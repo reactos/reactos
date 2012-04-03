@@ -165,7 +165,7 @@ CPortWaveRTStreamInit::GetPhysicalPageAddress(
 
     Addr = MmGetPhysicalAddress(Buffer);
     Address->QuadPart = Addr.QuadPart;
-    Result.QuadPart = (PtrToUlong(Address));
+    Result.QuadPart = (ULONG_PTR)Address;
 
     return Result;
 }

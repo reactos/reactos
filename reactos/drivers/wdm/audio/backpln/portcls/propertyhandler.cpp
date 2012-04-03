@@ -134,7 +134,7 @@ HandleDataIntersection(
             IoStatus->Information = Length;
             break;
         }
-        DataRange =  (PKSDATARANGE)	UlongToPtr(PtrToUlong(DataRange) + DataRange->FormatSize);
+        DataRange = (PKSDATARANGE)((PUCHAR)DataRange + DataRange->FormatSize);
     }
 
     IoStatus->Status = Status;
@@ -230,7 +230,7 @@ PinPropertyHandler(
     // get current irp stack
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
-    // get dispatch context 
+    // get dispatch context
     DispatchContext = (PDISPATCH_CONTEXT)IoStack->FileObject->FsContext;
 
     // Get the IrpTarget
