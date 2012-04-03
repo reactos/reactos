@@ -877,7 +877,7 @@ KspHandleDataIntersection(
             break;
         }
 
-        DataRange =  UlongToPtr(PtrToUlong(DataRange) + DataRange->FormatSize);
+        DataRange = (PKSDATARANGE)((PUCHAR)DataRange + DataRange->FormatSize);
         /* FIXME make sure its 64 bit aligned */
         ASSERT(((ULONG_PTR)DataRange & 0x7) == 0);
     }
