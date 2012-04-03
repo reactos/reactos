@@ -1124,7 +1124,7 @@ CUSBDevice::SelectConfiguration(
         }
 
         // move offset
-        InterfaceInfo = (PUSBD_INTERFACE_INFORMATION)((ULONG_PTR)PtrToUlong(InterfaceInfo) + InterfaceInfo->Length);
+        InterfaceInfo = (PUSBD_INTERFACE_INFORMATION)((PUCHAR)InterfaceInfo + InterfaceInfo->Length);
     }
 
     //
