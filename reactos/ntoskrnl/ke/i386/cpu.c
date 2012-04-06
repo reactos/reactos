@@ -1323,7 +1323,12 @@ KiFlushNPXState(IN PFLOATING_SAVE_AREA SaveArea)
     if (Thread->NpxState != NPX_STATE_LOADED)
     {
         /* If there's nothing to load, quit */
-        if (!SaveArea) return;
+        if (!SaveArea)
+        {
+            /* Restore interrupt state and return */
+            __writeeflags(EFlags);
+            return;
+        }
 
         /* Need FXSR support for this */
         ASSERT(KeI386FxsrPresent == TRUE);
