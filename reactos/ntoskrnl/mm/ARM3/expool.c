@@ -1256,7 +1256,7 @@ ExpAddTagForBigPages(IN PVOID Va,
     // This means there's no free hash buckets whatsoever, so we would now have
     // to attempt expanding the table
     //
-    DPRINT1("Big pool expansion needed, not implemented!");
+    DPRINT1("Big pool expansion needed, not implemented!\n");
     KeReleaseSpinLock(&ExpLargePoolTableLock, OldIrql);
     return FALSE;
 }
