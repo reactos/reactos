@@ -1750,6 +1750,9 @@ RegistrationProc(LPVOID Parameter)
     SetupTermDefaultQueueCallback(RegistrationData->DefaultContext);
     HeapFree(GetProcessHeap(), 0, RegistrationData);
 
+    // FIXME: Move this call to a separate cleanup page!
+    RtlCreateBootStatusDataFile();
+
     return 0;
 }
 
@@ -2051,6 +2054,8 @@ FinishDlgProc(HWND hwndDlg,
 
     return FALSE;
 }
+
+
 BOOL
 ProcessUnattendInf(HINF hUnattendedInf)
 {
@@ -2260,8 +2265,9 @@ GetRosInstallCD(WCHAR *pwszPath, DWORD cchPathMax)
     return FALSE;
 }
 
+
 VOID
-ProcessUnattendSetup()
+ProcessUnattendSetup(VOID)
 {
     WCHAR szPath[MAX_PATH];
     HINF hUnattendedInf;
@@ -2311,7 +2317,6 @@ InstallWizard(VOID)
     ZeroMemory(&SetupData, sizeof(SETUPDATA));
 
     ProcessUnattendSetup();
-
 
     /* Create the Welcome page */
     psp.dwSize = sizeof(PROPSHEETPAGE);
