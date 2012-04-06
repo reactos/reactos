@@ -810,6 +810,10 @@ VOID NTAPI ProtocolStatus(
     PRECONFIGURE_CONTEXT Context;
 
     TI_DbgPrint(DEBUG_DATALINK, ("Called.\n"));
+
+    /* Ignore the status indication if we have no context yet. We'll get another later */
+    if (!Adapter->Context)
+        return;
     
     Context = ExAllocatePool(NonPagedPool, sizeof(RECONFIGURE_CONTEXT));
     if (!Context)
@@ -1302,6 +1306,7 @@ BOOLEAN BindAdapter(
     LLIP_BIND_INFO BindInfo;
     ULONG Lookahead = LOOKAHEAD_SIZE;
     NTSTATUS Status;
+    NDIS_MEDIA_STATE MediaState;
 
     TI_DbgPrint(DEBUG_DATALINK, ("Called.\n"));
 
@@ -1384,12 +1389,30 @@ BOOLEAN BindAdapter(
                           sizeof(UINT));
     if (NdisStatus != NDIS_STATUS_SUCCESS)
         return FALSE;
-    
+
     /* Register interface with IP layer */
     IPRegisterInterface(IF);
 
-    /* Set adapter state */
+    /* Store adapter context */
     Adapter->Context = IF;
+
+    /* Get the media state */
+    NdisStatus = NDISCall(Adapter,
+                          NdisRequestQueryInformation,
+                          OID_GEN_MEDIA_CONNECT_STATUS,
+                          &MediaState,
+                          sizeof(MediaState));
+    if (NdisStatus != NDIS_STATUS_SUCCESS) {
+        TI_DbgPrint(DEBUG_DATALINK, ("Could not query media status (0x%X).\n", NdisStatus));
+        IPUnregisterInterface(IF);
+        IPDestroyInterface(IF);
+        return FALSE;
+    }
+
+    /* Indicate the current media state */
+    ProtocolStatus(Adapter,
+                   (MediaState == NdisMediaStateConnected) ? NDIS_STATUS_MEDIA_CONNECT : NDIS_STATUS_MEDIA_DISCONNECT,
+                   NULL, 0);
 
     /* Set packet filter so we can send and receive packets */
     NdisStatus = NDISCall(Adapter,
@@ -1404,9 +1427,6 @@ BOOLEAN BindAdapter(
         IPDestroyInterface(IF);
         return FALSE;
     }
-    
-    /* Indicate media connect (our drivers are broken and don't do this) */
-    ProtocolStatus(Adapter, NDIS_STATUS_MEDIA_CONNECT, NULL, 0);
 
     return TRUE;
 }
