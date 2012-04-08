@@ -27,6 +27,7 @@ int WINAPI RegisterServicesProcess(DWORD ServicesProcessId);
 #define PIPE_TIMEOUT 1000
 
 BOOL ScmShutdown = FALSE;
+static HANDLE hScmShutdownEvent = NULL;
 
 
 /* FUNCTIONS *****************************************************************/
@@ -358,6 +359,9 @@ ShutdownHandlerRoutine(DWORD dwCtrlType)
 
         ScmAutoShutdownServices();
         ScmShutdownServiceDatabase();
+
+        /* Set the shutdwon event */
+        SetEvent(hScmShutdownEvent);
     }
 
     return TRUE;
@@ -371,7 +375,6 @@ wWinMain(HINSTANCE hInstance,
          int nShowCmd)
 {
     HANDLE hScmStartEvent;
-    HANDLE hEvent;
     DWORD dwError;
 
     DPRINT("SERVICES: Service Control Manager\n");
@@ -395,6 +398,7 @@ wWinMain(HINSTANCE hInstance,
     if (dwError != ERROR_SUCCESS)
     {
         DPRINT1("SERVICES: failed to create SCM database (Error %lu)\n", dwError);
+        CloseHandle(hScmStartEvent);
         ExitThread(0);
     }
 
@@ -431,19 +435,17 @@ wWinMain(HINSTANCE hInstance,
 
     DPRINT("SERVICES: Running.\n");
 
-#if 1
-    hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
-    if (hEvent)
-        WaitForSingleObject(hEvent, INFINITE);
-#else
-    for (;;)
-    {
-        NtYieldExecution();
-    }
-#endif
+    /* Create the shutdown event and wait until it gets set */
+    hScmShutdownEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+    if (hScmShutdownEvent)
+        WaitForSingleObject(hScmShutdownEvent, INFINITE);
 
     ScmDeleteNamedPipeCriticalSection();
 
+    /* Close the shutdown event */
+    CloseHandle(hScmShutdownEvent);
+
+    /* Close the start event */
     CloseHandle(hScmStartEvent);
 
     DPRINT("SERVICES: Finished.\n");
