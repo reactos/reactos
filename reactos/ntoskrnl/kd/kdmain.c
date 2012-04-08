@@ -56,20 +56,12 @@ KdpServiceDispatcher(ULONG Service,
         {
             switch ((ULONG_PTR)Buffer1)
             {
-                case ManualBugCheck:
-                    KeBugCheck(MANUALLY_INITIATED_CRASH);
-                    break;
-
                 case DumpAllThreads:
                     PspDumpThreads(TRUE);
                     break;
 
                 case DumpUserThreads:
                     PspDumpThreads(FALSE);
-                    break;
-
-                case EnterDebugger:
-                    DbgBreakPoint();
                     break;
 
                 case KdSpare3:
