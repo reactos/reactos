@@ -1619,6 +1619,9 @@ DWORD RSetServiceStatus(
     LPSERVICE_STATUS lpServiceStatus)
 {
     PSERVICE lpService;
+    DWORD dwPreviousState;
+    LPCWSTR lpErrorStrings[2];
+    WCHAR szErrorBuffer[32];
 
     DPRINT("RSetServiceStatus() called\n");
     DPRINT("hServiceStatus = %p\n", hServiceStatus);
@@ -1668,12 +1671,31 @@ DWORD RSetServiceStatus(
     /* Lock the service database exclusively */
     ScmLockDatabaseExclusive();
 
+    /* Save the current service state */
+    dwPreviousState = lpService->Status.dwCurrentState;
+
     RtlCopyMemory(&lpService->Status,
                   lpServiceStatus,
                   sizeof(SERVICE_STATUS));
 
     /* Unlock the service database */
     ScmUnlockDatabase();
+
+    /* Log a failed service stop */
+    if ((lpServiceStatus->dwCurrentState == SERVICE_STOPPED) &&
+        (dwPreviousState != SERVICE_STOPPED))
+    {
+        if (lpServiceStatus->dwWin32ExitCode != ERROR_SUCCESS)
+        {
+            swprintf(szErrorBuffer, L"%lu", lpServiceStatus->dwWin32ExitCode);
+            lpErrorStrings[0] = lpService->lpDisplayName;
+            lpErrorStrings[1] = szErrorBuffer;
+
+            ScmLogError(EVENT_SERVICE_EXIT_FAILED,
+                        2,
+                        lpErrorStrings);
+        }
+    }
 
     DPRINT("Set %S to %lu\n", lpService->lpDisplayName, lpService->Status.dwCurrentState);
     DPRINT("RSetServiceStatus() done\n");

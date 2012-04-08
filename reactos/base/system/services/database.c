@@ -1617,6 +1617,7 @@ ScmStartService(PSERVICE Service, DWORD argc, LPWSTR *argv)
     PSERVICE_GROUP Group = Service->lpGroup;
     DWORD dwError = ERROR_SUCCESS;
     LPCWSTR ErrorLogStrings[2];
+    WCHAR szErrorBuffer[32];
 
     DPRINT("ScmStartService() called\n");
 
@@ -1681,8 +1682,10 @@ ScmStartService(PSERVICE Service, DWORD argc, LPWSTR *argv)
     {
         if (Service->dwErrorControl != SERVICE_ERROR_IGNORE)
         {
+            /* Log a failed service start */
+            swprintf(szErrorBuffer, L"%lu", dwError);
             ErrorLogStrings[0] = Service->lpServiceName;
-            ErrorLogStrings[1] = L"Test";
+            ErrorLogStrings[1] = szErrorBuffer;
             ScmLogError(EVENT_SERVICE_START_FAILED,
                         2,
                         ErrorLogStrings);
