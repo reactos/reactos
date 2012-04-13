@@ -1,9 +1,9 @@
-/* 
+/*
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
  * PURPOSE:           Engine floating point functions
  * FILE:              subsys/win32k/eng/float.c
- * PROGRAMER:         Jason Filby
+ * PROGRAMER:         David Welch
  */
 
 /* INCLUDES *****************************************************************/
@@ -17,43 +17,53 @@
 
 BOOL
 APIENTRY
-EngRestoreFloatingPointState ( IN VOID *Buffer )
+EngRestoreFloatingPointState(
+    IN VOID *Buffer)
 {
-  NTSTATUS Status;
-  Status = KeRestoreFloatingPointState((PKFLOATING_SAVE)Buffer);
-  if (!NT_SUCCESS(Status))
+    NTSTATUS Status;
+
+    Status = KeRestoreFloatingPointState((PKFLOATING_SAVE)Buffer);
+    if (!NT_SUCCESS(Status))
     {
-      return FALSE;
+        return FALSE;
     }
-  return TRUE;
+
+    return TRUE;
 }
 
 ULONG
 APIENTRY
-EngSaveFloatingPointState(OUT VOID  *Buffer,
-     IN ULONG  BufferSize)
+EngSaveFloatingPointState(
+    OUT VOID *Buffer,
+    IN ULONG BufferSize)
 {
-  KFLOATING_SAVE TempBuffer;
-  NTSTATUS Status;
-  if (Buffer == NULL || BufferSize == 0)
+    KFLOATING_SAVE TempBuffer;
+    NTSTATUS Status;
+
+    if ((Buffer == NULL) || (BufferSize == 0))
     {
-      /* Check for floating point support. */
-      Status = KeSaveFloatingPointState(&TempBuffer);
-      if (Status != STATUS_SUCCESS)
- {
-   return(0);
- }
-      KeRestoreFloatingPointState(&TempBuffer);
-      return(sizeof(KFLOATING_SAVE));
+        /* Check for floating point support. */
+        Status = KeSaveFloatingPointState(&TempBuffer);
+        if (Status != STATUS_SUCCESS)
+        {
+            return(0);
+        }
+
+        KeRestoreFloatingPointState(&TempBuffer);
+        return(sizeof(KFLOATING_SAVE));
     }
-  if (BufferSize < sizeof(KFLOATING_SAVE))
+
+    if (BufferSize < sizeof(KFLOATING_SAVE))
     {
-      return(0);
+        return(0);
     }
-  Status = KeSaveFloatingPointState((PKFLOATING_SAVE)Buffer);
-  if (!NT_SUCCESS(Status))
+
+    Status = KeSaveFloatingPointState((PKFLOATING_SAVE)Buffer);
+    if (!NT_SUCCESS(Status))
     {
-      return FALSE;
+        return FALSE;
     }
-  return TRUE;
+
+    return TRUE;
 }
+
