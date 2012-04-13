@@ -461,5 +461,32 @@ add_dependencies(ntoskrnl psdk bugcodes asm)
 
 add_cd_file(TARGET ntoskrnl DESTINATION reactos/system32 NO_CAB FOR all)
 
+if(BUILD_MP)
+    add_executable(ntkrnlmp ${SOURCE})
+    add_target_compile_definitions(ntkrnlmp CONFIG_SMP)
+
+    if(ARCH MATCHES i386)
+        set_entrypoint(ntkrnlmp KiSystemStartup 4)
+    else()
+        set_entrypoint(ntkrnlmp KiSystemStartup)
+    endif()
+    set_subsystem(ntkrnlmp native)
+
+    if(MSVC)
+        set_image_base(ntkrnlmp 0x00400000)
+    else()
+        set_image_base(ntkrnlmp 0x80800000)
+    endif()
+
+    # Linker bug
+    if(NOT MSVC AND LTCG)
+        add_target_link_flags(ntkrnlmp "-shared")
+    endif()
+
+    target_link_libraries(ntkrnlmp cportlib csq ${PSEH_LIB} cmlib rtl rossym libcntpr wdmguid ioevent)
+    add_importlibs(ntkrnlmp hal kdcom bootvid)
+    add_dependencies(ntkrnlmp psdk bugcodes asm)
+    add_cd_file(TARGET ntkrnlmp DESTINATION reactos/system32 NO_CAB FOR all)
+endif()
 
 add_library(ntdllsys ntdll.S)
