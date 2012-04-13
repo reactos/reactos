@@ -273,8 +273,7 @@ list(APPEND SOURCE
     se/token.c
     vf/driver.c
     wmi/wmi.c
-    ntoskrnl.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/ntoskrnl.def)
+    ntoskrnl.rc)
 
 if(ARCH MATCHES i386)
     list(APPEND SOURCE
@@ -423,7 +422,9 @@ else() # _WINKD_
 
 endif()
 
-add_executable(ntoskrnl ${SOURCE})
+add_executable(ntoskrnl
+    ${SOURCE}
+    ${CMAKE_CURRENT_BINARY_DIR}/ntoskrnl.def)
 
 if (ARCH MATCHES i386)
   set_entrypoint(ntoskrnl KiSystemStartup 4)
@@ -462,7 +463,12 @@ add_dependencies(ntoskrnl psdk bugcodes asm)
 add_cd_file(TARGET ntoskrnl DESTINATION reactos/system32 NO_CAB FOR all)
 
 if(BUILD_MP)
-    add_executable(ntkrnlmp ${SOURCE})
+    spec2def(ntkrnlmp.exe ntoskrnl.spec)
+
+    add_executable(ntkrnlmp
+        ${SOURCE}
+        ${CMAKE_CURRENT_BINARY_DIR}/ntkrnlmp.def)
+
     add_target_compile_definitions(ntkrnlmp CONFIG_SMP)
 
     if(ARCH MATCHES i386)
