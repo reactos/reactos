@@ -2005,10 +2005,12 @@ PATH_add_outline(PDC dc, INT x, INT y, TTPOLYGONHEADER *header, DWORD size)
   PPATH pPath;
   TTPOLYGONHEADER *start;
   POINT pt;
+  BOOL bResult = FALSE;
 
   start = header;
 
   pPath = PATH_LockPath(dc->dclevel.hPath);
+  if (!pPath)
   {
      return FALSE;
   }
@@ -2020,7 +2022,7 @@ PATH_add_outline(PDC dc, INT x, INT y, TTPOLYGONHEADER *header, DWORD size)
      if (header->dwType != TT_POLYGON_TYPE)
      {
         DPRINT1("Unknown header type %d\n", header->dwType);
-        return FALSE;
+        goto cleanup;
      }
 
      pt.x = x + int_from_fixed(header->pfxStart.x);
@@ -2055,7 +2057,7 @@ PATH_add_outline(PDC dc, INT x, INT y, TTPOLYGONHEADER *header, DWORD size)
               POINTFX ptfx;
               POINT *pts = ExAllocatePoolWithTag(PagedPool, (curve->cpfx + 1) * sizeof(POINT), TAG_PATH);
 
-              if (!pts) return FALSE;
+              if (!pts) goto cleanup;
 
               ptfx = *(POINTFX *)((char *)curve - sizeof(POINTFX));
 
@@ -2076,7 +2078,7 @@ PATH_add_outline(PDC dc, INT x, INT y, TTPOLYGONHEADER *header, DWORD size)
 
            default:
               DPRINT1("Unknown curve type %04x\n", curve->wType);
-              return FALSE;
+              goto cleanup;
         }
 
         curve = (TTPOLYCURVE *)&curve->apfx[curve->cpfx];
@@ -2084,9 +2086,12 @@ PATH_add_outline(PDC dc, INT x, INT y, TTPOLYGONHEADER *header, DWORD size)
      header = (TTPOLYGONHEADER *)((char *)header + header->cb);
   }
 
+  bResult = TRUE;
+
+cleanup:
   IntGdiCloseFigure( pPath );
   PATH_UnlockPath( pPath );
-  return TRUE;
+  return bResult;
 }
 
 /**********************************************************************
