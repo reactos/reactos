@@ -193,7 +193,7 @@ INT cmd_date (LPTSTR param)
   nErrorLevel = 0;
 
 	/* build parameter array */
-	arg = split (param, &argc, FALSE);
+	arg = split (param, &argc, FALSE, FALSE);
 
 	/* check for options */
 	for (i = 0; i < argc; i++)

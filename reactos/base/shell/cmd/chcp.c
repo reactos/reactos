@@ -33,7 +33,7 @@ INT CommandChcp (LPTSTR param)
 	nErrorLevel = 0;
 
 	/* get parameters */
-	arg = split (param, &args, FALSE);
+	arg = split (param, &args, FALSE, FALSE);
 
 	if (args == 0)
 	{

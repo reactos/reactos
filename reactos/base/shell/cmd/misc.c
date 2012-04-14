@@ -275,7 +275,7 @@ static BOOL expand (LPINT ac, LPTSTR **arg, LPCTSTR pattern)
  *         are spaces and slashes ('/').
  */
 
-LPTSTR *split (LPTSTR s, LPINT args, BOOL expand_wildcards)
+LPTSTR *split (LPTSTR s, LPINT args, BOOL expand_wildcards, BOOL handle_plus)
 {
 	LPTSTR *arg;
 	LPTSTR start;
@@ -315,7 +315,7 @@ LPTSTR *split (LPTSTR s, LPINT args, BOOL expand_wildcards)
                 /* check for separators */
                 if (_istspace(*s) ||
                     (*s == _T('/')) ||
-                    (*s == _T('+')))
+                    (handle_plus && (*s == _T('+'))))
                 {
                     /* Make length at least one character */
                     if (s == start) s++;

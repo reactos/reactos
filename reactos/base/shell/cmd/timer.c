@@ -100,7 +100,7 @@ INT CommandTimer (LPTSTR param)
 
 	nErrorLevel = 0;
 
-	p = split (param, &argc, FALSE);
+	p = split (param, &argc, FALSE, FALSE);
 
 	//read options
 	for (i = 0; i < argc; i++)

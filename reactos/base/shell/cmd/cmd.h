@@ -332,7 +332,7 @@ BOOL SetRootPath(TCHAR *oldpath,TCHAR *InPath);
 TCHAR  cgetchar (VOID);
 BOOL   CheckCtrlBreak (INT);
 BOOL add_entry (LPINT ac, LPTSTR **arg, LPCTSTR entry);
-LPTSTR *split (LPTSTR, LPINT, BOOL);
+LPTSTR *split (LPTSTR, LPINT, BOOL, BOOL);
 LPTSTR *splitspace (LPTSTR, LPINT);
 VOID   freep (LPTSTR *);
 LPTSTR _stpcpy (LPTSTR, LPCTSTR);

@@ -376,7 +376,7 @@ INT cmd_replace (LPTSTR param)
 	}
 
 	/* Divide the argument in to an array of c-strings */
-	arg = split (param, &argc, FALSE);
+	arg = split (param, &argc, FALSE, FALSE);
 	nFiles = argc;
 
 	/* Read options */

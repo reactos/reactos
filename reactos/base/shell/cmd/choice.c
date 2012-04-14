@@ -150,7 +150,7 @@ CommandChoice (LPTSTR param)
 	}
 
 	/* build parameter array */
-	arg = split (param, &argc, FALSE);
+	arg = split (param, &argc, FALSE, FALSE);
 
 	/* evaluate arguments */
 	if (argc > 0)

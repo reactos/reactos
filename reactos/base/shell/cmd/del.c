@@ -275,7 +275,7 @@ DeleteFiles(LPTSTR FileName, DWORD* dwFlags, DWORD dwAttrFlags)
                 }
                 while (FindNextFile (hFile, &f));
 				FindClose (hFile);
-        } 
+        }
 		else error_sfile_not_found(szFullPath);
         return dwFiles;
 }
@@ -385,7 +385,7 @@ INT CommandDelete (LPTSTR param)
 
 	nErrorLevel = 0;
 
-	arg = split (param, &args, FALSE);
+	arg = split (param, &args, FALSE, FALSE);
 
 	if (args == 0)
 	{

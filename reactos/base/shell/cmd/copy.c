@@ -438,7 +438,7 @@ INT cmd_copy(LPTSTR param)
 
 
     /* Split the user input into array */
-    arg = split(param, &argc, FALSE);
+    arg = split(param, &argc, FALSE, TRUE);
     nFiles = argc;
 
     /* Read switches and count files */

@@ -132,7 +132,7 @@ cmd_mklink(LPTSTR param)
 		return 0;
 	}
 
-	arg = split(param, &argc, FALSE);
+	arg = split(param, &argc, FALSE, FALSE);
 	for (i = 0; i < argc; i++)
 	{
 		if (arg[i][0] == _T('/'))
