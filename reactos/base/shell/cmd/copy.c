@@ -293,9 +293,9 @@ static INT CopyOverwrite (LPTSTR fn)
 (most likely Eric Kohl) and it was taken from ren.c */
 static void
 BuildFileName(
-    LPTSTR pszSource, // original
-    LPTSTR pszTarget, // template
-    LPTSTR pszOutput) // taget
+    LPTSTR pszSource,
+    LPTSTR pszTarget,
+    LPTSTR pszOutput)
 {
     /* build destination file name */
     while (*pszTarget != 0)
