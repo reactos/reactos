@@ -583,6 +583,7 @@ HRESULT WINAPI CShellLink::Load(IStream *stm)
     if (hdr.dwFlags & SLDF_HAS_WORKINGDIR)
     {
         hr = Stream_LoadString(stm, unicode, &sWorkDir);
+        PathRemoveBackslash(sWorkDir);
         TRACE("Working Dir  -> %s\n", debugstr_w(sWorkDir));
     }
     if (FAILED(hr))
