@@ -592,7 +592,7 @@ HRESULT WINAPI CShellLink::Load(IStream *stm)
     if (hdr.dwFlags & SLDF_HAS_ARGS)
     {
         hr = Stream_LoadString(stm, unicode, &sArgs);
-        TRACE("Working Dir  -> %s\n", debugstr_w(sArgs));
+        TRACE("Arguments    -> %s\n", debugstr_w(sArgs));
     }
     if (FAILED(hr))
         goto end;
