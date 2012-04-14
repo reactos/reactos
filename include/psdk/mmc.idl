@@ -754,7 +754,6 @@ enum
     [
         object,
         uuid(43136EB6-D36C-11CF-ADBC-00AA00A80033),
-        object,
         pointer_default(unique)
     ]
 
@@ -1052,7 +1051,7 @@ typedef struct _MMC_TASK_DISPLAY_OBJECT
 {
     MMC_TASK_DISPLAY_TYPE eDisplayType;
     [switch_type(MMC_TASK_DISPLAY_TYPE), switch_is((MMC_TASK_DISPLAY_TYPE)eDisplayType)]
-    _ANONYMOUS_UNION union
+    union
     {
     [case(MMC_TASK_DISPLAY_TYPE_BITMAP,MMC_TASK_DISPLAY_TYPE_VANILLA_GIF,MMC_TASK_DISPLAY_TYPE_CHOCOLATE_GIF)]
         MMC_TASK_DISPLAY_BITMAP uBitmap;
@@ -1076,7 +1075,7 @@ typedef struct _MMC_TASK
     LPOLESTR szText;
     LPOLESTR szHelpString;
     MMC_ACTION_TYPE eActionType;
-    _ANONYMOUS_UNION union
+    union
     {
         LONG_PTR nCommandID;
         LPOLESTR szActionURL;
@@ -1316,21 +1315,21 @@ typedef struct _RESULT_VIEW_TYPE_INFO
     DWORD         dwMiscOptions;
 
     [switch_type(MMC_VIEW_TYPE), switch_is((MMC_VIEW_TYPE)eViewType)]
-    _ANONYMOUS_UNION union
+    union
     {
 
     [case(MMC_VIEW_TYPE_LIST)]
         DWORD dwListOptions;
 
     [case(MMC_VIEW_TYPE_HTML)]
-        _ANONYMOUS_STRUCT struct
+        struct
         {
             DWORD       dwHTMLOptions;
             LPOLESTR    pstrURL;
         } DUMMYSTRUCTNAME;
 
     [case(MMC_VIEW_TYPE_OCX)]
-        _ANONYMOUS_STRUCT struct
+        struct
         {
             DWORD       dwOCXOptions;
             LPUNKNOWN   pUnkControl;
