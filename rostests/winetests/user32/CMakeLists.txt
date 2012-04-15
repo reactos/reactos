@@ -41,5 +41,6 @@ add_cd_file(TARGET user32_winetest DESTINATION reactos/bin FOR all)
 if(NOT MSVC)
     # FIXME: http://www.cmake.org/Bug/view.php?id=12998
     #add_target_compile_flags(user32_winetest "-Wno-format")
+    #allow_warnings(user32_winetest)
     set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-Wno-format")
 endif()
