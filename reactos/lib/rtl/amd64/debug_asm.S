@@ -38,8 +38,6 @@ DbgUserBreakPoint:
 .PROC DbgBreakPointWithStatus
     .endprolog
     mov eax, ecx
-    int 3
-    ret
 .ENDP
 
 .PROC RtlpBreakWithStatusInstruction
