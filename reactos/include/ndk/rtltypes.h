@@ -455,17 +455,6 @@ typedef VOID
 #else /* !NTOS_MODE_USER */
 
 //
-// Handler during regular RTL Exceptions
-//
-typedef EXCEPTION_DISPOSITION
-(NTAPI *PEXCEPTION_ROUTINE)(
-    IN struct _EXCEPTION_RECORD *ExceptionRecord,
-    IN PVOID EstablisherFrame,
-    IN OUT struct _CONTEXT *ContextRecord,
-    IN OUT PVOID DispatcherContext
-);
-
-//
 // RTL Library Allocation/Free Routines
 //
 typedef PVOID
