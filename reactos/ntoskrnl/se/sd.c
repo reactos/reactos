@@ -38,6 +38,7 @@ SepGetGroupFromDescriptor(PVOID _Descriptor)
     if (Descriptor->Control & SE_SELF_RELATIVE)
     {
         SdRel = (PISECURITY_DESCRIPTOR_RELATIVE)Descriptor;
+        if (!SdRel->Group) return NULL;
         return (PSID)((ULONG_PTR)Descriptor + SdRel->Group);
     }
     else
@@ -56,6 +57,7 @@ SepGetOwnerFromDescriptor(PVOID _Descriptor)
     if (Descriptor->Control & SE_SELF_RELATIVE)
     {
         SdRel = (PISECURITY_DESCRIPTOR_RELATIVE)Descriptor;
+        if (!SdRel->Owner) return NULL;
         return (PSID)((ULONG_PTR)Descriptor + SdRel->Owner);
     }
     else
@@ -74,6 +76,7 @@ SepGetDaclFromDescriptor(PVOID _Descriptor)
     if (Descriptor->Control & SE_SELF_RELATIVE)
     {
         SdRel = (PISECURITY_DESCRIPTOR_RELATIVE)Descriptor;
+        if (!SdRel->Dacl) return NULL;
         return (PACL)((ULONG_PTR)Descriptor + SdRel->Dacl);
     }
     else
@@ -92,6 +95,7 @@ SepGetSaclFromDescriptor(PVOID _Descriptor)
     if (Descriptor->Control & SE_SELF_RELATIVE)
     {
         SdRel = (PISECURITY_DESCRIPTOR_RELATIVE)Descriptor;
+        if (!SdRel->Sacl) return NULL;
         return (PACL)((ULONG_PTR)Descriptor + SdRel->Sacl);
     }
     else
