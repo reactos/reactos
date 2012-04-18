@@ -33,12 +33,8 @@
 #include <locale.h>
 
 extern void __cdecl _initterm(_PVFV *,_PVFV *);
-
-#if defined(__GNUC__)
-extern void __main (void);
+extern void __main ();
 extern void _pei386_runtime_relocator (void);
-#endif
-
 extern _CRTALLOC(".CRT$XIA") _PIFV __xi_a[];
 extern _CRTALLOC(".CRT$XIZ") _PIFV __xi_z[];
 extern _CRTALLOC(".CRT$XCA") _PVFV __xc_a[];
@@ -101,16 +97,19 @@ WINBOOL WINAPI _CRT_INIT (HANDLE hDllHandle, DWORD dwReason, LPVOID lpreserved)
 	    }
 	  Sleep(1000);
 	}
-      if (__native_startup_state != __uninitialized)
+      if (__native_startup_state == __initializing)
 	{
-	  _amsg_exit(31);
+	  _amsg_exit (31);
 	}
-      else
+      else if (__native_startup_state == __uninitialized)
 	{
 	  __native_startup_state = __initializing;
 	  
 	  _initterm ((_PVFV *) (void *) __xi_a, (_PVFV *) (void *) __xi_z);
-	  _initterm (__xc_a,__xc_z);
+	}
+      if (__native_startup_state == __initializing)
+	{
+	  _initterm (__xc_a, __xc_z);
 	  __native_startup_state = __initialized;
 	}
       if (! nested)
@@ -130,7 +129,7 @@ WINBOOL WINAPI _CRT_INIT (HANDLE hDllHandle, DWORD dwReason, LPVOID lpreserved)
 	{
 	  Sleep(1000);
 	}
-      if(__native_startup_state!=__initialized)
+      if (__native_startup_state != __initialized)
 	{
 	  _amsg_exit (31);
 	}
@@ -183,9 +182,7 @@ __DllMainCRTStartup (HANDLE hDllHandle, DWORD dwReason, LPVOID lpreserved)
 	retcode = FALSE;
 	goto i__leave;
     }
-#if defined(__GNUC__)
   _pei386_runtime_relocator ();
-#endif
   if (dwReason == DLL_PROCESS_ATTACH || dwReason == DLL_THREAD_ATTACH)
     {
         retcode = _CRT_INIT (hDllHandle, dwReason, lpreserved);
@@ -199,10 +196,8 @@ __DllMainCRTStartup (HANDLE hDllHandle, DWORD dwReason, LPVOID lpreserved)
 	    goto i__leave;
 	  }
     }
-#if defined(__GNUC__)
   if (dwReason == DLL_PROCESS_ATTACH)
     __main ();
-#endif
   retcode = DllMain(hDllHandle,dwReason,lpreserved);
   if (dwReason == DLL_PROCESS_ATTACH && ! retcode)
     {

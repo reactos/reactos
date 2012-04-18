@@ -9,5 +9,7 @@
 #define _UNICODE
 #define mainCRTStartup wmainCRTStartup
 #define WinMainCRTStartup wWinMainCRTStartup
+#define mingw_pcinit mingw_pwcinit
+#define mingw_pcppinit mingw_pwcppinit
 
 #include "crtexe.c"

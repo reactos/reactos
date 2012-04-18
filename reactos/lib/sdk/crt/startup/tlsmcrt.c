@@ -10,3 +10,4 @@
  otherwise
    we do tls cleanup in runtime and _CRT_MT has value 2.  */
 int _CRT_MT = 2;
+

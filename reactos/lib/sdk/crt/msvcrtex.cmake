@@ -34,6 +34,7 @@ list(APPEND MSVCRTEX_SOURCE
     startup/crt0_c.c
     startup/crt0_w.c
     startup/dllentry.c
+    startup/reactos.c
     misc/fltused.c
     misc/ofmt_stub.c
 )
