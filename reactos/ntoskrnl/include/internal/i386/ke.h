@@ -540,28 +540,6 @@ Ke386SanitizeFlags(IN ULONG Eflags,
 }
 
 //
-// Gets a DR register from a CONTEXT structure
-//
-FORCEINLINE
-PVOID
-KiDrFromContext(IN ULONG Dr,
-                IN PCONTEXT Context)
-{
-    return *(PVOID*)((ULONG_PTR)Context + KiDebugRegisterContextOffsets[Dr]);
-}
-
-//
-// Gets a DR register from a KTRAP_FRAME structure
-//
-FORCEINLINE
-PVOID*
-KiDrFromTrapFrame(IN ULONG Dr,
-                  IN PKTRAP_FRAME TrapFrame)
-{
-    return (PVOID*)((ULONG_PTR)TrapFrame + KiDebugRegisterTrapOffsets[Dr]);
-}
-
-//
 // Sanitizes a Debug Register
 //
 FORCEINLINE

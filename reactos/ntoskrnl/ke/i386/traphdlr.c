@@ -50,6 +50,9 @@ PFAST_SYSTEM_CALL_EXIT KiFastCallExitHandler;
 PKDBG_PRESERVICEHOOK KeWin32PreServiceHook = NULL;
 PKDBG_POSTSERVICEHOOK KeWin32PostServiceHook = NULL;
 #endif
+#if TRAP_DEBUG
+BOOLEAN StopChecking = FALSE;
+#endif
 
 
 /* TRAP EXIT CODE *************************************************************/
@@ -86,12 +89,9 @@ KiCommonExit(IN PKTRAP_FRAME TrapFrame, BOOLEAN SkipPreviousMode)
 {
     /* Disable interrupts until we return */
     _disable();
-    
+
     /* Check for APC delivery */
     KiCheckForApcDelivery(TrapFrame);
-    
-    /* Debugging checks */
-    KiExitTrapDebugChecks(TrapFrame, SkipPreviousMode);
 
     /* Restore the SEH handler chain */
     KeGetPcr()->NtTib.ExceptionList = TrapFrame->ExceptionList;
@@ -99,11 +99,17 @@ KiCommonExit(IN PKTRAP_FRAME TrapFrame, BOOLEAN SkipPreviousMode)
     /* Check if there are active debug registers */
     if (__builtin_expect(TrapFrame->Dr7 & ~DR7_RESERVED_MASK, 0))
     {
-        /* Not handled yet */
-        DbgPrint("Need Hardware Breakpoint Support!\n");
-        DbgBreakPoint();
-        while (TRUE);
+        /* Check if the frame was from user mode or v86 mode */
+        if ((TrapFrame->SegCs & MODE_MASK) ||
+            (TrapFrame->EFlags & EFLAGS_V86_MASK))
+        {
+            /* Handle debug registers */
+            KiHandleDebugRegistersOnTrapExit(TrapFrame);
+        }
     }
+
+    /* Debugging checks */
+    KiExitTrapDebugChecks(TrapFrame, SkipPreviousMode);
 }
 
 DECLSPEC_NORETURN
@@ -841,7 +847,7 @@ KiTrap0AHandler(IN PKTRAP_FRAME TrapFrame)
 
     /* Check for VDM trap */
     ASSERT((KiVdmTrap(TrapFrame)) == FALSE);
-    
+
     /* Kill the system */
     KiSystemFatalException(EXCEPTION_INVALID_TSS, TrapFrame);
 }
@@ -1068,7 +1074,7 @@ KiTrap0DHandler(IN PKTRAP_FRAME TrapFrame)
         UNIMPLEMENTED;
         while (TRUE);
     }
-    
+
     /*
      * NOTE: The ASM trap exit code would restore segment registers by doing
      * a POP <SEG>, which could cause an invalid segment if someone had messed
@@ -1524,12 +1530,18 @@ KiSystemCall(IN PKTRAP_FRAME TrapFrame,
     TrapFrame->ExceptionList = KeGetPcr()->NtTib.ExceptionList;
     KeGetPcr()->NtTib.ExceptionList = EXCEPTION_CHAIN_END;
 
-    /* Clear DR7 and check for debugging */
+    /* Default to debugging disabled */
     TrapFrame->Dr7 = 0;
-    if (__builtin_expect(Thread->Header.DebugActive & 0xFF, 0))
+
+    /* Check if the frame was from user mode */
+    if (TrapFrame->SegCs & MODE_MASK)
     {
-        UNIMPLEMENTED;
-        while (TRUE);
+        /* Check for active debugging */
+        if (KeGetCurrentThread()->Header.DebugActive & 0xFF)
+        {
+            /* Handle debug registers */
+            KiHandleDebugRegistersOnTrapEntry(TrapFrame);
+        }
     }
 
     /* Set thread fields */

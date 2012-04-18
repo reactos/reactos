@@ -528,10 +528,7 @@ KiEnterV86Mode(IN PKV8086_STACK_FRAME StackFrame)
     TrapFrame->Dr7 = 0;
 
     /* Set some debug fields if trap debugging is enabled */
-#if TRAP_DEBUG
-    TrapFrame->DbgArgMark = 0xBADB0D00;
-    TrapFrame->PreviousPreviousMode = -1;
-#endif
+    KiFillTrapFrameDebug(TrapFrame);
     
     /* Disable interrupts */
     _disable();
