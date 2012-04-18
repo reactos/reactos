@@ -1,5 +1,5 @@
 
-spec2def(crtdll.dll crtdll.spec)
+spec2def(crtdll.dll crtdll.spec ADD_IMPORTLIB)
 
 add_definitions(
     -DUSE_MSVCRT_PREFIX
