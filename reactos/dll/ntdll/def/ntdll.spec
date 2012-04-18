@@ -83,7 +83,7 @@
 @ stdcall LdrFindResource_U(long ptr long ptr)
 ;@ stdcall LdrFlushAlternateResourceModules
 @ stdcall LdrGetDllHandle(wstr long ptr ptr)
-@ stdcall LdrGetDllHandleEx(long wstr long ptr ptr) 
+@ stdcall LdrGetDllHandleEx(long wstr long ptr ptr)
 @ stdcall LdrGetProcedureAddress(ptr ptr long ptr)
 ;@ stdcall LdrHotPatchRoutine
 ;@ stdcall LdrInitShimEngineDynamic
@@ -1314,7 +1314,7 @@
 @ cdecl -arch=i386 _aulldvrm()
 @ cdecl -arch=i386 -ret64 _aullrem(double double)
 @ cdecl -arch=i386 _aullshr()
-@ cdecl -arch=i386 -norelay _chkstk()
+@ extern -arch=i386 _chkstk
 @ cdecl -arch=i386,x86_64 _fltused()
 @ cdecl -arch=i386 -ret64 _ftol()
 @ cdecl _i64toa(double ptr long)
