@@ -438,6 +438,17 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
     SizeInPages = (PFN_COUNT)BYTES_TO_PAGES(SizeInBytes);
 
     //
+    // Check for overflow
+    //
+    if (SizeInPages == 0)
+    {
+        //
+        // Fail
+        //
+        return NULL;
+    }
+
+    //
     // Handle paged pool
     //
     if ((PoolType & BASE_POOL_TYPE_MASK) == PagedPool)
