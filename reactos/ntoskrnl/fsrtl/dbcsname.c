@@ -4,7 +4,7 @@
  * FILE:            ntoskrnl/fsrtl/name.c
  * PURPOSE:         Provides DBCS parsing and other support routines for FSDs
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
- *                  Pierre Schweitzer (pierre.schweitzer@reactos.org) 
+ *                  Pierre Schweitzer (pierre.schweitzer@reactos.org)
  */
 
 /* INCLUDES ******************************************************************/
@@ -249,6 +249,11 @@ FsRtlIsDbcsInExpression(IN PANSI_STRING Expression,
         Expression->Buffer[ExpressionPosition] == ANSI_DOS_DOT)
     {
         ExpressionPosition++;
+    }
+
+    if (BackTracking)
+    {
+        ExFreePoolWithTag(BackTracking, 'nrSF');
     }
 
     return (ExpressionPosition == Expression->Length && NamePosition == Name->Length);
