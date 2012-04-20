@@ -3,7 +3,7 @@
  * PROJECT:         ReactOS Kernel
  * FILE:            ntoskrnl/ex/keyedevt.c
  * PURPOSE:         Support for keyed events
- * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+ * PROGRAMMERS:     Timo Kreuzer (timo.kreuzer@reactos.org)
  */
 
 /* INCLUDES *****************************************************************/
