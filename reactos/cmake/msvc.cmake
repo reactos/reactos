@@ -70,7 +70,7 @@ if(_PREFAST_)
         set(CMAKE_CXX_LINK_EXECUTABLE
     "cl ${CMAKE_CL_NOLOGO} <OBJECTS> ${CMAKE_START_TEMP_FILE} <FLAGS> /Fe<TARGET> -link /implib:<TARGET_IMPLIB> /version:<TARGET_VERSION_MAJOR>.<TARGET_VERSION_MINOR> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <LINK_LIBRARIES>${CMAKE_END_TEMP_FILE}")
     endif()
-    
+
 endif()
 
 set(CMAKE_RC_CREATE_SHARED_LIBRARY ${CMAKE_C_CREATE_SHARED_LIBRARY})
@@ -139,15 +139,15 @@ function(spec2def _dllname _spec_file)
             message(FATAL_ERROR "Wrong argument passed to spec2def, ${ARGN}")
         endif()
     endif()
-    
+
     # get library basename
     get_filename_component(_file ${_dllname} NAME_WE)
-    
+
     # error out on anything else than spec
     if(NOT ${_spec_file} MATCHES ".*\\.spec")
         message(FATAL_ERROR "spec2def only takes spec files as input.")
     endif()
-    
+
     #generate def for the DLL and C stubs file
     add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def ${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c
@@ -168,7 +168,7 @@ function(spec2def _dllname _spec_file)
         # NOTE: as stub file and def file are generated in one pass, depending on one is like depending on the other
         add_library(lib${_file} STATIC EXCLUDE_FROM_ALL
             ${CMAKE_CURRENT_BINARY_DIR}/lib${_file}_stubs.asm)
-        
+
         # set correct "link rule"
         set_target_properties(lib${_file} PROPERTIES LINKER_LANGUAGE "IMPLIB"
             STATIC_LIBRARY_FLAGS "/DEF:${CMAKE_CURRENT_BINARY_DIR}\\lib${_file}_exp.def")
@@ -189,7 +189,7 @@ else()
     set(CMAKE_ASM16_COMPILER ml.exe)
 endif()
 
-function(CreateBootSectorTarget2 _target_name _asm_file _binary_file _base_address)
+function(CreateBootSectorTarget _target_name _asm_file _binary_file _base_address)
 
     set(_object_file ${_binary_file}.obj)
     set(_temp_file ${_binary_file}.tmp)

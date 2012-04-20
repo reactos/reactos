@@ -229,10 +229,10 @@ function(spec2def _dllname _spec_file)
             message(FATAL_ERROR "Wrong argument passed to spec2def, ${ARGN}")
         endif()
     endif()
-    
+
     # get library basename
     get_filename_component(_file ${_dllname} NAME_WE)
-    
+
     # error out on anything else than spec
     if(NOT ${_spec_file} MATCHES ".*\\.spec")
         message(FATAL_ERROR "spec2def only takes spec files as input.")
@@ -255,7 +255,7 @@ function(spec2def _dllname _spec_file)
         #create normal importlib
         _add_library(lib${_file} STATIC EXCLUDE_FROM_ALL ${CMAKE_CURRENT_BINARY_DIR}/${_file}_implib.def)
         set_target_properties(lib${_file} PROPERTIES LINKER_LANGUAGE "IMPLIB" PREFIX "")
-        
+
         #create delayed importlib
         _add_library(lib${_file}_delayed STATIC EXCLUDE_FROM_ALL ${CMAKE_CURRENT_BINARY_DIR}/${_file}_implib.def)
         set_target_properties(lib${_file}_delayed PROPERTIES LINKER_LANGUAGE "IMPLIB_DELAYED" PREFIX "")
@@ -338,30 +338,7 @@ else()
     endmacro()
 endif()
 
-function(CreateBootSectorTarget _target_name _asm_file _object_file _base_address)
-    get_filename_component(OBJECT_PATH ${_object_file} PATH)
-    get_filename_component(OBJECT_NAME ${_object_file} NAME)
-    file(MAKE_DIRECTORY ${OBJECT_PATH})
-    get_directory_property(defines COMPILE_DEFINITIONS)
-    get_directory_property(includes INCLUDE_DIRECTORIES)
-
-    foreach(arg ${defines})
-        set(result_defs ${result_defs} -D${arg})
-    endforeach()
-
-    foreach(arg ${includes})
-        set(result_incs -I${arg} ${result_incs})
-    endforeach()
-
-    add_custom_command(
-        OUTPUT ${_object_file}
-        COMMAND nasm -o ${_object_file} ${result_incs} ${result_defs} -f bin ${_asm_file}
-        DEPENDS ${_asm_file})
-    set_source_files_properties(${_object_file} PROPERTIES GENERATED TRUE)
-    add_custom_target(${_target_name} ALL DEPENDS ${_object_file})
-endfunction()
-
-function(CreateBootSectorTarget2 _target_name _asm_file _binary_file _base_address)
+function(CreateBootSectorTarget _target_name _asm_file _binary_file _base_address)
     set(_object_file ${_binary_file}.o)
 
     add_custom_command(

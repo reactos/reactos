@@ -7,12 +7,12 @@ endif()
 spec2def(freeldr.sys freeldr.spec)
 
 if(ARCH MATCHES i386)
-    CreateBootSectorTarget2(frldr16
+    CreateBootSectorTarget(frldr16
         ${CMAKE_CURRENT_SOURCE_DIR}/arch/realmode/i386.S
         ${CMAKE_CURRENT_BINARY_DIR}/frldr16.bin
         F800)
 elseif(ARCH MATCHES amd64)
-    CreateBootSectorTarget2(frldr16
+    CreateBootSectorTarget(frldr16
         ${CMAKE_CURRENT_SOURCE_DIR}/arch/realmode/amd64.S
         ${CMAKE_CURRENT_BINARY_DIR}/frldr16.bin
         F800)
