@@ -110,6 +110,7 @@ struct ExplorerCmd
 	bool	IsValidPath() const;
 
 	String	_path;
+	WCHAR	szPath[MAX_PATH];
 	int		_flags;	// OPEN_WINDOW_MODE
 	int		_cmdShow;
 	bool	_mdi;

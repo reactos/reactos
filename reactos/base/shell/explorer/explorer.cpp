@@ -805,13 +805,33 @@ bool ExplorerCmd::EvaluateOption(LPCTSTR option)
             _mdi = true;
         else if (!_tcsicmp(option, TEXT("sdi")))
             _mdi = false;
+        else if (!_tcsicmp(option, TEXT("n")))
+        {
+            // Do nothing
+        }
+        else if (!_tcsicmp(option, TEXT("select")))
+        {
+            SelectOpt = TRUE;
+        }
         else
             return false;
+
     } else {
         if (!_path.empty())
             return false;
 
-        _path = opt_str;
+        if((SelectOpt == TRUE) && (PathFileExists(option)))
+        {
+            WCHAR szDir[MAX_PATH];
+
+            _wsplitpath(option, szPath, szDir, NULL, NULL);
+            wcscat(szPath, szDir);
+            PathRemoveBackslash(szPath);
+            _path = szPath;
+            SelectOpt = FALSE;
+        }
+        else
+            _path = opt_str;
     }
 
     return true;
