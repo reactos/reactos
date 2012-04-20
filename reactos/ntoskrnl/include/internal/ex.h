@@ -137,7 +137,7 @@ ExGetPoolTagInfo(
     IN ULONG SystemInformationLength,
     IN OUT PULONG ReturnLength OPTIONAL
 );
-                 
+
 /* INITIALIZATION FUNCTIONS *************************************************/
 
 VOID
@@ -208,7 +208,7 @@ ExpInitializeEventImplementation(VOID);
 
 VOID
 NTAPI
-ExpInitializeEventImplementation(VOID);
+ExpInitializeKeyedEventImplementation(VOID);
 
 VOID
 NTAPI

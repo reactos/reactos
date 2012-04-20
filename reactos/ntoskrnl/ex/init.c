@@ -664,6 +664,7 @@ ExpInitSystemPhase1(VOID)
     /* Initialize events and event pairs */
     ExpInitializeEventImplementation();
     ExpInitializeEventPairImplementation();
+    ExpInitializeKeyedEventImplementation();
 
     /* Initialize callbacks */
     ExpInitializeCallbacks();
