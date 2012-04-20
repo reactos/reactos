@@ -107,16 +107,22 @@ Author:
 //
 // Machine Specific Registers
 //
-#define MSR_EFER         0xC0000080
-#define MSR_STAR         0xC0000081
-#define MSR_LSTAR        0xC0000082
-#define MSR_CSTAR        0xC0000083
-#define MSR_SYSCALL_MASK 0xC0000084
-#define MSR_FS_BASE      0xC0000100
-#define MSR_GS_BASE      0xC0000101
-#define MSR_GS_SWAP      0xC0000102
-#define MSR_MCG_STATUS   0x017A
-#define MSR_AMD_ACCESS   0x9C5A203A
+#define MSR_MCG_STATUS          0x017A
+#define MSR_DEGUG_CTL           0x01D9
+#define MSR_LAST_BRANCH_FROM    0x01DB
+#define MSR_LAST_BRANCH_TO      0x01DC
+#define MSR_LAST_EXCEPTION_FROM 0x01DD
+#define MSR_LAST_EXCEPTION_TO   0x01DE
+#define MSR_PAT                 0x0277
+#define MSR_AMD_ACCESS      0x9C5A203A
+#define MSR_EFER            0xC0000080
+#define MSR_STAR            0xC0000081
+#define MSR_LSTAR           0xC0000082
+#define MSR_CSTAR           0xC0000083
+#define MSR_SYSCALL_MASK    0xC0000084
+#define MSR_FS_BASE         0xC0000100
+#define MSR_GS_BASE         0xC0000101
+#define MSR_GS_SWAP         0xC0000102
 
 //
 // Flags in MSR_EFER
@@ -125,12 +131,6 @@ Author:
 #define MSR_LME                 0x0100
 #define MSR_SCE                 0x0001
 #define MSR_NXE                 0x0800
-#define MSR_PAT                 0x0277
-#define MSR_DEGUG_CTL           0x01D9
-#define MSR_LAST_BRANCH_FROM    0x01DB
-#define MSR_LAST_BRANCH_TO      0x01DC
-#define MSR_LAST_EXCEPTION_FROM 0x01DD
-#define MSR_LAST_EXCEPTION_TO   0x01DE
 
 //
 // IPI Types

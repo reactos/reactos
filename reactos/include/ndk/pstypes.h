@@ -922,7 +922,7 @@ typedef struct _ETHREAD
     union
     {
         KSEMAPHORE LpcReplySemaphore;
-        KSEMAPHORE KeyedReplySemaphore;
+        KSEMAPHORE KeyedWaitSemaphore;
     };
     union
     {
