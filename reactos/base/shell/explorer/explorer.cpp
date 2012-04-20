@@ -51,6 +51,7 @@ DynamicLoadLibFct<void(__stdcall*)(BOOL)> g_SHDOCVW_ShellDDEInit(TEXT("SHDOCVW")
 
 
 ExplorerGlobals g_Globals;
+boolean SelectOpt=FALSE;
 
 
 ExplorerGlobals::ExplorerGlobals()
