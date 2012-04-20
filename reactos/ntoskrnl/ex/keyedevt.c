@@ -30,7 +30,7 @@ NTAPI
 ExpInitializeKeyedEvent(
     _Out_ PEX_KEYED_EVENT KeyedEvent);
 
-#define KeGetCurrentProcess() ((PKPROCESS)PsGetCurrentProcess)
+#define KeGetCurrentProcess() ((PKPROCESS)PsGetCurrentProcess())
 
 /* GLOBALS *******************************************************************/
 
