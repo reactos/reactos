@@ -32,6 +32,15 @@ Author:
 #include <setypes.h>
 #endif
 
+#ifndef NTOS_MODE_USER
+
+//
+// Kernel Exported Object Types
+//
+extern POBJECT_TYPE NTSYSAPI PsJobType;
+
+#endif // !NTOS_MODE_USER
+
 //
 // KUSER_SHARED_DATA location in User Mode
 //
