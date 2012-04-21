@@ -11,6 +11,7 @@ DBG_DEFAULT_CHANNEL(UserMisc);
 /* GLOBALS *******************************************************************/
 
 PTHREADINFO gptiCurrent = NULL;
+PPROCESSINFO gppiInputProvider = NULL;
 ERESOURCE UserLock;
 ATOM AtomMessage; // Window Message atom.
 ATOM AtomWndObj;  // Window Object atom.

@@ -175,9 +175,6 @@ Win32kProcessCallback(struct _EPROCESS *Process,
         IntCleanupMenus(Process, ppiCurrent);
         IntCleanupCurIcons(Process, ppiCurrent);
 
-        /* no process windows should exist at this point, or the function will assert! */
-        DestroyProcessClasses(ppiCurrent);
-        ppiCurrent->W32PF_flags &= ~W32PF_CLASSESREGISTERED;
 
         GDI_CleanupForProcess(Process);
 
@@ -204,6 +201,8 @@ Win32kProcessCallback(struct _EPROCESS *Process,
         GdiPoolDestroy(ppiCurrent->pPoolDcAttr);
         GdiPoolDestroy(ppiCurrent->pPoolBrushAttr);
         GdiPoolDestroy(ppiCurrent->pPoolRgnAttr);
+
+        if (gppiInputProvider == ppiCurrent) gppiInputProvider = NULL;
 
         TRACE_CH(UserProcess,"Freeing ppi 0x%x\n", ppiCurrent);
 
@@ -432,7 +431,22 @@ UserDestroyThreadInfo(struct _ETHREAD *Thread)
         DestroyTimersForThread(ptiCurrent);
         KeSetEvent(ptiCurrent->MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE);
         UnregisterThreadHotKeys(Thread);
+/*
+        if (IsListEmpty(&ptiCurrent->WindowListHead))
+        {
+           ERR_CH(UserThread,"Thread Window List is Empty!\n");
+        }
+*/
         co_DestroyThreadWindows(Thread);
+
+        if (ppiCurrent && ppiCurrent->ptiList == ptiCurrent && !ptiCurrent->ptiSibling)
+        {
+           //ERR_CH(UserThread,"DestroyProcessClasses\n");
+          /* no process windows should exist at this point, or the function will assert! */
+           DestroyProcessClasses(ppiCurrent);
+           ppiCurrent->W32PF_flags &= ~W32PF_CLASSESREGISTERED;
+        }
+
         IntBlockInput(ptiCurrent, FALSE);
         IntCleanupThreadCallbacks(ptiCurrent);
 

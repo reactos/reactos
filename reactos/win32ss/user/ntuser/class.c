@@ -128,6 +128,7 @@ static VOID
 IntDestroyClass(IN OUT PCLS Class)
 {
     PDESKTOP pDesk;
+
     /* There shouldn't be any clones anymore */
     ASSERT(Class->cWndReferenceCount == 0);
     ASSERT(Class->pclsClone == NULL);
@@ -620,9 +621,11 @@ IntDereferenceClass(IN OUT PCLS Class,
 {
     PCLS *PrevLink, BaseClass, CurrentClass;
 
+    ASSERT(Class->cWndReferenceCount >= 1);
+
     BaseClass = Class->pclsBase;
 
-    if (--Class->cWndReferenceCount <= 0)
+    if (--Class->cWndReferenceCount == 0)
     {
         if (BaseClass == Class)
         {

@@ -13,6 +13,7 @@ extern BOOL gbInitialized;
 extern PSERVERINFO gpsi;
 extern PTHREADINFO gptiCurrent;
 extern PPROCESSINFO ppiScrnSaver;
+extern PPROCESSINFO gppiInputProvider;
 
 INIT_FUNCTION NTSTATUS NTAPI InitUserImpl(VOID);
 VOID FASTCALL CleanupUserImpl(VOID);
