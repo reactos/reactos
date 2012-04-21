@@ -3,6 +3,8 @@
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <windowsx.h>
+#include <tchar.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <commctrl.h>
@@ -51,6 +53,12 @@ typedef struct {
     WCHAR ch;
 } MAPNOTIFY, *LPMAPNOTIFY;
 
+typedef struct {
+    BOOL IsAdvancedView;
+} SETTINGS;
+
+SETTINGS Settings;
+HWND hCharmapDlg;
 
 LRESULT CALLBACK LrgCellWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
@@ -58,5 +66,12 @@ VOID ShowAboutDlg(HWND hWndParent);
 
 BOOL RegisterMapClasses(HINSTANCE hInstance);
 VOID UnregisterMapClasses(HINSTANCE hInstance);
+
+/* charmap.c */
+extern VOID ChangeMapFont(HWND hDlg);
+
+/* settings.c */
+extern void LoadSettings(void);
+extern void SaveSettings(void);
 
 #endif /* __CHARMAP_PRECOMP_H */
