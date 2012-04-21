@@ -348,16 +348,18 @@ typedef struct _CRYPTUI_SELECTCERTIFICATE_STRUCTA
     DWORD               dwSize;
     HWND                hwndParent;
     DWORD               dwFlags;
-    LPCWSTR             szTitle;
+    LPCSTR              szTitle;
     DWORD               dwDontUseColumn;
-    LPCWSTR             szDisplayString;
+    LPCSTR              szDisplayString;
     PFNCFILTERPROC      pFilterCallback;
     PFNCCERTDISPLAYPROC pDisplayCallback;
     void               *pvCallbackData;
+    DWORD               cDisplayStores;
+    HCERTSTORE         *rghDisplayStores;
     DWORD               cStores;
     HCERTSTORE         *rghStores;
     DWORD               cPropSheetPages;
-    LPCPROPSHEETPAGEW   rgPropSheetPages;
+    LPCPROPSHEETPAGEA   rgPropSheetPages;
     HCERTSTORE          hSelectedCertStore;
 } CRYPTUI_SELECTCERTIFICATE_STRUCTA, *PCRYPTUI_SELECTCERTIFICATE_STRUCTA;
 typedef const CRYPTUI_SELECTCERTIFICATE_STRUCTA *
@@ -374,6 +376,8 @@ typedef struct _CRYPTUI_SELECTCERTIFICATE_STRUCTW
     PFNCFILTERPROC      pFilterCallback;
     PFNCCERTDISPLAYPROC pDisplayCallback;
     void               *pvCallbackData;
+    DWORD               cDisplayStores;
+    HCERTSTORE         *rghDisplayStores;
     DWORD               cStores;
     HCERTSTORE         *rghStores;
     DWORD               cPropSheetPages;
