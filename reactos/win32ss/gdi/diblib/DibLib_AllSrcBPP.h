@@ -42,6 +42,9 @@
 #undef _SOURCE_BPP
 #undef _NextPixel_
 
+#undef _DibXlate
+#define _DibXlate(pBltData, ulColor) (pBltData->pfnXlate(pBltData->pxlo, ulColor))
+
 PFN_DIBFUNCTION
 __PASTE(gapfn, __FUNCTIONNAME)[7][7] =
 {
