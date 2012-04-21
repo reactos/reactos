@@ -44,10 +44,7 @@ _DibFunction(PBLTDATA pBltData)
 #if __USES_PATTERN
     pjPatBase = pBltData->siPat.pjBase;
     pjPatBase += pBltData->siPat.ptOrig.y * pBltData->siPat.lDelta;
-    pjPattern = pjPatBase + pBltData->siPat.ptOrig.x * _DEST_BPP / 8;
-    _CALCSHIFT(_DEST_BPP, &jPatShift, pBltData->siPat.ptOrig.x);
     cPatLines = pBltData->ulPatHeight - pBltData->siPat.ptOrig.y;
-    cPatRows = pBltData->ulPatWidth - pBltData->siPat.ptOrig.x;
 #endif
     pjDestBase = pBltData->siDst.pjBase;
 #if __USES_SOURCE
@@ -68,6 +65,11 @@ _DibFunction(PBLTDATA pBltData)
 #if __USES_MASK
         pjMask = pjMaskBase;
         _CALCSHIFT_1(&jMskShift, pBltData->siMsk.ptOrig.x);
+#endif
+#if __USES_PATTERN
+        pjPattern = pjPatBase + pBltData->siPat.ptOrig.x * _DEST_BPP / 8;
+        _CALCSHIFT(_DEST_BPP, &jPatShift, pBltData->siPat.ptOrig.x);
+        cPatRows = pBltData->ulPatWidth - pBltData->siPat.ptOrig.x;
 #endif
 
         /* Loop all rows */

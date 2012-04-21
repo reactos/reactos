@@ -72,10 +72,22 @@ CalculateCoordinates(
     {
         /* Calculate start point and bitpointer for pattern */
         pbltdata->siPat.ptOrig.x = (pptlPat->x + cx) % psizlPat->cx;
-        pbltdata->siPat.ptOrig.y = (pptlPat->x + cy) % psizlPat->cy;
+        pbltdata->siPat.ptOrig.y = (pptlPat->y + cy) % psizlPat->cy;
         pbltdata->siPat.pjBase = pbltdata->siPat.pvScan0;
-        pbltdata->siPat.pjBase += pbltdata->siPat.ptOrig.y * pbltdata->siPat.lDelta;
-        pbltdata->siPat.pjBase += pbltdata->siPat.ptOrig.x * pbltdata->siPat.jBpp / 8;
+
+        /* Check for bottom-up case */
+        if (pbltdata->dy < 0)
+        {
+            pbltdata->siPat.pjBase += (psizlPat->cy - 1) * pbltdata->siPat.lDelta;
+            pbltdata->siPat.ptOrig.y = psizlPat->cy - 1 - pbltdata->siPat.ptOrig.y;
+        }
+
+        /* Check for right-to-left case */
+        if (pbltdata->siDst.iFormat == 0)
+        {
+            pbltdata->siPat.pjBase += (psizlPat->cx - 1) * pbltdata->siMsk.jBpp / 8;
+            pbltdata->siPat.ptOrig.x = psizlPat->cx - 1 - pbltdata->siPat.ptOrig.x;
+        }
     }
 }
 
@@ -369,7 +381,7 @@ IntEngBitBlt(
 {
     BOOL bResult;
     RECTL rcClipped;
-    POINTL ptOffset, ptSrc, ptMask;
+    POINTL ptOffset, ptSrc, ptMask, ptBrush;
     SIZEL sizTrg;
     PFN_DrvBitBlt pfnBitBlt;
 
@@ -461,6 +473,14 @@ IntEngBitBlt(
     ptMask.x += ptOffset.x;
     ptMask.y += ptOffset.y;
 
+    /* Check if we have a brush origin */
+    if (pptlBrush)
+    {
+        /* calculate the new brush origin */
+        ptBrush.x = pptlBrush->x + ptOffset.x;
+        ptBrush.y = pptlBrush->y + ptOffset.y;
+    }
+
     /* Recalculate the target rect */
     rcClipped.left = prclTrg->left + ptOffset.x;
     rcClipped.top = prclTrg->top + ptOffset.y;
@@ -499,7 +519,7 @@ IntEngBitBlt(
                         psoSrc ? &ptSrc : NULL,
                         psoMask ? &ptMask : NULL,
                         pbo,
-                        pptlBrush,
+                        pptlBrush ? &ptBrush : NULL,
                         rop4);
 
     // FIXME: cleanup temp surface!
