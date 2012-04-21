@@ -134,7 +134,7 @@ ToolsPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             {
                 switch (nmh->code)
                 {
-                    case NM_CLICK:
+                    case LVN_ITEMCHANGED:
                     {
                         lpnmitem = (LPNMITEMACTIVATE) lParam;
                         if (lpnmitem->iItem > -1)
