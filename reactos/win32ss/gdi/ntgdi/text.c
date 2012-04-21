@@ -278,6 +278,12 @@ NtGdiGetTextExtentExW(
     LPINT Dx;
     PTEXTOBJ TextObj;
 
+    if ((LONG)Count < 0)
+    {
+        EngSetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
     /* FIXME: Handle fl */
 
     if (0 == Count)
