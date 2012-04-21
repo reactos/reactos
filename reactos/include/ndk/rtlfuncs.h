@@ -2606,7 +2606,7 @@ RtlGetFullPathName_UEx(
     );
 #endif
 
-ULONG
+NTSTATUS
 NTAPI
 RtlGetFullPathName_UstrEx(
     IN PUNICODE_STRING FileName,

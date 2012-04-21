@@ -1778,7 +1778,7 @@ RtlDosSearchPath_U(IN PCWSTR Path,
 /*
  * @implemented
  */
-ULONG
+NTSTATUS
 NTAPI
 RtlGetFullPathName_UstrEx(IN PUNICODE_STRING FileName,
                           IN PUNICODE_STRING StaticString,
