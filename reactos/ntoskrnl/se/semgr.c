@@ -947,7 +947,7 @@ NtAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     /* Reference the token */
     Status = ObReferenceObjectByHandle(TokenHandle,
                                        TOKEN_QUERY,
-                                       SepTokenObjectType,
+                                       SeTokenObjectType,
                                        PreviousMode,
                                        (PVOID*)&Token,
                                        NULL);

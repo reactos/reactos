@@ -1,7 +1,5 @@
 #pragma once
 
-extern POBJECT_TYPE SepTokenObjectType;
-
 /* SID Authorities */
 extern SID_IDENTIFIER_AUTHORITY SeNullSidAuthority;
 extern SID_IDENTIFIER_AUTHORITY SeWorldSidAuthority;

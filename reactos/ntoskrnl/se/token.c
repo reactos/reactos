@@ -19,7 +19,7 @@
 
 /* GLOBALS ********************************************************************/
 
-POBJECT_TYPE SepTokenObjectType = NULL;
+POBJECT_TYPE SeTokenObjectType = NULL;
 ERESOURCE SepTokenLock;
 
 TOKEN_SOURCE SeSystemTokenSource = {"*SYSTEM*", {0}};
@@ -240,7 +240,7 @@ SepDuplicateToken(PTOKEN Token,
     PAGED_CODE();
 
     Status = ObCreateObject(PreviousMode,
-                            SepTokenObjectType,
+                            SeTokenObjectType,
                             ObjectAttributes,
                             PreviousMode,
                             NULL,
@@ -494,7 +494,7 @@ SepInitializeTokenImplementation(VOID)
     ObjectTypeInitializer.ValidAccessMask = TOKEN_ALL_ACCESS;
     ObjectTypeInitializer.UseDefaultObject = TRUE;
     ObjectTypeInitializer.DeleteProcedure = SepDeleteToken;
-    ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &SepTokenObjectType);
+    ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &SeTokenObjectType);
 }
 
 VOID
@@ -588,7 +588,7 @@ SepCreateToken(OUT PHANDLE TokenHandle,
         return Status;
 
     Status = ObCreateObject(PreviousMode,
-                            SepTokenObjectType,
+                            SeTokenObjectType,
                             ObjectAttributes,
                             PreviousMode,
                             NULL,
@@ -1035,7 +1035,7 @@ NtQueryInformationToken(IN HANDLE TokenHandle,
 
     Status = ObReferenceObjectByHandle(TokenHandle,
                                        (TokenInformationClass == TokenSource) ? TOKEN_QUERY_SOURCE : TOKEN_QUERY,
-                                       SepTokenObjectType,
+                                       SeTokenObjectType,
                                        PreviousMode,
                                        (PVOID*)&Token,
                                        NULL);
@@ -1602,7 +1602,7 @@ NtSetInformationToken(IN HANDLE TokenHandle,
 
     Status = ObReferenceObjectByHandle(TokenHandle,
                                        NeededAccess,
-                                       SepTokenObjectType,
+                                       SeTokenObjectType,
                                        PreviousMode,
                                        (PVOID*)&Token,
                                        NULL);
@@ -1845,7 +1845,7 @@ NtDuplicateToken(IN HANDLE ExistingTokenHandle,
 
     Status = ObReferenceObjectByHandle(ExistingTokenHandle,
                                        TOKEN_DUPLICATE,
-                                       SepTokenObjectType,
+                                       SeTokenObjectType,
                                        PreviousMode,
                                        (PVOID*)&Token,
                                        &HandleInformation);
@@ -2047,7 +2047,7 @@ NtAdjustPrivilegesToken(IN HANDLE TokenHandle,
     /* Reference the token */
     Status = ObReferenceObjectByHandle(TokenHandle,
                                        TOKEN_ADJUST_PRIVILEGES | (PreviousState != NULL ? TOKEN_QUERY : 0),
-                                       SepTokenObjectType,
+                                       SeTokenObjectType,
                                        PreviousMode,
                                        (PVOID*)&Token,
                                        NULL);
@@ -2474,7 +2474,7 @@ NtOpenThreadTokenEx(IN HANDLE ThreadHandle,
     else
     {
         Status = ObOpenObjectByPointer(Token, HandleAttributes,
-                                       NULL, DesiredAccess, SepTokenObjectType,
+                                       NULL, DesiredAccess, SeTokenObjectType,
                                        PreviousMode, &hToken);
     }
 
@@ -2561,7 +2561,7 @@ NtCompareTokens(IN HANDLE FirstTokenHandle,
 
     Status = ObReferenceObjectByHandle(FirstTokenHandle,
                                        TOKEN_QUERY,
-                                       SepTokenObjectType,
+                                       SeTokenObjectType,
                                        PreviousMode,
                                        (PVOID*)&FirstToken,
                                        NULL);
@@ -2570,7 +2570,7 @@ NtCompareTokens(IN HANDLE FirstTokenHandle,
 
     Status = ObReferenceObjectByHandle(SecondTokenHandle,
                                        TOKEN_QUERY,
-                                       SepTokenObjectType,
+                                       SeTokenObjectType,
                                        PreviousMode,
                                        (PVOID*)&SecondToken,
                                        NULL);

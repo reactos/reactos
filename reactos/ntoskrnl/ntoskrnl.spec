@@ -1384,6 +1384,7 @@
 @ stdcall SeTokenIsAdmin(ptr)
 @ stdcall SeTokenIsRestricted(ptr)
 @ stdcall SeTokenIsWriteRestricted(ptr)
+@ extern SeTokenObjectType
 @ stdcall SeTokenType(ptr)
 @ stdcall SeUnlockSubjectContext(ptr)
 @ stdcall SeUnregisterLogonSessionTerminatedRoutine(ptr)

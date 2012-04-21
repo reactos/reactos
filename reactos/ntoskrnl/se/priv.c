@@ -531,7 +531,7 @@ NtPrivilegeCheck(IN HANDLE ClientToken,
      not doing an anonymous impersonation */
     Status = ObReferenceObjectByHandle(ClientToken,
                                        TOKEN_QUERY,
-                                       SepTokenObjectType,
+                                       SeTokenObjectType,
                                        PreviousMode,
                                        (PVOID*)&Token,
                                        NULL);
