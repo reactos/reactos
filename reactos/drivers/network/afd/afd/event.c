@@ -44,48 +44,48 @@ NTSTATUS AfdEventReceive(
     IN PVOID Tsdu,
     OUT PIRP *IoRequestPacket)
 {
-  PAFDFCB FCB = (PAFDFCB)TdiEventContext;
-  PVOID ReceiveBuffer;
-  PAFD_BUFFER Buffer;
-  KIRQL OldIrql;
+    PAFDFCB FCB = (PAFDFCB)TdiEventContext;
+    PVOID ReceiveBuffer;
+    PAFD_BUFFER Buffer;
+    KIRQL OldIrql;
 
-  AFD_DbgPrint(MAX_TRACE, ("Called.\n"));
+    AFD_DbgPrint(MAX_TRACE, ("Called.\n"));
 
-  AFD_DbgPrint(MID_TRACE, ("Receiving (%d) bytes on socket\n",
-			   BytesAvailable));
+    AFD_DbgPrint(MID_TRACE, ("Receiving (%d) bytes on socket\n",
+                             BytesAvailable));
 
-  ReceiveBuffer = ExAllocatePool(NonPagedPool, BytesAvailable);
-  if (!ReceiveBuffer)
-    return STATUS_INSUFFICIENT_RESOURCES;
+    ReceiveBuffer = ExAllocatePool(NonPagedPool, BytesAvailable);
+    if (!ReceiveBuffer)
+        return STATUS_INSUFFICIENT_RESOURCES;
 
-  /*Buffer = (PAFD_BUFFER)ExAllocateFromNPagedLookasideList(
-    &BufferLookasideList);*/
-  Buffer = (PAFD_BUFFER)ExAllocatePool(NonPagedPool, sizeof(AFD_BUFFER));
-  if (!Buffer) {
-    ExFreePool(ReceiveBuffer);
-    return STATUS_INSUFFICIENT_RESOURCES;
-  }
+    /*Buffer = (PAFD_BUFFER)ExAllocateFromNPagedLookasideList(
+      &BufferLookasideList);*/
+    Buffer = (PAFD_BUFFER)ExAllocatePool(NonPagedPool, sizeof(AFD_BUFFER));
+    if (!Buffer) {
+        ExFreePool(ReceiveBuffer);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
 
-  /* Copy the data to a local buffer */
-  RtlCopyMemory(ReceiveBuffer, Tsdu, BytesAvailable);
+    /* Copy the data to a local buffer */
+    RtlCopyMemory(ReceiveBuffer, Tsdu, BytesAvailable);
 
-  Buffer->Buffer.len = BytesAvailable;
-  Buffer->Buffer.buf = ReceiveBuffer;
-  Buffer->Offset = 0;
+    Buffer->Buffer.len = BytesAvailable;
+    Buffer->Buffer.buf = ReceiveBuffer;
+    Buffer->Offset = 0;
 
-  KeAcquireSpinLock(&FCB->ReceiveQueueLock, &OldIrql);
+    KeAcquireSpinLock(&FCB->ReceiveQueueLock, &OldIrql);
 
-  InsertTailList( &FCB->ReceiveQueue, &Buffer->ListEntry );
+    InsertTailList( &FCB->ReceiveQueue, &Buffer->ListEntry );
 
-  TryToSatisfyRecvRequest( FCB, TRUE );
+    TryToSatisfyRecvRequest( FCB, TRUE );
 
-  KeReleaseSpinLock(&FCB->ReceiveQueueLock, OldIrql);
+    KeReleaseSpinLock(&FCB->ReceiveQueueLock, OldIrql);
 
-  *BytesTaken = BytesAvailable;
+    *BytesTaken = BytesAvailable;
 
-  AFD_DbgPrint(MAX_TRACE, ("Leaving.\n"));
+    AFD_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 
-  return STATUS_SUCCESS;
+    return STATUS_SUCCESS;
 }
 
 
@@ -121,89 +121,87 @@ NTSTATUS ClientEventChainedReceive(
 
 
 NTSTATUS AfdEventReceiveDatagramHandler(
-  IN PVOID TdiEventContext,
-  IN LONG SourceAddressLength,
-  IN PVOID SourceAddress,
-  IN LONG OptionsLength,
-  IN PVOID Options,
-  IN ULONG ReceiveDatagramFlags,
-  IN ULONG BytesIndicated,
-  IN ULONG BytesAvailable,
-  OUT ULONG *BytesTaken,
-  IN PVOID Tsdu,
-  OUT PIRP *IoRequestPacket)
+    IN PVOID TdiEventContext,
+    IN LONG SourceAddressLength,
+    IN PVOID SourceAddress,
+    IN LONG OptionsLength,
+    IN PVOID Options,
+    IN ULONG ReceiveDatagramFlags,
+    IN ULONG BytesIndicated,
+    IN ULONG BytesAvailable,
+    OUT ULONG *BytesTaken,
+    IN PVOID Tsdu,
+    OUT PIRP *IoRequestPacket)
 {
-  PAFDFCB FCB = (PAFDFCB)TdiEventContext;
-  PAFD_READ_REQUEST ReadRequest;
-  PVOID ReceiveBuffer;
-  PAFD_BUFFER Buffer;
-  PLIST_ENTRY Entry;
-  NTSTATUS Status;
-  KIRQL OldIrql;
-  ULONG Count;
-  BOOLEAN CompleteIrp;
+    PAFDFCB FCB = (PAFDFCB)TdiEventContext;
+    PAFD_READ_REQUEST ReadRequest;
+    PVOID ReceiveBuffer;
+    PAFD_BUFFER Buffer;
+    PLIST_ENTRY Entry;
+    NTSTATUS Status;
+    KIRQL OldIrql;
+    ULONG Count;
+    BOOLEAN CompleteIrp;
 
-  AFD_DbgPrint(MAX_TRACE, ("Called.\n"));
+    AFD_DbgPrint(MAX_TRACE, ("Called.\n"));
 
-  AFD_DbgPrint(MID_TRACE, ("Receiving (%d) bytes from (0x%X).\n",
-    BytesAvailable, *(PULONG)SourceAddress));
+    AFD_DbgPrint(MID_TRACE, ("Receiving (%d) bytes from (0x%X).\n",
+                             BytesAvailable, *(PULONG)SourceAddress));
 
-  ReceiveBuffer = ExAllocatePool(NonPagedPool, BytesAvailable);
-  if (!ReceiveBuffer)
-    return STATUS_INSUFFICIENT_RESOURCES;
+    ReceiveBuffer = ExAllocatePool(NonPagedPool, BytesAvailable);
+    if (!ReceiveBuffer)
+        return STATUS_INSUFFICIENT_RESOURCES;
 
-  /*Buffer = (PAFD_BUFFER)ExAllocateFromNPagedLookasideList(
-    &BufferLookasideList);*/
-  Buffer = (PAFD_BUFFER)ExAllocatePool(NonPagedPool, sizeof(AFD_BUFFER));
-  if (!Buffer) {
-    ExFreePool(ReceiveBuffer);
-    return STATUS_INSUFFICIENT_RESOURCES;
-  }
+    /*Buffer = (PAFD_BUFFER)ExAllocateFromNPagedLookasideList(
+      &BufferLookasideList);*/
+    Buffer = (PAFD_BUFFER)ExAllocatePool(NonPagedPool, sizeof(AFD_BUFFER));
+    if (!Buffer) {
+        ExFreePool(ReceiveBuffer);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
 
-  /* Copy the data to a local buffer */
-  RtlCopyMemory(ReceiveBuffer, Tsdu, BytesAvailable);
+    /* Copy the data to a local buffer */
+    RtlCopyMemory(ReceiveBuffer, Tsdu, BytesAvailable);
 
-  Buffer->Buffer.len = BytesAvailable;
-  Buffer->Buffer.buf = ReceiveBuffer;
-  Buffer->Offset = 0;
+    Buffer->Buffer.len = BytesAvailable;
+    Buffer->Buffer.buf = ReceiveBuffer;
+    Buffer->Offset = 0;
 
-  ExInterlockedInsertTailList(
-    &FCB->ReceiveQueue,
-    &Buffer->ListEntry,
-    &FCB->ReceiveQueueLock);
+    ExInterlockedInsertTailList(&FCB->ReceiveQueue,
+                                &Buffer->ListEntry,
+                                &FCB->ReceiveQueueLock);
 
-  KeAcquireSpinLock(&FCB->ReceiveQueueLock, &OldIrql);
+    KeAcquireSpinLock(&FCB->ReceiveQueueLock, &OldIrql);
 
-  if (CompleteIrp = !IsListEmpty(&FCB->ReadRequestQueue)) {
-    AFD_DbgPrint(MAX_TRACE, ("Satisfying read request.\n"));
+    if (CompleteIrp = !IsListEmpty(&FCB->ReadRequestQueue)) {
+        AFD_DbgPrint(MAX_TRACE, ("Satisfying read request.\n"));
 
-    Entry = RemoveHeadList(&FCB->ReceiveQueue);
-    ReadRequest = CONTAINING_RECORD(Entry, AFD_READ_REQUEST, ListEntry);
+        Entry = RemoveHeadList(&FCB->ReceiveQueue);
+        ReadRequest = CONTAINING_RECORD(Entry, AFD_READ_REQUEST, ListEntry);
 
-    Status = FillWSABuffers(
-      FCB,
-      ReadRequest->RecvFromRequest->Buffers,
-      ReadRequest->RecvFromRequest->BufferCount,
-      &Count,
-      FALSE ); /* Packet oriented */
-    ReadRequest->RecvFromReply->NumberOfBytesRecvd = Count;
-    ReadRequest->RecvFromReply->Status = NO_ERROR;
+        Status = FillWSABuffers(FCB,
+                                ReadRequest->RecvFromRequest->Buffers,
+                                ReadRequest->RecvFromRequest->BufferCount,
+                                &Count,
+                                FALSE); /* Packet oriented */
+        ReadRequest->RecvFromReply->NumberOfBytesRecvd = Count;
+        ReadRequest->RecvFromReply->Status = NO_ERROR;
 
-    ReadRequest->Irp->IoStatus.Information = 0;
-    ReadRequest->Irp->IoStatus.Status = Status;
-  }
+        ReadRequest->Irp->IoStatus.Information = 0;
+        ReadRequest->Irp->IoStatus.Status = Status;
+    }
 
-  KeReleaseSpinLock(&FCB->ReceiveQueueLock, OldIrql);
+    KeReleaseSpinLock(&FCB->ReceiveQueueLock, OldIrql);
 
-  if (CompleteIrp) {
-    AFD_DbgPrint(MAX_TRACE, ("Completing IRP at (0x%X).\n", ReadRequest->Irp));
-    IoCompleteRequest(ReadRequest->Irp, IO_NETWORK_INCREMENT);
-    *BytesTaken = BytesAvailable;
-  }
+    if (CompleteIrp) {
+        AFD_DbgPrint(MAX_TRACE, ("Completing IRP at (0x%X).\n", ReadRequest->Irp));
+        IoCompleteRequest(ReadRequest->Irp, IO_NETWORK_INCREMENT);
+        *BytesTaken = BytesAvailable;
+    }
 
-  AFD_DbgPrint(MAX_TRACE, ("Leaving.\n"));
+    AFD_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 
-  return STATUS_SUCCESS;
+    return STATUS_SUCCESS;
 }
 
 

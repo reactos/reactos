@@ -26,9 +26,9 @@ void OskitDumpBuffer( PCHAR Data, UINT Len ) {
     unsigned int i;
 
     for( i = 0; i < Len; i++ ) {
-	if( i && !(i & 0xf) ) DbgPrint( "\n" );
-	if( !(i & 0xf) ) DbgPrint( "%08x: ", (UINT)(Data + i) );
-	DbgPrint( " %02x", Data[i] & 0xff );
+        if( i && !(i & 0xf) ) DbgPrint( "\n" );
+        if( !(i & 0xf) ) DbgPrint( "%08x: ", (UINT)(Data + i) );
+        DbgPrint( " %02x", Data[i] & 0xff );
     }
     DbgPrint("\n");
 }
@@ -40,7 +40,7 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath);
 
 NTSTATUS NTAPI
 AfdGetDisconnectOptions(PDEVICE_OBJECT DeviceObject, PIRP Irp,
-	          PIO_STACK_LOCATION IrpSp)
+                        PIO_STACK_LOCATION IrpSp)
 {
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
@@ -68,7 +68,7 @@ AfdGetDisconnectOptions(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 NTSTATUS
 NTAPI
 AfdSetDisconnectOptions(PDEVICE_OBJECT DeviceObject, PIRP Irp,
-                  PIO_STACK_LOCATION IrpSp)
+                        PIO_STACK_LOCATION IrpSp)
 {
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
@@ -76,7 +76,7 @@ AfdSetDisconnectOptions(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     UINT DisconnectOptionsSize = IrpSp->Parameters.DeviceIoControl.InputBufferLength;
 
     if (!SocketAcquireStateLock(FCB)) return LostSocket(Irp);
-    
+
     if (!DisconnectOptions)
         return UnlockAndMaybeComplete(FCB, STATUS_NO_MEMORY, Irp, 0);
 
@@ -89,7 +89,8 @@ AfdSetDisconnectOptions(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     }
 
     FCB->DisconnectOptions = ExAllocatePool(PagedPool, DisconnectOptionsSize);
-    if (!FCB->DisconnectOptions) return UnlockAndMaybeComplete(FCB, STATUS_NO_MEMORY, Irp, 0);
+    if (!FCB->DisconnectOptions)
+        return UnlockAndMaybeComplete(FCB, STATUS_NO_MEMORY, Irp, 0);
 
     RtlCopyMemory(FCB->DisconnectOptions,
                   DisconnectOptions,
@@ -111,7 +112,7 @@ AfdSetDisconnectOptionsSize(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     UINT BufferSize = IrpSp->Parameters.DeviceIoControl.InputBufferLength;
 
     if (!SocketAcquireStateLock(FCB)) return LostSocket(Irp);
-    
+
     if (!DisconnectOptionsSize)
         return UnlockAndMaybeComplete(FCB, STATUS_NO_MEMORY, Irp, 0);
 
@@ -138,7 +139,7 @@ AfdSetDisconnectOptionsSize(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
 NTSTATUS NTAPI
 AfdGetDisconnectData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
-	          PIO_STACK_LOCATION IrpSp)
+                  PIO_STACK_LOCATION IrpSp)
 {
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
@@ -154,7 +155,8 @@ AfdGetDisconnectData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     ASSERT(FCB->DisconnectData);
 
-    if (FCB->FilledDisconnectData < BufferSize) BufferSize = FCB->FilledDisconnectData;
+    if (FCB->FilledDisconnectData < BufferSize)
+        BufferSize = FCB->FilledDisconnectData;
 
     RtlCopyMemory(Irp->UserBuffer,
                   FCB->DisconnectData,
@@ -166,7 +168,7 @@ AfdGetDisconnectData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 NTSTATUS
 NTAPI
 AfdSetDisconnectData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
-                  PIO_STACK_LOCATION IrpSp)
+                     PIO_STACK_LOCATION IrpSp)
 {
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
@@ -174,7 +176,7 @@ AfdSetDisconnectData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     UINT DisconnectDataSize = IrpSp->Parameters.DeviceIoControl.InputBufferLength;
 
     if (!SocketAcquireStateLock(FCB)) return LostSocket(Irp);
-    
+
     if (!DisconnectData)
         return UnlockAndMaybeComplete(FCB, STATUS_NO_MEMORY, Irp, 0);
 
@@ -187,7 +189,8 @@ AfdSetDisconnectData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     }
 
     FCB->DisconnectData = ExAllocatePool(PagedPool, DisconnectDataSize);
-    if (!FCB->DisconnectData) return UnlockAndMaybeComplete(FCB, STATUS_NO_MEMORY, Irp, 0);
+    if (!FCB->DisconnectData)
+        return UnlockAndMaybeComplete(FCB, STATUS_NO_MEMORY, Irp, 0);
 
     RtlCopyMemory(FCB->DisconnectData,
                   DisconnectData,
@@ -209,7 +212,7 @@ AfdSetDisconnectDataSize(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     UINT BufferSize = IrpSp->Parameters.DeviceIoControl.InputBufferLength;
 
     if (!SocketAcquireStateLock(FCB)) return LostSocket(Irp);
-    
+
     if (!DisconnectDataSize)
         return UnlockAndMaybeComplete(FCB, STATUS_NO_MEMORY, Irp, 0);
 
@@ -227,7 +230,8 @@ AfdSetDisconnectDataSize(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     }
 
     FCB->DisconnectData = ExAllocatePool(PagedPool, *DisconnectDataSize);
-    if (!FCB->DisconnectData) return UnlockAndMaybeComplete(FCB, STATUS_NO_MEMORY, Irp, 0);
+    if (!FCB->DisconnectData)
+        return UnlockAndMaybeComplete(FCB, STATUS_NO_MEMORY, Irp, 0);
 
     FCB->DisconnectDataSize = *DisconnectDataSize;
 
@@ -244,7 +248,7 @@ AfdGetTdiHandles(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     PAFD_TDI_HANDLE_DATA HandleData = Irp->UserBuffer;
 
     if (!SocketAcquireStateLock(FCB)) return LostSocket(Irp);
-    
+
     if (!HandleFlags)
         return UnlockAndMaybeComplete(FCB, STATUS_NO_MEMORY, Irp, 0);
 
@@ -266,7 +270,7 @@ AfdGetTdiHandles(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
 static NTSTATUS NTAPI
 AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
-		PIO_STACK_LOCATION IrpSp) {
+                PIO_STACK_LOCATION IrpSp) {
     PAFD_FCB FCB;
     PFILE_OBJECT FileObject;
     PAFD_DEVICE_EXTENSION DeviceExt;
@@ -278,8 +282,8 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     UINT i;
     NTSTATUS Status = STATUS_SUCCESS;
 
-    AFD_DbgPrint(MID_TRACE,
-		 ("AfdCreate(DeviceObject %p Irp %p)\n", DeviceObject, Irp));
+    AFD_DbgPrint(MID_TRACE,("AfdCreate(DeviceObject %p Irp %p)\n",
+                            DeviceObject, Irp));
 
     DeviceExt = DeviceObject->DeviceExtension;
     FileObject = IrpSp->FileObject;
@@ -290,25 +294,26 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     EaInfo = Irp->AssociatedIrp.SystemBuffer;
 
     if( EaInfo ) {
-	ConnectInfo = (PAFD_CREATE_PACKET)(EaInfo->EaName + EaInfo->EaNameLength + 1);
-	EaInfoValue = (PWCHAR)(((PCHAR)ConnectInfo) + sizeof(AFD_CREATE_PACKET));
+        ConnectInfo = (PAFD_CREATE_PACKET)(EaInfo->EaName + EaInfo->EaNameLength + 1);
+        EaInfoValue = (PWCHAR)(((PCHAR)ConnectInfo) + sizeof(AFD_CREATE_PACKET));
 
-	//EaLength = sizeof(FILE_FULL_EA_INFORMATION) + EaInfo->EaNameLength + EaInfo->EaValueLength;
+        //EaLength = sizeof(FILE_FULL_EA_INFORMATION) + EaInfo->EaNameLength + EaInfo->EaValueLength;
 
-	AFD_DbgPrint(MID_TRACE,("EaInfo: %x, EaInfoValue: %x\n",
-				EaInfo, EaInfoValue));
+        AFD_DbgPrint(MID_TRACE,("EaInfo: %x, EaInfoValue: %x\n",
+                                EaInfo, EaInfoValue));
     }
 
     AFD_DbgPrint(MID_TRACE,("About to allocate the new FCB\n"));
 
     FCB = ExAllocatePool(NonPagedPool, sizeof(AFD_FCB));
     if( FCB == NULL ) {
-	Irp->IoStatus.Status = STATUS_NO_MEMORY;
-	IoCompleteRequest(Irp, IO_NO_INCREMENT);
-	return STATUS_NO_MEMORY;
+        Irp->IoStatus.Status = STATUS_NO_MEMORY;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return STATUS_NO_MEMORY;
     }
 
-    AFD_DbgPrint(MID_TRACE,("Initializing the new FCB @ %x (FileObject %x Flags %x)\n", FCB, FileObject, ConnectInfo ? ConnectInfo->EndpointFlags : 0));
+    AFD_DbgPrint(MID_TRACE,("Initializing the new FCB @ %x (FileObject %x Flags %x)\n",
+                            FCB, FileObject, ConnectInfo ? ConnectInfo->EndpointFlags : 0));
 
     RtlZeroMemory( FCB, sizeof( *FCB ) );
 
@@ -324,7 +329,7 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     KeInitializeMutex( &FCB->Mutex, 0 );
 
     for( i = 0; i < MAX_FUNCTIONS; i++ ) {
-	InitializeListHead( &FCB->PendingIrpList[i] );
+        InitializeListHead( &FCB->PendingIrpList[i] );
     }
 
     InitializeListHead( &FCB->DatagramList );
@@ -333,27 +338,27 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     AFD_DbgPrint(MID_TRACE,("%x: Checking command channel\n", FCB));
 
     if( ConnectInfo ) {
-	FCB->TdiDeviceName.Length = ConnectInfo->SizeOfTransportName;
-	FCB->TdiDeviceName.MaximumLength = FCB->TdiDeviceName.Length;
-	FCB->TdiDeviceName.Buffer =
-	    ExAllocatePool( NonPagedPool, FCB->TdiDeviceName.Length );
+        FCB->TdiDeviceName.Length = ConnectInfo->SizeOfTransportName;
+        FCB->TdiDeviceName.MaximumLength = FCB->TdiDeviceName.Length;
+        FCB->TdiDeviceName.Buffer =
+            ExAllocatePool( NonPagedPool, FCB->TdiDeviceName.Length );
 
-	if( !FCB->TdiDeviceName.Buffer ) {
-	    ExFreePool(FCB);
-	    AFD_DbgPrint(MID_TRACE,("Could not copy target string\n"));
-	    Irp->IoStatus.Status = STATUS_NO_MEMORY;
-	    IoCompleteRequest( Irp, IO_NETWORK_INCREMENT );
-	    return STATUS_NO_MEMORY;
-	}
+        if( !FCB->TdiDeviceName.Buffer ) {
+            ExFreePool(FCB);
+            AFD_DbgPrint(MID_TRACE,("Could not copy target string\n"));
+            Irp->IoStatus.Status = STATUS_NO_MEMORY;
+            IoCompleteRequest( Irp, IO_NETWORK_INCREMENT );
+            return STATUS_NO_MEMORY;
+        }
 
-	RtlCopyMemory( FCB->TdiDeviceName.Buffer,
-		       ConnectInfo->TransportName,
-		       FCB->TdiDeviceName.Length );
+        RtlCopyMemory( FCB->TdiDeviceName.Buffer,
+                       ConnectInfo->TransportName,
+                       FCB->TdiDeviceName.Length );
 
-	AFD_DbgPrint(MID_TRACE,("Success: %s %wZ\n",
-				EaInfo->EaName, &FCB->TdiDeviceName));
+        AFD_DbgPrint(MID_TRACE,("Success: %s %wZ\n",
+                                EaInfo->EaName, &FCB->TdiDeviceName));
     } else {
-	AFD_DbgPrint(MID_TRACE,("Success: Control connection\n"));
+        AFD_DbgPrint(MID_TRACE,("Success: Control connection\n"));
     }
 
     FileObject->FsContext = FCB;
@@ -361,17 +366,17 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     /* It seems that UDP sockets are writable from inception */
     if( FCB->Flags & AFD_ENDPOINT_CONNECTIONLESS ) {
         AFD_DbgPrint(MID_TRACE,("Packet oriented socket\n"));
-        
-	/* A datagram socket is always sendable */
-	FCB->PollState |= AFD_EVENT_SEND;
+
+        /* A datagram socket is always sendable */
+        FCB->PollState |= AFD_EVENT_SEND;
         FCB->PollStatus[FD_WRITE_BIT] = STATUS_SUCCESS;
         PollReeval( FCB->DeviceExt, FCB->FileObject );
     }
 
     if( !NT_SUCCESS(Status) ) {
-	if( FCB->TdiDeviceName.Buffer ) ExFreePool( FCB->TdiDeviceName.Buffer );
-	ExFreePool( FCB );
-	FileObject->FsContext = NULL;
+        if( FCB->TdiDeviceName.Buffer ) ExFreePool( FCB->TdiDeviceName.Buffer );
+        ExFreePool( FCB );
+        FileObject->FsContext = NULL;
     }
 
     Irp->IoStatus.Status = Status;
@@ -414,7 +419,7 @@ AfdCleanupSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
 static NTSTATUS NTAPI
 AfdCloseSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
-	       PIO_STACK_LOCATION IrpSp)
+               PIO_STACK_LOCATION IrpSp)
 {
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
@@ -422,10 +427,10 @@ AfdCloseSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     PAFD_IN_FLIGHT_REQUEST InFlightRequest[IN_FLIGHT_REQUESTS];
     PAFD_TDI_OBJECT_QELT Qelt;
     PLIST_ENTRY QeltEntry;
-    
 
-    AFD_DbgPrint(MID_TRACE,
-		 ("AfdClose(DeviceObject %p Irp %p)\n", DeviceObject, Irp));
+
+    AFD_DbgPrint(MID_TRACE,("AfdClose(DeviceObject %p Irp %p)\n",
+                            DeviceObject, Irp));
 
     if( !SocketAcquireStateLock( FCB ) ) return STATUS_FILE_CLOSED;
 
@@ -439,11 +444,11 @@ AfdCloseSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     /* Cancel our pending requests */
     for( i = 0; i < IN_FLIGHT_REQUESTS; i++ ) {
-	if( InFlightRequest[i]->InFlightRequest ) {
-	    AFD_DbgPrint(MID_TRACE,("Cancelling in flight irp %d (%x)\n",
-				    i, InFlightRequest[i]->InFlightRequest));
+        if( InFlightRequest[i]->InFlightRequest ) {
+            AFD_DbgPrint(MID_TRACE,("Cancelling in flight irp %d (%x)\n",
+                                    i, InFlightRequest[i]->InFlightRequest));
             IoCancelIrp(InFlightRequest[i]->InFlightRequest);
-	}
+        }
     }
 
     KillSelectsForFCB( FCB->DeviceExt, FileObject, FALSE );
@@ -476,17 +481,17 @@ AfdCloseSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         ExFreePool( FCB->Context );
 
     if( FCB->Recv.Window )
-	ExFreePool( FCB->Recv.Window );
+        ExFreePool( FCB->Recv.Window );
 
     if( FCB->Send.Window )
-	ExFreePool( FCB->Send.Window );
+        ExFreePool( FCB->Send.Window );
 
     if( FCB->AddressFrom )
-	ExFreePool( FCB->AddressFrom );
+        ExFreePool( FCB->AddressFrom );
 
     if( FCB->ConnectCallInfo )
         ExFreePool( FCB->ConnectCallInfo );
-    
+
     if( FCB->ConnectReturnInfo )
         ExFreePool( FCB->ConnectReturnInfo );
 
@@ -503,19 +508,19 @@ AfdCloseSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         ExFreePool( FCB->DisconnectOptions );
 
     if( FCB->LocalAddress )
-	ExFreePool( FCB->LocalAddress );
+        ExFreePool( FCB->LocalAddress );
 
     if( FCB->RemoteAddress )
-	ExFreePool( FCB->RemoteAddress );
+        ExFreePool( FCB->RemoteAddress );
 
     if( FCB->Connection.Object )
     {
         TdiDisassociateAddressFile(FCB->Connection.Object);
-	ObDereferenceObject(FCB->Connection.Object);
+        ObDereferenceObject(FCB->Connection.Object);
     }
 
     if( FCB->AddressFile.Object )
-	ObDereferenceObject(FCB->AddressFile.Object);
+        ObDereferenceObject(FCB->AddressFile.Object);
 
     if( FCB->AddressFile.Handle != INVALID_HANDLE_VALUE )
     {
@@ -534,7 +539,7 @@ AfdCloseSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     }
 
     if( FCB->TdiDeviceName.Buffer )
-	ExFreePool(FCB->TdiDeviceName.Buffer);
+        ExFreePool(FCB->TdiDeviceName.Buffer);
 
     ExFreePool(FCB);
 
@@ -557,17 +562,17 @@ DisconnectComplete(PDEVICE_OBJECT DeviceObject,
     PAFD_FCB FCB = Context;
     PIRP CurrentIrp;
     PLIST_ENTRY CurrentEntry;
-    
-    if( !SocketAcquireStateLock( FCB ) )
+
+    if (!SocketAcquireStateLock(FCB))
         return STATUS_FILE_CLOSED;
-    
+
     ASSERT(FCB->DisconnectIrp.InFlightRequest == Irp);
     FCB->DisconnectIrp.InFlightRequest = NULL;
-    
+
     ASSERT(FCB->DisconnectPending);
     ASSERT((IsListEmpty(&FCB->PendingIrpList[FUNCTION_SEND]) && !FCB->SendIrp.InFlightRequest) ||
            (FCB->DisconnectFlags & TDI_DISCONNECT_ABORT));
-    
+
     if (NT_SUCCESS(Irp->IoStatus.Status) && (FCB->DisconnectFlags & TDI_DISCONNECT_RELEASE))
     {
         FCB->FilledDisconnectData = MIN(FCB->DisconnectDataSize, FCB->ConnectReturnInfo->UserDataLength);
@@ -577,7 +582,7 @@ DisconnectComplete(PDEVICE_OBJECT DeviceObject,
                           FCB->ConnectReturnInfo->UserData,
                           FCB->FilledDisconnectData);
         }
-        
+
         FCB->FilledDisconnectOptions = MIN(FCB->DisconnectOptionsSize, FCB->ConnectReturnInfo->OptionsLength);
         if (FCB->FilledDisconnectOptions)
         {
@@ -586,9 +591,9 @@ DisconnectComplete(PDEVICE_OBJECT DeviceObject,
                           FCB->FilledDisconnectOptions);
         }
     }
-    
+
     FCB->DisconnectPending = FALSE;
-    
+
     while (!IsListEmpty(&FCB->PendingIrpList[FUNCTION_DISCONNECT]))
     {
         CurrentEntry = RemoveHeadList(&FCB->PendingIrpList[FUNCTION_DISCONNECT]);
@@ -599,7 +604,7 @@ DisconnectComplete(PDEVICE_OBJECT DeviceObject,
         (void)IoSetCancelRoutine(CurrentIrp, NULL);
         IoCompleteRequest(CurrentIrp, IO_NETWORK_INCREMENT );
     }
-    
+
     if (!(FCB->DisconnectFlags & TDI_DISCONNECT_RELEASE))
     {
         /* Signal complete connection closure immediately */
@@ -607,9 +612,9 @@ DisconnectComplete(PDEVICE_OBJECT DeviceObject,
         FCB->PollStatus[FD_CLOSE_BIT] = Irp->IoStatus.Status;
         PollReeval(FCB->DeviceExt, FCB->FileObject);
     }
-    
+
     SocketStateUnlock(FCB);
-    
+
     return Irp->IoStatus.Status;
 }
 
@@ -618,11 +623,11 @@ NTSTATUS
 DoDisconnect(PAFD_FCB FCB)
 {
     NTSTATUS Status;
-    
+
     ASSERT(FCB->DisconnectPending);
     ASSERT((IsListEmpty(&FCB->PendingIrpList[FUNCTION_SEND]) && !FCB->SendIrp.InFlightRequest) ||
            (FCB->DisconnectFlags & TDI_DISCONNECT_ABORT));
-    
+
     if (FCB->DisconnectIrp.InFlightRequest)
     {
         return STATUS_PENDING;
@@ -646,7 +651,7 @@ DoDisconnect(PAFD_FCB FCB)
     {
         FCB->DisconnectPending = FALSE;
     }
-    
+
     return Status;
 }
 
@@ -664,7 +669,7 @@ RetryDisconnectCompletion(PAFD_FCB FCB)
 
 static NTSTATUS NTAPI
 AfdDisconnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
-	      PIO_STACK_LOCATION IrpSp) {
+              PIO_STACK_LOCATION IrpSp) {
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
     PAFD_DISCONNECT_INFO DisReq;
@@ -673,12 +678,12 @@ AfdDisconnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     PLIST_ENTRY CurrentEntry;
     PIRP CurrentIrp;
 
-    if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
+    if (!SocketAcquireStateLock(FCB)) return LostSocket(Irp);
 
-    if( !(DisReq = LockRequest( Irp, IrpSp )) )
-	return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY,
-				       Irp, 0 );
-    
+    if (!(DisReq = LockRequest(Irp, IrpSp)))
+        return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY,
+                                       Irp, 0 );
+
     /* Send direction only */
     if ((DisReq->DisconnectType & AFD_DISCONNECT_SEND) &&
         !(DisReq->DisconnectType & AFD_DISCONNECT_RECV))
@@ -725,7 +730,7 @@ AfdDisconnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if (!(FCB->Flags & AFD_ENDPOINT_CONNECTIONLESS))
     {
-        if( !FCB->ConnectCallInfo )
+        if (!FCB->ConnectCallInfo)
         {
             AFD_DbgPrint(MIN_TRACE,("Invalid parameter\n"));
             return UnlockAndMaybeComplete( FCB, STATUS_INVALID_PARAMETER,
@@ -753,13 +758,13 @@ AfdDisconnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
                 }
             }
         }
-        
+
         FCB->DisconnectFlags = Flags;
         FCB->DisconnectTimeout = DisReq->Timeout;
         FCB->DisconnectPending = TRUE;
         FCB->SendClosed = TRUE;
         FCB->PollState &= ~AFD_EVENT_SEND;
-        
+
         Status = QueueUserModeIrp(FCB, Irp, FUNCTION_DISCONNECT);
         if (Status == STATUS_PENDING)
         {
@@ -769,11 +774,11 @@ AfdDisconnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
                 /* Go ahead and execute the disconnect because we're ready for it */
                 Status = DoDisconnect(FCB);
             }
-            
+
             if (Status != STATUS_PENDING)
                 RemoveEntryList(&Irp->Tail.Overlay.ListEntry);
         }
-        
+
         if (Status == STATUS_PENDING)
         {
             SocketStateUnlock(FCB);
@@ -790,12 +795,12 @@ AfdDisconnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
                 AFD_DbgPrint(MIN_TRACE,("Invalid parameter\n"));
                 return UnlockAndMaybeComplete(FCB, STATUS_INVALID_PARAMETER, Irp, 0);
             }
-        
+
             ExFreePool(FCB->RemoteAddress);
-        
+
             FCB->RemoteAddress = NULL;
         }
-        
+
         FCB->PollState &= ~AFD_EVENT_SEND;
         FCB->SendClosed = TRUE;
     }
@@ -814,168 +819,168 @@ AfdDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 
     AFD_DbgPrint(MID_TRACE,("AfdDispatch: %d\n", IrpSp->MajorFunction));
     if( IrpSp->MajorFunction != IRP_MJ_CREATE) {
-	AFD_DbgPrint(MID_TRACE,("FO %x, IrpSp->FO %x\n",
-				FileObject, IrpSp->FileObject));
-	ASSERT(FileObject == IrpSp->FileObject);
+        AFD_DbgPrint(MID_TRACE,("FO %x, IrpSp->FO %x\n",
+                                FileObject, IrpSp->FileObject));
+        ASSERT(FileObject == IrpSp->FileObject);
     }
 
     Irp->IoStatus.Information = 0;
 
     switch(IrpSp->MajorFunction)
     {
-	/* opening and closing handles to the device */
+        /* opening and closing handles to the device */
     case IRP_MJ_CREATE:
-	/* Mostly borrowed from the named pipe file system */
-	return AfdCreateSocket(DeviceObject, Irp, IrpSp);
+        /* Mostly borrowed from the named pipe file system */
+        return AfdCreateSocket(DeviceObject, Irp, IrpSp);
 
     case IRP_MJ_CLOSE:
-	/* Ditto the borrowing */
-	return AfdCloseSocket(DeviceObject, Irp, IrpSp);
+        /* Ditto the borrowing */
+        return AfdCloseSocket(DeviceObject, Irp, IrpSp);
 
     case IRP_MJ_CLEANUP:
         return AfdCleanupSocket(DeviceObject, Irp, IrpSp);
 
     /* write data */
     case IRP_MJ_WRITE:
-	return AfdConnectedSocketWriteData( DeviceObject, Irp, IrpSp, TRUE );
+        return AfdConnectedSocketWriteData( DeviceObject, Irp, IrpSp, TRUE );
 
     /* read data */
     case IRP_MJ_READ:
-	return AfdConnectedSocketReadData( DeviceObject, Irp, IrpSp, TRUE );
+        return AfdConnectedSocketReadData( DeviceObject, Irp, IrpSp, TRUE );
 
     case IRP_MJ_DEVICE_CONTROL:
     {
-	switch( IrpSp->Parameters.DeviceIoControl.IoControlCode ) {
-	case IOCTL_AFD_BIND:
-	    return AfdBindSocket( DeviceObject, Irp, IrpSp );
+        switch( IrpSp->Parameters.DeviceIoControl.IoControlCode ) {
+        case IOCTL_AFD_BIND:
+            return AfdBindSocket( DeviceObject, Irp, IrpSp );
 
-	case IOCTL_AFD_CONNECT:
-	    return AfdStreamSocketConnect( DeviceObject, Irp, IrpSp );
+        case IOCTL_AFD_CONNECT:
+            return AfdStreamSocketConnect( DeviceObject, Irp, IrpSp );
 
-	case IOCTL_AFD_START_LISTEN:
-	    return AfdListenSocket( DeviceObject, Irp, IrpSp );
+        case IOCTL_AFD_START_LISTEN:
+            return AfdListenSocket( DeviceObject, Irp, IrpSp );
 
-	case IOCTL_AFD_RECV:
-	    return AfdConnectedSocketReadData( DeviceObject, Irp, IrpSp,
-					       FALSE );
+        case IOCTL_AFD_RECV:
+            return AfdConnectedSocketReadData( DeviceObject, Irp, IrpSp,
+                                               FALSE );
 
-	case IOCTL_AFD_SELECT:
-	    return AfdSelect( DeviceObject, Irp, IrpSp );
+        case IOCTL_AFD_SELECT:
+            return AfdSelect( DeviceObject, Irp, IrpSp );
 
-	case IOCTL_AFD_EVENT_SELECT:
-	    return AfdEventSelect( DeviceObject, Irp, IrpSp );
+        case IOCTL_AFD_EVENT_SELECT:
+            return AfdEventSelect( DeviceObject, Irp, IrpSp );
 
-	case IOCTL_AFD_ENUM_NETWORK_EVENTS:
-	    return AfdEnumEvents( DeviceObject, Irp, IrpSp );
+        case IOCTL_AFD_ENUM_NETWORK_EVENTS:
+            return AfdEnumEvents( DeviceObject, Irp, IrpSp );
 
-	case IOCTL_AFD_RECV_DATAGRAM:
-	    return AfdPacketSocketReadData( DeviceObject, Irp, IrpSp );
+        case IOCTL_AFD_RECV_DATAGRAM:
+            return AfdPacketSocketReadData( DeviceObject, Irp, IrpSp );
 
-	case IOCTL_AFD_SEND:
-	    return AfdConnectedSocketWriteData( DeviceObject, Irp, IrpSp,
-						FALSE );
+        case IOCTL_AFD_SEND:
+            return AfdConnectedSocketWriteData( DeviceObject, Irp, IrpSp,
+                                                FALSE );
 
-	case IOCTL_AFD_SEND_DATAGRAM:
-	    return AfdPacketSocketWriteData( DeviceObject, Irp, IrpSp );
+        case IOCTL_AFD_SEND_DATAGRAM:
+            return AfdPacketSocketWriteData( DeviceObject, Irp, IrpSp );
 
-	case IOCTL_AFD_GET_INFO:
-	    return AfdGetInfo( DeviceObject, Irp, IrpSp );
+        case IOCTL_AFD_GET_INFO:
+            return AfdGetInfo( DeviceObject, Irp, IrpSp );
 
-	case IOCTL_AFD_SET_INFO:
-	    return AfdSetInfo( DeviceObject, Irp, IrpSp );
+        case IOCTL_AFD_SET_INFO:
+            return AfdSetInfo( DeviceObject, Irp, IrpSp );
 
-	case IOCTL_AFD_GET_CONTEXT_SIZE:
-	    return AfdGetContextSize( DeviceObject, Irp, IrpSp );
+        case IOCTL_AFD_GET_CONTEXT_SIZE:
+            return AfdGetContextSize( DeviceObject, Irp, IrpSp );
 
-	case IOCTL_AFD_GET_CONTEXT:
-	    return AfdGetContext( DeviceObject, Irp, IrpSp );
+        case IOCTL_AFD_GET_CONTEXT:
+            return AfdGetContext( DeviceObject, Irp, IrpSp );
 
-	case IOCTL_AFD_SET_CONTEXT:
-	    return AfdSetContext( DeviceObject, Irp, IrpSp );
+        case IOCTL_AFD_SET_CONTEXT:
+            return AfdSetContext( DeviceObject, Irp, IrpSp );
 
-	case IOCTL_AFD_WAIT_FOR_LISTEN:
-	    return AfdWaitForListen( DeviceObject, Irp, IrpSp );
+        case IOCTL_AFD_WAIT_FOR_LISTEN:
+            return AfdWaitForListen( DeviceObject, Irp, IrpSp );
 
-	case IOCTL_AFD_ACCEPT:
-	    return AfdAccept( DeviceObject, Irp, IrpSp );
+        case IOCTL_AFD_ACCEPT:
+            return AfdAccept( DeviceObject, Irp, IrpSp );
 
-	case IOCTL_AFD_DISCONNECT:
-	    return AfdDisconnect( DeviceObject, Irp, IrpSp );
+        case IOCTL_AFD_DISCONNECT:
+            return AfdDisconnect( DeviceObject, Irp, IrpSp );
 
-	case IOCTL_AFD_GET_SOCK_NAME:
-	    return AfdGetSockName( DeviceObject, Irp, IrpSp );
+        case IOCTL_AFD_GET_SOCK_NAME:
+            return AfdGetSockName( DeviceObject, Irp, IrpSp );
 
         case IOCTL_AFD_GET_PEER_NAME:
             return AfdGetPeerName( DeviceObject, Irp, IrpSp );
 
-	case IOCTL_AFD_GET_CONNECT_DATA:
-	    return AfdGetConnectData(DeviceObject, Irp, IrpSp);
+        case IOCTL_AFD_GET_CONNECT_DATA:
+            return AfdGetConnectData(DeviceObject, Irp, IrpSp);
 
-	case IOCTL_AFD_SET_CONNECT_DATA:
-	    return AfdSetConnectData(DeviceObject, Irp, IrpSp);
+        case IOCTL_AFD_SET_CONNECT_DATA:
+            return AfdSetConnectData(DeviceObject, Irp, IrpSp);
 
-	case IOCTL_AFD_SET_DISCONNECT_DATA:
-	    return AfdSetDisconnectData(DeviceObject, Irp, IrpSp);
+        case IOCTL_AFD_SET_DISCONNECT_DATA:
+            return AfdSetDisconnectData(DeviceObject, Irp, IrpSp);
 
-	case IOCTL_AFD_GET_DISCONNECT_DATA:
-	    return AfdGetDisconnectData(DeviceObject, Irp, IrpSp);
+        case IOCTL_AFD_GET_DISCONNECT_DATA:
+            return AfdGetDisconnectData(DeviceObject, Irp, IrpSp);
 
-	case IOCTL_AFD_SET_CONNECT_DATA_SIZE:
-	    return AfdSetConnectDataSize(DeviceObject, Irp, IrpSp);
+        case IOCTL_AFD_SET_CONNECT_DATA_SIZE:
+            return AfdSetConnectDataSize(DeviceObject, Irp, IrpSp);
 
-	case IOCTL_AFD_SET_DISCONNECT_DATA_SIZE:
-	    return AfdSetDisconnectDataSize(DeviceObject, Irp, IrpSp);
+        case IOCTL_AFD_SET_DISCONNECT_DATA_SIZE:
+            return AfdSetDisconnectDataSize(DeviceObject, Irp, IrpSp);
 
-	case IOCTL_AFD_SET_CONNECT_OPTIONS:
-	    return AfdSetConnectOptions(DeviceObject, Irp, IrpSp);
+        case IOCTL_AFD_SET_CONNECT_OPTIONS:
+            return AfdSetConnectOptions(DeviceObject, Irp, IrpSp);
 
-	case IOCTL_AFD_SET_DISCONNECT_OPTIONS:
-	    return AfdSetDisconnectOptions(DeviceObject, Irp, IrpSp);
+        case IOCTL_AFD_SET_DISCONNECT_OPTIONS:
+            return AfdSetDisconnectOptions(DeviceObject, Irp, IrpSp);
 
-	case IOCTL_AFD_GET_CONNECT_OPTIONS:
-	    return AfdGetConnectOptions(DeviceObject, Irp, IrpSp);
+        case IOCTL_AFD_GET_CONNECT_OPTIONS:
+            return AfdGetConnectOptions(DeviceObject, Irp, IrpSp);
 
-	case IOCTL_AFD_GET_DISCONNECT_OPTIONS:
-	    return AfdGetDisconnectOptions(DeviceObject, Irp, IrpSp);
+        case IOCTL_AFD_GET_DISCONNECT_OPTIONS:
+            return AfdGetDisconnectOptions(DeviceObject, Irp, IrpSp);
 
-	case IOCTL_AFD_SET_CONNECT_OPTIONS_SIZE:
-	    return AfdSetConnectOptionsSize(DeviceObject, Irp, IrpSp);
+        case IOCTL_AFD_SET_CONNECT_OPTIONS_SIZE:
+            return AfdSetConnectOptionsSize(DeviceObject, Irp, IrpSp);
 
-	case IOCTL_AFD_SET_DISCONNECT_OPTIONS_SIZE:
-	    return AfdSetDisconnectOptionsSize(DeviceObject, Irp, IrpSp);
+        case IOCTL_AFD_SET_DISCONNECT_OPTIONS_SIZE:
+            return AfdSetDisconnectOptionsSize(DeviceObject, Irp, IrpSp);
 
-	case IOCTL_AFD_GET_TDI_HANDLES:
-	    return AfdGetTdiHandles(DeviceObject, Irp, IrpSp);
+        case IOCTL_AFD_GET_TDI_HANDLES:
+            return AfdGetTdiHandles(DeviceObject, Irp, IrpSp);
 
-	case IOCTL_AFD_DEFER_ACCEPT:
-	    DbgPrint("IOCTL_AFD_DEFER_ACCEPT is UNIMPLEMENTED!\n");
-	    break;
+        case IOCTL_AFD_DEFER_ACCEPT:
+            DbgPrint("IOCTL_AFD_DEFER_ACCEPT is UNIMPLEMENTED!\n");
+            break;
 
-	case IOCTL_AFD_GET_PENDING_CONNECT_DATA:
-	    DbgPrint("IOCTL_AFD_GET_PENDING_CONNECT_DATA is UNIMPLEMENTED!\n");
-	    break;
+        case IOCTL_AFD_GET_PENDING_CONNECT_DATA:
+            DbgPrint("IOCTL_AFD_GET_PENDING_CONNECT_DATA is UNIMPLEMENTED!\n");
+            break;
 
-	case IOCTL_AFD_VALIDATE_GROUP:
-	    DbgPrint("IOCTL_AFD_VALIDATE_GROUP is UNIMPLEMENTED!\n");
-	    break;
+        case IOCTL_AFD_VALIDATE_GROUP:
+            DbgPrint("IOCTL_AFD_VALIDATE_GROUP is UNIMPLEMENTED!\n");
+            break;
 
-	default:
-	    Status = STATUS_NOT_SUPPORTED;
-	    DbgPrint("Unknown IOCTL (0x%x)\n",
-		     IrpSp->Parameters.DeviceIoControl.IoControlCode);
-	    break;
-	}
-	break;
+        default:
+            Status = STATUS_NOT_SUPPORTED;
+            DbgPrint("Unknown IOCTL (0x%x)\n",
+                     IrpSp->Parameters.DeviceIoControl.IoControlCode);
+            break;
+        }
+        break;
     }
 
 /* unsupported operations */
     default:
     {
-	Status = STATUS_NOT_IMPLEMENTED;
-	AFD_DbgPrint(MIN_TRACE,
-		     ("Irp: Unknown Major code was %x\n",
-		      IrpSp->MajorFunction));
-	break;
+        Status = STATUS_NOT_IMPLEMENTED;
+        AFD_DbgPrint(MIN_TRACE,
+                     ("Irp: Unknown Major code was %x\n",
+                      IrpSp->MajorFunction));
+        break;
     }
     }
 
@@ -983,7 +988,7 @@ AfdDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
     Irp->IoStatus.Status = Status;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
-    return (Status);
+    return Status;
 }
 
 BOOLEAN CheckUnlockExtraBuffers(PAFD_FCB FCB, PIO_STACK_LOCATION IrpSp)
@@ -1040,15 +1045,15 @@ CleanupPendingIrp(PAFD_FCB FCB, PIRP Irp, PIO_STACK_LOCATION IrpSp, PAFD_ACTIVE_
     PAFD_RECV_INFO RecvReq;
     PAFD_SEND_INFO SendReq;
     PAFD_POLL_INFO PollReq;
-    
+
     if (IrpSp->Parameters.DeviceIoControl.IoControlCode == IOCTL_AFD_RECV ||
         IrpSp->MajorFunction == IRP_MJ_READ)
     {
         RecvReq = GetLockedData(Irp, IrpSp);
         UnlockBuffers(RecvReq->BufferArray, RecvReq->BufferCount, CheckUnlockExtraBuffers(FCB, IrpSp));
     }
-    else if ((IrpSp->Parameters.DeviceIoControl.IoControlCode == IOCTL_AFD_SEND ||
-              IrpSp->MajorFunction == IRP_MJ_WRITE))
+    else if (IrpSp->Parameters.DeviceIoControl.IoControlCode == IOCTL_AFD_SEND ||
+             IrpSp->MajorFunction == IRP_MJ_WRITE)
     {
         SendReq = GetLockedData(Irp, IrpSp);
         UnlockBuffers(SendReq->BufferArray, SendReq->BufferCount, CheckUnlockExtraBuffers(FCB, IrpSp));
@@ -1058,7 +1063,7 @@ CleanupPendingIrp(PAFD_FCB FCB, PIRP Irp, PIO_STACK_LOCATION IrpSp, PAFD_ACTIVE_
         PollReq = Irp->AssociatedIrp.SystemBuffer;
         ZeroEvents(PollReq->Handles, PollReq->HandleCount);
         SignalSocket(Poll, NULL, PollReq, STATUS_CANCELLED);
-    }       
+    }
 }
 
 VOID NTAPI
@@ -1076,24 +1081,24 @@ AfdCancelHandler(PDEVICE_OBJECT DeviceObject,
     PAFD_ACTIVE_POLL Poll;
 
     IoReleaseCancelSpinLock(Irp->CancelIrql);
-    
+
     if (!SocketAcquireStateLock(FCB))
         return;
-    
+
     switch (IrpSp->MajorFunction)
     {
         case IRP_MJ_DEVICE_CONTROL:
             IoctlCode = IrpSp->Parameters.DeviceIoControl.IoControlCode;
             break;
-            
+
         case IRP_MJ_READ:
             IoctlCode = IOCTL_AFD_RECV;
             break;
-            
+
         case IRP_MJ_WRITE:
             IoctlCode = IOCTL_AFD_SEND;
             break;
-            
+
         default:
             ASSERT(FALSE);
             SocketStateUnlock(FCB);
@@ -1104,58 +1109,58 @@ AfdCancelHandler(PDEVICE_OBJECT DeviceObject,
     {
         case IOCTL_AFD_RECV:
         case IOCTL_AFD_RECV_DATAGRAM:
-        Function = FUNCTION_RECV;
-        break;
+            Function = FUNCTION_RECV;
+            break;
 
         case IOCTL_AFD_SEND:
         case IOCTL_AFD_SEND_DATAGRAM:
-        Function = FUNCTION_SEND;
-        break;
+            Function = FUNCTION_SEND;
+            break;
 
         case IOCTL_AFD_CONNECT:
-        Function = FUNCTION_CONNECT;
-        break;
+            Function = FUNCTION_CONNECT;
+            break;
 
         case IOCTL_AFD_WAIT_FOR_LISTEN:
-        Function = FUNCTION_PREACCEPT;
-        break;
+            Function = FUNCTION_PREACCEPT;
+            break;
 
         case IOCTL_AFD_SELECT:
-        KeAcquireSpinLock(&DeviceExt->Lock, &OldIrql);
+            KeAcquireSpinLock(&DeviceExt->Lock, &OldIrql);
 
-        CurrentEntry = DeviceExt->Polls.Flink;
-        while (CurrentEntry != &DeviceExt->Polls)
-        {
-            Poll = CONTAINING_RECORD(CurrentEntry, AFD_ACTIVE_POLL, ListEntry);
-
-            if (Irp == Poll->Irp)
+            CurrentEntry = DeviceExt->Polls.Flink;
+            while (CurrentEntry != &DeviceExt->Polls)
             {
-                CleanupPendingIrp(FCB, Irp, IrpSp, Poll);
-                KeReleaseSpinLock(&DeviceExt->Lock, OldIrql);
-                SocketStateUnlock(FCB);
-                return;
-            }
-            else
-            {
-                CurrentEntry = CurrentEntry->Flink;
-            }
-        }
+                Poll = CONTAINING_RECORD(CurrentEntry, AFD_ACTIVE_POLL, ListEntry);
 
-        KeReleaseSpinLock(&DeviceExt->Lock, OldIrql);
+                if (Irp == Poll->Irp)
+                {
+                    CleanupPendingIrp(FCB, Irp, IrpSp, Poll);
+                    KeReleaseSpinLock(&DeviceExt->Lock, OldIrql);
+                    SocketStateUnlock(FCB);
+                    return;
+                }
+                else
+                {
+                    CurrentEntry = CurrentEntry->Flink;
+                }
+            }
 
-        SocketStateUnlock(FCB);
-            
-        DbgPrint("WARNING!!! IRP cancellation race could lead to a process hang! (IOCTL_AFD_SELECT)\n");
-        return;
-            
+            KeReleaseSpinLock(&DeviceExt->Lock, OldIrql);
+
+            SocketStateUnlock(FCB);
+
+            DbgPrint("WARNING!!! IRP cancellation race could lead to a process hang! (IOCTL_AFD_SELECT)\n");
+            return;
+
         case IOCTL_AFD_DISCONNECT:
-        Function = FUNCTION_DISCONNECT;
-        break;
-            
+            Function = FUNCTION_DISCONNECT;
+            break;
+
         default:
-        ASSERT(FALSE);
-        UnlockAndMaybeComplete(FCB, STATUS_CANCELLED, Irp, 0);
-        return;
+            ASSERT(FALSE);
+            UnlockAndMaybeComplete(FCB, STATUS_CANCELLED, Irp, 0);
+            return;
     }
 
     CurrentEntry = FCB->PendingIrpList[Function].Flink;
@@ -1175,9 +1180,9 @@ AfdCancelHandler(PDEVICE_OBJECT DeviceObject,
             CurrentEntry = CurrentEntry->Flink;
         }
     }
-    
+
     SocketStateUnlock(FCB);
-    
+
     DbgPrint("WARNING!!! IRP cancellation race could lead to a process hang! (Function: %d)\n", Function);
 }
 
@@ -1203,19 +1208,18 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
     DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = AfdDispatch;
     DriverObject->DriverUnload = AfdUnload;
 
-    Status = IoCreateDevice
-	( DriverObject,
-	  sizeof(AFD_DEVICE_EXTENSION),
-	  &wstrDeviceName,
-	  FILE_DEVICE_NAMED_PIPE,
-	  0,
-	  FALSE,
-	  &DeviceObject );
+    Status = IoCreateDevice(DriverObject,
+                            sizeof(AFD_DEVICE_EXTENSION),
+                            &wstrDeviceName,
+                            FILE_DEVICE_NAMED_PIPE,
+                            0,
+                            FALSE,
+                            &DeviceObject);
 
     /* failure */
-    if(!NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status))
     {
-	return (Status);
+        return Status;
     }
 
     DeviceExt = DeviceObject->DeviceExtension;
@@ -1223,9 +1227,9 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
     InitializeListHead( &DeviceExt->Polls );
 
     AFD_DbgPrint(MID_TRACE,("Device created: object %x ext %x\n",
-			    DeviceObject, DeviceExt));
+                            DeviceObject, DeviceExt));
 
-    return (Status);
+    return Status;
 }
 
 /* EOF */
