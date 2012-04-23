@@ -4775,7 +4775,6 @@ DWORD RChangeServiceConfig2W(
         LPSERVICE_DESCRIPTIONW lpServiceDescription;
 
         lpServiceDescription = (LPSERVICE_DESCRIPTIONW)Info.psd;
-        lpServiceDescription->lpDescription = (LPWSTR)((ULONG_PTR)lpServiceDescription + sizeof(LPSERVICE_DESCRIPTIONW));
 
         if (lpServiceDescription != NULL &&
             lpServiceDescription->lpDescription != NULL)

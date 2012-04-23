@@ -229,7 +229,7 @@ ChangeServiceConfig2W(SC_HANDLE hService,
     switch (dwInfoLevel)
     {
         case SERVICE_CONFIG_DESCRIPTION:
-            Info.psd = (LPSERVICE_DESCRIPTIONW)&lpInfo;
+            Info.psd = (LPSERVICE_DESCRIPTIONW)lpInfo;
             break;
 
         case SERVICE_CONFIG_FAILURE_ACTIONS:
@@ -543,7 +543,7 @@ CreateServiceA(SC_HANDLE hSCManager,
     LPCSTR lpStr;
 
     TRACE("CreateServiceA() called\n");
-    TRACE("%p %s %s\n", hSCManager, 
+    TRACE("%p %s %s\n", hSCManager,
           lpServiceName, lpDisplayName);
 
     if (!hSCManager)
@@ -631,7 +631,7 @@ CreateServiceW(SC_HANDLE hSCManager,
     LPCWSTR lpStr;
 
     TRACE("CreateServiceW() called\n");
-    TRACE("%p %S %S\n", hSCManager, 
+    TRACE("%p %S %S\n", hSCManager,
           lpServiceName, lpDisplayName);
 
     if (!hSCManager)
