@@ -121,6 +121,12 @@ Test_SelectObject()
 	/* Test EMF */
 
 	/* test METAFILE */
+	SetLastError(ERROR_SUCCESS);
+	hNewObj = CreateMetaFile(NULL);
+	ok(hNewObj != 0, "failed to create a meta dc\n");
+	hOldObj = SelectObject(hdc1, hNewObj);
+	RTEST(hOldObj == NULL);
+	ok_err(ERROR_SUCCESS);
 
 	/* Test ENHMETAFILE */
 

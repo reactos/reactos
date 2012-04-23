@@ -22,6 +22,7 @@ Test_General(void)
 	} TestStruct;
 	PLOGBRUSH plogbrush;
 	HBRUSH hBrush;
+	INT ret;
 
 	/* Test null pointer and invalid handles */
 	SetLastError(ERROR_SUCCESS);
@@ -116,6 +117,7 @@ Test_General(void)
 	ok(GetLastError() == ERROR_INVALID_HANDLE, "\n");
 
 	/* Test need of alignment */
+	SetLastError(ERROR_SUCCESS);
 	hBrush = GetStockObject(WHITE_BRUSH);
 	plogbrush = (PVOID)((ULONG_PTR)&TestStruct.logbrush);
 	ok(GetObject(hBrush, sizeof(LOGBRUSH), plogbrush) == sizeof(LOGBRUSH), "\n");
@@ -123,6 +125,29 @@ Test_General(void)
 	ok(GetObject(hBrush, sizeof(LOGBRUSH), plogbrush) == sizeof(LOGBRUSH), "\n");
 	plogbrush = (PVOID)((ULONG_PTR)&TestStruct.logbrush + 1);
 	//ok(GetObject(hBrush, sizeof(LOGBRUSH), plogbrush) == 0, "\n"); // fails on win7
+
+    /* Test invalid buffer */
+	SetLastError(ERROR_SUCCESS);
+	ok(GetObjectA(hBrush, sizeof(LOGBRUSH), (PVOID)0xc0000000) == 0, "\n");
+	ok(GetLastError() == ERROR_NOACCESS, "expected ERROR_NOACCESS, got %ld\n", GetLastError());
+	SetLastError(ERROR_SUCCESS);
+	_SEH2_TRY
+	{
+        ret = GetObjectA(GetStockObject(SYSTEM_FONT), sizeof(LOGFONT), (PVOID)0xc0000000);
+	}
+	_SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+	{
+	    ret = -1;
+	}
+	_SEH2_END
+
+	ok(ret == -1, "should have got an exception\n");
+
+	SetLastError(ERROR_SUCCESS);
+	ok(GetObjectW(GetStockObject(SYSTEM_FONT), sizeof(LOGFONT), (PVOID)0xc0000000) == 0, "\n");
+	ok(GetLastError() == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %ld\n", GetLastError());
+
+
 }
 
 void
@@ -407,19 +432,22 @@ void
 Test_Font(void)
 {
 	HFONT hFont;
-	LOGFONTA logfonta;
-	LOGFONTW logfontw;
-	EXTLOGFONTA extlogfonta;
-	EXTLOGFONTW extlogfontw;
-	ENUMLOGFONTEXA enumlogfontexa;
-	ENUMLOGFONTEXW enumlogfontexw;
-	ENUMLOGFONTEXDVA enumlogfontexdva;
-	ENUMLOGFONTEXDVW enumlogfontexdvw;
-	ENUMLOGFONTA enumlogfonta;
-	ENUMLOGFONTW enumlogfontw;
-	BYTE bData[270];
+	union
+	{
+        LOGFONTA logfonta;
+        LOGFONTW logfontw;
+        EXTLOGFONTA extlogfonta;
+        EXTLOGFONTW extlogfontw;
+        ENUMLOGFONTEXA enumlogfontexa;
+        ENUMLOGFONTEXW enumlogfontexw;
+        ENUMLOGFONTEXDVA enumlogfontexdva;
+        ENUMLOGFONTEXDVW enumlogfontexdvw;
+        ENUMLOGFONTA enumlogfonta;
+        ENUMLOGFONTW enumlogfontw;
+        BYTE bData[270];
+	} u;
 
-	FillMemory(&logfonta, sizeof(LOGFONTA), 0x77);
+	FillMemory(&u, sizeof(u), 0x77);
 	hFont = CreateFontA(8, 8, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
 		ANSI_CHARSET, OUT_CHARACTER_PRECIS, CLIP_CHARACTER_PRECIS,
 		ANTIALIASED_QUALITY, DEFAULT_PITCH, "testfont");
@@ -446,70 +474,70 @@ Test_Font(void)
 	ok(GetObjectA(hFont, 0, NULL) == sizeof(LOGFONTA), "\n");
 	ok(GetObjectA(hFont, 5, NULL) == sizeof(LOGFONTA), "\n");
 	ok(GetObjectA(hFont, -5, NULL) == sizeof(LOGFONTA), "\n");
-	ok(GetObjectA(hFont, 0, &logfonta) == 0, "\n");
-	ok(logfonta.lfHeight == 0x77777777, "\n");
+	ok(GetObjectA(hFont, 0, &u.logfonta) == 0, "\n");
+	ok(u.logfonta.lfHeight == 0x77777777, "\n");
 
-	ok(GetObjectA(hFont, 5, &logfonta) == 5, "\n");
-	ok(logfonta.lfHeight == 8, "\n");
-	ok(logfonta.lfWidth == 0x77777708, "\n");
+	ok(GetObjectA(hFont, 5, &u.logfonta) == 5, "\n");
+	ok(u.logfonta.lfHeight == 8, "\n");
+	ok(u.logfonta.lfWidth == 0x77777708, "\n");
 
-	ok(GetObjectA(hFont, 0, &logfonta) == 0, "\n");
-	ok(GetObjectA(hFont, -1, &logfonta) == sizeof(ENUMLOGFONTEXDVA), "\n");
-	ok(GetObjectA(hFont, 1, &logfonta) == 1, "\n"); // 1 -> 1
-	ok(GetObjectA(hFont, sizeof(LOGFONTA) - 1, &logfonta) == sizeof(LOGFONTA) - 1, "\n"); // 59 -> 59
-	ok(GetObjectA(hFont, sizeof(LOGFONTA), &logfonta) == sizeof(LOGFONTA), "\n"); // 60 -> 60
-	ok(GetObjectA(hFont, sizeof(LOGFONTA) + 1, &logfonta) == sizeof(LOGFONTA) + 1, "\n"); // 61 -> 61
-	ok(GetObjectA(hFont, sizeof(LOGFONTW) - 1, &logfontw) == sizeof(LOGFONTW) - 1, "\n"); // 91 -> 91
-	ok(GetObjectA(hFont, sizeof(LOGFONTW), &logfontw) == sizeof(LOGFONTA), "\n"); // 92 -> 60
-	ok(GetObjectA(hFont, sizeof(LOGFONTW) + 1, &logfontw) == sizeof(LOGFONTW) + 1, "\n"); // 93 -> 93
-	ok(GetObjectA(hFont, sizeof(EXTLOGFONTA), &extlogfonta) == sizeof(EXTLOGFONTA), "\n"); // 192 -> 192
-	ok(GetObjectA(hFont, sizeof(EXTLOGFONTA)+1, &extlogfonta) == sizeof(EXTLOGFONTA)+1, "\n"); // 192+1 -> 192+1
-	ok(GetObjectA(hFont, sizeof(EXTLOGFONTA)+16*4, &extlogfonta) == sizeof(EXTLOGFONTA)+16*4, "\n"); // 192+1 -> 192+1
-	ok(GetObjectA(hFont, sizeof(EXTLOGFONTW), &extlogfontw) == sizeof(ENUMLOGFONTEXDVA), "\n"); // 320 -> 260
-	ok(GetObjectA(hFont, 261, &bData) == 260, "\n"); // no
+	ok(GetObjectA(hFont, 0, &u.logfonta) == 0, "\n");
+	ok(GetObjectA(hFont, -1, &u.logfonta) == sizeof(ENUMLOGFONTEXDVA), "\n");
+	ok(GetObjectA(hFont, 1, &u.logfonta) == 1, "\n"); // 1 -> 1
+	ok(GetObjectA(hFont, sizeof(LOGFONTA) - 1, &u.logfonta) == sizeof(LOGFONTA) - 1, "\n"); // 59 -> 59
+	ok(GetObjectA(hFont, sizeof(LOGFONTA), &u.logfonta) == sizeof(LOGFONTA), "\n"); // 60 -> 60
+	ok(GetObjectA(hFont, sizeof(LOGFONTA) + 1, &u.logfonta) == sizeof(LOGFONTA) + 1, "\n"); // 61 -> 61
+	ok(GetObjectA(hFont, sizeof(LOGFONTW) - 1, &u.logfontw) == sizeof(LOGFONTW) - 1, "\n"); // 91 -> 91
+	ok(GetObjectA(hFont, sizeof(LOGFONTW), &u.logfontw) == sizeof(LOGFONTA), "\n"); // 92 -> 60
+	ok(GetObjectA(hFont, sizeof(LOGFONTW) + 1, &u.logfontw) == sizeof(LOGFONTW) + 1, "\n"); // 93 -> 93
+	ok(GetObjectA(hFont, sizeof(EXTLOGFONTA), &u.extlogfonta) == sizeof(EXTLOGFONTA), "\n"); // 192 -> 192
+	ok(GetObjectA(hFont, sizeof(EXTLOGFONTA)+1, &u.extlogfonta) == sizeof(EXTLOGFONTA)+1, "\n"); // 192+1 -> 192+1
+	ok(GetObjectA(hFont, sizeof(EXTLOGFONTA)+16*4, &u.extlogfonta) == sizeof(EXTLOGFONTA)+16*4, "\n"); // 192+1 -> 192+1
+	ok(GetObjectA(hFont, sizeof(EXTLOGFONTW), &u.extlogfontw) == sizeof(ENUMLOGFONTEXDVA), "\n"); // 320 -> 260
+	ok(GetObjectA(hFont, 261, &u.bData) == 260, "\n"); // no
 
-	ok(GetObjectA(hFont, sizeof(ENUMLOGFONTEXDVA) - 1, &enumlogfontexdvw) == sizeof(ENUMLOGFONTEXDVA) - 1, "\n"); // 419
-	ok(GetObjectA(hFont, sizeof(ENUMLOGFONTEXDVA), &enumlogfontexdvw) == sizeof(ENUMLOGFONTEXDVA), "\n"); // 420
-	ok(GetObjectA(hFont, sizeof(ENUMLOGFONTEXDVA)+1, &enumlogfontexdvw) == sizeof(ENUMLOGFONTEXDVA), "\n"); // 356!
+	ok(GetObjectA(hFont, sizeof(ENUMLOGFONTEXDVA) - 1, &u.enumlogfontexdvw) == sizeof(ENUMLOGFONTEXDVA) - 1, "\n"); // 419
+	ok(GetObjectA(hFont, sizeof(ENUMLOGFONTEXDVA), &u.enumlogfontexdvw) == sizeof(ENUMLOGFONTEXDVA), "\n"); // 420
+	ok(GetObjectA(hFont, sizeof(ENUMLOGFONTEXDVA)+1, &u.enumlogfontexdvw) == sizeof(ENUMLOGFONTEXDVA), "\n"); // 356!
 
 	/* LOGFONT / GetObjectW */
-	FillMemory(&logfontw, sizeof(LOGFONTW), 0x77);
+	FillMemory(&u.logfontw, sizeof(LOGFONTW), 0x77);
 
 	ok(GetObjectW(hFont, sizeof(LOGFONTW), NULL) == sizeof(LOGFONTW), "1\n");
 	ok(GetObjectW(hFont, 0, NULL) == sizeof(LOGFONTW), "\n");
 	ok(GetObjectW(hFont, 5, NULL) == sizeof(LOGFONTW), "\n");
 	ok(GetObjectW(hFont, sizeof(ENUMLOGFONTEXA), NULL) == sizeof(LOGFONTW), "\n");
 	ok(GetObjectW(hFont, -5, NULL) == sizeof(LOGFONTW), "\n");
-	ok(GetObjectW(hFont, 0, &logfontw) == 0, "\n");
-	ok(logfontw.lfHeight == 0x77777777, "\n");
+	ok(GetObjectW(hFont, 0, &u.logfontw) == 0, "\n");
+	ok(u.logfontw.lfHeight == 0x77777777, "\n");
 
-	ok(GetObjectW(hFont, 5, &logfontw) == 5, "\n");
-	ok(logfontw.lfHeight == 8, "\n");
-	ok(logfontw.lfWidth == 0x77777708, "\n");
+	ok(GetObjectW(hFont, 5, &u.logfontw) == 5, "\n");
+	ok(u.logfontw.lfHeight == 8, "\n");
+	ok(u.logfontw.lfWidth == 0x77777708, "\n");
 
-	ok(GetObjectA(hFont, sizeof(LOGFONTA), &logfonta) == sizeof(LOGFONTA), "\n"); // 60
-	ok(logfonta.lfHeight == 8, "\n");
-	ok(GetObjectA(hFont, sizeof(ENUMLOGFONTA), &enumlogfonta) == sizeof(ENUMLOGFONTA), "\n"); // 156
-	ok(GetObjectA(hFont, sizeof(ENUMLOGFONTEXA), &enumlogfontexa) == sizeof(ENUMLOGFONTEXA), "\n"); // 188
-	ok(GetObjectA(hFont, sizeof(EXTLOGFONTA), &extlogfonta) == sizeof(EXTLOGFONTA), "\n"); // 192
-	ok(GetObjectA(hFont, sizeof(ENUMLOGFONTEXDVA), &enumlogfontexdva) == sizeof(ENUMLOGFONTEXDVA), "\n"); // 260
-	ok(GetObjectA(hFont, sizeof(ENUMLOGFONTEXDVA)+1, &enumlogfontexdva) == sizeof(ENUMLOGFONTEXDVA), "\n"); // 260
+	ok(GetObjectA(hFont, sizeof(LOGFONTA), &u.logfonta) == sizeof(LOGFONTA), "\n"); // 60
+	ok(u.logfonta.lfHeight == 8, "\n");
+	ok(GetObjectA(hFont, sizeof(ENUMLOGFONTA), &u.enumlogfonta) == sizeof(ENUMLOGFONTA), "\n"); // 156
+	ok(GetObjectA(hFont, sizeof(ENUMLOGFONTEXA), &u.enumlogfontexa) == sizeof(ENUMLOGFONTEXA), "\n"); // 188
+	ok(GetObjectA(hFont, sizeof(EXTLOGFONTA), &u.extlogfonta) == sizeof(EXTLOGFONTA), "\n"); // 192
+	ok(GetObjectA(hFont, sizeof(ENUMLOGFONTEXDVA), &u.enumlogfontexdva) == sizeof(ENUMLOGFONTEXDVA), "\n"); // 260
+	ok(GetObjectA(hFont, sizeof(ENUMLOGFONTEXDVA)+1, &u.enumlogfontexdva) == sizeof(ENUMLOGFONTEXDVA), "\n"); // 260
 
-	ok(GetObjectW(hFont, sizeof(LOGFONTW), &logfontw) == sizeof(LOGFONTW), "\n"); // 92
-	ok(GetObjectW(hFont, sizeof(LOGFONTW) + 1, &logfontw) == sizeof(LOGFONTW) + 1, "\n"); // 92
-	ok(GetObjectW(hFont, sizeof(LOGFONTW) - 1, &logfontw) == sizeof(LOGFONTW) - 1, "\n"); // 92
-	ok(GetObjectW(hFont, sizeof(ENUMLOGFONTW), &enumlogfontw) == sizeof(ENUMLOGFONTW), "\n"); // 284
-	ok(GetObjectW(hFont, sizeof(EXTLOGFONTW), &extlogfontw) == sizeof(EXTLOGFONTW), "\n"); // 320
-	ok(GetObjectW(hFont, sizeof(ENUMLOGFONTEXW), &enumlogfontexw) == sizeof(ENUMLOGFONTEXW), "\n"); // 348
-	ok(GetObjectW(hFont, sizeof(ENUMLOGFONTEXW) + 1, &enumlogfontexw) == sizeof(ENUMLOGFONTEXW) + 1, "\n"); // 348
-	ok(GetObjectW(hFont, 355, &enumlogfontexdvw) == 355, "\n"); // 419
-	ok(GetObjectW(hFont, 356, &enumlogfontexdvw) == sizeof(ENUMLOGFONTEXW) + 2*sizeof(DWORD), "\n"); // 419
-	ok(GetObjectW(hFont, sizeof(ENUMLOGFONTEXDVW) - 1, &enumlogfontexdvw) == sizeof(ENUMLOGFONTEXW) + 2*sizeof(DWORD), "\n"); // 419
-	ok(GetObjectW(hFont, sizeof(ENUMLOGFONTEXDVW), &enumlogfontexdvw) == sizeof(ENUMLOGFONTEXW) + 2*sizeof(DWORD), "\n"); // 420
-	ok(GetObjectW(hFont, sizeof(ENUMLOGFONTEXDVW)+1, &enumlogfontexdvw) == sizeof(ENUMLOGFONTEXW) + 2*sizeof(DWORD), "\n"); // 356!
+	ok(GetObjectW(hFont, sizeof(LOGFONTW), &u.logfontw) == sizeof(LOGFONTW), "\n"); // 92
+	ok(GetObjectW(hFont, sizeof(LOGFONTW) + 1, &u.logfontw) == sizeof(LOGFONTW) + 1, "\n"); // 92
+	ok(GetObjectW(hFont, sizeof(LOGFONTW) - 1, &u.logfontw) == sizeof(LOGFONTW) - 1, "\n"); // 92
+	ok(GetObjectW(hFont, sizeof(ENUMLOGFONTW), &u.enumlogfontw) == sizeof(ENUMLOGFONTW), "\n"); // 284
+	ok(GetObjectW(hFont, sizeof(EXTLOGFONTW), &u.extlogfontw) == sizeof(EXTLOGFONTW), "\n"); // 320
+	ok(GetObjectW(hFont, sizeof(ENUMLOGFONTEXW), &u.enumlogfontexw) == sizeof(ENUMLOGFONTEXW), "\n"); // 348
+	ok(GetObjectW(hFont, sizeof(ENUMLOGFONTEXW) + 1, &u.enumlogfontexw) == sizeof(ENUMLOGFONTEXW) + 1, "\n"); // 348
+	ok(GetObjectW(hFont, 355, &u.enumlogfontexdvw) == 355, "\n"); // 419
+	ok(GetObjectW(hFont, 356, &u.enumlogfontexdvw) == sizeof(ENUMLOGFONTEXW) + 2*sizeof(DWORD), "\n"); // 419
+	ok(GetObjectW(hFont, sizeof(ENUMLOGFONTEXDVW) - 1, &u.enumlogfontexdvw) == sizeof(ENUMLOGFONTEXW) + 2*sizeof(DWORD), "\n"); // 419
+	ok(GetObjectW(hFont, sizeof(ENUMLOGFONTEXDVW), &u.enumlogfontexdvw) == sizeof(ENUMLOGFONTEXW) + 2*sizeof(DWORD), "\n"); // 420
+	ok(GetObjectW(hFont, sizeof(ENUMLOGFONTEXDVW)+1, &u.enumlogfontexdvw) == sizeof(ENUMLOGFONTEXW) + 2*sizeof(DWORD), "\n"); // 356!
 
-	ok(GetObjectW(hFont, 356, &bData) == 356, "\n");
-	ok(GetObjectW(hFont, 357, &bData) == 356, "\n");
+	ok(GetObjectW(hFont, 356, &u.bData) == 356, "\n");
+	ok(GetObjectW(hFont, 357, &u.bData) == 356, "\n");
 	ok(GetLastError() == ERROR_SUCCESS, "got %ld\n", GetLastError());
 
 	DeleteObject(hFont);
