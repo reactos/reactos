@@ -462,7 +462,10 @@ IntSetFocusMessageQueue(PUSER_MESSAGE_QUEUE NewQueue)
    {
       (void)InterlockedExchangePointer((PVOID*)&Old->Desktop, 0);
       IntDereferenceMessageQueue(Old);
+      gpqForegroundPrev = Old;
    }
+   // Only one Q can have active foreground even when there are more than one desktop.
+   if (NewQueue) gpqForeground = pdo->ActiveMessageQueue;
 }
 
 HWND FASTCALL IntGetDesktopWindow(VOID)
@@ -485,7 +488,7 @@ PWND FASTCALL UserGetDesktopWindow(VOID)
       TRACE("No active desktop\n");
       return NULL;
    }
-
+   // return pdo->pDeskInfo->spwnd;
    return UserGetWindowObject(pdo->DesktopWindow);
 }
 
@@ -499,6 +502,18 @@ HWND FASTCALL IntGetMessageWindow(VOID)
       return NULL;
    }
    return pdo->spwndMessage->head.h;
+}
+
+PWND FASTCALL UserGetMessageWindow(VOID)
+{
+   PDESKTOP pdo = IntGetActiveDesktop();
+
+   if (!pdo)
+   {
+      TRACE("No active desktop\n");
+      return NULL;
+   }
+   return pdo->spwndMessage;
 }
 
 HWND FASTCALL IntGetCurrentThreadDesktopWindow(VOID)
@@ -558,6 +573,7 @@ UserRedrawDesktop()
 NTSTATUS FASTCALL
 co_IntShowDesktop(PDESKTOP Desktop, ULONG Width, ULONG Height)
 {
+//#if 0
    CSR_API_MESSAGE Request;
 
    Request.Type = MAKE_CSR_API(SHOW_DESKTOP, CSR_GUI);
@@ -566,21 +582,27 @@ co_IntShowDesktop(PDESKTOP Desktop, ULONG Width, ULONG Height)
    Request.Data.ShowDesktopRequest.Height = Height;
 
    return co_CsrNotify(&Request);
+//#endif
+#if 0 // DESKTOPWNDPROC
+   PWND Window;
+
+   Window = IntGetWindowObject(Desktop->DesktopWindow);
+
+   if (!Window)
+   {
+      ERR("No Desktop window.\n");
+      return STATUS_UNSUCCESSFUL;
+   }
+   co_WinPosSetWindowPos(Window, NULL, 0, 0, Width, Height, SWP_NOACTIVATE|SWP_NOZORDER|SWP_SHOWWINDOW);
+
+   co_UserRedrawWindow( Window, NULL, 0, RDW_UPDATENOW | RDW_ALLCHILDREN);
+   return STATUS_SUCCESS;
+#endif
 }
 
 NTSTATUS FASTCALL
 IntHideDesktop(PDESKTOP Desktop)
 {
-#if 0
-   CSRSS_API_REQUEST Request;
-   CSRSS_API_REPLY Reply;
-
-   Request.Type = CSRSS_HIDE_DESKTOP;
-   Request.Data.HideDesktopRequest.DesktopWindow = Desktop->DesktopWindow;
-
-   return NotifyCsrss(&Request, &Reply);
-#else
-
    PWND DesktopWnd;
 
    DesktopWnd = IntGetWindowObject(Desktop->DesktopWindow);
@@ -591,11 +613,7 @@ IntHideDesktop(PDESKTOP Desktop)
    DesktopWnd->style &= ~WS_VISIBLE;
 
    return STATUS_SUCCESS;
-#endif
 }
-
-
-
 
 static
 HWND* FASTCALL
@@ -637,14 +655,6 @@ VOID co_IntShellHookNotify(WPARAM Message, LPARAM lParam)
 
    if (!gpsi->uiShellMsg)
    {
-
-      /* Too bad, this doesn't work. */
-#if 0
-      UNICODE_STRING Str;
-      RtlInitUnicodeString(&Str, L"SHELLHOOK");
-      gpsi->uiShellMsg = UserRegisterWindowMessage(&Str);
-#endif
-
       gpsi->uiShellMsg = IntAddAtom(L"SHELLHOOK");
 
       TRACE("MsgType = %x\n", gpsi->uiShellMsg);
@@ -745,6 +755,216 @@ IntFreeDesktopHeap(IN OUT PDESKTOP Desktop)
         Desktop->hsectionDesktop = NULL;
     }
 }
+
+BOOL FASTCALL
+IntPaintDesktop(HDC hDC)
+{
+   RECTL Rect;
+   HBRUSH DesktopBrush, PreviousBrush;
+   HWND hWndDesktop;
+   BOOL doPatBlt = TRUE;
+   PWND WndDesktop;
+   static WCHAR s_wszSafeMode[] = L"Safe Mode";
+   int len;
+   COLORREF color_old;
+   UINT align_old;
+   int mode_old;
+
+   GdiGetClipBox(hDC, &Rect);
+
+   hWndDesktop = IntGetDesktopWindow(); // rpdesk->DesktopWindow;
+
+   WndDesktop = UserGetWindowObject(hWndDesktop); // rpdesk->pDeskInfo->spwnd;
+   if (!WndDesktop)
+   {
+      return FALSE;
+   }
+
+    if (!UserGetSystemMetrics(SM_CLEANBOOT))
+    {
+        DesktopBrush = (HBRUSH)WndDesktop->pcls->hbrBackground;
+
+        /*
+        * Paint desktop background
+        */
+        if (gspv.hbmWallpaper != NULL)
+        {
+            SIZE sz;
+            int x, y;
+            HDC hWallpaperDC;
+
+            sz.cx = WndDesktop->rcWindow.right - WndDesktop->rcWindow.left;
+            sz.cy = WndDesktop->rcWindow.bottom - WndDesktop->rcWindow.top;
+
+            if (gspv.WallpaperMode == wmStretch ||
+                gspv.WallpaperMode == wmTile)
+            {
+                x = 0;
+                y = 0;
+            }
+            else
+            {
+                /* Find the upper left corner, can be negtive if the bitmap is bigger then the screen */
+                x = (sz.cx / 2) - (gspv.cxWallpaper / 2);
+                y = (sz.cy / 2) - (gspv.cyWallpaper / 2);
+            }
+
+            hWallpaperDC = NtGdiCreateCompatibleDC(hDC);
+            if(hWallpaperDC != NULL)
+            {
+                HBITMAP hOldBitmap;
+
+                /* Fill in the area that the bitmap is not going to cover */
+                if (x > 0 || y > 0)
+                {
+                   /* FIXME: Clip out the bitmap
+                                               can be replaced with "NtGdiPatBlt(hDC, x, y, WinSta->cxWallpaper, WinSta->cyWallpaper, PATCOPY | DSTINVERT);"
+                                               once we support DSTINVERT */
+                  PreviousBrush = NtGdiSelectBrush(hDC, DesktopBrush);
+                  NtGdiPatBlt(hDC, Rect.left, Rect.top, Rect.right, Rect.bottom, PATCOPY);
+                  NtGdiSelectBrush(hDC, PreviousBrush);
+                }
+
+                /*Do not fill the background after it is painted no matter the size of the picture */
+                doPatBlt = FALSE;
+
+                hOldBitmap = NtGdiSelectBitmap(hWallpaperDC, gspv.hbmWallpaper);
+
+                if (gspv.WallpaperMode == wmStretch)
+                {
+                    if(Rect.right && Rect.bottom)
+                        NtGdiStretchBlt(hDC,
+                                    x,
+                                    y,
+                                    sz.cx,
+                                    sz.cy,
+                                    hWallpaperDC,
+                                    0,
+                                    0,
+                                    gspv.cxWallpaper,
+                                    gspv.cyWallpaper,
+                                    SRCCOPY,
+                                    0);
+
+                }
+                else if (gspv.WallpaperMode == wmTile)
+                {
+                    /* Paint the bitmap across the screen then down */
+                    for(y = 0; y < Rect.bottom; y += gspv.cyWallpaper)
+                    {
+                        for(x = 0; x < Rect.right; x += gspv.cxWallpaper)
+                        {
+                            NtGdiBitBlt(hDC,
+                                        x,
+                                        y,
+                                        gspv.cxWallpaper,
+                                        gspv.cyWallpaper,
+                                        hWallpaperDC,
+                                        0,
+                                        0,
+                                        SRCCOPY,
+                                        0,
+                                        0);
+                        }
+                    }
+                }
+                else
+                {
+                    NtGdiBitBlt(hDC,
+                                x,
+                                y,
+                                gspv.cxWallpaper,
+                                gspv.cyWallpaper,
+                                hWallpaperDC,
+                                0,
+                                0,
+                                SRCCOPY,
+                                0,
+                                0);
+                }
+                NtGdiSelectBitmap(hWallpaperDC, hOldBitmap);
+                NtGdiDeleteObjectApp(hWallpaperDC);
+            }
+        }
+    }
+    else
+    {
+        /* Black desktop background in Safe Mode */
+        DesktopBrush = StockObjects[BLACK_BRUSH];
+    }
+
+    /* Back ground is set to none, clear the screen */
+    if (doPatBlt)
+    {
+      PreviousBrush = NtGdiSelectBrush(hDC, DesktopBrush);
+      NtGdiPatBlt(hDC, Rect.left, Rect.top, Rect.right, Rect.bottom, PATCOPY);
+      NtGdiSelectBrush(hDC, PreviousBrush);
+    }
+
+   /*
+    * Display system version on the desktop background
+    */
+
+   if (g_PaintDesktopVersion||UserGetSystemMetrics(SM_CLEANBOOT))
+   {
+      static WCHAR s_wszVersion[256] = {0};
+      RECTL rect;
+
+      if (*s_wszVersion)
+      {
+         len = wcslen(s_wszVersion);
+      }
+      else
+      {
+         len = GetSystemVersionString(s_wszVersion);
+      }
+
+      if (len)
+      {
+         if (!UserSystemParametersInfo(SPI_GETWORKAREA, 0, &rect, 0))
+         {
+            rect.right = UserGetSystemMetrics(SM_CXSCREEN);
+            rect.bottom = UserGetSystemMetrics(SM_CYSCREEN);
+         }
+
+         color_old = IntGdiSetTextColor(hDC, RGB(255,255,255));
+         align_old = IntGdiSetTextAlign(hDC, TA_RIGHT);
+         mode_old = IntGdiSetBkMode(hDC, TRANSPARENT);
+
+            if(!UserGetSystemMetrics(SM_CLEANBOOT))
+            {
+                GreExtTextOutW(hDC, rect.right-16, rect.bottom-48, 0, NULL, s_wszVersion, len, NULL, 0);
+            }
+            else
+            {
+                /* Safe Mode */
+                /* Version information text in top center */
+                IntGdiSetTextAlign(hDC, TA_CENTER|TA_TOP);
+                GreExtTextOutW(hDC, (rect.right+rect.left)/2, rect.top, 0, NULL, s_wszVersion, len, NULL, 0);
+                /* Safe Mode text in corners */
+                len = wcslen(s_wszSafeMode);
+                IntGdiSetTextAlign(hDC, TA_RIGHT|TA_TOP);
+                GreExtTextOutW(hDC, rect.right, rect.top, 0, NULL, s_wszSafeMode, len, NULL, 0);
+                IntGdiSetTextAlign(hDC, TA_RIGHT|TA_BASELINE);
+                GreExtTextOutW(hDC, rect.right, rect.bottom, 0, NULL, s_wszSafeMode, len, NULL, 0);
+                IntGdiSetTextAlign(hDC, TA_LEFT|TA_TOP);
+                GreExtTextOutW(hDC, rect.left, rect.top, 0, NULL, s_wszSafeMode, len, NULL, 0);
+                IntGdiSetTextAlign(hDC, TA_LEFT|TA_BASELINE);
+                GreExtTextOutW(hDC, rect.left, rect.bottom, 0, NULL, s_wszSafeMode, len, NULL, 0);
+
+            }
+
+
+         IntGdiSetBkMode(hDC, mode_old);
+         IntGdiSetTextAlign(hDC, align_old);
+         IntGdiSetTextColor(hDC, color_old);
+      }
+   }
+
+   return TRUE;
+}
+
+
 /* SYSCALLS *******************************************************************/
 
 /*
@@ -911,15 +1131,15 @@ NtUserCreateDesktop(
    /* Initialize some local (to win32k) desktop state. */
    InitializeListHead(&DesktopObject->PtiList);
    DesktopObject->ActiveMessageQueue = NULL;
+
    /* Setup Global Hooks. */
    for (i = 0; i < NB_HOOKS; i++)
    {
       InitializeListHead(&DesktopObject->pDeskInfo->aphkStart[i]);
    }
-
-
+//#if 0
    /*
-    * Create a handle for CSRSS and notify CSRSS for Creating Desktop Window.
+    * Create a handle for CSRSS and notify CSRSS for Creating Desktop Background Window.
     */
    Request.Type = MAKE_CSR_API(CREATE_DESKTOP, CSR_GUI);
    Status = CsrInsertObject(Desktop,
@@ -942,10 +1162,23 @@ NtUserCreateDesktop(
       SetLastNtError(Status);
       RETURN( NULL);
    }
-#if 0 // Turn on when server side proc is ready.
+//#endif
+   if (!ptiCurrent->rpdesk) IntSetThreadDesktop(Desktop,FALSE);
+
+  /*
+     Based on wine/server/window.c in get_desktop_window.
+   */
+
+#if 0 // DESKTOPWNDPROC from Revision 6908 Dedicated to GvG!
+   // Turn on when server side proc is ready.
    //
    // Create desktop window.
    //
+   /*
+      Currently this works but it hangs in
+      co_IntShowDesktop->co_UserRedrawWindow->co_IntPaintWindows->co_IntSendMessage
+      Commenting out co_UserRedrawWindow will allow it to run with gui issues.
+    */
    ClassName.Buffer = ((PWSTR)((ULONG_PTR)(WORD)(gpsi->atomSysClass[ICLS_DESKTOP])));
    ClassName.Length = 0;
    RtlZeroMemory(&WindowName, sizeof(WindowName));
@@ -956,27 +1189,24 @@ NtUserCreateDesktop(
    Cs.cx = UserGetSystemMetrics(SM_CXVIRTUALSCREEN);
    Cs.cy = UserGetSystemMetrics(SM_CYVIRTUALSCREEN);
    Cs.style = WS_POPUP|WS_CLIPCHILDREN;
-   Cs.hInstance = hModClient; // Experimental mode... Move csr stuff to User32. hModuleWin; // Server side winproc!
+   Cs.hInstance = hModClient; // Experimental mode... hModuleWin; // Server side winproc!
    Cs.lpszName = (LPCWSTR) &WindowName;
    Cs.lpszClass = (LPCWSTR) &ClassName;
 
-   pWndDesktop = co_UserCreateWindowEx(&Cs, &ClassName, &WindowName, NULL);
+   pWnd = co_UserCreateWindowEx(&Cs, &ClassName, &WindowName, NULL);
    if (!pWnd)
    {
       ERR("Failed to create Desktop window handle\n");
    }
    else
-   {
-      DesktopObject->pDeskInfo->spwnd = pWndDesktop;
+   { // Should be set in window.c, Justin Case,
+      if (!DesktopObject->DesktopWindow)
+      {
+         DesktopObject->pDeskInfo->spwnd = pWnd;
+         DesktopObject->DesktopWindow = UserHMGetHandle(pWnd);
+      }
    }
 #endif
-
-   if (!ptiCurrent->rpdesk) IntSetThreadDesktop(Desktop,FALSE);
-
-  /*
-     Based on wine/server/window.c in get_desktop_window.
-   */
-
    ClassName.Buffer = ((PWSTR)((ULONG_PTR)(WORD)(gpsi->atomSysClass[ICLS_HWNDMESSAGE])));
    ClassName.Length = 0;
    RtlZeroMemory(&WindowName, sizeof(WindowName));
@@ -1207,9 +1437,6 @@ CLEANUP:
    END_CLEANUP;
 }
 
-
-
-
 /*
  * NtUserPaintDesktop
  *
@@ -1228,220 +1455,14 @@ CLEANUP:
 BOOL APIENTRY
 NtUserPaintDesktop(HDC hDC)
 {
-   RECTL Rect;
-   HBRUSH DesktopBrush, PreviousBrush;
-   HWND hWndDesktop;
-   BOOL doPatBlt = TRUE;
-   PWND WndDesktop;
-    static WCHAR s_wszSafeMode[] = L"Safe Mode";
-   int len;
-   COLORREF color_old;
-   UINT align_old;
-   int mode_old;
-   DECLARE_RETURN(BOOL);
-
+   BOOL Ret;
    UserEnterExclusive();
    TRACE("Enter NtUserPaintDesktop\n");
-
-   GdiGetClipBox(hDC, &Rect);
-
-   hWndDesktop = IntGetDesktopWindow();
-
-   WndDesktop = UserGetWindowObject(hWndDesktop);
-   if (!WndDesktop)
-   {
-      RETURN(FALSE);
-   }
-
-    if (!UserGetSystemMetrics(SM_CLEANBOOT))
-    {
-        DesktopBrush = (HBRUSH)WndDesktop->pcls->hbrBackground;
-
-        /*
-        * Paint desktop background
-        */
-        if (gspv.hbmWallpaper != NULL)
-        {
-            SIZE sz;
-            int x, y;
-            HDC hWallpaperDC;
-
-            sz.cx = WndDesktop->rcWindow.right - WndDesktop->rcWindow.left;
-            sz.cy = WndDesktop->rcWindow.bottom - WndDesktop->rcWindow.top;
-
-            if (gspv.WallpaperMode == wmStretch ||
-                gspv.WallpaperMode == wmTile)
-            {
-                x = 0;
-                y = 0;
-            }
-            else
-            {
-                /* Find the upper left corner, can be negtive if the bitmap is bigger then the screen */
-                x = (sz.cx / 2) - (gspv.cxWallpaper / 2);
-                y = (sz.cy / 2) - (gspv.cyWallpaper / 2);
-            }
-
-            hWallpaperDC = NtGdiCreateCompatibleDC(hDC);
-            if(hWallpaperDC != NULL)
-            {
-                HBITMAP hOldBitmap;
-
-                /* Fill in the area that the bitmap is not going to cover */
-                if (x > 0 || y > 0)
-                {
-                   /* FIXME: Clip out the bitmap
-                                               can be replaced with "NtGdiPatBlt(hDC, x, y, WinSta->cxWallpaper, WinSta->cyWallpaper, PATCOPY | DSTINVERT);"
-                                               once we support DSTINVERT */
-                  PreviousBrush = NtGdiSelectBrush(hDC, DesktopBrush);
-                  NtGdiPatBlt(hDC, Rect.left, Rect.top, Rect.right, Rect.bottom, PATCOPY);
-                  NtGdiSelectBrush(hDC, PreviousBrush);
-                }
-
-                /*Do not fill the background after it is painted no matter the size of the picture */
-                doPatBlt = FALSE;
-
-                hOldBitmap = NtGdiSelectBitmap(hWallpaperDC, gspv.hbmWallpaper);
-
-                if (gspv.WallpaperMode == wmStretch)
-                {
-                    if(Rect.right && Rect.bottom)
-                        NtGdiStretchBlt(hDC,
-                                    x,
-                                    y,
-                                    sz.cx,
-                                    sz.cy,
-                                    hWallpaperDC,
-                                    0,
-                                    0,
-                                    gspv.cxWallpaper,
-                                    gspv.cyWallpaper,
-                                    SRCCOPY,
-                                    0);
-
-                }
-                else if (gspv.WallpaperMode == wmTile)
-                {
-                    /* Paint the bitmap across the screen then down */
-                    for(y = 0; y < Rect.bottom; y += gspv.cyWallpaper)
-                    {
-                        for(x = 0; x < Rect.right; x += gspv.cxWallpaper)
-                        {
-                            NtGdiBitBlt(hDC,
-                                        x,
-                                        y,
-                                        gspv.cxWallpaper,
-                                        gspv.cyWallpaper,
-                                        hWallpaperDC,
-                                        0,
-                                        0,
-                                        SRCCOPY,
-                                        0,
-                                        0);
-                        }
-                    }
-                }
-                else
-                {
-                    NtGdiBitBlt(hDC,
-                                x,
-                                y,
-                                gspv.cxWallpaper,
-                                gspv.cyWallpaper,
-                                hWallpaperDC,
-                                0,
-                                0,
-                                SRCCOPY,
-                                0,
-                                0);
-                }
-                NtGdiSelectBitmap(hWallpaperDC, hOldBitmap);
-                NtGdiDeleteObjectApp(hWallpaperDC);
-            }
-        }
-    }
-    else
-    {
-        /* Black desktop background in Safe Mode */
-        DesktopBrush = StockObjects[BLACK_BRUSH];
-    }
-
-    /* Back ground is set to none, clear the screen */
-    if (doPatBlt)
-    {
-      PreviousBrush = NtGdiSelectBrush(hDC, DesktopBrush);
-      NtGdiPatBlt(hDC, Rect.left, Rect.top, Rect.right, Rect.bottom, PATCOPY);
-      NtGdiSelectBrush(hDC, PreviousBrush);
-    }
-
-   /*
-    * Display system version on the desktop background
-    */
-
-   if (g_PaintDesktopVersion||UserGetSystemMetrics(SM_CLEANBOOT))
-   {
-      static WCHAR s_wszVersion[256] = {0};
-      RECTL rect;
-
-      if (*s_wszVersion)
-      {
-         len = wcslen(s_wszVersion);
-      }
-      else
-      {
-         len = GetSystemVersionString(s_wszVersion);
-      }
-
-      if (len)
-      {
-         if (!UserSystemParametersInfo(SPI_GETWORKAREA, 0, &rect, 0))
-         {
-            rect.right = UserGetSystemMetrics(SM_CXSCREEN);
-            rect.bottom = UserGetSystemMetrics(SM_CYSCREEN);
-         }
-
-         color_old = IntGdiSetTextColor(hDC, RGB(255,255,255));
-         align_old = IntGdiSetTextAlign(hDC, TA_RIGHT);
-         mode_old = IntGdiSetBkMode(hDC, TRANSPARENT);
-
-            if(!UserGetSystemMetrics(SM_CLEANBOOT))
-            {
-                GreExtTextOutW(hDC, rect.right-16, rect.bottom-48, 0, NULL, s_wszVersion, len, NULL, 0);
-            }
-            else
-            {
-                /* Safe Mode */
-                /* Version information text in top center */
-                IntGdiSetTextAlign(hDC, TA_CENTER|TA_TOP);
-                GreExtTextOutW(hDC, (rect.right+rect.left)/2, rect.top, 0, NULL, s_wszVersion, len, NULL, 0);
-                /* Safe Mode text in corners */
-                len = wcslen(s_wszSafeMode);
-                IntGdiSetTextAlign(hDC, TA_RIGHT|TA_TOP);
-                GreExtTextOutW(hDC, rect.right, rect.top, 0, NULL, s_wszSafeMode, len, NULL, 0);
-                IntGdiSetTextAlign(hDC, TA_RIGHT|TA_BASELINE);
-                GreExtTextOutW(hDC, rect.right, rect.bottom, 0, NULL, s_wszSafeMode, len, NULL, 0);
-                IntGdiSetTextAlign(hDC, TA_LEFT|TA_TOP);
-                GreExtTextOutW(hDC, rect.left, rect.top, 0, NULL, s_wszSafeMode, len, NULL, 0);
-                IntGdiSetTextAlign(hDC, TA_LEFT|TA_BASELINE);
-                GreExtTextOutW(hDC, rect.left, rect.bottom, 0, NULL, s_wszSafeMode, len, NULL, 0);
-
-            }
-
-
-         IntGdiSetBkMode(hDC, mode_old);
-         IntGdiSetTextAlign(hDC, align_old);
-         IntGdiSetTextColor(hDC, color_old);
-      }
-   }
-
-   RETURN(TRUE);
-
-CLEANUP:
-   TRACE("Leave NtUserPaintDesktop, ret=%i\n",_ret_);
+   Ret = IntPaintDesktop(hDC);
+   TRACE("Leave NtUserPaintDesktop, ret=%i\n",Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
-
 
 /*
  * NtUserSwitchDesktop
@@ -1720,7 +1741,7 @@ IntSetThreadDesktop(IN HDESK hDesktop,
     HDESK hdeskOld;
     PTHREADINFO pti;
     NTSTATUS Status;
-    PCLIENTTHREADINFO pctiOld, pctiNew;
+    PCLIENTTHREADINFO pctiOld, pctiNew = NULL;
     PCLIENTINFO pci;
 
     ASSERT(NtCurrentTeb());

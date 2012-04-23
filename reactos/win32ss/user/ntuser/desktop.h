@@ -23,7 +23,7 @@ typedef struct _DESKTOP
 
     /* ReactOS */
     /* Pointer to the active queue. */
-    PVOID ActiveMessageQueue;
+    struct _USER_MESSAGE_QUEUE *ActiveMessageQueue;
     /* Handle of the desktop window. */
     HWND DesktopWindow;
     /* Thread blocking input */
@@ -158,6 +158,7 @@ HDC FASTCALL UserGetDesktopDC(ULONG,BOOL,BOOL);
     NULL
 
 HWND FASTCALL IntGetMessageWindow(VOID);
+PWND FASTCALL UserGetMessageWindow(VOID);
 
 static __inline PVOID
 DesktopHeapAlloc(IN PDESKTOP Desktop,

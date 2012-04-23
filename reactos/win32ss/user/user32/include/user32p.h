@@ -84,6 +84,7 @@ VOID MenuTrackMouseMenuBar(HWND hWnd, ULONG Ht, POINT Pt);
 VOID MenuTrackKbdMenuBar(HWND hWnd, UINT wParam, WCHAR wChar);
 
 /* misc definitions */
+void mirror_rect( const RECT *window_rect, RECT *rect );
 BOOL FASTCALL DefSetText(HWND hWnd, PCWSTR String, BOOL Ansi);
 VOID FASTCALL ScrollTrackScrollBar(HWND Wnd, INT SBType, POINT Pt);
 HCURSOR CursorIconToCursor(HICON hIcon, BOOL SemiTransparent);

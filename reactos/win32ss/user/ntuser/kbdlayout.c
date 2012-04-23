@@ -386,7 +386,7 @@ co_UserActivateKbl(PTHREADINFO pti, PKL pKl, UINT Flags)
     }
 
     // Send WM_INPUTLANGCHANGE to thread's focus window
-    co_IntSendMessage(pti->MessageQueue->FocusWindow,
+    co_IntSendMessage(pti->MessageQueue->spwndFocus ? UserHMGetHandle(pti->MessageQueue->spwndFocus) : 0,
                       WM_INPUTLANGCHANGE,
                       (WPARAM)pKl->iBaseCharset, // FIXME: How to set it?
                       (LPARAM)pKl->hkl); // hkl

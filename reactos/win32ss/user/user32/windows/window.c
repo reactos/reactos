@@ -44,18 +44,12 @@ User32CallSendAsyncProcForKernel(PVOID Arguments, ULONG ArgumentLength)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL WINAPI
 AllowSetForegroundWindow(DWORD dwProcessId)
 {
-    static BOOL show_message = TRUE;
-    if (show_message)
-    {  
-        UNIMPLEMENTED;
-        show_message = FALSE;
-    }
-    return TRUE;
+    return NtUserxAllowSetForegroundWindow(dwProcessId);
 }
 
 
@@ -1002,8 +996,11 @@ GetLastActivePopup(HWND hWnd)
     {
         _SEH2_TRY
         {
-            if (Wnd->hWndLastActive)
-               Ret = Wnd->hWndLastActive;
+            if (Wnd->spwndLastActive)
+            {
+               PWND LastActive = DesktopPtrToUser(Wnd->spwndLastActive);
+               Ret = UserHMGetHandle(LastActive);
+            }
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
@@ -1627,13 +1624,12 @@ IsZoomed(HWND hWnd)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL WINAPI
 LockSetForegroundWindow(UINT uLockCode)
 {
-    UNIMPLEMENTED;
-    return TRUE;
+    return NtUserxLockSetForegroundWindow(uLockCode);
 }
 
 

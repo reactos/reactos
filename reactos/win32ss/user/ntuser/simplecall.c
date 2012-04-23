@@ -380,6 +380,10 @@ NtUserCallOneParam(
 		  /* TODO: Implement sound sentry */
       case ONEPARAM_ROUTINE_CREATESYSTEMTHREADS:
           RETURN(CreateSystemThreads(Param));
+      case ONEPARAM_ROUTINE_LOCKFOREGNDWINDOW:
+          RETURN( (DWORD_PTR)IntLockSetForegroundWindow(Param));
+      case ONEPARAM_ROUTINE_ALLOWSETFOREGND:
+          RETURN( (DWORD_PTR)IntAllowSetForegroundWindow(Param));
    }
    ERR("Calling invalid routine number 0x%x in NtUserCallOneParam(), Param=0x%x\n",
            Routine, Param);

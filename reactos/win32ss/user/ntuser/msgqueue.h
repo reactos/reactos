@@ -78,10 +78,8 @@ typedef struct _USER_MESSAGE_QUEUE
   HWND CaptureWindow;
   PWND spwndCapture;
   /* Current window with focus (ie. receives keyboard input) for this queue. */
-  HWND FocusWindow;
   PWND spwndFocus;
   /* Current active window for this queue. */
-  HWND ActiveWindow;
   PWND spwndActive;
   PWND spwndActivePrev;
   /* Current move/size window for this queue */
@@ -146,7 +144,8 @@ typedef struct _USER_MESSAGE_QUEUE
 enum internal_event_message
 {
     WM_ASYNC_SHOWWINDOW = 0x80000000,
-    WM_ASYNC_SETWINDOWPOS
+    WM_ASYNC_SETWINDOWPOS,
+    WM_ASYNC_SETACTIVEWINDOW
 };
 
 BOOL FASTCALL MsqIsHung(PUSER_MESSAGE_QUEUE MessageQueue);

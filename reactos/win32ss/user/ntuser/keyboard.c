@@ -851,7 +851,7 @@ ProcessKeyEvent(WORD wVk, WORD wScanCode, DWORD dwFlags, BOOL bInjected, DWORD d
             IS_KEY_DOWN(gafAsyncKeyState, VK_MENU) &&
             !IS_KEY_DOWN(gafAsyncKeyState, VK_CONTROL))
         {
-            SnapWindow(pFocusQueue->FocusWindow);
+            SnapWindow(pFocusQueue->spwndFocus ? UserHMGetHandle(pFocusQueue->spwndFocus) : 0);
         }
         else
             SnapWindow(NULL);
@@ -859,7 +859,7 @@ ProcessKeyEvent(WORD wVk, WORD wScanCode, DWORD dwFlags, BOOL bInjected, DWORD d
     else if (pFocusQueue && bPostMsg)
     {
         /* Init message */
-        Msg.hwnd = pFocusQueue->FocusWindow;
+        Msg.hwnd = pFocusQueue->spwndFocus ? UserHMGetHandle(pFocusQueue->spwndFocus) : 0;
         Msg.wParam = wFixedVk & 0xFF; /* Note: It's simplified by msg queue */
         Msg.lParam = MAKELPARAM(1, wScanCode);
         Msg.time = dwTime;
@@ -902,6 +902,8 @@ UserSendKeyboardInput(KEYBDINPUT *pKbdInput, BOOL bInjected)
     LARGE_INTEGER LargeTickCount;
     DWORD dwTime;
     BOOL bExt = (pKbdInput->dwFlags & KEYEVENTF_EXTENDEDKEY) ? TRUE : FALSE;
+
+    gppiInputProvider = ((PTHREADINFO)PsGetCurrentThreadWin32Thread())->ppi;
 
     /* Find the target thread whose locale is in effect */
     pFocusQueue = IntGetFocusMessageQueue();

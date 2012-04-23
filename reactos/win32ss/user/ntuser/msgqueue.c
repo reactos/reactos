@@ -517,7 +517,7 @@ co_MsqInsertMouseMessage(MSG* Msg, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Hook
       if (co_HOOK_CallHooks(WH_MOUSE_LL, HC_ACTION, Msg->message, (LPARAM) &MouseHookData))
          return;
    }
-
+   
    /* Get the desktop window */
    pwndDesktop = UserGetDesktopWindow();
    if (!pwndDesktop) return;
@@ -717,8 +717,8 @@ co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
                                   (HHOOK)Message->Msg.lParam,
                                   Message->Msg.wParam);
    }
-   else if ((Message->CompletionCallback)
-       && (Message->CallBackSenderQueue == MessageQueue))
+   else if ((Message->CompletionCallback) &&
+            (Message->CallBackSenderQueue == MessageQueue))
    {   /* Call the callback routine */
       if (Message->QS_Flags & QS_SMRESULT)
       {
@@ -982,14 +982,6 @@ co_MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
    PLIST_ENTRY Entry;
    LRESULT Result = 0;   //// Result could be trashed. ////
 
-   if(!(Message = ExAllocatePoolWithTag(PagedPool, sizeof(USER_SENT_MESSAGE), TAG_USRMSG)))
-   {
-      ERR("MsqSendMessage(): Not enough memory to allocate a message");
-      return STATUS_INSUFFICIENT_RESOURCES;
-   }
-
-   KeInitializeEvent(&CompletionEvent, NotificationEvent, FALSE);
-
    pti = PsGetCurrentThreadWin32Thread();
    ThreadQueue = pti->MessageQueue;
    ptirec = MessageQueue->Thread->Tcb.Win32Thread;
@@ -999,9 +991,44 @@ co_MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
    /* Don't send from or to a dying thread */
     if (pti->TIF_flags & TIF_INCLEANUP || ptirec->TIF_flags & TIF_INCLEANUP)
     {
-        *uResult = -1;
-        return STATUS_TIMEOUT;
+        if (uResult) *uResult = -1;
+        ERR("MsqSM: Current pti %d or Rec pti %d\n",pti->TIF_flags & TIF_INCLEANUP, ptirec->TIF_flags & TIF_INCLEANUP);
+        return STATUS_UNSUCCESSFUL;
     }
+
+   if ( HookMessage == MSQ_NORMAL )
+   {
+      // These can not cross International Border lines!
+      if ( pti->ppi != ptirec->ppi )
+      {
+         switch(Msg)
+         {
+             case EM_GETLINE:
+             case EM_SETPASSWORDCHAR:
+             case WM_GETTEXT:
+             case WM_NOTIFY:
+                if (uResult) *uResult = -1;
+                ERR("Running across the border without a passport!\n");
+                return STATUS_UNSUCCESSFUL;
+         }
+      }
+
+      // These can not cross State lines!
+      if ( Msg == WM_CREATE || Msg == WM_NCCREATE )
+      {
+         if (uResult) *uResult = -1;
+         ERR("Can not tell the other State we have Create!\n");
+         return STATUS_UNSUCCESSFUL;
+      }
+   }
+
+   if(!(Message = ExAllocatePoolWithTag(PagedPool, sizeof(USER_SENT_MESSAGE), TAG_USRMSG)))
+   {
+      ERR("MsqSendMessage(): Not enough memory to allocate a message");
+      return STATUS_INSUFFICIENT_RESOURCES;
+   }
+
+   KeInitializeEvent(&CompletionEvent, NotificationEvent, FALSE);
 
    Timeout.QuadPart = (LONGLONG) uTimeout * (LONGLONG) -10000;
 
@@ -1203,7 +1230,7 @@ MsqPostQuitMessage(PUSER_MESSAGE_QUEUE MessageQueue, ULONG ExitCode)
  */
 static void MsqSendParentNotify( PWND pwnd, WORD event, WORD idChild, POINT pt )
 {
-    PWND pwndDesktop = UserGetWindowObject(IntGetDesktopWindow());
+    PWND pwndDesktop = UserGetDesktopWindow();
 
     /* pt has to be in the client coordinates of the parent window */
     pt.x += pwndDesktop->rcClient.left - pwnd->rcClient.left;
@@ -1231,7 +1258,7 @@ FASTCALL
 IntTrackMouseMove(PWND pwndTrack, PDESKTOP pDesk, PMSG msg, USHORT hittest)
 {
 //   PWND pwndTrack = IntChildrenWindowFromPoint(pwndMsg, msg->pt.x, msg->pt.y);
-//   hittest = GetNCHitEx(pwndTrack, msg->pt);
+   hittest = GetNCHitEx(pwndTrack, msg->pt);
 
    if ( pDesk->spwndTrack != pwndTrack || // Change with tracking window or
         msg->message != WM_MOUSEMOVE   || // Mouse click changes or
@@ -1836,7 +1863,7 @@ MsqInitializeMessageQueue(struct _ETHREAD *Thread, PUSER_MESSAGE_QUEUE MessageQu
    MessageQueue->QuitExitCode = 0;
    KeQueryTickCount(&LargeTickCount);
    MessageQueue->LastMsgRead = LargeTickCount.u.LowPart;
-   MessageQueue->FocusWindow = NULL;
+   MessageQueue->spwndFocus = NULL;
    MessageQueue->NewMessagesHandle = NULL;
    MessageQueue->ShowingCursor = 0;
    MessageQueue->CursorObject = NULL;
@@ -2146,12 +2173,12 @@ MsqSetStateWindow(PUSER_MESSAGE_QUEUE MessageQueue, ULONG Type, HWND hWnd)
          MessageQueue->CaptureWindow = hWnd;
          return Prev;
       case MSQ_STATE_ACTIVE:
-         Prev = MessageQueue->ActiveWindow;
-         MessageQueue->ActiveWindow = hWnd;
+         Prev = MessageQueue->spwndActive ? UserHMGetHandle(MessageQueue->spwndActive) : 0;
+         MessageQueue->spwndActive = UserGetWindowObject(hWnd);
          return Prev;
       case MSQ_STATE_FOCUS:
-         Prev = MessageQueue->FocusWindow;
-         MessageQueue->FocusWindow = hWnd;
+         Prev = MessageQueue->spwndFocus ? UserHMGetHandle(MessageQueue->spwndFocus) : 0;
+         MessageQueue->spwndFocus = UserGetWindowObject(hWnd);
          return Prev;
       case MSQ_STATE_MENUOWNER:
          Prev = MessageQueue->MenuOwner;

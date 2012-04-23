@@ -74,7 +74,7 @@ DoTheScreenSaver(VOID)
             else
             {
                 PUSER_MESSAGE_QUEUE ForegroundQueue = IntGetFocusMessageQueue();
-                if (ForegroundQueue && ForegroundQueue->ActiveWindow)
+                if (ForegroundQueue && ForegroundQueue->spwndActive)
                     UserPostMessage(hwndSAS, WM_LOGONNOTIFY, LN_START_SCREENSAVE, 1); // lParam 1 == Secure
                 else
                     UserPostMessage(hwndSAS, WM_LOGONNOTIFY, LN_START_SCREENSAVE, 0);

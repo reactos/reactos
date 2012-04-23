@@ -164,7 +164,7 @@ NtUserGetThreadState(
          GetW32ThreadInfo();
          break;
       case THREADSTATE_FOCUSWINDOW:
-         ret = (DWORD_PTR)UserGetFocusWindow();
+         ret = (DWORD_PTR)IntGetThreadFocusWindow();
          break;
       case THREADSTATE_CAPTUREWINDOW:
          /* FIXME: Should use UserEnterShared */
@@ -350,8 +350,8 @@ NtUserGetGUIThreadInfo(
 
    /* FIXME: Add flag GUI_16BITTASK */
 
-   SafeGui.hwndActive = MsgQueue->ActiveWindow;
-   SafeGui.hwndFocus = MsgQueue->FocusWindow;
+   SafeGui.hwndActive = MsgQueue->spwndActive ? UserHMGetHandle(MsgQueue->spwndActive) : 0;
+   SafeGui.hwndFocus = MsgQueue->spwndFocus ? UserHMGetHandle(MsgQueue->spwndFocus) : 0;
    SafeGui.hwndCapture = MsgQueue->CaptureWindow;
    SafeGui.hwndMenuOwner = MsgQueue->MenuOwner;
    SafeGui.hwndMoveSize = MsgQueue->MoveSize;

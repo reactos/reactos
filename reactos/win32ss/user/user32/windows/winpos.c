@@ -15,6 +15,14 @@
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(user32);
 
+void mirror_rect( const RECT *window_rect, RECT *rect )
+{
+    int width = window_rect->right - window_rect->left;
+    int tmp = rect->left;
+    rect->left = width - rect->right;
+    rect->right = width - tmp;
+}
+
 /* FUNCTIONS *****************************************************************/
 
 /*******************************************************************
@@ -206,7 +214,6 @@ WindowFromPoint(POINT Point)
     return NtUserWindowFromPoint(Point.x, Point.y);
 }
 
-
 /*
  * @implemented
  */
@@ -217,6 +224,7 @@ MapWindowPoints(HWND hWndFrom, HWND hWndTo, LPPOINT lpPoints, UINT cPoints)
     BOOL mirror_from, mirror_to;
     POINT Delta;
     UINT i;
+    int Change = 1;
 
     if (hWndFrom)
     {
@@ -240,7 +248,8 @@ MapWindowPoints(HWND hWndFrom, HWND hWndTo, LPPOINT lpPoints, UINT cPoints)
        if (FromWnd->ExStyle & WS_EX_LAYOUTRTL)
        {
           mirror_from = TRUE;
-          Delta.x = FromWnd->rcClient.right - FromWnd->rcClient.left;
+          Change = -Change;
+          Delta.x = -FromWnd->rcClient.right;
        }
        else
           Delta.x = FromWnd->rcClient.left;
@@ -252,10 +261,11 @@ MapWindowPoints(HWND hWndFrom, HWND hWndTo, LPPOINT lpPoints, UINT cPoints)
        if (ToWnd->ExStyle & WS_EX_LAYOUTRTL)
        {
           mirror_to = TRUE;
-          Delta.x -= ToWnd->rcClient.right - ToWnd->rcClient.left;
+          Change = -Change;
+          Delta.x += Change * ToWnd->rcClient.right;
        }
        else
-          Delta.x -= ToWnd->rcClient.left;
+          Delta.x -= Change * ToWnd->rcClient.left;
        Delta.y -= ToWnd->rcClient.top;
     }
 
@@ -264,20 +274,19 @@ MapWindowPoints(HWND hWndFrom, HWND hWndTo, LPPOINT lpPoints, UINT cPoints)
     for (i = 0; i != cPoints; i++)
     {
         lpPoints[i].x += Delta.x;
+        lpPoints[i].x *= Change;
         lpPoints[i].y += Delta.y;
-        if (mirror_from || mirror_to) lpPoints[i].x = -lpPoints[i].x;
     }
 
     if ((mirror_from || mirror_to) && cPoints == 2)  /* special case for rectangle */
     {
-       int tmp = lpPoints[0].x;
-       lpPoints[0].x = lpPoints[1].x;
-       lpPoints[1].x = tmp;
+       int tmp = min(lpPoints[0].x, lpPoints[1].x);
+       lpPoints[1].x = max(lpPoints[0].x, lpPoints[1].x);
+       lpPoints[0].x = tmp;
     }
 
     return MAKELONG(LOWORD(Delta.x), LOWORD(Delta.y));
 }
-
 
 /*
  * @implemented
@@ -302,7 +311,6 @@ ScreenToClient(HWND hWnd, LPPOINT lpPoint)
     return TRUE;
 }
 
-
 /*
  * @implemented
  */
@@ -325,4 +333,3 @@ ClientToScreen(HWND hWnd, LPPOINT lpPoint)
     }
     return TRUE;
 }
-

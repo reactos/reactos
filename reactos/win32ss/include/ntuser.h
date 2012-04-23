@@ -611,7 +611,6 @@ typedef struct _WND
     LARGE_UNICODE_STRING strName;
     /* Size of the extra data associated with the window. */
     ULONG cbwndExtra;
-    HWND hWndLastActive;
     struct _WND *spwndLastActive;
     //HIMC hImc; // Input context associated with this window.
     LONG dwUserData;

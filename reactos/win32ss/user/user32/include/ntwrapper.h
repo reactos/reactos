@@ -809,3 +809,13 @@ EXTINLINE BOOL NtUserxRegisterLogonProcess(DWORD dwProcessId, BOOL bRegister)
 {
     return (BOOL)NtUserCallTwoParam((DWORD_PTR)dwProcessId, (DWORD_PTR)bRegister, TWOPARAM_ROUTINE_REGISTERLOGONPROCESS);
 }
+
+EXTINLINE BOOL NtUserxAllowSetForegroundWindow(DWORD dwProcessId)
+{
+    return (BOOL)NtUserCallOneParam((DWORD_PTR)dwProcessId, ONEPARAM_ROUTINE_ALLOWSETFOREGND);
+}
+
+EXTINLINE BOOL NtUserxLockSetForegroundWindow(UINT uLockCode)
+{
+    return (BOOL)NtUserCallOneParam((DWORD_PTR)uLockCode, ONEPARAM_ROUTINE_LOCKFOREGNDWINDOW);
+}

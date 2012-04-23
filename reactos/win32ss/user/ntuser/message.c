@@ -594,10 +594,11 @@ IntCallWndProcRet ( PWND Window, HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lPar
 static LRESULT handle_internal_message( PWND pWnd, UINT msg, WPARAM wparam, LPARAM lparam )
 {
     LRESULT lRes;
+    USER_REFERENCE_ENTRY Ref;
 
     if (!pWnd ||
-         pWnd == IntGetDesktopWindow() || // pWnd->fnid == FNID_DESKTOP
-         pWnd == IntGetMessageWindow() )  // pWnd->fnid == FNID_MESSAGEWND
+         pWnd == UserGetDesktopWindow() || // pWnd->fnid == FNID_DESKTOP
+         pWnd == UserGetMessageWindow() )  // pWnd->fnid == FNID_MESSAGEWND
        return 0;
 
     ERR("Internal Event Msg %p\n",msg);
@@ -618,6 +619,14 @@ static LRESULT handle_internal_message( PWND pWnd, UINT msg, WPARAM wparam, LPAR
                                         winpos->cy,
                                         winpos->flags);
           ExFreePoolWithTag(winpos, USERTAG_SWP);
+          return lRes;
+       }
+       case WM_ASYNC_SETACTIVEWINDOW:
+       {
+          PWND Window = (PWND)wparam;
+          if (wparam) UserRefObjectCo(Window, &Ref);
+          lRes = (LRESULT)co_IntSetActiveWindow(Window,NULL,(BOOL)lparam,TRUE);
+          if (wparam) UserDerefObjectCo(Window);
           return lRes;
        }
     }

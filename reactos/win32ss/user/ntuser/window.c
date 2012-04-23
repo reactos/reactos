@@ -499,33 +499,6 @@ static LRESULT co_UserFreeWindow(PWND Window,
    return 0;
 }
 
-VOID FASTCALL
-IntGetWindowBorderMeasures(PWND Wnd, UINT *cx, UINT *cy)
-{
-   if(HAS_DLGFRAME(Wnd->style, Wnd->ExStyle) && !(Wnd->style & WS_MINIMIZE))
-   {
-      *cx = UserGetSystemMetrics(SM_CXDLGFRAME);
-      *cy = UserGetSystemMetrics(SM_CYDLGFRAME);
-   }
-   else
-   {
-      if(HAS_THICKFRAME(Wnd->style, Wnd->ExStyle)&& !(Wnd->style & WS_MINIMIZE))
-      {
-         *cx = UserGetSystemMetrics(SM_CXFRAME);
-         *cy = UserGetSystemMetrics(SM_CYFRAME);
-      }
-      else if(HAS_THINFRAME(Wnd->style, Wnd->ExStyle))
-      {
-         *cx = UserGetSystemMetrics(SM_CXBORDER);
-         *cy = UserGetSystemMetrics(SM_CYBORDER);
-      }
-      else
-      {
-         *cx = *cy = 0;
-      }
-   }
-}
-
 //
 // Same as User32:IntGetWndProc.
 //
@@ -777,41 +750,6 @@ co_DestroyThreadWindows(struct _ETHREAD *Thread)
    }
 }
 
-/*!
- * Internal function.
- * Returns client window rectangle relative to the upper-left corner of client area.
- *
- * \note Does not check the validity of the parameters
-*/
-VOID FASTCALL
-IntGetClientRect(PWND Wnd, RECTL *Rect)
-{
-   ASSERT( Wnd );
-   ASSERT( Rect );
-   if (Wnd->style & WS_MINIMIZED)
-   {
-      Rect->left = Rect->top = 0;
-      Rect->right = UserGetSystemMetrics(SM_CXMINIMIZED);
-      Rect->bottom = UserGetSystemMetrics(SM_CYMINIMIZED);
-      return;
-   }
-   if ( Wnd != UserGetDesktopWindow()) // Wnd->fnid != FNID_DESKTOP )
-   {
-      *Rect = Wnd->rcClient;
-      RECTL_vOffsetRect(Rect, -Wnd->rcClient.left, -Wnd->rcClient.top);
-   }
-   else
-   {
-      Rect->left = Rect->top = 0;
-      Rect->right  = Wnd->rcClient.right;
-      Rect->bottom = Wnd->rcClient.bottom;
-   /* Do this until Init bug is fixed. This sets 640x480, see InitMetrics.
-      Rect->right  = UserGetSystemMetrics(SM_CXSCREEN);
-      Rect->bottom = UserGetSystemMetrics(SM_CYSCREEN);
-   */
-   }
-}
-
 PMENU_OBJECT FASTCALL
 IntGetSystemMenu(PWND Window, BOOL bRevert, BOOL RetMenu)
 {
@@ -968,7 +906,9 @@ IntLinkWindow(
    }
 }
 
-
+/*
+ Note: Wnd->spwndParent can be null if it is the desktop.
+*/
 VOID FASTCALL IntLinkHwnd(PWND Wnd, HWND hWndPrev)
 {
     if (hWndPrev == HWND_NOTOPMOST)
@@ -1626,7 +1566,7 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
    pWnd->spwndParent = ParentWindow;
    pWnd->spwndOwner = OwnerWindow;
    pWnd->fnid = 0;
-   pWnd->hWndLastActive = hWnd;
+   pWnd->spwndLastActive = pWnd;
    pWnd->state2 |= WNDS2_WIN40COMPAT; // FIXME!!!
    pWnd->pcls = Class;
    pWnd->hModule = Cs->hInstance;
@@ -1754,14 +1694,15 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
       }
    }
 
-  /*
-   * WS_EX_WINDOWEDGE appears to be enforced based on the other styles, so
-   * why does the user get to set it?
-   */
-
-   if ((pWnd->ExStyle & WS_EX_DLGMODALFRAME) ||
-          (pWnd->style & (WS_DLGFRAME | WS_THICKFRAME)))
-        pWnd->ExStyle |= WS_EX_WINDOWEDGE;
+   /* WS_EX_WINDOWEDGE depends on some other styles */
+   if (pWnd->ExStyle & WS_EX_DLGMODALFRAME)
+       pWnd->ExStyle |= WS_EX_WINDOWEDGE;
+   else if (pWnd->style & (WS_DLGFRAME | WS_THICKFRAME))
+   {
+       if (!((pWnd->ExStyle & WS_EX_STATICEDGE) &&
+            (pWnd->style & (WS_CHILD | WS_POPUP))))
+           pWnd->ExStyle |= WS_EX_WINDOWEDGE;
+   }
     else
         pWnd->ExStyle &= ~WS_EX_WINDOWEDGE;
 
@@ -2061,6 +2002,7 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
    Window->rcWindow.bottom = Cs->y + Size.cy;
    if (0 != (Window->style & WS_CHILD) && ParentWindow)
    {
+//      ERR("co_UserCreateWindowEx(): Offset rcWindow\n");
       RECTL_vOffsetRect(&Window->rcWindow,
                         ParentWindow->rcClient.left,
                         ParentWindow->rcClient.top);
@@ -2421,10 +2363,10 @@ BOOLEAN FASTCALL co_UserDestroyWindow(PWND Window)
       }
    }
 
-   if (Window->head.pti->MessageQueue->ActiveWindow == Window->head.h)
-      Window->head.pti->MessageQueue->ActiveWindow = NULL;
-   if (Window->head.pti->MessageQueue->FocusWindow == Window->head.h)
-      Window->head.pti->MessageQueue->FocusWindow = NULL;
+   if (Window->head.pti->MessageQueue->spwndActive == Window)
+      Window->head.pti->MessageQueue->spwndActive = NULL;
+   if (Window->head.pti->MessageQueue->spwndFocus == Window)
+      Window->head.pti->MessageQueue->spwndFocus = NULL;
    if (Window->head.pti->MessageQueue->CaptureWindow == Window->head.h)
       Window->head.pti->MessageQueue->CaptureWindow = NULL;
 
@@ -3519,11 +3461,11 @@ NtUserQueryWindow(HWND hWnd, DWORD Index)
          break;
 
       case QUERY_WINDOW_ACTIVE:
-         Result = (DWORD)pWnd->head.pti->MessageQueue->ActiveWindow;
+         Result = (DWORD)(pWnd->head.pti->MessageQueue->spwndActive ? UserHMGetHandle(pWnd->head.pti->MessageQueue->spwndActive) : 0);
          break;
 
       case QUERY_WINDOW_FOCUS:
-         Result = (DWORD)pWnd->head.pti->MessageQueue->FocusWindow;
+         Result = (DWORD)(pWnd->head.pti->MessageQueue->spwndFocus ? UserHMGetHandle(pWnd->head.pti->MessageQueue->spwndFocus) : 0);
          break;
 
       case QUERY_WINDOW_ISHUNG:

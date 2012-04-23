@@ -178,6 +178,8 @@ UserSendMouseInput(MOUSEINPUT *pmi, BOOL bInjected)
     ptCursor = gpsi->ptCursor;
     dwFlags = IntFixMouseInputButtons(pmi->dwFlags);
 
+    gppiInputProvider = ((PTHREADINFO)PsGetCurrentThreadWin32Thread())->ppi;
+
     if (pmi->dwFlags & MOUSEEVENTF_MOVE)
     {
         /* Mouse has changes position */
