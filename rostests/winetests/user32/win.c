@@ -6924,10 +6924,7 @@ START_TEST(win)
     test_Expose();
     test_layered_window();
 
-     if(!winetest_interactive)
-        skip("skipping test_SetForegroundWindow, Hangs on WaitForSingleObject line 2771\n");
-    else
-     test_SetForegroundWindow(hwndMain);
+    test_SetForegroundWindow(hwndMain);
     if(!winetest_interactive)
        skip("bug 5957: skipping test_shell_window, it crashes ros/win7 explorer\n");
     else
