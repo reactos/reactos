@@ -9,11 +9,13 @@ extern void func_AddFontResource(void);
 extern void func_AddFontResourceEx(void);
 extern void func_BeginPath(void);
 extern void func_CombineTransform(void);
+extern void func_CreateBitmap(void);
 extern void func_CreateBitmapIndirect(void);
 extern void func_CreateCompatibleDC(void);
 extern void func_CreateDIBitmap(void);
 extern void func_CreateFont(void);
 extern void func_CreateFontIndirect(void);
+extern void func_CreateIconIndirect(void);
 extern void func_CreatePen(void);
 extern void func_CreateRectRgn(void);
 extern void func_DPtoLP(void);
@@ -39,10 +41,12 @@ extern void func_GetCurrentObject(void);
 extern void func_GetDIBits(void);
 extern void func_GetPixel(void);
 extern void func_GetObject(void);
+extern void func_GetRandomRgn(void);
 extern void func_GetStockObject(void);
 extern void func_GetTextExtentExPoint(void);
 extern void func_GetTextFace(void);
 extern void func_MaskBlt(void);
+extern void func_PatBlt(void);
 extern void func_Rectangle(void);
 extern void func_SelectObject(void);
 extern void func_SetDCPenColor(void);
@@ -58,11 +62,13 @@ const struct test winetest_testlist[] =
     { "AddFontResourceEx", func_AddFontResourceEx },
     { "BeginPath", func_BeginPath },
     { "CombineTransform", func_CombineTransform },
+    { "CreateBitmap", func_CreateBitmap },
     { "CreateBitmapIndirect", func_CreateBitmapIndirect },
     { "CreateCompatibleDC", func_CreateCompatibleDC },
     { "CreateDIBitmap", func_CreateDIBitmap },
     { "CreateFont", func_CreateFont },
     { "CreateFontIndirect", func_CreateFontIndirect },
+    { "CreateIconIndirect", func_CreateFontIndirect },
     { "CreatePen", func_CreatePen },
     { "CreateRectRgn", func_CreateRectRgn },
     { "DPtoLP", func_DPtoLP },
@@ -88,10 +94,12 @@ const struct test winetest_testlist[] =
     { "GetDIBits", func_GetDIBits },
     { "GetPixel", func_GetPixel },
     { "GetObject", func_GetObject },
+    { "GetRandomRgn", func_GetRandomRgn },
     { "GetStockObject", func_GetStockObject },
     { "GetTextExtentExPoint", func_GetTextExtentExPoint },
     { "GetTextFace", func_GetTextFace },
     { "MaskBlt", func_MaskBlt },
+    { "PatBlt", func_PatBlt },
     { "Rectangle", func_Rectangle },
     { "SelectObject", func_SelectObject },
     { "SetDCPenColor", func_SetDCPenColor },

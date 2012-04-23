@@ -7,11 +7,13 @@ list(APPEND SOURCE
     AddFontResourceEx.c
     BeginPath.c
     CombineTransform.c
+    CreateBitmap.c
     CreateBitmapIndirect.c
     CreateCompatibleDC.c
     CreateDIBitmap.c
     CreateFont.c
     CreateFontIndirect.c
+    CreateIconIndirect.c
     CreatePen.c
     CreateRectRgn.c
     DPtoLP.c
@@ -36,11 +38,13 @@ list(APPEND SOURCE
     GetCurrentObject.c
     GetDIBits.c
     GetObject.c
+    GetRandomRgn.c
     GetPixel.c
     GetStockObject.c
     GetTextExtentExPoint.c
     GetTextFace.c
     MaskBlt.c
+    PatBlt.c
     Rectangle.c
     SelectObject.c
     SetDCPenColor.c
