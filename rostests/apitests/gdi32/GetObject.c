@@ -519,7 +519,6 @@ void
 Test_Colorspace(void)
 {
     UCHAR buffer[1000];
-    int ret = 0;
 
 	SetLastError(ERROR_SUCCESS);
 	GetObjectA((HANDLE)GDI_OBJECT_TYPE_COLORSPACE, 0, NULL);
