@@ -479,7 +479,8 @@ SetWindowExtEx(HDC hdc,
                int nYExtent,
                LPSIZE lpSize)
 {
-    PDC_ATTR Dc_Attr;
+    PDC_ATTR pdcattr;
+
 #if 0
     if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)
     {
@@ -500,39 +501,44 @@ SetWindowExtEx(HDC hdc,
         }
     }
 #endif
-    if (!GdiGetHandleUserData((HGDIOBJ) hdc, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return FALSE;
+    pdcattr = GdiGetDcAttr(hdc);
+    if (!pdcattr)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
 
     if (lpSize)
     {
-        lpSize->cx = Dc_Attr->szlWindowExt.cx;
-        lpSize->cy = Dc_Attr->szlWindowExt.cy;
-        if (Dc_Attr->dwLayout & LAYOUT_RTL) lpSize->cx = -lpSize->cx;
+        lpSize->cx = pdcattr->szlWindowExt.cx;
+        lpSize->cy = pdcattr->szlWindowExt.cy;
+        if (pdcattr->dwLayout & LAYOUT_RTL) lpSize->cx = -lpSize->cx;
     }
 
-    if (Dc_Attr->dwLayout & LAYOUT_RTL)
+    if (pdcattr->dwLayout & LAYOUT_RTL)
     {
         NtGdiMirrorWindowOrg(hdc);
-        Dc_Attr->flXform |= (PAGE_EXTENTS_CHANGED|INVALIDATE_ATTRIBUTES|DEVICE_TO_WORLD_INVALID);
+        pdcattr->flXform |= (PAGE_EXTENTS_CHANGED|INVALIDATE_ATTRIBUTES|DEVICE_TO_WORLD_INVALID);
     }
-    else if ((Dc_Attr->iMapMode == MM_ISOTROPIC) || (Dc_Attr->iMapMode == MM_ANISOTROPIC))
+    else if ((pdcattr->iMapMode == MM_ISOTROPIC) || (pdcattr->iMapMode == MM_ANISOTROPIC))
     {
-        if ((Dc_Attr->szlWindowExt.cx == nXExtent) && (Dc_Attr->szlWindowExt.cy == nYExtent))
+        if ((pdcattr->szlWindowExt.cx == nXExtent) && (pdcattr->szlWindowExt.cy == nYExtent))
             return TRUE;
 
         if ((!nXExtent) || (!nYExtent)) return FALSE;
 
         if (NtCurrentTeb()->GdiTebBatch.HDC == hdc)
         {
-            if (Dc_Attr->ulDirty_ & DC_FONTTEXT_DIRTY)
+            if (pdcattr->ulDirty_ & DC_FONTTEXT_DIRTY)
             {
                 NtGdiFlush(); // Sync up Dc_Attr from Kernel space.
-                Dc_Attr->ulDirty_ &= ~(DC_MODE_DIRTY|DC_FONTTEXT_DIRTY);
+                pdcattr->ulDirty_ &= ~(DC_MODE_DIRTY|DC_FONTTEXT_DIRTY);
             }
         }
-        Dc_Attr->szlWindowExt.cx = nXExtent;
-        Dc_Attr->szlWindowExt.cy = nYExtent;
-        if (Dc_Attr->dwLayout & LAYOUT_RTL) NtGdiMirrorWindowOrg(hdc);
-        Dc_Attr->flXform |= (PAGE_EXTENTS_CHANGED|INVALIDATE_ATTRIBUTES|DEVICE_TO_WORLD_INVALID);
+        pdcattr->szlWindowExt.cx = nXExtent;
+        pdcattr->szlWindowExt.cy = nYExtent;
+        if (pdcattr->dwLayout & LAYOUT_RTL) NtGdiMirrorWindowOrg(hdc);
+        pdcattr->flXform |= (PAGE_EXTENTS_CHANGED|INVALIDATE_ATTRIBUTES|DEVICE_TO_WORLD_INVALID);
     }
     return TRUE; // Return TRUE.
 }

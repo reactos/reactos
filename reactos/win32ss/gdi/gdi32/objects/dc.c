@@ -909,9 +909,6 @@ GetObjectW(HGDIOBJ hGdiObj, int cbSize, LPVOID lpBuffer)
                 SetLastError(ERROR_INVALID_PARAMETER);
             return cbResult;
 
-        case GDI_OBJECT_TYPE_METADC:
-            return 0;
-
         case GDI_OBJECT_TYPE_DC:
         case GDI_OBJECT_TYPE_REGION:
         case GDI_OBJECT_TYPE_EMF:
@@ -1011,25 +1008,30 @@ SetDCBrushColor(
 COLORREF
 WINAPI
 SetDCPenColor(
-    HDC hdc,
-    COLORREF crColor
-)
+    _In_ HDC hdc,
+    _In_ COLORREF crColor)
 {
-    PDC_ATTR Dc_Attr;
-    COLORREF OldColor = CLR_INVALID;
+    PDC_ATTR pdcattr;
+    COLORREF OldColor;
 
-    if (!GdiGetHandleUserData((HGDIOBJ) hdc, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return OldColor;
-    else
+    /* Get the dc attribute */
+    pdcattr = GdiGetDcAttr(hdc);
+    if (!pdcattr)
     {
-        OldColor = (COLORREF) Dc_Attr->ulPenClr;
-        Dc_Attr->ulPenClr = (ULONG) crColor;
-
-        if ( Dc_Attr->crPenClr != crColor )
-        {
-            Dc_Attr->ulDirty_ |= DIRTY_LINE;
-            Dc_Attr->crPenClr = crColor;
-        }
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return CLR_INVALID;
     }
+
+    /* Get old color and store the new */
+    OldColor = (COLORREF)pdcattr->ulPenClr;
+    pdcattr->ulPenClr = (ULONG)crColor;
+
+    if (pdcattr->crPenClr != crColor)
+    {
+        pdcattr->ulDirty_ |= DIRTY_LINE;
+        pdcattr->crPenClr = crColor;
+    }
+
     return OldColor;
 }
 
@@ -1438,129 +1440,135 @@ GetMapMode(HDC hdc)
 INT
 WINAPI
 SetMapMode(
-    HDC hdc,
-    INT Mode
-)
+    _In_ HDC hdc,
+    _In_ INT iMode)
 {
-    PDC_ATTR Dc_Attr;
-    if (!GdiGetHandleUserData((HGDIOBJ) hdc, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return 0;
+    PDC_ATTR pdcattr;
+
+    pdcattr = GdiGetDcAttr(hdc);
+    if (!pdcattr)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
+
 #if 0
     if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC)
     {
         if (GDI_HANDLE_GET_TYPE(hDC) == GDI_OBJECT_TYPE_METADC)
-            return MFDRV_SetMapMode(hdc, Mode);
+            return MFDRV_SetMapMode(hdc, iMode);
         else
         {
             SetLastError(ERROR_INVALID_HANDLE);
             return 0;
         }
 #endif
-        // Force change if Isotropic is set for recompute.
-        if ((Mode != Dc_Attr->iMapMode) || (Mode == MM_ISOTROPIC))
-        {
-            Dc_Attr->ulDirty_ &= ~SLOW_WIDTHS;
-            return GetAndSetDCDWord( hdc, GdiGetSetMapMode, Mode, 0, 0, 0 );
-        }
-        return Dc_Attr->iMapMode;
-    }
-
-    /*
-     * @implemented
-     *
-     */
-    int
-    WINAPI
-    GetStretchBltMode(HDC hdc)
+    // Force change if Isotropic is set for recompute.
+    if ((iMode != pdcattr->iMapMode) || (iMode == MM_ISOTROPIC))
     {
-        PDC_ATTR Dc_Attr;
-        if (!GdiGetHandleUserData((HGDIOBJ) hdc, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return 0;
-        return Dc_Attr->lStretchBltMode;
+        pdcattr->ulDirty_ &= ~SLOW_WIDTHS;
+        return GetAndSetDCDWord( hdc, GdiGetSetMapMode, iMode, 0, 0, 0 );
     }
+    return pdcattr->iMapMode;
+}
 
-    /*
-     * @implemented
-     */
-    int
-    WINAPI
-    SetStretchBltMode(HDC hdc, int iStretchMode)
-    {
-        INT oSMode;
-        PDC_ATTR Dc_Attr;
+/*
+ * @implemented
+ *
+ */
+int
+WINAPI
+GetStretchBltMode(HDC hdc)
+{
+    PDC_ATTR Dc_Attr;
+    if (!GdiGetHandleUserData((HGDIOBJ) hdc, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return 0;
+    return Dc_Attr->lStretchBltMode;
+}
+
+/*
+ * @implemented
+ */
+int
+WINAPI
+SetStretchBltMode(HDC hdc, int iStretchMode)
+{
+    INT oSMode;
+    PDC_ATTR Dc_Attr;
 #if 0
-        if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)
+    if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)
+    {
+        if (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_METADC)
+            return MFDRV_SetStretchBltMode( hdc, iStretchMode);
+        else
         {
-            if (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_METADC)
-                return MFDRV_SetStretchBltMode( hdc, iStretchMode);
-            else
+            PLDC pLDC = GdiGetLDC(hdc);
+            if ( !pLDC )
             {
-                PLDC pLDC = GdiGetLDC(hdc);
-                if ( !pLDC )
-                {
-                    SetLastError(ERROR_INVALID_HANDLE);
-                    return 0;
-                }
-                if (pLDC->iType == LDC_EMFLDC)
-                {
-                    return EMFDRV_SetStretchBltMode( hdc, iStretchMode);
-                }
+                SetLastError(ERROR_INVALID_HANDLE);
+                return 0;
+            }
+            if (pLDC->iType == LDC_EMFLDC)
+            {
+                return EMFDRV_SetStretchBltMode( hdc, iStretchMode);
             }
         }
+    }
 #endif
-        if (!GdiGetHandleUserData((HGDIOBJ) hdc, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return 0;
+    if (!GdiGetHandleUserData((HGDIOBJ) hdc, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return 0;
 
-        oSMode = Dc_Attr->lStretchBltMode;
-        Dc_Attr->lStretchBltMode = iStretchMode;
+    oSMode = Dc_Attr->lStretchBltMode;
+    Dc_Attr->lStretchBltMode = iStretchMode;
 
-        // Wine returns an error here. We set the default.
-        if ((iStretchMode <= 0) || (iStretchMode > MAXSTRETCHBLTMODE)) iStretchMode = WHITEONBLACK;
+    // Wine returns an error here. We set the default.
+    if ((iStretchMode <= 0) || (iStretchMode > MAXSTRETCHBLTMODE)) iStretchMode = WHITEONBLACK;
 
-        Dc_Attr->jStretchBltMode = iStretchMode;
+    Dc_Attr->jStretchBltMode = iStretchMode;
 
-        return oSMode;
+    return oSMode;
+}
+
+/*
+ * @implemented
+ */
+HFONT
+WINAPI
+GetHFONT(HDC hdc)
+{
+    PDC_ATTR Dc_Attr;
+    if (!GdiGetHandleUserData((HGDIOBJ) hdc, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return NULL;
+    return Dc_Attr->hlfntNew;
+}
+
+
+/*
+ * @implemented
+ *
+ */
+HGDIOBJ
+WINAPI
+SelectObject(HDC hDC,
+             HGDIOBJ hGdiObj)
+{
+    PDC_ATTR pDc_Attr;
+    HGDIOBJ hOldObj = NULL;
+    UINT uType;
+
+    if(!GdiGetHandleUserData(hDC, GDI_OBJECT_TYPE_DC, (PVOID)&pDc_Attr))
+    {
+        SetLastError(ERROR_INVALID_HANDLE);
+        return NULL;
     }
 
-    /*
-     * @implemented
-     */
-    HFONT
-    WINAPI
-    GetHFONT(HDC hdc)
+    hGdiObj = GdiFixUpHandle(hGdiObj);
+    if (!GdiIsHandleValid(hGdiObj))
     {
-        PDC_ATTR Dc_Attr;
-        if (!GdiGetHandleUserData((HGDIOBJ) hdc, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return NULL;
-        return Dc_Attr->hlfntNew;
+        return NULL;
     }
 
+    uType = GDI_HANDLE_GET_TYPE(hGdiObj);
 
-    /*
-     * @implemented
-     *
-     */
-    HGDIOBJ
-    WINAPI
-    SelectObject(HDC hDC,
-                 HGDIOBJ hGdiObj)
+    switch (uType)
     {
-        PDC_ATTR pDc_Attr;
-        HGDIOBJ hOldObj = NULL;
-        UINT uType;
-
-        if(!GdiGetHandleUserData(hDC, GDI_OBJECT_TYPE_DC, (PVOID)&pDc_Attr))
-        {
-            SetLastError(ERROR_INVALID_HANDLE);
-            return NULL;
-        }
-
-        hGdiObj = GdiFixUpHandle(hGdiObj);
-        if (!GdiIsHandleValid(hGdiObj))
-        {
-            return NULL;
-        }
-
-        uType = GDI_HANDLE_GET_TYPE(hGdiObj);
-
-        switch (uType)
-        {
         case GDI_OBJECT_TYPE_REGION:
             return (HGDIOBJ)ExtSelectClipRgn(hDC, hGdiObj, RGN_COPY);
 
@@ -1618,10 +1626,10 @@ SetMapMode(
             return NULL;
 
         case GDI_OBJECT_TYPE_PALETTE:
-        default:
             SetLastError(ERROR_INVALID_FUNCTION);
+        default:
             return NULL;
-        }
-
-        return NULL;
     }
+
+    return NULL;
+}
