@@ -471,6 +471,13 @@ EngBitBlt(SURFOBJ *DestObj,
             ClipRect.bottom = ClipRegion->rclBounds.bottom;
             if (RECTL_bIntersectRect(&CombinedRect, &OutputRect, &ClipRect))
             {
+#ifdef _USE_DIBLIB_
+                if (BrushOrigin)
+                {
+                    AdjustedBrushOrigin.x = BrushOrigin->x + CombinedRect.left - OutputRect.left;
+                    AdjustedBrushOrigin.y = BrushOrigin->y + CombinedRect.top - OutputRect.top;
+                }
+#endif
                 Pt.x = InputPoint.x + CombinedRect.left - OutputRect.left;
                 Pt.y = InputPoint.y + CombinedRect.top - OutputRect.top;
                 Ret = (*BltRectFunc)(OutputObj, InputObj, Mask, ColorTranslation,
@@ -511,6 +518,13 @@ EngBitBlt(SURFOBJ *DestObj,
                     ClipRect.bottom = RectEnum.arcl[i].bottom;
                     if (RECTL_bIntersectRect(&CombinedRect, &OutputRect, &ClipRect))
                     {
+#ifdef _USE_DIBLIB_
+                        if (BrushOrigin)
+                        {
+                            AdjustedBrushOrigin.x = BrushOrigin->x + CombinedRect.left - OutputRect.left;
+                            AdjustedBrushOrigin.y = BrushOrigin->y + CombinedRect.top - OutputRect.top;
+                        }
+#endif
                         Pt.x = InputPoint.x + CombinedRect.left - OutputRect.left;
                         Pt.y = InputPoint.y + CombinedRect.top - OutputRect.top;
                         Ret = (*BltRectFunc)(OutputObj, InputObj, Mask,
@@ -546,6 +560,7 @@ IntEngBitBlt(
     BOOL bResult;
     RECTL rclClipped;
     RECTL rclSrc;
+    POINTL ptlBrush;
     PFN_DrvBitBlt pfnBitBlt;
 
     ASSERT(psoTrg);
@@ -591,6 +606,16 @@ IntEngBitBlt(
         psurfSrc = NULL;
     }
 
+    if (pptlBrush)
+    {
+#ifdef _USE_DIBLIB_
+        ptlBrush.x = pptlBrush->x + rclClipped.left - prclTrg->left;
+        ptlBrush.y = pptlBrush->y + rclClipped.top - prclTrg->top;
+#else
+        ptlBrush = *pptlBrush;
+#endif
+    }
+
     /* Is the target surface device managed? */
     if (psurfTrg->flags & HOOK_BITBLT)
     {
@@ -623,7 +648,7 @@ IntEngBitBlt(
                         (POINTL*)&rclSrc,
                         pptlMask,
                         pbo,
-                        pptlBrush,
+                        pptlBrush ? &ptlBrush : NULL,
                         Rop4);
 
     // FIXME: cleanup temp surface!

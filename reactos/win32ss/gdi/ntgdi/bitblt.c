@@ -778,9 +778,13 @@ IntPatBlt(
     DestRect.top    += pdc->ptlDCOrig.y;
     DestRect.right  += pdc->ptlDCOrig.x;
     DestRect.bottom += pdc->ptlDCOrig.y;
-
+#ifdef _USE_DIBLIB_
+    BrushOrigin.x = pbrush->ptOrigin.x + pdc->ptlDCOrig.x + XLeft;
+    BrushOrigin.y = pbrush->ptOrigin.y + pdc->ptlDCOrig.y + YLeft;
+#else
     BrushOrigin.x = pbrush->ptOrigin.x + pdc->ptlDCOrig.x;
     BrushOrigin.y = pbrush->ptOrigin.y + pdc->ptlDCOrig.y;
+#endif
 
     DC_vPrepareDCsForBlit(pdc, DestRect, NULL, DestRect);
 
@@ -880,6 +884,8 @@ NtGdiPatBlt(
         /* In this case we call on GdiMaskBlt */
         return NtGdiMaskBlt(hDC, XLeft, YLeft, Width, Height, 0,0,0,0,0,0,ROP,0);
     }
+
+if ((XLeft == 0) && (YLeft == 0) && (Width == 592) && (Height == 362)) __debugbreak();
 
     dc = DC_LockDc(hDC);
     if (dc == NULL)
