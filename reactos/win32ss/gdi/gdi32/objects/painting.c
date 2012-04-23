@@ -382,7 +382,7 @@ PaintRgn( HDC hDC, HRGN hRgn )
     }
 #endif
 // Could just use Dc_Attr->hbrush? No.
-    HBRUSH hBrush = (HBRUSH) GetDCObject( hDC, GDI_OBJECT_TYPE_BRUSH);
+    HBRUSH hBrush = (HBRUSH)GetCurrentObject(hDC, OBJ_BRUSH);
 
     return NtGdiFillRgn( hDC, hRgn, hBrush);
 }

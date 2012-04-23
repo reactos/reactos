@@ -461,7 +461,6 @@ NtGdiGetDCObject(HDC hDC, INT ObjectType)
 
     if(!(pdc = DC_LockDc(hDC)))
     {
-        EngSetLastError(ERROR_INVALID_HANDLE);
         return NULL;
     }
     pdcattr = pdc->pdcattr;

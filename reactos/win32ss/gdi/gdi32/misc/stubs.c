@@ -1131,7 +1131,7 @@ GetETM(HDC hdc,
     BOOL Ret = NtGdiGetETM(hdc, petm);
 
     if (Ret && petm)
-        petm->emKernPairs = GetKerningPairsA(hdc, 0, 0);
+        petm->emKernPairs = (WORD)GetKerningPairsA(hdc, 0, 0);
 
     return Ret;
 }

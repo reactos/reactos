@@ -1021,7 +1021,6 @@ GreGetObject(
     if (!pvObj)
     {
         DPRINT("GreGetObject: Could not lock object\n");
-        EngSetLastError(ERROR_INVALID_HANDLE);
         return 0;
     }
 

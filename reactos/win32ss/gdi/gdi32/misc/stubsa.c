@@ -61,7 +61,7 @@ GetICMProfileA(
 
     if (GetICMProfileW(hdc, &buflen, filenameW))
     {
-        int len = WideCharToMultiByte(CP_ACP, 0, filenameW, -1, NULL, 0, NULL, NULL);
+        ULONG len = WideCharToMultiByte(CP_ACP, 0, filenameW, -1, NULL, 0, NULL, NULL);
         if (*pBufSize >= len)
         {
             WideCharToMultiByte(CP_ACP, 0, filenameW, -1, pszFilename, *pBufSize, NULL, NULL);

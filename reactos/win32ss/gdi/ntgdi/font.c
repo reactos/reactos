@@ -74,7 +74,7 @@ GreGetKerningPairs(
 }
 
 /*
- 
+
   It is recommended that an application use the GetFontLanguageInfo function
   to determine whether the GCP_DIACRITIC, GCP_DBCS, GCP_USEKERNING, GCP_LIGATE,
   GCP_REORDER, GCP_GLYPHSHAPE, and GCP_KASHIDA values are valid for the
@@ -102,7 +102,7 @@ GreGetCharacterPlacementW(
   INT *tmpDxCaretPos;
   LONG Cx;
   SIZE Size = {0,0};
- 
+
   DPRINT1("GreGCPW Start\n");
 
    if (!pgcpw)
@@ -126,7 +126,7 @@ GreGetCharacterPlacementW(
   if ( !gcpwSave.lpDx && gcpwSave.lpCaretPos )
      tmpDxCaretPos = gcpwSave.lpCaretPos;
   else
-     tmpDxCaretPos = gcpwSave.lpDx;  
+     tmpDxCaretPos = gcpwSave.lpDx;
 
   if ( !GreGetTextExtentExW( hdc,
                              pwsz,
@@ -145,7 +145,7 @@ GreGetCharacterPlacementW(
   nSet = cSet;
 
   if ( tmpDxCaretPos && nSet > 0)
-  {  
+  {
       for (i = (nSet - 1); i > 0; i--)
       {
           tmpDxCaretPos[i] -= tmpDxCaretPos[i - 1];
@@ -161,7 +161,7 @@ GreGetCharacterPlacementW(
      {
         DWORD Count;
         LPKERNINGPAIR pKP;
-        
+
         Count = GreGetKerningPairs( hdc, 0, NULL);
         if (Count)
         {
@@ -262,41 +262,43 @@ GreGetCharacterPlacementW(
 
 INT
 FASTCALL
-FontGetObject(PTEXTOBJ TFont, INT Count, PVOID Buffer)
+FontGetObject(PTEXTOBJ TFont, INT cjBuffer, PVOID pvBuffer)
 {
-  if( Buffer == NULL ) return sizeof(LOGFONTW);
+    if (pvBuffer == NULL) return sizeof(LOGFONTW);
 
-  switch (Count)
-  {
-     case sizeof(ENUMLOGFONTEXDVW):
-        RtlCopyMemory( (LPENUMLOGFONTEXDVW) Buffer,
-                                            &TFont->logfont,
-                                            sizeof(ENUMLOGFONTEXDVW));
-        break;
-     case sizeof(ENUMLOGFONTEXW):
-        RtlCopyMemory( (LPENUMLOGFONTEXW) Buffer,
-                                          &TFont->logfont.elfEnumLogfontEx,
-                                          sizeof(ENUMLOGFONTEXW));
+    switch (cjBuffer)
+    {
+        case sizeof(ENUMLOGFONTEXDVW):
+            RtlCopyMemory(pvBuffer,
+                          &TFont->logfont,
+                          sizeof(ENUMLOGFONTEXDVW));
+            break;
+
+        case sizeof(ENUMLOGFONTEXW):
+            RtlCopyMemory(pvBuffer,
+                          &TFont->logfont.elfEnumLogfontEx,
+                          sizeof(ENUMLOGFONTEXW));
         break;
 
-     case sizeof(EXTLOGFONTW):
-     case sizeof(ENUMLOGFONTW):
-        RtlCopyMemory((LPENUMLOGFONTW) Buffer,
+        case sizeof(EXTLOGFONTW):
+        case sizeof(ENUMLOGFONTW):
+            RtlCopyMemory((LPENUMLOGFONTW) pvBuffer,
                                     &TFont->logfont.elfEnumLogfontEx.elfLogFont,
                                        sizeof(ENUMLOGFONTW));
-        break;
+            break;
 
-     case sizeof(LOGFONTW):
-        RtlCopyMemory((LPLOGFONTW) Buffer,
+        case sizeof(LOGFONTW):
+            RtlCopyMemory((LPLOGFONTW) pvBuffer,
                                    &TFont->logfont.elfEnumLogfontEx.elfLogFont,
                                    sizeof(LOGFONTW));
-        break;
+            break;
 
-     default:
-        EngSetLastError(ERROR_BUFFER_OVERFLOW);
-        return 0;
-  }
-  return Count;
+        default:
+            EngSetLastError(ERROR_BUFFER_OVERFLOW);
+            return 0;
+    }
+
+    return cjBuffer;
 }
 
 DWORD
@@ -928,7 +930,7 @@ NtGdiGetFontResourceInfoInternalW(
 
     /* Allocate a safe unicode string buffer */
     cbStringSize = cwc * sizeof(WCHAR);
-    SafeFileNames.MaximumLength = SafeFileNames.Length = cbStringSize - sizeof(WCHAR);
+    SafeFileNames.MaximumLength = SafeFileNames.Length = (USHORT)cbStringSize - sizeof(WCHAR);
     SafeFileNames.Buffer = ExAllocatePoolWithTag(PagedPool,
                                                  cbStringSize,
                                                  'RTSU');

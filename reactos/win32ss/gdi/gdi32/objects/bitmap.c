@@ -554,7 +554,7 @@ SetDIBits(HDC hDC,
     if ( hOldBitmap )
     {
         if ( hDC )
-            hPal = SelectPalette(SavehDC, (HPALETTE)GetDCObject(hDC, GDI_OBJECT_TYPE_PALETTE), FALSE);
+            hPal = SelectPalette(SavehDC, (HPALETTE)GetCurrentObject(hDC, OBJ_PAL), FALSE);
 
         if ( lpbmi->bmiHeader.biSize < sizeof(BITMAPINFOHEADER))
         {

@@ -88,8 +88,8 @@ FONT_TextMetricWToA(const TEXTMETRICW *ptmW, LPTEXTMETRICA ptmA )
         ptmA->tmFirstChar = ptmW->tmDefaultChar - 1;
         ptmA->tmLastChar = min(ptmW->tmLastChar, 0xff);
     }
-    ptmA->tmDefaultChar = ptmW->tmDefaultChar;
-    ptmA->tmBreakChar = ptmW->tmBreakChar;
+    ptmA->tmDefaultChar = (CHAR)ptmW->tmDefaultChar;
+    ptmA->tmBreakChar = (CHAR)ptmW->tmBreakChar;
     ptmA->tmItalic = ptmW->tmItalic;
     ptmA->tmUnderlined = ptmW->tmUnderlined;
     ptmA->tmStruckOut = ptmW->tmStruckOut;
@@ -503,7 +503,7 @@ NewGetCharacterPlacementW(
     DWORD dwFlags
 )
 {
-    INT nSet;
+    ULONG nSet;
     SIZE Size = {0,0};
 
     if ( !lpString || uCount <= 0 || (nMaxExtent < 0 && nMaxExtent != -1 ) )
@@ -1497,14 +1497,14 @@ CreateFontW(
     logfont.lfEscapement = nEscapement;
     logfont.lfOrientation = nOrientation;
     logfont.lfWeight = nWeight;
-    logfont.lfItalic = fnItalic;
-    logfont.lfUnderline = fdwUnderline;
-    logfont.lfStrikeOut = fdwStrikeOut;
-    logfont.lfCharSet = fdwCharSet;
-    logfont.lfOutPrecision = fdwOutputPrecision;
-    logfont.lfClipPrecision = fdwClipPrecision;
-    logfont.lfQuality = fdwQuality;
-    logfont.lfPitchAndFamily = fdwPitchAndFamily;
+    logfont.lfItalic = (BYTE)fnItalic;
+    logfont.lfUnderline = (BYTE)fdwUnderline;
+    logfont.lfStrikeOut = (BYTE)fdwStrikeOut;
+    logfont.lfCharSet = (BYTE)fdwCharSet;
+    logfont.lfOutPrecision = (BYTE)fdwOutputPrecision;
+    logfont.lfClipPrecision = (BYTE)fdwClipPrecision;
+    logfont.lfQuality = (BYTE)fdwQuality;
+    logfont.lfPitchAndFamily = (BYTE)fdwPitchAndFamily;
 
     if (NULL != lpszFace)
     {

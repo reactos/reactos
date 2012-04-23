@@ -145,7 +145,7 @@ RealizePalette(HDC hDC) /* [in] Handle of device context */
             return MFDRV_(hDC);
         else
         {
-            HPALETTE Pal = GetDCObject(hDC, GDI_OBJECT_TYPE_PALETTE);
+            HPALETTE Pal = GetCurrentObject(hDC, OBJ_PAL);
             PLDC pLDC = GdiGetLDC((HDC) Pal);
             if ( !pLDC ) return FALSE;
             if (pLDC->iType == LDC_EMFLDC) return EMFDRV_(Pal);

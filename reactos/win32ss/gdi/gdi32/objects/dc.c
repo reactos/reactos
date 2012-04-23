@@ -412,83 +412,62 @@ SetArcDirection( HDC hdc, INT nDirection )
     return GetAndSetDCDWord( hdc, GdiGetSetArcDirection, nDirection, 0, 0, 0 );
 }
 
-
-HGDIOBJ
-WINAPI
-GetDCObject( HDC hDC, INT iType)
-{
-    if((iType == GDI_OBJECT_TYPE_BRUSH) ||
-            (iType == GDI_OBJECT_TYPE_EXTPEN)||
-            (iType == GDI_OBJECT_TYPE_PEN)   ||
-            (iType == GDI_OBJECT_TYPE_COLORSPACE))
-    {
-        HGDIOBJ hGO = NULL;
-        PDC_ATTR Dc_Attr;
-
-        if (!hDC) return hGO;
-
-        if (!GdiGetHandleUserData((HGDIOBJ) hDC, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return NULL;
-
-        switch (iType)
-        {
-        case GDI_OBJECT_TYPE_BRUSH:
-            hGO = Dc_Attr->hbrush;
-            break;
-
-        case GDI_OBJECT_TYPE_EXTPEN:
-        case GDI_OBJECT_TYPE_PEN:
-            hGO = Dc_Attr->hpen;
-            break;
-
-        case GDI_OBJECT_TYPE_COLORSPACE:
-            hGO = Dc_Attr->hColorSpace;
-            break;
-        }
-        return hGO;
-    }
-    return NtGdiGetDCObject( hDC, iType );
-}
-
-
 /*
  * @implemented
  *
  */
 HGDIOBJ
 WINAPI
-GetCurrentObject(HDC hdc,
-                 UINT uObjectType)
+GetCurrentObject(
+    _In_ HDC hdc,
+    _In_ UINT uObjectType)
 {
-    switch(uObjectType)
+    PDC_ATTR pdcattr;
+
+    /* Check if this is a user mode object */
+    if ((uObjectType == OBJ_PEN) ||
+        (uObjectType == OBJ_EXTPEN) ||
+        (uObjectType == OBJ_BRUSH) ||
+        (uObjectType == OBJ_COLORSPACE))
     {
-    case OBJ_EXTPEN:
-    case OBJ_PEN:
-        uObjectType = GDI_OBJECT_TYPE_PEN;
-        break;
-    case OBJ_BRUSH:
-        uObjectType = GDI_OBJECT_TYPE_BRUSH;
-        break;
-    case OBJ_PAL:
-        uObjectType = GDI_OBJECT_TYPE_PALETTE;
-        break;
-    case OBJ_FONT:
-        uObjectType = GDI_OBJECT_TYPE_FONT;
-        break;
-    case OBJ_BITMAP:
-        uObjectType = GDI_OBJECT_TYPE_BITMAP;
-        break;
-    case OBJ_COLORSPACE:
-        uObjectType = GDI_OBJECT_TYPE_COLORSPACE;
-        break;
-        /* tests show that OBJ_REGION is explicitly ignored */
-    case OBJ_REGION:
-        return NULL;
-        /* the SDK only mentions those above */
-    default:
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return NULL;
+        /* Get the dc attribute */
+        pdcattr = GdiGetDcAttr(hdc);
+        if (!pdcattr) return NULL;
     }
-    return  GetDCObject(hdc, uObjectType);
+
+    /* Check what object was requested */
+    switch (uObjectType)
+    {
+        case OBJ_EXTPEN:
+        case OBJ_PEN:
+            return pdcattr->hpen;
+
+        case OBJ_BRUSH:
+            return pdcattr->hbrush;
+
+        case OBJ_COLORSPACE:
+            return pdcattr->hColorSpace;
+
+        case OBJ_PAL:
+            uObjectType = GDI_OBJECT_TYPE_PALETTE;
+            break;
+
+        case OBJ_FONT:
+            uObjectType = GDI_OBJECT_TYPE_FONT;
+            break;
+
+        case OBJ_BITMAP:
+            uObjectType = GDI_OBJECT_TYPE_BITMAP;
+            break;
+
+        /* All others are invalid */
+        default:
+            SetLastError(ERROR_INVALID_PARAMETER);
+            return NULL;
+    }
+
+    /* Pass the request to win32k */
+    return NtGdiGetDCObject(hdc, uObjectType);
 }
 
 /*
@@ -774,8 +753,7 @@ GetDCOrgEx(
 LONG
 WINAPI
 GetDCOrg(
-    HDC hdc
-)
+    HDC hdc)
 {
     // Officially obsolete by Microsoft
     POINT Pt;
@@ -784,117 +762,86 @@ GetDCOrg(
     return(MAKELONG(Pt.x, Pt.y));
 }
 
-
-int
-GetNonFontObject(HGDIOBJ hGdiObj, int cbSize, LPVOID lpBuffer)
-{
-    INT dwType;
-
-    hGdiObj = (HANDLE)GdiFixUpHandle(hGdiObj);
-    dwType = GDI_HANDLE_GET_TYPE(hGdiObj);
-
-    if (!lpBuffer) // Should pass it all to Win32k and let god sort it out. ;^)
-    {
-        switch(dwType)
-        {
-        case GDI_OBJECT_TYPE_PEN:
-            return sizeof(LOGPEN);
-        case GDI_OBJECT_TYPE_BRUSH:
-            return sizeof(LOGBRUSH);
-        case GDI_OBJECT_TYPE_BITMAP:
-            return sizeof(BITMAP);
-        case GDI_OBJECT_TYPE_PALETTE:
-            return sizeof(WORD);
-        case GDI_OBJECT_TYPE_EXTPEN: /* we don't know the size, ask win32k */
-            break;
-        }
-    }
-
-    switch(dwType)
-    {
-    case GDI_OBJECT_TYPE_PEN: //Check the structures and see if A & W are the same.
-    case GDI_OBJECT_TYPE_EXTPEN:
-    case GDI_OBJECT_TYPE_BRUSH: // Mixing Apples and Oranges?
-    case GDI_OBJECT_TYPE_BITMAP:
-    case GDI_OBJECT_TYPE_PALETTE:
-        return NtGdiExtGetObjectW(hGdiObj, cbSize, lpBuffer);
-
-    case GDI_OBJECT_TYPE_DC:
-    case GDI_OBJECT_TYPE_REGION:
-    case GDI_OBJECT_TYPE_METAFILE:
-    case GDI_OBJECT_TYPE_ENHMETAFILE:
-    case GDI_OBJECT_TYPE_EMF:
-        SetLastError(ERROR_INVALID_HANDLE);
-    }
-    return 0;
-}
-
-
-/*
- * @implemented
- */
-int
+ULONG
 WINAPI
-GetObjectA(HGDIOBJ hGdiObj, int cbSize, LPVOID lpBuffer)
+GetFontObjectW(HGDIOBJ hfont, ULONG cbSize, LPVOID lpBuffer)
 {
-    ENUMLOGFONTEXDVW LogFont;
-    DWORD dwType;
-    INT Result = 0;
+    ENUMLOGFONTEXDVW elfedvW;
+    ULONG cbResult, cbMaxSize;
 
-    dwType = GDI_HANDLE_GET_TYPE(hGdiObj);
+    /* Check if size only is requested */
+    if (!lpBuffer) return sizeof(LOGFONTW);
 
-    if(dwType == GDI_OBJECT_TYPE_COLORSPACE) //Stays here, processes struct A
+    /* Check for size 0 */
+    if (cbSize == 0)
     {
-        SetLastError(ERROR_NOT_SUPPORTED);
+        /* Windows does not SetLastError() */
         return 0;
     }
 
-    if (dwType == GDI_OBJECT_TYPE_FONT)
+    /* Call win32k to get the logfont (widechar) */
+    cbResult = NtGdiExtGetObjectW(hfont, sizeof(ENUMLOGFONTEXDVW), &elfedvW);
+    if (cbResult == 0)
     {
-        if (!lpBuffer)
-        {
-            return sizeof(LOGFONTA);
-        }
-        if (cbSize == 0)
-        {
-            /* Windows does not SetLastError() */
-            return 0;
-        }
-        // ENUMLOGFONTEXDVW is the default size and should be the structure for
-        // Entry->KernelData for Font objects.
-        Result = NtGdiExtGetObjectW(hGdiObj, sizeof(ENUMLOGFONTEXDVW), &LogFont);
-
-        if (0 == Result)
-        {
-            return 0;
-        }
-
-        switch (cbSize)
-        {
-        case sizeof(ENUMLOGFONTEXDVA):
-            // need to move more here.
-        case sizeof(ENUMLOGFONTEXA):
-            EnumLogFontExW2A( (LPENUMLOGFONTEXA) lpBuffer, &LogFont.elfEnumLogfontEx );
-            break;
-
-        case sizeof(ENUMLOGFONTA):
-            // Same here, maybe? Check the structures.
-        case sizeof(EXTLOGFONTA):
-            // Same here
-        case sizeof(LOGFONTA):
-            LogFontW2A((LPLOGFONTA) lpBuffer, &LogFont.elfEnumLogfontEx.elfLogFont);
-            break;
-
-        default:
-            SetLastError(ERROR_BUFFER_OVERFLOW);
-            return 0;
-        }
-        return cbSize;
+        return 0;
     }
 
-    return GetNonFontObject(hGdiObj, cbSize, lpBuffer);
+    /* Calculate the maximum size according to number of axes */
+    cbMaxSize = FIELD_OFFSET(ENUMLOGFONTEXDVW,
+            elfDesignVector.dvValues[elfedvW.elfDesignVector.dvNumAxes]);
+
+    /* Don't copy more than the maximum */
+    if (cbSize > cbMaxSize) cbSize = cbMaxSize;
+    if (cbSize > cbResult) cbSize = cbResult;
+
+    /* Copy the number of bytes requested */
+    memcpy(lpBuffer, &elfedvW, cbSize);
+
+    /* Return the number of bytes copied */
+    return cbSize;
 }
 
+ULONG
+WINAPI
+GetFontObjectA(HGDIOBJ hfont, ULONG cbSize, LPVOID lpBuffer)
+{
+    ENUMLOGFONTEXDVW elfedvW;
+    ENUMLOGFONTEXDVA elfedvA;
+    ULONG cbResult;
+
+    /* Check if size only is requested */
+    if (!lpBuffer) return sizeof(LOGFONTA);
+
+    /* Check for size 0 */
+    if (cbSize == 0)
+    {
+        /* Windows does not SetLastError() */
+        return 0;
+    }
+
+    /* Windows does this ... */
+    if (cbSize == sizeof(LOGFONTW)) cbSize = sizeof(LOGFONTA);
+
+    /* Call win32k to get the logfont (widechar) */
+    cbResult = NtGdiExtGetObjectW(hfont, sizeof(ENUMLOGFONTEXDVW), &elfedvW);
+    if (cbResult == 0)
+    {
+        return 0;
+    }
+
+    /* Convert the logfont from widechar to ansi */
+    EnumLogFontExW2A(&elfedvA.elfEnumLogfontEx, &elfedvW.elfEnumLogfontEx);
+    elfedvA.elfDesignVector = elfedvW.elfDesignVector;
+
+    /* Don't copy more than maximum */
+    if (cbSize > sizeof(ENUMLOGFONTEXDVA)) cbSize = sizeof(ENUMLOGFONTEXDVA);
+
+    /* Copy the number of bytes requested */
+    memcpy(lpBuffer, &elfedvA, cbSize);
+
+    /* Return the number of bytes copied */
+    return cbSize;
+}
 
 /*
  * @implemented
@@ -903,47 +850,100 @@ int
 WINAPI
 GetObjectW(HGDIOBJ hGdiObj, int cbSize, LPVOID lpBuffer)
 {
-    DWORD dwType = GDI_HANDLE_GET_TYPE(hGdiObj);
-    INT Result = 0;
+    DWORD dwType;
+    INT cbResult = 0;
 
-    /*
-      Check List:
-      MSDN, "This can be a handle to one of the following: logical bitmap, a brush,
-      a font, a palette, a pen, or a device independent bitmap created by calling
-      the CreateDIBSection function."
-     */
-    if(dwType == GDI_OBJECT_TYPE_COLORSPACE) //Stays here, processes struct W
+    hGdiObj = GdiFixUpHandle(hGdiObj);
+
+    /* Get the object type */
+    dwType = GDI_HANDLE_GET_TYPE(hGdiObj);
+
+    /* Check what kind of object we have */
+    switch(dwType)
     {
-        SetLastError(ERROR_NOT_SUPPORTED); // Not supported yet.
-        return 0;
+        case GDI_OBJECT_TYPE_PEN:
+            if (!lpBuffer) return sizeof(LOGPEN);
+            cbResult = NtGdiExtGetObjectW(hGdiObj, cbSize, lpBuffer);
+            if (cbResult == 0)
+                SetLastError(ERROR_INVALID_PARAMETER);
+            return cbResult;
+
+        case GDI_OBJECT_TYPE_BRUSH:
+            if (!lpBuffer) return sizeof(LOGBRUSH);
+            cbResult = NtGdiExtGetObjectW(hGdiObj, cbSize, lpBuffer);
+            if (cbResult == 0)
+                SetLastError(ERROR_INVALID_PARAMETER);
+            return cbResult;
+
+        case GDI_OBJECT_TYPE_BITMAP:
+            if (!lpBuffer) return sizeof(BITMAP);
+            return NtGdiExtGetObjectW(hGdiObj, cbSize, lpBuffer);
+
+        case GDI_OBJECT_TYPE_PALETTE:
+            if (!lpBuffer) return sizeof(WORD);
+            return NtGdiExtGetObjectW(hGdiObj, cbSize, lpBuffer);
+
+        case GDI_OBJECT_TYPE_FONT:
+            return GetFontObjectW(hGdiObj, cbSize, lpBuffer);
+
+        case GDI_OBJECT_TYPE_EXTPEN:
+            /* we don't know the size, ask win32k */
+            cbResult = NtGdiExtGetObjectW(hGdiObj, cbSize, lpBuffer);
+            if (cbResult == 0)
+            {
+                if (!GdiIsHandleValid(hGdiObj))
+                    SetLastError(ERROR_INVALID_PARAMETER);
+                else if (cbSize == 0)
+                    SetLastError(ERROR_NOACCESS);
+            }
+            return cbResult;
+
+        case GDI_OBJECT_TYPE_COLORSPACE:
+            if ((cbSize < 328) || !lpBuffer)
+            {
+                SetLastError(ERROR_INSUFFICIENT_BUFFER);
+                return 0;
+            }
+            cbResult = NtGdiExtGetObjectW(hGdiObj, cbSize, lpBuffer);
+            if (cbResult == 0)
+                SetLastError(ERROR_INVALID_PARAMETER);
+            return cbResult;
+
+        case GDI_OBJECT_TYPE_METADC:
+            return 0;
+
+        case GDI_OBJECT_TYPE_DC:
+        case GDI_OBJECT_TYPE_REGION:
+        case GDI_OBJECT_TYPE_EMF:
+        case GDI_OBJECT_TYPE_METAFILE:
+        case GDI_OBJECT_TYPE_ENHMETAFILE:
+            SetLastError(ERROR_INVALID_HANDLE);
+        default:
+            return 0;
     }
 
+    return 0;
+}
+
+/*
+ * @implemented
+ */
+int
+WINAPI
+GetObjectA(HGDIOBJ hGdiObj, int cbSize, LPVOID lpBuffer)
+{
+    DWORD dwType = GDI_HANDLE_GET_TYPE(hGdiObj);
+
+    /* Chjeck if this is anything else but a font */
     if (dwType == GDI_OBJECT_TYPE_FONT)
     {
-        if (!lpBuffer)
-        {
-            return sizeof(LOGFONTW);
-        }
-
-        if (cbSize == 0)
-        {
-            /* Windows does not SetLastError() */
-            return 0;
-        }
-        // Poorly written apps are not ReactOS problem!
-        // We fix it here if the size is larger than the default size.
-        if( cbSize > (int)sizeof(ENUMLOGFONTEXDVW) ) cbSize = sizeof(ENUMLOGFONTEXDVW);
-
-        Result = NtGdiExtGetObjectW(hGdiObj, cbSize, lpBuffer); // Should handle the copy.
-
-        if (0 == Result)
-        {
-            return 0;
-        }
-        return cbSize;
+        return GetFontObjectA(hGdiObj, cbSize, lpBuffer);
     }
-
-    return GetNonFontObject(hGdiObj, cbSize, lpBuffer);
+    else
+    {
+        /* Simply pass it to the widechar version */
+        return GetObjectW(hGdiObj, cbSize, lpBuffer);
+    }
 }
 
 
