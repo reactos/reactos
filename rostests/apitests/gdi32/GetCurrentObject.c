@@ -30,7 +30,7 @@ void Test_GetCurrentObject()
 	SetLastError(ERROR_SUCCESS);
 	hObj = GetCurrentObject(NULL, 0);
 	ok(hObj == 0, "Expected 0, got %p\n", hObj);
-	ok(GetLastError() == ERROR_INVALID_PARAMETER, "Expected ERROR_SUCCESS, got %lu\n", GetLastError());
+	ok(GetLastError() == ERROR_INVALID_PARAMETER, "Expected ERROR_INVALID_PARAMETER, got %lu\n", GetLastError());
 
 	SetLastError(ERROR_SUCCESS);
 	hObj = GetCurrentObject(NULL, OBJ_BITMAP);
@@ -49,9 +49,9 @@ void Test_GetCurrentObject()
 
 	/* Test invalid DC handle */
 	SetLastError(ERROR_SUCCESS);
-	hObj = GetCurrentObject((HDC)-123, 0);
+	hObj = GetCurrentObject((HDC)-123, OBJ_PEN);
 	ok(hObj == 0, "Expected 0, got %p\n", hObj);
-	ok(GetLastError() == ERROR_INVALID_PARAMETER, "Expected ERROR_INVALID_PARAMETER, got %lu\n", GetLastError());
+	ok(GetLastError() == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %lu\n", GetLastError());
 
 	SetLastError(ERROR_SUCCESS);
 	hObj = GetCurrentObject((HDC)-123, OBJ_BITMAP);
@@ -65,7 +65,17 @@ void Test_GetCurrentObject()
 	ok(GetLastError() == ERROR_INVALID_PARAMETER, "Expected ERROR_INVALID_PARAMETER, got %lu\n", GetLastError());
 
 	SetLastError(ERROR_SUCCESS);
+	hObj = GetCurrentObject((HDC)-123, 0);
+	ok(hObj == 0, "Expected 0, got %p\n", hObj);
+	ok(GetLastError() == ERROR_INVALID_PARAMETER, "Expected ERROR_INVALID_PARAMETER, got %lu\n", GetLastError());
+
+	SetLastError(ERROR_SUCCESS);
 	hObj = GetCurrentObject(hDC, 3);
+	ok(hObj == 0, "Expected 0, got %p\n", hObj);
+	ok(GetLastError() == ERROR_INVALID_PARAMETER, "Expected ERROR_INVALID_PARAMETER, got %lu\n", GetLastError());
+
+	SetLastError(ERROR_SUCCESS);
+	hObj = GetCurrentObject(NULL, 3);
 	ok(hObj == 0, "Expected 0, got %p\n", hObj);
 	ok(GetLastError() == ERROR_INVALID_PARAMETER, "Expected ERROR_INVALID_PARAMETER, got %lu\n", GetLastError());
 
