@@ -848,9 +848,7 @@ NTSTATUS TdiQueryAddress(
 
                 if (SnmpInfo.NumAddr != 1) {
                     /* Skip loopback address */
-                    PIPADDR_ENTRY IpAddressEntry = (PIPADDR_ENTRY)
-                        ((PCHAR)IpAddress) + sizeof(IPADDR_ENTRY);
-                    *Address = DN2H(IpAddressEntry->Addr);
+                    *Address = DN2H(IpAddress[1].Addr);
                 } else {
                     /* Select the first address returned */
                     *Address = DN2H(IpAddress->Addr);

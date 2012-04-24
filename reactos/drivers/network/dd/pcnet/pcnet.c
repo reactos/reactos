@@ -1286,7 +1286,7 @@ MiGetMediaDuplex(PADAPTER Adapter)
   NdisRawWritePortUshort(Adapter->PortOffset + RAP, BCR5);
   NdisRawReadPortUshort(Adapter->PortOffset + BDP, &Data);
 
-  return Data & BCR5_LEDOUT;
+  return (Data & BCR5_LEDOUT) != 0;
 }
 
 UINT
