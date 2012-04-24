@@ -264,7 +264,7 @@ USBSTOR_FdoHandleStartDevice(
         //
         // create pdo
         //
-        Status = USBSTOR_CreatePDO(DeviceObject, &DeviceExtension->ChildPDO[Index]);
+        Status = USBSTOR_CreatePDO(DeviceObject, Index, &DeviceExtension->ChildPDO[Index]);
 
         //
         // check for failure

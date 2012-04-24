@@ -1256,6 +1256,7 @@ USBSTOR_SendFormatCapacityIrp(
 NTSTATUS
 USBSTOR_CreatePDO(
     IN PDEVICE_OBJECT DeviceObject,
+    IN UCHAR LUN,
     OUT PDEVICE_OBJECT *ChildDeviceObject)
 {
     PDEVICE_OBJECT PDO;
@@ -1293,6 +1294,7 @@ USBSTOR_CreatePDO(
     PDODeviceExtension->LowerDeviceObject = DeviceObject;
     PDODeviceExtension->PDODeviceObject = ChildDeviceObject;
     PDODeviceExtension->Self = PDO;
+    PDODeviceExtension->LUN = LUN;
 
     //
     // set device flags

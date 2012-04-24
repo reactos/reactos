@@ -364,6 +364,7 @@ USBSTOR_PdoHandlePnp(
 NTSTATUS
 USBSTOR_CreatePDO(
     IN PDEVICE_OBJECT DeviceObject,
+    IN UCHAR LUN,
     OUT PDEVICE_OBJECT *ChildDeviceObject);
 
 //---------------------------------------------------------------------
