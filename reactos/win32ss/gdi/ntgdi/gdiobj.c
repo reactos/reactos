@@ -1038,15 +1038,9 @@ GreGetObject(
         case GDILoObjType_LO_BITMAP_TYPE:
             iResult = BITMAP_GetObject(pvObj, cbCount, pvBuffer);
             break;
+
         case GDILoObjType_LO_FONT_TYPE:
             iResult = FontGetObject(pvObj, cbCount, pvBuffer);
-#if 0
-            // Fix the LOGFONT structure for the stock fonts
-            if (FIRST_STOCK_HANDLE <= hobj && hobj <= LAST_STOCK_HANDLE)
-            {
-                FixStockFontSizeW(hobj, cbCount, pvBuffer);
-            }
-#endif
             break;
 
         case GDILoObjType_LO_PALETTE_TYPE:
@@ -1096,7 +1090,7 @@ NtGdiExtGetObjectW(
         /* Enter SEH for buffer transfer */
         _SEH2_TRY
         {
-            // Probe the buffer and copy it
+            /* Probe the buffer and copy it */
             ProbeForWrite(lpBuffer, cbCopyCount, sizeof(WORD));
             RtlCopyMemory(lpBuffer, &object, cbCopyCount);
         }

@@ -88,7 +88,7 @@ BOOL FASTCALL InitFontSupport(VOID);
 BOOL FASTCALL IntIsFontRenderingEnabled(VOID);
 BOOL FASTCALL IntIsFontRenderingEnabled(VOID);
 VOID FASTCALL IntEnableFontRendering(BOOL Enable);
-INT FASTCALL FontGetObject(PTEXTOBJ TextObj, INT Count, PVOID Buffer);
+ULONG FASTCALL FontGetObject(PTEXTOBJ TextObj, ULONG Count, PVOID Buffer);
 VOID FASTCALL IntLoadSystemFonts(VOID);
 INT FASTCALL IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics);
 ULONG FASTCALL ftGdiGetGlyphOutline(PDC,WCHAR,UINT,LPGLYPHMETRICS,ULONG,PVOID,LPMAT2,BOOL);

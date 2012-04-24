@@ -422,7 +422,7 @@ GetCurrentObject(
     _In_ HDC hdc,
     _In_ UINT uObjectType)
 {
-    PDC_ATTR pdcattr;
+    PDC_ATTR pdcattr = NULL;
 
     /* Check if this is a user mode object */
     if ((uObjectType == OBJ_PEN) ||
@@ -762,44 +762,101 @@ GetDCOrg(
     return(MAKELONG(Pt.x, Pt.y));
 }
 
-ULONG
+
+/*
+ * @implemented
+ */
+int
 WINAPI
-GetFontObjectW(HGDIOBJ hfont, ULONG cbSize, LPVOID lpBuffer)
+GetObjectW(HGDIOBJ hGdiObj, int cbSize, LPVOID lpBuffer)
 {
-    ENUMLOGFONTEXDVW elfedvW;
-    ULONG cbResult, cbMaxSize;
+    DWORD dwType;
+    INT cbResult = 0;
 
-    /* Check if size only is requested */
-    if (!lpBuffer) return sizeof(LOGFONTW);
+    /* Fixup handles with upper 16 bits masked */
+    hGdiObj = GdiFixUpHandle(hGdiObj);
 
-    /* Check for size 0 */
-    if (cbSize == 0)
+    /* Get the object type */
+    dwType = GDI_HANDLE_GET_TYPE(hGdiObj);
+
+    /* Check what kind of object we have */
+    switch (dwType)
     {
-        /* Windows does not SetLastError() */
-        return 0;
+        case GDI_OBJECT_TYPE_PEN:
+            if (!lpBuffer) return sizeof(LOGPEN);
+            break;
+
+        case GDI_OBJECT_TYPE_BRUSH:
+            if (!lpBuffer || !cbSize) return sizeof(LOGBRUSH);
+            break;
+
+        case GDI_OBJECT_TYPE_BITMAP:
+            if (!lpBuffer) return sizeof(BITMAP);
+            break;
+
+        case GDI_OBJECT_TYPE_PALETTE:
+            if (!lpBuffer) return sizeof(WORD);
+            break;
+
+        case GDI_OBJECT_TYPE_FONT:
+            if (!lpBuffer) return sizeof(LOGFONTW);
+            break;
+
+        case GDI_OBJECT_TYPE_EXTPEN:
+            /* we don't know the size, ask win32k */
+            break;
+
+        case GDI_OBJECT_TYPE_COLORSPACE:
+            if ((cbSize < 328) || !lpBuffer)
+            {
+                SetLastError(ERROR_INSUFFICIENT_BUFFER);
+                return 0;
+            }
+            break;
+
+        case GDI_OBJECT_TYPE_DC:
+        case GDI_OBJECT_TYPE_REGION:
+        case GDI_OBJECT_TYPE_EMF:
+        case GDI_OBJECT_TYPE_METAFILE:
+        case GDI_OBJECT_TYPE_ENHMETAFILE:
+            SetLastError(ERROR_INVALID_HANDLE);
+        default:
+            return 0;
     }
 
-    /* Call win32k to get the logfont (widechar) */
-    cbResult = NtGdiExtGetObjectW(hfont, sizeof(ENUMLOGFONTEXDVW), &elfedvW);
+    /* Call win32k */
+    cbResult = NtGdiExtGetObjectW(hGdiObj, cbSize, lpBuffer);
+
+    /* Handle error */
     if (cbResult == 0)
     {
-        return 0;
+        if (!GdiIsHandleValid(hGdiObj))
+        {
+            if ((dwType == GDI_OBJECT_TYPE_PEN) ||
+                (dwType == GDI_OBJECT_TYPE_EXTPEN) ||
+                (dwType == GDI_OBJECT_TYPE_BRUSH) ||
+                (dwType == GDI_OBJECT_TYPE_COLORSPACE))
+            {
+                SetLastError(ERROR_INVALID_PARAMETER);
+            }
+        }
+        else
+        {
+            if ((dwType == GDI_OBJECT_TYPE_PEN) ||
+                (dwType == GDI_OBJECT_TYPE_BRUSH) ||
+                (dwType == GDI_OBJECT_TYPE_COLORSPACE) ||
+                ( (dwType == GDI_OBJECT_TYPE_EXTPEN) &&
+                    ( (cbSize >= sizeof(EXTLOGPEN)) || (cbSize == 0) ) ) ||
+                ( (dwType == GDI_OBJECT_TYPE_BITMAP) && (cbSize >= sizeof(BITMAP)) ))
+            {
+                SetLastError(ERROR_NOACCESS);
+            }
+        }
     }
 
-    /* Calculate the maximum size according to number of axes */
-    cbMaxSize = FIELD_OFFSET(ENUMLOGFONTEXDVW,
-            elfDesignVector.dvValues[elfedvW.elfDesignVector.dvNumAxes]);
-
-    /* Don't copy more than the maximum */
-    if (cbSize > cbMaxSize) cbSize = cbMaxSize;
-    if (cbSize > cbResult) cbSize = cbResult;
-
-    /* Copy the number of bytes requested */
-    memcpy(lpBuffer, &elfedvW, cbSize);
-
-    /* Return the number of bytes copied */
-    return cbSize;
+    return cbResult;
 }
+
 
 ULONG
 WINAPI
@@ -843,84 +900,6 @@ GetFontObjectA(HGDIOBJ hfont, ULONG cbSize, LPVOID lpBuffer)
     return cbSize;
 }
 
-/*
- * @implemented
- */
-int
-WINAPI
-GetObjectW(HGDIOBJ hGdiObj, int cbSize, LPVOID lpBuffer)
-{
-    DWORD dwType;
-    INT cbResult = 0;
-
-    hGdiObj = GdiFixUpHandle(hGdiObj);
-
-    /* Get the object type */
-    dwType = GDI_HANDLE_GET_TYPE(hGdiObj);
-
-    /* Check what kind of object we have */
-    switch(dwType)
-    {
-        case GDI_OBJECT_TYPE_PEN:
-            if (!lpBuffer) return sizeof(LOGPEN);
-            cbResult = NtGdiExtGetObjectW(hGdiObj, cbSize, lpBuffer);
-            if (cbResult == 0)
-                SetLastError(ERROR_INVALID_PARAMETER);
-            return cbResult;
-
-        case GDI_OBJECT_TYPE_BRUSH:
-            if (!lpBuffer) return sizeof(LOGBRUSH);
-            cbResult = NtGdiExtGetObjectW(hGdiObj, cbSize, lpBuffer);
-            if (cbResult == 0)
-                SetLastError(ERROR_INVALID_PARAMETER);
-            return cbResult;
-
-        case GDI_OBJECT_TYPE_BITMAP:
-            if (!lpBuffer) return sizeof(BITMAP);
-            return NtGdiExtGetObjectW(hGdiObj, cbSize, lpBuffer);
-
-        case GDI_OBJECT_TYPE_PALETTE:
-            if (!lpBuffer) return sizeof(WORD);
-            return NtGdiExtGetObjectW(hGdiObj, cbSize, lpBuffer);
-
-        case GDI_OBJECT_TYPE_FONT:
-            return GetFontObjectW(hGdiObj, cbSize, lpBuffer);
-
-        case GDI_OBJECT_TYPE_EXTPEN:
-            /* we don't know the size, ask win32k */
-            cbResult = NtGdiExtGetObjectW(hGdiObj, cbSize, lpBuffer);
-            if (cbResult == 0)
-            {
-                if (!GdiIsHandleValid(hGdiObj))
-                    SetLastError(ERROR_INVALID_PARAMETER);
-                else if (cbSize == 0)
-                    SetLastError(ERROR_NOACCESS);
-            }
-            return cbResult;
-
-        case GDI_OBJECT_TYPE_COLORSPACE:
-            if ((cbSize < 328) || !lpBuffer)
-            {
-                SetLastError(ERROR_INSUFFICIENT_BUFFER);
-                return 0;
-            }
-            cbResult = NtGdiExtGetObjectW(hGdiObj, cbSize, lpBuffer);
-            if (cbResult == 0)
-                SetLastError(ERROR_INVALID_PARAMETER);
-            return cbResult;
-
-        case GDI_OBJECT_TYPE_DC:
-        case GDI_OBJECT_TYPE_REGION:
-        case GDI_OBJECT_TYPE_EMF:
-        case GDI_OBJECT_TYPE_METAFILE:
-        case GDI_OBJECT_TYPE_ENHMETAFILE:
-            SetLastError(ERROR_INVALID_HANDLE);
-        default:
-            return 0;
-    }
-
-    return 0;
-}
 
 /*
  * @implemented

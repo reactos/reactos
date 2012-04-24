@@ -260,43 +260,23 @@ GreGetCharacterPlacementW(
 }
 #endif
 
-INT
+ULONG
 FASTCALL
-FontGetObject(PTEXTOBJ TFont, INT cjBuffer, PVOID pvBuffer)
+FontGetObject(PTEXTOBJ plfont, ULONG cjBuffer, PVOID pvBuffer)
 {
+    ULONG cjMaxSize;
+    ENUMLOGFONTEXDVW *plf = &plfont->logfont;
+
+    /* If buffer is NULL, only the size is requested */
     if (pvBuffer == NULL) return sizeof(LOGFONTW);
 
-    switch (cjBuffer)
-    {
-        case sizeof(ENUMLOGFONTEXDVW):
-            RtlCopyMemory(pvBuffer,
-                          &TFont->logfont,
-                          sizeof(ENUMLOGFONTEXDVW));
-            break;
+    /* Calculate the maximum size according to number of axes */
+    cjMaxSize = FIELD_OFFSET(ENUMLOGFONTEXDVW,
+                    elfDesignVector.dvValues[plf->elfDesignVector.dvNumAxes]);
 
-        case sizeof(ENUMLOGFONTEXW):
-            RtlCopyMemory(pvBuffer,
-                          &TFont->logfont.elfEnumLogfontEx,
-                          sizeof(ENUMLOGFONTEXW));
-        break;
+    if (cjBuffer > cjMaxSize) cjBuffer = cjMaxSize;
 
-        case sizeof(EXTLOGFONTW):
-        case sizeof(ENUMLOGFONTW):
-            RtlCopyMemory((LPENUMLOGFONTW) pvBuffer,
-                                    &TFont->logfont.elfEnumLogfontEx.elfLogFont,
-                                       sizeof(ENUMLOGFONTW));
-            break;
-
-        case sizeof(LOGFONTW):
-            RtlCopyMemory((LPLOGFONTW) pvBuffer,
-                                   &TFont->logfont.elfEnumLogfontEx.elfLogFont,
-                                   sizeof(LOGFONTW));
-            break;
-
-        default:
-            EngSetLastError(ERROR_BUFFER_OVERFLOW);
-            return 0;
-    }
+    RtlCopyMemory(pvBuffer, plf, cjBuffer);
 
     return cjBuffer;
 }
