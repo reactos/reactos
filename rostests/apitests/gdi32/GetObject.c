@@ -18,7 +18,7 @@ Test_General(void)
 	struct
 	{
 		LOGBRUSH logbrush;
-		BYTE additional[5];
+		BYTE additional[600];
 	} TestStruct;
 	PLOGBRUSH plogbrush;
 	HBRUSH hBrush;
@@ -28,11 +28,12 @@ Test_General(void)
 	SetLastError(ERROR_SUCCESS);
 	ok(GetObjectA(0, 0, NULL) == 0, "\n");
 	ok(GetObjectA((HANDLE)-1, 0, NULL) == 0, "\n");
+
+	/* Test invalid habdles of different types */
 	ok(GetObjectA((HANDLE)0x00380000, 0, NULL) == 0, "\n");
 	ok(GetLastError() == ERROR_SUCCESS, "\n");
 	ok(GetObjectA((HANDLE)0x00380000, 10, &TestStruct) == 0, "\n");
 	ok(GetLastError() == ERROR_SUCCESS, "\n");
-
 	SetLastError(ERROR_SUCCESS);
 	ok(GetObjectA((HANDLE)0x00010000, 0, NULL) == 0, "\n");
 	ok(GetLastError() == ERROR_INVALID_HANDLE, "\n");
@@ -84,7 +85,6 @@ Test_General(void)
 	SetLastError(ERROR_SUCCESS);
 	ok(GetObjectA((HANDLE)0x00160000, 0, NULL) == 0, "\n");
 	ok(GetLastError() == ERROR_SUCCESS, "\n");
-
 	SetLastError(ERROR_SUCCESS);
 	ok(GetObjectA((HANDLE)GDI_OBJECT_TYPE_DC, 0, NULL) == 0, "\n");
 	ok(GetLastError() == ERROR_INVALID_HANDLE, "\n");
@@ -126,10 +126,19 @@ Test_General(void)
 	plogbrush = (PVOID)((ULONG_PTR)&TestStruct.logbrush + 1);
 	//ok(GetObject(hBrush, sizeof(LOGBRUSH), plogbrush) == 0, "\n"); // fails on win7
 
-    /* Test invalid buffer */
+	/* Test invalid buffer */
 	SetLastError(ERROR_SUCCESS);
-	ok(GetObjectA(hBrush, sizeof(LOGBRUSH), (PVOID)0xc0000000) == 0, "\n");
+	ok(GetObjectA(GetStockObject(WHITE_BRUSH), sizeof(LOGBRUSH), (PVOID)0xc0000000) == 0, "\n");
 	ok(GetLastError() == ERROR_NOACCESS, "expected ERROR_NOACCESS, got %ld\n", GetLastError());
+	SetLastError(ERROR_SUCCESS);
+	ok(GetObjectW(GetStockObject(BLACK_PEN), sizeof(LOGPEN), (PVOID)0xc0000000) == 0, "\n");
+	ok(GetLastError() == ERROR_NOACCESS, "expected ERROR_NOACCESS, got %ld\n", GetLastError());
+	SetLastError(ERROR_SUCCESS);
+	ok(GetObjectW(GetStockObject(21), sizeof(BITMAP), (PVOID)0xc0000000) == 0, "\n");
+	ok(GetLastError() == ERROR_NOACCESS, "expected ERROR_NOACCESS, got %ld\n", GetLastError());
+	SetLastError(ERROR_SUCCESS);
+	ok(GetObjectW(GetStockObject(SYSTEM_FONT), sizeof(LOGFONT), (PVOID)0xc0000000) == 0, "\n");
+	ok(GetLastError() == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %ld\n", GetLastError());
 	SetLastError(ERROR_SUCCESS);
 	_SEH2_TRY
 	{
@@ -140,13 +149,25 @@ Test_General(void)
 	    ret = -1;
 	}
 	_SEH2_END
-
 	ok(ret == -1, "should have got an exception\n");
 
-	SetLastError(ERROR_SUCCESS);
-	ok(GetObjectW(GetStockObject(SYSTEM_FONT), sizeof(LOGFONT), (PVOID)0xc0000000) == 0, "\n");
-	ok(GetLastError() == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %ld\n", GetLastError());
+	ok(GetObjectW(GetStockObject(SYSTEM_FONT), 0x50000000, &TestStruct) == 356, "\n");
+	ok(GetObjectW(GetStockObject(WHITE_BRUSH), 0x50000000, &TestStruct) == sizeof(LOGBRUSH), "\n");
 
+
+	/* Test buffer size of 0 */
+	SetLastError(ERROR_SUCCESS);
+	ok(GetObjectA(GetStockObject(WHITE_BRUSH), 0, &TestStruct) == sizeof(LOGBRUSH), "\n");
+	ok(GetLastError() == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %ld\n", GetLastError());
+	SetLastError(ERROR_SUCCESS);
+	ok(GetObjectA(GetStockObject(BLACK_PEN), 0, &TestStruct) == 0, "\n");
+	ok(GetLastError() == ERROR_NOACCESS, "expected ERROR_NOACCESS, got %ld\n", GetLastError());
+	SetLastError(ERROR_SUCCESS);
+	ok(GetObjectW(GetStockObject(SYSTEM_FONT), 0, &TestStruct) == 0, "\n");
+	ok(GetLastError() == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %ld\n", GetLastError());
+	SetLastError(ERROR_SUCCESS);
+	ok(GetObjectW(GetStockObject(21), 0, &TestStruct) == 0, "\n");
+	ok(GetLastError() == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %ld\n", GetLastError());
 
 }
 
@@ -446,6 +467,7 @@ Test_Font(void)
         ENUMLOGFONTW enumlogfontw;
         BYTE bData[270];
 	} u;
+	int ret;
 
 	FillMemory(&u, sizeof(u), 0x77);
 	hFont = CreateFontA(8, 8, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
@@ -531,13 +553,15 @@ Test_Font(void)
 	ok(GetObjectW(hFont, sizeof(ENUMLOGFONTEXW), &u.enumlogfontexw) == sizeof(ENUMLOGFONTEXW), "\n"); // 348
 	ok(GetObjectW(hFont, sizeof(ENUMLOGFONTEXW) + 1, &u.enumlogfontexw) == sizeof(ENUMLOGFONTEXW) + 1, "\n"); // 348
 	ok(GetObjectW(hFont, 355, &u.enumlogfontexdvw) == 355, "\n"); // 419
+
 	ok(GetObjectW(hFont, 356, &u.enumlogfontexdvw) == sizeof(ENUMLOGFONTEXW) + 2*sizeof(DWORD), "\n"); // 419
+	ret = sizeof(ENUMLOGFONTEXW) + 2*sizeof(DWORD);
+	ret = GetObjectW(hFont, 357, &u.enumlogfontexdvw);
+	ok(ret == sizeof(ENUMLOGFONTEXW) + 2*sizeof(DWORD), "\n");
+	ok(GetObjectW(hFont, 357, &u.enumlogfontexdvw) == sizeof(ENUMLOGFONTEXW) + 2*sizeof(DWORD), "\n"); // 419
 	ok(GetObjectW(hFont, sizeof(ENUMLOGFONTEXDVW) - 1, &u.enumlogfontexdvw) == sizeof(ENUMLOGFONTEXW) + 2*sizeof(DWORD), "\n"); // 419
 	ok(GetObjectW(hFont, sizeof(ENUMLOGFONTEXDVW), &u.enumlogfontexdvw) == sizeof(ENUMLOGFONTEXW) + 2*sizeof(DWORD), "\n"); // 420
 	ok(GetObjectW(hFont, sizeof(ENUMLOGFONTEXDVW)+1, &u.enumlogfontexdvw) == sizeof(ENUMLOGFONTEXW) + 2*sizeof(DWORD), "\n"); // 356!
-
-	ok(GetObjectW(hFont, 356, &u.bData) == 356, "\n");
-	ok(GetObjectW(hFont, 357, &u.bData) == 356, "\n");
 	ok(GetLastError() == ERROR_SUCCESS, "got %ld\n", GetLastError());
 
 	DeleteObject(hFont);
