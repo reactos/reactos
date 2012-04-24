@@ -1448,17 +1448,13 @@ co_IntSendMessageNoWait(HWND hWnd,
                         LPARAM lParam)
 {
     ULONG_PTR Result = 0;
-    if (!co_IntSendMessageWithCallBack( hWnd,
-                                        Msg,
-                                        wParam,
-                                        lParam,
-                                        NULL,
-                                        0,
-                                       &Result))
-    {
-       Result = ((ULONG_PTR)-1);
-    }
-    return Result;
+    return co_IntSendMessageWithCallBack( hWnd,
+                                          Msg,
+                                          wParam,
+                                          lParam,
+                                          NULL,
+                                          0,
+                                         &Result);
 }
 /* MSDN:
    If you send a message in the range below WM_USER to the asynchronous message
@@ -1507,6 +1503,15 @@ co_IntSendMessageWithCallBack( HWND hWnd,
         RETURN(FALSE);
     }
 
+    if (Msg & 0x80000000 &&
+        Window->head.pti->MessageQueue == Win32Thread->MessageQueue)
+    {
+       ERR("SMWCB: Internal Message!\n");
+       Result = (ULONG_PTR)handle_internal_message( Window, Msg, wParam, lParam );
+       if (uResult) *uResult = Result;
+       RETURN( TRUE);
+    }
+
     /* See if this message type is present in the table */
     MsgMemoryEntry = FindMsgMemory(Msg);
     if (NULL == MsgMemoryEntry)
@@ -1532,14 +1537,6 @@ co_IntSendMessageWithCallBack( HWND hWnd,
             UnpackParam(lParamPacked, Msg, wParam, lParam, FALSE);
             /* Never send messages to exiting threads */
             RETURN(FALSE);
-        }
-
-        if (Msg & 0x80000000)
-        {
-           ERR("SMWCB: Internal Message!\n");
-           Result = (ULONG_PTR)handle_internal_message( Window, Msg, wParam, lParam );
-           if (uResult) *uResult = Result;
-           RETURN( TRUE);
         }
 
         IntCallWndProc( Window, hWnd, Msg, wParam, lParam);
@@ -1784,7 +1781,6 @@ UserSendNotifyMessage( HWND hWnd,
     else
     {
         Ret = co_IntSendMessageNoWait( hWnd, Msg, wParam, lParam);
-        if (-1 == (int) Ret || !Ret) Ret = FALSE;
     }
     return Ret;
 }
