@@ -960,9 +960,10 @@ REGION_RegionOp(
      * have to worry about using too much memory. I hope to be able to
      * nuke the Xrealloc() at the end of this function eventually.
      */
-    newReg->rdh.nRgnSize = max(reg1->rdh.nCount,reg2->rdh.nCount) * 2 * sizeof(RECT);
+    newReg->rdh.nRgnSize = max(reg1->rdh.nCount + 1,reg2->rdh.nCount) * 2 * sizeof(RECT);
 
-    if (! (newReg->Buffer = ExAllocatePoolWithTag(PagedPool, newReg->rdh.nRgnSize, TAG_REGION)))
+    newReg->Buffer = ExAllocatePoolWithTag(PagedPool, newReg->rdh.nRgnSize, TAG_REGION);
+    if (!newReg->Buffer)
     {
         newReg->rdh.nRgnSize = 0;
         return;
@@ -2379,64 +2380,56 @@ IntGdiSetRegionOwner(HRGN hRgn, DWORD OwnerMask)
 
 INT
 FASTCALL
-IntGdiCombineRgn(PROSRGNDATA destRgn,
-                 PROSRGNDATA src1Rgn,
-                 PROSRGNDATA src2Rgn,
-                    INT  CombineMode)
+IntGdiCombineRgn(
+    PROSRGNDATA prgnDest,
+    PROSRGNDATA prgnSrc1,
+    PROSRGNDATA prgnSrc2,
+    INT iCombineMode)
 {
-  INT result = ERROR;
 
-  if (destRgn)
-  {
-     if (src1Rgn)
-     {
-        if (CombineMode == RGN_COPY)
-        {
-           if ( !REGION_CopyRegion(destRgn, src1Rgn) )
-               return ERROR;
-           result = REGION_Complexity(destRgn);
-        }
-        else
-        {
-           if (src2Rgn)
-           {
-              switch (CombineMode)
-              {
-                 case RGN_AND:
-                     REGION_IntersectRegion(destRgn, src1Rgn, src2Rgn);
-                     break;
-                 case RGN_OR:
-                     REGION_UnionRegion(destRgn, src1Rgn, src2Rgn);
-                     break;
-                 case RGN_XOR:
-                     REGION_XorRegion(destRgn, src1Rgn, src2Rgn);
-                     break;
-                 case RGN_DIFF:
-                     REGION_SubtractRegion(destRgn, src1Rgn, src2Rgn);
-                     break;
-              }
-              result = REGION_Complexity(destRgn);
-           }
-           else if (src2Rgn == NULL)
-           {
-              DPRINT1("IntGdiCombineRgn requires hSrc2 != NULL for combine mode %d!\n", CombineMode);
-              EngSetLastError(ERROR_INVALID_HANDLE);
-              ASSERT(FALSE);
-           }
-        }
-     }
-     else
-     {
+    if (!prgnDest)
+    {
+        DPRINT("IntGdiCombineRgn: hDest unavailable\n");
+        return ERROR;
+    }
+
+    if (!prgnSrc1)
+    {
         DPRINT("IntGdiCombineRgn: hSrc1 unavailable\n");
-        EngSetLastError(ERROR_INVALID_HANDLE);
-     }
-  }
-  else
-  {
-     DPRINT("IntGdiCombineRgn: hDest unavailable\n");
-     EngSetLastError(ERROR_INVALID_HANDLE);
-  }
-  return result;
+        return ERROR;
+    }
+
+    if (iCombineMode == RGN_COPY)
+    {
+        if (!REGION_CopyRegion(prgnDest, prgnSrc1))
+            return ERROR;
+        return REGION_Complexity(prgnDest);
+    }
+
+    if (!prgnSrc2)
+    {
+        DPRINT1("IntGdiCombineRgn requires hSrc2 != NULL for combine mode %d!\n", iCombineMode);
+        ASSERT(FALSE);
+        return ERROR;
+    }
+
+    switch (iCombineMode)
+    {
+        case RGN_AND:
+            REGION_IntersectRegion(prgnDest, prgnSrc1, prgnSrc2);
+            break;
+        case RGN_OR:
+            REGION_UnionRegion(prgnDest, prgnSrc1, prgnSrc2);
+            break;
+        case RGN_XOR:
+            REGION_XorRegion(prgnDest, prgnSrc1, prgnSrc2);
+            break;
+        case RGN_DIFF:
+            REGION_SubtractRegion(prgnDest, prgnSrc1, prgnSrc2);
+            break;
+    }
+
+    return REGION_Complexity(prgnDest);
 }
 
 INT FASTCALL
@@ -3339,7 +3332,6 @@ NtGdiCombineRgn(
 
     if (iMode < RGN_AND || iMode > RGN_COPY)
     {
-        EngSetLastError(ERROR_INVALID_PARAMETER);
         return ERROR;
     }
 
@@ -3347,7 +3339,6 @@ NtGdiCombineRgn(
     {
         DPRINT1("NtGdiCombineRgn: %p, %p, %p, %d\n",
                 hrgnDst, hrgnSrc1, hrgnSrc2, iMode);
-        EngSetLastError(ERROR_INVALID_PARAMETER);
         return ERROR;
     }
 
@@ -3359,7 +3350,6 @@ NtGdiCombineRgn(
     {
         DPRINT1("NtGdiCombineRgn: %p, %p, %p, %d\n",
                 hrgnDst, hrgnSrc1, hrgnSrc2, iMode);
-        EngSetLastError(ERROR_INVALID_PARAMETER);
         return ERROR;
     }
 
