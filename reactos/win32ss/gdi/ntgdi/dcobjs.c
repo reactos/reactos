@@ -265,6 +265,7 @@ NtGdiSelectBitmap(
     PSURFACE psurfNew, psurfOld;
     HRGN hVisRgn;
     HDC hdcOld;
+    ULONG cBitsPixel;
     ASSERT_NOGDILOCKS();
 
     /* Verify parameters */
@@ -329,6 +330,18 @@ NtGdiSelectBitmap(
             return NULL;
         }
 
+        /* Check if the bitmap is compatile with the dc */
+        cBitsPixel = gajBitsPerFormat[psurfNew->SurfObj.iBitmapFormat];
+        if ((cBitsPixel != 1) &&
+            (cBitsPixel != pdc->ppdev->gdiinfo.cBitsPixel) &&
+            (psurfNew->hSecure == NULL))
+        {
+            /* Dereference the bitmap, unlock the DC and fail. */
+            SURFACE_ShareUnlockSurface(psurfNew);
+            DC_UnlockDc(pdc);
+            return NULL;
+        }
+
         /* Set the bitmap's hdc and check if it was set before */
         hdcOld = InterlockedCompareExchangePointer((PVOID*)&psurfNew->hdc, hdc, 0);
         if (hdcOld != NULL)
@@ -346,7 +359,7 @@ NtGdiSelectBitmap(
         pdc->dclevel.sizl = psurfNew->SurfObj.sizlBitmap;
 
         /* Check if the bitmap is a dibsection */
-        if(psurfNew->hSecure)
+        if (psurfNew->hSecure)
         {
             /* Set DIBSECTION attribute */
             pdc->pdcattr->ulDirty_ |= DC_DIBSECTION;
