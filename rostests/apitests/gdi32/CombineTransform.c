@@ -10,7 +10,19 @@
 #include <windows.h>
 #include <winddi.h>
 
-#define ok_flt(x, y) ok(x == y, "Wrong value for " #x ", expected " #y ", got %f\n", (double)x);
+typedef union
+{
+    float e;
+    long l;
+} FLT_LONG;
+
+#define ok_flt(x, y) \
+{ \
+    FLT_LONG __x, __y; \
+     __x.e = (x); \
+     __y.e = (y); \
+    ok(__x.l == __y.l, "Wrong value for " #x ", expected " #y " (%f), got %f\n", (double)(y), (double)(x)); \
+}
 
 #define ok_xform(xform, m11, m12, m21, m22, dx, dy) \
     ok_flt(xform.eM11, m11); \
@@ -19,6 +31,18 @@
     ok_flt(xform.eM22, m22); \
     ok_flt(xform.eDx, dx); \
     ok_flt(xform.eDy, dy);
+
+#define set_xform(pxform, m11, m12, m21, m22, dx, dy) \
+    (pxform)->eM11 = m11; \
+    (pxform)->eM12 = m12; \
+    (pxform)->eM21 = m21; \
+    (pxform)->eM22 = m22; \
+    (pxform)->eDx = dx; \
+    (pxform)->eDy = dy;
+
+float geINF;
+float geIND;
+float geQNAN;
 
 void Test_CombineTransform()
 {
@@ -37,14 +61,18 @@ void Test_CombineTransform()
     ok_int(ret, 0);
     ok_int(GetLastError(), ERROR_SUCCESS);
 
+    /* 2 zero matrices */
+    set_xform(&xform1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+    set_xform(&xform2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+    SetLastError(ERROR_SUCCESS);
+    ret = CombineTransform(&xform3, &xform1, &xform2);
+    ok_int(ret, 1);
+    ok_xform(xform3, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+    ok_int(GetLastError(), ERROR_SUCCESS);
+
     /* 2 Identity matrices */
-    xform1.eM11 = 1.0;
-    xform1.eM12 = 0;
-    xform1.eM21 = 0;
-    xform1.eM22 = 1.0;
-    xform1.eDx = 0;
-    xform1.eDy = 0;
-    xform2 = xform1;
+    set_xform(&xform1, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0);
+    set_xform(&xform2, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0);
     SetLastError(ERROR_SUCCESS);
     ret = CombineTransform(&xform3, &xform1, &xform2);
     ok_int(ret, 1);
@@ -52,8 +80,8 @@ void Test_CombineTransform()
     ok_int(GetLastError(), ERROR_SUCCESS);
 
     /* 2 Identity matrices with offsets */
-    xform1.eDx = 20.0;
-    xform1.eDy = -100;
+    set_xform(&xform1, 1.0, 0.0, 0.0, 1.0, 20.0, -100.0);
+    set_xform(&xform2, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0);
     ret = CombineTransform(&xform3, &xform1, &xform2);
     ok_int(ret, 1);
     ok_xform(xform3, 1.0, 0., 0., 1.0, 20.0, -100.0);
@@ -91,24 +119,22 @@ void Test_CombineTransform()
     ok_int(ret, 1);
     ok_xform(xform3, 8.0, -2.0, 2.25, 0.0, -670.0, -340.0);
 
-    xform1.eM11 = 1.;
-    xform1.eM12 = 0;
-    xform1.eM21 = 0;
-    xform1.eM22 = 1.;
-    xform1.eDx = 0;
-    xform1.eDy = 0;
-    xform2 = xform1;
-
+    set_xform(&xform1, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0);
+    set_xform(&xform2, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0);
+    set_xform(&xform3, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
     xform1.eDx = 4294967167.999999761;
     ok(xform1.eDx == 4294967040.0, "float rounding error.\n");
     ret = CombineTransform(&xform3, &xform1, &xform2);
     ok(ret == 1, "expected ret = 1, got %d\n", ret);
+    ok_xform(xform3, 1.0, 0.0, 0.0, 1.0, 4294967040.0, 0.0);
 
+    set_xform(&xform3, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
     xform1.eDx = 4294967167.999999762;
     ok(xform1.eDx == 4294967296.0, "float rounding error.\n");
     ret = CombineTransform(&xform3, &xform1, &xform2);
     ok_int(ret, 0);
     ok_int(GetLastError(), ERROR_SUCCESS);
+    ok_xform(xform3, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
 
     xform1.eDx = -4294967167.999999761;
     ok(xform1.eDx == -4294967040.0, "float rounding error.\n");
@@ -130,6 +156,7 @@ void Test_CombineTransform()
     xform2.eDy = 1;
     ret = CombineTransform(&xform3, &xform1, &xform2);
     ok_int(ret, 1);
+    ok_flt(xform3.eDy, 4294967040.0);
 
     xform1.eDy = 4294967167.999999762;
     ok(xform1.eDy == 4294967296.0, "float rounding error.\n");
@@ -152,8 +179,8 @@ void Test_CombineTransform()
     ret = CombineTransform(&xform3, &xform1, &xform2);
     ok_int(ret, 1);
 
+    set_xform(&xform1, 1000.0, 0.0, 0.0, 0.0, 0.0, 0.0);
     xform1.eDx = -4294967167.999999762;
-    xform1.eM11 = 1000.0;
     xform2.eM11 = 1000.0;
     ret = CombineTransform(&xform3, &xform1, &xform2);
     ok_int(ret, 0);
@@ -166,44 +193,140 @@ void Test_CombineTransform()
     ok_int(GetLastError(), ERROR_SUCCESS);
 
     /* Some undefined values */
-    *(DWORD*)&xform1.eM11 = 0xffc00000; // (0.0F/0.0F)
-    xform1.eM12 = 0;
-    xform1.eM21 = 0;
-    *(DWORD*)&xform1.eM22 = 0x7f800000; // (1.0F/0.0F)
-    xform1.eDx = 0;
-    xform1.eDy = 0;
+    set_xform(&xform1, geIND, 0.0, 0.0, geINF, 0.0, 0.0);
     xform2 = xform1;
     SetLastError(ERROR_SUCCESS);
     ret = CombineTransform(&xform3, &xform1, &xform2);
     ok_int(ret, 1);
-    ok(*(DWORD*)&xform3.eM11 == 0xffc00000, "eM11: Expected 0xffc00000, got 0x%lx\n", *(DWORD*)&xform3.eM11);
-    ok(xform3.eM12 == 0, "eM12: Expected 0, got %f\n", xform3.eM12);
-    ok(xform3.eM21 == 0, "eM21: Expected 0, got %f\n", xform3.eM21);
-    ok(*(DWORD*)&xform3.eM22 == 0x7f800000, "eM22: Expected 0x7f800000, got 0x%lx\n", *(DWORD*)&xform3.eM22);
-    ok(xform3.eDx == 0, "eDx: Expected 0, got %f\n", xform3.eDx);
-    ok(xform3.eDy == 0, "eDy: Expected 0, got %f\n", xform3.eDy);
+    ok_xform(xform3, geIND, 0.0, 0.0, geINF, 0.0, 0.0);
     ok_int(GetLastError(), ERROR_SUCCESS);
 
-    /* Some undefined values */
-    xform2.eM11 = 1.;
-    xform2.eM22 = 1.;
-    xform2.eM12 = 1.;
-    xform2.eM21 = 1.;
+    set_xform(&xform2, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0);
     ret = CombineTransform(&xform3, &xform1, &xform2);
     ok_int(ret, 1);
-
-    ok_int(*(DWORD*)&xform3.eM11, 0xffc00000);
-    ok_int(*(DWORD*)&xform3.eM12, 0xffc00000);
-    ok_int(*(DWORD*)&xform3.eM21, 0x7f800000);
-    ok_int(*(DWORD*)&xform3.eM22, 0x7f800000);
-    ok(xform3.eDx == 0, "eDx: Expected 0, got %f\n", xform3.eDx);
-    ok(xform3.eDy == 0, "eDy: Expected 0, got %f\n", xform3.eDy);
+    ok_xform(xform3, geIND, geIND, geINF, geINF, 0.0, 0.0);
     ok_int(GetLastError(), ERROR_SUCCESS);
 
+    set_xform(&xform1, 18446743500000000000.0, 0.0, 1.0, 0.0, 0.0, 0.0);
+    xform2 = xform1;
+    ret = CombineTransform(&xform3, &xform1, &xform2);
+    ok_int(ret, 1);
+    ok_flt(xform3.eM11, 340282326356119260000000000000000000000.0);
+
+    xform1.eM11 = 18446745000000000000.0;
+    ret = CombineTransform(&xform3, &xform1, &xform2);
+    ok_int(ret, 1);
+    ok_flt(xform3.eM11, 340282346638528860000000000000000000000.0);
+
+    xform1.eM11 = 18446746000000000000.0;
+    ret = CombineTransform(&xform3, &xform1, &xform2);
+    ok_long(*(DWORD*)&xform3.eM11, 0x7f800000);
+
+    /* zero matrix + 1 invalid */
+    set_xform(&xform1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+    set_xform(&xform2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+    *(DWORD*)&xform2.eM22 = 0x7f800000; // (0.0F/0.0F)
+    ret = CombineTransform(&xform3, &xform1, &xform2);
+    ok_int(ret, 1);
+    ok_xform(xform3, 0.0, 0.0, 0.0, geIND, 0.0, 0.0);
+
+    /* zero matrix + 1 invalid */
+    xform2 = xform1;
+    *(DWORD*)&xform2.eM12 = 0x7f800000; // (0.0F/0.0F)
+    ret = CombineTransform(&xform3, &xform1, &xform2);
+    ok_int(ret, 1);
+    ok_xform(xform3, 0.0, geIND, 0.0, geIND, 0.0, 0.0);
+
+    /* Some undefined values */
+    set_xform(&xform1, 0.0, geIND, 0.0, 0.0, 0.0, 0.0);
+    set_xform(&xform2, geIND, 0.0, 0.0, geINF, 0.0, 0.0);
+    ret = CombineTransform(&xform3, &xform1, &xform2);
+    ok_int(ret, 1);
+    ok_xform(xform3, geIND, geIND, geIND, geIND, 0.0, 0.0);
+
+}
+
+void Test_CombineTransform_Inval(float eInval, float eOut)
+{
+    XFORM xform1, xform2, xform3;
+    BOOL ret;
+
+    /* zero matrix / M11 invalid */
+    set_xform(&xform1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+    set_xform(&xform2, eInval, 0.0, 0.0, 0.0, 0.0, 0.0);
+    ret = CombineTransform(&xform3, &xform1, &xform2);
+    ok_xform(xform3, eOut, 0.0, 0.0, 0.0, 0.0, 0.0); // -> M21
+    ret = CombineTransform(&xform3, &xform2, &xform1);
+    ok_xform(xform3, eOut, 0.0, 0.0, 0.0, 0.0, 0.0); // -> M12
+
+    /* zero matrix / M12 invalid */
+    set_xform(&xform1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+    set_xform(&xform2, 0.0, eInval, 0.0, 0.0, 0.0, 0.0);
+    ret = CombineTransform(&xform3, &xform1, &xform2);
+    ok_xform(xform3, 0.0, eOut, 0.0, eOut, 0.0, 0.0);
+    ret = CombineTransform(&xform3, &xform2, &xform1);
+    ok_xform(xform3, eOut, eOut, 0.0, 0.0, 0.0, 0.0);
+
+    /* zero matrix / M21 invalid */
+    set_xform(&xform1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+    set_xform(&xform2, 0.0, 0.0, eInval, 0.0, 0.0, 0.0);
+    ret = CombineTransform(&xform3, &xform1, &xform2);
+    ok_xform(xform3, eOut, 0.0, eOut, 0.0, 0.0, 0.0);
+    ret = CombineTransform(&xform3, &xform2, &xform1);
+    ok_xform(xform3, 0.0, 0.0, eOut, eOut, 0.0, 0.0);
+
+    /* zero matrix / M22 invalid */
+    set_xform(&xform1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+    set_xform(&xform2, 0.0, 0.0, 0.0, eInval, 0.0, 0.0);
+    ret = CombineTransform(&xform3, &xform1, &xform2);
+    ok_xform(xform3, 0.0, 0.0, 0.0, eOut, 0.0, 0.0); // -> M12
+    ret = CombineTransform(&xform3, &xform2, &xform1);
+    ok_xform(xform3, 0.0, 0.0, 0.0, eOut, 0.0, 0.0); // -> M21
+
+    /* zero matrix / M11,M12 invalid */
+    set_xform(&xform1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+    set_xform(&xform2, eInval, eInval, 0.0, 0.0, 0.0, 0.0);
+    ret = CombineTransform(&xform3, &xform1, &xform2);
+    ok_xform(xform3, eOut, eOut, eOut, eOut, 0.0, 0.0);
+    ret = CombineTransform(&xform3, &xform2, &xform1);
+    ok_xform(xform3, eOut, eOut, 0.0, 0.0, 0.0, 0.0);
+
+    /* zero matrix / M11,M21 invalid */
+    set_xform(&xform1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+    set_xform(&xform2, eInval, 0.0, eInval, 0.0, 0.0, 0.0);
+    ret = CombineTransform(&xform3, &xform1, &xform2);
+    ok_xform(xform3, eOut, 0.0, eOut, 0.0, 0.0, 0.0);
+    ret = CombineTransform(&xform3, &xform2, &xform1);
+    ok_xform(xform3, eOut, eOut, eOut, eOut, 0.0, 0.0);
+
+    /* zero matrix / M11,M22 invalid */
+    set_xform(&xform1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+    set_xform(&xform2, eInval, 0.0, 0.0, eInval, 0.0, 0.0);
+    ret = CombineTransform(&xform3, &xform1, &xform2);
+    ok_xform(xform3, eOut, 0.0, 0.0, eOut, 0.0, 0.0); // -> M12, M21
+    ret = CombineTransform(&xform3, &xform2, &xform1);
+    ok_xform(xform3, eOut, 0.0, 0.0, eOut, 0.0, 0.0);
+
+    /* zero matrix / M12,M21 invalid */
+    set_xform(&xform1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+    set_xform(&xform2, 0.0, eInval, eInval, 0.0, 0.0, 0.0);
+    ret = CombineTransform(&xform3, &xform1, &xform2);
+    ok_xform(xform3, eOut, eOut, eOut, eOut, 0.0, 0.0);
+    ret = CombineTransform(&xform3, &xform2, &xform1);
+    ok_xform(xform3, eOut, eOut, eOut, eOut, 0.0, 0.0);
 }
 
 START_TEST(CombineTransform)
 {
+    *(DWORD*)&geINF = 0x7f800000;
+    *(DWORD*)&geIND = 0xffc00000;
+    *(DWORD*)&geQNAN = 0x7fc00000;
+
     Test_CombineTransform();
+
+    Test_CombineTransform_Inval(geINF, geIND);
+    Test_CombineTransform_Inval(geIND, geIND);
+    Test_CombineTransform_Inval(geQNAN, geQNAN);
+
 }
 
