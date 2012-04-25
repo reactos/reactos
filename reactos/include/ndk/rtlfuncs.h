@@ -2513,13 +2513,6 @@ RtlDetermineDosPathNameType_U(
 );
 
 NTSYSAPI
-RTL_PATH_TYPE
-NTAPI
-RtlDetermineDosPathNameType_Ustr(
-    IN PCUNICODE_STRING Path
-);
-
-NTSYSAPI
 ULONG
 NTAPI
 RtlDosSearchPath_U(
@@ -2617,6 +2610,13 @@ RtlGetFullPathName_UstrEx(
     OUT PBOOLEAN NameInvalid,
     OUT RTL_PATH_TYPE* PathType,
     OUT PSIZE_T LengthNeeded
+);
+
+NTSYSAPI
+ULONG
+NTAPI
+RtlGetLongestNtPathLength(
+    VOID
 );
 
 NTSYSAPI

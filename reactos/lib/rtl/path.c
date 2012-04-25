@@ -50,6 +50,42 @@ PRTLP_CURDIR_REF RtlpCurDirRef;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
+RTL_PATH_TYPE
+NTAPI
+RtlDetermineDosPathNameType_Ustr(IN PCUNICODE_STRING PathString)
+{
+    PWCHAR Path;
+    ULONG Chars;
+
+    /* Validate the input */
+    if (!PathString) return RtlPathTypeUnknown;
+
+    Path = PathString->Buffer;
+    Chars = PathString->Length / sizeof(WCHAR);
+
+    /* Return if there are no characters */
+    if (!Chars) return RtlPathTypeUnknown;
+
+    /*
+     * The algorithm is similar to RtlDetermineDosPathNameType_U but here we
+     * actually check for the path length before touching the characters
+     */
+    if ((Chars < 1) || (IS_PATH_SEPARATOR(Path[0])))
+    {
+        if ((Chars < 2) || !(IS_PATH_SEPARATOR(Path[1]))) return RtlPathTypeRooted;                /* \x             */
+        if ((Chars < 3) || ((Path[2] != L'.') && (Path[2] != L'?'))) return RtlPathTypeUncAbsolute;/* \\x            */
+        if ((Chars >= 4) && (IS_PATH_SEPARATOR(Path[3]))) return RtlPathTypeLocalDevice;           /* \\.\x or \\?\x */
+        if (Chars != 3) return RtlPathTypeUncAbsolute;                                             /* \\.x or \\?x   */
+        return RtlPathTypeRootLocalDevice;                                                         /* \\. or \\?     */
+    }
+    else
+    {
+        if ((Chars < 2) || (!(Path[0]) || (Path[1] != L':'))) return RtlPathTypeRelative;          /* x              */
+        if ((Chars < 3) || (IS_PATH_SEPARATOR(Path[2]))) return RtlPathTypeDriveAbsolute;          /* x:\            */
+        return RtlPathTypeDriveRelative;                                                           /* x:             */
+    }
+}
+
 ULONG
 NTAPI
 RtlIsDosDeviceName_Ustr(IN PCUNICODE_STRING PathString)
@@ -209,42 +245,6 @@ RtlIsDosDeviceName_Ustr(IN PCUNICODE_STRING PathString)
 
     /* Otherwise, this is not a valid DOS device */
     return 0;
-}
-
-RTL_PATH_TYPE
-NTAPI
-RtlDetermineDosPathNameType_Ustr(IN PCUNICODE_STRING PathString)
-{
-    PWCHAR Path;
-    ULONG Chars;
-
-    /* Validate the input */
-    if (!PathString) return RtlPathTypeUnknown;
-
-    Path = PathString->Buffer;
-    Chars = PathString->Length / sizeof(WCHAR);
-
-    /* Return if there are no characters */
-    if (!Chars) return RtlPathTypeUnknown;
-
-    /*
-     * The algorithm is similar to RtlDetermineDosPathNameType_U but here we
-     * actually check for the path length before touching the characters
-     */
-    if ((Chars < 1) || (IS_PATH_SEPARATOR(Path[0])))
-    {
-        if ((Chars < 2) || !(IS_PATH_SEPARATOR(Path[1]))) return RtlPathTypeRooted;                /* \x             */
-        if ((Chars < 3) || ((Path[2] != L'.') && (Path[2] != L'?'))) return RtlPathTypeUncAbsolute;/* \\x            */
-        if ((Chars >= 4) && (IS_PATH_SEPARATOR(Path[3]))) return RtlPathTypeLocalDevice;           /* \\.\x or \\?\x */
-        if (Chars != 3) return RtlPathTypeUncAbsolute;                                             /* \\.x or \\?x   */
-        return RtlPathTypeRootLocalDevice;                                                         /* \\. or \\?     */
-    }
-    else
-    {
-        if ((Chars < 2) || (!(Path[0]) || (Path[1] != L':'))) return RtlPathTypeRelative;          /* x              */
-        if ((Chars < 3) || (IS_PATH_SEPARATOR(Path[2]))) return RtlPathTypeDriveAbsolute;          /* x:\            */
-        return RtlPathTypeDriveRelative;                                                           /* x:             */
-    }
 }
 
 NTSTATUS
