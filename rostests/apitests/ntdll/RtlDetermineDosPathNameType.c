@@ -6,6 +6,7 @@
  */
 
 #define WIN32_NO_STATUS
+#define UNICODE
 #include <wine/test.h>
 #include <pseh/pseh2.h>
 #include <ndk/mmfuncs.h>
@@ -183,18 +184,22 @@ START_TEST(RtlDetermineDosPathNameType)
     USHORT Length;
 
     if (!RtlDetermineDosPathNameType_Ustr)
-        skip("RtlDetermineDosPathNameType_Ustr unavailable\n");
+    {
+        RtlDetermineDosPathNameType_Ustr = (PVOID)GetProcAddress(GetModuleHandle(L"ntdll"), "RtlDetermineDosPathNameType_Ustr");
+        if (!RtlDetermineDosPathNameType_Ustr)
+            skip("RtlDetermineDosPathNameType_Ustr unavailable\n");
+    }
 
     StartSeh() RtlDetermineDosPathNameType_U(NULL);     EndSeh(STATUS_ACCESS_VIOLATION);
 
     if (RtlDetermineDosPathNameType_Ustr)
     {
-    UNICODE_STRING PathString;
-    StartSeh() RtlDetermineDosPathNameType_Ustr(NULL);  EndSeh(STATUS_ACCESS_VIOLATION);
+        UNICODE_STRING PathString;
+        StartSeh() RtlDetermineDosPathNameType_Ustr(NULL);  EndSeh(STATUS_ACCESS_VIOLATION);
 
-    RtlInitEmptyUnicodeString(&PathString, NULL, MAXUSHORT);
-    PathType = RtlDetermineDosPathNameType_Ustr(&PathString);
-    ok(PathType == RtlPathTypeRelative, "PathType = %d\n", PathType);
+        RtlInitEmptyUnicodeString(&PathString, NULL, MAXUSHORT);
+        PathType = RtlDetermineDosPathNameType_Ustr(&PathString);
+        ok(PathType == RtlPathTypeRelative, "PathType = %d\n", PathType);
     }
 
     for (i = 0; i < sizeof(Tests) / sizeof(Tests[0]); i++)

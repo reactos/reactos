@@ -163,10 +163,52 @@ START_TEST(RtlDoesFileExists)
     BOOL Success;
     HANDLE Handle;
 
+    if (!RtlDoesFileExists_UEx)
+    {
+        RtlDoesFileExists_UEx = (PVOID)GetProcAddress(GetModuleHandle(L"ntdll"), "RtlDoesFileExists_UEx");
+        if (!RtlDoesFileExists_UEx)
+            skip("RtlDoesFileExists_UEx unavailable\n");
+    }
+
+    if (!RtlDoesFileExists_UStr)
+    {
+        RtlDoesFileExists_UStr = (PVOID)GetProcAddress(GetModuleHandle(L"ntdll"), "RtlDoesFileExists_UStr");
+        if (!RtlDoesFileExists_UStr)
+            skip("RtlDoesFileExists_UStr unavailable\n");
+    }
+
+    if (!RtlDoesFileExists_UstrEx)
+    {
+        RtlDoesFileExists_UstrEx = (PVOID)GetProcAddress(GetModuleHandle(L"ntdll"), "RtlDoesFileExists_UstrEx");
+        if (!RtlDoesFileExists_UstrEx)
+            skip("RtlDoesFileExists_UstrEx unavailable\n");
+    }
+
     StartSeh()
         Ret = RtlDoesFileExists_U(NULL);
         ok(Ret == FALSE, "NULL file exists?!\n");
     EndSeh(STATUS_SUCCESS);
+
+    if (RtlDoesFileExists_UEx)
+    {
+        StartSeh()
+            Ret = RtlDoesFileExists_UEx(NULL, TRUE);
+            ok(Ret == FALSE, "NULL file exists?!\n");
+            Ret = RtlDoesFileExists_UEx(NULL, FALSE);
+            ok(Ret == FALSE, "NULL file exists?!\n");
+        EndSeh(STATUS_SUCCESS);
+    }
+
+    if (RtlDoesFileExists_UStr)
+    {
+        StartSeh() Ret = RtlDoesFileExists_UStr(NULL);      EndSeh(STATUS_ACCESS_VIOLATION);
+    }
+
+    if (RtlDoesFileExists_UstrEx)
+    {
+        StartSeh() RtlDoesFileExists_UstrEx(NULL, FALSE);   EndSeh(STATUS_ACCESS_VIOLATION);
+        StartSeh() RtlDoesFileExists_UstrEx(NULL, TRUE);    EndSeh(STATUS_ACCESS_VIOLATION);
+    }
 
     swprintf(FileName, L"C:\\%ls", CustomPath);
     /* Make sure this directory doesn't exist */

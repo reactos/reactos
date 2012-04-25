@@ -6,6 +6,7 @@
  */
 
 #define WIN32_NO_STATUS
+#define UNICODE
 #include <wine/test.h>
 #include <pseh/pseh2.h>
 #include <ndk/rtlfuncs.h>
@@ -307,7 +308,14 @@ START_TEST(RtlGetFullPathName_Ustr)
     PATH_TYPE_AND_UNKNOWN PathType;
 
     if (!RtlGetFullPathName_Ustr)
-        return;
+    {
+        RtlGetFullPathName_Ustr = (PVOID)GetProcAddress(GetModuleHandle(L"ntdll"), "RtlGetFullPathName_Ustr");
+        if (!RtlGetFullPathName_Ustr)
+        {
+            skip("RtlGetFullPathName_Ustr unavailable\n");
+            return;
+        }
+    }
 
     /* NULL parameters */
     StartSeh()
