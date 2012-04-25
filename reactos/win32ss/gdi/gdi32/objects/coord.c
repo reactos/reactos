@@ -56,7 +56,8 @@ GdiTransformPoints(
     GdiTransformPoints2(&xform, pptOut, pptIn, nCount);
 }
 
-#define MAX_OFFSET 4294967040.0
+#define MAX_OFFSET 4294967041.0
+#define _fmul(x,y) (((x) == 0) ? 0 : (x) * (y))
 
 BOOL
 WINAPI
@@ -70,31 +71,39 @@ CombineTransform(
     /* Check paramters */
     if (!pxfResult || !pxf1 || !pxf2) return FALSE;
 
-    /* Do matrix multiplication */
-    xformTmp.eM11 = pxf1->eM11 * pxf2->eM11 + pxf1->eM12 * pxf2->eM21;
-    xformTmp.eM12 = pxf1->eM11 * pxf2->eM12 + pxf1->eM12 * pxf2->eM22;
-    xformTmp.eM21 = pxf1->eM21 * pxf2->eM11 + pxf1->eM22 * pxf2->eM21;
-    xformTmp.eM22 = pxf1->eM21 * pxf2->eM12 + pxf1->eM22 * pxf2->eM22;
-    xformTmp.eDx = pxf1->eDx * pxf2->eM11 + pxf1->eDy * pxf2->eM21 + pxf2->eDx;
-    xformTmp.eDy = pxf1->eDx * pxf2->eM12 + pxf1->eDy * pxf2->eM22 + pxf2->eDy;
+    /* Do matrix multiplication, start with scaling elements */
+    xformTmp.eM11 = (pxf1->eM11 * pxf2->eM11) + (pxf1->eM12 * pxf2->eM21);
+    xformTmp.eM22 = (pxf1->eM21 * pxf2->eM12) + (pxf1->eM22 * pxf2->eM22);
 
-    *pxfResult = xformTmp;
-#if 0
-    /* windows compatibility fixups (needs more work) */
-    if (_isnan(xformTmp.eM12))
+    /* Calculate shear/rotate elements only of they are present */
+    if ((pxf1->eM12 != 0.) || (pxf1->eM21 != 0.) ||
+        (pxf2->eM12 != 0.) || (pxf2->eM21 != 0.))
     {
-        if (pxf1->eM11 == 0 || pxf2->eM12 == 0) pxfResult->eM12 = 0.;
+        xformTmp.eM12 = (pxf1->eM11 * pxf2->eM12) + (pxf1->eM12 * pxf2->eM22);
+        xformTmp.eM21 = (pxf1->eM21 * pxf2->eM11) + (pxf1->eM22 * pxf2->eM21);
     }
-#endif
+    else
+    {
+        xformTmp.eM12 = 0.;
+        xformTmp.eM21 = 0.;
+    }
+
+    /* Calculate the offset */
+    xformTmp.eDx = _fmul(pxf1->eDx, pxf2->eM11) + _fmul(pxf1->eDy, pxf2->eM21) + pxf2->eDx;
+    xformTmp.eDy = _fmul(pxf1->eDx, pxf2->eM12) + _fmul(pxf1->eDy, pxf2->eM22) + pxf2->eDy;
+
     /* Check for invalid offset ranges */
-    if (xformTmp.eDx > MAX_OFFSET || xformTmp.eDx < -MAX_OFFSET ||
-        xformTmp.eDy > MAX_OFFSET || xformTmp.eDy < -MAX_OFFSET)
+    if ((xformTmp.eDx > MAX_OFFSET) || (xformTmp.eDx < -MAX_OFFSET) ||
+        (xformTmp.eDy > MAX_OFFSET) || (xformTmp.eDy < -MAX_OFFSET))
     {
         return FALSE;
     }
 
+    /* All is ok, return the calculated values */
+    *pxfResult = xformTmp;
     return TRUE;
 }
+
 
 BOOL
 WINAPI
