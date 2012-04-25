@@ -146,8 +146,8 @@ START_TEST(RtlDetermineDosPathNameType)
         { L"/\\?",              RtlPathTypeRootLocalDevice },
         { L"\\/?",              RtlPathTypeRootLocalDevice },
         { L"//??",              RtlPathTypeUncAbsolute },
-        { L"//??/",             RtlPathTypeUncAbsolute },
-        { L"//??/C:/",          RtlPathTypeUncAbsolute },
+        { L"//?" L"?/",         RtlPathTypeUncAbsolute },
+        { L"//?" L"?/C:/",      RtlPathTypeUncAbsolute },
         { L"//.",               RtlPathTypeRootLocalDevice },
         { L"\\/.",              RtlPathTypeRootLocalDevice },
         { L"/\\.",              RtlPathTypeRootLocalDevice },
@@ -180,8 +180,8 @@ START_TEST(RtlDetermineDosPathNameType)
         RtlCopyMemory(FileName, Tests[i].FileName, Length + sizeof(UNICODE_NULL));
         StartSeh()
             PathType = RtlDetermineDosPathNameType_U(FileName);
+            ok(PathType == Tests[i].PathType, "PathType is %d, expected %d for '%S'\n", PathType, Tests[i].PathType, Tests[i].FileName);
         EndSeh(STATUS_SUCCESS);
-        ok(PathType == Tests[i].PathType, "PathType is %d, expected %d for '%S'\n", PathType, Tests[i].PathType, Tests[i].FileName);
         FreeGuarded(FileName);
 
         if (RtlDetermineDosPathNameType_Ustr)
@@ -195,8 +195,8 @@ START_TEST(RtlDetermineDosPathNameType)
             PathString.MaximumLength = MAXUSHORT;
             StartSeh()
                 PathType = RtlDetermineDosPathNameType_Ustr(&PathString);
+                ok(PathType == Tests[i].PathType, "PathType is %d, expected %d for '%S'\n", PathType, Tests[i].PathType, Tests[i].FileName);
             EndSeh(STATUS_SUCCESS);
-            ok(PathType == Tests[i].PathType, "PathType is %d, expected %d for '%S'\n", PathType, Tests[i].PathType, Tests[i].FileName);
             FreeGuarded(FileName);
         }
     }
