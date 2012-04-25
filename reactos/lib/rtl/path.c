@@ -57,20 +57,17 @@ RtlDetermineDosPathNameType_Ustr(IN PCUNICODE_STRING PathString)
     PWCHAR Path;
     ULONG Chars;
 
-    /* Validate the input */
-    if (!PathString) return RtlPathTypeUnknown;
-
     Path = PathString->Buffer;
     Chars = PathString->Length / sizeof(WCHAR);
 
     /* Return if there are no characters */
-    if (!Chars) return RtlPathTypeUnknown;
+    if (!Chars) return RtlPathTypeRelative;
 
     /*
      * The algorithm is similar to RtlDetermineDosPathNameType_U but here we
      * actually check for the path length before touching the characters
      */
-    if ((Chars < 1) || (IS_PATH_SEPARATOR(Path[0])))
+    if (IS_PATH_SEPARATOR(Path[0]))
     {
         if ((Chars < 2) || !(IS_PATH_SEPARATOR(Path[1]))) return RtlPathTypeRooted;                /* \x             */
         if ((Chars < 3) || ((Path[2] != L'.') && (Path[2] != L'?'))) return RtlPathTypeUncAbsolute;/* \\x            */
@@ -80,9 +77,9 @@ RtlDetermineDosPathNameType_Ustr(IN PCUNICODE_STRING PathString)
     }
     else
     {
-        if ((Chars < 2) || (!(Path[0]) || (Path[1] != L':'))) return RtlPathTypeRelative;          /* x              */
-        if ((Chars < 3) || (IS_PATH_SEPARATOR(Path[2]))) return RtlPathTypeDriveAbsolute;          /* x:\            */
-        return RtlPathTypeDriveRelative;                                                           /* x:             */
+        if ((Chars < 2) || (Path[1] != L':')) return RtlPathTypeRelative;                          /* x              */
+        if ((Chars < 3) || !(IS_PATH_SEPARATOR(Path[2]))) return RtlPathTypeDriveRelative;         /* x:             */
+        return RtlPathTypeDriveAbsolute;                                                           /* x:\            */
     }
 }
 
@@ -308,8 +305,7 @@ RtlGetFullPathName_Ustr(IN PUNICODE_STRING FileName,
 
     /* Handle initial path type and failure case */
     *PathType = RtlPathTypeUnknown;
-    if (!(Size) || !(Buffer) || !(FileName) ||
-        !(FileName->Length) || (FileName->Buffer[0] == UNICODE_NULL)) return 0;
+    if (!(FileName->Length) || (FileName->Buffer[0] == UNICODE_NULL)) return 0;
 
     /* Break filename into component parts */
     FileNameBuffer = FileName->Buffer;
@@ -737,9 +733,6 @@ RtlDoesFileExists_UstrEx(IN PCUNICODE_STRING FileName,
     NTSTATUS Status;
     FILE_BASIC_INFORMATION BasicInformation;
 
-    /* Validate the input */
-    if (!FileName) return FALSE;
-
     /* Get the NT Path */
     Result = RtlDosPathNameToRelativeNtPathName_Ustr(FileName,
                                                      &NtPathName,
@@ -862,7 +855,7 @@ RtlGetLongestNtPathLength(VOID)
      * This is, and has always been equal to, 269 characters, except in Wine
      * which claims this is 277. Go figure.
      */
-    return (MAX_PATH + RtlpDosDevicesUncPrefix.Length + sizeof(ANSI_NULL));
+    return MAX_PATH + RtlpDosDevicesUncPrefix.Length / sizeof(WCHAR) + sizeof(ANSI_NULL);
 }
 
 /*
@@ -873,9 +866,6 @@ NTAPI
 RtlDetermineDosPathNameType_U(IN PCWSTR Path)
 {
     DPRINT("RtlDetermineDosPathNameType_U %S\n", Path);
-
-    /* Validate the input */
-    if (!Path) return RtlPathTypeUnknown;
 
     /* Unlike the newer RtlDetermineDosPathNameType_U we assume 4 characters */
     if (IS_PATH_SEPARATOR(Path[0]))
@@ -1997,7 +1987,7 @@ Release:
 Quickie:
     /* Free any buffers we should be freeing */
     DPRINT("Status: %lx %S %S\n", Status, StaticBuffer, TempDynamicString.Buffer);
-    if ((StaticBuffer) && (StaticBuffer != StaticString->Buffer))
+    if ((StaticString) && (StaticBuffer) && (StaticBuffer != StaticString->Buffer))
     {
         RtlpFreeMemory(StaticBuffer, TAG_USTR);
     }
