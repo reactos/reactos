@@ -2498,14 +2498,6 @@ RtlDoesFileExists_U(
 );
 
 NTSYSAPI
-BOOLEAN
-NTAPI
-RtlDoesFileExists_UstrEx(
-    IN PCUNICODE_STRING FileName,
-    IN BOOLEAN SucceedIfBusy
-);
-
-NTSYSAPI
 ULONG
 NTAPI
 RtlDetermineDosPathNameType_U(
