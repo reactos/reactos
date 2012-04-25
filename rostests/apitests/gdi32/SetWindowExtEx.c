@@ -26,24 +26,55 @@ void Test_SetWindowExtEx()
 
     SetLastError(0);
     ret = SetWindowExtEx(0, 0, 0, NULL);
-    TEST(GetLastError() == ERROR_INVALID_HANDLE);
+    ok_err(ERROR_INVALID_HANDLE);
     TEST(ret == 0);
 
     SetLastError(0);
     ret = SetWindowExtEx((HDC)0x1234, 0, 0, NULL);
-    TEST(GetLastError() == ERROR_INVALID_HANDLE);
+    ok_err(ERROR_INVALID_HANDLE);
+    TEST(ret == 0);
+
+    SetLastError(0);
+    ret = SetWindowExtEx((HDC)0x10000, 0, 0, NULL);
+    ok_err(ERROR_INVALID_PARAMETER);
+    TEST(ret == 0);
+
+    SetLastError(0);
+    ret = SetWindowExtEx((HDC)0x210000, 0, 0, NULL); // GDILoObjType_LO_ALTDC_TYPE
+    ok_err(ERROR_INVALID_HANDLE);
+    TEST(ret == 0);
+
+    SetLastError(0);
+    ret = SetWindowExtEx((HDC)0x260000, 0, 0, NULL); // GDILoObjType_LO_METAFILE16_TYPE
+    ok_err(ERROR_INVALID_HANDLE);
+    TEST(ret == 0);
+
+    SetLastError(0);
+    ret = SetWindowExtEx((HDC)0x460000, 0, 0, NULL); // GDILoObjType_LO_METAFILE_TYPE
+    ok_err(ERROR_INVALID_HANDLE);
+    TEST(ret == 0);
+
+    SetLastError(0);
+    ret = SetWindowExtEx((HDC)0x660000, 0, 0, NULL); // GDILoObjType_LO_METADC16_TYPE
+    ok_err(ERROR_INVALID_HANDLE);
     TEST(ret == 0);
 
     SetLastError(0);
     ret = SetWindowExtEx(hDC, 0, 0, NULL);
-    TEST(GetLastError() == 0);
+    ok_err(0);
     TEST(ret == 1);
+
+    /* Test 16 bit handle */
+    SetLastError(0);
+    ret = SetWindowExtEx((HDC)((ULONG_PTR)hDC & 0xffff), 0, 0, NULL);
+    ok_err(ERROR_INVALID_HANDLE);
+    TEST(ret == 0);
 
     WindowExt.cx = 1234;
     WindowExt.cy = 6789;
     SetLastError(0);
     ret = SetWindowExtEx(0, 0, 0, &WindowExt);
-    TEST(GetLastError() == ERROR_INVALID_HANDLE);
+    ok_err(ERROR_INVALID_HANDLE);
     TEST(ret == 0);
     TEST(WindowExt.cx == 1234);
     TEST(WindowExt.cy == 6789);
@@ -53,7 +84,7 @@ void Test_SetWindowExtEx()
     /* Test with a deleted DC */
     SetLastError(0);
     ret = SetWindowExtEx(hDC, 0, 0, NULL);
-    TEST(GetLastError() == ERROR_INVALID_PARAMETER);
+    ok_err(ERROR_INVALID_PARAMETER);
     TEST(ret == 0);
 
     hDC = CreateCompatibleDC(0);
