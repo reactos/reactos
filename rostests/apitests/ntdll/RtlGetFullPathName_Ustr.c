@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS api tests
  * LICENSE:         GPLv2+ - See COPYING in the top level directory
- * PURPOSE:         Test for RtlGetFullPathName_UstrEx
+ * PURPOSE:         Test for RtlGetFullPathName_Ustr
  * PROGRAMMER:      Thomas Faber <thfabba@gmx.de>
  */
 
@@ -11,19 +11,39 @@
 #include <ndk/rtlfuncs.h>
 
 /*
-NTSTATUS
+ULONG
 NTAPI
-RtlGetFullPathName_UstrEx(
-    IN PUNICODE_STRING FileName,
-    IN PUNICODE_STRING StaticString,
-    IN PUNICODE_STRING DynamicString,
-    IN PUNICODE_STRING *StringUsed,
-    IN PSIZE_T FilePartSize OPTIONAL,
-    OUT PBOOLEAN NameInvalid,
-    OUT RTL_PATH_TYPE* PathType,
-    OUT PSIZE_T LengthNeeded OPTIONAL
+RtlGetFullPathName_Ustr(
+    IN PCUNICODE_STRING FileName,
+    IN ULONG Size,
+    IN PWSTR Buffer,
+    OUT PCWSTR *ShortName,
+    OUT PBOOLEAN InvalidName,
+    OUT RTL_PATH_TYPE* PathType
 );
 */
+
+/* This seems to be a struct of some kind in Windows 7... returns 0 or 32 in the second member */
+typedef struct _PATH_TYPE_AND_UNKNOWN
+{
+    RTL_PATH_TYPE Type;
+    ULONG Unknown;
+} PATH_TYPE_AND_UNKNOWN;
+
+static
+ULONG
+(NTAPI
+*RtlGetFullPathName_Ustr)(
+    IN PCUNICODE_STRING FileName,
+    IN ULONG Size,
+    IN PWSTR Buffer,
+    OUT PCWSTR *ShortName,
+    OUT PBOOLEAN InvalidName,
+    OUT PATH_TYPE_AND_UNKNOWN* PathType
+)
+//= (PVOID)0x7c83086c // 2003 sp1 x86
+//= (PVOID)0x7769a3dd // win7 sp1 wow64
+;
 
 #define StartSeh()                  ExceptionStatus = STATUS_SUCCESS; _SEH2_TRY {
 #define EndSeh(ExpectedStatus)      } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) { ExceptionStatus = _SEH2_GetExceptionCode(); } _SEH2_END; ok(ExceptionStatus == ExpectedStatus, "Exception %lx, expected %lx\n", ExceptionStatus, ExpectedStatus)
@@ -37,43 +57,45 @@ RtlGetFullPathName_UstrEx(
 static
 BOOLEAN
 CheckStringBuffer(
-    PCUNICODE_STRING String,
+    PCWSTR Buffer,
+    ULONG Length,
+    SIZE_T MaximumLength,
     PCWSTR Expected)
 {
-    USHORT Length = wcslen(Expected) * sizeof(WCHAR);
+    USHORT ExpectedLength = wcslen(Expected) * sizeof(WCHAR);
     SIZE_T EqualLength;
     BOOLEAN Result = TRUE;
     SIZE_T i;
 
-    if (String->Length != Length)
+    if (Length != ExpectedLength)
     {
-        ok(0, "String length is %u, expected %u\n", String->Length, Length);
+        ok(0, "String length is %u, expected %u\n", Length, ExpectedLength);
         Result = FALSE;
     }
 
-    EqualLength = RtlCompareMemory(String->Buffer, Expected, Length);
+    EqualLength = RtlCompareMemory(Buffer, Expected, Length);
     if (EqualLength != Length)
     {
-        ok(0, "String is '%wZ', expected '%S'\n", String, Expected);
+        ok(0, "String is '%S', expected '%S'\n", Buffer, Expected);
         Result = FALSE;
     }
 
-    if (String->Buffer[String->Length / sizeof(WCHAR)] != UNICODE_NULL)
+    if (Buffer[Length / sizeof(WCHAR)] != UNICODE_NULL)
     {
         ok(0, "Not null terminated\n");
         Result = FALSE;
     }
 
-    /* the function nulls the rest of the buffer! */
-    for (i = String->Length + sizeof(UNICODE_NULL); i < String->MaximumLength; i++)
+    /* The function nulls the rest of the buffer! */
+    for (i = Length + sizeof(UNICODE_NULL); i < MaximumLength; i++)
     {
-        UCHAR Char = ((PUCHAR)String->Buffer)[i];
+        UCHAR Char = ((PUCHAR)Buffer)[i];
         if (Char != 0)
         {
             ok(0, "Found 0x%x at offset %lu, expected 0x%x\n", Char, (ULONG)i, 0);
-            /* don't count this as a failure unless the string was actually wrong */
+            /* Don't count this as a failure unless the string was actually wrong */
             //Result = FALSE;
-            /* don't flood the log */
+            /* Don't flood the log */
             break;
         }
     }
@@ -141,18 +163,17 @@ RunTestCases(VOID)
         { L"\\\\??\\C:\\test",   PrefixNone, L"\\\\??\\C:\\test", RtlPathTypeUncAbsolute, PrefixNone, sizeof(L"\\\\??\\C:\\") },
         { L"\\\\??\\C:\\test\\", PrefixNone, L"\\\\??\\C:\\test\\", RtlPathTypeUncAbsolute },
     };
-    NTSTATUS Status, ExceptionStatus;
+    NTSTATUS ExceptionStatus;
+    ULONG Length;
     UNICODE_STRING FileName;
-    UNICODE_STRING FullPathName;
     WCHAR FullPathNameBuffer[MAX_PATH];
     UNICODE_STRING TempString;
-    PUNICODE_STRING StringUsed;
-    SIZE_T FilePartSize;
+    const WCHAR *ShortName;
     BOOLEAN NameInvalid;
-    RTL_PATH_TYPE PathType;
-    SIZE_T LengthNeeded;
+    PATH_TYPE_AND_UNKNOWN PathType;
     WCHAR ExpectedPathName[MAX_PATH];
     SIZE_T ExpectedFilePartSize;
+    const WCHAR *ExpectedShortName;
     const INT TestCount = sizeof(TestCases) / sizeof(TestCases[0]);
     INT i;
 
@@ -182,31 +203,24 @@ RunTestCases(VOID)
         }
         wcscat(ExpectedPathName, TestCases[i].FullPathName);
         RtlInitUnicodeString(&FileName, TestCases[i].FileName);
-        RtlInitEmptyUnicodeString(&FullPathName, FullPathNameBuffer, sizeof(FullPathNameBuffer));
-        RtlFillMemory(FullPathName.Buffer, FullPathName.MaximumLength, 0xAA);
+        RtlFillMemory(FullPathNameBuffer, sizeof(FullPathNameBuffer), 0xAA);
         TempString = FileName;
-        PathType = RtlPathTypeNotSet;
-        StringUsed = InvalidPointer;
-        FilePartSize = 1234;
+        PathType.Type = RtlPathTypeNotSet;
+        PathType.Unknown = 1234;
+        ShortName = InvalidPointer;
         NameInvalid = (BOOLEAN)-1;
-        LengthNeeded = 1234;
+        Length = 1234;
         StartSeh()
-            Status = RtlGetFullPathName_UstrEx(&FileName,
-                                               &FullPathName,
-                                               NULL,
-                                               &StringUsed,
-                                               &FilePartSize,
-                                               &NameInvalid,
-                                               &PathType,
-                                               &LengthNeeded);
-            ok(Status == STATUS_SUCCESS, "status = %lx\n", Status);
+            Length = RtlGetFullPathName_Ustr(&FileName,
+                                             sizeof(FullPathNameBuffer),
+                                             FullPathNameBuffer,
+                                             &ShortName,
+                                             &NameInvalid,
+                                             &PathType);
         EndSeh(STATUS_SUCCESS);
         ok_eq_ustr(&FileName, &TempString);
-        ok(FullPathName.Buffer        == FullPathNameBuffer,         "Buffer modified\n");
-        ok(FullPathName.MaximumLength == sizeof(FullPathNameBuffer), "MaximumLength modified\n");
-        ok(CheckStringBuffer(&FullPathName, ExpectedPathName),
-            "Wrong path name '%wZ', expected '%S'\n", &FullPathName, ExpectedPathName);
-        ok(StringUsed == &FullPathName, "StringUsed = %p, expected %p\n", StringUsed, &FullPathName);
+        ok(CheckStringBuffer(FullPathNameBuffer, Length, sizeof(FullPathNameBuffer), ExpectedPathName),
+            "Wrong path name '%S', expected '%S'\n", FullPathNameBuffer, ExpectedPathName);
         switch (TestCases[i].FilePartPrefixType)
         {
             case PrefixNone:
@@ -242,132 +256,137 @@ RunTestCases(VOID)
                 continue;
         }
         ExpectedFilePartSize += TestCases[i].FilePartSize;
-        if (ExpectedFilePartSize != 0)
+        if (ExpectedFilePartSize == 0)
+        {
+            ExpectedShortName = NULL;
+        }
+        else
+        {
             ExpectedFilePartSize = (ExpectedFilePartSize - sizeof(UNICODE_NULL)) / sizeof(WCHAR);
-        ok(FilePartSize == ExpectedFilePartSize,
-            "FilePartSize = %lu, expected %lu\n", (ULONG)FilePartSize, (ULONG)ExpectedFilePartSize);
+            ExpectedShortName = FullPathNameBuffer + ExpectedFilePartSize;
+        }
+        ok(ShortName == ExpectedShortName,
+            "ShortName = %p, expected %p\n", ShortName, ExpectedShortName);
         ok(NameInvalid == FALSE, "NameInvalid = %u\n", NameInvalid);
-        ok(PathType == TestCases[i].PathType, "PathType = %d, expected %d\n", PathType, TestCases[i].PathType);
-        ok(LengthNeeded == 0, "LengthNeeded = %lu\n", (ULONG)LengthNeeded);
+        ok(PathType.Type == TestCases[i].PathType, "PathType = %d, expected %d\n", PathType.Type, TestCases[i].PathType);
+        ok(PathType.Unknown == 1234 ||
+            broken(PathType.Unknown == 0) ||
+            broken(PathType.Unknown == 32), "Unknown = %d\n", PathType.Unknown);
     }
 }
 
-START_TEST(RtlGetFullPathName_UstrEx)
+START_TEST(RtlGetFullPathName_Ustr)
 {
-    NTSTATUS Status, ExceptionStatus;
+    NTSTATUS ExceptionStatus;
+    ULONG Length;
     UNICODE_STRING FileName;
     UNICODE_STRING TempString;
-    UNICODE_STRING StaticString;
-    PUNICODE_STRING StringUsed;
-    SIZE_T FilePartSize;
+    PCWSTR ShortName;
     BOOLEAN NameInvalid;
-    RTL_PATH_TYPE PathType;
-    SIZE_T LengthNeeded;
+    PATH_TYPE_AND_UNKNOWN PathType;
+
+    if (!RtlGetFullPathName_Ustr)
+        return;
 
     /* NULL parameters */
     StartSeh()
-        RtlGetFullPathName_UstrEx(NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+        RtlGetFullPathName_Ustr(NULL, 0, NULL, NULL, NULL, NULL);
     EndSeh(STATUS_ACCESS_VIOLATION);
 
     RtlInitUnicodeString(&FileName, NULL);
     TempString = FileName;
     StartSeh()
-        RtlGetFullPathName_UstrEx(&FileName, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+        RtlGetFullPathName_Ustr(&FileName, 0, NULL, NULL, NULL, NULL);
     EndSeh(STATUS_ACCESS_VIOLATION);
     ok_eq_ustr(&FileName, &TempString);
 
     RtlInitUnicodeString(&FileName, L"");
     TempString = FileName;
     StartSeh()
-        RtlGetFullPathName_UstrEx(&FileName, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+        RtlGetFullPathName_Ustr(&FileName, 0, NULL, NULL, NULL, NULL);
     EndSeh(STATUS_ACCESS_VIOLATION);
     ok_eq_ustr(&FileName, &TempString);
 
-    PathType = RtlPathTypeNotSet;
+    PathType.Type = RtlPathTypeNotSet;
+    PathType.Unknown = 1234;
     StartSeh()
-        RtlGetFullPathName_UstrEx(NULL, NULL, NULL, NULL, NULL, NULL, &PathType, NULL);
+        RtlGetFullPathName_Ustr(NULL, 0, NULL, NULL, NULL, &PathType);
     EndSeh(STATUS_ACCESS_VIOLATION);
-    ok(PathType == RtlPathTypeUnknown ||
-       broken(PathType == RtlPathTypeNotSet) /* Win7 */, "PathType = %d\n", PathType);
+    ok(PathType.Type == RtlPathTypeUnknown ||
+       broken(PathType.Type == RtlPathTypeNotSet) /* Win7 */, "PathType = %d\n", PathType.Type);
+    ok(PathType.Unknown == 1234 ||
+       broken(PathType.Unknown == 0) /* Win7 */, "Unknown = %d\n", PathType.Unknown);
 
-    /* Check what else is initialized before it crashes */
-    PathType = RtlPathTypeNotSet;
-    StringUsed = InvalidPointer;
-    FilePartSize = 1234;
+    /* check what else is initialized before it crashes */
+    PathType.Type = RtlPathTypeNotSet;
+    PathType.Unknown = 1234;
+    ShortName = InvalidPointer;
     NameInvalid = (BOOLEAN)-1;
-    LengthNeeded = 1234;
     StartSeh()
-        RtlGetFullPathName_UstrEx(NULL, NULL, NULL, &StringUsed, &FilePartSize, &NameInvalid, &PathType, &LengthNeeded);
+        RtlGetFullPathName_Ustr(NULL, 0, NULL, &ShortName, &NameInvalid, &PathType);
     EndSeh(STATUS_ACCESS_VIOLATION);
-    ok(StringUsed == NULL, "StringUsed = %p\n", StringUsed);
-    ok(FilePartSize == 0, "FilePartSize = %lu\n", (ULONG)FilePartSize);
     ok(NameInvalid == FALSE, "NameInvalid = %u\n", NameInvalid);
-    ok(PathType == RtlPathTypeUnknown ||
-       broken(PathType == RtlPathTypeNotSet) /* Win7 */, "PathType = %d\n", PathType);
-    ok(LengthNeeded == 0, "LengthNeeded = %lu\n", (ULONG)LengthNeeded);
+    ok(ShortName == InvalidPointer ||
+        broken(ShortName == NULL), "ShortName = %p\n", ShortName);
+    ok(PathType.Type == RtlPathTypeUnknown ||
+       broken(PathType.Type == RtlPathTypeNotSet) /* Win7 */, "PathType = %d\n", PathType.Type);
+    ok(PathType.Unknown == 1234 ||
+       broken(PathType.Unknown == 0) /* Win7 */, "Unknown = %d\n", PathType.Unknown);
 
     RtlInitUnicodeString(&FileName, L"");
     TempString = FileName;
-    StringUsed = InvalidPointer;
-    FilePartSize = 1234;
+    ShortName = InvalidPointer;
     NameInvalid = (BOOLEAN)-1;
-    LengthNeeded = 1234;
     StartSeh()
-        RtlGetFullPathName_UstrEx(&FileName, NULL, NULL, &StringUsed, &FilePartSize, &NameInvalid, NULL, &LengthNeeded);
+        RtlGetFullPathName_Ustr(&FileName, 0, NULL, &ShortName, &NameInvalid, NULL);
     EndSeh(STATUS_ACCESS_VIOLATION);
     ok_eq_ustr(&FileName, &TempString);
-    ok(StringUsed == NULL, "StringUsed = %p\n", StringUsed);
-    ok(FilePartSize == 0, "FilePartSize = %lu\n", (ULONG)FilePartSize);
+    ok(ShortName == InvalidPointer ||
+        broken(ShortName == NULL), "ShortName = %p\n", ShortName);
     ok(NameInvalid == FALSE ||
        broken(NameInvalid == (BOOLEAN)-1) /* Win7 */, "NameInvalid = %u\n", NameInvalid);
-    ok(LengthNeeded == 0, "LengthNeeded = %lu\n", (ULONG)LengthNeeded);
 
     /* This is the first one that doesn't crash. FileName and PathType cannot be NULL */
     RtlInitUnicodeString(&FileName, NULL);
     TempString = FileName;
-    PathType = RtlPathTypeNotSet;
+    PathType.Type = RtlPathTypeNotSet;
+    PathType.Unknown = 1234;
     StartSeh()
-        Status = RtlGetFullPathName_UstrEx(&FileName, NULL, NULL, NULL, NULL, NULL, &PathType, NULL);
-        ok(Status == STATUS_OBJECT_NAME_INVALID, "status = %lx\n", Status);
+        Length = RtlGetFullPathName_Ustr(&FileName, 0, NULL, NULL, NULL, &PathType);
+        ok(Length == 0, "Length = %lu\n", Length);
     EndSeh(STATUS_SUCCESS);
     ok_eq_ustr(&FileName, &TempString);
-    ok(PathType == RtlPathTypeUnknown, "PathType = %d\n", PathType);
+    ok(PathType.Type == RtlPathTypeUnknown, "PathType = %d\n", PathType.Type);
+    ok(PathType.Unknown == 1234 ||
+       broken(PathType.Unknown == 0) /* Win7 */, "Unknown = %d\n", PathType.Unknown);
 
     RtlInitUnicodeString(&FileName, L"");
     TempString = FileName;
-    PathType = RtlPathTypeNotSet;
+    PathType.Type = RtlPathTypeNotSet;
+    PathType.Unknown = 1234;
     StartSeh()
-        Status = RtlGetFullPathName_UstrEx(&FileName, NULL, NULL, NULL, NULL, NULL, &PathType, NULL);
-        ok(Status == STATUS_OBJECT_NAME_INVALID, "status = %lx\n", Status);
+        Length = RtlGetFullPathName_Ustr(&FileName, 0, NULL, NULL, NULL, &PathType);
+        ok(Length == 0, "Length = %lu\n", Length);
     EndSeh(STATUS_SUCCESS);
     ok_eq_ustr(&FileName, &TempString);
-    ok(PathType == RtlPathTypeUnknown, "PathType = %d\n", PathType);
+    ok(PathType.Type == RtlPathTypeUnknown, "PathType = %d\n", PathType.Type);
+    ok(PathType.Unknown == 1234 ||
+       broken(PathType.Unknown == 0) /* Win7 */, "Unknown = %d\n", PathType.Unknown);
 
     /* Give it a valid path */
     RtlInitUnicodeString(&FileName, L"C:\\test");
     TempString = FileName;
-    PathType = RtlPathTypeNotSet;
+    PathType.Type = RtlPathTypeNotSet;
+    PathType.Unknown = 1234;
     StartSeh()
-        Status = RtlGetFullPathName_UstrEx(&FileName, NULL, NULL, NULL, NULL, NULL, &PathType, NULL);
-        ok(Status == STATUS_BUFFER_TOO_SMALL, "status = %lx\n", Status);
+        Length = RtlGetFullPathName_Ustr(&FileName, 0, NULL, NULL, NULL, &PathType);
+        ok(Length == sizeof(L"C:\\test"), "Length = %lu\n", Length);
     EndSeh(STATUS_SUCCESS);
     ok_eq_ustr(&FileName, &TempString);
-    ok(PathType == RtlPathTypeDriveAbsolute, "PathType = %d\n", PathType);
+    ok(PathType.Type == RtlPathTypeDriveAbsolute, "PathType = %d\n", PathType.Type);
+    ok(PathType.Unknown == 1234 ||
+       broken(PathType.Unknown == 0) /* Win7 */, "Unknown = %d\n", PathType.Unknown);
 
-    /* Zero-length static string */
-    RtlInitUnicodeString(&FileName, L"C:\\test");
-    TempString = FileName;
-    RtlInitUnicodeString(&StaticString, NULL);
-    PathType = RtlPathTypeNotSet;
-    StartSeh()
-        Status = RtlGetFullPathName_UstrEx(&FileName, &StaticString, NULL, NULL, NULL, NULL, &PathType, NULL);
-        ok(Status == STATUS_BUFFER_TOO_SMALL, "status = %lx\n", Status);
-    EndSeh(STATUS_SUCCESS);
-    ok_eq_ustr(&FileName, &TempString);
-    ok(PathType == RtlPathTypeDriveAbsolute, "PathType = %d\n", PathType);
-
-    /* TODO: play around with StaticString and DynamicString */
-
-    /* Check the actual functionality with different paths */
+    /* check the actual functionality with different paths */
     RunTestCases();
 }

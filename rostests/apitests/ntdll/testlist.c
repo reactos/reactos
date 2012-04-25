@@ -10,6 +10,7 @@ extern void func_NtFreeVirtualMemory(void);
 extern void func_NtSystemInformation(void);
 extern void func_RtlDetermineDosPathNameType(void);
 extern void func_RtlGetFullPathName_U(void);
+extern void func_RtlGetFullPathName_Ustr(void);
 extern void func_RtlGetFullPathName_UstrEx(void);
 extern void func_RtlGetLongestNtPathLength(void);
 extern void func_RtlInitializeBitMap(void);
@@ -22,6 +23,7 @@ const struct test winetest_testlist[] =
     { "NtSystemInformation",            func_NtSystemInformation },
     { "RtlDetermineDosPathNameType",    func_RtlDetermineDosPathNameType },
     { "RtlGetFullPathName_U",           func_RtlGetFullPathName_U },
+    { "RtlGetFullPathName_Ustr",        func_RtlGetFullPathName_Ustr },
     { "RtlGetFullPathName_UstrEx",      func_RtlGetFullPathName_UstrEx },
     { "RtlGetLongestNtPathLength",      func_RtlGetLongestNtPathLength },
     { "RtlInitializeBitMap",            func_RtlInitializeBitMap },

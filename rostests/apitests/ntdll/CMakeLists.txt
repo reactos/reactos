@@ -4,6 +4,7 @@ list(APPEND SOURCE
     NtFreeVirtualMemory.c
     RtlDetermineDosPathNameType.c
     RtlGetFullPathName_U.c
+    RtlGetFullPathName_Ustr.c
     RtlGetFullPathName_UstrEx.c
     RtlGetLongestNtPathLength.c
     RtlInitializeBitMap.c

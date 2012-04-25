@@ -56,16 +56,16 @@ CheckStringBuffer(
         Result = FALSE;
     }
 
-    /* the function nulls the rest of the buffer! */
+    /* The function nulls the rest of the buffer! */
     for (i = Length + sizeof(UNICODE_NULL); i < MaximumLength; i++)
     {
         UCHAR Char = ((PUCHAR)Buffer)[i];
         if (Char != 0)
         {
             ok(0, "Found 0x%x at offset %lu, expected 0x%x\n", Char, (ULONG)i, 0);
-            /* don't count this as a failure unless the string was actually wrong */
+            /* Don't count this as a failure unless the string was actually wrong */
             //Result = FALSE;
-            /* don't flood the log */
+            /* Don't flood the log */
             break;
         }
     }
@@ -73,7 +73,7 @@ CheckStringBuffer(
     return Result;
 }
 
-#define InvalidPointer ((PVOID)0x1234)
+#define InvalidPointer ((PVOID)0x0123456789ABCDEFULL)
 
 /* winetest_platform is "windows" for us, so broken() doesn't do what it should :( */
 #undef broken
@@ -172,11 +172,8 @@ RunTestCases(VOID)
                                           &ShortName);
         EndSeh(STATUS_SUCCESS);
 
-        /* TODO: remove SEH here */
-        StartSeh()
-            ok(CheckStringBuffer(FullPathNameBuffer, Length, sizeof(FullPathNameBuffer), ExpectedPathName),
-                "Wrong path name '%S', expected '%S'\n", FullPathNameBuffer, ExpectedPathName);
-        EndSeh(STATUS_SUCCESS);
+        ok(CheckStringBuffer(FullPathNameBuffer, Length, sizeof(FullPathNameBuffer), ExpectedPathName),
+            "Wrong path name '%S', expected '%S'\n", FullPathNameBuffer, ExpectedPathName);
 
         if (!ShortName)
             FilePartSize = 0;
@@ -278,6 +275,6 @@ START_TEST(RtlGetFullPathName_U)
     ok(ShortName == InvalidPointer ||
         broken(ShortName == NULL) /* Win7 */, "ShortName = %p\n", ShortName);
 
-    /* check the actual functionality with different paths */
+    /* Check the actual functionality with different paths */
     RunTestCases();
 }

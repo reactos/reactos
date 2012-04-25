@@ -70,6 +70,28 @@ AllocateGuarded(
 
 static
 VOID
+MakeReadOnly(
+    PVOID Pointer,
+    SIZE_T SizeRequested)
+{
+    NTSTATUS Status;
+    SIZE_T Size = PAGE_ROUND_UP(SizeRequested);
+    PVOID VirtualMemory = (PVOID)PAGE_ROUND_DOWN((SIZE_T)Pointer);
+
+    if (Size)
+    {
+        Status = NtAllocateVirtualMemory(NtCurrentProcess(), &VirtualMemory, 0, &Size, MEM_COMMIT, PAGE_READWRITE);
+        if (!NT_SUCCESS(Status))
+        {
+            Size = 0;
+            Status = NtFreeVirtualMemory(NtCurrentProcess(), &VirtualMemory, &Size, MEM_RELEASE);
+            ok(Status == STATUS_SUCCESS, "Status = %lx\n", Status);
+        }
+    }
+}
+
+static
+VOID
 FreeGuarded(
     PVOID Pointer)
 {
@@ -159,7 +181,7 @@ START_TEST(RtlDetermineDosPathNameType)
     USHORT Length;
 
     if (!RtlDetermineDosPathNameType_Ustr)
-        skip(0, "RtlDetermineDosPathNameType_Ustr unavailable\n");
+        skip("RtlDetermineDosPathNameType_Ustr unavailable\n");
 
     StartSeh() RtlDetermineDosPathNameType_U(NULL);     EndSeh(STATUS_ACCESS_VIOLATION);
 
@@ -178,6 +200,7 @@ START_TEST(RtlDetermineDosPathNameType)
         Length = (USHORT)wcslen(Tests[i].FileName) * sizeof(WCHAR);
         FileName = AllocateGuarded(Length + sizeof(UNICODE_NULL));
         RtlCopyMemory(FileName, Tests[i].FileName, Length + sizeof(UNICODE_NULL));
+        MakeReadOnly(FileName, Length + sizeof(UNICODE_NULL));
         StartSeh()
             PathType = RtlDetermineDosPathNameType_U(FileName);
             ok(PathType == Tests[i].PathType, "PathType is %d, expected %d for '%S'\n", PathType, Tests[i].PathType, Tests[i].FileName);
@@ -190,6 +213,7 @@ START_TEST(RtlDetermineDosPathNameType)
 
             FileName = AllocateGuarded(Length);
             RtlCopyMemory(FileName, Tests[i].FileName, Length);
+            MakeReadOnly(FileName, Length);
             PathString.Buffer = FileName;
             PathString.Length = Length;
             PathString.MaximumLength = MAXUSHORT;
