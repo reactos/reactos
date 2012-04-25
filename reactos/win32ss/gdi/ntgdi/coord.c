@@ -461,20 +461,23 @@ GreModifyWorldTransform(
         case MWT_LEFTMULTIPLY:
             XFORMOBJ_vInit(&xoDC, &pdc->pdcattr->mxWorldToPage);
             XFORMOBJ_vInit(&xoSrc, &mxSrc);
-            XFORMOBJ_iSetXform(&xoSrc, pxform);
+            if (XFORMOBJ_iSetXform(&xoSrc, pxform) == DDI_ERROR)
+                return FALSE;
             XFORMOBJ_iCombine(&xoDC, &xoSrc, &xoDC);
             break;
 
         case MWT_RIGHTMULTIPLY:
             XFORMOBJ_vInit(&xoDC, &pdc->pdcattr->mxWorldToPage);
             XFORMOBJ_vInit(&xoSrc, &mxSrc);
-            XFORMOBJ_iSetXform(&xoSrc, pxform);
+            if (XFORMOBJ_iSetXform(&xoSrc, pxform) == DDI_ERROR)
+                return FALSE;
             XFORMOBJ_iCombine(&xoDC, &xoDC, &xoSrc);
             break;
 
         case MWT_MAX+1: // Must be MWT_SET????
             XFORMOBJ_vInit(&xoDC, &pdc->pdcattr->mxWorldToPage);
-            XFORMOBJ_iSetXform(&xoDC, pxform);
+            if (XFORMOBJ_iSetXform(&xoDC, pxform) == DDI_ERROR)
+                return FALSE;
             break;
 
         default:

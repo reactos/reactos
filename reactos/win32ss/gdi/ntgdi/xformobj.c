@@ -160,10 +160,10 @@ XFORMOBJ_iSetXform(
     PMATRIX pmx = XFORMOBJ_pmx(pxo);
 
     /* Check parameters */
-    if (!pxo || !pxform)
-    {
-        return DDI_ERROR;
-    }
+    if (!pxo || !pxform) return DDI_ERROR;
+
+    /* Check if the xform is valid */
+    if ((pxform->eM11 == 0) || (pxform->eM22 == 0)) return DDI_ERROR;
 
     /* Copy members */
     FLOATOBJ_SetFloat(&pmx->efM11, pxform->eM11);
