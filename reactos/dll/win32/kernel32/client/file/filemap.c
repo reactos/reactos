@@ -195,7 +195,7 @@ MapViewOfFileEx(HANDLE hFileMappingObject,
     }
 
     /* Map the section */
-    Status = ZwMapViewOfSection(hFileMappingObject,
+    Status = NtMapViewOfSection(hFileMappingObject,
                                 NtCurrentProcess(),
                                 &ViewBase,
                                 0,
@@ -326,7 +326,7 @@ OpenFileMappingW(IN DWORD dwDesiredAccess,
     }
 
     /* Open the section */
-    Status = ZwOpenSection(&SectionHandle, dwDesiredAccess, &ObjectAttributes);
+    Status = NtOpenSection(&SectionHandle, dwDesiredAccess, &ObjectAttributes);
     if (!NT_SUCCESS(Status))
     {
         /* We failed */

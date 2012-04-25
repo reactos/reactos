@@ -889,7 +889,7 @@ BasePushProcessParameters(IN ULONG ParameterFlags,
         /* Allocate and Initialize new Environment Block */
         Size = EnviroSize;
         ProcessParameters->Environment = NULL;
-        Status = ZwAllocateVirtualMemory(ProcessHandle,
+        Status = NtAllocateVirtualMemory(ProcessHandle,
                                          (PVOID*)&ProcessParameters->Environment,
                                          0,
                                          &Size,
@@ -898,7 +898,7 @@ BasePushProcessParameters(IN ULONG ParameterFlags,
         if (!NT_SUCCESS(Status)) goto FailPath;
 
         /* Write the Environment Block */
-        Status = ZwWriteVirtualMemory(ProcessHandle,
+        Status = NtWriteVirtualMemory(ProcessHandle,
                                       ProcessParameters->Environment,
                                       lpEnvironment,
                                       EnviroSize,
@@ -2947,7 +2947,7 @@ GetAppName:
     /* FIXME: Allow CREATE_SEPARATE only for WOW Apps, once we have that. */
 
     /* Get some information about the executable */
-    Status = ZwQuerySection(hSection,
+    Status = NtQuerySection(hSection,
                             SectionImageInformation,
                             &SectionImageInfo,
                             sizeof(SectionImageInfo),

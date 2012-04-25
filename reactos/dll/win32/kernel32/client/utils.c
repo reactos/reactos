@@ -408,7 +408,7 @@ BaseCreateStack(HANDLE hProcess,
 
     /* Reserve memory for the stack */
     Stack = 0;
-    Status = ZwAllocateVirtualMemory(hProcess,
+    Status = NtAllocateVirtualMemory(hProcess,
                                      (PVOID*)&Stack,
                                      0,
                                      &StackReserve,
@@ -442,7 +442,7 @@ BaseCreateStack(HANDLE hProcess,
     }
 
     /* Allocate memory for the stack */
-    Status = ZwAllocateVirtualMemory(hProcess,
+    Status = NtAllocateVirtualMemory(hProcess,
                                      (PVOID*)&Stack,
                                      0,
                                      &StackCommit,
@@ -452,7 +452,7 @@ BaseCreateStack(HANDLE hProcess,
     {
         DPRINT1("Failure to allocate stack\n");
         GuardPageSize = 0;
-        ZwFreeVirtualMemory(hProcess, (PVOID*)&Stack, &GuardPageSize, MEM_RELEASE);
+        NtFreeVirtualMemory(hProcess, (PVOID*)&Stack, &GuardPageSize, MEM_RELEASE);
         return Status;
     }
 
@@ -464,7 +464,7 @@ BaseCreateStack(HANDLE hProcess,
     {
         /* Set the guard page */
         GuardPageSize = PAGE_SIZE;
-        Status = ZwProtectVirtualMemory(hProcess,
+        Status = NtProtectVirtualMemory(hProcess,
                                         (PVOID*)&Stack,
                                         &GuardPageSize,
                                         PAGE_GUARD | PAGE_READWRITE,

@@ -322,7 +322,7 @@ DllMain(HANDLE hDll,
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("Failed to connect to CSR (Status %lx)\n", Status);
-            ZwTerminateProcess(NtCurrentProcess(), Status);
+            NtTerminateProcess(NtCurrentProcess(), Status);
             return FALSE;
         }
 
