@@ -483,38 +483,42 @@ SetWindowOrgEx(HDC hdc,
  */
 BOOL
 WINAPI
-SetWindowExtEx(HDC hdc,
-               int nXExtent,
-               int nYExtent,
-               LPSIZE lpSize)
+SetWindowExtEx(
+    _In_ HDC hdc,
+    _In_ INT nXExtent,
+    _In_ INT nYExtent,
+    _Out_opt_ LPSIZE lpSize)
 {
     PDC_ATTR pdcattr;
+    ULONG ulType;
 
-#if 0
-    if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)
+    /* Check what type of DC that is */
+    ulType = GDI_HANDLE_GET_TYPE(hdc);
+    switch (ulType)
     {
-        if (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_METADC)
-            return MFDRV_SetWindowExtEx();
-        else
-        {
-            PLDC pLDC = GdiGetLDC(hdc);
-            if ( !pLDC )
-            {
-                SetLastError(ERROR_INVALID_HANDLE);
-                return FALSE;
-            }
-            if (pLDC->iType == LDC_EMFLDC)
-            {
-                return EMFDRV_SetWindowExtEx();
-            }
-        }
-    }
+        case GDILoObjType_LO_DC_TYPE:
+            /* Handle this in the path below */
+            break;
+#if 0// FIXME: we don't support this
+        case GDILoObjType_LO_METADC16_TYPE:
+            return MFDRV_SetWindowExtEx(hdc, nXExtent, nYExtent, lpSize);
+
+        case GDILoObjType_LO_METAFILE_TYPE:
+            return EMFDRV_SetWindowExtEx(hdc, nXExtent, nYExtent, lpSize);
 #endif
+        default:
+            /* Other types are not allowed */
+            SetLastError(ERROR_INVALID_HANDLE);
+            return FALSE;
+    }
+
+    /* Get the DC attr */
     pdcattr = GdiGetDcAttr(hdc);
     if (!pdcattr)
     {
+        /* Set the error value and return failure */
         SetLastError(ERROR_INVALID_PARAMETER);
-        return 0;
+        return FALSE;
     }
 
     if (lpSize)
@@ -549,7 +553,8 @@ SetWindowExtEx(HDC hdc,
         if (pdcattr->dwLayout & LAYOUT_RTL) NtGdiMirrorWindowOrg(hdc);
         pdcattr->flXform |= (PAGE_EXTENTS_CHANGED|INVALIDATE_ATTRIBUTES|DEVICE_TO_WORLD_INVALID);
     }
-    return TRUE; // Return TRUE.
+
+    return TRUE;
 }
 
 /*
