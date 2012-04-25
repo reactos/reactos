@@ -124,6 +124,7 @@ START_TEST(RtlDetermineDosPathNameType)
         { L"::",                RtlPathTypeDriveRelative },
         { L":::",               RtlPathTypeDriveRelative },
         { L"::::",              RtlPathTypeDriveRelative },
+        { L"::\\",              RtlPathTypeDriveAbsolute },
         { L"\\",                RtlPathTypeRooted },
         { L"\\:",               RtlPathTypeRooted },
         { L"\\C:",              RtlPathTypeRooted },
@@ -175,6 +176,7 @@ START_TEST(RtlDetermineDosPathNameType)
         { L"/\\.",              RtlPathTypeRootLocalDevice },
         { L"//./",              RtlPathTypeLocalDevice },
         { L"//./C:/",           RtlPathTypeLocalDevice },
+        { L"%SystemRoot%",      RtlPathTypeRelative },
     };
     ULONG i;
     PWSTR FileName;

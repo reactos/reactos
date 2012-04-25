@@ -3,6 +3,7 @@ list(APPEND SOURCE
     NtAllocateVirtualMemory.c
     NtFreeVirtualMemory.c
     RtlDetermineDosPathNameType.c
+    RtlDoesFileExists.c
     RtlGetFullPathName_U.c
     RtlGetFullPathName_Ustr.c
     RtlGetFullPathName_UstrEx.c

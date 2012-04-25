@@ -81,6 +81,25 @@ CheckStringBuffer(
     return Result;
 }
 
+static
+BOOLEAN
+CheckBuffer(
+    PVOID Buffer,
+    SIZE_T Size,
+    UCHAR Value)
+{
+    PUCHAR Array = Buffer;
+    SIZE_T i;
+
+    for (i = 0; i < Size; i++)
+        if (Array[i] != Value)
+        {
+            trace("Expected %x, found %x at offset %lu\n", Value, Array[i], (ULONG)i);
+            return FALSE;
+        }
+    return TRUE;
+}
+
 #define RtlPathTypeNotSet 123
 #define InvalidPointer ((PVOID)0x0123456789ABCDEFULL)
 
@@ -100,7 +119,8 @@ static
 VOID
 RunTestCases(VOID)
 {
-    /* TODO: don't duplicate this here and in the RtlGetFullPathName_U test */
+    /* TODO: don't duplicate this in the other tests */
+    /* TODO: Drive Relative tests don't work yet if the current drive isn't C: */
     struct
     {
         PCWSTR FileName;
@@ -261,6 +281,7 @@ START_TEST(RtlGetFullPathName_UstrEx)
     PUNICODE_STRING StringUsed;
     SIZE_T FilePartSize;
     BOOLEAN NameInvalid;
+    BOOLEAN NameInvalidArray[sizeof(ULONGLONG)];
     RTL_PATH_TYPE PathType;
     SIZE_T LengthNeeded;
 
@@ -342,6 +363,20 @@ START_TEST(RtlGetFullPathName_UstrEx)
     EndSeh(STATUS_SUCCESS);
     ok_eq_ustr(&FileName, &TempString);
     ok(PathType == RtlPathTypeUnknown, "PathType = %d\n", PathType);
+
+    /* Show that NameInvalid is indeed BOOLEAN */
+    RtlInitUnicodeString(&FileName, L"");
+    TempString = FileName;
+    PathType = RtlPathTypeNotSet;
+    RtlFillMemory(NameInvalidArray, sizeof(NameInvalidArray), 0x55);
+    StartSeh()
+        Status = RtlGetFullPathName_UstrEx(&FileName, NULL, NULL, NULL, NULL, NameInvalidArray, &PathType, NULL);
+        ok(Status == STATUS_OBJECT_NAME_INVALID, "status = %lx\n", Status);
+    EndSeh(STATUS_SUCCESS);
+    ok_eq_ustr(&FileName, &TempString);
+    ok(PathType == RtlPathTypeUnknown, "PathType = %d\n", PathType);
+    ok(NameInvalidArray[0] == FALSE, "NameInvalid = %u\n", NameInvalidArray[0]);
+    ok(CheckBuffer(NameInvalidArray + 1, sizeof(NameInvalidArray) - sizeof(NameInvalidArray[0]), 0x55), "CheckBuffer failed\n");
 
     /* Give it a valid path */
     RtlInitUnicodeString(&FileName, L"C:\\test");

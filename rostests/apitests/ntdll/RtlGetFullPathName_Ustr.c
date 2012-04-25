@@ -39,7 +39,7 @@ ULONG
     IN PWSTR Buffer,
     OUT PCWSTR *ShortName,
     OUT PBOOLEAN InvalidName,
-    OUT PATH_TYPE_AND_UNKNOWN* PathType
+    OUT PATH_TYPE_AND_UNKNOWN *PathType
 )
 //= (PVOID)0x7c83086c // 2003 sp1 x86
 //= (PVOID)0x7769a3dd // win7 sp1 wow64
@@ -103,6 +103,25 @@ CheckStringBuffer(
     return Result;
 }
 
+static
+BOOLEAN
+CheckBuffer(
+    PVOID Buffer,
+    SIZE_T Size,
+    UCHAR Value)
+{
+    PUCHAR Array = Buffer;
+    SIZE_T i;
+
+    for (i = 0; i < Size; i++)
+        if (Array[i] != Value)
+        {
+            trace("Expected %x, found %x at offset %lu\n", Value, Array[i], (ULONG)i);
+            return FALSE;
+        }
+    return TRUE;
+}
+
 #define RtlPathTypeNotSet 123
 #define InvalidPointer ((PVOID)0x0123456789ABCDEFULL)
 
@@ -122,7 +141,8 @@ static
 VOID
 RunTestCases(VOID)
 {
-    /* TODO: don't duplicate this here and in the RtlGetFullPathName_U test */
+    /* TODO: don't duplicate this in the other tests */
+    /* TODO: Drive Relative tests don't work yet if the current drive isn't C: */
     struct
     {
         PCWSTR FileName;
@@ -283,6 +303,7 @@ START_TEST(RtlGetFullPathName_Ustr)
     UNICODE_STRING TempString;
     PCWSTR ShortName;
     BOOLEAN NameInvalid;
+    BOOLEAN NameInvalidArray[sizeof(ULONGLONG)];
     PATH_TYPE_AND_UNKNOWN PathType;
 
     if (!RtlGetFullPathName_Ustr)
@@ -312,10 +333,9 @@ START_TEST(RtlGetFullPathName_Ustr)
     StartSeh()
         RtlGetFullPathName_Ustr(NULL, 0, NULL, NULL, NULL, &PathType);
     EndSeh(STATUS_ACCESS_VIOLATION);
-    ok(PathType.Type == RtlPathTypeUnknown ||
-       broken(PathType.Type == RtlPathTypeNotSet) /* Win7 */, "PathType = %d\n", PathType.Type);
+    ok(PathType.Type == RtlPathTypeUnknown, "PathType = %d\n", PathType.Type);
     ok(PathType.Unknown == 1234 ||
-       broken(PathType.Unknown == 0) /* Win7 */, "Unknown = %d\n", PathType.Unknown);
+        broken(PathType.Unknown == 0) /* Win7 */, "Unknown = %d\n", PathType.Unknown);
 
     /* check what else is initialized before it crashes */
     PathType.Type = RtlPathTypeNotSet;
@@ -327,9 +347,8 @@ START_TEST(RtlGetFullPathName_Ustr)
     EndSeh(STATUS_ACCESS_VIOLATION);
     ok(NameInvalid == FALSE, "NameInvalid = %u\n", NameInvalid);
     ok(ShortName == InvalidPointer ||
-        broken(ShortName == NULL), "ShortName = %p\n", ShortName);
-    ok(PathType.Type == RtlPathTypeUnknown ||
-       broken(PathType.Type == RtlPathTypeNotSet) /* Win7 */, "PathType = %d\n", PathType.Type);
+        broken(ShortName == NULL) /* Win7 */, "ShortName = %p\n", ShortName);
+    ok(PathType.Type == RtlPathTypeUnknown, "PathType = %d\n", PathType.Type);
     ok(PathType.Unknown == 1234 ||
        broken(PathType.Unknown == 0) /* Win7 */, "Unknown = %d\n", PathType.Unknown);
 
@@ -342,9 +361,8 @@ START_TEST(RtlGetFullPathName_Ustr)
     EndSeh(STATUS_ACCESS_VIOLATION);
     ok_eq_ustr(&FileName, &TempString);
     ok(ShortName == InvalidPointer ||
-        broken(ShortName == NULL), "ShortName = %p\n", ShortName);
-    ok(NameInvalid == FALSE ||
-       broken(NameInvalid == (BOOLEAN)-1) /* Win7 */, "NameInvalid = %u\n", NameInvalid);
+        broken(ShortName == NULL) /* Win7 */, "ShortName = %p\n", ShortName);
+    ok(NameInvalid == FALSE, "NameInvalid = %u\n", NameInvalid);
 
     /* This is the first one that doesn't crash. FileName and PathType cannot be NULL */
     RtlInitUnicodeString(&FileName, NULL);
@@ -372,6 +390,23 @@ START_TEST(RtlGetFullPathName_Ustr)
     ok(PathType.Type == RtlPathTypeUnknown, "PathType = %d\n", PathType.Type);
     ok(PathType.Unknown == 1234 ||
        broken(PathType.Unknown == 0) /* Win7 */, "Unknown = %d\n", PathType.Unknown);
+
+    /* Show that NameInvalid is indeed BOOLEAN */
+    RtlInitUnicodeString(&FileName, L"");
+    TempString = FileName;
+    PathType.Type = RtlPathTypeNotSet;
+    PathType.Unknown = 1234;
+    RtlFillMemory(NameInvalidArray, sizeof(NameInvalidArray), 0x55);
+    StartSeh()
+        Length = RtlGetFullPathName_Ustr(&FileName, 0, NULL, NULL, NameInvalidArray, &PathType);
+        ok(Length == 0, "Length = %lu\n", Length);
+    EndSeh(STATUS_SUCCESS);
+    ok_eq_ustr(&FileName, &TempString);
+    ok(PathType.Type == RtlPathTypeUnknown, "PathType = %d\n", PathType.Type);
+    ok(PathType.Unknown == 1234 ||
+       broken(PathType.Unknown == 0) /* Win7 */, "Unknown = %d\n", PathType.Unknown);
+    ok(NameInvalidArray[0] == FALSE, "NameInvalid = %u\n", NameInvalidArray[0]);
+    ok(CheckBuffer(NameInvalidArray + 1, sizeof(NameInvalidArray) - sizeof(NameInvalidArray[0]), 0x55), "CheckBuffer failed\n");
 
     /* Give it a valid path */
     RtlInitUnicodeString(&FileName, L"C:\\test");

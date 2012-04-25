@@ -91,7 +91,8 @@ static
 VOID
 RunTestCases(VOID)
 {
-    /* TODO: don't duplicate this here and in the RtlGetFullPathName_UstrEx test */
+    /* TODO: don't duplicate this in the other tests */
+    /* TODO: Drive Relative tests don't work yet if the current drive isn't C: */
     struct
     {
         PCWSTR FileName;
