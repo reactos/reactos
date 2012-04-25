@@ -9,13 +9,21 @@
 #include <wine/test.h>
 #include <windows.h>
 
-#define ok_long(expression, result) \
-    { \
-        int _value = (expression); \
-        ok(_value == (result), "Wrong value for %s, expected " #result " (0x%x), got 0x%x\n", \
-           #expression, (int)(result), _value); \
-    }
+void Test_CombineRgn_Params()
+{
+    HRGN hrgn1, hrgn2, hrgn3;
 
+    hrgn1 = CreateRectRgn(0, 0, 0, 0);
+    hrgn2 = CreateRectRgn(0, 0, 10, 10);
+    hrgn3 = CreateRectRgn(5, 5, 20, 20);
+
+    SetLastError(0xbadbabe);
+    ok_long(CombineRgn(NULL, NULL, NULL, 0), ERROR);
+    ok_long(CombineRgn(hrgn1, hrgn2, hrgn3, 0), ERROR);
+    ok_long(CombineRgn(hrgn1, hrgn2, hrgn3, 6), ERROR);
+    ok_long(GetLastError(), 0xbadbabe);
+
+}
 
 void Test_CombineRgn_COPY()
 {
@@ -189,6 +197,7 @@ void Test_CombineRgn_XOR()
 
 START_TEST(CombineRgn)
 {
+    Test_CombineRgn_Params();
     Test_CombineRgn_COPY();
     Test_CombineRgn_AND();
     Test_CombineRgn_OR();

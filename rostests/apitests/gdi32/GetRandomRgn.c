@@ -15,14 +15,6 @@
 #define SYSRGN  4
 #define RGN5    5
 
-#define ok_int(x, exp) \
-    ok((x) == (exp), "Failed test in line %d: value %s expected 0x%x, got 0x%x\n", \
-       (int)__LINE__, #x, (int)(exp), (int)(x))
-
-#define ok_long(x, exp) \
-    ok((x) == (exp), "Failed test in line %d: value %s expected 0x%x, got 0x%x\n", \
-       (int)__LINE__, #x, (int)(exp), (int)(x))
-
 HWND ghwnd;
 HDC ghdcWindow;
 

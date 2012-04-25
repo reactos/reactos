@@ -9,8 +9,6 @@
 #include <wine/test.h>
 #include <windows.h>
 
-#define ok_err(dwErr) ok(GetLastError() == dwErr, "LastError is wrong, expected %d, got %ld\n", dwErr, GetLastError())
-
 void Test_GetDIBits()
 {
 	HDC hdcScreen, hdcMem;

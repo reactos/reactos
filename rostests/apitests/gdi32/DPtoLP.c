@@ -9,8 +9,6 @@
 #include <wine/test.h>
 #include <windows.h>
 
-#define ok_int(x, y) ok(x == y, "Wrong value for " #x ", expected " #y ", got %ld\n", (long)x);
-
 void Test_DPtoLP_Params()
 {
     BOOL ret;

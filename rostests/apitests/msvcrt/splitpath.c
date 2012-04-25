@@ -11,12 +11,6 @@
 #include <strings.h>
 #include <stdarg.h>
 
-#define ok_str(x, y) \
-    ok(strcmp(x, y) == 0, "got '%s', expected '%s'\n", x, y);
-
-#define ok_int(x, y) \
-    ok(x == y, "got %d, expected %d\n", x, y);
-
 START_TEST(splitpath)
 {
     char drive[5];

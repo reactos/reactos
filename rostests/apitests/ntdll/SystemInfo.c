@@ -10,13 +10,6 @@
 #include <wine/test.h>
 #include <ndk/ntndk.h>
 
-#define ok_long(x, y) \
-    ok(x == y, "got %ld, expected %ld\n", (long)x, (long)y);
-
-#define ok_ntstatus(status, expected) \
-    ok(status == expected, "got 0x%lx, expected 0x%lx\n", status, expected);
-//    ok(status == expected, "expected: " ##expected## ", got 0x%lx\n", status)
-
 void
 GetPrivilege()
 {

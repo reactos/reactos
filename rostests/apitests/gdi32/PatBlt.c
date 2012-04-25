@@ -13,14 +13,6 @@ HBITMAP ghbmpTarget;
 PULONG gpulTargetBits;
 HDC hdcTarget;
 
-#define ok_int(x, exp) \
-    ok((x) == (exp), "Failed test in line %d: value %s expected 0x%x, got 0x%x\n", \
-       (int)__LINE__, #x, (int)(exp), (int)(x))
-
-#define ok_long(x, exp) \
-    ok((x) == (exp), "Failed test in line %d: value %s expected 0x%x, got 0x%x\n", \
-       (int)__LINE__, #x, (int)(exp), (int)(x))
-
 void Test_BrushOrigin()
 {
     ULONG aulBits[2] = {0x5555AAAA, 0};

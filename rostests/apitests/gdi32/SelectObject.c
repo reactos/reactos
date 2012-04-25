@@ -15,8 +15,6 @@
 #define TEST(x) ok(x, #x"\n")
 #define RTEST(x) ok(x, #x"\n")
 
-#define ok_err(dwErr) ok(GetLastError() == dwErr, "Wrong LastError, expected %d, got %ld\n", dwErr, GetLastError())
-
 HDC hdc1, hdc2;
 
 static void
