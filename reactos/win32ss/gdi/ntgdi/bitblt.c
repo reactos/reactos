@@ -866,53 +866,60 @@ IntGdiPolyPatBlt(
     return TRUE;
 }
 
-BOOL APIENTRY
+BOOL
+APIENTRY
 NtGdiPatBlt(
-    HDC hDC,
-    INT XLeft,
-    INT YLeft,
-    INT Width,
-    INT Height,
-    DWORD ROP)
+    _In_ HDC hdcDest,
+    _In_ INT x,
+    _In_ INT y,
+    _In_ INT cx,
+    _In_ INT cy,
+    _In_ DWORD rop4)
 {
-    DC *dc;
-    PDC_ATTR pdcattr;
-    BOOL ret;
+    BOOL bResult;
+    PDC pdc;
 
-    BOOL UsesSource = ROP_USES_SOURCE(ROP);
-    if (UsesSource)
+    /* Mask away everything except foreground rop index */
+    rop4 = rop4 & 0x00FF0000;
+    rop4 |= rop4 << 8;
+
+    /* Check if the rop uses a source */
+    if (ROP_USES_SOURCE(rop4))
     {
-        /* In this case we call on GdiMaskBlt */
-        return NtGdiMaskBlt(hDC, XLeft, YLeft, Width, Height, 0,0,0,0,0,0,ROP,0);
+        /* This is not possible */
+        return 0;
     }
 
-    dc = DC_LockDc(hDC);
-    if (dc == NULL)
+    /* Lock the DC */
+    pdc = DC_LockDc(hdcDest);
+    if (pdc == NULL)
     {
         EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
-    if (dc->dctype == DC_TYPE_INFO)
+
+    /* Check if the DC has no surface (empty mem or info DC) */
+    if (pdc->dclevel.pSurface == NULL)
     {
-        DC_UnlockDc(dc);
-        DPRINT1("NtGdiPatBlt on info DC!\n");
-        /* Yes, Windows really returns TRUE in this case */
+        /* Nothing to do, Windows returns TRUE! */
+        DC_UnlockDc(pdc);
         return TRUE;
     }
 
-    pdcattr = dc->pdcattr;
+    /* Update the fill brush, if neccessary */
+    if (pdc->pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
+        DC_vUpdateFillBrush(pdc);
 
-    if (pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
-        DC_vUpdateFillBrush(dc);
+    /* Call the internal function */
+    bResult = IntPatBlt(pdc, x, y, cx, cy, rop4, &pdc->eboFill);
 
-    ret = IntPatBlt(dc, XLeft, YLeft, Width, Height, ROP, &dc->eboFill);
-
-    DC_UnlockDc(dc);
-
-    return ret;
+    /* Unlock the DC and return the result */
+    DC_UnlockDc(pdc);
+    return bResult;
 }
 
-BOOL APIENTRY
+BOOL
+APIENTRY
 NtGdiPolyPatBlt(
     HDC hDC,
     DWORD dwRop,
