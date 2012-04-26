@@ -880,6 +880,7 @@ GDIOBJ_vDeleteObject(POBJ pobj)
             /* Release the pushlock and reenable APCs */
             ExReleasePushLockExclusive(&pobj->pushlock);
             KeLeaveCriticalRegion();
+            DBG_DECREASE_LOCK_COUNT(PsGetCurrentProcessWin32Process(), pobj->hHmgr);
         }
     }
 

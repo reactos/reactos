@@ -1156,7 +1156,7 @@ NtGdiGetPixel(
             /* Call the copy bits function */
             bResult = IntEngCopyBits(&psurfDest->SurfObj,
                                      &psurfSrc->SurfObj,
-                                     pdc->rosdc.CombinedClip,
+                                     NULL,
                                      &exlo.xlo,
                                      &rclDest,
                                      &ptlSrc);

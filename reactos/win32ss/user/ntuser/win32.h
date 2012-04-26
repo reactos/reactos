@@ -108,7 +108,7 @@ typedef struct _THREADINFO
     SINGLE_LIST_ENTRY  ReferencesList;
     ULONG cExclusiveLocks;
 #if DBG
-    USHORT acExclusiveLockCount[GDIObjTypeTotal];
+    USHORT acExclusiveLockCount[GDIObjTypeTotal + 1];
 #endif
 
 } THREADINFO;
