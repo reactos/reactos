@@ -1042,7 +1042,7 @@ void state_fogstartend(struct wined3d_context *context, const struct wined3d_sta
             fogend = tmpvalue.f;
             /* In GL, fogstart == fogend disables fog, in D3D everything's fogged.*/
             if(fogstart == fogend) {
-                fogstart = -1.0f / 0.0f;
+                fogstart = -INFINITY;
                 fogend = 0.0f;
             }
             break;
