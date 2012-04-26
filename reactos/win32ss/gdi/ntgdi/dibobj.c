@@ -1744,9 +1744,6 @@ DIB_MapPaletteColors(PPALETTE ppal, CONST BITMAPINFO* lpbmi)
         nNumColors = min(nNumColors, lpbmi->bmiHeader.biClrUsed);
     }
 
-    /* Don't have more colors than we need */
-    nNumColors = min(ppal->NumColors, nNumColors);
-
     ppalEntries = ExAllocatePoolWithTag(PagedPool, sizeof(PALETTEENTRY) * nNumColors, TAG_COLORMAP);
     if (ppalEntries == NULL)
     {
@@ -1758,17 +1755,7 @@ DIB_MapPaletteColors(PPALETTE ppal, CONST BITMAPINFO* lpbmi)
 
     for (i = 0; i < nNumColors; i++)
     {
-        if (*lpIndex < ppal->NumColors)
-        {
-            ppalEntries[i] = ppal->IndexedColors[*lpIndex];
-        }
-        else
-        {
-            ppalEntries[i].peRed = 0;
-            ppalEntries[i].peGreen = 0;
-            ppalEntries[i].peBlue = 0;
-            ppalEntries[i].peFlags = 0;
-        }
+        ppalEntries[i] = ppal->IndexedColors[*lpIndex % ppal->NumColors];
 
         lpIndex++;
     }
