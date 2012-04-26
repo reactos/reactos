@@ -23,7 +23,7 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 add_library(d3dx9_36 SHARED ${SOURCE})
 set_module_type(d3dx9_36 win32dll)
-target_link_libraries(d3dx9_36 wine)
+target_link_libraries(d3dx9_36 uuid wine)
 
 add_importlibs(d3dx9_36
     d3d9
