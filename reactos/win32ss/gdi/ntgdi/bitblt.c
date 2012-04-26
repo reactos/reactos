@@ -733,15 +733,15 @@ IntPatBlt(
     INT Width,
     INT Height,
     DWORD dwRop,
-    PBRUSH pbrush)
+    PEBRUSHOBJ pebo)
 {
     RECTL DestRect;
     SURFACE *psurf;
-    EBRUSHOBJ eboFill ;
     POINTL BrushOrigin;
     BOOL ret;
+    PBRUSH pbrush = pebo->pbrush;
 
-    ASSERT(pbrush);
+    ASSERT(pebo);
 
     FIXUP_ROP(dwRop);
 
@@ -790,11 +790,6 @@ IntPatBlt(
 
     psurf = pdc->dclevel.pSurface;
 
-    if (pdc->pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
-        DC_vUpdateFillBrush(pdc);
-
-    EBRUSHOBJ_vInit(&eboFill, pbrush, pdc);
-
     ret = IntEngBitBlt(
         &psurf->SurfObj,
         NULL,
@@ -804,13 +799,11 @@ IntPatBlt(
         &DestRect,
         NULL,
         NULL,
-        &eboFill.BrushObject,
+        &pebo->BrushObject,
         &BrushOrigin,
         ROP_TO_ROP4(dwRop));
 
     DC_vFinishBlit(pdc, NULL);
-
-    EBRUSHOBJ_vCleanup(&eboFill);
 
     return ret;
 }
@@ -826,6 +819,7 @@ IntGdiPolyPatBlt(
     INT i;
     PBRUSH pbrush;
     PDC pdc;
+    EBRUSHOBJ eboFill;
 
     pdc = DC_LockDc(hDC);
     if (!pdc)
@@ -844,8 +838,13 @@ IntGdiPolyPatBlt(
     for (i = 0; i < cRects; i++)
     {
         pbrush = BRUSH_ShareLockBrush(pRects->hBrush);
-        if(pbrush != NULL)
+
+        /* Check if we could lock the brush */
+        if (pbrush != NULL)
         {
+            /* Initialize a brush object */
+            EBRUSHOBJ_vInit(&eboFill, pbrush, pdc);
+
             IntPatBlt(
                 pdc,
                 pRects->r.left,
@@ -853,7 +852,10 @@ IntGdiPolyPatBlt(
                 pRects->r.right,
                 pRects->r.bottom,
                 dwRop,
-                pbrush);
+                &eboFill);
+
+            /* Cleanup the brush object and unlock the brush */
+            EBRUSHOBJ_vCleanup(&eboFill);
             BRUSH_ShareUnlockBrush(pbrush);
         }
         pRects++;
@@ -873,7 +875,6 @@ NtGdiPatBlt(
     INT Height,
     DWORD ROP)
 {
-    PBRUSH pbrush;
     DC *dc;
     PDC_ATTR pdcattr;
     BOOL ret;
@@ -884,8 +885,6 @@ NtGdiPatBlt(
         /* In this case we call on GdiMaskBlt */
         return NtGdiMaskBlt(hDC, XLeft, YLeft, Width, Height, 0,0,0,0,0,0,ROP,0);
     }
-
-if ((XLeft == 0) && (YLeft == 0) && (Width == 592) && (Height == 362)) __debugbreak();
 
     dc = DC_LockDc(hDC);
     if (dc == NULL)
@@ -906,17 +905,8 @@ if ((XLeft == 0) && (YLeft == 0) && (Width == 592) && (Height == 362)) __debugbr
     if (pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
         DC_vUpdateFillBrush(dc);
 
-    pbrush = BRUSH_ShareLockBrush(pdcattr->hbrush);
-    if (pbrush == NULL)
-    {
-        EngSetLastError(ERROR_INVALID_HANDLE);
-        DC_UnlockDc(dc);
-        return FALSE;
-    }
+    ret = IntPatBlt(dc, XLeft, YLeft, Width, Height, ROP, &dc->eboFill);
 
-    ret = IntPatBlt(dc, XLeft, YLeft, Width, Height, ROP, pbrush);
-
-    BRUSH_ShareUnlockBrush(pbrush);
     DC_UnlockDc(dc);
 
     return ret;
