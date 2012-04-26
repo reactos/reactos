@@ -17,79 +17,6 @@
 #define FIXUP_ROP(Rop) if(((Rop) & 0xFF000000) == 0) Rop = MAKEROP4((Rop), (Rop))
 #define ROP_TO_ROP4(Rop) ((Rop) >> 16)
 
-ULONG
-TranslateCOLORREF(PDC pdc, COLORREF *pcrColor)
-{
-    PPALETTE ppalDC, ppalSurface;
-    ULONG index, ulColor, iBitmapFormat;
-    COLORREF crColor = *pcrColor;
-    EXLATEOBJ exlo;
-
-    switch (crColor >> 24)
-    {
-        case 0x00: /* RGB color */
-            break;
-
-        case 0x01: /* PALETTEINDEX */
-            index = crColor & 0xFFFFFF;
-            ppalDC = pdc->dclevel.ppal;
-            if (index >= ppalDC->NumColors) index = 0;
-
-            /* Get the RGB value */
-            crColor = PALETTE_ulGetRGBColorFromIndex(ppalDC, index);
-            *pcrColor = crColor;
-            break;
-
-        case 0x02: /* PALETTERGB */
-
-            /* First find the nearest index in the dc palette */
-            ppalDC = pdc->dclevel.ppal;
-            index = PALETTE_ulGetNearestIndex(ppalDC, crColor & 0xFFFFFF);
-
-            /* Get the RGB value */
-            crColor = PALETTE_ulGetRGBColorFromIndex(ppalDC, index);
-            *pcrColor = crColor;
-            break;
-
-        case 0x10: /* DIBINDEX */
-            /* Mask the value to match the target bpp */
-            iBitmapFormat = pdc->dclevel.pSurface->SurfObj.iBitmapFormat;
-            if (iBitmapFormat == BMF_1BPP) index = crColor & 0x1;
-            else if (iBitmapFormat == BMF_4BPP) index = crColor & 0xf;
-            else if (iBitmapFormat == BMF_8BPP) index = crColor & 0xFF;
-            else if (iBitmapFormat == BMF_16BPP) index = crColor & 0xFFFF;
-            else index = crColor & 0xFFFFFF;
-
-            /* Translate the color to RGB for the caller */
-            ppalSurface = pdc->dclevel.pSurface->ppal;
-            if (index < ppalSurface->NumColors)
-                *pcrColor = PALETTE_ulGetRGBColorFromIndex(ppalSurface, index);
-            else
-                *pcrColor = 0;
-            return index;
-
-        default:
-            DPRINT("Unsupported color type %d passed\n", crColor >> 24);
-            return 0;
-    }
-
-    /* Initialize an XLATEOBJ from RGB to the target surface */
-    EXLATEOBJ_vInitialize(&exlo,
-                          &gpalRGB,
-                          pdc->dclevel.pSurface->ppal,
-                          0,
-                          pdc->pdcattr->crBackgroundClr,
-                          pdc->pdcattr->crForegroundClr);
-
-    /* Translate the color to the target format */
-    ulColor = XLATEOBJ_iXlate(&exlo.xlo, crColor);
-
-    /* Cleanup and return the RGB value */
-    EXLATEOBJ_vCleanup(&exlo);
-    return ulColor;
-}
-
-
 BOOL APIENTRY
 NtGdiAlphaBlend(
     HDC hDCDest,
@@ -806,15 +733,15 @@ IntPatBlt(
     INT Width,
     INT Height,
     DWORD dwRop,
-    PEBRUSHOBJ pebo)
+    PBRUSH pbrush)
 {
     RECTL DestRect;
     SURFACE *psurf;
+    EBRUSHOBJ eboFill ;
     POINTL BrushOrigin;
     BOOL ret;
-    PBRUSH pbrush = pebo->pbrush;
 
-    ASSERT(pebo);
+    ASSERT(pbrush);
 
     FIXUP_ROP(dwRop);
 
@@ -863,6 +790,11 @@ IntPatBlt(
 
     psurf = pdc->dclevel.pSurface;
 
+    if (pdc->pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
+        DC_vUpdateFillBrush(pdc);
+
+    EBRUSHOBJ_vInit(&eboFill, pbrush, pdc);
+
     ret = IntEngBitBlt(
         &psurf->SurfObj,
         NULL,
@@ -872,11 +804,13 @@ IntPatBlt(
         &DestRect,
         NULL,
         NULL,
-        &pebo->BrushObject,
+        &eboFill.BrushObject,
         &BrushOrigin,
         ROP_TO_ROP4(dwRop));
 
     DC_vFinishBlit(pdc, NULL);
+
+    EBRUSHOBJ_vCleanup(&eboFill);
 
     return ret;
 }
@@ -892,7 +826,6 @@ IntGdiPolyPatBlt(
     INT i;
     PBRUSH pbrush;
     PDC pdc;
-    EBRUSHOBJ eboFill;
 
     pdc = DC_LockDc(hDC);
     if (!pdc)
@@ -911,13 +844,8 @@ IntGdiPolyPatBlt(
     for (i = 0; i < cRects; i++)
     {
         pbrush = BRUSH_ShareLockBrush(pRects->hBrush);
-
-        /* Check if we could lock the brush */
-        if (pbrush != NULL)
+        if(pbrush != NULL)
         {
-            /* Initialize a brush object */
-            EBRUSHOBJ_vInit(&eboFill, pbrush, pdc);
-
             IntPatBlt(
                 pdc,
                 pRects->r.left,
@@ -925,10 +853,7 @@ IntGdiPolyPatBlt(
                 pRects->r.right,
                 pRects->r.bottom,
                 dwRop,
-                &eboFill);
-
-            /* Cleanup the brush object and unlock the brush */
-            EBRUSHOBJ_vCleanup(&eboFill);
+                pbrush);
             BRUSH_ShareUnlockBrush(pbrush);
         }
         pRects++;
@@ -939,60 +864,63 @@ IntGdiPolyPatBlt(
     return TRUE;
 }
 
-BOOL
-APIENTRY
+BOOL APIENTRY
 NtGdiPatBlt(
-    _In_ HDC hdcDest,
-    _In_ INT x,
-    _In_ INT y,
-    _In_ INT cx,
-    _In_ INT cy,
-    _In_ DWORD dwRop)
+    HDC hDC,
+    INT XLeft,
+    INT YLeft,
+    INT Width,
+    INT Height,
+    DWORD ROP)
 {
-    BOOL bResult;
-    PDC pdc;
+    PBRUSH pbrush;
+    DC *dc;
+    PDC_ATTR pdcattr;
+    BOOL ret;
 
-    /* Mask away everything except foreground rop index */
-    dwRop = dwRop & 0x00FF0000;
-    dwRop |= dwRop << 8;
-
-    /* Check if the rop uses a source */
-    if (ROP_USES_SOURCE(dwRop))
+    BOOL UsesSource = ROP_USES_SOURCE(ROP);
+    if (UsesSource)
     {
-        /* This is not possible */
-        return 0;
+        /* In this case we call on GdiMaskBlt */
+        return NtGdiMaskBlt(hDC, XLeft, YLeft, Width, Height, 0,0,0,0,0,0,ROP,0);
     }
 
-    /* Lock the DC */
-    pdc = DC_LockDc(hdcDest);
-    if (pdc == NULL)
+    dc = DC_LockDc(hDC);
+    if (dc == NULL)
     {
         EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
-
-    /* Check if the DC has no surface (empty mem or info DC) */
-    if (pdc->dclevel.pSurface == NULL)
+    if (dc->dctype == DC_TYPE_INFO)
     {
-        /* Nothing to do, Windows returns TRUE! */
-        DC_UnlockDc(pdc);
+        DC_UnlockDc(dc);
+        DPRINT1("NtGdiPatBlt on info DC!\n");
+        /* Yes, Windows really returns TRUE in this case */
         return TRUE;
     }
 
-    /* Update the fill brush, if neccessary */
-    if (pdc->pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
-        DC_vUpdateFillBrush(pdc);
+    pdcattr = dc->pdcattr;
 
-    /* Call the internal function */
-    bResult = IntPatBlt(pdc, x, y, cx, cy, dwRop, &pdc->eboFill);
+    if (pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
+        DC_vUpdateFillBrush(dc);
 
-    /* Unlock the DC and return the result */
-    DC_UnlockDc(pdc);
-    return bResult;
+    pbrush = BRUSH_ShareLockBrush(pdcattr->hbrush);
+    if (pbrush == NULL)
+    {
+        EngSetLastError(ERROR_INVALID_HANDLE);
+        DC_UnlockDc(dc);
+        return FALSE;
+    }
+
+    ret = IntPatBlt(dc, XLeft, YLeft, Width, Height, ROP, pbrush);
+
+    BRUSH_ShareUnlockBrush(pbrush);
+    DC_UnlockDc(dc);
+
+    return ret;
 }
 
-BOOL
-APIENTRY
+BOOL APIENTRY
 NtGdiPolyPatBlt(
     HDC hDC,
     DWORD dwRop,
@@ -1042,137 +970,3 @@ NtGdiPolyPatBlt(
 
     return Ret;
 }
-
-
-COLORREF
-APIENTRY
-NtGdiSetPixel(
-    _In_ HDC hdc,
-    _In_ INT x,
-    _In_ INT y,
-    _In_ COLORREF crColor)
-{
-    PDC pdc;
-    ULONG iOldColor, iSolidColor;
-    BOOL bResult;
-    PEBRUSHOBJ pebo;
-    ULONG ulDirty;
-
-    /* Lock the DC */
-    pdc = DC_LockDc(hdc);
-    if (!pdc)
-    {
-        EngSetLastError(ERROR_INVALID_HANDLE);
-        return -1;
-    }
-
-    /* Check if the DC has no surface (empty mem or info DC) */
-    if (pdc->dclevel.pSurface == NULL)
-    {
-        /* Fail! */
-        DC_UnlockDc(pdc);
-        return -1;
-    }
-
-    /* Translate the color to the target format and get the RGB value */
-    iSolidColor = TranslateCOLORREF(pdc, &crColor);
-
-    /* Use the DC's text brush, which is always a solid brush */
-    pebo = &pdc->eboText;
-
-    /* Save the old solid color and set the one for the pixel */
-    iOldColor = EBRUSHOBJ_iSetSolidColor(pebo, iSolidColor);
-
-    /* Save dirty flags and reset dirty text brush flag */
-    ulDirty = pdc->pdcattr->ulDirty_;
-    pdc->pdcattr->ulDirty_ &= ~DIRTY_TEXT;
-
-    /* Call the internal function */
-    bResult = IntPatBlt(pdc, x, y, 1, 1, PATCOPY, pebo);
-
-    /* Restore old text brush color and dirty flags */
-    EBRUSHOBJ_iSetSolidColor(pebo, iOldColor);
-    pdc->pdcattr->ulDirty_ = ulDirty;
-
-    /* Unlock the DC */
-    DC_UnlockDc(pdc);
-
-    /* Return the new RGB color or -1 on failure */
-    return bResult ? crColor : -1;
-}
-
-COLORREF
-APIENTRY
-NtGdiGetPixel(
-    _In_ HDC hdc,
-    _In_ INT x,
-    _In_ INT y)
-{
-    PDC pdc;
-    ULONG ulRGBColor;
-    BOOL bResult = FALSE;
-    POINTL ptlSrc;
-    PSURFACE psurfSrc, psurfDest;
-
-    /* Lock the DC */
-    pdc = DC_LockDc(hdc);
-    if (!pdc)
-    {
-        EngSetLastError(ERROR_INVALID_HANDLE);
-        return -1;
-    }
-
-    /* Check if the DC has no surface (empty mem or info DC) */
-    psurfSrc = pdc->dclevel.pSurface;
-    if (psurfSrc == NULL)
-    {
-        /* Fail! */
-        DC_UnlockDc(pdc);
-        return -1;
-    }
-
-    /* Get the logical coordinates */
-    ptlSrc.x = x;
-    ptlSrc.y = y;
-
-    /* Translate coordinates to device coordinates */
-    IntLPtoDP(pdc, &ptlSrc, 1);
-    ptlSrc.x += pdc->ptlDCOrig.x;
-    ptlSrc.y += pdc->ptlDCOrig.y;
-
-    /* Allocate a surface */
-    psurfDest = SURFACE_AllocSurface(STYPE_BITMAP, 1, 1, BMF_32BPP);
-    if (psurfDest)
-    {
-        /* Set the bitmap bits */
-        if (SURFACE_bSetBitmapBits(psurfDest, 0, 0, &ulRGBColor))
-        {
-            RECTL rclDest = {0, 0, 1, 1};
-            EXLATEOBJ exlo;
-
-            /* Translate from the source palette to RGB color */
-            EXLATEOBJ_vInitialize(&exlo, psurfSrc->ppal, &gpalRGB, 0, 0, 0);
-
-            /* Call the copy bits function */
-            bResult = IntEngCopyBits(&psurfDest->SurfObj,
-                                     &psurfSrc->SurfObj,
-                                     pdc->rosdc.CombinedClip,
-                                     &exlo.xlo,
-                                     &rclDest,
-                                     &ptlSrc);
-
-            /* Cleanup the XLATEOBJ */
-            EXLATEOBJ_vCleanup(&exlo);
-        }
-
-        /* Delete the surface */
-        GDIOBJ_vDeleteObject(&psurfDest->BaseObject);
-    }
-
-    /* Unlock the DC */
-    DC_UnlockDc(pdc);
-
-    /* Return the new RGB color or -1 on failure */
-    return bResult ? ulRGBColor : -1;
-}
-

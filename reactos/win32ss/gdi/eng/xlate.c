@@ -49,10 +49,7 @@ ULONG
 FASTCALL
 EXLATEOBJ_iXlateTable(PEXLATEOBJ pexlo, ULONG iColor)
 {
-    if (iColor >= pexlo->xlo.cEntries)
-    {
-        iColor %= pexlo->xlo.cEntries;
-    }
+    if (iColor >= pexlo->xlo.cEntries) return 0;
     return pexlo->xlo.pulXlate[iColor];
 }
 

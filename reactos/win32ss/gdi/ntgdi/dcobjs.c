@@ -51,7 +51,7 @@ DC_vUpdateFillBrush(PDC pdc)
     {
         /* ROS HACK, should use surf xlate */
         /* Update the eboFill's solid color */
-        EBRUSHOBJ_vSetSolidBrushColor(&pdc->eboFill, pdcattr->crPenClr);
+        EBRUSHOBJ_vSetSolidRGBColor(&pdc->eboFill, pdcattr->crPenClr);
     }
 
     /* Clear flags */
@@ -97,7 +97,7 @@ DC_vUpdateLineBrush(PDC pdc)
     if (pdcattr->hpen == StockObjects[DC_PEN])
     {
         /* Update the eboLine's solid color */
-        EBRUSHOBJ_vSetSolidBrushColor(&pdc->eboLine, pdcattr->crPenClr);
+        EBRUSHOBJ_vSetSolidRGBColor(&pdc->eboLine, pdcattr->crPenClr);
     }
 
     /* Clear flags */
@@ -116,7 +116,7 @@ DC_vUpdateTextBrush(PDC pdc)
         EBRUSHOBJ_vUpdate(&pdc->eboText, pbrDefaultBrush, pdc);
 
     /* Update the eboText's solid color */
-    EBRUSHOBJ_vSetSolidBrushColor(&pdc->eboText, pdcattr->crForegroundClr);
+    EBRUSHOBJ_vSetSolidRGBColor(&pdc->eboText, pdcattr->crForegroundClr);
 
     /* Clear flag */
     pdcattr->ulDirty_ &= ~DIRTY_TEXT;
@@ -132,7 +132,7 @@ DC_vUpdateBackgroundBrush(PDC pdc)
         EBRUSHOBJ_vUpdate(&pdc->eboBackground, pbrDefaultBrush, pdc);
 
     /* Update the eboBackground's solid color */
-    EBRUSHOBJ_vSetSolidBrushColor(&pdc->eboBackground, pdcattr->crBackgroundClr);
+    EBRUSHOBJ_vSetSolidRGBColor(&pdc->eboBackground, pdcattr->crBackgroundClr);
 
     /* Clear flag */
     pdcattr->ulDirty_ &= ~DIRTY_BACKGROUND;

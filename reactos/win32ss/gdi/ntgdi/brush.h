@@ -104,7 +104,7 @@ EBRUSHOBJ_vInit(EBRUSHOBJ *pebo, PBRUSH pbrush, struct _DC *);
 
 VOID
 FASTCALL
-EBRUSHOBJ_vSetSolidBrushColor(EBRUSHOBJ *pebo, COLORREF crColor);
+EBRUSHOBJ_vSetSolidRGBColor(EBRUSHOBJ *pebo, COLORREF crColor);
 
 VOID
 NTAPI
@@ -128,6 +128,15 @@ EBRUSHOBJ_psoPattern(EBRUSHOBJ *pebo);
 
 #define BRUSHOBJ_psoPattern(pbo) \
     EBRUSHOBJ_psoPattern(CONTAINING_RECORD(pbo, EBRUSHOBJ, BrushObject))
+
+ULONG
+FORCEINLINE
+EBRUSHOBJ_iSetSolidColor(EBRUSHOBJ *pebo, ULONG iSolidColor)
+{
+    ULONG iOldColor = pebo->BrushObject.iSolidColor;
+    pebo->BrushObject.iSolidColor = iSolidColor;
+    return iOldColor;
+}
 
 BOOL FASTCALL IntGdiSetBrushOwner(PBRUSH,DWORD);
 BOOL FASTCALL GreSetBrushOwner(HBRUSH,DWORD);

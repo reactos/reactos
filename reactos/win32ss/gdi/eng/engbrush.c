@@ -47,7 +47,7 @@ EBRUSHOBJ_vInit(EBRUSHOBJ *pebo, PBRUSH pbrush, PDC pdc)
     else if (pbrush->flAttrs & GDIBRUSH_IS_SOLID)
     {
         /* Set the RGB color */
-        EBRUSHOBJ_vSetSolidBrushColor(pebo, pbrush->BrushAttr.lbColor);
+        EBRUSHOBJ_vSetSolidRGBColor(pebo, pbrush->BrushAttr.lbColor);
     }
     else
     {
@@ -62,7 +62,7 @@ EBRUSHOBJ_vInit(EBRUSHOBJ *pebo, PBRUSH pbrush, PDC pdc)
 
 VOID
 FASTCALL
-EBRUSHOBJ_vSetSolidBrushColor(EBRUSHOBJ *pebo, COLORREF crColor)
+EBRUSHOBJ_vSetSolidRGBColor(EBRUSHOBJ *pebo, COLORREF crColor)
 {
     ULONG iSolidColor;
     EXLATEOBJ exlo;
