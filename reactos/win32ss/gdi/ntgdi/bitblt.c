@@ -1109,8 +1109,7 @@ NtGdiGetPixel(
     _In_ INT y)
 {
     PDC pdc;
-    ULONG ulRGBColor;
-    BOOL bResult = FALSE;
+    ULONG ulRGBColor = CLR_INVALID;
     POINTL ptlSrc;
     PSURFACE psurfSrc, psurfDest;
 
@@ -1119,7 +1118,7 @@ NtGdiGetPixel(
     if (!pdc)
     {
         EngSetLastError(ERROR_INVALID_HANDLE);
-        return -1;
+        return CLR_INVALID;
     }
 
     /* Check if the DC has no surface (empty mem or info DC) */
@@ -1127,8 +1126,7 @@ NtGdiGetPixel(
     if (psurfSrc == NULL)
     {
         /* Fail! */
-        DC_UnlockDc(pdc);
-        return -1;
+        goto leave;
     }
 
     /* Get the logical coordinates */
@@ -1139,6 +1137,14 @@ NtGdiGetPixel(
     IntLPtoDP(pdc, &ptlSrc, 1);
     ptlSrc.x += pdc->ptlDCOrig.x;
     ptlSrc.y += pdc->ptlDCOrig.y;
+
+    /* Check if the pixel is outside the surface */
+    if ((ptlSrc.x >= psurfSrc->SurfObj.sizlBitmap.cx) ||
+        (ptlSrc.y >= psurfSrc->SurfObj.sizlBitmap.cy))
+    {
+        /* Fail! */
+        goto leave;
+    }
 
     /* Allocate a surface */
     psurfDest = SURFACE_AllocSurface(STYPE_BITMAP, 1, 1, BMF_32BPP);
@@ -1159,12 +1165,12 @@ NtGdiGetPixel(
                                   RGB(0,0,0));
 
             /* Call the copy bits function */
-            bResult = IntEngCopyBits(&psurfDest->SurfObj,
-                                     &psurfSrc->SurfObj,
-                                     NULL,
-                                     &exlo.xlo,
-                                     &rclDest,
-                                     &ptlSrc);
+            EngCopyBits(&psurfDest->SurfObj,
+                        &psurfSrc->SurfObj,
+                        NULL,
+                        &exlo.xlo,
+                        &rclDest,
+                        &ptlSrc);
 
             /* Cleanup the XLATEOBJ */
             EXLATEOBJ_vCleanup(&exlo);
@@ -1174,10 +1180,11 @@ NtGdiGetPixel(
         GDIOBJ_vDeleteObject(&psurfDest->BaseObject);
     }
 
+leave:
     /* Unlock the DC */
     DC_UnlockDc(pdc);
 
     /* Return the new RGB color or -1 on failure */
-    return bResult ? ulRGBColor : -1;
+    return ulRGBColor;
 }
 
