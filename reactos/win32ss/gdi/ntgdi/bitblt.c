@@ -1151,7 +1151,12 @@ NtGdiGetPixel(
             EXLATEOBJ exlo;
 
             /* Translate from the source palette to RGB color */
-            EXLATEOBJ_vInitialize(&exlo, psurfSrc->ppal, &gpalRGB, 0, 0, 0);
+            EXLATEOBJ_vInitialize(&exlo,
+                                  psurfSrc->ppal,
+                                  &gpalRGB,
+                                  0,
+                                  RGB(0xff,0xff,0xff),
+                                  RGB(0,0,0));
 
             /* Call the copy bits function */
             bResult = IntEngCopyBits(&psurfDest->SurfObj,
