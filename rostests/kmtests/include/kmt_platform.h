@@ -49,6 +49,7 @@ typedef ULONG LOGICAL, *PLOGICAL;
 
 #include <pseh/pseh2.h>
 #include <limits.h>
+#include <malloc.h>
 #include <stdarg.h>
 
 #endif /* !defined _KMTEST_PLATFORM_H_ */
