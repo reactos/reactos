@@ -38,6 +38,7 @@ KMT_TESTFUNC Test_ObTypeClean;
 KMT_TESTFUNC Test_ObTypeNoClean;
 KMT_TESTFUNC Test_ObTypes;
 KMT_TESTFUNC Test_RtlAvlTree;
+KMT_TESTFUNC Test_RtlException;
 KMT_TESTFUNC Test_RtlMemory;
 KMT_TESTFUNC Test_RtlSplayTree;
 
@@ -74,6 +75,7 @@ const KMT_TEST TestList[] =
     { "-ObTypeNoClean",                     Test_ObTypeNoClean },
     { "ObTypes",                            Test_ObTypes },
     { "RtlAvlTreeKM",                       Test_RtlAvlTree },
+    { "RtlExceptionKM",                     Test_RtlException },
     { "RtlMemoryKM",                        Test_RtlMemory },
     { "RtlSplayTreeKM",                     Test_RtlSplayTree },
     { NULL,                                 NULL }

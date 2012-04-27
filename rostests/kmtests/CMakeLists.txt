@@ -10,6 +10,7 @@ add_subdirectory(ntos_io)
 list(APPEND COMMON_SOURCE
     example/GuardedMemory.c
     rtl/RtlAvlTree.c
+    rtl/RtlException.c
     rtl/RtlMemory.c
     rtl/RtlSplayTree.c
     rtl/RtlUnicodeString.c)
