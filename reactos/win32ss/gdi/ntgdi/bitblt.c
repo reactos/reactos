@@ -41,12 +41,20 @@ TranslateCOLORREF(PDC pdc, COLORREF *pcrColor)
 
         case 0x02: /* PALETTERGB */
 
-            /* First find the nearest index in the dc palette */
-            ppalDC = pdc->dclevel.ppal;
-            index = PALETTE_ulGetNearestIndex(ppalDC, crColor & 0xFFFFFF);
+            if (pdc->dclevel.hpal != StockObjects[DEFAULT_PALETTE])
+            {
+                /* First find the nearest index in the dc palette */
+                ppalDC = pdc->dclevel.ppal;
+                index = PALETTE_ulGetNearestIndex(ppalDC, crColor & 0xFFFFFF);
 
-            /* Get the RGB value */
-            crColor = PALETTE_ulGetRGBColorFromIndex(ppalDC, index);
+                /* Get the RGB value */
+                crColor = PALETTE_ulGetRGBColorFromIndex(ppalDC, index);
+            }
+            else
+            {
+                /* Use the pure color */
+                crColor = crColor & 0x00FFFFFF;
+            }
             break;
 
         case 0x10: /* DIBINDEX */
