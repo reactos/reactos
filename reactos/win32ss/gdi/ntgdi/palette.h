@@ -100,6 +100,7 @@ FORCEINLINE
 ULONG
 PALETTE_ulGetRGBColorFromIndex(PPALETTE ppal, ULONG ulIndex)
 {
+    if (ulIndex >= ppal->NumColors) return 0;
     return RGB(ppal->IndexedColors[ulIndex].peRed,
                ppal->IndexedColors[ulIndex].peGreen,
                ppal->IndexedColors[ulIndex].peBlue);

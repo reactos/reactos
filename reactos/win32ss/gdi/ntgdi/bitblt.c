@@ -37,7 +37,6 @@ TranslateCOLORREF(PDC pdc, COLORREF *pcrColor)
 
             /* Get the RGB value */
             crColor = PALETTE_ulGetRGBColorFromIndex(ppalDC, index);
-            *pcrColor = crColor;
             break;
 
         case 0x02: /* PALETTERGB */
@@ -48,7 +47,6 @@ TranslateCOLORREF(PDC pdc, COLORREF *pcrColor)
 
             /* Get the RGB value */
             crColor = PALETTE_ulGetRGBColorFromIndex(ppalDC, index);
-            *pcrColor = crColor;
             break;
 
         case 0x10: /* DIBINDEX */
@@ -62,10 +60,7 @@ TranslateCOLORREF(PDC pdc, COLORREF *pcrColor)
 
             /* Translate the color to RGB for the caller */
             ppalSurface = pdc->dclevel.pSurface->ppal;
-            if (index < ppalSurface->NumColors)
-                *pcrColor = PALETTE_ulGetRGBColorFromIndex(ppalSurface, index);
-            else
-                *pcrColor = 0;
+            *pcrColor = PALETTE_ulGetRGBColorFromIndex(ppalSurface, index);
             return index;
 
         default:
@@ -74,17 +69,27 @@ TranslateCOLORREF(PDC pdc, COLORREF *pcrColor)
     }
 
     /* Initialize an XLATEOBJ from RGB to the target surface */
-    EXLATEOBJ_vInitialize(&exlo,
-                          &gpalRGB,
-                          pdc->dclevel.pSurface->ppal,
-                          0,
-                          pdc->pdcattr->crBackgroundClr,
-                          pdc->pdcattr->crForegroundClr);
+    ppalSurface = pdc->dclevel.pSurface->ppal;
+    EXLATEOBJ_vInitialize(&exlo, &gpalRGB, ppalSurface, 0xFFFFFF, 0, 0);
 
     /* Translate the color to the target format */
     ulColor = XLATEOBJ_iXlate(&exlo.xlo, crColor);
 
-    /* Cleanup and return the RGB value */
+    /* Cleanup the XLATEOBJ */
+    EXLATEOBJ_vCleanup(&exlo);
+
+    /* Initialize an XLATEOBJ from the target surface to RGB */
+    EXLATEOBJ_vInitialize(&exlo,
+                          ppalSurface,
+                          &gpalRGB,
+                          0,
+                          pdc->pdcattr->crBackgroundClr,
+                          pdc->pdcattr->crForegroundClr);
+
+    /* Translate the color back to RGB */
+    *pcrColor = XLATEOBJ_iXlate(&exlo.xlo, ulColor);
+
+    /* Cleanup and return the target format color */
     EXLATEOBJ_vCleanup(&exlo);
     return ulColor;
 }
