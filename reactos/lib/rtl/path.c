@@ -2400,20 +2400,12 @@ RtlDosSearchPath_Ustr(IN ULONG Flags,
             }
 
             /* Copy the filename */
-            RtlCopyMemory(StaticCandidateString.Buffer,
-                          FileNameString->Buffer,
-                          FileNameString->Length);
+            RtlCopyUnicodeString(&StaticCandidateString, FileNameString);
 
             /* Copy the extension */
-            RtlCopyMemory(&StaticCandidateString.Buffer[FileNameString->Length / sizeof(WCHAR)],
-                          ExtensionString->Buffer,
-                          ExtensionString->Length);
+            RtlAppendUnicodeStringToString(&StaticCandidateString,
+                                           ExtensionString);
 
-            /* Now NULL-terminate */
-            StaticCandidateString.Buffer[StaticCandidateString.Length / sizeof(WCHAR)] = UNICODE_NULL;
-
-            /* Finalize the length of the string to make it valid */
-            StaticCandidateString.Length = FileNameString->Length + ExtensionString->Length;
             DPRINT("SB: %wZ\n", &StaticCandidateString);
 
             /* And check if this file now exists */
