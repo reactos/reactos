@@ -49,7 +49,6 @@ extern PMMPTE MmDebugPte;
 struct _KTRAP_FRAME;
 struct _EPROCESS;
 struct _MM_RMAP_ENTRY;
-struct _MM_PAGEOP;
 typedef ULONG_PTR SWAPENTRY;
 
 //
@@ -83,12 +82,6 @@ typedef ULONG_PTR SWAPENTRY;
 #define MM_CORE_DUMP_TYPE_NONE              (0x0)
 #define MM_CORE_DUMP_TYPE_MINIMAL           (0x1)
 #define MM_CORE_DUMP_TYPE_FULL              (0x2)
-
-#define MM_PAGEOP_PAGEIN                    (1)
-#define MM_PAGEOP_PAGEOUT                   (2)
-#define MM_PAGEOP_PAGESYNCH                 (3)
-#define MM_PAGEOP_ACCESSFAULT               (4)
-#define MM_PAGEOP_CHANGEPROTECT             (5)
 
 /* Number of list heads to use */
 #define MI_FREE_POOL_LISTS 4
@@ -414,37 +407,6 @@ extern MMPFNLIST MmFreePageListHead;
 extern MMPFNLIST MmStandbyPageListHead;
 extern MMPFNLIST MmModifiedPageListHead;
 extern MMPFNLIST MmModifiedNoWritePageListHead;
-
-typedef struct _MM_PAGEOP
-{
-  /* Type of operation. */
-  ULONG OpType;
-  /* Number of threads interested in this operation. */
-  ULONG ReferenceCount;
-  /* Event that will be set when the operation is completed. */
-  KEVENT CompletionEvent;
-  /* Status of the operation once it is completed. */
-  NTSTATUS Status;
-  /* TRUE if the operation was abandoned. */
-  BOOLEAN Abandoned;
-  /* The memory area to be affected by the operation. */
-  PMEMORY_AREA MArea;
-  ULONG Hash;
-  struct _MM_PAGEOP* Next;
-  struct _ETHREAD* Thread;
-  /*
-   * These fields are used to identify the operation if it is against a
-   * virtual memory area.
-   */
-  HANDLE Pid;
-  PVOID Address;
-  /*
-   * These fields are used to identify the operation if it is against a
-   * section mapping.
-   */
-  PMM_SECTION_SEGMENT Segment;
-  ULONGLONG Offset;
-} MM_PAGEOP, *PMM_PAGEOP;
 
 typedef struct _MM_MEMORY_CONSUMER
 {
@@ -937,7 +899,7 @@ MmPageOutVirtualMemory(
     PMMSUPPORT AddressSpace,
     PMEMORY_AREA MemoryArea,
     PVOID Address,
-    struct _MM_PAGEOP* PageOp
+    PFN_NUMBER Page
 );
 
 NTSTATUS
@@ -973,7 +935,7 @@ MmWritePageVirtualMemory(
     PMMSUPPORT AddressSpace,
     PMEMORY_AREA MArea,
     PVOID Address,
-    PMM_PAGEOP PageOp
+    PFN_NUMBER Page
 );
 
 /* kmap.c ********************************************************************/
@@ -1006,38 +968,6 @@ MiZeroPage(PFN_NUMBER Page);
 PVOID
 FASTCALL
 MmSafeReadPtr(PVOID Source);
-
-/* pageop.c ******************************************************************/
-
-VOID
-NTAPI
-MmReleasePageOp(PMM_PAGEOP PageOp);
-
-PMM_PAGEOP
-NTAPI
-MmGetPageOp(
-    PMEMORY_AREA MArea,
-    HANDLE Pid,
-    PVOID Address,
-    PMM_SECTION_SEGMENT Segment,
-    ULONGLONG Offset,
-    ULONG OpType,
-    BOOLEAN First
-);
-
-PMM_PAGEOP
-NTAPI
-MmCheckForPageOp(
-    PMEMORY_AREA MArea,
-    HANDLE Pid,
-    PVOID Address,
-    PMM_SECTION_SEGMENT Segment,
-    ULONGLONG Offset
-);
-
-VOID
-NTAPI
-MmInitializePageOp(VOID);
 
 /* process.c *****************************************************************/
 
@@ -1657,7 +1587,7 @@ MmPageOutSectionView(
     PMMSUPPORT AddressSpace,
     PMEMORY_AREA MemoryArea,
     PVOID Address,
-    struct _MM_PAGEOP *PageOp
+    ULONG_PTR Entry
 );
 
 NTSTATUS

@@ -215,8 +215,9 @@ _MmSetPageEntrySectionSegment(PMM_SECTION_SEGMENT Segment,
         ASSERT(!Entry || IS_SWAP_FROM_SSE(Entry));
         MmDeleteSectionAssociation(PFN_FROM_SSE(OldEntry));
     } else if (IS_SWAP_FROM_SSE(Entry)) {
-        ASSERT(!IS_SWAP_FROM_SSE(OldEntry));
-        if (OldEntry)
+        ASSERT(!IS_SWAP_FROM_SSE(OldEntry) || 
+               SWAPENTRY_FROM_SSE(OldEntry) == MM_WAIT_ENTRY);
+        if (OldEntry && SWAPENTRY_FROM_SSE(OldEntry) != MM_WAIT_ENTRY)
             MmDeleteSectionAssociation(PFN_FROM_SSE(OldEntry));
     } else if (IS_SWAP_FROM_SSE(OldEntry)) {
         ASSERT(!IS_SWAP_FROM_SSE(Entry));

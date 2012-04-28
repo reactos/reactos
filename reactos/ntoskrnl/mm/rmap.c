@@ -52,7 +52,6 @@ MmPageOutPhysicalAddress(PFN_NUMBER Page)
    ULONG Type;
    PVOID Address;
    PEPROCESS Process;
-   PMM_PAGEOP PageOp;
    ULONGLONG Offset;
    NTSTATUS Status = STATUS_SUCCESS;
 
@@ -126,17 +125,20 @@ MmPageOutPhysicalAddress(PFN_NUMBER Page)
    Type = MemoryArea->Type;
    if (Type == MEMORY_AREA_SECTION_VIEW)
    {
+      ULONG Entry;
       Offset = MemoryArea->Data.SectionData.ViewOffset.QuadPart +
                ((ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress);
+
+      MmLockSectionSegment(MemoryArea->Data.SectionData.Segment);
 
       /*
        * Get or create a pageop
        */
-      PageOp = MmGetPageOp(MemoryArea, NULL, 0,
-                           MemoryArea->Data.SectionData.Segment,
-                           Offset, MM_PAGEOP_PAGEOUT, TRUE);
-      if (PageOp == NULL)
+      Entry = MmGetPageEntrySectionSegment
+          (MemoryArea->Data.SectionData.Segment, (PLARGE_INTEGER)&Offset);
+      if (Entry && IS_SWAP_FROM_SSE(Entry) && SWAPENTRY_FROM_SSE(Entry) == MM_WAIT_ENTRY)
       {
+         MmUnlockSectionSegment(MemoryArea->Data.SectionData.Segment);
          MmUnlockAddressSpace(AddressSpace);
          if (Address < MmSystemRangeStart)
          {
@@ -146,16 +148,18 @@ MmPageOutPhysicalAddress(PFN_NUMBER Page)
          return(STATUS_UNSUCCESSFUL);
       }
 
+      MmSetPageEntrySectionSegment(MemoryArea->Data.SectionData.Segment, (PLARGE_INTEGER)&Offset, MAKE_SWAP_SSE(MM_WAIT_ENTRY));
+
       /*
        * Release locks now we have a page op.
        */
+      MmUnlockSectionSegment(MemoryArea->Data.SectionData.Segment);
       MmUnlockAddressSpace(AddressSpace);
 
       /*
        * Do the actual page out work.
        */
-      Status = MmPageOutSectionView(AddressSpace, MemoryArea,
-                                    Address, PageOp);
+      Status = MmPageOutSectionView(AddressSpace, MemoryArea, Address, Entry);
    }
    else if (Type == MEMORY_AREA_CACHE)
    {

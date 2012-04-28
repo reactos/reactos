@@ -419,7 +419,6 @@ MmInitSystem(IN ULONG Phase,
     MiInitializeUserPfnBitmap();
     MmInitializeMemoryConsumer(MC_USER, MmTrimUserMemory);
     MmInitializeRmapList();
-    MmInitializePageOp();
     MmInitSectionImplementation();
     MmInitPagingFile();
 

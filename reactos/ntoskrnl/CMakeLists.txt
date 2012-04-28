@@ -229,7 +229,6 @@ list(APPEND SOURCE
     mm/mmfault.c
     mm/mminit.c
     mm/pagefile.c
-    mm/pageop.c
     mm/region.c
     mm/rmap.c
     mm/section.c
