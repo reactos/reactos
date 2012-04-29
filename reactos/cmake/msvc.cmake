@@ -124,6 +124,29 @@ macro(add_delay_importlibs MODULE)
     target_link_libraries(${MODULE} delayimp)
 endmacro()
 
+function(generate_import_lib _libname _dllname _spec_file)
+    # Generate the asm stub file and the def file for import library
+    add_custom_command(
+        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_stubs.asm ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_exp.def
+        COMMAND native-spec2def --ms --kill-at -a=${SPEC2DEF_ARCH} --implib -n=${_dllname} -d=${CMAKE_CURRENT_BINARY_DIR}/${_libname}_exp.def -l=${CMAKE_CURRENT_BINARY_DIR}/${_libname}_stubs.asm ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
+        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} native-spec2def)
+
+    # be clear about the "language"
+    # Thanks MS for creating a stupid linker
+    set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${_libname}_stubs.asm PROPERTIES LANGUAGE "STUB_ASM")
+
+    # add our library
+    # NOTE: as stub file and def file are generated in one pass, depending on one is like depending on the other
+    add_library(${_libname} STATIC EXCLUDE_FROM_ALL
+        ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_stubs.asm)
+
+    add_dependencies(${_libname} ${CMAKE_CURRENT_BINARY_DIR}\\${_libname}_exp.def)
+
+    # set correct "link rule"
+    set_target_properties(${_libname} PROPERTIES LINKER_LANGUAGE "IMPLIB"
+        STATIC_LIBRARY_FLAGS "/DEF:${CMAKE_CURRENT_BINARY_DIR}\\${_libname}_exp.def")
+endfunction()
+
 if(${ARCH} MATCHES amd64)
     add_definitions(/D__x86_64)
     set(SPEC2DEF_ARCH x86_64)
@@ -154,24 +177,8 @@ function(spec2def _dllname _spec_file)
         COMMAND native-spec2def --ms --kill-at -a=${SPEC2DEF_ARCH} -n=${_dllname} -d=${CMAKE_CURRENT_BINARY_DIR}/${_file}.def -s=${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} native-spec2def)
 
-        if(__add_importlib)
-        # Generate the asm stub file and the export def file for import library
-        add_custom_command(
-            OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/lib${_file}_stubs.asm ${CMAKE_CURRENT_BINARY_DIR}/lib${_file}_exp.def
-            COMMAND native-spec2def --ms --kill-at -a=${SPEC2DEF_ARCH} --implib -n=${_dllname} -d=${CMAKE_CURRENT_BINARY_DIR}/lib${_file}_exp.def -l=${CMAKE_CURRENT_BINARY_DIR}/lib${_file}_stubs.asm ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
-            DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} native-spec2def)
-        # be clear about the "language"
-        # Thanks MS for creating a stupid linker
-        set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/lib${_file}_stubs.asm PROPERTIES LANGUAGE "STUB_ASM")
-
-        # add our library
-        # NOTE: as stub file and def file are generated in one pass, depending on one is like depending on the other
-        add_library(lib${_file} STATIC EXCLUDE_FROM_ALL
-            ${CMAKE_CURRENT_BINARY_DIR}/lib${_file}_stubs.asm)
-
-        # set correct "link rule"
-        set_target_properties(lib${_file} PROPERTIES LINKER_LANGUAGE "IMPLIB"
-            STATIC_LIBRARY_FLAGS "/DEF:${CMAKE_CURRENT_BINARY_DIR}\\lib${_file}_exp.def")
+    if(__add_importlib)
+        generate_import_lib(lib${_file} ${_dllname} ${_spec_file})
     endif()
 endfunction()
 

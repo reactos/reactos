@@ -217,11 +217,28 @@ if(NOT ARCH MATCHES i386)
     set(DECO_OPTION "-@")
 endif()
 
+function(generate_import_lib _libname _dllname _spec_file)
+    # generate the def for the import lib
+    add_custom_command(
+        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def
+        COMMAND native-spec2def -n=${_dllname} -a=${ARCH2} -d=${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
+        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} native-spec2def)
+    set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def PROPERTIES EXTERNAL_OBJECT TRUE)
+
+    #create normal importlib
+    _add_library(${_libname} STATIC EXCLUDE_FROM_ALL ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def)
+    set_target_properties(${_libname} PROPERTIES LINKER_LANGUAGE "IMPLIB" PREFIX "")
+
+    #create delayed importlib
+    _add_library(${_libname}_delayed STATIC EXCLUDE_FROM_ALL ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def)
+    set_target_properties(${_libname}_delayed PROPERTIES LINKER_LANGUAGE "IMPLIB_DELAYED" PREFIX "")
+endfunction()
+
 # Cute little hack to produce import libs
 set(CMAKE_IMPLIB_CREATE_STATIC_LIBRARY "${CMAKE_DLLTOOL} --def <OBJECTS> --kill-at --output-lib=<TARGET>")
 set(CMAKE_IMPLIB_DELAYED_CREATE_STATIC_LIBRARY "${CMAKE_DLLTOOL} --def <OBJECTS> --kill-at --output-delaylib=<TARGET>")
 function(spec2def _dllname _spec_file)
-    # do we also want to add impotlib targets?
+    # do we also want to add importlib targets?
     if(${ARGC} GREATER 2)
         if(${ARGN} STREQUAL "ADD_IMPORTLIB")
             set(__add_importlib TRUE)
@@ -245,20 +262,7 @@ function(spec2def _dllname _spec_file)
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} native-spec2def)
 
     if(__add_importlib)
-        # generate the def for the export lib
-        add_custom_command(
-            OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_file}_implib.def
-            COMMAND native-spec2def -n=${_dllname} -a=${ARCH2} -d=${CMAKE_CURRENT_BINARY_DIR}/${_file}_implib.def ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
-            DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} native-spec2def)
-        set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${_file}_implib.def PROPERTIES EXTERNAL_OBJECT TRUE)
-
-        #create normal importlib
-        _add_library(lib${_file} STATIC EXCLUDE_FROM_ALL ${CMAKE_CURRENT_BINARY_DIR}/${_file}_implib.def)
-        set_target_properties(lib${_file} PROPERTIES LINKER_LANGUAGE "IMPLIB" PREFIX "")
-
-        #create delayed importlib
-        _add_library(lib${_file}_delayed STATIC EXCLUDE_FROM_ALL ${CMAKE_CURRENT_BINARY_DIR}/${_file}_implib.def)
-        set_target_properties(lib${_file}_delayed PROPERTIES LINKER_LANGUAGE "IMPLIB_DELAYED" PREFIX "")
+        generate_import_lib(lib${_file} ${_dllname} ${_spec_file})
     endif()
 endfunction()
 
