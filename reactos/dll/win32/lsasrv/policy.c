@@ -351,7 +351,7 @@ Done:
         }
     }
 
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 
