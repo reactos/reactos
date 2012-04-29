@@ -6,4 +6,6 @@ if(NOT MSVC)
     set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/liboldnames.a PROPERTIES GENERATED TRUE)
 
     add_custom_target(oldnames ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/liboldnames.a)
+else()
+    add_library(oldnames oldnames-msvcrt.S)
 endif()
