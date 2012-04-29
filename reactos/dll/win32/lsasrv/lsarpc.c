@@ -310,8 +310,65 @@ NTSTATUS WINAPI LsarCreateAccount(
     ACCESS_MASK DesiredAccess,
     LSAPR_HANDLE *AccountHandle)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    LSAPR_HANDLE AccountsHandle;
+    LSAPR_HANDLE Account;
+    LPWSTR SidString;
+    NTSTATUS Status;
+
+    /* Validate the PolicyHandle */
+    Status = LsapValidateDbObject(PolicyHandle,
+                                  LsaDbPolicyObject,
+                                  POLICY_CREATE_ACCOUNT);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("LsapValidateDbObject returned 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Open the Accounts object */
+    AccountsHandle = LsapCreateDbObject(PolicyHandle,
+                                        L"Accounts",
+                                        TRUE,
+                                        LsaDbContainerObject,
+                                        0);
+    if (AccountsHandle == NULL)
+    {
+        ERR("LsapCreateDbObject (Accounts) failed\n");
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    /* Create SID string */
+    if (!ConvertSidToStringSid((PSID)AccountSid,
+                               &SidString))
+    {
+        ERR("ConvertSidToStringSid failed\n");
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    /* Create the Account object */
+    Account = LsapCreateDbObject(AccountsHandle,
+                                 SidString,
+                                 FALSE,
+                                 LsaDbAccountObject,
+                                 DesiredAccess);
+    if (Account != NULL)
+    {
+        /* Set the Sid attribute */
+        Status = LsapSetObjectAttribute((PLSA_DB_OBJECT)Account,
+                                        L"Sid",
+                                        (PVOID)AccountSid,
+                                        GetLengthSid(AccountSid));
+        if (NT_SUCCESS(Status))
+        {
+            *AccountHandle = Account;
+        }
+    }
+
+    LocalFree(SidString);
+
+    LsapCloseDbObject(AccountsHandle);
+
+    return STATUS_SUCCESS;
 }
 
 
