@@ -152,6 +152,7 @@ LsarQueryPrimaryDomain(LSAPR_HANDLE PolicyHandle,
         return STATUS_INSUFFICIENT_RESOURCES;
 
     /* Domain Name */
+    AttributeSize = 0;
     Status = LsapGetObjectAttribute((PLSA_DB_OBJECT)PolicyHandle,
                                     L"PolPrDmN",
                                     NULL,
@@ -241,7 +242,7 @@ Done:
         }
     }
 
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 
