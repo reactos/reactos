@@ -252,7 +252,7 @@ LsarQueryAccountDomain(LSAPR_HANDLE PolicyHandle,
 {
     PLSAPR_POLICY_ACCOUNT_DOM_INFO p = NULL;
     PUNICODE_STRING DomainName;
-    ULONG AttributeSize;
+    ULONG AttributeSize = 0;
     NTSTATUS Status;
 
     *PolicyInformation = NULL;
