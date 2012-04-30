@@ -24,9 +24,9 @@ Signature = "$ReactOS$"
 8 = media
 9 = Microsoft.NET
 10 = Microsoft.NET\Framework
-11 = Microsoft.NET\Framework\v1.1.4322
-12 = Microsoft.NET\Framework\v2.0.50727
-13 = Microsoft.NET\Framework\v4.0.30319
+11 = Microsoft.NET\Framework\v1.0.3705
+12 = Microsoft.NET\Framework\v1.1.4322
+13 = Microsoft.NET\Framework\v2.0.50727
 
 .InfEnd
 
