@@ -6,6 +6,7 @@
 #define IMPSYM(name) __imp__##name
 #else
 #define SYM(name) name
+#define IMPSYM(name) __imp_##name
 #endif
 
 MACRO(CREATE_ALIAS1, alias, target)
