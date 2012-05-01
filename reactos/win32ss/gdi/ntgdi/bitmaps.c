@@ -84,7 +84,7 @@ GreCreateBitmapEx(
     }
 
     /* The infamous RLE hack */
-    if ((iFormat == BMF_4RLE) || (iFormat == BMF_8RLE))
+    if (pvCompressedBits)
     {
         SIZEL sizl;
         LONG lDelta;
@@ -95,7 +95,6 @@ GreCreateBitmapEx(
 
         pvBits = psurf->SurfObj.pvBits;
         DecompressBitmap(sizl, pvCompressedBits, pvBits, lDelta, iFormat);
-        psurf->SurfObj.fjBitmap |= BMF_RLE_HACK;
     }
 
     /* Get the handle for the bitmap */

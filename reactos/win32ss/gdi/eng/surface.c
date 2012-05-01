@@ -143,8 +143,6 @@ SURFACE_AllocSurface(
     PVOID pvSection;
 
     ASSERT(!pvBits || (iType == STYPE_BITMAP));
-    ASSERT(pvBits || !(fjBitmap & BMF_DONT_FREE));
-    ASSERT(!pvBits || !(fjBitmap & BMF_SINGLEALLOC));
 
     /* Verify format */
     if ((iFormat < BMF_1BPP) || (iFormat > BMF_PNG))

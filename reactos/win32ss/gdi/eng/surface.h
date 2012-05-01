@@ -80,11 +80,7 @@ typedef struct _SURFACE
 #define ABORT_SURFACE             0x40000000
 #define PDEV_SURFACE              0x80000000
 
-
-#define BMF_DONT_FREE 0x100
-#define BMF_RLE_HACK  0x200
-#define BMF_SINGLEALLOC 0x400
-#define BMF_POOLALLOC 0x800
+#define BMF_POOLALLOC 0x100
 
 /*  Internal interface  */
 
