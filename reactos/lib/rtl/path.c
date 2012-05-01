@@ -2011,7 +2011,7 @@ Quickie:
 /*
  * @implemented
  */
-ULONG
+NTSTATUS
 NTAPI
 RtlDosSearchPath_Ustr(IN ULONG Flags,
                       IN PUNICODE_STRING PathString,

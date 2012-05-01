@@ -2516,7 +2516,8 @@ RtlDosSearchPath_U(
     OUT PWSTR *PartName
 );
 
-ULONG
+NTSYSAPI
+NTSTATUS
 NTAPI
 RtlDosSearchPath_Ustr(
     IN ULONG Flags,

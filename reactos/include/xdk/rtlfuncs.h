@@ -178,7 +178,7 @@ RtlCopyMemoryNonTemporal(
 #define RtlEqualLuid(Luid1, Luid2) \
     (((Luid1)->LowPart == (Luid2)->LowPart) && ((Luid1)->HighPart == (Luid2)->HighPart))
 
-/* ULONG
+/* LOGICAL
  * RtlEqualMemory(
  *     IN VOID UNALIGNED *Destination,
  *     IN CONST VOID UNALIGNED *Source,
