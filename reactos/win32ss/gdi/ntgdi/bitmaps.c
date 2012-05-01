@@ -56,7 +56,7 @@ GreCreateBitmapEx(
 {
     PSURFACE psurf;
     HBITMAP hbmp;
-    PVOID pvCompressedBits;
+    PVOID pvCompressedBits = NULL;
 
     /* Verify format */
     if (iFormat < BMF_1BPP || iFormat > BMF_PNG) return NULL;
