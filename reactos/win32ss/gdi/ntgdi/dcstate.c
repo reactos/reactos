@@ -257,7 +257,7 @@ NtGdiSaveDC(
 
     /* Make it a kernel handle
        (FIXME: Windows handles this differently, see Wiki) */
-    GreSetObjectOwner(hdcSave, GDI_OBJ_HMGR_PUBLIC);
+    GDIOBJ_vSetObjectOwner(&pdcSave->BaseObject, GDI_OBJ_HMGR_PUBLIC);
 
     /* Copy the current state */
     DC_vCopyState(pdc, pdcSave, TRUE);
@@ -266,7 +266,7 @@ NtGdiSaveDC(
     if (pdc->dctype == DCTYPE_MEMORY)
         DC_vSelectSurface(pdcSave, pdc->dclevel.pSurface);
 
-    /* Copy path */ 
+    /* Copy path */
     /* FIXME: Why this way? */
     pdcSave->dclevel.hPath = pdc->dclevel.hPath;
     pdcSave->dclevel.flPath = pdc->dclevel.flPath | DCPATH_SAVESTATE;
