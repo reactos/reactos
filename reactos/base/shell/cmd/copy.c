@@ -582,7 +582,6 @@ INT cmd_copy(LPTSTR param)
         /* If no destination was entered then just use
         the current directory as the destination */
         GetCurrentDirectory(MAX_PATH, szDestPath);
-        printf("szDestPath = %S\n", szDestPath);
     }
     else
     {
@@ -647,7 +646,6 @@ INT cmd_copy(LPTSTR param)
     {
         /* Something's seriously wrong! */
         UseThisName = szDestPath;
-        printf("\n##########\n\n");
     }
 
     do
@@ -677,7 +675,6 @@ INT cmd_copy(LPTSTR param)
                 _tcsncat(szSrcPath, appendPointer, 1);
                 appendPointer++;
             }
-printf("szSrcPath = %S\n\n", szSrcPath);
 
             if (_tcschr(arg[nSrc], _T(',')) != NULL)
             {

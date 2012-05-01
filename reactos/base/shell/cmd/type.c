@@ -128,7 +128,7 @@ INT cmd_type (LPTSTR param)
 			}
 		}
 
-		ConOutPrintf(_T("\n"));
+		ConOutPuts(_T("\n"));
 		CloseHandle(hFile);
 	}
 

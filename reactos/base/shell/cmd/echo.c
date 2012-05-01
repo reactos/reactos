@@ -83,6 +83,7 @@ INT CommandEcho (LPTSTR param)
 	{
 		/* skip the first character */
 		ConOutPuts(param + 1);
+		ConOutPuts("\n");
 	}
 	return 0;
 }
