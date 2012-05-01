@@ -1160,34 +1160,36 @@ NtGdiGetPixel(
     }
 
     /* Allocate a surface */
-    psurfDest = SURFACE_AllocSurface(STYPE_BITMAP, 1, 1, BMF_32BPP);
+    psurfDest = SURFACE_AllocSurface(STYPE_BITMAP,
+                                     1,
+                                     1,
+                                     BMF_32BPP,
+                                     BMF_DONT_FREE,
+                                     0,
+                                     &ulRGBColor);
     if (psurfDest)
     {
-        /* Set the bitmap bits */
-        if (SURFACE_bSetBitmapBits(psurfDest, 0, 0, &ulRGBColor))
-        {
-            RECTL rclDest = {0, 0, 1, 1};
-            EXLATEOBJ exlo;
+        RECTL rclDest = {0, 0, 1, 1};
+        EXLATEOBJ exlo;
 
-            /* Translate from the source palette to RGB color */
-            EXLATEOBJ_vInitialize(&exlo,
-                                  psurfSrc->ppal,
-                                  &gpalRGB,
-                                  0,
-                                  RGB(0xff,0xff,0xff),
-                                  RGB(0,0,0));
+        /* Translate from the source palette to RGB color */
+        EXLATEOBJ_vInitialize(&exlo,
+                              psurfSrc->ppal,
+                              &gpalRGB,
+                              0,
+                              RGB(0xff,0xff,0xff),
+                              RGB(0,0,0));
 
-            /* Call the copy bits function */
-            EngCopyBits(&psurfDest->SurfObj,
-                        &psurfSrc->SurfObj,
-                        NULL,
-                        &exlo.xlo,
-                        &rclDest,
-                        &ptlSrc);
+        /* Call the copy bits function */
+        EngCopyBits(&psurfDest->SurfObj,
+                    &psurfSrc->SurfObj,
+                    NULL,
+                    &exlo.xlo,
+                    &rclDest,
+                    &ptlSrc);
 
-            /* Cleanup the XLATEOBJ */
-            EXLATEOBJ_vCleanup(&exlo);
-        }
+        /* Cleanup the XLATEOBJ */
+        EXLATEOBJ_vCleanup(&exlo);
 
         /* Delete the surface */
         GDIOBJ_vDeleteObject(&psurfDest->BaseObject);

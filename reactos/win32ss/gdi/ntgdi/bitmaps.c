@@ -56,25 +56,36 @@ GreCreateBitmapEx(
 {
     PSURFACE psurf;
     HBITMAP hbmp;
+    PVOID pvCompressedBits;
 
     /* Verify format */
     if (iFormat < BMF_1BPP || iFormat > BMF_PNG) return NULL;
 
+    /* The infamous RLE hack */
+    if ((iFormat == BMF_4RLE) || (iFormat == BMF_8RLE))
+    {
+        pvCompressedBits = pvBits;
+        pvBits = NULL;
+        iFormat = (iFormat == BMF_4RLE) ? BMF_4BPP : BMF_8BPP;
+    }
+
     /* Allocate a surface */
-    psurf = SURFACE_AllocSurface(STYPE_BITMAP, nWidth, nHeight, iFormat);
+    psurf = SURFACE_AllocSurface(STYPE_BITMAP,
+                                 nWidth,
+                                 nHeight,
+                                 iFormat,
+                                 fjBitmap,
+                                 cjWidthBytes,
+                                 pvBits);
     if (!psurf)
     {
         DPRINT1("SURFACE_AllocSurface failed.\n");
         return NULL;
     }
 
-    /* Get the handle for the bitmap */
-    hbmp = (HBITMAP)psurf->SurfObj.hsurf;
-
     /* The infamous RLE hack */
-    if (iFormat == BMF_4RLE || iFormat == BMF_8RLE)
+    if ((iFormat == BMF_4RLE) || (iFormat == BMF_8RLE))
     {
-        PVOID pvCompressedBits;
         SIZEL sizl;
         LONG lDelta;
 
@@ -82,33 +93,16 @@ GreCreateBitmapEx(
         sizl.cy = nHeight;
         lDelta = WIDTH_BYTES_ALIGN32(nWidth, gajBitsPerFormat[iFormat]);
 
-        pvCompressedBits = pvBits;
-        pvBits = EngAllocMem(FL_ZERO_MEMORY, lDelta * nHeight, TAG_DIB);
-        if (!pvBits)
-        {
-            EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
-            GDIOBJ_vDeleteObject(&psurf->BaseObject);
-            return NULL;
-        }
+        pvBits = psurf->SurfObj.pvBits;
         DecompressBitmap(sizl, pvCompressedBits, pvBits, lDelta, iFormat);
-        fjBitmap |= BMF_RLE_HACK;
-
-        iFormat = iFormat == BMF_4RLE ? BMF_4BPP : BMF_8BPP;
-        psurf->SurfObj.iBitmapFormat = iFormat;
+        psurf->SurfObj.fjBitmap |= BMF_RLE_HACK;
     }
+
+    /* Get the handle for the bitmap */
+    hbmp = (HBITMAP)psurf->SurfObj.hsurf;
 
     /* Mark as API bitmap */
     psurf->flags |= (flags | API_BITMAP);
-
-    /* Set the bitmap bits */
-    if (!SURFACE_bSetBitmapBits(psurf, fjBitmap, cjWidthBytes, pvBits))
-    {
-        /* Bail out if that failed */
-        DPRINT1("SURFACE_bSetBitmapBits failed.\n");
-        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
-        GDIOBJ_vDeleteObject(&psurf->BaseObject);
-        return NULL;
-    }
 
     /* Unlock the surface and return */
     SURFACE_UnlockSurface(psurf);
@@ -149,8 +143,9 @@ NtGdiCreateBitmap(
     IN OPTIONAL LPBYTE pUnsafeBits)
 {
     HBITMAP hbmp;
-    ULONG cRealBpp, cjWidthBytes, iFormat;
+    ULONG cRealBpp, cjWidthBytes, iFormat, fjBitmap;
     ULONGLONG cjSize;
+    PSURFACE psurf;
 
     /* Calculate bitmap format and real bits per pixel. */
     iFormat = BitmapFormat(cBitsPixel * cPlanes, BI_RGB);
@@ -170,12 +165,27 @@ NtGdiCreateBitmap(
         return NULL;
     }
 
-    /* Call internal function. */
-    hbmp = GreCreateBitmapEx(nWidth, nHeight, 0, iFormat, 0, 0, NULL, DDB_SURFACE);
-
-    if (pUnsafeBits && hbmp)
+    /* Allocate the surface (but don't set the bits) */
+    psurf = SURFACE_AllocSurface(STYPE_BITMAP,
+                                 nWidth,
+                                 nHeight,
+                                 iFormat,
+                                 fjBitmap,
+                                 0,
+                                 NULL);
+    if (!psurf)
     {
-        PSURFACE psurf = SURFACE_ShareLockSurface(hbmp);
+        DPRINT1("SURFACE_AllocSurface failed.\n");
+        return NULL;
+    }
+
+    /* Mark as API and DDB bitmap */
+    psurf->flags |= (API_BITMAP | DDB_SURFACE);
+
+    /* Check if we have bits to set */
+    if (pUnsafeBits)
+    {
+        /* Protect with SEH and copy the bits */
         _SEH2_TRY
         {
             ProbeForRead(pUnsafeBits, (SIZE_T)cjSize, 1);
@@ -187,9 +197,18 @@ NtGdiCreateBitmap(
             _SEH2_YIELD(return NULL;)
         }
         _SEH2_END
-
-        SURFACE_ShareUnlockSurface(psurf);
     }
+    else
+    {
+        /* Zero the bits */
+        RtlZeroMemory(psurf->SurfObj.pvBits, psurf->SurfObj.cjBits);
+    }
+
+    /* Get the handle for the bitmap */
+    hbmp = (HBITMAP)psurf->SurfObj.hsurf;
+
+    /* Unlock the surface */
+    SURFACE_UnlockSurface(psurf);
 
     return hbmp;
 }
@@ -324,7 +343,8 @@ NtGdiCreateCompatibleBitmap(
     HBITMAP Bmp;
     PDC Dc;
 
-    if (Width <= 0 || Height <= 0 || (Width * Height) > 0x3FFFFFFF)
+    /* Check parameters */
+    if ((Width <= 0) || (Height <= 0) || ((Width * Height) > 0x3FFFFFFF))
     {
         EngSetLastError(ERROR_INVALID_PARAMETER);
         return NULL;
@@ -351,17 +371,19 @@ NtGdiCreateCompatibleBitmap(
     return Bmp;
 }
 
-BOOL APIENTRY
+BOOL
+APIENTRY
 NtGdiGetBitmapDimension(
     HBITMAP hBitmap,
-    LPSIZE Dimension)
+    LPSIZE psizDim)
 {
     PSURFACE psurfBmp;
-    BOOL Ret = TRUE;
+    BOOL bResult = TRUE;
 
     if (hBitmap == NULL)
         return FALSE;
 
+    /* Lock the bitmap */
     psurfBmp = SURFACE_ShareLockSurface(hBitmap);
     if (psurfBmp == NULL)
     {
@@ -369,20 +391,22 @@ NtGdiGetBitmapDimension(
         return FALSE;
     }
 
+    /* Use SEH to copy the data to the caller */
     _SEH2_TRY
     {
-        ProbeForWrite(Dimension, sizeof(SIZE), 1);
-        *Dimension = psurfBmp->sizlDim;
+        ProbeForWrite(psizDim, sizeof(SIZE), 1);
+        *psizDim = psurfBmp->sizlDim;
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        Ret = FALSE;
+        bResult = FALSE;
     }
     _SEH2_END
 
+    /* Unlock the bitmap */
     SURFACE_ShareUnlockSurface(psurfBmp);
 
-    return Ret;
+    return bResult;
 }
 
 
@@ -580,7 +604,7 @@ BITMAP_CopyBitmap(HBITMAP hBitmap)
                                psurfSrc->SurfObj.sizlBitmap.cy,
                                abs(psurfSrc->SurfObj.lDelta),
                                psurfSrc->SurfObj.iBitmapFormat,
-                               psurfSrc->SurfObj.fjBitmap,
+                               psurfSrc->SurfObj.fjBitmap & BMF_TOPDOWN,
                                psurfSrc->SurfObj.cjBits,
                                NULL,
                                psurfSrc->flags);
