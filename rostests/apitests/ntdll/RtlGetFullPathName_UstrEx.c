@@ -40,19 +40,19 @@ CheckStringBuffer(
     PCUNICODE_STRING String,
     PCWSTR Expected)
 {
-    USHORT Length = wcslen(Expected) * sizeof(WCHAR);
+    SIZE_T ExpectedLength = wcslen(Expected) * sizeof(WCHAR);
     SIZE_T EqualLength;
     BOOLEAN Result = TRUE;
     SIZE_T i;
 
-    if (String->Length != Length)
+    if (String->Length != ExpectedLength)
     {
-        ok(0, "String length is %u, expected %u\n", String->Length, Length);
+        ok(0, "String length is %u, expected %lu\n", String->Length, (ULONG)ExpectedLength);
         Result = FALSE;
     }
 
-    EqualLength = RtlCompareMemory(String->Buffer, Expected, Length);
-    if (EqualLength != Length)
+    EqualLength = RtlCompareMemory(String->Buffer, Expected, ExpectedLength);
+    if (EqualLength != ExpectedLength)
     {
         ok(0, "String is '%wZ', expected '%S'\n", String, Expected);
         Result = FALSE;
@@ -175,6 +175,7 @@ RunTestCases(VOID)
     SIZE_T ExpectedFilePartSize;
     const INT TestCount = sizeof(TestCases) / sizeof(TestCases[0]);
     INT i;
+    BOOLEAN Okay;
 
     for (i = 0; i < TestCount; i++)
     {
@@ -224,8 +225,8 @@ RunTestCases(VOID)
         ok_eq_ustr(&FileName, &TempString);
         ok(FullPathName.Buffer        == FullPathNameBuffer,         "Buffer modified\n");
         ok(FullPathName.MaximumLength == sizeof(FullPathNameBuffer), "MaximumLength modified\n");
-        ok(CheckStringBuffer(&FullPathName, ExpectedPathName),
-            "Wrong path name '%wZ', expected '%S'\n", &FullPathName, ExpectedPathName);
+        Okay = CheckStringBuffer(&FullPathName, ExpectedPathName);
+        ok(Okay, "Wrong path name '%wZ', expected '%S'\n", &FullPathName, ExpectedPathName);
         ok(StringUsed == &FullPathName, "StringUsed = %p, expected %p\n", StringUsed, &FullPathName);
         switch (TestCases[i].FilePartPrefixType)
         {
@@ -284,6 +285,7 @@ START_TEST(RtlGetFullPathName_UstrEx)
     BOOLEAN NameInvalidArray[sizeof(ULONGLONG)];
     RTL_PATH_TYPE PathType;
     SIZE_T LengthNeeded;
+    BOOLEAN Okay;
 
     /* NULL parameters */
     StartSeh()
@@ -376,7 +378,8 @@ START_TEST(RtlGetFullPathName_UstrEx)
     ok_eq_ustr(&FileName, &TempString);
     ok(PathType == RtlPathTypeUnknown, "PathType = %d\n", PathType);
     ok(NameInvalidArray[0] == FALSE, "NameInvalid = %u\n", NameInvalidArray[0]);
-    ok(CheckBuffer(NameInvalidArray + 1, sizeof(NameInvalidArray) - sizeof(NameInvalidArray[0]), 0x55), "CheckBuffer failed\n");
+    Okay = CheckBuffer(NameInvalidArray + 1, sizeof(NameInvalidArray) - sizeof(NameInvalidArray[0]), 0x55);
+    ok(Okay, "CheckBuffer failed\n");
 
     /* Give it a valid path */
     RtlInitUnicodeString(&FileName, L"C:\\test");

@@ -28,18 +28,18 @@ static
 BOOLEAN
 CheckStringBuffer(
     PCWSTR Buffer,
-    ULONG Length,
+    SIZE_T Length,
     SIZE_T MaximumLength,
     PCWSTR Expected)
 {
-    USHORT ExpectedLength = wcslen(Expected) * sizeof(WCHAR);
+    SIZE_T ExpectedLength = wcslen(Expected) * sizeof(WCHAR);
     SIZE_T EqualLength;
     BOOLEAN Result = TRUE;
     SIZE_T i;
 
     if (Length != ExpectedLength)
     {
-        ok(0, "String length is %u, expected %u\n", Length, ExpectedLength);
+        ok(0, "String length is %lu, expected %lu\n", (ULONG)Length, (ULONG)ExpectedLength);
         Result = FALSE;
     }
 
@@ -141,6 +141,7 @@ RunTestCases(VOID)
     SIZE_T ExpectedFilePartSize;
     const INT TestCount = sizeof(TestCases) / sizeof(TestCases[0]);
     INT i;
+    BOOLEAN Okay;
 
     for (i = 0; i < TestCount; i++)
     {
@@ -173,8 +174,8 @@ RunTestCases(VOID)
                                           &ShortName);
         EndSeh(STATUS_SUCCESS);
 
-        ok(CheckStringBuffer(FullPathNameBuffer, Length, sizeof(FullPathNameBuffer), ExpectedPathName),
-            "Wrong path name '%S', expected '%S'\n", FullPathNameBuffer, ExpectedPathName);
+        Okay = CheckStringBuffer(FullPathNameBuffer, Length, sizeof(FullPathNameBuffer), ExpectedPathName);
+        ok(Okay, "Wrong path name '%S', expected '%S'\n", FullPathNameBuffer, ExpectedPathName);
 
         if (!ShortName)
             FilePartSize = 0;

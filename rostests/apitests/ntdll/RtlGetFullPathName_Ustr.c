@@ -43,6 +43,7 @@ ULONG
     OUT PATH_TYPE_AND_UNKNOWN *PathType
 )
 //= (PVOID)0x7c83086c // 2003 sp1 x86
+//= (PVOID)0x77ef49f0 // 2003 sp1 x64
 //= (PVOID)0x7769a3dd // win7 sp1 wow64
 ;
 
@@ -59,18 +60,18 @@ static
 BOOLEAN
 CheckStringBuffer(
     PCWSTR Buffer,
-    ULONG Length,
+    SIZE_T Length,
     SIZE_T MaximumLength,
     PCWSTR Expected)
 {
-    USHORT ExpectedLength = wcslen(Expected) * sizeof(WCHAR);
+    SIZE_T ExpectedLength = wcslen(Expected) * sizeof(WCHAR);
     SIZE_T EqualLength;
     BOOLEAN Result = TRUE;
     SIZE_T i;
 
     if (Length != ExpectedLength)
     {
-        ok(0, "String length is %u, expected %u\n", Length, ExpectedLength);
+        ok(0, "String length is %lu, expected %lu\n", (ULONG)Length, (ULONG)ExpectedLength);
         Result = FALSE;
     }
 
@@ -197,6 +198,7 @@ RunTestCases(VOID)
     const WCHAR *ExpectedShortName;
     const INT TestCount = sizeof(TestCases) / sizeof(TestCases[0]);
     INT i;
+    BOOLEAN Okay;
 
     for (i = 0; i < TestCount; i++)
     {
@@ -240,8 +242,8 @@ RunTestCases(VOID)
                                              &PathType);
         EndSeh(STATUS_SUCCESS);
         ok_eq_ustr(&FileName, &TempString);
-        ok(CheckStringBuffer(FullPathNameBuffer, Length, sizeof(FullPathNameBuffer), ExpectedPathName),
-            "Wrong path name '%S', expected '%S'\n", FullPathNameBuffer, ExpectedPathName);
+        Okay = CheckStringBuffer(FullPathNameBuffer, Length, sizeof(FullPathNameBuffer), ExpectedPathName);
+        ok(Okay, "Wrong path name '%S', expected '%S'\n", FullPathNameBuffer, ExpectedPathName);
         switch (TestCases[i].FilePartPrefixType)
         {
             case PrefixNone:
@@ -306,6 +308,7 @@ START_TEST(RtlGetFullPathName_Ustr)
     BOOLEAN NameInvalid;
     BOOLEAN NameInvalidArray[sizeof(ULONGLONG)];
     PATH_TYPE_AND_UNKNOWN PathType;
+    BOOLEAN Okay;
 
     if (!RtlGetFullPathName_Ustr)
     {
@@ -414,7 +417,8 @@ START_TEST(RtlGetFullPathName_Ustr)
     ok(PathType.Unknown == 1234 ||
        broken(PathType.Unknown == 0) /* Win7 */, "Unknown = %d\n", PathType.Unknown);
     ok(NameInvalidArray[0] == FALSE, "NameInvalid = %u\n", NameInvalidArray[0]);
-    ok(CheckBuffer(NameInvalidArray + 1, sizeof(NameInvalidArray) - sizeof(NameInvalidArray[0]), 0x55), "CheckBuffer failed\n");
+    Okay = CheckBuffer(NameInvalidArray + 1, sizeof(NameInvalidArray) - sizeof(NameInvalidArray[0]), 0x55);
+    ok(Okay, "CheckBuffer failed\n");
 
     /* Give it a valid path */
     RtlInitUnicodeString(&FileName, L"C:\\test");
