@@ -143,7 +143,7 @@ NtGdiCreateBitmap(
     IN OPTIONAL LPBYTE pUnsafeBits)
 {
     HBITMAP hbmp;
-    ULONG cRealBpp, cjWidthBytes, iFormat, fjBitmap;
+    ULONG cRealBpp, cjWidthBytes, iFormat;
     ULONGLONG cjSize;
     PSURFACE psurf;
 
@@ -170,7 +170,7 @@ NtGdiCreateBitmap(
                                  nWidth,
                                  nHeight,
                                  iFormat,
-                                 fjBitmap,
+                                 0,
                                  0,
                                  NULL);
     if (!psurf)
