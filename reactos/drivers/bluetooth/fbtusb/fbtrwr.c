@@ -22,18 +22,18 @@
 // Read/Write handler
 NTSTATUS FreeBT_DispatchRead(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 {
-    PMDL					mdl;
-    PURB					urb;
-    ULONG					totalLength;
-    ULONG					stageLength;
-    NTSTATUS				ntStatus;
-    ULONG_PTR				virtualAddress;
-    PFILE_OBJECT			fileObject;
-    PDEVICE_EXTENSION		deviceExtension;
-    PIO_STACK_LOCATION		irpStack;
-    PIO_STACK_LOCATION		nextStack;
-    PFREEBT_RW_CONTEXT		rwContext;
-    ULONG					maxLength=0;
+    PMDL                    mdl;
+    PURB                    urb;
+    ULONG                   totalLength;
+    ULONG                   stageLength;
+    NTSTATUS                ntStatus;
+    ULONG_PTR               virtualAddress;
+    PFILE_OBJECT            fileObject;
+    PDEVICE_EXTENSION       deviceExtension;
+    PIO_STACK_LOCATION      irpStack;
+    PIO_STACK_LOCATION      nextStack;
+    PFREEBT_RW_CONTEXT      rwContext;
+    //ULONG                   maxLength=0;
 
     urb = NULL;
     mdl = NULL;
@@ -56,7 +56,7 @@ NTSTATUS FreeBT_DispatchRead(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
     // Make sure that any selective suspend request has been completed.
     if (deviceExtension->SSEnable)
     {
-	    FreeBT_DbgPrint(3, ("FBTUSB: FreeBT_DispatchRead: Waiting on the IdleReqPendEvent\n"));
+        FreeBT_DbgPrint(3, ("FBTUSB: FreeBT_DispatchRead: Waiting on the IdleReqPendEvent\n"));
         KeWaitForSingleObject(&deviceExtension->NoIdleReqPendEvent,
                               Executive,
                               KernelMode,
@@ -80,7 +80,7 @@ NTSTATUS FreeBT_DispatchRead(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 
     }
 
-	FreeBT_DbgPrint(1, ("FBTUSB: FreeBT_DispatchRead: Transfer data length = %d\n", totalLength));
+    FreeBT_DbgPrint(1, ("FBTUSB: FreeBT_DispatchRead: Transfer data length = %d\n", totalLength));
     if (totalLength == 0)
     {
         ntStatus = STATUS_SUCCESS;
@@ -189,7 +189,7 @@ NTSTATUS FreeBT_DispatchRead(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
     FreeBT_DbgPrint(3, ("FBTUSB: FreeBT_DispatchRead::"));
     FreeBT_IoIncrement(deviceExtension);
 
-	FreeBT_DbgPrint(3, ("FBTUSB: FreeBT_DispatchRead: URB sent to lower driver, IRP is pending\n"));
+    FreeBT_DbgPrint(3, ("FBTUSB: FreeBT_DispatchRead: URB sent to lower driver, IRP is pending\n"));
 
     // we return STATUS_PENDING and not the status returned by the lower layer.
     return STATUS_PENDING;
@@ -206,13 +206,13 @@ FreeBT_DispatchRead_Exit:
 
 NTSTATUS FreeBT_ReadCompletion(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp, IN PVOID Context)
 {
-    ULONG				stageLength;
-    NTSTATUS			ntStatus;
-    PIO_STACK_LOCATION	nextStack;
-    PFREEBT_RW_CONTEXT	rwContext;
-	PDEVICE_EXTENSION	deviceExtension;
+    //ULONG               stageLength;
+    NTSTATUS            ntStatus;
+    //PIO_STACK_LOCATION  nextStack;
+    PFREEBT_RW_CONTEXT  rwContext;
+    PDEVICE_EXTENSION   deviceExtension;
 
-	deviceExtension = (PDEVICE_EXTENSION) DeviceObject->DeviceExtension;
+    deviceExtension = (PDEVICE_EXTENSION) DeviceObject->DeviceExtension;
     rwContext = (PFREEBT_RW_CONTEXT) Context;
     ntStatus = Irp->IoStatus.Status;
 
@@ -221,13 +221,13 @@ NTSTATUS FreeBT_ReadCompletion(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp, IN P
 
     if (NT_SUCCESS(ntStatus))
     {
-		Irp->IoStatus.Information = rwContext->Urb->UrbBulkOrInterruptTransfer.TransferBufferLength;
+        Irp->IoStatus.Information = rwContext->Urb->UrbBulkOrInterruptTransfer.TransferBufferLength;
 
     }
 
     else
     {
-		Irp->IoStatus.Information = 0;
+        Irp->IoStatus.Information = 0;
         FreeBT_DbgPrint(1, ("FBTUSB: FreeBT_ReadCompletion: - failed with status = %X\n", ntStatus));
 
     }
@@ -252,18 +252,18 @@ NTSTATUS FreeBT_ReadCompletion(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp, IN P
 // Read/Write handler
 NTSTATUS FreeBT_DispatchWrite(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 {
-    PMDL					mdl;
-    PURB					urb;
-    ULONG					totalLength;
-    ULONG					stageLength;
-    NTSTATUS				ntStatus;
-    ULONG_PTR				virtualAddress;
-    PFILE_OBJECT			fileObject;
-    PDEVICE_EXTENSION		deviceExtension;
-    PIO_STACK_LOCATION		irpStack;
-    PIO_STACK_LOCATION		nextStack;
-    PFREEBT_RW_CONTEXT		rwContext;
-    ULONG					maxLength=0;
+    PMDL                    mdl;
+    PURB                    urb;
+    ULONG                   totalLength;
+    ULONG                   stageLength;
+    NTSTATUS                ntStatus;
+    ULONG_PTR               virtualAddress;
+    PFILE_OBJECT            fileObject;
+    PDEVICE_EXTENSION       deviceExtension;
+    PIO_STACK_LOCATION      irpStack;
+    PIO_STACK_LOCATION      nextStack;
+    PFREEBT_RW_CONTEXT      rwContext;
+    //ULONG                   maxLength=0;
 
     urb = NULL;
     mdl = NULL;
@@ -286,7 +286,7 @@ NTSTATUS FreeBT_DispatchWrite(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
     // Make sure that any selective suspend request has been completed.
     if (deviceExtension->SSEnable)
     {
-	    FreeBT_DbgPrint(3, ("FBTUSB: FreeBT_WriteDispatch: Waiting on the IdleReqPendEvent\n"));
+        FreeBT_DbgPrint(3, ("FBTUSB: FreeBT_WriteDispatch: Waiting on the IdleReqPendEvent\n"));
         KeWaitForSingleObject(&deviceExtension->NoIdleReqPendEvent,
                               Executive,
                               KernelMode,
@@ -310,10 +310,10 @@ NTSTATUS FreeBT_DispatchWrite(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 
     }
 
-	FreeBT_DbgPrint(1, ("FBTUSB: FreeBT_WriteDispatch: Transfer data length = %d\n", totalLength));
+    FreeBT_DbgPrint(1, ("FBTUSB: FreeBT_WriteDispatch: Transfer data length = %d\n", totalLength));
     if (totalLength>FBT_HCI_DATA_MAX_SIZE)
     {
-		FreeBT_DbgPrint(1, ("FBTUSB: FreeBT_WriteDispatch: Buffer exceeds maximum packet length (%d), failing IRP\n", FBT_HCI_DATA_MAX_SIZE));
+        FreeBT_DbgPrint(1, ("FBTUSB: FreeBT_WriteDispatch: Buffer exceeds maximum packet length (%d), failing IRP\n", FBT_HCI_DATA_MAX_SIZE));
         ntStatus = STATUS_INVALID_BUFFER_SIZE;
         ExFreePool(rwContext);
         goto FreeBT_DispatchWrite_Exit;
@@ -322,7 +322,7 @@ NTSTATUS FreeBT_DispatchWrite(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 
     if (totalLength<FBT_HCI_DATA_MIN_SIZE)
     {
-		FreeBT_DbgPrint(1, ("FBTUSB: FreeBT_WriteDispatch: Zero length buffer, completing IRP\n"));
+        FreeBT_DbgPrint(1, ("FBTUSB: FreeBT_WriteDispatch: Zero length buffer, completing IRP\n"));
         ntStatus = STATUS_BUFFER_TOO_SMALL;
         ExFreePool(rwContext);
         goto FreeBT_DispatchWrite_Exit;
@@ -429,7 +429,7 @@ NTSTATUS FreeBT_DispatchWrite(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
     FreeBT_DbgPrint(3, ("FBTUSB: FreeBT_DispatchWrite::"));
     FreeBT_IoIncrement(deviceExtension);
 
-	FreeBT_DbgPrint(3, ("FBTUSB: FreeBT_DispatchWrite: URB sent to lower driver, IRP is pending\n"));
+    FreeBT_DbgPrint(3, ("FBTUSB: FreeBT_DispatchWrite: URB sent to lower driver, IRP is pending\n"));
 
     // we return STATUS_PENDING and not the status returned by the lower layer.
     return STATUS_PENDING;
@@ -446,13 +446,13 @@ FreeBT_DispatchWrite_Exit:
 
 NTSTATUS FreeBT_WriteCompletion(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp, IN PVOID Context)
 {
-    ULONG				stageLength;
-    NTSTATUS			ntStatus;
-    PIO_STACK_LOCATION	nextStack;
-    PFREEBT_RW_CONTEXT	rwContext;
-	PDEVICE_EXTENSION	deviceExtension;
+    ULONG               stageLength;
+    NTSTATUS            ntStatus;
+    PIO_STACK_LOCATION  nextStack;
+    PFREEBT_RW_CONTEXT  rwContext;
+    PDEVICE_EXTENSION   deviceExtension;
 
-	deviceExtension = (PDEVICE_EXTENSION) DeviceObject->DeviceExtension;
+    deviceExtension = (PDEVICE_EXTENSION) DeviceObject->DeviceExtension;
     rwContext = (PFREEBT_RW_CONTEXT) Context;
     ntStatus = Irp->IoStatus.Status;
 
@@ -508,7 +508,7 @@ NTSTATUS FreeBT_WriteCompletion(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp, IN 
             else
             {
                 // No more data to transfer
-				FreeBT_DbgPrint(1, ("FBTUSB: FreeNT_WriteCompletion: Write completed, %d bytes written\n", Irp->IoStatus.Information));
+                FreeBT_DbgPrint(1, ("FBTUSB: FreeNT_WriteCompletion: Write completed, %d bytes written\n", Irp->IoStatus.Information));
                 Irp->IoStatus.Information = rwContext->Numxfer;
 
             }

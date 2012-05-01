@@ -22,9 +22,9 @@
 // Handle power events
 NTSTATUS FreeBT_DispatchPower(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 {
-    NTSTATUS           ntStatus;
+    NTSTATUS           ntStatus = STATUS_SUCCESS;
     PIO_STACK_LOCATION irpStack;
-    PUNICODE_STRING    tagString;
+    //PUNICODE_STRING    tagString;
     PDEVICE_EXTENSION  deviceExtension;
 
     irpStack = IoGetCurrentIrpStackLocation(Irp);
@@ -38,7 +38,7 @@ NTSTATUS FreeBT_DispatchPower(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
     // it should return STATUS_PENDING and queue all incoming
     // IRPs until the IRP completes.
     if (Removed == deviceExtension->DeviceState)
-	{
+    {
 
         // Even if a driver fails the IRP, it must nevertheless call
         // PoStartNextPowerIrp to inform the Power Manager that it
@@ -53,7 +53,7 @@ NTSTATUS FreeBT_DispatchPower(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
     }
 
     if (NotStarted == deviceExtension->DeviceState)
-	{
+    {
         // if the device is not started yet, pass it down
         PoStartNextPowerIrp(Irp);
         IoSkipCurrentIrpStackLocation(Irp);
@@ -66,7 +66,7 @@ NTSTATUS FreeBT_DispatchPower(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
     FreeBT_IoIncrement(deviceExtension);
 
     switch(irpStack->MinorFunction)
-	{
+    {
     case IRP_MN_SET_POWER:
         // The Power Manager sends this IRP for one of the
         // following reasons:
@@ -82,7 +82,7 @@ NTSTATUS FreeBT_DispatchPower(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
         IoMarkIrpPending(Irp);
 
         switch(irpStack->Parameters.Power.Type)
-		{
+        {
         case SystemPowerState:
             HandleSystemSetPower(DeviceObject, Irp);
             ntStatus = STATUS_PENDING;
@@ -108,7 +108,7 @@ NTSTATUS FreeBT_DispatchPower(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
         IoMarkIrpPending(Irp);
 
         switch(irpStack->Parameters.Power.Type)
-		{
+        {
         case SystemPowerState:
             HandleSystemQueryPower(DeviceObject, Irp);
             ntStatus = STATUS_PENDING;
@@ -144,7 +144,7 @@ NTSTATUS FreeBT_DispatchPower(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
         PoStartNextPowerIrp(Irp);
         ntStatus = PoCallDriver(deviceExtension->TopOfStackDeviceObject, Irp);
         if(!NT_SUCCESS(ntStatus))
-		{
+        {
             FreeBT_DbgPrint(1, ("FBTUSB: Lower drivers failed the wait-wake Irp\n"));
 
         }
@@ -168,7 +168,7 @@ NTSTATUS FreeBT_DispatchPower(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
         IoSkipCurrentIrpStackLocation(Irp);
         ntStatus = PoCallDriver(deviceExtension->TopOfStackDeviceObject, Irp);
         if(!NT_SUCCESS(ntStatus))
-		{
+        {
             FreeBT_DbgPrint(1, ("FBTUSB: FreeBT_DispatchPower: Lower drivers failed this Irp\n"));
 
         }
@@ -205,7 +205,7 @@ NTSTATUS HandleSystemQueryPower(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 
     // Fail a query for a power state incompatible with waking up the system
     if ((deviceExtension->WaitWakeEnable) && (systemState > deviceExtension->DeviceCapabilities.SystemWake))
-	{
+    {
         FreeBT_DbgPrint(1, ("FBTUSB: HandleSystemQueryPower: Query for an incompatible system power state\n"));
 
         PoStartNextPowerIrp(Irp);
@@ -222,7 +222,7 @@ NTSTATUS HandleSystemQueryPower(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 
     // if querying for a lower S-state, issue a wait-wake
     if((systemState > deviceExtension->SysPower) && (deviceExtension->WaitWakeEnable))
-	{
+    {
         IssueWaitWake(deviceExtension);
 
     }
@@ -296,7 +296,7 @@ NTSTATUS HandleDeviceQueryPower(PDEVICE_OBJECT DeviceObject, PIRP Irp)
                          deviceExtension->DevPower - 1));
 
     if (deviceExtension->WaitWakeEnable && deviceState > deviceExtension->DeviceCapabilities.DeviceWake)
-	{
+    {
         PoStartNextPowerIrp(Irp);
         Irp->IoStatus.Status = ntStatus = STATUS_INVALID_DEVICE_STATE;
         Irp->IoStatus.Information = 0;
@@ -310,16 +310,16 @@ NTSTATUS HandleDeviceQueryPower(PDEVICE_OBJECT DeviceObject, PIRP Irp)
     }
 
     if (deviceState < deviceExtension->DevPower)
-	{
+    {
         ntStatus = STATUS_SUCCESS;
 
     }
 
     else
-	{
+    {
         ntStatus = HoldIoRequests(DeviceObject, Irp);
         if(STATUS_PENDING == ntStatus)
-		{
+        {
             return ntStatus;
 
         }
@@ -332,13 +332,13 @@ NTSTATUS HandleDeviceQueryPower(PDEVICE_OBJECT DeviceObject, PIRP Irp)
     Irp->IoStatus.Status = ntStatus;
     Irp->IoStatus.Information = 0;
     if(!NT_SUCCESS(ntStatus))
-	{
+    {
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
     }
 
     else
-	{
+    {
         IoSkipCurrentIrpStackLocation(Irp);
         ntStatus=PoCallDriver(deviceExtension->TopOfStackDeviceObject, Irp);
 
@@ -357,7 +357,7 @@ NTSTATUS HandleDeviceQueryPower(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 NTSTATUS SysPoCompletionRoutine(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp, IN PDEVICE_EXTENSION DeviceExtension)
 {
     NTSTATUS           ntStatus;
- 	PIO_STACK_LOCATION irpStack;
+    PIO_STACK_LOCATION irpStack;
 
     ntStatus = Irp->IoStatus.Status;
     irpStack = IoGetCurrentIrpStackLocation(Irp);
@@ -366,7 +366,7 @@ NTSTATUS SysPoCompletionRoutine(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp, IN 
 
     // lower drivers failed this Irp
     if(!NT_SUCCESS(ntStatus))
-	{
+    {
         PoStartNextPowerIrp(Irp);
         FreeBT_DbgPrint(3, ("FBTUSB: SysPoCompletionRoutine::"));
         FreeBT_IoDecrement(DeviceExtension);
@@ -377,7 +377,7 @@ NTSTATUS SysPoCompletionRoutine(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp, IN 
 
     // ..otherwise update the cached system power state (IRP_MN_SET_POWER)
     if(irpStack->MinorFunction == IRP_MN_SET_POWER)
-	{
+    {
         DeviceExtension->SysPower = irpStack->Parameters.Power.State.SystemState;
 
     }
@@ -415,14 +415,14 @@ VOID SendDeviceIrp(IN PDEVICE_OBJECT DeviceObject, IN PIRP SIrp )
 
     powerContext = (PPOWER_COMPLETION_CONTEXT) ExAllocatePool(NonPagedPool, sizeof(POWER_COMPLETION_CONTEXT));
     if (!powerContext)
-	{
+    {
         FreeBT_DbgPrint(1, ("FBTUSB: SendDeviceIrp: Failed to alloc memory for powerContext\n"));
         ntStatus = STATUS_INSUFFICIENT_RESOURCES;
 
     }
 
     else
-	{
+    {
         powerContext->DeviceObject = DeviceObject;
         powerContext->SIrp = SIrp;
 
@@ -438,9 +438,9 @@ VOID SendDeviceIrp(IN PDEVICE_OBJECT DeviceObject, IN PIRP SIrp )
     }
 
     if (!NT_SUCCESS(ntStatus))
-	{
+    {
         if (powerContext)
-		{
+        {
             ExFreePool(powerContext);
 
         }
@@ -516,7 +516,7 @@ NTSTATUS HandleDeviceSetPower(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
                          deviceExtension->DevPower - 1));
 
     if (newDevState < oldDevState)
-	{
+    {
 
         FreeBT_DbgPrint(3, ("FBTUSB: HandleDeviceSetPower: Adding power to the device\n"));
 
@@ -531,23 +531,23 @@ NTSTATUS HandleDeviceSetPower(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 
         ntStatus = PoCallDriver(deviceExtension->TopOfStackDeviceObject, Irp);
 
-	}
+    }
 
     else
-	{
+    {
         // newDevState >= oldDevState
 
         // hold I/O if transition from D0 -> DX (X = 1, 2, 3)
         // if transition from D1 or D2 to deeper sleep states,
         // I/O queue is already on hold.
         if(PowerDeviceD0 == oldDevState && newDevState > oldDevState)
-		{
+        {
             // D0 -> DX transition
             FreeBT_DbgPrint(3, ("FBTUSB: HandleDeviceSetPower: Removing power from the device\n"));
 
             ntStatus = HoldIoRequests(DeviceObject, Irp);
             if (!NT_SUCCESS(ntStatus))
-			{
+            {
                 PoStartNextPowerIrp(Irp);
                 Irp->IoStatus.Status = ntStatus;
                 Irp->IoStatus.Information = 0;
@@ -561,7 +561,7 @@ NTSTATUS HandleDeviceSetPower(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
             }
 
             else
-			{
+            {
                 goto HandleDeviceSetPower_Exit;
 
             }
@@ -569,7 +569,7 @@ NTSTATUS HandleDeviceSetPower(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
         }
 
         else if (PowerDeviceD0 == oldDevState && PowerDeviceD0 == newDevState)
-		{
+        {
             // D0 -> D0
             // unblock the queue which may have been blocked processing
             // query irp
@@ -594,7 +594,7 @@ NTSTATUS HandleDeviceSetPower(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 
         ntStatus = PoCallDriver(deviceExtension->TopOfStackDeviceObject, Irp);
         if(!NT_SUCCESS(ntStatus))
-		{
+        {
             FreeBT_DbgPrint(1, ("FBTUSB: HandleDeviceSetPower: Lower drivers failed a power Irp\n"));
 
         }
@@ -617,13 +617,13 @@ NTSTATUS FinishDevPoUpIrp(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp, IN PDEVIC
 
     ntStatus = Irp->IoStatus.Status;
     if(Irp->PendingReturned)
-	{
+    {
         IoMarkIrpPending(Irp);
 
     }
 
     if(!NT_SUCCESS(ntStatus))
-	{
+    {
         PoStartNextPowerIrp(Irp);
 
         FreeBT_DbgPrint(3, ("FBTUSB: FinishDevPoUpIrp::"));
@@ -665,7 +665,7 @@ NTSTATUS SetDeviceFunctional(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp, IN PDE
     // save/restore.
     PoSetPowerState(DeviceObject, DevicePowerState, newState);
     if(PowerDeviceD0 == newDevState)
-	{
+    {
         KeAcquireSpinLock(&DeviceExtension->DevStateLock, &oldIrql);
         DeviceExtension->QueueState = AllowRequests;
         KeReleaseSpinLock(&DeviceExtension->DevStateLock, oldIrql);
@@ -701,7 +701,7 @@ NTSTATUS FinishDevPoDnIrp(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp, IN PDEVIC
     newState = irpStack->Parameters.Power.State;
 
     if (NT_SUCCESS(ntStatus) && irpStack->MinorFunction == IRP_MN_SET_POWER)
-	{
+    {
         FreeBT_DbgPrint(3, ("FBTUSB: updating cache..\n"));
         DeviceExtension->DevPower = newState.DeviceState;
         PoSetPowerState(DeviceObject, DevicePowerState, newState);
@@ -734,7 +734,7 @@ NTSTATUS HoldIoRequests(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 
     context = (PWORKER_THREAD_CONTEXT) ExAllocatePool(NonPagedPool, sizeof(WORKER_THREAD_CONTEXT));
     if(context)
-	{
+    {
         item = IoAllocateWorkItem(DeviceObject);
 
         context->Irp = Irp;
@@ -742,7 +742,7 @@ NTSTATUS HoldIoRequests(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
         context->WorkItem = item;
 
         if (item)
-		{
+        {
             IoMarkIrpPending(Irp);
             IoQueueWorkItem(item, HoldIoRequestsWorkerRoutine, DelayedWorkQueue, context);
             ntStatus = STATUS_PENDING;
@@ -750,7 +750,7 @@ NTSTATUS HoldIoRequests(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
         }
 
         else
-		{
+        {
             FreeBT_DbgPrint(3, ("FBTUSB: HoldIoRequests: Failed to allocate memory for workitem\n"));
             ExFreePool(context);
             ntStatus = STATUS_INSUFFICIENT_RESOURCES;
@@ -760,7 +760,7 @@ NTSTATUS HoldIoRequests(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
     }
 
     else
-	{
+    {
         FreeBT_DbgPrint(1, ("FBTUSB: HoldIoRequests: Failed to alloc memory for worker thread context\n"));
         ntStatus = STATUS_INSUFFICIENT_RESOURCES;
 
@@ -806,16 +806,16 @@ VOID HoldIoRequestsWorkerRoutine(IN PDEVICE_OBJECT DeviceObject, IN PVOID Contex
     // now send the Irp down
     IoCopyCurrentIrpStackLocationToNext(irp);
     IoSetCompletionRoutine(
-		irp,
-		(PIO_COMPLETION_ROUTINE) FinishDevPoDnIrp,
-		deviceExtension,
-		TRUE,
-		TRUE,
-		TRUE);
+        irp,
+        (PIO_COMPLETION_ROUTINE) FinishDevPoDnIrp,
+        deviceExtension,
+        TRUE,
+        TRUE,
+        TRUE);
 
     ntStatus = PoCallDriver(deviceExtension->TopOfStackDeviceObject, irp);
     if(!NT_SUCCESS(ntStatus))
-	{
+    {
         FreeBT_DbgPrint(1, ("FBTUSB: HoldIoRequestsWorkerRoutine: Lower driver fail a power Irp\n"));
 
     }
@@ -892,7 +892,7 @@ NTSTATUS IssueWaitWake(IN PDEVICE_EXTENSION DeviceExtension)
     FreeBT_DbgPrint(3, ("FBTUSB: IssueWaitWake: Entered\n"));
 
     if(InterlockedExchange(&DeviceExtension->FlagWWOutstanding, 1))
-	{
+    {
         return STATUS_DEVICE_BUSY;
 
     }
@@ -909,7 +909,7 @@ NTSTATUS IssueWaitWake(IN PDEVICE_EXTENSION DeviceExtension)
                                  &DeviceExtension->WaitWakeIrp);
 
     if(!NT_SUCCESS(ntStatus))
-	{
+    {
         InterlockedExchange(&DeviceExtension->FlagWWOutstanding, 0);
 
     }
@@ -928,10 +928,10 @@ VOID CancelWaitWake(IN PDEVICE_EXTENSION DeviceExtension)
 
     Irp = (PIRP) InterlockedExchangePointer(&DeviceExtension->WaitWakeIrp, NULL);
     if(Irp)
-	{
+    {
         IoCancelIrp(Irp);
         if(InterlockedExchange(&DeviceExtension->FlagWWCancel, 1))
-		{
+        {
             PoStartNextPowerIrp(Irp);
             Irp->IoStatus.Status = STATUS_CANCELLED;
             Irp->IoStatus.Information = 0;
@@ -949,7 +949,7 @@ NTSTATUS WaitWakeCompletionRoutine(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp, 
 {
     FreeBT_DbgPrint(3, ("FBTUSB: WaitWakeCompletionRoutine: Entered\n"));
     if(Irp->PendingReturned)
-	{
+    {
         IoMarkIrpPending(Irp);
 
     }
@@ -958,7 +958,7 @@ NTSTATUS WaitWakeCompletionRoutine(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp, 
     // as part of the completion process. If it's already NULL,
     // avoid race with the CancelWaitWake routine.
     if(InterlockedExchangePointer(&DeviceExtension->WaitWakeIrp, NULL))
-	{
+    {
         PoStartNextPowerIrp(Irp);
 
         return STATUS_SUCCESS;
@@ -969,7 +969,7 @@ NTSTATUS WaitWakeCompletionRoutine(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp, 
     // If FlagWWCancel != 0, complete the Irp.
     // If FlagWWCancel == 0, CancelWaitWake completes it.
     if(InterlockedExchange(&DeviceExtension->FlagWWCancel, 1))
-	{
+    {
         PoStartNextPowerIrp(Irp);
 
         return STATUS_CANCELLED;
@@ -1000,14 +1000,14 @@ VOID WaitWakeCallback(
     InterlockedExchange(&deviceExtension->FlagWWOutstanding, 0);
 
     if(!NT_SUCCESS(IoStatus->Status))
-	{
+    {
         return;
 
     }
 
     // wake up the device
     if(deviceExtension->DevPower == PowerDeviceD0)
-	{
+    {
         FreeBT_DbgPrint(3, ("FBTUSB: WaitWakeCallback: Device already powered up...\n"));
 
         return;
@@ -1026,7 +1026,7 @@ VOID WaitWakeCallback(
                                  NULL);
 
     if(deviceExtension->WaitWakeEnable)
-	{
+    {
         IssueWaitWake(deviceExtension);
 
     }
@@ -1041,7 +1041,7 @@ VOID WaitWakeCallback(
 PCHAR PowerMinorFunctionString (IN UCHAR MinorFunction)
 {
     switch (MinorFunction)
-	{
+    {
         case IRP_MN_SET_POWER:
             return "IRP_MN_SET_POWER\n";
 

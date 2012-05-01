@@ -25,7 +25,7 @@ NTSTATUS FreeBT_DispatchPnP(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 {
     PIO_STACK_LOCATION irpStack;
     PDEVICE_EXTENSION  deviceExtension;
-    KEVENT             startDeviceEvent;
+    //KEVENT             startDeviceEvent;
     NTSTATUS           ntStatus;
 
     irpStack = IoGetCurrentIrpStackLocation(Irp);
@@ -33,7 +33,7 @@ NTSTATUS FreeBT_DispatchPnP(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 
     // since the device is removed, fail the Irp.
     if (Removed == deviceExtension->DeviceState)
-	{
+    {
         ntStatus = STATUS_DELETE_PENDING;
         Irp->IoStatus.Status = ntStatus;
         Irp->IoStatus.Information = 0;
@@ -45,15 +45,15 @@ NTSTATUS FreeBT_DispatchPnP(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
     FreeBT_DbgPrint(3, ("FBTUSB: FreeBT_DispatchPnP::"));
     FreeBT_IoIncrement(deviceExtension);
     if (irpStack->MinorFunction == IRP_MN_START_DEVICE)
-	{
+    {
         ASSERT(deviceExtension->IdleReqPend == 0);
 
     }
 
     else
-	{
+    {
         if (deviceExtension->SSEnable)
-		{
+        {
             CancelSelectSuspend(deviceExtension);
 
         }
@@ -64,7 +64,7 @@ NTSTATUS FreeBT_DispatchPnP(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
     FreeBT_DbgPrint(3, ("FBTUSB: FreeBT_DispatchPnP::"));
     FreeBT_DbgPrint(2, (PnPMinorFunctionString(irpStack->MinorFunction)));
     switch (irpStack->MinorFunction)
-	{
+    {
     case IRP_MN_START_DEVICE:
         ntStatus = HandleStartDevice(DeviceObject, Irp);
         break;
@@ -73,7 +73,7 @@ NTSTATUS FreeBT_DispatchPnP(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
         // if we cannot stop the device, we fail the query stop irp
         ntStatus = CanStopDevice(DeviceObject, Irp);
         if(NT_SUCCESS(ntStatus))
-		{
+        {
             ntStatus = HandleQueryStopDevice(DeviceObject, Irp);
             return ntStatus;
 
@@ -168,14 +168,14 @@ NTSTATUS HandleStartDevice(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 
     ntStatus = IoCallDriver(deviceExtension->TopOfStackDeviceObject, Irp);
     if (ntStatus == STATUS_PENDING)
-	{
+    {
         KeWaitForSingleObject(&startDeviceEvent, Executive, KernelMode, FALSE, NULL);
         ntStatus = Irp->IoStatus.Status;
 
     }
 
     if (!NT_SUCCESS(ntStatus))
-	{
+    {
         FreeBT_DbgPrint(1, ("FBTUSB: HandleStartDevice: Lower drivers failed this Irp (0x%08x)\n", ntStatus));
         return ntStatus;
 
@@ -185,7 +185,7 @@ NTSTATUS HandleStartDevice(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
     // and select the interface descriptors
     ntStatus = ReadandSelectDescriptors(DeviceObject);
     if (!NT_SUCCESS(ntStatus))
-	{
+    {
         FreeBT_DbgPrint(1, ("FBTUSB: HandleStartDevice: ReadandSelectDescriptors failed (0x%08x)\n", ntStatus));
         return ntStatus;
 
@@ -195,7 +195,7 @@ NTSTATUS HandleStartDevice(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
     // handles to the device
     ntStatus = IoSetDeviceInterfaceState(&deviceExtension->InterfaceName, TRUE);
     if (!NT_SUCCESS(ntStatus))
-	{
+    {
         FreeBT_DbgPrint(1, ("FBTUSB: HandleStartDevice: IoSetDeviceInterfaceState failed (0x%08x)\n", ntStatus));
         return ntStatus;
 
@@ -213,19 +213,19 @@ NTSTATUS HandleStartDevice(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
     deviceExtension->WaitWakeIrp = NULL;
 
     if (deviceExtension->WaitWakeEnable)
-	{
+    {
         IssueWaitWake(deviceExtension);
 
     }
 
     ProcessQueuedRequests(deviceExtension);
     if (WinXpOrBetter == deviceExtension->WdmVersion)
-	{
+    {
         deviceExtension->SSEnable = deviceExtension->SSRegistryEnable;
 
         // set timer.for selective suspend requests
         if (deviceExtension->SSEnable)
-		{
+        {
             dueTime.QuadPart = -10000 * IDLE_INTERVAL;               // 5000 ms
             KeSetTimerEx(&deviceExtension->Timer, dueTime, IDLE_INTERVAL, &deviceExtension->DeferredProcCall);
             deviceExtension->FreeIdleIrpCount = 0;
@@ -254,11 +254,11 @@ NTSTATUS ReadandSelectDescriptors(IN PDEVICE_OBJECT DeviceObject)
     // 1. Read the device descriptor
     urb = (PURB) ExAllocatePool(NonPagedPool, sizeof(struct _URB_CONTROL_DESCRIPTOR_REQUEST));
     if(urb)
-	{
+    {
         siz = sizeof(USB_DEVICE_DESCRIPTOR);
         deviceDescriptor = (PUSB_DEVICE_DESCRIPTOR) ExAllocatePool(NonPagedPool, siz);
         if (deviceDescriptor)
-		{
+        {
             UsbBuildGetDescriptorRequest(
                     urb,
                     (USHORT) sizeof(struct _URB_CONTROL_DESCRIPTOR_REQUEST),
@@ -272,7 +272,7 @@ NTSTATUS ReadandSelectDescriptors(IN PDEVICE_OBJECT DeviceObject)
 
             ntStatus = CallUSBD(DeviceObject, urb);
             if (NT_SUCCESS(ntStatus))
-			{
+            {
                 ASSERT(deviceDescriptor->bNumConfigurations);
                 ntStatus = ConfigureDevice(DeviceObject);
 
@@ -284,7 +284,7 @@ NTSTATUS ReadandSelectDescriptors(IN PDEVICE_OBJECT DeviceObject)
         }
 
         else
-		{
+        {
             FreeBT_DbgPrint(1, ("FBTUSB: ReadandSelectDescriptors: Failed to allocate memory for deviceDescriptor"));
             ExFreePool(urb);
             ntStatus = STATUS_INSUFFICIENT_RESOURCES;
@@ -294,7 +294,7 @@ NTSTATUS ReadandSelectDescriptors(IN PDEVICE_OBJECT DeviceObject)
     }
 
     else
-	{
+    {
         FreeBT_DbgPrint(1, ("FBTUSB: ReadandSelectDescriptors: Failed to allocate memory for urb"));
         ntStatus = STATUS_INSUFFICIENT_RESOURCES;
 
@@ -323,12 +323,12 @@ NTSTATUS ConfigureDevice(IN PDEVICE_OBJECT DeviceObject)
     // 2. Read the CD with all embedded interface and endpoint descriptors
     urb = (PURB) ExAllocatePool(NonPagedPool, sizeof(struct _URB_CONTROL_DESCRIPTOR_REQUEST));
     if (urb)
-	{
+    {
         siz = sizeof(USB_CONFIGURATION_DESCRIPTOR);
         configurationDescriptor = (PUSB_CONFIGURATION_DESCRIPTOR) ExAllocatePool(NonPagedPool, siz);
 
         if(configurationDescriptor)
-		{
+        {
             UsbBuildGetDescriptorRequest(
                     urb,
                     (USHORT) sizeof(struct _URB_CONTROL_DESCRIPTOR_REQUEST),
@@ -342,7 +342,7 @@ NTSTATUS ConfigureDevice(IN PDEVICE_OBJECT DeviceObject)
 
             ntStatus = CallUSBD(DeviceObject, urb);
             if(!NT_SUCCESS(ntStatus))
-			{
+            {
                 FreeBT_DbgPrint(1, ("FBTUSB: ConfigureDevice: UsbBuildGetDescriptorRequest failed\n"));
                 goto ConfigureDevice_Exit;
 
@@ -351,7 +351,7 @@ NTSTATUS ConfigureDevice(IN PDEVICE_OBJECT DeviceObject)
         }
 
         else
-		{
+        {
             FreeBT_DbgPrint(1, ("FBTUSB: ConfigureDevice: Failed to allocate mem for config Descriptor\n"));
             ntStatus = STATUS_INSUFFICIENT_RESOURCES;
             goto ConfigureDevice_Exit;
@@ -363,7 +363,7 @@ NTSTATUS ConfigureDevice(IN PDEVICE_OBJECT DeviceObject)
 
         configurationDescriptor = (PUSB_CONFIGURATION_DESCRIPTOR) ExAllocatePool(NonPagedPool, siz);
         if (configurationDescriptor)
-		{
+        {
             UsbBuildGetDescriptorRequest(
                     urb,
                     (USHORT)sizeof(struct _URB_CONTROL_DESCRIPTOR_REQUEST),
@@ -377,7 +377,7 @@ NTSTATUS ConfigureDevice(IN PDEVICE_OBJECT DeviceObject)
 
             ntStatus = CallUSBD(DeviceObject, urb);
             if (!NT_SUCCESS(ntStatus))
-			{
+            {
                 FreeBT_DbgPrint(1,("FBTUSB: ConfigureDevice: Failed to read configuration descriptor"));
                 goto ConfigureDevice_Exit;
 
@@ -386,7 +386,7 @@ NTSTATUS ConfigureDevice(IN PDEVICE_OBJECT DeviceObject)
         }
 
         else
-		{
+        {
             FreeBT_DbgPrint(1, ("FBTUSB: ConfigureDevice: Failed to alloc mem for config Descriptor\n"));
             ntStatus = STATUS_INSUFFICIENT_RESOURCES;
             goto ConfigureDevice_Exit;
@@ -396,7 +396,7 @@ NTSTATUS ConfigureDevice(IN PDEVICE_OBJECT DeviceObject)
     }
 
     else
-	{
+    {
         FreeBT_DbgPrint(1, ("FBTUSB: ConfigureDevice: Failed to allocate memory for urb\n"));
         ntStatus = STATUS_INSUFFICIENT_RESOURCES;
         goto ConfigureDevice_Exit;
@@ -404,7 +404,7 @@ NTSTATUS ConfigureDevice(IN PDEVICE_OBJECT DeviceObject)
     }
 
     if (configurationDescriptor)
-	{
+    {
         // save a copy of configurationDescriptor in deviceExtension
         // remember to free it later.
         deviceExtension->UsbConfigurationDescriptor = configurationDescriptor;
@@ -427,14 +427,14 @@ NTSTATUS ConfigureDevice(IN PDEVICE_OBJECT DeviceObject)
     }
 
     else
-	{
+    {
         deviceExtension->UsbConfigurationDescriptor = NULL;
 
     }
 
 ConfigureDevice_Exit:
     if (urb)
-	{
+    {
         ExFreePool(urb);
 
     }
@@ -448,7 +448,7 @@ NTSTATUS SelectInterfaces(IN PDEVICE_OBJECT DeviceObject, IN PUSB_CONFIGURATION_
     LONG                        numberOfInterfaces, interfaceNumber, interfaceindex;
     ULONG                       i;
     PURB                        urb;
-    PUCHAR                      pInf;
+    //PUCHAR                      pInf;
     NTSTATUS                    ntStatus;
     PDEVICE_EXTENSION           deviceExtension;
     PUSB_INTERFACE_DESCRIPTOR   interfaceDescriptor;
@@ -465,10 +465,10 @@ NTSTATUS SelectInterfaces(IN PDEVICE_OBJECT DeviceObject, IN PUSB_CONFIGURATION_
 
     // Parse the configuration descriptor for the interface;
     tmp = interfaceList = (PUSBD_INTERFACE_LIST_ENTRY)
-		ExAllocatePool(NonPagedPool, sizeof(USBD_INTERFACE_LIST_ENTRY) * (numberOfInterfaces + 1));
+        ExAllocatePool(NonPagedPool, sizeof(USBD_INTERFACE_LIST_ENTRY) * (numberOfInterfaces + 1));
 
     if (!tmp)
-	{
+    {
 
         FreeBT_DbgPrint(1, ("FBTUSB: SelectInterfaces: Failed to allocate mem for interfaceList\n"));
         return STATUS_INSUFFICIENT_RESOURCES;
@@ -476,11 +476,11 @@ NTSTATUS SelectInterfaces(IN PDEVICE_OBJECT DeviceObject, IN PUSB_CONFIGURATION_
     }
 
 
-	FreeBT_DbgPrint(3, ("FBTUSB: -------------\n"));
-	FreeBT_DbgPrint(3, ("FBTUSB: Number of interfaces %d\n", numberOfInterfaces));
+    FreeBT_DbgPrint(3, ("FBTUSB: -------------\n"));
+    FreeBT_DbgPrint(3, ("FBTUSB: Number of interfaces %d\n", numberOfInterfaces));
 
     while (interfaceNumber < numberOfInterfaces)
-	{
+    {
         interfaceDescriptor = USBD_ParseConfigurationDescriptorEx(
                                             ConfigurationDescriptor,
                                             ConfigurationDescriptor,
@@ -488,7 +488,7 @@ NTSTATUS SelectInterfaces(IN PDEVICE_OBJECT DeviceObject, IN PUSB_CONFIGURATION_
                                             0, -1, -1, -1);
 
         if (interfaceDescriptor)
-		{
+        {
             interfaceList->InterfaceDescriptor = interfaceDescriptor;
             interfaceList->Interface = NULL;
             interfaceList++;
@@ -505,10 +505,10 @@ NTSTATUS SelectInterfaces(IN PDEVICE_OBJECT DeviceObject, IN PUSB_CONFIGURATION_
     urb = USBD_CreateConfigurationRequestEx(ConfigurationDescriptor, tmp);
 
     if (urb)
-	{
+    {
         Interface = &urb->UrbSelectConfiguration.Interface;
         for (i=0; i<Interface->NumberOfPipes; i++)
-		{
+        {
             // perform pipe initialization here
             // set the transfer size and any pipe flags we use
             // USBD sets the rest of the Interface struct members
@@ -518,17 +518,17 @@ NTSTATUS SelectInterfaces(IN PDEVICE_OBJECT DeviceObject, IN PUSB_CONFIGURATION_
 
         ntStatus = CallUSBD(DeviceObject, urb);
         if (NT_SUCCESS(ntStatus))
-		{
+        {
             // save a copy of interface information in the device extension.
             deviceExtension->UsbInterface = (PUSBD_INTERFACE_INFORMATION) ExAllocatePool(NonPagedPool, Interface->Length);
             if (deviceExtension->UsbInterface)
-			{
+            {
                 RtlCopyMemory(deviceExtension->UsbInterface, Interface, Interface->Length);
 
             }
 
             else
-			{
+            {
                 ntStatus = STATUS_INSUFFICIENT_RESOURCES;
                 FreeBT_DbgPrint(1, ("FBTUSB: SelectInterfaces: Memory alloc for UsbInterface failed\n"));
 
@@ -547,18 +547,18 @@ NTSTATUS SelectInterfaces(IN PDEVICE_OBJECT DeviceObject, IN PUSB_CONFIGURATION_
                                  Interface->SubClass,
                                  Interface->Protocol));
 
-			if (Interface->Class==FREEBT_USB_STDCLASS && Interface->SubClass==FREEBT_USB_STDSUBCLASS &&
-				Interface->Protocol==FREEBT_USB_STDPROTOCOL)
-			{
-				FreeBT_DbgPrint(3, ("FBTUSB: This is a standard USB Bluetooth device\n"));
+            if (Interface->Class==FREEBT_USB_STDCLASS && Interface->SubClass==FREEBT_USB_STDSUBCLASS &&
+                Interface->Protocol==FREEBT_USB_STDPROTOCOL)
+            {
+                FreeBT_DbgPrint(3, ("FBTUSB: This is a standard USB Bluetooth device\n"));
 
-			}
+            }
 
-			else
-			{
-				FreeBT_DbgPrint(3, ("FBTUSB: WARNING: This device does not report itself as a standard USB Bluetooth device\n"));
+            else
+            {
+                FreeBT_DbgPrint(3, ("FBTUSB: WARNING: This device does not report itself as a standard USB Bluetooth device\n"));
 
-			}
+            }
 
             // Initialize the PipeContext
             // Dump the pipe info
@@ -568,74 +568,74 @@ NTSTATUS SelectInterfaces(IN PDEVICE_OBJECT DeviceObject, IN PUSB_CONFIGURATION_
                                                 sizeof(FREEBT_PIPE_CONTEXT));
 
             if (!deviceExtension->PipeContext)
-			{
+            {
                 ntStatus = STATUS_INSUFFICIENT_RESOURCES;
                 FreeBT_DbgPrint(1, ("FBTUSB: Memory alloc for UsbInterface failed\n"));
 
             }
 
             else
-			{
-				FreeBT_DbgPrint(3, ("FBTUSB: SelectInterfaces: Allocated PipeContext %p\n", deviceExtension->PipeContext));
-				for (i=0; i<Interface->NumberOfPipes; i++)
-				{
-					deviceExtension->PipeContext[i].PipeOpen = FALSE;
+            {
+                FreeBT_DbgPrint(3, ("FBTUSB: SelectInterfaces: Allocated PipeContext %p\n", deviceExtension->PipeContext));
+                for (i=0; i<Interface->NumberOfPipes; i++)
+                {
+                    deviceExtension->PipeContext[i].PipeOpen = FALSE;
 
-					FreeBT_DbgPrint(3, ("FBTUSB: ---------\n"));
-					FreeBT_DbgPrint(3, ("FBTUSB: PipeType 0x%x\n", Interface->Pipes[i].PipeType));
-					FreeBT_DbgPrint(3, ("FBTUSB: EndpointAddress 0x%x\n", Interface->Pipes[i].EndpointAddress));
-					FreeBT_DbgPrint(3, ("FBTUSB: MaxPacketSize 0x%x\n", Interface->Pipes[i].MaximumPacketSize));
-					FreeBT_DbgPrint(3, ("FBTUSB: Interval 0x%x\n", Interface->Pipes[i].Interval));
-					FreeBT_DbgPrint(3, ("FBTUSB: Handle 0x%x\n", Interface->Pipes[i].PipeHandle));
-					FreeBT_DbgPrint(3, ("FBTUSB: MaximumTransferSize 0x%x\n", Interface->Pipes[i].MaximumTransferSize));
+                    FreeBT_DbgPrint(3, ("FBTUSB: ---------\n"));
+                    FreeBT_DbgPrint(3, ("FBTUSB: PipeType 0x%x\n", Interface->Pipes[i].PipeType));
+                    FreeBT_DbgPrint(3, ("FBTUSB: EndpointAddress 0x%x\n", Interface->Pipes[i].EndpointAddress));
+                    FreeBT_DbgPrint(3, ("FBTUSB: MaxPacketSize 0x%x\n", Interface->Pipes[i].MaximumPacketSize));
+                    FreeBT_DbgPrint(3, ("FBTUSB: Interval 0x%x\n", Interface->Pipes[i].Interval));
+                    FreeBT_DbgPrint(3, ("FBTUSB: Handle 0x%x\n", Interface->Pipes[i].PipeHandle));
+                    FreeBT_DbgPrint(3, ("FBTUSB: MaximumTransferSize 0x%x\n", Interface->Pipes[i].MaximumTransferSize));
 
-					// Log the pipes
-					// Note the HCI Command endpoint won't appear here, because the Default Control Pipe
-					// is used for this. The Default Control Pipe is always present at EndPointAddress 0x0
-					switch (Interface->Pipes[i].EndpointAddress)
-					{
-						case FREEBT_STDENDPOINT_HCIEVENT:
-							deviceExtension->PipeContext[i].PipeType=HciEventPipe;
-							deviceExtension->EventPipe=Interface->Pipes[i];
-							FreeBT_DbgPrint(3, ("FBTUSB: HCI Event Endpoint\n"));
-							break;
+                    // Log the pipes
+                    // Note the HCI Command endpoint won't appear here, because the Default Control Pipe
+                    // is used for this. The Default Control Pipe is always present at EndPointAddress 0x0
+                    switch (Interface->Pipes[i].EndpointAddress)
+                    {
+                        case FREEBT_STDENDPOINT_HCIEVENT:
+                            deviceExtension->PipeContext[i].PipeType=HciEventPipe;
+                            deviceExtension->EventPipe=Interface->Pipes[i];
+                            FreeBT_DbgPrint(3, ("FBTUSB: HCI Event Endpoint\n"));
+                            break;
 
-						case FREEBT_STDENDPOINT_ACLIN:
-							deviceExtension->PipeContext[i].PipeType=AclDataIn;
-							deviceExtension->DataInPipe=Interface->Pipes[i];
-							FreeBT_DbgPrint(3, ("FBTUSB: ACL Data In Endpoint\n"));
-							break;
+                        case FREEBT_STDENDPOINT_ACLIN:
+                            deviceExtension->PipeContext[i].PipeType=AclDataIn;
+                            deviceExtension->DataInPipe=Interface->Pipes[i];
+                            FreeBT_DbgPrint(3, ("FBTUSB: ACL Data In Endpoint\n"));
+                            break;
 
-						case FREEBT_STDENDPOINT_ACLOUT:
-							deviceExtension->PipeContext[i].PipeType=AclDataOut;
-							deviceExtension->DataOutPipe=Interface->Pipes[i];
-							FreeBT_DbgPrint(3, ("FBTUSB: ACL Data Out Endpoint\n"));
-							break;
+                        case FREEBT_STDENDPOINT_ACLOUT:
+                            deviceExtension->PipeContext[i].PipeType=AclDataOut;
+                            deviceExtension->DataOutPipe=Interface->Pipes[i];
+                            FreeBT_DbgPrint(3, ("FBTUSB: ACL Data Out Endpoint\n"));
+                            break;
 
-						case FREEBT_STDENDPOINT_AUDIOIN:
-							deviceExtension->PipeContext[i].PipeType=SCODataIn;
-							deviceExtension->AudioInPipe=Interface->Pipes[i];
-							FreeBT_DbgPrint(3, ("FBTUSB: ACL Data Out Endpoint\n"));
-							break;
+                        case FREEBT_STDENDPOINT_AUDIOIN:
+                            deviceExtension->PipeContext[i].PipeType=SCODataIn;
+                            deviceExtension->AudioInPipe=Interface->Pipes[i];
+                            FreeBT_DbgPrint(3, ("FBTUSB: ACL Data Out Endpoint\n"));
+                            break;
 
-						case FREEBT_STDENDPOINT_AUDIOOUT:
-							deviceExtension->PipeContext[i].PipeType=SCODataOut;
-							deviceExtension->AudioOutPipe=Interface->Pipes[i];
-							FreeBT_DbgPrint(3, ("FBTUSB: ACL Data Out Endpoint\n"));
-							break;
+                        case FREEBT_STDENDPOINT_AUDIOOUT:
+                            deviceExtension->PipeContext[i].PipeType=SCODataOut;
+                            deviceExtension->AudioOutPipe=Interface->Pipes[i];
+                            FreeBT_DbgPrint(3, ("FBTUSB: ACL Data Out Endpoint\n"));
+                            break;
 
-					}
+                    }
 
-				}
+                }
 
-			}
+            }
 
             FreeBT_DbgPrint(3, ("FBTUSB: ---------\n"));
 
         }
 
         else
-		{
+        {
             FreeBT_DbgPrint(1, ("FBTUSB: SelectInterfaces: Failed to select an interface\n"));
 
         }
@@ -643,20 +643,20 @@ NTSTATUS SelectInterfaces(IN PDEVICE_OBJECT DeviceObject, IN PUSB_CONFIGURATION_
     }
 
     else
-	{
+    {
         FreeBT_DbgPrint(1, ("FBTUSB: SelectInterfaces: USBD_CreateConfigurationRequestEx failed\n"));
         ntStatus = STATUS_INSUFFICIENT_RESOURCES;
 
     }
 
     if (tmp)
-	{
+    {
         ExFreePool(tmp);
 
     }
 
     if (urb)
-	{
+    {
         ExFreePool(urb);
 
     }
@@ -674,11 +674,11 @@ NTSTATUS DeconfigureDevice(IN PDEVICE_OBJECT DeviceObject)
     siz = sizeof(struct _URB_SELECT_CONFIGURATION);
     urb = (PURB) ExAllocatePool(NonPagedPool, siz);
     if (urb)
-	{
+    {
         UsbBuildSelectConfigurationRequest(urb, (USHORT)siz, NULL);
         ntStatus = CallUSBD(DeviceObject, urb);
         if(!NT_SUCCESS(ntStatus))
-		{
+        {
             FreeBT_DbgPrint(3, ("FBTUSB: DeconfigureDevice: Failed to deconfigure device\n"));
 
         }
@@ -688,7 +688,7 @@ NTSTATUS DeconfigureDevice(IN PDEVICE_OBJECT DeviceObject)
     }
 
     else
-	{
+    {
         FreeBT_DbgPrint(1, ("FBTUSB: DeconfigureDevice: Failed to allocate urb\n"));
         ntStatus = STATUS_INSUFFICIENT_RESOURCES;
 
@@ -722,7 +722,7 @@ NTSTATUS CallUSBD(IN PDEVICE_OBJECT DeviceObject, IN PURB Urb)
                                         &ioStatus);
 
     if (!irp)
-	{
+    {
         FreeBT_DbgPrint(1, ("FBTUSB: CallUSBD: IoBuildDeviceIoControlRequest failed\n"));
         return STATUS_INSUFFICIENT_RESOURCES;
 
@@ -737,7 +737,7 @@ NTSTATUS CallUSBD(IN PDEVICE_OBJECT DeviceObject, IN PURB Urb)
 
     ntStatus = IoCallDriver(deviceExtension->TopOfStackDeviceObject, irp);
     if (ntStatus == STATUS_PENDING)
-	{
+    {
         KeWaitForSingleObject(&event, Executive, KernelMode, FALSE, NULL);
         ntStatus = ioStatus.Status;
 
@@ -808,7 +808,7 @@ NTSTATUS HandleCancelStopDevice(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
     // above us fails a query-stop and passes down the subsequent
     // cancel-stop.
     if(PendingStop == deviceExtension->DeviceState)
-	{
+    {
         KeInitializeEvent(&event, NotificationEvent, FALSE);
 
         IoCopyCurrentIrpStackLocationToNext(Irp);
@@ -821,14 +821,14 @@ NTSTATUS HandleCancelStopDevice(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 
         ntStatus = IoCallDriver(deviceExtension->TopOfStackDeviceObject, Irp);
         if(ntStatus == STATUS_PENDING)
-		{
+        {
             KeWaitForSingleObject(&event, Executive, KernelMode, FALSE, NULL);
             ntStatus = Irp->IoStatus.Status;
 
         }
 
         if(NT_SUCCESS(ntStatus))
-		{
+        {
             KeAcquireSpinLock(&deviceExtension->DevStateLock, &oldIrql);
 
             RESTORE_PREVIOUS_PNP_STATE(deviceExtension);
@@ -844,7 +844,7 @@ NTSTATUS HandleCancelStopDevice(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
     }
 
     else
-	{
+    {
         // spurious Irp
         ntStatus = STATUS_SUCCESS;
 
@@ -866,9 +866,9 @@ NTSTATUS HandleStopDevice(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 
     deviceExtension = (PDEVICE_EXTENSION) DeviceObject->DeviceExtension;
     if(WinXpOrBetter == deviceExtension->WdmVersion)
-	{
+    {
         if(deviceExtension->SSEnable)
-		{
+        {
             // Cancel the timer so that the DPCs are no longer fired.
             // Thus, we are making judicious usage of our resources.
             // we do not need DPCs because the device is stopping.
@@ -898,7 +898,7 @@ NTSTATUS HandleStopDevice(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
     // the driver must not send any more Irps down that touch
     // the device until another Start has occurred.
     if (deviceExtension->WaitWakeEnable)
-	{
+    {
         CancelWaitWake(deviceExtension);
 
     }
@@ -988,7 +988,7 @@ NTSTATUS HandleCancelRemoveDevice(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
     // someone above us fails a query-remove and passes down the
     // subsequent cancel-remove.
     if(PendingRemove == deviceExtension->DeviceState)
-	{
+    {
 
         KeInitializeEvent(&event, NotificationEvent, FALSE);
 
@@ -1002,14 +1002,14 @@ NTSTATUS HandleCancelRemoveDevice(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 
         ntStatus = IoCallDriver(deviceExtension->TopOfStackDeviceObject, Irp);
         if(ntStatus == STATUS_PENDING)
-		{
+        {
             KeWaitForSingleObject(&event, Executive, KernelMode, FALSE, NULL);
             ntStatus = Irp->IoStatus.Status;
 
         }
 
         if (NT_SUCCESS(ntStatus))
-		{
+        {
             KeAcquireSpinLock(&deviceExtension->DevStateLock, &oldIrql);
 
             deviceExtension->QueueState = AllowRequests;
@@ -1026,8 +1026,8 @@ NTSTATUS HandleCancelRemoveDevice(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
     }
 
     else
-	{
-	    // spurious cancel-remove
+    {
+        // spurious cancel-remove
         ntStatus = STATUS_SUCCESS;
 
     }
@@ -1053,16 +1053,16 @@ NTSTATUS HandleSurpriseRemoval(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
     // 2. return device and memory resources
     // 3. disable interfaces
     if(deviceExtension->WaitWakeEnable)
-	{
+    {
         CancelWaitWake(deviceExtension);
 
     }
 
 
     if (WinXpOrBetter == deviceExtension->WdmVersion)
-	{
+    {
         if (deviceExtension->SSEnable)
-		{
+        {
             // Cancel the timer so that the DPCs are no longer fired.
             // we do not need DPCs because the device has been surprise
             // removed
@@ -1090,7 +1090,7 @@ NTSTATUS HandleSurpriseRemoval(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 
     ntStatus = IoSetDeviceInterfaceState(&deviceExtension->InterfaceName, FALSE);
     if(!NT_SUCCESS(ntStatus))
-	{
+    {
         FreeBT_DbgPrint(1, ("FBTUSB: HandleSurpriseRemoval: IoSetDeviceInterfaceState::disable:failed\n"));
 
     }
@@ -1112,7 +1112,7 @@ NTSTATUS HandleSurpriseRemoval(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 NTSTATUS HandleRemoveDevice(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 {
     KIRQL             oldIrql;
-    KEVENT            event;
+    //KEVENT            event;
     ULONG             requestCount;
     NTSTATUS          ntStatus;
     PDEVICE_EXTENSION deviceExtension;
@@ -1126,7 +1126,7 @@ NTSTATUS HandleRemoveDevice(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
     // (If we wanted to express an interest in preventing this removal,
     // we should have failed the query remove IRP).
     if(SurpriseRemoved != deviceExtension->DeviceState)
-	{
+    {
 
         // we are here after QUERY_REMOVE
         KeAcquireSpinLock(&deviceExtension->DevStateLock, &oldIrql);
@@ -1134,15 +1134,15 @@ NTSTATUS HandleRemoveDevice(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
         KeReleaseSpinLock(&deviceExtension->DevStateLock, oldIrql);
 
         if(deviceExtension->WaitWakeEnable)
-		{
+        {
             CancelWaitWake(deviceExtension);
 
         }
 
         if(WinXpOrBetter == deviceExtension->WdmVersion)
-		{
+        {
             if (deviceExtension->SSEnable)
-			{
+            {
                 // Cancel the timer so that the DPCs are no longer fired.
                 // we do not need DPCs because the device has been removed
                 KeCancelTimer(&deviceExtension->Timer);
@@ -1164,7 +1164,7 @@ NTSTATUS HandleRemoveDevice(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 
         ntStatus = IoSetDeviceInterfaceState(&deviceExtension->InterfaceName, FALSE);
         if(!NT_SUCCESS(ntStatus))
-		{
+        {
             FreeBT_DbgPrint(1, ("FBTUSB: HandleRemoveDevice: IoSetDeviceInterfaceState::disable:failed\n"));
 
         }
@@ -1231,7 +1231,7 @@ NTSTATUS HandleQueryCapabilities(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
     pdc = irpStack->Parameters.DeviceCapabilities.Capabilities;
 
     if(pdc->Version < 1 || pdc->Size < sizeof(DEVICE_CAPABILITIES))
-	{
+    {
 
         FreeBT_DbgPrint(1, ("FBTUSB: HandleQueryCapabilities::request failed\n"));
         ntStatus = STATUS_UNSUCCESSFUL;
@@ -1254,7 +1254,7 @@ NTSTATUS HandleQueryCapabilities(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
                            TRUE);
     ntStatus = IoCallDriver(deviceExtension->TopOfStackDeviceObject, Irp);
     if(ntStatus == STATUS_PENDING)
-	{
+    {
         KeWaitForSingleObject(&event, Executive, KernelMode, FALSE, NULL);
         ntStatus = Irp->IoStatus.Status;
 
@@ -1263,12 +1263,12 @@ NTSTATUS HandleQueryCapabilities(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
     // initialize PowerDownLevel to disabled
     deviceExtension->PowerDownLevel = PowerDeviceUnspecified;
     if(NT_SUCCESS(ntStatus))
-	{
+    {
         deviceExtension->DeviceCapabilities = *pdc;
         for(i = PowerSystemSleeping1; i <= PowerSystemSleeping3; i++)
-		{
+        {
             if(deviceExtension->DeviceCapabilities.DeviceState[i] < PowerDeviceD3)
-			{
+            {
                 deviceExtension->PowerDownLevel = deviceExtension->DeviceCapabilities.DeviceState[i];
 
             }
@@ -1283,8 +1283,8 @@ NTSTATUS HandleQueryCapabilities(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
     }
 
     if(deviceExtension->PowerDownLevel == PowerDeviceUnspecified ||
-		deviceExtension->PowerDownLevel <= PowerDeviceD0)
-	{
+        deviceExtension->PowerDownLevel <= PowerDeviceD0)
+    {
         deviceExtension->PowerDownLevel = PowerDeviceD2;
 
     }
@@ -1317,19 +1317,19 @@ VOID DpcRoutine(IN PKDPC Dpc, IN PVOID DeferredContext, IN PVOID SystemArgument1
     KeClearEvent(&deviceExtension->NoDpcWorkItemPendingEvent);
 
     if(CanDeviceSuspend(deviceExtension))
-	{
+    {
         FreeBT_DbgPrint(3, ("FBTUSB: DpcRoutine: Device is Idle\n"));
         item = IoAllocateWorkItem(deviceObject);
 
         if (item)
-		{
+        {
             IoQueueWorkItem(item, IdleRequestWorkerRoutine, DelayedWorkQueue, item);
             ntStatus = STATUS_PENDING;
 
         }
 
         else
-		{
+        {
             FreeBT_DbgPrint(3, ("FBTUSB: DpcRoutine: Cannot alloc memory for work item\n"));
             ntStatus = STATUS_INSUFFICIENT_RESOURCES;
             KeSetEvent(&deviceExtension->NoDpcWorkItemPendingEvent, IO_NO_INCREMENT, FALSE);
@@ -1339,7 +1339,7 @@ VOID DpcRoutine(IN PKDPC Dpc, IN PVOID DeferredContext, IN PVOID SystemArgument1
     }
 
     else
-	{
+    {
         FreeBT_DbgPrint(3, ("FBTUSB: DpcRoutine: Idle event not signaled\n"));
         KeSetEvent(&deviceExtension->NoDpcWorkItemPendingEvent, IO_NO_INCREMENT, FALSE);
 
@@ -1351,7 +1351,7 @@ VOID DpcRoutine(IN PKDPC Dpc, IN PVOID DeferredContext, IN PVOID SystemArgument1
 
 VOID IdleRequestWorkerRoutine(IN PDEVICE_OBJECT DeviceObject, IN PVOID Context)
 {
-    PIRP                   irp;
+    //PIRP                   irp;
     NTSTATUS               ntStatus;
     PDEVICE_EXTENSION      deviceExtension;
     PIO_WORKITEM           workItem;
@@ -1362,11 +1362,11 @@ VOID IdleRequestWorkerRoutine(IN PDEVICE_OBJECT DeviceObject, IN PVOID Context)
     workItem = (PIO_WORKITEM) Context;
 
     if(CanDeviceSuspend(deviceExtension))
-	{
+    {
         FreeBT_DbgPrint(3, ("FBTUSB: IdleRequestWorkerRoutine: Device is idle\n"));
         ntStatus = SubmitIdleRequestIrp(deviceExtension);
         if(!NT_SUCCESS(ntStatus))
-		{
+        {
             FreeBT_DbgPrint(1, ("FBTUSB: IdleRequestWorkerRoutine: SubmitIdleRequestIrp failed\n"));
 
         }
@@ -1374,7 +1374,7 @@ VOID IdleRequestWorkerRoutine(IN PDEVICE_OBJECT DeviceObject, IN PVOID Context)
     }
 
     else
-	{
+    {
         FreeBT_DbgPrint(3, ("FBTUSB: IdleRequestWorkerRoutine: Device is not idle\n"));
 
     }
@@ -1427,10 +1427,10 @@ Return Value:
     // 3a. if the device is active, send them down
     // 3b. else complete with STATUS_DELETE_PENDING
     while(1)
-	{
+    {
         KeAcquireSpinLock(&DeviceExtension->QueueLock, &oldIrql);
         if(IsListEmpty(&DeviceExtension->NewRequestsQueue))
-		{
+        {
             KeReleaseSpinLock(&DeviceExtension->QueueLock, oldIrql);
             break;
 
@@ -1443,9 +1443,9 @@ Return Value:
 
         // check if its already cancelled
         if (nextIrp->Cancel)
-		{
+        {
             if(cancelRoutine)
-			{
+            {
                 // the cancel routine for this IRP hasnt been called yet
                 // so queue the IRP in the cancelledIrp list and complete
                 // after releasing the lock
@@ -1454,8 +1454,8 @@ Return Value:
             }
 
             else
-			{
-			    // the cancel routine has run
+            {
+                // the cancel routine has run
                 // it must be waiting to hold the queue lock
                 // so initialize the IRPs listEntry
                 InitializeListHead(listEntry);
@@ -1467,10 +1467,10 @@ Return Value:
         }
 
         else
-		{
+        {
             KeReleaseSpinLock(&DeviceExtension->QueueLock, oldIrql);
             if(FailRequests == DeviceExtension->QueueState)
-			{
+            {
                 nextIrp->IoStatus.Information = 0;
                 nextIrp->IoStatus.Status = STATUS_DELETE_PENDING;
                 IoCompleteRequest(nextIrp, IO_NO_INCREMENT);
@@ -1478,8 +1478,8 @@ Return Value:
             }
 
             else
-			{
-                PIO_STACK_LOCATION irpStack;
+            {
+                //PIO_STACK_LOCATION irpStack;
 
                 FreeBT_DbgPrint(3, ("FBTUSB: ProcessQueuedRequests::"));
                 FreeBT_IoIncrement(DeviceExtension);
@@ -1497,7 +1497,7 @@ Return Value:
     }
 
     while(!IsListEmpty(&cancelledIrpList))
-	{
+    {
         PLIST_ENTRY cancelEntry = RemoveHeadList(&cancelledIrpList);
 
         cancelledIrp = CONTAINING_RECORD(cancelEntry, IRP, Tail.Overlay.ListEntry);
@@ -1547,14 +1547,14 @@ NTSTATUS FreeBT_GetRegistryDword(IN PWCHAR RegPath, IN PWCHAR ValueName, IN OUT 
                                       NULL);
 
     if (NT_SUCCESS(ntStatus))
-	{
+    {
         FreeBT_DbgPrint(3, ("FBTUSB: FreeBT_GetRegistryDword: Success, Value = %X\n", *Value));
         return STATUS_SUCCESS;
     }
 
     else
-	{
-		FreeBT_DbgPrint(3, ("FBTUSB: FreeBT_GetRegistryDword: Failed\n"));
+    {
+        FreeBT_DbgPrint(3, ("FBTUSB: FreeBT_GetRegistryDword: Failed\n"));
         *Value = 0;
         return STATUS_UNSUCCESSFUL;
 
@@ -1573,7 +1573,7 @@ NTSTATUS FreeBT_DispatchClean(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
     PIRP               pendingIrp;
     PIO_STACK_LOCATION pendingIrpStack,
                        irpStack;
-    NTSTATUS           ntStatus;
+    //NTSTATUS           ntStatus;
 
     deviceExtension = (PDEVICE_EXTENSION) DeviceObject->DeviceExtension;
     irpStack = IoGetCurrentIrpStackLocation(Irp);
@@ -1588,21 +1588,21 @@ NTSTATUS FreeBT_DispatchClean(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
     for(thisEntry = listHead->Flink, nextEntry = thisEntry->Flink;
        thisEntry != listHead;
        thisEntry = nextEntry, nextEntry = thisEntry->Flink)
-	{
+    {
         pendingIrp = CONTAINING_RECORD(thisEntry, IRP, Tail.Overlay.ListEntry);
         pendingIrpStack = IoGetCurrentIrpStackLocation(pendingIrp);
         if (irpStack->FileObject == pendingIrpStack->FileObject)
-		{
+        {
             RemoveEntryList(thisEntry);
 
             if (NULL == IoSetCancelRoutine(pendingIrp, NULL))
-			{
+            {
                 InitializeListHead(thisEntry);
 
             }
 
             else
-			{
+            {
                 InsertTailList(&cleanupList, thisEntry);
 
             }
@@ -1614,7 +1614,7 @@ NTSTATUS FreeBT_DispatchClean(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
     KeReleaseSpinLock(&deviceExtension->QueueLock, oldIrql);
 
     while(!IsListEmpty(&cleanupList))
-	{
+    {
         thisEntry = RemoveHeadList(&cleanupList);
         pendingIrp = CONTAINING_RECORD(thisEntry, IRP, Tail.Overlay.ListEntry);
 
@@ -1644,7 +1644,7 @@ BOOLEAN CanDeviceSuspend(IN PDEVICE_EXTENSION DeviceExtension)
     if ((DeviceExtension->OpenHandleCount == 0) && (DeviceExtension->OutStandingIO == 1))
         return TRUE;
 
-	return FALSE;
+    return FALSE;
 
 }
 
@@ -1654,8 +1654,8 @@ NTSTATUS FreeBT_AbortPipes(IN PDEVICE_OBJECT DeviceObject)
     ULONG                       i;
     NTSTATUS                    ntStatus;
     PDEVICE_EXTENSION           deviceExtension;
-    PFREEBT_PIPE_CONTEXT		pipeContext;
-    PUSBD_PIPE_INFORMATION      pipeInformation;
+    PFREEBT_PIPE_CONTEXT        pipeContext;
+    //PUSBD_PIPE_INFORMATION      pipeInformation;
     PUSBD_INTERFACE_INFORMATION interfaceInfo;
 
     deviceExtension = (PDEVICE_EXTENSION) DeviceObject->DeviceExtension;
@@ -1668,14 +1668,14 @@ NTSTATUS FreeBT_AbortPipes(IN PDEVICE_OBJECT DeviceObject)
         return STATUS_SUCCESS;
 
     for(i=0; i<interfaceInfo->NumberOfPipes; i++)
-	{
+    {
         if(pipeContext[i].PipeOpen)
-		{
+        {
             FreeBT_DbgPrint(3, ("FBTUSB: FreeBT_AbortPipes: Aborting open pipe %d\n", i));
 
             urb = (PURB) ExAllocatePool(NonPagedPool, sizeof(struct _URB_PIPE_REQUEST));
             if (urb)
-			{
+            {
                 urb->UrbHeader.Length = sizeof(struct _URB_PIPE_REQUEST);
                 urb->UrbHeader.Function = URB_FUNCTION_ABORT_PIPE;
                 urb->UrbPipeRequest.PipeHandle = interfaceInfo->Pipes[i].PipeHandle;
@@ -1687,7 +1687,7 @@ NTSTATUS FreeBT_AbortPipes(IN PDEVICE_OBJECT DeviceObject)
             }
 
             else
-			{
+            {
                 FreeBT_DbgPrint(1, ("FBTUSB: FreeBT_AbortPipes: Failed to alloc memory for urb\n"));
                 ntStatus = STATUS_INSUFFICIENT_RESOURCES;
                 return ntStatus;
@@ -1731,7 +1731,7 @@ LONG FreeBT_IoIncrement(IN OUT PDEVICE_EXTENSION DeviceExtension)
     if (result == 2)
         KeClearEvent(&DeviceExtension->StopEvent);
 
-	KeReleaseSpinLock(&DeviceExtension->IOCountLock, oldIrql);
+    KeReleaseSpinLock(&DeviceExtension->IOCountLock, oldIrql);
 
     FreeBT_DbgPrint(3, ("FreeBT_IoIncrement::%d\n", result));
 
@@ -1752,7 +1752,7 @@ LONG FreeBT_IoDecrement(IN OUT PDEVICE_EXTENSION DeviceExtension)
         KeSetEvent(&DeviceExtension->StopEvent, IO_NO_INCREMENT, FALSE);
 
     if(result == 0)
-	{
+    {
         ASSERT(Removed == DeviceExtension->DeviceState);
         KeSetEvent(&DeviceExtension->RemoveEvent, IO_NO_INCREMENT, FALSE);
 
@@ -1790,35 +1790,35 @@ NTSTATUS CanRemoveDevice(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 NTSTATUS ReleaseMemory(IN PDEVICE_OBJECT DeviceObject)
 {
     // Disconnect from the interrupt and unmap any I/O ports
-    PDEVICE_EXTENSION	deviceExtension;
-    UNICODE_STRING		uniDeviceName;
-    NTSTATUS			ntStatus;
+    PDEVICE_EXTENSION   deviceExtension;
+    UNICODE_STRING      uniDeviceName;
+    NTSTATUS            ntStatus;
 
     deviceExtension = (PDEVICE_EXTENSION) DeviceObject->DeviceExtension;
     if (deviceExtension->UsbConfigurationDescriptor)
-	{
-		FreeBT_DbgPrint(3, ("FBTUSB: ReleaseMemory: Freeing UsbConfigurationDescriptor\n"));
+    {
+        FreeBT_DbgPrint(3, ("FBTUSB: ReleaseMemory: Freeing UsbConfigurationDescriptor\n"));
         ExFreePool(deviceExtension->UsbConfigurationDescriptor);
         deviceExtension->UsbConfigurationDescriptor = NULL;
 
     }
 
     if(deviceExtension->UsbInterface)
-	{
-		FreeBT_DbgPrint(3, ("FBTUSB: ReleaseMemory: Freeing UsbInterface\n"));
+    {
+        FreeBT_DbgPrint(3, ("FBTUSB: ReleaseMemory: Freeing UsbInterface\n"));
         ExFreePool(deviceExtension->UsbInterface);
         deviceExtension->UsbInterface = NULL;
 
     }
 
     if(deviceExtension->PipeContext)
-	{
-		RtlInitUnicodeString(&uniDeviceName, deviceExtension->wszDosDeviceName);
-		ntStatus = IoDeleteSymbolicLink(&uniDeviceName);
-		if (!NT_SUCCESS(ntStatus))
-			FreeBT_DbgPrint(3, ("FBTUSB: Failed to delete symbolic link %ws\n", deviceExtension->wszDosDeviceName));
+    {
+        RtlInitUnicodeString(&uniDeviceName, deviceExtension->wszDosDeviceName);
+        ntStatus = IoDeleteSymbolicLink(&uniDeviceName);
+        if (!NT_SUCCESS(ntStatus))
+            FreeBT_DbgPrint(3, ("FBTUSB: Failed to delete symbolic link %ws\n", deviceExtension->wszDosDeviceName));
 
-		FreeBT_DbgPrint(3, ("FBTUSB: ReleaseMemory: Freeing PipeContext %p\n", deviceExtension->PipeContext));
+        FreeBT_DbgPrint(3, ("FBTUSB: ReleaseMemory: Freeing PipeContext %p\n", deviceExtension->PipeContext));
         ExFreePool(deviceExtension->PipeContext);
         deviceExtension->PipeContext = NULL;
 
@@ -1831,7 +1831,7 @@ NTSTATUS ReleaseMemory(IN PDEVICE_OBJECT DeviceObject)
 PCHAR PnPMinorFunctionString (UCHAR MinorFunction)
 {
     switch (MinorFunction)
-	{
+    {
         case IRP_MN_START_DEVICE:
             return "IRP_MN_START_DEVICE\n";
 

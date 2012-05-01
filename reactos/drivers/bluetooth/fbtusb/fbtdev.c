@@ -22,13 +22,13 @@
 // Dispatch routine for CreateHandle
 NTSTATUS FreeBT_DispatchCreate(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 {
-    ULONG                       i;
+    //ULONG                       i;
     NTSTATUS                    ntStatus;
     PFILE_OBJECT                fileObject;
     PDEVICE_EXTENSION           deviceExtension;
     PIO_STACK_LOCATION          irpStack;
-    PFREEBT_PIPE_CONTEXT		pipeContext;
-    PUSBD_INTERFACE_INFORMATION	interface;
+    //PFREEBT_PIPE_CONTEXT        pipeContext;
+    PUSBD_INTERFACE_INFORMATION interface;
 
     PAGED_CODE();
 
@@ -71,12 +71,12 @@ NTSTATUS FreeBT_DispatchCreate(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 
     }
 
-	if (deviceExtension->OpenHandleCount>0)
-	{
-		ntStatus = STATUS_ACCESS_VIOLATION;
-		goto FreeBT_DispatchCreate_Exit;
+    if (deviceExtension->OpenHandleCount>0)
+    {
+        ntStatus = STATUS_ACCESS_VIOLATION;
+        goto FreeBT_DispatchCreate_Exit;
 
-	}
+    }
 
     // opening a device as opposed to pipe.
     ntStatus = STATUS_SUCCESS;
@@ -105,15 +105,15 @@ NTSTATUS FreeBT_DispatchClose(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
     PFILE_OBJECT           fileObject;
     PDEVICE_EXTENSION      deviceExtension;
     PIO_STACK_LOCATION     irpStack;
-    PFREEBT_PIPE_CONTEXT  pipeContext;
-    PUSBD_PIPE_INFORMATION pipeInformation;
+    //PFREEBT_PIPE_CONTEXT  pipeContext;
+    //PUSBD_PIPE_INFORMATION pipeInformation;
 
     PAGED_CODE();
 
     irpStack = IoGetCurrentIrpStackLocation(Irp);
     fileObject = irpStack->FileObject;
-    pipeContext = NULL;
-    pipeInformation = NULL;
+    //pipeContext = NULL;
+    //pipeInformation = NULL;
     deviceExtension = (PDEVICE_EXTENSION) DeviceObject->DeviceExtension;
 
     FreeBT_DbgPrint(3, ("FreeBT_DispatchClose: Entered\n"));
@@ -134,16 +134,16 @@ NTSTATUS FreeBT_DispatchClose(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 // Called when a HCI Send on the control pipe completes
 NTSTATUS FreeBT_HCISendCompletion(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp, IN PVOID Context)
 {
-    ULONG               stageLength;
+    //ULONG               stageLength;
     NTSTATUS            ntStatus;
 
     FreeBT_DbgPrint(3, ("FBTUSB: FreeBT_HCISendCompletion, status=0x%08X\n", Irp->IoStatus.Status));
 
-	if (Irp->PendingReturned)
-		IoMarkIrpPending(Irp);
+    if (Irp->PendingReturned)
+        IoMarkIrpPending(Irp);
 
     ExFreePool(Context);
-	FreeBT_IoDecrement(DeviceObject->DeviceExtension);
+    FreeBT_IoDecrement(DeviceObject->DeviceExtension);
     ntStatus = Irp->IoStatus.Status;
     Irp->IoStatus.Information = 0;
 
@@ -155,79 +155,79 @@ NTSTATUS FreeBT_HCISendCompletion(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp, I
 // HCI Commands are sent on the (default) control pipe
 NTSTATUS FreeBT_SendHCICommand(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp, IN PVOID IoBuffer, IN ULONG InputBufferLength)
 {
-	PDEVICE_EXTENSION	deviceExtension;
-    ULONG				urbFlags;
-	ULONG				stageLength;
-	PVOID				pBuffer;
-	PURB				urb;
-	NTSTATUS			ntStatus;
-    PIO_STACK_LOCATION	nextStack;
-	//PFBT_HCI_CMD_HEADER	pHCICommand;
-	//LARGE_INTEGER		delay;
+    PDEVICE_EXTENSION   deviceExtension;
+    //ULONG               urbFlags;
+    //ULONG               stageLength;
+    //PVOID               pBuffer;
+    PURB                urb;
+    NTSTATUS            ntStatus;
+    PIO_STACK_LOCATION  nextStack;
+    //PFBT_HCI_CMD_HEADER pHCICommand;
+    //LARGE_INTEGER       delay;
 
-	deviceExtension = (PDEVICE_EXTENSION) DeviceObject->DeviceExtension;
-	if (!deviceExtension)
-	{
-		ntStatus=STATUS_INVALID_PARAMETER;
-		FreeBT_DbgPrint(1, ("FBTUSB: FreeBT_SendHCICommand: Failed to get DeviceExtension\n"));
-		Irp->IoStatus.Status = ntStatus;
-		Irp->IoStatus.Information = 0;
-		IoCompleteRequest(Irp, IO_NO_INCREMENT);
-		return ntStatus;
+    deviceExtension = (PDEVICE_EXTENSION) DeviceObject->DeviceExtension;
+    if (!deviceExtension)
+    {
+        ntStatus=STATUS_INVALID_PARAMETER;
+        FreeBT_DbgPrint(1, ("FBTUSB: FreeBT_SendHCICommand: Failed to get DeviceExtension\n"));
+        Irp->IoStatus.Status = ntStatus;
+        Irp->IoStatus.Information = 0;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return ntStatus;
 
-	}
+    }
 
-	// The user is doing a reset, reset all the pipes as well, so that any
-	// old events or data are removed
-	/*pHCICommand=(PFBT_HCI_CMD_HEADER)IoBuffer;
-	if (pHCICommand->OpCode==FBT_HCI_CMD_RESET)
-	{
-		FreeBT_ResetPipe(DeviceObject, deviceExtension->EventPipe.PipeHandle);
-		FreeBT_ResetPipe(DeviceObject, deviceExtension->DataInPipe.PipeHandle);
-		FreeBT_ResetPipe(DeviceObject, deviceExtension->DataOutPipe.PipeHandle);
-		FreeBT_ResetPipe(DeviceObject, deviceExtension->AudioInPipe.PipeHandle);
-		FreeBT_ResetPipe(DeviceObject, deviceExtension->AudioOutPipe.PipeHandle);
+    // The user is doing a reset, reset all the pipes as well, so that any
+    // old events or data are removed
+    /*pHCICommand=(PFBT_HCI_CMD_HEADER)IoBuffer;
+    if (pHCICommand->OpCode==FBT_HCI_CMD_RESET)
+    {
+        FreeBT_ResetPipe(DeviceObject, deviceExtension->EventPipe.PipeHandle);
+        FreeBT_ResetPipe(DeviceObject, deviceExtension->DataInPipe.PipeHandle);
+        FreeBT_ResetPipe(DeviceObject, deviceExtension->DataOutPipe.PipeHandle);
+        FreeBT_ResetPipe(DeviceObject, deviceExtension->AudioInPipe.PipeHandle);
+        FreeBT_ResetPipe(DeviceObject, deviceExtension->AudioOutPipe.PipeHandle);
 
-		// Wait a second for the device to recover
-		FreeBT_DbgPrint(1, ("FBTUSB: FreeBT_SendHCICommand: Sleeping\n"));
-		delay.QuadPart = -10000 * 5000; // 5s
+        // Wait a second for the device to recover
+        FreeBT_DbgPrint(1, ("FBTUSB: FreeBT_SendHCICommand: Sleeping\n"));
+        delay.QuadPart = -10000 * 5000; // 5s
         KeWaitForSingleObject(&deviceExtension->DelayEvent,
                               Executive,
                               UserMode,
                               FALSE,
                               &delay);
 
-		FreeBT_DbgPrint(1, ("FBTUSB: FreeBT_SendHCICommand: Finished sleeping\n"));
+        FreeBT_DbgPrint(1, ("FBTUSB: FreeBT_SendHCICommand: Finished sleeping\n"));
 
 
-	}*/
+    }*/
 
-	// Create the URB
+    // Create the URB
     urb = (PURB)ExAllocatePool(NonPagedPool, sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST));
     if(urb == NULL)
     {
         FreeBT_DbgPrint(1, ("FBTUSB: FreeBT_SendHCICommand: Failed to alloc mem for urb\n"));
         ntStatus = STATUS_INSUFFICIENT_RESOURCES;
-		Irp->IoStatus.Status = ntStatus;
-		Irp->IoStatus.Information = 0;
-		IoCompleteRequest(Irp, IO_NO_INCREMENT);
-		return ntStatus;
+        Irp->IoStatus.Status = ntStatus;
+        Irp->IoStatus.Information = 0;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return ntStatus;
 
     }
 
-	UsbBuildVendorRequest(
-		urb,
-		URB_FUNCTION_CLASS_DEVICE, // This works, for CSR and Silicon Wave
-		sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST),
-		0,
-		0,
-		0,
-		0,
-		0,
-		IoBuffer,
-		NULL,
-		InputBufferLength,
-		NULL);
+    UsbBuildVendorRequest(
+        urb,
+        URB_FUNCTION_CLASS_DEVICE, // This works, for CSR and Silicon Wave
+        sizeof(struct _URB_CONTROL_VENDOR_OR_CLASS_REQUEST),
+        0,
+        0,
+        0,
+        0,
+        0,
+        IoBuffer,
+        NULL,
+        InputBufferLength,
+        NULL);
 
     // use the original irp as an internal device control irp
     nextStack = IoGetNextIrpStackLocation(Irp);
@@ -236,41 +236,41 @@ NTSTATUS FreeBT_SendHCICommand(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp, IN P
     nextStack->Parameters.DeviceIoControl.IoControlCode = IOCTL_INTERNAL_USB_SUBMIT_URB;
 
     IoSetCompletionRoutine(
-		Irp,
-		(PIO_COMPLETION_ROUTINE)FreeBT_HCISendCompletion,
-		urb,
-		TRUE,
-		TRUE,
-		TRUE);
+        Irp,
+        (PIO_COMPLETION_ROUTINE)FreeBT_HCISendCompletion,
+        urb,
+        TRUE,
+        TRUE,
+        TRUE);
 
     // We return STATUS_PENDING; call IoMarkIrpPending.
     IoMarkIrpPending(Irp);
 
- 	FreeBT_DbgPrint(3, ("FBTUSB: FreeBT_SendHCICommand::"));
+    FreeBT_DbgPrint(3, ("FBTUSB: FreeBT_SendHCICommand::"));
     FreeBT_IoIncrement(deviceExtension);
 
- 	FreeBT_DbgPrint(3, ("FBTUSB: FreeBT_SendHCICommand: Sending IRP %X to underlying driver\n", Irp));
+    FreeBT_DbgPrint(3, ("FBTUSB: FreeBT_SendHCICommand: Sending IRP %X to underlying driver\n", Irp));
     ntStatus=IoCallDriver(deviceExtension->TopOfStackDeviceObject, Irp);
     if(!NT_SUCCESS(ntStatus))
     {
         FreeBT_DbgPrint(3, ("FBTUSB: FreeBT_SendHCICommand: IoCallDriver fails with status %X\n", ntStatus));
 
-	 	FreeBT_DbgPrint(3, ("FBTUSB: FreeBT_SendHCICommand::"));
-		FreeBT_IoDecrement(deviceExtension);
+        FreeBT_DbgPrint(3, ("FBTUSB: FreeBT_SendHCICommand::"));
+        FreeBT_IoDecrement(deviceExtension);
 
         // If the device was surprise removed out, the pipeInformation field is invalid.
         // similarly if the request was cancelled, then we need not reset the device.
         if((ntStatus != STATUS_CANCELLED) && (ntStatus != STATUS_DEVICE_NOT_CONNECTED))
-			ntStatus = FreeBT_ResetDevice(DeviceObject);
+            ntStatus = FreeBT_ResetDevice(DeviceObject);
 
         else
             FreeBT_DbgPrint(3, ("FBTUSB: FreeBT_SendHCICommand: ntStatus is STATUS_CANCELLED or STATUS_DEVICE_NOT_CONNECTED\n"));
 
-		Irp->IoStatus.Status = ntStatus;
-		Irp->IoStatus.Information = 0;
-		IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        Irp->IoStatus.Status = ntStatus;
+        Irp->IoStatus.Information = 0;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
-		return ntStatus;
+        return ntStatus;
 
     }
 
@@ -283,24 +283,24 @@ NTSTATUS FreeBT_SendHCICommand(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp, IN P
 // Called when a HCI Get on the event pipe completes
 NTSTATUS FreeBT_HCIEventCompletion(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp, IN PVOID Context)
 {
-    ULONG               stageLength;
+    //ULONG               stageLength;
     NTSTATUS            ntStatus;
     PIO_STACK_LOCATION  nextStack;
-    PURB				urb;
+    PURB                urb;
 
     FreeBT_DbgPrint(3, ("FBTUSB: FreeBT_HCIEventCompletion, status=0x%08X\n", Irp->IoStatus.Status));
 
-	if (Irp->PendingReturned)
-		IoMarkIrpPending(Irp);
+    if (Irp->PendingReturned)
+        IoMarkIrpPending(Irp);
 
     // initialize variables
-	urb=(PURB)Context;
+    urb=(PURB)Context;
     ntStatus = Irp->IoStatus.Status;
     Irp->IoStatus.Information = urb->UrbBulkOrInterruptTransfer.TransferBufferLength;
     nextStack = IoGetNextIrpStackLocation(Irp);
 
     ExFreePool(Context);
-	FreeBT_IoDecrement(DeviceObject->DeviceExtension);
+    FreeBT_IoDecrement(DeviceObject->DeviceExtension);
 
     return ntStatus;
 
@@ -309,10 +309,10 @@ NTSTATUS FreeBT_HCIEventCompletion(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp, 
 // Called from the DeviceIOControl handler to wait for an event on the interrupt pipe
 NTSTATUS FreeBT_GetHCIEvent(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp, IN PVOID IoBuffer, IN ULONG InputBufferLength)
 {
-	PDEVICE_EXTENSION	deviceExtension;
-	PURB				urb;
-	NTSTATUS			ntStatus;
-    PIO_STACK_LOCATION	nextStack;
+    PDEVICE_EXTENSION   deviceExtension;
+    PURB                urb;
+    NTSTATUS            ntStatus;
+    PIO_STACK_LOCATION  nextStack;
 
     FreeBT_DbgPrint(3, ("FBTUSB: FreeBT_GetHCIEvent: Entered\n"));
 
@@ -346,17 +346,17 @@ NTSTATUS FreeBT_GetHCIEvent(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp, IN PVOI
     nextStack->Parameters.DeviceIoControl.IoControlCode = IOCTL_INTERNAL_USB_SUBMIT_URB;
 
     IoSetCompletionRoutine(
-		Irp,
-		(PIO_COMPLETION_ROUTINE)FreeBT_HCIEventCompletion,
-		urb,
-		TRUE,
-		TRUE,
-		TRUE);
+        Irp,
+        (PIO_COMPLETION_ROUTINE)FreeBT_HCIEventCompletion,
+        urb,
+        TRUE,
+        TRUE,
+        TRUE);
 
     // We return STATUS_PENDING; call IoMarkIrpPending.
     IoMarkIrpPending(Irp);
 
-	FreeBT_DbgPrint(3, ("FBTUSB: FreeBT_GetHCIEvent::"));
+    FreeBT_DbgPrint(3, ("FBTUSB: FreeBT_GetHCIEvent::"));
     FreeBT_IoIncrement(deviceExtension);
 
     ntStatus = IoCallDriver(deviceExtension->TopOfStackDeviceObject, Irp);
@@ -364,8 +364,8 @@ NTSTATUS FreeBT_GetHCIEvent(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp, IN PVOI
     {
         FreeBT_DbgPrint(3, ("FBTUSB: FreeBT_GetHCIEvent: IoCallDriver fails with status %X\n", ntStatus));
 
-		FreeBT_DbgPrint(3, ("FBTUSB: FreeBT_GetHCIEvent::"));
-		FreeBT_IoDecrement(deviceExtension);
+        FreeBT_DbgPrint(3, ("FBTUSB: FreeBT_GetHCIEvent::"));
+        FreeBT_IoDecrement(deviceExtension);
 
         // If the device was surprise removed out, the pipeInformation field is invalid.
         // similarly if the request was cancelled, then we need not reset the pipe.
@@ -432,17 +432,17 @@ NTSTATUS FreeBT_DispatchDevCtrl(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
     if (deviceExtension->DeviceState != Working)
     {
         FreeBT_DbgPrint(1, ("FBTUSB: Invalid device state\n"));
-		ntStatus = STATUS_INVALID_DEVICE_STATE;
-		goto FreeBT_DispatchDevCtrlExit;
+        ntStatus = STATUS_INVALID_DEVICE_STATE;
+        goto FreeBT_DispatchDevCtrlExit;
 
-	}
+    }
 
     FreeBT_DbgPrint(3, ("FBTUSB: FreeBT_DispatchDevCtrl::"));
 
     // Make sure that any selective suspend request has been completed.
     if (deviceExtension->SSEnable)
     {
-	    FreeBT_DbgPrint(3, ("Waiting on the IdleReqPendEvent\n"));
+        FreeBT_DbgPrint(3, ("Waiting on the IdleReqPendEvent\n"));
         KeWaitForSingleObject(&deviceExtension->NoIdleReqPendEvent,
                               Executive,
                               KernelMode,
@@ -453,49 +453,49 @@ NTSTATUS FreeBT_DispatchDevCtrl(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 
     switch(code)
     {
-	case IOCTL_FREEBT_HCI_SEND_CMD:
-		FreeBT_DbgPrint(3, ("FBTUSB: IOCTL_FREEBT_HCI_SEND_CMD received\n"));
-		if (inputBufferLength<FBT_HCI_CMD_MIN_SIZE)
-		{
-			ntStatus = STATUS_BUFFER_TOO_SMALL;
-			FreeBT_DbgPrint(3, ("FBTUSB: IOCTL_FREEBT_HCI_SEND_CMD: Buffer too small\n"));
-			goto FreeBT_DispatchDevCtrlExit;
+    case IOCTL_FREEBT_HCI_SEND_CMD:
+        FreeBT_DbgPrint(3, ("FBTUSB: IOCTL_FREEBT_HCI_SEND_CMD received\n"));
+        if (inputBufferLength<FBT_HCI_CMD_MIN_SIZE)
+        {
+            ntStatus = STATUS_BUFFER_TOO_SMALL;
+            FreeBT_DbgPrint(3, ("FBTUSB: IOCTL_FREEBT_HCI_SEND_CMD: Buffer too small\n"));
+            goto FreeBT_DispatchDevCtrlExit;
 
-		}
+        }
 
-		if (inputBufferLength>FBT_HCI_CMD_MAX_SIZE)
-		{
-			ntStatus = STATUS_INVALID_BUFFER_SIZE;
-			FreeBT_DbgPrint(3, ("FBTUSB: IOCTL_FREEBT_HCI_SEND_CMD: Buffer too long\n"));
-			goto FreeBT_DispatchDevCtrlExit;
+        if (inputBufferLength>FBT_HCI_CMD_MAX_SIZE)
+        {
+            ntStatus = STATUS_INVALID_BUFFER_SIZE;
+            FreeBT_DbgPrint(3, ("FBTUSB: IOCTL_FREEBT_HCI_SEND_CMD: Buffer too long\n"));
+            goto FreeBT_DispatchDevCtrlExit;
 
-		}
+        }
 
-		return FreeBT_SendHCICommand(DeviceObject, Irp, ioBuffer, inputBufferLength);
-		break;
+        return FreeBT_SendHCICommand(DeviceObject, Irp, ioBuffer, inputBufferLength);
+        break;
 
-	case IOCTL_FREEBT_HCI_GET_EVENT:
-		FreeBT_DbgPrint(3, ("FBTUSB: IOCTL_FREEBT_HCI_GET_EVENT received\n"));
-		if (outputBufferLength<FBT_HCI_EVENT_MAX_SIZE)
-		{
-			ntStatus = STATUS_BUFFER_TOO_SMALL;
-			FreeBT_DbgPrint(3, ("FBTUSB: IOCTL_FREEBT_HCI_GET_EVENT: Buffer too small\n"));
-			goto FreeBT_DispatchDevCtrlExit;
+    case IOCTL_FREEBT_HCI_GET_EVENT:
+        FreeBT_DbgPrint(3, ("FBTUSB: IOCTL_FREEBT_HCI_GET_EVENT received\n"));
+        if (outputBufferLength<FBT_HCI_EVENT_MAX_SIZE)
+        {
+            ntStatus = STATUS_BUFFER_TOO_SMALL;
+            FreeBT_DbgPrint(3, ("FBTUSB: IOCTL_FREEBT_HCI_GET_EVENT: Buffer too small\n"));
+            goto FreeBT_DispatchDevCtrlExit;
 
-		}
+        }
 
-		return FreeBT_GetHCIEvent(DeviceObject, Irp, ioBuffer, outputBufferLength);
-		break;
+        return FreeBT_GetHCIEvent(DeviceObject, Irp, ioBuffer, outputBufferLength);
+        break;
 
     default:
-    	FreeBT_DbgPrint(3, ("FBTUSB: Invalid IOCTL 0x%08x received\n", code));
+        FreeBT_DbgPrint(3, ("FBTUSB: Invalid IOCTL 0x%08x received\n", code));
         ntStatus = STATUS_INVALID_DEVICE_REQUEST;
         break;
 
     }
 
 FreeBT_DispatchDevCtrlExit:
-	Irp->IoStatus.Information = 0;
+    Irp->IoStatus.Information = 0;
     Irp->IoStatus.Status = ntStatus;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
@@ -1125,13 +1125,13 @@ VOID CancelSelectSuspend(IN PDEVICE_EXTENSION DeviceExtension)
         {
             FreeBT_DbgPrint(3, ("IoCancelIrp returns TRUE\n"));
 
-		}
+        }
 
         else
         {
             FreeBT_DbgPrint(3, ("IoCancelIrp returns FALSE\n"));
 
-		}
+        }
 
         // ....we decrement the FreeIdleIrpCount from 2 to 1.
         // if completion routine runs ahead of us, then this routine
@@ -1167,7 +1167,7 @@ VOID PoIrpCompletionFunc(IN PDEVICE_OBJECT DeviceObject, IN UCHAR MinorFunction,
     if(irpContext)
     {
         KeSetEvent(irpContext->Event, 0, FALSE);
-    	FreeBT_IoDecrement(irpContext->DeviceExtension);
+        FreeBT_IoDecrement(irpContext->DeviceExtension);
         ExFreePool(irpContext);
 
     }
