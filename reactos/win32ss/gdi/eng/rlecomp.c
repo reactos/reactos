@@ -33,7 +33,7 @@ VOID DecompressBitmap(SIZEL Size, BYTE *CompressedBits, BYTE *UncompressedBits, 
 
     if ((Format == BMF_4RLE) || (Format == BMF_4BPP))
         shift = 1;
-    else if ((Format != BMF_8RLE) || (Format == BMF_8BPP))
+    else if ((Format != BMF_8RLE) && (Format != BMF_8BPP))
         return;
 
     width = ((Size.cx + shift) >> shift);
