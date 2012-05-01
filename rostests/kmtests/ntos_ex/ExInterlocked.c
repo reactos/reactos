@@ -5,18 +5,18 @@
  * PROGRAMMER:      Thomas Faber <thfabba@gmx.de>
  */
 
+#include <stddef.h>
+
 /* missing prototypes >:| */
-#ifndef _MSC_VER
-typedef long long __int64;
-#endif
-struct _KSPIN_LOCK;
 __declspec(dllimport)   long            __fastcall  InterlockedCompareExchange(volatile long *, long, long);
 __declspec(dllimport)   __int64         __fastcall  ExInterlockedCompareExchange64(volatile __int64 *, __int64 *, __int64 *, void *);
 __declspec(dllimport)   __int64         __fastcall  ExfInterlockedCompareExchange64(volatile __int64 *, __int64 *, __int64 *);
 __declspec(dllimport)   long            __fastcall  InterlockedExchange(volatile long *, long);
 __declspec(dllimport)   unsigned long   __stdcall   ExInterlockedExchangeUlong(unsigned long *, unsigned long, void *);
 __declspec(dllimport)   long            __fastcall  InterlockedExchangeAdd(volatile long *, long);
-__declspec(dllimport)   unsigned long   __stdcall   ExInterlockedAddUlong(unsigned long *, unsigned long, void *);
+#ifdef _X86_
+__declspec(dllimport)   unsigned long   __stdcall   ExInterlockedAddUlong(unsigned long *, unsigned long, unsigned long *);
+#endif
 __declspec(dllimport)   unsigned long   __stdcall   Exi386InterlockedExchangeUlong(unsigned long *, unsigned long);
 __declspec(dllimport)   long            __fastcall  InterlockedIncrement(long *);
 __declspec(dllimport)   long            __fastcall  InterlockedDecrement(long *);
@@ -74,13 +74,11 @@ typedef int PROCESSOR_STATE;
 #elif defined(__GNUC__) && defined(_M_IX86)
 #define SaveState(State)                                                    \
     asm volatile(                                                           \
-        ".intel_syntax noprefix\n\t"                                        \
-        "mov\t[ecx], esi\n\t"                                               \
-        "mov\t[ecx+4], edi\n\t"                                             \
-        "mov\t[ecx+8], ebx\n\t"                                             \
-        "mov\t[ecx+12], ebp\n\t"                                            \
-        "mov\t[ecx+16], esp\n\t"                                            \
-        ".att_syntax prefix"                                                \
+        "movl\t%%esi, (%%ecx)\n\t"                                            \
+        "movl\t%%edi, 4(%%ecx)\n\t"                                           \
+        "movl\t%%ebx, 8(%%ecx)\n\t"                                           \
+        "movl\t%%ebp, 12(%%ecx)\n\t"                                          \
+        "movl\t%%esp, 16(%%ecx)"                                              \
         : : "c" (&State) : "memory"                                         \
     );
 
@@ -96,17 +94,15 @@ typedef int PROCESSOR_STATE;
 #elif defined(__GNUC__) && defined(_M_AMD64)
 #define SaveState(State)                                                    \
     asm volatile(                                                           \
-        ".intel_syntax noprefix\n\t"                                        \
-        "mov\t[rcx], rsi\n\t"                                               \
-        "mov\t[rcx+8], rdi\n\t"                                             \
-        "mov\t[rcx+16], rbx\n\t"                                            \
-        "mov\t[rcx+24], rbp\n\t"                                            \
-        "mov\t[rcx+32], rsp\n\t"                                            \
-        "mov\t[rcx+40], r12\n\t"                                            \
-        "mov\t[rcx+48], r13\n\t"                                            \
-        "mov\t[rcx+56], r14\n\t"                                            \
-        "mov\t[rcx+64], r15\n\t"                                            \
-        ".att_syntax prefix"                                                \
+        "mov\t%%rsi, (%%rcx)\n\t"                                             \
+        "mov\t%%rdi, 8(%%rcx)\n\t"                                            \
+        "mov\t%%rbx, 16(%%rcx)\n\t"                                           \
+        "mov\t%%rbp, 24(%%rcx)\n\t"                                           \
+        "mov\t%%rsp, 32(%%rcx)\n\t"                                           \
+        "mov\t%%r12, 40(%%rcx)\n\t"                                           \
+        "mov\t%%r13, 48(%%rcx)\n\t"                                           \
+        "mov\t%%r14, 56(%%rcx)\n\t"                                           \
+        "mov\t%%r15, 64(%%rcx)"                                               \
         : : "c" (&State) : "memory"                                         \
     );
 
@@ -124,7 +120,11 @@ typedef int PROCESSOR_STATE;
 } while (0)
 #else
 #define SaveState(State)
-#define CheckState(OldState, NewState)
+#define CheckState(OldState, NewState) do                                   \
+{                                                                           \
+    (void)OldState;                                                         \
+    (void)NewState;                                                         \
+} while (0)
 #endif
 
 static

@@ -279,7 +279,7 @@ DriverIoControl(
 {
     NTSTATUS Status = STATUS_SUCCESS;
     PIO_STACK_LOCATION IoStackLocation;
-    ULONG Length = 0;
+    SIZE_T Length = 0;
 
     PAGED_CODE();
 

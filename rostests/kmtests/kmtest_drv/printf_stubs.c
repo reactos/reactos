@@ -26,7 +26,7 @@ int __cdecl KmtVSNPrintF(char *buffer, size_t count, const char *format, va_list
     stream._base = (char *)buffer;
     stream._ptr = stream._base;
     stream._charbuf = 0;
-    stream._cnt = count;
+    stream._cnt = (int)count;
     stream._bufsiz = 0;
     stream._flag = _IOSTRG | _IOWRT;
     stream._tmpfname = 0;

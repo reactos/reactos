@@ -160,7 +160,7 @@ START_TEST(RtlMemory)
     const SIZE_T HalfSize = Size / 2;
     SIZE_T RetSize;
     KIRQL Irql;
-    ULONG i;
+    SIZE_T i;
 
     KeRaiseIrql(HIGH_LEVEL, &Irql);
     /* zero everything behind 'Size'. Tests will check that this wasn't changed.

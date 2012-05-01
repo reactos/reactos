@@ -234,7 +234,7 @@ static PKMT_RESULTBUFFER KmtAllocateResultBuffer(SIZE_T ResultBufferSize)
     Buffer->Failures = 0;
     Buffer->Skipped = 0;
     Buffer->LogBufferLength = 0;
-    Buffer->LogBufferMaxLength = ResultBufferSize - FIELD_OFFSET(KMT_RESULTBUFFER, LogBuffer);
+    Buffer->LogBufferMaxLength = (ULONG)ResultBufferSize - FIELD_OFFSET(KMT_RESULTBUFFER, LogBuffer);
 
     return Buffer;
 }
@@ -260,7 +260,7 @@ static VOID KmtAddToLogBuffer(PKMT_RESULTBUFFER Buffer, PCSTR String, SIZE_T Len
     do
     {
         OldLength = Buffer->LogBufferLength;
-        NewLength = OldLength + Length;
+        NewLength = OldLength + (ULONG)Length;
         if (NewLength > Buffer->LogBufferMaxLength)
             return;
     } while (InterlockedCompareExchange(&Buffer->LogBufferLength, NewLength, OldLength) != OldLength);

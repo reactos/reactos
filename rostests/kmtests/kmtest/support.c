@@ -31,7 +31,7 @@ KmtRunKernelTest(
     DWORD Error = ERROR_SUCCESS;
     DWORD BytesRead;
 
-    if (!DeviceIoControl(KmtestHandle, IOCTL_KMTEST_RUN_TEST, (PVOID)TestName, strlen(TestName), NULL, 0, &BytesRead, NULL))
+    if (!DeviceIoControl(KmtestHandle, IOCTL_KMTEST_RUN_TEST, (PVOID)TestName, (DWORD)strlen(TestName), NULL, 0, &BytesRead, NULL))
         error(Error);
 
     return Error;
@@ -181,7 +181,7 @@ KmtSendStringToDriver(
 
     assert(ControlCode < 0x400);
 
-    if (!DeviceIoControl(TestDeviceHandle, KMT_MAKE_CODE(ControlCode), (PVOID)String, strlen(String), NULL, 0, &BytesRead, NULL))
+    if (!DeviceIoControl(TestDeviceHandle, KMT_MAKE_CODE(ControlCode), (PVOID)String, (DWORD)strlen(String), NULL, 0, &BytesRead, NULL))
         return GetLastError();
 
     return ERROR_SUCCESS;
