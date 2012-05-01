@@ -5,6 +5,8 @@ add_definitions(-D__WINESRC__)
 list(APPEND SOURCE
     config.c
     debug_ros.c
+    isinf.c
+    isnan.c
     loader.c
     wctype.c
     register.c

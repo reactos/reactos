@@ -6,11 +6,6 @@ add_definitions(
 
 include_directories(BEFORE ${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-if(MSVC)
-    add_definitions(-Disnan=_isnan)
-    add_definitions(-Disinf=!_finite)
-endif()
-
 spec2def(wined3d.dll wined3d.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
