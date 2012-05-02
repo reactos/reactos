@@ -1725,14 +1725,14 @@ INT FASTCALL DIB_BitmapInfoSize(const BITMAPINFO * info, WORD coloruse)
 
 HPALETTE
 FASTCALL
-DIB_MapPaletteColors(PPALETTE ppal, CONST BITMAPINFO* lpbmi)
+DIB_MapPaletteColors(PPALETTE ppalDc, CONST BITMAPINFO* lpbmi)
 {
-    PALETTEENTRY* ppalEntries;
+    PPALETTE ppalNew;
     ULONG nNumColors,i;
     USHORT *lpIndex;
     HPALETTE hpal;
 
-    if (!(ppal->flFlags & PAL_INDEXED))
+    if (!(ppalDc->flFlags & PAL_INDEXED))
     {
         return NULL;
     }
@@ -1743,10 +1743,10 @@ DIB_MapPaletteColors(PPALETTE ppal, CONST BITMAPINFO* lpbmi)
         nNumColors = min(nNumColors, lpbmi->bmiHeader.biClrUsed);
     }
 
-    ppalEntries = ExAllocatePoolWithTag(PagedPool, sizeof(PALETTEENTRY) * nNumColors, TAG_COLORMAP);
-    if (ppalEntries == NULL)
+    ppalNew = PALETTE_AllocPalWithHandle(PAL_INDEXED, nNumColors, NULL, 0, 0, 0);
+    if (ppalNew == NULL)
     {
-        DPRINT1("Could not allocate palette entries\n");
+        DPRINT1("Could not allocate palette\n");
         return NULL;
     }
 
@@ -1754,14 +1754,13 @@ DIB_MapPaletteColors(PPALETTE ppal, CONST BITMAPINFO* lpbmi)
 
     for (i = 0; i < nNumColors; i++)
     {
-        ppalEntries[i] = ppal->IndexedColors[*lpIndex % ppal->NumColors];
-
+        ULONG iColorIndex = *lpIndex % ppalDc->NumColors;
+        ppalNew->IndexedColors[i] = ppalDc->IndexedColors[iColorIndex];
         lpIndex++;
     }
 
-    hpal = PALETTE_AllocPalette(PAL_INDEXED, nNumColors, (ULONG*)ppalEntries, 0, 0, 0);
-
-    ExFreePoolWithTag(ppalEntries, TAG_COLORMAP);
+    hpal = ppalNew->BaseObject.hHmgr;
+    PALETTE_UnlockPalette(ppalNew);
 
     return hpal;
 }
