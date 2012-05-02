@@ -117,7 +117,7 @@ UserSetCursor(
     /* Get the screen DC */
     if(!(hdcScreen = IntGetScreenDC()))
     {
-        return (HCURSOR)0;
+        return NULL;
     }
 
     OldCursor = MessageQueue->CursorObject;
@@ -517,7 +517,7 @@ co_MsqInsertMouseMessage(MSG* Msg, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Hook
       if (co_HOOK_CallHooks(WH_MOUSE_LL, HC_ACTION, Msg->message, (LPARAM) &MouseHookData))
          return;
    }
-   
+
    /* Get the desktop window */
    pwndDesktop = UserGetDesktopWindow();
    if (!pwndDesktop) return;
@@ -1727,8 +1727,8 @@ co_MsqPeekHardwareMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
  3: handle to the window whose messages are to be retrieved.
  */
       if ( ( !Window || // 1
-            ( Window == HWND_BOTTOM && CurrentMessage->Msg.hwnd == NULL ) || // 2
-            ( Window != HWND_BOTTOM && Window->head.h == CurrentMessage->Msg.hwnd ) ) && // 3
+            ( Window->head.h == HWND_BOTTOM && CurrentMessage->Msg.hwnd == NULL ) || // 2
+            ( Window->head.h != HWND_BOTTOM && Window->head.h == CurrentMessage->Msg.hwnd ) ) && // 3
             ( ( ( MsgFilterLow == 0 && MsgFilterHigh == 0 ) && CurrentMessage->QS_Flags & QSflags ) ||
               ( MsgFilterLow <= CurrentMessage->Msg.message && MsgFilterHigh >= CurrentMessage->Msg.message ) ) )
         {
@@ -1790,8 +1790,8 @@ MsqPeekMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
  3: handle to the window whose messages are to be retrieved.
  */
       if ( ( !Window || // 1
-            ( Window == HWND_BOTTOM && CurrentMessage->Msg.hwnd == NULL ) || // 2
-            ( Window != HWND_BOTTOM && Window->head.h == CurrentMessage->Msg.hwnd ) ) && // 3
+            ( Window->head.h == HWND_BOTTOM && CurrentMessage->Msg.hwnd == NULL ) || // 2
+            ( Window->head.h != HWND_BOTTOM && Window->head.h == CurrentMessage->Msg.hwnd ) ) && // 3
             ( ( ( MsgFilterLow == 0 && MsgFilterHigh == 0 ) && CurrentMessage->QS_Flags & QSflags ) ||
               ( MsgFilterLow <= CurrentMessage->Msg.message && MsgFilterHigh >= CurrentMessage->Msg.message ) ) )
       {

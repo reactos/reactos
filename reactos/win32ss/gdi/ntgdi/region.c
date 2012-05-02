@@ -3346,7 +3346,7 @@ NtGdiCombineRgn(
     ahrgn[0] = hrgnDst;
     ahrgn[1] = hrgnSrc1;
     ahrgn[2] = iMode != RGN_COPY ? hrgnSrc2 : NULL;
-    if (!GDIOBJ_bLockMultipleObjects(3, ahrgn, (PVOID*)aprgn, GDIObjType_RGN_TYPE))
+    if (!GDIOBJ_bLockMultipleObjects(3, (HGDIOBJ*)ahrgn, (PVOID*)aprgn, GDIObjType_RGN_TYPE))
     {
         DPRINT1("NtGdiCombineRgn: %p, %p, %p, %d\n",
                 hrgnDst, hrgnSrc1, hrgnSrc2, iMode);

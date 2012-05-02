@@ -165,7 +165,7 @@ EngRealizeBrush(
     psurfRealize = SURFACE_ShareLockSurface(hbmpRealize);
 
     /* Already delete the pattern bitmap (will be kept until dereferenced) */
-    EngDeleteSurface(hbmpRealize);
+    EngDeleteSurface((HSURF)hbmpRealize);
 
     if (!psurfRealize)
     {

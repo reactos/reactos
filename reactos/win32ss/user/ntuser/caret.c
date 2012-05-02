@@ -1,4 +1,4 @@
-/* 
+/*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS Win32k subsystem
  * PURPOSE:          Caret functions
@@ -164,7 +164,8 @@ BOOL FASTCALL co_UserHideCaret(PWND Window OPTIONAL)
 
    if(ThreadQueue->CaretInfo->Visible)
    {
-      IntKillTimer(ThreadQueue->CaretInfo->hWnd, IDCARETTIMER, TRUE);
+      PWND pwnd = UserGetWindowObject(ThreadQueue->CaretInfo->hWnd);
+      IntKillTimer(pwnd, IDCARETTIMER, TRUE);
 
       co_IntHideCaret(ThreadQueue->CaretInfo);
       ThreadQueue->CaretInfo->Visible = 0;
@@ -247,7 +248,8 @@ NtUserCreateCaret(
 
    if (ThreadQueue->CaretInfo->Visible)
    {
-      IntKillTimer(hWnd, IDCARETTIMER, TRUE);
+      PWND pwnd = UserGetWindowObject(hWnd);
+      IntKillTimer(pwnd, IDCARETTIMER, TRUE);
       co_IntHideCaret(ThreadQueue->CaretInfo);
    }
 

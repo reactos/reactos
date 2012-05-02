@@ -533,7 +533,7 @@ DxEngLockHdev(HDEV hDev)
 
     DPRINT1("hDev                   : 0x%08lx\n",hDev);
 
-    Resource = ppdev->hsemDevLock;
+    Resource = (PERESOURCE)ppdev->hsemDevLock;
 
     if (Resource)
     {
@@ -564,7 +564,7 @@ APIENTRY
 DxEngUnlockHdev(HDEV hDev)
 {
     PPDEVOBJ ppdev = (PPDEVOBJ)hDev;
-    PERESOURCE Resource = ppdev->hsemDevLock;
+    PERESOURCE Resource = (PERESOURCE)ppdev->hsemDevLock;
 
     DPRINT1("ReactX Calling : DxEngUnlockHdev \n");
 
@@ -674,7 +674,7 @@ BOOLEAN
 APIENTRY
 DxEngIsHdevLockedByCurrentThread(HDEV hDev)
 {   // Based on EngIsSemaphoreOwnedByCurrentThread w/o the Ex call.
-    PERESOURCE pSem = ((PPDEVOBJ)hDev)->hsemDevLock;
+    PERESOURCE pSem = (PERESOURCE)(((PPDEVOBJ)hDev)->hsemDevLock);
     return pSem->OwnerEntry.OwnerThread == (ERESOURCE_THREAD)PsGetCurrentThread();
 }
 

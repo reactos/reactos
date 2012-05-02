@@ -173,7 +173,7 @@ IntSynthesizeDib(PWINSTATION_OBJECT pWinStaObj, HBITMAP hBm)
     {
         pMemObj->cbData = sizeof(BITMAPINFOHEADER) + bi.bmiHeader.biSizeImage;
         memcpy(pMemObj->Data, &bi, sizeof(BITMAPINFOHEADER));
-        NtGdiGetDIBitsInternal(hdc, pMemObj->Data, 0, bm.bmHeight, (LPBYTE)pMemObj->Data + sizeof(BITMAPINFOHEADER), &bi, DIB_RGB_COLORS, 0, 0);
+        NtGdiGetDIBitsInternal(hdc, hBm, 0, bm.bmHeight, (LPBYTE)pMemObj->Data + sizeof(BITMAPINFOHEADER), &bi, DIB_RGB_COLORS, 0, 0);
         IntAddFormatedData(pWinStaObj, CF_DIB, hMem, TRUE, TRUE);
     }
 
@@ -478,7 +478,7 @@ BOOL APIENTRY
 NtUserCloseClipboard(VOID)
 {
     BOOL bRet;
-    
+
     UserEnterExclusive();
     bRet = UserCloseClipboard();
     UserLeave();
@@ -714,7 +714,7 @@ NtUserGetPriorityClipboardFormat(UINT *paFormatPriorityList, INT cFormats)
     pWinStaObj = IntGetWinStaForCbAccess();
     if (!pWinStaObj)
         goto cleanup;
-    
+
     if (pWinStaObj->pClipBase == NULL)
     {
         iRet = 0;
@@ -1002,7 +1002,7 @@ NtUserSetClipboardViewer(HWND hWndNewViewer)
 cleanup:
     if(pWinStaObj)
         ObDereferenceObject(pWinStaObj);
-    
+
     UserLeave();
 
     return hWndNext;

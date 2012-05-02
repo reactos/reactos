@@ -15,7 +15,7 @@ REGISTER_SYSCLASS DefaultServerClasses[] =
     CS_GLOBALCLASS|CS_DBLCLKS,
     NULL,
     0,
-    IDC_ARROW,
+    (HICON)IDC_ARROW,
     (HBRUSH)(COLOR_BACKGROUND + 1),
     FNID_DESKTOP,
     ICLS_DESKTOP
@@ -24,7 +24,7 @@ REGISTER_SYSCLASS DefaultServerClasses[] =
     CS_VREDRAW|CS_HREDRAW|CS_SAVEBITS,
     NULL, // Use User32 procs
     sizeof(LONG),
-    IDC_ARROW,
+    (HICON)IDC_ARROW,
     NULL,
     FNID_SWITCH,
     ICLS_SWITCH
@@ -33,7 +33,7 @@ REGISTER_SYSCLASS DefaultServerClasses[] =
     CS_DBLCLKS|CS_SAVEBITS,
     NULL, // Use User32 procs
     sizeof(LONG),
-    IDC_ARROW,
+    (HICON)IDC_ARROW,
     (HBRUSH)(COLOR_MENU + 1),
     FNID_MENU,
     ICLS_MENU
@@ -42,7 +42,7 @@ REGISTER_SYSCLASS DefaultServerClasses[] =
     CS_DBLCLKS|CS_VREDRAW|CS_HREDRAW|CS_PARENTDC,
     NULL, // Use User32 procs
     sizeof(SBWND)-sizeof(WND),
-    IDC_ARROW,
+    (HICON)IDC_ARROW,
     NULL,
     FNID_SCROLLBAR,
     ICLS_SCROLLBAR
@@ -51,7 +51,7 @@ REGISTER_SYSCLASS DefaultServerClasses[] =
     0,
     NULL, // Use User32 procs
     0,
-    IDC_ARROW,
+    (HICON)IDC_ARROW,
     0,
     FNID_ICONTITLE,
     ICLS_ICONTITLE
@@ -60,7 +60,7 @@ REGISTER_SYSCLASS DefaultServerClasses[] =
     CS_GLOBALCLASS,
     NULL, // Use User32 procs
     0,
-    IDC_ARROW,
+    (HICON)IDC_ARROW,
     NULL,
     FNID_MESSAGEWND,
     ICLS_HWNDMESSAGE

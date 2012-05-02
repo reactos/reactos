@@ -15,7 +15,7 @@ DBG_DEFAULT_CHANNEL(UserHook);
 
 typedef struct _HOOKPACK
 {
-  PHOOK pHk; 
+  PHOOK pHk;
   LPARAM lParam;
   PVOID pHookStructs;
 } HOOKPACK, *PHOOKPACK;
@@ -42,7 +42,7 @@ IntLoadHookModule(int iHookID, HHOOK hHook, BOOL Unload)
     {
         if(!Unload && !(ppi->W32PF_flags & W32PF_APIHOOKLOADED))
         {
-            /* A callback in user mode can trigger UserLoadApiHook to be called and 
+            /* A callback in user mode can trigger UserLoadApiHook to be called and
                as a result IntLoadHookModule will be called recursively.
                To solve this we set the flag that means that the appliaction has
                loaded the api hook before the callback and in case of error we remove it */
@@ -80,11 +80,11 @@ IntLoadHookModule(int iHookID, HHOOK hHook, BOOL Unload)
 }
 
 /*
-IntHookModuleUnloaded: 
-Sends a internal message to all threads of the requested desktop 
-and notifies them that a global hook was destroyed 
-and an injected module must be unloaded. 
-As a result, IntLoadHookModule will be called for all the threads that 
+IntHookModuleUnloaded:
+Sends a internal message to all threads of the requested desktop
+and notifies them that a global hook was destroyed
+and an injected module must be unloaded.
+As a result, IntLoadHookModule will be called for all the threads that
 will receive the special purpose internal message.
 */
 BOOL
@@ -106,7 +106,7 @@ IntHookModuleUnloaded(PDESKTOP pdesk, int iHookID, HHOOK hHook)
         /* FIXME: Do some more security checks here */
 
         /* FIXME: The first check is a reactos specific hack for system threads */
-        if(!PsIsSystemProcess(ptiCurrent->ppi->peProcess) && 
+        if(!PsIsSystemProcess(ptiCurrent->ppi->peProcess) &&
            ptiCurrent->ppi != ppiCsr)
         {
             if(ptiCurrent->ppi->W32PF_flags & W32PF_APIHOOKLOADED)
@@ -129,8 +129,8 @@ IntHookModuleUnloaded(PDESKTOP pdesk, int iHookID, HHOOK hHook)
     return TRUE;
 }
 
-BOOL 
-FASTCALL 
+BOOL
+FASTCALL
 UserLoadApiHook()
 {
     return IntLoadHookModule(WH_APIHOOK, 0, FALSE);
@@ -436,7 +436,7 @@ co_IntCallDebugHook(PHOOK Hook,
                     break;
 
                 case HCBT_ACTIVATE:
-                    Size = sizeof(CBTACTIVATESTRUCT); 
+                    Size = sizeof(CBTACTIVATESTRUCT);
                     break;
 
                 case HCBT_CREATEWND: /* Handle ANSI? */
@@ -876,8 +876,8 @@ co_UserCallNextHookEx(PHOOK Hook,
                 }
             }
 
-            if (!BadChk) 
-            {               
+            if (!BadChk)
+            {
                 lResult = co_HOOK_CallHookNext(Hook, Code, wParam, (LPARAM)(lParam ? &EventMsg : NULL));
 
                 if (lParam)
@@ -917,14 +917,14 @@ co_UserCallNextHookEx(PHOOK Hook,
         case WH_FOREGROUNDIDLE:
         case WH_KEYBOARD:
         case WH_SHELL:
-            lResult = co_HOOK_CallHookNext(Hook, Code, wParam, lParam);      
+            lResult = co_HOOK_CallHookNext(Hook, Code, wParam, lParam);
             break;
 
         default:
             ERR("Unsupported HOOK Id -> %d\n",Hook->HookId);
             break;
     }
-    return lResult; 
+    return lResult;
 }
 
 PHOOK
@@ -932,7 +932,7 @@ FASTCALL
 IntGetHookObject(HHOOK hHook)
 {
     PHOOK Hook;
-    
+
     if (!hHook)
     {
        EngSetLastError(ERROR_INVALID_HOOK_HANDLE);
@@ -1274,7 +1274,7 @@ co_HOOK_CallHooks( INT HookId,
               continue;
           }
           UserRefObjectCo(Hook, &Ref);
-          
+
          /* Hook->Thread is null, we hax around this with Hook->head.pti. */
           ptiHook = Hook->head.pti;
 
@@ -1421,7 +1421,7 @@ CLEANUP:
 
 HHOOK
 APIENTRY
-NtUserSetWindowsHookAW( int idHook, 
+NtUserSetWindowsHookAW( int idHook,
                         HOOKPROC lpfn,
                         BOOL Ansi)
 {
@@ -1523,7 +1523,7 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
              RETURN( NULL);
           }
 
-          if ( (ptiHook->TIF_flags & (TIF_CSRSSTHREAD|TIF_SYSTEMTHREAD)) && 
+          if ( (ptiHook->TIF_flags & (TIF_CSRSSTHREAD|TIF_SYSTEMTHREAD)) &&
                (HookId == WH_GETMESSAGE ||
                 HookId == WH_CALLWNDPROC ||
                 HookId == WH_CBT ||
@@ -1539,7 +1539,7 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
        }
     }
     else  /* System-global hook */
-    {                                                                                
+    {
        ptiHook = pti; // gptiCurrent;
        if ( !Mod &&
             (HookId == WH_GETMESSAGE ||
@@ -1570,7 +1570,7 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
     }
     ObDereferenceObject(WinStaObj);
 
-    Hook = UserCreateObject(gHandleTable, NULL, &Handle, otHook, sizeof(HOOK));
+    Hook = UserCreateObject(gHandleTable, NULL, (PHANDLE)&Handle, otHook, sizeof(HOOK));
 
     if (!Hook)
     {

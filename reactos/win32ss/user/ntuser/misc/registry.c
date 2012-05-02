@@ -33,7 +33,7 @@ RegOpenKey(
                                NULL);
 
     /* Open the key */
-    Status = ZwOpenKey(&hkey, KEY_READ, &ObjectAttributes);
+    Status = ZwOpenKey((PHANDLE)&hkey, KEY_READ, &ObjectAttributes);
     if (NT_SUCCESS(Status))
     {
         *phkey = hkey;
@@ -198,7 +198,7 @@ RegReadUserSetting(
                                NULL);
 
     /* Open the key */
-    Status = ZwOpenKey(&hkey, KEY_READ, &ObjectAttributes);
+    Status = ZwOpenKey((PHANDLE)&hkey, KEY_READ, &ObjectAttributes);
     if (!NT_SUCCESS(Status))
     {
         return FALSE;
@@ -292,7 +292,7 @@ RegWriteUserSetting(
     Status = RtlAppendUnicodeToString(&usKeyName, pwszKeyName);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("RtlAppendUnicodeToString failed with Status=%lx, buf:%d,%d\n", 
+        DPRINT1("RtlAppendUnicodeToString failed with Status=%lx, buf:%d,%d\n",
                 Status, usKeyName.Length, usKeyName.MaximumLength);
         return FALSE;
     }
@@ -305,7 +305,7 @@ RegWriteUserSetting(
                                NULL);
 
     /* Open or create the key */
-    Status = ZwCreateKey(&hkey,
+    Status = ZwCreateKey((PHANDLE)&hkey,
                          KEY_READ | KEY_WRITE,
                          &ObjectAttributes,
                          0,

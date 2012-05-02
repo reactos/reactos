@@ -11,6 +11,7 @@
 /* INCLUDES ******************************************************************/
 
 #define _NO_COM
+#define STRICT
 
 /* DDK/NDK/SDK headers */
 #undef NTDDI_VERSION

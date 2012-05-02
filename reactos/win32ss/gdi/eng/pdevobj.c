@@ -832,7 +832,7 @@ NtGdiGetDhpdev(
     for (ppdev = gppdevList;  ppdev; ppdev = ppdev->ppdevNext)
     {
         /* Compare with the given HDEV */
-        if (ppdev == hdev)
+        if (ppdev == (PPDEVOBJ)hdev)
         {
             /* Found the PDEV! Get it's dhpdev and break */
             dhpdev = ppdev->dhpdev;

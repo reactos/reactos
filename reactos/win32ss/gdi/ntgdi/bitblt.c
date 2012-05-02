@@ -138,7 +138,7 @@ NtGdiAlphaBlend(
     DPRINT("Locking DCs\n");
     ahDC[0] = hDCDest;
     ahDC[1] = hDCSrc ;
-    if (!GDIOBJ_bLockMultipleObjects(2, ahDC, apObj, GDIObjType_DC_TYPE))
+    if (!GDIOBJ_bLockMultipleObjects(2, (HGDIOBJ*)ahDC, apObj, GDIObjType_DC_TYPE))
     {
         DPRINT1("Invalid dc handle (dest=0x%08x, src=0x%08x) passed to NtGdiAlphaBlend\n", hDCDest, hDCSrc);
         EngSetLastError(ERROR_INVALID_HANDLE);
@@ -286,7 +286,7 @@ NtGdiTransparentBlt(
     DPRINT("Locking DCs\n");
     ahDC[0] = hdcDst;
     ahDC[1] = hdcSrc ;
-    if (!GDIOBJ_bLockMultipleObjects(2, ahDC, apObj, GDIObjType_DC_TYPE))
+    if (!GDIOBJ_bLockMultipleObjects(2, (HGDIOBJ*)ahDC, apObj, GDIObjType_DC_TYPE))
     {
         DPRINT1("Invalid dc handle (dest=0x%08x, src=0x%08x) passed to NtGdiAlphaBlend\n", hdcDst, hdcSrc);
         EngSetLastError(ERROR_INVALID_HANDLE);
@@ -440,7 +440,7 @@ NtGdiMaskBlt(
     DPRINT("Locking DCs\n");
     ahDC[0] = hdcDest;
     ahDC[1] = UsesSource ? hdcSrc : NULL;
-    if (!GDIOBJ_bLockMultipleObjects(2, ahDC, apObj, GDIObjType_DC_TYPE))
+    if (!GDIOBJ_bLockMultipleObjects(2, (HGDIOBJ*)ahDC, apObj, GDIObjType_DC_TYPE))
     {
         DPRINT1("Invalid dc handle (dest=0x%08x, src=0x%08x) passed to NtGdiAlphaBlend\n", hdcDest, hdcSrc);
         EngSetLastError(ERROR_INVALID_HANDLE);
@@ -635,7 +635,7 @@ GreStretchBltMask(
     ahDC[0] = hDCDest;
     ahDC[1] = UsesSource ? hDCSrc : NULL;
     ahDC[2] = UsesMask ? hDCMask : NULL;
-    if (!GDIOBJ_bLockMultipleObjects(3, ahDC, apObj, GDIObjType_DC_TYPE))
+    if (!GDIOBJ_bLockMultipleObjects(3, (HGDIOBJ*)ahDC, apObj, GDIObjType_DC_TYPE))
     {
         DPRINT1("Invalid dc handle (dest=0x%08x, src=0x%08x) passed to NtGdiAlphaBlend\n", hDCDest, hDCSrc);
         EngSetLastError(ERROR_INVALID_HANDLE);

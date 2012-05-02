@@ -477,11 +477,11 @@ EngSetPointerShape(
 
 failure:
     /* Cleanup surfaces */
-    if (hbmMask) EngDeleteSurface(hbmMask);
+    if (hbmMask) EngDeleteSurface((HSURF)hbmMask);
     if (psurfMask) SURFACE_ShareUnlockSurface(psurfMask);
-    if (hbmColor) EngDeleteSurface(hbmColor);
+    if (hbmColor) EngDeleteSurface((HSURF)hbmColor);
     if (psurfColor) SURFACE_ShareUnlockSurface(psurfColor);
-    if (hbmSave) EngDeleteSurface(hbmSave);
+    if (hbmSave) EngDeleteSurface((HSURF)hbmSave);
     if (psurfSave) SURFACE_ShareUnlockSurface(psurfSave);
 
     return SPS_ERROR;

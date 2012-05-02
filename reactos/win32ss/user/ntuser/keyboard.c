@@ -750,7 +750,7 @@ cleanup:
     if (hbm)
         GreDeleteObject(hbm);
     if (hdc)
-        UserReleaseDC(hWnd, hdc, FALSE);
+        UserReleaseDC(pWnd, hdc, FALSE);
 }
 
 /*

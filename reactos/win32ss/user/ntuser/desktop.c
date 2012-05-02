@@ -237,7 +237,7 @@ IntParseDesktopPath(PEPROCESS Process,
       pwstrDesktop = wcschr(DesktopPath->Buffer, L'\\');
       if(pwstrDesktop != NULL)
       {
-          *pwstrDesktop = 0; 
+          *pwstrDesktop = 0;
           pwstrDesktop++;
           pwstrWinsta = DesktopPath->Buffer;
       }
@@ -245,7 +245,7 @@ IntParseDesktopPath(PEPROCESS Process,
       {
           pwstrDesktop = DesktopPath->Buffer;
           pwstrWinsta = NULL;
-      } 
+      }
 
       TRACE("IntParseDesktopPath pwstrWinsta:%S pwstrDesktop:%S\n", pwstrWinsta, pwstrDesktop);
    }
@@ -279,7 +279,7 @@ IntParseDesktopPath(PEPROCESS Process,
        if(!pwstrDesktop)
            pwstrDesktop = L"Default";
    }
-   
+
    if(*hWinSta == NULL)
    {
        swprintf(wstrWinstaFullName, L"%wZ\\%ws", &gustrWindowStationsDir, pwstrWinsta);
@@ -371,7 +371,7 @@ IntValidateDesktopHandle(
                (PVOID*)Object,
                NULL);
 
-   TRACE("IntValidateDesktopHandle: handle:0x%x obj:0x%x access:0x%x Status:0x%x\n", 
+   TRACE("IntValidateDesktopHandle: handle:0x%x obj:0x%x access:0x%x Status:0x%x\n",
             Desktop, *Object, DesiredAccess, Status);
 
    if (!NT_SUCCESS(Status))
@@ -1042,7 +1042,7 @@ NtUserCreateDesktop(
    /*
     * Try to open already existing desktop
     */
-   
+
    Status = ObOpenObjectByName(
                ObjectAttributes,
                ExDesktopObjectType,
@@ -1087,7 +1087,7 @@ NtUserCreateDesktop(
                                       KernelMode,
                                       (PVOID)&DesktopObject,
                                       NULL);
-   if (!NT_SUCCESS(Status)) 
+   if (!NT_SUCCESS(Status))
    {
        ERR("Failed to reference desktop object\n");
        RETURN(NULL);
@@ -1243,7 +1243,7 @@ CLEANUP:
    {
        ExFreePoolWithTag(DesktopName.Buffer, TAG_STRING);
    }
-   if (!NoHooks && ptiCurrent) 
+   if (!NoHooks && ptiCurrent)
    {
        ptiCurrent->TIF_flags &= ~TIF_DISABLEHOOKS;
        ptiCurrent->pClientInfo->dwTIFlags = ptiCurrent->TIF_flags;
@@ -1355,7 +1355,7 @@ NtUserOpenInputDesktop(
                dwDesiredAccess,
                ExDesktopObjectType,
                UserMode,
-               &hdesk);
+               (PHANDLE)&hdesk);
 
    ObDereferenceObject(pdesk);
 
@@ -1818,12 +1818,12 @@ IntSetThreadDesktop(IN HDESK hDesktop,
             return FALSE;
         }
     }
-     
+
     pdeskOld = pti->rpdesk;
     hdeskOld = pti->hdesk;
     pctiOld = pti->pcti;
 
-    /* do the switch */   
+    /* do the switch */
     if(pdesk != NULL)
     {
         pti->rpdesk = pdesk;
@@ -1855,7 +1855,7 @@ IntSetThreadDesktop(IN HDESK hDesktop,
         pci->pDeskInfo = NULL;
         pci->pClientThreadInfo = NULL;
     }
-    
+
     /* clean up the old desktop */
     if(pdeskOld != NULL)
     {
