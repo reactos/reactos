@@ -5,20 +5,6 @@
 extern HDC hSystemBM;
 extern HSEMAPHORE hsemDriverMgmt;
 
-HBRUSH APIENTRY
-IntGdiCreatePatternBrush(
-   HBITMAP hBitmap);
-
-HBRUSH APIENTRY
-IntGdiCreateSolidBrush(
-   COLORREF Color);
-
-HBRUSH APIENTRY
-IntGdiCreateNullBrush(VOID);
-
-VOID FASTCALL
-IntGdiSetSolidBrushColor(HBRUSH hBrush, COLORREF Color);
-
 /* Line functions */
 
 BOOL FASTCALL

@@ -141,3 +141,16 @@ EBRUSHOBJ_iSetSolidColor(EBRUSHOBJ *pebo, ULONG iSolidColor)
 BOOL FASTCALL IntGdiSetBrushOwner(PBRUSH,DWORD);
 BOOL FASTCALL GreSetBrushOwner(HBRUSH,DWORD);
 
+HBRUSH APIENTRY
+IntGdiCreatePatternBrush(
+   HBITMAP hBitmap);
+
+HBRUSH APIENTRY
+IntGdiCreateSolidBrush(
+   COLORREF Color);
+
+HBRUSH APIENTRY
+IntGdiCreateNullBrush(VOID);
+
+VOID FASTCALL
+IntGdiSetSolidBrushColor(HBRUSH hBrush, COLORREF Color);

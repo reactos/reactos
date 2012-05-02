@@ -38,6 +38,7 @@ EBRUSHOBJ_vInit(EBRUSHOBJ *pebo, PBRUSH pbrush, PDC pdc)
 
     pebo->ppalSurf = pebo->psurfTrg->ppal;
     GDIOBJ_vReferenceObjectByPointer(&pebo->ppalSurf->BaseObject);
+    //pebo->ppalDC = pdc->dclevel.ppal;
 
     if (pbrush->flAttrs & GDIBRUSH_IS_NULL)
     {
@@ -194,6 +195,7 @@ EBRUSHOBJ_bRealizeBrush(EBRUSHOBJ *pebo, BOOL bCallDriver)
     PSURFACE psurfPattern, psurfMask;
     PPDEVOBJ ppdev = NULL;
     EXLATEOBJ exlo;
+    PPALETTE ppalPattern;
 
     /* All EBRUSHOBJs have a surface, see EBRUSHOBJ_vInit */
     ASSERT(pebo->psurfTrg);
@@ -214,9 +216,22 @@ EBRUSHOBJ_bRealizeBrush(EBRUSHOBJ *pebo, BOOL bCallDriver)
     /* FIXME: implement mask */
     psurfMask = NULL;
 
+    /* DIB brushes with DIB_PAL_COLORS usage need a new palette */
+    if (pebo->pbrush->flAttrs & GDIBRUSH_IS_DIBPALCOLORS)
+    {
+        ASSERT(FALSE);
+        ppalPattern = 0; //CreateDIBPalette(psurfPattern->ppal, pebo->ppalDC);
+        // pebo->ppalDIB = ppalPattern;
+    }
+    else
+    {
+        /* The palette is already as it should be */
+        ppalPattern = psurfPattern->ppal;
+    }
+
     /* Initialize XLATEOBJ for the brush */
     EXLATEOBJ_vInitialize(&exlo,
-                          psurfPattern->ppal,
+                          ppalPattern,
                           pebo->psurfTrg->ppal,
                           0,
                           pebo->crCurrentBack,
