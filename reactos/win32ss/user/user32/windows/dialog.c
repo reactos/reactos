@@ -579,6 +579,18 @@ INT DIALOG_DoDialogBox( HWND hwnd, HWND owner )
                 if (!IsWindow( hwnd )) return 0;
                 break;
             }
+
+            /*
+             * If the user is pressing Ctrl+C, send a WM_COPY message.
+             * TODO: Is there another way to check if the Dialog it's a MessageBox?.
+             */
+            if( msg.message == WM_KEYDOWN && GetPropW(hwnd, L"ROS_MSGBOX") != NULL &&
+                GetForegroundWindow() == hwnd )
+            {
+                if( msg.wParam == L'C' && GetKeyState(VK_CONTROL) < 0 )
+                    SendMessageW( hwnd, WM_COPY, 0, 0);
+            }
+            
             if (!IsWindow( hwnd )) return 0;
             if (!(dlgInfo->flags & DF_END) && !IsDialogMessageW( hwnd, &msg))
             {

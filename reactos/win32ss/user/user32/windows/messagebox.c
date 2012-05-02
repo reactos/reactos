@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id$
+/*
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/messagebox.c
@@ -75,6 +75,114 @@ typedef struct _MSGBOXINFO {
 } MSGBOXINFO, *PMSGBOXINFO;
 
 /* INTERNAL FUNCTIONS ********************************************************/
+
+static VOID MessageBoxTextToClipboard(HWND DialogWindow)
+{
+    HWND hwndText;
+    PMSGBOXINFO mbi;
+    int cchTotal, cchTitle, cchText, cchButton, i, n, cchBuffer;
+    LPWSTR pszBuffer, pszBufferPos, pMessageBoxText, pszTitle, pszText, pszButton;
+    WCHAR szButton[MSGBOXEX_MAXBTNSTR];
+    HGLOBAL hGlobal;
+    
+    static const WCHAR szLine[30] = 
+    {'-','-','-','-','-','-','-','-','-','-','-','-','-','-','-',
+    '-','-','-','-','-','-','-','-','-','-','-','-','\r','\n', 0};
+    
+    mbi = (PMSGBOXINFO)GetPropW(DialogWindow, L"ROS_MSGBOX");
+    hwndText = GetDlgItem(DialogWindow, MSGBOX_IDTEXT);
+    cchTitle = GetWindowTextLengthW(DialogWindow) + 1;
+    cchText = GetWindowTextLengthW(hwndText) + 1;
+    
+    if(!mbi)
+        return;
+    
+    pMessageBoxText = (LPWSTR)RtlAllocateHeap(GetProcessHeap(), 0, (cchTitle + cchText) * sizeof(WCHAR));
+    
+    if(pMessageBoxText == NULL)
+    {
+        RtlFreeHeap(GetProcessHeap(), 0, pMessageBoxText);
+        return;
+    }
+      
+    pszTitle = pMessageBoxText;
+    pszText = pMessageBoxText + cchTitle;
+    
+
+    
+    if(GetWindowTextW(DialogWindow, pszTitle, cchTitle) == 0 ||
+       GetWindowTextW(hwndText, pszText, cchText) == 0)
+    {
+        RtlFreeHeap(GetProcessHeap(), 0, pMessageBoxText);
+        return;
+    }
+    
+    /* 
+     * Calculate the total buffer size.
+     */
+    cchTotal = 6 + cchTitle + cchText + (lstrlenW(szLine) * 4) + (mbi->nButtons * MSGBOXEX_MAXBTNSTR + 3);
+    
+    hGlobal = GlobalAlloc(GHND, cchTotal * sizeof(WCHAR));
+    
+    pszBuffer = (LPWSTR)GlobalLock(hGlobal);
+    
+    if(pszBuffer == NULL)
+    {
+        RtlFreeHeap(GetProcessHeap(), 0, pMessageBoxText);
+        GlobalFree(hGlobal);
+        return;
+    }
+
+    /*
+     * First format title and text.
+     * ------------------
+     * Title
+     * ------------------
+     * Text
+     * ------------------
+     */
+    cchBuffer = wsprintfW(pszBuffer, L"%s%s\r\n%s%s\r\n%s", szLine, pszTitle, szLine, pszText, szLine);
+    pszBufferPos = pszBuffer + cchBuffer;
+    
+    for(i = 0; i < mbi->nButtons; i++)
+    {
+        GetDlgItemTextW(DialogWindow, mbi->Btns[i], szButton, MSGBOXEX_MAXBTNSTR);
+        
+        cchButton = strlenW(szButton);
+        pszButton = szButton;
+        
+        /* Skip '&' character. */
+        if(szButton[0] == '&')
+        {
+            pszButton = pszButton + 1;
+            cchButton = cchButton - 1;
+        }
+
+        for(n = 0; n < cchButton; n++)
+            *(pszBufferPos++) = pszButton[n];
+
+        /* Add spaces. */
+        *(pszBufferPos++) = L' ';
+        *(pszBufferPos++) = L' ';
+        *(pszBufferPos++) = L' ';
+    }
+    
+    wsprintfW(pszBufferPos, L"\r\n%s", szLine);
+    
+    GlobalUnlock(hGlobal);
+
+    if(OpenClipboard(DialogWindow))
+    {
+        EmptyClipboard();
+        SetClipboardData(CF_UNICODETEXT, hGlobal);
+        CloseClipboard();
+    }
+    else
+    {
+        GlobalFree(hGlobal);
+    }
+    RtlFreeHeap(GetProcessHeap(), 0, pMessageBoxText);
+}
 
 static INT_PTR CALLBACK MessageBoxProc( HWND hwnd, UINT message,
                                         WPARAM wParam, LPARAM lParam )
@@ -139,6 +247,10 @@ static INT_PTR CALLBACK MessageBoxProc( HWND hwnd, UINT message,
           return 0;
       }
       return 0;
+    
+    case WM_COPY:
+        MessageBoxTextToClipboard(hwnd);
+        return 0;
 
     case WM_HELP:
       mbi = (PMSGBOXINFO)GetPropW(hwnd, L"ROS_MSGBOX");
