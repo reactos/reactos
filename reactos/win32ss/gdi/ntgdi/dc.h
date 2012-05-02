@@ -138,9 +138,25 @@ typedef struct _DC
   ROS_DC_INFO rosdc;
 } DC;
 
+extern PDC defaultDCstate;
+
 /* Internal functions *********************************************************/
 
-extern PDC defaultDCstate;
+/* dcobjs.c */
+
+VOID FASTCALL DC_vUpdateFillBrush(PDC pdc);
+VOID FASTCALL DC_vUpdateLineBrush(PDC pdc);
+VOID FASTCALL DC_vUpdateTextBrush(PDC pdc);
+VOID FASTCALL DC_vUpdateBackgroundBrush(PDC pdc);
+
+HPALETTE
+NTAPI
+GdiSelectPalette(
+    HDC hDC,
+    HPALETTE hpal,
+    BOOL ForceBackground);
+
+
 
 INIT_FUNCTION NTSTATUS NTAPI InitDcImpl(VOID);
 PPDEVOBJ FASTCALL IntEnumHDev(VOID);
@@ -152,10 +168,6 @@ BOOL FASTCALL IntGdiDeleteDC(HDC, BOOL);
 BOOL FASTCALL DC_InvertXform(const XFORM *xformSrc, XFORM *xformDest);
 VOID FASTCALL DC_vUpdateViewportExt(PDC pdc);
 VOID FASTCALL DC_vCopyState(PDC pdcSrc, PDC pdcDst, BOOL to);
-VOID FASTCALL DC_vUpdateFillBrush(PDC pdc);
-VOID FASTCALL DC_vUpdateLineBrush(PDC pdc);
-VOID FASTCALL DC_vUpdateTextBrush(PDC pdc);
-VOID FASTCALL DC_vUpdateBackgroundBrush(PDC pdc);
 VOID FASTCALL DC_vFinishBlit(PDC pdc1, PDC pdc2);
 VOID FASTCALL DC_vPrepareDCsForBlit(PDC pdc1, RECT rc1, PDC pdc2, RECT rc2);
 
@@ -176,6 +188,7 @@ BOOL FASTCALL IntGdiCleanDC(HDC hDC);
 VOID FASTCALL IntvGetDeviceCaps(PPDEVOBJ, PDEVCAPS);
 BOOL FASTCALL IntSetDefaultRegion(PDC);
 BOOL NTAPI GreSetDCOwner(HDC hdc, ULONG ulOwner);
+
 
 FORCEINLINE
 PDC

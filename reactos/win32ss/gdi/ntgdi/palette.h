@@ -1,11 +1,5 @@
 #pragma once
 
-#define PALETTE_FIXED    0x0001 /* read-only colormap - have to use XAllocColor (if not virtual) */
-#define PALETTE_VIRTUAL  0x0002 /* no mapping needed - pixel == pixel color */
-
-#define PALETTE_PRIVATE  0x1000 /* private colormap, identity mapping */
-#define PALETTE_WHITESET 0x2000
-
 // Palette mode flags
 #ifndef __WINDDI_H // Defined in ddk/winddi.h
 #define PAL_INDEXED         0x00000001 // Indexed palette
@@ -28,61 +22,101 @@
 #define PAL_RGB16_565       0x00400000 // 16-bit RGB in 565 format
 #define PAL_GAMMACORRECTION 0x00800000 // Correct colors
 
-
 typedef struct _PALETTE
 {
-  /* Header for all gdi objects in the handle table.
-     Do not (re)move this. */
-  BASEOBJECT    BaseObject;
+    /* Header for all gdi objects in the handle table.
+       Do not (re)move this. */
+    BASEOBJECT    BaseObject;
 
-  PALOBJ PalObj;
-  XLATEOBJ *logicalToSystem;
-  HPALETTE Self;
-  FLONG flFlags; // PAL_INDEXED, PAL_BITFIELDS, PAL_RGB, PAL_BGR
-  ULONG NumColors;
-  PALETTEENTRY *IndexedColors;
-  ULONG RedMask;
-  ULONG GreenMask;
-  ULONG BlueMask;
-  ULONG ulRedShift;
-  ULONG ulGreenShift;
-  ULONG ulBlueShift;
-  HDEV  hPDev;
+    PALOBJ PalObj;
+    XLATEOBJ *logicalToSystem;
+    FLONG flFlags; // PAL_INDEXED, PAL_BITFIELDS, PAL_RGB, PAL_BGR
+    ULONG NumColors;
+    PALETTEENTRY *IndexedColors;
+    ULONG RedMask;
+    ULONG GreenMask;
+    ULONG BlueMask;
+    ULONG ulRedShift;
+    ULONG ulGreenShift;
+    ULONG ulBlueShift;
+    HDEV  hPDev;
+    PALETTEENTRY apalColors[0];
 } PALETTE;
 
 extern PALETTE gpalRGB, gpalBGR, gpalMono, gpalRGB555, gpalRGB565, *gppalDefault;
 extern PPALETTE appalSurfaceDefault[];
 
-HPALETTE FASTCALL PALETTE_AllocPalette(ULONG Mode,
-                                       ULONG NumColors,
-                                       ULONG *Colors,
-                                       ULONG Red,
-                                       ULONG Green,
-                                       ULONG Blue);
-HPALETTE FASTCALL PALETTE_AllocPaletteIndexedRGB(ULONG NumColors,
-                                                 CONST RGBQUAD *Colors);
-#define  PALETTE_FreePalette(pPalette)  GDIOBJ_FreeObj((POBJ)pPalette, GDIObjType_PAL_TYPE)
-#define  PALETTE_FreePaletteByHandle(hPalette)  GDIOBJ_FreeObjByHandle((HGDIOBJ)hPalette, GDI_OBJECT_TYPE_PALETTE)
 #define  PALETTE_UnlockPalette(pPalette) GDIOBJ_vUnlockObject((POBJ)pPalette)
-
 #define  PALETTE_ShareLockPalette(hpal) \
   ((PPALETTE)GDIOBJ_ShareLockObj((HGDIOBJ)hpal, GDI_OBJECT_TYPE_PALETTE))
 #define  PALETTE_ShareUnlockPalette(ppal)  \
   GDIOBJ_vDereferenceObject(&ppal->BaseObject)
 
-BOOL NTAPI PALETTE_Cleanup(PVOID ObjectBody);
-INIT_FUNCTION NTSTATUS NTAPI InitPaletteImpl(VOID);
-VOID     FASTCALL PALETTE_ValidateFlags (PALETTEENTRY* lpPalE, INT size);
-INT      FASTCALL PALETTE_ToPhysical (PDC dc, COLORREF color);
+INIT_FUNCTION
+NTSTATUS
+NTAPI
+InitPaletteImpl(VOID);
 
-INT FASTCALL PALETTE_GetObject(PPALETTE pGdiObject, INT cbCount, LPLOGBRUSH lpBuffer);
-ULONG NTAPI PALETTE_ulGetNearestPaletteIndex(PALETTE* ppal, ULONG iColor);
-ULONG NTAPI PALETTE_ulGetNearestIndex(PALETTE* ppal, ULONG iColor);
-ULONG NTAPI PALETTE_ulGetNearestBitFieldsIndex(PALETTE* ppal, ULONG ulColor);
-VOID NTAPI PALETTE_vGetBitMasks(PPALETTE ppal, PULONG pulColors);
+PPALETTE
+NTAPI
+PALETTE_AllocPalette2(
+    _In_ ULONG iMode,
+    _In_ ULONG cColors,
+    _In_ PULONG pulColors,
+    _In_ FLONG flRed,
+    _In_ FLONG flGreen,
+    _In_ FLONG flBlue);
 
-PPALETTEENTRY FASTCALL ReturnSystemPalette (VOID);
-HPALETTE FASTCALL GdiSelectPalette(HDC, HPALETTE, BOOL);
+PPALETTE
+NTAPI
+PALETTE_AllocPalWithHandle(
+    _In_ ULONG iMode,
+    _In_ ULONG cColors,
+    _In_ PULONG pulColors,
+    _In_ FLONG flRed,
+    _In_ FLONG flGreen,
+    _In_ FLONG flBlue);
+
+VOID
+FASTCALL
+PALETTE_ValidateFlags(
+    PALETTEENTRY* lpPalE,
+    INT size);
+
+INT
+FASTCALL
+PALETTE_GetObject(
+    PPALETTE pGdiObject,
+    INT cbCount,
+    LPLOGBRUSH lpBuffer);
+
+ULONG
+NTAPI
+PALETTE_ulGetNearestPaletteIndex(
+    PPALETTE ppal,
+    ULONG iColor);
+
+ULONG
+NTAPI
+PALETTE_ulGetNearestIndex(
+    PPALETTE ppal,
+    ULONG iColor);
+
+ULONG
+NTAPI
+PALETTE_ulGetNearestBitFieldsIndex(
+    PPALETTE ppal,
+    ULONG ulColor);
+
+VOID
+NTAPI
+PALETTE_vGetBitMasks(
+    PPALETTE ppal,
+    PULONG pulColors);
+
+BOOL
+NTAPI
+PALETTE_Cleanup(PVOID ObjectBody);
 
 ULONG
 FORCEINLINE
@@ -105,4 +139,26 @@ PALETTE_ulGetRGBColorFromIndex(PPALETTE ppal, ULONG ulIndex)
                ppal->IndexedColors[ulIndex].peGreen,
                ppal->IndexedColors[ulIndex].peBlue);
 }
+
+HPALETTE
+NTAPI
+GreCreatePaletteInternal(
+    IN LPLOGPALETTE pLogPal,
+    IN UINT cEntries);
+
+////
+
+HPALETTE
+FASTCALL
+PALETTE_AllocPalette(ULONG Mode,
+                     ULONG NumColors,
+                     ULONG *Colors,
+                     ULONG Red,
+                     ULONG Green,
+                     ULONG Blue);
+
+HPALETTE
+FASTCALL
+PALETTE_AllocPaletteIndexedRGB(ULONG NumColors,
+                               CONST RGBQUAD *Colors);
 

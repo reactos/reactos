@@ -139,7 +139,7 @@ DC_vUpdateBackgroundBrush(PDC pdc)
 }
 
 HPALETTE
-FASTCALL
+NTAPI
 GdiSelectPalette(
     HDC hDC,
     HPALETTE hpal,
