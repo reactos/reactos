@@ -1599,7 +1599,14 @@ DIB_CreateDIBSection(
     /* HACK */
     if(hpal != (HPALETTE)0xFFFFFFFF)
     {
-        bmp->ppal = PALETTE_ShareLockPalette(hpal);
+        PPALETTE ppal = PALETTE_ShareLockPalette(hpal);
+
+        if (ppal)
+        {
+            if (bmp->ppal) PALETTE_ShareUnlockPalette(bmp->ppal);
+            bmp->ppal = ppal;
+        }
+
         /* Lazy delete hpal, it will be freed at surface release */
         GreDeleteObject(hpal);
     }
@@ -1771,10 +1778,11 @@ BuildDIBPalette(CONST BITMAPINFO *bmi)
 {
     WORD bits;
     ULONG ColorCount;
-    HPALETTE hPal;
+    HPALETTE hpal;
+    PPALETTE ppal;
     ULONG RedMask = 0, GreenMask = 0, BlueMask = 0;
     PDWORD pdwColors = (PDWORD)((PBYTE)bmi + bmi->bmiHeader.biSize);
-    INT paletteType;
+    ULONG paletteType, i;
 
     // Determine Bits Per Pixel
     bits = bmi->bmiHeader.biBitCount;
@@ -1833,18 +1841,41 @@ BuildDIBPalette(CONST BITMAPINFO *bmi)
         ColorCount = bmi->bmiHeader.biClrUsed;
     }
 
-    if (PAL_INDEXED == paletteType)
+    if (paletteType == PAL_INDEXED)
     {
-        hPal = PALETTE_AllocPaletteIndexedRGB(ColorCount, (RGBQUAD*)pdwColors);
+        RGBQUAD* pColors = (RGBQUAD*)((PBYTE)bmi + bmi->bmiHeader.biSize);
+
+        /* Allocate a palette */
+        ppal = PALETTE_AllocPalWithHandle(PAL_INDEXED,
+                                          ColorCount,
+                                          NULL,
+                                          0, 0, 0);
+        if (!ppal) return NULL;
+
+        /* Copy all colors */
+        for (i = 0; i < ColorCount; i++)
+        {
+            ppal->IndexedColors[i].peRed = pColors[i].rgbRed;
+            ppal->IndexedColors[i].peGreen = pColors[i].rgbGreen;
+            ppal->IndexedColors[i].peBlue = pColors[i].rgbBlue;
+            ppal->IndexedColors[i].peFlags = 0;
+        }
+
+        /* Get palette handle and unlock the palette */
+        hpal = ppal->BaseObject.hHmgr;
+        PALETTE_UnlockPalette(ppal);
     }
     else
     {
-        hPal = PALETTE_AllocPalette(paletteType, 0,
-                                    NULL,
-                                    RedMask, GreenMask, BlueMask);
+        ppal = PALETTE_AllocPalWithHandle(paletteType, 0,
+                                          NULL,
+                                          RedMask, GreenMask, BlueMask);
+
+        hpal = ppal->BaseObject.hHmgr;
+        PALETTE_UnlockPalette(ppal);
     }
 
-    return hPal;
+    return hpal;
 }
 
 /* Converts a BITMAPCOREINFO to a BITMAPINFO structure,

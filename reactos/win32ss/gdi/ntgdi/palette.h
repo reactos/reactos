@@ -156,9 +156,3 @@ PALETTE_AllocPalette(ULONG Mode,
                      ULONG Red,
                      ULONG Green,
                      ULONG Blue);
-
-HPALETTE
-FASTCALL
-PALETTE_AllocPaletteIndexedRGB(ULONG NumColors,
-                               CONST RGBQUAD *Colors);
-
