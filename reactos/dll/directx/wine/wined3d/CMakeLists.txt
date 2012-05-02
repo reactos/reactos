@@ -37,12 +37,6 @@ list(APPEND SOURCE
     wined3d_main.c
     ${CMAKE_CURRENT_BINARY_DIR}/wined3d.def)
 
-if(ARCH MATCHES amd64)
-list(APPEND SOURCE
-     powf.c
-     sqrtf.c)
-endif()
-
 add_library(wined3d SHARED
     ${SOURCE}
     version.rc)
