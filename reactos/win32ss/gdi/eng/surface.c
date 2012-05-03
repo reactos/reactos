@@ -257,25 +257,26 @@ SURFACE_AllocSurface(
                 RtlZeroMemory(pso->pvBits, cjBits);
             }
         }
+
+        /* Set pvScan0 and lDelta */
+        if (fjBitmap & BMF_TOPDOWN)
+        {
+            /* Topdown is the normal way */
+            pso->pvScan0 = pso->pvBits;
+            pso->lDelta = cjWidth;
+        }
+        else
+        {
+            /* Inversed bitmap (bottom up) */
+            pso->pvScan0 = ((PCHAR)pso->pvBits + pso->cjBits - cjWidth);
+            pso->lDelta = -(LONG)cjWidth;
+        }
     }
     else
     {
         /* There are no bitmap bits */
-        pso->pvBits = NULL;
-    }
-
-    /* Set pvScan0 and lDelta */
-    if (fjBitmap & BMF_TOPDOWN)
-    {
-        /* Topdown is the normal way */
-        pso->pvScan0 = pso->pvBits;
-        pso->lDelta = cjWidth;
-    }
-    else
-    {
-        /* Inversed bitmap (bottom up) */
-        pso->pvScan0 = ((PCHAR)pso->pvBits + pso->cjBits - cjWidth);
-        pso->lDelta = -(LONG)cjWidth;
+        pso->pvScan0 = pso->pvBits = NULL;
+        pso->lDelta = 0;
     }
 
     /* Assign a default palette and increment its reference count */
@@ -372,6 +373,8 @@ EngCreateDeviceSurface(
 {
     PSURFACE psurf;
     HSURF hsurf;
+
+__debugbreak();
 
     /* Allocate a surface */
     psurf = SURFACE_AllocSurface(STYPE_DEVICE,
