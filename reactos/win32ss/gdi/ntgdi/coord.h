@@ -159,4 +159,4 @@ GreModifyWorldTransform(
 VOID FASTCALL IntMirrorWindowOrg(PDC);
 void FASTCALL IntFixIsotropicMapping(PDC);
 LONG FASTCALL IntCalcFillOrigin(PDC);
-PPOINTL FASTCALL IntptlBrushOrigin(PDC pdc,LONG,LONG);
+

@@ -138,6 +138,71 @@ DC_vUpdateBackgroundBrush(PDC pdc)
     pdcattr->ulDirty_ &= ~DIRTY_BACKGROUND;
 }
 
+VOID
+NTAPI
+DC_vSetBrushOrigin(PDC pdc, LONG x, LONG y)
+{
+    /* Set the brush origin */
+    pdc->dclevel.ptlBrushOrigin.x = x;
+    pdc->dclevel.ptlBrushOrigin.y = y;
+
+    /* Set the fill origin */
+    pdc->ptlFillOrigin.x = x + pdc->ptlDCOrig.x;
+    pdc->ptlFillOrigin.y = y + pdc->ptlDCOrig.y;
+}
+
+/**
+ * \name NtGdiSetBrushOrg
+ *
+ * \brief Sets the brush origin that GDI uses when drawing with pattern
+ *     brushes. The brush origin is relative to the DC origin.
+ *
+ * @implemented
+ */
+BOOL
+APIENTRY
+NtGdiSetBrushOrg(
+    _In_ HDC hdc,
+    _In_ INT x,
+    _In_ INT y,
+    _Out_opt_ LPPOINT pptOut)
+{
+    PDC pdc;
+
+    /* Lock the DC */
+    pdc = DC_LockDc(hdc);
+    if (pdc == NULL)
+    {
+        EngSetLastError(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
+
+    /* Check if the old origin was requested */
+    if (pptOut != NULL)
+    {
+        /* Enter SEH for buffer transfer */
+        _SEH2_TRY
+        {
+            /* Probe and copy the old origin */
+            ProbeForWrite(pptOut, sizeof(POINT), 1);
+            *pptOut = pdc->pdcattr->ptlBrushOrigin;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            DC_UnlockDc(pdc);
+            _SEH2_YIELD(return FALSE);
+        }
+        _SEH2_END;
+    }
+
+    /* Call the internal function */
+    DC_vSetBrushOrigin(pdc, x, y);
+
+    /* Unlock the DC and return success */
+    DC_UnlockDc(pdc);
+    return TRUE;
+}
+
 HPALETTE
 NTAPI
 GdiSelectPalette(

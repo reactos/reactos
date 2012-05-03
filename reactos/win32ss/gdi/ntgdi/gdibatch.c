@@ -109,7 +109,7 @@ GdiFlushUserBatch(PDC dc, PGDIBATCHHDR pHdr)
         if (!dc) break;
         pgSBO = (PGDIBSSETBRHORG) pHdr;
         pdcattr->ptlBrushOrigin = pgSBO->ptlBrushOrigin;
-        IntptlBrushOrigin(dc, pgSBO->ptlBrushOrigin.x, pgSBO->ptlBrushOrigin.y);
+        DC_vSetBrushOrigin(dc, pgSBO->ptlBrushOrigin.x, pgSBO->ptlBrushOrigin.y);
         break;
      }
      case GdiBCExtSelClipRgn:

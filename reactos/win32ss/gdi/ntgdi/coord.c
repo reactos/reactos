@@ -1205,17 +1205,6 @@ NtGdiSetVirtualResolution(
     return TRUE;
 }
 
-PPOINTL
-FASTCALL
-IntptlBrushOrigin(PDC pdc, LONG x, LONG y )
-{
-    pdc->dclevel.ptlBrushOrigin.x = x;
-    pdc->dclevel.ptlBrushOrigin.y = y;
-    pdc->ptlFillOrigin.x = pdc->dclevel.ptlBrushOrigin.x + pdc->ptlDCOrig.x;
-    pdc->ptlFillOrigin.y = pdc->dclevel.ptlBrushOrigin.y + pdc->ptlDCOrig.y;
-    return &pdc->dclevel.ptlBrushOrigin;
-}
-
 static
 VOID FASTCALL
 DC_vGetAspectRatioFilter(PDC pDC, LPSIZE AspectRatio)

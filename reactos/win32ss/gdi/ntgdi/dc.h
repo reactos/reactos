@@ -189,6 +189,9 @@ VOID FASTCALL IntvGetDeviceCaps(PPDEVOBJ, PDEVCAPS);
 BOOL FASTCALL IntSetDefaultRegion(PDC);
 BOOL NTAPI GreSetDCOwner(HDC hdc, ULONG ulOwner);
 
+VOID
+NTAPI
+DC_vSetBrushOrigin(PDC pdc, LONG x, LONG y);
 
 FORCEINLINE
 PDC
