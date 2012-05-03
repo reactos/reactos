@@ -959,22 +959,24 @@ BOOLEAN MiIsPageFromCache(PMEMORY_AREA MemoryArea,
 
 NTSTATUS
 NTAPI
-MiCopyFromUserPage(PFN_NUMBER DestPage, PVOID SourceAddress)
+MiCopyFromUserPage(PFN_NUMBER DestPage, PFN_NUMBER SrcPage)
 {
     PEPROCESS Process;
-    KIRQL Irql;
-    PVOID TempAddress;
+    KIRQL Irql, Irql2;
+    PVOID DestAddress, SrcAddress;
 
-    ASSERT((ULONG_PTR)SourceAddress % PAGE_SIZE == 0);
     Process = PsGetCurrentProcess();
-    TempAddress = MiMapPageInHyperSpace(Process, DestPage, &Irql);
-    if (TempAddress == NULL)
+    DestAddress = MiMapPageInHyperSpace(Process, DestPage, &Irql);
+    SrcAddress = MiMapPageInHyperSpace(Process, SrcPage, &Irql2);
+    if (DestAddress == NULL || SrcAddress == NULL)
     {
         return(STATUS_NO_MEMORY);
     }
-    ASSERT((ULONG_PTR)TempAddress % PAGE_SIZE == 0);
-    RtlCopyMemory(TempAddress, SourceAddress, PAGE_SIZE);
-    MiUnmapPageInHyperSpace(Process, TempAddress, Irql);
+    ASSERT((ULONG_PTR)DestAddress % PAGE_SIZE == 0);
+    ASSERT((ULONG_PTR)SrcAddress % PAGE_SIZE == 0);
+    RtlCopyMemory(DestAddress, SrcAddress, PAGE_SIZE);
+    MiUnmapPageInHyperSpace(Process, SrcAddress, Irql2);
+    MiUnmapPageInHyperSpace(Process, DestAddress, Irql);
     return(STATUS_SUCCESS);
 }
 
@@ -1620,6 +1622,7 @@ MmAccessFaultSectionView(PMMSUPPORT AddressSpace,
    PMM_REGION Region;
    ULONG_PTR Entry;
    PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
+   SWAPENTRY SwapEntry;
 
    DPRINT("MmAccessFaultSectionView(%x, %x, %x, %x)\n", AddressSpace, MemoryArea, Address);
 
@@ -1699,6 +1702,10 @@ MmAccessFaultSectionView(PMMSUPPORT AddressSpace,
        return(STATUS_MM_RESTART_OPERATION);
    }
 
+   MmDeleteRmap(OldPage, Process, PAddress);
+   MmDeleteVirtualMapping(Process, PAddress, FALSE, NULL, NULL);
+   MmCreatePageFileMapping(Process, PAddress, MM_WAIT_ENTRY);
+
    /*
     * Release locks now we have the pageop
     */
@@ -1720,17 +1727,14 @@ MmAccessFaultSectionView(PMMSUPPORT AddressSpace,
    /*
     * Copy the old page
     */
-   MiCopyFromUserPage(NewPage, PAddress);
+   MiCopyFromUserPage(NewPage, OldPage);
 
    MmLockAddressSpace(AddressSpace);
-   /*
-    * Delete the old entry.
-    */
-   MmDeleteVirtualMapping(Process, Address, FALSE, NULL, NULL);
 
    /*
     * Set the PTE to point to the new page
     */
+   MmDeletePageFileMapping(Process, PAddress, &SwapEntry);
    Status = MmCreateVirtualMapping(Process,
                                    PAddress,
                                    Region->Protect,
@@ -1751,7 +1755,7 @@ MmAccessFaultSectionView(PMMSUPPORT AddressSpace,
    /*
     * Unshare the old page.
     */
-   MmDeleteRmap(OldPage, Process, PAddress);
+   DPRINT("Swapping page (Old %x New %x)\n", OldPage, NewPage);
    MmInsertRmap(NewPage, Process, PAddress);
    MmLockSectionSegment(Segment);
    MmUnsharePageEntrySectionSegment(Section, Segment, &Offset, FALSE, FALSE, NULL);
@@ -2388,8 +2392,17 @@ MmAlterViewAttributes(PMMSUPPORT AddressSpace,
    {
       for (i = 0; i < PAGE_ROUND_UP(RegionSize) / PAGE_SIZE; i++)
       {
+         SWAPENTRY SwapEntry;
          PVOID Address = (char*)BaseAddress + (i * PAGE_SIZE);
          ULONG Protect = NewProtect;
+
+         /* Wait for a wait entry to disappear */
+         do {
+             MmGetPageFileMapping(Process, Address, &SwapEntry);
+             if (SwapEntry != MM_WAIT_ENTRY)
+                 break;
+             MiWaitForPageEvent(Process, Address);
+         } while (TRUE);
 
          /*
           * If we doing COW for this segment then check if the page is
@@ -2404,6 +2417,10 @@ MmAlterViewAttributes(PMMSUPPORT AddressSpace,
             Offset.QuadPart = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress
                      + MemoryArea->Data.SectionData.ViewOffset.QuadPart;
             Entry = MmGetPageEntrySectionSegment(Segment, &Offset);
+            /*
+             * An MM_WAIT_ENTRY is ok in this case...  It'll just count as 
+             * IS_SWAP_FROM_SSE and we'll do the right thing.
+             */
             Page = MmGetPfnForProcess(Process, Address);
 
             Protect = PAGE_READONLY;

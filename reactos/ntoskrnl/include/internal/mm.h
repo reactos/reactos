@@ -955,8 +955,8 @@ ExAllocatePageWithPhysPage(PFN_NUMBER Page);
 NTSTATUS
 NTAPI
 MiCopyFromUserPage(
-    PFN_NUMBER Page,
-    PVOID SourceAddress
+    PFN_NUMBER NewPage,
+    PFN_NUMBER OldPage
 );
 
 NTSTATUS

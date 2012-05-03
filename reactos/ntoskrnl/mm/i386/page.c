@@ -558,6 +558,7 @@ MmDeletePageFileMapping(PEPROCESS Process, PVOID Address,
 
     if ((Pte & PA_PRESENT) || !(Pte & 0x800))
     {
+        DPRINT1("Pte %x (want not 1 and 0x800)\n", Pte);
         KeBugCheck(MEMORY_MANAGEMENT);
     }
 

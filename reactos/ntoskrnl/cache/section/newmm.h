@@ -4,7 +4,7 @@
 
 /* TYPES *********************************************************************/
 
-#define MM_WAIT_ENTRY            0x7ffff800
+#define MM_WAIT_ENTRY            0x7ffffc00
 #define PFN_FROM_SSE(E)          ((PFN_NUMBER)((E) >> PAGE_SHIFT))
 #define IS_SWAP_FROM_SSE(E)      ((E) & 0x00000001)
 #define MM_IS_WAIT_PTE(E)        \
