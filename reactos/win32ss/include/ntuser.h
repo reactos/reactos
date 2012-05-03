@@ -639,6 +639,8 @@ typedef struct _WND
   LIST_ENTRY ThreadListEntry;
 } WND, *PWND;
 
+#define PWND_BOTTOM ((PWND)1)
+
 typedef struct _SBWND
 {
   WND    wnd;

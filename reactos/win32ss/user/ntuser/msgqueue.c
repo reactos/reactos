@@ -1727,8 +1727,8 @@ co_MsqPeekHardwareMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
  3: handle to the window whose messages are to be retrieved.
  */
       if ( ( !Window || // 1
-            ( Window == (PWND)HWND_BOTTOM && CurrentMessage->Msg.hwnd == NULL ) || // 2
-            ( Window != (PWND)HWND_BOTTOM && Window->head.h == CurrentMessage->Msg.hwnd ) ) && // 3
+            ( Window == PWND_BOTTOM && CurrentMessage->Msg.hwnd == NULL ) || // 2
+            ( Window != PWND_BOTTOM && Window->head.h == CurrentMessage->Msg.hwnd ) ) && // 3
             ( ( ( MsgFilterLow == 0 && MsgFilterHigh == 0 ) && CurrentMessage->QS_Flags & QSflags ) ||
               ( MsgFilterLow <= CurrentMessage->Msg.message && MsgFilterHigh >= CurrentMessage->Msg.message ) ) )
         {
@@ -1790,8 +1790,8 @@ MsqPeekMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
  3: handle to the window whose messages are to be retrieved.
  */
       if ( ( !Window || // 1
-            ( Window == (PWND)HWND_BOTTOM && CurrentMessage->Msg.hwnd == NULL ) || // 2
-            ( Window != (PWND)HWND_BOTTOM && Window->head.h == CurrentMessage->Msg.hwnd ) ) && // 3
+            ( Window == PWND_BOTTOM && CurrentMessage->Msg.hwnd == NULL ) || // 2
+            ( Window != PWND_BOTTOM && Window->head.h == CurrentMessage->Msg.hwnd ) ) && // 3
             ( ( ( MsgFilterLow == 0 && MsgFilterHigh == 0 ) && CurrentMessage->QS_Flags & QSflags ) ||
               ( MsgFilterLow <= CurrentMessage->Msg.message && MsgFilterHigh >= CurrentMessage->Msg.message ) ) )
       {
