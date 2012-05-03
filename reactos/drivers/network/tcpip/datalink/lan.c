@@ -734,6 +734,10 @@ BOOLEAN ReconfigureAdapter(PRECONFIGURE_CONTEXT Context)
     
     Context->Adapter->CompletingReset = FALSE;
 
+    /* Update the IP and link status information cached in TCP */
+    TCPUpdateInterfaceIPInformation(Interface);
+    TCPUpdateInterfaceLinkStatus(Interface);
+
     /* We're done here if the adapter isn't connected */
     if (Context->State != LAN_STATE_STARTED)
     {
