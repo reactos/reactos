@@ -374,8 +374,6 @@ EngCreateDeviceSurface(
     PSURFACE psurf;
     HSURF hsurf;
 
-__debugbreak();
-
     /* Allocate a surface */
     psurf = SURFACE_AllocSurface(STYPE_DEVICE,
                                  sizl.cx,
