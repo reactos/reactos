@@ -12,6 +12,7 @@ list(APPEND SOURCE
     CreateBitmapIndirect.c
     CreateCompatibleDC.c
     CreateDIBitmap.c
+    CreateDIBPatternBrush
     CreateFont.c
     CreateFontIndirect.c
     CreateIconIndirect.c
@@ -57,6 +58,7 @@ list(APPEND SOURCE
     SetSysColors.c
     SetWindowExtEx.c
     SetWorldTransform.c
+    init.c
     testlist.c)
 
 add_executable(gdi32_apitest ${SOURCE})

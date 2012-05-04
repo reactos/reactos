@@ -216,7 +216,7 @@ Test_Bitmap(void)
 void
 Test_Dibsection(void)
 {
-	BITMAPINFO bmi = {{sizeof(BITMAPINFOHEADER), 10, 9, 1, 8, BI_RGB, 0, 10, 10, 0,0}};
+	BITMAPINFO bmi = {{sizeof(BITMAPINFOHEADER), 10, 9, 1, 16, BI_RGB, 0, 10, 10, 0,0}};
 	HBITMAP hBitmap;
 	BITMAP bitmap;
 	DIBSECTION dibsection;
@@ -233,25 +233,25 @@ Test_Dibsection(void)
 	ok(GetObjectW((HANDLE)((UINT_PTR)hBitmap & 0x0000ffff), 0, NULL) == sizeof(BITMAP), "\n");
 
 	SetLastError(ERROR_SUCCESS);
-	ok(GetObject(hBitmap, sizeof(DIBSECTION), NULL) == sizeof(BITMAP), "\n");
-	ok(GetObject(hBitmap, 0, NULL) == sizeof(BITMAP), "\n");
-	ok(GetObject(hBitmap, 5, NULL) == sizeof(BITMAP), "\n");
-	ok(GetObject(hBitmap, -5, NULL) == sizeof(BITMAP), "\n");
-	ok(GetObject(hBitmap, 0, &dibsection) == 0, "\n");
-	ok(GetObject(hBitmap, 5, &dibsection) == 0, "\n");
-	ok(GetObject(hBitmap, sizeof(BITMAP), &bitmap) == sizeof(BITMAP), "\n");
-	ok(GetObject(hBitmap, sizeof(BITMAP)+2, &bitmap) == sizeof(BITMAP), "\n");
-	ok(bitmap.bmType == 0, "\n");
-	ok(bitmap.bmWidth == 10, "\n");
-	ok(bitmap.bmHeight == 9, "\n");
-	ok(bitmap.bmWidthBytes == 12, "\n");
-	ok(bitmap.bmPlanes == 1, "\n");
-	ok(bitmap.bmBitsPixel == 8, "\n");
+	ok_long(GetObject(hBitmap, sizeof(DIBSECTION), NULL), sizeof(BITMAP));
+	ok_long(GetObject(hBitmap, 0, NULL), sizeof(BITMAP));
+	ok_long(GetObject(hBitmap, 5, NULL), sizeof(BITMAP));
+	ok_long(GetObject(hBitmap, -5, NULL), sizeof(BITMAP));
+	ok_long(GetObject(hBitmap, 0, &dibsection), 0);
+	ok_long(GetObject(hBitmap, 5, &dibsection), 0);
+	ok_long(GetObject(hBitmap, sizeof(BITMAP), &bitmap), sizeof(BITMAP));
+	ok_long(GetObject(hBitmap, sizeof(BITMAP)+2, &bitmap), sizeof(BITMAP));
+	ok_long(bitmap.bmType, 0);
+	ok_long(bitmap.bmWidth, 10);
+	ok_long(bitmap.bmHeight, 9);
+	ok_long(bitmap.bmWidthBytes, 20);
+	ok_long(bitmap.bmPlanes, 1);
+	ok_long(bitmap.bmBitsPixel, 16);
 	ok(bitmap.bmBits == pData, "\n");
-	ok(GetObject(hBitmap, sizeof(DIBSECTION), &dibsection) == sizeof(DIBSECTION), "\n");
-	ok(GetObject(hBitmap, sizeof(DIBSECTION)+2, &dibsection) == sizeof(DIBSECTION), "\n");
-	ok(GetObject(hBitmap, -5, &dibsection) == sizeof(DIBSECTION), "\n");
-	ok(GetLastError() == ERROR_SUCCESS, "\n");
+	ok_long(GetObject(hBitmap, sizeof(DIBSECTION), &dibsection), sizeof(DIBSECTION));
+	ok_long(GetObject(hBitmap, sizeof(DIBSECTION)+2, &dibsection), sizeof(DIBSECTION));
+	ok_long(GetObject(hBitmap, -5, &dibsection), sizeof(DIBSECTION));
+	ok_err(ERROR_SUCCESS);
 	DeleteObject(hBitmap);
 	ReleaseDC(0, hDC);
 }
@@ -333,6 +333,59 @@ Test_Brush(void)
 
 	ok(GetObjectW((HANDLE)GDI_OBJECT_TYPE_BRUSH, sizeof(LOGBRUSH), &logbrush) == 0, "\n");
 	ok(GetLastError() == ERROR_INVALID_PARAMETER, "expected ERROR_INVALID_PARAMETER, got %ld\n", GetLastError());
+}
+
+void
+Test_DIBBrush(void)
+{
+    struct
+    {
+        BITMAPINFOHEADER bmiHeader;
+        WORD wColors[4];
+        BYTE jBuffer[16];
+    } PackedDIB =
+    {
+        {sizeof(BITMAPINFOHEADER), 4, 4, 1, 8, BI_RGB, 0, 1, 1, 4, 0},
+        {1, 7, 3, 1},
+        {0,1,2,3,  1,2,3,0,  2,3,0,1,  3,0,1,2},
+    };
+    PBITMAPINFO pbmi = (PBITMAPINFO)&PackedDIB;
+	LOGBRUSH logbrush;
+	HBRUSH hBrush;
+
+    /* Create a DIB brush */
+    hBrush = CreateDIBPatternBrushPt(&PackedDIB, DIB_PAL_COLORS);
+	ok(hBrush != 0, "CreateSolidBrush failed, skipping tests.\n");
+	if (!hBrush) return;
+
+	FillMemory(&logbrush, sizeof(LOGBRUSH), 0x77);
+	SetLastError(ERROR_SUCCESS);
+
+	ok_long(GetObject(hBrush, sizeof(LOGBRUSH), &logbrush), sizeof(LOGBRUSH));
+	ok_long(logbrush.lbStyle, BS_DIBPATTERN);
+	ok_long(logbrush.lbColor, 0);
+	ok_long(logbrush.lbHatch, (ULONG_PTR)&PackedDIB);
+
+	ok_err(ERROR_SUCCESS);
+	DeleteObject(hBrush);
+
+
+    /* Create a DIB brush with undocumented iUsage 2 */
+    hBrush = CreateDIBPatternBrushPt(&PackedDIB, 2);
+	ok(hBrush != 0, "CreateSolidBrush failed, skipping tests.\n");
+	if (!hBrush) return;
+
+	FillMemory(&logbrush, sizeof(LOGBRUSH), 0x77);
+	SetLastError(ERROR_SUCCESS);
+
+	ok_long(GetObject(hBrush, sizeof(LOGBRUSH), &logbrush), sizeof(LOGBRUSH));
+	ok_long(logbrush.lbStyle, BS_DIBPATTERN);
+	ok_long(logbrush.lbColor, 0);
+	ok_long(logbrush.lbHatch, (ULONG_PTR)&PackedDIB);
+
+	ok_err(ERROR_SUCCESS);
+	DeleteObject(hBrush);
+
 }
 
 void
@@ -632,6 +685,7 @@ START_TEST(GetObject)
 	Test_Dibsection();
 	Test_Palette();
 	Test_Brush();
+	Test_DIBBrush();
 	Test_Pen();
 	Test_ExtPen(); // not implemented yet in ROS
 	Test_MetaDC();
