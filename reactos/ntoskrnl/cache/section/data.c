@@ -869,7 +869,7 @@ MmExtendCacheSection(PROS_SECTION_OBJECT Section,
     MmLockSectionSegment(Segment);
     Segment->RawLength.QuadPart = NewSize->QuadPart;
     Segment->Length.QuadPart = MAX(Segment->Length.QuadPart,
-                                   PAGE_ROUND_UP(Segment->RawLength.LowPart));
+                                   (LONG64)PAGE_ROUND_UP(Segment->RawLength.QuadPart));
     MmUnlockSectionSegment(Segment);
     return STATUS_SUCCESS;
 }

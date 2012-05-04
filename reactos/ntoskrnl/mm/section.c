@@ -1163,7 +1163,7 @@ MiReadPage(PMEMORY_AREA MemoryArea,
 NTSTATUS
 NTAPI
 MiReadPage(PMEMORY_AREA MemoryArea,
-           ULONG SegOffset,
+           ULONG_PTR SegOffset,
            PPFN_NUMBER Page)
 /*
  * FUNCTION: Read a page for a section backed memory area.
@@ -1685,7 +1685,7 @@ MmAccessFaultSectionView(PMMSUPPORT AddressSpace,
     */
    MmLockSectionSegment(Segment);
    Entry = MmGetPageEntrySectionSegment(Segment, &Offset);
-   
+
    /*
     * Wait for any other operations to complete
     */
@@ -2418,7 +2418,7 @@ MmAlterViewAttributes(PMMSUPPORT AddressSpace,
                      + MemoryArea->Data.SectionData.ViewOffset.QuadPart;
             Entry = MmGetPageEntrySectionSegment(Segment, &Offset);
             /*
-             * An MM_WAIT_ENTRY is ok in this case...  It'll just count as 
+             * An MM_WAIT_ENTRY is ok in this case...  It'll just count as
              * IS_SWAP_FROM_SSE and we'll do the right thing.
              */
             Page = MmGetPfnForProcess(Process, Address);

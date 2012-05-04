@@ -1738,12 +1738,16 @@ MiRemoveMappedPtes(IN PVOID BaseAddress,
             /* Was the PDE invalid */
             if (PointerPde->u.Long == 0)
             {
+#if (_MI_PAGING_LEVELS == 2)
                 /* Find the system double-mapped PDE that describes this mapping */
                 SystemMapPde = &MmSystemPagePtes[((ULONG_PTR)PointerPde & (SYSTEM_PD_SIZE - 1)) / sizeof(MMPTE)];
 
                 /* Make it valid */
                 ASSERT(SystemMapPde->u.Hard.Valid == 1);
                 MI_WRITE_VALID_PDE(PointerPde, *SystemMapPde);
+#else
+                ASSERT(FALSE);
+#endif
             }
 
             /* Dereference the PDE and the PTE */
@@ -1791,7 +1795,8 @@ MiRemoveFromSystemSpace(IN PMMSESSION Session,
                         IN PVOID Base,
                         OUT PCONTROL_AREA *ControlArea)
 {
-    ULONG Hash, Size, Count = 0, Entry;
+    ULONG Hash, Size, Count = 0;
+    ULONG_PTR Entry;
     PAGED_CODE();
 
     /* Compute the hash for this entry and loop trying to find it */
@@ -1846,7 +1851,7 @@ MiUnmapViewInSystemSpace(IN PMMSESSION Session,
 
     /* Clear the bits for this mapping */
     RtlClearBits(Session->SystemSpaceBitMap,
-                 ((ULONG_PTR)MappedBase - (ULONG_PTR)Session->SystemSpaceViewStart) >> 16,
+                 (ULONG)(((ULONG_PTR)MappedBase - (ULONG_PTR)Session->SystemSpaceViewStart) >> 16),
                  Size);
 
     /* Convert the size from a bit size into the actual size */

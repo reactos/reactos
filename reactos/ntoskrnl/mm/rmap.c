@@ -125,7 +125,7 @@ MmPageOutPhysicalAddress(PFN_NUMBER Page)
    Type = MemoryArea->Type;
    if (Type == MEMORY_AREA_SECTION_VIEW)
    {
-      ULONG Entry;
+      ULONG_PTR Entry;
       Offset = MemoryArea->Data.SectionData.ViewOffset.QuadPart +
                ((ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress);
 
@@ -134,8 +134,8 @@ MmPageOutPhysicalAddress(PFN_NUMBER Page)
       /*
        * Get or create a pageop
        */
-      Entry = MmGetPageEntrySectionSegment
-          (MemoryArea->Data.SectionData.Segment, (PLARGE_INTEGER)&Offset);
+      Entry = MmGetPageEntrySectionSegment(MemoryArea->Data.SectionData.Segment,
+                                           (PLARGE_INTEGER)&Offset);
       if (Entry && IS_SWAP_FROM_SSE(Entry) && SWAPENTRY_FROM_SSE(Entry) == MM_WAIT_ENTRY)
       {
          MmUnlockSectionSegment(MemoryArea->Data.SectionData.Segment);
@@ -430,7 +430,7 @@ schema.  In short, this requires the address part to be 0xffffff00 + n
 where n is between 0 and 255.  When such an rmap exists, it specifies a
 segment rmap in which the process part is a pointer to a slice of a section
 page table, and the low 8 bits of the address represent a page index in the
-page table slice.  Together, this information is used by 
+page table slice.  Together, this information is used by
 MmGetSectionAssociation to determine which page entry points to this page in
 the segment page table.
 

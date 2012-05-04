@@ -3579,7 +3579,7 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
         //
         PointerPte = MI_GET_PROTOTYPE_PTE_FOR_VPN(FoundVad, StartingAddress >> PAGE_SHIFT);
         LastPte = MI_GET_PROTOTYPE_PTE_FOR_VPN(FoundVad, EndingAddress >> PAGE_SHIFT);
-        QuotaCharge = LastPte - PointerPte + 1;
+        QuotaCharge = (ULONG)(LastPte - PointerPte + 1);
         KeAcquireGuardedMutexUnsafe(&MmSectionCommitMutex);
 
         //
