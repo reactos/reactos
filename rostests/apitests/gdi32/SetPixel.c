@@ -71,7 +71,7 @@ void Test_SetPixel_PAL()
     HDC hdc;
     HPALETTE hpal, hpalOld;
     PULONG pulBits;
-    ULONG i;
+    USHORT i;
 
     /* Initialize the BITMAPINFO */
     pbmi->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
