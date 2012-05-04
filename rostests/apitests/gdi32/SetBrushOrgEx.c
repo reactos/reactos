@@ -25,7 +25,7 @@ void Test_Set(ULONG ulLine, HDC hdc, INT x, INT y, LPPOINT ppt, BOOL bExp, DWORD
     }
     _SEH2_END;
 
-    ok(bResult == bExp, "line %ld: Wrong result, expected %ld, got %ld\n",
+    ok(bResult == bExp, "line %ld: Wrong result, expected %d, got %d\n",
        ulLine, bExp, bResult);
     ok(GetLastError() == dwErrExp,"line %ld: Wrong error, expected %lx, got %lx\n",
        ulLine, dwErrExp, GetLastError());
