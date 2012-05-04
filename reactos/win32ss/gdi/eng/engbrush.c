@@ -40,12 +40,12 @@ EBRUSHOBJ_vInit(EBRUSHOBJ *pebo, PBRUSH pbrush, PDC pdc)
     GDIOBJ_vReferenceObjectByPointer(&pebo->ppalSurf->BaseObject);
     //pebo->ppalDC = pdc->dclevel.ppal;
 
-    if (pbrush->flAttrs & GDIBRUSH_IS_NULL)
+    if (pbrush->flAttrs & BR_IS_NULL)
     {
         /* NULL brushes don't need a color */
         pebo->BrushObject.iSolidColor = 0;
     }
-    else if (pbrush->flAttrs & GDIBRUSH_IS_SOLID)
+    else if (pbrush->flAttrs & BR_IS_SOLID)
     {
         /* Set the RGB color */
         EBRUSHOBJ_vSetSolidRGBColor(pebo, pbrush->BrushAttr.lbColor);
@@ -56,7 +56,7 @@ EBRUSHOBJ_vInit(EBRUSHOBJ *pebo, PBRUSH pbrush, PDC pdc)
         pebo->BrushObject.iSolidColor = 0xFFFFFFFF;
 
         /* Use foreground color of hatch brushes */
-        if (pbrush->flAttrs & GDIBRUSH_IS_HATCH)
+        if (pbrush->flAttrs & BR_IS_HATCH)
             pebo->crCurrentText = pbrush->BrushAttr.lbColor;
     }
 }
@@ -69,7 +69,7 @@ EBRUSHOBJ_vSetSolidRGBColor(EBRUSHOBJ *pebo, COLORREF crColor)
     EXLATEOBJ exlo;
 
     /* Never use with non-solid brushes */
-    ASSERT(pebo->flattrs & GDIBRUSH_IS_SOLID);
+    ASSERT(pebo->flattrs & BR_IS_SOLID);
 
     /* Set the RGB color */
     pebo->crRealize = crColor;
@@ -217,7 +217,7 @@ EBRUSHOBJ_bRealizeBrush(EBRUSHOBJ *pebo, BOOL bCallDriver)
     psurfMask = NULL;
 
     /* DIB brushes with DIB_PAL_COLORS usage need a new palette */
-    if (pebo->pbrush->flAttrs & GDIBRUSH_IS_DIBPALCOLORS)
+    if (pebo->pbrush->flAttrs & BR_IS_DIBPALCOLORS)
     {
         ASSERT(FALSE);
         ppalPattern = 0; //CreateDIBPalette(psurfPattern->ppal, pebo->ppalDC);

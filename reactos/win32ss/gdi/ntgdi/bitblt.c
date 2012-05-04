@@ -831,7 +831,7 @@ IntPatBlt(
 
     FIXUP_ROP(dwRop);
 
-    if (pbrush->flAttrs & GDIBRUSH_IS_NULL)
+    if (pbrush->flAttrs & BR_IS_NULL)
     {
         return TRUE;
     }

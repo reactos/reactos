@@ -1263,7 +1263,7 @@ IntFillRect( DC *dc,
         return 0;
     }
 
-    if (!(pbrush->flAttrs & GDIBRUSH_IS_NULL))
+    if (!(pbrush->flAttrs & BR_IS_NULL))
     {
         pdcattr = dc->pdcattr;
 

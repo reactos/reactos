@@ -25,7 +25,7 @@ GreCreateBitmapEx(
     _In_ FLONG flags);
 
 HBITMAP
-FASTCALL
+NTAPI
 GreCreateDIBitmapInternal(
     IN HDC hDc,
     IN INT cx,
@@ -35,4 +35,5 @@ GreCreateDIBitmapInternal(
     IN OPTIONAL PBITMAPINFO pbmi,
     IN DWORD iUsage,
     IN FLONG fl,
+    IN UINT cjMaxBits,
     IN HANDLE hcmXform);

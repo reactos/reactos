@@ -120,16 +120,16 @@ IntCreateStockPen(DWORD dwPenStyle,
     pbrushPen->hbmClient = (HANDLE)NULL;
     pbrushPen->dwStyleCount = 0;
     pbrushPen->pStyle = 0;
-    pbrushPen->flAttrs = GDIBRUSH_IS_OLDSTYLEPEN;
+    pbrushPen->flAttrs = BR_IS_OLDSTYLEPEN;
 
     switch (dwPenStyle & PS_STYLE_MASK)
     {
         case PS_NULL:
-            pbrushPen->flAttrs |= GDIBRUSH_IS_NULL;
+            pbrushPen->flAttrs |= BR_IS_NULL;
             break;
 
         case PS_SOLID:
-            pbrushPen->flAttrs |= GDIBRUSH_IS_SOLID;
+            pbrushPen->flAttrs |= BR_IS_SOLID;
             break;
     }
     hPen = pbrushPen->BaseObject.hHmgr;

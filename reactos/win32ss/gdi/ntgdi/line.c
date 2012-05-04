@@ -131,7 +131,7 @@ IntGdiLineTo(DC  *dc,
         pbrLine = dc->dclevel.pbrLine;
         ASSERT(pbrLine);
 
-        if (!(pbrLine->flAttrs & GDIBRUSH_IS_NULL))
+        if (!(pbrLine->flAttrs & BR_IS_NULL))
         {
             Ret = IntEngLineTo(&psurf->SurfObj,
                                dc->rosdc.CombinedClip,
@@ -249,7 +249,7 @@ IntGdiPolyline(DC      *dc,
     pbrLine = dc->dclevel.pbrLine;
     ASSERT(pbrLine);
 
-    if (!(pbrLine->flAttrs & GDIBRUSH_IS_NULL))
+    if (!(pbrLine->flAttrs & BR_IS_NULL))
     {
         Points = EngAllocMem(0, Count * sizeof(POINT), GDITAG_TEMP);
         if (Points != NULL)

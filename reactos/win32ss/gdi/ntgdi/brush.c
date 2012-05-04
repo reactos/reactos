@@ -40,7 +40,7 @@ FASTCALL
 IntGdiSetBrushOwner(PBRUSH pbr, ULONG ulOwner)
 {
     // FIXME:
-    if (pbr->flAttrs & GDIBRUSH_IS_GLOBAL) return TRUE;
+    if (pbr->flAttrs & BR_IS_GLOBAL) return TRUE;
 
     if ((ulOwner == GDI_OBJ_HMGR_PUBLIC) || ulOwner == GDI_OBJ_HMGR_NONE)
     {
@@ -129,7 +129,7 @@ NTAPI
 BRUSH_Cleanup(PVOID ObjectBody)
 {
     PBRUSH pbrush = (PBRUSH)ObjectBody;
-    if (pbrush->flAttrs & (GDIBRUSH_IS_HATCH | GDIBRUSH_IS_BITMAP))
+    if (pbrush->flAttrs & (BR_IS_HATCH | BR_IS_BITMAP))
     {
         ASSERT(pbrush->hbmPattern);
         GreSetObjectOwner(pbrush->hbmPattern, GDI_OBJ_HMGR_POWNED);
@@ -162,7 +162,7 @@ BRUSH_GetObject(PBRUSH pbrush, INT Count, LPLOGBRUSH Buffer)
     Buffer->lbColor = pbrush->BrushAttr.lbColor;
 
     /* Set Hatch */
-    if ((pbrush->flAttrs & GDIBRUSH_IS_HATCH)!=0)
+    if ((pbrush->flAttrs & BR_IS_HATCH)!=0)
     {
         /* FIXME: This is not the right value */
         Buffer->lbHatch = (LONG)pbrush->hbmPattern;
@@ -175,23 +175,23 @@ BRUSH_GetObject(PBRUSH pbrush, INT Count, LPLOGBRUSH Buffer)
     Buffer->lbStyle = 0;
 
     /* Get the type of style */
-    if ((pbrush->flAttrs & GDIBRUSH_IS_SOLID)!=0)
+    if ((pbrush->flAttrs & BR_IS_SOLID)!=0)
     {
         Buffer->lbStyle = BS_SOLID;
     }
-    else if ((pbrush->flAttrs & GDIBRUSH_IS_NULL)!=0)
+    else if ((pbrush->flAttrs & BR_IS_NULL)!=0)
     {
         Buffer->lbStyle = BS_NULL; // BS_HOLLOW
     }
-    else if ((pbrush->flAttrs & GDIBRUSH_IS_HATCH)!=0)
+    else if ((pbrush->flAttrs & BR_IS_HATCH)!=0)
     {
         Buffer->lbStyle = BS_HATCHED;
     }
-    else if ((pbrush->flAttrs & GDIBRUSH_IS_BITMAP)!=0)
+    else if ((pbrush->flAttrs & BR_IS_BITMAP)!=0)
     {
         Buffer->lbStyle = BS_PATTERN;
     }
-    else if ((pbrush->flAttrs & GDIBRUSH_IS_DIB)!=0)
+    else if ((pbrush->flAttrs & BR_IS_DIB)!=0)
     {
         Buffer->lbStyle = BS_DIBPATTERN;
     }
@@ -254,7 +254,7 @@ IntGdiCreateDIBBrush(
     }
     hBrush = pbrush->BaseObject.hHmgr;
 
-    pbrush->flAttrs |= GDIBRUSH_IS_BITMAP | GDIBRUSH_IS_DIB;
+    pbrush->flAttrs |= BR_IS_BITMAP | BR_IS_DIB;
     pbrush->hbmPattern = hPattern;
     /* FIXME: Fill in the rest of fields!!! */
 
@@ -296,7 +296,7 @@ IntGdiCreateHatchBrush(
     }
     hBrush = pbrush->BaseObject.hHmgr;
 
-    pbrush->flAttrs |= GDIBRUSH_IS_HATCH;
+    pbrush->flAttrs |= BR_IS_HATCH;
     pbrush->hbmPattern = hPattern;
     pbrush->BrushAttr.lbColor = Color & 0xFFFFFF;
 
@@ -332,7 +332,7 @@ IntGdiCreatePatternBrush(
     }
     hBrush = pbrush->BaseObject.hHmgr;
 
-    pbrush->flAttrs |= GDIBRUSH_IS_BITMAP;
+    pbrush->flAttrs |= BR_IS_BITMAP;
     pbrush->hbmPattern = hPattern;
     /* FIXME: Fill in the rest of fields!!! */
 
@@ -359,7 +359,7 @@ IntGdiCreateSolidBrush(
     }
     hBrush = pbrush->BaseObject.hHmgr;
 
-    pbrush->flAttrs |= GDIBRUSH_IS_SOLID;
+    pbrush->flAttrs |= BR_IS_SOLID;
 
     pbrush->BrushAttr.lbColor = Color & 0x00FFFFFF;
     /* FIXME: Fill in the rest of fields!!! */
@@ -384,7 +384,7 @@ IntGdiCreateNullBrush(VOID)
     }
     hBrush = pbrush->BaseObject.hHmgr;
 
-    pbrush->flAttrs |= GDIBRUSH_IS_NULL;
+    pbrush->flAttrs |= BR_IS_NULL;
     GDIOBJ_vUnlockObject(&pbrush->BaseObject);
 
     return hBrush;
@@ -397,7 +397,7 @@ IntGdiSetSolidBrushColor(HBRUSH hBrush, COLORREF Color)
     PBRUSH pbrush;
 
     pbrush = BRUSH_ShareLockBrush(hBrush);
-    if (pbrush->flAttrs & GDIBRUSH_IS_SOLID)
+    if (pbrush->flAttrs & BR_IS_SOLID)
     {
         pbrush->BrushAttr.lbColor = Color & 0xFFFFFF;
     }

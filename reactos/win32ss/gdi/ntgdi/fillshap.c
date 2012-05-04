@@ -85,7 +85,7 @@ IntGdiPolygon(PDC    dc,
         ASSERT(psurf);
 
         /* Now fill the polygon with the current fill brush. */
-        if (!(pbrFill->flAttrs & GDIBRUSH_IS_NULL))
+        if (!(pbrFill->flAttrs & BR_IS_NULL))
         {
             BrushOrigin = *((PPOINTL)&pbrFill->ptOrigin);
             BrushOrigin.x += dc->ptlDCOrig.x;
@@ -100,7 +100,7 @@ IntGdiPolygon(PDC    dc,
         }
 
         // Draw the Polygon Edges with the current pen ( if not a NULL pen )
-        if (!(pbrLine->flAttrs & GDIBRUSH_IS_NULL))
+        if (!(pbrLine->flAttrs & BR_IS_NULL))
         {
             int i;
 
@@ -574,7 +574,7 @@ IntRectangle(PDC dc,
 
     if (pbrFill)
     {
-        if (!(pbrFill->flAttrs & GDIBRUSH_IS_NULL))
+        if (!(pbrFill->flAttrs & BR_IS_NULL))
         {
             BrushOrigin = *((PPOINTL)&pbrFill->ptOrigin);
             BrushOrigin.x += dc->ptlDCOrig.x;
@@ -597,7 +597,7 @@ IntRectangle(PDC dc,
 
     ret = TRUE; // Change default to success
 
-    if (!(pbrLine->flAttrs & GDIBRUSH_IS_NULL))
+    if (!(pbrLine->flAttrs & BR_IS_NULL))
     {
         Mix = ROP2_TO_MIX(pdcattr->jROP2);
         ret = ret && IntEngLineTo(&psurf->SurfObj,

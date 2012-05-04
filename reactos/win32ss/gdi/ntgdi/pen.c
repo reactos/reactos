@@ -86,7 +86,7 @@ IntGdiExtCreatePen(
    pbrushPen->dwStyleCount = dwStyleCount;
    pbrushPen->pStyle = pStyle;
 
-   pbrushPen->flAttrs = bOldStylePen? GDIBRUSH_IS_OLDSTYLEPEN : GDIBRUSH_IS_PEN;
+   pbrushPen->flAttrs = bOldStylePen? BR_IS_OLDSTYLEPEN : BR_IS_PEN;
 
    // If dwPenStyle is PS_COSMETIC, the width must be set to 1.
    if ( !(bOldStylePen) && ((dwPenStyle & PS_TYPE_MASK) == PS_COSMETIC) && ( dwWidth != 1) )
@@ -95,40 +95,40 @@ IntGdiExtCreatePen(
    switch (dwPenStyle & PS_STYLE_MASK)
    {
       case PS_NULL:
-         pbrushPen->flAttrs |= GDIBRUSH_IS_NULL;
+         pbrushPen->flAttrs |= BR_IS_NULL;
          break;
 
       case PS_SOLID:
-         pbrushPen->flAttrs |= GDIBRUSH_IS_SOLID;
+         pbrushPen->flAttrs |= BR_IS_SOLID;
          break;
 
       case PS_ALTERNATE:
-         pbrushPen->flAttrs |= GDIBRUSH_IS_BITMAP;
+         pbrushPen->flAttrs |= BR_IS_BITMAP;
          pbrushPen->hbmPattern = GreCreateBitmap(24, 1, 1, 1, (LPBYTE)PatternAlternate);
          break;
 
       case PS_DOT:
-         pbrushPen->flAttrs |= GDIBRUSH_IS_BITMAP;
+         pbrushPen->flAttrs |= BR_IS_BITMAP;
          pbrushPen->hbmPattern = GreCreateBitmap(24, 1, 1, 1, (LPBYTE)PatternDot);
          break;
 
       case PS_DASH:
-         pbrushPen->flAttrs |= GDIBRUSH_IS_BITMAP;
+         pbrushPen->flAttrs |= BR_IS_BITMAP;
          pbrushPen->hbmPattern = GreCreateBitmap(24, 1, 1, 1, (LPBYTE)PatternDash);
          break;
 
       case PS_DASHDOT:
-         pbrushPen->flAttrs |= GDIBRUSH_IS_BITMAP;
+         pbrushPen->flAttrs |= BR_IS_BITMAP;
          pbrushPen->hbmPattern = GreCreateBitmap(24, 1, 1, 1, (LPBYTE)PatternDashDot);
          break;
 
       case PS_DASHDOTDOT:
-         pbrushPen->flAttrs |= GDIBRUSH_IS_BITMAP;
+         pbrushPen->flAttrs |= BR_IS_BITMAP;
          pbrushPen->hbmPattern = GreCreateBitmap(24, 1, 1, 1, (LPBYTE)PatternDashDotDot);
          break;
 
       case PS_INSIDEFRAME:
-         pbrushPen->flAttrs |= (GDIBRUSH_IS_SOLID|GDIBRUSH_IS_INSIDEFRAME);
+         pbrushPen->flAttrs |= (BR_IS_SOLID|BR_IS_INSIDEFRAME);
          break;
 
       case PS_USERSTYLE:
@@ -136,7 +136,7 @@ IntGdiExtCreatePen(
          {
             /* FIXME: PS_USERSTYLE workaround */
             DPRINT1("PS_COSMETIC | PS_USERSTYLE not handled\n");
-            pbrushPen->flAttrs |= GDIBRUSH_IS_SOLID;
+            pbrushPen->flAttrs |= BR_IS_SOLID;
             break;
          }
          else
@@ -180,7 +180,7 @@ IntGdiSetSolidPenColor(HPEN hPen, COLORREF Color)
   pbrPen = PEN_ShareLockPen(hPen);
   if (pbrPen)
   {
-    if (pbrPen->flAttrs & GDIBRUSH_IS_SOLID)
+    if (pbrPen->flAttrs & BR_IS_SOLID)
     {
       pbrPen->BrushAttr.lbColor = Color & 0xFFFFFF;
     }
@@ -195,7 +195,7 @@ PEN_GetObject(PBRUSH pbrushPen, INT cbCount, PLOGPEN pBuffer)
    PEXTLOGPEN pExtLogPen;
    INT cbRetCount;
 
-   if (pbrushPen->flAttrs & GDIBRUSH_IS_OLDSTYLEPEN)
+   if (pbrushPen->flAttrs & BR_IS_OLDSTYLEPEN)
    {
       cbRetCount = sizeof(LOGPEN);
       if (pBuffer)
