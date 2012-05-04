@@ -639,6 +639,13 @@ int main( int argc, char **argv )
            #expression, (int)(result), _value); \
     }
 
+#define ok_ptr(expression, result) \
+    { \
+        void *_value = (expression); \
+        ok(_value == (result), "Wrong value for '%s', expected: " #result " (%p), got: %p\n", \
+           #expression, (void*)(result), _value); \
+    }
+
 #define ok_err(error) \
     ok(GetLastError() == (error), "Wrong last error. Expected " #error ", got %d\n", (int)GetLastError())
 
@@ -648,5 +655,6 @@ int main( int argc, char **argv )
 #define ok_long(expression, result) ok_hex(expression, result)
 #define ok_int(expression, result) ok_dec(expression, result)
 #define ok_ntstatus(status, expected) ok_hex(status, expected)
+#define ok_hdl ok_ptr
 
 #endif  /* __WINE_WINE_TEST_H */
