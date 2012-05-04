@@ -225,6 +225,7 @@ IntSynthesizeBitmap(PWINSTATION_OBJECT pWinStaObj, PCLIP pBmEl)
                                     pConvertedBmi,
                                     DIB_RGB_COLORS,
                                     0,
+                                    pMemObj->cbData - Offset,
                                     0);
 
     if (hBm)

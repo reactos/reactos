@@ -229,6 +229,7 @@ UserLoadImage(PCWSTR pwszName)
                                          pConvertedInfo,
                                          DIB_RGB_COLORS,
                                          0,
+                                         pbmfh->bfSize - pbmfh->bfOffBits,
                                          0);
 
 		NtGdiDeleteObjectApp(hdc);
