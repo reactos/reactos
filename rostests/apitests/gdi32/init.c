@@ -30,7 +30,7 @@ struct
 BOOL InitStuff(void)
 {
     BITMAPINFO bmi32 =
-        {{sizeof(BITMAPINFOHEADER), 4, -4, 1, 32, BI_RGB, 0, 1, 1, 0, 0}, {0}};
+        {{sizeof(BITMAPINFOHEADER), 4, -4, 1, 32, BI_RGB, 0, 1, 1, 0, 0}};
 
     ghdcDIB32 = CreateCompatibleDC(0);
 
