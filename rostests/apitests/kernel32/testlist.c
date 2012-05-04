@@ -5,11 +5,15 @@
 #define STANDALONE
 #include "wine/test.h"
 
+extern void func_GetCurrentDirectory(void);
 extern void func_GetDriveType(void);
+extern void func_SetCurrentDirectory(void);
 
 const struct test winetest_testlist[] =
 {
-    { "GetDriveType", func_GetDriveType },
+    { "GetCurrentDirectory",    func_GetCurrentDirectory },
+    { "GetDriveType",           func_GetDriveType },
+    { "SetCurrentDirectory",    func_SetCurrentDirectory },
 
     { 0, 0 }
 };

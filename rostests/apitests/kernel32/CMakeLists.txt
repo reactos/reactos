@@ -2,7 +2,9 @@
 add_definitions(-D_DLL -D__USE_CRTIMP)
 
 list(APPEND SOURCE
+    GetCurrentDirectory.c
     GetDriveType.c
+    SetCurrentDirectory.c
     testlist.c)
 
 add_executable(kernel32_apitest ${SOURCE})
