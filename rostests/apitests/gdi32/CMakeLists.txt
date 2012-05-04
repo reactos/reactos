@@ -37,6 +37,7 @@ list(APPEND SOURCE
     GdiSetAttrs.c
     GetClipRgn.c
     GetCurrentObject.c
+    GetDIBColorTable.c
     GetDIBits.c
     GetObject.c
     GetRandomRgn.c
@@ -48,9 +49,11 @@ list(APPEND SOURCE
     PatBlt.c
     Rectangle.c
     SelectObject.c
+    SetBrushOrgEx.c
     SetDCPenColor.c
     SetDIBits.c
     SetMapMode.c
+    SetPixel.c
     SetSysColors.c
     SetWindowExtEx.c
     SetWorldTransform.c

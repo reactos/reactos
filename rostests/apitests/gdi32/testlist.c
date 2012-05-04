@@ -39,6 +39,7 @@ extern void func_GdiReleaseLocalDC(void);
 extern void func_GdiSetAttrs(void);
 extern void func_GetClipRgn(void);
 extern void func_GetCurrentObject(void);
+extern void func_GetDIBColorTable(void);
 extern void func_GetDIBits(void);
 extern void func_GetPixel(void);
 extern void func_GetObject(void);
@@ -50,9 +51,11 @@ extern void func_MaskBlt(void);
 extern void func_PatBlt(void);
 extern void func_Rectangle(void);
 extern void func_SelectObject(void);
+extern void func_SetBrushOrgEx(void);
 extern void func_SetDCPenColor(void);
 extern void func_SetDIBits(void);
 extern void func_SetMapMode(void);
+extern void func_SetPixel(void);
 extern void func_SetSysColors(void);
 extern void func_SetWindowExtEx(void);
 extern void func_SetWorldTransform(void);
@@ -93,6 +96,7 @@ const struct test winetest_testlist[] =
     { "GdiSetAttrs", func_GdiSetAttrs },
     { "GetClipRgn", func_GetClipRgn },
     { "GetCurrentObject", func_GetCurrentObject },
+    { "GetDIBColorTable", func_GetDIBColorTable },
     { "GetDIBits", func_GetDIBits },
     { "GetPixel", func_GetPixel },
     { "GetObject", func_GetObject },
@@ -104,9 +108,11 @@ const struct test winetest_testlist[] =
     { "PatBlt", func_PatBlt },
     { "Rectangle", func_Rectangle },
     { "SelectObject", func_SelectObject },
+    { "SetBrushOrgEx", func_SetBrushOrgEx },
     { "SetDCPenColor", func_SetDCPenColor },
     { "SetDIBits", func_SetDIBits },
     { "SetMapMode", func_SetMapMode },
+    { "SetPixel", func_SetPixel },
     { "SetSysColors", func_SetSysColors },
     { "SetWindowExtEx", func_SetWindowExtEx },
     { "SetWorldTransform", func_SetWorldTransform },

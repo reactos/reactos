@@ -13,6 +13,68 @@ HBITMAP ghbmpTarget;
 PULONG gpulTargetBits;
 HDC hdcTarget;
 
+void Test_PatBlt_Params()
+{
+    BOOL ret;
+    ULONG i, rop;
+    HDC hdc;
+
+    /* Test a rop that contains only the operation index */
+    ret = PatBlt(hdcTarget, 0, 0, 1, 1, PATCOPY & 0x00FF0000);
+    ok_long(ret, 1);
+
+    /* Test an invalid rop  */
+    SetLastError(0);
+    ok_long(PatBlt(hdcTarget, 0, 0, 1, 1, SRCCOPY) , 0);
+    ok_err(0);
+
+    /* Test all rops */
+    for (i = 0; i < 256; i++)
+    {
+        rop = i << 16;
+        ret = PatBlt(hdcTarget, 0, 0, 1, 1, rop);
+
+        /* Only these should succeed (they use no source) */
+        if ((i == 0) || (i == 5) || (i == 10) || (i == 15) || (i == 80) ||
+            (i == 85) || (i == 90) || (i == 95) || (i == 160) || (i == 165) ||
+            (i == 170) || (i == 175) || (i == 240) || (i == 245) ||
+            (i == 250) || (i == 255))
+        {
+            ok(ret == 1, "index %ld failed, but should succeed\n", i);
+        }
+        else
+        {
+            ok(ret == 0, "index %ld succeeded, but should fail\n", i);
+        }
+    }
+
+    /* Test quaternary rop, the background part is simply ignored */
+    ret = PatBlt(hdcTarget, 0, 0, 1, 1, MAKEROP4(PATCOPY, PATINVERT));
+    ok_long(ret, 1);
+    ret = PatBlt(hdcTarget, 0, 0, 1, 1, MAKEROP4(PATCOPY, SRCCOPY));
+    ok_long(ret, 1);
+    ret = PatBlt(hdcTarget, 0, 0, 1, 1, MAKEROP4(SRCCOPY, PATCOPY));
+    ok_long(ret, 0);
+
+    /* Test an info DC */
+    hdc = CreateICA("DISPLAY", NULL, NULL, NULL);
+    ok(hdc != 0, "\n");
+    SetLastError(0);
+    ok_long(PatBlt(hdc, 0, 0, 1, 1, PATCOPY), 1);
+    ok_err(0);
+    DeleteDC(hdc);
+
+    /* Test a mem DC without selecting a bitmap */
+    hdc = CreateCompatibleDC(NULL);
+    ok(hdc != 0, "\n");
+    ok_long(PatBlt(hdc, 0, 0, 1, 1, PATCOPY), 1);
+    ok_err(0);
+    DeleteDC(hdc);
+
+
+
+}
+
 void Test_BrushOrigin()
 {
     ULONG aulBits[2] = {0x5555AAAA, 0};
@@ -100,6 +162,10 @@ START_TEST(PatBlt)
         return;
     }
 
+    Test_PatBlt_Params();
+
     Test_BrushOrigin();
+
+
 }
 
