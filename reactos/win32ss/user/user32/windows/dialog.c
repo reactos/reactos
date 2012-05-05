@@ -549,6 +549,10 @@ INT DIALOG_DoDialogBox( HWND hwnd, HWND owner )
     INT retval;
     HWND ownerMsg = GetAncestor( owner, GA_ROOT );
     BOOL bFirstEmpty;
+    PWND pWnd;
+
+    pWnd = ValidateHwnd(hwnd);
+    if (!pWnd) return -1;
 
     if (!(dlgInfo = GETDLGINFO(hwnd))) return -1;
 
@@ -582,9 +586,10 @@ INT DIALOG_DoDialogBox( HWND hwnd, HWND owner )
 
             /*
              * If the user is pressing Ctrl+C, send a WM_COPY message.
-             * TODO: Is there another way to check if the Dialog it's a MessageBox?.
+             * Guido Pola, Bug 5281, Is there another way to check if the Dialog it's a MessageBox?
              */
-            if( msg.message == WM_KEYDOWN && GetPropW(hwnd, L"ROS_MSGBOX") != NULL &&
+            if( msg.message == WM_KEYDOWN &&
+                pWnd->state & WNDS_MSGBOX && // Yes!
                 GetForegroundWindow() == hwnd )
             {
                 if( msg.wParam == L'C' && GetKeyState(VK_CONTROL) < 0 )

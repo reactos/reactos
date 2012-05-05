@@ -63,11 +63,10 @@ WINE_DEFAULT_DEBUG_CHANNEL(user32);
 #define MSGBOXEX_MAXBTNS    (4)
 
 typedef struct _MSGBOXINFO {
+  MSGBOXPARAMSW; // Wine passes this too.
+  // ReactOS
   HICON Icon;
   HFONT Font;
-  DWORD ContextHelpId;
-  MSGBOXCALLBACK Callback;
-  DWORD Style;
   int DefBtn;
   int nButtons;
   LONG *Btns;
@@ -187,7 +186,7 @@ static VOID MessageBoxTextToClipboard(HWND DialogWindow)
 static INT_PTR CALLBACK MessageBoxProc( HWND hwnd, UINT message,
                                         WPARAM wParam, LPARAM lParam )
 {
-  int i;
+  int i, Alert;
   PMSGBOXINFO mbi;
   HELPINFO hi;
   HWND owner;
@@ -195,12 +194,42 @@ static INT_PTR CALLBACK MessageBoxProc( HWND hwnd, UINT message,
   switch(message) {
     case WM_INITDIALOG:
       mbi = (PMSGBOXINFO)lParam;
+
+      SetWindowLongPtrW(hwnd, GWLP_USERDATA, (LONG_PTR)mbi);
+      NtUserxSetMessageBox(hwnd);
+
       if(!GetPropW(hwnd, L"ROS_MSGBOX"))
       {
         SetPropW(hwnd, L"ROS_MSGBOX", (HANDLE)lParam);
-        if(mbi->Icon)
+
+        if (mbi->dwContextHelpId)
+          SetWindowContextHelpId(hwnd, mbi->dwContextHelpId);
+
+        if (mbi->Icon)
+        {
           SendDlgItemMessageW(hwnd, MSGBOX_IDICON, STM_SETICON, (WPARAM)mbi->Icon, 0);
-        SetWindowContextHelpId(hwnd, mbi->ContextHelpId);
+          Alert = ALERT_SYSTEM_WARNING;
+        }
+        else // Setup the rest of the alerts.
+        {
+          switch(mbi->dwStyle & MB_ICONMASK)
+          {
+             case MB_ICONWARNING:
+                Alert = ALERT_SYSTEM_WARNING;
+             break;
+             case MB_ICONERROR:
+                Alert = ALERT_SYSTEM_ERROR;
+             break;
+             case MB_ICONQUESTION:
+                Alert = ALERT_SYSTEM_QUERY;
+             break;
+             default:
+                Alert = ALERT_SYSTEM_INFORMATIONAL;
+             /* fall through */
+          }
+        }
+        /* Send out the alert notifications. */
+        NotifyWinEvent(EVENT_SYSTEM_ALERT, hwnd, OBJID_ALERT, Alert);
 
         /* set control fonts */
         SendDlgItemMessageW(hwnd, MSGBOX_IDTEXT, WM_SETFONT, (WPARAM)mbi->Font, 0);
@@ -208,7 +237,7 @@ static INT_PTR CALLBACK MessageBoxProc( HWND hwnd, UINT message,
         {
           SendDlgItemMessageW(hwnd, mbi->Btns[i], WM_SETFONT, (WPARAM)mbi->Font, 0);
         }
-        switch(mbi->Style & MB_TYPEMASK)
+        switch(mbi->dwStyle & MB_TYPEMASK)
         {
           case MB_ABORTRETRYIGNORE:
           case MB_YESNO:
@@ -259,8 +288,8 @@ static INT_PTR CALLBACK MessageBoxProc( HWND hwnd, UINT message,
       memcpy(&hi, (void *)lParam, sizeof(hi));
       hi.dwContextId = GetWindowContextHelpId(hwnd);
 
-      if (mbi->Callback)
-        mbi->Callback(&hi);
+      if (mbi->lpfnMsgBoxCallback)
+        mbi->lpfnMsgBoxCallback(&hi);
       else
       {
         owner = GetWindow(hwnd, GW_OWNER);
@@ -273,7 +302,7 @@ static INT_PTR CALLBACK MessageBoxProc( HWND hwnd, UINT message,
       mbi = (PMSGBOXINFO)GetPropW(hwnd, L"ROS_MSGBOX");
       if(!mbi)
         return 0;
-      switch(mbi->Style & MB_TYPEMASK)
+      switch(mbi->dwStyle & MB_TYPEMASK)
       {
         case MB_ABORTRETRYIGNORE:
         case MB_YESNO:
@@ -703,12 +732,21 @@ MessageBoxTimeoutIndirectW(
     /* finally show the messagebox */
     mbi.Icon = Icon;
     mbi.Font = hFont;
-    mbi.ContextHelpId = lpMsgBoxParams->dwContextHelpId;
-    mbi.Callback = lpMsgBoxParams->lpfnMsgBoxCallback;
-    mbi.Style = lpMsgBoxParams->dwStyle;
+    mbi.dwContextHelpId = lpMsgBoxParams->dwContextHelpId;
+    mbi.lpfnMsgBoxCallback = lpMsgBoxParams->lpfnMsgBoxCallback;
+    mbi.dwStyle = lpMsgBoxParams->dwStyle;
     mbi.nButtons = nButtons;
     mbi.Btns = &Buttons[0];
     mbi.Timeout = Timeout;
+
+    /* Pass on to Justin Case so he can peek the message? */
+    mbi.cbSize       = lpMsgBoxParams->cbSize;
+    mbi.hwndOwner    = lpMsgBoxParams->hwndOwner;
+    mbi.hInstance    = lpMsgBoxParams->hInstance;
+    mbi.lpszText     = lpMsgBoxParams->lpszText;
+    mbi.lpszCaption  = lpMsgBoxParams->lpszCaption;
+    mbi.lpszIcon     = lpMsgBoxParams->lpszIcon;
+    mbi.dwLanguageId = lpMsgBoxParams->dwLanguageId;
 
     if(hDC)
       DeleteDC(hDC);

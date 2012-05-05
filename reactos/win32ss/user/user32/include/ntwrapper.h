@@ -727,6 +727,11 @@ EXTINLINE BOOL NtUserxRegisterShellHookWindow(HWND hWnd)
   return NtUserCallHwnd(hWnd, HWND_ROUTINE_REGISTERSHELLHOOKWINDOW);
 }
 
+EXTINLINE BOOL NtUserxSetMessageBox(HWND hWnd)
+{
+  return NtUserCallHwnd(hWnd, HWND_ROUTINE_SETMSGBOX);
+}
+
 EXTINLINE HWND NtUserxSetTaskmanWindow(HWND hWnd)
 {
     return NtUserCallHwndOpt(hWnd, HWNDOPT_ROUTINE_SETTASKMANWINDOW);

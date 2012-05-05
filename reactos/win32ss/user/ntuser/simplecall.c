@@ -648,6 +648,17 @@ NtUserCallHwnd(
          if (IntIsWindow(hWnd))
             return IntDeRegisterShellHookWindow(hWnd);
          return FALSE;
+      case HWND_ROUTINE_SETMSGBOX:
+      {
+         PWND Window;
+         UserEnterExclusive();
+         if ((Window = UserGetWindowObject(hWnd)))
+         {
+            Window->state |= WNDS_MSGBOX;
+         }
+         UserLeave();
+         return FALSE;
+      }
    }
    STUB;
 
