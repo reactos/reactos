@@ -127,15 +127,15 @@ Test_General(void)
 	//ok(GetObject(hBrush, sizeof(LOGBRUSH), plogbrush) == 0, "\n"); // fails on win7
 
 	/* Test invalid buffer */
-	SetLastError(ERROR_SUCCESS);
+	SetLastError(0xbadbad00);
 	ok(GetObjectA(GetStockObject(WHITE_BRUSH), sizeof(LOGBRUSH), (PVOID)0xc0000000) == 0, "\n");
-	ok(GetLastError() == ERROR_NOACCESS, "expected ERROR_NOACCESS, got %ld\n", GetLastError());
+    ok((GetLastError() == 0xbadbad00) || (GetLastError() == ERROR_NOACCESS), "wrong error: %ld\n", GetLastError());
 	SetLastError(ERROR_SUCCESS);
 	ok(GetObjectW(GetStockObject(BLACK_PEN), sizeof(LOGPEN), (PVOID)0xc0000000) == 0, "\n");
-	ok(GetLastError() == ERROR_NOACCESS, "expected ERROR_NOACCESS, got %ld\n", GetLastError());
+    ok((GetLastError() == 0xbadbad00) || (GetLastError() == ERROR_NOACCESS), "wrong error: %ld\n", GetLastError());
 	SetLastError(ERROR_SUCCESS);
 	ok(GetObjectW(GetStockObject(21), sizeof(BITMAP), (PVOID)0xc0000000) == 0, "\n");
-	ok(GetLastError() == ERROR_NOACCESS, "expected ERROR_NOACCESS, got %ld\n", GetLastError());
+    ok((GetLastError() == 0xbadbad00) || (GetLastError() == ERROR_NOACCESS), "wrong error: %ld\n", GetLastError());
 	SetLastError(ERROR_SUCCESS);
 	ok(GetObjectW(GetStockObject(SYSTEM_FONT), sizeof(LOGFONT), (PVOID)0xc0000000) == 0, "\n");
 	ok(GetLastError() == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %ld\n", GetLastError());
@@ -157,11 +157,11 @@ Test_General(void)
 
 	/* Test buffer size of 0 */
 	SetLastError(ERROR_SUCCESS);
-	ok(GetObjectA(GetStockObject(WHITE_BRUSH), 0, &TestStruct) == sizeof(LOGBRUSH), "\n");
+	ok_long(GetObjectA(GetStockObject(WHITE_BRUSH), 0, &TestStruct), sizeof(LOGBRUSH));
 	ok(GetLastError() == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %ld\n", GetLastError());
 	SetLastError(ERROR_SUCCESS);
 	ok(GetObjectA(GetStockObject(BLACK_PEN), 0, &TestStruct) == 0, "\n");
-	ok(GetLastError() == ERROR_NOACCESS, "expected ERROR_NOACCESS, got %ld\n", GetLastError());
+    ok((GetLastError() == 0xbadbad00) || (GetLastError() == ERROR_NOACCESS), "wrong error: %ld\n", GetLastError());
 	SetLastError(ERROR_SUCCESS);
 	ok(GetObjectW(GetStockObject(SYSTEM_FONT), 0, &TestStruct) == 0, "\n");
 	ok(GetLastError() == ERROR_SUCCESS, "expected ERROR_SUCCESS, got %ld\n", GetLastError());
@@ -458,7 +458,7 @@ Test_ExtPen(void)
 	ok(GetLastError() ==  ERROR_INVALID_PARAMETER, "got %ld\n", GetLastError());
     SetLastError(ERROR_SUCCESS);
 	ok(GetObject(hPen, 0, &extlogpen) == 0, "\n");
-	ok(GetLastError() == ERROR_NOACCESS, "got %ld\n", GetLastError());
+    ok((GetLastError() == 0xbadbad00) || (GetLastError() == ERROR_NOACCESS), "wrong error: %ld\n", GetLastError());
     SetLastError(ERROR_SUCCESS);
 	ok(GetObject(hPen, 4, &extlogpen) == 0, "\n");
 	ok(GetLastError() == ERROR_SUCCESS, "got %ld\n", GetLastError());
@@ -627,19 +627,18 @@ Test_Colorspace(void)
 	SetLastError(ERROR_SUCCESS);
 	GetObjectA((HANDLE)GDI_OBJECT_TYPE_COLORSPACE, 0, NULL);
 	//ok(GetObjectA((HANDLE)GDI_OBJECT_TYPE_COLORSPACE, 0, NULL) == 60, "\n");// FIXME: what structure? fails on win7
-	ok(GetLastError() == ERROR_INSUFFICIENT_BUFFER, "\n");
+	ok_err(ERROR_INSUFFICIENT_BUFFER);
 	SetLastError(ERROR_SUCCESS);
 	ok(GetObjectW((HANDLE)GDI_OBJECT_TYPE_COLORSPACE, 0, NULL) == 0, "\n");
-	ok(GetLastError() == ERROR_INSUFFICIENT_BUFFER, "\n");
+	ok_err(ERROR_INSUFFICIENT_BUFFER);
 	SetLastError(ERROR_SUCCESS);
 	ok(GetObjectA((HANDLE)GDI_OBJECT_TYPE_COLORSPACE, 327, buffer) == 0, "\n");
-	ok(GetLastError() == ERROR_INSUFFICIENT_BUFFER, "expected ERROR_INSUFFICIENT_BUFFER, got %ld\n", GetLastError());
+	ok_err(ERROR_INSUFFICIENT_BUFFER);
 	ok(GetObjectA((HANDLE)GDI_OBJECT_TYPE_COLORSPACE, 328, buffer) == 0, "\n");
-	ok(GetLastError() == ERROR_INVALID_PARAMETER, "expected ERROR_INVALID_PARAMETER, got %ld\n", GetLastError());
+	ok_err(ERROR_INVALID_PARAMETER);
 
-	ok(GetObjectA((HANDLE)GDI_OBJECT_TYPE_COLORSPACE, 328, NULL) == 0, "\n");
-	//ok(ret == 0, "Expected ... got %d\n", ret);
-	ok(GetLastError() == ERROR_INSUFFICIENT_BUFFER, "expected ERROR_INSUFFICIENT_BUFFER, got %ld\n", GetLastError());
+	ok_long(GetObjectA((HANDLE)GDI_OBJECT_TYPE_COLORSPACE, 328, NULL), 0);
+	ok_err(ERROR_INSUFFICIENT_BUFFER);
 }
 
 void
