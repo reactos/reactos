@@ -19,9 +19,13 @@ typedef union
 #define ok_flt(x, y) \
 { \
     FLT_LONG __x, __y; \
-     __x.e = (x); \
-     __y.e = (y); \
-    ok(__x.l == __y.l, "Wrong value for " #x ", expected " #y " (%f), got %f\n", (double)(y), (double)(x)); \
+    __x.e = (x); \
+    __y.e = (y); \
+    if (_isnan(y)) {\
+      ok((__x.l == __y.l) || (__x.l == 0), "Wrong value for " #x ", expected " #y " (%f), got %f\n", (double)(y), (double)(x)); \
+    } else {\
+      ok(__x.l == __y.l, "Wrong value for " #x ", expected " #y " (%f), got %f\n", (double)(y), (double)(x)); \
+    } \
 }
 
 #define ok_xform(xform, m11, m12, m21, m22, dx, dy) \
@@ -122,33 +126,33 @@ void Test_CombineTransform()
     set_xform(&xform1, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0);
     set_xform(&xform2, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0);
     set_xform(&xform3, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-    xform1.eDx = 4294967167.999999761;
+    xform1.eDx = (FLOAT)4294967167.999999761;
     ok(xform1.eDx == 4294967040.0, "float rounding error.\n");
     ret = CombineTransform(&xform3, &xform1, &xform2);
     ok(ret == 1, "expected ret = 1, got %d\n", ret);
     ok_xform(xform3, 1.0, 0.0, 0.0, 1.0, 4294967040.0, 0.0);
 
     set_xform(&xform3, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-    xform1.eDx = 4294967167.999999762;
+    xform1.eDx = (FLOAT)4294967167.999999762;
     ok(xform1.eDx == 4294967296.0, "float rounding error.\n");
     ret = CombineTransform(&xform3, &xform1, &xform2);
     ok_int(ret, 0);
     ok_int(GetLastError(), ERROR_SUCCESS);
     ok_xform(xform3, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
 
-    xform1.eDx = -4294967167.999999761;
+    xform1.eDx = (FLOAT)-4294967167.999999761;
     ok(xform1.eDx == -4294967040.0, "float rounding error.\n");
     ret = CombineTransform(&xform3, &xform1, &xform2);
     ok_int(ret, 1);
 
-    xform1.eDx = -4294967167.999999762;
+    xform1.eDx = (FLOAT)-4294967167.999999762;
     ok(xform1.eDx == -4294967296.0, "float rounding error.\n");
     ret = CombineTransform(&xform3, &xform1, &xform2);
     ok_int(ret, 0);
     ok_int(GetLastError(), ERROR_SUCCESS);
 
     xform1.eDx = 0;
-    xform1.eDy = 4294967167.999999761;
+    xform1.eDy = (FLOAT)4294967167.999999761;
     ok(xform1.eDy == 4294967040.0, "float rounding error.\n");
     ret = CombineTransform(&xform3, &xform1, &xform2);
     ok_int(ret, 1);
@@ -158,18 +162,18 @@ void Test_CombineTransform()
     ok_int(ret, 1);
     ok_flt(xform3.eDy, 4294967040.0);
 
-    xform1.eDy = 4294967167.999999762;
+    xform1.eDy = (FLOAT)4294967167.999999762;
     ok(xform1.eDy == 4294967296.0, "float rounding error.\n");
     ret = CombineTransform(&xform3, &xform1, &xform2);
     ok_int(ret, 0);
     ok_int(GetLastError(), ERROR_SUCCESS);
 
-    xform1.eDy = -4294967167.999999761;
+    xform1.eDy = (FLOAT)-4294967167.999999761;
     ok(xform1.eDy == -4294967040.0, "float rounding error.\n");
     ret = CombineTransform(&xform3, &xform1, &xform2);
     ok_int(ret, 1);
 
-    xform1.eDy = -4294967167.999999762;
+    xform1.eDy = (FLOAT)-4294967167.999999762;
     ok(xform1.eDy == -4294967296.0, "float rounding error.\n");
     ret = CombineTransform(&xform3, &xform1, &xform2);
     ok_int(ret, 0);
@@ -180,7 +184,7 @@ void Test_CombineTransform()
     ok_int(ret, 1);
 
     set_xform(&xform1, 1000.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-    xform1.eDx = -4294967167.999999762;
+    xform1.eDx = (FLOAT)-4294967167.999999762;
     xform2.eM11 = 1000.0;
     ret = CombineTransform(&xform3, &xform1, &xform2);
     ok_int(ret, 0);
@@ -207,18 +211,18 @@ void Test_CombineTransform()
     ok_xform(xform3, geIND, geIND, geINF, geINF, 0.0, 0.0);
     ok_int(GetLastError(), ERROR_SUCCESS);
 
-    set_xform(&xform1, 18446743500000000000.0, 0.0, 1.0, 0.0, 0.0, 0.0);
+    set_xform(&xform1, (FLOAT)18446743500000000000.0, 0.0, 1.0, 0.0, 0.0, 0.0);
     xform2 = xform1;
     ret = CombineTransform(&xform3, &xform1, &xform2);
     ok_int(ret, 1);
     ok_flt(xform3.eM11, 340282326356119260000000000000000000000.0);
 
-    xform1.eM11 = 18446745000000000000.0;
+    xform1.eM11 = (FLOAT)18446745000000000000.0;
     ret = CombineTransform(&xform3, &xform1, &xform2);
     ok_int(ret, 1);
     ok_flt(xform3.eM11, 340282346638528860000000000000000000000.0);
 
-    xform1.eM11 = 18446746000000000000.0;
+    xform1.eM11 = (FLOAT)18446746000000000000.0;
     ret = CombineTransform(&xform3, &xform1, &xform2);
     ok_long(*(DWORD*)&xform3.eM11, 0x7f800000);
 

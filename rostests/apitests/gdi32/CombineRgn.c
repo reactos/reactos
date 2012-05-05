@@ -21,7 +21,7 @@ void Test_CombineRgn_Params()
     ok_long(CombineRgn(NULL, NULL, NULL, 0), ERROR);
     ok_long(CombineRgn(hrgn1, hrgn2, hrgn3, 0), ERROR);
     ok_long(CombineRgn(hrgn1, hrgn2, hrgn3, 6), ERROR);
-    ok_long(GetLastError(), 0xbadbabe);
+    ok((GetLastError() == 0xbadbabe) || (GetLastError() == ERROR_INVALID_PARAMETER), "wrong error: %ld\n", GetLastError());
 
 }
 
@@ -38,7 +38,7 @@ void Test_CombineRgn_COPY()
     ok_long(CombineRgn(NULL, hrgn1, NULL, RGN_COPY), ERROR);
     ok_long(CombineRgn(NULL, NULL, hrgn1, RGN_COPY), ERROR);
     ok_long(CombineRgn(NULL, hrgn1, hrgn2, RGN_COPY), ERROR);
-    ok_long(GetLastError(), 0xbadbabe);
+    ok((GetLastError() == 0xbadbabe) || (GetLastError() == ERROR_INVALID_HANDLE), "wrong error: %ld\n", GetLastError());
 
     ok_long(CombineRgn(hrgn1, hrgn2, hrgn3, RGN_COPY), SIMPLEREGION);
     ok(EqualRgn(hrgn1, hrgn2), "Region is not correct\n");
@@ -58,7 +58,7 @@ void Test_CombineRgn_COPY()
     ok_long(CombineRgn(hrgn1, NULL, NULL, RGN_COPY), ERROR);
     ok(EqualRgn(hrgn1, hrgn3), "Region is not correct\n");
 
-    ok_long(GetLastError(), 0xbadbabe);
+    ok((GetLastError() == 0xbadbabe) || (GetLastError() == ERROR_INVALID_HANDLE), "wrong error: %ld\n", GetLastError());
 
 }
 
@@ -77,7 +77,7 @@ void Test_CombineRgn_AND()
     ok_long(CombineRgn(hrgn1, NULL, hrgn2, RGN_AND), ERROR);
     ok_long(CombineRgn(hrgn1, GetStockObject(BLACK_PEN), hrgn2, RGN_AND), ERROR);
     ok_long(CombineRgn(hrgn1, hrgn2, GetStockObject(BLACK_PEN), RGN_AND), ERROR);
-    ok_long(GetLastError(), 0xbadbabe);
+    ok((GetLastError() == 0xbadbabe) || (GetLastError() == ERROR_INVALID_HANDLE), "wrong error: %ld\n", GetLastError());
 
 
     ok_long(CombineRgn(hrgn1, hrgn2, hrgn3, RGN_AND), SIMPLEREGION);
@@ -152,7 +152,7 @@ void Test_CombineRgn_DIFF()
     ok_long(CombineRgn(hrgn1, NULL, hrgn2, RGN_DIFF), ERROR);
     ok_long(CombineRgn(hrgn1, GetStockObject(BLACK_PEN), hrgn2, RGN_DIFF), ERROR);
     ok_long(CombineRgn(hrgn1, hrgn2, GetStockObject(BLACK_PEN), RGN_DIFF), ERROR);
-    ok_long(GetLastError(), 0xbadbabe);
+    ok((GetLastError() == 0xbadbabe) || (GetLastError() == ERROR_INVALID_HANDLE), "wrong error: %ld\n", GetLastError());
 
     ok_long(CombineRgn(hrgn1, hrgn1, hrgn1, RGN_DIFF), NULLREGION);
     ok_long(CombineRgn(hrgn1, hrgn2, hrgn2, RGN_DIFF), NULLREGION);
@@ -182,7 +182,7 @@ void Test_CombineRgn_XOR()
     ok_long(CombineRgn(hrgn1, NULL, hrgn2, RGN_XOR), ERROR);
     ok_long(CombineRgn(hrgn1, GetStockObject(BLACK_PEN), hrgn2, RGN_XOR), ERROR);
     ok_long(CombineRgn(hrgn1, hrgn2, GetStockObject(BLACK_PEN), RGN_XOR), ERROR);
-    ok_long(GetLastError(), 0xbadbabe);
+    ok((GetLastError() == 0xbadbabe) || (GetLastError() == ERROR_INVALID_HANDLE), "wrong error: %ld\n", GetLastError());
 
     ok_long(CombineRgn(hrgn1, hrgn2, hrgn3, RGN_XOR), COMPLEXREGION);
     ok_long(CombineRgn(hrgn4, hrgn2, hrgn3, RGN_OR), COMPLEXREGION);
