@@ -20,6 +20,7 @@
 
 #include <stdarg.h>
 
+#define _WIN32_WINNT  0x0500
 #define NTDDI_WIN2K   0x05000000
 #define NTDDI_VERSION NTDDI_WIN2K /* for some MIDL_STUB_MESSAGE fields */
 
