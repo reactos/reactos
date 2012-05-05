@@ -59,7 +59,7 @@ InitPaletteImpl(VOID);
 
 PPALETTE
 NTAPI
-PALETTE_AllocPalette2(
+PALETTE_AllocPalette(
     _In_ ULONG iMode,
     _In_ ULONG cColors,
     _In_ PULONG pulColors,
@@ -146,13 +146,3 @@ GreCreatePaletteInternal(
     IN LPLOGPALETTE pLogPal,
     IN UINT cEntries);
 
-////
-
-HPALETTE
-FASTCALL
-PALETTE_AllocPalette(ULONG Mode,
-                     ULONG NumColors,
-                     ULONG *Colors,
-                     ULONG Red,
-                     ULONG Green,
-                     ULONG Blue);
