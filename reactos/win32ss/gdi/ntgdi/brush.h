@@ -56,8 +56,8 @@ typedef struct _EBRUSHOBJ
 //    DWORD       dwUnknown30;
     SURFACE *   psurfTrg;
     struct _PALETTE *   ppalSurf;
-//    PALETTE *   ppalDC;
-//    PALETTE *   ppal3;
+    struct _PALETTE *   ppalDC;
+    struct _PALETTE *   ppalDIB;
 //    DWORD       dwUnknown44;
     BRUSH *     pbrush;
     FLONG       flattrs;

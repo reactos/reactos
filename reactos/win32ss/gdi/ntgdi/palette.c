@@ -151,7 +151,7 @@ NTAPI
 PALETTE_AllocPalette(
     _In_ ULONG iMode,
     _In_ ULONG cColors,
-    _In_ PULONG pulColors,
+    _In_opt_ PULONG pulColors,
     _In_ FLONG flRed,
     _In_ FLONG flGreen,
     _In_ FLONG flBlue)

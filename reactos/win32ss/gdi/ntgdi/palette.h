@@ -62,7 +62,7 @@ NTAPI
 PALETTE_AllocPalette(
     _In_ ULONG iMode,
     _In_ ULONG cColors,
-    _In_ PULONG pulColors,
+    _In_opt_ PULONG pulColors,
     _In_ FLONG flRed,
     _In_ FLONG flGreen,
     _In_ FLONG flBlue);
@@ -138,6 +138,16 @@ PALETTE_ulGetRGBColorFromIndex(PPALETTE ppal, ULONG ulIndex)
     return RGB(ppal->IndexedColors[ulIndex].peRed,
                ppal->IndexedColors[ulIndex].peGreen,
                ppal->IndexedColors[ulIndex].peBlue);
+}
+
+FORCEINLINE
+VOID
+PALETTE_vSetRGBColorForIndex(PPALETTE ppal, ULONG ulIndex, COLORREF crColor)
+{
+    if (ulIndex >= ppal->NumColors) return;
+    ppal->IndexedColors[ulIndex].peRed = GetRValue(crColor);
+    ppal->IndexedColors[ulIndex].peGreen = GetGValue(crColor);
+    ppal->IndexedColors[ulIndex].peBlue = GetBValue(crColor);
 }
 
 HPALETTE
