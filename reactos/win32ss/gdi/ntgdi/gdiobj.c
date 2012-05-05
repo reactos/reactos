@@ -479,6 +479,8 @@ GDIOBJ_vDereferenceObject(POBJ pobj)
     /* Must not be exclusively locked */
     ASSERT(pobj->cExclusiveLock == 0);
 
+    DBG_LOGEVENT(&pobj->slhLog, EVENT_DEREFERENCE, cRefs);
+
     /* Check if the object has a handle */
     if (GDI_HANDLE_GET_INDEX(pobj->hHmgr))
     {
@@ -492,6 +494,9 @@ GDIOBJ_vDereferenceObject(POBJ pobj)
         /* Check if we reached 0 and handle bit is not set */
         if (cRefs == 0)
         {
+            /* Make sure it's ok to delete the object */
+            ASSERT(pobj->BaseFlags & BASEFLAG_READY_TO_DIE);
+
             /* Check if the handle was process owned */
             if (gpentHmgr[ulIndex].ObjectOwner.ulObj != GDI_OBJ_HMGR_PUBLIC &&
                 gpentHmgr[ulIndex].ObjectOwner.ulObj != GDI_OBJ_HMGR_NONE)
@@ -504,6 +509,9 @@ GDIOBJ_vDereferenceObject(POBJ pobj)
 
             /* Push entry to the free list */
             ENTRY_vPushFreeEntry(&gpentHmgr[ulIndex]);
+
+            /* Free the object */
+            GDIOBJ_vFreeObject(pobj);
         }
     }
     else
@@ -511,18 +519,13 @@ GDIOBJ_vDereferenceObject(POBJ pobj)
         /* Decrement the objects reference count */
         ASSERT(pobj->ulShareCount > 0);
         cRefs = InterlockedDecrement((LONG*)&pobj->ulShareCount);
-    }
 
-    DBG_LOGEVENT(&pobj->slhLog, EVENT_DEREFERENCE, cRefs);
-
-    /* Check if we reached 0 */
-    if (cRefs == 0)
-    {
-        /* Make sure it's ok to delete the object */
-        ASSERT(pobj->BaseFlags & BASEFLAG_READY_TO_DIE);
-
-        /* Free the object */
-        GDIOBJ_vFreeObject(pobj);
+        /* Check if we reached 0 */
+        if (cRefs == 0)
+        {
+            /* Free the object */
+            GDIOBJ_vFreeObject(pobj);
+        }
     }
 }
 
