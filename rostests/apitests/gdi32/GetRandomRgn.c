@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS api tests
  * LICENSE:         GPL - See COPYING in the top level directory
- * PURPOSE:         Test for ...
+ * PURPOSE:         Test for GetRandomRgn
  * PROGRAMMERS:     Timo Kreuzer
  */
 
@@ -41,22 +41,22 @@ void Test_GetRandomRgn_Params()
     SetLastError(0xbadbad00);
     ret = GetRandomRgn(NULL, NULL, 0);
     ok_int(ret, -1);
-    ok_long(GetLastError(), 0xbadbad00);
+    ok((GetLastError() == 0xbadbad00) || (GetLastError() == ERROR_INVALID_HANDLE), "wrong error: %ld\n", GetLastError());
 
     SetLastError(0xbadbad00);
     ret = GetRandomRgn(NULL, NULL, CLIPRGN);
     ok_int(ret, -1);
-    ok_long(GetLastError(), 0xbadbad00);
+    ok((GetLastError() == 0xbadbad00) || (GetLastError() == ERROR_INVALID_HANDLE), "wrong error: %ld\n", GetLastError());
 
     SetLastError(0xbadbad00);
     ret = GetRandomRgn(NULL, hrgn, 0);
     ok_int(ret, -1);
-    ok_long(GetLastError(), 0xbadbad00);
+    ok((GetLastError() == 0xbadbad00) || (GetLastError() == ERROR_INVALID_HANDLE), "wrong error: %ld\n", GetLastError());
 
     SetLastError(0xbadbad00);
     ret = GetRandomRgn(NULL, hrgn, CLIPRGN);
     ok_int(ret, -1);
-    ok_long(GetLastError(), 0xbadbad00);
+    ok((GetLastError() == 0xbadbad00) || (GetLastError() == ERROR_INVALID_HANDLE), "wrong error: %ld\n", GetLastError());
 
     SetLastError(0xbadbad00);
     ret = GetRandomRgn(hdc, NULL, 0);
@@ -101,7 +101,7 @@ void Test_GetRandomRgn_Params()
     SetLastError(0xbadbad00);
     ret = GetRandomRgn((HDC)0x123, hrgn, CLIPRGN);
     ok_int(ret, -1);
-    ok_long(GetLastError(), 0xbadbad00);
+    ok((GetLastError() == 0xbadbad00) || (GetLastError() == ERROR_INVALID_HANDLE), "wrong error: %ld\n", GetLastError());
 
     DeleteObject(hrgn);
     DeleteDC(hdc);

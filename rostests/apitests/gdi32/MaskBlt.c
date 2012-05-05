@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS api tests
  * LICENSE:         GPL - See COPYING in the top level directory
- * PURPOSE:         Test for GdiReleaseLocalDC
+ * PURPOSE:         Test for MaskBlt
  * PROGRAMMERS:     Timo Kreuzer
  */
 
@@ -12,25 +12,30 @@
 void Test_MaskBlt_1bpp()
 {
     HDC hdcDst, hdcSrc;
-	BITMAPINFO bmi = {{sizeof(BITMAPINFOHEADER), 8, 1, 1, 1, BI_RGB, 0, 10, 10, 0,0}};
+    struct
+    {
+        BITMAPINFOHEADER bmiHeader;
+        ULONG aulColors[2];
+    } bmiData = {{sizeof(BITMAPINFOHEADER), 8, 1, 1, 1, BI_RGB, 0, 10, 10, 2,0}, {0, 0xFFFFFF}};
+    PBITMAPINFO pbmi = (PBITMAPINFO)&bmiData;
     HBITMAP hbmDst, hbmSrc, hbmMsk;
     PUCHAR pjBitsDst, pjBitsSrc, pjBitsMsk;
     BOOL ret;
 
     /* Create a dest dc and bitmap */
     hdcDst = CreateCompatibleDC(NULL);
-	hbmDst = CreateDIBSection(hdcDst, &bmi, DIB_RGB_COLORS, (PVOID*)&pjBitsDst, NULL, 0);
+    hbmDst = CreateDIBSection(hdcDst, pbmi, DIB_RGB_COLORS, (PVOID*)&pjBitsDst, NULL, 0);
     SelectObject(hdcDst, hbmDst);
 
     /* Create a source dc and bitmap */
     hdcSrc = CreateCompatibleDC(NULL);
-	hbmSrc = CreateDIBSection(hdcSrc, &bmi, DIB_RGB_COLORS, (PVOID*)&pjBitsSrc, NULL, 0);
+    hbmSrc = CreateDIBSection(hdcSrc, pbmi, DIB_RGB_COLORS, (PVOID*)&pjBitsSrc, NULL, 0);
     SelectObject(hdcSrc, hbmSrc);
 
     /* Create a 1 bpp mask bitmap */
-	hbmMsk = CreateDIBSection(hdcDst, &bmi, DIB_RGB_COLORS, (PVOID*)&pjBitsMsk, NULL, 0);
+    hbmMsk = CreateDIBSection(hdcDst, pbmi, DIB_RGB_COLORS, (PVOID*)&pjBitsMsk, NULL, 0);
 
-    /* Do the masking */
+    /* Do the masking (SRCCOPY / NOOP) */
     pjBitsDst[0] = 0xAA;
     pjBitsSrc[0] = 0xCC;
     pjBitsMsk[0] = 0xF0;
@@ -45,13 +50,29 @@ void Test_MaskBlt_1bpp()
     ok(ret == 1, "MaskBlt failed (%d)\n", ret);
     ok (pjBitsDst[0] == 0xF0, "pjBitsDst[0] == 0x%x\n", pjBitsDst[0]);
 
+    /* Do the masking (NOTSRCERASE / SRCINVERT) */
+    pjBitsDst[0] = 0xF0;
+    pjBitsSrc[0] = 0xCC;
+    pjBitsMsk[0] = 0xAA;
+    ret = MaskBlt(hdcDst, 0, 0, 8, 1, hdcSrc, 0, 0, hbmMsk, 0, 0, MAKEROP4(NOTSRCERASE, SRCINVERT)); // 22
+    ok(ret == 1, "MaskBlt failed (%d)\n", ret);
+    ok (pjBitsDst[0] == 0x16, "pjBitsDst[0] == 0x%x\n", pjBitsDst[0]);
+
+    /* Do the masking (MERGEPAINT / DSxn) */
+    pjBitsDst[0] = 0xF0;
+    pjBitsSrc[0] = 0xCC;
+    pjBitsMsk[0] = 0xAA;
+    ret = MaskBlt(hdcDst, 0, 0, 8, 1, hdcSrc, 0, 0, hbmMsk, 0, 0, MAKEROP4(MERGEPAINT, 0x990000));
+    ok(ret == 1, "MaskBlt failed (%d)\n", ret);
+    ok (pjBitsDst[0] == 0xE3, "pjBitsDst[0] == 0x%x\n", pjBitsDst[0]);
+
 }
 
 void Test_MaskBlt_16bpp()
 {
     HDC hdcDst, hdcSrc;
-	BITMAPINFO bmi1 = {{sizeof(BITMAPINFOHEADER), 8, 1, 1, 1, BI_RGB, 0, 10, 10, 0,0}};
-	BITMAPINFO bmi32 = {{sizeof(BITMAPINFOHEADER), 8, 1, 1, 16, BI_RGB, 0, 10, 10, 0,0}};
+    BITMAPINFO bmi1 = {{sizeof(BITMAPINFOHEADER), 8, 1, 1, 1, BI_RGB, 0, 10, 10, 0,0}};
+    BITMAPINFO bmi32 = {{sizeof(BITMAPINFOHEADER), 8, 1, 1, 16, BI_RGB, 0, 10, 10, 0,0}};
     HBITMAP hbmDst, hbmSrc, hbmMsk;
     PUCHAR pjBitsMsk;
     PUSHORT pusBitsDst, pusBitsSrc;
@@ -59,18 +80,18 @@ void Test_MaskBlt_16bpp()
 
     /* Create a dest dc and bitmap */
     hdcDst = CreateCompatibleDC(NULL);
-	hbmDst = CreateDIBSection(hdcDst, &bmi32, DIB_RGB_COLORS, (PVOID*)&pusBitsDst, NULL, 0);
+    hbmDst = CreateDIBSection(hdcDst, &bmi32, DIB_RGB_COLORS, (PVOID*)&pusBitsDst, NULL, 0);
     SelectObject(hdcDst, hbmDst);
 
     /* Create a source dc and bitmap */
     hdcSrc = CreateCompatibleDC(NULL);
-	hbmSrc = CreateDIBSection(hdcSrc, &bmi32, DIB_RGB_COLORS, (PVOID*)&pusBitsSrc, NULL, 0);
+    hbmSrc = CreateDIBSection(hdcSrc, &bmi32, DIB_RGB_COLORS, (PVOID*)&pusBitsSrc, NULL, 0);
     SelectObject(hdcSrc, hbmSrc);
-	ok(hdcSrc && hbmSrc, "\n");
+    ok(hdcSrc && hbmSrc, "\n");
 
     /* Create a 1 bpp mask bitmap */
-	hbmMsk = CreateDIBSection(hdcDst, &bmi1, DIB_RGB_COLORS, (PVOID*)&pjBitsMsk, NULL, 0);
-	ok(hbmMsk != 0, "CreateDIBSection failed\n");
+    hbmMsk = CreateDIBSection(hdcDst, &bmi1, DIB_RGB_COLORS, (PVOID*)&pjBitsMsk, NULL, 0);
+    ok(hbmMsk != 0, "CreateDIBSection failed\n");
 
     /* Do the masking */
     pusBitsDst[0] = 0x1234;
@@ -94,8 +115,8 @@ void Test_MaskBlt_16bpp()
 void Test_MaskBlt_32bpp()
 {
     HDC hdcDst, hdcSrc;
-	BITMAPINFO bmi1 = {{sizeof(BITMAPINFOHEADER), 8, 1, 1, 1, BI_RGB, 0, 10, 10, 0,0}};
-	BITMAPINFO bmi32 = {{sizeof(BITMAPINFOHEADER), 8, 1, 1, 32, BI_RGB, 0, 10, 10, 0,0}};
+    BITMAPINFO bmi1 = {{sizeof(BITMAPINFOHEADER), 8, 1, 1, 1, BI_RGB, 0, 10, 10, 0,0}};
+    BITMAPINFO bmi32 = {{sizeof(BITMAPINFOHEADER), 8, 1, 1, 32, BI_RGB, 0, 10, 10, 0,0}};
     HBITMAP hbmDst, hbmSrc, hbmMsk;
     PUCHAR pjBitsMsk;
     PULONG pulBitsDst, pulBitsSrc;
@@ -103,18 +124,18 @@ void Test_MaskBlt_32bpp()
 
     /* Create a dest dc and bitmap */
     hdcDst = CreateCompatibleDC(NULL);
-	hbmDst = CreateDIBSection(hdcDst, &bmi32, DIB_RGB_COLORS, (PVOID*)&pulBitsDst, NULL, 0);
+    hbmDst = CreateDIBSection(hdcDst, &bmi32, DIB_RGB_COLORS, (PVOID*)&pulBitsDst, NULL, 0);
     SelectObject(hdcDst, hbmDst);
 
     /* Create a source dc and bitmap */
     hdcSrc = CreateCompatibleDC(NULL);
-	hbmSrc = CreateDIBSection(hdcSrc, &bmi32, DIB_RGB_COLORS, (PVOID*)&pulBitsSrc, NULL, 0);
+    hbmSrc = CreateDIBSection(hdcSrc, &bmi32, DIB_RGB_COLORS, (PVOID*)&pulBitsSrc, NULL, 0);
     SelectObject(hdcSrc, hbmSrc);
-	ok(hdcSrc && hbmSrc, "\n");
+    ok(hdcSrc && hbmSrc, "\n");
 
     /* Create a 1 bpp mask bitmap */
-	hbmMsk = CreateDIBSection(hdcDst, &bmi1, DIB_RGB_COLORS, (PVOID*)&pjBitsMsk, NULL, 0);
-	ok(hbmMsk != 0, "CreateDIBSection failed\n");
+    hbmMsk = CreateDIBSection(hdcDst, &bmi1, DIB_RGB_COLORS, (PVOID*)&pjBitsMsk, NULL, 0);
+    ok(hbmMsk != 0, "CreateDIBSection failed\n");
 
     /* Do the masking */
     pulBitsDst[0] = 0x12345678;
@@ -143,6 +164,6 @@ START_TEST(MaskBlt)
         case 16: Test_MaskBlt_16bpp(); break;
         case 32: Test_MaskBlt_32bpp(); break;
     }
-    
+
 }
 
