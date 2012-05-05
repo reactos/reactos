@@ -2669,6 +2669,12 @@ extern "C" {
 #define EVENT_OBJECT_HELPCHANGE         0x00008010
 #define EVENT_OBJECT_DEFACTIONCHANGE    0x00008011
 #define EVENT_OBJECT_ACCELERATORCHANGE  0x00008012
+#define ALERT_SYSTEM_INFORMATIONAL      1          /* MB_INFORMATION */
+#define ALERT_SYSTEM_WARNING            2          /* MB_WARNING */
+#define ALERT_SYSTEM_ERROR              3          /* MB_ERROR */
+#define ALERT_SYSTEM_QUERY              4          /* MB_QUESTION */
+#define ALERT_SYSTEM_CRITICAL           5          /* HardSysErrBox */
+#define CALERT_SYSTEM                   6
 #if (_WIN32_WINNT >= 0x0501)
 #define EVENT_CONSOLE_CARET             0x00004001
 #define CONSOLE_CARET_SELECTION         0x00000001
