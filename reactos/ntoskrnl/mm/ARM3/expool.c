@@ -205,6 +205,9 @@ ExpCheckPoolHeader(IN PPOOL_HEADER Entry)
         if (PreviousEntry->BlockSize != Entry->PreviousSize)
         {
             /* Otherwise, someone corrupted one of the sizes */
+            DPRINT1("PreviousEntry BlockSize %lu, tag %.4s. Entry PreviousSize %lu, tag %.4s\n",
+                    PreviousEntry->BlockSize, (char *)&PreviousEntry->PoolTag,
+                    Entry->PreviousSize, (char *)&Entry->PoolTag);
             KeBugCheckEx(BAD_POOL_HEADER,
                          5,
                          (ULONG_PTR)PreviousEntry,
@@ -226,6 +229,18 @@ ExpCheckPoolHeader(IN PPOOL_HEADER Entry)
     if (!Entry->BlockSize)
     {
         /* Someone must've corrupted this field */
+        if (Entry->PreviousSize)
+        {
+            PreviousEntry = POOL_PREV_BLOCK(Entry);
+            DPRINT1("PreviousEntry tag %.4s. Entry tag %.4s\n",
+                    (char *)&PreviousEntry->PoolTag,
+                    (char *)&Entry->PoolTag);
+        }
+        else
+        {
+            DPRINT1("Entry tag %.4s\n",
+                    (char *)&Entry->PoolTag);
+        }
         KeBugCheckEx(BAD_POOL_HEADER,
                      8,
                      0,
@@ -254,6 +269,9 @@ ExpCheckPoolHeader(IN PPOOL_HEADER Entry)
         if (NextEntry->PreviousSize != Entry->BlockSize)
         {
             /* Otherwise, someone corrupted the field */
+            DPRINT1("Entry BlockSize %lu, tag %.4s. NextEntry PreviousSize %lu, tag %.4s\n",
+                    Entry->BlockSize, (char *)&Entry->PoolTag,
+                    NextEntry->PreviousSize, (char *)&NextEntry->PoolTag);
             KeBugCheckEx(BAD_POOL_HEADER,
                          5,
                          (ULONG_PTR)NextEntry,
