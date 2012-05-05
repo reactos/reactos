@@ -1308,7 +1308,7 @@ MiQueryAddressState(IN PVOID Va,
     PMMPDE PointerPde;
     MMPTE TempPte;
     BOOLEAN DemandZeroPte = TRUE, ValidPte = FALSE;
-    ULONG State = MEM_RESERVE, Protect = 0, LockChange;
+    ULONG State = MEM_RESERVE, Protect = 0;
     ASSERT((Vad->StartingVpn <= ((ULONG_PTR)Va >> PAGE_SHIFT)) &&
            (Vad->EndingVpn >= ((ULONG_PTR)Va >> PAGE_SHIFT)));
 
@@ -1322,31 +1322,23 @@ MiQueryAddressState(IN PVOID Va,
     /* Return the next range */
     *NextVa = (PVOID)((ULONG_PTR)Va + PAGE_SIZE);
 
-    /* Loop to make sure the PDE is valid */
-    do
+    /* Is the PDE demand-zero? */
+    if (PointerPde->u.Long != 0)
     {
-        /* Try again */
-        LockChange = 0;
-
-        /* Is the PDE empty? */
-        if (!PointerPde->u.Long)
+        /* It is not. Is it valid? */
+        if (PointerPde->u.Hard.Valid == 0)
         {
-            /* No address in this range used yet, move to the next PDE range */
-            *NextVa = MiPdeToAddress(PointerPde + 1);
-            break;
+            /* Is isn't, fault it in */
+            PointerPte = MiPteToAddress(PointerPde);
+            MiMakeSystemAddressValid(PointerPte, TargetProcess);
+            ValidPte = TRUE;
         }
-
-        /* The PDE is not empty, but is it faulted in? */
-        if (!PointerPde->u.Hard.Valid)
-        {
-            /* It isn't, go ahead and do the fault */
-            LockChange = MiMakeSystemAddressValid(MiPdeToPte(PointerPde),
-                                                  TargetProcess);
-        }
-
-        /* Check if the PDE was faulted in, making the PTE readable */
-        if (!LockChange) ValidPte = TRUE;
-    } while (LockChange);
+    }
+    else
+    {
+        /* It is, skip it and move to the next PDE */
+        *NextVa = MiPdeToAddress(PointerPde + 1);
+    }
 
     /* Is it safe to try reading the PTE? */
     if (ValidPte)
@@ -1355,27 +1347,38 @@ MiQueryAddressState(IN PVOID Va,
 
         /* Capture the PTE */
         TempPte = *PointerPte;
-        if (TempPte.u.Long)
+        if (TempPte.u.Long != 0)
         {
             /* The PTE is valid, so it's not zeroed out */
             DemandZeroPte = FALSE;
 
-            /* Check if it's valid or has a valid protection mask */
-            ASSERT(TempPte.u.Soft.Prototype == 0);
-            if ((TempPte.u.Soft.Protection != MM_DECOMMIT) ||
-                (TempPte.u.Hard.Valid == 1))
+            /* Is it a decommited, invalid, or faulted PTE? */
+            if ((TempPte.u.Soft.Protection == MM_DECOMMIT) &&
+                (TempPte.u.Hard.Valid == 0) &&
+                ((TempPte.u.Soft.Prototype == 0) ||
+                 (TempPte.u.Soft.PageFileHigh == MI_PTE_LOOKUP_NEEDED)))
+            {
+                /* Otherwise our defaults should hold */
+                ASSERT(Protect == 0);
+                ASSERT(State == MEM_RESERVE);
+            }
+            else
             {
                 /* This means it's committed */
                 State = MEM_COMMIT;
 
                 /* Get protection state of this page */
                 Protect = MiGetPageProtection(PointerPte);
-            }
-            else
-            {
-                /* Otherwise our defaults should hold */
-                ASSERT(Protect == 0);
-                ASSERT(State == MEM_RESERVE);
+
+                /* Check if this is an image-backed VAD */
+                if ((TempPte.u.Soft.Valid == 0) &&
+                    (TempPte.u.Soft.Prototype == 1) &&
+                    (Vad->u.VadFlags.PrivateMemory == 0) &&
+                    (Vad->ControlArea))
+                {
+                    DPRINT1("Not supported\n");
+                    ASSERT(FALSE);
+                }
             }
         }
     }
@@ -1383,8 +1386,13 @@ MiQueryAddressState(IN PVOID Va,
     /* Check if this was a demand-zero PTE, since we need to find the state */
     if (DemandZeroPte)
     {
-        /* Check if the VAD is for committed memory */
-        if (Vad->u.VadFlags.MemCommit)
+        /* Check if this is private commited memory, or an image-backed VAD */
+        if ((Vad->u.VadFlags.PrivateMemory == 0) && (Vad->ControlArea))
+        {
+            DPRINT1("Not supported\n");
+            ASSERT(FALSE);
+        }
+        else if (Vad->u.VadFlags.MemCommit)
         {
             /* This is committed memory */
             State = MEM_COMMIT;
