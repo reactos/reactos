@@ -171,11 +171,11 @@ CreateDIBPalette(
             /* Mark the palette as a brush hack palette */
             ppal->flFlags |= PAL_BRUSHHACK;
         }
-        else if (iUsage == 2)
-        {
+//        else if (iUsage == 2)
+//        {
             // FIXME: this one is undocumented
-            ASSERT(FALSE);
-        }
+//            ASSERT(FALSE);
+//        }
         else // if (iUsage == DIB_RGB_COLORS)
         {
             /* The colors are an array of RGBQUAD values */
