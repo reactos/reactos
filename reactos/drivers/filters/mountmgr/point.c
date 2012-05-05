@@ -43,7 +43,7 @@ MountMgrCreatePointWorker(IN PDEVICE_EXTENSION DeviceExtension,
     PMOUNTDEV_UNIQUE_ID UniqueId;
     PSYMLINK_INFORMATION SymlinkInformation;
     UNICODE_STRING SymLink, TargetDeviceName;
-    PDEVICE_INFORMATION DeviceInformation, DeviceInfo;
+    PDEVICE_INFORMATION DeviceInformation = NULL, DeviceInfo;
 
     /* Get device name */
     Status = QueryDeviceInformation(SymbolicLinkName,
@@ -434,7 +434,7 @@ QueryPointsFromSymbolicLinkName(IN PDEVICE_EXTENSION DeviceExtension,
     PIO_STACK_LOCATION Stack;
     UNICODE_STRING DeviceName;
     PMOUNTMGR_MOUNT_POINTS MountPoints;
-    PDEVICE_INFORMATION DeviceInformation;
+    PDEVICE_INFORMATION DeviceInformation = NULL;
     PLIST_ENTRY DeviceEntry, SymlinksEntry;
     PSYMLINK_INFORMATION SymlinkInformation;
 
