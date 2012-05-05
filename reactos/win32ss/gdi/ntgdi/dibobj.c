@@ -1140,7 +1140,6 @@ NtGdiStretchDIBitsInternal(
     PDC pdc;
     HBITMAP hbmTmp = 0;
     PSURFACE psurfTmp = 0, psurfDst = 0;
-    HPALETTE hpalDIB = 0;
     PPALETTE ppalDIB = 0;
     EXLATEOBJ exlo;
     PVOID pvBits;
