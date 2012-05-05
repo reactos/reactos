@@ -148,9 +148,12 @@ CreateDIBPalette(
             /* Loop all color indices in the DIB */
             for (i = 0; i < cColors; i++)
             {
-                /* Get the RGB value from the DC palette, indexed by the DIB
-                   color table value */
-                crColor = PALETTE_ulGetRGBColorFromIndex(ppalDC, pwColors[i]);
+                /* Get the palette index and handle wraparound when exceeding
+                   the number of colors in the DC palette */
+                WORD wIndex = pwColors[i] % ppalDC->NumColors;
+
+                /* USe the RGB value from the DC palette */
+                crColor = PALETTE_ulGetRGBColorFromIndex(ppalDC, wIndex);
                 PALETTE_vSetRGBColorForIndex(ppal, i, crColor);
             }
         }
