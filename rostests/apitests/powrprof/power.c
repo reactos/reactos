@@ -1,3 +1,12 @@
+/*
+ * PROJECT:         ReactOS api tests
+ * LICENSE:         GPL - See COPYING in the top level directory
+ * PURPOSE:         Tests for powrprof.dll
+ * PROGRAMMER:      Alex Wurzinger
+ *                  Johannes Anderwald
+ *                  Martin Rottensteiner
+ */
+
 #include <stdarg.h>
 #include "ntstatus.h"
 #define WIN32_NO_STATUS
@@ -1200,7 +1209,6 @@ void test_ValidatePowerPolicies_Old(void)
    gpp.user.DischargePolicy[1].Enable=FALSE;
    gpp.user.DischargePolicy[2].Enable=FALSE;
    gpp.user.DischargePolicy[3].Enable=FALSE;
-   gpp.user.DischargePolicy[4].Enable=FALSE;
    ret = ValidatePowerPolicies(&gpp,0);
    ok(ret, "function was expected to succeed return %i\n",(UINT)GetLastError());
    if (!ret)
@@ -1347,7 +1355,7 @@ void test_ValidatePowerPolicies(void)
    gpp_compare.user.DischargePolicy[2].PowerPolicy.EventCode = 131072;
    gpp_compare.user.DischargePolicy[3].PowerPolicy.EventCode = 196608;
    ok(globalcompare(gpp,gpp_compare),"Difference Found\n");
-	
+
    gpp_original.user.PowerButtonAc.Action = PowerActionNone;
     memcpy(&gpp, &gpp_original, sizeof(GLOBAL_POWER_POLICY));
     memcpy(&gpp_compare, &gpp_original, sizeof(GLOBAL_POWER_POLICY));
@@ -1448,17 +1456,6 @@ void test_ValidatePowerPolicies(void)
    ok(globalcompare(gpp,gpp_compare),"Difference Found\n");
 
    gpp_original.user.DischargePolicy[3].Enable=FALSE;
-    memcpy(&gpp, &gpp_original, sizeof(GLOBAL_POWER_POLICY));
-    memcpy(&gpp_compare, &gpp_original, sizeof(GLOBAL_POWER_POLICY));
-   ret = ValidatePowerPolicies(&gpp,0);
-   ok(ret, "function was expected to succeed return %i\n",(UINT)GetLastError());
-   gpp_compare.mach.BroadcastCapacityResolution=100;
-   gpp_compare.user.DischargePolicy[1].PowerPolicy.EventCode = 65536;
-   gpp_compare.user.DischargePolicy[2].PowerPolicy.EventCode = 131072;
-   gpp_compare.user.DischargePolicy[3].PowerPolicy.EventCode = 196608;
-   ok(globalcompare(gpp,gpp_compare),"Difference Found\n");
-
-   gpp_original.user.DischargePolicy[4].Enable=FALSE;
     memcpy(&gpp, &gpp_original, sizeof(GLOBAL_POWER_POLICY));
     memcpy(&gpp_compare, &gpp_original, sizeof(GLOBAL_POWER_POLICY));
    ret = ValidatePowerPolicies(&gpp,0);
@@ -2259,7 +2256,7 @@ void test_ValidatePowerPolicies(void)
 
    test_ValidatePowerPolicies_Next(&gpp_original,&pp_original);
 
-   
+
  //   memcpy(&gpp, &gpp_original, sizeof(GLOBAL_POWER_POLICY));
  //   memcpy(&gpp_compare, &gpp_original, sizeof(GLOBAL_POWER_POLICY));
 	//memcpy(&pp, &pp_original, sizeof(POWER_POLICY));
@@ -4416,7 +4413,7 @@ pPP_original->user.OptimizeForPowerDc=1;
   pPP_original->user.IdleAc.Action=PowerActionNone;
 
 
-  
+
    pPP_original->user.IdleDc.Action=PowerActionNone-2;
     memcpy(&gpp, pGPP_original, sizeof(GLOBAL_POWER_POLICY));
     memcpy(&gpp_compare, pGPP_original, sizeof(GLOBAL_POWER_POLICY));
@@ -4862,7 +4859,10 @@ void test_WritePwrScheme(void)
 
 void func_power(void)
 {
-   test_CallNtPowerInformation();
+   if (1)
+      skip("CallNtPowerInformation test is broken and fails on Windows\n");
+   else
+      test_CallNtPowerInformation();
    test_CanUserWritePwrScheme();
    test_EnumPwrSchemes();
    test_GetSetActivePwrScheme();
@@ -4881,8 +4881,13 @@ void func_power(void)
    test_ReadGlobalPwrPolicy();
    test_ReadProcessorPwrScheme();
    test_SetSuspendState();
-   test_ValidatePowerPolicies_Old();
-   test_ValidatePowerPolicies();
+   if (1)
+      skip("ValidatePowerPolicies tests are broken and fail on Windows\n");
+   else
+   {
+      test_ValidatePowerPolicies_Old();
+      test_ValidatePowerPolicies();
+   }
    test_WriteGlobalPwrPolicy();
    test_WriteProcessorPwrScheme();
 
