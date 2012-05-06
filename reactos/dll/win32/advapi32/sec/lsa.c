@@ -213,7 +213,7 @@ LsaCreateAccount(IN LSA_HANDLE PolicyHandle,
 {
     NTSTATUS Status;
 
-    TRACE("(%p,%p,0x%08x,%p)\n", PolicyHandle, AccountSid, Flags, AccountHandle);
+    TRACE("(%p,%p,0x%08x,%p)\n", PolicyHandle, AccountSid, DesiredAccess, AccountHandle);
 
     RpcTryExcept
     {
