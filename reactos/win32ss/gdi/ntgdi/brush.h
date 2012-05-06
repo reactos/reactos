@@ -96,7 +96,14 @@ typedef struct _EBRUSHOBJ
 INT FASTCALL BRUSH_GetObject (PBRUSH GdiObject, INT Count, LPLOGBRUSH Buffer);
 BOOL NTAPI BRUSH_Cleanup(PVOID ObjectBody);
 
+extern HSURF gahsurfHatch[HS_DDI_MAX];
+
 struct _DC;
+
+INIT_FUNCTION
+NTSTATUS
+NTAPI
+InitBrushImpl(VOID);
 
 VOID
 NTAPI

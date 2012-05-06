@@ -136,6 +136,7 @@ PDEVOBJ_bEnablePDEV(
     PWSTR pwszLogAddress)
 {
     PFN_DrvEnablePDEV pfnEnablePDEV;
+    ULONG i;
 
     DPRINT("PDEVOBJ_bEnablePDEV()\n");
 
@@ -164,6 +165,13 @@ PDEVOBJ_bEnablePDEV(
 
     /* Setup Palette */
     ppdev->ppalSurf = PALETTE_ShareLockPalette(ppdev->devinfo.hpalDefault);
+
+    /* Setup hatch brushes */
+    for (i = 0; i < HS_DDI_MAX; i++)
+    {
+        if (ppdev->ahsurf[i] == NULL)
+            ppdev->ahsurf[i] = gahsurfHatch[i];
+    }
 
     DPRINT("PDEVOBJ_bEnablePDEV - dhpdev = %p\n", ppdev->dhpdev);
 

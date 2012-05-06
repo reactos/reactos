@@ -75,7 +75,7 @@ Win32kProcessCallback(struct _EPROCESS *Process,
                                            sizeof(PROCESSINFO),
                                            USERTAG_PROCESSINFO);
 
-        if (ppiCurrent == NULL) 
+        if (ppiCurrent == NULL)
         {
             ERR_CH(UserProcess, "Failed to allocate ppi for PID:%d\n", Process->UniqueProcessId);
             RETURN( STATUS_NO_MEMORY);
@@ -127,7 +127,7 @@ Win32kProcessCallback(struct _EPROCESS *Process,
         ppiCurrent->KeyboardLayout = W32kGetDefaultKeyLayout();
         EngCreateEvent((PEVENT *)&ppiCurrent->InputIdleEvent);
         KeInitializeEvent(ppiCurrent->InputIdleEvent, NotificationEvent, FALSE);
-        
+
 
         /* map the gdi handle table to user land */
         Process->Peb->GdiSharedHandleTable = GDI_MapHandleTable(Process);
@@ -163,7 +163,7 @@ Win32kProcessCallback(struct _EPROCESS *Process,
         TRACE_CH(UserProcess, "Destroying ppi 0x%x\n", ppiCurrent);
         ppiCurrent->W32PF_flags |= W32PF_TERMINATED;
 
-        if (ppiScrnSaver == ppiCurrent) 
+        if (ppiScrnSaver == ppiCurrent)
             ppiScrnSaver = NULL;
 
         if (ppiCurrent->InputIdleEvent)
@@ -244,7 +244,7 @@ UserCreateThreadInfo(struct _ETHREAD *Thread)
     }
 
     RtlZeroMemory(ptiCurrent, sizeof(THREADINFO));
-    
+
     PsSetThreadWin32Thread(Thread, ptiCurrent);
     pTeb->Win32ThreadInfo = ptiCurrent;
     ptiCurrent->pClientInfo = (PCLIENTINFO)pTeb->Win32ClientInfo;
@@ -275,14 +275,14 @@ UserCreateThreadInfo(struct _ETHREAD *Thread)
     if (ptiCurrent->KeyboardLayout)
         UserReferenceObject(ptiCurrent->KeyboardLayout);
     ptiCurrent->TIF_flags &= ~TIF_INCLEANUP;
-    
+
     /* Initialize the CLIENTINFO */
     pci = (PCLIENTINFO)pTeb->Win32ClientInfo;
     RtlZeroMemory(pci, sizeof(CLIENTINFO));
     pci->ppi = ptiCurrent->ppi;
     pci->fsHooks = ptiCurrent->fsHooks;
     pci->dwTIFlags = ptiCurrent->TIF_flags;
-    if (ptiCurrent->KeyboardLayout) 
+    if (ptiCurrent->KeyboardLayout)
         pci->hKL = ptiCurrent->KeyboardLayout->hkl;
 
     /* Assign a default window station and desktop to the process */
@@ -614,6 +614,7 @@ DriverEntry(
     CreateStockObjects();
     CreateSysColorObjects();
 
+    NT_ROF(InitBrushImpl());
     NT_ROF(InitPDEVImpl());
     NT_ROF(InitLDEVImpl());
     NT_ROF(InitDeviceImpl());

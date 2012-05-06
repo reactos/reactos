@@ -25,16 +25,6 @@ typedef struct _GDI_OBJ_ATTR_ENTRY
   RGN_ATTR Attr[GDIOBJATTRFREE];
 } GDI_OBJ_ATTR_ENTRY, *PGDI_OBJ_ATTR_ENTRY;
 
-static const ULONG HatchBrushes[NB_HATCH_STYLES][8] =
-{
-    {0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0xFF, 0xFF, 0xFF}, /* HS_HORIZONTAL */
-    {0xF7, 0xF7, 0xF7, 0xF7, 0xF7, 0xF7, 0xF7, 0xF7}, /* HS_VERTICAL   */
-    {0xFE, 0xFD, 0xFB, 0xF7, 0xEF, 0xDF, 0xBF, 0x7F}, /* HS_FDIAGONAL  */
-    {0x7F, 0xBF, 0xDF, 0xEF, 0xF7, 0xFB, 0xFD, 0xFE}, /* HS_BDIAGONAL  */
-    {0xF7, 0xF7, 0xF7, 0xF7, 0x00, 0xF7, 0xF7, 0xF7}, /* HS_CROSS      */
-    {0x7E, 0xBD, 0xDB, 0xE7, 0xE7, 0xDB, 0xBD, 0x7E}  /* HS_DIAGCROSS  */
-};
-
 BOOL
 FASTCALL
 IntGdiSetBrushOwner(PBRUSH pbr, ULONG ulOwner)
@@ -129,9 +119,8 @@ NTAPI
 BRUSH_Cleanup(PVOID ObjectBody)
 {
     PBRUSH pbrush = (PBRUSH)ObjectBody;
-    if (pbrush->flAttrs & (BR_IS_HATCH | BR_IS_BITMAP))
+    if (pbrush->hbmPattern)
     {
-        ASSERT(pbrush->hbmPattern);
         GreSetObjectOwner(pbrush->hbmPattern, GDI_OBJ_HMGR_POWNED);
         GreDeleteObject(pbrush->hbmPattern);
     }
@@ -273,34 +262,23 @@ IntGdiCreateHatchBrush(
 {
     HBRUSH hBrush;
     PBRUSH pbrush;
-    HBITMAP hPattern;
 
     if (Style < 0 || Style >= NB_HATCH_STYLES)
     {
         return 0;
     }
 
-    hPattern = GreCreateBitmap(8, 8, 1, 1, (LPBYTE)HatchBrushes[Style]);
-    if (hPattern == NULL)
-    {
-        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
-        return NULL;
-    }
-
     pbrush = BRUSH_AllocBrushWithHandle();
     if (pbrush == NULL)
     {
-        GreDeleteObject(hPattern);
         EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return NULL;
     }
     hBrush = pbrush->BaseObject.hHmgr;
 
     pbrush->flAttrs |= BR_IS_HATCH;
-    pbrush->hbmPattern = hPattern;
     pbrush->BrushAttr.lbColor = Color & 0xFFFFFF;
-
-    GreSetObjectOwner(hPattern, GDI_OBJ_HMGR_PUBLIC);
+    pbrush->ulStyle = Style;
 
     GDIOBJ_vUnlockObject(&pbrush->BaseObject);
 
