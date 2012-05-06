@@ -358,7 +358,7 @@
 @ stub LsaEnumerateAccounts
 @ stdcall LsaEnumerateAccountsWithUserRight(ptr ptr ptr ptr)
 @ stub LsaEnumeratePrivileges
-@ stub LsaEnumeratePrivilegesOfAccount
+@ stdcall LsaEnumeratePrivilegesOfAccount(ptr ptr)
 @ stdcall LsaEnumerateTrustedDomains(ptr ptr ptr long ptr)
 @ stdcall LsaEnumerateTrustedDomainsEx(ptr ptr ptr long ptr)
 @ stdcall LsaFreeMemory(ptr)

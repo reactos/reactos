@@ -723,8 +723,52 @@ NTSTATUS WINAPI LsarEnumeratePrivilegesAccount(
     LSAPR_HANDLE AccountHandle,
     PLSAPR_PRIVILEGE_SET *Privileges)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PLSA_DB_OBJECT AccountObject;
+    ULONG PrivilegeSetSize = 0;
+    PLSAPR_PRIVILEGE_SET PrivilegeSet = NULL;
+    NTSTATUS Status;
+
+    *Privileges = NULL;
+
+    /* Validate the AccountHandle */
+    Status = LsapValidateDbObject(AccountHandle,
+                                  LsaDbAccountObject,
+                                  0,
+                                  &AccountObject);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("LsapValidateDbObject returned 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Get the size of the privilege set */
+    Status = LsapGetObjectAttribute(AccountObject,
+                                    L"Privilgs",
+                                    NULL,
+                                    &PrivilegeSetSize);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    /* Allocate a buffer for the privilege set */
+    PrivilegeSet = MIDL_user_allocate(PrivilegeSetSize);
+    if (PrivilegeSet == NULL)
+        return STATUS_NO_MEMORY;
+
+    /* Get the privilege set */
+    Status = LsapGetObjectAttribute(AccountObject,
+                                    L"Privilgs",
+                                    PrivilegeSet,
+                                    &PrivilegeSetSize);
+    if (!NT_SUCCESS(Status))
+    {
+        MIDL_user_free(PrivilegeSet);
+        return Status;
+    }
+
+    /* Return a pointer to the privilege set */
+    *Privileges = PrivilegeSet;
+
+    return STATUS_SUCCESS;
 }
 
 
@@ -733,8 +777,44 @@ NTSTATUS WINAPI LsarAddPrivilegesToAccount(
     LSAPR_HANDLE AccountHandle,
     PLSAPR_PRIVILEGE_SET Privileges)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PLSA_DB_OBJECT AccountObject;
+    ULONG PrivilegeSetSize = 0;
+    NTSTATUS Status;
+
+    /* Validate the AccountHandle */
+    Status = LsapValidateDbObject(AccountHandle,
+                                  LsaDbAccountObject,
+                                  0,
+                                  &AccountObject);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("LsapValidateDbObject returned 0x%08lx\n", Status);
+        return Status;
+    }
+
+    Status = LsapGetObjectAttribute(AccountObject,
+                                    L"Privilgs",
+                                    NULL,
+                                    &PrivilegeSetSize);
+    if (!NT_SUCCESS(Status) || PrivilegeSetSize == 0)
+    {
+        /* The Privilgs attribute does not exist */
+
+        PrivilegeSetSize = sizeof(PRIVILEGE_SET) +
+                           (Privileges->PrivilegeCount - 1) * sizeof(LUID_AND_ATTRIBUTES);
+        Status = LsapSetObjectAttribute(AccountObject,
+                                        L"Privilgs",
+                                        Privileges,
+                                        PrivilegeSetSize);
+    }
+    else
+    {
+        /* The Privilgs attribute exists */
+
+        Status = STATUS_NOT_IMPLEMENTED;
+    }
+
+    return Status;
 }
 
 

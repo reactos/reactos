@@ -366,6 +366,34 @@ LsaEnumerateAccountsWithUserRight(
     return STATUS_NO_MORE_ENTRIES;
 }
 
+
+/*
+ * @implemented
+ */
+NTSTATUS
+WINAPI
+LsaEnumeratePrivilegesOfAccount(IN LSA_HANDLE AccountHandle,
+                                OUT PPRIVILEGE_SET *Privileges)
+{
+    NTSTATUS Status;
+
+    TRACE("(%p,%p) stub\n", AccountHandle, Privileges);
+
+    RpcTryExcept
+    {
+        Status = LsarEnumeratePrivilegesAccount((LSAPR_HANDLE)AccountHandle,
+                                                (LSAPR_PRIVILEGE_SET **)Privileges);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
+
 /*
  * @unimplemented
  */
@@ -380,7 +408,7 @@ LsaEnumerateTrustedDomains(
 {
     FIXME("(%p,%p,%p,0x%08x,%p) stub\n", PolicyHandle, EnumerationContext,
         Buffer, PreferedMaximumLength, CountReturned);
-    
+
     if (CountReturned) *CountReturned = 0;
     return STATUS_SUCCESS;
 }
