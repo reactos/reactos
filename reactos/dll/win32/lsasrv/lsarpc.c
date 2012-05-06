@@ -641,8 +641,80 @@ NTSTATUS WINAPI LsarOpenAccount(
     ACCESS_MASK DesiredAccess,
     LSAPR_HANDLE *AccountHandle)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PLSA_DB_OBJECT PolicyObject;
+    PLSA_DB_OBJECT AccountsObject = NULL;
+    PLSA_DB_OBJECT AccountObject = NULL;
+    LPWSTR SidString = NULL;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    /* Validate the PolicyHandle */
+    Status = LsapValidateDbObject(PolicyHandle,
+                                  LsaDbPolicyObject,
+                                  POLICY_CREATE_ACCOUNT,
+                                  &PolicyObject);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("LsapValidateDbObject returned 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Open the Accounts object */
+    Status = LsapOpenDbObject(PolicyObject,
+                              L"Accounts",
+                              LsaDbContainerObject,
+                              0,
+                              &AccountsObject);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("LsapCreateDbObject (Accounts) failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    /* Create SID string */
+    if (!ConvertSidToStringSid((PSID)AccountSid,
+                               &SidString))
+    {
+        ERR("ConvertSidToStringSid failed\n");
+        Status = STATUS_INVALID_PARAMETER;
+        goto done;
+    }
+
+    /* Create the Account object */
+    Status = LsapOpenDbObject(AccountsObject,
+                              SidString,
+                              LsaDbAccountObject,
+                              DesiredAccess,
+                              &AccountObject);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("LsapOpenDbObject (Account) failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    /* Set the Sid attribute */
+    Status = LsapSetObjectAttribute(AccountObject,
+                                    L"Sid",
+                                    (PVOID)AccountSid,
+                                    GetLengthSid(AccountSid));
+
+done:
+    if (SidString != NULL)
+        LocalFree(SidString);
+
+    if (!NT_SUCCESS(Status))
+    {
+        if (AccountObject != NULL)
+            LsapCloseDbObject(AccountObject);
+    }
+    else
+    {
+        *AccountHandle = (LSAPR_HANDLE)AccountObject;
+    }
+
+    if (AccountsObject != NULL)
+        LsapCloseDbObject(AccountsObject);
+
+    return STATUS_SUCCESS;
 }
 
 
