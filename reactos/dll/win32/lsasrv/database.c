@@ -202,40 +202,40 @@ Done:
 static NTSTATUS
 LsapCreateDatabaseObjects(VOID)
 {
-    PLSA_DB_OBJECT DbObject = NULL;
+    PLSA_DB_OBJECT PolicyObject;
+    NTSTATUS Status;
 
     /* Open the 'Policy' object */
-    DbObject = (PLSA_DB_OBJECT)LsapCreateDbObject(NULL,
-                                L"Policy",
-                                TRUE,
-                                LsaDbPolicyObject,
-                                0);
-    if (DbObject != NULL)
-    {
-        LsapSetObjectAttribute(DbObject,
-                               L"PolPrDmN",
-                               NULL,
-                               0);
+    Status = LsapOpenDbObject(NULL,
+                              L"Policy",
+                              LsaDbPolicyObject,
+                              0,
+                              &PolicyObject);
+    if (!NT_SUCCESS(Status))
+        return Status;
 
-        LsapSetObjectAttribute(DbObject,
-                               L"PolPrDmS",
-                               NULL,
-                               0);
+    LsapSetObjectAttribute(PolicyObject,
+                           L"PolPrDmN",
+                           NULL,
+                           0);
 
-        LsapSetObjectAttribute(DbObject,
-                               L"PolAcDmN",
-                               NULL,
-                               0);
+    LsapSetObjectAttribute(PolicyObject,
+                           L"PolPrDmS",
+                           NULL,
+                           0);
 
-        LsapSetObjectAttribute(DbObject,
-                               L"PolAcDmS",
-                               NULL,
-                               0);
+    LsapSetObjectAttribute(PolicyObject,
+                           L"PolAcDmN",
+                           NULL,
+                           0);
 
+    LsapSetObjectAttribute(PolicyObject,
+                           L"PolAcDmS",
+                           NULL,
+                           0);
 
-        /* Close the 'Policy' object */
-        LsapCloseDbObject((LSAPR_HANDLE)DbObject);
-    }
+    /* Close the 'Policy' object */
+    LsapCloseDbObject(PolicyObject);
 
     return STATUS_SUCCESS;
 }
@@ -294,25 +294,27 @@ LsapInitDatabase(VOID)
 }
 
 
-LSAPR_HANDLE
-LsapCreateDbObject(LSAPR_HANDLE ParentHandle,
-                   LPWSTR ObjectName,
-                   BOOLEAN Open,
-                   LSA_DB_OBJECT_TYPE ObjectType,
-                   ACCESS_MASK DesiredAccess)
+NTSTATUS
+LsapCreateDbObject(IN PLSA_DB_OBJECT ParentObject,
+                   IN LPWSTR ObjectName,
+                   IN LSA_DB_OBJECT_TYPE ObjectType,
+                   IN ACCESS_MASK DesiredAccess,
+                   OUT PLSA_DB_OBJECT *DbObject)
 {
-    PLSA_DB_OBJECT ParentObject = (PLSA_DB_OBJECT)ParentHandle;
-    PLSA_DB_OBJECT DbObject;
+    PLSA_DB_OBJECT NewObject;
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING KeyName;
     HANDLE ParentKeyHandle;
     HANDLE ObjectKeyHandle;
     NTSTATUS Status;
 
-    if (ParentHandle != NULL)
-        ParentKeyHandle = ParentObject->KeyHandle;
-    else
+    if (DbObject == NULL)
+        return STATUS_INVALID_PARAMETER;
+
+    if (ParentObject == NULL)
         ParentKeyHandle = SecurityKeyHandle;
+    else
+        ParentKeyHandle = ParentObject->KeyHandle;
 
     RtlInitUnicodeString(&KeyName,
                          ObjectName);
@@ -323,65 +325,122 @@ LsapCreateDbObject(LSAPR_HANDLE ParentHandle,
                                ParentKeyHandle,
                                NULL);
 
-    if (Open == TRUE)
-    {
-        Status = NtOpenKey(&ObjectKeyHandle,
-                           KEY_ALL_ACCESS,
-                           &ObjectAttributes);
-    }
-    else
-    {
-        Status = NtCreateKey(&ObjectKeyHandle,
-                             KEY_ALL_ACCESS,
-                             &ObjectAttributes,
-                             0,
-                             NULL,
-                             0,
-                             NULL);
-    }
-
+    Status = NtCreateKey(&ObjectKeyHandle,
+                         KEY_ALL_ACCESS,
+                         &ObjectAttributes,
+                         0,
+                         NULL,
+                         0,
+                         NULL);
     if (!NT_SUCCESS(Status))
     {
-        return NULL;
+        return Status;
     }
 
-    DbObject = (PLSA_DB_OBJECT)RtlAllocateHeap(RtlGetProcessHeap(),
-                                               0,
-                                               sizeof(LSA_DB_OBJECT));
-    if (DbObject == NULL)
+    NewObject = RtlAllocateHeap(RtlGetProcessHeap(),
+                                0,
+                                sizeof(LSA_DB_OBJECT));
+    if (NewObject == NULL)
     {
         NtClose(ObjectKeyHandle);
-        return NULL;
+        return STATUS_NO_MEMORY;
     }
 
-    DbObject->Signature = LSAP_DB_SIGNATURE;
-    DbObject->RefCount = 0;
-    DbObject->ObjectType = ObjectType;
-    DbObject->Access = DesiredAccess;
-    DbObject->KeyHandle = ObjectKeyHandle;
-    DbObject->ParentObject = ParentObject;
+    NewObject->Signature = LSAP_DB_SIGNATURE;
+    NewObject->RefCount = 1;
+    NewObject->ObjectType = ObjectType;
+    NewObject->Access = DesiredAccess;
+    NewObject->KeyHandle = ObjectKeyHandle;
+    NewObject->ParentObject = ParentObject;
 
     if (ParentObject != NULL)
         ParentObject->RefCount++;
 
-    return (LSAPR_HANDLE)DbObject;
+    *DbObject = NewObject;
+
+    return STATUS_SUCCESS;
+}
+
+
+NTSTATUS
+LsapOpenDbObject(IN PLSA_DB_OBJECT ParentObject,
+                 IN LPWSTR ObjectName,
+                 IN LSA_DB_OBJECT_TYPE ObjectType,
+                 IN ACCESS_MASK DesiredAccess,
+                 OUT PLSA_DB_OBJECT *DbObject)
+{
+    PLSA_DB_OBJECT NewObject;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING KeyName;
+    HANDLE ParentKeyHandle;
+    HANDLE ObjectKeyHandle;
+    NTSTATUS Status;
+
+    if (DbObject == NULL)
+        return STATUS_INVALID_PARAMETER;
+
+    if (ParentObject == NULL)
+        ParentKeyHandle = SecurityKeyHandle;
+    else
+        ParentKeyHandle = ParentObject->KeyHandle;
+
+    RtlInitUnicodeString(&KeyName,
+                         ObjectName);
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &KeyName,
+                               OBJ_CASE_INSENSITIVE,
+                               ParentKeyHandle,
+                               NULL);
+
+    Status = NtOpenKey(&ObjectKeyHandle,
+                       KEY_ALL_ACCESS,
+                       &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    NewObject = RtlAllocateHeap(RtlGetProcessHeap(),
+                                  0,
+                                  sizeof(LSA_DB_OBJECT));
+    if (NewObject == NULL)
+    {
+        NtClose(ObjectKeyHandle);
+        return STATUS_NO_MEMORY;
+    }
+
+    NewObject->Signature = LSAP_DB_SIGNATURE;
+    NewObject->RefCount = 1;
+    NewObject->ObjectType = ObjectType;
+    NewObject->Access = DesiredAccess;
+    NewObject->KeyHandle = ObjectKeyHandle;
+    NewObject->ParentObject = ParentObject;
+
+    if (ParentObject != NULL)
+        ParentObject->RefCount++;
+
+    *DbObject = NewObject;
+
+    return STATUS_SUCCESS;
 }
 
 
 NTSTATUS
 LsapValidateDbObject(LSAPR_HANDLE Handle,
                      LSA_DB_OBJECT_TYPE ObjectType,
-                     ACCESS_MASK GrantedAccess)
+                     ACCESS_MASK DesiredAccess,
+                     PLSA_DB_OBJECT *DbObject)
 {
-    PLSA_DB_OBJECT DbObject = (PLSA_DB_OBJECT)Handle;
+    PLSA_DB_OBJECT LocalObject = (PLSA_DB_OBJECT)Handle;
     BOOLEAN bValid = FALSE;
 
     _SEH2_TRY
     {
-        if (DbObject->Signature == LSAP_DB_SIGNATURE)
+        if (LocalObject->Signature == LSAP_DB_SIGNATURE)
         {
             if ((ObjectType == LsaDbIgnoreObject) ||
-                (DbObject->ObjectType == ObjectType))
+                (LocalObject->ObjectType == ObjectType))
                 bValid = TRUE;
         }
     }
@@ -394,32 +453,52 @@ LsapValidateDbObject(LSAPR_HANDLE Handle,
     if (bValid == FALSE)
         return STATUS_INVALID_HANDLE;
 
-    if (GrantedAccess != 0)
+    if (DesiredAccess != 0)
     {
-        /* FIXME: Check for granted access rights */
+        /* Check for granted access rights */
+        if ((LocalObject->Access & DesiredAccess) != DesiredAccess)
+        {
+            ERR("LsapValidateDbObject access check failed %08lx  %08lx\n",
+                LocalObject->Access, DesiredAccess);
+            return STATUS_ACCESS_DENIED;
+        }
     }
+
+    if (DbObject != NULL)
+        *DbObject = LocalObject;
 
     return STATUS_SUCCESS;
 }
 
 
 NTSTATUS
-LsapCloseDbObject(LSAPR_HANDLE Handle)
+LsapCloseDbObject(PLSA_DB_OBJECT DbObject)
 {
-    PLSA_DB_OBJECT DbObject = (PLSA_DB_OBJECT)Handle;
+    PLSA_DB_OBJECT ParentObject = NULL;
+    NTSTATUS Status = STATUS_SUCCESS;
 
-    if (DbObject->RefCount != 0)
-        return STATUS_UNSUCCESSFUL;
+    DbObject->RefCount--;
 
-    if (DbObject->ParentObject != NULL)
-        DbObject->ParentObject->RefCount--;
+    if (DbObject->RefCount > 0)
+        return STATUS_SUCCESS;
 
     if (DbObject->KeyHandle != NULL)
         NtClose(DbObject->KeyHandle);
 
+    if (DbObject->ParentObject != NULL)
+        ParentObject = DbObject->ParentObject;
+
     RtlFreeHeap(RtlGetProcessHeap(), 0, DbObject);
 
-    return STATUS_SUCCESS;
+    if (ParentObject != NULL)
+    {
+        ParentObject->RefCount--;
+
+        if (ParentObject->RefCount == 0)
+            Status = LsapCloseDbObject(ParentObject);
+    }
+
+    return Status;
 }
 
 

@@ -69,6 +69,7 @@ void __RPC_USER LSAPR_HANDLE_rundown(LSAPR_HANDLE hHandle)
 NTSTATUS WINAPI LsarClose(
     LSAPR_HANDLE *ObjectHandle)
 {
+    PLSA_DB_OBJECT DbObject;
     NTSTATUS Status = STATUS_SUCCESS;
 
     TRACE("0x%p\n", ObjectHandle);
@@ -77,10 +78,11 @@ NTSTATUS WINAPI LsarClose(
 
     Status = LsapValidateDbObject(*ObjectHandle,
                                   LsaDbIgnoreObject,
-                                  0);
+                                  0,
+                                  &DbObject);
     if (Status == STATUS_SUCCESS)
     {
-        Status = LsapCloseDbObject(*ObjectHandle);
+        Status = LsapCloseDbObject(DbObject);
         *ObjectHandle = NULL;
     }
 
@@ -154,21 +156,23 @@ NTSTATUS WINAPI LsarOpenPolicy(
     ACCESS_MASK DesiredAccess,
     LSAPR_HANDLE *PolicyHandle)
 {
-    NTSTATUS Status = STATUS_SUCCESS;
+    PLSA_DB_OBJECT PolicyObject;
+    NTSTATUS Status;
 
     TRACE("LsarOpenPolicy called!\n");
 
     RtlEnterCriticalSection(&PolicyHandleTableLock);
 
-    *PolicyHandle = LsapCreateDbObject(NULL,
-                                       L"Policy",
-                                       TRUE,
-                                       LsaDbPolicyObject,
-                                       DesiredAccess);
-    if (*PolicyHandle == NULL)
-        Status = STATUS_INSUFFICIENT_RESOURCES;
+    Status = LsapOpenDbObject(NULL,
+                              L"Policy",
+                              LsaDbPolicyObject,
+                              DesiredAccess,
+                              &PolicyObject);
 
     RtlLeaveCriticalSection(&PolicyHandleTableLock);
+
+    if (NT_SUCCESS(Status))
+        *PolicyHandle = (LSAPR_HANDLE)PolicyObject;
 
     TRACE("LsarOpenPolicy done!\n");
 
@@ -182,6 +186,7 @@ NTSTATUS WINAPI LsarQueryInformationPolicy(
     POLICY_INFORMATION_CLASS InformationClass,
     PLSAPR_POLICY_INFORMATION *PolicyInformation)
 {
+    PLSA_DB_OBJECT DbObject;
     NTSTATUS Status;
 
     TRACE("LsarQueryInformationPolicy(%p,0x%08x,%p)\n",
@@ -194,7 +199,8 @@ NTSTATUS WINAPI LsarQueryInformationPolicy(
 
     Status = LsapValidateDbObject(PolicyHandle,
                                   LsaDbPolicyObject,
-                                  0); /* FIXME */
+                                  0, /* FIXME */
+                                  &DbObject);
     if (!NT_SUCCESS(Status))
         return Status;
 
@@ -244,6 +250,7 @@ NTSTATUS WINAPI LsarSetInformationPolicy(
     POLICY_INFORMATION_CLASS InformationClass,
     PLSAPR_POLICY_INFORMATION PolicyInformation)
 {
+    PLSA_DB_OBJECT DbObject;
     NTSTATUS Status;
 
     TRACE("LsarSetInformationPolicy(%p,0x%08x,%p)\n",
@@ -256,7 +263,8 @@ NTSTATUS WINAPI LsarSetInformationPolicy(
 
     Status = LsapValidateDbObject(PolicyHandle,
                                   LsaDbPolicyObject,
-                                  0); /* FIXME */
+                                  0, /* FIXME */
+                                  &DbObject);
     if (!NT_SUCCESS(Status))
         return Status;
 
@@ -310,15 +318,17 @@ NTSTATUS WINAPI LsarCreateAccount(
     ACCESS_MASK DesiredAccess,
     LSAPR_HANDLE *AccountHandle)
 {
-    LSAPR_HANDLE AccountsHandle;
-    LSAPR_HANDLE Account;
-    LPWSTR SidString;
-    NTSTATUS Status;
+    PLSA_DB_OBJECT PolicyObject;
+    PLSA_DB_OBJECT AccountsObject = NULL;
+    PLSA_DB_OBJECT AccountObject = NULL;
+    LPWSTR SidString = NULL;
+    NTSTATUS Status = STATUS_SUCCESS;
 
     /* Validate the PolicyHandle */
     Status = LsapValidateDbObject(PolicyHandle,
                                   LsaDbPolicyObject,
-                                  POLICY_CREATE_ACCOUNT);
+                                  POLICY_CREATE_ACCOUNT,
+                                  &PolicyObject);
     if (!NT_SUCCESS(Status))
     {
         ERR("LsapValidateDbObject returned 0x%08lx\n", Status);
@@ -326,15 +336,15 @@ NTSTATUS WINAPI LsarCreateAccount(
     }
 
     /* Open the Accounts object */
-    AccountsHandle = LsapCreateDbObject(PolicyHandle,
-                                        L"Accounts",
-                                        TRUE,
-                                        LsaDbContainerObject,
-                                        0);
-    if (AccountsHandle == NULL)
+    Status = LsapOpenDbObject(PolicyObject,
+                              L"Accounts",
+                              LsaDbContainerObject,
+                              0,
+                              &AccountsObject);
+    if (!NT_SUCCESS(Status))
     {
-        ERR("LsapCreateDbObject (Accounts) failed\n");
-        return STATUS_UNSUCCESSFUL;
+        ERR("LsapCreateDbObject (Accounts) failed (Status 0x%08lx)\n", Status);
+        goto done;
     }
 
     /* Create SID string */
@@ -342,31 +352,44 @@ NTSTATUS WINAPI LsarCreateAccount(
                                &SidString))
     {
         ERR("ConvertSidToStringSid failed\n");
-        return STATUS_UNSUCCESSFUL;
+        Status = STATUS_INVALID_PARAMETER;
+        goto done;
     }
 
     /* Create the Account object */
-    Account = LsapCreateDbObject(AccountsHandle,
-                                 SidString,
-                                 FALSE,
-                                 LsaDbAccountObject,
-                                 DesiredAccess);
-    if (Account != NULL)
+    Status = LsapCreateDbObject(AccountsObject,
+                                SidString,
+                                LsaDbAccountObject,
+                                DesiredAccess,
+                                &AccountObject);
+    if (!NT_SUCCESS(Status))
     {
-        /* Set the Sid attribute */
-        Status = LsapSetObjectAttribute((PLSA_DB_OBJECT)Account,
-                                        L"Sid",
-                                        (PVOID)AccountSid,
-                                        GetLengthSid(AccountSid));
-        if (NT_SUCCESS(Status))
-        {
-            *AccountHandle = Account;
-        }
+        ERR("LsapCreateDbObject (Account) failed (Status 0x%08lx)\n", Status);
+        goto done;
     }
 
-    LocalFree(SidString);
+    /* Set the Sid attribute */
+    Status = LsapSetObjectAttribute(AccountObject,
+                                    L"Sid",
+                                    (PVOID)AccountSid,
+                                    GetLengthSid(AccountSid));
 
-    LsapCloseDbObject(AccountsHandle);
+done:
+    if (SidString != NULL)
+        LocalFree(SidString);
+
+    if (!NT_SUCCESS(Status))
+    {
+        if (AccountObject != NULL)
+            LsapCloseDbObject(AccountObject);
+    }
+    else
+    {
+        *AccountHandle = (LSAPR_HANDLE)AccountObject;
+    }
+
+    if (AccountsObject != NULL)
+        LsapCloseDbObject(AccountsObject);
 
     return STATUS_SUCCESS;
 }
@@ -777,7 +800,8 @@ NTSTATUS WINAPI LsarLookupPrivilegeValue(
 
     Status = LsapValidateDbObject(PolicyHandle,
                                   LsaDbPolicyObject,
-                                  0); /* FIXME */
+                                  0, /* FIXME */
+                                  NULL);
     if (!NT_SUCCESS(Status))
     {
         ERR("Invalid handle (Status %lx)\n", Status);
@@ -806,7 +830,8 @@ NTSTATUS WINAPI LsarLookupPrivilegeName(
 
     Status = LsapValidateDbObject(PolicyHandle,
                                   LsaDbPolicyObject,
-                                  0); /* FIXME */
+                                  0, /* FIXME */
+                                  NULL);
     if (!NT_SUCCESS(Status))
     {
         ERR("Invalid handle\n");
@@ -859,13 +884,15 @@ NTSTATUS WINAPI LsarEnmuerateAccountRights(
     PRPC_SID AccountSid,
     PLSAPR_USER_RIGHT_SET UserRights)
 {
+    PLSA_DB_OBJECT PolicyObject;
     NTSTATUS Status;
 
     FIXME("(%p,%p,%p) stub\n", PolicyHandle, AccountSid, UserRights);
 
     Status = LsapValidateDbObject(PolicyHandle,
                                   LsaDbPolicyObject,
-                                  0); /* FIXME */
+                                  0, /* FIXME */
+                                  &PolicyObject);
     if (!NT_SUCCESS(Status))
         return Status;
 

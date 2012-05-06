@@ -16,7 +16,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(lsasrv);
 /* FUNCTIONS ***************************************************************/
 
 NTSTATUS
-LsarSetPrimaryDomain(LSAPR_HANDLE PolicyHandle,
+LsarSetPrimaryDomain(PLSA_DB_OBJECT PolicyObject,
                      PLSAPR_POLICY_PRIMARY_DOM_INFO Info)
 {
     PUNICODE_STRING Buffer;
@@ -24,7 +24,7 @@ LsarSetPrimaryDomain(LSAPR_HANDLE PolicyHandle,
     NTSTATUS Status;
     LPWSTR Ptr;
 
-    TRACE("LsarSetPrimaryDomain(%p, %p)\n", PolicyHandle, Info);
+    TRACE("LsarSetPrimaryDomain(%p, %p)\n", PolicyObject, Info);
 
     Length = sizeof(UNICODE_STRING) + Info->Name.MaximumLength;
     Buffer = RtlAllocateHeap(RtlGetProcessHeap(),
@@ -39,9 +39,10 @@ LsarSetPrimaryDomain(LSAPR_HANDLE PolicyHandle,
     Ptr = (LPWSTR)((ULONG_PTR)Buffer + sizeof(UNICODE_STRING));
     memcpy(Ptr, Info->Name.Buffer, Info->Name.MaximumLength);
 
-    Status = LsapSetObjectAttribute((PLSA_DB_OBJECT)PolicyHandle,
+    Status = LsapSetObjectAttribute(PolicyObject,
                                     L"PolPrDmN",
-                                    Buffer, Length);
+                                    Buffer,
+                                    Length);
 
     RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
 
@@ -52,7 +53,7 @@ LsarSetPrimaryDomain(LSAPR_HANDLE PolicyHandle,
     if (Info->Sid != NULL)
         Length = RtlLengthSid(Info->Sid);
 
-    Status = LsapSetObjectAttribute((PLSA_DB_OBJECT)PolicyHandle,
+    Status = LsapSetObjectAttribute(PolicyObject,
                                     L"PolPrDmS",
                                     (LPBYTE)Info->Sid,
                                     Length);
@@ -62,7 +63,7 @@ LsarSetPrimaryDomain(LSAPR_HANDLE PolicyHandle,
 
 
 NTSTATUS
-LsarSetAccountDomain(LSAPR_HANDLE PolicyHandle,
+LsarSetAccountDomain(PLSA_DB_OBJECT PolicyObject,
                      PLSAPR_POLICY_ACCOUNT_DOM_INFO Info)
 {
     PUNICODE_STRING Buffer;
@@ -70,7 +71,7 @@ LsarSetAccountDomain(LSAPR_HANDLE PolicyHandle,
     NTSTATUS Status;
     LPWSTR Ptr;
 
-    TRACE("LsarSetAccountDomain(%p, %p)\n", PolicyHandle, Info);
+    TRACE("LsarSetAccountDomain(%p, %p)\n", PolicyObject, Info);
 
     Length = sizeof(UNICODE_STRING) + Info->DomainName.MaximumLength;
     Buffer = RtlAllocateHeap(RtlGetProcessHeap(),
@@ -85,9 +86,10 @@ LsarSetAccountDomain(LSAPR_HANDLE PolicyHandle,
     Ptr = (LPWSTR)((ULONG_PTR)Buffer + sizeof(UNICODE_STRING));
     memcpy(Ptr, Info->DomainName.Buffer, Info->DomainName.MaximumLength);
 
-    Status = LsapSetObjectAttribute((PLSA_DB_OBJECT)PolicyHandle,
+    Status = LsapSetObjectAttribute(PolicyObject,
                                     L"PolAcDmN",
-                                    Buffer, Length);
+                                    Buffer,
+                                    Length);
 
     RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
 
@@ -98,7 +100,7 @@ LsarSetAccountDomain(LSAPR_HANDLE PolicyHandle,
     if (Info->Sid != NULL)
         Length = RtlLengthSid(Info->Sid);
 
-    Status = LsapSetObjectAttribute((PLSA_DB_OBJECT)PolicyHandle,
+    Status = LsapSetObjectAttribute(PolicyObject,
                                     L"PolAcDmS",
                                     (LPBYTE)Info->Sid,
                                     Length);
@@ -108,7 +110,7 @@ LsarSetAccountDomain(LSAPR_HANDLE PolicyHandle,
 
 
 NTSTATUS
-LsarSetDnsDomain(LSAPR_HANDLE PolicyHandle,
+LsarSetDnsDomain(PLSA_DB_OBJECT PolicyObject,
                  PLSAPR_POLICY_DNS_DOMAIN_INFO Info)
 {
 
@@ -117,7 +119,7 @@ LsarSetDnsDomain(LSAPR_HANDLE PolicyHandle,
 
 
 NTSTATUS
-LsarQueryAuditEvents(LSAPR_HANDLE PolicyHandle,
+LsarQueryAuditEvents(PLSA_DB_OBJECT PolicyObject,
                      PLSAPR_POLICY_INFORMATION *PolicyInformation)
 {
     PLSAPR_POLICY_AUDIT_EVENTS_INFO p = NULL;
@@ -137,7 +139,7 @@ LsarQueryAuditEvents(LSAPR_HANDLE PolicyHandle,
 
 
 NTSTATUS
-LsarQueryPrimaryDomain(LSAPR_HANDLE PolicyHandle,
+LsarQueryPrimaryDomain(PLSA_DB_OBJECT PolicyObject,
                        PLSAPR_POLICY_INFORMATION *PolicyInformation)
 {
     PLSAPR_POLICY_PRIMARY_DOM_INFO p = NULL;
@@ -153,7 +155,7 @@ LsarQueryPrimaryDomain(LSAPR_HANDLE PolicyHandle,
 
     /* Domain Name */
     AttributeSize = 0;
-    Status = LsapGetObjectAttribute((PLSA_DB_OBJECT)PolicyHandle,
+    Status = LsapGetObjectAttribute(PolicyObject,
                                     L"PolPrDmN",
                                     NULL,
                                     &AttributeSize);
@@ -171,7 +173,7 @@ LsarQueryPrimaryDomain(LSAPR_HANDLE PolicyHandle,
             goto Done;
         }
 
-        Status = LsapGetObjectAttribute((PLSA_DB_OBJECT)PolicyHandle,
+        Status = LsapGetObjectAttribute(PolicyObject,
                                         L"PolPrDmN",
                                         DomainName,
                                         &AttributeSize);
@@ -201,7 +203,7 @@ LsarQueryPrimaryDomain(LSAPR_HANDLE PolicyHandle,
 
     /* Domain SID */
     AttributeSize = 0;
-    Status = LsapGetObjectAttribute((PLSA_DB_OBJECT)PolicyHandle,
+    Status = LsapGetObjectAttribute(PolicyObject,
                                     L"PolPrDmS",
                                     NULL,
                                     &AttributeSize);
@@ -219,7 +221,7 @@ LsarQueryPrimaryDomain(LSAPR_HANDLE PolicyHandle,
             goto Done;
         }
 
-        Status = LsapGetObjectAttribute((PLSA_DB_OBJECT)PolicyHandle,
+        Status = LsapGetObjectAttribute(PolicyObject,
                                         L"PolPrDmS",
                                         p->Sid,
                                         &AttributeSize);
@@ -247,7 +249,7 @@ Done:
 
 
 NTSTATUS
-LsarQueryAccountDomain(LSAPR_HANDLE PolicyHandle,
+LsarQueryAccountDomain(PLSA_DB_OBJECT PolicyObject,
                        PLSAPR_POLICY_INFORMATION *PolicyInformation)
 {
     PLSAPR_POLICY_ACCOUNT_DOM_INFO p = NULL;
@@ -262,7 +264,7 @@ LsarQueryAccountDomain(LSAPR_HANDLE PolicyHandle,
         return STATUS_INSUFFICIENT_RESOURCES;
 
     /* Domain Name */
-    Status = LsapGetObjectAttribute((PLSA_DB_OBJECT)PolicyHandle,
+    Status = LsapGetObjectAttribute(PolicyObject,
                                     L"PolAcDmN",
                                     NULL,
                                     &AttributeSize);
@@ -280,7 +282,7 @@ LsarQueryAccountDomain(LSAPR_HANDLE PolicyHandle,
             goto Done;
         }
 
-        Status = LsapGetObjectAttribute((PLSA_DB_OBJECT)PolicyHandle,
+        Status = LsapGetObjectAttribute(PolicyObject,
                                         L"PolAcDmN",
                                         DomainName,
                                         &AttributeSize);
@@ -310,7 +312,7 @@ LsarQueryAccountDomain(LSAPR_HANDLE PolicyHandle,
 
     /* Domain SID */
     AttributeSize = 0;
-    Status = LsapGetObjectAttribute((PLSA_DB_OBJECT)PolicyHandle,
+    Status = LsapGetObjectAttribute(PolicyObject,
                                     L"PolAcDmS",
                                     NULL,
                                     &AttributeSize);
@@ -328,7 +330,7 @@ LsarQueryAccountDomain(LSAPR_HANDLE PolicyHandle,
             goto Done;
         }
 
-        Status = LsapGetObjectAttribute((PLSA_DB_OBJECT)PolicyHandle,
+        Status = LsapGetObjectAttribute(PolicyObject,
                                         L"PolAcDmS",
                                         p->Sid,
                                         &AttributeSize);
@@ -356,7 +358,7 @@ Done:
 
 
 NTSTATUS
-LsarQueryDnsDomain(LSAPR_HANDLE PolicyHandle,
+LsarQueryDnsDomain(PLSA_DB_OBJECT PolicyObject,
                    PLSAPR_POLICY_INFORMATION *PolicyInformation)
 {
     PLSAPR_POLICY_DNS_DOMAIN_INFO p = NULL;
