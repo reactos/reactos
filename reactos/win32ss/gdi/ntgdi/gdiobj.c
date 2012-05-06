@@ -476,9 +476,7 @@ GDIOBJ_vDereferenceObject(POBJ pobj)
 {
     ULONG cRefs, ulIndex;
 
-    /* Must not be exclusively locked */
-    ASSERT(pobj->cExclusiveLock == 0);
-
+    /* Log the event */
     DBG_LOGEVENT(&pobj->slhLog, EVENT_DEREFERENCE, cRefs);
 
     /* Check if the object has a handle */
@@ -489,10 +487,10 @@ GDIOBJ_vDereferenceObject(POBJ pobj)
 
         /* Decrement reference count */
         ASSERT((gpaulRefCount[ulIndex] & REF_MASK_COUNT) > 0);
-        cRefs = InterlockedDecrement((LONG*)&gpaulRefCount[ulIndex]) & REF_MASK_INUSE;
+        cRefs = InterlockedDecrement((LONG*)&gpaulRefCount[ulIndex]);
 
         /* Check if we reached 0 and handle bit is not set */
-        if (cRefs == 0)
+        if ((cRefs & REF_MASK_INUSE) == 0)
         {
             /* Make sure it's ok to delete the object */
             ASSERT(pobj->BaseFlags & BASEFLAG_READY_TO_DIE);
