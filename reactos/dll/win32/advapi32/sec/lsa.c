@@ -208,7 +208,7 @@ NTSTATUS
 WINAPI
 LsaCreateAccount(IN LSA_HANDLE PolicyHandle,
                  IN PSID AccountSid,
-                 IN ULONG Flags,
+                 IN ACCESS_MASK DesiredAccess,
                  OUT PLSA_HANDLE AccountHandle)
 {
     NTSTATUS Status;
@@ -219,7 +219,7 @@ LsaCreateAccount(IN LSA_HANDLE PolicyHandle,
     {
         Status = LsarCreateAccount((LSAPR_HANDLE)PolicyHandle,
                                    AccountSid,
-                                   Flags,
+                                   DesiredAccess,
                                    AccountHandle);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
@@ -697,18 +697,18 @@ NTSTATUS
 WINAPI
 LsaOpenAccount(IN LSA_HANDLE PolicyHandle,
                IN PSID AccountSid,
-               IN ULONG Flags,
+               IN ACCESS_MASK DesiredAccess,
                OUT PLSA_HANDLE AccountHandle)
 {
     NTSTATUS Status;
 
-    TRACE("(%p,%p,0x%08x,%p)\n", PolicyHandle, AccountSid, Flags, AccountHandle);
+    TRACE("(%p,%p,0x%08lx,%p)\n", PolicyHandle, AccountSid, DesiredAccess, AccountHandle);
 
     RpcTryExcept
     {
         Status = LsarOpenAccount((LSAPR_HANDLE)PolicyHandle,
                                  AccountSid,
-                                 Flags,
+                                 DesiredAccess,
                                  AccountHandle);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
