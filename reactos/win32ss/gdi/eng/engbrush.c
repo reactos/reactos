@@ -309,7 +309,7 @@ EBRUSHOBJ_bRealizeBrush(EBRUSHOBJ *pebo, BOOL bCallDriver)
     /* DIB brushes with DIB_PAL_COLORS usage need a new palette */
     if (pbr->flAttrs & BR_IS_DIBPALCOLORS)
     {
-        ASSERT(FALSE);
+        /* Create a palette with the colors from the DC */
         ppalPattern = FixupDIBBrushPalette(psurfPattern->ppal, pebo->ppalDC);
         pebo->ppalDIB = ppalPattern;
     }
