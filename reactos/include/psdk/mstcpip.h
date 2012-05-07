@@ -15,9 +15,7 @@ extern "C" {
 #define MSTCPIP_INLINE extern inline
 #endif
 
-/* FIXME : 
 #include <nldef.h>
-*/
 
 struct tcp_keepalive {
   ULONG onoff;
