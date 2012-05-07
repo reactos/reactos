@@ -1405,6 +1405,11 @@ typedef enum {
 #define MESSAGE_RESOURCE_UNICODE 1
 #define RTL_CRITSECT_TYPE 0
 #define RTL_RESOURCE_TYPE 1
+
+#define RTL_FIELD_TYPE(type, field)    (((type*)0)->field)
+#define RTL_BITS_OF(sizeOfArg)         (sizeof(sizeOfArg) * 8)
+#define RTL_BITS_OF_FIELD(type, field) (RTL_BITS_OF(RTL_FIELD_TYPE(type, field)))
+
 /* Also in winddk.h */
 #if !defined(__GNUC__)
 #define FIELD_OFFSET(t,f) ((LONG)(LONG_PTR)&(((t*) 0)->f))

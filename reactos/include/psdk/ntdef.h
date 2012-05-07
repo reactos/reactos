@@ -415,6 +415,11 @@ typedef ULONG LCID;
 typedef PULONG PLCID;
 typedef USHORT LANGID;
 
+typedef enum {
+  UNSPECIFIED_COMPARTMENT_ID = 0,
+  DEFAULT_COMPARTMENT_ID
+} COMPARTMENT_ID, *PCOMPARTMENT_ID;
+
 /* Used to store a non-float 8 byte aligned structure */
 typedef struct _QUAD
 {
@@ -645,6 +650,11 @@ typedef struct _GROUP_AFFINITY {
 } GROUP_AFFINITY, *PGROUP_AFFINITY;
 
 /* Helper Macros */
+
+#define RTL_FIELD_TYPE(type, field)    (((type*)0)->field)
+#define RTL_BITS_OF(sizeOfArg)         (sizeof(sizeOfArg) * 8)
+#define RTL_BITS_OF_FIELD(type, field) (RTL_BITS_OF(RTL_FIELD_TYPE(type, field)))
+
 #define RTL_CONSTANT_STRING(s) { sizeof(s)-sizeof((s)[0]), sizeof(s), s }
 
 #define RTL_FIELD_SIZE(type, field) (sizeof(((type *)0)->field))
