@@ -49,6 +49,7 @@ typedef struct _PALETTE *PPALETTE;
 #include "gdi/eng/xlateobj.h"
 #include "gdi/eng/floatobj.h"
 #include "gdi/eng/mouse.h"
+#include "gdi/eng/mapping.h"
 #include "gdi/ntgdi/xformobj.h"
 #include "gdi/ntgdi/brush.h"
 #include "gdi/ntgdi/color.h"

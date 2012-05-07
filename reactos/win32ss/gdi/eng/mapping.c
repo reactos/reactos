@@ -15,44 +15,76 @@
 #define MmMapViewInSessionSpace MmMapViewInSystemSpace
 #define MmUnmapViewInSessionSpace MmUnmapViewInSystemSpace
 
-typedef struct _ENGSECTION
-{
-    PVOID pvSectionObject;
-    PVOID pvMappedBase;
-    SIZE_T cjViewSize;
-    ULONG ulTag;
-} ENGSECTION, *PENGSECTION;
-
-typedef struct _FILEVIEW
-{
-    LARGE_INTEGER  LastWriteTime;  
-    PVOID          pvKView;
-    PVOID          pvViewFD;  
-    SIZE_T         cjView;  
-    PVOID          pSection;  
-} FILEVIEW, *PFILEVIEW;   
-
-typedef struct _FONTFILEVIEW 
-{
-    FILEVIEW;
-    DWORD          reserved[2];
-    PWSTR          pwszPath;
-    SIZE_T         ulRegionSize;
-    ULONG          cKRefCount;
-    ULONG          cRefCountFD;
-    PVOID          pvSpoolerBase;
-    DWORD          dwSpoolerPid;
-} FONTFILEVIEW, *PFONTFILEVIEW;
-
-enum
-{
-    FVF_SYSTEMROOT = 1,
-    FVF_READONLY = 2,
-    FVF_FONTFILE = 4,
-};
-
 HANDLE ghSystem32Directory;
 HANDLE ghRootDirectory;
+
+PVOID
+NTAPI
+EngMapSectionView(
+    _In_ HANDLE hSection,
+    _In_ SIZE_T cjSize,
+    _In_ ULONG cjOffset,
+    _Out_ PHANDLE phSecure)
+{
+    LARGE_INTEGER liSectionOffset;
+    PVOID pvBaseAddress;
+    NTSTATUS Status;
+
+    /* Align the offset at allocation granularity and compensate for the size */
+    liSectionOffset.QuadPart = cjOffset & ~(MM_ALLOCATION_GRANULARITY - 1);
+    cjSize += cjOffset & (MM_ALLOCATION_GRANULARITY - 1);
+
+    /* Map the section */
+    Status = ZwMapViewOfSection(hSection,
+                                NtCurrentProcess(),
+                                &pvBaseAddress,
+                                0,
+                                cjSize,
+                                &liSectionOffset,
+                                &cjSize,
+                                ViewShare,
+                                0,
+                                PAGE_READWRITE);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("ZwMapViewOfSection failed (0x%lx)\n", Status);
+        return NULL;
+    }
+
+    /* Secure the section memory */
+    *phSecure = EngSecureMem(pvBaseAddress, cjSize);
+    if (!*phSecure)
+    {
+        ZwUnmapViewOfSection(NtCurrentProcess(), pvBaseAddress);
+        return NULL;
+    }
+
+    /* Return the address where the requested data starts */
+    return (PUCHAR)pvBaseAddress + (cjOffset & (MM_ALLOCATION_GRANULARITY - 1));
+}
+
+VOID
+NTAPI
+EngUnmapSectionView(
+    _In_ PVOID pvBits,
+    _In_ ULONG cjOffset,
+    _In_ HANDLE hSecure)
+{
+    NTSTATUS Status;
+
+    /* Unsecure the memory */
+    EngUnsecureMem(hSecure);
+
+    /* Calculate the real start of the section view */
+    pvBits = (PUCHAR)pvBits - (cjOffset & (MM_ALLOCATION_GRANULARITY - 1));
+
+    /* Unmap the section view */
+    Status = MmUnmapViewOfSection(PsGetCurrentProcess(), pvBits);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Could not unmap section view!\n");
+    }
+}
 
 
 PVOID
@@ -156,7 +188,7 @@ EngMapSection(
         }
         else
         {
-            DPRINT1("Failed to unmap a section @ &p Status=0x%x\n", 
+            DPRINT1("Failed to unmap a section @ &p Status=0x%x\n",
                     pSection->pvMappedBase, Status);
         }
     }

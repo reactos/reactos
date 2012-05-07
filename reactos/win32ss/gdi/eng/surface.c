@@ -68,7 +68,6 @@ SURFACE_Cleanup(PVOID ObjectBody)
 {
     PSURFACE psurf = (PSURFACE)ObjectBody;
     PVOID pvBits = psurf->SurfObj.pvBits;
-    NTSTATUS Status;
 
     /* Check if the surface has bits */
     if (pvBits)
@@ -79,20 +78,8 @@ SURFACE_Cleanup(PVOID ObjectBody)
         /* Check if it is a DIB section */
         if (psurf->hDIBSection)
         {
-            /* Unsecure the memory */
-            EngUnsecureMem(psurf->hSecure);
-
-            /* Calculate the real start of the section */
-            pvBits = (PVOID)((ULONG_PTR)pvBits - psurf->dwOffset);
-
-            /* Unmap the section */
-            Status = MmUnmapViewOfSection(PsGetCurrentProcess(), pvBits);
-            if (!NT_SUCCESS(Status))
-            {
-                DPRINT1("Could not unmap section view!\n");
-                // Should we BugCheck here?
-                ASSERT(FALSE);
-            }
+            /* Unmap the section view */
+            EngUnmapSectionView(pvBits, psurf->dwOffset, psurf->hSecure);
         }
         else if (psurf->SurfObj.fjBitmap & BMF_USERMEM)
         {
