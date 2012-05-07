@@ -1821,7 +1821,10 @@ IntSetThreadDesktop(IN HDESK hDesktop,
 
     pdeskOld = pti->rpdesk;
     hdeskOld = pti->hdesk;
-    pctiOld = pti->pcti;
+    if (pti->pcti != &pti->cti)
+       pctiOld = pti->pcti;
+    else
+       pctiOld = NULL;
 
     /* do the switch */
     if(pdesk != NULL)
@@ -1850,7 +1853,7 @@ IntSetThreadDesktop(IN HDESK hDesktop,
         pti->rpdesk = NULL;
         pti->hdesk = NULL;
         pti->pDeskInfo = NULL;
-        pti->pcti = NULL;
+        pti->pcti = &pti->cti; // Always point inside so there will be no crash when posting or sending msg's!
         pci->ulClientDelta = 0;
         pci->pDeskInfo = NULL;
         pci->pClientThreadInfo = NULL;
@@ -1860,7 +1863,7 @@ IntSetThreadDesktop(IN HDESK hDesktop,
     if(pdeskOld != NULL)
     {
         RemoveEntryList(&pti->PtiLink);
-        DesktopHeapFree(pdeskOld, pctiOld);
+        if (pctiOld) DesktopHeapFree(pdeskOld, pctiOld);
         IntUnmapDesktopView(pdeskOld);
         ObDereferenceObject(pdeskOld);
         ZwClose(hdeskOld);
