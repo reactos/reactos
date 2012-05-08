@@ -30,6 +30,8 @@ void Test_GetDIBColorTable()
     cColors = GetDIBColorTable(hdc, 0, 257, (RGBQUAD*)aulColors);
     ok_long(cColors, 2);
     ok_err(0);
+    ok_long(aulColors[0], 0x000000);
+    ok_long(aulColors[1], 0xffffff);
 
     hbmp = CreateBitmap(1, 1, 1, 1, NULL);
     ok(hbmp != 0, "\n");
@@ -38,6 +40,8 @@ void Test_GetDIBColorTable()
     cColors = GetDIBColorTable(hdc, 0, 257, (RGBQUAD*)aulColors);
     ok_long(cColors, 2);
     ok_err(0);
+    ok_long(aulColors[0], 0x000000);
+    ok_long(aulColors[1], 0xffffff);
     SelectObject(hdc, hbmpOld);
     DeleteObject(hbmp);
 
