@@ -141,7 +141,7 @@ co_IntSendActivateMessages(HWND hWndPrev, HWND hWnd, BOOL MouseActivate)
          List = IntWinListChildren(UserGetWindowObject(IntGetDesktopWindow()));
          if ( List )
          {
-            if ( OldTid )
+            if ( OldTID )
             {
                for (phWnd = List; *phWnd; ++phWnd)
                {
