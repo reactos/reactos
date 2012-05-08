@@ -407,6 +407,8 @@ IntSetDIBits(
     EXLATEOBJ	exlo;
     PPALETTE    ppalDIB = 0;
 
+    if (!bmi) return 0;
+
     SourceBitmap = GreCreateBitmapEx(bmi->bmiHeader.biWidth,
                                      ScanLines,
                                      0,
@@ -1380,6 +1382,7 @@ NtGdiCreateDIBitmapInternal(
 
     if(pjInit && (fInit == CBM_INIT))
     {
+        if (cjMaxBits == 0) return NULL;
         safeBits = ExAllocatePoolWithTag(PagedPool, cjMaxBits, TAG_DIB);
         if(!safeBits)
         {
