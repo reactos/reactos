@@ -223,6 +223,9 @@ typedef DWORD LFTYPE;
 #define METARGN 2 // GetMetaRgn
 #define APIRGN  3
 
+/* Undocumented flag for fdwInit in CreateDIBitmap */
+#define CBM_CREATDIB 2
+
 /* TYPES *********************************************************************/
 
 typedef PVOID KERNEL_PVOID;
