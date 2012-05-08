@@ -14,7 +14,7 @@
 
 static UINT SystemPaletteUse = SYSPAL_NOSTATIC;  /* The program need save the pallete and restore it */
 
-PALETTE gpalRGB, gpalBGR, gpalMono, gpalRGB555, gpalRGB565, *gppalDefault;
+PALETTE gpalRGB, gpalBGR, gpalRGB555, gpalRGB565, *gppalMono, *gppalDefault;
 PPALETTE appalSurfaceDefault[11];
 
 const PALETTEENTRY g_sysPalTemplate[NB_RESERVED_COLORS] =
@@ -62,30 +62,13 @@ NTSTATUS
 NTAPI
 InitPaletteImpl()
 {
-    int i;
-    HPALETTE hpalette;
-    PLOGPALETTE palPtr;
-
     // Create default palette (20 system colors)
-    palPtr = ExAllocatePoolWithTag(PagedPool,
-                                   sizeof(LOGPALETTE) +
-                                       (NB_RESERVED_COLORS * sizeof(PALETTEENTRY)),
-                                   TAG_PALETTE);
-    if (!palPtr) return STATUS_NO_MEMORY;
-
-    palPtr->palVersion = 0x300;
-    palPtr->palNumEntries = NB_RESERVED_COLORS;
-    for (i=0; i<NB_RESERVED_COLORS; i++)
-    {
-        palPtr->palPalEntry[i].peRed = g_sysPalTemplate[i].peRed;
-        palPtr->palPalEntry[i].peGreen = g_sysPalTemplate[i].peGreen;
-        palPtr->palPalEntry[i].peBlue = g_sysPalTemplate[i].peBlue;
-        palPtr->palPalEntry[i].peFlags = 0;
-    }
-
-    hpalette = GreCreatePaletteInternal(palPtr,NB_RESERVED_COLORS);
-    ASSERT(hpalette);
-    ExFreePoolWithTag(palPtr, TAG_PALETTE);
+    gppalDefault = PALETTE_AllocPalWithHandle(PAL_INDEXED,
+                                              20,
+                                              (PULONG)g_sysPalTemplate,
+                                              0, 0, 0);
+    GDIOBJ_vReferenceObjectByPointer(&gppalDefault->BaseObject);
+    PALETTE_UnlockPalette(gppalDefault);
 
     /*  palette_size = visual->map_entries; */
 
@@ -117,14 +100,12 @@ InitPaletteImpl()
     gpalRGB565.BaseObject.ulShareCount = 1;
     gpalRGB565.BaseObject.BaseFlags = 0 ;
 
-    memset(&gpalMono, 0, sizeof(PALETTE));
-    gpalMono.flFlags = PAL_MONOCHROME;
-    gpalMono.BaseObject.ulShareCount = 1;
-    gpalMono.BaseObject.BaseFlags = 0 ;
+    gppalMono = PALETTE_AllocPalette(PAL_MONOCHROME|PAL_INDEXED, 2, NULL, 0, 0, 0);
+    PALETTE_vSetRGBColorForIndex(gppalMono, 0, 0x000000);
+    PALETTE_vSetRGBColorForIndex(gppalMono, 1, 0xffffff);
 
     /* Initialize default surface palettes */
-    gppalDefault = PALETTE_ShareLockPalette(hpalette);
-    appalSurfaceDefault[BMF_1BPP] = &gpalMono;
+    appalSurfaceDefault[BMF_1BPP] = gppalMono;
     appalSurfaceDefault[BMF_4BPP] = gppalDefault;
     appalSurfaceDefault[BMF_8BPP] = gppalDefault;
     appalSurfaceDefault[BMF_16BPP] = &gpalRGB565;
@@ -160,7 +141,7 @@ PALETTE_AllocPalette(
     ULONG fl = 0, cjSize = sizeof(PALETTE);
 
     /* Check if the palette has entries */
-    if (iMode == PAL_INDEXED)
+    if (iMode & PAL_INDEXED)
     {
         /* Check color count */
         if ((cColors == 0) || (cColors > 1024)) return NULL;
@@ -1010,6 +991,82 @@ IntSetPaletteEntries(
     return Entries;
 }
 
+ULONG
+APIENTRY
+GreGetSetColorTable(
+    HDC hdc,
+    ULONG iStartIndex,
+    ULONG cEntries,
+    RGBQUAD *prgbColors,
+    BOOL bSet)
+{
+    PDC pdc;
+    PSURFACE psurf;
+    PPALETTE ppal = NULL;
+    ULONG i, iEndIndex, iResult = 0;
+
+    /* Lock the DC */
+    pdc = DC_LockDc(hdc);
+    if (!pdc)
+    {
+        return 0;
+    }
+
+    /* Get the surace from the DC */
+    psurf = pdc->dclevel.pSurface;
+
+    /* Check if we have the default surface */
+    if ((psurf == NULL) && !bSet)
+    {
+        /* Use a mono palette */
+        ppal = gppalMono;
+    }
+    else if (psurf->SurfObj.iType == STYPE_BITMAP)
+    {
+        /* Get the palette of the surface */
+        ppal = psurf->ppal;
+    }
+
+    /* Check if this is an indexed palette and the range is ok */
+    if (ppal && (ppal->flFlags & PAL_INDEXED) &&
+        (iStartIndex < ppal->NumColors))
+    {
+        /* Calculate the end of the operation */
+        iEndIndex = min(iStartIndex + cEntries, ppal->NumColors);
+
+        /* Check what operation to perform */
+        if (bSet)
+        {
+            /* Loop all colors and set the palette entries */
+            for (i = iStartIndex; i < iEndIndex; i++, prgbColors++)
+            {
+                ppal->IndexedColors[i].peRed = prgbColors->rgbRed;
+                ppal->IndexedColors[i].peGreen = prgbColors->rgbGreen;
+                ppal->IndexedColors[i].peBlue = prgbColors->rgbBlue;
+            }
+        }
+        else
+        {
+            /* Loop all colors and get the palette entries */
+            for (i = iStartIndex; i < iEndIndex; i++, prgbColors++)
+            {
+                prgbColors->rgbRed = ppal->IndexedColors[i].peRed;
+                prgbColors->rgbGreen = ppal->IndexedColors[i].peGreen;
+                prgbColors->rgbBlue = ppal->IndexedColors[i].peBlue;
+                prgbColors->rgbReserved = 0;
+            }
+        }
+
+        /* Calculate how many entries were modified */
+        iResult = iEndIndex - iStartIndex;
+    }
+
+    /* Unlock the DC */
+    DC_UnlockDc(pdc);
+
+    return iResult;
+}
+
 W32KAPI
 LONG
 APIENTRY
@@ -1051,6 +1108,11 @@ NtGdiDoPalette(
 			}
 			_SEH2_END
 		}
+		else
+		{
+		    /* Zero it out, so we don't accidentally leak kernel data */
+		    RtlZeroMemory(pEntries, cEntries * sizeof(PALETTEENTRY));
+		}
 	}
 
 	ret = 0;
@@ -1076,12 +1138,12 @@ NtGdiDoPalette(
 
 		case GdiPalSetColorTable:
 			if (pEntries)
-				ret = IntSetDIBColorTable((HDC)hObj, iStart, cEntries, (RGBQUAD*)pEntries);
+				ret = GreGetSetColorTable((HDC)hObj, iStart, cEntries, (RGBQUAD*)pEntries, TRUE);
 			break;
 
 		case GdiPalGetColorTable:
 			if (pEntries)
-				ret = IntGetDIBColorTable((HDC)hObj, iStart, cEntries, (RGBQUAD*)pEntries);
+				ret = GreGetSetColorTable((HDC)hObj, iStart, cEntries, (RGBQUAD*)pEntries, FALSE);
 			break;
 	}
 

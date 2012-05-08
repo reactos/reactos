@@ -391,7 +391,7 @@ EngSetPointerShape(
         /* Initialize an EXLATEOBJ */
         ppal = PALETTE_ShareLockPalette(ppdev->devinfo.hpalDefault);
         EXLATEOBJ_vInitialize(&exlo,
-                              &gpalMono,
+                              gppalMono,
                               ppal,
                               0,
                               RGB(0xff,0xff,0xff),

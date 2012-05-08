@@ -576,9 +576,6 @@ GDIOBJ_vReferenceObjectByPointer(POBJ pobj)
 {
     ULONG cRefs;
 
-    /* Must not be exclusively locked */
-    ASSERT(pobj->cExclusiveLock == 0);
-
     /* Check if the object has a handle */
     if (GDI_HANDLE_GET_INDEX(pobj->hHmgr))
     {

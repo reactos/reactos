@@ -591,8 +591,8 @@ EXLATEOBJ_vInitXlateFromDCs(
 
     /* Normal initialisation. No surface means DEFAULT_BITMAP */
     EXLATEOBJ_vInitialize(pexlo,
-                          psurfSrc ? psurfSrc->ppal : &gpalMono,
-                          psurfDst ? psurfDst->ppal : &gpalMono,
+                          psurfSrc ? psurfSrc->ppal : gppalMono,
+                          psurfDst ? psurfDst->ppal : gppalMono,
                           pdcSrc->pdcattr->crBackgroundClr,
                           pdcDst->pdcattr->crBackgroundClr,
                           pdcDst->pdcattr->crForegroundClr);
