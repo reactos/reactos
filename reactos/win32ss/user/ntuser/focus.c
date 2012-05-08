@@ -84,6 +84,7 @@ co_IntSendActivateMessages(HWND hWndPrev, HWND hWnd, BOOL MouseActivate)
    USER_REFERENCE_ENTRY Ref, RefPrev;
    PWND Window, WindowPrev = NULL;
    HANDLE OldTID, NewTID;
+   PTHREADINFO ptiOld, ptiNew;
 
    if ((Window = UserGetWindowObject(hWnd)))
    { 
@@ -127,6 +128,8 @@ co_IntSendActivateMessages(HWND hWndPrev, HWND hWnd, BOOL MouseActivate)
 
       OldTID = WindowPrev ? IntGetWndThreadId(WindowPrev) : NULL;
       NewTID = Window ? IntGetWndThreadId(Window) : NULL;
+      ptiOld = WindowPrev ? WindowPrev->head.pti : NULL;
+      ptiNew = Window ? Window->head.pti : NULL;
 
       TRACE("SendActiveMessage Old -> %x, New -> %x\n", OldTID, NewTID);
 
@@ -136,27 +139,26 @@ co_IntSendActivateMessages(HWND hWndPrev, HWND hWnd, BOOL MouseActivate)
          HWND *List, *phWnd;
 
          List = IntWinListChildren(UserGetWindowObject(IntGetDesktopWindow()));
-         if (List)
+         if ( List )
          {
-            if (OldTID)
+            if ( OldTid )
             {
                for (phWnd = List; *phWnd; ++phWnd)
                {
                   cWindow = UserGetWindowObject(*phWnd);
-
-                  if (cWindow && (IntGetWndThreadId(cWindow) == OldTID))
+                  if (cWindow && cWindow->head.pti == ptiOld)
                   {  // FALSE if the window is being deactivated,
                      // ThreadId that owns the window being activated.
                     co_IntSendMessageNoWait(*phWnd, WM_ACTIVATEAPP, FALSE, (LPARAM)NewTID);
                   }
                }
             }
-            if (NewTID)
+            if ( NewTID )
             {
                for (phWnd = List; *phWnd; ++phWnd)
                {
                   cWindow = UserGetWindowObject(*phWnd);
-                  if (cWindow && (IntGetWndThreadId(cWindow) == NewTID))
+                  if (cWindow && cWindow->head.pti == ptiNew)
                   { // TRUE if the window is being activated,
                     // ThreadId that owns the window being deactivated.
                     co_IntSendMessageNoWait(*phWnd, WM_ACTIVATEAPP, TRUE, (LPARAM)OldTID);
@@ -306,9 +308,14 @@ co_IntSetForegroundAndFocusWindow(PWND Wnd, BOOL MouseActivate)
       IntSetFocusMessageQueue(Wnd->head.pti->MessageQueue);
       gptiForeground = Wnd->head.pti;
       fgRet = TRUE;
-   }
-
-//// Fix FG Bounce with regedit but breaks test_SFW todos 
+   } 
+/*
+     Fix FG Bounce with regedit but breaks test_SFW todos:
+     Henri Verbeet,
+     What happens is that we get the WM_WINE_SETACTIVEWINDOW message sent by the
+     other thread after we already changed the foreground window back to our own
+     window.
+ */
    if (hWndPrev != hWnd )
    {
       if (PrevForegroundQueue &&
@@ -316,6 +323,13 @@ co_IntSetForegroundAndFocusWindow(PWND Wnd, BOOL MouseActivate)
           Wnd->head.pti->MessageQueue != PrevForegroundQueue &&
           PrevForegroundQueue->spwndActive)
       {
+         //ERR("SFGW: Send NULL to 0x%x\n",hWndPrev);
+         if (pti->MessageQueue == PrevForegroundQueue)
+         {
+            //ERR("SFGW: TI same as Prev TI\n");
+            co_IntSetActiveWindow(NULL, NULL, FALSE, TRUE);
+         }
+         else
          co_IntSendMessageNoWait(hWndPrev, WM_ASYNC_SETACTIVEWINDOW, 0, 0 );
       }
    }

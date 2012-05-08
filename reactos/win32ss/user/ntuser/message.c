@@ -1498,7 +1498,8 @@ co_IntSendMessageWithCallBack( HWND hWnd,
 
     Win32Thread = PsGetCurrentThreadWin32Thread();
 
-    if (Win32Thread == NULL)
+    if (Win32Thread == NULL ||
+        Win32Thread->TIF_flags & TIF_INCLEANUP)
     {
         RETURN(FALSE);
     }

@@ -29,10 +29,10 @@ extern ATOM AtomFlashWndState;
   ((WndObj->head.pti) && (WndObj->head.pti == W32Thread))
 
 #define IntGetWndThreadId(WndObj) \
-  WndObj->head.pti->pEThread->Cid.UniqueThread
+  PsGetThreadId(WndObj->head.pti->pEThread)
 
 #define IntGetWndProcessId(WndObj) \
-  WndObj->head.pti->pEThread->ThreadsProcess->UniqueProcessId
+  PsGetProcessId(WndObj->head.pti->ppi->peProcess)
 
   
 BOOL FASTCALL UserUpdateUiState(PWND Wnd, WPARAM wParam);
