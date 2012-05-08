@@ -57,7 +57,7 @@ void Test_CreateDIBPatternBrushPt()
 
     /* Create a DIB brush with palette indices */
     hbr = CreateDIBPatternBrushPt(&PackedDIB, DIB_PAL_COLORS);
-    ok(hbr != 0, "CreateSolidBrush failed, skipping tests.\n");
+    ok(hbr != 0, "CreateDIBPatternBrushPt failed, skipping tests.\n");
     if (!hbr) return;
 
     /* Select the brush into the dc */
@@ -135,6 +135,33 @@ void Test_CreateDIBPatternBrushPt()
 
 }
 
+void Test_CreateDIBPatternBrushPt_RLE8()
+{
+    struct
+    {
+        BITMAPINFOHEADER bmiHeader;
+        WORD wColors[4];
+        BYTE ajBuffer[20];
+    } PackedDIB =
+    {
+        {sizeof(BITMAPINFOHEADER), 4, 4, 1, 8, BI_RLE8, 20, 1, 1, 4, 0},
+        {0, 1, 2, 7},
+        {4,0,   0,2,0,1,0,2,3,1,   2,1, 2,2,   1,3,1,0,1,2, },
+    };
+    HBRUSH hbr;
+
+    HDC hdc = CreateCompatibleDC(0);
+    HBITMAP hbmp = CreateDIBitmap(hdc, &PackedDIB.bmiHeader, CBM_INIT, &PackedDIB.ajBuffer, (PVOID)&PackedDIB, DIB_PAL_COLORS);
+    ok(hbmp != 0, "CreateDIBitmap failed, skipping tests.\n");
+
+    /* Create a DIB brush with palette indices */
+    hbr = CreateDIBPatternBrushPt(&PackedDIB, DIB_PAL_COLORS);
+    ok(hbr != 0, "CreateDIBPatternBrushPt failed, skipping tests.\n");
+    if (!hbr) return;
+
+
+}
+
 
 START_TEST(CreateDIBPatternBrush)
 {
@@ -142,5 +169,6 @@ START_TEST(CreateDIBPatternBrush)
 
     Test_CreateDIBPatternBrush();
     Test_CreateDIBPatternBrushPt();
+    Test_CreateDIBPatternBrushPt_RLE8();
 }
 
