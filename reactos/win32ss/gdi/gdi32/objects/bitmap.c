@@ -200,9 +200,9 @@ CreateDIBSection(
                                          dwOffset,
                                          pConvertedInfo,
                                          Usage,
-                                         0,
-                                         0,
-                                         0,
+                                         ConvertedInfoSize,
+                                         0, // fl
+                                         0, // dwColorSpace
                                          &bmBits);
         if (BitmapInfo != pConvertedInfo)
             RtlFreeHeap(RtlGetProcessHeap(), 0, pConvertedInfo);

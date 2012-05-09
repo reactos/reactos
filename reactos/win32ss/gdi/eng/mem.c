@@ -157,11 +157,53 @@ HackUnsecureVirtualMemory(
 /*
  * @implemented
  */
-HANDLE APIENTRY
+HANDLE
+APIENTRY
 EngSecureMem(PVOID Address, ULONG Length)
 {
-    return (HANDLE)-1; // HACK!!!
+    {// HACK!!!
+        _SEH2_TRY
+        {
+            ProbeForWrite(Address, Length, 1);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            _SEH2_YIELD(return NULL);
+        }
+        _SEH2_END;
+        return (HANDLE)-1;
+    }
     return MmSecureVirtualMemory(Address, Length, PAGE_READWRITE);
+}
+
+HANDLE
+APIENTRY
+EngSecureMemForRead(PVOID Address, ULONG Length)
+{
+    {// HACK!!!
+        ULONG cPages;
+        volatile BYTE *pjProbe;
+
+        _SEH2_TRY
+        {
+            ProbeForRead(Address, Length, 1);
+            cPages = ADDRESS_AND_SIZE_TO_SPAN_PAGES(Address, Length);
+            pjProbe = ALIGN_DOWN_POINTER_BY(Address, PAGE_SIZE);
+            while(cPages--)
+            {
+                /* Do a read probe */
+                (void)*pjProbe;
+                pjProbe += PAGE_SIZE;
+            }
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            _SEH2_YIELD(return NULL);
+        }
+        _SEH2_END;
+        return (HANDLE)-1;
+    }
+    return MmSecureVirtualMemory(Address, Length, PAGE_READONLY);
 }
 
 /*

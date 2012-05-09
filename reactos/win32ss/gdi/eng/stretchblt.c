@@ -390,6 +390,24 @@ IntEngStretchBlt(SURFOBJ *psoDest,
     /* Sanity check */
     ASSERT(IS_VALID_ROP4(Rop4));
 
+    /* Check if source and dest size are equal */
+    if (((DestRect->right - DestRect->left) == (SourceRect->right - SourceRect->left)) &&
+        ((DestRect->bottom - DestRect->top) == (SourceRect->bottom - SourceRect->top)))
+    {
+        /* Pass the request to IntEngBitBlt */
+        return IntEngBitBlt(psoDest,
+                            psoSource,
+                            MaskSurf,
+                            ClipRegion,
+                            ColorTranslation,
+                            DestRect,
+                            (PPOINTL)SourceRect,
+                            pMaskOrigin,
+                            pbo,
+                            BrushOrigin,
+                            Rop4);
+    }
+
     InputClippedRect = *DestRect;
     if (InputClippedRect.right < InputClippedRect.left)
     {

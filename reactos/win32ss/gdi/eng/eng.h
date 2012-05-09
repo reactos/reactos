@@ -26,3 +26,7 @@ VOID FASTCALL IntGdiReleaseSemaphore ( HSEMAPHORE hsem );
 ULONGLONG APIENTRY EngGetTickCount(VOID);
 
 VOID DecompressBitmap(SIZEL Size, BYTE *CompressedBits, BYTE *UncompressedBits, LONG Delta, ULONG iFormat);
+
+HANDLE
+APIENTRY
+EngSecureMemForRead(PVOID Address, ULONG Length);
