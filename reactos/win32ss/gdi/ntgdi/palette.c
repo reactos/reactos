@@ -1044,6 +1044,10 @@ GreGetSetColorTable(
                 ppal->IndexedColors[i].peGreen = prgbColors->rgbGreen;
                 ppal->IndexedColors[i].peBlue = prgbColors->rgbBlue;
             }
+
+            /* Mark the dc brushes invalid */
+            pdc->pdcattr->ulDirty_ |= DIRTY_FILL|DIRTY_LINE|
+                                      DIRTY_BACKGROUND|DIRTY_TEXT;
         }
         else
         {
