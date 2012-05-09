@@ -510,6 +510,8 @@ int startup(int argc, const char *argv[])
          res = ProcessRunKeys(HKEY_LOCAL_MACHINE, runkeys_names[RUNKEY_RUN], FALSE, FALSE);
     if (res && ops.postlogin && ops.startup)
          res = ProcessRunKeys(HKEY_CURRENT_USER, runkeys_names[RUNKEY_RUN], FALSE, FALSE);
+    if (res && ops.postlogin && ops.startup)
+         res = ProcessRunKeys(HKEY_CURRENT_USER, runkeys_names[RUNKEY_RUNONCE], TRUE, FALSE);
 
     printf("Operation done\n");
 
