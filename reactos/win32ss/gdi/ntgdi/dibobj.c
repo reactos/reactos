@@ -111,13 +111,23 @@ CreateDIBPalette(
     _In_ ULONG iUsage)
 {
     PPALETTE ppal;
-    ULONG i, cColors;
+    ULONG i, cBitsPixel, cColors;
+
+    if (pbmi->bmiHeader.biSize < sizeof(BITMAPINFOHEADER))
+    {
+        PBITMAPCOREINFO pbci = (PBITMAPCOREINFO)pbmi;
+        cBitsPixel = pbci->bmciHeader.bcBitCount;
+    }
+    else
+    {
+        cBitsPixel = pbmi->bmiHeader.biBitCount;
+    }
 
     /* Check if the colors are indexed */
-    if (pbmi->bmiHeader.biBitCount <= 8)
+    if (cBitsPixel <= 8)
     {
         /* We create a "full" palette */
-        cColors = 1 << pbmi->bmiHeader.biBitCount;
+        cColors = 1 << cBitsPixel;
 
         /* Allocate the palette */
         ppal = PALETTE_AllocPalette(PAL_INDEXED,
@@ -128,7 +138,8 @@ CreateDIBPalette(
                                     0);
 
         /* Check if the BITMAPINFO specifies how many colors to use */
-        if (pbmi->bmiHeader.biClrUsed != 0)
+        if ((pbmi->bmiHeader.biSize >= sizeof(BITMAPINFOHEADER)) &&
+            (pbmi->bmiHeader.biClrUsed != 0))
         {
             /* This is how many colors we can actually process */
             cColors = min(cColors, pbmi->bmiHeader.biClrUsed);
@@ -179,7 +190,7 @@ CreateDIBPalette(
             // FIXME: this one is undocumented
 //            ASSERT(FALSE);
 //        }
-        else // if (iUsage == DIB_RGB_COLORS)
+        else if (pbmi->bmiHeader.biSize >= sizeof(BITMAPINFOHEADER))
         {
             /* The colors are an array of RGBQUAD values */
             RGBQUAD *prgb = (RGBQUAD*)((PCHAR)pbmi + pbmi->bmiHeader.biSize);
@@ -197,6 +208,22 @@ CreateDIBPalette(
                 PALETTE_vSetRGBColorForIndex(ppal, i, crColor);
             }
         }
+        else
+        {
+            /* The colors are an array of RGBTRIPLE values */
+            RGBTRIPLE *prgb = (RGBTRIPLE*)((PCHAR)pbmi + pbmi->bmiHeader.biSize);
+
+            /* Loop all color indices in the DIB */
+            for (i = 0; i < cColors; i++)
+            {
+                /* Get the color value and translate it to a COLORREF */
+                RGBTRIPLE rgb = prgb[i];
+                COLORREF crColor = RGB(rgb.rgbtRed, rgb.rgbtGreen, rgb.rgbtBlue);
+
+                /* Set the RGB value in the palette */
+                PALETTE_vSetRGBColorForIndex(ppal, i, crColor);
+            }
+        }
     }
     else
     {
@@ -204,7 +231,8 @@ CreateDIBPalette(
         ULONG flRedMask, flGreenMask, flBlueMask;
 
         /* Check if the DIB contains bitfield values */
-        if (pbmi->bmiHeader.biCompression == BI_BITFIELDS)
+        if ((pbmi->bmiHeader.biSize >= sizeof(BITMAPINFOHEADER)) &&
+            (pbmi->bmiHeader.biCompression == BI_BITFIELDS))
         {
             /* Check if we have a v4/v5 header */
             if (pbmi->bmiHeader.biSize >= sizeof(BITMAPV4HEADER))
@@ -228,7 +256,7 @@ CreateDIBPalette(
         {
             /* Check what bit depth we have. Note: optimization flags are
                calculated in PALETTE_AllocPalette()  */
-            if (pbmi->bmiHeader.biBitCount == 16)
+            if (cBitsPixel == 16)
             {
                 /* This is an RGB 555 palette */
                 flRedMask = 0x7C00;
@@ -255,136 +283,6 @@ CreateDIBPalette(
 
     /* We're done, return the palette */
     return ppal;
-}
-
-
-UINT
-APIENTRY
-IntSetDIBColorTable(
-    HDC hDC,
-    UINT StartIndex,
-    UINT Entries,
-    CONST RGBQUAD *Colors)
-{
-    PDC dc;
-    PSURFACE psurf;
-    PPALETTE PalGDI;
-    UINT Index;
-    ULONG biBitCount;
-
-    if (!(dc = DC_LockDc(hDC))) return 0;
-    if (dc->dctype == DC_TYPE_INFO)
-    {
-        DC_UnlockDc(dc);
-        return 0;
-    }
-
-    psurf = dc->dclevel.pSurface;
-    if (psurf == NULL)
-    {
-        DC_UnlockDc(dc);
-        EngSetLastError(ERROR_INVALID_PARAMETER);
-        return 0;
-    }
-
-    if (psurf->hSecure == NULL)
-    {
-        DC_UnlockDc(dc);
-        EngSetLastError(ERROR_INVALID_PARAMETER);
-        return 0;
-    }
-
-    biBitCount = BitsPerFormat(psurf->SurfObj.iBitmapFormat);
-    if ((biBitCount <= 8) && (StartIndex < (1UL << biBitCount)))
-    {
-        if (StartIndex + Entries > (1UL << biBitCount))
-            Entries = (1 << biBitCount) - StartIndex;
-
-        if (psurf->ppal == NULL)
-        {
-            DC_UnlockDc(dc);
-            EngSetLastError(ERROR_INVALID_HANDLE);
-            return 0;
-        }
-
-        PalGDI = psurf->ppal;
-
-        for (Index = StartIndex;
-                Index < StartIndex + Entries && Index < PalGDI->NumColors;
-                Index++)
-        {
-            PalGDI->IndexedColors[Index].peRed = Colors[Index - StartIndex].rgbRed;
-            PalGDI->IndexedColors[Index].peGreen = Colors[Index - StartIndex].rgbGreen;
-            PalGDI->IndexedColors[Index].peBlue = Colors[Index - StartIndex].rgbBlue;
-        }
-    }
-    else
-        Entries = 0;
-
-    /* Mark the brushes invalid */
-    dc->pdcattr->ulDirty_ |= DIRTY_FILL|DIRTY_LINE|DIRTY_BACKGROUND|DIRTY_TEXT;
-
-    DC_UnlockDc(dc);
-
-    return Entries;
-}
-
-UINT
-APIENTRY
-IntGetDIBColorTable(
-    HDC hDC,
-    UINT StartIndex,
-    UINT Entries,
-    RGBQUAD *Colors)
-{
-    PDC dc;
-    PSURFACE psurf;
-    PPALETTE ppal;
-    UINT Index, Count = 0;
-
-    if (!(dc = DC_LockDc(hDC))) return 0;
-    if (dc->dctype == DC_TYPE_INFO)
-    {
-        DC_UnlockDc(dc);
-        return 0;
-    }
-
-    psurf = dc->dclevel.pSurface;
-    if (psurf == NULL)
-    {
-        DC_UnlockDc(dc);
-        EngSetLastError(ERROR_INVALID_PARAMETER);
-        return 0;
-    }
-
-    if (psurf->hSecure == NULL)
-    {
-        DC_UnlockDc(dc);
-        EngSetLastError(ERROR_INVALID_PARAMETER);
-        return 0;
-    }
-
-    ppal = psurf->ppal;
-    ASSERT(ppal);
-
-    if (ppal->flFlags & PAL_INDEXED)
-    {
-
-        for (Index = StartIndex;
-                Index < StartIndex + Entries && Index < ppal->NumColors;
-                Index++)
-        {
-            Colors[Index - StartIndex].rgbRed = ppal->IndexedColors[Index].peRed;
-            Colors[Index - StartIndex].rgbGreen = ppal->IndexedColors[Index].peGreen;
-            Colors[Index - StartIndex].rgbBlue = ppal->IndexedColors[Index].peBlue;
-            Colors[Index - StartIndex].rgbReserved = 0;
-            Count++;
-        }
-    }
-
-    DC_UnlockDc(dc);
-
-    return Count;
 }
 
 // Converts a DIB to a device-dependent bitmap
