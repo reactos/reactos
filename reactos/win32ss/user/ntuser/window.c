@@ -2509,7 +2509,7 @@ IntFindWindow(PWND Parent,
 
    ASSERT(Parent);
 
-   CheckWindowName = WindowName->Length != 0;
+   CheckWindowName = WindowName->Buffer != 0;
 
    if((List = IntWinListChildren(Parent)))
    {
@@ -2588,6 +2588,7 @@ NtUserFindWindowEx(HWND hwndParent,
    PWND Parent, ChildAfter;
    UNICODE_STRING ClassName = {0}, WindowName = {0};
    HWND Desktop, Ret = NULL;
+   BOOL DoMessageWnd = FALSE;
    RTL_ATOM ClassAtom = (RTL_ATOM)0;
    DECLARE_RETURN(HWND);
 
@@ -2657,7 +2658,10 @@ NtUserFindWindowEx(HWND hwndParent,
    Desktop = IntGetCurrentThreadDesktopWindow();
 
    if(hwndParent == NULL)
+   {
       hwndParent = Desktop;
+      DoMessageWnd = TRUE;
+   }
    else if(hwndParent == HWND_MESSAGE)
    {
      hwndParent = IntGetMessageWindow();
@@ -2698,7 +2702,7 @@ NtUserFindWindowEx(HWND hwndParent,
                    ;
              }
 
-             CheckWindowName = WindowName.Length != 0;
+             CheckWindowName = WindowName.Buffer != 0;
 
              /* search children */
              while(*phWnd)
@@ -2741,15 +2745,13 @@ NtUserFindWindowEx(HWND hwndParent,
           }
        }
        else
-          Ret = IntFindWindow(Parent, ChildAfter, ClassAtom, &WindowName);
-
-#if 0
-
-       if(Ret == NULL && hwndParent == NULL && hwndChildAfter == NULL)
        {
-          /* FIXME:  If both hwndParent and hwndChildAfter are NULL, we also should
-                     search the message-only windows. Should this also be done if
-                     Parent is the desktop window??? */
+          ERR("FindWindowEx: Not Desktop Parent!\n");
+          Ret = IntFindWindow(Parent, ChildAfter, ClassAtom, &WindowName);
+       }
+
+       if (Ret == NULL && DoMessageWnd)
+       {
           PWND MsgWindows;
 
           if((MsgWindows = UserGetWindowObject(IntGetMessageWindow())))
@@ -2757,7 +2759,6 @@ NtUserFindWindowEx(HWND hwndParent,
              Ret = IntFindWindow(MsgWindows, ChildAfter, ClassAtom, &WindowName);
           }
        }
-#endif
    }
    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
