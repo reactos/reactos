@@ -1027,6 +1027,7 @@ co_IntSetParent(PWND Wnd, PWND WndNewParent)
 {
    PWND WndOldParent, pWndExam;
    BOOL WasVisible;
+   POINT pt;
 
    ASSERT(Wnd);
    ASSERT(WndNewParent);
@@ -1065,8 +1066,11 @@ co_IntSetParent(PWND Wnd, PWND WndNewParent)
    WasVisible = co_WinPosShowWindow(Wnd, SW_HIDE);
 
    /* Window must belong to current process */
-   if (Wnd->head.pti->pEThread->ThreadsProcess != PsGetCurrentProcess())
+   if (Wnd->head.pti->ppi != PsGetCurrentProcessWin32Process())
       return NULL;
+
+   pt.x = Wnd->rcWindow.left;
+   pt.y = Wnd->rcWindow.top;
 
    WndOldParent = Wnd->spwndParent;
 
@@ -1091,14 +1095,10 @@ co_IntSetParent(PWND Wnd, PWND WndNewParent)
     * in the z-order and send the expected WM_WINDOWPOSCHANGING and
     * WM_WINDOWPOSCHANGED notification messages.
     */
-   co_WinPosSetWindowPos(Wnd, (0 == (Wnd->ExStyle & WS_EX_TOPMOST) ? HWND_TOP : HWND_TOPMOST),
-                         0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE
-                         | (WasVisible ? SWP_SHOWWINDOW : 0));
+   co_WinPosSetWindowPos( Wnd,
+                         (0 == (Wnd->ExStyle & WS_EX_TOPMOST) ? HWND_TOP : HWND_TOPMOST),
+                          pt.x, pt.y, 0, 0, SWP_NOSIZE );
 
-   /*
-    * FIXME: A WM_MOVE is also generated (in the DefWindowProc handler
-    * for WM_WINDOWPOSCHANGED) in Windows, should probably remove SWP_NOMOVE.
-    */
    if (WasVisible) co_WinPosShowWindow(Wnd, SW_SHOWNORMAL);
 
    return WndOldParent;
