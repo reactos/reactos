@@ -112,6 +112,8 @@ static void test_GetRandomRgn(void)
     GetRgnBox(hrgn, &ret_rc);
     if(GetVersion() & 0x80000000)
         OffsetRect(&window_rc, -window_rc.left, -window_rc.top);
+    /* the window may be partially obscured so the region may be smaller */
+    IntersectRect( &window_rc, &ret_rc, &ret_rc );
     ok(EqualRect(&window_rc, &ret_rc) ||
        broken(IsRectEmpty(&ret_rc)), /* win95 */
        "GetRandomRgn %d,%d - %d,%d\n",
@@ -331,7 +333,7 @@ static void test_GetClipRgn(void)
 
     /* Try unsetting and then query the clipping region. */
     ret = SelectClipRgn(hdc, NULL);
-    ok(ret == SIMPLEREGION,
+    ok(ret == SIMPLEREGION || (ret == COMPLEXREGION && GetSystemMetrics(SM_CMONITORS) > 1),
        "Expected SelectClipRgn to return SIMPLEREGION, got %d\n", ret);
 
     ret = GetClipRgn(hdc, NULL);
@@ -432,7 +434,8 @@ static void test_window_dc_clipping(void)
     ok(ret == 0, "expected 0, got %d\n", ret);
 
     ret = ExtSelectClipRgn(hdc, hrgn_empty, RGN_DIFF);
-    ok(ret == SIMPLEREGION, "expected SIMPLEREGION, got %d\n", ret);
+    ok(ret == SIMPLEREGION || (ret == COMPLEXREGION && GetSystemMetrics(SM_CMONITORS) > 1),
+       "expected SIMPLEREGION, got %d\n", ret);
 
     ret = GetClipRgn(hdc, hrgn);
     ok(ret == 1, "expected 1, got %d\n", ret);
@@ -444,7 +447,8 @@ static void test_window_dc_clipping(void)
         rc.left, rc.top, rc.right, rc.bottom);
 
     ret = ExtSelectClipRgn(hdc, 0, RGN_COPY);
-    ok(ret == SIMPLEREGION, "expected SIMPLEREGION, got %d\n", ret);
+    ok(ret == SIMPLEREGION || (ret == COMPLEXREGION && GetSystemMetrics(SM_CMONITORS) > 1),
+       "expected SIMPLEREGION, got %d\n", ret);
 
     ret = GetClipRgn(hdc, hrgn);
     ok(ret == 0, "expected 0, got %d\n", ret);

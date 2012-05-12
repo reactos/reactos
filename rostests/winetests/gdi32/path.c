@@ -33,6 +33,238 @@
 
 #define expect(expected, got) ok(got == expected, "Expected %.8x, got %.8x\n", expected, got)
 
+static void test_path_state(void)
+{
+    BYTE buffer[sizeof(BITMAPINFO) + 256 * sizeof(RGBQUAD)];
+    BITMAPINFO *bi = (BITMAPINFO *)buffer;
+    HDC hdc;
+    HBITMAP orig, dib;
+    void *bits;
+    BOOL ret;
+
+    hdc = CreateCompatibleDC( 0 );
+    memset( buffer, 0, sizeof(buffer) );
+    bi->bmiHeader.biSize = sizeof(bi->bmiHeader);
+    bi->bmiHeader.biHeight = 256;
+    bi->bmiHeader.biWidth = 256;
+    bi->bmiHeader.biBitCount = 32;
+    bi->bmiHeader.biPlanes = 1;
+    bi->bmiHeader.biCompression = BI_RGB;
+    dib = CreateDIBSection( 0, bi, DIB_RGB_COLORS, (void**)&bits, NULL, 0 );
+    orig = SelectObject( hdc, dib );
+
+    BeginPath( hdc );
+    LineTo( hdc, 100, 100 );
+    ret = WidenPath( hdc );
+    ok( !ret, "WidenPath succeeded\n" );
+
+    /* selecting another bitmap doesn't affect the path */
+    SelectObject( hdc, orig );
+    ret = WidenPath( hdc );
+    ok( !ret, "WidenPath succeeded\n" );
+
+    SelectObject( hdc, dib );
+    ret = WidenPath( hdc );
+    ok( !ret, "WidenPath succeeded\n" );
+
+    ret = EndPath( hdc );
+    ok( ret, "EndPath failed error %u\n", GetLastError() );
+    ret = WidenPath( hdc );
+    ok( ret, "WidenPath failed error %u\n", GetLastError() );
+
+    SelectObject( hdc, orig );
+    ret = WidenPath( hdc );
+    ok( ret, "WidenPath failed error %u\n", GetLastError() );
+
+    BeginPath( hdc );
+    LineTo( hdc, 100, 100 );
+    ret = WidenPath( hdc );
+    ok( !ret, "WidenPath succeeded\n" );
+    SaveDC( hdc );
+    SelectObject( hdc, dib );
+    ret = EndPath( hdc );
+    ok( ret, "EndPath failed error %u\n", GetLastError() );
+    ret = WidenPath( hdc );
+    ok( ret, "WidenPath failed error %u\n", GetLastError() );
+
+    /* path should be open again after RestoreDC */
+    RestoreDC( hdc, -1  );
+    ret = WidenPath( hdc );
+    ok( !ret, "WidenPath succeeded\n" );
+    ret = EndPath( hdc );
+    ok( ret, "EndPath failed error %u\n", GetLastError() );
+
+    SaveDC( hdc );
+    BeginPath( hdc );
+    RestoreDC( hdc, -1  );
+    ret = WidenPath( hdc );
+    ok( ret, "WidenPath failed error %u\n", GetLastError() );
+
+    /* test all functions with no path at all */
+    AbortPath( hdc );
+    SetLastError( 0xdeadbeef );
+    ret = WidenPath( hdc );
+    ok( !ret, "WidenPath succeeded\n" );
+    ok( GetLastError() == ERROR_CAN_NOT_COMPLETE || broken(GetLastError() == 0xdeadbeef),
+        "wrong error %u\n", GetLastError() );
+
+    SetLastError( 0xdeadbeef );
+    ret = FlattenPath( hdc );
+    ok( !ret, "FlattenPath succeeded\n" );
+    ok( GetLastError() == ERROR_CAN_NOT_COMPLETE || broken(GetLastError() == 0xdeadbeef),
+        "wrong error %u\n", GetLastError() );
+
+    SetLastError( 0xdeadbeef );
+    ret = StrokePath( hdc );
+    ok( !ret, "StrokePath succeeded\n" );
+    ok( GetLastError() == ERROR_CAN_NOT_COMPLETE || broken(GetLastError() == 0xdeadbeef),
+        "wrong error %u\n", GetLastError() );
+
+    SetLastError( 0xdeadbeef );
+    ret = FillPath( hdc );
+    ok( !ret, "FillPath succeeded\n" );
+    ok( GetLastError() == ERROR_CAN_NOT_COMPLETE || broken(GetLastError() == 0xdeadbeef),
+        "wrong error %u\n", GetLastError() );
+
+    SetLastError( 0xdeadbeef );
+    ret = StrokeAndFillPath( hdc );
+    ok( !ret, "StrokeAndFillPath succeeded\n" );
+    ok( GetLastError() == ERROR_CAN_NOT_COMPLETE || broken(GetLastError() == 0xdeadbeef),
+        "wrong error %u\n", GetLastError() );
+
+    SetLastError( 0xdeadbeef );
+    ret = SelectClipPath( hdc, RGN_OR );
+    ok( !ret, "SelectClipPath succeeded\n" );
+    ok( GetLastError() == ERROR_CAN_NOT_COMPLETE || broken(GetLastError() == 0xdeadbeef),
+        "wrong error %u\n", GetLastError() );
+
+    SetLastError( 0xdeadbeef );
+    ret = EndPath( hdc );
+    ok( !ret, "SelectClipPath succeeded\n" );
+    ok( GetLastError() == ERROR_CAN_NOT_COMPLETE || broken(GetLastError() == 0xdeadbeef),
+        "wrong error %u\n", GetLastError() );
+
+    SetLastError( 0xdeadbeef );
+    ret = CloseFigure( hdc );
+    ok( !ret, "CloseFigure succeeded\n" );
+    ok( GetLastError() == ERROR_CAN_NOT_COMPLETE || broken(GetLastError() == 0xdeadbeef),
+        "wrong error %u\n", GetLastError() );
+
+    /* test all functions with an open path */
+    AbortPath( hdc );
+    BeginPath( hdc );
+    SetLastError( 0xdeadbeef );
+    ret = WidenPath( hdc );
+    ok( !ret, "WidenPath succeeded\n" );
+    ok( GetLastError() == ERROR_CAN_NOT_COMPLETE || broken(GetLastError() == 0xdeadbeef),
+        "wrong error %u\n", GetLastError() );
+
+    AbortPath( hdc );
+    BeginPath( hdc );
+    SetLastError( 0xdeadbeef );
+    ret = FlattenPath( hdc );
+    ok( !ret, "FlattenPath succeeded\n" );
+    ok( GetLastError() == ERROR_CAN_NOT_COMPLETE || broken(GetLastError() == 0xdeadbeef),
+        "wrong error %u\n", GetLastError() );
+
+    AbortPath( hdc );
+    BeginPath( hdc );
+    SetLastError( 0xdeadbeef );
+    ret = StrokePath( hdc );
+    ok( !ret, "StrokePath succeeded\n" );
+    ok( GetLastError() == ERROR_CAN_NOT_COMPLETE || broken(GetLastError() == 0xdeadbeef),
+        "wrong error %u\n", GetLastError() );
+
+    AbortPath( hdc );
+    BeginPath( hdc );
+    SetLastError( 0xdeadbeef );
+    ret = FillPath( hdc );
+    ok( !ret, "FillPath succeeded\n" );
+    ok( GetLastError() == ERROR_CAN_NOT_COMPLETE || broken(GetLastError() == 0xdeadbeef),
+        "wrong error %u\n", GetLastError() );
+
+    AbortPath( hdc );
+    BeginPath( hdc );
+    SetLastError( 0xdeadbeef );
+    ret = StrokeAndFillPath( hdc );
+    ok( !ret, "StrokeAndFillPath succeeded\n" );
+    ok( GetLastError() == ERROR_CAN_NOT_COMPLETE || broken(GetLastError() == 0xdeadbeef),
+        "wrong error %u\n", GetLastError() );
+
+    AbortPath( hdc );
+    BeginPath( hdc );
+    Rectangle( hdc, 1, 1, 10, 10 );  /* region needs some contents */
+    SetLastError( 0xdeadbeef );
+    ret = SelectClipPath( hdc, RGN_OR );
+    ok( !ret, "SelectClipPath succeeded\n" );
+    ok( GetLastError() == ERROR_CAN_NOT_COMPLETE || broken(GetLastError() == 0xdeadbeef),
+        "wrong error %u\n", GetLastError() );
+
+    AbortPath( hdc );
+    BeginPath( hdc );
+    ret = CloseFigure( hdc );
+    ok( ret, "CloseFigure failed\n" );
+
+    /* test all functions with a closed path */
+    AbortPath( hdc );
+    BeginPath( hdc );
+    EndPath( hdc );
+    ret = WidenPath( hdc );
+    ok( ret, "WidenPath failed\n" );
+
+    AbortPath( hdc );
+    BeginPath( hdc );
+    EndPath( hdc );
+    ret = FlattenPath( hdc );
+    ok( ret, "FlattenPath failed\n" );
+
+    AbortPath( hdc );
+    BeginPath( hdc );
+    EndPath( hdc );
+    ret = StrokePath( hdc );
+    ok( ret, "StrokePath failed\n" );
+
+    AbortPath( hdc );
+    BeginPath( hdc );
+    EndPath( hdc );
+    ret = FillPath( hdc );
+    ok( ret, "FillPath failed\n" );
+
+    AbortPath( hdc );
+    BeginPath( hdc );
+    EndPath( hdc );
+    ret = StrokeAndFillPath( hdc );
+    ok( ret, "StrokeAndFillPath failed\n" );
+
+    AbortPath( hdc );
+    BeginPath( hdc );
+    Rectangle( hdc, 1, 1, 10, 10 );  /* region needs some contents */
+    EndPath( hdc );
+    ret = SelectClipPath( hdc, RGN_OR );
+    ok( ret, "SelectClipPath failed\n" );
+
+    AbortPath( hdc );
+    BeginPath( hdc );
+    EndPath( hdc );
+    SetLastError( 0xdeadbeef );
+    ret = CloseFigure( hdc );
+    ok( !ret, "CloseFigure succeeded\n" );
+    ok( GetLastError() == ERROR_CAN_NOT_COMPLETE || broken(GetLastError() == 0xdeadbeef),
+        "wrong error %u\n", GetLastError() );
+
+    AbortPath( hdc );
+    BeginPath( hdc );
+    EndPath( hdc );
+    SetLastError( 0xdeadbeef );
+    ret = EndPath( hdc );
+    ok( !ret, "SelectClipPath succeeded\n" );
+    ok( GetLastError() == ERROR_CAN_NOT_COMPLETE || broken(GetLastError() == 0xdeadbeef),
+        "wrong error %u\n", GetLastError() );
+
+    DeleteDC( hdc );
+    DeleteObject( dib );
+}
+
 static void test_widenpath(void)
 {
     HDC hdc = GetDC(0);
@@ -504,6 +736,7 @@ static void test_linedda(void)
 
 START_TEST(path)
 {
+    test_path_state();
     test_widenpath();
     test_arcto();
     test_anglearc();

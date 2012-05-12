@@ -41,6 +41,7 @@ static DWORD (WINAPI *pGdiGetCodePage)(HDC hdc);
 static BOOL  (WINAPI *pGetCharABCWidthsI)(HDC hdc, UINT first, UINT count, LPWORD glyphs, LPABC abc);
 static BOOL  (WINAPI *pGetCharABCWidthsA)(HDC hdc, UINT first, UINT last, LPABC abc);
 static BOOL  (WINAPI *pGetCharABCWidthsW)(HDC hdc, UINT first, UINT last, LPABC abc);
+static BOOL  (WINAPI *pGetCharABCWidthsFloatW)(HDC hdc, UINT first, UINT last, LPABCFLOAT abc);
 static DWORD (WINAPI *pGetFontUnicodeRanges)(HDC hdc, LPGLYPHSET lpgs);
 static DWORD (WINAPI *pGetGlyphIndicesA)(HDC hdc, LPCSTR lpstr, INT count, LPWORD pgi, DWORD flags);
 static DWORD (WINAPI *pGetGlyphIndicesW)(HDC hdc, LPCWSTR lpstr, INT count, LPWORD pgi, DWORD flags);
@@ -63,6 +64,7 @@ static void init(void)
     pGetCharABCWidthsI = (void *)GetProcAddress(hgdi32, "GetCharABCWidthsI");
     pGetCharABCWidthsA = (void *)GetProcAddress(hgdi32, "GetCharABCWidthsA");
     pGetCharABCWidthsW = (void *)GetProcAddress(hgdi32, "GetCharABCWidthsW");
+    pGetCharABCWidthsFloatW = (void *)GetProcAddress(hgdi32, "GetCharABCWidthsFloatW");
     pGetFontUnicodeRanges = (void *)GetProcAddress(hgdi32, "GetFontUnicodeRanges");
     pGetGlyphIndicesA = (void *)GetProcAddress(hgdi32, "GetGlyphIndicesA");
     pGetGlyphIndicesW = (void *)GetProcAddress(hgdi32, "GetGlyphIndicesW");
@@ -332,7 +334,7 @@ static void test_bitmap_font(void)
 	    return;
     }
 
-    hdc = GetDC(0);
+    hdc = CreateCompatibleDC(0);
 
     /* "System" has only 1 pixel size defined, otherwise the test breaks */
     ret = EnumFontFamiliesA(hdc, "System", font_enum_proc, (LPARAM)&bitmap_lf);
@@ -406,7 +408,7 @@ static void test_bitmap_font(void)
     SelectObject(hdc, old_hfont);
     DeleteObject(hfont);
 
-    ReleaseDC(0, hdc);
+    DeleteDC(hdc);
 }
 
 /* Test how GDI scales outline font metrics */
@@ -678,6 +680,7 @@ static INT CALLBACK find_font_proc(const LOGFONT *elf, const TEXTMETRIC *ntm, DW
     return 1; /* continue enumeration */
 }
 
+#define FH_SCALE 0x80000000
 static void test_bitmap_font_metrics(void)
 {
     static const struct font_data
@@ -685,145 +688,207 @@ static void test_bitmap_font_metrics(void)
         const char face_name[LF_FACESIZE];
         int weight, height, ascent, descent, int_leading, ext_leading;
         int ave_char_width, max_char_width, dpi;
+        BYTE first_char, last_char, def_char, break_char;
         DWORD ansi_bitfield;
         WORD skip_lang_id;
+        int scaled_height;
     } fd[] =
     {
-        { "MS Sans Serif", FW_NORMAL, 13, 11, 2, 2, 0, 5, 11, 96, FS_LATIN1 | FS_LATIN2 | FS_CYRILLIC },
-        { "MS Sans Serif", FW_NORMAL, 16, 13, 3, 3, 0, 7, 14, 96, FS_LATIN1 | FS_LATIN2 | FS_CYRILLIC },
-        { "MS Sans Serif", FW_NORMAL, 20, 16, 4, 4, 0, 8, 16, 96, FS_LATIN1 | FS_CYRILLIC },
-        { "MS Sans Serif", FW_NORMAL, 20, 16, 4, 4, 0, 8, 18, 96, FS_LATIN2 },
-        { "MS Sans Serif", FW_NORMAL, 24, 19, 5, 6, 0, 9, 19, 96, FS_LATIN1 },
-        { "MS Sans Serif", FW_NORMAL, 24, 19, 5, 6, 0, 9, 24, 96, FS_LATIN2 },
-        { "MS Sans Serif", FW_NORMAL, 24, 19, 5, 6, 0, 9, 20, 96, FS_CYRILLIC },
-        { "MS Sans Serif", FW_NORMAL, 29, 23, 6, 5, 0, 12, 24, 96, FS_LATIN1 },
-        { "MS Sans Serif", FW_NORMAL, 29, 23, 6, 6, 0, 12, 24, 96, FS_LATIN2 },
-        { "MS Sans Serif", FW_NORMAL, 29, 23, 6, 5, 0, 12, 25, 96, FS_CYRILLIC },
-        { "MS Sans Serif", FW_NORMAL, 37, 29, 8, 5, 0, 16, 32, 96, FS_LATIN1 | FS_LATIN2 | FS_CYRILLIC },
+        { "MS Sans Serif", FW_NORMAL, FH_SCALE | 6, 11, 2, 2, 0, 5, 11, 96, 0x20, 0xff, 0x81, 0x20, FS_LATIN1 | FS_LATIN2, 0, 13 },
+        { "MS Sans Serif", FW_NORMAL, FH_SCALE | 6, 11, 2, 2, 0, 5, 11, 96, 0x20, 0xff, 0x7f, 0x20, FS_CYRILLIC, 0, 13 },
+        { "MS Sans Serif", FW_NORMAL, FH_SCALE | 8, 11, 2, 2, 0, 5, 11, 96, 0x20, 0xff, 0x81, 0x20, FS_LATIN1 | FS_LATIN2, 0, 13 },
+        { "MS Sans Serif", FW_NORMAL, FH_SCALE | 8, 11, 2, 2, 0, 5, 11, 96, 0x20, 0xff, 0x7f, 0x20, FS_CYRILLIC, 0, 13 },
+        { "MS Sans Serif", FW_NORMAL, FH_SCALE | 10, 11, 2, 2, 0, 5, 11, 96, 0x20, 0xff, 0x81, 0x20, FS_LATIN1 | FS_LATIN2, 0, 13 },
+        { "MS Sans Serif", FW_NORMAL, FH_SCALE | 10, 11, 2, 2, 0, 5, 11, 96, 0x20, 0xff, 0x7f, 0x20, FS_CYRILLIC, 0, 13 },
+        { "MS Sans Serif", FW_NORMAL, FH_SCALE | 14, 11, 2, 2, 0, 5, 11, 96, 0x20, 0xff, 0x81, 0x20, FS_LATIN1 | FS_LATIN2, 0, 13 },
+        { "MS Sans Serif", FW_NORMAL, FH_SCALE | 14, 11, 2, 2, 0, 5, 11, 96, 0x20, 0xff, 0x7f, 0x20, FS_CYRILLIC, 0, 13 },
+        { "MS Sans Serif", FW_NORMAL, FH_SCALE | 18, 13, 3, 3, 0, 7, 14, 96, 0x20, 0xff, 0x81, 0x20, FS_LATIN1 | FS_LATIN2, 0, 16 },
+        { "MS Sans Serif", FW_NORMAL, FH_SCALE | 18, 13, 3, 3, 0, 7, 14, 96, 0x20, 0xff, 0x7f, 0x20, FS_CYRILLIC, 0, 16 },
 
-        { "MS Sans Serif", FW_NORMAL, 16, 13, 3, 3, 0, 7, 14, 120, FS_LATIN1 | FS_LATIN2 | FS_CYRILLIC },
-        { "MS Sans Serif", FW_NORMAL, 20, 16, 4, 4, 0, 8, 18, 120, FS_LATIN1 | FS_LATIN2 },
-        { "MS Sans Serif", FW_NORMAL, 20, 16, 4, 4, 0, 8, 17, 120, FS_CYRILLIC },
-        { "MS Sans Serif", FW_NORMAL, 25, 20, 5, 5, 0, 10, 21, 120, FS_LATIN1 | FS_LATIN2 | FS_CYRILLIC },
-        { "MS Sans Serif", FW_NORMAL, 29, 23, 6, 6, 0, 12, 24, 120, FS_LATIN1 | FS_LATIN2 },
-        { "MS Sans Serif", FW_NORMAL, 29, 23, 6, 5, 0, 12, 24, 120, FS_CYRILLIC },
-        { "MS Sans Serif", FW_NORMAL, 36, 29, 7, 6, 0, 15, 30, 120, FS_LATIN1 | FS_LATIN2 | FS_CYRILLIC },
-        { "MS Sans Serif", FW_NORMAL, 46, 37, 9, 6, 0, 20, 40, 120, FS_LATIN1 | FS_LATIN2 | FS_CYRILLIC },
+        { "MS Sans Serif", FW_NORMAL, FH_SCALE | 6, 13, 3, 3, 0, 7, 14, 120, 0x20, 0xff, 0x81, 0x20, FS_LATIN1 | FS_LATIN2, 0, 16 },
+        { "MS Sans Serif", FW_NORMAL, FH_SCALE | 6, 13, 3, 3, 0, 7, 14, 120, 0x20, 0xff, 0x7f, 0x20, FS_CYRILLIC, 0, 16 },
+        { "MS Sans Serif", FW_NORMAL, FH_SCALE | 8, 13, 3, 3, 0, 7, 14, 120, 0x20, 0xff, 0x81, 0x20, FS_LATIN1 | FS_LATIN2, 0, 16 },
+        { "MS Sans Serif", FW_NORMAL, FH_SCALE | 8, 13, 3, 3, 0, 7, 14, 120, 0x20, 0xff, 0x7f, 0x20, FS_CYRILLIC, 0, 16 },
+        { "MS Sans Serif", FW_NORMAL, FH_SCALE | 10, 13, 3, 3, 0, 7, 14, 120, 0x20, 0xff, 0x81, 0x20, FS_LATIN1 | FS_LATIN2, 0, 16 },
+        { "MS Sans Serif", FW_NORMAL, FH_SCALE | 10, 13, 3, 3, 0, 7, 14, 120, 0x20, 0xff, 0x7f, 0x20, FS_CYRILLIC, 0, 16 },
+        { "MS Sans Serif", FW_NORMAL, FH_SCALE | 14, 13, 3, 3, 0, 7, 14, 120, 0x20, 0xff, 0x81, 0x20, FS_LATIN1 | FS_LATIN2, 0, 16 },
+        { "MS Sans Serif", FW_NORMAL, FH_SCALE | 14, 13, 3, 3, 0, 7, 14, 120, 0x20, 0xff, 0x7f, 0x20, FS_CYRILLIC, 0, 16 },
+        { "MS Sans Serif", FW_NORMAL, FH_SCALE | 18, 13, 3, 3, 0, 7, 14, 120, 0x20, 0xff, 0x81, 0x20, FS_LATIN1 | FS_LATIN2, 0, 16 },
+        { "MS Sans Serif", FW_NORMAL, FH_SCALE | 18, 13, 3, 3, 0, 7, 14, 120, 0x20, 0xff, 0x7f, 0x20, FS_CYRILLIC, 0, 16 },
 
-        { "MS Serif", FW_NORMAL, 10, 8, 2, 2, 0, 4, 8, 96, FS_LATIN1 | FS_LATIN2 },
-        { "MS Serif", FW_NORMAL, 10, 8, 2, 2, 0, 5, 8, 96, FS_CYRILLIC },
-        { "MS Serif", FW_NORMAL, 11, 9, 2, 2, 0, 5, 9, 96, FS_LATIN1 | FS_LATIN2 | FS_CYRILLIC },
-        { "MS Serif", FW_NORMAL, 13, 11, 2, 2, 0, 5, 11, 96, FS_LATIN1 },
-        { "MS Serif", FW_NORMAL, 13, 11, 2, 2, 0, 5, 12, 96, FS_LATIN2 | FS_CYRILLIC },
-        { "MS Serif", FW_NORMAL, 16, 13, 3, 3, 0, 6, 14, 96, FS_LATIN1 | FS_LATIN2 },
-        { "MS Serif", FW_NORMAL, 16, 13, 3, 3, 0, 6, 16, 96, FS_CYRILLIC },
-        { "MS Serif", FW_NORMAL, 19, 15, 4, 3, 0, 8, 18, 96, FS_LATIN1 | FS_LATIN2 },
-        { "MS Serif", FW_NORMAL, 19, 15, 4, 3, 0, 8, 19, 96, FS_CYRILLIC },
-        { "MS Serif", FW_NORMAL, 21, 16, 5, 3, 0, 9, 17, 96, FS_LATIN1 },
-        { "MS Serif", FW_NORMAL, 21, 16, 5, 3, 0, 9, 22, 96, FS_LATIN2 },
-        { "MS Serif", FW_NORMAL, 21, 16, 5, 3, 0, 9, 23, 96, FS_CYRILLIC },
-        { "MS Serif", FW_NORMAL, 27, 21, 6, 3, 0, 12, 23, 96, FS_LATIN1 },
-        { "MS Serif", FW_NORMAL, 27, 21, 6, 3, 0, 12, 26, 96, FS_LATIN2 },
-        { "MS Serif", FW_NORMAL, 27, 21, 6, 3, 0, 12, 27, 96, FS_CYRILLIC },
-        { "MS Serif", FW_NORMAL, 35, 27, 8, 3, 0, 16, 33, 96, FS_LATIN1 | FS_LATIN2 },
-        { "MS Serif", FW_NORMAL, 35, 27, 8, 3, 0, 16, 34, 96, FS_CYRILLIC },
+        { "MS Sans Serif", FW_NORMAL, 13, 11, 2, 2, 0, 5, 11, 96, 0x20, 0xff, 0x81, 0x20, FS_LATIN1 | FS_LATIN2 },
+        { "MS Sans Serif", FW_NORMAL, 13, 11, 2, 2, 0, 5, 11, 96, 0x20, 0xff, 0x7f, 0x20, FS_CYRILLIC },
+        { "MS Sans Serif", FW_NORMAL, 16, 13, 3, 3, 0, 7, 14, 96, 0x20, 0xff, 0x81, 0x20, FS_LATIN1 | FS_LATIN2 },
+        { "MS Sans Serif", FW_NORMAL, 16, 13, 3, 3, 0, 7, 14, 96, 0x20, 0xff, 0x7f, 0x20, FS_CYRILLIC },
+        { "MS Sans Serif", FW_NORMAL, 20, 16, 4, 4, 0, 8, 16, 96, 0x20, 0xff, 0x81, 0x20, FS_LATIN1 },
+        { "MS Sans Serif", FW_NORMAL, 20, 16, 4, 4, 0, 8, 18, 96, 0x20, 0xff, 0x81, 0x20, FS_LATIN2 },
+        { "MS Sans Serif", FW_NORMAL, 20, 16, 4, 4, 0, 8, 16, 96, 0x20, 0xff, 0x7f, 0x20, FS_CYRILLIC },
+        { "MS Sans Serif", FW_NORMAL, 24, 19, 5, 6, 0, 9, 19, 96, 0x20, 0xff, 0x81, 0x20, FS_LATIN1 },
+        { "MS Sans Serif", FW_NORMAL, 24, 19, 5, 6, 0, 9, 24, 96, 0x20, 0xff, 0x81, 0x40, FS_LATIN2 },
+        { "MS Sans Serif", FW_NORMAL, 24, 19, 5, 6, 0, 9, 20, 96, 0x20, 0xff, 0x7f, 0x20, FS_CYRILLIC },
+        { "MS Sans Serif", FW_NORMAL, 29, 23, 6, 5, 0, 12, 24, 96, 0x20, 0xff, 0x81, 0x20, FS_LATIN1 },
+        { "MS Sans Serif", FW_NORMAL, 29, 23, 6, 6, 0, 12, 24, 96, 0x20, 0xff, 0x81, 0x20, FS_LATIN2 },
+        { "MS Sans Serif", FW_NORMAL, 29, 23, 6, 5, 0, 12, 25, 96, 0x20, 0xff, 0x7f, 0x20, FS_CYRILLIC },
+        { "MS Sans Serif", FW_NORMAL, 37, 29, 8, 5, 0, 16, 32, 96, 0x20, 0xff, 0x81, 0x20, FS_LATIN1 },
+        { "MS Sans Serif", FW_NORMAL, 37, 29, 8, 5, 0, 16, 32, 96, 0x20, 0xff, 0x81, 0x40, FS_LATIN2 },
+        { "MS Sans Serif", FW_NORMAL, 37, 29, 8, 5, 0, 16, 32, 96, 0x20, 0xff, 0x7f, 0x20, FS_CYRILLIC },
 
-        { "MS Serif", FW_NORMAL, 16, 13, 3, 3, 0, 6, 14, 120, FS_LATIN1 | FS_CYRILLIC },
-        { "MS Serif", FW_NORMAL, 16, 13, 3, 3, 0, 6, 13, 120, FS_LATIN2 },
-        { "MS Serif", FW_NORMAL, 20, 16, 4, 4, 0, 8, 18, 120, FS_LATIN1 | FS_CYRILLIC },
-        { "MS Serif", FW_NORMAL, 20, 16, 4, 4, 0, 8, 15, 120, FS_LATIN2 },
-        { "MS Serif", FW_NORMAL, 23, 18, 5, 3, 0, 10, 21, 120, FS_LATIN1 | FS_CYRILLIC },
-        { "MS Serif", FW_NORMAL, 23, 18, 5, 3, 0, 10, 19, 120, FS_LATIN2 },
-        { "MS Serif", FW_NORMAL, 27, 21, 6, 4, 0, 12, 23, 120, FS_LATIN1 | FS_LATIN2 },
-        { "MS Serif", FW_MEDIUM, 27, 22, 5, 2, 0, 12, 30, 120, FS_CYRILLIC },
-        { "MS Serif", FW_NORMAL, 33, 26, 7, 3, 0, 14, 30, 120, FS_LATIN1 | FS_LATIN2 },
-        { "MS Serif", FW_MEDIUM, 32, 25, 7, 2, 0, 14, 32, 120, FS_CYRILLIC },
-        { "MS Serif", FW_NORMAL, 43, 34, 9, 3, 0, 19, 39, 120, FS_LATIN1 | FS_LATIN2 | FS_CYRILLIC },
+        { "MS Sans Serif", FW_NORMAL, 16, 13, 3, 3, 0, 7, 14, 120, 0x20, 0xff, 0x81, 0x20, FS_LATIN1 | FS_LATIN2 },
+        { "MS Sans Serif", FW_NORMAL, 16, 13, 3, 3, 0, 7, 14, 120, 0x20, 0xff, 0x7f, 0x20, FS_CYRILLIC },
+        { "MS Sans Serif", FW_NORMAL, 20, 16, 4, 4, 0, 8, 18, 120, 0x20, 0xff, 0x81, 0x20, FS_LATIN1 | FS_LATIN2 },
+        { "MS Sans Serif", FW_NORMAL, 20, 16, 4, 4, 0, 8, 17, 120, 0x20, 0xff, 0x7f, 0x20, FS_CYRILLIC },
+        { "MS Sans Serif", FW_NORMAL, 25, 20, 5, 5, 0, 10, 21, 120, 0x20, 0xff, 0x81, 0x20, FS_LATIN1 | FS_LATIN2 },
+        { "MS Sans Serif", FW_NORMAL, 25, 20, 5, 5, 0, 10, 21, 120, 0x20, 0xff, 0x7f, 0x20, FS_CYRILLIC },
+        { "MS Sans Serif", FW_NORMAL, 29, 23, 6, 6, 0, 12, 24, 120, 0x20, 0xff, 0x81, 0x20, FS_LATIN1 | FS_LATIN2 },
+        { "MS Sans Serif", FW_NORMAL, 29, 23, 6, 5, 0, 12, 24, 120, 0x20, 0xff, 0x7f, 0x20, FS_CYRILLIC },
+        { "MS Sans Serif", FW_NORMAL, 36, 29, 7, 6, 0, 15, 30, 120, 0x20, 0xff, 0x81, 0x20, FS_LATIN1 | FS_LATIN2 },
+        { "MS Sans Serif", FW_NORMAL, 36, 29, 7, 6, 0, 15, 30, 120, 0x20, 0xff, 0x7f, 0x20, FS_CYRILLIC },
+        { "MS Sans Serif", FW_NORMAL, 46, 37, 9, 6, 0, 20, 40, 120, 0x20, 0xff, 0x81, 0x20, FS_LATIN1 | FS_LATIN2 },
+        { "MS Sans Serif", FW_NORMAL, 46, 37, 9, 6, 0, 20, 40, 120, 0x20, 0xff, 0x7f, 0x20, FS_CYRILLIC },
 
-        { "Courier", FW_NORMAL, 13, 11, 2, 0, 0, 8, 8, 96, FS_LATIN1 | FS_LATIN2 | FS_CYRILLIC },
-        { "Courier", FW_NORMAL, 16, 13, 3, 0, 0, 9, 9, 96, FS_LATIN1 | FS_LATIN2 | FS_CYRILLIC },
-        { "Courier", FW_NORMAL, 20, 16, 4, 0, 0, 12, 12, 96, FS_LATIN1 | FS_LATIN2 | FS_CYRILLIC },
+        { "MS Serif", FW_NORMAL, 10, 8, 2, 2, 0, 4, 8, 96, 0x20, 0xff, 0x80, 0x20, FS_LATIN1 | FS_LATIN2 },
+        { "MS Serif", FW_NORMAL, 10, 8, 2, 2, 0, 5, 8, 96, 0x20, 0xff, 0x80, 0x20, FS_CYRILLIC },
+        { "MS Serif", FW_NORMAL, 11, 9, 2, 2, 0, 5, 9, 96, 0x20, 0xff, 0x80, 0x20, FS_LATIN1 | FS_LATIN2 | FS_CYRILLIC },
+        { "MS Serif", FW_NORMAL, 13, 11, 2, 2, 0, 5, 11, 96, 0x20, 0xff, 0x80, 0x20, FS_LATIN1 },
+        { "MS Serif", FW_NORMAL, 13, 11, 2, 2, 0, 5, 12, 96, 0x20, 0xff, 0x80, 0x20, FS_LATIN2 | FS_CYRILLIC },
+        { "MS Serif", FW_NORMAL, 16, 13, 3, 3, 0, 6, 14, 96, 0x20, 0xff, 0x80, 0x20, FS_LATIN1 | FS_LATIN2 },
+        { "MS Serif", FW_NORMAL, 16, 13, 3, 3, 0, 6, 16, 96, 0x20, 0xff, 0x80, 0x20, FS_CYRILLIC },
+        { "MS Serif", FW_NORMAL, 19, 15, 4, 3, 0, 8, 18, 96, 0x20, 0xff, 0x80, 0x20, FS_LATIN1 | FS_LATIN2 },
+        { "MS Serif", FW_NORMAL, 19, 15, 4, 3, 0, 8, 19, 96, 0x20, 0xff, 0x80, 0x20, FS_CYRILLIC },
+        { "MS Serif", FW_NORMAL, 21, 16, 5, 3, 0, 9, 17, 96, 0x20, 0xff, 0x80, 0x20, FS_LATIN1 },
+        { "MS Serif", FW_NORMAL, 21, 16, 5, 3, 0, 9, 22, 96, 0x20, 0xff, 0x80, 0x20, FS_LATIN2 },
+        { "MS Serif", FW_NORMAL, 21, 16, 5, 3, 0, 9, 23, 96, 0x20, 0xff, 0x80, 0x20, FS_CYRILLIC },
+        { "MS Serif", FW_NORMAL, 27, 21, 6, 3, 0, 12, 23, 96, 0x20, 0xff, 0x80, 0x20, FS_LATIN1 },
+        { "MS Serif", FW_NORMAL, 27, 21, 6, 3, 0, 12, 26, 96, 0x20, 0xff, 0x80, 0x20, FS_LATIN2 },
+        { "MS Serif", FW_NORMAL, 27, 21, 6, 3, 0, 12, 27, 96, 0x20, 0xff, 0x80, 0x20, FS_CYRILLIC },
+        { "MS Serif", FW_NORMAL, 35, 27, 8, 3, 0, 16, 33, 96, 0x20, 0xff, 0x80, 0x20, FS_LATIN1 | FS_LATIN2 },
+        { "MS Serif", FW_NORMAL, 35, 27, 8, 3, 0, 16, 34, 96, 0x20, 0xff, 0x80, 0x20, FS_CYRILLIC },
 
-        { "Courier", FW_NORMAL, 16, 13, 3, 0, 0, 9, 9, 120, FS_LATIN1 | FS_LATIN2 | FS_CYRILLIC },
-        { "Courier", FW_NORMAL, 20, 16, 4, 0, 0, 12, 12, 120, FS_LATIN1 | FS_LATIN2 | FS_CYRILLIC },
-        { "Courier", FW_NORMAL, 25, 20, 5, 0, 0, 15, 15, 120, FS_LATIN1 | FS_LATIN2 | FS_CYRILLIC },
+        { "MS Serif", FW_NORMAL, 16, 13, 3, 3, 0, 6, 14, 120, 0x20, 0xff, 0x80, 0x20, FS_LATIN1 | FS_CYRILLIC },
+        { "MS Serif", FW_NORMAL, 16, 13, 3, 3, 0, 6, 13, 120, 0x20, 0xff, 0x80, 0x20, FS_LATIN2 },
+        { "MS Serif", FW_NORMAL, 20, 16, 4, 4, 0, 8, 18, 120, 0x20, 0xff, 0x80, 0x20, FS_LATIN1 | FS_CYRILLIC },
+        { "MS Serif", FW_NORMAL, 20, 16, 4, 4, 0, 8, 15, 120, 0x20, 0xff, 0x80, 0x20, FS_LATIN2 },
+        { "MS Serif", FW_NORMAL, 23, 18, 5, 3, 0, 10, 21, 120, 0x20, 0xff, 0x80, 0x20, FS_LATIN1 | FS_CYRILLIC },
+        { "MS Serif", FW_NORMAL, 23, 18, 5, 3, 0, 10, 19, 120, 0x20, 0xff, 0x80, 0x20, FS_LATIN2 },
+        { "MS Serif", FW_NORMAL, 27, 21, 6, 4, 0, 12, 23, 120, 0x20, 0xff, 0x80, 0x20, FS_LATIN1 | FS_LATIN2 },
+        { "MS Serif", FW_MEDIUM, 27, 22, 5, 2, 0, 12, 30, 120, 0x20, 0xff, 0x80, 0x20, FS_CYRILLIC },
+        { "MS Serif", FW_NORMAL, 33, 26, 7, 3, 0, 14, 30, 120, 0x20, 0xff, 0x80, 0x20, FS_LATIN1 | FS_LATIN2 },
+        { "MS Serif", FW_MEDIUM, 32, 25, 7, 2, 0, 14, 32, 120, 0x20, 0xff, 0x80, 0x20, FS_CYRILLIC },
+        { "MS Serif", FW_NORMAL, 43, 34, 9, 3, 0, 19, 39, 120, 0x20, 0xff, 0x80, 0x20, FS_LATIN1 | FS_LATIN2 | FS_CYRILLIC },
 
-        { "System", FW_BOLD, 16, 13, 3, 3, 0, 7, 14, 96, FS_LATIN1 },
-        { "System", FW_BOLD, 16, 13, 3, 3, 0, 7, 15, 96, FS_LATIN2 | FS_CYRILLIC },
-        { "System", FW_NORMAL, 18, 16, 2, 0, 2, 8, 16, 96, FS_JISJAPAN },
+        { "Courier", FW_NORMAL, 13, 11, 2, 0, 0, 8, 8, 96, 0x20, 0xff, 0x80, 0x20, FS_LATIN1 | FS_LATIN2 | FS_CYRILLIC },
+        { "Courier", FW_NORMAL, 16, 13, 3, 0, 0, 9, 9, 96, 0x20, 0xff, 0x80, 0x20, FS_LATIN1 | FS_LATIN2 | FS_CYRILLIC },
+        { "Courier", FW_NORMAL, 20, 16, 4, 0, 0, 12, 12, 96, 0x20, 0xff, 0x80, 0x20, FS_LATIN1 | FS_LATIN2 | FS_CYRILLIC },
 
-        { "System", FW_BOLD, 20, 16, 4, 4, 0, 9, 14, 120, FS_LATIN1 },
-        { "System", FW_BOLD, 20, 16, 4, 4, 0, 9, 17, 120, FS_LATIN2 | FS_CYRILLIC },
+        { "Courier", FW_NORMAL, 16, 13, 3, 0, 0, 9, 9, 120, 0x20, 0xff, 0x80, 0x20, FS_LATIN1 | FS_LATIN2 | FS_CYRILLIC },
+        { "Courier", FW_NORMAL, 20, 16, 4, 0, 0, 12, 12, 120, 0x20, 0xff, 0x80, 0x20, FS_LATIN1 | FS_LATIN2 | FS_CYRILLIC },
+        { "Courier", FW_NORMAL, 25, 20, 5, 0, 0, 15, 15, 120, 0x20, 0xff, 0x40, 0x20, FS_LATIN1 | FS_LATIN2 | FS_CYRILLIC },
 
-        { "Small Fonts", FW_NORMAL, 3, 2, 1, 0, 0, 1, 2, 96, FS_LATIN1 },
-        { "Small Fonts", FW_NORMAL, 3, 2, 1, 0, 0, 1, 8, 96, FS_LATIN2 | FS_CYRILLIC },
-        { "Small Fonts", FW_NORMAL, 3, 2, 1, 0, 0, 2, 4, 96, FS_JISJAPAN },
-        { "Small Fonts", FW_NORMAL, 5, 4, 1, 1, 0, 3, 4, 96, FS_LATIN1, LANG_ARABIC },
-        { "Small Fonts", FW_NORMAL, 5, 4, 1, 1, 0, 2, 8, 96, FS_LATIN2 | FS_CYRILLIC },
-        { "Small Fonts", FW_NORMAL, 5, 4, 1, 0, 0, 3, 6, 96, FS_JISJAPAN },
-        { "Small Fonts", FW_NORMAL, 6, 5, 1, 1, 0, 3, 13, 96, FS_LATIN1, LANG_ARABIC },
-        { "Small Fonts", FW_NORMAL, 6, 5, 1, 1, 0, 3, 8, 96, FS_LATIN2 | FS_CYRILLIC },
-        { "Small Fonts", FW_NORMAL, 6, 5, 1, 1, 0, 3, 8, 96, FS_ARABIC },
-        { "Small Fonts", FW_NORMAL, 6, 5, 1, 0, 0, 4, 8, 96, FS_JISJAPAN },
-        { "Small Fonts", FW_NORMAL, 8, 7, 1, 1, 0, 4, 7, 96, FS_LATIN1, LANG_ARABIC },
-        { "Small Fonts", FW_NORMAL, 8, 7, 1, 1, 0, 4, 8, 96, FS_LATIN2 | FS_CYRILLIC },
-        { "Small Fonts", FW_NORMAL, 8, 7, 1, 1, 0, 4, 8, 96, FS_ARABIC },
-        { "Small Fonts", FW_NORMAL, 8, 7, 1, 0, 0, 5, 10, 96, FS_JISJAPAN },
-        { "Small Fonts", FW_NORMAL, 10, 8, 2, 2, 0, 4, 8, 96, FS_LATIN1 | FS_LATIN2, LANG_ARABIC },
-        { "Small Fonts", FW_NORMAL, 10, 8, 2, 2, 0, 5, 8, 96, FS_CYRILLIC },
-        { "Small Fonts", FW_NORMAL, 10, 8, 2, 2, 0, 4, 9, 96, FS_ARABIC },
-        { "Small Fonts", FW_NORMAL, 10, 8, 2, 0, 0, 6, 12, 96, FS_JISJAPAN },
-        { "Small Fonts", FW_NORMAL, 11, 9, 2, 2, 0, 5, 9, 96, FS_LATIN1 | FS_LATIN2 | FS_CYRILLIC, LANG_ARABIC },
-        { "Small Fonts", FW_NORMAL, 11, 9, 2, 2, 0, 4, 10, 96, FS_ARABIC },
-        { "Small Fonts", FW_NORMAL, 11, 9, 2, 0, 0, 7, 14, 96, FS_JISJAPAN },
+        { "System", FW_BOLD, 16, 13, 3, 3, 0, 7, 14, 96, 0x20, 0xff, 0x80, 0x20, FS_LATIN1 },
+        { "System", FW_BOLD, 16, 13, 3, 3, 0, 7, 15, 96, 0x20, 0xff, 0x80, 0x20, FS_LATIN2 | FS_CYRILLIC },
+        { "System", FW_NORMAL, 18, 16, 2, 0, 2, 8, 16, 96, 0, 0, 0, 0, FS_JISJAPAN },
 
-        { "Small Fonts", FW_NORMAL, 3, 2, 1, 0, 0, 1, 2, 120, FS_LATIN1 | FS_JISJAPAN },
-        { "Small Fonts", FW_NORMAL, 3, 2, 1, 0, 0, 1, 8, 120, FS_LATIN2 | FS_CYRILLIC },
-        { "Small Fonts", FW_NORMAL, 6, 5, 1, 1, 0, 3, 5, 120, FS_LATIN1 | FS_JISJAPAN },
-        { "Small Fonts", FW_NORMAL, 6, 5, 1, 1, 0, 3, 8, 120, FS_LATIN2 | FS_CYRILLIC },
-        { "Small Fonts", FW_NORMAL, 8, 7, 1, 1, 0, 4, 7, 120, FS_LATIN1 | FS_JISJAPAN },
-        { "Small Fonts", FW_NORMAL, 8, 7, 1, 1, 0, 4, 8, 120, FS_LATIN2 | FS_CYRILLIC },
-        { "Small Fonts", FW_NORMAL, 10, 8, 2, 2, 0, 5, 9, 120, FS_LATIN1 | FS_LATIN2 | FS_JISJAPAN },
-        { "Small Fonts", FW_NORMAL, 10, 8, 2, 2, 0, 5, 8, 120, FS_CYRILLIC },
-        { "Small Fonts", FW_NORMAL, 12, 10, 2, 2, 0, 5, 10, 120, FS_LATIN1 | FS_LATIN2 | FS_JISJAPAN },
-        { "Small Fonts", FW_NORMAL, 12, 10, 2, 2, 0, 6, 10, 120, FS_CYRILLIC },
-        { "Small Fonts", FW_NORMAL, 13, 11, 2, 2, 0, 6, 12, 120, FS_LATIN1 | FS_LATIN2 | FS_JISJAPAN },
-        { "Small Fonts", FW_NORMAL, 13, 11, 2, 2, 0, 6, 11, 120, FS_CYRILLIC },
+        { "System", FW_BOLD, 20, 16, 4, 4, 0, 9, 14, 120, 0x20, 0xff, 0x80, 0x20, FS_LATIN1 },
+        { "System", FW_BOLD, 20, 16, 4, 4, 0, 9, 17, 120, 0x20, 0xff, 0x80, 0x20, FS_LATIN2 | FS_CYRILLIC },
 
-        { "Fixedsys", FW_NORMAL, 15, 12, 3, 3, 0, 8, 8, 96, FS_LATIN1 | FS_LATIN2 },
-        { "Fixedsys", FW_NORMAL, 16, 12, 4, 3, 0, 8, 8, 96, FS_CYRILLIC },
-        { "FixedSys", FW_NORMAL, 18, 16, 2, 0, 0, 8, 16, 96, FS_JISJAPAN },
+        { "Small Fonts", FW_NORMAL, 3, 2, 1, 0, 0, 1, 2, 96, 0x20, 0xff, 0x80, 0x20, FS_LATIN1 },
+        { "Small Fonts", FW_NORMAL, 3, 2, 1, 0, 0, 1, 8, 96, 0x20, 0xff, 0x80, 0x20, FS_LATIN2 | FS_CYRILLIC },
+        { "Small Fonts", FW_NORMAL, 3, 2, 1, 0, 0, 2, 4, 96, 0, 0, 0, 0, FS_JISJAPAN },
+        { "Small Fonts", FW_NORMAL, 5, 4, 1, 1, 0, 3, 4, 96, 0x20, 0xff, 0x80, 0x20, FS_LATIN1, LANG_ARABIC },
+        { "Small Fonts", FW_NORMAL, 5, 4, 1, 1, 0, 2, 8, 96, 0x20, 0xff, 0x80, 0x20, FS_LATIN2 | FS_CYRILLIC },
+        { "Small Fonts", FW_NORMAL, 5, 4, 1, 0, 0, 3, 6, 96, 0, 0, 0, 0, FS_JISJAPAN },
+        { "Small Fonts", FW_NORMAL, 6, 5, 1, 1, 0, 3, 13, 96, 0x20, 0xff, 0x80, 0x20, FS_LATIN1, LANG_ARABIC },
+        { "Small Fonts", FW_NORMAL, 6, 5, 1, 1, 0, 3, 8, 96, 0x20, 0xff, 0x80, 0x20, FS_LATIN2 | FS_CYRILLIC },
+        { "Small Fonts", FW_NORMAL, 6, 5, 1, 1, 0, 3, 8, 96, 0, 0, 0, 0, FS_ARABIC },
+        { "Small Fonts", FW_NORMAL, 6, 5, 1, 0, 0, 4, 8, 96, 0, 0, 0, 0, FS_JISJAPAN },
+        { "Small Fonts", FW_NORMAL, 8, 7, 1, 1, 0, 4, 7, 96, 0x20, 0xff, 0x80, 0x20, FS_LATIN1, LANG_ARABIC },
+        { "Small Fonts", FW_NORMAL, 8, 7, 1, 1, 0, 4, 8, 96, 0x20, 0xff, 0x80, 0x20, FS_LATIN2 | FS_CYRILLIC },
+        { "Small Fonts", FW_NORMAL, 8, 7, 1, 1, 0, 4, 8, 96, 0, 0, 0, 0, FS_ARABIC },
+        { "Small Fonts", FW_NORMAL, 8, 7, 1, 0, 0, 5, 10, 96, 0, 0, 0, 0, FS_JISJAPAN },
+        { "Small Fonts", FW_NORMAL, 10, 8, 2, 2, 0, 4, 8, 96, 0x20, 0xff, 0x80, 0x20, FS_LATIN1 | FS_LATIN2, LANG_ARABIC },
+        { "Small Fonts", FW_NORMAL, 10, 8, 2, 2, 0, 5, 8, 96, 0x20, 0xff, 0x80, 0x20, FS_CYRILLIC },
+        { "Small Fonts", FW_NORMAL, 10, 8, 2, 2, 0, 4, 9, 96, 0, 0, 0, 0, FS_ARABIC },
+        { "Small Fonts", FW_NORMAL, 10, 8, 2, 0, 0, 6, 12, 96, 0, 0, 0, 0, FS_JISJAPAN },
+        { "Small Fonts", FW_NORMAL, 11, 9, 2, 2, 0, 5, 9, 96, 0x20, 0xff, 0x80, 0x20, FS_LATIN1 | FS_LATIN2 | FS_CYRILLIC, LANG_ARABIC },
+        { "Small Fonts", FW_NORMAL, 11, 9, 2, 2, 0, 4, 10, 96, 0, 0, 0, 0, FS_ARABIC },
+        { "Small Fonts", FW_NORMAL, 11, 9, 2, 0, 0, 7, 14, 96, 0, 0, 0, 0, FS_JISJAPAN },
 
-        /* The 120dpi version still has its dpi marked as 96 */
-        { "Fixedsys", FW_NORMAL, 20, 16, 4, 2, 0, 10, 10, 96, FS_LATIN1 | FS_LATIN2 | FS_CYRILLIC }
+        { "Small Fonts", FW_NORMAL, 3, 2, 1, 0, 0, 1, 2, 120, 0x20, 0xff, 0x80, 0x20, FS_LATIN1 | FS_JISJAPAN },
+        { "Small Fonts", FW_NORMAL, 3, 2, 1, 0, 0, 1, 8, 120, 0x20, 0xff, 0x80, 0x20, FS_LATIN2 | FS_CYRILLIC },
+        { "Small Fonts", FW_NORMAL, 6, 5, 1, 1, 0, 3, 5, 120, 0x20, 0xff, 0x80, 0x20, FS_LATIN1 | FS_JISJAPAN },
+        { "Small Fonts", FW_NORMAL, 6, 5, 1, 1, 0, 3, 8, 120, 0x20, 0xff, 0x80, 0x20, FS_LATIN2 | FS_CYRILLIC },
+        { "Small Fonts", FW_NORMAL, 8, 7, 1, 1, 0, 4, 7, 120, 0x20, 0xff, 0x80, 0x20, FS_LATIN1 | FS_JISJAPAN },
+        { "Small Fonts", FW_NORMAL, 8, 7, 1, 1, 0, 4, 8, 120, 0x20, 0xff, 0x80, 0x20, FS_LATIN2 | FS_CYRILLIC },
+        { "Small Fonts", FW_NORMAL, 10, 8, 2, 2, 0, 5, 9, 120, 0x20, 0xff, 0x80, 0x20, FS_LATIN1 | FS_LATIN2 | FS_JISJAPAN },
+        { "Small Fonts", FW_NORMAL, 10, 8, 2, 2, 0, 5, 8, 120, 0x20, 0xff, 0x80, 0x20, FS_CYRILLIC },
+        { "Small Fonts", FW_NORMAL, 12, 10, 2, 2, 0, 5, 10, 120, 0x20, 0xff, 0x80, 0x20, FS_LATIN1 | FS_LATIN2 | FS_JISJAPAN },
+        { "Small Fonts", FW_NORMAL, 12, 10, 2, 2, 0, 6, 10, 120, 0x20, 0xff, 0x80, 0x20, FS_CYRILLIC },
+        { "Small Fonts", FW_NORMAL, 13, 11, 2, 2, 0, 6, 12, 120, 0x20, 0xff, 0x80, 0x20, FS_LATIN1 | FS_LATIN2 | FS_JISJAPAN },
+        { "Small Fonts", FW_NORMAL, 13, 11, 2, 2, 0, 6, 11, 120, 0x20, 0xff, 0x80, 0x20, FS_CYRILLIC },
+
+        { "Fixedsys", FW_NORMAL, 15, 12, 3, 3, 0, 8, 8, 96, 0x20, 0xff, 0x80, 0x20, FS_LATIN1 | FS_LATIN2 },
+        { "Fixedsys", FW_NORMAL, 16, 12, 4, 3, 0, 8, 8, 96, 0x20, 0xff, 0x80, 0x20, FS_CYRILLIC },
+        { "FixedSys", FW_NORMAL, 18, 16, 2, 0, 0, 8, 16, 96, 0, 0, 0, 0, FS_JISJAPAN },
+
+        { "Fixedsys", FW_NORMAL, 20, 16, 4, 2, 0, 10, 10, 120, 0x20, 0xff, 0x80, 0x20, FS_LATIN1 | FS_LATIN2 | FS_CYRILLIC }
 
         /* FIXME: add "Terminal" */
     };
+    static const int font_log_pixels[] = { 96, 120 };
     HDC hdc;
     LOGFONT lf;
     HFONT hfont, old_hfont;
     TEXTMETRIC tm;
-    INT ret, i;
+    INT ret, i, expected_cs, screen_log_pixels, diff, font_res;
     WORD system_lang_id;
+    char face_name[LF_FACESIZE];
+    CHARSETINFO csi;
 
     system_lang_id = PRIMARYLANGID(GetSystemDefaultLangID());
+    trace("system language id %04x\n", system_lang_id);
+
+    expected_cs = GetACP();
+    if (!TranslateCharsetInfo(ULongToPtr(expected_cs), &csi, TCI_SRCCODEPAGE))
+    {
+        skip("TranslateCharsetInfo failed for code page %d\n", expected_cs);
+        return;
+    }
+    expected_cs = csi.ciCharset;
+    trace("ACP %d -> charset %d\n", GetACP(), expected_cs);
 
     hdc = CreateCompatibleDC(0);
     assert(hdc);
 
+    trace("logpixelsX %d, logpixelsY %d\n", GetDeviceCaps(hdc, LOGPIXELSX),
+          GetDeviceCaps(hdc, LOGPIXELSY));
+
+    screen_log_pixels = GetDeviceCaps(hdc, LOGPIXELSY);
+    diff = 32768;
+    font_res = 0;
+    for (i = 0; i < sizeof(font_log_pixels)/sizeof(font_log_pixels[0]); i++)
+    {
+        int new_diff = abs(font_log_pixels[i] - screen_log_pixels);
+        if (new_diff < diff)
+        {
+            diff = new_diff;
+            font_res = font_log_pixels[i];
+        }
+    }
+    trace("best font resolution is %d\n", font_res);
+
     for (i = 0; i < sizeof(fd)/sizeof(fd[0]); i++)
     {
-        int bit;
+        int bit, height;
 
         memset(&lf, 0, sizeof(lf));
 
-        lf.lfHeight = fd[i].height;
+        height = fd[i].height & ~FH_SCALE;
+        lf.lfHeight = height;
         strcpy(lf.lfFaceName, fd[i].face_name);
 
         for(bit = 0; bit < 32; bit++)
         {
             DWORD fs[2];
-            CHARSETINFO csi;
             BOOL bRet;
 
             fs[0] = 1L << bit;
@@ -832,30 +897,78 @@ static void test_bitmap_font_metrics(void)
             if(!TranslateCharsetInfo( fs, &csi, TCI_SRCFONTSIG )) continue;
 
             lf.lfCharSet = csi.ciCharset;
+            trace("looking for %s height %d charset %d\n", lf.lfFaceName, lf.lfHeight, lf.lfCharSet);
             ret = EnumFontFamiliesEx(hdc, &lf, find_font_proc, (LPARAM)&lf, 0);
-            if (ret) continue;
+            if (fd[i].height & FH_SCALE)
+                ok(ret, "scaled font height %d should not be enumerated\n", height);
+            else
+            {
+                if (font_res == fd[i].dpi && lf.lfCharSet == expected_cs)
+                {
+                    if (ret) /* FIXME: Remove once Wine is fixed */
+                        todo_wine ok(!ret, "%s height %d charset %d dpi %d should be enumerated\n", lf.lfFaceName, lf.lfHeight, lf.lfCharSet, fd[i].dpi);
+                    else
+                        ok(!ret, "%s height %d charset %d dpi %d should be enumerated\n", lf.lfFaceName, lf.lfHeight, lf.lfCharSet, fd[i].dpi);
+                }
+            }
+            if (ret && !(fd[i].height & FH_SCALE))
+                continue;
 
             hfont = create_font(lf.lfFaceName, &lf);
             old_hfont = SelectObject(hdc, hfont);
             bRet = GetTextMetrics(hdc, &tm);
             ok(bRet, "GetTextMetrics error %d\n", GetLastError());
+
+            SetLastError(0xdeadbeef);
+            ret = GetTextFace(hdc, sizeof(face_name), face_name);
+            ok(ret, "GetTextFace error %u\n", GetLastError());
+
+            SetLastError(0xdeadbeef);
+            ret = GetTextCharset(hdc);
+
+            if (lstrcmp(face_name, fd[i].face_name) != 0)
+            {
+                ok(ret != ANSI_CHARSET, "font charset should not be ANSI_CHARSET\n");
+                ok(ret != expected_cs, "font charset %d should not be %d\n", ret, expected_cs);
+                trace("Skipping replacement %s height %d charset %d\n", face_name, tm.tmHeight, tm.tmCharSet);
+                SelectObject(hdc, old_hfont);
+                DeleteObject(hfont);
+                continue;
+            }
+
+            ok(ret == expected_cs, "got charset %d, expected %d\n", ret, expected_cs);
+
+            trace("created %s, height %d charset %x dpi %d\n", face_name, tm.tmHeight, tm.tmCharSet, tm.tmDigitizedAspectX);
+            trace("expected %s, height %d scaled_hight %d, dpi %d\n", fd[i].face_name, height, fd[i].scaled_height, fd[i].dpi);
+
             if(fd[i].dpi == tm.tmDigitizedAspectX)
             {
-                trace("found font %s, height %d charset %x dpi %d\n", lf.lfFaceName, lf.lfHeight, lf.lfCharSet, fd[i].dpi);
+                trace("matched %s, height %d charset %x dpi %d\n", lf.lfFaceName, lf.lfHeight, lf.lfCharSet, fd[i].dpi);
                 if (fd[i].skip_lang_id == 0 || system_lang_id != fd[i].skip_lang_id)
                 {
-                    ok(tm.tmWeight == fd[i].weight, "%s(%d): tm.tmWeight %d != %d\n", fd[i].face_name, fd[i].height, tm.tmWeight, fd[i].weight);
-                    ok(tm.tmHeight == fd[i].height, "%s(%d): tm.tmHeight %d != %d\n", fd[i].face_name, fd[i].height, tm.tmHeight, fd[i].height);
-                    ok(tm.tmAscent == fd[i].ascent, "%s(%d): tm.tmAscent %d != %d\n", fd[i].face_name, fd[i].height, tm.tmAscent, fd[i].ascent);
-                    ok(tm.tmDescent == fd[i].descent, "%s(%d): tm.tmDescent %d != %d\n", fd[i].face_name, fd[i].height, tm.tmDescent, fd[i].descent);
-                    ok(tm.tmInternalLeading == fd[i].int_leading, "%s(%d): tm.tmInternalLeading %d != %d\n", fd[i].face_name, fd[i].height, tm.tmInternalLeading, fd[i].int_leading);
-                    ok(tm.tmExternalLeading == fd[i].ext_leading, "%s(%d): tm.tmExternalLeading %d != %d\n", fd[i].face_name, fd[i].height, tm.tmExternalLeading, fd[i].ext_leading);
-                    ok(tm.tmAveCharWidth == fd[i].ave_char_width, "%s(%d): tm.tmAveCharWidth %d != %d\n", fd[i].face_name, fd[i].height, tm.tmAveCharWidth, fd[i].ave_char_width);
+                    ok(tm.tmWeight == fd[i].weight, "%s(%d): tm.tmWeight %d != %d\n", fd[i].face_name, height, tm.tmWeight, fd[i].weight);
+                    if (fd[i].height & FH_SCALE)
+                        ok(tm.tmHeight == fd[i].scaled_height, "%s(%d): tm.tmHeight %d != %d\n", fd[i].face_name, height, tm.tmHeight, fd[i].scaled_height);
+                    else
+                        ok(tm.tmHeight == fd[i].height, "%s(%d): tm.tmHeight %d != %d\n", fd[i].face_name, fd[i].height, tm.tmHeight, fd[i].height);
+                    ok(tm.tmAscent == fd[i].ascent, "%s(%d): tm.tmAscent %d != %d\n", fd[i].face_name, height, tm.tmAscent, fd[i].ascent);
+                    ok(tm.tmDescent == fd[i].descent, "%s(%d): tm.tmDescent %d != %d\n", fd[i].face_name, height, tm.tmDescent, fd[i].descent);
+                    ok(tm.tmInternalLeading == fd[i].int_leading, "%s(%d): tm.tmInternalLeading %d != %d\n", fd[i].face_name, height, tm.tmInternalLeading, fd[i].int_leading);
+                    ok(tm.tmExternalLeading == fd[i].ext_leading, "%s(%d): tm.tmExternalLeading %d != %d\n", fd[i].face_name, height, tm.tmExternalLeading, fd[i].ext_leading);
+                    ok(tm.tmAveCharWidth == fd[i].ave_char_width, "%s(%d): tm.tmAveCharWidth %d != %d\n", fd[i].face_name, height, tm.tmAveCharWidth, fd[i].ave_char_width);
+                    ok(tm.tmFirstChar == fd[i].first_char, "%s(%d): tm.tmFirstChar = %02x\n", fd[i].face_name, height, tm.tmFirstChar);
+                    ok(tm.tmLastChar == fd[i].last_char, "%s(%d): tm.tmLastChar = %02x\n", fd[i].face_name, height, tm.tmLastChar);
+                    /* Substitutions like MS Sans Serif,0=MS Sans Serif,204
+                       make default char test fail */
+                    if (tm.tmCharSet == lf.lfCharSet)
+                        ok(tm.tmDefaultChar == fd[i].def_char, "%s(%d): tm.tmDefaultChar = %02x\n", fd[i].face_name, height, tm.tmDefaultChar);
+                    ok(tm.tmBreakChar == fd[i].break_char, "%s(%d): tm.tmBreakChar = %02x\n", fd[i].face_name, height, tm.tmBreakChar);
+                    ok(tm.tmCharSet == expected_cs || tm.tmCharSet == ANSI_CHARSET, "%s(%d): tm.tmCharSet %d != %d\n", fd[i].face_name, height, tm.tmCharSet, expected_cs);
 
                     /* Don't run the max char width test on System/ANSI_CHARSET.  We have extra characters in our font
                        that make the max width bigger */
                     if(strcmp(lf.lfFaceName, "System") || lf.lfCharSet != ANSI_CHARSET)
-                        ok(tm.tmMaxCharWidth == fd[i].max_char_width, "%s(%d): tm.tmMaxCharWidth %d != %d\n", fd[i].face_name, fd[i].height, tm.tmMaxCharWidth, fd[i].max_char_width);
+                        ok(tm.tmMaxCharWidth == fd[i].max_char_width, "%s(%d): tm.tmMaxCharWidth %d != %d\n", fd[i].face_name, height, tm.tmMaxCharWidth, fd[i].max_char_width);
                 }
                 else
                     skip("Skipping font metrics test for system langid 0x%x\n",
@@ -934,6 +1047,7 @@ static void test_GetCharABCWidths(void)
     LOGFONTA lf;
     HFONT hfont;
     ABC abc[1];
+    ABCFLOAT abcf[1];
     WORD glyphs[1];
     DWORD nb;
     static const struct
@@ -952,7 +1066,8 @@ static void test_GetCharABCWidths(void)
         {0xffffff, 0xffffff},
         {0x1000000, 0x1000000},
         {0xffffff, 0x1000000},
-        {0xffffffff, 0xffffffff}
+        {0xffffffff, 0xffffffff},
+        {0x00, 0xff}
     };
     static const struct
     {
@@ -962,16 +1077,22 @@ static void test_GetCharABCWidths(void)
         BOOL r[sizeof range / sizeof range[0]];
     } c[] =
     {
-        {ANSI_CHARSET, 0x30, 0x30, {TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE}},
-        {SHIFTJIS_CHARSET, 0x82a0, 0x3042, {TRUE, TRUE, FALSE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE}},
-        {HANGEUL_CHARSET, 0x8141, 0xac02, {TRUE, TRUE, FALSE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE}},
-        {JOHAB_CHARSET, 0x8446, 0x3135, {TRUE, TRUE, FALSE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE}},
-        {GB2312_CHARSET, 0x8141, 0x4e04, {TRUE, TRUE, FALSE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE}},
-        {CHINESEBIG5_CHARSET, 0xa142, 0x3001, {TRUE, TRUE, FALSE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE}}
+        {ANSI_CHARSET, 0x30, 0x30,
+         {TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, TRUE}},
+        {SHIFTJIS_CHARSET, 0x82a0, 0x3042,
+         {TRUE, TRUE, FALSE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, TRUE}},
+        {HANGEUL_CHARSET, 0x8141, 0xac02,
+         {TRUE, TRUE, FALSE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, TRUE}},
+        {JOHAB_CHARSET, 0x8446, 0x3135,
+         {TRUE, TRUE, FALSE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, TRUE}},
+        {GB2312_CHARSET, 0x8141, 0x4e04,
+         {TRUE, TRUE, FALSE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, TRUE}},
+        {CHINESEBIG5_CHARSET, 0xa142, 0x3001,
+         {TRUE, TRUE, FALSE, FALSE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, TRUE}}
     };
     UINT i;
 
-    if (!pGetCharABCWidthsA || !pGetCharABCWidthsW || !pGetCharABCWidthsI)
+    if (!pGetCharABCWidthsA || !pGetCharABCWidthsW || !pGetCharABCWidthsFloatW || !pGetCharABCWidthsI)
     {
         win_skip("GetCharABCWidthsA/W/I not available on this platform\n");
         return;
@@ -1005,6 +1126,15 @@ static void test_GetCharABCWidths(void)
 
     ret = pGetCharABCWidthsW(hdc, 'a', 'a', abc);
     ok(!ret, "GetCharABCWidthsW should have failed\n");
+
+    ret = pGetCharABCWidthsFloatW(NULL, 'a', 'a', abcf);
+    ok(!ret, "GetCharABCWidthsFloatW should have failed\n");
+
+    ret = pGetCharABCWidthsFloatW(hdc, 'a', 'a', NULL);
+    ok(!ret, "GetCharABCWidthsFloatW should have failed\n");
+
+    ret = pGetCharABCWidthsFloatW(hdc, 'a', 'a', abcf);
+    ok(ret, "GetCharABCWidthsFloatW should have succeeded\n");
 
     hfont = SelectObject(hdc, hfont);
     DeleteObject(hfont);
@@ -1043,9 +1173,18 @@ static void test_GetCharABCWidths(void)
 
         for (j = 0; j < sizeof range / sizeof range[0]; ++j)
         {
+            memset(full, 0xdd, sizeof full);
             ret = pGetCharABCWidthsA(hdc, range[j].first, range[j].last, full);
             ok(ret == c[i].r[j], "GetCharABCWidthsA %x - %x should have %s\n",
                range[j].first, range[j].last, c[i].r[j] ? "succeeded" : "failed");
+            if (ret)
+            {
+                UINT last = range[j].last - range[j].first;
+                ret = pGetCharABCWidthsA(hdc, range[j].last, range[j].last, a);
+                ok(ret && memcmp(&full[last], &a[0], sizeof(ABC)) == 0,
+                   "GetCharABCWidthsA %x should match. codepage = %u\n",
+                   range[j].last, c[i].cs);
+            }
         }
 
         hfont = SelectObject(hdc, hfont);
@@ -1066,6 +1205,7 @@ static void test_text_extents(void)
     HFONT hfont;
     SIZE sz;
     SIZE sz1, sz2;
+    BOOL ret;
 
     memset(&lf, 0, sizeof(lf));
     strcpy(lf.lfFaceName, "Arial");
@@ -1121,6 +1261,47 @@ static void test_text_extents(void)
     ok(sz1.cx == sz2.cx && sz1.cy == sz2.cy,
        "GetTextExtentExPointW with lpnFit and alpDx both NULL returns incorrect results\n");
     HeapFree(GetProcessHeap(), 0, extents);
+
+    /* extents functions fail with -ve counts (the interesting case being -1) */
+    ret = GetTextExtentPointA(hdc, "o", -1, &sz);
+    ok(ret == FALSE, "got %d\n", ret);
+    ret = GetTextExtentExPointA(hdc, "o", -1, 0, NULL, NULL, &sz);
+    ok(ret == FALSE, "got %d\n", ret);
+    ret = GetTextExtentExPointW(hdc, wt, -1, 0, NULL, NULL, &sz1);
+    ok(ret == FALSE, "got %d\n", ret);
+
+    /* max_extent = 0 succeeds and returns zero */
+    fit1 = fit2 = -215;
+    ret = GetTextExtentExPointA(hdc, NULL, 0, 0, &fit1, NULL, &sz);
+    ok(ret == TRUE ||
+       broken(ret == FALSE), /* NT4, 2k */
+       "got %d\n", ret);
+    ok(fit1 == 0 ||
+       broken(fit1 == -215), /* NT4, 2k */
+       "fit = %d\n", fit1);
+    ret = GetTextExtentExPointW(hdc, NULL, 0, 0, &fit2, NULL, &sz1);
+    ok(ret == TRUE, "got %d\n", ret);
+    ok(fit2 == 0, "fit = %d\n", fit2);
+
+    /* max_extent = -1 is interpreted as a very large width that will
+     * definitely fit our three characters */
+    fit1 = fit2 = -215;
+    ret = GetTextExtentExPointA(hdc, "One", 3, -1, &fit1, NULL, &sz);
+    ok(ret == TRUE, "got %d\n", ret);
+    todo_wine ok(fit1 == 3, "fit = %d\n", fit1);
+    ret = GetTextExtentExPointW(hdc, wt, 3, -1, &fit2, NULL, &sz);
+    ok(ret == TRUE, "got %d\n", ret);
+    todo_wine ok(fit2 == 3, "fit = %d\n", fit2);
+
+    /* max_extent = -2 is interpreted similarly, but the Ansi version
+     * rejects it while the Unicode one accepts it */
+    fit1 = fit2 = -215;
+    ret = GetTextExtentExPointA(hdc, "One", 3, -2, &fit1, NULL, &sz);
+    todo_wine ok(ret == FALSE, "got %d\n", ret);
+    todo_wine ok(fit1 == -215, "fit = %d\n", fit1);
+    ret = GetTextExtentExPointW(hdc, wt, 3, -2, &fit2, NULL, &sz);
+    ok(ret == TRUE, "got %d\n", ret);
+    todo_wine ok(fit2 == 3, "fit = %d\n", fit2);
 
     hfont = SelectObject(hdc, hfont);
     DeleteObject(hfont);
@@ -1354,13 +1535,14 @@ todo_wine {
         trace("total_kern_pairs %u\n", total_kern_pairs);
         kern_pair = HeapAlloc(GetProcessHeap(), 0, total_kern_pairs * sizeof(*kern_pair));
 
-#if 0 /* Win98 (GetKerningPairsA) and XP behave differently here, the test passes on XP */
+        /* Win98 (GetKerningPairsA) and XP behave differently here, the test
+         * passes on XP.
+         */
         SetLastError(0xdeadbeef);
         ret = GetKerningPairsW(hdc, 0, kern_pair);
         ok(GetLastError() == ERROR_INVALID_PARAMETER,
-           "got error %ld, expected ERROR_INVALID_PARAMETER\n", GetLastError());
-        ok(ret == 0, "got %lu, expected 0\n", ret);
-#endif
+           "got error %u, expected ERROR_INVALID_PARAMETER\n", GetLastError());
+        ok(ret == 0, "got %u, expected 0\n", ret);
 
         ret = GetKerningPairsW(hdc, 100, NULL);
         ok(ret == total_kern_pairs, "got %u, expected %u\n", ret, total_kern_pairs);
@@ -1376,11 +1558,10 @@ todo_wine {
         for (n = 0; n < ret; n++)
         {
             DWORD j;
-#if 0
-            if (kern_pair[n].wFirst < 127 && kern_pair[n].wSecond < 127)
+            /* Disabled to limit console spam */
+            if (0 && kern_pair[n].wFirst < 127 && kern_pair[n].wSecond < 127)
                 trace("{'%c','%c',%d},\n",
                       kern_pair[n].wFirst, kern_pair[n].wSecond, kern_pair[n].iKernAmount);
-#endif
             for (j = 0; j < kd[i].total_kern_pairs; j++)
             {
                 if (kern_pair[n].wFirst == kd[i].kern_pair[j].wFirst &&
@@ -1832,6 +2013,7 @@ static void test_GetFontUnicodeRanges(void)
     HFONT hfont, hfont_old;
     DWORD size;
     GLYPHSET *gs;
+    DWORD i;
 
     if (!pGetFontUnicodeRanges)
     {
@@ -1856,10 +2038,10 @@ static void test_GetFontUnicodeRanges(void)
 
     size = pGetFontUnicodeRanges(hdc, gs);
     ok(size, "GetFontUnicodeRanges failed\n");
-#if 0
-    for (i = 0; i < gs->cRanges; i++)
-        trace("%03d wcLow %04x cGlyphs %u\n", i, gs->ranges[i].wcLow, gs->ranges[i].cGlyphs);
-#endif
+
+    if (0) /* Disabled to limit console spam */
+        for (i = 0; i < gs->cRanges; i++)
+            trace("%03d wcLow %04x cGlyphs %u\n", i, gs->ranges[i].wcLow, gs->ranges[i].cGlyphs);
     trace("found %u ranges\n", gs->cRanges);
 
     HeapFree(GetProcessHeap(), 0, gs);
@@ -1886,14 +2068,18 @@ struct enum_font_dataW
 static INT CALLBACK arial_enum_proc(const LOGFONT *lf, const TEXTMETRIC *tm, DWORD type, LPARAM lParam)
 {
     struct enum_font_data *efd = (struct enum_font_data *)lParam;
+    const NEWTEXTMETRIC *ntm = (const NEWTEXTMETRIC *)tm;
 
     ok(lf->lfHeight == tm->tmHeight, "lfHeight %d != tmHeight %d\n", lf->lfHeight, tm->tmHeight);
+    ok(lf->lfHeight > 0 && lf->lfHeight < 200, "enumerated font height %d\n", lf->lfHeight);
 
     if (type != TRUETYPE_FONTTYPE) return 1;
-#if 0
-    trace("enumed font \"%s\", charset %d, height %d, weight %d, italic %d\n",
-          lf->lfFaceName, lf->lfCharSet, lf->lfHeight, lf->lfWeight, lf->lfItalic);
-#endif
+
+    ok(ntm->ntmCellHeight + ntm->ntmCellHeight/5 >= ntm->ntmSizeEM, "ntmCellHeight %d should be close to ntmSizeEM %d\n", ntm->ntmCellHeight, ntm->ntmSizeEM);
+
+    if (0) /* Disabled to limit console spam */
+        trace("enumed font \"%s\", charset %d, height %d, weight %d, italic %d\n",
+              lf->lfFaceName, lf->lfCharSet, lf->lfHeight, lf->lfWeight, lf->lfItalic);
     if (efd->total < MAX_ENUM_FONTS)
         efd->lf[efd->total++] = *lf;
     else
@@ -1905,14 +2091,18 @@ static INT CALLBACK arial_enum_proc(const LOGFONT *lf, const TEXTMETRIC *tm, DWO
 static INT CALLBACK arial_enum_procw(const LOGFONTW *lf, const TEXTMETRICW *tm, DWORD type, LPARAM lParam)
 {
     struct enum_font_dataW *efd = (struct enum_font_dataW *)lParam;
+    const NEWTEXTMETRICW *ntm = (const NEWTEXTMETRICW *)tm;
 
     ok(lf->lfHeight == tm->tmHeight, "lfHeight %d != tmHeight %d\n", lf->lfHeight, tm->tmHeight);
+    ok(lf->lfHeight > 0 && lf->lfHeight < 200, "enumerated font height %d\n", lf->lfHeight);
 
     if (type != TRUETYPE_FONTTYPE) return 1;
-#if 0
-    trace("enumed font \"%s\", charset %d, height %d, weight %d, italic %d\n",
-          lf->lfFaceName, lf->lfCharSet, lf->lfHeight, lf->lfWeight, lf->lfItalic);
-#endif
+
+    ok(ntm->ntmCellHeight + ntm->ntmCellHeight/5 >= ntm->ntmSizeEM, "ntmCellHeight %d should be close to ntmSizeEM %d\n", ntm->ntmCellHeight, ntm->ntmSizeEM);
+
+    if (0) /* Disabled to limit console spam */
+        trace("enumed font %s, charset %d, height %d, weight %d, italic %d\n",
+              wine_dbgstr_w(lf->lfFaceName), lf->lfCharSet, lf->lfHeight, lf->lfWeight, lf->lfItalic);
     if (efd->total < MAX_ENUM_FONTS)
         efd->lf[efd->total++] = *lf;
     else
@@ -2477,7 +2667,7 @@ static BOOL get_first_last_from_cmap4(void *ptr, DWORD *first, DWORD *last, DWOR
                     + i - seg_count;
 
                 /* some fonts have broken last segment */
-                if ((char *)(glyph_ids + index + sizeof(*glyph_ids)) < (char *)ptr + limit)
+                if ((char *)(glyph_ids + index + 1) < (char *)ptr + limit)
                     index = GET_BE_WORD(glyph_ids[index]);
                 else
                 {
@@ -2664,7 +2854,7 @@ out:
     return r;
 }
 
-static void test_text_metrics(const LOGFONTA *lf)
+static void test_text_metrics(const LOGFONT *lf, const NEWTEXTMETRIC *ntm)
 {
     HDC hdc;
     HFONT hfont, hfont_old;
@@ -2673,6 +2863,7 @@ static void test_text_metrics(const LOGFONTA *lf)
     LONG size, ret;
     const char *font_name = lf->lfFaceName;
     DWORD cmap_first = 0, cmap_last = 0;
+    UINT ascent, descent, cell_height;
     cmap_type cmap_type;
     BOOL sys_lang_non_english;
 
@@ -2700,6 +2891,12 @@ static void test_text_metrics(const LOGFONTA *lf)
     memset(&tt_os2, 0, sizeof(tt_os2));
     ret = GetFontData(hdc, MS_OS2_TAG, 0, &tt_os2, size);
     ok(ret == size, "GetFontData should return %u not %u\n", size, ret);
+
+    ascent = GET_BE_WORD(tt_os2.usWinAscent);
+    descent = GET_BE_WORD(tt_os2.usWinDescent);
+    cell_height = ascent + descent;
+    ok(ntm->ntmCellHeight == cell_height, "%s: ntmCellHeight %u != %u, os2.usWinAscent/os2.usWinDescent %u/%u\n",
+       font_name, ntm->ntmCellHeight, cell_height, ascent, descent);
 
     SetLastError(0xdeadbeef);
     ret = GetTextMetricsA(hdc, &tmA);
@@ -2889,7 +3086,7 @@ static INT CALLBACK enum_truetype_font_proc(const LOGFONT *lf, const TEXTMETRIC 
     if (type == TRUETYPE_FONTTYPE)
     {
         (*enumed)++;
-        test_text_metrics(lf);
+        test_text_metrics(lf, (const NEWTEXTMETRIC *)ntm);
     }
     return 1;
 }
@@ -3685,6 +3882,11 @@ static INT CALLBACK enum_all_fonts_proc(const LOGFONT *elf, const TEXTMETRIC *nt
     return 1;
 }
 
+static INT CALLBACK enum_with_magic_retval_proc(const LOGFONT *elf, const TEXTMETRIC *ntm, DWORD type, LPARAM lparam)
+{
+    return lparam;
+}
+
 static void test_EnumFonts(void)
 {
     int ret;
@@ -3705,6 +3907,10 @@ static void test_EnumFonts(void)
     }
 
     hdc = CreateCompatibleDC(0);
+
+    /* check that the enumproc's retval is returned */
+    ret = EnumFontFamilies(hdc, NULL, enum_with_magic_retval_proc, 0xcafe);
+    ok(ret == 0xcafe, "got %08x\n", ret);
 
     ret = EnumFontFamilies(hdc, "Arial", enum_fonts_proc, (LPARAM)&lf);
     ok(!ret, "font Arial is not enumerated\n");
@@ -3815,7 +4021,7 @@ static void test_fullname(void)
     DeleteDC(hdc);
 }
 
-static BOOL write_ttf_file(char *tmp_name)
+static BOOL write_ttf_file(const char *fontname, char *tmp_name)
 {
     char tmp_path[MAX_PATH];
     HRSRC rsrc;
@@ -3825,7 +4031,7 @@ static BOOL write_ttf_file(char *tmp_name)
     BOOL ret;
 
     SetLastError(0xdeadbeef);
-    rsrc = FindResource(GetModuleHandle(0), "wine_test.ttf", RT_RCDATA);
+    rsrc = FindResource(GetModuleHandle(0), fontname, RT_RCDATA);
     ok(rsrc != 0, "FindResource error %d\n", GetLastError());
     if (!rsrc) return FALSE;
     SetLastError(0xdeadbeef);
@@ -3871,7 +4077,7 @@ static void test_CreateScalableFontResource(void)
         return;
     }
 
-    if (!write_ttf_file(ttf_name))
+    if (!write_ttf_file("wine_test.ttf", ttf_name))
     {
         skip("Failed to create ttf file for testing\n");
         return;
@@ -3909,13 +4115,11 @@ static void test_CreateScalableFontResource(void)
     SetLastError(0xdeadbeef);
     ret = CreateScalableFontResource(0, fot_name, "random file name", tmp_path);
     ok(!ret, "CreateScalableFontResource() should fail\n");
-todo_wine
     ok(GetLastError() == ERROR_INVALID_PARAMETER, "not expected error %d\n", GetLastError());
 
     SetLastError(0xdeadbeef);
     ret = CreateScalableFontResource(0, fot_name, NULL, ttf_name);
     ok(!ret, "CreateScalableFontResource() should fail\n");
-todo_wine
     ok(GetLastError() == ERROR_INVALID_PARAMETER, "not expected error %d\n", GetLastError());
 
     ret = DeleteFile(fot_name);
@@ -3924,9 +4128,6 @@ todo_wine
     ret = pRemoveFontResourceExA(fot_name, 0, 0);
 todo_wine
     ok(!ret, "RemoveFontResourceEx() should fail\n");
-
-    /* FIXME: since CreateScalableFontResource is a stub further testing is impossible */
-    if (ret) return;
 
     /* test public font resource */
     SetLastError(0xdeadbeef);
@@ -3944,11 +4145,11 @@ todo_wine
     ok(ret, "font wine_test should be enumerated\n");
 
     ret = pRemoveFontResourceExA(fot_name, FR_PRIVATE, 0);
+todo_wine
     ok(!ret, "RemoveFontResourceEx() with not matching flags should fail\n");
 
     SetLastError(0xdeadbeef);
     ret = pRemoveFontResourceExA(fot_name, 0, 0);
-todo_wine
     ok(ret, "RemoveFontResourceEx() error %d\n", GetLastError());
 
     ret = is_truetype_font_installed("wine_test");
@@ -3997,6 +4198,159 @@ todo_wine
 
     DeleteFile(fot_name);
     DeleteFile(ttf_name);
+}
+
+static void check_vertical_font(const char *name, BOOL *installed, BOOL *selected, GLYPHMETRICS *gm, WORD *gi)
+{
+    LOGFONTA lf;
+    HFONT hfont, hfont_prev;
+    HDC hdc;
+    char facename[100];
+    DWORD ret;
+    static const WCHAR str[] = { 0x2025 };
+
+    *installed = is_truetype_font_installed(name);
+
+    lf.lfHeight = -18;
+    lf.lfWidth = 0;
+    lf.lfEscapement = 0;
+    lf.lfOrientation = 0;
+    lf.lfWeight = FW_DONTCARE;
+    lf.lfItalic = 0;
+    lf.lfUnderline = 0;
+    lf.lfStrikeOut = 0;
+    lf.lfCharSet = DEFAULT_CHARSET;
+    lf.lfOutPrecision = OUT_TT_ONLY_PRECIS;
+    lf.lfClipPrecision = CLIP_DEFAULT_PRECIS;
+    lf.lfQuality = DEFAULT_QUALITY;
+    lf.lfPitchAndFamily = DEFAULT_PITCH | FF_DONTCARE;
+    strcpy(lf.lfFaceName, name);
+
+    hfont = CreateFontIndirectA(&lf);
+    ok(hfont != NULL, "CreateFontIndirectA failed\n");
+
+    hdc = GetDC(NULL);
+
+    hfont_prev = SelectObject(hdc, hfont);
+    ok(hfont_prev != NULL, "SelectObject failed\n");
+
+    ret = GetTextFaceA(hdc, sizeof facename, facename);
+    ok(ret, "GetTextFaceA failed\n");
+    *selected = !strcmp(facename, name);
+
+    ret = GetGlyphOutlineW(hdc, 0x2025, GGO_METRICS, gm, 0, NULL, &mat);
+    ok(ret != GDI_ERROR, "GetGlyphOutlineW failed\n");
+    if (!*selected)
+        memset(gm, 0, sizeof *gm);
+
+    ret = pGetGlyphIndicesW(hdc, str, 1, gi, 0);
+    ok(ret != GDI_ERROR, "GetGlyphIndicesW failed\n");
+
+    SelectObject(hdc, hfont_prev);
+    DeleteObject(hfont);
+    ReleaseDC(NULL, hdc);
+}
+
+static void test_vertical_font(void)
+{
+    char ttf_name[MAX_PATH];
+    int num;
+    BOOL ret, installed, selected;
+    GLYPHMETRICS gm;
+    WORD hgi, vgi;
+
+    if (!pAddFontResourceExA || !pRemoveFontResourceExA || !pGetGlyphIndicesW)
+    {
+        win_skip("AddFontResourceExA or GetGlyphIndicesW is not available on this platform\n");
+        return;
+    }
+
+    if (!write_ttf_file("vertical.ttf", ttf_name))
+    {
+        skip("Failed to create ttf file for testing\n");
+        return;
+    }
+
+    num = pAddFontResourceExA(ttf_name, FR_PRIVATE, 0);
+    ok(num == 2, "AddFontResourceExA should add 2 fonts from vertical.ttf\n");
+
+    check_vertical_font("@WineTestVertical", &installed, &selected, &gm, &hgi);
+    ok(installed, "@WineTestVertical is not installed\n");
+    ok(selected, "@WineTestVertical is not selected\n");
+    ok(gm.gmBlackBoxX > gm.gmBlackBoxY,
+       "gmBlackBoxX(%u) should be greater than gmBlackBoxY(%u) if horizontal\n",
+       gm.gmBlackBoxX, gm.gmBlackBoxY);
+
+    check_vertical_font("@@WineTestVertical", &installed, &selected, &gm, &vgi);
+    ok(installed, "@@WineTestVertical is not installed\n");
+    ok(selected, "@@WineTestVertical is not selected\n");
+    ok(gm.gmBlackBoxX < gm.gmBlackBoxY,
+       "gmBlackBoxX(%u) should be less than gmBlackBoxY(%u) if vertical\n",
+       gm.gmBlackBoxX, gm.gmBlackBoxY);
+
+    ok(hgi == vgi, "different glyph h:%u v:%u\n", hgi, vgi);
+
+    ret = pRemoveFontResourceExA(ttf_name, FR_PRIVATE, 0);
+    ok(ret, "RemoveFontResourceEx() error %d\n", GetLastError());
+
+    DeleteFile(ttf_name);
+}
+
+static INT CALLBACK has_vertical_font_proc(const LOGFONT *lf, const TEXTMETRIC *ntm,
+                                           DWORD type, LPARAM lParam)
+{
+    if (lf->lfFaceName[0] == '@') {
+        return 0;
+    }
+    return 1;
+}
+
+static void test_east_asian_font_selection(void)
+{
+    HDC hdc;
+    UINT charset[] = { SHIFTJIS_CHARSET, HANGEUL_CHARSET, JOHAB_CHARSET,
+                       GB2312_CHARSET, CHINESEBIG5_CHARSET };
+    size_t i;
+
+    hdc = GetDC(NULL);
+
+    for (i = 0; i < sizeof(charset)/sizeof(charset[0]); i++)
+    {
+        LOGFONTA lf;
+        HFONT hfont;
+        char face_name[LF_FACESIZE];
+        int ret;
+
+        memset(&lf, 0, sizeof lf);
+        lf.lfFaceName[0] = '\0';
+        lf.lfCharSet = charset[i];
+
+        if (EnumFontFamiliesEx(hdc, &lf, has_vertical_font_proc, 0, 0))
+        {
+            skip("Vertical font for charset %u is not installed\n", charset[i]);
+            continue;
+        }
+
+        hfont = CreateFontIndirectA(&lf);
+        hfont = SelectObject(hdc, hfont);
+        memset(face_name, 0, sizeof face_name);
+        ret = GetTextFaceA(hdc, sizeof face_name, face_name);
+        ok(ret && face_name[0] != '@',
+           "expected non-vertical face for charset %u, got %s\n", charset[i], face_name);
+        DeleteObject(SelectObject(hdc, hfont));
+
+        memset(&lf, 0, sizeof lf);
+        strcpy(lf.lfFaceName, "@");
+        lf.lfCharSet = charset[i];
+        hfont = CreateFontIndirectA(&lf);
+        hfont = SelectObject(hdc, hfont);
+        memset(face_name, 0, sizeof face_name);
+        ret = GetTextFaceA(hdc, sizeof face_name, face_name);
+        ok(ret && face_name[0] == '@',
+           "expected vertical face for charset %u, got %s\n", charset[i], face_name);
+        DeleteObject(SelectObject(hdc, hfont));
+    }
+    ReleaseDC(NULL, hdc);
 }
 
 START_TEST(font)
@@ -4051,9 +4405,11 @@ START_TEST(font)
     test_CreateFontIndirectEx();
     test_oemcharset();
     test_fullname();
+    test_east_asian_font_selection();
 
-    /* CreateScalableFontResource should be last test until RemoveFontResource
+    /* These tests should be last test until RemoveFontResource
      * is properly implemented.
      */
+    test_vertical_font();
     test_CreateScalableFontResource();
 }
