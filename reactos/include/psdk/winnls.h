@@ -138,6 +138,24 @@ extern "C" {
 #define LOCALE_IREADINGLAYOUT       0x0070
 #define LOCALE_INEUTRAL             0x0071
 
+#if defined(__GNUC__)
+# define LOCALE_NAME_INVARIANT      (const WCHAR []){ 0 }
+#elif defined(_MSC_VER)
+# define LOCALE_NAME_INVARIANT      L""
+#else
+static const WCHAR LOCALE_NAME_INVARIANT[] = { 0 };
+#endif
+
+#if defined(__GNUC__)
+# define LOCALE_NAME_SYSTEM_DEFAULT      (const WCHAR []){'!','s','y','s','-','d','e','f','a','u','l','t','-','l','o','c','a','l','e',0}
+#elif defined(_MSC_VER)
+# define LOCALE_NAME_SYSTEM_DEFAULT      L"!sys-default-locale"
+#else
+static const WCHAR LOCALE_NAME_SYSTEM_DEFAULT[] = {'!','s','y','s','-','d','e','f','a','u','l','t','-','l','o','c','a','l','e',0};
+#endif
+
+#define LOCALE_NAME_USER_DEFAULT    NULL
+
 #define LOCALE_IDEFAULTUNIXCODEPAGE   0x1030 /* Wine extension */
 
 #define NORM_IGNORECASE	1
