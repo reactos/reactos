@@ -570,6 +570,7 @@ extern "C" {
 #define HS_FDIAGONAL	2
 #define HS_HORIZONTAL	0
 #define HS_VERTICAL	1
+#define HS_API_MAX	12
 #define PS_GEOMETRIC	65536
 #define PS_COSMETIC	0
 #define PS_ALTERNATE	8
