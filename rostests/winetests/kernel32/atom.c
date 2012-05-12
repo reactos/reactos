@@ -168,11 +168,11 @@ static void test_get_atom_name(void)
 
     if (unicode_OS)
     {
-        static const WCHAR sampleW[10] = {'.','.','.','.','.','.','.','.','.','.'};
+        static const WCHAR sampleW[] = {'.','.','.','.','.','.','.','.','.','.'};
 
         for (i = 0; i < 10; i++) bufW[i] = '.';
         ok( !GlobalGetAtomNameW( atom, bufW, 0 ), "succeeded\n" );
-        ok( !memcmp( bufW, sampleW, 10 * sizeof(WCHAR) ), "should not touch buffer\n" );
+        ok( !memcmp( bufW, sampleW, sizeof(sampleW) ), "should not touch buffer\n" );
     }
 
     /* Test integer atoms */
@@ -266,7 +266,7 @@ static void test_get_atom_name(void)
             {
                 /* len == 0 with ERROR_MORE_DATA is on NT3.51 */
                 ok(len == 1 || (len == 0 && GetLastError() == ERROR_MORE_DATA),
-                         "0x%04x: got %u with %d (excepted '1' or '0' with "
+                         "0x%04x: got %u with %d (expected '1' or '0' with "
                          "ERROR_MORE_DATA)\n", i, len, GetLastError());
                 ok(outW[1] == DOUBLE('.'), "buffer overwrite\n");
             }
@@ -442,11 +442,11 @@ static void test_local_get_atom_name(void)
 
     if (unicode_OS)
     {
-        static const WCHAR sampleW[10] = {'.','.','.','.','.','.','.','.','.','.'};
+        static const WCHAR sampleW[] = {'.','.','.','.','.','.','.','.','.','.'};
 
         for (i = 0; i < 10; i++) bufW[i] = '.';
         ok( !GetAtomNameW( atom, bufW, 0 ), "succeeded\n" );
-        ok( !memcmp( bufW, sampleW, 10 * sizeof(WCHAR) ), "should not touch buffer\n" );
+        ok( !memcmp( bufW, sampleW, sizeof(sampleW) ), "should not touch buffer\n" );
     }
 
     /* Test integer atoms */

@@ -448,8 +448,8 @@ static void test_profile_delete_on_close(void)
 
     h = CreateFile(testfile, GENERIC_WRITE, FILE_SHARE_READ, NULL,
                     CREATE_ALWAYS, FILE_FLAG_DELETE_ON_CLOSE, NULL);
-    ok( WriteFile( h, contents, sizeof contents - 1, &size, NULL ),
-                    "Cannot write test file: %x\n", GetLastError() );
+    res = WriteFile( h, contents, sizeof contents - 1, &size, NULL );
+    ok( res, "Cannot write test file: %x\n", GetLastError() );
     ok( size == sizeof contents - 1, "Test file: partial write\n");
 
     SetLastError(0xdeadbeef);
@@ -472,8 +472,8 @@ static void test_profile_refresh(void)
 
     h = CreateFile(testfile, GENERIC_WRITE, FILE_SHARE_READ, NULL,
                     CREATE_ALWAYS, FILE_FLAG_DELETE_ON_CLOSE, NULL);
-    ok( WriteFile( h, contents1, sizeof contents1 - 1, &size, NULL ),
-                    "Cannot write test file: %x\n", GetLastError() );
+    res = WriteFile( h, contents1, sizeof contents1 - 1, &size, NULL );
+    ok( res, "Cannot write test file: %x\n", GetLastError() );
     ok( size == sizeof contents1 - 1, "Test file: partial write\n");
 
     SetLastError(0xdeadbeef);
@@ -488,8 +488,8 @@ static void test_profile_refresh(void)
 
     h = CreateFile(testfile, GENERIC_WRITE, FILE_SHARE_READ, NULL,
                     CREATE_ALWAYS, FILE_FLAG_DELETE_ON_CLOSE, NULL);
-    ok( WriteFile( h, contents2, sizeof contents2 - 1, &size, NULL ),
-                    "Cannot write test file: %x\n", GetLastError() );
+    res = WriteFile( h, contents2, sizeof contents2 - 1, &size, NULL );
+    ok( res, "Cannot write test file: %x\n", GetLastError() );
     ok( size == sizeof contents2 - 1, "Test file: partial write\n");
 
     SetLastError(0xdeadbeef);
@@ -500,6 +500,13 @@ static void test_profile_refresh(void)
 
     /* This also deletes the file */
     CloseHandle(h);
+
+    /* Cache must be invalidated if file no longer exists and default must be returned */
+    SetLastError(0xdeadbeef);
+    res = GetPrivateProfileInt(SECTION, KEY, 421, testfile);
+    ok( res == 421 ||
+        broken(res == 0 && GetLastError() == 0xdeadbeef), /* Win9x, WinME */
+        "Got %d instead of 421\n", res);
 }
 
 static void create_test_file(LPCSTR name, LPCSTR data, DWORD size)

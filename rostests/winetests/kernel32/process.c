@@ -62,6 +62,7 @@ static LPVOID (WINAPI *pVirtualAllocEx)(HANDLE, LPVOID, SIZE_T, DWORD, DWORD);
 static BOOL   (WINAPI *pVirtualFreeEx)(HANDLE, LPVOID, SIZE_T, DWORD);
 static BOOL   (WINAPI *pQueryFullProcessImageNameA)(HANDLE hProcess, DWORD dwFlags, LPSTR lpExeName, PDWORD lpdwSize);
 static BOOL   (WINAPI *pQueryFullProcessImageNameW)(HANDLE hProcess, DWORD dwFlags, LPWSTR lpExeName, PDWORD lpdwSize);
+static DWORD  (WINAPI *pK32GetProcessImageFileNameA)(HANDLE,LPSTR,DWORD);
 
 /* ############################### */
 static char     base[MAX_PATH];
@@ -204,6 +205,7 @@ static int     init(void)
     pVirtualFreeEx = (void *) GetProcAddress(hkernel32, "VirtualFreeEx");
     pQueryFullProcessImageNameA = (void *) GetProcAddress(hkernel32, "QueryFullProcessImageNameA");
     pQueryFullProcessImageNameW = (void *) GetProcAddress(hkernel32, "QueryFullProcessImageNameW");
+    pK32GetProcessImageFileNameA = (void *) GetProcAddress(hkernel32, "K32GetProcessImageFileNameA");
     return 1;
 }
 
@@ -1638,21 +1640,70 @@ static void test_GetProcessVersion(void)
     CloseHandle(pi.hThread);
 }
 
-static void test_ProcessNameA(void)
+static void test_GetProcessImageFileNameA(void)
+{
+    DWORD rc;
+    CHAR process[MAX_PATH];
+    static const char harddisk[] = "\\Device\\HarddiskVolume";
+
+    if (!pK32GetProcessImageFileNameA)
+    {
+        win_skip("K32GetProcessImageFileNameA is unavailable\n");
+        return;
+    }
+
+    /* callers must guess the buffer size */
+    SetLastError(0xdeadbeef);
+    rc = pK32GetProcessImageFileNameA(GetCurrentProcess(), NULL, 0);
+    ok(!rc && GetLastError() == ERROR_INSUFFICIENT_BUFFER,
+       "K32GetProcessImageFileNameA(no buffer): returned %u, le=%u\n", rc, GetLastError());
+
+    *process = '\0';
+    rc = pK32GetProcessImageFileNameA(GetCurrentProcess(), process, sizeof(process));
+    expect_eq_d(rc, lstrlenA(process));
+    if (strncmp(process, harddisk, lstrlenA(harddisk)))
+    {
+        todo_wine win_skip("%s is probably on a network share, skipping tests\n", process);
+        return;
+    }
+
+    if (!pQueryFullProcessImageNameA)
+        win_skip("QueryFullProcessImageNameA unavailable (added in Windows Vista)\n");
+    else
+    {
+        CHAR image[MAX_PATH];
+        DWORD length;
+
+        length = sizeof(image);
+        expect_eq_d(TRUE, pQueryFullProcessImageNameA(GetCurrentProcess(), PROCESS_NAME_NATIVE, image, &length));
+        expect_eq_d(length, lstrlenA(image));
+        ok(lstrcmpi(process, image) == 0, "expected '%s' to be equal to '%s'\n", process, image);
+    }
+}
+
+static void test_QueryFullProcessImageNameA(void)
 {
 #define INIT_STR "Just some words"
     DWORD length, size;
-    CHAR buf[1024];
+    CHAR buf[MAX_PATH], module[MAX_PATH];
 
     if (!pQueryFullProcessImageNameA)
     {
         win_skip("QueryFullProcessImageNameA unavailable (added in Windows Vista)\n");
         return;
     }
+
+    *module = '\0';
+    SetLastError(0); /* old Windows don't reset it on success */
+    size = GetModuleFileNameA(NULL, module, sizeof(module));
+    ok(size && GetLastError() != ERROR_INSUFFICIENT_BUFFER, "GetModuleFileName failed: %u le=%u\n", size, GetLastError());
+
     /* get the buffer length without \0 terminator */
-    length = 1024;
+    length = sizeof(buf);
     expect_eq_d(TRUE, pQueryFullProcessImageNameA(GetCurrentProcess(), 0, buf, &length));
     expect_eq_d(length, lstrlenA(buf));
+    ok((buf[0] == '\\' && buf[1] == '\\') ||
+       lstrcmpi(buf, module) == 0, "expected %s to match %s\n", buf, module);
 
     /*  when the buffer is too small
      *  - function fail with error ERROR_INSUFFICIENT_BUFFER
@@ -1676,8 +1727,8 @@ static void test_ProcessNameA(void)
     expect_eq_s(INIT_STR, buf);
 
     /* this is a difference between the ascii and the unicode version
-     * the unicode version crashes when the size is big enough to hold the result
-     * ascii version through an error
+     * the unicode version crashes when the size is big enough to hold
+     * the result while the ascii version throws an error
      */
     size = 1024;
     expect_eq_d(FALSE, pQueryFullProcessImageNameA(GetCurrentProcess(), 0, NULL, &size));
@@ -1685,13 +1736,13 @@ static void test_ProcessNameA(void)
     expect_eq_d(ERROR_INVALID_PARAMETER, GetLastError());
 }
 
-static void test_ProcessName(void)
+static void test_QueryFullProcessImageNameW(void)
 {
     HANDLE hSelf;
-    WCHAR module_name[1024];
+    WCHAR module_name[1024], device[1024];
     WCHAR deviceW[] = {'\\','D', 'e','v','i','c','e',0};
     WCHAR buf[1024];
-    DWORD size;
+    DWORD size, len;
 
     if (!pQueryFullProcessImageNameW)
     {
@@ -1736,13 +1787,6 @@ static void test_ProcessName(void)
     expect_eq_d(0, size);
     expect_eq_d(ERROR_INSUFFICIENT_BUFFER, GetLastError());
 
-    /* native path */
-    size = sizeof(buf) / sizeof(buf[0]);
-    expect_eq_d(TRUE, pQueryFullProcessImageNameW(hSelf, PROCESS_NAME_NATIVE, buf, &size));
-    expect_eq_d(lstrlenW(buf), size);
-    ok(buf[0] == '\\', "NT path should begin with '\\'\n");
-    todo_wine ok(memcmp(buf, deviceW, sizeof(WCHAR)*lstrlenW(deviceW)) == 0, "NT path should begin with \\Device\n");
-
     /* Buffer too small */
     size = lstrlenW(module_name)/2;
     SetLastError(0xdeadbeef);
@@ -1751,6 +1795,33 @@ static void test_ProcessName(void)
     expect_eq_d(lstrlenW(module_name)/2, size);  /* size not changed(!) */
     expect_eq_d(ERROR_INSUFFICIENT_BUFFER, GetLastError());
     expect_eq_ws_i(module_name, buf);  /* buffer not changed */
+
+
+    /* native path */
+    size = sizeof(buf) / sizeof(buf[0]);
+    expect_eq_d(TRUE, pQueryFullProcessImageNameW(hSelf, PROCESS_NAME_NATIVE, buf, &size));
+    expect_eq_d(lstrlenW(buf), size);
+    ok(buf[0] == '\\', "NT path should begin with '\\'\n");
+    ok(memcmp(buf, deviceW, sizeof(WCHAR)*lstrlenW(deviceW)) == 0, "NT path should begin with \\Device\n");
+
+    module_name[2] = '\0';
+    *device = '\0';
+    size = QueryDosDeviceW(module_name, device, sizeof(device)/sizeof(device[0]));
+    ok(size, "QueryDosDeviceW failed: le=%u\n", GetLastError());
+    len = lstrlenW(device);
+    ok(size >= len+2, "expected %d to be greater than %d+2 = strlen(%s)\n", size, len, wine_dbgstr_w(device));
+
+    if (size >= lstrlenW(buf))
+    {
+        ok(0, "expected %s\\ to match the start of %s\n", wine_dbgstr_w(device), wine_dbgstr_w(buf));
+    }
+    else
+    {
+        ok(buf[len] == '\\', "expected '%c' to be a '\\' in %s\n", buf[len], wine_dbgstr_w(module_name));
+        buf[len] = '\0';
+        ok(lstrcmpiW(device, buf) == 0, "expected %s to match %s\n", wine_dbgstr_w(device), wine_dbgstr_w(buf));
+        ok(lstrcmpiW(module_name+3, buf+len+1) == 0, "expected '%s' to match '%s'\n", wine_dbgstr_w(module_name+3), wine_dbgstr_w(buf+len+1));
+    }
 
     CloseHandle(hSelf);
 }
@@ -1888,8 +1959,9 @@ START_TEST(process)
     test_ExitCode();
     test_OpenProcess();
     test_GetProcessVersion();
-    test_ProcessNameA();
-    test_ProcessName();
+    test_GetProcessImageFileNameA();
+    test_QueryFullProcessImageNameA();
+    test_QueryFullProcessImageNameW();
     test_Handles();
     test_SystemInfo();
     test_RegistryQuota();

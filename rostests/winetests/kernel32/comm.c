@@ -1115,9 +1115,8 @@ static void  test_WaitRx(HANDLE hcom)
     ZeroMemory( &overlapped, sizeof(overlapped));
     overlapped.hEvent = hComPortEvent;
 
-    ok((hComWriteEvent =  CreateEvent( NULL, TRUE, FALSE, NULL )) !=0,
-       "CreateEvent res %d\n",
-       GetLastError());
+    hComWriteEvent = CreateEvent( NULL, TRUE, FALSE, NULL );
+    ok(hComWriteEvent != NULL, "CreateEvent res %d\n", GetLastError());
     ZeroMemory( &overlapped_w, sizeof(overlapped_w));
     overlapped_w.hEvent = hComWriteEvent;
 

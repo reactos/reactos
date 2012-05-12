@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define _WIN32_WINNT 0x500
+#define _WIN32_WINNT 0x502
 #include <stdarg.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -35,6 +35,8 @@ static HANDLE (WINAPI *pCreateWaitableTimerA)(SECURITY_ATTRIBUTES*,BOOL,LPCSTR);
 static BOOL   (WINAPI *pDeleteTimerQueueEx)(HANDLE, HANDLE);
 static BOOL   (WINAPI *pDeleteTimerQueueTimer)(HANDLE, HANDLE, HANDLE);
 static HANDLE (WINAPI *pOpenWaitableTimerA)(DWORD,BOOL,LPCSTR);
+static HANDLE (WINAPI *pCreateMemoryResourceNotification)(MEMORY_RESOURCE_NOTIFICATION_TYPE);
+static BOOL   (WINAPI *pQueryMemoryResourceNotification)(HANDLE, PBOOL);
 
 static void test_signalandwait(void)
 {
@@ -131,12 +133,23 @@ static void test_mutex(void)
     int i;
     DWORD failed = 0;
 
+    SetLastError(0xdeadbeef);
+    hOpened = OpenMutex(0, FALSE, "WineTestMutex");
+    ok(hOpened == NULL, "OpenMutex succeeded\n");
+    ok(GetLastError() == ERROR_FILE_NOT_FOUND, "wrong error %u\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
     hCreated = CreateMutex(NULL, FALSE, "WineTestMutex");
     ok(hCreated != NULL, "CreateMutex failed with error %d\n", GetLastError());
 
+    SetLastError(0xdeadbeef);
     hOpened = OpenMutex(0, FALSE, "WineTestMutex");
-    ok(hOpened == NULL, "OpenMutex succeded\n");
+todo_wine
+    ok(hOpened == NULL, "OpenMutex succeeded\n");
+todo_wine
+    ok(GetLastError() == ERROR_ACCESS_DENIED, "wrong error %u\n", GetLastError());
 
+    SetLastError(0xdeadbeef);
     hOpened = OpenMutex(GENERIC_EXECUTE, FALSE, "WineTestMutex");
     ok(hOpened != NULL, "OpenMutex failed with error %d\n", GetLastError());
     wait_ret = WaitForSingleObject(hOpened, INFINITE);
@@ -149,6 +162,7 @@ static void test_mutex(void)
         ok(wait_ret == WAIT_OBJECT_0, "WaitForSingleObject failed with error 0x%08x\n", wait_ret);
     }
 
+    SetLastError(0xdeadbeef);
     hOpened = OpenMutex(GENERIC_READ | GENERIC_WRITE, FALSE, "WineTestMutex");
     ok(hOpened != NULL, "OpenMutex failed with error %d\n", GetLastError());
     wait_ret = WaitForSingleObject(hOpened, INFINITE);
@@ -157,22 +171,30 @@ static void test_mutex(void)
 
     for (i = 0; i < 32; i++)
     {
+        SetLastError(0xdeadbeef);
         hOpened = OpenMutex(0x1 << i, FALSE, "WineTestMutex");
         if(hOpened != NULL)
         {
+            SetLastError(0xdeadbeef);
             ret = ReleaseMutex(hOpened);
             ok(ret, "ReleaseMutex failed with error %d, access %x\n", GetLastError(), 1 << i);
             CloseHandle(hOpened);
         }
         else
         {
+            if ((1 << i) == ACCESS_SYSTEM_SECURITY)
+                todo_wine ok(GetLastError() == ERROR_PRIVILEGE_NOT_HELD, "wrong error %u, access %x\n", GetLastError(), 1 << i);
+            else
+                todo_wine ok(GetLastError() == ERROR_ACCESS_DENIED, "wrong error %u, , access %x\n", GetLastError(), 1 << i);
             ReleaseMutex(hCreated);
             failed |=0x1 << i;
         }
     }
 
-    ok( failed == 0x0de0fffe, "open succeded when it shouldn't: %x\n", failed);
+todo_wine
+    ok( failed == 0x0de0fffe, "open succeeded when it shouldn't: %x\n", failed);
 
+    SetLastError(0xdeadbeef);
     ret = ReleaseMutex(hCreated);
     ok(!ret && (GetLastError() == ERROR_NOT_OWNER),
         "ReleaseMutex should have failed with ERROR_NOT_OWNER instead of %d\n", GetLastError());
@@ -300,6 +322,8 @@ static void test_event(void)
     SECURITY_ATTRIBUTES sa;
     SECURITY_DESCRIPTOR sd;
     ACL acl;
+    DWORD ret;
+    BOOL val;
 
     /* no sd */
     handle = CreateEventA(NULL, FALSE, FALSE, __FILE__ ": Test Event");
@@ -359,6 +383,39 @@ static void test_event(void)
     ok( !handle2, "OpenEvent succeeded\n");
     ok( GetLastError() == ERROR_FILE_NOT_FOUND, "wrong error %u\n", GetLastError());
 
+    CloseHandle( handle );
+
+    /* resource notifications are events too */
+
+    if (!pCreateMemoryResourceNotification || !pQueryMemoryResourceNotification)
+    {
+        trace( "memory resource notifications not supported\n" );
+        return;
+    }
+    handle = pCreateMemoryResourceNotification( HighMemoryResourceNotification + 1 );
+    ok( !handle, "CreateMemoryResourceNotification succeeded\n" );
+    ok( GetLastError() == ERROR_INVALID_PARAMETER, "wrong error %u\n", GetLastError() );
+    ret = pQueryMemoryResourceNotification( handle, &val );
+    ok( !ret, "QueryMemoryResourceNotification succeeded\n" );
+    ok( GetLastError() == ERROR_INVALID_PARAMETER, "wrong error %u\n", GetLastError() );
+
+    handle = pCreateMemoryResourceNotification( LowMemoryResourceNotification );
+    ok( handle != 0, "CreateMemoryResourceNotification failed err %u\n", GetLastError() );
+    ret = WaitForSingleObject( handle, 10 );
+    ok( ret == WAIT_OBJECT_0 || ret == WAIT_TIMEOUT, "WaitForSingleObject wrong ret %u\n", ret );
+
+    val = ~0;
+    ret = pQueryMemoryResourceNotification( handle, &val );
+    ok( ret, "QueryMemoryResourceNotification failed err %u\n", GetLastError() );
+    ok( val == FALSE || val == TRUE, "wrong value %u\n", val );
+    ret = CloseHandle( handle );
+    ok( ret, "CloseHandle failed err %u\n", GetLastError() );
+
+    handle = CreateEventA(NULL, FALSE, FALSE, __FILE__ ": Test Event");
+    val = ~0;
+    ret = pQueryMemoryResourceNotification( handle, &val );
+    ok( ret, "QueryMemoryResourceNotification failed err %u\n", GetLastError() );
+    ok( val == FALSE || val == TRUE, "wrong value %u\n", val );
     CloseHandle( handle );
 }
 
@@ -1074,6 +1131,8 @@ START_TEST(sync)
     pDeleteTimerQueueEx = (void*)GetProcAddress(hdll, "DeleteTimerQueueEx");
     pDeleteTimerQueueTimer = (void*)GetProcAddress(hdll, "DeleteTimerQueueTimer");
     pOpenWaitableTimerA = (void*)GetProcAddress(hdll, "OpenWaitableTimerA");
+    pCreateMemoryResourceNotification = (void *)GetProcAddress(hdll, "CreateMemoryResourceNotification");
+    pQueryMemoryResourceNotification = (void *)GetProcAddress(hdll, "QueryMemoryResourceNotification");
 
     test_signalandwait();
     test_mutex();

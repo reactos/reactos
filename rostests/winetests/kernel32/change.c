@@ -858,7 +858,7 @@ static void test_readdirectorychanges_cr(void)
     ok(fni->FileNameLength == lstrlenW(szFile)*sizeof(WCHAR),
             "FileNameLength = %d\n", fni->FileNameLength);
     ok(!memcmp(fni->FileName, szFile, lstrlenW(szFile)*sizeof(WCHAR)),
-            "FileName = %s\n", wine_dbgstr_w(fni->FileName));
+            "FileName = %s\n", wine_dbgstr_wn(fni->FileName, fni->FileNameLength/sizeof(WCHAR)));
 
     r = pReadDirectoryChangesW(hdir, fni, sizeof(fni), FALSE,
             FILE_NOTIFY_CHANGE_FILE_NAME, NULL, &ov, readdirectorychanges_cr);
@@ -878,7 +878,7 @@ static void test_readdirectorychanges_cr(void)
     ok(fni->FileNameLength == lstrlenW(szFile)*sizeof(WCHAR),
             "FileNameLength = %d\n", fni->FileNameLength);
     ok(!memcmp(fni->FileName, szFile, lstrlenW(szFile)*sizeof(WCHAR)),
-            "FileName = %s\n", wine_dbgstr_w(fni->FileName));
+            "FileName = %s\n", wine_dbgstr_wn(fni->FileName, fni->FileNameLength/sizeof(WCHAR)));
 
     r = pReadDirectoryChangesW(hdir, fni, sizeof(fni), FALSE,
             FILE_NOTIFY_CHANGE_FILE_NAME, NULL, &ov, readdirectorychanges_cr);
@@ -894,7 +894,7 @@ static void test_readdirectorychanges_cr(void)
     ok(fni->FileNameLength == lstrlenW(szFile)*sizeof(WCHAR),
             "FileNameLength = %d\n", fni->FileNameLength);
     ok(!memcmp(fni->FileName, szFile, lstrlenW(szFile)*sizeof(WCHAR)),
-            "FileName = %s\n", wine_dbgstr_w(fni->FileName));
+            "FileName = %s\n", wine_dbgstr_wn(fni->FileName, fni->FileNameLength/sizeof(WCHAR)));
 
     r = pReadDirectoryChangesW(hdir, fni, sizeof(fni), FALSE,
             FILE_NOTIFY_CHANGE_FILE_NAME, NULL, &ov, readdirectorychanges_cr);
@@ -910,7 +910,7 @@ static void test_readdirectorychanges_cr(void)
     ok(fni->FileNameLength == lstrlenW(szFile)*sizeof(WCHAR),
             "FileNameLength = %d\n", fni->FileNameLength);
     ok(!memcmp(fni->FileName, szFile, lstrlenW(szFile)*sizeof(WCHAR)),
-            "FileName = %s\n", wine_dbgstr_w(fni->FileName));
+            "FileName = %s\n", wine_dbgstr_wn(fni->FileName, fni->FileNameLength/sizeof(WCHAR)));
 
     CloseHandle(hdir);
 
@@ -934,7 +934,7 @@ static void test_readdirectorychanges_cr(void)
         ok(fni->FileNameLength == lstrlenW(szDir)*sizeof(WCHAR),
                 "FileNameLength = %d\n", fni->FileNameLength);
         ok(!memcmp(fni->FileName, szDir, lstrlenW(szDir)*sizeof(WCHAR)),
-                "FileName = %s\n", wine_dbgstr_w(fni->FileName));
+                "FileName = %s\n", wine_dbgstr_wn(fni->FileName, fni->FileNameLength/sizeof(WCHAR)));
         ok(fni->NextEntryOffset != 0, "no next entry in movement event\n");
         fni_next = (FILE_NOTIFY_INFORMATION*)((char*)fni+fni->NextEntryOffset);
         ok(fni_next->NextEntryOffset == 0, "there should be no more events in buffer\n");
@@ -942,7 +942,7 @@ static void test_readdirectorychanges_cr(void)
         ok(fni_next->FileNameLength == lstrlenW(szFile)*sizeof(WCHAR),
                 "FileNameLength = %d\n", fni_next->FileNameLength);
         ok(!memcmp(fni_next->FileName, szFile, lstrlenW(szFile)*sizeof(WCHAR)),
-                "FileName = %s\n", wine_dbgstr_w(fni_next->FileName));
+                "FileName = %s\n", wine_dbgstr_wn(fni_next->FileName, fni_next->FileNameLength/sizeof(WCHAR)));
     }
     else
     {
@@ -975,7 +975,7 @@ static void test_readdirectorychanges_cr(void)
     ok(fni->FileNameLength == lstrlenW(szDir)*sizeof(WCHAR),
             "FileNameLength = %d\n", fni->FileNameLength);
     ok(!memcmp(fni->FileName, szDir, lstrlenW(szDir)*sizeof(WCHAR)),
-            "FileName = %s\n", wine_dbgstr_w(fni->FileName));
+            "FileName = %s\n", wine_dbgstr_wn(fni->FileName, fni->FileNameLength/sizeof(WCHAR)));
     if (fni->NextEntryOffset)
         fni_next = (FILE_NOTIFY_INFORMATION*)((char*)fni+fni->NextEntryOffset);
     else
@@ -993,7 +993,7 @@ static void test_readdirectorychanges_cr(void)
     ok(fni_next->FileNameLength == lstrlenW(szDir)*sizeof(WCHAR),
             "FileNameLength = %d\n", fni_next->FileNameLength);
     ok(!memcmp(fni_next->FileName, szDir, lstrlenW(szDir)*sizeof(WCHAR)),
-            "FileName = %s\n", wine_dbgstr_w(fni_next->FileName));
+            "FileName = %s\n", wine_dbgstr_wn(fni_next->FileName, fni_next->FileNameLength/sizeof(WCHAR)));
 
     CloseHandle(hdir);
     RemoveDirectoryW(file);

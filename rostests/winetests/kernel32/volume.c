@@ -44,6 +44,12 @@ static void test_query_dos_deviceA(void)
     DWORD ret, ret2, buflen=32768;
     BOOL found = FALSE;
 
+    /* callers must guess the buffer size */
+    SetLastError(0xdeadbeef);
+    ret = QueryDosDeviceA( NULL, NULL, 0 );
+    ok(!ret && GetLastError() == ERROR_INSUFFICIENT_BUFFER,
+       "QueryDosDeviceA(no buffer): returned %u, le=%u\n", ret, GetLastError());
+
     buffer = HeapAlloc( GetProcessHeap(), 0, buflen );
     SetLastError(0xdeadbeef);
     ret = QueryDosDeviceA( NULL, buffer, buflen );

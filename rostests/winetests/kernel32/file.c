@@ -1591,7 +1591,7 @@ static void test_offset_in_overlapped_structure(void)
 
 static void test_LockFile(void)
 {
-    HANDLE handle;
+    HANDLE handle, handle2;
     DWORD written;
     OVERLAPPED overlapped;
     int limited_LockFile;
@@ -1605,6 +1605,14 @@ static void test_LockFile(void)
     {
         ok(0,"couldn't create file \"%s\" (err=%d)\n",filename,GetLastError());
         return;
+    }
+    handle2 = CreateFileA( filename, GENERIC_READ | GENERIC_WRITE,
+                           FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
+                           OPEN_EXISTING, 0, 0 );
+    if (handle2 == INVALID_HANDLE_VALUE)
+    {
+        ok( 0, "couldn't open file \"%s\" (err=%d)\n", filename, GetLastError() );
+        goto cleanup;
     }
     ok( WriteFile( handle, sillytext, strlen(sillytext), &written, NULL ), "write failed\n" );
 
@@ -1656,6 +1664,22 @@ static void test_LockFile(void)
             "UnlockFileEx 150,100 again succeeded\n" );
     }
 
+    /* shared lock can overlap exclusive if handles are equal */
+    S(U(overlapped)).Offset = 300;
+    ok( LockFileEx( handle, LOCKFILE_EXCLUSIVE_LOCK, 0, 100, 0, &overlapped ),
+        "LockFileEx exclusive 300,100 failed\n" );
+    ok( !LockFileEx( handle2, LOCKFILE_FAIL_IMMEDIATELY, 0, 100, 0, &overlapped ),
+        "LockFileEx handle2 300,100 succeeded\n" );
+    ret = LockFileEx( handle, LOCKFILE_FAIL_IMMEDIATELY, 0, 100, 0, &overlapped );
+    ok( ret, "LockFileEx 300,100 failed\n" );
+    ok( UnlockFileEx( handle, 0, 100, 0, &overlapped ), "UnlockFileEx 300,100 failed\n" );
+    /* exclusive lock is removed first */
+    ok( LockFileEx( handle2, LOCKFILE_FAIL_IMMEDIATELY, 0, 100, 0, &overlapped ),
+        "LockFileEx handle2 300,100 failed\n" );
+    ok( UnlockFileEx( handle2, 0, 100, 0, &overlapped ), "UnlockFileEx 300,100 failed\n" );
+    if (ret)
+        ok( UnlockFileEx( handle, 0, 100, 0, &overlapped ), "UnlockFileEx 300,100 failed\n" );
+
     ret = LockFile( handle, 0, 0x10000000, 0, 0xf0000000 );
     if (ret)
     {
@@ -1689,6 +1713,8 @@ static void test_LockFile(void)
 
     ok( UnlockFile( handle, 100, 0, 0, 0 ), "UnlockFile 100,0 failed\n" );
 
+    CloseHandle( handle2 );
+cleanup:
     CloseHandle( handle );
     DeleteFileA( filename );
 }
@@ -1732,12 +1758,12 @@ static BOOL create_fake_dll( LPCSTR filename )
 #elif defined __sparc__
     nt->FileHeader.Machine = IMAGE_FILE_MACHINE_SPARC;
 #elif defined __arm__
-    nt->FileHeader.Machine = IMAGE_FILE_MACHINE_ARM;
+    nt->FileHeader.Machine = IMAGE_FILE_MACHINE_ARMV7;
 #else
 # error You must specify the machine type
 #endif
     nt->FileHeader.NumberOfSections = 1;
-    nt->FileHeader.SizeOfOptionalHeader = IMAGE_SIZEOF_NT_OPTIONAL_HEADER;
+    nt->FileHeader.SizeOfOptionalHeader = sizeof(IMAGE_OPTIONAL_HEADER);
     nt->FileHeader.Characteristics = IMAGE_FILE_DLL | IMAGE_FILE_EXECUTABLE_IMAGE;
     nt->OptionalHeader.Magic = IMAGE_NT_OPTIONAL_HDR_MAGIC;
     nt->OptionalHeader.MajorLinkerVersion = 1;
@@ -2393,7 +2419,8 @@ static void test_read_write(void)
     user_apc_ran = FALSE;
     if (pQueueUserAPC) {
         trace("Queueing an user APC\n"); /* verify the file is non alerable */
-        ok(pQueueUserAPC(&user_apc, GetCurrentThread(), 0), "QueueUserAPC failed: %d\n", GetLastError());
+        ret = pQueueUserAPC(&user_apc, GetCurrentThread(), 0);
+        ok(ret, "QueueUserAPC failed: %d\n", GetLastError());
     }
 
     SetLastError(12345678);
@@ -3124,6 +3151,92 @@ static void test_ReplaceFileW(void)
     }
 }
 
+static void test_CreatFile(void)
+{
+    static const struct test_data
+    {
+        DWORD disposition, access, error, clean_up;
+    } td[] =
+    {
+    /* 0 */ { 0, 0, ERROR_INVALID_PARAMETER, 0 },
+    /* 1 */ { 0, GENERIC_READ, ERROR_INVALID_PARAMETER, 0 },
+    /* 2 */ { 0, GENERIC_READ|GENERIC_WRITE, ERROR_INVALID_PARAMETER, 0 },
+    /* 3 */ { CREATE_NEW, 0, ERROR_FILE_EXISTS, 1 },
+    /* 4 */ { CREATE_NEW, 0, 0, 1 },
+    /* 5 */ { CREATE_NEW, GENERIC_READ, 0, 1 },
+    /* 6 */ { CREATE_NEW, GENERIC_WRITE, 0, 1 },
+    /* 7 */ { CREATE_NEW, GENERIC_READ|GENERIC_WRITE, 0, 0 },
+    /* 8 */ { CREATE_ALWAYS, 0, 0, 0 },
+    /* 9 */ { CREATE_ALWAYS, GENERIC_READ, 0, 0 },
+    /* 10*/ { CREATE_ALWAYS, GENERIC_WRITE, 0, 0 },
+    /* 11*/ { CREATE_ALWAYS, GENERIC_READ|GENERIC_WRITE, 0, 1 },
+    /* 12*/ { OPEN_EXISTING, 0, ERROR_FILE_NOT_FOUND, 0 },
+    /* 13*/ { CREATE_ALWAYS, 0, 0, 0 },
+    /* 14*/ { OPEN_EXISTING, 0, 0, 0 },
+    /* 15*/ { OPEN_EXISTING, GENERIC_READ, 0, 0 },
+    /* 16*/ { OPEN_EXISTING, GENERIC_WRITE, 0, 0 },
+    /* 17*/ { OPEN_EXISTING, GENERIC_READ|GENERIC_WRITE, 0, 1 },
+    /* 18*/ { OPEN_ALWAYS, 0, 0, 0 },
+    /* 19*/ { OPEN_ALWAYS, GENERIC_READ, 0, 0 },
+    /* 20*/ { OPEN_ALWAYS, GENERIC_WRITE, 0, 0 },
+    /* 21*/ { OPEN_ALWAYS, GENERIC_READ|GENERIC_WRITE, 0, 0 },
+    /* 22*/ { TRUNCATE_EXISTING, 0, ERROR_INVALID_PARAMETER, 0 },
+    /* 23*/ { TRUNCATE_EXISTING, GENERIC_READ, ERROR_INVALID_PARAMETER, 0 },
+    /* 24*/ { TRUNCATE_EXISTING, GENERIC_WRITE, 0, 0 },
+    /* 25*/ { TRUNCATE_EXISTING, GENERIC_READ|GENERIC_WRITE, 0, 0 }
+    };
+    char temp_path[MAX_PATH];
+    char file_name[MAX_PATH];
+    DWORD i, ret, written;
+    HANDLE hfile;
+
+    GetTempPath(MAX_PATH, temp_path);
+    GetTempFileName(temp_path, "tmp", 0, file_name);
+
+    for (i = 0; i < sizeof(td)/sizeof(td[0]); i++)
+    {
+        SetLastError(0xdeadbeef);
+        hfile = CreateFile(file_name, td[i].access, 0, NULL, td[i].disposition, 0, 0);
+        if (!td[i].error)
+        {
+            ok(hfile != INVALID_HANDLE_VALUE, "%d: CreateFile error %d\n", i, GetLastError());
+            written = 0xdeadbeef;
+            SetLastError(0xdeadbeef);
+            ret = WriteFile(hfile, &td[i].error, sizeof(td[i].error), &written, NULL);
+            if (td[i].access & GENERIC_WRITE)
+            ok(ret, "%d: WriteFile error %d\n", i, GetLastError());
+            else
+            {
+                ok(!ret, "%d: WriteFile should fail\n", i);
+                ok(GetLastError() == ERROR_ACCESS_DENIED, "%d: expected ERROR_ACCESS_DENIED, got %d\n", i, GetLastError());
+            }
+            CloseHandle(hfile);
+        }
+        else
+        {
+            /* FIXME: remove the condition below once Wine is fixed */
+            if (td[i].disposition == TRUNCATE_EXISTING && !(td[i].access & GENERIC_WRITE))
+            {
+                todo_wine
+                {
+                ok(hfile == INVALID_HANDLE_VALUE, "%d: CreateFile should fail\n", i);
+                ok(GetLastError() == td[i].error, "%d: expected %d, got %d\n", i, td[i].error, GetLastError());
+                }
+                CloseHandle(hfile);
+            }
+            else
+            {
+            ok(hfile == INVALID_HANDLE_VALUE, "%d: CreateFile should fail\n", i);
+            ok(GetLastError() == td[i].error, "%d: expected %d, got %d\n", i, td[i].error, GetLastError());
+            }
+        }
+
+        if (td[i].clean_up) DeleteFile(file_name);
+    }
+
+    DeleteFile(file_name);
+}
+
 START_TEST(file)
 {
     InitFunctionPointers();
@@ -3139,6 +3252,7 @@ START_TEST(file)
     test_GetTempFileNameA();
     test_CopyFileA();
     test_CopyFileW();
+    test_CreatFile();
     test_CreateFileA();
     test_CreateFileW();
     test_DeleteFileA();

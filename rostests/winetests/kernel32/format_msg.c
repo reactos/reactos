@@ -125,6 +125,7 @@ static void test_message_from_string_wide(void)
     static const WCHAR s_sp002sp001[] = {' ',' ','0','0','0','2',',',' ',' ','0','0','1',0};
     static const WCHAR s_sp002sp003[] = {' ',' ','0','0','0','2',',',' ','0','0','0','0','3',0};
     static const WCHAR s_sp001004[]   = {' ',' ','0','0','1',',','0','0','0','0','0','4',0};
+    static const WCHAR s_null[]       = {'(','n','u','l','l',')',0};
 
     static const WCHAR init_buf[] = {'x', 'x', 'x', 'x', 'x', 'x'};
     static const WCHAR broken_buf[] = {'t','e','s','t','x','x'};
@@ -380,6 +381,12 @@ static void test_message_from_string_wide(void)
         0, out, sizeof(out)/sizeof(WCHAR));
     ok(!lstrcmpW(s_crlfcrlf, out), "failed out=%s\n", wine_dbgstr_w(out));
     ok(r==4,"failed: r=%d\n", r);
+
+    /* null string as argument */
+    r = doitW(FORMAT_MESSAGE_FROM_STRING, fmt_1, 0,
+        0, out, sizeof(out)/sizeof(WCHAR), NULL);
+    ok(!lstrcmpW(s_null, out),"failed out=[%s]\n", wine_dbgstr_w(out));
+    ok(r==6,"failed: r=%d\n",r);
 
     /* precision and width */
 
@@ -699,6 +706,12 @@ static void test_message_from_string(void)
         0, out, sizeof(out)/sizeof(CHAR));
     ok(!strcmp("\r\n\r\n", out),"failed out=[%s]\n",out);
     ok(r==4,"failed: r=%d\n",r);
+
+    /* null string as argument */
+    r = doit(FORMAT_MESSAGE_FROM_STRING, "%1", 0,
+        0, out, sizeof(out)/sizeof(CHAR), NULL);
+    ok(!strcmp("(null)", out),"failed out=[%s]\n",out);
+    ok(r==6,"failed: r=%d\n",r);
 
     /* precision and width */
 

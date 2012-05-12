@@ -18,7 +18,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <assert.h>
 #include <stdarg.h>
 #include <stdio.h>
 
@@ -71,6 +70,19 @@ static void test_CreateNamedPipe(int pipemode)
         /* lpSecurityAttrib */ NULL);
     ok(hnp == INVALID_HANDLE_VALUE && GetLastError() == ERROR_INVALID_NAME,
         "CreateNamedPipe should fail if name doesn't start with \\\\.\\pipe\n");
+
+    if (pipemode == PIPE_TYPE_BYTE)
+    {
+        /* Bad parameter checks */
+        hnp = CreateNamedPipe(PIPENAME, PIPE_ACCESS_DUPLEX, PIPE_TYPE_BYTE | PIPE_READMODE_MESSAGE,
+            /* nMaxInstances */ 1,
+            /* nOutBufSize */ 1024,
+            /* nInBufSize */ 1024,
+            /* nDefaultWait */ NMPWAIT_USE_DEFAULT_WAIT,
+            /* lpSecurityAttrib */ NULL);
+        ok(hnp == INVALID_HANDLE_VALUE && GetLastError() == ERROR_INVALID_PARAMETER,
+            "CreateNamedPipe should fail with PIPE_TYPE_BYTE | PIPE_READMODE_MESSAGE\n");
+    }
 
     hnp = CreateNamedPipe(NULL,
         PIPE_ACCESS_DUPLEX, pipemode | PIPE_WAIT,
@@ -375,7 +387,7 @@ static void test_CreateNamedPipe_instances_must_match(void)
     ok(hnp != INVALID_HANDLE_VALUE, "CreateNamedPipe failed\n");
 
     hnp2 = CreateNamedPipe(PIPENAME, PIPE_ACCESS_INBOUND, PIPE_TYPE_BYTE | PIPE_WAIT,
-        /* nMaxInstances */ 1,
+        /* nMaxInstances */ 2,
         /* nOutBufSize */ 1024,
         /* nInBufSize */ 1024,
         /* nDefaultWait */ NMPWAIT_USE_DEFAULT_WAIT,
@@ -385,7 +397,25 @@ static void test_CreateNamedPipe_instances_must_match(void)
 
     ok(CloseHandle(hnp), "CloseHandle\n");
 
-    /* etc, etc */
+    /* check everything else */
+    hnp = CreateNamedPipe(PIPENAME, PIPE_ACCESS_DUPLEX, PIPE_TYPE_BYTE | PIPE_WAIT,
+        /* nMaxInstances */ 4,
+        /* nOutBufSize */ 1024,
+        /* nInBufSize */ 1024,
+        /* nDefaultWait */ NMPWAIT_USE_DEFAULT_WAIT,
+        /* lpSecurityAttrib */ NULL);
+    ok(hnp != INVALID_HANDLE_VALUE, "CreateNamedPipe failed\n");
+
+    hnp2 = CreateNamedPipe(PIPENAME, PIPE_ACCESS_DUPLEX, PIPE_TYPE_MESSAGE,
+        /* nMaxInstances */ 3,
+        /* nOutBufSize */ 102,
+        /* nInBufSize */ 24,
+        /* nDefaultWait */ 1234,
+        /* lpSecurityAttrib */ NULL);
+    ok(hnp2 != INVALID_HANDLE_VALUE, "CreateNamedPipe failed\n");
+
+    ok(CloseHandle(hnp), "CloseHandle\n");
+    ok(CloseHandle(hnp2), "CloseHandle\n");
 }
 
 /** implementation of alarm() */
@@ -480,7 +510,8 @@ static DWORD CALLBACK serverThreadMain2(LPVOID arg)
         user_apc_ran = FALSE;
         if (i == 0 && pQueueUserAPC) {
             trace("Queueing an user APC\n"); /* verify the pipe is non alerable */
-            ok(pQueueUserAPC(&user_apc, GetCurrentThread(), 0), "QueueUserAPC failed: %d\n", GetLastError());
+            success = pQueueUserAPC(&user_apc, GetCurrentThread(), 0);
+            ok(success, "QueueUserAPC failed: %d\n", GetLastError());
         }
 
         /* Wait for client to connect */

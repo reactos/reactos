@@ -211,8 +211,8 @@ static void test_string_conversion(LPBOOL bUsedDefaultChar)
     int ret;
     WCHAR wc1 = 228;                           /* Western Windows-1252 character */
     WCHAR wc2 = 1088;                          /* Russian Windows-1251 character not displayable for Windows-1252 */
-    WCHAR wcs[5] = {'T', 'h', 1088, 'i', 0};   /* String with ASCII characters and a Russian character */
-    WCHAR dbwcs[3] = {28953, 25152, 0};        /* String with Chinese (codepage 950) characters */
+    static const WCHAR wcs[] = {'T', 'h', 1088, 'i', 0}; /* String with ASCII characters and a Russian character */
+    static const WCHAR dbwcs[] = {28953, 25152, 0}; /* String with Chinese (codepage 950) characters */
 
     SetLastError(0xdeadbeef);
     ret = WideCharToMultiByte(1252, 0, &wc1, 1, &mbc, 1, NULL, bUsedDefaultChar);

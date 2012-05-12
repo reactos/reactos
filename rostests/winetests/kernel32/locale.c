@@ -30,6 +30,9 @@
 #include <stdarg.h>
 #include <stdio.h>
 
+#undef WINVER
+#define WINVER 0x0600
+
 #include "wine/test.h"
 #include "windef.h"
 #include "winbase.h"
@@ -71,20 +74,30 @@ static BOOL (WINAPI *pEnumSystemLanguageGroupsA)(LANGUAGEGROUP_ENUMPROC, DWORD, 
 static BOOL (WINAPI *pEnumLanguageGroupLocalesA)(LANGGROUPLOCALE_ENUMPROC, LGRPID, DWORD, LONG_PTR);
 static BOOL (WINAPI *pEnumUILanguagesA)(UILANGUAGE_ENUMPROC, DWORD, LONG_PTR);
 static BOOL (WINAPI *pEnumSystemLocalesEx)(LOCALE_ENUMPROCEX, DWORD, LPARAM, LPVOID);
+static LCID (WINAPI *pLocaleNameToLCID)(LPCWSTR, DWORD);
+static INT  (WINAPI *pLCIDToLocaleName)(LCID, LPWSTR, INT, DWORD);
 static INT (WINAPI *pFoldStringA)(DWORD, LPCSTR, INT, LPSTR, INT);
 static INT (WINAPI *pFoldStringW)(DWORD, LPCWSTR, INT, LPWSTR, INT);
 static BOOL (WINAPI *pIsValidLanguageGroup)(LGRPID, DWORD);
+static INT (WINAPI *pIdnToNameprepUnicode)(DWORD, LPCWSTR, INT, LPWSTR, INT);
+static INT (WINAPI *pIdnToAscii)(DWORD, LPCWSTR, INT, LPWSTR, INT);
+static INT (WINAPI *pIdnToUnicode)(DWORD, LPCWSTR, INT, LPWSTR, INT);
 
 static void InitFunctionPointers(void)
 {
   hKernel32 = GetModuleHandleA("kernel32");
   pEnumSystemLanguageGroupsA = (void*)GetProcAddress(hKernel32, "EnumSystemLanguageGroupsA");
   pEnumLanguageGroupLocalesA = (void*)GetProcAddress(hKernel32, "EnumLanguageGroupLocalesA");
+  pLocaleNameToLCID = (void*)GetProcAddress(hKernel32, "LocaleNameToLCID");
+  pLCIDToLocaleName = (void*)GetProcAddress(hKernel32, "LCIDToLocaleName");
   pFoldStringA = (void*)GetProcAddress(hKernel32, "FoldStringA");
   pFoldStringW = (void*)GetProcAddress(hKernel32, "FoldStringW");
   pIsValidLanguageGroup = (void*)GetProcAddress(hKernel32, "IsValidLanguageGroup");
   pEnumUILanguagesA = (void*)GetProcAddress(hKernel32, "EnumUILanguagesA");
   pEnumSystemLocalesEx = (void*)GetProcAddress(hKernel32, "EnumSystemLocalesEx");
+  pIdnToNameprepUnicode = (void*)GetProcAddress(hKernel32, "IdnToNameprepUnicode");
+  pIdnToAscii = (void*)GetProcAddress(hKernel32, "IdnToAscii");
+  pIdnToUnicode = (void*)GetProcAddress(hKernel32, "IdnToUnicode");
 }
 
 #define eq(received, expected, label, type) \
@@ -1135,11 +1148,62 @@ static void test_GetNumberFormatA(void)
   }
 }
 
+struct comparestringa_entry {
+  LCID lcid;
+  DWORD flags;
+  const char *first;
+  int first_len;
+  const char *second;
+  int second_len;
+  int ret;
+};
+
+static const struct comparestringa_entry comparestringa_data[] = {
+  { LOCALE_SYSTEM_DEFAULT, 0, "EndDialog", -1, "_Property", -1, CSTR_GREATER_THAN },
+  { LOCALE_SYSTEM_DEFAULT, 0, "osp_vba.sreg0070", -1, "_IEWWBrowserComp", -1, CSTR_GREATER_THAN },
+  { LOCALE_SYSTEM_DEFAULT, 0, "r", -1, "\\", -1, CSTR_GREATER_THAN },
+  { LOCALE_SYSTEM_DEFAULT, 0, "osp_vba.sreg0031", -1, "OriginalDatabase", -1, CSTR_GREATER_THAN },
+  { LOCALE_SYSTEM_DEFAULT, 0, "AAA", -1, "aaa", -1, CSTR_GREATER_THAN },
+  { LOCALE_SYSTEM_DEFAULT, 0, "AAA", -1, "aab", -1, CSTR_LESS_THAN },
+  { LOCALE_SYSTEM_DEFAULT, 0, "AAA", -1, "Aab", -1, CSTR_LESS_THAN },
+  { LOCALE_SYSTEM_DEFAULT, 0, ".AAA", -1, "Aab", -1, CSTR_LESS_THAN },
+  { LOCALE_SYSTEM_DEFAULT, 0, ".AAA", -1, "A.ab", -1, CSTR_LESS_THAN },
+  { LOCALE_SYSTEM_DEFAULT, 0, "aa", -1, "AB", -1, CSTR_LESS_THAN },
+  { LOCALE_SYSTEM_DEFAULT, 0, "aa", -1, "Aab", -1, CSTR_LESS_THAN },
+  { LOCALE_SYSTEM_DEFAULT, 0, "aB", -1, "Aab", -1, CSTR_GREATER_THAN },
+  { LOCALE_SYSTEM_DEFAULT, 0, "Ba", -1, "bab", -1, CSTR_LESS_THAN },
+  { LOCALE_SYSTEM_DEFAULT, 0, "{100}{83}{71}{71}{71}", -1, "Global_DataAccess_JRO", -1, CSTR_LESS_THAN },
+  { LOCALE_SYSTEM_DEFAULT, 0, "a", -1, "{", -1, CSTR_GREATER_THAN },
+  { LOCALE_SYSTEM_DEFAULT, 0, "A", -1, "{", -1, CSTR_GREATER_THAN },
+  { LOCALE_SYSTEM_DEFAULT, 0, "3.5", 0, "4.0", -1, CSTR_LESS_THAN },
+  { LOCALE_SYSTEM_DEFAULT, 0, "3.5", -1, "4.0", -1, CSTR_LESS_THAN },
+  { LOCALE_SYSTEM_DEFAULT, 0, "3.520.4403.2", -1, "4.0.2927.10", -1, CSTR_LESS_THAN },
+  /* hyphen and apostrophe are treated differently depending on whether SORT_STRINGSORT specified or not */
+  { LOCALE_SYSTEM_DEFAULT, 0, "-o", -1, "/m", -1, CSTR_GREATER_THAN },
+  { LOCALE_SYSTEM_DEFAULT, 0, "/m", -1, "-o", -1, CSTR_LESS_THAN },
+  { LOCALE_SYSTEM_DEFAULT, SORT_STRINGSORT, "-o", -1, "/m", -1, CSTR_LESS_THAN },
+  { LOCALE_SYSTEM_DEFAULT, SORT_STRINGSORT, "/m", -1, "-o", -1, CSTR_GREATER_THAN },
+  { LOCALE_SYSTEM_DEFAULT, 0, "'o", -1, "/m", -1, CSTR_GREATER_THAN },
+  { LOCALE_SYSTEM_DEFAULT, 0, "/m", -1, "'o", -1, CSTR_LESS_THAN },
+  { LOCALE_SYSTEM_DEFAULT, SORT_STRINGSORT, "'o", -1, "/m", -1, CSTR_LESS_THAN },
+  { LOCALE_SYSTEM_DEFAULT, SORT_STRINGSORT, "/m", -1, "'o", -1, CSTR_GREATER_THAN },
+  { LOCALE_SYSTEM_DEFAULT, 0, "aLuZkUtZ", 8, "aLuZkUtZ", 9, CSTR_EQUAL },
+  { LOCALE_SYSTEM_DEFAULT, 0, "aLuZkUtZ", 7, "aLuZkUtZ\0A", 10, CSTR_LESS_THAN }
+};
 
 static void test_CompareStringA(void)
 {
-  int ret;
+  int ret, i;
   LCID lcid = MAKELCID(MAKELANGID(LANG_FRENCH, SUBLANG_DEFAULT), SORT_DEFAULT);
+
+  for (i = 0; i < sizeof(comparestringa_data)/sizeof(struct comparestringa_entry); i++)
+  {
+      const struct comparestringa_entry *entry = &comparestringa_data[i];
+
+      ret = CompareStringA(entry->lcid, entry->flags, entry->first, entry->first_len,
+          entry->second, entry->second_len);
+      ok(ret == entry->ret, "%d: got %d, expected %d\n", i, ret, entry->ret);
+  }
 
   ret = CompareStringA(lcid, NORM_IGNORECASE, "Salut", -1, "Salute", -1);
   ok (ret== 1, "(Salut/Salute) Expected 1, got %d\n", ret);
@@ -1189,89 +1253,6 @@ static void test_CompareStringA(void)
     ret = lstrcmpA(NULL, "");
     ok (ret == -1 || broken(ret == -2) /* win9x */, "lstrcmpA(NULL, \"\") should return -1, got %d\n", ret);
  
-    ret = CompareStringA(LOCALE_SYSTEM_DEFAULT,0,"EndDialog",-1,"_Property",-1);
-    ok( ret == 3, "EndDialog vs _Property ... expected 3, got %d\n", ret);
-
-    ret = CompareStringA(LOCALE_SYSTEM_DEFAULT,0,"osp_vba.sreg0070",-1,"_IEWWBrowserComp",-1);
-    ok( ret == 3, "osp_vba.sreg0070 vs _IEWWBrowserComp ... expected 3, got %d\n", ret);
-
-    ret = CompareStringA(LOCALE_SYSTEM_DEFAULT,0,"r",-1,"\\",-1); 
-    ok( ret == 3, "r vs \\ ... expected 3, got %d\n", ret);
-
-    ret = CompareStringA(LOCALE_SYSTEM_DEFAULT,0,"osp_vba.sreg0031", -1, "OriginalDatabase", -1 );
-    ok( ret == 3, "osp_vba.sreg0031 vs OriginalDatabase ... expected 3, got %d\n", ret);
-
-    ret = CompareStringA(LOCALE_SYSTEM_DEFAULT, 0, "AAA", -1, "aaa", -1 );
-    ok( ret == 3, "AAA vs aaa expected 3, got %d\n", ret);
-
-    ret = CompareStringA(LOCALE_SYSTEM_DEFAULT, 0, "AAA", -1, "aab", -1 );
-    ok( ret == 1, "AAA vs aab expected 1, got %d\n", ret);
-
-    ret = CompareStringA(LOCALE_SYSTEM_DEFAULT, 0, "AAA", -1, "Aab", -1 );
-    ok( ret == 1, "AAA vs Aab expected 1, got %d\n", ret);
-
-    ret = CompareStringA(LOCALE_SYSTEM_DEFAULT, 0, ".AAA", -1, "Aab", -1 );
-    ok( ret == 1, ".AAA vs Aab expected 1, got %d\n", ret);
-
-    ret = CompareStringA(LOCALE_SYSTEM_DEFAULT, 0, ".AAA", -1, "A.ab", -1 );
-    ok( ret == 1, ".AAA vs A.ab expected 1, got %d\n", ret);
-
-    ret = CompareStringA(LOCALE_SYSTEM_DEFAULT, 0, "aa", -1, "AB", -1 );
-    ok( ret == 1, "aa vs AB expected 1, got %d\n", ret);
-
-    ret = CompareStringA(LOCALE_SYSTEM_DEFAULT, 0, "aa", -1, "Aab", -1 );
-    ok( ret == 1, "aa vs Aab expected 1, got %d\n", ret);
-
-    ret = CompareStringA(LOCALE_SYSTEM_DEFAULT, 0, "aB", -1, "Aab", -1 );
-    ok( ret == 3, "aB vs Aab expected 3, got %d\n", ret);
-
-    ret = CompareStringA(LOCALE_SYSTEM_DEFAULT, 0, "Ba", -1, "bab", -1 );
-    ok( ret == 1, "Ba vs bab expected 1, got %d\n", ret);
-
-    ret = CompareStringA(LOCALE_SYSTEM_DEFAULT, 0, "{100}{83}{71}{71}{71}", -1, "Global_DataAccess_JRO", -1 );
-    ok( ret == 1, "{100}{83}{71}{71}{71} vs Global_DataAccess_JRO expected 1, got %d\n", ret);
-
-    ret = CompareStringA(LOCALE_SYSTEM_DEFAULT, 0, "a", -1, "{", -1 );
-    ok( ret == 3, "a vs { expected 3, got %d\n", ret);
-
-    ret = CompareStringA(LOCALE_SYSTEM_DEFAULT, 0, "A", -1, "{", -1 );
-    ok( ret == 3, "A vs { expected 3, got %d\n", ret);
-
-    ret = CompareStringA(LOCALE_SYSTEM_DEFAULT, 0, "3.5", 0, "4.0", -1 );
-    ok(ret == 1, "3.5/0 vs 4.0/-1 expected 1, got %d\n", ret);
-
-    ret = CompareStringA(LOCALE_SYSTEM_DEFAULT, 0, "3.5", -1, "4.0", -1 );
-    ok(ret == 1, "3.5 vs 4.0 expected 1, got %d\n", ret);
-
-    ret = CompareStringA(LOCALE_SYSTEM_DEFAULT, 0, "3.520.4403.2", -1, "4.0.2927.10", -1 );
-    ok(ret == 1, "3.520.4403.2 vs 4.0.2927.10 expected 1, got %d\n", ret);
-
-   /* hyphen and apostrophe are treated differently depending on
-    * whether SORT_STRINGSORT specified or not
-    */
-    ret = CompareStringA(LOCALE_SYSTEM_DEFAULT, 0, "-o", -1, "/m", -1 );
-    ok(ret == 3, "-o vs /m expected 3, got %d\n", ret);
-
-    ret = CompareStringA(LOCALE_SYSTEM_DEFAULT, 0, "/m", -1, "-o", -1 );
-    ok(ret == 1, "/m vs -o expected 1, got %d\n", ret);
-
-    ret = CompareStringA(LOCALE_SYSTEM_DEFAULT, SORT_STRINGSORT, "-o", -1, "/m", -1 );
-    ok(ret == 1, "-o vs /m expected 1, got %d\n", ret);
-
-    ret = CompareStringA(LOCALE_SYSTEM_DEFAULT, SORT_STRINGSORT, "/m", -1, "-o", -1 );
-    ok(ret == 3, "/m vs -o expected 3, got %d\n", ret);
-
-    ret = CompareStringA(LOCALE_SYSTEM_DEFAULT, 0, "'o", -1, "/m", -1 );
-    ok(ret == 3, "'o vs /m expected 3, got %d\n", ret);
-
-    ret = CompareStringA(LOCALE_SYSTEM_DEFAULT, 0, "/m", -1, "'o", -1 );
-    ok(ret == 1, "/m vs 'o expected 1, got %d\n", ret);
-
-    ret = CompareStringA(LOCALE_SYSTEM_DEFAULT, SORT_STRINGSORT, "'o", -1, "/m", -1 );
-    ok(ret == 1, "'o vs /m expected 1, got %d\n", ret);
-
-    ret = CompareStringA(LOCALE_SYSTEM_DEFAULT, SORT_STRINGSORT, "/m", -1, "'o", -1 );
-    ok(ret == 3, "/m vs 'o expected 3, got %d\n", ret);
 
     if (0) { /* this requires collation table patch to make it MS compatible */
     ret = CompareStringA(LOCALE_SYSTEM_DEFAULT, 0, "'o", -1, "-o", -1 );
@@ -1311,11 +1292,6 @@ static void test_CompareStringA(void)
     ok(ret == 1, "-m vs `o expected 1, got %d\n", ret);
     }
 
-    ret = CompareStringA(LOCALE_USER_DEFAULT, 0, "aLuZkUtZ", 8, "aLuZkUtZ", 9);
-    ok(ret == 2, "aLuZkUtZ vs aLuZkUtZ\\0 expected 2, got %d\n", ret);
-
-    ret = CompareStringA(LOCALE_USER_DEFAULT, 0, "aLuZkUtZ", 7, "aLuZkUtZ\0A", 10);
-    ok(ret == 1, "aLuZkUtZ vs aLuZkUtZ\\0A expected 1, got %d\n", ret);
 
     /* WinXP handles embedded NULLs differently than earlier versions */
     ret = CompareStringA(LOCALE_USER_DEFAULT, 0, "aLuZkUtZ", 8, "aLuZkUtZ\0A", 10);
@@ -1672,6 +1648,43 @@ static void test_LCMapStringW(void)
     ok(!ret, "LCMapStringW should fail with srclen = 0\n");
     ok(GetLastError() == ERROR_INVALID_PARAMETER,
        "unexpected error code %d\n", GetLastError());
+}
+
+static void test_LocaleNames(void)
+{
+    LCID lcid;
+    INT ret;
+    WCHAR buffer[LOCALE_NAME_MAX_LENGTH];
+
+    if (!pLocaleNameToLCID)
+    {
+        win_skip( "LocaleNameToLCID not available\n" );
+        return;
+    }
+
+    /* special cases */
+    buffer[0] = 0;
+    lcid = pLocaleNameToLCID(LOCALE_NAME_USER_DEFAULT, 0);
+    ok(lcid == GetUserDefaultLCID() || broken(GetLastError() == ERROR_INVALID_PARAMETER /* Vista */),
+       "Expected lcid == %08x, got %08x, error %d\n", lcid, GetUserDefaultLCID(), GetLastError());
+    ret = pLCIDToLocaleName(lcid, buffer, LOCALE_NAME_MAX_LENGTH, 0);
+    ok(ret > 0, "Expected ret > 0, got %d, error %d\n", ret, GetLastError());
+    trace("%08x, %s\n", lcid, wine_dbgstr_w(buffer));
+
+    buffer[0] = 0;
+    lcid = pLocaleNameToLCID(LOCALE_NAME_SYSTEM_DEFAULT, 0);
+    todo_wine ok(!lcid && GetLastError() == ERROR_INVALID_PARAMETER,
+                 "Expected lcid != 0, got %08x, error %d\n", lcid, GetLastError());
+    ret = pLCIDToLocaleName(lcid, buffer, LOCALE_NAME_MAX_LENGTH, 0);
+    ok(ret > 0, "Expected ret > 0, got %d, error %d\n", ret, GetLastError());
+    trace("%08x, %s\n", lcid, wine_dbgstr_w(buffer));
+
+    buffer[0] = 0;
+    lcid = pLocaleNameToLCID(LOCALE_NAME_INVARIANT, 0);
+    todo_wine ok(lcid == 0x7F, "Expected lcid = 0x7F, got %08x, error %d\n", lcid, GetLastError());
+    ret = pLCIDToLocaleName(lcid, buffer, LOCALE_NAME_MAX_LENGTH, 0);
+    ok(ret > 0, "Expected ret > 0, got %d, error %d\n", ret, GetLastError());
+    trace("%08x, %s\n", lcid, wine_dbgstr_w(buffer));
 }
 
 /* this requires collation table patch to make it MS compatible */
@@ -2098,6 +2111,18 @@ static void test_FoldStringW(void)
   {
     'W','i','n','e',0x0348,0x0551,0x1323,0x280d,'W','i','n','e','\0'
   };
+  static const WCHAR foldczone_todo_src[] =
+  {
+      0x3c5,0x308,0x6a,0x30c,0xa0,0xaa,0
+  };
+  static const WCHAR foldczone_todo_dst[] =
+  {
+      0x3cb,0x1f0,' ','a',0
+  };
+  static const WCHAR foldczone_todo_broken_dst[] =
+  {
+      0x3cb,0x1f0,0xa0,0xaa,0
+  };
   static const WCHAR ligatures_src[] =
   {
     'W',    'i',    'n',    'e',    0x03a6, 0x03b9, 0x03bd, 0x03b5,
@@ -2241,6 +2266,13 @@ static void test_FoldStringW(void)
      "Got %d, error %d\n", ret, GetLastError());
   ok(!memcmp(dst, foldczone_dst, sizeof(foldczone_dst)),
      "MAP_FOLDCZONE: Expanded incorrectly\n");
+
+  ret = pFoldStringW(MAP_FOLDCZONE|MAP_PRECOMPOSED, foldczone_todo_src, -1, dst, 256);
+  todo_wine ok(ret == sizeof(foldczone_todo_dst)/sizeof(foldczone_todo_dst[0]),
+          "Got %d, error %d\n", ret, GetLastError());
+  todo_wine ok(!memcmp(dst, foldczone_todo_dst, sizeof(foldczone_todo_dst))
+          || broken(!memcmp(dst, foldczone_todo_broken_dst, sizeof(foldczone_todo_broken_dst))),
+          "MAP_FOLDCZONE: Expanded incorrectly (%s)\n", wine_dbgstr_w(dst));
 
   /* MAP_EXPAND_LIGATURES */
   SetLastError(0);
@@ -2803,6 +2835,311 @@ static void test_GetStringTypeW(void)
         ok(types[i] & C1_SPACE || broken(types[i] == C1_CNTRL) || broken(types[i] == 0), "incorrect types returned for %x -> (%x does not have %x)\n",space_special[i], types[i], C1_SPACE );
 }
 
+static void test_IdnToNameprepUnicode(void)
+{
+    struct {
+        DWORD in_len;
+        const WCHAR in[64];
+        DWORD ret;
+        const WCHAR out[64];
+        DWORD flags;
+        DWORD err;
+        DWORD todo;
+    } test_data[] = {
+        {
+            5, {'t','e','s','t',0},
+            5, {'t','e','s','t',0},
+            0, 0xdeadbeef
+        },
+        {
+            3, {'a',0xe111,'b'},
+            0, {0},
+            0, ERROR_INVALID_NAME
+        },
+        {
+            4, {'t',0,'e',0},
+            0, {0},
+            0, ERROR_INVALID_NAME
+        },
+        {
+            1, {'T',0},
+            1, {'T',0},
+            0, 0xdeadbeef
+        },
+        {
+            1, {0},
+            0, {0},
+            0, ERROR_INVALID_NAME
+        },
+        {
+            6, {' ','-','/','[',']',0},
+            6, {' ','-','/','[',']',0},
+            0, 0xdeadbeef
+        },
+        {
+            3, {'a','-','a'},
+            3, {'a','-','a'},
+            IDN_USE_STD3_ASCII_RULES, 0xdeadbeef
+        },
+        {
+            3, {'a','a','-'},
+            0, {0},
+            IDN_USE_STD3_ASCII_RULES, ERROR_INVALID_NAME
+        },
+        { /* FoldString is not working as expected when MAP_FOLDCZONE is specified (composition+compatibility) */
+            10, {'T',0xdf,0x130,0x143,0x37a,0x6a,0x30c,' ',0xaa,0},
+            12, {'t','s','s','i',0x307,0x144,' ',0x3b9,0x1f0,' ','a',0},
+            0, 0xdeadbeef, TRUE
+        },
+        {
+            11, {'t',0xad,0x34f,0x1806,0x180b,0x180c,0x180d,0x200b,0x200c,0x200d,0},
+            2, {'t',0},
+            0, 0xdeadbeef
+        },
+        { /* Another example of incorrectly working FoldString (composition) */
+            2, {0x3b0, 0},
+            2, {0x3b0, 0},
+            0, 0xdeadbeef, TRUE
+        },
+        {
+            2, {0x221, 0},
+            0, {0},
+            0, ERROR_NO_UNICODE_TRANSLATION
+        },
+        {
+            2, {0x221, 0},
+            2, {0x221, 0},
+            IDN_ALLOW_UNASSIGNED, 0xdeadbeef
+        },
+        {
+            5, {'a','.','.','a',0},
+            0, {0},
+            0, ERROR_INVALID_NAME
+        },
+        {
+            3, {'a','.',0},
+            3, {'a','.',0},
+            0, 0xdeadbeef
+        },
+    };
+
+    WCHAR buf[1024];
+    DWORD i, ret, err;
+
+    if (!pIdnToNameprepUnicode)
+    {
+        win_skip("IdnToNameprepUnicode is not available\n");
+        return;
+    }
+
+    ret = pIdnToNameprepUnicode(0, test_data[0].in,
+            test_data[0].in_len, NULL, 0);
+    ok(ret == test_data[0].ret, "ret = %d\n", ret);
+
+    SetLastError(0xdeadbeef);
+    ret = pIdnToNameprepUnicode(0, test_data[1].in,
+            test_data[1].in_len, NULL, 0);
+    err = GetLastError();
+    ok(ret == test_data[1].ret, "ret = %d\n", ret);
+    ok(err == test_data[1].err, "err = %d\n", err);
+
+    SetLastError(0xdeadbeef);
+    ret = pIdnToNameprepUnicode(0, test_data[0].in, -1,
+            buf, sizeof(buf)/sizeof(WCHAR));
+    err = GetLastError();
+    ok(ret == test_data[0].ret, "ret = %d\n", ret);
+    ok(err == 0xdeadbeef, "err = %d\n", err);
+
+    SetLastError(0xdeadbeef);
+    ret = pIdnToNameprepUnicode(0, test_data[0].in, -2,
+            buf, sizeof(buf)/sizeof(WCHAR));
+    err = GetLastError();
+    ok(ret == 0, "ret = %d\n", ret);
+    ok(err == ERROR_INVALID_PARAMETER, "err = %d\n", err);
+
+    SetLastError(0xdeadbeef);
+    ret = pIdnToNameprepUnicode(0, test_data[0].in, 0,
+            buf, sizeof(buf)/sizeof(WCHAR));
+    err = GetLastError();
+    ok(ret == 0, "ret = %d\n", ret);
+    ok(err == ERROR_INVALID_NAME, "err = %d\n", err);
+
+    ret = pIdnToNameprepUnicode(IDN_ALLOW_UNASSIGNED|IDN_USE_STD3_ASCII_RULES,
+            test_data[0].in, -1, buf, sizeof(buf)/sizeof(WCHAR));
+    ok(ret == test_data[0].ret, "ret = %d\n", ret);
+
+    SetLastError(0xdeadbeef);
+    ret = pIdnToNameprepUnicode(0, NULL, 0, NULL, 0);
+    err = GetLastError();
+    ok(ret == 0, "ret = %d\n", ret);
+    ok(err == ERROR_INVALID_PARAMETER, "err = %d\n", err);
+
+    SetLastError(0xdeadbeef);
+    ret = pIdnToNameprepUnicode(4, NULL, 0, NULL, 0);
+    err = GetLastError();
+    ok(ret == 0, "ret = %d\n", ret);
+    ok(err == ERROR_INVALID_FLAGS, "err = %d\n", err);
+
+    for (i=0; i<sizeof(test_data)/sizeof(*test_data); i++)
+    {
+        SetLastError(0xdeadbeef);
+        ret = pIdnToNameprepUnicode(test_data[i].flags, test_data[i].in,
+                test_data[i].in_len, buf, sizeof(buf)/sizeof(WCHAR));
+        err = GetLastError();
+        if(!test_data[i].todo) {
+            ok(ret == test_data[i].ret, "%d) ret = %d\n", i, ret);
+            ok(err == test_data[i].err, "%d) err = %d\n", i, err);
+            ok(!memcmp(test_data[i].out, buf, ret*sizeof(WCHAR)),
+                    "%d) buf = %s\n", i, wine_dbgstr_wn(buf, ret));
+        }else {
+            todo_wine ok(!memcmp(test_data[i].out, buf, ret*sizeof(WCHAR)),
+                    "%d) buf = %s\n", i, wine_dbgstr_wn(buf, ret));
+        }
+    }
+}
+
+static void test_IdnToAscii(void)
+{
+    struct {
+        DWORD in_len;
+        const WCHAR in[64];
+        DWORD ret;
+        const WCHAR out[64];
+        DWORD flags;
+        DWORD err;
+    } test_data[] = {
+        {
+            5, {'T','e','s','t',0},
+            5, {'T','e','s','t',0},
+            0, 0xdeadbeef
+        },
+        {
+            5, {'T','e',0x017c,'s','t',0},
+            12, {'x','n','-','-','t','e','s','t','-','c','b','b',0},
+            0, 0xdeadbeef
+        },
+        {
+            12, {'t','e',0x0105,'s','t','.','t','e',0x017c,'s','t',0},
+            26, {'x','n','-','-','t','e','s','t','-','c','t','a','.','x','n','-','-','t','e','s','t','-','c','b','b',0},
+            0, 0xdeadbeef
+        },
+        {
+            3, {0x0105,'.',0},
+            9, {'x','n','-','-','2','d','a','.',0},
+            0, 0xdeadbeef
+        },
+        {
+            10, {'h','t','t','p',':','/','/','t',0x0106,0},
+            17, {'x','n','-','-','h','t','t','p',':','/','/','t','-','7','8','a',0},
+            0, 0xdeadbeef
+        },
+        {
+            10, {0x4e3a,0x8bf4,0x4e0d,0x4ed6,0x5011,0x10d,0x11b,0x305c,0x306a,0},
+            35, {'x','n','-','-','b','e','a','2','a','1','6','3','1','a','v','b','a',
+                'v','4','4','t','y','h','a','3','2','b','9','1','e','g','s','2','t',0},
+            0, 0xdeadbeef
+        },
+        {
+            2, {0x221,0},
+            8, {'x','n','-','-','6','l','a',0},
+            IDN_ALLOW_UNASSIGNED, 0xdeadbeef
+        },
+    };
+
+    WCHAR buf[1024];
+    DWORD i, ret, err;
+
+    if (!pIdnToAscii)
+    {
+        win_skip("IdnToAscii is not available\n");
+        return;
+    }
+
+    for (i=0; i<sizeof(test_data)/sizeof(*test_data); i++)
+    {
+        SetLastError(0xdeadbeef);
+        ret = pIdnToAscii(test_data[i].flags, test_data[i].in,
+                test_data[i].in_len, buf, sizeof(buf));
+        err = GetLastError();
+        ok(ret == test_data[i].ret, "%d) ret = %d\n", i, ret);
+        ok(err == test_data[i].err, "%d) err = %d\n", i, err);
+        ok(!memcmp(test_data[i].out, buf, ret*sizeof(WCHAR)),
+                "%d) buf = %s\n", i, wine_dbgstr_wn(buf, ret));
+    }
+}
+
+static void test_IdnToUnicode(void)
+{
+    struct {
+        DWORD in_len;
+        const WCHAR in[64];
+        DWORD ret;
+        const WCHAR out[64];
+        DWORD flags;
+        DWORD err;
+    } test_data[] = {
+        {
+            5, {'T','e','s','.',0},
+            5, {'T','e','s','.',0},
+            0, 0xdeadbeef
+        },
+        {
+            2, {0x105,0},
+            0, {0},
+            0, ERROR_INVALID_NAME
+        },
+        {
+            33, {'x','n','-','-','4','d','b','c','a','g','d','a','h','y','m','b',
+                'x','e','k','h','e','h','6','e','0','a','7','f','e','i','0','b',0},
+            23, {0x05dc,0x05de,0x05d4,0x05d4,0x05dd,0x05e4,0x05e9,0x05d5,0x05d8,
+                0x05dc,0x05d0,0x05de,0x05d3,0x05d1,0x05e8,0x05d9,0x05dd,0x05e2,
+                0x05d1,0x05e8,0x05d9,0x05ea,0},
+            0, 0xdeadbeef
+        },
+        {
+            34, {'t','e','s','t','.','x','n','-','-','k','d','a','9','a','g','5','e',
+                '9','j','n','f','s','j','.','x','n','-','-','p','d','-','f','n','a'},
+            16, {'t','e','s','t','.',0x0105,0x0119,0x015b,0x0107,
+                0x0142,0x00f3,0x017c,'.','p',0x0119,'d'},
+            0, 0xdeadbeef
+        },
+        {
+            64, {'a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a',
+                'a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a',
+                'a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a',
+                'a','a','a','a','a','a','a','a','a','a','a','a','a','a','a','a'},
+            0, {0},
+            0, ERROR_INVALID_NAME
+        },
+        {
+            8, {'x','n','-','-','6','l','a',0},
+            2, {0x221,0},
+            IDN_ALLOW_UNASSIGNED, 0xdeadbeef
+        },
+    };
+
+    WCHAR buf[1024];
+    DWORD i, ret, err;
+
+    if (!pIdnToUnicode)
+    {
+        win_skip("IdnToUnicode is not available\n");
+        return;
+    }
+
+    for (i=0; i<sizeof(test_data)/sizeof(*test_data); i++)
+    {
+        SetLastError(0xdeadbeef);
+        ret = pIdnToUnicode(test_data[i].flags, test_data[i].in,
+                test_data[i].in_len, buf, sizeof(buf));
+        err = GetLastError();
+        ok(ret == test_data[i].ret, "%d) ret = %d\n", i, ret);
+        ok(err == test_data[i].err, "%d) err = %d\n", i, err);
+        ok(!memcmp(test_data[i].out, buf, ret*sizeof(WCHAR)),
+                "%d) buf = %s\n", i, wine_dbgstr_wn(buf, ret));
+    }
+}
+
 START_TEST(locale)
 {
   InitFunctionPointers();
@@ -2819,6 +3156,7 @@ START_TEST(locale)
   test_CompareStringA();
   test_LCMapStringA();
   test_LCMapStringW();
+  test_LocaleNames();
   test_FoldStringA();
   test_FoldStringW();
   test_ConvertDefaultLocale();
@@ -2829,6 +3167,9 @@ START_TEST(locale)
   test_EnumUILanguageA();
   test_GetCPInfo();
   test_GetStringTypeW();
+  test_IdnToNameprepUnicode();
+  test_IdnToAscii();
+  test_IdnToUnicode();
   /* this requires collation table patch to make it MS compatible */
   if (0) test_sorting();
 }

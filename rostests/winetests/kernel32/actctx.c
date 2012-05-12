@@ -591,7 +591,7 @@ static HANDLE test_create(const char *file, const char *manifest)
     ok(handle != INVALID_HANDLE_VALUE, "handle == INVALID_HANDLE_VALUE, error %u\n", GetLastError());
 
     ok(actctx.cbSize == sizeof(actctx), "actctx.cbSize=%d\n", actctx.cbSize);
-    ok(actctx.dwFlags == 0, "actctx.=%d\n", actctx.dwFlags);
+    ok(actctx.dwFlags == 0, "actctx.dwFlags=%d\n", actctx.dwFlags);
     ok(actctx.lpSource == path, "actctx.lpSource=%p\n", actctx.lpSource);
     ok(actctx.wProcessorArchitecture == 0,
        "actctx.wProcessorArchitecture=%d\n", actctx.wProcessorArchitecture);
@@ -599,7 +599,7 @@ static HANDLE test_create(const char *file, const char *manifest)
     ok(actctx.lpAssemblyDirectory == NULL,
        "actctx.lpAssemblyDirectory=%p\n", actctx.lpAssemblyDirectory);
     ok(actctx.lpResourceName == NULL, "actctx.lpResourceName=%p\n", actctx.lpResourceName);
-    ok(actctx.lpApplicationName == NULL, "actctx.lpApplocationName=%p\n",
+    ok(actctx.lpApplicationName == NULL, "actctx.lpApplicationName=%p\n",
        actctx.lpApplicationName);
     ok(actctx.hModule == NULL, "actctx.hModule=%p\n", actctx.hModule);
 
