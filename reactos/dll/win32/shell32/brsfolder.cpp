@@ -396,7 +396,6 @@ static HTREEITEM InsertTreeViewItem( browse_info *info, IShellFolder * lpsf,
 static void FillTreeView( browse_info *info, IShellFolder * lpsf,
                  LPITEMIDLIST  pidl, HTREEITEM hParent, IEnumIDList* lpe)
 {
-    HTREEITEM    hPrev = 0;
     LPITEMIDLIST    pidlTemp = 0;
     ULONG        ulFetched;
     HRESULT        hr;
@@ -436,7 +435,7 @@ static void FillTreeView( browse_info *info, IShellFolder * lpsf,
                 }
         }
 
-        if (!(hPrev = InsertTreeViewItem(info, lpsf, pidlTemp, pidl, pEnumIL, hParent)))
+        if (!InsertTreeViewItem(info, lpsf, pidlTemp, pidl, pEnumIL, hParent))
             goto done;
         SHFree(pidlTemp);  /* Finally, free the pidl that the shell gave us... */
         pidlTemp=NULL;
