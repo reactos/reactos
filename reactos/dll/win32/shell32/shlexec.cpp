@@ -1501,7 +1501,7 @@ static UINT_PTR SHELL_quote_and_execute(LPCWSTR wcmd, LPCWSTR wszParameters, LPC
     strcatW(wszQuotedCmd, L"\"");
     if (wszParameters[0])
     {
-        strcatW(wszQuotedCmd, " ");
+        strcatW(wszQuotedCmd, L" ");
         strcatW(wszQuotedCmd, wszParameters);
     }
 
