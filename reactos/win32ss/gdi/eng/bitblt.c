@@ -50,6 +50,8 @@ BltMask(SURFOBJ* psoDest,
 
     ASSERT(IS_VALID_ROP4(Rop4));
 
+    if (!psoMask) return FALSE;
+
     fgndRop = ROP4_FGND(Rop4);
     bkgndRop = ROP4_BKGND(Rop4);
 
