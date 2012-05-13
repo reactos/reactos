@@ -80,6 +80,17 @@ PWND FASTCALL UserGetWindowObject(HWND hWnd)
    return Window;
 }
 
+ULONG FASTCALL
+IntSetStyle( PWND pwnd, ULONG set_bits, ULONG clear_bits )
+{
+    ULONG styleOld, styleNew;
+    styleOld = pwnd->style;
+    styleNew = (pwnd->style | set_bits) & ~clear_bits;
+    if (styleNew == styleOld) return styleNew;
+    pwnd->style = styleNew;
+    if ((styleOld ^ styleNew) & WS_VISIBLE) DceResetActiveDCEs( pwnd );
+    return styleOld;
+}
 
 /*
  * IntIsWindow
@@ -162,7 +173,7 @@ IntEnableWindow( HWND hWnd, BOOL bEnable )
 
     if (bEnable)
     {
-       pWnd->style &= ~WS_DISABLED;
+       IntSetStyle( pWnd, 0, WS_DISABLED );
     }
     else
     {
@@ -175,7 +186,7 @@ IntEnableWindow( HWND hWnd, BOOL bEnable )
        {
           co_UserSetFocus(NULL);
        }
-       pWnd->style |= WS_DISABLED;
+       IntSetStyle( pWnd, WS_DISABLED, 0 );
     }
 
     if (Update)
@@ -1780,6 +1791,7 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
                      PLARGE_STRING WindowName,
                      PVOID acbiBuffer)
 {
+   ULONG style;
    PWND Window = NULL, ParentWindow = NULL, OwnerWindow;
    HWND hWnd, hWndParent, hWndOwner, hwndInsertAfter;
    PWINSTATION_OBJECT WinSta;
@@ -2060,12 +2072,14 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
    }
 
    /* Show or maybe minimize or maximize the window. */
-   if (Window->style & (WS_MINIMIZE | WS_MAXIMIZE))
+
+   style = IntSetStyle( Window, 0, WS_MAXIMIZE | WS_MINIMIZE );
+   if (style & (WS_MINIMIZE | WS_MAXIMIZE))
    {
       RECTL NewPos;
       UINT16 SwFlag;
 
-      SwFlag = (Window->style & WS_MINIMIZE) ? SW_MINIMIZE : SW_MAXIMIZE;
+      SwFlag = (style & WS_MINIMIZE) ? SW_MINIMIZE : SW_MAXIMIZE;
 
       co_WinPosMinMaximize(Window, SwFlag, &NewPos);
 
@@ -3217,6 +3231,18 @@ CLEANUP:
    END_CLEANUP;
 }
 
+// Fixes wine Win test_window_styles and todo tests...
+static BOOL FASTCALL
+IntCheckFrameEdge(ULONG Style, ULONG ExStyle)
+{
+   if (ExStyle & WS_EX_DLGMODALFRAME)
+      return TRUE;
+   else if (!(ExStyle & WS_EX_STATICEDGE) && (Style & (WS_DLGFRAME | WS_THICKFRAME)))
+      return TRUE;
+   else
+      return FALSE;
+}
+
 LONG FASTCALL
 co_UserSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi)
 {
@@ -3265,6 +3291,8 @@ co_UserSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi)
             Style.styleOld = OldValue;
             Style.styleNew = NewValue;
 
+            co_IntSendMessage(hWnd, WM_STYLECHANGING, GWL_EXSTYLE, (LPARAM) &Style);
+
             /*
              * Remove extended window style bit WS_EX_TOPMOST for shell windows.
              */
@@ -3274,8 +3302,12 @@ co_UserSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi)
                if (hWnd == WindowStation->ShellWindow || hWnd == WindowStation->ShellListView)
                   Style.styleNew &= ~WS_EX_TOPMOST;
             }
+            /* WS_EX_WINDOWEDGE depends on some other styles */
+            if (IntCheckFrameEdge(Window->style, NewValue))
+               Style.styleNew |= WS_EX_WINDOWEDGE;
+            else
+               Style.styleNew &= ~WS_EX_WINDOWEDGE;
 
-            co_IntSendMessage(hWnd, WM_STYLECHANGING, GWL_EXSTYLE, (LPARAM) &Style);
             Window->ExStyle = (DWORD)Style.styleNew;
             co_IntSendMessage(hWnd, WM_STYLECHANGED, GWL_EXSTYLE, (LPARAM) &Style);
             break;
@@ -3285,6 +3317,15 @@ co_UserSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi)
             Style.styleOld = OldValue;
             Style.styleNew = NewValue;
             co_IntSendMessage(hWnd, WM_STYLECHANGING, GWL_STYLE, (LPARAM) &Style);
+
+           /* WS_CLIPSIBLINGS can't be reset on top-level windows */
+            if (Window->spwndParent == UserGetDesktopWindow()) Style.styleNew |= WS_CLIPSIBLINGS;
+            /* Fixes wine FIXME: changing WS_DLGFRAME | WS_THICKFRAME is supposed to change WS_EX_WINDOWEDGE too */
+            if (IntCheckFrameEdge(NewValue, Window->ExStyle))
+               Window->ExStyle |= WS_EX_WINDOWEDGE;
+            else
+               Window->ExStyle &= ~WS_EX_WINDOWEDGE;
+
             Window->style = (DWORD)Style.styleNew;
             co_IntSendMessage(hWnd, WM_STYLECHANGED, GWL_STYLE, (LPARAM) &Style);
             break;
