@@ -623,7 +623,6 @@ LogonUserW(LPWSTR lpszUsername,
     }
     DefaultPrivs[] =
     {
-      { L"SeUnsolicitedInputPrivilege", 0 },
       { L"SeMachineAccountPrivilege", 0 },
       { L"SeSecurityPrivilege", 0 },
       { L"SeTakeOwnershipPrivilege", 0 },
