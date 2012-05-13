@@ -307,75 +307,59 @@ SamGetUserSid(LPCWSTR UserName,
 
 
 static BOOL WINAPI
-SamGetDomainSid(PSID *Sid)
+GetDomainSid(PSID *Sid)
 {
+    PPOLICY_ACCOUNT_DOMAIN_INFO Info = NULL;
+    LSA_OBJECT_ATTRIBUTES ObjectAttributes;
+    LSA_HANDLE PolicyHandle;
     PSID lpSid;
-    DWORD dwLength;
-    HKEY hDomainKey;
+    ULONG Length;
+    NTSTATUS Status;
 
-    TRACE("SamGetDomainSid() called\n");
+    *Sid = NULL;
 
-    if (Sid != NULL)
-        *Sid = NULL;
+    memset(&ObjectAttributes, 0, sizeof(LSA_OBJECT_ATTRIBUTES));
+    ObjectAttributes.Length = sizeof(LSA_OBJECT_ATTRIBUTES);
 
-    /* Open the account domain key */
-    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-                      L"SAM\\SAM\\Domains\\Account",
-                      0,
-                      KEY_READ,
-                      &hDomainKey))
+    Status = LsaOpenPolicy(NULL,
+                           &ObjectAttributes,
+                           POLICY_TRUST_ADMIN,
+                           &PolicyHandle);
+    if (!NT_SUCCESS(Status))
     {
-        ERR("Failed to open the account domain key! (Error %lu)\n", GetLastError());
+        ERR("LsaOpenPolicy failed (Status: 0x%08lx)\n", Status);
         return FALSE;
     }
 
-    /* Get SID size */
-    dwLength = 0;
-    if (RegQueryValueExW(hDomainKey,
-                         L"Sid",
-                         NULL,
-                         NULL,
-                         NULL,
-                         &dwLength))
+    Status = LsaQueryInformationPolicy(PolicyHandle,
+                                       PolicyAccountDomainInformation,
+                                       (PVOID *)&Info);
+    if (!NT_SUCCESS(Status))
     {
-        ERR("Failed to read the SID size! (Error %lu)\n", GetLastError());
-        RegCloseKey(hDomainKey);
+        ERR("LsaQueryInformationPolicy failed (Status: 0x%08lx)\n", Status);
+        LsaClose(PolicyHandle);
         return FALSE;
     }
 
-    /* Allocate sid buffer */
-    TRACE("Required SID buffer size: %lu\n", dwLength);
-    lpSid = (PSID)RtlAllocateHeap(RtlGetProcessHeap(),
-                                  0,
-                                  dwLength);
+    Length = RtlLengthSid(Info->DomainSid);
+
+    lpSid = RtlAllocateHeap(RtlGetProcessHeap(),
+                            0,
+                            Length);
     if (lpSid == NULL)
     {
         ERR("Failed to allocate SID buffer!\n");
-        RegCloseKey(hDomainKey);
+        LsaFreeMemory(Info);
+        LsaClose(PolicyHandle);
         return FALSE;
     }
 
-    /* Read sid */
-    if (RegQueryValueExW(hDomainKey,
-                         L"Sid",
-                         NULL,
-                         NULL,
-                         (LPBYTE)lpSid,
-                         &dwLength))
-    {
-        ERR("Failed to read the SID! (Error %lu)\n", GetLastError());
-        RtlFreeHeap(RtlGetProcessHeap(),
-                    0,
-                    lpSid);
-        RegCloseKey(hDomainKey);
-        return FALSE;
-    }
-
-    RegCloseKey(hDomainKey);
+    memcpy(lpSid, Info->DomainSid, Length);
 
     *Sid = lpSid;
 
-    TRACE("SamGetDomainSid() done\n");
+    LsaFreeMemory(Info);
+    LsaClose(PolicyHandle);
 
     return TRUE;
 }
@@ -435,7 +419,7 @@ AllocateGroupSids(OUT PSID *PrimaryGroupSid,
     if (!NT_SUCCESS(Status))
         return NULL;
 
-    if (!SamGetDomainSid(&DomainSid))
+    if (!GetDomainSid(&DomainSid))
         return NULL;
 
     TokenGroups = RtlAllocateHeap(
