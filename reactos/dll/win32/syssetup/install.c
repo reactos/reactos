@@ -908,9 +908,9 @@ InstallReactOS(HINSTANCE hInstance)
     }
 
     /* Set the Domain SID (aka Computer SID) */
-    if (!SamSetDomainSid(DomainSid))
+    if (SetAccountDomain(NULL, DomainSid) != STATUS_SUCCESS)
     {
-        FatalError("SamSetDomainSid() failed!");
+        FatalError("SetAccountDomain() failed!");
         RtlFreeSid(DomainSid);
         return 0;
     }
