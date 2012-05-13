@@ -200,7 +200,7 @@ static void test_click_make_new_folder_button(void)
     bi.ulFlags = BIF_NEWDIALOGSTYLE;
     bi.lpfn = create_new_folder_callback;
     /* Use test folder as the root folder for dialog box */
-    MultiByteToWideChar(CP_UTF8, 0, test_folder_path, MAX_PATH,
+    MultiByteToWideChar(CP_UTF8, 0, test_folder_path, -1,
         test_folder_pathW, MAX_PATH);
     hr = SHGetDesktopFolder(&test_folder_object);
     ok (SUCCEEDED(hr), "SHGetDesktopFolder failed with hr 0x%08x\n", hr);

@@ -27,6 +27,9 @@
 #include "shlwapi.h"
 #include "wine/test.h"
 
+#define EXPECT_HR(hr,hr_exp) \
+    ok(hr == hr_exp, "got 0x%08x, expected 0x%08x\n", hr, hr_exp)
+
 static HRESULT (WINAPI *pSHGetFolderPathW)(HWND, int, HANDLE, DWORD, LPWSTR);
 static HRESULT (WINAPI *pSHGetNameFromIDList)(PCIDLIST_ABSOLUTE,SIGDN,PWSTR*);
 static HRESULT (WINAPI *pSHGetSpecialFolderLocation)(HWND, int, LPITEMIDLIST *);
@@ -303,6 +306,63 @@ static void test_namespace(void)
     IShellDispatch_Release(sd);
 }
 
+static void test_service(void)
+{
+    static const WCHAR spooler[] = {'S','p','o','o','l','e','r',0};
+    static const WCHAR dummyW[] = {'d','u','m','m','y',0};
+    SERVICE_STATUS_PROCESS status;
+    SC_HANDLE scm, service;
+    IShellDispatch2 *sd;
+    DWORD dummy;
+    HRESULT hr;
+    BSTR name;
+    VARIANT v;
+
+    hr = CoCreateInstance(&CLSID_Shell, NULL, CLSCTX_INPROC_SERVER,
+        &IID_IShellDispatch2, (void**)&sd);
+    if (hr != S_OK)
+    {
+        win_skip("IShellDispatch2 not supported\n");
+        return;
+    }
+
+    V_VT(&v) = VT_I2;
+    V_I2(&v) = 10;
+    hr = IShellDispatch2_IsServiceRunning(sd, NULL, &v);
+    ok(V_VT(&v) == VT_BOOL, "got %d\n", V_VT(&v));
+    ok(V_BOOL(&v) == VARIANT_FALSE, "got %d\n", V_BOOL(&v));
+    EXPECT_HR(hr, S_OK);
+
+    scm = OpenSCManagerW(NULL, NULL, SC_MANAGER_CONNECT);
+    service = OpenServiceW(scm, spooler, SERVICE_QUERY_STATUS);
+    QueryServiceStatusEx(service, SC_STATUS_PROCESS_INFO, (BYTE *)&status, sizeof(SERVICE_STATUS_PROCESS), &dummy);
+    CloseServiceHandle(service);
+    CloseServiceHandle(scm);
+
+    /* service should exist */
+    name = SysAllocString(spooler);
+    V_VT(&v) = VT_I2;
+    hr = IShellDispatch2_IsServiceRunning(sd, name, &v);
+    EXPECT_HR(hr, S_OK);
+    ok(V_VT(&v) == VT_BOOL, "got %d\n", V_VT(&v));
+    if (status.dwCurrentState == SERVICE_RUNNING)
+        ok(V_BOOL(&v) == VARIANT_TRUE, "got %d\n", V_BOOL(&v));
+    else
+        ok(V_BOOL(&v) == VARIANT_FALSE, "got %d\n", V_BOOL(&v));
+    SysFreeString(name);
+
+    /* service doesn't exist */
+    name = SysAllocString(dummyW);
+    V_VT(&v) = VT_I2;
+    hr = IShellDispatch2_IsServiceRunning(sd, name, &v);
+    EXPECT_HR(hr, S_OK);
+    ok(V_VT(&v) == VT_BOOL, "got %d\n", V_VT(&v));
+    ok(V_BOOL(&v) == VARIANT_FALSE, "got %d\n", V_BOOL(&v));
+    SysFreeString(name);
+
+    IShellDispatch_Release(sd);
+}
+
 START_TEST(shelldispatch)
 {
     HRESULT r;
@@ -314,6 +374,7 @@ START_TEST(shelldispatch)
 
     init_function_pointers();
     test_namespace();
+    test_service();
 
     CoUninitialize();
 }

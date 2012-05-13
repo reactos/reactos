@@ -859,6 +859,12 @@ if (0) { /* crashes */
     hr = pSHGetKnownFolderPath(&FOLDERID_Desktop, 0, NULL, NULL);
     ok(hr == E_INVALIDARG, "expected E_INVALIDARG, got 0x%08x\n", hr);
 }
+    /* non-existent folder id */
+    path = (void *)0xdeadbeef;
+    hr = pSHGetKnownFolderPath(&IID_IOleObject, 0, NULL, &path);
+    ok(hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), "got 0x%08x\n", hr);
+    ok(path == NULL, "got %p\n", path);
+
     path = NULL;
     hr = pSHGetKnownFolderPath(&FOLDERID_Desktop, 0, NULL, &path);
     ok(hr == S_OK, "expected S_OK, got 0x%08x\n", hr);

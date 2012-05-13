@@ -348,6 +348,7 @@ static void Cleanup(void)
     RemoveDirectoryA(".\\testdir");
 }
 
+
 /* perform test */
 static void test_EnumObjects(IShellFolder *iFolder)
 {
@@ -1805,6 +1806,7 @@ static void test_ITEMIDLIST_format(void) {
             cbOffset <= pidlFile->mkid.cb - sizeof(struct FileStructW))
         {
             struct FileStructW *pFileStructW = (struct FileStructW *)(((LPBYTE)pidlFile)+cbOffset);
+            WCHAR *name = pFileStructW->wszName;
 
             ok(pidlFile->mkid.cb == cbOffset + pFileStructW->cbLen,
                 "FileStructW's offset and length should add up to the PIDL's length!\n");
@@ -1841,9 +1843,9 @@ static void test_ITEMIDLIST_format(void) {
                     /* TODO: Perform check for date being within one day.*/
                 }
 
-                ok (!lstrcmpW(wszFile[i], pFileStructW->wszName) ||
-                    !lstrcmpW(wszFile[i], (WCHAR *)(pFileStructW->abFooBar2 + 22)) || /* Vista */
-                    !lstrcmpW(wszFile[i], (WCHAR *)(pFileStructW->abFooBar2 + 26)), /* Win7 */
+                ok (!lstrcmpW(wszFile[i], name) ||
+                    !lstrcmpW(wszFile[i], name + 9) || /* Vista */
+                    !lstrcmpW(wszFile[i], name + 11), /* Win7 */
                     "The filename should be stored in unicode at this position!\n");
             }
         }
@@ -3783,12 +3785,15 @@ if (0)
     if (!pIsWow64Process || !pIsWow64Process( GetCurrentProcess(), &is_wow64 )) is_wow64 = FALSE;
     if (is_wow64 && pGetSystemWow64DirectoryW)
     {
+        UINT len;
         *dirW = 0;
-        ok(GetSystemDirectoryW(dirW, MAX_PATH) > 0, "GetSystemDirectoryW failed: %u\n", GetLastError());
+        len = GetSystemDirectoryW(dirW, MAX_PATH);
+        ok(len > 0, "GetSystemDirectoryW failed: %u\n", GetLastError());
         hr = pSHParseDisplayName(dirW, NULL, &pidl1, 0, NULL);
         ok(hr == S_OK, "failed %08x\n", hr);
         *dirW = 0;
-        ok(pGetSystemWow64DirectoryW(dirW, MAX_PATH) > 0, "GetSystemWow64DirectoryW failed: %u\n", GetLastError());
+        len = pGetSystemWow64DirectoryW(dirW, MAX_PATH);
+        ok(len > 0, "GetSystemWow64DirectoryW failed: %u\n", GetLastError());
         hr = pSHParseDisplayName(dirW, NULL, &pidl2, 0, NULL);
         ok(hr == S_OK, "failed %08x\n", hr);
         ret = pILIsEqual(pidl1, pidl2);

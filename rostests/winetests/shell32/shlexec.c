@@ -92,7 +92,10 @@ static void strcat_param(char* str, const char* param)
 static char shell_call[2048]="";
 static int shell_execute(LPCSTR operation, LPCSTR file, LPCSTR parameters, LPCSTR directory)
 {
-    INT_PTR rc;
+    INT_PTR rc, rcEmpty = 0;
+
+    if(!operation)
+        rcEmpty = shell_execute("", file, parameters, directory);
 
     strcpy(shell_call, "ShellExecute(");
     strcat_param(shell_call, operation);
@@ -138,6 +141,10 @@ static int shell_execute(LPCSTR operation, LPCSTR file, LPCSTR parameters, LPCST
     WritePrivateProfileStringA(NULL, NULL, NULL, child_file);
     if (rc > 32)
         dump_child();
+
+    if(!operation)
+        ok(rc == rcEmpty || broken(rc > 32 && rcEmpty == SE_ERR_NOASSOC) /* NT4 */,
+                "Got different return value with empty string: %lu %lu\n", rc, rcEmpty);
 
     return rc;
 }
@@ -2150,6 +2157,7 @@ static void test_commandline(void)
     LPWSTR *args = (LPWSTR*)0xdeadcafe, pbuf;
     INT numargs = -1;
     size_t buflen;
+    DWORD lerror;
 
     wsprintfW(cmdline,fmt1,one,two,three,four);
     args=CommandLineToArgvW(cmdline,&numargs);
@@ -2163,6 +2171,15 @@ static void test_commandline(void)
     ok(lstrcmpW(args[1],two)==0,"arg1 is not as expected\n");
     ok(lstrcmpW(args[2],three)==0,"arg2 is not as expected\n");
     ok(lstrcmpW(args[3],four)==0,"arg3 is not as expected\n");
+
+    SetLastError(0xdeadbeef);
+    args=CommandLineToArgvW(cmdline,NULL);
+    lerror=GetLastError();
+    ok(args == NULL && lerror == ERROR_INVALID_PARAMETER, "expected NULL with ERROR_INVALID_PARAMETER got %p with %d\n",args,lerror);
+    SetLastError(0xdeadbeef);
+    args=CommandLineToArgvW(NULL,NULL);
+    lerror=GetLastError();
+    ok(args == NULL && lerror == ERROR_INVALID_PARAMETER, "expected NULL with ERROR_INVALID_PARAMETER got %p with %d\n",args,lerror);
 
     wsprintfW(cmdline,fmt2,one,two,three,four);
     args=CommandLineToArgvW(cmdline,&numargs);

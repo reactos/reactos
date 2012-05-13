@@ -7,6 +7,7 @@ add_definitions(
 
 list(APPEND SOURCE
     appbar.c
+    assoc.c
     autocomplete.c
     brsfolder.c
     ebrowser.c

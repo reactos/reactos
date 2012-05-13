@@ -7,6 +7,7 @@
 #include "wine/test.h"
 
 extern void func_appbar(void);
+extern void func_assoc(void);
 extern void func_autocomplete(void);
 extern void func_brsfolder(void);
 extern void func_ebrowser(void);
@@ -28,6 +29,7 @@ extern void func_systray(void);
 const struct test winetest_testlist[] =
 {
     { "appbar", func_appbar },
+    { "assoc", func_assoc },
     { "autocomplete", func_autocomplete },
     { "brsfolder", func_brsfolder },
     { "ebrowser", func_ebrowser },
