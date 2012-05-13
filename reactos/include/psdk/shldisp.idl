@@ -18,14 +18,42 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-import "objidl.idl";
-import "oleidl.idl";
-import "oaidl.idl";
-import "shtypes.idl";
-import "servprov.idl";
-import "comcat.idl";
+import "ocidl.idl";
 
 #include <shdispid.h>
+
+cpp_quote("#ifdef WINE_NO_UNICODE_MACROS")
+cpp_quote("#undef ShellExecute")
+cpp_quote("#endif")
+
+/*****************************************************************************
+ * IEnumACString interface
+ */
+[
+    local,
+    object,
+    uuid(8e74c210-cf9d-4eaf-a403-7356428f0a5a),
+    pointer_default(unique)
+]
+interface IEnumACString : IEnumString
+{
+    typedef IEnumACString *PENUMACSTRING, *LPENUMACSTRING;
+
+    typedef enum _tagACENUMOPTION
+    {
+        ACEO_NONE            = 0x00000000,
+        ACEO_MOSTRECENTFIRST = 0x00000001,
+        ACEO_FIRSTUNUSED     = 0x00010000,
+    } ACENUMOPTION;
+
+    HRESULT NextItem( [out] LPWSTR pszUrl,
+                      [in] ULONG cchMax,
+                      [out] ULONG *pulSortIndex);
+
+    HRESULT SetEnumOptions( [in] DWORD dwOptions );
+
+    HRESULT GetEnumOptions( [out] DWORD *pdwOptions );
+}
 
 /*****************************************************************************
  * IAutoComplete interface
@@ -425,11 +453,32 @@ interface IShellDispatch : IDispatch
 }
 
 [
+    object,
+    uuid(a4c6892c-3ba9-11d2-9dea-00c04fb16162),
+    oleautomation,
+    hidden,
+    dual,
+]
+interface IShellDispatch2 : IShellDispatch
+{
+    HRESULT IsRestricted([in] BSTR group, [in] BSTR restriction, [out, retval] long *value);
+    HRESULT ShellExecute([in] BSTR file, [in, optional] VARIANT args, [in, optional] VARIANT dir,
+        [in, optional] VARIANT op, [in, optional] VARIANT show);
+    HRESULT FindPrinter([in, optional] BSTR name, [in, optional] BSTR location, [in, optional] BSTR model);
+    HRESULT GetSystemInformation([in] BSTR name, [out, retval] VARIANT *ret);
+    HRESULT ServiceStart([in] BSTR service, [in] VARIANT persistent, [out, retval] VARIANT *ret);
+    HRESULT ServiceStop([in] BSTR service, [in] VARIANT persistent, [out, retval] VARIANT *ret);
+    HRESULT IsServiceRunning([in] BSTR service, [out, retval] VARIANT *running);
+    HRESULT CanStartStopService([in] BSTR service, [out, retval] VARIANT *ret);
+    HRESULT ShowBrowserBar([in] BSTR clsid, [in] VARIANT show, [out, retval] VARIANT *ret);
+}
+
+[
     uuid(13709620-c279-11ce-a49e-444553540000)
 ]
 coclass Shell
 {
-    [default] interface IShellDispatch;
+    [default] interface IShellDispatch2;
 }
 
 [
