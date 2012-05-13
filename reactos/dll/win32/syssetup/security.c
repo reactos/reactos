@@ -26,9 +26,6 @@ SetAccountDomain(LPCWSTR DomainName,
     LSA_HANDLE PolicyHandle;
     NTSTATUS Status;
 
-    if (DomainSid != NULL)
-        SamSetDomainSid (DomainSid);
-
     memset(&ObjectAttributes, 0, sizeof(LSA_OBJECT_ATTRIBUTES));
     ObjectAttributes.Length = sizeof(LSA_OBJECT_ATTRIBUTES);
 
