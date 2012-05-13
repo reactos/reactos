@@ -476,18 +476,16 @@ GDIOBJ_vDereferenceObject(POBJ pobj)
 {
     ULONG cRefs, ulIndex;
 
-    /* Log the event */
-    DBG_LOGEVENT(&pobj->slhLog, EVENT_DEREFERENCE, cRefs);
+    /* Calculate the index */
+    ulIndex = GDI_HANDLE_GET_INDEX(pobj->hHmgr);
 
     /* Check if the object has a handle */
-    if (GDI_HANDLE_GET_INDEX(pobj->hHmgr))
+    if (ulIndex)
     {
-        /* Calculate the index */
-        ulIndex = GDI_HANDLE_GET_INDEX(pobj->hHmgr);
-
         /* Decrement reference count */
         ASSERT((gpaulRefCount[ulIndex] & REF_MASK_COUNT) > 0);
         cRefs = InterlockedDecrement((LONG*)&gpaulRefCount[ulIndex]);
+        DBG_LOGEVENT(&pobj->slhLog, EVENT_DEREFERENCE, cRefs);
 
         /* Check if we reached 0 and handle bit is not set */
         if ((cRefs & REF_MASK_INUSE) == 0)
@@ -517,6 +515,7 @@ GDIOBJ_vDereferenceObject(POBJ pobj)
         /* Decrement the objects reference count */
         ASSERT(pobj->ulShareCount > 0);
         cRefs = InterlockedDecrement((LONG*)&pobj->ulShareCount);
+        DBG_LOGEVENT(&pobj->slhLog, EVENT_DEREFERENCE, cRefs);
 
         /* Check if we reached 0 */
         if (cRefs == 0)
@@ -777,6 +776,7 @@ GDIOBJ_vSetObjectOwner(
 
     /* Set new owner */
     pentry->ObjectOwner.ulObj = ulOwner;
+    DBG_LOGEVENT(&pobj->slhLog, EVENT_SET_OWNER, 0);
 }
 
 /* Locks 2 or 3 objects at a time */

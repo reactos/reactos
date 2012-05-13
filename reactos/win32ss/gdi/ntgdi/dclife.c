@@ -414,8 +414,19 @@ DC_vSetOwner(PDC pdc, ULONG ulOwner)
         GreSetObjectOwner(pdc->dclevel.hPath, ulOwner);
     }
 
-    IntGdiSetBrushOwner(pdc->dclevel.pbrFill, ulOwner);
-    IntGdiSetBrushOwner(pdc->dclevel.pbrLine, ulOwner);
+    /* Dereference current brush and pen */
+    BRUSH_ShareUnlockBrush(pdc->dclevel.pbrFill);
+    BRUSH_ShareUnlockBrush(pdc->dclevel.pbrLine);
+
+    /* Select the default fill and line brush */
+    pdc->dcattr.hbrush = StockObjects[WHITE_BRUSH];
+    pdc->dcattr.hpen = StockObjects[BLACK_PEN];
+    pdc->dclevel.pbrFill = BRUSH_ShareLockBrush(pdc->pdcattr->hbrush);
+    pdc->dclevel.pbrLine = PEN_ShareLockPen(pdc->pdcattr->hpen);
+
+    /* Update the EBRUSHOBJs */
+    EBRUSHOBJ_vUpdate(&pdc->eboFill, pdc->dclevel.pbrFill, pdc);
+    EBRUSHOBJ_vUpdate(&pdc->eboLine, pdc->dclevel.pbrLine, pdc);
 
     /* Allocate or free DC attribute */
     if (ulOwner == GDI_OBJ_HMGR_PUBLIC || ulOwner == GDI_OBJ_HMGR_NONE)
