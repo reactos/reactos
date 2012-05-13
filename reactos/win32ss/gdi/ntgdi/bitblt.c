@@ -18,11 +18,10 @@
 #define ROP_TO_ROP4(Rop) ((Rop) >> 16)
 
 ULONG
-TranslateCOLORREF(PDC pdc, COLORREF *pcrColor)
+TranslateCOLORREF(PDC pdc, COLORREF crColor)
 {
     PPALETTE ppalDC, ppalSurface;
     ULONG index, ulColor, iBitmapFormat;
-    COLORREF crColor = *pcrColor;
     EXLATEOBJ exlo;
 
     switch (crColor >> 24)
@@ -65,15 +64,11 @@ TranslateCOLORREF(PDC pdc, COLORREF *pcrColor)
             else if (iBitmapFormat == BMF_8BPP) index = crColor & 0xFF;
             else if (iBitmapFormat == BMF_16BPP) index = crColor & 0xFFFF;
             else index = crColor & 0xFFFFFF;
-
-            /* Translate the color to RGB for the caller */
-            ppalSurface = pdc->dclevel.pSurface->ppal;
-            *pcrColor = PALETTE_ulGetRGBColorFromIndex(ppalSurface, index);
             return index;
 
         default:
             DPRINT("Unsupported color type %d passed\n", crColor >> 24);
-            return 0;
+            crColor &= 0xFFFFFF;
     }
 
     /* Initialize an XLATEOBJ from RGB to the target surface */
@@ -86,19 +81,6 @@ TranslateCOLORREF(PDC pdc, COLORREF *pcrColor)
     /* Cleanup the XLATEOBJ */
     EXLATEOBJ_vCleanup(&exlo);
 
-    /* Initialize an XLATEOBJ from the target surface to RGB */
-    EXLATEOBJ_vInitialize(&exlo,
-                          ppalSurface,
-                          &gpalRGB,
-                          0,
-                          pdc->pdcattr->crBackgroundClr,
-                          pdc->pdcattr->crForegroundClr);
-
-    /* Translate the color back to RGB */
-    *pcrColor = XLATEOBJ_iXlate(&exlo.xlo, ulColor);
-
-    /* Cleanup and return the target format color */
-    EXLATEOBJ_vCleanup(&exlo);
     return ulColor;
 }
 
@@ -1070,6 +1052,7 @@ NtGdiSetPixel(
     BOOL bResult;
     PEBRUSHOBJ pebo;
     ULONG ulDirty;
+    EXLATEOBJ exlo;
 
     /* Lock the DC */
     pdc = DC_LockDc(hdc);
@@ -1088,7 +1071,7 @@ NtGdiSetPixel(
     }
 
     /* Translate the color to the target format and get the RGB value */
-    iSolidColor = TranslateCOLORREF(pdc, &crColor);
+    iSolidColor = TranslateCOLORREF(pdc, crColor);
 
     /* Use the DC's text brush, which is always a solid brush */
     pebo = &pdc->eboText;
@@ -1106,6 +1089,20 @@ NtGdiSetPixel(
     /* Restore old text brush color and dirty flags */
     EBRUSHOBJ_iSetSolidColor(pebo, iOldColor);
     pdc->pdcattr->ulDirty_ = ulDirty;
+
+    /* Initialize an XLATEOBJ from the target surface to RGB */
+    EXLATEOBJ_vInitialize(&exlo,
+                          pdc->dclevel.pSurface->ppal,
+                          &gpalRGB,
+                          0,
+                          pdc->pdcattr->crBackgroundClr,
+                          pdc->pdcattr->crForegroundClr);
+
+    /* Translate the color back to RGB */
+    crColor = XLATEOBJ_iXlate(&exlo.xlo, iSolidColor);
+
+    /* Cleanup and return the target format color */
+    EXLATEOBJ_vCleanup(&exlo);
 
     /* Unlock the DC */
     DC_UnlockDc(pdc);
