@@ -28,6 +28,7 @@ ks.inf
 
 [RegistrationPhase2]
 RegisterDlls = OleControlDlls
+AddReg=Classes
 
 [OleControlDlls]
 11,,atl.dll,1
@@ -89,3 +90,16 @@ RegisterDlls = OleControlDlls
 11,,wininet.dll,2
 11,,wintrust.dll,1
 11,,wuapi.dll,1
+
+[Strings]
+MciExtStr="Software\Microsoft\Windows NT\CurrentVersion\MCI Extensions"
+Mci32Str="Software\Microsoft\Windows NT\CurrentVersion\MCI32"
+Desktop="Control Panel\Desktop"
+Metrics="Control Panel\Desktop\WindowMetrics"
+CurrentVersion="Software\Microsoft\Windows\CurrentVersion"
+CurrentVersionNT="Software\Microsoft\Windows NT\CurrentVersion"
+FontSubStr="Software\Microsoft\Windows NT\CurrentVersion\FontSubstitutes"
+Control="System\CurrentControlSet\Control"
+
+[Classes]
+HKLM,%CurrentVersion%\Installer,"InstallerLocation",,"%11%"
