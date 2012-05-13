@@ -819,7 +819,7 @@ static UINT SHELL_FindExecutable(LPCWSTR lpPath, LPCWSTR lpFile, LPCWSTR lpOpera
     {
         /* Toss the leading dot */
         extension++;
-        if (GetProfileStringW(L"extesions", extension, L"", command, sizeof(command) / sizeof(WCHAR)) > 0)
+        if (GetProfileStringW(L"extensions", extension, L"", command, sizeof(command) / sizeof(WCHAR)) > 0)
         {
             if (wcslen(command) != 0)
             {
@@ -887,7 +887,7 @@ static unsigned dde_connect(const WCHAR* key, const WCHAR* start, WCHAR* ddeexec
     BOOL unicode = !(GetVersion() & 0x80000000);
 
     wcscpy(regkey, key);
-    wcscpy(endkey, L"application");
+    wcscpy(endkey, L"\\application");
     applen = sizeof(app);
     if (RegQueryValueW(HKEY_CLASSES_ROOT, regkey, app, &applen) != ERROR_SUCCESS)
     {
