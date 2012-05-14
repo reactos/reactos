@@ -73,7 +73,8 @@ static const char component_dat[] =
     "Two\t{BF03D1A6-20DA-4A65-82F3-6CAC995915CE}\tFIRSTDIR\t2\t\ttwo.txt\n"
     "dangler\t{6091DF25-EF96-45F1-B8E9-A9B1420C7A3C}\tTARGETDIR\t4\t\tregdata\n"
     "component\t\tMSITESTDIR\t0\t1\tfile\n"
-    "service_comp\t\tMSITESTDIR\t0\t1\tservice_file";
+    "service_comp\t{935A0A91-22A3-4F87-BCA8-928FFDFE2353}\tMSITESTDIR\t0\t\tservice_file\n"
+    "service_comp2\t{3F7B04A4-9521-4649-BDC9-0C8722740A49}\tMSITESTDIR\t0\t\tservice_file2";
 
 static const char directory_dat[] =
     "Directory\tDirectory_Parent\tDefaultDir\n"
@@ -109,7 +110,8 @@ static const char feature_comp_dat[] =
     "Three\tThree\n"
     "Two\tTwo\n"
     "feature\tcomponent\n"
-    "service_feature\tservice_comp\n";
+    "service_feature\tservice_comp\n"
+    "service_feature\tservice_comp2";
 
 static const char file_dat[] =
     "File\tComponent_\tFileName\tFileSize\tVersion\tLanguage\tAttributes\tSequence\n"
@@ -121,7 +123,8 @@ static const char file_dat[] =
     "three.txt\tThree\tthree.txt\t1000\t\t\t0\t3\n"
     "two.txt\tTwo\ttwo.txt\t1000\t\t\t0\t2\n"
     "file\tcomponent\tfilename\t100\t\t\t8192\t1\n"
-    "service_file\tservice_comp\tservice.exe\t100\t\t\t8192\t1";
+    "service_file\tservice_comp\tservice.exe\t100\t\t\t8192\t6\n"
+    "service_file2\tservice_comp2\tservice2.exe\t100\t\t\t8192\t7";
 
 static const char install_exec_seq_dat[] =
     "Action\tCondition\tSequence\n"
@@ -149,7 +152,7 @@ static const char media_dat[] =
     "i2\ti4\tL64\tS255\tS32\tS72\n"
     "Media\tDiskId\n"
     "1\t3\t\t\tDISK1\t\n"
-    "2\t5\t\tmsitest.cab\tDISK2\t\n";
+    "2\t7\t\tmsitest.cab\tDISK2\t\n";
 
 static const char property_dat[] =
     "Property\tValue\n"
@@ -172,7 +175,9 @@ static const char property_dat[] =
     "AdminProperties\tPOSTADMIN\n"
     "ROOTDRIVE\tC:\\\n"
     "SERVNAME\tTestService\n"
+    "SERVNAME2\tTestService2\n"
     "SERVDISP\tTestServiceDisp\n"
+    "SERVDISP2\tTestServiceDisp2\n"
     "MSIFASTINSTALL\t1\n";
 
 static const char environment_dat[] =
@@ -211,13 +216,15 @@ static const char service_install_dat[] =
     "LoadOrderGroup\tDependencies\tStartName\tPassword\tArguments\tComponent_\tDescription\n"
     "s72\ts255\tL255\ti4\ti4\ti4\tS255\tS255\tS255\tS255\tS255\ts72\tL255\n"
     "ServiceInstall\tServiceInstall\n"
-    "TestService\t[SERVNAME]\t[SERVDISP]\t2\t3\t0\t\tservice1[~]+group1[~]service2[~]+group2[~][~]\tTestService\t\t-a arg\tservice_comp\tdescription";
+    "TestService\t[SERVNAME]\t[SERVDISP]\t2\t3\t0\t\tservice1[~]+group1[~]service2[~]+group2[~][~]\tTestService\t\t-a arg\tservice_comp\tdescription\n"
+    "TestService2\tSERVNAME2]\t[SERVDISP2]\t2\t3\t0\t\tservice1[~]+group1[~]service2[~]+group2[~][~]\tTestService2\t\t-a arg\tservice_comp2\tdescription";
 
 static const char service_control_dat[] =
     "ServiceControl\tName\tEvent\tArguments\tWait\tComponent_\n"
     "s72\tl255\ti2\tL255\tI2\ts72\n"
     "ServiceControl\tServiceControl\n"
-    "ServiceControl\tTestService\t8\t\t0\tservice_comp";
+    "ServiceControl\tTestService3\t8\t\t0\tservice_comp\n"
+    "ServiceControl2\tTestService3\t128\t\t0\tservice_comp2";
 
 static const char sss_service_control_dat[] =
     "ServiceControl\tName\tEvent\tArguments\tWait\tComponent_\n"
@@ -254,11 +261,13 @@ static const char sds_install_exec_seq_dat[] =
     "CostFinalize\t\t1000\n"
     "InstallValidate\t\t1400\n"
     "InstallInitialize\t\t1500\n"
-    "DeleteServices\tInstalled\t5000\n"
+    "StopServices\t\t5000\n"
+    "DeleteServices\t\t5050\n"
     "MoveFiles\t\t5100\n"
     "InstallFiles\t\t5200\n"
     "DuplicateFiles\t\t5300\n"
-    "InstallServices\tNOT Installed\t5400\n"
+    "InstallServices\t\t5400\n"
+    "StartServices\t\t5450\n"
     "RegisterProduct\t\t5500\n"
     "PublishFeatures\t\t5600\n"
     "PublishProduct\t\t5700\n"
@@ -2181,6 +2190,7 @@ static void create_test_files(void)
 
     create_file("msitest\\filename", 100);
     create_file("msitest\\service.exe", 100);
+    create_file("msitest\\service2.exe", 100);
 
     DeleteFileA("four.txt");
     DeleteFileA("five.txt");
@@ -2208,6 +2218,7 @@ static void delete_test_files(void)
     DeleteFileA("msitest\\first\\two.txt");
     DeleteFileA("msitest\\one.txt");
     DeleteFileA("msitest\\service.exe");
+    DeleteFileA("msitest\\service2.exe");
     DeleteFileA("msitest\\filename");
     RemoveDirectoryA("msitest\\second");
     RemoveDirectoryA("msitest\\first");
@@ -4706,6 +4717,7 @@ static void test_envvar(void)
     delete_pf("msitest\\filename", TRUE);
     delete_pf("msitest\\one.txt", TRUE);
     delete_pf("msitest\\service.exe", TRUE);
+    delete_pf("msitest\\service2.exe", TRUE);
     delete_pf("msitest", FALSE);
 
 error:
@@ -4830,6 +4842,7 @@ static void test_start_services(void)
     ok(delete_pf("msitest\\filename", TRUE), "File not installed\n");
     ok(delete_pf("msitest\\one.txt", TRUE), "File not installed\n");
     ok(delete_pf("msitest\\service.exe", TRUE), "File not installed\n");
+    ok(delete_pf("msitest\\service2.exe", TRUE), "File not installed\n");
     ok(delete_pf("msitest", FALSE), "Directory not created\n");
 
     delete_test_files();
@@ -4853,12 +4866,26 @@ static void test_start_services(void)
 static void test_delete_services(void)
 {
     UINT r;
+    SC_HANDLE manager, service;
+    DWORD error;
 
     if (is_process_limited())
     {
         skip("process is limited\n");
         return;
     }
+
+    manager = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
+    ok(manager != NULL, "can't open service manager %u\n", GetLastError());
+    if (!manager) return;
+
+    service = CreateServiceA(manager, "TestService3", "TestService3",
+        SERVICE_ALL_ACCESS, SERVICE_WIN32_OWN_PROCESS, SERVICE_DEMAND_START,
+        SERVICE_ERROR_NORMAL, "C:\\doesnt_exist.exe", NULL, NULL, NULL, NULL, NULL);
+    ok(service != NULL, "can't create service %u\n", GetLastError());
+    CloseServiceHandle(service);
+    CloseServiceHandle(manager);
+    if (!service) goto error;
 
     create_test_files();
     create_database(msifile, sds_tables, sizeof(sds_tables) / sizeof(msi_table));
@@ -4872,6 +4899,16 @@ static void test_delete_services(void)
         goto error;
     }
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
+
+    manager = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
+    ok(manager != NULL, "can't open service manager\n");
+    if (!manager) goto error;
+
+    service = OpenServiceA(manager, "TestService3", GENERIC_ALL);
+    error = GetLastError();
+    ok(service == NULL, "TestService3 not deleted\n");
+    ok(error == ERROR_SERVICE_DOES_NOT_EXIST, "wrong error %u\n", error);
+    CloseServiceHandle(manager);
 
     r = MsiInstallProductA(msifile, "REMOVE=ALL");
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
@@ -4887,6 +4924,7 @@ static void test_delete_services(void)
     ok(delete_pf("msitest\\filename", TRUE), "File not installed\n");
     ok(delete_pf("msitest\\one.txt", TRUE), "File not installed\n");
     ok(delete_pf("msitest\\service.exe", TRUE), "File not installed\n");
+    ok(delete_pf("msitest\\service2.exe", TRUE), "File not installed\n");
     ok(delete_pf("msitest", FALSE), "Directory not created\n");
 
 error:
@@ -4928,6 +4966,7 @@ static void test_self_registration(void)
     ok(delete_pf("msitest\\filename", TRUE), "File not installed\n");
     ok(delete_pf("msitest\\one.txt", TRUE), "File not installed\n");
     ok(delete_pf("msitest\\service.exe", TRUE), "File not installed\n");
+    ok(delete_pf("msitest\\service2.exe", TRUE), "File not installed\n");
     ok(delete_pf("msitest", FALSE), "Directory not created\n");
 
 error:
@@ -5034,6 +5073,7 @@ static void test_validate_product_id(void)
     ok(delete_pf("msitest\\filename", TRUE), "File not installed\n");
     ok(delete_pf("msitest\\one.txt", TRUE), "File not installed\n");
     ok(delete_pf("msitest\\service.exe", TRUE), "File not installed\n");
+    ok(delete_pf("msitest\\service2.exe", TRUE), "File not installed\n");
     ok(delete_pf("msitest", FALSE), "Directory not created\n");
 
 error:

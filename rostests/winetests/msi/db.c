@@ -923,6 +923,30 @@ static void test_viewmodify(void)
     r = MsiViewModify(hview, MSIMODIFY_INSERT_TEMPORARY, hrec );
     ok(r == ERROR_FUNCTION_FAILED, "MsiViewModify failed\n");
 
+    /* try to merge the same record */
+    r = MsiViewExecute(hview, 0);
+    ok(r == ERROR_SUCCESS, "MsiViewExecute failed\n");
+    r = MsiViewModify(hview, MSIMODIFY_MERGE, hrec );
+    ok(r == ERROR_SUCCESS, "MsiViewModify failed\n");
+
+    r = MsiCloseHandle(hrec);
+    ok(r == ERROR_SUCCESS, "failed to close record\n");
+
+    /* try merging a new record */
+    hrec = MsiCreateRecord(3);
+
+    r = MsiRecordSetInteger(hrec, 1, 10);
+    ok(r == ERROR_SUCCESS, "failed to set integer\n");
+    r = MsiRecordSetString(hrec, 2, "pepe");
+    ok(r == ERROR_SUCCESS, "failed to set string\n");
+    r = MsiRecordSetString(hrec, 3, "7654321");
+    ok(r == ERROR_SUCCESS, "failed to set string\n");
+
+    r = MsiViewModify(hview, MSIMODIFY_MERGE, hrec );
+    ok(r == ERROR_SUCCESS, "MsiViewModify failed\n");
+    r = MsiViewExecute(hview, 0);
+    ok(r == ERROR_SUCCESS, "MsiViewExecute failed\n");
+
     r = MsiCloseHandle(hrec);
     ok(r == ERROR_SUCCESS, "failed to close record\n");
 
