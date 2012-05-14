@@ -28,7 +28,7 @@ GetExpected(
         return FALSE;
     }
 
-    if (fuUsage != 0)
+    if (fuUsage != DIB_RGB_COLORS)
     {
         if (hdc == (HDC)-1)
         {
@@ -76,22 +76,19 @@ GetExpected(
         return TRUE;
     }
 
-    if (lpbmih && (lpbmih != (PVOID)0xc0000000) && (lpbmih->biSize != 0))
-    {
-        if (hdc == (HDC)-1)
-        {
-            *pdwError = ERROR_INVALID_PARAMETER;
-            return FALSE;
-        }
-    }
-
-
     if ((lpbmih == NULL) ||
         (lpbmih == (PVOID)0xC0000000) ||
         (lpbmih->biSize == 0))
     {
         return FALSE;
     }
+
+    if (hdc == (HDC)-1)
+    {
+        *pdwError = ERROR_INVALID_PARAMETER;
+        return FALSE;
+    }
+
 
     if (lpbmi == (PVOID)0xc0000000) return FALSE;
 
