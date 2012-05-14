@@ -7,7 +7,6 @@ add_definitions(-D__WINESRC__ -DMSIRUNMODE=MSIRUNMODE_T)
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
-set_rc_compiler()
 spec2def(msi.dll msi.spec ADD_IMPORTLIB)
 
 generate_idl_iids(msiserver.idl)
@@ -98,5 +97,3 @@ add_pch(msi msipriv.h)
 add_cd_file(TARGET msi DESTINATION reactos/system32 FOR all)
 
 endif(NOT MSVC)
-
-

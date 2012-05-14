@@ -338,7 +338,8 @@ enum platform
 {
     PLATFORM_INTEL,
     PLATFORM_INTEL64,
-    PLATFORM_X64
+    PLATFORM_X64,
+    PLATFORM_ARM
 };
 
 enum clr_version
@@ -388,6 +389,7 @@ typedef struct tagMSIPACKAGE
     LPWSTR localfile;
     BOOL delete_on_close;
 
+    INSTALLUILEVEL ui_level;
     UINT CurrentInstallState;
     msi_dialog *dialog;
     LPWSTR next_dialog;
@@ -405,7 +407,8 @@ typedef struct tagMSIPACKAGE
     unsigned char scheduled_action_running : 1;
     unsigned char commit_action_running : 1;
     unsigned char rollback_action_running : 1;
-    unsigned char need_reboot : 1;
+    unsigned char need_reboot_at_end : 1;
+    unsigned char need_reboot_now : 1;
     unsigned char need_rollback : 1;
 } MSIPACKAGE;
 
@@ -998,7 +1001,7 @@ extern UINT msi_get_property( MSIDATABASE *, LPCWSTR, LPWSTR, LPDWORD ) DECLSPEC
 extern int msi_get_property_int( MSIDATABASE *package, LPCWSTR prop, int def ) DECLSPEC_HIDDEN;
 extern WCHAR *msi_resolve_source_folder(MSIPACKAGE *package, const WCHAR *name, MSIFOLDER **folder) DECLSPEC_HIDDEN;
 extern void msi_resolve_target_folder(MSIPACKAGE *package, const WCHAR *name, BOOL load_prop) DECLSPEC_HIDDEN;
-extern void msi_clean_path( WCHAR *p ) DECLSPEC_HIDDEN;
+extern WCHAR *msi_normalize_path(const WCHAR *) DECLSPEC_HIDDEN;
 extern WCHAR *msi_resolve_file_source(MSIPACKAGE *package, MSIFILE *file) DECLSPEC_HIDDEN;
 extern const WCHAR *msi_get_target_folder(MSIPACKAGE *package, const WCHAR *name) DECLSPEC_HIDDEN;
 extern void msi_reset_folders( MSIPACKAGE *package, BOOL source ) DECLSPEC_HIDDEN;
@@ -1024,6 +1027,7 @@ extern UINT msi_create_empty_local_file(LPWSTR path, LPCWSTR suffix) DECLSPEC_HI
 extern UINT msi_set_sourcedir_props(MSIPACKAGE *package, BOOL replace) DECLSPEC_HIDDEN;
 extern MSIASSEMBLY *msi_load_assembly(MSIPACKAGE *, MSICOMPONENT *) DECLSPEC_HIDDEN;
 extern UINT msi_install_assembly(MSIPACKAGE *, MSICOMPONENT *) DECLSPEC_HIDDEN;
+extern UINT msi_uninstall_assembly(MSIPACKAGE *, MSICOMPONENT *) DECLSPEC_HIDDEN;
 extern BOOL msi_init_assembly_caches(MSIPACKAGE *) DECLSPEC_HIDDEN;
 extern void msi_destroy_assembly_caches(MSIPACKAGE *) DECLSPEC_HIDDEN;
 extern WCHAR *msi_font_version_from_file(const WCHAR *) DECLSPEC_HIDDEN;
@@ -1077,6 +1081,7 @@ static const WCHAR szSOURCEDIR[] = {'S','O','U','R','C','E','D','I','R',0};
 static const WCHAR szRootDrive[] = {'R','O','O','T','D','R','I','V','E',0};
 static const WCHAR szTargetDir[] = {'T','A','R','G','E','T','D','I','R',0};
 static const WCHAR szLocalSid[] = {'S','-','1','-','5','-','1','8',0};
+static const WCHAR szAllSid[] = {'S','-','1','-','1','-','0',0};
 static const WCHAR szEmpty[] = {0};
 static const WCHAR szAll[] = {'A','L','L',0};
 static const WCHAR szOne[] = {'1',0};
@@ -1147,6 +1152,7 @@ static const WCHAR szIntel[] = {'I','n','t','e','l',0};
 static const WCHAR szIntel64[] = {'I','n','t','e','l','6','4',0};
 static const WCHAR szX64[] = {'x','6','4',0};
 static const WCHAR szAMD64[] = {'A','M','D','6','4',0};
+static const WCHAR szARM[] = {'A','r','m',0};
 static const WCHAR szWow6432NodeCLSID[] = {'W','o','w','6','4','3','2','N','o','d','e','\\','C','L','S','I','D',0};
 static const WCHAR szWow6432Node[] = {'W','o','w','6','4','3','2','N','o','d','e',0};
 static const WCHAR szStreams[] = {'_','S','t','r','e','a','m','s',0};
@@ -1167,6 +1173,7 @@ static const WCHAR szAppDataFolder[] = {'A','p','p','D','a','t','a','F','o','l',
 static const WCHAR szRollbackDisabled[] = {'R','o','l','l','b','a','c','k','D','i','s','a','b','l','e','d',0};
 static const WCHAR szName[] = {'N','a','m','e',0};
 static const WCHAR szData[] = {'D','a','t','a',0};
+static const WCHAR szLangResource[] = {'\\','V','a','r','F','i','l','e','I','n','f','o','\\','T','r','a','n','s','l','a','t','i','o','n',0};
 
 /* memory allocation macro functions */
 static void *msi_alloc( size_t len ) __WINE_ALLOC_SIZE(1);

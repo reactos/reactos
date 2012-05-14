@@ -453,6 +453,12 @@ UINT WINAPI MsiEnumComponentsA(DWORD, LPSTR);
 UINT WINAPI MsiEnumComponentsW(DWORD, LPWSTR);
 #define     MsiEnumComponents WINELIB_NAME_AW(MsiEnumComponents)
 
+UINT WINAPI MsiEnumComponentsExA(LPCSTR, DWORD, DWORD, CHAR[39],
+                                 MSIINSTALLCONTEXT *, LPSTR, LPDWORD);
+UINT WINAPI MsiEnumComponentsExW(LPCWSTR, DWORD, DWORD, WCHAR[39],
+                                 MSIINSTALLCONTEXT *, LPWSTR, LPDWORD);
+#define     MsiEnumComponentsEx WINELIB_NAME_AW(MsiEnumComponentsEx)
+
 UINT WINAPI MsiEnumClientsA(LPCSTR, DWORD, LPSTR);
 UINT WINAPI MsiEnumClientsW(LPCWSTR, DWORD, LPWSTR);
 #define     MsiEnumClients WINELIB_NAME_AW(MsiEnumClients)

@@ -222,7 +222,6 @@ static int parse_prop( const WCHAR *str, WCHAR *value, int *quotes )
             switch (*p)
             {
             case ' ':
-                if (!count) goto done;
                 in_quotes = 1;
                 ignore = 1;
                 len++;
@@ -234,8 +233,7 @@ static int parse_prop( const WCHAR *str, WCHAR *value, int *quotes )
                 break;
             default:
                 state = state_token;
-                if (!count) in_quotes = 0;
-                else in_quotes = 1;
+                in_quotes = 1;
                 len++;
                 break;
             }
@@ -482,8 +480,7 @@ UINT msi_set_sourcedir_props(MSIPACKAGE *package, BOOL replace)
 
 static BOOL needs_ui_sequence(MSIPACKAGE *package)
 {
-    INT level = msi_get_property_int(package->db, szUILevel, 0);
-    return (level & INSTALLUILEVEL_MASK) >= INSTALLUILEVEL_REDUCED;
+    return (package->ui_level & INSTALLUILEVEL_MASK) >= INSTALLUILEVEL_REDUCED;
 }
 
 UINT msi_set_context(MSIPACKAGE *package)
@@ -539,6 +536,12 @@ static UINT ITERATE_Actions(MSIRECORD *row, LPVOID param)
     if (rc != ERROR_SUCCESS)
         ERR("Execution halted, action %s returned %i\n", debugstr_w(action), rc);
 
+    if (package->need_reboot_now)
+    {
+        TRACE("action %s asked for immediate reboot, suspending installation\n",
+              debugstr_w(action));
+        rc = ACTION_ForceReboot( package );
+    }
     return rc;
 }
 
@@ -881,6 +884,20 @@ static UINT ACTION_CreateFolders(MSIPACKAGE *package)
     return rc;
 }
 
+static void remove_persistent_folder( MSIFOLDER *folder )
+{
+    FolderList *fl;
+
+    LIST_FOR_EACH_ENTRY( fl, &folder->children, FolderList, entry )
+    {
+        remove_persistent_folder( fl->folder );
+    }
+    if (folder->persistent && folder->State != FOLDER_STATE_REMOVED)
+    {
+        if (RemoveDirectoryW( folder->ResolvedTarget )) folder->State = FOLDER_STATE_REMOVED;
+    }
+}
+
 static UINT ITERATE_RemoveFolders( MSIRECORD *row, LPVOID param )
 {
     MSIPACKAGE *package = param;
@@ -924,9 +941,8 @@ static UINT ITERATE_RemoveFolders( MSIRECORD *row, LPVOID param )
     msi_ui_actiondata( package, szRemoveFolders, uirow );
     msiobj_release( &uirow->hdr );
 
-    RemoveDirectoryW( full_path );
     folder = msi_get_loaded_folder( package, dir );
-    folder->State = FOLDER_STATE_REMOVED;
+    remove_persistent_folder( folder );
     return ERROR_SUCCESS;
 }
 
@@ -1617,16 +1633,19 @@ static void ACTION_GetComponentInstallStates(MSIPACKAGE *package)
         r = MsiQueryComponentStateW( package->ProductCode, NULL,
                                      MSIINSTALLCONTEXT_USERMANAGED, comp->ComponentId,
                                      &comp->Installed );
-        if (r != ERROR_SUCCESS)
-            r = MsiQueryComponentStateW( package->ProductCode, NULL,
-                                         MSIINSTALLCONTEXT_USERUNMANAGED, comp->ComponentId,
-                                         &comp->Installed );
-        if (r != ERROR_SUCCESS)
-            r = MsiQueryComponentStateW( package->ProductCode, NULL,
-                                         MSIINSTALLCONTEXT_MACHINE, comp->ComponentId,
-                                         &comp->Installed );
-        if (r != ERROR_SUCCESS)
-            comp->Installed = INSTALLSTATE_ABSENT;
+        if (r == ERROR_SUCCESS) continue;
+
+        r = MsiQueryComponentStateW( package->ProductCode, NULL,
+                                     MSIINSTALLCONTEXT_USERUNMANAGED, comp->ComponentId,
+                                     &comp->Installed );
+        if (r == ERROR_SUCCESS) continue;
+
+        r = MsiQueryComponentStateW( package->ProductCode, NULL,
+                                     MSIINSTALLCONTEXT_MACHINE, comp->ComponentId,
+                                     &comp->Installed );
+        if (r == ERROR_SUCCESS) continue;
+
+        comp->Installed = INSTALLSTATE_ABSENT;
     }
 }
 
@@ -1795,6 +1814,9 @@ UINT MSI_SetFeatureStates(MSIPACKAGE *package)
                 }
                 else if (fl->feature->Attributes & msidbFeatureAttributesFollowParent)
                 {
+                    TRACE("feature %s (level %d request %d) follows parent %s (level %d request %d)\n",
+                          debugstr_w(fl->feature->Feature), fl->feature->Level, fl->feature->ActionRequest,
+                          debugstr_w(feature->Feature), feature->Level, feature->ActionRequest);
                     fl->feature->Action = feature->Action;
                     fl->feature->ActionRequest = feature->ActionRequest;
                 }
@@ -1825,12 +1847,14 @@ UINT MSI_SetFeatureStates(MSIPACKAGE *package)
         {
             FeatureList *fl;
 
-            if (!is_feature_selected( feature, level )) continue;
-
             LIST_FOR_EACH_ENTRY( fl, &feature->Children, FeatureList, entry )
             {
-                if (fl->feature->Attributes & msidbFeatureAttributesFollowParent)
+                if (fl->feature->Attributes & msidbFeatureAttributesFollowParent &&
+                    (!(feature->Attributes & msidbFeatureAttributesFavorAdvertise)))
                 {
+                    TRACE("feature %s (level %d request %d) follows parent %s (level %d request %d)\n",
+                          debugstr_w(fl->feature->Feature), fl->feature->Level, fl->feature->ActionRequest,
+                          debugstr_w(feature->Feature), feature->Level, feature->ActionRequest);
                     fl->feature->Action = feature->Action;
                     fl->feature->ActionRequest = feature->ActionRequest;
                 }
@@ -1843,7 +1867,7 @@ UINT MSI_SetFeatureStates(MSIPACKAGE *package)
     {
         ComponentList *cl;
 
-        TRACE("Examining Feature %s (Level %d Installed %d Request %d Action %d)\n",
+        TRACE("examining feature %s (level %d installed %d request %d action %d)\n",
               debugstr_w(feature->Feature), feature->Level, feature->Installed,
               feature->ActionRequest, feature->Action);
 
@@ -1958,7 +1982,7 @@ UINT MSI_SetFeatureStates(MSIPACKAGE *package)
             component->ActionRequest = INSTALLSTATE_UNKNOWN;
         }
 
-        TRACE("Result: Component %s (Installed %d Request %d Action %d)\n",
+        TRACE("component %s (installed %d request %d action %d)\n",
               debugstr_w(component->Component), component->Installed, component->ActionRequest, component->Action);
     }
 
@@ -2214,11 +2238,15 @@ static UINT calculate_file_cost( MSIPACKAGE *package )
     return ERROR_SUCCESS;
 }
 
-void msi_clean_path( WCHAR *p )
+WCHAR *msi_normalize_path( const WCHAR *in )
 {
-    WCHAR *q = p;
-    int n, len = 0;
+    const WCHAR *p = in;
+    WCHAR *q, *ret;
+    int n, len = strlenW( in ) + 2;
 
+    if (!(q = ret = msi_alloc( len * sizeof(WCHAR) ))) return NULL;
+
+    len = 0;
     while (1)
     {
         /* copy until the end of the string or a space */
@@ -2245,32 +2273,20 @@ void msi_clean_path( WCHAR *p )
         else  /* copy n spaces */
             while (n && (*q++ = *p++)) n--;
     }
-}
-
-static WCHAR *get_target_dir_property( MSIDATABASE *db )
-{
-    int len;
-    WCHAR *path, *target_dir = msi_dup_property( db, szTargetDir );
-
-    if (!target_dir) return NULL;
-
-    len = strlenW( target_dir );
-    if (target_dir[len - 1] == '\\') return target_dir;
-    if ((path = msi_alloc( (len + 2) * sizeof(WCHAR) )))
+    while (q - ret > 0 && q[-1] == ' ') q--;
+    if (q - ret > 0 && q[-1] != '\\')
     {
-        strcpyW( path, target_dir );
-        path[len] = '\\';
-        path[len + 1] = 0;
+        q[0] = '\\';
+        q[1] = 0;
     }
-    msi_free( target_dir );
-    return path;
+    return ret;
 }
 
 void msi_resolve_target_folder( MSIPACKAGE *package, const WCHAR *name, BOOL load_prop )
 {
     FolderList *fl;
     MSIFOLDER *folder, *parent, *child;
-    WCHAR *path;
+    WCHAR *path, *normalized_path;
 
     TRACE("resolving %s\n", debugstr_w(name));
 
@@ -2278,7 +2294,7 @@ void msi_resolve_target_folder( MSIPACKAGE *package, const WCHAR *name, BOOL loa
 
     if (!strcmpW( folder->Directory, szTargetDir )) /* special resolving for target root dir */
     {
-        if (!load_prop || !(path = get_target_dir_property( package->db )))
+        if (!load_prop || !(path = msi_dup_property( package->db, szTargetDir )))
         {
             path = msi_dup_property( package->db, szRootDrive );
         }
@@ -2293,16 +2309,17 @@ void msi_resolve_target_folder( MSIPACKAGE *package, const WCHAR *name, BOOL loa
         else
             path = msi_build_directory_name( 2, folder->TargetDefault, NULL );
     }
-    msi_clean_path( path );
-    if (folder->ResolvedTarget && !strcmpiW( path, folder->ResolvedTarget ))
+    normalized_path = msi_normalize_path( path );
+    msi_free( path );
+    if (folder->ResolvedTarget && !strcmpiW( normalized_path, folder->ResolvedTarget ))
     {
         TRACE("%s already resolved to %s\n", debugstr_w(name), debugstr_w(folder->ResolvedTarget));
-        msi_free( path );
+        msi_free( normalized_path );
         return;
     }
-    msi_set_property( package->db, folder->Directory, path );
+    msi_set_property( package->db, folder->Directory, normalized_path );
     msi_free( folder->ResolvedTarget );
-    folder->ResolvedTarget = path;
+    folder->ResolvedTarget = normalized_path;
 
     LIST_FOR_EACH_ENTRY( fl, &folder->children, FolderList, entry )
     {
@@ -2953,7 +2970,7 @@ static UINT ITERATE_LaunchConditions(MSIRECORD *row, LPVOID param)
     r = MSI_EvaluateConditionW(package,cond);
     if (r == MSICONDITION_FALSE)
     {
-        if ((gUILevel & INSTALLUILEVEL_MASK) != INSTALLUILEVEL_NONE)
+        if ((package->ui_level & INSTALLUILEVEL_MASK) != INSTALLUILEVEL_NONE)
         {
             LPWSTR deformated;
             message = MSI_RecordGetString(row,2);
@@ -3608,25 +3625,9 @@ static UINT ITERATE_CreateShortcuts(MSIRECORD *row, LPVOID param)
     target = MSI_RecordGetString(row, 5);
     if (strchrW(target, '['))
     {
-        int len;
-        WCHAR *format_string, *p;
-
-        if (!(p = strchrW( target, ']' ))) goto err;
-        len = p - target + 1;
-        format_string = msi_alloc( (len + 1) * sizeof(WCHAR) );
-        memcpy( format_string, target, len * sizeof(WCHAR) );
-        format_string[len] = 0;
-        deformat_string( package, format_string, &deformated );
-        msi_free( format_string );
-
-        path = msi_alloc( (strlenW( deformated ) + strlenW( p + 1 ) + 2) * sizeof(WCHAR) );
-        strcpyW( path, deformated );
-        PathAddBackslashW( path );
-        strcatW( path, p + 1 );
+        deformat_string( package, target, &path );
         TRACE("target path is %s\n", debugstr_w(path));
-
         IShellLinkW_SetPath( sl, path );
-        msi_free( deformated );
         msi_free( path );
     }
     else
@@ -4479,7 +4480,7 @@ static UINT ITERATE_SelfRegModules(MSIRECORD *row, LPVOID param)
     MSIFILE *file;
     MSIRECORD *uirow;
 
-    filename = MSI_RecordGetString(row,1);
+    filename = MSI_RecordGetString( row, 1 );
     file = msi_get_loaded_file( package, filename );
     if (!file)
     {
@@ -4497,7 +4498,7 @@ static UINT ITERATE_SelfRegModules(MSIRECORD *row, LPVOID param)
     register_dll( file->TargetPath, FALSE );
 
     uirow = MSI_CreateRecord( 2 );
-    MSI_RecordSetStringW( uirow, 1, filename );
+    MSI_RecordSetStringW( uirow, 1, file->File );
     MSI_RecordSetStringW( uirow, 2, file->Component->Directory );
     msi_ui_actiondata( package, szSelfRegModules, uirow );
     msiobj_release( &uirow->hdr );
@@ -4547,7 +4548,7 @@ static UINT ITERATE_SelfUnregModules( MSIRECORD *row, LPVOID param )
     register_dll( file->TargetPath, TRUE );
 
     uirow = MSI_CreateRecord( 2 );
-    MSI_RecordSetStringW( uirow, 1, filename );
+    MSI_RecordSetStringW( uirow, 1, file->File );
     MSI_RecordSetStringW( uirow, 2, file->Component->Directory );
     msi_ui_actiondata( package, szSelfUnregModules, uirow );
     msiobj_release( &uirow->hdr );
@@ -5933,28 +5934,25 @@ static UINT ITERATE_DeleteService( MSIRECORD *rec, LPVOID param )
     MSIPACKAGE *package = param;
     MSICOMPONENT *comp;
     MSIRECORD *uirow;
-    LPCWSTR component;
     LPWSTR name = NULL, display_name = NULL;
     DWORD event, len;
     SC_HANDLE scm = NULL, service = NULL;
 
-    event = MSI_RecordGetInteger( rec, 3 );
-    if (!(event & msidbServiceControlEventDelete))
-        return ERROR_SUCCESS;
-
-    component = MSI_RecordGetString(rec, 6);
-    comp = msi_get_loaded_component(package, component);
+    comp = msi_get_loaded_component( package, MSI_RecordGetString(rec, 6) );
     if (!comp)
         return ERROR_SUCCESS;
 
+    event = MSI_RecordGetInteger( rec, 3 );
+    deformat_string( package, MSI_RecordGetString(rec, 2), &name );
+
     comp->Action = msi_get_component_action( package, comp );
-    if (comp->Action != INSTALLSTATE_ABSENT)
+    if (!(comp->Action == INSTALLSTATE_LOCAL && (event & msidbServiceControlEventDelete)) &&
+        !(comp->Action == INSTALLSTATE_ABSENT && (event & msidbServiceControlEventUninstallDelete)))
     {
-        TRACE("component not scheduled for removal %s\n", debugstr_w(component));
+        TRACE("service %s not scheduled for removal\n", debugstr_w(name));
+        msi_free( name );
         return ERROR_SUCCESS;
     }
-
-    deformat_string( package, MSI_RecordGetString(rec, 2), &name );
     stop_service( name );
 
     scm = OpenSCManagerW( NULL, NULL, SC_MANAGER_ALL_ACCESS );
@@ -6084,6 +6082,11 @@ static UINT ITERATE_InstallODBCDriver( MSIRECORD *rec, LPVOID param )
     ptr += lstrlenW(ptr) + 1;
     *ptr = '\0';
 
+    if (!driver_file->TargetPath)
+    {
+        const WCHAR *dir = msi_get_target_folder( package, driver_file->Component->Directory );
+        driver_file->TargetPath = msi_build_directory_name( 2, dir, driver_file->FileName );
+    }
     driver_path = strdupW(driver_file->TargetPath);
     ptr = strrchrW(driver_path, '\\');
     if (ptr) *ptr = '\0';
@@ -6907,7 +6910,7 @@ static UINT ACTION_ValidateProductID( MSIPACKAGE *package )
 static UINT ACTION_ScheduleReboot( MSIPACKAGE *package )
 {
     TRACE("\n");
-    package->need_reboot = 1;
+    package->need_reboot_at_end = 1;
     return ERROR_SUCCESS;
 }
 
@@ -7532,7 +7535,7 @@ UINT MSI_InstallPackage( MSIPACKAGE *package, LPCWSTR szPackagePath,
     }
     msi_free( reinstall );
 
-    if (rc == ERROR_SUCCESS && package->need_reboot)
+    if (rc == ERROR_SUCCESS && package->need_reboot_at_end)
         return ERROR_SUCCESS_REBOOT_REQUIRED;
 
     return rc;

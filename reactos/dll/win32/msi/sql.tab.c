@@ -156,7 +156,7 @@ static struct expr * EXPR_wildcard( void *info );
 
 
 /* Line 189 of yacc.c  */
-#line 153 "sql.tab.c"
+#line 161 "sql.tab.c"
 
 /* Enabling traces.  */
 #ifndef YYDEBUG
@@ -267,7 +267,7 @@ typedef union YYSTYPE
 
 
 /* Line 214 of yacc.c  */
-#line 264 "sql.tab.c"
+#line 272 "sql.tab.c"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */

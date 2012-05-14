@@ -884,10 +884,9 @@ static VOID set_installer_properties(MSIPACKAGE *package)
 
     GetNativeSystemInfo( &sys_info );
     sprintfW( bufstr, szIntFormat, sys_info.wProcessorLevel );
+    msi_set_property( package->db, szIntel, bufstr );
     if (sys_info.u.s.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_INTEL)
     {
-        msi_set_property( package->db, szIntel, bufstr );
-
         GetSystemDirectoryW( pth, MAX_PATH );
         PathAddBackslashW( pth );
         msi_set_property( package->db, szSystemFolder, pth );
@@ -1154,9 +1153,9 @@ void msi_adjust_privilege_properties( MSIPACKAGE *package )
 
 MSIPACKAGE *MSI_CreatePackage( MSIDATABASE *db, LPCWSTR base_url )
 {
-    static const WCHAR szpi[] = {'%','i',0};
+    static const WCHAR fmtW[] = {'%','u',0};
     MSIPACKAGE *package;
-    WCHAR uilevel[10];
+    WCHAR uilevel[11];
     UINT r;
 
     TRACE("%p\n", db);
@@ -1181,7 +1180,8 @@ MSIPACKAGE *MSI_CreatePackage( MSIDATABASE *db, LPCWSTR base_url )
         set_installed_prop( package );
         set_installer_properties( package );
 
-        sprintfW(uilevel,szpi,gUILevel);
+        package->ui_level = gUILevel;
+        sprintfW( uilevel, fmtW, gUILevel & INSTALLUILEVEL_MASK );
         msi_set_property(package->db, szUILevel, uilevel);
 
         r = msi_load_summary_properties( package );
@@ -1297,6 +1297,8 @@ static UINT msi_parse_summary( MSISUMMARYINFO *si, MSIPACKAGE *package )
         package->platform = PLATFORM_INTEL64;
     else if (!strcmpW( template, szX64 ) || !strcmpW( template, szAMD64 ))
         package->platform = PLATFORM_X64;
+    else if (!strcmpW( template, szARM ))
+        package->platform = PLATFORM_ARM;
     else
     {
         WARN("unknown platform %s\n", debugstr_w(template));
@@ -1341,9 +1343,11 @@ static UINT validate_package( MSIPACKAGE *package )
     UINT i;
 
     if (package->platform == PLATFORM_INTEL64)
-    {
         return ERROR_INSTALL_PLATFORM_UNSUPPORTED;
-    }
+#ifndef __arm__
+    if (package->platform == PLATFORM_ARM)
+        return ERROR_INSTALL_PLATFORM_UNSUPPORTED;
+#endif
     IsWow64Process( GetCurrentProcess(), &is_wow64 );
     if (package->platform == PLATFORM_X64)
     {
@@ -1451,6 +1455,9 @@ static UINT get_registered_local_package( const WCHAR *product, const WCHAR *pac
     if (!strcmpiW( package, unsquashed ))
     {
         WCHAR *filename = msi_reg_get_val_str( props_key, INSTALLPROPERTY_LOCALPACKAGEW );
+        if (!filename)
+            goto done;
+
         strcpyW( localfile, filename );
         msi_free( filename );
         r = ERROR_SUCCESS;
@@ -1749,13 +1756,11 @@ MSIHANDLE WINAPI MsiGetActiveDatabase(MSIHANDLE hInstall)
 
 INT MSI_ProcessMessage( MSIPACKAGE *package, INSTALLMESSAGE eMessageType, MSIRECORD *record )
 {
-    static const WCHAR szActionData[] =
-        {'A','c','t','i','o','n','D','a','t','a',0};
-    static const WCHAR szSetProgress[] =
-        {'S','e','t','P','r','o','g','r','e','s','s',0};
-    static const WCHAR szActionText[] =
-        {'A','c','t','i','o','n','T','e','x','t',0};
-    LPWSTR message;
+    static const WCHAR szActionData[] = {'A','c','t','i','o','n','D','a','t','a',0};
+    static const WCHAR szSetProgress[] = {'S','e','t','P','r','o','g','r','e','s','s',0};
+    static const WCHAR szActionText[] = {'A','c','t','i','o','n','T','e','x','t',0};
+    MSIRECORD *uirow;
+    LPWSTR deformated, message;
     DWORD i, len, total_len, log_type = 0;
     INT rc = 0;
     char *msg;
@@ -1894,27 +1899,27 @@ INT MSI_ProcessMessage( MSIPACKAGE *package, INSTALLMESSAGE eMessageType, MSIREC
     switch (eMessageType & 0xff000000)
     {
     case INSTALLMESSAGE_ACTIONDATA:
-        /* FIXME: format record here instead of in ui_actiondata to get the
-         * correct action data for external scripts */
-        ControlEvent_FireSubscribedEvent(package, szActionData, record);
-        break;
-    case INSTALLMESSAGE_ACTIONSTART:
-    {
-        MSIRECORD *uirow;
-        LPWSTR deformated;
-        LPCWSTR action_text = MSI_RecordGetString(record, 2);
-
-        deformat_string(package, action_text, &deformated);
+        deformat_string(package, MSI_RecordGetString(record, 2), &deformated);
         uirow = MSI_CreateRecord(1);
         MSI_RecordSetStringW(uirow, 1, deformated);
-        TRACE("INSTALLMESSAGE_ACTIONSTART: %s\n", debugstr_w(deformated));
+        msi_free(deformated);
+
+        ControlEvent_FireSubscribedEvent(package, szActionData, uirow);
+
+        msiobj_release(&uirow->hdr);
+        break;
+
+    case INSTALLMESSAGE_ACTIONSTART:
+        deformat_string(package, MSI_RecordGetString(record, 2), &deformated);
+        uirow = MSI_CreateRecord(1);
+        MSI_RecordSetStringW(uirow, 1, deformated);
         msi_free(deformated);
 
         ControlEvent_FireSubscribedEvent(package, szActionText, uirow);
 
         msiobj_release(&uirow->hdr);
         break;
-    }
+
     case INSTALLMESSAGE_PROGRESS:
         ControlEvent_FireSubscribedEvent(package, szSetProgress, record);
         break;

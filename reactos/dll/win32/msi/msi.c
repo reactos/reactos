@@ -42,6 +42,9 @@
 #include "wintrust.h"
 #include "softpub.h"
 
+#include "initguid.h"
+#include "msxml2.h"
+
 #include "wine/debug.h"
 #include "wine/unicode.h"
 
@@ -303,7 +306,6 @@ done:
 
     return r;
 }
-
 
 static UINT get_patch_product_codes( LPCWSTR szPatchPackage, WCHAR ***product_codes )
 {
@@ -580,9 +582,59 @@ static UINT MSI_ApplicablePatchW( MSIPACKAGE *package, LPCWSTR patch )
     return r;
 }
 
+/* IXMLDOMDocument should be set to XPath mode already */
+static UINT MSI_ApplicablePatchXML( MSIPACKAGE *package, IXMLDOMDocument *desc )
+{
+    static const WCHAR queryW[] = {'M','s','i','P','a','t','c','h','/',
+                                   'T','a','r','g','e','t','P','r','o','d','u','c','t','/',
+                                   'T','a','r','g','e','t','P','r','o','d','u','c','t','C','o','d','e',0};
+    UINT r = ERROR_FUNCTION_FAILED;
+    IXMLDOMNodeList *list;
+    LPWSTR product_code;
+    IXMLDOMNode *node;
+    HRESULT hr;
+    BSTR s;
+
+    product_code = msi_dup_property( package->db, szProductCode );
+    if (!product_code)
+    {
+        /* FIXME: the property ProductCode should be written into the DB somewhere */
+        ERR("no product code to check\n");
+        return ERROR_SUCCESS;
+    }
+
+    s = SysAllocString(queryW);
+    hr = IXMLDOMDocument_selectNodes( desc, s, &list );
+    SysFreeString(s);
+    if (hr != S_OK)
+        return ERROR_INVALID_PATCH_XML;
+
+    while (IXMLDOMNodeList_nextNode( list, &node ) == S_OK && r != ERROR_SUCCESS)
+    {
+        hr = IXMLDOMNode_get_text( node, &s );
+        IXMLDOMNode_Release( node );
+        if (hr == S_OK)
+        {
+            if (!strcmpW( s, product_code )) r = ERROR_SUCCESS;
+            SysFreeString( s );
+        }
+    }
+    IXMLDOMNodeList_Release( list );
+
+    if (r != ERROR_SUCCESS)
+        TRACE("patch not applicable\n");
+
+    msi_free( product_code );
+    return r;
+}
+
 static UINT determine_patch_sequence( MSIPACKAGE *package, DWORD count, MSIPATCHSEQUENCEINFOW *info )
 {
+    IXMLDOMDocument *desc = NULL;
     DWORD i;
+
+    if (count > 1)
+        FIXME("patch ordering not supported\n");
 
     for (i = 0; i < count; i++)
     {
@@ -590,8 +642,56 @@ static UINT determine_patch_sequence( MSIPACKAGE *package, DWORD count, MSIPATCH
         {
         case MSIPATCH_DATATYPE_PATCHFILE:
         {
-            FIXME("patch ordering not supported\n");
             if (MSI_ApplicablePatchW( package, info[i].szPatchData ) != ERROR_SUCCESS)
+            {
+                info[i].dwOrder = ~0u;
+                info[i].uStatus = ERROR_PATCH_TARGET_NOT_FOUND;
+            }
+            else
+            {
+                info[i].dwOrder = i;
+                info[i].uStatus = ERROR_SUCCESS;
+            }
+            break;
+        }
+        case MSIPATCH_DATATYPE_XMLPATH:
+        case MSIPATCH_DATATYPE_XMLBLOB:
+        {
+            VARIANT_BOOL b;
+            HRESULT hr;
+            BSTR s;
+
+            if (!desc)
+            {
+                hr = CoCreateInstance( &CLSID_DOMDocument30, NULL, CLSCTX_INPROC_SERVER,
+                    &IID_IXMLDOMDocument, (void**)&desc );
+                if (hr != S_OK)
+                {
+                    ERR("failed to create DOMDocument30 instance, 0x%08x\n", hr);
+                    return ERROR_FUNCTION_FAILED;
+                }
+            }
+
+            s = SysAllocString( info[i].szPatchData );
+            if (info[i].ePatchDataType == MSIPATCH_DATATYPE_XMLPATH)
+            {
+                VARIANT src;
+
+                V_VT(&src) = VT_BSTR;
+                V_BSTR(&src) = s;
+                hr = IXMLDOMDocument_load( desc, src, &b );
+            }
+            else
+                hr = IXMLDOMDocument_loadXML( desc, s, &b );
+            SysFreeString( s );
+            if ( hr != S_OK )
+            {
+                ERR("failed to parse patch description\n");
+                IXMLDOMDocument_Release( desc );
+                break;
+            }
+
+            if (MSI_ApplicablePatchXML( package, desc ) != ERROR_SUCCESS)
             {
                 info[i].dwOrder = ~0u;
                 info[i].uStatus = ERROR_PATCH_TARGET_NOT_FOUND;
@@ -605,17 +705,21 @@ static UINT determine_patch_sequence( MSIPACKAGE *package, DWORD count, MSIPATCH
         }
         default:
         {
-            FIXME("patch data type %u not supported\n", info[i].ePatchDataType);
+            FIXME("unknown patch data type %u\n", info[i].ePatchDataType);
             info[i].dwOrder = i;
             info[i].uStatus = ERROR_SUCCESS;
             break;
         }
         }
+
         TRACE("szPatchData: %s\n", debugstr_w(info[i].szPatchData));
         TRACE("ePatchDataType: %u\n", info[i].ePatchDataType);
         TRACE("dwOrder: %u\n", info[i].dwOrder);
         TRACE("uStatus: %u\n", info[i].uStatus);
     }
+
+    if (desc) IXMLDOMDocument_Release( desc );
+
     return ERROR_SUCCESS;
 }
 
@@ -2008,7 +2112,7 @@ UINT WINAPI MsiQueryComponentStateA(LPCSTR szProductCode,
 static BOOL msi_comp_find_prod_key(LPCWSTR prodcode, MSIINSTALLCONTEXT context)
 {
     UINT r;
-    HKEY hkey;
+    HKEY hkey = NULL;
 
     r = MSIREG_OpenProductKey(prodcode, NULL, context, &hkey, FALSE);
     RegCloseKey(hkey);
@@ -2044,7 +2148,7 @@ static BOOL msi_comp_find_package(LPCWSTR prodcode, MSIINSTALLCONTEXT context)
     return (res == ERROR_SUCCESS);
 }
 
-static BOOL msi_comp_find_prodcode(LPWSTR squished_pc,
+static UINT msi_comp_find_prodcode(LPWSTR squished_pc,
                                    MSIINSTALLCONTEXT context,
                                    LPCWSTR comp, LPWSTR val, DWORD *sz)
 {
@@ -2058,14 +2162,14 @@ static BOOL msi_comp_find_prodcode(LPWSTR squished_pc,
         r = MSIREG_OpenUserDataComponentKey(comp, NULL, &hkey, FALSE);
 
     if (r != ERROR_SUCCESS)
-        return FALSE;
+        return r;
 
     res = RegQueryValueExW(hkey, squished_pc, NULL, NULL, (BYTE *)val, sz);
     if (res != ERROR_SUCCESS)
-        return FALSE;
+        return res;
 
     RegCloseKey(hkey);
-    return TRUE;
+    return res;
 }
 
 UINT WINAPI MsiQueryComponentStateW(LPCWSTR szProductCode,
@@ -2073,7 +2177,6 @@ UINT WINAPI MsiQueryComponentStateW(LPCWSTR szProductCode,
                                     LPCWSTR szComponent, INSTALLSTATE *pdwState)
 {
     WCHAR squished_pc[GUID_SIZE];
-    WCHAR val[MAX_PATH];
     BOOL found;
     DWORD sz;
 
@@ -2104,21 +2207,29 @@ UINT WINAPI MsiQueryComponentStateW(LPCWSTR szProductCode,
 
     *pdwState = INSTALLSTATE_UNKNOWN;
 
-    sz = MAX_PATH;
-    if (!msi_comp_find_prodcode(squished_pc, dwContext, szComponent, val, &sz))
+    sz = 0;
+    if (msi_comp_find_prodcode(squished_pc, dwContext, szComponent, NULL, &sz))
         return ERROR_UNKNOWN_COMPONENT;
 
     if (sz == 0)
         *pdwState = INSTALLSTATE_NOTUSED;
     else
     {
+        WCHAR *val;
+        UINT r;
+
+        if (!(val = msi_alloc( sz ))) return ERROR_OUTOFMEMORY;
+        if ((r = msi_comp_find_prodcode(squished_pc, dwContext, szComponent, val, &sz)))
+            return r;
+
         if (lstrlenW(val) > 2 &&
-            val[0] >= '0' && val[0] <= '9' && val[1] >= '0' && val[1] <= '9')
+            val[0] >= '0' && val[0] <= '9' && val[1] >= '0' && val[1] <= '9' && val[2] != ':')
         {
             *pdwState = INSTALLSTATE_SOURCE;
         }
         else
             *pdwState = INSTALLSTATE_LOCAL;
+        msi_free( val );
     }
 
     TRACE("-> %d\n", *pdwState);
@@ -2476,6 +2587,7 @@ HRESULT WINAPI MsiGetFileSignatureInformationW( LPCWSTR path, DWORD flags, PCCER
     data.dwProvFlags         = 0;
     data.dwUIContext         = WTD_UICONTEXT_INSTALL;
     hr = WinVerifyTrustEx( INVALID_HANDLE_VALUE, &generic_verify_v2, &data );
+    *cert = NULL;
     if (FAILED(hr)) goto done;
 
     if (!(signer = WTHelperGetProvSignerFromChain( data.hWVTStateData, 0, FALSE, 0 )))
@@ -3021,11 +3133,7 @@ static UINT get_file_version( const WCHAR *path, WCHAR *verbuf, DWORD *verlen,
                               WCHAR *langbuf, DWORD *langlen )
 {
     static const WCHAR szVersionResource[] = {'\\',0};
-    static const WCHAR szVersionFormat[] = {
-        '%','d','.','%','d','.','%','d','.','%','d',0};
-    static const WCHAR szLangResource[] = {
-        '\\','V','a','r','F','i','l','e','I','n','f','o','\\',
-        'T','r','a','n','s','l','a','t','i','o','n',0};
+    static const WCHAR szVersionFormat[] = {'%','d','.','%','d','.','%','d','.','%','d',0};
     static const WCHAR szLangFormat[] = {'%','d',0};
     UINT ret = ERROR_SUCCESS;
     DWORD len, error;
@@ -3100,18 +3208,18 @@ UINT WINAPI MsiGetFileVersionW( LPCWSTR path, LPWSTR verbuf, LPDWORD verlen,
         return ERROR_INVALID_PARAMETER;
 
     ret = get_file_version( path, verbuf, verlen, langbuf, langlen );
-    if (ret == ERROR_RESOURCE_DATA_NOT_FOUND)
+    if (ret == ERROR_RESOURCE_DATA_NOT_FOUND && verlen)
     {
         int len;
         WCHAR *version = msi_font_version_from_file( path );
         if (!version) return ERROR_FILE_INVALID;
         len = strlenW( version );
-        if (*verlen > len)
+        if (len >= *verlen) ret = ERROR_MORE_DATA;
+        else if (verbuf)
         {
             strcpyW( verbuf, version );
             ret = ERROR_SUCCESS;
         }
-        else ret = ERROR_MORE_DATA;
         *verlen = len;
         msi_free( version );
     }
@@ -3909,24 +4017,34 @@ UINT WINAPI MsiGetFileHashW( LPCWSTR szFilePath, DWORD dwOptions,
     }
     length = GetFileSize( handle, NULL );
 
-    mapping = CreateFileMappingW( handle, NULL, PAGE_READONLY, 0, 0, NULL );
-    if (mapping)
+    if (length)
     {
-        p = MapViewOfFile( mapping, FILE_MAP_READ, 0, 0, length );
-        if (p)
+        mapping = CreateFileMappingW( handle, NULL, PAGE_READONLY, 0, 0, NULL );
+        if (mapping)
         {
-            MD5_CTX ctx;
+            p = MapViewOfFile( mapping, FILE_MAP_READ, 0, 0, length );
+            if (p)
+            {
+                MD5_CTX ctx;
 
-            MD5Init( &ctx );
-            MD5Update( &ctx, p, length );
-            MD5Final( &ctx );
-            UnmapViewOfFile( p );
+                MD5Init( &ctx );
+                MD5Update( &ctx, p, length );
+                MD5Final( &ctx );
+                UnmapViewOfFile( p );
 
-            memcpy( pHash->dwData, ctx.digest, sizeof pHash->dwData );
-            r = ERROR_SUCCESS;
+                memcpy( pHash->dwData, ctx.digest, sizeof pHash->dwData );
+                r = ERROR_SUCCESS;
+            }
+            CloseHandle( mapping );
         }
-        CloseHandle( mapping );
     }
+    else
+    {
+        /* Empty file -> set hash to 0 */
+        memset( pHash->dwData, 0, sizeof pHash->dwData );
+        r = ERROR_SUCCESS;
+    }
+
     CloseHandle( handle );
 
     return r;

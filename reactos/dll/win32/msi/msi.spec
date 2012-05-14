@@ -282,8 +282,8 @@
 286 stdcall MsiEndTransaction(long)
 287 stub MsiJoinTransaction
 288 stub MsiSetOfflineContextW
-289 stub MsiEnumComponentsExA
-290 stub MsiEnumComponentsExW
+289 stdcall MsiEnumComponentsExA(str long long ptr ptr ptr ptr)
+290 stdcall MsiEnumComponentsExW(wstr long long ptr ptr ptr ptr)
 291 stub MsiEnumClientsExA
 292 stub MsiEnumClientsExW
 293 stub MsiGetComponentPathExA

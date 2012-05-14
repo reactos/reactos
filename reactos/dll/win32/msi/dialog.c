@@ -3978,8 +3978,7 @@ UINT msi_spawn_error_dialog( MSIPACKAGE *package, LPWSTR error_dialog, LPWSTR er
         'M','S','I','E','r','r','o','r','D','i','a','l','o','g','R','e','s','u','l','t',0
     };
 
-    if ( (msi_get_property_int( package->db, szUILevel, 0 ) & INSTALLUILEVEL_MASK) == INSTALLUILEVEL_NONE )
-        return ERROR_SUCCESS;
+    if ((package->ui_level & INSTALLUILEVEL_MASK) == INSTALLUILEVEL_NONE) return ERROR_SUCCESS;
 
     if ( !error_dialog )
     {

@@ -77,9 +77,8 @@ static UINT msi_change_media(MSIPACKAGE *package, MSIMEDIAINFO *mi)
 
     static const WCHAR error_prop[] = {'E','r','r','o','r','D','i','a','l','o','g',0};
 
-    if ((msi_get_property_int(package->db, szUILevel, 0) & INSTALLUILEVEL_MASK) ==
-         INSTALLUILEVEL_NONE && !gUIHandlerA && !gUIHandlerW && !gUIHandlerRecord)
-        return ERROR_SUCCESS;
+    if ((package->ui_level & INSTALLUILEVEL_MASK) == INSTALLUILEVEL_NONE &&
+        !gUIHandlerA && !gUIHandlerW && !gUIHandlerRecord) return ERROR_SUCCESS;
 
     error = msi_build_error_string(package, 1302, 1, mi->disk_prompt);
     error_dialog = msi_dup_property(package->db, error_prop);
@@ -428,7 +427,7 @@ static INT_PTR cabinet_copy_file(FDINOTIFICATIONTYPE fdint,
         goto done;
     }
 
-    TRACE("extracting %s\n", debugstr_w(path));
+    TRACE("extracting %s -> %s\n", debugstr_w(data->curfile), debugstr_w(path));
 
     attrs = attrs & (FILE_ATTRIBUTE_READONLY|FILE_ATTRIBUTE_HIDDEN|FILE_ATTRIBUTE_SYSTEM);
     if (!attrs) attrs = FILE_ATTRIBUTE_NORMAL;
@@ -478,7 +477,7 @@ static INT_PTR cabinet_copy_file(FDINOTIFICATIONTYPE fdint,
                 MoveFileExW(path, NULL, MOVEFILE_DELAY_UNTIL_REBOOT) &&
                 MoveFileExW(tmpfileW, path, MOVEFILE_DELAY_UNTIL_REBOOT))
             {
-                data->package->need_reboot = 1;
+                data->package->need_reboot_at_end = 1;
             }
             else
             {

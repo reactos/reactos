@@ -215,7 +215,7 @@ static UINT copy_install_file(MSIPACKAGE *package, MSIFILE *file, LPWSTR source)
             MoveFileExW(tmpfileW, file->TargetPath, MOVEFILE_DELAY_UNTIL_REBOOT))
         {
             file->state = msifs_installed;
-            package->need_reboot = 1;
+            package->need_reboot_at_end = 1;
             gle = ERROR_SUCCESS;
         }
         else
@@ -247,6 +247,17 @@ static UINT msi_create_directory( MSIPACKAGE *package, const WCHAR *dir )
     return ERROR_SUCCESS;
 }
 
+static MSIFILE *find_file( MSIPACKAGE *package, const WCHAR *filename )
+{
+    MSIFILE *file;
+
+    LIST_FOR_EACH_ENTRY( file, &package->files, MSIFILE, entry )
+    {
+        if (file->state != msifs_installed && !strcmpiW( filename, file->File )) return file;
+    }
+    return NULL;
+}
+
 static BOOL installfiles_cb(MSIPACKAGE *package, LPCWSTR file, DWORD action,
                             LPWSTR *path, DWORD *attrs, PVOID user)
 {
@@ -255,8 +266,7 @@ static BOOL installfiles_cb(MSIPACKAGE *package, LPCWSTR file, DWORD action,
 
     if (action == MSICABEXTRACT_BEGINEXTRACT)
     {
-        f = msi_get_loaded_file(package, file);
-        if (!f)
+        if (!(f = find_file( package, file )))
         {
             TRACE("unknown file in cabinet (%s)\n", debugstr_w(file));
             return FALSE;
@@ -1298,22 +1308,26 @@ UINT ACTION_RemoveFiles( MSIPACKAGE *package )
         msi_ui_actiondata( package, szRemoveFiles, uirow );
         msiobj_release( &uirow->hdr );
     }
+
+    msi_init_assembly_caches( package );
     LIST_FOR_EACH_ENTRY( comp, &package->components, MSICOMPONENT, entry )
     {
-        MSIFOLDER *folder;
-
         comp->Action = msi_get_component_action( package, comp );
         if (comp->Action != INSTALLSTATE_ABSENT) continue;
-
-        if (comp->assembly && !comp->assembly->application) continue;
 
         if (comp->Attributes & msidbComponentAttributesPermanent)
         {
             TRACE("permanent component, not removing directory\n");
             continue;
         }
-        folder = msi_get_loaded_folder( package, comp->Directory );
-        remove_folder( folder );
+        if (comp->assembly && !comp->assembly->application)
+            msi_uninstall_assembly( package, comp );
+        else
+        {
+            MSIFOLDER *folder = msi_get_loaded_folder( package, comp->Directory );
+            remove_folder( folder );
+        }
     }
+    msi_destroy_assembly_caches( package );
     return ERROR_SUCCESS;
 }

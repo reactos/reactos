@@ -262,13 +262,13 @@ static BOOL is_assembly_installed( IAssemblyCache *cache, const WCHAR *display_n
 
     memset( &info, 0, sizeof(info) );
     info.cbAssemblyInfo = sizeof(info);
-    hr = IAssemblyCache_QueryAssemblyInfo( cache, QUERYASMINFO_FLAG_GETSIZE, display_name, &info );
-    if (hr != HRESULT_FROM_WIN32( ERROR_INSUFFICIENT_BUFFER ))
+    hr = IAssemblyCache_QueryAssemblyInfo( cache, 0, display_name, &info );
+    if (hr == S_OK /* sxs version */ || hr == HRESULT_FROM_WIN32( ERROR_INSUFFICIENT_BUFFER ))
     {
-        TRACE("QueryAssemblyInfo returned 0x%08x\n", hr);
-        return FALSE;
+        return (info.dwAssemblyFlags == ASSEMBLYINFO_FLAG_INSTALLED);
     }
-    return (info.dwAssemblyFlags == ASSEMBLYINFO_FLAG_INSTALLED);
+    TRACE("QueryAssemblyInfo returned 0x%08x\n", hr);
+    return FALSE;
 }
 
 static const WCHAR clr_version_v10[] = {'v','1','.','0','.','3','7','0','5',0};
@@ -422,6 +422,45 @@ UINT msi_install_assembly( MSIPACKAGE *package, MSICOMPONENT *comp )
     }
     if (feature) feature->Action = INSTALLSTATE_LOCAL;
     assembly->installed = TRUE;
+    return ERROR_SUCCESS;
+}
+
+UINT msi_uninstall_assembly( MSIPACKAGE *package, MSICOMPONENT *comp )
+{
+    HRESULT hr;
+    IAssemblyCache *cache;
+    MSIASSEMBLY *assembly = comp->assembly;
+    MSIFEATURE *feature = NULL;
+
+    if (comp->assembly->feature)
+        feature = msi_get_loaded_feature( package, comp->assembly->feature );
+
+    if (assembly->application)
+    {
+        if (feature) feature->Action = INSTALLSTATE_ABSENT;
+        return ERROR_SUCCESS;
+    }
+    TRACE("removing %s\n", debugstr_w(assembly->display_name));
+
+    if (assembly->attributes == msidbAssemblyAttributesWin32)
+    {
+        cache = package->cache_sxs;
+        hr = IAssemblyCache_UninstallAssembly( cache, 0, assembly->display_name, NULL, NULL );
+        if (FAILED( hr )) WARN("failed to uninstall assembly 0x%08x\n", hr);
+    }
+    else
+    {
+        unsigned int i;
+        for (i = 0; i < CLR_VERSION_MAX; i++)
+        {
+            if (!assembly->clr_version[i]) continue;
+            cache = package->cache_net[i];
+            hr = IAssemblyCache_UninstallAssembly( cache, 0, assembly->display_name, NULL, NULL );
+            if (FAILED( hr )) WARN("failed to uninstall assembly 0x%08x\n", hr);
+        }
+    }
+    if (feature) feature->Action = INSTALLSTATE_ABSENT;
+    assembly->installed = FALSE;
     return ERROR_SUCCESS;
 }
 

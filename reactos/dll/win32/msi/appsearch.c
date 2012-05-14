@@ -608,6 +608,65 @@ static void ACTION_ExpandAnyPath(MSIPACKAGE *package, WCHAR *src, WCHAR *dst,
     msi_free(deformatted);
 }
 
+static LANGID *parse_languages( const WCHAR *languages, DWORD *num_ids )
+{
+    UINT i, count = 1;
+    WCHAR *str = strdupW( languages ), *p, *q;
+    LANGID *ret;
+
+    if (!str) return NULL;
+    for (p = q = str; (q = strchrW( q, ',' )); q++) count++;
+
+    if (!(ret = msi_alloc( count * sizeof(LANGID) )))
+    {
+        msi_free( str );
+        return NULL;
+    }
+    i = 0;
+    while (*p)
+    {
+        q = strchrW( p, ',' );
+        if (q) *q = 0;
+        ret[i] = atoiW( p );
+        if (!q) break;
+        p = q + 1;
+        i++;
+    }
+    msi_free( str );
+    *num_ids = count;
+    return ret;
+}
+
+static BOOL match_languages( const void *version, const WCHAR *languages )
+{
+    struct lang
+    {
+        USHORT id;
+        USHORT codepage;
+    } *lang;
+    DWORD len, num_ids, i, j;
+    BOOL found = FALSE;
+    LANGID *ids;
+
+    if (!languages || !languages[0]) return TRUE;
+    if (!VerQueryValueW( version, szLangResource, (void **)&lang, &len )) return FALSE;
+    if (!(ids = parse_languages( languages, &num_ids ))) return FALSE;
+
+    for (i = 0; i < num_ids; i++)
+    {
+        found = FALSE;
+        for (j = 0; j < len / sizeof(struct lang); j++)
+        {
+            if (!ids[i] || ids[i] == lang[j].id) found = TRUE;
+        }
+        if (!found) goto done;
+    }
+
+done:
+    msi_free( ids );
+    return found;
+}
+
 /* Sets *matches to whether the file (whose path is filePath) matches the
  * versions set in sig.
  * Return ERROR_SUCCESS in case of success (whether or not the file matches),
@@ -616,69 +675,55 @@ static void ACTION_ExpandAnyPath(MSIPACKAGE *package, WCHAR *src, WCHAR *dst,
 static UINT ACTION_FileVersionMatches(const MSISIGNATURE *sig, LPCWSTR filePath,
  BOOL *matches)
 {
-    UINT rc = ERROR_SUCCESS;
+    UINT len;
+    void *version;
+    VS_FIXEDFILEINFO *info = NULL;
+    DWORD zero, size = GetFileVersionInfoSizeW( filePath, &zero );
 
     *matches = FALSE;
-    if (sig->Languages)
-    {
-        FIXME(": need to check version for languages %s\n",
-         debugstr_w(sig->Languages));
-    }
-    else
-    {
-        DWORD zero, size = GetFileVersionInfoSizeW(filePath, &zero);
 
-        if (size)
+    if (!size) return ERROR_SUCCESS;
+    if (!(version = msi_alloc( size ))) return ERROR_OUTOFMEMORY;
+
+    if (GetFileVersionInfoW( filePath, 0, size, version ))
+        VerQueryValueW( version, szBackSlash, (void **)&info, &len );
+
+    if (info)
+    {
+        TRACE("comparing file version %d.%d.%d.%d:\n",
+              HIWORD(info->dwFileVersionMS),
+              LOWORD(info->dwFileVersionMS),
+              HIWORD(info->dwFileVersionLS),
+              LOWORD(info->dwFileVersionLS));
+        if (info->dwFileVersionMS < sig->MinVersionMS
+            || (info->dwFileVersionMS == sig->MinVersionMS &&
+                info->dwFileVersionLS < sig->MinVersionLS))
         {
-            LPVOID buf = msi_alloc( size);
-
-            if (buf)
-            {
-                UINT versionLen;
-                LPVOID subBlock = NULL;
-
-                if (GetFileVersionInfoW(filePath, 0, size, buf))
-                    VerQueryValueW(buf, szBackSlash, &subBlock, &versionLen);
-                if (subBlock)
-                {
-                    VS_FIXEDFILEINFO *info = subBlock;
-
-                    TRACE("Comparing file version %d.%d.%d.%d:\n",
-                     HIWORD(info->dwFileVersionMS),
-                     LOWORD(info->dwFileVersionMS),
-                     HIWORD(info->dwFileVersionLS),
-                     LOWORD(info->dwFileVersionLS));
-                    if (info->dwFileVersionMS < sig->MinVersionMS
-                     || (info->dwFileVersionMS == sig->MinVersionMS &&
-                     info->dwFileVersionLS < sig->MinVersionLS))
-                    {
-                        TRACE("Less than minimum version %d.%d.%d.%d\n",
-                         HIWORD(sig->MinVersionMS),
-                         LOWORD(sig->MinVersionMS),
-                         HIWORD(sig->MinVersionLS),
-                         LOWORD(sig->MinVersionLS));
-                    }
-                    else if ((sig->MaxVersionMS || sig->MaxVersionLS) &&
-                             (info->dwFileVersionMS > sig->MaxVersionMS ||
-                              (info->dwFileVersionMS == sig->MaxVersionMS &&
-                               info->dwFileVersionLS > sig->MaxVersionLS)))
-                    {
-                        TRACE("Greater than maximum version %d.%d.%d.%d\n",
-                         HIWORD(sig->MaxVersionMS),
-                         LOWORD(sig->MaxVersionMS),
-                         HIWORD(sig->MaxVersionLS),
-                         LOWORD(sig->MaxVersionLS));
-                    }
-                    else
-                        *matches = TRUE;
-                }
-                msi_free( buf);
-            }
-            else
-                rc = ERROR_OUTOFMEMORY;
+            TRACE("less than minimum version %d.%d.%d.%d\n",
+                   HIWORD(sig->MinVersionMS),
+                   LOWORD(sig->MinVersionMS),
+                   HIWORD(sig->MinVersionLS),
+                   LOWORD(sig->MinVersionLS));
         }
+        else if ((sig->MaxVersionMS || sig->MaxVersionLS) &&
+                 (info->dwFileVersionMS > sig->MaxVersionMS ||
+                  (info->dwFileVersionMS == sig->MaxVersionMS &&
+                   info->dwFileVersionLS > sig->MaxVersionLS)))
+        {
+            TRACE("greater than maximum version %d.%d.%d.%d\n",
+                   HIWORD(sig->MaxVersionMS),
+                   LOWORD(sig->MaxVersionMS),
+                   HIWORD(sig->MaxVersionLS),
+                   LOWORD(sig->MaxVersionLS));
+        }
+        else if (!match_languages( version, sig->Languages ))
+        {
+            TRACE("languages %s not supported\n", debugstr_w( sig->Languages ));
+        }
+        else *matches = TRUE;
     }
-    return rc;
+    msi_free( version );
+    return ERROR_SUCCESS;
 }
 
 /* Sets *matches to whether the file in findData matches that in sig.
