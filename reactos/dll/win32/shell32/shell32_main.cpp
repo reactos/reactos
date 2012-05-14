@@ -66,27 +66,34 @@ LPWSTR* WINAPI CommandLineToArgvW(LPCWSTR lpCmdline, int* numargs)
     LPWSTR cmdline;
     int in_quotes,bcount;
 
+    if(!numargs)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return NULL;
+    }
+
     if (*lpCmdline==0)
     {
         /* Return the path to the executable */
-        DWORD len, size=16;
+        DWORD len, deslen=MAX_PATH, size;
 
-        argv = (LPWSTR *)LocalAlloc(LMEM_FIXED, size);
+        size = sizeof(LPWSTR) + deslen*sizeof(WCHAR) + sizeof(LPWSTR);
         for (;;)
         {
-            len = GetModuleFileNameW(0, (LPWSTR)(argv+1), (size-sizeof(LPWSTR))/sizeof(WCHAR));
+            if (!(argv = (LPWSTR *)LocalAlloc(LMEM_FIXED, size))) return NULL;
+            len = GetModuleFileNameW(0, (LPWSTR)(argv+1), deslen);
             if (!len)
             {
                 LocalFree(argv);
                 return NULL;
             }
-            if (len < size) break;
-            size*=2;
-            argv = (LPWSTR *)LocalReAlloc(argv, size, 0);
+            if (len < deslen) break;
+            deslen*=2;
+            size = sizeof(LPWSTR) + deslen*sizeof(WCHAR) + sizeof(LPWSTR);
+            LocalFree( argv );
         }
         argv[0]=(LPWSTR)(argv+1);
-        if (numargs)
-            *numargs=1;
+        *numargs=1;
 
         return argv;
     }
@@ -133,11 +140,9 @@ LPWSTR* WINAPI CommandLineToArgvW(LPCWSTR lpCmdline, int* numargs)
     /* Allocate in a single lump, the string array, and the strings that go with it.
      * This way the caller can make a single GlobalFree call to free both, as per MSDN.
      */
-    argv = (LPWSTR *)LocalAlloc(LMEM_FIXED, argc*sizeof(LPWSTR)+(wcslen(lpCmdline)+1)*sizeof(WCHAR));
-
+    argv=(LPWSTR *)LocalAlloc(LMEM_FIXED, argc*sizeof(LPWSTR)+(wcslen(lpCmdline)+1)*sizeof(WCHAR));
     if (!argv)
         return NULL;
-
     cmdline=(LPWSTR)(argv+argc);
     wcscpy(cmdline, lpCmdline);
 
@@ -203,8 +208,7 @@ LPWSTR* WINAPI CommandLineToArgvW(LPCWSTR lpCmdline, int* numargs)
         *d='\0';
         argv[argc++]=arg;
     }
-    if (numargs)
-        *numargs=argc;
+    *numargs=argc;
 
     return argv;
 }
