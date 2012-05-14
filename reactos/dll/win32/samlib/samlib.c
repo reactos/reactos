@@ -298,52 +298,6 @@ SamInitializeSAM (VOID)
 }
 
 
-BOOL WINAPI
-SamGetDomainSid (PSID *Sid)
-{
-  DPRINT ("SamGetDomainSid() called\n");
-
-  return FALSE;
-}
-
-
-BOOL WINAPI
-SamSetDomainSid (PSID Sid)
-{
-  HKEY hAccountKey;
-
-  DPRINT ("SamSetDomainSid() called\n");
-
-  if (RegOpenKeyExW (HKEY_LOCAL_MACHINE,
-		     L"SAM\\SAM\\Domains\\Account",
-		     0,
-		     KEY_ALL_ACCESS,
-		     &hAccountKey))
-    {
-      DPRINT1 ("Failed to open the Account key! (Error %lu)\n", GetLastError());
-      return FALSE;
-    }
-
-  if (RegSetValueExW (hAccountKey,
-		      L"Sid",
-		      0,
-		      REG_BINARY,
-		      (LPBYTE)Sid,
-		      RtlLengthSid (Sid)))
-    {
-      DPRINT1 ("Failed to set Domain-SID value! (Error %lu)\n", GetLastError());
-      RegCloseKey (hAccountKey);
-      return FALSE;
-    }
-
-  RegCloseKey (hAccountKey);
-
-  DPRINT ("SamSetDomainSid() called\n");
-
-  return TRUE;
-}
-
-
 /*
  * ERROR_USER_EXISTS
  */

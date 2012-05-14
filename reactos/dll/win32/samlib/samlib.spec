@@ -65,8 +65,6 @@
 @ stub SamiSetDSRMPasswordOWF
 
 @ stdcall SamInitializeSAM()
-@ stdcall SamGetDomainSid(ptr)
-@ stdcall SamSetDomainSid(ptr)
 @ stdcall SamCreateUser(wstr wstr ptr)
 @ stdcall SamCheckUserPassword(wstr wstr)
 @ stdcall SamGetUserSid(wstr ptr)

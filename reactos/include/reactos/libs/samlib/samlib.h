@@ -30,12 +30,6 @@ BOOL WINAPI
 SamInitializeSAM (VOID);
 
 BOOL WINAPI
-SamGetDomainSid (PSID *Sid);
-
-BOOL WINAPI
-SamSetDomainSid (PSID Sid);
-
-BOOL WINAPI
 SamCreateUser (PWSTR UserName,
 	       PWSTR UserPassword,
 	       PSID UserSid);
