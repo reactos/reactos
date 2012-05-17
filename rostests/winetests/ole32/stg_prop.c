@@ -186,7 +186,7 @@ static void testProps(void)
     spec.ulKind = PRSPEC_PROPID;
     U(spec).propid = PIDSI_THUMBNAIL;
     hr = IPropertyStorage_ReadMultiple(propertyStorage, 1, &spec, &var);
-    ok(SUCCEEDED(hr), "ReadMultiple failed: 0x%08x\n", hr);
+    ok(hr == S_OK, "ReadMultiple failed: 0x%08x\n", hr);
     ok(var.vt == VT_CF, "variant type wrong\n");
     ok(U(var).pclipdata->ulClipFmt == CF_ENHMETAFILE,
         "clipboard type wrong\n");
@@ -315,13 +315,18 @@ static void testProps(void)
 
     spec.ulKind = PRSPEC_PROPID;
     U(spec).propid = PID_FIRST_USABLE;
+    var.vt = VT_I4;
     U(var).lVal = 1;
     hr = IPropertyStorage_WriteMultiple(propertyStorage, 1, &spec, &var, 0);
     ok(hr == S_OK, "WriteMultiple failed: 0x%08x\n", hr);
 
+    hr = IPropertyStorage_Commit(propertyStorage, STGC_DEFAULT);
+    ok(hr == S_OK, "Commit failed: 0x%08x\n", hr);
+
     IPropertyStorage_Release(propertyStorage);
     IPropertySetStorage_Release(propSetStorage);
     IStorage_Release(storage);
+    propertyStorage = NULL;
 
     /* now open it again */
     hr = StgOpenStorage(filename, NULL, STGM_READWRITE | STGM_SHARE_EXCLUSIVE,
@@ -338,7 +343,11 @@ static void testProps(void)
     spec.ulKind = PRSPEC_PROPID;
     U(spec).propid = PID_FIRST_USABLE;
     hr = IPropertyStorage_ReadMultiple(propertyStorage, 1, &spec, &var);
-    ok(hr == S_FALSE, "ReadMultiple failed: 0x%08x\n", hr);
+    ok(hr == S_OK, "ReadMultiple failed: 0x%08x\n", hr);
+
+    ok(var.vt == VT_I4 && U(var).lVal == 1,
+     "Didn't get expected type or value for property (got type %d, value %d)\n",
+     var.vt, U(var).lVal);
 
     IPropertyStorage_Release(propertyStorage);
     IPropertySetStorage_Release(propSetStorage);

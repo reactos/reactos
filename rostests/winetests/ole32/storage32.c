@@ -66,12 +66,18 @@ static void test_hglobal_storage_stat(void)
     r = CreateILockBytesOnHGlobal( NULL, TRUE, &ilb );
     ok( r == S_OK, "CreateILockBytesOnHGlobal failed\n");
 
+    r = StgIsStorageILockBytes( ilb );
+    ok( r == S_FALSE, "StgIsStorageILockBytes should have failed\n");
+
     mode = STGM_CREATE|STGM_SHARE_EXCLUSIVE|STGM_READWRITE;/*0x1012*/
     r = StgCreateDocfileOnILockBytes( ilb, mode, 0,  &stg );
     ok( r == S_OK, "StgCreateDocfileOnILockBytes failed\n");
 
     r = WriteClassStg( stg, &test_stg_cls );
     ok( r == S_OK, "WriteClassStg failed\n");
+
+    r = StgIsStorageILockBytes( ilb );
+    ok( r == S_OK, "StgIsStorageILockBytes failed\n");
 
     memset( &stat, 0, sizeof stat );
     r = IStorage_Stat( stg, &stat, 0 );
@@ -236,6 +242,59 @@ static void test_create_storage_modes(void)
    /* test the way msi uses StgCreateDocfile */
    r = StgCreateDocfile( filename, STGM_DIRECT | STGM_READWRITE | STGM_SHARE_EXCLUSIVE, 0, &stg);
    ok(r==S_OK, "StgCreateDocFile failed\n");
+   r = IStorage_Release(stg);
+   ok(r == 0, "storage not released\n");
+   ok(DeleteFileA(filenameA), "failed to delete file\n");
+}
+
+static void test_stgcreatestorageex(void)
+{
+   HRESULT (WINAPI *pStgCreateStorageEx)(const WCHAR* pwcsName, DWORD grfMode, DWORD stgfmt, DWORD grfAttrs, STGOPTIONS* pStgOptions, void* reserved, REFIID riid, void** ppObjectOpen);
+   HMODULE hOle32 = GetModuleHandle("ole32");
+   IStorage *stg = NULL;
+   STGOPTIONS stgoptions = {1, 0, 4096};
+   HRESULT r;
+
+   pStgCreateStorageEx = (void *) GetProcAddress(hOle32, "StgCreateStorageEx");
+   if (!pStgCreateStorageEx)
+   {
+      win_skip("skipping test on NT4\n");
+      return;
+   }
+
+   DeleteFileA(filenameA);
+
+   /* Verify that StgCreateStorageEx can accept an options param */
+   r = pStgCreateStorageEx( filename,
+                           STGM_SHARE_EXCLUSIVE | STGM_READWRITE,
+                           STGFMT_DOCFILE,
+                           0,
+                           &stgoptions,
+                           NULL,
+                           &IID_IStorage,
+                           (void **) &stg);
+   ok(r==S_OK || r==STG_E_UNIMPLEMENTEDFUNCTION, "StgCreateStorageEx with options failed\n");
+   if (r==STG_E_UNIMPLEMENTEDFUNCTION)
+   {
+      /* We're on win98 which means all bets are off.  Let's get out of here. */
+      win_skip("skipping test on win9x\n");
+      return;
+   }
+
+   r = IStorage_Release(stg);
+   ok(r == 0, "storage not released\n");
+   ok(DeleteFileA(filenameA), "failed to delete file\n");
+
+   /* Verify that StgCreateStorageEx can accept a NULL pStgOptions */
+   r = pStgCreateStorageEx( filename,
+                           STGM_SHARE_EXCLUSIVE | STGM_READWRITE,
+                           STGFMT_STORAGE,
+                           0,
+                           NULL,
+                           NULL,
+                           &IID_IStorage,
+                           (void **) &stg);
+   ok(r==S_OK, "StgCreateStorageEx with NULL options failed\n");
    r = IStorage_Release(stg);
    ok(r == 0, "storage not released\n");
    ok(DeleteFileA(filenameA), "failed to delete file\n");
@@ -822,7 +881,7 @@ static void test_storage_refcount(void)
         STATSTG statstg;
 
         r = IStorage_Stat( stg, &statstg, STATFLAG_NONAME );
-        ok(r == S_OK, "Stat should have succeded instead of returning 0x%08x\n", r);
+        ok(r == S_OK, "Stat should have succeeded instead of returning 0x%08x\n", r);
         ok(statstg.type == STGTY_STORAGE, "Statstg type should have been STGTY_STORAGE instead of %d\n", statstg.type);
         ok(U(statstg.cbSize).LowPart == 0, "Statstg cbSize.LowPart should have been 0 instead of %d\n", U(statstg.cbSize).LowPart);
         ok(U(statstg.cbSize).HighPart == 0, "Statstg cbSize.HighPart should have been 0 instead of %d\n", U(statstg.cbSize).HighPart);
@@ -837,7 +896,7 @@ static void test_storage_refcount(void)
         ok(r == S_OK, "CreateStorage should have succeeded instead of returning 0x%08x\n", r);
 
         r = IStorage_Stat( stg2, &statstg, STATFLAG_DEFAULT );
-        ok(r == S_OK, "Stat should have succeded instead of returning 0x%08x\n", r);
+        ok(r == S_OK, "Stat should have succeeded instead of returning 0x%08x\n", r);
         ok(!memcmp(statstg.pwcsName, stgname, sizeof(stgname)),
             "Statstg pwcsName should have been the name the storage was created with\n");
         ok(statstg.type == STGTY_STORAGE, "Statstg type should have been STGTY_STORAGE instead of %d\n", statstg.type);
@@ -955,6 +1014,7 @@ static void test_streamenum(void)
         CoTaskMemFree(stat.pwcsName);
 
     r = IEnumSTATSTG_Release(ee);
+    ok(r==S_OK, "EnumSTATSTG_Release failed with error 0x%08x\n", r);
 
     /* second enum... destroy the stream before reading */
     r = IStorage_EnumElements(stg, 0, NULL, 0, &ee);
@@ -985,6 +1045,7 @@ static void test_streamenum(void)
     ok(r==S_OK, "IStorage->CreateStream failed\n");
 
     r = IStream_Release(stm);
+    ok(r==S_OK, "Stream_Release failed with error 0x%08x\n", r);
 
     count = 0xf00;
     r = IEnumSTATSTG_Next(ee, 1, &stat, &count);
@@ -1001,6 +1062,7 @@ static void test_streamenum(void)
     ok(r==S_OK, "IStorage->CreateStream failed\n");
 
     r = IStream_Release(stm);
+    ok(r==S_OK, "Stream_Release failed with error 0x%08x\n", r);
 
     count = 0xf00;
     r = IEnumSTATSTG_Next(ee, 1, &stat, &count);
@@ -1018,6 +1080,7 @@ static void test_streamenum(void)
     ok(r==S_OK, "IStorage->CreateStream failed\n");
 
     r = IStream_Release(stm);
+    ok(r==S_OK, "Stream_Release failed with error 0x%08x\n", r);
 
     r = IEnumSTATSTG_Reset(ee);
     ok(r==S_OK, "IEnumSTATSTG->Reset failed\n");
@@ -1363,6 +1426,7 @@ static void test_revert(void)
     ok(r==S_OK, "IStorage->CreateStorage failed, hr=%08x\n", r);
 
     r = IStorage_Revert(stg);
+    ok(r==S_OK, "Storage_Revert failed with error 0x%08x\n", r);
 
     /* all open objects become invalid */
     r = IStream_Write(stm, "this shouldn't work\n", 20, NULL);
@@ -1497,7 +1561,7 @@ static void test_parent_free(void)
         if (r == S_OK)
         {
             r = IStream_Write(stm, "this should fail\n", 17, NULL);
-            ok(r==STG_E_REVERTED, "IStream->Write sould fail, hr=%x\n", r);
+            ok(r==STG_E_REVERTED, "IStream->Write should fail, hr=%x\n", r);
 
             IStream_Release(stm);
 
@@ -2679,6 +2743,7 @@ static void test_toplevel_stat(void)
     ok(r==S_OK, "StgCreateDocfile failed\n");
 
     r = IStorage_Stat( stg, &stat, STATFLAG_DEFAULT );
+    ok(r==S_OK, "Storage_Stat failed with error 0x%08x\n", r);
     ok(!strcmp_ww(stat.pwcsName, filename), "expected %s, got %s\n",
         wine_dbgstr_w(filename), wine_dbgstr_w(stat.pwcsName));
     CoTaskMemFree(stat.pwcsName);
@@ -2689,6 +2754,7 @@ static void test_toplevel_stat(void)
     ok(r==S_OK, "StgOpenStorage failed with error 0x%08x\n", r);
 
     r = IStorage_Stat( stg, &stat, STATFLAG_DEFAULT );
+    ok(r==S_OK, "Storage_Stat failed with error 0x%08x\n", r);
     ok(!strcmp_ww(stat.pwcsName, filename), "expected %s, got %s\n",
         wine_dbgstr_w(filename), wine_dbgstr_w(stat.pwcsName));
     CoTaskMemFree(stat.pwcsName);
@@ -2712,6 +2778,7 @@ static void test_toplevel_stat(void)
     ok(r==S_OK, "StgCreateDocfile failed\n");
 
     r = IStorage_Stat( stg, &stat, STATFLAG_DEFAULT );
+    ok(r==S_OK, "Storage_Stat failed with error 0x%08x\n", r);
     ok(!strcmp_ww(stat.pwcsName, filename), "expected %s, got %s\n",
         wine_dbgstr_w(filename), wine_dbgstr_w(stat.pwcsName));
     CoTaskMemFree(stat.pwcsName);
@@ -2722,6 +2789,7 @@ static void test_toplevel_stat(void)
     ok(r==S_OK, "StgOpenStorage failed with error 0x%08x\n", r);
 
     r = IStorage_Stat( stg, &stat, STATFLAG_DEFAULT );
+    ok(r==S_OK, "Storage_Stat failed with error 0x%08x\n", r);
     ok(!strcmp_ww(stat.pwcsName, filename), "expected %s, got %s\n",
         wine_dbgstr_w(filename), wine_dbgstr_w(stat.pwcsName));
     CoTaskMemFree(stat.pwcsName);
@@ -2819,7 +2887,7 @@ static void test_copyto_locking(void)
 
     /* Try to copy the storage while the substorage is open */
     r = IStorage_CopyTo(stg2, 0, NULL, NULL, stg3);
-    todo_wine ok(r==S_OK, "IStorage->CopyTo failed, hr=%08x\n", r);
+    ok(r==S_OK, "IStorage->CopyTo failed, hr=%08x\n", r);
 
     IStorage_Release(stg4);
     IStorage_Release(stg3);
@@ -2881,6 +2949,52 @@ static void test_copyto_recursive(void)
     ok( r == TRUE, "deleted file\n");
 }
 
+static void test_hglobal_storage_creation(void)
+{
+    ILockBytes *ilb = NULL;
+    IStorage *stg = NULL;
+    HRESULT r;
+    STATSTG stat;
+    char junk[512];
+    ULARGE_INTEGER offset;
+
+    r = CreateILockBytesOnHGlobal(NULL, TRUE, &ilb);
+    ok(r == S_OK, "CreateILockBytesOnHGlobal failed, hr=%x\n", r);
+
+    offset.QuadPart = 0;
+    memset(junk, 0xaa, 512);
+    r = ILockBytes_WriteAt(ilb, offset, junk, 512, NULL);
+    ok(r == S_OK, "ILockBytes_WriteAt failed, hr=%x\n", r);
+
+    offset.QuadPart = 2000;
+    r = ILockBytes_WriteAt(ilb, offset, junk, 512, NULL);
+    ok(r == S_OK, "ILockBytes_WriteAt failed, hr=%x\n", r);
+
+    r = StgCreateDocfileOnILockBytes(ilb, STGM_CREATE|STGM_SHARE_EXCLUSIVE|STGM_READWRITE, 0,  &stg);
+    ok(r == S_OK, "StgCreateDocfileOnILockBytes failed, hr=%x\n", r);
+
+    IStorage_Release(stg);
+
+    r = StgOpenStorageOnILockBytes(ilb, NULL, STGM_READ|STGM_SHARE_EXCLUSIVE,
+        NULL, 0, &stg);
+    ok(r == S_OK, "StgOpenStorageOnILockBytes failed, hr=%x\n", r);
+
+    if (SUCCEEDED(r))
+    {
+        r = IStorage_Stat(stg, &stat, STATFLAG_NONAME);
+        ok(r == S_OK, "StgOpenStorageOnILockBytes failed, hr=%x\n", r);
+        ok(IsEqualCLSID(&stat.clsid, &GUID_NULL), "unexpected CLSID value\n");
+
+        IStorage_Release(stg);
+    }
+
+    r = ILockBytes_Stat(ilb, &stat, STATFLAG_NONAME);
+    ok(r == S_OK, "ILockBytes_Stat failed, hr=%x\n", r);
+    ok(stat.cbSize.u.LowPart < 2512, "expected truncated size, got %d\n", stat.cbSize.u.LowPart);
+
+    ILockBytes_Release(ilb);
+}
+
 START_TEST(storage32)
 {
     CHAR temp[MAX_PATH];
@@ -2896,6 +3010,7 @@ START_TEST(storage32)
 
     test_hglobal_storage_stat();
     test_create_storage_modes();
+    test_stgcreatestorageex();
     test_storage_stream();
     test_open_storage();
     test_storage_suminfo();
@@ -2922,4 +3037,5 @@ START_TEST(storage32)
     test_substorage_enum();
     test_copyto_locking();
     test_copyto_recursive();
+    test_hglobal_storage_creation();
 }

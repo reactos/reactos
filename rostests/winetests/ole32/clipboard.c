@@ -19,6 +19,7 @@
  */
 
 #define COBJMACROS
+#define CONST_VTABLE
 #define NONAMELESSUNION
 
 #include <stdarg.h>
@@ -49,7 +50,7 @@ static inline char *dump_fmtetc(FORMATETC *fmt)
 }
 
 typedef struct DataObjectImpl {
-    const IDataObjectVtbl *lpVtbl;
+    IDataObject IDataObject_iface;
     LONG ref;
 
     FORMATETC *fmtetc;
@@ -61,7 +62,7 @@ typedef struct DataObjectImpl {
 } DataObjectImpl;
 
 typedef struct EnumFormatImpl {
-    const IEnumFORMATETCVtbl *lpVtbl;
+    IEnumFORMATETC IEnumFORMATETC_iface;
     LONG ref;
 
     FORMATETC *fmtetc;
@@ -79,9 +80,19 @@ static UINT cf_stream, cf_storage, cf_global, cf_another, cf_onemore;
 
 static HRESULT EnumFormatImpl_Create(FORMATETC *fmtetc, UINT size, LPENUMFORMATETC *lplpformatetc);
 
+static inline DataObjectImpl *impl_from_IDataObject(IDataObject *iface)
+{
+    return CONTAINING_RECORD(iface, DataObjectImpl, IDataObject_iface);
+}
+
+static inline EnumFormatImpl *impl_from_IEnumFORMATETC(IEnumFORMATETC *iface)
+{
+    return CONTAINING_RECORD(iface, EnumFormatImpl, IEnumFORMATETC_iface);
+}
+
 static HRESULT WINAPI EnumFormatImpl_QueryInterface(IEnumFORMATETC *iface, REFIID riid, LPVOID *ppvObj)
 {
-    EnumFormatImpl *This = (EnumFormatImpl*)iface;
+    EnumFormatImpl *This = impl_from_IEnumFORMATETC(iface);
 
     if (IsEqualGUID(riid, &IID_IUnknown) || IsEqualGUID(riid, &IID_IEnumFORMATETC)) {
         IEnumFORMATETC_AddRef(iface);
@@ -94,14 +105,14 @@ static HRESULT WINAPI EnumFormatImpl_QueryInterface(IEnumFORMATETC *iface, REFII
 
 static ULONG WINAPI EnumFormatImpl_AddRef(IEnumFORMATETC *iface)
 {
-    EnumFormatImpl *This = (EnumFormatImpl*)iface;
+    EnumFormatImpl *This = impl_from_IEnumFORMATETC(iface);
     LONG ref = InterlockedIncrement(&This->ref);
     return ref;
 }
 
 static ULONG WINAPI EnumFormatImpl_Release(IEnumFORMATETC *iface)
 {
-    EnumFormatImpl *This = (EnumFormatImpl*)iface;
+    EnumFormatImpl *This = impl_from_IEnumFORMATETC(iface);
     ULONG ref = InterlockedDecrement(&This->ref);
 
     if(!ref) {
@@ -115,7 +126,7 @@ static ULONG WINAPI EnumFormatImpl_Release(IEnumFORMATETC *iface)
 static HRESULT WINAPI EnumFormatImpl_Next(IEnumFORMATETC *iface, ULONG celt,
                                           FORMATETC *rgelt, ULONG *pceltFetched)
 {
-    EnumFormatImpl *This = (EnumFormatImpl*)iface;
+    EnumFormatImpl *This = impl_from_IEnumFORMATETC(iface);
     ULONG count, i;
 
     trace("next: count %d cur %d\n", celt, This->cur);
@@ -147,7 +158,7 @@ static HRESULT WINAPI EnumFormatImpl_Skip(IEnumFORMATETC *iface, ULONG celt)
 
 static HRESULT WINAPI EnumFormatImpl_Reset(IEnumFORMATETC *iface)
 {
-    EnumFormatImpl *This = (EnumFormatImpl*)iface;
+    EnumFormatImpl *This = impl_from_IEnumFORMATETC(iface);
 
     This->cur = 0;
     return S_OK;
@@ -174,7 +185,7 @@ static HRESULT EnumFormatImpl_Create(FORMATETC *fmtetc, UINT fmtetc_cnt, IEnumFO
     EnumFormatImpl *ret;
 
     ret = HeapAlloc(GetProcessHeap(), 0, sizeof(EnumFormatImpl));
-    ret->lpVtbl = &VT_EnumFormatImpl;
+    ret->IEnumFORMATETC_iface.lpVtbl = &VT_EnumFormatImpl;
     ret->ref = 1;
     ret->cur = 0;
     ret->fmtetc_cnt = fmtetc_cnt;
@@ -186,7 +197,7 @@ static HRESULT EnumFormatImpl_Create(FORMATETC *fmtetc, UINT fmtetc_cnt, IEnumFO
 
 static HRESULT WINAPI DataObjectImpl_QueryInterface(IDataObject *iface, REFIID riid, LPVOID *ppvObj)
 {
-    DataObjectImpl *This = (DataObjectImpl*)iface;
+    DataObjectImpl *This = impl_from_IDataObject(iface);
 
     if (IsEqualGUID(riid, &IID_IUnknown) || IsEqualGUID(riid, &IID_IDataObject)) {
         IDataObject_AddRef(iface);
@@ -199,14 +210,14 @@ static HRESULT WINAPI DataObjectImpl_QueryInterface(IDataObject *iface, REFIID r
 
 static ULONG WINAPI DataObjectImpl_AddRef(IDataObject* iface)
 {
-    DataObjectImpl *This = (DataObjectImpl*)iface;
+    DataObjectImpl *This = impl_from_IDataObject(iface);
     ULONG ref = InterlockedIncrement(&This->ref);
     return ref;
 }
 
 static ULONG WINAPI DataObjectImpl_Release(IDataObject* iface)
 {
-    DataObjectImpl *This = (DataObjectImpl*)iface;
+    DataObjectImpl *This = impl_from_IDataObject(iface);
     ULONG ref = InterlockedDecrement(&This->ref);
 
     if(!ref)
@@ -226,7 +237,7 @@ static ULONG WINAPI DataObjectImpl_Release(IDataObject* iface)
 
 static HRESULT WINAPI DataObjectImpl_GetData(IDataObject* iface, FORMATETC *pformatetc, STGMEDIUM *pmedium)
 {
-    DataObjectImpl *This = (DataObjectImpl*)iface;
+    DataObjectImpl *This = impl_from_IDataObject(iface);
     UINT i;
     BOOL foundFormat = FALSE;
 
@@ -282,7 +293,7 @@ static HRESULT WINAPI DataObjectImpl_GetDataHere(IDataObject* iface, FORMATETC *
 
 static HRESULT WINAPI DataObjectImpl_QueryGetData(IDataObject* iface, FORMATETC *pformatetc)
 {
-    DataObjectImpl *This = (DataObjectImpl*)iface;
+    DataObjectImpl *This = impl_from_IDataObject(iface);
     UINT i;
     BOOL foundFormat = FALSE;
 
@@ -320,7 +331,7 @@ static HRESULT WINAPI DataObjectImpl_SetData(IDataObject* iface, FORMATETC *pfor
 static HRESULT WINAPI DataObjectImpl_EnumFormatEtc(IDataObject* iface, DWORD dwDirection,
                                                    IEnumFORMATETC **ppenumFormatEtc)
 {
-    DataObjectImpl *This = (DataObjectImpl*)iface;
+    DataObjectImpl *This = impl_from_IDataObject(iface);
 
     DataObjectImpl_EnumFormatEtc_calls++;
 
@@ -371,7 +382,7 @@ static HRESULT DataObjectImpl_CreateText(LPCSTR text, LPDATAOBJECT *lplpdataobj)
     DataObjectImpl *obj;
 
     obj = HeapAlloc(GetProcessHeap(), 0, sizeof(DataObjectImpl));
-    obj->lpVtbl = &VT_DataObjectImpl;
+    obj->IDataObject_iface.lpVtbl = &VT_DataObjectImpl;
     obj->ref = 1;
     obj->text = GlobalAlloc(GMEM_MOVEABLE, strlen(text) + 1);
     strcpy(GlobalLock(obj->text), text);
@@ -387,9 +398,9 @@ static HRESULT DataObjectImpl_CreateText(LPCSTR text, LPDATAOBJECT *lplpdataobj)
     return S_OK;
 }
 
-const char *cmpl_stm_data = "complex stream";
-const char *cmpl_text_data = "complex text";
-const WCHAR device_name[] = {'m','y','d','e','v',0};
+static const char *cmpl_stm_data = "complex stream";
+static const char *cmpl_text_data = "complex text";
+static const WCHAR device_name[] = {'m','y','d','e','v',0};
 
 static HRESULT DataObjectImpl_CreateComplex(LPDATAOBJECT *lplpdataobj)
 {
@@ -398,7 +409,7 @@ static HRESULT DataObjectImpl_CreateComplex(LPDATAOBJECT *lplpdataobj)
     DEVMODEW dm;
 
     obj = HeapAlloc(GetProcessHeap(), 0, sizeof(DataObjectImpl));
-    obj->lpVtbl = &VT_DataObjectImpl;
+    obj->IDataObject_iface.lpVtbl = &VT_DataObjectImpl;
     obj->ref = 1;
     obj->text = GlobalAlloc(GMEM_MOVEABLE, strlen(cmpl_text_data) + 1);
     strcpy(GlobalLock(obj->text), cmpl_text_data);
@@ -417,18 +428,21 @@ static HRESULT DataObjectImpl_CreateComplex(LPDATAOBJECT *lplpdataobj)
     InitFormatEtc(obj->fmtetc[1], cf_stream, TYMED_ISTREAM);
     InitFormatEtc(obj->fmtetc[2], cf_storage, TYMED_ISTORAGE);
     InitFormatEtc(obj->fmtetc[3], cf_another, TYMED_ISTORAGE|TYMED_ISTREAM|TYMED_HGLOBAL);
-    memset(&dm, 0, sizeof(dm));
-    dm.dmSize = sizeof(dm);
-    dm.dmDriverExtra = 0;
-    lstrcpyW(dm.dmDeviceName, device_name);
-    obj->fmtetc[3].ptd = HeapAlloc(GetProcessHeap(), 0, FIELD_OFFSET(DVTARGETDEVICE, tdData) + sizeof(device_name) + dm.dmSize + dm.dmDriverExtra);
-    obj->fmtetc[3].ptd->tdSize = FIELD_OFFSET(DVTARGETDEVICE, tdData) + sizeof(device_name) + dm.dmSize + dm.dmDriverExtra;
-    obj->fmtetc[3].ptd->tdDriverNameOffset = FIELD_OFFSET(DVTARGETDEVICE, tdData);
-    obj->fmtetc[3].ptd->tdDeviceNameOffset = 0;
-    obj->fmtetc[3].ptd->tdPortNameOffset   = 0;
-    obj->fmtetc[3].ptd->tdExtDevmodeOffset = obj->fmtetc[3].ptd->tdDriverNameOffset + sizeof(device_name);
-    lstrcpyW((WCHAR*)obj->fmtetc[3].ptd->tdData, device_name);
-    memcpy(obj->fmtetc[3].ptd->tdData + sizeof(device_name), &dm, dm.dmSize + dm.dmDriverExtra);
+    if (0)  /* Causes crashes on both Wine and Windows */
+    {
+        memset(&dm, 0, sizeof(dm));
+        dm.dmSize = sizeof(dm);
+        dm.dmDriverExtra = 0;
+        lstrcpyW(dm.dmDeviceName, device_name);
+        obj->fmtetc[3].ptd = HeapAlloc(GetProcessHeap(), 0, FIELD_OFFSET(DVTARGETDEVICE, tdData) + sizeof(device_name) + dm.dmSize + dm.dmDriverExtra);
+        obj->fmtetc[3].ptd->tdSize = FIELD_OFFSET(DVTARGETDEVICE, tdData) + sizeof(device_name) + dm.dmSize + dm.dmDriverExtra;
+        obj->fmtetc[3].ptd->tdDriverNameOffset = FIELD_OFFSET(DVTARGETDEVICE, tdData);
+        obj->fmtetc[3].ptd->tdDeviceNameOffset = 0;
+        obj->fmtetc[3].ptd->tdPortNameOffset   = 0;
+        obj->fmtetc[3].ptd->tdExtDevmodeOffset = obj->fmtetc[3].ptd->tdDriverNameOffset + sizeof(device_name);
+        lstrcpyW((WCHAR*)obj->fmtetc[3].ptd->tdData, device_name);
+        memcpy(obj->fmtetc[3].ptd->tdData + sizeof(device_name), &dm, dm.dmSize + dm.dmDriverExtra);
+    }
 
     InitFormatEtc(obj->fmtetc[4], cf_global, TYMED_HGLOBAL);
     InitFormatEtc(obj->fmtetc[5], cf_another, TYMED_HGLOBAL);
@@ -812,15 +826,15 @@ static void test_set_clipboard(void)
     cf_onemore = RegisterClipboardFormatA("one more format");
 
     hr = DataObjectImpl_CreateText("data1", &data1);
-    ok(SUCCEEDED(hr), "Failed to create data1 object: 0x%08x\n", hr);
+    ok(hr == S_OK, "Failed to create data1 object: 0x%08x\n", hr);
     if(FAILED(hr))
         return;
     hr = DataObjectImpl_CreateText("data2", &data2);
-    ok(SUCCEEDED(hr), "Failed to create data2 object: 0x%08x\n", hr);
+    ok(hr == S_OK, "Failed to create data2 object: 0x%08x\n", hr);
     if(FAILED(hr))
         return;
     hr = DataObjectImpl_CreateComplex(&data_cmpl);
-    ok(SUCCEEDED(hr), "Failed to create complex data object: 0x%08x\n", hr);
+    ok(hr == S_OK, "Failed to create complex data object: 0x%08x\n", hr);
     if(FAILED(hr))
         return;
 
@@ -1181,31 +1195,32 @@ static void test_flushed_getdata(void)
 
     InitFormatEtc(fmt, cf_another, 0xffff);
     hr = IDataObject_GetData(get, &fmt, &med);
-    ok(hr == DV_E_FORMATETC ||
-       broken(hr == S_OK), /* win9x, winme & nt4 */
-       "got %08x\n", hr);
-    if(SUCCEEDED(hr)) ReleaseStgMedium(&med);
-
-    InitFormatEtc(fmt, cf_another, 0xffff);
-    memset(&dm, 0, sizeof(dm));
-    dm.dmSize = sizeof(dm);
-    dm.dmDriverExtra = 0;
-    lstrcpyW(dm.dmDeviceName, device_name);
-    fmt.ptd = HeapAlloc(GetProcessHeap(), 0, FIELD_OFFSET(DVTARGETDEVICE, tdData) + sizeof(device_name) + dm.dmSize + dm.dmDriverExtra);
-    fmt.ptd->tdSize = FIELD_OFFSET(DVTARGETDEVICE, tdData) + sizeof(device_name) + dm.dmSize + dm.dmDriverExtra;
-    fmt.ptd->tdDriverNameOffset = FIELD_OFFSET(DVTARGETDEVICE, tdData);
-    fmt.ptd->tdDeviceNameOffset = 0;
-    fmt.ptd->tdPortNameOffset   = 0;
-    fmt.ptd->tdExtDevmodeOffset = fmt.ptd->tdDriverNameOffset + sizeof(device_name);
-    lstrcpyW((WCHAR*)fmt.ptd->tdData, device_name);
-    memcpy(fmt.ptd->tdData + sizeof(device_name), &dm, dm.dmSize + dm.dmDriverExtra);
-
-    hr = IDataObject_GetData(get, &fmt, &med);
     ok(hr == S_OK, "got %08x\n", hr);
-    ok(med.tymed == TYMED_ISTORAGE, "got %x\n", med.tymed);
     if(SUCCEEDED(hr)) ReleaseStgMedium(&med);
 
-    HeapFree(GetProcessHeap(), 0, fmt.ptd);
+    if (0)  /* Causes crashes on both Wine and Windows */
+    {
+        InitFormatEtc(fmt, cf_another, 0xffff);
+        memset(&dm, 0, sizeof(dm));
+        dm.dmSize = sizeof(dm);
+        dm.dmDriverExtra = 0;
+        lstrcpyW(dm.dmDeviceName, device_name);
+        fmt.ptd = HeapAlloc(GetProcessHeap(), 0, FIELD_OFFSET(DVTARGETDEVICE, tdData) + sizeof(device_name) + dm.dmSize + dm.dmDriverExtra);
+        fmt.ptd->tdSize = FIELD_OFFSET(DVTARGETDEVICE, tdData) + sizeof(device_name) + dm.dmSize + dm.dmDriverExtra;
+        fmt.ptd->tdDriverNameOffset = FIELD_OFFSET(DVTARGETDEVICE, tdData);
+        fmt.ptd->tdDeviceNameOffset = 0;
+        fmt.ptd->tdPortNameOffset   = 0;
+        fmt.ptd->tdExtDevmodeOffset = fmt.ptd->tdDriverNameOffset + sizeof(device_name);
+        lstrcpyW((WCHAR*)fmt.ptd->tdData, device_name);
+        memcpy(fmt.ptd->tdData + sizeof(device_name), &dm, dm.dmSize + dm.dmDriverExtra);
+
+        hr = IDataObject_GetData(get, &fmt, &med);
+        ok(hr == S_OK, "got %08x\n", hr);
+        ok(med.tymed == TYMED_ISTORAGE, "got %x\n", med.tymed);
+        if(SUCCEEDED(hr)) ReleaseStgMedium(&med);
+
+        HeapFree(GetProcessHeap(), 0, fmt.ptd);
+    }
 
 
     IDataObject_Release(get);

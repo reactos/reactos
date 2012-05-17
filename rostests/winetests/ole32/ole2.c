@@ -20,9 +20,10 @@
 
 #define COBJMACROS
 #define CONST_VTABLE
+#define WIN32_LEAN_AND_MEAN
 
 #include <stdarg.h>
-#define NOCRYPT
+
 #include "windef.h"
 #include "winbase.h"
 #include "objbase.h"
@@ -44,7 +45,16 @@ static const CLSID CLSID_WineTest =
     {0xbc, 0x13, 0x51, 0x6e, 0x92, 0x39, 0xac, 0xe0}
 };
 
+static const IID IID_WineTest =
+{ /* 9474ba1a-258b-490b-bc13-516e9239ace1 */
+    0x9474ba1a,
+    0x258b,
+    0x490b,
+    {0xbc, 0x13, 0x51, 0x6e, 0x92, 0x39, 0xac, 0xe1}
+};
+
 #define TEST_OPTIONAL 0x1
+#define TEST_TODO     0x2
 
 struct expected_method
 {
@@ -53,21 +63,38 @@ struct expected_method
 };
 
 static const struct expected_method *expected_method_list;
+static FORMATETC *g_expected_fetc = NULL;
 
-BOOL g_showRunnable = TRUE;
-BOOL g_isRunning = TRUE;
+static BOOL g_showRunnable = TRUE;
+static BOOL g_isRunning = TRUE;
+static BOOL g_failGetMiscStatus;
+static HRESULT g_QIFailsWith;
+
+static UINT cf_test_1, cf_test_2, cf_test_3;
 
 #define CHECK_EXPECTED_METHOD(method_name) \
     do { \
         trace("%s\n", method_name); \
         ok(expected_method_list->method != NULL, "Extra method %s called\n", method_name); \
+        if (!strcmp(expected_method_list->method, "WINE_EXTRA")) \
+        { \
+            todo_wine ok(0, "Too many method calls.\n"); \
+            break; \
+        } \
         if (expected_method_list->method) \
         { \
             while (expected_method_list->flags & TEST_OPTIONAL && \
                    strcmp(expected_method_list->method, method_name) != 0) \
                 expected_method_list++; \
-            ok(!strcmp(expected_method_list->method, method_name), "Expected %s to be called instead of %s\n", \
-               expected_method_list->method, method_name); \
+            if (expected_method_list->flags & TEST_TODO) \
+                todo_wine \
+                    ok(!strcmp(expected_method_list->method, method_name), \
+                       "Expected %s to be called instead of %s\n", \
+                       expected_method_list->method, method_name); \
+            else \
+                ok(!strcmp(expected_method_list->method, method_name), \
+                   "Expected %s to be called instead of %s\n", \
+                   expected_method_list->method, method_name); \
             expected_method_list++; \
         } \
     } while(0)
@@ -93,6 +120,8 @@ static HRESULT WINAPI OleObject_QueryInterface(IOleObject *iface, REFIID riid, v
         *ppv = cache;
     else if (IsEqualIID(riid, &IID_IRunnableObject) && g_showRunnable)
         *ppv = runnable;
+    else if (IsEqualIID(riid, &IID_WineTest))
+        return g_QIFailsWith;
 
     if(*ppv) {
         IUnknown_AddRef((IUnknown*)*ppv);
@@ -327,8 +356,16 @@ static HRESULT WINAPI OleObject_GetMiscStatus
 )
 {
     CHECK_EXPECTED_METHOD("OleObject_GetMiscStatus");
-    *pdwStatus = DVASPECT_CONTENT;
-    return S_OK;
+    if(!g_failGetMiscStatus)
+    {
+        *pdwStatus = OLEMISC_RECOMPOSEONRESIZE;
+        return S_OK;
+    }
+    else
+    {
+        *pdwStatus = 0x1234;
+        return E_FAIL;
+    }
 }
 
 static HRESULT WINAPI OleObject_SetColorScheme
@@ -496,6 +533,22 @@ static HRESULT WINAPI OleObjectCache_Cache
 )
 {
     CHECK_EXPECTED_METHOD("OleObjectCache_Cache");
+    if (g_expected_fetc) {
+        ok(pformatetc != NULL, "pformatetc should not be NULL\n");
+        if (pformatetc) {
+            ok(pformatetc->cfFormat == g_expected_fetc->cfFormat,
+                    "cfFormat: %x\n", pformatetc->cfFormat);
+            ok((pformatetc->ptd != NULL) == (g_expected_fetc->ptd != NULL),
+                    "ptd: %p\n", pformatetc->ptd);
+            ok(pformatetc->dwAspect == g_expected_fetc->dwAspect,
+                    "dwAspect: %x\n", pformatetc->dwAspect);
+            ok(pformatetc->lindex == g_expected_fetc->lindex,
+                    "lindex: %x\n", pformatetc->lindex);
+            ok(pformatetc->tymed == g_expected_fetc->tymed,
+                    "tymed: %x\n", pformatetc->tymed);
+        }
+    } else
+        ok(pformatetc == NULL, "pformatetc should be NULL\n");
     return S_OK;
 }
 
@@ -796,6 +849,12 @@ static void test_OleCreate(IStorage *pStorage)
         { NULL, 0 }
     };
 
+    g_expected_fetc = &formatetc;
+    formatetc.cfFormat = 0;
+    formatetc.ptd = NULL;
+    formatetc.dwAspect = DVASPECT_CONTENT;
+    formatetc.lindex = -1;
+    formatetc.tymed = TYMED_NULL;
     runnable = &OleObjectRunnable;
     cache = &OleObjectCache;
     expected_method_list = methods_olerender_none;
@@ -836,6 +895,8 @@ static void test_OleCreate(IStorage *pStorage)
     IOleObject_Release(pObject);
     CHECK_NO_EXTRA_METHODS();
 
+    formatetc.cfFormat = 0;
+    formatetc.tymed = TYMED_NULL;
     runnable = NULL;
     expected_method_list = methods_olerender_draw_no_runnable;
     trace("OleCreate with OLERENDER_DRAW (no IRunnableObject):\n");
@@ -853,6 +914,7 @@ static void test_OleCreate(IStorage *pStorage)
     IOleObject_Release(pObject);
     CHECK_NO_EXTRA_METHODS();
     trace("end\n");
+    g_expected_fetc = NULL;
 }
 
 static void test_OleLoad(IStorage *pStorage)
@@ -874,10 +936,32 @@ static void test_OleLoad(IStorage *pStorage)
         { "OleObject_SetClientSite", 0 },
         { "OleObject_Release", 0 },
         { "OleObject_QueryInterface", 0 },
+        { "OleObject_GetMiscStatus", 0 },
         { "OleObject_Release", 0 },
         { NULL, 0 }
     };
 
+    /* Test once with IOleObject_GetMiscStatus failing */
+    expected_method_list = methods_oleload;
+    g_failGetMiscStatus = TRUE;
+    trace("OleLoad:\n");
+    hr = OleLoad(pStorage, &IID_IOleObject, (IOleClientSite *)0xdeadbeef, (void **)&pObject);
+    ok(hr == S_OK ||
+       broken(hr == E_INVALIDARG), /* win98 and win2k */
+       "OleLoad failed with error 0x%08x\n", hr);
+    if(pObject)
+    {
+        DWORD dwStatus = 0xdeadbeef;
+        hr = IOleObject_GetMiscStatus(pObject, DVASPECT_CONTENT, &dwStatus);
+        ok(hr == E_FAIL, "Got 0x%08x\n", hr);
+        ok(dwStatus == 0x1234, "Got 0x%08x\n", dwStatus);
+
+        IOleObject_Release(pObject);
+        CHECK_NO_EXTRA_METHODS();
+    }
+
+    /* Test again, let IOleObject_GetMiscStatus succeed. */
+    g_failGetMiscStatus = FALSE;
     expected_method_list = methods_oleload;
     trace("OleLoad:\n");
     hr = OleLoad(pStorage, &IID_IOleObject, (IOleClientSite *)0xdeadbeef, (void **)&pObject);
@@ -886,6 +970,11 @@ static void test_OleLoad(IStorage *pStorage)
        "OleLoad failed with error 0x%08x\n", hr);
     if (pObject)
     {
+        DWORD dwStatus = 0xdeadbeef;
+        hr = IOleObject_GetMiscStatus(pObject, DVASPECT_CONTENT, &dwStatus);
+        ok(hr == S_OK, "Got 0x%08x\n", hr);
+        ok(dwStatus == 1, "Got 0x%08x\n", dwStatus);
+
         IOleObject_Release(pObject);
         CHECK_NO_EXTRA_METHODS();
     }
@@ -895,6 +984,12 @@ static BOOL STDMETHODCALLTYPE draw_continue(ULONG_PTR param)
 {
     CHECK_EXPECTED_METHOD("draw_continue");
     return TRUE;
+}
+
+static BOOL STDMETHODCALLTYPE draw_continue_false(ULONG_PTR param)
+{
+    CHECK_EXPECTED_METHOD("draw_continue_false");
+    return FALSE;
 }
 
 static HRESULT WINAPI AdviseSink_QueryInterface(IAdviseSink *iface, REFIID riid, void **ppv)
@@ -972,6 +1067,8 @@ static HRESULT WINAPI DataObject_QueryInterface(
             REFIID           riid,
             void**           ppvObject)
 {
+    CHECK_EXPECTED_METHOD("DataObject_QueryInterface");
+
     if (IsEqualIID(riid, &IID_IDataObject) || IsEqualIID(riid, &IID_IUnknown))
     {
         *ppvObject = iface;
@@ -984,12 +1081,14 @@ static HRESULT WINAPI DataObject_QueryInterface(
 static ULONG WINAPI DataObject_AddRef(
             IDataObject*     iface)
 {
+    CHECK_EXPECTED_METHOD("DataObject_AddRef");
     return 2;
 }
 
 static ULONG WINAPI DataObject_Release(
             IDataObject*     iface)
 {
+    CHECK_EXPECTED_METHOD("DataObject_Release");
     return 1;
 }
 
@@ -1054,8 +1153,20 @@ static HRESULT WINAPI DataObject_DAdvise(
         IAdviseSink*     pAdvSink,
         DWORD*           pdwConnection)
 {
+    STGMEDIUM stgmedium;
+
     CHECK_EXPECTED_METHOD("DataObject_DAdvise");
     *pdwConnection = 1;
+
+    if(advf & ADVF_PRIMEFIRST)
+    {
+        ok(pformatetc->cfFormat == cf_test_2, "got %04x\n", pformatetc->cfFormat);
+        stgmedium.tymed = TYMED_HGLOBAL;
+        U(stgmedium).hGlobal = GlobalAlloc(GMEM_MOVEABLE | GMEM_ZEROINIT, 4);
+        stgmedium.pUnkForRelease = NULL;
+        IAdviseSink_OnDataChange(pAdvSink, pformatetc, &stgmedium);
+    }
+
     return S_OK;
 }
 
@@ -1101,6 +1212,7 @@ static void test_data_cache(void)
     IPersistStorage *pPS;
     IViewObject *pViewObject;
     IOleCacheControl *pOleCacheControl;
+    IDataObject *pCacheDataObject;
     FORMATETC fmtetc;
     STGMEDIUM stgmedium;
     DWORD dwConnection;
@@ -1116,7 +1228,8 @@ static void test_data_cache(void)
     {
         { "AdviseSink_OnViewChange", 0 },
         { "AdviseSink_OnViewChange", 0 },
-        { "draw_continue", 0 },
+        { "draw_continue", 1 },
+        { "draw_continue_false", 1 },
         { "DataObject_DAdvise", 0 },
         { "DataObject_DAdvise", 0 },
         { "DataObject_DUnadvise", 0 },
@@ -1126,12 +1239,25 @@ static void test_data_cache(void)
     static const struct expected_method methods_cacheload[] =
     {
         { "AdviseSink_OnViewChange", 0 },
-        { "draw_continue", 0 },
-        { "draw_continue", 0 },
-        { "draw_continue", 0 },
+        { "draw_continue", 1 },
+        { "draw_continue", 1 },
+        { "draw_continue", 1 },
         { "DataObject_GetData", 0 },
         { "DataObject_GetData", 0 },
         { "DataObject_GetData", 0 },
+        { NULL, 0 }
+    };
+    static const struct expected_method methods_cachethenrun[] =
+    {
+        { "DataObject_DAdvise", 0 },
+        { "DataObject_DAdvise", 0 },
+        { "DataObject_DAdvise", 0 },
+        { "DataObject_QueryGetData", 1 }, /* called by win9x and nt4 */
+        { "DataObject_DAdvise", 0 },
+        { "DataObject_DUnadvise", 0 },
+        { "DataObject_DUnadvise", 0 },
+        { "DataObject_DUnadvise", 0 },
+        { "DataObject_DUnadvise", 0 },
         { NULL, 0 }
     };
 
@@ -1248,6 +1374,7 @@ static void test_data_cache(void)
     fmtetc.dwAspect = DVASPECT_ICON;
     hr = IOleCache_SetData(pOleCache, &fmtetc, &stgmedium, FALSE);
     ok_ole_success(hr, "IOleCache_SetData");
+    ReleaseStgMedium(&stgmedium);
 
     hr = IViewObject_Freeze(pViewObject, DVASPECT_ICON, -1, NULL, &dwFreeze);
     todo_wine {
@@ -1268,12 +1395,20 @@ static void test_data_cache(void)
     hr = IViewObject_Draw(pViewObject, DVASPECT_CONTENT, -1, NULL, NULL, NULL, hdcMem, &rcBounds, NULL, draw_continue, 0xdeadbeef);
     ok(hr == OLE_E_BLANK, "IViewObject_Draw with uncached aspect should have returned OLE_E_BLANK instead of 0x%08x\n", hr);
 
+    /* a NULL draw_continue fn ptr */
+    hr = IViewObject_Draw(pViewObject, DVASPECT_ICON, -1, NULL, NULL, NULL, hdcMem, &rcBounds, NULL, NULL, 0xdeadbeef);
+    ok_ole_success(hr, "IViewObject_Draw");
+
+    /* draw_continue that returns FALSE to abort drawing */
+    hr = IViewObject_Draw(pViewObject, DVASPECT_ICON, -1, NULL, NULL, NULL, hdcMem, &rcBounds, NULL, draw_continue_false, 0xdeadbeef);
+    ok(hr == E_ABORT ||
+       broken(hr == S_OK), /* win9x may skip the callbacks */
+       "IViewObject_Draw with draw_continue_false returns 0x%08x\n", hr);
+
     DeleteDC(hdcMem);
 
     hr = IOleCacheControl_OnRun(pOleCacheControl, &DataObject);
-    todo_wine {
     ok_ole_success(hr, "IOleCacheControl_OnRun");
-    }
 
     hr = IPersistStorage_Save(pPS, pStorage, TRUE);
     ok_ole_success(hr, "IPersistStorage_Save");
@@ -1289,9 +1424,7 @@ static void test_data_cache(void)
     IOleCache_Release(pOleCache);
     IOleCacheControl_Release(pOleCacheControl);
 
-    todo_wine {
     CHECK_NO_EXTRA_METHODS();
-    }
 
     /* Test with loaded data */
     trace("Testing loaded data with CreateDataCache:\n");
@@ -1365,8 +1498,70 @@ static void test_data_cache(void)
     CHECK_NO_EXTRA_METHODS();
     }
 
-    IStorage_Release(pStorage);
+    hr = CreateDataCache(NULL, &CLSID_NULL, &IID_IOleCache2, (LPVOID *)&pOleCache);
+    ok_ole_success(hr, "CreateDataCache");
+
+    expected_method_list = methods_cachethenrun;
+
+    hr = IOleCache_QueryInterface(pOleCache, &IID_IDataObject, (LPVOID *)&pCacheDataObject);
+    ok_ole_success(hr, "IOleCache_QueryInterface(IID_IDataObject)");
+    hr = IOleCache_QueryInterface(pOleCache, &IID_IOleCacheControl, (LPVOID *)&pOleCacheControl);
+    ok_ole_success(hr, "IOleCache_QueryInterface(IID_IOleCacheControl)");
+
+    fmtetc.cfFormat = CF_METAFILEPICT;
+    fmtetc.dwAspect = DVASPECT_CONTENT;
+    fmtetc.tymed = TYMED_MFPICT;
+
+    hr = IOleCache_Cache(pOleCache, &fmtetc, 0, &dwConnection);
+    ok_ole_success(hr, "IOleCache_Cache");
+
+    hr = IDataObject_GetData(pCacheDataObject, &fmtetc, &stgmedium);
+    ok(hr == OLE_E_BLANK, "got %08x\n", hr);
+
+    fmtetc.cfFormat = cf_test_1;
+    fmtetc.dwAspect = DVASPECT_CONTENT;
+    fmtetc.tymed = TYMED_HGLOBAL;
+
+    hr = IOleCache_Cache(pOleCache, &fmtetc, 0, &dwConnection);
+    ok(hr == CACHE_S_FORMATETC_NOTSUPPORTED, "got %08x\n", hr);
+
+    hr = IDataObject_GetData(pCacheDataObject, &fmtetc, &stgmedium);
+    ok(hr == OLE_E_BLANK, "got %08x\n", hr);
+
+    fmtetc.cfFormat = cf_test_2;
+    hr = IOleCache_Cache(pOleCache, &fmtetc, ADVF_PRIMEFIRST, &dwConnection);
+    ok(hr == CACHE_S_FORMATETC_NOTSUPPORTED, "got %08x\n", hr);
+
+    hr = IDataObject_GetData(pCacheDataObject, &fmtetc, &stgmedium);
+    ok(hr == OLE_E_BLANK, "got %08x\n", hr);
+
+    hr = IOleCacheControl_OnRun(pOleCacheControl, &DataObject);
+    ok_ole_success(hr, "IOleCacheControl_OnRun");
+
+    fmtetc.cfFormat = cf_test_3;
+    hr = IOleCache_Cache(pOleCache, &fmtetc, 0, &dwConnection);
+    ok(hr == CACHE_S_FORMATETC_NOTSUPPORTED, "got %08x\n", hr);
+
+    fmtetc.cfFormat = cf_test_1;
+    hr = IDataObject_GetData(pCacheDataObject, &fmtetc, &stgmedium);
+    ok(hr == OLE_E_BLANK, "got %08x\n", hr);
+
+    fmtetc.cfFormat = cf_test_2;
+    hr = IDataObject_GetData(pCacheDataObject, &fmtetc, &stgmedium);
+    ok(hr == S_OK, "got %08x\n", hr);
     ReleaseStgMedium(&stgmedium);
+
+    fmtetc.cfFormat = cf_test_3;
+    hr = IDataObject_GetData(pCacheDataObject, &fmtetc, &stgmedium);
+    ok(hr == OLE_E_BLANK, "got %08x\n", hr);
+
+    IOleCacheControl_Release(pOleCacheControl);
+    IDataObject_Release(pCacheDataObject);
+    IOleCache_Release(pOleCache);
+
+    CHECK_NO_EXTRA_METHODS();
+
+    IStorage_Release(pStorage);
 }
 
 static void test_default_handler(void)
@@ -1386,9 +1581,24 @@ static void test_default_handler(void)
     FORMATETC fmtetc;
     IOleInPlaceObject *pInPlaceObj;
     IEnumOLEVERB *pEnumVerbs;
+    DWORD dwRegister;
     static const WCHAR wszUnknown[] = {'U','n','k','n','o','w','n',0};
     static const WCHAR wszHostName[] = {'W','i','n','e',' ','T','e','s','t',' ','P','r','o','g','r','a','m',0};
     static const WCHAR wszDelim[] = {'!',0};
+
+    static const struct expected_method methods_embeddinghelper[] =
+    {
+        { "OleObject_QueryInterface", 0 },
+        { "OleObject_AddRef", 0 },
+        { "OleObject_QueryInterface", 0 },
+        { "OleObject_QueryInterface", TEST_TODO },
+        { "OleObject_QueryInterface", 0 },
+        { "OleObject_QueryInterface", 0 },
+        { "OleObject_QueryInterface", TEST_OPTIONAL }, /* Win95/98/NT4 */
+        { "OleObject_Release", TEST_TODO },
+        { "WINE_EXTRA", TEST_OPTIONAL },
+        { NULL, 0 }
+    };
 
     hr = CoCreateInstance(&CLSID_WineTest, NULL, CLSCTX_INPROC_HANDLER, &IID_IOleObject, (void **)&pObject);
     ok(hr == REGDB_E_CLASSNOTREG, "CoCreateInstance should have failed with REGDB_E_CLASSNOTREG instead of 0x%08x\n", hr);
@@ -1449,6 +1659,7 @@ static void test_default_handler(void)
 
     sizel.cx = sizel.cy = 0;
     hr = IOleObject_SetExtent(pObject, DVASPECT_CONTENT, &sizel);
+    ok(hr == OLE_E_NOTRUNNING, "IOleObject_SetExtent should have returned OLE_E_NOTRUNNING instead of 0x%08x\n", hr);
 
     hr = IOleObject_SetHostNames(pObject, wszHostName, NULL);
     ok_ole_success(hr, "IOleObject_SetHostNames");
@@ -1517,6 +1728,45 @@ static void test_default_handler(void)
 
     IRunnableObject_Release(pRunnableObject);
     IOleObject_Release(pObject);
+
+    /* Test failure propagation from delegate ::QueryInterface */
+    hr = CoRegisterClassObject(&CLSID_WineTest, (IUnknown*)&OleObjectCF,
+                               CLSCTX_INPROC_SERVER, REGCLS_MULTIPLEUSE, &dwRegister);
+    ok_ole_success(hr, "CoRegisterClassObject");
+    if(SUCCEEDED(hr))
+    {
+        expected_method_list = methods_embeddinghelper;
+        hr = OleCreateEmbeddingHelper(&CLSID_WineTest, NULL, EMBDHLP_INPROC_SERVER,
+                                      &OleObjectCF, &IID_IOleObject, (void**)&pObject);
+        ok_ole_success(hr, "OleCreateEmbeddingHelper");
+        if(SUCCEEDED(hr))
+        {
+            IUnknown *punk;
+
+            g_QIFailsWith = E_FAIL;
+            hr = IOleObject_QueryInterface(pObject, &IID_WineTest, (void**)&punk);
+            ok(hr == E_FAIL, "Got 0x%08x\n", hr);
+
+            g_QIFailsWith = E_NOINTERFACE;
+            hr = IOleObject_QueryInterface(pObject, &IID_WineTest, (void**)&punk);
+            ok(hr == E_NOINTERFACE, "Got 0x%08x\n", hr);
+
+            g_QIFailsWith = CO_E_OBJNOTCONNECTED;
+            hr = IOleObject_QueryInterface(pObject, &IID_WineTest, (void**)&punk);
+            ok(hr == CO_E_OBJNOTCONNECTED, "Got 0x%08x\n", hr);
+
+            g_QIFailsWith = 0x87654321;
+            hr = IOleObject_QueryInterface(pObject, &IID_WineTest, (void**)&punk);
+            ok(hr == 0x87654321, "Got 0x%08x\n", hr);
+
+            IOleObject_Release(pObject);
+        }
+
+        CHECK_NO_EXTRA_METHODS();
+
+        hr = CoRevokeClassObject(dwRegister);
+        ok_ole_success(hr, "CoRevokeClassObject");
+    }
 }
 
 static void test_runnable(void)
@@ -1536,20 +1786,28 @@ static void test_runnable(void)
         { NULL, 0 }
     };
 
+    BOOL ret;
     IOleObject *object = &OleObject;
 
+    /* null argument */
+    ret = OleIsRunning(NULL);
+    ok(ret == FALSE, "got %d\n", ret);
+
     expected_method_list = methods_query_runnable;
-    ok(OleIsRunning(object), "Object should be running\n");
+    ret = OleIsRunning(object);
+    ok(ret == TRUE, "Object should be running\n");
     CHECK_NO_EXTRA_METHODS();
 
     g_isRunning = FALSE;
     expected_method_list = methods_query_runnable;
-    ok(OleIsRunning(object) == FALSE, "Object should not be running\n");
+    ret = OleIsRunning(object);
+    ok(ret == FALSE, "Object should not be running\n");
     CHECK_NO_EXTRA_METHODS();
 
     g_showRunnable = FALSE;  /* QueryInterface(IID_IRunnableObject, ...) will fail */
     expected_method_list = methods_no_runnable;
-    ok(OleIsRunning(object), "Object without IRunnableObject should be running\n");
+    ret = OleIsRunning(object);
+    ok(ret == TRUE, "Object without IRunnableObject should be running\n");
     CHECK_NO_EXTRA_METHODS();
 
     g_isRunning = TRUE;
@@ -1585,13 +1843,13 @@ static const IUnknownVtbl UnknownVtbl =
     Unknown_Release
 };
 
-static IUnknown Unknown = { &UnknownVtbl };
+static IUnknown unknown = { &UnknownVtbl };
 
 static void test_OleLockRunning(void)
 {
     HRESULT hr;
 
-    hr = OleLockRunning((LPUNKNOWN)&Unknown, TRUE, FALSE);
+    hr = OleLockRunning((LPUNKNOWN)&unknown, TRUE, FALSE);
     ok(hr == S_OK, "OleLockRunning failed 0x%08x\n", hr);
 }
 
@@ -1601,6 +1859,10 @@ START_TEST(ole2)
     IStorage *pStorage;
     STATSTG statstg;
     HRESULT hr;
+
+    cf_test_1 = RegisterClipboardFormatA("cf_winetest_1");
+    cf_test_2 = RegisterClipboardFormatA("cf_winetest_2");
+    cf_test_3 = RegisterClipboardFormatA("cf_winetest_3");
 
     CoInitialize(NULL);
 

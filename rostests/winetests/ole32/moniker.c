@@ -28,6 +28,7 @@
 #include "windef.h"
 #include "winbase.h"
 #include "objbase.h"
+#include "ocidl.h"
 #include "initguid.h"
 #include "comcat.h"
 #include "olectl.h"
@@ -156,9 +157,14 @@ static IClassFactory Test_ClassFactory = { &TestClassFactory_Vtbl };
 
 typedef struct
 {
-    const IUnknownVtbl *lpVtbl;
+    IUnknown IUnknown_iface;
     ULONG refs;
 } HeapUnknown;
+
+static inline HeapUnknown *impl_from_IUnknown(IUnknown *iface)
+{
+    return CONTAINING_RECORD(iface, HeapUnknown, IUnknown_iface);
+}
 
 static HRESULT WINAPI HeapUnknown_QueryInterface(IUnknown *iface, REFIID riid, void **ppv)
 {
@@ -174,13 +180,13 @@ static HRESULT WINAPI HeapUnknown_QueryInterface(IUnknown *iface, REFIID riid, v
 
 static ULONG WINAPI HeapUnknown_AddRef(IUnknown *iface)
 {
-    HeapUnknown *This = (HeapUnknown *)iface;
+    HeapUnknown *This = impl_from_IUnknown(iface);
     return InterlockedIncrement((LONG*)&This->refs);
 }
 
 static ULONG WINAPI HeapUnknown_Release(IUnknown *iface)
 {
-    HeapUnknown *This = (HeapUnknown *)iface;
+    HeapUnknown *This = impl_from_IUnknown(iface);
     ULONG refs = InterlockedDecrement((LONG*)&This->refs);
     if (!refs) HeapFree(GetProcessHeap(), 0, This);
     return refs;
@@ -1007,7 +1013,6 @@ static void test_MkParseDisplayName(void)
     hr = IEnumMoniker_QueryInterface(spEM1, &IID_IUnknown, (void*) &lpEM1);
     /* Register a couple of Monikers and check is ok */
     ok(hr==0, "IEnumMoniker_QueryInterface hr %08x %p\n", hr, lpEM1);
-    hr = MK_E_NOOBJECT;
     
     matchCnt = count_moniker_matches(pbc, spEM1);
     trace("Number of matches is %i\n", matchCnt);
@@ -1271,6 +1276,7 @@ static void test_moniker(
     IROTData_Release(rotdata);
   
     hr = CreateStreamOnHGlobal(NULL, TRUE, &stream);
+    ok_ole_success(hr, CreateStreamOnHGlobal);
   
     /* Saving */
 
@@ -1451,6 +1457,7 @@ static void test_file_moniker(WCHAR* path)
     ok_ole_success(hr, CreateFileMoniker); 
 
     hr = CreateStreamOnHGlobal(NULL, TRUE, &stream);
+    ok_ole_success(hr, CreateStreamOnHGlobal);
 
     /* Marshal */
     hr = CoMarshalInterface(stream, &IID_IMoniker, (IUnknown *)moniker1, MSHCTX_INPROC, NULL, MSHLFLAGS_NORMAL);
@@ -1774,9 +1781,9 @@ static void test_pointer_moniker(void)
     /* Hashing */
     hr = IMoniker_Hash(moniker, &hash);
     ok_ole_success(hr, IMoniker_Hash);
-    ok(hash == (DWORD)&Test_ClassFactory,
+    ok(hash == PtrToUlong(&Test_ClassFactory),
         "Hash value should have been 0x%08x, instead of 0x%08x\n",
-        (DWORD)&Test_ClassFactory, hash);
+        PtrToUlong(&Test_ClassFactory), hash);
 
     /* IsSystemMoniker test */
     hr = IMoniker_IsSystemMoniker(moniker, &moniker_type);
@@ -1880,9 +1887,9 @@ static void test_bind_context(void)
     ok(hr == E_INVALIDARG, "IBindCtx_RegisterObjectParam should have returned E_INVALIDARG instead of 0x%08x\n", hr);
 
     unknown = HeapAlloc(GetProcessHeap(), 0, sizeof(*unknown));
-    unknown->lpVtbl = &HeapUnknown_Vtbl;
+    unknown->IUnknown_iface.lpVtbl = &HeapUnknown_Vtbl;
     unknown->refs = 1;
-    hr = IBindCtx_RegisterObjectParam(pBindCtx, (WCHAR *)wszParamName, (IUnknown *)&unknown->lpVtbl);
+    hr = IBindCtx_RegisterObjectParam(pBindCtx, (WCHAR *)wszParamName, &unknown->IUnknown_iface);
     ok_ole_success(hr, "IBindCtx_RegisterObjectParam");
 
     hr = IBindCtx_GetObjectParam(pBindCtx, (WCHAR *)wszParamName, &param_obj);
@@ -1907,23 +1914,23 @@ static void test_bind_context(void)
     ok(hr == E_INVALIDARG, "IBindCtx_RevokeObjectBound(NULL) should have return E_INVALIDARG instead of 0x%08x\n", hr);
 
     unknown2 = HeapAlloc(GetProcessHeap(), 0, sizeof(*unknown));
-    unknown2->lpVtbl = &HeapUnknown_Vtbl;
+    unknown2->IUnknown_iface.lpVtbl = &HeapUnknown_Vtbl;
     unknown2->refs = 1;
-    hr = IBindCtx_RegisterObjectBound(pBindCtx, (IUnknown *)&unknown2->lpVtbl);
+    hr = IBindCtx_RegisterObjectBound(pBindCtx, &unknown2->IUnknown_iface);
     ok_ole_success(hr, "IBindCtx_RegisterObjectBound");
 
-    hr = IBindCtx_RevokeObjectBound(pBindCtx, (IUnknown *)&unknown2->lpVtbl);
+    hr = IBindCtx_RevokeObjectBound(pBindCtx, &unknown2->IUnknown_iface);
     ok_ole_success(hr, "IBindCtx_RevokeObjectBound");
 
-    hr = IBindCtx_RevokeObjectBound(pBindCtx, (IUnknown *)&unknown2->lpVtbl);
+    hr = IBindCtx_RevokeObjectBound(pBindCtx, &unknown2->IUnknown_iface);
     ok(hr == MK_E_NOTBOUND, "IBindCtx_RevokeObjectBound with not bound object should have returned MK_E_NOTBOUND instead of 0x%08x\n", hr);
 
     IBindCtx_Release(pBindCtx);
 
-    refs = IUnknown_Release((IUnknown *)&unknown->lpVtbl);
+    refs = IUnknown_Release(&unknown->IUnknown_iface);
     ok(!refs, "object param should have been destroyed, instead of having %d refs\n", refs);
 
-    refs = IUnknown_Release((IUnknown *)&unknown2->lpVtbl);
+    refs = IUnknown_Release(&unknown2->IUnknown_iface);
     ok(!refs, "bound object should have been destroyed, instead of having %d refs\n", refs);
 }
 
@@ -1998,6 +2005,11 @@ static void test_save_load_filemoniker(void)
 
 START_TEST(moniker)
 {
+    if (!GetProcAddress(GetModuleHandleA("ole32.dll"), "CoRegisterSurrogateEx")) {
+        win_skip("skipping test on win9x\n");
+        return;
+    }
+
     CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
 
     test_ROT();

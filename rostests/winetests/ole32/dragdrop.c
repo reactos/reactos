@@ -39,7 +39,7 @@ static int droptarget_refs;
 static HRESULT WINAPI DropTarget_QueryInterface(IDropTarget* iface, REFIID riid,
                                                 void** ppvObject)
 {
-    trace("DropTarget_QueryInterface\n");
+    ok(0, "DropTarget_QueryInterface() shouldn't be called\n");
     if (IsEqualIID(riid, &IID_IUnknown) ||
         IsEqualIID(riid, &IID_IDropTarget))
     {

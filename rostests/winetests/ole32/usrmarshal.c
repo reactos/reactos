@@ -182,6 +182,7 @@ static void test_marshal_HGLOBAL(void)
     wirehglobal += sizeof(ULONG);
     ok(*(ULONG *)wirehglobal == 0, "buffer+4 should be HGLOBAL\n");
     init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, buffer, size, MSHCTX_LOCAL);
+    hglobal2 = NULL;
     HGLOBAL_UserUnmarshal(&umcb.Flags, buffer, &hglobal2);
     ok(hglobal2 == hglobal, "Didn't unmarshal properly\n");
     HeapFree(GetProcessHeap(), 0, buffer);
@@ -227,6 +228,7 @@ static void test_marshal_HGLOBAL(void)
             ok(wirehglobal[i] == i, "buffer+0x%x should be %d\n", 0x10 + i, i);
 
         init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, buffer, size, MSHCTX_LOCAL);
+        hglobal2 = NULL;
         HGLOBAL_UserUnmarshal(&umcb.Flags, buffer, &hglobal2);
         ok(hglobal2 != NULL, "Didn't unmarshal properly\n");
         HeapFree(GetProcessHeap(), 0, buffer);
@@ -578,7 +580,6 @@ static void marshal_WdtpInterfacePointer(DWORD umcb_ctx, DWORD ctx)
     ok(size == 0, "size should be 0 bytes, not %d\n", size);
     buffer = HeapAlloc(GetProcessHeap(), 0, size);
     buffer_end = WdtpInterfacePointer_UserMarshal(&umcb.Flags, ctx, buffer, unk, &IID_IUnknown);
-    wireip = buffer;
     HeapFree(GetProcessHeap(), 0, buffer);
 
     /* Now for a non-NULL pointer. The marshalled data are two size DWORDS and then

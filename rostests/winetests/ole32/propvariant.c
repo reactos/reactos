@@ -32,7 +32,7 @@
 #define PROP_V1A 2
 #define PROP_TODO 0x80
 
-struct valid_mapping
+static const struct valid_mapping
 {
     BYTE simple;
     BYTE with_array;

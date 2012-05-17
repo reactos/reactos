@@ -38,11 +38,11 @@
 extern const IID GUID_NULL;
 
 /* functions that are not present on all versions of Windows */
-HRESULT (WINAPI * pCoInitializeEx)(LPVOID lpReserved, DWORD dwCoInit);
-HRESULT (WINAPI * pCoGetObjectContext)(REFIID riid, LPVOID *ppv);
-HRESULT (WINAPI * pCoSwitchCallContext)(IUnknown *pObject, IUnknown **ppOldObject);
-HRESULT (WINAPI * pCoGetTreatAsClass)(REFCLSID clsidOld, LPCLSID pClsidNew);
-HRESULT (WINAPI * pCoGetContextToken)(ULONG_PTR *token);
+static HRESULT (WINAPI * pCoInitializeEx)(LPVOID lpReserved, DWORD dwCoInit);
+static HRESULT (WINAPI * pCoGetObjectContext)(REFIID riid, LPVOID *ppv);
+static HRESULT (WINAPI * pCoSwitchCallContext)(IUnknown *pObject, IUnknown **ppOldObject);
+static HRESULT (WINAPI * pCoGetTreatAsClass)(REFCLSID clsidOld, LPCLSID pClsidNew);
+static HRESULT (WINAPI * pCoGetContextToken)(ULONG_PTR *token);
 
 #define ok_ole_success(hr, func) ok(hr == S_OK, func " failed with error 0x%08x\n", hr)
 #define ok_more_than_one_lock() ok(cLocks > 0, "Number of locks should be > 0, but actually is %d\n", cLocks)
@@ -117,7 +117,7 @@ static ULONG WINAPI Test_IClassFactory_Release(LPCLASSFACTORY iface)
 
 static HRESULT WINAPI Test_IClassFactory_CreateInstance(
     LPCLASSFACTORY iface,
-    LPUNKNOWN pUnkOuter,
+    IUnknown *pUnkOuter,
     REFIID riid,
     LPVOID *ppvObj)
 {
@@ -192,6 +192,9 @@ static void test_CLSIDFromProgID(void)
 static void test_CLSIDFromString(void)
 {
     CLSID clsid;
+    WCHAR wszCLSID_Broken[50];
+    UINT i;
+
     HRESULT hr = CLSIDFromString(wszCLSID_StdFont, &clsid);
     ok_ole_success(hr, "CLSIDFromString");
     ok(IsEqualCLSID(&clsid, &CLSID_StdFont), "clsid wasn't equal to CLSID_StdFont\n");
@@ -199,6 +202,60 @@ static void test_CLSIDFromString(void)
     hr = CLSIDFromString(NULL, &clsid);
     ok_ole_success(hr, "CLSIDFromString");
     ok(IsEqualCLSID(&clsid, &CLSID_NULL), "clsid wasn't equal to CLSID_NULL\n");
+
+    lstrcpyW(wszCLSID_Broken, wszCLSID_StdFont);
+    for(i = lstrlenW(wszCLSID_StdFont); i < 49; i++)
+        wszCLSID_Broken[i] = 'A';
+    wszCLSID_Broken[i] = '\0';
+
+    memset(&clsid, 0, sizeof(CLSID));
+    hr = CLSIDFromString(wszCLSID_Broken, &clsid);
+    ok(hr == CO_E_CLASSSTRING, "Got %08x\n", hr);
+    ok(IsEqualCLSID(&clsid, &CLSID_StdFont), "clsid wasn't equal to CLSID_StdFont\n");
+
+    wszCLSID_Broken[lstrlenW(wszCLSID_StdFont)-1] = 'A';
+    memset(&clsid, 0, sizeof(CLSID));
+    hr = CLSIDFromString(wszCLSID_Broken, &clsid);
+    ok(hr == CO_E_CLASSSTRING, "Got %08x\n", hr);
+    ok(IsEqualCLSID(&clsid, &CLSID_StdFont), "clsid wasn't equal to CLSID_StdFont\n");
+
+    wszCLSID_Broken[lstrlenW(wszCLSID_StdFont)] = '\0';
+    memset(&clsid, 0, sizeof(CLSID));
+    hr = CLSIDFromString(wszCLSID_Broken, &clsid);
+    ok(hr == CO_E_CLASSSTRING, "Got %08x\n", hr);
+    ok(IsEqualCLSID(&clsid, &CLSID_StdFont), "clsid wasn't equal to CLSID_StdFont\n");
+
+    wszCLSID_Broken[lstrlenW(wszCLSID_StdFont)-1] = '\0';
+    memset(&clsid, 0, sizeof(CLSID));
+    hr = CLSIDFromString(wszCLSID_Broken, &clsid);
+    ok(hr == CO_E_CLASSSTRING, "Got %08x\n", hr);
+    ok(IsEqualCLSID(&clsid, &CLSID_StdFont), "clsid wasn't equal to CLSID_StdFont\n");
+
+    memset(&clsid, 0xcc, sizeof(CLSID));
+    hr = CLSIDFromString(wszCLSID_Broken+1, &clsid);
+    ok(hr == CO_E_CLASSSTRING, "Got %08x\n", hr);
+    ok(IsEqualCLSID(&clsid, &CLSID_NULL), "clsid wasn't equal to CLSID_NULL\n");
+
+    wszCLSID_Broken[9] = '*';
+    memset(&clsid, 0xcc, sizeof(CLSID));
+    hr = CLSIDFromString(wszCLSID_Broken, &clsid);
+    ok(hr == CO_E_CLASSSTRING, "Got %08x\n", hr);
+    ok(clsid.Data1 == CLSID_StdFont.Data1, "Got %08x\n", clsid.Data1);
+    ok(clsid.Data2 == 0xcccc, "Got %04x\n", clsid.Data2);
+
+    wszCLSID_Broken[3] = '*';
+    memset(&clsid, 0xcc, sizeof(CLSID));
+    hr = CLSIDFromString(wszCLSID_Broken, &clsid);
+    ok(hr == CO_E_CLASSSTRING, "Got %08x\n", hr);
+    ok(clsid.Data1 == 0xb, "Got %08x\n", clsid.Data1);
+    ok(clsid.Data2 == 0xcccc, "Got %04x\n", clsid.Data2);
+
+    wszCLSID_Broken[3] = '\0';
+    memset(&clsid, 0xcc, sizeof(CLSID));
+    hr = CLSIDFromString(wszCLSID_Broken, &clsid);
+    ok(hr == CO_E_CLASSSTRING, "Got %08x\n", hr);
+    ok(clsid.Data1 == 0xb, "Got %08x\n", clsid.Data1);
+    ok(clsid.Data2 == 0xcccc, "Got %04x\n", clsid.Data2);
 }
 
 static void test_StringFromGUID2(void)
@@ -515,7 +572,7 @@ static void test_CoRegisterMessageFilter(void)
 }
 
 static HRESULT WINAPI Test_IUnknown_QueryInterface(
-    LPUNKNOWN iface,
+    IUnknown *iface,
     REFIID riid,
     LPVOID *ppvObj)
 {
@@ -533,12 +590,12 @@ static HRESULT WINAPI Test_IUnknown_QueryInterface(
     return E_NOINTERFACE;
 }
 
-static ULONG WINAPI Test_IUnknown_AddRef(LPUNKNOWN iface)
+static ULONG WINAPI Test_IUnknown_AddRef(IUnknown *iface)
 {
     return 2; /* non-heap-based object */
 }
 
-static ULONG WINAPI Test_IUnknown_Release(LPUNKNOWN iface)
+static ULONG WINAPI Test_IUnknown_Release(IUnknown *iface)
 {
     return 1; /* non-heap-based object */
 }
@@ -872,7 +929,7 @@ static void test_CoRegisterClassObject(void)
 
     /* crashes with at least win9x DCOM! */
     if (0)
-        hr = CoRevokeClassObject(cookie);
+        CoRevokeClassObject(cookie);
 
     CoUninitialize();
 }
@@ -1216,9 +1273,14 @@ static void test_CoGetObjectContext(void)
 }
 
 typedef struct {
-    const IUnknownVtbl *lpVtbl;
+    IUnknown IUnknown_iface;
     LONG refs;
 } Test_CallContext;
+
+static inline Test_CallContext *impl_from_IUnknown(IUnknown *iface)
+{
+    return CONTAINING_RECORD(iface, Test_CallContext, IUnknown_iface);
+}
 
 static HRESULT WINAPI Test_CallContext_QueryInterface(
     IUnknown *iface,
@@ -1240,13 +1302,13 @@ static HRESULT WINAPI Test_CallContext_QueryInterface(
 
 static ULONG WINAPI Test_CallContext_AddRef(IUnknown *iface)
 {
-    Test_CallContext *This = (Test_CallContext*)iface;
+    Test_CallContext *This = impl_from_IUnknown(iface);
     return InterlockedIncrement(&This->refs);
 }
 
 static ULONG WINAPI Test_CallContext_Release(IUnknown *iface)
 {
-    Test_CallContext *This = (Test_CallContext*)iface;
+    Test_CallContext *This = impl_from_IUnknown(iface);
     ULONG refs = InterlockedDecrement(&This->refs);
     if (!refs)
         HeapFree(GetProcessHeap(), 0, This);
@@ -1265,7 +1327,7 @@ static void test_CoGetCallContext(void)
     HRESULT hr;
     ULONG refs;
     IUnknown *pUnk;
-    IUnknown *test_object;
+    Test_CallContext *test_object;
 
     if (!pCoSwitchCallContext)
     {
@@ -1276,41 +1338,43 @@ static void test_CoGetCallContext(void)
     CoInitialize(NULL);
 
     test_object = HeapAlloc(GetProcessHeap(), 0, sizeof(Test_CallContext));
-    ((Test_CallContext*)test_object)->lpVtbl = &TestCallContext_Vtbl;
-    ((Test_CallContext*)test_object)->refs = 1;
+    test_object->IUnknown_iface.lpVtbl = &TestCallContext_Vtbl;
+    test_object->refs = 1;
 
     hr = CoGetCallContext(&IID_IUnknown, (void**)&pUnk);
     ok(hr == RPC_E_CALL_COMPLETE, "Expected RPC_E_CALL_COMPLETE, got 0x%08x\n", hr);
 
     pUnk = (IUnknown*)0xdeadbeef;
-    hr = pCoSwitchCallContext(test_object, &pUnk);
+    hr = pCoSwitchCallContext(&test_object->IUnknown_iface, &pUnk);
     ok_ole_success(hr, "CoSwitchCallContext");
     ok(pUnk == NULL, "expected NULL, got %p\n", pUnk);
-    refs = IUnknown_AddRef(test_object);
+    refs = IUnknown_AddRef(&test_object->IUnknown_iface);
     ok(refs == 2, "Expected refcount 2, got %d\n", refs);
-    IUnknown_Release(test_object);
+    IUnknown_Release(&test_object->IUnknown_iface);
 
     pUnk = (IUnknown*)0xdeadbeef;
     hr = CoGetCallContext(&IID_IUnknown, (void**)&pUnk);
     ok_ole_success(hr, "CoGetCallContext");
-    ok(pUnk == test_object, "expected %p, got %p\n", test_object, pUnk);
-    refs = IUnknown_AddRef(test_object);
+    ok(pUnk == &test_object->IUnknown_iface, "expected %p, got %p\n",
+       &test_object->IUnknown_iface, pUnk);
+    refs = IUnknown_AddRef(&test_object->IUnknown_iface);
     ok(refs == 3, "Expected refcount 3, got %d\n", refs);
-    IUnknown_Release(test_object);
+    IUnknown_Release(&test_object->IUnknown_iface);
     IUnknown_Release(pUnk);
 
     pUnk = (IUnknown*)0xdeadbeef;
     hr = pCoSwitchCallContext(NULL, &pUnk);
     ok_ole_success(hr, "CoSwitchCallContext");
-    ok(pUnk == test_object, "expected %p, got %p\n", test_object, pUnk);
-    refs = IUnknown_AddRef(test_object);
+    ok(pUnk == &test_object->IUnknown_iface, "expected %p, got %p\n",
+       &test_object->IUnknown_iface, pUnk);
+    refs = IUnknown_AddRef(&test_object->IUnknown_iface);
     ok(refs == 2, "Expected refcount 2, got %d\n", refs);
-    IUnknown_Release(test_object);
+    IUnknown_Release(&test_object->IUnknown_iface);
 
     hr = CoGetCallContext(&IID_IUnknown, (void**)&pUnk);
     ok(hr == RPC_E_CALL_COMPLETE, "Expected RPC_E_CALL_COMPLETE, got 0x%08x\n", hr);
 
-    IUnknown_Release(test_object);
+    IUnknown_Release(&test_object->IUnknown_iface);
 
     CoUninitialize();
 }
