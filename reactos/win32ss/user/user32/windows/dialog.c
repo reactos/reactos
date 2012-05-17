@@ -2561,7 +2561,7 @@ IsDialogMessageW(
                  else if (DC_HASDEFID == HIWORD(dw = SendMessageW (hDlg, DM_GETDEFID, 0, 0)))
                  {
                     HWND hwndDef = DIALOG_IdToHwnd(hDlg, LOWORD(dw));
-                    if (hwndDef ? IsWindowEnabled(hwndDef) : LOWORD(dw)==IDOK)
+                    if (!hwndDef || IsWindowEnabled(hwndDef))
                         SendMessageW( hDlg, WM_COMMAND, MAKEWPARAM( LOWORD(dw), BN_CLICKED ), (LPARAM)hwndDef);
                  }
                  else
