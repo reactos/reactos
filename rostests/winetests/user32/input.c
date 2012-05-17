@@ -1603,6 +1603,46 @@ static void test_keyboard_layout_name(void)
     ok(!strcmp(klid, "00000409"), "expected 00000409, got %s\n", klid);
 }
 
+static void test_key_names(void)
+{
+    char buffer[40];
+    WCHAR bufferW[40];
+    int ret, prev;
+    LONG lparam = 0x1d << 16;
+
+    memset( buffer, 0xcc, sizeof(buffer) );
+    ret = GetKeyNameTextA( lparam, buffer, sizeof(buffer) );
+    ok( ret > 0, "wrong len %u for '%s'\n", ret, buffer );
+    ok( ret == strlen(buffer), "wrong len %u for '%s'\n", ret, buffer );
+
+    memset( buffer, 0xcc, sizeof(buffer) );
+    prev = ret;
+    ret = GetKeyNameTextA( lparam, buffer, prev );
+    ok( ret == prev - 1, "wrong len %u for '%s'\n", ret, buffer );
+    ok( ret == strlen(buffer), "wrong len %u for '%s'\n", ret, buffer );
+
+    memset( buffer, 0xcc, sizeof(buffer) );
+    ret = GetKeyNameTextA( lparam, buffer, 0 );
+    ok( ret == 0, "wrong len %u for '%s'\n", ret, buffer );
+    ok( buffer[0] == 0, "wrong string '%s'\n", buffer );
+
+    memset( bufferW, 0xcc, sizeof(bufferW) );
+    ret = GetKeyNameTextW( lparam, bufferW, sizeof(bufferW)/sizeof(WCHAR) );
+    ok( ret > 0, "wrong len %u for %s\n", ret, wine_dbgstr_w(bufferW) );
+    ok( ret == lstrlenW(bufferW), "wrong len %u for %s\n", ret, wine_dbgstr_w(bufferW) );
+
+    memset( bufferW, 0xcc, sizeof(bufferW) );
+    prev = ret;
+    ret = GetKeyNameTextW( lparam, bufferW, prev );
+    ok( ret == prev - 1, "wrong len %u for %s\n", ret, wine_dbgstr_w(bufferW) );
+    ok( ret == lstrlenW(bufferW), "wrong len %u for %s\n", ret, wine_dbgstr_w(bufferW) );
+
+    memset( bufferW, 0xcc, sizeof(bufferW) );
+    ret = GetKeyNameTextW( lparam, bufferW, 0 );
+    ok( ret == 0, "wrong len %u for %s\n", ret, wine_dbgstr_w(bufferW) );
+    ok( bufferW[0] == 0xcccc, "wrong string %s\n", wine_dbgstr_w(bufferW) );
+}
+
 START_TEST(input)
 {
     init_function_pointers();
@@ -1621,6 +1661,7 @@ START_TEST(input)
     test_ToUnicode();
     test_get_async_key_state();
     test_keyboard_layout_name();
+    test_key_names();
 
     if(pGetMouseMovePointsEx)
         test_GetMouseMovePointsEx();

@@ -1066,20 +1066,38 @@ static INT_PTR CALLBACK TestDefButtonDlgProc (HWND hDlg, UINT uiMsg,
 static INT_PTR CALLBACK TestReturnKeyDlgProc (HWND hDlg, UINT uiMsg,
         WPARAM wParam, LPARAM lParam)
 {
-    static int received_idok = 0;
+    static int received_idok;
+
     switch (uiMsg)
     {
     case WM_INITDIALOG:
-        {
-            MSG msg = {hDlg, WM_KEYDOWN, VK_RETURN, 0x011c0001};
-            IsDialogMessage(hDlg, &msg);
-        }
-        ok(received_idok, "WM_COMMAND not received\n");
+    {
+        MSG msg = {hDlg, WM_KEYDOWN, VK_RETURN, 0x011c0001};
+
+        received_idok = -1;
+        IsDialogMessage(hDlg, &msg);
+        ok(received_idok == 0xdead, "WM_COMMAND/0xdead not received\n");
+
+        received_idok = -2;
+        IsDialogMessage(hDlg, &msg);
+        ok(received_idok == IDOK, "WM_COMMAND/IDOK not received\n");
+
         EndDialog(hDlg, 0);
         return TRUE;
+    }
+
+    case DM_GETDEFID:
+        if (received_idok == -1)
+        {
+            HWND hwnd = GetDlgItem(hDlg, 0xdead);
+            ok(!hwnd, "dialog item with ID 0xdead should not exist\n");
+            SetWindowLong(hDlg, DWLP_MSGRESULT, MAKELRESULT(0xdead, DC_HASDEFID));
+            return TRUE;
+        }
+        return FALSE;
+
     case WM_COMMAND:
-        ok(wParam==IDOK, "Expected IDOK\n");
-        received_idok = 1;
+        received_idok = wParam;
         return TRUE;
     }
     return FALSE;

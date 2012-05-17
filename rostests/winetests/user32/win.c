@@ -6710,7 +6710,7 @@ static void test_FlashWindowEx(void)
 
     SetLastError(0xdeadbeef);
     ret = pFlashWindowEx(&finfo);
-    todo_wine ok(!ret, "FlashWindowEx succeeded\n");
+    todo_wine ok(!ret, "previous window state should not be active\n");
 
     finfo.cbSize = sizeof(FLASHWINFO) - 1;
     SetLastError(0xdeadbeef);
@@ -6750,7 +6750,7 @@ static void test_FlashWindowEx(void)
 
     SetLastError(0xdeadbeef);
     ret = pFlashWindowEx(&finfo);
-    todo_wine ok(!ret, "FlashWindowEx succeeded\n");
+    ok(ret, "previous window state should be active\n");
 
     ok(finfo.cbSize == sizeof(FLASHWINFO), "FlashWindowEx modified cdSize to %x\n", finfo.cbSize);
     ok(finfo.hwnd == hwnd, "FlashWindowEx modified hwnd to %p\n", finfo.hwnd);
@@ -6761,7 +6761,8 @@ static void test_FlashWindowEx(void)
     finfo.dwFlags = FLASHW_STOP;
     SetLastError(0xdeadbeef);
     ret = pFlashWindowEx(&finfo);
-    ok(ret, "FlashWindowEx failed with %d\n", GetLastError());
+todo_wine
+    ok(!ret, "previous window state should not be active\n");
 
     DestroyWindow( hwnd );
 }
@@ -6822,6 +6823,238 @@ static void test_GetLastActivePopup(void)
     DestroyWindow( hwndOwner );
 }
 
+static LRESULT WINAPI my_httrasparent_proc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
+{
+    if (msg == WM_NCHITTEST) return HTTRANSPARENT;
+    return DefWindowProc(hwnd, msg, wp, lp);
+}
+
+static LRESULT WINAPI my_window_proc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
+{
+    return DefWindowProc(hwnd, msg, wp, lp);
+}
+
+static void create_window_tree(HWND parent, HWND *window, int size)
+{
+    static const DWORD style[] = { 0, WS_VISIBLE, WS_DISABLED, WS_VISIBLE | WS_DISABLED };
+    int i, pos;
+
+    memset(window, 0, size * sizeof(window[0]));
+
+    pos = 0;
+    for (i = 0; i < sizeof(style)/sizeof(style[0]); i++)
+    {
+        assert(pos < size);
+        window[pos] = CreateWindowEx(0, "my_window", NULL, style[i] | WS_CHILD,
+                                     0, 0, 100, 100, parent, 0, 0, NULL);
+        ok(window[pos] != 0, "CreateWindowEx failed\n");
+        pos++;
+        assert(pos < size);
+        window[pos] = CreateWindowEx(WS_EX_TRANSPARENT, "my_window", NULL, style[i] | WS_CHILD,
+                                     0, 0, 100, 100, parent, 0, 0, NULL);
+        ok(window[pos] != 0, "CreateWindowEx failed\n");
+        pos++;
+
+        assert(pos < size);
+        window[pos] = CreateWindowEx(0, "my_httrasparent", NULL, style[i] | WS_CHILD,
+                                     0, 0, 100, 100, parent, 0, 0, NULL);
+        ok(window[pos] != 0, "CreateWindowEx failed\n");
+        pos++;
+        assert(pos < size);
+        window[pos] = CreateWindowEx(WS_EX_TRANSPARENT, "my_httrasparent", NULL, style[i] | WS_CHILD,
+                                     0, 0, 100, 100, parent, 0, 0, NULL);
+        ok(window[pos] != 0, "CreateWindowEx failed\n");
+        pos++;
+
+        assert(pos < size);
+        window[pos] = CreateWindowEx(0, "my_button", NULL, style[i] | WS_CHILD | BS_GROUPBOX,
+                                     0, 0, 100, 100, parent, 0, 0, NULL);
+        ok(window[pos] != 0, "CreateWindowEx failed\n");
+        pos++;
+        assert(pos < size);
+        window[pos] = CreateWindowEx(WS_EX_TRANSPARENT, "my_button", NULL, style[i] | WS_CHILD | BS_GROUPBOX,
+                                     0, 0, 100, 100, parent, 0, 0, NULL);
+        ok(window[pos] != 0, "CreateWindowEx failed\n");
+        pos++;
+        assert(pos < size);
+        window[pos] = CreateWindowEx(0, "my_button", NULL, style[i] | WS_CHILD | BS_PUSHBUTTON,
+                                     0, 0, 100, 100, parent, 0, 0, NULL);
+        ok(window[pos] != 0, "CreateWindowEx failed\n");
+        pos++;
+        assert(pos < size);
+        window[pos] = CreateWindowEx(WS_EX_TRANSPARENT, "my_button", NULL, style[i] | WS_CHILD | BS_PUSHBUTTON,
+                                     0, 0, 100, 100, parent, 0, 0, NULL);
+        ok(window[pos] != 0, "CreateWindowEx failed\n");
+        pos++;
+
+        assert(pos < size);
+        window[pos] = CreateWindowEx(0, "Button", NULL, style[i] | WS_CHILD | BS_GROUPBOX,
+                                     0, 0, 100, 100, parent, 0, 0, NULL);
+        ok(window[pos] != 0, "CreateWindowEx failed\n");
+        pos++;
+        assert(pos < size);
+        window[pos] = CreateWindowEx(WS_EX_TRANSPARENT, "Button", NULL, style[i] | WS_CHILD | BS_GROUPBOX,
+                                     0, 0, 100, 100, parent, 0, 0, NULL);
+        ok(window[pos] != 0, "CreateWindowEx failed\n");
+        pos++;
+        assert(pos < size);
+        window[pos] = CreateWindowEx(0, "Button", NULL, style[i] | WS_CHILD | BS_PUSHBUTTON,
+                                     0, 0, 100, 100, parent, 0, 0, NULL);
+        ok(window[pos] != 0, "CreateWindowEx failed\n");
+        pos++;
+        assert(pos < size);
+        window[pos] = CreateWindowEx(WS_EX_TRANSPARENT, "Button", NULL, style[i] | WS_CHILD | BS_PUSHBUTTON,
+                                     0, 0, 100, 100, parent, 0, 0, NULL);
+        ok(window[pos] != 0, "CreateWindowEx failed\n");
+        pos++;
+
+        assert(pos < size);
+        window[pos] = CreateWindowEx(0, "Static", NULL, style[i] | WS_CHILD,
+                                     0, 0, 100, 100, parent, 0, 0, NULL);
+        ok(window[pos] != 0, "CreateWindowEx failed\n");
+        pos++;
+        assert(pos < size);
+        window[pos] = CreateWindowEx(WS_EX_TRANSPARENT, "Static", NULL, style[i] | WS_CHILD,
+                                     0, 0, 100, 100, parent, 0, 0, NULL);
+        ok(window[pos] != 0, "CreateWindowEx failed\n");
+        pos++;
+    }
+}
+
+struct window_attributes
+{
+    char class_name[128];
+    int is_visible, is_enabled, is_groupbox, is_httransparent, is_extransparent;
+};
+
+static void get_window_attributes(HWND hwnd, struct window_attributes *attrs)
+{
+    DWORD style, ex_style, hittest;
+
+    style = GetWindowLong(hwnd, GWL_STYLE);
+    ex_style = GetWindowLong(hwnd, GWL_EXSTYLE);
+    attrs->class_name[0] = 0;
+    GetClassName(hwnd, attrs->class_name, sizeof(attrs->class_name));
+    hittest = SendMessage(hwnd, WM_NCHITTEST, 0, 0);
+
+    attrs->is_visible = (style & WS_VISIBLE) != 0;
+    attrs->is_enabled = (style & WS_DISABLED) == 0;
+    attrs->is_groupbox = !lstrcmpi(attrs->class_name, "Button") && (style & BS_TYPEMASK) == BS_GROUPBOX;
+    attrs->is_httransparent = hittest == HTTRANSPARENT;
+    attrs->is_extransparent = (ex_style & WS_EX_TRANSPARENT) != 0;
+}
+
+static int window_to_index(HWND hwnd, HWND *window, int size)
+{
+    int i;
+
+    for (i = 0; i < size; i++)
+    {
+        if (!window[i]) break;
+        if (window[i] == hwnd) return i;
+    }
+    return -1;
+}
+
+static void test_child_window_from_point(void)
+{
+    static const int real_child_pos[] = { 14,15,16,17,18,19,20,21,24,25,26,27,42,43,
+                                          44,45,46,47,48,49,52,53,54,55,51,50,23,22,-1 };
+    static const int real_child_pos_nt4[] = { 14,15,16,17,20,21,24,25,26,27,42,43,44,45,
+                                              48,49,52,53,54,55,51,50,47,46,23,22,19,18,-1 };
+    WNDCLASSA cls;
+    HWND hwnd, parent, window[100];
+    POINT pt;
+    int found_invisible, found_disabled, found_groupbox, found_httransparent, found_extransparent;
+    int ret, i;
+
+    ret = GetClassInfo(0, "Button", &cls);
+    ok(ret, "GetClassInfo(Button) failed\n");
+    cls.lpszClassName = "my_button";
+    ret = RegisterClass(&cls);
+    ok(ret, "RegisterClass(my_button) failed\n");
+
+    cls.lpszClassName = "my_httrasparent";
+    cls.lpfnWndProc = my_httrasparent_proc;
+    ret = RegisterClass(&cls);
+    ok(ret, "RegisterClass(my_httrasparent) failed\n");
+
+    cls.lpszClassName = "my_window";
+    cls.lpfnWndProc = my_window_proc;
+    ret = RegisterClass(&cls);
+    ok(ret, "RegisterClass(my_window) failed\n");
+
+    parent = CreateWindowEx(0, "MainWindowClass", NULL,
+                            WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE,
+                            100, 100, 200, 200,
+                            0, 0, GetModuleHandle(0), NULL);
+    ok(parent != 0, "CreateWindowEx failed\n");
+    trace("parent %p\n", parent);
+
+    create_window_tree(parent, window, sizeof(window)/sizeof(window[0]));
+
+    found_invisible = 0;
+    found_disabled = 0;
+    found_groupbox = 0;
+    found_httransparent = 0;
+    found_extransparent = 0;
+
+    /* FIXME: also test WindowFromPoint, ChildWindowFromPoint, ChildWindowFromPointEx */
+    for (i = 0; i < sizeof(real_child_pos)/sizeof(real_child_pos[0]); i++)
+    {
+        struct window_attributes attrs;
+
+        pt.x = pt.y = 50;
+        hwnd = RealChildWindowFromPoint(parent, pt);
+        ok(hwnd != 0, "RealChildWindowFromPoint failed\n");
+        ret = window_to_index(hwnd, window, sizeof(window)/sizeof(window[0]));
+        /* FIXME: remove once Wine is fixed */
+        if (ret != real_child_pos[i])
+            todo_wine ok(ret == real_child_pos[i] || broken(ret == real_child_pos_nt4[i]), "expected %d, got %d\n", real_child_pos[i], ret);
+        else
+            ok(ret == real_child_pos[i] || broken(ret == real_child_pos_nt4[i]), "expected %d, got %d\n", real_child_pos[i], ret);
+
+        get_window_attributes(hwnd, &attrs);
+        if (!attrs.is_visible) found_invisible++;
+        if (!attrs.is_enabled) found_disabled++;
+        if (attrs.is_groupbox) found_groupbox++;
+        if (attrs.is_httransparent) found_httransparent++;
+        if (attrs.is_extransparent) found_extransparent++;
+
+        if (ret != real_child_pos[i] && ret != -1)
+        {
+            trace("found hwnd %p (%s), is_visible %d, is_enabled %d, is_groupbox %d, is_httransparent %d, is_extransparent %d\n",
+                  hwnd, attrs.class_name, attrs.is_visible, attrs.is_enabled, attrs.is_groupbox, attrs.is_httransparent, attrs.is_extransparent);
+            get_window_attributes(window[real_child_pos[i]], &attrs);
+            trace("expected hwnd %p (%s), is_visible %d, is_enabled %d, is_groupbox %d, is_httransparent %d, is_extransparent %d\n",
+                  window[real_child_pos[i]], attrs.class_name, attrs.is_visible, attrs.is_enabled, attrs.is_groupbox, attrs.is_httransparent, attrs.is_extransparent);
+        }
+        if (ret == -1)
+        {
+            ok(hwnd == parent, "expected %p, got %p\n", parent, hwnd);
+            break;
+        }
+        DestroyWindow(hwnd);
+    }
+
+    DestroyWindow(parent);
+
+    ok(!found_invisible, "found %d invisible windows\n", found_invisible);
+    ok(found_disabled, "found %d disabled windows\n", found_disabled);
+todo_wine
+    ok(found_groupbox == 4, "found %d groupbox windows\n", found_groupbox);
+    ok(found_httransparent, "found %d httransparent windows\n", found_httransparent);
+todo_wine
+    ok(found_extransparent, "found %d extransparent windows\n", found_extransparent);
+
+    ret = UnregisterClass("my_button", cls.hInstance);
+    ok(ret, "UnregisterClass(my_button) failed\n");
+    ret = UnregisterClass("my_httrasparent", cls.hInstance);
+    ok(ret, "UnregisterClass(my_httrasparent) failed\n");
+    ret = UnregisterClass("my_window", cls.hInstance);
+    ok(ret, "UnregisterClass(my_window) failed\n");
+}
+
 START_TEST(win)
 {
     HMODULE user32 = GetModuleHandleA( "user32.dll" );
@@ -6872,6 +7105,7 @@ START_TEST(win)
     our_pid = GetWindowThreadProcessId(hwndMain, NULL);
 
     /* Add the tests below this line */
+    test_child_window_from_point();
     test_thick_child_size(hwndMain);
     test_fullscreen();
     test_hwnd_message();

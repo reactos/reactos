@@ -1926,8 +1926,8 @@ static void test_DrawIconEx(void)
     check_DrawIconEx(hdcDst, FALSE, 0x00A0B0C0, 32, 0, 0x00102030, 0x00102030, 0x00102030, __LINE__);
     check_DrawIconEx(hdcDst, TRUE, 0x00A0B0C0, 32, 0, 0x00102030, 0x00102030, 0x00102030, __LINE__);
 
-    check_DrawIconEx(hdcDst, FALSE, 0x80A0B0C0, 32, DI_MASK, 0x00FFFFFF, 0x00000000, 0x00000000, __LINE__);
-    check_DrawIconEx(hdcDst, TRUE, 0x80A0B0C0, 32, DI_MASK, 0x00FFFFFF, 0x00FFFFFF, 0x00FFFFFF, __LINE__);
+    check_DrawIconEx(hdcDst, FALSE, 0x80A0B0C0, 32, DI_MASK, 0x00123456, 0x00000000, 0x00000000, __LINE__);
+    check_DrawIconEx(hdcDst, TRUE, 0x80A0B0C0, 32, DI_MASK, 0x00123456, 0x00FFFFFF, 0x00FFFFFF, __LINE__);
 
     check_DrawIconEx(hdcDst, FALSE, 0x00A0B0C0, 32, DI_IMAGE, 0x00FFFFFF, 0x00C0B0A0, 0x00C0B0A0, __LINE__);
     check_DrawIconEx(hdcDst, TRUE, 0x00A0B0C0, 32, DI_IMAGE, 0x00FFFFFF, 0x00C0B0A0, 0x00C0B0A0, __LINE__);
