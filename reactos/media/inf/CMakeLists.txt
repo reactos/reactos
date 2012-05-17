@@ -6,6 +6,7 @@ list(APPEND INF_FILES
     bth.inf
     cdrom.inf
     cpu.inf
+    defltws.inf
     disk.inf
     display.inf
     fdc.inf
