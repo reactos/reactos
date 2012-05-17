@@ -64,7 +64,7 @@ typedef struct StdGITEntry
 /* Class data */
 typedef struct StdGlobalInterfaceTableImpl
 {
-  const IGlobalInterfaceTableVtbl *lpVtbl;
+  IGlobalInterfaceTable IGlobalInterfaceTable_iface;
 
   ULONG ref;
   struct list list;
@@ -84,13 +84,18 @@ static CRITICAL_SECTION_DEBUG critsect_debug =
 static CRITICAL_SECTION git_section = { &critsect_debug, -1, 0, 0, 0, 0 };
 
 
-/** This destroys it again. It should revoke all the held interfaces first **/
-static void StdGlobalInterfaceTable_Destroy(void* self)
+static inline StdGlobalInterfaceTableImpl *impl_from_IGlobalInterfaceTable(IGlobalInterfaceTable *iface)
 {
-  TRACE("(%p)\n", self);
+  return CONTAINING_RECORD(iface, StdGlobalInterfaceTableImpl, IGlobalInterfaceTable_iface);
+}
+
+/** This destroys it again. It should revoke all the held interfaces first **/
+static void StdGlobalInterfaceTable_Destroy(void* This)
+{
+  TRACE("(%p)\n", This);
   FIXME("Revoke held interfaces here\n");
   
-  HeapFree(GetProcessHeap(), 0, self);
+  HeapFree(GetProcessHeap(), 0, This);
   StdGlobalInterfaceTableInstance = NULL;
 }
 
@@ -98,19 +103,18 @@ static void StdGlobalInterfaceTable_Destroy(void* self)
  * A helper function to traverse the list and find the entry that matches the cookie.
  * Returns NULL if not found. Must be called inside git_section critical section.
  */
-static StdGITEntry*
-StdGlobalInterfaceTable_FindEntry(IGlobalInterfaceTable* iface, DWORD cookie)
+static StdGITEntry* StdGlobalInterfaceTable_FindEntry(StdGlobalInterfaceTableImpl* This,
+                DWORD cookie)
 {
-  StdGlobalInterfaceTableImpl* const self = (StdGlobalInterfaceTableImpl*) iface;
   StdGITEntry* e;
 
-  TRACE("iface=%p, cookie=0x%x\n", iface, cookie);
+  TRACE("This=%p, cookie=0x%x\n", This, cookie);
 
-  LIST_FOR_EACH_ENTRY(e, &self->list, StdGITEntry, entry) {
+  LIST_FOR_EACH_ENTRY(e, &This->list, StdGITEntry, entry) {
     if (e->cookie == cookie)
       return e;
   }
-  
+
   TRACE("Entry not found\n");
   return NULL;
 }
@@ -143,25 +147,25 @@ StdGlobalInterfaceTable_QueryInterface(IGlobalInterfaceTable* iface,
 static ULONG WINAPI
 StdGlobalInterfaceTable_AddRef(IGlobalInterfaceTable* iface)
 {
-  StdGlobalInterfaceTableImpl* const self = (StdGlobalInterfaceTableImpl*) iface;
+  StdGlobalInterfaceTableImpl* const This = impl_from_IGlobalInterfaceTable(iface);
 
-  /* InterlockedIncrement(&self->ref); */
-  return self->ref;
+  /* InterlockedIncrement(&This->ref); */
+  return This->ref;
 }
 
 static ULONG WINAPI
 StdGlobalInterfaceTable_Release(IGlobalInterfaceTable* iface)
 {
-  StdGlobalInterfaceTableImpl* const self = (StdGlobalInterfaceTableImpl*) iface;
+  StdGlobalInterfaceTableImpl* const This = impl_from_IGlobalInterfaceTable(iface);
 
-  /* InterlockedDecrement(&self->ref); */
-  if (self->ref == 0) {
+  /* InterlockedDecrement(&This->ref); */
+  if (This->ref == 0) {
     /* Hey ho, it's time to go, so long again 'till next weeks show! */
-    StdGlobalInterfaceTable_Destroy(self);
+    StdGlobalInterfaceTable_Destroy(This);
     return 0;
   }
 
-  return self->ref;
+  return This->ref;
 }
 
 /***
@@ -173,7 +177,7 @@ StdGlobalInterfaceTable_RegisterInterfaceInGlobal(
                IGlobalInterfaceTable* iface, IUnknown* pUnk,
                REFIID riid, DWORD* pdwCookie)
 {
-  StdGlobalInterfaceTableImpl* const self = (StdGlobalInterfaceTableImpl*) iface;
+  StdGlobalInterfaceTableImpl* const This = impl_from_IGlobalInterfaceTable(iface);
   IStream* stream = NULL;
   HRESULT hres;
   StdGITEntry* entry;
@@ -205,11 +209,11 @@ StdGlobalInterfaceTable_RegisterInterfaceInGlobal(
   
   entry->iid = *riid;
   entry->stream = stream;
-  entry->cookie = self->nextCookie;
-  self->nextCookie++; /* inc the cookie count */
+  entry->cookie = This->nextCookie;
+  This->nextCookie++; /* inc the cookie count */
 
   /* insert the new entry at the end of the list */
-  list_add_tail(&self->list, &entry->entry);
+  list_add_tail(&This->list, &entry->entry);
 
   /* and return the cookie */
   *pdwCookie = entry->cookie;
@@ -224,6 +228,7 @@ static HRESULT WINAPI
 StdGlobalInterfaceTable_RevokeInterfaceFromGlobal(
                IGlobalInterfaceTable* iface, DWORD dwCookie)
 {
+  StdGlobalInterfaceTableImpl* This = impl_from_IGlobalInterfaceTable(iface);
   StdGITEntry* entry;
   HRESULT hr;
 
@@ -231,7 +236,7 @@ StdGlobalInterfaceTable_RevokeInterfaceFromGlobal(
 
   EnterCriticalSection(&git_section);
 
-  entry = StdGlobalInterfaceTable_FindEntry(iface, dwCookie);
+  entry = StdGlobalInterfaceTable_FindEntry(This, dwCookie);
   if (entry == NULL) {
     TRACE("Entry not found\n");
     LeaveCriticalSection(&git_section);
@@ -260,6 +265,7 @@ StdGlobalInterfaceTable_GetInterfaceFromGlobal(
                IGlobalInterfaceTable* iface, DWORD dwCookie,
                REFIID riid, void **ppv)
 {
+  StdGlobalInterfaceTableImpl* This = impl_from_IGlobalInterfaceTable(iface);
   StdGITEntry* entry;
   HRESULT hres;
   IStream *stream;
@@ -268,7 +274,7 @@ StdGlobalInterfaceTable_GetInterfaceFromGlobal(
 
   EnterCriticalSection(&git_section);
 
-  entry = StdGlobalInterfaceTable_FindEntry(iface, dwCookie);
+  entry = StdGlobalInterfaceTable_FindEntry(This, dwCookie);
   if (entry == NULL) {
     WARN("Entry for cookie 0x%x not found\n", dwCookie);
     LeaveCriticalSection(&git_section);
@@ -380,7 +386,7 @@ void* StdGlobalInterfaceTable_Construct(void)
   newGIT = HeapAlloc(GetProcessHeap(), 0, sizeof(StdGlobalInterfaceTableImpl));
   if (newGIT == 0) return newGIT;
 
-  newGIT->lpVtbl = &StdGlobalInterfaceTableImpl_Vtbl;
+  newGIT->IGlobalInterfaceTable_iface.lpVtbl = &StdGlobalInterfaceTableImpl_Vtbl;
   newGIT->ref = 1;      /* Initialise the reference count */
   list_init(&newGIT->list);
   newGIT->nextCookie = 0xf100; /* that's where windows starts, so that's where we start */

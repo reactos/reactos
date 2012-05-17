@@ -49,7 +49,7 @@ typedef struct BindCtxObject{
 /* BindCtx data structure */
 typedef struct BindCtxImpl{
 
-    const IBindCtxVtbl *lpVtbl; /* VTable relative to the IBindCtx interface.*/
+    IBindCtx IBindCtx_iface;
 
     LONG ref; /* reference counter for this object */
 
@@ -66,13 +66,18 @@ static HRESULT WINAPI BindCtxImpl_ReleaseBoundObjects(IBindCtx*);
 static HRESULT BindCtxImpl_GetObjectIndex(BindCtxImpl*, IUnknown*, LPOLESTR, DWORD *);
 static HRESULT BindCtxImpl_ExpandTable(BindCtxImpl *);
 
+static inline BindCtxImpl *impl_from_IBindCtx(IBindCtx *iface)
+{
+return CONTAINING_RECORD(iface, BindCtxImpl, IBindCtx_iface);
+}
+
 /*******************************************************************************
  *        BindCtx_QueryInterface
  *******************************************************************************/
 static HRESULT WINAPI
 BindCtxImpl_QueryInterface(IBindCtx* iface,REFIID riid,void** ppvObject)
 {
-    BindCtxImpl *This = (BindCtxImpl *)iface;
+    BindCtxImpl *This = impl_from_IBindCtx(iface);
 
     TRACE("(%p %s %p)\n",This, debugstr_guid(riid), ppvObject);
 
@@ -100,7 +105,7 @@ BindCtxImpl_QueryInterface(IBindCtx* iface,REFIID riid,void** ppvObject)
  ******************************************************************************/
 static ULONG WINAPI BindCtxImpl_AddRef(IBindCtx* iface)
 {
-    BindCtxImpl *This = (BindCtxImpl *)iface;
+    BindCtxImpl *This = impl_from_IBindCtx(iface);
 
     TRACE("(%p)\n",This);
 
@@ -128,7 +133,7 @@ static HRESULT BindCtxImpl_Destroy(BindCtxImpl* This)
  ******************************************************************************/
 static ULONG WINAPI BindCtxImpl_Release(IBindCtx* iface)
 {
-    BindCtxImpl *This = (BindCtxImpl *)iface;
+    BindCtxImpl *This = impl_from_IBindCtx(iface);
     ULONG ref;
 
     TRACE("(%p)\n",This);
@@ -137,7 +142,7 @@ static ULONG WINAPI BindCtxImpl_Release(IBindCtx* iface)
     if (ref == 0)
     {
         /* release all registered objects */
-        BindCtxImpl_ReleaseBoundObjects((IBindCtx*)This);
+        BindCtxImpl_ReleaseBoundObjects(&This->IBindCtx_iface);
 
         BindCtxImpl_Destroy(This);
     }
@@ -151,7 +156,7 @@ static ULONG WINAPI BindCtxImpl_Release(IBindCtx* iface)
 static HRESULT WINAPI
 BindCtxImpl_RegisterObjectBound(IBindCtx* iface,IUnknown* punk)
 {
-    BindCtxImpl *This = (BindCtxImpl *)iface;
+    BindCtxImpl *This = impl_from_IBindCtx(iface);
     DWORD lastIndex=This->bindCtxTableLastIndex;
 
     TRACE("(%p,%p)\n",This,punk);
@@ -185,7 +190,7 @@ BindCtxImpl_RevokeObjectBound(IBindCtx* iface, IUnknown* punk)
 {
     DWORD index,j;
 
-    BindCtxImpl *This = (BindCtxImpl *)iface;
+    BindCtxImpl *This = impl_from_IBindCtx(iface);
 
     TRACE("(%p,%p)\n",This,punk);
 
@@ -217,7 +222,7 @@ BindCtxImpl_ReleaseBoundObjects(IBindCtx* iface)
 {
     DWORD i;
 
-    BindCtxImpl *This = (BindCtxImpl *)iface;
+    BindCtxImpl *This = impl_from_IBindCtx(iface);
 
     TRACE("(%p)\n",This);
 
@@ -239,7 +244,7 @@ BindCtxImpl_ReleaseBoundObjects(IBindCtx* iface)
 static HRESULT WINAPI
 BindCtxImpl_SetBindOptions(IBindCtx* iface,BIND_OPTS *pbindopts)
 {
-    BindCtxImpl *This = (BindCtxImpl *)iface;
+    BindCtxImpl *This = impl_from_IBindCtx(iface);
 
     TRACE("(%p,%p)\n",This,pbindopts);
 
@@ -261,7 +266,7 @@ BindCtxImpl_SetBindOptions(IBindCtx* iface,BIND_OPTS *pbindopts)
 static HRESULT WINAPI
 BindCtxImpl_GetBindOptions(IBindCtx* iface,BIND_OPTS *pbindopts)
 {
-    BindCtxImpl *This = (BindCtxImpl *)iface;
+    BindCtxImpl *This = impl_from_IBindCtx(iface);
     ULONG cbStruct;
 
     TRACE("(%p,%p)\n",This,pbindopts);
@@ -285,7 +290,7 @@ BindCtxImpl_GetBindOptions(IBindCtx* iface,BIND_OPTS *pbindopts)
 static HRESULT WINAPI
 BindCtxImpl_GetRunningObjectTable(IBindCtx* iface,IRunningObjectTable** pprot)
 {
-    BindCtxImpl *This = (BindCtxImpl *)iface;
+    BindCtxImpl *This = impl_from_IBindCtx(iface);
 
     TRACE("(%p,%p)\n",This,pprot);
 
@@ -302,7 +307,7 @@ static HRESULT WINAPI
 BindCtxImpl_RegisterObjectParam(IBindCtx* iface,LPOLESTR pszkey, IUnknown* punk)
 {
     DWORD index=0;
-    BindCtxImpl *This = (BindCtxImpl *)iface;
+    BindCtxImpl *This = impl_from_IBindCtx(iface);
 
     TRACE("(%p,%s,%p)\n",This,debugstr_w(pszkey),punk);
 
@@ -357,7 +362,7 @@ static HRESULT WINAPI
 BindCtxImpl_GetObjectParam(IBindCtx* iface,LPOLESTR pszkey, IUnknown** punk)
 {
     DWORD index;
-    BindCtxImpl *This = (BindCtxImpl *)iface;
+    BindCtxImpl *This = impl_from_IBindCtx(iface);
 
     TRACE("(%p,%s,%p)\n",This,debugstr_w(pszkey),punk);
 
@@ -384,7 +389,7 @@ BindCtxImpl_RevokeObjectParam(IBindCtx* iface,LPOLESTR ppenum)
 {
     DWORD index,j;
 
-    BindCtxImpl *This = (BindCtxImpl *)iface;
+    BindCtxImpl *This = impl_from_IBindCtx(iface);
 
     TRACE("(%p,%s)\n",This,debugstr_w(ppenum));
 
@@ -513,7 +518,7 @@ static HRESULT BindCtxImpl_Construct(BindCtxImpl* This)
     TRACE("(%p)\n",This);
 
     /* Initialize the virtual function table.*/
-    This->lpVtbl       = &VT_BindCtxImpl;
+    This->IBindCtx_iface.lpVtbl = &VT_BindCtxImpl;
     This->ref          = 0;
 
     /* Initialize the BIND_OPTS2 structure */
@@ -577,7 +582,7 @@ HRESULT WINAPI CreateBindCtx(DWORD reserved, LPBC * ppbc)
         return hr;
     }
 
-    return BindCtxImpl_QueryInterface((IBindCtx*)newBindCtx,&IID_IBindCtx,(void**)ppbc);
+    return BindCtxImpl_QueryInterface(&newBindCtx->IBindCtx_iface,&IID_IBindCtx,(void**)ppbc);
 }
 
 /******************************************************************************

@@ -39,19 +39,21 @@
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
 typedef struct _FTMarshalImpl {
-	const IUnknownVtbl *lpVtbl;
+        IUnknown IUnknown_iface;
 	LONG ref;
-	const IMarshalVtbl *lpvtblFTM;
+        IMarshal IMarshal_iface;
 
 	IUnknown *pUnkOuter;
 } FTMarshalImpl;
 
-#define _IFTMUnknown_(This) ((IUnknown*)&(This)->lpVtbl)
-#define _IFTMarshal_(This)  (&(This)->lpvtblFTM)
+static inline FTMarshalImpl *impl_from_IUnknown(IUnknown *iface)
+{
+    return CONTAINING_RECORD(iface, FTMarshalImpl, IUnknown_iface);
+}
 
 static inline FTMarshalImpl *impl_from_IMarshal( IMarshal *iface )
 {
-    return (FTMarshalImpl *)((char*)iface - FIELD_OFFSET(FTMarshalImpl, lpvtblFTM));
+    return CONTAINING_RECORD(iface, FTMarshalImpl, IMarshal_iface);
 }
 
 /* inner IUnknown to handle aggregation */
@@ -59,15 +61,15 @@ static HRESULT WINAPI
 IiFTMUnknown_fnQueryInterface (IUnknown * iface, REFIID riid, LPVOID * ppv)
 {
 
-    FTMarshalImpl *This = (FTMarshalImpl *)iface;
+    FTMarshalImpl *This = impl_from_IUnknown(iface);
 
     TRACE ("\n");
     *ppv = NULL;
 
     if (IsEqualIID (&IID_IUnknown, riid))
-	*ppv = _IFTMUnknown_ (This);
+        *ppv = &This->IUnknown_iface;
     else if (IsEqualIID (&IID_IMarshal, riid))
-	*ppv = _IFTMarshal_ (This);
+        *ppv = &This->IMarshal_iface;
     else {
 	FIXME ("No interface for %s.\n", debugstr_guid (riid));
 	return E_NOINTERFACE;
@@ -79,7 +81,7 @@ IiFTMUnknown_fnQueryInterface (IUnknown * iface, REFIID riid, LPVOID * ppv)
 static ULONG WINAPI IiFTMUnknown_fnAddRef (IUnknown * iface)
 {
 
-    FTMarshalImpl *This = (FTMarshalImpl *)iface;
+    FTMarshalImpl *This = impl_from_IUnknown(iface);
 
     TRACE ("\n");
     return InterlockedIncrement (&This->ref);
@@ -88,7 +90,7 @@ static ULONG WINAPI IiFTMUnknown_fnAddRef (IUnknown * iface)
 static ULONG WINAPI IiFTMUnknown_fnRelease (IUnknown * iface)
 {
 
-    FTMarshalImpl *This = (FTMarshalImpl *)iface;
+    FTMarshalImpl *This = impl_from_IUnknown(iface);
 
     TRACE ("\n");
     if (InterlockedDecrement (&This->ref))
@@ -340,12 +342,12 @@ HRESULT WINAPI CoCreateFreeThreadedMarshaler (LPUNKNOWN punkOuter, LPUNKNOWN * p
     if (!ftm)
 	return E_OUTOFMEMORY;
 
-    ftm->lpVtbl = &iunkvt;
-    ftm->lpvtblFTM = &ftmvtbl;
+    ftm->IUnknown_iface.lpVtbl = &iunkvt;
+    ftm->IMarshal_iface.lpVtbl = &ftmvtbl;
     ftm->ref = 1;
-    ftm->pUnkOuter = punkOuter ? punkOuter : _IFTMUnknown_(ftm);
+    ftm->pUnkOuter = punkOuter ? punkOuter : &ftm->IUnknown_iface;
 
-    *ppunkMarshal = _IFTMUnknown_ (ftm);
+    *ppunkMarshal = &ftm->IUnknown_iface;
     return S_OK;
 }
 

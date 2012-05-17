@@ -71,7 +71,7 @@ struct rot_entry
 /* define the RunningObjectTableImpl structure */
 typedef struct RunningObjectTableImpl
 {
-    const IRunningObjectTableVtbl *lpVtbl;
+    IRunningObjectTable IRunningObjectTable_iface;
     LONG ref;
 
     struct list rot; /* list of ROT entries */
@@ -84,13 +84,22 @@ static IrotHandle irot_handle;
 /* define the EnumMonikerImpl structure */
 typedef struct EnumMonikerImpl
 {
-    const IEnumMonikerVtbl *lpVtbl;
+    IEnumMoniker IEnumMoniker_iface;
     LONG ref;
 
     InterfaceList *moniker_list;
     ULONG pos;
 } EnumMonikerImpl;
 
+static inline RunningObjectTableImpl *impl_from_IRunningObjectTable(IRunningObjectTable *iface)
+{
+    return CONTAINING_RECORD(iface, RunningObjectTableImpl, IRunningObjectTable_iface);
+}
+
+static inline EnumMonikerImpl *impl_from_IEnumMoniker(IEnumMoniker *iface)
+{
+    return CONTAINING_RECORD(iface, EnumMonikerImpl, IEnumMoniker_iface);
+}
 
 /* IEnumMoniker Local functions*/
 static HRESULT EnumMonikerImpl_CreateEnumROTMoniker(InterfaceList *moniker_list,
@@ -159,7 +168,7 @@ static HRESULT create_stream_on_mip_ro(const InterfaceData *mip, IStream **strea
     return CreateStreamOnHGlobal(hglobal, TRUE, stream);
 }
 
-static inline void rot_entry_delete(struct rot_entry *rot_entry)
+static void rot_entry_delete(struct rot_entry *rot_entry)
 {
     if (rot_entry->cookie)
     {
@@ -294,7 +303,7 @@ static HRESULT WINAPI
 RunningObjectTableImpl_QueryInterface(IRunningObjectTable* iface,
                                       REFIID riid,void** ppvObject)
 {
-    RunningObjectTableImpl *This = (RunningObjectTableImpl *)iface;
+    RunningObjectTableImpl *This = impl_from_IRunningObjectTable(iface);
 
     TRACE("(%p,%p,%p)\n",This,riid,ppvObject);
 
@@ -323,7 +332,7 @@ RunningObjectTableImpl_QueryInterface(IRunningObjectTable* iface,
 static ULONG WINAPI
 RunningObjectTableImpl_AddRef(IRunningObjectTable* iface)
 {
-    RunningObjectTableImpl *This = (RunningObjectTableImpl *)iface;
+    RunningObjectTableImpl *This = impl_from_IRunningObjectTable(iface);
 
     TRACE("(%p)\n",This);
 
@@ -373,7 +382,7 @@ RunningObjectTableImpl_Destroy(void)
 static ULONG WINAPI
 RunningObjectTableImpl_Release(IRunningObjectTable* iface)
 {
-    RunningObjectTableImpl *This = (RunningObjectTableImpl *)iface;
+    RunningObjectTableImpl *This = impl_from_IRunningObjectTable(iface);
     ULONG ref;
 
     TRACE("(%p)\n",This);
@@ -411,7 +420,7 @@ static HRESULT WINAPI
 RunningObjectTableImpl_Register(IRunningObjectTable* iface, DWORD grfFlags,
                IUnknown *punkObject, IMoniker *pmkObjectName, DWORD *pdwRegister)
 {
-    RunningObjectTableImpl *This = (RunningObjectTableImpl *)iface;
+    RunningObjectTableImpl *This = impl_from_IRunningObjectTable(iface);
     struct rot_entry *rot_entry;
     HRESULT hr = S_OK;
     IStream *pStream = NULL;
@@ -582,7 +591,7 @@ RunningObjectTableImpl_Register(IRunningObjectTable* iface, DWORD grfFlags,
 static HRESULT WINAPI
 RunningObjectTableImpl_Revoke( IRunningObjectTable* iface, DWORD dwRegister) 
 {
-    RunningObjectTableImpl *This = (RunningObjectTableImpl *)iface;
+    RunningObjectTableImpl *This = impl_from_IRunningObjectTable(iface);
     struct rot_entry *rot_entry;
 
     TRACE("(%p,%d)\n",This,dwRegister);
@@ -613,7 +622,7 @@ RunningObjectTableImpl_Revoke( IRunningObjectTable* iface, DWORD dwRegister)
 static HRESULT WINAPI
 RunningObjectTableImpl_IsRunning( IRunningObjectTable* iface, IMoniker *pmkObjectName)
 {
-    RunningObjectTableImpl *This = (RunningObjectTableImpl *)iface;
+    RunningObjectTableImpl *This = impl_from_IRunningObjectTable(iface);
     MonikerComparisonData *moniker_data;
     HRESULT hr;
     const struct rot_entry *rot_entry;
@@ -679,7 +688,7 @@ static HRESULT WINAPI
 RunningObjectTableImpl_GetObject( IRunningObjectTable* iface,
                      IMoniker *pmkObjectName, IUnknown **ppunkObject)
 {
-    RunningObjectTableImpl *This = (RunningObjectTableImpl *)iface;
+    RunningObjectTableImpl *This = impl_from_IRunningObjectTable(iface);
     MonikerComparisonData *moniker_data;
     InterfaceData *object = NULL;
     IrotCookie cookie;
@@ -773,7 +782,7 @@ static HRESULT WINAPI
 RunningObjectTableImpl_NoteChangeTime(IRunningObjectTable* iface,
                                       DWORD dwRegister, FILETIME *pfiletime)
 {
-    RunningObjectTableImpl *This = (RunningObjectTableImpl *)iface;
+    RunningObjectTableImpl *This = impl_from_IRunningObjectTable(iface);
     struct rot_entry *rot_entry;
     HRESULT hr = E_INVALIDARG;
 
@@ -828,7 +837,7 @@ RunningObjectTableImpl_GetTimeOfLastChange(IRunningObjectTable* iface,
                             IMoniker *pmkObjectName, FILETIME *pfiletime)
 {
     HRESULT hr = MK_E_UNAVAILABLE;
-    RunningObjectTableImpl *This = (RunningObjectTableImpl *)iface;
+    RunningObjectTableImpl *This = impl_from_IRunningObjectTable(iface);
     MonikerComparisonData *moniker_data;
     const struct rot_entry *rot_entry;
 
@@ -898,7 +907,7 @@ static HRESULT WINAPI
 RunningObjectTableImpl_EnumRunning(IRunningObjectTable* iface,
                                    IEnumMoniker **ppenumMoniker)
 {
-    RunningObjectTableImpl *This = (RunningObjectTableImpl *)iface;
+    RunningObjectTableImpl *This = impl_from_IRunningObjectTable(iface);
     InterfaceList *interface_list = NULL;
     HRESULT hr;
 
@@ -961,7 +970,7 @@ HRESULT WINAPI RunningObjectTableImpl_Initialize(void)
         return E_OUTOFMEMORY;
 
     /* initialize the virtual table function */
-    runningObjectTableInstance->lpVtbl = &VT_RunningObjectTableImpl;
+    runningObjectTableInstance->IRunningObjectTable_iface.lpVtbl = &VT_RunningObjectTableImpl;
 
     /* the initial reference is set to "1" so that it isn't destroyed after its
      * first use until the process is destroyed, as the running object table is
@@ -985,7 +994,7 @@ HRESULT WINAPI RunningObjectTableImpl_UnInitialize(void)
     if (runningObjectTableInstance==NULL)
         return E_POINTER;
 
-    RunningObjectTableImpl_Release((IRunningObjectTable*)runningObjectTableInstance);
+    RunningObjectTableImpl_Release(&runningObjectTableInstance->IRunningObjectTable_iface);
 
     RunningObjectTableImpl_Destroy();
 
@@ -1019,7 +1028,8 @@ GetRunningObjectTable(DWORD reserved, LPRUNNINGOBJECTTABLE *pprot)
     if(runningObjectTableInstance==NULL)
         return CO_E_NOTINITIALIZED;
 
-    res = IRunningObjectTable_QueryInterface((IRunningObjectTable*)runningObjectTableInstance,&riid,(void**)pprot);
+    res = IRunningObjectTable_QueryInterface(&runningObjectTableInstance->IRunningObjectTable_iface,
+                                             &riid,(void**)pprot);
 
     return res;
 }
@@ -1277,7 +1287,7 @@ HRESULT WINAPI GetClassFile(LPCOLESTR filePathName,CLSID *pclsid)
  */
 static HRESULT WINAPI EnumMonikerImpl_QueryInterface(IEnumMoniker* iface,REFIID riid,void** ppvObject)
 {
-    EnumMonikerImpl *This = (EnumMonikerImpl *)iface;
+    EnumMonikerImpl *This = impl_from_IEnumMoniker(iface);
 
     TRACE("(%p,%p,%p)\n",This,riid,ppvObject);
 
@@ -1306,7 +1316,7 @@ static HRESULT WINAPI EnumMonikerImpl_QueryInterface(IEnumMoniker* iface,REFIID 
  */
 static ULONG   WINAPI EnumMonikerImpl_AddRef(IEnumMoniker* iface)
 {
-    EnumMonikerImpl *This = (EnumMonikerImpl *)iface;
+    EnumMonikerImpl *This = impl_from_IEnumMoniker(iface);
 
     TRACE("(%p)\n",This);
 
@@ -1318,7 +1328,7 @@ static ULONG   WINAPI EnumMonikerImpl_AddRef(IEnumMoniker* iface)
  */
 static ULONG   WINAPI EnumMonikerImpl_Release(IEnumMoniker* iface)
 {
-    EnumMonikerImpl *This = (EnumMonikerImpl *)iface;
+    EnumMonikerImpl *This = impl_from_IEnumMoniker(iface);
     ULONG ref;
 
     TRACE("(%p)\n",This);
@@ -1346,7 +1356,7 @@ static ULONG   WINAPI EnumMonikerImpl_Release(IEnumMoniker* iface)
 static HRESULT   WINAPI EnumMonikerImpl_Next(IEnumMoniker* iface, ULONG celt, IMoniker** rgelt, ULONG * pceltFetched)
 {
     ULONG i;
-    EnumMonikerImpl *This = (EnumMonikerImpl *)iface;
+    EnumMonikerImpl *This = impl_from_IEnumMoniker(iface);
     HRESULT hr = S_OK;
 
     TRACE("(%p) TabCurrentPos %d Tablastindx %d\n", This, This->pos, This->moniker_list->size);
@@ -1380,7 +1390,7 @@ static HRESULT   WINAPI EnumMonikerImpl_Next(IEnumMoniker* iface, ULONG celt, IM
  */
 static HRESULT   WINAPI EnumMonikerImpl_Skip(IEnumMoniker* iface, ULONG celt)
 {
-    EnumMonikerImpl *This = (EnumMonikerImpl *)iface;
+    EnumMonikerImpl *This = impl_from_IEnumMoniker(iface);
 
     TRACE("(%p)\n",This);
 
@@ -1397,7 +1407,7 @@ static HRESULT   WINAPI EnumMonikerImpl_Skip(IEnumMoniker* iface, ULONG celt)
  */
 static HRESULT   WINAPI EnumMonikerImpl_Reset(IEnumMoniker* iface)
 {
-    EnumMonikerImpl *This = (EnumMonikerImpl *)iface;
+    EnumMonikerImpl *This = impl_from_IEnumMoniker(iface);
 
     This->pos = 0;	/* set back to start of list */
 
@@ -1411,7 +1421,7 @@ static HRESULT   WINAPI EnumMonikerImpl_Reset(IEnumMoniker* iface)
  */
 static HRESULT   WINAPI EnumMonikerImpl_Clone(IEnumMoniker* iface, IEnumMoniker ** ppenum)
 {
-    EnumMonikerImpl *This = (EnumMonikerImpl *)iface;
+    EnumMonikerImpl *This = impl_from_IEnumMoniker(iface);
     InterfaceList *moniker_list;
     ULONG i;
 
@@ -1475,14 +1485,14 @@ static HRESULT EnumMonikerImpl_CreateEnumROTMoniker(InterfaceList *moniker_list,
     TRACE("(%p)\n", This);
 
     /* initialize the virtual table function */
-    This->lpVtbl = &VT_EnumMonikerImpl;
+    This->IEnumMoniker_iface.lpVtbl = &VT_EnumMonikerImpl;
 
     /* the initial reference is set to "1" */
     This->ref = 1;			/* set the ref count to one         */
     This->pos = current_pos;		/* Set the list start posn */
     This->moniker_list = moniker_list;
 
-    *ppenumMoniker =  (IEnumMoniker*)This;
+    *ppenumMoniker =  &This->IEnumMoniker_iface;
 
     return S_OK;
 }
@@ -1493,27 +1503,32 @@ static HRESULT EnumMonikerImpl_CreateEnumROTMoniker(InterfaceList *moniker_list,
 
 typedef struct MonikerMarshal
 {
-    const IUnknownVtbl *lpVtbl;
-    const IMarshalVtbl *lpVtblMarshal;
-    
+    IUnknown IUnknown_iface;
+    IMarshal IMarshal_iface;
+
     LONG ref;
     IMoniker *moniker;
 } MonikerMarshal;
 
+static inline MonikerMarshal *impl_from_IUnknown(IUnknown *iface)
+{
+    return CONTAINING_RECORD(iface, MonikerMarshal, IUnknown_iface);
+}
+
 static inline MonikerMarshal *impl_from_IMarshal( IMarshal *iface )
 {
-    return (MonikerMarshal *)((char*)iface - FIELD_OFFSET(MonikerMarshal, lpVtblMarshal));
+    return CONTAINING_RECORD(iface, MonikerMarshal, IMarshal_iface);
 }
 
 static HRESULT WINAPI MonikerMarshalInner_QueryInterface(IUnknown *iface, REFIID riid, LPVOID *ppv)
 {
-    MonikerMarshal *This = (MonikerMarshal *)iface;
+    MonikerMarshal *This = impl_from_IUnknown(iface);
     TRACE("(%s, %p)\n", debugstr_guid(riid), ppv);
     *ppv = NULL;
     if (IsEqualIID(&IID_IUnknown, riid) || IsEqualIID(&IID_IMarshal, riid))
     {
-        *ppv = &This->lpVtblMarshal;
-        IUnknown_AddRef((IUnknown *)&This->lpVtblMarshal);
+        *ppv = &This->IMarshal_iface;
+        IUnknown_AddRef((IUnknown *)&This->IMarshal_iface);
         return S_OK;
     }
     FIXME("No interface for %s\n", debugstr_guid(riid));
@@ -1522,13 +1537,13 @@ static HRESULT WINAPI MonikerMarshalInner_QueryInterface(IUnknown *iface, REFIID
 
 static ULONG WINAPI MonikerMarshalInner_AddRef(IUnknown *iface)
 {
-    MonikerMarshal *This = (MonikerMarshal *)iface;
+    MonikerMarshal *This = impl_from_IUnknown(iface);
     return InterlockedIncrement(&This->ref);
 }
 
 static ULONG WINAPI MonikerMarshalInner_Release(IUnknown *iface)
 {
-    MonikerMarshal *This = (MonikerMarshal *)iface;
+    MonikerMarshal *This = impl_from_IUnknown(iface);
     ULONG ref = InterlockedDecrement(&This->ref);
 
     if (!ref) HeapFree(GetProcessHeap(), 0, This);
@@ -1648,12 +1663,12 @@ HRESULT MonikerMarshal_Create(IMoniker *inner, IUnknown **outer)
     MonikerMarshal *This = HeapAlloc(GetProcessHeap(), 0, sizeof(*This));
     if (!This) return E_OUTOFMEMORY;
 
-    This->lpVtbl = &VT_MonikerMarshalInner;
-    This->lpVtblMarshal = &VT_MonikerMarshal;
+    This->IUnknown_iface.lpVtbl = &VT_MonikerMarshalInner;
+    This->IMarshal_iface.lpVtbl = &VT_MonikerMarshal;
     This->ref = 1;
     This->moniker = inner;
 
-    *outer = (IUnknown *)&This->lpVtbl;
+    *outer = &This->IUnknown_iface;
     return S_OK;
 }
 

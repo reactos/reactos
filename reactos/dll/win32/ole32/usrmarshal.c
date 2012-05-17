@@ -429,7 +429,7 @@ unsigned char * __RPC_USER HGLOBAL_UserMarshal(ULONG *pFlags, unsigned char *pBu
     {
         *(ULONG *)pBuffer = WDT_REMOTE_CALL;
         pBuffer += sizeof(ULONG);
-        *(ULONG *)pBuffer = (ULONG)*phGlobal;
+        *(ULONG *)pBuffer = HandleToULong(*phGlobal);
         pBuffer += sizeof(ULONG);
         if (*phGlobal)
         {
@@ -437,7 +437,7 @@ unsigned char * __RPC_USER HGLOBAL_UserMarshal(ULONG *pFlags, unsigned char *pBu
             SIZE_T size = GlobalSize(*phGlobal);
             *(ULONG *)pBuffer = (ULONG)size;
             pBuffer += sizeof(ULONG);
-            *(ULONG *)pBuffer = (ULONG)*phGlobal;
+            *(ULONG *)pBuffer = HandleToULong(*phGlobal);
             pBuffer += sizeof(ULONG);
             *(ULONG *)pBuffer = (ULONG)size;
             pBuffer += sizeof(ULONG);

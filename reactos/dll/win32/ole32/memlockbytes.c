@@ -165,7 +165,7 @@ HRESULT WINAPI GetHGlobalFromILockBytes(ILockBytes* plkbyt, HGLOBAL* phglobal)
      ERR("Cannot ILockBytes_Stat, %x\n",hres);
      return hres;
   }
-  FIXME("cbSize is %d\n",stbuf.cbSize.u.LowPart);
+  TRACE("cbSize is %s\n", wine_dbgstr_longlong(stbuf.cbSize.QuadPart));
   *phglobal = GlobalAlloc( GMEM_MOVEABLE|GMEM_SHARE, stbuf.cbSize.u.LowPart);
   if (!*phglobal)
     return E_INVALIDARG;

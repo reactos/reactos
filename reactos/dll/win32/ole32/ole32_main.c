@@ -104,10 +104,10 @@ HGLOBAL WINAPI OleMetafilePictFromIconAndLabel(HICON hIcon, LPOLESTR lpszLabel,
 	SetWindowOrgEx(hdc, 0, 0, NULL);
 	SetWindowExtEx(hdc, width, label_offset + text_size.cy, NULL);
 
-	/* draw the icon centred */
+	/* draw the icon centered */
 	DrawIcon(hdc, (width-icon_width) / 2, 0, hIcon);
 	if(lpszLabel)
-		/* draw the label centred too, if provided */
+		/* draw the label centered too, if provided */
 		TextOutW(hdc, (width-text_size.cx) / 2, label_offset, lpszLabel, lstrlenW(lpszLabel));
 
 	if (lpszSourceFile)

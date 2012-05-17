@@ -23,3 +23,105 @@
 cpp_quote("#if 0    /* ole32_objidl.idl hack */")
 #include "objidl.idl"
 cpp_quote("#endif   /* ole32_objidl.idl hack */")
+
+#ifndef __WIDL__
+#define threading(model)
+#define progid(str)
+#endif
+
+[
+    threading(both),
+    uuid(00000300-0000-0000-c000-000000000046)
+]
+coclass StdOleLink { interface IMarshal; }
+
+[
+    threading(both),
+    progid("file"),
+    uuid(00000303-0000-0000-c000-000000000046)
+]
+coclass FileMoniker { interface IMoniker; }
+
+[
+    threading(both),
+    uuid(00000304-0000-0000-c000-000000000046)
+]
+coclass ItemMoniker { interface IMoniker; }
+
+[
+    threading(both),
+    uuid(00000305-0000-0000-c000-000000000046)
+]
+coclass AntiMoniker { interface IMoniker; }
+
+[
+    threading(both),
+    uuid(00000306-0000-0000-c000-000000000046)
+]
+coclass PointerMoniker { interface IMoniker; }
+
+[
+    threading(both),
+    uuid(00000308-0000-0000-c000-000000000046)
+]
+coclass PackagerMoniker { interface IMoniker; }
+
+[
+    threading(both),
+    uuid(00000309-0000-0000-c000-000000000046)
+]
+coclass CompositeMoniker { interface IMoniker; }
+
+[
+    threading(both),
+    uuid(0000030b-0000-0000-c000-000000000046)
+]
+coclass DfMarshal { interface IMarshal; }
+
+#ifdef __WIDL__
+[
+    helpstring("Picture (Metafile)"),
+    threading(both),
+    progid("StaticMetafile"),
+    uuid(00000315-0000-0000-c000-000000000046)
+]
+coclass Picture_Metafile { interface IPicture; }
+
+[
+    helpstring("Picture (Device Independent Bitmap)"),
+    threading(both),
+    progid("StaticDib"),
+    uuid(00000316-0000-0000-c000-000000000046)
+]
+coclass Picture_Dib { interface IPicture; }
+#endif
+
+[
+    threading(both),
+    progid("CLSID"),
+    uuid(0000031a-0000-0000-c000-000000000046)
+]
+coclass ClassMoniker { interface IMoniker; }
+
+#ifdef __WIDL__
+[
+    threading(both),
+    uuid(00000320-0000-0000-c000-000000000046)
+]
+coclass PSFactoryBuffer { interface IFactoryBuffer; }
+#endif
+
+[
+    threading(apartment),
+    uuid(00000323-0000-0000-c000-000000000046)
+]
+coclass StdGlobalInterfaceTable { interface IGlobalInterfaceTable; }
+
+#ifdef __WIDL__
+[
+    helpstring("Component Categories Manager"),
+    threading(both),
+    uuid(0002e005-0000-0000-c000-000000000046)
+]
+coclass StdComponentCategoriesMgr { interface ICatRegister; interface ICatInformation; }
+#endif

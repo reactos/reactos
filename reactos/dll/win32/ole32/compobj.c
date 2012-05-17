@@ -59,7 +59,9 @@
 #include "ctxtcall.h"
 #include "dde.h"
 
+#include "initguid.h"
 #include "compobj_private.h"
+#include "moniker.h"
 
 #include "wine/unicode.h"
 #include "wine/debug.h"
@@ -67,6 +69,10 @@
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
 #define ARRAYSIZE(array) (sizeof(array)/sizeof((array)[0]))
+
+#ifdef _MSC_VER
+DEFINE_GUID(CLSID_PSFactoryBuffer, 0x00000320, 0x0000, 0x0000, 0xc0,0x00, 0x00,0x00,0x00,0x00,0x00,0x46);
+#endif
 
 /****************************************************************************
  * This section defines variables internal to the COM module.
@@ -306,6 +312,7 @@ static void COMPOBJ_DllList_Free(void)
         HeapFree(GetProcessHeap(), 0, entry);
     }
     LeaveCriticalSection(&csOpenDllList);
+    DeleteCriticalSection(&csOpenDllList);
 }
 
 /******************************************************************************
@@ -454,6 +461,116 @@ static void COM_RevokeAllClasses(const struct apartment *apt)
   }
 
   LeaveCriticalSection( &csRegisteredClassList );
+}
+
+/******************************************************************************
+ * Implementation of the manual reset event object. (CLSID_ManualResetEvent)
+ */
+
+typedef struct ManualResetEvent {
+    ISynchronize   ISynchronize_iface;
+    LONG ref;
+    HANDLE event;
+} MREImpl;
+
+static inline MREImpl *impl_from_ISynchronize(ISynchronize *iface)
+{
+    return CONTAINING_RECORD(iface, MREImpl, ISynchronize_iface);
+}
+
+static HRESULT WINAPI ISynchronize_fnQueryInterface(ISynchronize *iface, REFIID riid, void **ppv)
+{
+    MREImpl *This = impl_from_ISynchronize(iface);
+    TRACE("%p (%s, %p)\n", This, debugstr_guid(riid), ppv);
+
+    *ppv = NULL;
+    if(IsEqualGUID(riid, &IID_IUnknown) ||
+       IsEqualGUID(riid, &IID_ISynchronize))
+        *ppv = This;
+    else
+        ERR("Unknown interface %s requested.\n", debugstr_guid(riid));
+
+    if(*ppv)
+    {
+        IUnknown_AddRef((IUnknown*)*ppv);
+        return S_OK;
+    }
+
+    return E_NOINTERFACE;
+}
+
+static ULONG WINAPI ISynchronize_fnAddRef(ISynchronize *iface)
+{
+    MREImpl *This = impl_from_ISynchronize(iface);
+    LONG ref = InterlockedIncrement(&This->ref);
+    TRACE("%p - ref %d\n", This, ref);
+
+    return ref;
+}
+
+static ULONG WINAPI ISynchronize_fnRelease(ISynchronize *iface)
+{
+    MREImpl *This = impl_from_ISynchronize(iface);
+    LONG ref = InterlockedDecrement(&This->ref);
+    TRACE("%p - ref %d\n", This, ref);
+
+    if(!ref)
+    {
+        CloseHandle(This->event);
+        HeapFree(GetProcessHeap(), 0, This);
+    }
+
+    return ref;
+}
+
+static HRESULT WINAPI ISynchronize_fnWait(ISynchronize *iface, DWORD dwFlags, DWORD dwMilliseconds)
+{
+    MREImpl *This = impl_from_ISynchronize(iface);
+    UINT index;
+    TRACE("%p (%08x, %08x)\n", This, dwFlags, dwMilliseconds);
+    return CoWaitForMultipleHandles(dwFlags, dwMilliseconds, 1, &This->event, &index);
+}
+
+static HRESULT WINAPI ISynchronize_fnSignal(ISynchronize *iface)
+{
+    MREImpl *This = impl_from_ISynchronize(iface);
+    TRACE("%p\n", This);
+    SetEvent(This->event);
+    return S_OK;
+}
+
+static HRESULT WINAPI ISynchronize_fnReset(ISynchronize *iface)
+{
+    MREImpl *This = impl_from_ISynchronize(iface);
+    TRACE("%p\n", This);
+    ResetEvent(This->event);
+    return S_OK;
+}
+
+static ISynchronizeVtbl vt_ISynchronize = {
+    ISynchronize_fnQueryInterface,
+    ISynchronize_fnAddRef,
+    ISynchronize_fnRelease,
+    ISynchronize_fnWait,
+    ISynchronize_fnSignal,
+    ISynchronize_fnReset
+};
+
+static HRESULT ManualResetEvent_Construct(IUnknown *punkouter, REFIID iid, void **ppv)
+{
+    MREImpl *This = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(MREImpl));
+    HRESULT hr;
+
+    if(punkouter)
+        FIXME("Aggregation not implemented.\n");
+
+    This->ref = 1;
+    This->ISynchronize_iface.lpVtbl = &vt_ISynchronize;
+    This->event = CreateEventW(NULL, TRUE, FALSE, NULL);
+
+    hr = ISynchronize_QueryInterface(&This->ISynchronize_iface, iid, ppv);
+    ISynchronize_Release(&This->ISynchronize_iface);
+    return hr;
 }
 
 /***********************************************************************
@@ -1488,6 +1605,15 @@ HRESULT WINAPI CoCreateGuid(GUID *pguid)
     return HRESULT_FROM_WIN32( status );
 }
 
+static inline BOOL is_valid_hex(WCHAR c)
+{
+    if (!(((c >= '0') && (c <= '9'))  ||
+          ((c >= 'a') && (c <= 'f'))  ||
+          ((c >= 'A') && (c <= 'F'))))
+        return FALSE;
+    return TRUE;
+}
+
 /******************************************************************************
  *		CLSIDFromString	[OLE32.@]
  *		IIDFromString   [OLE32.@]
@@ -1511,24 +1637,10 @@ static HRESULT __CLSIDFromString(LPCWSTR s, LPCLSID id)
   int	i;
   BYTE table[256];
 
-  if (!s) {
+  if (!s || s[0]!='{') {
     memset( id, 0, sizeof (CLSID) );
-    return S_OK;
-  }
-
-  /* validate the CLSID string */
-  if (strlenW(s) != 38)
+    if(!s) return S_OK;
     return CO_E_CLASSSTRING;
-
-  if ((s[0]!='{') || (s[9]!='-') || (s[14]!='-') || (s[19]!='-') || (s[24]!='-') || (s[37]!='}'))
-    return CO_E_CLASSSTRING;
-
-  for (i=1; i<37; i++) {
-    if ((i == 9)||(i == 14)||(i == 19)||(i == 24)) continue;
-    if (!(((s[i] >= '0') && (s[i] <= '9'))  ||
-          ((s[i] >= 'a') && (s[i] <= 'f'))  ||
-          ((s[i] >= 'A') && (s[i] <= 'F'))))
-       return CO_E_CLASSSTRING;
   }
 
   TRACE("%s -> %p\n", debugstr_w(s), id);
@@ -1546,22 +1658,40 @@ static HRESULT __CLSIDFromString(LPCWSTR s, LPCLSID id)
 
   /* in form {XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX} */
 
-  id->Data1 = (table[s[1]] << 28 | table[s[2]] << 24 | table[s[3]] << 20 | table[s[4]] << 16 |
-               table[s[5]] << 12 | table[s[6]] << 8  | table[s[7]] << 4  | table[s[8]]);
-  id->Data2 = table[s[10]] << 12 | table[s[11]] << 8 | table[s[12]] << 4 | table[s[13]];
-  id->Data3 = table[s[15]] << 12 | table[s[16]] << 8 | table[s[17]] << 4 | table[s[18]];
+  id->Data1 = 0;
+  for (i = 1; i < 9; i++) {
+    if (!is_valid_hex(s[i])) return CO_E_CLASSSTRING;
+    id->Data1 = (id->Data1 << 4) | table[s[i]];
+  }
+  if (s[9]!='-') return CO_E_CLASSSTRING;
 
-  /* these are just sequential bytes */
-  id->Data4[0] = table[s[20]] << 4 | table[s[21]];
-  id->Data4[1] = table[s[22]] << 4 | table[s[23]];
-  id->Data4[2] = table[s[25]] << 4 | table[s[26]];
-  id->Data4[3] = table[s[27]] << 4 | table[s[28]];
-  id->Data4[4] = table[s[29]] << 4 | table[s[30]];
-  id->Data4[5] = table[s[31]] << 4 | table[s[32]];
-  id->Data4[6] = table[s[33]] << 4 | table[s[34]];
-  id->Data4[7] = table[s[35]] << 4 | table[s[36]];
+  id->Data2 = 0;
+  for (i = 10; i < 14; i++) {
+    if (!is_valid_hex(s[i])) return CO_E_CLASSSTRING;
+    id->Data2 = (id->Data2 << 4) | table[s[i]];
+  }
+  if (s[14]!='-') return CO_E_CLASSSTRING;
 
-  return S_OK;
+  id->Data3 = 0;
+  for (i = 15; i < 19; i++) {
+    if (!is_valid_hex(s[i])) return CO_E_CLASSSTRING;
+    id->Data3 = (id->Data3 << 4) | table[s[i]];
+  }
+  if (s[19]!='-') return CO_E_CLASSSTRING;
+
+  for (i = 20; i < 37; i+=2) {
+    if (i == 24) {
+      if (s[i]!='-') return CO_E_CLASSSTRING;
+      i++;
+    }
+    if (!is_valid_hex(s[i]) || !is_valid_hex(s[i+1])) return CO_E_CLASSSTRING;
+    id->Data4[(i-20)/2] = table[s[i]] << 4 | table[s[i+1]];
+  }
+
+  if (s[37] == '}' && s[38] == '\0')
+    return S_OK;
+
+  return CO_E_CLASSSTRING;
 }
 
 /*****************************************************************************/
@@ -1575,7 +1705,10 @@ HRESULT WINAPI CLSIDFromString(LPCOLESTR idstr, LPCLSID id )
 
     ret = __CLSIDFromString(idstr, id);
     if(ret != S_OK) { /* It appears a ProgID is also valid */
-        ret = CLSIDFromProgID(idstr, id);
+        CLSID tmp_id;
+        ret = CLSIDFromProgID(idstr, &tmp_id);
+        if(SUCCEEDED(ret))
+            *id = tmp_id;
     }
     return ret;
 }
@@ -2491,6 +2624,9 @@ HRESULT WINAPI CoCreateInstance(
     TRACE("Retrieved GIT (%p)\n", *ppv);
     return S_OK;
   }
+
+  if (IsEqualCLSID(rclsid, &CLSID_ManualResetEvent))
+      return ManualResetEvent_Construct(pUnkOuter, iid, ppv);
 
   /*
    * Get a class factory to construct the object we want.
@@ -3518,7 +3654,7 @@ HRESULT WINAPI CoRevertToSelf(void)
 static BOOL COM_PeekMessage(struct apartment *apt, MSG *msg)
 {
     /* first try to retrieve messages for incoming COM calls to the apartment window */
-    return PeekMessageW(msg, apt->win, WM_USER, WM_APP - 1, PM_REMOVE|PM_NOYIELD) ||
+    return PeekMessageW(msg, apt->win, 0, 0, PM_REMOVE|PM_NOYIELD) ||
            /* next retrieve other messages necessary for the app to remain responsive */
            PeekMessageW(msg, NULL, WM_DDE_FIRST, WM_DDE_LAST, PM_REMOVE|PM_NOYIELD) ||
            PeekMessageW(msg, NULL, 0, 0, PM_QS_PAINT|PM_QS_SENDMESSAGE|PM_REMOVE|PM_NOYIELD);
@@ -3580,7 +3716,7 @@ HRESULT WINAPI CoWaitForMultipleHandles(DWORD dwFlags, DWORD dwTimeout,
 
             res = MsgWaitForMultipleObjectsEx(cHandles, pHandles,
                 (dwTimeout == INFINITE) ? INFINITE : start_time + dwTimeout - now,
-                QS_ALLINPUT, wait_flags);
+                QS_SENDMESSAGE | QS_ALLPOSTMESSAGE | QS_PAINT, wait_flags);
 
             if (res == WAIT_OBJECT_0 + cHandles)  /* messages available */
             {
@@ -3614,11 +3750,7 @@ HRESULT WINAPI CoWaitForMultipleHandles(DWORD dwFlags, DWORD dwTimeout,
                     }
                 }
 
-                /* note: using "if" here instead of "while" might seem less
-                 * efficient, but only if we are optimising for quick delivery
-                 * of pending messages, rather than quick completion of the
-                 * COM call */
-                if (COM_PeekMessage(apt, &msg))
+                while (COM_PeekMessage(apt, &msg))
                 {
                     TRACE("received message whilst waiting for RPC: 0x%04x\n", msg.message);
                     TranslateMessage(&msg);
@@ -3629,6 +3761,7 @@ HRESULT WINAPI CoWaitForMultipleHandles(DWORD dwFlags, DWORD dwTimeout,
                         PostQuitMessage(msg.wParam);
                         /* no longer need to process messages */
                         message_loop = FALSE;
+                        break;
                     }
                 }
                 continue;
@@ -3644,23 +3777,19 @@ HRESULT WINAPI CoWaitForMultipleHandles(DWORD dwFlags, DWORD dwTimeout,
                 (dwFlags & COWAIT_ALERTABLE) ? TRUE : FALSE);
         }
 
-        if (res < WAIT_OBJECT_0 + cHandles)
+        switch (res)
         {
-            /* handle signaled, store index */
-            *lpdwindex = (res - WAIT_OBJECT_0);
-            break;
-        }
-        else if (res == WAIT_TIMEOUT)
-        {
+        case WAIT_TIMEOUT:
             hr = RPC_S_CALLPENDING;
             break;
-        }
-        else
-        {
-            ERR("Unexpected wait termination: %d, %d\n", res, GetLastError());
-            hr = E_UNEXPECTED;
+        case WAIT_FAILED:
+            hr = HRESULT_FROM_WIN32( GetLastError() );
+            break;
+        default:
+            *lpdwindex = res;
             break;
         }
+        break;
     }
     TRACE("-- 0x%08x\n", hr);
     return hr;
@@ -3740,26 +3869,26 @@ HRESULT WINAPI CoRegisterChannelHook(REFGUID guidExtension, IChannelHook *pChann
 
 typedef struct Context
 {
-    const IComThreadingInfoVtbl *lpVtbl;
-    const IContextCallbackVtbl  *lpCallbackVtbl;
-    const IObjContextVtbl  *lpContextVtbl;
+    IComThreadingInfo IComThreadingInfo_iface;
+    IContextCallback IContextCallback_iface;
+    IObjContext IObjContext_iface;
     LONG refs;
     APTTYPE apttype;
 } Context;
 
 static inline Context *impl_from_IComThreadingInfo( IComThreadingInfo *iface )
 {
-        return (Context *)((char*)iface - FIELD_OFFSET(Context, lpVtbl));
+        return CONTAINING_RECORD(iface, Context, IComThreadingInfo_iface);
 }
 
 static inline Context *impl_from_IContextCallback( IContextCallback *iface )
 {
-        return (Context *)((char*)iface - FIELD_OFFSET(Context, lpCallbackVtbl));
+        return CONTAINING_RECORD(iface, Context, IContextCallback_iface);
 }
 
 static inline Context *impl_from_IObjContext( IObjContext *iface )
 {
-        return (Context *)((char*)iface - FIELD_OFFSET(Context, lpContextVtbl));
+        return CONTAINING_RECORD(iface, Context, IObjContext_iface);
 }
 
 static HRESULT Context_QueryInterface(Context *iface, REFIID riid, LPVOID *ppv)
@@ -3769,15 +3898,15 @@ static HRESULT Context_QueryInterface(Context *iface, REFIID riid, LPVOID *ppv)
     if (IsEqualIID(riid, &IID_IComThreadingInfo) ||
         IsEqualIID(riid, &IID_IUnknown))
     {
-        *ppv = &iface->lpVtbl;
+        *ppv = &iface->IComThreadingInfo_iface;
     }
     else if (IsEqualIID(riid, &IID_IContextCallback))
     {
-        *ppv = &iface->lpCallbackVtbl;
+        *ppv = &iface->IContextCallback_iface;
     }
     else if (IsEqualIID(riid, &IID_IObjContext))
     {
-        *ppv = &iface->lpContextVtbl;
+        *ppv = &iface->IObjContext_iface;
     }
 
     if (*ppv)
@@ -4054,9 +4183,9 @@ HRESULT WINAPI CoGetObjectContext(REFIID riid, void **ppv)
     if (!context)
         return E_OUTOFMEMORY;
 
-    context->lpVtbl = &Context_Threading_Vtbl;
-    context->lpCallbackVtbl = &Context_Callback_Vtbl;
-    context->lpContextVtbl = &Context_Object_Vtbl;
+    context->IComThreadingInfo_iface.lpVtbl = &Context_Threading_Vtbl;
+    context->IContextCallback_iface.lpVtbl = &Context_Callback_Vtbl;
+    context->IObjContext_iface.lpVtbl = &Context_Object_Vtbl;
     context->refs = 1;
     if (apt->multi_threaded)
         context->apttype = APTTYPE_MTA;
@@ -4065,8 +4194,8 @@ HRESULT WINAPI CoGetObjectContext(REFIID riid, void **ppv)
     else
         context->apttype = APTTYPE_STA;
 
-    hr = IUnknown_QueryInterface((IUnknown *)&context->lpVtbl, riid, ppv);
-    IUnknown_Release((IUnknown *)&context->lpVtbl);
+    hr = IUnknown_QueryInterface((IUnknown *)&context->IComThreadingInfo_iface, riid, ppv);
+    IUnknown_Release((IUnknown *)&context->IComThreadingInfo_iface);
 
     return hr;
 }
@@ -4159,6 +4288,8 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID fImpLoad)
         COMPOBJ_UninitProcess();
         RPC_UnregisterAllChannelHooks();
         COMPOBJ_DllList_Free();
+        DeleteCriticalSection(&csRegisteredClassList);
+        DeleteCriticalSection(&csApartment);
 	break;
 
     case DLL_THREAD_DETACH:
@@ -4168,4 +4299,18 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID fImpLoad)
     return TRUE;
 }
 
-/* NOTE: DllRegisterServer and DllUnregisterServer are in regsvr.c */
+/***********************************************************************
+ *		DllRegisterServer (OLE32.@)
+ */
+HRESULT WINAPI DllRegisterServer(void)
+{
+    return OLE32_DllRegisterServer();
+}
+
+/***********************************************************************
+ *		DllUnregisterServer (OLE32.@)
+ */
+HRESULT WINAPI DllUnregisterServer(void)
+{
+    return OLE32_DllUnregisterServer();
+}
