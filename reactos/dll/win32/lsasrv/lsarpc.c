@@ -733,7 +733,7 @@ NTSTATUS WINAPI LsarEnumeratePrivilegesAccount(
     /* Validate the AccountHandle */
     Status = LsapValidateDbObject(AccountHandle,
                                   LsaDbAccountObject,
-                                  0,
+                                  ACCOUNT_VIEW,
                                   &AccountObject);
     if (!NT_SUCCESS(Status))
     {
@@ -778,13 +778,18 @@ NTSTATUS WINAPI LsarAddPrivilegesToAccount(
     PLSAPR_PRIVILEGE_SET Privileges)
 {
     PLSA_DB_OBJECT AccountObject;
+    PPRIVILEGE_SET CurrentPrivileges = NULL;
+    PPRIVILEGE_SET NewPrivileges = NULL;
     ULONG PrivilegeSetSize = 0;
+    ULONG PrivilegeCount;
+    ULONG i, j;
+    BOOL bFound;
     NTSTATUS Status;
 
     /* Validate the AccountHandle */
     Status = LsapValidateDbObject(AccountHandle,
                                   LsaDbAccountObject,
-                                  0,
+                                  ACCOUNT_ADJUST_PRIVILEGES,
                                   &AccountObject);
     if (!NT_SUCCESS(Status))
     {
@@ -811,8 +816,107 @@ NTSTATUS WINAPI LsarAddPrivilegesToAccount(
     {
         /* The Privilgs attribute exists */
 
-        Status = STATUS_NOT_IMPLEMENTED;
+        /* Allocate memory for the stored privilege set */
+        CurrentPrivileges = MIDL_user_allocate(PrivilegeSetSize);
+        if (CurrentPrivileges == NULL)
+            return STATUS_NO_MEMORY;
+
+        /* Get the current privilege set */
+        Status = LsapGetObjectAttribute(AccountObject,
+                                        L"Privilgs",
+                                        CurrentPrivileges,
+                                        &PrivilegeSetSize);
+        if (!NT_SUCCESS(Status))
+        {
+            TRACE("LsapGetObjectAttribute() failed (Status 0x%08lx)\n", Status);
+            goto done;
+        }
+
+        PrivilegeCount = CurrentPrivileges->PrivilegeCount;
+        TRACE("Current privilege count: %lu\n", PrivilegeCount);
+
+        /* Calculate the number privileges in the combined privilege set */
+        for (i = 0; i < Privileges->PrivilegeCount; i++)
+        {
+            bFound = FALSE;
+            for (j = 0; j < CurrentPrivileges->PrivilegeCount; j++)
+            {
+                if (RtlEqualLuid(&(Privileges->Privilege[i].Luid),
+                                 &(CurrentPrivileges->Privilege[i].Luid)))
+                {
+                    bFound = TRUE;
+                    break;
+                }
+            }
+
+            if (bFound == FALSE)
+            {
+                TRACE("Found new privilege\n");
+                PrivilegeCount++;
+            }
+        }
+        TRACE("New privilege count: %lu\n", PrivilegeCount);
+
+        /* Calculate the size of the new privilege set and allocate it */
+        PrivilegeSetSize = sizeof(PRIVILEGE_SET) +
+                           (PrivilegeCount - 1) * sizeof(LUID_AND_ATTRIBUTES);
+        NewPrivileges = MIDL_user_allocate(PrivilegeSetSize);
+        if (NewPrivileges == NULL)
+        {
+            Status = STATUS_NO_MEMORY;
+            goto done;
+        }
+
+        /* Initialize the new privilege set */
+        NewPrivileges->PrivilegeCount = PrivilegeCount;
+        NewPrivileges->Control = 0;
+
+        /* Copy all privileges from the current privilege set */
+        RtlCopyLuidAndAttributesArray(CurrentPrivileges->PrivilegeCount,
+                                      &(CurrentPrivileges->Privilege[0]),
+                                      &(NewPrivileges->Privilege[0]));
+
+        /* Add new privileges to the new privilege set */
+        PrivilegeCount = CurrentPrivileges->PrivilegeCount;
+        for (i = 0; i < Privileges->PrivilegeCount; i++)
+        {
+            bFound = FALSE;
+            for (j = 0; j < CurrentPrivileges->PrivilegeCount; j++)
+            {
+                if (RtlEqualLuid(&(Privileges->Privilege[i].Luid),
+                                 &(CurrentPrivileges->Privilege[i].Luid)))
+                {
+                    /* Overwrite attributes if a matching privilege was found */
+                    NewPrivileges->Privilege[j].Attributes = Privileges->Privilege[i].Attributes;
+
+                    bFound = TRUE;
+                    break;
+                }
+            }
+
+            if (bFound == FALSE)
+            {
+                /* Copy the new privilege */
+                RtlCopyLuidAndAttributesArray(1,
+                                              (PLUID_AND_ATTRIBUTES)&(Privileges->Privilege[i]),
+                                              &(NewPrivileges->Privilege[PrivilegeCount]));
+                PrivilegeCount++;
+            }
+        }
+
+        /* Set the new priivliege set */
+        Status = LsapSetObjectAttribute(AccountObject,
+                                        L"Privilgs",
+                                        NewPrivileges,
+                                        PrivilegeSetSize);
     }
+
+done:
+    if (CurrentPrivileges != NULL)
+        MIDL_user_free(CurrentPrivileges);
+
+    if (NewPrivileges != NULL)
+        MIDL_user_free(NewPrivileges);
 
     return Status;
 }

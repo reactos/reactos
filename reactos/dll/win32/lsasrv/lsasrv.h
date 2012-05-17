@@ -17,6 +17,7 @@
 #include <ndk/rtlfuncs.h>
 #include <ndk/setypes.h>
 
+#include <ntlsa.h>
 #include <ntsecapi.h>
 #include <sddl.h>
 
