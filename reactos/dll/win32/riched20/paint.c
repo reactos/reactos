@@ -25,7 +25,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(richedit);
 
 static void ME_DrawParagraph(ME_Context *c, ME_DisplayItem *paragraph);
 
-void ME_PaintContent(ME_TextEditor *editor, HDC hDC, BOOL bOnlyNew, const RECT *rcUpdate)
+void ME_PaintContent(ME_TextEditor *editor, HDC hDC, const RECT *rcUpdate)
 {
   ME_DisplayItem *item;
   ME_Context c;
@@ -71,18 +71,9 @@ void ME_PaintContent(ME_TextEditor *editor, HDC hDC, BOOL bOnlyNew, const RECT *
       ys -= item->member.para.pCell->member.cell.yTextOffset;
     }
 
-    if (!bOnlyNew || (item->member.para.nFlags & MEPF_REPAINT))
-    {
-      /* Draw the paragraph if any of the paragraph is in the update region. */
-      if (ys < rcUpdate->bottom && ye > rcUpdate->top)
-      {
-        ME_DrawParagraph(&c, item);
-        /* Clear the repaint flag if the whole paragraph is in the
-         * update region. */
-        if (rcUpdate->top <= ys && rcUpdate->bottom >= ye)
-          item->member.para.nFlags &= ~MEPF_REPAINT;
-      }
-    }
+    /* Draw the paragraph if any of the paragraph is in the update region. */
+    if (ys < rcUpdate->bottom && ye > rcUpdate->top)
+      ME_DrawParagraph(&c, item);
     item = item->member.para.next_para;
   }
   if (c.pt.y + editor->nTotalLength < c.rcView.bottom)
@@ -93,15 +84,6 @@ void ME_PaintContent(ME_TextEditor *editor, HDC hDC, BOOL bOnlyNew, const RECT *
     rc.left = c.rcView.left;
     rc.bottom = c.rcView.bottom;
     rc.right = c.rcView.right;
-
-    if (bOnlyNew)
-    {
-      /* Only erase region drawn from previous call to ME_PaintContent */
-      if (editor->nTotalLength < editor->nLastTotalLength)
-        rc.bottom = c.pt.y + editor->nLastTotalLength;
-      else
-        SetRectEmpty(&rc);
-    }
 
     IntersectRect(&rc, &rc, rcUpdate);
 
@@ -316,7 +298,7 @@ static void ME_DrawTextWithStyle(ME_Context *c, int x, int y, LPCWSTR szText,
       hPen = CreatePen(PS_DOT, 1, rgb);
       break;
     default:
-      WINE_FIXME("Unknown underline type (%u)\n", s->fmt.bUnderlineType);
+      FIXME("Unknown underline type (%u)\n", s->fmt.bUnderlineType);
       /* fall through */
     case CFU_CF1UNDERLINE: /* this type is supported in the font, do nothing */
     case CFU_UNDERLINENONE:
@@ -1275,7 +1257,8 @@ void ME_EnsureVisible(ME_TextEditor *editor, ME_Cursor *pCursor)
 void
 ME_InvalidateSelection(ME_TextEditor *editor)
 {
-  ME_DisplayItem *para1, *para2;
+  ME_DisplayItem *sel_start, *sel_end;
+  ME_DisplayItem *repaint_start = NULL, *repaint_end = NULL;
   int nStart, nEnd;
   int len = ME_GetTextLength(editor);
 
@@ -1285,32 +1268,39 @@ ME_InvalidateSelection(ME_TextEditor *editor)
   if (nStart == nEnd && editor->nLastSelStart == editor->nLastSelEnd)
     return;
   ME_WrapMarkedParagraphs(editor);
-  ME_GetSelectionParas(editor, &para1, &para2);
-  assert(para1->type == diParagraph);
-  assert(para2->type == diParagraph);
+  ME_GetSelectionParas(editor, &sel_start, &sel_end);
+  assert(sel_start->type == diParagraph);
+  assert(sel_end->type == diParagraph);
   /* last selection markers aren't always updated, which means
    * they can point past the end of the document */
   if (editor->nLastSelStart > len || editor->nLastSelEnd > len) {
-    ME_MarkForPainting(editor,
-        ME_FindItemFwd(editor->pBuffer->pFirst, diParagraph),
-        editor->pBuffer->pLast);
+    repaint_start = ME_FindItemFwd(editor->pBuffer->pFirst, diParagraph);
+    repaint_end = editor->pBuffer->pLast;
+    ME_MarkForPainting(editor, repaint_start, repaint_end);
   } else {
     /* if the start part of selection is being expanded or contracted... */
     if (nStart < editor->nLastSelStart) {
-      ME_MarkForPainting(editor, para1, editor->pLastSelStartPara->member.para.next_para);
+      repaint_start = sel_start;
+      repaint_end = editor->pLastSelStartPara->member.para.next_para;
     } else if (nStart > editor->nLastSelStart) {
-      ME_MarkForPainting(editor, editor->pLastSelStartPara, para1->member.para.next_para);
+      repaint_start = editor->pLastSelStartPara;
+      repaint_end = sel_start->member.para.next_para;
     }
+    ME_MarkForPainting(editor, repaint_start, repaint_end);
 
     /* if the end part of selection is being contracted or expanded... */
     if (nEnd < editor->nLastSelEnd) {
-      ME_MarkForPainting(editor, para2, editor->pLastSelEndPara->member.para.next_para);
+      if (!repaint_start) repaint_start = sel_end;
+      repaint_end = editor->pLastSelEndPara->member.para.next_para;
+      ME_MarkForPainting(editor, sel_end, repaint_end);
     } else if (nEnd > editor->nLastSelEnd) {
-      ME_MarkForPainting(editor, editor->pLastSelEndPara, para2->member.para.next_para);
+      if (!repaint_start) repaint_start = editor->pLastSelEndPara;
+      repaint_end = sel_end->member.para.next_para;
+      ME_MarkForPainting(editor, editor->pLastSelEndPara, repaint_end);
     }
   }
 
-  ME_InvalidateMarkedParagraphs(editor);
+  ME_InvalidateMarkedParagraphs(editor, repaint_start, repaint_end);
   /* remember the last invalidated position */
   ME_GetSelectionOfs(editor, &editor->nLastSelStart, &editor->nLastSelEnd);
   ME_GetSelectionParas(editor, &editor->pLastSelStartPara, &editor->pLastSelEndPara);

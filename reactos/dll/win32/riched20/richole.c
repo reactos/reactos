@@ -1669,6 +1669,7 @@ void ME_DrawOLE(ME_Context *c, int x, int y, ME_Run *run,
                  hMemDC, 0, 0, dibsect.dsBm.bmWidth,
                  dibsect.dsBm.bmHeight, SRCCOPY);
     }
+    DeleteDC(hMemDC);
     if (!stgm.pUnkForRelease) DeleteObject(stgm.u.hBitmap);
     break;
   case TYMED_ENHMF:

@@ -146,8 +146,11 @@ int ME_SetSelection(ME_TextEditor *editor, int from, int to)
     {
       int start, end;
       ME_GetSelectionOfs(editor, &start, &end);
-      editor->pCursors[1] = editor->pCursors[0];
-      ME_Repaint(editor);
+      if (start != end)
+      {
+          editor->pCursors[1] = editor->pCursors[0];
+          ME_Repaint(editor);
+      }
       ME_ClearTempStyle(editor);
       return end;
     }

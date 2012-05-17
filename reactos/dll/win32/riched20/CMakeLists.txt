@@ -4,8 +4,6 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 spec2def(riched20.dll riched20.spec ADD_IMPORTLIB)
 
-set_rc_compiler()
-
 list(APPEND SOURCE
     caret.c
     clipboard.c
@@ -51,5 +49,4 @@ add_importlibs(riched20
     ntdll)
 
 add_pch(riched20 editor.h)
-
 add_cd_file(TARGET riched20 DESTINATION reactos/system32 FOR all)
