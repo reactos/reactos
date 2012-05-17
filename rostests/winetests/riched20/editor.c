@@ -6366,7 +6366,7 @@ static void test_format_rect(void)
 
     /* Reset to default rect and check how the format rect adjusts to window
      * resize and how it copes with very small windows */
-    SendMessageA(hwnd, EM_SETRECT, 0, (LPARAM)NULL);
+    SendMessageA(hwnd, EM_SETRECT, 0, 0);
 
     MoveWindow(hwnd, 0, 0, 100, 30, FALSE);
     GetClientRect(hwnd, &clientRect);
@@ -7172,6 +7172,114 @@ static void test_EM_FINDWORDBREAK_A(void)
     DestroyWindow(hwndRichEdit);
 }
 
+/*
+ * This test attempts to show the effect of enter on a richedit
+ * control v1.0 inserts CRLF whereas for higher versions it only
+ * inserts CR. If shows that EM_GETTEXTEX with GT_USECRLF == WM_GETTEXT
+ * and also shows that GT_USECRLF has no effect in richedit 1.0, but
+ * does for higher. The same test is cloned in riched32 and riched20.
+ */
+static void test_enter(void)
+{
+    static const struct {
+      const char *initialtext;
+      const int   cursor;
+      const char *expectedwmtext;
+      const char *expectedemtext;
+      const char *expectedemtextcrlf;
+    } testenteritems[] = {
+      { "aaabbb\r\n", 3, "aaa\r\nbbb\r\n", "aaa\rbbb\r", "aaa\r\nbbb\r\n"},
+      { "aaabbb\r\n", 6, "aaabbb\r\n\r\n", "aaabbb\r\r", "aaabbb\r\n\r\n"},
+      { "aa\rabbb\r\n", 7, "aa\r\nabbb\r\n\r\n", "aa\rabbb\r\r", "aa\r\nabbb\r\n\r\n"},
+      { "aa\rabbb\r\n", 3, "aa\r\n\r\nabbb\r\n", "aa\r\rabbb\r", "aa\r\n\r\nabbb\r\n"},
+      { "aa\rabbb\r\n", 2, "aa\r\n\r\nabbb\r\n", "aa\r\rabbb\r", "aa\r\n\r\nabbb\r\n"}
+    };
+
+  char expectedbuf[1024];
+  char resultbuf[1024];
+  HWND hwndRichEdit = new_richedit(NULL);
+  UINT i,j;
+
+  for (i = 0; i < sizeof(testenteritems)/sizeof(testenteritems[0]); i++) {
+
+    char buf[1024] = {0};
+    LRESULT result;
+    GETTEXTEX getText;
+    const char *expected;
+
+    /* Set the text to the initial text */
+    result = SendMessage(hwndRichEdit, WM_SETTEXT, 0, (LPARAM) testenteritems[i].initialtext);
+    ok (result == 1, "[%d] WM_SETTEXT returned %ld instead of 1\n", i, result);
+
+    /* Send Enter */
+    SendMessage(hwndRichEdit, EM_SETSEL, testenteritems[i].cursor, testenteritems[i].cursor);
+    simulate_typing_characters(hwndRichEdit, "\r");
+
+    /* 1. Retrieve with WM_GETTEXT */
+    buf[0] = 0x00;
+    result = SendMessage(hwndRichEdit, WM_GETTEXT, 1024, (LPARAM) buf);
+    expected = testenteritems[i].expectedwmtext;
+
+    resultbuf[0]=0x00;
+    for (j = 0; j < (UINT)result; j++)
+      sprintf(resultbuf+strlen(resultbuf), "%02x", buf[j] & 0xFF);
+    expectedbuf[0] = '\0';
+    for (j = 0; j < strlen(expected); j++)
+      sprintf(expectedbuf+strlen(expectedbuf), "%02x", expected[j] & 0xFF);
+
+    result = strcmp(expected, buf);
+    ok (result == 0,
+        "[%d] WM_GETTEXT unexpected '%s' expected '%s'\n",
+        i, resultbuf, expectedbuf);
+
+    /* 2. Retrieve with EM_GETTEXTEX, GT_DEFAULT */
+    getText.cb = sizeof(buf);
+    getText.flags = GT_DEFAULT;
+    getText.codepage      = CP_ACP;
+    getText.lpDefaultChar = NULL;
+    getText.lpUsedDefChar = NULL;
+    buf[0] = 0x00;
+    result = SendMessage(hwndRichEdit, EM_GETTEXTEX, (WPARAM)&getText, (LPARAM) buf);
+    expected = testenteritems[i].expectedemtext;
+
+    resultbuf[0]=0x00;
+    for (j = 0; j < (UINT)result; j++)
+      sprintf(resultbuf+strlen(resultbuf), "%02x", buf[j] & 0xFF);
+    expectedbuf[0] = '\0';
+    for (j = 0; j < strlen(expected); j++)
+      sprintf(expectedbuf+strlen(expectedbuf), "%02x", expected[j] & 0xFF);
+
+    result = strcmp(expected, buf);
+    ok (result == 0,
+        "[%d] EM_GETTEXTEX, GT_DEFAULT unexpected '%s', expected '%s'\n",
+        i, resultbuf, expectedbuf);
+
+    /* 3. Retrieve with EM_GETTEXTEX, GT_USECRLF */
+    getText.cb = sizeof(buf);
+    getText.flags = GT_USECRLF;
+    getText.codepage      = CP_ACP;
+    getText.lpDefaultChar = NULL;
+    getText.lpUsedDefChar = NULL;
+    buf[0] = 0x00;
+    result = SendMessage(hwndRichEdit, EM_GETTEXTEX, (WPARAM)&getText, (LPARAM) buf);
+    expected = testenteritems[i].expectedemtextcrlf;
+
+    resultbuf[0]=0x00;
+    for (j = 0; j < (UINT)result; j++)
+      sprintf(resultbuf+strlen(resultbuf), "%02x", buf[j] & 0xFF);
+    expectedbuf[0] = '\0';
+    for (j = 0; j < strlen(expected); j++)
+      sprintf(expectedbuf+strlen(expectedbuf), "%02x", expected[j] & 0xFF);
+
+    result = strcmp(expected, buf);
+    ok (result == 0,
+        "[%d] EM_GETTEXTEX, GT_USECRLF unexpected '%s', expected '%s'\n",
+        i, resultbuf, expectedbuf);
+  }
+
+  DestroyWindow(hwndRichEdit);
+}
+
 START_TEST( editor )
 {
   BOOL ret;
@@ -7230,6 +7338,7 @@ START_TEST( editor )
   test_dialogmode();
   test_EM_FINDWORDBREAK_W();
   test_EM_FINDWORDBREAK_A();
+  test_enter();
 
   /* Set the environment variable WINETEST_RICHED20 to keep windows
    * responsive and open for 30 seconds. This is useful for debugging.

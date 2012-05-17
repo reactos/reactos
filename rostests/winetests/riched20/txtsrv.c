@@ -21,6 +21,7 @@
  */
 
 #define COBJMACROS
+#define CONST_VTABLE
 
 #include <stdio.h>
 #include <stdarg.h>
@@ -38,6 +39,7 @@ static HMODULE hmoduleRichEdit;
 static IID *pIID_ITextServices;
 static IID *pIID_ITextHost;
 static IID *pIID_ITextHost2;
+static PCreateTextServices pCreateTextServices;
 
 static const char *debugstr_guid(REFIID riid)
 {
@@ -620,7 +622,6 @@ static BOOL init_texthost(void)
 {
     IUnknown *init;
     HRESULT result;
-    PCreateTextServices pCreateTextServices;
 
     dummyTextHost = CoTaskMemAlloc(sizeof(*dummyTextHost));
     if (dummyTextHost == NULL) {
@@ -633,7 +634,6 @@ static BOOL init_texthost(void)
     /* MSDN states that an IUnknown object is returned by
        CreateTextServices which is then queried to obtain a
        ITextServices object. */
-    pCreateTextServices = (void*)GetProcAddress(hmoduleRichEdit, "CreateTextServices");
     result = (*pCreateTextServices)(NULL, &dummyTextHost->ITextHost_iface, &init);
     ok(result == S_OK, "Did not return S_OK when created (result =  %x)\n", result);
     if (result != S_OK) {
@@ -812,6 +812,69 @@ static void test_IIDs(void)
        "unexpected value for IID_ITextHost2: %s\n", debugstr_guid(pIID_ITextHost2));
 }
 
+/* Outer IUnknown for COM aggregation tests */
+struct unk_impl {
+    IUnknown IUnknown_iface;
+    LONG ref;
+    IUnknown *inner_unk;
+};
+
+static inline struct unk_impl *impl_from_IUnknown(IUnknown *iface)
+{
+    return CONTAINING_RECORD(iface, struct unk_impl, IUnknown_iface);
+}
+
+static HRESULT WINAPI unk_QueryInterface(IUnknown *iface, REFIID riid, void **ppv)
+{
+    struct unk_impl *This = impl_from_IUnknown(iface);
+
+    return IUnknown_QueryInterface(This->inner_unk, riid, ppv);
+}
+
+static ULONG WINAPI unk_AddRef(IUnknown *iface)
+{
+    struct unk_impl *This = impl_from_IUnknown(iface);
+
+    return InterlockedIncrement(&This->ref);
+}
+
+static ULONG WINAPI unk_Release(IUnknown *iface)
+{
+    struct unk_impl *This = impl_from_IUnknown(iface);
+
+    return InterlockedDecrement(&This->ref);
+}
+
+static const IUnknownVtbl unk_vtbl =
+{
+    unk_QueryInterface,
+    unk_AddRef,
+    unk_Release
+};
+
+static void test_COM(void)
+{
+    struct unk_impl unk_obj = {{&unk_vtbl}, 19, NULL};
+    struct ITextHostTestImpl texthost = {{&itextHostVtbl}, 1};
+    ITextServices *textsrv;
+    ULONG refcount;
+    HRESULT hr;
+
+    /* COM aggregation */
+    hr = pCreateTextServices(&unk_obj.IUnknown_iface, &texthost.ITextHost_iface,
+                             &unk_obj.inner_unk);
+    ok(hr == S_OK, "CreateTextServices failed: %08x\n", hr);
+    hr = IUnknown_QueryInterface(unk_obj.inner_unk, pIID_ITextServices, (void**)&textsrv);
+    ok(hr == S_OK, "QueryInterface for IID_ITextServices failed: %08x\n", hr);
+    refcount = ITextServices_AddRef(textsrv);
+    ok(refcount == unk_obj.ref, "CreateTextServices just pretends to support COM aggregation\n");
+    refcount = ITextServices_Release(textsrv);
+    ok(refcount == unk_obj.ref, "CreateTextServices just pretends to support COM aggregation\n");
+    refcount = ITextServices_Release(textsrv);
+    ok(refcount == 19, "Refcount should be back at 19 but is %u\n", refcount);
+
+    IUnknown_Release(unk_obj.inner_unk);
+}
 
 START_TEST( txtsrv )
 {
@@ -825,7 +888,10 @@ START_TEST( txtsrv )
     pIID_ITextServices = (IID*)GetProcAddress(hmoduleRichEdit, "IID_ITextServices");
     pIID_ITextHost = (IID*)GetProcAddress(hmoduleRichEdit, "IID_ITextHost");
     pIID_ITextHost2 = (IID*)GetProcAddress(hmoduleRichEdit, "IID_ITextHost2");
+    pCreateTextServices = (void*)GetProcAddress(hmoduleRichEdit, "CreateTextServices");
+
     test_IIDs();
+    test_COM();
 
     if (init_texthost())
     {
