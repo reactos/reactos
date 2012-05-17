@@ -64,6 +64,7 @@ extern SETUPDATA SetupData;
 /* security.c */
 NTSTATUS SetAccountDomain(LPCWSTR DomainName,
                           PSID DomainSid);
+VOID InstallSecurity(VOID);
 
 /* wizard.c */
 VOID InstallWizard (VOID);

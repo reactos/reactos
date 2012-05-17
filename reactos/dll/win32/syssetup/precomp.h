@@ -22,7 +22,9 @@
 #include <string.h>
 #include <pseh/pseh2.h>
 #include <time.h>
+#include <ntlsa.h>
 #include <ntsecapi.h>
+#include <sddl.h>
 
 #include "globals.h"
 #include "resource.h"

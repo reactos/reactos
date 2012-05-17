@@ -85,3 +85,188 @@ SetAccountDomain(LPCWSTR DomainName,
 
     return Status;
 }
+
+
+static
+VOID
+InstallBuiltinAccounts(VOID)
+{
+    LPWSTR BuiltinAccounts[] = {
+        L"S-1-1-0",         /* Everyone */
+        L"S-1-5-4",         /* Interactive */
+        L"S-1-5-6",         /* Service */
+        L"S-1-5-19",        /* Local Service */
+        L"S-1-5-20",        /* Network Service */
+        L"S-1-5-32-544",    /* Administrators */
+        L"S-1-5-32-545",    /* Users */
+        L"S-1-5-32-547",    /* Power Users */
+        L"S-1-5-32-551",    /* Backup Operators */
+        L"S-1-5-32-555"};   /* Remote Desktop Users */
+    LSA_OBJECT_ATTRIBUTES ObjectAttributes;
+    NTSTATUS Status;
+    LSA_HANDLE PolicyHandle = NULL;
+    LSA_HANDLE AccountHandle = NULL;
+    PSID AccountSid;
+    ULONG i;
+
+    DPRINT("InstallBuiltinAccounts()\n");
+
+    memset(&ObjectAttributes, 0, sizeof(LSA_OBJECT_ATTRIBUTES));
+
+    Status = LsaOpenPolicy(NULL,
+                           &ObjectAttributes,
+                           POLICY_CREATE_ACCOUNT,
+                           &PolicyHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("LsaOpenPolicy failed (Status %08lx)\n", Status);
+        return;
+    }
+
+    for (i = 0; i < 10; i++)
+    {
+        ConvertStringSidToSid(BuiltinAccounts[i], &AccountSid);
+
+        Status = LsaCreateAccount(PolicyHandle,
+                                  AccountSid,
+                                  0,
+                                  &AccountHandle);
+        if (NT_SUCCESS(Status))
+        {
+            LsaClose(AccountHandle);
+        }
+
+        LocalFree(AccountSid);
+    }
+
+    LsaClose(PolicyHandle);
+}
+
+
+static
+VOID
+InstallPrivileges(VOID)
+{
+    HINF hSecurityInf = INVALID_HANDLE_VALUE;
+    LSA_OBJECT_ATTRIBUTES ObjectAttributes;
+    WCHAR szPrivilegeString[256];
+    WCHAR szSidString[256];
+    INFCONTEXT InfContext;
+    DWORD i;
+    PRIVILEGE_SET PrivilegeSet;
+    PSID AccountSid;
+    NTSTATUS Status;
+    LSA_HANDLE PolicyHandle = NULL;
+    LSA_HANDLE AccountHandle;
+
+    DPRINT("InstallPrivileges()\n");
+
+    hSecurityInf = SetupOpenInfFileW(L"defltws.inf", //szNameBuffer,
+                                     NULL,
+                                     INF_STYLE_WIN4,
+                                     NULL);
+    if (hSecurityInf == INVALID_HANDLE_VALUE)
+    {
+        DPRINT1("SetupOpenInfFileW failed\n");
+        return;
+    }
+
+    memset(&ObjectAttributes, 0, sizeof(LSA_OBJECT_ATTRIBUTES));
+
+    Status = LsaOpenPolicy(NULL,
+                           &ObjectAttributes,
+                           POLICY_CREATE_ACCOUNT,
+                           &PolicyHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("LsaOpenPolicy failed (Status %08lx)\n", Status);
+        goto done;
+    }
+
+    if (!SetupFindFirstLineW(hSecurityInf,
+                             L"Privilege Rights",
+                             NULL,
+                             &InfContext))
+    {
+        DPRINT1("SetupFindfirstLineW failed\n");
+        goto done;
+    }
+
+    PrivilegeSet.PrivilegeCount = 1;
+    PrivilegeSet.Control = 0;
+
+    do
+    {
+        /* Retrieve the privilege name */
+        if (!SetupGetStringFieldW(&InfContext,
+                                  0,
+                                  szPrivilegeString,
+                                  256,
+                                  NULL))
+        {
+            DPRINT1("SetupGetStringFieldW() failed\n");
+            goto done;
+        }
+        DPRINT("Privilege: %S\n", szPrivilegeString);
+
+        if (!LookupPrivilegeValueW(NULL,
+                                   szPrivilegeString,
+                                   &(PrivilegeSet.Privilege[0].Luid)))
+        {
+            DPRINT1("LookupPrivilegeNameW() failed\n");
+            goto done;
+        }
+
+        PrivilegeSet.Privilege[0].Attributes = 0;
+
+        for (i = 0; i < SetupGetFieldCount(&InfContext); i++)
+        {
+            if (!SetupGetStringFieldW(&InfContext,
+                                      i + 1,
+                                      szSidString,
+                                      256,
+                                      NULL))
+            {
+                DPRINT1("SetupGetStringFieldW() failed\n");
+                goto done;
+            }
+            DPRINT("SID: %S\n", szSidString);
+
+            ConvertStringSidToSid(szSidString, &AccountSid);
+
+            Status = LsaOpenAccount(PolicyHandle,
+                                    AccountSid,
+                                    ACCOUNT_VIEW | ACCOUNT_ADJUST_PRIVILEGES,
+                                    &AccountHandle);
+            if (NT_SUCCESS(Status))
+            {
+                Status = LsaAddPrivilegesToAccount(AccountHandle,
+                                                   &PrivilegeSet);
+                if (!NT_SUCCESS(Status))
+                {
+                    DPRINT1("LsaAddPrivilegesToAccount() failed (Status %08lx)\n", Status);
+                }
+
+                LsaClose(AccountHandle);
+            }
+
+            LocalFree(AccountSid);
+        }
+
+    }
+    while (SetupFindNextLine(&InfContext, &InfContext));
+
+done:
+    if (PolicyHandle != NULL)
+        LsaClose(PolicyHandle);
+
+    if (hSecurityInf != INVALID_HANDLE_VALUE)
+        SetupCloseInfFile(hSecurityInf);
+}
+
+VOID
+InstallSecurity(VOID)
+{
+    InstallBuiltinAccounts();
+    InstallPrivileges();
+}

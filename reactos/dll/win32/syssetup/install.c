@@ -956,6 +956,8 @@ InstallReactOS(HINSTANCE hInstance)
 
     InstallWizard();
 
+    InstallSecurity();
+
     /* Create the Administrator account */
     if (!SamCreateUser(L"Administrator", L"", AdminSid))
     {
