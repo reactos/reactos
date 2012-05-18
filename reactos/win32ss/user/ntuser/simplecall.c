@@ -569,7 +569,9 @@ NtUserCallHwndLock(
          break;
 
       case HWNDLOCK_ROUTINE_SETFOREGROUNDWINDOW:
+         TRACE("co_IntSetForegroundWindow 1 %p\n",hWnd);
          Ret = co_IntSetForegroundWindow(Window);
+         TRACE("co_IntSetForegroundWindow 2 \n");
          break;
 
       case HWNDLOCK_ROUTINE_UPDATEWINDOW:

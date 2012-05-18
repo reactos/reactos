@@ -229,6 +229,38 @@ IntFindChildWindowToOwner(PWND Root, PWND Owner)
    return NULL;
 }
 
+VOID FASTCALL
+FindRemoveAsyncMsg(PWND Wnd)
+{
+   PUSER_MESSAGE_QUEUE MessageQueue;
+   PUSER_SENT_MESSAGE Message;
+   PLIST_ENTRY Entry;
+
+   if (!Wnd) return;
+
+   MessageQueue = Wnd->head.pti->MessageQueue;
+
+   if (!IsListEmpty(&MessageQueue->SentMessagesListHead))
+   {
+      // Scan sent queue messages to see if we received async messages.
+      Entry = MessageQueue->SentMessagesListHead.Flink;
+      Message = CONTAINING_RECORD(Entry, USER_SENT_MESSAGE, ListEntry);
+      do
+      {
+         if (Message->Msg.message == WM_ASYNC_SETACTIVEWINDOW &&
+             Message->Msg.hwnd == UserHMGetHandle(Wnd) &&
+             Message->Msg.wParam == 0 )
+         {
+             TRACE("ASYNC SAW: Found one in the Sent Msg Queue! %p\n", Message->Msg.hwnd);
+             RemoveEntryList(Entry); // Purge the entry.
+         }
+         Entry = Message->ListEntry.Flink;
+         Message = CONTAINING_RECORD(Entry, USER_SENT_MESSAGE, ListEntry);
+      }
+      while (Entry != &MessageQueue->SentMessagesListHead);
+   }
+}
+
 /*
    Can the system force foreground from one or more conditions.
  */
@@ -307,15 +339,17 @@ co_IntSetForegroundAndFocusWindow(PWND Wnd, BOOL MouseActivate)
    { 
       IntSetFocusMessageQueue(Wnd->head.pti->MessageQueue);
       gptiForeground = Wnd->head.pti;
-      fgRet = TRUE;
-   } 
 /*
-     Fix FG Bounce with regedit but breaks test_SFW todos:
      Henri Verbeet,
      What happens is that we get the WM_WINE_SETACTIVEWINDOW message sent by the
      other thread after we already changed the foreground window back to our own
      window.
  */
+      FindRemoveAsyncMsg(Wnd); // Do this to fix test_SFW todos!
+      fgRet = TRUE;
+   } 
+
+   //  Fix FG Bounce with regedit.
    if (hWndPrev != hWnd )
    {
       if (PrevForegroundQueue &&
