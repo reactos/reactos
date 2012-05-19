@@ -1,0 +1,72 @@
+HKLM
+{
+    NoRemove Software
+    {
+        NoRemove Microsoft
+        {
+            NoRemove Cryptography
+            {
+                NoRemove Defaults
+                {
+                    NoRemove Provider
+                    {
+                        ForceRemove 'Microsoft Base Cryptographic Provider v1.0'
+                        {
+                            val 'Image Path' = s '%MODULE%'
+                            val 'Signature' = b deadbeef
+                            val 'Type' = d 1
+                        }
+                        ForceRemove 'Microsoft Enhanced Cryptographic Provider v1.0'
+                        {
+                            val 'Image Path' = s '%MODULE%'
+                            val 'Signature' = b deadbeef
+                            val 'Type' = d 1
+                        }
+                        ForceRemove 'Microsoft Enhanced RSA and AES Cryptographic Provider'
+                        {
+                            val 'Image Path' = s '%MODULE%'
+                            val 'Signature' = b deadbeef
+                            val 'Type' = d 24
+                        }
+                        ForceRemove 'Microsoft Enhanced RSA and AES Cryptographic Provider (Prototype)'
+                        {
+                            val 'Image Path' = s '%MODULE%'
+                            val 'Signature' = b deadbeef
+                            val 'Type' = d 24
+                        }
+                        ForceRemove 'Microsoft RSA SChannel Cryptographic Provider'
+                        {
+                            val 'Image Path' = s '%MODULE%'
+                            val 'Signature' = b deadbeef
+                            val 'Type' = d 12
+                        }
+                        ForceRemove 'Microsoft Strong Cryptographic Provider'
+                        {
+                            val 'Image Path' = s '%MODULE%'
+                            val 'Signature' = b deadbeef
+                            val 'Type' = d 1
+                        }
+                    }
+                    NoRemove 'Provider Types'
+                    {
+                        ForceRemove 'Type 001'
+                        {
+                            val 'Name' = s 'Microsoft Enhanced Cryptographic Provider v1.0'
+                            val 'TypeName' = s 'RSA Full (Signature and Key Exchange)'
+                        }
+                        ForceRemove 'Type 012'
+                        {
+                            val 'Name' = s 'Microsoft RSA SChannel Cryptographic Provider'
+                            val 'TypeName' = s 'RSA SChannel'
+                        }
+                        ForceRemove 'Type 024'
+                        {
+                            val 'Name' = s 'Microsoft Enhanced RSA and AES Cryptographic Provider'
+                            val 'TypeName' = s 'RSA Full and AES'
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

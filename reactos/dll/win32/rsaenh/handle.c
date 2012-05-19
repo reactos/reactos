@@ -41,7 +41,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(handle);
  * Initializes the HANDLETABLE structure pointed to by lpTable
  *
  * PARAMS
- *  lpTable [I] Pointer to the HANDLETABLE structure, which is to be initalized.
+ *  lpTable [I] Pointer to the HANDLETABLE structure, which is to be initialized.
  *
  * NOTES
  *  You have to call destroy_handle_table when you don't need the table

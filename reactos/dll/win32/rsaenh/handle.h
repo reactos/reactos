@@ -56,15 +56,15 @@ struct handle_table
     CRITICAL_SECTION mutex;
 };
 
-void init_handle_table   (struct handle_table *lpTable);
-void destroy_handle_table(struct handle_table *lpTable);
-int  release_handle      (struct handle_table *lpTable, HCRYPTKEY handle, DWORD dwType);
-int  copy_handle         (struct handle_table *lpTable, HCRYPTKEY handle, DWORD dwType, HCRYPTKEY *copy);
-int  lookup_handle       (struct handle_table *lpTable, HCRYPTKEY handle, DWORD dwType, OBJECTHDR **lplpObject);
-int  is_valid_handle     (struct handle_table *lpTable, HCRYPTKEY handle, DWORD dwType);
+void init_handle_table   (struct handle_table *lpTable) DECLSPEC_HIDDEN;
+void destroy_handle_table(struct handle_table *lpTable) DECLSPEC_HIDDEN;
+int  release_handle      (struct handle_table *lpTable, HCRYPTKEY handle, DWORD dwType) DECLSPEC_HIDDEN;
+int  copy_handle         (struct handle_table *lpTable, HCRYPTKEY handle, DWORD dwType, HCRYPTKEY *copy) DECLSPEC_HIDDEN;
+int  lookup_handle       (struct handle_table *lpTable, HCRYPTKEY handle, DWORD dwType, OBJECTHDR **lplpObject) DECLSPEC_HIDDEN;
+int  is_valid_handle     (struct handle_table *lpTable, HCRYPTKEY handle, DWORD dwType) DECLSPEC_HIDDEN;
 
 HCRYPTKEY new_object     (struct handle_table *lpTable, size_t cbSize, DWORD dwType, DESTRUCTOR destructor,
-                           OBJECTHDR **ppObject);
+                           OBJECTHDR **ppObject) DECLSPEC_HIDDEN;
         
 #ifdef __cplusplus
 }

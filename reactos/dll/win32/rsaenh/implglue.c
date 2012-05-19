@@ -482,7 +482,7 @@ BOOL export_private_key_impl(BYTE *pbDest, const KEY_CONTEXT *pKeyContext, DWORD
 }
 
 BOOL import_private_key_impl(CONST BYTE *pbSrc, KEY_CONTEXT *pKeyContext, DWORD dwKeyLen, 
-                             DWORD dwPubExp)
+                             DWORD dwDataLen, DWORD dwPubExp)
 {
     BYTE *pbTemp, *pbBigNum;
 
@@ -496,7 +496,7 @@ BOOL import_private_key_impl(CONST BYTE *pbSrc, KEY_CONTEXT *pKeyContext, DWORD 
 
     pbTemp = HeapAlloc(GetProcessHeap(), 0, 2*dwKeyLen+5*((dwKeyLen+1)>>1));
     if (!pbTemp) return FALSE;
-    memcpy(pbTemp, pbSrc, 2*dwKeyLen+5*((dwKeyLen+1)>>1));
+    memcpy(pbTemp, pbSrc, min(dwDataLen, 2*dwKeyLen+5*((dwKeyLen+1)>>1)));
     pbBigNum = pbTemp;
 
     pKeyContext->rsa.type = PK_PRIVATE;
@@ -518,6 +518,10 @@ BOOL import_private_key_impl(CONST BYTE *pbSrc, KEY_CONTEXT *pKeyContext, DWORD 
     reverse_bytes(pbBigNum, (dwKeyLen+1)>>1);
     mp_read_unsigned_bin(&pKeyContext->rsa.qP, pbBigNum, (dwKeyLen+1)>>1);
     pbBigNum += (dwKeyLen+1)>>1;
+    /* The size of the private exponent d is inferred from the remaining
+     * data length.
+     */
+    dwKeyLen = min(dwKeyLen, dwDataLen - (pbBigNum - pbTemp));
     reverse_bytes(pbBigNum, dwKeyLen);
     mp_read_unsigned_bin(&pKeyContext->rsa.d, pbBigNum, dwKeyLen);
     mp_set_int(&pKeyContext->rsa.e, dwPubExp);
