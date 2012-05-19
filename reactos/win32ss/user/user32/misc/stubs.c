@@ -72,28 +72,6 @@ GetAppCompatFlags2(HTASK hTask)
 /*
  * @unimplemented
  */
-UINT
-WINAPI
-GetInternalWindowPos(
-		     HWND hwnd,
-		     LPRECT rectWnd,
-		     LPPOINT ptIcon
-		     )
-{
-    WINDOWPLACEMENT wndpl;
-
-    if (GetWindowPlacement(hwnd, &wndpl))
-    {
-		if (rectWnd) *rectWnd = wndpl.rcNormalPosition;
-		if (ptIcon)  *ptIcon = wndpl.ptMinPosition;
-		return wndpl.showCmd;
-    }
-    return 0;
-}
-
-/*
- * @unimplemented
- */
 VOID
 WINAPI
 LoadLocalFonts ( VOID )

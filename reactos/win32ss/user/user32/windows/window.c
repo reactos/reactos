@@ -1028,21 +1028,12 @@ GetParent(HWND hWnd)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL WINAPI
 GetProcessDefaultLayout(DWORD *pdwDefaultLayout)
 {
-    if (!pdwDefaultLayout)
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return FALSE;
-    }
-
-    UNIMPLEMENTED;
-
-    *pdwDefaultLayout = 0;
-    return TRUE;
+return (BOOL)NtUserCallOneParam( (DWORD_PTR)pdwDefaultLayout, ONEPARAM_ROUTINE_GETPROCDEFLAYOUT);
 }
 
 
@@ -1659,7 +1650,7 @@ HWND WINAPI
 RealChildWindowFromPoint(HWND hwndParent,
                          POINT ptParentClientCoords)
 {
-    return ChildWindowFromPointEx(hwndParent, ptParentClientCoords, CWP_SKIPTRANSPARENT | CWP_SKIPINVISIBLE);
+    return NtUserRealChildWindowFromPoint(hwndParent, ptParentClientCoords.x, ptParentClientCoords.y);
 }
 
 /*
@@ -1673,16 +1664,12 @@ SetForegroundWindow(HWND hWnd)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL WINAPI
 SetProcessDefaultLayout(DWORD dwDefaultLayout)
 {
-    if (dwDefaultLayout == 0)
-        return TRUE;
-
-    UNIMPLEMENTED;
-    return FALSE;
+return NtUserCallOneParam( (DWORD_PTR)dwDefaultLayout, ONEPARAM_ROUTINE_SETPROCDEFLAYOUT);
 }
 
 

@@ -150,10 +150,8 @@ BOOL FASTCALL can_activate_window( PWND Wnd OPTIONAL)
     if (!Wnd) return FALSE;
 
     style = Wnd->style;
-    if (!(style & WS_VISIBLE) &&
-        Wnd->head.pti->pEThread->ThreadsProcess != CsrProcess) return FALSE;
-    if ((style & WS_MINIMIZE) &&
-        Wnd->head.pti->pEThread->ThreadsProcess != CsrProcess) return FALSE;
+    if (!(style & WS_VISIBLE)) return FALSE;
+    if (style & WS_MINIMIZE) return FALSE;
     if ((style & (WS_POPUP|WS_CHILD)) == WS_CHILD) return FALSE;
     return TRUE;
     /* FIXME: This window could be disable  because the child that closed
@@ -1783,8 +1781,10 @@ co_WinPosSendSizeMove(PWND Wnd)
     WPARAM wParam = SIZE_RESTORED;
 
     IntGetClientRect(Wnd, &Rect);
+    lParam = MAKELONG(Rect.right-Rect.left, Rect.bottom-Rect.top);
 
     Wnd->state &= ~WNDS_SENDSIZEMOVEMSGS;
+
     if (Wnd->style & WS_MAXIMIZE)
     {
         wParam = SIZE_MAXIMIZED;
@@ -1792,9 +1792,10 @@ co_WinPosSendSizeMove(PWND Wnd)
     else if (Wnd->style & WS_MINIMIZE)
     {
         wParam = SIZE_MINIMIZED;
+        lParam = 0;
     }
 
-    co_IntSendMessageNoWait(UserHMGetHandle(Wnd), WM_SIZE, wParam, MAKELONG(Rect.right-Rect.left, Rect.bottom-Rect.top));
+    co_IntSendMessageNoWait(UserHMGetHandle(Wnd), WM_SIZE, wParam, lParam);
 
     if (Wnd->spwndParent == UserGetDesktopWindow()) // Wnd->spwndParent->fnid != FNID_DESKTOP )
        lParam = MAKELONG(Wnd->rcClient.left, Wnd->rcClient.top);
@@ -2010,8 +2011,7 @@ co_WinPosSearchChildren(
 
     UserReferenceObject(ScopeWin);
 
-    if (Point->x - ScopeWin->rcClient.left < ScopeWin->rcClient.right &&
-        Point->y - ScopeWin->rcClient.top < ScopeWin->rcClient.bottom )
+    if ( RECTL_bPointInRect(&ScopeWin->rcClient, Point->x, Point->y) )
     {
         List = IntWinListChildren(ScopeWin);
         if(List)
@@ -2075,6 +2075,99 @@ co_WinPosWindowFromPoint(PWND ScopeWin, POINT *WinPoint, USHORT* HitTest)
    ASSERT_REFS_CO(ScopeWin);
 
    return Window;
+}
+
+PWND FASTCALL
+IntRealChildWindowFromPoint(PWND Parent, LONG x, LONG y)
+{
+   POINTL Pt;
+   HWND *List, *phWnd;
+   PWND pwndHit = NULL;
+
+   Pt.x = x;
+   Pt.y = y;
+
+   if (Parent != UserGetDesktopWindow())
+   {
+      Pt.x += Parent->rcClient.left;
+      Pt.y += Parent->rcClient.top;
+   }
+
+   if (!IntPtInWindow(Parent, Pt.x, Pt.y)) return NULL;
+
+   if ((List = IntWinListChildren(Parent)))
+   {
+      for (phWnd = List; *phWnd; phWnd++)
+      {
+         PWND Child;
+         if ((Child = UserGetWindowObject(*phWnd)))
+         {
+            if ( Child->style & WS_VISIBLE && IntPtInWindow(Child, Pt.x, Pt.y) )
+            {
+               if ( Child->pcls->atomClassName != gpsi->atomSysClass[ICLS_BUTTON] ||
+                   (Child->style & BS_TYPEMASK) != BS_GROUPBOX )
+               {
+                  ExFreePool(List);
+                  return Child;
+               }
+               pwndHit = Child;
+            }
+         }
+      }
+      ExFreePool(List);
+   }
+   return pwndHit ? pwndHit : Parent;
+}
+
+PWND APIENTRY
+IntChildWindowFromPointEx(PWND Parent, LONG x, LONG y, UINT uiFlags)
+{
+   POINTL Pt;
+   HWND *List, *phWnd;
+   PWND pwndHit = NULL;
+
+   Pt.x = x;
+   Pt.y = y;
+
+   if (Parent != UserGetDesktopWindow())
+   {
+      if (Parent->ExStyle & WS_EX_LAYOUTRTL)
+         Pt.x = Parent->rcClient.right - Pt.x;
+      else
+         Pt.x += Parent->rcClient.left;
+      Pt.y += Parent->rcClient.top;
+   }
+
+   if (!IntPtInWindow(Parent, Pt.x, Pt.y)) return NULL;
+
+   if ((List = IntWinListChildren(Parent)))
+   {
+      for (phWnd = List; *phWnd; phWnd++)
+      {
+         PWND Child;
+         if ((Child = UserGetWindowObject(*phWnd)))
+         {
+            if (uiFlags & (CWP_SKIPINVISIBLE|CWP_SKIPDISABLED))
+            {
+               if (!(Child->style & WS_VISIBLE) && (uiFlags & CWP_SKIPINVISIBLE)) continue;
+               if ((Child->style & WS_DISABLED) && (uiFlags & CWP_SKIPDISABLED)) continue;
+            }
+
+            if (uiFlags & CWP_SKIPTRANSPARENT)
+            {
+               if (Child->ExStyle & WS_EX_TRANSPARENT) continue;
+            }
+
+            if (IntPtInWindow(Child, Pt.x, Pt.y))
+            {
+               pwndHit = Child;
+               break;
+            }
+         }
+      }
+      ExFreePool(List);
+   }
+   return pwndHit ? pwndHit : Parent;
 }
 
 HDWP
@@ -2191,7 +2284,7 @@ BOOL FASTCALL IntEndDeferWindowPosEx( HDWP hdwp, BOOL sAsync )
                winpos->pos.hwnd, winpos->pos.hwndInsertAfter, winpos->pos.x, winpos->pos.y,
                winpos->pos.cx, winpos->pos.cy, winpos->pos.flags);
 
-        pwnd = UserGetWindowObject(winpos->pos.hwnd);
+        pwnd = (PWND)UserGetObject(gHandleTable, winpos->pos.hwnd, otWindow);
         if (!pwnd)
            continue;
 
@@ -2207,7 +2300,7 @@ BOOL FASTCALL IntEndDeferWindowPosEx( HDWP hdwp, BOOL sAsync )
               /* Yes it's a pointer inside Win32k! */
               lRes = co_IntSendMessageNoWait( winpos->pos.hwnd, WM_ASYNC_SETWINDOWPOS, 0, (LPARAM)ppos);
               /* We handle this the same way as Event Hooks and Hooks. */
-              if ( -1 == (int) lRes )
+              if ( !lRes )
               {
                  ExFreePoolWithTag(ppos, USERTAG_SWP);
               }
@@ -2240,61 +2333,16 @@ NtUserChildWindowFromPointEx(HWND hwndParent,
                              LONG y,
                              UINT uiFlags)
 {
-   PWND Parent;
-   POINTL Pt;
-   HWND Ret;
-   HWND *List, *phWnd;
-
-   if(!(Parent = UserGetWindowObject(hwndParent)))
+   PWND pwndParent;
+   TRACE("Enter NtUserChildWindowFromPointEx\n");
+   UserEnterExclusive();
+   if ((pwndParent = UserGetWindowObject(hwndParent)))
    {
-      return NULL;
+      pwndParent = IntChildWindowFromPointEx(pwndParent, x, y, uiFlags);
    }
-
-   Pt.x = x;
-   Pt.y = y;
-
-   if(Parent->head.h != IntGetDesktopWindow())
-   {
-      Pt.x += Parent->rcClient.left;
-      Pt.y += Parent->rcClient.top;
-   }
-
-   if(!IntPtInWindow(Parent, Pt.x, Pt.y))
-   {
-      return NULL;
-   }
-
-   Ret = Parent->head.h;
-   if((List = IntWinListChildren(Parent)))
-   {
-      for(phWnd = List; *phWnd; phWnd++)
-      {
-         PWND Child;
-         if((Child = UserGetWindowObject(*phWnd)))
-         {
-            if(!(Child->style & WS_VISIBLE) && (uiFlags & CWP_SKIPINVISIBLE))
-            {
-               continue;
-            }
-            if((Child->style & WS_DISABLED) && (uiFlags & CWP_SKIPDISABLED))
-            {
-               continue;
-            }
-            if((Child->ExStyle & WS_EX_TRANSPARENT) && (uiFlags & CWP_SKIPTRANSPARENT))
-            {
-               continue;
-            }
-            if(IntPtInWindow(Child, Pt.x, Pt.y))
-            {
-               Ret = Child->head.h;
-               break;
-            }
-         }
-      }
-      ExFreePool(List);
-   }
-
-   return Ret;
+   UserLeave();
+   TRACE("Leave NtUserChildWindowFromPointEx\n");
+   return pwndParent ? UserHMGetHandle(pwndParent) : NULL;
 }
 
 /*
@@ -2521,9 +2569,9 @@ NtUserMinMaximize(
      goto Exit;
   }
 
-  co_WinPosMinMaximize(pWnd, cmd, &NewPos);
+  SwFlags = co_WinPosMinMaximize(pWnd, cmd, &NewPos);
 
-  SwFlags = Hide ? SWP_NOACTIVATE|SWP_NOZORDER|SWP_FRAMECHANGED : SWP_NOZORDER|SWP_FRAMECHANGED;
+  SwFlags |= Hide ? SWP_NOACTIVATE : 0;
 
   co_WinPosSetWindowPos( pWnd,
                          NULL,
@@ -2556,6 +2604,26 @@ NtUserMoveWindow(
    return NtUserSetWindowPos(hWnd, 0, X, Y, nWidth, nHeight,
                              (bRepaint ? SWP_NOZORDER | SWP_NOACTIVATE :
                               SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOREDRAW));
+}
+
+/*
+ * @implemented
+ */
+HWND APIENTRY
+NtUserRealChildWindowFromPoint(HWND Parent,
+                               LONG x,
+                               LONG y)
+{
+   PWND pwndParent;
+   TRACE("Enter NtUserRealChildWindowFromPoint\n");
+   UserEnterShared();
+   if ((pwndParent = UserGetWindowObject(Parent)))
+   {
+      pwndParent = IntRealChildWindowFromPoint(pwndParent, x, y);
+   }
+   UserLeave();
+   TRACE("Leave NtUserRealChildWindowFromPoint\n");
+   return pwndParent ? UserHMGetHandle(pwndParent) : NULL;
 }
 
 /*

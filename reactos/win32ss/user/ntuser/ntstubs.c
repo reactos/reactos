@@ -908,17 +908,6 @@ NtUserPaintMenuBar(
     return 0;
 }
 
-BOOL
-APIENTRY
-NtUserGetLayeredWindowAttributes(
-    HWND hwnd,
-    COLORREF *pcrKey,
-    BYTE *pbAlpha,
-    DWORD *pdwFlags)
-{
-    STUB;
-    return 0;
-}
 
 DWORD
 APIENTRY
@@ -1018,19 +1007,6 @@ NtUserLockWindowUpdate(HWND hWnd)
 /*
  * @unimplemented
  */
-HWND APIENTRY
-NtUserRealChildWindowFromPoint(HWND Parent,
-                               LONG x,
-                               LONG y)
-{
-   STUB
-
-   return 0;
-}
-
-/*
- * @unimplemented
- */
 DWORD APIENTRY
 NtUserSetImeOwnerWindow(DWORD Unknown0,
                         DWORD Unknown1)
@@ -1038,6 +1014,18 @@ NtUserSetImeOwnerWindow(DWORD Unknown0,
    STUB
 
    return 0;
+}
+
+BOOL
+APIENTRY
+NtUserGetLayeredWindowAttributes(
+    HWND hwnd,
+    COLORREF *pcrKey,
+    BYTE *pbAlpha,
+    DWORD *pdwFlags)
+{
+    STUB;
+    return 0;
 }
 
 /*
