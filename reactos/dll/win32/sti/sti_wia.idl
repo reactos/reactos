@@ -17,3 +17,17 @@
  */
 
 #include "wia_lh.idl"
+
+#ifdef __WIDL__
+[
+    threading(both),
+    uuid(4db1ad10-3391-11d2-9a33-00c04fa36145)  /* IWiaItem */
+]
+coclass PSFactoryBuffer { interface IFactoryBuffer; }
+
+[
+    threading(both),
+    uuid(b323f8e0-2e68-11d0-90ea-00aa0060f86c)
+]
+coclass StillImage { interface IStillImageW; }
+#endif
