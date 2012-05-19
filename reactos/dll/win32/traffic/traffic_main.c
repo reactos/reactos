@@ -54,3 +54,12 @@ ULONG WINAPI TcRegisterClient(ULONG version, HANDLE context,
     if(buffer) *buffer = INVALID_HANDLE_VALUE;
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
+
+/*****************************************************************************
+ * TcDeregisterClient [TRAFFIC.@]
+ */
+ULONG WINAPI TcDeregisterClient(HANDLE ClientHandle)
+{
+    FIXME("%p: stub\n", ClientHandle);
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}

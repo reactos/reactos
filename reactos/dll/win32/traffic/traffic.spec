@@ -4,7 +4,7 @@
 @ stub TcCloseInterface
 @ stub TcDeleteFilter
 @ stub TcDeleteFlow
-@ stub TcDeregisterClient
+@ stdcall TcDeregisterClient(ptr)
 @ stub TcEnumerateFlows
 @ stub TcEnumerateInterfaces
 @ stub TcGetFlowNameA
