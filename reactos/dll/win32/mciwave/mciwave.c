@@ -225,7 +225,7 @@ static void WAVE_mciNotify(DWORD_PTR hWndCallBack, WINE_MCIWAVE* wmw, UINT wStat
 /**************************************************************************
  * 				WAVE_ConvertByteToTimeFormat	[internal]
  */
-static	DWORD 	WAVE_ConvertByteToTimeFormat(WINE_MCIWAVE* wmw, DWORD val, LPDWORD lpRet)
+static	DWORD 	WAVE_ConvertByteToTimeFormat(WINE_MCIWAVE* wmw, DWORD val)
 {
     DWORD	   ret = 0;
 
@@ -243,7 +243,6 @@ static	DWORD 	WAVE_ConvertByteToTimeFormat(WINE_MCIWAVE* wmw, DWORD val, LPDWORD
 	WARN("Bad time format %u!\n", wmw->dwMciTimeFormat);
     }
     TRACE("val=%u=0x%08x [tf=%u] => ret=%u\n", val, val, wmw->dwMciTimeFormat, ret);
-    *lpRet = 0;
     return ret;
 }
 
@@ -257,6 +256,9 @@ static	DWORD 	WAVE_ConvertTimeFormatToByte(WINE_MCIWAVE* wmw, DWORD val)
     switch (wmw->dwMciTimeFormat) {
     case MCI_FORMAT_MILLISECONDS:
 	ret = MulDiv(val,wmw->lpWaveFormat->nAvgBytesPerSec,1000);
+	if (ret > wmw->ckWaveData.cksize &&
+	    val == WAVE_ConvertByteToTimeFormat(wmw, wmw->ckWaveData.cksize))
+	    ret = wmw->ckWaveData.cksize;
 	break;
     case MCI_FORMAT_BYTES:
 	ret = val;
@@ -868,6 +870,10 @@ static DWORD WAVE_mciPlay(MCIDEVICEID wDevID, DWORD_PTR dwFlags, DWORD_PTR pmt, 
 
     whidx = 0;
     wmw->hEvent = CreateEventW(NULL, FALSE, FALSE, NULL);
+    if (!wmw->hEvent) {
+	dwRet = MCIERR_OUT_OF_MEMORY;
+	goto cleanUp;
+    }
     wmw->dwEventCount = 1L; /* for first buffer */
 
     TRACE("Playing (normalized) from byte=%u for %u bytes\n", wmw->dwPosition, left);
@@ -919,6 +925,7 @@ cleanUp:
 	wmw->hWave = 0;
     }
     CloseHandle(wmw->hEvent);
+    wmw->hEvent = NULL;
 
     wmw->dwStatus = MCI_MODE_STOP;
 
@@ -1484,7 +1491,7 @@ static DWORD WAVE_mciStatus(MCIDEVICEID wDevID, DWORD dwFlags, LPMCI_STATUS_PARM
 		return MCIERR_UNSUPPORTED_FUNCTION;
 	    }
 	    /* only one track in file is currently handled, so don't take care of MCI_TRACK flag */
-	    lpParms->dwReturn = WAVE_ConvertByteToTimeFormat(wmw, wmw->ckWaveData.cksize, &ret);
+	    lpParms->dwReturn = WAVE_ConvertByteToTimeFormat(wmw, wmw->ckWaveData.cksize);
             TRACE("MCI_STATUS_LENGTH => %lu\n", lpParms->dwReturn);
 	    break;
 	case MCI_STATUS_MODE:
@@ -1509,8 +1516,7 @@ static DWORD WAVE_mciStatus(MCIDEVICEID wDevID, DWORD dwFlags, LPMCI_STATUS_PARM
 	    }
 	    /* only one track in file is currently handled, so don't take care of MCI_TRACK flag */
 	    lpParms->dwReturn = WAVE_ConvertByteToTimeFormat(wmw,
-							     (dwFlags & MCI_STATUS_START) ? 0 : wmw->dwPosition,
-							     &ret);
+							     (dwFlags & MCI_STATUS_START) ? 0 : wmw->dwPosition);
             TRACE("MCI_STATUS_POSITION %s => %lu\n",
 		  (dwFlags & MCI_STATUS_START) ? "start" : "current", lpParms->dwReturn);
 	    break;
