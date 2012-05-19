@@ -85,6 +85,44 @@ HDSKSPC WINAPI SetupCreateDiskSpaceListA(PVOID Reserved1, DWORD Reserved2, UINT 
     return SetupCreateDiskSpaceListW( Reserved1, Reserved2, Flags );
 }
 
+/***********************************************************************
+ *		SetupDuplicateDiskSpaceListW  (SETUPAPI.@)
+ */
+HDSKSPC WINAPI SetupDuplicateDiskSpaceListW(HDSKSPC DiskSpace, PVOID Reserved1, DWORD Reserved2, UINT Flags)
+{
+    DISKSPACELIST *list_copy, *list_original = DiskSpace;
+
+    if (Reserved1 || Reserved2 || Flags)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return NULL;
+    }
+
+    if (!DiskSpace)
+    {
+        SetLastError(ERROR_INVALID_HANDLE);
+        return NULL;
+    }
+
+    list_copy = HeapAlloc(GetProcessHeap(), 0, sizeof(DISKSPACELIST));
+    if (!list_copy)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return NULL;
+    }
+
+    *list_copy = *list_original;
+
+    return list_copy;
+}
+
+/***********************************************************************
+ *		SetupDuplicateDiskSpaceListA  (SETUPAPI.@)
+ */
+HDSKSPC WINAPI SetupDuplicateDiskSpaceListA(HDSKSPC DiskSpace, PVOID Reserved1, DWORD Reserved2, UINT Flags)
+{
+    return SetupDuplicateDiskSpaceListW(DiskSpace, Reserved1, Reserved2, Flags);
+}
 
 /***********************************************************************
  *		SetupAddInstallSectionToDiskSpaceListA  (SETUPAPI.@)
@@ -98,24 +136,42 @@ BOOL WINAPI SetupAddInstallSectionToDiskSpaceListA(HDSKSPC DiskSpace,
 }
 
 /***********************************************************************
-*		SetupQuerySpaceRequiredOnDriveA  (SETUPAPI.@)
+*		SetupQuerySpaceRequiredOnDriveW  (SETUPAPI.@)
 */
-BOOL WINAPI SetupQuerySpaceRequiredOnDriveA(HDSKSPC DiskSpace,
-                        LPCSTR DriveSpec, LONGLONG* SpaceRequired,
+BOOL WINAPI SetupQuerySpaceRequiredOnDriveW(HDSKSPC DiskSpace,
+                        LPCWSTR DriveSpec, LONGLONG *SpaceRequired,
                         PVOID Reserved1, UINT Reserved2)
 {
-    WCHAR driveW[20];
+    WCHAR *driveW;
     unsigned int i;
-    LPDISKSPACELIST list = (LPDISKSPACELIST)DiskSpace;
+    LPDISKSPACELIST list = DiskSpace;
     BOOL rc = FALSE;
     static const WCHAR bkslsh[]= {'\\',0};
 
-    MultiByteToWideChar(CP_ACP,0,DriveSpec,-1,driveW,20);
+    if (!DiskSpace)
+    {
+        SetLastError(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
 
+    if (!DriveSpec)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    driveW = HeapAlloc(GetProcessHeap(), 0, (lstrlenW(DriveSpec) + 2) * sizeof(WCHAR));
+    if (!driveW)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return FALSE;
+    }
+
+    lstrcpyW(driveW,DriveSpec);
     lstrcatW(driveW,bkslsh);
 
     TRACE("Looking for drive %s\n",debugstr_w(driveW));
-
+ 
     for (i = 0; i < list->dwDriveCount; i++)
     {
         TRACE("checking drive %s\n",debugstr_w(list->Drives[i].lpzName));
@@ -127,7 +183,54 @@ BOOL WINAPI SetupQuerySpaceRequiredOnDriveA(HDSKSPC DiskSpace,
         }
     }
 
+    HeapFree(GetProcessHeap(), 0, driveW);
+
+    if (!rc) SetLastError(ERROR_INVALID_DRIVE);
     return rc;
+}
+
+/***********************************************************************
+*		SetupQuerySpaceRequiredOnDriveA  (SETUPAPI.@)
+*/
+BOOL WINAPI SetupQuerySpaceRequiredOnDriveA(HDSKSPC DiskSpace,
+                        LPCSTR DriveSpec, LONGLONG *SpaceRequired,
+                        PVOID Reserved1, UINT Reserved2)
+{
+    DWORD len;
+    LPWSTR DriveSpecW;
+    BOOL ret;
+
+    /* The parameter validation checks are in a different order from the
+     * Unicode variant of SetupQuerySpaceRequiredOnDrive. */
+    if (!DriveSpec)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    if (!DiskSpace)
+    {
+        SetLastError(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
+
+    len = MultiByteToWideChar(CP_ACP, 0, DriveSpec, -1, NULL, 0);
+
+    DriveSpecW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+    if (!DriveSpecW)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return FALSE;
+    }
+
+    MultiByteToWideChar(CP_ACP, 0, DriveSpec, -1, DriveSpecW, len);
+
+    ret = SetupQuerySpaceRequiredOnDriveW(DiskSpace, DriveSpecW, SpaceRequired,
+                                          Reserved1, Reserved2);
+
+    HeapFree(GetProcessHeap(), 0, DriveSpecW);
+
+    return ret;
 }
 
 /***********************************************************************

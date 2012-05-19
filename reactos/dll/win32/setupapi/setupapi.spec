@@ -388,8 +388,8 @@
 @ stdcall SetupDiSetSelectedDriverA(ptr ptr ptr)
 @ stdcall SetupDiSetSelectedDriverW(ptr ptr ptr)
 @ stdcall SetupDiUnremoveDevice(ptr ptr)
-@ stub SetupDuplicateDiskSpaceListA
-@ stub SetupDuplicateDiskSpaceListW
+@ stdcall SetupDuplicateDiskSpaceListA(ptr ptr long long)
+@ stdcall SetupDuplicateDiskSpaceListW(ptr ptr long long)
 @ stdcall SetupEnumInfSectionsA(long long ptr long ptr)
 @ stdcall SetupEnumInfSectionsW(long long ptr long ptr)
 @ stdcall SetupFindFirstLineA(long str str ptr)
@@ -481,7 +481,7 @@
 @ stub SetupQuerySourceListA
 @ stub SetupQuerySourceListW
 @ stdcall SetupQuerySpaceRequiredOnDriveA(long str ptr ptr long)
-@ stub SetupQuerySpaceRequiredOnDriveW
+@ stdcall SetupQuerySpaceRequiredOnDriveW(long wstr ptr ptr long)
 @ stdcall SetupQueueCopyA(long str str str str str str str long)
 @ stdcall SetupQueueCopyIndirectA(ptr)
 @ stdcall SetupQueueCopyIndirectW(ptr)
