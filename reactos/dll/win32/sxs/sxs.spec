@@ -1,2 +1,2 @@
 @ stdcall CreateAssemblyCache(ptr long)
-@ stub CreateAssemblyNameObject
+@ stdcall CreateAssemblyNameObject(ptr wstr long ptr)

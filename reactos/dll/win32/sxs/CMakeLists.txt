@@ -2,10 +2,11 @@
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 add_definitions(-D__WINESRC__)
 
-spec2def(sxs.dll sxs.spec)
+spec2def(sxs.dll sxs.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     cache.c
+    name.c
     sxs.c
     ${CMAKE_CURRENT_BINARY_DIR}/sxs_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/sxs.def)

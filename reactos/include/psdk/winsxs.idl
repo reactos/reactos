@@ -21,6 +21,7 @@ import "oleidl.idl";
 
 interface IAssemblyCache;
 interface IAssemblyCacheItem;
+interface IAssemblyName;
 
 typedef struct _FUSION_INSTALL_REFERENCE_
 {
@@ -99,4 +100,99 @@ interface IAssemblyCacheItem : IUnknown
     HRESULT AbortItem();
 }
 
+[
+    object,
+    uuid(cd193bc0-b4bc-11D2-9833-00c04fc31d2e),
+    pointer_default(unique),
+    local
+]
+interface IAssemblyName : IUnknown
+{
+    typedef [public] enum
+    {
+        ASM_NAME_PUBLIC_KEY,
+        ASM_NAME_PUBLIC_KEY_TOKEN,
+        ASM_NAME_HASH_VALUE,
+        ASM_NAME_NAME,
+        ASM_NAME_MAJOR_VERSION,
+        ASM_NAME_MINOR_VERSION,
+        ASM_NAME_BUILD_NUMBER,
+        ASM_NAME_REVISION_NUMBER,
+        ASM_NAME_CULTURE,
+        ASM_NAME_PROCESSOR_ID_ARRAY,
+        ASM_NAME_OSINFO_ARRAY,
+        ASM_NAME_HASH_ALGID,
+        ASM_NAME_ALIAS,
+        ASM_NAME_CODEBASE_URL,
+        ASM_NAME_CODEBASE_LASTMOD,
+        ASM_NAME_NULL_PUBLIC_KEY,
+        ASM_NAME_NULL_PUBLIC_KEY_TOKEN,
+        ASM_NAME_CUSTOM,
+        ASM_NAME_NULL_CUSTOM,
+        ASM_NAME_MVID,
+        ASM_NAME_MAX_PARAMS
+    } ASM_NAME;
+
+    typedef [public] enum
+    {
+        ASM_DISPLAYF_VERSION               = 0x1,
+        ASM_DISPLAYF_CULTURE               = 0x2,
+        ASM_DISPLAYF_PUBLIC_KEY_TOKEN      = 0x4,
+        ASM_DISPLAYF_PUBLIC_KEY            = 0x8,
+        ASM_DISPLAYF_CUSTOM                = 0x10,
+        ASM_DISPLAYF_PROCESSORARCHITECTURE = 0x20,
+        ASM_DISPLAYF_LANGUAGEID            = 0x40
+    } ASM_DISPLAY_FLAGS;
+
+    HRESULT SetProperty(
+        [in] DWORD id,
+        [in] LPVOID property,
+        [in] DWORD size);
+
+    HRESULT GetProperty(
+        [in] DWORD id,
+        [out] LPVOID buffer,
+        [in][out] LPDWORD buflen);
+
+    HRESULT Finalize();
+
+    HRESULT GetDisplayName(
+        [out] LPWSTR buffer,
+        [in][out] LPDWORD buflen,
+        [in] DWORD flags);
+
+    HRESULT Reserved(
+        [in] REFIID riid,
+        [in] IUnknown *pUnkReserved1,
+        [in] IUnknown *pUnkReserved2,
+        [in] LPCOLESTR szReserved,
+        [in] LONGLONG llReserved,
+        [in] LPVOID pvReserved,
+        [in] DWORD cbReserved,
+        [out] LPVOID *ppReserved);
+
+    HRESULT GetName(
+        [in][out] LPDWORD buflen,
+        [out] LPWSTR buffer);
+
+    HRESULT GetVersion(
+        [out] LPDWORD hi,
+        [out] LPDWORD low);
+
+    HRESULT IsEqual(
+        [in] IAssemblyName *name,
+        [in] DWORD flags);
+
+    HRESULT Clone(
+        [out] IAssemblyName **name);
+}
+
+typedef [unique] IAssemblyName *LPASSEMBLYNAME;
+typedef [public] enum
+{
+    CANOF_PARSE_DISPLAY_NAME = 0x1,
+    CANOF_SET_DEFAULT_VALUES = 0x2
+} CREATE_ASM_NAME_OBJ_FLAGS;
+
 cpp_quote("HRESULT WINAPI CreateAssemblyCache(IAssemblyCache**,DWORD);")
+cpp_quote("HRESULT WINAPI CreateAssemblyNameObject(LPASSEMBLYNAME *,LPCWSTR,DWORD,LPVOID);")
