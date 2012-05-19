@@ -21,8 +21,8 @@
 
 /* ################################ */
 
-BOOL backend_load_all(void);
-void backend_unload_all(void);
+BOOL backend_load_all(void) DECLSPEC_HIDDEN;
+void backend_unload_all(void) DECLSPEC_HIDDEN;
 
 /* ## Memory allocation functions ## */
 
