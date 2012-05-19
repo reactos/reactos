@@ -35,7 +35,7 @@ typedef struct {
 
 
 /***********************************************************************
- *		SetupCreateDiskSpaceListW  (SETUPAPI.@)
+ *      SetupCreateDiskSpaceListW  (SETUPAPI.@)
  */
 HDSKSPC WINAPI SetupCreateDiskSpaceListW(PVOID Reserved1, DWORD Reserved2, UINT Flags)
 {
@@ -43,6 +43,14 @@ HDSKSPC WINAPI SetupCreateDiskSpaceListW(PVOID Reserved1, DWORD Reserved2, UINT 
     DWORD rc;
     WCHAR *ptr;
     LPDISKSPACELIST list=NULL;
+
+    TRACE("(%p, %u, 0x%08x)\n", Reserved1, Reserved2, Flags);
+
+    if (Reserved1 || Reserved2 || Flags & ~SPDSL_IGNORE_DISK)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return NULL;
+    }
 
     rc = GetLogicalDriveStringsW(255,drives);
 
@@ -73,7 +81,7 @@ HDSKSPC WINAPI SetupCreateDiskSpaceListW(PVOID Reserved1, DWORD Reserved2, UINT 
         }
        ptr += lstrlenW(ptr) + 1;
     }
-    return  (HANDLE)list;
+    return list;
 }
 
 
