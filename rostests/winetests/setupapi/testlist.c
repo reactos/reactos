@@ -8,6 +8,7 @@
 
 extern void func_devclass(void);
 extern void func_devinst(void);
+extern void func_diskspace(void);
 extern void func_install(void);
 extern void func_misc(void);
 extern void func_parser(void);
@@ -19,6 +20,7 @@ const struct test winetest_testlist[] =
 {
     { "devclass", func_devclass },
     { "devinst", func_devinst },
+    { "diskspace", func_diskspace },
     { "install", func_install },
     { "misc", func_misc },
     { "parser", func_parser },

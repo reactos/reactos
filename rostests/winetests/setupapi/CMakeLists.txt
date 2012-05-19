@@ -5,6 +5,7 @@ add_definitions(
 list(APPEND SOURCE
     devclass.c
     devinst.c
+    diskspace.c
     install.c
     misc.c
     parser.c

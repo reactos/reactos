@@ -120,12 +120,14 @@ static void test_cmdline(void)
 {
     static const char infwithspaces[] = "test file.inf";
     char path[MAX_PATH];
+    BOOL ret;
 
     create_inf_file(inffile, cmdline_inf);
     sprintf(path, "%s\\%s", CURR_DIR, inffile);
     run_cmdline("DefaultInstall", 128, path);
     ok_registry(TRUE);
-    ok(DeleteFile(inffile), "Expected source inf to exist, last error was %d\n", GetLastError());
+    ret = DeleteFile(inffile);
+    ok(ret, "Expected source inf to exist, last error was %d\n", GetLastError());
 
     /* Test handling of spaces in path, unquoted and quoted */
     create_inf_file(infwithspaces, cmdline_inf);
@@ -138,7 +140,8 @@ static void test_cmdline(void)
     run_cmdline("DefaultInstall", 128, path);
     ok_registry(FALSE);
 
-    ok(DeleteFile(infwithspaces), "Expected source inf to exist, last error was %d\n", GetLastError());
+    ret = DeleteFile(infwithspaces);
+    ok(ret, "Expected source inf to exist, last error was %d\n", GetLastError());
 }
 
 static const char *cmdline_inf_reg = "[Version]\n"
@@ -153,6 +156,7 @@ static void test_registry(void)
     HKEY key;
     LONG res;
     char path[MAX_PATH];
+    BOOL ret;
 
     /* First create a registry structure we would like to be deleted */
     ok(!RegCreateKeyA(HKEY_CURRENT_USER, "Software\\Wine\\setupapitest\\setupapitest", &key),
@@ -176,7 +180,8 @@ static void test_registry(void)
         RegDeleteKeyA(HKEY_CURRENT_USER, "Software\\Wine\\setupapitest\\setupapitest");
         RegDeleteKeyA(HKEY_CURRENT_USER, "Software\\Wine\\setupapitest");
     }
-    ok(DeleteFile(inffile), "Expected source inf to exist, last error was %d\n", GetLastError());
+    ret = DeleteFile(inffile);
+    ok(ret, "Expected source inf to exist, last error was %d\n", GetLastError());
 }
 
 static void test_install_svc_from(void)
@@ -724,6 +729,7 @@ START_TEST(install)
         /* Check if pInstallHinfSectionA sets last error or is a stub (as on WinXP) */
         static const char *minimal_inf = "[Version]\nSignature=\"$Chicago$\"\n";
         char cmdline[MAX_PATH*2];
+        BOOL ret;
         create_inf_file(inffile, minimal_inf);
         sprintf(cmdline, "DefaultInstall 128 %s\\%s", CURR_DIR, inffile);
         SetLastError(0xdeadbeef);
@@ -733,7 +739,8 @@ START_TEST(install)
             skip("InstallHinfSectionA is broken (stub)\n");
             pInstallHinfSectionA = NULL;
         }
-        ok(DeleteFile(inffile), "Expected source inf to exist, last error was %d\n", GetLastError());
+        ret = DeleteFile(inffile);
+        ok(ret, "Expected source inf to exist, last error was %d\n", GetLastError());
     }
     if (!pInstallHinfSectionW && !pInstallHinfSectionA)
         win_skip("InstallHinfSectionA and InstallHinfSectionW are not available\n");

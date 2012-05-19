@@ -406,7 +406,7 @@ static const char *check_key( INFCONTEXT *context, const char *wanted )
 static void test_key_names(void)
 {
     char buffer[MAX_INF_STRING_LENGTH+32];
-    const char *key, *line;
+    const char *line;
     unsigned int i, index, count;
     UINT err_line;
     HINF hinf;
@@ -426,7 +426,7 @@ static void test_key_names(void)
         ret = SetupFindFirstLineA( hinf, "Test", 0, &context );
         assert( ret );
 
-        key = check_key( &context, key_names[i].key );
+        check_key( &context, key_names[i].key );
 
         buffer[0] = buffer[1] = 0;  /* build the full line */
         for (index = 0; ; index++)

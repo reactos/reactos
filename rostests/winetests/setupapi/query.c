@@ -23,8 +23,8 @@
 #include <setupapi.h>
 #include "wine/test.h"
 
-CHAR CURR_DIR[MAX_PATH];
-CHAR WIN_DIR[MAX_PATH];
+static CHAR CURR_DIR[MAX_PATH];
+static CHAR WIN_DIR[MAX_PATH];
 
 static void get_directories(void)
 {
