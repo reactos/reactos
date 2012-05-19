@@ -33,6 +33,10 @@ extern "C" {
 #define HTTB_SIZINGTEMPLATE         0x0100
 #define HTTB_SYSTEMSIZINGMARGINS    0x0200
 
+#define OTD_FORCE_RECT_SIZING       0x0001
+#define OTD_NONCLIENT               0x0002
+#define OTD_VALIDBITS               (OTD_FORCE_RECT_SIZING | OTD_NONCLIENT)
+
 typedef HANDLE HPAINTBUFFER;
 typedef HANDLE HTHEME;
 
