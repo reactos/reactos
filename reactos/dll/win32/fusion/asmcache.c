@@ -41,6 +41,9 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(fusion);
 
+static const WCHAR cache_mutex_nameW[] =
+    {'_','_','W','I','N','E','_','F','U','S','I','O','N','_','C','A','C','H','E','_','M','U','T','E','X','_','_',0};
+
 static BOOL create_full_path(LPCWSTR path)
 {
     LPWSTR new_path;
@@ -126,6 +129,7 @@ typedef struct {
     IAssemblyCache IAssemblyCache_iface;
 
     LONG ref;
+    HANDLE lock;
 } IAssemblyCacheImpl;
 
 static inline IAssemblyCacheImpl *impl_from_IAssemblyCache(IAssemblyCache *iface)
@@ -166,15 +170,27 @@ static ULONG WINAPI IAssemblyCacheImpl_AddRef(IAssemblyCache *iface)
 
 static ULONG WINAPI IAssemblyCacheImpl_Release(IAssemblyCache *iface)
 {
-    IAssemblyCacheImpl *This = impl_from_IAssemblyCache(iface);
-    ULONG refCount = InterlockedDecrement(&This->ref);
+    IAssemblyCacheImpl *cache = impl_from_IAssemblyCache(iface);
+    ULONG refCount = InterlockedDecrement( &cache->ref );
 
-    TRACE("(%p)->(ref before = %u)\n", This, refCount + 1);
+    TRACE("(%p)->(ref before = %u)\n", cache, refCount + 1);
 
     if (!refCount)
-        HeapFree(GetProcessHeap(), 0, This);
-
+    {
+        CloseHandle( cache->lock );
+        HeapFree( GetProcessHeap(), 0, cache );
+    }
     return refCount;
+}
+
+static void cache_lock( IAssemblyCacheImpl *cache )
+{
+    WaitForSingleObject( cache->lock, INFINITE );
+}
+
+static void cache_unlock( IAssemblyCacheImpl *cache )
+{
+    ReleaseMutex( cache->lock );
 }
 
 static HRESULT WINAPI IAssemblyCacheImpl_UninstallAssembly(IAssemblyCache *iface,
@@ -183,10 +199,81 @@ static HRESULT WINAPI IAssemblyCacheImpl_UninstallAssembly(IAssemblyCache *iface
                                                            LPCFUSION_INSTALL_REFERENCE pRefData,
                                                            ULONG *pulDisposition)
 {
-    FIXME("(%p, %d, %s, %p, %p) stub!\n", iface, dwFlags,
+    HRESULT hr;
+    IAssemblyCacheImpl *cache = impl_from_IAssemblyCache(iface);
+    IAssemblyName *asmname, *next = NULL;
+    IAssemblyEnum *asmenum = NULL;
+    WCHAR *p, *path = NULL;
+    ULONG disp;
+    DWORD len;
+
+    TRACE("(%p, 0%08x, %s, %p, %p)\n", iface, dwFlags,
           debugstr_w(pszAssemblyName), pRefData, pulDisposition);
 
-    return E_NOTIMPL;
+    if (pRefData)
+    {
+        FIXME("application reference not supported\n");
+        return E_NOTIMPL;
+    }
+    hr = CreateAssemblyNameObject( &asmname, pszAssemblyName, CANOF_PARSE_DISPLAY_NAME, NULL );
+    if (FAILED( hr ))
+        return hr;
+
+    cache_lock( cache );
+
+    hr = CreateAssemblyEnum( &asmenum, NULL, asmname, ASM_CACHE_GAC, NULL );
+    if (FAILED( hr ))
+        goto done;
+
+    hr = IAssemblyEnum_GetNextAssembly( asmenum, NULL, &next, 0 );
+    if (hr == S_FALSE)
+    {
+        if (pulDisposition)
+            *pulDisposition = IASSEMBLYCACHE_UNINSTALL_DISPOSITION_ALREADY_UNINSTALLED;
+        goto done;
+    }
+    hr = IAssemblyName_GetPath( next, NULL, &len );
+    if (hr != HRESULT_FROM_WIN32( ERROR_INSUFFICIENT_BUFFER ))
+        goto done;
+
+    if (!(path = HeapAlloc( GetProcessHeap(), 0, len * sizeof(WCHAR) )))
+    {
+        hr = E_OUTOFMEMORY;
+        goto done;
+    }
+    hr = IAssemblyName_GetPath( next, path, &len );
+    if (FAILED( hr ))
+        goto done;
+
+    if (DeleteFileW( path ))
+    {
+        if ((p = strrchrW( path, '\\' )))
+        {
+            *p = 0;
+            RemoveDirectoryW( path );
+            if ((p = strrchrW( path, '\\' )))
+            {
+                *p = 0;
+                RemoveDirectoryW( path );
+            }
+        }
+        disp = IASSEMBLYCACHE_UNINSTALL_DISPOSITION_UNINSTALLED;
+        hr = S_OK;
+    }
+    else
+    {
+        disp = IASSEMBLYCACHE_UNINSTALL_DISPOSITION_ALREADY_UNINSTALLED;
+        hr = S_FALSE;
+    }
+    if (pulDisposition) *pulDisposition = disp;
+
+done:
+    IAssemblyName_Release( asmname );
+    if (next) IAssemblyName_Release( next );
+    if (asmenum) IAssemblyEnum_Release( asmenum );
+    HeapFree( GetProcessHeap(), 0, path );
+    cache_unlock( cache );
+    return hr;
 }
 
 static HRESULT WINAPI IAssemblyCacheImpl_QueryAssemblyInfo(IAssemblyCache *iface,
@@ -194,6 +281,7 @@ static HRESULT WINAPI IAssemblyCacheImpl_QueryAssemblyInfo(IAssemblyCache *iface
                                                            LPCWSTR pszAssemblyName,
                                                            ASSEMBLY_INFO *pAsmInfo)
 {
+    IAssemblyCacheImpl *cache = impl_from_IAssemblyCache(iface);
     IAssemblyName *asmname, *next = NULL;
     IAssemblyEnum *asmenum = NULL;
     HRESULT hr;
@@ -213,6 +301,8 @@ static HRESULT WINAPI IAssemblyCacheImpl_QueryAssemblyInfo(IAssemblyCache *iface
                                   CANOF_PARSE_DISPLAY_NAME, NULL);
     if (FAILED(hr))
         return hr;
+
+    cache_lock( cache );
 
     hr = CreateAssemblyEnum(&asmenum, NULL, asmname, ASM_CACHE_GAC, NULL);
     if (FAILED(hr))
@@ -236,7 +326,7 @@ done:
     IAssemblyName_Release(asmname);
     if (next) IAssemblyName_Release(next);
     if (asmenum) IAssemblyEnum_Release(asmenum);
-
+    cache_unlock( cache );
     return hr;
 }
 
@@ -264,9 +354,10 @@ static HRESULT WINAPI IAssemblyCacheImpl_InstallAssembly(IAssemblyCache *iface,
                                                          LPCWSTR pszManifestFilePath,
                                                          LPCFUSION_INSTALL_REFERENCE pRefData)
 {
-    static const WCHAR format[] =
-        {'%','s','\\','%','s','\\','%','s','_','_','%','s','\\',0};
-
+    static const WCHAR format[] = {'%','s','\\','%','s','\\','%','s','_','_','%','s','\\',0};
+    static const WCHAR ext_exe[] = {'.','e','x','e',0};
+    static const WCHAR ext_dll[] = {'.','d','l','l',0};
+    IAssemblyCacheImpl *cache = impl_from_IAssemblyCache(iface);
     ASSEMBLY *assembly;
     LPWSTR filename;
     LPWSTR name = NULL;
@@ -277,9 +368,6 @@ static HRESULT WINAPI IAssemblyCacheImpl_InstallAssembly(IAssemblyCache *iface,
     WCHAR asmdir[MAX_PATH];
     LPWSTR ext;
     HRESULT hr;
-
-    static const WCHAR ext_exe[] = {'.','e','x','e',0};
-    static const WCHAR ext_dll[] = {'.','d','l','l',0};
 
     TRACE("(%p, %d, %s, %p)\n", iface, dwFlags,
           debugstr_w(pszManifestFilePath), pRefData);
@@ -315,6 +403,8 @@ static HRESULT WINAPI IAssemblyCacheImpl_InstallAssembly(IAssemblyCache *iface,
     if (FAILED(hr))
         goto done;
 
+    cache_lock( cache );
+
     get_assembly_directory(asmdir, MAX_PATH, assembly_get_architecture(assembly));
 
     sprintfW(path, format, asmdir, name, version, token);
@@ -337,6 +427,7 @@ done:
     HeapFree(GetProcessHeap(), 0, version);
     HeapFree(GetProcessHeap(), 0, asmpath);
     assembly_release(assembly);
+    cache_unlock( cache );
     return hr;
 }
 
@@ -371,9 +462,13 @@ HRESULT WINAPI CreateAssemblyCache(IAssemblyCache **ppAsmCache, DWORD dwReserved
 
     cache->IAssemblyCache_iface.lpVtbl = &AssemblyCacheVtbl;
     cache->ref = 1;
-
+    cache->lock = CreateMutexW( NULL, FALSE, cache_mutex_nameW );
+    if (!cache->lock)
+    {
+        HeapFree( GetProcessHeap(), 0, cache );
+        return HRESULT_FROM_WIN32( GetLastError() );
+    }
     *ppAsmCache = &cache->IAssemblyCache_iface;
-
     return S_OK;
 }
 

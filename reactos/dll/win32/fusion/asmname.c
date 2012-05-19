@@ -666,7 +666,7 @@ HRESULT WINAPI CreateAssemblyNameObject(LPASSEMBLYNAME *ppAssemblyNameObj,
     IAssemblyNameImpl *name;
     HRESULT hr;
 
-    TRACE("(%p, %s, %08x, %p) stub!\n", ppAssemblyNameObj,
+    TRACE("(%p, %s, %08x, %p)\n", ppAssemblyNameObj,
           debugstr_w(szAssemblyName), dwFlags, pvReserved);
 
     if (!ppAssemblyNameObj)
