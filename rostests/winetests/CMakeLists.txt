@@ -85,6 +85,7 @@ add_subdirectory(shell32)
 add_subdirectory(shlwapi)
 add_subdirectory(snmpapi)
 add_subdirectory(spoolss)
+add_subdirectory(sti)
 add_subdirectory(twain_32)
 if(NOT MSVC)
     add_subdirectory(urlmon) # FIXME: msvc build.
