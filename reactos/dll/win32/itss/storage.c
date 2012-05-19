@@ -406,7 +406,6 @@ static HRESULT WINAPI ITSS_IStorageImpl_OpenStorage(
     IStorage** ppstg)
 {
     ITSS_IStorageImpl *This = impl_from_IStorage(iface);
-    static const WCHAR szRoot[] = { '/', 0 };
     struct chmFile *chmfile;
     WCHAR *path, *p;
     DWORD len;
@@ -418,7 +417,7 @@ static HRESULT WINAPI ITSS_IStorageImpl_OpenStorage(
     if( !chmfile )
         return E_FAIL;
 
-    len = strlenW( This->dir ) + strlenW( pwcsName ) + 1;
+    len = strlenW( This->dir ) + strlenW( pwcsName ) + 2; /* need room for a terminating slash */
     path = HeapAlloc( GetProcessHeap(), 0, len*sizeof(WCHAR) );
     strcpyW( path, This->dir );
 
@@ -435,10 +434,12 @@ static HRESULT WINAPI ITSS_IStorageImpl_OpenStorage(
             *p = '/';
     }
 
-    if(*--p == '/')
+    /* add a terminating slash if one does not already exist */
+    if(*(p-1) != '/')
+    {
+        *p++ = '/';
         *p = 0;
-
-    strcatW( path, szRoot );
+    }
 
     TRACE("Resolving %s\n", debugstr_w(path));
 
