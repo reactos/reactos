@@ -78,6 +78,19 @@ static HRESULT __GetMoniker(HlinkImpl* This, IMoniker** moniker,
     if (ref_type == HLINKGETREF_DEFAULT)
         ref_type = HLINKGETREF_RELATIVE;
 
+    if (This->Moniker)
+    {
+        DWORD mktype = MKSYS_NONE;
+
+        hres = IMoniker_IsSystemMoniker(This->Moniker, &mktype);
+        if (hres == S_OK && mktype != MKSYS_NONE)
+        {
+            *moniker = This->Moniker;
+            IMoniker_AddRef(*moniker);
+            return S_OK;
+        }
+    }
+
     if (ref_type == HLINKGETREF_ABSOLUTE && This->Site)
     {
         IMoniker *hls_moniker;
@@ -217,9 +230,12 @@ static HRESULT WINAPI IHlink_fnSetMonikerReference( IHlink* iface,
         This->Moniker = pmkTarget;
         if (This->Moniker)
         {
+            IBindCtx *pbc;
             LPOLESTR display_name;
             IMoniker_AddRef(This->Moniker);
-            IMoniker_GetDisplayName(This->Moniker, NULL, NULL, &display_name);
+            CreateBindCtx( 0, &pbc);
+            IMoniker_GetDisplayName(This->Moniker, pbc, NULL, &display_name);
+            IBindCtx_Release(pbc);
             This->absolute = display_name && strchrW(display_name, ':');
             CoTaskMemFree(display_name);
         }

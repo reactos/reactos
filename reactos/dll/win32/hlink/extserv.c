@@ -24,13 +24,13 @@
 WINE_DEFAULT_DEBUG_CHANNEL(hlink);
 
 typedef struct {
-    IUnknown           IUnknown_iface;
+    IUnknown           IUnknown_inner;
     IAuthenticate      IAuthenticate_iface;
     IHttpNegotiate     IHttpNegotiate_iface;
     IExtensionServices IExtensionServices_iface;
 
+    IUnknown *outer_unk;
     LONG ref;
-    IUnknown *outer;
 
     HWND hwnd;
     LPWSTR username;
@@ -40,7 +40,7 @@ typedef struct {
 
 static inline ExtensionService *impl_from_IUnknown(IUnknown *iface)
 {
-    return CONTAINING_RECORD(iface, ExtensionService, IUnknown_iface);
+    return CONTAINING_RECORD(iface, ExtensionService, IUnknown_inner);
 }
 
 static HRESULT WINAPI ExtServUnk_QueryInterface(IUnknown *iface, REFIID riid, void **ppv)
@@ -51,7 +51,7 @@ static HRESULT WINAPI ExtServUnk_QueryInterface(IUnknown *iface, REFIID riid, vo
 
     if(IsEqualGUID(&IID_IUnknown, riid)) {
         TRACE("(%p)->(IID_IUnknown %p)\n", This, ppv);
-        *ppv = &This->IUnknown_iface;
+        *ppv = &This->IUnknown_inner;
     }else if(IsEqualGUID(&IID_IAuthenticate, riid)) {
         TRACE("(%p)->(IID_IAuthenticate %p)\n", This, ppv);
         *ppv = &This->IAuthenticate_iface;
@@ -113,19 +113,19 @@ static inline ExtensionService *impl_from_IAuthenticate(IAuthenticate *iface)
 static HRESULT WINAPI Authenticate_QueryInterface(IAuthenticate *iface, REFIID riid, void **ppv)
 {
     ExtensionService *This = impl_from_IAuthenticate(iface);
-    return IUnknown_QueryInterface(This->outer, riid, ppv);
+    return IUnknown_QueryInterface(This->outer_unk, riid, ppv);
 }
 
 static ULONG WINAPI Authenticate_AddRef(IAuthenticate *iface)
 {
     ExtensionService *This = impl_from_IAuthenticate(iface);
-    return IUnknown_AddRef(This->outer);
+    return IUnknown_AddRef(This->outer_unk);
 }
 
 static ULONG WINAPI Authenticate_Release(IAuthenticate *iface)
 {
     ExtensionService *This = impl_from_IAuthenticate(iface);
-    return IUnknown_Release(This->outer);
+    return IUnknown_Release(This->outer_unk);
 }
 
 static HRESULT WINAPI Authenticate_Authenticate(IAuthenticate *iface,
@@ -160,19 +160,19 @@ static inline ExtensionService *impl_from_IHttpNegotiate(IHttpNegotiate *iface)
 static HRESULT WINAPI HttpNegotiate_QueryInterface(IHttpNegotiate *iface, REFIID riid, void **ppv)
 {
     ExtensionService *This = impl_from_IHttpNegotiate(iface);
-    return IUnknown_QueryInterface(This->outer, riid, ppv);
+    return IUnknown_QueryInterface(This->outer_unk, riid, ppv);
 }
 
 static ULONG WINAPI HttpNegotiate_AddRef(IHttpNegotiate *iface)
 {
     ExtensionService *This = impl_from_IHttpNegotiate(iface);
-    return IUnknown_AddRef(This->outer);
+    return IUnknown_AddRef(This->outer_unk);
 }
 
 static ULONG WINAPI HttpNegotiate_Release(IHttpNegotiate *iface)
 {
     ExtensionService *This = impl_from_IHttpNegotiate(iface);
-    return IUnknown_Release(This->outer);
+    return IUnknown_Release(This->outer_unk);
 }
 
 static HRESULT WINAPI HttpNegotiate_BeginningTransaction(IHttpNegotiate *iface,
@@ -218,19 +218,19 @@ static inline ExtensionService *impl_from_IExtensionServices(IExtensionServices 
 static HRESULT WINAPI ExtServ_QueryInterface(IExtensionServices *iface, REFIID riid, void **ppv)
 {
     ExtensionService *This = impl_from_IExtensionServices(iface);
-    return IUnknown_QueryInterface(This->outer, riid, ppv);
+    return IUnknown_QueryInterface(This->outer_unk, riid, ppv);
 }
 
 static ULONG WINAPI ExtServ_AddRef(IExtensionServices *iface)
 {
     ExtensionService *This = impl_from_IExtensionServices(iface);
-    return IUnknown_AddRef(This->outer);
+    return IUnknown_AddRef(This->outer_unk);
 }
 
 static ULONG WINAPI ExtServ_Release(IExtensionServices *iface)
 {
     ExtensionService *This = impl_from_IExtensionServices(iface);
-    return IUnknown_Release(This->outer);
+    return IUnknown_Release(This->outer_unk);
 }
 
 static HRESULT ExtServ_ImplSetAdditionalHeaders(ExtensionService* This, LPCWSTR pwzAdditionalHeaders)
@@ -311,7 +311,7 @@ HRESULT WINAPI HlinkCreateExtensionServices(LPCWSTR pwzAdditionalHeaders,
 
     ret = heap_alloc(sizeof(*ret));
 
-    ret->IUnknown_iface.lpVtbl = &ExtServUnkVtbl;
+    ret->IUnknown_inner.lpVtbl = &ExtServUnkVtbl;
     ret->IAuthenticate_iface.lpVtbl = &AuthenticateVtbl;
     ret->IHttpNegotiate_iface.lpVtbl = &HttpNegotiateVtbl;
     ret->IExtensionServices_iface.lpVtbl = &ExtServVtbl;
@@ -325,14 +325,14 @@ HRESULT WINAPI HlinkCreateExtensionServices(LPCWSTR pwzAdditionalHeaders,
     ExtServ_ImplSetAdditionalHeaders(ret, pwzAdditionalHeaders);
 
     if(!punkOuter) {
-        ret->outer = &ret->IUnknown_iface;
-        hres = IUnknown_QueryInterface(&ret->IUnknown_iface, riid, ppv);
-        IUnknown_Release(&ret->IUnknown_iface);
+        ret->outer_unk = &ret->IUnknown_inner;
+        hres = IUnknown_QueryInterface(&ret->IUnknown_inner, riid, ppv);
+        IUnknown_Release(&ret->IUnknown_inner);
     }else if(IsEqualGUID(&IID_IUnknown, riid)) {
-        ret->outer = punkOuter;
-        *ppv = &ret->IUnknown_iface;
+        ret->outer_unk = punkOuter;
+        *ppv = &ret->IUnknown_inner;
     }else {
-        IUnknown_Release(&ret->IUnknown_iface);
+        IUnknown_Release(&ret->IUnknown_inner);
         hres = E_INVALIDARG;
     }
 
