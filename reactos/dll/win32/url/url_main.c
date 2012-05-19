@@ -106,6 +106,15 @@ HRESULT WINAPI FileProtocolHandlerA(HWND hWnd, HINSTANCE hInst, LPCSTR pszUrl,
 }
 
 /***********************************************************************
+ * OpenURLA    (URL.@)
+ *
+ */
+void WINAPI OpenURLA(HWND hwnd, HINSTANCE inst, LPCSTR cmdline, INT show)
+{
+    FIXME("(%p, %p, %s, %d): stub!\n", hwnd, inst, debugstr_a(cmdline), show);
+}
+
+/***********************************************************************
  * TelnetProtocolHandlerA    (URL.@)
  *
  */
