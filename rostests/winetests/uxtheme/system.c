@@ -33,17 +33,12 @@ static BOOL    (WINAPI * pIsAppThemed)(VOID);
 static BOOL    (WINAPI * pIsThemeActive)(VOID);
 static BOOL    (WINAPI * pIsThemePartDefined)(HTHEME, int, int);
 static HTHEME  (WINAPI * pOpenThemeData)(HWND, LPCWSTR);
+static HTHEME  (WINAPI * pOpenThemeDataEx)(HWND, LPCWSTR, DWORD);
 static HRESULT (WINAPI * pSetWindowTheme)(HWND, LPCWSTR, LPCWSTR);
 
 static HMODULE hUxtheme = 0;
 
-#define UXTHEME_GET_PROC(func) \
-    p ## func = (void*)GetProcAddress(hUxtheme, #func); \
-    if(!p ## func) { \
-      trace("GetProcAddress(%s) failed\n", #func); \
-      FreeLibrary(hUxtheme); \
-      return FALSE; \
-    }
+#define UXTHEME_GET_PROC(func) p ## func = (void*)GetProcAddress(hUxtheme, #func);
 
 static BOOL InitFunctionPtrs(void)
 {
@@ -61,6 +56,7 @@ static BOOL InitFunctionPtrs(void)
       UXTHEME_GET_PROC(IsThemeActive)
       UXTHEME_GET_PROC(IsThemePartDefined)
       UXTHEME_GET_PROC(OpenThemeData)
+      UXTHEME_GET_PROC(OpenThemeDataEx)
       UXTHEME_GET_PROC(SetWindowTheme)
     }
     /* The following functions should be available, if not return FALSE. The Vista functions will
@@ -71,7 +67,10 @@ static BOOL InitFunctionPtrs(void)
         !pGetWindowTheme || !pIsAppThemed ||
         !pIsThemeActive || !pIsThemePartDefined ||
         !pOpenThemeData || !pSetWindowTheme)
+    {
+        FreeLibrary(hUxtheme);
         return FALSE;
+    }
 
     return TRUE;
 }
@@ -193,8 +192,7 @@ static void test_OpenThemeData(void)
     SetLastError(0xdeadbeef);
     hTheme = pOpenThemeData(NULL, NULL);
     ok( hTheme == NULL, "Expected a NULL return, got %p\n", hTheme);
-    todo_wine
-        ok( GetLastError() == E_POINTER,
+    ok( GetLastError() == E_POINTER,
             "Expected GLE() to be E_POINTER, got 0x%08x\n",
             GetLastError());
 
@@ -233,8 +231,7 @@ static void test_OpenThemeData(void)
     SetLastError(0xdeadbeef);
     hTheme = pOpenThemeData(hWnd, NULL);
     ok( hTheme == NULL, "Expected a NULL return, got %p\n", hTheme);
-    todo_wine
-        ok( GetLastError() == E_POINTER,
+    ok( GetLastError() == E_POINTER,
             "Expected GLE() to be E_POINTER, got 0x%08x\n",
             GetLastError());
 
@@ -336,6 +333,151 @@ static void test_OpenThemeData(void)
             hWnd, GetLastError());
 }
 
+static void test_OpenThemeDataEx(void)
+{
+    HTHEME    hTheme;
+    HWND      hWnd;
+    BOOL      bThemeActive;
+    BOOL      bDestroyed;
+
+    WCHAR szInvalidClassList[] = {'D','E','A','D','B','E','E','F', 0 };
+    WCHAR szButtonClassList[]  = {'B','u','t','t','o','n', 0 };
+    WCHAR szButtonClassList2[]  = {'b','U','t','T','o','N', 0 };
+    WCHAR szClassList[]        = {'B','u','t','t','o','n',';','L','i','s','t','B','o','x', 0 };
+
+    if (!pOpenThemeDataEx)
+    {
+        win_skip("OpenThemeDataEx not available\n");
+        return;
+    }
+
+    bThemeActive = pIsThemeActive();
+
+    /* All NULL */
+    SetLastError(0xdeadbeef);
+    hTheme = pOpenThemeDataEx(NULL, NULL, 0);
+    ok( hTheme == NULL, "Expected a NULL return, got %p\n", hTheme);
+    ok( GetLastError() == E_POINTER,
+            "Expected GLE() to be E_POINTER, got 0x%08x\n",
+            GetLastError());
+
+    /* A NULL hWnd and an invalid classlist without flags */
+    SetLastError(0xdeadbeef);
+    hTheme = pOpenThemeDataEx(NULL, szInvalidClassList, 0);
+    ok( hTheme == NULL, "Expected a NULL return, got %p\n", hTheme);
+    todo_wine
+        ok( GetLastError() == E_PROP_ID_UNSUPPORTED,
+            "Expected GLE() to be E_PROP_ID_UNSUPPORTED, got 0x%08x\n",
+            GetLastError());
+
+    SetLastError(0xdeadbeef);
+    hTheme = pOpenThemeDataEx(NULL, szClassList, 0);
+    if (bThemeActive)
+    {
+        ok( hTheme != NULL, "got NULL, expected a HTHEME handle\n");
+        todo_wine
+            ok( GetLastError() == ERROR_SUCCESS,
+                "Expected ERROR_SUCCESS, got 0x%08x\n",
+                GetLastError());
+    }
+    else
+    {
+        ok( hTheme == NULL, "Expected a NULL return, got %p\n", hTheme);
+        todo_wine
+            ok( GetLastError() == E_PROP_ID_UNSUPPORTED,
+                "Expected GLE() to be E_PROP_ID_UNSUPPORTED, got 0x%08x\n",
+                GetLastError());
+    }
+
+    /* Only do the bare minimum to get a valid hdc */
+    hWnd = CreateWindowExA(0, "static", "", WS_POPUP, 0,0,100,100,0, 0, 0, NULL);
+    if (!hWnd) return;
+
+    SetLastError(0xdeadbeef);
+    hTheme = pOpenThemeDataEx(hWnd, NULL, 0);
+    ok( hTheme == NULL, "Expected a NULL return, got %p\n", hTheme);
+    ok( GetLastError() == E_POINTER,
+            "Expected GLE() to be E_POINTER, got 0x%08x\n",
+            GetLastError());
+
+    SetLastError(0xdeadbeef);
+    hTheme = pOpenThemeDataEx(hWnd, szInvalidClassList, 0);
+    ok( hTheme == NULL, "Expected a NULL return, got %p\n", hTheme);
+    todo_wine
+        ok( GetLastError() == E_PROP_ID_UNSUPPORTED,
+            "Expected GLE() to be E_PROP_ID_UNSUPPORTED, got 0x%08x\n",
+            GetLastError());
+
+    if (!bThemeActive)
+    {
+        SetLastError(0xdeadbeef);
+        hTheme = pOpenThemeDataEx(hWnd, szButtonClassList, 0);
+        ok( hTheme == NULL, "Expected a NULL return, got %p\n", hTheme);
+        todo_wine
+            ok( GetLastError() == E_PROP_ID_UNSUPPORTED,
+                "Expected GLE() to be E_PROP_ID_UNSUPPORTED, got 0x%08x\n",
+                GetLastError());
+        skip("No active theme, skipping rest of OpenThemeDataEx tests\n");
+        return;
+    }
+
+    /* Only do the next checks if we have an active theme */
+
+    SetLastError(0xdeadbeef);
+    hTheme = pOpenThemeDataEx(hWnd, szButtonClassList, 0);
+    ok( hTheme != NULL, "got NULL, expected a HTHEME handle\n");
+    todo_wine
+        ok( GetLastError() == ERROR_SUCCESS,
+            "Expected ERROR_SUCCESS, got 0x%08x\n",
+            GetLastError());
+
+    SetLastError(0xdeadbeef);
+    hTheme = pOpenThemeDataEx(hWnd, szButtonClassList, OTD_FORCE_RECT_SIZING);
+    ok( hTheme != NULL, "got NULL, expected a HTHEME handle\n");
+    todo_wine
+        ok( GetLastError() == ERROR_SUCCESS,
+            "Expected ERROR_SUCCESS, got 0x%08x\n",
+            GetLastError());
+
+    SetLastError(0xdeadbeef);
+    hTheme = pOpenThemeDataEx(hWnd, szButtonClassList, OTD_NONCLIENT);
+    ok( hTheme != NULL, "got NULL, expected a HTHEME handle\n");
+    todo_wine
+        ok( GetLastError() == ERROR_SUCCESS,
+            "Expected ERROR_SUCCESS, got 0x%08x\n",
+            GetLastError());
+
+    SetLastError(0xdeadbeef);
+    hTheme = pOpenThemeDataEx(hWnd, szButtonClassList, 0x3);
+    ok( hTheme != NULL, "got NULL, expected a HTHEME handle\n");
+    todo_wine
+        ok( GetLastError() == ERROR_SUCCESS,
+            "Expected ERROR_SUCCESS, got 0x%08x\n",
+            GetLastError());
+
+    /* Test with bUtToN instead of Button */
+    SetLastError(0xdeadbeef);
+    hTheme = pOpenThemeDataEx(hWnd, szButtonClassList2, 0);
+    ok( hTheme != NULL, "got NULL, expected a HTHEME handle\n");
+    todo_wine
+        ok( GetLastError() == ERROR_SUCCESS,
+            "Expected ERROR_SUCCESS, got 0x%08x\n",
+            GetLastError());
+
+    SetLastError(0xdeadbeef);
+    hTheme = pOpenThemeDataEx(hWnd, szClassList, 0);
+    ok( hTheme != NULL, "got NULL, expected a HTHEME handle\n");
+    todo_wine
+        ok( GetLastError() == ERROR_SUCCESS,
+            "Expected ERROR_SUCCESS, got 0x%08x\n",
+            GetLastError());
+
+    bDestroyed = DestroyWindow(hWnd);
+    if (!bDestroyed)
+        trace("Window %p couldn't be destroyed : 0x%08x\n",
+            hWnd, GetLastError());
+}
+
 static void test_GetCurrentThemeName(void)
 {
     BOOL    bThemeActive;
@@ -361,23 +503,20 @@ static void test_GetCurrentThemeName(void)
     SetLastError(0xdeadbeef);
     hRes = pGetCurrentThemeName(currentTheme, 0, NULL, 0, NULL, 0);
     if (bThemeActive)
-        ok( hRes == S_OK, "Expected S_OK, got 0x%08x\n", hRes);
+        ok( hRes == S_OK || broken(hRes == E_FAIL /* WinXP SP1 */), "Expected S_OK, got 0x%08x\n", hRes);
     else
         ok( hRes == E_PROP_ID_UNSUPPORTED, "Expected E_PROP_ID_UNSUPPORTED, got 0x%08x\n", hRes);
     ok( GetLastError() == 0xdeadbeef,
         "Expected 0xdeadbeef, got 0x%08x\n",
         GetLastError());
 
-    /* When the number of characters given is too small (not 0, see above), GetCurrentThemeName returns 0x8007007a.
-     * The only definition I found was in strsafe.h:
-     *
-     * #define STRSAFE_E_INSUFFICIENT_BUFFER       ((HRESULT)0x8007007AL)  // 0x7A = 122L = ERROR_INSUFFICIENT_BUFFER
-     */
     SetLastError(0xdeadbeef);
     hRes = pGetCurrentThemeName(currentTheme, 2, NULL, 0, NULL, 0);
     if (bThemeActive)
         todo_wine
-            ok(hRes == HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER), "Expected HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER), got 0x%08x\n", hRes);
+            ok(hRes == HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER) ||
+               broken(hRes == E_FAIL /* WinXP SP1 */),
+               "Expected HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER), got 0x%08x\n", hRes);
     else
         ok( hRes == E_PROP_ID_UNSUPPORTED, "Expected E_PROP_ID_UNSUPPORTED, got 0x%08x\n", hRes);
     ok( GetLastError() == 0xdeadbeef,
@@ -391,7 +530,9 @@ static void test_GetCurrentThemeName(void)
                                 currentSize,  sizeof(currentSize)  / sizeof(WCHAR));
     if (bThemeActive)
         todo_wine
-            ok(hRes == HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER), "Expected HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER), got 0x%08x\n", hRes);
+            ok(hRes == HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER) ||
+               broken(hRes == E_FAIL /* WinXP SP1 */),
+               "Expected HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER), got 0x%08x\n", hRes);
     else
         ok( hRes == E_PROP_ID_UNSUPPORTED, "Expected E_PROP_ID_UNSUPPORTED, got 0x%08x\n", hRes);
     ok( GetLastError() == 0xdeadbeef,
@@ -497,6 +638,10 @@ START_TEST(system)
     /* OpenThemeData, a bit more functional now */
     trace("Starting test_OpenThemeData()\n");
     test_OpenThemeData();
+
+    /* OpenThemeDataEx */
+    trace("Starting test_OpenThemeDataEx()\n");
+    test_OpenThemeDataEx();
 
     /* GetCurrentThemeName */
     trace("Starting test_GetCurrentThemeName()\n");
