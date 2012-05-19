@@ -131,12 +131,6 @@ static const unsigned char rgbheader[] =
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xd6, 0xf6, 0x00, 0x00,
   0x00, 0x00, 0x01, 0x00, 0x2d, 0xd3, 0x00, 0x00, 0x20, 0x20, 0x50, 0x48 };
 
-static LPSTR standardprofile;
-static LPWSTR standardprofileW;
-
-static LPSTR testprofile;
-static LPWSTR testprofileW;
-
 #define IS_SEPARATOR(ch)  ((ch) == '\\' || (ch) == '/')
 
 static void MSCMS_basenameA( LPCSTR path, LPSTR name )
@@ -227,7 +221,7 @@ static void test_GetColorDirectoryW(void)
     ok( ret && size > 0, "GetColorDirectoryW() failed (%d)\n", GetLastError() );
 }
 
-static void test_GetColorProfileElement(void)
+static void test_GetColorProfileElement( char *standardprofile )
 {
     if (standardprofile)
     {
@@ -277,7 +271,7 @@ static void test_GetColorProfileElement(void)
     }
 }
 
-static void test_GetColorProfileElementTag(void)
+static void test_GetColorProfileElementTag( char *standardprofile )
 {
     if (standardprofile)
     {
@@ -318,7 +312,7 @@ static void test_GetColorProfileElementTag(void)
     }
 }
 
-static void test_GetColorProfileFromHandle(void)
+static void test_GetColorProfileFromHandle( char *testprofile )
 {
     if (testprofile)
     {
@@ -376,7 +370,7 @@ static void test_GetColorProfileFromHandle(void)
     }
 }
 
-static void test_GetColorProfileHeader(void)
+static void test_GetColorProfileHeader( char *testprofile )
 {
     if (testprofile)
     {
@@ -417,7 +411,7 @@ static void test_GetColorProfileHeader(void)
     }
 }
 
-static void test_GetCountColorProfileElements(void)
+static void test_GetCountColorProfileElements( char *standardprofile )
 {
     if (standardprofile)
     {
@@ -453,7 +447,7 @@ static void test_GetCountColorProfileElements(void)
     }
 }
 
-static void test_GetStandardColorSpaceProfileA(void)
+static void test_GetStandardColorSpaceProfileA( char *standardprofile )
 {
     BOOL ret;
     DWORD size;
@@ -538,7 +532,7 @@ static void test_GetStandardColorSpaceProfileA(void)
     ok( ret, "SetStandardColorSpaceProfileA() failed (%d)\n", GetLastError() );
 }
 
-static void test_GetStandardColorSpaceProfileW(void)
+static void test_GetStandardColorSpaceProfileW( WCHAR *standardprofileW )
 {
     BOOL ret;
     DWORD size;
@@ -644,7 +638,7 @@ static void test_GetStandardColorSpaceProfileW(void)
     ok( ret, "SetStandardColorSpaceProfileW() failed (%d)\n", GetLastError() );
 }
 
-static void test_EnumColorProfilesA(void)
+static void test_EnumColorProfilesA( char *standardprofile )
 {
     BOOL ret;
     DWORD total, size, number;
@@ -698,7 +692,7 @@ static void test_EnumColorProfilesA(void)
     HeapFree( GetProcessHeap(), 0, buffer );
 }
 
-static void test_EnumColorProfilesW(void)
+static void test_EnumColorProfilesW( WCHAR *standardprofileW )
 {
     BOOL ret;
     DWORD total, size, number;
@@ -751,7 +745,7 @@ static void test_EnumColorProfilesW(void)
     HeapFree( GetProcessHeap(), 0, buffer );
 }
 
-static void test_InstallColorProfileA(void)
+static void test_InstallColorProfileA( char *standardprofile, char *testprofile )
 {
     BOOL ret;
 
@@ -808,7 +802,7 @@ static void test_InstallColorProfileA(void)
     }
 }
 
-static void test_InstallColorProfileW(void)
+static void test_InstallColorProfileW( WCHAR *standardprofileW, WCHAR *testprofileW )
 {
     BOOL ret;
 
@@ -865,7 +859,7 @@ static void test_InstallColorProfileW(void)
     }
 }
 
-static void test_IsColorProfileTagPresent(void)
+static void test_IsColorProfileTagPresent( char *standardprofile )
 {
     if (standardprofile)
     {
@@ -905,7 +899,7 @@ static void test_IsColorProfileTagPresent(void)
     }
 }
 
-static void test_OpenColorProfileA(void)
+static void test_OpenColorProfileA( char *standardprofile )
 {
     PROFILE profile;
     HPROFILE handle;
@@ -965,7 +959,7 @@ static void test_OpenColorProfileA(void)
     }
 }
 
-static void test_OpenColorProfileW(void)
+static void test_OpenColorProfileW( WCHAR *standardprofileW )
 {
     PROFILE profile;
     HPROFILE handle;
@@ -1015,7 +1009,7 @@ static void test_OpenColorProfileW(void)
     }
 }
 
-static void test_SetColorProfileElement(void)
+static void test_SetColorProfileElement( char *testprofile )
 {
     if (testprofile)
     {
@@ -1077,7 +1071,7 @@ static void test_SetColorProfileElement(void)
     }
 }
 
-static void test_SetColorProfileHeader(void)
+static void test_SetColorProfileHeader( char *testprofile )
 {
     if (testprofile)
     {
@@ -1148,7 +1142,7 @@ static void test_SetColorProfileHeader(void)
     }
 }
 
-static void test_UninstallColorProfileA(void)
+static void test_UninstallColorProfileA( char *testprofile )
 {
     BOOL ret;
 
@@ -1196,7 +1190,7 @@ static void test_UninstallColorProfileA(void)
     }
 }
 
-static void test_UninstallColorProfileW(void)
+static void test_UninstallColorProfileW( WCHAR *testprofileW )
 {
     BOOL ret;
 
@@ -1248,7 +1242,7 @@ static void test_UninstallColorProfileW(void)
     }
 }
 
-static void test_AssociateColorProfileWithDeviceA(void)
+static void test_AssociateColorProfileWithDeviceA( char *testprofile )
 {
     BOOL ret;
     char profile[MAX_PATH], basename[MAX_PATH];
@@ -1331,10 +1325,10 @@ START_TEST(profile)
 {
     UINT len;
     HANDLE handle;
-    char path[MAX_PATH], file[MAX_PATH];
-    char profilefile1[MAX_PATH], profilefile2[MAX_PATH];
-    WCHAR profilefile1W[MAX_PATH], profilefile2W[MAX_PATH];
-    WCHAR fileW[MAX_PATH];
+    char path[MAX_PATH], file[MAX_PATH], profilefile1[MAX_PATH], profilefile2[MAX_PATH];
+    WCHAR profilefile1W[MAX_PATH], profilefile2W[MAX_PATH], fileW[MAX_PATH];
+    char *standardprofile = NULL, *testprofile = NULL;
+    WCHAR *standardprofileW = NULL, *testprofileW = NULL;
     UINT ret;
 
     hmscms = LoadLibraryA( "mscms.dll" );
@@ -1395,10 +1389,8 @@ START_TEST(profile)
             if (CopyFileA( standardprofile, file, FALSE ))
             {
                 testprofile = (LPSTR)&file;
-
                 len = MultiByteToWideChar( CP_ACP, 0, testprofile, -1, NULL, 0 );
                 MultiByteToWideChar( CP_ACP, 0, testprofile, -1, fileW, len );
-
                 testprofileW = (LPWSTR)&fileW;
             }
         }
@@ -1407,40 +1399,37 @@ START_TEST(profile)
     test_GetColorDirectoryA();
     test_GetColorDirectoryW();
 
-    test_GetColorProfileElement();
-    test_GetColorProfileElementTag();
+    test_GetColorProfileElement( standardprofile );
+    test_GetColorProfileElementTag( standardprofile );
 
-    test_GetColorProfileFromHandle();
-    test_GetColorProfileHeader();
+    test_GetColorProfileFromHandle( testprofile );
+    test_GetColorProfileHeader( testprofile );
 
-    test_GetCountColorProfileElements();
+    test_GetCountColorProfileElements( standardprofile );
 
-    test_GetStandardColorSpaceProfileA();
-    test_GetStandardColorSpaceProfileW();
+    test_GetStandardColorSpaceProfileA( standardprofile );
+    test_GetStandardColorSpaceProfileW( standardprofileW );
 
-    test_EnumColorProfilesA();
-    test_EnumColorProfilesW();
+    test_EnumColorProfilesA( standardprofile );
+    test_EnumColorProfilesW( standardprofileW );
 
-    test_InstallColorProfileA();
-    test_InstallColorProfileW();
+    test_InstallColorProfileA( standardprofile, testprofile );
+    test_InstallColorProfileW( standardprofileW, testprofileW );
 
-    test_IsColorProfileTagPresent();
+    test_IsColorProfileTagPresent( standardprofile );
 
-    test_OpenColorProfileA();
-    test_OpenColorProfileW();
+    test_OpenColorProfileA( standardprofile );
+    test_OpenColorProfileW( standardprofileW );
 
-    test_SetColorProfileElement();
-    test_SetColorProfileHeader();
+    test_SetColorProfileElement( testprofile );
+    test_SetColorProfileHeader( testprofile );
 
-    test_UninstallColorProfileA();
-    test_UninstallColorProfileW();
+    test_UninstallColorProfileA( testprofile );
+    test_UninstallColorProfileW( testprofileW );
 
-    test_AssociateColorProfileWithDeviceA();
+    test_AssociateColorProfileWithDeviceA( testprofile );
 
-    /* Clean up */
-    if (testprofile)
-        DeleteFileA( testprofile );
-    
+    if (testprofile) DeleteFileA( testprofile );
     FreeLibrary( huser32 );
     FreeLibrary( hmscms );
 }
