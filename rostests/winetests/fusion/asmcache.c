@@ -888,7 +888,6 @@ static void test_InstallAssembly(void)
     ULONG disp;
     DWORD attr;
     char dllpath[MAX_PATH];
-    UINT size;
 
     static const WCHAR empty[] = {0};
     static const WCHAR noext[] = {'f','i','l','e',0};
@@ -942,7 +941,7 @@ static void test_InstallAssembly(void)
     hr = IAssemblyCache_InstallAssembly(cache, 0, winedll, NULL);
     ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
 
-    size = GetWindowsDirectoryA(dllpath, MAX_PATH);
+    GetWindowsDirectoryA(dllpath, MAX_PATH);
     strcat(dllpath, "\\assembly\\GAC_MSIL\\wine\\\\1.0.0.0__2d03617b1c31e2f5\\wine.dll");
 
     attr = GetFileAttributes(dllpath);
@@ -951,19 +950,18 @@ static void test_InstallAssembly(void)
     /* uninstall the assembly from the GAC */
     disp = 0xf00dbad;
     hr = IAssemblyCache_UninstallAssembly(cache, 0, wine, NULL, &disp);
-    todo_wine
-    {
-        ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
-        ok(disp == IASSEMBLYCACHE_UNINSTALL_DISPOSITION_UNINSTALLED,
-           "Expected IASSEMBLYCACHE_UNINSTALL_DISPOSITION_UNINSTALLED, got %d\n", disp);
-    }
+    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(disp == IASSEMBLYCACHE_UNINSTALL_DISPOSITION_UNINSTALLED,
+       "Expected IASSEMBLYCACHE_UNINSTALL_DISPOSITION_UNINSTALLED, got %d\n", disp);
 
-    /* FIXME: remove once UninstallAssembly is implemented */
-    DeleteFileA(dllpath);
-    dllpath[size + sizeof("\\assembly\\GAC_MSIL\\wine\\1.0.0.0__2d03617b1c31e2f5")] = '\0';
-    RemoveDirectoryA(dllpath);
-    dllpath[size + sizeof("\\assembly\\GAC_MSIL\\wine")] = '\0';
-    RemoveDirectoryA(dllpath);
+    attr = GetFileAttributes(dllpath);
+    ok(attr == INVALID_FILE_ATTRIBUTES, "Expected assembly not to exist\n");
+
+    disp = 0xf00dbad;
+    hr = IAssemblyCache_UninstallAssembly(cache, 0, wine, NULL, &disp);
+    ok(hr == S_FALSE, "Expected S_FALSE, got %08x\n", hr);
+    ok(disp == IASSEMBLYCACHE_UNINSTALL_DISPOSITION_ALREADY_UNINSTALLED,
+       "Expected IASSEMBLYCACHE_UNINSTALL_DISPOSITION_ALREADY_UNINSTALLED, got %d\n", disp);
 
     DeleteFileA("test.dll");
     DeleteFileA("wine.dll");
@@ -987,8 +985,6 @@ static void test_QueryAssemblyInfo(void)
     HRESULT hr;
     DWORD size;
     ULONG disp;
-    char dllpath[MAX_PATH];
-    UINT len;
 
     static const WCHAR empty[] = {0};
     static const WCHAR commasep[] = {',',' ',0};
@@ -1485,24 +1481,27 @@ static void test_QueryAssemblyInfo(void)
     ok(info.cchBuf == lstrlenW(asmpath) + 1,
        "Expected %d, got %d\n", lstrlenW(asmpath) + 1, info.cchBuf);
 
+    /* no flags, display name is "wine, Version=1.0.0.0" */
+    INIT_ASM_INFO();
+    info.pszCurrentAssemblyPathBuf = NULL;
+    info.cchBuf = 0;
+    lstrcpyW(name, wine);
+    lstrcatW(name, commasep);
+    lstrcatW(name, ver);
+    hr = IAssemblyCache_QueryAssemblyInfo(cache, 0, name, &info);
+    ok(hr == HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER),
+       "Expected HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER), got %08x\n", hr);
+    ok(info.cbAssemblyInfo == sizeof(ASSEMBLY_INFO),
+       "Expected sizeof(ASSEMBLY_INFO), got %d\n", info.cbAssemblyInfo);
+    ok(info.dwAssemblyFlags == ASSEMBLYINFO_FLAG_INSTALLED,
+       "Expected ASSEMBLYINFO_FLAG_INSTALLED, got %08x\n", info.dwAssemblyFlags);
+
     /* uninstall the assembly from the GAC */
     disp = 0xf00dbad;
     hr = IAssemblyCache_UninstallAssembly(cache, 0, wine, NULL, &disp);
-    todo_wine
-    {
-        ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
-        ok(disp == IASSEMBLYCACHE_UNINSTALL_DISPOSITION_UNINSTALLED,
-           "Expected IASSEMBLYCACHE_UNINSTALL_DISPOSITION_UNINSTALLED, got %d\n", disp);
-    }
-
-    /* FIXME: remove once UninstallAssembly is implemented */
-    len = GetWindowsDirectoryA(dllpath, MAX_PATH);
-    strcat(dllpath, "\\assembly\\GAC_MSIL\\wine\\\\1.0.0.0__2d03617b1c31e2f5\\wine.dll");
-    DeleteFileA(dllpath);
-    dllpath[len + sizeof("\\assembly\\GAC_MSIL\\wine\\1.0.0.0__2d03617b1c31e2f5")] = '\0';
-    RemoveDirectoryA(dllpath);
-    dllpath[len + sizeof("\\assembly\\GAC_MSIL\\wine")] = '\0';
-    RemoveDirectoryA(dllpath);
+    ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+    ok(disp == IASSEMBLYCACHE_UNINSTALL_DISPOSITION_UNINSTALLED,
+       "Expected IASSEMBLYCACHE_UNINSTALL_DISPOSITION_UNINSTALLED, got %d\n", disp);
 
     DeleteFileA("test.dll");
     DeleteFileA("wine.dll");
