@@ -253,13 +253,12 @@ BOOL WINAPI GetColorDirectoryA( PCSTR machine, PSTR buffer, PDWORD size )
     {
         ret = GetColorDirectoryW( NULL, NULL, &sizeW );
         *size = sizeW / sizeof(WCHAR);
-        return FALSE;
+        return ret;
     }
 
     sizeW = *size * sizeof(WCHAR);
 
     bufferW = HeapAlloc( GetProcessHeap(), 0, sizeW );
-
     if (bufferW)
     {
         if ((ret = GetColorDirectoryW( NULL, bufferW, &sizeW )))
@@ -594,11 +593,10 @@ BOOL WINAPI GetStandardColorSpaceProfileA( PCSTR machine, DWORD id, PSTR profile
     {
         ret = GetStandardColorSpaceProfileW( NULL, id, NULL, &sizeW );
         *size = sizeW / sizeof(WCHAR);
-        return FALSE;
+        return ret;
     }
 
     profileW = HeapAlloc( GetProcessHeap(), 0, sizeW );
-
     if (profileW)
     {
         if ((ret = GetStandardColorSpaceProfileW( NULL, id, profileW, &sizeW )))
@@ -1475,7 +1473,6 @@ HPROFILE WINAPI OpenColorProfileW( PPROFILE profile, DWORD access, DWORD sharing
             handle = CreateFileW( profile->pProfileData, flags, sharing, NULL, creation, 0, NULL );
         else
         {
-            DWORD size;
             WCHAR *path;
 
             if (!GetColorDirectoryW( NULL, NULL, &size ) && GetLastError() == ERROR_MORE_DATA)
