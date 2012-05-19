@@ -11,6 +11,7 @@ list(APPEND SOURCE
     graphicspath.c
     image.c
     matrix.c
+    metafile.c
     pathiterator.c
     pen.c
     region.c

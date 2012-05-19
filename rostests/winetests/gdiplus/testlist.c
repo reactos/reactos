@@ -13,6 +13,7 @@ extern void func_graphics(void);
 extern void func_graphicspath(void);
 extern void func_image(void);
 extern void func_matrix(void);
+extern void func_metafile(void);
 extern void func_pathiterator(void);
 extern void func_pen(void);
 extern void func_region(void);
@@ -21,12 +22,13 @@ extern void func_stringformat(void);
 const struct test winetest_testlist[] =
 {
     { "brush", func_brush },
-	{ "customlinecap", func_customlinecap },
+    { "customlinecap", func_customlinecap },
     { "font", func_font },
     { "graphics", func_graphics },
     { "graphicspath", func_graphicspath },
     { "image", func_image },
     { "matrix", func_matrix },
+    { "metafile", func_metafile },
     { "pathiterator", func_pathiterator },
     { "pen", func_pen },
     { "region", func_region },
