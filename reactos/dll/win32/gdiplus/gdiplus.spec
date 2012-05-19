@@ -316,7 +316,7 @@
 316 stdcall GdipGetPathGradientCenterPointI(ptr ptr)
 317 stdcall GdipGetPathGradientFocusScales(ptr ptr ptr)
 318 stdcall GdipGetPathGradientGammaCorrection(ptr ptr)
-319 stub GdipGetPathGradientPath
+319 stdcall GdipGetPathGradientPath(ptr ptr)
 320 stdcall GdipGetPathGradientPointCount(ptr ptr)
 321 stdcall GdipGetPathGradientPresetBlend(ptr ptr ptr long)
 322 stdcall GdipGetPathGradientPresetBlendCount(ptr ptr)
@@ -457,9 +457,9 @@
 457 stdcall GdipResetClip(ptr)
 458 stub GdipResetImageAttributes
 459 stdcall GdipResetLineTransform(ptr)
-460 stub GdipResetPageTransform
+460 stdcall GdipResetPageTransform(ptr)
 461 stdcall GdipResetPath(ptr)
-462 stub GdipResetPathGradientTransform
+462 stdcall GdipResetPathGradientTransform(ptr)
 463 stdcall GdipResetPenTransform(ptr)
 464 stdcall GdipResetTextureTransform(ptr)
 465 stdcall GdipResetWorldTransform(ptr)

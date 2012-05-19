@@ -161,6 +161,7 @@ struct GpGraphics{
     UINT textcontrast; /* not used yet. get/set only */
     struct list containers;
     GraphicsContainer contid; /* last-issued container ID */
+    INT origin_x, origin_y;
     /* For giving the caller an HDC when we technically can't: */
     HBITMAP temp_hbitmap;
     int temp_hbitmap_width;
@@ -170,9 +171,7 @@ struct GpGraphics{
 };
 
 struct GpBrush{
-    HBRUSH gdibrush;
     GpBrushType bt;
-    LOGBRUSH lb;
 };
 
 struct GpHatch{
@@ -185,12 +184,11 @@ struct GpHatch{
 struct GpSolidFill{
     GpBrush brush;
     ARGB color;
-    HBITMAP bmp;
 };
 
 struct GpPathGradient{
     GpBrush brush;
-    PathData pathdata;
+    GpPath* path;
     ARGB centercolor;
     GpWrapMode wrap;
     BOOL gamma;
@@ -199,6 +197,12 @@ struct GpPathGradient{
     REAL* blendfac;  /* blend factors */
     REAL* blendpos;  /* blend positions */
     INT blendcount;
+    ARGB *surroundcolors;
+    INT surroundcolorcount;
+    ARGB* pblendcolor; /* preset blend colors */
+    REAL* pblendpos; /* preset blend positions */
+    INT pblendcount;
+    GpMatrix *transform;
 };
 
 struct GpLineGradient{
@@ -327,7 +331,7 @@ struct color_matrix{
 struct color_remap_table{
     BOOL enabled;
     INT mapsize;
-    GDIPCONST ColorMap *colormap;
+    ColorMap *colormap;
 };
 
 struct GpImageAttributes{
@@ -342,11 +346,9 @@ struct GpImageAttributes{
 };
 
 struct GpFont{
-    LOGFONTW lfw;
-    REAL emSize;
-    REAL pixel_size;
-    UINT height;
-    LONG line_spacing;
+    GpFontFamily *family;
+    OUTLINETEXTMETRICW otm;
+    REAL emSize; /* in font units */
     Unit unit;
 };
 
@@ -373,8 +375,9 @@ struct GpFontCollection{
 };
 
 struct GpFontFamily{
-    NEWTEXTMETRICW tmw;
     WCHAR FamilyName[LF_FACESIZE];
+    UINT16 em_height, ascent, descent, line_spacing; /* in font units */
+    int dpi;
 };
 
 /* internal use */
@@ -425,7 +428,8 @@ struct GpRegion{
 typedef GpStatus (*gdip_format_string_callback)(HDC hdc,
     GDIPCONST WCHAR *string, INT index, INT length, GDIPCONST GpFont *font,
     GDIPCONST RectF *rect, GDIPCONST GpStringFormat *format,
-    INT lineno, const RectF *bounds, void *user_data);
+    INT lineno, const RectF *bounds, INT *underlined_indexes,
+    INT underlined_index_count, void *user_data);
 
 GpStatus gdip_format_string(HDC hdc,
     GDIPCONST WCHAR *string, INT length, GDIPCONST GpFont *font,

@@ -62,10 +62,15 @@ GpStatus WINGDIPAPI GdipCreateImageAttributes(GpImageAttributes **imageattr)
 
 GpStatus WINGDIPAPI GdipDisposeImageAttributes(GpImageAttributes *imageattr)
 {
+    int i;
+
     TRACE("(%p)\n", imageattr);
 
     if(!imageattr)
         return InvalidParameter;
+
+    for (i=0; i<ColorAdjustTypeCount; i++)
+        GdipFree(imageattr->colorremaptables[i].colormap);
 
     GdipFree(imageattr);
 
@@ -205,6 +210,8 @@ GpStatus WINGDIPAPI GdipSetImageAttributesRemapTable(GpImageAttributes *imageAtt
     ColorAdjustType type, BOOL enableFlag, UINT mapSize,
     GDIPCONST ColorMap *map)
 {
+    ColorMap *new_map;
+
     TRACE("(%p,%u,%i,%u,%p)\n", imageAttr, type, enableFlag, mapSize, map);
 
     if(!imageAttr || type >= ColorAdjustTypeCount)
@@ -215,8 +222,22 @@ GpStatus WINGDIPAPI GdipSetImageAttributesRemapTable(GpImageAttributes *imageAtt
         if(!map || !mapSize)
 	    return InvalidParameter;
 
+        new_map = GdipAlloc(sizeof(*map) * mapSize);
+
+        if (!new_map)
+            return OutOfMemory;
+
+        memcpy(new_map, map, sizeof(*map) * mapSize);
+
+        GdipFree(imageAttr->colorremaptables[type].colormap);
+
         imageAttr->colorremaptables[type].mapsize = mapSize;
-        imageAttr->colorremaptables[type].colormap = map;
+        imageAttr->colorremaptables[type].colormap = new_map;
+    }
+    else
+    {
+        GdipFree(imageAttr->colorremaptables[type].colormap);
+        imageAttr->colorremaptables[type].colormap = NULL;
     }
 
     imageAttr->colorremaptables[type].enabled = enableFlag;

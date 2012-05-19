@@ -265,15 +265,12 @@ COLORREF ARGB2COLORREF(ARGB color)
 
 HBITMAP ARGB2BMP(ARGB color)
 {
-    HDC hdc;
     BITMAPINFO bi;
     HBITMAP result;
     RGBQUAD *bits;
     int alpha;
 
     if ((color & 0xff000000) == 0xff000000) return 0;
-
-    hdc = CreateCompatibleDC(NULL);
 
     bi.bmiHeader.biSize = sizeof(bi.bmiHeader);
     bi.bmiHeader.biWidth = 1;
@@ -287,14 +284,12 @@ HBITMAP ARGB2BMP(ARGB color)
     bi.bmiHeader.biClrUsed = 0;
     bi.bmiHeader.biClrImportant = 0;
 
-    result = CreateDIBSection(hdc, &bi, DIB_RGB_COLORS, (void*)&bits, NULL, 0);
+    result = CreateDIBSection(0, &bi, DIB_RGB_COLORS, (void*)&bits, NULL, 0);
 
     bits[0].rgbReserved = alpha = (color>>24)&0xff;
     bits[0].rgbRed = ((color>>16)&0xff)*alpha/255;
     bits[0].rgbGreen = ((color>>8)&0xff)*alpha/255;
     bits[0].rgbBlue = (color&0xff)*alpha/255;
-
-    DeleteDC(hdc);
 
     return result;
 }
