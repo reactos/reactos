@@ -2798,6 +2798,19 @@ static void test_ScriptBreak(void)
     hr = ScriptItemize(test, 3, 4, NULL, NULL, items, NULL);
     ok(!hr, "ScriptItemize should return S_OK not %08x\n", hr);
 
+    /*
+     * This Test crashes pre Vista.
+
+    hr = ScriptBreak(test, 1, &items[0].a, NULL);
+    ok(hr == E_INVALIDARG, "ScriptBreak should return E_INVALIDARG not %08x\n", hr);
+    */
+
+    hr = ScriptBreak(test, 0, &items[0].a, &la);
+    ok(hr == E_FAIL || broken(hr == S_OK), "ScriptBreak should return E_FAIL not %08x\n", hr);
+
+    hr = ScriptBreak(test, -1, &items[0].a, &la);
+    ok(hr == E_INVALIDARG || broken(hr == S_OK), "ScriptBreak should return E_INVALIDARG not %08x\n", hr);
+
     memset(&la, 0, sizeof(la));
     hr = ScriptBreak(test, 1, &items[0].a, &la);
     ok(!hr, "ScriptBreak should return S_OK not %08x\n", hr);
