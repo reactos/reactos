@@ -30,7 +30,7 @@
 #include <ndk/psfuncs.h>
 
 #include <lsass/lsasrv.h>
-//#include <samsrv.h>
+#include <samsrv/samsrv.h>
 #include <lsass/lsass.h>
 
 #define NDEBUG
@@ -63,7 +63,6 @@ wWinMain(IN HINSTANCE hInstance,
         goto ByeBye;
     }
 
-#if 0
     /* Initialize the SAM server DLL. */
     Status = SamIInitialize();
     if (!NT_SUCCESS(Status))
@@ -71,7 +70,6 @@ wWinMain(IN HINSTANCE hInstance,
         DPRINT1("SamIInitialize() failed (Status 0x%08lX)\n", Status);
         goto ByeBye;
     }
-#endif
 
     /* FIXME: More initialization */
 
