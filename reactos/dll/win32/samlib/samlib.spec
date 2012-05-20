@@ -4,8 +4,8 @@
 @ stub SamChangePasswordUser2
 @ stub SamChangePasswordUser3
 @ stub SamChangePasswordUser
-@ stub SamCloseHandle
-@ stub SamConnect
+@ stdcall SamCloseHandle(ptr)
+@ stdcall SamConnect(ptr ptr long ptr)
 @ stub SamConnectWithCreds
 @ stub SamCreateAliasInDomain
 @ stub SamCreateGroupInDomain
@@ -49,7 +49,7 @@
 @ stub SamSetInformationUser
 @ stub SamSetMemberAttributesOfGroup
 @ stub SamSetSecurityObject
-@ stub SamShutdownSamServer
+@ stdcall SamShutdownSamServer(ptr)
 @ stub SamTestPrivateFunctionsDomain
 @ stub SamTestPrivateFunctionsUser
 @ stub SamiChangeKeys

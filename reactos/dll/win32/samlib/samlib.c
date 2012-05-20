@@ -578,4 +578,95 @@ SamGetUserSid (PWSTR UserName,
   return TRUE;
 }
 
+void __RPC_FAR * __RPC_USER midl_user_allocate(SIZE_T len)
+{
+    return HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len);
+}
+
+
+void __RPC_USER midl_user_free(void __RPC_FAR * ptr)
+{
+    HeapFree(GetProcessHeap(), 0, ptr);
+}
+
+
+handle_t __RPC_USER
+PSAMPR_SERVER_NAME_bind(PSAMPR_SERVER_NAME pszSystemName)
+{
+    handle_t hBinding = NULL;
+    LPWSTR pszStringBinding;
+    RPC_STATUS status;
+
+//    TRACE("PSAMPR_SERVER_NAME_bind() called\n");
+
+    status = RpcStringBindingComposeW(NULL,
+                                      L"ncacn_np",
+                                      pszSystemName,
+                                      L"\\pipe\\samr",
+                                      NULL,
+                                      &pszStringBinding);
+    if (status)
+    {
+//        TRACE("RpcStringBindingCompose returned 0x%x\n", status);
+        return NULL;
+    }
+
+    /* Set the binding handle that will be used to bind to the server. */
+    status = RpcBindingFromStringBindingW(pszStringBinding,
+                                          &hBinding);
+    if (status)
+    {
+//        TRACE("RpcBindingFromStringBinding returned 0x%x\n", status);
+    }
+
+    status = RpcStringFreeW(&pszStringBinding);
+    if (status)
+    {
+//        TRACE("RpcStringFree returned 0x%x\n", status);
+    }
+
+    return hBinding;
+}
+
+
+void __RPC_USER
+PSAMPR_SERVER_NAME_unbind(PSAMPR_SERVER_NAME pszSystemName,
+                          handle_t hBinding)
+{
+    RPC_STATUS status;
+
+//    TRACE("PSAMPR_SERVER_NAME_unbind() called\n");
+
+    status = RpcBindingFree(&hBinding);
+    if (status)
+    {
+//        TRACE("RpcBindingFree returned 0x%x\n", status);
+    }
+}
+
+
+NTSTATUS
+NTAPI
+SamCloseHandle(IN SAM_HANDLE SamHandle)
+{
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+SamConnect(IN OUT PUNICODE_STRING ServerName,
+           OUT PSAM_HANDLE ServerHandle,
+           IN ACCESS_MASK DesiredAccess,
+           IN POBJECT_ATTRIBUTES ObjectAttributes)
+{
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+SamShutdownSamServer(IN SAM_HANDLE ServerHandle)
+{
+    return STATUS_NOT_IMPLEMENTED;
+}
+
 /* EOF */
