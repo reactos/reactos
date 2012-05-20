@@ -307,7 +307,7 @@ BasepComputeProcessPath(IN PBASE_SEARCH_PATH_TYPE PathOrder,
             }
             break;
 
-        /* Add the current applicaiton path */
+        /* Add the current application path */
         case BaseSearchPathApp:
             if ((AppName) && (AppNameEnd))
             {

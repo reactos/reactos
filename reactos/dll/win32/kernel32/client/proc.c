@@ -778,6 +778,21 @@ BasePushProcessParameters(IN ULONG ParameterFlags,
     if ((Size) && (Size <= (MAX_PATH + 4)))
     {
         /* Get the DLL Path */
+        DllPathString = BaseComputeProcessDllPath(FullPath, lpEnvironment);
+        if (!DllPathString)
+        {
+            /* Fail */
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            return FALSE;
+        }
+
+        /* Initialize Strings */
+        RtlInitUnicodeString(&DllPath, DllPathString);
+        RtlInitUnicodeString(&ImageName, FullPath);
+    }
+    else
+    {
+        /* Couldn't get the path name. Just take the original path */
         DllPathString = BaseComputeProcessDllPath((LPWSTR)ApplicationPathName,
                                                   lpEnvironment);
         if (!DllPathString)
@@ -790,21 +805,6 @@ BasePushProcessParameters(IN ULONG ParameterFlags,
         /* Initialize Strings */
         RtlInitUnicodeString(&DllPath, DllPathString);
         RtlInitUnicodeString(&ImageName, ApplicationPathName);
-    }
-    else
-    {
-        /* Get the DLL Path */
-        DllPathString = BaseComputeProcessDllPath(FullPath, lpEnvironment);
-        if (!DllPathString)
-        {
-            /* Fail */
-            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-            return FALSE;
-        }
-
-        /* Initialize Strings */
-        RtlInitUnicodeString(&DllPath, DllPathString);
-        RtlInitUnicodeString(&ImageName, FullPath);
     }
 
     /* Initialize Strings */
@@ -1656,7 +1656,7 @@ GetStartupInfoA(IN LPSTARTUPINFOA lpStartupInfo)
                         /* Someone beat us to it, use their data instead */
                         StartupInfo = BaseAnsiStartupInfo;
                         Status = STATUS_SUCCESS;
-                        
+
                         /* We're going to free our own stuff, but not raise */
                         RtlFreeAnsiString(&TitleString);
                     }
