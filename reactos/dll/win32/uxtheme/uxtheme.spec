@@ -38,7 +38,7 @@
 46 stub -noname ClassicAdjustWindowRectEx
 48 stub -noname GetThemeParseErrorInfo
 60 stub -noname CreateThemeDataFromObjects
-61 stub -noname OpenThemeDataEx
+61 stdcall OpenThemeDataEx(ptr wstr long)
 62 stub -noname ServerClearStockObjects
 63 stub -noname MarkSelection
 

@@ -136,6 +136,7 @@ BOOL WINAPI IsThemeBackgroundPartiallyTransparent(HTHEME,int,int);
 BOOL WINAPI IsThemeDialogTextureEnabled(HWND);
 BOOL WINAPI IsThemePartDefined(HTHEME,int,int);
 HTHEME WINAPI OpenThemeData(HWND,LPCWSTR);
+HTHEME WINAPI OpenThemeDataEx(HWND,LPCWSTR,DWORD);
 void WINAPI SetThemeAppProperties(DWORD);
 HRESULT WINAPI SetWindowTheme(HWND,LPCWSTR,LPCWSTR);
 #endif
