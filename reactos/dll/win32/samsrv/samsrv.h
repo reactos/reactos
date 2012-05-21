@@ -17,3 +17,8 @@
 #include "sam_s.h"
 
 #include <wine/debug.h>
+
+
+/* setup.c */
+BOOL SampIsSetupRunning(VOID);
+BOOL SampInitializeSAM(VOID);

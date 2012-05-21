@@ -10,4 +10,4 @@
 
 #include "sam_c.h"
 
-#include "debug.h"
+#include <wine/debug.h>

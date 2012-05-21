@@ -27,9 +27,6 @@
 
 
 BOOL WINAPI
-SamInitializeSAM (VOID);
-
-BOOL WINAPI
 SamCreateUser (PWSTR UserName,
 	       PWSTR UserPassword,
 	       PSID UserSid);

@@ -29,9 +29,15 @@ NTSTATUS
 NTAPI
 SamIInitialize(VOID)
 {
+    NTSTATUS Status = STATUS_SUCCESS;
+
     TRACE("SamIInitialize() called\n");
 
-    return STATUS_SUCCESS;
+    if (SampIsSetupRunning())
+        Status = SampInitializeRegistry();
+
+
+    return Status;
 }
 
 
@@ -40,6 +46,8 @@ NTAPI
 SampInitializeRegistry(VOID)
 {
     TRACE("SampInitializeRegistry() called\n");
+
+    SampInitializeSAM();
 
     return STATUS_SUCCESS;
 }

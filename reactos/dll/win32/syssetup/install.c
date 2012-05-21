@@ -893,13 +893,6 @@ InstallReactOS(HINSTANCE hInstance)
         return 0;
     }
 
-    /* Initialize the Security Account Manager (SAM) */
-    if (!SamInitializeSAM())
-    {
-        FatalError("SamInitializeSAM() failed!");
-        return 0;
-    }
-
     /* Create the semi-random Domain-SID */
     if (!CreateRandomSid(&DomainSid))
     {
