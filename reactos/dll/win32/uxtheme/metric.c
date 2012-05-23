@@ -74,7 +74,7 @@ COLORREF WINAPI GetThemeSysColor(HTHEME hTheme, int iColorID)
                 SetLastError(hr);
        }
     }
-    return GetSysColor(iColorID - TMT_FIRSTCOLOR);
+    return GetSysColor(iColorID);
 }
 
 /***********************************************************************
@@ -105,7 +105,7 @@ HRESULT WINAPI GetThemeSysFont(HTHEME hTheme, int iFontID, LOGFONTW *plf)
        }
     }
     if(iFontID == TMT_ICONTITLEFONT) {
-        if(!SystemParametersInfoW(SPI_GETICONTITLELOGFONT, sizeof(LOGFONTW), &plf, 0))
+        if(!SystemParametersInfoW(SPI_GETICONTITLELOGFONT, sizeof(LOGFONTW), plf, 0))
             return HRESULT_FROM_WIN32(GetLastError());
     }
     else {
