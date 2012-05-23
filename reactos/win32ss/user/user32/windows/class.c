@@ -13,6 +13,167 @@
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(user32);
 
+/* From rtl/actctx.c and must match! */
+struct entity
+{
+    DWORD  kind;  // Activation context type
+    WCHAR *name;  // Class name
+    WCHAR *clsid; // Not supported yet but needed for menu name.
+};
+
+struct dll_redirect
+{
+    WCHAR *name; // Dll name
+    WCHAR *hash;
+    DWORD  Data; // Junk
+};
+
+LPCWSTR
+FASTCALL
+ClassNameToVersion(
+  LPCTSTR lpszClass,
+  LPCWSTR lpszMenuName,
+  LPCWSTR *plpLibFileName,
+  HANDLE *pContext,
+  BOOL bAnsi)
+{
+   NTSTATUS Status;
+   UNICODE_STRING SectionName;
+   WCHAR SeactionNameBuf[256] = {0};
+   ACTCTX_SECTION_KEYED_DATA KeyedData = { sizeof(KeyedData) };
+
+   if (IS_ATOM(lpszClass))
+   {
+      SectionName.Buffer = (LPWSTR)&SeactionNameBuf;
+      SectionName.MaximumLength = sizeof(SeactionNameBuf);
+      if(!NtUserGetAtomName(LOWORD((DWORD_PTR)lpszClass), &SectionName))
+      {
+         return NULL;
+      }
+   }
+   else
+  {
+      if (bAnsi)
+      {
+         RtlCreateUnicodeStringFromAsciiz(&SectionName, (LPSTR)lpszClass);
+      }
+      else
+      {
+         RtlInitUnicodeString(&SectionName, lpszClass);
+      }
+   }
+   Status = RtlFindActivationContextSectionString( FIND_ACTCTX_SECTION_KEY_RETURN_HACTCTX,
+                                                   NULL,
+                                                   ACTIVATION_CONTEXT_SECTION_WINDOW_CLASS_REDIRECTION,
+                                                  &SectionName,
+                                                  &KeyedData );
+ 
+   if (NT_SUCCESS(Status) && KeyedData.ulDataFormatVersion == 1)
+   {
+      struct dll_redirect *dll = KeyedData.lpSectionBase;
+
+      if (plpLibFileName) *plpLibFileName = dll->name;
+
+      if (lpszMenuName)
+      {
+         WCHAR * mnubuf;
+         LPWSTR mnuNameW;
+         LPSTR mnuNameA;
+         int len = 0;
+         struct entity *entity = KeyedData.lpData;
+
+         FIXME("actctx: Needs to support menu name from redirected class!");
+
+         if (entity->clsid)
+         {
+            mnubuf = entity->clsid;
+            if (bAnsi)
+            {
+               mnuNameA = (LPSTR)lpszMenuName;
+               RtlUnicodeToMultiByteN( mnuNameA, 255, (PULONG)&len, mnubuf, strlenW(mnubuf) * sizeof(WCHAR) );
+               mnuNameA[len] = 0;
+            }
+            else
+            {
+               mnuNameW = (LPWSTR)lpszMenuName;
+               len = strlenW(mnubuf) * sizeof(WCHAR);
+               RtlCopyMemory((void *)mnuNameW, mnubuf, len);
+               mnuNameW[len] = 0;
+            }
+         }
+      }
+      if (pContext) *pContext = KeyedData.hActCtx;
+   }
+
+   if (!IS_ATOM(lpszClass) && bAnsi)
+      RtlFreeUnicodeString(&SectionName);
+   if (KeyedData.hActCtx)
+      RtlReleaseActivationContext(KeyedData.hActCtx);
+
+   return lpszClass;
+}
+
+BOOL
+FASTCALL
+VersionRegisterClass(
+  PCWSTR pszClass,
+  LPCWSTR lpLibFileName,
+  HANDLE Contex,
+  HMODULE * phLibModule)
+{
+   BOOL Ret;
+   HMODULE hLibModule;
+   PREGISTERCLASSNAMEW pRegisterClassNameW;
+   UNICODE_STRING ClassName;
+   WCHAR ClassNameBuf[256] = {0};
+   RTL_CALLER_ALLOCATED_ACTIVATION_CONTEXT_STACK_FRAME_EXTENDED Frame = { sizeof(Frame), 1 };
+
+   RtlActivateActivationContextUnsafeFast(&Frame, Contex);
+
+   Ret = FALSE;
+   hLibModule = NULL;
+
+   _SEH2_TRY
+   {
+      hLibModule = LoadLibraryW(lpLibFileName);
+      if ( hLibModule )
+      {
+         if ((pRegisterClassNameW = (void*) GetProcAddress(hLibModule, "RegisterClassNameW")))
+         {
+            if (IS_ATOM(pszClass))
+            {
+               ClassName.Buffer = (LPWSTR)&ClassNameBuf;
+               ClassName.MaximumLength = sizeof(ClassNameBuf);
+               if (!NtUserGetAtomName(LOWORD((DWORD_PTR)pszClass), &ClassName))
+               {
+                  _SEH2_YIELD(goto Error_Exit);
+               }
+               pszClass = (PCWSTR)&ClassNameBuf;
+            }
+            Ret = pRegisterClassNameW(pszClass);
+         }
+      }
+   }
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+   {
+   }
+   _SEH2_END
+
+Error_Exit:
+   if ( Ret || !hLibModule )
+   {
+      if ( phLibModule ) *phLibModule = hLibModule;  
+   }
+   else
+   {
+      DWORD save_error = GetLastError();
+      FreeLibrary(hLibModule);
+      SetLastError(save_error);
+   }
+                                  
+   return Ret;
+}
+
 /*
  * @implemented
  */
