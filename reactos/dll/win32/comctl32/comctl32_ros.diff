@@ -222,6 +222,23 @@ Index: commctrl.c
  }
  
  /***********************************************************************
+@@ -1821,3 +1821,15 @@
+     if (pfVerificationFlagChecked) *pfVerificationFlagChecked = TRUE;
+     return S_OK;
+ }
++
++/***********************************************************************
++ * RegisterClassNameW [COMCTL32.@]
++ *
++ * Register window class again while using as SxS module.
++ */
++BOOLEAN WINAPI RegisterClassNameW(LPCWSTR className)
++{
++    /* FIXME: actually register redirected user32 class,
++              comctl32 classes are registered by this module anyway */
++    return TRUE;
++}
+
 Index: propsheet.c
 ===================================================================
 --- propsheet.c	(revision 38890)
@@ -470,3 +487,15 @@ Index: monthcal.c
 
  /* Prev/Next buttons */
  enum nav_direction
+Index: comctl32.spec
+===================================================================
+--- comctl32.spec       (revision 56653)
++++ comctl32.spec       (working copy)
+@@ -188,6 +188,7 @@
+ @ stdcall PropertySheet(ptr) PropertySheetA
+ @ stdcall PropertySheetA(ptr)
+ @ stdcall PropertySheetW(ptr)
++@ stdcall RegisterClassNameW(wstr)
+ @ stdcall TaskDialogIndirect(ptr ptr ptr ptr)
+ @ stdcall UninitializeFlatSB(long)
+ @ stdcall _TrackMouseEvent(ptr)

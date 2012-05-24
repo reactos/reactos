@@ -1821,3 +1821,15 @@ HRESULT WINAPI TaskDialogIndirect(const TASKDIALOGCONFIG *pTaskConfig, int *pnBu
     if (pfVerificationFlagChecked) *pfVerificationFlagChecked = TRUE;
     return S_OK;
 }
+
+/***********************************************************************
+ * RegisterClassNameW [COMCTL32.@]
+ *
+ * Register window class again while using as SxS module.
+ */
+BOOLEAN WINAPI RegisterClassNameW(LPCWSTR className)
+{
+    /* FIXME: actually register redirected user32 class,
+              comctl32 classes are registered by this module anyway */
+    return TRUE;
+}
