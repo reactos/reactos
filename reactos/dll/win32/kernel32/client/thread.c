@@ -153,13 +153,13 @@ CreateThread(IN LPSECURITY_ATTRIBUTES lpThreadAttributes,
  */
 HANDLE
 WINAPI
-CreateRemoteThread(HANDLE hProcess,
-                   LPSECURITY_ATTRIBUTES lpThreadAttributes,
-                   DWORD dwStackSize,
-                   LPTHREAD_START_ROUTINE lpStartAddress,
-                   LPVOID lpParameter,
-                   DWORD dwCreationFlags,
-                   LPDWORD lpThreadId)
+CreateRemoteThread(IN HANDLE hProcess,
+                   IN LPSECURITY_ATTRIBUTES lpThreadAttributes,
+                   IN DWORD dwStackSize,
+                   IN LPTHREAD_START_ROUTINE lpStartAddress,
+                   IN LPVOID lpParameter,
+                   IN DWORD dwCreationFlags,
+                   OUT LPDWORD lpThreadId)
 {
     NTSTATUS Status;
     INITIAL_TEB InitialTeb;
@@ -169,7 +169,12 @@ CreateRemoteThread(HANDLE hProcess,
     POBJECT_ATTRIBUTES ObjectAttributes;
     HANDLE hThread;
     ULONG Dummy;
-
+    PTEB Teb;
+    THREAD_BASIC_INFORMATION ThreadBasicInfo;
+    PVOID ActivationContextStack = NULL;
+    ACTIVATION_CONTEXT_BASIC_INFORMATION ActCtxInfo;
+    ULONG_PTR Cookie;
+    ULONG ReturnLength;
     DPRINT("CreateRemoteThread: hProcess: %ld dwStackSize: %ld lpStartAddress"
             ": %p lpParameter: %lx, dwCreationFlags: %lx\n", hProcess,
             dwStackSize, lpStartAddress, lpParameter, dwCreationFlags);
@@ -182,10 +187,10 @@ CreateRemoteThread(HANDLE hProcess,
 
     /* Create the Stack */
     Status = BaseCreateStack(hProcess,
-                              dwStackSize,
-                              dwCreationFlags & STACK_SIZE_PARAM_IS_A_RESERVATION ?
-                              dwStackSize : 0,
-                              &InitialTeb);
+                             dwStackSize,
+                             dwCreationFlags & STACK_SIZE_PARAM_IS_A_RESERVATION ?
+                             dwStackSize : 0,
+                             &InitialTeb);
     if(!NT_SUCCESS(Status))
     {
         BaseSetLastNTError(Status);
@@ -194,15 +199,15 @@ CreateRemoteThread(HANDLE hProcess,
 
     /* Create Initial Context */
     BaseInitializeContext(&Context,
-                           lpParameter,
-                           lpStartAddress,
-                           InitialTeb.StackBase,
-                           1);
+                          lpParameter,
+                          lpStartAddress,
+                          InitialTeb.StackBase,
+                          1);
 
     /* initialize the attributes for the thread object */
     ObjectAttributes = BaseFormatObjectAttributes(&LocalObjectAttributes,
-                                                    lpThreadAttributes,
-                                                    NULL);
+                                                  lpThreadAttributes,
+                                                  NULL);
 
     /* Create the Kernel Thread Object */
     Status = NtCreateThread(&hThread,
@@ -213,8 +218,9 @@ CreateRemoteThread(HANDLE hProcess,
                             &Context,
                             &InitialTeb,
                             TRUE);
-    if(!NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status))
     {
+        /* Fail the kernel create */
         BaseFreeThreadStack(hProcess, &InitialTeb);
         BaseSetLastNTError(Status);
         return NULL;
@@ -223,71 +229,82 @@ CreateRemoteThread(HANDLE hProcess,
     /* Are we in the same process? */
     if (hProcess == NtCurrentProcess())
     {
-        PTEB Teb;
-        PVOID ActivationContextStack = NULL;
-        THREAD_BASIC_INFORMATION ThreadBasicInfo;
-#ifndef SXS_SUPPORT_FIXME
-        ACTIVATION_CONTEXT_BASIC_INFORMATION ActivationCtxInfo;
-        ULONG_PTR Cookie;
-#endif
-        ULONG retLen;
-
         /* Get the TEB */
         Status = NtQueryInformationThread(hThread,
                                           ThreadBasicInformation,
                                           &ThreadBasicInfo,
                                           sizeof(ThreadBasicInfo),
-                                          &retLen);
-        if (NT_SUCCESS(Status))
+                                          &ReturnLength);
+        if (!NT_SUCCESS(Status))
         {
-            /* Allocate the Activation Context Stack */
-            Status = RtlAllocateActivationContextStack(&ActivationContextStack);
+            /* Fail */
+            DbgPrint("SXS: %s - Failing thread create because "
+                     "NtQueryInformationThread() failed with status %08lx\n",
+                     __FUNCTION__, Status);
+            while (TRUE);
         }
 
-        if (NT_SUCCESS(Status))
+        /* Allocate the Activation Context Stack */
+        Status = RtlAllocateActivationContextStack(&ActivationContextStack);
+        if (!NT_SUCCESS(Status))
         {
-            Teb = ThreadBasicInfo.TebBaseAddress;
+            /* Fail */
+            DbgPrint("SXS: %s - Failing thread create because "
+                     "RtlAllocateActivationContextStack() failed with status %08lx\n",
+                     __FUNCTION__, Status);
+            while (TRUE);
+        }
 
-            /* Save it */
-            Teb->ActivationContextStackPointer = ActivationContextStack;
-#ifndef SXS_SUPPORT_FIXME
-            /* Query the Context */
-            Status = RtlQueryInformationActivationContext(1,
-                                                          0,
-                                                          NULL,
-                                                          ActivationContextBasicInformation,
-                                                          &ActivationCtxInfo,
-                                                          sizeof(ActivationCtxInfo),
-                                                          &retLen);
-            if (NT_SUCCESS(Status))
+        /* Save it */
+        Teb = ThreadBasicInfo.TebBaseAddress;
+        Teb->ActivationContextStackPointer = ActivationContextStack;
+
+        /* Query the Context */
+         // WARNING!!! THIS IS USING THE WIN32 FLAG BECAUSE REACTOS CONTINUES TO BE A POS!!! ///
+        Status = RtlQueryInformationActivationContext(QUERY_ACTCTX_FLAG_USE_ACTIVE_ACTCTX,
+                                                      NULL,
+                                                      0,
+                                                      ActivationContextBasicInformation,
+                                                      &ActCtxInfo,
+                                                      sizeof(ActCtxInfo),
+                                                      &ReturnLength);
+        if (!NT_SUCCESS(Status))
+        {
+            /* Fail */
+            DbgPrint("SXS: %s - Failing thread create because "
+                     "RtlQueryInformationActivationContext() failed with status %08lx\n",
+                     __FUNCTION__, Status);
+            while (TRUE);
+        }
+
+        /* Does it need to be activated? */
+        if ((ActCtxInfo.hActCtx) && !(ActCtxInfo.dwFlags & 1))
+        {
+            /* Activate it */
+            Status = RtlActivateActivationContextEx(RTL_ACTIVATE_ACTIVATION_CONTEXT_EX_FLAG_RELEASE_ON_STACK_DEALLOCATION,
+                                                    Teb,
+                                                    ActCtxInfo.hActCtx,
+                                                    &Cookie);
+            if (!NT_SUCCESS(Status))
             {
-                /* Does it need to be activated? */
-                if (!ActivationCtxInfo.hActCtx)
-                {
-                    /* Activate it */
-                    Status = RtlActivateActivationContext(1,
-                                                          ActivationCtxInfo.hActCtx,
-                                                          &Cookie);
-                    if (!NT_SUCCESS(Status))
-                        DPRINT1("RtlActivateActivationContext failed %x\n", Status);
-                }
+                /* Fail */
+                DbgPrint("SXS: %s - Failing thread create because "
+                         "RtlActivateActivationContextEx() failed with status %08lx\n",
+                         __FUNCTION__, Status);
+                while (TRUE);
             }
-            else
-                DPRINT1("RtlQueryInformationActivationContext failed %x\n", Status);
-#endif
         }
-        else
-            DPRINT1("RtlAllocateActivationContextStack failed %x\n", Status);
     }
 
     /* Notify CSR */
     if (!BaseRunningInServerProcess)
     {
+        /* Notify CSR */
         Status = BasepNotifyCsrOfThread(hThread, &ClientId);
+        ASSERT(NT_SUCCESS(Status));
     }
     else
     {
-        DPRINT("Server thread in Server. Handle: %lx\n", hProcess);
         if (hProcess != NtCurrentProcess())
         {
             PCSR_CREATE_REMOTE_THREAD CsrCreateRemoteThread;
@@ -300,23 +317,16 @@ CreateRemoteThread(HANDLE hProcess,
             {
                 /* Call it instead of going through LPC */
                 Status = CsrCreateRemoteThread(hThread, &ClientId);
+                ASSERT(NT_SUCCESS(Status));
             }
         }
     }
 
-    if (!NT_SUCCESS(Status))
-    {
-        ASSERT(FALSE);
-    }
-
     /* Success */
-    if(lpThreadId) *lpThreadId = HandleToUlong(ClientId.UniqueThread);
+    if (lpThreadId) *lpThreadId = HandleToUlong(ClientId.UniqueThread);
 
     /* Resume it if asked */
-    if (!(dwCreationFlags & CREATE_SUSPENDED))
-    {
-        NtResumeThread(hThread, &Dummy);
-    }
+    if (!(dwCreationFlags & CREATE_SUSPENDED)) NtResumeThread(hThread, &Dummy);
 
     /* Return handle to thread */
     return hThread;
