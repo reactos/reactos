@@ -81,6 +81,12 @@ Author:
                                                             0x1
 
 //
+// RtlActivateActivationContextEx Flags
+//
+#define RTL_ACTIVATE_ACTIVATION_CONTEXT_EX_FLAG_RELEASE_ON_STACK_DEALLOCATION \
+                                                            0x1
+
+//
 // Public Heap Flags
 //
 #if !defined(NTOS_MODE_USER) && !defined(_NTIFS_)
