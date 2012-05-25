@@ -1711,7 +1711,7 @@ co_WinPosSetWindowPos(
       }
    }
 
-   if (!(WinPos.flags & SWP_NOACTIVATE))//(SWP_NOACTIVATE|SWP_HIDEWINDOW)))
+   if (!(WinPos.flags & (SWP_NOACTIVATE|SWP_HIDEWINDOW)))
    {
       if ((Window->style & (WS_CHILD | WS_POPUP)) == WS_CHILD)
       {
@@ -1848,6 +1848,15 @@ co_WinPosShowWindow(PWND Wnd, INT Cmd)
             Swp |= SWP_NOACTIVATE;
             if (!(style & WS_MINIMIZE))
             {
+               // Fix wine Win test_SetFocus todo #1 & #2,
+               if (Cmd == SW_SHOWMINIMIZED)
+               {
+                  if ((style & (WS_CHILD | WS_POPUP)) == WS_CHILD)
+                     co_UserSetFocus(Wnd->spwndParent);
+                  else
+                     co_UserSetFocus(0);
+               }
+
                Swp |= co_WinPosMinMaximize(Wnd, SW_MINIMIZE, &NewPos) |
                       SWP_FRAMECHANGED;
             }
@@ -1965,7 +1974,7 @@ co_WinPosShowWindow(PWND Wnd, INT Cmd)
       {
          Parent = Wnd->spwndParent;
          if (Wnd->spwndParent == UserGetDesktopWindow()) Parent = 0;
-            co_UserSetFocus(Parent);
+         co_UserSetFocus(Parent);
       }
    }
 
@@ -1978,8 +1987,12 @@ co_WinPosShowWindow(PWND Wnd, INT Cmd)
    }
 
    /* if previous state was minimized Windows sets focus to the window */
-   if (style & WS_MINIMIZE) co_UserSetFocus(Wnd);
-
+   if (style & WS_MINIMIZE)
+   {
+      co_UserSetFocus(Wnd);
+      // Fix wine Win test_SetFocus todo #3,
+      if (!(style & WS_CHILD)) co_IntSendMessageNoWait(UserHMGetHandle(Wnd), WM_ACTIVATE, WA_ACTIVE, 0);
+   }
    return(WasVisible);
 }
 
