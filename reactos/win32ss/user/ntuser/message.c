@@ -601,7 +601,7 @@ static LRESULT handle_internal_message( PWND pWnd, UINT msg, WPARAM wparam, LPAR
          pWnd == UserGetMessageWindow() )  // pWnd->fnid == FNID_MESSAGEWND
        return 0;
 
-    ERR("Internal Event Msg %p\n",msg);
+    TRACE("Internal Event Msg %p\n",msg);
 
     switch(msg)
     {
@@ -1257,7 +1257,7 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
 
         if (Msg & 0x80000000)
         {
-           ERR("SMTS: Internal Message!\n");
+           TRACE("SMTS: Internal Message!\n");
            Result = (ULONG_PTR)handle_internal_message( Window, Msg, wParam, lParam );
            if (uResult) *uResult = Result;
            RETURN( TRUE);
