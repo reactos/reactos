@@ -27,7 +27,7 @@ UrbCompletion(
     // Get the original Irp
     //
     OriginalIrp = (PIRP)Context;
-    
+
     //
     // Update it to match what was returned for the IRP that was passed to RootHub
     //
@@ -224,7 +224,7 @@ USBHUB_PdoHandleInternalDeviceControl(
             //
             Urb = (PURB)Stack->Parameters.Others.Argument1;
             ASSERT(Urb);
-            
+
             //
             // Set the real device handle
             //
@@ -274,10 +274,13 @@ USBHUB_PdoHandleInternalDeviceControl(
                     }
                 */
                     break;
-                            
+
                 }
                 case URB_FUNCTION_CLASS_INTERFACE:
                     DPRINT1("URB_FUNCTION_CLASS_INTERFACE\n");
+                    break;
+                case URB_FUNCTION_VENDOR_DEVICE:
+                    DPRINT1("URB_FUNCTION_VENDOR_DEVICE\n");
                     break;
                 default:
                     DPRINT1("IOCTL_INTERNAL_USB_SUBMIT_URB Function %x NOT IMPLEMENTED\n", Urb->UrbHeader.Function);
@@ -323,11 +326,11 @@ USBHUB_PdoHandleInternalDeviceControl(
                         *PortStatusBits +=
                             (((PortStatus.Status & USB_PORT_STATUS_CONNECT) << 1) << ((PortId - 1) * 2)) +
                             (((PortStatus.Status & USB_PORT_STATUS_ENABLE) >> 1) << ((PortId - 1) * 2));
-                        
+
                     }
                 }
             }
-            
+
             DPRINT1("Arg1 %x\n", *PortStatusBits);
             Status = STATUS_SUCCESS;
             break;
@@ -609,7 +612,7 @@ USBHUB_PdoHandlePnp(
         case IRP_MN_QUERY_RESOURCE_REQUIREMENTS:
         {
             DPRINT("IRP_MJ_PNP / IRP_MN_QUERY_RESOURCE_REQUIREMENTS\n");
-            
+
             Information = Irp->IoStatus.Information;
             Status = Irp->IoStatus.Status;
             break;
