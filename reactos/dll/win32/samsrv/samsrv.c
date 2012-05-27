@@ -34,8 +34,19 @@ SamIInitialize(VOID)
     TRACE("SamIInitialize() called\n");
 
     if (SampIsSetupRunning())
+    {
         Status = SampInitializeRegistry();
+        if (!NT_SUCCESS(Status))
+            return Status;
+    }
 
+    /* Initialize the SAM database */
+    Status = SampInitDatabase();
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    /* Start the RPC server */
+    SampStartRpcServer();
 
     return Status;
 }

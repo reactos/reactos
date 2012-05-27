@@ -13,8 +13,48 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(samsrv);
 
+/* GLOBALS ********************************************************************/
+
+static SID_IDENTIFIER_AUTHORITY NtSidAuthority = {SECURITY_NT_AUTHORITY};
 
 /* FUNCTIONS ***************************************************************/
+
+VOID
+SampStartRpcServer(VOID)
+{
+    RPC_STATUS Status;
+
+    TRACE("SampStartRpcServer() called\n");
+
+    Status = RpcServerUseProtseqEpW(L"ncacn_np",
+                                    10,
+                                    L"\\pipe\\samr",
+                                    NULL);
+    if (Status != RPC_S_OK)
+    {
+        WARN("RpcServerUseProtseqEpW() failed (Status %lx)\n", Status);
+        return;
+    }
+
+    Status = RpcServerRegisterIf(samr_v1_0_s_ifspec,
+                                 NULL,
+                                 NULL);
+    if (Status != RPC_S_OK)
+    {
+        WARN("RpcServerRegisterIf() failed (Status %lx)\n", Status);
+        return;
+    }
+
+    Status = RpcServerListen(1, 20, TRUE);
+    if (Status != RPC_S_OK)
+    {
+        WARN("RpcServerListen() failed (Status %lx)\n", Status);
+        return;
+    }
+
+    TRACE("SampStartRpcServer() done\n");
+}
+
 
 void __RPC_FAR * __RPC_USER midl_user_allocate(SIZE_T len)
 {
@@ -38,8 +78,24 @@ SamrConnect(IN PSAMPR_SERVER_NAME ServerName,
             OUT SAMPR_HANDLE *ServerHandle,
             IN ACCESS_MASK DesiredAccess)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PSAM_DB_OBJECT ServerObject;
+    NTSTATUS Status;
+
+    TRACE("SamrConnect(%p %p %lx)\n",
+          ServerName, ServerHandle, DesiredAccess);
+
+    Status = SampOpenDbObject(NULL,
+                              NULL,
+                              L"SAM",
+                              SamDbServerObject,
+                              DesiredAccess,
+                              &ServerObject);
+    if (NT_SUCCESS(Status))
+        *ServerHandle = (SAMPR_HANDLE)ServerObject;
+
+    TRACE("SamrConnect done (Status 0x%08lx)\n", Status);
+
+    return Status;
 }
 
 /* Function 1 */
@@ -47,8 +103,24 @@ NTSTATUS
 NTAPI
 SamrCloseHandle(IN OUT SAMPR_HANDLE *SamHandle)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PSAM_DB_OBJECT DbObject;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    TRACE("SamrCloseHandle(%p)\n", SamHandle);
+
+    Status = SampValidateDbObject(*SamHandle,
+                                  SamDbIgnoreObject,
+                                  0,
+                                  &DbObject);
+    if (Status == STATUS_SUCCESS)
+    {
+        Status = SampCloseDbObject(DbObject);
+        *SamHandle = NULL;
+    }
+
+    TRACE("SamrCloseHandle done (Status 0x%08lx)\n", Status);
+
+    return Status;
 }
 
 /* Function 2 */
@@ -114,8 +186,67 @@ SamrOpenDomain(IN SAMPR_HANDLE ServerHandle,
                IN PRPC_SID DomainId,
                OUT SAMPR_HANDLE *DomainHandle)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PSAM_DB_OBJECT ServerObject;
+    PSAM_DB_OBJECT DomainObject;
+    NTSTATUS Status;
+
+    TRACE("SamrOpenDomain(%p %lx %p %p)\n",
+          ServerHandle, DesiredAccess, DomainId, DomainHandle);
+
+    Status = SampValidateDbObject(ServerHandle,
+                                  SamDbServerObject,
+                                  SAM_SERVER_LOOKUP_DOMAIN,
+                                  &ServerObject);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    /* Validate the Domain SID */
+    if ((DomainId->Revision != SID_REVISION) ||
+        (DomainId->SubAuthorityCount > SID_MAX_SUB_AUTHORITIES) ||
+        (memcmp(&DomainId->IdentifierAuthority, &NtSidAuthority, sizeof(SID_IDENTIFIER_AUTHORITY)) != 0))
+        return STATUS_INVALID_PARAMETER;
+
+    /* Open the domain object */
+    if ((DomainId->SubAuthorityCount == 1) &&
+        (DomainId->SubAuthority[0] == SECURITY_BUILTIN_DOMAIN_RID))
+    {
+        /* Builtin domain object */
+        TRACE("Opening the builtin domain object.\n");
+
+        Status = SampOpenDbObject(ServerObject,
+                                  L"Domains",
+                                  L"Builtin",
+                                  SamDbServerObject,
+                                  DesiredAccess,
+                                  &DomainObject);
+    }
+    else if ((DomainId->SubAuthorityCount == 4) &&
+             (DomainId->SubAuthority[0] == SECURITY_NT_NON_UNIQUE))
+    {
+        /* Account domain object */
+        TRACE("Opening the account domain object.\n");
+
+        /* FIXME: Check the account domain sub authorities!!! */
+
+        Status = SampOpenDbObject(ServerObject,
+                                  L"Domains",
+                                  L"Account",
+                                  SamDbServerObject,
+                                  DesiredAccess,
+                                  &DomainObject);
+    }
+    else
+    {
+        /* No vaild domain SID */
+        Status = STATUS_INVALID_PARAMETER;
+    }
+
+    if (NT_SUCCESS(Status))
+        *DomainHandle = (SAMPR_HANDLE)DomainObject;
+
+    TRACE("SamrOpenDomain done (Status 0x%08lx)\n", Status);
+
+    return Status;
 }
 
 /* Function 8 */
@@ -168,7 +299,7 @@ SamrEnumerateGroupsInDomain(IN SAMPR_HANDLE DomainHandle,
 
 /* Function 12 */
 NTSTATUS
-__stdcall
+NTAPI
 SamrCreateUserInDomain(IN SAMPR_HANDLE DomainHandle,
                        IN PRPC_UNICODE_STRING Name,
                        IN ACCESS_MASK DesiredAccess,
@@ -181,7 +312,7 @@ SamrCreateUserInDomain(IN SAMPR_HANDLE DomainHandle,
 
 /* Function 13 */
 NTSTATUS
-__stdcall
+NTAPI
 SamrEnumerateUsersInDomain(IN SAMPR_HANDLE DomainHandle,
                            IN OUT unsigned long *EnumerationContext,
                            IN unsigned long UserAccountControl,
@@ -195,7 +326,7 @@ SamrEnumerateUsersInDomain(IN SAMPR_HANDLE DomainHandle,
 
 /* Function 14 */
 NTSTATUS
-__stdcall
+NTAPI
 SamrCreateAliasInDomain(IN SAMPR_HANDLE DomainHandle,
                         IN PRPC_UNICODE_STRING AccountName,
                         IN ACCESS_MASK DesiredAccess,
@@ -208,7 +339,7 @@ SamrCreateAliasInDomain(IN SAMPR_HANDLE DomainHandle,
 
 /* Function 15 */
 NTSTATUS
-__stdcall
+NTAPI
 SamrEnumerateAliasesInDomain(IN SAMPR_HANDLE DomainHandle,
                              IN OUT unsigned long *EnumerationContext,
                              OUT PSAMPR_ENUMERATION_BUFFER *Buffer,
@@ -221,7 +352,7 @@ SamrEnumerateAliasesInDomain(IN SAMPR_HANDLE DomainHandle,
 
 /* Function 16 */
 NTSTATUS
-__stdcall
+NTAPI
 SamrGetAliasMembership(IN SAMPR_HANDLE DomainHandle,
                        IN PSAMPR_PSID_ARRAY SidArray,
                        OUT PSAMPR_ULONG_ARRAY Membership)
@@ -232,7 +363,7 @@ SamrGetAliasMembership(IN SAMPR_HANDLE DomainHandle,
 
 /* Function 17 */
 NTSTATUS
-__stdcall
+NTAPI
 SamrLookupNamesInDomain(IN SAMPR_HANDLE DomainHandle,
                         IN unsigned long Count,
                         IN RPC_UNICODE_STRING Names[],
@@ -245,7 +376,7 @@ SamrLookupNamesInDomain(IN SAMPR_HANDLE DomainHandle,
 
 /* Function 18 */
 NTSTATUS
-__stdcall
+NTAPI
 SamrLookupIdsInDomain(IN SAMPR_HANDLE DomainHandle,
                       IN unsigned long Count,
                       IN unsigned long *RelativeIds,
@@ -258,7 +389,7 @@ SamrLookupIdsInDomain(IN SAMPR_HANDLE DomainHandle,
 
 /* Function 19 */
 NTSTATUS
-__stdcall
+NTAPI
 SamrOpenGroup(IN SAMPR_HANDLE DomainHandle,
               IN ACCESS_MASK DesiredAccess,
               IN unsigned long GroupId,
@@ -270,7 +401,7 @@ SamrOpenGroup(IN SAMPR_HANDLE DomainHandle,
 
 /* Function 20 */
 NTSTATUS
-__stdcall
+NTAPI
 SamrQueryInformationGroup(IN SAMPR_HANDLE GroupHandle,
                           IN GROUP_INFORMATION_CLASS GroupInformationClass,
                           OUT PSAMPR_GROUP_INFO_BUFFER *Buffer)
@@ -281,7 +412,7 @@ SamrQueryInformationGroup(IN SAMPR_HANDLE GroupHandle,
 
 /* Function 21 */
 NTSTATUS
-__stdcall
+NTAPI
 SamrSetInformationGroup(IN SAMPR_HANDLE GroupHandle,
                         IN GROUP_INFORMATION_CLASS GroupInformationClass,
                         IN PSAMPR_GROUP_INFO_BUFFER Buffer)

@@ -387,7 +387,21 @@ NTSTATUS
 NTAPI
 SamCloseHandle(IN SAM_HANDLE SamHandle)
 {
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status;
+
+    TRACE("SamCloseHandle(%p)\n", SamHandle);
+
+    RpcTryExcept
+    {
+        Status = SamrCloseHandle((SAMPR_HANDLE *)&SamHandle);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
 }
 
 NTSTATUS
@@ -397,7 +411,52 @@ SamConnect(IN OUT PUNICODE_STRING ServerName,
            IN ACCESS_MASK DesiredAccess,
            IN POBJECT_ATTRIBUTES ObjectAttributes)
 {
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status;
+
+    TRACE("SamConnect(%p,%p,0x%08x,%p)\n",
+          ServerName, ServerHandle, DesiredAccess, ObjectAttributes);
+
+    RpcTryExcept
+    {
+        Status = SamrConnect((PSAMPR_SERVER_NAME)ServerName,
+                             (SAMPR_HANDLE *)ServerHandle,
+                             DesiredAccess);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+SamOpenDomain(IN SAM_HANDLE ServerHandle,
+              IN ACCESS_MASK DesiredAccess,
+              IN PSID DomainId,
+              OUT PSAM_HANDLE DomainHandle)
+{
+    NTSTATUS Status;
+
+    TRACE("SamOpenDomain(%p,0x%08x,%p,%p)\n",
+          ServerHandle, DesiredAccess, DomainId, DomainHandle);
+
+    RpcTryExcept
+    {
+        Status = SamrOpenDomain((SAMPR_HANDLE)ServerHandle,
+                                DesiredAccess,
+                                (PRPC_SID)DomainId,
+                                (SAMPR_HANDLE *)DomainHandle);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
 }
 
 NTSTATUS

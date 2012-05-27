@@ -29,7 +29,7 @@
 @ stub SamLookupIdsInDomain
 @ stub SamLookupNamesInDomain
 @ stub SamOpenAlias
-@ stub SamOpenDomain
+@ stdcall SamOpenDomain(ptr long ptr ptr)
 @ stub SamOpenGroup
 @ stub SamOpenUser
 @ stub SamQueryDisplayInformation
