@@ -75,6 +75,20 @@ SampValidateDbObject(SAMPR_HANDLE Handle,
 NTSTATUS
 SampCloseDbObject(PSAM_DB_OBJECT DbObject);
 
+NTSTATUS
+SampSetObjectAttribute(PSAM_DB_OBJECT DbObject,
+                       LPWSTR AttributeName,
+                       ULONG AttributeType,
+                       LPVOID AttributeData,
+                       ULONG AttributeSize);
+
+NTSTATUS
+SampGetObjectAttribute(PSAM_DB_OBJECT DbObject,
+                       LPWSTR AttributeName,
+                       PULONG AttributeType,
+                       LPVOID AttributeData,
+                       PULONG AttributeSize);
+
 /* samspc.c */
 VOID SampStartRpcServer(VOID);
 

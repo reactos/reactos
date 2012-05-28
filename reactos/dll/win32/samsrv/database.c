@@ -309,6 +309,7 @@ SampCreateDbObject(IN PSAM_DB_OBJECT ParentObject,
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING KeyName;
     HANDLE ParentKeyHandle;
+    HANDLE ContainerKeyHandle = NULL;
     HANDLE ObjectKeyHandle;
     NTSTATUS Status;
 
@@ -320,25 +321,73 @@ SampCreateDbObject(IN PSAM_DB_OBJECT ParentObject,
     else
         ParentKeyHandle = ParentObject->KeyHandle;
 
-    RtlInitUnicodeString(&KeyName,
-                         ObjectName);
-
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &KeyName,
-                               OBJ_CASE_INSENSITIVE,
-                               ParentKeyHandle,
-                               NULL);
-
-    Status = NtCreateKey(&ObjectKeyHandle,
-                         KEY_ALL_ACCESS,
-                         &ObjectAttributes,
-                         0,
-                         NULL,
-                         0,
-                         NULL);
-    if (!NT_SUCCESS(Status))
+    if (ContainerName != NULL)
     {
-        return Status;
+        /* Open the container key */
+        RtlInitUnicodeString(&KeyName,
+                             ContainerName);
+
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   &KeyName,
+                                   OBJ_CASE_INSENSITIVE,
+                                   ParentKeyHandle,
+                                   NULL);
+
+        Status = NtOpenKey(&ContainerKeyHandle,
+                           KEY_ALL_ACCESS,
+                           &ObjectAttributes);
+        if (!NT_SUCCESS(Status))
+        {
+            return Status;
+        }
+
+        /* Open the object key */
+        RtlInitUnicodeString(&KeyName,
+                             ObjectName);
+
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   &KeyName,
+                                   OBJ_CASE_INSENSITIVE,
+                                   ContainerKeyHandle,
+                                   NULL);
+
+        Status = NtCreateKey(&ObjectKeyHandle,
+                             KEY_ALL_ACCESS,
+                             &ObjectAttributes,
+                             0,
+                             NULL,
+                             0,
+                             NULL);
+
+        NtClose(ContainerKeyHandle);
+
+        if (!NT_SUCCESS(Status))
+        {
+            return Status;
+        }
+    }
+    else
+    {
+        RtlInitUnicodeString(&KeyName,
+                             ObjectName);
+
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   &KeyName,
+                                   OBJ_CASE_INSENSITIVE,
+                                   ParentKeyHandle,
+                                   NULL);
+
+        Status = NtCreateKey(&ObjectKeyHandle,
+                             KEY_ALL_ACCESS,
+                             &ObjectAttributes,
+                             0,
+                             NULL,
+                             0,
+                             NULL);
+        if (!NT_SUCCESS(Status))
+        {
+            return Status;
+        }
     }
 
     NewObject = RtlAllocateHeap(RtlGetProcessHeap(),
@@ -553,120 +602,82 @@ SampCloseDbObject(PSAM_DB_OBJECT DbObject)
 }
 
 
-#if 0
 NTSTATUS
-LsapSetObjectAttribute(PLSA_DB_OBJECT DbObject,
+SampSetObjectAttribute(PSAM_DB_OBJECT DbObject,
                        LPWSTR AttributeName,
+                       ULONG AttributeType,
                        LPVOID AttributeData,
                        ULONG AttributeSize)
 {
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    UNICODE_STRING KeyName;
-    HANDLE AttributeKey;
-    NTSTATUS Status;
+    UNICODE_STRING ValueName;
 
-    RtlInitUnicodeString(&KeyName,
+    RtlInitUnicodeString(&ValueName,
                          AttributeName);
 
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &KeyName,
-                               OBJ_CASE_INSENSITIVE,
-                               DbObject->KeyHandle,
-                               NULL);
-
-    Status = NtCreateKey(&AttributeKey,
-                         KEY_SET_VALUE,
-                         &ObjectAttributes,
+    return ZwSetValueKey(DbObject->KeyHandle,
+                         &ValueName,
                          0,
-                         NULL,
-                         REG_OPTION_NON_VOLATILE,
-                         NULL);
-    if (!NT_SUCCESS(Status))
-    {
-
-        return Status;
-    }
-
-    Status = RtlpNtSetValueKey(AttributeKey,
-                               REG_NONE,
-                               AttributeData,
-                               AttributeSize);
-
-    NtClose(AttributeKey);
-
-    return Status;
+                         AttributeType,
+                         AttributeData,
+                         AttributeSize);
 }
 
 
 NTSTATUS
-LsapGetObjectAttribute(PLSA_DB_OBJECT DbObject,
+SampGetObjectAttribute(PSAM_DB_OBJECT DbObject,
                        LPWSTR AttributeName,
+                       PULONG AttributeType,
                        LPVOID AttributeData,
                        PULONG AttributeSize)
 {
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    UNICODE_STRING KeyName;
-    HANDLE AttributeKey;
-    ULONG ValueSize;
+    PKEY_VALUE_PARTIAL_INFORMATION ValueInfo;
+    UNICODE_STRING ValueName;
+    ULONG BufferLength = 0;
     NTSTATUS Status;
 
-    RtlInitUnicodeString(&KeyName,
+    RtlInitUnicodeString(&ValueName,
                          AttributeName);
 
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &KeyName,
-                               OBJ_CASE_INSENSITIVE,
-                               DbObject->KeyHandle,
-                               NULL);
+    if (AttributeSize != NULL)
+        BufferLength = *AttributeSize;
 
-    Status = NtOpenKey(&AttributeKey,
-                       KEY_QUERY_VALUE,
-                       &ObjectAttributes);
-    if (!NT_SUCCESS(Status))
+    BufferLength += FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data);
+
+    /* Allocate memory for the value */
+    ValueInfo = RtlAllocateHeap(RtlGetProcessHeap(), 0, BufferLength);
+    if (ValueInfo == NULL)
+        return STATUS_NO_MEMORY;
+
+    /* Query the value */
+    Status = ZwQueryValueKey(DbObject->KeyHandle,
+                             &ValueName,
+                             KeyValuePartialInformation,
+                             ValueInfo,
+                             BufferLength,
+                             &BufferLength);
+    if ((NT_SUCCESS(Status)) || (Status == STATUS_BUFFER_OVERFLOW))
     {
-        return Status;
+        if (AttributeType != NULL)
+            *AttributeType = ValueInfo->Type;
+
+        if (AttributeSize != NULL)
+            *AttributeSize = ValueInfo->DataLength;
     }
 
-    ValueSize = *AttributeSize;
-    Status = RtlpNtQueryValueKey(AttributeKey,
-                                 NULL,
-                                 NULL,
-                                 &ValueSize,
-                                 0);
-    if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_OVERFLOW)
+    /* Check if the caller wanted data back, and we got it */
+    if ((NT_SUCCESS(Status)) && (AttributeData != NULL))
     {
-        goto Done;
+        /* Copy it */
+        RtlMoveMemory(AttributeData,
+                      ValueInfo->Data,
+                      ValueInfo->DataLength);
     }
 
-    if (AttributeData == NULL || *AttributeSize == 0)
-    {
-        *AttributeSize = ValueSize;
-        Status = STATUS_SUCCESS;
-        goto Done;
-    }
-    else if (*AttributeSize < ValueSize)
-    {
-        *AttributeSize = ValueSize;
-        Status = STATUS_BUFFER_OVERFLOW;
-        goto Done;
-    }
-
-    Status = RtlpNtQueryValueKey(AttributeKey,
-                                 NULL,
-                                 AttributeData,
-                                 &ValueSize,
-                                 0);
-    if (NT_SUCCESS(Status))
-    {
-        *AttributeSize = ValueSize;
-    }
-
-Done:
-    NtClose(AttributeKey);
+    /* Free the memory and return status */
+    RtlFreeHeap(RtlGetProcessHeap(), 0, ValueInfo);
 
     return Status;
 }
-#endif
 
 /* EOF */
 
