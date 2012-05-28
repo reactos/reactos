@@ -446,6 +446,48 @@ CLEANUP:
    END_CLEANUP;
 }
 
+VOID FASTCALL
+IntSetWindowState(PWND pWnd, UINT Flag)
+{
+   UINT bit;
+   if (gptiCurrent->ppi != pWnd->head.pti->ppi) return;
+   bit = 1 << LOWORD(Flag);
+   TRACE("SWS %x\n",bit);
+   switch(HIWORD(Flag))
+   {
+      case 0:
+          pWnd->state |= bit;
+          break;
+      case 1:
+          pWnd->state2 |= bit;
+          break;
+      case 2:
+          pWnd->ExStyle2 |= bit;
+          break;
+   }
+}
+
+VOID FASTCALL
+IntClearWindowState(PWND pWnd, UINT Flag)
+{
+   UINT bit;
+   if (gptiCurrent->ppi != pWnd->head.pti->ppi) return;
+   bit = 1 << LOWORD(Flag);
+   TRACE("CWS %x\n",bit);
+   switch(HIWORD(Flag))
+   {
+      case 0:
+          pWnd->state &= ~bit;
+          break;
+      case 1:
+          pWnd->state2 &= ~bit;
+          break;
+      case 2:
+          pWnd->ExStyle2 &= ~bit;
+          break;
+   }
+}
+
 NTSTATUS FASTCALL
 IntSafeCopyUnicodeString(PUNICODE_STRING Dest,
                          PUNICODE_STRING Source)
