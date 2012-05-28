@@ -272,6 +272,13 @@ USBCCGP_PdoHandleQueryId(
         //
         DeviceString = &PDODeviceExtension->FunctionDescriptor->CompatibleId;
     }
+    else
+    {
+        //
+        // unsupported query
+        //
+        return Irp->IoStatus.Status;
+    }
 
     //
     // sanity check
@@ -294,6 +301,7 @@ USBCCGP_PdoHandleQueryId(
     // copy buffer
     //
     RtlCopyMemory(Buffer, DeviceString->Buffer, DeviceString->Length);
+    Buffer[DeviceString->Length / sizeof(WCHAR)] = UNICODE_NULL;
     Irp->IoStatus.Information = (ULONG_PTR)Buffer;
 
     return STATUS_SUCCESS;

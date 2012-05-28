@@ -166,8 +166,8 @@ DumpFunctionDescriptor(
     {
         DPRINT1("Function %lu\n", Index);
         DPRINT1("FunctionNumber %lu\n", FunctionDescriptor[Index].FunctionNumber);
-        DPRINT1("HardwareId %wZ\n", &FunctionDescriptor[Index].HardwareId);
-        DPRINT1("CompatibleId %wZ\n", &FunctionDescriptor[Index].CompatibleId);
+        DPRINT1("HardwareId %S\n", FunctionDescriptor[Index].HardwareId.Buffer);
+        DPRINT1("CompatibleId %S\n", FunctionDescriptor[Index].CompatibleId.Buffer);
         DPRINT1("FunctionDescription %wZ\n", &FunctionDescriptor[Index].FunctionDescription);
         DPRINT1("NumInterfaces %lu\n", FunctionDescriptor[Index].NumberOfInterfaces);
 

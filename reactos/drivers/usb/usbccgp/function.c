@@ -386,9 +386,9 @@ USBCCGP_InitFunctionDescriptor(
                                                                          FDODeviceExtension->DeviceDescriptor->idProduct,
                                                                          FDODeviceExtension->DeviceDescriptor->bcdDevice,
                                                                          Descriptor->bFirstInterface) + 1;
-    Index = swprintf(&Buffer[Index], L"USB\\VID_%04x&PID_%04x&MI_%02x", FDODeviceExtension->DeviceDescriptor->idVendor,
-                                                                        FDODeviceExtension->DeviceDescriptor->idProduct,
-                                                                        Descriptor->bFirstInterface) + 1;
+    Index += swprintf(&Buffer[Index], L"USB\\VID_%04x&PID_%04x&MI_%02x", FDODeviceExtension->DeviceDescriptor->idVendor,
+                                                                         FDODeviceExtension->DeviceDescriptor->idProduct,
+                                                                         Descriptor->bFirstInterface) + 1;
 
     // allocate result buffer
     DescriptionBuffer = AllocateItem(NonPagedPool, (Index + 1) * sizeof(WCHAR));
@@ -401,7 +401,7 @@ USBCCGP_InitFunctionDescriptor(
     }
 
     // copy description
-    RtlCopyMemory(DescriptionBuffer, Buffer, Index * sizeof(WCHAR));
+    RtlCopyMemory(DescriptionBuffer, Buffer, (Index + 1) * sizeof(WCHAR));
     FunctionDescriptor->HardwareId.Buffer = DescriptionBuffer;
     FunctionDescriptor->HardwareId.Length = Index * sizeof(WCHAR);
     FunctionDescriptor->HardwareId.MaximumLength = (Index + 1) * sizeof(WCHAR);
@@ -411,8 +411,8 @@ USBCCGP_InitFunctionDescriptor(
     // now init the compatible id
     //
     Index = swprintf(Buffer, L"USB\\Class_%02x&SubClass_%02x&Prot_%02x", Descriptor->bFunctionClass, Descriptor->bFunctionSubClass, Descriptor->bFunctionProtocol) + 1;
-    Index = swprintf(&Buffer[Index], L"USB\\Class_%04x&SubClass_%04x",  Descriptor->bFunctionClass, Descriptor->bFunctionSubClass) + 1;
-    Index = swprintf(&Buffer[Index], L"USB\\Class_%04x", Descriptor->bFunctionClass) + 1;
+    Index += swprintf(&Buffer[Index], L"USB\\Class_%02x&SubClass_%02x",  Descriptor->bFunctionClass, Descriptor->bFunctionSubClass) + 1;
+    Index += swprintf(&Buffer[Index], L"USB\\Class_%02x", Descriptor->bFunctionClass) + 1;
 
     // allocate result buffer
     DescriptionBuffer = AllocateItem(NonPagedPool, (Index + 1) * sizeof(WCHAR));
@@ -425,7 +425,7 @@ USBCCGP_InitFunctionDescriptor(
     }
 
     // copy description
-    RtlCopyMemory(DescriptionBuffer, Buffer, Index * sizeof(WCHAR));
+    RtlCopyMemory(DescriptionBuffer, Buffer, (Index + 1) * sizeof(WCHAR));
     FunctionDescriptor->CompatibleId.Buffer = DescriptionBuffer;
     FunctionDescriptor->CompatibleId.Length = Index * sizeof(WCHAR);
     FunctionDescriptor->CompatibleId.MaximumLength = (Index + 1) * sizeof(WCHAR);
@@ -566,7 +566,7 @@ USBCCG_InitIdsWithInterfaceDescriptor(
     }
 
     // copy description
-    RtlCopyMemory(DescriptionBuffer, Buffer, Index * sizeof(WCHAR));
+    RtlCopyMemory(DescriptionBuffer, Buffer, (Index + 1) * sizeof(WCHAR));
     FunctionDescriptor->HardwareId.Buffer = DescriptionBuffer;
     FunctionDescriptor->HardwareId.Length = Index * sizeof(WCHAR);
     FunctionDescriptor->HardwareId.MaximumLength = (Index + 1) * sizeof(WCHAR);
@@ -589,7 +589,7 @@ USBCCG_InitIdsWithInterfaceDescriptor(
     }
 
     // copy description
-    RtlCopyMemory(DescriptionBuffer, Buffer, Index * sizeof(WCHAR));
+    RtlCopyMemory(DescriptionBuffer, Buffer, (Index + 1) * sizeof(WCHAR));
     FunctionDescriptor->CompatibleId.Buffer = DescriptionBuffer;
     FunctionDescriptor->CompatibleId.Length = Index * sizeof(WCHAR);
     FunctionDescriptor->CompatibleId.MaximumLength = (Index + 1) * sizeof(WCHAR);
