@@ -965,7 +965,7 @@ CHubController::HandleClassOther(
                     Status = m_Hardware->ClearPortStatus(PortId, C_PORT_CONNECTION);
                     break;
                 case C_PORT_RESET:
-                    Status= m_Hardware->ClearPortStatus(PortId, C_PORT_RESET);
+                    Status = m_Hardware->ClearPortStatus(PortId, C_PORT_RESET);
                     break;
                 default:
                     DPRINT("[USBLIB] Unknown Value for Clear Feature %x \n", Urb->UrbControlVendorClassRequest.Value);
@@ -1209,31 +1209,30 @@ CHubController::HandleGetStatusFromDevice(
     UsbDevice = PUSBDEVICE(Urb->UrbHeader.UsbdDeviceHandle);
 
 
-     //
-     // generate setup packet
-     //
-     CtrlSetup.bRequest = USB_REQUEST_GET_STATUS;
-     CtrlSetup.wValue.LowByte = 0;
-     CtrlSetup.wValue.HiByte = 0;
-     CtrlSetup.wIndex.W = Urb->UrbControlGetStatusRequest.Index;
-     CtrlSetup.wLength = (USHORT)Urb->UrbControlGetStatusRequest.TransferBufferLength;
-     CtrlSetup.bmRequestType.B = 0x80;
+    //
+    // generate setup packet
+    //
+    CtrlSetup.bRequest = USB_REQUEST_GET_STATUS;
+    CtrlSetup.wValue.LowByte = 0;
+    CtrlSetup.wValue.HiByte = 0;
+    CtrlSetup.wIndex.W = Urb->UrbControlGetStatusRequest.Index;
+    CtrlSetup.wLength = (USHORT)Urb->UrbControlGetStatusRequest.TransferBufferLength;
+    CtrlSetup.bmRequestType.B = 0x80;
 
-
-     if (Urb->UrbHeader.Function == URB_FUNCTION_GET_STATUS_FROM_INTERFACE)
-     {
-         //
-         // add interface type
-         //
-         CtrlSetup.bmRequestType.B |= 0x01;
-     }
-     else if (Urb->UrbHeader.Function == URB_FUNCTION_GET_STATUS_FROM_ENDPOINT)
-     {
-         //
-         // add interface type
-         //
-         CtrlSetup.bmRequestType.B |= 0x02;
-     }
+    if (Urb->UrbHeader.Function == URB_FUNCTION_GET_STATUS_FROM_INTERFACE)
+    {
+        //
+        // add interface type
+        //
+        CtrlSetup.bmRequestType.B |= 0x01;
+    }
+    else if (Urb->UrbHeader.Function == URB_FUNCTION_GET_STATUS_FROM_ENDPOINT)
+    {
+        //
+        // add interface type
+        //
+        CtrlSetup.bmRequestType.B |= 0x02;
+    }
 
     //
     // submit setup packet

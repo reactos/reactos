@@ -56,7 +56,7 @@ USBCCGP_QueryInterface(
     //
     // initialize request
     //
-    Stack=IoGetNextIrpStackLocation(Irp);
+    Stack = IoGetNextIrpStackLocation(Irp);
     Stack->MajorFunction = IRP_MJ_PNP;
     Stack->MinorFunction = IRP_MN_QUERY_INTERFACE;
     Stack->Parameters.QueryInterface.Size = sizeof(BUS_INTERFACE_STANDARD);
@@ -69,7 +69,7 @@ USBCCGP_QueryInterface(
     //
     // call driver
     //
-    Status= IoCallDriver(DeviceObject, Irp);
+    Status = IoCallDriver(DeviceObject, Irp);
 
     //
     // did operation complete
@@ -116,14 +116,14 @@ USBCCGP_CustomEnumWithInterface(
     //
     // invoke callback
     //
-    Status = FDODeviceExtension->BusInterface.StartDeviceCallback(FDODeviceExtension->DeviceDescriptor, 
-                                                                  FDODeviceExtension->ConfigurationDescriptor, 
+    Status = FDODeviceExtension->BusInterface.StartDeviceCallback(FDODeviceExtension->DeviceDescriptor,
+                                                                  FDODeviceExtension->ConfigurationDescriptor,
                                                                   &FunctionDescriptorBuffer,
                                                                   &FunctionDescriptorBufferLength,
                                                                   DeviceObject,
                                                                   FDODeviceExtension->PhysicalDeviceObject);
 
-    DPRINT("USBCCGP_CustomEnumWithInterface Status %x\n", Status);
+    DPRINT("USBCCGP_CustomEnumWithInterface Status %lx\n", Status);
     if (!NT_SUCCESS(Status))
     {
         //
@@ -167,7 +167,7 @@ USBCCGP_CountAssociationDescriptors(
     Offset = (PUCHAR)ConfigurationDescriptor + ConfigurationDescriptor->bLength;
     End = (PUCHAR)ConfigurationDescriptor + ConfigurationDescriptor->wTotalLength;
 
-    while(Offset < End)
+    while (Offset < End)
     {
         //
         // get association descriptor
@@ -209,7 +209,7 @@ USBCCGP_GetAssociationDescriptorAtIndex(
     Offset = (PUCHAR)ConfigurationDescriptor + ConfigurationDescriptor->bLength;
     End = (PUCHAR)ConfigurationDescriptor + ConfigurationDescriptor->wTotalLength;
 
-    while(Offset < End)
+    while (Offset < End)
     {
         //
         // get association descriptor
@@ -260,7 +260,7 @@ USBCCGP_InitInterfaceListOfFunctionDescriptor(
     Offset = (PUCHAR)AssociationDescriptor + AssociationDescriptor->bLength;
     End = (PUCHAR)ConfigurationDescriptor + ConfigurationDescriptor->wTotalLength;
 
-    while(Offset < End)
+    while (Offset < End)
     {
         //
         // get association descriptor
@@ -358,8 +358,8 @@ USBCCGP_InitFunctionDescriptor(
         // get interface description
         //
          Status = USBCCGP_GetStringDescriptor(FDODeviceExtension->NextDeviceObject,
-                                              100 * sizeof(WCHAR), 
-                                              Descriptor->iFunction, 
+                                              100 * sizeof(WCHAR),
+                                              Descriptor->iFunction,
                                               0x0409, //FIXME
                                               (PVOID*)&DescriptionBuffer);
         if (!NT_SUCCESS(Status))
@@ -405,7 +405,6 @@ USBCCGP_InitFunctionDescriptor(
     FunctionDescriptor->HardwareId.Buffer = DescriptionBuffer;
     FunctionDescriptor->HardwareId.Length = Index * sizeof(WCHAR);
     FunctionDescriptor->HardwareId.MaximumLength = (Index + 1) * sizeof(WCHAR);
-
 
     //
     // now init the compatible id
@@ -475,7 +474,7 @@ USBCCGP_EnumWithAssociationDescriptor(
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    for(Index = 0; Index < DescriptorCount; Index++)
+    for (Index = 0; Index < DescriptorCount; Index++)
     {
         //
         // init function descriptors
@@ -552,8 +551,8 @@ USBCCG_InitIdsWithInterfaceDescriptor(
                                                                          FDODeviceExtension->DeviceDescriptor->bcdDevice,
                                                                          FunctionIndex) + 1;
     Index += swprintf(&Buffer[Index], L"USB\\VID_%04x&PID_%04x&MI_%02x", FDODeviceExtension->DeviceDescriptor->idVendor,
-                                                                        FDODeviceExtension->DeviceDescriptor->idProduct,
-                                                                        FunctionIndex) + 1;
+                                                                         FDODeviceExtension->DeviceDescriptor->idProduct,
+                                                                         FunctionIndex) + 1;
 
     // allocate result buffer
     DescriptionBuffer = AllocateItem(NonPagedPool, (Index + 1) * sizeof(WCHAR));
@@ -637,7 +636,7 @@ USBCCGP_LegacyEnum(
     //
     // init function descriptors
     //
-    for(Index = 0; Index < FDODeviceExtension->ConfigurationDescriptor->bNumInterfaces; Index++)
+    for (Index = 0; Index < FDODeviceExtension->ConfigurationDescriptor->bNumInterfaces; Index++)
     {
         // get interface descriptor
         InterfaceDescriptor = USBD_ParseConfigurationDescriptorEx(FDODeviceExtension->ConfigurationDescriptor, FDODeviceExtension->ConfigurationDescriptor, Index, 0, -1, -1, -1);
@@ -679,7 +678,7 @@ USBCCGP_LegacyEnum(
             //
             // failed to init ids
             //
-            DPRINT1("[USBCCGP] Failed to init ids with %x\n", Status);
+            DPRINT1("[USBCCGP] Failed to init ids with %lx\n", Status);
             return Status;
         }
 
@@ -722,7 +721,7 @@ USBCCGP_EnumWithAudioLegacy(
     //
     // first check if all interfaces belong to the same audio class
     //
-    for(Index = 0; Index < FDODeviceExtension->ConfigurationDescriptor->bNumInterfaces; Index++)
+    for (Index = 0; Index < FDODeviceExtension->ConfigurationDescriptor->bNumInterfaces; Index++)
     {
         //
         // get interface descriptor
@@ -789,7 +788,7 @@ USBCCGP_EnumWithAudioLegacy(
         //
         // failed to allocate descriptor array
         //
-        DPRINT1("[USBCCGP] Failed to allocate descriptor array %x\n", Status);
+        DPRINT1("[USBCCGP] Failed to allocate descriptor array %lx\n", Status);
         return Status;
     }
 
@@ -802,7 +801,7 @@ USBCCGP_EnumWithAudioLegacy(
         //
         // failed to init ids
         //
-        DPRINT1("[USBCCGP] Failed to init ids with %x\n", Status);
+        DPRINT1("[USBCCGP] Failed to init ids with %lx\n", Status);
         return Status;
     }
 

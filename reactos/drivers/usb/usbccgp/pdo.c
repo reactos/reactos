@@ -136,7 +136,7 @@ USBCCGP_PdoAppendInterfaceNumber(
     // count length of string
     //
     String = DeviceId;
-    while(*String)
+    while (*String)
     {
         StringLength = wcslen(String) + 1;
         Length += StringLength;
@@ -161,7 +161,7 @@ USBCCGP_PdoAppendInterfaceNumber(
     //
     *OutString = String;
 
-    while(*DeviceId)
+    while (*DeviceId)
     {
         StringLength = swprintf(String, L"%s&MI_%02x", DeviceId, InterfaceNumber) + 1;
         Length = wcslen(DeviceId) + 1;
@@ -225,7 +225,7 @@ USBCCGP_PdoHandleQueryId(
                 DPRINT("BusQueryDeviceID %S\n", Buffer);
 
                 ExFreePool((PVOID)Irp->IoStatus.Information);
-                Irp->IoStatus .Information = (ULONG_PTR)Buffer;
+                Irp->IoStatus.Information = (ULONG_PTR)Buffer;
             }
             else
             {
@@ -334,76 +334,76 @@ PDO_HandlePnp(
 
     switch(IoStack->MinorFunction)
     {
-       case IRP_MN_QUERY_DEVICE_RELATIONS:
-       {
-           //
-           // handle device relations
-           //
-           Status = USBCCGP_PdoHandleDeviceRelations(DeviceObject, Irp);
-           break;
-       }
-       case IRP_MN_QUERY_DEVICE_TEXT:
-       {
-           //
-           // handle query device text
-           //
-           Status = USBCCGP_PdoHandleQueryDeviceText(DeviceObject, Irp);
-           break;
-       }
-       case IRP_MN_QUERY_ID:
-       {
-           //
-           // handle request
-           //
-           Status = USBCCGP_PdoHandleQueryId(DeviceObject, Irp);
-           break;
-       }
-       case IRP_MN_REMOVE_DEVICE:
-       {
-           //
-           // remove us from the fdo's pdo list
-           //
-           bFound = FALSE;
-           for(Index = 0; Index < PDODeviceExtension->FDODeviceExtension->FunctionDescriptorCount; Index++)
-           {
-               if (PDODeviceExtension->FDODeviceExtension->ChildPDO[Index] == DeviceObject)
-               {
-                   //
-                   // remove us
-                   //
-                   PDODeviceExtension->FDODeviceExtension->ChildPDO[Index] = NULL;
-                   bFound = TRUE;
-                   break;
-               }
-           }
+        case IRP_MN_QUERY_DEVICE_RELATIONS:
+        {
+            //
+            // handle device relations
+            //
+            Status = USBCCGP_PdoHandleDeviceRelations(DeviceObject, Irp);
+            break;
+        }
+        case IRP_MN_QUERY_DEVICE_TEXT:
+        {
+            //
+            // handle query device text
+            //
+            Status = USBCCGP_PdoHandleQueryDeviceText(DeviceObject, Irp);
+            break;
+        }
+        case IRP_MN_QUERY_ID:
+        {
+            //
+            // handle request
+            //
+            Status = USBCCGP_PdoHandleQueryId(DeviceObject, Irp);
+            break;
+        }
+        case IRP_MN_REMOVE_DEVICE:
+        {
+            //
+            // remove us from the fdo's pdo list
+            //
+            bFound = FALSE;
+            for(Index = 0; Index < PDODeviceExtension->FDODeviceExtension->FunctionDescriptorCount; Index++)
+            {
+                if (PDODeviceExtension->FDODeviceExtension->ChildPDO[Index] == DeviceObject)
+                {
+                    //
+                    // remove us
+                    //
+                    PDODeviceExtension->FDODeviceExtension->ChildPDO[Index] = NULL;
+                    bFound = TRUE;
+                    break;
+                }
+            }
 
-           //
-           // Complete the IRP
-           //
-           Irp->IoStatus.Status = STATUS_SUCCESS;
-           IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            //
+            // Complete the IRP
+            //
+            Irp->IoStatus.Status = STATUS_SUCCESS;
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
-           if (bFound)
-           {
-               //
-               // Delete the device object
-               //
-               IoDeleteDevice(DeviceObject);
-           }
-           return STATUS_SUCCESS;
-       }
-       case IRP_MN_QUERY_CAPABILITIES:
-       {
-           //
-           // copy device capabilities
-           //
-           RtlCopyMemory(IoStack->Parameters.DeviceCapabilities.Capabilities, &PDODeviceExtension->Capabilities, sizeof(DEVICE_CAPABILITIES));
+            if (bFound)
+            {
+                //
+                // Delete the device object
+                //
+                IoDeleteDevice(DeviceObject);
+            }
+            return STATUS_SUCCESS;
+        }
+        case IRP_MN_QUERY_CAPABILITIES:
+        {
+            //
+            // copy device capabilities
+            //
+            RtlCopyMemory(IoStack->Parameters.DeviceCapabilities.Capabilities, &PDODeviceExtension->Capabilities, sizeof(DEVICE_CAPABILITIES));
 
-           /* Complete the IRP */
-           Irp->IoStatus.Status = STATUS_SUCCESS;
-           IoCompleteRequest(Irp, IO_NO_INCREMENT);
-           return STATUS_SUCCESS;
-       }
+            /* Complete the IRP */
+            Irp->IoStatus.Status = STATUS_SUCCESS;
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            return STATUS_SUCCESS;
+        }
         case IRP_MN_QUERY_REMOVE_DEVICE:
         case IRP_MN_QUERY_STOP_DEVICE:
         {
@@ -413,24 +413,24 @@ PDO_HandlePnp(
             Status = STATUS_SUCCESS;
             break;
         }
-       case IRP_MN_START_DEVICE:
-       {
-           //
-           // no-op for PDO
-           //
-           DPRINT("[USBCCGP] PDO IRP_MN_START\n");
-           Status = STATUS_SUCCESS;
-           break;
-       }
-       case IRP_MN_QUERY_INTERFACE:
-       {
-           //
-           // forward to lower device object
-           //
-           IoSkipCurrentIrpStackLocation(Irp);
-           return IoCallDriver(PDODeviceExtension->NextDeviceObject, Irp);
-       }
-       default:
+        case IRP_MN_START_DEVICE:
+        {
+            //
+            // no-op for PDO
+            //
+            DPRINT("[USBCCGP] PDO IRP_MN_START\n");
+            Status = STATUS_SUCCESS;
+            break;
+        }
+        case IRP_MN_QUERY_INTERFACE:
+        {
+            //
+            // forward to lower device object
+            //
+            IoSkipCurrentIrpStackLocation(Irp);
+            return IoCallDriver(PDODeviceExtension->NextDeviceObject, Irp);
+        }
+        default:
         {
             //
             // do nothing
@@ -465,7 +465,7 @@ PDO_HandlePnp(
 
 NTSTATUS
 USBCCGP_BuildConfigurationDescriptor(
-    PDEVICE_OBJECT DeviceObject, 
+    PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
     PIO_STACK_LOCATION IoStack;
@@ -501,7 +501,7 @@ USBCCGP_BuildConfigurationDescriptor(
     //
     TotalSize = sizeof(USB_CONFIGURATION_DESCRIPTOR);
 
-    for(Index = 0; Index < PDODeviceExtension->FunctionDescriptor->NumberOfInterfaces; Index++)
+    for (Index = 0; Index < PDODeviceExtension->FunctionDescriptor->NumberOfInterfaces; Index++)
     {
         //
         // get current interface descriptor
@@ -555,7 +555,7 @@ USBCCGP_BuildConfigurationDescriptor(
             // move to next descriptor
             //
             InterfaceDescriptor = (PUSB_INTERFACE_DESCRIPTOR)((ULONG_PTR)InterfaceDescriptor + InterfaceDescriptor->bLength);
-        }while(TRUE);
+        } while(TRUE);
     }
 
     //
@@ -577,7 +577,7 @@ USBCCGP_BuildConfigurationDescriptor(
     RtlCopyMemory(Buffer, ConfigurationDescriptor, sizeof(USB_CONFIGURATION_DESCRIPTOR));
     BufferPtr = (PUCHAR)((ULONG_PTR)Buffer + ConfigurationDescriptor->bLength);
 
-    for(Index = 0; Index < PDODeviceExtension->FunctionDescriptor->NumberOfInterfaces; Index++)
+    for (Index = 0; Index < PDODeviceExtension->FunctionDescriptor->NumberOfInterfaces; Index++)
     {
         //
         // get current interface descriptor
@@ -634,7 +634,7 @@ USBCCGP_BuildConfigurationDescriptor(
             // move to next descriptor
             //
             InterfaceDescriptor = (PUSB_INTERFACE_DESCRIPTOR)((ULONG_PTR)InterfaceDescriptor + InterfaceDescriptor->bLength);
-        }while(TRUE);
+        } while(TRUE);
     }
 
     //
@@ -674,7 +674,7 @@ USBCCGP_BuildConfigurationDescriptor(
 
 NTSTATUS
 USBCCGP_PDOSelectConfiguration(
-    PDEVICE_OBJECT DeviceObject, 
+    PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
     PIO_STACK_LOCATION IoStack;
@@ -736,7 +736,7 @@ USBCCGP_PDOSelectConfiguration(
         // search for the interface in the local interface list
         //
         FoundInterface = FALSE;
-        for(InterfaceIndex = 0; InterfaceIndex < PDODeviceExtension->FunctionDescriptor->NumberOfInterfaces; InterfaceIndex++)
+        for (InterfaceIndex = 0; InterfaceIndex < PDODeviceExtension->FunctionDescriptor->NumberOfInterfaces; InterfaceIndex++)
         {
             if (PDODeviceExtension->FunctionDescriptor->InterfaceDescriptorList[InterfaceIndex]->bInterfaceNumber == InterfaceInformation->InterfaceNumber)
             {
@@ -760,7 +760,7 @@ USBCCGP_PDOSelectConfiguration(
         // now query the total interface list
         //
         Entry = NULL;
-        for(InterfaceIndex = 0; InterfaceIndex < PDODeviceExtension->InterfaceListCount; InterfaceIndex++)
+        for (InterfaceIndex = 0; InterfaceIndex < PDODeviceExtension->InterfaceListCount; InterfaceIndex++)
         {
             if (PDODeviceExtension->InterfaceList[InterfaceIndex].Interface->InterfaceNumber == InterfaceInformation->InterfaceNumber)
             {
@@ -786,7 +786,6 @@ USBCCGP_PDOSelectConfiguration(
         NeedSelect = FALSE;
         if (Entry->InterfaceDescriptor->bAlternateSetting == InterfaceInformation->AlternateSetting)
         {
-            
             for(InterfaceIndex = 0; InterfaceIndex < InterfaceInformation->NumberOfPipes; InterfaceIndex++)
             {
                 if (InterfaceInformation->Pipes[InterfaceIndex].MaximumTransferSize != Entry->Interface->Pipes[InterfaceIndex].MaximumTransferSize)
@@ -894,7 +893,7 @@ USBCCGP_PDOSelectConfiguration(
             FreeItem(NewUrb);
         }
 
-    }while(Length);
+    } while(Length);
 
     //
     // store configuration handle
@@ -911,7 +910,7 @@ USBCCGP_PDOSelectConfiguration(
 
 NTSTATUS
 PDO_HandleInternalDeviceControl(
-    PDEVICE_OBJECT DeviceObject, 
+    PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
     PIO_STACK_LOCATION IoStack;
@@ -950,7 +949,7 @@ PDO_HandleInternalDeviceControl(
         }
         else if (Urb->UrbHeader.Function == URB_FUNCTION_GET_DESCRIPTOR_FROM_DEVICE)
         {
-            if(Urb->UrbControlDescriptorRequest.DescriptorType == USB_DEVICE_DESCRIPTOR_TYPE)
+            if (Urb->UrbControlDescriptorRequest.DescriptorType == USB_DEVICE_DESCRIPTOR_TYPE)
             {
                 //
                 // is the buffer big enough
@@ -1047,8 +1046,6 @@ PDO_HandleInternalDeviceControl(
         return Status;
     }
 
-
-
     DPRINT1("IOCTL %x\n", IoStack->Parameters.DeviceIoControl.IoControlCode);
     DPRINT1("InputBufferLength %lu\n", IoStack->Parameters.DeviceIoControl.InputBufferLength);
     DPRINT1("OutputBufferLength %lu\n", IoStack->Parameters.DeviceIoControl.OutputBufferLength);
@@ -1064,7 +1061,7 @@ PDO_HandleInternalDeviceControl(
 
 NTSTATUS
 PDO_Dispatch(
-    PDEVICE_OBJECT DeviceObject, 
+    PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
     PIO_STACK_LOCATION IoStack;
@@ -1085,5 +1082,4 @@ PDO_Dispatch(
             IoCompleteRequest(Irp, IO_NO_INCREMENT);
             return Status;
     }
-
 }

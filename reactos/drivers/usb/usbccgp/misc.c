@@ -18,7 +18,7 @@ NTSTATUS
 NTAPI
 USBSTOR_SyncForwardIrpCompletionRoutine(
     PDEVICE_OBJECT DeviceObject,
-    PIRP Irp, 
+    PIRP Irp,
     PVOID Context)
 {
     if (Irp->PendingReturned)
@@ -162,7 +162,7 @@ DumpFunctionDescriptor(
 
 
     DPRINT1("FunctionCount %lu\n", FunctionDescriptorCount);
-    for(Index = 0; Index < FunctionDescriptorCount; Index++)
+    for (Index = 0; Index < FunctionDescriptorCount; Index++)
     {
         DPRINT1("Function %lu\n", Index);
         DPRINT1("FunctionNumber %lu\n", FunctionDescriptor[Index].FunctionNumber);
