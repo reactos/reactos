@@ -569,9 +569,9 @@ NtUserCallHwndLock(
          break;
 
       case HWNDLOCK_ROUTINE_SETFOREGROUNDWINDOW:
-         TRACE("co_IntSetForegroundWindow 1 %p\n",hWnd);
+         ERR("co_IntSetForegroundWindow 1 %p\n",hWnd);
          Ret = co_IntSetForegroundWindow(Window);
-         TRACE("co_IntSetForegroundWindow 2 \n");
+         ERR("co_IntSetForegroundWindow 2 \n");
          break;
 
       case HWNDLOCK_ROUTINE_UPDATEWINDOW:
@@ -746,6 +746,24 @@ NtUserCallHwndParam(
          else
             pWnd = NULL;
          IntNotifyWinEvent(pne->event, pWnd, pne->idObject, pne->idChild, pne->flags);
+         UserLeave();
+         return 0;
+      }
+      case HWNDPARAM_ROUTINE_CLEARWINDOWSTATE:
+      {
+         PWND pWnd;
+         UserEnterExclusive();
+         pWnd = UserGetWindowObject(hWnd);
+         if (pWnd) IntClearWindowState(pWnd, (UINT)Param);
+         UserLeave();
+         return 0;
+      }
+      case HWNDPARAM_ROUTINE_SETWINDOWSTATE:
+      {
+         PWND pWnd;
+         UserEnterExclusive();
+         pWnd = UserGetWindowObject(hWnd);
+         if (pWnd) IntSetWindowState(pWnd, (UINT)Param);
          UserLeave();
          return 0;
       }

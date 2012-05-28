@@ -81,6 +81,9 @@ UserSystemParametersInfo(
   PVOID pvParam,
   UINT fWinIni);
 
+VOID FASTCALL IntSetWindowState(PWND, UINT);
+VOID FASTCALL IntClearWindowState(PWND, UINT);
+
 /*************** MESSAGE.C ***************/
 
 BOOL FASTCALL

@@ -522,6 +522,8 @@ typedef struct _SBINFOEX
 #define WNDS_MAXIMIZESTOMONITOR      0x40000000
 #define WNDS_DESTROYED               0x80000000
 
+#define WNDSACTIVEFRAME              0x00000006
+
 // State2 Flags !Not Implemented!
 #define WNDS2_WMPAINTSENT               0X00000001
 #define WNDS2_ENDPAINTINVALIDATE        0X00000002

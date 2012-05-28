@@ -257,6 +257,24 @@ TestWindowProcess(PWND Wnd)
               (DWORD_PTR)NtCurrentTeb()->ClientId.UniqueProcess );
 }
 
+BOOL
+FASTCALL
+TestState(PWND pWnd, UINT Flag)
+{
+    UINT bit;
+    bit = 1 << LOWORD(Flag);
+    switch(HIWORD(Flag))
+    {
+       case 0: 
+          return (pWnd->state & bit); 
+       case 1:
+          return (pWnd->state2 & bit);
+       case 2:
+          return (pWnd->ExStyle2 & bit);
+    }
+    return FALSE;
+}
+
 PUSER_HANDLE_ENTRY
 FASTCALL
 GetUser32Handle(HANDLE handle)

@@ -6,6 +6,8 @@
 #error
 #endif
 
+BOOL FASTCALL TestState(PWND, UINT);
+
 EXTINLINE BOOL WINAPI
 GetScrollBarInfo(HWND hWnd, LONG idObject, PSCROLLBARINFO psbi)
 {
@@ -730,6 +732,18 @@ EXTINLINE BOOL NtUserxRegisterShellHookWindow(HWND hWnd)
 EXTINLINE BOOL NtUserxSetMessageBox(HWND hWnd)
 {
   return NtUserCallHwnd(hWnd, HWND_ROUTINE_SETMSGBOX);
+}
+
+EXTINLINE VOID NtUserxClearWindowState(PWND pWnd, UINT Flag)
+{
+  if (!TestState(pWnd, Flag)) return; 
+  NtUserCallHwndParam(UserHMGetHandle(pWnd), (DWORD_PTR)Flag, HWNDPARAM_ROUTINE_CLEARWINDOWSTATE);
+}
+
+EXTINLINE VOID NtUserxSetWindowState(PWND pWnd, UINT Flag)
+{
+  if (TestState(pWnd, Flag)) return;
+  NtUserCallHwndParam(UserHMGetHandle(pWnd), (DWORD_PTR)Flag, HWNDPARAM_ROUTINE_SETWINDOWSTATE);
 }
 
 EXTINLINE HWND NtUserxSetTaskmanWindow(HWND hWnd)
