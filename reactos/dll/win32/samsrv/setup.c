@@ -56,6 +56,28 @@ SampIsSetupRunning(VOID)
 
 
 static BOOL
+CreateNamesKey(HKEY hParentKey)
+{
+    DWORD dwDisposition;
+    HKEY hNamesKey;
+
+    if (RegCreateKeyExW(hParentKey,
+                        L"Names",
+                        0,
+                        NULL,
+                        REG_OPTION_NON_VOLATILE,
+                        KEY_ALL_ACCESS,
+                        NULL,
+                        &hNamesKey,
+                        &dwDisposition))
+        return FALSE;
+
+    RegCloseKey(hNamesKey);
+    return TRUE;
+}
+
+
+static BOOL
 CreateBuiltinAliases(HKEY hAliasesKey)
 {
     return TRUE;
@@ -80,13 +102,14 @@ BOOL
 SampInitializeSAM(VOID)
 {
     DWORD dwDisposition;
-    HKEY hSamKey;
-    HKEY hDomainsKey;
-    HKEY hAccountKey;
-    HKEY hBuiltinKey;
-    HKEY hAliasesKey;
-    HKEY hGroupsKey;
-    HKEY hUsersKey;
+    HKEY hSamKey = NULL;
+    HKEY hDomainsKey = NULL;
+    HKEY hAccountKey = NULL;
+    HKEY hBuiltinKey = NULL;
+    HKEY hAliasesKey = NULL;
+    HKEY hGroupsKey = NULL;
+    HKEY hUsersKey = NULL;
+    BOOL bResult = TRUE;
 
     TRACE("SampInitializeSAM() called\n");
 
@@ -115,11 +138,12 @@ SampInitializeSAM(VOID)
                         &dwDisposition))
     {
         ERR("Failed to create 'Domains' key! (Error %lu)\n", GetLastError());
-        RegCloseKey(hSamKey);
-        return FALSE;
+        bResult = FALSE;
+        goto done;
     }
 
-    RegCloseKey (hSamKey);
+    RegCloseKey(hSamKey);
+    hSamKey = NULL;
 
     /* Create the 'Domains\\Account' key */
     if (RegCreateKeyExW(hDomainsKey,
@@ -133,8 +157,8 @@ SampInitializeSAM(VOID)
                         &dwDisposition))
     {
         ERR("Failed to create 'Domains\\Account' key! (Error %lu)\n", GetLastError());
-        RegCloseKey(hDomainsKey);
-        return FALSE;
+        bResult = FALSE;
+        goto done;
     }
 
 
@@ -150,13 +174,19 @@ SampInitializeSAM(VOID)
                         &dwDisposition))
     {
         ERR("Failed to create 'Account\\Aliases' key! (Error %lu)\n", GetLastError());
-        RegCloseKey(hAccountKey);
-        RegCloseKey(hDomainsKey);
-        return FALSE;
+        bResult = FALSE;
+        goto done;
     }
 
-    RegCloseKey (hAliasesKey);
+    if (!CreateNamesKey(hAliasesKey))
+    {
+        ERR("Failed to create 'Account\\Aliases\\Names' key! (Error %lu)\n", GetLastError());
+        bResult = FALSE;
+        goto done;
+    }
 
+    RegCloseKey(hAliasesKey);
+    hAliasesKey = NULL;
 
     /* Create the 'Account\Groups' key */
     if (RegCreateKeyExW(hAccountKey,
@@ -170,12 +200,19 @@ SampInitializeSAM(VOID)
                         &dwDisposition))
     {
         ERR("Failed to create 'Account\\Groups' key! (Error %lu)\n", GetLastError());
-        RegCloseKey(hAccountKey);
-        RegCloseKey(hDomainsKey);
-        return FALSE;
+        bResult = FALSE;
+        goto done;
+    }
+
+    if (!CreateNamesKey(hGroupsKey))
+    {
+        ERR("Failed to create 'Account\\Groups\\Names' key! (Error %lu)\n", GetLastError());
+        bResult = FALSE;
+        goto done;
     }
 
     RegCloseKey(hGroupsKey);
+    hGroupsKey = NULL;
 
 
     /* Create the 'Account\Users' key */
@@ -190,15 +227,22 @@ SampInitializeSAM(VOID)
                         &dwDisposition))
     {
         ERR("Failed to create 'Account\\Users' key! (Error %lu)\n", GetLastError());
-        RegCloseKey(hAccountKey);
-        RegCloseKey(hDomainsKey);
-        return FALSE;
+        bResult = FALSE;
+        goto done;
+    }
+
+    if (!CreateNamesKey(hUsersKey))
+    {
+        ERR("Failed to create 'Account\\Aliases\\Users' key! (Error %lu)\n", GetLastError());
+        bResult = FALSE;
+        goto done;
     }
 
     RegCloseKey(hUsersKey);
+    hUsersKey = NULL;
 
     RegCloseKey(hAccountKey);
-
+    hAccountKey = NULL;
 
     /* Create the 'Domains\\Builtin' */
     if (RegCreateKeyExW(hDomainsKey,
@@ -212,8 +256,8 @@ SampInitializeSAM(VOID)
                         &dwDisposition))
     {
         ERR("Failed to create Builtin key! (Error %lu)\n", GetLastError());
-        RegCloseKey(hDomainsKey);
-        return FALSE;
+        bResult = FALSE;
+        goto done;
     }
 
 
@@ -229,23 +273,27 @@ SampInitializeSAM(VOID)
                         &dwDisposition))
     {
         ERR("Failed to create 'Builtin\\Aliases' key! (Error %lu)\n", GetLastError());
-        RegCloseKey(hBuiltinKey);
-        RegCloseKey(hDomainsKey);
-        return FALSE;
+        bResult = FALSE;
+        goto done;
+    }
+
+    if (!CreateNamesKey(hAliasesKey))
+    {
+        ERR("Failed to create 'Builtin\\Aliases\\Names' key! (Error %lu)\n", GetLastError());
+        bResult = FALSE;
+        goto done;
     }
 
     /* Create builtin aliases */
     if (!CreateBuiltinAliases(hAliasesKey))
     {
         ERR("Failed to create builtin aliases!\n");
-        RegCloseKey(hAliasesKey);
-        RegCloseKey(hBuiltinKey);
-        RegCloseKey(hDomainsKey);
-        return FALSE;
+        bResult = FALSE;
+        goto done;
     }
 
     RegCloseKey(hAliasesKey);
-
+    hAliasesKey = NULL;
 
     /* Create the 'Builtin\Groups' key */
     if (RegCreateKeyExW(hBuiltinKey,
@@ -259,22 +307,27 @@ SampInitializeSAM(VOID)
                         &dwDisposition))
     {
         ERR("Failed to create 'Builtin\\Groups' key! (Error %lu)\n", GetLastError());
-        RegCloseKey(hBuiltinKey);
-        RegCloseKey(hDomainsKey);
-        return FALSE;
+        bResult = FALSE;
+        goto done;
+    }
+
+    if (!CreateNamesKey(hGroupsKey))
+    {
+        ERR("Failed to create 'Builtin\\Groups\\Names' key! (Error %lu)\n", GetLastError());
+        bResult = FALSE;
+        goto done;
     }
 
     /* Create builtin groups */
     if (!CreateBuiltinGroups(hGroupsKey))
     {
         ERR("Failed to create builtin groups!\n");
-        RegCloseKey(hGroupsKey);
-        RegCloseKey(hBuiltinKey);
-        RegCloseKey(hDomainsKey);
-        return FALSE;
+        bResult = FALSE;
+        goto done;
     }
 
     RegCloseKey(hGroupsKey);
+    hGroupsKey = NULL;
 
 
     /* Create the 'Builtin\Users' key */
@@ -289,28 +342,48 @@ SampInitializeSAM(VOID)
                         &dwDisposition))
     {
         ERR("Failed to create 'Builtin\\Users' key! (Error %lu)\n", GetLastError());
-        RegCloseKey(hBuiltinKey);
-        RegCloseKey(hDomainsKey);
-        return FALSE;
+        bResult = FALSE;
+        goto done;
+    }
+
+    if (!CreateNamesKey(hUsersKey))
+    {
+        ERR("Failed to create 'Builtin\\Users\\Names' key! (Error %lu)\n", GetLastError());
+        bResult = FALSE;
+        goto done;
     }
 
     /* Create builtin users */
     if (!CreateBuiltinUsers(hUsersKey))
     {
         ERR("Failed to create builtin users!\n");
-        RegCloseKey(hUsersKey);
-        RegCloseKey(hBuiltinKey);
-        RegCloseKey(hDomainsKey);
-        return FALSE;
+        bResult = FALSE;
+        goto done;
     }
 
-    RegCloseKey(hUsersKey);
+done:
+    if (hAliasesKey)
+        RegCloseKey(hAliasesKey);
 
-    RegCloseKey(hBuiltinKey);
+    if (hGroupsKey)
+        RegCloseKey(hGroupsKey);
 
-    RegCloseKey(hDomainsKey);
+    if (hUsersKey)
+        RegCloseKey(hUsersKey);
+
+    if (hAccountKey)
+        RegCloseKey(hAccountKey);
+
+    if (hBuiltinKey)
+        RegCloseKey(hBuiltinKey);
+
+    if (hDomainsKey)
+        RegCloseKey(hDomainsKey);
+
+    if (hSamKey)
+        RegCloseKey(hSamKey);
 
     TRACE("SampInitializeSAM() done\n");
 
-    return TRUE;
+    return bResult;
 }
