@@ -171,6 +171,12 @@ CreateProgressDialog(HWND hParent,
                      0,
                      lpProgStr);
         }
+
+        /* Finally, show and update the progress dialog */
+        ShowWindow(hProgDlg, SW_SHOWNORMAL);
+        UpdateWindow(hProgDlg);
+
+        // TODO: Add a message loop for it ?
     }
 
     return hProgDlg;
