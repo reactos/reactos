@@ -323,7 +323,7 @@ CUSBDevice::SetDeviceAddress(
     CtrlSetup->wValue.W = DeviceAddress;
 
     // set device address
-    Status = CommitSetupPacket(CtrlSetup, 0, 0, 0);
+    Status = CommitSetupPacket(CtrlSetup, NULL, 0, NULL);
 
     // free setup packet
     ExFreePoolWithTag(CtrlSetup, TAG_USBLIB);
@@ -640,7 +640,7 @@ CUSBDevice::CreateDeviceDescriptor()
     //
     // commit setup packet
     //
-    Status = CommitSetupPacket(&CtrlSetup, 0, sizeof(USB_DEVICE_DESCRIPTOR), Mdl);
+    Status = CommitSetupPacket(&CtrlSetup, NULL, sizeof(USB_DEVICE_DESCRIPTOR), Mdl);
 
     //
     // now free the mdl
@@ -713,7 +713,7 @@ CUSBDevice::GetConfigurationDescriptor(
     //
     // commit packet
     //
-    Status = CommitSetupPacket(&CtrlSetup, 0, BufferSize, Mdl);
+    Status = CommitSetupPacket(&CtrlSetup, NULL, BufferSize, Mdl);
 
     //
     // free mdl
@@ -809,6 +809,8 @@ CUSBDevice::GetConfigurationDescriptors(
     IN ULONG BufferLength,
     OUT PULONG OutBufferLength)
 {
+    ULONG Length;
+
     // sanity check
     ASSERT(BufferLength >= sizeof(USB_CONFIGURATION_DESCRIPTOR));
     ASSERT(ConfigDescriptorBuffer);
@@ -821,8 +823,9 @@ CUSBDevice::GetConfigurationDescriptors(
     PC_ASSERT(m_DeviceDescriptor.bNumConfigurations == 1);
 
     // copy configuration descriptor
-    RtlCopyMemory(ConfigDescriptorBuffer, m_ConfigurationDescriptors[0].ConfigurationDescriptor, min(m_ConfigurationDescriptors[0].ConfigurationDescriptor->wTotalLength, BufferLength));
-    *OutBufferLength = m_ConfigurationDescriptors[0].ConfigurationDescriptor->wTotalLength;
+    Length = min(m_ConfigurationDescriptors[0].ConfigurationDescriptor->wTotalLength, BufferLength);
+    RtlCopyMemory(ConfigDescriptorBuffer, m_ConfigurationDescriptors[0].ConfigurationDescriptor, Length);
+    *OutBufferLength = Length;
 }
 
 //----------------------------------------------------------------------------------------
@@ -904,7 +907,7 @@ CUSBDevice::SubmitSetupPacket(
     //
     // commit setup packet
     //
-    Status = CommitSetupPacket(SetupPacket, 0, BufferLength, Mdl);
+    Status = CommitSetupPacket(SetupPacket, NULL, BufferLength, Mdl);
 
     if (Mdl != NULL)
     {
@@ -1055,7 +1058,7 @@ CUSBDevice::SelectConfiguration(
     CtrlSetup.wValue.W = bConfigurationValue;
 
     // select configuration
-    Status = CommitSetupPacket(&CtrlSetup, 0, 0, 0);
+    Status = CommitSetupPacket(&CtrlSetup, NULL, 0, NULL);
 
     if (!ConfigurationDescriptor)
     {
@@ -1174,7 +1177,7 @@ CUSBDevice::SelectInterface(
     CtrlSetup.bmRequestType.B = 0x01;
 
     // issue request
-    Status = CommitSetupPacket(&CtrlSetup, 0, 0, 0);
+    Status = CommitSetupPacket(&CtrlSetup, NULL, 0, NULL);
 
     // informal debug print
     DPRINT1("CUSBDevice::SelectInterface AlternateSetting %x InterfaceNumber %x Status %x\n", InterfaceInfo->AlternateSetting, InterfaceInfo->InterfaceNumber, Status);

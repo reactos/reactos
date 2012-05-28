@@ -473,6 +473,7 @@ USBCCGP_BuildConfigurationDescriptor(
     PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor;
     PUSB_INTERFACE_DESCRIPTOR InterfaceDescriptor;
     ULONG TotalSize, Index;
+    ULONG Size;
     PURB Urb;
     PVOID Buffer;
     PUCHAR BufferPtr;
@@ -640,7 +641,7 @@ USBCCGP_BuildConfigurationDescriptor(
     // modify configuration descriptor
     //
     ConfigurationDescriptor = Buffer;
-    ConfigurationDescriptor->wTotalLength = TotalSize;
+    ConfigurationDescriptor->wTotalLength = (USHORT)TotalSize;
     ConfigurationDescriptor->bNumInterfaces = PDODeviceExtension->FunctionDescriptor->NumberOfInterfaces;
 
     //
@@ -652,12 +653,13 @@ USBCCGP_BuildConfigurationDescriptor(
     //
     // copy descriptor
     //
-    RtlCopyMemory(Urb->UrbControlDescriptorRequest.TransferBuffer, Buffer, min(TotalSize, Urb->UrbControlDescriptorRequest.TransferBufferLength));
+    Size = min(TotalSize, Urb->UrbControlDescriptorRequest.TransferBufferLength);
+    RtlCopyMemory(Urb->UrbControlDescriptorRequest.TransferBuffer, Buffer, Size);
 
     //
     // store final size
     //
-    Urb->UrbControlDescriptorRequest.TransferBufferLength = TotalSize;
+    Urb->UrbControlDescriptorRequest.TransferBufferLength = Size;
 
     //
     // free buffer
@@ -846,7 +848,7 @@ USBCCGP_PDOSelectConfiguration(
             //
             // now prepare interface urb
             //
-            UsbBuildSelectInterfaceRequest(NewUrb, GET_SELECT_INTERFACE_REQUEST_SIZE(InterfaceInformation->NumberOfPipes), PDODeviceExtension->ConfigurationHandle, InterfaceInformation->InterfaceNumber, InterfaceInformation->AlternateSetting);
+            UsbBuildSelectInterfaceRequest(NewUrb, (USHORT)GET_SELECT_INTERFACE_REQUEST_SIZE(InterfaceInformation->NumberOfPipes), PDODeviceExtension->ConfigurationHandle, InterfaceInformation->InterfaceNumber, InterfaceInformation->AlternateSetting);
 
             //
             // now select the interface

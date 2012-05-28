@@ -538,7 +538,7 @@ CUSBRequest::InternalGetTransferType()
         // initialized with setup packet, must be a control transfer
         //
         TransferType = USB_ENDPOINT_TYPE_CONTROL;
-        ASSERT(m_EndpointDescriptor == FALSE);
+        ASSERT(m_EndpointDescriptor == NULL);
     }
 
     //

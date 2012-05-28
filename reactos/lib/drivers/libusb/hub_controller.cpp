@@ -1293,7 +1293,6 @@ CHubController::HandleClassDevice(
             // generate setup packet
             //
             CtrlSetup.bRequest = USB_REQUEST_GET_STATUS;
-            CtrlSetup.wValue.LowByte = Urb->UrbControlVendorClassRequest.Index;
             CtrlSetup.wValue.W = Urb->UrbControlVendorClassRequest.Value;
             CtrlSetup.wIndex.W = Urb->UrbControlVendorClassRequest.Index;
             CtrlSetup.wLength = (USHORT)Urb->UrbControlGetStatusRequest.TransferBufferLength;
@@ -1410,7 +1409,7 @@ CHubController::HandleClassDevice(
             CtrlSetup.bRequest = Urb->UrbControlVendorClassRequest.Request;
             CtrlSetup.wValue.W = Urb->UrbControlVendorClassRequest.Value;
             CtrlSetup.wIndex.W = Urb->UrbControlVendorClassRequest.Index;
-            CtrlSetup.wLength = Urb->UrbControlVendorClassRequest.TransferBufferLength;
+            CtrlSetup.wLength = (USHORT)Urb->UrbControlVendorClassRequest.TransferBufferLength;
 
             if (Urb->UrbControlVendorClassRequest.TransferFlags & USBD_TRANSFER_DIRECTION_IN)
             {
@@ -1758,7 +1757,7 @@ CHubController::HandleClassEndpoint(
     CtrlSetup.bRequest = Urb->UrbControlVendorClassRequest.Request;
     CtrlSetup.wValue.W = Urb->UrbControlVendorClassRequest.Value;
     CtrlSetup.wIndex.W = Urb->UrbControlVendorClassRequest.Index;
-    CtrlSetup.wLength = Urb->UrbControlVendorClassRequest.TransferBufferLength;
+    CtrlSetup.wLength = (USHORT)Urb->UrbControlVendorClassRequest.TransferBufferLength;
 
     if (Urb->UrbControlVendorClassRequest.TransferFlags & USBD_TRANSFER_DIRECTION_IN)
     {
@@ -1830,7 +1829,7 @@ CHubController::HandleVendorDevice(
     CtrlSetup.bRequest = Urb->UrbControlVendorClassRequest.Request;
     CtrlSetup.wValue.W = Urb->UrbControlVendorClassRequest.Value;
     CtrlSetup.wIndex.W = Urb->UrbControlVendorClassRequest.Index;
-    CtrlSetup.wLength = Urb->UrbControlVendorClassRequest.TransferBufferLength;
+    CtrlSetup.wLength = (USHORT)Urb->UrbControlVendorClassRequest.TransferBufferLength;
 
     if (Urb->UrbControlVendorClassRequest.TransferFlags & USBD_TRANSFER_DIRECTION_IN)
     {
@@ -2096,7 +2095,7 @@ CHubController::HandleClassInterface(
     CtrlSetup.bRequest = Urb->UrbControlVendorClassRequest.Request;
     CtrlSetup.wValue.W = Urb->UrbControlVendorClassRequest.Value;
     CtrlSetup.wIndex.W = Urb->UrbControlVendorClassRequest.Index;
-    CtrlSetup.wLength = Urb->UrbControlVendorClassRequest.TransferBufferLength;
+    CtrlSetup.wLength = (USHORT)Urb->UrbControlVendorClassRequest.TransferBufferLength;
 
     if (Urb->UrbControlVendorClassRequest.TransferFlags & USBD_TRANSFER_DIRECTION_IN)
     {
