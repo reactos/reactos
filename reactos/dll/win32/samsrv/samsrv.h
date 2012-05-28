@@ -7,6 +7,7 @@
  * PROGRAMMERS:     Eric Kohl
  */
 
+#include <stdlib.h>
 #define WIN32_NO_STATUS
 #include <windows.h>
 #define NTOS_MODE_USER
@@ -74,6 +75,18 @@ SampValidateDbObject(SAMPR_HANDLE Handle,
 
 NTSTATUS
 SampCloseDbObject(PSAM_DB_OBJECT DbObject);
+
+NTSTATUS
+SampSetDbObjectNameAlias(IN PSAM_DB_OBJECT DomainObject,
+                         IN LPCWSTR lpContainerName,
+                         IN LPCWSTR lpAliasName,
+                         IN DWORD dwAliasValue);
+
+NTSTATUS
+SampCheckDbObjectNameAlias(IN PSAM_DB_OBJECT DomainObject,
+                           IN LPCWSTR lpContainerName,
+                           IN LPCWSTR lpAliasName,
+                           OUT PBOOL bAliasExists);
 
 NTSTATUS
 SampSetObjectAttribute(PSAM_DB_OBJECT DbObject,

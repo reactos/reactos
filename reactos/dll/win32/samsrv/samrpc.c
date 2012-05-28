@@ -193,6 +193,7 @@ SamrOpenDomain(IN SAMPR_HANDLE ServerHandle,
     TRACE("SamrOpenDomain(%p %lx %p %p)\n",
           ServerHandle, DesiredAccess, DomainId, DomainHandle);
 
+    /* Validate the server handle */
     Status = SampValidateDbObject(ServerHandle,
                                   SamDbServerObject,
                                   SAM_SERVER_LOOKUP_DOMAIN,
@@ -216,7 +217,7 @@ SamrOpenDomain(IN SAMPR_HANDLE ServerHandle,
         Status = SampOpenDbObject(ServerObject,
                                   L"Domains",
                                   L"Builtin",
-                                  SamDbServerObject,
+                                  SamDbDomainObject,
                                   DesiredAccess,
                                   &DomainObject);
     }
@@ -231,7 +232,7 @@ SamrOpenDomain(IN SAMPR_HANDLE ServerHandle,
         Status = SampOpenDbObject(ServerObject,
                                   L"Domains",
                                   L"Account",
-                                  SamDbServerObject,
+                                  SamDbDomainObject,
                                   DesiredAccess,
                                   &DomainObject);
     }
@@ -306,8 +307,116 @@ SamrCreateUserInDomain(IN SAMPR_HANDLE DomainHandle,
                        OUT SAMPR_HANDLE *UserHandle,
                        OUT unsigned long *RelativeId)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PSAM_DB_OBJECT DomainObject;
+    PSAM_DB_OBJECT UserObject;
+    ULONG ulSize;
+    ULONG ulRid;
+    WCHAR szRid[9];
+    BOOL bAliasExists = FALSE;
+    NTSTATUS Status;
+
+    TRACE("SamrCreateUserInDomain(%p %p %lx %p %p)\n",
+          DomainHandle, Name, DesiredAccess, UserHandle, RelativeId);
+
+    /* Validate the domain handle */
+    Status = SampValidateDbObject(DomainHandle,
+                                  SamDbDomainObject,
+                                  DOMAIN_CREATE_USER,
+                                  &DomainObject);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Get the NextRID attribute */
+    ulSize = sizeof(ULONG);
+    Status = SampGetObjectAttribute(DomainObject,
+                                    L"NextRID",
+                                    NULL,
+                                    (LPVOID)&ulRid,
+                                    &ulSize);
+    if (!NT_SUCCESS(Status))
+        ulRid = DOMAIN_USER_RID_MAX;
+
+    TRACE("RID: %lx\n", ulRid);
+
+    /* Convert the RID into a string (hex) */
+    _ultow(ulRid, szRid, 16);
+
+    /* Check whether the user name is already in use */
+    Status = SampCheckDbObjectNameAlias(DomainObject,
+                                        L"Users",
+                                        Name->Buffer,
+                                        &bAliasExists);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    if (bAliasExists)
+    {
+        TRACE("The user account %S already exists!\n", Name->Buffer);
+        return STATUS_USER_EXISTS;
+    }
+
+    /* Create the user object */
+    Status = SampCreateDbObject(DomainObject,
+                                L"Users",
+                                szRid,
+                                SamDbUserObject,
+                                DesiredAccess,
+                                &UserObject);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Add the name alias for the user object */
+    Status = SampSetDbObjectNameAlias(DomainObject,
+                                      L"Users",
+                                      Name->Buffer,
+                                      ulRid);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Set the account name attribute */
+    Status = SampSetObjectAttribute(UserObject,
+                                    L"AccountName",
+                                    REG_SZ,
+                                    (LPVOID)Name->Buffer,
+                                    Name->MaximumLength);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* FIXME: Set default user attributes */
+
+    if (NT_SUCCESS(Status))
+    {
+        *UserHandle = (SAMPR_HANDLE)UserObject;
+        *RelativeId = ulRid;
+    }
+
+    /* Increment the NextRID attribute */
+    ulRid++;
+    ulSize = sizeof(ULONG);
+    SampSetObjectAttribute(DomainObject,
+                           L"NextRID",
+                           REG_DWORD,
+                           (LPVOID)&ulRid,
+                           ulSize);
+
+    TRACE("returns with status 0x%08lx\n", Status);
+
+    return Status;
 }
 
 /* Function 13 */

@@ -10,7 +10,7 @@
 @ stub SamCreateAliasInDomain
 @ stub SamCreateGroupInDomain
 @ stub SamCreateUser2InDomain
-@ stub SamCreateUserInDomain
+@ stdcall SamCreateUserInDomain(ptr ptr long ptr ptr)
 @ stub SamDeleteAlias
 @ stub SamDeleteGroup
 @ stub SamDeleteUser

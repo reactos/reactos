@@ -603,6 +603,151 @@ SampCloseDbObject(PSAM_DB_OBJECT DbObject)
 
 
 NTSTATUS
+SampSetDbObjectNameAlias(IN PSAM_DB_OBJECT DomainObject,
+                         IN LPCWSTR lpContainerName,
+                         IN LPCWSTR lpAliasName,
+                         IN ULONG ulAliasValue)
+{
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING KeyName;
+    UNICODE_STRING ValueName;
+    HANDLE ContainerKeyHandle = NULL;
+    HANDLE NamesKeyHandle = NULL;
+    NTSTATUS Status;
+
+    /* Open the container key */
+    RtlInitUnicodeString(&KeyName, lpContainerName);
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &KeyName,
+                               OBJ_CASE_INSENSITIVE,
+                               DomainObject->KeyHandle,
+                               NULL);
+
+    Status = NtOpenKey(&ContainerKeyHandle,
+                       KEY_ALL_ACCESS,
+                       &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    /* Open the 'Names' key */
+    RtlInitUnicodeString(&KeyName, L"Names");
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &KeyName,
+                               OBJ_CASE_INSENSITIVE,
+                               ContainerKeyHandle,
+                               NULL);
+
+    Status = NtOpenKey(&NamesKeyHandle,
+                       KEY_ALL_ACCESS,
+                       &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    /* Set the alias value */
+    RtlInitUnicodeString(&ValueName, lpAliasName);
+
+    Status = NtSetValueKey(NamesKeyHandle,
+                           &ValueName,
+                           0,
+                           REG_DWORD,
+                           (LPVOID)&ulAliasValue,
+                           sizeof(ULONG));
+
+done:
+    if (NamesKeyHandle)
+        NtClose(NamesKeyHandle);
+
+    if (ContainerKeyHandle)
+        NtClose(ContainerKeyHandle);
+
+    return Status;
+}
+
+
+NTSTATUS
+SampCheckDbObjectNameAlias(IN PSAM_DB_OBJECT DomainObject,
+                           IN LPCWSTR lpContainerName,
+                           IN LPCWSTR lpAliasName,
+                           OUT PBOOL bAliasExists)
+{
+    PKEY_VALUE_PARTIAL_INFORMATION ValueInfo;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING KeyName;
+    UNICODE_STRING ValueName;
+    HANDLE ContainerKeyHandle = NULL;
+    HANDLE NamesKeyHandle = NULL;
+    ULONG BufferLength = sizeof(ULONG);
+    NTSTATUS Status;
+
+    /* Open the container key */
+    RtlInitUnicodeString(&KeyName, lpContainerName);
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &KeyName,
+                               OBJ_CASE_INSENSITIVE,
+                               DomainObject->KeyHandle,
+                               NULL);
+
+    Status = NtOpenKey(&ContainerKeyHandle,
+                       KEY_ALL_ACCESS,
+                       &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    /* Open the 'Names' key */
+    RtlInitUnicodeString(&KeyName, L"Names");
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &KeyName,
+                               OBJ_CASE_INSENSITIVE,
+                               ContainerKeyHandle,
+                               NULL);
+
+    Status = NtOpenKey(&NamesKeyHandle,
+                       KEY_ALL_ACCESS,
+                       &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    /* Get the alias value */
+    RtlInitUnicodeString(&ValueName, lpAliasName);
+
+    BufferLength += FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data);
+
+    /* Allocate memory for the value */
+    ValueInfo = RtlAllocateHeap(RtlGetProcessHeap(), 0, BufferLength);
+    if (ValueInfo == NULL)
+        return STATUS_NO_MEMORY;
+
+    /* Query the value */
+    Status = ZwQueryValueKey(NamesKeyHandle,
+                             &ValueName,
+                             KeyValuePartialInformation,
+                             ValueInfo,
+                             BufferLength,
+                             &BufferLength);
+
+    *bAliasExists = (Status != STATUS_OBJECT_NAME_NOT_FOUND);
+
+    Status = STATUS_SUCCESS;
+
+    /* Free the memory and return status */
+    RtlFreeHeap(RtlGetProcessHeap(), 0, ValueInfo);
+
+done:
+    if (NamesKeyHandle)
+        NtClose(NamesKeyHandle);
+
+    if (ContainerKeyHandle)
+        NtClose(ContainerKeyHandle);
+
+    return Status;
+}
+
+
+NTSTATUS
 SampSetObjectAttribute(PSAM_DB_OBJECT DbObject,
                        LPWSTR AttributeName,
                        ULONG AttributeType,

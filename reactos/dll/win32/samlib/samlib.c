@@ -433,6 +433,36 @@ SamConnect(IN OUT PUNICODE_STRING ServerName,
 
 NTSTATUS
 NTAPI
+SamCreateUserInDomain(IN SAM_HANDLE DomainHandle,
+                      IN PUNICODE_STRING AccountName,
+                      IN ACCESS_MASK DesiredAccess,
+                      OUT PSAM_HANDLE UserHandle,
+                      OUT PULONG RelativeId)
+{
+    NTSTATUS Status;
+
+    TRACE("SamCreateUserInDomain(%p,%p,0x%08x,%p,%p)\n",
+          DomainHandle, AccountName, DesiredAccess, UserHandle, RelativeId);
+
+    RpcTryExcept
+    {
+        Status = SamrCreateUserInDomain((SAMPR_HANDLE)DomainHandle,
+                                        (PRPC_UNICODE_STRING)AccountName,
+                                        DesiredAccess,
+                                        (SAMPR_HANDLE *)UserHandle,
+                                        RelativeId);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
+NTSTATUS
+NTAPI
 SamOpenDomain(IN SAM_HANDLE ServerHandle,
               IN ACCESS_MASK DesiredAccess,
               IN PSID DomainId,
