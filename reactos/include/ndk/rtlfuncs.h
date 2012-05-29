@@ -2872,6 +2872,13 @@ RtlAreBitsSet(
 NTSYSAPI
 VOID
 NTAPI
+RtlClearAllBits(
+    IN OUT PRTL_BITMAP BitMapHeader
+);
+
+NTSYSAPI
+VOID
+NTAPI
 RtlClearBits(
     IN PRTL_BITMAP BitMapHeader,
     IN ULONG StartingIndex,
@@ -2897,6 +2904,20 @@ RtlFindClearBitsAndSet(
 );
 
 NTSYSAPI
+CCHAR
+NTAPI
+RtlFindLeastSignificantBit(
+    IN ULONGLONG Value
+);
+
+NTSYSAPI
+CCHAR
+NTAPI
+RtlFindMostSignificantBit(
+    IN ULONGLONG Value
+);
+
+NTSYSAPI
 ULONG
 NTAPI
 RtlFindNextForwardRunClear(
@@ -2906,12 +2927,46 @@ RtlFindNextForwardRunClear(
 );
 
 NTSYSAPI
+ULONG
+NTAPI
+RtlFindNextForwardRunSet(
+    IN PRTL_BITMAP BitMapHeader,
+    IN ULONG FromIndex,
+    IN PULONG StartingRunIndex
+);
+
+NTSYSAPI
+ULONG
+NTAPI
+RtlFindSetBits(
+    IN PRTL_BITMAP BitMapHeader,
+    IN ULONG NumberToFind,
+    IN ULONG HintIndex
+);
+
+NTSYSAPI
+ULONG
+NTAPI
+RtlFindSetBitsAndClear(
+    IN PRTL_BITMAP BitMapHeader,
+    IN ULONG NumberToFind,
+    IN ULONG HintIndex
+);
+
+NTSYSAPI
 VOID
 NTAPI
 RtlInitializeBitMap(
     IN PRTL_BITMAP BitMapHeader,
     IN PULONG BitMapBuffer,
     IN ULONG SizeOfBitMap
+);
+
+NTSYSAPI
+ULONG
+NTAPI
+RtlNumberOfClearBits(
+    IN PRTL_BITMAP BitMapHeader
 );
 
 NTSYSAPI
