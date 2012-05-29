@@ -1889,11 +1889,15 @@ IntSetThreadDesktop(IN HDESK hDesktop,
 BOOL APIENTRY
 NtUserSetThreadDesktop(HDESK hDesktop)
 {
-   BOOL ret;
+   BOOL ret = FALSE;
 
    UserEnterExclusive();
 
-   ret = IntSetThreadDesktop(hDesktop, FALSE);
+   // FIXME: IntSetThreadDesktop validates the desktop handle, it should happen
+   // here too and set the NT error level. Q. Is it necessary to have the validation
+   // in IntSetThreadDesktop? Is it needed there too?
+   if (hDesktop || (!hDesktop && CsrProcess == PsGetCurrentProcess()))
+      ret = IntSetThreadDesktop(hDesktop, FALSE);
 
    UserLeave();
 
