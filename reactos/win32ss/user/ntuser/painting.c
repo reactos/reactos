@@ -594,8 +594,7 @@ IntIsWindowDirty(PWND Wnd)
 {
    return ( Wnd->style & WS_VISIBLE &&
            ( Wnd->hrgnUpdate != NULL ||
-             Wnd->state & WNDS_INTERNALPAINT ||
-             Wnd->state & WNDS_SENDNCPAINT ) );
+             Wnd->state & WNDS_INTERNALPAINT ) );
 }
 
 PWND FASTCALL
