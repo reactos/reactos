@@ -2,6 +2,7 @@
 list(APPEND SOURCE
     NtAllocateVirtualMemory.c
     NtFreeVirtualMemory.c
+    RtlBitmap.c
     RtlDetermineDosPathNameType.c
     RtlDoesFileExists.c
     RtlDosSearchPath_U.c
