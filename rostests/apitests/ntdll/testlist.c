@@ -25,7 +25,7 @@ const struct test winetest_testlist[] =
     { "NtAllocateVirtualMemory",        func_NtAllocateVirtualMemory },
     { "NtFreeVirtualMemory",            func_NtFreeVirtualMemory },
     { "NtSystemInformation",            func_NtSystemInformation },
-    { "RtlBitmap",                      func_RtlBitmap },
+    { "RtlBitmapApi",                   func_RtlBitmap },
     { "RtlDetermineDosPathNameType",    func_RtlDetermineDosPathNameType },
     { "RtlDoesFileExists",              func_RtlDoesFileExists },
     { "RtlDosSearchPath_U",             func_RtlDosSearchPath_U },
