@@ -200,10 +200,40 @@ Done:
 
 
 static NTSTATUS
+LsapCreateRandomDomainSid(OUT PSID *Sid)
+{
+    SID_IDENTIFIER_AUTHORITY SystemAuthority = {SECURITY_NT_AUTHORITY};
+    LARGE_INTEGER SystemTime;
+    PULONG Seed;
+
+    NtQuerySystemTime(&SystemTime);
+    Seed = &SystemTime.u.LowPart;
+
+    return RtlAllocateAndInitializeSid(&SystemAuthority,
+                                       4,
+                                       SECURITY_NT_NON_UNIQUE,
+                                       RtlUniform(Seed),
+                                       RtlUniform(Seed),
+                                       RtlUniform(Seed),
+                                       SECURITY_NULL_RID,
+                                       SECURITY_NULL_RID,
+                                       SECURITY_NULL_RID,
+                                       SECURITY_NULL_RID,
+                                       Sid);
+}
+
+
+static NTSTATUS
 LsapCreateDatabaseObjects(VOID)
 {
-    PLSA_DB_OBJECT PolicyObject;
+    PLSA_DB_OBJECT PolicyObject = NULL;
+    PSID AccountDomainSid = NULL;
     NTSTATUS Status;
+
+    /* Create a random domain SID */
+    Status = LsapCreateRandomDomainSid(&AccountDomainSid);
+    if (!NT_SUCCESS(Status))
+        return Status;
 
     /* Open the 'Policy' object */
     Status = LsapOpenDbObject(NULL,
@@ -212,7 +242,7 @@ LsapCreateDatabaseObjects(VOID)
                               0,
                               &PolicyObject);
     if (!NT_SUCCESS(Status))
-        return Status;
+        goto done;
 
     LsapSetObjectAttribute(PolicyObject,
                            L"PolPrDmN",
@@ -231,13 +261,17 @@ LsapCreateDatabaseObjects(VOID)
 
     LsapSetObjectAttribute(PolicyObject,
                            L"PolAcDmS",
-                           NULL,
-                           0);
+                           AccountDomainSid,
+                           RtlLengthSid(AccountDomainSid));
 
-    /* Close the 'Policy' object */
-    LsapCloseDbObject(PolicyObject);
+done:
+    if (PolicyObject != NULL)
+        LsapCloseDbObject(PolicyObject);
 
-    return STATUS_SUCCESS;
+    if (AccountDomainSid != NULL)
+        RtlFreeSid(AccountDomainSid);
+
+    return Status;
 }
 
 

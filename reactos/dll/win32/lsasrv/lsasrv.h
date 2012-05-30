@@ -11,6 +11,7 @@
 #include <windows.h>
 #define NTOS_MODE_USER
 #include <ndk/cmfuncs.h>
+#include <ndk/kefuncs.h>
 #include <ndk/lpctypes.h>
 #include <ndk/lpcfuncs.h>
 #include <ndk/obfuncs.h>

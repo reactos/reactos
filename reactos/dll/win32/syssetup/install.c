@@ -36,9 +36,6 @@ CMP_WaitNoPendingInstallEvents(DWORD dwTimeout);
 
 /* GLOBALS ******************************************************************/
 
-PSID DomainSid = NULL;
-PSID AdminSid = NULL;
-
 HINF hSysSetupInf = INVALID_HANDLE_VALUE;
 
 /* FUNCTIONS ****************************************************************/
@@ -225,33 +222,6 @@ CreateShortcutFolder(int csidl, UINT nID, LPTSTR pszName, int cchNameLen)
     _tcscpy(p, pszName);
 
     return CreateDirectory(szPath, NULL) || GetLastError()==ERROR_ALREADY_EXISTS;
-}
-
-static BOOL
-CreateRandomSid(
-    OUT PSID *Sid)
-{
-    SID_IDENTIFIER_AUTHORITY SystemAuthority = {SECURITY_NT_AUTHORITY};
-    LARGE_INTEGER SystemTime;
-    PULONG Seed;
-    NTSTATUS Status;
-
-    NtQuerySystemTime(&SystemTime);
-    Seed = &SystemTime.u.LowPart;
-
-    Status = RtlAllocateAndInitializeSid(
-        &SystemAuthority,
-        4,
-        SECURITY_NT_NON_UNIQUE,
-        RtlUniform(Seed),
-        RtlUniform(Seed),
-        RtlUniform(Seed),
-        SECURITY_NULL_RID,
-        SECURITY_NULL_RID,
-        SECURITY_NULL_RID,
-        SECURITY_NULL_RID,
-        Sid);
-    return NT_SUCCESS(Status);
 }
 
 static VOID
@@ -878,6 +848,8 @@ SetSetupType(DWORD dwSetupType)
 DWORD WINAPI
 InstallReactOS(HINSTANCE hInstance)
 {
+    PPOLICY_ACCOUNT_DOMAIN_INFO AccountDomainInfo = NULL;
+    PSID AdminSid = NULL;
     TCHAR szBuffer[MAX_PATH];
     DWORD LastError;
     HANDLE token;
@@ -893,23 +865,17 @@ InstallReactOS(HINSTANCE hInstance)
         return 0;
     }
 
-    /* Create the semi-random Domain-SID */
-    if (!CreateRandomSid(&DomainSid))
+    /* Get account domain information */
+    if (GetAccountDomainInfo(&AccountDomainInfo) != STATUS_SUCCESS)
     {
-        FatalError("Domain-SID creation failed!");
-        return 0;
-    }
-
-    /* Set the Domain SID (aka Computer SID) */
-    if (SetAccountDomain(NULL, DomainSid) != STATUS_SUCCESS)
-    {
-        FatalError("SetAccountDomain() failed!");
-        RtlFreeSid(DomainSid);
+        FatalError("GetAccountDomainInfo() failed!");
         return 0;
     }
 
     /* Append the Admin-RID */
-    AppendRidToSid(&AdminSid, DomainSid, DOMAIN_USER_RID_ADMIN);
+    AppendRidToSid(&AdminSid, AccountDomainInfo->DomainSid, DOMAIN_USER_RID_ADMIN);
+
+    LsaFreeMemory(AccountDomainInfo);
 
     CreateTempDir(L"TEMP");
     CreateTempDir(L"TMP");
@@ -964,13 +930,11 @@ InstallReactOS(HINSTANCE hInstance)
         {
             FatalError("SamCreateUser() failed!");
             RtlFreeSid(AdminSid);
-            RtlFreeSid(DomainSid);
             return 0;
         }
     }
 
     RtlFreeSid(AdminSid);
-    RtlFreeSid(DomainSid);
 
     if (!CreateShortcuts())
     {
