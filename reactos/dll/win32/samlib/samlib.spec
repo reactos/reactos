@@ -31,12 +31,12 @@
 @ stub SamOpenAlias
 @ stdcall SamOpenDomain(ptr long ptr ptr)
 @ stub SamOpenGroup
-@ stub SamOpenUser
+@ stdcall SamOpenUser(ptr long long ptr)
 @ stub SamQueryDisplayInformation
 @ stub SamQueryInformationAlias
 @ stub SamQueryInformationDomain
 @ stub SamQueryInformationGroup
-@ stub SamQueryInformationUser
+@ stdcall SamQueryInformationUser(ptr long ptr)
 @ stub SamQuerySecurityObject
 @ stub SamRemoveMemberFromAlias
 @ stub SamRemoveMemberFromForeignDomain
@@ -46,7 +46,7 @@
 @ stub SamSetInformationAlias
 @ stub SamSetInformationDomain
 @ stub SamSetInformationGroup
-@ stub SamSetInformationUser
+@ stdcall SamSetInformationUser(ptr long ptr)
 @ stub SamSetMemberAttributesOfGroup
 @ stub SamSetSecurityObject
 @ stdcall SamShutdownSamServer(ptr)

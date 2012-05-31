@@ -13,6 +13,9 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(samsrv);
 
+/* GLOBALS *****************************************************************/
+
+SID_IDENTIFIER_AUTHORITY SecurityNtAuthority = {SECURITY_NT_AUTHORITY};
 
 /* FUNCTIONS ***************************************************************/
 
@@ -56,60 +59,220 @@ SampIsSetupRunning(VOID)
 
 
 static BOOL
-CreateNamesKey(HKEY hParentKey)
+SampCreateUserAccount(HKEY hDomainKey,
+                      LPCWSTR lpAccountName,
+                      ULONG ulRelativeId)
 {
     DWORD dwDisposition;
-    HKEY hNamesKey;
+    WCHAR szUserKeyName[32];
+    HKEY hUserKey = NULL;
+    HKEY hNamesKey = NULL;
 
-    if (RegCreateKeyExW(hParentKey,
-                        L"Names",
+    swprintf(szUserKeyName, L"Users\\%08lX", ulRelativeId);
+
+    if (!RegCreateKeyExW(hDomainKey,
+                         szUserKeyName,
+                         0,
+                         NULL,
+                         REG_OPTION_NON_VOLATILE,
+                         KEY_ALL_ACCESS,
+                         NULL,
+                         &hUserKey,
+                         &dwDisposition))
+    {
+        RegSetValueEx(hUserKey,
+                      L"Name",
+                      0,
+                      REG_SZ,
+                      (LPVOID)lpAccountName,
+                      (wcslen(lpAccountName) + 1) * sizeof(WCHAR));
+
+        RegCloseKey(hUserKey);
+    }
+
+    if (!RegOpenKeyExW(hDomainKey,
+                       L"Users\\Names",
+                       0,
+                       KEY_ALL_ACCESS,
+                       &hNamesKey))
+    {
+        RegSetValueEx(hNamesKey,
+                      lpAccountName,
+                      0,
+                      REG_DWORD,
+                      (LPVOID)&ulRelativeId,
+                      sizeof(ULONG));
+
+        RegCloseKey(hNamesKey);
+    }
+
+    return TRUE;
+}
+
+
+static BOOL
+SampCreateDomain(IN HKEY hDomainsKey,
+                 IN LPCWSTR lpDomainName,
+                 IN PSID lpDomainSid,
+                 OUT PHKEY lpDomainKey)
+{
+    DWORD dwDisposition;
+    HKEY hDomainKey = NULL;
+    HKEY hAliasKey = NULL;
+    HKEY hGroupsKey = NULL;
+    HKEY hUsersKey = NULL;
+    HKEY hNamesKey = NULL;
+
+    if (lpDomainKey != NULL)
+        *lpDomainKey = NULL;
+
+    if (RegCreateKeyExW(hDomainsKey,
+                        lpDomainName,
                         0,
                         NULL,
                         REG_OPTION_NON_VOLATILE,
                         KEY_ALL_ACCESS,
                         NULL,
-                        &hNamesKey,
+                        &hDomainKey,
                         &dwDisposition))
         return FALSE;
 
-    RegCloseKey(hNamesKey);
+    if (lpDomainSid != NULL)
+    {
+        RegSetValueEx(hDomainKey,
+                      L"SID",
+                      0,
+                      REG_BINARY,
+                      (LPVOID)lpDomainSid,
+                      RtlLengthSid(lpDomainSid));
+    }
+
+    /* Create the Alias container */
+    if (!RegCreateKeyExW(hDomainKey,
+                         L"Alias",
+                         0,
+                         NULL,
+                         REG_OPTION_NON_VOLATILE,
+                         KEY_ALL_ACCESS,
+                         NULL,
+                         &hAliasKey,
+                         &dwDisposition))
+    {
+        if (!RegCreateKeyExW(hAliasKey,
+                             L"Names",
+                             0,
+                             NULL,
+                             REG_OPTION_NON_VOLATILE,
+                             KEY_ALL_ACCESS,
+                             NULL,
+                             &hNamesKey,
+                             &dwDisposition))
+            RegCloseKey(hNamesKey);
+
+        RegCloseKey(hAliasKey);
+    }
+
+    /* Create the Groups container */
+    if (!RegCreateKeyExW(hDomainKey,
+                         L"Groups",
+                         0,
+                         NULL,
+                         REG_OPTION_NON_VOLATILE,
+                         KEY_ALL_ACCESS,
+                         NULL,
+                         &hGroupsKey,
+                         &dwDisposition))
+    {
+        if (!RegCreateKeyExW(hGroupsKey,
+                             L"Names",
+                             0,
+                             NULL,
+                             REG_OPTION_NON_VOLATILE,
+                             KEY_ALL_ACCESS,
+                             NULL,
+                             &hNamesKey,
+                             &dwDisposition))
+            RegCloseKey(hNamesKey);
+
+        RegCloseKey(hGroupsKey);
+    }
+
+
+    /* Create the Users container */
+    if (!RegCreateKeyExW(hDomainKey,
+                         L"Users",
+                         0,
+                         NULL,
+                         REG_OPTION_NON_VOLATILE,
+                         KEY_ALL_ACCESS,
+                         NULL,
+                         &hUsersKey,
+                         &dwDisposition))
+    {
+        if (!RegCreateKeyExW(hUsersKey,
+                             L"Names",
+                             0,
+                             NULL,
+                             REG_OPTION_NON_VOLATILE,
+                             KEY_ALL_ACCESS,
+                             NULL,
+                             &hNamesKey,
+                             &dwDisposition))
+            RegCloseKey(hNamesKey);
+
+        RegCloseKey(hUsersKey);
+    }
+
+    if (lpDomainKey != NULL)
+        *lpDomainKey = hDomainKey;
+
     return TRUE;
 }
 
 
-static BOOL
-CreateBuiltinAliases(HKEY hAliasesKey)
+NTSTATUS
+SampGetAccountDomainInfo(PPOLICY_ACCOUNT_DOMAIN_INFO *AccountDomainInfo)
 {
-    return TRUE;
-}
+    LSA_OBJECT_ATTRIBUTES ObjectAttributes;
+    LSA_HANDLE PolicyHandle;
+    NTSTATUS Status;
 
+    TRACE("SampGetAccountDomainInfo\n");
 
-static BOOL
-CreateBuiltinGroups(HKEY hGroupsKey)
-{
-    return TRUE;
-}
+    memset(&ObjectAttributes, 0, sizeof(LSA_OBJECT_ATTRIBUTES));
+    ObjectAttributes.Length = sizeof(LSA_OBJECT_ATTRIBUTES);
 
+    Status = LsaOpenPolicy(NULL,
+                           &ObjectAttributes,
+                           POLICY_TRUST_ADMIN,
+                           &PolicyHandle);
+    if (Status != STATUS_SUCCESS)
+    {
+        ERR("LsaOpenPolicy failed (Status: 0x%08lx)\n", Status);
+        return Status;
+    }
 
-static BOOL
-CreateBuiltinUsers(HKEY hUsersKey)
-{
-    return TRUE;
+    Status = LsaQueryInformationPolicy(PolicyHandle,
+                                       PolicyAccountDomainInformation,
+                                       (PVOID *)AccountDomainInfo);
+
+    LsaClose(PolicyHandle);
+
+    return Status;
 }
 
 
 BOOL
 SampInitializeSAM(VOID)
 {
+    PPOLICY_ACCOUNT_DOMAIN_INFO AccountDomainInfo = NULL;
     DWORD dwDisposition;
     HKEY hSamKey = NULL;
     HKEY hDomainsKey = NULL;
-    HKEY hAccountKey = NULL;
-    HKEY hBuiltinKey = NULL;
-    HKEY hAliasesKey = NULL;
-    HKEY hGroupsKey = NULL;
-    HKEY hUsersKey = NULL;
+    HKEY hDomainKey = NULL;
+    PSID pBuiltinSid = NULL;
     BOOL bResult = TRUE;
+    NTSTATUS Status;
 
     TRACE("SampInitializeSAM() called\n");
 
@@ -145,237 +308,60 @@ SampInitializeSAM(VOID)
     RegCloseKey(hSamKey);
     hSamKey = NULL;
 
-    /* Create the 'Domains\\Account' key */
-    if (RegCreateKeyExW(hDomainsKey,
-                        L"Account",
-                        0,
-                        NULL,
-                        REG_OPTION_NON_VOLATILE,
-                        KEY_ALL_ACCESS,
-                        NULL,
-                        &hAccountKey,
-                        &dwDisposition))
+    /* Create and initialize the Builtin Domain SID */
+    pBuiltinSid = RtlAllocateHeap(RtlGetProcessHeap(), 0, RtlLengthRequiredSid(1));
+    if (pBuiltinSid == NULL)
     {
-        ERR("Failed to create 'Domains\\Account' key! (Error %lu)\n", GetLastError());
+        ERR("Failed to alloacte the Builtin Domain SID\n");
         bResult = FALSE;
         goto done;
     }
 
+    RtlInitializeSid(pBuiltinSid, &SecurityNtAuthority, 1);
+    *(RtlSubAuthoritySid(pBuiltinSid, 0)) = SECURITY_BUILTIN_DOMAIN_RID;
 
-    /* Create the 'Account\Aliases' key */
-    if (RegCreateKeyExW(hAccountKey,
-                        L"Aliases",
-                        0,
-                        NULL,
-                        REG_OPTION_NON_VOLATILE,
-                        KEY_ALL_ACCESS,
-                        NULL,
-                        &hAliasesKey,
-                        &dwDisposition))
+    /* Get account domain information */
+    Status = SampGetAccountDomainInfo(&AccountDomainInfo);
+    if (!NT_SUCCESS(Status))
     {
-        ERR("Failed to create 'Account\\Aliases' key! (Error %lu)\n", GetLastError());
+        ERR("SampGetAccountDomainInfo failed (Status %08lx)\n", Status);
         bResult = FALSE;
         goto done;
     }
 
-    if (!CreateNamesKey(hAliasesKey))
+    /* Create the Builtin domain */
+    if (SampCreateDomain(hDomainsKey,
+                         L"Builtin",
+                         pBuiltinSid,
+                         &hDomainKey))
     {
-        ERR("Failed to create 'Account\\Aliases\\Names' key! (Error %lu)\n", GetLastError());
-        bResult = FALSE;
-        goto done;
+
+        RegCloseKey(hDomainKey);
     }
 
-    RegCloseKey(hAliasesKey);
-    hAliasesKey = NULL;
-
-    /* Create the 'Account\Groups' key */
-    if (RegCreateKeyExW(hAccountKey,
-                        L"Groups",
-                        0,
-                        NULL,
-                        REG_OPTION_NON_VOLATILE,
-                        KEY_ALL_ACCESS,
-                        NULL,
-                        &hGroupsKey,
-                        &dwDisposition))
+    /* Create the Account domain */
+    if (SampCreateDomain(hDomainsKey,
+                         L"Account",
+                         AccountDomainInfo->DomainSid, //NULL,
+                         &hDomainKey))
     {
-        ERR("Failed to create 'Account\\Groups' key! (Error %lu)\n", GetLastError());
-        bResult = FALSE;
-        goto done;
-    }
+        SampCreateUserAccount(hDomainKey,
+                              L"Administrator",
+                              DOMAIN_USER_RID_ADMIN);
 
-    if (!CreateNamesKey(hGroupsKey))
-    {
-        ERR("Failed to create 'Account\\Groups\\Names' key! (Error %lu)\n", GetLastError());
-        bResult = FALSE;
-        goto done;
-    }
+        SampCreateUserAccount(hDomainKey,
+                              L"Guest",
+                              DOMAIN_USER_RID_GUEST);
 
-    RegCloseKey(hGroupsKey);
-    hGroupsKey = NULL;
-
-
-    /* Create the 'Account\Users' key */
-    if (RegCreateKeyExW(hAccountKey,
-                        L"Users",
-                        0,
-                        NULL,
-                        REG_OPTION_NON_VOLATILE,
-                        KEY_ALL_ACCESS,
-                        NULL,
-                        &hUsersKey,
-                        &dwDisposition))
-    {
-        ERR("Failed to create 'Account\\Users' key! (Error %lu)\n", GetLastError());
-        bResult = FALSE;
-        goto done;
-    }
-
-    if (!CreateNamesKey(hUsersKey))
-    {
-        ERR("Failed to create 'Account\\Aliases\\Users' key! (Error %lu)\n", GetLastError());
-        bResult = FALSE;
-        goto done;
-    }
-
-    RegCloseKey(hUsersKey);
-    hUsersKey = NULL;
-
-    RegCloseKey(hAccountKey);
-    hAccountKey = NULL;
-
-    /* Create the 'Domains\\Builtin' */
-    if (RegCreateKeyExW(hDomainsKey,
-                        L"Builtin",
-                        0,
-                        NULL,
-                        REG_OPTION_NON_VOLATILE,
-                        KEY_ALL_ACCESS,
-                        NULL,
-                        &hBuiltinKey,
-                        &dwDisposition))
-    {
-        ERR("Failed to create Builtin key! (Error %lu)\n", GetLastError());
-        bResult = FALSE;
-        goto done;
-    }
-
-
-    /* Create the 'Builtin\Aliases' key */
-    if (RegCreateKeyExW(hBuiltinKey,
-                        L"Aliases",
-                        0,
-                        NULL,
-                        REG_OPTION_NON_VOLATILE,
-                        KEY_ALL_ACCESS,
-                        NULL,
-                        &hAliasesKey,
-                        &dwDisposition))
-    {
-        ERR("Failed to create 'Builtin\\Aliases' key! (Error %lu)\n", GetLastError());
-        bResult = FALSE;
-        goto done;
-    }
-
-    if (!CreateNamesKey(hAliasesKey))
-    {
-        ERR("Failed to create 'Builtin\\Aliases\\Names' key! (Error %lu)\n", GetLastError());
-        bResult = FALSE;
-        goto done;
-    }
-
-    /* Create builtin aliases */
-    if (!CreateBuiltinAliases(hAliasesKey))
-    {
-        ERR("Failed to create builtin aliases!\n");
-        bResult = FALSE;
-        goto done;
-    }
-
-    RegCloseKey(hAliasesKey);
-    hAliasesKey = NULL;
-
-    /* Create the 'Builtin\Groups' key */
-    if (RegCreateKeyExW(hBuiltinKey,
-                        L"Groups",
-                        0,
-                        NULL,
-                        REG_OPTION_NON_VOLATILE,
-                        KEY_ALL_ACCESS,
-                        NULL,
-                        &hGroupsKey,
-                        &dwDisposition))
-    {
-        ERR("Failed to create 'Builtin\\Groups' key! (Error %lu)\n", GetLastError());
-        bResult = FALSE;
-        goto done;
-    }
-
-    if (!CreateNamesKey(hGroupsKey))
-    {
-        ERR("Failed to create 'Builtin\\Groups\\Names' key! (Error %lu)\n", GetLastError());
-        bResult = FALSE;
-        goto done;
-    }
-
-    /* Create builtin groups */
-    if (!CreateBuiltinGroups(hGroupsKey))
-    {
-        ERR("Failed to create builtin groups!\n");
-        bResult = FALSE;
-        goto done;
-    }
-
-    RegCloseKey(hGroupsKey);
-    hGroupsKey = NULL;
-
-
-    /* Create the 'Builtin\Users' key */
-    if (RegCreateKeyExW(hBuiltinKey,
-                        L"Users",
-                        0,
-                        NULL,
-                        REG_OPTION_NON_VOLATILE,
-                        KEY_ALL_ACCESS,
-                        NULL,
-                        &hUsersKey,
-                        &dwDisposition))
-    {
-        ERR("Failed to create 'Builtin\\Users' key! (Error %lu)\n", GetLastError());
-        bResult = FALSE;
-        goto done;
-    }
-
-    if (!CreateNamesKey(hUsersKey))
-    {
-        ERR("Failed to create 'Builtin\\Users\\Names' key! (Error %lu)\n", GetLastError());
-        bResult = FALSE;
-        goto done;
-    }
-
-    /* Create builtin users */
-    if (!CreateBuiltinUsers(hUsersKey))
-    {
-        ERR("Failed to create builtin users!\n");
-        bResult = FALSE;
-        goto done;
+        RegCloseKey(hDomainKey);
     }
 
 done:
-    if (hAliasesKey)
-        RegCloseKey(hAliasesKey);
+    if (AccountDomainInfo)
+        LsaFreeMemory(AccountDomainInfo);
 
-    if (hGroupsKey)
-        RegCloseKey(hGroupsKey);
-
-    if (hUsersKey)
-        RegCloseKey(hUsersKey);
-
-    if (hAccountKey)
-        RegCloseKey(hAccountKey);
-
-    if (hBuiltinKey)
-        RegCloseKey(hBuiltinKey);
+    if (pBuiltinSid)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, pBuiltinSid);
 
     if (hDomainsKey)
         RegCloseKey(hDomainsKey);

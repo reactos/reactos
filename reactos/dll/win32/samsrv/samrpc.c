@@ -337,12 +337,12 @@ SamrCreateUserInDomain(IN SAMPR_HANDLE DomainHandle,
                                     (LPVOID)&ulRid,
                                     &ulSize);
     if (!NT_SUCCESS(Status))
-        ulRid = DOMAIN_USER_RID_MAX;
+        ulRid = DOMAIN_USER_RID_MAX + 1;
 
     TRACE("RID: %lx\n", ulRid);
 
     /* Convert the RID into a string (hex) */
-    _ultow(ulRid, szRid, 16);
+    swprintf(szRid, L"%08lX", ulRid);
 
     /* Check whether the user name is already in use */
     Status = SampCheckDbObjectNameAlias(DomainObject,
@@ -385,9 +385,9 @@ SamrCreateUserInDomain(IN SAMPR_HANDLE DomainHandle,
         return Status;
     }
 
-    /* Set the account name attribute */
+    /* Set the name attribute */
     Status = SampSetObjectAttribute(UserObject,
-                                    L"AccountName",
+                                    L"Name",
                                     REG_SZ,
                                     (LPVOID)Name->Buffer,
                                     Name->MaximumLength);
@@ -658,12 +658,48 @@ SamrGetMembersInAlias(IN SAMPR_HANDLE AliasHandle,
 NTSTATUS
 NTAPI
 SamrOpenUser(IN SAMPR_HANDLE DomainHandle,
-             IN unsigned long DesiredAccess,
+             IN ACCESS_MASK DesiredAccess,
              IN unsigned long UserId,
              OUT SAMPR_HANDLE *UserHandle)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PSAM_DB_OBJECT DomainObject;
+    PSAM_DB_OBJECT UserObject;
+    WCHAR szRid[9];
+    NTSTATUS Status;
+
+    TRACE("SamrOpenUser(%p %lx %lx %p)\n",
+          DomainHandle, DesiredAccess, UserId, UserHandle);
+
+    /* Validate the domain handle */
+    Status = SampValidateDbObject(DomainHandle,
+                                  SamDbDomainObject,
+                                  DOMAIN_LOOKUP,
+                                  &DomainObject);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Convert the RID into a string (hex) */
+    swprintf(szRid, L"%08lX", UserId);
+
+    /* Create the user object */
+    Status = SampOpenDbObject(DomainObject,
+                              L"Users",
+                              szRid,
+                              SamDbUserObject,
+                              DesiredAccess,
+                              &UserObject);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    *UserHandle = (SAMPR_HANDLE)UserObject;
+
+    return STATUS_SUCCESS;
 }
 
 /* Function 35 */
@@ -686,6 +722,27 @@ SamrQueryInformationUser(IN SAMPR_HANDLE UserHandle,
     return STATUS_NOT_IMPLEMENTED;
 }
 
+
+static
+NTSTATUS
+SampSetPasswordInformation(PSAM_DB_OBJECT UserObject,
+                           PSAMPR_USER_SET_PASSWORD_INFORMATION PasswordInfo)
+{
+    NTSTATUS Status;
+
+    TRACE("Password: %S\n", PasswordInfo->Password.Buffer);
+    TRACE("PasswordExpired: %d\n", PasswordInfo->PasswordExpired);
+
+    Status = SampSetObjectAttribute(UserObject,
+                                    L"Password",
+                                    REG_SZ,
+                                    PasswordInfo->Password.Buffer,
+                                    PasswordInfo->Password.MaximumLength);
+
+    return Status;
+}
+
+
 /* Function 37 */
 NTSTATUS
 NTAPI
@@ -693,8 +750,36 @@ SamrSetInformationUser(IN SAMPR_HANDLE UserHandle,
                        IN USER_INFORMATION_CLASS UserInformationClass,
                        IN PSAMPR_USER_INFO_BUFFER Buffer)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PSAM_DB_OBJECT UserObject;
+    NTSTATUS Status;
+
+    TRACE("SamrSetInformationUser(%p %lu %p)\n",
+          UserHandle, UserInformationClass, Buffer);
+
+    /* Validate the domain handle */
+    Status = SampValidateDbObject(UserHandle,
+                                  SamDbUserObject,
+                                  USER_FORCE_PASSWORD_CHANGE,
+                                  &UserObject);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    switch (UserInformationClass)
+    {
+        case UserSetPasswordInformation:
+            Status = SampSetPasswordInformation(UserObject,
+                                                (PSAMPR_USER_SET_PASSWORD_INFORMATION)Buffer);
+            break;
+
+        default:
+            Status = STATUS_INVALID_INFO_CLASS;
+            break;
+    }
+
+    return Status;
 }
 
 /* Function 38 */
@@ -848,7 +933,7 @@ NTAPI
 SamrCreateUser2InDomain(IN SAMPR_HANDLE DomainHandle,
                         IN PRPC_UNICODE_STRING Name,
                         IN unsigned long AccountType,
-                        IN unsigned long DesiredAccess,
+                        IN ACCESS_MASK DesiredAccess,
                         OUT SAMPR_HANDLE *UserHandle,
                         OUT unsigned long *GrantedAccess,
                         OUT unsigned long *RelativeId)

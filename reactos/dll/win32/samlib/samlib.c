@@ -404,6 +404,7 @@ SamCloseHandle(IN SAM_HANDLE SamHandle)
     return Status;
 }
 
+
 NTSTATUS
 NTAPI
 SamConnect(IN OUT PUNICODE_STRING ServerName,
@@ -430,6 +431,7 @@ SamConnect(IN OUT PUNICODE_STRING ServerName,
 
     return Status;
 }
+
 
 NTSTATUS
 NTAPI
@@ -461,6 +463,7 @@ SamCreateUserInDomain(IN SAM_HANDLE DomainHandle,
     return Status;
 }
 
+
 NTSTATUS
 NTAPI
 SamOpenDomain(IN SAM_HANDLE ServerHandle,
@@ -488,6 +491,74 @@ SamOpenDomain(IN SAM_HANDLE ServerHandle,
 
     return Status;
 }
+
+
+NTSTATUS
+NTAPI
+SamOpenUser(IN SAM_HANDLE DomainHandle,
+            IN ACCESS_MASK DesiredAccess,
+            IN ULONG UserId,
+            OUT PSAM_HANDLE UserHandle)
+{
+    NTSTATUS Status;
+
+    TRACE("SamOpenUser(%p,0x%08x,%lx,%p)\n",
+          DomainHandle, DesiredAccess, UserId, UserHandle);
+
+    RpcTryExcept
+    {
+        Status = SamrOpenUser((SAMPR_HANDLE)DomainHandle,
+                              DesiredAccess,
+                              UserId,
+                              (SAMPR_HANDLE *)UserHandle);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
+
+NTSTATUS
+NTAPI
+SamQueryInformationUser(IN SAM_HANDLE UserHandle,
+                        IN USER_INFORMATION_CLASS UserInformationClass,
+                        OUT PVOID *Buffer)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+
+NTSTATUS
+NTAPI
+SamSetInformationUser(IN SAM_HANDLE UserHandle,
+                      IN USER_INFORMATION_CLASS UserInformationClass,
+                      IN PVOID Buffer)
+{
+    NTSTATUS Status;
+
+    TRACE("SamSetInformationUser(%p %lu %p)\n",
+          UserHandle, UserInformationClass, Buffer);
+
+    RpcTryExcept
+    {
+        Status = SamrSetInformationUser((SAMPR_HANDLE)UserHandle,
+                                        UserInformationClass,
+                                        Buffer);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
 
 NTSTATUS
 NTAPI

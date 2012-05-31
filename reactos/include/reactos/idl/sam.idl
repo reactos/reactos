@@ -152,6 +152,7 @@ typedef enum _DOMAIN_SERVER_ROLE
     DomainServerRolePrimary = 3
 } DOMAIN_SERVER_ROLE, *PDOMAIN_SERVER_ROLE;
 
+cpp_quote("#ifndef _NTSECAPI_H")
 typedef struct _DOMAIN_PASSWORD_INFORMATION
 {
     unsigned short MinPasswordLength;
@@ -160,6 +161,7 @@ typedef struct _DOMAIN_PASSWORD_INFORMATION
     OLD_LARGE_INTEGER MaxPasswordAge;
     OLD_LARGE_INTEGER MinPasswordAge;
 } DOMAIN_PASSWORD_INFORMATION, *PDOMAIN_PASSWORD_INFORMATION;
+cpp_quote("#endif")
 
 typedef struct _DOMAIN_LOGOFF_INFORMATION
 {
@@ -600,6 +602,13 @@ typedef struct _SAMPR_USER_WORKSTATIONS_INFORMATION
     RPC_UNICODE_STRING WorkStations;
 } SAMPR_USER_WORKSTATIONS_INFORMATION, *PSAMPR_USER_WORKSTATIONS_INFORMATION;
 
+typedef struct _SAMPR_USER_SET_PASSWORD_INFORMATION
+{
+//    SAMPR_ENCRYPTED_USER_PASSWORD Password;
+    RPC_UNICODE_STRING Password;
+    BOOLEAN PasswordExpired;
+} SAMPR_USER_SET_PASSWORD_INFORMATION, *PSAMPR_USER_SET_PASSWORD_INFORMATION;
+
 typedef struct _SAMPR_USER_LOGON_HOURS_INFORMATION
 {
     SAMPR_LOGON_HOURS LogonHours;
@@ -638,6 +647,7 @@ typedef struct _SAMPR_USER_INTERNAL5_INFORMATION_NEW
     unsigned char PasswordExpired;
 } SAMPR_USER_INTERNAL5_INFORMATION_NEW, *PSAMPR_USER_INTERNAL5_INFORMATION_NEW;
 
+cpp_quote("#ifndef _NTSAM_")
 typedef enum _USER_INFORMATION_CLASS
 {
     UserGeneralInformation = 1,
@@ -654,16 +664,23 @@ typedef enum _USER_INFORMATION_CLASS
     UserProfileInformation = 12,
     UserAdminCommentInformation = 13,
     UserWorkStationsInformation = 14,
+    UserSetPasswordInformation = 15, /* This is missing from the SAM RPC documentation */
     UserControlInformation = 16,
     UserExpiresInformation = 17,
     UserInternal1Information = 18,
+    UserInternal2Information = 19,   /* This is missing from the SAM RPC documentation */
     UserParametersInformation = 20,
     UserAllInformation = 21,
+    UserInternal3Information = 22,   /* This is missing from the SAM RPC documentation */
     UserInternal4Information = 23,
     UserInternal5Information = 24,
     UserInternal4InformationNew = 25,
     UserInternal5InformationNew = 26,
+    UserInternal6Information,        /* This is missing from the SAM RPC documentation */
+    UserExtendedInformation,         /* This is missing from the SAM RPC documentation */
+    UserLogonUIInformation,          /* This is missing from the SAM RPC documentation */
 } USER_INFORMATION_CLASS, *PUSER_INFORMATION_CLASS;
+cpp_quote("#endif")
 
 typedef [switch_type(USER_INFORMATION_CLASS)] union _SAMPR_USER_INFO_BUFFER
 {
@@ -681,6 +698,7 @@ typedef [switch_type(USER_INFORMATION_CLASS)] union _SAMPR_USER_INFO_BUFFER
     [case(UserProfileInformation)] SAMPR_USER_PROFILE_INFORMATION Profile;
     [case(UserAdminCommentInformation)] SAMPR_USER_ADMIN_COMMENT_INFORMATION AdminComment;
     [case(UserWorkStationsInformation)] SAMPR_USER_WORKSTATIONS_INFORMATION WorkStations;
+    [case(UserSetPasswordInformation)] SAMPR_USER_SET_PASSWORD_INFORMATION SetPassword;
     [case(UserControlInformation)] USER_CONTROL_INFORMATION Control;
     [case(UserExpiresInformation)] USER_EXPIRES_INFORMATION Expires;
     [case(UserInternal1Information)] SAMPR_USER_INTERNAL1_INFORMATION Internal1;
@@ -1015,7 +1033,7 @@ interface samr
     __stdcall
     SamrOpenAlias(
         [in] SAMPR_HANDLE DomainHandle,
-        [in] unsigned long DesiredAccess,
+        [in] ACCESS_MASK DesiredAccess,
         [in] unsigned long AliasId,
         [out] SAMPR_HANDLE *AliasHandle);
 
@@ -1067,7 +1085,7 @@ interface samr
     __stdcall
     SamrOpenUser(
         [in] SAMPR_HANDLE DomainHandle,
-        [in] unsigned long DesiredAccess,
+        [in] ACCESS_MASK DesiredAccess,
         [in] unsigned long UserId,
         [out] SAMPR_HANDLE *UserHandle);
 
@@ -1209,7 +1227,7 @@ interface samr
         [in] SAMPR_HANDLE DomainHandle,
         [in] PRPC_UNICODE_STRING Name,
         [in] unsigned long AccountType,
-        [in] unsigned long DesiredAccess,
+        [in] ACCESS_MASK DesiredAccess,
         [out] SAMPR_HANDLE *UserHandle,
         [out] unsigned long *GrantedAccess,
         [out] unsigned long *RelativeId);

@@ -7,7 +7,7 @@
  * PROGRAMMERS:     Eric Kohl
  */
 
-#include <stdlib.h>
+#include <stdio.h>
 #define WIN32_NO_STATUS
 #include <windows.h>
 #define NTOS_MODE_USER
@@ -16,6 +16,7 @@
 #include <ndk/rtlfuncs.h>
 #include <ndk/umtypes.h>
 #include <ddk/ntsam.h>
+#include <ntsecapi.h>
 
 #include <samsrv/samsrv.h>
 

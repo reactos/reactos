@@ -25,8 +25,59 @@ extern "C" {
 #define SAM_SERVER_ENUMERATE_DOMAINS 16
 #define SAM_SERVER_LOOKUP_DOMAIN 32
 
+#define USER_READ_GENERAL 1
+#define USER_READ_PREFERENCES 2
+#define USER_WRITE_PREFERENCES 4
+#define USER_READ_LOGON 8
+#define USER_READ_ACCOUNT 16
+#define USER_WRITE_ACCOUNT 32
+#define USER_CHANGE_PASSWORD 64
+#define USER_FORCE_PASSWORD_CHANGE 128
+#define USER_LIST_GROUPS 256
+#define USER_READ_GROUP_INFORMATION 512
+#define USER_WRITE_GROUP_INFORMATION 1024
 
 typedef PVOID SAM_HANDLE, *PSAM_HANDLE;
+
+typedef enum _USER_INFORMATION_CLASS
+{
+    UserGeneralInformation = 1,
+    UserPreferencesInformation,
+    UserLogonInformation,
+    UserLogonHoursInformation,
+    UserAccountInformation,
+    UserNameInformation,
+    UserAccountNameInformation,
+    UserFullNameInformation,
+    UserPrimaryGroupInformation,
+    UserHomeInformation,
+    UserScriptInformation,
+    UserProfileInformation,
+    UserAdminCommentInformation,
+    UserWorkStationsInformation,
+    UserSetPasswordInformation,
+    UserControlInformation,
+    UserExpiresInformation,
+    UserInternal1Information,
+    UserInternal2Information,
+    UserParametersInformation,
+    UserAllInformation,
+    UserInternal3Information,
+    UserInternal4Information,
+    UserInternal5Information,
+    UserInternal4InformationNew,
+    UserInternal5InformationNew,
+    UserInternal6Information,
+    UserExtendedInformation,
+    UserLogonUIInformation,
+} USER_INFORMATION_CLASS, *PUSER_INFORMATION_CLASS;
+
+typedef struct _USER_SET_PASSWORD_INFORMATION
+{
+    UNICODE_STRING Password;
+    BOOLEAN PasswordExpired;
+} USER_SET_PASSWORD_INFORMATION, *PUSER_SET_PASSWORD_INFORMATION;
+
 
 NTSTATUS
 NTAPI
@@ -53,6 +104,25 @@ SamOpenDomain(IN SAM_HANDLE ServerHandle,
               IN ACCESS_MASK DesiredAccess,
               IN PSID DomainId,
               OUT PSAM_HANDLE DomainHandle);
+
+NTSTATUS
+NTAPI
+SamOpenUser(IN SAM_HANDLE DomainHandle,
+            IN ACCESS_MASK DesiredAccess,
+            IN ULONG UserId,
+            OUT PSAM_HANDLE UserHandle);
+
+NTSTATUS
+NTAPI
+SamQueryInformationUser(IN SAM_HANDLE UserHandle,
+                        IN USER_INFORMATION_CLASS UserInformationClass,
+                        OUT PVOID *Buffer);
+
+NTSTATUS
+NTAPI
+SamSetInformationUser(IN SAM_HANDLE UserHandle,
+                      IN USER_INFORMATION_CLASS UserInformationClass,
+                      IN PVOID Buffer);
 
 NTSTATUS
 NTAPI
