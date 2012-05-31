@@ -404,7 +404,6 @@ GetUserSid(LPCWSTR UserName,
     ULONG ulUserRid;
     DWORD dwLength;
     HKEY hNamesKey = NULL;
-    LONG lError;
     BOOL bResult = TRUE;
 
     if (!GetAccountDomainSid(&AccountDomainSid))
@@ -433,7 +432,7 @@ GetUserSid(LPCWSTR UserName,
                         (LPBYTE)&ulUserRid,
                         &dwLength))
     {
-        ERR("Failed to read the SID! (Error %ld)\n", lError);
+        ERR("Failed to read the SID! (Error %ld)\n", GetLastError());
         bResult = FALSE;
         goto done;
     }
