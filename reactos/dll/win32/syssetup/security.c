@@ -89,38 +89,6 @@ SetAccountDomain(LPCWSTR DomainName,
 }
 
 
-NTSTATUS
-GetAccountDomainInfo(PPOLICY_ACCOUNT_DOMAIN_INFO *AccountDomainInfo)
-{
-    LSA_OBJECT_ATTRIBUTES ObjectAttributes;
-    LSA_HANDLE PolicyHandle;
-    NTSTATUS Status;
-
-    DPRINT1("SYSSETUP: GetAccountDomain\n");
-
-    memset(&ObjectAttributes, 0, sizeof(LSA_OBJECT_ATTRIBUTES));
-    ObjectAttributes.Length = sizeof(LSA_OBJECT_ATTRIBUTES);
-
-    Status = LsaOpenPolicy(NULL,
-                           &ObjectAttributes,
-                           POLICY_TRUST_ADMIN,
-                           &PolicyHandle);
-    if (Status != STATUS_SUCCESS)
-    {
-        DPRINT("LsaOpenPolicy failed (Status: 0x%08lx)\n", Status);
-        return Status;
-    }
-
-    Status = LsaQueryInformationPolicy(PolicyHandle,
-                                       PolicyAccountDomainInformation,
-                                       (PVOID *)AccountDomainInfo);
-
-    LsaClose(PolicyHandle);
-
-    return Status;
-}
-
-
 static
 VOID
 InstallBuiltinAccounts(VOID)

@@ -63,7 +63,3 @@
 @ stub SamiSetBootKeyInformation
 @ stub SamiSetDSRMPassword
 @ stub SamiSetDSRMPasswordOWF
-
-@ stdcall SamCreateUser(wstr wstr ptr)
-@ stdcall SamCheckUserPassword(wstr wstr)
-@ stdcall SamGetUserSid(wstr ptr)

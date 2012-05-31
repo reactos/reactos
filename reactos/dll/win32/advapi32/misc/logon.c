@@ -211,9 +211,104 @@ UsernameDone:
 
 
 static BOOL WINAPI
-SamGetUserSid(LPCWSTR UserName,
-              PSID *Sid)
+GetAccountDomainSid(PSID *Sid)
 {
+    PPOLICY_ACCOUNT_DOMAIN_INFO Info = NULL;
+    LSA_OBJECT_ATTRIBUTES ObjectAttributes;
+    LSA_HANDLE PolicyHandle;
+    PSID lpSid;
+    ULONG Length;
+    NTSTATUS Status;
+
+    *Sid = NULL;
+
+    memset(&ObjectAttributes, 0, sizeof(LSA_OBJECT_ATTRIBUTES));
+    ObjectAttributes.Length = sizeof(LSA_OBJECT_ATTRIBUTES);
+
+    Status = LsaOpenPolicy(NULL,
+                           &ObjectAttributes,
+                           POLICY_VIEW_LOCAL_INFORMATION,
+                           &PolicyHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("LsaOpenPolicy failed (Status: 0x%08lx)\n", Status);
+        return FALSE;
+    }
+
+    Status = LsaQueryInformationPolicy(PolicyHandle,
+                                       PolicyAccountDomainInformation,
+                                       (PVOID *)&Info);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("LsaQueryInformationPolicy failed (Status: 0x%08lx)\n", Status);
+        LsaClose(PolicyHandle);
+        return FALSE;
+    }
+
+    Length = RtlLengthSid(Info->DomainSid);
+
+    lpSid = RtlAllocateHeap(RtlGetProcessHeap(),
+                            0,
+                            Length);
+    if (lpSid == NULL)
+    {
+        ERR("Failed to allocate SID buffer!\n");
+        LsaFreeMemory(Info);
+        LsaClose(PolicyHandle);
+        return FALSE;
+    }
+
+    memcpy(lpSid, Info->DomainSid, Length);
+
+    *Sid = lpSid;
+
+    LsaFreeMemory(Info);
+    LsaClose(PolicyHandle);
+
+    return TRUE;
+}
+
+
+static PSID
+AppendRidToSid(PSID SrcSid,
+               ULONG Rid)
+{
+    ULONG Rids[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+    UCHAR RidCount;
+    PSID DstSid;
+    ULONG i;
+
+    RidCount = *RtlSubAuthorityCountSid(SrcSid);
+    if (RidCount >= 8)
+        return NULL;
+
+    for (i = 0; i < RidCount; i++)
+        Rids[i] = *RtlSubAuthoritySid(SrcSid, i);
+
+    Rids[RidCount] = Rid;
+    RidCount++;
+
+    RtlAllocateAndInitializeSid(RtlIdentifierAuthoritySid(SrcSid),
+                                RidCount,
+                                Rids[0],
+                                Rids[1],
+                                Rids[2],
+                                Rids[3],
+                                Rids[4],
+                                Rids[5],
+                                Rids[6],
+                                Rids[7],
+                                &DstSid);
+
+    return DstSid;
+}
+
+
+static BOOL WINAPI
+GetUserSid(LPCWSTR UserName,
+           PSID *Sid)
+{
+#if 0
     PSID lpSid;
     DWORD dwLength;
     HKEY hUsersKey;
@@ -303,100 +398,56 @@ SamGetUserSid(LPCWSTR UserName,
     *Sid = lpSid;
 
     return TRUE;
-}
+#endif
 
+    PSID AccountDomainSid = NULL;
+    ULONG ulUserRid;
+    DWORD dwLength;
+    HKEY hNamesKey = NULL;
+    LONG lError;
+    BOOL bResult = TRUE;
 
-static BOOL WINAPI
-GetDomainSid(PSID *Sid)
-{
-    PPOLICY_ACCOUNT_DOMAIN_INFO Info = NULL;
-    LSA_OBJECT_ATTRIBUTES ObjectAttributes;
-    LSA_HANDLE PolicyHandle;
-    PSID lpSid;
-    ULONG Length;
-    NTSTATUS Status;
-
-    *Sid = NULL;
-
-    memset(&ObjectAttributes, 0, sizeof(LSA_OBJECT_ATTRIBUTES));
-    ObjectAttributes.Length = sizeof(LSA_OBJECT_ATTRIBUTES);
-
-    Status = LsaOpenPolicy(NULL,
-                           &ObjectAttributes,
-                           POLICY_TRUST_ADMIN,
-                           &PolicyHandle);
-    if (!NT_SUCCESS(Status))
+    if (!GetAccountDomainSid(&AccountDomainSid))
     {
-        ERR("LsaOpenPolicy failed (Status: 0x%08lx)\n", Status);
         return FALSE;
     }
 
-    Status = LsaQueryInformationPolicy(PolicyHandle,
-                                       PolicyAccountDomainInformation,
-                                       (PVOID *)&Info);
-    if (!NT_SUCCESS(Status))
+    /* Open the Users\Names key */
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                      L"SAM\\SAM\\Domains\\Account\\Users\\Names",
+                      0,
+                      KEY_READ,
+                      &hNamesKey))
     {
-        ERR("LsaQueryInformationPolicy failed (Status: 0x%08lx)\n", Status);
-        LsaClose(PolicyHandle);
-        return FALSE;
+        ERR("Failed to open Users\\Names key! (Error %lu)\n", GetLastError());
+        bResult = FALSE;
+        goto done;
     }
 
-    Length = RtlLengthSid(Info->DomainSid);
-
-    lpSid = RtlAllocateHeap(RtlGetProcessHeap(),
-                            0,
-                            Length);
-    if (lpSid == NULL)
+    /* Read the user RID */
+    dwLength = sizeof(ULONG);
+    if (RegQueryValueExW(hNamesKey,
+                         UserName,
+                         NULL,
+                         NULL,
+                        (LPBYTE)&ulUserRid,
+                        &dwLength))
     {
-        ERR("Failed to allocate SID buffer!\n");
-        LsaFreeMemory(Info);
-        LsaClose(PolicyHandle);
-        return FALSE;
+        ERR("Failed to read the SID! (Error %ld)\n", lError);
+        bResult = FALSE;
+        goto done;
     }
 
-    memcpy(lpSid, Info->DomainSid, Length);
+    *Sid = AppendRidToSid(AccountDomainSid, ulUserRid);
 
-    *Sid = lpSid;
+done:
+    if (hNamesKey != NULL)
+        RegCloseKey(hNamesKey);
 
-    LsaFreeMemory(Info);
-    LsaClose(PolicyHandle);
+    if (AccountDomainSid != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, AccountDomainSid);
 
-    return TRUE;
-}
-
-
-static PSID
-AppendRidToSid(PSID SrcSid,
-               ULONG Rid)
-{
-    ULONG Rids[8] = {0, 0, 0, 0, 0, 0, 0, 0};
-    UCHAR RidCount;
-    PSID DstSid;
-    ULONG i;
-
-    RidCount = *RtlSubAuthorityCountSid(SrcSid);
-    if (RidCount >= 8)
-        return NULL;
-
-    for (i = 0; i < RidCount; i++)
-        Rids[i] = *RtlSubAuthoritySid(SrcSid, i);
-
-    Rids[RidCount] = Rid;
-    RidCount++;
-
-    RtlAllocateAndInitializeSid(RtlIdentifierAuthoritySid(SrcSid),
-                                RidCount,
-                                Rids[0],
-                                Rids[1],
-                                Rids[2],
-                                Rids[3],
-                                Rids[4],
-                                Rids[5],
-                                Rids[6],
-                                Rids[7],
-                                &DstSid);
-
-    return DstSid;
+    return bResult;
 }
 
 
@@ -419,7 +470,7 @@ AllocateGroupSids(OUT PSID *PrimaryGroupSid,
     if (!NT_SUCCESS(Status))
         return NULL;
 
-    if (!GetDomainSid(&DomainSid))
+    if (!GetAccountDomainSid(&DomainSid))
         return NULL;
 
     TokenGroups = RtlAllocateHeap(
@@ -669,7 +720,7 @@ LogonUserW(LPWSTR lpszUsername,
     ExpirationTime.QuadPart = -1;
 
     /* Get the user SID from the registry */
-    if (!SamGetUserSid (lpszUsername, &UserSid))
+    if (!GetUserSid (lpszUsername, &UserSid))
     {
         ERR("SamGetUserSid() failed\n");
         return FALSE;

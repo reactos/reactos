@@ -224,40 +224,6 @@ CreateShortcutFolder(int csidl, UINT nID, LPTSTR pszName, int cchNameLen)
     return CreateDirectory(szPath, NULL) || GetLastError()==ERROR_ALREADY_EXISTS;
 }
 
-static VOID
-AppendRidToSid(
-    OUT PSID *Dst,
-    IN PSID Src,
-    IN ULONG NewRid)
-{
-    ULONG Rid[8] = {0, 0, 0, 0, 0, 0, 0, 0};
-    UCHAR RidCount;
-    ULONG i;
-
-    RidCount = *RtlSubAuthorityCountSid (Src);
-
-    for (i = 0; i < RidCount; i++)
-        Rid[i] = *RtlSubAuthoritySid (Src, i);
-
-    if (RidCount < 8)
-    {
-        Rid[RidCount] = NewRid;
-        RidCount++;
-    }
-
-    RtlAllocateAndInitializeSid(
-        RtlIdentifierAuthoritySid(Src),
-        RidCount,
-        Rid[0],
-        Rid[1],
-        Rid[2],
-        Rid[3],
-        Rid[4],
-        Rid[5],
-        Rid[6],
-        Rid[7],
-        Dst);
-}
 
 static VOID
 CreateTempDir(
@@ -848,10 +814,7 @@ SetSetupType(DWORD dwSetupType)
 DWORD WINAPI
 InstallReactOS(HINSTANCE hInstance)
 {
-    PPOLICY_ACCOUNT_DOMAIN_INFO AccountDomainInfo = NULL;
-    PSID AdminSid = NULL;
     TCHAR szBuffer[MAX_PATH];
-    DWORD LastError;
     HANDLE token;
     TOKEN_PRIVILEGES privs;
     HKEY hKey;
@@ -864,18 +827,6 @@ InstallReactOS(HINSTANCE hInstance)
         FatalError("InitializeProfiles() failed");
         return 0;
     }
-
-    /* Get account domain information */
-    if (GetAccountDomainInfo(&AccountDomainInfo) != STATUS_SUCCESS)
-    {
-        FatalError("GetAccountDomainInfo() failed!");
-        return 0;
-    }
-
-    /* Append the Admin-RID */
-    AppendRidToSid(&AdminSid, AccountDomainInfo->DomainSid, DOMAIN_USER_RID_ADMIN);
-
-    LsaFreeMemory(AccountDomainInfo);
 
     CreateTempDir(L"TEMP");
     CreateTempDir(L"TMP");
@@ -916,25 +867,6 @@ InstallReactOS(HINSTANCE hInstance)
     InstallWizard();
 
     InstallSecurity();
-
-    /* Create the Administrator account */
-    if (!SamCreateUser(L"Administrator", L"", AdminSid))
-    {
-        /* Check what the error was.
-         * If the Admin Account already exists, then it means Setup
-         * wasn't allowed to finish properly. Instead of rebooting
-         * and not completing it, let it restart instead
-         */
-        LastError = GetLastError();
-        if (LastError != ERROR_USER_EXISTS)
-        {
-            FatalError("SamCreateUser() failed!");
-            RtlFreeSid(AdminSid);
-            return 0;
-        }
-    }
-
-    RtlFreeSid(AdminSid);
 
     if (!CreateShortcuts())
     {
