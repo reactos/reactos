@@ -2392,6 +2392,8 @@ WINBASEAPI LONG WINAPI InterlockedIncrement(IN OUT LONG volatile *);
 PSLIST_ENTRY WINAPI InterlockedPopEntrySList(PSLIST_HEADER);
 PSLIST_ENTRY WINAPI InterlockedPushEntrySList(PSLIST_HEADER,PSLIST_ENTRY);
 #endif
+#define InterlockedCompareExchangePointerAcquire InterlockedCompareExchangePointer
+#define InterlockedCompareExchangePointerRelease InterlockedCompareExchangePointer
 
 #endif // !(defined (_M_AMD64) || defined (_M_IA64))
 
