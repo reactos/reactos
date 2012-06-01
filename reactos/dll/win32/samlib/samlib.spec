@@ -18,14 +18,14 @@
 @ stub SamEnumerateDomainsInSamServer
 @ stub SamEnumerateGroupsInDomain
 @ stub SamEnumerateUsersInDomain
-@ stub SamFreeMemory
+@ stdcall SamFreeMemory(ptr)
 @ stub SamGetAliasMembership
 @ stub SamGetCompatibilityMode
 @ stub SamGetDisplayEnumerationIndex
 @ stub SamGetGroupsForUser
 @ stub SamGetMembersInAlias
 @ stub SamGetMembersInGroup
-@ stub SamLookupDomainInSamServer
+@ stdcall SamLookupDomainInSamServer(ptr ptr ptr)
 @ stub SamLookupIdsInDomain
 @ stub SamLookupNamesInDomain
 @ stub SamOpenAlias

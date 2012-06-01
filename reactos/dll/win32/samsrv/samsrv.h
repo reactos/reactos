@@ -103,6 +103,35 @@ SampGetObjectAttribute(PSAM_DB_OBJECT DbObject,
                        LPVOID AttributeData,
                        PULONG AttributeSize);
 
+/* registry.h */
+NTSTATUS
+NTAPI
+SampRegEnumerateSubKey(IN HANDLE KeyHandle,
+                       IN ULONG Index,
+                       IN ULONG Length,
+                       OUT LPWSTR Buffer);
+
+NTSTATUS
+NTAPI
+SampRegOpenKey(IN HANDLE ParentKeyHandle,
+               IN LPCWSTR KeyName,
+               IN ACCESS_MASK DesiredAccess,
+               OUT HANDLE KeyHandle);
+
+NTSTATUS
+SampRegQueryValue(IN HANDLE KeyHandle,
+                  IN LPWSTR ValueName,
+                  OUT PULONG Type OPTIONAL,
+                  OUT LPVOID Data OPTIONAL,
+                  IN OUT PULONG DataLength OPTIONAL);
+
+NTSTATUS
+SampRegSetValue(IN HANDLE KeyHandle,
+                IN LPWSTR ValueName,
+                IN ULONG Type,
+                IN LPVOID Data,
+                IN ULONG DataLength);
+
 /* samspc.c */
 VOID SampStartRpcServer(VOID);
 

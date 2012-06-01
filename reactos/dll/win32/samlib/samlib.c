@@ -186,6 +186,44 @@ SamCreateUserInDomain(IN SAM_HANDLE DomainHandle,
 
 NTSTATUS
 NTAPI
+SamFreeMemory(IN PVOID Buffer)
+{
+    if (Buffer!= NULL)
+        midl_user_free(Buffer);
+
+    return STATUS_SUCCESS;
+}
+
+
+NTSTATUS
+NTAPI
+SamLookupDomainInSamServer(IN SAM_HANDLE ServerHandle,
+                           IN PUNICODE_STRING Name,
+                           OUT PSID *DomainId)
+{
+    NTSTATUS Status;
+
+    TRACE("SamLookupDomainInSamServer(%p,%p,%p)\n",
+          ServerHandle, Name, DomainId);
+
+    RpcTryExcept
+    {
+        Status = SamrLookupDomainInSamServer((SAMPR_HANDLE)ServerHandle,
+                                             (PRPC_UNICODE_STRING)Name,
+                                             (PRPC_SID *)DomainId);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
+
+NTSTATUS
+NTAPI
 SamOpenDomain(IN SAM_HANDLE ServerHandle,
               IN ACCESS_MASK DesiredAccess,
               IN PSID DomainId,

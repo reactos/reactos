@@ -161,8 +161,106 @@ SamrLookupDomainInSamServer(IN SAMPR_HANDLE ServerHandle,
                             IN PRPC_UNICODE_STRING Name,
                             OUT PRPC_SID *DomainId)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PSAM_DB_OBJECT ServerObject;
+    HANDLE DomainsKeyHandle = NULL;
+    HANDLE DomainKeyHandle = NULL;
+    WCHAR DomainKeyName[64];
+    ULONG Index;
+    WCHAR DomainNameString[MAX_COMPUTERNAME_LENGTH + 1];
+    UNICODE_STRING DomainName;
+    ULONG Length;
+    BOOL Found = FALSE;
+    NTSTATUS Status;
+
+    TRACE("SamrLookupDomainInSamServer(%p %p %p)\n",
+          ServerHandle, Name, DomainId);
+
+    /* Validate the server handle */
+    Status = SampValidateDbObject(ServerHandle,
+                                  SamDbServerObject,
+                                  SAM_SERVER_LOOKUP_DOMAIN,
+                                  &ServerObject);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    *DomainId = NULL;
+
+    Status = SampRegOpenKey(ServerObject->KeyHandle,
+                            L"Domains",
+                            KEY_READ,
+                            &DomainsKeyHandle);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    Index = 0;
+    while (Found == FALSE)
+    {
+        Status = SampRegEnumerateSubKey(DomainsKeyHandle,
+                                        Index,
+                                        64,
+                                        DomainKeyName);
+        if (!NT_SUCCESS(Status))
+        {
+            if (Status == STATUS_NO_MORE_ENTRIES)
+                Status = STATUS_NO_SUCH_DOMAIN;
+            break;
+        }
+
+        TRACE("Domain key name: %S\n", DomainKeyName);
+
+        Status = SampRegOpenKey(DomainsKeyHandle,
+                                DomainKeyName,
+                                KEY_READ,
+                                &DomainKeyHandle);
+        if (NT_SUCCESS(Status))
+        {
+            Length = (MAX_COMPUTERNAME_LENGTH + 1) * sizeof(WCHAR);
+            Status = SampRegQueryValue(DomainKeyHandle,
+                                       L"Name",
+                                       NULL,
+                                       (PVOID)&DomainNameString,
+                                       &Length);
+            if (NT_SUCCESS(Status))
+            {
+                TRACE("Domain name: %S\n", DomainNameString);
+
+                RtlInitUnicodeString(&DomainName,
+                                     DomainNameString);
+                if (RtlEqualUnicodeString(&DomainName, (PUNICODE_STRING)Name, TRUE))
+                {
+                   TRACE("Found it!\n");
+                   Found = TRUE;
+
+                   Status = SampRegQueryValue(DomainKeyHandle,
+                                              L"SID",
+                                              NULL,
+                                              NULL,
+                                              &Length);
+                   if (NT_SUCCESS(Status))
+                   {
+                       *DomainId = midl_user_allocate(Length);
+
+                       SampRegQueryValue(DomainKeyHandle,
+                                         L"SID",
+                                         NULL,
+                                         (PVOID)*DomainId,
+                                         &Length);
+
+                       Status = STATUS_SUCCESS;
+                       break;
+                   }
+                }
+            }
+
+            NtClose(DomainKeyHandle);
+        }
+
+        Index++;
+    }
+
+    NtClose(DomainsKeyHandle);
+
+    return Status;
 }
 
 /* Function 6 */

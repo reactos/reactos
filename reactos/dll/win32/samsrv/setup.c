@@ -112,6 +112,7 @@ SampCreateUserAccount(HKEY hDomainKey,
 
 static BOOL
 SampCreateDomain(IN HKEY hDomainsKey,
+                 IN LPCWSTR lpKeyName,
                  IN LPCWSTR lpDomainName,
                  IN PSID lpDomainSid,
                  OUT PHKEY lpDomainKey)
@@ -127,7 +128,7 @@ SampCreateDomain(IN HKEY hDomainsKey,
         *lpDomainKey = NULL;
 
     if (RegCreateKeyExW(hDomainsKey,
-                        lpDomainName,
+                        lpKeyName,
                         0,
                         NULL,
                         REG_OPTION_NON_VOLATILE,
@@ -139,6 +140,13 @@ SampCreateDomain(IN HKEY hDomainsKey,
 
     if (lpDomainSid != NULL)
     {
+        RegSetValueEx(hDomainKey,
+                      L"Name",
+                      0,
+                      REG_SZ,
+                      (LPVOID)lpDomainName,
+                      (wcslen(lpDomainName) + 1) * sizeof(WCHAR));
+
         RegSetValueEx(hDomainKey,
                       L"SID",
                       0,
@@ -332,6 +340,7 @@ SampInitializeSAM(VOID)
     /* Create the Builtin domain */
     if (SampCreateDomain(hDomainsKey,
                          L"Builtin",
+                         L"Builtin",
                          pBuiltinSid,
                          &hDomainKey))
     {
@@ -342,7 +351,8 @@ SampInitializeSAM(VOID)
     /* Create the Account domain */
     if (SampCreateDomain(hDomainsKey,
                          L"Account",
-                         AccountDomainInfo->DomainSid, //NULL,
+                         L"",
+                         AccountDomainInfo->DomainSid,
                          &hDomainKey))
     {
         SampCreateUserAccount(hDomainKey,

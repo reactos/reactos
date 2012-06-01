@@ -100,6 +100,16 @@ SamCreateUserInDomain(IN SAM_HANDLE DomainHandle,
 
 NTSTATUS
 NTAPI
+SamFreeMemory(IN PVOID Buffer);
+
+NTSTATUS
+NTAPI
+SamLookupDomainInSamServer(IN SAM_HANDLE ServerHandle,
+                           IN PUNICODE_STRING Name,
+                           OUT PSID *DomainId);
+
+NTSTATUS
+NTAPI
 SamOpenDomain(IN SAM_HANDLE ServerHandle,
               IN ACCESS_MASK DesiredAccess,
               IN PSID DomainId,
