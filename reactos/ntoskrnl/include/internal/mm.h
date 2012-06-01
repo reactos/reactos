@@ -179,6 +179,10 @@ typedef ULONG_PTR SWAPENTRY;
     (PAGE_WRITECOPY | \
     PAGE_EXECUTE_WRITECOPY)
 
+//
+// Wait entry for marking pages that are being serviced
+//
+#define MM_WAIT_ENTRY            0x7ffffc00
 
 #define InterlockedCompareExchangePte(PointerPte, Exchange, Comperand) \
     InterlockedCompareExchange((PLONG)(PointerPte), Exchange, Comperand)
@@ -1259,6 +1263,13 @@ MmSetPageProtect(
 BOOLEAN
 NTAPI
 MmIsPagePresent(
+    struct _EPROCESS* Process,
+    PVOID Address
+);
+
+BOOLEAN
+NTAPI
+MmIsDisabledPage(
     struct _EPROCESS* Process,
     PVOID Address
 );

@@ -467,7 +467,9 @@ MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOLEAN FreePage,
      */
     Pte = InterlockedExchangePte(Pt, 0);
 
-    WasValid = (Pte & PA_PRESENT);
+    /* We count a mapping as valid if it's a present page, or it's a nonzero pfn with
+     * the swap bit unset, indicating a valid page protected to PAGE_NOACCESS. */
+    WasValid = (Pte & PA_PRESENT) || ((Pte >> PAGE_SHIFT) && !(Pte & 0x800));
     if (WasValid)
     {
         /* Flush the TLB since we transitioned this PTE
@@ -702,6 +704,14 @@ MmIsPagePresent(PEPROCESS Process, PVOID Address)
 
 BOOLEAN
 NTAPI
+MmIsDisabledPage(PEPROCESS Process, PVOID Address)
+{
+    ULONG_PTR Entry = MmGetPageEntryForProcess(Process, Address);
+    return !(Entry & PA_PRESENT) && !(Entry & 0x800) && (Entry >> PAGE_SHIFT);
+}
+
+BOOLEAN
+NTAPI
 MmIsPageSwapEntry(PEPROCESS Process, PVOID Address)
 {
     ULONG Entry;
@@ -738,12 +748,17 @@ MmCreatePageFileMapping(PEPROCESS Process,
     if (Pt == NULL)
     {
         /* Nobody should page out an address that hasn't even been mapped */
-        KeBugCheck(MEMORY_MANAGEMENT);
+        /* But we might place a wait entry first, requiring the page table */
+        if (SwapEntry != MM_WAIT_ENTRY)
+        {
+            KeBugCheck(MEMORY_MANAGEMENT);
+        }
+        Pt = MmGetPageTableForProcess(Process, Address, TRUE);
     }
     Pte = InterlockedExchangePte(Pt, SwapEntry << 1);
     if (Pte != 0)
     {
-        KeBugCheck(MEMORY_MANAGEMENT);
+        KeBugCheckEx(MEMORY_MANAGEMENT, SwapEntry, (ULONG_PTR)Process, (ULONG_PTR)Address, 0);
     }
 
 	if (Address < MmSystemRangeStart)
@@ -975,7 +990,8 @@ MmSetPageProtect(PEPROCESS Process, PVOID Address, ULONG flProtect)
     }
     Pte = InterlockedExchangePte(Pt, PAGE_MASK(*Pt) | Attributes | (*Pt & (PA_ACCESSED|PA_DIRTY)));
 
-    if (!(Pte & PA_PRESENT))
+    // We should be able to bring a page back from PAGE_NOACCESS
+    if ((Pte & 0x800) || !(Pte >> PAGE_SHIFT))
     {
         DPRINT1("Invalid Pte %lx\n", Pte);
         KeBugCheck(MEMORY_MANAGEMENT);

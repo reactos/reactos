@@ -1223,6 +1223,11 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
       return(STATUS_SUCCESS);
    }
 
+   if (MmIsDisabledPage(Process, Address))
+   {
+       return(STATUS_ACCESS_VIOLATION);
+   }
+
    /*
     * Check for the virtual memory area being deleted.
     */
@@ -1438,6 +1443,8 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
 
    if (Entry == 0)
    {
+      SWAPENTRY FakeSwapEntry;
+
       /*
        * If the entry is zero (and it can't change because we have
        * locked the segment) then we need to load the page.
@@ -1448,6 +1455,7 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
        */
       MmSetPageEntrySectionSegment(Segment, &Offset, MAKE_SWAP_SSE(MM_WAIT_ENTRY));
       MmUnlockSectionSegment(Segment);
+      MmCreatePageFileMapping(Process, PAddress, MM_WAIT_ENTRY);
       MmUnlockAddressSpace(AddressSpace);
 
       if ((Segment->Flags & MM_PAGEFILE_SEGMENT) ||
@@ -1496,6 +1504,9 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
       MmSetPageEntrySectionSegment(Segment, &Offset, Entry);
       MmUnlockSectionSegment(Segment);
 
+      MmDeletePageFileMapping(Process, PAddress, &FakeSwapEntry);
+      DPRINT("CreateVirtualMapping Page %x Process %p PAddress %p Attributes %x\n", 
+              Page, Process, PAddress, Attributes);
       Status = MmCreateVirtualMapping(Process,
                                       PAddress,
                                       Attributes,
@@ -1506,6 +1517,7 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
          DPRINT1("Unable to create virtual mapping\n");
           KeBugCheck(MEMORY_MANAGEMENT);
       }
+      ASSERT(MmIsPagePresent(Process, PAddress));
       MmInsertRmap(Page, Process, Address);
 
       MiSetPageEvent(Process, Address);
@@ -2441,7 +2453,7 @@ MmAlterViewAttributes(PMMSUPPORT AddressSpace,
             }
          }
 
-         if (MmIsPagePresent(Process, Address))
+         if (MmIsPagePresent(Process, Address) || MmIsDisabledPage(Process, Address))
          {
             MmSetPageProtect(Process, Address,
                              Protect);
