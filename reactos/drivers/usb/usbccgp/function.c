@@ -331,7 +331,7 @@ USBCCGP_InitFunctionDescriptor(
 
     // allocate array for interface count
     FunctionDescriptor->InterfaceDescriptorList = AllocateItem(NonPagedPool, sizeof(PUSB_INTERFACE_DESCRIPTOR) * Descriptor->bInterfaceCount);
-    if (FunctionDescriptor->InterfaceDescriptorList)
+    if (!FunctionDescriptor->InterfaceDescriptorList)
     {
         //
         // no memory
