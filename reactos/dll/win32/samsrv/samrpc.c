@@ -359,6 +359,21 @@ SamrQueryInformationDomain(IN SAMPR_HANDLE DomainHandle,
     return STATUS_NOT_IMPLEMENTED;
 }
 
+static NTSTATUS
+SampSetDomainName(PSAM_DB_OBJECT DomainObject,
+                  PSAMPR_DOMAIN_NAME_INFORMATION DomainNameInfo)
+{
+    NTSTATUS Status;
+
+    Status = SampSetObjectAttribute(DomainObject,
+                                    L"Name",
+                                    REG_SZ,
+                                    DomainNameInfo->DomainName.Buffer,
+                                    DomainNameInfo->DomainName.Length + sizeof(WCHAR));
+
+    return Status;
+}
+
 /* Function 9 */
 NTSTATUS
 NTAPI
@@ -366,8 +381,32 @@ SamrSetInformationDomain(IN SAMPR_HANDLE DomainHandle,
                          IN DOMAIN_INFORMATION_CLASS DomainInformationClass,
                          IN PSAMPR_DOMAIN_INFO_BUFFER DomainInformation)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PSAM_DB_OBJECT DomainObject;
+    NTSTATUS Status;
+
+    TRACE("SamrSetInformationDomain(%p %lu %p)\n",
+          DomainHandle, DomainInformationClass, DomainInformation);
+
+    /* Validate the server handle */
+    Status = SampValidateDbObject(DomainHandle,
+                                  SamDbDomainObject,
+                                  DOMAIN_WRITE_OTHER_PARAMETERS,
+                                  &DomainObject);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    switch (DomainInformationClass)
+    {
+        case DomainNameInformation:
+            Status = SampSetDomainName(DomainObject,
+                                       (PSAMPR_DOMAIN_NAME_INFORMATION)DomainInformation);
+            break;
+
+        default:
+            Status = STATUS_NOT_IMPLEMENTED;
+    }
+
+    return Status;
 }
 
 /* Function 10 */

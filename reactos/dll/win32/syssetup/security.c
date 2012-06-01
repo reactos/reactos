@@ -24,6 +24,11 @@ SetAccountDomain(LPCWSTR DomainName,
     POLICY_ACCOUNT_DOMAIN_INFO Info;
     LSA_OBJECT_ATTRIBUTES ObjectAttributes;
     LSA_HANDLE PolicyHandle;
+
+    SAM_HANDLE ServerHandle = NULL;
+    SAM_HANDLE DomainHandle = NULL;
+    DOMAIN_NAME_INFORMATION DomainNameInfo;
+
     NTSTATUS Status;
 
     DPRINT1("SYSSETUP: SetAccountDomain\n");
@@ -84,6 +89,40 @@ SetAccountDomain(LPCWSTR DomainName,
         LsaFreeMemory(OrigInfo);
 
     LsaClose(PolicyHandle);
+
+    DomainNameInfo.DomainName.Length = wcslen(DomainName) * sizeof(WCHAR);
+    DomainNameInfo.DomainName.MaximumLength = (wcslen(DomainName) + 1) * sizeof(WCHAR);
+    DomainNameInfo.DomainName.Buffer = (LPWSTR)DomainName;
+
+    Status = SamConnect(NULL,
+                        &ServerHandle,
+                        SAM_SERVER_CONNECT | SAM_SERVER_LOOKUP_DOMAIN,
+                        NULL);
+    if (NT_SUCCESS(Status))
+    {
+        Status = SamOpenDomain(ServerHandle,
+                               DOMAIN_WRITE_OTHER_PARAMETERS,
+                               Info.DomainSid,
+                               &DomainHandle);
+        if (NT_SUCCESS(Status))
+        {
+            Status = SamSetInformationDomain(DomainHandle,
+                                             DomainNameInformation,
+                                             (PVOID)&DomainNameInfo);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("SamSetInformationDomain failed (Status: 0x%08lx)\n", Status);
+            }
+
+            SamCloseHandle(DomainHandle);
+        }
+        else
+        {
+            DPRINT1("SamOpenDomain failed (Status: 0x%08lx)\n", Status);
+        }
+
+        SamCloseHandle(ServerHandle);
+    }
 
     return Status;
 }

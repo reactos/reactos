@@ -44,7 +44,7 @@
 @ stub SamRemoveMultipleMembersFromAlias
 @ stub SamRidToSid
 @ stub SamSetInformationAlias
-@ stub SamSetInformationDomain
+@ stdcall SamSetInformationDomain(ptr long ptr)
 @ stub SamSetInformationGroup
 @ stdcall SamSetInformationUser(ptr long ptr)
 @ stub SamSetMemberAttributesOfGroup

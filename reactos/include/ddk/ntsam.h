@@ -39,6 +39,28 @@ extern "C" {
 
 typedef PVOID SAM_HANDLE, *PSAM_HANDLE;
 
+typedef enum _DOMAIN_INFORMATION_CLASS
+{
+    DomainPasswordInformation = 1,
+    DomainGeneralInformation,
+    DomainLogoffInformation,
+    DomainOemInformation,
+    DomainNameInformation,
+    DomainReplicationInformation,
+    DomainServerRoleInformation,
+    DomainModifiedInformation,
+    DomainStateInformation,
+    DomainUasInformation,
+    DomainGeneralInformation2,
+    DomainLockoutInformation,
+    DomainModifiedInformation2
+} DOMAIN_INFORMATION_CLASS;
+
+typedef struct _DOMAIN_NAME_INFORMATION
+{
+    UNICODE_STRING DomainName;
+} DOMAIN_NAME_INFORMATION, *PDOMAIN_NAME_INFORMATION;
+
 typedef enum _USER_INFORMATION_CLASS
 {
     UserGeneralInformation = 1,
@@ -127,6 +149,12 @@ NTAPI
 SamQueryInformationUser(IN SAM_HANDLE UserHandle,
                         IN USER_INFORMATION_CLASS UserInformationClass,
                         OUT PVOID *Buffer);
+
+NTSTATUS
+NTAPI
+SamSetInformationDomain(IN SAM_HANDLE DomainHandle,
+                        IN DOMAIN_INFORMATION_CLASS DomainInformationClass,
+                        IN PVOID DomainInformation);
 
 NTSTATUS
 NTAPI

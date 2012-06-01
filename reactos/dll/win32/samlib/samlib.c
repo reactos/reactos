@@ -293,6 +293,33 @@ SamQueryInformationUser(IN SAM_HANDLE UserHandle,
 
 NTSTATUS
 NTAPI
+SamSetInformationDomain(IN SAM_HANDLE DomainHandle,
+                        IN DOMAIN_INFORMATION_CLASS DomainInformationClass,
+                        IN PVOID DomainInformation)
+{
+    NTSTATUS Status;
+
+    TRACE("SamSetInformationDomain(%p %lu %p)\n",
+          DomainHandle, DomainInformationClass, DomainInformation);
+
+    RpcTryExcept
+    {
+        Status = SamrSetInformationDomain((SAMPR_HANDLE)DomainHandle,
+                                          DomainInformationClass,
+                                          DomainInformation);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
+
+NTSTATUS
+NTAPI
 SamSetInformationUser(IN SAM_HANDLE UserHandle,
                       IN USER_INFORMATION_CLASS UserInformationClass,
                       IN PVOID Buffer)

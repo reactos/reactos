@@ -233,6 +233,7 @@ typedef struct _SAMPR_DOMAIN_LOCKOUT_INFORMATION
     unsigned short LockoutThreshold;
 } SAMPR_DOMAIN_LOCKOUT_INFORMATION, *PSAMPR_DOMAIN_LOCKOUT_INFORMATION;
 
+cpp_quote("#ifndef _NTSAM_")
 typedef enum _DOMAIN_INFORMATION_CLASS
 {
     DomainPasswordInformation = 1,
@@ -248,6 +249,7 @@ typedef enum _DOMAIN_INFORMATION_CLASS
     DomainLockoutInformation = 12,
     DomainModifiedInformation2 = 13
 } DOMAIN_INFORMATION_CLASS;
+cpp_quote("#endif")
 
 typedef [switch_type(DOMAIN_INFORMATION_CLASS)] union _SAMPR_DOMAIN_INFO_BUFFER
 {
