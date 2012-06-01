@@ -1070,7 +1070,7 @@ NtGdiSetPixel(
         return -1;
     }
 
-    /* Translate the color to the target format and get the RGB value */
+    /* Translate the color to the target format */
     iSolidColor = TranslateCOLORREF(pdc, crColor);
 
     /* Use the DC's text brush, which is always a solid brush */
