@@ -221,6 +221,10 @@ NtUserGetThreadState(
       case THREADSTATE_GETINPUTSTATE:
          ret = LOWORD(IntGetQueueStatus(QS_POSTMESSAGE|QS_TIMER|QS_PAINT|QS_SENDMESSAGE|QS_INPUT)) & (QS_KEY | QS_MOUSEBUTTON);
          break;
+
+      case THREADSTATE_FOREGROUNDTHREAD:
+         ret = (gpqForeground == GetW32ThreadInfo()->MessageQueue);
+         break;
    }
 
    TRACE("Leave NtUserGetThreadState, ret=%i\n", ret);

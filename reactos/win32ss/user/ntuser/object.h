@@ -37,6 +37,7 @@ PVOID FASTCALL UserCreateObject(PUSER_HANDLE_TABLE ht, struct _DESKTOP* pDesktop
 BOOL FASTCALL UserDeleteObject(HANDLE h, USER_OBJECT_TYPE type );
 PVOID UserGetObject(PUSER_HANDLE_TABLE ht, HANDLE handle, USER_OBJECT_TYPE type );
 BOOL FASTCALL UserCreateHandleTable(VOID);
+BOOL FASTCALL UserObjectInDestroy(HANDLE);
 
 static __inline VOID
 UserRefObjectCo(PVOID obj, PUSER_REFERENCE_ENTRY UserReferenceEntry)
