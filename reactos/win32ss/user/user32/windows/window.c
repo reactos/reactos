@@ -1501,7 +1501,9 @@ IsWindow(HWND hWnd)
     PWND Wnd = ValidateHwndNoErr(hWnd);
     if (Wnd != NULL)
     {
-        /* FIXME: If window is being destroyed return FALSE! */
+        if (Wnd->state & WNDS_DESTROYED ||
+            Wnd->state2 & WNDS2_INDESTROY)
+           return FALSE;
         return TRUE;
     }
 
