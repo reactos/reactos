@@ -269,11 +269,201 @@ NTAPI
 SamrEnumerateDomainsInSamServer(IN SAMPR_HANDLE ServerHandle,
                                 IN OUT unsigned long *EnumerationContext,
                                 OUT PSAMPR_ENUMERATION_BUFFER *Buffer,
-                                IN unsigned long PreferedMaximumLength,
-                                OUT unsigned long *CountReturned)
+                                IN ULONG PreferedMaximumLength,
+                                OUT PULONG CountReturned)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PSAM_DB_OBJECT ServerObject;
+    WCHAR DomainKeyName[64];
+    HANDLE DomainsKeyHandle;
+    HANDLE DomainKeyHandle;
+    ULONG EnumIndex;
+    ULONG EnumCount;
+    ULONG RequiredLength;
+    ULONG DataLength;
+    ULONG i;
+    PSAMPR_ENUMERATION_BUFFER EnumBuffer = NULL;
+    NTSTATUS Status;
+
+    TRACE("SamrEnumerateDomainsInSamServer(%p %p %p %lu %p)\n",
+          ServerHandle, EnumerationContext, Buffer, PreferedMaximumLength,
+          CountReturned);
+
+    /* Validate the server handle */
+    Status = SampValidateDbObject(ServerHandle,
+                                  SamDbServerObject,
+                                  SAM_SERVER_ENUMERATE_DOMAINS,
+                                  &ServerObject);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    Status = SampRegOpenKey(ServerObject->KeyHandle,
+                            L"Domains",
+                            KEY_READ,
+                            &DomainsKeyHandle);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    EnumIndex = *EnumerationContext;
+    EnumCount = 0;
+    RequiredLength = 0;
+
+    while (TRUE)
+    {
+        Status = SampRegEnumerateSubKey(DomainsKeyHandle,
+                                        EnumIndex,
+                                        64 * sizeof(WCHAR),
+                                        DomainKeyName);
+        if (!NT_SUCCESS(Status))
+            break;
+
+        TRACE("EnumIndex: %lu\n", EnumIndex);
+        TRACE("Domain key name: %S\n", DomainKeyName);
+
+        Status = SampRegOpenKey(DomainsKeyHandle,
+                                DomainKeyName,
+                                KEY_READ,
+                                &DomainKeyHandle);
+        TRACE("SampRegOpenKey returned %08lX\n", Status);
+        if (NT_SUCCESS(Status))
+        {
+            DataLength = 0;
+            Status = SampRegQueryValue(DomainKeyHandle,
+                                       L"Name",
+                                       NULL,
+                                       NULL,
+                                       &DataLength);
+            TRACE("SampRegQueryValue returned %08lX\n", Status);
+            if (NT_SUCCESS(Status))
+            {
+                TRACE("Data length: %lu\n", DataLength);
+
+                if ((RequiredLength + DataLength + sizeof(UNICODE_STRING)) > PreferedMaximumLength)
+                    break;
+
+                RequiredLength += (DataLength + sizeof(UNICODE_STRING));
+                EnumCount++;
+            }
+
+            NtClose(DomainKeyHandle);
+        }
+
+        EnumIndex++;
+    }
+
+    TRACE("EnumCount: %lu\n", EnumCount);
+    TRACE("RequiredLength: %lu\n", RequiredLength);
+
+    EnumBuffer = midl_user_allocate(sizeof(SAMPR_ENUMERATION_BUFFER));
+    if (EnumBuffer == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
+
+    EnumBuffer->EntriesRead = EnumCount;
+    EnumBuffer->Buffer = midl_user_allocate(EnumCount * sizeof(SAMPR_RID_ENUMERATION));
+    if (EnumBuffer->Buffer == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
+
+    EnumIndex = *EnumerationContext;
+    for (i = 0; i < EnumCount; i++, EnumIndex++)
+    {
+        Status = SampRegEnumerateSubKey(DomainsKeyHandle,
+                                        EnumIndex,
+                                        64 * sizeof(WCHAR),
+                                        DomainKeyName);
+        if (!NT_SUCCESS(Status))
+            break;
+
+        TRACE("EnumIndex: %lu\n", EnumIndex);
+        TRACE("Domain key name: %S\n", DomainKeyName);
+
+        Status = SampRegOpenKey(DomainsKeyHandle,
+                                DomainKeyName,
+                                KEY_READ,
+                                &DomainKeyHandle);
+        TRACE("SampRegOpenKey returned %08lX\n", Status);
+        if (NT_SUCCESS(Status))
+        {
+            DataLength = 0;
+            Status = SampRegQueryValue(DomainKeyHandle,
+                                       L"Name",
+                                       NULL,
+                                       NULL,
+                                       &DataLength);
+            TRACE("SampRegQueryValue returned %08lX\n", Status);
+            if (NT_SUCCESS(Status))
+            {
+                EnumBuffer->Buffer[i].RelativeId = 0;
+                EnumBuffer->Buffer[i].Name.Length = (USHORT)DataLength - sizeof(WCHAR);
+                EnumBuffer->Buffer[i].Name.MaximumLength = (USHORT)DataLength;
+                EnumBuffer->Buffer[i].Name.Buffer = midl_user_allocate(DataLength);
+                if (EnumBuffer->Buffer[i].Name.Buffer == NULL)
+                {
+                    NtClose(DomainKeyHandle);
+                    Status = STATUS_INSUFFICIENT_RESOURCES;
+                    goto done;
+                }
+
+                Status = SampRegQueryValue(DomainKeyHandle,
+                                           L"Name",
+                                           NULL,
+                                           EnumBuffer->Buffer[i].Name.Buffer,
+                                           &DataLength);
+                TRACE("SampRegQueryValue returned %08lX\n", Status);
+                if (NT_SUCCESS(Status))
+                {
+                    TRACE("Domain name: %S\n", EnumBuffer->Buffer[i].Name.Buffer);
+                }
+            }
+
+            NtClose(DomainKeyHandle);
+
+            if (!NT_SUCCESS(Status))
+                goto done;
+        }
+    }
+
+    if (NT_SUCCESS(Status))
+    {
+        *EnumerationContext += EnumCount;
+        *Buffer = EnumBuffer;
+        *CountReturned = EnumCount;
+    }
+
+done:
+    if (!NT_SUCCESS(Status))
+    {
+        *EnumerationContext = 0;
+        *Buffer = NULL;
+        *CountReturned = 0;
+
+        if (EnumBuffer != NULL)
+        {
+            if (EnumBuffer->Buffer != NULL)
+            {
+                if (EnumBuffer->EntriesRead != 0)
+                {
+                    for (i = 0; i < EnumBuffer->EntriesRead; i++)
+                    {
+                        if (EnumBuffer->Buffer[i].Name.Buffer != NULL)
+                            midl_user_free(EnumBuffer->Buffer[i].Name.Buffer);
+                    }
+                }
+
+                midl_user_free(EnumBuffer->Buffer);
+            }
+
+            midl_user_free(EnumBuffer);
+        }
+    }
+
+    NtClose(DomainsKeyHandle);
+
+    return Status;
 }
 
 /* Function 7 */
@@ -348,6 +538,64 @@ SamrOpenDomain(IN SAMPR_HANDLE ServerHandle,
     return Status;
 }
 
+
+static NTSTATUS
+SampQueryDomainName(PSAM_DB_OBJECT DomainObject,
+                    PSAMPR_DOMAIN_INFO_BUFFER *Buffer)
+{
+    PSAMPR_DOMAIN_INFO_BUFFER InfoBuffer = NULL;
+    ULONG Length = 0;
+    NTSTATUS Status;
+
+    *Buffer = NULL;
+
+    InfoBuffer = midl_user_allocate(sizeof(SAMPR_DOMAIN_INFO_BUFFER));
+    if (InfoBuffer == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    Status = SampGetObjectAttribute(DomainObject,
+                                    L"Name",
+                                    NULL,
+                                    NULL,
+                                    &Length);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    InfoBuffer->Name.DomainName.Length = Length - sizeof(WCHAR);
+    InfoBuffer->Name.DomainName.MaximumLength = Length;
+    InfoBuffer->Name.DomainName.Buffer = midl_user_allocate(Length);
+    if (InfoBuffer->Name.DomainName.Buffer == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
+
+    Status = SampGetObjectAttribute(DomainObject,
+                                    L"Name",
+                                    NULL,
+                                    (PVOID)InfoBuffer->Name.DomainName.Buffer,
+                                    &Length);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    *Buffer = InfoBuffer;
+
+done:
+    if (!NT_SUCCESS(Status))
+    {
+        if (InfoBuffer != NULL)
+        {
+            if (InfoBuffer->Name.DomainName.Buffer != NULL)
+                midl_user_free(InfoBuffer->Name.DomainName.Buffer);
+
+            midl_user_free(InfoBuffer);
+        }
+    }
+
+    return Status;
+}
+
+
 /* Function 8 */
 NTSTATUS
 NTAPI
@@ -355,8 +603,32 @@ SamrQueryInformationDomain(IN SAMPR_HANDLE DomainHandle,
                            IN DOMAIN_INFORMATION_CLASS DomainInformationClass,
                            OUT PSAMPR_DOMAIN_INFO_BUFFER *Buffer)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PSAM_DB_OBJECT DomainObject;
+    NTSTATUS Status;
+
+    TRACE("SamrQueryInformationDomain(%p %lu %p)\n",
+          DomainHandle, DomainInformationClass, Buffer);
+
+    /* Validate the server handle */
+    Status = SampValidateDbObject(DomainHandle,
+                                  SamDbDomainObject,
+                                  DOMAIN_READ_OTHER_PARAMETERS,
+                                  &DomainObject);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    switch (DomainInformationClass)
+    {
+        case DomainNameInformation:
+            Status = SampQueryDomainName(DomainObject,
+                                         Buffer);
+            break;
+
+        default:
+            Status = STATUS_NOT_IMPLEMENTED;
+    }
+
+    return Status;
 }
 
 static NTSTATUS
@@ -399,7 +671,7 @@ SamrSetInformationDomain(IN SAMPR_HANDLE DomainHandle,
     {
         case DomainNameInformation:
             Status = SampSetDomainName(DomainObject,
-                                       (PSAMPR_DOMAIN_NAME_INFORMATION)DomainInformation);
+                                       &DomainInformation->Name);
             break;
 
         default:
@@ -579,8 +851,116 @@ SamrCreateAliasInDomain(IN SAMPR_HANDLE DomainHandle,
                         OUT SAMPR_HANDLE *AliasHandle,
                         OUT unsigned long *RelativeId)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PSAM_DB_OBJECT DomainObject;
+    PSAM_DB_OBJECT AliasObject;
+    ULONG ulSize;
+    ULONG ulRid;
+    WCHAR szRid[9];
+    BOOL bAliasExists = FALSE;
+    NTSTATUS Status;
+
+    TRACE("SamrCreateAliasInDomain(%p %p %lx %p %p)\n",
+          DomainHandle, AccountName, DesiredAccess, AliasHandle, RelativeId);
+
+    /* Validate the domain handle */
+    Status = SampValidateDbObject(DomainHandle,
+                                  SamDbDomainObject,
+                                  DOMAIN_CREATE_ALIAS,
+                                  &DomainObject);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Get the NextRID attribute */
+    ulSize = sizeof(ULONG);
+    Status = SampGetObjectAttribute(DomainObject,
+                                    L"NextRID",
+                                    NULL,
+                                    (LPVOID)&ulRid,
+                                    &ulSize);
+    if (!NT_SUCCESS(Status))
+        ulRid = DOMAIN_USER_RID_MAX + 1;
+
+    TRACE("RID: %lx\n", ulRid);
+
+    /* Convert the RID into a string (hex) */
+    swprintf(szRid, L"%08lX", ulRid);
+
+    /* Check whether the user name is already in use */
+    Status = SampCheckDbObjectNameAlias(DomainObject,
+                                        L"Aliases",
+                                        AccountName->Buffer,
+                                        &bAliasExists);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    if (bAliasExists)
+    {
+        TRACE("The alias account %S already exists!\n", AccountName->Buffer);
+        return STATUS_ALIAS_EXISTS;
+    }
+
+    /* Create the user object */
+    Status = SampCreateDbObject(DomainObject,
+                                L"Aliases",
+                                szRid,
+                                SamDbAliasObject,
+                                DesiredAccess,
+                                &AliasObject);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Add the name alias for the user object */
+    Status = SampSetDbObjectNameAlias(DomainObject,
+                                      L"Aliases",
+                                      AccountName->Buffer,
+                                      ulRid);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Set the name attribute */
+    Status = SampSetObjectAttribute(AliasObject,
+                                    L"Name",
+                                    REG_SZ,
+                                    (LPVOID)AccountName->Buffer,
+                                    AccountName->MaximumLength);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* FIXME: Set default alias attributes */
+
+    if (NT_SUCCESS(Status))
+    {
+        *AliasHandle = (SAMPR_HANDLE)AliasObject;
+        *RelativeId = ulRid;
+    }
+
+    /* Increment the NextRID attribute */
+    ulRid++;
+    ulSize = sizeof(ULONG);
+    SampSetObjectAttribute(DomainObject,
+                           L"NextRID",
+                           REG_DWORD,
+                           (LPVOID)&ulRid,
+                           ulSize);
+
+    TRACE("returns with status 0x%08lx\n", Status);
+
+    return Status;
 }
 
 /* Function 15 */
@@ -723,11 +1103,47 @@ NTSTATUS
 NTAPI
 SamrOpenAlias(IN SAMPR_HANDLE DomainHandle,
               IN ACCESS_MASK DesiredAccess,
-              IN unsigned long AliasId,
+              IN ULONG AliasId,
               OUT SAMPR_HANDLE *AliasHandle)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PSAM_DB_OBJECT DomainObject;
+    PSAM_DB_OBJECT AliasObject;
+    WCHAR szRid[9];
+    NTSTATUS Status;
+
+    TRACE("SamrOpenAlias(%p %lx %lx %p)\n",
+          DomainHandle, DesiredAccess, AliasId, AliasHandle);
+
+    /* Validate the domain handle */
+    Status = SampValidateDbObject(DomainHandle,
+                                  SamDbDomainObject,
+                                  DOMAIN_LOOKUP,
+                                  &DomainObject);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Convert the RID into a string (hex) */
+    swprintf(szRid, L"%08lX", AliasId);
+
+    /* Create the alias object */
+    Status = SampOpenDbObject(DomainObject,
+                              L"Aliases",
+                              szRid,
+                              SamDbAliasObject,
+                              DesiredAccess,
+                              &AliasObject);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    *AliasHandle = (SAMPR_HANDLE)AliasObject;
+
+    return STATUS_SUCCESS;
 }
 
 /* Function 28 */
@@ -767,8 +1183,52 @@ NTAPI
 SamrAddMemberToAlias(IN SAMPR_HANDLE AliasHandle,
                      IN PRPC_SID MemberId)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PSAM_DB_OBJECT AliasObject;
+    LPWSTR MemberIdString = NULL;
+    HANDLE MembersKeyHandle = NULL;
+    NTSTATUS Status;
+
+    TRACE("SamrAddMemberToAlias(%p %p)\n",
+          AliasHandle, MemberId);
+
+    /* Validate the domain handle */
+    Status = SampValidateDbObject(AliasHandle,
+                                  SamDbAliasObject,
+                                  ALIAS_ADD_MEMBER,
+                                  &AliasObject);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    ConvertSidToStringSidW(MemberId, &MemberIdString);
+    TRACE("Member SID: %S\n", MemberIdString);
+
+    Status = SampRegCreateKey(AliasObject->KeyHandle,
+                              L"Members",
+                              KEY_WRITE,
+                              &MembersKeyHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampRegCreateKey failed with status 0x%08lx\n", Status);
+        goto done;
+    }
+
+    Status = SampRegSetValue(MembersKeyHandle,
+                             MemberIdString,
+                             REG_BINARY,
+                             NULL,
+                             0);
+
+done:
+    if (MembersKeyHandle != NULL)
+        SampRegCloseKey(MembersKeyHandle);
+
+    if (MemberIdString != NULL)
+        LocalFree(MemberIdString);
+
+    return Status;
 }
 
 /* Function 32 */

@@ -1,4 +1,4 @@
-@ stub SamAddMemberToAlias
+@ stdcall SamAddMemberToAlias(ptr ptr)
 @ stub SamAddMemberToGroup
 @ stub SamAddMultipleMembersToAlias
 @ stub SamChangePasswordUser2
@@ -7,7 +7,7 @@
 @ stdcall SamCloseHandle(ptr)
 @ stdcall SamConnect(ptr ptr long ptr)
 @ stub SamConnectWithCreds
-@ stub SamCreateAliasInDomain
+@ stdcall SamCreateAliasInDomain(ptr ptr long ptr ptr)
 @ stub SamCreateGroupInDomain
 @ stub SamCreateUser2InDomain
 @ stdcall SamCreateUserInDomain(ptr ptr long ptr ptr)
@@ -15,7 +15,7 @@
 @ stub SamDeleteGroup
 @ stub SamDeleteUser
 @ stub SamEnumerateAliasesInDomain
-@ stub SamEnumerateDomainsInSamServer
+@ stdcall SamEnumerateDomainsInSamServer(ptr ptr ptr long ptr)
 @ stub SamEnumerateGroupsInDomain
 @ stub SamEnumerateUsersInDomain
 @ stdcall SamFreeMemory(ptr)
@@ -28,13 +28,13 @@
 @ stdcall SamLookupDomainInSamServer(ptr ptr ptr)
 @ stub SamLookupIdsInDomain
 @ stub SamLookupNamesInDomain
-@ stub SamOpenAlias
+@ stdcall SamOpenAlias(ptr long long ptr)
 @ stdcall SamOpenDomain(ptr long ptr ptr)
 @ stub SamOpenGroup
 @ stdcall SamOpenUser(ptr long long ptr)
 @ stub SamQueryDisplayInformation
 @ stub SamQueryInformationAlias
-@ stub SamQueryInformationDomain
+@ stdcall SamQueryInformationDomain(ptr long ptr)
 @ stub SamQueryInformationGroup
 @ stdcall SamQueryInformationUser(ptr long ptr)
 @ stub SamQuerySecurityObject

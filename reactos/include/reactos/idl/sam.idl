@@ -1036,7 +1036,7 @@ interface samr
     SamrOpenAlias(
         [in] SAMPR_HANDLE DomainHandle,
         [in] ACCESS_MASK DesiredAccess,
-        [in] unsigned long AliasId,
+        [in] ULONG AliasId,
         [out] SAMPR_HANDLE *AliasHandle);
 
     /* Function 28 */
@@ -1088,7 +1088,7 @@ interface samr
     SamrOpenUser(
         [in] SAMPR_HANDLE DomainHandle,
         [in] ACCESS_MASK DesiredAccess,
-        [in] unsigned long UserId,
+        [in] ULONG UserId,
         [out] SAMPR_HANDLE *UserHandle);
 
     /* Function 35 */

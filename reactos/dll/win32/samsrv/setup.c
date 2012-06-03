@@ -59,35 +59,87 @@ SampIsSetupRunning(VOID)
 
 
 static BOOL
-SampCreateUserAccount(HKEY hDomainKey,
-                      LPCWSTR lpAccountName,
-                      ULONG ulRelativeId)
+SampCreateAliasAccount(HKEY hDomainKey,
+                       LPCWSTR lpAccountName,
+                       ULONG ulRelativeId)
 {
     DWORD dwDisposition;
-    WCHAR szUserKeyName[32];
-    HKEY hUserKey = NULL;
+    WCHAR szAccountKeyName[32];
+    HKEY hAccountKey = NULL;
     HKEY hNamesKey = NULL;
 
-    swprintf(szUserKeyName, L"Users\\%08lX", ulRelativeId);
+    swprintf(szAccountKeyName, L"Aliases\\%08lX", ulRelativeId);
 
     if (!RegCreateKeyExW(hDomainKey,
-                         szUserKeyName,
+                         szAccountKeyName,
                          0,
                          NULL,
                          REG_OPTION_NON_VOLATILE,
                          KEY_ALL_ACCESS,
                          NULL,
-                         &hUserKey,
+                         &hAccountKey,
                          &dwDisposition))
     {
-        RegSetValueEx(hUserKey,
+        RegSetValueEx(hAccountKey,
                       L"Name",
                       0,
                       REG_SZ,
                       (LPVOID)lpAccountName,
                       (wcslen(lpAccountName) + 1) * sizeof(WCHAR));
 
-        RegCloseKey(hUserKey);
+        RegCloseKey(hAccountKey);
+    }
+
+    if (!RegOpenKeyExW(hDomainKey,
+                       L"Aliases\\Names",
+                       0,
+                       KEY_ALL_ACCESS,
+                       &hNamesKey))
+    {
+        RegSetValueEx(hNamesKey,
+                      lpAccountName,
+                      0,
+                      REG_DWORD,
+                      (LPVOID)&ulRelativeId,
+                      sizeof(ULONG));
+
+        RegCloseKey(hNamesKey);
+    }
+
+    return TRUE;
+}
+
+
+static BOOL
+SampCreateUserAccount(HKEY hDomainKey,
+                      LPCWSTR lpAccountName,
+                      ULONG ulRelativeId)
+{
+    DWORD dwDisposition;
+    WCHAR szAccountKeyName[32];
+    HKEY hAccountKey = NULL;
+    HKEY hNamesKey = NULL;
+
+    swprintf(szAccountKeyName, L"Users\\%08lX", ulRelativeId);
+
+    if (!RegCreateKeyExW(hDomainKey,
+                         szAccountKeyName,
+                         0,
+                         NULL,
+                         REG_OPTION_NON_VOLATILE,
+                         KEY_ALL_ACCESS,
+                         NULL,
+                         &hAccountKey,
+                         &dwDisposition))
+    {
+        RegSetValueEx(hAccountKey,
+                      L"Name",
+                      0,
+                      REG_SZ,
+                      (LPVOID)lpAccountName,
+                      (wcslen(lpAccountName) + 1) * sizeof(WCHAR));
+
+        RegCloseKey(hAccountKey);
     }
 
     if (!RegOpenKeyExW(hDomainKey,
@@ -119,7 +171,7 @@ SampCreateDomain(IN HKEY hDomainsKey,
 {
     DWORD dwDisposition;
     HKEY hDomainKey = NULL;
-    HKEY hAliasKey = NULL;
+    HKEY hAliasesKey = NULL;
     HKEY hGroupsKey = NULL;
     HKEY hUsersKey = NULL;
     HKEY hNamesKey = NULL;
@@ -157,16 +209,16 @@ SampCreateDomain(IN HKEY hDomainsKey,
 
     /* Create the Alias container */
     if (!RegCreateKeyExW(hDomainKey,
-                         L"Alias",
+                         L"Aliases",
                          0,
                          NULL,
                          REG_OPTION_NON_VOLATILE,
                          KEY_ALL_ACCESS,
                          NULL,
-                         &hAliasKey,
+                         &hAliasesKey,
                          &dwDisposition))
     {
-        if (!RegCreateKeyExW(hAliasKey,
+        if (!RegCreateKeyExW(hAliasesKey,
                              L"Names",
                              0,
                              NULL,
@@ -177,7 +229,7 @@ SampCreateDomain(IN HKEY hDomainsKey,
                              &dwDisposition))
             RegCloseKey(hNamesKey);
 
-        RegCloseKey(hAliasKey);
+        RegCloseKey(hAliasesKey);
     }
 
     /* Create the Groups container */
@@ -344,6 +396,21 @@ SampInitializeSAM(VOID)
                          pBuiltinSid,
                          &hDomainKey))
     {
+        SampCreateAliasAccount(hDomainKey,
+                               L"Administrators",
+                               DOMAIN_ALIAS_RID_ADMINS);
+
+        SampCreateAliasAccount(hDomainKey,
+                               L"Users",
+                               DOMAIN_ALIAS_RID_USERS);
+
+        SampCreateAliasAccount(hDomainKey,
+                               L"Guests",
+                               DOMAIN_ALIAS_RID_GUESTS);
+
+        SampCreateAliasAccount(hDomainKey,
+                               L"Power Users",
+                               DOMAIN_ALIAS_RID_POWER_USERS);
 
         RegCloseKey(hDomainKey);
     }

@@ -17,6 +17,7 @@
 #include <ndk/umtypes.h>
 #include <ddk/ntsam.h>
 #include <ntsecapi.h>
+#include <sddl.h>
 
 #include <samsrv/samsrv.h>
 
@@ -105,14 +106,21 @@ SampGetObjectAttribute(PSAM_DB_OBJECT DbObject,
 
 /* registry.h */
 NTSTATUS
-NTAPI
+SampRegCloseKey(IN HANDLE KeyHandle);
+
+NTSTATUS
+SampRegCreateKey(IN HANDLE ParentKeyHandle,
+                 IN LPCWSTR KeyName,
+                 IN ACCESS_MASK DesiredAccess,
+                 OUT HANDLE KeyHandle);
+
+NTSTATUS
 SampRegEnumerateSubKey(IN HANDLE KeyHandle,
                        IN ULONG Index,
                        IN ULONG Length,
                        OUT LPWSTR Buffer);
 
 NTSTATUS
-NTAPI
 SampRegOpenKey(IN HANDLE ParentKeyHandle,
                IN LPCWSTR KeyName,
                IN ACCESS_MASK DesiredAccess,

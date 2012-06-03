@@ -105,6 +105,31 @@ PSAMPR_SERVER_NAME_unbind(PSAMPR_SERVER_NAME pszSystemName,
 
 NTSTATUS
 NTAPI
+SamAddMemberToAlias(IN SAM_HANDLE AliasHandle,
+                    IN PSID MemberId)
+{
+    NTSTATUS Status;
+
+    TRACE("SamAddMemberToAlias(%p %p)\n",
+          AliasHandle, MemberId);
+
+    RpcTryExcept
+    {
+        Status = SamrAddMemberToAlias((SAMPR_HANDLE)AliasHandle,
+                                      (PRPC_SID)MemberId);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
+
+NTSTATUS
+NTAPI
 SamCloseHandle(IN SAM_HANDLE SamHandle)
 {
     NTSTATUS Status;
@@ -155,6 +180,37 @@ SamConnect(IN OUT PUNICODE_STRING ServerName,
 
 NTSTATUS
 NTAPI
+SamCreateAliasInDomain(IN SAM_HANDLE DomainHandle,
+                       IN PUNICODE_STRING AccountName,
+                       IN ACCESS_MASK DesiredAccess,
+                       OUT PSAM_HANDLE AliasHandle,
+                       OUT PULONG RelativeId)
+{
+    NTSTATUS Status;
+
+    TRACE("SamCreateAliasInDomain(%p,%p,0x%08x,%p,%p)\n",
+          DomainHandle, AccountName, DesiredAccess, AliasHandle, RelativeId);
+
+    RpcTryExcept
+    {
+        Status = SamrCreateAliasInDomain((SAMPR_HANDLE)DomainHandle,
+                                         (PRPC_UNICODE_STRING)AccountName,
+                                         DesiredAccess,
+                                         (SAMPR_HANDLE *)AliasHandle,
+                                         RelativeId);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
+
+NTSTATUS
+NTAPI
 SamCreateUserInDomain(IN SAM_HANDLE DomainHandle,
                       IN PUNICODE_STRING AccountName,
                       IN ACCESS_MASK DesiredAccess,
@@ -186,9 +242,59 @@ SamCreateUserInDomain(IN SAM_HANDLE DomainHandle,
 
 NTSTATUS
 NTAPI
+SamEnumerateDomainsInSamServer(IN SAM_HANDLE ServerHandle,
+                               IN OUT PSAM_ENUMERATE_HANDLE EnumerationContext,
+                               OUT PVOID *Buffer,
+                               IN ULONG PreferedMaximumLength,
+                               OUT PULONG CountReturned)
+{
+    PSAMPR_ENUMERATION_BUFFER EnumBuffer = NULL;
+    NTSTATUS Status;
+
+    TRACE("SamEnumerateDomainsInSamServer(%p,%p,%p,%lu,%p)\n",
+          ServerHandle, EnumerationContext, Buffer, PreferedMaximumLength,
+          CountReturned);
+
+    if ((EnumerationContext == NULL) ||
+        (Buffer == NULL) ||
+        (CountReturned == NULL))
+        return STATUS_INVALID_PARAMETER;
+
+    *Buffer = NULL;
+
+    RpcTryExcept
+    {
+        Status = SamrEnumerateDomainsInSamServer((SAMPR_HANDLE)ServerHandle,
+                                                 EnumerationContext,
+                                                 (PSAMPR_ENUMERATION_BUFFER *)&EnumBuffer,
+                                                 PreferedMaximumLength,
+                                                 CountReturned);
+
+        if (EnumBuffer != NULL)
+        {
+            if (EnumBuffer->Buffer != NULL)
+            {
+                *Buffer = EnumBuffer->Buffer;
+            }
+
+            midl_user_free(EnumBuffer);
+        }
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
+
+NTSTATUS
+NTAPI
 SamFreeMemory(IN PVOID Buffer)
 {
-    if (Buffer!= NULL)
+    if (Buffer != NULL)
         midl_user_free(Buffer);
 
     return STATUS_SUCCESS;
@@ -211,6 +317,35 @@ SamLookupDomainInSamServer(IN SAM_HANDLE ServerHandle,
         Status = SamrLookupDomainInSamServer((SAMPR_HANDLE)ServerHandle,
                                              (PRPC_UNICODE_STRING)Name,
                                              (PRPC_SID *)DomainId);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
+
+NTSTATUS
+NTAPI
+SamOpenAlias(IN SAM_HANDLE DomainHandle,
+             IN ACCESS_MASK DesiredAccess,
+             IN ULONG AliasId,
+             OUT PSAM_HANDLE AliasHandle)
+{
+    NTSTATUS Status;
+
+    TRACE("SamOpenAlias(%p 0x%08x %lx %p)\n",
+          DomainHandle, DesiredAccess, AliasId, AliasHandle);
+
+    RpcTryExcept
+    {
+        Status = SamrOpenAlias((SAMPR_HANDLE)DomainHandle,
+                               DesiredAccess,
+                               AliasId,
+                               (SAMPR_HANDLE *)AliasHandle);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -282,12 +417,55 @@ SamOpenUser(IN SAM_HANDLE DomainHandle,
 
 NTSTATUS
 NTAPI
+SamQueryInformationDomain(IN SAM_HANDLE DomainHandle,
+                          IN DOMAIN_INFORMATION_CLASS DomainInformationClass,
+                          OUT PVOID *Buffer)
+{
+    NTSTATUS Status;
+
+    TRACE("SamQueryInformationDomain(%p %lu %p)\n",
+          DomainHandle, DomainInformationClass, Buffer);
+
+    RpcTryExcept
+    {
+        Status = SamrQueryInformationDomain((SAMPR_HANDLE)DomainHandle,
+                                            DomainInformationClass,
+                                            (PSAMPR_DOMAIN_INFO_BUFFER *)Buffer);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
+
+NTSTATUS
+NTAPI
 SamQueryInformationUser(IN SAM_HANDLE UserHandle,
                         IN USER_INFORMATION_CLASS UserInformationClass,
                         OUT PVOID *Buffer)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status;
+
+    TRACE("SamQueryInformationUser(%p %lu %p)\n",
+          UserHandle, UserInformationClass, Buffer);
+
+    RpcTryExcept
+    {
+        Status = SamrQueryInformationUser((SAMPR_HANDLE)UserHandle,
+                                          UserInformationClass,
+                                          (PSAMPR_USER_INFO_BUFFER *)Buffer);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
 }
 
 
@@ -349,6 +527,7 @@ NTSTATUS
 NTAPI
 SamShutdownSamServer(IN SAM_HANDLE ServerHandle)
 {
+    UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
 

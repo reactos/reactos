@@ -6,6 +6,12 @@
 extern "C" {
 #endif
 
+#define ALIAS_ADD_MEMBER 1
+#define ALIAS_REMOVE_MEMBER 2
+#define ALIAS_LIST_MEMBERS 4
+#define ALIAS_READ_INFORMATION 8
+#define ALIAS_WRITE_ACCOUNT 16
+
 #define DOMAIN_READ_PASSWORD_PARAMETERS 1
 #define DOMAIN_WRITE_PASSWORD_PARAMS 2
 #define DOMAIN_READ_OTHER_PARAMETERS 4
@@ -38,6 +44,19 @@ extern "C" {
 #define USER_WRITE_GROUP_INFORMATION 1024
 
 typedef PVOID SAM_HANDLE, *PSAM_HANDLE;
+typedef ULONG SAM_ENUMERATE_HANDLE, *PSAM_ENUMERATE_HANDLE;
+
+typedef struct _SAM_RID_ENUMERATION
+{
+    ULONG RelativeId;
+    UNICODE_STRING Name;
+} SAM_RID_ENUMERATION, *PSAM_RID_ENUMERATION;
+
+typedef struct _SAM_SID_ENUMERATION
+{
+    PSID Sid;
+    UNICODE_STRING Name;
+} SAM_SID_ENUMERATION, *PSAM_SID_ENUMERATION;
 
 typedef enum _DOMAIN_INFORMATION_CLASS
 {
@@ -103,6 +122,11 @@ typedef struct _USER_SET_PASSWORD_INFORMATION
 
 NTSTATUS
 NTAPI
+SamAddMemberToAlias(IN SAM_HANDLE AliasHandle,
+                    IN PSID MemberId);
+
+NTSTATUS
+NTAPI
 SamCloseHandle(IN SAM_HANDLE SamHandle);
 
 NTSTATUS
@@ -114,11 +138,27 @@ SamConnect(IN OUT PUNICODE_STRING ServerName,
 
 NTSTATUS
 NTAPI
+SamCreateAliasInDomain(IN SAM_HANDLE DomainHandle,
+                       IN PUNICODE_STRING AccountName,
+                       IN ACCESS_MASK DesiredAccess,
+                       OUT PSAM_HANDLE AliasHandle,
+                       OUT PULONG RelativeId);
+
+NTSTATUS
+NTAPI
 SamCreateUserInDomain(IN SAM_HANDLE DomainHandle,
                       IN PUNICODE_STRING AccountName,
                       IN ACCESS_MASK DesiredAccess,
                       OUT PSAM_HANDLE UserHandle,
                       OUT PULONG RelativeId);
+
+NTSTATUS
+NTAPI
+SamEnumerateDomainsInSamServer(IN SAM_HANDLE ServerHandle,
+                               IN OUT PSAM_ENUMERATE_HANDLE EnumerationContext,
+                               OUT PVOID *Buffer,
+                               IN ULONG PreferedMaximumLength,
+                               OUT PULONG CountReturned);
 
 NTSTATUS
 NTAPI
@@ -129,6 +169,13 @@ NTAPI
 SamLookupDomainInSamServer(IN SAM_HANDLE ServerHandle,
                            IN PUNICODE_STRING Name,
                            OUT PSID *DomainId);
+
+NTSTATUS
+NTAPI
+SamOpenAlias(IN SAM_HANDLE DomainHandle,
+             IN ACCESS_MASK DesiredAccess,
+             IN ULONG AliasId,
+             OUT PSAM_HANDLE AliasHandle);
 
 NTSTATUS
 NTAPI
@@ -143,6 +190,12 @@ SamOpenUser(IN SAM_HANDLE DomainHandle,
             IN ACCESS_MASK DesiredAccess,
             IN ULONG UserId,
             OUT PSAM_HANDLE UserHandle);
+
+NTSTATUS
+NTAPI
+SamQueryInformationDomain(IN SAM_HANDLE DomainHandle,
+                          IN DOMAIN_INFORMATION_CLASS DomainInformationClass,
+                          OUT PVOID *Buffer);
 
 NTSTATUS
 NTAPI

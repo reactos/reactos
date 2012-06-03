@@ -16,7 +16,42 @@ WINE_DEFAULT_DEBUG_CHANNEL(samsrv);
 /* FUNCTIONS ***************************************************************/
 
 NTSTATUS
-NTAPI
+SampRegCloseKey(IN HANDLE KeyHandle)
+{
+    return NtClose(KeyHandle);
+}
+
+
+NTSTATUS
+SampRegCreateKey(IN HANDLE ParentKeyHandle,
+                 IN LPCWSTR KeyName,
+                 IN ACCESS_MASK DesiredAccess,
+                 OUT HANDLE KeyHandle)
+{
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING Name;
+    ULONG Disposition;
+
+    RtlInitUnicodeString(&Name, KeyName);
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &Name,
+                               OBJ_CASE_INSENSITIVE | OBJ_OPENIF,
+                               ParentKeyHandle,
+                               NULL);
+
+    /* Create the key */
+    return ZwCreateKey(KeyHandle,
+                       DesiredAccess,
+                       &ObjectAttributes,
+                       0,
+                       NULL,
+                       0,
+                       &Disposition);
+}
+
+
+NTSTATUS
 SampRegEnumerateSubKey(IN HANDLE KeyHandle,
                        IN ULONG Index,
                        IN ULONG Length,
@@ -74,7 +109,6 @@ SampRegEnumerateSubKey(IN HANDLE KeyHandle,
 
 
 NTSTATUS
-NTAPI
 SampRegOpenKey(IN HANDLE ParentKeyHandle,
                IN LPCWSTR KeyName,
                IN ACCESS_MASK DesiredAccess,
@@ -170,6 +204,9 @@ SampRegQueryValue(HANDLE KeyHandle,
 
     /* Free the memory and return status */
     RtlFreeHeap(RtlGetProcessHeap(), 0, ValueInfo);
+
+    if ((Data == NULL) && (Status == STATUS_BUFFER_OVERFLOW))
+        Status = STATUS_SUCCESS;
 
     return Status;
 }
