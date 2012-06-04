@@ -60,8 +60,12 @@ static BOOL init_functionpointers(void)
 
 static void test_versioninfo(void)
 {
+    const WCHAR v9_0[] = {'v','9','.','0','.','3','0','3','1','9',0};
+    const WCHAR v2_0cap[] = {'V','2','.','0','.','5','0','7','2','7',0};
     const WCHAR v2_0[] = {'v','2','.','0','.','5','0','7','2','7',0};
+    const WCHAR v2_0_0[] = {'v','2','.','0','.','0',0};
     const WCHAR v1_1[] = {'v','1','.','1','.','4','3','2','2',0};
+    const WCHAR v1_1_0[] = {'v','1','.','1','.','0',0};
 
     WCHAR version[MAX_PATH];
     WCHAR path[MAX_PATH];
@@ -141,6 +145,45 @@ static void test_versioninfo(void)
     /* With NULL-pointer for bufferlength, the buffer itself still gets filled with correct string */
     memset(version, 0, sizeof(version));
     hr = pGetRequestedRuntimeInfo( NULL, v2_0, NULL, 0, 0, path, MAX_PATH, &path_len, version, MAX_PATH, NULL);
+    ok(hr == S_OK, "GetRequestedRuntimeInfo returned %08x\n", hr);
+    ok(!winetest_strcmpW(version, v2_0), "version is %s , expected %s\n", wine_dbgstr_w(version), wine_dbgstr_w(v2_0));
+
+    memset(version, 0, sizeof(version));
+    hr = pGetRequestedRuntimeInfo( NULL, v2_0cap, NULL, 0, 0, path, MAX_PATH, &path_len, version, MAX_PATH, NULL);
+    ok(hr == S_OK, "GetRequestedRuntimeInfo returned %08x\n", hr);
+    ok(!winetest_strcmpW(version, v2_0cap), "version is %s , expected %s\n", wine_dbgstr_w(version), wine_dbgstr_w(v2_0cap));
+
+    /* Invalid Version and RUNTIME_INFO_UPGRADE_VERSION flag*/
+    memset(version, 0, sizeof(version));
+    hr = pGetRequestedRuntimeInfo( NULL, v1_1, NULL, 0, RUNTIME_INFO_UPGRADE_VERSION, path, MAX_PATH, &path_len, version, MAX_PATH, NULL);
+    ok(hr == S_OK  || hr == CLR_E_SHIM_RUNTIME , "GetRequestedRuntimeInfo returned %08x\n", hr);
+    if(hr == S_OK)
+    {
+        /* .NET 1.1 may not be installed. */
+        ok(!winetest_strcmpW(version, v1_1) || !winetest_strcmpW(version, v2_0),
+           "version is %s , expected %s or %s\n", wine_dbgstr_w(version), wine_dbgstr_w(v1_1), wine_dbgstr_w(v2_0));
+
+    }
+
+    memset(version, 0, sizeof(version));
+    hr = pGetRequestedRuntimeInfo( NULL, v9_0, NULL, 0, RUNTIME_INFO_UPGRADE_VERSION, path, MAX_PATH, &path_len, version, MAX_PATH, NULL);
+    ok(hr == CLR_E_SHIM_RUNTIME, "GetRequestedRuntimeInfo returned %08x\n", hr);
+
+    memset(version, 0, sizeof(version));
+    hr = pGetRequestedRuntimeInfo( NULL, v1_1_0, NULL, 0, 0, path, MAX_PATH, &path_len, version, MAX_PATH, NULL);
+    ok(hr == CLR_E_SHIM_RUNTIME, "GetRequestedRuntimeInfo returned %08x\n", hr);
+
+    memset(version, 0, sizeof(version));
+    hr = pGetRequestedRuntimeInfo( NULL, v1_1_0, NULL, 0, RUNTIME_INFO_UPGRADE_VERSION, path, MAX_PATH, &path_len, version, MAX_PATH, NULL);
+    ok(hr == S_OK, "GetRequestedRuntimeInfo returned %08x\n", hr);
+    ok(!winetest_strcmpW(version, v2_0), "version is %s , expected %s\n", wine_dbgstr_w(version), wine_dbgstr_w(v2_0));
+
+    memset(version, 0, sizeof(version));
+    hr = pGetRequestedRuntimeInfo( NULL, v2_0_0, NULL, 0, 0, path, MAX_PATH, &path_len, version, MAX_PATH, NULL);
+    ok(hr == CLR_E_SHIM_RUNTIME, "GetRequestedRuntimeInfo returned %08x\n", hr);
+
+    memset(version, 0, sizeof(version));
+    hr = pGetRequestedRuntimeInfo( NULL, v2_0_0, NULL, 0, RUNTIME_INFO_UPGRADE_VERSION, path, MAX_PATH, &path_len, version, MAX_PATH, NULL);
     ok(hr == S_OK, "GetRequestedRuntimeInfo returned %08x\n", hr);
     ok(!winetest_strcmpW(version, v2_0), "version is %s , expected %s\n", wine_dbgstr_w(version), wine_dbgstr_w(v2_0));
 }
