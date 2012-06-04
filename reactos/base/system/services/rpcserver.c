@@ -1237,9 +1237,6 @@ DWORD RControlService(
                       sizeof(SERVICE_STATUS));
     }
 
-    if ((dwError == ERROR_SUCCESS) && (pcbBytesNeeded))
-        dwError = ERROR_DEPENDENT_SERVICES_RUNNING;
-
     return dwError;
 }
 
