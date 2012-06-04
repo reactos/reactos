@@ -2152,7 +2152,7 @@ QueryServiceConfig2A(SC_HANDLE hService,
 
                 if (lpPtr->lpDescription != NULL)
                     lpPtr->lpDescription =
-                        (LPSTR)((UINT_PTR)lpPtr + (UINT_PTR)lpPtr->lpDescription);
+                        (LPSTR)((ULONG_PTR)lpPtr + (ULONG_PTR)lpPtr->lpDescription);
             }
             break;
 
@@ -2162,15 +2162,15 @@ QueryServiceConfig2A(SC_HANDLE hService,
 
                 if (lpPtr->lpRebootMsg != NULL)
                     lpPtr->lpRebootMsg =
-                        (LPSTR)((UINT_PTR)lpPtr + (UINT_PTR)lpPtr->lpRebootMsg);
+                        (LPSTR)((ULONG_PTR)lpPtr + (ULONG_PTR)lpPtr->lpRebootMsg);
 
                 if (lpPtr->lpCommand != NULL)
                     lpPtr->lpCommand =
-                        (LPSTR)((UINT_PTR)lpPtr + (UINT_PTR)lpPtr->lpCommand);
+                        (LPSTR)((ULONG_PTR)lpPtr + (ULONG_PTR)lpPtr->lpCommand);
 
                 if (lpPtr->lpsaActions != NULL)
                     lpPtr->lpsaActions =
-                        (SC_ACTION*)((UINT_PTR)lpPtr + (UINT_PTR)lpPtr->lpsaActions);
+                        (LPSC_ACTION)((ULONG_PTR)lpPtr + (ULONG_PTR)lpPtr->lpsaActions);
             }
             break;
     }
@@ -2269,7 +2269,7 @@ QueryServiceConfig2W(SC_HANDLE hService,
 
                 if (lpPtr->lpDescription != NULL)
                     lpPtr->lpDescription =
-                        (LPWSTR)((UINT_PTR)lpPtr + (UINT_PTR)lpPtr->lpDescription);
+                        (LPWSTR)((ULONG_PTR)lpPtr + (ULONG_PTR)lpPtr->lpDescription);
             }
             break;
 
@@ -2279,15 +2279,15 @@ QueryServiceConfig2W(SC_HANDLE hService,
 
                 if (lpPtr->lpRebootMsg != NULL)
                     lpPtr->lpRebootMsg =
-                        (LPWSTR)((UINT_PTR)lpPtr + (UINT_PTR)lpPtr->lpRebootMsg);
+                        (LPWSTR)((ULONG_PTR)lpPtr + (ULONG_PTR)lpPtr->lpRebootMsg);
 
                 if (lpPtr->lpCommand != NULL)
                     lpPtr->lpCommand =
-                        (LPWSTR)((UINT_PTR)lpPtr + (UINT_PTR)lpPtr->lpCommand);
+                        (LPWSTR)((ULONG_PTR)lpPtr + (ULONG_PTR)lpPtr->lpCommand);
 
                 if (lpPtr->lpsaActions != NULL)
                     lpPtr->lpsaActions =
-                        (SC_ACTION*)((UINT_PTR)lpPtr + (UINT_PTR)lpPtr->lpsaActions);
+                        (LPSC_ACTION)((ULONG_PTR)lpPtr + (ULONG_PTR)lpPtr->lpsaActions);
             }
             break;
     }
@@ -2351,7 +2351,7 @@ QueryServiceLockStatusA(SC_HANDLE hSCManager,
     if (lpStatusPtr->lpLockOwner != NULL)
     {
         lpStatusPtr->lpLockOwner =
-            (LPSTR)((UINT_PTR)lpStatusPtr + (UINT_PTR)lpStatusPtr->lpLockOwner);
+            (LPSTR)((ULONG_PTR)lpStatusPtr + (ULONG_PTR)lpStatusPtr->lpLockOwner);
     }
 
     TRACE("QueryServiceLockStatusA() done\n");
@@ -2413,7 +2413,7 @@ QueryServiceLockStatusW(SC_HANDLE hSCManager,
     if (lpStatusPtr->lpLockOwner != NULL)
     {
         lpStatusPtr->lpLockOwner =
-            (LPWSTR)((UINT_PTR)lpStatusPtr + (UINT_PTR)lpStatusPtr->lpLockOwner);
+            (LPWSTR)((ULONG_PTR)lpStatusPtr + (ULONG_PTR)lpStatusPtr->lpLockOwner);
     }
 
     TRACE("QueryServiceLockStatusW() done\n");
