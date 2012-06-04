@@ -52,6 +52,8 @@ WINE_DEFAULT_DEBUG_CHANNEL( mscoree );
 
 static HINSTANCE MSCOREE_hInstance;
 
+typedef HRESULT (*fnCreateInstance)(REFIID riid, LPVOID *ppObj);
+
 char *WtoA(LPCWSTR wstr)
 {
     int length;
@@ -88,6 +90,105 @@ static BOOL get_install_root(LPWSTR install_dir)
 
     return TRUE;
 }
+
+typedef struct mscorecf
+{
+    IClassFactory    IClassFactory_iface;
+    LONG ref;
+
+    fnCreateInstance pfnCreateInstance;
+
+    CLSID clsid;
+} mscorecf;
+
+static inline mscorecf *impl_from_IClassFactory( IClassFactory *iface )
+{
+    return CONTAINING_RECORD(iface, mscorecf, IClassFactory_iface);
+}
+
+static HRESULT WINAPI mscorecf_QueryInterface(IClassFactory *iface, REFIID riid, LPVOID *ppobj )
+{
+    TRACE("%s %p\n", debugstr_guid(riid), ppobj);
+
+    if (IsEqualGUID(riid, &IID_IUnknown) ||
+        IsEqualGUID(riid, &IID_IClassFactory))
+    {
+        IClassFactory_AddRef( iface );
+        *ppobj = iface;
+        return S_OK;
+    }
+
+    ERR("interface %s not implemented\n", debugstr_guid(riid));
+    return E_NOINTERFACE;
+}
+
+static ULONG WINAPI mscorecf_AddRef(IClassFactory *iface )
+{
+    mscorecf *This = impl_from_IClassFactory(iface);
+    ULONG ref = InterlockedIncrement(&This->ref);
+
+    TRACE("%p ref=%u\n", This, ref);
+
+    return ref;
+}
+
+static ULONG WINAPI mscorecf_Release(IClassFactory *iface )
+{
+    mscorecf *This = impl_from_IClassFactory(iface);
+    ULONG ref = InterlockedDecrement(&This->ref);
+
+    TRACE("%p ref=%u\n", This, ref);
+
+    if (ref == 0)
+    {
+        HeapFree(GetProcessHeap(), 0, This);
+    }
+
+    return ref;
+}
+
+static HRESULT WINAPI mscorecf_CreateInstance(IClassFactory *iface,LPUNKNOWN pOuter,
+                            REFIID riid, LPVOID *ppobj )
+{
+    mscorecf *This = impl_from_IClassFactory( iface );
+    HRESULT hr;
+    IUnknown *punk;
+
+    TRACE("%p %s %p\n", pOuter, debugstr_guid(riid), ppobj );
+
+    *ppobj = NULL;
+
+    if (pOuter)
+        return CLASS_E_NOAGGREGATION;
+
+    hr = This->pfnCreateInstance( &This->clsid, (LPVOID*) &punk );
+    if (SUCCEEDED(hr))
+    {
+        hr = IUnknown_QueryInterface( punk, riid, ppobj );
+
+        IUnknown_Release( punk );
+    }
+    else
+    {
+        WARN("Cannot create an instance object. 0x%08x\n", hr);
+    }
+    return hr;
+}
+
+static HRESULT WINAPI mscorecf_LockServer(IClassFactory *iface, BOOL dolock)
+{
+    FIXME("(%p)->(%d),stub!\n",iface,dolock);
+    return S_OK;
+}
+
+static const struct IClassFactoryVtbl mscorecf_vtbl =
+{
+    mscorecf_QueryInterface,
+    mscorecf_AddRef,
+    mscorecf_Release,
+    mscorecf_CreateInstance,
+    mscorecf_LockServer
+};
 
 HRESULT WINAPI CorBindToRuntimeHost(LPCWSTR pwszVersion, LPCWSTR pwszBuildFlavor,
                                     LPCWSTR pwszHostConfigFile, VOID *pReserved,
@@ -126,25 +227,13 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
     case DLL_WINE_PREATTACH:
         return FALSE;  /* prefer native version */
     case DLL_PROCESS_ATTACH:
+        runtimehost_init();
         DisableThreadLibraryCalls(hinstDLL);
         break;
     case DLL_PROCESS_DETACH:
         expect_no_runtimes();
-        break;
-    }
-    return TRUE;
-}
-
-BOOL WINAPI _CorDllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
-{
-    FIXME("(%p, %d, %p): stub\n", hinstDLL, fdwReason, lpvReserved);
-
-    switch (fdwReason)
-    {
-    case DLL_PROCESS_ATTACH:
-        DisableThreadLibraryCalls(hinstDLL);
-        break;
-    case DLL_PROCESS_DETACH:
+        if (lpvReserved) break; /* process is terminating */
+        runtimehost_uninit();
         break;
     }
     return TRUE;
@@ -246,6 +335,9 @@ HRESULT WINAPI GetRequestedRuntimeInfo(LPCWSTR pExe, LPCWSTR pwszVersion, LPCWST
 
         if (SUCCEEDED(ret))
         {
+            if(pwszVersion)
+                pVersion[0] = pwszVersion[0];
+
             *dwDirectoryLength = dwDirectory;
             ret = ICLRRuntimeInfo_GetRuntimeDirectory(info, pDirectory, dwDirectoryLength);
         }
@@ -258,7 +350,7 @@ HRESULT WINAPI GetRequestedRuntimeInfo(LPCWSTR pExe, LPCWSTR pwszVersion, LPCWST
 
 HRESULT WINAPI GetRequestedRuntimeVersion(LPWSTR pExe, LPWSTR pVersion, DWORD cchBuffer, DWORD *dwlength)
 {
-    TRACE("(%s, %p, %d, %p)\n", debugstr_w(pExe), debugstr_w(pExe), cchBuffer, dwlength);
+    TRACE("(%s, %p, %d, %p)\n", debugstr_w(pExe), pVersion, cchBuffer, dwlength);
 
     if(!dwlength)
         return E_POINTER;
@@ -504,11 +596,25 @@ HRESULT WINAPI CLRCreateInstance(REFCLSID clsid, REFIID riid, LPVOID *ppInterfac
 
 HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID* ppv)
 {
-    FIXME("(%s, %s, %p): stub\n", debugstr_guid(rclsid), debugstr_guid(riid), ppv);
+    mscorecf *This;
+    HRESULT hr;
+
+    TRACE("(%s, %s, %p): stub\n", debugstr_guid(rclsid), debugstr_guid(riid), ppv);
+
     if(!ppv)
         return E_INVALIDARG;
 
-    return E_NOTIMPL;
+    This = HeapAlloc(GetProcessHeap(), 0, sizeof(mscorecf));
+
+    This->IClassFactory_iface.lpVtbl = &mscorecf_vtbl;
+    This->pfnCreateInstance = &create_monodata;
+    This->ref = 1;
+    This->clsid = *rclsid;
+
+    hr = IClassFactory_QueryInterface( &This->IClassFactory_iface, riid, ppv );
+    IClassFactory_Release(&This->IClassFactory_iface);
+
+    return hr;
 }
 
 HRESULT WINAPI DllRegisterServer(void)
@@ -524,6 +630,11 @@ HRESULT WINAPI DllUnregisterServer(void)
 HRESULT WINAPI DllCanUnloadNow(VOID)
 {
     return S_FALSE;
+}
+
+void WINAPI CoEEShutDownCOM(void)
+{
+    FIXME("stub.\n");
 }
 
 INT WINAPI ND_RU1( const void *ptr, INT offset )

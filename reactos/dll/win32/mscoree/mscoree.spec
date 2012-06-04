@@ -9,7 +9,7 @@
 @ stub CloseCtrs
 @ stdcall CLRCreateInstance(ptr ptr ptr)
 @ stdcall ClrCreateManagedInstance(wstr ptr ptr)
-@ stub CoEEShutDownCOM
+@ stdcall CoEEShutDownCOM()
 @ stdcall CoInitializeCor(long)
 @ stub CoInitializeEE
 @ stub CoUninitializeCor

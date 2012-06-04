@@ -63,10 +63,13 @@ typedef struct tagCLRTABLE
 
 struct tagASSEMBLY
 {
-    LPWSTR path;
+    int is_mapped_file;
 
+    /* mapped files */
+    LPWSTR path;
     HANDLE hfile;
     HANDLE hmap;
+
     BYTE *data;
 
     IMAGE_NT_HEADERS *nthdr;
@@ -89,6 +92,29 @@ static inline LPWSTR strdupW(LPCWSTR src)
     return dest;
 }
 
+static void* assembly_rva_to_va(ASSEMBLY *assembly, ULONG rva)
+{
+    if (assembly->is_mapped_file)
+        return ImageRvaToVa(assembly->nthdr, assembly->data, rva, NULL);
+    else
+        return assembly->data + rva;
+}
+
+static ULONG assembly_datadir_get_data(ASSEMBLY *assembly,
+    IMAGE_DATA_DIRECTORY *datadir, void **data)
+{
+    if (!datadir->VirtualAddress || !datadir->Size)
+    {
+        *data = NULL;
+        return 0;
+    }
+    else
+    {
+        *data = assembly_rva_to_va(assembly, datadir->VirtualAddress);
+        return datadir->Size;
+    }
+}
+
 static HRESULT parse_metadata_header(ASSEMBLY *assembly, DWORD *hdrsz)
 {
     METADATAHDR *metadatahdr;
@@ -97,7 +123,7 @@ static HRESULT parse_metadata_header(ASSEMBLY *assembly, DWORD *hdrsz)
     ULONG rva;
 
     rva = assembly->corhdr->MetaData.VirtualAddress;
-    ptr = ImageRvaToVa(assembly->nthdr, assembly->data, rva, NULL);
+    ptr = assembly_rva_to_va(assembly, rva);
     if (!ptr)
         return E_FAIL;
 
@@ -158,18 +184,22 @@ static HRESULT parse_pe_header(ASSEMBLY *assembly)
     if (!datadirs)
         return E_FAIL;
 
-    if (!datadirs[IMAGE_DIRECTORY_ENTRY_COM_DESCRIPTOR].VirtualAddress ||
-        !datadirs[IMAGE_DIRECTORY_ENTRY_COM_DESCRIPTOR].Size)
-    {
-        return E_FAIL;
-    }
-
-    assembly->corhdr = ImageRvaToVa(assembly->nthdr, assembly->data,
-        datadirs[IMAGE_DIRECTORY_ENTRY_COM_DESCRIPTOR].VirtualAddress, NULL);
-    if (!assembly->corhdr)
+    if (!assembly_datadir_get_data(assembly, &datadirs[IMAGE_DIRECTORY_ENTRY_COM_DESCRIPTOR], (void**)&assembly->corhdr))
         return E_FAIL;
 
     return S_OK;
+}
+
+static HRESULT parse_headers(ASSEMBLY *assembly)
+{
+    HRESULT hr;
+
+    hr = parse_pe_header(assembly);
+
+    if (SUCCEEDED(hr))
+        hr = parse_clr_metadata(assembly);
+
+    return hr;
 }
 
 HRESULT assembly_create(ASSEMBLY **out, LPCWSTR file)
@@ -182,6 +212,8 @@ HRESULT assembly_create(ASSEMBLY **out, LPCWSTR file)
     assembly = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(ASSEMBLY));
     if (!assembly)
         return E_OUTOFMEMORY;
+
+    assembly->is_mapped_file = 1;
 
     assembly->path = strdupW(file);
     if (!assembly->path)
@@ -213,10 +245,7 @@ HRESULT assembly_create(ASSEMBLY **out, LPCWSTR file)
         goto failed;
     }
 
-    hr = parse_pe_header(assembly);
-    if (FAILED(hr)) goto failed;
-
-    hr = parse_clr_metadata(assembly);
+    hr = parse_headers(assembly);
     if (FAILED(hr)) goto failed;
 
     *out = assembly;
@@ -227,16 +256,43 @@ failed:
     return hr;
 }
 
+HRESULT assembly_from_hmodule(ASSEMBLY **out, HMODULE hmodule)
+{
+    ASSEMBLY *assembly;
+    HRESULT hr;
+
+    *out = NULL;
+
+    assembly = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(ASSEMBLY));
+    if (!assembly)
+        return E_OUTOFMEMORY;
+
+    assembly->is_mapped_file = 0;
+
+    assembly->data = (BYTE*)hmodule;
+
+    hr = parse_headers(assembly);
+    if (SUCCEEDED(hr))
+        *out = assembly;
+    else
+        assembly_release(assembly);
+
+    return hr;
+}
+
 HRESULT assembly_release(ASSEMBLY *assembly)
 {
     if (!assembly)
         return S_OK;
 
+    if (assembly->is_mapped_file)
+    {
+        UnmapViewOfFile(assembly->data);
+        CloseHandle(assembly->hmap);
+        CloseHandle(assembly->hfile);
+    }
     HeapFree(GetProcessHeap(), 0, assembly->metadatahdr);
     HeapFree(GetProcessHeap(), 0, assembly->path);
-    UnmapViewOfFile(assembly->data);
-    CloseHandle(assembly->hmap);
-    CloseHandle(assembly->hfile);
     HeapFree(GetProcessHeap(), 0, assembly);
 
     return S_OK;
@@ -245,6 +301,16 @@ HRESULT assembly_release(ASSEMBLY *assembly)
 HRESULT assembly_get_runtime_version(ASSEMBLY *assembly, LPSTR *version)
 {
     *version = assembly->metadatahdr->Version;
+
+    return S_OK;
+}
+
+HRESULT assembly_get_vtable_fixups(ASSEMBLY *assembly, VTableFixup **fixups, DWORD *count)
+{
+    ULONG size;
+
+    size = assembly_datadir_get_data(assembly, &assembly->corhdr->VTableFixups, (void**)fixups);
+    *count = size / sizeof(VTableFixup);
 
     return S_OK;
 }

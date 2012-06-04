@@ -425,7 +425,7 @@ static HRESULT parse_config(VARIANT input, parsed_config_file *result)
         ISAXXMLReader_Release(reader);
     }
 
-    IUnknown_Release((IUnknown*)handler);
+    ISAXContentHandler_Release(&handler->ISAXContentHandler_iface);
 
     return S_OK;
 }
@@ -445,7 +445,7 @@ HRESULT parse_config_file(LPCWSTR filename, parsed_config_file *result)
 
     if (SUCCEEDED(hr))
     {
-        V_VT(&var) = VT_UNKNOWN|VT_DISPATCH;
+        V_VT(&var) = VT_UNKNOWN;
         V_UNKNOWN(&var) = (IUnknown*)stream;
 
         hr = parse_config(var, result);

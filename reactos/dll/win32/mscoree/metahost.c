@@ -165,16 +165,19 @@ static HRESULT load_mono(CLRRuntimeInfo *This, loaded_mono **result)
 } while (0);
 
         LOAD_MONO_FUNCTION(mono_assembly_get_image);
+        LOAD_MONO_FUNCTION(mono_assembly_load_from);
         LOAD_MONO_FUNCTION(mono_assembly_open);
         LOAD_MONO_FUNCTION(mono_config_parse);
         LOAD_MONO_FUNCTION(mono_class_from_mono_type);
         LOAD_MONO_FUNCTION(mono_class_from_name);
         LOAD_MONO_FUNCTION(mono_class_get_method_from_name);
         LOAD_MONO_FUNCTION(mono_domain_assembly_open);
+        LOAD_MONO_FUNCTION(mono_image_open_from_module_handle);
         LOAD_MONO_FUNCTION(mono_install_assembly_preload_hook);
         LOAD_MONO_FUNCTION(mono_jit_exec);
         LOAD_MONO_FUNCTION(mono_jit_init);
         LOAD_MONO_FUNCTION(mono_jit_set_trace_options);
+        LOAD_MONO_FUNCTION(mono_marshal_get_vtfixup_ftnptr);
         LOAD_MONO_FUNCTION(mono_object_get_domain);
         LOAD_MONO_FUNCTION(mono_object_new);
         LOAD_MONO_FUNCTION(mono_object_unbox);
@@ -186,6 +189,7 @@ static HRESULT load_mono(CLRRuntimeInfo *This, loaded_mono **result)
         LOAD_MONO_FUNCTION(mono_set_dirs);
         LOAD_MONO_FUNCTION(mono_stringify_assembly_name);
         LOAD_MONO_FUNCTION(mono_string_new);
+        LOAD_MONO_FUNCTION(mono_thread_attach);
 
         /* GLib imports obsoleted by the 2.0 ABI */
         if (This->mono_abi_version == 1)
@@ -564,6 +568,14 @@ HRESULT ICLRRuntimeInfo_GetRuntimeHost(ICLRRuntimeInfo *iface, RuntimeHost **res
     return CLRRuntimeInfo_GetRuntimeHost(This, result);
 }
 
+#ifdef __i386__
+static const WCHAR libmono2_arch_dll[] = {'\\','b','i','n','\\','l','i','b','m','o','n','o','-','2','.','0','-','x','8','6','.','d','l','l',0};
+#elif defined(__x86_64__)
+static const WCHAR libmono2_arch_dll[] = {'\\','b','i','n','\\','l','i','b','m','o','n','o','-','2','.','0','-','x','8','6','_','6','4','.','d','l','l',0};
+#else
+static const WCHAR libmono2_arch_dll[] = {'\\','b','i','n','\\','l','i','b','m','o','n','o','-','2','.','0','.','d','l','l',0};
+#endif
+
 static BOOL find_mono_dll(LPCWSTR path, LPWSTR dll_path, int abi_version)
 {
     static const WCHAR mono_dll[] = {'\\','b','i','n','\\','m','o','n','o','.','d','l','l',0};
@@ -588,8 +600,15 @@ static BOOL find_mono_dll(LPCWSTR path, LPWSTR dll_path, int abi_version)
     else if (abi_version == 2)
     {
         strcpyW(dll_path, path);
-        strcatW(dll_path, mono2_dll);
+        strcatW(dll_path, libmono2_arch_dll);
         attributes = GetFileAttributesW(dll_path);
+
+        if (attributes == INVALID_FILE_ATTRIBUTES)
+        {
+            strcpyW(dll_path, path);
+            strcatW(dll_path, mono2_dll);
+            attributes = GetFileAttributesW(dll_path);
+        }
 
         if (attributes == INVALID_FILE_ATTRIBUTES)
         {
@@ -973,7 +992,7 @@ static BOOL parse_runtime_version(LPCWSTR version, DWORD *major, DWORD *minor, D
     *minor = 0;
     *build = 0;
 
-    if (version[0] == 'v')
+    if (version[0] == 'v' || version[0] == 'V')
     {
         version++;
         if (!isdigit(*version))
@@ -1310,11 +1329,21 @@ HRESULT get_runtime_info(LPCWSTR exefile, LPCWSTR version, LPCWSTR config_file,
 
     if (version)
     {
-        return CLRMetaHost_GetRuntime(0, version, &IID_ICLRRuntimeInfo, (void**)result);
+        hr = CLRMetaHost_GetRuntime(0, version, &IID_ICLRRuntimeInfo, (void**)result);
+        if(SUCCEEDED(hr))
+            return hr;
     }
 
     if (runtimeinfo_flags & RUNTIME_INFO_UPGRADE_VERSION)
     {
+        DWORD major, minor, build;
+
+        if (version && !parse_runtime_version(version, &major, &minor, &build))
+        {
+            ERR("Cannot parse %s\n", debugstr_w(version));
+            return CLR_E_SHIM_RUNTIME;
+        }
+
         find_runtimes();
 
         if (legacy)
@@ -1325,8 +1354,16 @@ HRESULT get_runtime_info(LPCWSTR exefile, LPCWSTR version, LPCWSTR config_file,
         while (i--)
         {
             if (runtimes[i].mono_abi_version)
-                return ICLRRuntimeInfo_QueryInterface(&runtimes[i].ICLRRuntimeInfo_iface,
-                        &IID_ICLRRuntimeInfo, (void **)result);
+            {
+                /* Must be greater or equal to the version passed in. */
+                if (!version || ((runtimes[i].major >= major && runtimes[i].minor >= minor && runtimes[i].build >= build) ||
+                     (runtimes[i].major >= major && runtimes[i].minor > minor) ||
+                     (runtimes[i].major > major)))
+                {
+                    return ICLRRuntimeInfo_QueryInterface(&runtimes[i].ICLRRuntimeInfo_iface,
+                            &IID_ICLRRuntimeInfo, (void **)result);
+                }
+            }
         }
 
         if (legacy)

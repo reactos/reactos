@@ -27,11 +27,19 @@ extern HRESULT CLRMetaHost_CreateInstance(REFIID riid, void **ppobj) DECLSPEC_HI
 extern HRESULT WINAPI CLRMetaHost_GetVersionFromFile(ICLRMetaHost* iface,
     LPCWSTR pwzFilePath, LPWSTR pwzBuffer, DWORD *pcchBuffer) DECLSPEC_HIDDEN;
 
+typedef struct _VTableFixup {
+    DWORD rva;
+    WORD count;
+    WORD type;
+} VTableFixup;
+
 typedef struct tagASSEMBLY ASSEMBLY;
 
-HRESULT assembly_create(ASSEMBLY **out, LPCWSTR file) DECLSPEC_HIDDEN;
-HRESULT assembly_release(ASSEMBLY *assembly) DECLSPEC_HIDDEN;
-HRESULT assembly_get_runtime_version(ASSEMBLY *assembly, LPSTR *version) DECLSPEC_HIDDEN;
+extern HRESULT assembly_create(ASSEMBLY **out, LPCWSTR file) DECLSPEC_HIDDEN;
+extern HRESULT assembly_from_hmodule(ASSEMBLY **out, HMODULE hmodule) DECLSPEC_HIDDEN;
+extern HRESULT assembly_release(ASSEMBLY *assembly) DECLSPEC_HIDDEN;
+extern HRESULT assembly_get_runtime_version(ASSEMBLY *assembly, LPSTR *version) DECLSPEC_HIDDEN;
+extern HRESULT assembly_get_vtable_fixups(ASSEMBLY *assembly, VTableFixup **fixups, DWORD *count) DECLSPEC_HIDDEN;
 
 /* Mono embedding */
 typedef struct _MonoDomain MonoDomain;
@@ -44,6 +52,7 @@ typedef struct _MonoObject MonoObject;
 typedef struct _MonoString MonoString;
 typedef struct _MonoMethod MonoMethod;
 typedef struct _MonoProfiler MonoProfiler;
+typedef struct _MonoThread MonoThread;
 
 typedef struct loaded_mono loaded_mono;
 typedef struct RuntimeHost RuntimeHost;
@@ -137,6 +146,7 @@ struct loaded_mono
     BOOL is_shutdown;
 
     MonoImage* (CDECL *mono_assembly_get_image)(MonoAssembly *assembly);
+    MonoAssembly* (CDECL *mono_assembly_load_from)(MonoImage *image, const char *fname, MonoImageOpenStatus *status);
     MonoAssembly* (CDECL *mono_assembly_open)(const char *filename, MonoImageOpenStatus *status);
     MonoClass* (CDECL *mono_class_from_mono_type)(MonoType *type);
     MonoClass* (CDECL *mono_class_from_name)(MonoImage *image, const char* name_space, const char *name);
@@ -144,10 +154,12 @@ struct loaded_mono
     void (CDECL *mono_config_parse)(const char *filename);
     MonoAssembly* (CDECL *mono_domain_assembly_open) (MonoDomain *domain, const char *name);
     void (CDECL *mono_free)(void *);
+    MonoImage* (CDECL *mono_image_open_from_module_handle)(HMODULE module_handle, char* fname, UINT has_entry_point, MonoImageOpenStatus* status);
     void (CDECL *mono_install_assembly_preload_hook)(MonoAssemblyPreLoadFunc func, void *user_data);
     int (CDECL *mono_jit_exec)(MonoDomain *domain, MonoAssembly *assembly, int argc, char *argv[]);
     MonoDomain* (CDECL *mono_jit_init)(const char *file);
     int (CDECL *mono_jit_set_trace_options)(const char* options);
+    void* (CDECL *mono_marshal_get_vtfixup_ftnptr)(MonoImage *image, DWORD token, WORD type);
     MonoDomain* (CDECL *mono_object_get_domain)(MonoObject *obj);
     MonoObject* (CDECL *mono_object_new)(MonoDomain *domain, MonoClass *klass);
     void* (CDECL *mono_object_unbox)(MonoObject *obj);
@@ -163,6 +175,7 @@ struct loaded_mono
     void (CDECL *mono_thread_suspend_all_other_threads)(void);
     void (CDECL *mono_threads_set_shutting_down)(void);
     MonoString* (CDECL *mono_string_new)(MonoDomain *domain, const char *str);
+    MonoThread* (CDECL *mono_thread_attach)(MonoDomain *domain);
 };
 
 /* loaded runtime interfaces */
@@ -185,5 +198,10 @@ extern HRESULT RuntimeHost_Destroy(RuntimeHost *This) DECLSPEC_HIDDEN;
 HRESULT WINAPI CLRMetaHost_GetRuntime(ICLRMetaHost* iface, LPCWSTR pwzVersion, REFIID iid, LPVOID *ppRuntime) DECLSPEC_HIDDEN;
 
 extern HRESULT CorDebug_Create(ICLRRuntimeHost *runtimehost, IUnknown** ppUnk) DECLSPEC_HIDDEN;
+
+extern HRESULT create_monodata(REFIID riid, LPVOID *ppObj) DECLSPEC_HIDDEN;
+
+extern void runtimehost_init(void);
+extern void runtimehost_uninit(void);
 
 #endif   /* __MSCOREE_PRIVATE__ */
