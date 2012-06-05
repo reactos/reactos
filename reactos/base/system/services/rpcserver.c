@@ -4819,7 +4819,11 @@ DWORD RQueryServiceConfig2A(
     PSERVICE_HANDLE hSvc;
     PSERVICE lpService = NULL;
     HKEY hServiceKey = NULL;
+    DWORD dwRequiredSize = 0;
+    DWORD dwType = 0;
     LPWSTR lpDescriptionW = NULL;
+    LPWSTR lpRebootMessageW = NULL;
+    LPWSTR lpFailureCommandW = NULL;
 
     DPRINT("RQueryServiceConfig2A() called hService %p dwInfoLevel %u, lpBuffer %p cbBufSize %u pcbBytesNeeded %p\n",
            hService, dwInfoLevel, lpBuffer, cbBufSize, pcbBytesNeeded);
@@ -4899,14 +4903,116 @@ DWORD RQueryServiceConfig2A(
         {
             lpServiceDescription->lpDescription = NULL;
             dwError = ERROR_SUCCESS;
-            goto done;
         }
     }
-    else if (dwInfoLevel & SERVICE_CONFIG_FAILURE_ACTIONS)
+    else if (dwInfoLevel == SERVICE_CONFIG_FAILURE_ACTIONS)
     {
-        UNIMPLEMENTED;
-        dwError = ERROR_CALL_NOT_IMPLEMENTED;
-        goto done;
+        LPSERVICE_FAILURE_ACTIONSA lpFailureActions = (LPSERVICE_FAILURE_ACTIONSA)lpBuffer;
+        LPSTR lpStr;
+
+        /* Query value length */
+        dwRequiredSize = 0;
+        dwError = RegQueryValueExW(hServiceKey,
+                                   L"FailureActions",
+                                   NULL,
+                                   &dwType,
+                                   NULL,
+                                   &dwRequiredSize);
+        if (dwError != ERROR_SUCCESS && dwError != ERROR_MORE_DATA)
+            goto done;
+
+        if (dwType != REG_BINARY)
+        {
+            dwError = ERROR_UNSUPPORTED_TYPE;
+            goto done;
+        }
+
+        dwRequiredSize = max(sizeof(SERVICE_FAILURE_ACTIONSA), dwRequiredSize);
+
+        dwError = ScmReadString(hServiceKey,
+                                L"FailureCommand",
+                                &lpFailureCommandW);
+
+        dwError = ScmReadString(hServiceKey,
+                                L"RebootMessage",
+                                &lpRebootMessageW);
+
+        if (lpRebootMessageW)
+            dwRequiredSize += (wcslen(lpRebootMessageW) + 1) * sizeof(WCHAR);
+
+        if (lpFailureCommandW)
+            dwRequiredSize += (wcslen(lpFailureCommandW) + 1) * sizeof(WCHAR);
+
+        if (cbBufSize < dwRequiredSize)
+        {
+            *pcbBytesNeeded = dwRequiredSize;
+            dwError = ERROR_INSUFFICIENT_BUFFER;
+            goto done;
+        }
+
+        /* Now we can fill the buffer */
+        dwError = RegQueryValueExW(hServiceKey,
+                                   L"FailureActions",
+                                   NULL,
+                                   NULL,
+                                   (LPBYTE)lpFailureActions,
+                                   &dwRequiredSize);
+        if (dwError != ERROR_SUCCESS)
+            goto done;
+
+        if ((dwRequiredSize < sizeof(SERVICE_FAILURE_ACTIONSA)) ||
+            (dwRequiredSize > cbBufSize))
+        {
+            dwError = ERROR_BUFFER_OVERFLOW;
+            goto done;
+        }
+
+        if (dwError == ERROR_SUCCESS)
+        {
+            lpFailureActions->cActions = min(lpFailureActions->cActions, (dwRequiredSize - FIELD_OFFSET(SERVICE_FAILURE_ACTIONSA, lpsaActions)) / sizeof(SC_ACTION));
+            lpFailureActions->lpsaActions = (lpFailureActions->cActions > 0) ? (LPSC_ACTION)(lpFailureActions + 1) : NULL;
+            lpStr = (LPSTR)((ULONG_PTR)(lpFailureActions + 1) + lpFailureActions->cActions * sizeof(SC_ACTION));
+        }
+        else
+        {
+            lpFailureActions->dwResetPeriod = 0;
+            lpFailureActions->cActions = 0;
+            lpFailureActions->lpsaActions = NULL;
+            lpStr = (LPSTR)(lpFailureActions + 1);
+        }
+
+        lpFailureActions->lpRebootMsg = NULL;
+        lpFailureActions->lpCommand = NULL;
+
+        if (lpRebootMessageW)
+        {
+            WideCharToMultiByte(CP_ACP,
+                                0,
+                                lpRebootMessageW,
+                                -1,
+                                lpStr,
+                                wcslen(lpRebootMessageW),
+                                NULL,
+                                NULL);
+            lpFailureActions->lpRebootMsg = (LPSTR)((ULONG_PTR)lpStr - (ULONG_PTR)lpFailureActions);
+            lpStr += strlen(lpStr) + 1;
+        }
+
+        if (lpFailureCommandW)
+        {
+            WideCharToMultiByte(CP_ACP,
+                                0,
+                                lpFailureCommandW,
+                                -1,
+                                lpStr,
+                                wcslen(lpFailureCommandW),
+                                NULL,
+                                NULL);
+            lpFailureActions->lpCommand = (LPSTR)((ULONG_PTR)lpStr - (ULONG_PTR)lpFailureActions);
+            /* lpStr += strlen(lpStr) + 1; */
+        }
+
+        dwError = ERROR_SUCCESS;
     }
 
 done:
@@ -4916,10 +5022,16 @@ done:
     if (lpDescriptionW != NULL)
         HeapFree(GetProcessHeap(), 0, lpDescriptionW);
 
+    if (lpRebootMessageW != NULL)
+        HeapFree(GetProcessHeap(), 0, lpRebootMessageW);
+
+    if (lpFailureCommandW != NULL)
+        HeapFree(GetProcessHeap(), 0, lpFailureCommandW);
+
     if (hServiceKey != NULL)
         RegCloseKey(hServiceKey);
 
-    DPRINT("RQueryServiceConfig2W() done (Error %lu)\n", dwError);
+    DPRINT("RQueryServiceConfig2A() done (Error %lu)\n", dwError);
 
     return dwError;
 }
@@ -4937,10 +5049,11 @@ DWORD RQueryServiceConfig2W(
     PSERVICE_HANDLE hSvc;
     PSERVICE lpService = NULL;
     HKEY hServiceKey = NULL;
-    DWORD dwRequiredSize;
+    DWORD dwRequiredSize = 0;
+    DWORD dwType = 0;
     LPWSTR lpDescription = NULL;
-    LPWSTR lpFailureCommand = NULL;
     LPWSTR lpRebootMessage = NULL;
+    LPWSTR lpFailureCommand = NULL;
 
     DPRINT("RQueryServiceConfig2W() called\n");
 
@@ -5015,10 +5128,27 @@ DWORD RQueryServiceConfig2W(
     }
     else if (dwInfoLevel == SERVICE_CONFIG_FAILURE_ACTIONS)
     {
-        LPWSTR lpStr;
         LPSERVICE_FAILURE_ACTIONSW lpFailureActions = (LPSERVICE_FAILURE_ACTIONSW)lpBuffer;
+        LPWSTR lpStr;
 
-        UNIMPLEMENTED;
+        /* Query value length */
+        dwRequiredSize = 0;
+        dwError = RegQueryValueExW(hServiceKey,
+                                   L"FailureActions",
+                                   NULL,
+                                   &dwType,
+                                   NULL,
+                                   &dwRequiredSize);
+        if (dwError != ERROR_SUCCESS && dwError != ERROR_MORE_DATA)
+            goto done;
+
+        if (dwType != REG_BINARY)
+        {
+            dwError = ERROR_UNSUPPORTED_TYPE;
+            goto done;
+        }
+
+        dwRequiredSize = max(sizeof(SERVICE_FAILURE_ACTIONSW), dwRequiredSize);
 
         dwError = ScmReadString(hServiceKey,
                                 L"FailureCommand",
@@ -5028,13 +5158,11 @@ DWORD RQueryServiceConfig2W(
                                 L"RebootMessage",
                                 &lpRebootMessage);
 
-        dwRequiredSize = sizeof(SERVICE_FAILURE_ACTIONSW);
+        if (lpRebootMessage)
+            dwRequiredSize += (wcslen(lpRebootMessage) + 1) * sizeof(WCHAR);
 
         if (lpFailureCommand)
             dwRequiredSize += (wcslen(lpFailureCommand) + 1) * sizeof(WCHAR);
-
-        if (lpRebootMessage)
-            dwRequiredSize += (wcslen(lpRebootMessage) + 1) * sizeof(WCHAR);
 
         if (cbBufSize < dwRequiredSize)
         {
@@ -5043,28 +5171,55 @@ DWORD RQueryServiceConfig2W(
             goto done;
         }
 
-        lpFailureActions->cActions = 0;
-        lpFailureActions->dwResetPeriod = 0;
-        lpFailureActions->lpCommand = NULL;
-        lpFailureActions->lpRebootMsg = NULL;
-        lpFailureActions->lpsaActions = NULL;
+        /* Now we can fill the buffer */
+        dwError = RegQueryValueExW(hServiceKey,
+                                   L"FailureActions",
+                                   NULL,
+                                   NULL,
+                                   (LPBYTE)lpFailureActions,
+                                   &dwRequiredSize);
+        if (dwError != ERROR_SUCCESS)
+            goto done;
 
-        lpStr = (LPWSTR)(lpFailureActions + 1);
+        if ((dwRequiredSize < sizeof(SERVICE_FAILURE_ACTIONSW)) ||
+            (dwRequiredSize > cbBufSize))
+        {
+            dwError = ERROR_BUFFER_OVERFLOW;
+            goto done;
+        }
+
+        if (dwError == ERROR_SUCCESS)
+        {
+            lpFailureActions->cActions = min(lpFailureActions->cActions, (dwRequiredSize - FIELD_OFFSET(SERVICE_FAILURE_ACTIONSW, lpsaActions)) / sizeof(SC_ACTION));
+            lpFailureActions->lpsaActions = (lpFailureActions->cActions > 0 ? (LPSC_ACTION)(lpFailureActions + 1) : NULL);
+            lpStr = (LPWSTR)((ULONG_PTR)(lpFailureActions + 1) + lpFailureActions->cActions * sizeof(SC_ACTION));
+        }
+        else
+        {
+            lpFailureActions->dwResetPeriod = 0;
+            lpFailureActions->cActions = 0;
+            lpFailureActions->lpsaActions = NULL;
+            lpStr = (LPWSTR)(lpFailureActions + 1);
+        }
+
+        lpFailureActions->lpRebootMsg = NULL;
+        lpFailureActions->lpCommand   = NULL;
+
         if (lpRebootMessage)
         {
             wcscpy(lpStr, lpRebootMessage);
-            lpFailureActions->lpRebootMsg = (LPWSTR)((ULONG_PTR)lpStr - (ULONG_PTR)lpRebootMessage);
-            lpStr += wcslen(lpRebootMessage) + 1;
+            lpFailureActions->lpRebootMsg = (LPWSTR)((ULONG_PTR)lpStr - (ULONG_PTR)lpFailureActions);
+            lpStr += wcslen(lpStr) + 1;
         }
 
         if (lpFailureCommand)
         {
             wcscpy(lpStr, lpFailureCommand);
-            lpFailureActions->lpCommand = (LPWSTR)((ULONG_PTR)lpStr - (ULONG_PTR)lpFailureCommand);
-            lpStr += wcslen(lpRebootMessage) + 1;
+            lpFailureActions->lpCommand = (LPWSTR)((ULONG_PTR)lpStr - (ULONG_PTR)lpFailureActions);
+            /* lpStr += wcslen(lpStr) + 1; */
         }
-        dwError = STATUS_SUCCESS;
-        goto done;
+
+        dwError = ERROR_SUCCESS;
     }
 
 done:
