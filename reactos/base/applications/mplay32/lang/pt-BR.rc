@@ -1,4 +1,4 @@
-/* Translation and UTF-8 Conversion by mkbu95 <mkbu95@gmail.com> (August, 2011) */
+/* Translation and UTF-8 Conversion by mkbu95 <mkbu95@gmail.com> (May, 2012) */
 
 LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 
@@ -23,10 +23,10 @@ BEGIN
 	IDS_TOOLTIP_PLAY "Executar"
 	IDS_TOOLTIP_STOP "Pausar"
 	IDS_TOOLTIP_EJECT "Ejetar"
-	IDS_TOOLTIP_BACKWARD "Skip Backward"
-	IDS_TOOLTIP_SEEKBACK "Seek Backward"
-	IDS_TOOLTIP_SEEKFORW "Seek Forward"
-	IDS_TOOLTIP_FORWARD "Skip Forward"
+	IDS_TOOLTIP_BACKWARD "Pular Anterior"
+	IDS_TOOLTIP_SEEKBACK "Procurar Anterior"
+	IDS_TOOLTIP_SEEKFORW "Procurar Próximo"
+	IDS_TOOLTIP_FORWARD "Pular Próxima"
 	IDS_APPTITLE "ReactOS Multimedia Player"
 	IDS_PLAY "Executar"
 END

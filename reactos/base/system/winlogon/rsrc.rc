@@ -52,6 +52,9 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #ifdef LANGUAGE_PL_PL
     #include "lang/pl-PL.rc"
 #endif
+#ifdef LANGUAGE_PT_BR
+    #include "lang/pt-BR.rc"
+#endif
 #ifdef LANGUAGE_RO_RO
     #include "lang/ro-RO.rc"
 #endif
