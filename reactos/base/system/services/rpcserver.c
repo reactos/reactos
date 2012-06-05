@@ -478,7 +478,7 @@ ScmConvertToBootPathName(wchar_t *CanonName, wchar_t **RelativeName)
         return ERROR_NOT_ENOUGH_MEMORY;
     }
 
-    /* Convert to NY-style path */
+    /* Convert to NT-style path */
     if (!RtlDosPathNameToNtPathName_U(Expanded, &NtPathName, NULL, NULL))
     {
         DPRINT("Error during a call to RtlDosPathNameToNtPathName_U()\n");
@@ -496,8 +496,8 @@ ScmConvertToBootPathName(wchar_t *CanonName, wchar_t **RelativeName)
                          NtPathName.Length + sizeof(UNICODE_NULL));
     if (!Expanded)
     {
-            DPRINT("Error allocating memory for boot driver name!\n");
-            return ERROR_NOT_ENOUGH_MEMORY;
+        DPRINT("Error allocating memory for boot driver name!\n");
+        return ERROR_NOT_ENOUGH_MEMORY;
     }
 
     ExpandedLen = NtPathName.Length / sizeof(WCHAR);
