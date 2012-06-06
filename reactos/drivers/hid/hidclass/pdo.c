@@ -420,6 +420,7 @@ HidClassPDO_PnP(
                 // invalid request
                 //
                 Status = STATUS_DEVICE_CONFIGURATION_ERROR;
+                break;
             }
 
             //
