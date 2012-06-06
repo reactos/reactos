@@ -303,6 +303,7 @@ DbgAddDebugChannel( CHAR* channel, CHAR* level, CHAR op)
 
         return TRUE;
     }
+    else return FALSE;
 
     if(op==L'+')
         DbgChannels[iChannel] |= iLevel;
