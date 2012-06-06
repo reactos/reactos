@@ -405,6 +405,11 @@ ScmConvertToBootPathName(wchar_t *CanonName, wchar_t **RelativeName)
 
     DPRINT("ScmConvertToBootPathName %S\n", CanonName);
 
+    if (!RelativeName)
+        return ERROR_INVALID_PARAMETER;
+
+    *RelativeName = NULL;
+
     ServiceNameLen = wcslen(CanonName);
 
     /* First check, if it's already good */
@@ -550,7 +555,6 @@ ScmConvertToBootPathName(wchar_t *CanonName, wchar_t **RelativeName)
             if (BufferSize > 0xFFFD)
             {
                 DPRINT("Too large buffer required\n");
-                *RelativeName = 0;
 
                 if (SymbolicLinkHandle) NtClose(SymbolicLinkHandle);
                 HeapFree(GetProcessHeap(), 0, Expanded);
@@ -635,14 +639,11 @@ ScmConvertToBootPathName(wchar_t *CanonName, wchar_t **RelativeName)
     }
     else
     {
+        /* Failure */
         DPRINT("Error, Status = %08X\n", Status);
         HeapFree(GetProcessHeap(), 0, Expanded);
         return ERROR_INVALID_PARAMETER;
     }
-
-    /* Failure */
-    *RelativeName = NULL;
-    return ERROR_INVALID_PARAMETER;
 }
 
 
@@ -1114,7 +1115,7 @@ DWORD RControlService(
             DesiredAccess = SERVICE_PAUSE_CONTINUE;
             break;
 
-        case SERVICE_INTERROGATE:
+        case SERVICE_CONTROL_INTERROGATE:
             DesiredAccess = SERVICE_INTERROGATE;
             break;
 
@@ -2989,7 +2990,7 @@ DWORD RQueryServiceConfigW(
 
         lpConfig->lpDependencies = (LPWSTR)((ULONG_PTR)lpStr - (ULONG_PTR)lpConfig);
         if (lpDependencies != NULL)
-            lpStr += dwDependenciesLength * sizeof(WCHAR);
+            lpStr += dwDependenciesLength;
         else
             lpStr += (wcslen(lpStr) + 1);
 
@@ -4105,7 +4106,7 @@ DWORD RQueryServiceConfigA(
                         &lpDependencies,
                         &dwDependenciesLength);
 
-    dwRequiredSize = sizeof(QUERY_SERVICE_CONFIGW);
+    dwRequiredSize = sizeof(QUERY_SERVICE_CONFIGA);
 
     if (lpImagePath != NULL)
         dwRequiredSize += wcslen(lpImagePath) + 1;
@@ -4148,7 +4149,7 @@ DWORD RQueryServiceConfigA(
         lpStr = (LPSTR)(lpServiceConfig + 1);
 
         /* NOTE: Strings that are NULL for QUERY_SERVICE_CONFIG are pointers to empty strings.
-          Verified in WINXP*/
+           Verified in WINXP */
 
         if (lpImagePath)
         {
