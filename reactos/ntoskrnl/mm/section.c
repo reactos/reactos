@@ -4105,7 +4105,7 @@ MiRosUnmapViewOfSection(IN PEPROCESS Process,
 
    ASSERT(Process);
 
-   AddressSpace = &Process->Vm;
+   AddressSpace = Process ? &Process->Vm : MmGetKernelAddressSpace();
 
    MmLockAddressSpace(AddressSpace);
    MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace,
