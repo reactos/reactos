@@ -1253,12 +1253,7 @@ INT WINAPI /*DECLSPEC_HOTPATCH*/ ShowCursor( BOOL bShow )
  */
 HCURSOR WINAPI GetCursor(void)
 {
-    CURSORINFO ci;
-    ci.cbSize = sizeof(CURSORINFO);
-    if(NtUserGetCursorInfo(&ci))
-        return ci.hCursor;
-    else
-        return (HCURSOR)0;
+     return (HCURSOR)NtUserGetThreadState(THREADSTATE_GETCURSOR);
 }
 
 

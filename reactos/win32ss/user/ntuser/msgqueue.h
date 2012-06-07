@@ -92,6 +92,7 @@ typedef struct _USER_MESSAGE_QUEUE
   PTHRDCARETINFO CaretInfo;
   /* Message Queue Flags */
   DWORD QF_flags;
+  DWORD cThreads; // Shared message queue counter.
 
   /* Queue state tracking */
   // Send list QS_SENDMESSAGE
@@ -108,7 +109,7 @@ typedef struct _USER_MESSAGE_QUEUE
   BYTE afKeyState[256 * 2 / 8]; // 2 bits per key
 
   /* Showing cursor counter (value>=0 - cursor visible, value<0 - cursor hidden) */
-  INT ShowingCursor;
+  INT iCursorLevel;
   /* Cursor object */
   PCURICON_OBJECT CursorObject;
 

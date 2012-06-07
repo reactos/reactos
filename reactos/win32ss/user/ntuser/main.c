@@ -462,9 +462,19 @@ UserDestroyThreadInfo(struct _ETHREAD *Thread)
         }
     }
 
+    if (ptiCurrent->pqAttach && ptiCurrent->MessageQueue)
+    {
+       PTHREADINFO ptiTo;
+       ptiTo = PsGetThreadWin32Thread(ptiCurrent->MessageQueue->Thread);
+       TRACE_CH(UserThread,"Attached Thread is getting switched!\n");
+       UserAttachThreadInput( ptiCurrent, ptiTo, FALSE);
+    }
+
     /* Free the message queue */
     if(ptiCurrent->MessageQueue)
-        MsqDestroyMessageQueue(ptiCurrent->MessageQueue);
+    {
+       MsqDestroyMessageQueue(ptiCurrent->MessageQueue);
+    }
 
     /* Find the THREADINFO in the PROCESSINFO's list */
     ppti = &ppiCurrent->ptiList;

@@ -225,6 +225,10 @@ NtUserGetThreadState(
       case THREADSTATE_FOREGROUNDTHREAD:
          ret = (gpqForeground == GetW32ThreadInfo()->MessageQueue);
          break;
+      case THREADSTATE_GETCURSOR:
+         ret = (DWORD_PTR) (GetW32ThreadInfo()->MessageQueue->CursorObject ?
+                            UserHMGetHandle(GetW32ThreadInfo()->MessageQueue->CursorObject) : 0);
+         break;
    }
 
    TRACE("Leave NtUserGetThreadState, ret=%i\n", ret);

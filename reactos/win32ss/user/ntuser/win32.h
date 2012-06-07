@@ -97,6 +97,7 @@ typedef struct _THREADINFO
     HANDLE              hEventQueueClient;
     PKEVENT             pEventQueueServer;
     LIST_ENTRY          PtiLink;
+    INT                 iCursorLevel;
     POINT               ptLast;
 
     LIST_ENTRY          aphkStart[NB_HOOKS];

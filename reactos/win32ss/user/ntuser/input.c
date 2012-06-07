@@ -418,13 +418,15 @@ UserAttachThreadInput(PTHREADINFO ptiFrom, PTHREADINFO ptiTo, BOOL fAttach)
         pai->pti1 = ptiFrom;
         pai->pti2 = ptiTo;
         gpai = pai;
-        ERR("Attach Allocated! ptiFrom 0x%p  ptiTo 0x%p\n",ptiFrom,ptiTo);
+        TRACE("Attach Allocated! ptiFrom 0x%p  ptiTo 0x%p\n",ptiFrom,ptiTo);
 
+        ptiTo->MessageQueue->iCursorLevel -= ptiFrom->iCursorLevel;
         ptiFrom->pqAttach = ptiFrom->MessageQueue;
         ptiFrom->MessageQueue = ptiTo->MessageQueue;
         // FIXME: conditions?
         ptiFrom->MessageQueue->spwndActive = ptiFrom->pqAttach->spwndActive;
         ptiFrom->MessageQueue->spwndFocus = ptiFrom->pqAttach->spwndFocus;
+        ptiFrom->MessageQueue->CursorObject = ptiFrom->pqAttach->CursorObject;
     }
     else /* If clear, unlink and free it. */
     {
@@ -447,13 +449,15 @@ UserAttachThreadInput(PTHREADINFO ptiFrom, PTHREADINFO ptiTo, BOOL fAttach)
         if (paiprev) paiprev->paiNext = pai->paiNext;
 
         ExFreePoolWithTag(pai, USERTAG_ATTACHINFO);
-        ERR("Attach Free! ptiFrom 0x%p  ptiTo 0x%p\n",ptiFrom,ptiTo);
+        TRACE("Attach Free! ptiFrom 0x%p  ptiTo 0x%p\n",ptiFrom,ptiTo);
 
         ptiFrom->MessageQueue = ptiFrom->pqAttach;
         // FIXME: conditions?
+        ptiFrom->MessageQueue->CursorObject = NULL;
         ptiFrom->MessageQueue->spwndActive = NULL;
         ptiFrom->MessageQueue->spwndFocus = NULL;
         ptiFrom->pqAttach = NULL;
+        ptiTo->MessageQueue->iCursorLevel -= ptiFrom->iCursorLevel;
     }
     /* Note that key state, which can be ascertained by calls to the GetKeyState
        or GetKeyboardState function, is reset after a call to AttachThreadInput.

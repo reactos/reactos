@@ -46,8 +46,7 @@ IntChildrenWindowFromPoint(PWND pWndTop, INT x, INT y)
     if ((pWndTop->style & WS_DISABLED)) return NULL;
     if (!IntPtInWindow(pWndTop, x, y)) return NULL;
 
-    if (x - pWndTop->rcClient.left < pWndTop->rcClient.right &&
-        y - pWndTop->rcClient.top  < pWndTop->rcClient.bottom )
+    if (RECTL_bPointInRect(&pWndTop->rcClient, x, y))
     {
        for (pWnd = pWndTop->spwndChild;
             pWnd != NULL;
@@ -130,7 +129,7 @@ UserSetCursor(
     MessageQueue->CursorObject = NewCursor;
 
     /* If cursor is not visible we have nothing to do */
-    if (MessageQueue->ShowingCursor < 0)
+    if (MessageQueue->iCursorLevel < 0)
         return OldCursor;
 
     /* Update cursor if this message queue controls it */
@@ -179,15 +178,16 @@ int UserShowCursor(BOOL bShow)
     MessageQueue = pti->MessageQueue;
 
     /* Update counter */
-    MessageQueue->ShowingCursor += bShow ? 1 : -1;
+    MessageQueue->iCursorLevel += bShow ? 1 : -1;
+    pti->iCursorLevel += bShow ? 1 : -1;
 
     /* Check for trivial cases */
-    if ((bShow && MessageQueue->ShowingCursor != 0) ||
-        (!bShow && MessageQueue->ShowingCursor != -1))
+    if ((bShow && MessageQueue->iCursorLevel != 0) ||
+        (!bShow && MessageQueue->iCursorLevel != -1))
     {
         /* Note: w don't update global info here because it is used only
           internally to check if cursor is visible */
-        return MessageQueue->ShowingCursor;
+        return MessageQueue->iCursorLevel;
     }
 
     /* Check if cursor is above window owned by this MessageQueue */
@@ -208,10 +208,10 @@ int UserShowCursor(BOOL bShow)
         }
 
         /* Update global info */
-        IntGetSysCursorInfo()->ShowingCursor = MessageQueue->ShowingCursor;
+        IntGetSysCursorInfo()->ShowingCursor = MessageQueue->iCursorLevel;
     }
 
-    return MessageQueue->ShowingCursor;
+    return MessageQueue->iCursorLevel;
 }
 
 DWORD FASTCALL
@@ -382,6 +382,10 @@ MsqWakeQueue(PUSER_MESSAGE_QUEUE Queue, DWORD MessageBits, BOOL KeyEvent)
 {
    PTHREADINFO pti;
 
+   if (Queue->QF_flags & QF_INDESTROY)
+   {
+      ERR("This Message Queue is in Destroy!\n");
+   }
    pti = Queue->Thread->Tcb.Win32Thread;
    pti->pcti->fsWakeBits |= MessageBits;
    pti->pcti->fsChangeBits |= MessageBits;
@@ -482,6 +486,7 @@ co_MsqInsertMouseMessage(MSG* Msg, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Hook
    PDESKTOP pDesk;
    PWND pwnd, pwndDesktop;
    HDC hdcScreen;
+   PUSER_MESSAGE_QUEUE MessageQueue;
    PSYSTEM_CURSORINFO CurInfo;
 
    KeQueryTickCount(&LargeTickCount);
@@ -541,14 +546,20 @@ co_MsqInsertMouseMessage(MSG* Msg, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Hook
    /* Check if we found a window */
    if (Msg->hwnd != NULL && pwnd != NULL)
    {
+       MessageQueue = pwnd->head.pti->MessageQueue;
+
+       if ( pwnd->head.pti->TIF_flags & TIF_INCLEANUP || MessageQueue->QF_flags & QF_INDESTROY)
+       {
+          ERR("Mouse is over the Window Thread is Dead!\n");
+          return;
+       }
+
        if (Msg->message == WM_MOUSEMOVE)
        {
-           PUSER_MESSAGE_QUEUE MessageQueue = pwnd->head.pti->MessageQueue;
-
-           /* Check if cursor should be visible */
+          /* Check if cursor should be visible */
            if(hdcScreen &&
               MessageQueue->CursorObject &&
-              MessageQueue->ShowingCursor >= 0)
+              MessageQueue->iCursorLevel >= 0)
            {
                /* Check if shape has changed */
                if(CurInfo->CurrentCursorObject != MessageQueue->CursorObject)
@@ -569,7 +580,7 @@ co_MsqInsertMouseMessage(MSG* Msg, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Hook
                GreMovePointer(hdcScreen, -1, -1);
 
            /* Update global cursor info */
-           CurInfo->ShowingCursor = MessageQueue->ShowingCursor;
+           CurInfo->ShowingCursor = MessageQueue->iCursorLevel;
            CurInfo->CurrentCursorObject = MessageQueue->CursorObject;
            gpqCursor = MessageQueue;
 
@@ -579,7 +590,7 @@ co_MsqInsertMouseMessage(MSG* Msg, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Hook
        else
        {
            TRACE("Posting mouse message to hwnd=0x%x!\n", UserHMGetHandle(pwnd));
-           MsqPostMessage(pwnd->head.pti->MessageQueue, Msg, TRUE, QS_MOUSEBUTTON);
+           MsqPostMessage(MessageQueue, Msg, TRUE, QS_MOUSEBUTTON);
        }
    }
    else if (hdcScreen)
@@ -1532,7 +1543,7 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, UINT first, UINT 
 
         /* Activate the window if needed */
 
-        if (msg->hwnd != UserGetForegroundWindow())
+        if (pwndMsg != pti->MessageQueue->spwndActive) //msg->hwnd != UserGetForegroundWindow())
         {
             PWND pwndTop = pwndMsg;
             while (pwndTop)
@@ -1559,7 +1570,7 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, UINT first, UINT 
                     /* fall through */
                 case MA_ACTIVATE:
                 case 0:
-                    if(!co_IntMouseActivateWindow(pwndMsg)) eatMsg = TRUE;
+                    if (!co_IntMouseActivateWindow( pwndTop )) eatMsg = TRUE;
                     break;
                 default:
                     ERR( "unknown WM_MOUSEACTIVATE code %d\n", ret );
@@ -1865,7 +1876,7 @@ MsqInitializeMessageQueue(struct _ETHREAD *Thread, PUSER_MESSAGE_QUEUE MessageQu
    MessageQueue->LastMsgRead = LargeTickCount.u.LowPart;
    MessageQueue->spwndFocus = NULL;
    MessageQueue->NewMessagesHandle = NULL;
-   MessageQueue->ShowingCursor = 0;
+   MessageQueue->iCursorLevel = 0;
    MessageQueue->CursorObject = NULL;
    RtlCopyMemory(MessageQueue->afKeyState, gafAsyncKeyState, sizeof(gafAsyncKeyState));
 
