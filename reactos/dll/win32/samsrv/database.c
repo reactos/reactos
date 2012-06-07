@@ -44,210 +44,6 @@ SampOpenSamKey(VOID)
     return Status;
 }
 
-#if 0
-static BOOLEAN
-LsapIsDatabaseInstalled(VOID)
-{
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    UNICODE_STRING KeyName;
-    HANDLE KeyHandle;
-    NTSTATUS Status;
-
-    RtlInitUnicodeString(&KeyName,
-                         L"Policy");
-
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &KeyName,
-                               OBJ_CASE_INSENSITIVE,
-                               SecurityKeyHandle,
-                               NULL);
-
-    Status = RtlpNtOpenKey(&KeyHandle,
-                           KEY_READ,
-                           &ObjectAttributes,
-                           0);
-    if (!NT_SUCCESS(Status))
-        return FALSE;
-
-    NtClose(KeyHandle);
-
-    return TRUE;
-}
-
-
-static NTSTATUS
-LsapCreateDatabaseKeys(VOID)
-{
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    UNICODE_STRING KeyName;
-    HANDLE PolicyKeyHandle = NULL;
-    HANDLE AccountsKeyHandle = NULL;
-    HANDLE DomainsKeyHandle = NULL;
-    HANDLE SecretsKeyHandle = NULL;
-    NTSTATUS Status = STATUS_SUCCESS;
-
-    TRACE("LsapInstallDatabase()\n");
-
-    /* Create the 'Policy' key */
-    RtlInitUnicodeString(&KeyName,
-                         L"Policy");
-
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &KeyName,
-                               OBJ_CASE_INSENSITIVE,
-                               SecurityKeyHandle,
-                               NULL);
-
-    Status = NtCreateKey(&PolicyKeyHandle,
-                         KEY_ALL_ACCESS,
-                         &ObjectAttributes,
-                         0,
-                         NULL,
-                         0,
-                         NULL);
-    if (!NT_SUCCESS(Status))
-    {
-        ERR("Failed to create the 'Policy' key (Status: 0x%08lx)\n", Status);
-        goto Done;
-    }
-
-    /* Create the 'Accounts' key */
-    RtlInitUnicodeString(&KeyName,
-                         L"Accounts");
-
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &KeyName,
-                               OBJ_CASE_INSENSITIVE,
-                               PolicyKeyHandle,
-                               NULL);
-
-    Status = NtCreateKey(&AccountsKeyHandle,
-                         KEY_ALL_ACCESS,
-                         &ObjectAttributes,
-                         0,
-                         NULL,
-                         0,
-                         NULL);
-    if (!NT_SUCCESS(Status))
-    {
-        ERR("Failed to create the 'Accounts' key (Status: 0x%08lx)\n", Status);
-        goto Done;
-    }
-
-    /* Create the 'Domains' key */
-    RtlInitUnicodeString(&KeyName,
-                         L"Domains");
-
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &KeyName,
-                               OBJ_CASE_INSENSITIVE,
-                               PolicyKeyHandle,
-                               NULL);
-
-    Status = NtCreateKey(&DomainsKeyHandle,
-                         KEY_ALL_ACCESS,
-                         &ObjectAttributes,
-                         0,
-                         NULL,
-                         0,
-                         NULL);
-    if (!NT_SUCCESS(Status))
-    {
-        ERR("Failed to create the 'Domains' key (Status: 0x%08lx)\n", Status);
-        goto Done;
-    }
-
-    /* Create the 'Secrets' key */
-    RtlInitUnicodeString(&KeyName,
-                         L"Secrets");
-
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &KeyName,
-                               OBJ_CASE_INSENSITIVE,
-                               PolicyKeyHandle,
-                               NULL);
-
-    Status = NtCreateKey(&SecretsKeyHandle,
-                         KEY_ALL_ACCESS,
-                         &ObjectAttributes,
-                         0,
-                         NULL,
-                         0,
-                         NULL);
-    if (!NT_SUCCESS(Status))
-    {
-        ERR("Failed to create the 'Secrets' key (Status: 0x%08lx)\n", Status);
-        goto Done;
-    }
-
-Done:
-    if (SecretsKeyHandle != NULL)
-        NtClose(SecretsKeyHandle);
-
-    if (DomainsKeyHandle != NULL)
-        NtClose(DomainsKeyHandle);
-
-    if (AccountsKeyHandle != NULL)
-        NtClose(AccountsKeyHandle);
-
-    if (PolicyKeyHandle != NULL)
-        NtClose(PolicyKeyHandle);
-
-    TRACE("LsapInstallDatabase() done (Status: 0x%08lx)\n", Status);
-
-    return Status;
-}
-
-
-static NTSTATUS
-LsapCreateDatabaseObjects(VOID)
-{
-    PLSA_DB_OBJECT PolicyObject;
-    NTSTATUS Status;
-
-    /* Open the 'Policy' object */
-    Status = LsapOpenDbObject(NULL,
-                              L"Policy",
-                              LsaDbPolicyObject,
-                              0,
-                              &PolicyObject);
-    if (!NT_SUCCESS(Status))
-        return Status;
-
-    LsapSetObjectAttribute(PolicyObject,
-                           L"PolPrDmN",
-                           NULL,
-                           0);
-
-    LsapSetObjectAttribute(PolicyObject,
-                           L"PolPrDmS",
-                           NULL,
-                           0);
-
-    LsapSetObjectAttribute(PolicyObject,
-                           L"PolAcDmN",
-                           NULL,
-                           0);
-
-    LsapSetObjectAttribute(PolicyObject,
-                           L"PolAcDmS",
-                           NULL,
-                           0);
-
-    /* Close the 'Policy' object */
-    LsapCloseDbObject(PolicyObject);
-
-    return STATUS_SUCCESS;
-}
-
-
-static NTSTATUS
-LsapUpdateDatabase(VOID)
-{
-    return STATUS_SUCCESS;
-}
-#endif
-
 
 NTSTATUS
 SampInitDatabase(VOID)
@@ -310,7 +106,8 @@ SampCreateDbObject(IN PSAM_DB_OBJECT ParentObject,
     UNICODE_STRING KeyName;
     HANDLE ParentKeyHandle;
     HANDLE ContainerKeyHandle = NULL;
-    HANDLE ObjectKeyHandle;
+    HANDLE ObjectKeyHandle = NULL;
+    HANDLE MembersKeyHandle = NULL;
     NTSTATUS Status;
 
     if (DbObject == NULL)
@@ -359,6 +156,28 @@ SampCreateDbObject(IN PSAM_DB_OBJECT ParentObject,
                              0,
                              NULL);
 
+        if ((ObjectType == SamDbAliasObject) ||
+            (ObjectType == SamDbGroupObject))
+        {
+            /* Open the object key */
+            RtlInitUnicodeString(&KeyName,
+                                 L"Members");
+
+            InitializeObjectAttributes(&ObjectAttributes,
+                                       &KeyName,
+                                       OBJ_CASE_INSENSITIVE | OBJ_OPENIF,
+                                       ContainerKeyHandle,
+                                       NULL);
+
+            Status = NtCreateKey(&MembersKeyHandle,
+                                 KEY_ALL_ACCESS,
+                                 &ObjectAttributes,
+                                 0,
+                                 NULL,
+                                 0,
+                                 NULL);
+        }
+
         NtClose(ContainerKeyHandle);
 
         if (!NT_SUCCESS(Status))
@@ -395,15 +214,32 @@ SampCreateDbObject(IN PSAM_DB_OBJECT ParentObject,
                                 sizeof(SAM_DB_OBJECT));
     if (NewObject == NULL)
     {
+        if (MembersKeyHandle != NULL)
+            NtClose(MembersKeyHandle);
         NtClose(ObjectKeyHandle);
         return STATUS_NO_MEMORY;
     }
+
+    NewObject->Name = RtlAllocateHeap(RtlGetProcessHeap(),
+                                      0,
+                                      (wcslen(ObjectName) + 1) * sizeof(WCHAR));
+    if (NewObject == NULL)
+    {
+        if (MembersKeyHandle != NULL)
+            NtClose(MembersKeyHandle);
+        NtClose(ObjectKeyHandle);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, NewObject);
+        return STATUS_NO_MEMORY;
+    }
+
+    wcscpy(NewObject->Name, ObjectName);
 
     NewObject->Signature = SAMP_DB_SIGNATURE;
     NewObject->RefCount = 1;
     NewObject->ObjectType = ObjectType;
     NewObject->Access = DesiredAccess;
     NewObject->KeyHandle = ObjectKeyHandle;
+    NewObject->MembersKeyHandle = MembersKeyHandle;
     NewObject->ParentObject = ParentObject;
 
     if (ParentObject != NULL)
@@ -428,7 +264,8 @@ SampOpenDbObject(IN PSAM_DB_OBJECT ParentObject,
     UNICODE_STRING KeyName;
     HANDLE ParentKeyHandle;
     HANDLE ContainerKeyHandle = NULL;
-    HANDLE ObjectKeyHandle;
+    HANDLE ObjectKeyHandle = NULL;
+    HANDLE MembersKeyHandle = NULL;
     NTSTATUS Status;
 
     if (DbObject == NULL)
@@ -473,6 +310,28 @@ SampOpenDbObject(IN PSAM_DB_OBJECT ParentObject,
                            KEY_ALL_ACCESS,
                            &ObjectAttributes);
 
+        if ((ObjectType == SamDbAliasObject) ||
+            (ObjectType == SamDbGroupObject))
+        {
+            /* Open the object key */
+            RtlInitUnicodeString(&KeyName,
+                                 L"Members");
+
+            InitializeObjectAttributes(&ObjectAttributes,
+                                       &KeyName,
+                                       OBJ_CASE_INSENSITIVE | OBJ_OPENIF,
+                                       ContainerKeyHandle,
+                                       NULL);
+
+            Status = NtCreateKey(&MembersKeyHandle,
+                                 KEY_ALL_ACCESS,
+                                 &ObjectAttributes,
+                                 0,
+                                 NULL,
+                                 0,
+                                 NULL);
+        }
+
         NtClose(ContainerKeyHandle);
 
         if (!NT_SUCCESS(Status))
@@ -506,15 +365,31 @@ SampOpenDbObject(IN PSAM_DB_OBJECT ParentObject,
                                 sizeof(SAM_DB_OBJECT));
     if (NewObject == NULL)
     {
+        if (MembersKeyHandle != NULL)
+            NtClose(MembersKeyHandle);
         NtClose(ObjectKeyHandle);
         return STATUS_NO_MEMORY;
     }
 
+    NewObject->Name = RtlAllocateHeap(RtlGetProcessHeap(),
+                                      0,
+                                      (wcslen(ObjectName) + 1) * sizeof(WCHAR));
+    if (NewObject == NULL)
+    {
+        if (MembersKeyHandle != NULL)
+            NtClose(MembersKeyHandle);
+        NtClose(ObjectKeyHandle);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, NewObject);
+        return STATUS_NO_MEMORY;
+    }
+
+    wcscpy(NewObject->Name, ObjectName);
     NewObject->Signature = SAMP_DB_SIGNATURE;
     NewObject->RefCount = 1;
     NewObject->ObjectType = ObjectType;
     NewObject->Access = DesiredAccess;
     NewObject->KeyHandle = ObjectKeyHandle;
+    NewObject->MembersKeyHandle = MembersKeyHandle;
     NewObject->ParentObject = ParentObject;
 
     if (ParentObject != NULL)
@@ -585,8 +460,14 @@ SampCloseDbObject(PSAM_DB_OBJECT DbObject)
     if (DbObject->KeyHandle != NULL)
         NtClose(DbObject->KeyHandle);
 
+    if (DbObject->MembersKeyHandle != NULL)
+        NtClose(DbObject->MembersKeyHandle);
+
     if (DbObject->ParentObject != NULL)
         ParentObject = DbObject->ParentObject;
+
+    if (DbObject->Name != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, DbObject->Name);
 
     RtlFreeHeap(RtlGetProcessHeap(), 0, DbObject);
 

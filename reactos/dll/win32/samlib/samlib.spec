@@ -23,7 +23,7 @@
 @ stub SamGetCompatibilityMode
 @ stub SamGetDisplayEnumerationIndex
 @ stub SamGetGroupsForUser
-@ stub SamGetMembersInAlias
+@ stdcall SamGetMembersInAlias(ptr ptr ptr)
 @ stub SamGetMembersInGroup
 @ stdcall SamLookupDomainInSamServer(ptr ptr ptr)
 @ stub SamLookupIdsInDomain

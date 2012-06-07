@@ -303,6 +303,48 @@ SamFreeMemory(IN PVOID Buffer)
 
 NTSTATUS
 NTAPI
+SamGetMembersInAlias(IN SAM_HANDLE AliasHandle,
+                     OUT PSID **MemberIds,
+                     OUT PULONG MemberCount)
+{
+    SAMPR_PSID_ARRAY_OUT SidArray;
+    NTSTATUS Status;
+
+    TRACE("SamGetMembersInAlias(%p %p %p)\n",
+          AliasHandle, MemberIds, MemberCount);
+
+    if ((MemberIds == NULL) ||
+        (MemberCount == NULL))
+        return STATUS_INVALID_PARAMETER;
+
+    *MemberIds = NULL;
+    *MemberCount = 0;
+
+    SidArray.Sids = NULL;
+
+    RpcTryExcept
+    {
+        Status = SamrGetMembersInAlias((SAMPR_HANDLE)AliasHandle,
+                                       &SidArray);
+        if (NT_SUCCESS(Status))
+        {
+            *MemberCount = SidArray.Count;
+            *MemberIds = (PSID *)(SidArray.Sids);
+        }
+
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
+
+NTSTATUS
+NTAPI
 SamLookupDomainInSamServer(IN SAM_HANDLE ServerHandle,
                            IN PUNICODE_STRING Name,
                            OUT PSID *DomainId)

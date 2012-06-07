@@ -1186,6 +1186,8 @@ SamrAddMemberToAlias(IN SAMPR_HANDLE AliasHandle,
     PSAM_DB_OBJECT AliasObject;
     LPWSTR MemberIdString = NULL;
     HANDLE MembersKeyHandle = NULL;
+    HANDLE MemberKeyHandle = NULL;
+    ULONG MemberIdLength;
     NTSTATUS Status;
 
     TRACE("SamrAddMemberToAlias(%p %p)\n",
@@ -1205,6 +1207,8 @@ SamrAddMemberToAlias(IN SAMPR_HANDLE AliasHandle,
     ConvertSidToStringSidW(MemberId, &MemberIdString);
     TRACE("Member SID: %S\n", MemberIdString);
 
+    MemberIdLength = RtlLengthSid(MemberId);
+
     Status = SampRegCreateKey(AliasObject->KeyHandle,
                               L"Members",
                               KEY_WRITE,
@@ -1218,10 +1222,39 @@ SamrAddMemberToAlias(IN SAMPR_HANDLE AliasHandle,
     Status = SampRegSetValue(MembersKeyHandle,
                              MemberIdString,
                              REG_BINARY,
-                             NULL,
-                             0);
+                             MemberId,
+                             MemberIdLength);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampRegSetValue failed with status 0x%08lx\n", Status);
+        goto done;
+    }
+
+    Status = SampRegCreateKey(AliasObject->MembersKeyHandle,
+                              MemberIdString,
+                              KEY_WRITE,
+                              &MemberKeyHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampRegCreateKey failed with status 0x%08lx\n", Status);
+        goto done;
+    }
+
+    Status = SampRegSetValue(MemberKeyHandle,
+                             AliasObject->Name,
+                             REG_BINARY,
+                             MemberId,
+                             MemberIdLength);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampRegSetValue failed with status 0x%08lx\n", Status);
+        goto done;
+    }
 
 done:
+    if (MemberKeyHandle != NULL)
+        SampRegCloseKey(MemberKeyHandle);
+
     if (MembersKeyHandle != NULL)
         SampRegCloseKey(MembersKeyHandle);
 
@@ -1247,8 +1280,129 @@ NTAPI
 SamrGetMembersInAlias(IN SAMPR_HANDLE AliasHandle,
                       OUT PSAMPR_PSID_ARRAY_OUT Members)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PSAM_DB_OBJECT AliasObject;
+    HANDLE MembersKeyHandle = NULL;
+    PSAMPR_SID_INFORMATION MemberArray = NULL;
+    ULONG ValueCount = 0;
+    ULONG DataLength;
+    ULONG Index;
+    NTSTATUS Status;
+
+    TRACE("SamrGetMembersInAlias(%p %p %p)\n",
+          AliasHandle, Members);
+
+    /* Validate the alias handle */
+    Status = SampValidateDbObject(AliasHandle,
+                                  SamDbAliasObject,
+                                  ALIAS_LIST_MEMBERS,
+                                  &AliasObject);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Open the members key of the alias objct */
+    Status = SampRegOpenKey(AliasObject->KeyHandle,
+                            L"Members",
+                            KEY_READ,
+                            &MembersKeyHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SampRegOpenKey failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Get the number of members */
+    Status = SampRegQueryKeyInfo(MembersKeyHandle,
+                                 NULL,
+                                 &ValueCount);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SampRegQueryKeyInfo failed with status 0x%08lx\n", Status);
+        goto done;
+    }
+
+    /* Allocate the member array */
+    MemberArray = midl_user_allocate(ValueCount * sizeof(SAMPR_SID_INFORMATION));
+    if (MemberArray == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
+
+    /* Enumerate the members */
+    Index = 0;
+    while (TRUE)
+    {
+        /* Get the size of the next SID */
+        DataLength = 0;
+        Status = SampRegEnumerateValue(MembersKeyHandle,
+                                       Index,
+                                       NULL,
+                                       NULL,
+                                       NULL,
+                                       NULL,
+                                       &DataLength);
+        if (!NT_SUCCESS(Status))
+        {
+            if (Status == STATUS_NO_MORE_ENTRIES)
+                Status = STATUS_SUCCESS;
+            break;
+        }
+
+        /* Allocate a buffer for the SID */
+        MemberArray[Index].SidPointer = midl_user_allocate(DataLength);
+        if (MemberArray[Index].SidPointer == NULL)
+        {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            goto done;
+        }
+
+        /* Read the SID into the buffer */
+        Status = SampRegEnumerateValue(MembersKeyHandle,
+                                       Index,
+                                       NULL,
+                                       NULL,
+                                       NULL,
+                                       (PVOID)MemberArray[Index].SidPointer,
+                                       &DataLength);
+        if (!NT_SUCCESS(Status))
+        {
+            goto done;
+        }
+
+        Index++;
+    }
+
+    /* Return the number of members and the member array */
+    if (NT_SUCCESS(Status))
+    {
+        Members->Count = ValueCount;
+        Members->Sids = MemberArray;
+    }
+
+done:
+    /* Clean up the members array and the SID buffers if something failed */
+    if (!NT_SUCCESS(Status))
+    {
+        if (MemberArray != NULL)
+        {
+            for (Index = 0; Index < ValueCount; Index++)
+            {
+                if (MemberArray[Index].SidPointer != NULL)
+                    midl_user_free(MemberArray[Index].SidPointer);
+            }
+
+            midl_user_free(MemberArray);
+        }
+    }
+
+    /* Close the members key */
+    if (MembersKeyHandle != NULL)
+        SampRegCloseKey(MembersKeyHandle);
+
+    return Status;
 }
 
 /* Function 34 */

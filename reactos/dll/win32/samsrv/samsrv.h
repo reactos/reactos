@@ -42,7 +42,9 @@ typedef struct _SAM_DB_OBJECT
     SAM_DB_OBJECT_TYPE ObjectType;
     ULONG RefCount;
     ACCESS_MASK Access;
+    LPWSTR Name;
     HANDLE KeyHandle;
+    HANDLE MembersKeyHandle;  // only used by Aliases and Groups
     struct _SAM_DB_OBJECT *ParentObject;
 } SAM_DB_OBJECT, *PSAM_DB_OBJECT;
 
@@ -125,6 +127,20 @@ SampRegOpenKey(IN HANDLE ParentKeyHandle,
                IN LPCWSTR KeyName,
                IN ACCESS_MASK DesiredAccess,
                OUT HANDLE KeyHandle);
+
+NTSTATUS
+SampRegQueryKeyInfo(IN HANDLE KeyHandle,
+                    OUT PULONG SubKeyCount,
+                    OUT PULONG ValueCount);
+
+NTSTATUS
+SampRegEnumerateValue(IN HANDLE KeyHandle,
+                      IN ULONG Index,
+                      OUT LPWSTR Name,
+                      IN OUT PULONG NameLength,
+                      OUT PULONG Type OPTIONAL,
+                      OUT PVOID Data OPTIONAL,
+                      IN OUT PULONG DataLength OPTIONAL);
 
 NTSTATUS
 SampRegQueryValue(IN HANDLE KeyHandle,

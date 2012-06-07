@@ -166,6 +166,12 @@ SamFreeMemory(IN PVOID Buffer);
 
 NTSTATUS
 NTAPI
+SamGetMembersInAlias(IN SAM_HANDLE AliasHandle,
+                     OUT PSID **MemberIds,
+                     OUT PULONG MemberCount);
+
+NTSTATUS
+NTAPI
 SamLookupDomainInSamServer(IN SAM_HANDLE ServerHandle,
                            IN PUNICODE_STRING Name,
                            OUT PSID *DomainId);
