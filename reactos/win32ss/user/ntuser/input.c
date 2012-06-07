@@ -395,17 +395,17 @@ NtUserBlockInput(
 }
 
 BOOL FASTCALL
-UserAttachThreadInput(PTHREADINFO pti, PTHREADINFO ptiTo, BOOL fAttach)
+UserAttachThreadInput(PTHREADINFO ptiFrom, PTHREADINFO ptiTo, BOOL fAttach)
 {
     PATTACHINFO pai;
 
     /* Can not be the same thread. */
-    if (pti == ptiTo) return FALSE;
+    if (ptiFrom == ptiTo) return FALSE;
 
     /* Do not attach to system threads or between different desktops. */
-    if (pti->TIF_flags & TIF_DONTATTACHQUEUE ||
+    if (ptiFrom->TIF_flags & TIF_DONTATTACHQUEUE ||
             ptiTo->TIF_flags & TIF_DONTATTACHQUEUE ||
-            pti->rpdesk != ptiTo->rpdesk)
+            ptiFrom->rpdesk != ptiTo->rpdesk)
         return FALSE;
 
     /* If Attach set, allocate and link. */
@@ -415,9 +415,16 @@ UserAttachThreadInput(PTHREADINFO pti, PTHREADINFO ptiTo, BOOL fAttach)
         if (!pai) return FALSE;
 
         pai->paiNext = gpai;
-        pai->pti1 = pti;
+        pai->pti1 = ptiFrom;
         pai->pti2 = ptiTo;
         gpai = pai;
+        ERR("Attach Allocated! ptiFrom 0x%p  ptiTo 0x%p\n",ptiFrom,ptiTo);
+
+        ptiFrom->pqAttach = ptiFrom->MessageQueue;
+        ptiFrom->MessageQueue = ptiTo->MessageQueue;
+        // FIXME: conditions?
+        ptiFrom->MessageQueue->spwndActive = ptiFrom->pqAttach->spwndActive;
+        ptiFrom->MessageQueue->spwndFocus = ptiFrom->pqAttach->spwndFocus;
     }
     else /* If clear, unlink and free it. */
     {
@@ -430,7 +437,7 @@ UserAttachThreadInput(PTHREADINFO pti, PTHREADINFO ptiTo, BOOL fAttach)
         /* Search list and free if found or return false. */
         do
         {
-            if (pai->pti2 == ptiTo && pai->pti1 == pti) break;
+            if (pai->pti2 == ptiTo && pai->pti1 == ptiFrom) break;
             paiprev = pai;
             pai = pai->paiNext;
         } while (pai);
@@ -440,8 +447,19 @@ UserAttachThreadInput(PTHREADINFO pti, PTHREADINFO ptiTo, BOOL fAttach)
         if (paiprev) paiprev->paiNext = pai->paiNext;
 
         ExFreePoolWithTag(pai, USERTAG_ATTACHINFO);
-    }
+        ERR("Attach Free! ptiFrom 0x%p  ptiTo 0x%p\n",ptiFrom,ptiTo);
 
+        ptiFrom->MessageQueue = ptiFrom->pqAttach;
+        // FIXME: conditions?
+        ptiFrom->MessageQueue->spwndActive = NULL;
+        ptiFrom->MessageQueue->spwndFocus = NULL;
+        ptiFrom->pqAttach = NULL;
+    }
+    /* Note that key state, which can be ascertained by calls to the GetKeyState
+       or GetKeyboardState function, is reset after a call to AttachThreadInput.
+       ATM which one?
+     */
+    RtlCopyMemory(ptiTo->MessageQueue->afKeyState, gafAsyncKeyState, sizeof(gafAsyncKeyState));
     return TRUE;
 }
 
