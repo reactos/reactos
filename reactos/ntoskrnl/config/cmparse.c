@@ -1074,6 +1074,10 @@ CmpParseKey(IN PVOID ParseObject,
     /* Grab the KCB */
     Kcb = ((PCM_KEY_BODY)ParseObject)->KeyControlBlock;
 
+    /* Fail if the key was marked as deleted */
+    if (Kcb->Delete)
+        return STATUS_KEY_DELETED;
+
     /* Lookup in the cache */
     Status = CmpBuildHashStackAndLookupCache(ParseObject,
                                              &Kcb,
