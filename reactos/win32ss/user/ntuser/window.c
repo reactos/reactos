@@ -2413,7 +2413,7 @@ BOOLEAN FASTCALL co_UserDestroyWindow(PWND Window)
    if (!co_WinPosShowWindow(Window, SW_HIDE))
    {  // Rule #1.
       if (ti->MessageQueue->spwndActive == Window && ti->MessageQueue == IntGetFocusMessageQueue())
-      {  ERR("DestroyWindow AOW\n");
+      {  //ERR("DestroyWindow AOW\n");
          co_WinPosActivateOtherWindow(Window);
       }
    }

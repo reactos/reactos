@@ -596,12 +596,9 @@ co_UserSetFocus(PWND Window)
       }
 
       // Check again! SetActiveWindow could have set the focus via WM_ACTIVATE.
-      if (ThreadQueue->spwndFocus && ThreadQueue->spwndFocus == Window)
-      {
-         hWndPrev = UserHMGetHandle(ThreadQueue->spwndFocus);
-      }
+      hWndPrev = ThreadQueue->spwndFocus ? UserHMGetHandle(ThreadQueue->spwndFocus) : 0;
 
-       /* check if the specified window can be set in the input data of a given queue */
+      /* check if the specified window can be set in the input data of a given queue */
       if (ThreadQueue == Window->head.pti->MessageQueue)
          /* set the current thread focus window */
          ThreadQueue->spwndFocus = Window;
