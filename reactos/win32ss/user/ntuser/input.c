@@ -397,6 +397,7 @@ NtUserBlockInput(
 BOOL FASTCALL
 UserAttachThreadInput(PTHREADINFO ptiFrom, PTHREADINFO ptiTo, BOOL fAttach)
 {
+    MSG msg;
     PATTACHINFO pai;
 
     /* Can not be the same thread. */
@@ -424,9 +425,16 @@ UserAttachThreadInput(PTHREADINFO ptiFrom, PTHREADINFO ptiTo, BOOL fAttach)
         ptiFrom->pqAttach = ptiFrom->MessageQueue;
         ptiFrom->MessageQueue = ptiTo->MessageQueue;
         // FIXME: conditions?
+        if (ptiFrom->pqAttach == gpqForeground)
+        {
         ptiFrom->MessageQueue->spwndActive = ptiFrom->pqAttach->spwndActive;
         ptiFrom->MessageQueue->spwndFocus = ptiFrom->pqAttach->spwndFocus;
         ptiFrom->MessageQueue->CursorObject = ptiFrom->pqAttach->CursorObject;
+        ptiFrom->MessageQueue->CaptureWindow = ptiFrom->pqAttach->CaptureWindow;
+        ptiFrom->MessageQueue->spwndCapture = ptiFrom->pqAttach->spwndCapture;
+        ptiFrom->MessageQueue->QF_flags ^= ((ptiFrom->MessageQueue->QF_flags ^ ptiFrom->pqAttach->QF_flags) & QF_CAPTURELOCKED);
+        ptiFrom->MessageQueue->CaretInfo = ptiFrom->pqAttach->CaretInfo;
+        }
     }
     else /* If clear, unlink and free it. */
     {
@@ -464,6 +472,14 @@ UserAttachThreadInput(PTHREADINFO ptiFrom, PTHREADINFO ptiTo, BOOL fAttach)
        ATM which one?
      */
     RtlCopyMemory(ptiTo->MessageQueue->afKeyState, gafAsyncKeyState, sizeof(gafAsyncKeyState));
+
+    /* Generate mouse move message */
+    msg.message = WM_MOUSEMOVE;
+    msg.wParam = UserGetMouseButtonsState();
+    msg.lParam = MAKELPARAM(gpsi->ptCursor.x, gpsi->ptCursor.y);
+    msg.pt = gpsi->ptCursor;
+    co_MsqInsertMouseMessage(&msg, 0, 0, TRUE);
+
     return TRUE;
 }
 
