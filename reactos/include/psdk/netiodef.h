@@ -140,7 +140,7 @@ typedef UINT64 HANDLE64, *PHANDLE64;
 #define icmp4_cksum     Header.Checksum
 #define icmp4_un_data32 Data32
 #define icmp4_un_data16 Data16
-#define icmp4_un_data8  Data8 
+#define icmp4_un_data8  Data8
 #define icmp4_dataun    Data
 #define icmp4_data32    icmp4_dataun.icmp4_un_data32
 #define icmp4_data16    icmp4_dataun.icmp4_un_data16
@@ -404,7 +404,6 @@ union _DL_EUI48 {
     DL_EI48 Ei48;
   };
 };
-typedef union _DL_EUI48 DL_EUI48, *PDL_EUI48;
 
 C_ASSERT(DL_ADDRESS_LENGTH_MAXIMUM >= sizeof(DL_EUI48));
 
@@ -1197,7 +1196,7 @@ typedef enum _NPI_MODULEID_TYPE {
 typedef struct _NPI_MODULEID {
   USHORT Length;
   NPI_MODULEID_TYPE Type;
-#ifdef __midl 
+#ifdef __midl
   [switch_type(NPI_MODULEID_TYPE), switch_is(Type)]
 #endif
   union {
