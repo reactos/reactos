@@ -50,6 +50,6 @@ add_importlibs(actxprxy
     kernel32
     ntdll)
 
-add_definitions(-DREGISTER_PROXY_DLL -DPROXY_DELEGATION)
+add_definitions(-DWINE_REGISTER_DLL -DPROXY_DELEGATION)
 
 add_cd_file(TARGET actxprxy DESTINATION reactos/system32 FOR all)
