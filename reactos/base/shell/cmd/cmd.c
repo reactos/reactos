@@ -396,7 +396,10 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest, PARSED_COMMAND *Cmd)
 		STARTUPINFO stui;
 
 		/* build command line for CreateProcess(): FullName + " " + rest */
-		_tcscpy(szFullCmdLine, szFullName);
+        BOOL quoted = !!_tcschr(First, ' ');
+		_tcscpy(szFullCmdLine, quoted ? _T("\"") : _T(""));
+		_tcsncat(szFullCmdLine, First, CMDLINE_LENGTH - _tcslen(szFullCmdLine));
+		_tcsncat(szFullCmdLine, quoted ? _T("\"") : _T(""), CMDLINE_LENGTH - _tcslen(szFullCmdLine));
 
 		if (*rest)
 		{
