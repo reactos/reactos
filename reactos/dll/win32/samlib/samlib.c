@@ -242,6 +242,56 @@ SamCreateUserInDomain(IN SAM_HANDLE DomainHandle,
 
 NTSTATUS
 NTAPI
+SamEnumerateAliasesInDomain(IN SAM_HANDLE DomainHandle,
+                            IN OUT PSAM_ENUMERATE_HANDLE EnumerationContext,
+                            OUT PVOID *Buffer,
+                            IN ULONG PreferedMaximumLength,
+                            OUT PULONG CountReturned)
+{
+    PSAMPR_ENUMERATION_BUFFER EnumBuffer = NULL;
+    NTSTATUS Status;
+
+    TRACE("SamEnumerateAliasesInDomain(%p,%p,%p,%lu,%p)\n",
+          DomainHandle, EnumerationContext, Buffer, PreferedMaximumLength,
+          CountReturned);
+
+    if ((EnumerationContext == NULL) ||
+        (Buffer == NULL) ||
+        (CountReturned == NULL))
+        return STATUS_INVALID_PARAMETER;
+
+    *Buffer = NULL;
+
+    RpcTryExcept
+    {
+        Status = SamrEnumerateAliasesInDomain((SAMPR_HANDLE)DomainHandle,
+                                              EnumerationContext,
+                                              (PSAMPR_ENUMERATION_BUFFER *)&EnumBuffer,
+                                              PreferedMaximumLength,
+                                              CountReturned);
+
+        if (EnumBuffer != NULL)
+        {
+            if (EnumBuffer->Buffer != NULL)
+            {
+                *Buffer = EnumBuffer->Buffer;
+            }
+
+            midl_user_free(EnumBuffer);
+        }
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
+
+NTSTATUS
+NTAPI
 SamEnumerateDomainsInSamServer(IN SAM_HANDLE ServerHandle,
                                IN OUT PSAM_ENUMERATE_HANDLE EnumerationContext,
                                OUT PVOID *Buffer,

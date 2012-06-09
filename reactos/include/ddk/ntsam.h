@@ -154,6 +154,14 @@ SamCreateUserInDomain(IN SAM_HANDLE DomainHandle,
 
 NTSTATUS
 NTAPI
+SamEnumerateAliasesInDomain(IN SAM_HANDLE DomainHandle,
+                            IN OUT PSAM_ENUMERATE_HANDLE EnumerationContext,
+                            OUT PVOID *Buffer,
+                            IN ULONG PreferedMaximumLength,
+                            OUT PULONG CountReturned);
+
+NTSTATUS
+NTAPI
 SamEnumerateDomainsInSamServer(IN SAM_HANDLE ServerHandle,
                                IN OUT PSAM_ENUMERATE_HANDLE EnumerationContext,
                                OUT PVOID *Buffer,

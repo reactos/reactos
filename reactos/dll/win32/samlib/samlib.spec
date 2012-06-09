@@ -14,7 +14,7 @@
 @ stub SamDeleteAlias
 @ stub SamDeleteGroup
 @ stub SamDeleteUser
-@ stub SamEnumerateAliasesInDomain
+@ stdcall SamEnumerateAliasesInDomain(ptr ptr ptr long ptr)
 @ stdcall SamEnumerateDomainsInSamServer(ptr ptr ptr long ptr)
 @ stub SamEnumerateGroupsInDomain
 @ stub SamEnumerateUsersInDomain

@@ -929,7 +929,7 @@ SamrCreateAliasInDomain(IN SAMPR_HANDLE DomainHandle,
         return Status;
     }
 
-    /* Set the name attribute */
+    /* Set the Name attribute */
     Status = SampSetObjectAttribute(AliasObject,
                                     L"Name",
                                     REG_SZ,
@@ -972,8 +972,223 @@ SamrEnumerateAliasesInDomain(IN SAMPR_HANDLE DomainHandle,
                              IN unsigned long PreferedMaximumLength,
                              OUT unsigned long *CountReturned)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PSAMPR_ENUMERATION_BUFFER EnumBuffer = NULL;
+    PSAM_DB_OBJECT DomainObject;
+    HANDLE AliasesKeyHandle;
+    WCHAR AliasKeyName[64];
+    HANDLE AliasKeyHandle;
+    ULONG EnumIndex;
+    ULONG EnumCount;
+    ULONG RequiredLength;
+    ULONG DataLength;
+    ULONG i;
+    BOOLEAN MoreEntries = FALSE;
+    NTSTATUS Status;
+
+    TRACE("SamrEnumerateAliasesInDomain(%p %p %p %lu %p)\n",
+          DomainHandle, EnumerationContext, Buffer, PreferedMaximumLength,
+          CountReturned);
+
+    /* Validate the domain handle */
+    Status = SampValidateDbObject(DomainHandle,
+                                  SamDbDomainObject,
+                                  DOMAIN_LIST_ACCOUNTS,
+                                  &DomainObject);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    Status = SampRegOpenKey(DomainObject->KeyHandle,
+                            L"Aliases",
+                            KEY_READ,
+                            &AliasesKeyHandle);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    TRACE("Part 1\n");
+
+    EnumIndex = *EnumerationContext;
+    EnumCount = 0;
+    RequiredLength = 0;
+
+    while (TRUE)
+    {
+        Status = SampRegEnumerateSubKey(AliasesKeyHandle,
+                                        EnumIndex,
+                                        64 * sizeof(WCHAR),
+                                        AliasKeyName);
+        if (!NT_SUCCESS(Status))
+        {
+            if (Status == STATUS_NO_MORE_ENTRIES)
+                Status = STATUS_SUCCESS;
+            break;
+        }
+
+        TRACE("EnumIndex: %lu\n", EnumIndex);
+        TRACE("Alias key name: %S\n", AliasKeyName);
+
+        Status = SampRegOpenKey(AliasesKeyHandle,
+                                AliasKeyName,
+                                KEY_READ,
+                                &AliasKeyHandle);
+        TRACE("SampRegOpenKey returned %08lX\n", Status);
+        if (NT_SUCCESS(Status))
+        {
+            DataLength = 0;
+            Status = SampRegQueryValue(AliasKeyHandle,
+                                       L"Name",
+                                       NULL,
+                                       NULL,
+                                       &DataLength);
+
+            NtClose(AliasKeyHandle);
+
+            TRACE("SampRegQueryValue returned %08lX\n", Status);
+
+            if (NT_SUCCESS(Status))
+            {
+                TRACE("Data length: %lu\n", DataLength);
+
+                if ((RequiredLength + DataLength + sizeof(SAMPR_RID_ENUMERATION)) > PreferedMaximumLength)
+                {
+                    MoreEntries = TRUE;
+                    break;
+                }
+
+                RequiredLength += (DataLength + sizeof(SAMPR_RID_ENUMERATION));
+                EnumCount++;
+            }
+        }
+
+        EnumIndex++;
+    }
+
+    TRACE("EnumCount: %lu\n", EnumCount);
+    TRACE("RequiredLength: %lu\n", RequiredLength);
+
+    EnumBuffer = midl_user_allocate(sizeof(SAMPR_ENUMERATION_BUFFER));
+    if (EnumBuffer == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
+
+    EnumBuffer->EntriesRead = EnumCount;
+    if (EnumCount == 0)
+        goto done;
+
+    EnumBuffer->Buffer = midl_user_allocate(EnumCount * sizeof(SAMPR_RID_ENUMERATION));
+    if (EnumBuffer->Buffer == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
+
+    TRACE("Part 2\n");
+
+    EnumIndex = *EnumerationContext;
+    for (i = 0; i < EnumCount; i++, EnumIndex++)
+    {
+        Status = SampRegEnumerateSubKey(AliasesKeyHandle,
+                                        EnumIndex,
+                                        64 * sizeof(WCHAR),
+                                        AliasKeyName);
+        if (!NT_SUCCESS(Status))
+        {
+            if (Status == STATUS_NO_MORE_ENTRIES)
+                Status = STATUS_SUCCESS;
+            break;
+        }
+
+        TRACE("EnumIndex: %lu\n", EnumIndex);
+        TRACE("Alias key name: %S\n", AliasKeyName);
+
+        Status = SampRegOpenKey(AliasesKeyHandle,
+                                AliasKeyName,
+                                KEY_READ,
+                                &AliasKeyHandle);
+        TRACE("SampRegOpenKey returned %08lX\n", Status);
+        if (NT_SUCCESS(Status))
+        {
+            DataLength = 0;
+            Status = SampRegQueryValue(AliasKeyHandle,
+                                       L"Name",
+                                       NULL,
+                                       NULL,
+                                       &DataLength);
+            TRACE("SampRegQueryValue returned %08lX\n", Status);
+            if (NT_SUCCESS(Status))
+            {
+                EnumBuffer->Buffer[i].RelativeId = wcstoul(AliasKeyName, NULL, 16);
+
+                EnumBuffer->Buffer[i].Name.Length = (USHORT)DataLength - sizeof(WCHAR);
+                EnumBuffer->Buffer[i].Name.MaximumLength = (USHORT)DataLength;
+                EnumBuffer->Buffer[i].Name.Buffer = midl_user_allocate(DataLength);
+                if (EnumBuffer->Buffer[i].Name.Buffer == NULL)
+                {
+                    NtClose(AliasKeyHandle);
+                    Status = STATUS_INSUFFICIENT_RESOURCES;
+                    goto done;
+                }
+
+                Status = SampRegQueryValue(AliasKeyHandle,
+                                           L"Name",
+                                           NULL,
+                                           EnumBuffer->Buffer[i].Name.Buffer,
+                                           &DataLength);
+                TRACE("SampRegQueryValue returned %08lX\n", Status);
+                if (NT_SUCCESS(Status))
+                {
+                    TRACE("Alias name: %S\n", EnumBuffer->Buffer[i].Name.Buffer);
+                }
+            }
+
+            NtClose(AliasKeyHandle);
+
+            if (!NT_SUCCESS(Status))
+                goto done;
+        }
+    }
+
+done:
+    if (NT_SUCCESS(Status))
+    {
+        *EnumerationContext += EnumCount;
+        *Buffer = EnumBuffer;
+        *CountReturned = EnumCount;
+    }
+
+    if (!NT_SUCCESS(Status))
+    {
+        *EnumerationContext = 0;
+        *Buffer = NULL;
+        *CountReturned = 0;
+
+        if (EnumBuffer != NULL)
+        {
+            if (EnumBuffer->Buffer != NULL)
+            {
+                if (EnumBuffer->EntriesRead != 0)
+                {
+                    for (i = 0; i < EnumBuffer->EntriesRead; i++)
+                    {
+                        if (EnumBuffer->Buffer[i].Name.Buffer != NULL)
+                            midl_user_free(EnumBuffer->Buffer[i].Name.Buffer);
+                    }
+                }
+
+                midl_user_free(EnumBuffer->Buffer);
+            }
+
+            midl_user_free(EnumBuffer);
+        }
+    }
+
+    NtClose(AliasesKeyHandle);
+
+    if ((Status == STATUS_SUCCESS) && (MoreEntries == TRUE))
+        Status = STATUS_MORE_ENTRIES;
+
+    return Status;
 }
 
 /* Function 16 */
