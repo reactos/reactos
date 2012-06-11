@@ -61,6 +61,7 @@ library stdole
         SCODE scode;
     } EXCEPINFO;
 
+#ifdef __WIDL__
     [
         odl,
         uuid(00000000-0000-0000-C000-000000000046)
@@ -135,4 +136,5 @@ library stdole
         HRESULT Clone(
                       [out] IEnumVARIANT **ppenum);
     }
+#endif
 };
