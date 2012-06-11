@@ -5943,11 +5943,15 @@ void __RPC_USER midl_user_free(void __RPC_FAR * ptr)
 
 void __RPC_USER SC_RPC_HANDLE_rundown(SC_RPC_HANDLE hSCObject)
 {
+    /* Close the handle */
+    RCloseServiceHandle(&hSCObject);
 }
 
 
 void __RPC_USER SC_RPC_LOCK_rundown(SC_RPC_LOCK Lock)
 {
+    /* Unlock the database */
+    RUnlockServiceDatabase(&Lock);
 }
 
 
