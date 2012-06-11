@@ -113,8 +113,8 @@ ScmCreateStartEvent(PHANDLE StartEvent)
 }
 
 
-static VOID
-ScmWaitForLsass(VOID)
+VOID
+ScmWaitForLsa(VOID)
 {
     HANDLE hEvent;
     DWORD dwError;
@@ -126,7 +126,7 @@ ScmWaitForLsass(VOID)
     if (hEvent == NULL)
     {
         dwError = GetLastError();
-        DPRINT("Failed to create the notication event (Error %lu)\n", dwError);
+        DPRINT1("Failed to create the notication event (Error %lu)\n", dwError);
 
         if (dwError == ERROR_ALREADY_EXISTS)
         {
@@ -146,6 +146,8 @@ ScmWaitForLsass(VOID)
     DPRINT("LSA server running!\n");
 
     CloseHandle(hEvent);
+
+    DPRINT("ScmWaitForLsa() done\n");
 }
 
 
@@ -420,7 +422,7 @@ wWinMain(HINSTANCE hInstance,
     SetConsoleCtrlHandler(ShutdownHandlerRoutine, TRUE);
 
     /* Wait for the LSA server */
-    ScmWaitForLsass();
+    ScmWaitForLsa();
 
     /* Acquire privileges to load drivers */
     AcquireLoadDriverPrivilege();

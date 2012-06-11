@@ -161,6 +161,7 @@ VOID PrintString(LPCSTR fmt, ...);
 VOID ScmLogError(DWORD dwEventId,
                  WORD wStrings,
                  LPCWSTR *lpStrings);
+VOID ScmWaitForLsa(VOID);
 
 /* EOF */
 
