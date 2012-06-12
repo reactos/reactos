@@ -1016,10 +1016,10 @@ GreGetSetColorTable(
     psurf = pdc->dclevel.pSurface;
 
     /* Check if we have the default surface */
-    if ((psurf == NULL) && !bSet)
+    if (psurf == NULL)
     {
         /* Use a mono palette */
-        ppal = gppalMono;
+        if(!bSet) ppal = gppalMono;
     }
     else if (psurf->SurfObj.iType == STYPE_BITMAP)
     {
