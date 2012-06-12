@@ -4214,6 +4214,8 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
                 //
                 if ((EndingAddress >> PAGE_SHIFT) == Vad->EndingVpn)
                 {
+                    PMEMORY_AREA MemoryArea;
+
                     //
                     // This is pretty easy and similar to case A. We compute the
                     // amount of pages to decommit, update the VAD's commit charge
@@ -4226,7 +4228,12 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
                                                                 Vad,
                                                                 Process);
                     Vad->u.VadFlags.CommitCharge -= CommitReduction;
+                    // For ReactOS: shrink the corresponding memory area
+                    MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, (PVOID)StartingAddress);
+                    ASSERT(Vad->StartingVpn << PAGE_SHIFT == (ULONG_PTR)MemoryArea->StartingAddress);
+                    ASSERT((Vad->EndingVpn + 1) << PAGE_SHIFT == (ULONG_PTR)MemoryArea->EndingAddress);
                     Vad->EndingVpn = ((ULONG_PTR)StartingAddress - 1) >> PAGE_SHIFT;
+                    MemoryArea->EndingAddress = (PVOID)(((Vad->EndingVpn + 1) << PAGE_SHIFT) - 1);
                 }
                 else
                 {
