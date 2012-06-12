@@ -4961,34 +4961,31 @@ DWORD RQueryServiceConfig2A(
     else if (dwInfoLevel == SERVICE_CONFIG_FAILURE_ACTIONS)
     {
         LPSERVICE_FAILURE_ACTIONSA lpFailureActions = (LPSERVICE_FAILURE_ACTIONSA)lpBuffer;
-        LPSTR lpStr;
+        LPSTR lpStr = NULL;
 
         /* Query value length */
-        dwRequiredSize = 0;
         dwError = RegQueryValueExW(hServiceKey,
                                    L"FailureActions",
                                    NULL,
                                    &dwType,
                                    NULL,
                                    &dwRequiredSize);
-        if (dwError != ERROR_SUCCESS && dwError != ERROR_MORE_DATA)
+        if (dwError != ERROR_SUCCESS &&
+            dwError != ERROR_MORE_DATA &&
+            dwError != ERROR_FILE_NOT_FOUND)
             goto done;
 
-        if (dwType != REG_BINARY)
-        {
-            dwError = ERROR_UNSUPPORTED_TYPE;
-            goto done;
-        }
+        dwRequiredSize = (dwType == REG_BINARY) ? max(sizeof(SERVICE_FAILURE_ACTIONSA), dwRequiredSize)
+                                                : sizeof(SERVICE_FAILURE_ACTIONSA);
 
-        dwRequiredSize = max(sizeof(SERVICE_FAILURE_ACTIONSA), dwRequiredSize);
+        /* Get the strings */
+        ScmReadString(hServiceKey,
+                      L"FailureCommand",
+                      &lpFailureCommandW);
 
-        dwError = ScmReadString(hServiceKey,
-                                L"FailureCommand",
-                                &lpFailureCommandW);
-
-        dwError = ScmReadString(hServiceKey,
-                                L"RebootMessage",
-                                &lpRebootMessageW);
+        ScmReadString(hServiceKey,
+                      L"RebootMessage",
+                      &lpRebootMessageW);
 
         if (lpRebootMessageW)
             dwRequiredSize += (wcslen(lpRebootMessageW) + 1) * sizeof(WCHAR);
@@ -5004,26 +5001,32 @@ DWORD RQueryServiceConfig2A(
         }
 
         /* Now we can fill the buffer */
-        dwError = RegQueryValueExW(hServiceKey,
-                                   L"FailureActions",
-                                   NULL,
-                                   NULL,
-                                   (LPBYTE)lpFailureActions,
-                                   &dwRequiredSize);
-        if (dwError != ERROR_SUCCESS)
-            goto done;
-
-        if ((dwRequiredSize < sizeof(SERVICE_FAILURE_ACTIONSA)) ||
-            (dwRequiredSize > cbBufSize))
+        if (dwType == REG_BINARY)
         {
-            dwError = ERROR_BUFFER_OVERFLOW;
-            goto done;
+            dwError = RegQueryValueExW(hServiceKey,
+                                       L"FailureActions",
+                                       NULL,
+                                       NULL,
+                                       (LPBYTE)lpFailureActions,
+                                       &dwRequiredSize);
+            if (dwError != ERROR_SUCCESS && dwError != ERROR_FILE_NOT_FOUND)
+                goto done;
+
+            if (dwRequiredSize < sizeof(SERVICE_FAILURE_ACTIONSA))
+                dwRequiredSize = sizeof(SERVICE_FAILURE_ACTIONSA);
+        }
+        else
+        {
+            dwError = ERROR_UNSUPPORTED_TYPE;
         }
 
         if (dwError == ERROR_SUCCESS)
         {
-            lpFailureActions->cActions = min(lpFailureActions->cActions, (dwRequiredSize - FIELD_OFFSET(SERVICE_FAILURE_ACTIONSA, lpsaActions)) / sizeof(SC_ACTION));
-            lpFailureActions->lpsaActions = (lpFailureActions->cActions > 0) ? (LPSC_ACTION)(lpFailureActions + 1) : NULL;
+            lpFailureActions->cActions = min(lpFailureActions->cActions, (dwRequiredSize - sizeof(SERVICE_FAILURE_ACTIONSA)) / sizeof(SC_ACTION));
+
+            /* Here lpFailureActions->lpsaActions contains an offset. The conversion is done by the caller. */
+            lpFailureActions->lpsaActions = (lpFailureActions->cActions > 0 ? (LPSC_ACTION)(ULONG_PTR)sizeof(SERVICE_FAILURE_ACTIONSA) : NULL);
+
             lpStr = (LPSTR)((ULONG_PTR)(lpFailureActions + 1) + lpFailureActions->cActions * sizeof(SC_ACTION));
         }
         else
@@ -5182,34 +5185,31 @@ DWORD RQueryServiceConfig2W(
     else if (dwInfoLevel == SERVICE_CONFIG_FAILURE_ACTIONS)
     {
         LPSERVICE_FAILURE_ACTIONSW lpFailureActions = (LPSERVICE_FAILURE_ACTIONSW)lpBuffer;
-        LPWSTR lpStr;
+        LPWSTR lpStr = NULL;
 
         /* Query value length */
-        dwRequiredSize = 0;
         dwError = RegQueryValueExW(hServiceKey,
                                    L"FailureActions",
                                    NULL,
                                    &dwType,
                                    NULL,
                                    &dwRequiredSize);
-        if (dwError != ERROR_SUCCESS && dwError != ERROR_MORE_DATA)
+        if (dwError != ERROR_SUCCESS &&
+            dwError != ERROR_MORE_DATA &&
+            dwError != ERROR_FILE_NOT_FOUND)
             goto done;
 
-        if (dwType != REG_BINARY)
-        {
-            dwError = ERROR_UNSUPPORTED_TYPE;
-            goto done;
-        }
+        dwRequiredSize = (dwType == REG_BINARY) ? max(sizeof(SERVICE_FAILURE_ACTIONSW), dwRequiredSize)
+                                                : sizeof(SERVICE_FAILURE_ACTIONSW);
 
-        dwRequiredSize = max(sizeof(SERVICE_FAILURE_ACTIONSW), dwRequiredSize);
+        /* Get the strings */
+        ScmReadString(hServiceKey,
+                      L"FailureCommand",
+                      &lpFailureCommand);
 
-        dwError = ScmReadString(hServiceKey,
-                                L"FailureCommand",
-                                &lpFailureCommand);
-
-        dwError = ScmReadString(hServiceKey,
-                                L"RebootMessage",
-                                &lpRebootMessage);
+        ScmReadString(hServiceKey,
+                      L"RebootMessage",
+                      &lpRebootMessage);
 
         if (lpRebootMessage)
             dwRequiredSize += (wcslen(lpRebootMessage) + 1) * sizeof(WCHAR);
@@ -5225,26 +5225,32 @@ DWORD RQueryServiceConfig2W(
         }
 
         /* Now we can fill the buffer */
-        dwError = RegQueryValueExW(hServiceKey,
-                                   L"FailureActions",
-                                   NULL,
-                                   NULL,
-                                   (LPBYTE)lpFailureActions,
-                                   &dwRequiredSize);
-        if (dwError != ERROR_SUCCESS)
-            goto done;
-
-        if ((dwRequiredSize < sizeof(SERVICE_FAILURE_ACTIONSW)) ||
-            (dwRequiredSize > cbBufSize))
+        if (dwType == REG_BINARY)
         {
-            dwError = ERROR_BUFFER_OVERFLOW;
-            goto done;
+            dwError = RegQueryValueExW(hServiceKey,
+                                       L"FailureActions",
+                                       NULL,
+                                       NULL,
+                                       (LPBYTE)lpFailureActions,
+                                       &dwRequiredSize);
+            if (dwError != ERROR_SUCCESS && dwError != ERROR_FILE_NOT_FOUND)
+                goto done;
+
+            if (dwRequiredSize < sizeof(SERVICE_FAILURE_ACTIONSW))
+                dwRequiredSize = sizeof(SERVICE_FAILURE_ACTIONSW);
+        }
+        else
+        {
+            dwError = ERROR_UNSUPPORTED_TYPE;
         }
 
         if (dwError == ERROR_SUCCESS)
         {
-            lpFailureActions->cActions = min(lpFailureActions->cActions, (dwRequiredSize - FIELD_OFFSET(SERVICE_FAILURE_ACTIONSW, lpsaActions)) / sizeof(SC_ACTION));
-            lpFailureActions->lpsaActions = (lpFailureActions->cActions > 0 ? (LPSC_ACTION)(lpFailureActions + 1) : NULL);
+            lpFailureActions->cActions = min(lpFailureActions->cActions, (dwRequiredSize - sizeof(SERVICE_FAILURE_ACTIONSW)) / sizeof(SC_ACTION));
+
+            /* Here lpFailureActions->lpsaActions contains an offset. The conversion is done by the caller. */
+            lpFailureActions->lpsaActions = (lpFailureActions->cActions > 0 ? (LPSC_ACTION)(ULONG_PTR)sizeof(SERVICE_FAILURE_ACTIONSW) : NULL);
+
             lpStr = (LPWSTR)((ULONG_PTR)(lpFailureActions + 1) + lpFailureActions->cActions * sizeof(SC_ACTION));
         }
         else
