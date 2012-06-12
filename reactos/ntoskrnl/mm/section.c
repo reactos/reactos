@@ -1283,6 +1283,8 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
 
    if (HasSwapEntry)
    {
+      SWAPENTRY DummyEntry;
+
       /*
        * Is it a wait entry?
        */
@@ -1331,6 +1333,7 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
           KeBugCheck(MEMORY_MANAGEMENT);
       }
       MmLockAddressSpace(AddressSpace);
+      MmDeletePageFileMapping(Process, PAddress, &DummyEntry);
       Status = MmCreateVirtualMapping(Process,
                                       PAddress,
                                       Region->Protect,
