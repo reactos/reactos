@@ -1,4 +1,6 @@
 
+PROJECT(NTOS)
+
 spec2def(ntoskrnl.exe ntoskrnl.spec ADD_IMPORTLIB)
 
 include_directories(

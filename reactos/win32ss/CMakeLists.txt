@@ -1,6 +1,9 @@
 
 set(USE_DIBLIB FALSE)
 
+# Give WIN32 subsystem its own project.
+PROJECT(WIN32SS)
+
 add_subdirectory(drivers)
 
 if(USE_DIBLIB)
