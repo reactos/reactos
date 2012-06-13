@@ -87,6 +87,7 @@ extern PDRIVER_OBJECT KmtDriverObject;
 
 VOID KmtSetIrql(IN KIRQL NewIrql);
 BOOLEAN KmtAreInterruptsEnabled(VOID);
+ULONG KmtGetPoolTag(PVOID Memory);
 #elif defined KMT_USER_MODE
 DWORD KmtRunKernelTest(IN PCSTR TestName);
 
@@ -124,8 +125,8 @@ extern PKMT_RESULTBUFFER ResultBuffer;
 #define trace_(file, line, ...)      KmtTrace(     file ":" KMT_STRINGIZE(line), __VA_ARGS__)
 #define skip_(test, file, line, ...) KmtSkip(test, file ":" KMT_STRINGIZE(line), __VA_ARGS__)
 
-VOID KmtVOk(INT Condition, PCSTR FileAndLine, PCSTR Format, va_list Arguments)      KMT_FORMAT(ms_printf, 3, 0);
-VOID KmtOk(INT Condition, PCSTR FileAndLine, PCSTR Format, ...)                     KMT_FORMAT(ms_printf, 3, 4);
+BOOLEAN KmtVOk(INT Condition, PCSTR FileAndLine, PCSTR Format, va_list Arguments)   KMT_FORMAT(ms_printf, 3, 0);
+BOOLEAN KmtOk(INT Condition, PCSTR FileAndLine, PCSTR Format, ...)                  KMT_FORMAT(ms_printf, 3, 4);
 VOID KmtVTrace(PCSTR FileAndLine, PCSTR Format, va_list Arguments)                  KMT_FORMAT(ms_printf, 2, 0);
 VOID KmtTrace(PCSTR FileAndLine, PCSTR Format, ...)                                 KMT_FORMAT(ms_printf, 2, 3);
 BOOLEAN KmtVSkip(INT Condition, PCSTR FileAndLine, PCSTR Format, va_list Arguments) KMT_FORMAT(ms_printf, 3, 0);
@@ -161,6 +162,7 @@ VOID KmtFreeGuarded(PVOID Pointer);
                                                 (expected) ? "TRUE" : "FALSE")
 #define ok_eq_str(value, expected)          ok(!strcmp(value, expected), #value " = \"%s\", expected \"%s\"\n", value, expected)
 #define ok_eq_wstr(value, expected)         ok(!wcscmp(value, expected), #value " = \"%ls\", expected \"%ls\"\n", value, expected)
+#define ok_eq_tag(value, expected)          ok_eq_print(value, expected, "0x%08lx")
 
 #define KMT_MAKE_CODE(ControlCode)  CTL_CODE(FILE_DEVICE_UNKNOWN,           \
                                              0xC00 + (ControlCode),         \
@@ -220,6 +222,58 @@ VOID KmtSetIrql(IN KIRQL NewIrql)
 BOOLEAN KmtAreInterruptsEnabled(VOID)
 {
     return (__readeflags() & (1 << 9)) != 0;
+}
+
+typedef struct _POOL_HEADER
+{
+    union
+    {
+        struct
+        {
+#ifdef _M_AMD64
+            USHORT PreviousSize:8;
+            USHORT PoolIndex:8;
+            USHORT BlockSize:8;
+            USHORT PoolType:8;
+#else
+            USHORT PreviousSize:9;
+            USHORT PoolIndex:7;
+            USHORT BlockSize:9;
+            USHORT PoolType:7;
+#endif
+        };
+        ULONG Ulong1;
+    };
+#ifdef _M_AMD64
+    ULONG PoolTag;
+#endif
+    union
+    {
+#ifdef _M_AMD64
+        PEPROCESS ProcessBilled;
+#else
+        ULONG PoolTag;
+#endif
+        struct
+        {
+            USHORT AllocatorBackTraceIndex;
+            USHORT PoolTagHash;
+        };
+    };
+} POOL_HEADER, *PPOOL_HEADER;
+
+ULONG KmtGetPoolTag(PVOID Memory)
+{
+    PPOOL_HEADER Header;
+
+    /* it's not so easy for allocations of PAGE_SIZE */
+    if (((ULONG_PTR)Memory & (PAGE_SIZE - 1)) == 0)
+        return 'TooL';
+
+    Header = Memory;
+    Header--;
+
+    return Header->PoolTag;
 }
 
 INT __cdecl KmtVSNPrintF(PSTR Buffer, SIZE_T BufferMaxLength, PCSTR Format, va_list Arguments) KMT_FORMAT(ms_printf, 3, 0);
@@ -335,13 +389,13 @@ VOID KmtFinishTest(PCSTR TestName)
     KmtAddToLogBuffer(ResultBuffer, MessageBuffer, MessageLength);
 }
 
-VOID KmtVOk(INT Condition, PCSTR FileAndLine, PCSTR Format, va_list Arguments)
+BOOLEAN KmtVOk(INT Condition, PCSTR FileAndLine, PCSTR Format, va_list Arguments)
 {
     CHAR MessageBuffer[512];
     SIZE_T MessageLength;
 
     if (!ResultBuffer)
-        return;
+        return Condition != 0;
 
     if (Condition)
     {
@@ -359,14 +413,18 @@ VOID KmtVOk(INT Condition, PCSTR FileAndLine, PCSTR Format, va_list Arguments)
         MessageLength = KmtXVSNPrintF(MessageBuffer, sizeof MessageBuffer, FileAndLine, ": Test failed: ", Format, Arguments);
         KmtAddToLogBuffer(ResultBuffer, MessageBuffer, MessageLength);
     }
+
+    return Condition != 0;
 }
 
-VOID KmtOk(INT Condition, PCSTR FileAndLine, PCSTR Format, ...)
+BOOLEAN KmtOk(INT Condition, PCSTR FileAndLine, PCSTR Format, ...)
 {
+    BOOLEAN Ret;
     va_list Arguments;
     va_start(Arguments, Format);
-    KmtVOk(Condition, FileAndLine, Format, Arguments);
+    Ret = KmtVOk(Condition, FileAndLine, Format, Arguments);
     va_end(Arguments);
+    return Ret;
 }
 
 VOID KmtVTrace(PCSTR FileAndLine, PCSTR Format, va_list Arguments)

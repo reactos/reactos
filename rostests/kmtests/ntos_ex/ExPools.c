@@ -145,8 +145,36 @@ static VOID PoolsCorruption(VOID)
     ExFreePoolWithTag(Ptr, TAG_POOLTEST);
 }
 
+static
+VOID
+TestPoolTags(VOID)
+{
+    PVOID Memory;
+
+    Memory = ExAllocatePoolWithTag(PagedPool, 8, 'MyTa');
+    ok_eq_tag(KmtGetPoolTag(Memory), 'MyTa');
+    ExFreePoolWithTag(Memory, 'MyTa');
+
+    Memory = ExAllocatePoolWithTag(PagedPool, PAGE_SIZE, 'MyTa');
+    ok_eq_tag(KmtGetPoolTag(Memory), 'TooL');
+    ExFreePoolWithTag(Memory, 'MyTa');
+
+    Memory = ExAllocatePoolWithTag(PagedPool, PAGE_SIZE - 3 * sizeof(PVOID), 'MyTa');
+    ok_eq_tag(KmtGetPoolTag(Memory), 'TooL');
+    ExFreePoolWithTag(Memory, 'MyTa');
+
+    Memory = ExAllocatePoolWithTag(PagedPool, PAGE_SIZE - 4 * sizeof(PVOID) + 1, 'MyTa');
+    ok_eq_tag(KmtGetPoolTag(Memory), 'TooL');
+    ExFreePoolWithTag(Memory, 'MyTa');
+
+    Memory = ExAllocatePoolWithTag(PagedPool, PAGE_SIZE - 4 * sizeof(PVOID), 'MyTa');
+    ok_eq_tag(KmtGetPoolTag(Memory), 'MyTa');
+    ExFreePoolWithTag(Memory, 'MyTa');
+}
+
 START_TEST(ExPools)
 {
     PoolsTest();
     PoolsCorruption();
+    TestPoolTags();
 }
