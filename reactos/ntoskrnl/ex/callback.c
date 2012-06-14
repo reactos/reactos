@@ -425,7 +425,7 @@ ExCreateCallback(OUT PCALLBACK_OBJECT *CallbackObject,
                                            0,
                                            ExCallbackObjectType,
                                            KernelMode,
-                                           &Callback,
+                                           (PVOID *)&Callback,
                                            NULL);
 
         /* Close the Handle, since we now have the pointer */
