@@ -579,8 +579,8 @@ FsRtlPrivateLock(IN PFILE_LOCK FileLock,
                &FileObject->FileName,
                Conflict->Exclusive.FileLock.StartingByte.HighPart,
                Conflict->Exclusive.FileLock.StartingByte.LowPart,
-               Conflict->Exclusive.FileLock.StartingByte.HighPart,
-               Conflict->Exclusive.FileLock.StartingByte.LowPart,
+               Conflict->Exclusive.FileLock.EndingByte.HighPart,
+               Conflict->Exclusive.FileLock.EndingByte.LowPart,
                Conflict->Exclusive.FileLock.ExclusiveLock);
         if (!ExclusiveLock)
         {
@@ -824,6 +824,14 @@ FsRtlFastUnlockSingle(IN PFILE_LOCK FileLock,
         DPRINT("Range not locked %wZ\n", &FileObject->FileName);
         return STATUS_RANGE_NOT_LOCKED;
     }
+
+    DPRINT("Found lock entry: Exclusive %d %08x%08x:%08x%08x %wZ\n",
+           Entry->Exclusive.FileLock.ExclusiveLock,
+           Entry->Exclusive.FileLock.StartingByte.HighPart,
+           Entry->Exclusive.FileLock.StartingByte.LowPart,
+           Entry->Exclusive.FileLock.EndingByte.HighPart,
+           Entry->Exclusive.FileLock.EndingByte.LowPart,
+           &FileObject->FileName);
     
     if (Entry->Exclusive.FileLock.ExclusiveLock)
     {
@@ -837,6 +845,8 @@ FsRtlFastUnlockSingle(IN PFILE_LOCK FileLock,
             return STATUS_RANGE_NOT_LOCKED;
         }
         RtlCopyMemory(&Find, Entry, sizeof(Find));
+        // Remove the old exclusive lock region
+        RtlDeleteElementGenericTable(&InternalInfo->RangeTable, Entry);
     }
     else
     {
@@ -882,7 +892,12 @@ FsRtlFastUnlockSingle(IN PFILE_LOCK FileLock,
     }
     
     if (IsListEmpty(&InternalInfo->SharedLocks)) {
-        DPRINT("Removing the lock entry %wZ\n", &FileObject->FileName);
+        DPRINT("Removing the lock entry %wZ (%08x%08x:%08x%08x)\n", 
+               &FileObject->FileName, 
+               Entry->Exclusive.FileLock.StartingByte.HighPart, 
+               Entry->Exclusive.FileLock.StartingByte.LowPart,
+               Entry->Exclusive.FileLock.EndingByte.HighPart, 
+               Entry->Exclusive.FileLock.EndingByte.LowPart);
         RtlDeleteElementGenericTable(&InternalInfo->RangeTable, Entry);
     } else {
         DPRINT("Lock still has:\n");
