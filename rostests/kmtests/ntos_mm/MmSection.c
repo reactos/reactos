@@ -7,9 +7,6 @@
 
 #include <kmt_test.h>
 
-#define StartSeh() ExceptionStatus = STATUS_SUCCESS; _SEH2_TRY {
-#define EndSeh(ExpectedStatus) } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) { ExceptionStatus = _SEH2_GetExceptionCode(); } _SEH2_END; ok_eq_hex(ExceptionStatus, ExpectedStatus)
-
 #define CheckObject(Handle, Pointers, Handles) do                   \
 {                                                                   \
     PUBLIC_OBJECT_BASIC_INFORMATION ObjectInfo;                     \
@@ -81,106 +78,105 @@ TestCreateSection(
 {
     NTSTATUS Status = STATUS_SUCCESS;
     NTSTATUS ExceptionStatus;
-    const PVOID InvalidPointer = (PVOID)0x5555555555555555ULL;
     PVOID SectionObject;
     LARGE_INTEGER MaximumSize;
     ULONG PointerCount1, PointerCount2;
 
-    StartSeh()
+    KmtStartSeh()
         Status = MmCreateSection(NULL, 0, NULL, NULL, 0, SEC_RESERVE, NULL, NULL);
-    EndSeh(STATUS_SUCCESS);
+    KmtEndSeh(STATUS_SUCCESS);
     ok_eq_hex(Status, STATUS_INVALID_PAGE_PROTECTION);
 
     if (!KmtIsCheckedBuild)
     {
         /* PAGE_NOACCESS and missing SEC_RESERVE/SEC_COMMIT/SEC_IMAGE assert */
-        StartSeh()
+        KmtStartSeh()
             Status = MmCreateSection(NULL, 0, NULL, NULL, PAGE_NOACCESS, SEC_RESERVE, NULL, NULL);
-        EndSeh(STATUS_ACCESS_VIOLATION);
+        KmtEndSeh(STATUS_ACCESS_VIOLATION);
 
-        StartSeh()
+        KmtStartSeh()
             Status = MmCreateSection(NULL, 0, NULL, NULL, PAGE_NOACCESS, 0, NULL, NULL);
-        EndSeh(STATUS_ACCESS_VIOLATION);
+        KmtEndSeh(STATUS_ACCESS_VIOLATION);
     }
 
-    SectionObject = InvalidPointer;
-    StartSeh()
+    SectionObject = KmtInvalidPointer;
+    KmtStartSeh()
         Status = MmCreateSection(&SectionObject, 0, NULL, NULL, 0, SEC_RESERVE, NULL, NULL);
-    EndSeh(STATUS_SUCCESS);
+    KmtEndSeh(STATUS_SUCCESS);
     ok_eq_hex(Status, STATUS_INVALID_PAGE_PROTECTION);
-    ok_eq_pointer(SectionObject, InvalidPointer);
+    ok_eq_pointer(SectionObject, KmtInvalidPointer);
 
-    if (SectionObject && SectionObject != InvalidPointer)
+    if (SectionObject && SectionObject != KmtInvalidPointer)
         ObDereferenceObject(SectionObject);
 
-    StartSeh()
+    KmtStartSeh()
         Status = MmCreateSection(NULL, 0, NULL, NULL, PAGE_READONLY, SEC_RESERVE, NULL, NULL);
-    EndSeh(STATUS_ACCESS_VIOLATION);
+    KmtEndSeh(STATUS_ACCESS_VIOLATION);
 
-    SectionObject = InvalidPointer;
-    StartSeh()
+    SectionObject = KmtInvalidPointer;
+    KmtStartSeh()
         Status = MmCreateSection(&SectionObject, 0, NULL, NULL, PAGE_READONLY, SEC_RESERVE, NULL, NULL);
-    EndSeh(STATUS_ACCESS_VIOLATION);
-    ok_eq_pointer(SectionObject, InvalidPointer);
+    KmtEndSeh(STATUS_ACCESS_VIOLATION);
+    ok_eq_pointer(SectionObject, KmtInvalidPointer);
 
-    if (SectionObject && SectionObject != InvalidPointer)
+    if (SectionObject && SectionObject != KmtInvalidPointer)
         ObDereferenceObject(SectionObject);
 
-    SectionObject = InvalidPointer;
+    SectionObject = KmtInvalidPointer;
     MaximumSize.QuadPart = 0;
-    StartSeh()
+    KmtStartSeh()
         Status = MmCreateSection(&SectionObject, 0, NULL, &MaximumSize, PAGE_READONLY, SEC_IMAGE, NULL, NULL);
-    EndSeh(STATUS_SUCCESS);
+    KmtEndSeh(STATUS_SUCCESS);
     ok_eq_hex(Status, STATUS_INVALID_FILE_FOR_SECTION);
     ok_eq_longlong(MaximumSize.QuadPart, 0LL);
-    ok_eq_pointer(SectionObject, InvalidPointer);
+    ok_eq_pointer(SectionObject, KmtInvalidPointer);
 
-    if (SectionObject && SectionObject != InvalidPointer)
+    if (SectionObject && SectionObject != KmtInvalidPointer)
         ObDereferenceObject(SectionObject);
 
     MaximumSize.QuadPart = 0;
-    StartSeh()
+    KmtStartSeh()
         Status = MmCreateSection(NULL, 0, NULL, &MaximumSize, PAGE_READONLY, SEC_RESERVE, NULL, NULL);
-    EndSeh(STATUS_SUCCESS);
+    KmtEndSeh(STATUS_SUCCESS);
     ok_eq_hex(Status, STATUS_INVALID_PARAMETER_4);
     ok_eq_longlong(MaximumSize.QuadPart, 0LL);
 
-    if (SectionObject && SectionObject != InvalidPointer)
+    if (SectionObject && SectionObject != KmtInvalidPointer)
         ObDereferenceObject(SectionObject);
 
     MaximumSize.QuadPart = 1;
-    StartSeh()
+    KmtStartSeh()
         Status = MmCreateSection(NULL, 0, NULL, &MaximumSize, PAGE_READONLY, SEC_RESERVE, NULL, NULL);
-    EndSeh(STATUS_ACCESS_VIOLATION);
+    KmtEndSeh(STATUS_ACCESS_VIOLATION);
     ok_eq_longlong(MaximumSize.QuadPart, 1LL);
 
-    if (SectionObject && SectionObject != InvalidPointer)
+    if (SectionObject && SectionObject != KmtInvalidPointer)
         ObDereferenceObject(SectionObject);
 
-    SectionObject = InvalidPointer;
+    SectionObject = KmtInvalidPointer;
     MaximumSize.QuadPart = 0;
-    StartSeh()
+    KmtStartSeh()
         Status = MmCreateSection(&SectionObject, 0, NULL, &MaximumSize, PAGE_READONLY, SEC_RESERVE, NULL, NULL);
-    EndSeh(STATUS_SUCCESS);
+    KmtEndSeh(STATUS_SUCCESS);
     ok_eq_hex(Status, STATUS_INVALID_PARAMETER_4);
     ok_eq_longlong(MaximumSize.QuadPart, 0LL);
-    ok_eq_pointer(SectionObject, InvalidPointer);
+    ok_eq_pointer(SectionObject, KmtInvalidPointer);
 
-    if (SectionObject && SectionObject != InvalidPointer)
+    if (SectionObject && SectionObject != KmtInvalidPointer)
         ObDereferenceObject(SectionObject);
 
     /* page file section */
-    SectionObject = InvalidPointer;
+    SectionObject = KmtInvalidPointer;
     MaximumSize.QuadPart = 1;
-    StartSeh()
+    KmtStartSeh()
         Status = MmCreateSection(&SectionObject, 0, NULL, &MaximumSize, PAGE_READONLY, SEC_RESERVE, NULL, NULL);
-    EndSeh(STATUS_SUCCESS);
+    KmtEndSeh(STATUS_SUCCESS);
     ok_eq_hex(Status, STATUS_SUCCESS);
     ok_eq_longlong(MaximumSize.QuadPart, 1LL);
-    ok(SectionObject != InvalidPointer, "Section object pointer untouched\n");
+    ok(SectionObject != KmtInvalidPointer, "Section object pointer untouched\n");
     ok(SectionObject != NULL, "Section object pointer NULL\n");
 
-    if (SectionObject && SectionObject != InvalidPointer)
+    if (SectionObject && SectionObject != KmtInvalidPointer)
         ObDereferenceObject(SectionObject);
 
     if (!skip(FileHandle1 != NULL && FileObject1 != NULL &&
@@ -190,196 +186,196 @@ TestCreateSection(
         PointerCount2 = 3;
         /* image section */
         CheckObject(FileHandle2, PointerCount2, 1L);
-        SectionObject = InvalidPointer;
+        SectionObject = KmtInvalidPointer;
         MaximumSize.QuadPart = 1;
-        StartSeh()
+        KmtStartSeh()
             Status = MmCreateSection(&SectionObject, 0, NULL, &MaximumSize, PAGE_READONLY, SEC_IMAGE, FileHandle2, NULL);
-        EndSeh(STATUS_SUCCESS);
+        KmtEndSeh(STATUS_SUCCESS);
         ok_eq_hex(Status, STATUS_SUCCESS);
         ok_eq_longlong(MaximumSize.QuadPart, 1LL);
-        ok(SectionObject != InvalidPointer, "Section object pointer untouched\n");
+        ok(SectionObject != KmtInvalidPointer, "Section object pointer untouched\n");
         ok(SectionObject != NULL, "Section object pointer NULL\n");
         CheckObject(FileHandle2, PointerCount2, 1L);
         CheckSection(SectionObject, SEC_IMAGE);
         TestMapView(SectionObject, FALSE, TRUE);
 
-        if (SectionObject && SectionObject != InvalidPointer)
+        if (SectionObject && SectionObject != KmtInvalidPointer)
             ObDereferenceObject(SectionObject);
 
         CheckObject(FileHandle2, PointerCount2, 1L);
-        SectionObject = InvalidPointer;
+        SectionObject = KmtInvalidPointer;
         MaximumSize.QuadPart = 1;
-        StartSeh()
+        KmtStartSeh()
             Status = MmCreateSection(&SectionObject, 0, NULL, &MaximumSize, PAGE_READONLY, SEC_IMAGE, NULL, FileObject2);
-        EndSeh(STATUS_SUCCESS);
+        KmtEndSeh(STATUS_SUCCESS);
         ok_eq_hex(Status, STATUS_SUCCESS);
         ok_eq_longlong(MaximumSize.QuadPart, 1LL);
-        ok(SectionObject != InvalidPointer, "Section object pointer untouched\n");
+        ok(SectionObject != KmtInvalidPointer, "Section object pointer untouched\n");
         ok(SectionObject != NULL, "Section object pointer NULL\n");
         ++PointerCount2;
         CheckObject(FileHandle2, PointerCount2, 1L);
         CheckSection(SectionObject, 0);
         TestMapView(SectionObject, TRUE, TRUE);
 
-        if (SectionObject && SectionObject != InvalidPointer)
+        if (SectionObject && SectionObject != KmtInvalidPointer)
             ObDereferenceObject(SectionObject);
         //--PointerCount2;  // ????
 
         CheckObject(FileHandle2, PointerCount2, 1L);
-        SectionObject = InvalidPointer;
+        SectionObject = KmtInvalidPointer;
         MaximumSize.QuadPart = 1;
-        StartSeh()
+        KmtStartSeh()
             Status = MmCreateSection(&SectionObject, 0, NULL, &MaximumSize, PAGE_READONLY, SEC_IMAGE, FileHandle2, FileObject2);
-        EndSeh(STATUS_SUCCESS);
+        KmtEndSeh(STATUS_SUCCESS);
         ok_eq_hex(Status, STATUS_SUCCESS);
         ok_eq_longlong(MaximumSize.QuadPart, 1LL);
-        ok(SectionObject != InvalidPointer, "Section object pointer untouched\n");
+        ok(SectionObject != KmtInvalidPointer, "Section object pointer untouched\n");
         ok(SectionObject != NULL, "Section object pointer NULL\n");
         CheckObject(FileHandle2, PointerCount2, 1L);
         CheckSection(SectionObject, 0);
         TestMapView(SectionObject, TRUE, TRUE);
 
-        if (SectionObject && SectionObject != InvalidPointer)
+        if (SectionObject && SectionObject != KmtInvalidPointer)
             ObDereferenceObject(SectionObject);
 
         /* image section with inappropriate file */
         CheckObject(FileHandle1, PointerCount1, 1L);
-        SectionObject = InvalidPointer;
+        SectionObject = KmtInvalidPointer;
         MaximumSize.QuadPart = 1;
-        StartSeh()
+        KmtStartSeh()
             Status = MmCreateSection(&SectionObject, 0, NULL, &MaximumSize, PAGE_READONLY, SEC_IMAGE, FileHandle1, NULL);
-        EndSeh(STATUS_SUCCESS);
+        KmtEndSeh(STATUS_SUCCESS);
         ok_eq_hex(Status, STATUS_INVALID_IMAGE_NOT_MZ);
         ok_eq_longlong(MaximumSize.QuadPart, 1LL);
-        ok_eq_pointer(SectionObject, InvalidPointer);
+        ok_eq_pointer(SectionObject, KmtInvalidPointer);
         CheckObject(FileHandle1, PointerCount1, 1L);
 
-        if (SectionObject && SectionObject != InvalidPointer)
+        if (SectionObject && SectionObject != KmtInvalidPointer)
             ObDereferenceObject(SectionObject);
 
         CheckObject(FileHandle1, PointerCount1, 1L);
-        SectionObject = InvalidPointer;
+        SectionObject = KmtInvalidPointer;
         MaximumSize.QuadPart = 1;
-        StartSeh()
+        KmtStartSeh()
             Status = MmCreateSection(&SectionObject, 0, NULL, &MaximumSize, PAGE_READONLY, SEC_IMAGE, NULL, FileObject1);
-        EndSeh(STATUS_SUCCESS);
+        KmtEndSeh(STATUS_SUCCESS);
         ok_eq_hex(Status, STATUS_SUCCESS);
         ok_eq_longlong(MaximumSize.QuadPart, 1LL);
-        ok(SectionObject != InvalidPointer, "Section object pointer untouched\n");
+        ok(SectionObject != KmtInvalidPointer, "Section object pointer untouched\n");
         ok(SectionObject != NULL, "Section object pointer NULL\n");
         ++PointerCount1;
         CheckObject(FileHandle1, PointerCount1, 1L);
         CheckSection(SectionObject, 0);
         TestMapView(SectionObject, TRUE, FALSE);
 
-        if (SectionObject && SectionObject != InvalidPointer)
+        if (SectionObject && SectionObject != KmtInvalidPointer)
             ObDereferenceObject(SectionObject);
         //--PointerCount1; // ????
 
         CheckObject(FileHandle1, PointerCount1, 1L);
-        SectionObject = InvalidPointer;
+        SectionObject = KmtInvalidPointer;
         MaximumSize.QuadPart = 1;
-        StartSeh()
+        KmtStartSeh()
             Status = MmCreateSection(&SectionObject, 0, NULL, &MaximumSize, PAGE_READONLY, SEC_IMAGE, FileHandle1, FileObject1);
-        EndSeh(STATUS_SUCCESS);
+        KmtEndSeh(STATUS_SUCCESS);
         ok_eq_hex(Status, STATUS_SUCCESS);
         ok_eq_longlong(MaximumSize.QuadPart, 1LL);
-        ok(SectionObject != InvalidPointer, "Section object pointer untouched\n");
+        ok(SectionObject != KmtInvalidPointer, "Section object pointer untouched\n");
         ok(SectionObject != NULL, "Section object pointer NULL\n");
         CheckObject(FileHandle1, PointerCount1, 1L);
         CheckSection(SectionObject, 0);
         TestMapView(SectionObject, TRUE, FALSE);
 
-        if (SectionObject && SectionObject != InvalidPointer)
+        if (SectionObject && SectionObject != KmtInvalidPointer)
             ObDereferenceObject(SectionObject);
 
         /* image section with two different files */
         CheckObject(FileHandle1, PointerCount1, 1L);
-        SectionObject = InvalidPointer;
+        SectionObject = KmtInvalidPointer;
         MaximumSize.QuadPart = 1;
-        StartSeh()
+        KmtStartSeh()
             Status = MmCreateSection(&SectionObject, 0, NULL, &MaximumSize, PAGE_READONLY, SEC_IMAGE, FileHandle1, FileObject2);
-        EndSeh(STATUS_SUCCESS);
+        KmtEndSeh(STATUS_SUCCESS);
         ok_eq_hex(Status, STATUS_SUCCESS);
         ok_eq_longlong(MaximumSize.QuadPart, 1LL);
-        ok(SectionObject != InvalidPointer, "Section object pointer untouched\n");
+        ok(SectionObject != KmtInvalidPointer, "Section object pointer untouched\n");
         ok(SectionObject != NULL, "Section object pointer NULL\n");
         CheckObject(FileHandle1, PointerCount1, 1L);
         CheckObject(FileHandle2, PointerCount2, 1L);
         CheckSection(SectionObject, 0);
         TestMapView(SectionObject, TRUE, TRUE);
 
-        if (SectionObject && SectionObject != InvalidPointer)
+        if (SectionObject && SectionObject != KmtInvalidPointer)
             ObDereferenceObject(SectionObject);
 
         CheckObject(FileHandle1, PointerCount1, 1L);
-        SectionObject = InvalidPointer;
+        SectionObject = KmtInvalidPointer;
         MaximumSize.QuadPart = 1;
-        StartSeh()
+        KmtStartSeh()
             Status = MmCreateSection(&SectionObject, 0, NULL, &MaximumSize, PAGE_READONLY, SEC_IMAGE, FileHandle2, FileObject1);
-        EndSeh(STATUS_SUCCESS);
+        KmtEndSeh(STATUS_SUCCESS);
         ok_eq_hex(Status, STATUS_SUCCESS);
         ok_eq_longlong(MaximumSize.QuadPart, 1LL);
-        ok(SectionObject != InvalidPointer, "Section object pointer untouched\n");
+        ok(SectionObject != KmtInvalidPointer, "Section object pointer untouched\n");
         ok(SectionObject != NULL, "Section object pointer NULL\n");
         CheckObject(FileHandle1, PointerCount1, 1L);
         CheckObject(FileHandle2, PointerCount2, 1L);
         CheckSection(SectionObject, 0);
         TestMapView(SectionObject, TRUE, FALSE);
 
-        if (SectionObject && SectionObject != InvalidPointer)
+        if (SectionObject && SectionObject != KmtInvalidPointer)
             ObDereferenceObject(SectionObject);
 
         /* data file section */
         CheckObject(FileHandle1, PointerCount1, 1L);
-        SectionObject = InvalidPointer;
+        SectionObject = KmtInvalidPointer;
         MaximumSize.QuadPart = 1;
-        StartSeh()
+        KmtStartSeh()
             Status = MmCreateSection(&SectionObject, 0, NULL, &MaximumSize, PAGE_READONLY, SEC_RESERVE, FileHandle1, NULL);
-        EndSeh(STATUS_SUCCESS);
+        KmtEndSeh(STATUS_SUCCESS);
         ok_eq_hex(Status, STATUS_SUCCESS);
         ok_eq_longlong(MaximumSize.QuadPart, 1LL);
-        ok(SectionObject != InvalidPointer, "Section object pointer untouched\n");
+        ok(SectionObject != KmtInvalidPointer, "Section object pointer untouched\n");
         ok(SectionObject != NULL, "Section object pointer NULL\n");
         CheckObject(FileHandle1, PointerCount1, 1L);
         CheckSection(SectionObject, 0);
         TestMapView(SectionObject, TRUE, FALSE);
 
-        if (SectionObject && SectionObject != InvalidPointer)
+        if (SectionObject && SectionObject != KmtInvalidPointer)
             ObDereferenceObject(SectionObject);
 
         CheckObject(FileHandle1, PointerCount1, 1L);
-        SectionObject = InvalidPointer;
+        SectionObject = KmtInvalidPointer;
         MaximumSize.QuadPart = 1;
-        StartSeh()
+        KmtStartSeh()
             Status = MmCreateSection(&SectionObject, 0, NULL, &MaximumSize, PAGE_READONLY, SEC_RESERVE, NULL, FileObject1);
-        EndSeh(STATUS_SUCCESS);
+        KmtEndSeh(STATUS_SUCCESS);
         ok_eq_hex(Status, STATUS_SUCCESS);
         ok_eq_longlong(MaximumSize.QuadPart, 1LL);
-        ok(SectionObject != InvalidPointer, "Section object pointer untouched\n");
+        ok(SectionObject != KmtInvalidPointer, "Section object pointer untouched\n");
         ok(SectionObject != NULL, "Section object pointer NULL\n");
         CheckObject(FileHandle1, PointerCount1, 1L);
         CheckSection(SectionObject, 0);
         TestMapView(SectionObject, TRUE, FALSE);
 
-        if (SectionObject && SectionObject != InvalidPointer)
+        if (SectionObject && SectionObject != KmtInvalidPointer)
             ObDereferenceObject(SectionObject);
 
         CheckObject(FileHandle1, PointerCount1, 1L);
-        SectionObject = InvalidPointer;
+        SectionObject = KmtInvalidPointer;
         MaximumSize.QuadPart = 1;
-        StartSeh()
+        KmtStartSeh()
             Status = MmCreateSection(&SectionObject, 0, NULL, &MaximumSize, PAGE_READONLY, SEC_RESERVE, FileHandle1, FileObject1);
-        EndSeh(STATUS_SUCCESS);
+        KmtEndSeh(STATUS_SUCCESS);
         ok_eq_hex(Status, STATUS_SUCCESS);
         ok_eq_longlong(MaximumSize.QuadPart, 1LL);
-        ok(SectionObject != InvalidPointer, "Section object pointer untouched\n");
+        ok(SectionObject != KmtInvalidPointer, "Section object pointer untouched\n");
         ok(SectionObject != NULL, "Section object pointer NULL\n");
         CheckObject(FileHandle1, PointerCount1, 1L);
         CheckSection(SectionObject, 0);
         TestMapView(SectionObject, TRUE, FALSE);
 
-        if (SectionObject && SectionObject != InvalidPointer)
+        if (SectionObject && SectionObject != KmtInvalidPointer)
             ObDereferenceObject(SectionObject);
 
         CheckObject(FileHandle1, PointerCount1, 1L);

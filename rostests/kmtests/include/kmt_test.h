@@ -173,6 +173,20 @@ VOID KmtFreeGuarded(PVOID Pointer);
 #define MILLISECOND     (1000 * MICROSECOND)
 #define SECOND          (1000 * MILLISECOND)
 
+#define KmtInvalidPointer ((PVOID)0x5555555555555555ULL)
+
+#define KmtStartSeh()                               \
+    ExceptionStatus = STATUS_SUCCESS;               \
+    _SEH2_TRY                                       \
+    {
+#define KmtEndSeh(ExpectedStatus)                   \
+    }                                               \
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)         \
+    {                                               \
+        ExceptionStatus = _SEH2_GetExceptionCode(); \
+    } _SEH2_END;                                    \
+    ok_eq_hex(ExceptionStatus, ExpectedStatus)
+
 #if defined KMT_DEFINE_TEST_FUNCTIONS
 
 #if defined KMT_KERNEL_MODE

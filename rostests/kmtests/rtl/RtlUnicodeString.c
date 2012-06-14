@@ -8,9 +8,6 @@
 #define KMT_EMULATE_KERNEL
 #include <kmt_test.h>
 
-#define StartSeh() ExceptionStatus = STATUS_SUCCESS; _SEH2_TRY {
-#define EndSeh(ExpectedStatus) } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) { ExceptionStatus = _SEH2_GetExceptionCode(); } _SEH2_END; ok_eq_hex(ExceptionStatus, ExpectedStatus)
-
 static
 VOID
 TestFindCharInUnicodeString(VOID)
@@ -116,32 +113,32 @@ TestFindCharInUnicodeString(VOID)
 
     /* NULL for SearchString */
     Position = 123;
-    StartSeh()
+    KmtStartSeh()
         Status = RtlFindCharInUnicodeString(0, NULL, &String, &Position);
-    EndSeh(STATUS_ACCESS_VIOLATION);
+    KmtEndSeh(STATUS_ACCESS_VIOLATION);
     ok_eq_uint(Position, 0);
     
     /* NULL for SearchString and invalid flags */
     Position = 123;
-    StartSeh()
+    KmtStartSeh()
         Status = RtlFindCharInUnicodeString(8, NULL, &String, &Position);
-    EndSeh(STATUS_SUCCESS);
+    KmtEndSeh(STATUS_SUCCESS);
     ok_eq_hex(Status, STATUS_INVALID_PARAMETER);
     ok_eq_uint(Position, 0);
     ok_eq_uint(Position, 0);
 
     /* NULL for SearchString with zero-length MatchString */
     Position = 123;
-    StartSeh()
+    KmtStartSeh()
         Status = RtlFindCharInUnicodeString(0, NULL, &ZeroLengthString, &Position);
-    EndSeh(STATUS_ACCESS_VIOLATION);
+    KmtEndSeh(STATUS_ACCESS_VIOLATION);
     ok_eq_uint(Position, 0);
 
     /* NULL for MatchString */
     Position = 123;
-    StartSeh()
+    KmtStartSeh()
         Status = RtlFindCharInUnicodeString(0, &String, NULL, &Position);
-    EndSeh(STATUS_ACCESS_VIOLATION);
+    KmtEndSeh(STATUS_ACCESS_VIOLATION);
     ok_eq_uint(Position, 0);
 
     /* This crashes in Windows, but not in ROS. I see no reason to add
@@ -149,30 +146,30 @@ TestFindCharInUnicodeString(VOID)
 #if 0
     /* NULL for MatchString with zero-length SearchString */
     Position = 123;
-    StartSeh()
+    KmtStartSeh()
         Status = RtlFindCharInUnicodeString(0, &ZeroLengthString, NULL, &Position);
-    EndSeh(STATUS_ACCESS_VIOLATION);
+    KmtEndSeh(STATUS_ACCESS_VIOLATION);
     ok_eq_uint(Position, 0);
 #endif
     
     /* NULL for MatchString and invalid flags */
     Position = 123;
-    StartSeh()
+    KmtStartSeh()
         Status = RtlFindCharInUnicodeString(8, &String, NULL, &Position);
-    EndSeh(STATUS_SUCCESS);
+    KmtEndSeh(STATUS_SUCCESS);
     ok_eq_hex(Status, STATUS_INVALID_PARAMETER);
     ok_eq_uint(Position, 0);
 
     /* NULL for Position */
-    StartSeh()
+    KmtStartSeh()
         Status = RtlFindCharInUnicodeString(0, &String, &String, NULL);
-    EndSeh(STATUS_SUCCESS);
+    KmtEndSeh(STATUS_SUCCESS);
     ok_eq_hex(Status, STATUS_INVALID_PARAMETER);
 
     /* NULL for all three */
-    StartSeh()
+    KmtStartSeh()
         Status = RtlFindCharInUnicodeString(0, NULL, NULL, NULL);
-    EndSeh(STATUS_SUCCESS);
+    KmtEndSeh(STATUS_SUCCESS);
     ok_eq_hex(Status, STATUS_INVALID_PARAMETER);
 #endif
 }
