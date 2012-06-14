@@ -8,6 +8,7 @@
 #include <kmt_test.h>
 
 KMT_TESTFUNC Test_Example;
+KMT_TESTFUNC Test_ExCallback;
 KMT_TESTFUNC Test_ExDoubleList;
 KMT_TESTFUNC Test_ExFastMutex;
 KMT_TESTFUNC Test_ExHardError;
@@ -37,6 +38,7 @@ KMT_TESTFUNC Test_ObType;
 KMT_TESTFUNC Test_ObTypeClean;
 KMT_TESTFUNC Test_ObTypeNoClean;
 KMT_TESTFUNC Test_ObTypes;
+KMT_TESTFUNC Test_PsNotify;
 KMT_TESTFUNC Test_RtlAvlTree;
 KMT_TESTFUNC Test_RtlException;
 KMT_TESTFUNC Test_RtlMemory;
@@ -44,6 +46,7 @@ KMT_TESTFUNC Test_RtlSplayTree;
 
 const KMT_TEST TestList[] =
 {
+    { "ExCallback",                         Test_ExCallback },
     { "ExDoubleList",                       Test_ExDoubleList },
     { "ExFastMutex",                        Test_ExFastMutex },
     { "ExHardError",                        Test_ExHardError },
@@ -74,6 +77,7 @@ const KMT_TEST TestList[] =
     { "-ObTypeClean",                       Test_ObTypeClean },
     { "-ObTypeNoClean",                     Test_ObTypeNoClean },
     { "ObTypes",                            Test_ObTypes },
+    { "PsNotify",                           Test_PsNotify },
     { "RtlAvlTreeKM",                       Test_RtlAvlTree },
     { "RtlExceptionKM",                     Test_RtlException },
     { "RtlMemoryKM",                        Test_RtlMemory },
