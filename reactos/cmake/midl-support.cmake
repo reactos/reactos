@@ -38,16 +38,17 @@ function(add_rpcproxy_files)
     get_includes(_includes)
     get_defines(_defines)
     set(_chain_dependency "")
+    set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/proxy.dlldata.c PROPERTIES GENERATED TRUE)
     foreach(_idl_file ${ARGN})
         get_filename_component(_name_we ${_idl_file} NAME_WE)
         add_custom_command(
-            OUTPUT ${_name_we}_p.c ${_name_we}_p.h proxy.dlldata.c
+            OUTPUT ${_name_we}_p.c ${_name_we}_p.h
             COMMAND midl ${_includes} ${_defines} ${IDL_FLAGS} /client none /server none /proxy ${_name_we}_p.c /h ${_name_we}_p.h /dlldata proxy.dlldata.c ${CMAKE_CURRENT_SOURCE_DIR}/${_idl_file}
             DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_idl_file} ${_chain_dependency})
         list(APPEND _chain_dependency ${CMAKE_CURRENT_BINARY_DIR}/${_name_we}_p.c)
         list(APPEND _chain_dependency ${CMAKE_CURRENT_BINARY_DIR}/${_name_we}_p.h)
+        set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/proxy.dlldata.c PROPERTIES OBJECT_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_idl_file})
     endforeach()
-    set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/proxy.dlldata.c PROPERTIES GENERATED TRUE)
 endfunction()
 
 function(add_rpc_files _type)
