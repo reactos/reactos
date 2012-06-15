@@ -2151,6 +2151,15 @@ ExFreePoolWithTag(IN PVOID P,
                          Entry->PoolType - 1);
 
     //
+    // Check block tag
+    //
+    if (TagToFree && TagToFree != Tag)
+    {
+        DPRINT1("Freeing pool - invalid tag specified: %.4s != %.4s\n", (char*)&TagToFree, (char*)&Tag);
+        KeBugCheckEx(BAD_POOL_CALLER, 0x0A, (ULONG_PTR)P, Tag, TagToFree);
+    }
+
+    //
     // Is this allocation small enough to have come from a lookaside list?
     //
     if (BlockSize <= MAXIMUM_PROCESSORS)
@@ -2199,15 +2208,6 @@ ExFreePoolWithTag(IN PVOID P,
     // Acquire the pool lock
     //
     OldIrql = ExLockPool(PoolDesc);
-
-    //
-    // Check block tag
-    //
-    if (TagToFree && TagToFree != Entry->PoolTag)
-    {
-        DPRINT1("Freeing pool - invalid tag specified: %.4s != %.4s\n", (char*)&TagToFree, (char*)&Entry->PoolTag);
-        KeBugCheckEx(BAD_POOL_CALLER, 0x0A, (ULONG_PTR)P, Entry->PoolTag, TagToFree);
-    }
 
     //
     // Check if the next allocation is at the end of the page
