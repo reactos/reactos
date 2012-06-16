@@ -5268,7 +5268,7 @@ DWORD RQueryServiceConfig2A(
         }
 
         /* Now we can fill the buffer */
-        if (dwType == REG_BINARY)
+        if (dwError != ERROR_FILE_NOT_FOUND && dwType == REG_BINARY)
         {
             dwError = RegQueryValueExW(hServiceKey,
                                        L"FailureActions",
@@ -5284,7 +5284,11 @@ DWORD RQueryServiceConfig2A(
         }
         else
         {
-            dwError = ERROR_UNSUPPORTED_TYPE;
+            /*
+             * The value of the error doesn't really matter, the only
+             * important thing is that it must be != ERROR_SUCCESS .
+             */
+            dwError = ERROR_INVALID_DATA;
         }
 
         if (dwError == ERROR_SUCCESS)
@@ -5492,7 +5496,7 @@ DWORD RQueryServiceConfig2W(
         }
 
         /* Now we can fill the buffer */
-        if (dwType == REG_BINARY)
+        if (dwError != ERROR_FILE_NOT_FOUND && dwType == REG_BINARY)
         {
             dwError = RegQueryValueExW(hServiceKey,
                                        L"FailureActions",
@@ -5508,7 +5512,11 @@ DWORD RQueryServiceConfig2W(
         }
         else
         {
-            dwError = ERROR_UNSUPPORTED_TYPE;
+            /*
+             * The value of the error doesn't really matter, the only
+             * important thing is that it must be != ERROR_SUCCESS .
+             */
+            dwError = ERROR_INVALID_DATA;
         }
 
         if (dwError == ERROR_SUCCESS)
