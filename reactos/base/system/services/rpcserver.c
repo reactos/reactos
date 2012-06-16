@@ -4766,6 +4766,272 @@ DWORD RChangeServiceConfig2A(
 }
 
 
+static DWORD
+ScmSetFailureActions(PSERVICE_HANDLE hSvc,
+                     PSERVICE lpService,
+                     HKEY hServiceKey,
+                     LPSERVICE_FAILURE_ACTIONSW lpFailureActions)
+{
+    LPSERVICE_FAILURE_ACTIONSW lpReadBuffer = NULL;
+    LPSERVICE_FAILURE_ACTIONSW lpWriteBuffer = NULL;
+    BOOL bIsActionRebootSet = FALSE;
+    DWORD dwDesiredAccess = SERVICE_CHANGE_CONFIG;
+    DWORD dwRequiredSize = 0;
+    DWORD dwType = 0;
+    DWORD i = 0;
+    DWORD dwError;
+
+    /* There is nothing to be done if we have no failure actions */
+    if (lpFailureActions == NULL)
+        return ERROR_SUCCESS;
+
+    /*
+     * 1- Check whether or not we can set
+     *    failure actions for this service.
+     */
+
+    /* Failure actions can only be set for Win32 services, not for drivers */
+    if (lpService->Status.dwServiceType & SERVICE_DRIVER)
+        return ERROR_CANNOT_DETECT_DRIVER_FAILURE;
+
+    /*
+     * If the service controller handles the SC_ACTION_RESTART action,
+     * hService must have the SERVICE_START access right.
+     *
+     * If you specify SC_ACTION_REBOOT, the caller must have the
+     * SE_SHUTDOWN_NAME privilege.
+     */
+    if (lpFailureActions->cActions > 0 &&
+        lpFailureActions->lpsaActions != NULL)
+    {
+        for (i = 0; i < lpFailureActions->cActions; ++i)
+        {
+           if (lpFailureActions->lpsaActions[i].Type == SC_ACTION_RESTART)
+               dwDesiredAccess |= SERVICE_START;
+           else if (lpFailureActions->lpsaActions[i].Type == SC_ACTION_REBOOT)
+               bIsActionRebootSet = TRUE;
+        }
+    }
+
+    /* Re-check the access rights */
+    if (!RtlAreAllAccessesGranted(hSvc->Handle.DesiredAccess,
+                                  dwDesiredAccess))
+    {
+        DPRINT1("Insufficient access rights! 0x%lx\n", hSvc->Handle.DesiredAccess);
+        return ERROR_ACCESS_DENIED;
+    }
+
+    /* FIXME: Check if the caller has the SE_SHUTDOWN_NAME privilege */
+    if (bIsActionRebootSet)
+    {
+    }
+
+    /*
+     * 2- Retrieve the original value of FailureActions.
+     */
+
+    /* Query value length */
+    dwError = RegQueryValueExW(hServiceKey,
+                               L"FailureActions",
+                               NULL,
+                               &dwType,
+                               NULL,
+                              &dwRequiredSize);
+    if (dwError != ERROR_SUCCESS &&
+        dwError != ERROR_MORE_DATA &&
+        dwError != ERROR_FILE_NOT_FOUND)
+        return dwError;
+
+    dwRequiredSize = (dwType == REG_BINARY) ? max(sizeof(SERVICE_FAILURE_ACTIONSW), dwRequiredSize)
+                                            : sizeof(SERVICE_FAILURE_ACTIONSW);
+
+    /* Initialize the read buffer */
+    lpReadBuffer = HeapAlloc(GetProcessHeap(),
+                             HEAP_ZERO_MEMORY,
+                             dwRequiredSize);
+    if (lpReadBuffer == NULL)
+        return ERROR_NOT_ENOUGH_MEMORY;
+
+    /* Now we can fill the read buffer */
+    if (dwError != ERROR_FILE_NOT_FOUND &&
+        dwType == REG_BINARY)
+    {
+        dwError = RegQueryValueExW(hServiceKey,
+                                   L"FailureActions",
+                                   NULL,
+                                   NULL,
+                                   (LPBYTE)lpReadBuffer,
+                                   &dwRequiredSize);
+        if (dwError != ERROR_SUCCESS &&
+            dwError != ERROR_FILE_NOT_FOUND)
+            goto done;
+
+        if (dwRequiredSize < sizeof(SERVICE_FAILURE_ACTIONSW))
+            dwRequiredSize = sizeof(SERVICE_FAILURE_ACTIONSW);
+    }
+    else
+    {
+        /*
+         * The value of the error doesn't really matter, the only
+         * important thing is that it must be != ERROR_SUCCESS.
+         */
+        dwError = ERROR_INVALID_DATA;
+    }
+
+    if (dwError == ERROR_SUCCESS)
+    {
+        lpReadBuffer->cActions = min(lpReadBuffer->cActions, (dwRequiredSize - sizeof(SERVICE_FAILURE_ACTIONSW)) / sizeof(SC_ACTION));
+        lpReadBuffer->lpsaActions = (lpReadBuffer->cActions > 0 ? (LPSC_ACTION)(lpReadBuffer + 1) : NULL);
+    }
+    else
+    {
+        lpReadBuffer->dwResetPeriod = 0;
+        lpReadBuffer->cActions = 0;
+        lpReadBuffer->lpsaActions = NULL;
+    }
+
+    lpReadBuffer->lpRebootMsg = NULL;
+    lpReadBuffer->lpCommand = NULL;
+
+    /*
+     * 3- Initialize the new value to set.
+     */
+
+    dwRequiredSize = sizeof(SERVICE_FAILURE_ACTIONSW);
+
+    if (lpFailureActions->lpsaActions == NULL)
+    {
+        /*
+         * lpFailureActions->cActions is ignored.
+         * Therefore we use the original values
+         * of cActions and lpsaActions.
+         */
+        dwRequiredSize += lpReadBuffer->cActions * sizeof(SC_ACTION);
+    }
+    else
+    {
+        /*
+         * The reset period and array of failure actions
+         * are deleted if lpFailureActions->cActions == 0 .
+         */
+        dwRequiredSize += lpFailureActions->cActions * sizeof(SC_ACTION);
+    }
+
+    lpWriteBuffer = HeapAlloc(GetProcessHeap(),
+                              HEAP_ZERO_MEMORY,
+                              dwRequiredSize);
+    if (lpWriteBuffer == NULL)
+    {
+        dwError = ERROR_NOT_ENOUGH_MEMORY;
+        goto done;
+    }
+
+    /* Clean the pointers as they have no meaning when the structure is stored in the registry */
+    lpWriteBuffer->lpRebootMsg = NULL;
+    lpWriteBuffer->lpCommand = NULL;
+    lpWriteBuffer->lpsaActions = NULL;
+
+    /* Set the members */
+    if (lpFailureActions->lpsaActions == NULL)
+    {
+        /*
+         * lpFailureActions->dwResetPeriod and lpFailureActions->cActions are ignored.
+         * Therefore we use the original values of dwResetPeriod, cActions and lpsaActions.
+         */
+        lpWriteBuffer->dwResetPeriod = lpReadBuffer->dwResetPeriod;
+        lpWriteBuffer->cActions = lpReadBuffer->cActions;
+
+        if (lpReadBuffer->lpsaActions != NULL)
+        {
+            memmove(lpWriteBuffer + 1,
+                    lpReadBuffer->lpsaActions,
+                    lpReadBuffer->cActions * sizeof(SC_ACTION));
+        }
+    }
+    else
+    {
+        if (lpFailureActions->cActions > 0)
+        {
+            lpWriteBuffer->dwResetPeriod = lpFailureActions->dwResetPeriod;
+            lpWriteBuffer->cActions = lpFailureActions->cActions;
+
+            memmove(lpWriteBuffer + 1,
+                    lpFailureActions->lpsaActions,
+                    lpFailureActions->cActions * sizeof(SC_ACTION));
+        }
+        else
+        {
+            /* The reset period and array of failure actions are deleted */
+            lpWriteBuffer->dwResetPeriod = 0;
+            lpWriteBuffer->cActions = 0;
+        }
+    }
+
+    /* Save the new failure actions into the registry */
+    dwError = RegSetValueExW(hServiceKey,
+                             L"FailureActions",
+                             0,
+                             REG_BINARY,
+                             (LPBYTE)lpWriteBuffer,
+                             dwRequiredSize);
+
+    /* We modify the strings only in case of success.*/
+    if (dwError == ERROR_SUCCESS)
+    {
+        /* Modify the Reboot Message value, if specified */
+        if (lpFailureActions->lpRebootMsg != NULL)
+        {
+            /* If the Reboot Message is "" then we delete it */
+            if (*lpFailureActions->lpRebootMsg == 0)
+            {
+                DPRINT("Delete Reboot Message value\n");
+                RegDeleteValueW(hServiceKey, L"RebootMessage");
+            }
+            else
+            {
+                DPRINT("Setting Reboot Message value %S\n", lpFailureActions->lpRebootMsg);
+                RegSetValueExW(hServiceKey,
+                               L"RebootMessage",
+                               0,
+                               REG_SZ,
+                               (LPBYTE)lpFailureActions->lpRebootMsg,
+                               (wcslen(lpFailureActions->lpRebootMsg) + 1) * sizeof(WCHAR));
+            }
+        }
+
+        /* Modify the Failure Command value, if specified */
+        if (lpFailureActions->lpCommand != NULL)
+        {
+            /* If the FailureCommand string is an empty string, delete the value */
+            if (*lpFailureActions->lpCommand == 0)
+            {
+                DPRINT("Delete Failure Command value\n");
+                RegDeleteValueW(hServiceKey, L"FailureCommand");
+            }
+            else
+            {
+                DPRINT("Setting Failure Command value %S\n", lpFailureActions->lpCommand);
+                RegSetValueExW(hServiceKey,
+                               L"FailureCommand",
+                               0,
+                               REG_SZ,
+                               (LPBYTE)lpFailureActions->lpCommand,
+                               (wcslen(lpFailureActions->lpCommand) + 1) * sizeof(WCHAR));
+            }
+        }
+    }
+
+done:
+    if (lpWriteBuffer != NULL)
+        HeapFree(GetProcessHeap(), 0, lpWriteBuffer);
+
+    if (lpReadBuffer != NULL)
+        HeapFree(GetProcessHeap(), 0, lpReadBuffer);
+
+    return dwError;
+}
+
+
 /* Function 37 */
 DWORD RChangeServiceConfig2W(
     SC_RPC_HANDLE hService,
@@ -4815,7 +5081,7 @@ DWORD RChangeServiceConfig2W(
 
     /* Open the service key */
     dwError = ScmOpenServiceKey(lpService->szServiceName,
-                                KEY_SET_VALUE,
+                                KEY_READ | KEY_SET_VALUE,
                                 &hServiceKey);
     if (dwError != ERROR_SUCCESS)
         goto done;
@@ -4842,17 +5108,18 @@ DWORD RChangeServiceConfig2W(
     }
     else if (Info.dwInfoLevel == SERVICE_CONFIG_FAILURE_ACTIONS)
     {
-        UNIMPLEMENTED;
-        dwError = ERROR_CALL_NOT_IMPLEMENTED;
-        goto done;
+        dwError = ScmSetFailureActions(hSvc,
+                                       lpService,
+                                       hServiceKey,
+                                       (LPSERVICE_FAILURE_ACTIONSW)Info.psfa);
     }
 
 done:
-    /* Unlock the service database */
-    ScmUnlockDatabase();
-
     if (hServiceKey != NULL)
         RegCloseKey(hServiceKey);
+
+    /* Unlock the service database */
+    ScmUnlockDatabase();
 
     DPRINT("RChangeServiceConfig2W() done (Error %lu)\n", dwError);
 

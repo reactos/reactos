@@ -233,7 +233,7 @@ ChangeServiceConfig2W(SC_HANDLE hService,
             break;
 
         case SERVICE_CONFIG_FAILURE_ACTIONS:
-            Info.psfa = (LPSERVICE_FAILURE_ACTIONSW)&lpInfo;
+            Info.psfa = (LPSERVICE_FAILURE_ACTIONSW)lpInfo;
             break;
 
         default:
