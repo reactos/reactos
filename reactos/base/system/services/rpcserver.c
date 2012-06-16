@@ -5088,22 +5088,35 @@ DWORD RChangeServiceConfig2W(
 
     if (Info.dwInfoLevel == SERVICE_CONFIG_DESCRIPTION)
     {
-        LPSERVICE_DESCRIPTIONW lpServiceDescription;
+        LPSERVICE_DESCRIPTIONW lpServiceDescription = (LPSERVICE_DESCRIPTIONW)Info.psd;
 
-        lpServiceDescription = (LPSERVICE_DESCRIPTIONW)Info.psd;
-
+        /* Modify the service description, if specified */
         if (lpServiceDescription != NULL &&
             lpServiceDescription->lpDescription != NULL)
         {
-            DPRINT("Setting value %S\n", lpServiceDescription->lpDescription);
-            dwError = RegSetValueExW(hServiceKey,
-                                     L"Description",
-                                     0,
-                                     REG_SZ,
-                                     (LPBYTE)lpServiceDescription->lpDescription,
-                                     (wcslen(lpServiceDescription->lpDescription) + 1) * sizeof(WCHAR));
-            if (dwError != ERROR_SUCCESS)
-                goto done;
+            /* If the description is "" then we delete it */
+            if (*lpServiceDescription->lpDescription == 0)
+            {
+                DPRINT("Delete service description\n");
+                dwError = RegDeleteValueW(hServiceKey, L"Description");
+
+                if (dwError == ERROR_FILE_NOT_FOUND)
+                    dwError = ERROR_SUCCESS;
+            }
+            else
+            {
+                DPRINT("Setting service description value %S\n", lpServiceDescription->lpDescription);
+                dwError = RegSetValueExW(hServiceKey,
+                                         L"Description",
+                                         0,
+                                         REG_SZ,
+                                         (LPBYTE)lpServiceDescription->lpDescription,
+                                         (wcslen(lpServiceDescription->lpDescription) + 1) * sizeof(WCHAR));
+            }
+        }
+        else
+        {
+            dwError = ERROR_SUCCESS;
         }
     }
     else if (Info.dwInfoLevel == SERVICE_CONFIG_FAILURE_ACTIONS)
