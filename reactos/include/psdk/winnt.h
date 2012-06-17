@@ -1,5 +1,5 @@
-#ifndef _WINNT_H
-#define _WINNT_H
+#ifndef _WINNT_
+#define _WINNT_
 
 #if !defined(__ROS_LONG64__)
 #ifdef __WINESRC__

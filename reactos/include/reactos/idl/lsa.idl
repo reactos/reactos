@@ -9,7 +9,7 @@ typedef [handle] LPWSTR PLSAPR_SERVER_NAME;
 typedef [context_handle] PVOID LSAPR_HANDLE;
 typedef LSAPR_HANDLE *PLSAPR_HANDLE;
 
-cpp_quote("#ifndef _WINNT_H")
+cpp_quote("#ifndef _WINNT_")
 typedef struct _LUID {
     DWORD LowPart;
     LONG HighPart;
@@ -33,7 +33,7 @@ typedef struct _LSAPR_ACL {
     [size_is(AclSize - 4)] BYTE Dummy1[*];
 } LSAPR_ACL, *PLSAPR_ACL;
 
-cpp_quote("#ifndef _WINNT_H")
+cpp_quote("#ifndef _WINNT_")
 typedef WORD SECURITY_DESCRIPTOR_CONTROL, *PSECURITY_DESCRIPTOR_CONTROL;
 cpp_quote("#endif")
 
@@ -282,7 +282,7 @@ typedef struct _POLICY_LSA_REPLICA_SRCE_INFO {
     RPC_UNICODE_STRING ReplicaAccountName;
 } POLICY_LSA_REPLICA_SRCE_INFO, *PPOLICY_LSA_REPLICA_SRCE_INFO;
 
-cpp_quote("#ifndef _WINNT_H")
+cpp_quote("#ifndef _WINNT_")
 typedef struct _QUOTA_LIMITS {
     INT64 PagedPoolLimit;
     INT64 NonPagedPoolLimit;

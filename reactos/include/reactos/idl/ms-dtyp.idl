@@ -26,11 +26,11 @@ typedef signed int LONG32;
 typedef signed __int64 LONG64;
 cpp_quote("#endif")
 typedef unsigned __int64 QWORD;
-cpp_quote("#ifndef _WINNT_H")
+cpp_quote("#ifndef _WINNT_")
 typedef short SHORT;
 cpp_quote("#endif")
 typedef __int64 TIME;
-cpp_quote("#ifndef _WINNT_H")
+cpp_quote("#ifndef _WINNT_")
 typedef char CHAR, *PCHAR;
 typedef unsigned char UCHAR, *PUCHAR;
 cpp_quote("#endif")
@@ -43,27 +43,27 @@ typedef unsigned short UINT16;
 typedef unsigned int UINT32;
 typedef unsigned __int64 UINT64;
 cpp_quote("#endif")
-cpp_quote("#ifndef _WINNT_H")
+cpp_quote("#ifndef _WINNT_")
 typedef unsigned long ULONG, *PULONG;
 cpp_quote("#endif")
 cpp_quote("#ifndef _BASETSD_H")
 typedef unsigned int ULONG32;
 typedef unsigned __int64 ULONG64;
 cpp_quote("#endif")
-cpp_quote("#ifndef _WINNT_H")
+cpp_quote("#ifndef _WINNT_")
 typedef unsigned __int64 ULONGLONG;
 typedef unsigned short USHORT;
 cpp_quote("#endif")
 cpp_quote("#ifndef _WINDEF_H")
 typedef unsigned short WORD, *PWORD, *LPWORD;
 cpp_quote("#endif")
-cpp_quote("#ifndef _WINNT_H")
+cpp_quote("#ifndef _WINNT_")
 typedef long LONG, *PLONG;
 cpp_quote("#endif")
 cpp_quote("#ifndef _WINDEF_H")
 typedef long *LPLONG;
 cpp_quote("#endif")
-cpp_quote("#ifndef _WINNT_H")
+cpp_quote("#ifndef _WINNT_")
 typedef signed __int64 LONGLONG;
 cpp_quote("#endif")
 
@@ -74,7 +74,7 @@ cpp_quote("#ifndef __wtypes_h__")
 typedef double DOUBLE;
 cpp_quote("#endif")
 
-cpp_quote("#ifndef _WINNT_H")
+cpp_quote("#ifndef _WINNT_")
 typedef BYTE BOOLEAN, *PBOOLEAN;
 cpp_quote("#endif")
 cpp_quote("#ifndef _BASETSD_H")
@@ -89,13 +89,13 @@ typedef ULONG_PTR SIZE_T;
 typedef ULONG_PTR DWORD_PTR;
 cpp_quote("#endif")
 typedef DWORD NET_API_STATUS;
-cpp_quote("#ifndef _WINNT_H")
+cpp_quote("#ifndef _WINNT_")
 typedef ULONGLONG DWORDLONG, *PDWORDLONG;
 cpp_quote("#endif")
 typedef DWORD HCALL;
 //typedef DWORD HRESULT;
 
-cpp_quote("#ifndef _WINNT_H")
+cpp_quote("#ifndef _WINNT_")
 typedef void *HANDLE;
 typedef void /*VOID,*/ *PVOID;
 cpp_quote("#endif")
@@ -105,7 +105,7 @@ cpp_quote("#endif")
 typedef [context_handle] void *PCONTEXT_HANDLE;
 typedef PCONTEXT_HANDLE *PPCONTEXT_HANDLE;
 
-cpp_quote("#ifndef _WINNT_H")
+cpp_quote("#ifndef _WINNT_")
 typedef wchar_t WCHAR, *PWCHAR;
 cpp_quote("#if 0")
 typedef wchar_t UNICODE;

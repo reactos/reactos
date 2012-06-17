@@ -59,7 +59,7 @@ typedef struct _SAMPR_RETURNED_USTRING_ARRAY
     [size_is(Count)] PRPC_UNICODE_STRING Element;
 } SAMPR_RETURNED_USTRING_ARRAY, *PSAMPR_RETURNED_USTRING_ARRAY;
 
-cpp_quote("#ifndef _WINNT_H")
+cpp_quote("#ifndef _WINNT_")
 typedef enum _SID_NAME_USE
 {
     SidTypeUser = 1,
