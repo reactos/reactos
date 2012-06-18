@@ -2,13 +2,13 @@
 
 [Section]
 Name = Python 2
-Version = 2.7.2
+Version = 2.7.3
 Licence = GPL/LGPL
 Description = A remarkably powerful dynamic programming language.
-Size = 15.23MB
+Size = 15.1MB
 Category = 7
 URLSite = http://www.python.org/
-URLDownload = http://www.python.org/ftp/python/2.7.2/python-2.7.2.msi
+URLDownload = http://www.python.org/ftp/python/2.7.3/python-2.7.3.msi
 CDPath = none
 
 [Section.0407]
