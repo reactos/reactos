@@ -1288,7 +1288,7 @@ DWORD RDeleteService(
 
     dwError = ScmMarkServiceForDelete(lpService);
 
-Done:;
+Done:
     /* Unlock the service database */
     ScmUnlockDatabase();
 
@@ -2312,7 +2312,7 @@ DWORD RCreateServiceW(
     lpService->dwRefCount = 1;
     DPRINT("CreateService - lpService->dwRefCount %u\n", lpService->dwRefCount);
 
-done:;
+done:
     /* Unlock the service database */
     ScmUnlockDatabase();
 
@@ -2635,7 +2635,7 @@ DWORD ROpenServiceW(
     *lpServiceHandle = (SC_RPC_HANDLE)hHandle;
     DPRINT("*hService = %p\n", *lpServiceHandle);
 
-Done:;
+Done:
     /* Unlock the service database */
     ScmUnlockDatabase();
 
@@ -2832,7 +2832,7 @@ DWORD RQueryServiceConfigW(
     if (pcbBytesNeeded != NULL)
         *pcbBytesNeeded = dwRequiredSize;
 
-Done:;
+Done:
     /* Unlock the service database */
     ScmUnlockDatabase();
 
@@ -3693,6 +3693,7 @@ DWORD REnumServicesStatusA(
     LPBOUNDED_DWORD_256K lpResumeHandle)
 {
     LPENUM_SERVICE_STATUSW lpStatusPtrW = NULL;
+    LPENUM_SERVICE_STATUSW lpStatusPtrIncrW;
     LPENUM_SERVICE_STATUSA lpStatusPtrA = NULL;
     LPWSTR lpStringPtrW;
     LPSTR lpStringPtrA;
@@ -3724,6 +3725,7 @@ DWORD REnumServicesStatusA(
     if (*lpServicesReturned == 0)
         goto Done;
 
+    lpStatusPtrIncrW = lpStatusPtrW;
     lpStatusPtrA = (LPENUM_SERVICE_STATUSA)lpBuffer;
     lpStringPtrA = (LPSTR)((ULONG_PTR)lpBuffer +
                   *lpServicesReturned * sizeof(ENUM_SERVICE_STATUSA));
@@ -3762,13 +3764,14 @@ DWORD REnumServicesStatusA(
 
         /* Copy the status information */
         memcpy(&lpStatusPtrA->ServiceStatus,
-               &lpStatusPtrW->ServiceStatus,
+               &lpStatusPtrIncrW->ServiceStatus,
                sizeof(SERVICE_STATUS));
 
+        lpStatusPtrIncrW++;
         lpStatusPtrA++;
     }
 
-Done:;
+Done:
     if (lpStatusPtrW)
         HeapFree(GetProcessHeap(), 0, lpStatusPtrW);
 
@@ -4062,7 +4065,7 @@ DWORD RQueryServiceConfigA(
     if (pcbBytesNeeded != NULL)
         *pcbBytesNeeded = dwRequiredSize;
 
-Done:;
+Done:
     /* Unlock the service database */
     ScmUnlockDatabase();
 
@@ -4432,15 +4435,14 @@ DWORD REnumServiceGroupW(
     *lpServicesReturned = 0;
 
     if ((dwServiceType == 0) ||
-        ((dwServiceType & ~(SERVICE_DRIVER | SERVICE_WIN32)) != 0))
+        ((dwServiceType & ~SERVICE_TYPE_ALL) != 0))
     {
         DPRINT("Not a valid Service Type!\n");
         return ERROR_INVALID_PARAMETER;
     }
 
-    if ((dwServiceState != SERVICE_ACTIVE) &&
-        (dwServiceState != SERVICE_INACTIVE) &&
-        (dwServiceState != SERVICE_STATE_ALL))
+    if ((dwServiceState == 0) ||
+        ((dwServiceState & ~SERVICE_STATE_ALL) != 0))
     {
         DPRINT("Not a valid Service State!\n");
         return ERROR_INVALID_PARAMETER;
@@ -5671,6 +5673,7 @@ DWORD REnumServicesStatusExA(
     LPCSTR pszGroupName)
 {
     LPENUM_SERVICE_STATUS_PROCESSW lpStatusPtrW = NULL;
+    LPENUM_SERVICE_STATUS_PROCESSW lpStatusPtrIncrW;
     LPENUM_SERVICE_STATUS_PROCESSA lpStatusPtrA = NULL;
     LPWSTR lpStringPtrW;
     LPSTR lpStringPtrA;
@@ -5722,6 +5725,7 @@ DWORD REnumServicesStatusExA(
     if (*lpServicesReturned == 0)
         goto Done;
 
+    lpStatusPtrIncrW = lpStatusPtrW;
     lpStatusPtrA = (LPENUM_SERVICE_STATUS_PROCESSA)lpBuffer;
     lpStringPtrA = (LPSTR)((ULONG_PTR)lpBuffer +
                   *lpServicesReturned * sizeof(ENUM_SERVICE_STATUS_PROCESSA));
@@ -5760,15 +5764,17 @@ DWORD REnumServicesStatusExA(
 
         /* Copy the status information */
         memcpy(&lpStatusPtrA->ServiceStatusProcess,
-               &lpStatusPtrW->ServiceStatusProcess,
+               &lpStatusPtrIncrW->ServiceStatusProcess,
                sizeof(SERVICE_STATUS));
 
-        lpStatusPtrA->ServiceStatusProcess.dwProcessId = lpStatusPtrW->ServiceStatusProcess.dwProcessId; /* FIXME */
+        lpStatusPtrA->ServiceStatusProcess.dwProcessId = lpStatusPtrIncrW->ServiceStatusProcess.dwProcessId; /* FIXME */
         lpStatusPtrA->ServiceStatusProcess.dwServiceFlags = 0; /* FIXME */
+
+        lpStatusPtrIncrW++;
         lpStatusPtrA++;
     }
 
-Done:;
+Done:
     if (pszGroupNameW)
         HeapFree(GetProcessHeap(), 0, pszGroupNameW);
 
@@ -5826,15 +5832,14 @@ DWORD REnumServicesStatusExW(
     *lpServicesReturned = 0;
 
     if ((dwServiceType == 0) ||
-        ((dwServiceType & ~(SERVICE_DRIVER | SERVICE_WIN32)) != 0))
+        ((dwServiceType & ~SERVICE_TYPE_ALL) != 0))
     {
         DPRINT("Not a valid Service Type!\n");
         return ERROR_INVALID_PARAMETER;
     }
 
-    if ((dwServiceState != SERVICE_ACTIVE) &&
-        (dwServiceState != SERVICE_INACTIVE) &&
-        (dwServiceState != SERVICE_STATE_ALL))
+    if ((dwServiceState == 0) ||
+        ((dwServiceState & ~SERVICE_STATE_ALL) != 0))
     {
         DPRINT("Not a valid Service State!\n");
         return ERROR_INVALID_PARAMETER;
@@ -6055,7 +6060,7 @@ DWORD REnumServicesStatusExW(
             *lpResumeIndex = 0;
     }
 
-Done:;
+Done:
     /* Unlock the service database */
     ScmUnlockDatabase();
 
