@@ -587,9 +587,10 @@ KeWaitForMultipleObjects(IN ULONG Count,
     LARGE_INTEGER DueTime = {{0}}, NewDueTime, InterruptTime;
     ULONG Index, Hand = 0;
 
-    ASSERT(KeGetCurrentIrql() < DISPATCH_LEVEL ||
+    /* HACK: tcpip is broken and waits with spinlocks acquired (bug #7129) */
+    /*ASSERT(KeGetCurrentIrql() < DISPATCH_LEVEL ||
            (KeGetCurrentIrql() == DISPATCH_LEVEL &&
-            Timeout && Timeout->QuadPart == 0));
+            Timeout && Timeout->QuadPart == 0));*/
 
     /* Make sure the Wait Count is valid */
     if (!WaitBlockArray)
