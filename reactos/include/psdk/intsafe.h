@@ -681,6 +681,7 @@ INTSAFE_NAME(_Name)( \
     return INTSAFE_NAME(_Convert)(Result, pOutput); \
 }
 
+DEFINE_SAFE_MULT_U32(ULongMult, ULONG, ULongLongToULong)
 #ifndef _WIN64
 DEFINE_SAFE_MULT_U32(SizeTMult, size_t, ULongLongToSizeT)
 DEFINE_SAFE_MULT_U32(SIZETMult, SIZE_T, ULongLongToSIZET)
