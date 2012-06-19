@@ -417,9 +417,12 @@ KeWaitForSingleObject(IN PVOID Object,
     PLARGE_INTEGER OriginalDueTime = Timeout;
     ULONG Hand = 0;
 
-    ASSERT(KeGetCurrentIrql() < DISPATCH_LEVEL ||
-           (KeGetCurrentIrql() == DISPATCH_LEVEL &&
-            Timeout && Timeout->QuadPart == 0));
+    if (Thread->WaitNext)
+        ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+    else
+        ASSERT(KeGetCurrentIrql() < DISPATCH_LEVEL ||
+               (KeGetCurrentIrql() == DISPATCH_LEVEL &&
+                Timeout && Timeout->QuadPart == 0));
 
     /* Check if the lock is already held */
     if (!Thread->WaitNext) goto WaitStart;
@@ -587,10 +590,17 @@ KeWaitForMultipleObjects(IN ULONG Count,
     LARGE_INTEGER DueTime = {{0}}, NewDueTime, InterruptTime;
     ULONG Index, Hand = 0;
 
-    /* HACK: tcpip is broken and waits with spinlocks acquired (bug #7129) */
-    /*ASSERT(KeGetCurrentIrql() < DISPATCH_LEVEL ||
-           (KeGetCurrentIrql() == DISPATCH_LEVEL &&
-            Timeout && Timeout->QuadPart == 0));*/
+    if (Thread->WaitNext)
+        ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+    else if (KeGetCurrentIrql() == DISPATCH_LEVEL &&
+             (!Timeout || Timeout->QuadPart != 0))
+    {
+        /* HACK: tcpip is broken and waits with spinlocks acquired (bug #7129) */
+        DPRINT1("%s called at DISPATCH_LEVEL with non-zero timeout!\n",
+                __FUNCTION__);
+    }
+    else
+        ASSERT(KeGetCurrentIrql() <= DISPATCH_LEVEL);
 
     /* Make sure the Wait Count is valid */
     if (!WaitBlockArray)
