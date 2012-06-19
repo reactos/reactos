@@ -412,7 +412,7 @@ static struct _tagASSEMBLY
         5, /* MinorRuntimeVersion */
         { 0x2188, 0x1B4 }, /* MetaData */
         COMIMAGE_FLAGS_ILONLY | COMIMAGE_FLAGS_STRONGNAMESIGNED, /* Flags */
-        0, /* EntryPointToken */
+        { 0 }, /* EntryPointToken */
         { 0x20D0, 0xB8 }, /* Resources */
         { 0x2050, 0x80 }, /* StrongNameSignature */
         { 0 }, /* CodeManagerTable */

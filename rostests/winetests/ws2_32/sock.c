@@ -1030,14 +1030,14 @@ static void test_set_getsockopt(void)
     SetLastError(0xdeadbeef);
     err = setsockopt(s, 0xffffffff, SO_RCVTIMEO, (char *) &timeout, size);
     ok( (err == SOCKET_ERROR) && (WSAGetLastError() == WSAEINVAL),
-        "got %d with %d (expected SOCKET_ERROR with WSAEINVAL\n",
+        "got %d with %d (expected SOCKET_ERROR with WSAEINVAL)\n",
         err, WSAGetLastError());
 
     timeout = SOCKTIMEOUT1;
     SetLastError(0xdeadbeef);
     err = setsockopt(s, 0x00008000, SO_RCVTIMEO, (char *) &timeout, size);
     ok( (err == SOCKET_ERROR) && (WSAGetLastError() == WSAEINVAL),
-        "got %d with %d (expected SOCKET_ERROR with WSAEINVAL\n",
+        "got %d with %d (expected SOCKET_ERROR with WSAEINVAL)\n",
         err, WSAGetLastError());
 
     closesocket(s);
