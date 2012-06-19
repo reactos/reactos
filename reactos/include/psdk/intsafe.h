@@ -36,22 +36,23 @@
 
 /* Handle ntintsafe here too */
 #ifdef _NTINTSAFE_H_INCLUDED_
-#ifndef NT_SUCCESS /* Guard agains redefinition from ntstatus.h */
+#ifndef _NTDEF_ /* Guard agains redefinition from ntstatus.h */
 typedef _Return_type_success_(return >= 0) long NTSTATUS;
-#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) >= 0)
-#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)
 #endif
+#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) >= 0)
+#define STATUS_SUCCESS ((NTSTATUS)0x00000000)
+#define STATUS_INTEGER_OVERFLOW ((NTSTATUS)0xC0000095)
 #define INTSAFE_RESULT NTSTATUS
 #define INTSAFE_SUCCESS STATUS_SUCCESS
 #define INTSAFE_E_ARITHMETIC_OVERFLOW STATUS_INTEGER_OVERFLOW
 #define INTSAFE_NAME(name) Rtl##name
 #else // _NTINTSAFE_H_INCLUDED_
-#ifndef SUCCEEDED /* Guard agains redefinition from winerror.h */
+#ifndef _HRESULT_DEFINED
 typedef _Return_type_success_(return >= 0) long HRESULT;
+#endif
 #define SUCCEEDED(hr) (((HRESULT)(hr)) >= 0)
 #define FAILED(hr) (((HRESULT)(hr)) < 0)
 #define S_OK    ((HRESULT)0L)
-#endif
 #define INTSAFE_RESULT HRESULT
 #define INTSAFE_SUCCESS S_OK
 #define INTSAFE_E_ARITHMETIC_OVERFLOW ((HRESULT)0x80070216L)
@@ -77,17 +78,18 @@ typedef _Return_type_success_(return >= 0) long HRESULT;
 
 /* Typedefs */
 #ifndef _WINNT_
+#ifndef _NTDEF_
 typedef char CHAR;
+typedef unsigned char UCHAR, UINT8;
 typedef signed char INT8;
-typedef unsigned char UCHAR, UINT8, BYTE;
 typedef short SHORT;
 typedef signed short INT16;
-typedef unsigned short USHORT, UINT16, WORD;
+typedef unsigned short USHORT, UINT16;
 typedef int INT;
+typedef unsigned int UINT32;
 typedef signed int INT32;
-typedef unsigned int UINT, UINT32;
 typedef long LONG;
-typedef unsigned long ULONG, DWORD;
+typedef unsigned long ULONG;
 typedef long long LONGLONG, LONG64;
 typedef signed long long INT64;
 typedef unsigned long long ULONGLONG, DWORDLONG, ULONG64, DWORD64, UINT64;
@@ -100,6 +102,11 @@ typedef _W64 unsigned int UINT_PTR, size_t;
 typedef _W64 long LONG_PTR, SSIZE_T;
 typedef _W64 unsigned long ULONG_PTR, DWORD_PTR, SIZE_T;
 #endif // _WIN64
+#endif
+typedef unsigned char BYTE;
+typedef unsigned short WORD;
+typedef unsigned int UINT;
+typedef unsigned long DWORD;
 #endif // _WINNT_
 
 /* Just to be sure! */
@@ -110,16 +117,27 @@ C_ASSERT(sizeof(LONG) == 4);
 C_ASSERT(sizeof(ULONG) == 4);
 C_ASSERT(sizeof(UINT_PTR) == sizeof(ULONG_PTR));
 
+/* Undefine these to avoid conflicts with limits.h */
+#undef CHAR_MIN
+#undef CHAR_MAX
+#undef INT_MIN
+#undef INT_MAX
+#undef LONG_MIN
+#undef LONG_MAX
+#undef UCHAR_MAX
+#undef UINT_MAX
+#undef ULONG_MAX
+
 /* Integer range margins (use (x-1) to prevent warnings) */
-#define INT8_MIN (-128)
-#define SHORT_MIN (-32768)
-#define INT16_MIN (-32768)
+#define INT8_MIN (-127 - 1)
+#define SHORT_MIN (-32767 - 1)
+#define INT16_MIN (-32767 - 1)
 #define INT_MIN (-2147483647 - 1)
 #define INT32_MIN (-2147483647 - 1)
 #define LONG_MIN (-2147483647L - 1)
-#define LONGLONG_MIN (-9223372036854775808LL)
-#define LONG64_MIN (-9223372036854775808LL)
-#define INT64_MIN (-9223372036854775808LL)
+#define LONGLONG_MIN (-9223372036854775807LL - 1)
+#define LONG64_MIN (-9223372036854775807LL - 1)
+#define INT64_MIN (-9223372036854775807LL - 1)
 //#define INT128_MIN (-170141183460469231731687303715884105728)
 #ifdef _WIN64
 #define INT_PTR_MIN INT64_MIN
@@ -242,6 +260,12 @@ C_ASSERT(sizeof(UINT_PTR) == sizeof(ULONG_PTR));
 #define CHAR_ERROR '\0'
 
 
+/* 32 bit x 32 bit to 64 bit unsigned multiplication */
+#ifndef UInt32x32To64
+#define UInt32x32To64(a,b) ((DWORDLONG)(a)*(DWORDLONG)(b))
+#endif
+
+
 #define DEFINE_SAFE_CONVERT_UTOX(_Name, _TypeFrom, _TypeTo) \
 _Must_inspect_result_ \
 __forceinline \
@@ -253,7 +277,7 @@ INTSAFE_NAME(_Name)( \
     if (Input <= _TypeTo ## _MAX) \
     { \
         *pOutput = (_TypeTo)Input; \
-        return S_OK; \
+        return INTSAFE_SUCCESS; \
     } \
     else \
     { \
@@ -289,6 +313,8 @@ DEFINE_SAFE_CONVERT_UTOX(UIntPtrToInt, UINT_PTR, INT)
 DEFINE_SAFE_CONVERT_UTOX(UIntPtrToLong, UINT_PTR, LONG)
 DEFINE_SAFE_CONVERT_UTOX(UIntPtrToIntPtr, UINT_PTR, INT_PTR)
 DEFINE_SAFE_CONVERT_UTOX(UIntPtrToLongPtr, UINT_PTR, LONG_PTR)
+DEFINE_SAFE_CONVERT_UTOX(ULongLongToUInt, ULONGLONG, UINT)
+DEFINE_SAFE_CONVERT_UTOX(ULongLongToULong, ULONGLONG, ULONG)
 
 
 #define DEFINE_SAFE_CONVERT_ITOU(_Name, _TypeFrom, _TypeTo) \
@@ -302,7 +328,7 @@ INTSAFE_NAME(_Name)( \
     if ((Input >= 0) && (Input <= _TypeTo ## _MAX)) \
     { \
         *pOutput = (_TypeTo)Input; \
-        return S_OK; \
+        return INTSAFE_SUCCESS; \
     } \
     else \
     { \
@@ -375,7 +401,7 @@ INTSAFE_NAME(_Name)( \
     if ((Input >= _TypeTo ## _MIN) && (Input <= _TypeTo ## _MAX)) \
     { \
         *pOutput = (_TypeTo)Input; \
-        return S_OK; \
+        return INTSAFE_SUCCESS; \
     } \
     else \
     { \
@@ -400,10 +426,79 @@ DEFINE_SAFE_CONVERT_ITOI(LongPtrToShort, LONG_PTR, SHORT)
 DEFINE_SAFE_CONVERT_ITOI(LongPtrToInt, LONG_PTR, INT)
 DEFINE_SAFE_CONVERT_ITOI(LongPtrToLong, LONG_PTR, LONG)
 DEFINE_SAFE_CONVERT_ITOI(LongPtrToIntPtr, LONG_PTR, INT_PTR)
+DEFINE_SAFE_CONVERT_ITOI(LongLongToLong, LONGLONG, LONG)
+DEFINE_SAFE_CONVERT_ITOI(LongLongToIntPtr, LONGLONG, INT_PTR)
+DEFINE_SAFE_CONVERT_ITOI(LongLongToLongPtr, LONGLONG, LONG_PTR)
 #ifndef _CHAR_UNSIGNED
 DEFINE_SAFE_CONVERT_ITOI(ShortToChar, SHORT, CHAR)
 DEFINE_SAFE_CONVERT_ITOI(LongPtrToChar, LONG_PTR, CHAR)
 #endif
+
+
+#ifdef _NTINTSAFE_H_INCLUDED_
+
+#define RtlInt8ToByte RtlInt8ToUInt8
+#define RtlInt8ToUInt16 RtlInt8ToUShort
+#define RtlInt8ToWord RtlInt8ToUShort
+#define RtlInt8ToUInt32 RtlInt8ToUInt
+#define RtlInt8ToDWord RtlInt8ToULong
+#define RtlInt8ToDWordPtr RtlInt8ToULongPtr
+#define RtlInt8ToDWordLong RtlInt8ToULongLong
+#define RtlInt8ToULong64 RtlInt8ToULongLong
+#define RtlInt8ToDWord64 RtlInt8ToULongLong
+#define RtlInt8ToUInt64 RtlInt8ToULongLong
+#define RtlInt8ToSizeT RtlInt8ToUIntPtr
+#define RtlInt8ToSIZET RtlInt8ToULongPtr
+#define RtlIntToSizeT RtlIntToUIntPtr
+#define RtlULongLongToInt64 RtlULongLongToLongLong
+#define RtlULongLongToLong64 RtlULongLongToLongLong
+#define RtlULongLongToPtrdiffT RtlULongLongToIntPtr
+#define RtlULongLongToSizeT RtlULongLongToUIntPtr
+#define RtlULongLongToSSIZET RtlULongLongToLongPtr
+#define RtlULongLongToSIZET RtlULongLongToULongPtr
+#ifdef _WIN64
+#define RtlIntToUIntPtr RtlIntToULongLong
+#define RtlULongLongToIntPtr RtlULongLongToLongLong
+#else
+#define RtlIntToUIntPtr RtlIntToUInt
+#define RtlULongLongToIntPtr RtlULongLongToInt
+#define RtlULongLongToUIntPtr RtlULongLongToUInt
+#define RtlULongLongToULongPtr RtlULongLongToULong
+#endif
+
+#else // _NTINTSAFE_H_INCLUDED_
+
+#define Int8ToByte Int8ToUInt8
+#define Int8ToUInt16 Int8ToUShort
+#define Int8ToWord Int8ToUShort
+#define Int8ToUInt32 Int8ToUInt
+#define Int8ToDWord Int8ToULong
+#define Int8ToDWordPtr Int8ToULongPtr
+#define Int8ToDWordLong Int8ToULongLong
+#define Int8ToULong64 Int8ToULongLong
+#define Int8ToDWord64 Int8ToULongLong
+#define Int8ToUInt64 Int8ToULongLong
+#define Int8ToSizeT Int8ToUIntPtr
+#define Int8ToSIZET Int8ToULongPtr
+#define IntToSizeT IntToUIntPtr
+#define ULongLongToInt64 ULongLongToLongLong
+#define ULongLongToLong64 ULongLongToLongLong
+#define ULongLongToPtrdiffT ULongLongToIntPtr
+#define ULongLongToSizeT ULongLongToUIntPtr
+#define ULongLongToSSIZET ULongLongToLongPtr
+#define ULongLongToSIZET ULongLongToULongPtr
+#ifdef _WIN64
+#define IntToUIntPtr IntToULongLong
+#define ULongLongToIntPtr ULongLongToLongLong
+#else
+#define IntToUIntPtr IntToUInt
+#define ULongLongToIntPtr ULongLongToInt
+#define ULongLongToUIntPtr ULongLongToUInt
+#define ULongLongToULongPtr ULongLongToULong
+#endif
+
+#endif // _NTINTSAFE_H_INCLUDED_
+
 
 #define DEFINE_SAFE_ADD(_Name, _Type) \
 _Must_inspect_result_ \
@@ -471,18 +566,155 @@ DEFINE_SAFE_SUB(SIZETSub, SIZE_T)
 DEFINE_SAFE_SUB(ULongLongSub, ULONGLONG)
 
 
-#define Int8ToByte Int8ToUInt8
-#define Int8ToUInt16 Int8ToUShort
-#define Int8ToWord Int8ToUShort
-#define Int8ToUInt32 Int8ToUInt
-#define Int8ToDWord Int8ToULong
-#define Int8ToDWordPtr Int8ToULongPtr
-#define Int8ToDWordLong Int8ToULongLong
-#define Int8ToULong64 Int8ToULongLong
-#define Int8ToDWord64 Int8ToULongLong
-#define Int8ToUInt64 Int8ToULongLong
-#define Int8ToSizeT Int8ToUIntPtr
-#define Int8ToSIZET Int8ToULongPtr
+_Must_inspect_result_
+__forceinline
+INTSAFE_RESULT
+INTSAFE_NAME(LongLongSub)(
+    _In_ LONGLONG Minuend,
+    _In_ LONGLONG Subtrahend,
+    _Out_ _Deref_out_range_(==, Minuend - Subtrahend) LONGLONG* pResult)
+{
+    LONGLONG Result = Minuend - Subtrahend;
+
+    /* The only way the result can overflow, is when the sign of the minuend
+       and the subtrahend differ. In that case the result is expected to
+       have the same sign as the minuend, otherwise it overflowed.
+       Sign equality is checked with a binary xor operation. */
+    if ( ((Minuend ^ Subtrahend) < 0) && ((Minuend ^ Result) < 0) )
+    {
+        *pResult = LONGLONG_ERROR;
+        return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    }
+    else
+    {
+        *pResult = Result;
+        return INTSAFE_SUCCESS;
+    }
+}
+
+
+#define DEFINE_SAFE_SUB_S(_Name, _Type1, _Type2, _Convert) \
+_Must_inspect_result_ \
+__forceinline \
+INTSAFE_RESULT \
+INTSAFE_NAME(_Name)( \
+    _In_ _Type1 Minuend, \
+    _In_ _Type1 Subtrahend, \
+    _Out_ _Deref_out_range_(==, Minuend - Subtrahend) _Type1* pOutput) \
+{ \
+    return INTSAFE_NAME(_Convert)(((_Type2)Minuend) - ((_Type2)Subtrahend), pOutput); \
+}
+
+DEFINE_SAFE_SUB_S(LongSub, LONG, LONGLONG, LongLongToLong)
+#ifndef _WIN64
+DEFINE_SAFE_SUB_S(IntPtrSub, INT_PTR, LONGLONG, LongLongToIntPtr)
+DEFINE_SAFE_SUB_S(LongPtrSub, LONG_PTR, LONGLONG, LongLongToLongPtr)
+#endif
+
+
+_Must_inspect_result_
+__forceinline
+INTSAFE_RESULT
+INTSAFE_NAME(ULongLongMult)(
+    _In_ ULONGLONG Multiplicand,
+    _In_ ULONGLONG Multiplier,
+    _Out_ _Deref_out_range_(==, Multiplicand * Multiplier) ULONGLONG* pOutput)
+{
+    /* We can split the 64 bit numbers in low and high parts:
+        M1 = M1Low + M1Hi * 0x100000000
+        M2 = M2Low + M2Hi * 0x100000000
+
+       Then the multiplication looks like this:
+        M1 * M2 = (M1Low + M1Hi * 0x100000000) + (M2Low + M2Hi * 0x100000000)
+                = M1Low * M2Low
+                  + M1Low * M2Hi * 0x100000000
+                  + M2Low * M1Hi * 0x100000000
+                  + M1Hi * M2Hi * 0x100000000 * 0x100000000
+
+        We get an overflow when
+            a) M1Hi * M2Hi != 0, so when M1Hi or M2Hi are not 0
+            b) The product of the nonzero high part and the other low part
+               is larger than 32 bits.
+            c) The addition of the product from b) shifted left by 32 and
+               M1Low * M2Low is larger than 64 bits
+    */
+    ULONG M1Low = Multiplicand & 0xffffffff;
+    ULONG M2Low = Multiplier & 0xffffffff;
+    ULONG M1Hi = Multiplicand >> 32;
+    ULONG M2Hi = Multiplier >> 32;
+    ULONGLONG Temp;
+
+    if (M1Hi == 0)
+    {
+        Temp = UInt32x32To64(M1Low, M2Hi);
+    }
+    else if (M2Hi == 0)
+    {
+        Temp = UInt32x32To64(M1Hi, M2Low);
+    }
+    else
+    {
+        *pOutput = LONGLONG_ERROR;
+        return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    }
+
+    if (Temp > ULONG_MAX)
+    {
+        *pOutput = LONGLONG_ERROR;
+        return INTSAFE_E_ARITHMETIC_OVERFLOW;
+    }
+
+    return INTSAFE_NAME(ULongLongAdd)(Temp << 32, UInt32x32To64(M1Low, M2Low), pOutput);
+}
+
+
+#define DEFINE_SAFE_MULT_U32(_Name, _Type, _Convert) \
+__checkReturn \
+__forceinline \
+INTSAFE_RESULT \
+INTSAFE_NAME(_Name)( \
+    _In_ _Type Multiplicand, \
+    _In_ _Type Multiplier, \
+    _Out_ _Deref_out_range_(==, Multiplicand * Multiplier) _Type* pOutput) \
+{ \
+    ULONGLONG Result = UInt32x32To64(Multiplicand, Multiplier); \
+    return INTSAFE_NAME(_Convert)(Result, pOutput); \
+}
+
+#ifndef _WIN64
+DEFINE_SAFE_MULT_U32(SizeTMult, size_t, ULongLongToSizeT)
+DEFINE_SAFE_MULT_U32(SIZETMult, SIZE_T, ULongLongToSIZET)
+#endif
+
+
+#ifdef _NTINTSAFE_H_INCLUDED_
+
+#define RtlUInt16Add RtlUShortAdd
+#define RtlWordAdd RtlUShortAdd
+#define RtlUInt32Add RtlUIntAdd
+#define RtlDWordAdd RtlULongAdd
+#define RtlDWordLongAdd RtlULongLongAdd
+#define RtlULong64Add RtlULongLongAdd
+#define RtlDWord64Add RtlULongLongAdd
+#define RtlUInt64Add RtlULongLongAdd
+#define RtlUInt16Sub RtlUShortSub
+#define RtlWordSub RtlUShortSub
+#define RtlUInt32Sub RtlUIntSub
+#define RtlDWordSub RtlULongSub
+#define RtlDWordLongSub RtlULongLongSub
+#define RtlULong64Sub RtlULongLongSub
+#define RtlDWord64Sub RtlULongLongSub
+#define RtlUInt64Sub RtlULongLongSub
+#ifdef _WIN64
+#define RtlIntPtrSub RtlLongLongSub
+#define RtlLongPtrSub RtlLongLongSub
+#define RtlSizeTMult RtlULongLongMult
+#define RtlSIZETMult RtlULongLongMult
+#else
+#endif
+
+#else // _NTINTSAFE_H_INCLUDED_
+
 #define UInt16Add UShortAdd
 #define WordAdd UShortAdd
 #define UInt32Add UIntAdd
@@ -499,6 +731,14 @@ DEFINE_SAFE_SUB(ULongLongSub, ULONGLONG)
 #define ULong64Sub ULongLongSub
 #define DWord64Sub ULongLongSub
 #define UInt64Sub ULongLongSub
+#ifdef _WIN64
+#define IntPtrSub LongLongSub
+#define LongPtrSub LongLongSub
+#define SizeTMult ULongLongMult
+#define SIZETMult ULongLongMult
+#else
+#endif
 
+#endif // _NTINTSAFE_H_INCLUDED_
 
 #endif // !_INTSAFE_H_INCLUDED_
