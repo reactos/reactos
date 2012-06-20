@@ -313,8 +313,19 @@ DEFINE_SAFE_CONVERT_UTOX(UIntPtrToInt, UINT_PTR, INT)
 DEFINE_SAFE_CONVERT_UTOX(UIntPtrToLong, UINT_PTR, LONG)
 DEFINE_SAFE_CONVERT_UTOX(UIntPtrToIntPtr, UINT_PTR, INT_PTR)
 DEFINE_SAFE_CONVERT_UTOX(UIntPtrToLongPtr, UINT_PTR, LONG_PTR)
+DEFINE_SAFE_CONVERT_UTOX(ULongToUChar, ULONG, UCHAR)
+DEFINE_SAFE_CONVERT_UTOX(ULongToUInt8, ULONG, UINT8)
+DEFINE_SAFE_CONVERT_UTOX(ULongToShort, ULONG, SHORT)
+DEFINE_SAFE_CONVERT_UTOX(ULongToUShort, ULONG, USHORT)
+DEFINE_SAFE_CONVERT_UTOX(ULongToInt, ULONG, INT)
+DEFINE_SAFE_CONVERT_UTOX(ULongToUInt, ULONG, UINT)
+DEFINE_SAFE_CONVERT_UTOX(ULongToIntPtr, ULONG, INT_PTR)
+DEFINE_SAFE_CONVERT_UTOX(ULongToUIntPtr, ULONG, UINT_PTR)
+DEFINE_SAFE_CONVERT_UTOX(ULongToLongPtr, ULONG, LONG_PTR)
+DEFINE_SAFE_CONVERT_UTOX(ULongPtrToULong, ULONG_PTR, ULONGLONG)
 DEFINE_SAFE_CONVERT_UTOX(ULongLongToUInt, ULONGLONG, UINT)
 DEFINE_SAFE_CONVERT_UTOX(ULongLongToULong, ULONGLONG, ULONG)
+DEFINE_SAFE_CONVERT_UTOX(ULongLongToULongPtr, ULONGLONG, ULONG_PTR)
 
 
 #define DEFINE_SAFE_CONVERT_ITOU(_Name, _TypeFrom, _TypeTo) \
@@ -450,12 +461,17 @@ DEFINE_SAFE_CONVERT_ITOI(LongPtrToChar, LONG_PTR, CHAR)
 #define RtlInt8ToSizeT RtlInt8ToUIntPtr
 #define RtlInt8ToSIZET RtlInt8ToULongPtr
 #define RtlIntToSizeT RtlIntToUIntPtr
+#define RtlIntToSIZET RtlIntToULongPtr
+#define RtlULongToByte RtlULongToUInt8
 #define RtlULongLongToInt64 RtlULongLongToLongLong
 #define RtlULongLongToLong64 RtlULongLongToLongLong
 #define RtlULongLongToPtrdiffT RtlULongLongToIntPtr
 #define RtlULongLongToSizeT RtlULongLongToUIntPtr
 #define RtlULongLongToSSIZET RtlULongLongToLongPtr
 #define RtlULongLongToSIZET RtlULongLongToULongPtr
+#define RtlSIZETToULong RtlULongPtrToULong
+#define RtlSSIZETToULongLong RtlLongPtrToULongLong
+#define RtlSSIZETToULong RtlLongPtrToULong
 #ifdef _WIN64
 #define RtlIntToUIntPtr RtlIntToULongLong
 #define RtlULongLongToIntPtr RtlULongLongToLongLong
@@ -481,12 +497,17 @@ DEFINE_SAFE_CONVERT_ITOI(LongPtrToChar, LONG_PTR, CHAR)
 #define Int8ToSizeT Int8ToUIntPtr
 #define Int8ToSIZET Int8ToULongPtr
 #define IntToSizeT IntToUIntPtr
+#define IntToSIZET IntToULongPtr
+#define ULongToByte ULongToUInt8
 #define ULongLongToInt64 ULongLongToLongLong
 #define ULongLongToLong64 ULongLongToLongLong
 #define ULongLongToPtrdiffT ULongLongToIntPtr
 #define ULongLongToSizeT ULongLongToUIntPtr
 #define ULongLongToSSIZET ULongLongToLongPtr
 #define ULongLongToSIZET ULongLongToULongPtr
+#define SIZETToULong ULongPtrToULong
+#define SSIZETToULongLong LongPtrToULongLong
+#define SSIZETToULong LongPtrToULong
 #ifdef _WIN64
 #define IntToUIntPtr IntToULongLong
 #define ULongLongToIntPtr ULongLongToLongLong
