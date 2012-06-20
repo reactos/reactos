@@ -529,7 +529,7 @@ void check_hostent(struct hostent **he)
     }
 }
 
-void populate_hostent(struct hostent *he, char* name, DNS_A_DATA addr)
+void populate_hostent(struct hostent *he, char* name, IP4_ADDRESS addr)
 {
     ASSERT(he);
 
@@ -561,8 +561,8 @@ void populate_hostent(struct hostent *he, char* name, DNS_A_DATA addr)
     WS_DbgPrint(MID_TRACE,("he->h_addr_list[0] %x\n", he->h_addr_list[0]));
 
     RtlCopyMemory(he->h_addr_list[0],
-                  &addr.IpAddress,
-                  sizeof(addr.IpAddress));
+                  &addr,
+                  sizeof(addr));
 
     he->h_addr_list[1] = NULL;
 }
@@ -813,50 +813,11 @@ FindEntryInHosts(IN CONST CHAR FAR* name)
         return NULL;
     }
 
-    if( !p->Hostent )
-    {
-        p->Hostent = HeapAlloc(GlobalHeap, 0, sizeof(*p->Hostent));
-        if( !p->Hostent )
-        {
-            WSASetLastError( WSATRY_AGAIN );
-            return NULL;
-        }
-    }
-
-    p->Hostent->h_name = HeapAlloc(GlobalHeap, 0, strlen(DnsName));
-    if( !p->Hostent->h_name )
-    {
-        WSASetLastError( WSATRY_AGAIN );
-        return NULL;
-    }
-
-    RtlCopyMemory(p->Hostent->h_name,
-                  DnsName,
-                  strlen(DnsName));
-
-    p->Hostent->h_aliases = HeapAlloc(GlobalHeap, 0, sizeof(char *));
-    if( !p->Hostent->h_aliases )
-    {
-        WSASetLastError( WSATRY_AGAIN );
-        return NULL;
-    }
-
-    p->Hostent->h_aliases[0] = 0;
-
     if (strstr(AddressStr, ":"))
     {
        DbgPrint("AF_INET6 NOT SUPPORTED!\n");
        WSASetLastError(WSAEINVAL);
        return NULL;
-    }
-    else
-       p->Hostent->h_addrtype = AF_INET;
-
-    p->Hostent->h_addr_list = HeapAlloc(GlobalHeap, 0, sizeof(char *));
-    if( !p->Hostent->h_addr_list )
-    {
-        WSASetLastError( WSATRY_AGAIN );
-        return NULL;
     }
 
     Address = inet_addr(AddressStr);
@@ -866,18 +827,7 @@ FindEntryInHosts(IN CONST CHAR FAR* name)
         return NULL;
     }
 
-    p->Hostent->h_addr_list[0] = HeapAlloc(GlobalHeap, 0, sizeof(Address));
-    if( !p->Hostent->h_addr_list[0] )
-    {
-        WSASetLastError( WSATRY_AGAIN );
-        return NULL;
-    }
-
-    RtlCopyMemory(p->Hostent->h_addr_list[0],
-                  &Address,
-                  sizeof(Address));
-
-    p->Hostent->h_length = sizeof(Address);
+    populate_hostent(p->Hostent, DnsName, Address);
 
     return p->Hostent;
 }
@@ -996,7 +946,9 @@ gethostbyname(IN  CONST CHAR FAR* name)
             {
                 WS_DbgPrint(MID_TRACE,("populating hostent\n"));
                 WS_DbgPrint(MID_TRACE,("pName is (%s)\n", curr->pName));
-                populate_hostent(p->Hostent, (PCHAR)curr->pName, curr->Data.A);
+                populate_hostent(p->Hostent,
+                                 (PCHAR)curr->pName,
+                                 curr->Data.A.IpAddress);
                 DnsRecordListFree(dp, DnsFreeRecordList);
                 return p->Hostent;
             }

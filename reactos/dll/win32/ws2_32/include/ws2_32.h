@@ -76,7 +76,7 @@ typedef struct _WINSOCK_THREAD_BLOCK
 
 /* ws2_32 internal Functions */
 void check_hostent(struct hostent **he);
-void populate_hostent(struct hostent *he, char* name, DNS_A_DATA addr);
+void populate_hostent(struct hostent *he, char* name, IP4_ADDRESS addr);
 void free_hostent(struct hostent *he);
 void free_servent(struct servent* s);
 
