@@ -726,8 +726,7 @@ static void test_command(HINTERNET hFtp, HINTERNET hConnect)
         { TRUE,  ERROR_SUCCESS,                 "SIZE\t/welcome.msg" },
         { TRUE,  ERROR_SUCCESS,                 "SIZE /welcome.msg" },
         { FALSE, ERROR_INTERNET_EXTENDED_ERROR, "PWD /welcome.msg" },
-        { TRUE,  ERROR_SUCCESS,                 "PWD" },
-        { TRUE,  ERROR_SUCCESS,                 "PWD\r\n" }
+        { TRUE,  ERROR_SUCCESS,                 "PWD" }
     };
 
     if (!pFtpCommandA)
