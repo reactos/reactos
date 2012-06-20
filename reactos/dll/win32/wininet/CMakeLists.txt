@@ -30,7 +30,7 @@ add_library(wininet SHARED
 
 set_module_type(wininet win32dll)
 target_link_libraries(wininet wine ${PSEH_LIB} zlib)
-add_delay_importlibs(wininet secur32 crypt32)
+add_delay_importlibs(wininet secur32 crypt32 cryptui)
 add_importlibs(wininet mpr shlwapi shell32 user32 advapi32 ws2_32 msvcrt kernel32 ntdll)
 add_cd_file(TARGET wininet DESTINATION reactos/system32 FOR all)
 

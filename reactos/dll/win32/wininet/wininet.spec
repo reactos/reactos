@@ -16,8 +16,8 @@
 122 stub -noname FreeP3PObject
 123 stub -noname GetP3PRequestStatus
 
-@ stdcall CommitUrlCacheEntryA(str str double double long str long str str)
-@ stdcall CommitUrlCacheEntryW(wstr wstr double double long wstr long wstr wstr)
+@ stdcall CommitUrlCacheEntryA(str str int64 int64 long str long str str)
+@ stdcall CommitUrlCacheEntryW(wstr wstr int64 int64 long wstr long wstr wstr)
 @ stdcall CreateMD5SSOHash(wstr wstr wstr ptr)
 @ stdcall CreateUrlCacheContainerA(long long long long long long long long)
 @ stdcall CreateUrlCacheContainerW(long long long long long long long long)
@@ -30,15 +30,15 @@
 @ stdcall DeleteUrlCacheEntry(str) DeleteUrlCacheEntryA
 @ stdcall DeleteUrlCacheEntryA(str)
 @ stdcall DeleteUrlCacheEntryW(wstr)
-@ stdcall DeleteUrlCacheGroup(double long ptr)
+@ stdcall DeleteUrlCacheGroup(int64 long ptr)
 @ stdcall DetectAutoProxyUrl(str long long)
 @ stdcall -private DllInstall(long wstr)
 @ stdcall FindCloseUrlCache(long)
 @ stdcall FindFirstUrlCacheContainerA(ptr ptr ptr long)
 @ stdcall FindFirstUrlCacheContainerW(ptr ptr ptr long)
 @ stdcall FindFirstUrlCacheEntryA(str ptr ptr)
-@ stdcall FindFirstUrlCacheEntryExA(str long long double ptr ptr ptr ptr ptr)
-@ stdcall FindFirstUrlCacheEntryExW(wstr long long double ptr ptr ptr ptr ptr)
+@ stdcall FindFirstUrlCacheEntryExA(str long long int64 ptr ptr ptr ptr ptr)
+@ stdcall FindFirstUrlCacheEntryExW(wstr long long int64 ptr ptr ptr ptr ptr)
 @ stdcall FindFirstUrlCacheEntryW(wstr ptr ptr)
 @ stdcall FindFirstUrlCacheGroup(long long ptr long ptr ptr)
 @ stdcall FindNextUrlCacheContainerA(long ptr ptr)
@@ -83,8 +83,8 @@
 @ stdcall GetUrlCacheEntryInfoExA(str ptr ptr str ptr ptr long)
 @ stdcall GetUrlCacheEntryInfoExW(wstr ptr ptr wstr ptr ptr long)
 @ stdcall GetUrlCacheEntryInfoW(wstr ptr long)
-@ stdcall GetUrlCacheGroupAttributeA(double long long ptr ptr ptr)
-@ stdcall GetUrlCacheGroupAttributeW(double long long ptr ptr ptr)
+@ stdcall GetUrlCacheGroupAttributeA(int64 long long ptr ptr ptr)
+@ stdcall GetUrlCacheGroupAttributeW(int64 long long ptr ptr ptr)
 @ stub GetUrlCacheHeaderData
 @ stdcall GopherCreateLocatorA(str long str str long str ptr)
 @ stdcall GopherCreateLocatorW(wstr long wstr wstr long wstr ptr)
@@ -222,21 +222,21 @@
 @ stdcall RetrieveUrlCacheEntryFileW(wstr ptr ptr long)
 @ stdcall RetrieveUrlCacheEntryStreamA(str ptr ptr long long)
 @ stdcall RetrieveUrlCacheEntryStreamW(wstr ptr ptr long long)
-@ stub RunOnceUrlCache
+@ stdcall RunOnceUrlCache(ptr ptr str long)
 @ stdcall SetUrlCacheConfigInfoA(ptr long)
 @ stdcall SetUrlCacheConfigInfoW(ptr long)
-@ stdcall SetUrlCacheEntryGroup(str long double ptr long ptr) SetUrlCacheEntryGroupA
-@ stdcall SetUrlCacheEntryGroupA(str long double ptr long ptr)
-@ stdcall SetUrlCacheEntryGroupW(wstr long double ptr long ptr)
+@ stdcall SetUrlCacheEntryGroup(str long int64 ptr long ptr) SetUrlCacheEntryGroupA
+@ stdcall SetUrlCacheEntryGroupA(str long int64 ptr long ptr)
+@ stdcall SetUrlCacheEntryGroupW(wstr long int64 ptr long ptr)
 @ stdcall SetUrlCacheEntryInfoA(str ptr long)
 @ stdcall SetUrlCacheEntryInfoW(wstr ptr long)
-@ stdcall SetUrlCacheGroupAttributeA(double long long ptr ptr)
-@ stdcall SetUrlCacheGroupAttributeW(double long long ptr ptr)
+@ stdcall SetUrlCacheGroupAttributeA(int64 long long ptr ptr)
+@ stdcall SetUrlCacheGroupAttributeW(int64 long long ptr ptr)
 @ stub SetUrlCacheHeaderData
 @ stub ShowCertificate
-@ stub ShowClientAuthCerts
+@ stdcall ShowClientAuthCerts(ptr)
 @ stub ShowSecurityInfo
-@ stub ShowX509EncodedCertificate
+@ stdcall ShowX509EncodedCertificate(ptr ptr long)
 @ stdcall UnlockUrlCacheEntryFile(str long) UnlockUrlCacheEntryFileA
 @ stdcall UnlockUrlCacheEntryFileA(str long)
 @ stdcall UnlockUrlCacheEntryFileW(wstr long)

@@ -265,6 +265,9 @@ typedef struct
     LPWSTR  password;
     INTERNET_PORT hostPort; /* the final destination port of the request */
     INTERNET_PORT serverPort; /* the port of the server we directly connect to */
+    DWORD connect_timeout;
+    DWORD send_timeout;
+    DWORD receive_timeout;
 } http_session_t;
 
 #define HDR_ISREQUEST		0x0001
@@ -305,7 +308,11 @@ typedef struct
     LPWSTR rawHeaders;
     netconn_t *netconn;
     DWORD security_flags;
+    DWORD connect_timeout;
+    DWORD send_timeout;
+    DWORD receive_timeout;
     LPWSTR version;
+    DWORD status_code;
     LPWSTR statusText;
     DWORD bytesToWrite;
     DWORD bytesWritten;
@@ -480,7 +487,8 @@ object_header_t *get_handle_object( HINTERNET hinternet ) DECLSPEC_HIDDEN;
 object_header_t *WININET_AddRef( object_header_t *info ) DECLSPEC_HIDDEN;
 BOOL WININET_Release( object_header_t *info ) DECLSPEC_HIDDEN;
 
-DWORD INET_QueryOption( object_header_t *, DWORD, void *, DWORD *, BOOL ) DECLSPEC_HIDDEN;
+DWORD INET_QueryOption(object_header_t*,DWORD,void*,DWORD*,BOOL) DECLSPEC_HIDDEN;
+DWORD INET_SetOption(object_header_t*,DWORD,void*,DWORD) DECLSPEC_HIDDEN;
 
 time_t ConvertTimeString(LPCWSTR asctime) DECLSPEC_HIDDEN;
 
@@ -515,10 +523,10 @@ VOID INTERNET_SendCallback(object_header_t *hdr, DWORD_PTR dwContext,
                            DWORD dwStatusInfoLength) DECLSPEC_HIDDEN;
 BOOL INTERNET_FindProxyForProtocol(LPCWSTR szProxy, LPCWSTR proto, WCHAR *foundProxy, DWORD *foundProxyLen) DECLSPEC_HIDDEN;
 
-DWORD create_netconn(BOOL,server_t*,DWORD,netconn_t**) DECLSPEC_HIDDEN;
+DWORD create_netconn(BOOL, server_t *, DWORD, DWORD, netconn_t **) DECLSPEC_HIDDEN;
 void free_netconn(netconn_t*) DECLSPEC_HIDDEN;
 void NETCON_unload(void) DECLSPEC_HIDDEN;
-DWORD NETCON_secure_connect(netconn_t *connection, LPWSTR hostname) DECLSPEC_HIDDEN;
+DWORD NETCON_secure_connect(netconn_t *connection) DECLSPEC_HIDDEN;
 DWORD NETCON_send(netconn_t *connection, const void *msg, size_t len, int flags,
 		int *sent /* out */) DECLSPEC_HIDDEN;
 DWORD NETCON_recv(netconn_t *connection, void *buf, size_t len, int flags,
@@ -527,7 +535,7 @@ BOOL NETCON_query_data_available(netconn_t *connection, DWORD *available) DECLSP
 BOOL NETCON_is_alive(netconn_t*) DECLSPEC_HIDDEN;
 LPCVOID NETCON_GetCert(netconn_t *connection) DECLSPEC_HIDDEN;
 int NETCON_GetCipherStrength(netconn_t*) DECLSPEC_HIDDEN;
-DWORD NETCON_set_timeout(netconn_t *connection, BOOL send, int value) DECLSPEC_HIDDEN;
+DWORD NETCON_set_timeout(netconn_t *connection, BOOL send, DWORD value) DECLSPEC_HIDDEN;
 #ifndef __REACTOS__
 int sock_get_error(int) DECLSPEC_HIDDEN;
 #else
