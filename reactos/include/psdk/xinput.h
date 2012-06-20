@@ -105,8 +105,8 @@
 
 /*
  * Defines what type of abilities the type of joystick has
- * DEVTYPE_GAMEPAD is avaliable for all joysticks, however
- * there may be more specfic identifiers for other joysticks
+ * DEVTYPE_GAMEPAD is available for all joysticks, however
+ * there may be more specific identifiers for other joysticks
  * which are being used.
  */
 
@@ -188,8 +188,8 @@ typedef struct _XINPUT_VIBRATION {
 
 /*
  * Defines the structure for what kind of abilities the joystick has
- * such abilites are things such as if the joystick has the ability
- * to send and receive audio, if the joystick is infact a driving
+ * such abilities are things such as if the joystick has the ability
+ * to send and receive audio, if the joystick is in fact a driving
  * wheel or perhaps if the joystick is some kind of dance pad or
  * guitar.
  */

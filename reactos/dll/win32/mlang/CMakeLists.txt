@@ -23,10 +23,9 @@ add_delay_importlibs(mlang oleaut32)
 
 add_importlibs(mlang
     ole32
-    user32
     gdi32
     advapi32
-	msvcrt
+    msvcrt
     kernel32
     ntdll)
 
