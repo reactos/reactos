@@ -1901,6 +1901,9 @@ static void http_release_netconn(http_request_t *req, BOOL reuse)
         }
         return;
     }
+#else
+    // silence unused function warning
+    (void)collect_connections_proc;
 #endif
 
     INTERNET_SendCallback(&req->hdr, req->hdr.dwContext,

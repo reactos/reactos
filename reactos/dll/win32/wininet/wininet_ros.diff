@@ -1,6 +1,6 @@
---- wine-1.5.4/Wine/dlls/wininet/internet.h	2012-06-20 14:38:39 +0200
-+++ dll/win32/wininet/internet.h	2012-06-20 14:51:41 +0200
-@@ -536,7 +536,11 @@ BOOL NETCON_is_alive(netconn_t*) DECLSPE
+--- wine-1.5.4/dlls/wininet/internet.h	2012-06-20 14:38:39 +0200
++++ dll/win32/wininet/internet.h	2012-06-20 16:49:05 +0200
+@@ -536,7 +536,30 @@ BOOL NETCON_is_alive(netconn_t*) DECLSPE
  LPCVOID NETCON_GetCert(netconn_t *connection) DECLSPEC_HIDDEN;
  int NETCON_GetCipherStrength(netconn_t*) DECLSPEC_HIDDEN;
  DWORD NETCON_set_timeout(netconn_t *connection, BOOL send, DWORD value) DECLSPEC_HIDDEN;
@@ -8,12 +8,31 @@
  int sock_get_error(int) DECLSPEC_HIDDEN;
 +#else
 +#define sock_get_error(x) WSAGetLastError()
++const char *inet_ntop(int, const void *, char *, socklen_t);
++
++static inline long unix_recv(int socket, void *buffer, size_t length, int flags)
++{
++    return recv(socket, buffer, length, flags);
++}
++#define recv unix_recv
++
++static inline int unix_ioctl(int filedes, long request, void *arg)
++{
++    return ioctlsocket(filedes, request, arg);
++}
++#define ioctlsocket unix_ioctl
++
++static inline int unix_getsockopt(int socket, int level, int option_name, void *option_value, socklen_t *option_len)
++{
++    return getsockopt(socket, level, option_name, option_value, option_len);
++}
++#define getsockopt unix_getsockopt
 +#endif
  
  extern void URLCacheContainers_CreateDefaults(void) DECLSPEC_HIDDEN;
  extern void URLCacheContainers_DeleteAll(void) DECLSPEC_HIDDEN;
---- wine-1.5.4/Wine/dlls/wininet/netconnection.c	2012-06-20 14:38:39 +0200
-+++ dll/win32/wininet/netconnection.c	2012-06-20 14:52:22 +0200
+--- wine-1.5.4/dlls/wininet/netconnection.c	2012-06-20 14:38:39 +0200
++++ dll/win32/wininet/netconnection.c	2012-06-20 15:50:06 +0200
 @@ -523,12 +523,16 @@ DWORD create_netconn(BOOL useSSL, server
          if(result == -1)
          {
@@ -51,8 +70,8 @@
  
  /******************************************************************************
   * NETCON_secure_connect
---- wine-1.5.4/Wine/dlls/wininet/internet.c	2012-06-20 14:38:38 +0200
-+++ dll/win32/wininet/internet.c	2012-06-20 14:58:51 +0200
+--- wine-1.5.4/dlls/wininet/internet.c	2012-06-20 14:38:38 +0200
++++ dll/win32/wininet/internet.c	2012-06-20 15:50:05 +0200
 @@ -292,7 +292,9 @@ BOOL WINAPI DllMain (HINSTANCE hinstDLL,
              if (g_dwTlsErrIndex == TLS_OUT_OF_INDEXES)
                  return FALSE;
@@ -91,10 +110,8 @@
          {
              if (recv(nSocket, &lpszBuffer[nRecv], 1, 0) <= 0)
              {
-Index: dll/win32/wininet/urlcache.c
-===================================================================
---- wine-1.5.4/Wine/dlls/wininet/urlcache.c	2012-06-20 14:30:41 +0200
-+++ dll/win32/wininet/urlcache.c	2012-06-20 14:54:06 +0200
+--- wine-1.5.4/dlls/wininet/urlcache.c	2012-06-20 14:30:41 +0200
++++ dll/win32/wininet/urlcache.c	2012-06-20 15:50:06 +0200
 @@ -189,6 +189,8 @@ typedef struct _URLCACHECONTAINER
  
  /* List of all containers available */
@@ -160,10 +177,8 @@ Index: dll/win32/wininet/urlcache.c
      LIST_FOR_EACH_ENTRY(pContainer, &UrlContainers, URLCACHECONTAINER, entry)
      {
          /* The URL cache has prefix L"" (unlike Cookies and History) */
-Index: dll/win32/wininet/http.c
-===================================================================
---- wine-1.5.4/Wine/dlls/wininet/http.c	2012-06-20 14:38:38 +0200
-+++ dll/win32/wininet/http.c	2012-06-20 14:49:11 +0200
+--- wine-1.5.4/dlls/wininet/http.c	2012-06-20 15:19:57 +0200
++++ dll/win32/wininet/http.c	2012-06-20 16:24:11 +0200
 @@ -73,6 +73,9 @@
  #include "wine/exception.h"
  #include "wine/unicode.h"
@@ -218,10 +233,13 @@ Index: dll/win32/wininet/http.c
          req->netconn = NULL;
  
          run_collector = !collector_running;
-@@ -1888,6 +1901,7 @@ static void http_release_netconn(http_re
+@@ -1888,6 +1901,10 @@ static void http_release_netconn(http_re
          }
          return;
      }
++#else
++    // silence unused function warning
++    (void)collect_connections_proc;
 +#endif
  
      INTERNET_SendCallback(&req->hdr, req->hdr.dwContext,

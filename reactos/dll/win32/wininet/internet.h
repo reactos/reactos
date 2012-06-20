@@ -540,6 +540,25 @@ DWORD NETCON_set_timeout(netconn_t *connection, BOOL send, DWORD value) DECLSPEC
 int sock_get_error(int) DECLSPEC_HIDDEN;
 #else
 #define sock_get_error(x) WSAGetLastError()
+const char *inet_ntop(int, const void *, char *, socklen_t);
+
+static inline long unix_recv(int socket, void *buffer, size_t length, int flags)
+{
+    return recv(socket, buffer, length, flags);
+}
+#define recv unix_recv
+
+static inline int unix_ioctl(int filedes, long request, void *arg)
+{
+    return ioctlsocket(filedes, request, arg);
+}
+#define ioctlsocket unix_ioctl
+
+static inline int unix_getsockopt(int socket, int level, int option_name, void *option_value, socklen_t *option_len)
+{
+    return getsockopt(socket, level, option_name, option_value, option_len);
+}
+#define getsockopt unix_getsockopt
 #endif
 
 extern void URLCacheContainers_CreateDefaults(void) DECLSPEC_HIDDEN;

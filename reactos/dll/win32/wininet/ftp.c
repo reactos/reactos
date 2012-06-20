@@ -2433,7 +2433,7 @@ HINTERNET FTP_Connect(appinfo_t *hIC, LPCWSTR lpszServerName,
     static const WCHAR szEmpty[] = {'\0'};
     struct sockaddr_in socketAddr;
     INT nsocket = -1;
-    UINT sock_namelen;
+    socklen_t sock_namelen;
     BOOL bSuccess = FALSE;
     ftp_session_t *lpwfs = NULL;
     char szaddr[INET_ADDRSTRLEN];
