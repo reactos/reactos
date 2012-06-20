@@ -777,20 +777,17 @@ EnumDependentServicesA(SC_HANDLE hService,
 
     if (dwError == ERROR_SUCCESS || dwError == ERROR_MORE_DATA)
     {
-        if (*lpServicesReturned > 0)
+        for (dwCount = 0; dwCount < *lpServicesReturned; dwCount++)
         {
-            for (dwCount = 0; dwCount < *lpServicesReturned; dwCount++)
-            {
-                if (lpStatusPtr->lpServiceName)
-                    lpStatusPtr->lpServiceName =
-                        (LPSTR)((ULONG_PTR)lpServices + (ULONG_PTR)lpStatusPtr->lpServiceName);
+            if (lpStatusPtr->lpServiceName)
+                lpStatusPtr->lpServiceName =
+                    (LPSTR)((ULONG_PTR)lpServices + (ULONG_PTR)lpStatusPtr->lpServiceName);
 
-                if (lpStatusPtr->lpDisplayName)
-                    lpStatusPtr->lpDisplayName =
-                        (LPSTR)((ULONG_PTR)lpServices + (ULONG_PTR)lpStatusPtr->lpDisplayName);
+            if (lpStatusPtr->lpDisplayName)
+                lpStatusPtr->lpDisplayName =
+                    (LPSTR)((ULONG_PTR)lpServices + (ULONG_PTR)lpStatusPtr->lpDisplayName);
 
-                lpStatusPtr++;
-            }
+            lpStatusPtr++;
         }
     }
 
@@ -856,20 +853,17 @@ EnumDependentServicesW(SC_HANDLE hService,
 
     if (dwError == ERROR_SUCCESS || dwError == ERROR_MORE_DATA)
     {
-        if (*lpServicesReturned > 0)
+        for (dwCount = 0; dwCount < *lpServicesReturned; dwCount++)
         {
-            for (dwCount = 0; dwCount < *lpServicesReturned; dwCount++)
-            {
-                if (lpStatusPtr->lpServiceName)
-                    lpStatusPtr->lpServiceName =
-                        (LPWSTR)((ULONG_PTR)lpServices + (ULONG_PTR)lpStatusPtr->lpServiceName);
+            if (lpStatusPtr->lpServiceName)
+                lpStatusPtr->lpServiceName =
+                    (LPWSTR)((ULONG_PTR)lpServices + (ULONG_PTR)lpStatusPtr->lpServiceName);
 
-                if (lpStatusPtr->lpDisplayName)
-                    lpStatusPtr->lpDisplayName =
-                        (LPWSTR)((ULONG_PTR)lpServices + (ULONG_PTR)lpStatusPtr->lpDisplayName);
+            if (lpStatusPtr->lpDisplayName)
+                lpStatusPtr->lpDisplayName =
+                    (LPWSTR)((ULONG_PTR)lpServices + (ULONG_PTR)lpStatusPtr->lpDisplayName);
 
-                lpStatusPtr++;
-            }
+            lpStatusPtr++;
         }
     }
 
@@ -961,20 +955,17 @@ EnumServiceGroupW(SC_HANDLE hSCManager,
 
     if (dwError == ERROR_SUCCESS || dwError == ERROR_MORE_DATA)
     {
-        if (*lpServicesReturned > 0)
+        for (dwCount = 0; dwCount < *lpServicesReturned; dwCount++)
         {
-            for (dwCount = 0; dwCount < *lpServicesReturned; dwCount++)
-            {
-                if (lpStatusPtr->lpServiceName)
-                    lpStatusPtr->lpServiceName =
-                        (LPWSTR)((ULONG_PTR)lpServices + (ULONG_PTR)lpStatusPtr->lpServiceName);
+            if (lpStatusPtr->lpServiceName)
+                lpStatusPtr->lpServiceName =
+                    (LPWSTR)((ULONG_PTR)lpServices + (ULONG_PTR)lpStatusPtr->lpServiceName);
 
-                if (lpStatusPtr->lpDisplayName)
-                    lpStatusPtr->lpDisplayName =
-                        (LPWSTR)((ULONG_PTR)lpServices + (ULONG_PTR)lpStatusPtr->lpDisplayName);
+            if (lpStatusPtr->lpDisplayName)
+                lpStatusPtr->lpDisplayName =
+                    (LPWSTR)((ULONG_PTR)lpServices + (ULONG_PTR)lpStatusPtr->lpDisplayName);
 
-                lpStatusPtr++;
-            }
+            lpStatusPtr++;
         }
     }
 
@@ -1020,46 +1011,10 @@ EnumServicesStatusA(SC_HANDLE hSCManager,
         return FALSE;
     }
 
-    if (dwServiceType != SERVICE_DRIVER && dwServiceType != SERVICE_WIN32)
-    {
-        if (pcbBytesNeeded && lpServicesReturned)
-        {
-            *pcbBytesNeeded = 0;
-            *lpServicesReturned = 0;
-        }
-
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return FALSE;
-    }
-
-    if (dwServiceState != SERVICE_ACTIVE && dwServiceState != SERVICE_INACTIVE && dwServiceState != SERVICE_STATE_ALL)
-    {
-            if (pcbBytesNeeded)
-                *pcbBytesNeeded = 0;
-
-            if (lpServicesReturned)
-                *lpServicesReturned = 0;
-
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return FALSE;
-    }
-
-    if (!pcbBytesNeeded || !lpServicesReturned)
-    {
-        SetLastError(ERROR_INVALID_ADDRESS);
-        return FALSE;
-    }
-
-    if (!lpServices && cbBufSize != 0)
-    {
-        SetLastError(ERROR_INVALID_ADDRESS);
-        return FALSE;
-    }
-
-    if (lpServices == NULL || cbBufSize < sizeof(ENUM_SERVICE_STATUSW))
+    if (lpServices == NULL || cbBufSize < sizeof(ENUM_SERVICE_STATUSA))
     {
         lpStatusPtr = &ServiceStatus;
-        dwBufferSize = sizeof(ENUM_SERVICE_STATUSW);
+        dwBufferSize = sizeof(ENUM_SERVICE_STATUSA);
     }
     else
     {
@@ -1086,20 +1041,17 @@ EnumServicesStatusA(SC_HANDLE hSCManager,
 
     if (dwError == ERROR_SUCCESS || dwError == ERROR_MORE_DATA)
     {
-        if (*lpServicesReturned > 0)
+        for (dwCount = 0; dwCount < *lpServicesReturned; dwCount++)
         {
-            for (dwCount = 0; dwCount < *lpServicesReturned; dwCount++)
-            {
-                if (lpStatusPtr->lpServiceName)
-                    lpStatusPtr->lpServiceName =
-                        (LPSTR)((ULONG_PTR)lpServices + (ULONG_PTR)lpStatusPtr->lpServiceName);
+            if (lpStatusPtr->lpServiceName)
+                lpStatusPtr->lpServiceName =
+                    (LPSTR)((ULONG_PTR)lpServices + (ULONG_PTR)lpStatusPtr->lpServiceName);
 
-                if (lpStatusPtr->lpDisplayName)
-                    lpStatusPtr->lpDisplayName =
-                        (LPSTR)((ULONG_PTR)lpServices + (ULONG_PTR)lpStatusPtr->lpDisplayName);
+            if (lpStatusPtr->lpDisplayName)
+                lpStatusPtr->lpDisplayName =
+                    (LPSTR)((ULONG_PTR)lpServices + (ULONG_PTR)lpStatusPtr->lpDisplayName);
 
-                lpStatusPtr++;
-            }
+            lpStatusPtr++;
         }
     }
 
@@ -1175,20 +1127,17 @@ EnumServicesStatusW(SC_HANDLE hSCManager,
 
     if (dwError == ERROR_SUCCESS || dwError == ERROR_MORE_DATA)
     {
-        if (*lpServicesReturned > 0)
+        for (dwCount = 0; dwCount < *lpServicesReturned; dwCount++)
         {
-            for (dwCount = 0; dwCount < *lpServicesReturned; dwCount++)
-            {
-                if (lpStatusPtr->lpServiceName)
-                    lpStatusPtr->lpServiceName =
-                        (LPWSTR)((ULONG_PTR)lpServices + (ULONG_PTR)lpStatusPtr->lpServiceName);
+            if (lpStatusPtr->lpServiceName)
+                lpStatusPtr->lpServiceName =
+                    (LPWSTR)((ULONG_PTR)lpServices + (ULONG_PTR)lpStatusPtr->lpServiceName);
 
-                if (lpStatusPtr->lpDisplayName)
-                    lpStatusPtr->lpDisplayName =
-                        (LPWSTR)((ULONG_PTR)lpServices + (ULONG_PTR)lpStatusPtr->lpDisplayName);
+            if (lpStatusPtr->lpDisplayName)
+                lpStatusPtr->lpDisplayName =
+                    (LPWSTR)((ULONG_PTR)lpServices + (ULONG_PTR)lpStatusPtr->lpDisplayName);
 
-                lpStatusPtr++;
-            }
+            lpStatusPtr++;
         }
     }
 
@@ -1333,6 +1282,12 @@ EnumServicesStatusExW(SC_HANDLE hSCManager,
     if (InfoLevel != SC_ENUM_PROCESS_INFO)
     {
         SetLastError(ERROR_INVALID_LEVEL);
+        return FALSE;
+    }
+
+    if (!hSCManager)
+    {
+        SetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
 
