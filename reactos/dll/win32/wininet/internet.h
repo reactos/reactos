@@ -528,7 +528,11 @@ BOOL NETCON_is_alive(netconn_t*) DECLSPEC_HIDDEN;
 LPCVOID NETCON_GetCert(netconn_t *connection) DECLSPEC_HIDDEN;
 int NETCON_GetCipherStrength(netconn_t*) DECLSPEC_HIDDEN;
 DWORD NETCON_set_timeout(netconn_t *connection, BOOL send, int value) DECLSPEC_HIDDEN;
+#ifndef __REACTOS__
+int sock_get_error(int) DECLSPEC_HIDDEN;
+#else
 #define sock_get_error(x) WSAGetLastError()
+#endif
 
 extern void URLCacheContainers_CreateDefaults(void) DECLSPEC_HIDDEN;
 extern void URLCacheContainers_DeleteAll(void) DECLSPEC_HIDDEN;

@@ -292,6 +292,10 @@ BOOL WINAPI DllMain (HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 	    if (g_dwTlsErrIndex == TLS_OUT_OF_INDEXES)
 		return FALSE;
 
+#ifndef __REACTOS__
+            URLCacheContainers_CreateDefaults();
+#endif
+
             WININET_hModule = hinstDLL;
 
         case DLL_THREAD_ATTACH:
@@ -3595,6 +3599,7 @@ LPSTR INTERNET_GetResponseBuffer(void)
 
 LPSTR INTERNET_GetNextLine(INT nSocket, LPDWORD dwLen)
 {
+    // ReactOS: use select instead of poll
     fd_set infd;
     struct timeval tv;
     BOOL bSuccess = FALSE;

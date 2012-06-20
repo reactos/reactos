@@ -182,6 +182,7 @@ typedef struct _URLCACHECONTAINER
 
 /* List of all containers available */
 static struct list UrlContainers = LIST_INIT(UrlContainers);
+// ReactOS r54992
 BOOL bDefaultContainersAdded = FALSE;
 
 static DWORD URLCache_CreateHashTable(LPURLCACHE_HEADER pHeader, HASH_CACHEFILE_ENTRY *pPrevHash, HASH_CACHEFILE_ENTRY **ppHash);
@@ -519,6 +520,7 @@ void URLCacheContainers_CreateDefaults(void)
     static const WCHAR HistoryPrefix[] = {'V','i','s','i','t','e','d',':',0};
     static const WCHAR CookieSuffix[] = {0};
     static const WCHAR CookiePrefix[] = {'C','o','o','k','i','e',':',0};
+    // ReactOS r50916
     static const WCHAR UserProfile[] = {'U','S','E','R','P','R','O','F','I','L','E',0};
     static const struct
     {
@@ -533,6 +535,7 @@ void URLCacheContainers_CreateDefaults(void)
     };
     DWORD i;
 
+    // ReactOS r50916
     if (GetEnvironmentVariableW(UserProfile, NULL, 0) == 0 && GetLastError() == ERROR_ENVVAR_NOT_FOUND)
     {
         TRACE("Environment variable 'USERPROFILE' does not exist!\n");
@@ -592,6 +595,7 @@ static DWORD URLCacheContainers_FindContainerW(LPCWSTR lpwszUrl, URLCACHECONTAIN
     if(!lpwszUrl)
         return ERROR_INVALID_PARAMETER;
 
+    // ReactOS r54992
     if (!bDefaultContainersAdded)
         URLCacheContainers_CreateDefaults();
 
@@ -633,6 +637,7 @@ static BOOL URLCacheContainers_Enum(LPCWSTR lpwszSearchPattern, DWORD dwIndex, U
     if (lpwszSearchPattern && dwIndex > 0)
         return FALSE;
 
+    // ReactOS r54992
     if (!bDefaultContainersAdded)
         URLCacheContainers_CreateDefaults();
 
@@ -1539,6 +1544,7 @@ BOOL WINAPI FreeUrlCacheSpaceW(LPCWSTR lpszCachePath, DWORD dwSize, DWORD dwSize
         return FALSE;
     }
 
+    // ReactOS r54992
     if (!bDefaultContainersAdded)
         URLCacheContainers_CreateDefaults();
 

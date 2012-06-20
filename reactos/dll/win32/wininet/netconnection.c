@@ -587,7 +587,7 @@ void NETCON_unload(void)
 #endif
 }
 
-#if 0
+#ifndef __REACTOS__
 /* translate a unix error code into a winsock one */
 int sock_get_error( int err )
 {
