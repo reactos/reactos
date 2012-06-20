@@ -22,7 +22,7 @@
 */
 
 #include <stdarg.h>
-#include <assert.h>
+#include <stdio.h>
 #include <windef.h>
 #include <winbase.h>
 #include <wingdi.h>
@@ -38,7 +38,7 @@ static HMODULE hmoduleRichEdit;
 static HWND new_window(LPCTSTR lpClassName, DWORD dwStyle, HWND parent) {
   HWND hwnd;
   hwnd = CreateWindow(lpClassName, NULL, dwStyle|WS_POPUP|WS_HSCROLL|WS_VSCROLL
-                      |WS_VISIBLE, 0, 0, 200, 60, parent, NULL,
+                      |WS_VISIBLE, 0, 0, 500, 60, parent, NULL,
                       hmoduleRichEdit, NULL);
   ok(hwnd != NULL, "class: %s, error: %d\n", lpClassName, (int) GetLastError());
   return hwnd;
@@ -48,32 +48,42 @@ static HWND new_richedit(HWND parent) {
   return new_window(RICHEDIT_CLASS10A, ES_MULTILINE, parent);
 }
 
+static BOOL is_rtl(void) {
+  LOCALESIGNATURE sig;
+
+  return (GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_FONTSIGNATURE,
+                         (LPSTR) &sig, sizeof(LOCALESIGNATURE)) &&
+          (sig.lsUsb[3] & 0x08000000) != 0);
+}
+
 static void test_WM_SETTEXT(void)
 {
   static const struct {
     const char *itemtext;
     DWORD lines;
+    DWORD lines_rtl;
     DWORD lines_broken;
   } testitems[] = {
-    { "TestSomeText", 1},
-    { "TestSomeText\r", 1},
-    { "TestSomeText\rSomeMoreText\r", 2, 1}, /* NT4 and below */
-    { "TestSomeText\n\nTestSomeText", 3},
-    { "TestSomeText\r\r\nTestSomeText", 2},
-    { "TestSomeText\r\r\n\rTestSomeText", 3, 2}, /* NT4 and below */
-    { "TestSomeText\r\n\r\r\n\rTestSomeText", 4, 3}, /* NT4 and below */
-    { "TestSomeText\r\n" ,2},
-    { "TestSomeText\r\nSomeMoreText\r\n", 3},
-    { "TestSomeText\r\n\r\nTestSomeText", 3},
-    { "TestSomeText TestSomeText" ,1},
-    { "TestSomeText \r\nTestSomeText", 2},
-    { "TestSomeText\r\n \r\nTestSomeText", 3},
-    { "TestSomeText\n", 2},
-    { "TestSomeText\r\r\r", 3, 1}, /* NT4 and below */
-    { "TestSomeText\r\r\rSomeMoreText", 4, 2} /* NT4 and below */
+    { "TestSomeText", 1, 1},
+    { "TestSomeText\r", 1, 1},
+    { "TestSomeText\rSomeMoreText\r", 2, 1, 1}, /* NT4 and below */
+    { "TestSomeText\n\nTestSomeText", 3, 3},
+    { "TestSomeText\r\r\nTestSomeText", 2, 2},
+    { "TestSomeText\r\r\n\rTestSomeText", 3, 2, 2}, /* NT4 and below */
+    { "TestSomeText\r\n\r\r\n\rTestSomeText", 4, 3, 3}, /* NT4 and below */
+    { "TestSomeText\r\n", 2, 2},
+    { "TestSomeText\r\nSomeMoreText\r\n", 3, 3},
+    { "TestSomeText\r\n\r\nTestSomeText", 3, 3},
+    { "TestSomeText TestSomeText", 1, 1},
+    { "TestSomeText \r\nTestSomeText", 2, 2},
+    { "TestSomeText\r\n \r\nTestSomeText", 3, 3},
+    { "TestSomeText\n", 2, 2},
+    { "TestSomeText\r\r\r", 3, 1, 1}, /* NT4 and below */
+    { "TestSomeText\r\r\rSomeMoreText", 4, 1, 1} /* NT4 and below */
   };
   HWND hwndRichEdit = new_richedit(NULL);
   int i;
+  BOOL rtl = is_rtl();
 
   /* This test attempts to show that WM_SETTEXT on a riched32 control does not
    * attempt to modify the text that is pasted into the control, and should
@@ -88,6 +98,8 @@ static void test_WM_SETTEXT(void)
    *   is, a run of \r{N} without a terminating \n is considered N line breaks
    * - \r at the end of the text is NOT a line break. This differs from riched20,
    *   where \r at the end of the text is a proper line break.
+   * However, on RTL language versions, \r is simply skipped and never used
+   * for line breaking (only \n adds a line break)
    */
 
   for (i = 0; i < sizeof(testitems)/sizeof(testitems[0]); i++) {
@@ -105,7 +117,7 @@ static void test_WM_SETTEXT(void)
     ok (result == 0,
         "[%d] WM_SETTEXT round trip: strcmp = %ld\n", i, result);
     result = SendMessage(hwndRichEdit, EM_GETLINECOUNT, 0, 0);
-    ok (result == testitems[i].lines ||
+    ok (result == (rtl ? testitems[i].lines_rtl : testitems[i].lines) ||
         broken(testitems[i].lines_broken && result == testitems[i].lines_broken),
         "[%d] EM_GETLINECOUNT returned %ld, expected %d\n", i, result, testitems[i].lines);
   }
@@ -374,6 +386,7 @@ static void test_EM_GETLINE(void)
       "\r\r\n"
       "bar\n";
   BOOL broken_os = FALSE;
+  BOOL rtl = is_rtl();
 
   SendMessage(hwndRichEdit, WM_SETTEXT, 0, (LPARAM) text);
   linecount = SendMessage(hwndRichEdit, EM_GETLINECOUNT, 0, 0);
@@ -421,9 +434,15 @@ static void test_EM_GETLINE(void)
     {
       ok(!strncmp(dest, gl_text, expected_bytes_written),
          "%d: expected_bytes_written=%d\n", i, expected_bytes_written);
-      ok(!strncmp(dest + expected_bytes_written, origdest
-                  + expected_bytes_written, nBuf - expected_bytes_written),
-         "%d: expected_bytes_written=%d\n", i, expected_bytes_written);
+      if (! rtl || expected_bytes_written == gl[i].buffer_len)
+        ok(!strncmp(dest + expected_bytes_written, origdest
+                    + expected_bytes_written, nBuf - expected_bytes_written),
+           "%d: expected_bytes_written=%d\n", i, expected_bytes_written);
+      else
+        ok(dest[expected_bytes_written] == 0 &&
+           !strncmp(dest + expected_bytes_written + 1, origdest
+                    + expected_bytes_written + 1, nBuf - (expected_bytes_written + 1)),
+           "%d: expected_bytes_written=%d\n", i, expected_bytes_written);
     }
   }
 
@@ -566,7 +585,7 @@ struct find_s {
 };
 
 
-struct find_s find_tests[] = {
+static struct find_s find_tests[] = {
   /* Find in empty text */
   {0, -1, "foo", FR_DOWN, -1},
   {0, -1, "foo", 0, -1},
@@ -575,7 +594,7 @@ struct find_s find_tests[] = {
   {5, 20, "foo", FR_DOWN, -1}
 };
 
-struct find_s find_tests2[] = {
+static struct find_s find_tests2[] = {
   /* No-result find */
   {0, -1, "foo", FR_DOWN | FR_MATCHCASE, -1},
   {5, 20, "WINE", FR_DOWN | FR_MATCHCASE, -1},
@@ -642,7 +661,7 @@ struct find_s find_tests2[] = {
   {4, -1, "INEW", 0, 10},
 };
 
-struct find_s find_tests3[] = {
+static struct find_s find_tests3[] = {
   /* Searching for end of line characters */
   {0, -1, "t\r\r\ns", FR_DOWN | FR_MATCHCASE, 4},
   {6, -1, "\r\n", FR_DOWN | FR_MATCHCASE, 6},
@@ -730,6 +749,7 @@ static void test_EM_POSFROMCHAR(void)
   LRESULT result;
   unsigned int height = 0;
   int xpos = 0;
+  int xpos_rtl_adjusted = 0;
   static const char text[] = "aa\n"
       "this is a long line of text that should be longer than the "
       "control's width\n"
@@ -772,17 +792,18 @@ static void test_EM_POSFROMCHAR(void)
           broken(pl.x == 0), /* Win9x, WinME and NT4 */
           "EM_POSFROMCHAR reports x=%d, expected 1\n", pl.x);
       xpos = pl.x;
+      xpos_rtl_adjusted = xpos + (is_rtl() ? 7 : 0);
     }
     else if (i == 1)
     {
       ok(pl.y > 0, "EM_POSFROMCHAR reports y=%d, expected > 0\n", pl.y);
-      ok(pl.x == xpos, "EM_POSFROMCHAR reports x=%d, expected 1\n", pl.x);
+      ok(pl.x == xpos, "EM_POSFROMCHAR reports x=%d, expected %d\n", pl.x, xpos);
       height = pl.y;
     }
     else
     {
       ok(pl.y == i * height, "EM_POSFROMCHAR reports y=%d, expected %d\n", pl.y, i * height);
-      ok(pl.x == xpos, "EM_POSFROMCHAR reports x=%d, expected 1\n", pl.x);
+      ok(pl.x == xpos, "EM_POSFROMCHAR reports x=%d, expected %d\n", pl.x, xpos);
     }
   }
 
@@ -790,13 +811,14 @@ static void test_EM_POSFROMCHAR(void)
   result = SendMessage(hwndRichEdit, EM_POSFROMCHAR, (WPARAM)&pl, 50 * 16);
   ok(result == 0, "EM_POSFROMCHAR returned %ld, expected 0\n", result);
   ok(pl.y == 50 * height, "EM_POSFROMCHAR reports y=%d, expected %d\n", pl.y, 50 * height);
-  ok(pl.x == xpos, "EM_POSFROMCHAR reports x=%d, expected 1\n", pl.x);
+  ok(pl.x == xpos, "EM_POSFROMCHAR reports x=%d, expected %d\n", pl.x, xpos);
 
   /* Testing position way past end of text */
   result = SendMessage(hwndRichEdit, EM_POSFROMCHAR, (WPARAM)&pl, 55 * 16);
   ok(result == 0, "EM_POSFROMCHAR returned %ld, expected 0\n", result);
   ok(pl.y == 50 * height, "EM_POSFROMCHAR reports y=%d, expected %d\n", pl.y, 50 * height);
-  ok(pl.x == xpos, "EM_POSFROMCHAR reports x=%d, expected 1\n", pl.x);
+
+  ok(pl.x == xpos_rtl_adjusted, "EM_POSFROMCHAR reports x=%d, expected %d\n", pl.x, xpos_rtl_adjusted);
 
 
   /* Testing that vertical scrolling does, in fact, have an effect on EM_POSFROMCHAR */
@@ -809,20 +831,20 @@ static void test_EM_POSFROMCHAR(void)
     ok(pl.y == (i - 1) * height,
         "EM_POSFROMCHAR reports y=%d, expected %d\n",
         pl.y, (i - 1) * height);
-    ok(pl.x == xpos, "EM_POSFROMCHAR reports x=%d, expected 1\n", pl.x);
+    ok(pl.x == xpos, "EM_POSFROMCHAR reports x=%d, expected %d\n", pl.x, xpos);
   }
 
   /* Testing position at end of text */
   result = SendMessage(hwndRichEdit, EM_POSFROMCHAR, (WPARAM)&pl, 50 * 16);
   ok(result == 0, "EM_POSFROMCHAR returned %ld, expected 0\n", result);
   ok(pl.y == (50 - 1) * height, "EM_POSFROMCHAR reports y=%d, expected %d\n", pl.y, (50 - 1) * height);
-  ok(pl.x == xpos, "EM_POSFROMCHAR reports x=%d, expected 1\n", pl.x);
+  ok(pl.x == xpos, "EM_POSFROMCHAR reports x=%d, expected %d\n", pl.x, xpos);
 
   /* Testing position way past end of text */
   result = SendMessage(hwndRichEdit, EM_POSFROMCHAR, (WPARAM)&pl, 55 * 16);
   ok(result == 0, "EM_POSFROMCHAR returned %ld, expected 0\n", result);
   ok(pl.y == (50 - 1) * height, "EM_POSFROMCHAR reports y=%d, expected %d\n", pl.y, (50 - 1) * height);
-  ok(pl.x == xpos, "EM_POSFROMCHAR reports x=%d, expected 1\n", pl.x);
+  ok(pl.x == xpos_rtl_adjusted, "EM_POSFROMCHAR reports x=%d, expected %d\n", pl.x, xpos_rtl_adjusted);
 
   /* Testing that horizontal scrolling does, in fact, have an effect on EM_POSFROMCHAR */
   SendMessage(hwndRichEdit, WM_SETTEXT, 0, (LPARAM) text);
@@ -844,7 +866,7 @@ static void test_EM_POSFROMCHAR(void)
   /* Fails on builtin because horizontal scrollbar is not being shown */
   ok(pl.x < xpos ||
       broken(pl.x == xpos), /* Win9x, WinME and NT4 */
-      "EM_POSFROMCHAR reports x=%hd, expected value less than %d\n", pl.x, xpos);
+      "EM_POSFROMCHAR reports x=%d, expected value less than %d\n", pl.x, xpos);
   }
   DestroyWindow(hwndRichEdit);
 }
@@ -1059,10 +1081,130 @@ static void test_autoscroll(void)
     DestroyWindow(hwnd);
 }
 
+static void simulate_typing_characters(HWND hwnd, const char* szChars)
+{
+    int ret;
+
+    while (*szChars != '\0') {
+        SendMessageA(hwnd, WM_KEYDOWN, *szChars, 1);
+        ret = SendMessageA(hwnd, WM_CHAR, *szChars, 1);
+        ok(ret == 0, "WM_CHAR('%c') ret=%d\n", *szChars, ret);
+        SendMessageA(hwnd, WM_KEYUP, *szChars, 1);
+        szChars++;
+    }
+}
+
+/*
+ * This test attempts to show the effect of enter on a richedit
+ * control v1.0 inserts CRLF whereas for higher versions it only
+ * inserts CR. If shows that EM_GETTEXTEX with GT_USECRLF == WM_GETTEXT
+ * and also shows that GT_USECRLF has no effect in richedit 1.0, but
+ * does for higher. The same test is cloned in riched32 and riched20.
+ */
+static void test_enter(void)
+{
+  static const struct {
+    const char *initialtext;
+    const int   cursor;
+    const char *expectedtext;
+  } testenteritems[] = {
+    { "aaabbb\r\n", 3, "aaa\r\nbbb\r\n"},
+    { "aaabbb\r\n", 6, "aaabbb\r\n\r\n"},
+    { "aa\rabbb\r\n", 7, "aa\rabbb\r\n\r\n"},
+    { "aa\rabbb\r\n", 3, "aa\r\r\nabbb\r\n"},
+    { "aa\rabbb\r\n", 2, "aa\r\n\rabbb\r\n"}
+  };
+
+  char expectedbuf[1024];
+  char resultbuf[1024];
+  HWND hwndRichEdit = new_richedit(NULL);
+  UINT i,j;
+
+  for (i = 0; i < sizeof(testenteritems)/sizeof(testenteritems[0]); i++) {
+
+    char buf[1024] = {0};
+    LRESULT result;
+    GETTEXTEX getText;
+    const char *expected;
+
+    /* Set the text to the initial text */
+    result = SendMessage(hwndRichEdit, WM_SETTEXT, 0, (LPARAM) testenteritems[i].initialtext);
+    ok (result == 1, "[%d] WM_SETTEXT returned %ld instead of 1\n", i, result);
+
+    /* Send Enter */
+    SendMessage(hwndRichEdit, EM_SETSEL, testenteritems[i].cursor, testenteritems[i].cursor);
+    simulate_typing_characters(hwndRichEdit, "\r");
+
+    /* 1. Retrieve with WM_GETTEXT */
+    buf[0] = 0x00;
+    result = SendMessage(hwndRichEdit, WM_GETTEXT, 1024, (LPARAM) buf);
+    expected = testenteritems[i].expectedtext;
+
+    resultbuf[0]=0x00;
+    for (j = 0; j < (UINT)result; j++)
+      sprintf(resultbuf+strlen(resultbuf), "%02x", buf[j] & 0xFF);
+    expectedbuf[0] = '\0';
+    for (j = 0; j < strlen(expected); j++)
+      sprintf(expectedbuf+strlen(expectedbuf), "%02x", expected[j] & 0xFF);
+
+    result = strcmp(expected, buf);
+    ok (result == 0,
+        "[%d] WM_GETTEXT unexpected '%s' expected '%s'\n",
+        i, resultbuf, expectedbuf);
+
+    /* 2. Retrieve with EM_GETTEXTEX, GT_DEFAULT */
+    getText.cb = sizeof(buf);
+    getText.flags = GT_DEFAULT;
+    getText.codepage      = CP_ACP;
+    getText.lpDefaultChar = NULL;
+    getText.lpUsedDefChar = NULL;
+    buf[0] = 0x00;
+    result = SendMessage(hwndRichEdit, EM_GETTEXTEX, (WPARAM)&getText, (LPARAM) buf);
+    expected = testenteritems[i].expectedtext;
+
+    resultbuf[0]=0x00;
+    for (j = 0; j < (UINT)result; j++)
+      sprintf(resultbuf+strlen(resultbuf), "%02x", buf[j] & 0xFF);
+    expectedbuf[0] = '\0';
+    for (j = 0; j < strlen(expected); j++)
+      sprintf(expectedbuf+strlen(expectedbuf), "%02x", expected[j] & 0xFF);
+
+    result = strcmp(expected, buf);
+    ok (result == 0 || broken(buf[0]==0x00 /* WinNT4 */),
+        "[%d] EM_GETTEXTEX, GT_DEFAULT unexpected '%s', expected '%s'\n",
+        i, resultbuf, expectedbuf);
+
+    /* 3. Retrieve with EM_GETTEXTEX, GT_USECRLF */
+    getText.cb = sizeof(buf);
+    getText.flags = GT_USECRLF;
+    getText.codepage      = CP_ACP;
+    getText.lpDefaultChar = NULL;
+    getText.lpUsedDefChar = NULL;
+    buf[0] = 0x00;
+    result = SendMessage(hwndRichEdit, EM_GETTEXTEX, (WPARAM)&getText, (LPARAM) buf);
+    expected = testenteritems[i].expectedtext;
+
+    resultbuf[0]=0x00;
+    for (j = 0; j < (UINT)result; j++)
+      sprintf(resultbuf+strlen(resultbuf), "%02x", buf[j] & 0xFF);
+    expectedbuf[0] = '\0';
+    for (j = 0; j < strlen(expected); j++)
+      sprintf(expectedbuf+strlen(expectedbuf), "%02x", expected[j] & 0xFF);
+
+    result = strcmp(expected, buf);
+    ok (result == 0 || broken(buf[0]==0x00 /* WinNT4 */),
+        "[%d] EM_GETTEXTEX, GT_USECRLF unexpected '%s', expected '%s'\n",
+        i, resultbuf, expectedbuf);
+  }
+
+  DestroyWindow(hwndRichEdit);
+}
+
 START_TEST( editor )
 {
   MSG msg;
   time_t end;
+  BOOL ret;
 
   /* Must explicitly LoadLibrary(). The test has no references to functions in
    * RICHED32.DLL, so the linker doesn't actually link to it. */
@@ -1082,6 +1224,7 @@ START_TEST( editor )
   test_word_wrap();
   test_EM_GETOPTIONS();
   test_autoscroll();
+  test_enter();
 
   /* Set the environment variable WINETEST_RICHED32 to keep windows
    * responsive and open for 30 seconds. This is useful for debugging.
@@ -1101,5 +1244,6 @@ START_TEST( editor )
   }
 
   OleFlushClipboard();
-  ok(FreeLibrary(hmoduleRichEdit) != 0, "error: %d\n", (int) GetLastError());
+  ret = FreeLibrary(hmoduleRichEdit);
+  ok(ret, "error: %u\n", GetLastError());
 }

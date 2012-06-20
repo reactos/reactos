@@ -1,7 +1,5 @@
 
-add_definitions(
-    -D__ROS_LONG64__
-    -D_DLL -D__USE_CRTIMP)
+add_definitions(-D__ROS_LONG64__)
 
 add_executable(riched32_winetest editor.c testlist.c)
 target_link_libraries(riched32_winetest wine)
