@@ -16,8 +16,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef __BCRYPT_H__
-#define __BCRYPT_H__
+#ifndef __WINE_BCRYPT_H
+#define __WINE_BCRYPT_H
 
 #ifndef WINAPI
 #define WINAPI __stdcall
@@ -35,11 +35,6 @@
 #define OPTIONAL
 #endif
 
-#ifndef _NTDEF_
-typedef _Return_type_success_(return >= 0) LONG NTSTATUS;
-typedef NTSTATUS *PNTSTATUS;
-#endif
-
 typedef struct _BCRYPT_ALGORITHM_IDENTIFIER
 {
     LPWSTR pszName;
@@ -47,4 +42,4 @@ typedef struct _BCRYPT_ALGORITHM_IDENTIFIER
     ULONG  dwFlags;
 } BCRYPT_ALGORITHM_IDENTIFIER;
 
-#endif  /* __BCRYPT_H__ */
+#endif  /* __WINE_BCRYPT_H */
