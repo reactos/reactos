@@ -36,13 +36,13 @@ WINE_DEFAULT_DEBUG_CHANNEL(wuapi);
 
 typedef struct _update_downloader
 {
-    const struct IUpdateDownloaderVtbl *vtbl;
+    IUpdateDownloader IUpdateDownloader_iface;
     LONG refs;
 } update_downloader;
 
 static inline update_downloader *impl_from_IUpdateDownloader( IUpdateDownloader *iface )
 {
-    return (update_downloader *)((char *)iface - FIELD_OFFSET( update_downloader, vtbl ));
+    return CONTAINING_RECORD(iface, update_downloader, IUpdateDownloader_iface);
 }
 
 static ULONG WINAPI update_downloader_AddRef(
@@ -257,10 +257,10 @@ HRESULT UpdateDownloader_create( IUnknown *pUnkOuter, LPVOID *ppObj )
     downloader = HeapAlloc( GetProcessHeap(), 0, sizeof(*downloader) );
     if (!downloader) return E_OUTOFMEMORY;
 
-    downloader->vtbl = &update_downloader_vtbl;
+    downloader->IUpdateDownloader_iface.lpVtbl = &update_downloader_vtbl;
     downloader->refs = 1;
 
-    *ppObj = &downloader->vtbl;
+    *ppObj = &downloader->IUpdateDownloader_iface;
 
     TRACE("returning iface %p\n", *ppObj);
     return S_OK;

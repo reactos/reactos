@@ -27,6 +27,7 @@
 #include "winbase.h"
 #include "winuser.h"
 #include "ole2.h"
+#include "rpcproxy.h"
 #include "wuapi.h"
 
 #include "wine/debug.h"
@@ -38,13 +39,13 @@ typedef HRESULT (*fnCreateInstance)( IUnknown *pUnkOuter, LPVOID *ppObj );
 
 typedef struct _wucf
 {
-    const struct IClassFactoryVtbl *vtbl;
+    IClassFactory IClassFactory_iface;
     fnCreateInstance pfnCreateInstance;
 } wucf;
 
 static inline wucf *impl_from_IClassFactory( IClassFactory *iface )
 {
-    return (wucf *)((char *)iface - FIELD_OFFSET( wucf, vtbl ));
+    return CONTAINING_RECORD(iface, wucf, IClassFactory_iface);
 }
 
 static HRESULT WINAPI wucf_QueryInterface( IClassFactory *iface, REFIID riid, LPVOID *ppobj )
@@ -111,8 +112,11 @@ static const struct IClassFactoryVtbl wucf_vtbl =
     wucf_LockServer
 };
 
-static wucf sessioncf = { &wucf_vtbl, UpdateSession_create };
-static wucf updatescf = { &wucf_vtbl, AutomaticUpdates_create };
+static wucf sessioncf = { { &wucf_vtbl }, UpdateSession_create };
+static wucf updatescf = { { &wucf_vtbl }, AutomaticUpdates_create };
+static wucf sysinfocf = { { &wucf_vtbl }, SystemInformation_create };
+
+static HINSTANCE instance;
 
 BOOL WINAPI DllMain( HINSTANCE hinst, DWORD reason, LPVOID lpv )
 {
@@ -121,6 +125,7 @@ BOOL WINAPI DllMain( HINSTANCE hinst, DWORD reason, LPVOID lpv )
     case DLL_WINE_PREATTACH:
         return FALSE;  /* prefer native version */
     case DLL_PROCESS_ATTACH:
+        instance = hinst;
         DisableThreadLibraryCalls( hinst );
         break;
     case DLL_PROCESS_DETACH:
@@ -137,11 +142,15 @@ HRESULT WINAPI DllGetClassObject( REFCLSID rclsid, REFIID iid, LPVOID *ppv )
 
     if (IsEqualGUID( rclsid, &CLSID_UpdateSession ))
     {
-       cf = (IClassFactory *)&sessioncf.vtbl;
+       cf = &sessioncf.IClassFactory_iface;
     }
     else if (IsEqualGUID( rclsid, &CLSID_AutomaticUpdates ))
     {
-       cf = (IClassFactory *)&updatescf.vtbl;
+       cf = &updatescf.IClassFactory_iface;
+    }
+    else if (IsEqualGUID( rclsid, &CLSID_SystemInformation ))
+    {
+       cf = &sysinfocf.IClassFactory_iface;
     }
     if (!cf) return CLASS_E_CLASSNOTAVAILABLE;
     return IClassFactory_QueryInterface( cf, iid, ppv );
@@ -150,4 +159,20 @@ HRESULT WINAPI DllGetClassObject( REFCLSID rclsid, REFIID iid, LPVOID *ppv )
 HRESULT WINAPI DllCanUnloadNow( void )
 {
     return S_FALSE;
+}
+
+/***********************************************************************
+ *		DllRegisterServer (WUAPI.@)
+ */
+HRESULT WINAPI DllRegisterServer(void)
+{
+    return __wine_register_resources( instance );
+}
+
+/***********************************************************************
+ *		DllUnregisterServer (WUAPI.@)
+ */
+HRESULT WINAPI DllUnregisterServer(void)
+{
+    return __wine_unregister_resources( instance );
 }

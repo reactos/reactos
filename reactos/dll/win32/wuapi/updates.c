@@ -35,13 +35,13 @@ WINE_DEFAULT_DEBUG_CHANNEL(wuapi);
 
 typedef struct _automatic_updates
 {
-    const struct IAutomaticUpdatesVtbl *vtbl;
+    IAutomaticUpdates IAutomaticUpdates_iface;
     LONG refs;
 } automatic_updates;
 
 static inline automatic_updates *impl_from_IAutomaticUpdates( IAutomaticUpdates *iface )
 {
-    return (automatic_updates *)((char*)iface - FIELD_OFFSET( automatic_updates, vtbl ));
+    return CONTAINING_RECORD(iface, automatic_updates, IAutomaticUpdates_iface);
 }
 
 static ULONG WINAPI automatic_updates_AddRef(
@@ -151,7 +151,7 @@ static HRESULT WINAPI automatic_updates_Resume(
     IAutomaticUpdates *This )
 {
     FIXME("\n");
-    return E_NOTIMPL;
+    return S_OK;
 }
 
 static HRESULT WINAPI automatic_updates_ShowSettingsDialog(
@@ -211,10 +211,10 @@ HRESULT AutomaticUpdates_create( IUnknown *pUnkOuter, LPVOID *ppObj )
     updates = HeapAlloc( GetProcessHeap(), 0, sizeof(*updates) );
     if (!updates) return E_OUTOFMEMORY;
 
-    updates->vtbl = &automatic_updates_vtbl;
+    updates->IAutomaticUpdates_iface.lpVtbl = &automatic_updates_vtbl;
     updates->refs = 1;
 
-    *ppObj = &updates->vtbl;
+    *ppObj = &updates->IAutomaticUpdates_iface;
 
     TRACE("returning iface %p\n", *ppObj);
     return S_OK;
