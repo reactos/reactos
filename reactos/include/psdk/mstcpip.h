@@ -443,7 +443,7 @@ SCOPE_ID
 IN4ADDR_SCOPE_ID(
   IN CONST SOCKADDR_IN *a)
 {
-  SCOPE_ID UnspecifiedScopeId = {0};
+  SCOPE_ID UnspecifiedScopeId = {{{0}}};
   UNREFERENCED_PARAMETER(a);
   return UnspecifiedScopeId;
 }
