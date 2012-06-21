@@ -16,8 +16,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#ifndef __WINE_BCRYPT_H
-#define __WINE_BCRYPT_H
+#ifndef __BCRYPT_H__
+#define __BCRYPT_H__
 
 #ifndef WINAPI
 #define WINAPI __stdcall
@@ -47,4 +47,4 @@ typedef struct _BCRYPT_ALGORITHM_IDENTIFIER
     ULONG  dwFlags;
 } BCRYPT_ALGORITHM_IDENTIFIER;
 
-#endif  /* __WINE_BCRYPT_H */
+#endif  /* __BCRYPT_H__ */
