@@ -1326,7 +1326,7 @@
 @ stdcall RtlValidSid(ptr)
 @ stdcall RtlVerifyVersionInfo(ptr long long long)
 @ cdecl -arch=x86_64 RtlVirtualUnwind(long double double ptr ptr ptr ptr ptr)
-@ stdcall RtlVolumeDeviceToDosName(ptr ptr)
+@ stdcall RtlVolumeDeviceToDosName(ptr ptr) IoVolumeDeviceToDosName
 @ stdcall RtlWalkFrameChain(ptr long long)
 @ stdcall RtlWriteRegistryValue(long wstr wstr long ptr long)
 @ stdcall RtlZeroHeap(ptr long)

@@ -292,18 +292,4 @@ RtlIsNameLegalDOS8Dot3(IN PCUNICODE_STRING UnicodeName,
     return TRUE;
 }
 
-/*
-* @unimplemented
-*/
-NTSTATUS
-NTAPI
-RtlVolumeDeviceToDosName(
-	IN  PVOID VolumeDeviceObject,
-	OUT PUNICODE_STRING DosName
-	)
-{
-	UNIMPLEMENTED;
-	return STATUS_NOT_IMPLEMENTED;
-}
-
 /* EOF */
