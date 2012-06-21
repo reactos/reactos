@@ -35,6 +35,11 @@
 #define OPTIONAL
 #endif
 
+#ifndef WINE_NTSTATUS_DECLARED
+#define WINE_NTSTATUS_DECLARED
+typedef LONG NTSTATUS;
+#endif
+
 typedef struct _BCRYPT_ALGORITHM_IDENTIFIER
 {
     LPWSTR pszName;

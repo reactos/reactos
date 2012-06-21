@@ -109,12 +109,41 @@ extern "C" {
 #ifndef RC_INVOKED
 #include <string.h>
 
-/* FIXME: add more architectures. Is there a way to specify this in GCC? */
-#if defined(_M_AMD64)
-#undef UNALIGNED
+#if defined(_M_MRX000) || defined(_M_ALPHA) || defined(_M_PPC) || defined(_M_IA64) || defined(_M_AMD64)
+#define ALIGNMENT_MACHINE
 #define UNALIGNED __unaligned
+#if defined(_WIN64)
+#define UNALIGNED64 __unaligned
 #else
+#define UNALIGNED64
+#endif
+#else
+#undef ALIGNMENT_MACHINE
 #define UNALIGNED
+#define UNALIGNED64
+#endif
+
+#if defined(_WIN64) || defined(_M_ALPHA)
+#define MAX_NATURAL_ALIGNMENT sizeof(ULONGLONG)
+#define MEMORY_ALLOCATION_ALIGNMENT 16
+#else
+#define MAX_NATURAL_ALIGNMENT sizeof(ULONG)
+#define MEMORY_ALLOCATION_ALIGNMENT 8
+#endif
+
+/* Returns the type's alignment */
+#if defined(_MSC_VER) && (_MSC_VER >= 1300)
+#define TYPE_ALIGNMENT(t) __alignof(t)
+#else
+#define TYPE_ALIGNMENT(t) FIELD_OFFSET(struct { char x; t test; }, test)
+#endif
+
+#if defined(_AMD64_) || defined(_X86_)
+#define PROBE_ALIGNMENT(_s) TYPE_ALIGNMENT(ULONG)
+#elif defined(_IA64_) || defined(_ARM_)
+#define PROBE_ALIGNMENT(_s) max((TYPE_ALIGNMENT(_s), TYPE_ALIGNMENT(ULONG))
+#else
+#error "unknown architecture"
 #endif
 
 #ifndef DECLSPEC_NOVTABLE
