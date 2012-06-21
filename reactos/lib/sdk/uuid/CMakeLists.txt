@@ -49,7 +49,7 @@ list(APPEND IDL_SOURCES
 #    htiface.idl
     htiframe.idl
 #    htmlfilter.idl
-#    httprequest.idl
+    httprequest.idl
 #    iaccess.idl
 #    iaspolcy.idl
 #    iedial.idl

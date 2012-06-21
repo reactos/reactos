@@ -1,0 +1,191 @@
+/*
+ * Copyright 2011 Hans Leidekker for CodeWeavers
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#include "httprequestid.h"
+
+import "oaidl.idl";
+
+#ifndef __WIDL__
+#define threading(model)
+#define progid(str)
+#endif
+
+[
+    uuid(662901fc-6951-4854-9eb2-d9a2570f2b2e),
+    helpstring("Microsoft WinHTTP Services, version 5.1"),
+    lcid(0x0000),
+    version(5.1)
+]
+library WinHttp {
+
+importlib ("stdole2.tlb");
+
+typedef [public] LONG   HTTPREQUEST_PROXY_SETTING;
+const HTTPREQUEST_PROXY_SETTING HTTPREQUEST_PROXYSETTING_DEFAULT    = 0x00000000;
+const HTTPREQUEST_PROXY_SETTING HTTPREQUEST_PROXYSETTING_PRECONFIG  = 0x00000000;
+const HTTPREQUEST_PROXY_SETTING HTTPREQUEST_PROXYSETTING_DIRECT     = 0x00000001;
+const HTTPREQUEST_PROXY_SETTING HTTPREQUEST_PROXYSETTING_PROXY      = 0x00000002;
+
+typedef [public] LONG   HTTPREQUEST_SETCREDENTIALS_FLAGS;
+const HTTPREQUEST_SETCREDENTIALS_FLAGS  HTTPREQUEST_SETCREDENTIALS_FOR_SERVER   = 0x00000000;
+const HTTPREQUEST_SETCREDENTIALS_FLAGS  HTTPREQUEST_SETCREDENTIALS_FOR_PROXY    = 0x00000001;
+
+typedef
+[uuid(12782009-fe90-4877-9730-e5e183669b19)]
+enum WinHttpRequestOption
+{
+    WinHttpRequestOption_UserAgentString,
+    WinHttpRequestOption_URL,
+    WinHttpRequestOption_URLCodePage,
+    WinHttpRequestOption_EscapePercentInURL,
+    WinHttpRequestOption_SslErrorIgnoreFlags,
+    WinHttpRequestOption_SelectCertificate,
+    WinHttpRequestOption_EnableRedirects,
+    WinHttpRequestOption_UrlEscapeDisable,
+    WinHttpRequestOption_UrlEscapeDisableQuery,
+    WinHttpRequestOption_SecureProtocols,
+    WinHttpRequestOption_EnableTracing,
+    WinHttpRequestOption_RevertImpersonationOverSsl,
+    WinHttpRequestOption_EnableHttpsToHttpRedirects,
+    WinHttpRequestOption_EnablePassportAuthentication,
+    WinHttpRequestOption_MaxAutomaticRedirects,
+    WinHttpRequestOption_MaxResponseHeaderSize,
+    WinHttpRequestOption_MaxResponseDrainSize,
+    WinHttpRequestOption_EnableHttp1_1,
+    WinHttpRequestOption_EnableCertificateRevocationCheck,
+    WinHttpRequestOption_RejectUserpwd
+} WinHttpRequestOption;
+
+typedef
+[uuid(9d8a6df8-13de-4b1f-a330-67c719d62514)]
+enum WinHttpRequestAutoLogonPolicy
+{
+    AutoLogonPolicy_Always,
+    AutoLogonPolicy_OnlyIfBypassProxy,
+    AutoLogonPolicy_Never
+} WinHttpRequestAutoLogonPolicy;
+
+[
+    object,
+    uuid(016fe2ec-b2c8-45f8-b23b-39e53a75396b),
+    odl,
+    dual,
+    oleautomation,
+    nonextensible,
+    pointer_default(unique)
+]
+interface IWinHttpRequest : IDispatch
+{
+    [id(DISPID_HTTPREQUEST_SETPROXY)]
+    HRESULT SetProxy(
+        [in] HTTPREQUEST_PROXY_SETTING proxy_setting,
+        [in, optional] VARIANT proxy_server,
+        [in, optional] VARIANT bypass_list);
+
+    [id(DISPID_HTTPREQUEST_SETCREDENTIALS)]
+    HRESULT SetCredentials(
+        [in] BSTR username,
+        [in] BSTR password,
+        [in] HTTPREQUEST_SETCREDENTIALS_FLAGS flags);
+
+    [id(DISPID_HTTPREQUEST_OPEN)]
+    HRESULT Open(
+        [in] BSTR method,
+        [in] BSTR url,
+        [in, optional] VARIANT async);
+
+    [id(DISPID_HTTPREQUEST_SETREQUESTHEADER)]
+    HRESULT SetRequestHeader(
+        [in] BSTR header,
+        [in] BSTR value);
+
+    [id(DISPID_HTTPREQUEST_GETRESPONSEHEADER)]
+    HRESULT GetResponseHeader(
+        [in] BSTR header,
+        [out, retval] BSTR *value);
+
+    [id(DISPID_HTTPREQUEST_GETALLRESPONSEHEADERS)]
+    HRESULT GetAllResponseHeaders(
+        [out, retval] BSTR *headers);
+
+    [id(DISPID_HTTPREQUEST_SEND)]
+    HRESULT Send(
+        [in, optional] VARIANT body);
+
+    [propget, id(DISPID_HTTPREQUEST_STATUS)]
+    HRESULT Status(
+        [out, retval] LONG *status);
+
+    [propget, id(DISPID_HTTPREQUEST_STATUSTEXT)]
+    HRESULT StatusText(
+        [out, retval] BSTR *status);
+
+    [propget, id(DISPID_HTTPREQUEST_RESPONSETEXT)]
+    HRESULT ResponseText(
+        [out, retval] BSTR *body);
+
+    [propget, id(DISPID_HTTPREQUEST_RESPONSEBODY)]
+    HRESULT ResponseBody(
+        [out, retval] VARIANT *body);
+
+    [propget, id(DISPID_HTTPREQUEST_RESPONSESTREAM)]
+    HRESULT ResponseStream(
+        [out, retval] VARIANT *body);
+
+    [propget, id(DISPID_HTTPREQUEST_OPTION)]
+    HRESULT Option(
+        [in] WinHttpRequestOption option,
+        [out, retval] VARIANT *value);
+
+    [propput, id(DISPID_HTTPREQUEST_OPTION)]
+    HRESULT Option(
+        [in] WinHttpRequestOption option,
+        [in] VARIANT value);
+
+    [id(DISPID_HTTPREQUEST_WAITFORRESPONSE)]
+    HRESULT WaitForResponse(
+        [in, optional] VARIANT timeout,
+        [out, retval] VARIANT_BOOL *succeeded);
+
+    [id(DISPID_HTTPREQUEST_ABORT)]
+    HRESULT Abort();
+
+    [id(DISPID_HTTPREQUEST_SETTIMEOUTS)]
+    HRESULT SetTimeouts(
+        [in] LONG resolve_timeout,
+        [in] LONG connect_timeout,
+        [in] LONG send_timeout,
+        [in] LONG receive_timeout);
+
+    [id(DISPID_HTTPREQUEST_SETCLIENTCERTIFICATE)]
+    HRESULT SetClientCertificate(
+        [in] BSTR certificate);
+
+    [id(DISPID_HTTPREQUEST_SETAUTOLOGONPOLICY)]
+    HRESULT SetAutoLogonPolicy(
+        [in] WinHttpRequestAutoLogonPolicy policy);
+}
+[
+    helpstring("WinHttpRequest Component version 5.1"),
+    threading(apartment),
+    progid("WinHttp.WinHttpRequest.5.1"),
+    uuid(2087c2f4-2cef-4953-a8ab-66779b670495)
+]
+coclass WinHttpRequest { interface IWinHttpRequest; }
+
+} /* WinHttp */

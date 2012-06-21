@@ -41,6 +41,7 @@ list(APPEND SOURCE
     fusion.idl
     hlink.idl
     htiframe.idl
+    httprequest.idl
     iads.idl
     icftypes.idl
     imnact.idl
