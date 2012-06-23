@@ -277,6 +277,9 @@ User32 -
   reactos/dll/win32/user32/windows/text.c       # Forked (lstr.c)
   reactos/dll/win32/user32/windows/winpos.c     # Forked
 
+ws2_32 -
+  reactos/dll/win32/ws2_32/misc/async.c         # Synced to Wine-1.5.4
+
 Update process for autosync DLLs
 
 *** This process can only be done on Microsoft Windows ***
