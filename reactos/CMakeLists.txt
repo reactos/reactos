@@ -14,6 +14,9 @@ include(include/reactos/version.cmake)
 # Don't escape preprocessor definition values added via add_definitions
 cmake_policy(SET CMP0005 OLD)
 cmake_policy(SET CMP0002 NEW)
+if(POLICY CMP0018)
+    cmake_policy(SET CMP0018 OLD)
+endif()
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_INCLUDE_DIRECTORIES_PROJECT_BEFORE ON)
@@ -48,7 +51,7 @@ if(NOT CMAKE_CROSSCOMPILING)
 
     if(MSVC)
         if(ARCH MATCHES i386)
-            add_definitions(/DWIN32 /D_WINDOWS)
+            add_definitions(/D_X86_ /DWIN32 /D_WINDOWS)
         endif()
         add_definitions(/Dinline=__inline)
     else()
