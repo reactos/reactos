@@ -396,10 +396,11 @@ typedef [switch_type(GROUP_INFORMATION_CLASS)] union _SAMPR_GROUP_INFO_BUFFER
     [case(GroupReplicationInformation)] SAMPR_GROUP_GENERAL_INFORMATION DoNotUse;
 } SAMPR_GROUP_INFO_BUFFER, *PSAMPR_GROUP_INFO_BUFFER;
 
+cpp_quote("#ifndef _NTSAM_")
 typedef struct _SAMPR_ALIAS_GENERAL_INFORMATION
 {
     RPC_UNICODE_STRING Name;
-    unsigned long MemberCount;
+    ULONG MemberCount;
     RPC_UNICODE_STRING AdminComment;
 } SAMPR_ALIAS_GENERAL_INFORMATION, *PSAMPR_ALIAS_GENERAL_INFORMATION;
 
@@ -419,6 +420,7 @@ typedef enum _ALIAS_INFORMATION_CLASS
     AliasNameInformation,
     AliasAdminCommentInformation,
 } ALIAS_INFORMATION_CLASS;
+cpp_quote("#endif")
 
 typedef [switch_type(ALIAS_INFORMATION_CLASS)] union _SAMPR_ALIAS_INFO_BUFFER
 {
