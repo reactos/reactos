@@ -1,5 +1,5 @@
 --- wine-1.5.4/dlls/wininet/internet.h	2012-06-20 14:38:39 +0200
-+++ dll/win32/wininet/internet.h	2012-06-20 16:49:05 +0200
++++ dll/win32/wininet/internet.h	2012-06-23 17:25:14 +0200
 @@ -536,7 +536,30 @@ BOOL NETCON_is_alive(netconn_t*) DECLSPE
  LPCVOID NETCON_GetCert(netconn_t *connection) DECLSPEC_HIDDEN;
  int NETCON_GetCipherStrength(netconn_t*) DECLSPEC_HIDDEN;
@@ -71,7 +71,7 @@
  /******************************************************************************
   * NETCON_secure_connect
 --- wine-1.5.4/dlls/wininet/internet.c	2012-06-20 14:38:38 +0200
-+++ dll/win32/wininet/internet.c	2012-06-20 15:50:05 +0200
++++ dll/win32/wininet/internet.c	2012-06-23 17:45:14 +0200
 @@ -292,7 +292,9 @@ BOOL WINAPI DllMain (HINSTANCE hinstDLL,
              if (g_dwTlsErrIndex == TLS_OUT_OF_INDEXES)
                  return FALSE;
@@ -82,7 +82,29 @@
  
              WININET_hModule = hinstDLL;
              break;
-@@ -3716,19 +3718,23 @@ LPSTR INTERNET_GetResponseBuffer(void)
+@@ -745,6 +747,9 @@ static VOID APPINFO_Destroy(object_heade
+     heap_free(lpwai->proxyBypass);
+     heap_free(lpwai->proxyUsername);
+     heap_free(lpwai->proxyPassword);
++#ifdef __REACTOS__
++    WSACleanup();
++#endif
+ }
+ 
+ static DWORD APPINFO_QueryOption(object_header_t *hdr, DWORD option, void *buffer, DWORD *size, BOOL unicode)
+@@ -906,6 +911,11 @@ HINTERNET WINAPI InternetOpenW(LPCWSTR l
+     LPCWSTR lpszProxy, LPCWSTR lpszProxyBypass, DWORD dwFlags)
+ {
+     appinfo_t *lpwai = NULL;
++#ifdef __REACTOS__
++    WSADATA wsaData;
++    int error = WSAStartup(MAKEWORD(2, 2), &wsaData);
++    if (error) ERR("WSAStartup failed: %d\n", error);
++#endif
+ 
+     if (TRACE_ON(wininet)) {
+ #define FE(x) { x, #x }
+@@ -3716,19 +3726,23 @@ LPSTR INTERNET_GetResponseBuffer(void)
  
  LPSTR INTERNET_GetNextLine(INT nSocket, LPDWORD dwLen)
  {

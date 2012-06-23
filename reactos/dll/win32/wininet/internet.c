@@ -747,6 +747,9 @@ static VOID APPINFO_Destroy(object_header_t *hdr)
     heap_free(lpwai->proxyBypass);
     heap_free(lpwai->proxyUsername);
     heap_free(lpwai->proxyPassword);
+#ifdef __REACTOS__
+    WSACleanup();
+#endif
 }
 
 static DWORD APPINFO_QueryOption(object_header_t *hdr, DWORD option, void *buffer, DWORD *size, BOOL unicode)
@@ -908,6 +911,11 @@ HINTERNET WINAPI InternetOpenW(LPCWSTR lpszAgent, DWORD dwAccessType,
     LPCWSTR lpszProxy, LPCWSTR lpszProxyBypass, DWORD dwFlags)
 {
     appinfo_t *lpwai = NULL;
+#ifdef __REACTOS__
+    WSADATA wsaData;
+    int error = WSAStartup(MAKEWORD(2, 2), &wsaData);
+    if (error) ERR("WSAStartup failed: %d\n", error);
+#endif
 
     if (TRACE_ON(wininet)) {
 #define FE(x) { x, #x }
