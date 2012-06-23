@@ -853,6 +853,7 @@ SamrCreateAliasInDomain(IN SAMPR_HANDLE DomainHandle,
 {
     PSAM_DB_OBJECT DomainObject;
     PSAM_DB_OBJECT AliasObject;
+    UNICODE_STRING EmptyString = RTL_CONSTANT_STRING(L"");
     ULONG ulSize;
     ULONG ulRid;
     WCHAR szRid[9];
@@ -941,7 +942,17 @@ SamrCreateAliasInDomain(IN SAMPR_HANDLE DomainHandle,
         return Status;
     }
 
-    /* FIXME: Set default alias attributes */
+    /* Set the Description attribute */
+    Status = SampSetObjectAttribute(AliasObject,
+                                    L"Description",
+                                    REG_SZ,
+                                    EmptyString.Buffer,
+                                    EmptyString.MaximumLength);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
 
     if (NT_SUCCESS(Status))
     {
@@ -1198,8 +1209,142 @@ SamrGetAliasMembership(IN SAMPR_HANDLE DomainHandle,
                        IN PSAMPR_PSID_ARRAY SidArray,
                        OUT PSAMPR_ULONG_ARRAY Membership)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PSAM_DB_OBJECT DomainObject;
+    HANDLE AliasesKeyHandle = NULL;
+    HANDLE MembersKeyHandle = NULL;
+    HANDLE MemberKeyHandle = NULL;
+    LPWSTR MemberSidString = NULL;
+    PULONG RidArray = NULL;
+    ULONG MaxSidCount = 0;
+    ULONG ValueCount;
+    ULONG DataLength;
+    ULONG i, j;
+    NTSTATUS Status;
+
+    TRACE("SamrGetAliasMembership(%p %p %p)\n",
+          DomainHandle, SidArray, Membership);
+
+    /* Validate the domain handle */
+    Status = SampValidateDbObject(DomainHandle,
+                                  SamDbDomainObject,
+                                  DOMAIN_LOOKUP,
+                                  &DomainObject);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    Status = SampRegOpenKey(DomainObject->KeyHandle,
+                            L"Aliases",
+                            KEY_READ,
+                            &AliasesKeyHandle);
+    TRACE("SampRegOpenKey returned %08lX\n", Status);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    Status = SampRegOpenKey(AliasesKeyHandle,
+                            L"Members",
+                            KEY_READ,
+                            &MembersKeyHandle);
+    TRACE("SampRegOpenKey returned %08lX\n", Status);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    for (i = 0; i < SidArray->Count; i++)
+    {
+        ConvertSidToStringSid(SidArray->Sids[i].SidPointer, &MemberSidString);
+TRACE("Open %S\n", MemberSidString);
+
+        Status = SampRegOpenKey(MembersKeyHandle,
+                                MemberSidString,
+                                KEY_READ,
+                                &MemberKeyHandle);
+        TRACE("SampRegOpenKey returned %08lX\n", Status);
+        if (NT_SUCCESS(Status))
+        {
+            Status = SampRegQueryKeyInfo(MemberKeyHandle,
+                                         NULL,
+                                         &ValueCount);
+            if (NT_SUCCESS(Status))
+            {
+                TRACE("Found %lu values\n", ValueCount);
+                MaxSidCount += ValueCount;
+            }
+
+
+            NtClose(MemberKeyHandle);
+        }
+
+        LocalFree(MemberSidString);
+    }
+
+    TRACE("Maximum sid count: %lu\n", MaxSidCount);
+    RidArray = midl_user_allocate(MaxSidCount * sizeof(ULONG));
+    if (RidArray == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
+
+    for (i = 0; i < SidArray->Count; i++)
+    {
+        ConvertSidToStringSid(SidArray->Sids[i].SidPointer, &MemberSidString);
+TRACE("Open %S\n", MemberSidString);
+
+        Status = SampRegOpenKey(MembersKeyHandle,
+                                MemberSidString,
+                                KEY_READ,
+                                &MemberKeyHandle);
+        TRACE("SampRegOpenKey returned %08lX\n", Status);
+        if (NT_SUCCESS(Status))
+        {
+            Status = SampRegQueryKeyInfo(MemberKeyHandle,
+                                         NULL,
+                                         &ValueCount);
+            if (NT_SUCCESS(Status))
+            {
+                TRACE("Found %lu values\n", ValueCount);
+
+                for (j = 0; j < ValueCount; j++)
+                {
+                    DataLength = sizeof(ULONG);
+                    Status = SampRegEnumerateValue(MemberKeyHandle,
+                                                   j,
+                      NULL,
+                      NULL,
+                      NULL,
+                      (PVOID)&RidArray[j],
+                      &DataLength);
+                }
+            }
+
+            NtClose(MemberKeyHandle);
+        }
+
+        LocalFree(MemberSidString);
+    }
+
+
+done:
+    if (NT_SUCCESS(Status))
+    {
+        Membership->Count = MaxSidCount;
+        Membership->Element = RidArray;
+    }
+    else
+    {
+        if (RidArray != NULL)
+            midl_user_free(RidArray);
+    }
+
+    if (MembersKeyHandle != NULL)
+        NtClose(MembersKeyHandle);
+
+    if (MembersKeyHandle != NULL)
+        NtClose(MembersKeyHandle);
+
+    if (AliasesKeyHandle != NULL)
+        NtClose(AliasesKeyHandle);
+
+    return Status;
 }
 
 /* Function 17 */
@@ -1368,8 +1513,76 @@ SamrQueryInformationAlias(IN SAMPR_HANDLE AliasHandle,
                           IN ALIAS_INFORMATION_CLASS AliasInformationClass,
                           OUT PSAMPR_ALIAS_INFO_BUFFER *Buffer)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PSAM_DB_OBJECT AliasObject;
+    NTSTATUS Status;
+
+    TRACE("SamrQueryInformationAlias(%p %lu %p)\n",
+          AliasHandle, AliasInformationClass, Buffer);
+
+    /* Validate the alias handle */
+    Status = SampValidateDbObject(AliasHandle,
+                                  SamDbAliasObject,
+                                  ALIAS_READ_INFORMATION,
+                                  &AliasObject);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    switch (AliasInformationClass)
+    {
+#if 0
+        case AliasGeneralInformation:
+            Status = SampQueryAliasGeneral(AliasObject,
+                                           &Buffer->General);
+            break;
+
+        case AliasNameInformation:
+            Status = SampQueryAliasName(AliasObject,
+                                        &Buffer->Name);
+            break;
+
+        case AliasAdminCommentInformation:
+            Status = SampQueryAliasAdminComment(AliasObject,
+                                                &Buffer->AdminComment);
+            break;
+#endif
+
+        default:
+            Status = STATUS_INVALID_INFO_CLASS;
+            break;
+    }
+
+    return Status;
+}
+
+
+static NTSTATUS
+SampSetAliasName(PSAM_DB_OBJECT AliasObject,
+                 PSAMPR_ALIAS_NAME_INFORMATION AliasNameInfo)
+{
+    NTSTATUS Status;
+
+    Status = SampSetObjectAttribute(AliasObject,
+                                    L"Name",
+                                    REG_SZ,
+                                    AliasNameInfo->Name.Buffer,
+                                    AliasNameInfo->Name.Length + sizeof(WCHAR));
+
+    return Status;
+}
+
+static NTSTATUS
+SampSetAliasAdminComment(PSAM_DB_OBJECT AliasObject,
+                         PSAMPR_ALIAS_ADM_COMMENT_INFORMATION AliasAdminCommentInfo)
+{
+    NTSTATUS Status;
+
+    Status = SampSetObjectAttribute(AliasObject,
+                                    L"Description",
+                                    REG_SZ,
+                                    AliasAdminCommentInfo->AdminComment.Buffer,
+                                    AliasAdminCommentInfo->AdminComment.Length + sizeof(WCHAR));
+
+    return Status;
 }
 
 /* Function 29 */
@@ -1379,8 +1592,38 @@ SamrSetInformationAlias(IN SAMPR_HANDLE AliasHandle,
                         IN ALIAS_INFORMATION_CLASS AliasInformationClass,
                         IN PSAMPR_ALIAS_INFO_BUFFER Buffer)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PSAM_DB_OBJECT AliasObject;
+    NTSTATUS Status;
+
+    TRACE("SamrSetInformationAlias(%p %lu %p)\n",
+          AliasHandle, AliasInformationClass, Buffer);
+
+    /* Validate the alias handle */
+    Status = SampValidateDbObject(AliasHandle,
+                                  SamDbAliasObject,
+                                  ALIAS_WRITE_ACCOUNT,
+                                  &AliasObject);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    switch (AliasInformationClass)
+    {
+        case AliasNameInformation:
+            Status = SampSetAliasName(AliasObject,
+                                      &Buffer->Name);
+            break;
+
+        case AliasAdminCommentInformation:
+            Status = SampSetAliasAdminComment(AliasObject,
+                                              &Buffer->AdminComment);
+            break;
+
+        default:
+            Status = STATUS_INVALID_INFO_CLASS;
+            break;
+    }
+
+    return Status;
 }
 
 /* Function 30 */

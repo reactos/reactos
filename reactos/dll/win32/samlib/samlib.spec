@@ -19,7 +19,7 @@
 @ stub SamEnumerateGroupsInDomain
 @ stub SamEnumerateUsersInDomain
 @ stdcall SamFreeMemory(ptr)
-@ stub SamGetAliasMembership
+@ stdcall SamGetAliasMembership(ptr long ptr ptr ptr)
 @ stub SamGetCompatibilityMode
 @ stub SamGetDisplayEnumerationIndex
 @ stub SamGetGroupsForUser
@@ -27,13 +27,13 @@
 @ stub SamGetMembersInGroup
 @ stdcall SamLookupDomainInSamServer(ptr ptr ptr)
 @ stub SamLookupIdsInDomain
-@ stub SamLookupNamesInDomain
+@ stdcall SamLookupNamesInDomain(ptr long ptr ptr ptr)
 @ stdcall SamOpenAlias(ptr long long ptr)
 @ stdcall SamOpenDomain(ptr long ptr ptr)
 @ stub SamOpenGroup
 @ stdcall SamOpenUser(ptr long long ptr)
 @ stub SamQueryDisplayInformation
-@ stub SamQueryInformationAlias
+@ stdcall SamQueryInformationAlias(ptr long ptr)
 @ stdcall SamQueryInformationDomain(ptr long ptr)
 @ stub SamQueryInformationGroup
 @ stdcall SamQueryInformationUser(ptr long ptr)
@@ -43,7 +43,7 @@
 @ stub SamRemoveMemberFromGroup
 @ stub SamRemoveMultipleMembersFromAlias
 @ stub SamRidToSid
-@ stub SamSetInformationAlias
+@ stdcall SamSetInformationAlias(ptr long ptr)
 @ stdcall SamSetInformationDomain(ptr long ptr)
 @ stub SamSetInformationGroup
 @ stdcall SamSetInformationUser(ptr long ptr)

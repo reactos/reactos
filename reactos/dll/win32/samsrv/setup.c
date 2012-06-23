@@ -58,9 +58,110 @@ SampIsSetupRunning(VOID)
 }
 
 
+static PSID
+AppendRidToSid(PSID SrcSid,
+               ULONG Rid)
+{
+    ULONG Rids[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+    UCHAR RidCount;
+    PSID DstSid;
+    ULONG i;
+
+    RidCount = *RtlSubAuthorityCountSid(SrcSid);
+    if (RidCount >= 8)
+        return NULL;
+
+    for (i = 0; i < RidCount; i++)
+        Rids[i] = *RtlSubAuthoritySid(SrcSid, i);
+
+    Rids[RidCount] = Rid;
+    RidCount++;
+
+    RtlAllocateAndInitializeSid(RtlIdentifierAuthoritySid(SrcSid),
+                                RidCount,
+                                Rids[0],
+                                Rids[1],
+                                Rids[2],
+                                Rids[3],
+                                Rids[4],
+                                Rids[5],
+                                Rids[6],
+                                Rids[7],
+                                &DstSid);
+
+    return DstSid;
+}
+
+
+static BOOL
+SampAddMemberToAlias(HKEY hDomainKey,
+                     ULONG AliasId,
+                     PSID MemberSid)
+{
+    DWORD dwDisposition;
+    LPWSTR MemberSidString = NULL;
+    WCHAR szKeyName[256];
+    HKEY hMembersKey;
+
+    ConvertSidToStringSidW(MemberSid, &MemberSidString);
+
+    swprintf(szKeyName, L"Aliases\\%08lX\\Members", AliasId);
+
+    if (!RegCreateKeyExW(hDomainKey,
+                         szKeyName,
+                         0,
+                         NULL,
+                         REG_OPTION_NON_VOLATILE,
+                         KEY_ALL_ACCESS,
+                         NULL,
+                         &hMembersKey,
+                         &dwDisposition))
+    {
+        RegSetValueEx(hMembersKey,
+                      MemberSidString,
+                      0,
+                      REG_BINARY,
+                      (LPVOID)MemberSid,
+                      RtlLengthSid(MemberSid));
+
+        RegCloseKey(hMembersKey);
+    }
+
+    swprintf(szKeyName, L"Aliases\\Members\\%s", MemberSidString);
+
+    if (!RegCreateKeyExW(hDomainKey,
+                         szKeyName,
+                         0,
+                         NULL,
+                         REG_OPTION_NON_VOLATILE,
+                         KEY_ALL_ACCESS,
+                         NULL,
+                         &hMembersKey,
+                         &dwDisposition))
+    {
+        swprintf(szKeyName, L"%08lX", AliasId);
+
+        RegSetValueEx(hMembersKey,
+                      szKeyName,
+                      0,
+                      REG_BINARY,
+                      (LPVOID)MemberSid,
+                      RtlLengthSid(MemberSid));
+
+        RegCloseKey(hMembersKey);
+    }
+
+    if (MemberSidString != NULL)
+        LocalFree(MemberSidString);
+
+    return TRUE;
+}
+
+
 static BOOL
 SampCreateAliasAccount(HKEY hDomainKey,
                        LPCWSTR lpAccountName,
+                       LPCWSTR lpDescription,
                        ULONG ulRelativeId)
 {
     DWORD dwDisposition;
@@ -86,6 +187,13 @@ SampCreateAliasAccount(HKEY hDomainKey,
                       REG_SZ,
                       (LPVOID)lpAccountName,
                       (wcslen(lpAccountName) + 1) * sizeof(WCHAR));
+
+        RegSetValueEx(hAccountKey,
+                      L"Description",
+                      0,
+                      REG_SZ,
+                      (LPVOID)lpDescription,
+                      (wcslen(lpDescription) + 1) * sizeof(WCHAR));
 
         RegCloseKey(hAccountKey);
     }
@@ -332,6 +440,7 @@ SampInitializeSAM(VOID)
     HKEY hDomainKey = NULL;
     PSID pBuiltinSid = NULL;
     BOOL bResult = TRUE;
+    PSID pSid;
     NTSTATUS Status;
 
     TRACE("SampInitializeSAM() called\n");
@@ -398,19 +507,36 @@ SampInitializeSAM(VOID)
     {
         SampCreateAliasAccount(hDomainKey,
                                L"Administrators",
+                               L"",
                                DOMAIN_ALIAS_RID_ADMINS);
 
         SampCreateAliasAccount(hDomainKey,
                                L"Users",
+                               L"",
                                DOMAIN_ALIAS_RID_USERS);
 
         SampCreateAliasAccount(hDomainKey,
                                L"Guests",
+                               L"",
                                DOMAIN_ALIAS_RID_GUESTS);
 
         SampCreateAliasAccount(hDomainKey,
                                L"Power Users",
+                               L"",
                                DOMAIN_ALIAS_RID_POWER_USERS);
+
+
+        pSid = AppendRidToSid(AccountDomainInfo->DomainSid,
+                              DOMAIN_USER_RID_ADMIN);
+        if (pSid != NULL)
+        {
+            SampAddMemberToAlias(hDomainKey,
+                                 DOMAIN_ALIAS_RID_ADMINS,
+                                 pSid);
+
+            RtlFreeHeap(RtlGetProcessHeap(), 0, pSid);
+        }
+
 
         RegCloseKey(hDomainKey);
     }

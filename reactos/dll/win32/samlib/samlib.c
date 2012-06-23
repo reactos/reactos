@@ -353,6 +353,57 @@ SamFreeMemory(IN PVOID Buffer)
 
 NTSTATUS
 NTAPI
+SamGetAliasMembership(IN SAM_HANDLE DomainHandle,
+                      IN ULONG PassedCount,
+                      IN PSID *Sids,
+                      OUT PULONG MembershipCount,
+                      OUT PULONG *Aliases)
+{
+    SAMPR_PSID_ARRAY SidArray;
+    SAMPR_ULONG_ARRAY Membership;
+    NTSTATUS Status;
+
+    TRACE("SamAliasMembership(%p %ul %p %p %p)\n",
+          DomainHandle, PassedCount, Sids, MembershipCount, Aliases);
+
+    if (Sids == NULL ||
+        MembershipCount == NULL ||
+        Aliases == NULL)
+        return STATUS_INVALID_PARAMETER;
+
+    Membership.Element = NULL;
+
+    RpcTryExcept
+    {
+        SidArray.Count = PassedCount;
+        SidArray.Sids = (PSAMPR_SID_INFORMATION)Sids;
+
+        Status = SamrGetAliasMembership((SAMPR_HANDLE)DomainHandle,
+                                        &SidArray,
+                                        &Membership);
+        if (NT_SUCCESS(Status))
+        {
+            *MembershipCount = Membership.Count;
+            *Aliases = Membership.Element;
+        }
+        else
+        {
+            if (Membership.Element != NULL)
+                midl_user_free(Membership.Element);
+        }
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
+
+NTSTATUS
+NTAPI
 SamGetMembersInAlias(IN SAM_HANDLE AliasHandle,
                      OUT PSID **MemberIds,
                      OUT PULONG MemberCount)
@@ -379,7 +430,7 @@ SamGetMembersInAlias(IN SAM_HANDLE AliasHandle,
         if (NT_SUCCESS(Status))
         {
             *MemberCount = SidArray.Count;
-            *MemberIds = (PSID *)(SidArray.Sids);
+            *MemberIds = (PSID *)SidArray.Sids;
         }
 
     }
@@ -417,6 +468,19 @@ SamLookupDomainInSamServer(IN SAM_HANDLE ServerHandle,
     RpcEndExcept;
 
     return Status;
+}
+
+
+NTSTATUS
+NTAPI
+SamLookupNamesInDomain(IN SAM_HANDLE DomainHandle,
+                       IN ULONG Count,
+                       IN PUNICODE_STRING Names,
+                       OUT PULONG *RelativeIds,
+                       OUT PSID_NAME_USE *Use)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 
@@ -509,6 +573,33 @@ SamOpenUser(IN SAM_HANDLE DomainHandle,
 
 NTSTATUS
 NTAPI
+SamQueryInformationAlias(IN SAM_HANDLE AliasHandle,
+                         IN ALIAS_INFORMATION_CLASS AliasInformationClass,
+                         OUT PVOID *Buffer)
+{
+    NTSTATUS Status;
+
+    TRACE("SamQueryInformationAlias(%p %lu %p)\n",
+          AliasHandle, AliasInformationClass, Buffer);
+
+    RpcTryExcept
+    {
+        Status = SamrQueryInformationAlias((SAMPR_HANDLE)AliasHandle,
+                                           AliasInformationClass,
+                                           (PSAMPR_ALIAS_INFO_BUFFER *)Buffer);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
+
+NTSTATUS
+NTAPI
 SamQueryInformationDomain(IN SAM_HANDLE DomainHandle,
                           IN DOMAIN_INFORMATION_CLASS DomainInformationClass,
                           OUT PVOID *Buffer)
@@ -550,6 +641,33 @@ SamQueryInformationUser(IN SAM_HANDLE UserHandle,
         Status = SamrQueryInformationUser((SAMPR_HANDLE)UserHandle,
                                           UserInformationClass,
                                           (PSAMPR_USER_INFO_BUFFER *)Buffer);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
+
+NTSTATUS
+NTAPI
+SamSetInformationAlias(IN SAM_HANDLE AliasHandle,
+                       IN ALIAS_INFORMATION_CLASS AliasInformationClass,
+                       IN PVOID Buffer)
+{
+    NTSTATUS Status;
+
+    TRACE("SamSetInformationAlias(%p %lu %p)\n",
+          AliasHandle, AliasInformationClass, Buffer);
+
+    RpcTryExcept
+    {
+        Status = SamrSetInformationAlias((SAMPR_HANDLE)AliasHandle,
+                                         AliasInformationClass,
+                                         Buffer);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {

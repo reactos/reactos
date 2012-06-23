@@ -58,6 +58,31 @@ typedef struct _SAM_SID_ENUMERATION
     UNICODE_STRING Name;
 } SAM_SID_ENUMERATION, *PSAM_SID_ENUMERATION;
 
+typedef enum _ALIAS_INFORMATION_CLASS
+{
+    AliasGeneralInformation = 1,
+    AliasNameInformation,
+    AliasAdminCommentInformation
+} ALIAS_INFORMATION_CLASS, *PALIAS_INFORMATION_CLASS;
+
+typedef struct _SAMPR_ALIAS_GENERAL_INFORMATION
+{
+    UNICODE_STRING Name;
+    ULONG MemberCount;
+    UNICODE_STRING AdminComment;
+} SAMPR_ALIAS_GENERAL_INFORMATION, *PSAMPR_ALIAS_GENERAL_INFORMATION;
+
+typedef struct _SAMPR_ALIAS_NAME_INFORMATION
+{
+    UNICODE_STRING Name;
+} SAMPR_ALIAS_NAME_INFORMATION, *PSAMPR_ALIAS_NAME_INFORMATION;
+
+typedef struct _SAMPR_ALIAS_ADM_COMMENT_INFORMATION
+{
+    UNICODE_STRING AdminComment;
+} SAMPR_ALIAS_ADM_COMMENT_INFORMATION, *PSAMPR_ALIAS_ADM_COMMENT_INFORMATION;
+
+
 typedef enum _DOMAIN_INFORMATION_CLASS
 {
     DomainPasswordInformation = 1,
@@ -174,6 +199,14 @@ SamFreeMemory(IN PVOID Buffer);
 
 NTSTATUS
 NTAPI
+SamGetAliasMembership(IN SAM_HANDLE DomainHandle,
+                      IN ULONG PassedCount,
+                      IN PSID *Sids,
+                      OUT PULONG MembershipCount,
+                      OUT PULONG *Aliases);
+
+NTSTATUS
+NTAPI
 SamGetMembersInAlias(IN SAM_HANDLE AliasHandle,
                      OUT PSID **MemberIds,
                      OUT PULONG MemberCount);
@@ -183,6 +216,14 @@ NTAPI
 SamLookupDomainInSamServer(IN SAM_HANDLE ServerHandle,
                            IN PUNICODE_STRING Name,
                            OUT PSID *DomainId);
+
+NTSTATUS
+NTAPI
+SamLookupNamesInDomain(IN SAM_HANDLE DomainHandle,
+                       IN ULONG Count,
+                       IN PUNICODE_STRING Names,
+                       OUT PULONG *RelativeIds,
+                       OUT PSID_NAME_USE *Use);
 
 NTSTATUS
 NTAPI
@@ -207,6 +248,12 @@ SamOpenUser(IN SAM_HANDLE DomainHandle,
 
 NTSTATUS
 NTAPI
+SamQueryInformationAlias(IN SAM_HANDLE AliasHandle,
+                         IN ALIAS_INFORMATION_CLASS AliasInformationClass,
+                         OUT PVOID *Buffer);
+
+NTSTATUS
+NTAPI
 SamQueryInformationDomain(IN SAM_HANDLE DomainHandle,
                           IN DOMAIN_INFORMATION_CLASS DomainInformationClass,
                           OUT PVOID *Buffer);
@@ -216,6 +263,12 @@ NTAPI
 SamQueryInformationUser(IN SAM_HANDLE UserHandle,
                         IN USER_INFORMATION_CLASS UserInformationClass,
                         OUT PVOID *Buffer);
+
+NTSTATUS
+NTAPI
+SamSetInformationAlias(IN SAM_HANDLE AliasHandle,
+                       IN ALIAS_INFORMATION_CLASS AliasInformationClass,
+                       IN PVOID Buffer);
 
 NTSTATUS
 NTAPI
