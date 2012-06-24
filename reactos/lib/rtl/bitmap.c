@@ -1,6 +1,7 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
+ * LICENSE:         GNU GPL - See COPYING in the top level directory
+ *                  BSD - See COPYING.ARM in the top level directory
  * FILE:            lib/rtl/bitmap.c
  * PURPOSE:         Bitmap functions
  * PROGRAMMER:      Timo Kreuzer (timo.kreuzer@reactos.org)
@@ -13,6 +14,9 @@
 #define NDEBUG
 #include <debug.h>
 
+// FIXME: hack
+#undef ASSERT
+#define ASSERT(...)
 
 /* DATA *********************************************************************/
 
@@ -150,6 +154,12 @@ RtlFindMostSignificantBit(ULONGLONG Value)
 {
     ULONG Position;
 
+#ifdef _M_AMD64
+    if (BitScanReverse64(&Position, Value))
+    {
+        return (CCHAR)Position;
+    }
+#else
     if (BitScanReverse(&Position, Value >> 32))
     {
         return (CCHAR)(Position + 32);
@@ -158,7 +168,7 @@ RtlFindMostSignificantBit(ULONGLONG Value)
     {
         return (CCHAR)Position;
     }
-
+#endif
     return -1;
 }
 
@@ -168,6 +178,12 @@ RtlFindLeastSignificantBit(ULONGLONG Value)
 {
     ULONG Position;
 
+#ifdef _M_AMD64
+    if (BitScanForward64(&Position, Value))
+    {
+        return (CCHAR)Position;
+    }
+#else
     if (BitScanForward(&Position, (ULONG)Value))
     {
         return (CCHAR)Position;
@@ -176,7 +192,7 @@ RtlFindLeastSignificantBit(ULONGLONG Value)
     {
         return (CCHAR)(Position + 32);
     }
-
+#endif
     return -1;
 }
 
