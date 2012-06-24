@@ -415,7 +415,7 @@ RtlNumberOfSetBits(
     Byte = (PUCHAR)BitMapHeader->Buffer;
     MaxByte = Byte + BitMapHeader->SizeOfBitMap / 8;
 
-    while (Byte < MaxByte);
+    while (Byte < MaxByte)
     {
         BitCount += BitCountTable[*Byte++];
     }
