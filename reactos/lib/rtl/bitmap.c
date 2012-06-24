@@ -410,16 +410,18 @@ RtlNumberOfSetBits(
     IN PRTL_BITMAP BitMapHeader)
 {
     PUCHAR Byte, MaxByte;
-    ULONG BitCount = 0;
+    ULONG BitCount = 0, Shift;
 
     Byte = (PUCHAR)BitMapHeader->Buffer;
-    MaxByte = Byte + (BitMapHeader->SizeOfBitMap + 7) / 8;
+    MaxByte = Byte + BitMapHeader->SizeOfBitMap / 8;
 
-    do
+    while (Byte < MaxByte);
     {
         BitCount += BitCountTable[*Byte++];
     }
-    while (Byte <= MaxByte);
+
+    Shift = 8 - (BitMapHeader->SizeOfBitMap & 7);
+    BitCount += BitCountTable[(*Byte) << Shift];
 
     return BitCount;
 }
