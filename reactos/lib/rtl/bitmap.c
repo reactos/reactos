@@ -421,7 +421,7 @@ RtlNumberOfSetBits(
     }
 
     Shift = 8 - (BitMapHeader->SizeOfBitMap & 7);
-    BitCount += BitCountTable[(*Byte) << Shift];
+    BitCount += BitCountTable[((*Byte) << Shift) & 0xFF];
 
     return BitCount;
 }
@@ -618,6 +618,13 @@ RtlFindNextForwardRunClear(
 {
     ULONG Length;
 
+    /* Check for buffer overrun */
+    if (FromIndex >= BitMapHeader->SizeOfBitMap)
+    {
+        *StartingRunIndex = FromIndex;
+        return 0;
+    }
+
     /* Assume a set run first, count it's length */
     Length = RtlpGetLengthOfRunSet(BitMapHeader, FromIndex, MAXULONG);
     *StartingRunIndex = FromIndex + Length;
@@ -634,6 +641,13 @@ RtlFindNextForwardRunSet(
     IN PULONG StartingRunIndex)
 {
     ULONG Length;
+
+    /* Check for buffer overrun */
+    if (FromIndex >= BitMapHeader->SizeOfBitMap)
+    {
+        *StartingRunIndex = FromIndex;
+        return 0;
+    }
 
     /* Assume a clear run first, count it's length */
     Length = RtlpGetLengthOfRunClear(BitMapHeader, FromIndex, MAXULONG);
