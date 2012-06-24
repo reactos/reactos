@@ -450,10 +450,14 @@ RtlFindClearBits(
         return MAXULONG;
     }
 
+    /* Check if the hint is outside the bitmap */
+    if (HintIndex >= BitMapHeader->SizeOfBitMap) HintIndex = 0;
+
     /* Check for trivial case */
     if (NumberToFind == 0)
     {
-        return HintIndex;
+        /* Return hint rounded down to byte margin */
+        return HintIndex & ~7;
     }
 
     /* First margin is end of bitmap */
@@ -514,10 +518,14 @@ RtlFindSetBits(
         return MAXULONG;
     }
 
+    /* Check if the hint is outside the bitmap */
+    if (HintIndex >= BitMapHeader->SizeOfBitMap) HintIndex = 0;
+
     /* Check for trivial case */
     if (NumberToFind == 0)
     {
-        return HintIndex;
+        /* Return hint rounded down to byte margin */
+        return HintIndex & ~7;
     }
 
     /* First margin is end of bitmap */
