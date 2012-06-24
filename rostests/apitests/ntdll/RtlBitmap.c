@@ -290,6 +290,7 @@ Test_RtlFindClearBits(void)
     ok_int(RtlFindClearBits(&BitMapHeader, 1, 1), -1);
 
     RtlInitializeBitMap(&BitMapHeader, Buffer, 8);
+    ok_int(RtlFindClearBits(&BitMapHeader, 0, 3), 0);
     ok_int(RtlFindClearBits(&BitMapHeader, 1, 0), 1);
     ok_int(RtlFindClearBits(&BitMapHeader, 1, 1), 1);
     ok_int(RtlFindClearBits(&BitMapHeader, 1, 2), 4);
@@ -298,14 +299,21 @@ Test_RtlFindClearBits(void)
     ok_int(RtlFindClearBits(&BitMapHeader, 3, 0), -1);
 
     RtlInitializeBitMap(&BitMapHeader, Buffer, 32);
+    ok_int(RtlFindClearBits(&BitMapHeader, 0, 3), 0);
+    ok_int(RtlFindClearBits(&BitMapHeader, 0, 21), 16);
+    ok_int(RtlFindClearBits(&BitMapHeader, 0, 12), 8);
+    ok_int(RtlFindClearBits(&BitMapHeader, 0, 31), 24);
+    ok_int(RtlFindClearBits(&BitMapHeader, 0, 32), 0);
+    ok_int(RtlFindClearBits(&BitMapHeader, 0, 39), 0);
     ok_int(RtlFindClearBits(&BitMapHeader, 4, 0), 11);
     ok_int(RtlFindClearBits(&BitMapHeader, 5, 0), 20);
     ok_int(RtlFindClearBits(&BitMapHeader, 4, 11), 11);
     ok_int(RtlFindClearBits(&BitMapHeader, 4, 12), 20);
     ok_int(RtlFindClearBits(&BitMapHeader, 2, 11), 11);
     ok_int(RtlFindClearBits(&BitMapHeader, 2, 12), 12);
-    ok_int(RtlFindClearBits(&BitMapHeader, 0, 12), 8);
-    ok_int(RtlFindClearBits(&BitMapHeader, 0, 39), 0);
+    ok_int(RtlFindClearBits(&BitMapHeader, 1, 32), 1);
+    ok_int(RtlFindClearBits(&BitMapHeader, 4, 32), 11);
+    ok_int(RtlFindClearBits(&BitMapHeader, 5, 32), 20);
 
 }
 
@@ -325,6 +333,7 @@ Test_RtlFindSetBits(void)
     ok_int(RtlFindSetBits(&BitMapHeader, 1, 1), -1);
 
     RtlInitializeBitMap(&BitMapHeader, Buffer, 8);
+    ok_int(RtlFindSetBits(&BitMapHeader, 0, 3), 0);
     ok_int(RtlFindSetBits(&BitMapHeader, 1, 0), 1);
     ok_int(RtlFindSetBits(&BitMapHeader, 1, 1), 1);
     ok_int(RtlFindSetBits(&BitMapHeader, 1, 2), 4);
@@ -333,14 +342,20 @@ Test_RtlFindSetBits(void)
     ok_int(RtlFindSetBits(&BitMapHeader, 3, 0), -1);
 
     RtlInitializeBitMap(&BitMapHeader, Buffer, 32);
+    ok_int(RtlFindSetBits(&BitMapHeader, 0, 3), 0);
+    ok_int(RtlFindSetBits(&BitMapHeader, 0, 21), 16);
+    ok_int(RtlFindSetBits(&BitMapHeader, 0, 12), 8);
+    ok_int(RtlFindSetBits(&BitMapHeader, 0, 31), 24);
+    ok_int(RtlFindSetBits(&BitMapHeader, 0, 32), 0);
+    ok_int(RtlFindSetBits(&BitMapHeader, 0, 39), 0);
     ok_int(RtlFindSetBits(&BitMapHeader, 4, 0), 11);
     ok_int(RtlFindSetBits(&BitMapHeader, 5, 0), 20);
     ok_int(RtlFindSetBits(&BitMapHeader, 4, 11), 11);
     ok_int(RtlFindSetBits(&BitMapHeader, 4, 12), 20);
     ok_int(RtlFindSetBits(&BitMapHeader, 2, 11), 11);
-    ok_int(RtlFindSetBits(&BitMapHeader, 2, 12), 12);
-    ok_int(RtlFindSetBits(&BitMapHeader, 0, 12), 8);
-    ok_int(RtlFindSetBits(&BitMapHeader, 0, 39), 0);
+    ok_int(RtlFindSetBits(&BitMapHeader, 1, 32), 1);
+    ok_int(RtlFindSetBits(&BitMapHeader, 4, 32), 11);
+    ok_int(RtlFindSetBits(&BitMapHeader, 5, 32), 20);
 
 }
 
