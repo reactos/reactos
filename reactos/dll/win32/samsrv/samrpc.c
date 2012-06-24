@@ -1506,6 +1506,254 @@ SamrOpenAlias(IN SAMPR_HANDLE DomainHandle,
     return STATUS_SUCCESS;
 }
 
+
+static NTSTATUS
+SampQueryAliasGeneral(PSAM_DB_OBJECT AliasObject,
+                      PSAMPR_ALIAS_INFO_BUFFER *Buffer)
+{
+    PSAMPR_ALIAS_INFO_BUFFER InfoBuffer = NULL;
+    HANDLE MembersKeyHandle = NULL;
+    ULONG NameLength = 0;
+    ULONG DescriptionLength = 0;
+    NTSTATUS Status;
+
+    *Buffer = NULL;
+
+    InfoBuffer = midl_user_allocate(sizeof(SAMPR_ALIAS_INFO_BUFFER));
+    if (InfoBuffer == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    Status = SampGetObjectAttribute(AliasObject,
+                                    L"Name",
+                                    NULL,
+                                    NULL,
+                                    &NameLength);
+    TRACE("Status 0x%08lx\n", Status);
+    if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_OVERFLOW)
+    {
+        TRACE("Status 0x%08lx\n", Status);
+        goto done;
+    }
+
+    InfoBuffer->General.Name.Length = NameLength - sizeof(WCHAR);
+    InfoBuffer->General.Name.MaximumLength = NameLength;
+    InfoBuffer->General.Name.Buffer = midl_user_allocate(NameLength);
+    if (InfoBuffer->General.Name.Buffer == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
+
+    TRACE("Name Length: %lu\n", NameLength);
+    Status = SampGetObjectAttribute(AliasObject,
+                                    L"Name",
+                                    NULL,
+                                    (PVOID)InfoBuffer->General.Name.Buffer,
+                                    &NameLength);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("Status 0x%08lx\n", Status);
+        goto done;
+    }
+
+    Status = SampGetObjectAttribute(AliasObject,
+                                    L"Description",
+                                    NULL,
+                                    NULL,
+                                    &DescriptionLength);
+    if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_OVERFLOW)
+    {
+        TRACE("Status 0x%08lx\n", Status);
+        goto done;
+    }
+
+    InfoBuffer->General.AdminComment.Length = DescriptionLength - sizeof(WCHAR);
+    InfoBuffer->General.AdminComment.MaximumLength = DescriptionLength;
+    InfoBuffer->General.AdminComment.Buffer = midl_user_allocate(DescriptionLength);
+    if (InfoBuffer->General.AdminComment.Buffer == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
+
+    TRACE("Description Length: %lu\n", DescriptionLength);
+    Status = SampGetObjectAttribute(AliasObject,
+                                    L"Description",
+                                    NULL,
+                                    (PVOID)InfoBuffer->General.AdminComment.Buffer,
+                                    &DescriptionLength);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("Status 0x%08lx\n", Status);
+        goto done;
+    }
+
+    /* Open the Members subkey */
+    Status = SampRegOpenKey(AliasObject->KeyHandle,
+                            L"Members",
+                            KEY_READ,
+                            &MembersKeyHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("Status 0x%08lx\n", Status);
+        goto done;
+    }
+
+    /* Retrieve the number of members of the alias */
+    Status = SampRegQueryKeyInfo(MembersKeyHandle,
+                                 NULL,
+                                 &InfoBuffer->General.MemberCount);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("Status 0x%08lx\n", Status);
+        goto done;
+    }
+
+    *Buffer = InfoBuffer;
+
+done:
+    if (MembersKeyHandle != NULL)
+        SampRegCloseKey(MembersKeyHandle);
+
+    if (!NT_SUCCESS(Status))
+    {
+        if (InfoBuffer != NULL)
+        {
+            if (InfoBuffer->General.Name.Buffer != NULL)
+                midl_user_free(InfoBuffer->General.Name.Buffer);
+
+            if (InfoBuffer->General.AdminComment.Buffer != NULL)
+                midl_user_free(InfoBuffer->General.AdminComment.Buffer);
+
+            midl_user_free(InfoBuffer);
+        }
+    }
+
+    return Status;
+}
+
+
+static NTSTATUS
+SampQueryAliasName(PSAM_DB_OBJECT AliasObject,
+                   PSAMPR_ALIAS_INFO_BUFFER *Buffer)
+{
+    PSAMPR_ALIAS_INFO_BUFFER InfoBuffer = NULL;
+    ULONG Length = 0;
+    NTSTATUS Status;
+
+    *Buffer = NULL;
+
+    InfoBuffer = midl_user_allocate(sizeof(SAMPR_ALIAS_INFO_BUFFER));
+    if (InfoBuffer == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    Status = SampGetObjectAttribute(AliasObject,
+                                    L"Name",
+                                    NULL,
+                                    NULL,
+                                    &Length);
+    if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_OVERFLOW)
+    {
+        TRACE("Status 0x%08lx\n", Status);
+        goto done;
+    }
+
+    InfoBuffer->Name.Name.Length = Length - sizeof(WCHAR);
+    InfoBuffer->Name.Name.MaximumLength = Length;
+    InfoBuffer->Name.Name.Buffer = midl_user_allocate(Length);
+    if (InfoBuffer->Name.Name.Buffer == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
+
+    TRACE("Length: %lu\n", Length);
+    Status = SampGetObjectAttribute(AliasObject,
+                                    L"Name",
+                                    NULL,
+                                    (PVOID)InfoBuffer->Name.Name.Buffer,
+                                    &Length);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("Status 0x%08lx\n", Status);
+        goto done;
+    }
+
+    *Buffer = InfoBuffer;
+
+done:
+    if (!NT_SUCCESS(Status))
+    {
+        if (InfoBuffer != NULL)
+        {
+            if (InfoBuffer->Name.Name.Buffer != NULL)
+                midl_user_free(InfoBuffer->Name.Name.Buffer);
+
+            midl_user_free(InfoBuffer);
+        }
+    }
+
+    return Status;
+}
+
+
+static NTSTATUS
+SampQueryAliasAdminComment(PSAM_DB_OBJECT AliasObject,
+                           PSAMPR_ALIAS_INFO_BUFFER *Buffer)
+{
+    PSAMPR_ALIAS_INFO_BUFFER InfoBuffer = NULL;
+    ULONG Length = 0;
+    NTSTATUS Status;
+
+    *Buffer = NULL;
+
+    InfoBuffer = midl_user_allocate(sizeof(SAMPR_ALIAS_INFO_BUFFER));
+    if (InfoBuffer == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    Status = SampGetObjectAttribute(AliasObject,
+                                    L"Description",
+                                    NULL,
+                                    NULL,
+                                    &Length);
+    if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_OVERFLOW)
+        goto done;
+
+    InfoBuffer->AdminComment.AdminComment.Length = Length - sizeof(WCHAR);
+    InfoBuffer->AdminComment.AdminComment.MaximumLength = Length;
+    InfoBuffer->AdminComment.AdminComment.Buffer = midl_user_allocate(Length);
+    if (InfoBuffer->AdminComment.AdminComment.Buffer == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
+
+    Status = SampGetObjectAttribute(AliasObject,
+                                    L"Description",
+                                    NULL,
+                                    (PVOID)InfoBuffer->AdminComment.AdminComment.Buffer,
+                                    &Length);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    *Buffer = InfoBuffer;
+
+done:
+    if (!NT_SUCCESS(Status))
+    {
+        if (InfoBuffer != NULL)
+        {
+            if (InfoBuffer->AdminComment.AdminComment.Buffer != NULL)
+                midl_user_free(InfoBuffer->AdminComment.AdminComment.Buffer);
+
+            midl_user_free(InfoBuffer);
+        }
+    }
+
+    return Status;
+}
+
+
 /* Function 28 */
 NTSTATUS
 NTAPI
@@ -1529,22 +1777,20 @@ SamrQueryInformationAlias(IN SAMPR_HANDLE AliasHandle,
 
     switch (AliasInformationClass)
     {
-#if 0
         case AliasGeneralInformation:
             Status = SampQueryAliasGeneral(AliasObject,
-                                           &Buffer->General);
+                                           Buffer);
             break;
 
         case AliasNameInformation:
             Status = SampQueryAliasName(AliasObject,
-                                        &Buffer->Name);
+                                        Buffer);
             break;
 
         case AliasAdminCommentInformation:
             Status = SampQueryAliasAdminComment(AliasObject,
-                                                &Buffer->AdminComment);
+                                                Buffer);
             break;
-#endif
 
         default:
             Status = STATUS_INVALID_INFO_CLASS;
@@ -1557,30 +1803,30 @@ SamrQueryInformationAlias(IN SAMPR_HANDLE AliasHandle,
 
 static NTSTATUS
 SampSetAliasName(PSAM_DB_OBJECT AliasObject,
-                 PSAMPR_ALIAS_NAME_INFORMATION AliasNameInfo)
+                 PSAMPR_ALIAS_INFO_BUFFER Buffer)
 {
     NTSTATUS Status;
 
     Status = SampSetObjectAttribute(AliasObject,
                                     L"Name",
                                     REG_SZ,
-                                    AliasNameInfo->Name.Buffer,
-                                    AliasNameInfo->Name.Length + sizeof(WCHAR));
+                                    Buffer->Name.Name.Buffer,
+                                    Buffer->Name.Name.Length + sizeof(WCHAR));
 
     return Status;
 }
 
 static NTSTATUS
 SampSetAliasAdminComment(PSAM_DB_OBJECT AliasObject,
-                         PSAMPR_ALIAS_ADM_COMMENT_INFORMATION AliasAdminCommentInfo)
+                         PSAMPR_ALIAS_INFO_BUFFER Buffer)
 {
     NTSTATUS Status;
 
     Status = SampSetObjectAttribute(AliasObject,
                                     L"Description",
                                     REG_SZ,
-                                    AliasAdminCommentInfo->AdminComment.Buffer,
-                                    AliasAdminCommentInfo->AdminComment.Length + sizeof(WCHAR));
+                                    Buffer->AdminComment.AdminComment.Buffer,
+                                    Buffer->AdminComment.AdminComment.Length + sizeof(WCHAR));
 
     return Status;
 }
@@ -1610,12 +1856,12 @@ SamrSetInformationAlias(IN SAMPR_HANDLE AliasHandle,
     {
         case AliasNameInformation:
             Status = SampSetAliasName(AliasObject,
-                                      &Buffer->Name);
+                                      Buffer);
             break;
 
         case AliasAdminCommentInformation:
             Status = SampSetAliasAdminComment(AliasObject,
-                                              &Buffer->AdminComment);
+                                              Buffer);
             break;
 
         default:
