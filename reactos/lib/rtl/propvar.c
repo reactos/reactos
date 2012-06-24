@@ -67,7 +67,7 @@ PropertyLengthAsVariant(IN PSERIALIZEDPROPERTYVALUE pProp,
                         IN USHORT CodePage,
                         IN BYTE bReserved)
 {
-    BOOLEAN Success = FALSE;
+    ULONG Length = 0;
     PVOID BaseAddress = NULL;
     ULONG (*ProcedureAddress)(PSERIALIZEDPROPERTYVALUE, ULONG, USHORT, BYTE);
 
@@ -77,7 +77,7 @@ PropertyLengthAsVariant(IN PSERIALIZEDPROPERTYVALUE pProp,
         ProcedureAddress = LoadOle32Export(&BaseAddress,
                                            "StgPropertyLengthAsVariant");
 
-        Success = ProcedureAddress(pProp, cbProp, CodePage, bReserved);
+        Length = ProcedureAddress(pProp, cbProp, CodePage, bReserved);
     }
     _SEH2_FINALLY
     {
@@ -88,7 +88,7 @@ PropertyLengthAsVariant(IN PSERIALIZEDPROPERTYVALUE pProp,
     }
     _SEH2_END;
 
-    return Success;
+    return Length;
 }
 
 /*
