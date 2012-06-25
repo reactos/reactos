@@ -66,6 +66,9 @@ TestNodeName(VOID)
         { "0.0.0.0:80",                     NULL },
         { "0.0.0.0.0",                      NULL },
         { "1.1.1.256",                      NULL },
+        { "1.2.3",                          NULL },
+        { "1.2.3.0x4",                      "1.2.3.4",          AI_NUMERICHOST },
+        { "1.2.3.010",                      "1.2.3.8",          AI_NUMERICHOST },
         /* let's just assume this one doesn't change any time soon ;) */
         { "google-public-dns-a.google.com", "8.8.8.8" },
     };
@@ -80,7 +83,7 @@ TestNodeName(VOID)
     for (i = 0; i < TestCount; i++)
     {
         trace("%d: '%s'\n", i, Tests[i].NodeName);
-        StartSeh();
+        StartSeh()
             AddrInfo = InvalidPointer;
             Error = getaddrinfo(Tests[i].NodeName, NULL, &Hints, &AddrInfo);
             if (Tests[i].ExpectedAddress)
@@ -214,6 +217,17 @@ START_TEST(getaddrinfo)
     struct hostent *Hostent;
 
     /* not yet initialized */
+    StartSeh()
+        Error = getaddrinfo(NULL, NULL, NULL, NULL);
+        ok_dec(Error, WSANOTINITIALISED);
+    EndSeh(STATUS_SUCCESS);
+    StartSeh()
+        AddrInfo = InvalidPointer;
+        Error = getaddrinfo(NULL, NULL, NULL, &AddrInfo);
+        ok_dec(Error, WSANOTINITIALISED);
+        ok_ptr(AddrInfo, InvalidPointer);
+    EndSeh(STATUS_SUCCESS);
+
     Error = getaddrinfo("127.0.0.1", "80", NULL, &AddrInfo);
     ok_dec(Error, WSANOTINITIALISED);
 
@@ -239,9 +253,9 @@ START_TEST(getaddrinfo)
 
     ZeroMemory(&Hints, sizeof(Hints));
     /* parameter tests */
-    StartSeh(); getaddrinfo(NULL, NULL, NULL, NULL); EndSeh(STATUS_ACCESS_VIOLATION);
-    StartSeh(); getaddrinfo("", "", &Hints, NULL);   EndSeh(STATUS_ACCESS_VIOLATION);
-    StartSeh();
+    StartSeh() getaddrinfo(NULL, NULL, NULL, NULL); EndSeh(STATUS_ACCESS_VIOLATION);
+    StartSeh() getaddrinfo("", "", &Hints, NULL);   EndSeh(STATUS_ACCESS_VIOLATION);
+    StartSeh()
         AddrInfo = InvalidPointer;
         Error = getaddrinfo(NULL, NULL, NULL, &AddrInfo);
         ok_dec(Error, WSAHOST_NOT_FOUND);

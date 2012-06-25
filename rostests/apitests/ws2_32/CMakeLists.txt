@@ -4,6 +4,7 @@ list(APPEND SOURCE
     helpers.c
     ioctlsocket.c
     recv.c
+    WSAStartup.c
     testlist.c)
 
 add_executable(ws2_32_apitest ${SOURCE})
