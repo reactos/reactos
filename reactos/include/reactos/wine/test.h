@@ -626,31 +626,31 @@ int main( int argc, char **argv )
 // Some helpful definitions
 
 #define ok_hex(expression, result) \
-    { \
+    do { \
         int _value = (expression); \
         ok(_value == (result), "Wrong value for '%s', expected: " #result " (0x%x), got: 0x%x\n", \
            #expression, (int)(result), _value); \
-    }
+    } while (0)
 
 #define ok_dec(expression, result) \
-    { \
+    do { \
         int _value = (expression); \
         ok(_value == (result), "Wrong value for '%s', expected: " #result " (%d), got: %d\n", \
            #expression, (int)(result), _value); \
-    }
+    } while (0)
 
 #define ok_ptr(expression, result) \
-    { \
+    do { \
         void *_value = (expression); \
         ok(_value == (result), "Wrong value for '%s', expected: " #result " (%p), got: %p\n", \
            #expression, (void*)(result), _value); \
-    }
+    } while (0)
 
 #define ok_err(error) \
     ok(GetLastError() == (error), "Wrong last error. Expected " #error ", got %d\n", (int)GetLastError())
 
 #define ok_str(x, y) \
-    ok(strcmp(x, y) == 0, "Wrong string. Expected '%s', got '%s'\n", y, x);
+    ok(strcmp(x, y) == 0, "Wrong string. Expected '%s', got '%s'\n", y, x)
 
 #define ok_long(expression, result) ok_hex(expression, result)
 #define ok_int(expression, result) ok_dec(expression, result)
