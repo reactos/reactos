@@ -296,8 +296,9 @@ SepCaptureAcl(IN PACL InputAcl,
         }
         _SEH2_END;
 
-        NewAcl = ExAllocatePool(PoolType,
-                                AclSize);
+        NewAcl = ExAllocatePoolWithTag(PoolType,
+                                       AclSize,
+                                       TAG_ACL);
         if (NewAcl != NULL)
         {
             _SEH2_TRY
@@ -329,8 +330,9 @@ SepCaptureAcl(IN PACL InputAcl,
     {
         AclSize = InputAcl->AclSize;
 
-        NewAcl = ExAllocatePool(PoolType,
-                                AclSize);
+        NewAcl = ExAllocatePoolWithTag(PoolType,
+                                       AclSize,
+                                       TAG_ACL);
 
         if (NewAcl != NULL)
         {
