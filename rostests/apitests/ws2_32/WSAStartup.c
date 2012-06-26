@@ -78,7 +78,7 @@ CheckStringBuffer(
     EqualLength = RtlCompareMemory(Buffer, Expected, Length);
     if (EqualLength != Length)
     {
-        ok(0, "String is '%S', expected '%S'\n", Buffer, Expected);
+        ok(0, "String is '%s', expected '%s'\n", Buffer, Expected);
         Result = FALSE;
     }
 
