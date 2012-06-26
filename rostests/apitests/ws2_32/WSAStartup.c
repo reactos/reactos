@@ -64,7 +64,50 @@ FreeGuarded(
 
 static
 BOOLEAN
-IsInitialized(VOID)
+CheckStringBuffer(
+    PCSTR Buffer,
+    SIZE_T MaximumLength,
+    PCSTR Expected,
+    UCHAR Fill)
+{
+    SIZE_T Length = strlen(Expected);
+    SIZE_T EqualLength;
+    BOOLEAN Result = TRUE;
+    SIZE_T i;
+
+    EqualLength = RtlCompareMemory(Buffer, Expected, Length);
+    if (EqualLength != Length)
+    {
+        ok(0, "String is '%S', expected '%S'\n", Buffer, Expected);
+        Result = FALSE;
+    }
+
+    if (Buffer[Length] != ANSI_NULL)
+    {
+        ok(0, "Not null terminated\n");
+        Result = FALSE;
+    }
+
+    /* The function nulls the rest of the buffer! */
+    for (i = Length + 1; i < MaximumLength; i++)
+    {
+        UCHAR Char = ((PUCHAR)Buffer)[i];
+        if (Char != Fill)
+        {
+            ok(0, "Found 0x%x at offset %lu, expected 0x%x\n", Char, (ULONG)i, Fill);
+            /* Don't count this as a failure unless the string was actually wrong */
+            //Result = FALSE;
+            /* Don't flood the log */
+            break;
+        }
+    }
+
+    return Result;
+}
+
+static
+BOOLEAN
+IsWinsockInitialized(VOID)
 {
     struct hostent *Hostent;
 
@@ -91,6 +134,7 @@ AreLegacyFunctionsSupported(VOID)
 START_TEST(WSAStartup)
 {
     NTSTATUS ExceptionStatus;
+    BOOLEAN Okay;
     LPWSADATA WsaData;
     int Error;
     struct
@@ -125,7 +169,7 @@ START_TEST(WSAStartup)
     const INT TestCount = sizeof(Tests) / sizeof(Tests[0]);
     INT i;
 
-    ok(!IsInitialized(), "Winsock unexpectedly initialized\n");
+    ok(!IsWinsockInitialized(), "Winsock unexpectedly initialized\n");
 
     /* parameter checks */
     StartSeh()
@@ -138,7 +182,7 @@ START_TEST(WSAStartup)
         ok_dec(Error, WSAEFAULT);
         ok_dec(WSAGetLastError(), WSANOTINITIALISED);
     EndSeh(STATUS_SUCCESS);
-    ok(!IsInitialized(), "Winsock unexpectedly initialized\n");
+    ok(!IsWinsockInitialized(), "Winsock unexpectedly initialized\n");
 
     WsaData = AllocateGuarded(sizeof(*WsaData));
     if (!WsaData)
@@ -162,27 +206,35 @@ START_TEST(WSAStartup)
             ok(!Tests[i].ExpectedSuccess, "WSAStartup failed unexpectedly\n");
             ok_dec(Error, WSAVERNOTSUPPORTED);
             ok_dec(WSAGetLastError(), WSANOTINITIALISED);
-            ok(!IsInitialized(), "Winsock unexpectedly initialized\n");
+            ok(!IsWinsockInitialized(), "Winsock unexpectedly initialized\n");
         }
         else
         {
             ok(Tests[i].ExpectedSuccess, "WSAStartup succeeded unexpectedly\n");
             ok_dec(WSAGetLastError(), 0);
-            ok(IsInitialized(), "Winsock not initialized despite success\n");
+            ok(IsWinsockInitialized(), "Winsock not initialized despite success\n");
             if (LOBYTE(Tests[i].Version) < 2)
                 ok(AreLegacyFunctionsSupported(), "Legacy function failed\n");
             else
                 ok(!AreLegacyFunctionsSupported(), "Legacy function succeeded\n");
             WSACleanup();
-            ok(!IsInitialized(), "Winsock still initialized after cleanup\n");
+            ok(!IsWinsockInitialized(), "Winsock still initialized after cleanup\n");
         }
         if (Tests[i].ExpectedVersion)
             ok_hex(WsaData->wVersion, Tests[i].ExpectedVersion);
         else
             ok_hex(WsaData->wVersion, Tests[i].Version);
         ok_hex(WsaData->wHighVersion, MAKEWORD(2, 2));
-        ok_str(WsaData->szDescription, "WinSock 2.0");
-        ok_str(WsaData->szSystemStatus, "Running");
+        Okay = CheckStringBuffer(WsaData->szDescription,
+                                 sizeof(WsaData->szDescription),
+                                 "WinSock 2.0",
+                                 0x55);
+        ok(Okay, "CheckStringBuffer failed\n");
+        Okay = CheckStringBuffer(WsaData->szSystemStatus,
+                                 sizeof(WsaData->szSystemStatus),
+                                 "Running",
+                                 0x55);
+        ok(Okay, "CheckStringBuffer failed\n");
         if (LOBYTE(WsaData->wVersion) >= 2)
         {
             ok_dec(WsaData->iMaxSockets, 0);
@@ -203,12 +255,20 @@ START_TEST(WSAStartup)
     ok_dec(WSAGetLastError(), 0);
     ok_hex(WsaData->wVersion, MAKEWORD(1, 1));
     ok_hex(WsaData->wHighVersion, MAKEWORD(2, 2));
-    ok_str(WsaData->szDescription, "WinSock 2.0");
-    ok_str(WsaData->szSystemStatus, "Running");
+    Okay = CheckStringBuffer(WsaData->szDescription,
+                             sizeof(WsaData->szDescription),
+                             "WinSock 2.0",
+                             0x55);
+    ok(Okay, "CheckStringBuffer failed\n");
+    Okay = CheckStringBuffer(WsaData->szSystemStatus,
+                             sizeof(WsaData->szSystemStatus),
+                             "Running",
+                             0x55);
+    ok(Okay, "CheckStringBuffer failed\n");
     ok_dec(WsaData->iMaxSockets, 32767);
     ok_dec(WsaData->iMaxUdpDg, 65467);
     ok_ptr(WsaData->lpVendorInfo, (PVOID)0x5555555555555555ULL);
-    ok(IsInitialized(), "Winsock not initialized\n");
+    ok(IsWinsockInitialized(), "Winsock not initialized\n");
     if (!Error)
     {
         ok(AreLegacyFunctionsSupported(), "Legacy function failed\n");
@@ -217,8 +277,16 @@ START_TEST(WSAStartup)
         ok_dec(Error, 0);
         ok_hex(WsaData->wVersion, MAKEWORD(2, 2));
         ok_hex(WsaData->wHighVersion, MAKEWORD(2, 2));
-        ok_str(WsaData->szDescription, "WinSock 2.0");
-        ok_str(WsaData->szSystemStatus, "Running");
+        Okay = CheckStringBuffer(WsaData->szDescription,
+                                 sizeof(WsaData->szDescription),
+                                 "WinSock 2.0",
+                                 0x55);
+        ok(Okay, "CheckStringBuffer failed\n");
+        Okay = CheckStringBuffer(WsaData->szSystemStatus,
+                                 sizeof(WsaData->szSystemStatus),
+                                 "Running",
+                                 0x55);
+        ok(Okay, "CheckStringBuffer failed\n");
         ok_dec(WsaData->iMaxSockets, 0);
         ok_dec(WsaData->iMaxUdpDg, 0);
         ok_ptr(WsaData->lpVendorInfo, (PVOID)0x5555555555555555ULL);
@@ -226,10 +294,10 @@ START_TEST(WSAStartup)
         {
             ok(AreLegacyFunctionsSupported(), "Legacy function failed\n");
             WSACleanup();
-            ok(IsInitialized(), "Winsock prematurely uninitialized\n");
+            ok(IsWinsockInitialized(), "Winsock prematurely uninitialized\n");
         }
         WSACleanup();
-        ok(!IsInitialized(), "Winsock still initialized after cleanup\n");
+        ok(!IsWinsockInitialized(), "Winsock still initialized after cleanup\n");
     }
 
     /* downgrade the version */
@@ -239,12 +307,20 @@ START_TEST(WSAStartup)
     ok_dec(WSAGetLastError(), 0);
     ok_hex(WsaData->wVersion, MAKEWORD(2, 2));
     ok_hex(WsaData->wHighVersion, MAKEWORD(2, 2));
-    ok_str(WsaData->szDescription, "WinSock 2.0");
-    ok_str(WsaData->szSystemStatus, "Running");
+    Okay = CheckStringBuffer(WsaData->szDescription,
+                             sizeof(WsaData->szDescription),
+                             "WinSock 2.0",
+                             0x55);
+    ok(Okay, "CheckStringBuffer failed\n");
+    Okay = CheckStringBuffer(WsaData->szSystemStatus,
+                             sizeof(WsaData->szSystemStatus),
+                             "Running",
+                             0x55);
+    ok(Okay, "CheckStringBuffer failed\n");
     ok_dec(WsaData->iMaxSockets, 0);
     ok_dec(WsaData->iMaxUdpDg, 0);
     ok_ptr(WsaData->lpVendorInfo, (PVOID)0x5555555555555555ULL);
-    ok(IsInitialized(), "Winsock not initialized\n");
+    ok(IsWinsockInitialized(), "Winsock not initialized\n");
     if (!Error)
     {
         ok(!AreLegacyFunctionsSupported(), "Legacy function succeeded\n");
@@ -253,8 +329,16 @@ START_TEST(WSAStartup)
         ok_dec(Error, 0);
         ok_hex(WsaData->wVersion, MAKEWORD(1, 1));
         ok_hex(WsaData->wHighVersion, MAKEWORD(2, 2));
-        ok_str(WsaData->szDescription, "WinSock 2.0");
-        ok_str(WsaData->szSystemStatus, "Running");
+        Okay = CheckStringBuffer(WsaData->szDescription,
+                                 sizeof(WsaData->szDescription),
+                                 "WinSock 2.0",
+                                 0x55);
+        ok(Okay, "CheckStringBuffer failed\n");
+        Okay = CheckStringBuffer(WsaData->szSystemStatus,
+                                 sizeof(WsaData->szSystemStatus),
+                                 "Running",
+                                 0x55);
+        ok(Okay, "CheckStringBuffer failed\n");
         ok_dec(WsaData->iMaxSockets, 32767);
         ok_dec(WsaData->iMaxUdpDg, 65467);
         ok_ptr(WsaData->lpVendorInfo, (PVOID)0x5555555555555555ULL);
@@ -262,10 +346,10 @@ START_TEST(WSAStartup)
         {
             ok(AreLegacyFunctionsSupported(), "Legacy function failed\n");
             WSACleanup();
-            ok(IsInitialized(), "Winsock prematurely uninitialized\n");
+            ok(IsWinsockInitialized(), "Winsock prematurely uninitialized\n");
         }
         WSACleanup();
-        ok(!IsInitialized(), "Winsock still initialized after cleanup\n");
+        ok(!IsWinsockInitialized(), "Winsock still initialized after cleanup\n");
     }
 
     FreeGuarded(WsaData);
