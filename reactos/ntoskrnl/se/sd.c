@@ -882,11 +882,12 @@ SeSetSecurityDescriptorInfo(IN PVOID Object OPTIONAL,
     SECURITY_INFORMATION SecurityInformation;
 
     ObjectSd = *ObjectsSecurityDescriptor;
-    ASSERT(ObjectSd->Control & SE_SELF_RELATIVE);
 
     /* The object does not have a security descriptor. */
     if (!ObjectSd)
         return STATUS_NO_SECURITY_ON_OBJECT;
+
+    ASSERT(ObjectSd->Control & SE_SELF_RELATIVE);
 
     SecurityInformation = *_SecurityInformation;
 
