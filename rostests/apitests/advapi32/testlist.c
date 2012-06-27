@@ -6,10 +6,12 @@
 #include "wine/test.h"
 
 extern void func_CreateService(void);
+extern void func_QueryServiceConfig2(void);
 
 const struct test winetest_testlist[] =
 {
     { "CreateService", func_CreateService },
+    { "QueryServiceConfig2", func_QueryServiceConfig2 },
 
     { 0, 0 }
 };

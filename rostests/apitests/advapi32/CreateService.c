@@ -9,8 +9,6 @@
 #include <windows.h>
 #include <strsafe.h>
 
-#define ok_lasterr(err, s) ok(GetLastError() == (err), "%s GetLastError()=0x%08lx, expected 0x%08lx\n", s, GetLastError(), (DWORD)(err))
-
 static int MakeService(SC_HANDLE hScm, const wchar_t *serviceName, SC_HANDLE *hService, DWORD *tag)
 {
     DWORD ret;
@@ -41,7 +39,7 @@ static int MakeService(SC_HANDLE hScm, const wchar_t *serviceName, SC_HANDLE *hS
         return 1;
     }
 
-    ok_lasterr(ERROR_SUCCESS, "CreateServiceW");
+    ok_err(ERROR_SUCCESS);
 
     ok(*tag != 0, "tag is zero, expected nonzero\n");
 
@@ -98,7 +96,7 @@ static void Test_CreateService(void)
         goto cleanup;
     }
 
-    ok_lasterr(ERROR_SUCCESS, "OpenSCManagerW");
+    ok_err(ERROR_SUCCESS);
 
     if (MakeService(hScm, L"advapi32_apitest_CreateService_Test_Service1", &hService1, &tag1))
         goto cleanup;

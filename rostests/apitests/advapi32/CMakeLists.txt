@@ -1,8 +1,7 @@
 
-add_definitions(-D_DLL -D__USE_CRTIMP)
-
 list(APPEND SOURCE
      CreateService.c
+     QueryServiceConfig2.c
      testlist.c)
 
 add_executable(advapi32_apitest ${SOURCE})
