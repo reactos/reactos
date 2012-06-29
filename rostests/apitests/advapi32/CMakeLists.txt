@@ -1,6 +1,7 @@
 
 list(APPEND SOURCE
      CreateService.c
+     LockDatabase.c
      QueryServiceConfig2.c
      testlist.c)
 

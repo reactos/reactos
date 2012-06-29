@@ -2,12 +2,15 @@
  * PROJECT:         ReactOS api tests
  * LICENSE:         GPLv2+ - See COPYING in the top level directory
  * PURPOSE:         Test for QueryServiceConfig2A/W
- * PROGRAMMER:      HermËs B…LUSCA - MAœTO
+ * PROGRAMMER:      Herm√®s B√âLUSCA - MA√èTO
  */
 
 #include <wine/test.h>
 #include <windows.h>
 #include <strsafe.h>
+
+#define TESTING_SERVICEW     L"Spooler"
+#define TESTING_SERVICEA      "Spooler"
 
 /*
  * Taken from base/system/services/config.c and adapted.
@@ -495,7 +498,7 @@ static void Test_QueryServiceConfig2W(void)
     ok_err(ERROR_SUCCESS);
 
     SetLastError(0xdeadbeef);
-    hService = OpenServiceW(hScm, L"Spooler", SERVICE_QUERY_CONFIG);
+    hService = OpenServiceW(hScm, TESTING_SERVICEW, SERVICE_QUERY_CONFIG);
     ok(hService != NULL, "Failed to open service handle, error=0x%08lx\n", GetLastError());
     if (!hService)
     {
@@ -505,10 +508,10 @@ static void Test_QueryServiceConfig2W(void)
 
     ok_err(ERROR_SUCCESS);
 
-    if (QueryConfig2W(hService, L"Spooler", SERVICE_CONFIG_DESCRIPTION) != 0)
+    if (QueryConfig2W(hService, TESTING_SERVICEW, SERVICE_CONFIG_DESCRIPTION) != 0)
         goto cleanup;
 
-    if (QueryConfig2W(hService, L"Spooler", SERVICE_CONFIG_FAILURE_ACTIONS) != 0)
+    if (QueryConfig2W(hService, TESTING_SERVICEW, SERVICE_CONFIG_FAILURE_ACTIONS) != 0)
         goto cleanup;
 
 cleanup:
@@ -536,7 +539,7 @@ static void Test_QueryServiceConfig2A(void)
     ok_err(ERROR_SUCCESS);
 
     SetLastError(0xdeadbeef);
-    hService = OpenServiceA(hScm, "Spooler", SERVICE_QUERY_CONFIG);
+    hService = OpenServiceA(hScm, TESTING_SERVICEA, SERVICE_QUERY_CONFIG);
     ok(hService != NULL, "Failed to open service handle, error=0x%08lx\n", GetLastError());
     if (!hService)
     {
@@ -546,10 +549,10 @@ static void Test_QueryServiceConfig2A(void)
 
     ok_err(ERROR_SUCCESS);
 
-    if (QueryConfig2A(hService, "Spooler", SERVICE_CONFIG_DESCRIPTION) != 0)
+    if (QueryConfig2A(hService, TESTING_SERVICEA, SERVICE_CONFIG_DESCRIPTION) != 0)
         goto cleanup;
 
-    if (QueryConfig2A(hService, "Spooler", SERVICE_CONFIG_FAILURE_ACTIONS) != 0)
+    if (QueryConfig2A(hService, TESTING_SERVICEA, SERVICE_CONFIG_FAILURE_ACTIONS) != 0)
         goto cleanup;
 
 cleanup:
