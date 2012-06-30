@@ -57,6 +57,8 @@ InterlockedBitTestAndReset(
 #define InterlockedBitTestAndReset _interlockedbittestandreset
 
 #ifdef _M_AMD64
+#define BitScanForward64 _BitScanForward64
+#define BitScanReverse64 _BitScanReverse64
 #define BitTest64 _bittest64
 #define BitTestAndComplement64 _bittestandcomplement64
 #define BitTestAndSet64 _bittestandset64

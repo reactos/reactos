@@ -264,6 +264,8 @@ InterlockedBitTestAndReset(
 #define InterlockedBitTestAndReset _interlockedbittestandreset
 
 #ifdef _M_AMD64
+#define BitScanForward64 _BitScanForward64
+#define BitScanReverse64 _BitScanReverse64
 #define BitTest64 _bittest64
 #define BitTestAndComplement64 _bittestandcomplement64
 #define BitTestAndSet64 _bittestandset64
@@ -9757,6 +9759,7 @@ typedef XSAVE_FORMAT XMM_SAVE_AREA32, *PXMM_SAVE_AREA32;
 #define KeGetDcacheFillSize() 1L
 
 #define YieldProcessor _mm_pause
+#define MemoryBarrier __faststorefence
 #define FastFence __faststorefence
 #define LoadFence _mm_lfence
 #define MemoryFence _mm_mfence
@@ -10206,8 +10209,8 @@ KeInitializeSpinLock(_Out_ PKSPIN_LOCK SpinLock)
 }
 #endif
 
-DECLSPEC_NORETURN
 NTKERNELAPI
+DECLSPEC_NORETURN
 VOID
 NTAPI
 KeBugCheckEx(
