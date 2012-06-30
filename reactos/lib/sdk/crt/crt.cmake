@@ -175,6 +175,32 @@ list(APPEND CRT_SOURCE
     search/lsearch.c
     signal/signal.c
     signal/xcptinfo.c
+    startup/crtexe.c
+    startup/wcrtexe.c
+    startup/crt_handler.c
+    startup/crtdll.c
+    startup/_newmode.c
+    startup/wildcard.c
+    startup/tlssup.c
+    startup/mingw_helpers.c
+    startup/natstart.c
+    startup/charmax.c
+    startup/merr.c
+    startup/atonexit.c
+    startup/txtmode.c
+    startup/pesect.c
+    startup/tlsmcrt.c
+    startup/tlsthrd.c
+    startup/tlsmthread.c
+    startup/cinitexe.c
+    startup/gs_support.c
+    startup/dll_argv.c
+    startup/dllargv.c
+    startup/wdllargv.c
+    startup/crt0_c.c
+    startup/crt0_w.c
+    startup/dllentry.c
+    startup/reactos.c
     stdio/_flsbuf.c
     stdio/_flswbuf.c
     stdio/access.c
