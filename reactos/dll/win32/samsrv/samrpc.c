@@ -2177,27 +2177,6 @@ SamrQueryInformationUser(IN SAMPR_HANDLE UserHandle,
     return STATUS_NOT_IMPLEMENTED;
 }
 
-
-static
-NTSTATUS
-SampSetPasswordInformation(PSAM_DB_OBJECT UserObject,
-                           PSAMPR_USER_SET_PASSWORD_INFORMATION PasswordInfo)
-{
-    NTSTATUS Status;
-
-    TRACE("Password: %S\n", PasswordInfo->Password.Buffer);
-    TRACE("PasswordExpired: %d\n", PasswordInfo->PasswordExpired);
-
-    Status = SampSetObjectAttribute(UserObject,
-                                    L"Password",
-                                    REG_SZ,
-                                    PasswordInfo->Password.Buffer,
-                                    PasswordInfo->Password.MaximumLength);
-
-    return Status;
-}
-
-
 /* Function 37 */
 NTSTATUS
 NTAPI
@@ -2206,15 +2185,40 @@ SamrSetInformationUser(IN SAMPR_HANDLE UserHandle,
                        IN PSAMPR_USER_INFO_BUFFER Buffer)
 {
     PSAM_DB_OBJECT UserObject;
+    ACCESS_MASK DesiredAccess;
     NTSTATUS Status;
 
     TRACE("SamrSetInformationUser(%p %lu %p)\n",
           UserHandle, UserInformationClass, Buffer);
 
+    switch (UserInformationClass)
+    {
+        case UserNameInformation:
+        case UserAccountNameInformation:
+        case UserFullNameInformation:
+        case UserPrimaryGroupInformation:
+        case UserHomeInformation:
+        case UserScriptInformation:
+        case UserProfileInformation:
+        case UserAdminCommentInformation:
+        case UserWorkStationsInformation:
+        case UserControlInformation:
+        case UserExpiresInformation:
+            DesiredAccess = USER_WRITE_ACCOUNT;
+            break;
+
+        case UserSetPasswordInformation:
+            DesiredAccess = USER_FORCE_PASSWORD_CHANGE;
+            break;
+
+        default:
+            return STATUS_INVALID_INFO_CLASS;
+    }
+
     /* Validate the domain handle */
     Status = SampValidateDbObject(UserHandle,
                                   SamDbUserObject,
-                                  USER_FORCE_PASSWORD_CHANGE,
+                                  DesiredAccess,
                                   &UserObject);
     if (!NT_SUCCESS(Status))
     {
@@ -2224,14 +2228,135 @@ SamrSetInformationUser(IN SAMPR_HANDLE UserHandle,
 
     switch (UserInformationClass)
     {
-        case UserSetPasswordInformation:
-            Status = SampSetPasswordInformation(UserObject,
-                                                (PSAMPR_USER_SET_PASSWORD_INFORMATION)Buffer);
+//        case UserGeneralInformation:
+//        case UserPreferencesInformation:
+//        case UserLogonHoursInformation:
+
+        case UserNameInformation:
+            Status = SampSetObjectAttribute(UserObject,
+                                            L"Name",
+                                            REG_SZ,
+                                            Buffer->Name.UserName.Buffer,
+                                            Buffer->Name.UserName.MaximumLength);
+            if (!NT_SUCCESS(Status))
+                break;
+
+            Status = SampSetObjectAttribute(UserObject,
+                                            L"FullName",
+                                            REG_SZ,
+                                            Buffer->Name.FullName.Buffer,
+                                            Buffer->Name.FullName.MaximumLength);
             break;
+
+        case UserAccountNameInformation:
+            Status = SampSetObjectAttribute(UserObject,
+                                            L"Name",
+                                            REG_SZ,
+                                            Buffer->AccountName.UserName.Buffer,
+                                            Buffer->AccountName.UserName.MaximumLength);
+            break;
+
+        case UserFullNameInformation:
+            Status = SampSetObjectAttribute(UserObject,
+                                            L"FullName",
+                                            REG_SZ,
+                                            Buffer->FullName.FullName.Buffer,
+                                            Buffer->FullName.FullName.MaximumLength);
+            break;
+
+        case UserPrimaryGroupInformation:
+            Status = SampSetObjectAttribute(UserObject,
+                                            L"PrimaryGroupId",
+                                            REG_DWORD,
+                                            &Buffer->PrimaryGroup.PrimaryGroupId,
+                                            sizeof(ULONG));
+            break;
+
+        case UserHomeInformation:
+            Status = SampSetObjectAttribute(UserObject,
+                                            L"HomeDirectory",
+                                            REG_SZ,
+                                            Buffer->Home.HomeDirectory.Buffer,
+                                            Buffer->Home.HomeDirectory.MaximumLength);
+            if (!NT_SUCCESS(Status))
+                break;
+
+            Status = SampSetObjectAttribute(UserObject,
+                                            L"HomeDirectoryDrive",
+                                            REG_SZ,
+                                            Buffer->Home.HomeDirectoryDrive.Buffer,
+                                            Buffer->Home.HomeDirectoryDrive.MaximumLength);
+            break;
+
+        case UserScriptInformation:
+            Status = SampSetObjectAttribute(UserObject,
+                                            L"ScriptPath",
+                                            REG_SZ,
+                                            Buffer->Script.ScriptPath.Buffer,
+                                            Buffer->Script.ScriptPath.MaximumLength);
+            break;
+
+        case UserProfileInformation:
+            Status = SampSetObjectAttribute(UserObject,
+                                            L"ProfilePath",
+                                            REG_SZ,
+                                            Buffer->Profile.ProfilePath.Buffer,
+                                            Buffer->Profile.ProfilePath.MaximumLength);
+            break;
+
+        case UserAdminCommentInformation:
+            Status = SampSetObjectAttribute(UserObject,
+                                            L"AdminComment",
+                                            REG_SZ,
+                                            Buffer->AdminComment.AdminComment.Buffer,
+                                            Buffer->AdminComment.AdminComment.MaximumLength);
+            break;
+
+        case UserWorkStationsInformation:
+            Status = SampSetObjectAttribute(UserObject,
+                                            L"WorkStations",
+                                            REG_SZ,
+                                            Buffer->WorkStations.WorkStations.Buffer,
+                                            Buffer->WorkStations.WorkStations.MaximumLength);
+            break;
+
+        case UserSetPasswordInformation:
+            TRACE("Password: %S\n", Buffer->SetPassword.Password.Buffer);
+            TRACE("PasswordExpired: %d\n", Buffer->SetPassword.PasswordExpired);
+
+            Status = SampSetObjectAttribute(UserObject,
+                                            L"Password",
+                                            REG_SZ,
+                                            Buffer->SetPassword.Password.Buffer,
+                                            Buffer->SetPassword.Password.MaximumLength);
+            break;
+
+        case UserControlInformation:
+            Status = SampSetObjectAttribute(UserObject,
+                                            L"UserAccountControl",
+                                            REG_DWORD,
+                                            &Buffer->Control.UserAccountControl,
+                                            sizeof(ULONG));
+            break;
+
+        case UserExpiresInformation:
+            Status = SampSetObjectAttribute(UserObject,
+                                            L"AccountExpires",
+                                            REG_BINARY,
+                                            &Buffer->Expires.AccountExpires,
+                                            sizeof(OLD_LARGE_INTEGER));
+            break;
+
+//        case UserInternal1Information:
+//        case UserParametersInformation:
+//        case UserAllInformation:
+//        case UserInternal4Information:
+//        case UserInternal5Information:
+//        case UserInternal4InformationNew:
+//        case UserInternal5InformationNew:
 
         default:
             Status = STATUS_INVALID_INFO_CLASS;
-            break;
     }
 
     return Status;
