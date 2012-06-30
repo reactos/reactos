@@ -6,42 +6,162 @@
 extern "C" {
 #endif
 
-#define ALIAS_ADD_MEMBER 1
-#define ALIAS_REMOVE_MEMBER 2
-#define ALIAS_LIST_MEMBERS 4
-#define ALIAS_READ_INFORMATION 8
-#define ALIAS_WRITE_ACCOUNT 16
+#define ALIAS_ADD_MEMBER                0x00000001
+#define ALIAS_REMOVE_MEMBER             0x00000002
+#define ALIAS_LIST_MEMBERS              0x00000004
+#define ALIAS_READ_INFORMATION          0x00000008
+#define ALIAS_WRITE_ACCOUNT             0x00000010
 
-#define DOMAIN_READ_PASSWORD_PARAMETERS 1
-#define DOMAIN_WRITE_PASSWORD_PARAMS 2
-#define DOMAIN_READ_OTHER_PARAMETERS 4
-#define DOMAIN_WRITE_OTHER_PARAMETERS 8
-#define DOMAIN_CREATE_USER 16
-#define DOMAIN_CREATE_GROUP 32
-#define DOMAIN_CREATE_ALIAS 64
-#define DOMAIN_GET_ALIAS_MEMBERSHIP 128
-#define DOMAIN_LIST_ACCOUNTS 256
-#define DOMAIN_LOOKUP 512
-#define DOMAIN_ADMINISTER_SERVER 1024
+#define ALIAS_READ                     (STANDARD_RIGHTS_READ |\
+                                        ALIAS_LIST_MEMBERS)
 
-#define SAM_SERVER_CONNECT 1
-#define SAM_SERVER_SHUTDOWN 2
-#define SAM_SERVER_INITIALIZE 4
-#define SAM_SERVER_CREATE_DOMAIN 8
-#define SAM_SERVER_ENUMERATE_DOMAINS 16
-#define SAM_SERVER_LOOKUP_DOMAIN 32
+#define ALIAS_WRITE                    (STANDARD_RIGHTS_WRITE |\
+                                        ALIAS_ADD_MEMBER |\
+                                        ALIAS_REMOVE_MEMBER |\
+                                        ALIAS_WRITE_ACCOUNT)
 
-#define USER_READ_GENERAL 1
-#define USER_READ_PREFERENCES 2
-#define USER_WRITE_PREFERENCES 4
-#define USER_READ_LOGON 8
-#define USER_READ_ACCOUNT 16
-#define USER_WRITE_ACCOUNT 32
-#define USER_CHANGE_PASSWORD 64
-#define USER_FORCE_PASSWORD_CHANGE 128
-#define USER_LIST_GROUPS 256
-#define USER_READ_GROUP_INFORMATION 512
-#define USER_WRITE_GROUP_INFORMATION 1024
+#define ALIAS_EXECUTE                  (STANDARD_RIGHTS_EXECUTE |\
+                                        ALIAS_READ_INFORMATION)
+
+#define ALIAS_ALL_ACCESS               (STANDARD_RIGHTS_REQUIRED |\
+                                        ALIAS_ADD_MEMBER |\
+                                        ALIAS_REMOVE_MEMBER |\
+                                        ALIAS_LIST_MEMBERS |\
+                                        ALIAS_READ_INFORMATION |\
+                                        ALIAS_WRITE_ACCOUNT)
+
+#define DOMAIN_READ_PASSWORD_PARAMETERS 0x00000001
+#define DOMAIN_WRITE_PASSWORD_PARAMS    0x00000002
+#define DOMAIN_READ_OTHER_PARAMETERS    0x00000004
+#define DOMAIN_WRITE_OTHER_PARAMETERS   0x00000008
+#define DOMAIN_CREATE_USER              0x00000010
+#define DOMAIN_CREATE_GROUP             0x00000020
+#define DOMAIN_CREATE_ALIAS             0x00000040
+#define DOMAIN_GET_ALIAS_MEMBERSHIP     0x00000080
+#define DOMAIN_LIST_ACCOUNTS            0x00000100
+#define DOMAIN_LOOKUP                   0x00000200
+#define DOMAIN_ADMINISTER_SERVER        0x00000400
+
+#define DOMAIN_READ                    (STANDARD_RIGHTS_READ |\
+                                        DOMAIN_READ_OTHER_PARAMETERS |\
+                                        DOMAIN_GET_ALIAS_MEMBERSHIP)
+
+#define DOMAIN_WRITE                   (STANDARD_RIGHTS_WRITE |\
+                                        DOMAIN_WRITE_PASSWORD_PARAMS |\
+                                        DOMAIN_WRITE_OTHER_PARAMETERS |\
+                                        DOMAIN_CREATE_USER |\
+                                        DOMAIN_CREATE_GROUP |\
+                                        DOMAIN_CREATE_ALIAS |\
+                                        DOMAIN_ADMINISTER_SERVER)
+
+#define DOMAIN_EXECUTE                 (STANDARD_RIGHTS_EXECUTE |\
+                                        DOMAIN_READ_PASSWORD_PARAMETERS |\
+                                        DOMAIN_LIST_ACCOUNTS |\
+                                        DOMAIN_LOOKUP)
+
+#define DOMAIN_ALL_ACCESS              (STANDARD_RIGHTS_REQUIRED |\
+                                        DOMAIN_READ_PASSWORD_PARAMETERS |\
+                                        DOMAIN_WRITE_PASSWORD_PARAMS |\
+                                        DOMAIN_READ_OTHER_PARAMETERS |\
+                                        DOMAIN_WRITE_OTHER_PARAMETERS |\
+                                        DOMAIN_CREATE_USER |\
+                                        DOMAIN_CREATE_GROUP |\
+                                        DOMAIN_CREATE_ALIAS |\
+                                        DOMAIN_GET_ALIAS_MEMBERSHIP |\
+                                        DOMAIN_LIST_ACCOUNTS |\
+                                        DOMAIN_LOOKUP |\
+                                        DOMAIN_ADMINISTER_SERVER)
+
+#define GROUP_READ_INFORMATION          0x00000001
+#define GROUP_WRITE_ACCOUNT             0x00000002
+#define GROUP_ADD_MEMBER                0x00000004
+#define GROUP_REMOVE_MEMBER             0x00000008
+#define GROUP_LIST_MEMBERS              0x00000010
+
+#define GROUP_READ                     (STANDARD_RIGHTS_READ |\
+                                        GROUP_LIST_MEMBERS)
+
+#define GROUP_WRITE                    (STANDARD_RIGHTS_WRITE |\
+                                        GROUP_WRITE_ACCOUNT |\
+                                        GROUP_ADD_MEMBER |\
+                                        GROUP_REMOVE_MEMBER)
+
+#define GROUP_EXECUTE                  (STANDARD_RIGHTS_EXECUTE |\
+                                        GROUP_READ_INFORMATION)
+
+#define GROUP_ALL_ACCESS               (STANDARD_RIGHTS_REQUIRED |\
+                                        GROUP_READ_INFORMATION |\
+                                        GROUP_WRITE_ACCOUNT |\
+                                        GROUP_ADD_MEMBER |\
+                                        GROUP_REMOVE_MEMBER |\
+                                        GROUP_LIST_MEMBERS)
+
+#define SAM_SERVER_CONNECT              0x00000001
+#define SAM_SERVER_SHUTDOWN             0x00000002
+#define SAM_SERVER_INITIALIZE           0x00000004
+#define SAM_SERVER_CREATE_DOMAIN        0x00000008
+#define SAM_SERVER_ENUMERATE_DOMAINS    0x00000010
+#define SAM_SERVER_LOOKUP_DOMAIN        0x00000020
+
+#define SAM_SERVER_READ                (STANDARD_RIGHTS_READ |\
+                                        SAM_SERVER_ENUMERATE_DOMAINS)
+
+#define SAM_SERVER_WRITE               (STANDARD_RIGHTS_WRITE |\
+                                        SAM_SERVER_SHUTDOWN |\
+                                        SAM_SERVER_INITIALIZE |\
+                                        SAM_SERVER_CREATE_DOMAIN)
+
+#define SAM_SERVER_EXECUTE             (STANDARD_RIGHTS_EXECUTE |\
+                                        SAM_SERVER_CONNECT |\
+                                        SAM_SERVER_LOOKUP_DOMAIN)
+
+#define SAM_SERVER_ALL_ACCESS          (STANDARD_RIGHTS_REQUIRED |\
+                                        SAM_SERVER_CONNECT |\
+                                        SAM_SERVER_SHUTDOWN |\
+                                        SAM_SERVER_INITIALIZE |\
+                                        SAM_SERVER_CREATE_DOMAIN |\
+                                        SAM_SERVER_ENUMERATE_DOMAINS |\
+                                        SAM_SERVER_LOOKUP_DOMAIN)
+
+#define USER_READ_GENERAL               0x00000001
+#define USER_READ_PREFERENCES           0x00000002
+#define USER_WRITE_PREFERENCES          0x00000004
+#define USER_READ_LOGON                 0x00000008
+#define USER_READ_ACCOUNT               0x00000010
+#define USER_WRITE_ACCOUNT              0x00000020
+#define USER_CHANGE_PASSWORD            0x00000040
+#define USER_FORCE_PASSWORD_CHANGE      0x00000080
+#define USER_LIST_GROUPS                0x00000100
+#define USER_READ_GROUP_INFORMATION     0x00000200
+#define USER_WRITE_GROUP_INFORMATION    0x00000400
+
+#define USER_READ                      (STANDARD_RIGHTS_READ |\
+                                        USER_READ_PREFERENCES |\
+                                        USER_READ_LOGON |\
+                                        USER_READ_ACCOUNT |\
+                                        USER_LIST_GROUPS |\
+                                        USER_READ_GROUP_INFORMATION)
+
+#define USER_WRITE                     (STANDARD_RIGHTS_WRITE |\
+                                        USER_WRITE_PREFERENCES |\
+                                        USER_CHANGE_PASSWORD)
+
+#define USER_EXECUTE                   (STANDARD_RIGHTS_EXECUTE |\
+                                        USER_READ_GENERAL |\
+                                        USER_CHANGE_PASSWORD)
+
+#define USER_ALL_ACCESS                (STANDARD_RIGHTS_REQUIRED |\
+                                        USER_READ_GENERAL |\
+                                        USER_READ_PREFERENCES |\
+                                        USER_WRITE_PREFERENCES |\
+                                        USER_READ_LOGON |\
+                                        USER_READ_ACCOUNT |\
+                                        USER_WRITE_ACCOUNT |\
+                                        USER_CHANGE_PASSWORD |\
+                                        USER_FORCE_PASSWORD_CHANGE |\
+                                        USER_LIST_GROUPS |\
+                                        USER_READ_GROUP_INFORMATION |\
+                                        USER_WRITE_GROUP_INFORMATION)
 
 typedef PVOID SAM_HANDLE, *PSAM_HANDLE;
 typedef ULONG SAM_ENUMERATE_HANDLE, *PSAM_ENUMERATE_HANDLE;
