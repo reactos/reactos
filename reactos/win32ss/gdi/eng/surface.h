@@ -10,7 +10,7 @@ typedef struct _SURFACE
     SURFOBJ     SurfObj;
     //XDCOBJ *   pdcoAA;
     FLONG       flags;
-    struct _PALETTE  *ppal;
+    struct _PALETTE  * const ppal; // Use SURFACE_vSetPalette to assign a palette
     //UINT       unk_050;
 
     union
@@ -123,3 +123,17 @@ SURFACE_AllocSurface(
     _In_ ULONG fjBitmap,
     _In_opt_ ULONG cjWidth,
     _In_opt_ PVOID pvBits);
+
+VOID
+FORCEINLINE
+SURFACE_vSetPalette(
+    _Inout_ PSURFACE psurf,
+    _In_ PPALETTE ppal)
+{
+    if (psurf->ppal)
+        GDIOBJ_vDereferenceObject((POBJ)psurf->ppal);
+    if (ppal)
+        GDIOBJ_vReferenceObjectByPointer((POBJ)ppal);
+    *(PVOID*)&psurf->ppal = ppal;
+}
+

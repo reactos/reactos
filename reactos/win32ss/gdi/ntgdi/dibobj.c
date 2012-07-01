@@ -1599,8 +1599,8 @@ DIB_CreateDIBSection(
     ppalDIB = CreateDIBPalette(bmi, dc, usage);
     if (ppalDIB)
     {
-        if (bmp->ppal) PALETTE_ShareUnlockPalette(bmp->ppal);
-        bmp->ppal = ppalDIB;
+        SURFACE_vSetPalette(bmp, ppalDIB);
+        PALETTE_ShareUnlockPalette(ppalDIB);
     }
 
     // Clean up in case of errors

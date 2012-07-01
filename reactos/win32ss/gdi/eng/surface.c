@@ -267,8 +267,7 @@ SURFACE_AllocSurface(
     }
 
     /* Assign a default palette and increment its reference count */
-    psurf->ppal = appalSurfaceDefault[iFormat];
-    GDIOBJ_vReferenceObjectByPointer(&psurf->ppal->BaseObject);
+    SURFACE_vSetPalette(psurf, appalSurfaceDefault[iFormat]);
 
     return psurf;
 }
@@ -399,6 +398,7 @@ EngAssociateSurface(
     SURFOBJ *pso;
     PSURFACE psurf;
     PDEVOBJ* ppdev;
+    PPALETTE ppal;
 
     ppdev = (PDEVOBJ*)hdev;
 
@@ -418,8 +418,10 @@ EngAssociateSurface(
     psurf->flags &= ~HOOK_FLAGS;
     psurf->flags |= (flHooks & HOOK_FLAGS);
 
-    /* Get palette */
-    psurf->ppal = PALETTE_ShareLockPalette(ppdev->devinfo.hpalDefault);
+    /* Assign the PDEV's palette */
+    ppal = PALETTE_ShareLockPalette(ppdev->devinfo.hpalDefault);
+    SURFACE_vSetPalette(psurf, ppal);
+    PALETTE_ShareUnlockPalette(ppal);
 
     SURFACE_ShareUnlockSurface(psurf);
 
@@ -441,6 +443,7 @@ EngModifySurface(
     SURFOBJ *pso;
     PSURFACE psurf;
     PDEVOBJ* ppdev;
+    PPALETTE ppal;
 
     psurf = SURFACE_ShareLockSurface(hsurf);
     if (psurf == NULL)
@@ -462,8 +465,10 @@ EngModifySurface(
     psurf->flags &= ~HOOK_FLAGS;
     psurf->flags |= (flHooks & HOOK_FLAGS);
 
-    /* Get palette */
-    psurf->ppal = PALETTE_ShareLockPalette(ppdev->devinfo.hpalDefault);
+    /* Assign the PDEV's palette */
+    ppal = PALETTE_ShareLockPalette(ppdev->devinfo.hpalDefault);
+    SURFACE_vSetPalette(psurf, ppal);
+    PALETTE_ShareUnlockPalette(ppal);
 
     SURFACE_ShareUnlockSurface(psurf);
 

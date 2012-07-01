@@ -223,6 +223,7 @@ IntCreateCompatibleBitmap(
     INT Height)
 {
     HBITMAP Bmp = NULL;
+    PPALETTE ppal;
 
     /* MS doc says if width or height is 0, return 1-by-1 pixel, monochrome bitmap */
     if (0 == Width || 0 == Height)
@@ -241,8 +242,13 @@ IntCreateCompatibleBitmap(
                               NULL);
         psurf = SURFACE_ShareLockSurface(Bmp);
         ASSERT(psurf);
-        /* Set palette */
-        psurf->ppal = PALETTE_ShareLockPalette(Dc->ppdev->devinfo.hpalDefault);
+
+        /* Dereference old palette and set new palette */
+        ppal = PALETTE_ShareLockPalette(Dc->ppdev->devinfo.hpalDefault);
+        ASSERT(ppal);
+        SURFACE_vSetPalette(psurf, ppal);
+        PALETTE_ShareUnlockPalette(ppal);
+
         /* Set flags */
         psurf->flags = API_BITMAP;
         psurf->hdc = NULL; // FIXME:
@@ -266,9 +272,10 @@ IntCreateCompatibleBitmap(
                           NULL);
             psurfBmp = SURFACE_ShareLockSurface(Bmp);
             ASSERT(psurfBmp);
-            /* Assign palette */
-            psurfBmp->ppal = psurf->ppal;
-            GDIOBJ_vReferenceObjectByPointer((POBJ)psurf->ppal);
+
+            /* Dereference old palette and set new palette */
+            SURFACE_vSetPalette(psurfBmp, psurf->ppal);
+
             /* Set flags */
             psurfBmp->flags = API_BITMAP;
             psurfBmp->hdc = NULL; // FIXME:
@@ -622,12 +629,9 @@ BITMAP_CopyBitmap(HBITMAP hBitmap)
                           psurfSrc->SurfObj.pvBits,
                           psurfNew->SurfObj.cjBits);
 
-            /* Dereference the new bitmaps palette, we will use a different */
-            GDIOBJ_vDereferenceObject(&psurfNew->ppal->BaseObject);
 
             /* Reference the palette of the source bitmap and use it */
-            GDIOBJ_vReferenceObjectByPointer(&psurfSrc->ppal->BaseObject);
-            psurfNew->ppal = psurfSrc->ppal;
+            SURFACE_vSetPalette(psurfNew, psurfSrc->ppal);
 
             /* Unlock the new surface */
             SURFACE_ShareUnlockSurface(psurfNew);
