@@ -220,6 +220,18 @@ typedef enum _DOMAIN_INFORMATION_CLASS
     DomainModifiedInformation2
 } DOMAIN_INFORMATION_CLASS;
 
+typedef enum _DOMAIN_SERVER_ENABLE_STATE
+{
+    DomainServerEnabled = 1,
+    DomainServerDisabled
+} DOMAIN_SERVER_ENABLE_STATE, *PDOMAIN_SERVER_ENABLE_STATE;
+
+typedef enum _DOMAIN_SERVER_ROLE
+{
+    DomainServerRoleBackup = 2,
+    DomainServerRolePrimary
+} DOMAIN_SERVER_ROLE, *PDOMAIN_SERVER_ROLE;
+
 typedef struct _DOMAIN_NAME_INFORMATION
 {
     UNICODE_STRING DomainName;
@@ -383,6 +395,11 @@ NTAPI
 SamQueryInformationUser(IN SAM_HANDLE UserHandle,
                         IN USER_INFORMATION_CLASS UserInformationClass,
                         OUT PVOID *Buffer);
+
+NTSTATUS
+NTAPI
+SamRemoveMemberFromAlias(IN SAM_HANDLE AliasHandle,
+                         IN PSID MemberId);
 
 NTSTATUS
 NTAPI

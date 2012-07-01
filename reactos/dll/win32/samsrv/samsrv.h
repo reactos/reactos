@@ -12,6 +12,7 @@
 #include <windows.h>
 #define NTOS_MODE_USER
 #include <ndk/cmfuncs.h>
+#include <ndk/kefuncs.h>
 #include <ndk/obfuncs.h>
 #include <ndk/rtlfuncs.h>
 #include <ndk/umtypes.h>
@@ -49,6 +50,28 @@ typedef struct _SAM_DB_OBJECT
 } SAM_DB_OBJECT, *PSAM_DB_OBJECT;
 
 #define SAMP_DB_SIGNATURE 0x87654321
+
+typedef struct _SAM_DOMAIN_FIXED_DATA
+{
+    ULONG Version;
+    ULONG Reserved;
+    LARGE_INTEGER CreationTime;
+    LARGE_INTEGER DomainModifiedCount;
+    LARGE_INTEGER MaxPasswordAge;
+    LARGE_INTEGER MinPasswordAge;
+    LARGE_INTEGER ForceLogoff;
+    LARGE_INTEGER LockoutDuration;
+    LARGE_INTEGER LockoutObservationWindow;
+    LARGE_INTEGER ModifiedCountAtLastPromotion;
+    ULONG NextRid;
+    ULONG PasswordProperties;
+    USHORT MinPasswordLength;
+    USHORT PasswordHistoryLength;
+    USHORT LockoutThreshold;
+    DOMAIN_SERVER_ENABLE_STATE DomainServerState;
+    DOMAIN_SERVER_ROLE DomainServerRole;
+    BOOLEAN UasCompatibilityRequired;
+} SAM_DOMAIN_FIXED_DATA, *PSAM_DOMAIN_FIXED_DATA;
 
 /* database.c */
 

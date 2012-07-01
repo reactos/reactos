@@ -277,6 +277,8 @@ SampCreateDomain(IN HKEY hDomainsKey,
                  IN PSID lpDomainSid,
                  OUT PHKEY lpDomainKey)
 {
+    SAM_DOMAIN_FIXED_DATA FixedData;
+    LPWSTR lpEmptyString = L"";
     DWORD dwDisposition;
     HKEY hDomainKey = NULL;
     HKEY hAliasesKey = NULL;
@@ -287,6 +289,26 @@ SampCreateDomain(IN HKEY hDomainsKey,
     if (lpDomainKey != NULL)
         *lpDomainKey = NULL;
 
+    /* Initialize the fixed domain data */
+    memset(&FixedData, 0, sizeof(SAM_DOMAIN_FIXED_DATA));
+    FixedData.Version = 1;
+    NtQuerySystemTime(&FixedData.CreationTime);
+    FixedData.DomainModifiedCount.QuadPart = 0;
+//    FixedData.MaxPasswordAge                 // 6 Weeks
+    FixedData.MinPasswordAge.QuadPart = 0;     // Now
+//    FixedData.ForceLogoff
+//    FixedData.LockoutDuration                // 30 minutes
+//    FixedData.LockoutObservationWindow       // 30 minutes
+    FixedData.ModifiedCountAtLastPromotion.QuadPart = 0;
+    FixedData.NextRid = 1000;
+    FixedData.PasswordProperties = 0;
+    FixedData.MinPasswordLength = 0;
+    FixedData.PasswordHistoryLength = 0;
+    FixedData.LockoutThreshold = 0;
+    FixedData.DomainServerState = DomainServerEnabled;
+    FixedData.DomainServerRole = DomainServerRolePrimary;
+    FixedData.UasCompatibilityRequired = TRUE;
+
     if (RegCreateKeyExW(hDomainsKey,
                         lpKeyName,
                         0,
@@ -296,6 +318,15 @@ SampCreateDomain(IN HKEY hDomainsKey,
                         NULL,
                         &hDomainKey,
                         &dwDisposition))
+        return FALSE;
+
+    /* Set the fixed data value */
+    if (RegSetValueEx(hDomainKey,
+                      L"F",
+                      0,
+                      REG_BINARY,
+                      (LPVOID)&FixedData,
+                      sizeof(SAM_DOMAIN_FIXED_DATA)))
         return FALSE;
 
     if (lpDomainSid != NULL)
@@ -314,6 +345,20 @@ SampCreateDomain(IN HKEY hDomainsKey,
                       (LPVOID)lpDomainSid,
                       RtlLengthSid(lpDomainSid));
     }
+
+    RegSetValueEx(hDomainKey,
+                  L"OemInformation",
+                  0,
+                  REG_SZ,
+                  (LPVOID)lpEmptyString,
+                  sizeof(WCHAR));
+
+    RegSetValueEx(hDomainKey,
+                  L"ReplicaSourceNodeName",
+                  0,
+                  REG_SZ,
+                  (LPVOID)lpEmptyString,
+                  sizeof(WCHAR));
 
     /* Create the Alias container */
     if (!RegCreateKeyExW(hDomainKey,
@@ -507,22 +552,22 @@ SampInitializeSAM(VOID)
     {
         SampCreateAliasAccount(hDomainKey,
                                L"Administrators",
-                               L"",
+                               L"Testabc1234567890",
                                DOMAIN_ALIAS_RID_ADMINS);
 
         SampCreateAliasAccount(hDomainKey,
                                L"Users",
-                               L"",
+                               L"Users Group",
                                DOMAIN_ALIAS_RID_USERS);
 
         SampCreateAliasAccount(hDomainKey,
                                L"Guests",
-                               L"",
+                               L"Guests Group",
                                DOMAIN_ALIAS_RID_GUESTS);
 
         SampCreateAliasAccount(hDomainKey,
                                L"Power Users",
-                               L"",
+                               L"Power Users Group",
                                DOMAIN_ALIAS_RID_POWER_USERS);
 
 

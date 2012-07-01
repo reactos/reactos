@@ -135,22 +135,26 @@ typedef struct _USER_DOMAIN_PASSWORD_INFORMATION
     unsigned long PasswordProperties;
 } USER_DOMAIN_PASSWORD_INFORMATION, *PUSER_DOMAIN_PASSWORD_INFORMATION;
 
+cpp_quote("#ifndef _NTSAM_")
 typedef enum _DOMAIN_SERVER_ENABLE_STATE
 {
     DomainServerEnabled = 1,
     DomainServerDisabled
 } DOMAIN_SERVER_ENABLE_STATE, *PDOMAIN_SERVER_ENABLE_STATE;
+cpp_quote("#endif")
 
 typedef struct _DOMAIN_STATE_INFORMATION
 {
     DOMAIN_SERVER_ENABLE_STATE DomainServerState;
 } DOMAIN_STATE_INFORMATION, *PDOMAIN_STATE_INFORMATION;
 
+cpp_quote("#ifndef _NTSAM_")
 typedef enum _DOMAIN_SERVER_ROLE
 {
     DomainServerRoleBackup = 2,
     DomainServerRolePrimary = 3
 } DOMAIN_SERVER_ROLE, *PDOMAIN_SERVER_ROLE;
+cpp_quote("#endif")
 
 cpp_quote("#ifndef _NTSECAPI_H")
 typedef struct _DOMAIN_PASSWORD_INFORMATION

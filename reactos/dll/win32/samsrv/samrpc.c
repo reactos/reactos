@@ -540,6 +540,290 @@ SamrOpenDomain(IN SAMPR_HANDLE ServerHandle,
 
 
 static NTSTATUS
+SampQueryDomainPassword(PSAM_DB_OBJECT DomainObject,
+                        PSAMPR_DOMAIN_INFO_BUFFER *Buffer)
+{
+    PSAMPR_DOMAIN_INFO_BUFFER InfoBuffer = NULL;
+    SAM_DOMAIN_FIXED_DATA FixedData;
+    ULONG Length = 0;
+    NTSTATUS Status;
+
+    *Buffer = NULL;
+
+    InfoBuffer = midl_user_allocate(sizeof(SAMPR_DOMAIN_INFO_BUFFER));
+    if (InfoBuffer == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    Length = sizeof(SAM_DOMAIN_FIXED_DATA);
+    Status = SampGetObjectAttribute(DomainObject,
+                                    L"F",
+                                    NULL,
+                                    (PVOID)&FixedData,
+                                    &Length);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    InfoBuffer->Password.MinPasswordLength = FixedData.MinPasswordLength;
+    InfoBuffer->Password.PasswordHistoryLength = FixedData.PasswordHistoryLength;
+    InfoBuffer->Password.PasswordProperties = FixedData.PasswordProperties;
+    InfoBuffer->Password.MaxPasswordAge.LowPart = FixedData.MaxPasswordAge.LowPart;
+    InfoBuffer->Password.MaxPasswordAge.HighPart = FixedData.MaxPasswordAge.HighPart;
+    InfoBuffer->Password.MinPasswordAge.LowPart = FixedData.MinPasswordAge.LowPart;
+    InfoBuffer->Password.MinPasswordAge.HighPart = FixedData.MinPasswordAge.HighPart;
+
+    *Buffer = InfoBuffer;
+
+done:
+    if (!NT_SUCCESS(Status))
+    {
+        if (InfoBuffer != NULL)
+        {
+            midl_user_free(InfoBuffer);
+        }
+    }
+
+    return Status;
+}
+
+
+static NTSTATUS
+SampQueryDomainGeneral(PSAM_DB_OBJECT DomainObject,
+                       PSAMPR_DOMAIN_INFO_BUFFER *Buffer)
+{
+    PSAMPR_DOMAIN_INFO_BUFFER InfoBuffer = NULL;
+    SAM_DOMAIN_FIXED_DATA FixedData;
+    ULONG Length = 0;
+    NTSTATUS Status;
+
+    *Buffer = NULL;
+
+    InfoBuffer = midl_user_allocate(sizeof(SAMPR_DOMAIN_INFO_BUFFER));
+    if (InfoBuffer == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    Length = sizeof(SAM_DOMAIN_FIXED_DATA);
+    Status = SampGetObjectAttribute(DomainObject,
+                                    L"F",
+                                    NULL,
+                                    (PVOID)&FixedData,
+                                    &Length);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    InfoBuffer->General.ForceLogoff.LowPart = FixedData.ForceLogoff.LowPart;
+    InfoBuffer->General.ForceLogoff.HighPart = FixedData.ForceLogoff.HighPart;
+    InfoBuffer->General.DomainModifiedCount.LowPart = FixedData.DomainModifiedCount.LowPart;
+    InfoBuffer->General.DomainModifiedCount.HighPart = FixedData.DomainModifiedCount.HighPart;
+    InfoBuffer->General.DomainServerState = FixedData.DomainServerState;
+    InfoBuffer->General.DomainServerRole = FixedData.DomainServerRole;
+    InfoBuffer->General.UasCompatibilityRequired = FixedData.UasCompatibilityRequired;
+
+    Length = 0;
+    Status = SampGetObjectAttribute(DomainObject,
+                                    L"OemInformation",
+                                    NULL,
+                                    NULL,
+                                    &Length);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    InfoBuffer->General.OemInformation.Length = Length - sizeof(WCHAR);
+    InfoBuffer->General.OemInformation.MaximumLength = Length;
+    InfoBuffer->General.OemInformation.Buffer = midl_user_allocate(Length);
+    if (InfoBuffer->General.OemInformation.Buffer == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
+
+    Status = SampGetObjectAttribute(DomainObject,
+                                    L"OemInformation",
+                                    NULL,
+                                    (PVOID)InfoBuffer->General.OemInformation.Buffer,
+                                    &Length);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    Length = 0;
+    Status = SampGetObjectAttribute(DomainObject,
+                                    L"Name",
+                                    NULL,
+                                    NULL,
+                                    &Length);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    InfoBuffer->General.DomainName.Length = Length - sizeof(WCHAR);
+    InfoBuffer->General.DomainName.MaximumLength = Length;
+    InfoBuffer->General.DomainName.Buffer = midl_user_allocate(Length);
+    if (InfoBuffer->General.DomainName.Buffer == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
+
+    Status = SampGetObjectAttribute(DomainObject,
+                                    L"Name",
+                                    NULL,
+                                    (PVOID)InfoBuffer->General.DomainName.Buffer,
+                                    &Length);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    Length = 0;
+    Status = SampGetObjectAttribute(DomainObject,
+                                    L"ReplicaSourceNodeName",
+                                    NULL,
+                                    NULL,
+                                    &Length);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    InfoBuffer->General.ReplicaSourceNodeName.Length = Length - sizeof(WCHAR);
+    InfoBuffer->General.ReplicaSourceNodeName.MaximumLength = Length;
+    InfoBuffer->General.ReplicaSourceNodeName.Buffer = midl_user_allocate(Length);
+    if (InfoBuffer->General.ReplicaSourceNodeName.Buffer == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
+
+    Status = SampGetObjectAttribute(DomainObject,
+                                    L"ReplicaSourceNodeName",
+                                    NULL,
+                                    (PVOID)InfoBuffer->General.ReplicaSourceNodeName.Buffer,
+                                    &Length);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    InfoBuffer->General.UserCount = 0;  /* FIXME */
+    InfoBuffer->General.GroupCount = 0; /* FIXME */
+    InfoBuffer->General.AliasCount = 0; /* FIXME */
+
+    *Buffer = InfoBuffer;
+
+done:
+    if (!NT_SUCCESS(Status))
+    {
+        if (InfoBuffer != NULL)
+        {
+            if (InfoBuffer->General.OemInformation.Buffer != NULL)
+                midl_user_free(InfoBuffer->General.OemInformation.Buffer);
+
+            if (InfoBuffer->General.DomainName.Buffer != NULL)
+                midl_user_free(InfoBuffer->General.DomainName.Buffer);
+
+            if (InfoBuffer->General.ReplicaSourceNodeName.Buffer != NULL)
+                midl_user_free(InfoBuffer->General.ReplicaSourceNodeName.Buffer);
+
+            midl_user_free(InfoBuffer);
+        }
+    }
+
+    return Status;
+}
+
+
+static NTSTATUS
+SampQueryDomainLogoff(PSAM_DB_OBJECT DomainObject,
+                      PSAMPR_DOMAIN_INFO_BUFFER *Buffer)
+{
+    PSAMPR_DOMAIN_INFO_BUFFER InfoBuffer = NULL;
+    SAM_DOMAIN_FIXED_DATA FixedData;
+    ULONG Length = 0;
+    NTSTATUS Status;
+
+    *Buffer = NULL;
+
+    InfoBuffer = midl_user_allocate(sizeof(SAMPR_DOMAIN_INFO_BUFFER));
+    if (InfoBuffer == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    Length = sizeof(SAM_DOMAIN_FIXED_DATA);
+    Status = SampGetObjectAttribute(DomainObject,
+                                    L"F",
+                                    NULL,
+                                    (PVOID)&FixedData,
+                                    &Length);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    InfoBuffer->Logoff.ForceLogoff.LowPart = FixedData.ForceLogoff.LowPart;
+    InfoBuffer->Logoff.ForceLogoff.HighPart = FixedData.ForceLogoff.HighPart;
+
+    *Buffer = InfoBuffer;
+
+done:
+    if (!NT_SUCCESS(Status))
+    {
+        if (InfoBuffer != NULL)
+        {
+            midl_user_free(InfoBuffer);
+        }
+    }
+
+    return Status;
+}
+
+
+static NTSTATUS
+SampQueryDomainOem(PSAM_DB_OBJECT DomainObject,
+                   PSAMPR_DOMAIN_INFO_BUFFER *Buffer)
+{
+    PSAMPR_DOMAIN_INFO_BUFFER InfoBuffer = NULL;
+    ULONG Length = 0;
+    NTSTATUS Status;
+
+    *Buffer = NULL;
+
+    InfoBuffer = midl_user_allocate(sizeof(SAMPR_DOMAIN_INFO_BUFFER));
+    if (InfoBuffer == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    Status = SampGetObjectAttribute(DomainObject,
+                                    L"OemInformation",
+                                    NULL,
+                                    NULL,
+                                    &Length);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    InfoBuffer->Oem.OemInformation.Length = Length - sizeof(WCHAR);
+    InfoBuffer->Oem.OemInformation.MaximumLength = Length;
+    InfoBuffer->Oem.OemInformation.Buffer = midl_user_allocate(Length);
+    if (InfoBuffer->Oem.OemInformation.Buffer == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
+
+    Status = SampGetObjectAttribute(DomainObject,
+                                    L"OemInformation",
+                                    NULL,
+                                    (PVOID)InfoBuffer->Oem.OemInformation.Buffer,
+                                    &Length);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    *Buffer = InfoBuffer;
+
+done:
+    if (!NT_SUCCESS(Status))
+    {
+        if (InfoBuffer != NULL)
+        {
+            if (InfoBuffer->Oem.OemInformation.Buffer != NULL)
+                midl_user_free(InfoBuffer->Oem.OemInformation.Buffer);
+
+            midl_user_free(InfoBuffer);
+        }
+    }
+
+    return Status;
+}
+
+
+static NTSTATUS
 SampQueryDomainName(PSAM_DB_OBJECT DomainObject,
                     PSAMPR_DOMAIN_INFO_BUFFER *Buffer)
 {
@@ -596,6 +880,420 @@ done:
 }
 
 
+static NTSTATUS
+SampQueryDomainReplication(PSAM_DB_OBJECT DomainObject,
+                           PSAMPR_DOMAIN_INFO_BUFFER *Buffer)
+{
+    PSAMPR_DOMAIN_INFO_BUFFER InfoBuffer = NULL;
+    ULONG Length = 0;
+    NTSTATUS Status;
+
+    *Buffer = NULL;
+
+    InfoBuffer = midl_user_allocate(sizeof(SAMPR_DOMAIN_INFO_BUFFER));
+    if (InfoBuffer == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    Status = SampGetObjectAttribute(DomainObject,
+                                    L"ReplicaSourceNodeName",
+                                    NULL,
+                                    NULL,
+                                    &Length);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    InfoBuffer->Replication.ReplicaSourceNodeName.Length = Length - sizeof(WCHAR);
+    InfoBuffer->Replication.ReplicaSourceNodeName.MaximumLength = Length;
+    InfoBuffer->Replication.ReplicaSourceNodeName.Buffer = midl_user_allocate(Length);
+    if (InfoBuffer->Replication.ReplicaSourceNodeName.Buffer == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
+
+    Status = SampGetObjectAttribute(DomainObject,
+                                    L"ReplicaSourceNodeName",
+                                    NULL,
+                                    (PVOID)InfoBuffer->Replication.ReplicaSourceNodeName.Buffer,
+                                    &Length);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    *Buffer = InfoBuffer;
+
+done:
+    if (!NT_SUCCESS(Status))
+    {
+        if (InfoBuffer != NULL)
+        {
+            if (InfoBuffer->Replication.ReplicaSourceNodeName.Buffer != NULL)
+                midl_user_free(InfoBuffer->Replication.ReplicaSourceNodeName.Buffer);
+
+            midl_user_free(InfoBuffer);
+        }
+    }
+
+    return Status;
+}
+
+
+static NTSTATUS
+SampQueryDomainServerRole(PSAM_DB_OBJECT DomainObject,
+                          PSAMPR_DOMAIN_INFO_BUFFER *Buffer)
+{
+    PSAMPR_DOMAIN_INFO_BUFFER InfoBuffer = NULL;
+    SAM_DOMAIN_FIXED_DATA FixedData;
+    ULONG Length = 0;
+    NTSTATUS Status;
+
+    *Buffer = NULL;
+
+    InfoBuffer = midl_user_allocate(sizeof(SAMPR_DOMAIN_INFO_BUFFER));
+    if (InfoBuffer == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    Length = sizeof(SAM_DOMAIN_FIXED_DATA);
+    Status = SampGetObjectAttribute(DomainObject,
+                                    L"F",
+                                    NULL,
+                                    (PVOID)&FixedData,
+                                    &Length);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    InfoBuffer->Role.DomainServerRole = FixedData.DomainServerRole;
+
+    *Buffer = InfoBuffer;
+
+done:
+    if (!NT_SUCCESS(Status))
+    {
+        if (InfoBuffer != NULL)
+        {
+            midl_user_free(InfoBuffer);
+        }
+    }
+
+    return Status;
+}
+
+
+static NTSTATUS
+SampQueryDomainModified(PSAM_DB_OBJECT DomainObject,
+                        PSAMPR_DOMAIN_INFO_BUFFER *Buffer)
+{
+    PSAMPR_DOMAIN_INFO_BUFFER InfoBuffer = NULL;
+    SAM_DOMAIN_FIXED_DATA FixedData;
+    ULONG Length = 0;
+    NTSTATUS Status;
+
+    *Buffer = NULL;
+
+    InfoBuffer = midl_user_allocate(sizeof(SAMPR_DOMAIN_INFO_BUFFER));
+    if (InfoBuffer == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    Length = sizeof(SAM_DOMAIN_FIXED_DATA);
+    Status = SampGetObjectAttribute(DomainObject,
+                                    L"F",
+                                    NULL,
+                                    (PVOID)&FixedData,
+                                    &Length);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    InfoBuffer->Modified.DomainModifiedCount.LowPart = FixedData.DomainModifiedCount.LowPart;
+    InfoBuffer->Modified.DomainModifiedCount.HighPart = FixedData.DomainModifiedCount.HighPart;
+    InfoBuffer->Modified.CreationTime.LowPart = FixedData.CreationTime.LowPart;
+    InfoBuffer->Modified.CreationTime.HighPart = FixedData.CreationTime.HighPart;
+
+    *Buffer = InfoBuffer;
+
+done:
+    if (!NT_SUCCESS(Status))
+    {
+        if (InfoBuffer != NULL)
+        {
+            midl_user_free(InfoBuffer);
+        }
+    }
+
+    return Status;
+}
+
+
+static NTSTATUS
+SampQueryDomainState(PSAM_DB_OBJECT DomainObject,
+                     PSAMPR_DOMAIN_INFO_BUFFER *Buffer)
+{
+    PSAMPR_DOMAIN_INFO_BUFFER InfoBuffer = NULL;
+    SAM_DOMAIN_FIXED_DATA FixedData;
+    ULONG Length = 0;
+    NTSTATUS Status;
+
+    *Buffer = NULL;
+
+    InfoBuffer = midl_user_allocate(sizeof(SAMPR_DOMAIN_INFO_BUFFER));
+    if (InfoBuffer == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    Length = sizeof(SAM_DOMAIN_FIXED_DATA);
+    Status = SampGetObjectAttribute(DomainObject,
+                                    L"F",
+                                    NULL,
+                                    (PVOID)&FixedData,
+                                    &Length);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    InfoBuffer->State.DomainServerState = FixedData.DomainServerState;
+
+    *Buffer = InfoBuffer;
+
+done:
+    if (!NT_SUCCESS(Status))
+    {
+        if (InfoBuffer != NULL)
+        {
+            midl_user_free(InfoBuffer);
+        }
+    }
+
+    return Status;
+}
+
+
+static NTSTATUS
+SampQueryDomainGeneral2(PSAM_DB_OBJECT DomainObject,
+                        PSAMPR_DOMAIN_INFO_BUFFER *Buffer)
+{
+    PSAMPR_DOMAIN_INFO_BUFFER InfoBuffer = NULL;
+    SAM_DOMAIN_FIXED_DATA FixedData;
+    ULONG Length = 0;
+    NTSTATUS Status;
+
+    *Buffer = NULL;
+
+    InfoBuffer = midl_user_allocate(sizeof(SAMPR_DOMAIN_INFO_BUFFER));
+    if (InfoBuffer == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    Length = sizeof(SAM_DOMAIN_FIXED_DATA);
+    Status = SampGetObjectAttribute(DomainObject,
+                                    L"F",
+                                    NULL,
+                                    (PVOID)&FixedData,
+                                    &Length);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    InfoBuffer->General2.I1.ForceLogoff.LowPart = FixedData.ForceLogoff.LowPart;
+    InfoBuffer->General2.I1.ForceLogoff.HighPart = FixedData.ForceLogoff.HighPart;
+    InfoBuffer->General2.I1.DomainModifiedCount.LowPart = FixedData.DomainModifiedCount.LowPart;
+    InfoBuffer->General2.I1.DomainModifiedCount.HighPart = FixedData.DomainModifiedCount.HighPart;
+    InfoBuffer->General2.I1.DomainServerState = FixedData.DomainServerState;
+    InfoBuffer->General2.I1.DomainServerRole = FixedData.DomainServerRole;
+    InfoBuffer->General2.I1.UasCompatibilityRequired = FixedData.UasCompatibilityRequired;
+
+    InfoBuffer->General2.LockoutDuration = FixedData.LockoutDuration;
+    InfoBuffer->General2.LockoutObservationWindow = FixedData.LockoutObservationWindow;
+    InfoBuffer->General2.LockoutThreshold = FixedData.LockoutThreshold;
+
+    Length = 0;
+    Status = SampGetObjectAttribute(DomainObject,
+                                    L"OemInformation",
+                                    NULL,
+                                    NULL,
+                                    &Length);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    InfoBuffer->General2.I1.OemInformation.Length = Length - sizeof(WCHAR);
+    InfoBuffer->General2.I1.OemInformation.MaximumLength = Length;
+    InfoBuffer->General2.I1.OemInformation.Buffer = midl_user_allocate(Length);
+    if (InfoBuffer->General2.I1.OemInformation.Buffer == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
+
+    Status = SampGetObjectAttribute(DomainObject,
+                                    L"OemInformation",
+                                    NULL,
+                                    (PVOID)InfoBuffer->General2.I1.OemInformation.Buffer,
+                                    &Length);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    Length = 0;
+    Status = SampGetObjectAttribute(DomainObject,
+                                    L"Name",
+                                    NULL,
+                                    NULL,
+                                    &Length);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    InfoBuffer->General2.I1.DomainName.Length = Length - sizeof(WCHAR);
+    InfoBuffer->General2.I1.DomainName.MaximumLength = Length;
+    InfoBuffer->General2.I1.DomainName.Buffer = midl_user_allocate(Length);
+    if (InfoBuffer->General2.I1.DomainName.Buffer == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
+
+    Status = SampGetObjectAttribute(DomainObject,
+                                    L"Name",
+                                    NULL,
+                                    (PVOID)InfoBuffer->General2.I1.DomainName.Buffer,
+                                    &Length);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    Length = 0;
+    Status = SampGetObjectAttribute(DomainObject,
+                                    L"ReplicaSourceNodeName",
+                                    NULL,
+                                    NULL,
+                                    &Length);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    InfoBuffer->General2.I1.ReplicaSourceNodeName.Length = Length - sizeof(WCHAR);
+    InfoBuffer->General2.I1.ReplicaSourceNodeName.MaximumLength = Length;
+    InfoBuffer->General2.I1.ReplicaSourceNodeName.Buffer = midl_user_allocate(Length);
+    if (InfoBuffer->General2.I1.ReplicaSourceNodeName.Buffer == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
+
+    Status = SampGetObjectAttribute(DomainObject,
+                                    L"ReplicaSourceNodeName",
+                                    NULL,
+                                    (PVOID)InfoBuffer->General2.I1.ReplicaSourceNodeName.Buffer,
+                                    &Length);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    InfoBuffer->General2.I1.UserCount = 0;  /* FIXME */
+    InfoBuffer->General2.I1.GroupCount = 0; /* FIXME */
+    InfoBuffer->General2.I1.AliasCount = 0; /* FIXME */
+
+    *Buffer = InfoBuffer;
+
+done:
+    if (!NT_SUCCESS(Status))
+    {
+        if (InfoBuffer != NULL)
+        {
+            if (InfoBuffer->General2.I1.OemInformation.Buffer != NULL)
+                midl_user_free(InfoBuffer->General2.I1.OemInformation.Buffer);
+
+            if (InfoBuffer->General2.I1.DomainName.Buffer != NULL)
+                midl_user_free(InfoBuffer->General2.I1.DomainName.Buffer);
+
+            if (InfoBuffer->General2.I1.ReplicaSourceNodeName.Buffer != NULL)
+                midl_user_free(InfoBuffer->General2.I1.ReplicaSourceNodeName.Buffer);
+
+            midl_user_free(InfoBuffer);
+        }
+    }
+
+    return Status;
+}
+
+
+static NTSTATUS
+SampQueryDomainLockout(PSAM_DB_OBJECT DomainObject,
+                       PSAMPR_DOMAIN_INFO_BUFFER *Buffer)
+{
+    PSAMPR_DOMAIN_INFO_BUFFER InfoBuffer = NULL;
+    SAM_DOMAIN_FIXED_DATA FixedData;
+    ULONG Length = 0;
+    NTSTATUS Status;
+
+    *Buffer = NULL;
+
+    InfoBuffer = midl_user_allocate(sizeof(SAMPR_DOMAIN_INFO_BUFFER));
+    if (InfoBuffer == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    Length = sizeof(SAM_DOMAIN_FIXED_DATA);
+    Status = SampGetObjectAttribute(DomainObject,
+                                    L"F",
+                                    NULL,
+                                    (PVOID)&FixedData,
+                                    &Length);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    InfoBuffer->Lockout.LockoutDuration = FixedData.LockoutDuration;
+    InfoBuffer->Lockout.LockoutObservationWindow = FixedData.LockoutObservationWindow;
+    InfoBuffer->Lockout.LockoutThreshold = FixedData.LockoutThreshold;
+
+    *Buffer = InfoBuffer;
+
+done:
+    if (!NT_SUCCESS(Status))
+    {
+        if (InfoBuffer != NULL)
+        {
+            midl_user_free(InfoBuffer);
+        }
+    }
+
+    return Status;
+}
+
+
+static NTSTATUS
+SampQueryDomainModified2(PSAM_DB_OBJECT DomainObject,
+                        PSAMPR_DOMAIN_INFO_BUFFER *Buffer)
+{
+    PSAMPR_DOMAIN_INFO_BUFFER InfoBuffer = NULL;
+    SAM_DOMAIN_FIXED_DATA FixedData;
+    ULONG Length = 0;
+    NTSTATUS Status;
+
+    *Buffer = NULL;
+
+    InfoBuffer = midl_user_allocate(sizeof(SAMPR_DOMAIN_INFO_BUFFER));
+    if (InfoBuffer == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    Length = sizeof(SAM_DOMAIN_FIXED_DATA);
+    Status = SampGetObjectAttribute(DomainObject,
+                                    L"F",
+                                    NULL,
+                                    (PVOID)&FixedData,
+                                    &Length);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    InfoBuffer->Modified2.DomainModifiedCount.LowPart = FixedData.DomainModifiedCount.LowPart;
+    InfoBuffer->Modified2.DomainModifiedCount.HighPart = FixedData.DomainModifiedCount.HighPart;
+    InfoBuffer->Modified2.CreationTime.LowPart = FixedData.CreationTime.LowPart;
+    InfoBuffer->Modified2.CreationTime.HighPart = FixedData.CreationTime.HighPart;
+    InfoBuffer->Modified2.ModifiedCountAtLastPromotion.LowPart = FixedData.ModifiedCountAtLastPromotion.LowPart;
+    InfoBuffer->Modified2.ModifiedCountAtLastPromotion.HighPart = FixedData.ModifiedCountAtLastPromotion.HighPart;
+
+    *Buffer = InfoBuffer;
+
+done:
+    if (!NT_SUCCESS(Status))
+    {
+        if (InfoBuffer != NULL)
+        {
+            midl_user_free(InfoBuffer);
+        }
+    }
+
+    return Status;
+}
+
+
 /* Function 8 */
 NTSTATUS
 NTAPI
@@ -604,44 +1302,113 @@ SamrQueryInformationDomain(IN SAMPR_HANDLE DomainHandle,
                            OUT PSAMPR_DOMAIN_INFO_BUFFER *Buffer)
 {
     PSAM_DB_OBJECT DomainObject;
+    ACCESS_MASK DesiredAccess;
     NTSTATUS Status;
 
     TRACE("SamrQueryInformationDomain(%p %lu %p)\n",
           DomainHandle, DomainInformationClass, Buffer);
 
+    switch (DomainInformationClass)
+    {
+        case DomainPasswordInformation:
+        case DomainLockoutInformation:
+            DesiredAccess = DOMAIN_READ_PASSWORD_PARAMETERS;
+            break;
+
+        case DomainGeneralInformation:
+        case DomainLogoffInformation:
+        case DomainOemInformation:
+        case DomainNameInformation:
+        case DomainReplicationInformation:
+        case DomainServerRoleInformation:
+        case DomainModifiedInformation:
+        case DomainStateInformation:
+        case DomainModifiedInformation2:
+            DesiredAccess = DOMAIN_READ_OTHER_PARAMETERS;
+            break;
+
+        case DomainGeneralInformation2:
+            DesiredAccess = DOMAIN_READ_PASSWORD_PARAMETERS |
+                            DOMAIN_READ_OTHER_PARAMETERS;
+            break;
+
+        default:
+            return STATUS_INVALID_INFO_CLASS;
+    }
+
     /* Validate the server handle */
     Status = SampValidateDbObject(DomainHandle,
                                   SamDbDomainObject,
-                                  DOMAIN_READ_OTHER_PARAMETERS,
+                                  DesiredAccess,
                                   &DomainObject);
     if (!NT_SUCCESS(Status))
         return Status;
 
     switch (DomainInformationClass)
     {
+        case DomainPasswordInformation:
+            Status = SampQueryDomainPassword(DomainObject,
+                                             Buffer);
+            break;
+
+        case DomainGeneralInformation:
+            Status = SampQueryDomainGeneral(DomainObject,
+                                            Buffer);
+            break;
+
+        case DomainLogoffInformation:
+            Status = SampQueryDomainLogoff(DomainObject,
+                                           Buffer);
+            break;
+
+        case DomainOemInformation:
+            Status = SampQueryDomainOem(DomainObject,
+                                        Buffer);
+            break;
+
         case DomainNameInformation:
             Status = SampQueryDomainName(DomainObject,
                                          Buffer);
             break;
 
+        case DomainReplicationInformation:
+            Status = SampQueryDomainReplication(DomainObject,
+                                                Buffer);
+            break;
+
+        case DomainServerRoleInformation:
+            Status = SampQueryDomainServerRole(DomainObject,
+                                               Buffer);
+            break;
+
+        case DomainModifiedInformation:
+            Status = SampQueryDomainModified(DomainObject,
+                                             Buffer);
+            break;
+
+        case DomainStateInformation:
+            Status = SampQueryDomainState(DomainObject,
+                                          Buffer);
+            break;
+
+        case DomainGeneralInformation2:
+            Status = SampQueryDomainGeneral2(DomainObject,
+                                             Buffer);
+            break;
+
+        case DomainLockoutInformation:
+            Status = SampQueryDomainLockout(DomainObject,
+                                            Buffer);
+            break;
+
+        case DomainModifiedInformation2:
+            Status = SampQueryDomainModified2(DomainObject,
+                                              Buffer);
+            break;
+
         default:
             Status = STATUS_NOT_IMPLEMENTED;
     }
-
-    return Status;
-}
-
-static NTSTATUS
-SampSetDomainName(PSAM_DB_OBJECT DomainObject,
-                  PSAMPR_DOMAIN_NAME_INFORMATION DomainNameInfo)
-{
-    NTSTATUS Status;
-
-    Status = SampSetObjectAttribute(DomainObject,
-                                    L"Name",
-                                    REG_SZ,
-                                    DomainNameInfo->DomainName.Buffer,
-                                    DomainNameInfo->DomainName.Length + sizeof(WCHAR));
 
     return Status;
 }
@@ -654,24 +1421,82 @@ SamrSetInformationDomain(IN SAMPR_HANDLE DomainHandle,
                          IN PSAMPR_DOMAIN_INFO_BUFFER DomainInformation)
 {
     PSAM_DB_OBJECT DomainObject;
+    ACCESS_MASK DesiredAccess;
     NTSTATUS Status;
 
     TRACE("SamrSetInformationDomain(%p %lu %p)\n",
           DomainHandle, DomainInformationClass, DomainInformation);
 
+    switch (DomainInformationClass)
+    {
+        case DomainPasswordInformation:
+        case DomainLockoutInformation:
+            DesiredAccess = DOMAIN_WRITE_PASSWORD_PARAMS;
+            break;
+
+        case DomainLogoffInformation:
+        case DomainOemInformation:
+        case DomainNameInformation:
+            DesiredAccess = DOMAIN_WRITE_OTHER_PARAMETERS;
+            break;
+
+        case DomainReplicationInformation:
+        case DomainServerRoleInformation:
+        case DomainStateInformation:
+            DesiredAccess = DOMAIN_ADMINISTER_SERVER;
+            break;
+
+        default:
+            return STATUS_INVALID_INFO_CLASS;
+    }
+
     /* Validate the server handle */
     Status = SampValidateDbObject(DomainHandle,
                                   SamDbDomainObject,
-                                  DOMAIN_WRITE_OTHER_PARAMETERS,
+                                  DesiredAccess,
                                   &DomainObject);
     if (!NT_SUCCESS(Status))
         return Status;
 
     switch (DomainInformationClass)
     {
+        case DomainPasswordInformation:
+            break;
+
+        case DomainLogoffInformation:
+            break;
+
+        case DomainOemInformation:
+            Status = SampSetObjectAttribute(DomainObject,
+                                            L"OemInformation",
+                                            REG_SZ,
+                                            DomainInformation->Oem.OemInformation.Buffer,
+                                            DomainInformation->Oem.OemInformation.Length + sizeof(WCHAR));
+            break;
+
         case DomainNameInformation:
-            Status = SampSetDomainName(DomainObject,
-                                       &DomainInformation->Name);
+            Status = SampSetObjectAttribute(DomainObject,
+                                            L"Name",
+                                            REG_SZ,
+                                            DomainInformation->Name.DomainName.Buffer,
+                                            DomainInformation->Name.DomainName.Length + sizeof(WCHAR));
+            break;
+
+        case DomainReplicationInformation:
+            Status = SampSetObjectAttribute(DomainObject,
+                                            L"ReplicaSourceNodeName",
+                                            REG_SZ,
+                                            DomainInformation->Replication.ReplicaSourceNodeName.Buffer,
+                                            DomainInformation->Replication.ReplicaSourceNodeName.Length + sizeof(WCHAR));
+            break;
+
+        case DomainServerRoleInformation:
+            break;
+
+        case DomainStateInformation:
+            break;
+
+        case DomainLockoutInformation:
             break;
 
         default:
@@ -1800,37 +2625,6 @@ SamrQueryInformationAlias(IN SAMPR_HANDLE AliasHandle,
     return Status;
 }
 
-
-static NTSTATUS
-SampSetAliasName(PSAM_DB_OBJECT AliasObject,
-                 PSAMPR_ALIAS_INFO_BUFFER Buffer)
-{
-    NTSTATUS Status;
-
-    Status = SampSetObjectAttribute(AliasObject,
-                                    L"Name",
-                                    REG_SZ,
-                                    Buffer->Name.Name.Buffer,
-                                    Buffer->Name.Name.Length + sizeof(WCHAR));
-
-    return Status;
-}
-
-static NTSTATUS
-SampSetAliasAdminComment(PSAM_DB_OBJECT AliasObject,
-                         PSAMPR_ALIAS_INFO_BUFFER Buffer)
-{
-    NTSTATUS Status;
-
-    Status = SampSetObjectAttribute(AliasObject,
-                                    L"Description",
-                                    REG_SZ,
-                                    Buffer->AdminComment.AdminComment.Buffer,
-                                    Buffer->AdminComment.AdminComment.Length + sizeof(WCHAR));
-
-    return Status;
-}
-
 /* Function 29 */
 NTSTATUS
 NTAPI
@@ -1855,13 +2649,19 @@ SamrSetInformationAlias(IN SAMPR_HANDLE AliasHandle,
     switch (AliasInformationClass)
     {
         case AliasNameInformation:
-            Status = SampSetAliasName(AliasObject,
-                                      Buffer);
+            Status = SampSetObjectAttribute(AliasObject,
+                                            L"Name",
+                                            REG_SZ,
+                                            Buffer->Name.Name.Buffer,
+                                            Buffer->Name.Name.Length + sizeof(WCHAR));
             break;
 
         case AliasAdminCommentInformation:
-            Status = SampSetAliasAdminComment(AliasObject,
-                                              Buffer);
+            Status = SampSetObjectAttribute(AliasObject,
+                                            L"Description",
+                                            REG_SZ,
+                                            Buffer->AdminComment.AdminComment.Buffer,
+                                            Buffer->AdminComment.AdminComment.Length + sizeof(WCHAR));
             break;
 
         default:
@@ -2166,6 +2966,15 @@ SamrDeleteUser(IN OUT SAMPR_HANDLE *UserHandle)
     return STATUS_NOT_IMPLEMENTED;
 }
 
+static
+NTSTATUS
+SampQueryUserName(PSAM_DB_OBJECT UserObject,
+                  PSAMPR_USER_INFO_BUFFER *Buffer)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
 /* Function 36 */
 NTSTATUS
 NTAPI
@@ -2173,8 +2982,52 @@ SamrQueryInformationUser(IN SAMPR_HANDLE UserHandle,
                          IN USER_INFORMATION_CLASS UserInformationClass,
                          OUT PSAMPR_USER_INFO_BUFFER *Buffer)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PSAM_DB_OBJECT UserObject;
+    ACCESS_MASK DesiredAccess;
+    NTSTATUS Status;
+
+    TRACE("SamrQueryInformationUser(%p %lu %p)\n",
+          UserHandle, UserInformationClass, Buffer);
+
+    switch (UserInformationClass)
+    {
+        case UserGeneralInformation:
+        case UserNameInformation:
+        case UserAccountNameInformation:
+        case UserFullNameInformation:
+        case UserPrimaryGroupInformation:
+        case UserAdminCommentInformation:
+            DesiredAccess = USER_READ_GENERAL;
+            break;
+
+
+        default:
+            return STATUS_INVALID_INFO_CLASS;
+    }
+
+    /* Validate the domain handle */
+    Status = SampValidateDbObject(UserHandle,
+                                  SamDbUserObject,
+                                  DesiredAccess,
+                                  &UserObject);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    switch (UserInformationClass)
+    {
+        case UserNameInformation:
+            Status = SampQueryUserName(UserObject,
+                                       Buffer);
+            break;
+
+        default:
+            Status = STATUS_INVALID_INFO_CLASS;
+    }
+
+    return Status;
 }
 
 /* Function 37 */
