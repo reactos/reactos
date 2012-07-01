@@ -1413,6 +1413,166 @@ SamrQueryInformationDomain(IN SAMPR_HANDLE DomainHandle,
     return Status;
 }
 
+
+static NTSTATUS
+SampSetDomainPassword(PSAM_DB_OBJECT DomainObject,
+                      PSAMPR_DOMAIN_INFO_BUFFER Buffer)
+{
+    SAM_DOMAIN_FIXED_DATA FixedData;
+    ULONG Length = 0;
+    NTSTATUS Status;
+
+    Length = sizeof(SAM_DOMAIN_FIXED_DATA);
+    Status = SampGetObjectAttribute(DomainObject,
+                                    L"F",
+                                    NULL,
+                                    (PVOID)&FixedData,
+                                    &Length);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    FixedData.MinPasswordLength = Buffer->Password.MinPasswordLength;
+    FixedData.PasswordHistoryLength = Buffer->Password.PasswordHistoryLength;
+    FixedData.PasswordProperties = Buffer->Password.PasswordProperties;
+    FixedData.MaxPasswordAge.LowPart = Buffer->Password.MaxPasswordAge.LowPart;
+    FixedData.MaxPasswordAge.HighPart = Buffer->Password.MaxPasswordAge.HighPart;
+    FixedData.MinPasswordAge.LowPart = Buffer->Password.MinPasswordAge.LowPart;
+    FixedData.MinPasswordAge.HighPart = Buffer->Password.MinPasswordAge.HighPart;
+
+    Status = SampSetObjectAttribute(DomainObject,
+                                    L"F",
+                                    REG_BINARY,
+                                    &FixedData,
+                                    Length);
+
+done:
+    return Status;
+}
+
+
+static NTSTATUS
+SampSetDomainLogoff(PSAM_DB_OBJECT DomainObject,
+                    PSAMPR_DOMAIN_INFO_BUFFER Buffer)
+{
+    SAM_DOMAIN_FIXED_DATA FixedData;
+    ULONG Length = 0;
+    NTSTATUS Status;
+
+    Length = sizeof(SAM_DOMAIN_FIXED_DATA);
+    Status = SampGetObjectAttribute(DomainObject,
+                                    L"F",
+                                    NULL,
+                                    (PVOID)&FixedData,
+                                    &Length);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    FixedData.ForceLogoff.LowPart = Buffer->Logoff.ForceLogoff.LowPart;
+    FixedData.ForceLogoff.HighPart = Buffer->Logoff.ForceLogoff.HighPart;
+
+    Status = SampSetObjectAttribute(DomainObject,
+                                    L"F",
+                                    REG_BINARY,
+                                    &FixedData,
+                                    Length);
+
+done:
+    return Status;
+}
+
+
+static NTSTATUS
+SampSetDomainServerRole(PSAM_DB_OBJECT DomainObject,
+                        PSAMPR_DOMAIN_INFO_BUFFER Buffer)
+{
+    SAM_DOMAIN_FIXED_DATA FixedData;
+    ULONG Length = 0;
+    NTSTATUS Status;
+
+    Length = sizeof(SAM_DOMAIN_FIXED_DATA);
+    Status = SampGetObjectAttribute(DomainObject,
+                                    L"F",
+                                    NULL,
+                                    (PVOID)&FixedData,
+                                    &Length);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    FixedData.DomainServerRole = Buffer->Role.DomainServerRole;
+
+    Status = SampSetObjectAttribute(DomainObject,
+                                    L"F",
+                                    REG_BINARY,
+                                    &FixedData,
+                                    Length);
+
+done:
+    return Status;
+}
+
+
+static NTSTATUS
+SampSetDomainState(PSAM_DB_OBJECT DomainObject,
+                   PSAMPR_DOMAIN_INFO_BUFFER Buffer)
+{
+    SAM_DOMAIN_FIXED_DATA FixedData;
+    ULONG Length = 0;
+    NTSTATUS Status;
+
+    Length = sizeof(SAM_DOMAIN_FIXED_DATA);
+    Status = SampGetObjectAttribute(DomainObject,
+                                    L"F",
+                                    NULL,
+                                    (PVOID)&FixedData,
+                                    &Length);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    FixedData.DomainServerState = Buffer->State.DomainServerState;
+
+    Status = SampSetObjectAttribute(DomainObject,
+                                    L"F",
+                                    REG_BINARY,
+                                    &FixedData,
+                                    Length);
+
+done:
+    return Status;
+}
+
+
+static NTSTATUS
+SampSetDomainLockout(PSAM_DB_OBJECT DomainObject,
+                     PSAMPR_DOMAIN_INFO_BUFFER Buffer)
+{
+    SAM_DOMAIN_FIXED_DATA FixedData;
+    ULONG Length = 0;
+    NTSTATUS Status;
+
+    Length = sizeof(SAM_DOMAIN_FIXED_DATA);
+    Status = SampGetObjectAttribute(DomainObject,
+                                    L"F",
+                                    NULL,
+                                    (PVOID)&FixedData,
+                                    &Length);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    FixedData.LockoutDuration = Buffer->Lockout.LockoutDuration;
+    FixedData.LockoutObservationWindow = Buffer->Lockout.LockoutObservationWindow;
+    FixedData.LockoutThreshold = Buffer->Lockout.LockoutThreshold;
+
+    Status = SampSetObjectAttribute(DomainObject,
+                                    L"F",
+                                    REG_BINARY,
+                                    &FixedData,
+                                    Length);
+
+done:
+    return Status;
+}
+
+
 /* Function 9 */
 NTSTATUS
 NTAPI
@@ -1461,9 +1621,13 @@ SamrSetInformationDomain(IN SAMPR_HANDLE DomainHandle,
     switch (DomainInformationClass)
     {
         case DomainPasswordInformation:
+            Status = SampSetDomainPassword(DomainObject,
+                                           DomainInformation);
             break;
 
         case DomainLogoffInformation:
+            Status = SampSetDomainLogoff(DomainObject,
+                                         DomainInformation);
             break;
 
         case DomainOemInformation:
@@ -1491,12 +1655,18 @@ SamrSetInformationDomain(IN SAMPR_HANDLE DomainHandle,
             break;
 
         case DomainServerRoleInformation:
+            Status = SampSetDomainServerRole(DomainObject,
+                                             DomainInformation);
             break;
 
         case DomainStateInformation:
+            Status = SampSetDomainState(DomainObject,
+                                        DomainInformation);
             break;
 
         case DomainLockoutInformation:
+            Status = SampSetDomainLockout(DomainObject,
+                                          DomainInformation);
             break;
 
         default:
@@ -1541,6 +1711,7 @@ SamrCreateUserInDomain(IN SAMPR_HANDLE DomainHandle,
                        OUT SAMPR_HANDLE *UserHandle,
                        OUT unsigned long *RelativeId)
 {
+    SAM_DOMAIN_FIXED_DATA FixedDomainData;
     PSAM_DB_OBJECT DomainObject;
     PSAM_DB_OBJECT UserObject;
     ULONG ulSize;
@@ -1563,15 +1734,34 @@ SamrCreateUserInDomain(IN SAMPR_HANDLE DomainHandle,
         return Status;
     }
 
-    /* Get the NextRID attribute */
-    ulSize = sizeof(ULONG);
+    /* Get the fixed domain attributes */
+    ulSize = sizeof(SAM_DOMAIN_FIXED_DATA);
     Status = SampGetObjectAttribute(DomainObject,
-                                    L"NextRID",
+                                    L"F",
                                     NULL,
-                                    (LPVOID)&ulRid,
+                                    (PVOID)&FixedDomainData,
                                     &ulSize);
     if (!NT_SUCCESS(Status))
-        ulRid = DOMAIN_USER_RID_MAX + 1;
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Increment the NextRid attribute */
+    ulRid = FixedDomainData.NextRid;
+    FixedDomainData.NextRid++;
+
+    /* Store the fixed domain attributes */
+    Status = SampSetObjectAttribute(DomainObject,
+                           L"F",
+                           REG_BINARY,
+                           &FixedDomainData,
+                           ulSize);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
 
     TRACE("RID: %lx\n", ulRid);
 
@@ -1639,15 +1829,6 @@ SamrCreateUserInDomain(IN SAMPR_HANDLE DomainHandle,
         *RelativeId = ulRid;
     }
 
-    /* Increment the NextRID attribute */
-    ulRid++;
-    ulSize = sizeof(ULONG);
-    SampSetObjectAttribute(DomainObject,
-                           L"NextRID",
-                           REG_DWORD,
-                           (LPVOID)&ulRid,
-                           ulSize);
-
     TRACE("returns with status 0x%08lx\n", Status);
 
     return Status;
@@ -1676,6 +1857,7 @@ SamrCreateAliasInDomain(IN SAMPR_HANDLE DomainHandle,
                         OUT SAMPR_HANDLE *AliasHandle,
                         OUT unsigned long *RelativeId)
 {
+    SAM_DOMAIN_FIXED_DATA FixedDomainData;
     PSAM_DB_OBJECT DomainObject;
     PSAM_DB_OBJECT AliasObject;
     UNICODE_STRING EmptyString = RTL_CONSTANT_STRING(L"");
@@ -1699,15 +1881,34 @@ SamrCreateAliasInDomain(IN SAMPR_HANDLE DomainHandle,
         return Status;
     }
 
-    /* Get the NextRID attribute */
-    ulSize = sizeof(ULONG);
+    /* Get the fixed domain attributes */
+    ulSize = sizeof(SAM_DOMAIN_FIXED_DATA);
     Status = SampGetObjectAttribute(DomainObject,
-                                    L"NextRID",
+                                    L"F",
                                     NULL,
-                                    (LPVOID)&ulRid,
+                                    (PVOID)&FixedDomainData,
                                     &ulSize);
     if (!NT_SUCCESS(Status))
-        ulRid = DOMAIN_USER_RID_MAX + 1;
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Increment the NextRid attribute */
+    ulRid = FixedDomainData.NextRid;
+    FixedDomainData.NextRid++;
+
+    /* Store the fixed domain attributes */
+    Status = SampSetObjectAttribute(DomainObject,
+                           L"F",
+                           REG_BINARY,
+                           &FixedDomainData,
+                           ulSize);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
 
     TRACE("RID: %lx\n", ulRid);
 
@@ -1784,15 +1985,6 @@ SamrCreateAliasInDomain(IN SAMPR_HANDLE DomainHandle,
         *AliasHandle = (SAMPR_HANDLE)AliasObject;
         *RelativeId = ulRid;
     }
-
-    /* Increment the NextRID attribute */
-    ulRid++;
-    ulSize = sizeof(ULONG);
-    SampSetObjectAttribute(DomainObject,
-                           L"NextRID",
-                           REG_DWORD,
-                           (LPVOID)&ulRid,
-                           ulSize);
 
     TRACE("returns with status 0x%08lx\n", Status);
 
