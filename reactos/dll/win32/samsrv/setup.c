@@ -223,10 +223,17 @@ SampCreateUserAccount(HKEY hDomainKey,
                       LPCWSTR lpAccountName,
                       ULONG ulRelativeId)
 {
+    SAM_USER_FIXED_DATA FixedUserData;
     DWORD dwDisposition;
     WCHAR szAccountKeyName[32];
     HKEY hAccountKey = NULL;
     HKEY hNamesKey = NULL;
+
+    /* Initialize fixed user data */
+    memset(&FixedUserData, 0, sizeof(SAM_USER_FIXED_DATA));
+    FixedUserData.Version = 1;
+
+    FixedUserData.UserId = ulRelativeId;
 
     swprintf(szAccountKeyName, L"Users\\%08lX", ulRelativeId);
 
@@ -240,6 +247,13 @@ SampCreateUserAccount(HKEY hDomainKey,
                          &hAccountKey,
                          &dwDisposition))
     {
+        RegSetValueEx(hAccountKey,
+                      L"F",
+                      0,
+                      REG_BINARY,
+                      (LPVOID)&FixedUserData,
+                      sizeof(SAM_USER_FIXED_DATA));
+
         RegSetValueEx(hAccountKey,
                       L"Name",
                       0,

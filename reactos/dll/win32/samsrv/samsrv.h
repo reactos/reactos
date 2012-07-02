@@ -73,6 +73,26 @@ typedef struct _SAM_DOMAIN_FIXED_DATA
     BOOLEAN UasCompatibilityRequired;
 } SAM_DOMAIN_FIXED_DATA, *PSAM_DOMAIN_FIXED_DATA;
 
+typedef struct _SAM_USER_FIXED_DATA
+{
+    ULONG Version;
+    ULONG Reserved;
+    LARGE_INTEGER LastLogon;
+    LARGE_INTEGER LastLogoff;
+    LARGE_INTEGER PasswordLastSet;
+    LARGE_INTEGER AccountExpires;
+    LARGE_INTEGER LastBadPasswordTime;
+    ULONG UserId;
+    ULONG PrimaryGroupId;
+    ULONG UserAccountControl;
+    USHORT CountryCode;
+    USHORT CodePage;
+    USHORT BadPasswordCount;
+    USHORT LogonCount;
+    USHORT AdminCount;
+    USHORT OperatorCount;
+} SAM_USER_FIXED_DATA, *PSAM_USER_FIXED_DATA;
+
 /* database.c */
 
 NTSTATUS
