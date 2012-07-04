@@ -118,7 +118,16 @@ NtUserCallNoParam(DWORD Routine)
          RETURN( (DWORD_PTR)IntReleaseCapture());
 
       case NOPARAM_ROUTINE_LOADUSERAPIHOOK:
-          RETURN(UserLoadApiHook());
+         RETURN(UserLoadApiHook());
+
+      case NOPARAM_ROUTINE_ZAPACTIVEANDFOUS:
+      {
+         PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
+         ERR("Zapping the Active and Focus window out of the Queue!\n");
+         pti->MessageQueue->spwndFocus = NULL;
+         pti->MessageQueue->spwndActive = NULL;
+         RETURN(0);
+      }
 
       default:
          ERR("Calling invalid routine number 0x%x in NtUserCallNoParam\n", Routine);

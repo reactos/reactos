@@ -246,8 +246,8 @@ IntNotifyWinEvent(
      // Must be inside the event window.
      if ( (pEH->eventMin <= Event) && (pEH->eventMax >= Event))
      {
-// If all process || all thread || other thread same process
-// If ^skip own thread && ((Pid && CPid == Pid && ^skip own process) || all process)
+     // if all process || all thread || other thread same process
+     // if ^skip own thread && ((Pid && CPid == Pid && ^skip own process) || all process)
         if ( (!pEH->idProcess || pEH->idProcess == PtrToUint(pti->pEThread->Cid.UniqueProcess)) &&
              (!(pEH->Flags & WINEVENT_SKIPOWNPROCESS) || pEH->head.pti->ppi != pti->ppi) &&
              (!pEH->idThread  || pEH->idThread == PtrToUint(pti->pEThread->Cid.UniqueThread)) &&
