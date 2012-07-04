@@ -68,6 +68,8 @@ add_cd_file(TARGET kmtest_drv DESTINATION reactos/bin FOR all)
 
 add_library(kmtest_printf
     kmtest_drv/printf_stubs.c
+    ${REACTOS_SOURCE_DIR}/lib/sdk/crt/string/strnlen.c
+    ${REACTOS_SOURCE_DIR}/lib/sdk/crt/string/wcsnlen.c
     ${REACTOS_SOURCE_DIR}/lib/sdk/crt/printf/streamout.c)
 add_target_compile_definitions(kmtest_printf _LIBCNT_ _USER32_WSPRINTF wctomb=KmtWcToMb)
 add_target_include_directories(kmtest_printf ${REACTOS_SOURCE_DIR}/lib/sdk/crt/include)
