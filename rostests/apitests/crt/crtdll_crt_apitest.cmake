@@ -554,8 +554,8 @@ endif()
 
 
 add_executable(crtdll_crt_apitest testlist.c ${SOURCE_CRTDLL})
-add_target_compile_definitions(crtdll_crt_apitest _DLL __USE_CRTIMP)
+add_target_compile_definitions(crtdll_crt_apitest TEST_CRTDLL)
 target_link_libraries(crtdll_crt_apitest wine ${PSEH_LIB})
 set_module_type(crtdll_crt_apitest win32cui)
-add_importlibs(crtdll_crt_apitest crtdll msvcrt_mini kernel32)
+add_importlibs(crtdll_crt_apitest crtdll msvcrt kernel32 ntdll)
 add_cd_file(TARGET crtdll_crt_apitest DESTINATION reactos/bin FOR all)

@@ -10,8 +10,13 @@ extern void func_strcpy(void);
 const struct test winetest_testlist[] =
 {
     { "strcpy", func_strcpy },
-#if defined(TEST_CRTDLL) || defined(TEST_MSVCRT)
+#if defined(TEST_CRTDLL) || defined(TEST_MSVCRT) || defined(TEST_STATIC_CRT)
     // ...
+#endif
+#if defined(TEST_STATIC_CRT) || defined(TEST_MSVCRT)
+    // ...
+#endif
+#if defined(TEST_STATIC_CRT)
 #elif defined(TEST_MSVCRT)
 #elif defined(TEST_NTDLL)
 #elif defined(TEST_CRTDLL)
