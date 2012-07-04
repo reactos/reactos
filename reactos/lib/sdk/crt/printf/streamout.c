@@ -508,10 +508,9 @@ streamout(FILE *stream, const TCHAR *format, va_list argptr)
                 }
 
                 if (flags & FLAG_WIDECHAR)
-                    len = wcslen((wchar_t*)string);
+                    len = wcsnlen((wchar_t*)string, (unsigned)precision);
                 else
-                    len = strlen((char*)string);
-                if (precision >= 0 && len > (unsigned)precision) len = precision;
+                    len = strnlen((char*)string, (unsigned)precision);
                 precision = 0;
                 break;
 

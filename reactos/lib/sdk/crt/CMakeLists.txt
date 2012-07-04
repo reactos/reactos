@@ -34,6 +34,8 @@ add_library(user32_wsprintf
     printf/wvsprintfW.c
     printf/wvsnprintfA.c
     printf/wvsnprintfW.c
+    string/strnlen.c
+    string/wcsnlen.c
     string/mbstowcs_nt.c
     string/wcstombs_nt.c)
 
