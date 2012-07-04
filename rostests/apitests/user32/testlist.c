@@ -39,7 +39,7 @@ const struct test winetest_testlist[] =
     { "SystemParametersInfo", func_SystemParametersInfo },
     { "TrackMouseEvent", func_TrackMouseEvent },
     { "WndProc", func_WndProc },
-    { "wsprintf", func_wsprintf },
+    { "wsprintfApi", func_wsprintf },
     { 0, 0 }
 };
 
