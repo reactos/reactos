@@ -5,10 +5,12 @@
 #define STANDALONE
 #include "wine/test.h"
 
+extern void func_sprintf(void);
 extern void func_strcpy(void);
 
 const struct test winetest_testlist[] =
 {
+    { "sprintf", func_sprintf },
     { "strcpy", func_strcpy },
 #if defined(TEST_CRTDLL) || defined(TEST_MSVCRT) || defined(TEST_STATIC_CRT)
     // ...

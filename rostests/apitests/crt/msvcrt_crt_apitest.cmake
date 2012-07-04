@@ -1156,7 +1156,7 @@ list(APPEND SOURCE_MSVCRT
 #    signal.c
 #    sin.c
 #    sinh.c
-#    sprintf.c
+    sprintf.c
 #    sprintf_s.c
 #    sqrt.c
 #    srand.c

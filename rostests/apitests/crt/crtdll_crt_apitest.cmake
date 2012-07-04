@@ -454,7 +454,7 @@ list(APPEND SOURCE_CRTDLL
 #    signal.c
 #    sin.c
 #    sinh.c
-#    sprintf.c
+    sprintf.c
 #    sqrt.c
 #    srand.c
 #    sscanf.c
