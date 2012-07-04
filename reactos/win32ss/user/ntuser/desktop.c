@@ -466,6 +466,23 @@ IntSetFocusMessageQueue(PUSER_MESSAGE_QUEUE NewQueue)
    }
    // Only one Q can have active foreground even when there are more than one desktop.
    if (NewQueue) gpqForeground = pdo->ActiveMessageQueue;
+   else gpqForeground = NULL;
+}
+
+PWND FASTCALL
+IntGetThreadDesktopWindow(PTHREADINFO pti)
+{
+   if (!pti) pti = PsGetCurrentThreadWin32Thread();
+   if (pti->pDeskInfo) return pti->pDeskInfo->spwnd;
+   return NULL;
+}
+
+PWND FASTCALL co_GetDesktopWindow(PWND pWnd)
+{
+   if (pWnd->head.rpdesk &&
+       pWnd->head.rpdesk->pDeskInfo)
+      return pWnd->head.rpdesk->pDeskInfo->spwnd;
+   return NULL;
 }
 
 HWND FASTCALL IntGetDesktopWindow(VOID)
@@ -529,6 +546,21 @@ HWND FASTCALL IntGetCurrentThreadDesktopWindow(VOID)
 }
 
 /* PUBLIC FUNCTIONS ***********************************************************/
+
+LRESULT FASTCALL
+DesktopWindowProc(PWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
+{
+   switch (Msg)   
+   {
+      case WM_NCCREATE:
+         if (!Wnd->fnid)
+         {
+            Wnd->fnid = FNID_DESKTOP;
+         }
+         return (LRESULT)TRUE;
+   }
+   return 0;
+}
 
 HDC FASTCALL
 UserGetDesktopDC(ULONG DcType, BOOL EmptyDC, BOOL ValidatehWnd)
@@ -1335,16 +1367,17 @@ NtUserOpenInputDesktop(
 {
    PDESKTOP pdesk;
    NTSTATUS Status;
-   HDESK hdesk;
+   HDESK hdesk = NULL;
 
-   TRACE("Enter NtUserOpenInputDesktop\n");
+   UserEnterExclusive();
+   TRACE("Enter NtUserOpenInputDesktop InputDesktopHandle 0x%x\n",InputDesktopHandle);
 
    /* Get a pointer to the desktop object */
    Status = IntValidateDesktopHandle(InputDesktopHandle, UserMode, 0, &pdesk);
    if (!NT_SUCCESS(Status))
    {
-      TRACE("Validation of input desktop handle (0x%X) failed\n", InputDesktop);
-      return NULL;
+      ERR("Validation of input desktop handle (0x%X) failed\n", InputDesktopHandle);
+      goto Exit;
    }
 
    /* Create a new handle to the object */
@@ -1363,10 +1396,11 @@ NtUserOpenInputDesktop(
    {
        ERR("Failed to open input desktop object\n");
        SetLastNtError(Status);
-       return NULL;
+       goto Exit;
    }
-
+Exit:
    TRACE("NtUserOpenInputDesktop returning 0x%x\n",hdesk);
+   UserLeave();
    return hdesk;
 }
 
@@ -1397,15 +1431,12 @@ NtUserCloseDesktop(HDESK hDesktop)
 {
    PDESKTOP pdesk;
    NTSTATUS Status;
-   PTHREADINFO pti;
    DECLARE_RETURN(BOOL);
-
-   pti = PsGetCurrentThreadWin32Thread();
 
    TRACE("NtUserCloseDesktop called (0x%x)\n", hDesktop);
    UserEnterExclusive();
 
-   if( hDesktop == pti->hdesk || hDesktop == pti->ppi->hdeskStartup)
+   if( hDesktop == gptiCurrent->hdesk || hDesktop == gptiCurrent->ppi->hdeskStartup)
    {
        ERR("Attempted to close thread desktop\n");
        EngSetLastError(ERROR_BUSY);
@@ -1526,7 +1557,7 @@ NtUserSwitchDesktop(HDESK hdesk)
    /* Set the global state. */
    InputDesktop = pdesk;
    InputDesktopHandle = hdesk;
-
+   TRACE("SwitchDesktop InputDesktopHandle 0x%x\n",InputDesktopHandle);
    ObDereferenceObject(pdesk);
 
    RETURN(TRUE);
@@ -1780,6 +1811,13 @@ IntSetThreadDesktop(IN HDESK hDesktop,
         return FALSE;
     }
 
+    /* Desktop is being re-set so clear out foreground. */
+    if (pti->rpdesk != pdesk && pti->MessageQueue == gpqForeground)
+    {
+       // Like above, there shouldn't be any windows, hooks or anything active on this threads desktop!
+       IntSetFocusMessageQueue(NULL);
+    }
+
     /* Before doing the switch, map the new desktop heap and allocate the new pcti */
     if(pdesk != NULL)
     {
@@ -1846,6 +1884,8 @@ IntSetThreadDesktop(IN HDESK hDesktop,
         else
         {
             RtlZeroMemory(pctiNew, sizeof(CLIENTTHREADINFO));
+            pci->fsHooks = pti->fsHooks;
+            pci->dwTIFlags = pti->TIF_flags;
         }
     }
     else

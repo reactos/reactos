@@ -275,4 +275,8 @@ DesktopHeapAddressToUser(PVOID lpMem)
     return NULL;
 }
 
+PWND FASTCALL IntGetThreadDesktopWindow(PTHREADINFO);
+PWND FASTCALL co_GetDesktopWindow(PWND);
+
+LRESULT FASTCALL DesktopWindowProc(PWND, UINT, WPARAM, LPARAM);
 /* EOF */

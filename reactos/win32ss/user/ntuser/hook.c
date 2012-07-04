@@ -1048,7 +1048,7 @@ IntRemoveHook(PHOOK Hook)
           pti->fsHooks &= ~HOOKID_TO_FLAG(HookId);
           _SEH2_TRY
           {
-             GetWin32ClientInfo()->fsHooks = pti->fsHooks;
+             pti->pClientInfo->fsHooks = pti->fsHooks;
           }
           _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
           {
@@ -1106,6 +1106,7 @@ HOOK_DestroyThreadHooks(PETHREAD Thread)
          }
       }
       pti->fsHooks = 0;
+      pti->pClientInfo->fsHooks = 0;
    }
 // Global search based on Thread and cleanup.
    if (pdo->pDeskInfo->fsHooks)
