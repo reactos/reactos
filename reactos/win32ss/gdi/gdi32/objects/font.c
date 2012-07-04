@@ -1785,10 +1785,24 @@ TranslateCharsetInfo(
     case TCI_SRCCHARSET:
         while (index < MAXTCIINDEX && PtrToUlong(lpSrc) != FONT_tci[index].ciCharset) index++;
         break;
+    case TCI_SRCLOCALE:
+    {
+        LCID lCid = (LCID)PtrToUlong(lpSrc);
+        LOCALESIGNATURE LocSig;
+        INT Ret = GetLocaleInfoW(lCid, LOCALE_FONTSIGNATURE, (LPWSTR)&LocSig, 0);
+        if ( GetLocaleInfoW(lCid, LOCALE_FONTSIGNATURE, (LPWSTR)&LocSig, Ret))
+        {
+           while (index < MAXTCIINDEX && !(LocSig.lsCsbDefault[0]>>index & 0x0001)) index++;
+           break;
+        }
+    }
     default:
+        GdiSetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
     if (index >= MAXTCIINDEX || FONT_tci[index].ciCharset == DEFAULT_CHARSET) return FALSE;
+    DPRINT("Index %d Charset %d CodePage %d FontSig %d\n",
+             index,FONT_tci[index].ciCharset,FONT_tci[index].ciACP,FONT_tci[index].fs.fsCsb[0]);
     memcpy(lpCs, &FONT_tci[index], sizeof(CHARSETINFO));
     return TRUE;
 }
