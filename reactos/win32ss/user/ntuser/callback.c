@@ -824,4 +824,63 @@ co_IntClientThreadSetup(VOID)
    return Status;
 }
 
+BOOL
+APIENTRY
+co_IntGetCharsetInfo(LCID Locale, PCHARSETINFO pCs)
+{
+   NTSTATUS Status;
+   ULONG ArgumentLength, ResultLength;
+   PVOID Argument, ResultPointer;
+   PGET_CHARSET_INFO Common;
+
+   ArgumentLength = sizeof(GET_CHARSET_INFO);
+
+   Argument = IntCbAllocateMemory(ArgumentLength);
+   if (NULL == Argument)
+   {
+      ERR("GetCharsetInfo callback failed: out of memory\n");
+      return 0;
+   }
+   Common = (PGET_CHARSET_INFO) Argument;
+
+   Common->Locale = Locale;
+
+   ResultPointer = NULL;
+   ResultLength = ArgumentLength;
+
+   UserLeaveCo();
+
+   Status = KeUserModeCallback(USER32_CALLBACK_GETCHARSETINFO,
+                               Argument,
+                               ArgumentLength,
+                               &ResultPointer,
+                               &ResultLength);
+
+   _SEH2_TRY
+   {
+      /* Need to copy into our local buffer */
+      RtlMoveMemory(Argument, ResultPointer, ArgumentLength);
+   }
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+   {
+      ERR("Failed to copy result from user mode!\n");
+      Status = _SEH2_GetExceptionCode();
+   }
+   _SEH2_END;
+
+   UserEnterCo();
+
+   RtlCopyMemory(pCs, &Common->Cs, sizeof(CHARSETINFO));
+
+   IntCbFreeMemory(Argument);
+
+   if (!NT_SUCCESS(Status))
+   {
+      ERR("GetCharsetInfo Failed!!\n");
+      return FALSE;
+   }
+
+   return TRUE;
+}
+
 /* EOF */

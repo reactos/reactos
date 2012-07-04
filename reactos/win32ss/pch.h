@@ -3,7 +3,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Win32k subsystem
- * FILE:            subsystems/win32/win32k/pch.h
+ * FILE:            win32ss/pch.h
  * PURPOSE:         Main Win32K Header
  * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
  */
@@ -63,6 +63,7 @@ typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
 #include <prntfont.h>
 #include <dde.h>
 #include <wincon.h>
+#include <winnls.h>
 #define _NOCSECT_TYPE
 #include <ddrawi.h>
 

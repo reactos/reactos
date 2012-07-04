@@ -61,3 +61,6 @@ co_IntClientLoadLibrary(PUNICODE_STRING strLibName,
                         BOOL Unload,
                         BOOL ApiHook);
 
+BOOL
+APIENTRY
+co_IntGetCharsetInfo(LCID Locale, PCHARSETINFO pCs);

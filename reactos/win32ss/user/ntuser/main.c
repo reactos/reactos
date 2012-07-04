@@ -283,7 +283,10 @@ UserCreateThreadInfo(struct _ETHREAD *Thread)
     pci->fsHooks = ptiCurrent->fsHooks;
     pci->dwTIFlags = ptiCurrent->TIF_flags;
     if (ptiCurrent->KeyboardLayout)
+    {
         pci->hKL = ptiCurrent->KeyboardLayout->hkl;
+        pci->CodePage = ptiCurrent->KeyboardLayout->CodePage;
+    }
 
     /* Assign a default window station and desktop to the process */
     /* Do not try to open a desktop or window station before winlogon initializes */

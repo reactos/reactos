@@ -219,6 +219,8 @@ Init(VOID)
       (PVOID)User32CallClientThreadSetupFromKernel;
    KernelCallbackTable[USER32_CALLBACK_CLIENTLOADLIBRARY] =
       (PVOID)User32CallClientLoadLibraryFromKernel;
+   KernelCallbackTable[USER32_CALLBACK_GETCHARSETINFO] =
+      (PVOID)User32CallGetCharsetInfo;
 
    NtUserProcessConnect( NtCurrentProcess(),
                          &UserCon,
@@ -352,3 +354,16 @@ User32CallClientThreadSetupFromKernel(PVOID Arguments, ULONG ArgumentLength)
   return ZwCallbackReturn(NULL, 0, STATUS_SUCCESS);  
 }
 
+NTSTATUS
+WINAPI
+User32CallGetCharsetInfo(PVOID Arguments, ULONG ArgumentLength)
+{
+  BOOL Ret;
+  PGET_CHARSET_INFO pgci = (PGET_CHARSET_INFO)Arguments;
+
+  TRACE("GetCharsetInfo\n");
+
+  Ret = TranslateCharsetInfo((DWORD *)pgci->Locale, &pgci->Cs, TCI_SRCLOCALE);
+
+  return ZwCallbackReturn(Arguments, ArgumentLength, Ret ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL);  
+}

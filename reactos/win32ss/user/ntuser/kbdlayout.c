@@ -201,6 +201,8 @@ cleanup:
 static PKL
 UserLoadKbdLayout(PUNICODE_STRING pwszKLID, HKL hKL)
 {
+    LCID lCid;
+    CHARSETINFO cs;
     PKL pKl;
 
     /* Create keyboard layout object */
@@ -223,6 +225,23 @@ UserLoadKbdLayout(PUNICODE_STRING pwszKLID, HKL hKL)
         ERR("UserLoadKbdFile(%wZ) failed!\n", pwszKLID);
         UserDeleteObject(pKl->head.h, otKBDlayout);
         return NULL;
+    }
+
+    // Up to Language Identifiers..
+    RtlUnicodeStringToInteger(pwszKLID, (ULONG)16, (PULONG)&lCid);
+    TRACE("Language Identifiers %wZ LCID 0x%x\n", pwszKLID, lCid);
+    if (co_IntGetCharsetInfo(lCid, &cs))
+    {
+       pKl->iBaseCharset = cs.ciCharset;
+       pKl->dwFontSigs = cs.fs.fsCsb[0];
+       pKl->CodePage = (USHORT)cs.ciACP;
+       TRACE("Charset %d Font Sig %d CodePage %d\n", pKl->iBaseCharset, pKl->dwFontSigs, pKl->CodePage);
+    }
+    else
+    {
+       pKl->iBaseCharset = ANSI_CHARSET;
+       pKl->dwFontSigs = FS_LATIN1;
+       pKl->CodePage = CP_ACP;
     }
 
     return pKl;

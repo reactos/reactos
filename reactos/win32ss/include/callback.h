@@ -10,7 +10,8 @@
 #define USER32_CALLBACK_LOADMENU              (6)
 #define USER32_CALLBACK_CLIENTTHREADSTARTUP   (7)
 #define USER32_CALLBACK_CLIENTLOADLIBRARY     (8)
-#define USER32_CALLBACK_MAXIMUM               (8)
+#define USER32_CALLBACK_GETCHARSETINFO        (9)
+#define USER32_CALLBACK_MAXIMUM               (9)
 
 typedef struct _WINDOWPROC_CALLBACK_ARGUMENTS
 {
@@ -85,6 +86,12 @@ typedef struct _CLIENT_LOAD_LIBRARY_ARGUMENTS
     BOOL ApiHook;
 } CLIENT_LOAD_LIBRARY_ARGUMENTS, *PCLIENT_LOAD_LIBRARY_ARGUMENTS;
 
+typedef struct _GET_CHARSET_INFO
+{
+    LCID Locale;
+    CHARSETINFO Cs;
+} GET_CHARSET_INFO, *PGET_CHARSET_INFO;
+
 NTSTATUS WINAPI
 User32CallWindowProcFromKernel(PVOID Arguments, ULONG ArgumentLength);
 NTSTATUS WINAPI
@@ -103,4 +110,6 @@ NTSTATUS WINAPI
 User32CallClientThreadSetupFromKernel(PVOID Arguments, ULONG ArgumentLength);
 NTSTATUS WINAPI
 User32CallClientLoadLibraryFromKernel(PVOID Arguments, ULONG ArgumentLength);
+NTSTATUS WINAPI
+User32CallGetCharsetInfo(PVOID Arguments, ULONG ArgumentLength);
 #endif /* __INCLUDE_USER32_CALLBACK_H */
