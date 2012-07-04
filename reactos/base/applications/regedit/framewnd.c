@@ -312,6 +312,38 @@ static INT_PTR CALLBACK LoadHive_KeyNameInHookProc(HWND hWndDlg, UINT uMsg, WPAR
     return FALSE;
 }
 
+static BOOL EnablePrivilege(LPCTSTR lpszPrivilegeName, LPCTSTR lpszSystemName, BOOL bEnablePrivilege)
+{
+    BOOL   bRet   = FALSE;
+    HANDLE hToken = NULL;
+
+    if (OpenProcessToken(GetCurrentProcess(),
+                         TOKEN_ADJUST_PRIVILEGES,
+                         &hToken))
+    {
+        TOKEN_PRIVILEGES tp;
+
+        tp.PrivilegeCount = 1;
+        tp.Privileges[0].Attributes = (bEnablePrivilege ? SE_PRIVILEGE_ENABLED : 0);
+
+        if (LookupPrivilegeValue(lpszSystemName,
+                                 lpszPrivilegeName,
+                                 &tp.Privileges[0].Luid))
+        {
+            bRet = AdjustTokenPrivileges(hToken,
+                                         FALSE,
+                                         &tp,
+                                         sizeof(tp),
+                                         NULL,
+                                         NULL);
+        }
+
+        CloseHandle(hToken);
+    }
+
+    return bRet;
+}
+
 static BOOL LoadHive(HWND hWnd)
 {
     OPENFILENAME ofn;
@@ -340,7 +372,19 @@ static BOOL LoadHive(HWND hWnd)
     {
         if(DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_LOADHIVE), hWnd, &LoadHive_KeyNameInHookProc, (LPARAM)xPath))
         {
-            LONG regLoadResult = RegLoadKey(hRootKey, xPath, ofn.lpstrFile);
+            LONG regLoadResult;
+
+            /* Enable the required privileges */
+            EnablePrivilege(SE_BACKUP_NAME, NULL, TRUE);
+            EnablePrivilege(SE_RESTORE_NAME, NULL, TRUE);
+
+            /* Load the hive */
+            regLoadResult = RegLoadKey(hRootKey, xPath, ofn.lpstrFile);
+
+            /* Disable the privileges */
+            EnablePrivilege(SE_RESTORE_NAME, NULL, FALSE);
+            EnablePrivilege(SE_BACKUP_NAME, NULL, FALSE);
+
             if(regLoadResult == ERROR_SUCCESS)
             {
                 /* refresh tree and list views */
@@ -373,8 +417,18 @@ static BOOL UnloadHive(HWND hWnd)
     pszKeyPath = GetItemPath(g_pChildWnd->hTreeWnd, 0, &hRootKey);
     /* load and set the caption and flags for dialog */
     LoadString(hInst, IDS_UNLOAD_HIVE, Caption, COUNT_OF(Caption));
-    /* now unload the hive */
+
+    /* Enable the required privileges */
+    EnablePrivilege(SE_BACKUP_NAME, NULL, TRUE);
+    EnablePrivilege(SE_RESTORE_NAME, NULL, TRUE);
+
+    /* Unload the hive */
     regUnloadResult = RegUnLoadKey(hRootKey, pszKeyPath);
+
+    /* Disable the privileges */
+    EnablePrivilege(SE_RESTORE_NAME, NULL, FALSE);
+    EnablePrivilege(SE_BACKUP_NAME, NULL, FALSE);
+
     if(regUnloadResult == ERROR_SUCCESS)
     {
         /* refresh tree and list views */
