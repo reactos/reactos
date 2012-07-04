@@ -362,8 +362,8 @@ UserGetDCEx(PWND Wnd OPTIONAL, HANDLE ClipRegion, ULONG Flags)
          }
 /*         else // For Testing!
          {
-            DPRINT1("We have POWNER!!\n");
-            if (Window->Dce) DPRINT1("We have POWNER with DCE!!\n");
+            ERR("We have POWNER!!\n");
+            if (Window->Dce) ERR("We have POWNER with DCE!!\n");
          }
 */
          if (Wnd->style & WS_CLIPSIBLINGS)
@@ -837,7 +837,10 @@ DceResetActiveDCEs(PWND Window)
          }
          else
          {
-            CurrentWindow = UserGetWindowObject(pDCE->hwndCurrent);
+            if (!pDCE->hwndCurrent)
+               CurrentWindow = NULL;
+            else 
+               CurrentWindow = UserGetWindowObject(pDCE->hwndCurrent);
             if (NULL == CurrentWindow)
             {
                pLE = pDCE->List.Flink;
