@@ -1027,6 +1027,13 @@ User32DefWindowProc(HWND hWnd,
 		    LPARAM lParam,
 		    BOOL bUnicode)
 {
+    PWND pWnd = NULL;
+    if (hWnd)
+    {
+       pWnd = ValidateHwnd(hWnd);
+       if (!pWnd) return 0;
+    }
+
     switch (Msg)
     {
 	case WM_NCPAINT:
@@ -1531,10 +1538,7 @@ User32DefWindowProc(HWND hWnd,
 
         case WM_ISACTIVEICON:
         {
-           PWND pWnd;
            BOOL isai;
-           pWnd = ValidateHwnd(hWnd);
-           if (!pWnd) return 0;
            isai = (pWnd->state & WNDS_ACTIVEFRAME) != 0;
            return isai;
         }
