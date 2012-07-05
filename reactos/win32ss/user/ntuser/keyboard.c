@@ -845,6 +845,7 @@ ProcessKeyEvent(WORD wVk, WORD wScanCode, DWORD dwFlags, BOOL bInjected, DWORD d
 
     /* If we have a focus queue, post a keyboard message */
     pFocusQueue = IntGetFocusMessageQueue();
+    TRACE("ProcessKeyEvent Q 0x%p Focus pWnd 0x%p\n",pFocusQueue, pFocusQueue ?  pFocusQueue->spwndFocus : 0);
     if (bIsDown && wVk == VK_SNAPSHOT)
     {
         if (pFocusQueue &&
@@ -1062,7 +1063,6 @@ IntTranslateKbdMessage(LPMSG lpMsg,
     WCHAR wch[3] = { 0 };
     MSG NewMsg = { 0 };
     PKBDTABLES pKbdTbl;
-    PWND pWnd;
     LARGE_INTEGER LargeTickCount;
     BOOL bResult = FALSE;
 
@@ -1077,14 +1077,7 @@ IntTranslateKbdMessage(LPMSG lpMsg,
           return FALSE;
     }
 
-    pWnd = UserGetWindowObject(lpMsg->hwnd);
-    if (!pWnd) // Must have a window!
-    {
-        ERR("No Window for Translate.\n");
-        return FALSE;
-    }
-
-    pti = pWnd->head.pti;
+    pti = PsGetCurrentThreadWin32Thread();
 
     if (!pti->KeyboardLayout)
     {

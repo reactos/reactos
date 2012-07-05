@@ -2116,12 +2116,12 @@ NtUserDispatchMessage(PMSG UnsafeMsgInfo)
     return Res;
 }
 
-
 BOOL APIENTRY
 NtUserTranslateMessage(LPMSG lpMsg, UINT flags)
 {
     MSG SafeMsg;
     BOOL Ret;
+    PWND pWnd;
 
     _SEH2_TRY
     {
@@ -2136,9 +2136,16 @@ NtUserTranslateMessage(LPMSG lpMsg, UINT flags)
     _SEH2_END;
 
     UserEnterExclusive();
-
-    Ret = IntTranslateKbdMessage(&SafeMsg, flags);
-
+    pWnd = UserGetWindowObject(SafeMsg.hwnd);
+    if (pWnd) // Must have a window!
+    {
+       Ret = IntTranslateKbdMessage(&SafeMsg, flags);
+    }
+    else
+    {
+        ERR("No Window for Translate. hwnd 0x%p Msg %d\n",SafeMsg.hwnd,SafeMsg.message); 
+        Ret = FALSE;
+    }
     UserLeave();
 
     return Ret;
