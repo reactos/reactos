@@ -1216,6 +1216,7 @@ User32DefWindowProc(HWND hWnd,
         case WM_PAINT:
         {
             PAINTSTRUCT Ps;
+            HDC hDC;
 
             /* If already in Paint and Client area is not empty just return. */
             if (pWnd->state2 & WNDS2_STARTPAINT && !IsRectEmpty(&pWnd->rcClient))
@@ -1224,7 +1225,7 @@ User32DefWindowProc(HWND hWnd,
                return 0;
             }
 
-            HDC hDC = BeginPaint(hWnd, &Ps);
+            hDC = BeginPaint(hWnd, &Ps);
             if (hDC)
             {
                 HICON hIcon;
