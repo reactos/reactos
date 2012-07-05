@@ -1209,13 +1209,20 @@ User32DefWindowProc(HWND hWnd,
         case WM_PAINT:
         {
             PAINTSTRUCT Ps;
+
+            /* If already in Paint and Client area is not empty just return. */
+            if (pWnd->state2 & WNDS2_STARTPAINT && !IsRectEmpty(&pWnd->rcClient))
+            {
+               ERR("In Paint and Client area is not empty!\n");
+               return 0;
+            }
+
             HDC hDC = BeginPaint(hWnd, &Ps);
             if (hDC)
             {
                 HICON hIcon;
 
-                if (GetWindowLongPtrW(hWnd, GWL_STYLE) & WS_MINIMIZE &&
-                    (hIcon = (HICON)GetClassLongPtrW(hWnd, GCL_HICON)) != NULL)
+                if (IsIconic(hWnd) && ((hIcon = (HICON)GetClassLongPtrW( hWnd, GCLP_HICON))))
                 {
                     RECT ClientRect;
                     INT x, y;

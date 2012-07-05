@@ -58,8 +58,18 @@ IntIntersectWithParents(PWND Child, RECTL *WindowRect)
 BOOL FASTCALL
 IntValidateParent(PWND Child, HRGN hValidateRgn, BOOL Recurse)
 {
-   PWND ParentWnd = Child->spwndParent;
+   PWND ParentWnd = Child;
 
+   if (ParentWnd->style & WS_CHILD)
+   {
+      do
+         ParentWnd = ParentWnd->spwndParent;
+      while (ParentWnd->style & WS_CHILD);
+   }
+// Hax out for drawing issues.
+//   if (!(ParentWnd->state & WNDS_SYNCPAINTPENDING)) Recurse = FALSE;
+
+   ParentWnd = Child->spwndParent;
    while (ParentWnd)
    {
       if (ParentWnd->style & WS_CLIPCHILDREN)
@@ -79,6 +89,81 @@ IntValidateParent(PWND Child, HRGN hValidateRgn, BOOL Recurse)
    }
 
    return TRUE;
+}
+
+/*
+  Synchronize painting to the top-level windows of other threads.
+*/
+VOID FASTCALL
+IntSendSyncPaint(PWND Wnd, ULONG Flags)
+{
+   PTHREADINFO ptiCur;
+   PUSER_MESSAGE_QUEUE MessageQueue;
+   PUSER_SENT_MESSAGE Message;
+   PLIST_ENTRY Entry;
+   BOOL bSend = TRUE;
+
+   MessageQueue = Wnd->head.pti->MessageQueue;
+   ptiCur = PsGetCurrentThreadWin32Thread();
+   /*
+      Not the current thread, Wnd is in send Nonclient paint also in send erase background and it is visiable.
+   */
+   if ( Wnd->head.pti != ptiCur &&
+        Wnd->state & WNDS_SENDNCPAINT &&
+        Wnd->state & WNDS_SENDERASEBACKGROUND &&
+        Wnd->style & WS_VISIBLE)
+   {
+      // For testing, if you see this, break out the Champagne and have a party!
+      ERR("SendSyncPaint Wnd in State!\n");
+      if (!IsListEmpty(&MessageQueue->SentMessagesListHead))
+      {
+         // Scan sent queue messages to see if we received sync paint messages.
+         Entry = MessageQueue->SentMessagesListHead.Flink;
+         Message = CONTAINING_RECORD(Entry, USER_SENT_MESSAGE, ListEntry);
+         do
+         {
+            ERR("LOOP it\n");
+            if (Message->Msg.message == WM_SYNCPAINT &&
+                Message->Msg.hwnd == UserHMGetHandle(Wnd))
+            {  // Already received so exit out.
+                ERR("SendSyncPaint Found one in the Sent Msg Queue!\n");
+                bSend = FALSE;
+                break;
+            }
+            Entry = Message->ListEntry.Flink;
+            Message = CONTAINING_RECORD(Entry, USER_SENT_MESSAGE, ListEntry);
+         }
+         while (Entry != &MessageQueue->SentMessagesListHead);
+      }
+      if (bSend)
+      {
+         ERR("Sending WM_SYNCPAINT\n");
+         // This message has no parameters. But it does! Pass Flags along.
+         co_IntSendMessageNoWait(UserHMGetHandle(Wnd), WM_SYNCPAINT, Flags, 0);
+         Wnd->state |= WNDS_SYNCPAINTPENDING;
+      }
+   }
+
+   // Send to all the children if this is the desktop window.
+   if ( Wnd == UserGetDesktopWindow() )
+   {
+      if ( Flags & RDW_ALLCHILDREN ||
+          ( !(Flags & RDW_NOCHILDREN) && Wnd->style & WS_CLIPCHILDREN))
+      {
+         PWND spwndChild = Wnd->spwndChild;
+         while(spwndChild)
+         {
+            if ( spwndChild->style & WS_CHILD &&
+                 spwndChild->head.pti != ptiCur)
+            {
+               spwndChild = spwndChild->spwndNext;
+               continue;
+            }
+            IntSendSyncPaint( spwndChild, Flags );
+            spwndChild = spwndChild->spwndNext;
+         }
+      }
+   }
 }
 
 /**
@@ -166,6 +251,7 @@ IntGetNCUpdateRgn(PWND Window, BOOL Validate)
       {
          GreDeleteObject(hRgnWindow);
          GreDeleteObject(hRgnNonClient);
+         Window->state &= ~WNDS_UPDATEDIRTY;
          return NULL;
       }
 
@@ -181,6 +267,7 @@ IntGetNCUpdateRgn(PWND Window, BOOL Validate)
          {
             IntGdiSetRegionOwner(Window->hrgnUpdate, GDI_OBJ_HMGR_POWNED);
             GreDeleteObject(Window->hrgnUpdate);
+            Window->state &= ~WNDS_UPDATEDIRTY;
             Window->hrgnUpdate = NULL;
             if (!(Window->state & WNDS_INTERNALPAINT))
                MsqDecPaintCountQueue(Window->head.pti->MessageQueue);
@@ -210,6 +297,8 @@ co_IntPaintWindows(PWND Wnd, ULONG Flags, BOOL Recurse)
    HWND hWnd = Wnd->head.h;
    HRGN TempRegion;
 
+   Wnd->state &= ~WNDS_PAINTNOTPROCESSED;
+
    if (Flags & (RDW_ERASENOW | RDW_UPDATENOW))
    {
       if (Wnd->hrgnUpdate)
@@ -220,20 +309,26 @@ co_IntPaintWindows(PWND Wnd, ULONG Flags, BOOL Recurse)
 
       if (Flags & RDW_UPDATENOW)
       {
-         if (Wnd->hrgnUpdate != NULL ||
-             Wnd->state & WNDS_INTERNALPAINT)
+         if ((Wnd->hrgnUpdate != NULL ||
+              Wnd->state & WNDS_INTERNALPAINT))
          {
             Wnd->state2 |= WNDS2_WMPAINTSENT;
             co_IntSendMessage(hWnd, WM_PAINT, 0, 0);
          }
       }
-      else
+      else if (Wnd->head.pti == PsGetCurrentThreadWin32Thread())
       {
          if (Wnd->state & WNDS_SENDNCPAINT)
          {
             TempRegion = IntGetNCUpdateRgn(Wnd, TRUE);
             Wnd->state &= ~WNDS_SENDNCPAINT;
-            co_IntSendMessage(hWnd, WM_NCPAINT, (WPARAM)TempRegion, 0);
+            if ( Wnd == GetW32ThreadInfo()->MessageQueue->spwndActive &&
+                !(Wnd->state & WNDS_ACTIVEFRAME))
+            {
+               Wnd->state |= WNDS_ACTIVEFRAME;
+               Wnd->state &= ~WNDS_NONCPAINT;
+            }
+            if (TempRegion) co_IntSendMessage(hWnd, WM_NCPAINT, (WPARAM)TempRegion, 0);
          }
 
          if (Wnd->state & WNDS_SENDERASEBACKGROUND)
@@ -254,6 +349,10 @@ co_IntPaintWindows(PWND Wnd, ULONG Flags, BOOL Recurse)
             }
          }
       }
+   }
+   else
+   {
+      Wnd->state &= ~(WNDS_SENDNCPAINT|WNDS_SENDERASEBACKGROUND|WNDS_ERASEBACKGROUND);
    }
 
    /*
@@ -305,6 +404,8 @@ IntInvalidateWindows(PWND Wnd, HRGN hRgn, ULONG Flags)
    BOOL HadPaintMessage;
 
    TRACE("IntInvalidateWindows start\n");
+
+   Wnd->state |= WNDS_PAINTNOTPROCESSED;
 
    /*
     * If the nonclient is not to be redrawn, clip the region to the client
@@ -362,10 +463,14 @@ IntInvalidateWindows(PWND Wnd, HRGN hRgn, ULONG Flags)
 
       if (Flags & RDW_INVALIDATE && RgnType != NULLREGION)
       {
+         Wnd->state &= ~WNDS_NONCPAINT;
+
          /* If not the same thread set it dirty. */
          if (Wnd->head.pti != PsGetCurrentThreadWin32Thread())
          {
             Wnd->state |= WNDS_UPDATEDIRTY;
+            if (Wnd->state2 & WNDS2_WMPAINTSENT)
+               Wnd->state2 |= WNDS2_ENDPAINTINVALIDATE;
          }
 
          if (Flags & RDW_FRAME)
@@ -572,6 +677,7 @@ co_UserRedrawWindow(
 
    if (Flags & (RDW_ERASENOW | RDW_UPDATENOW))
    {
+      if (Flags & RDW_ERASENOW) IntSendSyncPaint(Window, Flags);
       co_IntPaintWindows(Window, Flags, FALSE);
    }
 
@@ -853,7 +959,7 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* UnsafePs)
       co_IntSendMessage(hWnd, WM_NCPAINT, (WPARAM)hRgn, 0);
       if (hRgn != HRGN_WINDOW && hRgn != NULL && GreIsHandleValid(hRgn))
       {
-         /* NOTE: The region can already by deleted! */
+         /* NOTE: The region can already be deleted! */
          GreDeleteObject(hRgn);
       }
    }
@@ -928,7 +1034,7 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* UnsafePs)
 CLEANUP:
    if (Window) UserDerefObjectCo(Window);
 
-   TRACE("Leave NtUserBeginPaint, ret=%i\n",_ret_);
+   TRACE("Leave NtUserBeginPaint, ret=%p\n",_ret_);
    UserLeave();
    END_CLEANUP;
 
@@ -1869,11 +1975,13 @@ cleanup:
    return Ret;
 }
 
+BOOL FASTCALL IntPaintDesktop(HDC hDC);
+
 INT
 FASTCALL
 UserRealizePalette(HDC hdc)
 {
-  HWND hWnd;
+  HWND hWnd, hWndDesktop;
   DWORD Ret;
 
   Ret = IntGdiRealizePalette(hdc);
@@ -1882,6 +1990,15 @@ UserRealizePalette(HDC hdc)
       hWnd = IntWindowFromDC(hdc);
       if (hWnd) // Send broadcast if dc is associated with a window.
       {  // FYI: Thread locked in CallOneParam.
+         hWndDesktop = IntGetDesktopWindow();
+         if ( hWndDesktop != hWnd )
+         {
+            PWND pWnd = UserGetWindowObject(hWndDesktop);
+            ERR("RealizePalette Desktop.");
+            hdc = UserGetWindowDC(pWnd);
+            IntPaintDesktop(hdc);
+            UserReleaseDC(pWnd,hdc,FALSE);            
+         }
          UserSendNotifyMessage((HWND)HWND_BROADCAST, WM_PALETTECHANGED, (WPARAM)hWnd, 0);
       }
   }
