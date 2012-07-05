@@ -495,7 +495,7 @@ DefWndNCPaint(HWND hWnd, HRGN hRgn, BOOL Active)
    if (hRgn != HRGN_WINDOW)
       DeleteObject(hRgn); // We use DCX_KEEPCLIPRGN
 
-   return 0;
+   return 0; // For WM_NCPAINT message, return 0.
 }
 
 LRESULT
@@ -652,9 +652,35 @@ DefWndNCCalcSize(HWND hWnd, BOOL CalcSizeStruct, RECT *Rect)
 }
 
 LRESULT
-DefWndNCActivate(HWND hWnd, WPARAM wParam)
+DefWndNCActivate(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
-   DefWndNCPaint(hWnd, HRGN_WINDOW, wParam);
+   PWND Wnd = ValidateHwnd(hWnd);
+
+   if (!Wnd) return 0;
+
+  /* Lotus Notes draws menu descriptions in the caption of its main
+   * window. When it wants to restore original "system" view, it just
+   * sends WM_NCACTIVATE message to itself. Any optimizations here in
+   * attempt to minimize redrawings lead to a not restored caption.   
+   */
+   if (wParam)
+      NtUserxSetWindowState(Wnd, WNDSACTIVEFRAME);
+   else
+      NtUserxClearWindowState(Wnd, WNDSACTIVEFRAME);
+
+   if (Wnd->state & WNDS_NONCPAINT)
+      return 0;
+
+   /* This isn't documented but is reproducible in at least XP SP2 and
+    * Outlook 2007 depends on it
+    */
+   // MSDN:
+   // If this parameter is set to -1, DefWindowProc does not repaint the
+   // nonclient area to reflect the state change.
+   if (lParam != -1)
+   {
+      DefWndNCPaint(hWnd, HRGN_WINDOW, wParam);
+   }
    return TRUE;
 }
 
@@ -930,6 +956,7 @@ DefWndDoButton(HWND hWnd, WPARAM wParam)
    {
       if (GetMessageW(&Msg, 0, WM_MOUSEFIRST, WM_MOUSELAST) <= 0)
          break;
+      if (CallMsgFilterW( &Msg, MSGF_MAX )) continue;
 
       if (Msg.message == WM_LBUTTONUP)
          break;
@@ -948,7 +975,7 @@ DefWndDoButton(HWND hWnd, WPARAM wParam)
    ReleaseCapture();
    ReleaseDC(hWnd, WindowDC);
    if (Pressed)
-      SendMessageW(hWnd, WM_SYSCOMMAND, SCMsg, 0);
+      SendMessageW(hWnd, WM_SYSCOMMAND, SCMsg, MAKELONG(Msg.pt.x,Msg.pt.y));
 }
 
 

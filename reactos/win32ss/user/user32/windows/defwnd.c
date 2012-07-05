@@ -18,7 +18,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(user32);
 
 LRESULT DefWndNCPaint(HWND hWnd, HRGN hRgn, BOOL Active);
 LRESULT DefWndNCCalcSize(HWND hWnd, BOOL CalcSizeStruct, RECT *Rect);
-LRESULT DefWndNCActivate(HWND hWnd, WPARAM wParam);
+LRESULT DefWndNCActivate(HWND hWnd, WPARAM wParam, LPARAM lParam);
 LRESULT DefWndNCHitTest(HWND hWnd, POINT Point);
 LRESULT DefWndNCLButtonDown(HWND hWnd, WPARAM wParam, LPARAM lParam);
 LRESULT DefWndNCLButtonDblClk(HWND hWnd, WPARAM wParam, LPARAM lParam);
@@ -1053,7 +1053,7 @@ User32DefWindowProc(HWND hWnd,
 
         case WM_NCACTIVATE:
         {
-            return DefWndNCActivate(hWnd, wParam);
+            return DefWndNCActivate(hWnd, wParam, lParam);
         }
 
         case WM_NCHITTEST:
