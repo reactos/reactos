@@ -27,9 +27,9 @@
  * If you discover missing features, or bugs, please note them below.
  *
  * TODO:
- *    - GetListBoxInfo()
- *    - LB_GETLISTBOXINFO
- *    - LBS_NODATA
+ *    - GetListBoxInfo()  ReactOS
+ *    - LB_GETLISTBOXINFO ReactOS
+ *    - LBS_NODATA        ReactOS
  */
 
 #include <user32.h>
@@ -2523,6 +2523,14 @@ static BOOL LISTBOX_Create( HWND hwnd, LPHEADCOMBO lphc )
     if (descr->style & LBS_EXTENDEDSEL) descr->style |= LBS_MULTIPLESEL;
     if (descr->style & LBS_MULTICOLUMN) descr->style &= ~LBS_OWNERDRAWVARIABLE;
     if (descr->style & LBS_OWNERDRAWVARIABLE) descr->style |= LBS_NOINTEGRALHEIGHT;
+
+    //// ReactOS
+    /* A no-data list box must also have the LBS_OWNERDRAWFIXED style, but must
+       not have the LBS_SORT or LBS_HASSTRINGS style. */
+    if ( descr->style & LBS_NODATA &&
+        (!(descr->style & LBS_OWNERDRAWFIXED) || descr->style & (LBS_HASSTRINGS|LBS_SORT) ) )
+       descr->style &= ~LBS_NODATA;
+    ////
     descr->item_height = LISTBOX_SetFont( descr, 0 );
 
     if (descr->style & LBS_OWNERDRAWFIXED)
@@ -3001,9 +3009,11 @@ LRESULT WINAPI ListBoxWndProc_common( HWND hwnd, UINT msg,
             LISTBOX_RepaintItem( descr, descr->focus_item, ODA_FOCUS );
         return LB_OKAY;
 
-    case LB_GETLISTBOXINFO:
-        FIXME("LB_GETLISTBOXINFO: stub!\n");
-        return 0;
+    case LB_GETLISTBOXINFO: //// ReactOS
+        if (descr->style & LBS_MULTICOLUMN)
+           return descr->column_width;
+        else
+           return descr->nb_items;
 
     case WM_DESTROY:
         return LISTBOX_Destroy( descr );

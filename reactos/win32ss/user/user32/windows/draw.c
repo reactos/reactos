@@ -1,4 +1,4 @@
-﻿/*
+/*
  * ReactOS User32 Library
  * - Various drawing functions
  *
