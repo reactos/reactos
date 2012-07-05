@@ -46,7 +46,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(user32);
 #define GET_WORD(ptr)  (*(WORD *)(ptr))
 #define GET_DWORD(ptr) (*(DWORD *)(ptr))
 #define DLG_ISANSI 2
-void WINAPI WinPosActivateOtherWindow(HWND hwnd);
 
 /* INTERNAL STRUCTS **********************************************************/
 
@@ -1062,7 +1061,21 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
         return hwnd;
     }
     if (modal && ownerEnabled) DIALOG_EnableOwner(owner);
-    if( IsWindow(hwnd) ) DestroyWindow( hwnd );
+    IntNotifyWinEvent(EVENT_SYSTEM_DIALOGEND, hwnd, OBJID_WINDOW, CHILDID_SELF, 0);
+    if( IsWindow(hwnd) )
+    {
+      DestroyWindow( hwnd );
+      //// ReactOS
+      if (owner)
+      {  ERR("DIALOG_CreateIndirect 1\n");
+         if ( NtUserGetThreadState(THREADSTATE_FOREGROUNDTHREAD) && // Rule #1.
+             !NtUserQueryWindow(owner, QUERY_WINDOW_FOREGROUND) )
+         { ERR("DIALOG_CreateIndirect SFW\n");
+            SetForegroundWindow(owner);
+         }
+      }
+      ////
+    }
     return 0;
 }
 
@@ -2001,7 +2014,7 @@ DlgDirSelectExW(
 
 
 /*
- * @implemented
+ * @implemented Modified for ReactOS.
  */
 BOOL
 WINAPI
@@ -2012,6 +2025,7 @@ EndDialog(
     BOOL wasEnabled = TRUE;
     DIALOGINFO * dlgInfo;
     HWND owner;
+    BOOL wasActive;
 
     TRACE("%p %ld\n", hwnd, retval );
 
@@ -2020,6 +2034,7 @@ EndDialog(
         ERR("got invalid window handle (%p); buggy app !?\n", hwnd);
         return FALSE;
     }
+    wasActive = (hwnd == GetActiveWindow());
     dlgInfo->idResult = retval;
     dlgInfo->flags |= DF_END;
     wasEnabled = (dlgInfo->flags & DF_OWNERENABLED);
@@ -2030,7 +2045,7 @@ EndDialog(
 
     /* Windows sets the focus to the dialog itself in EndDialog */
 
-    if (IsChild(hwnd, GetFocus()))
+    if (wasActive && IsChild(hwnd, GetFocus()))
        SetFocus( hwnd );
 
     /* Don't have to send a ShowWindow(SW_HIDE), just do
@@ -2039,15 +2054,16 @@ EndDialog(
     SetWindowPos(hwnd, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE
                  | SWP_NOZORDER | SWP_NOACTIVATE | SWP_HIDEWINDOW);
 
-    if (hwnd == GetActiveWindow())
+    if (wasActive && owner)
     {
         /* If this dialog was given an owner then set the focus to that owner
            even when the owner is disabled (normally when a window closes any
            disabled windows cannot receive the focus). */
-        if (owner)
-            SetForegroundWindow( owner );
-        else
-            WinPosActivateOtherWindow( hwnd );
+        SetActiveWindow(owner);
+    }
+    else if (hwnd == GetActiveWindow()) // Check it again!
+    {
+        NtUserCallNoParam(NOPARAM_ROUTINE_ZAPACTIVEANDFOUS);
     }
 
     /* unblock dialog loop */
@@ -2593,13 +2609,15 @@ IsDialogMessageW(
 //// ReactOS
      case WM_SYSKEYDOWN:
          /* If the ALT key is being pressed display the keyboard cues */
-         if (HIWORD(lpMsg->lParam) & KF_ALTDOWN)
+         if ( HIWORD(lpMsg->lParam) & KF_ALTDOWN &&
+             !(gpsi->dwSRVIFlags & SRVINFO_KBDPREF) && !(gpsi->PUSIFlags & PUSIF_KEYBOARDCUES) )
              SendMessageW(hDlg, WM_CHANGEUISTATE, MAKEWPARAM(UIS_CLEAR, UISF_HIDEACCEL | UISF_HIDEFOCUS), 0);
          break;
 
      case WM_SYSCOMMAND:
          /* If the ALT key is being pressed display the keyboard cues */
-         if (lpMsg->wParam == SC_KEYMENU)
+         if ( lpMsg->wParam == SC_KEYMENU &&
+             !(gpsi->dwSRVIFlags & SRVINFO_KBDPREF) && !(gpsi->PUSIFlags & PUSIF_KEYBOARDCUES) )
          {
             SendMessageW(hDlg, WM_CHANGEUISTATE, MAKEWPARAM(UIS_CLEAR, UISF_HIDEACCEL | UISF_HIDEFOCUS), 0);
          }

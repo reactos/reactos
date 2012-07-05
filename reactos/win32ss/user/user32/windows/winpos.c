@@ -25,57 +25,6 @@ void mirror_rect( const RECT *window_rect, RECT *rect )
 
 /* FUNCTIONS *****************************************************************/
 
-/*******************************************************************
- *         can_activate_window
- *
- * Check if we can activate the specified window.
- */
-static BOOL can_activate_window( HWND hwnd )
-{
-    LONG style;
-
-    if (!hwnd) return FALSE;
-    style = GetWindowLongPtrW( hwnd, GWL_STYLE );
-    if (!(style & WS_VISIBLE)) return FALSE;
-    if ((style & (WS_POPUP|WS_CHILD)) == WS_CHILD) return FALSE;
-    return !(style & WS_DISABLED);
-}
-
-
-/*******************************************************************
- *         WINPOS_ActivateOtherWindow
- *
- *  Activates window other than pWnd.
- */
-void
-WINAPI
-WinPosActivateOtherWindow(HWND hwnd)
-{
-    HWND hwndTo, fg;
-
-    if ((GetWindowLongPtrW( hwnd, GWL_STYLE ) & WS_POPUP) && (hwndTo = GetWindow( hwnd, GW_OWNER )))
-    {
-        hwndTo = GetAncestor( hwndTo, GA_ROOT );
-        if (can_activate_window( hwndTo )) goto done;
-    }
-
-    hwndTo = hwnd;
-    for (;;)
-    {
-        if (!(hwndTo = GetWindow( hwndTo, GW_HWNDNEXT ))) break;
-        if (can_activate_window( hwndTo )) break;
-    }
-
- done:
-    fg = GetForegroundWindow();
-    TRACE("win = %p fg = %p\n", hwndTo, fg);
-    if (!fg || (hwnd == fg))
-    {
-        if (SetForegroundWindow( hwndTo )) return;
-    }
-    if (!SetActiveWindow( hwndTo )) SetActiveWindow(0);
-}
-
 #define EMPTYPOINT(pt) ((pt).x == -1 && (pt).y == -1)
 
 UINT WINAPI
