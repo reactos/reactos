@@ -301,6 +301,14 @@ SpiUpdatePerUserSystemParameters()
 
     /* Update SystemMetrics */
     InitMetrics();
+
+    if (gbSpiInitialized && gpsi)
+    {
+       if (gspv.bKbdPref) gpsi->dwSRVIFlags |= SRVINFO_KBDPREF;
+       if (SPITESTPREF(UPM_KEYBOARDCUES)) gpsi->PUSIFlags |= PUSIF_KEYBOARDCUES;
+       if (SPITESTPREF(UPM_COMBOBOXANIMATION)) gpsi->PUSIFlags |= PUSIF_COMBOBOXANIMATION;
+       if (SPITESTPREF(UPM_LISTBOXSMOOTHSCROLLING)) gpsi->PUSIFlags |= PUSIF_LISTBOXSMOOTHSCROLLING;
+    }
 }
 
 BOOL

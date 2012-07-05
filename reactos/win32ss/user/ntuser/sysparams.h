@@ -190,4 +190,4 @@ extern SPIVALUES gspv;
 extern BOOL g_PaintDesktopVersion;
 
 BOOL InitSysParams();
-
+#define SPITESTPREF(x) (gspv.dwUserPrefMask & x ? 1 : 0)
