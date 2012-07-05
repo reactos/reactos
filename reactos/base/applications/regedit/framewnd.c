@@ -330,12 +330,10 @@ static BOOL EnablePrivilege(LPCTSTR lpszPrivilegeName, LPCTSTR lpszSystemName, B
                                  lpszPrivilegeName,
                                  &tp.Privileges[0].Luid))
         {
-            bRet = AdjustTokenPrivileges(hToken,
-                                         FALSE,
-                                         &tp,
-                                         sizeof(tp),
-                                         NULL,
-                                         NULL);
+            bRet = AdjustTokenPrivileges(hToken, FALSE, &tp, 0, NULL, NULL);
+
+            if (GetLastError() == ERROR_NOT_ALL_ASSIGNED)
+                bRet = FALSE;
         }
 
         CloseHandle(hToken);
@@ -374,16 +372,10 @@ static BOOL LoadHive(HWND hWnd)
         {
             LONG regLoadResult;
 
-            /* Enable the required privileges */
-            EnablePrivilege(SE_BACKUP_NAME, NULL, TRUE);
+            /* Enable the 'restore' privilege, load the hive, disable the privilege */
             EnablePrivilege(SE_RESTORE_NAME, NULL, TRUE);
-
-            /* Load the hive */
             regLoadResult = RegLoadKey(hRootKey, xPath, ofn.lpstrFile);
-
-            /* Disable the privileges */
             EnablePrivilege(SE_RESTORE_NAME, NULL, FALSE);
-            EnablePrivilege(SE_BACKUP_NAME, NULL, FALSE);
 
             if(regLoadResult == ERROR_SUCCESS)
             {
@@ -418,16 +410,10 @@ static BOOL UnloadHive(HWND hWnd)
     /* load and set the caption and flags for dialog */
     LoadString(hInst, IDS_UNLOAD_HIVE, Caption, COUNT_OF(Caption));
 
-    /* Enable the required privileges */
-    EnablePrivilege(SE_BACKUP_NAME, NULL, TRUE);
+    /* Enable the 'restore' privilege, unload the hive, disable the privilege */
     EnablePrivilege(SE_RESTORE_NAME, NULL, TRUE);
-
-    /* Unload the hive */
     regUnloadResult = RegUnLoadKey(hRootKey, pszKeyPath);
-
-    /* Disable the privileges */
     EnablePrivilege(SE_RESTORE_NAME, NULL, FALSE);
-    EnablePrivilege(SE_BACKUP_NAME, NULL, FALSE);
 
     if(regUnloadResult == ERROR_SUCCESS)
     {
