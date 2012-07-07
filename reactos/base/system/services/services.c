@@ -403,13 +403,6 @@ wWinMain(HINSTANCE hInstance,
 
     /* FIXME: more initialization */
 
-    /* Read the control set values */
-    if (!ScmGetControlSetValues())
-    {
-        DPRINT1("SERVICES: failed to read the control set values\n");
-        goto done;
-    }
-
     /* Create the service database */
     dwError = ScmCreateServiceDatabase();
     if (dwError != ERROR_SUCCESS)
