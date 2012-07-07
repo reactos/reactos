@@ -12,6 +12,7 @@ list(APPEND SOURCE
     database.c
     driver.c
     groupdb.c
+    lock.c
     rpcserver.c
     services.c
     services.rc

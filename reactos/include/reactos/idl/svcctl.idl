@@ -443,7 +443,8 @@ interface svcctl
     /* Function 18 */
     DWORD RQueryServiceLockStatusW(
         [in] SC_RPC_HANDLE hSCManager,
-        [out] LPQUERY_SERVICE_LOCK_STATUSW lpLockStatus,
+        [out, size_is(cbBufSize)] LPBYTE lpLockStatus,
+        /* FIXME: should be [out] LPQUERY_SERVICE_LOCK_STATUSW lpLockStatus, */
         [in, range(0, 1024*4)] DWORD cbBufSize,
         [out] LPBOUNDED_DWORD_4K pcbBytesNeeded);
 
@@ -555,7 +556,8 @@ interface svcctl
     /* Function 30 */
     DWORD RQueryServiceLockStatusA(
         [in] SC_RPC_HANDLE hSCManager,
-        [out] LPQUERY_SERVICE_LOCK_STATUSA lpLockStatus,
+        [out, size_is(cbBufSize)] LPBYTE lpLockStatus,
+        /* FIXME: should be [out] LPQUERY_SERVICE_LOCK_STATUSA lpLockStatus, */
         [in, range(0, 1024*4)] DWORD cbBufSize,
         [out] LPBOUNDED_DWORD_4K pcbBytesNeeded);
 

@@ -2286,7 +2286,7 @@ QueryServiceLockStatusA(SC_HANDLE hSCManager,
     {
         /* Call to services.exe using RPC */
         dwError = RQueryServiceLockStatusA((SC_RPC_HANDLE)hSCManager,
-                                           lpStatusPtr,
+                                           (LPBYTE)lpStatusPtr,
                                            dwBufferSize,
                                            pcbBytesNeeded);
     }
@@ -2348,7 +2348,7 @@ QueryServiceLockStatusW(SC_HANDLE hSCManager,
     {
         /* Call to services.exe using RPC */
         dwError = RQueryServiceLockStatusW((SC_RPC_HANDLE)hSCManager,
-                                           lpStatusPtr,
+                                           (LPBYTE)lpStatusPtr,
                                            dwBufferSize,
                                            pcbBytesNeeded);
     }

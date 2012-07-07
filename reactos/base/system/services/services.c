@@ -376,7 +376,8 @@ wWinMain(HINSTANCE hInstance,
          LPWSTR lpCmdLine,
          int nShowCmd)
 {
-    HANDLE hScmStartEvent;
+    HANDLE hScmStartEvent = NULL;
+    SC_RPC_LOCK Lock = NULL;
     DWORD dwError;
 
     DPRINT("SERVICES: Service Control Manager\n");
@@ -385,23 +386,36 @@ wWinMain(HINSTANCE hInstance,
     if (!ScmCreateStartEvent(&hScmStartEvent))
     {
         DPRINT1("SERVICES: Failed to create start event\n");
-        ExitThread(0);
+        goto done;
     }
 
     DPRINT("SERVICES: created start event with handle %p.\n", hScmStartEvent);
+
+    /* Create the shutdown event */
+    hScmShutdownEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+    if (hScmShutdownEvent == NULL)
+    {
+        DPRINT1("SERVICES: Failed to create shutdown event\n");
+        goto done;
+    }
 
 //    ScmInitThreadManager();
 
     /* FIXME: more initialization */
 
+    /* Read the control set values */
+    if (!ScmGetControlSetValues())
+    {
+        DPRINT1("SERVICES: failed to read the control set values\n");
+        goto done;
+    }
 
     /* Create the service database */
     dwError = ScmCreateServiceDatabase();
     if (dwError != ERROR_SUCCESS)
     {
         DPRINT1("SERVICES: failed to create SCM database (Error %lu)\n", dwError);
-        CloseHandle(hScmStartEvent);
-        ExitThread(0);
+        goto done;
     }
 
     /* Update service database */
@@ -429,26 +443,37 @@ wWinMain(HINSTANCE hInstance,
 
     ScmInitNamedPipeCriticalSection();
 
+    /* Acquire the service start lock until autostart services have been started */
+    dwError = ScmAcquireServiceStartLock(TRUE, &Lock);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("SERVICES: failed to acquire the service start lock (Error %lu)\n", dwError);
+        goto done;
+    }
+
     /* Start auto-start services */
     ScmAutoStartServices();
 
     /* FIXME: more to do ? */
 
+    /* Release the service start lock */
+    ScmReleaseServiceStartLock(&Lock);
 
     DPRINT("SERVICES: Running.\n");
 
-    /* Create the shutdown event and wait until it gets set */
-    hScmShutdownEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
-    if (hScmShutdownEvent)
-        WaitForSingleObject(hScmShutdownEvent, INFINITE);
+    /* Wait until the shutdown event gets signaled */
+    WaitForSingleObject(hScmShutdownEvent, INFINITE);
 
+done:
     ScmDeleteNamedPipeCriticalSection();
 
     /* Close the shutdown event */
-    CloseHandle(hScmShutdownEvent);
+    if (hScmShutdownEvent != NULL)
+        CloseHandle(hScmShutdownEvent);
 
     /* Close the start event */
-    CloseHandle(hScmStartEvent);
+    if (hScmStartEvent != NULL)
+        CloseHandle(hScmStartEvent);
 
     DPRINT("SERVICES: Finished.\n");
 

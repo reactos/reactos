@@ -1307,7 +1307,7 @@ DWORD RLockServiceDatabase(
 
     DPRINT("RLockServiceDatabase() called\n");
 
-    *lpLock = 0;
+    *lpLock = NULL;
 
     hMgr = ScmGetServiceManagerFromHandle(hSCManager);
     if (hMgr == NULL)
@@ -1320,12 +1320,7 @@ DWORD RLockServiceDatabase(
                                   SC_MANAGER_LOCK))
         return ERROR_ACCESS_DENIED;
 
-//    return ScmLockDatabase(0, hMgr->0xC, hLock);
-
-    /* FIXME: Lock the database */
-    *lpLock = (SC_RPC_LOCK)0x12345678; /* Dummy! */
-
-    return ERROR_SUCCESS;
+    return ScmAcquireServiceStartLock(FALSE, lpLock);
 }
 
 
@@ -1706,8 +1701,8 @@ DWORD RSetServiceStatus(
 DWORD RUnlockServiceDatabase(
     LPSC_RPC_LOCK Lock)
 {
-    UNIMPLEMENTED;
-    return ERROR_SUCCESS;
+    DPRINT("RUnlockServiceDatabase(%p)\n", Lock);
+    return ScmReleaseServiceStartLock(Lock);
 }
 
 
@@ -2857,12 +2852,41 @@ Done:
 /* Function 18 */
 DWORD RQueryServiceLockStatusW(
     SC_RPC_HANDLE hSCManager,
-    LPQUERY_SERVICE_LOCK_STATUSW lpLockStatus,
+    LPBYTE lpBuf, // LPQUERY_SERVICE_LOCK_STATUSW lpLockStatus,
     DWORD cbBufSize,
     LPBOUNDED_DWORD_4K pcbBytesNeeded)
 {
-    UNIMPLEMENTED;
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    LPQUERY_SERVICE_LOCK_STATUSW lpLockStatus = (LPQUERY_SERVICE_LOCK_STATUSW)lpBuf;
+    PMANAGER_HANDLE hMgr;
+    DWORD dwRequiredSize;
+
+    if (!lpLockStatus || !pcbBytesNeeded)
+        return ERROR_INVALID_PARAMETER;
+
+    hMgr = ScmGetServiceManagerFromHandle(hSCManager);
+    if (hMgr == NULL)
+    {
+        DPRINT1("Invalid service manager handle!\n");
+        return ERROR_INVALID_HANDLE;
+    }
+
+    if (!RtlAreAllAccessesGranted(hMgr->Handle.DesiredAccess,
+                                  SC_MANAGER_QUERY_LOCK_STATUS))
+    {
+        DPRINT("Insufficient access rights! 0x%lx\n", hMgr->Handle.DesiredAccess);
+        return ERROR_ACCESS_DENIED;
+    }
+
+    /* HACK: we need to compute instead the real length of the owner name */
+    dwRequiredSize = sizeof(QUERY_SERVICE_LOCK_STATUSW) + sizeof(WCHAR);
+    *pcbBytesNeeded = dwRequiredSize;
+
+    if (cbBufSize < dwRequiredSize)
+        return ERROR_INSUFFICIENT_BUFFER;
+
+    ScmQueryServiceLockStatusW(lpLockStatus);
+
+    return ERROR_SUCCESS;
 }
 
 
@@ -2875,6 +2899,7 @@ DWORD RStartServiceW(
     DWORD dwError = ERROR_SUCCESS;
     PSERVICE_HANDLE hSvc;
     PSERVICE lpService = NULL;
+    SC_RPC_LOCK Lock = NULL;
     DWORD i;
 
     DPRINT("RStartServiceW(%p %lu %p) called\n", hService, argc, argv);
@@ -2917,8 +2942,16 @@ DWORD RStartServiceW(
     if (lpService->bDeleted)
         return ERROR_SERVICE_MARKED_FOR_DELETE;
 
+    /* Acquire the service start lock until the service has been started */
+    dwError = ScmAcquireServiceStartLock(TRUE, &Lock);
+    if (dwError != ERROR_SUCCESS)
+        return dwError;
+
     /* Start the service */
     dwError = ScmStartService(lpService, argc, (LPWSTR*)argv);
+
+    /* Release the service start lock */
+    ScmReleaseServiceStartLock(&Lock);
 
     return dwError;
 }
@@ -4090,12 +4123,41 @@ Done:
 /* Function 30 */
 DWORD RQueryServiceLockStatusA(
     SC_RPC_HANDLE hSCManager,
-    LPQUERY_SERVICE_LOCK_STATUSA lpLockStatus,
+    LPBYTE lpBuf, // LPQUERY_SERVICE_LOCK_STATUSA lpLockStatus,
     DWORD cbBufSize,
     LPBOUNDED_DWORD_4K pcbBytesNeeded)
 {
-    UNIMPLEMENTED;
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    LPQUERY_SERVICE_LOCK_STATUSA lpLockStatus = (LPQUERY_SERVICE_LOCK_STATUSA)lpBuf;
+    PMANAGER_HANDLE hMgr;
+    DWORD dwRequiredSize;
+
+    if (!lpLockStatus || !pcbBytesNeeded)
+        return ERROR_INVALID_PARAMETER;
+
+    hMgr = ScmGetServiceManagerFromHandle(hSCManager);
+    if (hMgr == NULL)
+    {
+        DPRINT1("Invalid service manager handle!\n");
+        return ERROR_INVALID_HANDLE;
+    }
+
+    if (!RtlAreAllAccessesGranted(hMgr->Handle.DesiredAccess,
+                                  SC_MANAGER_QUERY_LOCK_STATUS))
+    {
+        DPRINT("Insufficient access rights! 0x%lx\n", hMgr->Handle.DesiredAccess);
+        return ERROR_ACCESS_DENIED;
+    }
+
+    /* FIXME: we need to compute instead the real length of the owner name */
+    dwRequiredSize = sizeof(QUERY_SERVICE_LOCK_STATUSA) + sizeof(CHAR);
+    *pcbBytesNeeded = dwRequiredSize;
+
+    if (cbBufSize < dwRequiredSize)
+        return ERROR_INSUFFICIENT_BUFFER;
+
+    ScmQueryServiceLockStatusA(lpLockStatus);
+
+    return ERROR_SUCCESS;
 }
 
 
@@ -4108,6 +4170,7 @@ DWORD RStartServiceA(
     DWORD dwError = ERROR_SUCCESS;
     PSERVICE_HANDLE hSvc;
     PSERVICE lpService = NULL;
+    SC_RPC_LOCK Lock = NULL;
     LPWSTR *lpVector = NULL;
     DWORD i;
     DWORD dwLength;
@@ -4182,6 +4245,17 @@ DWORD RStartServiceA(
 
     /* Start the service */
     dwError = ScmStartService(lpService, argc, lpVector);
+
+    /* Acquire the service start lock until the service has been started */
+    dwError = ScmAcquireServiceStartLock(TRUE, &Lock);
+    if (dwError != ERROR_SUCCESS)
+        goto done;
+
+     /* Start the service */
+     dwError = ScmStartService(lpService, argc, lpVector);
+
+     /* Release the service start lock */
+     ScmReleaseServiceStartLock(&Lock);
 
 done:
     /* Free the Unicode argument vector */
