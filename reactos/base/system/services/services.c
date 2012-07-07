@@ -85,17 +85,17 @@ ScmCreateStartEvent(PHANDLE StartEvent)
 {
     HANDLE hEvent;
 
-    hEvent = CreateEvent(NULL,
-                         TRUE,
-                         FALSE,
-                         TEXT("SvcctrlStartEvent_A3752DX"));
+    hEvent = CreateEventW(NULL,
+                          TRUE,
+                          FALSE,
+                          L"SvcctrlStartEvent_A3752DX");
     if (hEvent == NULL)
     {
         if (GetLastError() == ERROR_ALREADY_EXISTS)
         {
-            hEvent = OpenEvent(EVENT_ALL_ACCESS,
-                               FALSE,
-                               TEXT("SvcctrlStartEvent_A3752DX"));
+            hEvent = OpenEventW(EVENT_ALL_ACCESS,
+                                FALSE,
+                                L"SvcctrlStartEvent_A3752DX");
             if (hEvent == NULL)
             {
                 return FALSE;
@@ -227,7 +227,7 @@ ScmCreateNamedPipe(VOID)
 
     DPRINT("ScmCreateNamedPipe() - CreateNamedPipe(\"\\\\.\\pipe\\Ntsvcs\")\n");
 
-    hPipe = CreateNamedPipe(TEXT("\\\\.\\pipe\\Ntsvcs"),
+    hPipe = CreateNamedPipeW(L"\\\\.\\pipe\\Ntsvcs",
               PIPE_ACCESS_DUPLEX,
               PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT,
               PIPE_UNLIMITED_INSTANCES,
