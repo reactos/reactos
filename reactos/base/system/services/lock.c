@@ -3,7 +3,7 @@
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        base/system/services/lock.c
  * PURPOSE:     Service lock functions
- * COPYRIGHT:   Copyright 2002-2006 Eric Kohl
+ * COPYRIGHT:   Copyright 2012 Hermès Bélusca
  */
 
 /* INCLUDES *****************************************************************/
