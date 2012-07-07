@@ -60,19 +60,15 @@ extern HMODULE kernel32_handle;
 #define LOCALE_LOCALEINFOFLAGSMASK (LOCALE_NOUSEROVERRIDE|LOCALE_USE_CP_ACP|\
                                     LOCALE_RETURN_NUMBER|LOCALE_RETURN_GENITIVE_NAMES)
 
-static const WCHAR szNlsKeyName[] = {
-    'M','a','c','h','i','n','e','\\','S','y','s','t','e','m','\\',
-    'C','u','r','r','e','n','t','C','o','n','t','r','o','l','S','e','t','\\',
-    'C','o','n','t','r','o','l','\\','N','l','s','\0'
-};
-
 static const WCHAR szLocaleKeyName[] = {
+	'\\', 'R', 'e', 'g', 'i', 's', 't', 'r', 'y', '\\',
     'M','a','c','h','i','n','e','\\','S','y','s','t','e','m','\\',
     'C','u','r','r','e','n','t','C','o','n','t','r','o','l','S','e','t','\\',
     'C','o','n','t','r','o','l','\\','N','l','s','\\','L','o','c','a','l','e',0
 };
 
 static const WCHAR szLangGroupsKeyName[] = {
+	'\\', 'R', 'e', 'g', 'i', 's', 't', 'r', 'y', '\\',
     'M','a','c','h','i','n','e','\\','S','y','s','t','e','m','\\',
     'C','u','r','r','e','n','t','C','o','n','t','r','o','l','S','e','t','\\',
     'C','o','n','t','r','o','l','\\','N','l','s','\\',
@@ -1851,7 +1847,7 @@ static HANDLE NLS_RegOpenKey(HANDLE hRootKey, LPCWSTR szKeyName)
     HANDLE hkey;
 
     RtlInitUnicodeString( &keyName, szKeyName );
-    InitializeObjectAttributes(&attr, &keyName, 0, hRootKey, NULL);
+    InitializeObjectAttributes(&attr, &keyName, OBJ_CASE_INSENSITIVE, hRootKey, NULL);
 
     if (NtOpenKey( &hkey, KEY_READ, &attr ) != STATUS_SUCCESS)
         hkey = 0;
@@ -1974,6 +1970,7 @@ static BOOL NLS_GetLanguageGroupName(LGRPID lgrpid, LPWSTR szName, ULONG nameSiz
 /* Registry keys for NLS related information */
 
 static const WCHAR szCountryListName[] = {
+	'\\','R','e','g','i','s','t','r','y','\\',
     'M','a','c','h','i','n','e','\\','S','o','f','t','w','a','r','e','\\',
     'M','i','c','r','o','s','o','f','t','\\','W','i','n','d','o','w','s','\\',
     'C','u','r','r','e','n','t','V','e','r','s','i','o','n','\\',
@@ -2689,16 +2686,149 @@ BOOL WINAPI EnumUILanguagesW(UILANGUAGE_ENUMPROCW pUILangEnumProc, DWORD dwFlags
     return TRUE;
 }
 
-INT WINAPI GetGeoInfoW(GEOID GeoId, GEOTYPE GeoType, LPWSTR lpGeoData, 
-                int cchData, LANGID language)
+static int
+NLS_GetGeoFriendlyName(GEOID Location, LPWSTR szFriendlyName, int cchData)
 {
-    FIXME("%d %d %p %d %d\n", GeoId, GeoType, lpGeoData, cchData, language);
+    HANDLE hKey;
+    WCHAR szPath[MAX_PATH];
+    UNICODE_STRING ValueName;
+    KEY_VALUE_PARTIAL_INFORMATION *info;
+    const int info_size = FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data);
+    DWORD dwSize;
+    NTSTATUS Status;
+    int Ret;
+
+    swprintf(szPath, L"\\REGISTRY\\Machine\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Telephony\\Country List\\%d", Location);
+
+    hKey = NLS_RegOpenKey(0, szPath);
+    if (!hKey)
+    {
+        WARN("NLS_RegOpenKey() failed\n");
+        return 0;
+    }
+
+    dwSize = info_size + cchData * sizeof(WCHAR);
+
+    if (!(info = HeapAlloc(GetProcessHeap(), 0, dwSize)))
+    {
+        NtClose(hKey);
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return 0;
+    }
+
+    RtlInitUnicodeString(&ValueName, L"Name");
+
+    Status = NtQueryValueKey(hKey, &ValueName, KeyValuePartialInformation,
+                             (LPBYTE)info, dwSize, &dwSize);
+
+    if (!Status)
+    {
+        Ret = (dwSize - info_size) / sizeof(WCHAR);
+
+        if (!Ret || ((WCHAR *)info->Data)[Ret-1])
+        {
+            if (Ret < cchData || !szFriendlyName) Ret++;
+            else
+            {
+                WARN("ERROR_INSUFFICIENT_BUFFER\n");
+                SetLastError(ERROR_INSUFFICIENT_BUFFER);
+                Ret = 0;
+            }
+        }
+
+        if (Ret && szFriendlyName)
+        {
+            memcpy(szFriendlyName, info->Data, (Ret-1) * sizeof(WCHAR));
+            szFriendlyName[Ret-1] = 0;
+        }
+    }
+    else if (Status == STATUS_BUFFER_OVERFLOW && !szFriendlyName)
+    {
+        Ret = (dwSize - info_size) / sizeof(WCHAR) + 1;
+    }
+    else if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
+    {
+        Ret = -1;
+    }
+    else
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        Ret = 0;
+    }
+
+    NtClose(hKey);
+    HeapFree(GetProcessHeap(), 0, info);
+
+    return Ret;
+}
+
+/*
+ * @implemented
+ */
+INT WINAPI GetGeoInfoW(GEOID GeoId, GEOTYPE GeoType, LPWSTR lpGeoData, 
+                int cchData, LANGID LangId)
+{
+	TRACE("%d %d %p %d %d\n", GeoId, GeoType, lpGeoData, cchData, LangId);
+
+    switch (GeoType)
+    {
+        case GEO_FRIENDLYNAME:
+        {
+            return NLS_GetGeoFriendlyName(GeoId, lpGeoData, cchData);
+        }
+        case GEO_TIMEZONES:
+        case GEO_NATION:
+        case GEO_LATITUDE:
+        case GEO_LONGITUDE:
+        case GEO_ISO2:
+        case GEO_ISO3:
+        case GEO_RFC1766:
+        case GEO_LCID:
+        case GEO_OFFICIALNAME:
+        case GEO_OFFICIALLANGUAGES:
+            FIXME("%d %d %p %d %d\n", GeoId, GeoType, lpGeoData, cchData, LangId);
+            SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+        break;
+    }
+
     return 0;
 }
 
+/*
+ * @implemented
+ */
 INT WINAPI GetGeoInfoA(GEOID GeoId, GEOTYPE GeoType, LPSTR lpGeoData, 
-                int cchData, LANGID language)
+                int cchData, LANGID LangId)
 {
-    FIXME("%d %d %p %d %d\n", GeoId, GeoType, lpGeoData, cchData, language);
+	WCHAR szBuffer[MAX_PATH];
+    char szBufferA[sizeof(szBuffer)/sizeof(WCHAR)];
+    int Ret;
+
+    TRACE("%d %d %p %d %d\n", GeoId, GeoType, lpGeoData, cchData, LangId);
+
+    switch (GeoType)
+    {
+        case GEO_FRIENDLYNAME:
+        {
+            Ret = NLS_GetGeoFriendlyName(GeoId, szBuffer, cchData);
+            WideCharToMultiByte(CP_ACP, 0, szBuffer, -1, szBufferA, sizeof(szBufferA), 0, 0);
+            strcpy(lpGeoData, szBufferA);
+            return Ret;
+        }
+        case GEO_TIMEZONES:
+        case GEO_NATION:
+        case GEO_LATITUDE:
+        case GEO_LONGITUDE:
+        case GEO_ISO2:
+        case GEO_ISO3:
+        case GEO_RFC1766:
+        case GEO_LCID:
+        case GEO_OFFICIALNAME:
+        case GEO_OFFICIALLANGUAGES:
+            FIXME("%d %d %p %d %d\n", GeoId, GeoType, lpGeoData, cchData, LangId);
+            SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+        break;
+    }
+
     return 0;
 }
