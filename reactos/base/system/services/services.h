@@ -115,6 +115,11 @@ ScmReadDependencies(HKEY hServiceKey,
                     DWORD *lpdwDependenciesLength);
 
 
+/* controlset.c */
+
+BOOL ScmGetControlSetValues(VOID);
+
+
 /* database.c */
 
 DWORD ScmCreateServiceDatabase(VOID);
