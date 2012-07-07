@@ -104,60 +104,46 @@ static
 BOOL
 AcquireRemoveRestorePrivilege(IN BOOL bAcquire)
 {
-    HANDLE Process;
+    BOOL bRet = FALSE;
     HANDLE Token;
-    PTOKEN_PRIVILEGES TokenPriv;
-    BOOL bRet;
+    TOKEN_PRIVILEGES TokenPriv;
 
     DPRINT("AcquireRemoveRestorePrivilege(%d)\n", bAcquire);
 
-    Process = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, GetCurrentProcessId());
-    if (!Process)
+    if (OpenProcessToken(GetCurrentProcess(),
+                         TOKEN_ADJUST_PRIVILEGES,
+                         &Token))
     {
-        DPRINT1("OpenProcess() failed with error %lu\n", GetLastError());
-        return FALSE;
+        TokenPriv.PrivilegeCount = 1;
+        TokenPriv.Privileges[0].Attributes = (bAcquire ? SE_PRIVILEGE_ENABLED : 0);
+
+        if (LookupPrivilegeValue(NULL, SE_RESTORE_NAME, &TokenPriv.Privileges[0].Luid))
+        {
+            bRet = AdjustTokenPrivileges(Token, FALSE, &TokenPriv, 0, NULL, NULL);
+
+            if (!bRet)
+            {
+                DPRINT1("AdjustTokenPrivileges() failed with error %lu\n", GetLastError());
+            }
+            else if (GetLastError() == ERROR_NOT_ALL_ASSIGNED)
+            {
+                DPRINT1("AdjustTokenPrivileges() succeeded, but with not all privileges assigned\n");
+                bRet = FALSE;
+            }
+        }
+        else
+        {
+            DPRINT1("LookupPrivilegeValue() failed with error %lu\n", GetLastError());
+        }
+
+        CloseHandle(Token);
     }
-    bRet = OpenProcessToken(Process, TOKEN_ADJUST_PRIVILEGES, &Token);
-    CloseHandle(Process);
-    if (!bRet)
+    else
     {
         DPRINT1("OpenProcessToken() failed with error %lu\n", GetLastError());
-        return FALSE;
-    }
-    TokenPriv = HeapAlloc(GetProcessHeap(), 0, FIELD_OFFSET(TOKEN_PRIVILEGES, Privileges) + sizeof(LUID_AND_ATTRIBUTES));
-    if (!TokenPriv)
-    {
-        DPRINT1("Failed to allocate mem for token privileges\n");
-        CloseHandle(Token);
-        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-        return FALSE;
-    }
-    TokenPriv->PrivilegeCount = 1;
-    TokenPriv->Privileges[0].Attributes = bAcquire ? SE_PRIVILEGE_ENABLED : 0;
-    if (!LookupPrivilegeValue(NULL, SE_RESTORE_NAME, &TokenPriv->Privileges[0].Luid))
-    {
-        DPRINT1("LookupPrivilegeValue() failed with error %lu\n", GetLastError());
-        HeapFree(GetProcessHeap(), 0, TokenPriv);
-        CloseHandle(Token);
-        return FALSE;
-    }
-    bRet = AdjustTokenPrivileges(
-        Token,
-        FALSE,
-        TokenPriv,
-        0,
-        NULL,
-        NULL);
-    HeapFree(GetProcessHeap(), 0, TokenPriv);
-    CloseHandle(Token);
-
-    if (!bRet)
-    {
-        DPRINT1("AdjustTokenPrivileges() failed with error %lu\n", GetLastError());
-        return FALSE;
     }
 
-    return TRUE;
+    return bRet;
 }
 
 
@@ -177,6 +163,7 @@ CreateUserProfileW(PSID Sid,
     DWORD dwDisposition;
     UINT i;
     HKEY hKey;
+    BOOL bRet = TRUE;
     LONG Error;
 
     DPRINT("CreateUserProfileW() called\n");
@@ -317,9 +304,8 @@ CreateUserProfileW(PSID Sid,
     if (Error != ERROR_SUCCESS)
     {
         DPRINT1("Error: %lu\n", Error);
-        LocalFree((HLOCAL)SidString);
-        SetLastError((DWORD)Error);
-        return FALSE;
+        bRet = FALSE;
+        goto Done;
     }
 
     /* Create non-expanded user profile path */
@@ -337,10 +323,9 @@ CreateUserProfileW(PSID Sid,
     if (Error != ERROR_SUCCESS)
     {
         DPRINT1("Error: %lu\n", Error);
-        LocalFree((HLOCAL)SidString);
         RegCloseKey(hKey);
-        SetLastError((DWORD)Error);
-        return FALSE;
+        bRet = FALSE;
+        goto Done;
     }
 
     /* Set 'Sid' value */
@@ -353,13 +338,12 @@ CreateUserProfileW(PSID Sid,
     if (Error != ERROR_SUCCESS)
     {
         DPRINT1("Error: %lu\n", Error);
-        LocalFree((HLOCAL)SidString);
         RegCloseKey(hKey);
-        SetLastError((DWORD)Error);
-        return FALSE;
+        bRet = FALSE;
+        goto Done;
     }
 
-    RegCloseKey (hKey);
+    RegCloseKey(hKey);
 
     /* Create user hive name */
     wcscpy(szBuffer, szUserProfilePath);
@@ -368,9 +352,10 @@ CreateUserProfileW(PSID Sid,
     /* Acquire restore privilege */
     if (!AcquireRemoveRestorePrivilege(TRUE))
     {
+        Error = GetLastError();
         DPRINT1("Error: %lu\n", Error);
-        LocalFree((HLOCAL)SidString);
-        return FALSE;
+        bRet = FALSE;
+        goto Done;
     }
 
     /* Create new user hive */
@@ -381,26 +366,30 @@ CreateUserProfileW(PSID Sid,
     if (Error != ERROR_SUCCESS)
     {
         DPRINT1("Error: %lu\n", Error);
-        LocalFree((HLOCAL)SidString);
-        SetLastError((DWORD)Error);
-        return FALSE;
+        bRet = FALSE;
+        goto Done;
     }
 
     /* Initialize user hive */
     if (!CreateUserHive(SidString, szUserProfilePath))
     {
-        DPRINT1("Error: %lu\n", GetLastError());
-        LocalFree((HLOCAL)SidString);
-        return FALSE;
+        Error = GetLastError();
+        DPRINT1("Error: %lu\n", Error);
+        bRet = FALSE;
     }
 
+    /* Unload the hive */
+    AcquireRemoveRestorePrivilege(TRUE);
     RegUnLoadKeyW(HKEY_USERS, SidString);
+    AcquireRemoveRestorePrivilege(FALSE);
 
+Done:
     LocalFree((HLOCAL)SidString);
+    SetLastError((DWORD)Error);
 
     DPRINT("CreateUserProfileW() done\n");
 
-    return TRUE;
+    return bRet;
 }
 
 
