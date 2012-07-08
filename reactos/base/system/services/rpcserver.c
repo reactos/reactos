@@ -2877,7 +2877,7 @@ DWORD RQueryServiceLockStatusW(
         return ERROR_ACCESS_DENIED;
     }
 
-    /* HACK: we need to compute instead the real length of the owner name */
+    /* FIXME: we need to compute instead the real length of the owner name */
     dwRequiredSize = sizeof(QUERY_SERVICE_LOCK_STATUSW) + sizeof(WCHAR);
     *pcbBytesNeeded = dwRequiredSize;
 
@@ -4243,16 +4243,13 @@ DWORD RStartServiceA(
         }
     }
 
-    /* Start the service */
-    dwError = ScmStartService(lpService, argc, lpVector);
-
     /* Acquire the service start lock until the service has been started */
     dwError = ScmAcquireServiceStartLock(TRUE, &Lock);
     if (dwError != ERROR_SUCCESS)
         goto done;
 
-     /* Start the service */
-     dwError = ScmStartService(lpService, argc, lpVector);
+    /* Start the service */
+    dwError = ScmStartService(lpService, argc, lpVector);
 
      /* Release the service start lock */
      ScmReleaseServiceStartLock(&Lock);

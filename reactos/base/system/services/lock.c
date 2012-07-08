@@ -22,9 +22,9 @@ static PSTART_LOCK pServiceStartLock = NULL;
 /* FUNCTIONS *****************************************************************/
 
 /*
- * TRUE if locked by the Service Control Manager, FALSE otherwise
+ * NOTE: IsServiceController is TRUE if locked by the
+ * Service Control Manager, and FALSE otherwise.
  */
-
 DWORD
 ScmAcquireServiceStartLock(IN BOOL IsServiceController,
                            OUT LPSC_RPC_LOCK lpLock)
@@ -146,7 +146,7 @@ ScmQueryServiceLockStatusW(OUT LPQUERY_SERVICE_LOCK_STATUSW lpLockStatus)
         lpLockStatus->dwLockDuration = 0;
     }
 
-    /* Unlock the whole SC manager */
+    /* Unlock the service database */
     ScmUnlockDatabase();
 
     return;
@@ -178,7 +178,7 @@ ScmQueryServiceLockStatusA(OUT LPQUERY_SERVICE_LOCK_STATUSA lpLockStatus)
         lpLockStatus->dwLockDuration = 0;
     }
 
-    /* Unlock the whole SC manager */
+    /* Unlock the service database */
     ScmUnlockDatabase();
 
     return;

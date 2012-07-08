@@ -378,6 +378,7 @@ wWinMain(HINSTANCE hInstance,
 {
     HANDLE hScmStartEvent = NULL;
     SC_RPC_LOCK Lock = NULL;
+    BOOL bDeleteCriticalSection = FALSE;
     DWORD dwError;
 
     DPRINT("SERVICES: Service Control Manager\n");
@@ -442,6 +443,7 @@ wWinMain(HINSTANCE hInstance,
     AcquireLoadDriverPrivilege();
 
     ScmInitNamedPipeCriticalSection();
+    bDeleteCriticalSection = TRUE;
 
     /* Acquire the service start lock until autostart services have been started */
     dwError = ScmAcquireServiceStartLock(TRUE, &Lock);
@@ -465,7 +467,8 @@ wWinMain(HINSTANCE hInstance,
     WaitForSingleObject(hScmShutdownEvent, INFINITE);
 
 done:
-    ScmDeleteNamedPipeCriticalSection();
+    if (bDeleteCriticalSection == TRUE)
+        ScmDeleteNamedPipeCriticalSection();
 
     /* Close the shutdown event */
     if (hScmShutdownEvent != NULL)
