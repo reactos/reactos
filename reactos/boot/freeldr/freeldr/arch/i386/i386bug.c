@@ -102,6 +102,8 @@ void
 NTAPI
 i386PrintExceptionText(ULONG TrapIndex, PKTRAP_FRAME TrapFrame, PKSPECIAL_REGISTERS Special)
 {
+	PUCHAR InstructionPointer;
+
 	MachVideoClearScreen(SCREEN_ATTR);
 	i386_ScreenPosX = 0;
 	i386_ScreenPosY = 0;
@@ -109,7 +111,7 @@ i386PrintExceptionText(ULONG TrapIndex, PKTRAP_FRAME TrapFrame, PKSPECIAL_REGIST
     PrintText("An error occured in FreeLoader\n"
               VERSION"\n"
 	          "Report this error to the ReactOS Development mailing list <ros-dev@reactos.org>\n\n"
-              "%s\n", i386ExceptionDescriptionText[TrapIndex]);
+              "0x%02lx: %s\n", TrapIndex, i386ExceptionDescriptionText[TrapIndex]);
 #ifdef _M_IX86
     PrintText("EAX: %.8lx        ESP: %.8lx        CR0: %.8lx        DR0: %.8lx\n",
               TrapFrame->Eax, TrapFrame->HardwareEsp, Special->Cr0, TrapFrame->Dr0);
@@ -137,6 +139,7 @@ i386PrintExceptionText(ULONG TrapIndex, PKTRAP_FRAME TrapFrame, PKSPECIAL_REGIST
               TrapFrame->HardwareSegSs, Special->Ldtr, Special->Idtr.Limit);
 
 	i386PrintFrames(TrapFrame);						// Display frames
+	InstructionPointer = (PUCHAR)TrapFrame->Eip;
 #else
     PrintText("RAX: %.8lx        R8:  %.8lx        R12: %.8lx        RSI: %.8lx\n",
               TrapFrame->Rax, TrapFrame->R8, 0, TrapFrame->Rsi);
@@ -159,7 +162,13 @@ i386PrintExceptionText(ULONG TrapIndex, PKTRAP_FRAME TrapFrame, PKSPECIAL_REGIST
               TrapFrame->SegGs, Special->Idtr.Base, Special->Idtr.Limit);
     PrintText("SS: %.4lx        LDTR: %.4lx TR: %.4lx\n\n",
               TrapFrame->SegSs, Special->Ldtr, Special->Idtr.Limit);
+	InstructionPointer = (PUCHAR)TrapFrame->Rip;
 #endif
+    PrintText("\nInstructionstream: %.2x %.2x %.2x %.2x %.2x %.2x %.2x %.2x \n",
+              InstructionPointer[0], InstructionPointer[1],
+              InstructionPointer[2], InstructionPointer[3],
+              InstructionPointer[4], InstructionPointer[5],
+              InstructionPointer[6], InstructionPointer[7]);
 }
 
 char *BugCodeStrings[] =

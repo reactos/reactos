@@ -32,6 +32,11 @@ if(ARCH MATCHES arm)
     endif()
 endif()
 
+# for VS 2012 we need to explicitly disable SSE
+if (MSVC_VERSION GREATER 1699 AND ARCH MATCHES i386)
+        add_definitions(/arch:IA32)
+endif ()
+
 list(APPEND FREELDR_COMMON_SOURCE
     cmdline.c
     debug.c
