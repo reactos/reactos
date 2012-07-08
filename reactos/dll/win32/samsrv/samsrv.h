@@ -149,6 +149,11 @@ SampGetObjectAttribute(PSAM_DB_OBJECT DbObject,
                        LPVOID AttributeData,
                        PULONG AttributeSize);
 
+NTSTATUS
+SampGetObjectAttributeString(PSAM_DB_OBJECT DbObject,
+                             LPWSTR AttributeName,
+                             RPC_UNICODE_STRING *String);
+
 /* registry.h */
 NTSTATUS
 SampRegCloseKey(IN HANDLE KeyHandle);

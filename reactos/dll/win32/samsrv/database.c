@@ -705,5 +705,59 @@ SampGetObjectAttribute(PSAM_DB_OBJECT DbObject,
     return Status;
 }
 
+
+NTSTATUS
+SampGetObjectAttributeString(PSAM_DB_OBJECT DbObject,
+                             LPWSTR AttributeName,
+                             RPC_UNICODE_STRING *String)
+{
+    ULONG Length = 0;
+    NTSTATUS Status;
+
+    Status = SampGetObjectAttribute(DbObject,
+                                    AttributeName,
+                                    NULL,
+                                    NULL,
+                                    &Length);
+    if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_OVERFLOW)
+    {
+        TRACE("Status 0x%08lx\n", Status);
+        goto done;
+    }
+
+    String->Length = Length - sizeof(WCHAR);
+    String->MaximumLength = Length;
+    String->Buffer = midl_user_allocate(Length);
+    if (String->Buffer == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
+
+    TRACE("Length: %lu\n", Length);
+    Status = SampGetObjectAttribute(DbObject,
+                                    AttributeName,
+                                    NULL,
+                                    (PVOID)String->Buffer,
+                                    &Length);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("Status 0x%08lx\n", Status);
+        goto done;
+    }
+
+done:
+    if (!NT_SUCCESS(Status))
+    {
+        if (String->Buffer != NULL)
+        {
+            midl_user_free(String->Buffer);
+            String->Buffer = NULL;
+        }
+    }
+
+    return Status;
+}
+
 /* EOF */
 

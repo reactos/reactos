@@ -618,83 +618,35 @@ SampQueryDomainGeneral(PSAM_DB_OBJECT DomainObject,
     InfoBuffer->General.DomainServerRole = FixedData.DomainServerRole;
     InfoBuffer->General.UasCompatibilityRequired = FixedData.UasCompatibilityRequired;
 
-    Length = 0;
-    Status = SampGetObjectAttribute(DomainObject,
-                                    L"OemInformation",
-                                    NULL,
-                                    NULL,
-                                    &Length);
+    /* Get the OemInformation string */
+    Status = SampGetObjectAttributeString(DomainObject,
+                                          L"OemInformation",
+                                          &InfoBuffer->General.OemInformation);
     if (!NT_SUCCESS(Status))
-        goto done;
-
-    InfoBuffer->General.OemInformation.Length = Length - sizeof(WCHAR);
-    InfoBuffer->General.OemInformation.MaximumLength = Length;
-    InfoBuffer->General.OemInformation.Buffer = midl_user_allocate(Length);
-    if (InfoBuffer->General.OemInformation.Buffer == NULL)
     {
-        Status = STATUS_INSUFFICIENT_RESOURCES;
+        TRACE("Status 0x%08lx\n", Status);
         goto done;
     }
 
-    Status = SampGetObjectAttribute(DomainObject,
-                                    L"OemInformation",
-                                    NULL,
-                                    (PVOID)InfoBuffer->General.OemInformation.Buffer,
-                                    &Length);
+    /* Get the Name string */
+    Status = SampGetObjectAttributeString(DomainObject,
+                                          L"Name",
+                                          &InfoBuffer->General.DomainName);
     if (!NT_SUCCESS(Status))
-        goto done;
-
-    Length = 0;
-    Status = SampGetObjectAttribute(DomainObject,
-                                    L"Name",
-                                    NULL,
-                                    NULL,
-                                    &Length);
-    if (!NT_SUCCESS(Status))
-        goto done;
-
-    InfoBuffer->General.DomainName.Length = Length - sizeof(WCHAR);
-    InfoBuffer->General.DomainName.MaximumLength = Length;
-    InfoBuffer->General.DomainName.Buffer = midl_user_allocate(Length);
-    if (InfoBuffer->General.DomainName.Buffer == NULL)
     {
-        Status = STATUS_INSUFFICIENT_RESOURCES;
+        TRACE("Status 0x%08lx\n", Status);
         goto done;
     }
 
-    Status = SampGetObjectAttribute(DomainObject,
-                                    L"Name",
-                                    NULL,
-                                    (PVOID)InfoBuffer->General.DomainName.Buffer,
-                                    &Length);
+    /* Get the ReplicaSourceNodeName string */
+    Status = SampGetObjectAttributeString(DomainObject,
+                                          L"ReplicaSourceNodeName",
+                                          &InfoBuffer->General.ReplicaSourceNodeName);
     if (!NT_SUCCESS(Status))
-        goto done;
-
-    Length = 0;
-    Status = SampGetObjectAttribute(DomainObject,
-                                    L"ReplicaSourceNodeName",
-                                    NULL,
-                                    NULL,
-                                    &Length);
-    if (!NT_SUCCESS(Status))
-        goto done;
-
-    InfoBuffer->General.ReplicaSourceNodeName.Length = Length - sizeof(WCHAR);
-    InfoBuffer->General.ReplicaSourceNodeName.MaximumLength = Length;
-    InfoBuffer->General.ReplicaSourceNodeName.Buffer = midl_user_allocate(Length);
-    if (InfoBuffer->General.ReplicaSourceNodeName.Buffer == NULL)
     {
-        Status = STATUS_INSUFFICIENT_RESOURCES;
+        TRACE("Status 0x%08lx\n", Status);
         goto done;
     }
-
-    Status = SampGetObjectAttribute(DomainObject,
-                                    L"ReplicaSourceNodeName",
-                                    NULL,
-                                    (PVOID)InfoBuffer->General.ReplicaSourceNodeName.Buffer,
-                                    &Length);
-    if (!NT_SUCCESS(Status))
-        goto done;
 
     InfoBuffer->General.UserCount = 0;  /* FIXME */
     InfoBuffer->General.GroupCount = 0; /* FIXME */
@@ -771,7 +723,6 @@ SampQueryDomainOem(PSAM_DB_OBJECT DomainObject,
                    PSAMPR_DOMAIN_INFO_BUFFER *Buffer)
 {
     PSAMPR_DOMAIN_INFO_BUFFER InfoBuffer = NULL;
-    ULONG Length = 0;
     NTSTATUS Status;
 
     *Buffer = NULL;
@@ -780,30 +731,15 @@ SampQueryDomainOem(PSAM_DB_OBJECT DomainObject,
     if (InfoBuffer == NULL)
         return STATUS_INSUFFICIENT_RESOURCES;
 
-    Status = SampGetObjectAttribute(DomainObject,
-                                    L"OemInformation",
-                                    NULL,
-                                    NULL,
-                                    &Length);
+    /* Get the OemInformation string */
+    Status = SampGetObjectAttributeString(DomainObject,
+                                          L"OemInformation",
+                                          &InfoBuffer->Oem.OemInformation);
     if (!NT_SUCCESS(Status))
-        goto done;
-
-    InfoBuffer->Oem.OemInformation.Length = Length - sizeof(WCHAR);
-    InfoBuffer->Oem.OemInformation.MaximumLength = Length;
-    InfoBuffer->Oem.OemInformation.Buffer = midl_user_allocate(Length);
-    if (InfoBuffer->Oem.OemInformation.Buffer == NULL)
     {
-        Status = STATUS_INSUFFICIENT_RESOURCES;
+        TRACE("Status 0x%08lx\n", Status);
         goto done;
     }
-
-    Status = SampGetObjectAttribute(DomainObject,
-                                    L"OemInformation",
-                                    NULL,
-                                    (PVOID)InfoBuffer->Oem.OemInformation.Buffer,
-                                    &Length);
-    if (!NT_SUCCESS(Status))
-        goto done;
 
     *Buffer = InfoBuffer;
 
@@ -828,7 +764,6 @@ SampQueryDomainName(PSAM_DB_OBJECT DomainObject,
                     PSAMPR_DOMAIN_INFO_BUFFER *Buffer)
 {
     PSAMPR_DOMAIN_INFO_BUFFER InfoBuffer = NULL;
-    ULONG Length = 0;
     NTSTATUS Status;
 
     *Buffer = NULL;
@@ -837,30 +772,15 @@ SampQueryDomainName(PSAM_DB_OBJECT DomainObject,
     if (InfoBuffer == NULL)
         return STATUS_INSUFFICIENT_RESOURCES;
 
-    Status = SampGetObjectAttribute(DomainObject,
-                                    L"Name",
-                                    NULL,
-                                    NULL,
-                                    &Length);
+    /* Get the Name string */
+    Status = SampGetObjectAttributeString(DomainObject,
+                                          L"Name",
+                                          &InfoBuffer->Name.DomainName);
     if (!NT_SUCCESS(Status))
-        goto done;
-
-    InfoBuffer->Name.DomainName.Length = Length - sizeof(WCHAR);
-    InfoBuffer->Name.DomainName.MaximumLength = Length;
-    InfoBuffer->Name.DomainName.Buffer = midl_user_allocate(Length);
-    if (InfoBuffer->Name.DomainName.Buffer == NULL)
     {
-        Status = STATUS_INSUFFICIENT_RESOURCES;
+        TRACE("Status 0x%08lx\n", Status);
         goto done;
     }
-
-    Status = SampGetObjectAttribute(DomainObject,
-                                    L"Name",
-                                    NULL,
-                                    (PVOID)InfoBuffer->Name.DomainName.Buffer,
-                                    &Length);
-    if (!NT_SUCCESS(Status))
-        goto done;
 
     *Buffer = InfoBuffer;
 
@@ -885,7 +805,6 @@ SampQueryDomainReplication(PSAM_DB_OBJECT DomainObject,
                            PSAMPR_DOMAIN_INFO_BUFFER *Buffer)
 {
     PSAMPR_DOMAIN_INFO_BUFFER InfoBuffer = NULL;
-    ULONG Length = 0;
     NTSTATUS Status;
 
     *Buffer = NULL;
@@ -894,30 +813,15 @@ SampQueryDomainReplication(PSAM_DB_OBJECT DomainObject,
     if (InfoBuffer == NULL)
         return STATUS_INSUFFICIENT_RESOURCES;
 
-    Status = SampGetObjectAttribute(DomainObject,
-                                    L"ReplicaSourceNodeName",
-                                    NULL,
-                                    NULL,
-                                    &Length);
+    /* Get the ReplicaSourceNodeName string */
+    Status = SampGetObjectAttributeString(DomainObject,
+                                          L"ReplicaSourceNodeName",
+                                          &InfoBuffer->Replication.ReplicaSourceNodeName);
     if (!NT_SUCCESS(Status))
-        goto done;
-
-    InfoBuffer->Replication.ReplicaSourceNodeName.Length = Length - sizeof(WCHAR);
-    InfoBuffer->Replication.ReplicaSourceNodeName.MaximumLength = Length;
-    InfoBuffer->Replication.ReplicaSourceNodeName.Buffer = midl_user_allocate(Length);
-    if (InfoBuffer->Replication.ReplicaSourceNodeName.Buffer == NULL)
     {
-        Status = STATUS_INSUFFICIENT_RESOURCES;
+        TRACE("Status 0x%08lx\n", Status);
         goto done;
     }
-
-    Status = SampGetObjectAttribute(DomainObject,
-                                    L"ReplicaSourceNodeName",
-                                    NULL,
-                                    (PVOID)InfoBuffer->Replication.ReplicaSourceNodeName.Buffer,
-                                    &Length);
-    if (!NT_SUCCESS(Status))
-        goto done;
 
     *Buffer = InfoBuffer;
 
@@ -1099,83 +1003,35 @@ SampQueryDomainGeneral2(PSAM_DB_OBJECT DomainObject,
     InfoBuffer->General2.LockoutObservationWindow = FixedData.LockoutObservationWindow;
     InfoBuffer->General2.LockoutThreshold = FixedData.LockoutThreshold;
 
-    Length = 0;
-    Status = SampGetObjectAttribute(DomainObject,
-                                    L"OemInformation",
-                                    NULL,
-                                    NULL,
-                                    &Length);
+    /* Get the OemInformation string */
+    Status = SampGetObjectAttributeString(DomainObject,
+                                          L"OemInformation",
+                                          &InfoBuffer->General2.I1.OemInformation);
     if (!NT_SUCCESS(Status))
-        goto done;
-
-    InfoBuffer->General2.I1.OemInformation.Length = Length - sizeof(WCHAR);
-    InfoBuffer->General2.I1.OemInformation.MaximumLength = Length;
-    InfoBuffer->General2.I1.OemInformation.Buffer = midl_user_allocate(Length);
-    if (InfoBuffer->General2.I1.OemInformation.Buffer == NULL)
     {
-        Status = STATUS_INSUFFICIENT_RESOURCES;
+        TRACE("Status 0x%08lx\n", Status);
         goto done;
     }
 
-    Status = SampGetObjectAttribute(DomainObject,
-                                    L"OemInformation",
-                                    NULL,
-                                    (PVOID)InfoBuffer->General2.I1.OemInformation.Buffer,
-                                    &Length);
+    /* Get the Name string */
+    Status = SampGetObjectAttributeString(DomainObject,
+                                          L"Name",
+                                          &InfoBuffer->General2.I1.DomainName);
     if (!NT_SUCCESS(Status))
-        goto done;
-
-    Length = 0;
-    Status = SampGetObjectAttribute(DomainObject,
-                                    L"Name",
-                                    NULL,
-                                    NULL,
-                                    &Length);
-    if (!NT_SUCCESS(Status))
-        goto done;
-
-    InfoBuffer->General2.I1.DomainName.Length = Length - sizeof(WCHAR);
-    InfoBuffer->General2.I1.DomainName.MaximumLength = Length;
-    InfoBuffer->General2.I1.DomainName.Buffer = midl_user_allocate(Length);
-    if (InfoBuffer->General2.I1.DomainName.Buffer == NULL)
     {
-        Status = STATUS_INSUFFICIENT_RESOURCES;
+        TRACE("Status 0x%08lx\n", Status);
         goto done;
     }
 
-    Status = SampGetObjectAttribute(DomainObject,
-                                    L"Name",
-                                    NULL,
-                                    (PVOID)InfoBuffer->General2.I1.DomainName.Buffer,
-                                    &Length);
+    /* Get the ReplicaSourceNodeName string */
+    Status = SampGetObjectAttributeString(DomainObject,
+                                          L"ReplicaSourceNodeName",
+                                          &InfoBuffer->General2.I1.ReplicaSourceNodeName);
     if (!NT_SUCCESS(Status))
-        goto done;
-
-    Length = 0;
-    Status = SampGetObjectAttribute(DomainObject,
-                                    L"ReplicaSourceNodeName",
-                                    NULL,
-                                    NULL,
-                                    &Length);
-    if (!NT_SUCCESS(Status))
-        goto done;
-
-    InfoBuffer->General2.I1.ReplicaSourceNodeName.Length = Length - sizeof(WCHAR);
-    InfoBuffer->General2.I1.ReplicaSourceNodeName.MaximumLength = Length;
-    InfoBuffer->General2.I1.ReplicaSourceNodeName.Buffer = midl_user_allocate(Length);
-    if (InfoBuffer->General2.I1.ReplicaSourceNodeName.Buffer == NULL)
     {
-        Status = STATUS_INSUFFICIENT_RESOURCES;
+        TRACE("Status 0x%08lx\n", Status);
         goto done;
     }
-
-    Status = SampGetObjectAttribute(DomainObject,
-                                    L"ReplicaSourceNodeName",
-                                    NULL,
-                                    (PVOID)InfoBuffer->General2.I1.ReplicaSourceNodeName.Buffer,
-                                    &Length);
-    if (!NT_SUCCESS(Status))
-        goto done;
 
     InfoBuffer->General2.I1.UserCount = 0;  /* FIXME */
     InfoBuffer->General2.I1.GroupCount = 0; /* FIXME */
@@ -2549,8 +2405,6 @@ SampQueryAliasGeneral(PSAM_DB_OBJECT AliasObject,
 {
     PSAMPR_ALIAS_INFO_BUFFER InfoBuffer = NULL;
     HANDLE MembersKeyHandle = NULL;
-    ULONG NameLength = 0;
-    ULONG DescriptionLength = 0;
     NTSTATUS Status;
 
     *Buffer = NULL;
@@ -2559,65 +2413,18 @@ SampQueryAliasGeneral(PSAM_DB_OBJECT AliasObject,
     if (InfoBuffer == NULL)
         return STATUS_INSUFFICIENT_RESOURCES;
 
-    Status = SampGetObjectAttribute(AliasObject,
-                                    L"Name",
-                                    NULL,
-                                    NULL,
-                                    &NameLength);
-    TRACE("Status 0x%08lx\n", Status);
-    if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_OVERFLOW)
-    {
-        TRACE("Status 0x%08lx\n", Status);
-        goto done;
-    }
-
-    InfoBuffer->General.Name.Length = NameLength - sizeof(WCHAR);
-    InfoBuffer->General.Name.MaximumLength = NameLength;
-    InfoBuffer->General.Name.Buffer = midl_user_allocate(NameLength);
-    if (InfoBuffer->General.Name.Buffer == NULL)
-    {
-        Status = STATUS_INSUFFICIENT_RESOURCES;
-        goto done;
-    }
-
-    TRACE("Name Length: %lu\n", NameLength);
-    Status = SampGetObjectAttribute(AliasObject,
-                                    L"Name",
-                                    NULL,
-                                    (PVOID)InfoBuffer->General.Name.Buffer,
-                                    &NameLength);
+    Status = SampGetObjectAttributeString(AliasObject,
+                                          L"Name",
+                                          &InfoBuffer->General.Name);
     if (!NT_SUCCESS(Status))
     {
         TRACE("Status 0x%08lx\n", Status);
         goto done;
     }
 
-    Status = SampGetObjectAttribute(AliasObject,
-                                    L"Description",
-                                    NULL,
-                                    NULL,
-                                    &DescriptionLength);
-    if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_OVERFLOW)
-    {
-        TRACE("Status 0x%08lx\n", Status);
-        goto done;
-    }
-
-    InfoBuffer->General.AdminComment.Length = DescriptionLength - sizeof(WCHAR);
-    InfoBuffer->General.AdminComment.MaximumLength = DescriptionLength;
-    InfoBuffer->General.AdminComment.Buffer = midl_user_allocate(DescriptionLength);
-    if (InfoBuffer->General.AdminComment.Buffer == NULL)
-    {
-        Status = STATUS_INSUFFICIENT_RESOURCES;
-        goto done;
-    }
-
-    TRACE("Description Length: %lu\n", DescriptionLength);
-    Status = SampGetObjectAttribute(AliasObject,
-                                    L"Description",
-                                    NULL,
-                                    (PVOID)InfoBuffer->General.AdminComment.Buffer,
-                                    &DescriptionLength);
+    Status = SampGetObjectAttributeString(AliasObject,
+                                          L"Description",
+                                          &InfoBuffer->General.AdminComment);
     if (!NT_SUCCESS(Status))
     {
         TRACE("Status 0x%08lx\n", Status);
@@ -2674,7 +2481,6 @@ SampQueryAliasName(PSAM_DB_OBJECT AliasObject,
                    PSAMPR_ALIAS_INFO_BUFFER *Buffer)
 {
     PSAMPR_ALIAS_INFO_BUFFER InfoBuffer = NULL;
-    ULONG Length = 0;
     NTSTATUS Status;
 
     *Buffer = NULL;
@@ -2683,32 +2489,9 @@ SampQueryAliasName(PSAM_DB_OBJECT AliasObject,
     if (InfoBuffer == NULL)
         return STATUS_INSUFFICIENT_RESOURCES;
 
-    Status = SampGetObjectAttribute(AliasObject,
-                                    L"Name",
-                                    NULL,
-                                    NULL,
-                                    &Length);
-    if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_OVERFLOW)
-    {
-        TRACE("Status 0x%08lx\n", Status);
-        goto done;
-    }
-
-    InfoBuffer->Name.Name.Length = Length - sizeof(WCHAR);
-    InfoBuffer->Name.Name.MaximumLength = Length;
-    InfoBuffer->Name.Name.Buffer = midl_user_allocate(Length);
-    if (InfoBuffer->Name.Name.Buffer == NULL)
-    {
-        Status = STATUS_INSUFFICIENT_RESOURCES;
-        goto done;
-    }
-
-    TRACE("Length: %lu\n", Length);
-    Status = SampGetObjectAttribute(AliasObject,
-                                    L"Name",
-                                    NULL,
-                                    (PVOID)InfoBuffer->Name.Name.Buffer,
-                                    &Length);
+    Status = SampGetObjectAttributeString(AliasObject,
+                                          L"Name",
+                                          &InfoBuffer->Name.Name);
     if (!NT_SUCCESS(Status))
     {
         TRACE("Status 0x%08lx\n", Status);
@@ -2738,7 +2521,6 @@ SampQueryAliasAdminComment(PSAM_DB_OBJECT AliasObject,
                            PSAMPR_ALIAS_INFO_BUFFER *Buffer)
 {
     PSAMPR_ALIAS_INFO_BUFFER InfoBuffer = NULL;
-    ULONG Length = 0;
     NTSTATUS Status;
 
     *Buffer = NULL;
@@ -2747,30 +2529,14 @@ SampQueryAliasAdminComment(PSAM_DB_OBJECT AliasObject,
     if (InfoBuffer == NULL)
         return STATUS_INSUFFICIENT_RESOURCES;
 
-    Status = SampGetObjectAttribute(AliasObject,
-                                    L"Description",
-                                    NULL,
-                                    NULL,
-                                    &Length);
-    if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_OVERFLOW)
-        goto done;
-
-    InfoBuffer->AdminComment.AdminComment.Length = Length - sizeof(WCHAR);
-    InfoBuffer->AdminComment.AdminComment.MaximumLength = Length;
-    InfoBuffer->AdminComment.AdminComment.Buffer = midl_user_allocate(Length);
-    if (InfoBuffer->AdminComment.AdminComment.Buffer == NULL)
+    Status = SampGetObjectAttributeString(AliasObject,
+                                          L"Description",
+                                          &InfoBuffer->AdminComment.AdminComment);
+    if (!NT_SUCCESS(Status))
     {
-        Status = STATUS_INSUFFICIENT_RESOURCES;
+        TRACE("Status 0x%08lx\n", Status);
         goto done;
     }
-
-    Status = SampGetObjectAttribute(AliasObject,
-                                    L"Description",
-                                    NULL,
-                                    (PVOID)InfoBuffer->AdminComment.AdminComment.Buffer,
-                                    &Length);
-    if (!NT_SUCCESS(Status))
-        goto done;
 
     *Buffer = InfoBuffer;
 
@@ -3180,10 +2946,11 @@ SamrDeleteUser(IN OUT SAMPR_HANDLE *UserHandle)
 
 static
 NTSTATUS
-SampQueryUserName(PSAM_DB_OBJECT UserObject,
-                  PSAMPR_USER_INFO_BUFFER *Buffer)
+SampQueryUserGeneral(PSAM_DB_OBJECT UserObject,
+                     PSAMPR_USER_INFO_BUFFER *Buffer)
 {
     PSAMPR_USER_INFO_BUFFER InfoBuffer = NULL;
+    SAM_USER_FIXED_DATA FixedData;
     ULONG Length = 0;
     NTSTATUS Status;
 
@@ -3193,65 +2960,485 @@ SampQueryUserName(PSAM_DB_OBJECT UserObject,
     if (InfoBuffer == NULL)
         return STATUS_INSUFFICIENT_RESOURCES;
 
+    Length = sizeof(SAM_USER_FIXED_DATA);
     Status = SampGetObjectAttribute(UserObject,
-                                    L"Name",
+                                    L"F",
                                     NULL,
-                                    NULL,
+                                    (PVOID)&FixedData,
                                     &Length);
-    if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_OVERFLOW)
-    {
-        TRACE("Status 0x%08lx\n", Status);
+    if (!NT_SUCCESS(Status))
         goto done;
-    }
 
-    InfoBuffer->Name.UserName.Length = Length - sizeof(WCHAR);
-    InfoBuffer->Name.UserName.MaximumLength = Length;
-    InfoBuffer->Name.UserName.Buffer = midl_user_allocate(Length);
-    if (InfoBuffer->Name.UserName.Buffer == NULL)
-    {
-        Status = STATUS_INSUFFICIENT_RESOURCES;
-        goto done;
-    }
+    InfoBuffer->General.PrimaryGroupId = FixedData.PrimaryGroupId;
 
-    TRACE("Length: %lu\n", Length);
-    Status = SampGetObjectAttribute(UserObject,
-                                    L"Name",
-                                    NULL,
-                                    (PVOID)InfoBuffer->Name.UserName.Buffer,
-                                    &Length);
+    /* Get the Name string */
+    Status = SampGetObjectAttributeString(UserObject,
+                                          L"Name",
+                                          &InfoBuffer->General.UserName);
     if (!NT_SUCCESS(Status))
     {
         TRACE("Status 0x%08lx\n", Status);
         goto done;
     }
 
-    Length = 0;
-    Status = SampGetObjectAttribute(UserObject,
-                                    L"FullName",
-                                    NULL,
-                                    NULL,
-                                    &Length);
-    if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_OVERFLOW)
+    /* Get the FullName string */
+    Status = SampGetObjectAttributeString(UserObject,
+                                          L"FullName",
+                                          &InfoBuffer->General.FullName);
+    if (!NT_SUCCESS(Status))
     {
         TRACE("Status 0x%08lx\n", Status);
         goto done;
     }
 
-    InfoBuffer->Name.FullName.Length = Length - sizeof(WCHAR);
-    InfoBuffer->Name.FullName.MaximumLength = Length;
-    InfoBuffer->Name.FullName.Buffer = midl_user_allocate(Length);
-    if (InfoBuffer->Name.FullName.Buffer == NULL)
+    /* Get the AdminComment string */
+    Status = SampGetObjectAttributeString(UserObject,
+                                          L"AdminComment",
+                                          &InfoBuffer->General.AdminComment);
+    if (!NT_SUCCESS(Status))
     {
-        Status = STATUS_INSUFFICIENT_RESOURCES;
+        TRACE("Status 0x%08lx\n", Status);
         goto done;
     }
 
-    TRACE("Length: %lu\n", Length);
+    /* Get the UserComment string */
+    Status = SampGetObjectAttributeString(UserObject,
+                                          L"UserComment",
+                                          &InfoBuffer->General.UserComment);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("Status 0x%08lx\n", Status);
+        goto done;
+    }
+
+    *Buffer = InfoBuffer;
+
+done:
+    if (!NT_SUCCESS(Status))
+    {
+        if (InfoBuffer != NULL)
+        {
+            if (InfoBuffer->General.UserName.Buffer != NULL)
+                midl_user_free(InfoBuffer->General.UserName.Buffer);
+
+            if (InfoBuffer->General.FullName.Buffer != NULL)
+                midl_user_free(InfoBuffer->General.FullName.Buffer);
+
+            if (InfoBuffer->General.AdminComment.Buffer != NULL)
+                midl_user_free(InfoBuffer->General.AdminComment.Buffer);
+
+            if (InfoBuffer->General.UserComment.Buffer != NULL)
+                midl_user_free(InfoBuffer->General.UserComment.Buffer);
+
+            midl_user_free(InfoBuffer);
+        }
+    }
+
+    return Status;
+}
+
+
+static
+NTSTATUS
+SampQueryUserPreferences(PSAM_DB_OBJECT UserObject,
+                         PSAMPR_USER_INFO_BUFFER *Buffer)
+{
+    PSAMPR_USER_INFO_BUFFER InfoBuffer = NULL;
+    SAM_USER_FIXED_DATA FixedData;
+    ULONG Length = 0;
+    NTSTATUS Status;
+
+    *Buffer = NULL;
+
+    InfoBuffer = midl_user_allocate(sizeof(SAMPR_USER_INFO_BUFFER));
+    if (InfoBuffer == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    Length = sizeof(SAM_USER_FIXED_DATA);
     Status = SampGetObjectAttribute(UserObject,
-                                    L"FullName",
+                                    L"F",
                                     NULL,
-                                    (PVOID)InfoBuffer->Name.FullName.Buffer,
+                                    (PVOID)&FixedData,
                                     &Length);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    InfoBuffer->Preferences.CountryCode = FixedData.CountryCode;
+    InfoBuffer->Preferences.CodePage = FixedData.CodePage;
+
+    /* Get the UserComment string */
+    Status = SampGetObjectAttributeString(UserObject,
+                                          L"UserComment",
+                                          &InfoBuffer->Preferences.UserComment);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("Status 0x%08lx\n", Status);
+        goto done;
+    }
+
+    *Buffer = InfoBuffer;
+
+done:
+    if (!NT_SUCCESS(Status))
+    {
+        if (InfoBuffer != NULL)
+        {
+            if (InfoBuffer->Preferences.UserComment.Buffer != NULL)
+                midl_user_free(InfoBuffer->Preferences.UserComment.Buffer);
+
+            midl_user_free(InfoBuffer);
+        }
+    }
+
+    return Status;
+}
+
+
+static
+NTSTATUS
+SampQueryUserLogon(PSAM_DB_OBJECT UserObject,
+                   PSAMPR_USER_INFO_BUFFER *Buffer)
+{
+    PSAMPR_USER_INFO_BUFFER InfoBuffer = NULL;
+    SAM_USER_FIXED_DATA FixedData;
+    ULONG Length = 0;
+    NTSTATUS Status;
+
+    *Buffer = NULL;
+
+    InfoBuffer = midl_user_allocate(sizeof(SAMPR_USER_INFO_BUFFER));
+    if (InfoBuffer == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    Length = sizeof(SAM_USER_FIXED_DATA);
+    Status = SampGetObjectAttribute(UserObject,
+                                    L"F",
+                                    NULL,
+                                    (PVOID)&FixedData,
+                                    &Length);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    InfoBuffer->Logon.UserId = FixedData.UserId;
+    InfoBuffer->Logon.PrimaryGroupId = FixedData.PrimaryGroupId;
+    InfoBuffer->Logon.LastLogon.LowPart = FixedData.LastLogon.LowPart;
+    InfoBuffer->Logon.LastLogon.HighPart = FixedData.LastLogon.HighPart;
+    InfoBuffer->Logon.LastLogoff.LowPart = FixedData.LastLogoff.LowPart;
+    InfoBuffer->Logon.LastLogoff.HighPart = FixedData.LastLogoff.HighPart;
+    InfoBuffer->Logon.PasswordLastSet.LowPart = FixedData.PasswordLastSet.LowPart;
+    InfoBuffer->Logon.PasswordLastSet.HighPart = FixedData.PasswordLastSet.HighPart;
+    InfoBuffer->Logon.BadPasswordCount = FixedData.BadPasswordCount;
+    InfoBuffer->Logon.LogonCount = FixedData.LogonCount;
+    InfoBuffer->Logon.UserAccountControl = FixedData.UserAccountControl;
+
+//  OLD_LARGE_INTEGER PasswordCanChange;
+//  OLD_LARGE_INTEGER PasswordMustChange;
+
+    /* Get the Name string */
+    Status = SampGetObjectAttributeString(UserObject,
+                                          L"Name",
+                                          &InfoBuffer->Logon.UserName);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("Status 0x%08lx\n", Status);
+        goto done;
+    }
+
+    /* Get the FullName string */
+    Status = SampGetObjectAttributeString(UserObject,
+                                          L"FullName",
+                                          &InfoBuffer->Logon.FullName);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("Status 0x%08lx\n", Status);
+        goto done;
+    }
+
+    /* Get the HomeDirectory string */
+    Status = SampGetObjectAttributeString(UserObject,
+                                          L"HomeDirectory",
+                                          &InfoBuffer->Logon.HomeDirectory);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("Status 0x%08lx\n", Status);
+        goto done;
+    }
+
+    /* Get the HomeDirectoryDrive string */
+    Status = SampGetObjectAttributeString(UserObject,
+                                          L"HomeDirectoryDrive",
+                                          &InfoBuffer->Logon.HomeDirectoryDrive);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("Status 0x%08lx\n", Status);
+        goto done;
+    }
+
+    /* Get the ScriptPath string */
+    Status = SampGetObjectAttributeString(UserObject,
+                                          L"ScriptPath",
+                                          &InfoBuffer->Logon.ScriptPath);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("Status 0x%08lx\n", Status);
+        goto done;
+    }
+
+    /* Get the ProfilePath string */
+    Status = SampGetObjectAttributeString(UserObject,
+                                          L"ProfilePath",
+                                          &InfoBuffer->Logon.ProfilePath);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("Status 0x%08lx\n", Status);
+        goto done;
+    }
+
+    /* Get the WorkStations string */
+    Status = SampGetObjectAttributeString(UserObject,
+                                          L"WorkStations",
+                                          &InfoBuffer->Logon.WorkStations);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("Status 0x%08lx\n", Status);
+        goto done;
+    }
+
+    /* FIXME: LogonHours */
+
+    *Buffer = InfoBuffer;
+
+done:
+    if (!NT_SUCCESS(Status))
+    {
+        if (InfoBuffer != NULL)
+        {
+            if (InfoBuffer->Logon.UserName.Buffer != NULL)
+                midl_user_free(InfoBuffer->Logon.UserName.Buffer);
+
+            if (InfoBuffer->Logon.FullName.Buffer != NULL)
+                midl_user_free(InfoBuffer->Logon.FullName.Buffer);
+
+            if (InfoBuffer->Logon.HomeDirectory.Buffer != NULL)
+                midl_user_free(InfoBuffer->Logon.HomeDirectory.Buffer);
+
+            if (InfoBuffer->Logon.HomeDirectoryDrive.Buffer != NULL)
+                midl_user_free(InfoBuffer->Logon.HomeDirectoryDrive.Buffer);
+
+            if (InfoBuffer->Logon.ScriptPath.Buffer != NULL)
+                midl_user_free(InfoBuffer->Logon.ScriptPath.Buffer);
+
+            if (InfoBuffer->Logon.ProfilePath.Buffer != NULL)
+                midl_user_free(InfoBuffer->Logon.ProfilePath.Buffer);
+
+            if (InfoBuffer->Logon.WorkStations.Buffer != NULL)
+                midl_user_free(InfoBuffer->Logon.WorkStations.Buffer);
+
+            if (InfoBuffer->Logon.LogonHours.LogonHours != NULL)
+                midl_user_free(InfoBuffer->Logon.LogonHours.LogonHours);
+
+            midl_user_free(InfoBuffer);
+        }
+    }
+
+    return Status;
+}
+
+
+
+
+static
+NTSTATUS
+SampQueryUserAccount(PSAM_DB_OBJECT UserObject,
+                     PSAMPR_USER_INFO_BUFFER *Buffer)
+{
+    PSAMPR_USER_INFO_BUFFER InfoBuffer = NULL;
+    SAM_USER_FIXED_DATA FixedData;
+    ULONG Length = 0;
+    NTSTATUS Status;
+
+    *Buffer = NULL;
+
+    InfoBuffer = midl_user_allocate(sizeof(SAMPR_USER_INFO_BUFFER));
+    if (InfoBuffer == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    Length = sizeof(SAM_USER_FIXED_DATA);
+    Status = SampGetObjectAttribute(UserObject,
+                                    L"F",
+                                    NULL,
+                                    (PVOID)&FixedData,
+                                    &Length);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    InfoBuffer->Account.UserId = FixedData.UserId;
+    InfoBuffer->Account.PrimaryGroupId = FixedData.PrimaryGroupId;
+    InfoBuffer->Account.LastLogon.LowPart = FixedData.LastLogon.LowPart;
+    InfoBuffer->Account.LastLogon.HighPart = FixedData.LastLogon.HighPart;
+    InfoBuffer->Account.LastLogoff.LowPart = FixedData.LastLogoff.LowPart;
+    InfoBuffer->Account.LastLogoff.HighPart = FixedData.LastLogoff.HighPart;
+    InfoBuffer->Account.PasswordLastSet.LowPart = FixedData.PasswordLastSet.LowPart;
+    InfoBuffer->Account.PasswordLastSet.HighPart = FixedData.PasswordLastSet.HighPart;
+    InfoBuffer->Account.AccountExpires.LowPart = FixedData.AccountExpires.LowPart;
+    InfoBuffer->Account.AccountExpires.HighPart = FixedData.AccountExpires.HighPart;
+    InfoBuffer->Account.BadPasswordCount = FixedData.BadPasswordCount;
+    InfoBuffer->Account.LogonCount = FixedData.LogonCount;
+    InfoBuffer->Account.UserAccountControl = FixedData.UserAccountControl;
+
+    /* Get the Name string */
+    Status = SampGetObjectAttributeString(UserObject,
+                                          L"Name",
+                                          &InfoBuffer->Account.UserName);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("Status 0x%08lx\n", Status);
+        goto done;
+    }
+
+    /* Get the FullName string */
+    Status = SampGetObjectAttributeString(UserObject,
+                                          L"FullName",
+                                          &InfoBuffer->Account.FullName);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("Status 0x%08lx\n", Status);
+        goto done;
+    }
+
+    /* Get the HomeDirectory string */
+    Status = SampGetObjectAttributeString(UserObject,
+                                          L"HomeDirectory",
+                                          &InfoBuffer->Account.HomeDirectory);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("Status 0x%08lx\n", Status);
+        goto done;
+    }
+
+    /* Get the HomeDirectoryDrive string */
+    Status = SampGetObjectAttributeString(UserObject,
+                                          L"HomeDirectoryDrive",
+                                          &InfoBuffer->Account.HomeDirectoryDrive);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("Status 0x%08lx\n", Status);
+        goto done;
+    }
+
+    /* Get the ScriptPath string */
+    Status = SampGetObjectAttributeString(UserObject,
+                                          L"ScriptPath",
+                                          &InfoBuffer->Account.ScriptPath);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("Status 0x%08lx\n", Status);
+        goto done;
+    }
+
+    /* Get the ProfilePath string */
+    Status = SampGetObjectAttributeString(UserObject,
+                                          L"ProfilePath",
+                                          &InfoBuffer->Account.ProfilePath);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("Status 0x%08lx\n", Status);
+        goto done;
+    }
+
+    /* Get the AdminComment string */
+    Status = SampGetObjectAttributeString(UserObject,
+                                          L"AdminComment",
+                                          &InfoBuffer->Account.AdminComment);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("Status 0x%08lx\n", Status);
+        goto done;
+    }
+
+    /* Get the WorkStations string */
+    Status = SampGetObjectAttributeString(UserObject,
+                                          L"WorkStations",
+                                          &InfoBuffer->Account.WorkStations);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("Status 0x%08lx\n", Status);
+        goto done;
+    }
+
+    /* FIXME: LogonHours */
+
+    *Buffer = InfoBuffer;
+
+done:
+    if (!NT_SUCCESS(Status))
+    {
+        if (InfoBuffer != NULL)
+        {
+            if (InfoBuffer->Account.UserName.Buffer != NULL)
+                midl_user_free(InfoBuffer->Account.UserName.Buffer);
+
+            if (InfoBuffer->Account.FullName.Buffer != NULL)
+                midl_user_free(InfoBuffer->Account.FullName.Buffer);
+
+            if (InfoBuffer->Account.HomeDirectory.Buffer != NULL)
+                midl_user_free(InfoBuffer->Account.HomeDirectory.Buffer);
+
+            if (InfoBuffer->Account.HomeDirectoryDrive.Buffer != NULL)
+                midl_user_free(InfoBuffer->Account.HomeDirectoryDrive.Buffer);
+
+            if (InfoBuffer->Account.ScriptPath.Buffer != NULL)
+                midl_user_free(InfoBuffer->Account.ScriptPath.Buffer);
+
+            if (InfoBuffer->Account.ProfilePath.Buffer != NULL)
+                midl_user_free(InfoBuffer->Account.ProfilePath.Buffer);
+
+            if (InfoBuffer->Account.AdminComment.Buffer != NULL)
+                midl_user_free(InfoBuffer->Account.AdminComment.Buffer);
+
+            if (InfoBuffer->Account.WorkStations.Buffer != NULL)
+                midl_user_free(InfoBuffer->Account.WorkStations.Buffer);
+
+            if (InfoBuffer->Account.LogonHours.LogonHours != NULL)
+                midl_user_free(InfoBuffer->Account.LogonHours.LogonHours);
+
+            midl_user_free(InfoBuffer);
+        }
+    }
+
+    return Status;
+}
+
+/* FIXME: SampQueryUserLogonHours */
+
+static
+NTSTATUS
+SampQueryUserName(PSAM_DB_OBJECT UserObject,
+                  PSAMPR_USER_INFO_BUFFER *Buffer)
+{
+    PSAMPR_USER_INFO_BUFFER InfoBuffer = NULL;
+    NTSTATUS Status;
+
+    *Buffer = NULL;
+
+    InfoBuffer = midl_user_allocate(sizeof(SAMPR_USER_INFO_BUFFER));
+    if (InfoBuffer == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    /* Get the Name string */
+    Status = SampGetObjectAttributeString(UserObject,
+                                          L"Name",
+                                          &InfoBuffer->Name.UserName);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("Status 0x%08lx\n", Status);
+        goto done;
+    }
+
+    /* Get the FullName string */
+    Status = SampGetObjectAttributeString(UserObject,
+                                          L"FullName",
+                                          &InfoBuffer->Name.FullName);
     if (!NT_SUCCESS(Status))
     {
         TRACE("Status 0x%08lx\n", Status);
@@ -3284,7 +3471,6 @@ SampQueryUserAccountName(PSAM_DB_OBJECT UserObject,
                          PSAMPR_USER_INFO_BUFFER *Buffer)
 {
     PSAMPR_USER_INFO_BUFFER InfoBuffer = NULL;
-    ULONG Length = 0;
     NTSTATUS Status;
 
     *Buffer = NULL;
@@ -3293,32 +3479,10 @@ SampQueryUserAccountName(PSAM_DB_OBJECT UserObject,
     if (InfoBuffer == NULL)
         return STATUS_INSUFFICIENT_RESOURCES;
 
-    Status = SampGetObjectAttribute(UserObject,
-                                    L"Name",
-                                    NULL,
-                                    NULL,
-                                    &Length);
-    if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_OVERFLOW)
-    {
-        TRACE("Status 0x%08lx\n", Status);
-        goto done;
-    }
-
-    InfoBuffer->AccountName.UserName.Length = Length - sizeof(WCHAR);
-    InfoBuffer->AccountName.UserName.MaximumLength = Length;
-    InfoBuffer->AccountName.UserName.Buffer = midl_user_allocate(Length);
-    if (InfoBuffer->AccountName.UserName.Buffer == NULL)
-    {
-        Status = STATUS_INSUFFICIENT_RESOURCES;
-        goto done;
-    }
-
-    TRACE("Length: %lu\n", Length);
-    Status = SampGetObjectAttribute(UserObject,
-                                    L"Name",
-                                    NULL,
-                                    (PVOID)InfoBuffer->AccountName.UserName.Buffer,
-                                    &Length);
+    /* Get the Name string */
+    Status = SampGetObjectAttributeString(UserObject,
+                                          L"Name",
+                                          &InfoBuffer->AccountName.UserName);
     if (!NT_SUCCESS(Status))
     {
         TRACE("Status 0x%08lx\n", Status);
@@ -3348,7 +3512,6 @@ SampQueryUserFullName(PSAM_DB_OBJECT UserObject,
                       PSAMPR_USER_INFO_BUFFER *Buffer)
 {
     PSAMPR_USER_INFO_BUFFER InfoBuffer = NULL;
-    ULONG Length = 0;
     NTSTATUS Status;
 
     *Buffer = NULL;
@@ -3357,32 +3520,10 @@ SampQueryUserFullName(PSAM_DB_OBJECT UserObject,
     if (InfoBuffer == NULL)
         return STATUS_INSUFFICIENT_RESOURCES;
 
-    Status = SampGetObjectAttribute(UserObject,
-                                    L"FullName",
-                                    NULL,
-                                    NULL,
-                                    &Length);
-    if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_OVERFLOW)
-    {
-        TRACE("Status 0x%08lx\n", Status);
-        goto done;
-    }
-
-    InfoBuffer->FullName.FullName.Length = Length - sizeof(WCHAR);
-    InfoBuffer->FullName.FullName.MaximumLength = Length;
-    InfoBuffer->FullName.FullName.Buffer = midl_user_allocate(Length);
-    if (InfoBuffer->FullName.FullName.Buffer == NULL)
-    {
-        Status = STATUS_INSUFFICIENT_RESOURCES;
-        goto done;
-    }
-
-    TRACE("Length: %lu\n", Length);
-    Status = SampGetObjectAttribute(UserObject,
-                                    L"FullName",
-                                    NULL,
-                                    (PVOID)InfoBuffer->FullName.FullName.Buffer,
-                                    &Length);
+    /* Get the FullName string */
+    Status = SampGetObjectAttributeString(UserObject,
+                                          L"FullName",
+                                          &InfoBuffer->FullName.FullName);
     if (!NT_SUCCESS(Status))
     {
         TRACE("Status 0x%08lx\n", Status);
@@ -3454,7 +3595,6 @@ SampQueryUserHome(PSAM_DB_OBJECT UserObject,
                   PSAMPR_USER_INFO_BUFFER *Buffer)
 {
     PSAMPR_USER_INFO_BUFFER InfoBuffer = NULL;
-    ULONG Length = 0;
     NTSTATUS Status;
 
     *Buffer = NULL;
@@ -3463,65 +3603,20 @@ SampQueryUserHome(PSAM_DB_OBJECT UserObject,
     if (InfoBuffer == NULL)
         return STATUS_INSUFFICIENT_RESOURCES;
 
-    Status = SampGetObjectAttribute(UserObject,
-                                    L"HomeDirectory",
-                                    NULL,
-                                    NULL,
-                                    &Length);
-    if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_OVERFLOW)
-    {
-        TRACE("Status 0x%08lx\n", Status);
-        goto done;
-    }
-
-    InfoBuffer->Home.HomeDirectory.Length = Length - sizeof(WCHAR);
-    InfoBuffer->Home.HomeDirectory.MaximumLength = Length;
-    InfoBuffer->Home.HomeDirectory.Buffer = midl_user_allocate(Length);
-    if (InfoBuffer->Home.HomeDirectory.Buffer == NULL)
-    {
-        Status = STATUS_INSUFFICIENT_RESOURCES;
-        goto done;
-    }
-
-    TRACE("Length: %lu\n", Length);
-    Status = SampGetObjectAttribute(UserObject,
-                                    L"HomeDirectory",
-                                    NULL,
-                                    (PVOID)InfoBuffer->Home.HomeDirectory.Buffer,
-                                    &Length);
+    /* Get the HomeDirectory string */
+    Status = SampGetObjectAttributeString(UserObject,
+                                          L"HomeDirectory",
+                                          &InfoBuffer->Home.HomeDirectory);
     if (!NT_SUCCESS(Status))
     {
         TRACE("Status 0x%08lx\n", Status);
         goto done;
     }
 
-    Length = 0;
-    Status = SampGetObjectAttribute(UserObject,
-                                    L"HomeDirectoryDrive",
-                                    NULL,
-                                    NULL,
-                                    &Length);
-    if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_OVERFLOW)
-    {
-        TRACE("Status 0x%08lx\n", Status);
-        goto done;
-    }
-
-    InfoBuffer->Home.HomeDirectoryDrive.Length = Length - sizeof(WCHAR);
-    InfoBuffer->Home.HomeDirectoryDrive.MaximumLength = Length;
-    InfoBuffer->Home.HomeDirectoryDrive.Buffer = midl_user_allocate(Length);
-    if (InfoBuffer->Home.HomeDirectoryDrive.Buffer == NULL)
-    {
-        Status = STATUS_INSUFFICIENT_RESOURCES;
-        goto done;
-    }
-
-    TRACE("Length: %lu\n", Length);
-    Status = SampGetObjectAttribute(UserObject,
-                                    L"HomeDirectoryDrive",
-                                    NULL,
-                                    (PVOID)InfoBuffer->Home.HomeDirectoryDrive.Buffer,
-                                    &Length);
+    /* Get the HomeDirectoryDrive string */
+    Status = SampGetObjectAttributeString(UserObject,
+                                          L"HomeDirectoryDrive",
+                                          &InfoBuffer->Home.HomeDirectoryDrive);
     if (!NT_SUCCESS(Status))
     {
         TRACE("Status 0x%08lx\n", Status);
@@ -3554,7 +3649,6 @@ SampQueryUserScript(PSAM_DB_OBJECT UserObject,
                     PSAMPR_USER_INFO_BUFFER *Buffer)
 {
     PSAMPR_USER_INFO_BUFFER InfoBuffer = NULL;
-    ULONG Length = 0;
     NTSTATUS Status;
 
     *Buffer = NULL;
@@ -3563,32 +3657,10 @@ SampQueryUserScript(PSAM_DB_OBJECT UserObject,
     if (InfoBuffer == NULL)
         return STATUS_INSUFFICIENT_RESOURCES;
 
-    Status = SampGetObjectAttribute(UserObject,
-                                    L"ScriptPath",
-                                    NULL,
-                                    NULL,
-                                    &Length);
-    if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_OVERFLOW)
-    {
-        TRACE("Status 0x%08lx\n", Status);
-        goto done;
-    }
-
-    InfoBuffer->Script.ScriptPath.Length = Length - sizeof(WCHAR);
-    InfoBuffer->Script.ScriptPath.MaximumLength = Length;
-    InfoBuffer->Script.ScriptPath.Buffer = midl_user_allocate(Length);
-    if (InfoBuffer->Script.ScriptPath.Buffer == NULL)
-    {
-        Status = STATUS_INSUFFICIENT_RESOURCES;
-        goto done;
-    }
-
-    TRACE("Length: %lu\n", Length);
-    Status = SampGetObjectAttribute(UserObject,
-                                    L"ScriptPath",
-                                    NULL,
-                                    (PVOID)InfoBuffer->Script.ScriptPath.Buffer,
-                                    &Length);
+    /* Get the ScriptPath string */
+    Status = SampGetObjectAttributeString(UserObject,
+                                          L"ScriptPath",
+                                          &InfoBuffer->Script.ScriptPath);
     if (!NT_SUCCESS(Status))
     {
         TRACE("Status 0x%08lx\n", Status);
@@ -3618,7 +3690,6 @@ SampQueryUserProfile(PSAM_DB_OBJECT UserObject,
                      PSAMPR_USER_INFO_BUFFER *Buffer)
 {
     PSAMPR_USER_INFO_BUFFER InfoBuffer = NULL;
-    ULONG Length = 0;
     NTSTATUS Status;
 
     *Buffer = NULL;
@@ -3627,32 +3698,10 @@ SampQueryUserProfile(PSAM_DB_OBJECT UserObject,
     if (InfoBuffer == NULL)
         return STATUS_INSUFFICIENT_RESOURCES;
 
-    Status = SampGetObjectAttribute(UserObject,
-                                    L"ProfilePath",
-                                    NULL,
-                                    NULL,
-                                    &Length);
-    if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_OVERFLOW)
-    {
-        TRACE("Status 0x%08lx\n", Status);
-        goto done;
-    }
-
-    InfoBuffer->Profile.ProfilePath.Length = Length - sizeof(WCHAR);
-    InfoBuffer->Profile.ProfilePath.MaximumLength = Length;
-    InfoBuffer->Profile.ProfilePath.Buffer = midl_user_allocate(Length);
-    if (InfoBuffer->Profile.ProfilePath.Buffer == NULL)
-    {
-        Status = STATUS_INSUFFICIENT_RESOURCES;
-        goto done;
-    }
-
-    TRACE("Length: %lu\n", Length);
-    Status = SampGetObjectAttribute(UserObject,
-                                    L"ProfilePath",
-                                    NULL,
-                                    (PVOID)InfoBuffer->Profile.ProfilePath.Buffer,
-                                    &Length);
+    /* Get the ProfilePath string */
+    Status = SampGetObjectAttributeString(UserObject,
+                                          L"ProfilePath",
+                                          &InfoBuffer->Profile.ProfilePath);
     if (!NT_SUCCESS(Status))
     {
         TRACE("Status 0x%08lx\n", Status);
@@ -3682,7 +3731,6 @@ SampQueryUserAdminComment(PSAM_DB_OBJECT UserObject,
                           PSAMPR_USER_INFO_BUFFER *Buffer)
 {
     PSAMPR_USER_INFO_BUFFER InfoBuffer = NULL;
-    ULONG Length = 0;
     NTSTATUS Status;
 
     *Buffer = NULL;
@@ -3691,32 +3739,10 @@ SampQueryUserAdminComment(PSAM_DB_OBJECT UserObject,
     if (InfoBuffer == NULL)
         return STATUS_INSUFFICIENT_RESOURCES;
 
-    Status = SampGetObjectAttribute(UserObject,
-                                    L"AdminComment",
-                                    NULL,
-                                    NULL,
-                                    &Length);
-    if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_OVERFLOW)
-    {
-        TRACE("Status 0x%08lx\n", Status);
-        goto done;
-    }
-
-    InfoBuffer->AdminComment.AdminComment.Length = Length - sizeof(WCHAR);
-    InfoBuffer->AdminComment.AdminComment.MaximumLength = Length;
-    InfoBuffer->AdminComment.AdminComment.Buffer = midl_user_allocate(Length);
-    if (InfoBuffer->AdminComment.AdminComment.Buffer == NULL)
-    {
-        Status = STATUS_INSUFFICIENT_RESOURCES;
-        goto done;
-    }
-
-    TRACE("Length: %lu\n", Length);
-    Status = SampGetObjectAttribute(UserObject,
-                                    L"AdminComment",
-                                    NULL,
-                                    (PVOID)InfoBuffer->AdminComment.AdminComment.Buffer,
-                                    &Length);
+    /* Get the AdminComment string */
+    Status = SampGetObjectAttributeString(UserObject,
+                                          L"AdminComment",
+                                          &InfoBuffer->AdminComment.AdminComment);
     if (!NT_SUCCESS(Status))
     {
         TRACE("Status 0x%08lx\n", Status);
@@ -3741,13 +3767,11 @@ done:
 }
 
 
-
 static NTSTATUS
 SampQueryUserWorkStations(PSAM_DB_OBJECT UserObject,
                           PSAMPR_USER_INFO_BUFFER *Buffer)
 {
     PSAMPR_USER_INFO_BUFFER InfoBuffer = NULL;
-    ULONG Length = 0;
     NTSTATUS Status;
 
     *Buffer = NULL;
@@ -3756,32 +3780,10 @@ SampQueryUserWorkStations(PSAM_DB_OBJECT UserObject,
     if (InfoBuffer == NULL)
         return STATUS_INSUFFICIENT_RESOURCES;
 
-    Status = SampGetObjectAttribute(UserObject,
-                                    L"WorkStations",
-                                    NULL,
-                                    NULL,
-                                    &Length);
-    if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_OVERFLOW)
-    {
-        TRACE("Status 0x%08lx\n", Status);
-        goto done;
-    }
-
-    InfoBuffer->WorkStations.WorkStations.Length = Length - sizeof(WCHAR);
-    InfoBuffer->WorkStations.WorkStations.MaximumLength = Length;
-    InfoBuffer->WorkStations.WorkStations.Buffer = midl_user_allocate(Length);
-    if (InfoBuffer->WorkStations.WorkStations.Buffer == NULL)
-    {
-        Status = STATUS_INSUFFICIENT_RESOURCES;
-        goto done;
-    }
-
-    TRACE("Length: %lu\n", Length);
-    Status = SampGetObjectAttribute(UserObject,
-                                    L"WorkStations",
-                                    NULL,
-                                    (PVOID)InfoBuffer->WorkStations.WorkStations.Buffer,
-                                    &Length);
+    /* Get the WorkStations string */
+    Status = SampGetObjectAttributeString(UserObject,
+                                          L"WorkStations",
+                                          &InfoBuffer->WorkStations.WorkStations);
     if (!NT_SUCCESS(Status))
     {
         TRACE("Status 0x%08lx\n", Status);
@@ -3959,11 +3961,30 @@ SamrQueryInformationUser(IN SAMPR_HANDLE UserHandle,
 
     switch (UserInformationClass)
     {
-//        case UserGeneralInformation:
-//        case UserPreferencesInformation:
-//        case UserLogonInformation:
+        case UserGeneralInformation:
+            Status = SampQueryUserGeneral(UserObject,
+                                          Buffer);
+            break;
+
+        case UserPreferencesInformation:
+            Status = SampQueryUserPreferences(UserObject,
+                                              Buffer);
+            break;
+
+        case UserLogonInformation:
+            Status = SampQueryUserLogon(UserObject,
+                                        Buffer);
+            break;
+
 //        case UserLogonHoursInformation:
-//        case UserAccountInformation:
+//            Status = SampQueryUserLogonHours(UserObject,
+//                                             Buffer);
+//            break;
+
+        case UserAccountInformation:
+            Status = SampQueryUserAccount(UserObject,
+                                          Buffer);
+            break;
 
         case UserNameInformation:
             Status = SampQueryUserName(UserObject,
@@ -4026,6 +4047,199 @@ SamrQueryInformationUser(IN SAMPR_HANDLE UserHandle,
     return Status;
 }
 
+
+static NTSTATUS
+SampSetUserGeneral(PSAM_DB_OBJECT UserObject,
+                   PSAMPR_USER_INFO_BUFFER Buffer)
+{
+    SAM_USER_FIXED_DATA FixedData;
+    ULONG Length = 0;
+    NTSTATUS Status;
+
+    Length = sizeof(SAM_USER_FIXED_DATA);
+    Status = SampGetObjectAttribute(UserObject,
+                                    L"F",
+                                    NULL,
+                                    (PVOID)&FixedData,
+                                    &Length);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    FixedData.PrimaryGroupId = Buffer->General.PrimaryGroupId;
+
+    Status = SampSetObjectAttribute(UserObject,
+                                    L"F",
+                                    REG_BINARY,
+                                    &FixedData,
+                                    Length);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    Status = SampSetObjectAttribute(UserObject,
+                                    L"Name",
+                                    REG_SZ,
+                                    Buffer->General.UserName.Buffer,
+                                    Buffer->General.UserName.MaximumLength);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    Status = SampSetObjectAttribute(UserObject,
+                                    L"FullName",
+                                    REG_SZ,
+                                    Buffer->General.FullName.Buffer,
+                                    Buffer->General.FullName.MaximumLength);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    Status = SampSetObjectAttribute(UserObject,
+                                    L"AdminComment",
+                                    REG_SZ,
+                                    Buffer->General.AdminComment.Buffer,
+                                    Buffer->General.AdminComment.MaximumLength);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    Status = SampSetObjectAttribute(UserObject,
+                                    L"UserComment",
+                                    REG_SZ,
+                                    Buffer->General.UserComment.Buffer,
+                                    Buffer->General.UserComment.MaximumLength);
+
+done:
+    return Status;
+}
+
+
+static NTSTATUS
+SampSetUserPreferences(PSAM_DB_OBJECT UserObject,
+                       PSAMPR_USER_INFO_BUFFER Buffer)
+{
+    SAM_USER_FIXED_DATA FixedData;
+    ULONG Length = 0;
+    NTSTATUS Status;
+
+    Length = sizeof(SAM_USER_FIXED_DATA);
+    Status = SampGetObjectAttribute(UserObject,
+                                    L"F",
+                                    NULL,
+                                    (PVOID)&FixedData,
+                                    &Length);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    FixedData.CountryCode = Buffer->Preferences.CountryCode;
+    FixedData.CodePage = Buffer->Preferences.CodePage;
+
+    Status = SampSetObjectAttribute(UserObject,
+                                    L"F",
+                                    REG_BINARY,
+                                    &FixedData,
+                                    Length);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    Status = SampSetObjectAttribute(UserObject,
+                                    L"UserComment",
+                                    REG_SZ,
+                                    Buffer->Preferences.UserComment.Buffer,
+                                    Buffer->Preferences.UserComment.MaximumLength);
+
+done:
+    return Status;
+}
+
+
+static NTSTATUS
+SampSetUserPrimaryGroup(PSAM_DB_OBJECT UserObject,
+                        PSAMPR_USER_INFO_BUFFER Buffer)
+{
+    SAM_USER_FIXED_DATA FixedData;
+    ULONG Length = 0;
+    NTSTATUS Status;
+
+    Length = sizeof(SAM_USER_FIXED_DATA);
+    Status = SampGetObjectAttribute(UserObject,
+                                    L"F",
+                                    NULL,
+                                    (PVOID)&FixedData,
+                                    &Length);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    FixedData.PrimaryGroupId = Buffer->PrimaryGroup.PrimaryGroupId;
+
+    Status = SampSetObjectAttribute(UserObject,
+                                    L"F",
+                                    REG_BINARY,
+                                    &FixedData,
+                                    Length);
+
+done:
+    return Status;
+}
+
+
+static NTSTATUS
+SampSetUserControl(PSAM_DB_OBJECT UserObject,
+                   PSAMPR_USER_INFO_BUFFER Buffer)
+{
+    SAM_USER_FIXED_DATA FixedData;
+    ULONG Length = 0;
+    NTSTATUS Status;
+
+    Length = sizeof(SAM_USER_FIXED_DATA);
+    Status = SampGetObjectAttribute(UserObject,
+                                    L"F",
+                                    NULL,
+                                    (PVOID)&FixedData,
+                                    &Length);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    FixedData.UserAccountControl = Buffer->Control.UserAccountControl;
+
+    Status = SampSetObjectAttribute(UserObject,
+                                    L"F",
+                                    REG_BINARY,
+                                    &FixedData,
+                                    Length);
+
+done:
+    return Status;
+}
+
+
+static NTSTATUS
+SampSetUserExpires(PSAM_DB_OBJECT UserObject,
+                   PSAMPR_USER_INFO_BUFFER Buffer)
+{
+    SAM_USER_FIXED_DATA FixedData;
+    ULONG Length = 0;
+    NTSTATUS Status;
+
+    Length = sizeof(SAM_USER_FIXED_DATA);
+    Status = SampGetObjectAttribute(UserObject,
+                                    L"F",
+                                    NULL,
+                                    (PVOID)&FixedData,
+                                    &Length);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    FixedData.AccountExpires.LowPart = Buffer->Expires.AccountExpires.LowPart;
+    FixedData.AccountExpires.HighPart = Buffer->Expires.AccountExpires.HighPart;
+
+    Status = SampSetObjectAttribute(UserObject,
+                                    L"F",
+                                    REG_BINARY,
+                                    &FixedData,
+                                    Length);
+
+done:
+    return Status;
+}
+
+
 /* Function 37 */
 NTSTATUS
 NTAPI
@@ -4042,6 +4256,7 @@ SamrSetInformationUser(IN SAMPR_HANDLE UserHandle,
 
     switch (UserInformationClass)
     {
+        case UserLogonHoursInformation:
         case UserNameInformation:
         case UserAccountNameInformation:
         case UserFullNameInformation:
@@ -4054,6 +4269,15 @@ SamrSetInformationUser(IN SAMPR_HANDLE UserHandle,
         case UserControlInformation:
         case UserExpiresInformation:
             DesiredAccess = USER_WRITE_ACCOUNT;
+            break;
+
+        case UserGeneralInformation:
+            DesiredAccess = USER_WRITE_ACCOUNT |
+                            USER_WRITE_PREFERENCES;
+            break;
+
+        case UserPreferencesInformation:
+            DesiredAccess = USER_WRITE_PREFERENCES;
             break;
 
         case UserSetPasswordInformation:
@@ -4077,10 +4301,21 @@ SamrSetInformationUser(IN SAMPR_HANDLE UserHandle,
 
     switch (UserInformationClass)
     {
-//        case UserGeneralInformation:
-//        case UserPreferencesInformation:
-//        case UserLogonHoursInformation:
+        case UserGeneralInformation:
+            Status = SampSetUserGeneral(UserObject,
+                                        Buffer);
+            break;
 
+        case UserPreferencesInformation:
+            Status = SampSetUserPreferences(UserObject,
+                                            Buffer);
+            break;
+/*
+        case UserLogonHoursInformation:
+            Status = SampSetUserLogonHours(UserObject,
+                                           Buffer);
+            break;
+*/
         case UserNameInformation:
             Status = SampSetObjectAttribute(UserObject,
                                             L"Name",
@@ -4113,15 +4348,10 @@ SamrSetInformationUser(IN SAMPR_HANDLE UserHandle,
                                             Buffer->FullName.FullName.MaximumLength);
             break;
 
-/*
         case UserPrimaryGroupInformation:
-            Status = SampSetObjectAttribute(UserObject,
-                                            L"PrimaryGroupId",
-                                            REG_DWORD,
-                                            &Buffer->PrimaryGroup.PrimaryGroupId,
-                                            sizeof(ULONG));
+            Status = SampSetUserPrimaryGroup(UserObject,
+                                             Buffer);
             break;
-*/
 
         case UserHomeInformation:
             Status = SampSetObjectAttribute(UserObject,
@@ -4182,24 +4412,15 @@ SamrSetInformationUser(IN SAMPR_HANDLE UserHandle,
                                             Buffer->SetPassword.Password.MaximumLength);
             break;
 
-/*
         case UserControlInformation:
-            Status = SampSetObjectAttribute(UserObject,
-                                            L"UserAccountControl",
-                                            REG_DWORD,
-                                            &Buffer->Control.UserAccountControl,
-                                            sizeof(ULONG));
+            Status = SampSetUserControl(UserObject,
+                                        Buffer);
             break;
-*/
-/*
+
         case UserExpiresInformation:
-            Status = SampSetObjectAttribute(UserObject,
-                                            L"AccountExpires",
-                                            REG_BINARY,
-                                            &Buffer->Expires.AccountExpires,
-                                            sizeof(OLD_LARGE_INTEGER));
+            Status = SampSetUserExpires(UserObject,
+                                        Buffer);
             break;
-*/
 
 //        case UserInternal1Information:
 //        case UserParametersInformation:
