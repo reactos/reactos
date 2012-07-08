@@ -71,7 +71,6 @@ typedef struct _LOADER_SYSTEM_BLOCK
     CHAR NtBootPathName[MAX_PATH+1];
     CHAR NtHalPathName[MAX_PATH+1];
     ARC_DISK_INFORMATION ArcDiskInformation;
-    ARC_DISK_SIGNATURE_EX ArcDiskSignature[];
 } LOADER_SYSTEM_BLOCK, *PLOADER_SYSTEM_BLOCK;
 
 extern PLOADER_SYSTEM_BLOCK WinLdrSystemBlock;

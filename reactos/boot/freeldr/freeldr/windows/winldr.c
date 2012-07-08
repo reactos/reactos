@@ -48,12 +48,9 @@ VOID
 AllocateAndInitLPB(PLOADER_PARAMETER_BLOCK *OutLoaderBlock)
 {
 	PLOADER_PARAMETER_BLOCK LoaderBlock;
-	ULONG SystemBlockSize;
 
 	/* Allocate and zero-init the LPB */
-	SystemBlockSize = sizeof(LOADER_SYSTEM_BLOCK) +
-	                  reactos_disk_count * sizeof(ARC_DISK_SIGNATURE_EX);
-	WinLdrSystemBlock = MmAllocateMemoryWithType(SystemBlockSize,
+	WinLdrSystemBlock = MmAllocateMemoryWithType(sizeof(LOADER_SYSTEM_BLOCK),
                                                  LoaderSystemBlock);
 	if (WinLdrSystemBlock == NULL)
 	{
@@ -135,26 +132,27 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
 	/* Convert ARC disk information from freeldr to a correct format */
 	for (i = 0; i < reactos_disk_count; i++)
 	{
-		PARC_DISK_SIGNATURE ArcDiskSig;
+		PARC_DISK_SIGNATURE_EX ArcDiskSig;
 
-		/* Get the ARC structure */
-		ArcDiskSig = &WinLdrSystemBlock->ArcDiskSignature[i].DiskSignature;
+		/* Allocate the ARC structure */
+		ArcDiskSig = HeapAllocate(FrLdrDefaultHeap,
+                                  sizeof(ARC_DISK_SIGNATURE_EX),
+                                 'giSD');
 
 		/* Copy the data over */
-		ArcDiskSig->Signature = reactos_arc_disk_info[i].Signature;
-		ArcDiskSig->CheckSum = reactos_arc_disk_info[i].CheckSum;
+		ArcDiskSig->DiskSignature.Signature = reactos_arc_disk_info[i].Signature;
+		ArcDiskSig->DiskSignature.CheckSum = reactos_arc_disk_info[i].CheckSum;
 
 		/* Copy the ARC Name */
-		ArcDiskSig->ArcName = WinLdrSystemBlock->ArcDiskSignature[i].ArcName;
 		strncpy(ArcDiskSig->ArcName, reactos_arc_disk_info[i].ArcName, MAX_PATH);
-		ArcDiskSig->ArcName = PaToVa(ArcDiskSig->ArcName);
+		ArcDiskSig->DiskSignature.ArcName = PaToVa(ArcDiskSig->ArcName);
 
 		/* Mark partition table as valid */
-		ArcDiskSig->ValidPartitionTable = TRUE;
+		ArcDiskSig->DiskSignature.ValidPartitionTable = TRUE;
 
 		/* Insert into the list */
 		InsertTailList(&LoaderBlock->ArcDiskInformation->DiskSignatureListHead,
-			&ArcDiskSig->ListEntry);
+		               &ArcDiskSig->DiskSignature.ListEntry);
 	}
 
 	/* Convert all list's to Virtual address */
@@ -639,7 +637,9 @@ LoadAndBootWindowsCommon(
 
 	WinLdrpDumpMemoryDescriptors(LoaderBlockVA);
 	WinLdrpDumpBootDriver(LoaderBlockVA);
+#ifndef _M_AMD64
 	WinLdrpDumpArcDisks(LoaderBlockVA);
+#endif
 
 	//FIXME: If I substitute this debugging checkpoint, GCC will "optimize away" the code below
 	//while (1) {};
