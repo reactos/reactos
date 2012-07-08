@@ -21,6 +21,12 @@ add_definitions(/Dinline=__inline /D__STDC__=1)
 
 add_compile_flags("/X /GR- /GS- /Zl /W3")
 
+# HACK: for VS 11+ we need to explicitly disable SSE, which is off by
+# default for older compilers. See bug #7174
+if (MSVC_VERSION GREATER 1699 AND ARCH MATCHES i386)
+    add_compile_flags("/arch:IA32")
+endif ()
+
 # C4700 is almost always likely to result in broken code, so mark it as an error
 add_compile_flags("/we4700")
 
