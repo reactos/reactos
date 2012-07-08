@@ -902,11 +902,111 @@ CheckForLoadedProfile(HANDLE hToken)
 
 BOOL
 WINAPI
-LoadUserProfileA(HANDLE hToken,
-                 LPPROFILEINFOA lpProfileInfo)
+LoadUserProfileA(IN HANDLE hToken,
+                 IN OUT LPPROFILEINFOA lpProfileInfo)
 {
-    DPRINT ("LoadUserProfileA() not implemented\n");
-    return FALSE;
+    BOOL bResult = FALSE;
+    PROFILEINFOW ProfileInfoW = {0};
+    int len;
+
+    DPRINT("LoadUserProfileA() called\n");
+
+    /* Check profile info */
+    if (!lpProfileInfo || (lpProfileInfo->dwSize != sizeof(PROFILEINFOA)) ||
+        (lpProfileInfo->lpUserName == NULL) || (lpProfileInfo->lpUserName[0] == 0))
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    /* Convert the structure to UNICODE... */
+    ProfileInfoW.dwSize = sizeof(PROFILEINFOW);
+    ProfileInfoW.dwFlags = lpProfileInfo->dwFlags;
+
+    if (lpProfileInfo->lpUserName)
+    {
+        len = MultiByteToWideChar(CP_ACP, 0, lpProfileInfo->lpUserName, -1, NULL, 0);
+        ProfileInfoW.lpUserName = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+        if (!ProfileInfoW.lpUserName)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            goto cleanup;
+        }
+        MultiByteToWideChar(CP_ACP, 0, lpProfileInfo->lpUserName, -1, ProfileInfoW.lpUserName, len);
+    }
+
+    if (lpProfileInfo->lpProfilePath)
+    {
+        len = MultiByteToWideChar(CP_ACP, 0, lpProfileInfo->lpProfilePath, -1, NULL, 0);
+        ProfileInfoW.lpProfilePath = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+        if (!ProfileInfoW.lpProfilePath)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            goto cleanup;
+        }
+        MultiByteToWideChar(CP_ACP, 0, lpProfileInfo->lpProfilePath, -1, ProfileInfoW.lpProfilePath, len);
+    }
+
+    if (lpProfileInfo->lpDefaultPath)
+    {
+        len = MultiByteToWideChar(CP_ACP, 0, lpProfileInfo->lpDefaultPath, -1, NULL, 0);
+        ProfileInfoW.lpDefaultPath = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+        if (!ProfileInfoW.lpDefaultPath)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            goto cleanup;
+        }
+        MultiByteToWideChar(CP_ACP, 0, lpProfileInfo->lpDefaultPath, -1, ProfileInfoW.lpDefaultPath, len);
+    }
+
+    if (lpProfileInfo->lpServerName)
+    {
+        len = MultiByteToWideChar(CP_ACP, 0, lpProfileInfo->lpServerName, -1, NULL, 0);
+        ProfileInfoW.lpServerName = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+        if (!ProfileInfoW.lpServerName)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            goto cleanup;
+        }
+        MultiByteToWideChar(CP_ACP, 0, lpProfileInfo->lpServerName, -1, ProfileInfoW.lpServerName, len);
+    }
+
+    if ((ProfileInfoW.dwFlags & PI_APPLYPOLICY) != 0 && lpProfileInfo->lpPolicyPath)
+    {
+        len = MultiByteToWideChar(CP_ACP, 0, lpProfileInfo->lpPolicyPath, -1, NULL, 0);
+        ProfileInfoW.lpPolicyPath = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+        if (!ProfileInfoW.lpPolicyPath)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            goto cleanup;
+        }
+        MultiByteToWideChar(CP_ACP, 0, lpProfileInfo->lpPolicyPath, -1, ProfileInfoW.lpPolicyPath, len);
+    }
+
+    /* ... and call the UNICODE function */
+    bResult = LoadUserProfileW(hToken, &ProfileInfoW);
+
+    /* Save the returned value */
+    lpProfileInfo->hProfile = ProfileInfoW.hProfile;
+
+cleanup:
+    /* Memory cleanup */
+    if (ProfileInfoW.lpUserName)
+        HeapFree(GetProcessHeap(), 0, ProfileInfoW.lpUserName);
+
+    if (ProfileInfoW.lpProfilePath)
+        HeapFree(GetProcessHeap(), 0, ProfileInfoW.lpProfilePath);
+
+    if (ProfileInfoW.lpDefaultPath)
+        HeapFree(GetProcessHeap(), 0, ProfileInfoW.lpDefaultPath);
+
+    if (ProfileInfoW.lpServerName)
+        HeapFree(GetProcessHeap(), 0, ProfileInfoW.lpServerName);
+
+    if ((ProfileInfoW.dwFlags & PI_APPLYPOLICY) != 0 && ProfileInfoW.lpPolicyPath)
+        HeapFree(GetProcessHeap(), 0, ProfileInfoW.lpPolicyPath);
+
+    return bResult;
 }
 
 
@@ -932,7 +1032,7 @@ LoadUserProfileW(IN HANDLE hToken,
         (lpProfileInfo->lpUserName == NULL) || (lpProfileInfo->lpUserName[0] == 0))
     {
         SetLastError(ERROR_INVALID_PARAMETER);
-        return TRUE;
+        return FALSE;
     }
 
     /* Don't load a profile twice */
@@ -1105,7 +1205,7 @@ UnloadUserProfile(HANDLE hToken,
 
     if (hProfile == NULL)
     {
-        DPRINT1("Invalide profile handle\n");
+        DPRINT1("Invalid profile handle\n");
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
@@ -1151,15 +1251,17 @@ UnloadUserProfile(HANDLE hToken,
     return TRUE;
 }
 
+
 BOOL
 WINAPI
 DeleteProfileW(LPCWSTR lpSidString,
                LPCWSTR lpProfilePath,
                LPCWSTR lpComputerName)
 {
-   DPRINT1("DeleteProfileW() not implemented!\n");
-   return FALSE;
+    DPRINT1("DeleteProfileW() not implemented!\n");
+    return FALSE;
 }
+
 
 BOOL
 WINAPI
@@ -1167,8 +1269,40 @@ DeleteProfileA(LPCSTR lpSidString,
                LPCSTR lpProfilePath,
                LPCSTR lpComputerName)
 {
-   DPRINT1("DeleteProfileA() not implemented!\n");
-   return FALSE;
+    BOOL bResult;
+    UNICODE_STRING SidString, ProfilePath, ComputerName;
+
+    DPRINT("DeleteProfileA() called\n");
+
+    /* Conversion to UNICODE */
+    if (lpSidString)
+        RtlCreateUnicodeStringFromAsciiz(&SidString,
+                                         (LPSTR)lpSidString);
+
+    if (lpProfilePath)
+        RtlCreateUnicodeStringFromAsciiz(&ProfilePath,
+                                         (LPSTR)lpProfilePath);
+
+    if (lpComputerName)
+        RtlCreateUnicodeStringFromAsciiz(&ComputerName,
+                                         (LPSTR)lpComputerName);
+
+    /* Call the UNICODE function */
+    bResult = DeleteProfileW(SidString.Buffer,
+                             ProfilePath.Buffer,
+                             ComputerName.Buffer);
+
+    /* Memory cleanup */
+    if (lpSidString)
+        RtlFreeUnicodeString(&SidString);
+
+    if (lpProfilePath)
+        RtlFreeUnicodeString(&ProfilePath);
+
+    if (lpComputerName)
+        RtlFreeUnicodeString(&ComputerName);
+
+    return bResult;
 }
 
 /* EOF */
