@@ -160,8 +160,8 @@ SmpInvokeAutoChk(IN PUNICODE_STRING FileName,
                  IN PUNICODE_STRING Arguments,
                  IN ULONG Flags)
 {
-    ANSI_STRING DestinationString;
-    CHAR SourceString[256];
+    ANSI_STRING MessageString;
+    CHAR MessageBuffer[256];
     UNICODE_STRING Destination;
     WCHAR Buffer[1024];
     BOOLEAN BootState, BootOkay, ShutdownOkay;
@@ -173,13 +173,13 @@ SmpInvokeAutoChk(IN PUNICODE_STRING FileName,
     if (Flags & SMP_INVALID_PATH)
     {
         /* It wasn't, so create an error message to print on the screen */
-        sprintf_nt(SourceString,
+        sprintf_nt(MessageBuffer,
                    "%wZ program not found - skipping AUTOCHECK\n",
                    FileName);
-        RtlInitAnsiString(&DestinationString, SourceString);
-        if (RtlAnsiStringToUnicodeString(&Destination,
-                                         &DestinationString,
-                                         TRUE))
+        RtlInitAnsiString(&MessageString, MessageBuffer);
+        if (NT_SUCCESS(RtlAnsiStringToUnicodeString(&Destination,
+                                                    &MessageString,
+                                                    TRUE)))
         {
             /* And show it */
             NtDisplayString(&Destination);
@@ -469,7 +469,7 @@ _main(IN INT argc,
     ASSERT(NT_SUCCESS(Status));
 
     /* Save the debug flag if it was passed */
-    if (DebugFlag) SmpDebug = DebugFlag;
+    if (DebugFlag) SmpDebug = DebugFlag != 0;
 
     /* Build the hard error parameters */
     Parameters[0] = (ULONG_PTR)&DbgString;
