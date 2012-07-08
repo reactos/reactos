@@ -635,8 +635,8 @@ MEMORY    Afișează informații referitoare la memoria sistemului.\n\
 MD        Crează un director.\n\
 MKDIR     Crează un director.\n\
 MKLINK    Crează un obiect-legătură în sistemul de fișiere.\n\
-MOVE      Mută unul sau mai multe fișiere dintr-un director în altul.\n\
-PATH      Afișează sau stabilește căile de căutare de fișierelor executabile.\n\
+MOVE      Mută unul sau mai multe fișiere dintr-un director în altul.\n\"
+STRING_HELP2, "PATH      Afișează sau stabilește căile de căutare de fișierelor executabile.\n\
 PAUSE     Suspendă execuția unui fișier de comenzi și afișează un mesaj.\n\
 POPD      Restabilește valoarea precedentă a directorului curent, anterior\n\
           stocată cu PUSHD.\n\
@@ -646,8 +646,8 @@ RD        Elimină un director.\n\
 REM       Desemnează un rând de comentarii într-un fișier de comenzi.\n\
 REN       Redenumește un fișier/director sau un grup (de fișiere/directoare).\n\
 RENAME    Redenumește un fișier/director sau un grup (de fișiere/directoare).\n\
-REPLACE   Înlocuiește fișiere.\n"
-STRING_HELP2, "RMDIR     Elimină un director.\n\
+REPLACE   Înlocuiește fișiere.\n\
+RMDIR     Elimină un director.\n\
 SCREEN    Mută cursorul și (opțional) afișează un text.\n\
 SET       Afișează, stabilește sau elimină variabile de mediu ReactOS.\n\
 SHIFT     Schimbă poziția argumentelor înlocuibile într-un fișier de comenzi.\n\
