@@ -584,7 +584,7 @@ MD       Erstellt ein Verzeichnis.\n\
 MKDIR    Erstellt ein Verzeichnis.\n\
 MKLINK   Erzeugt eine Dateisystemverknüpfung.\n\
 MOVE     Verschiebt eine oder mehrere Dateien von einem Verzeichnis in\n\
-         ein anderes.\n\"
+         ein anderes.\n"
 STRING_HELP2, "PATH     Legt den Suchpfad für ausführbare Dateien fest oder zeigt diesen an.\n\
 PAUSE    Hält die Ausführung einer Batchdatei an und zeigt eine Meldung an.\n\
 POPD     Wechselt zu dem Verzeichnis, das durch PUSHD gespeichert wurde.\n\

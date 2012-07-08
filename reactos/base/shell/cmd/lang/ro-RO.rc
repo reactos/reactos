@@ -635,7 +635,7 @@ MEMORY    Afișează informații referitoare la memoria sistemului.\n\
 MD        Crează un director.\n\
 MKDIR     Crează un director.\n\
 MKLINK    Crează un obiect-legătură în sistemul de fișiere.\n\
-MOVE      Mută unul sau mai multe fișiere dintr-un director în altul.\n\"
+MOVE      Mută unul sau mai multe fișiere dintr-un director în altul.\n"
 STRING_HELP2, "PATH      Afișează sau stabilește căile de căutare de fișierelor executabile.\n\
 PAUSE     Suspendă execuția unui fișier de comenzi și afișează un mesaj.\n\
 POPD      Restabilește valoarea precedentă a directorului curent, anterior\n\
