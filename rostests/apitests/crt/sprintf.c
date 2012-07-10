@@ -151,9 +151,11 @@ START_TEST(sprintf)
     ok_str(Buffer, "hello");
     ok_int(Length, 5);
 
-    /* TODO: wsprintf can't do * */
-#ifndef TEST_USER32
     Length = sprintf(Buffer, "%*s", -8, "hello");
+#ifdef TEST_USER32
+    ok_str(Buffer, "*s");
+    ok_int(Length, 2);
+#else
     ok_str(Buffer, "hello   ");
     ok_int(Length, 8);
 #endif
@@ -179,13 +181,16 @@ START_TEST(sprintf)
     ok_str(Buffer, "hell");
     ok_int(Length, 4);
     
-#ifndef TEST_USER32
     StartSeh()
         Length = sprintf(Buffer, "%.*s", -1, "hello");
+#ifdef TEST_USER32
+        ok_str(Buffer, "*s");
+        ok_int(Length, 2);
+#else
         ok_str(Buffer, "hello");
         ok_int(Length, 5);
-    EndSeh(STATUS_SUCCESS);
 #endif
+    EndSeh(STATUS_SUCCESS);
 
     String = AllocateGuarded(6);
     if (!String)
@@ -219,32 +224,47 @@ START_TEST(sprintf)
         ok_int(Length, 4);
     EndSeh(STATUS_SUCCESS);
 
-    /* TODO: wsprintf can't do *, and also seems to use strlen despite a
-     * precision being given */
-#ifndef TEST_USER32
     String[5] = '!';
     StartSeh()
         Length = sprintf(Buffer, "%.5s", String);
         ok_str(Buffer, "hello");
         ok_int(Length, 5);
+#ifdef TEST_USER32
+    EndSeh(STATUS_ACCESS_VIOLATION);
+#else
     EndSeh(STATUS_SUCCESS);
+#endif
 
     StartSeh()
         Length = sprintf(Buffer, "%.6s", String);
         ok_str(Buffer, "hello!");
         ok_int(Length, 6);
+#ifdef TEST_USER32
+    EndSeh(STATUS_ACCESS_VIOLATION);
+#else
     EndSeh(STATUS_SUCCESS);
+#endif
 
     StartSeh()
         Length = sprintf(Buffer, "%.*s", 5, String);
+#ifdef TEST_USER32
+        ok_str(Buffer, "*s");
+        ok_int(Length, 2);
+#else
         ok_str(Buffer, "hello");
         ok_int(Length, 5);
+#endif
     EndSeh(STATUS_SUCCESS);
 
     StartSeh()
         Length = sprintf(Buffer, "%.*s", 6, String);
+#ifdef TEST_USER32
+        ok_str(Buffer, "*s");
+        ok_int(Length, 2);
+#else
         ok_str(Buffer, "hello!");
         ok_int(Length, 6);
+#endif
     EndSeh(STATUS_SUCCESS);
 
     /* both field width and precision */
@@ -252,20 +272,33 @@ START_TEST(sprintf)
         Length = sprintf(Buffer, "%8.5s", String);
         ok_str(Buffer, "   hello");
         ok_int(Length, 8);
+#ifdef TEST_USER32
+    EndSeh(STATUS_ACCESS_VIOLATION);
+#else
     EndSeh(STATUS_SUCCESS);
+#endif
 
     StartSeh()
         Length = sprintf(Buffer, "%-*.6s", -8, String);
+#ifdef TEST_USER32
+        ok_str(Buffer, "*.6s");
+        ok_int(Length, 4);
+#else
         ok_str(Buffer, "hello!  ");
         ok_int(Length, 8);
+#endif
     EndSeh(STATUS_SUCCESS);
 
     StartSeh()
         Length = sprintf(Buffer, "%*.*s", -8, 6, String);
+#ifdef TEST_USER32
+        ok_str(Buffer, "*.*s");
+        ok_int(Length, 4);
+#else
         ok_str(Buffer, "hello!  ");
         ok_int(Length, 8);
-    EndSeh(STATUS_SUCCESS);
 #endif
+    EndSeh(STATUS_SUCCESS);
 
     FreeGuarded(String);
 }
