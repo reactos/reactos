@@ -2350,10 +2350,13 @@ SpiGetPciConfigData(IN PDRIVER_OBJECT DriverObject,
             if (DataSize == 0)
                 return FALSE;
 
-            /* If result is PCI_INVALID_VENDORID, then this device has no more
-               "Functions" */
-            if (PciConfig.VendorID == PCI_INVALID_VENDORID)
-                break;
+            /* Check if result is PCI_INVALID_VENDORID or too small */
+            if ((DataSize < (ULONG)PCI_COMMON_HDR_LENGTH) ||
+                (PciConfig.VendorID == PCI_INVALID_VENDORID))
+            {
+                /* Continue to try the next function */
+                continue;
+            }
 
             sprintf (VendorIdString, "%04hx", PciConfig.VendorID);
             sprintf (DeviceIdString, "%04hx", PciConfig.DeviceID);
