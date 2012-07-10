@@ -895,6 +895,9 @@ IntScrollHandleScrollEvent(HWND Wnd, INT SBType, UINT Msg, POINT Pt)
         ScrollBarInfo.rgstate[ScrollTrackHitTest] &= ~STATE_SYSTEM_PRESSED;
         NewInfo.rgstate[ScrollTrackHitTest] = ScrollBarInfo.rgstate[ScrollTrackHitTest];
         NtUserSetScrollBarInfo(Wnd, IntScrollGetObjectId(SBType), &NewInfo);
+		
+        IntDrawScrollArrows(Dc, &ScrollBarInfo, Vertical);
+		
         break;
 
       case WM_SYSTIMER:
