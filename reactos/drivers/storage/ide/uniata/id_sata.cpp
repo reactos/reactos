@@ -1045,8 +1045,14 @@ UniataAhciSendCommand(
     UniataAhciWriteChannelPort4(chan, IDX_AHCI_P_IS, IS.Reg);
 
     if (timeout && (i >= timeout)) {
+        ULONG TFD;
+
         SError = AtapiReadPort4(chan, IDX_SATA_SError);
         KdPrint((" AHCI: timeout, SError %#x\n", SError));
+
+        TFD = UniataAhciReadChannelPort4(chan, IDX_AHCI_P_TFD);
+        KdPrint2(("  TFD %#x\n", TFD));
+        
         return 0xff;
     }
 

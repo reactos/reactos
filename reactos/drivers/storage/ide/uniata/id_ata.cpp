@@ -2094,6 +2094,7 @@ AtapiResetController__(
             switch(VendorID) {
             case ATA_INTEL_ID: {
                 ULONG mask;
+                ULONG pshift;
                 ULONG timeout;
                 if(!(ChipFlags & UNIATA_SATA))
                     goto default_reset;
@@ -2117,7 +2118,7 @@ AtapiResetController__(
 #else
                 mask = 1 << chan->lun[0]->SATA_lun_map;
                 if (MaxLuns > 1) {
-                	mask |= (1 << chan->lun[1]->SATA_lun_map);
+                    mask |= (1 << chan->lun[1]->SATA_lun_map);
                 }
 #endif
                 ChangePciConfig2(0x92, a & ~mask);
@@ -2126,18 +2127,20 @@ AtapiResetController__(
                 timeout = 100;
 
                 /* Wait up to 1 sec for "connect well". */
-                if (ChipFlags & (I6CH | I6CH2))
-                    mask = mask << 8;
-                else
-                    mask = mask << 4;
-
+                if (ChipFlags & (I6CH | I6CH2)) {
+                    pshift = 8;
+                } else {
+                    pshift = 4;
+                }
                 while (timeout--) {
-                    AtapiStallExecution(10000);
                     GetPciConfig2(0x92, tmp16);
-                    if ((tmp16 & mask) == mask) {
-                        AtapiStallExecution(10000);
-                        break;
+                    if (((tmp16 >> pshift) & mask) == mask) {
+                        GetBaseStatus(chan, statusByte);
+                        if(statusByte != 0xff) {
+                            break;
+                        }
                     }
+                    AtapiStallExecution(10000);
                 }
                 break; }
             case ATA_SIS_ID:
@@ -3729,7 +3732,7 @@ AtapiCheckInterrupt__(
 {
     PHW_DEVICE_EXTENSION deviceExtension = (PHW_DEVICE_EXTENSION)HwDeviceExtension;
     PHW_CHANNEL chan = &(deviceExtension->chan[c]);
-    PHW_LU_EXTENSION LunExt;
+    PHW_LU_EXTENSION LunExt = chan->lun[chan->cur_cdev];
 
     ULONG VendorID  = deviceExtension->DevID & 0xffff;
     ULONG ChipType  = deviceExtension->HwFlags & CHIPTYPE_MASK;
@@ -3986,6 +3989,11 @@ check_unknown:
                 if(statusByte & IDE_STATUS_ERROR) {
                     KdPrint2((PRINT_PREFIX "  IDE_STATUS_ERROR -> our\n", statusByte));
                     OurInterrupt = INTERRUPT_REASON_UNEXPECTED;
+                } else
+                if ((statusByte & IDE_STATUS_DSC) &&
+                    (LunExt->DeviceFlags & DFLAGS_ATAPI_DEVICE) &&
+                    (dma_status == BM_STATUS_ACTIVE)) {
+                    KdPrint2((PRINT_PREFIX "  special case DMA + ATAPI + IDE_STATUS_DSC -> our\n", statusByte));
                 } else {
                     return INTERRUPT_REASON_IGNORE;
                 }
@@ -4005,7 +4013,6 @@ skip_dma_stat_check:
         AtapiStallExecution(1);
     }
 
-    LunExt = chan->lun[chan->cur_cdev];
     /* if drive is busy it didn't interrupt */
     /* the exception is DCS + BSY state of ATAPI devices */
     KdPrint2((PRINT_PREFIX "  getting status...\n"));
@@ -8858,16 +8865,17 @@ DriverEntry(
             }
             continue;
         }
+        //BMList[i].AltInitMasterDev = (UCHAR)0xff;
+
         if(GlobalConfig->AtDiskPrimaryAddressClaimed)
             PrimaryClaimed = TRUE;
         if(GlobalConfig->AtDiskSecondaryAddressClaimed)
             SecondaryClaimed = TRUE;
 
-        BMList[i].AltInitMasterDev = (UCHAR)0xff;
-
         if(g_opt_Verbose) {
             _PrintNtConsole("Init standard Dual-channel PCI ATA controller:");
         }
+
 
         for(alt = 0; alt < (ULONG)(WinVer_WDM_Model ? 1 : 2) ; alt++) {
 
