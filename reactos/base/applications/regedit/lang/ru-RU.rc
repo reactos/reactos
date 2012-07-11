@@ -365,6 +365,8 @@ BEGIN
     IDS_ERR_DELETEVALUE           "Невозможно удалить все указанные значения!"
     IDS_ERR_RENVAL_CAPTION        "Ошибка переименования значения"
     IDS_ERR_RENVAL_TOEMPTY        "Невозможно переименовать %s. Указанное значение не пустое. Введите другое значение и повторите попытку."
+    IDS_QUERY_IMPORT_HIVE_CAPTION "Confirm Key Restoration"
+    IDS_QUERY_IMPORT_HIVE_MSG     "A key will be restored on top of the currently selected key.\nAll values and subkeys of this key will be deleted.\nDo you want to continue the operation?"
     IDS_NEW_KEY                   "Новый ключ #%d"
     IDS_NEW_VALUE                 "Новое значение #%d"
 END
@@ -388,6 +390,8 @@ BEGIN
     IDS_FLT_REGFILE         "Файл реестра"
     IDS_FLT_REGFILES        "Файлы реестра (*.reg)"
     IDS_FLT_REGFILES_FLT    "*.reg"
+    IDS_FLT_HIVFILES        "Registry Hive Files (*.*)"
+    IDS_FLT_HIVFILES_FLT    "*.*"
     IDS_FLT_REGEDIT4        "Файлы реестра Win9x/NT4 (REGEDIT4) (*.reg)"
     IDS_FLT_REGEDIT4_FLT    "*.reg"
     IDS_FLT_ALLFILES        "Все файлы (*.*)"

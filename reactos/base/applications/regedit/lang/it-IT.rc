@@ -370,6 +370,8 @@ BEGIN
     IDS_ERR_DELETEVALUE     "Impossibile cancellare tutti i valori indicati!"
     IDS_ERR_RENVAL_CAPTION  "Errore nel rinominare il valore"
     IDS_ERR_RENVAL_TOEMPTY  "Impossibile rinominare %s. Il nome indicato è vuoto. Riprovate con un altro nome."
+    IDS_QUERY_IMPORT_HIVE_CAPTION "Confirm Key Restoration"
+    IDS_QUERY_IMPORT_HIVE_MSG     "A key will be restored on top of the currently selected key.\nAll values and subkeys of this key will be deleted.\nDo you want to continue the operation?"
     IDS_NEW_KEY             "Nuova chiave #%d"
     IDS_NEW_VALUE           "Nuovo valore #%d"
 END
@@ -393,6 +395,8 @@ BEGIN
     IDS_FLT_REGFILE         "File di Registrazione"
     IDS_FLT_REGFILES        "File di Registrazione (*.reg)"
     IDS_FLT_REGFILES_FLT    "*.reg"
+    IDS_FLT_HIVFILES        "Registry Hive Files (*.*)"
+    IDS_FLT_HIVFILES_FLT    "*.*"
     IDS_FLT_REGEDIT4        "File di Registrazione Win9x/NT4 (REGEDIT4) (*.reg)"
     IDS_FLT_REGEDIT4_FLT    "*.reg"
     IDS_FLT_ALLFILES        "Tutti i file (*.*)"

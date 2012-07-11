@@ -353,6 +353,8 @@ BEGIN
     IDS_ERR_DELETEVALUE     "모든 선택된 값을 제거할 수 없습니다!"
     IDS_ERR_RENVAL_CAPTION  "값 이름 바꾸기 오류"
     IDS_ERR_RENVAL_TOEMPTY  "%s의 이름을 바꿀 수 없습니다. 값의 이름이 없습니다. 다른 이름으로 해 보세요."
+    IDS_QUERY_IMPORT_HIVE_CAPTION "Confirm Key Restoration"
+    IDS_QUERY_IMPORT_HIVE_MSG     "A key will be restored on top of the currently selected key.\nAll values and subkeys of this key will be deleted.\nDo you want to continue the operation?"
     IDS_NEW_KEY             "새 키 #%d"
     IDS_NEW_VALUE           "새 값 #%d"
 END
@@ -376,6 +378,8 @@ BEGIN
     IDS_FLT_REGFILE         "레지스트리 파일"
     IDS_FLT_REGFILES        "레지스트리 파일들 (*.reg)"
     IDS_FLT_REGFILES_FLT    "*.reg"
+    IDS_FLT_HIVFILES        "Registry Hive Files (*.*)"
+    IDS_FLT_HIVFILES_FLT    "*.*"
     IDS_FLT_REGEDIT4        "Win9x/NT4 레지스트리 파일 (REGEDIT4) (*.reg)"
     IDS_FLT_REGEDIT4_FLT    "*.reg"
     IDS_FLT_ALLFILES        "모든 파일 (*.*)"

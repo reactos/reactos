@@ -367,6 +367,8 @@ BEGIN
     IDS_ERR_DELETEVALUE     "Tidak bisa menghapus semua nilai yang ditetapkan!"
     IDS_ERR_RENVAL_CAPTION  "Kesalahan Mengganti nama Nilai"
     IDS_ERR_RENVAL_TOEMPTY  "Tidak bisa mengganti nama %s. Nama nilai yang ditetapkan kosong. Coba nama lain dan coba lagi."
+    IDS_QUERY_IMPORT_HIVE_CAPTION "Confirm Key Restoration"
+    IDS_QUERY_IMPORT_HIVE_MSG     "A key will be restored on top of the currently selected key.\nAll values and subkeys of this key will be deleted.\nDo you want to continue the operation?"
     IDS_NEW_KEY             "Kunci Baru #%d"
     IDS_NEW_VALUE           "Nilai Baru #%d"
 END
@@ -390,6 +392,8 @@ BEGIN
     IDS_FLT_REGFILE         "Registration File"
     IDS_FLT_REGFILES        "File Registrasi (*.reg)"
     IDS_FLT_REGFILES_FLT    "*.reg"
+    IDS_FLT_HIVFILES        "Registry Hive Files (*.*)"
+    IDS_FLT_HIVFILES_FLT    "*.*"
     IDS_FLT_REGEDIT4        "File Registrasi Win9x/NT4 (REGEDIT4) (*.reg)"
     IDS_FLT_REGEDIT4_FLT    "*.reg"
     IDS_FLT_ALLFILES        "Semua File (*.*)"

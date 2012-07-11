@@ -368,6 +368,8 @@ BEGIN
     IDS_ERR_DELETEVALUE     "Δεν ήτνα δυνατή η διαγραφή όλων των τιμών!"
     IDS_ERR_RENVAL_CAPTION  "Σφάλμα κατά τη Μετονομασία Τιμών"
     IDS_ERR_RENVAL_TOEMPTY  "Δεν είναι δυνατή η μετονομασία του %s. Το όνομα της συγκεκριμένης τιμής είναι άδειο. Δώστε άλλο όνομα και προσπαθήστε ξανά."
+    IDS_QUERY_IMPORT_HIVE_CAPTION "Confirm Key Restoration"
+    IDS_QUERY_IMPORT_HIVE_MSG     "A key will be restored on top of the currently selected key.\nAll values and subkeys of this key will be deleted.\nDo you want to continue the operation?"
     IDS_NEW_KEY             "Νέο Κλειδί #%d"
     IDS_NEW_VALUE           "Νέα Τιμή #%d"
 END
@@ -391,6 +393,8 @@ BEGIN
     IDS_FLT_REGFILE         "Registration File"
     IDS_FLT_REGFILES        "Registration αρχεία (*.reg)"
     IDS_FLT_REGFILES_FLT    "*.reg"
+    IDS_FLT_HIVFILES        "Registry Hive Files (*.*)"
+    IDS_FLT_HIVFILES_FLT    "*.*"
     IDS_FLT_REGEDIT4        "Win9x/NT4 Registration αρχεία (REGEDIT4) (*.reg)"
     IDS_FLT_REGEDIT4_FLT    "*.reg"
     IDS_FLT_ALLFILES        "Όλα τα αρχεία (*.*)"

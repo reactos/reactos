@@ -364,6 +364,8 @@ BEGIN
     IDS_ERR_DELETEVALUE     "Impossible de supprimer toutes les valeurs seléctionnées !"
     IDS_ERR_RENVAL_CAPTION  "Erreur lors de la tentative pour renommer la valeur."
     IDS_ERR_RENVAL_TOEMPTY  "Impossible de renommer %s. Le nom de valeur spécifié est vide. Essayez à nouveau avec un autre nom."
+    IDS_QUERY_IMPORT_HIVE_CAPTION "Confirmation de la restauration de la clé"
+    IDS_QUERY_IMPORT_HIVE_MSG     "Une clé sera restaurée en remplacement de la clé sélectionnée.\nToutes les valeurs et les sous-clés contenues dans cette clé seront supprimées.\nVoulez-vous continuer l'opération ?"
     IDS_NEW_KEY             "Nouvelle clé #%d"
     IDS_NEW_VALUE           "Nouvelle valeur #%d"
 END
@@ -387,6 +389,8 @@ BEGIN
     IDS_FLT_REGFILE         "Fichier d'enregistrement"
     IDS_FLT_REGFILES        "Fichiers d'enregistrement (*.reg)"
     IDS_FLT_REGFILES_FLT    "*.reg"
+    IDS_FLT_HIVFILES        "Fichiers ruche du Registre (*.*)"
+    IDS_FLT_HIVFILES_FLT    "*.*"
     IDS_FLT_REGEDIT4        "Fichiers d'enregistrement Win9x/NT4 (REGEDIT4) (*.reg)"
     IDS_FLT_REGEDIT4_FLT    "*.reg"
     IDS_FLT_ALLFILES        "Tous les fichiers (*.*)"
