@@ -2,7 +2,7 @@
  * Unit tests for RtlNtStatusToDosError function
  *
  * Copyright (c) 2002 Andriy Palamarchuk
- * Copyright (c) 2010 André Hentschel
+ * Copyright (c) 2010 AndrÃ© Hentschel
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public

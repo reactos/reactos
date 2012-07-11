@@ -147,10 +147,24 @@ static void test_create_invalid(void)
 
     timeout.QuadPart = -100000000000ll;
 
+/* create a pipe with FILE_OVERWRITE */
+    res = pNtCreateNamedPipeFile(&handle, FILE_READ_ATTRIBUTES | SYNCHRONIZE, &attr, &iosb, FILE_SHARE_READ, 4 /*FILE_OVERWRITE*/,
+                                 0, 1, 0, 0, 0xFFFFFFFF, 500, 500, &timeout);
+    todo_wine ok(res == STATUS_INVALID_PARAMETER, "NtCreateNamedPipeFile returned %x\n", res);
+    if (!res)
+        CloseHandle(handle);
+
+/* create a pipe with FILE_OVERWRITE_IF */
+    res = pNtCreateNamedPipeFile(&handle, FILE_READ_ATTRIBUTES | SYNCHRONIZE, &attr, &iosb, FILE_SHARE_READ, 5 /*FILE_OVERWRITE_IF*/,
+                                 0, 1, 0, 0, 0xFFFFFFFF, 500, 500, &timeout);
+    todo_wine ok(res == STATUS_INVALID_PARAMETER, "NtCreateNamedPipeFile returned %x\n", res);
+    if (!res)
+        CloseHandle(handle);
+
 /* create a pipe with sharing = 0 */
     res = pNtCreateNamedPipeFile(&handle, FILE_READ_ATTRIBUTES | SYNCHRONIZE, &attr, &iosb, 0, 2 /*FILE_CREATE*/,
                                  0, 1, 0, 0, 0xFFFFFFFF, 500, 500, &timeout);
-    todo_wine ok(res == STATUS_INVALID_PARAMETER, "NtCreateNamedPipeFile returned %x\n", res);
+    ok(res == STATUS_INVALID_PARAMETER, "NtCreateNamedPipeFile returned %x\n", res);
     if (!res)
         CloseHandle(handle);
 
@@ -160,7 +174,7 @@ static void test_create_invalid(void)
     ok(!res, "NtCreateNamedPipeFile returned %x\n", res);
 
     res = pNtQueryInformationFile(handle, &iosb, &info, sizeof(info), (FILE_INFORMATION_CLASS)24);
-    todo_wine ok(res == STATUS_ACCESS_DENIED, "NtQueryInformationFile returned %x\n", res);
+    ok(res == STATUS_ACCESS_DENIED, "NtQueryInformationFile returned %x\n", res);
 
 /* test FILE_CREATE creation disposition */
     res = pNtCreateNamedPipeFile(&handle2, SYNCHRONIZE, &attr, &iosb, FILE_SHARE_READ | FILE_SHARE_WRITE, 2 /*FILE_CREATE*/,
@@ -170,6 +184,60 @@ static void test_create_invalid(void)
         CloseHandle(handle2);
 
     CloseHandle(handle);
+}
+
+static void test_create(void)
+{
+    HANDLE hserver;
+    NTSTATUS res;
+    int j, k;
+    FILE_PIPE_LOCAL_INFORMATION info;
+    IO_STATUS_BLOCK iosb;
+
+    static const DWORD access[] = { 0, GENERIC_READ, GENERIC_WRITE, GENERIC_READ | GENERIC_WRITE};
+    static const DWORD sharing[] =    { FILE_SHARE_READ, FILE_SHARE_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE };
+    static const DWORD pipe_config[]= {               1,                0,                                  2 };
+
+    for (j = 0; j < sizeof(sharing) / sizeof(DWORD); j++) {
+        for (k = 0; k < sizeof(access) / sizeof(DWORD); k++) {
+            HANDLE hclient;
+            BOOL should_succeed = TRUE;
+
+            res  = create_pipe(&hserver, sharing[j], FILE_SYNCHRONOUS_IO_NONALERT);
+            if (res) {
+                ok(0, "NtCreateNamedPipeFile returned %x, sharing: %x\n", res, sharing[j]);
+                continue;
+            }
+
+            res = pNtQueryInformationFile(hserver, &iosb, &info, sizeof(info), (FILE_INFORMATION_CLASS)24);
+            ok(!res, "NtQueryInformationFile for server returned %x, sharing: %x\n", res, sharing[j]);
+            ok(info.NamedPipeConfiguration == pipe_config[j], "wrong duplex status for pipe: %d, expected %d\n",
+               info.NamedPipeConfiguration, pipe_config[j]);
+
+            hclient = CreateFileW(testpipe, access[k], 0, 0, OPEN_EXISTING, 0, 0);
+            if (hclient != INVALID_HANDLE_VALUE) {
+                res = pNtQueryInformationFile(hclient, &iosb, &info, sizeof(info), (FILE_INFORMATION_CLASS)24);
+                ok(!res, "NtQueryInformationFile for client returned %x, access: %x, sharing: %x\n",
+                   res, access[k], sharing[j]);
+                ok(info.NamedPipeConfiguration == pipe_config[j], "wrong duplex status for pipe: %d, expected %d\n",
+                   info.NamedPipeConfiguration, pipe_config[j]);
+                CloseHandle(hclient);
+            }
+
+            if (access[k] & GENERIC_WRITE)
+                should_succeed &= !!(sharing[j] & FILE_SHARE_WRITE);
+            if (access[k] & GENERIC_READ)
+                should_succeed &= !!(sharing[j] & FILE_SHARE_READ);
+
+            if (should_succeed)
+                ok(hclient != INVALID_HANDLE_VALUE, "CreateFile failed for sharing %x, access: %x, GetLastError: %d\n",
+                   sharing[j], access[k], GetLastError());
+            else
+                ok(hclient == INVALID_HANDLE_VALUE, "CreateFile succeeded for sharing %x, access: %x\n", sharing[j], access[k]);
+
+            CloseHandle(hserver);
+        }
+    }
 }
 
 static BOOL ioapc_called;
@@ -238,8 +306,10 @@ static DWORD WINAPI thread(PVOID main_thread)
     Sleep(400);
 
     if (main_thread) {
+        DWORD ret;
         userapc_called = FALSE;
-        ok(pQueueUserAPC(&userapc, main_thread, 0), "can't queue user apc, GetLastError: %x\n", GetLastError());
+        ret = pQueueUserAPC(&userapc, main_thread, 0);
+        ok(ret, "can't queue user apc, GetLastError: %x\n", GetLastError());
         CloseHandle(main_thread);
     }
 
@@ -264,6 +334,7 @@ static void test_alertable(void)
     HANDLE hPipe;
     NTSTATUS res;
     HANDLE hThread;
+    DWORD ret;
 
     memset(&iosb, 0x55, sizeof(iosb));
 
@@ -275,7 +346,8 @@ static void test_alertable(void)
 
 /* queue an user apc before calling listen */
     userapc_called = FALSE;
-    ok(pQueueUserAPC(&userapc, GetCurrentThread(), 0), "can't queue user apc, GetLastError: %x\n", GetLastError());
+    ret = pQueueUserAPC(&userapc, GetCurrentThread(), 0);
+    ok(ret, "can't queue user apc, GetLastError: %x\n", GetLastError());
 
     res = listen_pipe(hPipe, hEvent, &iosb, TRUE);
     todo_wine ok(res == STATUS_CANCELLED, "NtFsControlFile returned %x\n", res);
@@ -332,6 +404,7 @@ static void test_nonalertable(void)
     HANDLE hPipe;
     NTSTATUS res;
     HANDLE hThread;
+    DWORD ret;
 
     memset(&iosb, 0x55, sizeof(iosb));
 
@@ -345,7 +418,8 @@ static void test_nonalertable(void)
     ok(hThread != INVALID_HANDLE_VALUE, "can't create thread, GetLastError: %x\n", GetLastError());
 
     userapc_called = FALSE;
-    ok(pQueueUserAPC(&userapc, GetCurrentThread(), 0), "can't queue user apc, GetLastError: %x\n", GetLastError());
+    ret = pQueueUserAPC(&userapc, GetCurrentThread(), 0);
+    ok(ret, "can't queue user apc, GetLastError: %x\n", GetLastError());
 
     res = listen_pipe(hPipe, hEvent, &iosb, TRUE);
     todo_wine ok(!res, "NtFsControlFile returned %x\n", res);
@@ -412,6 +486,9 @@ START_TEST(pipe)
 
     trace("starting invalid create tests\n");
     test_create_invalid();
+
+    trace("starting create tests\n");
+    test_create();
 
     trace("starting overlapped tests\n");
     test_overlapped();

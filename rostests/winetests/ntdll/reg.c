@@ -396,7 +396,8 @@ static void test_NtCreateKey(void)
 
     /* Only attributes */
     status = pNtCreateKey(NULL, 0, &attr, 0, 0, 0, 0);
-    ok(status == STATUS_ACCESS_VIOLATION, "Expected STATUS_ACCESS_VIOLATION, got: 0x%08x\n", status);
+    ok(status == STATUS_ACCESS_VIOLATION || status == STATUS_ACCESS_DENIED /* Win7 */,
+       "Expected STATUS_ACCESS_VIOLATION or STATUS_ACCESS_DENIED, got: 0x%08x\n", status);
 
     /* Length > sizeof(OBJECT_ATTRIBUTES) */
     attr.Length *= 2;
@@ -1243,6 +1244,41 @@ static void test_redirection(void)
     pNtClose( key64 );
 }
 
+static void test_long_value_name(void)
+{
+    HANDLE key;
+    NTSTATUS status, expected;
+    OBJECT_ATTRIBUTES attr;
+    UNICODE_STRING ValName;
+    DWORD i;
+
+    InitializeObjectAttributes(&attr, &winetestpath, 0, 0, 0);
+    status = pNtOpenKey(&key, KEY_WRITE|KEY_READ, &attr);
+    ok(status == STATUS_SUCCESS, "NtOpenKey Failed: 0x%08x\n", status);
+
+    ValName.MaximumLength = 0xfffc;
+    ValName.Length = ValName.MaximumLength - sizeof(WCHAR);
+    ValName.Buffer = HeapAlloc(GetProcessHeap(), 0, ValName.MaximumLength);
+    for (i = 0; i < ValName.Length / sizeof(WCHAR); i++)
+        ValName.Buffer[i] = 'a';
+    ValName.Buffer[i] = 0;
+
+    status = pNtDeleteValueKey(key, &ValName);
+    ok(status == STATUS_OBJECT_NAME_NOT_FOUND, "NtDeleteValueKey with nonexistent long value name returned 0x%08x\n", status);
+    status = pNtSetValueKey(key, &ValName, 0, REG_DWORD, &i, sizeof(i));
+    ok(status == STATUS_INVALID_PARAMETER || broken(status == STATUS_SUCCESS) /* nt4 */,
+       "NtSetValueKey with long value name returned 0x%08x\n", status);
+    expected = (status == STATUS_SUCCESS) ? STATUS_SUCCESS : STATUS_OBJECT_NAME_NOT_FOUND;
+    status = pNtDeleteValueKey(key, &ValName);
+    ok(status == expected, "NtDeleteValueKey with long value name returned 0x%08x\n", status);
+
+    status = pNtQueryValueKey(key, &ValName, KeyValueBasicInformation, NULL, 0, &i);
+    ok(status == STATUS_OBJECT_NAME_NOT_FOUND, "NtQueryValueKey with nonexistent long value name returned 0x%08x\n", status);
+
+    pRtlFreeUnicodeString(&ValName);
+    pNtClose(key);
+}
+
 START_TEST(reg)
 {
     static const WCHAR winetest[] = {'\\','W','i','n','e','T','e','s','t',0};
@@ -1264,6 +1300,7 @@ START_TEST(reg)
     test_RtlpNtQueryValueKey();
     test_NtFlushKey();
     test_NtQueryValueKey();
+    test_long_value_name();
     test_NtDeleteKey();
     test_symlinks();
     test_redirection();

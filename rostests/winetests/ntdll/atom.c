@@ -443,7 +443,7 @@ static void test_Global(void)
 
     ok(!res, "Added atom (%x)\n", res);
 
-    memset(abi->Name, 0xcc, 255 * sizeof(WCHAR));
+    memset( ptr, 0xcc, sizeof(ptr) );
     res = pNtQueryInformationAtom( atom, AtomBasicInformation, (void*)ptr, ptr_size, NULL );
     ok(!res, "atom lookup\n");
     ok(!lstrcmpW(abi->Name, testAtom1), "ok strings\n");
@@ -457,7 +457,7 @@ static void test_Global(void)
     ok(abi->NameLength == lstrlenW(testAtom1) * sizeof(WCHAR) || broken(abi->NameLength == sizeof(WCHAR)), /* nt4 */
        "string length %u\n",abi->NameLength);
 
-    memset(abi->Name, 0xcc, lstrlenW(testAtom1) * sizeof(WCHAR));
+    memset( ptr, 0xcc, sizeof(ptr) );
     ptr_size = sizeof(ATOM_BASIC_INFORMATION) + lstrlenW(testAtom1) * sizeof(WCHAR);
     res = pNtQueryInformationAtom( atom, AtomBasicInformation, (void*)ptr, ptr_size, NULL );
     ok(!res, "atom lookup %x\n", res);
@@ -466,8 +466,8 @@ static void test_Global(void)
     ok(abi->Name[lstrlenW(testAtom1)] == 0, "buffer overwrite %x\n", abi->Name[lstrlenW(testAtom1)]);
     ok(abi->Name[lstrlenW(testAtom1) + 1] == 0xcccc, "buffer overwrite %x\n", abi->Name[lstrlenW(testAtom1) + 1]);
 
+    memset( ptr, 0xcc, sizeof(ptr) );
     ptr_size = sizeof(ATOM_BASIC_INFORMATION) + 4 * sizeof(WCHAR);
-    abi->Name[0] = abi->Name[1] = abi->Name[2] = abi->Name[3] = '\0';
     res = pNtQueryInformationAtom( atom, AtomBasicInformation, (void*)ptr, ptr_size, NULL );
     ok(!res, "couldn't find atom\n");
     ok(abi->NameLength == 8, "wrong string length %u\n", abi->NameLength);

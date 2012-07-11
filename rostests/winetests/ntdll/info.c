@@ -1293,7 +1293,8 @@ static void test_queryvirtualmemory(void)
     {
         ok (mbi.AllocationProtect == PAGE_EXECUTE_WRITECOPY, "mbi.AllocationProtect is 0x%x, expected 0x%x\n", mbi.AllocationProtect, PAGE_EXECUTE_WRITECOPY);
         ok (mbi.State == MEM_COMMIT, "mbi.State is 0x%x, expected 0x%X\n", mbi.State, MEM_COMMIT);
-        ok (mbi.Protect == PAGE_READWRITE, "mbi.Protect is 0x%x, expected 0x%X\n", mbi.Protect, PAGE_READWRITE);
+        ok (mbi.Protect == PAGE_READWRITE || mbi.Protect == PAGE_WRITECOPY,
+            "mbi.Protect is 0x%x\n", mbi.Protect);
     }
     else skip( "bss is outside of module\n" );  /* this can happen on Mac OS */
 }

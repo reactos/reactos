@@ -1146,8 +1146,8 @@ static void test_wcsrchr(void)
 static void test_wcslwrupr(void)
 {
     static WCHAR teststringW[] = {'a','b','r','a','c','a','d','a','b','r','a',0};
-    static WCHAR emptyW[1] = {0};
-    static const WCHAR constemptyW[1] = {0};
+    static WCHAR emptyW[] = {0};
+    static const WCHAR constemptyW[] = {0};
 
     if (0) /* crashes on native */
     {
@@ -1255,9 +1255,9 @@ static void test_qsort(void)
 static void test_bsearch(void)
 {
     int arr[7] = { 1, 3, 4, 8, 16, 23, 42 };
-    int *x, l, i,j ;
+    int *x, l, i, j;
 
-    /* just try all all sizes */
+    /* just try all array sizes */
     for (j=1;j<sizeof(arr)/sizeof(arr[0]);j++) {
         for (i=0;i<j;i++) {
             l = arr[i];
