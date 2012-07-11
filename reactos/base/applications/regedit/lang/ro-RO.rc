@@ -57,9 +57,9 @@ BEGIN
         MENUITEM "E&xportare…",                     ID_REGISTRY_EXPORTREGISTRYFILE
 
         MENUITEM SEPARATOR
-		MENUITEM "Î&ncărcare registru…",            ID_REGISTRY_LOADHIVE, GRAYED
-		MENUITEM "Eli&berare registru…",            ID_REGISTRY_UNLOADHIVE, GRAYED
-		MENUITEM SEPARATOR
+        MENUITEM "Î&ncărcare registru…",            ID_REGISTRY_LOADHIVE, GRAYED
+        MENUITEM "Eli&berare registru…",            ID_REGISTRY_UNLOADHIVE, GRAYED
+        MENUITEM SEPARATOR
         MENUITEM "&Conectare la un registru din rețea…",
                                                     ID_REGISTRY_CONNECTNETWORKREGISTRY
 
@@ -349,8 +349,8 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_ERROR		              "Eroare"
-    IDS_WARNING		              "Avertisment"
+    IDS_ERROR                     "Eroare"
+    IDS_WARNING                   "Avertisment"
     IDS_BAD_KEY                   "Nu se poate citi cheia „%s”"
     IDS_BAD_VALUE                 "Nu se poate citi valoarea „%s”"
     IDS_UNSUPPORTED_TYPE          "Nu se poate edita acest tip de cheie (%ld)"
@@ -387,9 +387,9 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_FLT_REGFILE         "Fișier registru"
-    IDS_FLT_REGFILES        "Fișiere registru"
+    IDS_FLT_REGFILES        "Fișiere registru (*.reg)"
     IDS_FLT_REGFILES_FLT    "*.reg"
-    IDS_FLT_REGEDIT4        "Fișiere registru Win9x/NT4 (REGEDIT4)"
+    IDS_FLT_REGEDIT4        "Fișiere registru Win9x/NT4 (REGEDIT4) (*.reg)"
     IDS_FLT_REGEDIT4_FLT    "*.reg"
     IDS_FLT_ALLFILES        "Orice fișier (*.*)"
     IDS_FLT_ALLFILES_FLT    "*.*"

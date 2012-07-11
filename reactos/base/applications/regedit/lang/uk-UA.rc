@@ -55,9 +55,9 @@ BEGIN
         MENUITEM "&Експорт...",                       ID_REGISTRY_EXPORTREGISTRYFILE
 
         MENUITEM SEPARATOR
-		MENUITEM "Завантажити файл реєстру...",		ID_REGISTRY_LOADHIVE, GRAYED
-		MENUITEM "Вивантажити файл реєстру...",		ID_REGISTRY_UNLOADHIVE, GRAYED
-		MENUITEM SEPARATOR
+        MENUITEM "Завантажити файл реєстру...",       ID_REGISTRY_LOADHIVE, GRAYED
+        MENUITEM "Вивантажити файл реєстру...",       ID_REGISTRY_UNLOADHIVE, GRAYED
+        MENUITEM SEPARATOR
         MENUITEM "&Підключити мережевий реєстр...",
                                                 ID_REGISTRY_CONNECTNETWORKREGISTRY
 
@@ -352,8 +352,8 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_ERROR		    "Помилка"
-    IDS_WARNING		    "Увага"
+    IDS_ERROR               "Помилка"
+    IDS_WARNING             "Увага"
     IDS_BAD_KEY             "Не можу запросити розділ '%s'"
     IDS_BAD_VALUE           "Не можу запросити значення '%s'"
     IDS_UNSUPPORTED_TYPE    "Не можу редагувати розділи цього типу (%ld)"
@@ -390,9 +390,9 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_FLT_REGFILE         "Файл реєстру"
-    IDS_FLT_REGFILES        "Файли реєстру"
+    IDS_FLT_REGFILES        "Файли реєстру (*.reg)"
     IDS_FLT_REGFILES_FLT    "*.reg"
-    IDS_FLT_REGEDIT4        "Файли реєстру Win9x/NT4 (REGEDIT4)"
+    IDS_FLT_REGEDIT4        "Файли реєстру Win9x/NT4 (REGEDIT4) (*.reg)"
     IDS_FLT_REGEDIT4_FLT    "*.reg"
     IDS_FLT_ALLFILES        "Усі файли (*.*)"
     IDS_FLT_ALLFILES_FLT    "*.*"

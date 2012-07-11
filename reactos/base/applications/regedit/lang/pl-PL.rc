@@ -61,9 +61,9 @@ BEGIN
         MENUITEM "&Eksportuj plik rejestru...",    ID_REGISTRY_EXPORTREGISTRYFILE
 
         MENUITEM SEPARATOR
-		MENUITEM "Ładuj Drzewo....",				ID_REGISTRY_LOADHIVE, GRAYED
-		MENUITEM "Wyładuj Drzewo..",				ID_REGISTRY_UNLOADHIVE, GRAYED
-		MENUITEM SEPARATOR
+        MENUITEM "Ładuj Drzewo....",               ID_REGISTRY_LOADHIVE, GRAYED
+        MENUITEM "Wyładuj Drzewo..",               ID_REGISTRY_UNLOADHIVE, GRAYED
+        MENUITEM SEPARATOR
         MENUITEM "&Podłącz rejestr sieciowy...",
                                                    ID_REGISTRY_CONNECTNETWORKREGISTRY
 
@@ -358,8 +358,8 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_ERROR		    "Błąd"
-    IDS_WARNING		    "Ostrzeżenie"
+    IDS_ERROR               "Błąd"
+    IDS_WARNING             "Ostrzeżenie"
     IDS_BAD_KEY             "Nie można odczytać klucza '%s'"
     IDS_BAD_VALUE           "Nie można odczytać wartości '%s'"
     IDS_UNSUPPORTED_TYPE    "Nie można edytować kluczy tego typu (%ld)"
@@ -396,9 +396,9 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_FLT_REGFILE         "Plik rejestru"
-    IDS_FLT_REGFILES        "Pliki rejestru"
+    IDS_FLT_REGFILES        "Pliki rejestru (*.reg)"
     IDS_FLT_REGFILES_FLT    "*.reg"
-    IDS_FLT_REGEDIT4        "Pliki rejestru Win9x/NT4 (REGEDIT4)"
+    IDS_FLT_REGEDIT4        "Pliki rejestru Win9x/NT4 (REGEDIT4) (*.reg)"
     IDS_FLT_REGEDIT4_FLT    "*.reg"
     IDS_FLT_ALLFILES        "Wszystkie pliki (*.*)"
     IDS_FLT_ALLFILES_FLT    "*.*"

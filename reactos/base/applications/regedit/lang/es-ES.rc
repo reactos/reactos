@@ -56,10 +56,10 @@ BEGIN
 
         MENUITEM "&Exportar archivo de registro...", ID_REGISTRY_EXPORTREGISTRYFILE
 
-	MENUITEM SEPARATOR
-		MENUITEM "Cargar archivo de registro...",				ID_REGISTRY_LOADHIVE, GRAYED
-		MENUITEM "Descargar archivo de registro...",				ID_REGISTRY_UNLOADHIVE, GRAYED
-		MENUITEM SEPARATOR
+        MENUITEM SEPARATOR
+        MENUITEM "Cargar archivo de registro...",        ID_REGISTRY_LOADHIVE, GRAYED
+        MENUITEM "Descargar archivo de registro...",     ID_REGISTRY_UNLOADHIVE, GRAYED
+        MENUITEM SEPARATOR
         MENUITEM "&Conectar al Registro de red...", ID_REGISTRY_CONNECTNETWORKREGISTRY
 
 
@@ -354,8 +354,8 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_ERROR		    "Error"
-    IDS_WARNING		    "Aviso"
+    IDS_ERROR               "Error"
+    IDS_WARNING             "Aviso"
     IDS_BAD_KEY             "No puede averiguar valor clave '%s'"
     IDS_BAD_VALUE           "No puede averiguar valor '%s'"
     IDS_UNSUPPORTED_TYPE    "No puede editar claves de este tipo (%ld)"
@@ -392,9 +392,9 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_FLT_REGFILE         "Fichero de Registro"
-    IDS_FLT_REGFILES        "Fichero de Registro"
+    IDS_FLT_REGFILES        "Fichero de Registro (*.reg)"
     IDS_FLT_REGFILES_FLT    "*.reg"
-    IDS_FLT_REGEDIT4        "Fichero de Registro Win9x/NT4 (REGEDIT4)"
+    IDS_FLT_REGEDIT4        "Fichero de Registro Win9x/NT4 (REGEDIT4) (*.reg)"
     IDS_FLT_REGEDIT4_FLT    "*.reg"
     IDS_FLT_ALLFILES        "Todos los archivos (*.*)"
     IDS_FLT_ALLFILES_FLT    "*.*"

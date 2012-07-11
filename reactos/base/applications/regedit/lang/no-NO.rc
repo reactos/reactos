@@ -54,9 +54,9 @@ BEGIN
         MENUITEM "&Eksport...",    ID_REGISTRY_EXPORTREGISTRYFILE
 
         MENUITEM SEPARATOR
-		MENUITEM "Last inn struktur...",				ID_REGISTRY_LOADHIVE, GRAYED
-		MENUITEM "Fjern struktur...",				ID_REGISTRY_UNLOADHIVE, GRAYED
-		MENUITEM SEPARATOR
+        MENUITEM "Last inn struktur...",        ID_REGISTRY_LOADHIVE, GRAYED
+        MENUITEM "Fjern struktur...",           ID_REGISTRY_UNLOADHIVE, GRAYED
+        MENUITEM SEPARATOR
         MENUITEM "Koble til nettverksregister...",
                                                 ID_REGISTRY_CONNECTNETWORKREGISTRY
 
@@ -351,8 +351,8 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_ERROR		    "Feil"
-    IDS_WARNING		    "Advarsel"
+    IDS_ERROR               "Feil"
+    IDS_WARNING             "Advarsel"
     IDS_BAD_KEY             "Kan ikke lese nøkkel '%s'"
     IDS_BAD_VALUE           "Kan ikke lese verdi '%s'"
     IDS_UNSUPPORTED_TYPE    "Kan ikke endre nøkkel av type (%ld)"
@@ -389,9 +389,9 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_FLT_REGFILE         "Registration File"
-    IDS_FLT_REGFILES        "Registerfiler"
+    IDS_FLT_REGFILES        "Registerfiler (*.reg)"
     IDS_FLT_REGFILES_FLT    "*.reg"
-    IDS_FLT_REGEDIT4        "Win9x/NT4 Registerfiler (REGEDIT4)"
+    IDS_FLT_REGEDIT4        "Win9x/NT4 Registerfiler (REGEDIT4) (*.reg)"
     IDS_FLT_REGEDIT4_FLT    "*.reg"
     IDS_FLT_ALLFILES        "Alle Filer (*.*)"
     IDS_FLT_ALLFILES_FLT    "*.*"

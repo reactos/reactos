@@ -59,9 +59,9 @@ BEGIN
         MENUITEM "&Износ...",    ID_REGISTRY_EXPORTREGISTRYFILE
 
         MENUITEM SEPARATOR
-		MENUITEM "Зареждане на рой...",				ID_REGISTRY_LOADHIVE, GRAYED
-		MENUITEM "Изоставяне на рой...",				ID_REGISTRY_UNLOADHIVE, GRAYED
-		MENUITEM SEPARATOR
+        MENUITEM "Зареждане на рой...",         ID_REGISTRY_LOADHIVE, GRAYED
+        MENUITEM "Изоставяне на рой...",        ID_REGISTRY_UNLOADHIVE, GRAYED
+        MENUITEM SEPARATOR
         MENUITEM "&Свързване с мрежов регистър...",
                                                 ID_REGISTRY_CONNECTNETWORKREGISTRY
 
@@ -366,8 +366,8 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_ERROR		    "Грешка"
-    IDS_WARNING		    "Предупреждение"
+    IDS_ERROR               "Грешка"
+    IDS_WARNING             "Предупреждение"
     IDS_BAD_KEY             "Невъзможно извличането на ключ '%s'"
     IDS_BAD_VALUE           "Невъзможно извличането на стойност '%s'"
     IDS_UNSUPPORTED_TYPE    "Промяната на ключове от този вид е невъзможна (%ld)"
@@ -404,9 +404,9 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_FLT_REGFILE         "Вписващ файл"
-    IDS_FLT_REGFILES        "Вписващи (регистърни) файлове"
+    IDS_FLT_REGFILES        "Вписващи (регистърни) файлове (*.reg)"
     IDS_FLT_REGFILES_FLT    "*.reg"
-    IDS_FLT_REGEDIT4        "Win9x/NT4 вписващи файлове (REGEDIT4)"
+    IDS_FLT_REGEDIT4        "Win9x/NT4 вписващи файлове (REGEDIT4) (*.reg)"
     IDS_FLT_REGEDIT4_FLT    "*.reg"
     IDS_FLT_ALLFILES        "Всички файлове (*.*)"
     IDS_FLT_ALLFILES_FLT    "*.*"

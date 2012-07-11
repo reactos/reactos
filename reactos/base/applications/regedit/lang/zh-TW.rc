@@ -56,9 +56,9 @@ BEGIN
         MENUITEM "匯出(&E)...", ID_REGISTRY_EXPORTREGISTRYFILE
 
         MENUITEM SEPARATOR
-		MENUITEM "載入登錄區...",	ID_REGISTRY_LOADHIVE, GRAYED
-		MENUITEM "卸載登錄區...",	ID_REGISTRY_UNLOADHIVE, GRAYED
-		MENUITEM SEPARATOR
+        MENUITEM "載入登錄區...", ID_REGISTRY_LOADHIVE, GRAYED
+        MENUITEM "卸載登錄區...", ID_REGISTRY_UNLOADHIVE, GRAYED
+        MENUITEM SEPARATOR
         MENUITEM "連接網絡登錄(&C)...",       ID_REGISTRY_CONNECTNETWORKREGISTRY
 
 
@@ -352,8 +352,8 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_ERROR		    "錯誤"
-    IDS_WARNING		    "警告"
+    IDS_ERROR               "錯誤"
+    IDS_WARNING             "警告"
     IDS_BAD_KEY             "不能查詢機碼 '%s'"
     IDS_BAD_VALUE           "不能查詢值 '%s'"
     IDS_UNSUPPORTED_TYPE    "不能編輯這類型的機碼 (%ld)"
@@ -390,9 +390,9 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_FLT_REGFILE         "登錄文件"
-    IDS_FLT_REGFILES        "登錄文件"
+    IDS_FLT_REGFILES        "登錄文件 (*.reg)"
     IDS_FLT_REGFILES_FLT    "*.reg"
-    IDS_FLT_REGEDIT4        "Win9x/NT4 登錄文件 (REGEDIT4)"
+    IDS_FLT_REGEDIT4        "Win9x/NT4 登錄文件 (REGEDIT4) (*.reg)"
     IDS_FLT_REGEDIT4_FLT    "*.reg"
     IDS_FLT_ALLFILES        "所有文件 (*.*)"
     IDS_FLT_ALLFILES_FLT    "*.*"

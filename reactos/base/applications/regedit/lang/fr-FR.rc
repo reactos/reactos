@@ -53,19 +53,13 @@ BEGIN
     POPUP "&Fichier"
     BEGIN
         MENUITEM "&Importer...",    ID_REGISTRY_IMPORTREGISTRYFILE
-
         MENUITEM "&Exporter...",    ID_REGISTRY_EXPORTREGISTRYFILE
-
         MENUITEM SEPARATOR
-        MENUITEM "Charger un fichier registre...",				ID_REGISTRY_LOADHIVE, GRAYED
-        MENUITEM "Décharger un fichier registre...",				ID_REGISTRY_UNLOADHIVE, GRAYED
+        MENUITEM "Charger la ruche...",        ID_REGISTRY_LOADHIVE, GRAYED
+        MENUITEM "Décharger la ruche...",      ID_REGISTRY_UNLOADHIVE, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&Connecter à des registres via le réseau...", ID_REGISTRY_CONNECTNETWORKREGISTRY
-
-
         MENUITEM "&Déconnecter de registres réseau...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
-
-
         MENUITEM SEPARATOR
         MENUITEM "Im&primer\tCtrl+P",              ID_REGISTRY_PRINT, GRAYED
         MENUITEM SEPARATOR
@@ -321,13 +315,12 @@ BEGIN
     ID_EDIT_NEW_STRINGVALUE "Ajoute une nouvelle valeur chaîne"
     ID_EDIT_NEW_BINARYVALUE "Ajoute une nouvelle valeur binaire"
     ID_EDIT_NEW_DWORDVALUE  "Ajoute une nouvelle valeur mot double"
-    ID_REGISTRY_IMPORTREGISTRYFILE "Importe un fichier texte dans les registres"
+    ID_REGISTRY_IMPORTREGISTRYFILE
+                            "Importe un fichier texte dans les registres"
     ID_REGISTRY_EXPORTREGISTRYFILE
                             "Exporte tout ou une partie des registres dans un fichier texte"
-    ID_REGISTRY_LOADHIVE
-                            "Loads a hive file into the registry"
-    ID_REGISTRY_UNLOADHIVE
-                            "Unloads a hive from the registry"
+    ID_REGISTRY_LOADHIVE    "Charge un fichier ruche dans le Registre"
+    ID_REGISTRY_UNLOADHIVE  "Décharge une ruche à partir du Registre"
     ID_REGISTRY_CONNECTNETWORKREGISTRY
                             "Connecte aux registres d'un ordinateur distant"
     ID_REGISTRY_DISCONNECTNETWORKREGISTRY
@@ -354,22 +347,22 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_ERROR		    "Erreur"
-    IDS_WARNING		    "Attention"
+    IDS_ERROR               "Erreur"
+    IDS_WARNING             "Attention"
     IDS_BAD_KEY             "Impossible de récupérer la clé '%s'"
     IDS_BAD_VALUE           "Impossible de récupérer la valeur '%s'"
     IDS_UNSUPPORTED_TYPE    "Impossible d'éditer les clés de ce type (%ld)"
     IDS_TOO_BIG_VALUE       "La valeur est trop importante (%ld)"
     IDS_MULTI_SZ_EMPTY_STRING "Les données de type REG_MULTI_SZ ne peuvent contenir des chaînes vides.\nLes chaînes vides ont été supprimées de la liste."
-    IDS_QUERY_DELETE_KEY_ONE    "Êtes-vous sûr de vouloir supprimer cette clé?"
-    IDS_QUERY_DELETE_KEY_MORE   "Êtes-vous sûr de vouloir supprimer ces clés?"
+    IDS_QUERY_DELETE_KEY_ONE    "Êtes-vous sûr de vouloir supprimer cette clé ?"
+    IDS_QUERY_DELETE_KEY_MORE   "Êtes-vous sûr de vouloir supprimer ces clés ?"
     IDS_QUERY_DELETE_KEY_CONFIRM "Confirmation de la suppression de la clé"
-    IDS_QUERY_DELETE_ONE    "Êtes-vous sûr de vouloir supprimer cette valeur?"
-    IDS_QUERY_DELETE_MORE   "Êtes-vous sûr de vouloir supprimer ces valeurs?"
+    IDS_QUERY_DELETE_ONE    "Êtes-vous sûr de vouloir supprimer cette valeur ?"
+    IDS_QUERY_DELETE_MORE   "Êtes-vous sûr de vouloir supprimer ces valeurs ?"
     IDS_QUERY_DELETE_CONFIRM "Confirmation de la suppression de la valeur"
-    IDS_ERR_DELVAL_CAPTION  "Erreur lors de la suppression des valeurs"
-    IDS_ERR_DELETEVALUE     "Impossible de supprimer toutes les valeurs seléctionnées!"
-    IDS_ERR_RENVAL_CAPTION  "Erreur lors de la tentative pour renommer la valeur"
+    IDS_ERR_DELVAL_CAPTION  "Erreur lors de la suppression des valeurs."
+    IDS_ERR_DELETEVALUE     "Impossible de supprimer toutes les valeurs seléctionnées !"
+    IDS_ERR_RENVAL_CAPTION  "Erreur lors de la tentative pour renommer la valeur."
     IDS_ERR_RENVAL_TOEMPTY  "Impossible de renommer %s. Le nom de valeur spécifié est vide. Essayez à nouveau avec un autre nom."
     IDS_NEW_KEY             "Nouvelle clé #%d"
     IDS_NEW_VALUE           "Nouvelle valeur #%d"
@@ -377,24 +370,24 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_BINARY_EMPTY	    "(valeur binaire de longueur nulle)"
+    IDS_BINARY_EMPTY        "(valeur binaire de longueur nulle)"
     IDS_DEFAULT_VALUE_NAME  "(Défaut)"
     IDS_VALUE_NOT_SET       "(valeur non définie)"
     IDS_UNKNOWN_TYPE        "Type inconnu: (0x%lx)"
     IDS_MY_COMPUTER         "Mon ordinateur"
     IDS_IMPORT_REG_FILE     "Importer un fichier registre"
     IDS_EXPORT_REG_FILE     "Exporter un fichier registre"
-    IDS_LOAD_HIVE           "Load Hive"
-    IDS_UNLOAD_HIVE         "Unload Hive"
+    IDS_LOAD_HIVE           "Charger la ruche"
+    IDS_UNLOAD_HIVE         "Décharger la ruche"
     IDS_INVALID_DWORD       "(valeur mot double invalide)"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_FLT_REGFILE         "Fichier registre"
-    IDS_FLT_REGFILES        "Fichiers registre"
+    IDS_FLT_REGFILE         "Fichier d'enregistrement"
+    IDS_FLT_REGFILES        "Fichiers d'enregistrement (*.reg)"
     IDS_FLT_REGFILES_FLT    "*.reg"
-    IDS_FLT_REGEDIT4        "Fichiers registres de Win9x/NT4 (REGEDIT4)"
+    IDS_FLT_REGEDIT4        "Fichiers d'enregistrement Win9x/NT4 (REGEDIT4) (*.reg)"
     IDS_FLT_REGEDIT4_FLT    "*.reg"
     IDS_FLT_ALLFILES        "Tous les fichiers (*.*)"
     IDS_FLT_ALLFILES_FLT    "*.*"
@@ -433,8 +426,8 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_IMPORT_PROMPT             "Add the data to the registry?"
-  IDS_IMPORTED_OK               "Information added to the registry"
+  IDS_IMPORT_PROMPT             "Voulez-vous ajouter des informations dans le Registre ?"
+  IDS_IMPORTED_OK               "Les informations ont bien été ajoutées dans le Registre."
 END
 
 STRINGTABLE DISCARDABLE
@@ -502,18 +495,18 @@ IDD_EXPORTRANGE DIALOGEX DISCARDABLE  50, 50, 370, 50
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_BORDER
 FONT 8, "MS Shell Dlg"
 BEGIN
-   GROUPBOX "Export Range",IDC_STATIC,2,0,366,48
-   CONTROL "&All",IDC_EXPORT_ALL,"Button",BS_AUTORADIOBUTTON,10,10, 29,11
-   CONTROL "S&elected Branch",IDC_EXPORT_BRANCH,"Button",BS_AUTORADIOBUTTON,10,22, 100,11
+   GROUPBOX "Étendue de l'exportation",IDC_STATIC,2,0,366,48
+   CONTROL "T&out",IDC_EXPORT_ALL,"Button",BS_AUTORADIOBUTTON,10,10, 29,11
+   CONTROL "&Branche sélectionnée",IDC_EXPORT_BRANCH,"Button",BS_AUTORADIOBUTTON,10,22, 100,11
    EDITTEXT IDC_EXPORT_BRANCH_TEXT,30,34,335,12
 END
 
 IDD_LOADHIVE DIALOGEX DISCARDABLE 0, 0, 193, 34
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Load Hive"
+CAPTION "Charger une ruche"
 FONT 8, "Ms Shell Dlg"
 {
-    LTEXT           "&Key:", IDC_STATIC, 4, 4, 15, 8, SS_LEFT
+    LTEXT           "&Clé:", IDC_STATIC, 4, 4, 15, 8, SS_LEFT
     EDITTEXT        IDC_EDIT_KEY, 23, 2, 167, 13
     DEFPUSHBUTTON   "OK", IDOK, 140, 17, 50, 14
     PUSHBUTTON      "Cancel", IDCANCEL, 89, 17, 50, 14

@@ -275,7 +275,7 @@ static BOOL InitOpenFileName(HWND hWnd, OPENFILENAME* pofn)
     FilterPairs[1].FilterID = IDS_FLT_REGEDIT4_FLT;
     FilterPairs[2].DisplayID = IDS_FLT_ALLFILES;
     FilterPairs[2].FilterID = IDS_FLT_ALLFILES_FLT;
-    BuildFilterStrings(Filter, FilterPairs, sizeof(FilterPairs) / sizeof(FILTERPAIR));
+    BuildFilterStrings(Filter, FilterPairs, COUNT_OF(FilterPairs));
 
     pofn->lpstrFilter = Filter;
     pofn->lpstrFile = FileNameBuffer;
@@ -434,8 +434,8 @@ static BOOL ImportRegistryFile(HWND hWnd)
 {
     OPENFILENAME ofn;
     TCHAR Caption[128], szTitle[256], szText[256];
+    HKEY hKeyRoot;
     LPCTSTR pszKeyPath;
-    HKEY hRootKey;
 
     InitOpenFileName(hWnd, &ofn);
     LoadString(hInst, IDS_IMPORT_REG_FILE, Caption, COUNT_OF(Caption));
@@ -465,9 +465,10 @@ static BOOL ImportRegistryFile(HWND hWnd)
         CheckCommDlgError(hWnd);
     }
 
+    /* refresh tree and list views */
     RefreshTreeView(g_pChildWnd->hTreeWnd);
-    pszKeyPath = GetItemPath(g_pChildWnd->hTreeWnd, 0, &hRootKey);
-    RefreshListView(g_pChildWnd->hListWnd, hRootKey, pszKeyPath);
+    pszKeyPath = GetItemPath(g_pChildWnd->hTreeWnd, 0, &hKeyRoot);
+    RefreshListView(g_pChildWnd->hListWnd, hKeyRoot, pszKeyPath);
 
     return TRUE;
 }
@@ -539,7 +540,7 @@ BOOL ExportRegistryFile(HWND hWnd)
     GetKeyName(ExportKeyPath, COUNT_OF(ExportKeyPath), hKeyRoot, pszKeyPath);
 
     InitOpenFileName(hWnd, &ofn);
-    LoadString(hInst, IDS_EXPORT_REG_FILE, Caption, sizeof(Caption)/sizeof(TCHAR));
+    LoadString(hInst, IDS_EXPORT_REG_FILE, Caption, COUNT_OF(Caption));
     ofn.lpstrTitle = Caption;
 
     /* Only set the path if a key (not the root node) is selected */
@@ -572,6 +573,7 @@ BOOL ExportRegistryFile(HWND hWnd)
     {
         CheckCommDlgError(hWnd);
     }
+
     return TRUE;
 }
 
@@ -1055,8 +1057,8 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             if(nSelected >= 1)
             {
                 TCHAR msg[128], caption[128];
-                LoadString(hInst, IDS_QUERY_DELETE_CONFIRM, caption, sizeof(caption)/sizeof(TCHAR));
-                LoadString(hInst, (nSelected == 1 ? IDS_QUERY_DELETE_ONE : IDS_QUERY_DELETE_MORE), msg, sizeof(msg)/sizeof(TCHAR));
+                LoadString(hInst, IDS_QUERY_DELETE_CONFIRM, caption, COUNT_OF(caption));
+                LoadString(hInst, (nSelected == 1 ? IDS_QUERY_DELETE_ONE : IDS_QUERY_DELETE_MORE), msg, COUNT_OF(msg));
                 if(MessageBox(g_pChildWnd->hWnd, msg, caption, MB_ICONQUESTION | MB_YESNO) == IDYES)
                 {
                     int ni, errs;
@@ -1076,8 +1078,8 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                     RefreshListView(g_pChildWnd->hListWnd, hKeyRoot, keyPath);
                     if(errs > 0)
                     {
-                        LoadString(hInst, IDS_ERR_DELVAL_CAPTION, caption, sizeof(caption)/sizeof(TCHAR));
-                        LoadString(hInst, IDS_ERR_DELETEVALUE, msg, sizeof(msg)/sizeof(TCHAR));
+                        LoadString(hInst, IDS_ERR_DELVAL_CAPTION, caption, COUNT_OF(caption));
+                        LoadString(hInst, IDS_ERR_DELETEVALUE, msg, COUNT_OF(msg));
                         MessageBox(g_pChildWnd->hWnd, msg, caption, MB_ICONSTOP);
                     }
                 }
@@ -1135,7 +1137,8 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
     case ID_VIEW_REFRESH:
         RefreshTreeView(g_pChildWnd->hTreeWnd);
-        /*RefreshListView(g_pChildWnd->hListWnd, hKeyRoot, keyPath, NULL); */
+        keyPath = GetItemPath(g_pChildWnd->hTreeWnd, 0, &hKeyRoot);
+        RefreshListView(g_pChildWnd->hListWnd, hKeyRoot, keyPath);
         break;
         /*case ID_OPTIONS_TOOLBAR:*/
         /*	toggle_child(hWnd, LOWORD(wParam), hToolBar);*/
