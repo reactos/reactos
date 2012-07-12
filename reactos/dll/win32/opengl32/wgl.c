@@ -871,7 +871,7 @@ HGLRC
 APIENTRY
 rosglGetCurrentContext()
 {
-    return (HGLRC)(OPENGL32_threaddata->glrc);
+    return NtCurrentTeb()->glCurrentRC;
 }
 
 
@@ -884,11 +884,9 @@ HDC
 APIENTRY
 rosglGetCurrentDC()
 {
-    /* FIXME: is it correct to return NULL when there is no current GLRC or
-       is there another way to find out the wanted HDC? */
-    if (OPENGL32_threaddata->glrc == NULL)
-        return NULL;
-    return (HDC)(OPENGL32_threaddata->glrc->hdc);
+    GLRC* glrc = (GLRC*)NtCurrentTeb()->glCurrentRC;
+    if(glrc) return glrc->hdc;
+    return NULL;
 }
 
 
@@ -918,19 +916,18 @@ APIENTRY
 rosglGetProcAddress( LPCSTR proc )
 {
     PROC func;
-    GLDRIVERDATA *icd;
+    GLRC* glrc = (GLRC*)NtCurrentTeb()->glCurrentRC;
 
     /* FIXME we should Flush the gl here */
 
-    if (OPENGL32_threaddata->glrc == NULL)
+    if (glrc == NULL)
     {
         DBGPRINT( "Error: No current GLRC!" );
         SetLastError( ERROR_INVALID_FUNCTION );
         return NULL;
     }
 
-    icd = OPENGL32_threaddata->glrc->icd;
-    func = icd->DrvGetProcAddress( proc );
+    func = glrc->icd->DrvGetProcAddress( proc );
     if (func != NULL)
     {
         DBGPRINT( "Info: Proc \"%s\" loaded from ICD.", proc );
@@ -947,19 +944,18 @@ APIENTRY
 rosglGetDefaultProcAddress( LPCSTR proc )
 {
     PROC func;
-    GLDRIVERDATA *icd;
+    GLRC* glrc = (GLRC*)NtCurrentTeb()->glCurrentRC;
 
     /*  wglGetDefaultProcAddress does not flush the gl */
 
-    if (OPENGL32_threaddata->glrc == NULL)
+    if (glrc == NULL)
     {
         DBGPRINT( "Error: No current GLRC!" );
         SetLastError( ERROR_INVALID_FUNCTION );
         return NULL;
     }
 
-    icd = OPENGL32_threaddata->glrc->icd;
-    func = icd->DrvGetProcAddress( proc );
+    func = glrc->icd->DrvGetProcAddress( proc );
     if (func != NULL)
     {
         DBGPRINT( "Info: Proc \"%s\" loaded from ICD.", proc );
@@ -989,9 +985,6 @@ rosglMakeCurrent( HDC hdc, HGLRC hglrc )
 
     DBGTRACE( "Called!" );
 
-    if (OPENGL32_threaddata == NULL)
-        return FALSE;
-
     /* Is t a new context ? */
     if (glrc != NULL)
     {
@@ -1020,9 +1013,9 @@ rosglMakeCurrent( HDC hdc, HGLRC hglrc )
         }
 
         /* Unset previous one */
-        if (OPENGL32_threaddata->glrc != NULL)
+        if (NtCurrentTeb()->glCurrentRC != NULL)
         {
-            GLRC *oldglrc = OPENGL32_threaddata->glrc;
+            GLRC *oldglrc = (GLRC*)NtCurrentTeb()->glCurrentRC;
             oldglrc->is_current = FALSE;
             oldglrc->thread_id = 0;
             oldglrc->hdc = NULL;
@@ -1039,6 +1032,7 @@ rosglMakeCurrent( HDC hdc, HGLRC hglrc )
             if (icdTable == NULL)
             {
                 DBGPRINT( "Error: DrvSetContext failed (%d)\n", GetLastError() );
+                NtCurrentTeb()->glCurrentRC = NULL;
                 return FALSE;
             }
             DBGPRINT( "Info: DrvSetContext succeeded!" );
@@ -1048,17 +1042,17 @@ rosglMakeCurrent( HDC hdc, HGLRC hglrc )
         glrc->is_current = TRUE;
         glrc->thread_id = GetCurrentThreadId();
         glrc->hdc = hdc;
-        OPENGL32_threaddata->glrc = glrc;
+        NtCurrentTeb()->glCurrentRC = (HGLRC)glrc;
     }
-    else if(OPENGL32_threaddata->glrc)
+    else if(NtCurrentTeb()->glCurrentRC)
     {
         /* This is a call to unset the context */
-        GLRC *oldglrc = OPENGL32_threaddata->glrc;
+        GLRC *oldglrc = (GLRC*)NtCurrentTeb()->glCurrentRC;
         oldglrc->is_current = FALSE;
         oldglrc->thread_id = 0;
         oldglrc->hdc = NULL;
         oldglrc->icd->DrvReleaseContext(oldglrc->hglrc);
-        OPENGL32_threaddata->glrc = NULL;
+        NtCurrentTeb()->glCurrentRC = NULL;
     }
     else
     {
