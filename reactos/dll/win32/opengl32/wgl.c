@@ -486,6 +486,32 @@ ROSGL_SetContextCallBack( const ICDTable *table )
 }
 
 
+/*! \brief Returns the current pixelformat.
+ *
+ * \param hdc [IN] Handle to DC to get the pixelformat from
+ *
+ * \return Pixelformat index
+ * \retval 0 Failure
+ */
+int
+WINAPI
+rosglGetPixelFormat( HDC hdc )
+{
+    GLDCDATA *dcdata;
+
+    DBGTRACE( "Called!" );
+
+    dcdata = ROSGL_GetPrivateDCData( hdc );
+    if (dcdata == NULL)
+    {
+        DBGPRINT( "Error: ROSGL_GetPrivateDCData failed!" );
+        return 0;
+    }
+
+    return dcdata->pixel_format;
+}
+
+
 /*! \brief Attempts to find the best matching pixel format for HDC
  *
  * This function is comparing each available format with the preferred one
@@ -673,23 +699,32 @@ rosglCreateLayerContext( HDC hdc, int layer )
         return NULL;
     }
 */
-    /* create new GLRC */
-    glrc = ROSGL_NewContext();
-    if (glrc == NULL)
-        return NULL;
 
     /* load ICD */
     icd = ROSGL_ICDForHDC( hdc );
     if (icd == NULL)
     {
-        ROSGL_DeleteContext( glrc );
         DBGPRINT( "Couldn't get ICD by HDC :-(" );
         /* FIXME: fallback? */
         return NULL;
     }
+
+    /* create new GLRC */
+    glrc = ROSGL_NewContext();
+    if (glrc == NULL)
+        return NULL;
+
     /* Don't forget to refcount it, icd will be released when last context is deleted */
     InterlockedIncrement((LONG*)&icd->refcount);
-    
+
+    /* You can't create a context without first setting a valid pixel format */
+    if(rosglGetPixelFormat(hdc) == 0)
+    {
+        ROSGL_DeleteContext( glrc );
+        SetLastError(ERROR_INVALID_PIXEL_FORMAT);
+        return NULL;
+    }
+
 
     /* create context */
     if (icd->DrvCreateLayerContext != NULL)
@@ -735,7 +770,7 @@ rosglCreateContext( HDC hdc )
 
 /*! \brief Delete an OpenGL context
  *
- * \param hglrc [IN] Handle to GLRC to delete; must not be a threads current RC!
+ * \param hglrc [IN] Handle to GLRC to delete;
  *
  * \retval TRUE  Success
  * \retval FALSE Failure (i.e. GLRC is current for a thread)
@@ -754,12 +789,18 @@ rosglDeleteContext( HGLRC hglrc )
         return FALSE;
     }
 
-    /* make sure GLRC is not current for some thread */
+    /* On windows, this is allowed to delete a context which is current */
     if (glrc->is_current)
     {
-        DBGPRINT( "Error: GLRC is current for DC 0x%08x", glrc->hdc );
-        SetLastError( ERROR_INVALID_FUNCTION );
-        return FALSE;
+        /* But only for its own thread */
+        if(glrc->thread_id != GetCurrentThreadId())
+        {
+            DBGPRINT( "Error: GLRC is current for DC 0x%08x", glrc->hdc );
+            SetLastError( ERROR_INVALID_FUNCTION );
+            return FALSE;
+        }
+        /* Unset it before going further */
+        rosglMakeCurrent(glrc->hdc, NULL);
     }
 
     /* release ICD's context */
@@ -862,32 +903,6 @@ rosglGetLayerPaletteEntries( HDC hdc, int iLayerPlane, int iStart,
 }
 
 
-/*! \brief Returns the current pixelformat.
- *
- * \param hdc [IN] Handle to DC to get the pixelformat from
- *
- * \return Pixelformat index
- * \retval 0 Failure
- */
-int
-WINAPI
-rosglGetPixelFormat( HDC hdc )
-{
-    GLDCDATA *dcdata;
-
-    DBGTRACE( "Called!" );
-
-    dcdata = ROSGL_GetPrivateDCData( hdc );
-    if (dcdata == NULL)
-    {
-        DBGPRINT( "Error: ROSGL_GetPrivateDCData failed!" );
-        return 0;
-    }
-
-    return dcdata->pixel_format;
-}
-
-
 /*! \brief Get the address for an OpenGL extension function.
  *
  * The addresses this function returns are only valid within the same thread
@@ -977,24 +992,8 @@ rosglMakeCurrent( HDC hdc, HGLRC hglrc )
     if (OPENGL32_threaddata == NULL)
         return FALSE;
 
-    /* flush current context */
-    if (OPENGL32_threaddata->glrc != NULL)
-    {
-        glFlush();
-    }
-
-    /* check if current context is unset */
-    if (glrc == NULL)
-    {
-        if (OPENGL32_threaddata->glrc != NULL)
-        {
-            glrc = OPENGL32_threaddata->glrc;
-            glrc->icd->DrvReleaseContext( glrc->hglrc );
-            glrc->is_current = FALSE;
-            OPENGL32_threaddata->glrc = NULL;
-        }
-    }
-    else
+    /* Is t a new context ? */
+    if (glrc != NULL)
     {
         /* check hdc */
         if (GetObjectType( hdc ) != OBJ_DC && GetObjectType( hdc ) != OBJ_MEMDC)
@@ -1020,6 +1019,16 @@ rosglMakeCurrent( HDC hdc, HGLRC hglrc )
             return FALSE;
         }
 
+        /* Unset previous one */
+        if (OPENGL32_threaddata->glrc != NULL)
+        {
+            GLRC *oldglrc = OPENGL32_threaddata->glrc;
+            oldglrc->is_current = FALSE;
+            oldglrc->thread_id = 0;
+            oldglrc->hdc = NULL;
+            oldglrc->icd->DrvReleaseContext(oldglrc->hglrc);
+        }
+
         /* call the ICD */
         if (glrc->hglrc != NULL)
         {
@@ -1036,12 +1045,33 @@ rosglMakeCurrent( HDC hdc, HGLRC hglrc )
         }
 
         /* make it current */
-        if (OPENGL32_threaddata->glrc != NULL)
-            OPENGL32_threaddata->glrc->is_current = FALSE;
         glrc->is_current = TRUE;
         glrc->thread_id = GetCurrentThreadId();
         glrc->hdc = hdc;
         OPENGL32_threaddata->glrc = glrc;
+    }
+    else if(OPENGL32_threaddata->glrc)
+    {
+        /* This is a call to unset the context */
+        GLRC *oldglrc = OPENGL32_threaddata->glrc;
+        oldglrc->is_current = FALSE;
+        oldglrc->thread_id = 0;
+        oldglrc->hdc = NULL;
+        oldglrc->icd->DrvReleaseContext(oldglrc->hglrc);
+        OPENGL32_threaddata->glrc = NULL;
+    }
+    else
+    {
+        /*
+         * To make wine tests happy.
+         * Now, who cares if MakeCurrentContext(NULL, NULL) fails when current context is already NULL
+         */
+        if (GetObjectType( hdc ) != OBJ_DC && GetObjectType( hdc ) != OBJ_MEMDC)
+        {
+            DBGPRINT( "Error: hdc is not a DC handle!" );
+            SetLastError( ERROR_INVALID_HANDLE );
+            return FALSE;
+        }
     }
 
     if (ROSGL_SetContextCallBack( icdTable ) != ERROR_SUCCESS && icdTable == NULL)
