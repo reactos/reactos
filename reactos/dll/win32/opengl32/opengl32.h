@@ -158,7 +158,7 @@ typedef struct tagGLRC
 /* OpenGL private device context data */
 typedef struct tagGLDCDATA
 {
-    HDC hdc;           /*!< Device context handle for which this data is */
+    HANDLE handle;     /*!< Handle for which this data is (HWND for device, HDC for memory context) */
     GLDRIVERDATA *icd; /*!< Driver used for this DC */
     int pixel_format;  /*!< Selected pixel format */
 

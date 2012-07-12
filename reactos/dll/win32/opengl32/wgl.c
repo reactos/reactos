@@ -250,6 +250,7 @@ GLDCDATA *
 ROSGL_GetPrivateDCData( HDC hdc )
 {
     GLDCDATA *data;
+    HANDLE handle;
 
     /* check hdc */
     if (GetObjectType( hdc ) != OBJ_DC && GetObjectType( hdc ) != OBJ_MEMDC)
@@ -267,11 +268,17 @@ ROSGL_GetPrivateDCData( HDC hdc )
         return NULL; /* FIXME: do we have to expect such an error and handle it? */
     }
 
+    /* We must use the window to identify our data, as pixel format is
+     * specific to a window for device context */
+    handle = WindowFromDC(hdc);
+    if(!handle)
+        handle = hdc;
+
     /* look for data in list */
     data = OPENGL32_processdata.dcdata_list;
     while (data != NULL)
     {
-        if (data->hdc == hdc) /* found */
+        if (data->handle == handle) /* found */
             break;
         data = data->next;
     }
@@ -288,7 +295,7 @@ ROSGL_GetPrivateDCData( HDC hdc )
         }
         else
         {
-            data->hdc = hdc;
+            data->handle = handle;
 
             /* append data to list */
             if (OPENGL32_processdata.dcdata_list == NULL)
@@ -1111,32 +1118,30 @@ BOOL
 WINAPI
 rosglSetPixelFormat( HDC hdc, int iFormat, CONST PIXELFORMATDESCRIPTOR *pfd )
 {
-    GLDRIVERDATA *icd;
     GLDCDATA *dcdata;
+    GLDRIVERDATA* icd;
 
     DBGTRACE( "Called!" );
 
-    /* load ICD */
-    icd = ROSGL_ICDForHDC( hdc );
-    if (icd == NULL)
-    {
-        DBGPRINT( "Warning: ICDForHDC() failed" );
-        return FALSE;
-    }
-
-    /* call ICD */
-    if (!icd->DrvSetPixelFormat( hdc, iFormat, pfd ))
-    {
-        DBGPRINT( "Warning: DrvSetPixelFormat(format=%d) failed (%d)",
-                  iFormat, GetLastError() );
-        return FALSE;
-    }
-
-    /* store format in private DC data */
+    /* Get private DC data */
     dcdata = ROSGL_GetPrivateDCData( hdc );
     if (dcdata == NULL)
     {
         DBGPRINT( "Error: ROSGL_GetPrivateDCData() failed!" );
+        return FALSE;
+    }
+    /* you can set the same pixel format twice, but you can't modify it */
+    if(dcdata->pixel_format) return dcdata->pixel_format == iFormat;
+
+    icd = ROSGL_ICDForHDC(hdc);
+    if(icd == NULL)
+        return 0;
+
+    /* Call ICD function */
+    if (!icd->DrvSetPixelFormat( hdc, iFormat, pfd ))
+    {
+        DBGPRINT( "Warning: DrvSetPixelFormat(format=%d) failed (%d)",
+                  iFormat, GetLastError() );
         return FALSE;
     }
     dcdata->pixel_format = iFormat;
