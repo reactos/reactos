@@ -292,7 +292,7 @@ LRESULT CALLBACK AddressBarProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
     case WM_KEYUP:
         if (wParam == VK_RETURN)
         {
-            GetWindowText(hwnd, s_szNode, sizeof(s_szNode) / sizeof(s_szNode[0]));
+            GetWindowText(hwnd, s_szNode, COUNT_OF(s_szNode));
             SelectNode(g_pChildWnd->hTreeWnd, s_szNode);
         }
         break;
@@ -325,7 +325,7 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         HFONT hFont;
         TCHAR buffer[MAX_PATH];
         /* load "My Computer" string */
-        LoadString(hInst, IDS_MY_COMPUTER, buffer, sizeof(buffer)/sizeof(TCHAR));
+        LoadString(hInst, IDS_MY_COMPUTER, buffer, COUNT_OF(buffer));
 
         g_pChildWnd = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(ChildWnd));
         if (!g_pChildWnd) return 0;
@@ -557,7 +557,7 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
                 if (ptvdi->item.pszText)
                 {
                     keyPath = GetItemPath(g_pChildWnd->hTreeWnd, TreeView_GetParent(g_pChildWnd->hTreeWnd, ptvdi->item.hItem), &hRootKey);
-                    _sntprintf(szBuffer, sizeof(szBuffer) / sizeof(szBuffer[0]), _T("%s\\%s"), keyPath, ptvdi->item.pszText);
+                    _sntprintf(szBuffer, COUNT_OF(szBuffer), _T("%s\\%s"), keyPath, ptvdi->item.pszText);
                     keyPath = GetItemPath(g_pChildWnd->hTreeWnd, ptvdi->item.hItem, &hRootKey);
                     if (RegOpenKeyEx(hRootKey, szBuffer, 0, KEY_READ, &hKey) == ERROR_SUCCESS)
                     {
@@ -693,7 +693,7 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
                 (void)TreeView_GetItem(g_pChildWnd->hTreeWnd, &item);
 
                 /* Set the Expand/Collapse menu item appropriately */
-                LoadString(hInst, (item.state & TVIS_EXPANDED) ? IDS_COLLAPSE : IDS_EXPAND, buffer, sizeof(buffer) / sizeof(buffer[0]));
+                LoadString(hInst, (item.state & TVIS_EXPANDED) ? IDS_COLLAPSE : IDS_EXPAND, buffer, COUNT_OF(buffer));
                 memset(&mii, 0, sizeof(mii));
                 mii.cbSize = sizeof(mii);
                 mii.fMask = MIIM_STRING | MIIM_STATE | MIIM_ID;
@@ -720,18 +720,18 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 
                 /* Come up with suggestions */
                 keyPath = GetItemPath(g_pChildWnd->hTreeWnd, NULL, &hRootKey);
-                SuggestKeys(hRootKey, keyPath, Suggestions, sizeof(Suggestions) / sizeof(Suggestions[0]));
+                SuggestKeys(hRootKey, keyPath, Suggestions, COUNT_OF(Suggestions));
                 if (Suggestions[0])
                 {
                     AppendMenu(hContextMenu, MF_SEPARATOR, 0, NULL);
 
-                    LoadString(hInst, IDS_GOTO_SUGGESTED_KEY, resource, sizeof(resource) / sizeof(resource[0]));
+                    LoadString(hInst, IDS_GOTO_SUGGESTED_KEY, resource, COUNT_OF(resource));
 
                     s = Suggestions;
                     wID = ID_TREE_SUGGESTION_MIN;
                     while(*s && (wID <= ID_TREE_SUGGESTION_MAX))
                     {
-                        _sntprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), resource, s);
+                        _sntprintf(buffer, COUNT_OF(buffer), resource, s);
 
                         memset(&mii, 0, sizeof(mii));
                         mii.cbSize = sizeof(mii);

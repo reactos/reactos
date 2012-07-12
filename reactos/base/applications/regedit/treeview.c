@@ -586,7 +586,7 @@ BOOL CreateNewKey(HWND hwndTV, HTREEITEM hItem)
     else if (RegOpenKey(hRootKey, pszKeyPath, &hKey) != ERROR_SUCCESS)
         goto done;
 
-    if (LoadString(hInst, IDS_NEW_KEY, szNewKeyFormat, sizeof(szNewKeyFormat) / sizeof(szNewKeyFormat[0])) <= 0)
+    if (LoadString(hInst, IDS_NEW_KEY, szNewKeyFormat, COUNT_OF(szNewKeyFormat)) <= 0)
         goto done;
 
     /* Need to create a new key with a unique name */
@@ -704,7 +704,7 @@ BOOL SelectNode(HWND hwndTV, LPCTSTR keyPath)
             tvi.hItem = hChildItem;
             tvi.mask = TVIF_TEXT | TVIF_CHILDREN;
             tvi.pszText = szBuffer;
-            tvi.cchTextMax = sizeof(szBuffer) / sizeof(szBuffer[0]);
+            tvi.cchTextMax = COUNT_OF(szBuffer);
 
             (void)TreeView_GetItem(hwndTV, &tvi);
 

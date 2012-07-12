@@ -128,7 +128,7 @@ extern void SaveSettings(void)
             if (keyPath)
             {
                 rootName = get_root_key_name(hRootKey);
-                _sntprintf(szBuffer, sizeof(szBuffer) / sizeof(szBuffer[0]), _T("My Computer\\%s\\%s"), rootName, keyPath);
+                _sntprintf(szBuffer, COUNT_OF(szBuffer), _T("My Computer\\%s\\%s"), rootName, keyPath);
                 RegSetValueEx(hKey, _T("LastKey"), 0, REG_SZ, (LPBYTE) szBuffer, (DWORD) _tcslen(szBuffer) * sizeof(szBuffer[0]));
             }
 

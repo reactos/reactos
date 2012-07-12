@@ -924,7 +924,7 @@ InitializeRemoteRegistryPicker(OUT IDsObjectPicker **pDsObjectPicker)
 
         InitInfo.cbSize = sizeof(InitInfo);
         InitInfo.pwzTargetComputer = NULL;
-        InitInfo.cDsScopeInfos = sizeof(Scopes) / sizeof(Scopes[0]);
+        InitInfo.cDsScopeInfos = COUNT_OF(Scopes);
         InitInfo.aDsScopeInfos = Scopes;
         InitInfo.flOptions = 0;
         InitInfo.cAttributesToFetch = 0;
@@ -1065,7 +1065,7 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 hRet = InvokeRemoteRegistryPickerDialog(ObjectPicker,
                                                         hWnd,
                                                         szComputerName,
-                                                        sizeof(szComputerName) / sizeof(szComputerName[0]));
+                                                        COUNT_OF(szComputerName));
                 if (hRet == S_OK)
                 {
                     /* FIXME - connect to the registry */
@@ -1269,7 +1269,7 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             mii.fMask = MIIM_TYPE;
             mii.fType = MFT_STRING;
             mii.dwTypeData = szFavorite;
-            mii.cch = sizeof(szFavorite) / sizeof(szFavorite[0]);
+            mii.cch = COUNT_OF(szFavorite);
 
             if (GetMenuItemInfo(hMenu, LOWORD(wParam) - ID_FAVORITES_MIN, TRUE, &mii))
             {

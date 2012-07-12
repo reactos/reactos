@@ -36,7 +36,7 @@ static const CHAR *reg_class_names[] =
     "HKEY_CURRENT_CONFIG", "HKEY_CURRENT_USER", "HKEY_DYN_DATA"
 };
 
-#define REG_CLASS_NUMBER (sizeof(reg_class_names) / sizeof(reg_class_names[0]))
+#define REG_CLASS_NUMBER (COUNT_OF(reg_class_names))
 
 const WCHAR* reg_class_namesW[REG_CLASS_NUMBER] =
 {

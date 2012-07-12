@@ -82,10 +82,11 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     wcChild.cbWndExtra = sizeof(HANDLE);
     wcChild.hInstance = hInstance;
     wcChild.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_REGEDIT));
-    wcChild.hCursor = LoadCursor(0, IDC_ARROW),
-            wcChild.lpszClassName =  szChildClass,
-                    wcChild.hIconSm = (HICON)LoadImage(hInstance, MAKEINTRESOURCE(IDI_REGEDIT), IMAGE_ICON,
-                                      GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), LR_SHARED);
+    wcChild.hCursor = LoadCursor(0, IDC_ARROW);
+    wcChild.lpszClassName = szChildClass;
+    wcChild.hIconSm = (HICON)LoadImage(hInstance, MAKEINTRESOURCE(IDI_REGEDIT),
+                                       IMAGE_ICON, GetSystemMetrics(SM_CXSMICON),
+                                       GetSystemMetrics(SM_CYSMICON), LR_SHARED);
 
     RegisterClassEx(&wcChild); /* register child windows class */
 

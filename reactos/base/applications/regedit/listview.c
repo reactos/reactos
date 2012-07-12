@@ -176,7 +176,7 @@ static void AddEntryToList(HWND hwndLV, LPTSTR Name, DWORD dwValType, void* ValB
             {
                 TCHAR buffer[255];
                 /* load (value not set) string */
-                LoadString(hInst, IDS_VALUE_NOT_SET, buffer, sizeof(buffer)/sizeof(TCHAR));
+                LoadString(hInst, IDS_VALUE_NOT_SET, buffer, COUNT_OF(buffer));
                 ListView_SetItemText(hwndLV, index, 2, buffer);
             }
             break;
@@ -216,7 +216,7 @@ static void AddEntryToList(HWND hwndLV, LPTSTR Name, DWORD dwValType, void* ValB
             }
             else
             {
-                LoadString(hInst, IDS_INVALID_DWORD, buf, sizeof(buf)/sizeof(TCHAR));
+                LoadString(hInst, IDS_INVALID_DWORD, buf, COUNT_OF(buf));
             }
             ListView_SetItemText(hwndLV, index, 2, buf);
         }
@@ -241,7 +241,7 @@ static void AddEntryToList(HWND hwndLV, LPTSTR Name, DWORD dwValType, void* ValB
             else
             {
                 TCHAR szText[128];
-                LoadString(hInst, IDS_BINARY_EMPTY, szText, sizeof(szText)/sizeof(TCHAR));
+                LoadString(hInst, IDS_BINARY_EMPTY, szText, COUNT_OF(szText));
                 ListView_SetItemText(hwndLV, index, 2, szText);
             }
         }
@@ -266,7 +266,7 @@ static BOOL CreateListColumns(HWND hWndListView)
         lvC.iSubItem = index;
         lvC.cx = default_column_widths[index];
         lvC.fmt = column_alignment[index];
-        LoadString(hInst, IDS_LIST_COLUMN_FIRST + index, szText, sizeof(szText)/sizeof(TCHAR));
+        LoadString(hInst, IDS_LIST_COLUMN_FIRST + index, szText, COUNT_OF(szText));
         if (ListView_InsertColumn(hWndListView, index, &lvC) == -1) return FALSE;
     }
     return TRUE;
@@ -313,7 +313,7 @@ static void OnGetDispInfo(NMLVDISPINFO* plvdi)
     switch (plvdi->item.iSubItem)
     {
     case 0:
-        LoadString(hInst, IDS_DEFAULT_VALUE_NAME, buffer, sizeof(buffer)/sizeof(TCHAR));
+        LoadString(hInst, IDS_DEFAULT_VALUE_NAME, buffer, COUNT_OF(buffer));
         plvdi->item.pszText = buffer;
         break;
     case 1:
@@ -358,7 +358,7 @@ static void OnGetDispInfo(NMLVDISPINFO* plvdi)
         default:
         {
             TCHAR buf2[200];
-            LoadString(hInst, IDS_UNKNOWN_TYPE, buf2, sizeof(buf2)/sizeof(TCHAR));
+            LoadString(hInst, IDS_UNKNOWN_TYPE, buf2, COUNT_OF(buf2));
             wsprintf(buffer, buf2, ((LINE_INFO*)plvdi->item.lParam)->dwValType);
             plvdi->item.pszText = buffer;
             break;
@@ -453,8 +453,8 @@ BOOL ListWndNotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam, BOOL *Result)
                 {
                     TCHAR msg[128], caption[128];
 
-                    LoadString(hInst, IDS_ERR_RENVAL_TOEMPTY, msg, sizeof(msg)/sizeof(TCHAR));
-                    LoadString(hInst, IDS_ERR_RENVAL_CAPTION, caption, sizeof(caption)/sizeof(TCHAR));
+                    LoadString(hInst, IDS_ERR_RENVAL_TOEMPTY, msg, COUNT_OF(msg));
+                    LoadString(hInst, IDS_ERR_RENVAL_CAPTION, caption, COUNT_OF(caption));
                     MessageBox(0, msg, caption, 0);
                     *Result = TRUE;
                 }
