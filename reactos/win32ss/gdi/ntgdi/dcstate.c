@@ -73,7 +73,17 @@ IntGdiCleanDC(HDC hDC)
     dc = DC_LockDc(hDC);
     if (!dc) return FALSE;
     // Clean the DC
-    if (defaultDCstate) DC_vCopyState(defaultDCstate, dc, FALSE);
+    if (defaultDCstate)
+    {
+        DC_vCopyState(defaultDCstate, dc, FALSE);
+        /* Update the brushes now, because they reference some objects (the DC palette)
+         * Which belong to the current process, and this DC might be used for another process
+         * after being cleaned up (for GetDC(0) for instance) */
+        DC_vUpdateFillBrush(dc);
+        DC_vUpdateBackgroundBrush(dc);
+        DC_vUpdateLineBrush(dc);
+        DC_vUpdateTextBrush(dc);
+    }
 
     DC_UnlockDc(dc);
 
