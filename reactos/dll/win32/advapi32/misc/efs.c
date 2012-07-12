@@ -30,13 +30,11 @@ DecryptFileA(LPCSTR lpFileName,
              DWORD dwReserved)
 {
     UNICODE_STRING FileName;
-    NTSTATUS Status;
     BOOL ret;
 
-    Status = RtlCreateUnicodeStringFromAsciiz(&FileName, lpFileName);
-    if (!NT_SUCCESS(Status))
+    if (!RtlCreateUnicodeStringFromAsciiz(&FileName, lpFileName))
     {
-        SetLastError(RtlNtStatusToDosError(Status));
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return FALSE;
     }
 
@@ -67,13 +65,11 @@ BOOL WINAPI
 EncryptFileA(LPCSTR lpFileName)
 {
     UNICODE_STRING FileName;
-    NTSTATUS Status;
     BOOL ret;
 
-    Status = RtlCreateUnicodeStringFromAsciiz(&FileName, lpFileName);
-    if (!NT_SUCCESS(Status))
+    if (!RtlCreateUnicodeStringFromAsciiz(&FileName, lpFileName))
     {
-        SetLastError(RtlNtStatusToDosError(Status));
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return FALSE;
     }
 
@@ -117,17 +113,15 @@ FileEncryptionStatusA(LPCSTR lpFileName,
                       LPDWORD lpStatus)
 {
     UNICODE_STRING FileName;
-    NTSTATUS Status;
     BOOL ret = FALSE;
 
     TRACE("(%s, %p)\n", lpFileName, lpStatus);
 
     FileName.Buffer = NULL;
 
-    Status = RtlCreateUnicodeStringFromAsciiz(&FileName, lpFileName);
-    if (!NT_SUCCESS(Status))
+    if (!RtlCreateUnicodeStringFromAsciiz(&FileName, lpFileName))
     {
-        SetLastError(RtlNtStatusToDosError(Status));
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         goto cleanup;
     }
 

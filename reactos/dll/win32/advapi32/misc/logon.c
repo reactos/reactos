@@ -156,34 +156,27 @@ LogonUserA(LPSTR lpszUsername,
     UNICODE_STRING UserName;
     UNICODE_STRING Domain;
     UNICODE_STRING Password;
-    NTSTATUS Status;
     BOOL ret = FALSE;
 
     UserName.Buffer = NULL;
     Domain.Buffer = NULL;
     Password.Buffer = NULL;
 
-    Status = RtlCreateUnicodeStringFromAsciiz(&UserName,
-                                              lpszUsername);
-    if (!NT_SUCCESS(Status))
+    if (!RtlCreateUnicodeStringFromAsciiz(&UserName, lpszUsername))
     {
-        SetLastError(RtlNtStatusToDosError(Status));
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         goto UsernameDone;
     }
 
-    Status = RtlCreateUnicodeStringFromAsciiz(&Domain,
-                                              lpszDomain);
-    if (!NT_SUCCESS(Status))
+    if (!RtlCreateUnicodeStringFromAsciiz(&Domain, lpszDomain))
     {
-        SetLastError(RtlNtStatusToDosError(Status));
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         goto DomainDone;
     }
 
-    Status = RtlCreateUnicodeStringFromAsciiz(&Password,
-                                              lpszPassword);
-    if (!NT_SUCCESS(Status))
+    if (!RtlCreateUnicodeStringFromAsciiz(&Password, lpszPassword))
     {
-        SetLastError(RtlNtStatusToDosError(Status));
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         goto PasswordDone;
     }
 

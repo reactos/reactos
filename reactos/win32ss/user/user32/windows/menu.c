@@ -4635,7 +4635,6 @@ InsertMenuItemA(
   UNICODE_STRING MenuText;
   BOOL res = FALSE;
   BOOL CleanHeap = FALSE;
-  NTSTATUS Status;
 
   if((lpmii->cbSize == sizeof(MENUITEMINFOA)) ||
      (lpmii->cbSize == sizeof(MENUITEMINFOA) - sizeof(HBITMAP)))
@@ -4652,10 +4651,9 @@ InsertMenuItemA(
         ((mi.fMask & MIIM_TYPE) && (MENU_ITEM_TYPE(mi.fType) == MF_STRING)))
           && mi.dwTypeData != NULL)
     {
-      Status = RtlCreateUnicodeStringFromAsciiz(&MenuText, (LPSTR)mi.dwTypeData);
-      if (!NT_SUCCESS (Status))
+      if (!RtlCreateUnicodeStringFromAsciiz(&MenuText, (LPSTR)mi.dwTypeData))
       {
-        SetLastError (RtlNtStatusToDosError(Status));
+        SetLastError (ERROR_NOT_ENOUGH_MEMORY);
         return FALSE;
       }
       mi.dwTypeData = MenuText.Buffer;

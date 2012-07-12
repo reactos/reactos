@@ -281,16 +281,14 @@ RealSystemParametersInfoA(UINT uiAction,
 
       case SPI_SETDESKWALLPAPER:
       {
-          NTSTATUS Status;
           UNICODE_STRING ustrWallpaper;
           BOOL Ret;
 
           if (pvParam)
           {
-            Status = RtlCreateUnicodeStringFromAsciiz(&ustrWallpaper, pvParam);
-            if (!NT_SUCCESS(Status))
+            if (!RtlCreateUnicodeStringFromAsciiz(&ustrWallpaper, pvParam))
             {
-                ERR("Status = 0x%x\n", Status);
+                ERR("RtlCreateUnicodeStringFromAsciiz failed\n");
                 return FALSE;
             }
             pvParam = &ustrWallpaper;
