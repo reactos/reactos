@@ -2,15 +2,14 @@
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-set_rc_compiler()
 spec2def(wintrust.dll wintrust.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
+    asn.c
     crypt.c
     register.c
-    wintrust_main.c
-    asn.c
     softpub.c
+    wintrust_main.c
     version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/wintrust_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/wintrust.def)
