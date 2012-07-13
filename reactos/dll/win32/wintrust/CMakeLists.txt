@@ -17,7 +17,9 @@ list(APPEND SOURCE
 add_library(wintrust SHARED ${SOURCE})
 set_module_type(wintrust win32dll)
 target_link_libraries(wintrust wine ${PSEH_LIB})
-add_delay_importlibs(wintrust cryptui imagehlp)
-add_importlibs(wintrust crypt32 user32 advapi32 msvcrt kernel32 ntdll)
+# FIXME: imagehlp should be delay-imported. See bug 7171
+#add_delay_importlibs(wintrust cryptui imagehlp)
+add_delay_importlibs(wintrust cryptui)
+add_importlibs(wintrust imagehlp crypt32 user32 advapi32 msvcrt kernel32 ntdll)
 
 add_cd_file(TARGET wintrust DESTINATION reactos/system32 FOR all)
