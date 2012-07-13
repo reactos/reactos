@@ -248,6 +248,38 @@ __INTRIN_INLINE long long _InterlockedXor64(volatile long long * const value, co
 }
 #endif
 
+__INTRIN_INLINE long _InterlockedDecrement(volatile long * const lpAddend)
+{
+	return __sync_sub_and_fetch(lpAddend, 1);
+}
+
+__INTRIN_INLINE long _InterlockedIncrement(volatile long * const lpAddend)
+{
+	return __sync_add_and_fetch(lpAddend, 1);
+}
+
+__INTRIN_INLINE short _InterlockedDecrement16(volatile short * const lpAddend)
+{
+	return __sync_sub_and_fetch(lpAddend, 1);
+}
+
+__INTRIN_INLINE short _InterlockedIncrement16(volatile short * const lpAddend)
+{
+	return __sync_add_and_fetch(lpAddend, 1);
+}
+
+#if defined(_M_AMD64)
+__INTRIN_INLINE long long _InterlockedDecrement64(volatile long long * const lpAddend)
+{
+	return __sync_sub_and_fetch(lpAddend, 1);
+}
+
+__INTRIN_INLINE long long _InterlockedIncrement64(volatile long long * const lpAddend)
+{
+	return __sync_add_and_fetch(lpAddend, 1);
+}
+#endif
+
 #else
 
 __INTRIN_INLINE char _InterlockedCompareExchange8(volatile char * const Destination, const char Exchange, const char Comperand)
@@ -459,6 +491,38 @@ __INTRIN_INLINE long _InterlockedXor(volatile long * const value, const long mas
 	return y;
 }
 
+__INTRIN_INLINE long _InterlockedDecrement(volatile long * const lpAddend)
+{
+	return _InterlockedExchangeAdd(lpAddend, -1) - 1;
+}
+
+__INTRIN_INLINE long _InterlockedIncrement(volatile long * const lpAddend)
+{
+	return _InterlockedExchangeAdd(lpAddend, 1) + 1;
+}
+
+__INTRIN_INLINE short _InterlockedDecrement16(volatile short * const lpAddend)
+{
+	return _InterlockedExchangeAdd16(lpAddend, -1) - 1;
+}
+
+__INTRIN_INLINE short _InterlockedIncrement16(volatile short * const lpAddend)
+{
+	return _InterlockedExchangeAdd16(lpAddend, 1) + 1;
+}
+
+#if defined(_M_AMD64)
+__INTRIN_INLINE long long _InterlockedDecrement64(volatile long long * const lpAddend)
+{
+	return _InterlockedExchangeAdd64(lpAddend, -1) - 1;
+}
+
+__INTRIN_INLINE long long _InterlockedIncrement64(volatile long long * const lpAddend)
+{
+	return _InterlockedExchangeAdd64(lpAddend, 1) + 1;
+}
+#endif
+
 #endif
 
 #if (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__) > 40100 && defined(__x86_64__)
@@ -504,38 +568,6 @@ __INTRIN_INLINE long _InterlockedAddLargeStatistic(volatile long long * const Ad
 
 	return Value;
 }
-
-__INTRIN_INLINE long _InterlockedDecrement(volatile long * const lpAddend)
-{
-	return _InterlockedExchangeAdd(lpAddend, -1) - 1;
-}
-
-__INTRIN_INLINE long _InterlockedIncrement(volatile long * const lpAddend)
-{
-	return _InterlockedExchangeAdd(lpAddend, 1) + 1;
-}
-
-__INTRIN_INLINE short _InterlockedDecrement16(volatile short * const lpAddend)
-{
-	return _InterlockedExchangeAdd16(lpAddend, -1) - 1;
-}
-
-__INTRIN_INLINE short _InterlockedIncrement16(volatile short * const lpAddend)
-{
-	return _InterlockedExchangeAdd16(lpAddend, 1) + 1;
-}
-
-#if defined(_M_AMD64)
-__INTRIN_INLINE long long _InterlockedDecrement64(volatile long long * const lpAddend)
-{
-	return _InterlockedExchangeAdd64(lpAddend, -1) - 1;
-}
-
-__INTRIN_INLINE long long _InterlockedIncrement64(volatile long long * const lpAddend)
-{
-	return _InterlockedExchangeAdd64(lpAddend, 1) + 1;
-}
-#endif
 
 __INTRIN_INLINE unsigned char _interlockedbittestandreset(volatile long * a, const long b)
 {
