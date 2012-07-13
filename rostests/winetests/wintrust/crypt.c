@@ -115,6 +115,8 @@ static CRYPTCATATTRIBUTE * (WINAPI * pCryptCATEnumerateCatAttr)(HANDLE, CRYPTCAT
 static CRYPTCATMEMBER * (WINAPI * pCryptCATEnumerateMember)(HANDLE, CRYPTCATMEMBER *);
 static CRYPTCATATTRIBUTE * (WINAPI * pCryptCATEnumerateAttr)(HANDLE, CRYPTCATMEMBER *, CRYPTCATATTRIBUTE *);
 static BOOL (WINAPI * pCryptCATClose)(HANDLE);
+static pCryptSIPGetSignedDataMsg pGetSignedDataMsg;
+static pCryptSIPPutSignedDataMsg pPutSignedDataMsg;
 
 static void InitFunctionPtrs(void)
 {
@@ -144,6 +146,14 @@ static void InitFunctionPtrs(void)
     WINTRUST_GET_PROC(CryptCATClose)
 
 #undef WINTRUST_GET_PROC
+
+    pGetSignedDataMsg = (void*)GetProcAddress(hWintrust, "CryptSIPGetSignedDataMsg");
+    if(!pGetSignedDataMsg)
+        trace("GetProcAddress(CryptSIPGetSignedDataMsg) failed\n");
+
+    pPutSignedDataMsg = (void*)GetProcAddress(hWintrust, "CryptSIPPutSignedDataMsg");
+    if(!pPutSignedDataMsg)
+        trace("GetProcAddress(CryptSIPPutSignedDataMsg) failed\n");
 }
 
 static GUID dummy = {0xdeadbeef,0xdead,0xbeef,{0xde,0xad,0xbe,0xef,0xde,0xad,0xbe,0xef}};
@@ -616,6 +626,7 @@ static void test_CryptCATAdminAddRemoveCatalog(void)
     /* Set the attributes so we can delete the file */
     attrs = FILE_ATTRIBUTE_NORMAL;
     ret = SetFileAttributesA(tmpfile, attrs);
+    ok(ret, "SetFileAttributesA failed %u\n", GetLastError());
     DeleteFileA(tmpfile);
 }
 
@@ -784,7 +795,7 @@ static void test_create_catalog_file(void)
 
     /* Only enumerate the members */
     trace("Only members\n");
-    attrcount = membercount = 0;
+    membercount = 0;
     catcdf = pCryptCATCDFOpen(cdffileW, NULL);
 
     catmember = NULL;
@@ -892,8 +903,7 @@ static void test_cdf_parsing(void)
     catcdf = pCryptCATCDFOpen(cdffileW, cdf_callback);
     ok(catcdf == NULL, "CryptCATCDFOpen succeeded\n");
     todo_wine
-    ok(GetLastError() == ERROR_SHARING_VIOLATION ||
-        broken(GetLastError() == ERROR_SUCCESS),    /* win9x */
+    ok(GetLastError() == ERROR_SHARING_VIOLATION,
         "Expected ERROR_SHARING_VIOLATION, got %d\n", GetLastError());
     DeleteFileA(cdffileA);
 
@@ -908,8 +918,7 @@ static void test_cdf_parsing(void)
     catcdf = pCryptCATCDFOpen(cdffileW, cdf_callback);
     ok(catcdf == NULL, "CryptCATCDFOpen succeeded\n");
     todo_wine
-    ok(GetLastError() == ERROR_SHARING_VIOLATION ||
-        broken(GetLastError() == ERROR_SUCCESS),    /* win9x */
+    ok(GetLastError() == ERROR_SHARING_VIOLATION,
         "Expected ERROR_SHARING_VIOLATION, got %d\n", GetLastError());
     DeleteFileA(cdffileA);
     ok(!DeleteFileA(catfileA), "Didn't expect a catalog file to be created\n");
@@ -924,8 +933,7 @@ static void test_cdf_parsing(void)
     catcdf = pCryptCATCDFOpen(cdffileW, cdf_callback);
     ok(catcdf == NULL, "CryptCATCDFOpen succeeded\n");
     todo_wine
-    ok(GetLastError() == ERROR_SHARING_VIOLATION ||
-        broken(GetLastError() == ERROR_SUCCESS),    /* win9x */
+    ok(GetLastError() == ERROR_SHARING_VIOLATION,
         "Expected ERROR_SHARING_VIOLATION, got %d\n", GetLastError());
     DeleteFileA(cdffileA);
     ok(!DeleteFileA(catfileA), "Didn't expect a catalog file to be created\n");
@@ -1119,6 +1127,162 @@ static void test_cdf_parsing(void)
     ok(DeleteFileA(catfileA), "Expected a catalog file to be created\n");
 }
 
+static const struct
+{
+    WORD e_magic;      /* 00: MZ Header signature */
+    WORD unused[29];
+    DWORD e_lfanew;    /* 3c: Offset to extended header */
+} dos_header =
+{
+    IMAGE_DOS_SIGNATURE, { 0 }, sizeof(dos_header)
+};
+
+static IMAGE_NT_HEADERS nt_header =
+{
+    IMAGE_NT_SIGNATURE, /* Signature */
+    {
+        IMAGE_FILE_MACHINE_I386, /* Machine */
+        1, /* NumberOfSections */
+        0, /* TimeDateStamp */
+        0, /* PointerToSymbolTable */
+        0, /* NumberOfSymbols */
+        sizeof(IMAGE_OPTIONAL_HEADER), /* SizeOfOptionalHeader */
+        IMAGE_FILE_EXECUTABLE_IMAGE /* Characteristics */
+    },
+    {
+        IMAGE_NT_OPTIONAL_HDR_MAGIC, /* Magic */
+        2, /* MajorLinkerVersion */
+        15, /* MinorLinkerVersion */
+        0, /* SizeOfCode */
+        0, /* SizeOfInitializedData */
+        0, /* SizeOfUninitializedData */
+        0, /* AddressOfEntryPoint */
+        0x10, /* BaseOfCode, also serves as e_lfanew in the truncated MZ header */
+#ifndef _WIN64
+        0, /* BaseOfData */
+#endif
+        0x10000000, /* ImageBase */
+        0, /* SectionAlignment */
+        0, /* FileAlignment */
+        4, /* MajorOperatingSystemVersion */
+        0, /* MinorOperatingSystemVersion */
+        1, /* MajorImageVersion */
+        0, /* MinorImageVersion */
+        4, /* MajorSubsystemVersion */
+        0, /* MinorSubsystemVersion */
+        0, /* Win32VersionValue */
+        0x200, /* SizeOfImage */
+        sizeof(dos_header) + sizeof(nt_header), /* SizeOfHeaders */
+        0, /* CheckSum */
+        IMAGE_SUBSYSTEM_WINDOWS_CUI, /* Subsystem */
+        0, /* DllCharacteristics */
+        0, /* SizeOfStackReserve */
+        0, /* SizeOfStackCommit */
+        0, /* SizeOfHeapReserve */
+        3, /* SizeOfHeapCommit */
+        2, /* LoaderFlags */
+        1, /* NumberOfRvaAndSizes */
+        { { 0 } } /* DataDirectory[IMAGE_NUMBEROF_DIRECTORY_ENTRIES] */
+    }
+};
+
+static void test_sip(void)
+{
+    static WCHAR nameW[] = {'t','e','s','t','.','e','x','e',0};
+    SIP_SUBJECTINFO info;
+    DWORD index, encoding, size;
+    HANDLE file;
+    GUID guid;
+    BOOL ret;
+    char buf[1024];
+
+    file = CreateFileW(nameW, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    ok(file != INVALID_HANDLE_VALUE, "can't create file\n");
+    if(file == INVALID_HANDLE_VALUE)
+        return;
+    WriteFile(file, &dos_header, sizeof(dos_header), &size, NULL);
+    WriteFile(file, &nt_header, sizeof(nt_header), &size, NULL);
+    memset(buf, 0, sizeof(buf));
+    WriteFile(file, buf, 0x200 - sizeof(dos_header) - sizeof(nt_header), &size, NULL);
+    CloseHandle(file);
+
+    file= CreateFileW(nameW, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    ok(file != INVALID_HANDLE_VALUE, "can't open file\n");
+
+    memset(&info, 0, sizeof(SIP_SUBJECTINFO));
+    info.cbSize = sizeof(SIP_SUBJECTINFO);
+    info.pgSubjectType = &guid;
+    ret = CryptSIPRetrieveSubjectGuid(NULL, file, info.pgSubjectType);
+    ok(ret, "CryptSIPRetrieveSubjectGuid failed (%x)\n", GetLastError());
+
+    ret = pPutSignedDataMsg(&info, X509_ASN_ENCODING, &index, 4, (BYTE*)"test");
+    ok(!ret, "CryptSIPPutSignedDataMsg succeedded\n");
+    index = GetLastError();
+    ok(index == ERROR_PATH_NOT_FOUND, "GetLastError returned %x\n", index);
+
+    info.hFile = file;
+    info.pwsFileName = nameW;
+    ret = pPutSignedDataMsg(&info, X509_ASN_ENCODING, &index, 4, (BYTE*)"test");
+    ok(!ret, "CryptSIPPutSignedDataMsg succeedded\n");
+    index = GetLastError();
+    todo_wine ok(index == ERROR_INVALID_PARAMETER, "GetLastError returned %x\n", index);
+
+    info.hFile = INVALID_HANDLE_VALUE;
+    info.pwsFileName = nameW;
+    ret = pPutSignedDataMsg(&info, X509_ASN_ENCODING, &index, 4, (BYTE*)"test");
+    ok(!ret, "CryptSIPPutSignedDataMsg succeedded\n");
+    index = GetLastError();
+    ok(index == ERROR_SHARING_VIOLATION, "GetLastError returned %x\n", index);
+
+    CloseHandle(file);
+    file= CreateFileW(nameW, GENERIC_READ|GENERIC_WRITE, FILE_SHARE_READ|FILE_SHARE_WRITE, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+
+    info.hFile = file;
+    info.pwsFileName = (void*)0xdeadbeef;
+    ret = pPutSignedDataMsg(&info, X509_ASN_ENCODING, &index, 4, (BYTE*)"test");
+    ok(ret, "CryptSIPPutSignedDataMsg failed (%x)\n", GetLastError());
+    ok(index == 0, "index = %x\n", index);
+
+    CloseHandle(file);
+    file= CreateFileW(nameW, GENERIC_READ, FILE_SHARE_READ|FILE_SHARE_WRITE, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+
+    info.hFile = INVALID_HANDLE_VALUE;
+    info.pwsFileName = nameW;
+    ret = pPutSignedDataMsg(&info, X509_ASN_ENCODING, &index, 14, (BYTE*)"longer message");
+    ok(ret, "CryptSIPPutSignedDataMsg failed (%x)\n", GetLastError());
+    ok(index == 1, "index = %x\n", index);
+
+    size = 0;
+    encoding = 0xdeadbeef;
+    ret = pGetSignedDataMsg(&info, &encoding, 0, &size, NULL);
+    ok(ret, "CryptSIPGetSignedDataMsg failed (%x)\n", GetLastError());
+    ok(encoding == 0xdeadbeef, "encoding = %x\n", encoding);
+    ok(size == 16, "size = %d\n", size);
+
+    ret = pGetSignedDataMsg(&info, &encoding, 0, &size, (BYTE*)buf);
+    ok(ret, "CryptSIPGetSignedDataMsg failed (%x)\n", GetLastError());
+    ok(encoding == (X509_ASN_ENCODING|PKCS_7_ASN_ENCODING), "encoding = %x\n", encoding);
+    ok(size == 8, "size = %d\n", size);
+    ok(!memcmp(buf, "test\0\0\0\0", 8), "buf = %s\n", buf);
+
+    size = 0;
+    encoding = 0xdeadbeef;
+    ret = pGetSignedDataMsg(&info, &encoding, 1, &size, NULL);
+    ok(ret, "CryptSIPGetSignedDataMsg failed (%x)\n", GetLastError());
+    ok(encoding == 0xdeadbeef, "encoding = %x\n", encoding);
+    ok(size == 24, "size = %d\n", size);
+
+    ret = pGetSignedDataMsg(&info, &encoding, 1, &size, (BYTE*)buf);
+    ok(ret, "CryptSIPGetSignedDataMsg failed (%x)\n", GetLastError());
+    ok(encoding == (X509_ASN_ENCODING|PKCS_7_ASN_ENCODING), "encoding = %x\n", encoding);
+    ok(size == 16, "size = %d\n", size);
+    ok(!strcmp(buf, "longer message"), "buf = %s\n", buf);
+
+    CryptReleaseContext(info.hProv, 0);
+    CloseHandle(file);
+    DeleteFileW(nameW);
+}
+
 START_TEST(crypt)
 {
     char** myARGV;
@@ -1153,4 +1317,5 @@ START_TEST(crypt)
     /* Create a catalog file out of our own catalog definition file */
     test_create_catalog_file();
     test_CryptCATAdminAddRemoveCatalog();
+    test_sip();
 }

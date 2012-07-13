@@ -150,7 +150,7 @@ static void test_encodeSPCLink(void)
      CRYPT_ENCODE_ALLOC_FLAG, NULL, &buf, &size);
     ok(!ret &&
      (GetLastError() == CRYPT_E_INVALID_IA5_STRING ||
-     GetLastError() == OSS_BAD_PTR /* Win9x */),
+     GetLastError() == OSS_BAD_PTR /* WinNT */),
      "Expected CRYPT_E_INVALID_IA5_STRING, got %08x\n", GetLastError());
     /* Unlike the crypt32 string encoding routines, size is not set to the
      * index of the first invalid character.
@@ -298,7 +298,7 @@ static void test_decodeSPCLink(void)
      NULL, &buf, &size);
     ok(!ret &&
      (GetLastError() == CRYPT_E_BAD_ENCODE ||
-     GetLastError() == OSS_DATA_ERROR /* Win9x */),
+     GetLastError() == OSS_DATA_ERROR /* WinNT */),
      "Expected CRYPT_E_BAD_ENCODE, got %08x\n", GetLastError());
 }
 
