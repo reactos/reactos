@@ -39,6 +39,6 @@ add_custom_command(
     COMMAND native-cabman -C ${CMAKE_CURRENT_BINARY_DIR}/reactos.dff -RC ${CMAKE_CURRENT_BINARY_DIR}/reactos.inf -L ${CMAKE_CURRENT_BINARY_DIR} -N -P ${REACTOS_SOURCE_DIR}
     DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/reactos.inf native-cabman)
 # Finally, we create the reactos_cab target
-add_custom_target(reactos_cab ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/reactos.cab)
+add_custom_target(reactos_cab DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/reactos.cab)
 
 add_cd_file(TARGET reactos_cab FILE ${CMAKE_CURRENT_BINARY_DIR}/reactos.cab ${CMAKE_CURRENT_BINARY_DIR}/reactos.inf DESTINATION reactos NO_CAB FOR bootcd regtest)
