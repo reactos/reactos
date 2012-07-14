@@ -364,7 +364,6 @@ static BOOL ProcessRunKeys(HKEY hkRoot, LPCWSTR szKeyName, BOOL bDelete,
     {
         DWORD nValLength=nMaxValue, nDataLength=nMaxCmdLine;
         DWORD type;
-        WCHAR szCmdLineExp[MAX_PATH+1]= L"\0";
 
         --i;
 
@@ -391,8 +390,7 @@ static BOOL ProcessRunKeys(HKEY hkRoot, LPCWSTR szKeyName, BOOL bDelete,
             continue;
         }
 
-        ExpandEnvironmentStrings(szCmdLine, szCmdLineExp, sizeof(szCmdLineExp));
-        if ((res=runCmd(szCmdLineExp, NULL, bSynchronous, FALSE))==INVALID_RUNCMD_RETURN)
+        if ((res=runCmd(szCmdLine, NULL, bSynchronous, FALSE))==INVALID_RUNCMD_RETURN)
         {
             printf("Error running cmd #%ld (%ld)\n", i, GetLastError());
         }
