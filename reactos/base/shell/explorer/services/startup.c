@@ -245,7 +245,7 @@ static int runCmd(LPWSTR cmdline, LPCWSTR dir, BOOL wait, BOOL minimized)
     DWORD exit_code=0;
     WCHAR szCmdLineExp[MAX_PATH+1]= L"\0";
 
-    ExpandEnvironmentStrings(cmdline, szCmdLineExp, sizeof(szCmdLineExp));
+    ExpandEnvironmentStringsW(cmdline, szCmdLineExp, sizeof(szCmdLineExp) / sizeof(WCHAR));
 
     memset(&si, 0, sizeof(si));
     si.cb=sizeof(si);
