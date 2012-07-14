@@ -501,38 +501,32 @@ NtUserValidateHandleSecure(
      {
        case otWindow:
        {
-         PWND Window;
-         if ((Window = UserGetWindowObject((HWND) handle))) return TRUE;
+         if (UserGetWindowObject((HWND) handle)) return TRUE;
          return FALSE;
        }
        case otMenu:
        {
-         PMENU_OBJECT Menu;
-         if ((Menu = UserGetMenuObject((HMENU) handle))) return TRUE;
+         if (UserGetMenuObject((HMENU) handle)) return TRUE;
          return FALSE;
        }
        case otAccel:
        {
-         PACCELERATOR_TABLE Accel;
-         if ((Accel = UserGetAccelObject((HACCEL) handle))) return TRUE;
+         if (UserGetAccelObject((HACCEL) handle)) return TRUE;
          return FALSE;
        }
        case otCursorIcon:
        {
-         PCURICON_OBJECT Cursor;
-         if ((Cursor = UserGetCurIconObject((HCURSOR) handle))) return TRUE;
+         if (UserGetCurIconObject((HCURSOR) handle)) return TRUE;
          return FALSE;
        }
        case otHook:
        {
-         PHOOK Hook;
-         if ((Hook = IntGetHookObject((HHOOK) handle))) return TRUE;
+         if (IntGetHookObject((HHOOK) handle)) return TRUE;
          return FALSE;
        }
        case otMonitor:
        {
-         PMONITOR Monitor;
-         if ((Monitor = UserGetMonitorObject((HMONITOR) handle))) return TRUE;
+         if (UserGetMonitorObject((HMONITOR) handle)) return TRUE;
          return FALSE;
        }
        case otCallProc:
