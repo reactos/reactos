@@ -103,7 +103,7 @@ HINTERNET alloc_handle( object_header_t *hdr )
     }
     if (max_handles == next_handle)
     {
-        num = max_handles + HANDLE_CHUNK_SIZE;
+        num = max_handles * 2;
         if (!(p = heap_realloc_zero( handles, sizeof(ULONG_PTR) * num ))) goto end;
         handles = p;
         max_handles = num;

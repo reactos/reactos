@@ -116,6 +116,7 @@ MAKE_FUNCPTR( SSL_connect );
 MAKE_FUNCPTR( SSL_shutdown );
 MAKE_FUNCPTR( SSL_write );
 MAKE_FUNCPTR( SSL_read );
+MAKE_FUNCPTR( SSL_pending );
 MAKE_FUNCPTR( SSL_get_error );
 MAKE_FUNCPTR( SSL_get_ex_new_index );
 MAKE_FUNCPTR( SSL_get_ex_data );
@@ -159,7 +160,7 @@ static void ssl_lock_callback(int mode, int type, const char *file, int line)
 #endif
 
 /* translate a unix error code into a winsock error code */
-#if 0
+#ifndef __REACTOS__
 static int sock_get_error( int err )
 {
 #if !defined(__MINGW32__) && !defined (_MSC_VER)
@@ -227,6 +228,12 @@ static int sock_get_error( int err )
 }
 #else
 #define sock_get_error(x) WSAGetLastError()
+
+static inline int unix_ioctl(int filedes, long request, void *arg)
+{
+    return ioctlsocket(filedes, request, arg);
+}
+#define ioctlsocket unix_ioctl
 #endif
 
 #ifdef SONAME_LIBSSL
@@ -463,6 +470,7 @@ BOOL netconn_init( netconn_t *conn, BOOL secure )
     LOAD_FUNCPTR( SSL_shutdown );
     LOAD_FUNCPTR( SSL_write );
     LOAD_FUNCPTR( SSL_read );
+    LOAD_FUNCPTR( SSL_pending );
     LOAD_FUNCPTR( SSL_get_error );
     LOAD_FUNCPTR( SSL_get_ex_new_index );
     LOAD_FUNCPTR( SSL_get_ex_data );
@@ -536,14 +544,18 @@ BOOL netconn_init( netconn_t *conn, BOOL secure )
 
     pCRYPTO_set_id_callback(ssl_thread_id);
     num_ssl_locks = pCRYPTO_num_locks();
-    ssl_locks = HeapAlloc(GetProcessHeap(), 0, num_ssl_locks * sizeof(CRITICAL_SECTION));
+    ssl_locks = heap_alloc(num_ssl_locks * sizeof(CRITICAL_SECTION));
     if (!ssl_locks)
     {
         set_last_error( ERROR_OUTOFMEMORY );
         LeaveCriticalSection( &init_ssl_cs );
         return FALSE;
     }
-    for (i = 0; i < num_ssl_locks; i++) InitializeCriticalSection( &ssl_locks[i] );
+    for (i = 0; i < num_ssl_locks; i++)
+    {
+        InitializeCriticalSection( &ssl_locks[i] );
+        ssl_locks[i].DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": ssl_locks");
+    }
     pCRYPTO_set_locking_callback(ssl_lock_callback);
 
     LeaveCriticalSection( &init_ssl_cs );
@@ -572,9 +584,17 @@ void netconn_unload( void )
     if (ssl_locks)
     {
         int i;
-        for (i = 0; i < num_ssl_locks; i++) DeleteCriticalSection( &ssl_locks[i] );
-        HeapFree( GetProcessHeap(), 0, ssl_locks );
+        for (i = 0; i < num_ssl_locks; i++)
+        {
+            ssl_locks[i].DebugInfo->Spare[0] = 0;
+            DeleteCriticalSection( &ssl_locks[i] );
+        }
+        heap_free( ssl_locks );
     }
+    DeleteCriticalSection(&init_ssl_cs);
+#endif
+#ifndef HAVE_GETADDRINFO
+    DeleteCriticalSection(&cs_gethostbyname);
 #endif
 }
 
@@ -638,6 +658,7 @@ BOOL netconn_connect( netconn_t *conn, const struct sockaddr *sockaddr, unsigned
         res = sock_get_error( errno );
         if (res == WSAEWOULDBLOCK || res == WSAEINPROGRESS)
         {
+            // ReactOS: use select instead of poll
             fd_set outfd;
             struct timeval tv;
 
@@ -744,8 +765,6 @@ BOOL netconn_send( netconn_t *conn, const void *msg, size_t len, int flags, int 
 
 BOOL netconn_recv( netconn_t *conn, void *buf, size_t len, int flags, int *recvd )
 {
-    int ret;
-
     *recvd = 0;
     if (!netconn_connected( conn )) return FALSE;
     if (!len) return TRUE;
@@ -753,6 +772,8 @@ BOOL netconn_recv( netconn_t *conn, void *buf, size_t len, int flags, int *recvd
     if (conn->secure)
     {
 #ifdef SONAME_LIBSSL
+        int ret;
+
         if (flags & ~(MSG_PEEK | MSG_WAITALL))
             FIXME("SSL_read does not support the following flags: %08x\n", flags);
 
@@ -806,7 +827,7 @@ BOOL netconn_recv( netconn_t *conn, void *buf, size_t len, int flags, int *recvd
             }
             else memcpy( conn->peek_msg, buf, ret );
         }
-        *recvd = ret;
+        *recvd += ret;
         return TRUE;
 #else
         return FALSE;
@@ -831,7 +852,7 @@ BOOL netconn_query_data_available( netconn_t *conn, DWORD *available )
     if (conn->secure)
     {
 #ifdef SONAME_LIBSSL
-        if (conn->peek_msg) *available = conn->peek_len;
+        *available = pSSL_pending( conn->ssl_conn ) + conn->peek_len;
 #endif
         return TRUE;
     }
@@ -843,6 +864,7 @@ BOOL netconn_query_data_available( netconn_t *conn, DWORD *available )
 
 BOOL netconn_get_next_line( netconn_t *conn, char *buffer, DWORD *buflen )
 {
+    // ReactOS: use select instead of poll
     fd_set infd;
     BOOL ret = FALSE;
     DWORD recvd = 0;

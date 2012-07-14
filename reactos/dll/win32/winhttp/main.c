@@ -16,18 +16,21 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define COBJMACROS
 #include "config.h"
-
 #include <stdarg.h>
 
 #include "windef.h"
 #include "winbase.h"
 #include "objbase.h"
+#include "rpcproxy.h"
+#include "httprequest.h"
 #include "winhttp.h"
 
 #include "wine/debug.h"
-
 #include "winhttp_private.h"
+
+static HINSTANCE instance;
 
 WINE_DEFAULT_DEBUG_CHANNEL(winhttp);
 
@@ -39,6 +42,7 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpv)
     switch(fdwReason)
     {
     case DLL_PROCESS_ATTACH:
+        instance = hInstDLL;
         DisableThreadLibraryCalls(hInstDLL);
         break;
     case DLL_PROCESS_DETACH:
@@ -48,13 +52,109 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpv)
     return TRUE;
 }
 
+typedef HRESULT (*fnCreateInstance)( IUnknown *outer, void **obj );
+
+struct winhttp_cf
+{
+    IClassFactory IClassFactory_iface;
+    fnCreateInstance pfnCreateInstance;
+};
+
+static inline struct winhttp_cf *impl_from_IClassFactory( IClassFactory *iface )
+{
+    return CONTAINING_RECORD( iface, struct winhttp_cf, IClassFactory_iface );
+}
+
+static HRESULT WINAPI requestcf_QueryInterface(
+    IClassFactory *iface,
+    REFIID riid,
+    void **obj )
+{
+    if (IsEqualGUID( riid, &IID_IUnknown ) ||
+        IsEqualGUID( riid, &IID_IClassFactory ))
+    {
+        IClassFactory_AddRef( iface );
+        *obj = iface;
+        return S_OK;
+    }
+    FIXME("interface %s not implemented\n", debugstr_guid(riid));
+    return E_NOINTERFACE;
+}
+
+static ULONG WINAPI requestcf_AddRef(
+    IClassFactory *iface )
+{
+    return 2;
+}
+
+static ULONG WINAPI requestcf_Release(
+    IClassFactory *iface )
+{
+    return 1;
+}
+
+static HRESULT WINAPI requestcf_CreateInstance(
+    IClassFactory *iface,
+    LPUNKNOWN outer,
+    REFIID riid,
+    void **obj )
+{
+    struct winhttp_cf *cf = impl_from_IClassFactory( iface );
+    IUnknown *unknown;
+    HRESULT hr;
+
+    TRACE("%p, %s, %p\n", outer, debugstr_guid(riid), obj);
+
+    *obj = NULL;
+    if (outer)
+        return CLASS_E_NOAGGREGATION;
+
+    hr = cf->pfnCreateInstance( outer, (void **)&unknown );
+    if (FAILED(hr))
+        return hr;
+
+    hr = IUnknown_QueryInterface( unknown, riid, obj );
+    if (FAILED(hr))
+        return hr;
+
+    IUnknown_Release( unknown );
+    return hr;
+}
+
+static HRESULT WINAPI requestcf_LockServer(
+    IClassFactory *iface,
+    BOOL dolock )
+{
+    FIXME("%p, %d\n", iface, dolock);
+    return S_OK;
+}
+
+static const struct IClassFactoryVtbl winhttp_cf_vtbl =
+{
+    requestcf_QueryInterface,
+    requestcf_AddRef,
+    requestcf_Release,
+    requestcf_CreateInstance,
+    requestcf_LockServer
+};
+
+static struct winhttp_cf request_cf = { { &winhttp_cf_vtbl }, WinHttpRequest_create };
+
 /******************************************************************
  *		DllGetClassObject (winhttp.@)
  */
 HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
 {
-    FIXME("(%s %s %p)\n", debugstr_guid(rclsid), debugstr_guid(riid), ppv);
-    return CLASS_E_CLASSNOTAVAILABLE;
+    IClassFactory *cf = NULL;
+
+    TRACE("%s, %s, %p\n", debugstr_guid(rclsid), debugstr_guid(riid), ppv);
+
+    if (IsEqualGUID( rclsid, &CLSID_WinHttpRequest ))
+    {
+       cf = &request_cf.IClassFactory_iface;
+    }
+    if (!cf) return CLASS_E_CLASSNOTAVAILABLE;
+    return IClassFactory_QueryInterface( cf, riid, ppv );
 }
 
 /******************************************************************
@@ -70,8 +170,7 @@ HRESULT WINAPI DllCanUnloadNow(void)
  */
 HRESULT WINAPI DllRegisterServer(void)
 {
-    FIXME("()\n");
-    return S_OK;
+    return __wine_register_resources( instance );
 }
 
 /***********************************************************************
@@ -79,6 +178,5 @@ HRESULT WINAPI DllRegisterServer(void)
  */
 HRESULT WINAPI DllUnregisterServer(void)
 {
-    FIXME("()\n");
-    return S_OK;
+    return __wine_unregister_resources( instance );
 }
