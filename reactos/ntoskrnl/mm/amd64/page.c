@@ -380,6 +380,16 @@ MmIsPagePresent(PEPROCESS Process, PVOID Address)
 
 BOOLEAN
 NTAPI
+MmIsDisabledPage(PEPROCESS Process, PVOID Address)
+{
+    MMPTE Pte;
+    Pte.u.Long = MiGetPteValueForProcess(Process, Address);
+    __debugbreak(); // FIXME
+    return !Pte.u.Hard.Valid && !(Pte.u.Long & 0x800) && Pte.u.Hard.PageFrameNumber;
+}
+
+BOOLEAN
+NTAPI
 MmIsPageSwapEntry(PEPROCESS Process, PVOID Address)
 {
     MMPTE Pte;
