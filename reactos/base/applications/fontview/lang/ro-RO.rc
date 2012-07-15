@@ -3,12 +3,12 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE DISCARDABLE
 BEGIN
-	IDS_QUIT,           "Ieșire"
-	IDS_PRINT,          "Imprimare"
+	IDS_INSTALL,        "Install"
+    IDS_PRINT,          "Imprimare"
 	IDS_STRING,         "Turubinele eoliene generează câțiva MJ (câțiva kW•h) în exces, acoperind și necesarul familiei. QY 1234567890"
+	IDS_OPEN, 			"Open Font..."
 	IDS_ERROR,          "Eroare"
 	IDS_ERROR_NOMEM,    "Nu e destulă memorie pentru a încheia operația."
 	IDS_ERROR_NOFONT,   "Fișierul «%1» este un fișier font deteriorat."
 	IDS_ERROR_NOCLASS,  "Nu s-a putut inițializa clasa de ferestre."
-	IDS_ERROR_BADCMD,   "Niciun font specificat.\nSintaxă:\n  fontview.exe <fișier font>"
 END

@@ -377,6 +377,92 @@ Display_OnDestroy(HWND hwnd)
 	return 0;
 }
 
+LRESULT
+Display_OnPrint(HWND hwnd)
+{
+	PRINTDLG pfont;
+	TEXTMETRIC tm;
+	int copies, yPos;
+	DISPLAYDATA* pData;
+	
+	pData = malloc(sizeof(DISPLAYDATA));
+	ZeroMemory(pData, sizeof(DISPLAYDATA));
+
+	/* Sets up the font layout */
+	pData = (DISPLAYDATA*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+
+	/* Clears the memory before using it */
+	ZeroMemory(&pfont, sizeof(pfont));
+
+	pfont.lStructSize = sizeof(pfont);
+	pfont.hwndOwner = hwnd;
+	pfont.hDevMode = NULL;
+	pfont.hDevNames = NULL;
+	pfont.Flags = PD_USEDEVMODECOPIESANDCOLLATE | PD_RETURNDC;
+	pfont.nCopies = 1;
+	pfont.nFromPage = 0xFFFF;
+	pfont.nToPage = 0xFFFF;
+	pfont.nMinPage = 1;
+	pfont.nMaxPage = 0xFFFF;
+
+	/* Opens up the print dialog box */
+	if (PrintDlg(&pfont))
+	{
+		DOCINFO docinfo;
+
+		docinfo.cbSize = sizeof(DOCINFO);
+		docinfo.lpszDocName = "Printing Font";
+		docinfo.lpszOutput = NULL;
+		docinfo.lpszDatatype = NULL;
+		docinfo.fwType = 0;
+
+		/* We start printing */
+		StartDoc(pfont.hDC, &docinfo);
+
+		/* Grabs the text metrics for the printer */
+		GetTextMetrics(pfont.hDC, &tm);
+
+		/* Start out with 0 for the y position for the page */
+		yPos = 0;
+
+		/* Starts out with the current page */
+		StartPage(pfont.hDC);
+
+		/* Used when printing for more than one copy */
+		for (copies = 0; copies < pfont.nCopies; copies++)
+		{
+			/* Test output */
+			TextOutW(pfont.hDC, 10, yPos, L"Testing...1...2...3", 19);
+
+			/* TODO: Determine if using Display_DrawText() will work for both rendering out to the
+			window and to the printer output */
+			//Display_DrawText(pfont.hDC, pData, yPos);
+
+			/* Ends the current page */
+			EndPage(pfont.hDC);
+
+			/* If we are making more than one copy, start a new page */
+			if (copies != pfont.nCopies)
+			{
+				yPos = 0;
+				StartPage(pfont.hDC);
+			}
+		}
+
+		/* The printing is now over */
+		EndDoc(pfont.hDC);
+
+		DeleteDC(pfont.hDC);
+	} else {
+		return 0;
+	}
+
+	/* Frees the memory since we no longer need it for now */
+	free(pData);
+
+	return 0;
+}
+
 LRESULT CALLBACK
 DisplayProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {

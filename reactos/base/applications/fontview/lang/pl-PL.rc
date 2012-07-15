@@ -10,12 +10,12 @@ LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
 BEGIN
-	IDS_QUIT, "Wyjście"
+	IDS_INSTALL, "Install"
 	IDS_PRINT, "Drukuj"
 	IDS_STRING, "Zażółć gęślą Jaźń żółwiątkiem. 1234567890. !@#$%^&*()_+=-/?"
+	IDS_OPEN, "Open Font..."
 	IDS_ERROR, "Błąd"
 	IDS_ERROR_NOMEM, "Brakuje pamięci do ukończenia tej operacji."
 	IDS_ERROR_NOFONT, "Plik %1 nie jest poprawnym plikiem czcionki."
 	IDS_ERROR_NOCLASS, "Nie udało się zainicjować klasy window."
-	IDS_ERROR_BADCMD, "Brak pliku czcionki.\nSkładnia:\n  fontview.exe <plik czcionki>"
 END

@@ -12,7 +12,7 @@
 #define BUTTON_WIDTH 72
 #define BUTTON_HEIGHT 21
 
-#define IDC_QUIT 1001
+#define IDC_INSTALL 1001
 #define IDC_PRINT 1002
 #define IDC_DISPLAY 1003
 
