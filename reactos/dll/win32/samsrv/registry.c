@@ -60,6 +60,36 @@ SampRegCreateKey(IN HANDLE ParentKeyHandle,
 
 
 NTSTATUS
+SampRegDeleteKey(IN HANDLE ParentKeyHandle,
+                 IN LPCWSTR KeyName)
+{
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING SubKeyName;
+    HANDLE TargetKey;
+    NTSTATUS Status;
+
+    RtlInitUnicodeString(&SubKeyName,
+                         (LPWSTR)KeyName);
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &SubKeyName,
+                               OBJ_CASE_INSENSITIVE,
+                               ParentKeyHandle,
+                               NULL);
+    Status = NtOpenKey(&TargetKey,
+                       DELETE,
+                       &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    Status = NtDeleteKey(TargetKey);
+
+    NtClose(TargetKey);
+
+    return Status;
+}
+
+
+NTSTATUS
 SampRegEnumerateSubKey(IN HANDLE KeyHandle,
                        IN ULONG Index,
                        IN ULONG Length,
@@ -167,6 +197,20 @@ SampRegQueryKeyInfo(IN HANDLE KeyHandle,
         *ValueCount = FullInfoBuffer.Values;
 
     return Status;
+}
+
+
+NTSTATUS
+SampRegDeleteValue(IN HANDLE KeyHandle,
+                   IN LPWSTR ValueName)
+{
+    UNICODE_STRING Name;
+
+    RtlInitUnicodeString(&Name,
+                         ValueName);
+
+    return NtDeleteValueKey(KeyHandle,
+                            &Name);
 }
 
 

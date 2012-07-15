@@ -237,6 +237,15 @@ typedef struct _DOMAIN_NAME_INFORMATION
     UNICODE_STRING DomainName;
 } DOMAIN_NAME_INFORMATION, *PDOMAIN_NAME_INFORMATION;
 
+typedef enum _GROUP_INFORMATION_CLASS
+{
+    GroupGeneralInformation = 1,
+    GroupNameInformation,
+    GroupAttributeInformation,
+    GroupAdminCommentInformation,
+    GroupReplicationInformation
+} GROUP_INFORMATION_CLASS;
+
 typedef enum _USER_INFORMATION_CLASS
 {
     UserGeneralInformation = 1,
@@ -299,6 +308,14 @@ SamCreateAliasInDomain(IN SAM_HANDLE DomainHandle,
                        IN PUNICODE_STRING AccountName,
                        IN ACCESS_MASK DesiredAccess,
                        OUT PSAM_HANDLE AliasHandle,
+                       OUT PULONG RelativeId);
+
+NTSTATUS
+NTAPI
+SamCreateGroupInDomain(IN SAM_HANDLE DomainHandle,
+                       IN PUNICODE_STRING AccountName,
+                       IN ACCESS_MASK DesiredAccess,
+                       OUT PSAM_HANDLE GroupHandle,
                        OUT PULONG RelativeId);
 
 NTSTATUS
@@ -370,6 +387,13 @@ SamOpenDomain(IN SAM_HANDLE ServerHandle,
               IN ACCESS_MASK DesiredAccess,
               IN PSID DomainId,
               OUT PSAM_HANDLE DomainHandle);
+
+NTSTATUS
+NTAPI
+SamOpenGroup(IN SAM_HANDLE DomainHandle,
+             IN ACCESS_MASK DesiredAccess,
+             IN ULONG GroupId,
+             OUT PSAM_HANDLE GroupHandle);
 
 NTSTATUS
 NTAPI

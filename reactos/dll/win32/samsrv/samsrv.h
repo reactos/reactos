@@ -51,6 +51,13 @@ typedef struct _SAM_DB_OBJECT
 
 #define SAMP_DB_SIGNATURE 0x87654321
 
+typedef struct _SAM_ALIAS_FIXED_DATA
+{
+    ULONG Version;
+    ULONG Reserved;
+    ULONG AliasId;
+} SAM_ALIAS_FIXED_DATA, *PSAM_ALIAS_FIXED_DATA;
+
 typedef struct _SAM_DOMAIN_FIXED_DATA
 {
     ULONG Version;
@@ -72,6 +79,14 @@ typedef struct _SAM_DOMAIN_FIXED_DATA
     DOMAIN_SERVER_ROLE DomainServerRole;
     BOOLEAN UasCompatibilityRequired;
 } SAM_DOMAIN_FIXED_DATA, *PSAM_DOMAIN_FIXED_DATA;
+
+typedef struct _SAM_GROUP_FIXED_DATA
+{
+    ULONG Version;
+    ULONG Reserved;
+    ULONG GroupId;
+    ULONG Attributes;
+} SAM_GROUP_FIXED_DATA, *PSAM_GROUP_FIXED_DATA;
 
 typedef struct _SAM_USER_FIXED_DATA
 {
@@ -165,6 +180,10 @@ SampRegCreateKey(IN HANDLE ParentKeyHandle,
                  OUT HANDLE KeyHandle);
 
 NTSTATUS
+SampRegDeleteKey(IN HANDLE ParentKeyHandle,
+                 IN LPCWSTR KeyName);
+
+NTSTATUS
 SampRegEnumerateSubKey(IN HANDLE KeyHandle,
                        IN ULONG Index,
                        IN ULONG Length,
@@ -180,6 +199,10 @@ NTSTATUS
 SampRegQueryKeyInfo(IN HANDLE KeyHandle,
                     OUT PULONG SubKeyCount,
                     OUT PULONG ValueCount);
+
+NTSTATUS
+SampRegDeleteValue(IN HANDLE KeyHandle,
+                   IN LPWSTR ValueName);
 
 NTSTATUS
 SampRegEnumerateValue(IN HANDLE KeyHandle,

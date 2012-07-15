@@ -211,6 +211,37 @@ SamCreateAliasInDomain(IN SAM_HANDLE DomainHandle,
 
 NTSTATUS
 NTAPI
+SamCreateGroupInDomain(IN SAM_HANDLE DomainHandle,
+                       IN PUNICODE_STRING AccountName,
+                       IN ACCESS_MASK DesiredAccess,
+                       OUT PSAM_HANDLE GroupHandle,
+                       OUT PULONG RelativeId)
+{
+    NTSTATUS Status;
+
+    TRACE("SamCreateGroupInDomain(%p,%p,0x%08x,%p,%p)\n",
+          DomainHandle, AccountName, DesiredAccess, GroupHandle, RelativeId);
+
+    RpcTryExcept
+    {
+        Status = SamrCreateGroupInDomain((SAMPR_HANDLE)DomainHandle,
+                                         (PRPC_UNICODE_STRING)AccountName,
+                                         DesiredAccess,
+                                         (SAMPR_HANDLE *)GroupHandle,
+                                         RelativeId);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
+
+NTSTATUS
+NTAPI
 SamCreateUserInDomain(IN SAM_HANDLE DomainHandle,
                       IN PUNICODE_STRING AccountName,
                       IN ACCESS_MASK DesiredAccess,
@@ -531,6 +562,35 @@ SamOpenDomain(IN SAM_HANDLE ServerHandle,
                                 DesiredAccess,
                                 (PRPC_SID)DomainId,
                                 (SAMPR_HANDLE *)DomainHandle);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
+
+NTSTATUS
+NTAPI
+SamOpenGroup(IN SAM_HANDLE DomainHandle,
+             IN ACCESS_MASK DesiredAccess,
+             IN ULONG GroupId,
+             OUT PSAM_HANDLE GroupHandle)
+{
+    NTSTATUS Status;
+
+    TRACE("SamOpenGroup(%p,0x%08x,%p,%p)\n",
+          DomainHandle, DesiredAccess, GroupId, GroupHandle);
+
+    RpcTryExcept
+    {
+        Status = SamrOpenGroup((SAMPR_HANDLE)DomainHandle,
+                               DesiredAccess,
+                               GroupId,
+                               (SAMPR_HANDLE *)GroupHandle);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {

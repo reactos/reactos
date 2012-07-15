@@ -8,7 +8,7 @@
 @ stdcall SamConnect(ptr ptr long ptr)
 @ stub SamConnectWithCreds
 @ stdcall SamCreateAliasInDomain(ptr ptr long ptr ptr)
-@ stub SamCreateGroupInDomain
+@ stdcall SamCreateGroupInDomain(ptr ptr long ptr ptr)
 @ stub SamCreateUser2InDomain
 @ stdcall SamCreateUserInDomain(ptr ptr long ptr ptr)
 @ stub SamDeleteAlias
@@ -30,7 +30,7 @@
 @ stdcall SamLookupNamesInDomain(ptr long ptr ptr ptr)
 @ stdcall SamOpenAlias(ptr long long ptr)
 @ stdcall SamOpenDomain(ptr long ptr ptr)
-@ stub SamOpenGroup
+@ stdcall SamOpenGroup(ptr long long ptr)
 @ stdcall SamOpenUser(ptr long long ptr)
 @ stub SamQueryDisplayInformation
 @ stdcall SamQueryInformationAlias(ptr long ptr)

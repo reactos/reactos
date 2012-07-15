@@ -382,6 +382,7 @@ typedef struct _SAMPR_GROUP_ADM_COMMENT_INFORMATION
     RPC_UNICODE_STRING AdminComment;
 } SAMPR_GROUP_ADM_COMMENT_INFORMATION, *PSAMPR_GROUP_ADM_COMMENT_INFORMATION;
 
+cpp_quote("#ifndef _NTSAM_")
 typedef enum _GROUP_INFORMATION_CLASS
 {
     GroupGeneralInformation = 1,
@@ -390,6 +391,7 @@ typedef enum _GROUP_INFORMATION_CLASS
     GroupAdminCommentInformation,
     GroupReplicationInformation
 } GROUP_INFORMATION_CLASS;
+cpp_quote("#endif")
 
 typedef [switch_type(GROUP_INFORMATION_CLASS)] union _SAMPR_GROUP_INFO_BUFFER
 {

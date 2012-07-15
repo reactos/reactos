@@ -1541,11 +1541,145 @@ SamrCreateGroupInDomain(IN SAMPR_HANDLE DomainHandle,
                         OUT SAMPR_HANDLE *GroupHandle,
                         OUT unsigned long *RelativeId)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    UNICODE_STRING EmptyString = RTL_CONSTANT_STRING(L"");
+    SAM_DOMAIN_FIXED_DATA FixedDomainData;
+    SAM_GROUP_FIXED_DATA FixedGroupData;
+    PSAM_DB_OBJECT DomainObject;
+    PSAM_DB_OBJECT GroupObject;
+    ULONG ulSize;
+    ULONG ulRid;
+    WCHAR szRid[9];
+    NTSTATUS Status;
+
+    TRACE("SamrCreateGroupInDomain(%p %p %lx %p %p)\n",
+          DomainHandle, Name, DesiredAccess, GroupHandle, RelativeId);
+
+    /* Validate the domain handle */
+    Status = SampValidateDbObject(DomainHandle,
+                                  SamDbDomainObject,
+                                  DOMAIN_CREATE_GROUP,
+                                  &DomainObject);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Get the fixed domain attributes */
+    ulSize = sizeof(SAM_DOMAIN_FIXED_DATA);
+    Status = SampGetObjectAttribute(DomainObject,
+                                    L"F",
+                                    NULL,
+                                    (PVOID)&FixedDomainData,
+                                    &ulSize);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Increment the NextRid attribute */
+    ulRid = FixedDomainData.NextRid;
+    FixedDomainData.NextRid++;
+
+    /* Store the fixed domain attributes */
+    Status = SampSetObjectAttribute(DomainObject,
+                           L"F",
+                           REG_BINARY,
+                           &FixedDomainData,
+                           ulSize);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    TRACE("RID: %lx\n", ulRid);
+
+    /* Convert the RID into a string (hex) */
+    swprintf(szRid, L"%08lX", ulRid);
+
+    /* FIXME: Check whether the group name is already in use */
+
+    /* Create the group object */
+    Status = SampCreateDbObject(DomainObject,
+                                L"Groups",
+                                szRid,
+                                SamDbGroupObject,
+                                DesiredAccess,
+                                &GroupObject);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Add the name alias for the user object */
+    Status = SampSetDbObjectNameAlias(DomainObject,
+                                      L"Groups",
+                                      Name->Buffer,
+                                      ulRid);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Initialize fixed user data */
+    memset(&FixedGroupData, 0, sizeof(SAM_GROUP_FIXED_DATA));
+    FixedGroupData.Version = 1;
+
+    FixedGroupData.GroupId = ulRid;
+
+    /* Set fixed user data attribute */
+    Status = SampSetObjectAttribute(GroupObject,
+                                    L"F",
+                                    REG_BINARY,
+                                    (LPVOID)&FixedGroupData,
+                                    sizeof(SAM_GROUP_FIXED_DATA));
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Set the Name attribute */
+    Status = SampSetObjectAttribute(GroupObject,
+                                    L"Name",
+                                    REG_SZ,
+                                    (LPVOID)Name->Buffer,
+                                    Name->MaximumLength);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Set the AdminComment attribute */
+    Status = SampSetObjectAttribute(GroupObject,
+                                    L"AdminComment",
+                                    REG_SZ,
+                                    EmptyString.Buffer,
+                                    EmptyString.MaximumLength);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    if (NT_SUCCESS(Status))
+    {
+        *GroupHandle = (SAMPR_HANDLE)GroupObject;
+        *RelativeId = ulRid;
+    }
+
+    TRACE("returns with status 0x%08lx\n", Status);
+
+    return Status;
 }
 
-/* Function 10 */
+
+/* Function 11 */
 NTSTATUS
 NTAPI
 SamrEnumerateGroupsInDomain(IN SAMPR_HANDLE DomainHandle,
@@ -1558,6 +1692,7 @@ SamrEnumerateGroupsInDomain(IN SAMPR_HANDLE DomainHandle,
     return STATUS_NOT_IMPLEMENTED;
 }
 
+
 /* Function 12 */
 NTSTATUS
 NTAPI
@@ -1567,6 +1702,7 @@ SamrCreateUserInDomain(IN SAMPR_HANDLE DomainHandle,
                        OUT SAMPR_HANDLE *UserHandle,
                        OUT unsigned long *RelativeId)
 {
+    UNICODE_STRING EmptyString = RTL_CONSTANT_STRING(L"");
     SAM_DOMAIN_FIXED_DATA FixedDomainData;
     SAM_USER_FIXED_DATA FixedUserData;
     PSAM_DB_OBJECT DomainObject;
@@ -1684,12 +1820,108 @@ SamrCreateUserInDomain(IN SAMPR_HANDLE DomainHandle,
         return Status;
     }
 
-    /* Set the name attribute */
+    /* Set the Name attribute */
     Status = SampSetObjectAttribute(UserObject,
                                     L"Name",
                                     REG_SZ,
                                     (LPVOID)Name->Buffer,
                                     Name->MaximumLength);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Set the FullName attribute */
+    Status = SampSetObjectAttribute(UserObject,
+                                    L"FullName",
+                                    REG_SZ,
+                                    EmptyString.Buffer,
+                                    EmptyString.MaximumLength);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Set the HomeDirectory attribute */
+    Status = SampSetObjectAttribute(UserObject,
+                                    L"HomeDirectory",
+                                    REG_SZ,
+                                    EmptyString.Buffer,
+                                    EmptyString.MaximumLength);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Set the HomeDirectoryDrive attribute */
+    Status = SampSetObjectAttribute(UserObject,
+                                    L"HomeDirectoryDrive",
+                                    REG_SZ,
+                                    EmptyString.Buffer,
+                                    EmptyString.MaximumLength);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Set the ScriptPath attribute */
+    Status = SampSetObjectAttribute(UserObject,
+                                    L"ScriptPath",
+                                    REG_SZ,
+                                    EmptyString.Buffer,
+                                    EmptyString.MaximumLength);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Set the ProfilePath attribute */
+    Status = SampSetObjectAttribute(UserObject,
+                                    L"ProfilePath",
+                                    REG_SZ,
+                                    EmptyString.Buffer,
+                                    EmptyString.MaximumLength);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Set the AdminComment attribute */
+    Status = SampSetObjectAttribute(UserObject,
+                                    L"AdminComment",
+                                    REG_SZ,
+                                    EmptyString.Buffer,
+                                    EmptyString.MaximumLength);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Set the UserComment attribute */
+    Status = SampSetObjectAttribute(UserObject,
+                                    L"UserComment",
+                                    REG_SZ,
+                                    EmptyString.Buffer,
+                                    EmptyString.MaximumLength);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Set the WorkStations attribute */
+    Status = SampSetObjectAttribute(UserObject,
+                                    L"WorkStations",
+                                    REG_SZ,
+                                    EmptyString.Buffer,
+                                    EmptyString.MaximumLength);
     if (!NT_SUCCESS(Status))
     {
         TRACE("failed with status 0x%08lx\n", Status);
@@ -1709,6 +1941,7 @@ SamrCreateUserInDomain(IN SAMPR_HANDLE DomainHandle,
     return Status;
 }
 
+
 /* Function 13 */
 NTSTATUS
 NTAPI
@@ -1722,6 +1955,7 @@ SamrEnumerateUsersInDomain(IN SAMPR_HANDLE DomainHandle,
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
+
 
 /* Function 14 */
 NTSTATUS
@@ -1807,7 +2041,7 @@ SamrCreateAliasInDomain(IN SAMPR_HANDLE DomainHandle,
         return STATUS_ALIAS_EXISTS;
     }
 
-    /* Create the user object */
+    /* Create the alias object */
     Status = SampCreateDbObject(DomainObject,
                                 L"Aliases",
                                 szRid,
@@ -2239,6 +2473,7 @@ done:
     return Status;
 }
 
+
 /* Function 17 */
 NTSTATUS
 NTAPI
@@ -2265,6 +2500,7 @@ SamrLookupIdsInDomain(IN SAMPR_HANDLE DomainHandle,
     return STATUS_NOT_IMPLEMENTED;
 }
 
+
 /* Function 19 */
 NTSTATUS
 NTAPI
@@ -2273,9 +2509,46 @@ SamrOpenGroup(IN SAMPR_HANDLE DomainHandle,
               IN unsigned long GroupId,
               OUT SAMPR_HANDLE *GroupHandle)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PSAM_DB_OBJECT DomainObject;
+    PSAM_DB_OBJECT GroupObject;
+    WCHAR szRid[9];
+    NTSTATUS Status;
+
+    TRACE("SamrOpenGroup(%p %lx %lx %p)\n",
+          DomainHandle, DesiredAccess, GroupId, GroupHandle);
+
+    /* Validate the domain handle */
+    Status = SampValidateDbObject(DomainHandle,
+                                  SamDbDomainObject,
+                                  DOMAIN_LOOKUP,
+                                  &DomainObject);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Convert the RID into a string (hex) */
+    swprintf(szRid, L"%08lX", GroupId);
+
+    /* Create the group object */
+    Status = SampOpenDbObject(DomainObject,
+                              L"Groups",
+                              szRid,
+                              SamDbGroupObject,
+                              DesiredAccess,
+                              &GroupObject);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    *GroupHandle = (SAMPR_HANDLE)GroupObject;
+
+    return STATUS_SUCCESS;
 }
+
 
 /* Function 20 */
 NTSTATUS
@@ -2674,7 +2947,7 @@ SamrAddMemberToAlias(IN SAMPR_HANDLE AliasHandle,
     TRACE("SamrAddMemberToAlias(%p %p)\n",
           AliasHandle, MemberId);
 
-    /* Validate the domain handle */
+    /* Validate the alias handle */
     Status = SampValidateDbObject(AliasHandle,
                                   SamDbAliasObject,
                                   ALIAS_ADD_MEMBER,
