@@ -1261,6 +1261,107 @@ MiRaisePoolQuota(IN POOL_TYPE PoolType,
     return TRUE;
 }
 
+NTSTATUS
+NTAPI
+MiInitializeSessionPool(VOID)
+{
+    PMMPTE PointerPde, PointerPte, LastPte, LastPde;
+    PFN_NUMBER PageFrameIndex, PdeCount;
+    PPOOL_DESCRIPTOR PoolDescriptor;
+    PMM_SESSION_SPACE SessionGlobal;
+    PMM_PAGED_POOL_INFO PagedPoolInfo;
+    NTSTATUS Status;
+    ULONG Index, PoolSize, BitmapSize;
+    PAGED_CODE();
+
+    /* Lock session pool */
+    SessionGlobal = MmSessionSpace->GlobalVirtualAddress;
+    KeInitializeGuardedMutex(&SessionGlobal->PagedPoolMutex);
+
+    /* Setup a valid pool descriptor */
+    PoolDescriptor = &MmSessionSpace->PagedPool;
+    ExInitializePoolDescriptor(PoolDescriptor,
+                               PagedPoolSession,
+                               0,
+                               0,
+                               &SessionGlobal->PagedPoolMutex);
+
+    /* Setup the pool addresses */
+    MmSessionSpace->PagedPoolStart = (PVOID)MiSessionPoolStart;
+    MmSessionSpace->PagedPoolEnd = (PVOID)((ULONG_PTR)MiSessionPoolEnd - 1);
+    DPRINT1("Session Pool Start: 0x%p End: 0x%p\n",
+            MmSessionSpace->PagedPoolStart, MmSessionSpace->PagedPoolEnd);
+
+    /* Reset all the counters */
+    PagedPoolInfo = &MmSessionSpace->PagedPoolInfo;
+    PagedPoolInfo->PagedPoolCommit = 0;
+    PagedPoolInfo->PagedPoolHint = 0;
+    PagedPoolInfo->AllocatedPagedPool = 0;
+
+    /* Compute PDE and PTE addresses */
+    PointerPde = MiAddressToPde(MmSessionSpace->PagedPoolStart);
+    PointerPte = MiAddressToPte(MmSessionSpace->PagedPoolStart);
+    LastPde = MiAddressToPde(MmSessionSpace->PagedPoolEnd);
+    LastPte = MiAddressToPte(MmSessionSpace->PagedPoolEnd);
+
+    /* Write them down */
+    MmSessionSpace->PagedPoolBasePde = PointerPde;
+    PagedPoolInfo->FirstPteForPagedPool = PointerPte;
+    PagedPoolInfo->LastPteForPagedPool = LastPte;
+    PagedPoolInfo->NextPdeForPagedPoolExpansion = PointerPde + 1;
+
+    /* Zero the PDEs */
+    PdeCount = LastPde - PointerPde;
+    RtlZeroMemory(PointerPde, (PdeCount + 1) * sizeof(MMPTE));
+
+    /* Initialize the PFN for the PDE */
+    Status = MiInitializeAndChargePfn(&PageFrameIndex,
+                                      PointerPde,
+                                      MmSessionSpace->SessionPageDirectoryIndex,
+                                      TRUE);
+    ASSERT(NT_SUCCESS(Status) == TRUE);
+
+    /* Initialize the first page table */
+    Index = (ULONG_PTR)MmSessionSpace->PagedPoolStart - (ULONG_PTR)MmSessionBase;
+    Index >>= 22;
+    ASSERT(MmSessionSpace->PageTables[Index].u.Long == 0);
+    MmSessionSpace->PageTables[Index] = *PointerPde;
+
+    /* Bump up counters */
+    InterlockedIncrementSizeT(&MmSessionSpace->NonPageablePages);
+    InterlockedIncrementSizeT(&MmSessionSpace->CommittedPages);
+
+    /* Compute the size of the pool in pages, and of the bitmap for it */
+    PoolSize = MmSessionPoolSize >> PAGE_SHIFT;
+    BitmapSize = sizeof(RTL_BITMAP) + ((PoolSize + 31) / 32) * sizeof(ULONG);
+
+    /* Allocate and initialize the bitmap to track allocations */
+    PagedPoolInfo->PagedPoolAllocationMap = ExAllocatePoolWithTag(NonPagedPool,
+                                                                  BitmapSize,
+                                                                  '  mM');
+    ASSERT(PagedPoolInfo->PagedPoolAllocationMap != NULL);
+    RtlInitializeBitMap(PagedPoolInfo->PagedPoolAllocationMap,
+                        (PULONG)(PagedPoolInfo->PagedPoolAllocationMap + 1),
+                        PoolSize);
+
+    /* Set all bits, but clear the first page table's worth */
+    RtlSetAllBits(PagedPoolInfo->PagedPoolAllocationMap);
+    RtlClearBits(PagedPoolInfo->PagedPoolAllocationMap, 0, PTE_PER_PAGE);
+
+    /* Allocate and initialize the bitmap to track free space */
+    PagedPoolInfo->EndOfPagedPoolBitmap = ExAllocatePoolWithTag(NonPagedPool,
+                                                                BitmapSize,
+                                                                '  mM');
+    ASSERT(PagedPoolInfo->EndOfPagedPoolBitmap != NULL);
+    RtlInitializeBitMap(PagedPoolInfo->EndOfPagedPoolBitmap,
+                        (PULONG)(PagedPoolInfo->EndOfPagedPoolBitmap + 1),
+                        PoolSize);
+
+    /* Clear all the bits and return success */
+    RtlClearAllBits(PagedPoolInfo->EndOfPagedPoolBitmap);
+    return STATUS_SUCCESS;
+}
+
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 /*

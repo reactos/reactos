@@ -18,8 +18,13 @@
 /* GLOBALS ********************************************************************/
 
 /* Template PTE and PDE for a kernel page */
+ /* FIXME: These should be PTE_GLOBAL */
 MMPTE ValidKernelPde = {{PTE_VALID|PTE_READWRITE|PTE_DIRTY|PTE_ACCESSED}};
 MMPTE ValidKernelPte = {{PTE_VALID|PTE_READWRITE|PTE_DIRTY|PTE_ACCESSED}};
+
+/* The same, but for local pages */
+MMPTE ValidKernelPdeLocal = {{PTE_VALID|PTE_READWRITE|PTE_DIRTY|PTE_ACCESSED}};
+MMPTE ValidKernelPteLocal = {{PTE_VALID|PTE_READWRITE|PTE_DIRTY|PTE_ACCESSED}};
 
 /* Template PDE for a demand-zero page */
 MMPDE DemandZeroPde  = {{MM_READWRITE << MM_PTE_SOFTWARE_PROTECTION_BITS}};
@@ -106,6 +111,18 @@ MiInitializeSessionSpaceLayout()
     MiSessionImagePteEnd = MiAddressToPte(MiSessionImageEnd);
     MiSessionBasePte = MiAddressToPte(MmSessionBase);
     MiSessionLastPte = MiAddressToPte(MiSessionSpaceEnd);
+
+    /* Initialize session space */
+    MmSessionSpace = (PMM_SESSION_SPACE)((ULONG_PTR)MmSessionBase +
+                                         MmSessionSize -
+                                         MmSessionImageSize -
+                                         MM_ALLOCATION_GRANULARITY);
+
+    /* Setup all starting addresses */
+    DPRINT1("Session space: 0x%p\n", MmSessionSpace);
+    DPRINT1("Session Base: 0x%p, Session Image Size: 0x%lx, Session Image Start: 0x%p, Session ImageEnd: 0x%p\n",
+            MmSessionBase, MmSessionSize, MiSessionImageStart, MiSessionImageEnd);
+    DPRINT1("Session View start: 0x%p, Session View Size: 0x%lx\n", MiSessionViewStart, MmSessionViewSize);
 }
 
 VOID

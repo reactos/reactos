@@ -1123,6 +1123,45 @@ MiInitializePfnAndMakePteValid(IN PFN_NUMBER PageFrameIndex,
     MI_WRITE_VALID_PTE(PointerPte, TempPte);
 }
 
+NTSTATUS
+NTAPI
+MiInitializeAndChargePfn(OUT PPFN_NUMBER PageFrameIndex,
+                         IN PMMPTE PointerPde,
+                         IN PFN_NUMBER ContainingPageFrame,
+                         IN BOOLEAN SessionAllocation)
+{
+    MMPTE TempPte;
+    KIRQL OldIrql;
+
+    /* Use either a global or local PDE */
+    TempPte = SessionAllocation ? ValidKernelPdeLocal : ValidKernelPde;
+
+    /* Lock the PFN database */
+    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+
+    /* Make sure nobody is racing us */
+    if (PointerPde->u.Hard.Valid == 1)
+    {
+        /* Return special error if that was the case */
+        KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+        return STATUS_RETRY;
+    }
+
+    /* Grab a zero page and set the PFN, then make it valid */
+    *PageFrameIndex = MiRemoveZeroPage(MI_GET_NEXT_COLOR());
+    TempPte.u.Hard.PageFrameNumber = *PageFrameIndex;
+    MI_WRITE_VALID_PTE(PointerPde, TempPte);
+
+    /* Initialize the PFN */
+    MiInitializePfnForOtherProcess(*PageFrameIndex,
+                                   PointerPde,
+                                   ContainingPageFrame);
+    ASSERT(MI_PFN_ELEMENT(*PageFrameIndex)->u1.WsIndex == 0);
+
+    /* Release the lock and return success */
+    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+    return STATUS_SUCCESS;
+}
 
 PFN_NUMBER
 NTAPI

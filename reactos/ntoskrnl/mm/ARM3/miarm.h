@@ -221,6 +221,11 @@ extern const ULONG MmProtectToValue[32];
 #define MM_SYSLDR_BOOT_LOADED  (PVOID)0xFFFFFFFF
 #define MM_SYSLDR_SINGLE_ENTRY 0x1
 
+//
+// Number of initial session IDs
+//
+#define MI_INITIAL_SESSION_IDS  64
+
 #if defined(_M_IX86) || defined(_M_ARM)
 //
 // PFN List Sentinel
@@ -269,6 +274,24 @@ extern const ULONG MmProtectToValue[32];
 #else
 #define MI_PTE_LOOKUP_NEEDED 0xFFFFF
 #endif
+
+//
+// Number of session lists in the MM_SESSIONS_SPACE structure
+//
+#if defined(_M_AMD64)
+#define SESSION_POOL_LOOKASIDES 21
+#elif defined(_M_IX86)
+#define SESSION_POOL_LOOKASIDES 26
+#else
+#error Not Defined!
+#endif
+
+//
+// Number of session data and tag pages
+//
+#define MI_SESSION_DATA_PAGES_MAXIMUM (MM_ALLOCATION_GRANULARITY / PAGE_SIZE)
+#define MI_SESSION_TAG_PAGES_MAXIMUM  (MM_ALLOCATION_GRANULARITY / PAGE_SIZE)
+
 
 //
 // System views are binned into 64K chunks
@@ -473,9 +496,70 @@ typedef struct _MMSESSION
     PRTL_BITMAP SystemSpaceBitMap;
 } MMSESSION, *PMMSESSION;
 
+typedef struct _MM_SESSION_SPACE_FLAGS
+{
+    ULONG Initialized:1;
+    ULONG DeletePending:1;
+    ULONG Filler:30;
+} MM_SESSION_SPACE_FLAGS;
+
+typedef struct _MM_SESSION_SPACE
+{
+    struct _MM_SESSION_SPACE *GlobalVirtualAddress;
+    LONG ReferenceCount;
+    union
+    {
+        ULONG LongFlags;
+        MM_SESSION_SPACE_FLAGS Flags;
+    } u;
+    ULONG SessionId;
+    LIST_ENTRY ProcessList;
+    LARGE_INTEGER LastProcessSwappedOutTime;
+    PFN_NUMBER SessionPageDirectoryIndex;
+    SIZE_T NonPageablePages;
+    SIZE_T CommittedPages;
+    PVOID PagedPoolStart;
+    PVOID PagedPoolEnd;
+    PMMPTE PagedPoolBasePde;
+    ULONG Color;
+    LONG ResidentProcessCount;
+    ULONG SessionPoolAllocationFailures[4];
+    LIST_ENTRY ImageList;
+    LCID LocaleId;
+    ULONG AttachCount;
+    KEVENT AttachEvent;
+    PEPROCESS LastProcess;
+    LONG ProcessReferenceToSession;
+    LIST_ENTRY WsListEntry;
+    GENERAL_LOOKASIDE Lookaside[SESSION_POOL_LOOKASIDES];
+    MMSESSION Session;
+    KGUARDED_MUTEX PagedPoolMutex;
+    MM_PAGED_POOL_INFO PagedPoolInfo;
+    MMSUPPORT Vm;
+    PMMWSLE Wsle;
+    PDRIVER_UNLOAD Win32KDriverUnload;
+    POOL_DESCRIPTOR PagedPool;
+#if defined (_M_AMD64)
+    MMPTE PageDirectory;
+#else
+    PMMPTE PageTables;
+#endif
+#if defined (_M_AMD64)
+    PMMPTE SpecialPoolFirstPte;
+    PMMPTE SpecialPoolLastPte;
+    PMMPTE NextPdeForSpecialPoolExpansion;
+    PMMPTE LastPdeForSpecialPoolExpansion;
+    PFN_NUMBER SpecialPagesInUse;
+#endif
+    LONG ImageLoadingCount;
+} MM_SESSION_SPACE, *PMM_SESSION_SPACE;
+
+extern PMM_SESSION_SPACE MmSessionSpace;
 extern MMPTE HyperTemplatePte;
 extern MMPDE ValidKernelPde;
 extern MMPTE ValidKernelPte;
+extern MMPDE ValidKernelPdeLocal;
+extern MMPTE ValidKernelPteLocal;
 extern MMPDE DemandZeroPde;
 extern MMPTE DemandZeroPte;
 extern MMPTE PrototypePte;
@@ -1182,6 +1266,24 @@ InitializePool(           //
     IN ULONG Threshold    //
 );                        //
 
+// FIXFIX: THIS ONE TOO
+VOID
+NTAPI
+INIT_FUNCTION
+ExInitializePoolDescriptor(
+    IN PPOOL_DESCRIPTOR PoolDescriptor,
+    IN POOL_TYPE PoolType,
+    IN ULONG PoolIndex,
+    IN ULONG Threshold,
+    IN PVOID PoolLock
+);
+
+NTSTATUS
+NTAPI
+MiInitializeSessionPool(
+    VOID
+);
+
 VOID
 NTAPI
 MiInitializeSystemPtes(
@@ -1287,6 +1389,15 @@ MiInitializePfn(
     IN PFN_NUMBER PageFrameIndex,
     IN PMMPTE PointerPte,
     IN BOOLEAN Modified
+);
+
+NTSTATUS
+NTAPI
+MiInitializeAndChargePfn(
+    OUT PPFN_NUMBER PageFrameIndex,
+    IN PMMPTE PointerPde,
+    IN PFN_NUMBER ContainingPageFrame,
+    IN BOOLEAN SessionAllocation
 );
 
 VOID
@@ -1493,7 +1604,7 @@ MiGetNextNode(
 BOOLEAN
 NTAPI
 MiInitializeSystemSpaceMap(
-    IN PVOID InputSession OPTIONAL
+    IN PMMSESSION InputSession OPTIONAL
 );
 
 ULONG

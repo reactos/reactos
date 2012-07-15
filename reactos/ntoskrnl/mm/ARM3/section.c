@@ -191,31 +191,44 @@ MiMakeProtectionMask(IN ULONG Protect)
 
 BOOLEAN
 NTAPI
-MiInitializeSystemSpaceMap(IN PVOID InputSession OPTIONAL)
+MiInitializeSystemSpaceMap(IN PMMSESSION InputSession OPTIONAL)
 {
-    SIZE_T AllocSize, BitmapSize;
+    SIZE_T AllocSize, BitmapSize, Size;
+    PVOID ViewStart;
     PMMSESSION Session;
 
-    /* For now, always use the global session */
-    ASSERT(InputSession == NULL);
-    Session = &MmSession;
+    /* Check if this a session or system space */
+    if (InputSession)
+    {
+        /* Use the input session */
+        Session = InputSession;
+        ViewStart = MiSessionViewStart;
+        Size = MmSessionViewSize;
+    }
+    else
+    {
+        /* Use the system space "session" */
+        Session = &MmSession;
+        ViewStart = MiSystemViewStart;
+        Size = MmSystemViewSize;
+    }
 
     /* Initialize the system space lock */
     Session->SystemSpaceViewLockPointer = &Session->SystemSpaceViewLock;
     KeInitializeGuardedMutex(Session->SystemSpaceViewLockPointer);
 
     /* Set the start address */
-    Session->SystemSpaceViewStart = MiSystemViewStart;
+    Session->SystemSpaceViewStart = ViewStart;
 
     /* Create a bitmap to describe system space */
-    BitmapSize = sizeof(RTL_BITMAP) + ((((MmSystemViewSize / MI_SYSTEM_VIEW_BUCKET_SIZE) + 31) / 32) * sizeof(ULONG));
+    BitmapSize = sizeof(RTL_BITMAP) + ((((Size / MI_SYSTEM_VIEW_BUCKET_SIZE) + 31) / 32) * sizeof(ULONG));
     Session->SystemSpaceBitMap = ExAllocatePoolWithTag(NonPagedPool,
                                                        BitmapSize,
                                                        TAG_MM);
     ASSERT(Session->SystemSpaceBitMap);
     RtlInitializeBitMap(Session->SystemSpaceBitMap,
                         (PULONG)(Session->SystemSpaceBitMap + 1),
-                        (ULONG)(MmSystemViewSize / MI_SYSTEM_VIEW_BUCKET_SIZE));
+                        (ULONG)(Size / MI_SYSTEM_VIEW_BUCKET_SIZE));
 
     /* Set system space fully empty to begin with */
     RtlClearAllBits(Session->SystemSpaceBitMap);
@@ -2181,7 +2194,7 @@ MmForceSectionClosed(IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 NTAPI
@@ -2189,19 +2202,43 @@ MmMapViewInSessionSpace(IN PVOID Section,
                         OUT PVOID *MappedBase,
                         IN OUT PSIZE_T ViewSize)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PAGED_CODE();
+
+    /* Process must be in a session */
+    if (PsGetCurrentProcess()->ProcessInSession == FALSE)
+    {
+        DPRINT1("Process is not in session\n");
+        return STATUS_NOT_MAPPED_VIEW;
+    }
+
+    /* Use the system space API, but with the session view instead */
+    ASSERT(MmIsAddressValid(MmSessionSpace) == TRUE);
+    return MiMapViewInSystemSpace(Section,
+                                  &MmSessionSpace->Session,
+                                  MappedBase,
+                                  ViewSize);
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 NTAPI
 MmUnmapViewInSessionSpace(IN PVOID MappedBase)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PAGED_CODE();
+
+    /* Process must be in a session */
+    if (PsGetCurrentProcess()->ProcessInSession == FALSE)
+    {
+        DPRINT1("Proess is not in session\n");
+        return STATUS_NOT_MAPPED_VIEW;
+    }
+
+    /* Use the system space API, but with the session view instead */
+    ASSERT(MmIsAddressValid(MmSessionSpace) == TRUE);
+    return MiUnmapViewInSystemSpace(&MmSessionSpace->Session,
+                                    MappedBase);
 }
 
 /*
