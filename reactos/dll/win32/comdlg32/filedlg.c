@@ -260,6 +260,8 @@ static BOOL GetFileName95(FileOpenDlgInfos *fodInfos)
     HRSRC hRes;
     HANDLE hDlgTmpl = 0;
     HRESULT hr;
+    DWORD dwSize;
+    LPDLGTEMPLATE hDialogTemplate;
 
     /* test for missing functionality */
     if (fodInfos->ofnInfos->Flags & UNIMPLEMENTED_FLAGS)
@@ -276,11 +278,16 @@ static BOOL GetFileName95(FileOpenDlgInfos *fodInfos)
         return FALSE;
     }
     if (!(hDlgTmpl = LoadResource(COMDLG32_hInstance, hRes )) ||
+        !(dwSize = SizeofResource(COMDLG32_hInstance, hRes )) ||
+        !(hDialogTemplate = malloc(dwSize)) ||
         !(template = LockResource( hDlgTmpl )))
     {
         COMDLG32_SetCommDlgExtendedError(CDERR_LOADRESFAILURE);
         return FALSE;
     }
+
+    /* Copy the read only resource */
+    memcpy(hDialogTemplate, template, dwSize);
 
     /* msdn: explorer style dialogs permit sizing by default.
      * The OFN_ENABLESIZING flag is only needed when a hook or
@@ -291,12 +298,12 @@ static BOOL GetFileName95(FileOpenDlgInfos *fodInfos)
 
     if (fodInfos->ofnInfos->Flags & OFN_ENABLESIZING)
     {
-        ((LPDLGTEMPLATEW)template)->style |= WS_SIZEBOX;
+        hDialogTemplate->style |= WS_SIZEBOX;
         fodInfos->sizedlg.cx = fodInfos->sizedlg.cy = 0;
         fodInfos->initial_size.x = fodInfos->initial_size.y = 0;
     }
     else
-        ((LPDLGTEMPLATEW)template)->style &= ~WS_SIZEBOX;
+        hDialogTemplate->style &= ~WS_SIZEBOX;
 
 
     /* old style hook messages */
@@ -313,18 +320,20 @@ static BOOL GetFileName95(FileOpenDlgInfos *fodInfos)
 
     if (fodInfos->unicode)
       lRes = DialogBoxIndirectParamW(COMDLG32_hInstance,
-                                     template,
+                                     hDialogTemplate,
                                      fodInfos->ofnInfos->hwndOwner,
                                      FileOpenDlgProc95,
                                      (LPARAM) fodInfos);
     else
       lRes = DialogBoxIndirectParamA(COMDLG32_hInstance,
-                                     template,
+                                     hDialogTemplate,
                                      fodInfos->ofnInfos->hwndOwner,
                                      FileOpenDlgProc95,
                                      (LPARAM) fodInfos);
-    if (SUCCEEDED(hr)) 
+    if (SUCCEEDED(hr))
         OleUninitialize();
+
+    free(hDialogTemplate);
 
     /* Unable to create the dialog */
     if( lRes == -1)
