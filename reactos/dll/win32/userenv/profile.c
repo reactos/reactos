@@ -75,31 +75,6 @@ AppendSystemPostfix(LPWSTR lpName,
 }
 
 
-BOOL
-WINAPI
-CreateUserProfileA(PSID Sid,
-                   LPCSTR lpUserName)
-{
-    UNICODE_STRING UserName;
-    BOOL bResult;
-    NTSTATUS Status;
-
-    Status = RtlCreateUnicodeStringFromAsciiz(&UserName,
-                                              (LPSTR)lpUserName);
-    if (!NT_SUCCESS(Status))
-    {
-        SetLastError(RtlNtStatusToDosError(Status));
-        return FALSE;
-    }
-
-    bResult = CreateUserProfileW(Sid, UserName.Buffer);
-
-    RtlFreeUnicodeString(&UserName);
-
-    return bResult;
-}
-
-
 static
 BOOL
 AcquireRemoveRestorePrivilege(IN BOOL bAcquire)
@@ -144,6 +119,29 @@ AcquireRemoveRestorePrivilege(IN BOOL bAcquire)
     }
 
     return bRet;
+}
+
+
+BOOL
+WINAPI
+CreateUserProfileA(PSID Sid,
+                   LPCSTR lpUserName)
+{
+    UNICODE_STRING UserName;
+    BOOL bResult;
+
+    if (!RtlCreateUnicodeStringFromAsciiz(&UserName,
+                                          (LPSTR)lpUserName))
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return FALSE;
+    }
+
+    bResult = CreateUserProfileW(Sid, UserName.Buffer);
+
+    RtlFreeUnicodeString(&UserName);
+
+    return bResult;
 }
 
 
@@ -390,6 +388,34 @@ Done:
     DPRINT("CreateUserProfileW() done\n");
 
     return bRet;
+}
+
+
+BOOL
+WINAPI
+CreateUserProfileExA(IN PSID pSid,
+                     IN LPCSTR lpUserName,
+                     IN LPCSTR lpUserHive OPTIONAL,
+                     OUT LPSTR lpProfileDir OPTIONAL,
+                     IN DWORD dwDirSize,
+                     IN BOOL bWin9xUpg)
+{
+    DPRINT1("CreateUserProfileExA() not implemented!\n");
+    return FALSE;
+}
+
+
+BOOL
+WINAPI
+CreateUserProfileExW(IN PSID pSid,
+                     IN LPCWSTR lpUserName,
+                     IN LPCWSTR lpUserHive OPTIONAL,
+                     OUT LPWSTR lpProfileDir OPTIONAL,
+                     IN DWORD dwDirSize,
+                     IN BOOL bWin9xUpg)
+{
+    DPRINT1("CreateUserProfileExW() not implemented!\n");
+    return FALSE;
 }
 
 
@@ -1303,6 +1329,15 @@ DeleteProfileA(LPCSTR lpSidString,
         RtlFreeUnicodeString(&ComputerName);
 
     return bResult;
+}
+
+
+BOOL
+WINAPI
+GetProfileType(OUT PDWORD pdwFlags)
+{
+    DPRINT1("GetProfileType() not implemented!\n");
+    return FALSE;
 }
 
 /* EOF */

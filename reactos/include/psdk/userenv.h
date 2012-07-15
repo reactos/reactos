@@ -12,6 +12,13 @@ extern "C" {
 #define RP_FORCE (1)
 #endif
 
+/* Values returned by GetProfileType */
+#if (WINVER >= 0x0500)
+#define PT_TEMPORARY 1
+#define PT_ROAMING   2
+#define PT_MANDATORY 4
+#endif
+
 typedef struct _PROFILEINFOA
 {
   DWORD dwSize;
@@ -67,6 +74,9 @@ BOOL WINAPI GetProfilesDirectoryA(LPSTR, LPDWORD);
 BOOL WINAPI GetProfilesDirectoryW(LPWSTR, LPDWORD);
 BOOL WINAPI GetUserProfileDirectoryA(HANDLE, LPSTR, LPDWORD);
 BOOL WINAPI GetUserProfileDirectoryW(HANDLE, LPWSTR, LPDWORD);
+#if (WINVER >= 0x0500)
+BOOL WINAPI GetProfileType(PDWORD);
+#endif
 
 BOOL WINAPI CreateEnvironmentBlock(LPVOID*, HANDLE, BOOL);
 BOOL WINAPI DestroyEnvironmentBlock(LPVOID);
