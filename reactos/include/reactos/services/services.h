@@ -9,7 +9,15 @@
 #ifndef __SERVICES_SERVICES_H__
 #define __SERVICES_SERVICES_H__
 
-#define SERVICE_CONTROL_START 0
+/*
+ * Internal control codes.
+ * Neither in the range of public control codes (1-10 and 11-14 or 16 or 32 or 64)
+ * nor in the range of user-defined control codes (128-255).
+ */
+/* Start a service that shares a process with other services */
+#define SERVICE_CONTROL_START_SHARE 80
+/* Start a service that runs in its own process */
+#define SERVICE_CONTROL_START_OWN   81
 
 typedef struct _SCM_CONTROL_PACKET
 {

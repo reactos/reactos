@@ -1116,8 +1116,8 @@ ScmSendStartCommand(PSERVICE Service,
     DPRINT("ScmSendStartCommand() called\n");
 
     /* Calculate the total length of the start command line */
-    PacketSize = sizeof(SCM_CONTROL_PACKET);
-    PacketSize += (wcslen(Service->lpServiceName) + 1) * sizeof(WCHAR);
+    PacketSize = sizeof(SCM_CONTROL_PACKET) +
+                 (wcslen(Service->lpServiceName) + 1) * sizeof(WCHAR);
 
     /* Calculate the required packet size for the start arguments */
     if (argc > 0 && argv != NULL)
@@ -1140,7 +1140,9 @@ ScmSendStartCommand(PSERVICE Service,
         return ERROR_NOT_ENOUGH_MEMORY;
 
     ControlPacket->dwSize = PacketSize;
-    ControlPacket->dwControl = SERVICE_CONTROL_START;
+    ControlPacket->dwControl = (Service->Status.dwServiceType & SERVICE_WIN32_OWN_PROCESS)
+                               ? SERVICE_CONTROL_START_OWN
+                               : SERVICE_CONTROL_START_SHARE;
     ControlPacket->hServiceStatus = (SERVICE_STATUS_HANDLE)Service;
     ControlPacket->dwServiceNameOffset = sizeof(SCM_CONTROL_PACKET);
 
