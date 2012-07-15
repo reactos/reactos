@@ -687,6 +687,33 @@ SamQueryInformationDomain(IN SAM_HANDLE DomainHandle,
 
 NTSTATUS
 NTAPI
+SamQueryInformationGroup(IN SAM_HANDLE GroupHandle,
+                         IN GROUP_INFORMATION_CLASS GroupInformationClass,
+                         OUT PVOID *Buffer)
+{
+    NTSTATUS Status;
+
+    TRACE("SamQueryInformationGroup(%p %lu %p)\n",
+          GroupHandle, GroupInformationClass, Buffer);
+
+    RpcTryExcept
+    {
+        Status = SamrQueryInformationGroup((SAMPR_HANDLE)GroupHandle,
+                                           GroupInformationClass,
+                                           (PSAMPR_GROUP_INFO_BUFFER *)Buffer);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
+
+NTSTATUS
+NTAPI
 SamQueryInformationUser(IN SAM_HANDLE UserHandle,
                         IN USER_INFORMATION_CLASS UserInformationClass,
                         OUT PVOID *Buffer)
@@ -755,6 +782,33 @@ SamSetInformationDomain(IN SAM_HANDLE DomainHandle,
         Status = SamrSetInformationDomain((SAMPR_HANDLE)DomainHandle,
                                           DomainInformationClass,
                                           DomainInformation);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
+
+NTSTATUS
+NTAPI
+SamSetInformationGroup(IN SAM_HANDLE GroupHandle,
+                       IN GROUP_INFORMATION_CLASS GroupInformationClass,
+                       IN PVOID Buffer)
+{
+    NTSTATUS Status;
+
+    TRACE("SamSetInformationGroup(%p %lu %p)\n",
+          GroupHandle, GroupInformationClass, Buffer);
+
+    RpcTryExcept
+    {
+        Status = SamrSetInformationGroup((SAMPR_HANDLE)GroupHandle,
+                                         GroupInformationClass,
+                                         Buffer);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {

@@ -2550,6 +2550,217 @@ SamrOpenGroup(IN SAMPR_HANDLE DomainHandle,
 }
 
 
+static NTSTATUS
+SampQueryGroupGeneral(PSAM_DB_OBJECT GroupObject,
+                      PSAMPR_GROUP_INFO_BUFFER *Buffer)
+{
+    PSAMPR_GROUP_INFO_BUFFER InfoBuffer = NULL;
+    HANDLE MembersKeyHandle = NULL;
+    SAM_GROUP_FIXED_DATA FixedData;
+    ULONG Length = 0;
+    NTSTATUS Status;
+
+    *Buffer = NULL;
+
+    InfoBuffer = midl_user_allocate(sizeof(SAMPR_GROUP_INFO_BUFFER));
+    if (InfoBuffer == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    Status = SampGetObjectAttributeString(GroupObject,
+                                          L"Name",
+                                          &InfoBuffer->General.Name);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("Status 0x%08lx\n", Status);
+        goto done;
+    }
+
+    Status = SampGetObjectAttributeString(GroupObject,
+                                          L"Description",
+                                          &InfoBuffer->General.AdminComment);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("Status 0x%08lx\n", Status);
+        goto done;
+    }
+
+    Length = sizeof(SAM_GROUP_FIXED_DATA);
+    Status = SampGetObjectAttribute(GroupObject,
+                                    L"F",
+                                    NULL,
+                                    (PVOID)&FixedData,
+                                    &Length);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    InfoBuffer->General.Attributes = FixedData.Attributes;
+
+    /* Open the Members subkey */
+    Status = SampRegOpenKey(GroupObject->KeyHandle,
+                            L"Members",
+                            KEY_READ,
+                            &MembersKeyHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("Status 0x%08lx\n", Status);
+        goto done;
+    }
+
+    /* Retrieve the number of members of the alias */
+    Status = SampRegQueryKeyInfo(MembersKeyHandle,
+                                 NULL,
+                                 &InfoBuffer->General.MemberCount);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("Status 0x%08lx\n", Status);
+        goto done;
+    }
+
+    *Buffer = InfoBuffer;
+
+done:
+    if (MembersKeyHandle != NULL)
+        SampRegCloseKey(MembersKeyHandle);
+
+    if (!NT_SUCCESS(Status))
+    {
+        if (InfoBuffer != NULL)
+        {
+            if (InfoBuffer->General.Name.Buffer != NULL)
+                midl_user_free(InfoBuffer->General.Name.Buffer);
+
+            if (InfoBuffer->General.AdminComment.Buffer != NULL)
+                midl_user_free(InfoBuffer->General.AdminComment.Buffer);
+
+            midl_user_free(InfoBuffer);
+        }
+    }
+
+    return Status;
+}
+
+
+static NTSTATUS
+SampQueryGroupName(PSAM_DB_OBJECT GroupObject,
+                   PSAMPR_GROUP_INFO_BUFFER *Buffer)
+{
+    PSAMPR_GROUP_INFO_BUFFER InfoBuffer = NULL;
+    NTSTATUS Status;
+
+    *Buffer = NULL;
+
+    InfoBuffer = midl_user_allocate(sizeof(SAMPR_GROUP_INFO_BUFFER));
+    if (InfoBuffer == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    Status = SampGetObjectAttributeString(GroupObject,
+                                          L"Name",
+                                          &InfoBuffer->Name.Name);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("Status 0x%08lx\n", Status);
+        goto done;
+    }
+
+    *Buffer = InfoBuffer;
+
+done:
+    if (!NT_SUCCESS(Status))
+    {
+        if (InfoBuffer != NULL)
+        {
+            if (InfoBuffer->Name.Name.Buffer != NULL)
+                midl_user_free(InfoBuffer->Name.Name.Buffer);
+
+            midl_user_free(InfoBuffer);
+        }
+    }
+
+    return Status;
+}
+
+
+static NTSTATUS
+SampQueryGroupAttribute(PSAM_DB_OBJECT GroupObject,
+                        PSAMPR_GROUP_INFO_BUFFER *Buffer)
+{
+    PSAMPR_GROUP_INFO_BUFFER InfoBuffer = NULL;
+    SAM_GROUP_FIXED_DATA FixedData;
+    ULONG Length = 0;
+    NTSTATUS Status;
+
+    *Buffer = NULL;
+
+    InfoBuffer = midl_user_allocate(sizeof(SAMPR_GROUP_INFO_BUFFER));
+    if (InfoBuffer == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    Length = sizeof(SAM_GROUP_FIXED_DATA);
+    Status = SampGetObjectAttribute(GroupObject,
+                                    L"F",
+                                    NULL,
+                                    (PVOID)&FixedData,
+                                    &Length);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    InfoBuffer->Attribute.Attributes = FixedData.Attributes;
+
+    *Buffer = InfoBuffer;
+
+done:
+    if (!NT_SUCCESS(Status))
+    {
+        if (InfoBuffer != NULL)
+        {
+            midl_user_free(InfoBuffer);
+        }
+    }
+
+    return Status;
+}
+
+
+static NTSTATUS
+SampQueryGroupAdminComment(PSAM_DB_OBJECT GroupObject,
+                           PSAMPR_GROUP_INFO_BUFFER *Buffer)
+{
+    PSAMPR_GROUP_INFO_BUFFER InfoBuffer = NULL;
+    NTSTATUS Status;
+
+    *Buffer = NULL;
+
+    InfoBuffer = midl_user_allocate(sizeof(SAMPR_GROUP_INFO_BUFFER));
+    if (InfoBuffer == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    Status = SampGetObjectAttributeString(GroupObject,
+                                          L"Description",
+                                          &InfoBuffer->AdminComment.AdminComment);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("Status 0x%08lx\n", Status);
+        goto done;
+    }
+
+    *Buffer = InfoBuffer;
+
+done:
+    if (!NT_SUCCESS(Status))
+    {
+        if (InfoBuffer != NULL)
+        {
+            if (InfoBuffer->AdminComment.AdminComment.Buffer != NULL)
+                midl_user_free(InfoBuffer->AdminComment.AdminComment.Buffer);
+
+            midl_user_free(InfoBuffer);
+        }
+    }
+
+    return Status;
+}
+
+
 /* Function 20 */
 NTSTATUS
 NTAPI
@@ -2557,9 +2768,80 @@ SamrQueryInformationGroup(IN SAMPR_HANDLE GroupHandle,
                           IN GROUP_INFORMATION_CLASS GroupInformationClass,
                           OUT PSAMPR_GROUP_INFO_BUFFER *Buffer)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PSAM_DB_OBJECT GroupObject;
+    NTSTATUS Status;
+
+    TRACE("SamrQueryInformationGroup(%p %lu %p)\n",
+          GroupHandle, GroupInformationClass, Buffer);
+
+    /* Validate the group handle */
+    Status = SampValidateDbObject(GroupHandle,
+                                  SamDbGroupObject,
+                                  GROUP_READ_INFORMATION,
+                                  &GroupObject);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    switch (GroupInformationClass)
+    {
+        case GroupGeneralInformation:
+            Status = SampQueryGroupGeneral(GroupObject,
+                                           Buffer);
+            break;
+
+        case GroupNameInformation:
+            Status = SampQueryGroupName(GroupObject,
+                                        Buffer);
+            break;
+
+        case GroupAttributeInformation:
+            Status = SampQueryGroupAttribute(GroupObject,
+                                             Buffer);
+            break;
+
+        case GroupAdminCommentInformation:
+            Status = SampQueryGroupAdminComment(GroupObject,
+                                                Buffer);
+            break;
+
+        default:
+            Status = STATUS_INVALID_INFO_CLASS;
+            break;
+    }
+
+    return Status;
 }
+
+
+static NTSTATUS
+SampSetGroupAttribute(PSAM_DB_OBJECT GroupObject,
+                      PSAMPR_GROUP_INFO_BUFFER Buffer)
+{
+    SAM_GROUP_FIXED_DATA FixedData;
+    ULONG Length = 0;
+    NTSTATUS Status;
+
+    Length = sizeof(SAM_GROUP_FIXED_DATA);
+    Status = SampGetObjectAttribute(GroupObject,
+                                    L"F",
+                                    NULL,
+                                    (PVOID)&FixedData,
+                                    &Length);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    FixedData.Attributes = Buffer->Attribute.Attributes;
+
+    Status = SampSetObjectAttribute(GroupObject,
+                                    L"F",
+                                    REG_BINARY,
+                                    &FixedData,
+                                    Length);
+
+done:
+    return Status;
+}
+
 
 /* Function 21 */
 NTSTATUS
@@ -2568,9 +2850,51 @@ SamrSetInformationGroup(IN SAMPR_HANDLE GroupHandle,
                         IN GROUP_INFORMATION_CLASS GroupInformationClass,
                         IN PSAMPR_GROUP_INFO_BUFFER Buffer)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PSAM_DB_OBJECT GroupObject;
+    NTSTATUS Status;
+
+    TRACE("SamrSetInformationGroup(%p %lu %p)\n",
+          GroupHandle, GroupInformationClass, Buffer);
+
+    /* Validate the group handle */
+    Status = SampValidateDbObject(GroupHandle,
+                                  SamDbGroupObject,
+                                  GROUP_WRITE_ACCOUNT,
+                                  &GroupObject);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    switch (GroupInformationClass)
+    {
+        case GroupNameInformation:
+            Status = SampSetObjectAttribute(GroupObject,
+                                            L"Name",
+                                            REG_SZ,
+                                            Buffer->Name.Name.Buffer,
+                                            Buffer->Name.Name.Length + sizeof(WCHAR));
+            break;
+
+        case GroupAttributeInformation:
+            Status = SampSetGroupAttribute(GroupObject,
+                                           Buffer);
+            break;
+
+        case GroupAdminCommentInformation:
+            Status = SampSetObjectAttribute(GroupObject,
+                                            L"Description",
+                                            REG_SZ,
+                                            Buffer->AdminComment.AdminComment.Buffer,
+                                            Buffer->AdminComment.AdminComment.Length + sizeof(WCHAR));
+            break;
+
+        default:
+            Status = STATUS_INVALID_INFO_CLASS;
+            break;
+    }
+
+    return Status;
 }
+
 
 /* Function 22 */
 NTSTATUS
@@ -2622,6 +2946,7 @@ SamrSetMemberAttributesOfGroup(IN SAMPR_HANDLE GroupHandle,
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
+
 
 /* Function 27 */
 NTSTATUS
@@ -2875,6 +3200,7 @@ SamrQueryInformationAlias(IN SAMPR_HANDLE AliasHandle,
     return Status;
 }
 
+
 /* Function 29 */
 NTSTATUS
 NTAPI
@@ -2922,6 +3248,7 @@ SamrSetInformationAlias(IN SAMPR_HANDLE AliasHandle,
     return Status;
 }
 
+
 /* Function 30 */
 NTSTATUS
 NTAPI
@@ -2930,6 +3257,7 @@ SamrDeleteAlias(IN OUT SAMPR_HANDLE *AliasHandle)
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
+
 
 /* Function 31 */
 NTSTATUS
@@ -3017,6 +3345,7 @@ done:
 
     return Status;
 }
+
 
 /* Function 32 */
 NTSTATUS

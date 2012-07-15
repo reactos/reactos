@@ -35,7 +35,7 @@
 @ stub SamQueryDisplayInformation
 @ stdcall SamQueryInformationAlias(ptr long ptr)
 @ stdcall SamQueryInformationDomain(ptr long ptr)
-@ stub SamQueryInformationGroup
+@ stdcall SamQueryInformationGroup(ptr long ptr)
 @ stdcall SamQueryInformationUser(ptr long ptr)
 @ stub SamQuerySecurityObject
 @ stub SamRemoveMemberFromAlias
@@ -45,7 +45,7 @@
 @ stub SamRidToSid
 @ stdcall SamSetInformationAlias(ptr long ptr)
 @ stdcall SamSetInformationDomain(ptr long ptr)
-@ stub SamSetInformationGroup
+@ stdcall SamSetInformationGroup(ptr long ptr)
 @ stdcall SamSetInformationUser(ptr long ptr)
 @ stub SamSetMemberAttributesOfGroup
 @ stub SamSetSecurityObject
