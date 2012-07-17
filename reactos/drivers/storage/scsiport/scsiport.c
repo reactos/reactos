@@ -2351,7 +2351,7 @@ SpiGetPciConfigData(IN PDRIVER_OBJECT DriverObject,
                 return FALSE;
 
             /* Check if result is PCI_INVALID_VENDORID or too small */
-            if ((DataSize < (ULONG)PCI_COMMON_HDR_LENGTH) ||
+            if ((DataSize < sizeof(ULONG)) ||
                 (PciConfig.VendorID == PCI_INVALID_VENDORID))
             {
                 /* Continue to try the next function */
