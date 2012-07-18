@@ -4,11 +4,11 @@ IDR_MAINMENU MENU
 BEGIN
   POPUP "&Fichier"
   BEGIN
-    MENUITEM "&Quitter",                   IDC_EXIT
+    MENUITEM "&Quitter",                IDC_EXIT
   END
   POPUP "Action"
   BEGIN
-    MENUITEM "Imprimer",                   IDC_PRINT, GRAYED
+    MENUITEM "Imprimer",                IDC_PRINT, GRAYED
     MENUITEM SEPARATOR
     MENUITEM "Propriétés",              IDC_PROP, GRAYED
     MENUITEM SEPARATOR
@@ -21,12 +21,12 @@ BEGIN
     MENUITEM "Ressources par type",         IDC_RESBYTYPE, GRAYED
     MENUITEM "Ressources par connexion",    IDC_RESBYCONN, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "Show hidden devices",         IDC_SHOWHIDDEN
+    MENUITEM "Afficher les périphériques cachés", IDC_SHOWHIDDEN
   END
   POPUP "Aide"
   BEGIN
     MENUITEM "Aide",                    IDC_PROGHELP
-    MENUITEM "À propos",                   IDC_ABOUT
+    MENUITEM "À propos",                IDC_ABOUT
   END
 END
 
@@ -76,7 +76,7 @@ BEGIN
   IDS_HINT_ABOUT        " À propos du Gestionnaire de Périphériques de ReactOS."
 
   IDS_HINT_SYS_RESTORE  " Restaure cette fenêtre à sa taille normale."
-  IDS_HINT_SYS_MOVE     " Bouge cette fenêtre."
+  IDS_HINT_SYS_MOVE     " Déplace cette fenêtre."
   IDS_HINT_SYS_SIZE     " Redimensionne cette fenêtre."
   IDS_HINT_SYS_MINIMIZE " Réduit cette fenêtre à une icône."
   IDS_HINT_SYS_MAXIMIZE " Étend cette fenêtre à l'écran."
