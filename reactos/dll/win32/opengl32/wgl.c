@@ -807,7 +807,7 @@ rosglDeleteContext( HGLRC hglrc )
             return FALSE;
         }
         /* Unset it before going further */
-        rosglMakeCurrent(glrc->hdc, NULL);
+        rosglMakeCurrent(NULL, NULL);
     }
 
     /* release ICD's context */
