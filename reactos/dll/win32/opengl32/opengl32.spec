@@ -62,7 +62,7 @@
 @  stdcall glCopyTexSubImage1D( long long long long long long ) 
 @  stdcall glCopyTexSubImage2D( long long long long long long long long ) 
 @  stdcall glCullFace( long )
-@ stub glDebugEntry
+@  stdcall glDebugEntry(long long)
 @  stdcall glDeleteLists( long long ) 
 @  stdcall glDeleteTextures( long ptr ) 
 @  stdcall glDepthFunc( long ) 
