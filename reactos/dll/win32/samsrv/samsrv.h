@@ -151,6 +151,10 @@ SampCheckDbObjectNameAlias(IN PSAM_DB_OBJECT DomainObject,
                            OUT PBOOL bAliasExists);
 
 NTSTATUS
+SampCheckAccountNameInDomain(IN PSAM_DB_OBJECT DomainObject,
+                             IN LPWSTR lpAccountName);
+
+NTSTATUS
 SampSetObjectAttribute(PSAM_DB_OBJECT DbObject,
                        LPWSTR AttributeName,
                        ULONG AttributeType,

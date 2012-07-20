@@ -629,6 +629,121 @@ done:
 
 
 NTSTATUS
+SampCheckAccountNameInDomain(IN PSAM_DB_OBJECT DomainObject,
+                             IN LPWSTR lpAccountName)
+{
+    HANDLE AccountKey;
+    HANDLE NamesKey;
+    NTSTATUS Status;
+
+    TRACE("SampCheckNameInDomain()\n");
+
+    Status = SampRegOpenKey(DomainObject->KeyHandle,
+                            L"Aliases",
+                            KEY_READ,
+                            &AccountKey);
+    if (NT_SUCCESS(Status))
+    {
+        Status = SampRegOpenKey(AccountKey,
+                                L"Names",
+                                KEY_READ,
+                                &NamesKey);
+        if (NT_SUCCESS(Status))
+        {
+            Status = SampRegQueryValue(NamesKey,
+                                       lpAccountName,
+                                       NULL,
+                                       NULL,
+                                       NULL);
+            if (Status == STATUS_SUCCESS)
+                Status = STATUS_ALIAS_EXISTS;
+            else if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
+                Status = STATUS_SUCCESS;
+
+            SampRegCloseKey(NamesKey);
+        }
+
+        SampRegCloseKey(AccountKey);
+    }
+
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("Checking for alias account failed (Status 0x%08lx)\n", Status);
+        return Status;
+    }
+
+    Status = SampRegOpenKey(DomainObject->KeyHandle,
+                            L"Groups",
+                            KEY_READ,
+                            &AccountKey);
+    if (NT_SUCCESS(Status))
+    {
+        Status = SampRegOpenKey(AccountKey,
+                                L"Names",
+                                KEY_READ,
+                                &NamesKey);
+        if (NT_SUCCESS(Status))
+        {
+            Status = SampRegQueryValue(NamesKey,
+                                       lpAccountName,
+                                       NULL,
+                                       NULL,
+                                       NULL);
+            if (Status == STATUS_SUCCESS)
+                Status = STATUS_ALIAS_EXISTS;
+            else if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
+                Status = STATUS_SUCCESS;
+
+            SampRegCloseKey(NamesKey);
+        }
+
+        SampRegCloseKey(AccountKey);
+    }
+
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("Checking for group account failed (Status 0x%08lx)\n", Status);
+        return Status;
+    }
+
+    Status = SampRegOpenKey(DomainObject->KeyHandle,
+                            L"Users",
+                            KEY_READ,
+                            &AccountKey);
+    if (NT_SUCCESS(Status))
+    {
+        Status = SampRegOpenKey(AccountKey,
+                                L"Names",
+                                KEY_READ,
+                                &NamesKey);
+        if (NT_SUCCESS(Status))
+        {
+            Status = SampRegQueryValue(NamesKey,
+                                       lpAccountName,
+                                       NULL,
+                                       NULL,
+                                       NULL);
+            if (Status == STATUS_SUCCESS)
+                Status = STATUS_ALIAS_EXISTS;
+            else if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
+                Status = STATUS_SUCCESS;
+
+            SampRegCloseKey(NamesKey);
+        }
+
+        SampRegCloseKey(AccountKey);
+    }
+
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("Checking for user account failed (Status 0x%08lx)\n", Status);
+    }
+
+    return Status;
+}
+
+
+NTSTATUS
 SampSetObjectAttribute(PSAM_DB_OBJECT DbObject,
                        LPWSTR AttributeName,
                        ULONG AttributeType,

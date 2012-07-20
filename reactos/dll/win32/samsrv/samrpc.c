@@ -1565,6 +1565,16 @@ SamrCreateGroupInDomain(IN SAMPR_HANDLE DomainHandle,
         return Status;
     }
 
+    /* Check if the group name already exists in the domain */
+    Status = SampCheckAccountNameInDomain(DomainObject,
+                                          Name->Buffer);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("Group name \'%S\' already exists in domain (Status 0x%08lx)\n",
+              Name->Buffer, Status);
+        return Status;
+    }
+
     /* Get the fixed domain attributes */
     ulSize = sizeof(SAM_DOMAIN_FIXED_DATA);
     Status = SampGetObjectAttribute(DomainObject,
@@ -1598,8 +1608,6 @@ SamrCreateGroupInDomain(IN SAMPR_HANDLE DomainHandle,
 
     /* Convert the RID into a string (hex) */
     swprintf(szRid, L"%08lX", ulRid);
-
-    /* FIXME: Check whether the group name is already in use */
 
     /* Create the group object */
     Status = SampCreateDbObject(DomainObject,
@@ -1710,7 +1718,6 @@ SamrCreateUserInDomain(IN SAMPR_HANDLE DomainHandle,
     ULONG ulSize;
     ULONG ulRid;
     WCHAR szRid[9];
-    BOOL bAliasExists = FALSE;
     NTSTATUS Status;
 
     TRACE("SamrCreateUserInDomain(%p %p %lx %p %p)\n",
@@ -1724,6 +1731,16 @@ SamrCreateUserInDomain(IN SAMPR_HANDLE DomainHandle,
     if (!NT_SUCCESS(Status))
     {
         TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Check if the user name already exists in the domain */
+    Status = SampCheckAccountNameInDomain(DomainObject,
+                                          Name->Buffer);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("User name \'%S\' already exists in domain (Status 0x%08lx)\n",
+              Name->Buffer, Status);
         return Status;
     }
 
@@ -1761,23 +1778,6 @@ SamrCreateUserInDomain(IN SAMPR_HANDLE DomainHandle,
     /* Convert the RID into a string (hex) */
     swprintf(szRid, L"%08lX", ulRid);
 
-    /* Check whether the user name is already in use */
-    Status = SampCheckDbObjectNameAlias(DomainObject,
-                                        L"Users",
-                                        Name->Buffer,
-                                        &bAliasExists);
-    if (!NT_SUCCESS(Status))
-    {
-        TRACE("failed with status 0x%08lx\n", Status);
-        return Status;
-    }
-
-    if (bAliasExists)
-    {
-        TRACE("The user account %S already exists!\n", Name->Buffer);
-        return STATUS_USER_EXISTS;
-    }
-
     /* Create the user object */
     Status = SampCreateDbObject(DomainObject,
                                 L"Users",
@@ -1807,6 +1807,10 @@ SamrCreateUserInDomain(IN SAMPR_HANDLE DomainHandle,
     FixedUserData.Version = 1;
 
     FixedUserData.UserId = ulRid;
+    FixedUserData.PrimaryGroupId = DOMAIN_GROUP_RID_USERS;
+//    FixedUserData.UserAccountControl = USER_ACCOUNT_DISABLED |
+//                                       USER_PASSWORD_NOT_REQUIRED ||
+//                                       USER_NORMAL_ACCOUNT;
 
     /* Set fixed user data attribute */
     Status = SampSetObjectAttribute(UserObject,
@@ -1973,7 +1977,6 @@ SamrCreateAliasInDomain(IN SAMPR_HANDLE DomainHandle,
     ULONG ulSize;
     ULONG ulRid;
     WCHAR szRid[9];
-    BOOL bAliasExists = FALSE;
     NTSTATUS Status;
 
     TRACE("SamrCreateAliasInDomain(%p %p %lx %p %p)\n",
@@ -1987,6 +1990,16 @@ SamrCreateAliasInDomain(IN SAMPR_HANDLE DomainHandle,
     if (!NT_SUCCESS(Status))
     {
         TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Check if the alias name already exists in the domain */
+    Status = SampCheckAccountNameInDomain(DomainObject,
+                                          AccountName->Buffer);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("Alias name \'%S\' already exists in domain (Status 0x%08lx)\n",
+              AccountName->Buffer, Status);
         return Status;
     }
 
@@ -2023,23 +2036,6 @@ SamrCreateAliasInDomain(IN SAMPR_HANDLE DomainHandle,
 
     /* Convert the RID into a string (hex) */
     swprintf(szRid, L"%08lX", ulRid);
-
-    /* Check whether the user name is already in use */
-    Status = SampCheckDbObjectNameAlias(DomainObject,
-                                        L"Aliases",
-                                        AccountName->Buffer,
-                                        &bAliasExists);
-    if (!NT_SUCCESS(Status))
-    {
-        TRACE("failed with status 0x%08lx\n", Status);
-        return Status;
-    }
-
-    if (bAliasExists)
-    {
-        TRACE("The alias account %S already exists!\n", AccountName->Buffer);
-        return STATUS_ALIAS_EXISTS;
-    }
 
     /* Create the alias object */
     Status = SampCreateDbObject(DomainObject,
