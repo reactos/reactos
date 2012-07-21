@@ -832,7 +832,7 @@ list(APPEND SOURCE_MSVCRT
 #    _vscwprintf.c
 #    _vscwprintf_l
 #    _vscwprintf_p_l
-#    _vsnprintf.c
+    _vsnprintf.c
 #    _vsnprintf_c.c _vsnprintf
 #    _vsnprintf_c_l.c _vsnprintf_l
 #    _vsnprintf_l.c

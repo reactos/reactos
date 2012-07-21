@@ -34,7 +34,7 @@ list(APPEND SOURCE_NTDLL
 #    _ultoa.c
 #    _ultow.c
 #    _vscwprintf.c
-#    _vsnprintf.c
+    _vsnprintf.c
 #    _vsnwprintf.c
 #    _wcsicmp.c
 #    _wcslwr.c
