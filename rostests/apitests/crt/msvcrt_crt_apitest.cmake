@@ -826,10 +826,10 @@ list(APPEND SOURCE_MSVCRT
 #    _vprintf_p_l
 #    _vprintf_s_l
 #    _utime.c
-#    _vscprintf.c
+    _vscprintf.c
 #    _vscprintf_l
 #    _vscprintf_p_l
-#    _vscwprintf.c
+    _vscwprintf.c
 #    _vscwprintf_l
 #    _vscwprintf_p_l
     _vsnprintf.c
@@ -838,7 +838,7 @@ list(APPEND SOURCE_MSVCRT
 #    _vsnprintf_l.c
 #    _vsnprintf_s.c
 #    _vsnprintf_s_l.c
-#    _vsnwprintf.c
+    _vsnwprintf.c
 #    _vsnwprintf_l.c
 #    _vsnwprintf_s.c
 #    _vsnwprintf_s_l.c

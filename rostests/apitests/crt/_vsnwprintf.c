@@ -15,36 +15,36 @@
 #define StartSeh()              ExceptionStatus = STATUS_SUCCESS; _SEH2_TRY {
 #define EndSeh(ExpectedStatus)  } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) { ExceptionStatus = _SEH2_GetExceptionCode(); } _SEH2_END; ok(ExceptionStatus == ExpectedStatus, "Exception %lx, expected %lx\n", ExceptionStatus, ExpectedStatus)
 
-static void call_varargs(char* buf, size_t buf_size, int expected_ret, LPCSTR formatString, ...)
+static void call_varargs(wchar_t* buf, size_t buf_size, int expected_ret, LPCWSTR formatString, ...)
 {
     va_list args;
     int ret;
     /* Test the basic functionality */
     va_start(args, formatString);
-    ret = _vsnprintf(buf, 255, formatString, args);
+    ret = _vsnwprintf(buf, 255, formatString, args);
     ok(expected_ret == ret, "Test failed: expected %i, got %i.\n", expected_ret, ret);
 }
 
-START_TEST(_vsnprintf)
+START_TEST(_vsnwprintf)
 {
-    char buffer[255];
+    wchar_t buffer[255];
     NTSTATUS ExceptionStatus;
-    /* Here you can mix wide and ANSI strings */
-    call_varargs(buffer, 255, 12, "%S world!", L"hello");
-    call_varargs(buffer, 255, 12, "%s world!", "hello");
-    call_varargs(buffer, 255, 11, "%u cookies", 100);
+    /* Test basic functionality */
+    call_varargs(buffer, 255, 19, L"%s world!", "hello");
+    call_varargs(buffer, 255, 12, L"%s world!", L"hello");
+    call_varargs(buffer, 255, 11, L"%u cookies", 100);
     /* This is how WINE implements _vcsprintf, and they are obviously wrong */
     StartSeh()
-        call_varargs(NULL, INT_MAX, -1, "%s it really work?", "does");
-#if defined(TEST_CRTDLL) || defined(TEST_USER32)
+        call_varargs(NULL, INT_MAX, -1, L"%s it really work?", L"does");
+#if defined(TEST_CRTDLL)
     EndSeh(STATUS_ACCESS_VIOLATION);
 #else
     EndSeh(STATUS_SUCCESS);
 #endif
     /* This one is no better */
     StartSeh()
-        call_varargs(NULL, 0, -1, "%s it really work?", "does");
-#if defined(TEST_CRTDLL) || defined(TEST_USER32)
+        call_varargs(NULL, 0, -1, L"%s it really work?", L"does");
+#if defined(TEST_CRTDLL)
     EndSeh(STATUS_ACCESS_VIOLATION);
 #else
     EndSeh(STATUS_SUCCESS);

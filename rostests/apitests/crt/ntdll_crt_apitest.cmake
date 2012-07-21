@@ -33,9 +33,9 @@ list(APPEND SOURCE_NTDLL
 #    _ui64tow.c
 #    _ultoa.c
 #    _ultow.c
-#    _vscwprintf.c
+    _vscwprintf.c
     _vsnprintf.c
-#    _vsnwprintf.c
+    _vsnwprintf.c
 #    _wcsicmp.c
 #    _wcslwr.c
 #    _wcsnicmp.c

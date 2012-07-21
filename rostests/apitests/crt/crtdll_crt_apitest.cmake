@@ -315,7 +315,7 @@ list(APPEND SOURCE_CRTDLL
 #    _unloaddll.c
 #    _utime.c
     _vsnprintf.c
-#    _vsnwprintf.c
+    _vsnwprintf.c
 #    _wcsdup.c
 #    _wcsicmp.c
 #    _wcsicoll.c
