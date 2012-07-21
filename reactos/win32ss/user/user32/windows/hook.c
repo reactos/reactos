@@ -216,7 +216,7 @@ CallNextHookEx(
   ClientInfo = GetWin32ClientInfo();
 
   if (!ClientInfo->phkCurrent) return 0;
-  
+
   pHook = DesktopPtrToUser(ClientInfo->phkCurrent);
 
   if (!pHook->phkNext) return 0; // Nothing to do....
@@ -240,7 +240,7 @@ CallNextHookEx(
         NtUserMessageCall( pCWP->hwnd,
                            pCWP->message,
                            pCWP->wParam,
-                           pCWP->lParam, 
+                           pCWP->lParam,
                           (ULONG_PTR)&lResult,
                            FNID_CALLWNDPROC,
                            phkNext->Ansi);
@@ -254,7 +254,7 @@ CallNextHookEx(
         NtUserMessageCall( pCWPR->hwnd,
                            pCWPR->message,
                            pCWPR->wParam,
-                           pCWPR->lParam, 
+                           pCWPR->lParam,
                           (ULONG_PTR)&lResult,
                            FNID_CALLWNDPROCRET,
                            phkNext->Ansi);
@@ -427,8 +427,8 @@ SetWindowsHookExW(
   return IntSetWindowsHook(idHook, lpfn, hMod, dwThreadId, FALSE);
 }
 
-HINSTANCE ClientLoadLibrary(PUNICODE_STRING pstrLibName, 
-                            PUNICODE_STRING pstrInitFunc, 
+HINSTANCE ClientLoadLibrary(PUNICODE_STRING pstrLibName,
+                            PUNICODE_STRING pstrInitFunc,
                             BOOL Unload,
                             BOOL ApiHook)
 {
@@ -440,7 +440,7 @@ HINSTANCE ClientLoadLibrary(PUNICODE_STRING pstrLibName,
 
     TRACE("ClientLoadLibrary: pid: %d, strLibraryName: %S, "
           "strInitFuncName: %S, Unload: %d, ApiHook:%d\n",
-          GetCurrentProcessId(), 
+          GetCurrentProcessId(),
           pstrLibName->Buffer,
           pstrInitFunc->Buffer,
           Unload,
@@ -467,7 +467,7 @@ HINSTANCE ClientLoadLibrary(PUNICODE_STRING pstrLibName,
         /* Initialize the user api hook */
         ASSERT(pstrInitFunc->Buffer);
 
-        /*Status = */ RtlUnicodeStringToAnsiString(&InitFuncName, 
+        /*Status = */ RtlUnicodeStringToAnsiString(&InitFuncName,
                                               pstrInitFunc,
                                               TRUE);
 
@@ -539,7 +539,7 @@ User32CallClientLoadLibraryFromKernel(PVOID Arguments, ULONG ArgumentLength)
     }
 
     /* Call the implementation of the callback */
-    Result = ClientLoadLibrary(&Argument->strLibraryName, 
+    Result = ClientLoadLibrary(&Argument->strLibraryName,
                                &Argument->strInitFuncName,
                                Argument->Unload,
                                Argument->ApiHook);
@@ -558,9 +558,9 @@ User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
   MSLLHOOKSTRUCT MouseLlData, *pMouseLlData;
   MSG *pcMsg, *pMsg;
   PMOUSEHOOKSTRUCT pMHook;
-  CWPSTRUCT CWP, *pCWP;
-  CWPRETSTRUCT CWPR, *pCWPR;
-  PRECTL prl;  
+  CWPSTRUCT *pCWP;
+  CWPRETSTRUCT *pCWPR;
+  PRECTL prl;
   LPCBTACTIVATESTRUCT pcbtas;
   WPARAM wParam = 0;
   LPARAM lParam = 0;
@@ -631,7 +631,7 @@ User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
       switch(Common->Code)
       {
         case HCBT_CREATEWND:
-          CbtCreatewndExtra->WndInsertAfter = CbtCreatewndw.hwndInsertAfter; 
+          CbtCreatewndExtra->WndInsertAfter = CbtCreatewndw.hwndInsertAfter;
           CbtCreatewndExtra->Cs.x = CbtCreatewndw.lpcs->x;
           CbtCreatewndExtra->Cs.y = CbtCreatewndw.lpcs->y;
           CbtCreatewndExtra->Cs.cx = CbtCreatewndw.lpcs->cx;
@@ -666,14 +666,34 @@ User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
       break;
     case WH_CALLWNDPROC:
 //      ERR("WH_CALLWNDPROC: Code %d, wParam %d\n",Common->Code,Common->wParam);
-      pCWP = (PCWPSTRUCT)((PCHAR) Common + Common->lParam);
-      RtlCopyMemory(&CWP, pCWP, sizeof(CWPSTRUCT));
-      Result = Common->Proc(Common->Code, Common->wParam, (LPARAM) &CWP);
+      pCWP = HeapAlloc(GetProcessHeap(), 0, ArgumentLength - sizeof(HOOKPROC_CALLBACK_ARGUMENTS));
+      RtlCopyMemory(pCWP, (PCHAR) Common + Common->lParam, sizeof(CWPSTRUCT));
+      /* If more memory is reserved, then lParam is a pointer.
+       * Size of the buffer is stocked in the lParam member, and its content
+       * is at the end of the argument buffer */
+      if(ArgumentLength > (sizeof(CWPSTRUCT) + sizeof(HOOKPROC_CALLBACK_ARGUMENTS)))
+      {
+         RtlCopyMemory((PCHAR)pCWP + sizeof(CWPSTRUCT),
+            (PCHAR)Common + Common->lParam + sizeof(CWPSTRUCT),
+            pCWP->lParam);
+         pCWP->lParam = (LPARAM)((PCHAR)pCWP + sizeof(CWPSTRUCT));
+      }
+      Result = Common->Proc(Common->Code, Common->wParam, (LPARAM) pCWP);
+      HeapFree(GetProcessHeap(), 0, pCWP);
       break;
     case WH_CALLWNDPROCRET:
-      pCWPR = (PCWPRETSTRUCT)((PCHAR) Common + Common->lParam);
-      RtlCopyMemory(&CWPR, pCWPR, sizeof(CWPRETSTRUCT));
-      Result = Common->Proc(Common->Code, Common->wParam, (LPARAM) &CWPR);
+      /* Almost the same as WH_CALLWNDPROC */
+      pCWPR = HeapAlloc(GetProcessHeap(), 0, ArgumentLength - sizeof(HOOKPROC_CALLBACK_ARGUMENTS));
+      RtlCopyMemory(pCWPR, (PCHAR) Common + Common->lParam, sizeof(CWPRETSTRUCT));
+      if(ArgumentLength > (sizeof(CWPRETSTRUCT) + sizeof(HOOKPROC_CALLBACK_ARGUMENTS)))
+      {
+         RtlCopyMemory((PCHAR)pCWPR + sizeof(CWPRETSTRUCT),
+            (PCHAR)Common + Common->lParam + sizeof(CWPRETSTRUCT),
+            pCWPR->lParam);
+         pCWPR->lParam = (LPARAM)((PCHAR)pCWPR + sizeof(CWPRETSTRUCT));
+      }
+      Result = Common->Proc(Common->Code, Common->wParam, (LPARAM) pCWPR);
+      HeapFree(GetProcessHeap(), 0, pCWPR);
       break;
     case WH_MSGFILTER: /* All SEH support */
     case WH_SYSMSGFILTER:
@@ -698,7 +718,7 @@ User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
     case WH_KEYBOARD:
     case WH_SHELL:
       Result = Common->Proc(Common->Code, Common->wParam, Common->lParam);
-      break;    
+      break;
     case WH_FOREGROUNDIDLE: /* <-- SEH support */
       _SEH2_TRY
       {

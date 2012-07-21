@@ -13,6 +13,7 @@
 #include <win32k.h>
 DBG_DEFAULT_CHANNEL(UserCallback);
 
+
 /* CALLBACK MEMORY MANAGEMENT ************************************************/
 
 typedef struct _INT_CALLBACK_HEADER
@@ -115,8 +116,8 @@ IntRestoreTebWndCallback (HWND hWnd, PWND pWnd, PVOID pActCtx)
 
 /* Calls ClientLoadLibrary in user32 */
 HMODULE
-co_IntClientLoadLibrary(PUNICODE_STRING pstrLibName, 
-                        PUNICODE_STRING pstrInitFunc, 
+co_IntClientLoadLibrary(PUNICODE_STRING pstrLibName,
+                        PUNICODE_STRING pstrInitFunc,
                         BOOL Unload,
                         BOOL ApiHook)
 {
@@ -139,7 +140,7 @@ co_IntClientLoadLibrary(PUNICODE_STRING pstrLibName,
    }
    if(pstrInitFunc)
    {
-       pInitFuncBuffer = ArgumentLength; 
+       pInitFuncBuffer = ArgumentLength;
        ArgumentLength += pstrInitFunc->Length + sizeof(WCHAR);
    }
 
@@ -443,6 +444,7 @@ co_IntCallHookProc(INT HookId,
    PWND pWnd;
    PMSG pMsg = NULL;
    BOOL Hit = FALSE;
+   UINT lParamSize = 0;
 
    ASSERT(Proc);
 
@@ -509,11 +511,21 @@ co_IntCallHookProc(INT HookId,
          ArgumentLength += sizeof(MOUSEHOOKSTRUCT);
          break;
      case WH_CALLWNDPROC:
+     {
+         CWPSTRUCT* pCWP = (CWPSTRUCT*) lParam;
          ArgumentLength += sizeof(CWPSTRUCT);
+         lParamSize = lParamMemorySize(pCWP->message, pCWP->wParam, pCWP->lParam);
+         ArgumentLength += lParamSize;
          break;
+      }
       case WH_CALLWNDPROCRET:
+      {
+         CWPRETSTRUCT* pCWPR = (CWPRETSTRUCT*) lParam;
          ArgumentLength += sizeof(CWPRETSTRUCT);
+         lParamSize = lParamMemorySize(pCWPR->message, pCWPR->wParam, pCWPR->lParam);
+         ArgumentLength += lParamSize;
          break;
+      }
       case WH_MSGFILTER:
       case WH_SYSMSGFILTER:
       case WH_GETMESSAGE:
@@ -583,12 +595,25 @@ co_IntCallHookProc(INT HookId,
          Common->lParam = (LPARAM) (Extra - (PCHAR) Common);
          break;
       case WH_CALLWNDPROC:
+         /* For CALLWNDPROC and CALLWNDPROCRET, we must be wary of the fact that
+          * lParam could be a pointer to a buffer. This buffer must be exported
+          * to user space too */
          RtlCopyMemory(Extra, (PVOID) lParam, sizeof(CWPSTRUCT));
          Common->lParam = (LPARAM) (Extra - (PCHAR) Common);
+         if(lParamSize)
+         {
+             RtlCopyMemory(Extra + sizeof(CWPSTRUCT), (PVOID)((CWPSTRUCT*)lParam)->lParam, lParamSize);
+             ((CWPSTRUCT*)Extra)->lParam = (LPARAM)lParamSize;
+         }
          break;
       case WH_CALLWNDPROCRET:
          RtlCopyMemory(Extra, (PVOID) lParam, sizeof(CWPRETSTRUCT));
          Common->lParam = (LPARAM) (Extra - (PCHAR) Common);
+         if(lParamSize)
+         {
+             RtlCopyMemory(Extra + sizeof(CWPRETSTRUCT), (PVOID)((CWPRETSTRUCT*)lParam)->lParam, lParamSize);
+             ((CWPRETSTRUCT*)Extra)->lParam = (LPARAM)lParamSize;
+         }
          break;
       case WH_MSGFILTER:
       case WH_SYSMSGFILTER:

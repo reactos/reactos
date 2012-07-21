@@ -223,6 +223,13 @@ MsgMemorySize(PMSGMEMORY MsgMemoryEntry, WPARAM wParam, LPARAM lParam)
     return Size;
 }
 
+UINT lParamMemorySize(UINT Msg, WPARAM wParam, LPARAM lParam)
+{
+    PMSGMEMORY MsgMemory = FindMsgMemory(Msg);
+    if(MsgMemory == NULL) return 0;
+    return MsgMemorySize(MsgMemory, wParam, lParam);
+}
+
 static NTSTATUS
 PackParam(LPARAM *lParamPacked, UINT Msg, WPARAM wParam, LPARAM lParam, BOOL NonPagedPoolNeeded)
 {
@@ -2143,7 +2150,7 @@ NtUserTranslateMessage(LPMSG lpMsg, UINT flags)
     }
     else
     {
-        ERR("No Window for Translate. hwnd 0x%p Msg %d\n",SafeMsg.hwnd,SafeMsg.message); 
+        ERR("No Window for Translate. hwnd 0x%p Msg %d\n",SafeMsg.hwnd,SafeMsg.message);
         Ret = FALSE;
     }
     UserLeave();

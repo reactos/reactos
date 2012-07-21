@@ -296,4 +296,6 @@ UserSetCursor(PCURICON_OBJECT NewCursor,
               BOOL ForceChange);
 
 DWORD APIENTRY IntGetQueueStatus(DWORD);
+
+UINT lParamMemorySize(UINT Msg, WPARAM wParam, LPARAM lParam);
 /* EOF */
