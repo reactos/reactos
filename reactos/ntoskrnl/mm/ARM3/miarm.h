@@ -1607,6 +1607,13 @@ MiInitializeSystemSpaceMap(
     IN PMMSESSION InputSession OPTIONAL
 );
 
+NTSTATUS
+NTAPI
+MiSessionCommitPageTables(
+    IN PVOID StartVa,
+    IN PVOID EndVa
+);
+
 ULONG
 NTAPI
 MiMakeProtectionMask(

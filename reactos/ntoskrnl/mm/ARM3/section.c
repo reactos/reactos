@@ -243,7 +243,9 @@ MiInitializeSystemSpaceMap(IN PMMSESSION InputSession OPTIONAL)
     ASSERT(AllocSize < PAGE_SIZE);
 
     /* Allocate and zero the view table */
-    Session->SystemSpaceViewTable = ExAllocatePoolWithTag(NonPagedPool,
+    Session->SystemSpaceViewTable = ExAllocatePoolWithTag(Session == &MmSession ?
+                                                          NonPagedPool :
+                                                          PagedPool,
                                                           AllocSize,
                                                           TAG_MM);
     ASSERT(Session->SystemSpaceViewTable != NULL);
@@ -264,9 +266,6 @@ MiInsertInSystemSpace(IN PMMSESSION Session,
     PMMVIEW OldTable;
     PAGED_CODE();
 
-    /* Only global mappings supported for now */
-    ASSERT(Session == &MmSession);
-
     /* Stay within 4GB */
     ASSERT(Buckets < MI_SYSTEM_VIEW_BUCKET_SIZE);
 
@@ -281,7 +280,10 @@ MiInsertInSystemSpace(IN PMMSESSION Session,
 
         /* Save the old table and allocate a new one */
         OldTable = Session->SystemSpaceViewTable;
-        Session->SystemSpaceViewTable = ExAllocatePoolWithTag(NonPagedPool,
+        Session->SystemSpaceViewTable = ExAllocatePoolWithTag(Session ==
+                                                              &MmSession ?
+                                                              NonPagedPool :
+                                                              PagedPool,
                                                               HashSize *
                                                               sizeof(MMVIEW),
                                                               '  mM');
@@ -804,6 +806,111 @@ Quickie:
     return Status;
 }
 
+
+NTSTATUS
+NTAPI
+MiSessionCommitPageTables(IN PVOID StartVa,
+                          IN PVOID EndVa)
+{
+    KIRQL OldIrql;
+    ULONG Color, Index;
+    PMMPTE StartPde, EndPde;
+    MMPTE TempPte = ValidKernelPdeLocal;
+    PMMPFN Pfn1;
+    PFN_NUMBER PageCount = 0, ActualPages = 0, PageFrameNumber;
+
+    /* Windows sanity checks */
+    ASSERT(StartVa >= (PVOID)MmSessionBase);
+    ASSERT(EndVa < (PVOID)MiSessionSpaceEnd);
+    ASSERT(PAGE_ALIGN(EndVa) == EndVa);
+
+    /* Get the start and end PDE, then loop each one */
+    StartPde = MiAddressToPde(StartVa);
+    EndPde = MiAddressToPde((PVOID)((ULONG_PTR)EndVa - 1));
+    Index = (ULONG_PTR)StartVa >> 22;
+    while (StartPde <= EndPde)
+    {
+        /* If we don't already have a page table for it, increment count */
+        if (MmSessionSpace->PageTables[Index].u.Long == 0) PageCount++;
+
+        /* Move to the next one */
+        StartPde++;
+        Index++;
+    }
+
+    /* If there's no page tables to create, bail out */
+    if (PageCount == 0) return STATUS_SUCCESS;
+
+    /* Reset the start PDE and index */
+    StartPde = MiAddressToPde(StartVa);
+    Index = (ULONG_PTR)StartVa >> 22;
+
+    /* Loop each PDE while holding the working set lock */
+//  MiLockWorkingSet(PsGetCurrentThread(),
+//                   &MmSessionSpace->GlobalVirtualAddress->Vm);
+    while (StartPde <= EndPde)
+    {
+        /* Check if we already have a page table */
+        if (MmSessionSpace->PageTables[Index].u.Long == 0)
+        {
+            /* We don't, so the PDE shouldn't be ready yet */
+            ASSERT(StartPde->u.Hard.Valid == 0);
+
+            /* ReactOS check to avoid MiEnsureAvailablePageOrWait */
+            ASSERT(MmAvailablePages >= 32);
+
+            /* Acquire the PFN lock and grab a zero page */
+            OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+            Color = (++MmSessionSpace->Color) & MmSecondaryColorMask;
+            PageFrameNumber = MiRemoveZeroPage(Color);
+            TempPte.u.Hard.PageFrameNumber = PageFrameNumber;
+            MI_WRITE_VALID_PTE(StartPde, TempPte);
+
+            /* Write the page table in session space structure */
+            ASSERT(MmSessionSpace->PageTables[Index].u.Long == 0);
+            MmSessionSpace->PageTables[Index] = TempPte;
+
+            /* Initialize the PFN */
+            MiInitializePfnForOtherProcess(PageFrameNumber,
+                                           StartPde,
+                                           MmSessionSpace->SessionPageDirectoryIndex);
+
+            /* And now release the lock */
+            KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+
+            /* Get the PFN entry and make sure there's no event for it */
+            Pfn1 = MI_PFN_ELEMENT(PageFrameNumber);
+            ASSERT(Pfn1->u1.Event == NULL);
+
+            /* Increment the number of pages */
+            ActualPages++;
+        }
+
+        /* Move to the next PDE */
+        StartPde++;
+        Index++;
+    }
+
+    /* Make sure we didn't do more pages than expected */
+    ASSERT(ActualPages <= PageCount);
+
+    /* Release the working set lock */
+//  MiUnlockWorkingSet(PsGetCurrentThread(), 
+//                     &MmSessionSpace->GlobalVirtualAddress->Vm);
+
+    
+    /* If we did at least one page... */
+    if (ActualPages)
+    {
+        /* Update the performance counters! */
+        InterlockedExchangeAddSizeT(&MmSessionSpace->NonPageablePages, ActualPages);
+        InterlockedExchangeAddSizeT(&MmSessionSpace->CommittedPages, ActualPages);
+    }
+
+    /* Return status */
+    return STATUS_SUCCESS;
+}
+
 NTSTATUS
 NTAPI
 MiMapViewInSystemSpace(IN PVOID Section,
@@ -816,9 +923,6 @@ MiMapViewInSystemSpace(IN PVOID Section,
     ULONG Buckets, SectionSize;
     NTSTATUS Status;
     PAGED_CODE();
-
-    /* Only global mappings for now */
-    ASSERT(Session == &MmSession);
 
     /* Get the control area, check for any flags ARM3 doesn't yet support */
     ControlArea = ((PSECTION)Section)->Segment->ControlArea;
@@ -860,8 +964,21 @@ MiMapViewInSystemSpace(IN PVOID Section,
     Base = MiInsertInSystemSpace(Session, Buckets, ControlArea);
     ASSERT(Base);
 
-    /* Create the PDEs needed for this mapping, and double-map them if needed */
-    MiFillSystemPageDirectory(Base, Buckets * MI_SYSTEM_VIEW_BUCKET_SIZE);
+    /* What's the underlying session? */
+    if (Session == &MmSession)
+    {
+        /* Create the PDEs needed for this mapping, and double-map them if needed */
+        MiFillSystemPageDirectory(Base, Buckets * MI_SYSTEM_VIEW_BUCKET_SIZE);
+        Status = STATUS_SUCCESS;
+    }
+    else
+    {
+        /* Create the PDEs needed for this mapping */
+        Status = MiSessionCommitPageTables(Base,
+                                           (PVOID)((ULONG_PTR)Base + 
+                                           Buckets * MI_SYSTEM_VIEW_BUCKET_SIZE));
+        NT_ASSERT(NT_SUCCESS(Status));
+    }
 
     /* Create the actual prototype PTEs for this mapping */
     Status = MiAddMappedPtes(MiAddressToPte(Base),
@@ -2213,6 +2330,7 @@ MmMapViewInSessionSpace(IN PVOID Section,
 
     /* Use the system space API, but with the session view instead */
     ASSERT(MmIsAddressValid(MmSessionSpace) == TRUE);
+    ASSERT(FALSE);
     return MiMapViewInSystemSpace(Section,
                                   &MmSessionSpace->Session,
                                   MappedBase,

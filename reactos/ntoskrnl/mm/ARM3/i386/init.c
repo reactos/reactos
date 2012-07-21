@@ -117,12 +117,6 @@ MiInitializeSessionSpaceLayout()
                                          MmSessionSize -
                                          MmSessionImageSize -
                                          MM_ALLOCATION_GRANULARITY);
-
-    /* Setup all starting addresses */
-    DPRINT1("Session space: 0x%p\n", MmSessionSpace);
-    DPRINT1("Session Base: 0x%p, Session Image Size: 0x%lx, Session Image Start: 0x%p, Session ImageEnd: 0x%p\n",
-            MmSessionBase, MmSessionSize, MiSessionImageStart, MiSessionImageEnd);
-    DPRINT1("Session View start: 0x%p, Session View Size: 0x%lx\n", MiSessionViewStart, MmSessionViewSize);
 }
 
 VOID
