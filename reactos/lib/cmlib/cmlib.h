@@ -151,7 +151,7 @@ typedef struct _CM_USE_COUNT_LOG
 typedef struct _CMHIVE
 {
     HHIVE Hive;
-    HANDLE FileHandles[3];
+    HANDLE FileHandles[HFILE_TYPE_MAX];
     LIST_ENTRY NotifyList;
     LIST_ENTRY HiveList;
     EX_PUSH_LOCK HiveLock;

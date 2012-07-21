@@ -31,10 +31,9 @@
 // Hive types
 //
 #define HFILE_TYPE_PRIMARY                              0
-#define HFILE_TYPE_ALTERNATE                            1
-#define HFILE_TYPE_LOG                                  2
-#define HFILE_TYPE_EXTERNAL                             3
-#define HFILE_TYPE_MAX                                  4
+#define HFILE_TYPE_LOG                                  1
+#define HFILE_TYPE_EXTERNAL                             2
+#define HFILE_TYPE_MAX                                  3
 
 //
 // Hive sizes
