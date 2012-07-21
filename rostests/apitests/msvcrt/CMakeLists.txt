@@ -2,6 +2,7 @@
 add_definitions(-D_DLL -D__USE_CRTIMP)
 
 list(APPEND SOURCE
+    _vsnprintf.c
     ieee.c
     splitpath.c
     testlist.c)
