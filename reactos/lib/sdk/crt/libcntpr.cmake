@@ -13,6 +13,7 @@ list(APPEND LIBCNTPR_SOURCE
     printf/_snprintf.c
     printf/_snwprintf.c
     printf/_vcprintf.c
+    printf/_vscwprintf.c
     printf/_vsnprintf.c
     printf/_vsnwprintf.c
     printf/sprintf.c

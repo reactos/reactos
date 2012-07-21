@@ -136,6 +136,8 @@ list(APPEND CRT_SOURCE
     printf/_snwprintf.c
     printf/_vcprintf.c
 	printf/_vcwprintf.c
+    printf/_vscprintf.c
+    printf/_vscwprintf.c
     printf/_vsnprintf.c
     printf/_vsnwprintf.c
     printf/_vsprintf_p.c

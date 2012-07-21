@@ -975,10 +975,10 @@
 # stub _vprintf_p_l
 # stub _vprintf_s_l
 @ cdecl _utime(str ptr)
-# @ cdecl _vscprintf(str ptr)
+@ cdecl _vscprintf(str ptr)
 # stub _vscprintf_l
 # stub _vscprintf_p_l
-# @ cdecl _vscwprintf(wstr ptr)
+@ cdecl _vscwprintf(wstr ptr)
 # stub _vscwprintf_l
 # stub _vscwprintf_p_l
 @ cdecl _vsnprintf(ptr long str ptr)

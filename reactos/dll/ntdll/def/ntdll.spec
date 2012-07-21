@@ -1343,7 +1343,7 @@
 @ cdecl _ui64tow(double ptr long)
 @ cdecl _ultoa(long ptr long)
 @ cdecl _ultow(long ptr long)
-;@ cdecl _vscwprintf
+@ cdecl _vscwprintf(wstr ptr)
 @ cdecl _vsnprintf(ptr long str ptr)
 @ cdecl _vsnwprintf(ptr long wstr ptr)
 @ cdecl _wcsicmp(wstr wstr)
