@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <wine/test.h>
 #include <tchar.h>
+#include <errno.h>
 
 static void call_varargs(int expected_ret, LPCSTR formatString, ...)
 {
@@ -26,4 +27,5 @@ START_TEST(_vscprintf)
     call_varargs(11, "%u cookies", 100);
     /* Test NULL argument */
     call_varargs(-1, NULL);
+    ok(errno == EINVAL, "Expected EINVAL, got %u\n", errno);
 }

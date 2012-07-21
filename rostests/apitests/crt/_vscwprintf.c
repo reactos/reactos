@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <wine/test.h>
 #include <tchar.h>
+#include <errno.h>
 
 static void call_varargs(int expected_ret, LPCWSTR formatString, ...)
 {
@@ -27,4 +28,7 @@ START_TEST(_vscwprintf)
     
     /* Test NULL argument */
     call_varargs(-1, NULL);
+#if defined(TEST_MSVCRT) /* NTDLL doesn't use/set errno */
+    ok(errno == EINVAL, "Expected EINVAL, got %u\n", errno);
+#endif
 }
