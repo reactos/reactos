@@ -1,5 +1,3 @@
-#include "reactos/buildno.h"
-
 #define __WINE_CONFIG_H
 
 /* Define to a function attribute for Microsoft hotpatch assembly prefix. */
