@@ -10,7 +10,7 @@
 
 #define _DibDoRop(pBltData, M, D, S, P) ROP_SRCERASE(D,S,P)
 
-#include "diblib_allsrcbpp.h"
+#include "DibLib_AllSrcBPP.h"
 
 VOID
 FASTCALL

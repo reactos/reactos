@@ -10,7 +10,7 @@
 
 #define _DibDoRop(pBltData, M, D, S, P) pBltData->apfnDoRop[M](D,S,0)
 
-#include "diblib_allsrcbpp.h"
+#include "DibLib_AllSrcBPP.h"
 
 VOID
 FASTCALL

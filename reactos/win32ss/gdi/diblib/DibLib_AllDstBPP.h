@@ -8,27 +8,27 @@
 #endif
 
 #define _DEST_BPP 1
-#include "diblib_bitblt.h"
+#include "DibLib_BitBlt.h"
 #undef _DEST_BPP
 
 #define _DEST_BPP 4
-#include "diblib_bitblt.h"
+#include "DibLib_BitBlt.h"
 #undef _DEST_BPP
 
 #define _DEST_BPP 8
-#include "diblib_bitblt.h"
+#include "DibLib_BitBlt.h"
 #undef _DEST_BPP
 
 #define _DEST_BPP 16
-#include "diblib_bitblt.h"
+#include "DibLib_BitBlt.h"
 #undef _DEST_BPP
 
 #define _DEST_BPP 24
-#include "diblib_bitblt.h"
+#include "DibLib_BitBlt.h"
 #undef _DEST_BPP
 
 #define _DEST_BPP 32
-#include "diblib_bitblt.h"
+#include "DibLib_BitBlt.h"
 #undef _DEST_BPP
 
 #if (__USES_SOURCE == 0)

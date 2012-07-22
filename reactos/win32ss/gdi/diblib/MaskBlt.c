@@ -10,12 +10,12 @@
 
 #define _DibDoRop(pBltData, M, D, S, P) pBltData->apfnDoRop[M](D,S,P)
 
-#include "diblib_allsrcbpp.h"
+#include "DibLib_AllSrcBPP.h"
 
 #undef __FUNCTIONNAME
 #define __FUNCTIONNAME MaskBlt_Solid
 #define __USES_SOLID_BRUSH 1
-#include "diblib_allsrcbpp.h"
+#include "DibLib_AllSrcBPP.h"
 
 VOID
 FASTCALL

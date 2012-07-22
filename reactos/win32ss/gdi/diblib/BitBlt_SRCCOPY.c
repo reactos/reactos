@@ -50,10 +50,9 @@ Dib_BitBlt_SRCCOPY_S32_D32_EqSurf(PBLTDATA pBltData)
 #define Dib_BitBlt_SRCCOPY_S32_D32_EqSurf Dib_BitBlt_SRCCOPY_EqSurf
 #endif
 
+/* This definition will be checked against in DibLib_BitBlt.h
+   for all "redirected" functions */
 #define Dib_BitBlt_SRCCOPY_EqSurf_manual 1
-// #define Dib_BitBlt_SRCCOPY_S16_D16_EqSurf_manual 1
-// #define Dib_BitBlt_SRCCOPY_S24_D24_EqSurf_manual 1
-// #define Dib_BitBlt_SRCCOPY_S32_D32_EqSurf_manual 1
 
 #define __USES_SOURCE 1
 #define __USES_PATTERN 0
@@ -64,13 +63,12 @@ Dib_BitBlt_SRCCOPY_S32_D32_EqSurf(PBLTDATA pBltData)
 
 #define _DibDoRop(pBltData, M, D, S, P) ROP_SRCCOPY(D,S,P)
 
-#include "diblib_allsrcbpp.h"
+#include "DibLib_AllSrcBPP.h"
 
 VOID
 FASTCALL
 Dib_BitBlt_SRCCOPY(PBLTDATA pBltData)
 {
-    // TODO: XLATEless same-surface variants
     gapfnBitBlt_SRCCOPY[pBltData->siDst.iFormat][pBltData->siSrc.iFormat](pBltData);
 }
 

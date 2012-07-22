@@ -4,27 +4,27 @@
 #endif
 
 #define _SOURCE_BPP 1
-#include "diblib_alldstbpp.h"
+#include "DibLib_AllDstBPP.h"
 #undef _SOURCE_BPP
 
 #define _SOURCE_BPP 4
-#include "diblib_alldstbpp.h"
+#include "DibLib_AllDstBPP.h"
 #undef _SOURCE_BPP
 
 #define _SOURCE_BPP 8
-#include "diblib_alldstbpp.h"
+#include "DibLib_AllDstBPP.h"
 #undef _SOURCE_BPP
 
 #define _SOURCE_BPP 16
-#include "diblib_alldstbpp.h"
+#include "DibLib_AllDstBPP.h"
 #undef _SOURCE_BPP
 
 #define _SOURCE_BPP 24
-#include "diblib_alldstbpp.h"
+#include "DibLib_AllDstBPP.h"
 #undef _SOURCE_BPP
 
 #define _SOURCE_BPP 32
-#include "diblib_alldstbpp.h"
+#include "DibLib_AllDstBPP.h"
 #undef _SOURCE_BPP
 
 #undef _DibXlate
@@ -33,12 +33,12 @@
 
 #undef __DIB_FUNCTION_NAME
 #define __DIB_FUNCTION_NAME __DIB_FUNCTION_NAME_SRCDSTEQ
-#include "diblib_alldstbpp.h"
+#include "DibLib_AllDstBPP.h"
 
 #define _NextPixel_ _NextPixelR2L_
 #undef __DIB_FUNCTION_NAME
 #define __DIB_FUNCTION_NAME __DIB_FUNCTION_NAME_SRCDSTEQR2L
-#include "diblib_alldstbpp.h"
+#include "DibLib_AllDstBPP.h"
 #undef _SOURCE_BPP
 #undef _NextPixel_
 

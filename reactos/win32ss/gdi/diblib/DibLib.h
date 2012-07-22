@@ -30,7 +30,6 @@ extern const BYTE ajShift4[2];
 
 #define __PASTE_(s1,s2) s1##s2
 #define __PASTE(s1,s2) __PASTE_(s1,s2)
-#define EVALUATE(x) x
 
 #define __DIB_FUNCTION_NAME_SRCDST2(name, src_bpp, dst_bpp) Dib_ ## name ## _S ## src_bpp ## _D ## dst_bpp
 #define __DIB_FUNCTION_NAME_SRCDST(name, src_bpp, dst_bpp) __DIB_FUNCTION_NAME_SRCDST2(name, src_bpp, dst_bpp)

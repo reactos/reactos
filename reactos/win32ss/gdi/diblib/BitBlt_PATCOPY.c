@@ -10,12 +10,12 @@
 
 #define _DibDoRop(pBltData, M, D, S, P) ROP_PATCOPY(D,S,P)
 
-#include "diblib_alldstbpp.h"
+#include "DibLib_AllDstBPP.h"
 
 #undef __FUNCTIONNAME
 #define __FUNCTIONNAME BitBlt_PATCOPY_Solid
 #define __USES_SOLID_BRUSH 1
-#include "diblib_alldstbpp.h"
+#include "DibLib_AllDstBPP.h"
 
 VOID
 FASTCALL

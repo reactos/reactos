@@ -10,7 +10,7 @@
 
 #define _DibDoRop(pBltData, M, D, S, P) (~(P))
 
-#include "diblib_alldstbpp.h"
+#include "DibLib_AllDstBPP.h"
 
 extern PFN_DIBFUNCTION gapfnBitBlt_PATCOPY_Solid[];
 
