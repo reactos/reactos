@@ -30,15 +30,16 @@ extern const BYTE ajShift4[2];
 
 #define __PASTE_(s1,s2) s1##s2
 #define __PASTE(s1,s2) __PASTE_(s1,s2)
+#define EVALUATE(x) x
 
 #define __DIB_FUNCTION_NAME_SRCDST2(name, src_bpp, dst_bpp) Dib_ ## name ## _S ## src_bpp ## _D ## dst_bpp
 #define __DIB_FUNCTION_NAME_SRCDST(name, src_bpp, dst_bpp) __DIB_FUNCTION_NAME_SRCDST2(name, src_bpp, dst_bpp)
 
 #define __DIB_FUNCTION_NAME_DST2(name, dst_bpp) Dib_ ## name ## _D ## dst_bpp
 #define __DIB_FUNCTION_NAME_DST(name, src_bpp, dst_bpp) __DIB_FUNCTION_NAME_DST2(name, dst_bpp)
-#define __DIB_FUNCTION_NAME_SRCDSTEQ(name, src_bpp, dst_bpp) __DIB_FUNCTION_NAME_SRCDST2(name, src_bpp, dst_bpp) ## _EqSurf
-#define __DIB_FUNCTION_NAME_SRCDSTEQL2R(name, src_bpp, dst_bpp) __DIB_FUNCTION_NAME_SRCDST2(name, src_bpp, dst_bpp) ## _EqSurfL2R
-#define __DIB_FUNCTION_NAME_SRCDSTEQR2L(name, src_bpp, dst_bpp) __DIB_FUNCTION_NAME_SRCDST2(name, src_bpp, dst_bpp) ## _EqSurfR2L
+#define __DIB_FUNCTION_NAME_SRCDSTEQ(name, src_bpp, dst_bpp) __PASTE(__DIB_FUNCTION_NAME_SRCDST2(name, src_bpp, dst_bpp), _EqSurf)
+#define __DIB_FUNCTION_NAME_SRCDSTEQL2R(name, src_bpp, dst_bpp) __PASTE(__DIB_FUNCTION_NAME_SRCDST2(name, src_bpp, dst_bpp), _EqSurfL2R)
+#define __DIB_FUNCTION_NAME_SRCDSTEQR2L(name, src_bpp, dst_bpp) __PASTE(__DIB_FUNCTION_NAME_SRCDST2(name, src_bpp, dst_bpp), _EqSurfR2L)
 
 #define _ReadPixel_1(pjSource, jShift) (((*(pjSource)) >> (jShift)) & 1)
 #define _WritePixel_1(pjDest, jShift, ulColor) (void)(*(pjDest) = (UCHAR)((*(pjDest) & ~(1<<(jShift))) | ((ulColor)<<(jShift))))
