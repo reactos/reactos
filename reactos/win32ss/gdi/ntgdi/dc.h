@@ -260,5 +260,6 @@ DC_vSelectPalette(PDC pdc, PPALETTE ppal)
 }
 
 extern PBRUSH pbrDefaultBrush ;
+extern PSURFACE psurfDefaultBitmap;
 
 #endif /* not __WIN32K_DC_H */

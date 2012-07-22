@@ -446,6 +446,7 @@ NtGdiSetDIBitsToDeviceInternal(
     }
 
     pSurf = pDC->dclevel.pSurface;
+    if(!pSurf) pSurf = psurfDefaultBitmap;
 
     pDestSurf = pSurf ? &pSurf->SurfObj : NULL;
 
