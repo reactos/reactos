@@ -575,10 +575,6 @@ ScServiceDispatcher(HANDLE hPipe,
             break;
     }
 
-    HeapFree(GetProcessHeap(),
-             0,
-             ControlPacket);
-
     return TRUE;
 }
 
