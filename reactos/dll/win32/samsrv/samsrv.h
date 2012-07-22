@@ -139,20 +139,14 @@ NTSTATUS
 SampCloseDbObject(PSAM_DB_OBJECT DbObject);
 
 NTSTATUS
-SampSetDbObjectNameAlias(IN PSAM_DB_OBJECT DomainObject,
-                         IN LPCWSTR lpContainerName,
-                         IN LPCWSTR lpAliasName,
-                         IN DWORD dwAliasValue);
-
-NTSTATUS
-SampCheckDbObjectNameAlias(IN PSAM_DB_OBJECT DomainObject,
-                           IN LPCWSTR lpContainerName,
-                           IN LPCWSTR lpAliasName,
-                           OUT PBOOL bAliasExists);
-
-NTSTATUS
 SampCheckAccountNameInDomain(IN PSAM_DB_OBJECT DomainObject,
                              IN LPWSTR lpAccountName);
+
+NTSTATUS
+SampSetAccountNameInDomain(IN PSAM_DB_OBJECT DomainObject,
+                           IN LPCWSTR lpContainerName,
+                           IN LPCWSTR lpAccountName,
+                           IN ULONG ulRelativeId);
 
 NTSTATUS
 SampSetObjectAttribute(PSAM_DB_OBJECT DbObject,

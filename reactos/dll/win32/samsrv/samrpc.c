@@ -1622,11 +1622,11 @@ SamrCreateGroupInDomain(IN SAMPR_HANDLE DomainHandle,
         return Status;
     }
 
-    /* Add the name alias for the user object */
-    Status = SampSetDbObjectNameAlias(DomainObject,
-                                      L"Groups",
-                                      Name->Buffer,
-                                      ulRid);
+    /* Add the account name of the user object */
+    Status = SampSetAccountNameInDomain(DomainObject,
+                                        L"Groups",
+                                        Name->Buffer,
+                                        ulRid);
     if (!NT_SUCCESS(Status))
     {
         TRACE("failed with status 0x%08lx\n", Status);
@@ -1723,6 +1723,13 @@ SamrCreateUserInDomain(IN SAMPR_HANDLE DomainHandle,
     TRACE("SamrCreateUserInDomain(%p %p %lx %p %p)\n",
           DomainHandle, Name, DesiredAccess, UserHandle, RelativeId);
 
+    if (Name == NULL ||
+        Name->Length == 0 ||
+        Name->Buffer == NULL ||
+        UserHandle == NULL ||
+        RelativeId == NULL)
+        return STATUS_INVALID_PARAMETER;
+
     /* Validate the domain handle */
     Status = SampValidateDbObject(DomainHandle,
                                   SamDbDomainObject,
@@ -1791,11 +1798,11 @@ SamrCreateUserInDomain(IN SAMPR_HANDLE DomainHandle,
         return Status;
     }
 
-    /* Add the name alias for the user object */
-    Status = SampSetDbObjectNameAlias(DomainObject,
-                                      L"Users",
-                                      Name->Buffer,
-                                      ulRid);
+    /* Add the account name for the user object */
+    Status = SampSetAccountNameInDomain(DomainObject,
+                                        L"Users",
+                                        Name->Buffer,
+                                        ulRid);
     if (!NT_SUCCESS(Status))
     {
         TRACE("failed with status 0x%08lx\n", Status);
@@ -1805,12 +1812,17 @@ SamrCreateUserInDomain(IN SAMPR_HANDLE DomainHandle,
     /* Initialize fixed user data */
     memset(&FixedUserData, 0, sizeof(SAM_USER_FIXED_DATA));
     FixedUserData.Version = 1;
-
+    FixedUserData.LastLogon.QuadPart = 0;
+    FixedUserData.LastLogoff.QuadPart = 0;
+    FixedUserData.PasswordLastSet.QuadPart = 0;
+    FixedUserData.AccountExpires.LowPart = MAXULONG;
+    FixedUserData.AccountExpires.HighPart = MAXLONG;
+    FixedUserData.LastBadPasswordTime.QuadPart = 0;
     FixedUserData.UserId = ulRid;
     FixedUserData.PrimaryGroupId = DOMAIN_GROUP_RID_USERS;
-//    FixedUserData.UserAccountControl = USER_ACCOUNT_DISABLED |
-//                                       USER_PASSWORD_NOT_REQUIRED ||
-//                                       USER_NORMAL_ACCOUNT;
+    FixedUserData.UserAccountControl = USER_ACCOUNT_DISABLED |
+                                       USER_PASSWORD_NOT_REQUIRED |
+                                       USER_NORMAL_ACCOUNT;
 
     /* Set fixed user data attribute */
     Status = SampSetObjectAttribute(UserObject,
@@ -2050,11 +2062,11 @@ SamrCreateAliasInDomain(IN SAMPR_HANDLE DomainHandle,
         return Status;
     }
 
-    /* Add the name alias for the user object */
-    Status = SampSetDbObjectNameAlias(DomainObject,
-                                      L"Aliases",
-                                      AccountName->Buffer,
-                                      ulRid);
+    /* Add the account name for the alias object */
+    Status = SampSetAccountNameInDomain(DomainObject,
+                                        L"Aliases",
+                                        AccountName->Buffer,
+                                        ulRid);
     if (!NT_SUCCESS(Status))
     {
         TRACE("failed with status 0x%08lx\n", Status);

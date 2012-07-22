@@ -628,9 +628,9 @@ typedef struct _SAMPR_USER_INTERNAL1_INFORMATION
 {
     ENCRYPTED_NT_OWF_PASSWORD EncryptedNtOwfPassword;
     ENCRYPTED_LM_OWF_PASSWORD EncryptedLmOwfPassword;
-    unsigned char NtPasswordPresent;
-    unsigned char LmPasswordPresent;
-    unsigned char PasswordExpired;
+    BOOLEAN NtPasswordPresent;
+    BOOLEAN LmPasswordPresent;
+    BOOLEAN PasswordExpired;
 } SAMPR_USER_INTERNAL1_INFORMATION, *PSAMPR_USER_INTERNAL1_INFORMATION;
 
 typedef struct _SAMPR_USER_INTERNAL4_INFORMATION
@@ -648,13 +648,13 @@ typedef struct _SAMPR_USER_INTERNAL4_INFORMATION_NEW
 typedef struct _SAMPR_USER_INTERNAL5_INFORMATION
 {
     SAMPR_ENCRYPTED_USER_PASSWORD UserPassword;
-    unsigned char PasswordExpired;
+    BOOLEAN PasswordExpired;
 } SAMPR_USER_INTERNAL5_INFORMATION, *PSAMPR_USER_INTERNAL5_INFORMATION;
 
 typedef struct _SAMPR_USER_INTERNAL5_INFORMATION_NEW
 {
     SAMPR_ENCRYPTED_USER_PASSWORD_NEW UserPassword;
-    unsigned char PasswordExpired;
+    BOOLEAN PasswordExpired;
 } SAMPR_USER_INTERNAL5_INFORMATION_NEW, *PSAMPR_USER_INTERNAL5_INFORMATION_NEW;
 
 cpp_quote("#ifndef _NTSAM_")

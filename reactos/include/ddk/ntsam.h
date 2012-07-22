@@ -163,6 +163,31 @@ extern "C" {
                                         USER_READ_GROUP_INFORMATION |\
                                         USER_WRITE_GROUP_INFORMATION)
 
+/* User account control bits */
+#define USER_ACCOUNT_DISABLED                       0x00000001
+#define USER_HOME_DIRECTORY_REQUIRED                0x00000002
+#define USER_PASSWORD_NOT_REQUIRED                  0x00000004
+#define USER_TEMP_DUPLICATE_ACCOUNT                 0x00000008
+#define USER_NORMAL_ACCOUNT                         0x00000010
+#define USER_MNS_LOGON_ACCOUNT                      0x00000020
+#define USER_INTERDOMAIN_TRUST_ACCOUNT              0x00000040
+#define USER_WORKSTATION_TRUST_ACCOUNT              0x00000080
+#define USER_SERVER_TRUST_ACCOUNT                   0x00000100
+#define USER_DONT_EXPIRE_PASSWORD                   0x00000200
+#define USER_ACCOUNT_AUTO_LOCKED                    0x00000400
+#define USER_ENCRYPTED_TEXT_PASSWORD_ALLOWED        0x00000800
+#define USER_SMARTCARD_REQUIRED                     0x00001000
+#define USER_TRUSTED_FOR_DELEGATION                 0x00002000
+#define USER_NOT_DELEGATED                          0x00004000
+#define USER_USE_DES_KEY_ONLY                       0x00008000
+#define USER_DONT_REQUIRE_PREAUTH                   0x00010000
+#define USER_PASSWORD_EXPIRED                       0x00020000
+#define USER_TRUSTED_TO_AUTHENTICATE_FOR_DELEGATION 0x00040000
+#define USER_NO_AUTH_DATA_REQUIRED                  0x00080000
+#define USER_PARTIAL_SECRETS_ACCOUNT                0x00100000
+#define USER_USE_AES_KEYS                           0x00200000
+
+
 typedef PVOID SAM_HANDLE, *PSAM_HANDLE;
 typedef ULONG SAM_ENUMERATE_HANDLE, *PSAM_ENUMERATE_HANDLE;
 
@@ -293,6 +318,12 @@ SamAddMemberToAlias(IN SAM_HANDLE AliasHandle,
 
 NTSTATUS
 NTAPI
+SamAddMemberToGroup(IN SAM_HANDLE GroupHandle,
+                    IN ULONG MemberId,
+                    IN ULONG Attributes);
+
+NTSTATUS
+NTAPI
 SamCloseHandle(IN SAM_HANDLE SamHandle);
 
 NTSTATUS
@@ -416,6 +447,12 @@ SamQueryInformationDomain(IN SAM_HANDLE DomainHandle,
 
 NTSTATUS
 NTAPI
+SamQueryInformationGroup(IN SAM_HANDLE GroupHandle,
+                         IN GROUP_INFORMATION_CLASS GroupInformationClass,
+                         OUT PVOID *Buffer);
+
+NTSTATUS
+NTAPI
 SamQueryInformationUser(IN SAM_HANDLE UserHandle,
                         IN USER_INFORMATION_CLASS UserInformationClass,
                         OUT PVOID *Buffer);
@@ -435,7 +472,13 @@ NTSTATUS
 NTAPI
 SamSetInformationDomain(IN SAM_HANDLE DomainHandle,
                         IN DOMAIN_INFORMATION_CLASS DomainInformationClass,
-                        IN PVOID DomainInformation);
+                        IN PVOID Buffer);
+
+NTSTATUS
+NTAPI
+SamSetInformationGroup(IN SAM_HANDLE GroupHandle,
+                       IN GROUP_INFORMATION_CLASS GroupInformationClass,
+                       IN PVOID Buffer);
 
 NTSTATUS
 NTAPI
@@ -446,7 +489,6 @@ SamSetInformationUser(IN SAM_HANDLE UserHandle,
 NTSTATUS
 NTAPI
 SamShutdownSamServer(IN SAM_HANDLE ServerHandle);
-
 
 #ifdef __cplusplus
 }
