@@ -136,10 +136,10 @@ IoShutdownSystem(IN ULONG Phase)
     PIRP Irp;
     KEVENT Event;
     NTSTATUS Status;
-        
+
     /* Initialize an event to wait on */
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
-    
+
     /* What phase? */
     if (Phase == 0)
     {
@@ -167,11 +167,14 @@ IoShutdownSystem(IN ULONG Phase)
                                                NULL,
                                                &Event,
                                                &StatusBlock);
-            Status = IoCallDriver(DeviceObject, Irp);
-            if (Status == STATUS_PENDING)
+            if (Irp)
             {
-                /* Wait on the driver */
-                KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+                Status = IoCallDriver(DeviceObject, Irp);
+                if (Status == STATUS_PENDING)
+                {
+                    /* Wait on the driver */
+                    KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+                }
             }
 
             /* Remove the flag */
@@ -202,7 +205,7 @@ IoShutdownSystem(IN ULONG Phase)
 
         /* Shutdown tape filesystems */
         IopShutdownBaseFileSystems(&IopTapeFileSystemQueueHead);
-        
+
         /* Loop last-chance shutdown notifications */
         ListEntry = ExInterlockedRemoveHeadList(&LastChanceShutdownListHead,
                                                 &ShutdownListLock);
@@ -889,7 +892,7 @@ IoCreateDevice(IN PDRIVER_OBJECT DriverObject,
     /* Set the Type and Size. Question: why is Size 0 on Windows? */
     DeviceObjectExtension->Type = IO_TYPE_DEVICE_OBJECT_EXTENSION;
     DeviceObjectExtension->Size = 0;
-    
+
     /* Initialize with Power Manager */
     PoInitializeDeviceObject(DeviceObjectExtension);
 
@@ -981,7 +984,7 @@ IoCreateDevice(IN PDRIVER_OBJECT DriverObject,
     ASSERT((DriverObject->Flags & DRVO_UNLOAD_INVOKED) == 0);
     CreatedDeviceObject->DriverObject = DriverObject;
     IopEditDeviceList(DriverObject, CreatedDeviceObject, IopAdd);
-    
+
     /* Link with the power manager */
     if (CreatedDeviceObject->Vpb) PoVolumeDevice(CreatedDeviceObject);
 
@@ -1402,7 +1405,7 @@ IoRegisterLastChanceShutdownNotification(IN PDEVICE_OBJECT DeviceObject)
 
     /* Set the DO */
     Entry->DeviceObject = DeviceObject;
-    
+
     /* Reference it so it doesn't go away */
     ObReferenceObject(DeviceObject);
 
@@ -1433,7 +1436,7 @@ IoRegisterShutdownNotification(PDEVICE_OBJECT DeviceObject)
 
     /* Set the DO */
     Entry->DeviceObject = DeviceObject;
-    
+
     /* Reference it so it doesn't go away */
     ObReferenceObject(DeviceObject);
 
@@ -1457,7 +1460,7 @@ IoUnregisterShutdownNotification(PDEVICE_OBJECT DeviceObject)
     PSHUTDOWN_ENTRY ShutdownEntry;
     PLIST_ENTRY NextEntry;
     KIRQL OldIrql;
-    
+
     /* Remove the flag */
     DeviceObject->Flags &= ~DO_SHUTDOWN_REGISTERED;
 
@@ -1480,7 +1483,7 @@ IoUnregisterShutdownNotification(PDEVICE_OBJECT DeviceObject)
 
             /* Free the entry */
             ExFreePoolWithTag(ShutdownEntry, TAG_SHUTDOWN_ENTRY);
-            
+
             /* Get rid of our reference to it */
             ObDereferenceObject(DeviceObject);
         }
@@ -1507,7 +1510,7 @@ IoUnregisterShutdownNotification(PDEVICE_OBJECT DeviceObject)
 
             /* Free the entry */
             ExFreePoolWithTag(ShutdownEntry, TAG_SHUTDOWN_ENTRY);
-            
+
             /* Get rid of our reference to it */
             ObDereferenceObject(DeviceObject);
         }
