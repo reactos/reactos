@@ -9,7 +9,7 @@ if /I "%1" == "arm_hosttools" (
 
     :: Configure host tools for x86
     cmake -G %3 -DARCH=i386 %~dp0
-    exit /b
+    exit
 )
 
 :: Get the source root directory
@@ -158,7 +158,7 @@ set REACTOS_BUILD_TOOLS_DIR=%CD%
 :: Use x86 for ARM host tools
 if "%ARCH%" == "arm" (
     :: Launch new script instance for x86 host tools configuration
-    start "Preparing host tools for ARM cross build..." /WAIT /I /B %~dp0configure.cmd arm_hosttools "%VSINSTALLDIR%VC\vcvarsall.bat" %CMAKE_GENERATOR%
+    start "Preparing host tools for ARM cross build..." /I /B /WAIT %~dp0configure.cmd arm_hosttools "%VSINSTALLDIR%VC\vcvarsall.bat" %CMAKE_GENERATOR%
 ) else (
     cmake -G %CMAKE_GENERATOR% -DARCH=%ARCH% %REACTOS_SOURCE_DIR%
 )
