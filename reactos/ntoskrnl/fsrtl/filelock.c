@@ -21,12 +21,12 @@ PAGED_LOOKASIDE_LIST FsRtlFileLockLookasideList;
 */
 typedef union _COMBINED_LOCK_ELEMENT
 {
-	struct
-	{
-		LIST_ENTRY dummy;
-		FILE_SHARED_LOCK_ENTRY Shared;
-	};
-	FILE_EXCLUSIVE_LOCK_ENTRY Exclusive;
+    struct
+    {
+        LIST_ENTRY dummy;
+        FILE_SHARED_LOCK_ENTRY Shared;
+    };
+    FILE_EXCLUSIVE_LOCK_ENTRY Exclusive;
 }
     COMBINED_LOCK_ELEMENT, *PCOMBINED_LOCK_ELEMENT;
 
@@ -38,6 +38,7 @@ typedef struct _LOCK_INFORMATION
     LIST_ENTRY CsqList;
     PFILE_LOCK BelongsTo;
     LIST_ENTRY SharedLocks;
+    ULONG Generation;
 }
     LOCK_INFORMATION, *PLOCK_INFORMATION;
 
@@ -224,6 +225,7 @@ FsRtlCompleteLockIrpReal(IN PCOMPLETE_LOCK_IRP_ROUTINE CompleteRoutine,
                          IN PFILE_OBJECT FileObject OPTIONAL)
 {
     /* Check if we have a complete routine */
+    Irp->IoStatus.Information = 0;
     if (CompleteRoutine)
     {
         /* Check if we have a file object */
@@ -260,55 +262,57 @@ FsRtlGetNextFileLock(IN PFILE_LOCK FileLock,
     else return &Entry->Exclusive.FileLock;
 }
 
+VOID
+NTAPI
+FsRtlpExpandLockElement
+(PCOMBINED_LOCK_ELEMENT ToExpand,
+ PCOMBINED_LOCK_ELEMENT Conflict)
+{
+    if (ToExpand->Exclusive.FileLock.StartingByte.QuadPart >
+        Conflict->Exclusive.FileLock.StartingByte.QuadPart)
+    {
+        ToExpand->Exclusive.FileLock.StartingByte = 
+            Conflict->Exclusive.FileLock.StartingByte;
+    }
+    if (ToExpand->Exclusive.FileLock.EndingByte.QuadPart <
+        Conflict->Exclusive.FileLock.EndingByte.QuadPart)
+    {
+        ToExpand->Exclusive.FileLock.EndingByte =
+            Conflict->Exclusive.FileLock.EndingByte;
+    }
+}
+
 /* This function expands the conflicting range Conflict by removing and reinserting it,
    then adds a shared range of the same size */
 PCOMBINED_LOCK_ELEMENT
 NTAPI
-FsRtlpSubsumeSharedLock
+FsRtlpRebuildSharedLockRange
 (PFILE_LOCK FileLock,
  PLOCK_INFORMATION LockInfo,
- PCOMBINED_LOCK_ELEMENT ToInsert,
  PCOMBINED_LOCK_ELEMENT Conflict)
 {
+    /* Starting at Conflict->StartingByte and going to Conflict->EndingByte
+     * capture and expand a shared range from the shared range list.
+     * Finish when we've incorporated all overlapping shared regions.
+     */
     BOOLEAN InsertedNew = FALSE, RemovedOld;
-    COMBINED_LOCK_ELEMENT NewElement;
-    PLOCK_SHARED_RANGE SharedRange = 
-        ExAllocatePoolWithTag(NonPagedPool, sizeof(*SharedRange), 'FSRA');
-
-    if (!SharedRange)
-        return NULL;
-    
-    ASSERT(!Conflict->Exclusive.FileLock.ExclusiveLock);
-    ASSERT(!ToInsert->Exclusive.FileLock.ExclusiveLock);
-    SharedRange->Start = ToInsert->Exclusive.FileLock.StartingByte;
-    SharedRange->End = ToInsert->Exclusive.FileLock.EndingByte;
-    SharedRange->Key = ToInsert->Exclusive.FileLock.Key;
-    SharedRange->ProcessId = ToInsert->Exclusive.FileLock.ProcessId;
-    InsertTailList(&LockInfo->SharedLocks, &SharedRange->Entry);
-    
-    NewElement = *Conflict;
-    if (ToInsert->Exclusive.FileLock.StartingByte.QuadPart >
-        Conflict->Exclusive.FileLock.StartingByte.QuadPart)
+    COMBINED_LOCK_ELEMENT NewElement = *Conflict;
+    PCOMBINED_LOCK_ELEMENT Entry;
+    while ((Entry = RtlLookupElementGenericTable
+            (FileLock->LockInformation, &NewElement)))
     {
-        NewElement.Exclusive.FileLock.StartingByte = 
-            Conflict->Exclusive.FileLock.StartingByte;
+        FsRtlpExpandLockElement(&NewElement, Entry);
+        RemovedOld = RtlDeleteElementGenericTable
+            (&LockInfo->RangeTable,
+             Entry);
+        ASSERT(RemovedOld);
     }
-    if (ToInsert->Exclusive.FileLock.EndingByte.QuadPart <
-        Conflict->Exclusive.FileLock.EndingByte.QuadPart)
-    {
-        NewElement.Exclusive.FileLock.EndingByte =
-            Conflict->Exclusive.FileLock.EndingByte;
-    }
-    RemovedOld = RtlDeleteElementGenericTable
-        (&LockInfo->RangeTable,
-         Conflict);
-    ASSERT(RemovedOld);
     Conflict = RtlInsertElementGenericTable
         (&LockInfo->RangeTable,
-         ToInsert,
-         sizeof(*ToInsert),
+         &NewElement,
+         sizeof(NewElement),
          &InsertedNew);
-    ASSERT(InsertedNew && Conflict);
+    ASSERT(InsertedNew);
     return Conflict;
 }
 
@@ -334,20 +338,27 @@ FsRtlPrivateLock(IN PFILE_LOCK FileLock,
     COMBINED_LOCK_ELEMENT ToInsert;
     PCOMBINED_LOCK_ELEMENT Conflict;
     PLOCK_INFORMATION LockInfo;
+    PLOCK_SHARED_RANGE NewSharedRange;
     BOOLEAN InsertedNew;
+    ULARGE_INTEGER UnsignedStart;
+    ULARGE_INTEGER UnsignedEnd;
     
-    DPRINT("FsRtlPrivateLock(%wZ, Offset %08x%08x, Length %08x%08x, Key %x, FailImmediately %d, Exclusive %d)\n", 
+    DPRINT("FsRtlPrivateLock(%wZ, Offset %08x%08x (%d), Length %08x%08x (%d), Key %x, FailImmediately %d, Exclusive %d)\n", 
            &FileObject->FileName, 
            FileOffset->HighPart,
            FileOffset->LowPart, 
+           (int)FileOffset->QuadPart,
            Length->HighPart,
            Length->LowPart, 
+           (int)Length->QuadPart,
            Key,
            FailImmediately, 
            ExclusiveLock);
     
-    if (FileOffset->QuadPart < 0ll || 
-        FileOffset->QuadPart + Length->QuadPart < FileOffset->QuadPart)
+    UnsignedStart.QuadPart = FileOffset->QuadPart;
+    UnsignedEnd.QuadPart = FileOffset->QuadPart + Length->QuadPart;
+
+    if (UnsignedEnd.QuadPart < UnsignedStart.QuadPart)
     {
         DPRINT("File offset out of range\n");
         IoStatus->Status = STATUS_INVALID_PARAMETER;
@@ -416,11 +427,20 @@ FsRtlPrivateLock(IN PFILE_LOCK FileLock,
     {
         if (Conflict->Exclusive.FileLock.ExclusiveLock || ExclusiveLock)
         {
+            DPRINT("Conflict %08x%08x:%08x%08x Exc %d (Want Exc %d)\n",
+                   Conflict->Exclusive.FileLock.StartingByte.HighPart,
+                   Conflict->Exclusive.FileLock.StartingByte.LowPart,
+                   Conflict->Exclusive.FileLock.EndingByte.HighPart,
+                   Conflict->Exclusive.FileLock.EndingByte.LowPart,
+                   Conflict->Exclusive.FileLock.ExclusiveLock,
+                   ExclusiveLock);
             if (FailImmediately)
             {
+                DPRINT("STATUS_FILE_LOCK_CONFLICT\n");
                 IoStatus->Status = STATUS_FILE_LOCK_CONFLICT;
                 if (Irp)
                 {
+                    DPRINT("STATUS_FILE_LOCK_CONFLICT: Complete\n");
                     FsRtlCompleteLockIrpReal
                         (FileLock->CompleteLockIrpRoutine,
                          Context,
@@ -436,6 +456,7 @@ FsRtlPrivateLock(IN PFILE_LOCK FileLock,
                 IoStatus->Status = STATUS_PENDING;
                 if (Irp)
                 {
+                    Irp->IoStatus.Information = LockInfo->Generation;
                     IoMarkIrpPending(Irp);
                     IoCsqInsertIrpEx
                         (&LockInfo->Csq,
@@ -463,8 +484,10 @@ FsRtlPrivateLock(IN PFILE_LOCK FileLock,
                         if (FailImmediately)
                         {
                             IoStatus->Status = STATUS_FILE_LOCK_CONFLICT;
+                            DPRINT("STATUS_FILE_LOCK_CONFLICT\n");
                             if (Irp)
                             {
+                                DPRINT("STATUS_FILE_LOCK_CONFLICT: Complete\n");
                                 FsRtlCompleteLockIrpReal
                                     (FileLock->CompleteLockIrpRoutine,
                                      Context,
@@ -491,16 +514,14 @@ FsRtlPrivateLock(IN PFILE_LOCK FileLock,
                     }
                     else
                     {
-                        /* We've made all overlapping shared ranges into one big range
-                         * now we need to add a range entry for the new range */
                         DPRINT("Overlapping shared lock %wZ %08x%08x %08x%08x\n",
                                &FileObject->FileName,
                                Conflict->Exclusive.FileLock.StartingByte.HighPart,
                                Conflict->Exclusive.FileLock.StartingByte.LowPart,
                                Conflict->Exclusive.FileLock.EndingByte.HighPart,
                                Conflict->Exclusive.FileLock.EndingByte.LowPart);
-                        Conflict = FsRtlpSubsumeSharedLock
-                            (FileLock, LockInfo, &ToInsert, Conflict);
+                        Conflict = FsRtlpRebuildSharedLockRange
+                            (FileLock, LockInfo, &ToInsert);
                         if (!Conflict)
                         {
                             IoStatus->Status = STATUS_NO_MEMORY;
@@ -514,20 +535,20 @@ FsRtlPrivateLock(IN PFILE_LOCK FileLock,
                                      &Status,
                                      FileObject);
                             }
-                            return FALSE;
+                            break;
                         }
                     }
                 }
             }
 
             /* We got here because there were only overlapping shared locks */
-            DPRINT("Acquired shared lock %wZ %08x%08x %08x%08x\n",
-                   &FileObject->FileName,
-                   Conflict->Exclusive.FileLock.StartingByte.HighPart,
-                   Conflict->Exclusive.FileLock.StartingByte.LowPart,
-                   Conflict->Exclusive.FileLock.EndingByte.HighPart,
-                   Conflict->Exclusive.FileLock.EndingByte.LowPart);
-            if (!FsRtlpSubsumeSharedLock(FileLock, LockInfo, &ToInsert, Conflict))
+            /* A shared lock is both a range *and* a list entry.  Insert the
+               entry here. */
+            
+            DPRINT("Adding shared lock %wZ\n", &FileObject->FileName);
+            NewSharedRange = 
+                ExAllocatePoolWithTag(NonPagedPool, sizeof(*NewSharedRange), 'FSRA');
+            if (!NewSharedRange)
             {
                 IoStatus->Status = STATUS_NO_MEMORY;
                 if (Irp)
@@ -542,6 +563,19 @@ FsRtlPrivateLock(IN PFILE_LOCK FileLock,
                 }
                 return FALSE;
             }
+            DPRINT("Adding shared lock %wZ\n", &FileObject->FileName);
+            NewSharedRange->Start = ToInsert.Exclusive.FileLock.StartingByte;
+            NewSharedRange->End = ToInsert.Exclusive.FileLock.EndingByte;
+            NewSharedRange->Key = Key;
+            NewSharedRange->ProcessId = ToInsert.Exclusive.FileLock.ProcessId;
+            InsertTailList(&LockInfo->SharedLocks, &NewSharedRange->Entry);
+
+            DPRINT("Acquired shared lock %wZ %08x%08x %08x%08x\n",
+                   &FileObject->FileName,
+                   Conflict->Exclusive.FileLock.StartingByte.HighPart,
+                   Conflict->Exclusive.FileLock.StartingByte.LowPart,
+                   Conflict->Exclusive.FileLock.EndingByte.HighPart,
+                   Conflict->Exclusive.FileLock.EndingByte.LowPart);
             IoStatus->Status = STATUS_SUCCESS;
             if (Irp)
             {
@@ -584,7 +618,6 @@ FsRtlPrivateLock(IN PFILE_LOCK FileLock,
                Conflict->Exclusive.FileLock.ExclusiveLock);
         if (!ExclusiveLock)
         {
-            PLOCK_SHARED_RANGE NewSharedRange;
             NewSharedRange = 
                 ExAllocatePoolWithTag(NonPagedPool, sizeof(*NewSharedRange), 'FSRA');
             if (!NewSharedRange)
@@ -805,12 +838,14 @@ FsRtlFastUnlockSingle(IN PFILE_LOCK FileLock,
     PCOMBINED_LOCK_ELEMENT Entry;
     PIRP NextMatchingLockIrp;
     PLOCK_INFORMATION InternalInfo = FileLock->LockInformation;
-    DPRINT("FsRtlFastUnlockSingle(%wZ, Offset %08x%08x, Length %08x%08x, Key %x)\n", 
+    DPRINT("FsRtlFastUnlockSingle(%wZ, Offset %08x%08x (%d), Length %08x%08x (%d), Key %x)\n", 
            &FileObject->FileName, 
            FileOffset->HighPart,
            FileOffset->LowPart, 
+           (int)FileOffset->QuadPart,
            Length->HighPart,
            Length->LowPart,
+           (int)Length->QuadPart,
            Key);
     // The region to unlock must correspond exactly to a previously locked region
     // -- msdn
@@ -819,6 +854,7 @@ FsRtlFastUnlockSingle(IN PFILE_LOCK FileLock,
     Find.Exclusive.FileLock.StartingByte = *FileOffset;
     Find.Exclusive.FileLock.EndingByte.QuadPart = 
         FileOffset->QuadPart + Length->QuadPart;
+    ASSERT(InternalInfo);
     Entry = RtlLookupElementGenericTable(&InternalInfo->RangeTable, &Find);
     if (!Entry) {
         DPRINT("Range not locked %wZ\n", &FileObject->FileName);
@@ -879,11 +915,55 @@ FsRtlFastUnlockSingle(IN PFILE_LOCK FileLock,
         }
         if (FoundShared)
         {
+            PLIST_ENTRY SharedRangeEntry;
+            PLOCK_SHARED_RANGE WatchSharedRange;
+            COMBINED_LOCK_ELEMENT RemadeElement;
+            PCOMBINED_LOCK_ELEMENT RemadeElementInserted = NULL;
             Find.Exclusive.FileLock.StartingByte = SharedRange->Start;
             Find.Exclusive.FileLock.EndingByte = SharedRange->End;
             SharedEntry = SharedRange->Entry.Flink;
             RemoveEntryList(&SharedRange->Entry);
             ExFreePool(SharedRange);
+            /* We need to rebuild the list of shared ranges. */
+            DPRINT("Removing the lock entry %wZ (%08x%08x:%08x%08x)\n", 
+                   &FileObject->FileName, 
+                   Entry->Exclusive.FileLock.StartingByte.HighPart, 
+                   Entry->Exclusive.FileLock.StartingByte.LowPart,
+                   Entry->Exclusive.FileLock.EndingByte.HighPart, 
+                   Entry->Exclusive.FileLock.EndingByte.LowPart);
+            /* Copy */
+            RemadeElement = *Entry;
+            RtlDeleteElementGenericTable(&InternalInfo->RangeTable, Entry);
+            /* Put shared locks back in place */
+            for (SharedRangeEntry = InternalInfo->SharedLocks.Flink;
+                 SharedRangeEntry != &InternalInfo->SharedLocks;
+                 SharedRangeEntry = SharedRangeEntry->Flink)
+            {
+                COMBINED_LOCK_ELEMENT Find;
+                WatchSharedRange = CONTAINING_RECORD(SharedRangeEntry, LOCK_SHARED_RANGE, Entry);
+                Find.Exclusive.FileLock.StartingByte = WatchSharedRange->Start;
+                Find.Exclusive.FileLock.EndingByte = WatchSharedRange->End;
+                if (LockCompare(&InternalInfo->RangeTable, &RemadeElement, &Find) != GenericEqual)
+                {
+                    DPRINT("Skipping range %08x%08x:%08x%08x\n",
+                           Find.Exclusive.FileLock.StartingByte.HighPart,
+                           Find.Exclusive.FileLock.StartingByte.LowPart,
+                           Find.Exclusive.FileLock.EndingByte.HighPart,
+                           Find.Exclusive.FileLock.EndingByte.LowPart);
+                    continue;
+                }
+                DPRINT("Re-creating range %08x%08x:%08x%08x\n",
+                       Find.Exclusive.FileLock.StartingByte.HighPart,
+                       Find.Exclusive.FileLock.StartingByte.LowPart,
+                       Find.Exclusive.FileLock.EndingByte.HighPart,
+                       Find.Exclusive.FileLock.EndingByte.LowPart);
+                RtlZeroMemory(&RemadeElement, sizeof(RemadeElement));
+                RemadeElement.Exclusive.FileLock.StartingByte = WatchSharedRange->Start;
+                RemadeElement.Exclusive.FileLock.EndingByte = WatchSharedRange->End;
+                RemadeElementInserted =
+                    FsRtlpRebuildSharedLockRange
+                    (FileLock, InternalInfo, &RemadeElement);
+            }
         }
         else
         {
@@ -891,35 +971,36 @@ FsRtlFastUnlockSingle(IN PFILE_LOCK FileLock,
         }
     }
     
-    if (IsListEmpty(&InternalInfo->SharedLocks)) {
-        DPRINT("Removing the lock entry %wZ (%08x%08x:%08x%08x)\n", 
-               &FileObject->FileName, 
-               Entry->Exclusive.FileLock.StartingByte.HighPart, 
-               Entry->Exclusive.FileLock.StartingByte.LowPart,
-               Entry->Exclusive.FileLock.EndingByte.HighPart, 
-               Entry->Exclusive.FileLock.EndingByte.LowPart);
-        RtlDeleteElementGenericTable(&InternalInfo->RangeTable, Entry);
-    } else {
-        DPRINT("Lock still has:\n");
-        for (SharedEntry = InternalInfo->SharedLocks.Flink;
-             SharedEntry != &InternalInfo->SharedLocks;
-             SharedEntry = SharedEntry->Flink)
-        {
-            SharedRange = CONTAINING_RECORD(SharedEntry, LOCK_SHARED_RANGE, Entry);
-            DPRINT("Shared element %wZ Offset %08x%08x Length %08x%08x Key %x\n",
-                   &FileObject->FileName,
-                   SharedRange->Start.HighPart,
-                   SharedRange->Start.LowPart,
-                   SharedRange->End.HighPart,
-                   SharedRange->End.LowPart,
-                   SharedRange->Key);
-        }
+    DPRINT("Lock still has:\n");
+    for (SharedEntry = InternalInfo->SharedLocks.Flink;
+         SharedEntry != &InternalInfo->SharedLocks;
+         SharedEntry = SharedEntry->Flink)
+    {
+        SharedRange = CONTAINING_RECORD(SharedEntry, LOCK_SHARED_RANGE, Entry);
+        DPRINT("Shared element %wZ Offset %08x%08x Length %08x%08x Key %x\n",
+               &FileObject->FileName,
+               SharedRange->Start.HighPart,
+               SharedRange->Start.LowPart,
+               SharedRange->End.HighPart,
+               SharedRange->End.LowPart,
+               SharedRange->Key);
     }
     
     // this is definitely the thing we want
-    NextMatchingLockIrp = IoCsqRemoveNextIrp(&InternalInfo->Csq, &Find);
-    while (NextMatchingLockIrp)
+    InternalInfo->Generation++;
+    while ((NextMatchingLockIrp = IoCsqRemoveNextIrp(&InternalInfo->Csq, &Find)))
     {
+        if (NextMatchingLockIrp->IoStatus.Information == InternalInfo->Generation)
+        {
+            // We've already looked at this one, meaning that we looped.  
+            // Put it back and exit.
+            IoCsqInsertIrpEx
+                (&InternalInfo->Csq,
+                 NextMatchingLockIrp,
+                 NULL,
+                 NULL);
+            break;
+        }
         // Got a new lock irp... try to do the new lock operation
         // Note that we pick an operation that would succeed at the time
         // we looked, but can't guarantee that it won't just be re-queued
@@ -943,17 +1024,37 @@ FsRtlFastUnlockAll(IN PFILE_LOCK FileLock,
                    IN PEPROCESS Process,
                    IN PVOID Context OPTIONAL)
 {
+    PLIST_ENTRY ListEntry;
     PCOMBINED_LOCK_ELEMENT Entry;
-    PRTL_GENERIC_TABLE InternalInfo = FileLock->LockInformation;
+    PLOCK_INFORMATION InternalInfo = FileLock->LockInformation;
     DPRINT("FsRtlFastUnlockAll(%wZ)\n", &FileObject->FileName);
     // XXX Synchronize somehow
     if (!FileLock->LockInformation) {
         DPRINT("Not locked %wZ\n", &FileObject->FileName);
         return STATUS_RANGE_NOT_LOCKED; // no locks
     }
-    for (Entry = RtlEnumerateGenericTable(InternalInfo, TRUE);
+    for (ListEntry = InternalInfo->SharedLocks.Flink;
+         ListEntry != &InternalInfo->SharedLocks;)
+    {
+        LARGE_INTEGER Length;
+        PLOCK_SHARED_RANGE Range = CONTAINING_RECORD(ListEntry, LOCK_SHARED_RANGE, Entry);
+        Length.QuadPart = Range->End.QuadPart - Range->Start.QuadPart;
+        ListEntry = ListEntry->Flink;
+        if (Range->ProcessId != Process->UniqueProcessId)
+            continue;
+        FsRtlFastUnlockSingle
+            (FileLock,
+             FileObject,
+             &Range->Start,
+             &Length,
+             Range->ProcessId,
+             Range->Key,
+             Context,
+             TRUE);
+    }
+    for (Entry = RtlEnumerateGenericTable(&InternalInfo->RangeTable, TRUE);
          Entry;
-         Entry = RtlEnumerateGenericTable(InternalInfo, FALSE))
+         Entry = RtlEnumerateGenericTable(&InternalInfo->RangeTable, FALSE))
     {
         LARGE_INTEGER Length;
         // We'll take the first one to be the list head, and free the others first...
@@ -985,6 +1086,7 @@ FsRtlFastUnlockAllByKey(IN PFILE_LOCK FileLock,
                         IN ULONG Key,
                         IN PVOID Context OPTIONAL)
 {
+    PLIST_ENTRY ListEntry;
     PCOMBINED_LOCK_ELEMENT Entry;
     PLOCK_INFORMATION InternalInfo = FileLock->LockInformation;
     
@@ -992,6 +1094,26 @@ FsRtlFastUnlockAllByKey(IN PFILE_LOCK FileLock,
     
     // XXX Synchronize somehow
     if (!FileLock->LockInformation) return STATUS_RANGE_NOT_LOCKED; // no locks
+    for (ListEntry = InternalInfo->SharedLocks.Flink;
+         ListEntry != &InternalInfo->SharedLocks;)
+    {
+        PLOCK_SHARED_RANGE Range = CONTAINING_RECORD(ListEntry, LOCK_SHARED_RANGE, Entry);
+        LARGE_INTEGER Length;
+        Length.QuadPart = Range->End.QuadPart - Range->Start.QuadPart;
+        ListEntry = ListEntry->Flink;
+        if (Range->ProcessId != Process->UniqueProcessId ||
+            Range->Key != Key)
+            continue;
+        FsRtlFastUnlockSingle
+            (FileLock,
+             FileObject,
+             &Range->Start,
+             &Length,
+             Range->ProcessId,
+             Range->Key,
+             Context,
+             TRUE);
+    }
     for (Entry = RtlEnumerateGenericTable(&InternalInfo->RangeTable, TRUE);
          Entry;
          Entry = RtlEnumerateGenericTable(&InternalInfo->RangeTable, FALSE))
