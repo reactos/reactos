@@ -144,6 +144,7 @@ NpfsQueryDirectory(PNPFS_CCB Ccb,
     PipeIndex = 0;
 
     Vcb = Ccb->Fcb->Vcb;
+    KeLockMutex(&Vcb->PipeListLock);
     CurrentEntry = Vcb->PipeListHead.Flink;
     while (CurrentEntry != &Vcb->PipeListHead &&
            Status == STATUS_SUCCESS)
@@ -252,11 +253,17 @@ NpfsQueryDirectory(PNPFS_CCB Ccb,
 
                 /* Leave, if there is no space left in the buffer */
                 if (Status == STATUS_BUFFER_OVERFLOW)
+                {
+                    KeUnlockMutex(&Vcb->PipeListLock);
                     return Status;
+                }
 
                 /* Leave, if we should return only one entry */
                 if (Stack->Flags & SL_RETURN_SINGLE_ENTRY)
+                {
+                    KeUnlockMutex(&Vcb->PipeListLock);
                     return STATUS_SUCCESS;
+                }
 
                 /* Store the current offset for the next round */
                 LastOffset = CurrentOffset;
@@ -270,6 +277,7 @@ NpfsQueryDirectory(PNPFS_CCB Ccb,
 
         CurrentEntry = CurrentEntry->Flink;
     }
+    KeUnlockMutex(&Vcb->PipeListLock);
 
     /* Return STATUS_NO_MORE_FILES if no matching pipe name was found */
     if (CurrentOffset == 0)

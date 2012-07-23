@@ -51,6 +51,7 @@ typedef struct _NPFS_FCB
 {
     FCB_TYPE Type;
     PNPFS_VCB Vcb;
+    volatile LONG RefCount;
     UNICODE_STRING PipeName;
     LIST_ENTRY PipeListEntry;
     KMUTEX CcbListLock;
@@ -83,8 +84,7 @@ typedef struct _NPFS_CCB
     LIST_ENTRY CcbListEntry;
     CCB_TYPE Type;
     PNPFS_FCB Fcb;
-	
-	PFILE_OBJECT FileObject;
+    PFILE_OBJECT FileObject;
 
     struct _NPFS_CCB* OtherSide;
     struct ETHREAD *Thread;
@@ -189,6 +189,9 @@ NTSTATUS NTAPI NpfsQueryVolumeInformation (PDEVICE_OBJECT DeviceObject, PIRP Irp
 NTSTATUS NTAPI
 DriverEntry(PDRIVER_OBJECT DriverObject,
             PUNICODE_STRING RegistryPath);
+
+VOID
+NpfsDereferenceFcb(PNPFS_FCB Fcb);
 
 PNPFS_FCB
 NpfsFindPipe(PNPFS_VCB Vcb,
