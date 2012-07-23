@@ -179,9 +179,6 @@ DC_vInitDc(
         /* Non-direct DCs don't have a surface by default */
         pdc->dclevel.pSurface = NULL;
 
-        // FIXME: HACK, because our code expects a surface
-        // pdc->dclevel.pSurface = SURFACE_ShareLockSurface(StockObjects[DEFAULT_BITMAP]);
-
         pdc->erclBounds.left = 0;
         pdc->erclBounds.top = 0;
         pdc->erclBounds.right = 0;
@@ -793,9 +790,6 @@ NtGdiCreateCompatibleDC(HDC hdc)
 
     /* Allocate a dc attribute */
     DC_bAllocDcAttr(pdcNew);
-
-    // HACK!
-    //DC_vSelectSurface(pdcNew, psurfDefaultBitmap);
 
     DC_UnlockDc(pdcNew);
 
