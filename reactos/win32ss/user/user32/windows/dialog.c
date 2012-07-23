@@ -571,7 +571,7 @@ INT DIALOG_DoDialogBox( HWND hwnd, HWND owner )
                 if (!(GetWindowLongPtrW( hwnd, GWL_STYLE ) & DS_NOIDLEMSG))
                {
                     /* No message present -> send ENTERIDLE and wait */
-                    SendMessageW( ownerMsg, WM_ENTERIDLE, MSGF_DIALOGBOX, (LPARAM)hwnd );
+                    if (ownerMsg) SendMessageW( ownerMsg, WM_ENTERIDLE, MSGF_DIALOGBOX, (LPARAM)hwnd );
                 }
                 GetMessageW( &msg, 0, 0, 0 );
             }
