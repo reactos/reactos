@@ -613,7 +613,7 @@ NTSTATUS
 NTAPI
 RtlLeaveCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
 {
-#ifndef NDEBUG
+#if DBG
     HANDLE Thread = (HANDLE)NtCurrentTeb()->ClientId.UniqueThread;
 
     /* In win this case isn't checked. However it's a valid check so it should only
