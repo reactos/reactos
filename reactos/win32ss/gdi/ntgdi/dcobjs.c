@@ -230,9 +230,10 @@ GdiSelectPalette(
     }
 
     /* Is this a valid palette for this depth? */
-	if ((BitsPerFormat(pdc->dclevel.pSurface->SurfObj.iBitmapFormat) <= 8
-					&& (ppal->flFlags & PAL_INDEXED)) ||
-			(BitsPerFormat(pdc->dclevel.pSurface->SurfObj.iBitmapFormat) > 8))
+	if ((!pdc->dclevel.pSurface) ||
+        (BitsPerFormat(pdc->dclevel.pSurface->SurfObj.iBitmapFormat) <= 8
+            && (ppal->flFlags & PAL_INDEXED)) ||
+        (BitsPerFormat(pdc->dclevel.pSurface->SurfObj.iBitmapFormat) > 8))
     {
         /* Get old palette, set new one */
         oldPal = pdc->dclevel.hpal;
@@ -383,7 +384,7 @@ NtGdiSelectBitmap(
         pdc->dclevel.sizl.cy = 1;
 
         // HACK
-        psurfNew = SURFACE_ShareLockSurface(hbmp);
+        //psurfNew = SURFACE_ShareLockSurface(hbmp);
     }
     else
     {

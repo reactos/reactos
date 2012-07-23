@@ -180,7 +180,7 @@ DC_vInitDc(
         pdc->dclevel.pSurface = NULL;
 
         // FIXME: HACK, because our code expects a surface
-        pdc->dclevel.pSurface = SURFACE_ShareLockSurface(StockObjects[DEFAULT_BITMAP]);
+        // pdc->dclevel.pSurface = SURFACE_ShareLockSurface(StockObjects[DEFAULT_BITMAP]);
 
         pdc->erclBounds.left = 0;
         pdc->erclBounds.top = 0;
@@ -271,12 +271,9 @@ DC_vInitDc(
 	pdc->dclevel.ptlBrushOrigin.x = 0;
 	pdc->dclevel.ptlBrushOrigin.y = 0;
 	pdc->dcattr.ptlBrushOrigin = pdc->dclevel.ptlBrushOrigin;
-
-    /* Initialize EBRUSHOBJs */
-    EBRUSHOBJ_vInit(&pdc->eboFill, pdc->dclevel.pbrFill, pdc);
-    EBRUSHOBJ_vInit(&pdc->eboLine, pdc->dclevel.pbrLine, pdc);
+    
+    /* Init text brush */
     EBRUSHOBJ_vInit(&pdc->eboText, pbrDefaultBrush, pdc);
-    EBRUSHOBJ_vInit(&pdc->eboBackground, pbrDefaultBrush, pdc);
 
     /* Setup fill data */
 	pdc->dcattr.jROP2 = R2_COPYPEN;
@@ -424,9 +421,8 @@ DC_vSetOwner(PDC pdc, ULONG ulOwner)
     pdc->dclevel.pbrFill = BRUSH_ShareLockBrush(pdc->pdcattr->hbrush);
     pdc->dclevel.pbrLine = PEN_ShareLockPen(pdc->pdcattr->hpen);
 
-    /* Update the EBRUSHOBJs */
-    EBRUSHOBJ_vUpdate(&pdc->eboFill, pdc->dclevel.pbrFill, pdc);
-    EBRUSHOBJ_vUpdate(&pdc->eboLine, pdc->dclevel.pbrLine, pdc);
+    /* Mark them as dirty */
+    pdc->pdcattr->ulDirty_ |= DIRTY_FILL|DIRTY_LINE;
 
     /* Allocate or free DC attribute */
     if (ulOwner == GDI_OBJ_HMGR_PUBLIC || ulOwner == GDI_OBJ_HMGR_NONE)
@@ -796,7 +792,7 @@ NtGdiCreateCompatibleDC(HDC hdc)
     DC_bAllocDcAttr(pdcNew);
 
     // HACK!
-    DC_vSelectSurface(pdcNew, psurfDefaultBitmap);
+    //DC_vSelectSurface(pdcNew, psurfDefaultBitmap);
 
     DC_UnlockDc(pdcNew);
 

@@ -259,6 +259,7 @@ IntCreateCompatibleBitmap(
         DIBSECTION dibs;
         INT Count;
         PSURFACE psurf = Dc->dclevel.pSurface;
+        if(!psurf) psurf = psurfDefaultBitmap;
         Count = BITMAP_GetObject(psurf, sizeof(dibs), &dibs);
 
         if (Count == sizeof(BITMAP))

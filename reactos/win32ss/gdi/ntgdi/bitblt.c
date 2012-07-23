@@ -807,9 +807,11 @@ IntPatBlt(
     SURFACE *psurf;
     POINTL BrushOrigin;
     BOOL ret;
-    PBRUSH pbrush = pebo->pbrush;
+    PBRUSH pbrush;
 
     ASSERT(pebo);
+    pbrush = pebo->pbrush;
+    ASSERT(pbrush);
 
     FIXUP_ROP(dwRop);
 

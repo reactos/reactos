@@ -67,6 +67,9 @@ EBRUSHOBJ_vInit(EBRUSHOBJ *pebo, PBRUSH pbrush, PDC pdc)
     pebo->crCurrentText = pdc->pdcattr->crForegroundClr;
 
     pebo->psurfTrg = pdc->dclevel.pSurface;
+    /* We are initializing for a new memory DC */
+    if(!pebo->psurfTrg)
+        pebo->psurfTrg = psurfDefaultBitmap;
     ASSERT(pebo->psurfTrg);
     ASSERT(pebo->psurfTrg->ppal);
 
