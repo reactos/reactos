@@ -1,8 +1,8 @@
 ﻿; UTF-8
 
 [Section]
-Name = OpenOffice 3.3
-Version = 3.3.0
+Name = OpenOffice 3.4
+Version = 3.4.0
 Licence = LGPL
 Description = THE Open Source Office Suite.
 Size = 145.0MB
