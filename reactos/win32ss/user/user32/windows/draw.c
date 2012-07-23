@@ -623,19 +623,19 @@ static void UITOOLS_DrawCheckedRect( HDC dc, LPRECT rect )
 {
     if(GetSysColor(COLOR_BTNHIGHLIGHT) == RGB(255, 255, 255))
     {
-        HBITMAP hbm = CreateBitmap(8, 8, 1, 1, wPattern_AA55);
+//        HBITMAP hbm = CreateBitmap(8, 8, 1, 1, wPattern_AA55); gpsi->hbrGray
         HBRUSH hbsave;
-        HBRUSH hb = CreatePatternBrush(hbm);
+//        HBRUSH hb = CreatePatternBrush(hbm);
         COLORREF bg;
 
         FillRect(dc, rect, GetSysColorBrush(COLOR_BTNFACE));
         bg = SetBkColor(dc, RGB(255, 255, 255));
-        hbsave = (HBRUSH)SelectObject(dc, hb);
+        hbsave = (HBRUSH)SelectObject(dc, gpsi->hbrGray);
         PatBlt(dc, rect->left, rect->top, rect->right-rect->left, rect->bottom-rect->top, 0x00FA0089);
         SelectObject(dc, hbsave);
         SetBkColor(dc, bg);
-        DeleteObject(hb);
-        DeleteObject(hbm);
+//        DeleteObject(hb);
+//        DeleteObject(hbm);
     }
     else
     {
@@ -1054,9 +1054,9 @@ IntGrayString(
     // correct error codes. I doubt it grays strings either... Untested!
 
     BOOL    success = FALSE;
+    HBRUSH  hbsave;
     HDC     MemDC = NULL;
-    HBITMAP MemBMP = NULL,
-                     OldBMP = NULL;
+    HBITMAP MemBMP = NULL, OldBMP = NULL;
     HBRUSH  OldBrush = NULL;
     HFONT   OldFont = NULL;
     RECT    r;
@@ -1064,7 +1064,6 @@ IntGrayString(
 
     ForeColor = SetTextColor(hDC, RGB(0, 0, 0));
     BackColor = SetBkColor(hDC, RGB(255, 255, 255));
-
 
     if (! hBrush)
     {
@@ -1140,11 +1139,9 @@ IntGrayString(
 
         if (! success) goto cleanup;
 
-        PatBlt(MemDC, 0, 0, nWidth, nHeight, PATCOPY);
-//      This is how WINE does it: (but we should have our own graying brush already)
-//        hbsave = (HBRUSH)SelectObject(memdc, CACHE_GetPattern55AABrush());
-//        PatBlt(memdc, 0, 0, cx, cy, 0x000A0329);
-//        SelectObject(memdc, hbsave);
+        hbsave = (HBRUSH)SelectObject(MemDC, gpsi->hbrGray);
+        PatBlt(MemDC, 0, 0, nWidth, nHeight, 0x000A0329);
+        SelectObject(MemDC, hbsave);
     }
 
     if (! BitBlt(hDC, X, Y, nWidth, nHeight, MemDC, 0, 0, SRCCOPY)) goto cleanup;
@@ -1354,17 +1351,11 @@ IntDrawState(HDC hdc, HBRUSH hbr, DRAWSTATEPROC func, LPARAM lp, WPARAM wp,
     /* This state cause the image to be dithered */
     if(flags & DSS_UNION)
     {
-#if 0
-        hbsave = (HBRUSH)SelectObject(memdc, CACHE_GetPattern55AABrush());
-        if(!hbsave)
-           goto cleanup;
+        hbsave = (HBRUSH)SelectObject(memdc, gpsi->hbrGray);
+        if(!hbsave) goto cleanup;
         tmp = PatBlt(memdc, 0, 0, cx, cy, 0x00FA0089);
         SelectObject(memdc, hbsave);
-        if(!tmp)
-           goto cleanup;
-#else
-        UNIMPLEMENTED;
-#endif
+        if(!tmp) goto cleanup;
     }
 
     if (flags & DSS_DISABLED)
@@ -1590,23 +1581,13 @@ FillRect(HDC hDC, CONST RECT *lprc, HBRUSH hbr)
 BOOL WINAPI
 DrawFocusRect(HDC hdc, CONST RECT *rect)
 {
-    static HBRUSH hFocusRectBrush = NULL;
     HGDIOBJ OldObj;
     UINT cx, cy;
-
-    if(!hFocusRectBrush)
-    {
-        static HBITMAP hFocusPattern = NULL;
-        const DWORD Pattern[4] = {0x5555AAAA, 0x5555AAAA, 0x5555AAAA, 0x5555AAAA};
-
-        hFocusPattern = CreateBitmap(8, 8, 1, 1, Pattern);
-        hFocusRectBrush = CreatePatternBrush(hFocusPattern);
-    }
 
     NtUserSystemParametersInfo(SPI_GETFOCUSBORDERWIDTH, 0, &cx, 0);
     NtUserSystemParametersInfo(SPI_GETFOCUSBORDERHEIGHT, 0, &cy, 0);
 
-    OldObj = SelectObject(hdc, hFocusRectBrush);
+    OldObj = SelectObject(hdc, gpsi->hbrGray);
 
     /* top */
     PatBlt(hdc, rect->left, rect->top, rect->right - rect->left, cy, PATINVERT);
