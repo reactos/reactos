@@ -3391,6 +3391,7 @@ GreExtTextOutW(
     DC_vPrepareDCsForBlit(dc, DummyRect, NULL, DummyRect);
 
     psurf = dc->dclevel.pSurface ;
+    if(!psurf) psurf = psurfDefaultBitmap;
     SurfObj = &psurf->SurfObj ;
 
     EXLATEOBJ_vInitialize(&exloRGB2Dst, &gpalRGB, psurf->ppal, 0, 0, 0);
