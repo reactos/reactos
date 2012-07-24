@@ -320,7 +320,7 @@ unsigned __int64 __readdr(unsigned int reg);
 #pragma intrinsic(__readdr)
 void __writedr(unsigned reg, unsigned __int64 value);
 #pragma intrinsic(__writedr)
-#else if defined(_M_IX86)
+#elif defined(_M_IX86)
 unsigned long __readcr0(void);
 unsigned long __readcr2(void);
 unsigned long __readcr3(void);
