@@ -94,6 +94,11 @@ if(ARCH MATCHES i386)
         math/i386/sqrt_asm.s
         math/i386/tan_asm.s
         math/i386/ci.c
+        math/i386/cicos.c
+        math/i386/cilog.c
+        math/i386/cipow.c
+        math/i386/cisin.c
+        math/i386/cisqrt.c
         misc/i386/readcr4.S)
     if(NOT MSVC)
         list(APPEND LIBCNTPR_SOURCE except/i386/chkstk_ms.s)

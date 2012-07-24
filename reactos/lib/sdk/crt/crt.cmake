@@ -131,11 +131,11 @@ list(APPEND CRT_SOURCE
     misc/stubs.c
     misc/tls.c
     printf/_cprintf.c
-	printf/_cwprintf.c
+    printf/_cwprintf.c
     printf/_snprintf.c
     printf/_snwprintf.c
     printf/_vcprintf.c
-	printf/_vcwprintf.c
+    printf/_vcwprintf.c
     printf/_vscprintf.c
     printf/_vscwprintf.c
     printf/_vsnprintf.c
@@ -377,6 +377,11 @@ if(ARCH MATCHES i386)
         math/i386/tan_asm.s
         math/i386/atan2_asm.s
         math/i386/ci.c
+        math/i386/cicos.c
+        math/i386/cilog.c
+        math/i386/cipow.c
+        math/i386/cisin.c
+        math/i386/cisqrt.c
         math/i386/exp_asm.s
         math/i386/fmod_asm.s
         math/i386/fmodf_asm.s
