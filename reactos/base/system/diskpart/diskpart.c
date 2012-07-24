@@ -24,21 +24,38 @@ PrintResourceString(INT resID, ...)
     va_end(arg_ptr);
 }
 
+VOID
+ShowHeader(VOID)
+{
+    WCHAR szComputerName[MAX_STRING_SIZE];
+    DWORD comp_size = MAX_STRING_SIZE;
+
+    /* Get the name of the computer for us and change the value of comp_name */
+    GetComputerName(szComputerName, &comp_size);
+
+    /* TODO: Remove this section of code when program becomes stable enough for production use. */
+    wprintf(L"\n*WARNING*: This program is incomplete and may not work properly.\n");
+
+    /* Print the header information */
+    PrintResourceString(IDS_APP_HEADER);
+    PrintResourceString(IDS_APP_LICENSE);
+    PrintResourceString(IDS_APP_CURR_COMPUTER, szComputerName);
+}
 
 /*
- * run_script(const char *filename):
+ * RunScript(const char *filename):
  * opens the file, reads the contents, convert the text into readable
  * code for the computer, and then execute commands in order.
  */
 BOOL
-run_script(LPCWSTR filename)
+RunScript(LPCWSTR filename)
 {
-    FILE *script_file;
+    FILE *script;
     WCHAR tmp_string[MAX_STRING_SIZE];
 
     /* Open the file for processing */
-    script_file = _wfopen(filename, L"r");
-    if (script_file == NULL)
+    script = _wfopen(filename, L"r");
+    if (script == NULL)
     {
         /* if there was problems opening the file */
         PrintResourceString(IDS_ERROR_MSG_NO_SCRIPT, filename);
@@ -46,14 +63,14 @@ run_script(LPCWSTR filename)
     }
 
     /* Read and process the script */
-    while (fgetws(tmp_string, MAX_STRING_SIZE, script_file) != NULL)
+    while (fgetws(tmp_string, MAX_STRING_SIZE, script) != NULL)
     {
-        if (interpret_script(tmp_string) == FALSE)
+        if (InterpretScript(tmp_string) == FALSE)
             return FALSE;
     }
 
     /* Close the file */
-    fclose(script_file);
+    fclose(script);
 
     return TRUE;
 }
@@ -64,79 +81,96 @@ run_script(LPCWSTR filename)
  */
 int wmain(int argc, const WCHAR *argv[])
 {
-    WCHAR szComputerName[MAX_STRING_SIZE];
-    DWORD comp_size = MAX_STRING_SIZE;
-    LPCWSTR file_name = NULL;
-    int i;
-    int timeout = 0;
+    LPCWSTR script = NULL;
+    LPCWSTR tmpBuffer = NULL;
+    int index, timeout;
 
-    /* Get the name of the computer for us and change the value of comp_name */
-    GetComputerName(szComputerName, &comp_size);
+    /* Sets the timeout value to 0 just in case the user doesn't
+    specify a value. */
+    timeout = 0;
 
-    /* TODO: Remove this section of code when program becomes stable enough for production use. */
-    wprintf(L"\n*WARNING*: This program is incomplete and may not work properly.\n");
-
-    /* Print the header information */
-    PrintResourceString(IDS_APP_HEADER, DISKPART_VERSION);
-    PrintResourceString(IDS_APP_LICENSE);
-    PrintResourceString(IDS_APP_CURR_COMPUTER, szComputerName);
-
-    /* Process arguments */
-    for (i = 1; i < argc; i++)
+    /* If there are no command arguments, then go straight to the interpreter */
+    if (argc < 2)
     {
-        if ((argv[i][0] == L'-') || (argv[i][0] == L'/'))
+        ShowHeader();
+        InterpretMain();
+    }
+    /* If there are command arguments, then process them */
+    else
+    {
+        for (index = 1; index < argc; index++)
         {
-            if (wcsicmp(&argv[i][1], L"s") == 0)
+            /* checks for flags */
+            if ((argv[index][0] == '/')||
+                (argv[index][0] == '-'))
             {
-                /*
-                 * Get the file name only if there is at least one more
-                 * argument and it is not another option
-                 */
-                if ((i + 1 < argc) &&
-                    (argv[i + 1][0] != L'-') &&
-                    (argv[i + 1][0] != L'/'))
-                {
-                    /* Next argument */
-                    i++;
-
-                    /* Get the file name */
-                    file_name = argv[i];
-                }
+                tmpBuffer = argv[index] + 1;
             }
-            else if (wcsicmp(&argv[i][1], L"t") == 0)
+            else
             {
-                /*
-                 * Get the timeout value only if there is at least one more
-                 * argument and it is not another option
-                 */
-                if ((i + 1 < argc) &&
-                    (argv[i + 1][0] != L'-') &&
-                    (argv[i + 1][0] != L'/'))
-                {
-                    /* Next argument */
-                    i++;
-
-                    /* Get the timeout value */
-                    timeout = _wtoi(argv[i]);
-                }
+                /* If there is no flag, then return an error */
+                PrintResourceString(IDS_ERROR_MSG_BAD_ARG, argv[index]);
+                return EXIT_FAILURE;
             }
-            else if (wcscmp(&argv[i][1], L"?") == 0)
+
+            /* Checks for the /? flag first since the program
+            exits as soon as the usage list is shown. */
+            if (_wcsicmp(tmpBuffer, L"?") == 0)
             {
                 PrintResourceString(IDS_APP_USAGE);
                 return EXIT_SUCCESS;
             }
-        }
-    }
+            /* Checks for the script flag */
+            else if (_wcsicmp(tmpBuffer, L"s") == 0)
+            {
+                if ((index + 1) < argc)
+                {
+                    index++;
+                    script = argv[index];
+                }
+            }
+            /* Checks for the timeout flag */
+            else if (_wcsicmp(tmpBuffer, L"t") == 0)
+            {
+                if ((index + 1) < argc)
+                {
+                    index++;
+                    timeout = _wtoi(argv[index]);
 
-    /* Run the script if we got a script name or call the interpreter otherwise */
-    if (file_name != NULL)
-    {
-        if (run_script(file_name) == FALSE)
+                    /* If the number is a negative number, then
+                    change it so that the time is executed properly. */
+                    if (timeout < 0)
+                        timeout = 0;
+                }
+            }
+            else
+            {
+                /* Assume that the flag doesn't exist. */
+                PrintResourceString(IDS_ERROR_MSG_BAD_ARG, tmpBuffer);
+                return EXIT_FAILURE;
+            }
+        }
+
+        /* Shows the program information */
+        ShowHeader();
+
+        /* Now we process the filename if it exists */
+        if (script != NULL)
+        {
+            /* if the timeout is greater than 0, then assume
+            that the user specified a specific time. */
+            if (timeout > 0)
+                Sleep(timeout * 1000);
+
+            if (RunScript(script) == FALSE)
+                return EXIT_FAILURE;
+        }
+        else
+        {
+            /* Exit failure since the user wanted to run a script */
+            PrintResourceString(IDS_ERROR_MSG_NO_SCRIPT, script);
             return EXIT_FAILURE;
-    }
-    else
-    {
-        interpret_main();
+        }
     }
 
     /* Let the user know the program is exiting */

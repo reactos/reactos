@@ -13,12 +13,12 @@ LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
 /* Basic application information */
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_APP_HEADER, "\nReactOS DiskPart version %s\n"
-    IDS_APP_USAGE, "Diskpart command line syntax:\ndiskpart [/s <script file>] [/t <timeout value>] [/?]\n\
-/s <script file>   - Runs the given script file.\n\
-/t <timeout value> - Waits for the given time (in seconds) after running a\n\
-                     script file.\n\
-/?                 - Shows this help text."
+    IDS_APP_HEADER, "\nReactOS DiskPart\n"
+    IDS_APP_USAGE, "\nDisk Partitioning Interpreter.\n\n\
+Usage: DISKPART [/S filename] [/T timeout] [/?]\n\n\
+/S filename\tRuns the given script.\n\
+/T timeout\tTimeout in seconds to prevent diskpart usage overlap.\n\
+/?\t\tDisplay this help message.\n\n"
     IDS_APP_LICENSE, "Licensed under the GNU GPLv2\n"
     IDS_APP_CURR_COMPUTER, "On computer: %s\n\n"
     IDS_APP_LEAVING, "\nLeaving DiskPart...\n"
@@ -120,7 +120,8 @@ END
 /* Common Error Messages */
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_ERROR_MSG_NO_SCRIPT "Error opening script file: %s\n"
+    IDS_ERROR_MSG_NO_SCRIPT "Error opening script: %s\n"
+    IDS_ERROR_MSG_BAD_ARG   "Error processing argument: %s\n"
 END
 
 

@@ -15,12 +15,11 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 /* Basic application information */
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_APP_HEADER, "\nReactOS DiskPart versiune %s\n"
-    IDS_APP_USAGE, "Sintaxa liniei de comandă pentru Diskpart:\ndiskpart [/s <fișier-script>] [/t <valoare-temporală-limită>] [/?]\n\
-/s <fișier-script>            - Execută scriptul din fișierul dat.\n\
-/t <valoare-temporală-limită> - Așteaptă această perioadă (în secunde)\n\
-                                după execuția unui fișier script.\n\
-/?                            - Afișează acest manual."
+    IDS_APP_HEADER, "\nReactOS DiskPart\n"
+    IDS_APP_USAGE, "Disk Partitioning Interpreter.\n\nUsage: DISKPART [/S filename] [/T timeout] [/?]\n\n\
+/S filename\tExecută scriptul din fișierul dat.\n\
+/T timeout\tTimeout in seconds to prevent diskpart usage overlap.\n\
+/?\t\tAfișează acest manual.\n\n"
     IDS_APP_LICENSE, "Licențiere în termenii GNU GPLv2\n"
     IDS_APP_CURR_COMPUTER, "Pe calculatorul: %s\n\n"
     IDS_APP_LEAVING, "\nÎnchiderea DiskPart...\n"
@@ -123,6 +122,7 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_ERROR_MSG_NO_SCRIPT "Eroare la deschiderea fișierului script: %s\n"
+    IDS_ERROR_MSG_BAD_ARG   "De prelucrare de eroare argumente: %s\n"
 END
 
 

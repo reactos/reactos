@@ -73,12 +73,12 @@ rem_main(INT argc, WCHAR **argv)
 
 
 /*
- * interpret_cmd(char *cmd_line, char *arg_line):
+ * InterpretCmd(char *cmd_line, char *arg_line):
  * compares the command name to a list of available commands, and
  * determines which function to envoke.
  */
 BOOL
-interpret_cmd(int argc, WCHAR **argv)
+InterpretCmd(int argc, WCHAR **argv)
 {
     PCOMMAND cmdptr;
 
@@ -98,11 +98,11 @@ interpret_cmd(int argc, WCHAR **argv)
 
 
 /*
- * interpret_script(char *line):
+ * InterpretScript(char *line):
  * The main function used for when reading commands from scripts.
  */
 BOOL
-interpret_script(WCHAR *input_line)
+InterpretScript(WCHAR *input_line)
 {
     WCHAR *args_vector[MAX_ARGS_COUNT];
     INT args_count = 0;
@@ -134,18 +134,18 @@ interpret_script(WCHAR *input_line)
     }
 
     /* sends the string to find the command */
-    return interpret_cmd(args_count, args_vector);
+    return InterpretCmd(args_count, args_vector);
 }
 
 
 /*
- * interpret_main():
+ * InterpretMain():
  * Contents for the main program loop as it reads each line, and then
  * it sends the string to interpret_line, where it determines what
  * command to use.
  */
 VOID
-interpret_main(VOID)
+InterpretMain(VOID)
 {
     WCHAR input_line[MAX_STRING_SIZE];
     WCHAR *args_vector[MAX_ARGS_COUNT];
@@ -187,6 +187,6 @@ interpret_main(VOID)
         }
 
         /* sends the string to find the command */
-        bRun = interpret_cmd(args_count, args_vector);
+        bRun = InterpretCmd(args_count, args_vector);
     }
 }
