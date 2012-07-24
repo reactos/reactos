@@ -66,7 +66,7 @@
 #define InterlockedOr16 _InterlockedOr16
 #endif
 
-#define GDIOBJ_POOL_TAG(type) ('00hG' + ((objt & 0x1f) << 24))
+#define GDIOBJ_POOL_TAG(type) ('00hG' + (((type) & 0x1f) << 24))
 
 enum
 {
