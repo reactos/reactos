@@ -30,7 +30,7 @@ ENDIF(CMAKE_GENERATOR MATCHES "NMake")
 INCLUDE(Platform/WindowsPaths)
 
 # uncomment these out to debug nmake and borland makefiles
-SET(CMAKE_START_TEMP_FILE "")
-SET(CMAKE_END_TEMP_FILE "")
+#SET(CMAKE_START_TEMP_FILE "")
+#SET(CMAKE_END_TEMP_FILE "")
 #SET(CMAKE_VERBOSE_MAKEFILE 1)
 

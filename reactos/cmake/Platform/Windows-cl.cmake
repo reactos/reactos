@@ -64,6 +64,28 @@ endif()
 
 ############
 
+# Set lib path for ARM compiler
+if(${ARCH} MATCHES arm)
+    message("Using ARM build for cross compilation. Host tools are x86.")
+
+    # Force C/C++ Compilers
+    include(CMakeForceCompiler)
+    CMAKE_FORCE_C_COMPILER(cl MSVC)
+    CMAKE_FORCE_CXX_COMPILER(cl MSVC)
+
+    if(NOT CMAKE_CROSSCOMPILING)
+        message("Using x86 target for ARM host tools.")
+        set(ARCH i386)
+
+        LINK_DIRECTORIES($ENV{WindowsSdkDir}\\Lib\\win8\\um\\x86)
+    endif()
+
+    #LINK_DIRECTORIES($ENV{LIB})
+endif()
+
+
+############
+
 SET(CMAKE_CREATE_WIN32_EXE /subsystem:windows)
 SET(CMAKE_CREATE_CONSOLE_EXE /subsystem:console)
 
@@ -234,6 +256,10 @@ SET(_MACHINE_ARCH_FLAG ${MSVC_C_ARCHITECTURE_ID})
 IF(NOT _MACHINE_ARCH_FLAG)
   SET(_MACHINE_ARCH_FLAG ${MSVC_CXX_ARCHITECTURE_ID})
 ENDIF(NOT _MACHINE_ARCH_FLAG)
+# HACK
+if(${ARCH} MATCHES arm)
+  SET(_MACHINE_ARCH_FLAG ARM)
+endif()
 SET (CMAKE_EXE_LINKER_FLAGS_INIT
     "${CMAKE_EXE_LINKER_FLAGS_INIT} /STACK:10000000 /machine:${_MACHINE_ARCH_FLAG}")
 
