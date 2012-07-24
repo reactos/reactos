@@ -186,7 +186,7 @@ NpfsConnectPipe(PIRP Irp,
         KeWaitForSingleObject(&Ccb->ConnectEvent,
             UserRequest,
             WaitMode,
-            (Flags & FO_ALERTABLE_IO),
+            (Flags & FO_ALERTABLE_IO) != 0,
             NULL);
     }
 
@@ -407,7 +407,7 @@ NpfsWaitPipe(PIRP Irp,
     Status = KeWaitForSingleObject(&Ccb->ConnectEvent,
                                    UserRequest,
                                    Irp->RequestorMode,
-                                   (Ccb->FileObject->Flags & FO_ALERTABLE_IO),
+                                   (Ccb->FileObject->Flags & FO_ALERTABLE_IO) != 0,
                                    TimeOut);
     if ((Status == STATUS_USER_APC) || (Status == STATUS_KERNEL_APC) || (Status == STATUS_ALERTED))
         Status = STATUS_CANCELLED;
@@ -532,7 +532,7 @@ NpfsWaitPipe2(PIRP Irp,
     Status = KeWaitForSingleObject(&Ccb->ConnectEvent,
         UserRequest,
         Irp->RequestorMode,
-        (Ccb->FileObject->Flags & FO_ALERTABLE_IO),
+        (Ccb->FileObject->Flags & FO_ALERTABLE_IO) != 0,
         &TimeOut);
     if ((Status == STATUS_USER_APC) || (Status == STATUS_KERNEL_APC) || (Status == STATUS_ALERTED))
         Status = STATUS_CANCELLED;
