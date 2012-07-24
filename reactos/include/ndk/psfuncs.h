@@ -371,6 +371,7 @@ NtCreateThread(
     IN BOOLEAN CreateSuspended
 );
 
+#ifndef _M_ARM
 #ifndef NTOS_MODE_USER
 FORCEINLINE struct _TEB * NtCurrentTeb(VOID)
 {
@@ -382,6 +383,7 @@ FORCEINLINE struct _TEB * NtCurrentTeb(VOID)
 }
 #else
 struct _TEB * NtCurrentTeb(void);
+#endif
 #endif
 
 NTSYSCALLAPI
