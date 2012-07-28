@@ -715,20 +715,9 @@ int CDECL MSVCRT_memmove_s(void *dest, MSVCRT_size_t numberOfElements, const voi
     if(!count)
         return 0;
 
-    if(!dest || !src) {
-        if(dest)
-            memset(dest, 0, numberOfElements);
-
-        *_errno() = EINVAL;
-        return EINVAL;
-    }
-
-    if(count > numberOfElements) {
-        memset(dest, 0, numberOfElements);
-
-        *_errno() = ERANGE;
-        return ERANGE;
-    }
+    if (!MSVCRT_CHECK_PMT(dest != NULL)) return MSVCRT_EINVAL;
+    if (!MSVCRT_CHECK_PMT(src != NULL)) return MSVCRT_EINVAL;
+    if (!MSVCRT_CHECK_PMT_ERR( count <= numberOfElements, MSVCRT_ERANGE )) return MSVCRT_ERANGE;
 
     memmove(dest, src, count);
     return 0;
