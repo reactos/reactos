@@ -1490,7 +1490,7 @@ ftGdiGetGlyphOutline(
 
     pdcattr = dc->pdcattr;
 
-    MatrixS2XForm(&xForm, &dc->dclevel.mxWorldToDevice);
+    MatrixS2XForm(&xForm, &dc->pdcattr->mxWorldToDevice);
     eM11 = xForm.eM11;
 
     hFont = pdcattr->hlfntNew;

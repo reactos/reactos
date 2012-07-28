@@ -663,7 +663,7 @@ NtGdiRectangle(HDC  hDC,
     }
 
     /* Do we rotate or shear? */
-    if (!(dc->dclevel.mxWorldToDevice.flAccel & XFORM_SCALE))
+    if (!(dc->pdcattr->mxWorldToDevice.flAccel & XFORM_SCALE))
     {
         POINTL DestCoords[4];
         ULONG PolyCounts = 4;

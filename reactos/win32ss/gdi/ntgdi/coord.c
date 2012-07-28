@@ -635,7 +635,7 @@ NtGdiOffsetWindowOrgEx(
 
     pdcattr->ptlWindowOrg.x += XOffset;
     pdcattr->ptlWindowOrg.y += YOffset;
-    pdcattr->flXform |= PAGE_XLATE_CHANGED;
+    pdcattr->flXform |= PAGE_XLATE_CHANGED|DEVICE_TO_WORLD_INVALID;
 
     DC_UnlockDc(dc);
 
@@ -1052,8 +1052,6 @@ DC_vSetLayout(
     pdcattr->flXform |= (PAGE_EXTENTS_CHANGED |
                          INVALIDATE_ATTRIBUTES |
                          DEVICE_TO_WORLD_INVALID);
-
-//  DC_UpdateXforms(pdc);
 }
 
 // NtGdiSetLayout

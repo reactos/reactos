@@ -289,6 +289,16 @@ XFORMOBJ_iInverse(
     pmxDst->efM21 = pmxSrc->efM21;
     FLOATOBJ_Div(&pmxDst->efM21, &foDet);
 
+    /* Calculate the inverted x shift: Dx' = -Dx * M11' - Dy * M21' */
+    pmxDst->efDx = pmxSrc->efDx;
+    FLOATOBJ_Neg(&pmxDst->efDx);
+    MulSub(&pmxDst->efDx, &pmxDst->efDx, &pmxDst->efM11, &pmxSrc->efDy, &pmxDst->efM21);
+
+    /* Calculate the inverted y shift: Dy' = -Dy * M22' - Dx * M12' */
+    pmxDst->efDy = pmxSrc->efDy;
+    FLOATOBJ_Neg(&pmxDst->efDy);
+    MulSub(&pmxDst->efDy, &pmxDst->efDy, &pmxDst->efM22, &pmxSrc->efDx, &pmxDst->efM12);
+
     /* Update accelerators and return complexity */
     return XFORMOBJ_UpdateAccel(pxoDst);
 }

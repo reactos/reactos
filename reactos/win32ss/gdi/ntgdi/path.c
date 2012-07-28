@@ -76,7 +76,7 @@ GdiPathDPtoLP(PDC pdc, PPOINT ppt, INT count)
 {
   XFORMOBJ xo;
 
-  XFORMOBJ_vInit(&xo, &pdc->dclevel.mxDeviceToWorld);
+  XFORMOBJ_vInit(&xo, &pdc->pdcattr->mxDeviceToWorld);
   return XFORMOBJ_bApplyXform(&xo, XF_LTOL, count, (PPOINTL)ppt, (PPOINTL)ppt);
 }
 
@@ -124,7 +124,7 @@ PATH_FillPath( PDC dc, PPATH pPath )
      * tests show that resetting the graphics mode to GM_COMPATIBLE does
      * not reset the world transform.
      */
-    MatrixS2XForm(&xform, &dc->dclevel.mxWorldToPage);
+    MatrixS2XForm(&xform, &dc->pdcattr->mxWorldToPage);
 
     /* Set MM_TEXT */
 //    IntGdiSetMapMode( dc, MM_TEXT );
@@ -1429,7 +1429,7 @@ BOOL FASTCALL PATH_StrokePath(DC *dc, PPATH pPath)
     szWindowExt = dc->pdcattr->szlWindowExt;
     ptWindowOrg = dc->pdcattr->ptlWindowOrg;
 
-    MatrixS2XForm(&xform, &dc->dclevel.mxWorldToPage);
+    MatrixS2XForm(&xform, &dc->pdcattr->mxWorldToPage);
 
     /* Set MM_TEXT */
     pdcattr->iMapMode = MM_TEXT;
@@ -1556,7 +1556,7 @@ end:
     pdcattr->ptlViewportOrg.y = ptViewportOrg.y;
 
     /* Restore the world transform */
-    XForm2MatrixS(&dc->dclevel.mxWorldToPage, &xform);
+    XForm2MatrixS(&dc->pdcattr->mxWorldToPage, &xform);
 
     /* If we've moved the current point then get its new position
        which will be in device (MM_TEXT) co-ords, convert it to

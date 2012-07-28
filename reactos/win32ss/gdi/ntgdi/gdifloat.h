@@ -23,8 +23,8 @@ static __inline void INTERNAL_LPTODP_FLOAT(DC *dc, FLOAT_POINT *point)
 {
     FLOAT x, y;
     XFORM xformWorld2Vport;
-    
-    MatrixS2XForm(&xformWorld2Vport, &dc->dclevel.mxWorldToDevice);
+
+    MatrixS2XForm(&xformWorld2Vport, &dc->pdcattr->mxWorldToDevice);
 
     /* Perform the transformation */
     x = point->x;
