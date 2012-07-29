@@ -31,6 +31,7 @@ Revision History:
 #include "ioevent.h"
 
 NTSTATUS
+NTAPI
 DiskDetermineMediaTypes(
     IN PDEVICE_OBJECT Fdo,
     IN PIRP     Irp,
@@ -41,18 +42,21 @@ DiskDetermineMediaTypes(
     );
 
 PPARTITION_INFORMATION_EX
+NTAPI
 DiskPdoFindPartitionEntry(
     IN PPHYSICAL_DEVICE_EXTENSION Pdo,
     IN PDRIVE_LAYOUT_INFORMATION_EX LayoutInfo
     );
 
 PPARTITION_INFORMATION_EX
+NTAPI
 DiskFindAdjacentPartition(
     IN PDRIVE_LAYOUT_INFORMATION_EX LayoutInfo,
     IN PPARTITION_INFORMATION_EX BasePartition
     );
 
 PPARTITION_INFORMATION_EX
+NTAPI
 DiskFindContainingPartition(
     IN PDRIVE_LAYOUT_INFORMATION_EX LayoutInfo,
     IN PPARTITION_INFORMATION_EX BasePartition,
@@ -60,72 +64,84 @@ DiskFindContainingPartition(
     );
 
 NTSTATUS
+NTAPI
 DiskIoctlCreateDisk(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
     );
 
 NTSTATUS
+NTAPI
 DiskIoctlGetDriveLayout(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
     );
 
 NTSTATUS
+NTAPI
 DiskIoctlGetDriveLayoutEx(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
     );
 
 NTSTATUS
+NTAPI
 DiskIoctlSetDriveLayout(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
     );
 
 NTSTATUS
+NTAPI
 DiskIoctlSetDriveLayoutEx(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
     );
 
 NTSTATUS
+NTAPI
 DiskIoctlGetPartitionInfo(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
     );
 
 NTSTATUS
+NTAPI
 DiskIoctlGetPartitionInfoEx(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
     );
 
 NTSTATUS
+NTAPI
 DiskIoctlGetLengthInfo(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
     );
 
 NTSTATUS
+NTAPI
 DiskIoctlSetPartitionInfo(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
     );
 
 NTSTATUS
+NTAPI
 DiskIoctlSetPartitionInfoEx(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
     );
 
 NTSTATUS
+NTAPI
 DiskIoctlSetPartitionInfoEx(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
     );
 
 NTSTATUS
+NTAPI
 DiskIoctlGetDriveGeometryEx(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
@@ -171,7 +187,6 @@ const GUID GUID_NULL = { 0 };
 #define DiskCompareGuid(_First,_Second) \
     (memcmp ((_First),(_Second), sizeof (GUID)))
 
-
 NTSTATUS
 NTAPI
 DriverEntry(
@@ -342,8 +357,8 @@ Return Value:
 
 } // end DriverEntry()
 
-
 VOID
+NTAPI
 DiskUnload(
     IN PDRIVER_OBJECT DriverObject
     )
@@ -356,8 +371,8 @@ DiskUnload(
     return;
 }
 
-
 NTSTATUS
+NTAPI
 DiskCreateFdo(
     IN PDRIVER_OBJECT DriverObject,
     IN PDEVICE_OBJECT PhysicalDeviceObject,
@@ -393,8 +408,8 @@ Return Value:
 
 {
     CCHAR          ntNameBuffer[MAXIMUM_FILENAME_LENGTH];
-    STRING         ntNameString;
-    UNICODE_STRING ntUnicodeString;
+    //STRING         ntNameString;
+    //UNICODE_STRING ntUnicodeString;
 
     PUCHAR         deviceName = NULL;
 
@@ -407,8 +422,8 @@ Return Value:
     PDEVICE_OBJECT deviceObject = NULL;
 
     PFUNCTIONAL_DEVICE_EXTENSION fdoExtension;
-    STORAGE_PROPERTY_ID propertyId;
-    PSTORAGE_DEVICE_DESCRIPTOR deviceDescriptor;
+    //STORAGE_PROPERTY_ID propertyId;
+    //PSTORAGE_DEVICE_DESCRIPTOR deviceDescriptor;
 
     PAGED_CODE();
 
@@ -628,8 +643,8 @@ DiskCreateFdoExit:
     return(status);
 }
 
-
 NTSTATUS
+NTAPI
 DiskReadWriteVerification(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
@@ -742,9 +757,8 @@ Return Value:
 
 } // end DiskReadWrite()
 
-
-
 NTSTATUS
+NTAPI
 DiskDetermineMediaTypes(
     IN PDEVICE_OBJECT Fdo,
     IN PIRP     Irp,
@@ -777,8 +791,8 @@ Return Value:
 
 {
     PFUNCTIONAL_DEVICE_EXTENSION fdoExtension = Fdo->DeviceExtension;
-    PPHYSICAL_DEVICE_EXTENSION pdoExtension = Fdo->DeviceExtension;
-    PCOMMON_DEVICE_EXTENSION   commonExtension = Fdo->DeviceExtension;
+    //PPHYSICAL_DEVICE_EXTENSION pdoExtension = Fdo->DeviceExtension;
+    //PCOMMON_DEVICE_EXTENSION   commonExtension = Fdo->DeviceExtension;
     PIO_STACK_LOCATION         irpStack = IoGetCurrentIrpStackLocation(Irp);
 
     PGET_MEDIA_TYPES  mediaTypes = Irp->AssociatedIrp.SystemBuffer;
@@ -1008,8 +1022,8 @@ Return Value:
 
 }
 
-
 NTSTATUS
+NTAPI
 DiskDeviceControl(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp
@@ -1041,7 +1055,7 @@ Return Value:
 
 {
     PFUNCTIONAL_DEVICE_EXTENSION fdoExtension = DeviceObject->DeviceExtension;
-    PPHYSICAL_DEVICE_EXTENSION pdoExtension = DeviceObject->DeviceExtension;
+    //PPHYSICAL_DEVICE_EXTENSION pdoExtension = DeviceObject->DeviceExtension;
     PCOMMON_DEVICE_EXTENSION commonExtension = DeviceObject->DeviceExtension;
 
     PIO_STACK_LOCATION     irpStack = IoGetCurrentIrpStackLocation(Irp);
@@ -2772,7 +2786,7 @@ Retry:
         PDRIVE_LAYOUT_INFORMATION_EX layoutInfo;
         PPARTITION_INFORMATION_EX pdoPartition;
         PPARTITION_INFORMATION_EX containerPartition;
-        ULONG partitionIndex;
+        //ULONG partitionIndex;
 
         DebugPrint((2, "IOCTL_DISK_GROW_PARTITION to device %p through "
                        "irp %p\n",
@@ -2940,16 +2954,16 @@ Retry:
         sibling = commonExtension->ChildList;
 
         while(sibling != NULL) {
-            LARGE_INTEGER sibStoppingOffset;
+            //LARGE_INTEGER sibStoppingOffset;
             PCOMMON_DEVICE_EXTENSION siblingExtension;
 
             siblingExtension = &(sibling->CommonExtension);
 
             ASSERT( siblingExtension );
 
-            sibStoppingOffset.QuadPart =
+            /* sibStoppingOffset.QuadPart =
                 (siblingExtension->StartingOffset.QuadPart +
-                 siblingExtension->PartitionLength.QuadPart - 1);
+                 siblingExtension->PartitionLength.QuadPart - 1); */
 
             //
             // Only check the siblings that start beyond the new partition
@@ -3267,8 +3281,8 @@ defaultHandler:
 
 } // end DiskDeviceControl()
 
-
 NTSTATUS
+NTAPI
 DiskShutdownFlush (
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
@@ -3457,8 +3471,8 @@ Return Value:
     return STATUS_PENDING;
 } // end DiskShutdown()
 
-
 NTSTATUS
+NTAPI
 DiskModeSelect(
     IN PDEVICE_OBJECT Fdo,
     IN PCHAR ModeSelectBuffer,
@@ -3595,11 +3609,11 @@ Retry:
     return status;
 } // end DiskModeSelect()
 
-
 //
 // This routine is structured as a work-item routine
 //
 VOID
+NTAPI
 DisableWriteCache(
     IN PDEVICE_OBJECT Fdo,
     IN PIO_WORKITEM WorkItem
@@ -3667,11 +3681,11 @@ DisableWriteCache(
     IoFreeWorkItem(WorkItem);
 }
 
-
 //
 // This routine is structured as a work-item routine
 //
 VOID
+NTAPI
 DiskIoctlVerify(
     IN PDEVICE_OBJECT Fdo,
     IN PDISK_VERIFY_WORKITEM_CONTEXT Context
@@ -3785,9 +3799,8 @@ DiskIoctlVerify(
     ExFreePool(Context);
 }
 
-
-
 VOID
+NTAPI
 DiskFdoProcessError(
     PDEVICE_OBJECT Fdo,
     PSCSI_REQUEST_BLOCK Srb,
@@ -3992,8 +4005,8 @@ Return Value:
     return;
 }
 
-
 VOID
+NTAPI
 DiskSetSpecialHacks(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     IN ULONG_PTR Data
@@ -4095,8 +4108,8 @@ Return Value:
     return;
 }
 
-
 VOID
+NTAPI
 DiskScanRegistryForSpecial(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension
     )
@@ -4145,8 +4158,8 @@ Return Value:
     }
 }
 
-
 VOID
+NTAPI
 ResetBus(
     IN PDEVICE_OBJECT Fdo
     )
@@ -4255,8 +4268,8 @@ Return Value:
 
 } // end ResetBus()
 
-
 NTSTATUS
+NTAPI
 DiskQueryPnpCapabilities(
     IN PDEVICE_OBJECT DeviceObject,
     IN PDEVICE_CAPABILITIES Capabilities
@@ -4264,7 +4277,7 @@ DiskQueryPnpCapabilities(
 
 {
     PCOMMON_DEVICE_EXTENSION commonExtension = DeviceObject->DeviceExtension;
-    PDISK_DATA diskData = commonExtension->DriverData;
+    //PDISK_DATA diskData = commonExtension->DriverData;
 
     PAGED_CODE();
 
@@ -4275,8 +4288,7 @@ DiskQueryPnpCapabilities(
         return STATUS_NOT_IMPLEMENTED;
     } else {
 
-        PPHYSICAL_DEVICE_EXTENSION physicalExtension =
-            DeviceObject->DeviceExtension;
+        //PPHYSICAL_DEVICE_EXTENSION physicalExtension = DeviceObject->DeviceExtension;
 
         Capabilities->SilentInstall = 1;
         Capabilities->RawDeviceOK = 1;
@@ -4298,8 +4310,8 @@ DiskQueryPnpCapabilities(
     return STATUS_SUCCESS;
 }
 
-
 NTSTATUS
+NTAPI
 DiskGetCacheInformation(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     IN PDISK_CACHE_INFORMATION CacheInfo
@@ -4311,7 +4323,7 @@ DiskGetCacheInformation(
 
     ULONG length;
 
-    NTSTATUS status;
+    //NTSTATUS status;
 
     PAGED_CODE();
 
@@ -4416,8 +4428,8 @@ DiskGetCacheInformation(
     return STATUS_SUCCESS;
 }
 
-
 NTSTATUS
+NTAPI
 DiskSetCacheInformation(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     IN PDISK_CACHE_INFORMATION CacheInfo
@@ -4615,8 +4627,8 @@ DiskSetCacheInformation(
     return status;
 }
 
-
 PPARTITION_INFORMATION_EX
+NTAPI
 DiskPdoFindPartitionEntry(
     IN PPHYSICAL_DEVICE_EXTENSION Pdo,
     IN PDRIVE_LAYOUT_INFORMATION_EX LayoutInfo
@@ -4679,8 +4691,8 @@ DiskPdoFindPartitionEntry(
     return NULL;
 }
 
-
 PPARTITION_INFORMATION_EX
+NTAPI
 DiskFindAdjacentPartition(
     IN PDRIVE_LAYOUT_INFORMATION_EX LayoutInfo,
     IN PPARTITION_INFORMATION_EX BasePartition
@@ -4751,8 +4763,8 @@ DiskFindAdjacentPartition(
     return adjacentPartition;
 }
 
-
 PPARTITION_INFORMATION_EX
+NTAPI
 DiskFindContainingPartition(
     IN PDRIVE_LAYOUT_INFORMATION_EX LayoutInfo,
     IN PPARTITION_INFORMATION_EX BasePartition,
@@ -4846,8 +4858,8 @@ DiskFindContainingPartition(
     return containerPartition;
 }
 
-
 NTSTATUS
+NTAPI
 DiskGetInfoExceptionInformation(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     IN PMODE_INFO_EXCEPTIONS ReturnPageData
@@ -4938,8 +4950,8 @@ DiskGetInfoExceptionInformation(
     return(status);
 }
 
-
 NTSTATUS
+NTAPI
 DiskSetInfoExceptionInformation(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     IN PMODE_INFO_EXCEPTIONS PageData
@@ -4976,7 +4988,7 @@ DiskSetInfoExceptionInformation(
 
 #if 0
 #if defined(_X86_)
-
+
 NTSTATUS
 DiskQuerySuggestedLinkName(
     IN PDEVICE_OBJECT DeviceObject,
@@ -5155,8 +5167,8 @@ Return Value:
 #endif
 #endif
 
-
 NTSTATUS
+NTAPI
 DiskIoctlCreateDisk(
     IN OUT PDEVICE_OBJECT DeviceObject,
     IN OUT PIRP Irp
@@ -5186,7 +5198,7 @@ Return Values:
     PCOMMON_DEVICE_EXTENSION commonExtension;
     PFUNCTIONAL_DEVICE_EXTENSION fdoExtension;
     PIO_STACK_LOCATION irpStack;
-    PDISK_DATA diskData;
+    //PDISK_DATA diskData;
     PCREATE_DISK createDiskInfo;
 
 
@@ -5203,7 +5215,7 @@ Return Values:
     fdoExtension = DeviceObject->DeviceExtension;
 
     irpStack = IoGetCurrentIrpStackLocation(Irp);
-    diskData = (PDISK_DATA)(commonExtension->DriverData);
+    //diskData = (PDISK_DATA)(commonExtension->DriverData);
 
 
     ASSERT (commonExtension->IsFdo);
@@ -5252,9 +5264,8 @@ Return Values:
     return status;
 }
 
-
-
 NTSTATUS
+NTAPI
 DiskIoctlGetDriveLayout(
     IN OUT PDEVICE_OBJECT DeviceObject,
     IN OUT PIRP Irp
@@ -5288,11 +5299,11 @@ Return Values:
     PDRIVE_LAYOUT_INFORMATION partitionList;
     PDRIVE_LAYOUT_INFORMATION_EX partitionListEx;
     PFUNCTIONAL_DEVICE_EXTENSION fdoExtension;
-    PPHYSICAL_DEVICE_EXTENSION pdoExtension;
+    //PPHYSICAL_DEVICE_EXTENSION pdoExtension;
     PCOMMON_DEVICE_EXTENSION commonExtension;
     PIO_STACK_LOCATION irpStack;
     PDISK_DATA diskData;
-    BOOLEAN invalidateBusRelations;
+    //BOOLEAN invalidateBusRelations;
 
 
     PAGED_CODE ();
@@ -5408,9 +5419,8 @@ Return Values:
     return status;
 }
 
-
-
 NTSTATUS
+NTAPI
 DiskIoctlGetDriveLayoutEx(
     IN OUT PDEVICE_OBJECT DeviceObject,
     IN OUT PIRP Irp
@@ -5443,7 +5453,7 @@ Return Values:
     ULONG size;
     PDRIVE_LAYOUT_INFORMATION_EX partitionList;
     PFUNCTIONAL_DEVICE_EXTENSION fdoExtension;
-    PPHYSICAL_DEVICE_EXTENSION pdoExtension;
+    //PPHYSICAL_DEVICE_EXTENSION pdoExtension;
     PCOMMON_DEVICE_EXTENSION commonExtension;
     PIO_STACK_LOCATION irpStack;
     PDISK_DATA diskData;
@@ -5460,7 +5470,7 @@ Return Values:
     //
 
     fdoExtension = DeviceObject->DeviceExtension;
-    pdoExtension = DeviceObject->DeviceExtension;
+    //pdoExtension = DeviceObject->DeviceExtension;
     commonExtension = DeviceObject->DeviceExtension;
 
     irpStack = IoGetCurrentIrpStackLocation(Irp);
@@ -5532,8 +5542,8 @@ Return Values:
     return status;
 }
 
-
 NTSTATUS
+NTAPI
 DiskIoctlSetDriveLayout(
     IN OUT PDEVICE_OBJECT DeviceObject,
     IN OUT PIRP Irp
@@ -5564,11 +5574,11 @@ Return Values:
     PDRIVE_LAYOUT_INFORMATION partitionList;
     PDRIVE_LAYOUT_INFORMATION_EX partitionListEx;
     PFUNCTIONAL_DEVICE_EXTENSION fdoExtension;
-    PPHYSICAL_DEVICE_EXTENSION pdoExtension;
+    //PPHYSICAL_DEVICE_EXTENSION pdoExtension;
     PCOMMON_DEVICE_EXTENSION commonExtension;
     PIO_STACK_LOCATION irpStack;
     PDISK_DATA diskData;
-    BOOLEAN invalidateBusRelations;
+    //BOOLEAN invalidateBusRelations;
     SIZE_T listSize;
     SIZE_T inputBufferLength;
     SIZE_T outputBufferLength;
@@ -5585,7 +5595,7 @@ Return Values:
     partitionListEx = NULL;
     partitionList = NULL;
     fdoExtension = DeviceObject->DeviceExtension;
-    pdoExtension = DeviceObject->DeviceExtension;
+    //pdoExtension = DeviceObject->DeviceExtension;
     commonExtension = DeviceObject->DeviceExtension;
 
     irpStack = IoGetCurrentIrpStackLocation(Irp);
@@ -5691,9 +5701,8 @@ Return Values:
     return status;
 }
 
-
-
 NTSTATUS
+NTAPI
 DiskIoctlSetDriveLayoutEx(
     IN OUT PDEVICE_OBJECT DeviceObject,
     IN OUT PIRP Irp
@@ -5728,7 +5737,7 @@ Return Values:
 
     PIO_STACK_LOCATION irpStack;
     PDISK_DATA diskData;
-    BOOLEAN invalidateBusRelations;
+    //BOOLEAN invalidateBusRelations;
     SIZE_T listSize;
     SIZE_T inputBufferLength;
     SIZE_T outputBufferLength;
@@ -5849,8 +5858,8 @@ Return Values:
     return status;
 }
 
-
 NTSTATUS
+NTAPI
 DiskIoctlGetPartitionInfo(
     IN OUT PDEVICE_OBJECT DeviceObject,
     IN OUT PIRP Irp
@@ -6002,8 +6011,8 @@ Return Values:
     return status;
 }
 
-
 NTSTATUS
+NTAPI
 DiskIoctlGetPartitionInfoEx(
     IN OUT PDEVICE_OBJECT DeviceObject,
     IN OUT PIRP Irp
@@ -6126,9 +6135,8 @@ DiskIoctlGetPartitionInfoEx(
     return status;
 }
 
-
-
 NTSTATUS
+NTAPI
 DiskIoctlGetLengthInfo(
     IN OUT PDEVICE_OBJECT DeviceObject,
     IN OUT PIRP Irp
@@ -6136,7 +6144,7 @@ DiskIoctlGetLengthInfo(
 {
     NTSTATUS status;
     PIO_STACK_LOCATION irpStack;
-    PDISK_DATA diskData;
+    //PDISK_DATA diskData;
     PGET_LENGTH_INFORMATION lengthInfo;
     PFUNCTIONAL_DEVICE_EXTENSION p0Extension;
     PCOMMON_DEVICE_EXTENSION commonExtension;
@@ -6156,7 +6164,7 @@ DiskIoctlGetLengthInfo(
 
     commonExtension = DeviceObject->DeviceExtension;
     irpStack = IoGetCurrentIrpStackLocation(Irp);
-    diskData = (PDISK_DATA)(commonExtension->DriverData);
+    //diskData = (PDISK_DATA)(commonExtension->DriverData);
     p0Extension = commonExtension->PartitionZeroExtension;
     partitionZeroData = ((PDISK_DATA) p0Extension->CommonExtension.DriverData);
 
@@ -6221,9 +6229,8 @@ DiskIoctlGetLengthInfo(
     return status;
 }
 
-
-
 NTSTATUS
+NTAPI
 DiskIoctlSetPartitionInfo(
     IN OUT PDEVICE_OBJECT DeviceObject,
     IN OUT PIRP Irp
@@ -6298,8 +6305,8 @@ DiskIoctlSetPartitionInfo(
     return status;
 }
 
-
 NTSTATUS
+NTAPI
 DiskIoctlSetPartitionInfoEx(
     IN OUT PDEVICE_OBJECT DeviceObject,
     IN OUT PIRP Irp
@@ -6394,9 +6401,8 @@ typedef struct _DISK_GEOMETRY_EX_INTERNAL {
 } DISK_GEOMETRY_EX_INTERNAL, *PDISK_GEOMETRY_EX_INTERNAL;
 
 
-
-
 NTSTATUS
+NTAPI
 DiskIoctlGetDriveGeometryEx(
     IN PDEVICE_OBJECT DeviceObject,
     IN OUT PIRP Irp
@@ -6573,4 +6579,3 @@ Return Value:
 
     return status;
 }
-

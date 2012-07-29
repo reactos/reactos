@@ -28,22 +28,26 @@ Revision History:
 #if defined (_X86_)
 
 DISK_GEOMETRY_SOURCE
+NTAPI
 DiskUpdateGeometry(
     IN PFUNCTIONAL_DEVICE_EXTENSION DeviceExtension
     );
 
 NTSTATUS
+NTAPI
 DiskUpdateRemovableGeometry (
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension
     );
 
 VOID
+NTAPI
 DiskScanBusDetectInfo(
     IN PDRIVER_OBJECT DriverObject,
     IN HANDLE BusKey
     );
 
 NTSTATUS
+NTAPI
 DiskSaveBusDetectInfo(
     IN PDRIVER_OBJECT DriverObject,
     IN HANDLE TargetKey,
@@ -51,12 +55,14 @@ DiskSaveBusDetectInfo(
     );
 
 NTSTATUS
+NTAPI
 DiskSaveGeometryDetectInfo(
     IN PDRIVER_OBJECT DriverObject,
     IN HANDLE HardwareKey
     );
 
 NTSTATUS
+NTAPI
 DiskGetPortGeometry(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     OUT PDISK_GEOMETRY Geometry
@@ -94,8 +100,8 @@ ULONG DetectInfoUsedCount = 0;
 #endif
 
 
-
 NTSTATUS
+NTAPI
 DiskSaveDetectInfo(
     PDRIVER_OBJECT DriverObject
     )
@@ -208,8 +214,8 @@ Return Value:
     return STATUS_SUCCESS;
 }
 
-
 VOID
+NTAPI
 DiskCleanupDetectInfo(
     IN PDRIVER_OBJECT DriverObject
     )
@@ -237,8 +243,8 @@ Return Value:
     return;
 }
 
-
 NTSTATUS
+NTAPI
 DiskSaveGeometryDetectInfo(
     IN PDRIVER_OBJECT DriverObject,
     IN HANDLE HardwareKey
@@ -363,8 +369,8 @@ DiskSaveGeometryDetectInfo(
     return STATUS_SUCCESS;
 }
 
-
 VOID
+NTAPI
 DiskScanBusDetectInfo(
     IN PDRIVER_OBJECT DriverObject,
     IN HANDLE BusKey
@@ -520,8 +526,8 @@ Return Value:
     return;
 }
 
-
 NTSTATUS
+NTAPI
 DiskSaveBusDetectInfo(
     IN PDRIVER_OBJECT DriverObject,
     IN HANDLE TargetKey,
@@ -681,8 +687,8 @@ Return Value:
     return STATUS_SUCCESS;
 }
 
-
 DISK_GEOMETRY_SOURCE
+NTAPI
 DiskUpdateGeometry(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension
     )
@@ -769,7 +775,7 @@ Return Value:
         ULONG sectorsPerTrack;
         ULONG tracksPerCylinder;
 
-        ULONG sectors;
+        //ULONG sectors;
         ULONG length;
 
         //
@@ -882,8 +888,8 @@ Return Value:
     return diskData->GeometrySource;
 }
 
-
 NTSTATUS
+NTAPI
 DiskUpdateRemovableGeometry (
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension
     )
@@ -941,8 +947,8 @@ Return Value:
     return status;
 }
 
-
 NTSTATUS
+NTAPI
 DiskGetPortGeometry(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     OUT PDISK_GEOMETRY Geometry
@@ -1019,9 +1025,8 @@ Return Value:
     return status;
 }
 
-
-
 NTSTATUS
+NTAPI
 DiskReadDriveCapacity(
     IN PDEVICE_OBJECT Fdo
     )
@@ -1049,8 +1054,8 @@ Return Value:
 
 {
     PFUNCTIONAL_DEVICE_EXTENSION fdoExtension = Fdo->DeviceExtension;
-    PDISK_DATA diskData = fdoExtension->CommonExtension.DriverData;
-    DISK_GEOMETRY_SOURCE diskGeometrySource = DiskGeometryUnknown;
+    //PDISK_DATA diskData = fdoExtension->CommonExtension.DriverData;
+    //DISK_GEOMETRY_SOURCE diskGeometrySource = DiskGeometryUnknown;
     NTSTATUS status;
 
     ASSERT_FDO(Fdo);
@@ -1058,7 +1063,7 @@ Return Value:
     if (TEST_FLAG(Fdo->Characteristics, FILE_REMOVABLE_MEDIA)) {
         DiskUpdateRemovableGeometry(fdoExtension);
     } else {
-        diskGeometrySource = DiskUpdateGeometry(fdoExtension);
+        /* diskGeometrySource =*/ DiskUpdateGeometry(fdoExtension);
     }
 
     status = ClassReadDriveCapacity(Fdo);
@@ -1066,9 +1071,8 @@ Return Value:
     return status;
 }
 
-
-
 VOID
+NTAPI
 DiskDriverReinitialization(
     IN PDRIVER_OBJECT DriverObject,
     IN PVOID Nothing,
@@ -1238,7 +1242,7 @@ Return Value:
         ULONG sectorsPerTrack;
         ULONG tracksPerCylinder;
 
-        ULONG sectors;
+        //ULONG sectors;
         ULONG length;
 
         //
@@ -1321,8 +1325,8 @@ Return Value:
     return;
 }
 
-
 NTSTATUS
+NTAPI
 DiskGetDetectInfo(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     OUT PDISK_DETECTION_INFO DetectInfo
@@ -1408,8 +1412,8 @@ Return Value:
     return (found ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL);
 }
 
-
 NTSTATUS
+NTAPI
 DiskReadSignature(
     IN PDEVICE_OBJECT Fdo
     )
@@ -1466,5 +1470,3 @@ Return Value:
 }
 
 #endif // defined(_X86_)
-
-

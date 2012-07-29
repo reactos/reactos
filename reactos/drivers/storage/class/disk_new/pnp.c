@@ -39,8 +39,8 @@ extern NTSYSAPI ULONG InitSafeBootMode;
 
 #endif
 
-
 NTSTATUS
+NTAPI
 DiskAddDevice(
     IN PDRIVER_OBJECT DriverObject,
     IN PDEVICE_OBJECT PhysicalDeviceObject
@@ -185,9 +185,8 @@ Return Value:
 
 } // end DiskAddDevice()
 
-
-
 NTSTATUS
+NTAPI
 DiskInitFdo(
     IN PDEVICE_OBJECT Fdo
     )
@@ -214,16 +213,16 @@ Return Value:
 
     PDISK_DATA diskData = (PDISK_DATA) fdoExtension->CommonExtension.DriverData;
 
-    ULONG srbFlags = 0;
+    //ULONG srbFlags = 0;
 
     ULONG timeOut = 0;
 
     ULONG bytesPerSector;
-    UCHAR sectorShift;
+    //UCHAR sectorShift;
 
-    BOOLEAN dmActive = FALSE;
+    //BOOLEAN dmActive = FALSE;
     PULONG dmSkew;
-    ULONG dmByteSkew;
+    //ULONG dmByteSkew;
 
     NTSTATUS status;
 
@@ -279,7 +278,7 @@ Return Value:
 
     DiskScanRegistryForSpecial(fdoExtension);
 
-    srbFlags = fdoExtension->SrbFlags;
+    //srbFlags = fdoExtension->SrbFlags;
 
     //
     // Clear buffer for drive geometry.
@@ -413,7 +412,7 @@ Return Value:
         bytesPerSector = fdoExtension->DiskGeometry.BytesPerSector = 512;
     }
 
-    sectorShift = fdoExtension->SectorShift;
+    //sectorShift = fdoExtension->SectorShift;
 
     //
     // Determine is DM Driver is loaded on an IDE drive that is
@@ -443,8 +442,8 @@ Return Value:
         // blown away.
         //
 
-        dmActive = TRUE;
-        dmByteSkew = fdoExtension->DMByteSkew;
+        //dmActive = TRUE;
+        //dmByteSkew = fdoExtension->DMByteSkew;
 
     }
 
@@ -557,8 +556,8 @@ Return Value:
 
 } // end DiskInitFdo()
 
-
 NTSTATUS
+NTAPI
 DiskInitPdo(
     IN PDEVICE_OBJECT Pdo
     )
@@ -615,8 +614,8 @@ Routine Description:
     return STATUS_SUCCESS;
 }
 
-
 NTSTATUS
+NTAPI
 DiskStartPdo(
     IN PDEVICE_OBJECT Pdo
     )
@@ -637,6 +636,7 @@ Routine Description:
 }
 
 NTSTATUS
+NTAPI
 DiskStopDevice(
     IN PDEVICE_OBJECT DeviceObject,
     IN UCHAR Type
@@ -654,8 +654,8 @@ DiskStopDevice(
     return STATUS_SUCCESS;
 }
 
-
 NTSTATUS
+NTAPI
 DiskQueryId(
     IN PDEVICE_OBJECT Pdo,
     IN BUS_QUERY_ID_TYPE IdType,
@@ -695,7 +695,7 @@ Return Value:
 {
     ANSI_STRING ansiIdString;
 
-    NTSTATUS status;
+    //NTSTATUS status;
 
     PAGED_CODE();
     ASSERT_PDO(Pdo);
@@ -715,7 +715,7 @@ Return Value:
 
     if(IdType == BusQueryInstanceID) {
 
-        PPHYSICAL_DEVICE_EXTENSION pdoExtension = Pdo->DeviceExtension;
+        //PPHYSICAL_DEVICE_EXTENSION pdoExtension = Pdo->DeviceExtension;
         PCOMMON_DEVICE_EXTENSION commonExtension = Pdo->DeviceExtension;
         PDISK_DATA diskData = commonExtension->PartitionZeroExtension->CommonExtension.DriverData;
 
@@ -778,8 +778,8 @@ Return Value:
     return STATUS_NOT_IMPLEMENTED;
 }
 
-
 NTSTATUS
+NTAPI
 DiskGenerateDeviceName(
     IN BOOLEAN IsFdo,
     IN ULONG DeviceNumber,
@@ -859,8 +859,8 @@ Return Value:
     return STATUS_SUCCESS;
 }
 
-
 VOID
+NTAPI
 DiskCreateSymbolicLinks(
     IN PDEVICE_OBJECT DeviceObject
     )
@@ -983,8 +983,8 @@ Return Value:
     return;
 }
 
-
 VOID
+NTAPI
 DiskDeleteSymbolicLinks(
     IN PDEVICE_OBJECT DeviceObject
     )
@@ -1049,8 +1049,8 @@ Return Value:
     return;
 }
 
-
 NTSTATUS
+NTAPI
 DiskRemoveDevice(
     IN PDEVICE_OBJECT DeviceObject,
     IN UCHAR Type
@@ -1132,7 +1132,7 @@ Return Value:
 
     } else {
 
-        PPHYSICAL_DEVICE_EXTENSION pdoExtension = DeviceObject->DeviceExtension;
+        //PPHYSICAL_DEVICE_EXTENSION pdoExtension = DeviceObject->DeviceExtension;
 
     }
 
@@ -1157,8 +1157,8 @@ Return Value:
     return STATUS_SUCCESS;
 }
 
-
 NTSTATUS
+NTAPI
 DiskStartFdo(
     IN PDEVICE_OBJECT Fdo
     )
@@ -1400,4 +1400,3 @@ Return Value:
     return STATUS_SUCCESS;
 
 } // end DiskStartFdo()
-

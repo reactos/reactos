@@ -45,6 +45,7 @@ ULONG DiskDisableGpt = TRUE;
 #endif
 
 NTSTATUS
+NTAPI
 DiskReadPartitionTableEx(
     IN PFUNCTIONAL_DEVICE_EXTENSION Fdo,
     IN BOOLEAN BypassCache,
@@ -193,8 +194,8 @@ Return Value:
     return status;
 }
 
-
 NTSTATUS
+NTAPI
 DiskWritePartitionTableEx(
     IN PFUNCTIONAL_DEVICE_EXTENSION Fdo,
     IN PDRIVE_LAYOUT_INFORMATION_EX DriveLayout
@@ -240,6 +241,7 @@ Return Value:
 }
 
 NTSTATUS
+NTAPI
 DiskSetPartitionInformationEx(
     IN PFUNCTIONAL_DEVICE_EXTENSION Fdo,
     IN ULONG PartitionNumber,
@@ -264,6 +266,7 @@ DiskSetPartitionInformationEx(
 }
 
 NTSTATUS
+NTAPI
 DiskSetPartitionInformation(
     IN PFUNCTIONAL_DEVICE_EXTENSION Fdo,
     IN ULONG SectorSize,
@@ -284,6 +287,7 @@ DiskSetPartitionInformation(
 }
 
 BOOLEAN
+NTAPI
 DiskInvalidatePartitionTable(
     IN PFUNCTIONAL_DEVICE_EXTENSION Fdo,
     IN BOOLEAN PartitionLockHeld
@@ -309,6 +313,7 @@ DiskInvalidatePartitionTable(
 }
 
 NTSTATUS
+NTAPI
 DiskVerifyPartitionTable(
     IN PFUNCTIONAL_DEVICE_EXTENSION Fdo,
     IN BOOLEAN FixErrors
@@ -324,4 +329,3 @@ DiskVerifyPartitionTable(
 
     return IoVerifyPartitionTable(Fdo->DeviceObject, FixErrors);
 }
-

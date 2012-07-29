@@ -36,6 +36,7 @@ Revision History:
 #endif
 
 PDRIVE_LAYOUT_INFORMATION
+NTAPI
 DiskConvertExtendedToLayout(
     IN CONST PDRIVE_LAYOUT_INFORMATION_EX LayoutEx
     )
@@ -97,6 +98,7 @@ DiskConvertExtendedToLayout(
 }
 
 VOID
+NTAPI
 DiskConvertPartitionToExtended(
     IN PPARTITION_INFORMATION Partition,
     OUT PPARTITION_INFORMATION_EX PartitionEx
@@ -140,8 +142,8 @@ Return Values:
     PartitionEx->Mbr.HiddenSectors = Partition->HiddenSectors;
 }
 
-
-PDRIVE_LAYOUT_INFORMATION_EX 
+PDRIVE_LAYOUT_INFORMATION_EX
+NTAPI
 DiskConvertLayoutToExtended(
     IN CONST PDRIVE_LAYOUT_INFORMATION Layout
     )
@@ -163,7 +165,7 @@ Return Values:
     be freed by the callee using ExFreePool.
 
 --*/
-    
+
 {
     ULONG i;
     ULONG size;
@@ -216,9 +218,8 @@ Return Values:
     return layoutEx;
 }
 
-
-
 NTSTATUS
+NTAPI
 DiskEnumerateDevice(
     IN PDEVICE_OBJECT Fdo
     )
@@ -249,13 +250,13 @@ Return Value:
     PCOMMON_DEVICE_EXTENSION commonExtension = Fdo->DeviceExtension;
     PFUNCTIONAL_DEVICE_EXTENSION fdoExtension = Fdo->DeviceExtension;
 
-    PPHYSICAL_DEVICE_EXTENSION pdoExtension = NULL;
+    //PPHYSICAL_DEVICE_EXTENSION pdoExtension = NULL;
 
     PDISK_DATA diskData = (PDISK_DATA) commonExtension->DriverData;
 
-    PDEVICE_OBJECT pdo = NULL;
+    //PDEVICE_OBJECT pdo = NULL;
 
-    ULONG numberListElements = 0;
+    //ULONG numberListElements = 0;
 
     PDRIVE_LAYOUT_INFORMATION_EX partitionList;
 
@@ -358,8 +359,8 @@ Return Value:
 
 } // end DiskEnumerateDevice()
 
-
 VOID
+NTAPI
 DiskUpdateRemovablePartitions(
     IN PDEVICE_OBJECT Fdo,
     IN OUT PDRIVE_LAYOUT_INFORMATION_EX PartitionList
@@ -395,7 +396,7 @@ Return Value:
 
     ULONG partitionNumber;
     ULONG partitionOrdinal = 0;
-    ULONG newPartitionNumber;
+    //ULONG newPartitionNumber;
 
     PDISK_DATA pdoData;
     NTSTATUS status;
@@ -586,8 +587,8 @@ Return Value:
     return;
 }
 
-
 VOID
+NTAPI
 DiskUpdatePartitions(
     IN PDEVICE_OBJECT Fdo,
     IN OUT PDRIVE_LAYOUT_INFORMATION_EX PartitionList
@@ -828,7 +829,7 @@ Return Value:
 
         } else {
 
-            PDEVICE_OBJECT nextPdo;
+            //PDEVICE_OBJECT nextPdo;
 
             DebugPrint ((1, "DiskUpdatePartitions: Deleting %wZ\n",
                             &pdoExtension->CommonExtension.DeviceName));
@@ -1019,8 +1020,8 @@ Return Value:
     return;
 }
 
-
 NTSTATUS
+NTAPI
 DiskCreatePdo(
     IN PDEVICE_OBJECT Fdo,
     IN ULONG PartitionOrdinal,
@@ -1208,11 +1209,8 @@ Return Value:
     return status;
 }
 
-
-
-
-
 VOID
+NTAPI
 DiskAcquirePartitioningLock(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension
     )
@@ -1231,8 +1229,8 @@ DiskAcquirePartitioningLock(
     return;
 }
 
-
 VOID
+NTAPI
 DiskReleasePartitioningLock(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension
     )

@@ -23,30 +23,35 @@ Revision History:
 #include "disk.h"
 
 NTSTATUS
+NTAPI
 DiskSendFailurePredictIoctl(
     PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     PSTORAGE_PREDICT_FAILURE checkFailure
     );
 
 NTSTATUS
+NTAPI
 DiskGetIdentifyInfo(
     PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     PBOOLEAN SupportSmart
     );
 
 NTSTATUS
+NTAPI
 DiskDetectFailurePrediction(
     PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     PFAILURE_PREDICTION_METHOD FailurePredictCapability
     );
 
 NTSTATUS
+NTAPI
 DiskReadFailurePredictThresholds(
     PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     PSTORAGE_FAILURE_PREDICT_THRESHOLDS DiskSmartThresholds
     );
 
 NTSTATUS
+NTAPI
 DiskReadSmartLog(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     IN UCHAR SectorCount,
@@ -55,6 +60,7 @@ DiskReadSmartLog(
     );
 
 NTSTATUS
+NTAPI
 DiskWriteSmartLog(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     IN UCHAR SectorCount,
@@ -62,7 +68,7 @@ DiskWriteSmartLog(
     IN PUCHAR Buffer
     );
 
-void DiskReregWorker(
+void NTAPI DiskReregWorker(
     IN PVOID Context
     );
 
@@ -382,6 +388,7 @@ DiskExecuteSmartDiagnostics(
 
 
 NTSTATUS
+NTAPI
 DiskReadSmartLog(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     IN UCHAR SectorCount,
@@ -433,6 +440,7 @@ DiskReadSmartLog(
 
 
 NTSTATUS
+NTAPI
 DiskWriteSmartLog(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     IN UCHAR SectorCount,
@@ -477,8 +485,9 @@ DiskWriteSmartLog(
     }
     return(status);
 }
-                  
+
 NTSTATUS
+NTAPI
 DiskPerformSmartCommand(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     IN ULONG SrbControlCode,
@@ -526,8 +535,8 @@ Return Value:
     PDISK_DATA diskData = (PDISK_DATA)(commonExtension->DriverData);
     PUCHAR buffer;
     PSENDCMDINPARAMS cmdInParameters;
-    PSENDCMDOUTPARAMS cmdOutParameters;
-    ULONG outBufferSize;
+    //PSENDCMDOUTPARAMS cmdOutParameters;
+    //ULONG outBufferSize;
     NTSTATUS status;
     ULONG availableBufferSize;
     KEVENT event;
@@ -549,7 +558,7 @@ Return Value:
     buffer +=  sizeof(SRB_IO_CONTROL);
 
     cmdInParameters = (PSENDCMDINPARAMS)buffer;
-    cmdOutParameters = (PSENDCMDOUTPARAMS)buffer;
+    //cmdOutParameters = (PSENDCMDOUTPARAMS)buffer;
 
     availableBufferSize = *BufferSize - sizeof(SRB_IO_CONTROL);
 
@@ -776,8 +785,8 @@ Return Value:
     return status;
 }
 
-
 NTSTATUS
+NTAPI
 DiskGetIdentifyInfo(
     PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     PBOOLEAN SupportSmart
@@ -813,12 +822,12 @@ DiskGetIdentifyInfo(
     return status;
 }
 
-
 //
 // FP Ioctl specific routines
 //
 
 NTSTATUS
+NTAPI
 DiskSendFailurePredictIoctl(
     PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     PSTORAGE_PREDICT_FAILURE checkFailure
@@ -865,12 +874,12 @@ DiskSendFailurePredictIoctl(
     return status;
 }
 
-
 //
 // FP type independent routines
 //
 
 NTSTATUS
+NTAPI
 DiskEnableDisableFailurePrediction(
     PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     BOOLEAN Enable
@@ -934,6 +943,7 @@ Return Value:
 }
 
 NTSTATUS
+NTAPI
 DiskEnableDisableFailurePredictPolling(
     PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     BOOLEAN Enable,
@@ -990,8 +1000,8 @@ Return Value:
     return status;
 }
 
-
 NTSTATUS
+NTAPI
 DiskReadFailurePredictStatus(
     PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     PSTORAGE_FAILURE_PREDICT_STATUS DiskSmartStatus
@@ -1067,6 +1077,7 @@ Return Value:
 }
 
 NTSTATUS
+NTAPI
 DiskReadFailurePredictData(
     PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     PSTORAGE_FAILURE_PREDICT_DATA DiskSmartData
@@ -1158,6 +1169,7 @@ Return Value:
 }
 
 NTSTATUS
+NTAPI
 DiskReadFailurePredictThresholds(
     PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     PSTORAGE_FAILURE_PREDICT_THRESHOLDS DiskSmartThresholds
@@ -1239,7 +1251,7 @@ Return Value:
     return status;
 }
 
-void DiskReregWorker(
+void NTAPI DiskReregWorker(
     IN PVOID Context
     )
 {
@@ -1284,7 +1296,7 @@ void DiskReregWorker(
     
 }
 
-NTSTATUS DiskInitializeReregistration(
+NTSTATUS NTAPI DiskInitializeReregistration(
     void
     )
 {
@@ -1303,7 +1315,7 @@ NTSTATUS DiskInitializeReregistration(
     return(STATUS_SUCCESS);
 }
 
-NTSTATUS DiskPostReregisterRequest(
+NTSTATUS NTAPI DiskPostReregisterRequest(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp
     )
@@ -1344,7 +1356,7 @@ NTSTATUS DiskPostReregisterRequest(
     return(status);
 }
 
-NTSTATUS DiskInfoExceptionComplete(
+NTSTATUS NTAPI DiskInfoExceptionComplete(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp,
     PVOID Context
@@ -1361,7 +1373,7 @@ NTSTATUS DiskInfoExceptionComplete(
     ULONG retryInterval;
     ULONG srbStatus;
     BOOLEAN freeLockAndIrp = TRUE;
-    KIRQL oldIrql;
+    //KIRQL oldIrql;
 
     ASSERT(fdoExtension->CommonExtension.IsFdo);
 
@@ -1545,7 +1557,7 @@ NTSTATUS DiskInfoExceptionComplete(
     
 }
 
-NTSTATUS DiskInfoExceptionCheck(
+NTSTATUS NTAPI DiskInfoExceptionCheck(
     PFUNCTIONAL_DEVICE_EXTENSION FdoExtension
     )
 {
@@ -1760,6 +1772,7 @@ NTSTATUS DiskInfoExceptionCheck(
 }
 
 NTSTATUS
+NTAPI
 DiskDetectFailurePrediction(
     PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     PFAILURE_PREDICTION_METHOD FailurePredictCapability
@@ -1799,7 +1812,7 @@ Return Value:
     NTSTATUS status;
     STORAGE_PREDICT_FAILURE checkFailure;
     STORAGE_FAILURE_PREDICT_STATUS diskSmartStatus;
-    BOOLEAN logErr;
+    //BOOLEAN logErr;
 
     PAGED_CODE();
 
@@ -1881,8 +1894,8 @@ Return Value:
     return(STATUS_SUCCESS);
 }
 
-
 NTSTATUS
+NTAPI
 DiskWmiFunctionControl(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
@@ -1931,10 +1944,10 @@ Return Value:
 --*/
 {
     NTSTATUS status = STATUS_SUCCESS;
-    PCOMMON_DEVICE_EXTENSION commonExtension = DeviceObject->DeviceExtension;
+    //PCOMMON_DEVICE_EXTENSION commonExtension = DeviceObject->DeviceExtension;
     PFUNCTIONAL_DEVICE_EXTENSION fdoExtension = DeviceObject->DeviceExtension;
-    PDISK_DATA diskData = (PDISK_DATA)(commonExtension->DriverData);
-    ULONG enableCount;
+    //PDISK_DATA diskData = (PDISK_DATA)(commonExtension->DriverData);
+    //ULONG enableCount;
 
     PAGED_CODE();
 
@@ -1994,9 +2007,8 @@ Return Value:
     return status;
 }
 
-
-
 NTSTATUS
+NTAPI
 DiskFdoQueryWmiRegInfo(
     IN PDEVICE_OBJECT DeviceObject,
     OUT ULONG *RegFlags,
@@ -2036,10 +2048,10 @@ Return Value:
 
 --*/
 {
-    PFUNCTIONAL_DEVICE_EXTENSION fdoExtension = DeviceObject->DeviceExtension;
+    //PFUNCTIONAL_DEVICE_EXTENSION fdoExtension = DeviceObject->DeviceExtension;
     PCOMMON_DEVICE_EXTENSION commonExtension = DeviceObject->DeviceExtension;
     PDISK_DATA diskData = (PDISK_DATA)(commonExtension->DriverData);
-    NTSTATUS status;
+    //NTSTATUS status;
 
     PAGED_CODE();
 
@@ -2094,6 +2106,7 @@ Return Value:
 }
 
 NTSTATUS
+NTAPI
 DiskFdoQueryWmiRegInfoEx(
     IN PDEVICE_OBJECT DeviceObject,
     OUT ULONG *RegFlags,
@@ -2150,8 +2163,8 @@ Return Value:
     return(status);
 }
 
-
 NTSTATUS
+NTAPI
 DiskFdoQueryWmiDataBlock(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
@@ -2383,6 +2396,7 @@ Return Value:
 }
 
 NTSTATUS
+NTAPI
 DiskFdoSetWmiDataBlock(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
@@ -2487,6 +2501,7 @@ Return Value:
 }
 
 NTSTATUS
+NTAPI
 DiskFdoSetWmiDataItem(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
@@ -2554,8 +2569,8 @@ Return Value:
     return status;
 }
 
-
 NTSTATUS
+NTAPI
 DiskFdoExecuteWmiMethod(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
@@ -3018,11 +3033,11 @@ Return Value:
     return status;
 }
 
-
 #if 0
 //
 // Enable this to add WMI support for PDOs
 NTSTATUS
+NTAPI
 DiskPdoQueryWmiRegInfo(
     IN PDEVICE_OBJECT DeviceObject,
     OUT ULONG *RegFlags,
@@ -3088,6 +3103,7 @@ Return Value:
 }
 
 NTSTATUS
+NTAPI
 DiskPdoQueryWmiDataBlock(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
@@ -3169,6 +3185,7 @@ Return Value:
 }
 
 NTSTATUS
+NTAPI
 DiskPdoSetWmiDataBlock(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
@@ -3248,6 +3265,7 @@ Return Value:
 }
 
 NTSTATUS
+NTAPI
 DiskPdoSetWmiDataItem(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
@@ -3328,8 +3346,8 @@ Return Value:
     return status;
 }
 
-
 NTSTATUS
+NTAPI
 DiskPdoExecuteWmiMethod(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
@@ -3429,6 +3447,3 @@ Return Value:
     return status;
 }
 #endif
-
-
-
