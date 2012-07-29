@@ -6,7 +6,7 @@
 #pragma once
 
 /* The first 10 entries are never used in windows, they are empty */
-#define RESERVE_ENTRIES_COUNT 10
+static const unsigned RESERVE_ENTRIES_COUNT = 10;
 
 typedef struct _GDI_HANDLE_TABLE
 {
@@ -57,12 +57,15 @@ enum BASEFLAGS
 
 typedef struct _CLIENTOBJ
 {
-  BASEOBJECT BaseObject;
+    BASEOBJECT BaseObject;
 } CLIENTOBJ, *PCLIENTOBJ;
 
-#define GDIOBJFLAG_DEFAULT	(0x0)
-#define GDIOBJFLAG_IGNOREPID 	(0x1)
-#define GDIOBJFLAG_IGNORELOCK 	(0x2)
+enum _GDIOBJLAGS
+{
+    GDIOBJFLAG_DEFAULT    = 0x00,
+    GDIOBJFLAG_IGNOREPID  = 0x01,
+    GDIOBJFLAG_IGNORELOCK = 0x02
+};
 
 INIT_FUNCTION
 NTSTATUS

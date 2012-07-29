@@ -1,11 +1,7 @@
 
-#ifdef __GNUC__
-/* HACK, for bug in ld.  Will be removed soon.  */
-#define __ImageBase _image_base__
-#endif
 extern IMAGE_DOS_HEADER __ImageBase;
 
-#define GDI_ENGINE_VERSION DDI_DRIVER_VERSION_NT5_01
+static const unsigned GDI_ENGINE_VERSION = DDI_DRIVER_VERSION_NT5_01;
 
 typedef enum
 {

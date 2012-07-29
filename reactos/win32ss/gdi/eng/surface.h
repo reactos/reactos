@@ -1,7 +1,5 @@
 #pragma once
 
-#define PDEV_SURFACE              0x80000000
-
 /* GDI surface object */
 typedef struct _SURFACE
 {
@@ -39,7 +37,9 @@ typedef struct _SURFACE
     DWORD biClrImportant;
 } SURFACE, *PSURFACE;
 
-// flags field:
+/* flags field */
+enum _SURFACEFLAGS
+{
 //#define HOOK_BITBLT               0x00000001
 //#define HOOK_STRETCHBLT           0x00000002
 //#define HOOK_PLGBLT               0x00000004
@@ -65,22 +65,24 @@ typedef struct _SURFACE
 //#else
 // #define HOOK_FLAGS               0x0003B5EF
 //#endif
-#define UMPD_SURFACE              0x00040000
-#define MIRROR_SURFACE            0x00080000
-#define DIRECTDRAW_SURFACE        0x00100000
-#define DRIVER_CREATED_SURFACE    0x00200000
-#define ENG_CREATE_DEVICE_SURFACE 0x00400000
-#define DDB_SURFACE               0x00800000
-#define LAZY_DELETE_SURFACE       0x01000000
-#define BANDING_SURFACE           0x02000000
-#define API_BITMAP                0x04000000
-#define PALETTE_SELECT_SET        0x08000000
-#define UNREADABLE_SURFACE        0x10000000
-#define DYNAMIC_MODE_PALETTE      0x20000000
-#define ABORT_SURFACE             0x40000000
-#define PDEV_SURFACE              0x80000000
+    UMPD_SURFACE              = 0x00040000,
+    MIRROR_SURFACE            = 0x00080000,
+    DIRECTDRAW_SURFACE        = 0x00100000,
+    DRIVER_CREATED_SURFACE    = 0x00200000,
+    ENG_CREATE_DEVICE_SURFACE = 0x00400000,
+    DDB_SURFACE               = 0x00800000,
+    LAZY_DELETE_SURFACE       = 0x01000000,
+    BANDING_SURFACE           = 0x02000000,
+    API_BITMAP                = 0x04000000,
+    PALETTE_SELECT_SET        = 0x08000000,
+    UNREADABLE_SURFACE        = 0x10000000,
+    DYNAMIC_MODE_PALETTE      = 0x20000000,
+    ABORT_SURFACE             = 0x40000000,
+    PDEV_SURFACE              = 0x80000000
+};
 
 #define BMF_POOLALLOC 0x100
+#define PDEV_SURFACE              0x80000000
 
 /*  Internal interface  */
 

@@ -1,11 +1,15 @@
 #pragma once
 
-  /* DCPATH flPath */
-#define DCPATH_ACTIVE    0x0001
-#define DCPATH_SAVE      0x0002
-#define DCPATH_CLOCKWISE 0x0004
-// ReactOS only
-#define DCPATH_SAVESTATE 0x80000000
+/* DCPATH flPath */
+enum _DCPATHFLAGS
+{
+    DCPATH_ACTIVE    = 0x0001,
+    DCPATH_SAVE      = 0x0002,
+    DCPATH_CLOCKWISE = 0x0004,
+
+    /* ReactOS only */
+    DCPATH_SAVESTATE = 0x80000000
+};
 
 typedef HGDIOBJ HPATH, *PHPATH;
 

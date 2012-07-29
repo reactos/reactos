@@ -34,11 +34,11 @@ IntCreatePrimarySurface()
     /* Attach monitor */
     UserAttachMonitor((HDEV)gppdevPrimary);
 
-    DPRINT("IntCreatePrimarySurface, pPrimarySurface=%p, pPrimarySurface->pSurface = %p\n",
-        pPrimarySurface, pPrimarySurface->pSurface);
+    DPRINT("IntCreatePrimarySurface, gppdevPrimary=%p, gppdevPrimary->pSurface = %p\n",
+        gppdevPrimary, gppdevPrimary->pSurface);
 
     /* Create surface */
-    pso = &PDEVOBJ_pSurface(pPrimarySurface)->SurfObj;
+    pso = &PDEVOBJ_pSurface(gppdevPrimary)->SurfObj;
     SurfSize = pso->sizlBitmap;
 
     /* Put the pointer in the center of the screen */
@@ -48,7 +48,7 @@ IntCreatePrimarySurface()
     co_IntShowDesktop(IntGetActiveDesktop(), SurfSize.cx, SurfSize.cy);
 
     // Init Primary Displays Device Capabilities.
-    PDEVOBJ_vGetDeviceCaps(pPrimarySurface, &GdiHandleTable->DevCaps);
+    PDEVOBJ_vGetDeviceCaps(gppdevPrimary, &GdiHandleTable->DevCaps);
 
     return TRUE;
 }
@@ -64,7 +64,7 @@ IntEnumHDev(VOID)
 {
 // I guess we will soon have more than one primary surface.
 // This will do for now.
-    return pPrimarySurface;
+    return gppdevPrimary;
 }
 
 

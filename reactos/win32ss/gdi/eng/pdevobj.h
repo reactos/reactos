@@ -2,22 +2,25 @@
 #define __WIN32K_PDEVOBJ_H
 
 /* PDEVOBJ flags */
-#define PDEV_DISPLAY             0x00000001 /* Display device */
-#define PDEV_HARDWARE_POINTER    0x00000002 /* Supports hardware cursor */
-#define PDEV_SOFTWARE_POINTER    0x00000004
-#define PDEV_GOTFONTS            0x00000040 /* Has font driver */
-#define PDEV_PRINTER             0x00000080
-#define PDEV_ALLOCATEDBRUSHES    0x00000100
-#define PDEV_HTPAL_IS_DEVPAL     0x00000200
-#define PDEV_DISABLED            0x00000400
-#define PDEV_SYNCHRONIZE_ENABLED 0x00000800
-#define PDEV_FONTDRIVER          0x00002000 /* Font device */
-#define PDEV_GAMMARAMP_TABLE     0x00004000
-#define PDEV_UMPD                0x00008000
-#define PDEV_SHARED_DEVLOCK      0x00010000
-#define PDEV_META_DEVICE         0x00020000
-#define PDEV_DRIVER_PUNTED_CALL  0x00040000 /* Driver calls back to GDI engine */
-#define PDEV_CLONE_DEVICE        0x00080000
+enum _PDEVFLAGS
+{
+    PDEV_DISPLAY             = 0x00000001, /* Display device */
+    PDEV_HARDWARE_POINTER    = 0x00000002, /* Supports hardware cursor */
+    PDEV_SOFTWARE_POINTER    = 0x00000004,
+    PDEV_GOTFONTS            = 0x00000040, /* Has font driver */
+    PDEV_PRINTER             = 0x00000080,
+    PDEV_ALLOCATEDBRUSHES    = 0x00000100,
+    PDEV_HTPAL_IS_DEVPAL     = 0x00000200,
+    PDEV_DISABLED            = 0x00000400,
+    PDEV_SYNCHRONIZE_ENABLED = 0x00000800,
+    PDEV_FONTDRIVER          = 0x00002000, /* Font device */
+    PDEV_GAMMARAMP_TABLE     = 0x00004000,
+    PDEV_UMPD                = 0x00008000,
+    PDEV_SHARED_DEVLOCK      = 0x00010000,
+    PDEV_META_DEVICE         = 0x00020000,
+    PDEV_DRIVER_PUNTED_CALL  = 0x00040000, /* Driver calls back to GDI engine */
+    PDEV_CLONE_DEVICE        = 0x00080000
+};
 
 /* Type definitions ***********************************************************/
 
@@ -150,7 +153,6 @@ typedef struct _PDEVOBJ
 /* Globals ********************************************************************/
 
 extern PPDEVOBJ gppdevPrimary;
-#define pPrimarySurface gppdevPrimary
 
 
 /* Function prototypes ********************************************************/

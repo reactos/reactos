@@ -79,7 +79,7 @@ list(APPEND SOURCE
     gdi/eng/surface.c
     gdi/eng/transblt.c
     gdi/eng/engwindow.c
-    gdi/eng/xlate.c
+    gdi/eng/xlateobj.c
     user/ntuser/main.c
     user/ntuser/misc/file.c
     user/ntuser/misc/math.c

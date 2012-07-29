@@ -7,34 +7,40 @@
 #define DCB_WINDOWMGR 0x8000 /* Queries the Windows bounding rectangle instead of the application's */
 
 /* flFontState */
-#define DC_DIRTYFONT_XFORM 1
-#define DC_DIRTYFONT_LFONT 2
-#define DC_UFI_MAPPING 4
+enum _FONT_STATE
+{
+    DC_DIRTYFONT_XFORM = 1,
+    DC_DIRTYFONT_LFONT = 2,
+    DC_UFI_MAPPING     = 4
+};
 
 /* fl */
 #define DC_FL_PAL_BACK 1
 
-#define DC_DISPLAY  1
-#define DC_DIRECT 2
-#define DC_CANCELED 4
-#define DC_PERMANANT 0x08
-#define DC_DIRTY_RAO 0x10
-#define DC_ACCUM_WMGR 0x20
-#define DC_ACCUM_APP 0x40
-#define DC_RESET 0x80
-#define DC_SYNCHRONIZEACCESS 0x100
-#define DC_EPSPRINTINGESCAPE 0x200
-#define DC_TEMPINFODC 0x400
-#define DC_FULLSCREEN 0x800
-#define DC_IN_CLONEPDEV 0x1000
-#define DC_REDIRECTION 0x2000
-#define DC_SHAREACCESS 0x4000
-
-typedef enum
+enum _DCFLAGS
 {
-  DCTYPE_DIRECT = 0,
-  DCTYPE_MEMORY = 1,
-  DCTYPE_INFO = 2,
+    DC_DISPLAY           = 0x0001,
+    DC_DIRECT            = 0x0002,
+    DC_CANCELED          = 0x0004,
+    DC_PERMANANT         = 0x0008,
+    DC_DIRTY_RAO         = 0x0010,
+    DC_ACCUM_WMGR        = 0x0020,
+    DC_ACCUM_APP         = 0x0040,
+    DC_RESET             = 0x0080,
+    DC_SYNCHRONIZEACCESS = 0x0100,
+    DC_EPSPRINTINGESCAPE = 0x0200,
+    DC_TEMPINFODC        = 0x0400,
+    DC_FULLSCREEN        = 0x0800,
+    DC_IN_CLONEPDEV      = 0x1000,
+    DC_REDIRECTION       = 0x2000,
+    DC_SHAREACCESS       = 0x4000
+};
+
+typedef enum _DCTYPE
+{
+    DCTYPE_DIRECT = 0,
+    DCTYPE_MEMORY = 1,
+    DCTYPE_INFO = 2,
 } DCTYPE;
 
 

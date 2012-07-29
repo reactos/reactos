@@ -141,14 +141,6 @@ DC_vXformWorldToDevice(
     XFORMOBJ_bApplyXform(&xo, XF_LTOL, cNumPoints, pptlDest, pptlSource);
 }
 
-int APIENTRY IntGdiSetMapMode(PDC, int);
-
-BOOL NTAPI
-IntGdiCombineTransform(
-    XFORML *pxformDest,
-    XFORML *pxform1,
-    XFORML *pxform2);
-
 BOOL
 NTAPI
 GreModifyWorldTransform(
@@ -157,6 +149,5 @@ GreModifyWorldTransform(
     DWORD dwMode);
 
 VOID FASTCALL IntMirrorWindowOrg(PDC);
-void FASTCALL IntFixIsotropicMapping(PDC);
-LONG FASTCALL IntCalcFillOrigin(PDC);
+int APIENTRY IntGdiSetMapMode(PDC, int);
 

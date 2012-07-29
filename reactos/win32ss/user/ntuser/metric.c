@@ -34,15 +34,15 @@ InitMetrics(VOID)
     }
 
     /* FIXME: HACK, due to missing PDEV on first init */
-    if (!pPrimarySurface)
+    if (!gppdevPrimary)
     {
         Width = 640;
         Height = 480;
     }
     else
     {
-        Width = pPrimarySurface->gdiinfo.ulHorzRes;
-        Height = pPrimarySurface->gdiinfo.ulVertRes;
+        Width = gppdevPrimary->gdiinfo.ulHorzRes;
+        Height = gppdevPrimary->gdiinfo.ulVertRes;
     }
 
     /* Screen sizes */
