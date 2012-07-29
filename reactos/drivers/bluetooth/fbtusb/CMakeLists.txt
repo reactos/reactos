@@ -14,12 +14,9 @@ add_library(fbtusb SHARED
     fbtusb.rc)
 
 # FIXME: http://www.cmake.org/Bug/view.php?id=12998
-if(MSVC)
-    #add_target_compile_flags(fbtusb "/Gz")
-    set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "/Gz")
-else()
+if(NOT MSVC)
     #allow_warnings(fbtusb)
-    set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-Wno-error -mrtd -fno-builtin")
+    set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-Wno-error")
 endif()
 
 set_module_type(fbtusb kernelmodedriver)

@@ -20,7 +20,7 @@
 #include "fbtusr.h"
 
 // Read/Write handler
-NTSTATUS FreeBT_DispatchRead(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
+NTSTATUS NTAPI FreeBT_DispatchRead(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 {
     PMDL                    mdl;
     PURB                    urb;
@@ -204,7 +204,7 @@ FreeBT_DispatchRead_Exit:
 
 }
 
-NTSTATUS FreeBT_ReadCompletion(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp, IN PVOID Context)
+NTSTATUS NTAPI FreeBT_ReadCompletion(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp, IN PVOID Context)
 {
     //ULONG               stageLength;
     NTSTATUS            ntStatus;
@@ -250,7 +250,7 @@ NTSTATUS FreeBT_ReadCompletion(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp, IN P
 }
 
 // Read/Write handler
-NTSTATUS FreeBT_DispatchWrite(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
+NTSTATUS NTAPI FreeBT_DispatchWrite(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 {
     PMDL                    mdl;
     PURB                    urb;
@@ -444,7 +444,7 @@ FreeBT_DispatchWrite_Exit:
 
 }
 
-NTSTATUS FreeBT_WriteCompletion(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp, IN PVOID Context)
+NTSTATUS NTAPI FreeBT_WriteCompletion(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp, IN PVOID Context)
 {
     ULONG               stageLength;
     NTSTATUS            ntStatus;

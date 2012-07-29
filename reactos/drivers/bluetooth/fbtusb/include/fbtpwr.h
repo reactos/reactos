@@ -32,13 +32,13 @@ typedef struct _WORKER_THREAD_CONTEXT
 extern "C" {
 #endif
 
-NTSTATUS FreeBT_DispatchPower(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
-NTSTATUS HandleSystemQueryPower(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
-NTSTATUS HandleSystemSetPower(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
-NTSTATUS HandleDeviceQueryPower(PDEVICE_OBJECT DeviceObject, PIRP Irp);
-NTSTATUS SysPoCompletionRoutine(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp, IN PDEVICE_EXTENSION DeviceExtension);
-VOID SendDeviceIrp(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
-VOID DevPoCompletionRoutine(
+NTSTATUS NTAPI FreeBT_DispatchPower(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
+NTSTATUS NTAPI HandleSystemQueryPower(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
+NTSTATUS NTAPI HandleSystemSetPower(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
+NTSTATUS NTAPI HandleDeviceQueryPower(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS NTAPI SysPoCompletionRoutine(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp, IN PDEVICE_EXTENSION DeviceExtension);
+VOID NTAPI SendDeviceIrp(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
+VOID NTAPI DevPoCompletionRoutine(
     IN PDEVICE_OBJECT   DeviceObject,
     IN UCHAR            MinorFunction,
     IN POWER_STATE      PowerState,
@@ -46,18 +46,18 @@ VOID DevPoCompletionRoutine(
     IN PIO_STATUS_BLOCK IoStatus
     );
 
-NTSTATUS HandleDeviceSetPower(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
-NTSTATUS FinishDevPoUpIrp(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp, IN PDEVICE_EXTENSION DeviceExtension);
-NTSTATUS SetDeviceFunctional(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp, IN PDEVICE_EXTENSION DeviceExtension);
-NTSTATUS FinishDevPoDnIrp(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp, IN PDEVICE_EXTENSION DeviceExtension);
-NTSTATUS HoldIoRequests(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
-VOID HoldIoRequestsWorkerRoutine(IN PDEVICE_OBJECT DeviceObject, IN PVOID Context);
-NTSTATUS QueueRequest(IN OUT PDEVICE_EXTENSION DeviceExtension, IN PIRP Irp);
-VOID CancelQueued(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
-NTSTATUS WaitWakeCompletionRoutine(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp, IN PDEVICE_EXTENSION DeviceExtension);
-NTSTATUS IssueWaitWake(IN PDEVICE_EXTENSION DeviceExtension);
-VOID CancelWaitWake(IN PDEVICE_EXTENSION DeviceExtension);
-VOID WaitWakeCallback(
+NTSTATUS NTAPI HandleDeviceSetPower(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
+NTSTATUS NTAPI FinishDevPoUpIrp(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp, IN PDEVICE_EXTENSION DeviceExtension);
+NTSTATUS NTAPI SetDeviceFunctional(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp, IN PDEVICE_EXTENSION DeviceExtension);
+NTSTATUS NTAPI FinishDevPoDnIrp(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp, IN PDEVICE_EXTENSION DeviceExtension);
+NTSTATUS NTAPI HoldIoRequests(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
+VOID NTAPI HoldIoRequestsWorkerRoutine(IN PDEVICE_OBJECT DeviceObject, IN PVOID Context);
+NTSTATUS NTAPI QueueRequest(IN OUT PDEVICE_EXTENSION DeviceExtension, IN PIRP Irp);
+VOID NTAPI CancelQueued(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
+NTSTATUS NTAPI WaitWakeCompletionRoutine(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp, IN PDEVICE_EXTENSION DeviceExtension);
+NTSTATUS NTAPI IssueWaitWake(IN PDEVICE_EXTENSION DeviceExtension);
+VOID NTAPI CancelWaitWake(IN PDEVICE_EXTENSION DeviceExtension);
+VOID NTAPI WaitWakeCallback(
 	IN PDEVICE_OBJECT   DeviceObject,
     IN UCHAR            MinorFunction,
     IN POWER_STATE      PowerState,
@@ -65,7 +65,7 @@ VOID WaitWakeCallback(
     IN PIO_STATUS_BLOCK IoStatus
     );
 
-PCHAR PowerMinorFunctionString(IN UCHAR MinorFunction);
+PCHAR NTAPI PowerMinorFunctionString(IN UCHAR MinorFunction);
 
 #ifdef __cplusplus
 };

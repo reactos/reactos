@@ -21,7 +21,7 @@
 #include "fbtusr.h"
 
 // Handle PNP events
-NTSTATUS FreeBT_DispatchPnP(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
+NTSTATUS NTAPI FreeBT_DispatchPnP(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 {
     PIO_STACK_LOCATION irpStack;
     PDEVICE_EXTENSION  deviceExtension;
@@ -139,7 +139,7 @@ NTSTATUS FreeBT_DispatchPnP(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 
 }
 
-NTSTATUS HandleStartDevice(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
+NTSTATUS NTAPI HandleStartDevice(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 {
     KIRQL             oldIrql;
     KEVENT            startDeviceEvent;
@@ -241,7 +241,7 @@ NTSTATUS HandleStartDevice(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 }
 
 
-NTSTATUS ReadandSelectDescriptors(IN PDEVICE_OBJECT DeviceObject)
+NTSTATUS NTAPI ReadandSelectDescriptors(IN PDEVICE_OBJECT DeviceObject)
 {
     PURB                   urb;
     ULONG                  siz;
@@ -305,7 +305,7 @@ NTSTATUS ReadandSelectDescriptors(IN PDEVICE_OBJECT DeviceObject)
 
 }
 
-NTSTATUS ConfigureDevice(IN PDEVICE_OBJECT DeviceObject)
+NTSTATUS NTAPI ConfigureDevice(IN PDEVICE_OBJECT DeviceObject)
 {
     PURB                          urb;
     ULONG                         siz;
@@ -443,7 +443,7 @@ ConfigureDevice_Exit:
 
 }
 
-NTSTATUS SelectInterfaces(IN PDEVICE_OBJECT DeviceObject, IN PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor)
+NTSTATUS NTAPI SelectInterfaces(IN PDEVICE_OBJECT DeviceObject, IN PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor)
 {
     LONG                        numberOfInterfaces, interfaceNumber, interfaceindex;
     ULONG                       i;
@@ -665,7 +665,7 @@ NTSTATUS SelectInterfaces(IN PDEVICE_OBJECT DeviceObject, IN PUSB_CONFIGURATION_
 }
 
 
-NTSTATUS DeconfigureDevice(IN PDEVICE_OBJECT DeviceObject)
+NTSTATUS NTAPI DeconfigureDevice(IN PDEVICE_OBJECT DeviceObject)
 {
     PURB     urb;
     ULONG    siz;
@@ -698,7 +698,7 @@ NTSTATUS DeconfigureDevice(IN PDEVICE_OBJECT DeviceObject)
 
 }
 
-NTSTATUS CallUSBD(IN PDEVICE_OBJECT DeviceObject, IN PURB Urb)
+NTSTATUS NTAPI CallUSBD(IN PDEVICE_OBJECT DeviceObject, IN PURB Urb)
 {
     PIRP               irp;
     KEVENT             event;
@@ -749,7 +749,7 @@ NTSTATUS CallUSBD(IN PDEVICE_OBJECT DeviceObject, IN PURB Urb)
 
 }
 
-NTSTATUS HandleQueryStopDevice(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
+NTSTATUS NTAPI HandleQueryStopDevice(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 {
     KIRQL             oldIrql;
     NTSTATUS          ntStatus;
@@ -788,7 +788,7 @@ NTSTATUS HandleQueryStopDevice(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 
 }
 
-NTSTATUS HandleCancelStopDevice(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
+NTSTATUS NTAPI HandleCancelStopDevice(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 {
     KIRQL             oldIrql;
     KEVENT            event;
@@ -856,7 +856,7 @@ NTSTATUS HandleCancelStopDevice(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 
 }
 
-NTSTATUS HandleStopDevice(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
+NTSTATUS NTAPI HandleStopDevice(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 {
     KIRQL             oldIrql;
     NTSTATUS          ntStatus;
@@ -928,7 +928,7 @@ NTSTATUS HandleStopDevice(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 
 }
 
-NTSTATUS HandleQueryRemoveDevice(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
+NTSTATUS NTAPI HandleQueryRemoveDevice(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 {
     KIRQL             oldIrql;
     NTSTATUS          ntStatus;
@@ -969,7 +969,7 @@ NTSTATUS HandleQueryRemoveDevice(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 
 }
 
-NTSTATUS HandleCancelRemoveDevice(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
+NTSTATUS NTAPI HandleCancelRemoveDevice(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 {
     KIRQL             oldIrql;
     KEVENT            event;
@@ -1038,7 +1038,7 @@ NTSTATUS HandleCancelRemoveDevice(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 
 }
 
-NTSTATUS HandleSurpriseRemoval(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
+NTSTATUS NTAPI HandleSurpriseRemoval(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 {
     KIRQL             oldIrql;
     NTSTATUS          ntStatus;
@@ -1109,7 +1109,7 @@ NTSTATUS HandleSurpriseRemoval(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 
 }
 
-NTSTATUS HandleRemoveDevice(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
+NTSTATUS NTAPI HandleRemoveDevice(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 {
     KIRQL             oldIrql;
     //KEVENT            event;
@@ -1215,7 +1215,7 @@ NTSTATUS HandleRemoveDevice(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 
 }
 
-NTSTATUS HandleQueryCapabilities(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
+NTSTATUS NTAPI HandleQueryCapabilities(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 {
     ULONG                i;
     KEVENT               event;
@@ -1295,7 +1295,7 @@ NTSTATUS HandleQueryCapabilities(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 }
 
 
-VOID DpcRoutine(IN PKDPC Dpc, IN PVOID DeferredContext, IN PVOID SystemArgument1, IN PVOID SystemArgument2)
+VOID NTAPI DpcRoutine(IN PKDPC Dpc, IN PVOID DeferredContext, IN PVOID SystemArgument1, IN PVOID SystemArgument2)
 /*++
 
     DPC routine triggered by the timer to check the idle state
@@ -1349,7 +1349,7 @@ VOID DpcRoutine(IN PKDPC Dpc, IN PVOID DeferredContext, IN PVOID SystemArgument1
 }
 
 
-VOID IdleRequestWorkerRoutine(IN PDEVICE_OBJECT DeviceObject, IN PVOID Context)
+VOID NTAPI IdleRequestWorkerRoutine(IN PDEVICE_OBJECT DeviceObject, IN PVOID Context)
 {
     //PIRP                   irp;
     NTSTATUS               ntStatus;
@@ -1388,7 +1388,7 @@ VOID IdleRequestWorkerRoutine(IN PDEVICE_OBJECT DeviceObject, IN PVOID Context)
 }
 
 
-VOID ProcessQueuedRequests(IN OUT PDEVICE_EXTENSION DeviceExtension)
+VOID NTAPI ProcessQueuedRequests(IN OUT PDEVICE_EXTENSION DeviceExtension)
 /*++
 
 Routine Description:
@@ -1514,7 +1514,7 @@ Return Value:
 
 }
 
-NTSTATUS FreeBT_GetRegistryDword(IN PWCHAR RegPath, IN PWCHAR ValueName, IN OUT PULONG Value)
+NTSTATUS NTAPI FreeBT_GetRegistryDword(IN PWCHAR RegPath, IN PWCHAR ValueName, IN OUT PULONG Value)
 {
     ULONG                    defaultData;
     WCHAR                    buffer[MAXIMUM_FILENAME_LENGTH];
@@ -1562,7 +1562,7 @@ NTSTATUS FreeBT_GetRegistryDword(IN PWCHAR RegPath, IN PWCHAR ValueName, IN OUT 
 }
 
 
-NTSTATUS FreeBT_DispatchClean(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
+NTSTATUS NTAPI FreeBT_DispatchClean(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 {
     PDEVICE_EXTENSION  deviceExtension;
     KIRQL              oldIrql;
@@ -1637,7 +1637,7 @@ NTSTATUS FreeBT_DispatchClean(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 }
 
 
-BOOLEAN CanDeviceSuspend(IN PDEVICE_EXTENSION DeviceExtension)
+BOOLEAN NTAPI CanDeviceSuspend(IN PDEVICE_EXTENSION DeviceExtension)
 {
     FreeBT_DbgPrint(3, ("FBTUSB: CanDeviceSuspend: Entered\n"));
 
@@ -1648,7 +1648,7 @@ BOOLEAN CanDeviceSuspend(IN PDEVICE_EXTENSION DeviceExtension)
 
 }
 
-NTSTATUS FreeBT_AbortPipes(IN PDEVICE_OBJECT DeviceObject)
+NTSTATUS NTAPI FreeBT_AbortPipes(IN PDEVICE_OBJECT DeviceObject)
 {
     PURB                        urb;
     ULONG                       i;
@@ -1709,7 +1709,7 @@ NTSTATUS FreeBT_AbortPipes(IN PDEVICE_OBJECT DeviceObject)
 }
 
 // Completion routine for PNP IRPs
-NTSTATUS IrpCompletionRoutine(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp, IN PVOID Context)
+NTSTATUS NTAPI IrpCompletionRoutine(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp, IN PVOID Context)
 {
     PKEVENT event = (PKEVENT) Context;
     KeSetEvent(event, 0, FALSE);
@@ -1719,7 +1719,7 @@ NTSTATUS IrpCompletionRoutine(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp, IN PV
 }
 
 
-LONG FreeBT_IoIncrement(IN OUT PDEVICE_EXTENSION DeviceExtension)
+LONG NTAPI FreeBT_IoIncrement(IN OUT PDEVICE_EXTENSION DeviceExtension)
 {
     LONG  result = 0;
     KIRQL oldIrql;
@@ -1739,7 +1739,7 @@ LONG FreeBT_IoIncrement(IN OUT PDEVICE_EXTENSION DeviceExtension)
 
 }
 
-LONG FreeBT_IoDecrement(IN OUT PDEVICE_EXTENSION DeviceExtension)
+LONG NTAPI FreeBT_IoDecrement(IN OUT PDEVICE_EXTENSION DeviceExtension)
 {
     LONG  result = 0;
     KIRQL oldIrql;
@@ -1766,7 +1766,7 @@ LONG FreeBT_IoDecrement(IN OUT PDEVICE_EXTENSION DeviceExtension)
 
 }
 
-NTSTATUS CanStopDevice(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
+NTSTATUS NTAPI CanStopDevice(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 {
    // For the time being, just allow it to be stopped
    UNREFERENCED_PARAMETER(DeviceObject);
@@ -1776,7 +1776,7 @@ NTSTATUS CanStopDevice(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 
 }
 
-NTSTATUS CanRemoveDevice(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
+NTSTATUS NTAPI CanRemoveDevice(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 
 {
    // For the time being, just allow it to be removed
@@ -1787,7 +1787,7 @@ NTSTATUS CanRemoveDevice(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 
 }
 
-NTSTATUS ReleaseMemory(IN PDEVICE_OBJECT DeviceObject)
+NTSTATUS NTAPI ReleaseMemory(IN PDEVICE_OBJECT DeviceObject)
 {
     // Disconnect from the interrupt and unmap any I/O ports
     PDEVICE_EXTENSION   deviceExtension;
@@ -1828,7 +1828,7 @@ NTSTATUS ReleaseMemory(IN PDEVICE_OBJECT DeviceObject)
 
 }
 
-PCHAR PnPMinorFunctionString (UCHAR MinorFunction)
+PCHAR NTAPI PnPMinorFunctionString (UCHAR MinorFunction)
 {
     switch (MinorFunction)
     {

@@ -20,7 +20,7 @@
 #include "fbtusr.h"
 
 // Dispatch routine for CreateHandle
-NTSTATUS FreeBT_DispatchCreate(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
+NTSTATUS NTAPI FreeBT_DispatchCreate(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 {
     //ULONG                       i;
     NTSTATUS                    ntStatus;
@@ -99,7 +99,7 @@ FreeBT_DispatchCreate_Exit:
 }
 
 // Dispatch routine for CloseHandle
-NTSTATUS FreeBT_DispatchClose(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
+NTSTATUS NTAPI FreeBT_DispatchClose(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 {
     NTSTATUS               ntStatus;
     PFILE_OBJECT           fileObject;
@@ -132,7 +132,7 @@ NTSTATUS FreeBT_DispatchClose(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 }
 
 // Called when a HCI Send on the control pipe completes
-NTSTATUS FreeBT_HCISendCompletion(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp, IN PVOID Context)
+NTSTATUS NTAPI FreeBT_HCISendCompletion(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp, IN PVOID Context)
 {
     //ULONG               stageLength;
     NTSTATUS            ntStatus;
@@ -153,7 +153,7 @@ NTSTATUS FreeBT_HCISendCompletion(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp, I
 
 // Called the DeviceIOControl handler to send an HCI command received from the user
 // HCI Commands are sent on the (default) control pipe
-NTSTATUS FreeBT_SendHCICommand(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp, IN PVOID IoBuffer, IN ULONG InputBufferLength)
+NTSTATUS NTAPI FreeBT_SendHCICommand(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp, IN PVOID IoBuffer, IN ULONG InputBufferLength)
 {
     PDEVICE_EXTENSION   deviceExtension;
     //ULONG               urbFlags;
@@ -281,7 +281,7 @@ NTSTATUS FreeBT_SendHCICommand(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp, IN P
 }
 
 // Called when a HCI Get on the event pipe completes
-NTSTATUS FreeBT_HCIEventCompletion(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp, IN PVOID Context)
+NTSTATUS NTAPI FreeBT_HCIEventCompletion(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp, IN PVOID Context)
 {
     //ULONG               stageLength;
     NTSTATUS            ntStatus;
@@ -307,7 +307,7 @@ NTSTATUS FreeBT_HCIEventCompletion(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp, 
 }
 
 // Called from the DeviceIOControl handler to wait for an event on the interrupt pipe
-NTSTATUS FreeBT_GetHCIEvent(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp, IN PVOID IoBuffer, IN ULONG InputBufferLength)
+NTSTATUS NTAPI FreeBT_GetHCIEvent(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp, IN PVOID IoBuffer, IN ULONG InputBufferLength)
 {
     PDEVICE_EXTENSION   deviceExtension;
     PURB                urb;
@@ -409,7 +409,7 @@ FreeBT_GetHCIEvent_Exit:
 }
 
 // DeviceIOControl dispatch
-NTSTATUS FreeBT_DispatchDevCtrl(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
+NTSTATUS NTAPI FreeBT_DispatchDevCtrl(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 {
     ULONG              code;
     PVOID              ioBuffer;
@@ -503,7 +503,7 @@ FreeBT_DispatchDevCtrlExit:
 }
 
 // Submit URB_FUNCTION_RESET_PIPE
-NTSTATUS FreeBT_ResetPipe(IN PDEVICE_OBJECT DeviceObject, IN USBD_PIPE_HANDLE PipeHandle)
+NTSTATUS NTAPI FreeBT_ResetPipe(IN PDEVICE_OBJECT DeviceObject, IN USBD_PIPE_HANDLE PipeHandle)
 {
     PURB              urb;
     NTSTATUS          ntStatus;
@@ -543,7 +543,7 @@ NTSTATUS FreeBT_ResetPipe(IN PDEVICE_OBJECT DeviceObject, IN USBD_PIPE_HANDLE Pi
 }
 
 // Call FreeBT_ResetParentPort to reset the device
-NTSTATUS FreeBT_ResetDevice(IN PDEVICE_OBJECT DeviceObject)
+NTSTATUS NTAPI FreeBT_ResetDevice(IN PDEVICE_OBJECT DeviceObject)
 {
     NTSTATUS ntStatus;
     ULONG    portStatus;
@@ -562,7 +562,7 @@ NTSTATUS FreeBT_ResetDevice(IN PDEVICE_OBJECT DeviceObject)
 }
 
 // Read port status from the lower driver (USB class driver)
-NTSTATUS FreeBT_GetPortStatus(IN PDEVICE_OBJECT DeviceObject, IN OUT PULONG PortStatus)
+NTSTATUS NTAPI FreeBT_GetPortStatus(IN PDEVICE_OBJECT DeviceObject, IN OUT PULONG PortStatus)
 {
     NTSTATUS           ntStatus;
     KEVENT             event;
@@ -614,7 +614,7 @@ NTSTATUS FreeBT_GetPortStatus(IN PDEVICE_OBJECT DeviceObject, IN OUT PULONG Port
 }
 
 // Sends an IOCTL_INTERNAL_USB_RESET_PORT via the lower driver
-NTSTATUS FreeBT_ResetParentPort(IN PDEVICE_OBJECT DeviceObject)
+NTSTATUS NTAPI FreeBT_ResetParentPort(IN PDEVICE_OBJECT DeviceObject)
 {
     NTSTATUS           ntStatus;
     KEVENT             event;
@@ -666,7 +666,7 @@ NTSTATUS FreeBT_ResetParentPort(IN PDEVICE_OBJECT DeviceObject)
 }
 
 // Send an idle request to the lower driver
-NTSTATUS SubmitIdleRequestIrp(IN PDEVICE_EXTENSION DeviceExtension)
+NTSTATUS NTAPI SubmitIdleRequestIrp(IN PDEVICE_EXTENSION DeviceExtension)
 {
     PIRP                    irp;
     NTSTATUS                ntStatus;
@@ -883,7 +883,7 @@ SubmitIdleRequestIrp_Exit:
 }
 
 
-VOID IdleNotificationCallback(IN PDEVICE_EXTENSION DeviceExtension)
+VOID NTAPI IdleNotificationCallback(IN PDEVICE_EXTENSION DeviceExtension)
 {
     NTSTATUS                ntStatus;
     POWER_STATE             powerState;
@@ -978,7 +978,7 @@ VOID IdleNotificationCallback(IN PDEVICE_EXTENSION DeviceExtension)
 }
 
 
-NTSTATUS IdleNotificationRequestComplete(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp, IN PDEVICE_EXTENSION DeviceExtension)
+NTSTATUS NTAPI IdleNotificationRequestComplete(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp, IN PDEVICE_EXTENSION DeviceExtension)
 {
     NTSTATUS                ntStatus;
     POWER_STATE             powerState;
@@ -1090,7 +1090,7 @@ IdleNotificationRequestComplete_Exit:
 
 }
 
-VOID CancelSelectSuspend(IN PDEVICE_EXTENSION DeviceExtension)
+VOID NTAPI CancelSelectSuspend(IN PDEVICE_EXTENSION DeviceExtension)
 {
     PIRP  irp;
     KIRQL oldIrql;
@@ -1153,7 +1153,7 @@ VOID CancelSelectSuspend(IN PDEVICE_EXTENSION DeviceExtension)
 
 }
 
-VOID PoIrpCompletionFunc(IN PDEVICE_OBJECT DeviceObject, IN UCHAR MinorFunction, IN POWER_STATE PowerState, IN PVOID Context, IN PIO_STATUS_BLOCK IoStatus)
+VOID NTAPI PoIrpCompletionFunc(IN PDEVICE_OBJECT DeviceObject, IN UCHAR MinorFunction, IN POWER_STATE PowerState, IN PVOID Context, IN PIO_STATUS_BLOCK IoStatus)
 {
     PIRP_COMPLETION_CONTEXT irpContext;
     irpContext = NULL;
@@ -1176,7 +1176,7 @@ VOID PoIrpCompletionFunc(IN PDEVICE_OBJECT DeviceObject, IN UCHAR MinorFunction,
 
 }
 
-VOID PoIrpAsyncCompletionFunc(IN PDEVICE_OBJECT DeviceObject, IN UCHAR MinorFunction, IN POWER_STATE PowerState, IN PVOID Context, IN PIO_STATUS_BLOCK IoStatus)
+VOID NTAPI PoIrpAsyncCompletionFunc(IN PDEVICE_OBJECT DeviceObject, IN UCHAR MinorFunction, IN POWER_STATE PowerState, IN PVOID Context, IN PIO_STATUS_BLOCK IoStatus)
 {
     PDEVICE_EXTENSION DeviceExtension = (PDEVICE_EXTENSION) Context;
     FreeBT_DbgPrint(3, ("PoIrpAsyncCompletionFunc::"));
@@ -1186,7 +1186,7 @@ VOID PoIrpAsyncCompletionFunc(IN PDEVICE_OBJECT DeviceObject, IN UCHAR MinorFunc
 
 }
 
-VOID WWIrpCompletionFunc(IN PDEVICE_OBJECT DeviceObject, IN UCHAR MinorFunction, IN POWER_STATE PowerState, IN PVOID Context, IN PIO_STATUS_BLOCK IoStatus)
+VOID NTAPI WWIrpCompletionFunc(IN PDEVICE_OBJECT DeviceObject, IN UCHAR MinorFunction, IN POWER_STATE PowerState, IN PVOID Context, IN PIO_STATUS_BLOCK IoStatus)
 {
     PDEVICE_EXTENSION DeviceExtension = (PDEVICE_EXTENSION) Context;
 
