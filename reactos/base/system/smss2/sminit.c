@@ -1402,8 +1402,8 @@ SmpInitializeKnownDllsInternal(IN PUNICODE_STRING Directory,
     NTSTATUS Status, Status1;
     PLIST_ENTRY NextEntry;
     PSMP_REGISTRY_VALUE RegEntry;
-    ULONG_PTR ErrorParameters[3];
-    UNICODE_STRING ErrorResponse;
+    //ULONG_PTR ErrorParameters[3];
+    //UNICODE_STRING ErrorResponse;
     IO_STATUS_BLOCK IoStatusBlock;
     SECURITY_DESCRIPTOR_CONTROL OldFlag = 0;
     USHORT ImageCharacteristics;
@@ -1545,7 +1545,6 @@ SmpInitializeKnownDllsInternal(IN PUNICODE_STRING Directory,
             SmpTerminate(ErrorParameters, 5, RTL_NUMBER_OF(ErrorParameters));
         }
         else
-#endif
         if (!(ImageCharacteristics & IMAGE_FILE_DLL))
         {
             /* An invalid known DLL entry will also kill SMSS */
@@ -1556,6 +1555,7 @@ SmpInitializeKnownDllsInternal(IN PUNICODE_STRING Directory,
             ErrorParameters[2] = (ULONG)&RegEntry->Value;
             SmpTerminate(ErrorParameters, 5, RTL_NUMBER_OF(ErrorParameters));
         }
+#endif
 
         /* Temporarily hack the SD to use a default DACL for this section */
         if (SmpLiberalSecurityDescriptor)

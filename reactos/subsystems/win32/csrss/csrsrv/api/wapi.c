@@ -500,7 +500,7 @@ BasepFakeStaticServerData(VOID)
     PSECURITY_DESCRIPTOR BnoSd;
     HANDLE SymHandle;
     UNICODE_STRING DirectoryName, SymlinkName;
-    BOOLEAN LuidEnabled;
+    ULONG LuidEnabled;
     RTL_QUERY_REGISTRY_TABLE BaseServerRegistryConfigurationTable[2] =
     {
         {
@@ -674,11 +674,12 @@ BasepFakeStaticServerData(VOID)
     }
 
     /* Check if LUID device maps are enabled */
-    NtQueryInformationProcess(NtCurrentProcess(),
-                              ProcessLUIDDeviceMapsEnabled,
-                              &LuidEnabled,
-                              sizeof(LuidEnabled),
-                              NULL);
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessLUIDDeviceMapsEnabled,
+                                       &LuidEnabled,
+                                       sizeof(LuidEnabled),
+                                       NULL);
+    ASSERT(NT_SUCCESS(Status));
     BaseStaticServerData->LUIDDeviceMapsEnabled = LuidEnabled;
     if (!BaseStaticServerData->LUIDDeviceMapsEnabled)
     {
