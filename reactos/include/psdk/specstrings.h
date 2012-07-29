@@ -46,16 +46,17 @@
 #define __in_awcount(expr,size)
 #define __nullnullterminated
 #define __in_data_source(src_sym)
-#define __analysis_noreturn
 #define __kernel_entry
 
 #if (_MSC_VER >= 1000) && !defined(__midl) && defined(_PREFAST_)
 
 #define __inner_data_source(src_raw)        _SA_annotes1(SAL_untrusted_data_source,src_raw)
 #define __out_data_source(src_sym)          _Post_ __inner_data_source(#src_sym)
+#define __analysis_noreturn __declspec(noreturn)
 
 #else
 
 #define __out_data_source(src_sym)
+#define __analysis_noreturn
 
 #endif

@@ -109,9 +109,8 @@ ProbeArrayForRead(IN const VOID *ArrayPtr,
     }
 
     /* Probe the array */
-    ProbeForRead(ArrayPtr,
-                 ArraySize,
-                 Alignment);
+    _PRAGMA_WARNING_SUPPRESS(28125) /* Must be inside __try / __except block */
+    ProbeForRead(ArrayPtr, ArraySize, Alignment);
 }
 
 static __inline
@@ -131,9 +130,8 @@ ProbeArrayForWrite(IN OUT PVOID ArrayPtr,
     }
 
     /* Probe the array */
-    ProbeForWrite(ArrayPtr,
-                  ArraySize,
-                  Alignment);
+    _PRAGMA_WARNING_SUPPRESS(28125) /* Must be inside __try / __except block */
+    ProbeForWrite(ArrayPtr, ArraySize, Alignment);
 }
 #endif /* _WIN32K_ */
 

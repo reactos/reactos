@@ -5,6 +5,9 @@
 extern "C" {
 #endif
 
+/** Pragma support **/
+#define _PRAGMA_WARNING_SUPPRESS(x) __pragma(warning(suppress: x))
+
 /*** Stack frame juggling ***/
 void * _ReturnAddress(void);
 #pragma intrinsic(_ReturnAddress)

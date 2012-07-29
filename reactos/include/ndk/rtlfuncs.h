@@ -593,6 +593,7 @@ RtlAddVectoredExceptionHandler(
     IN PVECTORED_EXCEPTION_HANDLER VectoredHandler
 );
 
+__analysis_noreturn
 NTSYSAPI
 VOID
 NTAPI
