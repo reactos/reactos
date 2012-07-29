@@ -705,7 +705,7 @@ int main(int argc, char *argv[])
     char *pszSource, *pszDefFileName = 0, *pszStubFileName = 0, *pszLibStubName = 0;
     char achDllName[40];
     FILE *file;
-    int result, i;
+    int result = 0, i;
 
     if (argc < 2)
     {
