@@ -38,9 +38,7 @@ if(ARCH MATCHES i386)
         #add_target_compile_flags(classpnp "/Gz")
         set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "/Gz")
     else()
-        
-        #add_target_compile_flags(classpnp "-mrtd -fno-builtin -w")
-        set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-mrtd -fno-builtin -w")
+        set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-w")
     endif()
 endif()
 

@@ -509,34 +509,40 @@ static inline BOOLEAN SimpleIsSlistEmpty(SINGLE_LIST_ENTRY *SListHdr)
 }
 
 NTSTATUS
+NTAPI
 DriverEntry(
     IN PDRIVER_OBJECT DriverObject,
     IN PUNICODE_STRING RegistryPath
     );
 
 VOID
+NTAPI
 ClassUnload(
     IN PDRIVER_OBJECT DriverObject
     );
 
 NTSTATUS
+NTAPI
 ClassCreateClose(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
     );
 
 NTSTATUS
+NTAPI
 ClasspCreateClose(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
     );
 
 VOID
+NTAPI
 ClasspCleanupProtectedLocks(
     IN PFILE_OBJECT_EXTENSION FsContext
     );
 
 NTSTATUS
+NTAPI
 ClasspEjectionControl(
     IN PDEVICE_OBJECT Fdo,
     IN PIRP Irp,
@@ -545,47 +551,41 @@ ClasspEjectionControl(
     );
 
 NTSTATUS
+NTAPI
 ClassReadWrite(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
     );
 
 NTSTATUS
+NTAPI
 ClassDeviceControlDispatch(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp
     );
 
 NTSTATUS
-ClassDeviceControl(
-    PDEVICE_OBJECT DeviceObject,
-    PIRP Irp
-    );
-
-NTSTATUS
+NTAPI
 ClassDispatchPnp(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp
     );
 
 NTSTATUS
+NTAPI
 ClassPnpStartDevice(
     IN PDEVICE_OBJECT DeviceObject
     );
 
 NTSTATUS
-ClassInternalIoControl (
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp
-    );
-
-NTSTATUS
+NTAPI
 ClassShutdownFlush(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
     );
 
 NTSTATUS
+NTAPI
 ClassSystemControl(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
@@ -596,12 +596,14 @@ ClassSystemControl(
 //
 
 NTSTATUS
+NTAPI
 ClassAddDevice(
     IN PDRIVER_OBJECT DriverObject,
     IN OUT PDEVICE_OBJECT PhysicalDeviceObject
     );
 
 NTSTATUS
+NTAPI
 ClasspSendSynchronousCompletion(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
@@ -609,6 +611,7 @@ ClasspSendSynchronousCompletion(
     );
 
 VOID
+NTAPI
 RetryRequest(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp,
@@ -618,6 +621,7 @@ RetryRequest(
     );
 
 NTSTATUS
+NTAPI
 ClassIoCompletion(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
@@ -625,12 +629,14 @@ ClassIoCompletion(
     );
 
 NTSTATUS
+NTAPI
 ClassPnpQueryFdoRelations(
     IN PDEVICE_OBJECT Fdo,
     IN PIRP Irp
     );
 
 NTSTATUS
+NTAPI
 ClassRetrieveDeviceRelations(
     IN PDEVICE_OBJECT Fdo,
     IN DEVICE_RELATION_TYPE RelationType,
@@ -638,6 +644,7 @@ ClassRetrieveDeviceRelations(
     );
 
 NTSTATUS
+NTAPI
 ClassGetPdoId(
     IN PDEVICE_OBJECT Pdo,
     IN BUS_QUERY_ID_TYPE IdType,
@@ -645,18 +652,21 @@ ClassGetPdoId(
     );
 
 NTSTATUS
+NTAPI
 ClassQueryPnpCapabilities(
     IN PDEVICE_OBJECT PhysicalDeviceObject,
     IN PDEVICE_CAPABILITIES Capabilities
     );
 
 VOID
+NTAPI
 ClasspStartIo(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
     );
 
 NTSTATUS
+NTAPI
 ClasspPagingNotificationCompletion(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
@@ -664,6 +674,7 @@ ClasspPagingNotificationCompletion(
     );
 
 NTSTATUS
+NTAPI
 ClasspMediaChangeCompletion(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp,
@@ -671,12 +682,14 @@ ClasspMediaChangeCompletion(
     );
 
 PFILE_OBJECT_EXTENSION
+NTAPI
 ClasspGetFsContext(
     IN PCOMMON_DEVICE_EXTENSION CommonExtension,
     IN PFILE_OBJECT FileObject
     );
 
 NTSTATUS
+NTAPI
 ClasspMcnControl(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     IN PIRP Irp,
@@ -684,16 +697,19 @@ ClasspMcnControl(
     );
 
 VOID
+NTAPI
 ClasspRegisterMountedDeviceInterface(
     IN PDEVICE_OBJECT DeviceObject
     );
 
 NTSTATUS
+NTAPI
 ClasspDisableTimer(
     PDEVICE_OBJECT DeviceObject
     );
 
 NTSTATUS
+NTAPI
 ClasspEnableTimer(
     PDEVICE_OBJECT DeviceObject
     );
@@ -703,16 +719,19 @@ ClasspEnableTimer(
 //
 
 VOID
+NTAPI
 InitializeDictionary(
     IN PDICTIONARY Dictionary
     );
 
 BOOLEAN
+NTAPI
 TestDictionarySignature(
     IN PDICTIONARY Dictionary
     );
 
 NTSTATUS
+NTAPI
 AllocateDictionaryEntry(
     IN PDICTIONARY Dictionary,
     IN ULONGLONG Key,
@@ -722,12 +741,14 @@ AllocateDictionaryEntry(
     );
 
 PVOID
+NTAPI
 GetDictionaryEntry(
     IN PDICTIONARY Dictionary,
     IN ULONGLONG Key
     );
 
 VOID
+NTAPI
 FreeDictionaryEntry(
     IN PDICTIONARY Dictionary,
     IN PVOID Entry
@@ -735,16 +756,19 @@ FreeDictionaryEntry(
 
 
 NTSTATUS
+NTAPI
 ClasspAllocateReleaseRequest(
     IN PDEVICE_OBJECT Fdo
     );
 
 VOID
+NTAPI
 ClasspFreeReleaseRequest(
     IN PDEVICE_OBJECT Fdo
     );
 
 NTSTATUS
+NTAPI
 ClassReleaseQueueCompletion(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
@@ -752,12 +776,14 @@ ClassReleaseQueueCompletion(
     );
 
 VOID
+NTAPI
 ClasspReleaseQueue(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP ReleaseQueueIrp
     );
 
 VOID
+NTAPI
 ClasspDisablePowerNotification(
     PFUNCTIONAL_DEVICE_EXTENSION FdoExtension
 );
@@ -767,12 +793,14 @@ ClasspDisablePowerNotification(
 //
 
 NTSTATUS
+NTAPI
 ClassDispatchPower(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
     );
 
 NTSTATUS
+NTAPI
 ClassMinimalPowerHandler(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
@@ -783,6 +811,7 @@ ClassMinimalPowerHandler(
 //
 
 VOID
+NTAPI
 ClassAddChild(
     IN PFUNCTIONAL_DEVICE_EXTENSION Parent,
     IN PPHYSICAL_DEVICE_EXTENSION Child,
@@ -790,6 +819,7 @@ ClassAddChild(
     );
 
 PPHYSICAL_DEVICE_EXTENSION
+NTAPI
 ClassRemoveChild(
     IN PFUNCTIONAL_DEVICE_EXTENSION Parent,
     IN PPHYSICAL_DEVICE_EXTENSION Child,
@@ -797,11 +827,13 @@ ClassRemoveChild(
     );
 
 VOID
+NTAPI
 ClasspRetryDpcTimer(
     IN PCLASS_PRIVATE_FDO_DATA FdoData
     );
 
 VOID
+NTAPI
 ClasspRetryRequestDpc(
     IN PKDPC Dpc,
     IN PDEVICE_OBJECT DeviceObject,
@@ -810,12 +842,14 @@ ClasspRetryRequestDpc(
     );
 
 VOID
+NTAPI
 ClassFreeOrReuseSrb(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     IN PSCSI_REQUEST_BLOCK Srb
     );
 
 VOID
+NTAPI
 ClassRetryRequest(
     IN PDEVICE_OBJECT SelfDeviceObject,
     IN PIRP           Irp,
@@ -823,6 +857,7 @@ ClassRetryRequest(
     );
 
 VOID
+NTAPI
 ClasspBuildRequestEx(
     IN PFUNCTIONAL_DEVICE_EXTENSION Fdo,
     IN PIRP Irp,
@@ -830,17 +865,20 @@ ClasspBuildRequestEx(
     );
 
 NTSTATUS
+NTAPI
 ClasspAllocateReleaseQueueIrp(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension
     );
 
 NTSTATUS
+NTAPI
 ClasspInitializeGesn(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     IN PMEDIA_CHANGE_DETECTION_INFO Info
     );
 
 VOID
+NTAPI
 ClasspSendNotification(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     IN const GUID * Guid,
@@ -849,60 +887,60 @@ ClasspSendNotification(
     );
 
 VOID
+NTAPI
 ClassSendEjectionNotification(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension
     );
 
 VOID
+NTAPI
 ClasspScanForSpecialInRegistry(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension
     );
 
 VOID
+NTAPI
 ClasspScanForClassHacks(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     IN ULONG_PTR Data
     );
 
 NTSTATUS
+NTAPI
 ClasspInitializeHotplugInfo(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension
     );
 
 VOID
+NTAPI
 ClasspPerfIncrementErrorCount(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension
     );
 VOID
+NTAPI
 ClasspPerfIncrementSuccessfulIo(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension
     );
 
-
-PTRANSFER_PACKET NewTransferPacket(PDEVICE_OBJECT Fdo);
-VOID DestroyTransferPacket(PTRANSFER_PACKET Pkt);
-VOID EnqueueFreeTransferPacket(PDEVICE_OBJECT Fdo, PTRANSFER_PACKET Pkt);
-PTRANSFER_PACKET DequeueFreeTransferPacket(PDEVICE_OBJECT Fdo, BOOLEAN AllocIfNeeded);
-VOID SetupReadWriteTransferPacket(PTRANSFER_PACKET pkt, PVOID Buf, ULONG Len, LARGE_INTEGER DiskLocation, PIRP OriginalIrp);
-VOID SubmitTransferPacket(PTRANSFER_PACKET Pkt);
-NTSTATUS TransferPktComplete(IN PDEVICE_OBJECT NullFdo, IN PIRP Irp, IN PVOID Context);
-VOID ServiceTransferRequest(PDEVICE_OBJECT Fdo, PIRP Irp);
-VOID TransferPacketRetryTimerDpc(IN PKDPC Dpc, IN PVOID DeferredContext, IN PVOID SystemArgument1, IN PVOID SystemArgument2);
-BOOLEAN InterpretTransferPacketError(PTRANSFER_PACKET Pkt);
-BOOLEAN RetryTransferPacket(PTRANSFER_PACKET Pkt);
-VOID EnqueueDeferredClientIrp(PCLASS_PRIVATE_FDO_DATA FdoData, PIRP Irp);
-PIRP DequeueDeferredClientIrp(PCLASS_PRIVATE_FDO_DATA FdoData);
-VOID InitLowMemRetry(PTRANSFER_PACKET Pkt, PVOID BufPtr, ULONG Len, LARGE_INTEGER TargetLocation);
-BOOLEAN StepLowMemRetry(PTRANSFER_PACKET Pkt);
-VOID SetupEjectionTransferPacket(TRANSFER_PACKET *Pkt, BOOLEAN PreventMediaRemoval, PKEVENT SyncEventPtr, PIRP OriginalIrp);
-VOID SetupModeSenseTransferPacket(TRANSFER_PACKET *Pkt, PKEVENT SyncEventPtr, PVOID ModeSenseBuffer, UCHAR ModeSenseBufferLen, UCHAR PageMode, PIRP OriginalIrp);
-VOID SetupDriveCapacityTransferPacket(TRANSFER_PACKET *Pkt, PVOID ReadCapacityBuffer, ULONG ReadCapacityBufferLen, PKEVENT SyncEventPtr, PIRP OriginalIrp);
-PMDL BuildDeviceInputMdl(PVOID Buffer, ULONG BufferLen);
-VOID FreeDeviceInputMdl(PMDL Mdl);
-NTSTATUS InitializeTransferPackets(PDEVICE_OBJECT Fdo);
-VOID DestroyAllTransferPackets(PDEVICE_OBJECT Fdo);
-
-
-
-
-
+PTRANSFER_PACKET NTAPI NewTransferPacket(PDEVICE_OBJECT Fdo);
+VOID NTAPI DestroyTransferPacket(PTRANSFER_PACKET Pkt);
+VOID NTAPI EnqueueFreeTransferPacket(PDEVICE_OBJECT Fdo, PTRANSFER_PACKET Pkt);
+PTRANSFER_PACKET NTAPI DequeueFreeTransferPacket(PDEVICE_OBJECT Fdo, BOOLEAN AllocIfNeeded);
+VOID NTAPI SetupReadWriteTransferPacket(PTRANSFER_PACKET pkt, PVOID Buf, ULONG Len, LARGE_INTEGER DiskLocation, PIRP OriginalIrp);
+VOID NTAPI SubmitTransferPacket(PTRANSFER_PACKET Pkt);
+NTSTATUS NTAPI TransferPktComplete(IN PDEVICE_OBJECT NullFdo, IN PIRP Irp, IN PVOID Context);
+VOID NTAPI ServiceTransferRequest(PDEVICE_OBJECT Fdo, PIRP Irp);
+VOID NTAPI TransferPacketRetryTimerDpc(IN PKDPC Dpc, IN PVOID DeferredContext, IN PVOID SystemArgument1, IN PVOID SystemArgument2);
+BOOLEAN NTAPI InterpretTransferPacketError(PTRANSFER_PACKET Pkt);
+BOOLEAN NTAPI RetryTransferPacket(PTRANSFER_PACKET Pkt);
+VOID NTAPI EnqueueDeferredClientIrp(PCLASS_PRIVATE_FDO_DATA FdoData, PIRP Irp);
+PIRP NTAPI DequeueDeferredClientIrp(PCLASS_PRIVATE_FDO_DATA FdoData);
+VOID NTAPI InitLowMemRetry(PTRANSFER_PACKET Pkt, PVOID BufPtr, ULONG Len, LARGE_INTEGER TargetLocation);
+BOOLEAN NTAPI StepLowMemRetry(PTRANSFER_PACKET Pkt);
+VOID NTAPI SetupEjectionTransferPacket(TRANSFER_PACKET *Pkt, BOOLEAN PreventMediaRemoval, PKEVENT SyncEventPtr, PIRP OriginalIrp);
+VOID NTAPI SetupModeSenseTransferPacket(TRANSFER_PACKET *Pkt, PKEVENT SyncEventPtr, PVOID ModeSenseBuffer, UCHAR ModeSenseBufferLen, UCHAR PageMode, PIRP OriginalIrp);
+VOID NTAPI SetupDriveCapacityTransferPacket(TRANSFER_PACKET *Pkt, PVOID ReadCapacityBuffer, ULONG ReadCapacityBufferLen, PKEVENT SyncEventPtr, PIRP OriginalIrp);
+PMDL NTAPI BuildDeviceInputMdl(PVOID Buffer, ULONG BufferLen);
+VOID NTAPI FreeDeviceInputMdl(PMDL Mdl);
+NTSTATUS NTAPI InitializeTransferPackets(PDEVICE_OBJECT Fdo);
+VOID NTAPI DestroyAllTransferPackets(PDEVICE_OBJECT Fdo);

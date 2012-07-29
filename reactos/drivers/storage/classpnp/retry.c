@@ -24,8 +24,6 @@ Revision History:
 #include "classp.h"
 #include "debug.h"
 
-
-
 /*
  *  InterpretTransferPacketError
  *
@@ -34,7 +32,7 @@ Revision History:
  *
  *      Return TRUE iff packet should be retried.
  */
-BOOLEAN InterpretTransferPacketError(PTRANSFER_PACKET Pkt)
+BOOLEAN NTAPI InterpretTransferPacketError(PTRANSFER_PACKET Pkt)
 {
     BOOLEAN shouldRetry = FALSE;
     PCDB pCdb = (PCDB)Pkt->Srb.Cdb;
@@ -172,7 +170,6 @@ BOOLEAN InterpretTransferPacketError(PTRANSFER_PACKET Pkt)
     return shouldRetry;
 }
 
-
 /*
  *  RetryTransferPacket
  *
@@ -181,7 +178,7 @@ BOOLEAN InterpretTransferPacketError(PTRANSFER_PACKET Pkt)
  *      Return TRUE iff the packet is complete.
  *          (if so the status in pkt->irp is the final status).
  */
-BOOLEAN RetryTransferPacket(PTRANSFER_PACKET Pkt)
+BOOLEAN NTAPI RetryTransferPacket(PTRANSFER_PACKET Pkt)
 {
     BOOLEAN packetDone;
 
@@ -278,18 +275,16 @@ BOOLEAN RetryTransferPacket(PTRANSFER_PACKET Pkt)
     return packetDone;
 }
 
-
-VOID TransferPacketRetryTimerDpc(   IN PKDPC Dpc,
-                                    IN PVOID DeferredContext,
-                                    IN PVOID SystemArgument1,
-                                    IN PVOID SystemArgument2)
+VOID NTAPI TransferPacketRetryTimerDpc(IN PKDPC Dpc,
+                                       IN PVOID DeferredContext,
+                                       IN PVOID SystemArgument1,
+                                       IN PVOID SystemArgument2)
 {
     PTRANSFER_PACKET pkt = (PTRANSFER_PACKET)DeferredContext;
     SubmitTransferPacket(pkt);
 }
 
-
-VOID InitLowMemRetry(PTRANSFER_PACKET Pkt, PVOID BufPtr, ULONG Len, LARGE_INTEGER TargetLocation)
+VOID NTAPI InitLowMemRetry(PTRANSFER_PACKET Pkt, PVOID BufPtr, ULONG Len, LARGE_INTEGER TargetLocation)
 {
     ASSERT(Len > 0);
     ASSERT(!Pkt->InLowMemRetry);
@@ -299,7 +294,6 @@ VOID InitLowMemRetry(PTRANSFER_PACKET Pkt, PVOID BufPtr, ULONG Len, LARGE_INTEGE
     Pkt->LowMemRetry_nextChunkTargetLocation = TargetLocation;
 }
 
-
 /*
  *  StepLowMemRetry
  *
@@ -308,7 +302,7 @@ VOID InitLowMemRetry(PTRANSFER_PACKET Pkt, PVOID BufPtr, ULONG Len, LARGE_INTEGE
  *
  *      Returns TRUE iff the packet is done.
  */
-BOOLEAN StepLowMemRetry(PTRANSFER_PACKET Pkt)
+BOOLEAN NTAPI StepLowMemRetry(PTRANSFER_PACKET Pkt)
 {
     BOOLEAN packetDone;
 
@@ -346,4 +340,3 @@ BOOLEAN StepLowMemRetry(PTRANSFER_PACKET Pkt)
 
     return packetDone;
 }
-

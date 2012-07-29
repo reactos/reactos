@@ -24,13 +24,12 @@ Revision History:
 #include "classp.h"
 #include "debug.h"
 
-
 /*
  *  EnqueueDeferredClientIrp
  *
  *      Note: we currently do not support Cancel for storage irps.
  */
-VOID EnqueueDeferredClientIrp(PCLASS_PRIVATE_FDO_DATA FdoData, PIRP Irp)
+VOID NTAPI EnqueueDeferredClientIrp(PCLASS_PRIVATE_FDO_DATA FdoData, PIRP Irp)
 {
     KIRQL oldIrql;
 
@@ -44,7 +43,7 @@ VOID EnqueueDeferredClientIrp(PCLASS_PRIVATE_FDO_DATA FdoData, PIRP Irp)
  *  DequeueDeferredClientIrp
  *
  */
-PIRP DequeueDeferredClientIrp(PCLASS_PRIVATE_FDO_DATA FdoData)
+PIRP NTAPI DequeueDeferredClientIrp(PCLASS_PRIVATE_FDO_DATA FdoData)
 {
     KIRQL oldIrql;
     PLIST_ENTRY listEntry;
@@ -69,6 +68,3 @@ PIRP DequeueDeferredClientIrp(PCLASS_PRIVATE_FDO_DATA FdoData)
 
     return irp;
 }
-
-
-
