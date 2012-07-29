@@ -81,7 +81,7 @@ endif()
 add_compile_flags("-fno-strict-aliasing")
 
 if(ARCH MATCHES i386)
-    add_compile_flags("-mpreferred-stack-boundary=4 -fno-set-stack-executable -fno-optimize-sibling-calls -fno-omit-frame-pointer")
+    add_compile_flags("-mpreferred-stack-boundary=2 -fno-set-stack-executable -fno-optimize-sibling-calls -fno-omit-frame-pointer")
     if(OPTIMIZE STREQUAL "1")
         add_compile_flags("-ftracer -momit-leaf-frame-pointer")
     endif()
