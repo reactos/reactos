@@ -221,7 +221,7 @@ VOID NTAPI ClassScanForSpecial(
     PUCHAR productId;
     PUCHAR productRevision;
     UCHAR nullString[] = "";
-    ULONG j;
+    //ULONG j;
 
     PAGED_CODE();
     ASSERT(DeviceList);

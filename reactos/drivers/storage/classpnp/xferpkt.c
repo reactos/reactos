@@ -326,7 +326,7 @@ PTRANSFER_PACKET NTAPI DequeueFreeTransferPacket(PDEVICE_OBJECT Fdo, BOOLEAN All
     PCLASS_PRIVATE_FDO_DATA fdoData = fdoExt->PrivateFdoData;
     PTRANSFER_PACKET pkt;
     PSINGLE_LIST_ENTRY slistEntry;
-    KIRQL oldIrql;
+    //KIRQL oldIrql;
 
     slistEntry = InterlockedPopEntrySList(&fdoData->FreeTransferPacketsList);
     if (slistEntry){

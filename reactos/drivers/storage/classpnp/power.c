@@ -100,7 +100,7 @@ ClassDispatchPower(
     //       don't do anything that would break under either circumstance.
     //
 
-    NTSTATUS status;
+    //NTSTATUS status;
 
     isRemoved = ClassAcquireRemoveLock(DeviceObject, Irp);
 

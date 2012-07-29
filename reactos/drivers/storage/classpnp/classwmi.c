@@ -227,7 +227,7 @@ ClassSystemControl(
             PGUIDREGINFO guidList;
             PWMIREGINFOW wmiRegInfo;
             PWMIREGGUIDW wmiRegGuid;
-            PDEVICE_OBJECT pdo;
+            //PDEVICE_OBJECT pdo;
             PUNICODE_STRING regPath;
             PWCHAR stringPtr;
             ULONG retSize;

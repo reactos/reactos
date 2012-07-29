@@ -849,8 +849,8 @@ Return Value:
 {
     PCLASS_PRIVATE_FDO_DATA privateData = FdoExtension->PrivateFdoData;
     PCOMMON_DEVICE_EXTENSION commonExt = &FdoExtension->CommonExtension;
-    KIRQL oldIrql;
-    PIRP blockedIrp;
+    //KIRQL oldIrql;
+    //PIRP blockedIrp;
 
     // This function is obsolete, but still called by DISK.SYS .
     // DBGWARN(("ClassFreeOrReuseSrb is OBSOLETE !"));

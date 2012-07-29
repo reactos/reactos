@@ -425,7 +425,7 @@ ClassUnload(
     )
 {
     PCLASS_DRIVER_EXTENSION driverExtension;
-    NTSTATUS status;
+    //NTSTATUS status;
 
     PAGED_CODE();
 
@@ -2658,7 +2658,7 @@ ClassSendSrbSynchronous(
     PFUNCTIONAL_DEVICE_EXTENSION fdoExtension = Fdo->DeviceExtension;
     PCLASS_PRIVATE_FDO_DATA fdoData = fdoExtension->PrivateFdoData;
     IO_STATUS_BLOCK ioStatus;
-    ULONG controlType;
+    //ULONG controlType;
     PIRP irp;
     PIO_STACK_LOCATION irpStack;
     KEVENT event;
