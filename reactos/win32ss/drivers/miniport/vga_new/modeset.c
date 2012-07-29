@@ -10,12 +10,14 @@
 #include "vga.h"
 
 VP_STATUS
+NTAPI
 VgaInterpretCmdStream(
     PHW_DEVICE_EXTENSION HwDeviceExtension,
     PUSHORT pusCmdStream
     );
 
 VP_STATUS
+NTAPI
 VgaSetMode(
     PHW_DEVICE_EXTENSION HwDeviceExtension,
     PVIDEO_MODE Mode,
@@ -26,6 +28,7 @@ VgaSetMode(
     );
 
 VP_STATUS
+NTAPI
 VgaQueryAvailableModes(
     PHW_DEVICE_EXTENSION HwDeviceExtension,
     PVIDEO_MODE_INFORMATION ModeInformation,
@@ -34,6 +37,7 @@ VgaQueryAvailableModes(
     );
 
 VP_STATUS
+NTAPI
 VgaQueryNumberOfAvailableModes(
     PHW_DEVICE_EXTENSION HwDeviceExtension,
     PVIDEO_NUM_MODES NumModes,
@@ -42,6 +46,7 @@ VgaQueryNumberOfAvailableModes(
     );
 
 VP_STATUS
+NTAPI
 VgaQueryCurrentMode(
     PHW_DEVICE_EXTENSION HwDeviceExtension,
     PVIDEO_MODE_INFORMATION ModeInformation,
@@ -50,6 +55,7 @@ VgaQueryCurrentMode(
     );
 
 VOID
+NTAPI
 VgaZeroVideoMemory(
     PHW_DEVICE_EXTENSION HwDeviceExtension
     );
@@ -64,6 +70,7 @@ VgaZeroVideoMemory(
 
 //---------------------------------------------------------------------------
 VP_STATUS
+NTAPI
 VgaInterpretCmdStream(
     PHW_DEVICE_EXTENSION HwDeviceExtension,
     PUSHORT pusCmdStream
@@ -349,8 +356,8 @@ Return Value:
 
 } // end VgaInterpretCmdStream()
 
-
 VP_STATUS
+NTAPI
 VgaSetMode(
     PHW_DEVICE_EXTENSION HwDeviceExtension,
     PVIDEO_MODE Mode,
@@ -504,8 +511,9 @@ Cleanup:
     return NO_ERROR;
 
 } //end VgaSetMode()
-
+
 VP_STATUS
+NTAPI
 VgaQueryAvailableModes(
     PHW_DEVICE_EXTENSION HwDeviceExtension,
     PVIDEO_MODE_INFORMATION ModeInformation,
@@ -641,8 +649,9 @@ Return Value:
     return NO_ERROR;
 
 } // end VgaGetAvailableModes()
-
+
 VP_STATUS
+NTAPI
 VgaQueryNumberOfAvailableModes(
     PHW_DEVICE_EXTENSION HwDeviceExtension,
     PVIDEO_NUM_MODES NumModes,
@@ -704,8 +713,9 @@ Return Value:
     return NO_ERROR;
 
 } // end VgaGetNumberOfAvailableModes()
-
+
 VP_STATUS
+NTAPI
 VgaQueryCurrentMode(
     PHW_DEVICE_EXTENSION HwDeviceExtension,
     PVIDEO_MODE_INFORMATION ModeInformation,
@@ -837,8 +847,8 @@ Return Value:
 
 } // end VgaQueryCurrentMode()
 
-
 VOID
+NTAPI
 VgaZeroVideoMemory(
     PHW_DEVICE_EXTENSION HwDeviceExtension
     )
@@ -886,3 +896,4 @@ Return Value:
     VgaInterpretCmdStream(HwDeviceExtension, DisableA000Color);
 
 }
+

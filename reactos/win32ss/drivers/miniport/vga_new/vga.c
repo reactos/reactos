@@ -19,6 +19,7 @@
 //
 
 VP_STATUS
+NTAPI
 VgaFindAdapter(
     PVOID HwDeviceExtension,
     PVOID HwContext,
@@ -28,11 +29,13 @@ VgaFindAdapter(
     );
 
 BOOLEAN
+NTAPI
 VgaInitialize(
     PVOID HwDeviceExtension
     );
 
 BOOLEAN
+NTAPI
 VgaStartIO(
     PVOID HwDeviceExtension,
     PVIDEO_REQUEST_PACKET RequestPacket
@@ -43,6 +46,7 @@ VgaStartIO(
 //
 
 VP_STATUS
+NTAPI
 VgaQueryAvailableModes(
     PHW_DEVICE_EXTENSION HwDeviceExtension,
     PVIDEO_MODE_INFORMATION ModeInformation,
@@ -51,6 +55,7 @@ VgaQueryAvailableModes(
     );
 
 VP_STATUS
+NTAPI
 VgaQueryNumberOfAvailableModes(
     PHW_DEVICE_EXTENSION HwDeviceExtension,
     PVIDEO_NUM_MODES NumModes,
@@ -59,6 +64,7 @@ VgaQueryNumberOfAvailableModes(
     );
 
 VP_STATUS
+NTAPI
 VgaQueryCurrentMode(
     PHW_DEVICE_EXTENSION HwDeviceExtension,
     PVIDEO_MODE_INFORMATION ModeInformation,
@@ -67,6 +73,7 @@ VgaQueryCurrentMode(
     );
 
 VP_STATUS
+NTAPI
 VgaSetMode(
     PHW_DEVICE_EXTENSION HwDeviceExtension,
     PVIDEO_MODE Mode,
@@ -77,17 +84,20 @@ VgaSetMode(
     );
 
 BOOLEAN
+NTAPI
 VgaIsPresent(
     PHW_DEVICE_EXTENSION HwDeviceExtension
     );
 
 VOID
+NTAPI
 VgaInterpretCmdStream(
     PVOID HwDeviceExtension,
     PUSHORT pusCmdStream
     );
 
 VP_STATUS
+NTAPI
 VgaSetPaletteReg(
     PHW_DEVICE_EXTENSION HwDeviceExtension,
     PVIDEO_PALETTE_DATA PaletteBuffer,
@@ -95,6 +105,7 @@ VgaSetPaletteReg(
     );
 
 VP_STATUS
+NTAPI
 VgaSetColorLookup(
     PHW_DEVICE_EXTENSION HwDeviceExtension,
     PVIDEO_CLUT ClutBuffer,
@@ -102,6 +113,7 @@ VgaSetColorLookup(
     );
 
 VP_STATUS
+NTAPI
 GetDeviceDataCallback(
    PVOID HwDeviceExtension,
    PVOID Context,
@@ -116,6 +128,7 @@ GetDeviceDataCallback(
 
 // eVb: 1.2 [RESOURCE] - Add new function for acquiring VGA resources (I/O, memory)
 VP_STATUS
+NTAPI
 VgaAcquireResources(
     PHW_DEVICE_EXTENSION DeviceExtension
     );
@@ -130,7 +143,6 @@ VgaAcquireResources(
 #pragma alloc_text(PAGE,VgaSetColorLookup)
 #endif
 
-
 //---------------------------------------------------------------------------
 ULONG
 // eVb: 1.3 [GCC] - Add NTAPI for GCC support
@@ -303,9 +315,10 @@ Return Value:
     return initializationStatus;
 
 } // end DriverEntry()
-
+
 //---------------------------------------------------------------------------
 VP_STATUS
+NTAPI
 VgaFindAdapter(
     PVOID HwDeviceExtension,
     PVOID HwContext,
@@ -485,9 +498,10 @@ Return Value:
 
 
 } // VgaFindAdapter()
-
+
 //---------------------------------------------------------------------------
 BOOLEAN
+NTAPI
 VgaInitialize(
     PVOID HwDeviceExtension
     )
@@ -527,9 +541,10 @@ Return Value:
     return TRUE;
 
 } // VgaInitialize()
-
+
 //---------------------------------------------------------------------------
 BOOLEAN
+NTAPI
 VgaStartIO(
     PVOID HwDeviceExtension,
     PVIDEO_REQUEST_PACKET RequestPacket
@@ -912,15 +927,14 @@ Return Value:
 
 } // VgaStartIO()
 
-
 //---------------------------------------------------------------------------
 //
 // private routines
 //
 
-
 //---------------------------------------------------------------------------
 BOOLEAN
+NTAPI
 VgaIsPresent(
     PHW_DEVICE_EXTENSION HwDeviceExtension
     )
@@ -1243,10 +1257,10 @@ Return Value:
     return returnStatus;
 
 } // VgaIsPresent()
-
 
 //---------------------------------------------------------------------------
 VP_STATUS
+NTAPI
 VgaSetPaletteReg(
     PHW_DEVICE_EXTENSION HwDeviceExtension,
     PVIDEO_PALETTE_DATA PaletteBuffer,
@@ -1334,9 +1348,9 @@ Return Value:
 
 } // end VgaSetPaletteReg()
 
-
 //---------------------------------------------------------------------------
 VP_STATUS
+NTAPI
 VgaSetColorLookup(
     PHW_DEVICE_EXTENSION HwDeviceExtension,
     PVIDEO_CLUT ClutBuffer,
@@ -1440,8 +1454,9 @@ Return Value:
     return ERROR_INVALID_PARAMETER;
 
 } // end VgaSetColorLookup()
-
+
 VP_STATUS
+NTAPI
 GetDeviceDataCallback(
     PVOID HwDeviceExtension,
     PVOID Context,
@@ -1501,6 +1516,7 @@ Return Value:
 
 // eVb: 1.16 [RESOURCE] - Add new function for acquiring VGA resources (I/O, memory)
 VP_STATUS
+NTAPI
 VgaAcquireResources(
     PHW_DEVICE_EXTENSION DeviceExtension
     )

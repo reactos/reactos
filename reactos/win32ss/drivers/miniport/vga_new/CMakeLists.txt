@@ -13,12 +13,9 @@ add_library(vga SHARED
 target_link_libraries(vga libcntpr)
 
 # FIXME: http://www.cmake.org/Bug/view.php?id=12998
-if(MSVC)
-    #add_target_compile_flags(vga "/Gz")
-    set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "/Gz")
-else()
-    #add_target_compile_flags(vga "-mrtd -fno-builtin")
-    set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-mrtd -fno-builtin")
+if(NOT MSVC)
+    #allow_warnings(vga)
+    set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-Wno-error")
 endif()
 
 set_module_type(vga kernelmodedriver)
