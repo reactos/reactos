@@ -767,6 +767,11 @@ IntGdiRealizePalette(HDC hDC)
         return 0;
     }
 
+    if (!pdc->dclevel.pSurface)
+    {
+        goto cleanup;
+    }
+
     ppalSurf = pdc->dclevel.pSurface->ppal;
     ppalDC = pdc->dclevel.ppal;
 
