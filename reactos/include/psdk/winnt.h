@@ -176,7 +176,11 @@ extern "C" {
 #elif (_MSC_VER)
 #define FORCEINLINE __inline
 #else
-#define FORCEINLINE extern __inline__ __attribute__((always_inline))
+# if ( __MINGW_GNUC_PREREQ(4, 3)  &&  __STDC_VERSION__ >= 199901L)
+#  define FORCEINLINE extern inline __attribute__((__always_inline__,__gnu_inline__))
+# else
+#  define FORCEINLINE extern __inline__ __attribute__((__always_inline__))
+# endif
 #endif
 #endif
 

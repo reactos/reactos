@@ -112,7 +112,7 @@ extern "C" {
   _CRTIMP int __cdecl __iscsymf(int _C);
   _CRTIMP int __cdecl __iscsym(int _C);
 #if (defined (__STDC_VERSION__) && __STDC_VERSION__ >= 199901L) || !defined (NO_OLDNAMES)
-  _CRTIMP int __cdecl isblank(int _C);
+  int __cdecl isblank(int _C);
 #endif
 #endif /* !_CTYPE_DEFINED */
 
@@ -156,7 +156,7 @@ extern "C" {
   _CRTIMP int __cdecl is_wctype(wint_t _C,wctype_t _Type);
 
 #if (defined (__STDC_VERSION__) && __STDC_VERSION__ >= 199901L) || !defined (NO_OLDNAMES)
-  _CRTIMP int __cdecl iswblank(wint_t _C);
+  int __cdecl iswblank(wint_t _C);
 #endif
 #endif
 

@@ -31,7 +31,11 @@
 #include <specstrings.h>
 
 #if defined(__GNUC__) && !defined(__forceinline)
-#define __forceinline extern __inline __attribute((always_inline))
+# if ( __MINGW_GNUC_PREREQ(4, 3)  &&  __STDC_VERSION__ >= 199901L)
+#  define __forceinline extern inline __attribute__((__always_inline__,__gnu_inline__))
+# else
+#  define __forceinline extern __inline__ __attribute__((__always_inline__))
+# endif
 #endif
 
 /* Handle ntintsafe here too */
