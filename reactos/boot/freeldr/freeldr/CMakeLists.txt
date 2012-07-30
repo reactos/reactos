@@ -150,8 +150,12 @@ else()
 #TBD
 endif()
 
-add_library(freeldr_common ${FREELDR_COMMON_SOURCE})
-add_dependencies(freeldr_common bugcodes)
+if(CMAKE_VERSION VERSION_GREATER 2.8.7)
+    add_library(freeldr_common OBJECT ${FREELDR_COMMON_SOURCE})
+else()
+    add_library(freeldr_common ${FREELDR_COMMON_SOURCE})
+    add_dependencies(freeldr_common bugcodes)
+endif()
 
 if(ARCH MATCHES i386 AND NOT MSVC)
     list(APPEND FREELDR_BASE_SOURCE arch/i386/multiboot.S)
@@ -162,12 +166,18 @@ list(APPEND FREELDR_BASE_SOURCE
     freeldr.c
     rtl/libsupp.c)
 
-if (NOT MSVC)
+if(NOT MSVC)
     list(APPEND FREELDR_BASE_SOURCE ${CMAKE_CURRENT_BINARY_DIR}/freeldr.def)
 endif()
 
-add_library(freeldr_pe SHARED ${FREELDR_BASE_SOURCE})
-add_library(freeldr_pe_dbg SHARED EXCLUDE_FROM_ALL ${FREELDR_BASE_SOURCE})
+
+if(CMAKE_VERSION VERSION_GREATER 2.8.7)
+    add_library(freeldr_pe SHARED $<TARGET_OBJECTS:freeldr_common> ${FREELDR_BASE_SOURCE})
+    add_library(freeldr_pe_dbg SHARED EXCLUDE_FROM_ALL $<TARGET_OBJECTS:freeldr_common> ${FREELDR_BASE_SOURCE})
+else()
+    add_library(freeldr_pe SHARED ${FREELDR_BASE_SOURCE})
+    add_library(freeldr_pe_dbg SHARED EXCLUDE_FROM_ALL ${FREELDR_BASE_SOURCE})
+endif()
 
 if(NOT MSVC)
     add_target_link_flags(freeldr_pe "-Wl,--strip-all,--exclude-all-symbols,--file-alignment,0x1000,-T,${CMAKE_CURRENT_SOURCE_DIR}/freeldr_i386.lds")
@@ -190,21 +200,13 @@ if(ARCH MATCHES i386)
     target_link_libraries(freeldr_pe_dbg mini_hal)
 endif()
 
-target_link_libraries(freeldr_pe
-    freeldr_common
-    cportlib
-    rossym
-    cmlib
-    rtl
-    libcntpr)
+if(NOT CMAKE_VERSION VERSION_GREATER 2.8.7)
+    target_link_libraries(freeldr_pe freeldr_common)
+    target_link_libraries(freeldr_pe_dbg freeldr_common)
+endif()
 
-target_link_libraries(freeldr_pe_dbg
-    freeldr_common
-    cportlib
-    rossym
-    cmlib
-    rtl
-    libcntpr)
+target_link_libraries(freeldr_pe cportlib rossym cmlib rtl libcntpr)
+target_link_libraries(freeldr_pe_dbg cportlib rossym cmlib rtl libcntpr)
 
 # add_pch(freeldr_pe include/freeldr.h)
 
@@ -229,8 +231,13 @@ if(ARCH MATCHES i386 OR ARCH MATCHES amd64)
     list(APPEND SETUPLDR_SOURCE windows/setupldr.c)
 endif()
 
-add_library(setupldr_pe SHARED ${FREELDR_BASE_SOURCE} ${SETUPLDR_SOURCE})
-add_library(setupldr_pe_dbg SHARED EXCLUDE_FROM_ALL ${FREELDR_BASE_SOURCE} ${SETUPLDR_SOURCE})
+if(CMAKE_VERSION VERSION_GREATER 2.8.7)
+    add_library(setupldr_pe SHARED $<TARGET_OBJECTS:freeldr_common> ${FREELDR_BASE_SOURCE} ${SETUPLDR_SOURCE})
+    add_library(setupldr_pe_dbg SHARED EXCLUDE_FROM_ALL $<TARGET_OBJECTS:freeldr_common> ${FREELDR_BASE_SOURCE} ${SETUPLDR_SOURCE})
+else()
+    add_library(setupldr_pe SHARED ${FREELDR_BASE_SOURCE} ${SETUPLDR_SOURCE})
+    add_library(setupldr_pe_dbg SHARED EXCLUDE_FROM_ALL ${FREELDR_BASE_SOURCE} ${SETUPLDR_SOURCE})
+endif()
 
 if(NOT MSVC)
     add_target_link_flags(setupldr_pe "-Wl,--strip-all,--exclude-all-symbols,--file-alignment,0x1000,-T,${CMAKE_CURRENT_SOURCE_DIR}/freeldr_i386.lds")
@@ -256,21 +263,13 @@ if(ARCH MATCHES i386)
     target_link_libraries(setupldr_pe_dbg mini_hal)
 endif()
 
-target_link_libraries(setupldr_pe
-    freeldr_common
-    cportlib
-    rossym
-    cmlib
-    rtl
-    libcntpr)
+if(NOT CMAKE_VERSION VERSION_GREATER 2.8.7)
+    target_link_libraries(setupldr_pe freeldr_common)
+    target_link_libraries(setupldr_pe_dbg freeldr_common)
+endif()
 
-target_link_libraries(setupldr_pe_dbg
-    freeldr_common
-    cportlib
-    rossym
-    cmlib
-    rtl
-    libcntpr)
+target_link_libraries(setupldr_pe cportlib rossym cmlib rtl libcntpr)
+target_link_libraries(setupldr_pe_dbg cportlib rossym cmlib rtl libcntpr)
 
 add_dependencies(setupldr_pe asm)
 add_dependencies(setupldr_pe_dbg asm)
@@ -281,5 +280,4 @@ concatenate_files(
     ${CMAKE_CURRENT_BINARY_DIR}/setupldr.sys)
 
 add_custom_target(setupldr ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/setupldr.sys)
-
 add_cd_file(TARGET setupldr FILE ${CMAKE_CURRENT_BINARY_DIR}/setupldr.sys DESTINATION loader NO_CAB FOR bootcd regtest)
