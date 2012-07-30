@@ -2,6 +2,11 @@
 
 spec2def(opengl32.dll opengl32.spec ADD_IMPORTLIB)
 
+add_definitions(
+    -D_GDI32_ # prevent gl* being declared __declspec(dllimport) in MS headers
+    -DBUILD_GL32 # declare gl* as __declspec(dllexport) in Mesa headers
+)
+
 list(APPEND SOURCE
     font.c
     gl.c
