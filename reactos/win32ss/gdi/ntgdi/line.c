@@ -233,6 +233,12 @@ IntGdiPolyline(DC      *dc,
     LONG i;
     PDC_ATTR pdcattr = dc->pdcattr;
 
+    psurf = dc->dclevel.pSurface;
+    if (!psurf)
+    {
+        return FALSE;
+    }
+
     if (PATH_IsPathOpen(dc->dclevel))
         return PATH_Polyline(dc, pt, Count);
 
@@ -254,11 +260,6 @@ IntGdiPolyline(DC      *dc,
         Points = EngAllocMem(0, Count * sizeof(POINT), GDITAG_TEMP);
         if (Points != NULL)
         {
-            psurf = dc->dclevel.pSurface;
-            /* FIXME: psurf can be NULL!!!!
-               Don't assert but handle this case gracefully! */
-            ASSERT(psurf);
-
             RtlCopyMemory(Points, pt, Count * sizeof(POINT));
             IntLPtoDP(dc, Points, Count);
 
