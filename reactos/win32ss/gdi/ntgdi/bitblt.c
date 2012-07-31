@@ -67,7 +67,7 @@ TranslateCOLORREF(PDC pdc, COLORREF crColor)
             return index;
 
         default:
-            DPRINT("Unsupported color type %d passed\n", crColor >> 24);
+            DPRINT("Unsupported color type %u passed\n", crColor >> 24);
             crColor &= 0xFFFFFF;
     }
 
@@ -122,7 +122,7 @@ NtGdiAlphaBlend(
     ahDC[1] = hDCSrc ;
     if (!GDIOBJ_bLockMultipleObjects(2, (HGDIOBJ*)ahDC, apObj, GDIObjType_DC_TYPE))
     {
-        DPRINT1("Invalid dc handle (dest=0x%08x, src=0x%08x) passed to NtGdiAlphaBlend\n", hDCDest, hDCSrc);
+        DPRINT1("Invalid dc handle (dest=0x%p, src=0x%p) passed to NtGdiAlphaBlend\n", hDCDest, hDCSrc);
         EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
@@ -270,7 +270,7 @@ NtGdiTransparentBlt(
     ahDC[1] = hdcSrc ;
     if (!GDIOBJ_bLockMultipleObjects(2, (HGDIOBJ*)ahDC, apObj, GDIObjType_DC_TYPE))
     {
-        DPRINT1("Invalid dc handle (dest=0x%08x, src=0x%08x) passed to NtGdiAlphaBlend\n", hdcDst, hdcSrc);
+        DPRINT1("Invalid dc handle (dest=0x%p, src=0x%p) passed to NtGdiAlphaBlend\n", hdcDst, hdcSrc);
         EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
@@ -424,7 +424,7 @@ NtGdiMaskBlt(
     ahDC[1] = UsesSource ? hdcSrc : NULL;
     if (!GDIOBJ_bLockMultipleObjects(2, (HGDIOBJ*)ahDC, apObj, GDIObjType_DC_TYPE))
     {
-        DPRINT1("Invalid dc handle (dest=0x%08x, src=0x%08x) passed to NtGdiAlphaBlend\n", hdcDest, hdcSrc);
+        DPRINT1("Invalid dc handle (dest=0x%p, src=0x%p) passed to NtGdiAlphaBlend\n", hdcDest, hdcSrc);
         EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
@@ -435,7 +435,7 @@ NtGdiMaskBlt(
     if (NULL == DCDest)
     {
         if(DCSrc) DC_UnlockDc(DCSrc);
-        DPRINT("Invalid destination dc handle (0x%08x) passed to NtGdiBitBlt\n", hdcDest);
+        DPRINT("Invalid destination dc handle (0x%p) passed to NtGdiBitBlt\n", hdcDest);
         return FALSE;
     }
 
@@ -486,6 +486,13 @@ NtGdiMaskBlt(
         SourceRect.top = SourcePoint.y;
         SourceRect.right = SourcePoint.x + DestRect.right - DestRect.left;
         SourceRect.bottom = SourcePoint.y + DestRect.bottom - DestRect.top ;
+    }
+    else
+    {
+        SourceRect.left = 0;
+        SourceRect.top = 0;
+        SourceRect.right = 0;
+        SourceRect.bottom = 0;
     }
 
     /* Prepare blit */
@@ -619,7 +626,7 @@ GreStretchBltMask(
     ahDC[2] = UsesMask ? hDCMask : NULL;
     if (!GDIOBJ_bLockMultipleObjects(3, (HGDIOBJ*)ahDC, apObj, GDIObjType_DC_TYPE))
     {
-        DPRINT1("Invalid dc handle (dest=0x%08x, src=0x%08x) passed to NtGdiAlphaBlend\n", hDCDest, hDCSrc);
+        DPRINT1("Invalid dc handle (dest=0x%p, src=0x%p) passed to NtGdiAlphaBlend\n", hDCDest, hDCSrc);
         EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
@@ -728,10 +735,11 @@ GreStretchBltMask(
 
     /* Perform the bitblt operation */
     Status = IntEngStretchBlt(&BitmapDest->SurfObj,
-                              &BitmapSrc->SurfObj,
+                              BitmapSrc ? &BitmapSrc->SurfObj : NULL,
                               BitmapMask ? &BitmapMask->SurfObj : NULL,
                               DCDest->rosdc.CombinedClip,
                               XlateObj,
+                              &DCDest->dclevel.ca,
                               &DestRect,
                               &SourceRect,
                               BitmapMask ? &MaskPoint : NULL,

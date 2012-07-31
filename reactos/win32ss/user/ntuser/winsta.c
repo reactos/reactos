@@ -61,19 +61,19 @@ UserCreateWinstaDirectoy()
     }
     else
     {
-        swprintf(wstrWindowStationsDir, 
-                 L"%ws\\%ld%ws", 
-                 SESSION_DIR, 
-                 Peb->SessionId, 
+        swprintf(wstrWindowStationsDir,
+                 L"%ws\\%ld%ws",
+                 SESSION_DIR,
+                 Peb->SessionId,
                  WINSTA_OBJ_DIR);
 
         RtlCreateUnicodeString( &gustrWindowStationsDir, wstrWindowStationsDir);
     }
 
-   InitializeObjectAttributes(&ObjectAttributes, 
-                              &gustrWindowStationsDir, 
-                              0, 
-                              NULL, 
+   InitializeObjectAttributes(&ObjectAttributes,
+                              &gustrWindowStationsDir,
+                              0,
+                              NULL,
                               NULL);
    Status = ZwCreateDirectoryObject(&hWinstaDir, 0, &ObjectAttributes);
    if (!NT_SUCCESS(Status))
@@ -433,7 +433,7 @@ NtUserCreateWindowStation(
       InitCursorImpl();
    }
 
-   TRACE("NtUserCreateWindowStation created object 0x%x with name %wZ handle 0x%x\n", 
+   TRACE("NtUserCreateWindowStation created object 0x%x with name %wZ handle 0x%x\n",
           WindowStation, &WindowStationObject->Name, WindowStation);
    return WindowStation;
 }
@@ -631,7 +631,7 @@ NtUserGetObjectInformation(
       Status = IntValidateDesktopHandle(
                   hObject,
                   UserMode,
-                  0, 
+                  0,
                   &DesktopObject);
       if (!NT_SUCCESS(Status))
       {
