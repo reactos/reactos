@@ -17,10 +17,13 @@
 
 /* GLOBALS ********************************************************************/
 
+#define HYDRA_PROCESS (PEPROCESS)1
 #if MI_TRACE_PFNS
 BOOLEAN UserPdeFault = FALSE;
 #endif
 
+LONG MmSystemLockPagesCount;
+ 
 /* PRIVATE FUNCTIONS **********************************************************/
 
 PMMPTE
@@ -35,8 +38,70 @@ MiCheckVirtualAddress(IN PVOID VirtualAddress,
     /* No prototype/section support for now */
     *ProtoVad = NULL;
 
-    /* Check if this is a page table address */
-    if (MI_IS_PAGE_TABLE_ADDRESS(VirtualAddress))
+    /* User or kernel fault? */
+    if (VirtualAddress <= MM_HIGHEST_USER_ADDRESS)
+    {
+        /* Special case for shared data */
+        if (PAGE_ALIGN(VirtualAddress) == (PVOID)MM_SHARED_USER_DATA_VA)
+        {
+            /* It's a read-only page */
+            *ProtectCode = MM_READONLY;
+            return MmSharedUserDataPte;
+        }
+
+        /* Find the VAD, it might not exist if the address is bogus */
+        Vad = MiLocateAddress(VirtualAddress);
+        if (!Vad)
+        {
+            /* Bogus virtual address */
+            *ProtectCode = MM_NOACCESS;
+            return NULL;
+        }
+
+        /* ReactOS does not handle physical memory VADs yet */
+        ASSERT(Vad->u.VadFlags.VadType != VadDevicePhysicalMemory);
+
+        /* Check if it's a section, or just an allocation */
+        if (Vad->u.VadFlags.PrivateMemory)
+        {
+            /* ReactOS does not handle AWE VADs yet */
+            ASSERT(Vad->u.VadFlags.VadType != VadAwe);
+
+            /* This must be a TEB/PEB VAD */
+            if (Vad->u.VadFlags.MemCommit)
+            {
+                /* It's committed, so return the VAD protection */
+                *ProtectCode = (ULONG)Vad->u.VadFlags.Protection;
+            }
+            else
+            {
+                /* It has not yet been committed, so return no access */
+                *ProtectCode = MM_NOACCESS;
+            }
+
+            /* In both cases, return no PTE */
+            return NULL;
+        }
+        else
+        {
+            /* ReactOS does not supoprt these VADs yet */
+            ASSERT(Vad->u.VadFlags.VadType != VadImageMap);
+            ASSERT(Vad->u2.VadFlags2.ExtendableFile == 0);
+
+            /* Return the proto VAD */
+            *ProtoVad = Vad;
+
+            /* Get the prototype PTE for this page */
+            PointerPte = (((ULONG_PTR)VirtualAddress >> PAGE_SHIFT) - Vad->StartingVpn) + Vad->FirstPrototypePte;
+            ASSERT(PointerPte != NULL);
+            ASSERT(PointerPte <= Vad->LastContiguousPte);
+
+            /* Return the Prototype PTE and the protection for the page mapping */
+            *ProtectCode = (ULONG)Vad->u.VadFlags.Protection;
+            return PointerPte;
+        }
+    }
+    else if (MI_IS_PAGE_TABLE_ADDRESS(VirtualAddress))
     {
         /* This should never happen, as these addresses are handled by the double-maping */
         if (((PMMPTE)VirtualAddress >= MiAddressToPte(MmPagedPoolStart)) &&
@@ -51,61 +116,15 @@ MiCheckVirtualAddress(IN PVOID VirtualAddress,
         *ProtectCode = MM_READWRITE;
         return NULL;
     }
-
-    /* Should not be a session address */
-    ASSERT(MI_IS_SESSION_ADDRESS(VirtualAddress) == FALSE);
-
-    /* Special case for shared data */
-    if (PAGE_ALIGN(VirtualAddress) == (PVOID)MM_SHARED_USER_DATA_VA)
+    else if (MI_IS_SESSION_ADDRESS(VirtualAddress))
     {
-        /* It's a read-only page */
-        *ProtectCode = MM_READONLY;
-        return MmSharedUserDataPte;
+        /* ReactOS does not have an image list yet, so bail out to failure case */
+        ASSERT(IsListEmpty(&MmSessionSpace->ImageList));
     }
 
-    /* Find the VAD, it might not exist if the address is bogus */
-    Vad = MiLocateAddress(VirtualAddress);
-    if (!Vad)
-    {
-        /* Bogus virtual address */
-        *ProtectCode = MM_NOACCESS;
-        return NULL;
-    }
-
-    /* This must be a VM VAD */
-    ASSERT(Vad->u.VadFlags.VadType == VadNone);
-
-    /* Check if it's a section, or just an allocation */
-    if (Vad->u.VadFlags.PrivateMemory)
-    {
-        /* This must be a TEB/PEB VAD */
-        if (Vad->u.VadFlags.MemCommit)
-        {
-            /* It's committed, so return the VAD protection */
-            *ProtectCode = (ULONG)Vad->u.VadFlags.Protection;
-        }
-        else
-        {
-            /* It has not yet been committed, so return no access */
-            *ProtectCode = MM_NOACCESS;
-        }
-        return NULL;
-    }
-    else
-    {
-        /* Return the proto VAD */
-        ASSERT(Vad->u2.VadFlags2.ExtendableFile == 0);
-        *ProtoVad = Vad;
-
-        /* Get the prototype PTE for this page */
-        PointerPte = (((ULONG_PTR)VirtualAddress >> PAGE_SHIFT) - Vad->StartingVpn) + Vad->FirstPrototypePte;
-        ASSERT(PointerPte <= Vad->LastContiguousPte);
-        ASSERT(PointerPte != NULL);
-
-        /* Return the Prototype PTE and the protection for the page mapping */
-        *ProtectCode = (ULONG)Vad->u.VadFlags.Protection;
-        return PointerPte;
-    }
+    /* Default case -- failure */
+    *ProtectCode = MM_NOACCESS;
+    return NULL;
 }
 
 #if (_MI_PAGING_LEVELS == 2)
@@ -132,19 +151,23 @@ MiSynchronizeSystemPde(PMMPDE PointerPde)
 
 NTSTATUS
 FASTCALL
+MiCheckPdeForSessionSpace(IN PVOID Address)
+{
+    /* Code not yet tested */
+    ASSERT(FALSE);
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+FASTCALL
 MiCheckPdeForPagedPool(IN PVOID Address)
 {
     PMMPDE PointerPde;
     NTSTATUS Status = STATUS_SUCCESS;
 
-    if (MI_IS_SESSION_ADDRESS(Address))
-    {
-        DPRINT1("Unexpected session fault: %p %p %p\n", Address, MmSessionBase, MiSessionSpaceEnd);
-    }
-
-    /* No session support in ReactOS yet */
-    ASSERT(MI_IS_SESSION_ADDRESS(Address) == FALSE);
-    ASSERT(MI_IS_SESSION_PTE(Address) == FALSE);
+    /* Check session PDE */
+    if (MI_IS_SESSION_ADDRESS(Address)) return MiCheckPdeForSessionSpace(Address);
+    if (MI_IS_SESSION_PTE(Address)) return MiCheckPdeForSessionSpace(Address);
 
     //
     // Check if this is a fault while trying to access the page table itself
@@ -178,15 +201,11 @@ MiCheckPdeForPagedPool(IN PVOID Address)
     //
     if (PointerPde->u.Hard.Valid == 0)
     {
-#ifdef _M_AMD64
-        ASSERT(FALSE);
-#else
         //
         // Copy it from our double-mapped system page directory
         //
         InterlockedExchangePte(PointerPde,
                                MmSystemPagePtes[((ULONG_PTR)PointerPde & (SYSTEM_PD_SIZE - 1)) / sizeof(MMPTE)].u.Long);
-#endif
     }
 
     //
@@ -260,12 +279,13 @@ MiResolveDemandZeroFault(IN PVOID Address,
     MMPTE TempPte;
     BOOLEAN NeedZero = FALSE, HaveLock = FALSE;
     ULONG Color;
+    PMMPFN Pfn1;
     DPRINT("ARM3 Demand Zero Page Fault Handler for address: %p in process: %p\n",
             Address,
             Process);
 
     /* Must currently only be called by paging path */
-    if ((Process) && (OldIrql == MM_NOIRQL))
+    if ((Process > HYDRA_PROCESS) && (OldIrql == MM_NOIRQL))
     {
         /* Sanity check */
         ASSERT(MI_IS_PAGE_TABLE_ADDRESS(PointerPte));
@@ -299,15 +319,19 @@ MiResolveDemandZeroFault(IN PVOID Address,
 
     /* We either manually locked the PFN DB, or already came with it locked */
     ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
-
-    /* Do we need a zero page? */
     ASSERT(PointerPte->u.Hard.Valid == 0);
+
+    /* Assert we have enough pages */
+    ASSERT(MmAvailablePages >= 32);
+
 #if MI_TRACE_PFNS
     if (UserPdeFault) MI_SET_USAGE(MI_USAGE_PAGE_TABLE);
     if (!UserPdeFault) MI_SET_USAGE(MI_USAGE_DEMAND_ZERO);
 #endif
     if (Process) MI_SET_PROCESS2(Process->ImageFileName);
     if (!Process) MI_SET_PROCESS2("Kernel Demand 0");
+
+    /* Do we need a zero page? */
     if ((NeedZero) && (Process))
     {
         /* Try to get one, if we couldn't grab a free page and zero it */
@@ -338,11 +362,18 @@ MiResolveDemandZeroFault(IN PVOID Address,
     /* Initialize it */
     MiInitializePfn(PageFrameNumber, PointerPte, TRUE);
 
-    /* Increment demand zero faults */
-    KeGetCurrentPrcb()->MmDemandZeroCount++;
+    /* Do we have the lock? */
+    if (HaveLock)
+    {
+        /* Release it */
+        KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
 
-    /* Release PFN lock if needed */
-    if (HaveLock) KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+        /* Update performance counters */
+        if (Process > HYDRA_PROCESS) Process->NumberOfPrivatePages++;
+    }
+
+    /* Increment demand zero faults */
+    InterlockedIncrement(&KeGetCurrentPrcb()->MmDemandZeroCount);
 
     /* Zero the page if need be */
     if (NeedZero) MiZeroPfn(PageFrameNumber);
@@ -371,6 +402,17 @@ MiResolveDemandZeroFault(IN PVOID Address,
     /* Write it */
     MI_WRITE_VALID_PTE(PointerPte, TempPte);
 
+    /* Did we manually acquire the lock */
+    if (HaveLock)
+    {
+        /* Get the PFN entry */
+        Pfn1 = MI_PFN_ELEMENT(PageFrameNumber);
+
+        /* Windows does these sanity checks */
+        ASSERT(Pfn1->u1.Event == 0);
+        ASSERT(Pfn1->u3.e1.PrototypePte == 0);
+    }
+
     //
     // It's all good now
     //
@@ -385,13 +427,13 @@ MiCompleteProtoPteFault(IN BOOLEAN StoreInstruction,
                         IN PMMPTE PointerPte,
                         IN PMMPTE PointerProtoPte,
                         IN KIRQL OldIrql,
-                        IN PMMPFN Pfn1)
+                        IN PMMPFN* LockedPfn)
 {
     MMPTE TempPte;
     PMMPTE OriginalPte, PageTablePte;
     ULONG_PTR Protection;
     PFN_NUMBER PageFrameIndex;
-    PMMPFN Pfn2;
+    PMMPFN Pfn1, Pfn2;
 
     /* Must be called with an valid prototype PTE, with the PFN lock held */
     ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
@@ -494,6 +536,9 @@ MiResolveTransitionFault(IN PVOID FaultingAddress,
     ASSERT(MmAvailablePages >= 0);
     ASSERT(Pfn1->u4.InPageError == 0);
 
+    /* ReactOS checks for this */
+    ASSERT(MmAvailablePages > 32);
+
     /* Was this a transition page in the valid list, or free/zero list? */
     if (Pfn1->u3.e1.PageLocation == ActiveAndValid)
     {
@@ -523,7 +568,8 @@ MiResolveTransitionFault(IN PVOID FaultingAddress,
             ASSERT(FALSE);
         }
 
-        /* FIXME: Update counter */
+        /* Update counter */
+        InterlockedIncrementSizeT(&MmSystemLockPagesCount);
 
         /* We must be the first reference */
         NewRefCount = InterlockedIncrement16((PSHORT)&Pfn1->u3.e2.ReferenceCount);
@@ -555,7 +601,8 @@ MiResolveTransitionFault(IN PVOID FaultingAddress,
                 ASSERT(FALSE);
             }
 
-            /* FIXME: Update counter */
+            /* Update counter */
+            InterlockedDecrementSizeT(&MmSystemLockPagesCount);
         }
     }
 
@@ -585,7 +632,18 @@ MiResolveTransitionFault(IN PVOID FaultingAddress,
                      (MmProtectToPteMask[PointerPte->u.Trans.Protection]) |
                      MiDetermineUserGlobalPteMask(PointerPte);
 
-    /* FIXME: Set dirty bit */
+    /* Is the PTE writeable? */
+    if (((Pfn1->u3.e1.Modified) && (TempPte.u.Hard.Write)) &&
+        (TempPte.u.Hard.CopyOnWrite == 0))
+    {
+        /* Make it dirty */
+        TempPte.u.Hard.Dirty = TRUE;
+    }
+    else
+    {
+        /* Make it clean */
+        TempPte.u.Hard.Dirty = FALSE;
+    }
 
     /* Write the valid PTE */
     MI_WRITE_VALID_PTE(PointerPte, TempPte);
@@ -654,12 +712,24 @@ MiResolveProtoPteFault(IN BOOLEAN StoreInstruction,
     {
         if (!PteContents.u.Proto.ReadOnly)
         {
-            /* FIXME: CHECK FOR ACCESS AND COW */
+            /* FIXME: CHECK FOR ACCESS  */
+
+            /* Check for copy on write page */
+            if ((TempPte.u.Soft.Protection & MM_WRITECOPY) == MM_WRITECOPY)
+            {
+                /* Not yet supported */
+                ASSERT(FALSE);
+            }
         }
     }
     else
     {
-        /* FIXME: Should check for COW */
+        /* Check for copy on write page */
+        if ((PteContents.u.Soft.Protection & MM_WRITECOPY) == MM_WRITECOPY)
+        {
+            /* Not yet supported */
+            ASSERT(FALSE);
+        }
     }
 
     /* Check for clone PTEs */
@@ -815,7 +885,8 @@ MiDispatchFault(IN BOOLEAN StoreInstruction,
 
     //
     // The PTE must be invalid but not completely empty. It must also not be a
-    // prototype PTE as that scenario should've been handled above
+    // prototype PTE as that scenario should've been handled above. These are
+    // all Windows checks
     //
     ASSERT(TempPte.u.Hard.Valid == 0);
     ASSERT(TempPte.u.Soft.Prototype == 0);
@@ -823,7 +894,7 @@ MiDispatchFault(IN BOOLEAN StoreInstruction,
 
     //
     // No transition or page file software PTEs in ARM3 yet, so this must be a
-    // demand zero page
+    // demand zero page. These are all ReactOS checks
     //
     ASSERT(TempPte.u.Soft.Transition == 0);
     ASSERT(TempPte.u.Soft.PageFileHigh == 0);
