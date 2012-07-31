@@ -1472,12 +1472,12 @@ KdbEnterDebuggerException(
 
         if (BreakPoint->Type == KdbBreakPointSoftware)
         {
-            KdbpPrint("Entered debugger on breakpoint #%d: EXEC 0x%04x:0x%08x\n",
+            KdbpPrint("\nEntered debugger on breakpoint #%d: EXEC 0x%04x:0x%08x\n",
                       KdbLastBreakPointNr, TrapFrame->SegCs & 0xffff, TrapFrame->Eip);
         }
         else if (BreakPoint->Type == KdbBreakPointHardware)
         {
-            KdbpPrint("Entered debugger on breakpoint #%d: %s 0x%08x\n",
+            KdbpPrint("\nEntered debugger on breakpoint #%d: %s 0x%08x\n",
                       KdbLastBreakPointNr,
                      (BreakPoint->Data.Hw.AccessType == KdbAccessRead) ? "READ" :
                      ((BreakPoint->Data.Hw.AccessType == KdbAccessWrite) ? "WRITE" :
@@ -1545,7 +1545,7 @@ KdbEnterDebuggerException(
                 return kdHandleException;
             }
 
-            KdbpPrint("Entered debugger on unexpected debug trap!\n");
+            KdbpPrint("\nEntered debugger on unexpected debug trap!\n");
         }
     }
     else if (ExceptionCode == STATUS_BREAKPOINT)
@@ -1560,7 +1560,7 @@ KdbEnterDebuggerException(
             return kdHandleException;
         }
 
-        KdbpPrint("Entered debugger on embedded INT3 at 0x%04x:0x%08x.\n",
+        KdbpPrint("\nEntered debugger on embedded INT3 at 0x%04x:0x%08x.\n",
                   TrapFrame->SegCs & 0xffff, TrapFrame->Eip - 1);
     }
     else
@@ -1574,7 +1574,7 @@ KdbEnterDebuggerException(
             return ContinueType;
         }
 
-        KdbpPrint("Entered debugger on %s-chance exception (Exception Code: 0x%x) (%s)\n",
+        KdbpPrint("\nEntered debugger on %s-chance exception (Exception Code: 0x%x) (%s)\n",
                   FirstChance ? "first" : "last", ExceptionCode, ExceptionString);
 
         if (ExceptionCode == STATUS_ACCESS_VIOLATION &&
