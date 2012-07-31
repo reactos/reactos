@@ -12,6 +12,12 @@
 #define NDEBUG
 #include <debug.h>
 
+XCLIPOBJ gxcoTrivial =
+{
+    {0, {LONG_MIN, LONG_MIN, LONG_MAX, LONG_MAX}, DC_TRIVIAL, FC_RECT, TC_RECTANGLES, 0},
+    0, 0, 0
+};
+
 typedef BOOLEAN (APIENTRY *PBLTRECTFUNC)(SURFOBJ* OutputObj,
                                         SURFOBJ* InputObj,
                                         SURFOBJ* Mask,
@@ -590,6 +596,8 @@ IntEngBitBlt(
         if (pco->iDComplexity == DC_RECT)
             pco = NULL;
     }
+    else
+        pco = &gxcoTrivial.ClipObj;
 
     if (ROP4_USES_SOURCE(Rop4))
     {
@@ -601,6 +609,7 @@ IntEngBitBlt(
         rclSrc.top = pptlSrc->y + rclClipped.top - prclTrg->top;
         rclSrc.right = rclSrc.left + rclClipped.right - rclClipped.left;
         rclSrc.bottom = rclSrc.top + rclClipped.bottom - rclClipped.top;
+        pptlSrc = (PPOINTL)&rclSrc;
     }
     else
     {
@@ -647,7 +656,7 @@ IntEngBitBlt(
                         pco,
                         pxlo,
                         &rclClipped,
-                        (POINTL*)&rclSrc,
+                        pptlSrc,
                         pptlMask,
                         pbo,
                         pptlBrush ? &ptlBrush : NULL,

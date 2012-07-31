@@ -1,4 +1,4 @@
-/* 
+/*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          GDI TransparentBlt Function
@@ -226,6 +226,9 @@ IntEngTransparentBlt(SURFOBJ *psoDest,
   ASSERT(psurfDest);
   ASSERT(psurfSource);
 
+  /* If no clip object is given, use trivial one */
+  if (!Clip) Clip = &gxcoTrivial.ClipObj;
+
   InputClippedRect = *DestRect;
   if(InputClippedRect.right < InputClippedRect.left)
   {
@@ -241,7 +244,7 @@ IntEngTransparentBlt(SURFOBJ *psoDest,
   InputRect = *SourceRect;
   /* Clip against the bounds of the clipping region so we won't try to write
    * outside the surface */
-  if(Clip)
+  if (Clip->iDComplexity != DC_TRIVIAL)
   {
     if(!RECTL_bIntersectRect(&OutputRect, &InputClippedRect, &Clip->rclBounds))
     {
