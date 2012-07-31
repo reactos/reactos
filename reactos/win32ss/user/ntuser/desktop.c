@@ -305,7 +305,7 @@ IntParseDesktopPath(PEPROCESS Process,
       if(!NT_SUCCESS(Status))
       {
          SetLastNtError(Status);
-         ERR("Failed to reference window station %wZ PID: ??!\n", &ObjectName );
+         ERR("Failed to reference window station %wZ PID: --!\n", &ObjectName );
          return Status;
       }
    }
@@ -337,7 +337,7 @@ IntParseDesktopPath(PEPROCESS Process,
          NtClose(*hWinSta);
          *hWinSta = NULL;
          SetLastNtError(Status);
-         ERR("Failed to reference desktop %wZ PID: ??!\n", &ObjectName);
+         ERR("Failed to reference desktop %wZ PID: --!\n", &ObjectName);
          return Status;
       }
    }
