@@ -71,7 +71,7 @@ W32kOpenFile(PCWSTR pwszFileName, DWORD dwDesiredAccess)
         hFile = NULL;
     }
 
-    DPRINT("Leaving W32kOpenFile, Status=0x%x, hFile=0x%x\n", Status, hFile);
+    DPRINT("Leaving W32kOpenFile, Status=0x%lx, hFile=0x%p\n", Status, hFile);
     return hFile;
 }
 
@@ -109,7 +109,7 @@ W32kCreateFileSection(HANDLE hFile,
         SetLastNtError(Status);
     }
 
-    DPRINT("Leaving W32kCreateFileSection, Status=0x%x, hSection=0x%x\n", Status, hSection);
+    DPRINT("Leaving W32kCreateFileSection, Status=0x%lx, hSection=0x%p\n", Status, hSection);
 
     /* Return section handle */
     return hSection;
@@ -143,7 +143,7 @@ W32kMapViewOfSection(
         SetLastNtError(Status);
     }
 
-    DPRINT("Leaving W32kMapViewOfSection, Status=0x%x, pvBase=0x%x\n", Status, pvBase);
+    DPRINT("Leaving W32kMapViewOfSection, Status=0x%lx, pvBase=0x%p\n", Status, pvBase);
 
     return pvBase;
 }

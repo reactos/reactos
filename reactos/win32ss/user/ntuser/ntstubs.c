@@ -241,7 +241,7 @@ NtUserInitializeClientPfnArrays(
   HINSTANCE hmodUser)
 {
    NTSTATUS Status = STATUS_SUCCESS;
-   TRACE("Enter NtUserInitializeClientPfnArrays User32 0x%x\n",hmodUser);
+   TRACE("Enter NtUserInitializeClientPfnArrays User32 0x%p\n", hmodUser);
 
    if (ClientPfnInit) return Status;
 

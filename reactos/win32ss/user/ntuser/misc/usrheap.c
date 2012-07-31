@@ -23,10 +23,15 @@
 #include <debug.h>
 
 
-static NTSTATUS APIENTRY
-IntUserHeapCommitRoutine(IN PVOID Base,
-                         IN OUT PVOID *CommitAddress,
-                         IN OUT PSIZE_T CommitSize)
+_Function_class_(RTL_HEAP_COMMIT_ROUTINE)
+_IRQL_requires_same_
+static
+NTSTATUS
+NTAPI
+IntUserHeapCommitRoutine(
+    _In_ PVOID Base,
+    _Inout_ PVOID *CommitAddress,
+    _Inout_ PSIZE_T CommitSize)
 {
     PPROCESSINFO W32Process;
     PW32HEAP_USER_MAPPING Mapping;

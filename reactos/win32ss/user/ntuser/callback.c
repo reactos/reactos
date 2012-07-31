@@ -658,7 +658,7 @@ co_IntCallHookProc(INT HookId,
    }
    else
    {
-      ERR("ERROR: Hook ResultPointer 0x%x ResultLength %d\n",ResultPointer,ResultLength);
+      ERR("ERROR: Hook ResultPointer 0x%p ResultLength %u\n",ResultPointer,ResultLength);
    }
 
    if (!NT_SUCCESS(Status))

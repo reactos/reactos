@@ -325,7 +325,7 @@ int APIENTRY NtGdiIntersectClipRect(HDC  hDC,
    HRGN NewRgn;
    PDC dc = DC_LockDc(hDC);
 
-   DPRINT("NtGdiIntersectClipRect(%x, %d,%d-%d,%d)\n",
+   DPRINT("NtGdiIntersectClipRect(%p, %d,%d-%d,%d)\n",
       hDC, LeftRect, TopRect, RightRect, BottomRect);
 
    if (!dc)
@@ -541,6 +541,8 @@ NEW_CLIPPING_UpdateGCRegion(PDC pDC)
   /* Must have VisRgn set to a valid state! */
   ASSERT (pDC->prgnVis);
 
+// FIXME: this seems to be broken!
+
   if (pDC->prgnAPI)
   {
      REGION_Delete(pDC->prgnAPI);
@@ -583,8 +585,9 @@ NEW_CLIPPING_UpdateGCRegion(PDC pDC)
                     pDC->prgnAPI,
                     RGN_AND);
 
+  // FIXME: pDC->prgnRao may be NULL
   RtlCopyMemory(&pDC->erclClip,
-                &((PROSRGNDATA)pDC->prgnRao)->rdh.rcBound,
+                &pDC->prgnRao->rdh.rcBound,
                 sizeof(RECTL));
 
   pDC->fs &= ~DC_FLAG_DIRTY_RAO;

@@ -309,7 +309,7 @@ CLIPOBJ_cEnumStart(
                 break;
 
             default:
-                DPRINT1("Invalid BuildOrder %d\n", BuildOrder);
+                DPRINT1("Invalid BuildOrder %lu\n", BuildOrder);
                 BuildOrder = ClipGDI->EnumOrder;
                 CompareFunc = NULL;
                 break;

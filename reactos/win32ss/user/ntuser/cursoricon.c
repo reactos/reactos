@@ -38,7 +38,7 @@ InitCursorImpl()
     pgProcessLookasideList = ExAllocatePool(NonPagedPool, sizeof(PAGED_LOOKASIDE_LIST));
     if(!pgProcessLookasideList)
         return FALSE;
-        
+
     ExInitializePagedLookasideList(pgProcessLookasideList,
                                    NULL,
                                    NULL,
@@ -692,7 +692,7 @@ NtUserFindExistingCursorIcon(
     RETURN((HANDLE)0);
 
 CLEANUP:
-    TRACE("Leave NtUserFindExistingCursorIcon, ret=%i\n",_ret_);
+    TRACE("Leave NtUserFindExistingCursorIcon, ret=%p\n",_ret_);
     UserLeave();
     END_CLEANUP;
 }

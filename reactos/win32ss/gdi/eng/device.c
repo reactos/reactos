@@ -206,7 +206,7 @@ EngpRegisterGraphicsDevice(
             {
                 pGraphicsDevice->iDefaultMode = i;
                 pGraphicsDevice->iCurrentMode = i;
-                DPRINT("Found default entry: %ld '%ls'\n", i, pdm->dmDeviceName);
+                DPRINT("Found default entry: %lu '%ls'\n", i, pdm->dmDeviceName);
             }
 
             /* Initialize the entry */
@@ -232,7 +232,7 @@ EngpRegisterGraphicsDevice(
 
     /* Unlock loader */
     EngReleaseSemaphore(ghsemGraphicsDeviceList);
-    DPRINT("Prepared %ld modes for %ls\n", cModes, pGraphicsDevice->pwszDescription);
+    DPRINT("Prepared %lu modes for %ls\n", cModes, pGraphicsDevice->pwszDescription);
 
     return pGraphicsDevice;
 }
@@ -248,7 +248,7 @@ EngpFindGraphicsDevice(
     UNICODE_STRING ustrCurrent;
     PGRAPHICS_DEVICE pGraphicsDevice;
     ULONG i;
-    DPRINT("EngpFindGraphicsDevice('%wZ', %ld, 0x%lx)\n",
+    DPRINT("EngpFindGraphicsDevice('%wZ', %lu, 0x%lx)\n",
            pustrDevice, iDevNum, dwFlags);
 
     /* Lock list */

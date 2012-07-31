@@ -142,7 +142,7 @@ LDEVOBJ_pdmiGetModes(
     if (!cbSize)
     {
         /* Could not get modes */
-        DPRINT1("returned size %ld(%ld)\n", cbSize, pdminfo->cbdevmode);
+        DPRINT1("returned size %lu(%lu)\n", cbSize, pdminfo->cbdevmode);
         ExFreePoolWithTag(pdminfo, GDITAG_DEVMODE);
         pdminfo = NULL;
     }
@@ -327,7 +327,7 @@ EngLoadImageEx(
     ULONG cwcLength;
     LPWSTR pwsz;
 
-    DPRINT("EngLoadImageEx(%ls, %ld)\n", pwszDriverName, ldevtype);
+    DPRINT("EngLoadImageEx(%ls, %lu)\n", pwszDriverName, ldevtype);
     ASSERT(pwszDriverName);
 
     /* Initialize buffer for the the driver name */

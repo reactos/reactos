@@ -137,7 +137,7 @@ NtUserCallNoParam(DWORD Routine)
    RETURN(Result);
 
 CLEANUP:
-   TRACE("Leave NtUserCallNoParam, ret=%i\n",_ret_);
+   TRACE("Leave NtUserCallNoParam, ret=%p\n",(PVOID)_ret_);
    UserLeave();
    END_CLEANUP;
 }
@@ -400,7 +400,7 @@ NtUserCallOneParam(
    RETURN( 0);
 
 CLEANUP:
-   TRACE("Leave NtUserCallOneParam, ret=%i\n",_ret_);
+   TRACE("Leave NtUserCallOneParam, ret=%p\n", (PVOID)_ret_);
    UserLeave();
    END_CLEANUP;
 }
@@ -497,7 +497,7 @@ NtUserCallTwoParam(
    RETURN( 0);
 
 CLEANUP:
-   TRACE("Leave NtUserCallTwoParam, ret=%i\n",_ret_);
+   TRACE("Leave NtUserCallTwoParam, ret=%p\n", (PVOID)_ret_);
    UserLeave();
    END_CLEANUP;
 }
@@ -593,7 +593,7 @@ NtUserCallHwndLock(
    RETURN( Ret);
 
 CLEANUP:
-   TRACE("Leave NtUserCallHwndLock, ret=%i\n",_ret_);
+   TRACE("Leave NtUserCallHwndLock, ret=%u\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }
@@ -816,7 +816,7 @@ NtUserCallHwndParamLock(
    RETURN( Ret);
 
 CLEANUP:
-   TRACE("Leave NtUserCallHwndParamLock, ret=%i\n",_ret_);
+   TRACE("Leave NtUserCallHwndParamLock, ret=%lu\n",_ret_);
    UserLeave();
    END_CLEANUP;
 

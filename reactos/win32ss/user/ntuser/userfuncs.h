@@ -6,7 +6,7 @@ PMENU_OBJECT FASTCALL UserGetMenuObject(HMENU hMenu);
 { \
    LONG ref = ((PHEAD)_obj_)->cLockObj;\
    if (!(ref >= 1)){ \
-      ERR_CH(UserObj, "ASSERT: obj 0x%x, refs %i\n", _obj_, ref); \
+      ERR_CH(UserObj, "ASSERT: obj 0x%p, refs %ld\n", _obj_, ref); \
       ASSERT(FALSE); \
    } \
 }
@@ -18,7 +18,7 @@ PMENU_OBJECT FASTCALL UserGetMenuObject(HMENU hMenu);
    BOOL gotit=FALSE; \
    LONG ref = ((PHEAD)_obj_)->cLockObj;\
    if (!(ref >= 1)){ \
-      ERR_CH(UserObj, "obj 0x%x, refs %i\n", _obj_, ref); \
+      ERR_CH(UserObj, "obj 0x%p, refs %i\n", _obj_, ref); \
       ASSERT(FALSE); \
    } \
    \

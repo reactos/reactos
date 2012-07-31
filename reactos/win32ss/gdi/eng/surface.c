@@ -134,7 +134,7 @@ SURFACE_AllocSurface(
     /* Verify format */
     if ((iFormat < BMF_1BPP) || (iFormat > BMF_PNG))
     {
-        DPRINT1("Invalid bitmap format: %ld\n", iFormat);
+        DPRINT1("Invalid bitmap format: %lu\n", iFormat);
         return NULL;
     }
 

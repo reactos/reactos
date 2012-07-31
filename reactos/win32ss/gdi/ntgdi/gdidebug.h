@@ -70,7 +70,7 @@ GdiDbgAssertNoLocks(char * pszFile, ULONG nLine)
     PTHREADINFO pti = (PTHREADINFO)PsGetCurrentThreadWin32Thread();
     if (pti && pti->cExclusiveLocks != 0)
     {
-        DbgPrint("(%s:%ld) There are %ld exclusive locks!\n",
+        DbgPrint("(%s:%lu) There are %lu exclusive locks!\n",
                  pszFile, nLine, pti->cExclusiveLocks);
         ASSERT(FALSE);
     }

@@ -622,7 +622,8 @@ EngDitherColor(
    IN ULONG rgb,
    OUT ULONG *pul)
 {
-   return DCR_SOLID;
+    *pul = 0;
+    return DCR_SOLID;
 }
 
 /*

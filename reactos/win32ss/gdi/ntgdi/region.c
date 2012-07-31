@@ -493,7 +493,7 @@ REGION_Complexity( PROSRGNDATA obj )
     if (!obj) return NULLREGION;
     switch(obj->rdh.nCount)
     {
-       DPRINT("Region Complexity -> %d",obj->rdh.nCount);
+       DPRINT("Region Complexity -> %lu",obj->rdh.nCount);
        case 0:  return NULLREGION;
        case 1:  return SIMPLEREGION;
        default: return COMPLEXREGION;
@@ -1782,7 +1782,7 @@ REGION_CreateSimpleFrameRgn(
     RECTL rc[4];
     PRECTL prc;
 
-    if (x != 0 || y != 0)
+    if ((x != 0) || (y != 0))
     {
         prc = rc;
 
@@ -1841,6 +1841,7 @@ REGION_CreateSimpleFrameRgn(
                 return FALSE;
             }
 
+            _PRAGMA_WARNING_SUPPRESS(28199) // rc is initialized
             COPY_RECTS(rgn->Buffer, rc, rgn->rdh.nCount);
         }
     }
@@ -2162,6 +2163,7 @@ REGION_vSyncRegion(PREGION pRgn)
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
+            (void)0;
         }
         _SEH2_END;
      }
@@ -2210,6 +2212,7 @@ RGNOBJAPI_Unlock(PROSRGNDATA pRgn)
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
+            (void)0;
         }
         _SEH2_END;
      }
@@ -3829,7 +3832,7 @@ NtGdiOffsetRgn(
     PROSRGNDATA rgn = RGNOBJAPI_Lock(hRgn, NULL);
     INT ret;
 
-    DPRINT("NtGdiOffsetRgn: hRgn %d Xoffs %d Yoffs %d rgn %x\n", hRgn, XOffset, YOffset, rgn );
+    DPRINT("NtGdiOffsetRgn: hRgn %p Xoffs %d Yoffs %d rgn %p\n", hRgn, XOffset, YOffset, rgn );
 
     if (!rgn)
     {

@@ -77,7 +77,7 @@ Win32kProcessCallback(struct _EPROCESS *Process,
 
         if (ppiCurrent == NULL)
         {
-            ERR_CH(UserProcess, "Failed to allocate ppi for PID:%d\n", Process->UniqueProcessId);
+            ERR_CH(UserProcess, "Failed to allocate ppi for PID:0x%lx\n", HandleToUlong(Process->UniqueProcessId));
             RETURN( STATUS_NO_MEMORY);
         }
 
@@ -89,7 +89,7 @@ Win32kProcessCallback(struct _EPROCESS *Process,
         DbgInitDebugChannels();
 #endif
 
-        TRACE_CH(UserProcess,"Allocated ppi 0x%x for PID:%d\n", ppiCurrent, Process->UniqueProcessId);
+        TRACE_CH(UserProcess,"Allocated ppi 0x%p for PID:0x%lx\n", ppiCurrent, HandleToUlong(Process->UniqueProcessId));
 
         /* map the global heap into the process */
         Offset.QuadPart = 0;
@@ -125,7 +125,11 @@ Win32kProcessCallback(struct _EPROCESS *Process,
         ExInitializeFastMutex(&ppiCurrent->DriverObjListLock);
 
         ppiCurrent->KeyboardLayout = W32kGetDefaultKeyLayout();
-        EngCreateEvent((PEVENT *)&ppiCurrent->InputIdleEvent);
+        if (!EngCreateEvent((PEVENT *)&ppiCurrent->InputIdleEvent))
+        {
+            KeBugCheck(0);
+        }
+
         KeInitializeEvent(ppiCurrent->InputIdleEvent, NotificationEvent, FALSE);
 
 
@@ -160,7 +164,7 @@ Win32kProcessCallback(struct _EPROCESS *Process,
 
         ASSERT(ppiCurrent);
 
-        TRACE_CH(UserProcess, "Destroying ppi 0x%x\n", ppiCurrent);
+        TRACE_CH(UserProcess, "Destroying ppi 0x%p\n", ppiCurrent);
         ppiCurrent->W32PF_flags |= W32PF_TERMINATED;
 
         if (ppiScrnSaver == ppiCurrent)
@@ -204,7 +208,7 @@ Win32kProcessCallback(struct _EPROCESS *Process,
 
         if (gppiInputProvider == ppiCurrent) gppiInputProvider = NULL;
 
-        TRACE_CH(UserProcess,"Freeing ppi 0x%x\n", ppiCurrent);
+        TRACE_CH(UserProcess,"Freeing ppi 0x%p\n", ppiCurrent);
 
         /* Ftee the PROCESSINFO */
         PsSetProcessWin32Process(Process, NULL);
@@ -239,7 +243,7 @@ UserCreateThreadInfo(struct _ETHREAD *Thread)
                                        USERTAG_THREADINFO);
     if (ptiCurrent == NULL)
     {
-        ERR_CH(UserThread, "Failed to allocate pti for TID %d\n", Thread->Cid.UniqueThread);
+        ERR_CH(UserThread, "Failed to allocate pti for TID %p\n", Thread->Cid.UniqueThread);
         return STATUS_NO_MEMORY;
     }
 
@@ -249,7 +253,7 @@ UserCreateThreadInfo(struct _ETHREAD *Thread)
     pTeb->Win32ThreadInfo = ptiCurrent;
     ptiCurrent->pClientInfo = (PCLIENTINFO)pTeb->Win32ClientInfo;
 
-    TRACE_CH(UserThread, "Allocated pti 0x%x for TID %d\n", ptiCurrent, Thread->Cid.UniqueThread);
+    TRACE_CH(UserThread, "Allocated pti 0x%p for TID %p\n", ptiCurrent, Thread->Cid.UniqueThread);
 
     /* Initialize the THREADINFO */
     InitializeListHead(&ptiCurrent->WindowListHead);
@@ -365,7 +369,7 @@ UserCreateThreadInfo(struct _ETHREAD *Thread)
     return STATUS_SUCCESS;
 
 error:
-    ERR_CH(UserThread,"UserCreateThreadInfo failed! Freeing pti 0x%x for TID %d\n", ptiCurrent, Thread->Cid.UniqueThread);
+    ERR_CH(UserThread,"UserCreateThreadInfo failed! Freeing pti 0x%p for TID %p\n", ptiCurrent, Thread->Cid.UniqueThread);
     UserDestroyThreadInfo(Thread);
     return Status;
 }
@@ -387,12 +391,13 @@ UserDestroyThreadInfo(struct _ETHREAD *Thread)
 
     ASSERT(ptiCurrent);
 
-    TRACE_CH(UserThread,"Destroying pti 0x%x\n", ptiCurrent);
+    TRACE_CH(UserThread,"Destroying pti 0x%p\n", ptiCurrent);
 
-    ppiCurrent = ptiCurrent->ppi;
     ptiCurrent->TIF_flags |= TIF_INCLEANUP;
     ptiCurrent->pClientInfo->dwTIFlags = ptiCurrent->TIF_flags;
 
+    ppiCurrent = ptiCurrent->ppi;
+    ASSERT(ppiCurrent);
 
     /* Decrement thread count and check if its 0 */
     ppiCurrent->cThreads--;
@@ -416,7 +421,7 @@ UserDestroyThreadInfo(struct _ETHREAD *Thread)
                 {
                     DWORD ExitCode = PsGetProcessExitStatus(Process);
 
-                   TRACE_CH(UserProcess, "Shell process is exiting (%d)\n", ExitCode);
+                   TRACE_CH(UserProcess, "Shell process is exiting (%lu)\n", ExitCode);
 
                     UserPostMessage(hwndSAS,
                                     WM_LOGONNOTIFY,
@@ -458,7 +463,7 @@ UserDestroyThreadInfo(struct _ETHREAD *Thread)
         while (psle)
         {
             PUSER_REFERENCE_ENTRY ref = CONTAINING_RECORD(psle, USER_REFERENCE_ENTRY, Entry);
-            TRACE_CH(UserThread,"thread clean: remove reference obj 0x%x\n",ref->obj);
+            TRACE_CH(UserThread,"thread clean: remove reference obj 0x%p\n",ref->obj);
             UserDereferenceObject(ref->obj);
 
             psle = PopEntryList(&ptiCurrent->ReferencesList);
@@ -497,7 +502,7 @@ UserDestroyThreadInfo(struct _ETHREAD *Thread)
 
     IntSetThreadDesktop(NULL, TRUE);
 
-    TRACE_CH(UserThread,"Freeing pti 0x%x\n", ptiCurrent);
+    TRACE_CH(UserThread,"Freeing pti 0x%p\n", ptiCurrent);
 
     /* Free the THREADINFO */
     PsSetThreadWin32Thread(Thread, NULL);
@@ -577,7 +582,7 @@ DriverEntry(
     }
 
     hModuleWin = MmPageEntireDriver(DriverEntry);
-    DPRINT("Win32k hInstance 0x%x!\n",hModuleWin);
+    DPRINT("Win32k hInstance 0x%p!\n",hModuleWin);
 
     /* Register Object Manager Callbacks */
     CalloutData.WindowStationParseProcedure = IntWinStaObjectParse;
@@ -617,7 +622,7 @@ DriverEntry(
     }
 
     RtlZeroMemory(gpsi, sizeof(SERVERINFO));
-    DPRINT("Global Server Data -> %x\n", gpsi);
+    DPRINT("Global Server Data -> %p\n", gpsi);
 
     NT_ROF(InitGdiHandleTable());
     NT_ROF(InitPaletteImpl());

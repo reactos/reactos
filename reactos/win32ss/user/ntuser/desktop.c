@@ -135,7 +135,7 @@ IntDesktopObjectDelete(PWIN32_DELETEMETHOD_PARAMETERS Parameters)
 {
    PDESKTOP Desktop = (PDESKTOP)Parameters->Object;
 
-   TRACE("Deleting desktop object 0x%x\n", Desktop);
+   TRACE("Deleting desktop object 0x%p\n", Desktop);
 
    /* Remove the desktop from the window station's list of associcated desktops */
    RemoveEntryList(&Desktop->ListEntry);
@@ -305,7 +305,7 @@ IntParseDesktopPath(PEPROCESS Process,
       if(!NT_SUCCESS(Status))
       {
          SetLastNtError(Status);
-         ERR("Failed to reference window station %wZ PID: %d!\n", &ObjectName );
+         ERR("Failed to reference window station %wZ PID: ??!\n", &ObjectName );
          return Status;
       }
    }
@@ -337,7 +337,7 @@ IntParseDesktopPath(PEPROCESS Process,
          NtClose(*hWinSta);
          *hWinSta = NULL;
          SetLastNtError(Status);
-         ERR("Failed to reference desktop %wZ PID: %d!\n", &ObjectName);
+         ERR("Failed to reference desktop %wZ PID: ??!\n", &ObjectName);
          return Status;
       }
    }
@@ -371,7 +371,7 @@ IntValidateDesktopHandle(
                (PVOID*)Object,
                NULL);
 
-   TRACE("IntValidateDesktopHandle: handle:0x%x obj:0x%x access:0x%x Status:0x%x\n",
+   TRACE("IntValidateDesktopHandle: handle:0x%p obj:0x%p access:0x%x Status:0x%lx\n",
             Desktop, *Object, DesiredAccess, Status);
 
    if (!NT_SUCCESS(Status))
@@ -419,7 +419,7 @@ IntGetDesktopObjectHandle(PDESKTOP DesktopObject)
    }
    else
    {
-       ERR("Got handle: %lx\n", Ret);
+       ERR("Got handle: %p\n", Ret);
    }
 
    return Ret;
@@ -550,7 +550,7 @@ HWND FASTCALL IntGetCurrentThreadDesktopWindow(VOID)
 LRESULT FASTCALL
 DesktopWindowProc(PWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
-   switch (Msg)   
+   switch (Msg)
    {
       case WM_NCCREATE:
          if (!Wnd->fnid)
@@ -1125,7 +1125,7 @@ NtUserCreateDesktop(
        RETURN(NULL);
    }
 
-   TRACE("NtUserCreateDesktop created desktop 0x%x with name %wZ\n", DesktopObject, &DesktopName);
+   TRACE("NtUserCreateDesktop created desktop 0x%p with name %wZ\n", DesktopObject, &DesktopName);
 
    DesktopObject->hsectionDesktop = NULL;
    DesktopObject->pheapDesktop = UserCreateHeap(&DesktopObject->hsectionDesktop,
@@ -1195,7 +1195,7 @@ NtUserCreateDesktop(
       RETURN( NULL);
    }
 //#endif
-   if (!ptiCurrent->rpdesk) IntSetThreadDesktop(Desktop,FALSE);
+   if (ptiCurrent && !ptiCurrent->rpdesk) IntSetThreadDesktop(Desktop,FALSE);
 
   /*
      Based on wine/server/window.c in get_desktop_window.
@@ -1280,7 +1280,7 @@ CLEANUP:
        ptiCurrent->TIF_flags &= ~TIF_DISABLEHOOKS;
        ptiCurrent->pClientInfo->dwTIFlags = ptiCurrent->TIF_flags;
    }
-   TRACE("Leave NtUserCreateDesktop, ret=%i\n",_ret_);
+   TRACE("Leave NtUserCreateDesktop, ret=%p\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }
@@ -1332,7 +1332,7 @@ NtUserOpenDesktop(
       return 0;
    }
 
-   TRACE("Opened desktop %S with handle 0x%x\n", ObjectAttributes->ObjectName->Buffer, Desktop);
+   TRACE("Opened desktop %S with handle 0x%p\n", ObjectAttributes->ObjectName->Buffer, Desktop);
 
    return Desktop;
 }
@@ -1370,13 +1370,13 @@ NtUserOpenInputDesktop(
    HDESK hdesk = NULL;
 
    UserEnterExclusive();
-   TRACE("Enter NtUserOpenInputDesktop InputDesktopHandle 0x%x\n",InputDesktopHandle);
+   TRACE("Enter NtUserOpenInputDesktop InputDesktopHandle 0x%p\n",InputDesktopHandle);
 
    /* Get a pointer to the desktop object */
    Status = IntValidateDesktopHandle(InputDesktopHandle, UserMode, 0, &pdesk);
    if (!NT_SUCCESS(Status))
    {
-      ERR("Validation of input desktop handle (0x%X) failed\n", InputDesktopHandle);
+      ERR("Validation of input desktop handle (0x%p) failed\n", InputDesktopHandle);
       goto Exit;
    }
 
@@ -1399,7 +1399,7 @@ NtUserOpenInputDesktop(
        goto Exit;
    }
 Exit:
-   TRACE("NtUserOpenInputDesktop returning 0x%x\n",hdesk);
+   TRACE("NtUserOpenInputDesktop returning 0x%p\n",hdesk);
    UserLeave();
    return hdesk;
 }
@@ -1433,7 +1433,7 @@ NtUserCloseDesktop(HDESK hDesktop)
    NTSTATUS Status;
    DECLARE_RETURN(BOOL);
 
-   TRACE("NtUserCloseDesktop called (0x%x)\n", hDesktop);
+   TRACE("NtUserCloseDesktop called (0x%p)\n", hDesktop);
    UserEnterExclusive();
 
    if( hDesktop == gptiCurrent->hdesk || hDesktop == gptiCurrent->ppi->hdeskStartup)
@@ -1446,7 +1446,7 @@ NtUserCloseDesktop(HDESK hDesktop)
    Status = IntValidateDesktopHandle( hDesktop, UserMode, 0, &pdesk);
    if (!NT_SUCCESS(Status))
    {
-      ERR("Validation of desktop handle (0x%X) failed\n", hDesktop);
+      ERR("Validation of desktop handle (0x%p) failed\n", hDesktop);
       RETURN(FALSE);
    }
 
@@ -1455,7 +1455,7 @@ NtUserCloseDesktop(HDESK hDesktop)
    Status = ZwClose(hDesktop);
    if (!NT_SUCCESS(Status))
    {
-      ERR("Failed to close desktop handle 0x%x\n", hDesktop);
+      ERR("Failed to close desktop handle 0x%p\n", hDesktop);
       SetLastNtError(Status);
       RETURN(FALSE);
    }
@@ -1519,12 +1519,12 @@ NtUserSwitchDesktop(HDESK hdesk)
    DECLARE_RETURN(BOOL);
 
    UserEnterExclusive();
-   TRACE("Enter NtUserSwitchDesktop(0x%x)\n", hdesk);
+   TRACE("Enter NtUserSwitchDesktop(0x%p)\n", hdesk);
 
    Status = IntValidateDesktopHandle( hdesk, UserMode, 0, &pdesk);
    if (!NT_SUCCESS(Status))
    {
-      ERR("Validation of desktop handle (0x%X) failed\n", hdesk);
+      ERR("Validation of desktop handle (0x%p) failed\n", hdesk);
       RETURN(FALSE);
    }
 
@@ -1536,14 +1536,14 @@ NtUserSwitchDesktop(HDESK hdesk)
       LogonProcess != PsGetCurrentProcessWin32Process())
    {
       ObDereferenceObject(pdesk);
-      ERR("Switching desktop 0x%x denied because the window station is locked!\n", hdesk);
+      ERR("Switching desktop 0x%p denied because the window station is locked!\n", hdesk);
       RETURN(FALSE);
    }
 
    if(pdesk->rpwinstaParent != InputWindowStation)
    {
       ObDereferenceObject(pdesk);
-      ERR("Switching desktop 0x%x denied because desktop doesn't belong to the interactive winsta!\n", hdesk);
+      ERR("Switching desktop 0x%p denied because desktop doesn't belong to the interactive winsta!\n", hdesk);
       RETURN(FALSE);
    }
 
@@ -1557,7 +1557,7 @@ NtUserSwitchDesktop(HDESK hdesk)
    /* Set the global state. */
    InputDesktop = pdesk;
    InputDesktopHandle = hdesk;
-   TRACE("SwitchDesktop InputDesktopHandle 0x%x\n",InputDesktopHandle);
+   TRACE("SwitchDesktop InputDesktopHandle 0x%p\n",InputDesktopHandle);
    ObDereferenceObject(pdesk);
 
    RETURN(TRUE);
@@ -1649,7 +1649,7 @@ NtUserGetThreadDesktop(DWORD dwThreadId, DWORD Unknown1)
    RETURN(Ret);
 
 CLEANUP:
-   TRACE("Leave NtUserGetThreadDesktop, ret=%i\n",_ret_);
+   TRACE("Leave NtUserGetThreadDesktop, ret=%p\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }
@@ -1676,7 +1676,7 @@ IntUnmapDesktopView(IN PDESKTOP pdesk)
             {
                 *PrevLink = HeapMapping->Next;
 
-                TRACE("ppi 0x%x unmapped heap of desktop 0x%x\n", ppi, pdesk);
+                TRACE("ppi 0x%p unmapped heap of desktop 0x%p\n", ppi, pdesk);
                 Status = MmUnmapViewOfSection(PsGetCurrentProcess(),
                                               HeapMapping->UserMapping);
 
@@ -1704,7 +1704,7 @@ IntMapDesktopView(IN PDESKTOP pdesk)
     LARGE_INTEGER Offset;
     NTSTATUS Status;
 
-    TRACE("IntMapDesktopView called for desktop object 0x%x\n", pdesk);
+    TRACE("IntMapDesktopView called for desktop object 0x%p\n", pdesk);
 
     ppi = PsGetCurrentProcessWin32Process();
     PrevLink = &ppi->HeapMappings.Next;
@@ -1741,7 +1741,7 @@ IntMapDesktopView(IN PDESKTOP pdesk)
         return Status;
     }
 
-    TRACE("ppi 0x%x mapped heap of desktop 0x%x\n", ppi, pdesk);
+    TRACE("ppi 0x%p mapped heap of desktop 0x%p\n", ppi, pdesk);
 
     /* Add the mapping */
     HeapMapping = UserHeapAlloc(sizeof(W32HEAP_USER_MAPPING));
@@ -1777,7 +1777,7 @@ IntSetThreadDesktop(IN HDESK hDesktop,
 
     ASSERT(NtCurrentTeb());
 
-    TRACE("IntSetThreadDesktop hDesktop:0x%x, FOF:%d\n",hDesktop, FreeOnFailure);
+    TRACE("IntSetThreadDesktop hDesktop:0x%p, FOF:%i\n",hDesktop, FreeOnFailure);
 
     pti = PsGetCurrentThreadWin32Thread();
     pci = pti->pClientInfo;
@@ -1789,7 +1789,7 @@ IntSetThreadDesktop(IN HDESK hDesktop,
         Status = IntValidateDesktopHandle( hDesktop, UserMode, 0, &pdesk);
         if (!NT_SUCCESS(Status))
         {
-            ERR("Validation of desktop handle (0x%X) failed\n", hDesktop);
+            ERR("Validation of desktop handle (0x%p) failed\n", hDesktop);
             return FALSE;
         }
 
@@ -1914,7 +1914,7 @@ IntSetThreadDesktop(IN HDESK hDesktop,
         InsertTailList(&pdesk->PtiList, &pti->PtiLink);
     }
 
-    TRACE("IntSetThreadDesktop: pti 0x%x ppi 0x%x switched from object 0x%x to 0x%x\n", pti, pti->ppi, pdeskOld, pdesk);
+    TRACE("IntSetThreadDesktop: pti 0x%p ppi 0x%p switched from object 0x%p to 0x%p\n", pti, pti->ppi, pdeskOld, pdesk);
 
     return TRUE;
 }

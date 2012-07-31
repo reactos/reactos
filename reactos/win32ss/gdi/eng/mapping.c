@@ -188,7 +188,7 @@ EngMapSection(
         }
         else
         {
-            DPRINT1("Failed to unmap a section @ &p Status=0x%x\n",
+            DPRINT1("Failed to unmap a section @ %p Status=0x%x\n",
                     pSection->pvMappedBase, Status);
         }
     }

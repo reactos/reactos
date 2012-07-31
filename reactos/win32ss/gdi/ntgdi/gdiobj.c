@@ -361,7 +361,7 @@ ENTRY_ReferenceEntryByHandle(HGDIOBJ hobj, FLONG fl)
         if (pentry->FullUnique != (USHORT)((ULONG_PTR)hobj >> 16))
         {
             DPRINT("GDIOBJ: Wrong unique value. Handle: 0x%4x, entry: 0x%4x\n",
-                   (USHORT)((ULONG_PTR)hobj >> 16, pentry->FullUnique));
+                   (USHORT)((ULONG_PTR)hobj >> 16), pentry->FullUnique);
             return NULL;
         }
 
@@ -1286,7 +1286,7 @@ GDI_CleanupForProcess(struct _EPROCESS *Process)
     DWORD dwProcessId;
     PPROCESSINFO ppi;
 
-    DPRINT("CleanupForProcess prochandle %x Pid %d\n",
+    DPRINT("CleanupForProcess prochandle %p Pid %p\n",
            Process, Process->UniqueProcessId);
 
     ASSERT(Process == PsGetCurrentProcess());
@@ -1317,7 +1317,7 @@ GDI_CleanupForProcess(struct _EPROCESS *Process)
 #endif
 
     ppi = PsGetCurrentProcessWin32Process();
-    DPRINT("Completed cleanup for process %d\n", Process->UniqueProcessId);
+    DPRINT("Completed cleanup for process %p\n", Process->UniqueProcessId);
     if (ppi->GDIHandleCount != 0)
     {
         DPRINT1("Leaking %d handles!\n", ppi->GDIHandleCount);

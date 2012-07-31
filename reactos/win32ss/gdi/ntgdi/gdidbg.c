@@ -248,7 +248,7 @@ DbgGdiHTIntegrityCheck()
 		pEntry = &GdiHandleTable->Entries[i];
 		if (i > GDI_HANDLE_COUNT)
 		{
-		    DPRINT1("nDeleted=%ld\n", nDeleted);
+		    DPRINT1("nDeleted=%lu\n", nDeleted);
 		    ASSERT(FALSE);
 		}
 
@@ -332,7 +332,7 @@ DbgGdiHTIntegrityCheck()
 			if (((POBJ)(pEntry->KernelData))->hHmgr != Handle)
 			{
 				r = 0;
-				DPRINT1("Used entry %ld, has invalid hHmg %p (expected: %p)\n",
+				DPRINT1("Used entry %lu, has invalid hHmg %p (expected: %p)\n",
 				        i, ((POBJ)(pEntry->KernelData))->hHmgr, Handle);
 			}
 			nUsed++;
@@ -342,7 +342,7 @@ DbgGdiHTIntegrityCheck()
 	if (RESERVE_ENTRIES_COUNT + nDeleted + nFree + nUsed != GDI_HANDLE_COUNT)
 	{
 		r = 0;
-		DPRINT1("Number of all entries incorrect: RESERVE_ENTRIES_COUNT = %ld, nDeleted = %ld, nFree = %ld, nUsed = %ld\n",
+		DPRINT1("Number of all entries incorrect: RESERVE_ENTRIES_COUNT = %lu, nDeleted = %lu, nFree = %lu, nUsed = %lu\n",
 		        RESERVE_ENTRIES_COUNT, nDeleted, nFree, nUsed);
 	}
 
@@ -441,12 +441,12 @@ DbgPrintEvent(PLOGENTRY pLogEntry)
         default: pstr = "Unknown"; break;
     }
 
-    DbgPrint("[%ld] %03x:%03x %.8s val=%p <%lx,%lx,%lx,%lx>\n",
+    DbgPrint("[%lu] %03x:%03x %.8s val=%p <%lx,%lx,%lx,%lx>\n",
              pLogEntry->ulUnique,
              pLogEntry->dwProcessId,
              pLogEntry->dwThreadId,
              pstr,
-             pLogEntry->lParam,
+             (PVOID)pLogEntry->lParam,
              REL_ADDR(pLogEntry->apvBackTrace[2]),
              REL_ADDR(pLogEntry->apvBackTrace[3]),
              REL_ADDR(pLogEntry->apvBackTrace[4]),
@@ -489,7 +489,7 @@ GdiDbgPreServiceHook(ULONG ulSyscallId, PULONG_PTR pulArguments)
     PTHREADINFO pti = (PTHREADINFO)PsGetCurrentThreadWin32Thread();
     if (pti && pti->cExclusiveLocks != 0)
     {
-        DbgPrint("FATAL: Win32DbgPreServiceHook(0x%lx): There are %ld exclusive locks!\n",
+        DbgPrint("FATAL: Win32DbgPreServiceHook(0x%lx): There are %lu exclusive locks!\n",
                  ulSyscallId, pti->cExclusiveLocks);
         DbgDumpLockedGdiHandles();
         ASSERT(FALSE);
@@ -504,7 +504,7 @@ GdiDbgPostServiceHook(ULONG ulSyscallId, ULONG_PTR ulResult)
     PTHREADINFO pti = (PTHREADINFO)PsGetCurrentThreadWin32Thread();
     if (pti && pti->cExclusiveLocks != 0)
     {
-        DbgPrint("FATAL: Win32DbgPostServiceHook(0x%lx): There are %ld exclusive locks!\n",
+        DbgPrint("FATAL: Win32DbgPostServiceHook(0x%lx): There are %lu exclusive locks!\n",
                  ulSyscallId, pti->cExclusiveLocks);
         DbgDumpLockedGdiHandles();
         ASSERT(FALSE);
@@ -521,7 +521,7 @@ QueryEnvironmentVariable(PUNICODE_STRING Name,
    UNICODE_STRING var;
    PWSTR val;
    PPEB Peb;
-   PWSTR Environment; 
+   PWSTR Environment;
 
    /* Ugly HACK for ReactOS system threads */
    if(!NtCurrentTeb())
@@ -531,7 +531,7 @@ QueryEnvironmentVariable(PUNICODE_STRING Name,
 
    Peb = NtCurrentPeb();
 
-   if (Peb == NULL) 
+   if (Peb == NULL)
    {
        return(STATUS_VARIABLE_NOT_FOUND);
    }
@@ -595,10 +595,10 @@ DbgAddDebugChannel(PPROCESSINFO ppi, WCHAR* channel, WCHAR* level, WCHAR op)
     DBG_CHANNEL *ChannelEntry;
     UINT iLevel, iChannel;
 
-    ChannelEntry = (DBG_CHANNEL*)bsearch(channel, 
-                                         DbgChannels, 
-                                         DbgChCount, 
-                                         sizeof(DBG_CHANNEL), 
+    ChannelEntry = (DBG_CHANNEL*)bsearch(channel,
+                                         DbgChannels,
+                                         DbgChCount,
+                                         sizeof(DBG_CHANNEL),
                                          DbgCompareChannels);
     if(ChannelEntry == NULL)
     {
@@ -620,7 +620,7 @@ DbgAddDebugChannel(PPROCESSINFO ppi, WCHAR* channel, WCHAR* level, WCHAR op)
         iLevel = TRACE_LEVEL;
     else
         return FALSE;
-    
+
     if(op==L'+')
     {
         DBG_ENABLE_CHANNEL(ppi, iChannel, iLevel);
@@ -629,11 +629,11 @@ DbgAddDebugChannel(PPROCESSINFO ppi, WCHAR* channel, WCHAR* level, WCHAR op)
     {
         DBG_DISABLE_CHANNEL(ppi, iChannel, iLevel);
     }
-    
+
     return TRUE;
 }
 
-static BOOL 
+static BOOL
 DbgParseDebugChannels(PPROCESSINFO ppi, PUNICODE_STRING Value)
 {
     WCHAR *str, *separator, *c, op;
@@ -676,8 +676,8 @@ BOOL DbgInitDebugChannels()
 
     /* Initialize all channels to ERROR */
     ppi = PsGetCurrentProcessWin32Process();
-    RtlFillMemory( ppi->DbgChannelLevel, 
-                   sizeof(ppi->DbgChannelLevel), 
+    RtlFillMemory( ppi->DbgChannelLevel,
+                   sizeof(ppi->DbgChannelLevel),
                    ERR_LEVEL);
 
     /* Find DEBUGCHANNEL env var */

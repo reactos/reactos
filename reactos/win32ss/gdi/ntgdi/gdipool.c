@@ -100,7 +100,7 @@ GdiPoolDeleteSection(PGDI_POOL pPool, PGDI_POOL_SECTION pSection)
     /* Should not have any allocations */
     if (pSection->cAllocCount != 0)
     {
-        DPRINT1("There are %ld allocations left, section=%p, pool=%p\n",
+        DPRINT1("There are %lu allocations left, section=%p, pool=%p\n",
                 pSection->cAllocCount, pSection, pPool);
         DBG_DUMP_EVENT_LIST(&pPool->slhLog);
         ASSERT(FALSE);
@@ -140,7 +140,7 @@ GdiPoolAllocate(
         pSection = CONTAINING_RECORD(ple, GDI_POOL_SECTION, leReadyLink);
         if (pSection->cAllocCount >= pPool->cSlotsPerSection)
         {
-            DPRINT1("pSection->cAllocCount=%ld, pPool->cSlotsPerSection=%ld\n",
+            DPRINT1("pSection->cAllocCount=%lu, pPool->cSlotsPerSection=%lu\n",
                     pSection->cAllocCount, pPool->cSlotsPerSection);
             DBG_DUMP_EVENT_LIST(&pPool->slhLog);
             ASSERT(FALSE);
@@ -293,7 +293,7 @@ GdiPoolFree(
     }
 
     DbgPrint("failed to free. pvAlloc=%p, base=%p, size=%lx\n",
-             pvAlloc, pSection->pvBaseAddress, pPool->cjSectionSize);
+             pvAlloc, pSection ? pSection->pvBaseAddress : NULL, pPool->cjSectionSize);
     ASSERT(FALSE);
     // KeBugCheck()
 

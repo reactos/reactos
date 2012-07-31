@@ -642,7 +642,7 @@ XLATEOBJ_cGetPalette(XLATEOBJ *pxlo, ULONG iPal, ULONG cPal, ULONG *pPalOut)
 
     if (iPal > 5)
     {
-       DPRINT1("XLATEOBJ_cGetPalette called with wrong iPal: %d\n", iPal);
+       DPRINT1("XLATEOBJ_cGetPalette called with wrong iPal: %lu\n", iPal);
        return 0;
     }
 
