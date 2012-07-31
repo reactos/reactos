@@ -841,12 +841,14 @@ MiDispatchFault(IN BOOLEAN StoreInstruction,
                 IN BOOLEAN Recursive,
                 IN PEPROCESS Process,
                 IN PVOID TrapInformation,
-                IN PVOID Vad)
+                IN PMMVAD Vad)
 {
     MMPTE TempPte;
     KIRQL OldIrql, LockIrql;
     NTSTATUS Status;
     PMMPTE SuperProtoPte;
+    PMMPFN Pfn1;
+    PFN_NUMBER PageFrameIndex, PteCount, ProcessedPtes;
     DPRINT("ARM3 Page Fault Dispatcher for address: %p in process: %p\n",
              Address,
              Process);
@@ -910,29 +912,73 @@ MiDispatchFault(IN BOOLEAN StoreInstruction,
         }
         else
         {
-            /* We currently only handle very limited paths */
-            ASSERT(PointerPte->u.Soft.Prototype == 1);
+            /* We only handle the lookup path */
             ASSERT(PointerPte->u.Soft.PageFileHigh == MI_PTE_LOOKUP_NEEDED);
+
+            /* Is there a non-image VAD? */
+            if ((Vad) &&
+                (Vad->u.VadFlags.VadType != VadImageMap) &&
+                !(Vad->u2.VadFlags2.ExtendableFile))
+            {
+                /* One day, ReactOS will cluster faults */
+                ASSERT(Address <= MM_HIGHEST_USER_ADDRESS);
+                DPRINT("Should cluster fault, but won't\n");
+            }
+
+            /* Only one PTE to handle for now */
+            PteCount = 1;
+            ProcessedPtes = 0;
 
             /* Lock the PFN database */
             LockIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
 
-            /* For our current usage, this should be true */
+            /* We only handle the valid path */
             ASSERT(SuperProtoPte->u.Hard.Valid == 1);
-            ASSERT(TempPte.u.Hard.Valid == 0);
 
-            /* Resolve the fault -- this will release the PFN lock */
-            Status = MiResolveProtoPteFault(StoreInstruction,
+            /* Capture the PTE */
+            TempPte = *PointerProtoPte;
+
+            /* Loop to handle future case of clustered faults */
+            while (TRUE)
+            {
+                /* For our current usage, this should be true */
+                ASSERT(TempPte.u.Hard.Valid == 1);
+                ASSERT(TempPte.u.Soft.Prototype == 0);
+                ASSERT(TempPte.u.Soft.Transition == 0);
+
+                /* Bump the share count on the PTE */
+                PageFrameIndex = PFN_FROM_PTE(&TempPte);
+                Pfn1 = MI_PFN_ELEMENT(PageFrameIndex);
+                Pfn1->u2.ShareCount++;
+
+                /* One more done, was it the last? */
+                if (++ProcessedPtes == PteCount)
+                {
+                    /* Complete the fault */
+                    MiCompleteProtoPteFault(StoreInstruction,
                                             Address,
                                             PointerPte,
                                             PointerProtoPte,
-                                            NULL,
-                                            NULL,
-                                            NULL,
-                                            Process,
                                             LockIrql,
-                                            TrapInformation);
-            ASSERT(Status == STATUS_SUCCESS);
+                                            NULL);
+
+                    /* THIS RELEASES THE PFN LOCK! */
+                    break;
+                }
+
+                /* No clustered faults yet */
+                ASSERT(FALSE);
+            }
+
+            /* Only path that we support for now */
+            ASSERT(ProcessedPtes != 0);
+
+            /* Bump the transition count */
+            InterlockedExchangeAdd(&KeGetCurrentPrcb()->MmTransitionCount, ProcessedPtes);
+            ProcessedPtes--;
+
+            /* Loop all the processing we did */
+            ASSERT(ProcessedPtes == 0);
 
             /* Complete this as a transition fault */
             ASSERT(OldIrql == KeGetCurrentIrql());
