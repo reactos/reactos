@@ -79,7 +79,7 @@ NTKERNELAPI
 VOID
 NTAPI
 ProbeForWrite(
-  __in_data_source(USER_MODE) _Inout_updates_bytes_(Length) PVOID Address,
+  __in_data_source(USER_MODE) _Out_writes_bytes_(Length) PVOID Address,
   _In_ SIZE_T Length,
   _In_ ULONG Alignment);
 
@@ -550,8 +550,8 @@ KeSynchronizeExecution(
   _In_opt_ __drv_aliasesMem PVOID SynchronizeContext);
 
 _IRQL_requires_min_(PASSIVE_LEVEL)
-_When_((Timeout==NULL || *Timeout!=0), _IRQL_requires_max_(APC_LEVEL))
-_When_((Timeout!=NULL && *Timeout==0), _IRQL_requires_max_(DISPATCH_LEVEL))
+_When_((Timeout==NULL || Timeout->QuadPart!=0), _IRQL_requires_max_(APC_LEVEL))
+_When_((Timeout!=NULL && Timeout->QuadPart==0), _IRQL_requires_max_(DISPATCH_LEVEL))
 NTKERNELAPI
 NTSTATUS
 NTAPI
@@ -568,8 +568,8 @@ KeWaitForMultipleObjects(
 #define KeWaitForMutexObject KeWaitForSingleObject
 
 _IRQL_requires_min_(PASSIVE_LEVEL)
-_When_((Timeout==NULL || *Timeout!=0), _IRQL_requires_max_(APC_LEVEL))
-_When_((Timeout!=NULL && *Timeout==0), _IRQL_requires_max_(DISPATCH_LEVEL))
+_When_((Timeout==NULL || Timeout->QuadPart!=0), _IRQL_requires_max_(APC_LEVEL))
+_When_((Timeout!=NULL && Timeout->QuadPart==0), _IRQL_requires_max_(DISPATCH_LEVEL))
 NTKERNELAPI
 NTSTATUS
 NTAPI

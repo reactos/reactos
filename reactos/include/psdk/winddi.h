@@ -1324,16 +1324,16 @@ WIN32KAPI
 BOOL
 APIENTRY
 EngBitBlt(
-    _Inout_ SURFOBJ *psoTrg,
+    _In_ SURFOBJ *psoTrg,
     _In_opt_ SURFOBJ *psoSrc,
     _In_opt_ SURFOBJ *psoMask,
     _In_opt_ CLIPOBJ *pco,
     _In_opt_ XLATEOBJ *pxlo,
     _In_ RECTL *prclTrg,
-    _When_(psoSrc, _In_) POINTL *pptlSrc,
-    _When_(psoMask, _In_) POINTL *pptlMask,
+    _In_opt_ POINTL *pptlSrc,
+    _In_opt_ POINTL *pptlMask,
     _In_opt_ BRUSHOBJ *pbo,
-    _When_(pbo, _In_) POINTL *pptlBrush,
+    _In_opt_ POINTL *pptlBrush,
     _In_ ROP4 rop4);
 
 WIN32KAPI
@@ -1420,11 +1420,13 @@ EngCreateDriverObj(
     _In_opt_ FREEOBJPROC pFreeObjProc,
     _In_ HDEV hdev);
 
+_Must_inspect_result_
+_Success_(return != FALSE)
 WIN32KAPI
 BOOL
 APIENTRY
 EngCreateEvent(
-    _Deref_out_opt_ PEVENT *ppEvent);
+    _When_(return != FALSE, _Outptr_) PEVENT *ppEvent);
 
 /* EngCreatePalette.iMode constants */
 #define PAL_INDEXED                       0x00000001
@@ -2126,7 +2128,7 @@ BOOL
 APIENTRY
 EngQuerySystemAttribute(
     _In_ ENG_SYSTEM_ATTRIBUTE CapNum,
-    _Out_ PDWORD pCapability);
+    _When_(return != FALSE, _Out_) PDWORD pCapability);
 
 WIN32KAPI
 LONG
@@ -2150,7 +2152,7 @@ WIN32KAPI
 ULONG
 APIENTRY
 EngSaveFloatingPointState(
-    _Out_ VOID *pBuffer,
+    _Inout_ VOID *pBuffer,
     _In_ ULONG cjBufferSize);
 
 WIN32KAPI
@@ -2253,7 +2255,7 @@ EngStretchBltROP(
     _In_ RECTL *prclSrc,
     _When_(psoMask, _In_) POINTL *pptlMask,
     _In_ ULONG iMode,
-    _In_ BRUSHOBJ *pbo,
+    _In_opt_ BRUSHOBJ *pbo,
     _In_ DWORD rop4);
 
 WIN32KAPI
@@ -2594,7 +2596,7 @@ ULONG
 APIENTRY
 FONTOBJ_cGetAllGlyphHandles(
     _In_ FONTOBJ *pfo,
-    _Out_opt_bytecap_(return) HGLYPH *phg);
+    _Out_opt_ HGLYPH *phg);
 
 WIN32KAPI
 ULONG
@@ -2830,7 +2832,7 @@ WIN32KAPI
 VOID
 APIENTRY
 STROBJ_vEnumStart(
-    _In_ STROBJ *pstro);
+    _Inout_ STROBJ *pstro);
 
 WIN32KAPI
 BOOL
@@ -2955,10 +2957,10 @@ typedef BOOL
     _In_ CLIPOBJ *pco,
     _In_opt_ XLATEOBJ *pxlo,
     _In_ RECTL *prclTrg,
-    _When_(psoSrc, _In_) POINTL *pptlSrc,
-    _When_(psoMask, _In_) POINTL *pptlMask,
+    _In_opt_ POINTL *pptlSrc,
+    _In_opt_ POINTL *pptlMask,
     _In_opt_ BRUSHOBJ *pbo,
-    _When_(pbo, _In_) POINTL *pptlBrush,
+    _In_opt_ POINTL *pptlBrush,
     _In_ ROP4 rop4);
 typedef FN_DrvBitBlt *PFN_DrvBitBlt;
 extern FN_DrvBitBlt DrvBitBlt;
@@ -3007,7 +3009,7 @@ typedef LONG
     _In_ DHPDEV dhpdev,
     _In_ LONG iPixelFormat,
     _In_ ULONG cjpfd,
-    _Out_ PIXELFORMATDESCRIPTOR *ppfd);
+    _Out_opt_ PIXELFORMATDESCRIPTOR *ppfd);
 typedef FN_DrvDescribePixelFormat *PFN_DrvDescribePixelFormat;
 extern FN_DrvDescribePixelFormat DrvDescribePixelFormat;
 
