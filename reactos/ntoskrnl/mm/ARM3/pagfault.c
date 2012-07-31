@@ -23,7 +23,7 @@ BOOLEAN UserPdeFault = FALSE;
 #endif
 
 LONG MmSystemLockPagesCount;
- 
+
 /* PRIVATE FUNCTIONS **********************************************************/
 
 PMMPTE
@@ -305,8 +305,18 @@ MiResolveDemandZeroFault(IN PVOID Address,
         /* Check if we need a zero page */
         NeedZero = (OldIrql != MM_NOIRQL);
 
-        /* Get the next system page color */
-        Color = MI_GET_NEXT_COLOR();
+#if 0
+        /* Session-backed image views must be zeroed */
+        if ((Process == HYDRA_PROCESS) &&
+            ((MI_IS_SESSION_IMAGE_ADDRESS(Address)) ||
+             ((Address >= (PVOID)MiSessionViewStart) &&
+              (Address < (PVOID)MiSessionSpaceWs))))
+        {
+            NeedZero = TRUE;
+        }
+#endif
+        /* Hardcode unknown color */
+        Color = 0xFFFFFFFF;
     }
 
     /* Check if the PFN database should be acquired */
@@ -332,31 +342,31 @@ MiResolveDemandZeroFault(IN PVOID Address,
     if (!Process) MI_SET_PROCESS2("Kernel Demand 0");
 
     /* Do we need a zero page? */
-    if ((NeedZero) && (Process))
+    if (Color != 0xFFFFFFFF)
     {
         /* Try to get one, if we couldn't grab a free page and zero it */
         PageFrameNumber = MiRemoveZeroPageSafe(Color);
-        if (PageFrameNumber)
-        {
-            /* We got a genuine zero page, stop worrying about it */
-            NeedZero = FALSE;
-        }
-        else
+        if (!PageFrameNumber)
         {
             /* We'll need a free page and zero it manually */
             PageFrameNumber = MiRemoveAnyPage(Color);
+            NeedZero = TRUE;
         }
-    }
-    else if (!NeedZero)
-    {
-        /* Process or system doesn't want a zero page, grab anything */
-        PageFrameNumber = MiRemoveAnyPage(Color);
     }
     else
     {
-        /* System wants a zero page, obtain one */
-        PageFrameNumber = MiRemoveZeroPage(Color);
-        NeedZero = FALSE;
+        /* Get a color, and see if we should grab a zero or non-zero page */
+        Color = MI_GET_NEXT_COLOR();
+        if (!NeedZero)
+        {
+            /* Process or system doesn't want a zero page, grab anything */
+            PageFrameNumber = MiRemoveAnyPage(Color);
+        }
+        else
+        {
+            /* System wants a zero page, obtain one */
+            PageFrameNumber = MiRemoveZeroPage(Color);
+        }
     }
 
     /* Initialize it */
@@ -434,6 +444,7 @@ MiCompleteProtoPteFault(IN BOOLEAN StoreInstruction,
     ULONG_PTR Protection;
     PFN_NUMBER PageFrameIndex;
     PMMPFN Pfn1, Pfn2;
+    BOOLEAN OriginalProtection, DirtyPage;
 
     /* Must be called with an valid prototype PTE, with the PFN lock held */
     ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
@@ -458,19 +469,60 @@ MiCompleteProtoPteFault(IN BOOLEAN StoreInstruction,
     {
         /* Get the protection from the PTE, there's no real Proto PTE data */
         Protection = PointerPte->u.Soft.Protection;
+
+        /* Remember that we did not use the proto protection */
+        OriginalProtection = FALSE;
     }
     else
     {
         /* Get the protection from the original PTE link */
         OriginalPte = &Pfn1->OriginalPte;
         Protection = OriginalPte->u.Soft.Protection;
+
+        /* Remember that we used the original protection */
+        OriginalProtection = TRUE;
+
+        /* Check if this was a write on a read only proto */
+        if ((StoreInstruction) && !(Protection & MM_READWRITE))
+        {
+            /* Clear the flag */
+            StoreInstruction = 0;
+        }
     }
+
+    /* Check if this was a write on a non-COW page */
+    DirtyPage = FALSE;
+    if ((StoreInstruction) && ((Protection & MM_WRITECOPY) != MM_WRITECOPY))
+    {
+        /* Then the page should be marked dirty */
+        DirtyPage = TRUE;
+
+        /* ReactOS check */
+        ASSERT(Pfn1->OriginalPte.u.Soft.Prototype != 0);
+    }
+
+    /* Not yet handled by ReactOS */
+    ASSERT(LockedPfn == NULL);
 
     /* Release the PFN lock */
     KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
 
     /* Remove caching bits */
     Protection &= ~(MM_NOCACHE | MM_NOACCESS);
+
+    /* Setup caching */
+    if (Pfn1->u3.e1.CacheAttribute == MiWriteCombined)
+    {
+        /* Write combining, no caching */
+        MI_PAGE_DISABLE_CACHE(&TempPte);
+        MI_PAGE_WRITE_COMBINED(&TempPte);
+    }
+    else if (Pfn1->u3.e1.CacheAttribute == MiNonCached)
+    {
+        /* Write through, no caching */
+        MI_PAGE_DISABLE_CACHE(&TempPte);
+        MI_PAGE_WRITE_THROUGH(&TempPte);
+    }
 
     /* Check if this is a kernel or user address */
     if (Address < MmSystemRangeStart)
@@ -484,10 +536,17 @@ MiCompleteProtoPteFault(IN BOOLEAN StoreInstruction,
         MI_MAKE_HARDWARE_PTE(&TempPte, PointerPte, Protection, PageFrameIndex);
     }
 
+    /* Set the dirty flag if needed */
+    if (DirtyPage) TempPte.u.Hard.Dirty = TRUE;
+
     /* Write the PTE */
     MI_WRITE_VALID_PTE(PointerPte, TempPte);
 
+    /* Reset the protection if needed */
+    if (OriginalProtection) Protection = MM_ZERO_ACCESS;
+
     /* Return success */
+    ASSERT(PointerPte == MiAddressToPte(Address));
     return STATUS_SUCCESS;
 }
 
@@ -823,31 +882,31 @@ MiDispatchFault(IN BOOLEAN StoreInstruction,
             /* Has the PTE been made valid yet? */
             if (!SuperProtoPte->u.Hard.Valid)
             {
-                UNIMPLEMENTED;
-                while (TRUE);
+                ASSERT(FALSE);
             }
-            else
+            else if (PointerPte->u.Hard.Valid == 1)
             {
-                /* Resolve the fault -- this will release the PFN lock */
-                ASSERT(PointerPte->u.Hard.Valid == 0);
-                Status = MiResolveProtoPteFault(StoreInstruction,
-                                                Address,
-                                                PointerPte,
-                                                PointerProtoPte,
-                                                NULL,
-                                                NULL,
-                                                NULL,
-                                                Process,
-                                                LockIrql,
-                                                TrapInformation);
-                ASSERT(Status == STATUS_SUCCESS);
-
-                /* Complete this as a transition fault */
-                ASSERT(OldIrql == KeGetCurrentIrql());
-                ASSERT(OldIrql <= APC_LEVEL);
-                ASSERT(KeAreAllApcsDisabled() == TRUE);
-                return Status;
+                ASSERT(FALSE);
             }
+
+            /* Resolve the fault -- this will release the PFN lock */
+            Status = MiResolveProtoPteFault(StoreInstruction,
+                                            Address,
+                                            PointerPte,
+                                            PointerProtoPte,
+                                            NULL,
+                                            NULL,
+                                            NULL,
+                                            Process,
+                                            LockIrql,
+                                            TrapInformation);
+            ASSERT(Status == STATUS_SUCCESS);
+
+            /* Complete this as a transition fault */
+            ASSERT(OldIrql == KeGetCurrentIrql());
+            ASSERT(OldIrql <= APC_LEVEL);
+            ASSERT(KeAreAllApcsDisabled() == TRUE);
+            return Status;
         }
         else
         {
