@@ -384,10 +384,10 @@ IntEngStretchBlt(SURFOBJ *psoDest,
     LONG InputClWidth, InputClHeight, InputWidth, InputHeight;
 
     ASSERT(psoDest);
-    ASSERT(psoSource);
+    //ASSERT(psoSource); // FIXME!
     ASSERT(DestRect);
-    ASSERT(SourceRect);
-    ASSERT(!RECTL_bIsEmptyRect(SourceRect));
+    //ASSERT(SourceRect); // FIXME!
+    //ASSERT(!RECTL_bIsEmptyRect(SourceRect)); // FIXME!
 
     /* If no clip object is given, use trivial one */
     if (!ClipRegion) ClipRegion = &gxcoTrivial.ClipObj;
