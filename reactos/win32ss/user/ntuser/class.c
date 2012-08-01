@@ -110,6 +110,72 @@ LookupFnIdToiCls(int FnId, int *iCls )
   return FALSE;
 }
 
+_Must_inspect_result_
+NTSTATUS
+NTAPI
+CaptureUnicodeStringOrAtom(
+    _Out_ PUNICODE_STRING pustrOut,
+    __in_data_source(USER_MODE) _In_ PUNICODE_STRING pustrUnsafe)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    /* Default to NULL */
+    pustrOut->Buffer = NULL;
+
+    _SEH2_TRY
+    {
+        ProbeForRead(pustrUnsafe, sizeof(UNICODE_STRING), 1);
+
+        /* Validate the string */
+        if ((pustrUnsafe->Length & 1) || (pustrUnsafe->Buffer == NULL))
+        {
+            /* This is not legal */
+            _SEH2_YIELD(return STATUS_INVALID_PARAMETER);
+        }
+
+        /* Check if this is an atom */
+        if (IS_ATOM(pustrUnsafe->Buffer))
+        {
+            /* Copy the atom, length is 0 */
+            pustrOut->MaximumLength = pustrOut->Length = 0;
+            pustrOut->Buffer = pustrUnsafe->Buffer;
+        }
+        else
+        {
+            /* Get the length, maximum length includes zero termination */
+            pustrOut->Length = pustrUnsafe->Length;
+            pustrOut->MaximumLength = pustrOut->Length + sizeof(WCHAR);
+
+            /* Allocate a buffer */
+            pustrOut->Buffer = ExAllocatePoolWithTag(PagedPool,
+                                                     pustrOut->MaximumLength,
+                                                     TAG_STRING);
+            if (!pustrOut->Buffer)
+            {
+                _SEH2_YIELD(return STATUS_INSUFFICIENT_RESOURCES);
+            }
+
+            /* Copy the string and zero terminate it */
+            ProbeForRead(pustrUnsafe->Buffer, pustrOut->Length, 1);
+            RtlCopyMemory(pustrOut->Buffer, pustrUnsafe->Buffer, pustrOut->Length);
+            pustrOut->Buffer[pustrOut->Length / sizeof(WCHAR)] = L'\0';
+        }
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        /* Check if we already allocated a buffer */
+        if (pustrOut->Buffer)
+        {
+            /* Free the buffer */
+            ExFreePoolWithTag(pustrOut->Buffer, TAG_STRING);
+            Status = _SEH2_GetExceptionCode();
+        }
+    }
+    _SEH2_END;
+
+    return Status;
+}
+
 /* WINDOWCLASS ***************************************************************/
 
 static VOID
@@ -503,7 +569,7 @@ IntGetClassForDesktop(IN OUT PCLS BaseClass,
             /* Simply clone the class */
             RtlCopyMemory( Class, BaseClass, ClassSize);
 
-            TRACE("Clone Class 0x%x hM 0x%x\n %S\n",Class, Class->hModule, Class->lpszClientUnicodeMenuName);
+            TRACE("Clone Class 0x%p hM 0x%p\n %S\n",Class, Class->hModule, Class->lpszClientUnicodeMenuName);
 
             /* Restore module address if default user class Ref: Bug 4778 */
             if ( Class->hModule != hModClient &&
@@ -511,7 +577,7 @@ IntGetClassForDesktop(IN OUT PCLS BaseClass,
                  Class->fnid >= FNID_BUTTON )
             {
                Class->hModule = hModClient;
-               TRACE("Clone Class 0x%x Reset hM 0x%x\n",Class, Class->hModule);
+               TRACE("Clone Class 0x%p Reset hM 0x%p\n",Class, Class->hModule);
             }
 
             /* Update some pointers and link the class */
@@ -631,7 +697,7 @@ IntDereferenceClass(IN OUT PCLS Class,
         {
             ASSERT(Class->pclsBase == Class);
 
-            TRACE("IntDereferenceClass 0x%x\n", Class);
+            TRACE("IntDereferenceClass 0x%p\n", Class);
             /* Check if there are clones of the class on other desktops,
                link the first clone in if possible. If there are no clones
                then leave the class on the desktop heap. It will get moved
@@ -669,7 +735,7 @@ IntDereferenceClass(IN OUT PCLS Class,
         }
         else
         {
-            TRACE("IntDereferenceClass1 0x%x\n", Class);
+            TRACE("IntDereferenceClass1 0x%p\n", Class);
 
             /* Locate the cloned class and unlink it */
             PrevLink = &BaseClass->pclsClone;
@@ -1032,7 +1098,7 @@ NoMem:
         EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
     }
 
-    TRACE("Created class 0x%x with name %wZ and proc 0x%x for atom 0x%x and hInstance 0x%x, global %d\n",
+    TRACE("Created class 0x%p with name %wZ and proc 0x%p for atom 0x%x and hInstance 0x%p, global %u\n",
             Class, ClassName, Class->lpfnWndProc, Atom, Class->hModule, Class->Global);
 
     return Class;
@@ -1068,8 +1134,10 @@ IntFindClass(IN RTL_ATOM Atom,
 }
 
 BOOL
-IntGetAtomFromStringOrAtom(IN PUNICODE_STRING ClassName,
-                           OUT RTL_ATOM *Atom)
+NTAPI
+IntGetAtomFromStringOrAtom(
+    _In_ PUNICODE_STRING ClassName,
+    _Out_ RTL_ATOM *Atom)
 {
     BOOL Ret = FALSE;
 
@@ -1078,6 +1146,8 @@ IntGetAtomFromStringOrAtom(IN PUNICODE_STRING ClassName,
         WCHAR szBuf[65];
         PWSTR AtomName;
         NTSTATUS Status;
+
+        *Atom = 0;
 
         /* NOTE: Caller has to protect the call with SEH! */
 
@@ -1134,11 +1204,12 @@ IntGetAtomFromStringOrAtom(IN PUNICODE_STRING ClassName,
 }
 
 RTL_ATOM
-IntGetClassAtom(IN PUNICODE_STRING ClassName,
-                IN HINSTANCE hInstance  OPTIONAL,
-                IN PPROCESSINFO pi  OPTIONAL,
-                OUT PCLS *BaseClass  OPTIONAL,
-                OUT PCLS **Link  OPTIONAL)
+IntGetClassAtom(
+    _In_ PUNICODE_STRING ClassName,
+    IN HINSTANCE hInstance  OPTIONAL,
+    IN PPROCESSINFO pi  OPTIONAL,
+    OUT PCLS *BaseClass  OPTIONAL,
+    OUT PCLS **Link  OPTIONAL)
 {
     RTL_ATOM Atom = (RTL_ATOM)0;
 
@@ -1160,7 +1231,7 @@ IntGetClassAtom(IN PUNICODE_STRING ClassName,
                              &pi->pclsPrivateList,
                              Link);
         if (Class != NULL)
-        {  TRACE("Step 1: 0x%x\n",Class );
+        {  TRACE("Step 1: 0x%p\n",Class );
             goto FoundClass;
         }
 
@@ -1171,7 +1242,7 @@ IntGetClassAtom(IN PUNICODE_STRING ClassName,
                              &pi->pclsPublicList,
                              Link);
         if (Class != NULL)
-        { TRACE("Step 2: 0x%x 0x%x\n",Class, Class->hModule);
+        { TRACE("Step 2: 0x%p 0x%p\n",Class, Class->hModule);
             goto FoundClass;
         }
 
@@ -1181,7 +1252,7 @@ IntGetClassAtom(IN PUNICODE_STRING ClassName,
                              &pi->pclsPrivateList,
                              Link);
         if (Class != NULL)
-        { TRACE("Step 3: 0x%x\n",Class );
+        { TRACE("Step 3: 0x%p\n",Class );
             goto FoundClass;
         }
 
@@ -1194,7 +1265,7 @@ IntGetClassAtom(IN PUNICODE_STRING ClassName,
         {
             EngSetLastError(ERROR_CLASS_DOES_NOT_EXIST);
             return (RTL_ATOM)0;
-        }else{TRACE("Step 4: 0x%x\n",Class );}
+        }else{TRACE("Step 4: 0x%p\n",Class );}
 
 FoundClass:
         *BaseClass = Class;
@@ -1219,7 +1290,7 @@ IntGetAndReferenceClass(PUNICODE_STRING ClassName, HINSTANCE hInstance)
 
    /* Check the class. */
 
-   TRACE("Finding Class %wZ for hInstance 0x%x\n", ClassName, hInstance);
+   TRACE("Finding Class %wZ for hInstance 0x%p\n", ClassName, hInstance);
 
    ClassAtom = IntGetClassAtom(ClassName,
                                hInstance,
@@ -1231,7 +1302,7 @@ IntGetAndReferenceClass(PUNICODE_STRING ClassName, HINSTANCE hInstance)
    {
       if (IS_ATOM(ClassName->Buffer))
       {
-         ERR("Class 0x%p not found\n", (DWORD_PTR) ClassName->Buffer);
+         ERR("Class 0x%p not found\n", ClassName->Buffer);
       }
       else
       {
@@ -1242,7 +1313,7 @@ IntGetAndReferenceClass(PUNICODE_STRING ClassName, HINSTANCE hInstance)
       return NULL;
    }
 
-   TRACE("Referencing Class 0x%x with atom 0x%x\n", Class, ClassAtom);
+   TRACE("Referencing Class 0x%p with atom 0x%x\n", Class, ClassAtom);
    Class = IntReferenceClass(Class,
                              ClassLink,
                              pti->rpdesk);
@@ -1287,7 +1358,7 @@ UserRegisterClass(IN CONST WNDCLASSEXW* lpwcx,
        if (Class != NULL && !Class->Global)
        {
           // Local class already exists
-          TRACE("Local Class 0x%p does already exist!\n", ClassAtom);
+          TRACE("Local Class 0x%x does already exist!\n", ClassAtom);
           EngSetLastError(ERROR_CLASS_ALREADY_EXISTS);
           return (RTL_ATOM)0;
        }
@@ -1301,7 +1372,7 @@ UserRegisterClass(IN CONST WNDCLASSEXW* lpwcx,
 
           if (Class != NULL && Class->Global)
           {
-             TRACE("Global Class 0x%p does already exist!\n", ClassAtom);
+             TRACE("Global Class 0x%x does already exist!\n", ClassAtom);
              EngSetLastError(ERROR_CLASS_ALREADY_EXISTS);
              return (RTL_ATOM)0;
           }
@@ -1352,7 +1423,7 @@ UserUnregisterClass(IN PUNICODE_STRING ClassName,
 
     pi = GetW32ProcessInfo();
 
-    TRACE("UserUnregisterClass(%wZ, 0x%x)\n", ClassName, hInstance);
+    TRACE("UserUnregisterClass(%wZ, 0x%p)\n", ClassName, hInstance);
 
     /* NOTE: Accessing the buffer in ClassName may raise an exception! */
     ClassAtom = IntGetClassAtom(ClassName,
@@ -1371,7 +1442,7 @@ UserUnregisterClass(IN PUNICODE_STRING ClassName,
     if (Class->cWndReferenceCount != 0 ||
         Class->pclsClone != NULL)
     {
-        TRACE("UserUnregisterClass: Class has a Window. Ct %d : Clone 0x%x\n", Class->cWndReferenceCount, Class->pclsClone);
+        TRACE("UserUnregisterClass: Class has a Window. Ct %u : Clone 0x%p\n", Class->cWndReferenceCount, Class->pclsClone);
         EngSetLastError(ERROR_CLASS_HAS_WINDOWS);
         return FALSE;
     }
@@ -1384,7 +1455,7 @@ UserUnregisterClass(IN PUNICODE_STRING ClassName,
 
     if (NT_SUCCESS(IntDeregisterClassAtom(Class->atomClassName)))
     {
-        TRACE("Class 0x%x\n", Class);
+        TRACE("Class 0x%p\n", Class);
         TRACE("UserUnregisterClass: Good Exit!\n");
         /* Finally free the resources */
         IntDestroyClass(Class);
@@ -2184,196 +2255,135 @@ NtUserSetClassWord(
    return(0);
 }
 
-BOOL APIENTRY
-NtUserUnregisterClass(IN PUNICODE_STRING ClassNameOrAtom,
-                      IN HINSTANCE hInstance,
-                      OUT PCLSMENUNAME pClassMenuName)
+BOOL
+APIENTRY
+NtUserUnregisterClass(
+    IN PUNICODE_STRING ClassNameOrAtom,
+    IN HINSTANCE hInstance,
+    OUT PCLSMENUNAME pClassMenuName)
 {
-    UNICODE_STRING CapturedClassName;
-    BOOL Ret = FALSE;
+    UNICODE_STRING SafeClassName;
+    NTSTATUS Status;
+    BOOL Ret;
+
+    Status = CaptureUnicodeStringOrAtom(&SafeClassName, ClassNameOrAtom);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("Error capturing the class name\n");
+        SetLastNtError(Status);
+        return FALSE;
+    }
 
     UserEnterExclusive();
 
-    _SEH2_TRY
-    {
-        /* Probe the paramters */
-        CapturedClassName = ProbeForReadUnicodeString(ClassNameOrAtom);
-        if (CapturedClassName.Length & 1)
-        {
-            goto InvalidParameter;
-        }
-
-        if (CapturedClassName.Length != 0)
-        {
-            ProbeForRead(CapturedClassName.Buffer,
-                         CapturedClassName.Length,
-                         sizeof(WCHAR));
-        }
-        else
-        {
-            if (!IS_ATOM(CapturedClassName.Buffer))
-            {
-InvalidParameter:
-                EngSetLastError(ERROR_INVALID_PARAMETER);
-                _SEH2_LEAVE;
-            }
-        }
-
-        /* Unregister the class */
-        Ret = UserUnregisterClass(&CapturedClassName,
-                                  hInstance,
-                                  NULL); // Null for now~
-    }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        SetLastNtError(_SEH2_GetExceptionCode());
-    }
-    _SEH2_END;
+    /* Unregister the class */
+    Ret = UserUnregisterClass(&SafeClassName, hInstance, NULL); // Null for now~
 
     UserLeave();
+
+    if (SafeClassName.Buffer && !IS_ATOM(SafeClassName.Buffer))
+        ExFreePoolWithTag(SafeClassName.Buffer, TAG_STRING);
+
     return Ret;
 }
 
+
 /* NOTE: For system classes hInstance is not NULL here, but User32Instance */
-BOOL APIENTRY
+BOOL
+APIENTRY
 NtUserGetClassInfo(
    HINSTANCE hInstance,
    PUNICODE_STRING ClassName,
    LPWNDCLASSEXW lpWndClassEx,
    LPWSTR *ppszMenuName,
-   BOOL Ansi)
+   BOOL bAnsi)
 {
-   UNICODE_STRING CapturedClassName, SafeClassName;
-   WNDCLASSEXW Safewcexw;
-   PCLS Class;
-   RTL_ATOM ClassAtom = 0;
-   PPROCESSINFO ppi;
-   BOOL Ret = TRUE;
+    UNICODE_STRING SafeClassName;
+    WNDCLASSEXW Safewcexw;
+    PCLS Class;
+    RTL_ATOM ClassAtom = 0;
+    PPROCESSINFO ppi;
+    BOOL Ret = TRUE;
+    NTSTATUS Status;
 
-   /* NOTE: Need exclusive lock because getting the wndproc might require the
-            creation of a call procedure handle */
-   UserEnterExclusive();
+    _SEH2_TRY
+    {
+        ProbeForWrite( lpWndClassEx, sizeof(WNDCLASSEXW), sizeof(ULONG));
+        RtlCopyMemory( &Safewcexw, lpWndClassEx, sizeof(WNDCLASSEXW));
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        SetLastNtError(_SEH2_GetExceptionCode());
+        _SEH2_YIELD(return FALSE);
+    }
+    _SEH2_END;
 
-   ppi = GetW32ProcessInfo();
+    Status = CaptureUnicodeStringOrAtom(&SafeClassName, ClassName);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("Error capturing the class name\n");
+        SetLastNtError(Status);
+        return FALSE;
+    }
 
-   if ( !(ppi->W32PF_flags & W32PF_CLASSESREGISTERED ))
-   {
-      UserRegisterSystemClasses();
-   }
+    // If null instance use client.
+    if (!hInstance) hInstance = hModClient;
 
-   _SEH2_TRY
-   {
-      /* Probe the paramters */
-      CapturedClassName = ProbeForReadUnicodeString(ClassName);
+    TRACE("GetClassInfo(%wZ, 0x%x)\n", SafeClassName, hInstance);
 
-      if (CapturedClassName.Length == 0)
-      {
-         TRACE("hInst %p atom %04X lpWndClassEx %p Ansi %d\n", hInstance, CapturedClassName.Buffer, lpWndClassEx, Ansi);
-      }
-      else
-      {
-         TRACE("hInst %p class %wZ lpWndClassEx %p Ansi %d\n", hInstance, &CapturedClassName, lpWndClassEx, Ansi);
-      }
+    /* NOTE: Need exclusive lock because getting the wndproc might require the
+             creation of a call procedure handle */
+    UserEnterExclusive();
 
-      if (CapturedClassName.Length & 1)
-      {
-         EngSetLastError(ERROR_INVALID_PARAMETER);
-         Ret = FALSE;
-         _SEH2_LEAVE;
-      }
+    ppi = GetW32ProcessInfo();
+    if (!(ppi->W32PF_flags & W32PF_CLASSESREGISTERED))
+    {
+        UserRegisterSystemClasses();
+    }
 
-      if (CapturedClassName.Length != 0)
-      {
-         ProbeForRead( CapturedClassName.Buffer,
-                       CapturedClassName.Length,
-                       sizeof(WCHAR));
+    ClassAtom = IntGetClassAtom(&SafeClassName,
+                                hInstance,
+                                ppi,
+                                &Class,
+                                NULL);
+    if (ClassAtom != (RTL_ATOM)0)
+    {
+        Ret = UserGetClassInfo(Class, &Safewcexw, bAnsi, hInstance);
+    }
+    else
+    {
+        EngSetLastError(ERROR_CLASS_DOES_NOT_EXIST);
+        Ret = FALSE;
+    }
 
-         RtlInitUnicodeString( &SafeClassName, CapturedClassName.Buffer);
+    UserLeave();
 
-         SafeClassName.Buffer = ExAllocatePoolWithTag( PagedPool,
-                                                       SafeClassName.MaximumLength,
-                                                       TAG_STRING);
-         RtlCopyMemory( SafeClassName.Buffer,
-                        CapturedClassName.Buffer,
-                        SafeClassName.MaximumLength);
-      }
-      else
-      {
-         if (!IS_ATOM(CapturedClassName.Buffer))
-         {
-            ERR("NtUserGetClassInfo() got ClassName instead of Atom!\n");
-            EngSetLastError(ERROR_INVALID_PARAMETER);
+    if (Ret)
+    {
+        _SEH2_TRY
+        {
+            /* Emulate Function. */
+            if (ppszMenuName) *ppszMenuName = (LPWSTR)Safewcexw.lpszMenuName;
+
+            RtlCopyMemory(lpWndClassEx, &Safewcexw, sizeof(WNDCLASSEXW));
+
+            // From Wine:
+            /* We must return the atom of the class here instead of just TRUE. */
+            /* Undocumented behavior! Return the class atom as a BOOL! */
+            Ret = (BOOL)ClassAtom;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            EngSetLastError(ERROR_CLASS_DOES_NOT_EXIST);
             Ret = FALSE;
-            _SEH2_LEAVE;
-         }
+        }
+        _SEH2_END;
+    }
 
-         SafeClassName.Buffer = CapturedClassName.Buffer;
-         SafeClassName.Length = 0;
-         SafeClassName.MaximumLength = 0;
-      }
+    if (!IS_ATOM(SafeClassName.Buffer))
+        ExFreePoolWithTag(SafeClassName.Buffer, TAG_STRING);
 
-      ProbeForWrite( lpWndClassEx, sizeof(WNDCLASSEXW), sizeof(ULONG));
-
-      RtlCopyMemory( &Safewcexw, lpWndClassEx, sizeof(WNDCLASSEXW));
-   }
-   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-   {
-      SetLastNtError(_SEH2_GetExceptionCode());
-      Ret = FALSE;
-   }
-   _SEH2_END;
-
-   // If null instance use client.
-   if (!hInstance) hInstance = hModClient;
-
-   if (Ret)
-   {
-      TRACE("GetClassInfo(%wZ, 0x%x)\n", SafeClassName, hInstance);
-      ClassAtom = IntGetClassAtom( &SafeClassName,
-                                    hInstance,
-                                    ppi,
-                                   &Class,
-                                    NULL);
-      if (ClassAtom != (RTL_ATOM)0)
-      {
-         if (hInstance == NULL) hInstance = hModClient;
-
-         Ret = UserGetClassInfo( Class,
-                                &Safewcexw,
-                                 Ansi,
-                                 hInstance);
-      }
-      else
-      {
-         EngSetLastError(ERROR_CLASS_DOES_NOT_EXIST);
-         Ret = FALSE;
-      }
-   }
-   _SEH2_TRY
-   {
-      if (Ret)
-      {
-         /* Emulate Function. */
-         if (ppszMenuName) *ppszMenuName = (LPWSTR)Safewcexw.lpszMenuName;
-
-         RtlCopyMemory(lpWndClassEx, &Safewcexw, sizeof(WNDCLASSEXW));
-
-         // From Wine:
-         /* We must return the atom of the class here instead of just TRUE. */
-         /* Undocumented behavior! Return the class atom as a BOOL! */
-         Ret = (BOOL)ClassAtom;
-      }
-   }
-   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-   {
-      EngSetLastError(ERROR_CLASS_DOES_NOT_EXIST);
-      Ret = FALSE;
-   }
-   _SEH2_END;
-
-   if (SafeClassName.Length) ExFreePoolWithTag(SafeClassName.Buffer, TAG_STRING);
-   UserLeave();
-   return Ret;
+    return Ret;
 }
 
 
@@ -2430,78 +2440,49 @@ NtUserGetClassName (IN HWND hWnd,
 }
 
 /* Return Pointer to Class structure. */
-PCLS APIENTRY
-NtUserGetWOWClass(HINSTANCE hInstance,
-                  PUNICODE_STRING ClassName)
+PCLS
+APIENTRY
+NtUserGetWOWClass(
+    HINSTANCE hInstance,
+    PUNICODE_STRING ClassName)
 {
-  UNICODE_STRING SafeClassName;
-  PPROCESSINFO pi;
-  PCLS Class = NULL;
-  RTL_ATOM ClassAtom = 0;
-  BOOL Hit = FALSE;
+    UNICODE_STRING SafeClassName;
+    PPROCESSINFO pi;
+    PCLS Class = NULL;
+    RTL_ATOM ClassAtom = 0;
+    NTSTATUS Status;
 
-  UserEnterExclusive();
+    Status = CaptureUnicodeStringOrAtom(&SafeClassName, ClassName);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("Error capturing the class name\n");
+        SetLastNtError(Status);
+        return FALSE;
+    }
 
-  pi = GetW32ProcessInfo();
+    UserEnterExclusive();
 
-  _SEH2_TRY
-  {
-     if (ClassName->Length != 0)
-     {
-        ProbeForRead( ClassName->Buffer,
-                      ClassName->Length,
-                      sizeof(WCHAR));
+    pi = GetW32ProcessInfo();
 
-        RtlInitUnicodeString( &SafeClassName, ClassName->Buffer);
-
-        SafeClassName.Buffer = ExAllocatePoolWithTag( PagedPool,
-                                                      SafeClassName.MaximumLength,
-                                                      TAG_STRING);
-        RtlCopyMemory( SafeClassName.Buffer,
-                       ClassName->Buffer,
-                       SafeClassName.MaximumLength);
-     }
-     else
-     {
-        if (!IS_ATOM(ClassName->Buffer))
-        {
-           ERR("NtUserGetWOWClass() got ClassName instead of Atom!\n");
-           Hit = TRUE;
-        }
-        else
-        {
-           SafeClassName.Buffer = ClassName->Buffer;
-           SafeClassName.Length = 0;
-           SafeClassName.MaximumLength = 0;
-        }
-     }
-  }
-  _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-  {
-     EngSetLastError(ERROR_CLASS_DOES_NOT_EXIST);
-     Hit = TRUE;
-  }
-  _SEH2_END;
-
-  if (!Hit)
-  {
-     ClassAtom = IntGetClassAtom( &SafeClassName,
-                                   hInstance,
-                                   pi,
-                                  &Class,
-                                   NULL);
-     if (!ClassAtom)
-     {
+    ClassAtom = IntGetClassAtom(&SafeClassName,
+                                hInstance,
+                                pi,
+                                &Class,
+                                NULL);
+    if (!ClassAtom)
+    {
         EngSetLastError(ERROR_CLASS_DOES_NOT_EXIST);
-     }
-  }
+    }
 
-  if (SafeClassName.Length) ExFreePoolWithTag(SafeClassName.Buffer, TAG_STRING);
-  UserLeave();
+
+    if (SafeClassName.Buffer && !IS_ATOM(SafeClassName.Buffer))
+        ExFreePoolWithTag(SafeClassName.Buffer, TAG_STRING);
+
+    UserLeave();
 //
 // Don't forget to use DesktopPtrToUser( ? ) with return pointer in user space.
 //
-  return Class;
+    return Class;
 }
 
 /* EOF */
