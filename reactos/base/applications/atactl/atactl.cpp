@@ -784,6 +784,9 @@ ata_check_unit(
                         chs[0] = ident->NumberOfCylinders;
                         chs[1] = ident->NumberOfHeads;
                         chs[2] = ident->SectorsPerTrack;
+                        if(!max_lba) {
+                            max_lba = (ULONG)(chs[0])*(ULONG)(chs[1])*(ULONG)(chs[2]);
+                        }
                     }
                     if(io_mode != -1) {
                         printf("           %.12s\n", mode_str);
