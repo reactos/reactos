@@ -12,7 +12,7 @@ set_entrypoint(idndl 0)
 
 if(NOT MSVC)
     add_target_compile_flags(idndl "-fno-exceptions -fno-rtti")
-endif(NOT MSVC)
+endif()
 
 add_importlibs(idndl kernel32)
 

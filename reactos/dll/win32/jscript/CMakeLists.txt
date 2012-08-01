@@ -10,8 +10,6 @@ add_definitions(
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-set_rc_compiler()
-
 spec2def(jscript.dll jscript.spec)
 
 list(APPEND SOURCE
@@ -38,26 +36,11 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/jscript.def)
 
 add_library(jscript SHARED ${SOURCE})
-
 set_module_type(jscript win32dll)
-
 target_link_libraries(jscript wine)
-if(MSVC)
-    target_link_libraries(jscript uuid)
-endif()
-
-add_importlibs(jscript
-    msvcrt
-    user32
-    ole32
-    oleaut32
-    advapi32
-    kernel32
-    ntdll)
-
+add_importlibs(jscript user32 ole32 oleaut32 advapi32 msvcrt kernel32 ntdll)
 add_pch(jscript jscript.h)
 # jsglobal.tlb needs stdole2.tlb
 add_dependencies(jscript stdole2)
 add_cd_file(TARGET jscript DESTINATION reactos/system32 FOR all)
-
 set_source_files_properties(rsrc.rc PROPERTIES OBJECT_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/jsglobal.tlb)

@@ -66,7 +66,7 @@ if(NOT CMAKE_CROSSCOMPILING)
     if(NOT MSVC)
         export(TARGETS widl gendib cabman cdmake mkhive obj2bin spec2def geninc rsym mkshelllink FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
     else()
-        export(TARGETS gendib cabman cdmake mkhive obj2bin spec2def geninc mkshelllink FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
+        export(TARGETS widl gendib cabman cdmake mkhive obj2bin spec2def geninc mkshelllink FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
     endif()
 
 else()
@@ -169,11 +169,8 @@ else()
     include(cmake/CMakeMacros.cmake)
 
     # IDL macros for widl/midl
-    if (MSVC)
-        include(cmake/midl-support.cmake)
-    else()
-        include(cmake/widl-support.cmake)
-    endif()
+    # We're using widl now for both MSVC and GCC builds
+    include(cmake/widl-support.cmake)
 
     if(MSVC AND USE_WDK_HEADERS)
         include_directories(

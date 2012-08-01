@@ -70,10 +70,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
 #define ARRAYSIZE(array) (sizeof(array)/sizeof((array)[0]))
 
-#ifdef _MSC_VER
-DEFINE_GUID(CLSID_PSFactoryBuffer, 0x00000320, 0x0000, 0x0000, 0xc0,0x00, 0x00,0x00,0x00,0x00,0x00,0x46);
-#endif
-
 /****************************************************************************
  * This section defines variables internal to the COM module.
  */

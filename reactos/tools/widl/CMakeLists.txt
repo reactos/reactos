@@ -1,4 +1,9 @@
 
+if(MSVC)
+    add_definitions(-Dsnprintf=_snprintf)
+    list(APPEND SOURCE getopt.c)
+endif()
+
 list(APPEND SOURCE
     client.c
     expr.c

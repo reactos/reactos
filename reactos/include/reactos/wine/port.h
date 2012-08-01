@@ -153,7 +153,9 @@ struct statfs;
 
 /* Constructor functions */
 
-#ifdef __GNUC__
+#ifdef _MSC_VER
+# define DECL_GLOBAL_CONSTRUCTOR(func) /* nothing */
+#elif defined(__GNUC__)
 # define DECL_GLOBAL_CONSTRUCTOR(func) \
     static void func(void) __attribute__((constructor)); \
     static void func(void)
