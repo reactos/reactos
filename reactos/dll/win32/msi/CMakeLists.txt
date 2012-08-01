@@ -1,6 +1,4 @@
 
-if(NOT MSVC)
-
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 add_definitions(-D__WINESRC__ -DMSIRUNMODE=MSIRUNMODE_T)
 
@@ -95,5 +93,3 @@ add_importlibs(msi
 
 add_pch(msi msipriv.h)
 add_cd_file(TARGET msi DESTINATION reactos/system32 FOR all)
-
-endif(NOT MSVC)
