@@ -1,5 +1,5 @@
 #include <windows.h>
-#include <WinIoCtl.h>
+#include <winioctl.h>
 #include <stdio.h>
 //#include <ntdddisk.h>
 //#include <ntddscsi.h>
