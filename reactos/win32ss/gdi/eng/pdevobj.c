@@ -291,14 +291,14 @@ EngpCreatePDEV(
     {
         /* ... use the device's default one */
         pdm = pGraphicsDevice->pDevModeList[pGraphicsDevice->iDefaultMode].pdm;
-        DPRINT("Using iDefaultMode = %ld\n", pGraphicsDevice->iDefaultMode);
+        DPRINT("Using iDefaultMode = %lu\n", pGraphicsDevice->iDefaultMode);
     }
 
     /* Try to get a diplay driver */
     ppdev->pldev = EngLoadImageEx(pdm->dmDeviceName, LDEV_DEVICE_DISPLAY);
     if (!ppdev->pldev)
     {
-        DPRINT1("Could not load display driver '%ls', '%s'\n",
+        DPRINT1("Could not load display driver '%ls', '%ls'\n",
                 pGraphicsDevice->pDiplayDrivers,
                 pdm->dmDeviceName);
         ExFreePoolWithTag(ppdev, GDITAG_PDEV);
@@ -617,18 +617,13 @@ APIENTRY
 EngGetDriverName(IN HDEV hdev)
 {
     PPDEVOBJ ppdev = (PPDEVOBJ)hdev;
-    PLDEVOBJ pldev;
 
-    if (!hdev)
-        return NULL;
+    ASSERT(ppdev);
+    ASSERT(ppdev->pldev);
+    ASSERT(ppdev->pldev->pGdiDriverInfo);
+    ASSERT(ppdev->pldev->pGdiDriverInfo->DriverName.Buffer);
 
-    pldev = ppdev->pldev;
-    ASSERT(pldev);
-
-    if (!pldev->pGdiDriverInfo)
-        return NULL;
-
-    return pldev->pGdiDriverInfo->DriverName.Buffer;
+    return ppdev->pldev->pGdiDriverInfo->DriverName.Buffer;
 }
 
 

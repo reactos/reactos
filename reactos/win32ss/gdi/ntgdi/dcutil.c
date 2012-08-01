@@ -332,13 +332,13 @@ NtGdiGetDCDword(
     return Ret;
 }
 
-BOOL
+BOOL _Success_(return != FALSE)
 APIENTRY
 NtGdiGetAndSetDCDword(
-    HDC hDC,
-    UINT u,
-    DWORD dwIn,
-    DWORD *Result)
+    _In_ HDC hdc,
+    _In_ UINT u,
+    _In_ DWORD dwIn,
+    _Out_ DWORD *pdwResult)
 {
     BOOL Ret = TRUE;
     PDC pdc;
@@ -347,13 +347,13 @@ NtGdiGetAndSetDCDword(
     DWORD SafeResult = 0;
     NTSTATUS Status = STATUS_SUCCESS;
 
-    if (!Result)
+    if (!pdwResult)
     {
         EngSetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
 
-    pdc = DC_LockDc(hDC);
+    pdc = DC_LockDc(hdc);
     if (!pdc)
     {
         EngSetLastError(ERROR_INVALID_HANDLE);
@@ -442,8 +442,8 @@ NtGdiGetAndSetDCDword(
     {
         _SEH2_TRY
         {
-            ProbeForWrite(Result, sizeof(DWORD), 1);
-            *Result = SafeResult;
+            ProbeForWrite(pdwResult, sizeof(DWORD), 1);
+            *pdwResult = SafeResult;
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {

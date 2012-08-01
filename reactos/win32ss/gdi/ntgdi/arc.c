@@ -57,12 +57,17 @@ IntArc( DC *dc,
     {
        INT tmp = Bottom; Bottom = Top; Top = tmp;
     }
-    if ((Left == Right) ||
-        (Top == Bottom) ||
-        (((arctype != GdiTypeArc) || (arctype != GdiTypeArcTo)) &&
-        ((Right - Left == 1) ||
-        (Bottom - Top == 1))))
-       return TRUE;
+
+    /* Check if the target rect is empty */
+    if ((Left == Right) || (Top == Bottom)) return TRUE;
+
+    // FIXME: this needs to be verified
+    if ((arctype == GdiTypeChord ) || (arctype == GdiTypePie))
+    {
+        if ((Right - Left == 1) || (Bottom - Top == 1))
+           return TRUE;
+    }
+
 
     pdcattr = dc->pdcattr;
 
