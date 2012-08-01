@@ -182,6 +182,7 @@ InitBadBlocks(
         for(i=0; i<Length; i++) {
             cDevSerial[i] = (UCHAR)(DevSerial[i]);
         }
+        cDevSerial[i] = 0;
         KdPrint(( "S/N:%s\n", cDevSerial));
 #endif
 

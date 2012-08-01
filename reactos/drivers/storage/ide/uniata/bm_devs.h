@@ -1,6 +1,6 @@
 /*++
 
-Copyright (c) 2002-2011 Alexandr A. Telyatnikov (Alter)
+Copyright (c) 2002-2012 Alexandr A. Telyatnikov (Alter)
 
 Module Name:
     bm_devs.h
@@ -88,11 +88,17 @@ Revision History:
 #ifndef __IDE_BUSMASTER_DEVICES_H__
 #define __IDE_BUSMASTER_DEVICES_H__
 
+#ifdef USER_MODE
+#define PVEN_STR    PCSTR
+#else // USER_MODE
+#define PVEN_STR    PCHAR
+#endif // USER_MODE
+
 typedef struct _BUSMASTER_CONTROLLER_INFORMATION {
-    PCHAR   VendorId;
+    PVEN_STR VendorId;
     ULONG   VendorIdLength;
     ULONG   nVendorId;
-    PCHAR   DeviceId;
+    PVEN_STR DeviceId;
     ULONG   DeviceIdLength;
     ULONG   nDeviceId;
     ULONG   nRevId;
@@ -692,10 +698,10 @@ typedef struct _BUSMASTER_CONTROLLER_INFORMATION {
 
 #ifdef USER_MODE
   #define PCI_DEV_HW_SPEC_BM(idhi, idlo, rev, mode, name, flags) \
-    { #idlo, 4, 0x##idlo, #idhi, 4, 0x##idhi, rev, mode, name, flags}
+    { (PVEN_STR) #idlo, 4, 0x##idlo, (PVEN_STR) #idhi, 4, 0x##idhi, rev, mode, name, flags}
 #else
   #define PCI_DEV_HW_SPEC_BM(idhi, idlo, rev, mode, name, flags) \
-    { (PCHAR) #idlo, 4, 0x##idlo, (PCHAR) #idhi, 4, 0x##idhi, rev, mode, NULL, flags}
+    { (PVEN_STR) #idlo, 4, 0x##idlo, (PVEN_STR) #idhi, 4, 0x##idhi, rev, mode, NULL, flags}
 #endif
 
 #define BMLIST_TERMINATOR   (0xffffffffL)

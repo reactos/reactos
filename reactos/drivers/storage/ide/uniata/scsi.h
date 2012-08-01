@@ -98,6 +98,19 @@ typedef union _CDB {
         UCHAR Control;
     } ERASE, *PERASE;
 
+    struct _ERASE10 {
+        UCHAR OperationCode;
+        UCHAR Reserved : 1;
+        UCHAR Immediate : 1;
+        UCHAR ERA : 1;
+        UCHAR Reserved1 : 2;
+        UCHAR Lun : 3;
+        UCHAR LBA[4];
+        UCHAR Reserved2;
+        UCHAR TransferBlocks[2];
+        UCHAR Control;
+    } ERASE10, *PERASE10;
+
 #define FormatUnit_Code_Mask    0x07
 #define FormatUnit_Cmp          0x08
 #define FormatUnit_Fmt          0x10

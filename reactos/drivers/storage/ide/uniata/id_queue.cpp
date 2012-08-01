@@ -1,6 +1,6 @@
 /*++
 
-Copyright (c) 2008-2010 Alexandr A. Telyatnikov (Alter)
+Copyright (c) 2008-2012 Alexandr A. Telyatnikov (Alter)
 
 Module Name:
     id_probe.cpp
@@ -306,11 +306,13 @@ UniataRemoveRequest(
     LunExt->last_write = ((AtaReq->Flags & REQ_FLAG_RW_MASK) == REQ_FLAG_WRITE);
 
     // get request from longest queue to balance load
-    if(chan->lun[0]->queue_depth * (chan->lun[0]->LunSelectWaitCount+1) >
-       chan->lun[1]->queue_depth * (chan->lun[1]->LunSelectWaitCount+1)) {
-        cdev = 0;
-    } else {
-        cdev = 1;
+    if(chan->NumberLuns > 1) {
+        if(chan->lun[0]->queue_depth * (chan->lun[0]->LunSelectWaitCount+1) >
+           chan->lun[1]->queue_depth * (chan->lun[1]->LunSelectWaitCount+1)) {
+            cdev = 0;
+        } else {
+            cdev = 1;
+        }
     }
 /*    // prevent too long wait for actively used device
     if(chan->lun[cdev ^ 1]->queue_depth &&
@@ -320,10 +322,12 @@ UniataRemoveRequest(
     // get next request for processing
     chan->cur_req = chan->lun[cdev]->first_req;
     chan->cur_cdev = cdev;
-    if(!chan->lun[cdev ^ 1]->queue_depth) {
-        chan->lun[cdev ^ 1]->LunSelectWaitCount=0;
-    } else {
-        chan->lun[cdev ^ 1]->LunSelectWaitCount++;
+    if(chan->NumberLuns > 1) {
+        if(!chan->lun[cdev ^ 1]->queue_depth) {
+            chan->lun[cdev ^ 1]->LunSelectWaitCount=0;
+        } else {
+            chan->lun[cdev ^ 1]->LunSelectWaitCount++;
+        }
     }
     chan->lun[cdev]->LunSelectWaitCount=0;
 

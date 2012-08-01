@@ -1,6 +1,6 @@
 /*++
 
-Copyright (c) 2004-2011 Alexandr A. Telyatnikov (Alter)
+Copyright (c) 2004-2012 Alexandr A. Telyatnikov (Alter)
 
 Module Name:
     id_init.cpp
@@ -69,8 +69,8 @@ UniataChipDetectChannels(
             deviceExtension->NumberChannels = 1;
         }
         if(AtapiRegCheckDevValue(deviceExtension, CHAN_NOT_SPECIFIED, DEVNUM_NOT_SPECIFIED, L"IgnoreAhciPM", 1 /* DEBUG */)) {
-            KdPrint2((PRINT_PREFIX "SATA/AHCI w/o PM, max luns 1\n"));
-            deviceExtension->NumberLuns = 2;
+            KdPrint2((PRINT_PREFIX "SATA/AHCI w/o PM, max luns 1 or 2\n"));
+            deviceExtension->NumberLuns = 2; // we may be in Legacy mode
             //chan->ChannelCtrlFlags |= CTRFLAGS_NO_SLAVE;
         } else {
             KdPrint2((PRINT_PREFIX "SATA/AHCI -> possible PM, max luns %d\n", SATA_MAX_PM_UNITS));
@@ -133,8 +133,8 @@ UniataChipDetectChannels(
 
         if(ChipFlags & SIIBUG) {
             /* work around errata in early chips */
-            ConfigInfo->AlignmentMask = 0x1fff;
-            deviceExtension->MaximumDmaTransferLength = 15 * DEV_BSIZE;
+            deviceExtension->DmaSegmentLength = 15 * DEV_BSIZE;
+            deviceExtension->DmaSegmentAlignmentMask = 8192-1;
         }
         if(ChipType != SIIMIO) {
             break;
@@ -255,11 +255,15 @@ UniataChipDetect(
     deviceExtension->MaxTransferMode = BaseIoAddressBM ? ATA_DMA : ATA_PIO4;
     ConfigInfo->MaximumTransferLength = DEV_BSIZE*256;
     deviceExtension->MaximumDmaTransferLength = ConfigInfo->MaximumTransferLength;
+    //deviceExtension->NumberOfPhysicalBreaks = min(deviceExtension->MaximumDmaTransferLength/PAGE_SIZE+1, ATA_DMA_ENTRIES);
+    deviceExtension->DmaSegmentLength = 0x10000;
+    deviceExtension->DmaSegmentAlignmentMask = 0xffff;
 
     KdPrint2((PRINT_PREFIX "i: %#x\n", i));
     if(i != BMLIST_TERMINATOR) {
         DevTypeInfo = (PBUSMASTER_CONTROLLER_INFORMATION)&BusMasterAdapters[i];
     } else {
+unknown_dev:
         if(Ata_is_ahci_dev(pciData)) {
             KdPrint2((PRINT_PREFIX "  AHCI candidate"));
 
@@ -268,10 +272,9 @@ UniataChipDetect(
                 KdPrint2((PRINT_PREFIX "  AHCI init failed - not detected\n"));
                 return STATUS_UNSUCCESSFUL;
             }
-            KdPrint2((PRINT_PREFIX "  unknown AHCI dev, addr %#x", deviceExtension->BaseIoAHCI_0.Addr));
+            KdPrint2((PRINT_PREFIX "  unknown AHCI dev, addr %#x ", deviceExtension->BaseIoAHCI_0.Addr));
         }
-unknown_dev:
-        KdPrint2((PRINT_PREFIX "  unknown dev, BM addr %#I64x", BaseIoAddressBM));
+        KdPrint2((PRINT_PREFIX "  unknown dev, BM addr %#x ", BaseIoAddressBM));
         DevTypeInfo = NULL;
         KdPrint2((PRINT_PREFIX "  MaxTransferMode %#x\n", deviceExtension->MaxTransferMode));
 
@@ -281,8 +284,9 @@ unknown_dev:
         if(!UniataAllocateLunExt(deviceExtension, UNIATA_ALLOCATE_NEW_LUNS)) {
             return STATUS_UNSUCCESSFUL;
         }
-
-        return STATUS_NOT_FOUND;
+        // DEBUG, we shall return success when AHCI is completly supported
+        //return STATUS_NOT_FOUND;
+        return STATUS_SUCCESS;
     }
 
     static BUSMASTER_CONTROLLER_INFORMATION const SiSAdapters[] = {
@@ -447,7 +451,7 @@ unknown_dev:
                                        deviceExtension->BaseIoAddressBM_0);
 
             deviceExtension->BaseIoAddressBM_0 = 0;
-            deviceExtension->BusMaster = FALSE;
+            deviceExtension->BusMaster = DMA_MODE_NONE;
             deviceExtension->MaxTransferMode = ATA_PIO4;
             break;
 
@@ -1020,10 +1024,10 @@ for_ugly_chips:
             /* if BAR(5) is IO it should point to SATA interface registers */
             if(deviceExtension->DevID == 0x28288086 &&
                 pciData->u.type0.SubVendorID == 0x106b) {
-                BaseMemAddress = 0;
-                KdPrint2((PRINT_PREFIX "Ignore BAR5 on ICH8M Apples\n"));
-            } else {
                 /* Skip BAR(5) on ICH8M Apples, system locks up on access. */
+                KdPrint2((PRINT_PREFIX "Ignore BAR5 on ICH8M Apples\n"));
+                BaseMemAddress = 0;
+            } else {
                 BaseMemAddress = AtapiGetIoRange(HwDeviceExtension, ConfigInfo, pciData, SystemIoBusNumber,
                                     5, 0, 0x10);
                 if(BaseMemAddress && (*ConfigInfo->AccessRanges)[5].RangeInMemory) {
@@ -1465,15 +1469,43 @@ UniAtaReadLunConfig(
     }
 
     tmp32 = AtapiRegCheckDevValue(deviceExtension, channel, DeviceNumber, L"GeomType", 0xffffffff);
-    if(tmp32 > 2) {
+    if(tmp32 > GEOM_MANUAL) {
         tmp32 = 0xffffffff;
     }
     LunExt->opt_GeomType = tmp32;
+    if(tmp32 == GEOM_MANUAL) {
+        LunExt->DeviceFlags |= DFLAGS_MANUAL_CHS;
+        LunExt->opt_GeomType = GEOM_ORIG;
+        // assume IdentifyData is already zero-filled
+        tmp32 = AtapiRegCheckDevValue(deviceExtension, channel, DeviceNumber, L"C", 0);
+        LunExt->IdentifyData.NumberOfCurrentCylinders =
+        LunExt->IdentifyData.NumberOfCylinders = (USHORT)tmp32;
+        tmp32 = AtapiRegCheckDevValue(deviceExtension, channel, DeviceNumber, L"H", 0);
+        LunExt->IdentifyData.NumberOfCurrentHeads = 
+        LunExt->IdentifyData.NumberOfHeads = (USHORT)tmp32;
+        tmp32 = AtapiRegCheckDevValue(deviceExtension, channel, DeviceNumber, L"S", 0);
+        LunExt->IdentifyData.CurrentSectorsPerTrack =
+        LunExt->IdentifyData.SectorsPerTrack = (USHORT)tmp32;
+        memcpy(LunExt->IdentifyData.ModelNumber, "SEIDH DD", 8); // ESDI HDD
+        memcpy(LunExt->IdentifyData.SerialNumber, ".10", 4);
+        memcpy(LunExt->IdentifyData.FirmwareRevision, ".10", 4);
+        if(!LunExt->IdentifyData.SectorsPerTrack ||
+           !LunExt->IdentifyData.NumberOfCylinders ||
+           !LunExt->IdentifyData.SectorsPerTrack) {
+            // ERROR
+            KdPrint2((PRINT_PREFIX "Wrong CHS\n"));
+            LunExt->opt_GeomType = GEOM_AUTO;
+        } else {
+            LunExt->DeviceFlags |= DFLAGS_MANUAL_CHS;
+            LunExt->opt_GeomType = GEOM_ORIG;
+        }
+    }
 
     tmp32 = AtapiRegCheckDevValue(deviceExtension, channel, DeviceNumber, L"Hidden", 0);
     if(tmp32) {
         LunExt->DeviceFlags |= DFLAGS_HIDDEN;
     }
+
 
     return;
 } // end UniAtaReadLunConfig()
@@ -2284,6 +2316,7 @@ UniataInitMapBM(
             BaseIoAddressBM_0++;
         }
     }
+    return;
 } // end UniataInitMapBM()
 
 VOID
@@ -2305,6 +2338,7 @@ UniataInitMapBase(
         chan->RegTranslation[IDX_IO2+i].MemIo = FALSE;
     }
     UniataInitSyncBaseIO(chan);
+    return;
 } // end UniataInitMapBase()
 
 VOID
@@ -2315,6 +2349,7 @@ UniataInitSyncBaseIO(
 {
     RtlCopyMemory(&chan->RegTranslation[IDX_IO1_o], &chan->RegTranslation[IDX_IO1], IDX_IO1_SZ*sizeof(chan->RegTranslation[0]));
     RtlCopyMemory(&chan->RegTranslation[IDX_IO2_o], &chan->RegTranslation[IDX_IO2], IDX_IO2_SZ*sizeof(chan->RegTranslation[0]));
+    return;
 } // end UniataInitSyncBaseIO()
 
 VOID
@@ -2327,7 +2362,10 @@ AtapiSetupLunPtrs(
 {
     ULONG i;
 
+    KdPrint2((PRINT_PREFIX "AtapiSetupLunPtrs for channel %d of %d, %d luns \n", c, deviceExtension->NumberChannels, deviceExtension->NumberLuns));
+
     if(!deviceExtension->NumberLuns) {
+        KdPrint2((PRINT_PREFIX "Achtung !deviceExtension->NumberLuns \n"));
         deviceExtension->NumberLuns = IDE_MAX_LUN_PER_CHAN;
     }
     chan->DeviceExtension = deviceExtension;
@@ -2343,5 +2381,106 @@ AtapiSetupLunPtrs(
         chan->lun[i]->chan            = chan;
         chan->lun[i]->Lun             = i;
     }
+    if((deviceExtension->HwFlags & UNIATA_AHCI) &&
+       deviceExtension->AhciInternalAtaReq0 &&
+       deviceExtension->AhciInternalSrb0) {
+        chan->AhciInternalAtaReq = &(deviceExtension->AhciInternalAtaReq0[c]);
+        chan->AhciInternalSrb = &(deviceExtension->AhciInternalSrb0[c]);
+        UniataAhciSetupCmdPtr(chan->AhciInternalAtaReq);
+        chan->AhciInternalSrb->SrbExtension = chan->AhciInternalAtaReq;
+        chan->AhciInternalAtaReq->Srb = chan->AhciInternalSrb;
+    }
+    return;
 } // end AtapiSetupLunPtrs()
+
+BOOLEAN
+NTAPI
+UniataAllocateLunExt(
+    PHW_DEVICE_EXTENSION  deviceExtension,
+    ULONG NewNumberChannels
+    )
+{
+    PHW_LU_EXTENSION old_luns = NULL;
+    PHW_CHANNEL old_chans = NULL;
+
+    KdPrint2((PRINT_PREFIX "allocate %d Luns for %d channels\n", deviceExtension->lun, deviceExtension->NumberChannels));
+
+    old_luns = deviceExtension->lun;
+    old_chans = deviceExtension->chan;
+
+    if(old_luns || old_chans) {
+        if(NewNumberChannels == UNIATA_ALLOCATE_NEW_LUNS) {
+            KdPrint2((PRINT_PREFIX "already allocated!\n"));
+            return FALSE;
+        }
+    }
+
+    if(!deviceExtension->NumberLuns) {
+        KdPrint2((PRINT_PREFIX "default NumberLuns=2\n"));
+        deviceExtension->NumberLuns = 2;
+    }
+
+    if(deviceExtension->HwFlags & UNIATA_AHCI) {
+        if(!deviceExtension->AhciInternalAtaReq0) {
+            deviceExtension->AhciInternalAtaReq0 = (PATA_REQ)ExAllocatePool(NonPagedPool, sizeof(ATA_REQ)*deviceExtension->NumberChannels);
+            if (!deviceExtension->AhciInternalAtaReq0) {
+                KdPrint2((PRINT_PREFIX "!deviceExtension->AhciInternalAtaReq0 => SP_RETURN_ERROR\n"));
+                return FALSE;
+            }
+            RtlZeroMemory(deviceExtension->AhciInternalAtaReq0, sizeof(ATA_REQ)*deviceExtension->NumberChannels);
+        }
+        if(!deviceExtension->AhciInternalSrb0) {
+            deviceExtension->AhciInternalSrb0 = (PSCSI_REQUEST_BLOCK)ExAllocatePool(NonPagedPool, sizeof(SCSI_REQUEST_BLOCK)*deviceExtension->NumberChannels);
+            if (!deviceExtension->AhciInternalSrb0) {
+                KdPrint2((PRINT_PREFIX "!deviceExtension->AhciInternalSrb0 => SP_RETURN_ERROR\n"));
+                UniataFreeLunExt(deviceExtension);
+                return FALSE;
+            }
+            RtlZeroMemory(deviceExtension->AhciInternalSrb0, sizeof(SCSI_REQUEST_BLOCK)*deviceExtension->NumberChannels);
+        }
+    }
+
+    deviceExtension->lun = (PHW_LU_EXTENSION)ExAllocatePool(NonPagedPool, sizeof(HW_LU_EXTENSION) * (deviceExtension->NumberChannels+1) * deviceExtension->NumberLuns);
+    if (!deviceExtension->lun) {
+        KdPrint2((PRINT_PREFIX "!deviceExtension->lun => SP_RETURN_ERROR\n"));
+        UniataFreeLunExt(deviceExtension);
+        return FALSE;
+    }
+    RtlZeroMemory(deviceExtension->lun, sizeof(HW_LU_EXTENSION) * (deviceExtension->NumberChannels+1) * deviceExtension->NumberLuns);
+    
+    deviceExtension->chan = (PHW_CHANNEL)ExAllocatePool(NonPagedPool, sizeof(HW_CHANNEL) * (deviceExtension->NumberChannels+1));
+    if (!deviceExtension->chan) {
+        UniataFreeLunExt(deviceExtension);
+        KdPrint2((PRINT_PREFIX "!deviceExtension->chan => SP_RETURN_ERROR\n"));
+        return FALSE;
+    }
+    RtlZeroMemory(deviceExtension->chan, sizeof(HW_CHANNEL) * (deviceExtension->NumberChannels+1));
+    return TRUE;
+} // end UniataAllocateLunExt()
+
+VOID
+NTAPI
+UniataFreeLunExt(
+    PHW_DEVICE_EXTENSION  deviceExtension
+    )
+{
+    if (deviceExtension->lun) {
+        ExFreePool(deviceExtension->lun);
+        deviceExtension->lun = NULL;
+    }
+    if (deviceExtension->chan) {
+        ExFreePool(deviceExtension->chan);
+        deviceExtension->chan = NULL;
+    }
+    if(deviceExtension->AhciInternalAtaReq0) {
+        ExFreePool(deviceExtension->AhciInternalAtaReq0);
+        deviceExtension->AhciInternalAtaReq0 = NULL;
+    }
+    if(deviceExtension->AhciInternalSrb0) {
+        ExFreePool(deviceExtension->AhciInternalSrb0);
+        deviceExtension->AhciInternalSrb0 = NULL;
+    }
+    
+    return;
+} // end UniataFreeLunExt()
 
