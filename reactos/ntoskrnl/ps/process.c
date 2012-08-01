@@ -1114,8 +1114,7 @@ ULONG
 NTAPI
 PsGetCurrentProcessSessionId(VOID)
 {
-    // FIXME: this is broken!
-    return PtrToUlong(PsGetCurrentProcess()->Session);
+    return MmGetSessionId(PsGetCurrentProcess());
 }
 
 /*

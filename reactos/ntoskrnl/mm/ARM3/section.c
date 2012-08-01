@@ -827,7 +827,7 @@ MiSessionCommitPageTables(IN PVOID StartVa,
     /* Get the start and end PDE, then loop each one */
     StartPde = MiAddressToPde(StartVa);
     EndPde = MiAddressToPde((PVOID)((ULONG_PTR)EndVa - 1));
-    Index = (ULONG_PTR)StartVa >> 22;
+    Index = ((ULONG_PTR)StartVa - (ULONG_PTR)MmSessionBase) >> 22;
     while (StartPde <= EndPde)
     {
         /* If we don't already have a page table for it, increment count */
@@ -843,7 +843,7 @@ MiSessionCommitPageTables(IN PVOID StartVa,
 
     /* Reset the start PDE and index */
     StartPde = MiAddressToPde(StartVa);
-    Index = (ULONG_PTR)StartVa >> 22;
+    Index = ((ULONG_PTR)StartVa - (ULONG_PTR)MmSessionBase) >> 22;
 
     /* Loop each PDE while holding the working set lock */
 //  MiLockWorkingSet(PsGetCurrentThread(),
@@ -2330,7 +2330,6 @@ MmMapViewInSessionSpace(IN PVOID Section,
 
     /* Use the system space API, but with the session view instead */
     ASSERT(MmIsAddressValid(MmSessionSpace) == TRUE);
-    ASSERT(FALSE);
     return MiMapViewInSystemSpace(Section,
                                   &MmSessionSpace->Session,
                                   MappedBase,

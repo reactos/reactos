@@ -128,6 +128,7 @@ PFN_NUMBER MmSizeOfPagedPoolInPages = MI_MIN_INIT_PAGED_POOLSIZE / PAGE_SIZE;
 PVOID MiSessionSpaceEnd;    // 0xC0000000
 PVOID MiSessionImageEnd;    // 0xC0000000
 PVOID MiSessionImageStart;  // 0xBF800000
+PVOID MiSessionSpaceWs;
 PVOID MiSessionViewStart;   // 0xBE000000
 PVOID MiSessionPoolEnd;     // 0xBE000000
 PVOID MiSessionPoolStart;   // 0xBD000000

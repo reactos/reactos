@@ -110,6 +110,7 @@ MiInitializeSessionSpaceLayout()
     MiSessionImagePteStart = MiAddressToPte(MiSessionImageStart);
     MiSessionImagePteEnd = MiAddressToPte(MiSessionImageEnd);
     MiSessionBasePte = MiAddressToPte(MmSessionBase);
+    MiSessionSpaceWs = (PVOID)((ULONG_PTR)MiSessionViewStart + MmSessionViewSize);
     MiSessionLastPte = MiAddressToPte(MiSessionSpaceEnd);
 
     /* Initialize session space */

@@ -86,7 +86,7 @@ PspInitializeProcessSecurity(IN PEPROCESS Process,
         Status = SeSubProcessToken(ParentToken,
                                    &NewToken,
                                    TRUE,
-                                   0);//MmGetSessionId(Process));
+                                   MmGetSessionId(Process));
 
         /* Dereference the Parent */
         ObFastDereferenceObject(&Parent->Token, ParentToken);

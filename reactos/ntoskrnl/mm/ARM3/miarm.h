@@ -687,6 +687,7 @@ extern PVOID MiSystemViewStart;
 extern PVOID MiSessionPoolEnd;     // 0xBE000000
 extern PVOID MiSessionPoolStart;   // 0xBD000000
 extern PVOID MiSessionViewStart;   // 0xBE000000
+extern PVOID MiSessionSpaceWs;
 extern ULONG MmMaximumDeadKernelStacks;
 extern SLIST_HEADER MmDeadStackSListHead;
 extern MM_AVL_TABLE MmSectionBasedRoot;
@@ -1059,9 +1060,10 @@ MiLockWorkingSet(IN PETHREAD Thread,
     }
     else if (WorkingSet->Flags.SessionSpace)
     {
-        /* We don't implement this yet */
-        UNIMPLEMENTED;
-        while (TRUE);
+        /* Own the session working set */
+        ASSERT((Thread->OwnsSessionWorkingSetExclusive == FALSE) &&
+               (Thread->OwnsSessionWorkingSetShared == FALSE));
+        Thread->OwnsSessionWorkingSetExclusive = TRUE; 
     }
     else
     {
@@ -1093,9 +1095,10 @@ MiUnlockWorkingSet(IN PETHREAD Thread,
     }
     else if (WorkingSet->Flags.SessionSpace)
     {
-        /* We don't implement this yet */
-        UNIMPLEMENTED;
-        while (TRUE);
+        /* Release the session working set */
+        ASSERT((Thread->OwnsSessionWorkingSetExclusive == TRUE) ||
+               (Thread->OwnsSessionWorkingSetShared == TRUE));
+        Thread->OwnsSessionWorkingSetExclusive = 0;
     }
     else
     {
@@ -1608,6 +1611,24 @@ BOOLEAN
 NTAPI
 MiInitializeSystemSpaceMap(
     IN PMMSESSION InputSession OPTIONAL
+);
+
+VOID
+NTAPI
+MiSessionRemoveProcess(
+    VOID
+);
+
+VOID
+NTAPI
+MiReleaseProcessReferenceToSessionDataPage(
+    IN PMM_SESSION_SPACE SessionGlobal
+);
+
+VOID
+NTAPI
+MiSessionAddProcess(
+    IN PEPROCESS NewProcess
 );
 
 NTSTATUS

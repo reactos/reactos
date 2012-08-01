@@ -153,9 +153,79 @@ NTSTATUS
 FASTCALL
 MiCheckPdeForSessionSpace(IN PVOID Address)
 {
-    /* Code not yet tested */
-    ASSERT(FALSE);
-    return STATUS_NOT_IMPLEMENTED;
+    MMPTE TempPde;
+    PMMPTE PointerPde;
+    PVOID SessionPageTable;
+    ULONG Index;
+
+    /* Is this a session PTE? */
+    if (MI_IS_SESSION_PTE(Address))
+    {
+        /* Make sure the PDE for session space is valid */
+        PointerPde = MiAddressToPde(MmSessionSpace);
+        if (!PointerPde->u.Hard.Valid)
+        {
+            /* This means there's no valid session, bail out */
+            DbgPrint("MiCheckPdeForSessionSpace: No current session for PTE %p\n",
+                     Address);
+            DbgBreakPoint();
+            return STATUS_ACCESS_VIOLATION;
+        }
+
+        /* Now get the session-specific page table for this address */
+        SessionPageTable = MiPteToAddress(Address);
+        PointerPde = MiPteToAddress(Address);
+        if (PointerPde->u.Hard.Valid) return STATUS_WAIT_1;
+
+        /* It's not valid, so find it in the page table array */
+        Index = ((ULONG_PTR)SessionPageTable - (ULONG_PTR)MmSessionBase) >> 22;
+        TempPde.u.Long = MmSessionSpace->PageTables[Index].u.Long;
+        if (TempPde.u.Hard.Valid)
+        {
+            /* The copy is valid, so swap it in */
+            InterlockedExchange((PLONG)PointerPde, TempPde.u.Long);
+            return STATUS_WAIT_1;
+        }
+
+        /* We don't seem to have allocated a page table for this address yet? */
+        DbgPrint("MiCheckPdeForSessionSpace: No Session PDE for PTE %p, %p\n",
+                 PointerPde->u.Long, SessionPageTable);
+        DbgBreakPoint();
+        return STATUS_ACCESS_VIOLATION;
+    }
+
+    /* Is the address also a session address? If not, we're done */
+    if (!MI_IS_SESSION_ADDRESS(Address)) return STATUS_SUCCESS;
+
+    /* It is, so again get the PDE for session space */
+    PointerPde = MiAddressToPde(MmSessionSpace);
+    if (!PointerPde->u.Hard.Valid)
+    {
+        /* This means there's no valid session, bail out */
+        DbgPrint("MiCheckPdeForSessionSpace: No current session for VA %p\n",
+                    Address);
+        DbgBreakPoint();
+        return STATUS_ACCESS_VIOLATION;
+    }
+
+    /* Now get the PDE for the address itself */
+    PointerPde = MiAddressToPde(Address);
+    if (!PointerPde->u.Hard.Valid)
+    {
+        /* Do the swap, we should be good to go */
+        Index = ((ULONG_PTR)Address - (ULONG_PTR)MmSessionBase) >> 22;
+        PointerPde->u.Long = MmSessionSpace->PageTables[Index].u.Long;
+        if (PointerPde->u.Hard.Valid) return STATUS_WAIT_1;
+
+        /* We had not allocated a page table for this session address yet, fail! */
+        DbgPrint("MiCheckPdeForSessionSpace: No Session PDE for VA %p, %p\n",
+                 PointerPde->u.Long, Address);
+        DbgBreakPoint();
+        return STATUS_ACCESS_VIOLATION;
+    }
+
+    /* It's valid, so there's nothing to do */
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -305,16 +375,14 @@ MiResolveDemandZeroFault(IN PVOID Address,
         /* Check if we need a zero page */
         NeedZero = (OldIrql != MM_NOIRQL);
 
-#if 0
         /* Session-backed image views must be zeroed */
         if ((Process == HYDRA_PROCESS) &&
             ((MI_IS_SESSION_IMAGE_ADDRESS(Address)) ||
-             ((Address >= (PVOID)MiSessionViewStart) &&
-              (Address < (PVOID)MiSessionSpaceWs))))
+             ((Address >= MiSessionViewStart) && (Address < MiSessionSpaceWs))))
         {
             NeedZero = TRUE;
         }
-#endif
+
         /* Hardcode unknown color */
         Color = 0xFFFFFFFF;
     }
@@ -1200,18 +1268,22 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
                 KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
                 return STATUS_SUCCESS;
             }
-            else
-            {
-                /* Not yet handled */
-                ASSERT(FALSE);
-            }
         }
 
         /* Check if this was a session PTE that needs to remap the session PDE */
         if (MI_IS_SESSION_PTE(Address))
         {
-            /* Not yet handled */
-            ASSERT(FALSE);
+            /* Do the remapping */
+            Status = MiCheckPdeForSessionSpace(Address);
+            if (!NT_SUCCESS(Status))
+            {
+                /* It failed, this address is invalid */
+                KeBugCheckEx(PAGE_FAULT_IN_NONPAGED_AREA,
+                             (ULONG_PTR)Address,
+                             StoreInstruction,
+                             (ULONG_PTR)TrapInformation,
+                             6);
+            }
         }
 
         /* Check for a fault on the page table or hyperspace */
@@ -1249,8 +1321,17 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
         }
         else
         {
-            /* Not yet handled */
-            ASSERT(FALSE);
+            /* Use the session process and working set */
+            CurrentProcess = HYDRA_PROCESS;
+            WorkingSet = &MmSessionSpace->GlobalVirtualAddress->Vm;
+
+            /* Make sure we don't have a recursive working set lock */
+            if ((CurrentThread->OwnsSessionWorkingSetExclusive) ||
+                (CurrentThread->OwnsSessionWorkingSetShared))
+            {
+                /* Fail */
+                return STATUS_IN_PAGE_ERROR | 0x10000000;
+            }
         }
 
         /* Acquire the working set lock */
@@ -1282,8 +1363,28 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
                 }
             }
 
-            /* Case not yet handled */
-            ASSERT(!IsSessionAddress);
+            /* Check for read-only write in session space */
+            if ((IsSessionAddress) &&
+                (StoreInstruction) &&
+                !(TempPte.u.Hard.Write))
+            {
+                /* Sanity check */
+                ASSERT(MI_IS_SESSION_IMAGE_ADDRESS(Address));
+
+                /* Was this COW? */
+                if (TempPte.u.Hard.CopyOnWrite == 0)
+                {
+                    /* Then this is not allowed */
+                    KeBugCheckEx(ATTEMPTED_WRITE_TO_READONLY_MEMORY,
+                                 (ULONG_PTR)Address,
+                                 (ULONG_PTR)TempPte.u.Long,
+                                 (ULONG_PTR)TrapInformation,
+                                 13);
+                }
+
+                /* Otherwise, handle COW */
+                ASSERT(FALSE);
+            }
 
             /* Release the working set */
             MiUnlockWorkingSet(CurrentThread, WorkingSet);
@@ -1315,8 +1416,16 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
             /* Get the prototype PTE! */
             ProtoPte = MiProtoPteToPte(&TempPte);
 
-            /* Case not yet handled */
-            ASSERT(!IsSessionAddress);
+            /* Do we need to locate the prototype PTE in session space? */
+            if ((IsSessionAddress) &&
+                (TempPte.u.Soft.PageFileHigh == MI_PTE_LOOKUP_NEEDED))
+            {
+                /* Yep, go find it as well as the VAD for it */
+                ProtoPte = MiCheckVirtualAddress(Address,
+                                                 &ProtectionCode,
+                                                 &Vad);
+                ASSERT(ProtoPte != NULL);
+            }
         }
         else
         {

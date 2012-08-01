@@ -1615,7 +1615,14 @@ IoGetRequestorProcess(IN PIRP Irp)
     /* Return the requestor process */
     if (Irp->Tail.Overlay.Thread)
     {
-        return Irp->Tail.Overlay.Thread->ThreadsProcess;
+        if (Irp->ApcEnvironment == OriginalApcEnvironment)
+        {
+            return Irp->Tail.Overlay.Thread->ThreadsProcess;
+        }
+        else if (Irp->ApcEnvironment == AttachedApcEnvironment)
+        {
+            return (PEPROCESS)Irp->Tail.Overlay.Thread->Tcb.ApcState.Process;
+        }
     }
 
     return NULL;
@@ -1631,10 +1638,8 @@ IoGetRequestorProcessId(IN PIRP Irp)
     PEPROCESS Process;
 
     /* Return the requestor process' id */
-    if ((Process = IoGetRequestorProcess(Irp)))
-    {
-        return PtrToUlong(Process->UniqueProcessId);
-    }
+    Process = IoGetRequestorProcess(Irp);
+    if (Process) return PtrToUlong(Process->UniqueProcessId);
 
     return 0;
 }
@@ -1650,10 +1655,10 @@ IoGetRequestorSessionId(IN PIRP Irp,
     PEPROCESS Process;
 
     /* Return the session */
-    if ((Process = IoGetRequestorProcess(Irp)))
+    if (Irp->Tail.Overlay.Thread)
     {
-        // FIXME: broken
-        *pSessionId = PtrToUlong(Process->Session);
+        Process = Irp->Tail.Overlay.Thread->ThreadsProcess;
+        *pSessionId = MmGetSessionId(Process);
         return STATUS_SUCCESS;
     }
 

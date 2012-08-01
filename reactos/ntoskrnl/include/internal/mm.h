@@ -496,6 +496,12 @@ MmIsSessionAddress(
     IN PVOID Address
 );
 
+ULONG
+NTAPI
+MmGetSessionId(
+    IN PEPROCESS Process
+);
+
 /* marea.c *******************************************************************/
 
 NTSTATUS

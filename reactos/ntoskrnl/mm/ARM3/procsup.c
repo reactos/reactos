@@ -577,9 +577,7 @@ MmGetSessionLocaleId(VOID)
             //
             // Get the Locale ID
             //
-#if ROS_HAS_SESSIONS
             return ((PMM_SESSION_SPACE)Process->Session)->LocaleId;
-#endif
         }
     }
 
@@ -698,7 +696,7 @@ MmCreatePeb(IN PEPROCESS Process,
         //
         // Session ID
         //
-        if (Process->Session) Peb->SessionId = 0; // MmGetSessionId(Process);
+        MmGetSessionId(Process);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -1317,6 +1315,9 @@ MmCreateProcessAddressSpace(IN ULONG MinWs,
 
     /* Let go of the system PTE */
     MiReleaseSystemPtes(PointerPte, 1, SystemPteSpace);
+
+    /* Add the process to the session */
+    MiSessionAddProcess(Process);
     return TRUE;
 }
 #endif
@@ -1331,6 +1332,9 @@ MmCleanProcessAddressSpace(IN PEPROCESS Process)
 
     /* Only support this */
     ASSERT(Process->AddressSpaceInitialized == 2);
+
+    /* Remove from the session */
+    MiSessionRemoveProcess();
 
     /* Lock the process address space from changes */
     MmLockAddressSpace(&Process->Vm);
@@ -1383,6 +1387,7 @@ MmCleanProcessAddressSpace(IN PEPROCESS Process)
         /* Free the VAD memory */
         ExFreePool(Vad);
     }
+
     /* Delete the shared user data section */
     MiDeleteVirtualAddresses(USER_SHARED_DATA, USER_SHARED_DATA, NULL);
 
@@ -1447,8 +1452,8 @@ MmDeleteProcessAddressSpace2(IN PEPROCESS Process)
     /* Release the PFN lock */
     KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
 
-    /* No support for sessions yet */
-    ASSERT(Process->Session == 0);
+    /* Drop a reference on the session */
+    if (Process->Session) MiReleaseProcessReferenceToSessionDataPage(Process->Session);
 
     /* Clear out the PDE pages */
     Process->Pcb.DirectoryTableBase[0] = 0;
@@ -1526,6 +1531,257 @@ MiSessionLeader(IN PEPROCESS Process)
     OldIrql = KeAcquireQueuedSpinLock(LockQueueExpansionLock);
     Process->Vm.Flags.SessionLeader = TRUE;
     KeReleaseQueuedSpinLock(LockQueueExpansionLock, OldIrql);
+}
+
+ULONG
+NTAPI
+MmGetSessionId(IN PEPROCESS Process)
+{
+    PMM_SESSION_SPACE SessionGlobal;
+
+    /* The session leader is always session zero */
+    if (Process->Vm.Flags.SessionLeader == 1) return 0;
+
+    /* Otherwise, get the session global, and read the session ID from it */
+    SessionGlobal = (PMM_SESSION_SPACE)Process->Session;
+    if (!SessionGlobal) return 0;
+    return SessionGlobal->SessionId;
+}
+
+VOID
+NTAPI
+MiReleaseProcessReferenceToSessionDataPage(IN PMM_SESSION_SPACE SessionGlobal)
+{
+    ULONG i, SessionId;
+    PMMPTE PointerPte;
+    PFN_NUMBER PageFrameIndex[MI_SESSION_DATA_PAGES_MAXIMUM];
+    PMMPFN Pfn1;
+    KIRQL OldIrql;
+
+    /* Is there more than just this reference? If so, bail out */
+    if (InterlockedDecrement(&SessionGlobal->ProcessReferenceToSession)) return;
+
+    /* Get the session ID */
+    SessionId = SessionGlobal->SessionId;
+    DPRINT1("Last process in sessino %d going down!!!\n", SessionId);
+
+    /* Free the session page tables */
+    ExFreePool(SessionGlobal->PageTables);
+    ASSERT(!MI_IS_PHYSICAL_ADDRESS(SessionGlobal));
+
+    /* Capture the data page PFNs */
+    PointerPte = MiAddressToPte(SessionGlobal);
+    for (i = 0; i < MiSessionDataPages; i++)
+    {
+        PageFrameIndex[i] = PFN_FROM_PTE(PointerPte + i);
+    }
+
+    /* Release them */
+    MiReleaseSystemPtes(PointerPte, MiSessionDataPages, SystemPteSpace);
+
+    /* Mark them as deleted */
+    for (i = 0; i < MiSessionDataPages; i++)
+    {
+        Pfn1 = MI_PFN_ELEMENT(PageFrameIndex[i]);
+        MI_SET_PFN_DELETED(Pfn1);
+    }
+
+    /* Loop every data page and drop a reference count */
+    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+    for (i = 0; i < MiSessionDataPages; i++)
+    {
+        /* Sanity check that the page is correct, then decrement it */
+        Pfn1 = MI_PFN_ELEMENT(PageFrameIndex[i]);
+        ASSERT(Pfn1->u2.ShareCount == 1);
+        ASSERT(Pfn1->u3.e2.ReferenceCount == 1);
+        MiDecrementShareCount(Pfn1, PageFrameIndex[i]);
+    }
+
+    /* Done playing with pages, release the lock */
+    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+
+    /* Decrement the number of data pages */
+    InterlockedDecrement(&MmSessionDataPages);
+
+    /* Free this session ID from the session bitmap */
+    KeAcquireGuardedMutex(&MiSessionIdMutex);
+    ASSERT(RtlCheckBit(MiSessionIdBitmap, SessionId));
+    RtlClearBit(MiSessionIdBitmap, SessionId);
+    KeReleaseGuardedMutex(&MiSessionIdMutex);
+}
+
+VOID
+NTAPI
+MiSessionRemoveProcess(VOID)
+{
+    PEPROCESS CurrentProcess = PsGetCurrentProcess();
+
+    /* If the process isn't already in a session, or if it's the leader... */
+    if (!(CurrentProcess->Flags & PSF_PROCESS_IN_SESSION_BIT) ||
+        (CurrentProcess->Vm.Flags.SessionLeader))
+    {
+        /* Then there's nothing to do */
+        return;
+    }
+
+    /* Sanity check */
+    ASSERT(MmIsAddressValid(MmSessionSpace) == TRUE);
+
+    /* Remove the process from the list ,and dereference the session */
+    RemoveEntryList(&CurrentProcess->SessionProcessLinks);
+    //MiDereferenceSession();
+}
+
+VOID
+NTAPI
+MiSessionAddProcess(IN PEPROCESS NewProcess)
+{
+    PMM_SESSION_SPACE SessionGlobal;
+
+    /* The current process must already be in a session */
+    if (!(PsGetCurrentProcess()->Flags & PSF_PROCESS_IN_SESSION_BIT)) return;
+
+    /* Sanity check */
+    ASSERT(MmIsAddressValid(MmSessionSpace) == TRUE);
+
+    /* Get the global session */
+    SessionGlobal = MmSessionSpace->GlobalVirtualAddress;
+
+    /* Increment counters */
+    InterlockedIncrement((PLONG)&SessionGlobal->ReferenceCount);
+    InterlockedIncrement(&SessionGlobal->ResidentProcessCount);
+    InterlockedIncrement(&SessionGlobal->ProcessReferenceToSession);
+
+    /* Set the session pointer */
+    ASSERT(NewProcess->Session == NULL);
+    NewProcess->Session = SessionGlobal;
+
+    /* Insert it into the process list */
+    InsertTailList(&SessionGlobal->ProcessList, &NewProcess->SessionProcessLinks);
+
+    /* Set the flag */
+    PspSetProcessFlag(NewProcess, PSF_PROCESS_IN_SESSION_BIT);
+}
+
+NTSTATUS
+NTAPI
+MiSessionInitializeWorkingSetList(VOID)
+{
+    KIRQL OldIrql;
+    PMMPTE PointerPte, PointerPde;
+    MMPTE TempPte;
+    ULONG Color, Index;
+    PFN_NUMBER PageFrameIndex;
+    PMM_SESSION_SPACE SessionGlobal;
+    BOOLEAN AllocatedPageTable;
+    PMMWSL WorkingSetList;
+
+    /* Get pointers to session global and the session working set list */
+    SessionGlobal = MmSessionSpace->GlobalVirtualAddress;
+    WorkingSetList = (PMMWSL)MiSessionSpaceWs;
+
+    /* Fill out the two pointers */
+    MmSessionSpace->Vm.VmWorkingSetList = WorkingSetList;
+    MmSessionSpace->Wsle = (PMMWSLE)WorkingSetList->UsedPageTableEntries;
+
+    /* Get the PDE for the working set, and check if it's already allocated */
+    PointerPde = MiAddressToPde(WorkingSetList);
+    if (PointerPde->u.Hard.Valid == 1)
+    {
+        /* Nope, we'll have to do it */
+        ASSERT(PointerPde->u.Hard.Global == 0);
+        AllocatedPageTable = FALSE;
+    }
+    else
+    {
+        /* Yep, that makes our job easier */
+        AllocatedPageTable = TRUE;
+    }
+
+    /* Get the PTE for the working set */
+    PointerPte = MiAddressToPte(WorkingSetList);
+
+    /* Initialize the working set lock, and lock the PFN database */
+    ExInitializePushLock(&SessionGlobal->Vm.WorkingSetMutex);
+    //MmLockPageableSectionByHandle(ExPageLockHandle);
+    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+
+    /* Check if we need a page table */
+    if (AllocatedPageTable == TRUE)
+    {
+        /* Get a zeroed colored zero page */
+        Color = MI_GET_NEXT_COLOR();
+        PageFrameIndex = MiRemoveZeroPageSafe(Color);
+        if (!PageFrameIndex)
+        {
+            /* No zero pages, grab a free one */
+            PageFrameIndex = MiRemoveAnyPage(Color);
+
+            /* Zero it outside the PFN lock */
+            KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+            MiZeroPhysicalPage(PageFrameIndex);
+            OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+        }
+
+        /* Write a valid PDE for it */
+        TempPte.u.Long = ValidKernelPdeLocal.u.Long;
+        TempPte.u.Hard.PageFrameNumber = PageFrameIndex;
+        MI_WRITE_VALID_PTE(PointerPde, TempPte);
+
+        /* Add this into the list */
+        Index = ((ULONG_PTR)WorkingSetList - (ULONG_PTR)MmSessionBase) >> 22;
+        MmSessionSpace->PageTables[Index] = TempPte;
+
+        /* Initialize the page directory page, and now zero the working set list itself */
+        MiInitializePfnForOtherProcess(PageFrameIndex,
+                                       PointerPde,
+                                       MmSessionSpace->SessionPageDirectoryIndex);
+        KeZeroPages(PointerPte, PAGE_SIZE);
+    }
+
+    /* Get a zeroed colored zero page */
+    Color = MI_GET_NEXT_COLOR();
+    PageFrameIndex = MiRemoveZeroPageSafe(Color);
+    if (!PageFrameIndex)
+    {
+        /* No zero pages, grab a free one */
+        PageFrameIndex = MiRemoveAnyPage(Color);
+
+        /* Zero it outside the PFN lock */
+        KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+        MiZeroPhysicalPage(PageFrameIndex);
+        OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+    }
+
+    /* Write a valid PTE for it */
+    TempPte.u.Long = ValidKernelPteLocal.u.Long;
+    TempPte.u.Hard.Dirty = TRUE;
+    TempPte.u.Hard.PageFrameNumber = PageFrameIndex;
+
+    /* Initialize the working set list page */
+    MiInitializePfnAndMakePteValid(PageFrameIndex, PointerPte, TempPte);
+
+    /* Now we can release the PFN database lock */
+    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+
+    /* Fill out the working set structure */
+    MmSessionSpace->Vm.Flags.SessionSpace = 1;
+    MmSessionSpace->Vm.MinimumWorkingSetSize = 20;
+    MmSessionSpace->Vm.MaximumWorkingSetSize = 384;
+    WorkingSetList->LastEntry = 20;
+    WorkingSetList->HashTable = NULL;
+    WorkingSetList->HashTableSize = 0;
+    WorkingSetList->Wsle = MmSessionSpace->Wsle;
+
+    /* FIXME: Handle list insertions */
+    ASSERT(SessionGlobal->WsListEntry.Flink == NULL);
+    ASSERT(SessionGlobal->WsListEntry.Blink == NULL);
+    ASSERT(SessionGlobal->Vm.WorkingSetExpansionLinks.Flink == NULL);
+    ASSERT(SessionGlobal->Vm.WorkingSetExpansionLinks.Blink == NULL);
+
+    /* All done, return */
+    //MmUnlockPageableImageSection(ExPageLockHandle);
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -1770,12 +2026,31 @@ MmSessionCreate(OUT PULONG SessionId)
         MiSessionLeader(Process);
     }
 
-    /* FIXME: Actually create a session */
+    /* Create the session */
     KeEnterCriticalRegion();
     Status = MiSessionCreateInternal(SessionId);
+    if (!NT_SUCCESS(Status))
+    {
+        KeLeaveCriticalRegion();
+        return Status;
+    }
+
+    /* Set up the session working set */
+    Status = MiSessionInitializeWorkingSetList();
+    if (!NT_SUCCESS(Status))
+    {
+        /* Fail */
+        //MiDereferenceSession();
+        ASSERT(FALSE);
+        KeLeaveCriticalRegion();
+        return Status;
+    }
+
+    /* All done */
     KeLeaveCriticalRegion();
 
     /* Set and assert the flags, and return */
+    MmSessionSpace->u.Flags.Initialized = 1;
     PspSetProcessFlag(Process, PSF_PROCESS_IN_SESSION_BIT);
     ASSERT(MiSessionLeaderExists == 1);
     return Status;
