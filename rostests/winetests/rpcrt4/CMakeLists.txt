@@ -5,11 +5,7 @@ add_definitions(-D__ROS_LONG64__)
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
     
-if(MSVC)
-    set(IDL_FLAGS ${IDL_FLAGS} /prefix server s_ /app_config)
-else()
-    set(IDL_FLAGS ${IDL_FLAGS} --prefix-server=s_)
-endif()
+set(IDL_FLAGS ${IDL_FLAGS} --prefix-server=s_)
 
 add_rpc_files(client server.idl)
 add_rpc_files(server server.idl)

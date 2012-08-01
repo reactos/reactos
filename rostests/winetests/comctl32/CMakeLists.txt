@@ -33,9 +33,7 @@ add_executable(comctl32_winetest
 
 target_link_libraries(comctl32_winetest wine)
 
-if(MSVC)
-    target_link_libraries(comctl32_winetest uuid)
-else()
+if(NOT MSVC)
     # FIXME: http://www.cmake.org/Bug/view.php?id=12998
     #add_target_compile_flags(comctl32_winetest "-Wno-format")
     set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-Wno-format")
