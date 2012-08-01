@@ -48,10 +48,8 @@ UserAddCallProcToClass(IN OUT PCLS Class,
                        IN PCALLPROCDATA CallProc);
 
 BOOL
-NTAPI
-IntGetAtomFromStringOrAtom(
-    _In_ PUNICODE_STRING ClassName,
-    _Out_ RTL_ATOM *Atom);
+IntGetAtomFromStringOrAtom(IN PUNICODE_STRING ClassName,
+                           OUT RTL_ATOM *Atom);
 
 BOOL
 IntCheckProcessDesktopClasses(IN PDESKTOP Desktop,
