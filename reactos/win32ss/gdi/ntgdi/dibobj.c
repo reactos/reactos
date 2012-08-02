@@ -433,6 +433,8 @@ NtGdiSetDIBitsToDeviceInternal(
         goto Exit2;
     }
 
+    ScanLines = min(ScanLines, abs(bmi->bmiHeader.biHeight) - StartScan);
+
     pDC = DC_LockDc(hDC);
     if (!pDC)
     {
@@ -440,16 +442,21 @@ NtGdiSetDIBitsToDeviceInternal(
         goto Exit2;
     }
 
-    pSurf = pDC->dclevel.pSurface;
-    if ((pDC->dctype == DC_TYPE_INFO) || !pSurf)
+    if (pDC->dctype == DC_TYPE_INFO)
     {
         DC_UnlockDc(pDC);
         goto Exit2;
     }
 
-    pDestSurf = &pSurf->SurfObj;
+    pSurf = pDC->dclevel.pSurface;
+    if (!pSurf)
+    {
+        DC_UnlockDc(pDC);
+        ret = ScanLines;
+        goto Exit2;
+    }
 
-    ScanLines = min(ScanLines, abs(bmi->bmiHeader.biHeight) - StartScan);
+    pDestSurf = &pSurf->SurfObj;
 
     rcDest.left = XDest;
     rcDest.top = YDest;
