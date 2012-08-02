@@ -6,7 +6,6 @@ add_definitions(-D_WIN32_WINNT=0x600)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-set_rc_compiler()
 spec2def(amstream.dll amstream.spec)
 
 add_library(amstream SHARED
