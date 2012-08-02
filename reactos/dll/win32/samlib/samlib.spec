@@ -16,8 +16,8 @@
 @ stub SamDeleteUser
 @ stdcall SamEnumerateAliasesInDomain(ptr ptr ptr long ptr)
 @ stdcall SamEnumerateDomainsInSamServer(ptr ptr ptr long ptr)
-@ stub SamEnumerateGroupsInDomain
-@ stub SamEnumerateUsersInDomain
+@ stdcall SamEnumerateGroupsInDomain(ptr ptr ptr long ptr)
+@ stdcall SamEnumerateUsersInDomain(ptr ptr long ptr long ptr)
 @ stdcall SamFreeMemory(ptr)
 @ stdcall SamGetAliasMembership(ptr long ptr ptr ptr)
 @ stub SamGetCompatibilityMode

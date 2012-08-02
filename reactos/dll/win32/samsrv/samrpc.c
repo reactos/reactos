@@ -1696,8 +1696,197 @@ SamrEnumerateGroupsInDomain(IN SAMPR_HANDLE DomainHandle,
                             IN unsigned long PreferedMaximumLength,
                             OUT unsigned long *CountReturned)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PSAMPR_ENUMERATION_BUFFER EnumBuffer = NULL;
+    PSAM_DB_OBJECT DomainObject;
+    HANDLE GroupsKeyHandle = NULL;
+    HANDLE NamesKeyHandle = NULL;
+    WCHAR GroupName[64];
+    ULONG EnumIndex;
+    ULONG EnumCount = 0;
+    ULONG RequiredLength = 0;
+    ULONG NameLength;
+    ULONG DataLength;
+    ULONG Rid;
+    ULONG i;
+    BOOLEAN MoreEntries = FALSE;
+    NTSTATUS Status;
+
+    TRACE("SamrEnumerateUsersInDomain(%p %p %p %lu %p)\n",
+          DomainHandle, EnumerationContext, Buffer,
+          PreferedMaximumLength, CountReturned);
+
+    /* Validate the domain handle */
+    Status = SampValidateDbObject(DomainHandle,
+                                  SamDbDomainObject,
+                                  DOMAIN_LIST_ACCOUNTS,
+                                  &DomainObject);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    Status = SampRegOpenKey(DomainObject->KeyHandle,
+                            L"Groups",
+                            KEY_READ,
+                            &GroupsKeyHandle);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    Status = SampRegOpenKey(GroupsKeyHandle,
+                            L"Names",
+                            KEY_READ,
+                            &NamesKeyHandle);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    TRACE("Part 1\n");
+
+    EnumIndex = *EnumerationContext;
+
+    while (TRUE)
+    {
+        NameLength = 64 * sizeof(WCHAR);
+        Status = SampRegEnumerateValue(NamesKeyHandle,
+                                       EnumIndex,
+                                       GroupName,
+                                       &NameLength,
+                                       NULL,
+                                       NULL,
+                                       NULL);
+        if (!NT_SUCCESS(Status))
+        {
+            if (Status == STATUS_NO_MORE_ENTRIES)
+                Status = STATUS_SUCCESS;
+            break;
+        }
+
+        TRACE("EnumIndex: %lu\n", EnumIndex);
+        TRACE("Group name: %S\n", GroupName);
+        TRACE("Name length: %lu\n", NameLength);
+
+        if ((RequiredLength + NameLength + sizeof(UNICODE_NULL) + sizeof(SAMPR_RID_ENUMERATION)) > PreferedMaximumLength)
+        {
+            MoreEntries = TRUE;
+            break;
+        }
+
+        RequiredLength += (NameLength + sizeof(UNICODE_NULL) + sizeof(SAMPR_RID_ENUMERATION));
+        EnumCount++;
+
+        EnumIndex++;
+    }
+
+    TRACE("EnumCount: %lu\n", EnumCount);
+    TRACE("RequiredLength: %lu\n", RequiredLength);
+
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    EnumBuffer = midl_user_allocate(sizeof(SAMPR_ENUMERATION_BUFFER));
+    if (EnumBuffer == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
+
+    EnumBuffer->EntriesRead = EnumCount;
+    if (EnumCount == 0)
+        goto done;
+
+    EnumBuffer->Buffer = midl_user_allocate(EnumCount * sizeof(SAMPR_RID_ENUMERATION));
+    if (EnumBuffer->Buffer == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
+
+    TRACE("Part 2\n");
+
+    EnumIndex = *EnumerationContext;
+    for (i = 0; i < EnumCount; i++, EnumIndex++)
+    {
+        NameLength = 64 * sizeof(WCHAR);
+        DataLength = sizeof(ULONG);
+        Status = SampRegEnumerateValue(NamesKeyHandle,
+                                       EnumIndex,
+                                       GroupName,
+                                       &NameLength,
+                                       NULL,
+                                       &Rid,
+                                       &DataLength);
+        if (!NT_SUCCESS(Status))
+        {
+            if (Status == STATUS_NO_MORE_ENTRIES)
+                Status = STATUS_SUCCESS;
+            break;
+        }
+
+        TRACE("EnumIndex: %lu\n", EnumIndex);
+        TRACE("Group name: %S\n", GroupName);
+        TRACE("Name length: %lu\n", NameLength);
+        TRACE("RID: %lu\n", Rid);
+
+        EnumBuffer->Buffer[i].RelativeId = Rid;
+
+        EnumBuffer->Buffer[i].Name.Length = (USHORT)NameLength;
+        EnumBuffer->Buffer[i].Name.MaximumLength = (USHORT)(DataLength + sizeof(UNICODE_NULL));
+
+/* FIXME: Disabled because of bugs in widl and rpcrt4 */
+#if 0
+        EnumBuffer->Buffer[i].Name.Buffer = midl_user_allocate(EnumBuffer->Buffer[i].Name.MaximumLength);
+        if (EnumBuffer->Buffer[i].Name.Buffer == NULL)
+        {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            goto done;
+        }
+
+        memcpy(EnumBuffer->Buffer[i].Name.Buffer,
+               GroupName,
+               EnumBuffer->Buffer[i].Name.Length);
+#endif
+    }
+
+done:
+    if (NT_SUCCESS(Status))
+    {
+        *EnumerationContext += EnumCount;
+        *Buffer = EnumBuffer;
+        *CountReturned = EnumCount;
+    }
+    else
+    {
+        *EnumerationContext = 0;
+        *Buffer = NULL;
+        *CountReturned = 0;
+
+        if (EnumBuffer != NULL)
+        {
+            if (EnumBuffer->Buffer != NULL)
+            {
+                if (EnumBuffer->EntriesRead != 0)
+                {
+                    for (i = 0; i < EnumBuffer->EntriesRead; i++)
+                    {
+                        if (EnumBuffer->Buffer[i].Name.Buffer != NULL)
+                            midl_user_free(EnumBuffer->Buffer[i].Name.Buffer);
+                    }
+                }
+
+                midl_user_free(EnumBuffer->Buffer);
+            }
+
+            midl_user_free(EnumBuffer);
+        }
+    }
+
+    if (NamesKeyHandle != NULL)
+        SampRegCloseKey(NamesKeyHandle);
+
+    if (GroupsKeyHandle != NULL)
+        SampRegCloseKey(GroupsKeyHandle);
+
+    if ((Status == STATUS_SUCCESS) && (MoreEntries == TRUE))
+        Status = STATUS_MORE_ENTRIES;
+
+    return Status;
 }
 
 
@@ -1968,8 +2157,197 @@ SamrEnumerateUsersInDomain(IN SAMPR_HANDLE DomainHandle,
                            IN unsigned long PreferedMaximumLength,
                            OUT unsigned long *CountReturned)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PSAMPR_ENUMERATION_BUFFER EnumBuffer = NULL;
+    PSAM_DB_OBJECT DomainObject;
+    HANDLE UsersKeyHandle = NULL;
+    HANDLE NamesKeyHandle = NULL;
+    WCHAR UserName[64];
+    ULONG EnumIndex;
+    ULONG EnumCount = 0;
+    ULONG RequiredLength = 0;
+    ULONG NameLength;
+    ULONG DataLength;
+    ULONG Rid;
+    ULONG i;
+    BOOLEAN MoreEntries = FALSE;
+    NTSTATUS Status;
+
+    TRACE("SamrEnumerateUsersInDomain(%p %p %lx %p %lu %p)\n",
+          DomainHandle, EnumerationContext, UserAccountControl, Buffer,
+          PreferedMaximumLength, CountReturned);
+
+    /* Validate the domain handle */
+    Status = SampValidateDbObject(DomainHandle,
+                                  SamDbDomainObject,
+                                  DOMAIN_LIST_ACCOUNTS,
+                                  &DomainObject);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    Status = SampRegOpenKey(DomainObject->KeyHandle,
+                            L"Users",
+                            KEY_READ,
+                            &UsersKeyHandle);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    Status = SampRegOpenKey(UsersKeyHandle,
+                            L"Names",
+                            KEY_READ,
+                            &NamesKeyHandle);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    TRACE("Part 1\n");
+
+    EnumIndex = *EnumerationContext;
+
+    while (TRUE)
+    {
+        NameLength = 64 * sizeof(WCHAR);
+        Status = SampRegEnumerateValue(NamesKeyHandle,
+                                       EnumIndex,
+                                       UserName,
+                                       &NameLength,
+                                       NULL,
+                                       NULL,
+                                       NULL);
+        if (!NT_SUCCESS(Status))
+        {
+            if (Status == STATUS_NO_MORE_ENTRIES)
+                Status = STATUS_SUCCESS;
+            break;
+        }
+
+        TRACE("EnumIndex: %lu\n", EnumIndex);
+        TRACE("User name: %S\n", UserName);
+        TRACE("Name length: %lu\n", NameLength);
+
+        if ((RequiredLength + NameLength + sizeof(UNICODE_NULL) + sizeof(SAMPR_RID_ENUMERATION)) > PreferedMaximumLength)
+        {
+            MoreEntries = TRUE;
+            break;
+        }
+
+        RequiredLength += (NameLength + sizeof(UNICODE_NULL) + sizeof(SAMPR_RID_ENUMERATION));
+        EnumCount++;
+
+        EnumIndex++;
+    }
+
+    TRACE("EnumCount: %lu\n", EnumCount);
+    TRACE("RequiredLength: %lu\n", RequiredLength);
+
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    EnumBuffer = midl_user_allocate(sizeof(SAMPR_ENUMERATION_BUFFER));
+    if (EnumBuffer == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
+
+    EnumBuffer->EntriesRead = EnumCount;
+    if (EnumCount == 0)
+        goto done;
+
+    EnumBuffer->Buffer = midl_user_allocate(EnumCount * sizeof(SAMPR_RID_ENUMERATION));
+    if (EnumBuffer->Buffer == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
+
+    TRACE("Part 2\n");
+
+    EnumIndex = *EnumerationContext;
+    for (i = 0; i < EnumCount; i++, EnumIndex++)
+    {
+        NameLength = 64 * sizeof(WCHAR);
+        DataLength = sizeof(ULONG);
+        Status = SampRegEnumerateValue(NamesKeyHandle,
+                                       EnumIndex,
+                                       UserName,
+                                       &NameLength,
+                                       NULL,
+                                       &Rid,
+                                       &DataLength);
+        if (!NT_SUCCESS(Status))
+        {
+            if (Status == STATUS_NO_MORE_ENTRIES)
+                Status = STATUS_SUCCESS;
+            break;
+        }
+
+        TRACE("EnumIndex: %lu\n", EnumIndex);
+        TRACE("User name: %S\n", UserName);
+        TRACE("Name length: %lu\n", NameLength);
+        TRACE("RID: %lu\n", Rid);
+
+        EnumBuffer->Buffer[i].RelativeId = Rid;
+
+        EnumBuffer->Buffer[i].Name.Length = (USHORT)NameLength;
+        EnumBuffer->Buffer[i].Name.MaximumLength = (USHORT)(DataLength + sizeof(UNICODE_NULL));
+
+/* FIXME: Disabled because of bugs in widl and rpcrt4 */
+#if 0
+        EnumBuffer->Buffer[i].Name.Buffer = midl_user_allocate(EnumBuffer->Buffer[i].Name.MaximumLength);
+        if (EnumBuffer->Buffer[i].Name.Buffer == NULL)
+        {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            goto done;
+        }
+
+        memcpy(EnumBuffer->Buffer[i].Name.Buffer,
+               UserName,
+               EnumBuffer->Buffer[i].Name.Length);
+#endif
+    }
+
+done:
+    if (NT_SUCCESS(Status))
+    {
+        *EnumerationContext += EnumCount;
+        *Buffer = EnumBuffer;
+        *CountReturned = EnumCount;
+    }
+    else
+    {
+        *EnumerationContext = 0;
+        *Buffer = NULL;
+        *CountReturned = 0;
+
+        if (EnumBuffer != NULL)
+        {
+            if (EnumBuffer->Buffer != NULL)
+            {
+                if (EnumBuffer->EntriesRead != 0)
+                {
+                    for (i = 0; i < EnumBuffer->EntriesRead; i++)
+                    {
+                        if (EnumBuffer->Buffer[i].Name.Buffer != NULL)
+                            midl_user_free(EnumBuffer->Buffer[i].Name.Buffer);
+                    }
+                }
+
+                midl_user_free(EnumBuffer->Buffer);
+            }
+
+            midl_user_free(EnumBuffer);
+        }
+    }
+
+    if (NamesKeyHandle != NULL)
+        SampRegCloseKey(NamesKeyHandle);
+
+    if (UsersKeyHandle != NULL)
+        SampRegCloseKey(UsersKeyHandle);
+
+    if ((Status == STATUS_SUCCESS) && (MoreEntries == TRUE))
+        Status = STATUS_MORE_ENTRIES;
+
+    return Status;
 }
 
 
@@ -2108,6 +2486,7 @@ SamrCreateAliasInDomain(IN SAMPR_HANDLE DomainHandle,
     return Status;
 }
 
+
 /* Function 15 */
 NTSTATUS
 NTAPI
@@ -2119,20 +2498,22 @@ SamrEnumerateAliasesInDomain(IN SAMPR_HANDLE DomainHandle,
 {
     PSAMPR_ENUMERATION_BUFFER EnumBuffer = NULL;
     PSAM_DB_OBJECT DomainObject;
-    HANDLE AliasesKeyHandle;
-    WCHAR AliasKeyName[64];
-    HANDLE AliasKeyHandle;
+    HANDLE AliasesKeyHandle = NULL;
+    HANDLE NamesKeyHandle = NULL;
+    WCHAR AliasName[64];
     ULONG EnumIndex;
-    ULONG EnumCount;
-    ULONG RequiredLength;
+    ULONG EnumCount = 0;
+    ULONG RequiredLength = 0;
+    ULONG NameLength;
     ULONG DataLength;
+    ULONG Rid;
     ULONG i;
     BOOLEAN MoreEntries = FALSE;
     NTSTATUS Status;
 
     TRACE("SamrEnumerateAliasesInDomain(%p %p %p %lu %p)\n",
-          DomainHandle, EnumerationContext, Buffer, PreferedMaximumLength,
-          CountReturned);
+          DomainHandle, EnumerationContext, Buffer,
+          PreferedMaximumLength, CountReturned);
 
     /* Validate the domain handle */
     Status = SampValidateDbObject(DomainHandle,
@@ -2149,18 +2530,27 @@ SamrEnumerateAliasesInDomain(IN SAMPR_HANDLE DomainHandle,
     if (!NT_SUCCESS(Status))
         return Status;
 
+    Status = SampRegOpenKey(AliasesKeyHandle,
+                            L"Names",
+                            KEY_READ,
+                            &NamesKeyHandle);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
     TRACE("Part 1\n");
 
     EnumIndex = *EnumerationContext;
-    EnumCount = 0;
-    RequiredLength = 0;
 
     while (TRUE)
     {
-        Status = SampRegEnumerateSubKey(AliasesKeyHandle,
-                                        EnumIndex,
-                                        64 * sizeof(WCHAR),
-                                        AliasKeyName);
+        NameLength = 64 * sizeof(WCHAR);
+        Status = SampRegEnumerateValue(NamesKeyHandle,
+                                       EnumIndex,
+                                       AliasName,
+                                       &NameLength,
+                                       NULL,
+                                       NULL,
+                                       NULL);
         if (!NT_SUCCESS(Status))
         {
             if (Status == STATUS_NO_MORE_ENTRIES)
@@ -2169,46 +2559,26 @@ SamrEnumerateAliasesInDomain(IN SAMPR_HANDLE DomainHandle,
         }
 
         TRACE("EnumIndex: %lu\n", EnumIndex);
-        TRACE("Alias key name: %S\n", AliasKeyName);
+        TRACE("Alias name: %S\n", AliasName);
+        TRACE("Name length: %lu\n", NameLength);
 
-        Status = SampRegOpenKey(AliasesKeyHandle,
-                                AliasKeyName,
-                                KEY_READ,
-                                &AliasKeyHandle);
-        TRACE("SampRegOpenKey returned %08lX\n", Status);
-        if (NT_SUCCESS(Status))
+        if ((RequiredLength + NameLength + sizeof(UNICODE_NULL) + sizeof(SAMPR_RID_ENUMERATION)) > PreferedMaximumLength)
         {
-            DataLength = 0;
-            Status = SampRegQueryValue(AliasKeyHandle,
-                                       L"Name",
-                                       NULL,
-                                       NULL,
-                                       &DataLength);
-
-            NtClose(AliasKeyHandle);
-
-            TRACE("SampRegQueryValue returned %08lX\n", Status);
-
-            if (NT_SUCCESS(Status))
-            {
-                TRACE("Data length: %lu\n", DataLength);
-
-                if ((RequiredLength + DataLength + sizeof(SAMPR_RID_ENUMERATION)) > PreferedMaximumLength)
-                {
-                    MoreEntries = TRUE;
-                    break;
-                }
-
-                RequiredLength += (DataLength + sizeof(SAMPR_RID_ENUMERATION));
-                EnumCount++;
-            }
+            MoreEntries = TRUE;
+            break;
         }
+
+        RequiredLength += (NameLength + sizeof(UNICODE_NULL) + sizeof(SAMPR_RID_ENUMERATION));
+        EnumCount++;
 
         EnumIndex++;
     }
 
     TRACE("EnumCount: %lu\n", EnumCount);
     TRACE("RequiredLength: %lu\n", RequiredLength);
+
+    if (!NT_SUCCESS(Status))
+        goto done;
 
     EnumBuffer = midl_user_allocate(sizeof(SAMPR_ENUMERATION_BUFFER));
     if (EnumBuffer == NULL)
@@ -2233,10 +2603,15 @@ SamrEnumerateAliasesInDomain(IN SAMPR_HANDLE DomainHandle,
     EnumIndex = *EnumerationContext;
     for (i = 0; i < EnumCount; i++, EnumIndex++)
     {
-        Status = SampRegEnumerateSubKey(AliasesKeyHandle,
-                                        EnumIndex,
-                                        64 * sizeof(WCHAR),
-                                        AliasKeyName);
+        NameLength = 64 * sizeof(WCHAR);
+        DataLength = sizeof(ULONG);
+        Status = SampRegEnumerateValue(NamesKeyHandle,
+                                       EnumIndex,
+                                       AliasName,
+                                       &NameLength,
+                                       NULL,
+                                       &Rid,
+                                       &DataLength);
         if (!NT_SUCCESS(Status))
         {
             if (Status == STATUS_NO_MORE_ENTRIES)
@@ -2245,53 +2620,28 @@ SamrEnumerateAliasesInDomain(IN SAMPR_HANDLE DomainHandle,
         }
 
         TRACE("EnumIndex: %lu\n", EnumIndex);
-        TRACE("Alias key name: %S\n", AliasKeyName);
+        TRACE("Alias name: %S\n", AliasName);
+        TRACE("Name length: %lu\n", NameLength);
+        TRACE("RID: %lu\n", Rid);
 
-        Status = SampRegOpenKey(AliasesKeyHandle,
-                                AliasKeyName,
-                                KEY_READ,
-                                &AliasKeyHandle);
-        TRACE("SampRegOpenKey returned %08lX\n", Status);
-        if (NT_SUCCESS(Status))
+        EnumBuffer->Buffer[i].RelativeId = Rid;
+
+        EnumBuffer->Buffer[i].Name.Length = (USHORT)NameLength;
+        EnumBuffer->Buffer[i].Name.MaximumLength = (USHORT)(DataLength + sizeof(UNICODE_NULL));
+
+/* FIXME: Disabled because of bugs in widl and rpcrt4 */
+#if 0
+        EnumBuffer->Buffer[i].Name.Buffer = midl_user_allocate(EnumBuffer->Buffer[i].Name.MaximumLength);
+        if (EnumBuffer->Buffer[i].Name.Buffer == NULL)
         {
-            DataLength = 0;
-            Status = SampRegQueryValue(AliasKeyHandle,
-                                       L"Name",
-                                       NULL,
-                                       NULL,
-                                       &DataLength);
-            TRACE("SampRegQueryValue returned %08lX\n", Status);
-            if (NT_SUCCESS(Status))
-            {
-                EnumBuffer->Buffer[i].RelativeId = wcstoul(AliasKeyName, NULL, 16);
-
-                EnumBuffer->Buffer[i].Name.Length = (USHORT)DataLength - sizeof(WCHAR);
-                EnumBuffer->Buffer[i].Name.MaximumLength = (USHORT)DataLength;
-                EnumBuffer->Buffer[i].Name.Buffer = midl_user_allocate(DataLength);
-                if (EnumBuffer->Buffer[i].Name.Buffer == NULL)
-                {
-                    NtClose(AliasKeyHandle);
-                    Status = STATUS_INSUFFICIENT_RESOURCES;
-                    goto done;
-                }
-
-                Status = SampRegQueryValue(AliasKeyHandle,
-                                           L"Name",
-                                           NULL,
-                                           EnumBuffer->Buffer[i].Name.Buffer,
-                                           &DataLength);
-                TRACE("SampRegQueryValue returned %08lX\n", Status);
-                if (NT_SUCCESS(Status))
-                {
-                    TRACE("Alias name: %S\n", EnumBuffer->Buffer[i].Name.Buffer);
-                }
-            }
-
-            NtClose(AliasKeyHandle);
-
-            if (!NT_SUCCESS(Status))
-                goto done;
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            goto done;
         }
+
+        memcpy(EnumBuffer->Buffer[i].Name.Buffer,
+               AliasName,
+               EnumBuffer->Buffer[i].Name.Length);
+#endif
     }
 
 done:
@@ -2301,8 +2651,7 @@ done:
         *Buffer = EnumBuffer;
         *CountReturned = EnumCount;
     }
-
-    if (!NT_SUCCESS(Status))
+    else
     {
         *EnumerationContext = 0;
         *Buffer = NULL;
@@ -2328,13 +2677,18 @@ done:
         }
     }
 
-    NtClose(AliasesKeyHandle);
+    if (NamesKeyHandle != NULL)
+        SampRegCloseKey(NamesKeyHandle);
+
+    if (AliasesKeyHandle != NULL)
+        SampRegCloseKey(AliasesKeyHandle);
 
     if ((Status == STATUS_SUCCESS) && (MoreEntries == TRUE))
         Status = STATUS_MORE_ENTRIES;
 
     return Status;
 }
+
 
 /* Function 16 */
 NTSTATUS

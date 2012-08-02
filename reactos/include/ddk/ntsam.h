@@ -375,6 +375,23 @@ SamEnumerateDomainsInSamServer(IN SAM_HANDLE ServerHandle,
 
 NTSTATUS
 NTAPI
+SamEnumerateGroupsInDomain(IN SAM_HANDLE DomainHandle,
+                           IN OUT PSAM_ENUMERATE_HANDLE EnumerationContext,
+                           IN PVOID *Buffer,
+                           IN ULONG PreferedMaximumLength,
+                           OUT PULONG CountReturned);
+
+NTSTATUS
+NTAPI
+SamEnumerateUsersInDomain(IN SAM_HANDLE DomainHandle,
+                          IN OUT PSAM_ENUMERATE_HANDLE EnumerationContext,
+                          IN ULONG UserAccountControl,
+                          OUT PVOID *Buffer,
+                          IN ULONG PreferedMaximumLength,
+                          OUT PULONG CountReturned);
+
+NTSTATUS
+NTAPI
 SamFreeMemory(IN PVOID Buffer);
 
 NTSTATUS
