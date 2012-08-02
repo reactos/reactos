@@ -1602,6 +1602,7 @@ MiFlushTbAndCapture(IN PMMVAD FoundVad,
 {
     MMPTE TempPte, PreviousPte;
     KIRQL OldIrql;
+    BOOLEAN RebuildPte = FALSE;
 
     //
     // User for sanity checking later on
@@ -1618,11 +1619,45 @@ MiFlushTbAndCapture(IN PMMVAD FoundVad,
     OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
 
     //
-    // We don't support I/O mappings in this path yet, and only cached memory
+    // We don't support I/O mappings in this path yet
     //
     ASSERT(Pfn1 != NULL);
-    ASSERT(Pfn1->u3.e1.CacheAttribute == MiCached);
-    ASSERT((ProtectionMask & (MM_NOCACHE | MM_NOACCESS)) == 0);
+    ASSERT(Pfn1->u3.e1.CacheAttribute != MiWriteCombined);
+
+    //
+    // Make sure new protection mask doesn't get in conflict and fix it if it does
+    //
+    if (Pfn1->u3.e1.CacheAttribute == MiCached)
+    {
+        //
+        // This is a cached PFN
+        //
+        if (ProtectionMask & (MM_NOCACHE | MM_NOACCESS))
+        {
+            RebuildPte = TRUE;
+            ProtectionMask &= ~(MM_NOCACHE | MM_NOACCESS);
+        }
+    }
+    else if (Pfn1->u3.e1.CacheAttribute == MiNonCached)
+    {
+        //
+        // This is a non-cached PFN
+        //
+        if ((ProtectionMask & (MM_NOCACHE | MM_NOACCESS)) != MM_NOCACHE)
+        {
+            RebuildPte = TRUE;
+            ProtectionMask &= ~MM_NOACCESS;
+            ProtectionMask |= MM_NOCACHE;
+        }
+    }
+
+    if (RebuildPte)
+    {
+        MI_MAKE_HARDWARE_PTE_USER(&TempPte,
+                                  PointerPte,
+                                  ProtectionMask,
+                                  PreviousPte.u.Hard.PageFrameNumber);
+    }
 
     //
     // Write the new PTE, making sure we are only changing the bits
