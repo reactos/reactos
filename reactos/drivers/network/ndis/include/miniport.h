@@ -37,6 +37,7 @@ typedef struct _NDIS_M_DRIVER_BLOCK {
 typedef struct _NDIS_M_DEVICE_BLOCK {
     PDEVICE_OBJECT DeviceObject;
     PNDIS_STRING   SymbolicName;
+    PDRIVER_DISPATCH MajorFunction[IRP_MJ_MAXIMUM_FUNCTION+1];
 } NDIS_M_DEVICE_BLOCK, *PNDIS_M_DEVICE_BLOCK;
 
 /* resources allocated on behalf on the miniport */

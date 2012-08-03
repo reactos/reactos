@@ -2503,7 +2503,59 @@ NdisIAddDevice(
   return STATUS_SUCCESS;
 }
 
-
+NTSTATUS
+NTAPI
+NdisGenericIrpHandler(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp)
+{
+    PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
+
+    /* Use the characteristics to classify the device */
+    if (DeviceObject->DeviceType == FILE_DEVICE_PHYSICAL_NETCARD)
+    {
+        if ((IrpSp->MajorFunction == IRP_MJ_CREATE) ||
+            (IrpSp->MajorFunction == IRP_MJ_CLOSE))
+        {
+            return NdisICreateClose(DeviceObject, Irp);
+        }
+        else if (IrpSp->MajorFunction == IRP_MJ_PNP)
+        {
+            return NdisIDispatchPnp(DeviceObject, Irp);
+        }
+        else if (IrpSp->MajorFunction == IRP_MJ_SHUTDOWN)
+        {
+            return NdisIShutdown(DeviceObject, Irp);
+        }
+        else if (IrpSp->MajorFunction == IRP_MJ_DEVICE_CONTROL)
+        {
+            return NdisIDeviceIoControl(DeviceObject, Irp);
+        }
+    }
+    else if (DeviceObject->DeviceType == FILE_DEVICE_NETWORK)
+    {
+        PNDIS_M_DEVICE_BLOCK DeviceBlock = DeviceObject->DeviceExtension;
+
+        ASSERT(DeviceBlock->DeviceObject == DeviceObject);
+
+        if (DeviceBlock->MajorFunction[IrpSp->MajorFunction] != NULL)
+        {
+            return DeviceBlock->MajorFunction[IrpSp->MajorFunction](DeviceObject, Irp);
+        }
+    }
+    else
+    {
+        ASSERT(FALSE);
+    }
+
+    Irp->IoStatus.Status = STATUS_INVALID_DEVICE_REQUEST;
+    Irp->IoStatus.Information = 0;
+
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+    return STATUS_INVALID_DEVICE_REQUEST;
+}
+
 /*
  * @implemented
  */
@@ -2527,6 +2579,7 @@ NdisMRegisterMiniport(
   PNDIS_M_DRIVER_BLOCK Miniport = GET_MINIPORT_DRIVER(NdisWrapperHandle);
   PNDIS_M_DRIVER_BLOCK *MiniportPtr;
   NTSTATUS Status;
+  ULONG i;
 
   NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
@@ -2649,11 +2702,12 @@ NdisMRegisterMiniport(
 
   *MiniportPtr = Miniport;
 
-  Miniport->DriverObject->MajorFunction[IRP_MJ_CREATE] = NdisICreateClose;
-  Miniport->DriverObject->MajorFunction[IRP_MJ_CLOSE] = NdisICreateClose;
-  Miniport->DriverObject->MajorFunction[IRP_MJ_PNP] = NdisIDispatchPnp;
-  Miniport->DriverObject->MajorFunction[IRP_MJ_SHUTDOWN] = NdisIShutdown;
-  Miniport->DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = NdisIDeviceIoControl;
+  /* We have to register for all of these so handler registered in NdisMRegisterDevice work */
+  for (i = 0; i <= IRP_MJ_MAXIMUM_FUNCTION; i++)
+  {
+       Miniport->DriverObject->MajorFunction[i] = NdisGenericIrpHandler;
+  }
+
   Miniport->DriverObject->DriverExtension->AddDevice = NdisIAddDevice;
 
   return NDIS_STATUS_SUCCESS;
@@ -3076,7 +3130,7 @@ NdisMRegisterDevice(
     NDIS_DbgPrint(MAX_TRACE, ("Called\n"));
 
     Status = IoCreateDevice(DriverBlock->DriverObject,
-                            0, /* This space is reserved for us. Should we use it? */
+                            sizeof(NDIS_M_DEVICE_BLOCK),
                             DeviceName,
                             FILE_DEVICE_NETWORK,
                             0,
@@ -3098,7 +3152,7 @@ NdisMRegisterDevice(
         return Status;
     }
 
-    DeviceBlock = ExAllocatePool(NonPagedPool, sizeof(NDIS_M_DEVICE_BLOCK));
+    DeviceBlock = DeviceObject->DeviceExtension;
 
     if (!DeviceBlock)
     {
@@ -3109,15 +3163,7 @@ NdisMRegisterDevice(
     }
 
     for (i = 0; i <= IRP_MJ_MAXIMUM_FUNCTION; i++)
-         DriverBlock->DriverObject->MajorFunction[i] = MajorFunctions[i];
-
-    DriverBlock->DriverObject->MajorFunction[IRP_MJ_PNP] = NdisIDispatchPnp;
-
-    if (!DriverBlock->DriverObject->MajorFunction[IRP_MJ_CREATE])
-        DriverBlock->DriverObject->MajorFunction[IRP_MJ_CREATE] = NdisICreateClose;
-
-    if (!DriverBlock->DriverObject->MajorFunction[IRP_MJ_CLOSE])
-        DriverBlock->DriverObject->MajorFunction[IRP_MJ_CLOSE] = NdisICreateClose;
+         DeviceBlock->MajorFunction[i] = MajorFunctions[i];
 
     DeviceBlock->DeviceObject = DeviceObject;
     DeviceBlock->SymbolicName = SymbolicName;
@@ -3147,8 +3193,6 @@ NdisMDeregisterDevice(
     IoDeleteDevice(DeviceBlock->DeviceObject);
 
     IoDeleteSymbolicLink(DeviceBlock->SymbolicName);
-
-    ExFreePool(DeviceBlock);
 
     return NDIS_STATUS_SUCCESS;
 }
