@@ -1742,7 +1742,7 @@ UserFault:
     {
         /* Get the protection code and check if this is a proto PTE */
         ProtectionCode = TempPte.u.Soft.Protection;
-        DPRINT1("Code: %lx\n", ProtecitonCode);
+        DPRINT1("Code: %lx\n", ProtectionCode);
         if (TempPte.u.Soft.Prototype)
         {
             /* Do we need to go find the real PTE? */
