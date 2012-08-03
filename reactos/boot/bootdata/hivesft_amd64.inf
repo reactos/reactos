@@ -29,6 +29,9 @@ HKLM,"SOFTWARE\Microsoft\Rpc\SecurityService","18",2,"secur32.dll"
 HKLM,"SOFTWARE\Microsoft\Rpc\SecurityService","68",2,"netlogon.dll"
 HKLM,"SOFTWARE\Microsoft\Rpc\SecurityService","9",2,"secur32.dll"
 
+; .NET
+HKLM,"SOFTWARE\Microsoft\.NETFramework\","InstallDir",0x00020000,"%SystemRoot%\Microsoft .NET\Framework\"
+
 HKLM,"SOFTWARE\Microsoft\Secure",,0x00000012
 
 ; WBem
