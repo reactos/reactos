@@ -9170,7 +9170,7 @@ DriverEntry(
             return status;
         }
 #endif // USE_REACTOS_DDK
-        KdPrint(("UniATA Init: OS ver %x.%x (%d), %d CPU(s)\n", MajorVersion, MinorVersion, BuildNumber, *KeNumberProcessors));
+        KdPrint(("UniATA Init: OS ver %x.%x (%d), %d CPU(s)\n", MajorVersion, MinorVersion, BuildNumber, KeNumberProcessors));
 
         KeQuerySystemTime(&t0);
         do {
