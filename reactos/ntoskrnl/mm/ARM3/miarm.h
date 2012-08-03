@@ -693,6 +693,7 @@ extern SLIST_HEADER MmDeadStackSListHead;
 extern MM_AVL_TABLE MmSectionBasedRoot;
 extern KGUARDED_MUTEX MmSectionBasedMutex;
 extern PVOID MmHighSectionBase;
+extern SIZE_T MmSystemLockPagesCount;
 
 BOOLEAN
 FORCEINLINE
@@ -984,6 +985,43 @@ MI_WS_OWNER(IN PEPROCESS Process)
 }
 
 //
+// New ARM3<->RosMM PAGE Architecture
+//
+BOOLEAN
+FORCEINLINE
+MiIsRosSectionObject(IN PVOID Section)
+{
+    PROS_SECTION_OBJECT RosSection = Section;
+    if ((RosSection->Type == 'SC') && (RosSection->Size == 'TN')) return TRUE;
+    return FALSE;
+}
+
+#ifdef _WIN64
+// HACK ON TOP OF HACK ALERT!!!
+#define MI_GET_ROS_DATA(x) \
+    (((x)->RosMmData == 0) ? NULL : ((PMMROSPFN)((ULONG64)(ULONG)((x)->RosMmData) | \
+                                    ((ULONG64)MmNonPagedPoolStart & 0xffffffff00000000ULL))))
+#else
+#define MI_GET_ROS_DATA(x)   ((PMMROSPFN)(x->RosMmData))
+#endif
+#define MI_IS_ROS_PFN(x)     (((x)->u4.AweAllocation == TRUE) && (MI_GET_ROS_DATA(x) != NULL))
+#define ASSERT_IS_ROS_PFN(x) ASSERT(MI_IS_ROS_PFN(x) == TRUE);
+typedef struct _MMROSPFN
+{
+    PMM_RMAP_ENTRY RmapListHead;
+    SWAPENTRY SwapEntry;
+} MMROSPFN, *PMMROSPFN;
+
+#define RosMmData            AweReferenceCount
+
+VOID
+NTAPI
+MiDecrementReferenceCount(
+    IN PMMPFN Pfn1,
+    IN PFN_NUMBER PageFrameIndex
+);
+
+//
 // Locks the working set for the given process
 //
 FORCEINLINE
@@ -1063,7 +1101,7 @@ MiLockWorkingSet(IN PETHREAD Thread,
         /* Own the session working set */
         ASSERT((Thread->OwnsSessionWorkingSetExclusive == FALSE) &&
                (Thread->OwnsSessionWorkingSetShared == FALSE));
-        Thread->OwnsSessionWorkingSetExclusive = TRUE; 
+        Thread->OwnsSessionWorkingSetExclusive = TRUE;
     }
     else
     {
@@ -1141,6 +1179,237 @@ MI_PFN_ELEMENT(IN PFN_NUMBER Pfn)
     /* Get the entry */
     return &MmPfnDatabase[Pfn];
 };
+
+//
+// Drops a locked page without dereferencing it
+//
+FORCEINLINE
+VOID
+MiDropLockCount(IN PMMPFN Pfn1)
+{
+    /* This page shouldn't be locked, but it should be valid */
+    ASSERT(Pfn1->u3.e2.ReferenceCount != 0);
+    ASSERT(Pfn1->u2.ShareCount == 0);
+
+    /* Is this the last reference to the page */
+    if (Pfn1->u3.e2.ReferenceCount == 1)
+    {
+        /* It better not be valid */
+        ASSERT(Pfn1->u3.e1.PageLocation != ActiveAndValid);
+
+        /* Is it a prototype PTE? */
+        if ((Pfn1->u3.e1.PrototypePte == 1) &&
+            (Pfn1->OriginalPte.u.Soft.Prototype == 1))
+        {
+            /* We don't handle this */
+            ASSERT(FALSE);
+        }
+
+        /* Update the counter */
+        InterlockedDecrementSizeT(&MmSystemLockPagesCount);
+    }
+}
+
+//
+// Drops a locked page and dereferences it
+//
+FORCEINLINE
+VOID
+MiDereferencePfnAndDropLockCount(IN PMMPFN Pfn1)
+{
+    USHORT RefCount, OldRefCount;
+    PFN_NUMBER PageFrameIndex;
+
+    /* Loop while we decrement the page successfully */
+    do
+    {
+        /* There should be at least one reference */
+        OldRefCount = Pfn1->u3.e2.ReferenceCount;
+        ASSERT(OldRefCount != 0);
+
+        /* Are we the last one */
+        if (OldRefCount == 1)
+        {
+            /* The page shoudln't be shared not active at this point */
+            ASSERT(Pfn1->u3.e2.ReferenceCount == 1);
+            ASSERT(Pfn1->u3.e1.PageLocation != ActiveAndValid);
+            ASSERT(Pfn1->u2.ShareCount == 0);
+
+            /* Is it a prototype PTE? */
+            if ((Pfn1->u3.e1.PrototypePte == 1) &&
+                (Pfn1->OriginalPte.u.Soft.Prototype == 1))
+            {
+                /* We don't handle this */
+                ASSERT(FALSE);
+            }
+
+            /* Update the counter, and drop a reference the long way */
+            InterlockedDecrementSizeT(&MmSystemLockPagesCount);
+            PageFrameIndex = MiGetPfnEntryIndex(Pfn1);
+            MiDecrementReferenceCount(Pfn1, PageFrameIndex);
+            return;
+        }
+
+        /* Drop a reference the short way, and that's it */
+        RefCount = InterlockedCompareExchange16((PSHORT)&Pfn1->u3.e2.ReferenceCount,
+                                                OldRefCount - 1,
+                                                OldRefCount);
+        ASSERT(RefCount != 0);
+    } while (OldRefCount != RefCount);
+
+    /* If we got here, there should be more than one reference */
+    ASSERT(RefCount > 1);
+    if (RefCount == 2)
+    {
+        /* Is it still being shared? */
+        if (Pfn1->u2.ShareCount >= 1)
+        {
+            /* Then it should be valid */
+            ASSERT(Pfn1->u3.e1.PageLocation == ActiveAndValid);
+
+            /* Is it a prototype PTE? */
+            if ((Pfn1->u3.e1.PrototypePte == 1) &&
+                (Pfn1->OriginalPte.u.Soft.Prototype == 1))
+            {
+                /* We don't handle ethis */
+                ASSERT(FALSE);
+            }
+
+            /* Update the counter */
+            InterlockedDecrementSizeT(&MmSystemLockPagesCount);
+        }
+    }
+}
+
+//
+// References a locked page and updates the counter
+// Used in MmProbeAndLockPages to handle different edge cases
+//
+FORCEINLINE
+VOID
+MiReferenceProbedPageAndBumpLockCount(IN PMMPFN Pfn1)
+{
+    USHORT RefCount, OldRefCount;
+
+    /* Sanity check */
+    ASSERT(Pfn1->u3.e2.ReferenceCount != 0);
+
+    /* Does ARM3 own the page? */
+    if (MI_IS_ROS_PFN(Pfn1))
+    {
+        /* ReactOS Mm doesn't track share count */
+        ASSERT(Pfn1->u3.e1.PageLocation == ActiveAndValid);
+    }
+    else
+    {
+        /* On ARM3 pages, we should see a valid share count */
+        ASSERT((Pfn1->u2.ShareCount != 0) && (Pfn1->u3.e1.PageLocation == ActiveAndValid));
+
+        /* We don't support mapping a prototype page yet */
+        ASSERT((Pfn1->u3.e1.PrototypePte == 0) && (Pfn1->OriginalPte.u.Soft.Prototype == 0));
+    }
+
+    /* More locked pages! */
+    InterlockedIncrementSizeT(&MmSystemLockPagesCount);
+
+    /* Loop trying to update the reference count */
+    do
+    {
+        /* Get the current reference count, make sure it's valid */
+        OldRefCount = Pfn1->u3.e2.ReferenceCount;
+        ASSERT(OldRefCount != 0);
+        ASSERT(OldRefCount < 2500);
+
+        /* Bump it up by one */
+        RefCount = InterlockedCompareExchange16((PSHORT)&Pfn1->u3.e2.ReferenceCount,
+                                                OldRefCount + 1,
+                                                OldRefCount);
+        ASSERT(RefCount != 0);
+    } while (OldRefCount != RefCount);
+
+    /* Was this the first lock attempt? If not, undo our bump */
+    if (OldRefCount != 1) InterlockedDecrementSizeT(&MmSystemLockPagesCount);
+}
+
+//
+// References a locked page and updates the counter
+// Used in all other cases except MmProbeAndLockPages
+//
+FORCEINLINE
+VOID
+MiReferenceUsedPageAndBumpLockCount(IN PMMPFN Pfn1)
+{
+    USHORT NewRefCount;
+
+    /* Is it a prototype PTE? */
+    if ((Pfn1->u3.e1.PrototypePte == 1) &&
+        (Pfn1->OriginalPte.u.Soft.Prototype == 1))
+    {
+        /* We don't handle this */
+        ASSERT(FALSE);
+    }
+
+    /* More locked pages! */
+    InterlockedIncrementSizeT(&MmSystemLockPagesCount);
+
+    /* Update the reference count */
+    NewRefCount = InterlockedIncrement16((PSHORT)&Pfn1->u3.e2.ReferenceCount);
+    if (NewRefCount == 2)
+    {
+        /* Is it locked or shared? */
+        if (Pfn1->u2.ShareCount)
+        {
+            /* It's shared, so make sure it's active */
+            ASSERT(Pfn1->u3.e1.PageLocation == ActiveAndValid);
+        }
+        else
+        {
+            /* It's locked, so we shouldn't lock again */
+            InterlockedDecrementSizeT(&MmSystemLockPagesCount);
+        }
+    }
+    else
+    {
+        /* Someone had already locked the page, so undo our bump */
+        ASSERT(NewRefCount < 2500);
+        InterlockedDecrementSizeT(&MmSystemLockPagesCount);
+    }
+}
+
+//
+// References a locked page and updates the counter
+// Used in all other cases except MmProbeAndLockPages
+//
+FORCEINLINE
+VOID
+MiReferenceUnusedPageAndBumpLockCount(IN PMMPFN Pfn1)
+{
+    USHORT NewRefCount;
+
+    /* Make sure the page isn't used yet */
+    ASSERT(Pfn1->u2.ShareCount == 0);
+    ASSERT(Pfn1->u3.e1.PageLocation != ActiveAndValid);
+
+    /* Is it a prototype PTE? */
+    if ((Pfn1->u3.e1.PrototypePte == 1) &&
+        (Pfn1->OriginalPte.u.Soft.Prototype == 1))
+    {
+        /* We don't handle this */
+        ASSERT(FALSE);
+    }
+
+    /* More locked pages! */
+    InterlockedIncrementSizeT(&MmSystemLockPagesCount);
+
+    /* Update the reference count */
+    NewRefCount = InterlockedIncrement16((PSHORT)&Pfn1->u3.e2.ReferenceCount);
+    if (NewRefCount != 1)
+    {
+        /* Someone had already locked the page, so undo our bump */
+        ASSERT(NewRefCount < 2500);
+        InterlockedDecrementSizeT(&MmSystemLockPagesCount);
+    }
+}
 
 BOOLEAN
 NTAPI
@@ -1425,13 +1694,6 @@ MiInitializePfnForOtherProcess(
 VOID
 NTAPI
 MiDecrementShareCount(
-    IN PMMPFN Pfn1,
-    IN PFN_NUMBER PageFrameIndex
-);
-
-VOID
-NTAPI
-MiDecrementReferenceCount(
     IN PMMPFN Pfn1,
     IN PFN_NUMBER PageFrameIndex
 );
@@ -1738,35 +2000,5 @@ MiRemoveZeroPageSafe(IN ULONG Color)
     if (MmFreePagesByColor[ZeroedPageList][Color].Flink != LIST_HEAD) return MiRemoveZeroPage(Color);
     return 0;
 }
-
-//
-// New ARM3<->RosMM PAGE Architecture
-//
-BOOLEAN
-FORCEINLINE
-MiIsRosSectionObject(IN PVOID Section)
-{
-    PROS_SECTION_OBJECT RosSection = Section;
-    if ((RosSection->Type == 'SC') && (RosSection->Size == 'TN')) return TRUE;
-    return FALSE;
-}
-
-#ifdef _WIN64
-// HACK ON TOP OF HACK ALERT!!!
-#define MI_GET_ROS_DATA(x) \
-    (((x)->RosMmData == 0) ? NULL : ((PMMROSPFN)((ULONG64)(ULONG)((x)->RosMmData) | \
-                                    ((ULONG64)MmNonPagedPoolStart & 0xffffffff00000000ULL))))
-#else
-#define MI_GET_ROS_DATA(x)   ((PMMROSPFN)(x->RosMmData))
-#endif
-#define MI_IS_ROS_PFN(x)     (((x)->u4.AweAllocation == TRUE) && (MI_GET_ROS_DATA(x) != NULL))
-#define ASSERT_IS_ROS_PFN(x) ASSERT(MI_IS_ROS_PFN(x) == TRUE);
-typedef struct _MMROSPFN
-{
-    PMM_RMAP_ENTRY RmapListHead;
-    SWAPENTRY SwapEntry;
-} MMROSPFN, *PMMROSPFN;
-
-#define RosMmData            AweReferenceCount
 
 /* EOF */

@@ -806,7 +806,6 @@ Quickie:
     return Status;
 }
 
-
 NTSTATUS
 NTAPI
 MiSessionCommitPageTables(IN PVOID StartVa,

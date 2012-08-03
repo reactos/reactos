@@ -22,8 +22,6 @@
 BOOLEAN UserPdeFault = FALSE;
 #endif
 
-LONG MmSystemLockPagesCount;
-
 /* PRIVATE FUNCTIONS **********************************************************/
 
 PMMPTE
@@ -505,7 +503,7 @@ MiCompleteProtoPteFault(IN BOOLEAN StoreInstruction,
                         IN PMMPTE PointerPte,
                         IN PMMPTE PointerProtoPte,
                         IN KIRQL OldIrql,
-                        IN PMMPFN* LockedPfn)
+                        IN PMMPFN* LockedProtoPfn)
 {
     MMPTE TempPte;
     PMMPTE OriginalPte, PageTablePte;
@@ -569,8 +567,14 @@ MiCompleteProtoPteFault(IN BOOLEAN StoreInstruction,
         ASSERT(Pfn1->OriginalPte.u.Soft.Prototype != 0);
     }
 
-    /* Not yet handled by ReactOS */
-    ASSERT(LockedPfn == NULL);
+    /* Did we get a locked incoming PFN? */
+    if (*LockedProtoPfn)
+    {
+        /* Drop a reference */
+        ASSERT((*LockedProtoPfn)->u3.e2.ReferenceCount >= 1);
+        MiDereferencePfnAndDropLockCount(*LockedProtoPfn);
+        *LockedProtoPfn = NULL;
+    }
 
     /* Release the PFN lock */
     KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
@@ -630,7 +634,6 @@ MiResolveTransitionFault(IN PVOID FaultingAddress,
     PMMPFN Pfn1;
     MMPTE TempPte;
     PMMPTE PointerToPteForProtoPage;
-    USHORT NewRefCount;
     DPRINT1("Transition fault on 0x%p with PTE 0x%lx in process %s\n", FaultingAddress, PointerPte, CurrentProcess->ImageFileName);
 
     /* Windowss does this check */
@@ -681,57 +684,14 @@ MiResolveTransitionFault(IN PVOID FaultingAddress,
         /* Otherwise, the page is removed from its list */
         DPRINT1("Transition page in free/zero list\n");
         MiUnlinkPageFromList(Pfn1);
-
-        /* Windows does these checks -- perhaps a macro? */
-        ASSERT(Pfn1->u2.ShareCount == 0);
-        ASSERT(Pfn1->u2.ShareCount == 0);
-        ASSERT(Pfn1->u3.e1.PageLocation != ActiveAndValid);
-
-        /* Check if this was a prototype PTE */
-        if ((Pfn1->u3.e1.PrototypePte == 1) &&
-            (Pfn1->OriginalPte.u.Soft.Prototype == 1))
-        {
-            DPRINT1("Prototype floating page not yet supported\n");
-            ASSERT(FALSE);
-        }
-
-        /* Update counter */
-        InterlockedIncrementSizeT(&MmSystemLockPagesCount);
-
-        /* We must be the first reference */
-        NewRefCount = InterlockedIncrement16((PSHORT)&Pfn1->u3.e2.ReferenceCount);
-        ASSERT(NewRefCount == 1);
+        MiReferenceUnusedPageAndBumpLockCount(Pfn1);
     }
 
     /* At this point, there should no longer be any in-page errors */
     ASSERT(Pfn1->u4.InPageError == 0);
 
     /* Check if this was a PFN with no more share references */
-    if (Pfn1->u2.ShareCount == 0)
-    {
-        /* Windows checks for these... maybe a macro? */
-        ASSERT(Pfn1->u3.e2.ReferenceCount != 0);
-        ASSERT(Pfn1->u2.ShareCount == 0);
-
-        /* Was this the last active reference to it */
-        DPRINT1("Page share count is zero\n");
-        if (Pfn1->u3.e2.ReferenceCount == 1)
-        {
-            /* The page should be leaking somewhere on the free/zero list */
-            DPRINT1("Page reference count is one\n");
-            ASSERT(Pfn1->u3.e1.PageLocation != ActiveAndValid);
-            if ((Pfn1->u3.e1.PrototypePte == 1) &&
-                (Pfn1->OriginalPte.u.Soft.Prototype == 1))
-            {
-                /* Do extra processing if it was a prototype page */
-                DPRINT1("Prototype floating page not yet supported\n");
-                ASSERT(FALSE);
-            }
-
-            /* Update counter */
-            InterlockedDecrementSizeT(&MmSystemLockPagesCount);
-        }
-    }
+    if (Pfn1->u2.ShareCount == 0) MiDropLockCount(Pfn1);
 
     /* Bump the share count and make the page valid */
     Pfn1->u2.ShareCount++;
@@ -821,7 +781,7 @@ MiResolveProtoPteFault(IN BOOLEAN StoreInstruction,
                                        PointerPte,
                                        PointerProtoPte,
                                        OldIrql,
-                                       NULL);
+                                       OutPfn);
     }
 
     /* Make sure there's some protection mask */
@@ -897,7 +857,7 @@ MiResolveProtoPteFault(IN BOOLEAN StoreInstruction,
                                    PointerPte,
                                    PointerProtoPte,
                                    OldIrql,
-                                   NULL);
+                                   OutPfn);
 }
 
 NTSTATUS
@@ -915,7 +875,7 @@ MiDispatchFault(IN BOOLEAN StoreInstruction,
     KIRQL OldIrql, LockIrql;
     NTSTATUS Status;
     PMMPTE SuperProtoPte;
-    PMMPFN Pfn1;
+    PMMPFN Pfn1, OutPfn = NULL;
     PFN_NUMBER PageFrameIndex, PteCount, ProcessedPtes;
     DPRINT("ARM3 Page Fault Dispatcher for address: %p in process: %p\n",
              Address,
@@ -964,7 +924,7 @@ MiDispatchFault(IN BOOLEAN StoreInstruction,
                                             Address,
                                             PointerPte,
                                             PointerProtoPte,
-                                            NULL,
+                                            &OutPfn,
                                             NULL,
                                             NULL,
                                             Process,
@@ -1010,14 +970,24 @@ MiDispatchFault(IN BOOLEAN StoreInstruction,
             while (TRUE)
             {
                 /* For our current usage, this should be true */
-                ASSERT(TempPte.u.Hard.Valid == 1);
-                ASSERT(TempPte.u.Soft.Prototype == 0);
-                ASSERT(TempPte.u.Soft.Transition == 0);
-
-                /* Bump the share count on the PTE */
-                PageFrameIndex = PFN_FROM_PTE(&TempPte);
-                Pfn1 = MI_PFN_ELEMENT(PageFrameIndex);
-                Pfn1->u2.ShareCount++;
+                if (TempPte.u.Hard.Valid == 1)
+                {
+                    /* Bump the share count on the PTE */
+                    PageFrameIndex = PFN_FROM_PTE(&TempPte);
+                    Pfn1 = MI_PFN_ELEMENT(PageFrameIndex);
+                    Pfn1->u2.ShareCount++;
+                }
+                else if ((TempPte.u.Soft.Prototype == 0) &&
+                         (TempPte.u.Soft.Transition == 1))
+                {
+                    /* No standby support yet */
+                    ASSERT(FALSE);
+                }
+                else
+                {
+                    /* Page is invalid, get out of the loop */
+                    break;
+                }
 
                 /* One more done, was it the last? */
                 if (++ProcessedPtes == PteCount)
@@ -1028,7 +998,7 @@ MiDispatchFault(IN BOOLEAN StoreInstruction,
                                             PointerPte,
                                             PointerProtoPte,
                                             LockIrql,
-                                            NULL);
+                                            &OutPfn);
 
                     /* THIS RELEASES THE PFN LOCK! */
                     break;
@@ -1038,21 +1008,62 @@ MiDispatchFault(IN BOOLEAN StoreInstruction,
                 ASSERT(FALSE);
             }
 
-            /* Only path that we support for now */
-            ASSERT(ProcessedPtes != 0);
+            /* Did we resolve the fault? */
+            if (ProcessedPtes)
+            {
+                /* Bump the transition count */
+                InterlockedExchangeAdd(&KeGetCurrentPrcb()->MmTransitionCount, ProcessedPtes);
+                ProcessedPtes--;
 
-            /* Bump the transition count */
-            InterlockedExchangeAdd(&KeGetCurrentPrcb()->MmTransitionCount, ProcessedPtes);
-            ProcessedPtes--;
+                /* Loop all the processing we did */
+                ASSERT(ProcessedPtes == 0);
 
-            /* Loop all the processing we did */
-            ASSERT(ProcessedPtes == 0);
+                /* Complete this as a transition fault */
+                ASSERT(OldIrql == KeGetCurrentIrql());
+                ASSERT(OldIrql <= APC_LEVEL);
+                ASSERT(KeAreAllApcsDisabled() == TRUE);
+                return STATUS_PAGE_FAULT_TRANSITION;
+            }
+
+            /* We did not -- PFN lock is still held, prepare to resolve prototype PTE fault */
+            OutPfn = MI_PFN_ELEMENT(SuperProtoPte->u.Hard.PageFrameNumber);
+            MiReferenceUsedPageAndBumpLockCount(OutPfn);
+            ASSERT(OutPfn->u3.e2.ReferenceCount > 1);
+            ASSERT(PointerPte->u.Hard.Valid == 0);
+
+            /* Resolve the fault -- this will release the PFN lock */
+            Status = MiResolveProtoPteFault(StoreInstruction,
+                                            Address,
+                                            PointerPte,
+                                            PointerProtoPte,
+                                            &OutPfn,
+                                            NULL,
+                                            NULL,
+                                            Process,
+                                            LockIrql,
+                                            TrapInformation);
+            ASSERT(Status == STATUS_SUCCESS);
+
+            /* Did the routine clean out the PFN or should we? */
+            if (OutPfn)
+            {
+                /* We had a locked PFN, so acquire the PFN lock to dereference it */
+                ASSERT(PointerProtoPte != NULL);
+                OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+
+                /* Dereference the locked PFN */
+                MiDereferencePfnAndDropLockCount(OutPfn);
+                ASSERT(OutPfn->u3.e2.ReferenceCount >= 1);
+
+                /* And now release the lock */
+                KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+            }
 
             /* Complete this as a transition fault */
             ASSERT(OldIrql == KeGetCurrentIrql());
             ASSERT(OldIrql <= APC_LEVEL);
             ASSERT(KeAreAllApcsDisabled() == TRUE);
-            return STATUS_PAGE_FAULT_TRANSITION;
+            return Status;
         }
     }
 
@@ -1729,8 +1740,46 @@ UserFault:
     }
     else
     {
-        /* This path is not yet supported */
-        ASSERT(FALSE);
+        /* Get the protection code and check if this is a proto PTE */
+        ProtectionCode = TempPte.u.Soft.Protection;
+        DPRINT1("Code: %lx\n", ProtecitonCode);
+        if (TempPte.u.Soft.Prototype)
+        {
+            /* Do we need to go find the real PTE? */
+            DPRINT1("Soft: %lx\n", TempPte.u.Soft.PageFileHigh);
+            if (TempPte.u.Soft.PageFileHigh == MI_PTE_LOOKUP_NEEDED)
+            {
+                /* Get the prototype pte and VAD for it */
+                ProtoPte = MiCheckVirtualAddress(Address,
+                                                 &ProtectionCode,
+                                                 &Vad);
+                DPRINT1("Address: %p ProtoP %p Code: %lx Vad: %p\n", Address, ProtoPte, ProtectionCode, Vad);
+                if (!ProtoPte)
+                {
+                    ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
+                    MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
+                    return STATUS_ACCESS_VIOLATION;
+                }
+            }
+            else
+            {
+                /* Get the prototype PTE! */
+                ProtoPte = MiProtoPteToPte(&TempPte);
+
+                /* Is it read-only */
+                if (TempPte.u.Proto.ReadOnly)
+                {
+                    /* Set read-only code */
+                    ProtectionCode = MM_READONLY;
+                }
+                else
+                {
+                    /* Set unknown protection */
+                    ProtectionCode = 0x100;
+                    ASSERT(CurrentProcess->CloneRoot != NULL);
+                }
+            }
+        }
     }
 
     /* FIXME: Run MiAccessCheck */

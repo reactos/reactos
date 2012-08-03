@@ -602,7 +602,6 @@ MmProbeAndLockPages(IN PMDL Mdl,
     PFN_NUMBER PageFrameIndex;
     BOOLEAN UsePfnLock;
     KIRQL OldIrql;
-    USHORT OldRefCount, RefCount;
     PMMPFN Pfn1;
     DPRINT("Probing MDL: %p\n", Mdl);
 
@@ -998,45 +997,7 @@ MmProbeAndLockPages(IN PMDL Mdl,
             if (CurrentProcess) ASSERT(CurrentProcess->PhysicalVadRoot == NULL);
 
             /* This address should already exist and be fully valid */
-            ASSERT(Pfn1->u3.e2.ReferenceCount != 0);
-            if (MI_IS_ROS_PFN(Pfn1))
-            {
-                /* ReactOS Mm doesn't track share count */
-                ASSERT(Pfn1->u3.e1.PageLocation == ActiveAndValid);
-            }
-            else
-            {
-                /* On ARM3 pages, we should see a valid share count */
-                ASSERT((Pfn1->u2.ShareCount != 0) && (Pfn1->u3.e1.PageLocation == ActiveAndValid));
-
-                /* We don't support mapping a prototype page yet */
-                ASSERT((Pfn1->u3.e1.PrototypePte == 0) && (Pfn1->OriginalPte.u.Soft.Prototype == 0));
-            }
-
-            /* More locked pages! */
-            InterlockedExchangeAddSizeT(&MmSystemLockPagesCount, 1);
-
-            /* Loop trying to update the reference count */
-            do
-            {
-                /* Get the current reference count, make sure it's valid */
-                OldRefCount = Pfn1->u3.e2.ReferenceCount;
-                ASSERT(OldRefCount != 0);
-                ASSERT(OldRefCount < 2500);
-
-                /* Bump it up by one */
-                RefCount = InterlockedCompareExchange16((PSHORT)&Pfn1->u3.e2.ReferenceCount,
-                                                        OldRefCount + 1,
-                                                        OldRefCount);
-                ASSERT(RefCount != 0);
-            } while (OldRefCount != RefCount);
-
-            /* Was this the first lock attempt? */
-            if (OldRefCount != 1)
-            {
-                /* Someone else came through */
-                InterlockedExchangeAddSizeT(&MmSystemLockPagesCount, -1);
-            }
+            MiReferenceProbedPageAndBumpLockCount(Pfn1);
         }
         else
         {
@@ -1131,7 +1092,6 @@ MmUnlockPages(IN PMDL Mdl)
     PVOID Base;
     ULONG Flags, PageCount;
     KIRQL OldIrql;
-    USHORT RefCount, OldRefCount;
     PMMPFN Pfn1;
     DPRINT("Unlocking MDL: %p\n", Mdl);
 
@@ -1198,66 +1158,7 @@ MmUnlockPages(IN PMDL Mdl)
             // Check if this page is in the PFN database
             //
             Pfn1 = MiGetPfnEntry(*MdlPages);
-            if (Pfn1)
-            {
-                /* Get the current entry and reference count */
-                OldRefCount = Pfn1->u3.e2.ReferenceCount;
-                ASSERT(OldRefCount != 0);
-
-                /* Is this already the last dereference */
-                if (OldRefCount == 1)
-                {
-                    /* It should be on a free list waiting for us */
-                    ASSERT(Pfn1->u3.e2.ReferenceCount == 1);
-                    ASSERT(Pfn1->u3.e1.PageLocation != ActiveAndValid);
-                    ASSERT(Pfn1->u2.ShareCount == 0);
-
-                    /* Not supported yet */
-                    ASSERT((Pfn1->u3.e1.PrototypePte == 0) &&
-                            (Pfn1->OriginalPte.u.Soft.Prototype == 0));
-
-                    /* One less page */
-                    InterlockedExchangeAddSizeT(&MmSystemLockPagesCount, -1);
-
-                    /* Do the last dereference, we're done here */
-                    MiDecrementReferenceCount(Pfn1, *MdlPages);
-                }
-                else
-                {
-                    /* Loop decrementing one reference */
-                    do
-                    {
-                        /* Make sure it's still valid */
-                        OldRefCount = Pfn1->u3.e2.ReferenceCount;
-                        ASSERT(OldRefCount != 0);
-
-                        /* Take off one reference */
-                        RefCount = InterlockedCompareExchange16((PSHORT)&Pfn1->u3.e2.ReferenceCount,
-                                                                OldRefCount - 1,
-                                                                OldRefCount);
-                        ASSERT(RefCount != 0);
-                     } while (OldRefCount != RefCount);
-                     ASSERT(RefCount > 1);
-
-                     /* Are there only lock references left? */
-                     if (RefCount == 2)
-                     {
-                         /* And does the page still have users? */
-                         if (Pfn1->u2.ShareCount >= 1)
-                         {
-                            /* Then it should still be valid */
-                            ASSERT(Pfn1->u3.e1.PageLocation == ActiveAndValid);
-
-                            /* Not supported yet */
-                            ASSERT((Pfn1->u3.e1.PrototypePte == 0) &&
-                                    (Pfn1->OriginalPte.u.Soft.Prototype == 0));
-
-                            /* But there is one less "locked" page though */
-                            InterlockedExchangeAddSizeT(&MmSystemLockPagesCount, -1);
-                         }
-                     }
-                 }
-            }
+            if (Pfn1) MiDereferencePfnAndDropLockCount(Pfn1);
         } while (++MdlPages < LastPage);
 
         //
@@ -1347,62 +1248,7 @@ MmUnlockPages(IN PMDL Mdl)
     {
         /* Get the current entry and reference count */
         Pfn1 = (PMMPFN)*MdlPages;
-        OldRefCount = Pfn1->u3.e2.ReferenceCount;
-        ASSERT(OldRefCount != 0);
-
-        /* Is this already the last dereference */
-        if (OldRefCount == 1)
-        {
-            /* It should be on a free list waiting for us */
-            ASSERT(Pfn1->u3.e2.ReferenceCount == 1);
-            ASSERT(Pfn1->u3.e1.PageLocation != ActiveAndValid);
-            ASSERT(Pfn1->u2.ShareCount == 0);
-
-            /* Not supported yet */
-            ASSERT(((Pfn1->u3.e1.PrototypePte == 0) &&
-                    (Pfn1->OriginalPte.u.Soft.Prototype == 0)));
-
-            /* One less page */
-            InterlockedExchangeAddSizeT(&MmSystemLockPagesCount, -1);
-
-            /* Do the last dereference, we're done here */
-            MiDecrementReferenceCount(Pfn1, MiGetPfnEntryIndex(Pfn1));
-        }
-        else
-        {
-            /* Loop decrementing one reference */
-            do
-            {
-                /* Make sure it's still valid */
-                OldRefCount = Pfn1->u3.e2.ReferenceCount;
-                ASSERT(OldRefCount != 0);
-
-                /* Take off one reference */
-                RefCount = InterlockedCompareExchange16((PSHORT)&Pfn1->u3.e2.ReferenceCount,
-                                                        OldRefCount - 1,
-                                                        OldRefCount);
-                ASSERT(RefCount != 0);
-             } while (OldRefCount != RefCount);
-             ASSERT(RefCount > 1);
-
-             /* Are there only lock references left? */
-             if (RefCount == 2)
-             {
-                 /* And does the page still have users? */
-                 if (Pfn1->u2.ShareCount >= 1)
-                 {
-                    /* Then it should still be valid */
-                    ASSERT(Pfn1->u3.e1.PageLocation == ActiveAndValid);
-
-                    /* Not supported yet */
-                    ASSERT(((Pfn1->u3.e1.PrototypePte == 0) &&
-                            (Pfn1->OriginalPte.u.Soft.Prototype == 0)));
-
-                    /* But there is one less "locked" page though */
-                    InterlockedExchangeAddSizeT(&MmSystemLockPagesCount, -1);
-                 }
-             }
-         }
+        MiDereferencePfnAndDropLockCount(Pfn1);
     } while (++MdlPages < LastPage);
 
     //

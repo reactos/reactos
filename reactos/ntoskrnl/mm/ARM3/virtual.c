@@ -1313,9 +1313,9 @@ MiQueryAddressState(IN PVOID Va,
                     OUT PVOID *NextVa)
 {
 
-    PMMPTE PointerPte;
+    PMMPTE PointerPte, ProtoPte;
     PMMPDE PointerPde;
-    MMPTE TempPte;
+    MMPTE TempPte, TempProtoPte;
     BOOLEAN DemandZeroPte = TRUE, ValidPte = FALSE;
     ULONG State = MEM_RESERVE, Protect = 0;
     ASSERT((Vad->StartingVpn <= ((ULONG_PTR)Va >> PAGE_SHIFT)) &&
@@ -1353,6 +1353,7 @@ MiQueryAddressState(IN PVOID Va,
     if (ValidPte)
     {
         /* FIXME: watch out for large pages */
+        ASSERT(PointerPde->u.Hard.LargePage == FALSE);
 
         /* Capture the PTE */
         TempPte = *PointerPte;
@@ -1376,6 +1377,11 @@ MiQueryAddressState(IN PVOID Va,
                 /* This means it's committed */
                 State = MEM_COMMIT;
 
+                /* We don't support these */
+                ASSERT(Vad->u.VadFlags.VadType != VadDevicePhysicalMemory);
+                ASSERT(Vad->u.VadFlags.VadType != VadRotatePhysical);
+                ASSERT(Vad->u.VadFlags.VadType != VadAwe);
+
                 /* Get protection state of this page */
                 Protect = MiGetPageProtection(PointerPte);
 
@@ -1395,11 +1401,35 @@ MiQueryAddressState(IN PVOID Va,
     /* Check if this was a demand-zero PTE, since we need to find the state */
     if (DemandZeroPte)
     {
-        /* Check if this is private commited memory, or an image-backed VAD */
+        /* Not yet handled */
+        ASSERT(Vad->u.VadFlags.VadType != VadDevicePhysicalMemory);
+        ASSERT(Vad->u.VadFlags.VadType != VadAwe);
+
+        /* Check if this is private commited memory, or an section-backed VAD */
         if ((Vad->u.VadFlags.PrivateMemory == 0) && (Vad->ControlArea))
         {
-            DPRINT1("Not supported\n");
-            ASSERT(FALSE);
+            /* Tell caller about the next range */
+            *NextVa = (PVOID)((ULONG_PTR)Va + PAGE_SIZE);
+
+            /* Get the prototype PTE for this VAD */
+            ProtoPte = MI_GET_PROTOTYPE_PTE_FOR_VPN(Vad,
+                                                    (ULONG_PTR)Va >> PAGE_SHIFT);
+            if (ProtoPte)
+            {
+                /* We should unlock the working set, but it's not being held! */
+
+                /* Is the prototype PTE actually valid (committed)? */
+                TempProtoPte = *ProtoPte;
+                if (TempProtoPte.u.Long)
+                {
+                    /* Unless this is a memory-mapped file, handle it like private VAD */
+                    State = MEM_COMMIT;
+                    ASSERT(Vad->u.VadFlags.VadType != VadImageMap);
+                    Protect = MmProtectToValue[Vad->u.VadFlags.Protection];
+                }
+
+                /* We should re-lock the working set */
+            }
         }
         else if (Vad->u.VadFlags.MemCommit)
         {
