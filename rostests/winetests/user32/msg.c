@@ -5720,6 +5720,21 @@ static const struct message WmKeyDownComboSeq[] =
     { 0 }
 };
 
+static const struct message WmSetPosComboSeq[] =
+{
+    { WM_WINDOWPOSCHANGING, sent },
+    { WM_NCCALCSIZE, sent|wparam, TRUE },
+    { WM_CHILDACTIVATE, sent },
+    { WM_WINDOWPOSCHANGED, sent },
+    { WM_MOVE, sent|defwinproc },
+    { WM_SIZE, sent|defwinproc|wparam, SIZE_RESTORED },
+    { WM_WINDOWPOSCHANGING, sent|defwinproc },
+    { WM_NCCALCSIZE, sent|defwinproc|wparam, TRUE },
+    { WM_WINDOWPOSCHANGED, sent|defwinproc },
+    { WM_SIZE, sent|defwinproc|wparam, SIZE_RESTORED },
+    { 0 }
+};
+
 static WNDPROC old_combobox_proc;
 
 static LRESULT CALLBACK combobox_hook_proc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -5806,6 +5821,10 @@ static void test_combobox_messages(void)
     SendMessage(combo, WM_KEYUP, VK_DOWN, 0);
     log_all_parent_messages--;
     ok_sequence(WmKeyDownComboSeq, "WM_KEYDOWN/VK_DOWN on a ComboBox", FALSE);
+
+    flush_sequence();
+    SetWindowPos(combo, 0, 10, 10, 120, 130, SWP_NOZORDER);
+    ok_sequence(WmSetPosComboSeq, "repositioning messages on a ComboBox", FALSE);
 
     DestroyWindow(combo);
     DestroyWindow(parent);
