@@ -1,6 +1,6 @@
-libpng-manual.txt - A description on how to use and modify libpng
+Libpng-manual.txt - A description on how to use and modify libpng
 
- libpng version 1.5.2 - March 31, 2011
+ libpng version 1.5.12 - July 11, 2012
  Updated and distributed by Glenn Randers-Pehrson
  <glennrp at users.sourceforge.net>
  Copyright (c) 1998-2011 Glenn Randers-Pehrson
@@ -11,7 +11,7 @@ libpng-manual.txt - A description on how to use and modify libpng
 
  Based on:
 
- libpng versions 0.97, January 1998, through 1.5.2 - March 31, 2011
+ libpng versions 0.97, January 1998, through 1.5.12 - July 11, 2012
  Updated and distributed by Glenn Randers-Pehrson
  Copyright (c) 1998-2011 Glenn Randers-Pehrson
 
@@ -107,7 +107,8 @@ PNG file.  At one time, the fields of png_info were intended to be
 directly accessible to the user.  However, this tended to cause problems
 with applications using dynamically loaded libraries, and as a result
 a set of interface functions for png_info (the png_get_*() and png_set_*()
-functions) was developed.
+functions) was developed, and direct access to the png_info fields was
+deprecated..
 
 The png_struct structure is the object used by the library to decode a
 single image.  As of 1.5.0 this structure is also not exposed.
@@ -116,13 +117,22 @@ Almost all libpng APIs require a pointer to a png_struct as the first argument.
 Many (in particular the png_set and png_get APIs) also require a pointer
 to png_info as the second argument.  Some application visible macros
 defined in png.h designed for basic data access (reading and writing
-integers in the PNG format) break this rule, but it's almost always safe
-to assume that a (png_struct*) has to be passed to call an API function.
+integers in the PNG format) don't take a png_info pointer, but it's almost
+always safe to assume that a (png_struct*) has to be passed to call an API
+function.
+
+You can have more than one png_info structure associated with an image,
+as illustrated in pngtest.c, one for information valid prior to the
+IDAT chunks and another (called "end_info" below) for things after them.
 
 The png.h header file is an invaluable reference for programming with libpng.
 And while I'm on the topic, make sure you include the libpng header file:
 
 #include <png.h>
+
+and also (as of libpng-1.5.0) the zlib header file, if you need it:
+
+#include <zlib.h>
 
 Types
 
@@ -131,15 +141,15 @@ APIs.  Most of these are fairly obvious; for example types corresponding
 to integers of particular sizes and types for passing color values.
 
 One exception is how non-integral numbers are handled.  For application
-convenience most APIs that take such numbers have C (double) arguments,
-however internally PNG, and libpng, use 32 bit signed integers and encode
+convenience most APIs that take such numbers have C (double) arguments;
+however, internally PNG, and libpng, use 32 bit signed integers and encode
 the value by multiplying by 100,000.  As of libpng 1.5.0 a convenience
 macro PNG_FP_1 is defined in png.h along with a type (png_fixed_point)
 which is simply (png_int_32).
 
-All APIs that take (double) arguments also have an matching API that
+All APIs that take (double) arguments also have a matching API that
 takes the corresponding fixed point integer arguments.  The fixed point
-API has the same name as the floating point one with _fixed appended.
+API has the same name as the floating point one with "_fixed" appended.
 The actual range of values permitted in the APIs is frequently less than
 the full range of (png_fixed_point) (-21474 to +21474).  When APIs require
 a non-negative argument the type is recorded as png_uint_32 above.  Consult
@@ -157,6 +167,10 @@ preprocessing directives of the form:
     #ifdef PNG_feature_SUPPORTED
     declare-function
     #endif
+    ...
+    #ifdef PNG_feature_SUPPORTED
+    use-function
+    #endif
 
 The library can be built without support for these APIs, although a
 standard build will have all implemented APIs.  Application programs
@@ -165,7 +179,7 @@ portability.  From libpng 1.5.0 the feature macros set during the build
 of libpng are recorded in the header file "pnglibconf.h" and this file
 is always included by png.h.
 
-If you don't need to change the library configuration from the default skip to
+If you don't need to change the library configuration from the default, skip to
 the next section ("Reading").
 
 Notice that some of the makefiles in the 'scripts' directory and (in 1.5.0) all
@@ -197,24 +211,25 @@ A variety of methods exist to build libpng.  Not all of these support
 reconfiguration of pnglibconf.h.  To reconfigure pnglibconf.h it must either be
 rebuilt from scripts/pnglibconf.dfa using awk or it must be edited by hand.
 
-Hand editing is achieved by copying scripts/pnglibconf.h.prebuilt and changing
-the lines defining the supported features, paying very close attention to the
-'option' information in scripts/pnglibconf.dfa that describes those features and
-their requirements.  This is easy to get wrong.
+Hand editing is achieved by copying scripts/pnglibconf.h.prebuilt to
+pnglibconf.h and changing the lines defining the supported features, paying
+very close attention to the 'option' information in scripts/pnglibconf.dfa
+that describes those features and their requirements.  This is easy to get
+wrong.
 
 B. Configuration using DFA_XTRA
 
 Rebuilding from pnglibconf.dfa is easy if a functioning 'awk', or a later
 variant such as 'nawk' or 'gawk', is available.  The configure build will
 automatically find an appropriate awk and build pnglibconf.h.
-scripts/pnglibconf.mak contains a set of make rules for doing the same thing if
-configure is not used, and many of the makefiles in the scripts directory use
-this approach.
+The scripts/pnglibconf.mak file contains a set of make rules for doing the
+same thing if configure is not used, and many of the makefiles in the scripts
+directory use this approach.
 
-When rebuilding simply write new file containing changed options and set
+When rebuilding simply write a new file containing changed options and set
 DFA_XTRA to the name of this file.  This causes the build to append the new file
-to the end of scripts/pnglibconf.dfa.  pngusr.dfa should contain lines of the
-following forms:
+to the end of scripts/pnglibconf.dfa.  The pngusr.dfa file should contain lines
+of the following forms:
 
 everything = off
 
@@ -238,12 +253,16 @@ source code.  Most of these values have performance implications for the library
 but most of them have no visible effect on the API.  Some can also be overridden
 from the API.
 
+This method of building a customized pnglibconf.h is illustrated in
+contrib/pngminim/*.  See the "$(PNGCONF):" target in the makefile and
+pngusr.dfa in these directories.
+
 C. Configuration using PNG_USR_CONFIG
 
 If -DPNG_USR_CONFIG is added to the CFLAGS when pnglibconf.h is built the file
 pngusr.h will automatically be included before the options in
-scripts/pnglibconf.dfa are processed.  pngusr.h should contain only macro
-definitions turning features on or off or setting settings.
+scripts/pnglibconf.dfa are processed.  Your pngusr.h file should contain only
+macro definitions turning features on or off or setting settings.
 
 Apart from the global setting "everything = off" all the options listed above
 can be set using macros in pngusr.h:
@@ -273,6 +292,9 @@ If confusing or incomprehensible behavior results it is possible to
 examine the intermediate file pnglibconf.dfn to find the full set of
 dependency information for each setting and option.  Simply locate the
 feature in the file and read the C comments that precede it.
+
+This method is also illustrated in the contrib/pngminim/* makefiles and
+pngusr.h.
 
 III. Reading
 
@@ -348,21 +370,12 @@ create the structure, so your application should check for that.
        return (ERROR);
     }
 
-    png_infop end_info = png_create_info_struct(png_ptr);
-
-    if (!end_info)
-    {
-       png_destroy_read_struct(&png_ptr, &info_ptr,
-          (png_infopp)NULL);
-       return (ERROR);
-    }
-
 If you want to use your own memory allocation routines,
 use a libpng that was built with PNG_USER_MEM_SUPPORTED defined, and use
 png_create_read_struct_2() instead of png_create_read_struct():
 
     png_structp png_ptr = png_create_read_struct_2
-       (PNG_LIBPNG_VER_STRING, (png_voidp)user_error_ptr,
+        (PNG_LIBPNG_VER_STRING, (png_voidp)user_error_ptr,
         user_error_fn, user_warning_fn, (png_voidp)
         user_mem_ptr, user_malloc_fn, user_free_fn);
 
@@ -374,7 +387,7 @@ handling and memory alloc/free functions.
 When libpng encounters an error, it expects to longjmp back
 to your routine.  Therefore, you will need to call setjmp and pass
 your png_jmpbuf(png_ptr).  If you read the file from different
-routines, you will need to update the jmpbuf field every time you enter
+routines, you will need to update the longjmp buffer every time you enter
 a new routine that will call a png_*() function.
 
 See your documentation of setjmp/longjmp for your compiler for more
@@ -391,6 +404,9 @@ free any memory.
        fclose(fp);
        return (ERROR);
     }
+
+Pass (png_infopp)NULL instead of &end_info if you didn't create
+an end_info structure.
 
 If you would rather avoid the complexity of setjmp/longjmp issues,
 you can compile libpng with PNG_NO_SETJMP, in which case
@@ -563,6 +579,8 @@ according to the "keep" directive.  If a chunk is named in successive
 instances of png_set_keep_unknown_chunks(), the final instance will
 take precedence.  The IHDR and IEND chunks should not be named in
 chunk_list; if they are, libpng will process them normally anyway.
+If you know that your application will never make use of some particular
+chunks, use PNG_HANDLE_CHUNK_NEVER (or 1) as demonstrated below.
 
 Here is an example of the usage of png_set_keep_unknown_chunks(),
 where the private "vpAg" chunk will later be processed by a user chunk
@@ -603,7 +621,7 @@ large as 2^31-1 (0x7fffffff), or about 2.147 billion rows and columns.
 Since very few applications really need to process such large images,
 we have imposed an arbitrary 1-million limit on rows and columns.
 Larger images will be rejected immediately with a png_error() call. If
-you wish to override this limit, you can use
+you wish to change this limit, you can use
 
    png_set_user_limits(png_ptr, width_max, height_max);
 
@@ -613,6 +631,10 @@ anyway because of potential buffer overflow conditions).
 
 You should put this statement after you create the PNG structure and
 before calling png_read_info(), png_read_png(), or png_process_data().
+
+When writing a PNG datastream, put this statement before calling
+png_write_info() or png_write_png().
+
 If you need to retrieve the limits that are being applied, use
 
    width_max = png_get_user_width_max(png_ptr);
@@ -643,6 +665,242 @@ and you can retrieve the limit with
 Any chunks that would cause either of these limits to be exceeded will
 be ignored.
 
+Information about your system
+
+If you intend to display the PNG or to incorporate it in other image data you
+need to tell libpng information about your display or drawing surface so that
+libpng can convert the values in the image to match the display.
+
+From libpng-1.5.4 this information can be set before reading the PNG file
+header.  In earlier versions png_set_gamma() existed but behaved incorrectly if
+called before the PNG file header had been read and png_set_alpha_mode() did not
+exist.
+
+If you need to support versions prior to libpng-1.5.4 test the version number
+as illustrated below using "PNG_LIBPNG_VER >= 10504" and follow the procedures
+described in the appropriate manual page.
+
+You give libpng the encoding expected by your system expressed as a 'gamma'
+value.  You can also specify a default encoding for the PNG file in
+case the required information is missing from the file.  By default libpng
+assumes that the PNG data matches your system, to keep this default call:
+
+   png_set_gamma(png_ptr, screen_gamma, 1/screen_gamma/*file gamma*/);
+
+or you can use the fixed point equivalent:
+
+   png_set_gamma_fixed(png_ptr, PNG_FP_1*screen_gamma, PNG_FP_1/screen_gamma);
+
+If you don't know the gamma for your system it is probably 2.2 - a good
+approximation to the IEC standard for display systems (sRGB).  If images are
+too contrasty or washed out you got the value wrong - check your system
+documentation!
+
+Many systems permit the system gamma to be changed via a lookup table in the
+display driver, a few systems, including older Macs, change the response by
+default.  As of 1.5.4 three special values are available to handle common
+situations:
+
+   PNG_DEFAULT_sRGB: Indicates that the system conforms to the IEC 61966-2-1
+                     standard.  This matches almost all systems.
+   PNG_GAMMA_MAC_18: Indicates that the system is an older (pre Mac OS 10.6)
+                     Apple Macintosh system with the default settings.
+   PNG_GAMMA_LINEAR: Just the fixed point value for 1.0 - indicates that the
+                     system expects data with no gamma encoding.
+
+You would use the linear (unencoded) value if you need to process the pixel
+values further because this avoids the need to decode and reencode each
+component value whenever arithmetic is performed.  A lot of graphics software
+uses linear values for this reason, often with higher precision component values
+to preserve overall accuracy.
+
+The second thing you may need to tell libpng about is how your system handles
+alpha channel information.  Some, but not all, PNG files contain an alpha
+channel.  To display these files correctly you need to compose the data onto a
+suitable background, as described in the PNG specification.
+
+Libpng only supports composing onto a single color (using png_set_background;
+see below).  Otherwise you must do the composition yourself and, in this case,
+you may need to call png_set_alpha_mode:
+
+#if PNG_LIBPNG_VER >= 10504
+   png_set_alpha_mode(png_ptr, mode, screen_gamma);
+#else
+   png_set_gamma(png_ptr, screen_gamma, 1.0/screen_gamma);
+#endif
+
+The screen_gamma value is the same as the argument to png_set_gamma; however,
+how it affects the output depends on the mode.  png_set_alpha_mode() sets the
+file gamma default to 1/screen_gamma, so normally you don't need to call
+png_set_gamma.  If you need different defaults call png_set_gamma() before
+png_set_alpha_mode() - if you call it after it will override the settings made
+by png_set_alpha_mode().
+
+The mode is as follows:
+
+    PNG_ALPHA_PNG: The data is encoded according to the PNG specification.  Red,
+green and blue, or gray, components are gamma encoded color
+values and are not premultiplied by the alpha value.  The
+alpha value is a linear measure of the contribution of the
+pixel to the corresponding final output pixel.
+
+You should normally use this format if you intend to perform
+color correction on the color values; most, maybe all, color
+correction software has no handling for the alpha channel and,
+anyway, the math to handle pre-multiplied component values is
+unnecessarily complex.
+
+Before you do any arithmetic on the component values you need
+to remove the gamma encoding and multiply out the alpha
+channel.  See the PNG specification for more detail.  It is
+important to note that when an image with an alpha channel is
+scaled, linear encoded, pre-multiplied component values must
+be used!
+
+The remaining modes assume you don't need to do any further color correction or
+that if you do, your color correction software knows all about alpha (it
+probably doesn't!)
+
+    PNG_ALPHA_STANDARD:  The data libpng produces
+is encoded in the standard way
+assumed by most correctly written graphics software.
+The gamma encoding will be removed by libpng and the
+linear component values will be pre-multiplied by the
+alpha channel.
+
+With this format the final image must be re-encoded to
+match the display gamma before the image is displayed.
+If your system doesn't do that, yet still seems to
+perform arithmetic on the pixels without decoding them,
+it is broken - check out the modes below.
+
+With PNG_ALPHA_STANDARD libpng always produces linear
+component values, whatever screen_gamma you supply.  The
+screen_gamma value is, however, used as a default for
+the file gamma if the PNG file has no gamma information.
+
+If you call png_set_gamma() after png_set_alpha_mode() you
+will override the linear encoding.  Instead the
+pre-multiplied pixel values will be gamma encoded but
+the alpha channel will still be linear.  This may
+actually match the requirements of some broken software,
+but it is unlikely.
+
+While linear 8-bit data is often used it has
+insufficient precision for any image with a reasonable
+dynamic range.  To avoid problems, and if your software
+supports it, use png_set_expand_16() to force all
+components to 16 bits.
+
+    PNG_ALPHA_OPTIMIZED: This mode is the same
+as PNG_ALPHA_STANDARD except that
+completely opaque pixels are gamma encoded according to
+the screen_gamma value.  Pixels with alpha less than 1.0
+will still have linear components.
+
+Use this format if you have control over your
+compositing software and so don't do other arithmetic
+(such as scaling) on the data you get from libpng.  Your
+compositing software can simply copy opaque pixels to
+the output but still has linear values for the
+non-opaque pixels.
+
+In normal compositing, where the alpha channel encodes
+partial pixel coverage (as opposed to broad area
+translucency), the inaccuracies of the 8-bit
+representation of non-opaque pixels are irrelevant.
+
+You can also try this format if your software is broken;
+it might look better.
+
+    PNG_ALPHA_BROKEN: This is PNG_ALPHA_STANDARD;
+however, all component values,
+including the alpha channel are gamma encoded.  This is
+an appropriate format to try if your software, or more
+likely hardware, is totally broken, i.e., if it performs
+linear arithmetic directly on gamma encoded values.
+
+In most cases of broken software or hardware the bug in the final display
+manifests as a subtle halo around composited parts of the image.  You may not
+even perceive this as a halo; the composited part of the image may simply appear
+separate from the background, as though it had been cut out of paper and pasted
+on afterward.
+
+If you don't have to deal with bugs in software or hardware, or if you can fix
+them, there are three recommended ways of using png_set_alpha_mode():
+
+   png_set_alpha_mode(png_ptr, PNG_ALPHA_PNG,
+       screen_gamma);
+
+You can do color correction on the result (libpng does not currently
+support color correction internally).  When you handle the alpha channel
+you need to undo the gamma encoding and multiply out the alpha.
+
+   png_set_alpha_mode(png_ptr, PNG_ALPHA_STANDARD,
+       screen_gamma);
+   png_set_expand_16(png_ptr);
+
+If you are using the high level interface, don't call png_set_expand_16();
+instead pass PNG_TRANSFORM_EXPAND_16 to the interface.
+
+With this mode you can't do color correction, but you can do arithmetic,
+including composition and scaling, on the data without further processing.
+
+   png_set_alpha_mode(png_ptr, PNG_ALPHA_OPTIMIZED,
+       screen_gamma);
+
+You can avoid the expansion to 16-bit components with this mode, but you
+lose the ability to scale the image or perform other linear arithmetic.
+All you can do is compose the result onto a matching output.  Since this
+mode is libpng-specific you also need to write your own composition
+software.
+
+If you don't need, or can't handle, the alpha channel you can call
+png_set_background() to remove it by compositing against a fixed color.  Don't
+call png_set_strip_alpha() to do this - it will leave spurious pixel values in
+transparent parts of this image.
+
+   png_set_background(png_ptr, &background_color,
+       PNG_BACKGROUND_GAMMA_SCREEN, 0, 1);
+
+The background_color is an RGB or grayscale value according to the data format
+libpng will produce for you.  Because you don't yet know the format of the PNG
+file, if you call png_set_background at this point you must arrange for the
+format produced by libpng to always have 8-bit or 16-bit components and then
+store the color as an 8-bit or 16-bit color as appropriate.  The color contains
+separate gray and RGB component values, so you can let libpng produce gray or
+RGB output according to the input format, but low bit depth grayscale images
+must always be converted to at least 8-bit format.  (Even though low bit depth
+grayscale images can't have an alpha channel they can have a transparent
+color!)
+
+You set the transforms you need later, either as flags to the high level
+interface or libpng API calls for the low level interface.  For reference the
+settings and API calls required are:
+
+8-bit values:
+   PNG_TRANSFORM_SCALE_16 | PNG_EXPAND
+   png_set_expand(png_ptr); png_set_scale_16(png_ptr);
+
+   If you must get exactly the same inaccurate results
+   produced by default in versions prior to libpng-1.5.4,
+   use PNG_TRANSFORM_STRIP_16 and png_set_strip_16(png_ptr)
+   instead.
+
+16-bit values:
+   PNG_TRANSFORM_EXPAND_16
+   png_set_expand_16(png_ptr);
+
+In either case palette image data will be expanded to RGB.  If you just want
+color data you can add PNG_TRANSFORM_GRAY_TO_RGB or png_set_gray_to_rgb(png_ptr)
+to the list.
+
+Calling png_set_background before the PNG file header is read will not work
+prior to libpng-1.5.4.  Because the failure may result in unexpected warnings or
+errors it is therefore much safer to call png_set_background after the head has
+been read.  Unfortunately this means that prior to libpng-1.5.4 it cannot be
+used with the high level interface.
+
 The high-level read interface
 
 At this point there are two ways to proceed; through the high-level
@@ -652,8 +910,10 @@ the entire image into memory, and (b) the input transformations
 you want to do are limited to the following set:
 
     PNG_TRANSFORM_IDENTITY      No transformation
-    PNG_TRANSFORM_STRIP_16      Strip 16-bit samples to
-                                8 bits
+    PNG_TRANSFORM_SCALE_16      Strip 16-bit samples to
+                                8-bit accurately
+    PNG_TRANSFORM_STRIP_16      Chop 16-bit samples to
+                                8-bit less accurately
     PNG_TRANSFORM_STRIP_ALPHA   Discard the alpha channel
     PNG_TRANSFORM_PACKING       Expand 1, 2 and 4-bit
                                 samples to bytes
@@ -672,6 +932,7 @@ you want to do are limited to the following set:
     PNG_TRANSFORM_SWAP_ENDIAN   Byte-swap 16-bit samples
     PNG_TRANSFORM_GRAY_TO_RGB   Expand grayscale samples
                                 to RGB (or GA to RGBA)
+    PNG_TRANSFORM_EXPAND_16     Expand samples to 16 bits
 
 (This excludes setting a background color, doing gamma transformation,
 quantizing, and setting filler.)  If this is the case, simply do this:
@@ -739,6 +1000,22 @@ call to png_read_info().
     png_read_info(png_ptr, info_ptr);
 
 This will process all chunks up to but not including the image data.
+
+This also copies some of the data from the PNG file into the decode structure
+for use in later transformations.  Important information copied in is:
+
+1) The PNG file gamma from the gAMA chunk.  This overwrites the default value
+provided by an earlier call to png_set_gamma or png_set_alpha_mode.
+
+2) Prior to libpng-1.5.4 the background color from a bKGd chunk.  This
+damages the information provided by an earlier call to png_set_background
+resulting in unexpected behavior.  Libpng-1.5.4 no longer does this.
+
+3) The number of significant bits in each component value.  Libpng uses this to
+optimize gamma handling by reducing the internal lookup table sizes.
+
+4) The transparent color information from a tRNS chunk.  This can be modified by
+a later call to png_set_tRNS.
 
 Querying the info structure
 
@@ -853,6 +1130,11 @@ data has been read, or zero if it is missing.  The parameters to the
 png_get_<chunk> are set directly if they are simple data types, or a
 pointer into the info_ptr is returned for any complex types.
 
+The colorspace data from gAMA, cHRM, sRGB, iCCP, and sBIT chunks
+is simply returned to give the application information about how the
+image was encoded.  Libpng itself only does transformations using the file
+gamma when combining semitransparent pixels with the background color.
+
     png_get_PLTE(png_ptr, info_ptr, &palette,
                      &num_palette);
 
@@ -864,11 +1146,33 @@ pointer into the info_ptr is returned for any complex types.
     png_get_gAMA(png_ptr, info_ptr, &file_gamma);
     png_get_gAMA_fixed(png_ptr, info_ptr, &int_file_gamma);
 
-    file_gamma     - the gamma at which the file is
+    file_gamma     - the gamma at which the file was
                      written (PNG_INFO_gAMA)
 
     int_file_gamma - 100,000 times the gamma at which the
                      file is written
+
+    png_get_cHRM(png_ptr, info_ptr,  &white_x, &white_y, &red_x, &red_y,
+                     &green_x, &green_y, &blue_x, &blue_y)
+    png_get_cHRM_XYZ(png_ptr, info_ptr, &red_X, &red_Y, &red_Z, &green_X,
+                     &green_Y, &green_Z, &blue_X, &blue_Y, &blue_Z)
+    png_get_cHRM_fixed(png_ptr, info_ptr, &int_white_x, &int_white_y,
+                     &int_red_x, &int_red_y, &int_green_x, &int_green_y,
+                     &int_blue_x, &int_blue_y)
+    png_get_cHRM_XYZ_fixed(png_ptr, info_ptr, &int_red_X, &int_red_Y,
+                     &int_red_Z, &int_green_X, &int_green_Y, &int_green_Z,
+                     &int_blue_X, &int_blue_Y, &int_blue_Z)
+
+    {white,red,green,blue}_{x,y}
+                     A color space encoding specified using the chromaticities
+                     of the end points and the white point. (PNG_INFO_cHRM)
+
+    {red,green,blue}_{X,Y,Z}
+                     A color space encoding specified using the encoding end
+                     points - the CIE tristimulus specification of the intended
+                     color of the red, green and blue channels in the PNG RGB
+                     data.  The white point is simply the sum of the three end
+                     points. (PNG_INFO_cHRM)
 
     png_get_sRGB(png_ptr, info_ptr, &srgb_intent);
 
@@ -928,7 +1232,8 @@ pointer into the info_ptr is returned for any complex types.
 
     png_get_bKGD(png_ptr, info_ptr, &background);
 
-    background     - background color (PNG_VALID_bKGD)
+    background     - background color (of type
+                     png_color_16p) (PNG_VALID_bKGD)
                      valid 16-bit red, green and blue
                      values, regardless of color_type
 
@@ -965,8 +1270,13 @@ pointer into the info_ptr is returned for any complex types.
                          (empty string for unknown).
 
     Note that the itxt_length, lang, and lang_key
-    members of the text_ptr structure only exist
-    when the library is built with iTXt chunk support.
+    members of the text_ptr structure only exist when the
+    library is built with iTXt chunk support.  Prior to
+    libpng-1.4.0 the library was built by default without
+    iTXt support. Also note that when iTXt is supported,
+    they contain NULL pointers when the "compression"
+    field contains PNG_TEXT_COMPRESSION_NONE or
+    PNG_TEXT_COMPRESSION_zTXt.
 
     num_text       - number of comments (same as
                      num_comments; you can put NULL here
@@ -991,10 +1301,10 @@ pointer into the info_ptr is returned for any complex types.
        &unit_type);
 
     offset_x       - positive offset from the left edge
-                     of the screen
+                     of the screen (can be negative)
 
     offset_y       - positive offset from the top edge
-                     of the screen
+                     of the screen (can be negative)
 
     unit_type      - PNG_OFFSET_PIXEL, PNG_OFFSET_MICROMETER
 
@@ -1026,6 +1336,7 @@ pointer into the info_ptr is returned for any complex types.
     unit        - physical scale units (an integer)
 
     width       - width of a pixel in physical scale units
+                  (expressed as a string)
 
     height      - height of a pixel in physical scale units
                  (width and height are strings like "2.54")
@@ -1047,6 +1358,12 @@ pointer into the info_ptr is returned for any complex types.
     The value of "i" corresponds to the order in which the
     chunks were read from the PNG file or inserted with the
     png_set_unknown_chunks() function.
+
+    The value of "location" is a bitwise "or" of
+
+         PNG_HAVE_IHDR  (0x01)
+         PNG_HAVE_PLTE  (0x02)
+         PNG_AFTER_IDAT (0x08)
 
 The data from the pHYs chunk can be retrieved in several convenient
 forms:
@@ -1103,7 +1420,7 @@ forms:
        converted to microns and back without some loss
        of precision.
 
-For more information, see the png_info definition in png.h and the
+For more information, see the
 PNG specification for chunk contents.  Be careful with trusting
 rowbytes, as some of the transformations could increase the space
 needed to hold a row (expand, filler, gray_to_rgb, etc.).
@@ -1138,17 +1455,20 @@ to handle any special transformations of the image data.  The various
 ways to transform the data will be described in the order that they
 should occur.  This is important, as some of these change the color
 type and/or bit depth of the data, and some others only work on
-certain color types and bit depths.  Even though each transformation
-checks to see if it has data that it can do something with, you should
-make sure to only enable a transformation if it will be valid for the
-data.  For example, don't swap red and blue on grayscale data.
+certain color types and bit depths.
 
-The colors used for the background and transparency values should be
-supplied in the same format/depth as the current image data.  They
-are stored in the same format/depth as the image data in a bKGD or tRNS
-chunk, so this is what libpng expects for this data.  The colors are
-transformed to keep in sync with the image data when an application
-calls the png_read_update_info() routine (see below).
+Transformations you request are ignored if they don't have any meaning for a
+particular input data format.  However some transformations can have an effect
+as a result of a previous transformation.  If you specify a contradictory set of
+transformations, for example both adding and removing the alpha channel, you
+cannot predict the final result.
+
+The color used for the transparency values should be supplied in the same
+format/depth as the current image data.  It is stored in the same format/depth
+as the image data in a tRNS chunk, so this is what libpng expects for this data.
+
+The color used for the background value depends on the need_expand argument as
+described below.
 
 Data will be decoded into the supplied row buffers packed into bytes
 unless the library has been told to transform it into another format.
@@ -1158,12 +1478,12 @@ byte, unless png_set_packing() is called.  8-bit RGB data will be stored
 in RGB RGB RGB format unless png_set_filler() or png_set_add_alpha()
 is called to insert filler bytes, either before or after each RGB triplet.
 16-bit RGB data will be returned RRGGBB RRGGBB, with the most significant
-byte of the color value first, unless png_set_strip_16() is called to
+byte of the color value first, unless png_set_scale_16() is called to
 transform it to regular RGB RGB triplets, or png_set_filler() or
 png_set_add alpha() is called to insert filler bytes, either before or
 after each RRGGBB triplet.  Similarly, 8-bit or 16-bit grayscale data can
-be modified with
-png_set_filler(), png_set_add_alpha(), or png_set_strip_16().
+be modified with png_set_filler(), png_set_add_alpha(), png_set_strip_16(),
+or png_set_scale_16().
 
 The following code transforms grayscale images of less than 8 to 8 bits,
 changes paletted images to RGB, and adds a full alpha channel if there is
@@ -1189,7 +1509,7 @@ As of libpng version 1.2.9, png_set_expand_gray_1_2_4_to_8() was
 added.  It expands the sample depth without changing tRNS to alpha.
 
 As of libpng version 1.5.2, png_set_expand_16() was added.  It behaves as
-png_set_expand(), however, the resultant channels have 16 bits rather than 8.
+png_set_expand(); however, the resultant channels have 16 bits rather than 8.
 Use this when the output color or gray channels are made linear to avoid fairly
 severe accuracy loss.
 
@@ -1197,27 +1517,32 @@ severe accuracy loss.
       png_set_expand_16(png_ptr);
 
 PNG can have files with 16 bits per channel.  If you only can handle
-8 bits per channel, this will strip the pixels down to 8 bit.
+8 bits per channel, this will strip the pixels down to 8-bit.
 
     if (bit_depth == 16)
+#if PNG_LIBPNG_VER >= 10504
+       png_set_scale_16(png_ptr);
+#else
        png_set_strip_16(png_ptr);
+#endif
 
-If, for some reason, you don't need the alpha channel on an image,
-and you want to remove it rather than combining it with the background
-(but the image author certainly had in mind that you *would* combine
-it with the background, so that's what you should probably do):
+(The more accurate "png_set_scale_16()" API became available in libpng version
+1.5.4).
+
+If you need to process the alpha channel on the image separately from the image
+data (for example if you convert it to a bitmap mask) it is possible to have
+libpng strip the channel leaving just RGB or gray data:
 
     if (color_type & PNG_COLOR_MASK_ALPHA)
        png_set_strip_alpha(png_ptr);
 
-See below for png_set_background(), which does the correct composition on a
-single opaque color.  This is probably what you should do in all cases rather
-than use png_set_strip_alpha() - unless you know for sure that it is the wrong
-thing to do.
+If you strip the alpha channel you need to find some other way of dealing with
+the information.  If, instead, you want to convert the image to an opaque
+version with no alpha channel use png_set_background; see below.
 
 As of libpng version 1.5.2, almost all useful expansions are supported, the
-major ommissions are convertion of grayscale to indexed images (which can be
-done trivially in the application) and convertion of indexed to grayscale (which
+major ommissions are conversion of grayscale to indexed images (which can be
+done trivially in the application) and conversion of indexed to grayscale (which
 can be done by a trivial manipulation of the palette.)
 
 In the following table, the 01 means grayscale with depth<8, 31 means
@@ -1254,8 +1579,7 @@ Within the matrix,
          png_set_expand_gray_1_2_4_to_8() (and by png_set_expand() if there
          is no transparency in the original or the final format).
      "C" means the transformation is obtained by png_set_gray_to_rgb().
-     "G" means the transformation is obtained by png_set_rgb_to_gray() or
-         png_set_rgb_to_Y().
+     "G" means the transformation is obtained by png_set_rgb_to_gray().
      "P" means the transformation is obtained by
          png_set_expand_palette_to_rgb().
      "p" means the transformation is obtained by png_set_packing().
@@ -1347,8 +1671,8 @@ with alpha.
 
     if (color_type == PNG_COLOR_TYPE_RGB ||
         color_type == PNG_COLOR_TYPE_RGB_ALPHA)
-       png_set_rgb_to_gray_fixed(png_ptr, error_action,
-           int red_weight, int green_weight);
+       png_set_rgb_to_gray(png_ptr, error_action, double red_weight,
+          double green_weight);
 
     error_action = 1: silently do the conversion
 
@@ -1361,122 +1685,98 @@ with alpha.
                       image has any pixel where
                       red != green or red != blue
 
-    red_weight:       weight of red component times 100000
+    red_weight:       weight of red component
 
-    green_weight:     weight of green component times 100000
+    green_weight:     weight of green component
                       If either weight is negative, default
-                      weights (21268, 71514) are used.
+                      weights are used.
+
+In the corresponding fixed point API the red_weight and green_weight values are
+simply scaled by 100,000:
+
+    png_set_rgb_to_gray(png_ptr, error_action, png_fixed_point red_weight,
+       png_fixed_point green_weight);
 
 If you have set error_action = 1 or 2, you can
 later check whether the image really was gray, after processing
 the image rows, with the png_get_rgb_to_gray_status(png_ptr) function.
 It will return a png_byte that is zero if the image was gray or
-1 if there were any non-gray pixels.  bKGD and sBIT data
+1 if there were any non-gray pixels.  Background and sBIT data
 will be silently converted to grayscale, using the green channel
-data, regardless of the error_action setting.
+data for sBIT, regardless of the error_action setting.
 
-With red_weight+green_weight<=100000,
-the normalized graylevel is computed:
+The default values come from the PNG file cHRM chunk if present; otherwise, the
+defaults correspond to the ITU-R recommendation 709, and also the sRGB color
+space, as recommended in the Charles Poynton's Colour FAQ,
+<http://www.poynton.com/>, in section 9:
 
-    int rw = red_weight * 65536;
-    int gw = green_weight * 65536;
-    int bw = 65536 - (rw + gw);
-    gray = (rw*red + gw*green + bw*blue)/65536;
+   <http://www.poynton.com/notes/colour_and_gamma/ColorFAQ.html#RTFToC9>
 
-The default values approximate those recommended in the Charles
-Poynton's Color FAQ, <http://www.inforamp.net/~poynton/>
-Copyright (c) 1998-01-04 Charles Poynton <poynton at inforamp.net>
+    Y = 0.2126 * R + 0.7152 * G + 0.0722 * B
+
+Previous versions of this document, 1998 through 2002, recommended a slightly
+different formula:
 
     Y = 0.212671 * R + 0.715160 * G + 0.072169 * B
 
-Libpng approximates this with integers scaled by 32768:
+Libpng uses an integer approximation:
 
     Y = (6968 * R + 23434 * G + 2366 * B)/32768
 
 The calculation is done in a linear colorspace, if the image gamma
 can be determined.
 
-If you have a grayscale and you are using png_set_expand_gray_1_2_4_to_8(),
-png_set_expand(), or png_set_gray_to_rgb to change to truecolor or to
-a higher bit-depth, you must either supply the background color as a gray
-value at the original file bit-depth (need_expand = 1) or else supply the
-background color as an RGB triplet at the final, expanded bit depth
-(need_expand = 0).  Similarly, if you are reading a paletted image, you
-must either supply the background color as a palette index (need_expand = 1)
-or as an RGB triplet that may or may not be in the palette (need_expand = 0).
+The png_set_background() function has been described already; it tells libpng to
+composite images with alpha or simple transparency against the supplied
+background color.  For compatibility with versions of libpng earlier than
+libpng-1.5.4 it is recommended that you call the function after reading the file
+header, even if you don't want to use the color in a bKGD chunk, if one exists.
+
+If the PNG file contains a bKGD chunk (PNG_INFO_bKGD valid),
+you may use this color, or supply another color more suitable for
+the current display (e.g., the background color from a web page).  You
+need to tell libpng how the color is represented, both the format of the
+component values in the color (the number of bits) and the gamma encoding of the
+color.  The function takes two arguments, background_gamma_mode and need_expand
+to convey this information; however, only two combinations are likely to be
+useful:
 
     png_color_16 my_background;
     png_color_16p image_background;
 
     if (png_get_bKGD(png_ptr, info_ptr, &image_background))
        png_set_background(png_ptr, image_background,
-           PNG_BACKGROUND_GAMMA_FILE, 1, 1.0);
+           PNG_BACKGROUND_GAMMA_FILE, 1/*needs to be expanded*/, 1);
     else
        png_set_background(png_ptr, &my_background,
-           PNG_BACKGROUND_GAMMA_SCREEN, 0, 1.0);
+           PNG_BACKGROUND_GAMMA_SCREEN, 0/*do not expand*/, 1);
 
-The png_set_background() function tells libpng to composite images
-with alpha or simple transparency against the supplied background
-color.  If the PNG file contains a bKGD chunk (PNG_INFO_bKGD valid),
-you may use this color, or supply another color more suitable for
-the current display (e.g., the background color from a web page).  You
-need to tell libpng whether the color is in the gamma space of the
-display (PNG_BACKGROUND_GAMMA_SCREEN for colors you supply), the file
-(PNG_BACKGROUND_GAMMA_FILE for colors from the bKGD chunk), or one
-that is neither of these gammas (PNG_BACKGROUND_GAMMA_UNIQUE - I don't
-know why anyone would use this, but it's here).
+The second call was described above - my_background is in the format of the
+final, display, output produced by libpng.  Because you now know the format of
+the PNG it is possible to avoid the need to choose either 8-bit or 16-bit
+output and to retain palette images (the palette colors will be modified
+appropriately and the tRNS chunk removed.)  However, if you are doing this,
+take great care not to ask for transformations without checking first that
+they apply!
 
-To properly display PNG images on any kind of system, the application needs
-to know what the display gamma is.  Ideally, the user will know this, and
-the application will allow them to set it.  One method of allowing the user
-to set the display gamma separately for each system is to check for a
-SCREEN_GAMMA or DISPLAY_GAMMA environment variable, which will hopefully be
-correctly set.
+In the first call the background color has the original bit depth and color type
+of the PNG file.  So, for palette images the color is supplied as a palette
+index and for low bit greyscale images the color is a reduced bit value in
+image_background->gray.
 
-Note that display_gamma is the overall gamma correction required to produce
-pleasing results, which depends on the lighting conditions in the surrounding
-environment.  In a dim or brightly lit room, no compensation other than
-the physical gamma exponent of the monitor is needed, while in a dark room
-a slightly smaller exponent is better.
+If you didn't call png_set_gamma() before reading the file header, for example
+if you need your code to remain compatible with older versions of libpng prior
+to libpng-1.5.4, this is the place to call it.
 
-   double gamma, screen_gamma;
+Do not call it if you called png_set_alpha_mode(); doing so will damage the
+settings put in place by png_set_alpha_mode().  (If png_set_alpha_mode() is
+supported then you can certainly do png_set_gamma() before reading the PNG
+header.)
 
-   if (/* We have a user-defined screen
-       gamma value */)
-   {
-      screen_gamma = user_defined_screen_gamma;
-   }
-
-   /* One way that applications can share the same
-      screen gamma value */
-   else if ((gamma_str = getenv("SCREEN_GAMMA"))
-      != NULL)
-   {
-      screen_gamma = (double)atof(gamma_str);
-   }
-
-   /* If we don't have another value */
-   else
-   {
-      screen_gamma = 2.2; /* A good guess for a
-           PC monitor in a bright office or a dim room */
-
-      screen_gamma = 2.0; /* A good guess for a
-           PC monitor in a dark room */
-
-      screen_gamma = 1.7 or 1.0;  /* A good
-           guess for Mac systems */
-   }
-
-The functions png_set_gamma() and its fixed point equivalent
-png_set_gamma_fixed() handle gamma transformations of the data.
-Pass both the file gamma and the current screen_gamma.  If the file does
-not have a gamma value, you can pass one anyway if you have an idea what
-it is (usually 0.45455 is a good guess for GIF images on PCs).  Note
-that file gammas are inverted from screen gammas.  See the discussions
-on gamma in the PNG specification for an excellent description of what
-gamma is, and why all applications should support it.  It is strongly
-recommended that PNG viewers support gamma correction.
+This API unconditionally sets the screen and file gamma values, so it will
+override the value in the PNG file unless it is called before the PNG file
+reading starts.  For this reason you must always call it with the PNG file
+value when you call it in this position:
 
    if (png_get_gAMA(png_ptr, info_ptr, &file_gamma))
       png_set_gamma(png_ptr, screen_gamma, file_gamma);
@@ -1489,9 +1789,9 @@ file has more entries then will fit on your screen, png_set_quantize()
 will do that.  Note that this is a simple match quantization that merely
 finds the closest color available.  This should work fairly well with
 optimized palettes, but fairly badly with linear color cubes.  If you
-pass a palette that is larger then maximum_colors, the file will
+pass a palette that is larger than maximum_colors, the file will
 reduce the number of colors in the palette so it will fit into
-maximum_colors.  If there is a histogram, it will use it to make
+maximum_colors.  If there is a histogram, libpng will use it to make
 more intelligent choices when reducing the palette.  If there is no
 histogram, it may not do as good a job.
 
@@ -1532,7 +1832,7 @@ This function can also be used to invert grayscale and gray-alpha images:
        color_type == PNG_COLOR_TYPE_GRAY_ALPHA)
       png_set_invert_mono(png_ptr);
 
-PNG files store 16 bit pixels in network byte order (big-endian,
+PNG files store 16-bit pixels in network byte order (big-endian,
 ie. most significant bits first).  This code changes the storage to the
 other way (little-endian, i.e. least significant bits first, the
 way PCs store them):
@@ -1563,7 +1863,7 @@ after all of the other transformations have been processed.  Take care with
 interlaced images if you do the interlace yourself - the width of the row is the
 width in 'row_info', not the overall image width.
 
-If supported libpng provides two information routines that you can use to find
+If supported, libpng provides two information routines that you can use to find
 where you are in processing the image:
 
    png_get_current_pass_number(png_structp png_ptr);
@@ -1607,12 +1907,15 @@ of the interlaced image.
 
 After setting the transformations, libpng can update your png_info
 structure to reflect any transformations you've requested with this
-call.  This is most useful to update the info structure's rowbytes
-field so you can use it to allocate your image memory.  This function
-will also update your palette with the correct screen_gamma and
-background if these have been given with the calls above.
+call.
 
     png_read_update_info(png_ptr, info_ptr);
+
+This is most useful to update the info structure's rowbytes
+field so you can use it to allocate your image memory.  This function
+will also update your palette with the correct screen_gamma and
+background if these have been given with the calls above.  You may
+only call png_read_update_info() once with a particular info_ptr.
 
 After you call png_read_update_info(), you can allocate any
 memory you need to hold the image.  The row data is simply
@@ -1622,7 +1925,7 @@ are allocating one large chunk, you will need to build an
 array of pointers to each row, as it will be needed for some
 of the functions below.
 
-Remember: Before you call png_read_update_info(), the png_get_
+Remember: Before you call png_read_update_info(), the png_get_*()
 functions return the values corresponding to the original PNG image.
 After you call png_read_update_info the values refer to the image
 that libpng will output.  Consequently you must call all the png_set_
@@ -1729,7 +2032,7 @@ the second parameter NULL.
 
 If you don't want libpng to handle the interlacing details, just call
 png_read_rows() PNG_INTERLACE_ADAM7_PASSES times to read in all the images.
-Each of the images is a valid image by itself, however you will almost
+Each of the images is a valid image by itself; however, you will almost
 certainly need to distribute the pixels from each sub-image to the
 correct place.  This is where everything gets very tricky.
 
@@ -1814,7 +2117,7 @@ to load the whole file into memory when it is interlaced.
 
 libpng includes a test program, pngvalid, that illustrates reading and
 writing of interlaced images.  If you can't get interlacing to work in your
-code and don't want to leave it to libpng (the recommended approach) see
+code and don't want to leave it to libpng (the recommended approach), see
 how pngvalid.c does it.
 
 Finishing a sequential read
@@ -1824,14 +2127,38 @@ low-level interface, you can finish reading the file.  If you are
 interested in comments or time, which may be stored either before or
 after the image data, you should pass the separate png_info struct if
 you want to keep the comments from before and after the image
-separate.  If you are not interested, you can pass NULL.
+separate.
+
+    png_infop end_info = png_create_info_struct(png_ptr);
+
+    if (!end_info)
+    {
+       png_destroy_read_struct(&png_ptr, &info_ptr,
+           (png_infopp)NULL);
+       return (ERROR);
+    }
 
    png_read_end(png_ptr, end_info);
+
+If you are not interested, you should still call png_read_end()
+but you can pass NULL, avoiding the need to create an end_info structure.
+
+   png_read_end(png_ptr, (png_infop)NULL);
+
+If you don't call png_read_end(), then your file pointer will be
+left pointing to the first chunk after the last IDAT, which is probably
+not what you want if you expect to read something beyond the end of
+the PNG datastream.
 
 When you are done, you can free all memory allocated by libpng like this:
 
    png_destroy_read_struct(&png_ptr, &info_ptr,
        &end_info);
+
+or, if you didn't create an end_info structure,
+
+   png_destroy_read_struct(&png_ptr, &info_ptr,
+       (png_infopp)NULL);
 
 It is also possible to individually free the info_ptr members that
 point to libpng-allocated storage with the following function:
@@ -2295,11 +2622,11 @@ with zlib) for details on the compression levels.
 
     #include zlib.h
 
-    /* set the zlib compression level */
+    /* Set the zlib compression level */
     png_set_compression_level(png_ptr,
         Z_BEST_COMPRESSION);
 
-    /* set other zlib parameters */
+    /* Set other zlib parameters for compressing IDAT */
     png_set_compression_mem_level(png_ptr, 8);
     png_set_compression_strategy(png_ptr,
         Z_DEFAULT_STRATEGY);
@@ -2307,7 +2634,15 @@ with zlib) for details on the compression levels.
     png_set_compression_method(png_ptr, 8);
     png_set_compression_buffer_size(png_ptr, 8192)
 
-extern PNG_EXPORT(void,png_set_zbuf_size)
+    /* Set zlib parameters for text compression
+     * If you don't call these, the parameters
+     * fall back on those defined for IDAT chunks
+     */
+    png_set_text_compression_mem_level(png_ptr, 8);
+    png_set_text_compression_strategy(png_ptr,
+        Z_DEFAULT_STRATEGY);
+    png_set_text_compression_window_bits(png_ptr, 15);
+    png_set_text_compression_method(png_ptr, 8);
 
 Setting the contents of info for output
 
@@ -2395,6 +2730,28 @@ width, height, bit_depth, and color_type must be the same in each call.
     int_file_gamma - 100,000 times the gamma at which
                      the image was created
 
+    png_set_cHRM(png_ptr, info_ptr,  white_x, white_y, red_x, red_y,
+                     green_x, green_y, blue_x, blue_y)
+    png_set_cHRM_XYZ(png_ptr, info_ptr, red_X, red_Y, red_Z, green_X,
+                     green_Y, green_Z, blue_X, blue_Y, blue_Z)
+    png_set_cHRM_fixed(png_ptr, info_ptr, int_white_x, int_white_y,
+                     int_red_x, int_red_y, int_green_x, int_green_y,
+                     int_blue_x, int_blue_y)
+    png_set_cHRM_XYZ_fixed(png_ptr, info_ptr, int_red_X, int_red_Y,
+                     int_red_Z, int_green_X, int_green_Y, int_green_Z,
+                     int_blue_X, int_blue_Y, int_blue_Z)
+
+    {white,red,green,blue}_{x,y}
+                     A color space encoding specified using the chromaticities
+                     of the end points and the white point.
+
+    {red,green,blue}_{X,Y,Z}
+                     A color space encoding specified using the encoding end
+                     points - the CIE tristimulus specification of the intended
+                     color of the red, green and blue channels in the PNG RGB
+                     data.  The white point is simply the sum of the three end
+                     points.
+
     png_set_sRGB(png_ptr, info_ptr, srgb_intent);
 
     srgb_intent    - the rendering intent
@@ -2455,13 +2812,13 @@ width, height, bit_depth, and color_type must be the same in each call.
     trans_alpha    - array of alpha (transparency)
                      entries for palette (PNG_INFO_tRNS)
 
+    num_trans      - number of transparent entries
+                     (PNG_INFO_tRNS)
+
     trans_color    - graylevel or color sample values
                      (in order red, green, blue) of the
                      single transparent color for
                      non-paletted images (PNG_INFO_tRNS)
-
-    num_trans      - number of transparent entries
-                     (PNG_INFO_tRNS)
 
     png_set_hIST(png_ptr, info_ptr, hist);
 
@@ -2475,7 +2832,8 @@ width, height, bit_depth, and color_type must be the same in each call.
 
     png_set_bKGD(png_ptr, info_ptr, background);
 
-    background     - background color (PNG_VALID_bKGD)
+    background     - background color (of type
+                     png_color_16p) (PNG_VALID_bKGD)
 
     png_set_text(png_ptr, info_ptr, text_ptr, num_text);
 
@@ -2499,9 +2857,15 @@ width, height, bit_depth, and color_type must be the same in each call.
                          empty for unknown).
     text_ptr[i].translated_keyword  - keyword in UTF-8 (NULL
                          or empty for unknown).
+
     Note that the itxt_length, lang, and lang_key
-    members of the text_ptr structure only exist
-    when the library is built with iTXt chunk support.
+    members of the text_ptr structure only exist when the
+    library is built with iTXt chunk support.  Prior to
+    libpng-1.4.0 the library was built by default without
+    iTXt support. Also note that when iTXt is supported,
+    they contain NULL pointers when the "compression"
+    field contains PNG_TEXT_COMPRESSION_NONE or
+    PNG_TEXT_COMPRESSION_zTXt.
 
     num_text       - number of comments
 
@@ -2551,6 +2915,7 @@ width, height, bit_depth, and color_type must be the same in each call.
     unit        - physical scale units (an integer)
 
     width       - width of a pixel in physical scale units
+                  expressed as a string
 
     height      - height of a pixel in physical scale units
                  (width and height are strings like "2.54")
@@ -2592,7 +2957,7 @@ Because tEXt and zTXt chunks don't have a language field, if you
 specify PNG_TEXT_COMPRESSION_NONE or PNG_TEXT_COMPRESSION_zTXt
 any language code or translated keyword will not be written out.
 
-Until text gets around 1000 bytes, it is not worth compressing it.
+Until text gets around a few hundred bytes, it is not worth compressing it.
 After the text has been written out to the file, the compression type
 is set to PNG_TEXT_COMPRESSION_NONE_WR or PNG_TEXT_COMPRESSION_zTXt_WR,
 so that it isn't written out again at the end (in case you are calling
@@ -2813,7 +3178,7 @@ is required by PNG.
 
     png_set_shift(png_ptr, &sig_bit);
 
-PNG files store 16 bit pixels in network byte order (big-endian,
+PNG files store 16-bit pixels in network byte order (big-endian,
 ie. most significant bits first).  This code would be used if they are
 supplied the other way (little-endian, i.e. least significant bits
 first, the way PCs store them):
@@ -3202,7 +3567,8 @@ However, there are some uncertainties about the status of local variables
 after a longjmp, so the user may want to be careful about doing anything
 after setjmp returns non-zero besides returning itself.  Consult your
 compiler documentation for more details.  For an alternative approach, you
-may wish to use the "cexcept" facility (see http://cexcept.sourceforge.net).
+may wish to use the "cexcept" facility (see http://cexcept.sourceforge.net),
+which is illustrated in pngvalid.c and in contrib/visupng.
 
 Custom chunks
 
@@ -3220,8 +3586,11 @@ and look at how other chunks were designed, so you can do things
 similarly.  Second, check out the sections of libpng that read and
 write chunks.  Try to find a chunk that is similar to yours and use
 it as a template.  More details can be found in the comments inside
-the code.  It is best to handle unknown chunks in a generic method,
-via callback functions, instead of by modifying libpng functions.
+the code.  It is best to handle private or unknown chunks in a generic method,
+via callback functions, instead of by modifying libpng functions. This
+is illustrated in pngtest.c, which uses a callback function to handle a
+private "vpAg" chunk and the new "sTER" chunk, which are both unknown to
+libpng.
 
 If you wish to write your own transformation for the data, look through
 the part of the code that does the transformations, and check out some of
@@ -3229,7 +3598,7 @@ the simpler ones to get an idea of how they work.  Try to find a similar
 transformation to the one you want to add and copy off of it.  More details
 can be found in the comments inside the code itself.
 
-Configuring for 16 bit platforms
+Configuring for 16-bit platforms
 
 You will want to look into zconf.h to tell zlib (and thus libpng) that
 it cannot allocate more then 64K at a time.  Even if you can, the memory
@@ -3249,8 +3618,8 @@ defined, and FAR gets defined to far in pngconf.h, and you should be
 all set.  Everything in the library (except for zlib's structure) is
 expecting far data.  You must use the typedefs with the p or pp on
 the end for pointers (or at least look at them and be careful).  Make
-note that the rows of data are defined as png_bytepp, which is an
-unsigned char far * far *.
+note that the rows of data are defined as png_bytepp, which is
+an "unsigned char far * far *".
 
 Configuring for gui/windowing platforms:
 
@@ -3268,7 +3637,10 @@ or delete an include, this is the place to do it.
 The includes that are not needed outside libpng are placed in pngpriv.h,
 which is only used by the routines inside libpng itself.
 The files in libpng proper only include pngpriv.h and png.h, which
-in turn includes pngconf.h.
+in turn includes pngconf.h and, as of libpng-1.5.0, pnglibconf.h.
+As of libpng-1.5.0, pngpriv.h also includes three other private header
+files, pngstruct.h, pnginfo.h, and pngdebug.h, which contain material
+that previously appeared in the public headers.
 
 Configuring zlib:
 
@@ -3310,7 +3682,27 @@ zlib.h for more information on what these mean.
         window_bits);
 
     png_set_compression_method(png_ptr, method);
+
     png_set_compression_buffer_size(png_ptr, size);
+
+As of libpng version 1.5.4, additional APIs became
+available to set these separately for non-IDAT
+compressed chunks such as zTXt, iTXt, and iCCP:
+
+    #include zlib.h
+    #if PNG_LIBPNG_VER >= 10504
+    png_set_text_compression_level(png_ptr, level);
+
+    png_set_text_compression_mem_level(png_ptr, level);
+
+    png_set_text_compression_strategy(png_ptr,
+        strategy);
+
+    png_set_text_compression_window_bits(png_ptr,
+        window_bits);
+
+    png_set_text_compression_method(png_ptr, method);
+    #endif
 
 Controlling row filtering
 
@@ -3417,8 +3809,8 @@ capability, which you'll still have).
 All the reading and writing specific code are in separate files, so the
 linker should only grab the files it needs.  However, if you want to
 make sure, or if you are building a stand alone library, all the
-reading files start with pngr and all the writing files start with
-pngw.  The files that don't match either (like png.c, pngtrans.c, etc.)
+reading files start with "pngr" and all the writing files start with "pngw".
+The files that don't match either (like png.c, pngtrans.c, etc.)
 are used for both reading and writing, and always need to be included.
 The progressive reader is in pngpread.c
 
@@ -3536,6 +3928,9 @@ you are using at run-time:
 The number libpng_vn is constructed from the major version, minor
 version with leading zero, and release number with leading zero,
 (e.g., libpng_vn for version 1.0.7 is 10007).
+
+Note that this function does not take a png_ptr, so you can call it
+before you've created one.
 
 You can also check which version of png.h you used when compiling your
 application:
@@ -3735,7 +4130,8 @@ The png_zalloc() function no longer zeroes out the memory that it
 allocates.
 
 Support for dithering was disabled by default in libpng-1.4.0, because
-been well tested and doesn't actually "dither".  The code was not
+it has not been well tested and doesn't actually "dither".
+The code was not
 removed, however, and could be enabled by building libpng with
 PNG_READ_DITHER_SUPPORTED defined.  In libpng-1.4.2, this support
 was reenabled, but the function was renamed png_set_quantize() to
@@ -3751,10 +4147,20 @@ X.  Changes to Libpng from version 1.4.x to 1.5.x
 From libpng-1.4.0 until 1.4.4, the png_get_uint_16 macro (but not the
 function) incorrectly returned a value of type png_uint_32.
 
+Checking for invalid palette index on read or write was added at libpng
+1.5.10.  When an invalid index is found, libpng issues a benign error.
+This is enabled by default but can be disabled in each png_ptr with
+
+   png_set_check_for_invalid_index(png_ptr, allowed);
+
+      allowed  - one of
+                 0: disable
+                 1: enable
+
 A. Changes that affect users of libpng
 
 There are no substantial API changes between the non-deprecated parts of
-the 1.4.5 API and the 1.5.0 API, however the ability to directly access
+the 1.4.5 API and the 1.5.0 API; however, the ability to directly access
 the main libpng control structures, png_struct and png_info, deprecated
 in earlier versions of libpng, has been completely removed from
 libpng 1.5.
@@ -3772,10 +4178,9 @@ In png_get_iCCP, the type of "profile" was changed from png_charpp
 to png_bytepp, and in png_set_iCCP, from png_charp to png_const_bytep.
 
 There are changes of form in png.h, including new and changed macros to
-declare
-parts of the API.  Some API functions with arguments that are pointers to
-data not modified within the function have been corrected to declare
-these arguments with PNG_CONST.
+declare parts of the API.  Some API functions with arguments that are
+pointers to data not modified within the function have been corrected to
+declare these arguments with PNG_CONST.
 
 Much of the internal use of C macros to control the library build has also
 changed and some of this is visible in the exported header files, in
@@ -3795,9 +4200,9 @@ absolutely necessary) interlace an image.
 
 libpng 1.5.0 adds an API png_longjmp(png_ptr, value).  This API calls
 the application-provided png_longjmp_ptr on the internal, but application
-initialized, jmpbuf.  It is provided as a convenience to avoid the need
-to use the png_jmpbuf macro, which had the unnecessary side effect of
-resetting the internal png_longjmp_ptr value.
+initialized, longjmp buffer.  It is provided as a convenience to avoid
+the need to use the png_jmpbuf macro, which had the unnecessary side
+effect of resetting the internal png_longjmp_ptr value.
 
 libpng 1.5.0 includes a complete fixed point API.  By default this is
 present along with the corresponding floating point API.  In general the
@@ -3849,30 +4254,63 @@ Applications can now choose whether to use these macros or to call the
 corresponding function by defining PNG_USE_READ_MACROS or
 PNG_NO_USE_READ_MACROS before including png.h.  Notice that this is
 only supported from 1.5.0 -defining PNG_NO_USE_READ_MACROS prior to 1.5.0
- will lead to a link failure.
+will lead to a link failure.
+
+Prior to libpng-1.5.4, the zlib compressor used the same set of parameters
+when compressing the IDAT data and textual data such as zTXt and iCCP.
+In libpng-1.5.4 we reinitialized the zlib stream for each type of data.
+We added five png_set_text_*() functions for setting the parameters to
+use with textual data.
+
+Prior to libpng-1.5.4, the PNG_READ_16_TO_8_ACCURATE_SCALE_SUPPORTED
+option was off by default, and slightly inaccurate scaling occurred.
+This option can no longer be turned off, and the choice of accurate
+or inaccurate 16-to-8 scaling is by using the new png_set_scale_16_to_8()
+API for accurate scaling or the old png_set_strip_16_to_8() API for simple
+chopping.
+
+Prior to libpng-1.5.4, the png_set_user_limits() function could only be
+used to reduce the width and height limits from the value of
+PNG_USER_WIDTH_MAX and PNG_USER_HEIGHT_MAX, although this document said
+that it could be used to override them.  Now this function will reduce or
+increase the limits.
+
+Starting in libpng-1.5.10, the user limits can be set en masse with the
+configuration option PNG_SAFE_LIMITS_SUPPORTED.  If this option is enabled,
+a set of "safe" limits is applied in pngpriv.h.  These can be overridden by
+application calls to png_set_user_limits(), png_set_user_chunk_cache_max(),
+and/or png_set_user_malloc_max() that increase or decrease the limits.  Also,
+in libpng-1.5.10 the default width and height limits were increased
+from 1,000,000 to 0x7ffffff (i.e., made unlimited).  Therefore, the
+limits are now
+                               default      safe
+   png_user_width_max        0x7fffffff    1,000,000
+   png_user_height_max       0x7fffffff    1,000,000
+   png_user_chunk_cache_max  0 (unlimited)   128
+   png_user_chunk_malloc_max 0 (unlimited) 8,000,000
 
 B. Changes to the build and configuration of libpng
 
 Details of internal changes to the library code can be found in the CHANGES
-file.  These will be of no concern to the vast majority of library users or
-builders, however the few who configure libpng to a non-default feature
-set may need to change how this is done.
+file and in the GIT repository logs.  These will be of no concern to the vast
+majority of library users or builders; however, the few who configure libpng
+to a non-default feature set may need to change how this is done.
 
 There should be no need for library builders to alter build scripts if
 these use the distributed build support - configure or the makefiles -
-however users of the makefiles may care to update their build scripts
+however, users of the makefiles may care to update their build scripts
 to build pnglibconf.h where the corresponding makefile does not do so.
 
 Building libpng with a non-default configuration has changed completely.
 The old method using pngusr.h should still work correctly even though the
-way pngusr.h is used in the build has been changed, however library
+way pngusr.h is used in the build has been changed; however, library
 builders will probably want to examine the changes to take advantage of
 new capabilities and to simplify their build system.
 
 B.1 Specific changes to library configuration capabilities
 
 The library now supports a complete fixed point implementation and can
-thus be used on systems which have no floating point support or very
+thus be used on systems that have no floating point support or very
 limited or slow support.  Previously gamma correction, an essential part
 of complete PNG support, required reasonably fast floating point.
 
@@ -3888,14 +4326,14 @@ pnglibconf.h
 As part of this the mechanism used to choose procedure call standards on
 those systems that allow a choice has been changed.  At present this only
 affects certain Microsoft (DOS, Windows) and IBM (OS/2) operating systems
-running on Intel processors.  As before PNGAPI is defined where required
+running on Intel processors.  As before, PNGAPI is defined where required
 to control the exported API functions; however, two new macros, PNGCBAPI
 and PNGCAPI, are used instead for callback functions (PNGCBAPI) and
 (PNGCAPI) for functions that must match a C library prototype (currently
 only png_longjmp_ptr, which must match the C longjmp function.)  The new
 approach is documented in pngconf.h
 
-Despite these changes libpng 1.5.0 only supports the native C function
+Despite these changes, libpng 1.5.0 only supports the native C function
 calling standard on those platforms tested so far (__cdecl on Microsoft
 Windows).  This is because the support requirements for alternative
 calling conventions seem to no longer exist.  Developers who find it
@@ -3928,8 +4366,10 @@ if the feature is supported or:
 /*#undef PNG_feature_SUPPORTED*/
 
 if it is not.  Library code consistently checks for the 'SUPPORTED' macro.
-It does not, and should not, check for the 'NO' macro which will not
-normally be defined even if the feature is not supported.
+It does not, and libpng applications should not, check for the 'NO' macro
+which will not normally be defined even if the feature is not supported.
+The 'NO' macros are only used internally for setting or not setting the
+corresponding 'SUPPORTED' macros.
 
 Compatibility with the old names is provided as follows:
 
@@ -3964,7 +4404,7 @@ merely stops the function from being exported.
 PNG_FLOATING_ARITHMETIC_SUPPORTED chooses between the internal floating
 point implementation or the fixed point one.  Typically the fixed point
 implementation is larger and slower than the floating point implementation
-on a system that supports floating point, however it may be faster on a
+on a system that supports floating point; however, it may be faster on a
 system which lacks floating point hardware and therefore uses a software
 emulation.
 
@@ -3986,14 +4426,14 @@ application built without PNG_USER_CONFIG defined would see the
 unmodified, default, libpng API and thus would probably fail to link.
 
 These mechanisms still work in the configure build and in any makefile
-build that builds pnglibconf.h although the feature selection macros
+build that builds pnglibconf.h, although the feature selection macros
 have changed somewhat as described above.  In 1.5.0, however, pngusr.h is
 processed only once, when the exported header file pnglibconf.h is built.
-pngconf.h no longer includes pngusr.h, therefore it is ignored after the
+pngconf.h no longer includes pngusr.h, therefore pngusr.h is ignored after the
 build of pnglibconf.h and it is never included in an application build.
 
 The rarely used alternative of adding a list of feature macros to the
-CFLAGS setting in the build also still works, however the macros will be
+CFLAGS setting in the build also still works; however, the macros will be
 copied to pnglibconf.h and this may produce macro redefinition warnings
 when the individual C files are compiled.
 
@@ -4003,7 +4443,7 @@ scripts/pnglibconf.dfa.  This requires the program awk.  Brian Kernighan
 and all known later implementations (often called by subtly different
 names - nawk and gawk for example) are adequate to build pnglibconf.h.
 The Sun Microsystems (now Oracle) program 'awk' is an earlier version
-and does not work, this may also apply to other systems that have a
+and does not work; this may also apply to other systems that have a
 functioning awk called 'nawk'.
 
 Configuration options are now documented in scripts/pnglibconf.dfa.  This
@@ -4045,8 +4485,8 @@ the libpng bug tracker at
 
 We also accept patches built from the tar or zip distributions, and
 simple verbal discriptions of bug fixes, reported either to the
-SourceForge bug tracker or to the png-mng-implement at lists.sf.net
-mailing list.
+SourceForge bug tracker, to the png-mng-implement at lists.sf.net
+mailing list, or directly to glennrp.
 
 XIII. Coding style
 
@@ -4134,8 +4574,8 @@ above the comment that says
   /* Maintainer: Put new private prototypes here ^ and in libpngpf.3 */
 
 To avoid polluting the global namespace, the names of all exported
-functions and variables begin with  "png_", and all publicly visible C
-preprocessor macros begin with "PNG_".  We request that applications that
+functions and variables begin with "png_", and all publicly visible C
+preprocessor macros begin with "PNG".  We request that applications that
 use libpng *not* begin any of their own symbols with either of these strings.
 
 We put a space after each comma and after each semicolon
@@ -4151,6 +4591,9 @@ left parenthesis that follows it:
 We prefer #ifdef and #ifndef to #if defined() and if !defined()
 when there is only one macro being tested.
 
+We prefer to express integers that are used as bit masks in hex format,
+with an even number of lower-case hex digits (e.g., 0x00, 0xff, 0x0100).
+
 We do not use the TAB character for indentation in the C sources.
 
 Lines do not exceed 80 characters.
@@ -4159,25 +4602,25 @@ Other rules can be inferred by inspecting the libpng source.
 
 XIV. Y2K Compliance in libpng
 
-March 31, 2011
+July 11, 2012
 
 Since the PNG Development group is an ad-hoc body, we can't make
 an official declaration.
 
 This is your unofficial assurance that libpng from version 0.71 and
-upward through 1.5.2 are Y2K compliant.  It is my belief that earlier
+upward through 1.5.12 are Y2K compliant.  It is my belief that earlier
 versions were also Y2K compliant.
 
-Libpng only has three year fields.  One is a 2-byte unsigned integer that
-will hold years up to 65535.  The other two hold the date in text
+Libpng only has two year fields.  One is a 2-byte unsigned integer that
+will hold years up to 65535.  The other holds the date in text
 format, and will hold years up to 9999.
 
 The integer is
     "png_uint_16 year" in png_time_struct.
 
-The strings are
-    "png_charp time_buffer" in png_struct and
-    "near_time_buffer", which is a local character string in png.c.
+The string is
+    "char time_buffer[29]" in png_struct.  This will no
+longer be used in libpng-1.6.x and will be removed from libpng-1.7.0.
 
 There are seven time-related functions:
 

@@ -1,5 +1,5 @@
 
-Libpng 1.5.2 - March 31, 2011
+Libpng 1.5.12 - July 11, 2012
 
 This is a public release of libpng, intended for use in production codes.
 
@@ -8,55 +8,31 @@ Files available for download:
 Source files with LF line endings (for Unix/Linux) and with a
 "configure" script
 
-   libpng-1.5.2.tar.xz (LZMA-compressed, recommended)
-   libpng-1.5.2.tar.gz
-   libpng-1.5.2.tar.bz2
+   libpng-1.5.12.tar.xz (LZMA-compressed, recommended)
+   libpng-1.5.12.tar.gz
+   libpng-1.5.12.tar.bz2
 
 Source files with CRLF line endings (for Windows), without the
 "configure" script
 
-   lpng152.7z  (LZMA-compressed, recommended)
-   lpng152.zip
+   lpng1512.7z  (LZMA-compressed, recommended)
+   lpng1512.zip
 
 Other information:
 
-   libpng-1.5.2-README.txt
-   libpng-1.5.2-LICENSE.txt
+   libpng-1.5.12-README.txt
+   libpng-1.5.12-LICENSE.txt
 
-Changes since the last public release (1.5.2):
+Changes since the last public release (1.5.11):
 
-  More -Wshadow fixes for older gcc compilers.  Older gcc versions apparently
-    check formal parameters names in function declarations (as well as
-    definitions) to see if they match a name in the global namespace.
-  Revised PNG_EXPORTA macro to not use an empty parameter, to accommodate the
-    old VisualC++ preprocessor.
-  Turned on interlace handling in png_read_png().
-  Fixed gcc pendantic warnings.
-  Handle longjmp in Cygwin.
-  Fixed png_get_current_row_number() in the interlaced case.
-  Cleaned up ALPHA flags and transformations.
-  Implemented expansion to 16 bits.
-  Fixed mistake in the descriptions of user read_transform and write_transform
-    function prototypes in the manual.  The row_info struct is png_row_infop.
-  Corrected png_get_current_row_number documentation
-  Fixed the read/write row callback documentation.
-    This documents the current behavior, where the callback is called after
-    every row with information pertaining to the next row.
-  Fixed scripts/makefile.vcwin32
-  Updated contrib/pngsuite/README to add the word "modify".
-  Define PNG_ALLOCATED and other attributes to blank when _MSC_VER<1300.
-  ifdef out mask arrays in pngread.c when interlacing is not supported.
-  Added a hint to try CPP=/bin/cpp if "cpp -E" fails in scripts/pnglibconf.mak
-    and in contrib/pngminim/*/makefile, eg., on SunOS 5.10, and removed "strip"
-    from the makefiles.
-  Fixed a bug (present since libpng-1.0.7) that makes png_handle_sPLT() fail
-    to compile when PNG_NO_POINTER_INDEXING is defined (Chubanov Kirill)
-  Don't include standard header files in png.h while building the symbol table,
-    to avoid cpp failure on SunOS (introduced PNG_BUILDING_SYMBOL_TABLE macro).
+  Removed scripts/makefile.cegcc from the *.zip and *.7z distributions; it
+    depends on configure, which is not included in those archives.
+  Changed "a+w" to "u+w" in Makefile.in to fix CVE-2012-3386.
 
 Send comments/corrections/commendations to png-mng-implement at lists.sf.net
 (subscription required; visit
 https://lists.sourceforge.net/lists/listinfo/png-mng-implement
-to subscribe) or to glennrp at users.sourceforge.net
+to subscribe)
+or to glennrp at users.sourceforge.net
 
 Glenn R-P
