@@ -10,7 +10,6 @@ include_directories(
     ${REACTOS_SOURCE_DIR}/include/reactos/libs/zlib
     ${REACTOS_SOURCE_DIR}/include/reactos/libs/libpng
     ${REACTOS_SOURCE_DIR}/include/reactos/libs/libtiff)
-set_rc_compiler()
 
 if(MSVC)
     add_compile_flags("/FItypeof.h")
@@ -42,12 +41,8 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/windowscodecs.def)
 
 add_library(windowscodecs SHARED ${SOURCE})
-
 set_module_type(windowscodecs win32dll)
-
 target_link_libraries(windowscodecs wine uuid)
-
 add_importlibs(windowscodecs ole32 shlwapi advapi32 msvcrt kernel32 ntdll)
-
 
 add_cd_file(TARGET windowscodecs DESTINATION reactos/system32 FOR all)
