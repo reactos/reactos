@@ -195,6 +195,12 @@ UniataAhciSendPIOCommand(
     IN ULONG timeout
     );
 
+BOOLEAN
+NTAPI
+UniataAhciAbortOperation(
+    IN PHW_CHANNEL chan
+    );
+
 ULONG
 NTAPI
 UniataAhciSoftReset(
@@ -231,7 +237,7 @@ UniataAhciStartFR(
     IN PHW_CHANNEL chan
     );
 
-VOID
+BOOLEAN
 NTAPI
 UniataAhciStopFR(
     IN PHW_CHANNEL chan
@@ -243,13 +249,13 @@ UniataAhciStart(
     IN PHW_CHANNEL chan
     );
 
-VOID
+BOOLEAN
 NTAPI
 UniataAhciCLO(
     IN PHW_CHANNEL chan
     );
 
-VOID
+BOOLEAN
 NTAPI
 UniataAhciStop(
     IN PHW_CHANNEL chan

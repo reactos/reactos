@@ -145,6 +145,14 @@ typedef union _CDB {
         UCHAR Control;
     } CDB10, *PCDB10;
 
+    // Service Action 16-byte CDB
+    struct _SERVICE_ACTION16 {
+        UCHAR OperationCode; // 0x9E
+        UCHAR ServiceAction : 5;
+        UCHAR Reserved1 : 3;
+        UCHAR Data[14];
+    } SERVICE_ACTION16, *PSERVICE_ACTION16;
+
     // CD Rom Audio CDBs
 
 #define PauseResume_Pause   0x00
@@ -723,6 +731,26 @@ typedef union _CDB {
         UCHAR Reserved1[2];
     } CDB12READWRITE, *PCDB12READWRITE;
 
+    struct _CDB16READWRITE {
+        UCHAR OperationCode;
+        union {
+            UCHAR Flags;
+            struct {
+                UCHAR RELADR    : 1;
+                UCHAR Reserved0 : 2;
+                UCHAR FUA       : 1;
+                UCHAR DPO       : 1;
+                UCHAR Reserved1 : 3;
+            } Fields;
+        } Byte1;
+        UCHAR LBA [8];
+        UCHAR NumOfBlocks [4];
+        UCHAR GroupNumber:5;
+        UCHAR Reserved14_5_6:2;
+        UCHAR Restricted:1; // MMC-4
+        UCHAR Reserved1[1];
+    } CDB16READWRITE, *PCDB16READWRITE;
+
     // Plextor Read CD-DA
     struct _PLXTR_READ_CDDA {
         UCHAR OperationCode;
@@ -866,6 +894,13 @@ typedef union _CDB {
 #define SCSIOP_CLOSE_TRACK_SESSION  0x5B
 #define SCSIOP_READ_BUFFER_CAPACITY 0x5C
 #define SCSIOP_SEND_CUE_SHEET       0x5D
+#define SCSIOP_READ16               0x88
+#define SCSIOP_WRITE16              0x8A
+#define SCSIOP_VERIFY16             0x8F
+#define SCSIOP_SERVICE_ACTION16     0x9E
+
+  #define SCSIOP_SA_READ_CAPACITY16     0x10
+
 #define SCSIOP_BLANK                0xA1
 #define SCSIOP_SEND_KEY             0xA3
 #define SCSIOP_REPORT_KEY           0xA4
@@ -874,6 +909,7 @@ typedef union _CDB {
 #define SCSIOP_SET_READ_AHEAD       0xA7
 #define SCSIOP_READ12               0xA8
 #define SCSIOP_WRITE12              0xAA
+#define SCSIOP_VERIFY12             0xAF
 #define SCSIOP_SEEK12               0xAB
 #define SCSIOP_GET_PERFORMANCE      0xAC
 #define SCSIOP_READ_DVD_STRUCTURE   0xAD
@@ -1364,6 +1400,15 @@ typedef struct _READ_CAPACITY_DATA {
     ULONG LogicalBlockAddress;
     ULONG BytesPerBlock;
 } READ_CAPACITY_DATA, *PREAD_CAPACITY_DATA;
+
+typedef struct _READ_CAPACITY16_DATA {
+    ULONGLONG LogicalBlockAddress;
+    ULONG BytesPerBlock;
+    UCHAR Prot_EN:1;
+    UCHAR RTO_EN:1;
+    UCHAR Reserved:6;
+    UCHAR Reserved1[20];
+} READ_CAPACITY16_DATA, *PREAD_CAPACITY16_DATA;
 
 // CD ROM Read Table Of Contents (TOC) structures
 // Format 0 - Get table of contents

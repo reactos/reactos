@@ -502,6 +502,7 @@ typedef union _ATAPI_REGISTERS_2 {
 
 #define         ATA_F_DMA               0x01    /* enable DMA */
 #define         ATA_F_OVL               0x02    /* enable overlap */
+#define         ATA_F_DMAREAD           0x04    /* DMA Packet (ATAPI) read */
 
 #define		ATA_C_F_SETXFER	        0x03	/* set transfer mode */
 
@@ -628,8 +629,19 @@ typedef struct _IDENTIFY_DATA {
 
     ULONG  UserAddressableSectors;          //     60-61
 
-    USHORT SingleWordDMASupport : 8;        //     62  \- obsolete
-    USHORT SingleWordDMAActive : 8;         //         /-
+    union {
+        struct {
+            USHORT SingleWordDMASupport : 8;        //     62 ATA, obsolete
+            USHORT SingleWordDMAActive : 8;         //
+        };
+        struct {
+            USHORT UDMASupport : 7;        //     62  ATAPI
+            USHORT MultiWordDMASupport : 3;
+            USHORT DMASupport : 1;         
+            USHORT Reaseved62_11_14 : 4;         
+            USHORT DMADirRequired : 1;         
+        } AtapiDMA;
+    };
 
     USHORT MultiWordDMASupport : 8;         //     63
     USHORT MultiWordDMAActive : 8;

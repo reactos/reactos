@@ -803,7 +803,8 @@ AtapiDmaInit__(
     IN PHW_LU_EXTENSION LunExt
     )
 {
-    if(LunExt->IdentifyData.SupportDma) {
+    if(LunExt->IdentifyData.SupportDma ||
+       (LunExt->IdentifyData.AtapiDMA.DMASupport && (LunExt->DeviceFlags & DFLAGS_ATAPI_DEVICE))) {
         KdPrint2((PRINT_PREFIX
                     "AtapiDmaInit__: Set (U)DMA on Device %d\n", LunExt->Lun));
 /*        for(i=AtaUmode(&(LunExt->IdentifyData)); i>=0; i--) {

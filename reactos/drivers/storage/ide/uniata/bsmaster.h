@@ -187,11 +187,14 @@ typedef struct _IDE_AHCI_REGISTERS {
     } CAP;
 
 #define AHCI_CAP_NOP_MASK    0x0000001f
+#define AHCI_CAP_CCC         0x00000080
 #define AHCI_CAP_NCS_MASK    0x00001f00
 #define AHCI_CAP_PMD         0x00008000
 #define AHCI_CAP_SPM         0x00020000
 #define AHCI_CAP_SAM         0x00040000
 #define	AHCI_CAP_SCLO	     0x01000000
+#define AHCI_CAP_SNTF        0x20000000
+#define	AHCI_CAP_NCQ	     0x40000000
 #define AHCI_CAP_S64A        0x80000000
 
     // Global HBA Control
@@ -619,6 +622,7 @@ typedef struct _IDE_AHCI_PORT_REGISTERS {
 #define IDX_AHCI_P_TFD                    (FIELD_OFFSET(IDE_AHCI_PORT_REGISTERS, TFD))
 #define IDX_AHCI_P_SIG                    (FIELD_OFFSET(IDE_AHCI_PORT_REGISTERS, SIG))
 #define IDX_AHCI_P_CMD                    (FIELD_OFFSET(IDE_AHCI_PORT_REGISTERS, CMD))
+#define IDX_AHCI_P_ACT                    (FIELD_OFFSET(IDE_AHCI_PORT_REGISTERS, SACT))
 
 #define IDX_AHCI_P_SNTF                   (FIELD_OFFSET(IDE_AHCI_PORT_REGISTERS, SNTF))
 
@@ -1160,8 +1164,8 @@ typedef struct _HW_DEVICE_EXTENSION {
     HW_LU_EXTENSION lun[IDE_MAX_LUN];
     HW_CHANNEL chan[AHCI_MAX_PORT/*IDE_MAX_CHAN*/];
 #else
-    PHW_LU_EXTENSION lun;
-    PHW_CHANNEL chan;
+    PHW_LU_EXTENSION lun; // lun array
+    PHW_CHANNEL chan; // channel array
 #endif
     UCHAR LastInterruptedChannel;
     // Indicates the number of blocks transferred per int. according to the

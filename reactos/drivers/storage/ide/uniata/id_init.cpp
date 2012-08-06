@@ -2368,11 +2368,14 @@ AtapiSetupLunPtrs(
         KdPrint2((PRINT_PREFIX "Achtung !deviceExtension->NumberLuns \n"));
         deviceExtension->NumberLuns = IDE_MAX_LUN_PER_CHAN;
     }
+    KdPrint2((PRINT_PREFIX "  Chan %#x\n", chan));
     chan->DeviceExtension = deviceExtension;
     chan->lChannel        = c;
     chan->NumberLuns      = deviceExtension->NumberLuns;
     for(i=0; i<deviceExtension->NumberLuns; i++) {
         chan->lun[i] = &(deviceExtension->lun[c*deviceExtension->NumberLuns+i]);
+        KdPrint2((PRINT_PREFIX "  Lun %#x\n", i));
+        KdPrint2((PRINT_PREFIX "  Lun ptr %#x\n", chan->lun[i]));
     }
     chan->AltRegMap       = deviceExtension->AltRegMap;
     chan->NextDpcChan     = -1;
@@ -2403,7 +2406,7 @@ UniataAllocateLunExt(
     PHW_LU_EXTENSION old_luns = NULL;
     PHW_CHANNEL old_chans = NULL;
 
-    KdPrint2((PRINT_PREFIX "allocate %d Luns for %d channels\n", deviceExtension->lun, deviceExtension->NumberChannels));
+    KdPrint2((PRINT_PREFIX "allocate %d Luns for %d channels\n", deviceExtension->NumberLuns, deviceExtension->NumberChannels));
 
     old_luns = deviceExtension->lun;
     old_chans = deviceExtension->chan;

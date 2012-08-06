@@ -1385,11 +1385,11 @@ UniataFindBusMasterController(
         KdPrint2((PRINT_PREFIX "update ConfigInfo->nt4\n"));
         _ConfigInfo->nt4.DeviceExtensionSize         = sizeof(HW_DEVICE_EXTENSION);
         _ConfigInfo->nt4.SpecificLuExtensionSize     = sizeof(HW_LU_EXTENSION);
-        if(deviceExtension->HwFlags & UNIATA_AHCI) {
+        //if(deviceExtension->HwFlags & UNIATA_AHCI) {
            _ConfigInfo->nt4.SrbExtensionSize            = sizeof(ATA_REQ);
-        } else {
-           _ConfigInfo->nt4.SrbExtensionSize            = FIELD_OFFSET(ATA_REQ, dma_tab) + sizeof(BM_DMA_ENTRY)*ATA_DMA_ENTRIES;
-        }
+        //} else {
+        //   _ConfigInfo->nt4.SrbExtensionSize            = FIELD_OFFSET(ATA_REQ, dma_tab) + sizeof(BM_DMA_ENTRY)*ATA_DMA_ENTRIES;
+        //}
         KdPrint2((PRINT_PREFIX "using AtaReq sz %x\n", _ConfigInfo->nt4.SrbExtensionSize));
     }
     if((WinVer_Id() > WinVer_2k) ||
