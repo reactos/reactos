@@ -247,6 +247,8 @@ UserCreateThreadInfo(struct _ETHREAD *Thread)
         return STATUS_NO_MEMORY;
     }
 
+    TRACE_CH(UserThread,"Create pti 0x%p eThread 0x%p\n", ptiCurrent, Thread);
+
     RtlZeroMemory(ptiCurrent, sizeof(THREADINFO));
 
     PsSetThreadWin32Thread(Thread, ptiCurrent);
@@ -391,7 +393,7 @@ UserDestroyThreadInfo(struct _ETHREAD *Thread)
 
     ASSERT(ptiCurrent);
 
-    TRACE_CH(UserThread,"Destroying pti 0x%p\n", ptiCurrent);
+    TRACE_CH(UserThread,"Destroying pti 0x%p eThread 0x%p\n", ptiCurrent, Thread);
 
     ptiCurrent->TIF_flags |= TIF_INCLEANUP;
     ptiCurrent->pClientInfo->dwTIFlags = ptiCurrent->TIF_flags;
@@ -470,11 +472,20 @@ UserDestroyThreadInfo(struct _ETHREAD *Thread)
         }
     }
 
+    // ptiTo
+    if (IsThreadAttach(ptiCurrent))
+    {
+       PTHREADINFO ptiFrom = IsThreadAttach(ptiCurrent);
+       TRACE_CH(UserThread,"Attached Thread ptiTo is getting switched!\n");
+       UserAttachThreadInput(ptiFrom, ptiCurrent, FALSE);
+    }
+    
+    // ptiFrom
     if (ptiCurrent->pqAttach && ptiCurrent->MessageQueue)
     {
        PTHREADINFO ptiTo;
        ptiTo = PsGetThreadWin32Thread(ptiCurrent->MessageQueue->Thread);
-       TRACE_CH(UserThread,"Attached Thread is getting switched!\n");
+       TRACE_CH(UserThread,"Attached Thread ptiFrom is getting switched!\n");
        UserAttachThreadInput( ptiCurrent, ptiTo, FALSE);
     }
 
