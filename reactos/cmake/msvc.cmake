@@ -129,26 +129,41 @@ macro(add_delay_importlibs MODULE)
 endmacro()
 
 function(generate_import_lib _libname _dllname _spec_file)
+
+    set(_def_file ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_exp.def)
+    set(_asm_stubs_file ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_stubs.asm)
+    
     # Generate the asm stub file and the def file for import library
     add_custom_command(
-        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_stubs.asm ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_exp.def
-        COMMAND native-spec2def --ms --kill-at -a=${SPEC2DEF_ARCH} --implib -n=${_dllname} -d=${CMAKE_CURRENT_BINARY_DIR}/${_libname}_exp.def -l=${CMAKE_CURRENT_BINARY_DIR}/${_libname}_stubs.asm ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
+        OUTPUT ${_asm_stubs_file} ${_def_file}
+        COMMAND native-spec2def --ms --kill-at -a=${SPEC2DEF_ARCH} --implib -n=${_dllname} -d=${_def_file} -l=${_asm_stubs_file} ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} native-spec2def)
-
-    # be clear about the "language"
-    # Thanks MS for creating a stupid linker
-    set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${_libname}_stubs.asm PROPERTIES LANGUAGE "STUB_ASM")
+    
+    if(MSVC_IDE)
+        # Compile the generated asm stub file
+        add_custom_command(
+            OUTPUT ${_asm_stubs_file}.obj
+            COMMAND ml /Cp /Fo${_asm_stubs_file}.obj /c /Ta ${_asm_stubs_file}
+            DEPENDS ${_asm_stubs_file})
+    else()
+        # be clear about the "language"
+        # Thanks MS for creating a stupid linker
+        set_source_files_properties(${_asm_stubs_file} PROPERTIES LANGUAGE "STUB_ASM")
+    endif()
 
     # add our library
-    # NOTE: as stub file and def file are generated in one pass, depending on one is like depending on the other
-    add_library(${_libname} STATIC EXCLUDE_FROM_ALL
-        ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_stubs.asm)
-
-    add_dependencies(${_libname} ${CMAKE_CURRENT_BINARY_DIR}\\${_libname}_exp.def)
-
-    # set correct "link rule"
-    set_target_properties(${_libname} PROPERTIES LINKER_LANGUAGE "IMPLIB"
-        STATIC_LIBRARY_FLAGS "/DEF:${CMAKE_CURRENT_BINARY_DIR}\\${_libname}_exp.def")
+    if(MSVC_IDE)
+        add_library(${_libname} STATIC EXCLUDE_FROM_ALL ${_asm_stubs_file}.obj)
+        set_source_files_properties(${_asm_stubs_file}.obj PROPERTIES EXTERNAL_OBJECT 1)
+        set_target_properties(${_libname} PROPERTIES LINKER_LANGUAGE "C")
+    else()
+        # NOTE: as stub file and def file are generated in one pass, depending on one is like depending on the other
+        add_library(${_libname} STATIC EXCLUDE_FROM_ALL ${_asm_stubs_file})
+        add_dependencies(${_libname} ${_def_file})
+        # set correct "link rule"
+        set_target_properties(${_libname} PROPERTIES LINKER_LANGUAGE "IMPLIB")
+    endif()
+    set_target_properties(${_libname} PROPERTIES STATIC_LIBRARY_FLAGS "/DEF:${_def_file}")
 endfunction()
 
 if(${ARCH} MATCHES amd64)
