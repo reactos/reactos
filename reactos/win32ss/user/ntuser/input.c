@@ -429,6 +429,10 @@ UserAttachThreadInput(PTHREADINFO ptiFrom, PTHREADINFO ptiTo, BOOL fAttach)
             ptiFrom->rpdesk != ptiTo->rpdesk)
         return FALSE;
 
+    /* MSDN Note:
+       Keyboard and mouse events received by both threads are processed by the thread specifie
+     */
+
     /* If Attach set, allocate and link. */
     if (fAttach)
     {
@@ -475,6 +479,7 @@ UserAttachThreadInput(PTHREADINFO ptiFrom, PTHREADINFO ptiTo, BOOL fAttach)
         if (!pai) return FALSE;
 
         if (paiprev) paiprev->paiNext = pai->paiNext;
+        else if (!pai->paiNext) gpai = NULL;
 
         ExFreePoolWithTag(pai, USERTAG_ATTACHINFO);
         ERR("Attach Free! ptiFrom 0x%p  ptiTo 0x%p\n",ptiFrom,ptiTo);
