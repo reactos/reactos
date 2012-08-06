@@ -7624,13 +7624,13 @@ default_no_prep:
                     LunExt->IdentifyData.NumberOfHeads *
                     LunExt->IdentifyData.NumberOfCylinders;
             }
-            i--;
+            lba--;
 
             //((PREAD_CAPACITY_DATA)Srb->DataBuffer)->LogicalBlockAddress =
             //    (((PUCHAR)&i)[0] << 24) |  (((PUCHAR)&i)[1] << 16) |
             //    (((PUCHAR)&i)[2] << 8) | ((PUCHAR)&i)[3];
 
-            MOV_QD_SWP( ((PREAD_CAPACITY16_DATA)Srb->DataBuffer)->LogicalBlockAddress, i );
+            MOV_QD_SWP( ((PREAD_CAPACITY16_DATA)Srb->DataBuffer)->LogicalBlockAddress, lba );
 
             KdPrint2((PRINT_PREFIX 
                        "** IDE disk %#x - #sectors %#x, #heads %#x, #cylinders %#x (16)\n",
