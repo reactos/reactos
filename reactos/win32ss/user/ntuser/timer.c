@@ -619,12 +619,12 @@ NtUserSetTimer
    TIMERPROC lpTimerFunc
 )
 {
-   PWND Window;
+   PWND Window = NULL;
    DECLARE_RETURN(UINT_PTR);
 
    TRACE("Enter NtUserSetTimer\n");
    UserEnterExclusive();
-   Window = UserGetWindowObject(hWnd);
+   if (hWnd) Window = UserGetWindowObject(hWnd);
    UserLeave();
 
    RETURN(IntSetTimer(Window, nIDEvent, uElapse, lpTimerFunc, TMRF_TIFROMWND));
@@ -644,12 +644,12 @@ NtUserKillTimer
    UINT_PTR uIDEvent
 )
 {
-   PWND Window;
+   PWND Window = NULL;
    DECLARE_RETURN(BOOL);
 
    TRACE("Enter NtUserKillTimer\n");
    UserEnterExclusive();
-   Window = UserGetWindowObject(hWnd);
+   if (hWnd) Window = UserGetWindowObject(hWnd);
    UserLeave();
 
    RETURN(IntKillTimer(Window, uIDEvent, FALSE));
