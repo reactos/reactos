@@ -430,7 +430,7 @@ UserAttachThreadInput(PTHREADINFO ptiFrom, PTHREADINFO ptiTo, BOOL fAttach)
         return FALSE;
 
     /* MSDN Note:
-       Keyboard and mouse events received by both threads are processed by the thread specifieby the idAttachTo.
+       Keyboard and mouse events received by both threads are processed by the thread specified by the idAttachTo.
      */
 
     /* If Attach set, allocate and link. */
