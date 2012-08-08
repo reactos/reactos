@@ -2162,10 +2162,10 @@ UniataConnectIntr2(
         KdPrint2((PRINT_PREFIX "Multichannel native mode, go...\n"));
 #ifndef UNIATA_USE_XXableInterrupts
         // If we raise IRQL to TIMER value, other interrupt cannot occure on the same CPU
-        if(KeNumberProcessors < 2) {
+/*        if(KeNumberProcessors < 2) {
             KdPrint2((PRINT_PREFIX "Unnecessary (?), UP machine\n"));
             //return STATUS_SUCCESS;
-        }
+        }*/
 #endif //UNIATA_USE_XXableInterrupts
     } else {
         KdPrint2((PRINT_PREFIX "Unnecessary\n"));

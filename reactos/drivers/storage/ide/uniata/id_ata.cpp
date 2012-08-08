@@ -508,10 +508,11 @@ WaitOnBusy(
     ULONG i;
     UCHAR Status;
 
+    GetStatus(chan, Status);
     for (i=0; i<g_opt_WaitBusyCount; i++) {
-        GetStatus(chan, Status);
         if (Status & IDE_STATUS_BUSY) {
             AtapiStallExecution(g_opt_WaitBusyDelay);
+            GetStatus(chan, Status);
             continue;
         } else {
             break;
@@ -2069,7 +2070,7 @@ AtapiResetController__(
         KdPrint2((PRINT_PREFIX "AtapiResetController: Reset channel %d\n", j));
         chan = &(deviceExtension->chan[j]);
         MaxLuns = chan->NumberLuns;
-        KdPrint2((PRINT_PREFIX "  CompleteType %#x, Luns %d, chan %#x\n", CompleteType, MaxLuns, chan));
+        KdPrint2((PRINT_PREFIX "  CompleteType %#x, Luns %d, chan %#x, sptr %#x\n", CompleteType, MaxLuns, chan, &chan));
         //MaxLuns = (chan->ChannelCtrlFlags & CTRFLAGS_NO_SLAVE) ? 1 : 2;
         if(CompleteType != RESET_COMPLETE_NONE) {
 #ifndef UNIATA_CORE
@@ -2077,11 +2078,12 @@ AtapiResetController__(
 
                 PATA_REQ AtaReq = (PATA_REQ)(CurSrb->SrbExtension);
 
-                KdPrint2((PRINT_PREFIX "AtapiResetController: pending SRB %#x\n", CurSrb));
+                KdPrint2((PRINT_PREFIX "AtapiResetController: pending SRB %#x, chan %#x\n", CurSrb, chan));
                 // Check and see if we are processing an internal srb
                 if (AtaReq->OriginalSrb) {
                     KdPrint2((PRINT_PREFIX "  restore original SRB %#x\n", AtaReq->OriginalSrb));
                     AtaReq->Srb = AtaReq->OriginalSrb;
+                    CurSrb->SrbExtension = NULL;
                     AtaReq->OriginalSrb = NULL;
                     // NOTE: internal SRB doesn't get to SRB queue !!!
                     CurSrb = AtaReq->Srb;
@@ -2104,6 +2106,7 @@ AtapiResetController__(
                     if (CurSrb->SenseInfoBuffer) {
 
                         PSENSE_DATA  senseBuffer = (PSENSE_DATA)CurSrb->SenseInfoBuffer;
+                        KdPrint2((PRINT_PREFIX "  senseBuffer %#x, chan %#x\n", senseBuffer, chan));
 
                         senseBuffer->ErrorCode = 0x70;
                         senseBuffer->Valid     = 1;
@@ -2125,6 +2128,7 @@ AtapiResetController__(
                     AtaReq->WordsLeft = 0;
                     AtaReq->DataBuffer = NULL;
                     AtaReq->TransferLength = 0;
+                    KdPrint2((PRINT_PREFIX "chan %#x\n", chan));
 
                     ScsiPortNotification(RequestComplete,
                                          deviceExtension,
@@ -2161,7 +2165,7 @@ AtapiResetController__(
             AtapiDisableInterrupts(deviceExtension, j);
             UniataAhciReset(HwDeviceExtension, j);
         } else {
-            KdPrint2((PRINT_PREFIX "  ATA path\n"));
+            KdPrint2((PRINT_PREFIX "  ATA path, chan %#x\n", chan));
             KdPrint2((PRINT_PREFIX "  disable intr (0)\n"));
             AtapiDisableInterrupts(deviceExtension, j);
             KdPrint2((PRINT_PREFIX "  done\n"));
@@ -2170,8 +2174,9 @@ AtapiResetController__(
                 ULONG mask;
                 ULONG pshift;
                 ULONG timeout;
-                if(!(ChipFlags & UNIATA_SATA))
+                if(!(ChipFlags & UNIATA_SATA)) {
                     goto default_reset;
+                }
                 if(!UniataIsSATARangeAvailable(deviceExtension, j)) {
                     goto default_reset;
                 }
@@ -3917,7 +3922,7 @@ AtapiCheckInterrupt__(
     UCHAR dma_status = 0;
     UCHAR reg8 = 0;
     ULONG reg32 = 0;
-    UCHAR statusByte;
+    UCHAR statusByte = 0;
     ULONG slotNumber = deviceExtension->slotNumber;
     ULONG SystemIoBusNumber = deviceExtension->SystemIoBusNumber;
     ULONG ChipFlags = deviceExtension->HwFlags & CHIPFLAG_MASK;
@@ -5017,16 +5022,21 @@ IntrPrepareResetController:
     KdPrint2((PRINT_PREFIX "AtapiInterrupt: i-reason=%d, status=%#x\n", interruptReason, statusByte));
     if(deviceExtension->HwFlags & UNIATA_AHCI) {
         KdPrint2((PRINT_PREFIX "  AHCI path, WordsTransfered %x, WordsLeft %x\n", AtaReq->WordsTransfered, AtaReq->WordsLeft));
-        if(chan->AhciLastIS & ATA_AHCI_P_IX_OF) {
-            status = SRB_STATUS_DATA_OVERRUN;
+/*        if(chan->AhciLastIS & ATA_AHCI_P_IX_OF) {
+            //status = SRB_STATUS_DATA_OVERRUN;
             DataOverrun = TRUE;
         } else {
             status = SRB_STATUS_SUCCESS;
-        }
+        }*/
         if(AtaReq->WordsTransfered >= AtaReq->WordsLeft) {
             AtaReq->WordsLeft = 0;
         } else {
             AtaReq->WordsLeft -= AtaReq->WordsTransfered;
+        }
+        if(AtaReq->WordsLeft) {
+            status = SRB_STATUS_DATA_OVERRUN;
+        } else {
+            status = SRB_STATUS_SUCCESS;
         }
         chan->ChannelCtrlFlags &= ~CTRFLAGS_DMA_OPERATION;
         goto CompleteRequest;
@@ -6781,6 +6791,7 @@ GetLba2:
             // DEBUG !!!! for TEST ONLY
             KdPrint2((PRINT_PREFIX "AtapiSendCommand: force use dma (ahci)\n"));
             use_dma = TRUE;
+            goto setup_dma;
         } else
         if(Srb->Cdb[0] == SCSIOP_REQUEST_SENSE) {
             KdPrint2((PRINT_PREFIX "AtapiSendCommand: SCSIOP_REQUEST_SENSE, no DMA setup\n"));
@@ -6839,6 +6850,7 @@ call_dma_setup:
                 break;
             }
             // try setup DMA
+setup_dma:
             if(use_dma) {
                 if(deviceExtension->HwFlags & UNIATA_AHCI) {
                     KdPrint2((PRINT_PREFIX "AtapiSendCommand: use dma (ahci)\n"));
@@ -7625,11 +7637,6 @@ default_no_prep:
                     LunExt->IdentifyData.NumberOfCylinders;
             }
             lba--;
-
-            //((PREAD_CAPACITY_DATA)Srb->DataBuffer)->LogicalBlockAddress =
-            //    (((PUCHAR)&i)[0] << 24) |  (((PUCHAR)&i)[1] << 16) |
-            //    (((PUCHAR)&i)[2] << 8) | ((PUCHAR)&i)[3];
-
             MOV_QD_SWP( ((PREAD_CAPACITY16_DATA)Srb->DataBuffer)->LogicalBlockAddress, lba );
 
             KdPrint2((PRINT_PREFIX 
@@ -9815,6 +9822,8 @@ BuildMechanismStatusSrb(
     cdb->MECH_STATUS.OperationCode       = SCSIOP_MECHANISM_STATUS;
     cdb->MECH_STATUS.AllocationLength[1] = sizeof(MECHANICAL_STATUS_INFORMATION_HEADER);
 
+    KdPrint2((PRINT_PREFIX " MechanismStatusSrb %#x\n", srb));
+
     return srb;
 } // end BuildMechanismStatusSrb()
 
@@ -9856,6 +9865,8 @@ BuildRequestSenseSrb (
     cdb = (PCDB)srb->Cdb;
     cdb->CDB6INQUIRY.OperationCode    = SCSIOP_REQUEST_SENSE;
     cdb->CDB6INQUIRY.AllocationLength = sizeof(SENSE_DATA);
+
+    KdPrint2((PRINT_PREFIX " RequestSenseSrb %#x\n", srb));
 
     return srb;
 } // end BuildRequestSenseSrb()

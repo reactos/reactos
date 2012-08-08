@@ -192,6 +192,7 @@ typedef struct _IDE_AHCI_REGISTERS {
 #define AHCI_CAP_PMD         0x00008000
 #define AHCI_CAP_SPM         0x00020000
 #define AHCI_CAP_SAM         0x00040000
+#define	AHCI_CAP_ISS_MASK    0x00f00000
 #define	AHCI_CAP_SCLO	     0x01000000
 #define AHCI_CAP_SNTF        0x20000000
 #define	AHCI_CAP_NCQ	     0x40000000

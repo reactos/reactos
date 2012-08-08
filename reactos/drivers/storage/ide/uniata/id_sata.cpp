@@ -70,6 +70,15 @@ UniataSataConnect(
            SStatus.SPD == SStatus_SPD_Gen3) {
             chan->lun[0]->TransferMode = ATA_SA150 + (UCHAR)(SStatus.SPD - 1);
             KdPrint2((PRINT_PREFIX "SATA TransferMode %#x\n", chan->lun[0]->TransferMode));
+            if(chan->MaxTransferMode < chan->lun[0]->TransferMode) {
+                KdPrint2((PRINT_PREFIX "SATA upd chan TransferMode\n"));
+                chan->MaxTransferMode = chan->lun[0]->TransferMode;
+            }
+            if(deviceExtension->MaxTransferMode < chan->lun[0]->TransferMode) {
+                KdPrint2((PRINT_PREFIX "SATA upd controller TransferMode\n"));
+                deviceExtension->MaxTransferMode = chan->lun[0]->TransferMode;
+            }
+
             break;
         }
         AtapiStallExecution(10000);
@@ -664,6 +673,9 @@ UniataAhciInit(
     BaseMemAddress = deviceExtension->BaseIoAHCI_0.Addr;
     MemIo          = deviceExtension->BaseIoAHCI_0.MemIo;
 
+    deviceExtension->MaxTransferMode = ATA_SA150+(((CAP & AHCI_CAP_ISS_MASK) >> 20)-1);
+    KdPrint2((PRINT_PREFIX "  SATA Gen %d\n", ((CAP & AHCI_CAP_ISS_MASK) >> 20) ));
+
     for(c=0; c<deviceExtension->NumberChannels; c++) {
         chan = &deviceExtension->chan[c];
         offs = sizeof(IDE_AHCI_REGISTERS) + c*sizeof(IDE_AHCI_PORT_REGISTERS);
@@ -825,6 +837,7 @@ UniataAhciDetect(
     KdPrint2((PRINT_PREFIX "  AHCI version %#x.%02x controller with %d ports (mask %#x) detected\n",
 		  v_Mj, v_Mn,
 		  NumberChannels, PI));
+    KdPrint(("  AHCI SATA Gen %d\n", (((CAP & AHCI_CAP_ISS_MASK) >> 20)) ));
 
     if(CAP & AHCI_CAP_SPM) {
         KdPrint2((PRINT_PREFIX "  PM supported\n"));
@@ -865,7 +878,7 @@ UniataAhciDetect(
     deviceExtension->DmaSegmentAlignmentMask = -1; // no restrictions
 
     deviceExtension->BusMaster = DMA_MODE_AHCI;
-    deviceExtension->MaxTransferMode = max(deviceExtension->MaxTransferMode, ATA_SA150);
+    deviceExtension->MaxTransferMode = max(deviceExtension->MaxTransferMode, ATA_SA150+(((CAP & AHCI_CAP_ISS_MASK) >> 20)-1) );
 
     return TRUE;
 } // end UniataAhciDetect()
@@ -1190,11 +1203,11 @@ UniataAhciSendPIOCommand(
     UCHAR statusByte;
     PATA_REQ AtaReq;
     ULONG fis_size;
-    ULONG tag=0;
+    //ULONG tag=0;
     //PIDE_AHCI_CMD  AHCI_CMD = &(chan->AhciCtlBlock->cmd);
     PIDE_AHCI_CMD  AHCI_CMD = NULL;
 
-    PIDE_AHCI_CMD_LIST AHCI_CL = &(chan->AhciCtlBlock->cmd_list[tag]);
+    //PIDE_AHCI_CMD_LIST AHCI_CL = &(chan->AhciCtlBlock->cmd_list[tag]);
 
     KdPrint2((PRINT_PREFIX "UniataAhciSendPIOCommand: cntrlr %#x:%#x dev %#x, cmd %#x, lba %#I64x bcount %#x feature %#x, buff %#x, len %#x, WF %#x \n",
                  deviceExtension->DevIndex, lChannel, DeviceNumber, command, lba, bcount, feature, data, length, wait_flags ));
