@@ -351,6 +351,16 @@ SamCreateGroupInDomain(IN SAM_HANDLE DomainHandle,
 
 NTSTATUS
 NTAPI
+SamCreateUser2InDomain(IN SAM_HANDLE DomainHandle,
+                       IN PUNICODE_STRING AccountName,
+                       IN ULONG AccountType,
+                       IN ACCESS_MASK DesiredAccess,
+                       OUT PSAM_HANDLE UserHandle,
+                       OUT PULONG GrantedAccess,
+                       OUT PULONG RelativeId);
+
+NTSTATUS
+NTAPI
 SamCreateUserInDomain(IN SAM_HANDLE DomainHandle,
                       IN PUNICODE_STRING AccountName,
                       IN ACCESS_MASK DesiredAccess,

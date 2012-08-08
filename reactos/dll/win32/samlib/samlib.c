@@ -191,6 +191,9 @@ SamCreateAliasInDomain(IN SAM_HANDLE DomainHandle,
     TRACE("SamCreateAliasInDomain(%p %p 0x%08x %p %p)\n",
           DomainHandle, AccountName, DesiredAccess, AliasHandle, RelativeId);
 
+    *AliasHandle = NULL;
+    *RelativeId = 0;
+
     RpcTryExcept
     {
         Status = SamrCreateAliasInDomain((SAMPR_HANDLE)DomainHandle,
@@ -222,6 +225,9 @@ SamCreateGroupInDomain(IN SAM_HANDLE DomainHandle,
     TRACE("SamCreateGroupInDomain(%p %p 0x%08x %p %p)\n",
           DomainHandle, AccountName, DesiredAccess, GroupHandle, RelativeId);
 
+    *GroupHandle = NULL;
+    *RelativeId = 0;
+
     RpcTryExcept
     {
         Status = SamrCreateGroupInDomain((SAMPR_HANDLE)DomainHandle,
@@ -229,6 +235,46 @@ SamCreateGroupInDomain(IN SAM_HANDLE DomainHandle,
                                          DesiredAccess,
                                          (SAMPR_HANDLE *)GroupHandle,
                                          RelativeId);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
+
+NTSTATUS
+NTAPI
+SamCreateUser2InDomain(IN SAM_HANDLE DomainHandle,
+                       IN PUNICODE_STRING AccountName,
+                       IN ULONG AccountType,
+                       IN ACCESS_MASK DesiredAccess,
+                       OUT PSAM_HANDLE UserHandle,
+                       OUT PULONG GrantedAccess,
+                       OUT PULONG RelativeId)
+{
+    NTSTATUS Status;
+
+    TRACE("SamCreateUser2InDomain(%p %p %lu 0x%08x %p %p %p)\n",
+          DomainHandle, AccountName, AccountType, DesiredAccess,
+          UserHandle, GrantedAccess, RelativeId);
+
+    *UserHandle = NULL;
+    *RelativeId = 0;
+
+    RpcTryExcept
+    {
+        Status = SamrCreateUser2InDomain((SAMPR_HANDLE)DomainHandle,
+                                         (PRPC_UNICODE_STRING)AccountName,
+                                         AccountType,
+                                         DesiredAccess,
+                                         (SAMPR_HANDLE *)UserHandle,
+                                         GrantedAccess,
+                                         RelativeId);
+
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -252,6 +298,9 @@ SamCreateUserInDomain(IN SAM_HANDLE DomainHandle,
 
     TRACE("SamCreateUserInDomain(%p %p 0x%08x %p %p)\n",
           DomainHandle, AccountName, DesiredAccess, UserHandle, RelativeId);
+
+    *UserHandle = NULL;
+    *RelativeId = 0;
 
     RpcTryExcept
     {
@@ -605,8 +654,75 @@ SamLookupNamesInDomain(IN SAM_HANDLE DomainHandle,
                        OUT PULONG *RelativeIds,
                        OUT PSID_NAME_USE *Use)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    SAMPR_ULONG_ARRAY RidBuffer = {0, NULL};
+    SAMPR_ULONG_ARRAY UseBuffer = {0, NULL};
+    NTSTATUS Status;
+
+    TRACE("SamLookupNamesInDomain(%p %lu %p %p %p)\n",
+          DomainHandle, Count, Names, RelativeIds, Use);
+
+    *RelativeIds = NULL;
+    *Use = NULL;
+
+    RidBuffer.Element = NULL;
+    UseBuffer.Element = NULL;
+
+    RpcTryExcept
+    {
+        Status = SamrLookupNamesInDomain((SAMPR_HANDLE)DomainHandle,
+                                         Count,
+                                         (PRPC_UNICODE_STRING)Names,
+                                         &RidBuffer,
+                                         &UseBuffer);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    if (NT_SUCCESS(Status))
+    {
+        *RelativeIds = midl_user_allocate(Count * sizeof(ULONG));
+        if (*RelativeIds == NULL)
+        {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            goto done;
+        }
+
+        *Use = midl_user_allocate(Count * sizeof(SID_NAME_USE));
+        if (*Use == NULL)
+        {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            goto done;
+        }
+
+        RtlCopyMemory(*RelativeIds,
+                      RidBuffer.Element,
+                      Count * sizeof(ULONG));
+
+        RtlCopyMemory(*Use,
+                      UseBuffer.Element,
+                      Count * sizeof(SID_NAME_USE));
+    }
+
+done:
+    if (!NT_SUCCESS(Status))
+    {
+        if (*RelativeIds != NULL)
+            midl_user_free(*RelativeIds);
+
+        if (*Use != NULL)
+            midl_user_free(*Use);
+    }
+
+    if (RidBuffer.Element != NULL)
+        midl_user_free(RidBuffer.Element);
+
+    if (UseBuffer.Element != NULL)
+        midl_user_free(UseBuffer.Element);
+
+    return Status;
 }
 
 

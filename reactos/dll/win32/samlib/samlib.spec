@@ -9,7 +9,7 @@
 @ stub SamConnectWithCreds
 @ stdcall SamCreateAliasInDomain(ptr ptr long ptr ptr)
 @ stdcall SamCreateGroupInDomain(ptr ptr long ptr ptr)
-@ stub SamCreateUser2InDomain
+@ stdcall SamCreateUser2InDomain(ptr ptr long long ptr ptr ptr)
 @ stdcall SamCreateUserInDomain(ptr ptr long ptr ptr)
 @ stub SamDeleteAlias
 @ stub SamDeleteGroup

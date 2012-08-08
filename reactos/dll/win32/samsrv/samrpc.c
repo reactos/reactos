@@ -2840,14 +2840,211 @@ done:
 NTSTATUS
 NTAPI
 SamrLookupNamesInDomain(IN SAMPR_HANDLE DomainHandle,
-                        IN unsigned long Count,
+                        IN ULONG Count,
                         IN RPC_UNICODE_STRING Names[],
                         OUT PSAMPR_ULONG_ARRAY RelativeIds,
                         OUT PSAMPR_ULONG_ARRAY Use)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PSAM_DB_OBJECT DomainObject;
+    HANDLE AccountsKeyHandle;
+    HANDLE NamesKeyHandle;
+    ULONG MappedCount = 0;
+    ULONG DataLength;
+    ULONG i;
+    ULONG RelativeId;
+    NTSTATUS Status;
+
+    TRACE("SamrLookupNamesInDomain(%p %lu %p %p %p)\n",
+          DomainHandle, Count, Names, RelativeIds, Use);
+
+    /* Validate the domain handle */
+    Status = SampValidateDbObject(DomainHandle,
+                                  SamDbDomainObject,
+                                  DOMAIN_LOOKUP,
+                                  &DomainObject);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    RelativeIds->Count = 0;
+    Use->Count = 0;
+
+    if (Count == 0)
+        return STATUS_SUCCESS;
+
+    /* Allocate the relative IDs array */
+    RelativeIds->Element = midl_user_allocate(Count * sizeof(ULONG));
+    if (RelativeIds->Element == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
+
+    /* Allocate the use array */
+    Use->Element = midl_user_allocate(Count * sizeof(ULONG));
+    if (Use->Element == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
+
+    RelativeIds->Count = Count;
+    Use->Count = Count;
+
+    for (i = 0; i < Count; i++)
+    {
+        TRACE("Name: %S\n", Names[i].Buffer);
+
+        RelativeId = 0;
+
+        /* Lookup aliases */
+        Status = SampRegOpenKey(DomainObject->KeyHandle,
+                                L"Aliases",
+                                KEY_READ,
+                                &AccountsKeyHandle);
+        if (NT_SUCCESS(Status))
+        {
+            Status = SampRegOpenKey(AccountsKeyHandle,
+                                    L"Names",
+                                    KEY_READ,
+                                    &NamesKeyHandle);
+            if (NT_SUCCESS(Status))
+            {
+                DataLength = sizeof(ULONG);
+                Status = SampRegQueryValue(NamesKeyHandle,
+                                           Names[i].Buffer,
+                                           NULL,
+                                           &RelativeId,
+                                           &DataLength);
+
+                SampRegCloseKey(NamesKeyHandle);
+            }
+
+            SampRegCloseKey(AccountsKeyHandle);
+        }
+
+        /* Return alias account */
+        if (NT_SUCCESS(Status) && RelativeId != 0)
+        {
+            TRACE("Rid: %lu\n", RelativeId);
+            RelativeIds->Element[i] = RelativeId;
+            Use->Element[i] = SidTypeAlias;
+            MappedCount++;
+            continue;
+        }
+
+        /* Lookup groups */
+        Status = SampRegOpenKey(DomainObject->KeyHandle,
+                                L"Groups",
+                                KEY_READ,
+                                &AccountsKeyHandle);
+        if (NT_SUCCESS(Status))
+        {
+            Status = SampRegOpenKey(AccountsKeyHandle,
+                                    L"Names",
+                                    KEY_READ,
+                                    &NamesKeyHandle);
+            if (NT_SUCCESS(Status))
+            {
+                DataLength = sizeof(ULONG);
+                Status = SampRegQueryValue(NamesKeyHandle,
+                                           Names[i].Buffer,
+                                           NULL,
+                                           &RelativeId,
+                                           &DataLength);
+
+                SampRegCloseKey(NamesKeyHandle);
+            }
+
+            SampRegCloseKey(AccountsKeyHandle);
+        }
+
+        /* Return group account */
+        if (NT_SUCCESS(Status) && RelativeId != 0)
+        {
+            TRACE("Rid: %lu\n", RelativeId);
+            RelativeIds->Element[i] = RelativeId;
+            Use->Element[i] = SidTypeGroup;
+            MappedCount++;
+            continue;
+        }
+
+        /* Lookup users */
+        Status = SampRegOpenKey(DomainObject->KeyHandle,
+                                L"Users",
+                                KEY_READ,
+                                &AccountsKeyHandle);
+        if (NT_SUCCESS(Status))
+        {
+            Status = SampRegOpenKey(AccountsKeyHandle,
+                                    L"Names",
+                                    KEY_READ,
+                                    &NamesKeyHandle);
+            if (NT_SUCCESS(Status))
+            {
+                DataLength = sizeof(ULONG);
+                Status = SampRegQueryValue(NamesKeyHandle,
+                                           Names[i].Buffer,
+                                           NULL,
+                                           &RelativeId,
+                                           &DataLength);
+
+                SampRegCloseKey(NamesKeyHandle);
+            }
+
+            SampRegCloseKey(AccountsKeyHandle);
+        }
+
+        /* Return user account */
+        if (NT_SUCCESS(Status) && RelativeId != 0)
+        {
+            TRACE("Rid: %lu\n", RelativeId);
+            RelativeIds->Element[i] = RelativeId;
+            Use->Element[i] = SidTypeUser;
+            MappedCount++;
+            continue;
+        }
+
+        /* Return unknown account */
+        RelativeIds->Element[i] = 0;
+        Use->Element[i] = SidTypeUnknown;
+    }
+
+done:
+    if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
+        Status = STATUS_SUCCESS;
+
+    if (NT_SUCCESS(Status))
+    {
+        if (MappedCount == 0)
+            Status = STATUS_NONE_MAPPED;
+        else if (MappedCount < Count)
+            Status = STATUS_SOME_NOT_MAPPED;
+    }
+    else
+    {
+        if (RelativeIds->Element != NULL)
+        {
+            midl_user_free(RelativeIds->Element);
+            RelativeIds->Element = NULL;
+        }
+
+        RelativeIds->Count = 0;
+
+        if (Use->Element != NULL)
+        {
+            midl_user_free(Use->Element);
+            Use->Element = NULL;
+        }
+
+        Use->Count = 0;
+    }
+
+    return Status;
 }
+
 
 /* Function 18 */
 NTSTATUS
@@ -5546,6 +5743,7 @@ SamrGetDisplayEnumerationIndex2(IN SAMPR_HANDLE DomainHandle,
     return STATUS_NOT_IMPLEMENTED;
 }
 
+
 /* Function 50 */
 NTSTATUS
 NTAPI
@@ -5557,8 +5755,260 @@ SamrCreateUser2InDomain(IN SAMPR_HANDLE DomainHandle,
                         OUT unsigned long *GrantedAccess,
                         OUT unsigned long *RelativeId)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    UNICODE_STRING EmptyString = RTL_CONSTANT_STRING(L"");
+    SAM_DOMAIN_FIXED_DATA FixedDomainData;
+    SAM_USER_FIXED_DATA FixedUserData;
+    PSAM_DB_OBJECT DomainObject;
+    PSAM_DB_OBJECT UserObject;
+    ULONG ulSize;
+    ULONG ulRid;
+    WCHAR szRid[9];
+    NTSTATUS Status;
+
+    TRACE("SamrCreateUserInDomain(%p %p %lx %p %p)\n",
+          DomainHandle, Name, DesiredAccess, UserHandle, RelativeId);
+
+    if (Name == NULL ||
+        Name->Length == 0 ||
+        Name->Buffer == NULL ||
+        UserHandle == NULL ||
+        RelativeId == NULL)
+        return STATUS_INVALID_PARAMETER;
+
+    /* Check for valid account type */
+    if (AccountType != USER_NORMAL_ACCOUNT &&
+        AccountType != USER_WORKSTATION_TRUST_ACCOUNT &&
+        AccountType != USER_INTERDOMAIN_TRUST_ACCOUNT &&
+        AccountType != USER_SERVER_TRUST_ACCOUNT &&
+        AccountType != USER_TEMP_DUPLICATE_ACCOUNT)
+        return STATUS_INVALID_PARAMETER;
+
+    /* Validate the domain handle */
+    Status = SampValidateDbObject(DomainHandle,
+                                  SamDbDomainObject,
+                                  DOMAIN_CREATE_USER,
+                                  &DomainObject);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Check if the user name already exists in the domain */
+    Status = SampCheckAccountNameInDomain(DomainObject,
+                                          Name->Buffer);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("User name \'%S\' already exists in domain (Status 0x%08lx)\n",
+              Name->Buffer, Status);
+        return Status;
+    }
+
+    /* Get the fixed domain attributes */
+    ulSize = sizeof(SAM_DOMAIN_FIXED_DATA);
+    Status = SampGetObjectAttribute(DomainObject,
+                                    L"F",
+                                    NULL,
+                                    (PVOID)&FixedDomainData,
+                                    &ulSize);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Increment the NextRid attribute */
+    ulRid = FixedDomainData.NextRid;
+    FixedDomainData.NextRid++;
+
+    /* Store the fixed domain attributes */
+    Status = SampSetObjectAttribute(DomainObject,
+                           L"F",
+                           REG_BINARY,
+                           &FixedDomainData,
+                           ulSize);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    TRACE("RID: %lx\n", ulRid);
+
+    /* Convert the RID into a string (hex) */
+    swprintf(szRid, L"%08lX", ulRid);
+
+    /* Create the user object */
+    Status = SampCreateDbObject(DomainObject,
+                                L"Users",
+                                szRid,
+                                SamDbUserObject,
+                                DesiredAccess,
+                                &UserObject);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Add the account name for the user object */
+    Status = SampSetAccountNameInDomain(DomainObject,
+                                        L"Users",
+                                        Name->Buffer,
+                                        ulRid);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Initialize fixed user data */
+    memset(&FixedUserData, 0, sizeof(SAM_USER_FIXED_DATA));
+    FixedUserData.Version = 1;
+    FixedUserData.LastLogon.QuadPart = 0;
+    FixedUserData.LastLogoff.QuadPart = 0;
+    FixedUserData.PasswordLastSet.QuadPart = 0;
+    FixedUserData.AccountExpires.LowPart = MAXULONG;
+    FixedUserData.AccountExpires.HighPart = MAXLONG;
+    FixedUserData.LastBadPasswordTime.QuadPart = 0;
+    FixedUserData.UserId = ulRid;
+    FixedUserData.PrimaryGroupId = DOMAIN_GROUP_RID_USERS;
+    FixedUserData.UserAccountControl = USER_ACCOUNT_DISABLED |
+                                       USER_PASSWORD_NOT_REQUIRED |
+                                       AccountType;
+
+    /* Set fixed user data attribute */
+    Status = SampSetObjectAttribute(UserObject,
+                                    L"F",
+                                    REG_BINARY,
+                                    (LPVOID)&FixedUserData,
+                                    sizeof(SAM_USER_FIXED_DATA));
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Set the Name attribute */
+    Status = SampSetObjectAttribute(UserObject,
+                                    L"Name",
+                                    REG_SZ,
+                                    (LPVOID)Name->Buffer,
+                                    Name->MaximumLength);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Set the FullName attribute */
+    Status = SampSetObjectAttribute(UserObject,
+                                    L"FullName",
+                                    REG_SZ,
+                                    EmptyString.Buffer,
+                                    EmptyString.MaximumLength);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Set the HomeDirectory attribute */
+    Status = SampSetObjectAttribute(UserObject,
+                                    L"HomeDirectory",
+                                    REG_SZ,
+                                    EmptyString.Buffer,
+                                    EmptyString.MaximumLength);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Set the HomeDirectoryDrive attribute */
+    Status = SampSetObjectAttribute(UserObject,
+                                    L"HomeDirectoryDrive",
+                                    REG_SZ,
+                                    EmptyString.Buffer,
+                                    EmptyString.MaximumLength);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Set the ScriptPath attribute */
+    Status = SampSetObjectAttribute(UserObject,
+                                    L"ScriptPath",
+                                    REG_SZ,
+                                    EmptyString.Buffer,
+                                    EmptyString.MaximumLength);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Set the ProfilePath attribute */
+    Status = SampSetObjectAttribute(UserObject,
+                                    L"ProfilePath",
+                                    REG_SZ,
+                                    EmptyString.Buffer,
+                                    EmptyString.MaximumLength);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Set the AdminComment attribute */
+    Status = SampSetObjectAttribute(UserObject,
+                                    L"AdminComment",
+                                    REG_SZ,
+                                    EmptyString.Buffer,
+                                    EmptyString.MaximumLength);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Set the UserComment attribute */
+    Status = SampSetObjectAttribute(UserObject,
+                                    L"UserComment",
+                                    REG_SZ,
+                                    EmptyString.Buffer,
+                                    EmptyString.MaximumLength);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Set the WorkStations attribute */
+    Status = SampSetObjectAttribute(UserObject,
+                                    L"WorkStations",
+                                    REG_SZ,
+                                    EmptyString.Buffer,
+                                    EmptyString.MaximumLength);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* FIXME: Set default user attributes */
+
+    if (NT_SUCCESS(Status))
+    {
+        *UserHandle = (SAMPR_HANDLE)UserObject;
+        *RelativeId = ulRid;
+        *GrantedAccess = UserObject->Access;
+    }
+
+    TRACE("returns with status 0x%08lx\n", Status);
+
+    return Status;
 }
 
 /* Function 51 */
