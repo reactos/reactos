@@ -1763,7 +1763,7 @@ MiProtectVirtualMemory(IN PEPROCESS Process,
     ULONG_PTR StartingAddress, EndingAddress;
     PMMPTE PointerPde, PointerPte, LastPte;
     MMPTE PteContents;
-    PUSHORT UsedPageTableEntries;
+    //PUSHORT UsedPageTableEntries;
     PMMPFN Pfn1;
     ULONG ProtectionMask;
     NTSTATUS Status = STATUS_SUCCESS;
@@ -1894,9 +1894,10 @@ MiProtectVirtualMemory(IN PEPROCESS Process,
             {
                 /* This used to be a zero PTE and it no longer is, so we must add a
                    reference to the pagetable. */
-                UsedPageTableEntries = &MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(MiPteToAddress(PointerPte))];
-                (*UsedPageTableEntries)++;
-                ASSERT((*UsedPageTableEntries) <= PTE_COUNT);
+                //UsedPageTableEntries = &MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(MiPteToAddress(PointerPte))];
+                //(*UsedPageTableEntries)++;
+                //ASSERT((*UsedPageTableEntries) <= PTE_COUNT);
+                DPRINT1("HACK: Not increasing UsedPageTableEntries count!\n");
             }
             else if (PteContents.u.Hard.Valid == 1)
             {
@@ -1913,14 +1914,16 @@ MiProtectVirtualMemory(IN PEPROCESS Process,
                     /* TODO */
                     UNIMPLEMENTED;
                 }
-
-                /* Write the protection mask and write it with a TLB flush */
-                Pfn1->OriginalPte.u.Soft.Protection = ProtectionMask;
-                MiFlushTbAndCapture(Vad,
-                                    PointerPte,
-                                    ProtectionMask,
-                                    Pfn1,
-                                    TRUE);
+                else
+                {
+                    /* Write the protection mask and write it with a TLB flush */
+                    Pfn1->OriginalPte.u.Soft.Protection = ProtectionMask;
+                    MiFlushTbAndCapture(Vad,
+                                        PointerPte,
+                                        ProtectionMask,
+                                        Pfn1,
+                                        TRUE);
+                }
             }
             else
             {
