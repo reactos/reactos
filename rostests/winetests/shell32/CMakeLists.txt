@@ -12,7 +12,7 @@ list(APPEND SOURCE
     brsfolder.c
     ebrowser.c
     generated.c
-    progman_dde.c
+    #progman_dde.c FIXME: bug 7233
     recyclebin.c
     shelldispatch.c
     shelllink.c

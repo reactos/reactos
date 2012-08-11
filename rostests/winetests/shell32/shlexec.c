@@ -57,7 +57,7 @@ static char tmpdir[MAX_PATH];
 static char child_file[MAX_PATH];
 static DLLVERSIONINFO dllver;
 static BOOL skip_noassoc_tests = FALSE;
-static HANDLE dde_ready_event;
+//static HANDLE dde_ready_event; FIXME: bug 7233
 
 
 /***
@@ -1624,6 +1624,7 @@ typedef struct
     int todo;
 } dde_tests_t;
 
+#if BUG_7233_IS_FIXED
 static dde_tests_t dde_tests[] =
 {
     /* Test passing and not passing command-line
@@ -1820,6 +1821,7 @@ static void test_dde(void)
     CloseHandle(map);
     hook_WaitForInputIdle((void *) WaitForInputIdle);
 }
+#endif
 
 #define DDE_DEFAULT_APP_VARIANTS 2
 typedef struct
@@ -1830,6 +1832,7 @@ typedef struct
     int rc[DDE_DEFAULT_APP_VARIANTS];
 } dde_default_app_tests_t;
 
+#if BUG_7233_IS_FIXED
 static dde_default_app_tests_t dde_default_app_tests[] =
 {
     /* Windows XP and 98 handle default DDE app names in different ways.
@@ -1988,6 +1991,7 @@ static void test_dde_default_app(void)
     assert(DdeFreeStringHandle(ddeInst, hszApplication));
     assert(DdeUninitialize(ddeInst));
 }
+#endif
 
 static void init_test(void)
 {
@@ -2278,8 +2282,12 @@ START_TEST(shlexec)
     test_lnks();
     test_exes();
     test_exes_long();
+#if BUG_7233_IS_FIXED
     test_dde();
     test_dde_default_app();
+#endif
+    win_skip("Skipping test_dde() until we have a sane DDE implementation. Bug 7233.\n");
+    win_skip("Skipping test_dde_default_app() until we have a sane DDE implementation. Bug 7233.\n");
     test_commandline();
     test_directory();
 
