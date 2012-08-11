@@ -648,6 +648,116 @@ SamLookupDomainInSamServer(IN SAM_HANDLE ServerHandle,
 
 NTSTATUS
 NTAPI
+SamLookupIdsInDomain(IN SAM_HANDLE DomainHandle,
+                     IN ULONG Count,
+                     IN PULONG RelativeIds,
+                     OUT PUNICODE_STRING *Names,
+                     OUT PSID_NAME_USE *Use)
+{
+    SAMPR_RETURNED_USTRING_ARRAY NamesBuffer = {0, NULL};
+    SAMPR_ULONG_ARRAY UseBuffer = {0, NULL};
+    ULONG i;
+    NTSTATUS Status;
+
+    TRACE("SamLookupIdsInDomain(%p %lu %p %p %p)\n",
+          DomainHandle, Count, RelativeIds, Names, Use);
+
+    *Names = NULL;
+    *Use = NULL;
+
+    RpcTryExcept
+    {
+        Status = SamrLookupIdsInDomain((SAMPR_HANDLE)DomainHandle,
+                                       Count,
+                                       RelativeIds,
+                                       &NamesBuffer,
+                                       &UseBuffer);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    if (NT_SUCCESS(Status))
+    {
+        *Names = midl_user_allocate(Count * sizeof(RPC_UNICODE_STRING));
+        if (*Names == NULL)
+        {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            goto done;
+        }
+
+        for (i = 0; i < Count; i++)
+        {
+            (*Names)[i].Buffer = midl_user_allocate(NamesBuffer.Element[i].MaximumLength);
+            if ((*Names)[i].Buffer == NULL)
+            {
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+                goto done;
+            }
+        }
+
+        *Use = midl_user_allocate(Count * sizeof(SID_NAME_USE));
+        if (*Use == NULL)
+        {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            goto done;
+        }
+
+        for (i = 0; i < Count; i++)
+        {
+            (*Names)[i].Length = NamesBuffer.Element[i].Length;
+            (*Names)[i].MaximumLength = NamesBuffer.Element[i].MaximumLength;
+
+            RtlCopyMemory((*Names)[i].Buffer,
+                          NamesBuffer.Element[i].Buffer,
+                          NamesBuffer.Element[i].Length);
+        }
+
+        RtlCopyMemory(*Use,
+                      UseBuffer.Element,
+                      Count * sizeof(SID_NAME_USE));
+    }
+
+done:
+    if (!NT_SUCCESS(Status))
+    {
+        if (*Names != NULL)
+        {
+            for (i = 0; i < Count; i++)
+            {
+                if ((*Names)[i].Buffer != NULL)
+                    midl_user_free((*Names)[i].Buffer);
+            }
+
+            midl_user_free(*Names);
+        }
+
+        if (*Use != NULL)
+            midl_user_free(*Use);
+    }
+
+    if (NamesBuffer.Element != NULL)
+    {
+        for (i = 0; i < NamesBuffer.Count; i++)
+        {
+            if (NamesBuffer.Element[i].Buffer != NULL)
+                midl_user_free(NamesBuffer.Element[i].Buffer);
+        }
+
+        midl_user_free(NamesBuffer.Element);
+    }
+
+    if (UseBuffer.Element != NULL)
+        midl_user_free(UseBuffer.Element);
+
+    return 0;
+}
+
+
+NTSTATUS
+NTAPI
 SamLookupNamesInDomain(IN SAM_HANDLE DomainHandle,
                        IN ULONG Count,
                        IN PUNICODE_STRING Names,
@@ -663,9 +773,6 @@ SamLookupNamesInDomain(IN SAM_HANDLE DomainHandle,
 
     *RelativeIds = NULL;
     *Use = NULL;
-
-    RidBuffer.Element = NULL;
-    UseBuffer.Element = NULL;
 
     RpcTryExcept
     {

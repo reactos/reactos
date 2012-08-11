@@ -426,6 +426,14 @@ SamLookupDomainInSamServer(IN SAM_HANDLE ServerHandle,
 
 NTSTATUS
 NTAPI
+SamLookupIdsInDomain(IN SAM_HANDLE DomainHandle,
+                     IN ULONG Count,
+                     IN PULONG RelativeIds,
+                     OUT PUNICODE_STRING *Names,
+                     OUT PSID_NAME_USE *Use);
+
+NTSTATUS
+NTAPI
 SamLookupNamesInDomain(IN SAM_HANDLE DomainHandle,
                        IN ULONG Count,
                        IN PUNICODE_STRING Names,

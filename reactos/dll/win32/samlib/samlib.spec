@@ -26,7 +26,7 @@
 @ stdcall SamGetMembersInAlias(ptr ptr ptr)
 @ stub SamGetMembersInGroup
 @ stdcall SamLookupDomainInSamServer(ptr ptr ptr)
-@ stub SamLookupIdsInDomain
+@ stdcall SamLookupIdsInDomain(ptr long ptr ptr ptr)
 @ stdcall SamLookupNamesInDomain(ptr long ptr ptr ptr)
 @ stdcall SamOpenAlias(ptr long long ptr)
 @ stdcall SamOpenDomain(ptr long ptr ptr)

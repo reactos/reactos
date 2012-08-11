@@ -2925,6 +2925,9 @@ SamrLookupNamesInDomain(IN SAMPR_HANDLE DomainHandle,
             SampRegCloseKey(AccountsKeyHandle);
         }
 
+        if (!NT_SUCCESS(Status) && Status != STATUS_OBJECT_NAME_NOT_FOUND)
+            break;
+
         /* Return alias account */
         if (NT_SUCCESS(Status) && RelativeId != 0)
         {
@@ -2961,6 +2964,9 @@ SamrLookupNamesInDomain(IN SAMPR_HANDLE DomainHandle,
             SampRegCloseKey(AccountsKeyHandle);
         }
 
+        if (!NT_SUCCESS(Status) && Status != STATUS_OBJECT_NAME_NOT_FOUND)
+            break;
+
         /* Return group account */
         if (NT_SUCCESS(Status) && RelativeId != 0)
         {
@@ -2996,6 +3002,9 @@ SamrLookupNamesInDomain(IN SAMPR_HANDLE DomainHandle,
 
             SampRegCloseKey(AccountsKeyHandle);
         }
+
+        if (!NT_SUCCESS(Status) && Status != STATUS_OBJECT_NAME_NOT_FOUND)
+            break;
 
         /* Return user account */
         if (NT_SUCCESS(Status) && RelativeId != 0)
@@ -3050,13 +3059,276 @@ done:
 NTSTATUS
 NTAPI
 SamrLookupIdsInDomain(IN SAMPR_HANDLE DomainHandle,
-                      IN unsigned long Count,
-                      IN unsigned long *RelativeIds,
+                      IN ULONG Count,
+                      IN ULONG *RelativeIds,
                       OUT PSAMPR_RETURNED_USTRING_ARRAY Names,
                       OUT PSAMPR_ULONG_ARRAY Use)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PSAM_DB_OBJECT DomainObject;
+    WCHAR RidString[9];
+    HANDLE AccountsKeyHandle;
+    HANDLE AccountKeyHandle;
+    ULONG MappedCount = 0;
+    ULONG DataLength;
+    ULONG i;
+    NTSTATUS Status;
+
+    TRACE("SamrLookupIdsInDomain(%p %lu %p %p %p)\n",
+          DomainHandle, Count, RelativeIds, Names, Use);
+
+    /* Validate the domain handle */
+    Status = SampValidateDbObject(DomainHandle,
+                                  SamDbDomainObject,
+                                  DOMAIN_LOOKUP,
+                                  &DomainObject);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    Names->Count = 0;
+    Use->Count = 0;
+
+    if (Count == 0)
+        return STATUS_SUCCESS;
+
+    /* Allocate the names array */
+    Names->Element = midl_user_allocate(Count * sizeof(ULONG));
+    if (Names->Element == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
+
+    /* Allocate the use array */
+    Use->Element = midl_user_allocate(Count * sizeof(ULONG));
+    if (Use->Element == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
+
+    Names->Count = Count;
+    Use->Count = Count;
+
+    for (i = 0; i < Count; i++)
+    {
+        TRACE("RID: %lu\n", RelativeIds[i]);
+
+        swprintf(RidString, L"%08lx", RelativeIds[i]);
+
+        /* Lookup aliases */
+        Status = SampRegOpenKey(DomainObject->KeyHandle,
+                                L"Aliases",
+                                KEY_READ,
+                                &AccountsKeyHandle);
+        if (NT_SUCCESS(Status))
+        {
+            Status = SampRegOpenKey(AccountsKeyHandle,
+                                    RidString,
+                                    KEY_READ,
+                                    &AccountKeyHandle);
+            if (NT_SUCCESS(Status))
+            {
+                DataLength = 0;
+                Status = SampRegQueryValue(AccountKeyHandle,
+                                           L"Name",
+                                           NULL,
+                                           NULL,
+                                           &DataLength);
+                if (NT_SUCCESS(Status))
+                {
+                    Names->Element[i].Buffer = midl_user_allocate(DataLength);
+                    if (Names->Element[i].Buffer == NULL)
+                        Status = STATUS_INSUFFICIENT_RESOURCES;
+
+                    if (NT_SUCCESS(Status))
+                    {
+                        Names->Element[i].MaximumLength = DataLength;
+                        Names->Element[i].Length = DataLength - sizeof(WCHAR);
+
+                        Status = SampRegQueryValue(AccountKeyHandle,
+                                                   L"Name",
+                                                   NULL,
+                                                   Names->Element[i].Buffer,
+                                                   &DataLength);
+                    }
+                }
+
+                SampRegCloseKey(AccountKeyHandle);
+            }
+
+            SampRegCloseKey(AccountsKeyHandle);
+        }
+
+        if (!NT_SUCCESS(Status) && Status != STATUS_OBJECT_NAME_NOT_FOUND)
+            break;
+
+        /* Return alias account */
+        if (NT_SUCCESS(Status) && Names->Element[i].Buffer != NULL)
+        {
+            TRACE("Name: %S\n", Names->Element[i].Buffer);
+            Use->Element[i] = SidTypeAlias;
+            MappedCount++;
+            continue;
+        }
+
+        /* Lookup groups */
+        Status = SampRegOpenKey(DomainObject->KeyHandle,
+                                L"Groups",
+                                KEY_READ,
+                                &AccountsKeyHandle);
+        if (NT_SUCCESS(Status))
+        {
+            Status = SampRegOpenKey(AccountsKeyHandle,
+                                    RidString,
+                                    KEY_READ,
+                                    &AccountKeyHandle);
+            if (NT_SUCCESS(Status))
+            {
+                DataLength = 0;
+                Status = SampRegQueryValue(AccountKeyHandle,
+                                           L"Name",
+                                           NULL,
+                                           NULL,
+                                           &DataLength);
+                if (NT_SUCCESS(Status))
+                {
+                    Names->Element[i].Buffer = midl_user_allocate(DataLength);
+                    if (Names->Element[i].Buffer == NULL)
+                        Status = STATUS_INSUFFICIENT_RESOURCES;
+
+                    if (NT_SUCCESS(Status))
+                    {
+                        Names->Element[i].MaximumLength = DataLength;
+                        Names->Element[i].Length = DataLength - sizeof(WCHAR);
+
+                        Status = SampRegQueryValue(AccountKeyHandle,
+                                                   L"Name",
+                                                   NULL,
+                                                   Names->Element[i].Buffer,
+                                                   &DataLength);
+                    }
+                }
+
+                SampRegCloseKey(AccountKeyHandle);
+            }
+
+            SampRegCloseKey(AccountsKeyHandle);
+        }
+
+        if (!NT_SUCCESS(Status) && Status != STATUS_OBJECT_NAME_NOT_FOUND)
+            break;
+
+        /* Return group account */
+        if (NT_SUCCESS(Status) && Names->Element[i].Buffer != NULL)
+        {
+            TRACE("Name: %S\n", Names->Element[i].Buffer);
+            Use->Element[i] = SidTypeGroup;
+            MappedCount++;
+            continue;
+        }
+
+        /* Lookup users */
+        Status = SampRegOpenKey(DomainObject->KeyHandle,
+                                L"Users",
+                                KEY_READ,
+                                &AccountsKeyHandle);
+        if (NT_SUCCESS(Status))
+        {
+            Status = SampRegOpenKey(AccountsKeyHandle,
+                                    RidString,
+                                    KEY_READ,
+                                    &AccountKeyHandle);
+            if (NT_SUCCESS(Status))
+            {
+                DataLength = 0;
+                Status = SampRegQueryValue(AccountKeyHandle,
+                                           L"Name",
+                                           NULL,
+                                           NULL,
+                                           &DataLength);
+                if (NT_SUCCESS(Status))
+                {
+                    TRACE("DataLength: %lu\n", DataLength);
+
+                    Names->Element[i].Buffer = midl_user_allocate(DataLength);
+                    if (Names->Element[i].Buffer == NULL)
+                        Status = STATUS_INSUFFICIENT_RESOURCES;
+
+                    if (NT_SUCCESS(Status))
+                    {
+                        Names->Element[i].MaximumLength = DataLength;
+                        Names->Element[i].Length = DataLength - sizeof(WCHAR);
+
+                        Status = SampRegQueryValue(AccountKeyHandle,
+                                                   L"Name",
+                                                   NULL,
+                                                   Names->Element[i].Buffer,
+                                                   &DataLength);
+                    }
+                }
+
+                SampRegCloseKey(AccountKeyHandle);
+            }
+
+            SampRegCloseKey(AccountsKeyHandle);
+        }
+
+        if (!NT_SUCCESS(Status) && Status != STATUS_OBJECT_NAME_NOT_FOUND)
+            break;
+
+        /* Return user account */
+        if (NT_SUCCESS(Status) && Names->Element[i].Buffer != NULL)
+        {
+            TRACE("Name: %S\n", Names->Element[i].Buffer);
+            Use->Element[i] = SidTypeUser;
+            MappedCount++;
+            continue;
+        }
+
+        /* Return unknown account */
+        Use->Element[i] = SidTypeUnknown;
+    }
+
+done:
+    if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
+        Status = STATUS_SUCCESS;
+
+    if (NT_SUCCESS(Status))
+    {
+        if (MappedCount == 0)
+            Status = STATUS_NONE_MAPPED;
+        else if (MappedCount < Count)
+            Status = STATUS_SOME_NOT_MAPPED;
+    }
+    else
+    {
+        if (Names->Element != NULL)
+        {
+            for (i = 0; i < Count; i++)
+            {
+                if (Names->Element[i].Buffer != NULL)
+                    midl_user_free(Names->Element[i].Buffer);
+            }
+
+            midl_user_free(Names->Element);
+            Names->Element = NULL;
+        }
+
+        Names->Count = 0;
+
+        if (Use->Element != NULL)
+        {
+            midl_user_free(Use->Element);
+            Use->Element = NULL;
+        }
+
+        Use->Count = 0;
+    }
+
+    return Status;
 }
 
 
