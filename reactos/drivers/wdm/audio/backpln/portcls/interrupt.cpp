@@ -164,12 +164,13 @@ IInterruptServiceRoutine(
     PLIST_ENTRY CurEntry;
     PSYNC_ENTRY Entry;
     NTSTATUS Status;
-    BOOL Success;
+    BOOL Success, Ret;
 
     CInterruptSync * This = (CInterruptSync*)ServiceContext;
 
     DPRINT("IInterruptServiceRoutine Mode %u\n", This->m_Mode);
 
+    Ret = FALSE;
     if (This->m_Mode == InterruptSyncModeNormal)
     {
         CurEntry = This->m_ServiceRoutines.Flink;
@@ -177,13 +178,15 @@ IInterruptServiceRoutine(
         {
             Entry = CONTAINING_RECORD(CurEntry, SYNC_ENTRY, ListEntry);
             Status = Entry->SyncRoutine((CInterruptSync*)This, Entry->DynamicContext);
-            if (NT_SUCCESS(Status))
+            if (Status == STATUS_SUCCESS)
             {
-                return TRUE;
+                /* Mark as handled and break on the first success */
+                Ret = TRUE;
+                break;
             }
             CurEntry = CurEntry->Flink;
         }
-        return FALSE;
+        return Ret;
     }
     else if (This->m_Mode == InterruptSyncModeAll)
     {
@@ -191,11 +194,15 @@ IInterruptServiceRoutine(
         while (CurEntry != &This->m_ServiceRoutines)
         {
             Entry = CONTAINING_RECORD(CurEntry, SYNC_ENTRY, ListEntry);
-            Entry->SyncRoutine((CInterruptSync*)This, Entry->DynamicContext);
+            Status = Entry->SyncRoutine((CInterruptSync*)This, Entry->DynamicContext);
+            if (Status == STATUS_SUCCESS)
+            {
+                /* Mark as handled but don't break */
+                Ret = TRUE;
+            }
             CurEntry = CurEntry->Flink;
         }
-        DPRINT("Returning TRUE with mode InterruptSyncModeAll\n");
-        return TRUE; //FIXME
+        return Ret;
     }
     else if (This->m_Mode == InterruptSyncModeRepeat)
     {
@@ -207,18 +214,21 @@ IInterruptServiceRoutine(
             {
                 Entry = CONTAINING_RECORD(CurEntry, SYNC_ENTRY, ListEntry);
                 Status = Entry->SyncRoutine((CInterruptSync*)This, Entry->DynamicContext);
-                if (NT_SUCCESS(Status))
+                if (Status == STATUS_SUCCESS)
+                {
+                    /* Mark as handled if it works at least once */
                     Success = TRUE;
+                    Ret = TRUE;
+                }
                 CurEntry = CurEntry->Flink;
             }
-        }while(Success);
-        DPRINT("Returning TRUE with mode InterruptSyncModeRepeat\n");
-        return TRUE; //FIXME
+        } while(Success);
+        return Ret;
     }
     else
     {
         DPRINT("Unknown mode %u\n", This->m_Mode);
-        return FALSE; //FIXME
+        return Ret;
     }
 }
 
