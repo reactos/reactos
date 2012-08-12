@@ -26,7 +26,9 @@
 #define E_OUTOFMEMORY  ((HRESULT)0x8007000EL)
 #define TYPE_E_IOERROR ((HRESULT)0x80028CA2L)
 
+#ifndef max
 #define max(a, b) ((a) > (b) ? a : b)
+#endif
 
 #include <stdarg.h>
 #include <assert.h>

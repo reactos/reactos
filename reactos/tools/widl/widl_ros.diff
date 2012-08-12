@@ -84,7 +84,7 @@ diff -u wine-1.3.4/tools/widl/typelib_struct.h tools/widl/typelib_struct.h
 diff -u wine-1.3.4/tools/widl/widltypes.h tools/widl/widltypes.h
 --- wine-1.3.4/tools/widl/widltypes.h	2010-09-19 17:51:38.890625000 +0200
 +++ tools/widl/widltypes.h	2010-09-19 19:17:19.656250000 +0200
-@@ -21,6 +21,13 @@
+@@ -21,6 +21,15 @@
  #ifndef __WIDL_WIDLTYPES_H
  #define __WIDL_WIDLTYPES_H
  
@@ -93,7 +93,9 @@ diff -u wine-1.3.4/tools/widl/widltypes.h tools/widl/widltypes.h
 +#define E_OUTOFMEMORY  ((HRESULT)0x8007000EL)
 +#define TYPE_E_IOERROR ((HRESULT)0x80028CA2L)
 +
++#ifndef max
 +#define max(a, b) ((a) > (b) ? a : b)
++#endif
 +
  #include <stdarg.h>
  #include <assert.h>
@@ -124,3 +126,28 @@ diff -u wine-1.3.4/tools/widl/write_msft.c tools/widl/write_msft.c
  
  #include "widl.h"
  #include "typelib.h"
+@@ -2023,7 +2023,10 @@
+     }
+ 
+     if (is_attr(interface->attrs, ATTR_DISPINTERFACE))
+-        return add_dispinterface_typeinfo(typelib, interface);
++    {
++        add_dispinterface_typeinfo(typelib, interface);
++        return;
++    }
+ 
+     /* midl adds the parent interface first, unless the parent itself
+        has no parent (i.e. it stops before IUnknown). */
+diff -u wine-1.3.4/tools/widl/typegen.c tools/widl/typegen.c
+--- wine-1.3.4/tools/widl/typegen.c	2010-09-19 17:51:48.531250000 +0200
++++ tools/widl/typegen.c	2012-08-12 14:19:47.000000000 +0200
+@@ -2345,7 +2345,8 @@
+             return;
+         }
+     }
+-    return write_member_type(file, type, cont_is_complex, NULL, elem, NULL, tfsoff);
++    write_member_type(file, type, cont_is_complex, NULL, elem, NULL, tfsoff);
++    return;
+ }
+ 
+ static void write_end(FILE *file, unsigned int *tfsoff)
