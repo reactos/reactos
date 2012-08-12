@@ -338,7 +338,7 @@ struct enumeration_details
 struct func_details
 {
   var_list_t *args;
-  struct _type_t *rettype;
+  struct _var_t *retval;
   int idx;
 };
 
@@ -445,6 +445,7 @@ struct _var_t {
   expr_t *eval;
   enum storage_class stgclass;
   unsigned int procstring_offset;
+  unsigned int typestring_offset;
 
   struct _loc_info_t loc_info;
 

@@ -1607,7 +1607,8 @@ static var_t *declare_var(attr_list_t *attrs, decl_spec_t *decl_spec, const decl
     for (ft = v->type; is_ptr(ft); ft = type_pointer_get_ref(ft))
       ;
     assert(type_get_type_detect_alias(ft) == TYPE_FUNCTION);
-    ft->details.function->rettype = return_type;
+    ft->details.function->retval = make_var(xstrdup("_RetVal"));
+    ft->details.function->retval->type = return_type;
     /* move calling convention attribute, if present, from pointer nodes to
      * function node */
     for (t = v->type; is_ptr(t); t = type_pointer_get_ref(t))
