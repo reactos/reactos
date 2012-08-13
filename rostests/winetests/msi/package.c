@@ -40,7 +40,6 @@ static INSTALLSTATE (WINAPI *pMsiGetComponentPathExA)(LPCSTR, LPCSTR, LPCSTR, MS
 static HRESULT (WINAPI *pSHGetFolderPathA)(HWND, int, HANDLE, DWORD, LPSTR);
 
 static BOOL (WINAPI *pConvertSidToStringSidA)(PSID, LPSTR*);
-static BOOL (WINAPI *pGetTokenInformation)( HANDLE, TOKEN_INFORMATION_CLASS, LPVOID, DWORD, PDWORD );
 static BOOL (WINAPI *pOpenProcessToken)( HANDLE, DWORD, PHANDLE );
 static LONG (WINAPI *pRegDeleteKeyExA)(HKEY, LPCSTR, REGSAM, DWORD);
 static LONG (WINAPI *pRegDeleteKeyExW)(HKEY, LPCWSTR, REGSAM, DWORD);
@@ -68,7 +67,6 @@ static void init_functionpointers(void)
     GET_PROC(hshell32, SHGetFolderPathA);
 
     GET_PROC(hadvapi32, ConvertSidToStringSidA);
-    GET_PROC(hadvapi32, GetTokenInformation);
     GET_PROC(hadvapi32, OpenProcessToken);
     GET_PROC(hadvapi32, RegDeleteKeyExA)
     GET_PROC(hadvapi32, RegDeleteKeyExW)
@@ -87,7 +85,7 @@ static BOOL is_process_limited(void)
 {
     HANDLE token;
 
-    if (!pOpenProcessToken || !pGetTokenInformation) return FALSE;
+    if (!pOpenProcessToken) return FALSE;
 
     if (pOpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token))
     {
@@ -95,7 +93,7 @@ static BOOL is_process_limited(void)
         TOKEN_ELEVATION_TYPE type = TokenElevationTypeDefault;
         DWORD size;
 
-        ret = pGetTokenInformation(token, TokenElevationType, &type, sizeof(type), &size);
+        ret = GetTokenInformation(token, TokenElevationType, &type, sizeof(type), &size);
         CloseHandle(token);
         return (ret && type == TokenElevationTypeLimited);
     }
@@ -2445,7 +2443,7 @@ static void test_msipackage(void)
     ok(r == ERROR_INSTALL_PACKAGE_INVALID,
        "Expected ERROR_INSTALL_PACKAGE_INVALID, got %d\n", r);
 
-    set_summary_str(hdb, PID_REVNUMBER, "{004757CD-5092-49c2-AD20-28E1CE0DF5F2}");
+    set_summary_str(hdb, PID_REVNUMBER, "{004757CD-5092-49C2-AD20-28E1CE0DF5F2}");
     r = MsiOpenPackage(name, &hpack);
     ok(r == ERROR_SUCCESS,
        "Expected ERROR_SUCCESS, got %d\n", r);

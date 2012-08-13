@@ -453,11 +453,9 @@ static void test_msiinsert(void)
     ok(r == TRUE, "file didn't exist after commit\n");
 }
 
-typedef UINT (WINAPI *fnMsiDecomposeDescriptorA)(LPCSTR, LPCSTR, LPSTR, LPSTR, DWORD *);
-static fnMsiDecomposeDescriptorA pMsiDecomposeDescriptorA;
-
 static void test_msidecomposedesc(void)
 {
+    UINT (WINAPI *pMsiDecomposeDescriptorA)(LPCSTR, LPCSTR, LPSTR, LPSTR, DWORD *);
     char prod[MAX_FEATURE_CHARS+1], comp[MAX_FEATURE_CHARS+1], feature[MAX_FEATURE_CHARS+1];
     const char *desc;
     UINT r;
@@ -465,8 +463,7 @@ static void test_msidecomposedesc(void)
     HMODULE hmod;
 
     hmod = GetModuleHandle("msi.dll");
-    pMsiDecomposeDescriptorA = (fnMsiDecomposeDescriptorA)
-        GetProcAddress(hmod, "MsiDecomposeDescriptorA");
+    pMsiDecomposeDescriptorA = (void*)GetProcAddress(hmod, "MsiDecomposeDescriptorA");
     if (!pMsiDecomposeDescriptorA)
         return;
 
@@ -1490,7 +1487,7 @@ static void test_longstrings(void)
 
     HeapFree(GetProcessHeap(), 0, str);
 
-    MsiDatabaseCommit(hdb);
+    r = MsiDatabaseCommit(hdb);
     ok(r == ERROR_SUCCESS, "MsiDatabaseCommit failed\n");
     MsiCloseHandle(hdb);
 
@@ -9345,7 +9342,7 @@ static void test_createtable(void)
         size = sizeof(buffer);
         res = MsiRecordGetString(hrec, 1, buffer, &size );
         ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
-        todo_wine ok(!strcmp(buffer,"b"), "b != %s\n", buffer);
+        ok(!strcmp(buffer,"b"), "b != %s\n", buffer);
 
         res = MsiCloseHandle( hrec );
         ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);

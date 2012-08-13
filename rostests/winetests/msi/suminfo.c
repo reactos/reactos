@@ -254,7 +254,7 @@ static void test_suminfo(void)
     ok(r == ERROR_SUCCESS, "MsiCloseHandle failed\n");
 
     /* filename, non-zero update count */
-    MsiGetSummaryInformation(0, msifile, 1, &hsuminfo);
+    r = MsiGetSummaryInformation(0, msifile, 1, &hsuminfo);
     ok(r == ERROR_SUCCESS, "MsiGetSummaryInformation failed\n");
 
     r = MsiSummaryInfoSetProperty(hsuminfo, PID_AUTHOR, VT_LPSTR, 1, &ft, "Mike");
@@ -267,7 +267,7 @@ static void test_suminfo(void)
     ok(r == ERROR_SUCCESS, "MsiCloseHandle failed %u\n", r);
 
     /* filename, zero update count */
-    MsiGetSummaryInformation(0, msifile, 0, &hsuminfo);
+    r = MsiGetSummaryInformation(0, msifile, 0, &hsuminfo);
     ok(r == ERROR_SUCCESS, "MsiGetSummaryInformation failed %u\n", r);
 
     r = MsiSummaryInfoSetProperty(hsuminfo, PID_AUTHOR, VT_LPSTR, 1, &ft, "Mike");
