@@ -717,6 +717,14 @@ AtapiSoftReset(
     } else {
         AtapiStallExecution(500);
         AtapiWritePort1(chan, IDX_IO1_o_Command, IDE_COMMAND_ATAPI_RESET);
+        AtapiStallExecution(30);
+
+        // Wait for BUSY assertion, in some cases delay may occure
+        while (!(AtapiReadPort1(chan, IDX_IO1_i_Status) & IDE_STATUS_BUSY) &&
+               i--)
+        {
+            AtapiStallExecution(30);
+        }
 
         // ReactOS modification: Already stop looping when we know that the drive has finished resetting.
         // Not all controllers clear the IDE_STATUS_BUSY flag (e.g. not the VMware one), so ensure that
@@ -1066,6 +1074,24 @@ AtaUmode(PIDENTIFY_DATA2 ident)
     return IOMODE_NOT_SPECIFIED;
 } // end AtaUmode()
 
+LONG
+NTAPI
+AtaSAmode(PIDENTIFY_DATA2 ident) {
+    if(!ident->SataCapabilities || 
+       ident->SataCapabilities == 0xffff) {
+        return IOMODE_NOT_SPECIFIED;
+    }
+    if(ident->SataCapabilities & ATA_SATA_GEN3) {
+        return ATA_SA600;
+    } else
+    if(ident->SataCapabilities & ATA_SATA_GEN2) {
+        return ATA_SA300;
+    } else
+    if(ident->SataCapabilities & ATA_SATA_GEN1) {
+        return ATA_SA150;
+    }
+    return IOMODE_NOT_SPECIFIED;
+} // end AtaSAmode()
 
 #ifndef UNIATA_CORE
 
@@ -1580,6 +1606,12 @@ IssueIdentify(
     KdPrint2((PRINT_PREFIX "SATA support: %x, CAPs %#x\n",
         deviceExtension->FullIdentifyData.SataSupport,
         deviceExtension->FullIdentifyData.SataCapabilities));
+
+    LunExt->LimitedTransferMode =
+    LunExt->OrigTransferMode =
+        (UCHAR)ata_cur_mode_from_ident(&(deviceExtension->FullIdentifyData));
+
+    KdPrint2((PRINT_PREFIX "OrigTransferMode: %x\n", LunExt->OrigTransferMode));
 
     // Check out a few capabilities / limitations of the device.
     if (deviceExtension->FullIdentifyData.RemovableStatus & 1) {
@@ -3001,7 +3033,7 @@ AtapiHwInitialize__(
         }
 
         PreferedMode = LunExt->opt_MaxTransferMode;
-        if(PreferedMode == 0xffffffff) {
+        if((PreferedMode == 0xffffffff) || (PreferedMode > chan->MaxTransferMode)) {
             KdPrint2((PRINT_PREFIX "MaxTransferMode (overriden): %#x\n", chan->MaxTransferMode));
             PreferedMode = chan->MaxTransferMode;
         }
@@ -3012,14 +3044,12 @@ AtapiHwInitialize__(
         }
 
         KdPrint2((PRINT_PREFIX "  try mode %#x\n", PreferedMode));
-        LunExt->OrigTransferMode =
         LunExt->LimitedTransferMode =
         LunExt->TransferMode =
             (CHAR)PreferedMode;
 
         AtapiDmaInit__(deviceExtension, LunExt);
 
-        LunExt->OrigTransferMode =
         LunExt->LimitedTransferMode =
             LunExt->TransferMode;
         KdPrint2((PRINT_PREFIX "Using %#x mode\n", LunExt->TransferMode));
@@ -5033,11 +5063,10 @@ IntrPrepareResetController:
         } else {
             AtaReq->WordsLeft -= AtaReq->WordsTransfered;
         }
-        if(AtaReq->WordsLeft) {
+        if(AtaReq->WordsLeft && (status == SRB_STATUS_SUCCESS)) {
             status = SRB_STATUS_DATA_OVERRUN;
-        } else {
-            status = SRB_STATUS_SUCCESS;
         }
+        status = SRB_STATUS_SUCCESS;
         chan->ChannelCtrlFlags &= ~CTRFLAGS_DMA_OPERATION;
         goto CompleteRequest;
     } else
@@ -5106,11 +5135,13 @@ IntrPrepareResetController:
                           "IdeIntr: DMA tmp INTR %#x vs %#x\n", AtaReq->WordsLeft, wordCount));
                 if(AtaReq->WordsLeft > wordCount) {
                     AtaReq->WordsLeft -= wordCount;
+                    AtaReq->WordsTransfered += wordCount;
                     AtaReq->ReqState = REQ_STATE_ATAPI_EXPECTING_DATA_INTR;
                     goto ReturnEnableIntr;
                 }
                 dma_status = AtapiDmaDone(HwDeviceExtension, DEVNUM_NOT_SPECIFIED, lChannel, NULL/*srb*/);
             }
+            AtaReq->WordsTransfered = AtaReq->WordsLeft;
             AtaReq->WordsLeft = 0;
             status = SRB_STATUS_SUCCESS;
             chan->ChannelCtrlFlags &= ~CTRFLAGS_DMA_OPERATION;
@@ -5152,6 +5183,7 @@ IntrPrepareResetController:
         // Advance data buffer pointer and bytes left.
         AtaReq->DataBuffer += wordCount;
         AtaReq->WordsLeft -= wordCount;
+        AtaReq->WordsTransfered += wordCount;
 
         if (atapiDev) {
             AtaReq->ReqState = REQ_STATE_ATAPI_EXPECTING_DATA_INTR;
@@ -5205,12 +5237,14 @@ IntrPrepareResetController:
                           "IdeIntr: DMA tmp INTR %#x vs %#x\n", AtaReq->WordsLeft, wordCount));
                 if(AtaReq->WordsLeft > wordCount) {
                     AtaReq->WordsLeft -= wordCount;
+                    AtaReq->WordsTransfered += wordCount;
                     AtaReq->ReqState = REQ_STATE_ATAPI_EXPECTING_DATA_INTR;
                     goto ReturnEnableIntr;
                 }
                 dma_status = AtapiDmaDone(HwDeviceExtension, DEVNUM_NOT_SPECIFIED, lChannel, NULL/*srb*/);
             }
             //ASSERT(AtaReq->WordsLeft == wordCount);
+            AtaReq->WordsTransfered = AtaReq->WordsLeft;
             AtaReq->WordsLeft = 0;
             status = SRB_STATUS_SUCCESS;
             chan->ChannelCtrlFlags &= ~CTRFLAGS_DMA_OPERATION;
@@ -5281,6 +5315,7 @@ IntrPrepareResetController:
         // Advance data buffer pointer and bytes left.
         AtaReq->DataBuffer += wordCount;
         AtaReq->WordsLeft -= wordCount;
+        AtaReq->WordsTransfered += wordCount;
 
         // Check for read command complete.
         if (AtaReq->WordsLeft == 0) {
@@ -5358,13 +5393,14 @@ IntrPrepareResetController:
         // Command complete.
         if(DmaTransfer) {
             KdPrint2((PRINT_PREFIX "AtapiInterrupt: CompleteRequest, was DmaTransfer\n"));
+            AtaReq->WordsTransfered = AtaReq->WordsLeft;
             AtaReq->WordsLeft = 0;
         }
-        if (AtaReq->WordsLeft) {
-            status = SRB_STATUS_DATA_OVERRUN;
-        } else {
+        //if (AtaReq->WordsLeft) {
+        //    status = SRB_STATUS_DATA_OVERRUN;
+        //} else {
             status = SRB_STATUS_SUCCESS;
-        }
+        //}
 
 #ifdef UNIATA_DUMP_ATAPI
         if(srb &&
@@ -5419,6 +5455,12 @@ CompleteRequest:
 
         KdPrint2((PRINT_PREFIX "AtapiInterrupt: CompleteRequest, srbstatus %x\n", status));
         // Check and see if we are processing our secret (mechanism status/request sense) srb
+
+        if(AtaReq->WordsLeft && (status == SRB_STATUS_SUCCESS)) {
+            KdPrint2((PRINT_PREFIX "WordsLeft %#x -> SRB_STATUS_SUCCESS\n", AtaReq->WordsLeft));
+            status = SRB_STATUS_DATA_OVERRUN;
+        }
+
         if (AtaReq->OriginalSrb) {
 
             ULONG srbStatus;
@@ -5691,10 +5733,10 @@ PIO_wait_DRQ:
                 }
             }
             if(status == SRB_STATUS_SUCCESS) {
-                if(!(deviceExtension->HwFlags & UNIATA_AHCI)) {
-                    // This should be set in UniataAhciEndTransaction() for AHCI
-                    AtaReq->WordsTransfered += AtaReq->bcount * DEV_BSIZE/2;
-                }
+                //if(!(deviceExtension->HwFlags & UNIATA_AHCI) && !atapiDev) {
+                //    // This should be set in UniataAhciEndTransaction() for AHCI
+                //    AtaReq->WordsTransfered += AtaReq->bcount * DEV_BSIZE/2;
+                //}
                 if(!atapiDev &&
                    AtaReq->WordsTransfered*2 < AtaReq->TransferLength) {
                     KdPrint2((PRINT_PREFIX "AtapiInterrupt: more I/O required (%x of %x bytes) -> reenqueue\n",
@@ -6788,7 +6830,6 @@ GetLba2:
 
         // check if DMA read/write
         if(deviceExtension->HwFlags & UNIATA_SATA) {
-            // DEBUG !!!! for TEST ONLY
             KdPrint2((PRINT_PREFIX "AtapiSendCommand: force use dma (ahci)\n"));
             use_dma = TRUE;
             goto setup_dma;
@@ -8809,8 +8850,16 @@ do_bus_reset:
                 //ULONG ldev = GET_LDEV2(AtaCtl->addr.PathId, AtaCtl->addr.TargetId, 0);
                 ULONG DeviceNumber = AtaCtl->addr.TargetId;
                 BOOLEAN bad_ldev;
-                ULONG i;
+                ULONG i, pos;
+
+                pos = FIELD_OFFSET(UNIATA_CTL, RawData);
                 //chan = &(deviceExtension->chan[lChannel]);
+                if(len < pos) {
+                    KdPrint2((PRINT_PREFIX "AtapiStartIo: AtaCtl Buffer too small: %#x < %#x\n", len,
+                        FIELD_OFFSET(UNIATA_CTL, RawData) ));
+                    status = SRB_STATUS_DATA_OVERRUN;
+                    break;
+                }
 
                 if(AtaCtl->addr.Lun ||
                    AtaCtl->addr.TargetId >= deviceExtension->NumberLuns || 
@@ -8875,6 +8924,12 @@ handle_bad_ldev:
                     }
                     goto uata_ctl_queue;
                 case  IOCTL_SCSI_MINIPORT_UNIATA_SET_MAX_MODE:
+                    if(len < pos+sizeof(AtaCtl->SetMode)) {
+                        KdPrint2((PRINT_PREFIX "AtapiStartIo: AtaCtl Buffer too small: %#x < %#x\n", len,
+                            pos+sizeof(AtaCtl->SetMode) ));
+                        status = SRB_STATUS_DATA_OVERRUN;
+                        goto complete_req;
+                    }
                     if(!AtaCtl->SetMode.ApplyImmediately) {
                         break;
                     }
@@ -8905,6 +8960,12 @@ uata_ctl_queue:
 
                     KdPrint2((PRINT_PREFIX "AtapiStartIo: rescan bus\n"));
 
+                    if(len < pos+sizeof(AtaCtl->FindDelDev)) {
+                        KdPrint2((PRINT_PREFIX "AtapiStartIo: AtaCtl Buffer too small: %#x < %#x\n", len,
+                            pos+sizeof(AtaCtl->FindDelDev) ));
+                        status = SRB_STATUS_DATA_OVERRUN;
+                        goto complete_req;
+                    }
                     if(AtaCtl->FindDelDev.Flags & UNIATA_ADD_FLAGS_UNHIDE) {
                         KdPrint2((PRINT_PREFIX "AtapiStartIo: unhide from further detection\n"));
                         if(AtaCtl->addr.TargetId != 0xff) {
@@ -8929,10 +8990,17 @@ uata_ctl_queue:
 
                     KdPrint2((PRINT_PREFIX "AtapiStartIo: remove %#x:%#x\n", AtaCtl->addr.PathId, AtaCtl->addr.TargetId));
 
+                    if(len < pos+sizeof(AtaCtl->FindDelDev)) {
+                        KdPrint2((PRINT_PREFIX "AtapiStartIo: AtaCtl Buffer too small: %#x < %#x\n", len,
+                            pos+sizeof(AtaCtl->FindDelDev) ));
+                        status = SRB_STATUS_DATA_OVERRUN;
+                        goto complete_req;
+                    }
                     LunExt->DeviceFlags = 0;
                     if(AtaCtl->FindDelDev.Flags & UNIATA_REMOVE_FLAGS_HIDE) {
                         KdPrint2((PRINT_PREFIX "AtapiStartIo: hide from further detection\n"));
-                        LunExt->DeviceFlags |= DFLAGS_HIDDEN;
+                        //LunExt->DeviceFlags |= DFLAGS_HIDDEN;
+                        UniataForgetDevice(LunExt);
                     }
 
                     for(i=0; i<AtaCtl->FindDelDev.WaitForPhysicalLink && i<30; i++) {
@@ -8946,6 +9014,12 @@ uata_ctl_queue:
 
                     KdPrint2((PRINT_PREFIX "AtapiStartIo: Set transfer mode\n"));
 
+                    if(len < pos+sizeof(AtaCtl->SetMode)) {
+                        KdPrint2((PRINT_PREFIX "AtapiStartIo: AtaCtl Buffer too small: %#x < %#x\n", len,
+                            pos+sizeof(AtaCtl->SetMode) ));
+                        status = SRB_STATUS_DATA_OVERRUN;
+                        goto complete_req;
+                    }
                     if(AtaCtl->SetMode.OrigMode != IOMODE_NOT_SPECIFIED) {
                         LunExt->OrigTransferMode = (UCHAR)(AtaCtl->SetMode.OrigMode);
                     }
@@ -8973,9 +9047,16 @@ uata_ctl_queue:
 
                     KdPrint2((PRINT_PREFIX "AtapiStartIo: Get transfer mode\n"));
 
+                    if(len < pos+sizeof(AtaCtl->GetMode)) {
+                        KdPrint2((PRINT_PREFIX "AtapiStartIo: AtaCtl Buffer too small: %#x < %#x\n", len,
+                            pos+sizeof(AtaCtl->GetMode) ));
+                        status = SRB_STATUS_DATA_OVERRUN;
+                        goto complete_req;
+                    }
                     AtaCtl->GetMode.OrigMode    = LunExt->OrigTransferMode;
                     AtaCtl->GetMode.MaxMode     = LunExt->LimitedTransferMode;
                     AtaCtl->GetMode.CurrentMode = LunExt->TransferMode;
+                    AtaCtl->GetMode.PhyMode     = LunExt->PhyTransferMode;
 
                     status = SRB_STATUS_SUCCESS;
                     break;
@@ -8984,6 +9065,12 @@ uata_ctl_queue:
 
                     KdPrint2((PRINT_PREFIX "AtapiStartIo: Get version\n"));
 
+                    if(len < pos+sizeof(AtaCtl->Version)) {
+                        KdPrint2((PRINT_PREFIX "AtapiStartIo: AtaCtl Buffer too small: %#x < %#x\n", len,
+                            pos+sizeof(AtaCtl->Version) ));
+                        status = SRB_STATUS_DATA_OVERRUN;
+                        goto complete_req;
+                    }
                     AtaCtl->Version.Length      = sizeof(GETDRVVERSION);
                     AtaCtl->Version.VersionMj   = UNIATA_VER_MJ;
                     AtaCtl->Version.VersionMn   = UNIATA_VER_MN;
@@ -8997,14 +9084,13 @@ uata_ctl_queue:
 
                     KdPrint2((PRINT_PREFIX "AtapiStartIo: Get adapter info\n"));
 
-                    AtaCtl->AdapterInfo.HeaderLength = FIELD_OFFSET(ADAPTERINFO, Chan);
-
-                    if(len < AtaCtl->AdapterInfo.HeaderLength + sizeof(AtaCtl->AdapterInfo.Chan)) {
-                        KdPrint2((PRINT_PREFIX "AtapiStartIo: Buffer too small: %#x < %#x\n", len,
-                            AtaCtl->AdapterInfo.HeaderLength + sizeof(AtaCtl->AdapterInfo.Chan)));
+                    if(len < pos+sizeof(AtaCtl->AdapterInfo)) {
+                        KdPrint2((PRINT_PREFIX "AtapiStartIo: AtaCtl Buffer too small: %#x < %#x\n", len,
+                            pos+sizeof(AtaCtl->AdapterInfo) ));
                         status = SRB_STATUS_DATA_OVERRUN;
-                        break;
+                        goto complete_req;
                     }
+                    AtaCtl->AdapterInfo.HeaderLength = sizeof(ADAPTERINFO);
 
                     AtaCtl->AdapterInfo.DevID      = deviceExtension->DevID;
                     AtaCtl->AdapterInfo.RevID      = deviceExtension->RevID;
@@ -9031,8 +9117,35 @@ uata_ctl_queue:
                     }
                     AtaCtl->AdapterInfo.ChanInfoValid = FALSE;
                     AtaCtl->AdapterInfo.LunInfoValid = FALSE;
+                    AtaCtl->AdapterInfo.ChanHeaderLengthValid = TRUE;
 
-                    RtlZeroMemory(&AtaCtl->AdapterInfo.Chan, sizeof(AtaCtl->AdapterInfo.Chan));
+                    pos += AtaCtl->AdapterInfo.HeaderLength;
+
+                    // zero tail
+                    RtlZeroMemory(((PCHAR)AtaCtl)+pos,
+                        len-pos);
+
+                    if(len >= pos+AtaCtl->AdapterInfo.NumberChannels*sizeof(CHANINFO)) {
+                        PCHANINFO ChanInfo = (PCHANINFO)( ((PCHAR)AtaCtl)+pos );
+                        PHW_CHANNEL cur_chan;
+                        KdPrint2((PRINT_PREFIX "AtapiStartIo: Fill channel info\n"));
+                        for(i=0;i<AtaCtl->AdapterInfo.NumberChannels;i++) {
+                            KdPrint2((PRINT_PREFIX "chan[%d] %x\n", i, cur_chan));
+                            cur_chan = &(deviceExtension->chan[i]);
+                            ChanInfo->MaxTransferMode = cur_chan->MaxTransferMode;
+                            ChanInfo->ChannelCtrlFlags = cur_chan->ChannelCtrlFlags;
+                            RtlCopyMemory(&(ChanInfo->QueueStat), &(cur_chan->QueueStat), sizeof(ChanInfo->QueueStat));
+                            ChanInfo->ReorderCount        = cur_chan->ReorderCount;
+                            ChanInfo->IntersectCount      = cur_chan->IntersectCount;
+                            ChanInfo->TryReorderCount     = cur_chan->TryReorderCount;
+                            ChanInfo->TryReorderHeadCount = cur_chan->TryReorderHeadCount;
+                            ChanInfo->TryReorderTailCount = cur_chan->TryReorderTailCount;
+                            //ChanInfo->opt_MaxTransferMode = cur_chan->opt_MaxTransferMode;
+                            ChanInfo++;
+                        }
+                        AtaCtl->AdapterInfo.ChanInfoValid = TRUE;
+                        AtaCtl->AdapterInfo.ChanHeaderLength = sizeof(*ChanInfo);
+                    }
 
                     status = SRB_STATUS_SUCCESS;
                     break;

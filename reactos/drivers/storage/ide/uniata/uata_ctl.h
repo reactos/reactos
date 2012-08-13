@@ -85,7 +85,7 @@ typedef struct _GETTRANSFERMODE {
     ULONG MaxMode;
     ULONG OrigMode;
     ULONG CurrentMode;
-    ULONG Reserved;
+    ULONG PhyMode; // since v0.42i6
 } GETTRANSFERMODE, *PGETTRANSFERMODE;
 
 typedef struct _GETDRVVERSION {
@@ -100,14 +100,13 @@ typedef struct _GETDRVVERSION {
 typedef struct _CHANINFO {
     ULONG               MaxTransferMode; // may differ from Controller's value due to 40-pin cable
     ULONG               ChannelCtrlFlags;
-//#ifdef QUEUE_STATISTICS
     LONGLONG QueueStat[MAX_QUEUE_STAT];
     LONGLONG ReorderCount;
     LONGLONG IntersectCount;
     LONGLONG TryReorderCount;
     LONGLONG TryReorderHeadCount;
     LONGLONG TryReorderTailCount; /* in-order requests */
-//#endif //QUEUE_STATISTICS
+//    ULONG               opt_MaxTransferMode; // user-specified
 } CHANINFO, *PCHANINFO;
 
 typedef struct _ADAPTERINFO {
@@ -143,13 +142,15 @@ typedef struct _ADAPTERINFO {
     ULONG NumberChannels;
     BOOLEAN ChanInfoValid;
 
-    UCHAR   NumberLuns;
+    UCHAR   NumberLuns;  // per channel
     BOOLEAN LunInfoValid;
-    CHAR    Reserved;
+    BOOLEAN ChanHeaderLengthValid; // since v0.42i8
 
     ULONG   AdapterInterfaceType;
+    ULONG   ChanHeaderLength;
+    ULONG   LunHeaderLength;
 
-    CHANINFO Chan[AHCI_MAX_PORT];
+    //CHANINFO Chan[0];
 
 } ADAPTERINFO, *PADAPTERINFO;
 
@@ -216,7 +217,9 @@ typedef struct _ATA_PASS_THROUGH_DIRECT {
 
 #endif //ATA_FLAGS_DRDY_REQUIRED
 
-#pragma pack(1)
+#pragma pack(pop)
+
+#pragma pack(push, 1)
 typedef struct _IDEREGS_EX {
         UCHAR    bFeaturesReg;           // Used for specifying SMART "commands".
         UCHAR    bSectorCountReg;        // IDE sector count register
@@ -263,11 +266,15 @@ typedef struct _UNIATA_REG_IO_HDR {
     ULONG          ItemCount;
     UNIATA_REG_IO  r[1];
 } UNIATA_REG_IO_HDR, *PUNIATA_REG_IO_HDR;
-#pragma pack()
+
+#pragma pack(pop)
+
+#pragma pack(push, 1)
 
 typedef struct _UNIATA_CTL {
     SRB_IO_CONTROL hdr;
     SCSI_ADDRESS   addr;
+    ULONG Reserved;
     union {
         UCHAR                   RawData[1];
         ADDREMOVEDEV            FindDelDev;

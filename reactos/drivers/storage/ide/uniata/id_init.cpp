@@ -1350,10 +1350,11 @@ hpt_cable80(
     GetPciConfig1(0x5a, res);
     res = res & (channel ? 0x01 : 0x02);
     SetPciConfig1(reg, val);
+    KdPrint2((PRINT_PREFIX "hpt_cable80(%d) = %d\n", channel, !res));
     return !res;
 } // end hpt_cable80()
 
-
+/*
 ULONG
 NTAPI
 via_cable80(
@@ -1398,9 +1399,11 @@ via_cable80(
             res |= TRUE; //(1 << (1 - (i >> 4)));
         }
     }
+    KdPrint2((PRINT_PREFIX "via_cable80(%d) = %d\n", channel, res));
     return res;
 
 } // end via_cable80()
+*/
 
 BOOLEAN
 NTAPI
@@ -1426,9 +1429,11 @@ generic_cable80(
     GetPciConfig1(pci_reg, tmp8);
     if(!(tmp8 & (1 << (channel << bit_offs)))) {
         chan->MaxTransferMode = min(deviceExtension->MaxTransferMode, ATA_UDMA2);
+        KdPrint2((PRINT_PREFIX "generic_cable80(%d, %#x, %d) = 0\n", channel, pci_reg, bit_offs));
         return FALSE;
     }
 
+    KdPrint2((PRINT_PREFIX "generic_cable80(%d, %#x, %d) = 1\n", channel, pci_reg, bit_offs));
     return TRUE;
 } // end generic_cable80()
 
@@ -1599,7 +1604,7 @@ NTAPI
 AtapiChipInit(
     IN PVOID HwDeviceExtension,
     IN ULONG DeviceNumber,
-    IN ULONG channel // physical channel
+    IN ULONG channel // logical channel
     )
 {
     PHW_DEVICE_EXTENSION deviceExtension = (PHW_DEVICE_EXTENSION)HwDeviceExtension;
@@ -1628,10 +1633,12 @@ AtapiChipInit(
         c = CHAN_NOT_SPECIFIED;
         break;
     default:
-        c = channel - deviceExtension->Channel; // logical channel (for Compatible Mode controllers)
+        //c = channel - deviceExtension->Channel; // logical channel (for Compatible Mode controllers)
+        c = channel;
+        channel += deviceExtension->Channel;
     }
 
-    KdPrint2((PRINT_PREFIX "AtapiChipInit: dev %#x, ph chan %d\n", DeviceNumber, channel ));
+    KdPrint2((PRINT_PREFIX "AtapiChipInit: dev %#x, ph chan %d, c %d\n", DeviceNumber, channel, c));
 
     KdPrint2((PRINT_PREFIX "HwFlags: %#x\n", deviceExtension->HwFlags));
     KdPrint2((PRINT_PREFIX "VendorID/DeviceID/Rev %#x/%#x/%#x\n", VendorID, DeviceID, RevID));
@@ -2236,11 +2243,12 @@ AtapiChipInit(
                 UniataSataWritePort4(chan, IDX_SATA_SError, 0xffffffff, 0);
                 break;
             }
-
+/*
             // check 80-pin cable
             if(!via_cable80(deviceExtension, channel)) {
                 chan->MaxTransferMode = min(deviceExtension->MaxTransferMode, ATA_UDMA2);
             }
+*/
         }
 
         break;

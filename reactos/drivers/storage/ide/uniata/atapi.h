@@ -297,6 +297,44 @@ typedef struct _MODE_PARAMETER_HEADER_10 {
 }MODE_PARAMETER_HEADER_10, *PMODE_PARAMETER_HEADER_10;
 
 //
+// values for TransferMode
+//
+#define         ATA_PIO                 0x00
+#define 	ATA_PIO_NRDY            0x01
+
+#define         ATA_PIO0                0x08
+#define         ATA_PIO1                0x09
+#define         ATA_PIO2                0x0a
+#define         ATA_PIO3                0x0b
+#define         ATA_PIO4                0x0c
+#define         ATA_PIO5                0x0d
+
+#define         ATA_DMA                 0x10
+#define         ATA_SDMA                0x10
+#define         ATA_SDMA0               0x10
+#define         ATA_SDMA1               0x11
+#define         ATA_SDMA2               0x12
+
+#define         ATA_WDMA                0x20
+#define         ATA_WDMA0               0x20
+#define         ATA_WDMA1               0x21
+#define         ATA_WDMA2               0x22
+
+#define         ATA_UDMA                0x40
+#define         ATA_UDMA0               0x40 // ATA-16
+#define         ATA_UDMA1               0x41 // ATA-25
+#define         ATA_UDMA2               0x42 // ATA-33
+#define         ATA_UDMA3               0x43 // ATA-44
+#define         ATA_UDMA4               0x44 // ATA-66
+#define         ATA_UDMA5               0x45 // ATA-100
+#define         ATA_UDMA6               0x46 // ATA-133
+//#define         ATA_UDMA7               0x47 // ATA-166
+
+#define         ATA_SA150               0x47 /*0x80*/
+#define         ATA_SA300               0x48 /*0x81*/
+#define         ATA_SA600               0x49 /*0x82*/
+
+//
 // IDE command definitions
 //
 
@@ -766,6 +804,8 @@ typedef struct _IDENTIFY_DATA {
     USHORT HwResSlave : 5;
     USHORT HwResCableId : 1;
     USHORT HwResValid : 2;
+
+#define IDENTIFY_CABLE_ID_VALID    0x01
 
     USHORT CurrentAcoustic : 8;             //     94
     USHORT VendorAcoustic : 8;
@@ -1488,6 +1528,83 @@ extern UCHAR AtaCommandFlags[256];
 #endif //_DEBUG
 
 #endif //USER_MODE
+
+__inline
+BOOLEAN
+ata_is_sata(
+    PIDENTIFY_DATA ident
+    )
+{
+    return (ident->SataCapabilities && ident->SataCapabilities != 0xffff);
+} // end ata_is_sata()
+
+__inline
+LONG
+ata_cur_mode_from_ident(
+    PIDENTIFY_DATA ident
+    )
+{
+    if(ata_is_sata(ident)) {
+        if(ident->SataCapabilities & ATA_SATA_GEN3) {
+            return ATA_SA600;
+        } else
+        if(ident->SataCapabilities & ATA_SATA_GEN2) {
+            return ATA_SA300;
+        } else
+        if(ident->SataCapabilities & ATA_SATA_GEN1) {
+            return ATA_SA150;
+        }
+        return ATA_SA150;
+    }
+
+    if (ident->UdmaModesValid) {
+        if (ident->UltraDMAActive & 0x40)
+            return ATA_UDMA0+6;
+        if (ident->UltraDMAActive & 0x20)
+            return ATA_UDMA0+5;
+        if (ident->UltraDMAActive & 0x10)
+            return ATA_UDMA0+4;
+        if (ident->UltraDMAActive & 0x08)
+            return ATA_UDMA0+3;
+        if (ident->UltraDMAActive & 0x04)
+            return ATA_UDMA0+2;
+        if (ident->UltraDMAActive & 0x02)
+            return ATA_UDMA0+1;
+        if (ident->UltraDMAActive & 0x01)
+            return ATA_UDMA0+0;
+    }
+
+    if (ident->MultiWordDMAActive & 0x04)
+        return ATA_WDMA0+2;
+    if (ident->MultiWordDMAActive & 0x02)
+        return ATA_WDMA0+1;
+    if (ident->MultiWordDMAActive & 0x01)
+        return ATA_WDMA0+0;
+
+    if (ident->SingleWordDMAActive & 0x04)
+        return ATA_SDMA0+2;
+    if (ident->SingleWordDMAActive & 0x02)
+        return ATA_SDMA0+1;
+    if (ident->SingleWordDMAActive & 0x01)
+        return ATA_SDMA0+0;
+
+    if (ident->PioTimingsValid) {
+        if (ident->AdvancedPIOModes & AdvancedPIOModes_5)
+            return ATA_PIO0+5;
+        if (ident->AdvancedPIOModes & AdvancedPIOModes_4)
+            return ATA_PIO0+4;
+        if (ident->AdvancedPIOModes & AdvancedPIOModes_3) 
+            return ATA_PIO0+3;
+    }        
+    if (ident->PioCycleTimingMode == 2)
+        return ATA_PIO0+2;
+    if (ident->PioCycleTimingMode == 1)
+        return ATA_PIO0+1;
+    if (ident->PioCycleTimingMode == 0)
+        return ATA_PIO0+0;
+
+    return ATA_PIO;
+} // end ata_cur_mode_from_ident()
 
 #pragma pack(pop)
 

@@ -41,44 +41,6 @@ Revision History:
 
 #define MAX_QUEUE_STAT        8
 
-//
-// values for TransferMode
-//
-#define         ATA_PIO                 0x00
-#define 	ATA_PIO_NRDY            0x01
-
-#define         ATA_PIO0                0x08
-#define         ATA_PIO1                0x09
-#define         ATA_PIO2                0x0a
-#define         ATA_PIO3                0x0b
-#define         ATA_PIO4                0x0c
-#define         ATA_PIO5                0x0d
-
-#define         ATA_DMA                 0x10
-#define         ATA_SDMA                0x10
-#define         ATA_SDMA0               0x10
-#define         ATA_SDMA1               0x11
-#define         ATA_SDMA2               0x12
-
-#define         ATA_WDMA                0x20
-#define         ATA_WDMA0               0x20
-#define         ATA_WDMA1               0x21
-#define         ATA_WDMA2               0x22
-
-#define         ATA_UDMA                0x40
-#define         ATA_UDMA0               0x40 // ATA-16
-#define         ATA_UDMA1               0x41 // ATA-25
-#define         ATA_UDMA2               0x42 // ATA-33
-#define         ATA_UDMA3               0x43 // ATA-44
-#define         ATA_UDMA4               0x44 // ATA-66
-#define         ATA_UDMA5               0x45 // ATA-100
-#define         ATA_UDMA6               0x46 // ATA-133
-//#define         ATA_UDMA7               0x47 // ATA-166
-
-#define         ATA_SA150               0x47 /*0x80*/
-#define         ATA_SA300               0x48 /*0x81*/
-#define         ATA_SA600               0x49 /*0x82*/
-
 // define PIO timings in nanoseconds
 #define         PIO0_TIMING             600
 

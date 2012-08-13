@@ -1085,13 +1085,14 @@ typedef struct _HW_LU_EXTENSION {
     ULONG          DiscsPresent;   // Indicates number of platters on changer-ish devices.
     BOOLEAN        DWordIO;        // Indicates use of 32-bit PIO
     UCHAR          ReturningMediaStatus;
+    UCHAR          MaximumBlockXfer;
+    UCHAR          Padding0[1];    // padding
 
     UCHAR          TransferMode;          // current transfer mode
     UCHAR          LimitedTransferMode;   // user-defined or IDE cable limitation
     UCHAR          OrigTransferMode;      // transfer mode, returned by device IDENTIFY (can be changed via IOCTL)
+    UCHAR          PhyTransferMode;       // phy transfer mode (actual bus transfer mode for PATA DMA and SATA)
 
-    UCHAR          MaximumBlockXfer;
-    UCHAR          Padding0[2];    // padding
     ULONG          ErrorCount;     // Count of errors. Used to turn off features.
  //   ATA_QUEUE      cmd_queue;
     LONGLONG       ReadCmdCost;

@@ -68,7 +68,14 @@ UniataSataConnect(
         if(SStatus.SPD == SStatus_SPD_Gen1 ||
            SStatus.SPD == SStatus_SPD_Gen2 ||
            SStatus.SPD == SStatus_SPD_Gen3) {
+            // SATA sets actual transfer rate in LunExt on init.
+            // There is no run-time SATA rate adjustment yet.
+            // On the other hand, we may turn SATA device in PIO mode
+            // TODO: make separate states for interface speed and transfer mode (DMA vs PIO)
+            chan->lun[0]->LimitedTransferMode =
+            chan->lun[0]->PhyTransferMode =
             chan->lun[0]->TransferMode = ATA_SA150 + (UCHAR)(SStatus.SPD - 1);
+
             KdPrint2((PRINT_PREFIX "SATA TransferMode %#x\n", chan->lun[0]->TransferMode));
             if(chan->MaxTransferMode < chan->lun[0]->TransferMode) {
                 KdPrint2((PRINT_PREFIX "SATA upd chan TransferMode\n"));
