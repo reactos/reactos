@@ -1317,7 +1317,7 @@ Cleanup:
 /************************************************************************
  *  RegDeleteKeyExA
  *
- * @unimplemented
+ * @implemented
  */
 LONG
 WINAPI
@@ -1326,15 +1326,68 @@ RegDeleteKeyExA(HKEY hKey,
                 REGSAM samDesired,
                 DWORD Reserved)
 {
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING SubKeyName;
+    HANDLE ParentKey;
+    HANDLE TargetKey;
+    NTSTATUS Status;
+
+    /* Make sure we got a subkey */
+    if (!lpSubKey)
+    {
+        /* Fail */
+        return ERROR_INVALID_PARAMETER;
+    }
+
+    Status = MapDefaultKey(&ParentKey,
+                           hKey);
+    if (!NT_SUCCESS(Status))
+    {
+        return RtlNtStatusToDosError(Status);
+    }
+
+    if (samDesired & KEY_WOW64_32KEY)
+        ERR("Wow64 not yet supported!\n");
+
+    if (samDesired & KEY_WOW64_64KEY)
+        ERR("Wow64 not yet supported!\n");
+
+    RtlCreateUnicodeStringFromAsciiz(&SubKeyName,
+                                     (LPSTR)lpSubKey);
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &SubKeyName,
+                               OBJ_CASE_INSENSITIVE,
+                               ParentKey,
+                               NULL);
+
+    Status = NtOpenKey(&TargetKey,
+                       DELETE,
+                       &ObjectAttributes);
+    RtlFreeUnicodeString(&SubKeyName);
+    if (!NT_SUCCESS(Status))
+    {
+        goto Cleanup;
+    }
+
+    Status = NtDeleteKey(TargetKey);
+    NtClose (TargetKey);
+
+Cleanup:
+    ClosePredefKey(ParentKey);
+
+    if (!NT_SUCCESS(Status))
+    {
+        return RtlNtStatusToDosError(Status);
+    }
+
+    return ERROR_SUCCESS;
 }
 
 
 /************************************************************************
  *  RegDeleteKeyExW
  *
- * @unimplemented
+ * @implemented
  */
 LONG
 WINAPI
@@ -1343,8 +1396,60 @@ RegDeleteKeyExW(HKEY hKey,
                 REGSAM samDesired,
                 DWORD Reserved)
 {
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING SubKeyName;
+    HANDLE ParentKey;
+    HANDLE TargetKey;
+    NTSTATUS Status;
+
+    /* Make sure we got a subkey */
+    if (!lpSubKey)
+    {
+        /* Fail */
+        return ERROR_INVALID_PARAMETER;
+    }
+
+    Status = MapDefaultKey(&ParentKey,
+                           hKey);
+    if (!NT_SUCCESS(Status))
+    {
+        return RtlNtStatusToDosError(Status);
+    }
+
+    if (samDesired & KEY_WOW64_32KEY)
+        ERR("Wow64 not yet supported!\n");
+
+    if (samDesired & KEY_WOW64_64KEY)
+        ERR("Wow64 not yet supported!\n");
+
+
+    RtlInitUnicodeString(&SubKeyName,
+                         (LPWSTR)lpSubKey);
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &SubKeyName,
+                               OBJ_CASE_INSENSITIVE,
+                               ParentKey,
+                               NULL);
+    Status = NtOpenKey(&TargetKey,
+                       DELETE,
+                       &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+    {
+        goto Cleanup;
+    }
+
+    Status = NtDeleteKey(TargetKey);
+    NtClose(TargetKey);
+
+Cleanup:
+    ClosePredefKey(ParentKey);
+
+    if (!NT_SUCCESS(Status))
+    {
+        return RtlNtStatusToDosError(Status);
+    }
+
+    return ERROR_SUCCESS;
 }
 
 
