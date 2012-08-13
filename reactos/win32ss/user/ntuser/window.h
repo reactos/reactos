@@ -34,7 +34,7 @@ extern ATOM AtomFlashWndState;
 #define IntGetWndProcessId(WndObj) \
   PsGetProcessId(WndObj->head.pti->ppi->peProcess)
 
-  
+PWND FASTCALL ValidateHwndNoErr(HWND);
 BOOL FASTCALL UserUpdateUiState(PWND Wnd, WPARAM wParam);
 BOOL FASTCALL IntIsWindow(HWND hWnd);
 HWND* FASTCALL IntWinListChildren(PWND Window);

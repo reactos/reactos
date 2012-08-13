@@ -203,6 +203,20 @@ HANDLE UserAllocHandle(PUSER_HANDLE_TABLE ht, PVOID object, USER_OBJECT_TYPE typ
    return entry_to_handle(ht, entry );
 }
 
+/* return a pointer to a user object from its handle without setting an error */
+PVOID UserGetObjectNoErr(PUSER_HANDLE_TABLE ht, HANDLE handle, USER_OBJECT_TYPE type )
+{
+   PUSER_HANDLE_ENTRY entry;
+
+   ASSERT(ht);
+
+   if (!(entry = handle_to_entry(ht, handle )) || entry->type != type)
+   {
+      return NULL;
+   }
+   return entry->ptr;
+}
+
 /* return a pointer to a user object from its handle */
 PVOID UserGetObject(PUSER_HANDLE_TABLE ht, HANDLE handle, USER_OBJECT_TYPE type )
 {
