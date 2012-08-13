@@ -21,12 +21,9 @@ When porting a new DLL from Wine to ReactOS, please do the following steps
 
 The following build tools are shared with Wine.
 
-reactos/tools/unicode             # Synced to Wine-1.3.37
+reactos/tools/unicode             # Synced to Wine-1.5.4
 reactos/tools/widl                # Synced to Wine-1.3.26
-reactos/tools/winebuild           # Synced to Wine-1_1_13
-reactos/tools/wmc                 # Synced to Wine-20081105 (~Wine-1.1.7)
 reactos/tools/wpp                 # Synced to Wine-1.3.26
-reactos/tools/wrc                 # Synced to Wine-1.3.26
 
 The following libraries are shared with Wine.
 
@@ -53,12 +50,12 @@ reactos/dll/win32/comcat          # Synced to Wine-1.5.4
 reactos/dll/win32/comctl32        # Synced to Wine 1.3.37
 reactos/dll/win32/comdlg32        # Synced to Wine 1.3.37
 reactos/dll/win32/compstui        # Synced to Wine-1.5.4
-reactos/dll/win32/credui          # Synced to Wine-1.3.37
+reactos/dll/win32/credui          # Synced to Wine-1.5.4
 reactos/dll/win32/crypt32         # Synced to Wine-1.3.37
-reactos/dll/win32/cryptdlg        # Synced to Wine-1.3.37
-reactos/dll/win32/cryptdll        # Synced to Wine-1.3.37
+reactos/dll/win32/cryptdlg        # Synced to Wine-1.5.4
+reactos/dll/win32/cryptdll        # Synced to Wine-1.5.4
 reactos/dll/win32/cryptnet        # Synced to Wine-1.3.37
-reactos/dll/win32/cryptui         # Synced to Wine-1.3.37
+reactos/dll/win32/cryptui         # Synced to Wine-1.5.4
 reactos/dll/win32/dbghelp         # Synced to Wine-1.3.37
 reactos/dll/win32/dciman32        # Synced to Wine-1.5.4
 reactos/dll/win32/dwmapi          # Synced to Wine-1.5.4
