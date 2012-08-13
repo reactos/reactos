@@ -39,6 +39,7 @@
 #include "wine/debug.h"
 
 static const BOOL is_64bit = sizeof(void *) > sizeof(int);
+BOOL is_wow64;
 
 #define MSI_DATASIZEMASK 0x00ff
 #define MSITYPE_VALID    0x0100
@@ -347,6 +348,7 @@ enum clr_version
     CLR_VERSION_V10,
     CLR_VERSION_V11,
     CLR_VERSION_V20,
+    CLR_VERSION_V40,
     CLR_VERSION_MAX
 };
 
@@ -369,6 +371,7 @@ typedef struct tagMSIPACKAGE
     struct list cabinet_streams;
     LPWSTR ActionFormat;
     LPWSTR LastAction;
+    UINT   action_progress_increment;
     HANDLE log_file;
     IAssemblyCache *cache_net[CLR_VERSION_MAX];
     IAssemblyCache *cache_sxs;

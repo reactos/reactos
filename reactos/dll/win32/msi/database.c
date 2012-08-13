@@ -164,7 +164,7 @@ UINT msi_get_raw_stream( MSIDATABASE *db, LPCWSTR stname, IStream **stm )
 
         if (!(stream = msi_alloc( sizeof(MSISTREAM) ))) return ERROR_NOT_ENOUGH_MEMORY;
         stream->stg = stg;
-        IStream_AddRef( stg );
+        IStorage_AddRef( stg );
         stream->stm = *stm;
         IStream_AddRef( *stm );
         list_add_tail( &db->streams, &stream->entry );
@@ -207,7 +207,7 @@ void msi_destroy_stream( MSIDATABASE *db, const WCHAR *stname )
 
             list_remove( &stream->entry );
             IStream_Release( stream->stm );
-            IStream_Release( stream->stg );
+            IStorage_Release( stream->stg );
             IStorage_DestroyElement( stream->stg, stname );
             msi_free( stream );
             CoTaskMemFree( stat.pwcsName );
@@ -224,7 +224,7 @@ static void free_streams( MSIDATABASE *db )
         MSISTREAM *s = LIST_ENTRY(list_head( &db->streams ), MSISTREAM, entry);
         list_remove( &s->entry );
         IStream_Release( s->stm );
-        IStream_Release( s->stg );
+        IStorage_Release( s->stg );
         msi_free( s );
     }
 }
@@ -2082,7 +2082,7 @@ static HRESULT WINAPI mrd_QueryInterface( IWineMsiRemoteDatabase *iface,
     if( IsEqualCLSID( riid, &IID_IUnknown ) ||
         IsEqualCLSID( riid, &IID_IWineMsiRemoteDatabase ) )
     {
-        IUnknown_AddRef( iface );
+        IWineMsiRemoteDatabase_AddRef( iface );
         *ppobj = iface;
         return S_OK;
     }

@@ -357,14 +357,12 @@ const WCHAR *msi_string_lookup_id( const string_table *st, UINT id )
  *  [in/out] sz     - number of bytes available in the buffer on input
  *                    number of bytes used on output
  *
- *   The size includes the terminating nul character.  Short buffers
- *  will be filled, but not nul terminated.
+ *  Returned string is not nul terminated.
  */
 static UINT msi_id2stringA( const string_table *st, UINT id, LPSTR buffer, UINT *sz )
 {
-    UINT len;
+    UINT len, lenW;
     const WCHAR *str;
-    int n;
 
     TRACE("Finding string %d of %d\n", id, st->maxcount);
 
@@ -372,26 +370,14 @@ static UINT msi_id2stringA( const string_table *st, UINT id, LPSTR buffer, UINT 
     if( !str )
         return ERROR_FUNCTION_FAILED;
 
-    len = WideCharToMultiByte( st->codepage, 0, str, -1, NULL, 0, NULL, NULL );
-
-    if( !buffer )
+    lenW = strlenW( str );
+    len = WideCharToMultiByte( st->codepage, 0, str, lenW, NULL, 0, NULL, NULL );
+    if( *sz < len )
     {
         *sz = len;
-        return ERROR_SUCCESS;
+        return ERROR_MORE_DATA;
     }
-
-    if( len > *sz )
-    {
-        n = strlenW( str ) + 1;
-        while( n && (len > *sz) )
-            len = WideCharToMultiByte( st->codepage, 0, 
-                           str, --n, NULL, 0, NULL, NULL );
-    }
-    else
-        n = -1;
-
-    *sz = WideCharToMultiByte( st->codepage, 0, str, n, buffer, len, NULL, NULL );
-
+    *sz = WideCharToMultiByte( st->codepage, 0, str, lenW, buffer, *sz, NULL, NULL );
     return ERROR_SUCCESS;
 }
 
@@ -588,7 +574,7 @@ UINT msi_save_string_table( const string_table *st, IStorage *storage, UINT *byt
     data = msi_alloc( datasize );
     if( ! data )
     {
-        WARN("Failed to alloc data %d bytes\n", poolsize );
+        WARN("Failed to alloc data %d bytes\n", datasize );
         goto err;
     }
 
@@ -622,8 +608,6 @@ UINT msi_save_string_table( const string_table *st, IStorage *storage, UINT *byt
             ERR("failed to fetch string\n");
             sz = 0;
         }
-        if( sz && (sz < (datasize - used ) ) )
-            sz--;
 
         if (sz)
             pool[ n*2 + 1 ] = st->strings[i].persistent_refcount;

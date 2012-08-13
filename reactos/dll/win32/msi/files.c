@@ -399,7 +399,6 @@ UINT ACTION_InstallFiles(MSIPACKAGE *package)
             goto done;
         }
     }
-    msi_init_assembly_caches( package );
     LIST_FOR_EACH_ENTRY( comp, &package->components, MSICOMPONENT, entry )
     {
         comp->Action = msi_get_component_action( package, comp );
@@ -414,7 +413,6 @@ UINT ACTION_InstallFiles(MSIPACKAGE *package)
             }
         }
     }
-    msi_destroy_assembly_caches( package );
 
 done:
     msi_free_media_info(mi);
@@ -1309,7 +1307,6 @@ UINT ACTION_RemoveFiles( MSIPACKAGE *package )
         msiobj_release( &uirow->hdr );
     }
 
-    msi_init_assembly_caches( package );
     LIST_FOR_EACH_ENTRY( comp, &package->components, MSICOMPONENT, entry )
     {
         comp->Action = msi_get_component_action( package, comp );
@@ -1328,6 +1325,5 @@ UINT ACTION_RemoveFiles( MSIPACKAGE *package )
             remove_folder( folder );
         }
     }
-    msi_destroy_assembly_caches( package );
     return ERROR_SUCCESS;
 }

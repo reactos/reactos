@@ -81,7 +81,8 @@ DWORD call_script(MSIHANDLE hPackage, INT type, LPCWSTR script, LPCWSTR function
 {
     HRESULT hr;
     IActiveScript *pActiveScript = NULL;
-    IActiveScriptParse *pActiveScriptParse = NULL;
+    IActiveScriptParse32 *pActiveScriptParse32 = NULL;
+    IActiveScriptParse64 *pActiveScriptParse64 = NULL;
     MsiActiveScriptSite *pActiveScriptSite = NULL;
     IDispatch *pDispatch = NULL;
     DISPPARAMS dispparamsNoArgs = {NULL, NULL, 0, 0};
@@ -123,27 +124,41 @@ DWORD call_script(MSIHANDLE hPackage, INT type, LPCWSTR script, LPCWSTR function
         goto done;
     }
 
-    /* Get the IActiveScriptParse engine interface */
-    hr = IActiveScript_QueryInterface(pActiveScript, &IID_IActiveScriptParse, (void **)&pActiveScriptParse);
-    if (FAILED(hr)) goto done;
+    if (type & msidbCustomActionType64BitScript)
+    {
+        hr = IActiveScript_QueryInterface(pActiveScript, &IID_IActiveScriptParse64, (void **)&pActiveScriptParse64);
+        if (FAILED(hr)) goto done;
 
-    /* Give our host to the engine */
-    hr = IActiveScript_SetScriptSite(pActiveScript, (IActiveScriptSite *)pActiveScriptSite);
-    if (FAILED(hr)) goto done;
+        hr = IActiveScript_SetScriptSite(pActiveScript, (IActiveScriptSite *)pActiveScriptSite);
+        if (FAILED(hr)) goto done;
 
-    /* Initialize the script engine */
-    hr = IActiveScriptParse64_InitNew(pActiveScriptParse);
-    if (FAILED(hr)) goto done;
+        hr = IActiveScriptParse64_InitNew(pActiveScriptParse64);
+        if (FAILED(hr)) goto done;
 
-    /* Add the session object */
-    hr = IActiveScript_AddNamedItem(pActiveScript, szSession, SCRIPTITEM_GLOBALMEMBERS);
-    if (FAILED(hr)) goto done;
+        hr = IActiveScript_AddNamedItem(pActiveScript, szSession, SCRIPTITEM_GLOBALMEMBERS);
+        if (FAILED(hr)) goto done;
 
-    /* Pass the script to the engine */
-    hr = IActiveScriptParse64_ParseScriptText(pActiveScriptParse, script, NULL, NULL, NULL, 0, 0, 0L, NULL, NULL);
-    if (FAILED(hr)) goto done;
+        hr = IActiveScriptParse64_ParseScriptText(pActiveScriptParse64, script, NULL, NULL, NULL, 0, 0, 0L, NULL, NULL);
+        if (FAILED(hr)) goto done;
+    }
+    else
+    {
+        hr = IActiveScript_QueryInterface(pActiveScript, &IID_IActiveScriptParse32, (void **)&pActiveScriptParse32);
+        if (FAILED(hr)) goto done;
 
-    /* Start processing the script */
+        hr = IActiveScript_SetScriptSite(pActiveScript, (IActiveScriptSite *)pActiveScriptSite);
+        if (FAILED(hr)) goto done;
+
+        hr = IActiveScriptParse32_InitNew(pActiveScriptParse32);
+        if (FAILED(hr)) goto done;
+
+        hr = IActiveScript_AddNamedItem(pActiveScript, szSession, SCRIPTITEM_GLOBALMEMBERS);
+        if (FAILED(hr)) goto done;
+
+        hr = IActiveScriptParse32_ParseScriptText(pActiveScriptParse32, script, NULL, NULL, NULL, 0, 0, 0L, NULL, NULL);
+        if (FAILED(hr)) goto done;
+    }
+
     hr = IActiveScript_SetScriptState(pActiveScript, SCRIPTSTATE_CONNECTED);
     if (FAILED(hr)) goto done;
 
@@ -176,17 +191,17 @@ DWORD call_script(MSIHANDLE hPackage, INT type, LPCWSTR script, LPCWSTR function
 
 done:
 
-    /* Free everything that needs to be freed */
     if (pDispatch) IDispatch_Release(pDispatch);
-    if (pActiveScript) IActiveScriptSite_Release(pActiveScript);
-    if (pActiveScriptSite &&
-        pActiveScriptSite->pSession) IUnknown_Release((IUnknown *)pActiveScriptSite->pSession);
-    if (pActiveScriptSite &&
-        pActiveScriptSite->pInstaller) IUnknown_Release((IUnknown *)pActiveScriptSite->pInstaller);
-    if (pActiveScriptSite) IUnknown_Release((IUnknown *)pActiveScriptSite);
-
+    if (pActiveScript) IActiveScript_Release(pActiveScript);
+    if (pActiveScriptParse32) IActiveScriptParse32_Release(pActiveScriptParse32);
+    if (pActiveScriptParse64) IActiveScriptParse64_Release(pActiveScriptParse64);
+    if (pActiveScriptSite)
+    {
+        if (pActiveScriptSite->pSession) IDispatch_Release(pActiveScriptSite->pSession);
+        if (pActiveScriptSite->pInstaller) IDispatch_Release(pActiveScriptSite->pInstaller);
+        IActiveScriptSite_Release((IActiveScriptSite *)pActiveScriptSite);
+    }
     CoUninitialize();    /* must call even if CoInitialize failed */
-
     return ret;
 }
 
@@ -204,7 +219,7 @@ static HRESULT WINAPI MsiActiveScriptSite_QueryInterface(IActiveScriptSite* ifac
     if (IsEqualGUID(riid, &IID_IUnknown) ||
         IsEqualGUID(riid, &IID_IActiveScriptSite))
     {
-        IClassFactory_AddRef(iface);
+        IActiveScriptSite_AddRef(iface);
         *ppvObject = This;
         return S_OK;
     }

@@ -4207,3 +4207,9 @@ UINT WINAPI MsiEndTransaction( DWORD state )
     FIXME("%u\n", state);
     return ERROR_SUCCESS;
 }
+
+UINT WINAPI Migrate10CachedPackagesW(void* a, void* b, void* c, DWORD d)
+{
+    FIXME("%p,%p,%p,%08x\n", a, b, c, d);
+    return ERROR_SUCCESS;
+}

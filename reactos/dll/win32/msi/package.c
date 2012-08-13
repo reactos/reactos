@@ -344,8 +344,9 @@ static void free_package_structures( MSIPACKAGE *package )
 
 static void MSI_FreePackage( MSIOBJECTHDR *arg)
 {
-    UINT i;
     MSIPACKAGE *package = (MSIPACKAGE *)arg;
+
+    msi_destroy_assembly_caches( package );
 
     if( package->dialog )
         msi_dialog_destroy( package->dialog );
@@ -353,10 +354,6 @@ static void MSI_FreePackage( MSIOBJECTHDR *arg)
     msiobj_release( &package->db->hdr );
     free_package_structures(package);
     CloseHandle( package->log_file );
-
-    for (i = 0; i < CLR_VERSION_MAX; i++)
-        if (package->cache_net[i]) IAssemblyCache_Release( package->cache_net[i] );
-    if (package->cache_sxs) IAssemblyCache_Release( package->cache_sxs );
 
     if (package->delete_on_close) DeleteFileW( package->localfile );
     msi_free( package->localfile );
@@ -669,12 +666,11 @@ done:
 
 static VOID set_installer_properties(MSIPACKAGE *package)
 {
-    WCHAR pth[MAX_PATH];
     WCHAR *ptr;
     OSVERSIONINFOEXW OSVersion;
     MEMORYSTATUSEX msex;
     DWORD verval, len;
-    WCHAR verstr[10], bufstr[20];
+    WCHAR pth[MAX_PATH], verstr[11], bufstr[22];
     HDC dc;
     HKEY hkey;
     LPWSTR username, companyname;
@@ -704,14 +700,13 @@ static VOID set_installer_properties(MSIPACKAGE *package)
     static const WCHAR szVersion9x[] = {'V','e','r','s','i','o','n','9','X',0};
     static const WCHAR szVersionNT[] = {'V','e','r','s','i','o','n','N','T',0};
     static const WCHAR szMsiNTProductType[] = {'M','s','i','N','T','P','r','o','d','u','c','t','T','y','p','e',0};
-    static const WCHAR szFormat[] = {'%','l','i',0};
+    static const WCHAR szFormat[] = {'%','u',0};
+    static const WCHAR szFormat2[] = {'%','u','.','%','u',0};
     static const WCHAR szWindowsBuild[] = {'W','i','n','d','o','w','s','B','u','i','l','d',0};
     static const WCHAR szServicePackLevel[] = {'S','e','r','v','i','c','e','P','a','c','k','L','e','v','e','l',0};
-    static const WCHAR szSix[] = {'6',0 };
     static const WCHAR szVersionMsi[] = { 'V','e','r','s','i','o','n','M','s','i',0 };
     static const WCHAR szVersionDatabase[] = { 'V','e','r','s','i','o','n','D','a','t','a','b','a','s','e',0 };
     static const WCHAR szPhysicalMemory[] = { 'P','h','y','s','i','c','a','l','M','e','m','o','r','y',0 };
-    static const WCHAR szFormat2[] = {'%','l','i','.','%','l','i',0};
     static const WCHAR szScreenX[] = {'S','c','r','e','e','n','X',0};
     static const WCHAR szScreenY[] = {'S','c','r','e','e','n','Y',0};
     static const WCHAR szColorBits[] = {'C','o','l','o','r','B','i','t','s',0};
@@ -874,8 +869,8 @@ static VOID set_installer_properties(MSIPACKAGE *package)
     }
     sprintfW(verstr, szFormat, OSVersion.dwBuildNumber);
     msi_set_property(package->db, szWindowsBuild, verstr);
-    /* just fudge this */
-    msi_set_property(package->db, szServicePackLevel, szSix);
+    sprintfW(verstr, szFormat, OSVersion.wServicePackMajor);
+    msi_set_property(package->db, szServicePackLevel, verstr);
 
     sprintfW( bufstr, szFormat2, MSI_MAJORVERSION, MSI_MINORVERSION);
     msi_set_property( package->db, szVersionMsi, bufstr );
@@ -1339,7 +1334,6 @@ static UINT msi_parse_summary( MSISUMMARYINFO *si, MSIPACKAGE *package )
 
 static UINT validate_package( MSIPACKAGE *package )
 {
-    BOOL is_wow64;
     UINT i;
 
     if (package->platform == PLATFORM_INTEL64)
@@ -1348,7 +1342,6 @@ static UINT validate_package( MSIPACKAGE *package )
     if (package->platform == PLATFORM_ARM)
         return ERROR_INSTALL_PLATFORM_UNSUPPORTED;
 #endif
-    IsWow64Process( GetCurrentProcess(), &is_wow64 );
     if (package->platform == PLATFORM_X64)
     {
         if (!is_64bit && !is_wow64)
@@ -1905,8 +1898,16 @@ INT MSI_ProcessMessage( MSIPACKAGE *package, INSTALLMESSAGE eMessageType, MSIREC
         msi_free(deformated);
 
         ControlEvent_FireSubscribedEvent(package, szActionData, uirow);
-
         msiobj_release(&uirow->hdr);
+
+        if (package->action_progress_increment)
+        {
+            uirow = MSI_CreateRecord(2);
+            MSI_RecordSetInteger(uirow, 1, 2);
+            MSI_RecordSetInteger(uirow, 2, package->action_progress_increment);
+            ControlEvent_FireSubscribedEvent(package, szSetProgress, uirow);
+            msiobj_release(&uirow->hdr);
+        }
         break;
 
     case INSTALLMESSAGE_ACTIONSTART:
@@ -2360,7 +2361,7 @@ static HRESULT WINAPI mrp_QueryInterface( IWineMsiRemotePackage *iface,
     if( IsEqualCLSID( riid, &IID_IUnknown ) ||
         IsEqualCLSID( riid, &IID_IWineMsiRemotePackage ) )
     {
-        IUnknown_AddRef( iface );
+        IWineMsiRemotePackage_AddRef( iface );
         *ppobj = iface;
         return S_OK;
     }

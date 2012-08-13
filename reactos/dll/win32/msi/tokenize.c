@@ -266,7 +266,7 @@ int sqliteGetToken(const WCHAR *z, int *tokenType, int *skip){
         *tokenType = TK_DOT;
         return 1;
       }
-      /* Fall thru into the next case */
+      /* Fall through */
     case '0': case '1': case '2': case '3': case '4':
     case '5': case '6': case '7': case '8': case '9':
       *tokenType = TK_INTEGER;

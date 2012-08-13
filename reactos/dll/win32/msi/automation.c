@@ -609,8 +609,7 @@ static HRESULT WINAPI ListEnumerator_Clone(IEnumVARIANT* iface, IEnumVARIANT **p
     hr = create_list_enumerator(This->list, (LPVOID *)ppEnum);
     if (FAILED(hr))
     {
-        if (*ppEnum)
-            IUnknown_Release(*ppEnum);
+        if (*ppEnum) IEnumVARIANT_Release(*ppEnum);
         return hr;
     }
 

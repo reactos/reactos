@@ -1017,7 +1017,6 @@ UINT msi_load_all_components( MSIPACKAGE *package )
 
     r = MSI_IterateRecords(view, NULL, load_component, package);
     msiobj_release(&view->hdr);
-    msi_destroy_assembly_caches( package );
     return r;
 }
 
@@ -2390,13 +2389,17 @@ static UINT ACTION_CostFinalize(MSIPACKAGE *package)
     return MSI_SetFeatureStates(package);
 }
 
-/* OK this value is "interpreted" and then formatted based on the 
-   first few characters */
-static LPSTR parse_value(MSIPACKAGE *package, LPCWSTR value, DWORD *type, 
-                         DWORD *size)
+static LPSTR parse_value(MSIPACKAGE *package, LPCWSTR value, DWORD *type, DWORD *size)
 {
     LPSTR data = NULL;
 
+    if (!value)
+    {
+        data = (LPSTR)strdupW(szEmpty);
+        *size = sizeof(szEmpty);
+        *type = REG_SZ;
+        return data;
+    }
     if (value[0]=='#' && value[1]!='#' && value[1]!='%')
     {
         if (value[1]=='x')
@@ -2554,12 +2557,13 @@ static const WCHAR *get_root_key( MSIPACKAGE *package, INT root, HKEY *root_key 
     return ret;
 }
 
-static WCHAR *get_keypath( MSIPACKAGE *package, HKEY root, const WCHAR *path )
+static WCHAR *get_keypath( MSICOMPONENT *comp, HKEY root, const WCHAR *path )
 {
     static const WCHAR prefixW[] = {'S','O','F','T','W','A','R','E','\\'};
     static const UINT len = sizeof(prefixW) / sizeof(prefixW[0]);
 
-    if (is_64bit && package->platform == PLATFORM_INTEL &&
+    if ((is_64bit || is_wow64) &&
+        !(comp->Attributes & msidbComponentAttributes64bit) &&
         root == HKEY_LOCAL_MACHINE && !strncmpiW( path, prefixW, len ))
     {
         UINT size;
@@ -2574,18 +2578,54 @@ static WCHAR *get_keypath( MSIPACKAGE *package, HKEY root, const WCHAR *path )
         strcatW( path_32node, path + len );
         return path_32node;
     }
-
     return strdupW( path );
+}
+
+static HKEY open_key( HKEY root, const WCHAR *path, BOOL create )
+{
+    REGSAM access = KEY_ALL_ACCESS;
+    WCHAR *subkey, *p, *q;
+    HKEY hkey, ret = NULL;
+    LONG res;
+
+    if (is_wow64) access |= KEY_WOW64_64KEY;
+
+    if (!(subkey = strdupW( path ))) return NULL;
+    p = subkey;
+    if ((q = strchrW( p, '\\' ))) *q = 0;
+    if (create)
+        res = RegCreateKeyExW( root, subkey, 0, NULL, 0, access, NULL, &hkey, NULL );
+    else
+        res = RegOpenKeyExW( root, subkey, 0, access, &hkey );
+    if (res)
+    {
+        TRACE("failed to open key %s (%d)\n", debugstr_w(subkey), res);
+        msi_free( subkey );
+        return NULL;
+    }
+    if (q && q[1])
+    {
+        ret = open_key( hkey, q + 1, create );
+        RegCloseKey( hkey );
+    }
+    else ret = hkey;
+    msi_free( subkey );
+    return ret;
+}
+
+static BOOL is_special_entry( const WCHAR *name )
+{
+     return (name && (name[0] == '*' || name[0] == '+') && !name[1]);
 }
 
 static UINT ITERATE_WriteRegistryValues(MSIRECORD *row, LPVOID param)
 {
     MSIPACKAGE *package = param;
-    LPSTR value_data = NULL;
+    LPSTR value;
     HKEY  root_key, hkey;
     DWORD type,size;
     LPWSTR deformated, uikey, keypath;
-    LPCWSTR szRoot, component, name, key, value;
+    LPCWSTR szRoot, component, name, key;
     MSICOMPONENT *comp;
     MSIRECORD * uirow;
     INT   root;
@@ -2612,10 +2652,8 @@ static UINT ITERATE_WriteRegistryValues(MSIRECORD *row, LPVOID param)
         /* null values can have special meanings */
         if (name[0]=='-' && name[1] == 0)
                 return ERROR_SUCCESS;
-        else if ((name[0]=='+' && name[1] == 0) || 
-                 (name[0] == '*' && name[1] == 0))
-                name = NULL;
-        check_first = TRUE;
+        if ((name[0] == '+' || name[0] == '*') && !name[1])
+            check_first = TRUE;
     }
 
     root = MSI_RecordGetInteger(row,2);
@@ -2631,49 +2669,42 @@ static UINT ITERATE_WriteRegistryValues(MSIRECORD *row, LPVOID param)
     strcpyW(uikey,szRoot);
     strcatW(uikey,deformated);
 
-    keypath = get_keypath( package, root_key, deformated );
+    keypath = get_keypath( comp, root_key, deformated );
     msi_free( deformated );
-    if (RegCreateKeyW( root_key, keypath, &hkey ))
+    if (!(hkey = open_key( root_key, keypath, TRUE )))
     {
         ERR("Could not create key %s\n", debugstr_w(keypath));
         msi_free(uikey);
         msi_free(keypath);
-        return ERROR_SUCCESS;
+        return ERROR_FUNCTION_FAILED;
     }
-
-    value = MSI_RecordGetString(row,5);
-    if (value)
-        value_data = parse_value(package, value, &type, &size); 
-    else
-    {
-        value_data = (LPSTR)strdupW(szEmpty);
-        size = sizeof(szEmpty);
-        type = REG_SZ;
-    }
-
+    value = parse_value(package, MSI_RecordGetString(row, 5), &type, &size);
     deformat_string(package, name, &deformated);
 
-    if (!check_first)
+    if (!is_special_entry( name ))
     {
-        TRACE("Setting value %s of %s\n",debugstr_w(deformated),
-                        debugstr_w(uikey));
-        RegSetValueExW(hkey, deformated, 0, type, (LPBYTE)value_data, size);
-    }
-    else
-    {
-        DWORD sz = 0;
-        rc = RegQueryValueExW(hkey, deformated, NULL, NULL, NULL, &sz);
-        if (rc == ERROR_SUCCESS || rc == ERROR_MORE_DATA)
+        if (!check_first)
         {
-            TRACE("value %s of %s checked already exists\n",
-                            debugstr_w(deformated), debugstr_w(uikey));
+            TRACE("Setting value %s of %s\n", debugstr_w(deformated),
+                  debugstr_w(uikey));
+            RegSetValueExW(hkey, deformated, 0, type, (LPBYTE)value, size);
         }
         else
         {
-            TRACE("Checked and setting value %s of %s\n",
-                            debugstr_w(deformated), debugstr_w(uikey));
-            if (deformated || size)
-                RegSetValueExW(hkey, deformated, 0, type, (LPBYTE) value_data, size);
+            DWORD sz = 0;
+            rc = RegQueryValueExW(hkey, deformated, NULL, NULL, NULL, &sz);
+            if (rc == ERROR_SUCCESS || rc == ERROR_MORE_DATA)
+            {
+                TRACE("value %s of %s checked already exists\n", debugstr_w(deformated),
+                      debugstr_w(uikey));
+            }
+            else
+            {
+                TRACE("Checked and setting value %s of %s\n", debugstr_w(deformated),
+                      debugstr_w(uikey));
+                if (deformated || size)
+                    RegSetValueExW(hkey, deformated, 0, type, (LPBYTE)value, size);
+            }
         }
     }
     RegCloseKey(hkey);
@@ -2682,11 +2713,11 @@ static UINT ITERATE_WriteRegistryValues(MSIRECORD *row, LPVOID param)
     MSI_RecordSetStringW(uirow,2,deformated);
     MSI_RecordSetStringW(uirow,1,uikey);
     if (type == REG_SZ || type == REG_EXPAND_SZ)
-        MSI_RecordSetStringW(uirow,3,(LPWSTR)value_data);
+        MSI_RecordSetStringW(uirow, 3, (LPWSTR)value);
     msi_ui_actiondata( package, szWriteRegistryValues, uirow );
     msiobj_release( &uirow->hdr );
 
-    msi_free(value_data);
+    msi_free(value);
     msi_free(deformated);
     msi_free(uikey);
     msi_free(keypath);
@@ -2711,35 +2742,68 @@ static UINT ACTION_WriteRegistryValues(MSIPACKAGE *package)
     return rc;
 }
 
-static void delete_reg_value( HKEY root, const WCHAR *keypath, const WCHAR *value )
+static void delete_key( HKEY root, const WCHAR *path )
+{
+    REGSAM access = 0;
+    WCHAR *subkey, *p;
+    HKEY hkey;
+    LONG res;
+
+    if (is_wow64) access |= KEY_WOW64_64KEY;
+
+    if (!(subkey = strdupW( path ))) return;
+    for (;;)
+    {
+        if ((p = strrchrW( subkey, '\\' ))) *p = 0;
+        hkey = open_key( root, subkey, FALSE );
+        if (!hkey) break;
+        if (p && p[1])
+            res = RegDeleteKeyExW( hkey, p + 1, access, 0 );
+        else
+            res = RegDeleteKeyExW( root, subkey, access, 0 );
+        if (res)
+        {
+            TRACE("failed to delete key %s (%d)\n", debugstr_w(subkey), res);
+            break;
+        }
+        if (p && p[1]) RegCloseKey( hkey );
+        else break;
+    }
+    msi_free( subkey );
+}
+
+static void delete_value( HKEY root, const WCHAR *path, const WCHAR *value )
 {
     LONG res;
     HKEY hkey;
     DWORD num_subkeys, num_values;
 
-    if (!(res = RegOpenKeyW( root, keypath, &hkey )))
+    if ((hkey = open_key( root, path, FALSE )))
     {
         if ((res = RegDeleteValueW( hkey, value )))
-        {
             TRACE("failed to delete value %s (%d)\n", debugstr_w(value), res);
-        }
+
         res = RegQueryInfoKeyW( hkey, NULL, NULL, NULL, &num_subkeys, NULL, NULL, &num_values,
                                 NULL, NULL, NULL, NULL );
         RegCloseKey( hkey );
         if (!res && !num_subkeys && !num_values)
         {
-            TRACE("removing empty key %s\n", debugstr_w(keypath));
-            RegDeleteKeyW( root, keypath );
+            TRACE("removing empty key %s\n", debugstr_w(path));
+            delete_key( root, path );
         }
-        return;
     }
-    TRACE("failed to open key %s (%d)\n", debugstr_w(keypath), res);
 }
 
-static void delete_reg_key( HKEY root, const WCHAR *keypath )
+static void delete_tree( HKEY root, const WCHAR *path )
 {
-    LONG res = RegDeleteTreeW( root, keypath );
-    if (res) TRACE("failed to delete key %s (%d)\n", debugstr_w(keypath), res);
+    LONG res;
+    HKEY hkey;
+
+    if (!(hkey = open_key( root, path, FALSE ))) return;
+    res = RegDeleteTreeW( hkey, NULL );
+    if (res) TRACE("failed to delete subtree of %s (%d)\n", debugstr_w(path), res);
+    delete_key( root, path );
+    RegCloseKey( hkey );
 }
 
 static UINT ITERATE_RemoveRegistryValuesOnUninstall( MSIRECORD *row, LPVOID param )
@@ -2773,7 +2837,7 @@ static UINT ITERATE_RemoveRegistryValuesOnUninstall( MSIRECORD *row, LPVOID para
     {
         if (name[0] == '+' && !name[1])
             return ERROR_SUCCESS;
-        else if ((name[0] == '-' && !name[1]) || (name[0] == '*' && !name[1]))
+        if ((name[0] == '-' || name[0] == '*') && !name[1])
         {
             delete_key = TRUE;
             name = NULL;
@@ -2795,10 +2859,10 @@ static UINT ITERATE_RemoveRegistryValuesOnUninstall( MSIRECORD *row, LPVOID para
 
     deformat_string( package, name, &deformated_name );
 
-    keypath = get_keypath( package, hkey_root, deformated_key );
+    keypath = get_keypath( comp, hkey_root, deformated_key );
     msi_free( deformated_key );
-    if (delete_key) delete_reg_key( hkey_root, keypath );
-    else delete_reg_value( hkey_root, keypath, deformated_name );
+    if (delete_key) delete_tree( hkey_root, keypath );
+    else delete_value( hkey_root, keypath, deformated_name );
     msi_free( keypath );
 
     uirow = MSI_CreateRecord( 2 );
@@ -2860,10 +2924,10 @@ static UINT ITERATE_RemoveRegistryValuesOnInstall( MSIRECORD *row, LPVOID param 
 
     deformat_string( package, name, &deformated_name );
 
-    keypath = get_keypath( package, hkey_root, deformated_key );
+    keypath = get_keypath( comp, hkey_root, deformated_key );
     msi_free( deformated_key );
-    if (delete_key) delete_reg_key( hkey_root, keypath );
-    else delete_reg_value( hkey_root, keypath, deformated_name );
+    if (delete_key) delete_tree( hkey_root, keypath );
+    else delete_value( hkey_root, keypath, deformated_name );
     msi_free( keypath );
 
     uirow = MSI_CreateRecord( 2 );
@@ -6981,23 +7045,51 @@ static UINT ACTION_SetODBCFolders( MSIPACKAGE *package )
 
 static UINT ITERATE_RemoveExistingProducts( MSIRECORD *rec, LPVOID param )
 {
+    static const WCHAR fmtW[] =
+        {'m','s','i','e','x','e','c',' ','/','i',' ','%','s',' ','R','E','M','O','V','E','=','%','s',0};
     MSIPACKAGE *package = param;
-    const WCHAR *property = MSI_RecordGetString( rec, 1 );
-    WCHAR *value;
+    const WCHAR *property = MSI_RecordGetString( rec, 7 );
+    UINT len = sizeof(fmtW)/sizeof(fmtW[0]);
+    WCHAR *product, *features, *cmd;
+    STARTUPINFOW si;
+    PROCESS_INFORMATION info;
+    BOOL ret;
 
-    if ((value = msi_dup_property( package->db, property )))
+    if (!(product = msi_dup_property( package->db, property ))) return ERROR_SUCCESS;
+
+    deformat_string( package, MSI_RecordGetString( rec, 6 ), &features );
+
+    len += strlenW( product );
+    if (features)
+        len += strlenW( features );
+    else
+        len += sizeof(szAll) / sizeof(szAll[0]);
+
+    if (!(cmd = msi_alloc( len * sizeof(WCHAR) )))
     {
-        FIXME("remove %s\n", debugstr_w(value));
-        msi_free( value );
+        msi_free( product );
+        msi_free( features );
+        return ERROR_OUTOFMEMORY;
     }
+    sprintfW( cmd, fmtW, product, features ? features : szAll );
+    msi_free( product );
+    msi_free( features );
+
+    memset( &si, 0, sizeof(STARTUPINFOW) );
+    ret = CreateProcessW( NULL, cmd, NULL, NULL, FALSE, 0, NULL, NULL, &si, &info );
+    msi_free( cmd );
+    if (!ret) return GetLastError();
+    CloseHandle( info.hThread );
+
+    WaitForSingleObject( info.hProcess, INFINITE );
+    CloseHandle( info.hProcess );
     return ERROR_SUCCESS;
 }
 
 static UINT ACTION_RemoveExistingProducts( MSIPACKAGE *package )
 {
     static const WCHAR query[] = {
-        'S','E','L','E','C','T',' ','A','c','t','i','o','n','P','r','o','p','e','r','t','y',' ',
-        'F','R','O','M',' ','U','p','g','r','a','d','e',0};
+        'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ','U','p','g','r','a','d','e',0};
     MSIQUERY *view;
     UINT r;
 
@@ -7340,6 +7432,7 @@ UINT ACTION_PerformUIAction(MSIPACKAGE *package, const WCHAR *action, UINT scrip
 
     TRACE("Performing action (%s)\n", debugstr_w(action));
 
+    package->action_progress_increment = 0;
     handled = ACTION_HandleStandardAction(package, action, &rc);
 
     if (!handled)
