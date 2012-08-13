@@ -229,7 +229,7 @@ FASTCALL
 KiChainedDispatch(IN PKTRAP_FRAME TrapFrame,
                   IN PKINTERRUPT Interrupt)
 {
-    KIRQL OldIrql;
+    KIRQL OldIrql, OldInterruptIrql = 0;
     BOOLEAN Handled;
     PLIST_ENTRY NextEntry, ListHead;
 
@@ -250,7 +250,7 @@ KiChainedDispatch(IN PKTRAP_FRAME TrapFrame,
             if (Interrupt->SynchronizeIrql > Interrupt->Irql)
             {
                 /* Raise to higher IRQL */
-                OldIrql = KfRaiseIrql(Interrupt->SynchronizeIrql);
+                OldInterruptIrql = KfRaiseIrql(Interrupt->SynchronizeIrql);
             }
         
             /* Acquire interrupt lock */
@@ -267,7 +267,8 @@ KiChainedDispatch(IN PKTRAP_FRAME TrapFrame,
             if (Interrupt->SynchronizeIrql > Interrupt->Irql)
             {
                 /* Lower the IRQL back */
-                KfLowerIrql(OldIrql);
+                ASSERT(OldInterruptIrql == Interrupt->Irql);
+                KfLowerIrql(OldInterruptIrql);
             }
         
             /* Check if the interrupt got handled and it's level */
