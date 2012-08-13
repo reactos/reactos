@@ -1496,6 +1496,7 @@ MountMgrDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 
         case IOCTL_MOUNTMGR_DELETE_POINTS:
             Status = MountMgrDeletePoints(DeviceExtension, Irp);
+            break;
 
         case IOCTL_MOUNTMGR_QUERY_POINTS:
             Status = MountMgrQueryPoints(DeviceExtension, Irp);
