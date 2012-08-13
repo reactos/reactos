@@ -4585,7 +4585,11 @@ ScsiPortIsr(IN PKINTERRUPT Interrupt,
         return FALSE;
 
     /* Call miniport's HwInterrupt routine */
-    DeviceExtension->HwInterrupt(&DeviceExtension->MiniPortDeviceExtension);
+    if (DeviceExtension->HwInterrupt(&DeviceExtension->MiniPortDeviceExtension) == FALSE)
+    {
+        /* This interrupt doesn't belong to us */
+        return FALSE;
+    }
 
     /* If flag of notification is set - queue a DPC */
     if (DeviceExtension->InterruptData.Flags & SCSI_PORT_NOTIFICATION_NEEDED)
