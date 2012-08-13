@@ -5,6 +5,7 @@
 #define STANDALONE
 #include "wine/test.h"
 
+extern void func_AttachThreadInput(void);
 extern void func_DeferWindowPos(void);
 extern void func_desktop(void);
 extern void func_GetIconInfo(void);
@@ -24,6 +25,7 @@ extern void func_wsprintf(void);
 
 const struct test winetest_testlist[] =
 {
+    { "AttachThreadInput", func_AttachThreadInput },
     { "desktop", func_desktop },
     { "DeferWindowPos", func_DeferWindowPos },
     { "GetIconInfo", func_GetIconInfo },

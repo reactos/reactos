@@ -11,10 +11,11 @@
 #include "helper.h"
 #include <undocuser.h>
 
-MSG_ENTRY last_post_message;
-MSG_ENTRY message_cache[100];
-static int message_cache_size = 0;
-
+MSG_CACHE default_cache = {
+#ifdef _MSC_VER
+    0
+#endif
+};
 MSG_ENTRY empty_chain[]= {{0,0}};
 
 static char* get_msg_name(UINT msg)
@@ -48,6 +49,8 @@ static char* get_msg_name(UINT msg)
         case WM_SETTINGCHANGE: return "WM_SETTINGCHANGE";
         case WM_GETICON: return "WM_GETICON";
         case WM_SETICON: return "WM_SETICON";
+        case WM_KEYDOWN: return "WM_KEYDOWN";
+        case WM_KEYUP: return "WM_KEYUP";
         default: return NULL;
     }
 }
@@ -64,11 +67,9 @@ static char* get_hook_name(UINT id)
     }
 }
 
-void empty_message_cache()
+void empty_message_cache(MSG_CACHE* cache)
 {
-    memset(&last_post_message, 0, sizeof(last_post_message));
-    memset(message_cache, 0, sizeof(message_cache));
-    message_cache_size = 0;
+    memset(cache, 0, sizeof(MSG_CACHE));
 }
 
 void sprintf_msg_entry(char* buffer, MSG_ENTRY* msg)
@@ -111,20 +112,20 @@ void sprintf_msg_entry(char* buffer, MSG_ENTRY* msg)
     }
 }
 
-void trace_cache(const char* file, int line)
+void trace_cache(MSG_CACHE* cache, const char* file, int line)
 {
     int i;
     char buff[100];
 
-    for (i=0; i < message_cache_size; i++)
+    for (i=0; i < cache->count; i++)
     {
-        sprintf_msg_entry(buff, &message_cache[i]);
+        sprintf_msg_entry(buff, &cache->message_cache[i]);
         trace_(file,line)("%d: %s\n", i, buff);
     }
     trace_(file,line)("\n");
 }
 
-void compare_cache(const char* file, int line, MSG_ENTRY *msg_chain)
+void compare_cache(MSG_CACHE* cache, const char* file, int line, MSG_ENTRY *msg_chain)
 {
     int i = 0;
     char buffGot[100], buffExp[100];
@@ -132,9 +133,9 @@ void compare_cache(const char* file, int line, MSG_ENTRY *msg_chain)
 
     while(1)
     {
-        BOOL same = !memcmp(&message_cache[i],msg_chain, sizeof(MSG_ENTRY));
+        BOOL same = !memcmp(&cache->message_cache[i],msg_chain, sizeof(MSG_ENTRY));
 
-        sprintf_msg_entry(buffGot, &message_cache[i]);
+        sprintf_msg_entry(buffGot, &cache->message_cache[i]);
         sprintf_msg_entry(buffExp, msg_chain);
         ok_(file,line)(same,"%d: got %s, expected %s\n",i, buffGot, buffExp);
 
@@ -145,7 +146,7 @@ void compare_cache(const char* file, int line, MSG_ENTRY *msg_chain)
             msg_chain++;
         else
         {
-            if(i>message_cache_size)
+            if(i > cache->count)
                 break;
         }
         i++;
@@ -154,46 +155,46 @@ void compare_cache(const char* file, int line, MSG_ENTRY *msg_chain)
     if(got_error )
     {
         trace_(file,line)("The complete list of messages got is:\n");
-        trace_cache(file,line);
+        trace_cache(cache, file,line);
     }
 
-    empty_message_cache();
+    empty_message_cache(cache);
 }
 
-void record_message(int iwnd, UINT message, MSG_TYPE type, int param1,int param2)
+void record_message(MSG_CACHE* cache, int iwnd, UINT message, MSG_TYPE type, int param1,int param2)
 {
-    if(message_cache_size>=100)
+    if(cache->count >= 100)
     {
         return;
     }
 
     /* do not report a post message a second time */
     if(type == SENT &&
-       last_post_message.iwnd == iwnd && 
-       last_post_message.msg == message && 
-       last_post_message.param1 == param1 && 
-       last_post_message.param2 == param2)
+       cache->last_post_message.iwnd == iwnd && 
+       cache->last_post_message.msg == message && 
+       cache->last_post_message.param1 == param1 && 
+       cache->last_post_message.param2 == param2)
     {
-        memset(&last_post_message, 0, sizeof(last_post_message));
+        memset(&cache->last_post_message, 0, sizeof(MSG_ENTRY));
         return;
     }
 
-    message_cache[message_cache_size].iwnd = iwnd;
-    message_cache[message_cache_size].msg = message;
-    message_cache[message_cache_size].type = type;
-    message_cache[message_cache_size].param1 = param1;
-    message_cache[message_cache_size].param2 = param2;
+    cache->message_cache[cache->count].iwnd = iwnd;
+    cache->message_cache[cache->count].msg = message;
+    cache->message_cache[cache->count].type = type;
+    cache->message_cache[cache->count].param1 = param1;
+    cache->message_cache[cache->count].param2 = param2;
 
-    if(message_cache[message_cache_size].type == POST)
+    if(cache->message_cache[cache->count].type == POST)
     {
-        last_post_message = message_cache[message_cache_size];
+        cache->last_post_message = cache->message_cache[cache->count];
     }
     else
     {
-        memset(&last_post_message, 0, sizeof(last_post_message));
+        memset(&cache->last_post_message, 0, sizeof(MSG_ENTRY));
     }
 
-    message_cache_size++;
+    cache->count++;
 }
 
 ATOM RegisterSimpleClass(WNDPROC lpfnWndProc, LPCWSTR lpszClassName)

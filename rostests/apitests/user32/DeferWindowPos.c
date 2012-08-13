@@ -42,11 +42,11 @@ LRESULT CALLBACK DWPTestProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
         {
             WINDOWPOS* pwp = (WINDOWPOS*)lParam;
             ok(wParam==0,"expected wParam=0\n");
-            record_message(iwnd, message, SENT, get_iwnd(pwp->hwndInsertAfter), pwp->flags);
+            RECOND_MESSAGE(iwnd, message, SENT, get_iwnd(pwp->hwndInsertAfter), pwp->flags);
             break;
         }
     default:
-        record_message(iwnd, message, SENT, 0,0);
+        RECOND_MESSAGE(iwnd, message, SENT, 0,0);
     }
     return DefWindowProc(hWnd, message, wParam, lParam);
 }
@@ -59,7 +59,7 @@ static void FlushMessages()
     {
         int iwnd = get_iwnd(msg.hwnd);
         if(!(msg.message > WM_USER || !iwnd || IsDWmMsg(msg.message) || IseKeyMsg(msg.message)))
-            record_message(iwnd, msg.message, POST,0,0);
+            RECOND_MESSAGE(iwnd, msg.message, POST,0,0);
         DispatchMessageA( &msg );
     }
 }
@@ -105,7 +105,7 @@ static void set_default_pos()
     SetWindowPos(hWnd4, 0, 250,250,200,200, SWP_NOOWNERZORDER|SWP_SHOWWINDOW|SWP_NOACTIVATE);
     SetActiveWindow(hWnd4);
     FlushMessages();
-    empty_message_cache();
+    EMPTY_CACHE();
 }
 
 static void Test_DWP_Error(HWND hWnd, HWND hWnd2)
@@ -248,7 +248,7 @@ static void Test_DWP_Error(HWND hWnd, HWND hWnd2)
     ok_windowpos(hWnd2, 70, 80, 250, 260, "Window 2");
 
     FlushMessages();
-    empty_message_cache();
+    EMPTY_CACHE();
 }
 
 MSG_ENTRY move1_chain[]={
@@ -299,7 +299,7 @@ static void Test_DWP_SimpleMsg(HWND hWnd1, HWND hWnd2)
     SetWindowPos(hWnd1, 0, 10,20,100,100,0);
     SetWindowPos(hWnd2, 0, 10,20,100,100,0);
     FlushMessages();
-    empty_message_cache();
+    EMPTY_CACHE();
 
     /* move hWnd1 */
     hdwp = BeginDeferWindowPos(1);

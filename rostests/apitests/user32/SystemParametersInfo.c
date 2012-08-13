@@ -38,11 +38,11 @@ LRESULT CALLBACK SysParamsTestProc(HWND hWnd, UINT message, WPARAM wParam, LPARA
         {
             WINDOWPOS* pwp = (WINDOWPOS*)lParam;
             ok(wParam==0,"expected wParam=0\n");
-            record_message(iwnd, message, SENT, get_iwnd(pwp->hwndInsertAfter), pwp->flags);
+            RECOND_MESSAGE(iwnd, message, SENT, get_iwnd(pwp->hwndInsertAfter), pwp->flags);
             break;
         }
     default:
-        record_message(iwnd, message, SENT, 0,0);
+        RECOND_MESSAGE(iwnd, message, SENT, 0,0);
     }
     return DefWindowProc(hWnd, message, wParam, lParam);
 }
@@ -55,7 +55,7 @@ static void FlushMessages()
     {
         int iwnd = get_iwnd(msg.hwnd);
         if(!(msg.message > WM_USER || !iwnd || IsDWmMsg(msg.message) || IseKeyMsg(msg.message)))
-            record_message(iwnd, msg.message, POST,0,0);
+            RECOND_MESSAGE(iwnd, msg.message, POST,0,0);
         DispatchMessageA( &msg );
     }
 }

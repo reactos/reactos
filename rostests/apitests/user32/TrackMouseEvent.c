@@ -49,7 +49,7 @@ LRESULT CALLBACK TmeTestProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
         ok(0, "Got unexpected WM_SYSTIMER in the winproc. wParam=%d\n", wParam);
         break;
     default:
-        record_message(iwnd, message, SENT, 0,0);
+        RECOND_MESSAGE(iwnd, message, SENT, 0,0);
     }
     return DefWindowProc(hWnd, message, wParam, lParam);
 }
@@ -57,7 +57,7 @@ LRESULT CALLBACK TmeTestProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 static LRESULT CALLBACK MouseLLHookProc(int nCode, WPARAM wParam, LPARAM lParam)
 {
     LRESULT ret;
-    record_message(0, WH_MOUSE_LL, HOOK, wParam, 0);
+    RECOND_MESSAGE(0, WH_MOUSE_LL, HOOK, wParam, 0);
     ret = CallNextHookEx(hMouseHookLL, nCode, wParam, lParam);
     if(ignore_mousell)
         return TRUE;
@@ -68,7 +68,7 @@ static LRESULT CALLBACK MouseHookProc(int nCode, WPARAM wParam, LPARAM lParam)
 {
     MOUSEHOOKSTRUCT *hs = (MOUSEHOOKSTRUCT*) lParam;
     LRESULT ret;
-    record_message(get_iwnd(hs->hwnd), WH_MOUSE, HOOK, wParam, hs->wHitTestCode);
+    RECOND_MESSAGE(get_iwnd(hs->hwnd), WH_MOUSE, HOOK, wParam, hs->wHitTestCode);
     ret = CallNextHookEx(hMouseHook, nCode, wParam, lParam);
     if(ignore_mouse)
         return TRUE;
@@ -86,12 +86,12 @@ static void FlushMessages()
         {
             if(msg.message == WM_SYSTIMER)
             {
-                record_message(iwnd, msg.message, POST,msg.wParam,0);
+                RECOND_MESSAGE(iwnd, msg.message, POST,msg.wParam,0);
                 if(ignore_timer)
                     continue;
             }
             else if(!(msg.message > WM_USER || !iwnd || IsDWmMsg(msg.message) || IseKeyMsg(msg.message)))
-                record_message(iwnd, msg.message, POST,0,0);
+                RECOND_MESSAGE(iwnd, msg.message, POST,0,0);
         }
         DispatchMessageA( &msg );
     }
@@ -265,7 +265,7 @@ void Test_TrackMouseEvent()
     MOVE_CURSOR(0,0);
     create_test_windows();
     FlushMessages();
-    empty_message_cache();
+    EMPTY_CACHE();
 
     /* the mouse moves over hwnd2 */
     MOVE_CURSOR(220,220);

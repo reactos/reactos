@@ -1,5 +1,6 @@
 
 list(APPEND SOURCE
+    AttachThreadInput.c
     helper.c
     DeferWindowPos.c
     desktop.c

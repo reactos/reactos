@@ -16,13 +16,21 @@ typedef struct _MSG_ENTRY
     int param2;
 } MSG_ENTRY;
 
+typedef struct _MSG_CACHE
+{
+    MSG_ENTRY last_post_message;
+    MSG_ENTRY message_cache[100];
+    int count;
+} MSG_CACHE;
 
 extern MSG_ENTRY empty_chain[];
+extern MSG_CACHE default_cache;
 
-void record_message(int iwnd, UINT message, MSG_TYPE type, int param1,int param2);
-void compare_cache(const char* file, int line, MSG_ENTRY *msg_chain);
-void trace_cache(const char* file, int line);
-void empty_message_cache();
+void record_message(MSG_CACHE* cache, int iwnd, UINT message, MSG_TYPE type, int param1,int param2);
+void compare_cache(MSG_CACHE* cache, const char* file, int line, MSG_ENTRY *msg_chain);
+void trace_cache(MSG_CACHE* cache, const char* file, int line);
+void empty_message_cache(MSG_CACHE* cache);
+
 ATOM RegisterSimpleClass(WNDPROC lpfnWndProc, LPCWSTR lpszClassName);
 
 /* filter messages that are affected by dwm */
@@ -44,10 +52,14 @@ static inline BOOL IseKeyMsg(UINT msg)
     return (msg == WM_KEYUP || msg == WM_KEYDOWN);
 }
 
-#define COMPARE_CACHE(...) compare_cache(__FILE__, __LINE__, ##__VA_ARGS__)
-#define TRACE_CACHE() trace_cache(__FILE__, __LINE__)
+#define COMPARE_CACHE(msg_chain) compare_cache(&default_cache, __FILE__, __LINE__, msg_chain)
+#define TRACE_CACHE() trace_cache(&default_cache, __FILE__, __LINE__)
+#define EMPTY_CACHE() empty_message_cache(&default_cache);
+#define RECOND_MESSAGE(...) record_message(&default_cache, ##__VA_ARGS__);
 
-#define EXPECT_ACTIVE(hwnd) ok(GetActiveWindow() == hwnd, "Expected %p to be the active window, not %p\n",hwnd,GetActiveWindow())
+#define COMPARE_CACHE_(cache, msg_chain) compare_cache(cache, __FILE__, __LINE__, msg_chain)
+#define TRACE_CACHE_(cache) trace_cache(cache, __FILE__, __LINE__)
+#define EMPTY_CACHE_(cache) empty_message_cache(cache);
 
 #define EXPECT_QUEUE_STATUS(expected, notexpected)                                                                              \
     {                                                                                                                           \
