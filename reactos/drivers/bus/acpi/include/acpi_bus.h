@@ -164,10 +164,10 @@ struct acpi_device_flags {
 
 /* Plug and Play */
 
-typedef char			acpi_bus_id[8];
+typedef char			acpi_bus_id[20];
 typedef unsigned long		acpi_bus_address;
-typedef char			acpi_hardware_id[9];
-typedef char			acpi_unique_id[9];
+typedef char			acpi_hardware_id[20];
+typedef char			acpi_unique_id[20];
 typedef char			acpi_device_name[40];
 typedef char			acpi_device_class[20];
 
