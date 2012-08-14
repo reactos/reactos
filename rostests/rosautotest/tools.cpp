@@ -93,7 +93,7 @@ IsNumber(const char* Input)
  * The std::string to output
  */
 string
-StringOut(const string& String, const BOOL forcePrint)
+StringOut(const string& String, bool forcePrint)
 {
     char DbgString[DBGPRINT_BUFSIZE + 1];
     size_t i, start = 0, last_newline = 0, size = 0, curr_pos = 0;

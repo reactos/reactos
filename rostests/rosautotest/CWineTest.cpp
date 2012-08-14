@@ -269,7 +269,7 @@ CWineTest::RunTest(CTestInfo* TestInfo)
     string tailString;
 
     ss << "Running Wine Test, Module: " << TestInfo->Module << ", Test: " << TestInfo->Test << endl;
-    StringOut(ss.str(), TRUE);
+    StringOut(ss.str());
 
     StartTime = GetTickCount();
 
@@ -302,7 +302,7 @@ CWineTest::RunTest(CTestInfo* TestInfo)
 
                 /* Output text through StringOut, even while the test is still running */
                 Buffer[BytesAvailable] = 0;
-                tailString = StringOut(tailString.append(string(Buffer)), FALSE);
+                tailString = StringOut(tailString.append(string(Buffer)), false);
 
                 if(Configuration.DoSubmit())
                     TestInfo->Log += Buffer;
@@ -313,12 +313,12 @@ CWineTest::RunTest(CTestInfo* TestInfo)
 
     /* Print what's left */
     if(!tailString.empty())
-        StringOut(tailString, TRUE);
+        StringOut(tailString);
 
     TotalTime = ((float)GetTickCount() - StartTime)/1000;
     ssFinish << "Test " << TestInfo->Test << " completed in ";
     ssFinish << setprecision(2) << fixed << TotalTime << " seconds." << endl;
-    StringOut(ssFinish.str(), TRUE);
+    StringOut(ssFinish.str());
 }
 
 /**
@@ -375,6 +375,6 @@ CWineTest::Run()
         if(Configuration.DoSubmit() && !TestInfo->Log.empty())
             WebService->Submit("wine", TestInfo);
 
-        StringOut("\n\n", TRUE);
+        StringOut("\n\n");
     }
 }

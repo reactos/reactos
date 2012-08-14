@@ -60,7 +60,7 @@ wmain(int argc, wchar_t* argv[])
 
         ss << "\n\nSystem uptime " << setprecision(2) << fixed ;
         ss << ((float)GetTickCount()/1000) << " seconds\n";
-        StringOut(ss.str(), TRUE);
+        StringOut(ss.str());
 
         /* Run the tests */
         WineTest.Run();
@@ -76,7 +76,7 @@ wmain(int argc, wchar_t* argv[])
     }
     catch(CSimpleException& e)
     {
-        StringOut(e.GetMessage(), TRUE);
+        StringOut(e.GetMessage());
     }
     catch(CFatalException& e)
     {
@@ -87,7 +87,7 @@ wmain(int argc, wchar_t* argv[])
            << "File: " << e.GetFile() << endl
            << "Line: " << e.GetLine() << endl
            << "Last Win32 Error: " << GetLastError() << endl;
-        StringOut(ss.str(), TRUE);
+        StringOut(ss.str());
     }
 
     /* For sysreg2 to notice if rosautotest itself failed */
