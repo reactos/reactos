@@ -64,7 +64,15 @@ CJournaledTestList::~CJournaledTestList()
 void
 CJournaledTestList::OpenJournal(DWORD DesiredAccess, bool CreateNew)
 {
-    m_hJournal = CreateFileW(m_JournalFile.c_str(), DesiredAccess, 0, NULL, (CreateNew ? CREATE_ALWAYS : OPEN_EXISTING), FILE_ATTRIBUTE_NORMAL, NULL);
+    m_hJournal = CreateFileW(
+        m_JournalFile.c_str(),
+        DesiredAccess,
+        0,
+        NULL,
+        (CreateNew ? CREATE_ALWAYS : OPEN_EXISTING),
+        FILE_ATTRIBUTE_NORMAL | FILE_FLAG_NO_BUFFERING | FILE_FLAG_WRITE_THROUGH,
+        NULL
+    );
 
     if(m_hJournal == INVALID_HANDLE_VALUE)
         FATAL("CreateFileW failed\n");
