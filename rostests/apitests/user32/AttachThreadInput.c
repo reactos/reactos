@@ -26,7 +26,7 @@ typedef struct {
 } THREAD_DATA;
 
 DWORD tidMouseMove;
-THREAD_DATA data[5];
+THREAD_DATA data[6];
 HHOOK hMouseHookLL = NULL;
 HHOOK hKbdHookLL = NULL;
 
@@ -66,6 +66,7 @@ LRESULT CALLBACK TestProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 static void FlushMessages()
 {
     MSG msg;
+    LRESULT res;
 
     while (PeekMessage( &msg, 0, 0, 0, PM_REMOVE ))
     {
@@ -76,10 +77,14 @@ static void FlushMessages()
     }
 
     /* Use SendMessage to sync with the other queues */
-    SendMessage(data[1].hWnd, WM_APP, 0,0);
-    SendMessage(data[2].hWnd, WM_APP, 0,0);
-    SendMessage(data[3].hWnd, WM_APP, 0,0);
-    SendMessage(data[4].hWnd, WM_APP, 0,0);
+    res = SendMessageTimeout(data[1].hWnd, WM_APP, 0,0, SMTO_NORMAL, 1000, NULL);
+    ok (res != ERROR_TIMEOUT, "SendMessageTimeout timed out\n");
+    res = SendMessageTimeout(data[2].hWnd, WM_APP, 0,0, SMTO_NORMAL, 1000, NULL);
+    ok (res != ERROR_TIMEOUT, "SendMessageTimeout timed out\n");
+    res = SendMessageTimeout(data[3].hWnd, WM_APP, 0,0, SMTO_NORMAL, 1000, NULL);
+    ok (res != ERROR_TIMEOUT, "SendMessageTimeout timed out\n");
+    res = SendMessageTimeout(data[4].hWnd, WM_APP, 0,0, SMTO_NORMAL, 1000, NULL);
+    ok (res != ERROR_TIMEOUT, "SendMessageTimeout timed out\n");
 }
 
 static DWORD WINAPI thread_proc(void *param)
@@ -93,7 +98,6 @@ static DWORD WINAPI thread_proc(void *param)
     {
         hdesk = CreateDesktopW(current_data->Desktop, NULL, NULL, 0, DESKTOP_ALL_ACCESS, NULL );
         SetThreadDesktop(hdesk);
-        ok(GetThreadDesktop(current_data->tid) == hdesk, "Thread in wrong desktop. Following results may be bogus!\n");
     }
 
     /* create test window */
@@ -196,6 +200,9 @@ BOOLEAN InitThreads()
     /* create thread2(same desktop) */
     if(!CreateTestThread(2, NULL)) return FALSE;
 
+    /* ugly ros hack to bypass desktop crapiness */
+    if(!CreateTestThread(6, L"ThreadTestDesktop")) return FALSE;
+
     /* create thread3(different desktop) */
     if(!CreateTestThread(3, L"ThreadTestDesktop")) return FALSE;
 
@@ -203,6 +210,21 @@ BOOLEAN InitThreads()
     if(!CreateTestThread(4, L"ThreadTestDesktop")) return FALSE;
 
     return TRUE;
+}
+
+static void cleanup_attachments()
+{
+    int i,j;
+    BOOL ret;
+
+    for(i = 0; i< 4; i++);
+    {
+        for(j = 0; j< 4; j++);
+        {
+            ret = AttachThreadInput(data[i].tid,data[j].tid, FALSE);
+            ok(ret==0, "expected AttachThreadInput to fail\n");
+        }
+    }
 }
 
 
@@ -228,10 +250,14 @@ void Test_SimpleParameters()
     /* try to attach to a thread on another desktop*/
     ret = AttachThreadInput( data[2].tid,data[3].tid, TRUE);
     ok(ret==0, "expected AttachThreadInput to fail\n");
+    if(ret == 1 )
+        AttachThreadInput( data[2].tid,data[3].tid, FALSE);
 
     /* test other desktop to this */
     ret = AttachThreadInput( data[3].tid,data[2].tid, TRUE);
     ok(ret==0, "expected AttachThreadInput to fail\n");
+    if(ret == 1 )
+        AttachThreadInput( data[3].tid,data[2].tid, FALSE);
 
     /* attach two threads that are both in ThreadTestDesktop */
     {
@@ -253,21 +279,29 @@ void Test_SimpleParameters()
         ret = AttachThreadInput( data[1].tid,data[2].tid, TRUE);
         ok(ret==1, "expected AttachThreadInput to succeed\n");
 
+        /* attach in the opposite order */
+        ret = AttachThreadInput( data[2].tid,data[1].tid, TRUE);
+        ok(ret==1, "expected AttachThreadInput to succeed\n");
+
         /* Now try to detach 0 from 1 */
         ret = AttachThreadInput( data[0].tid,data[1].tid, FALSE);
         ok(ret==0, "expected AttachThreadInput to fail\n");
 
         /* also try to detach 3 from 2 */
-        ret = AttachThreadInput( data[2].tid,data[1].tid, FALSE);
+        ret = AttachThreadInput( data[3].tid,data[2].tid, FALSE);
         ok(ret==0, "expected AttachThreadInput to fail\n");
         
         /* cleanup previous attachment */
         ret = AttachThreadInput( data[1].tid,data[2].tid, FALSE);
         ok(ret==1, "expected AttachThreadInput to succeed\n");
+
+        ret = AttachThreadInput( data[2].tid,data[1].tid, FALSE);
+        ok(ret==1, "expected AttachThreadInput to succeed\n");
+
+        ret = AttachThreadInput( data[1].tid,data[2].tid, FALSE);
+        ok(ret==1, "expected AttachThreadInput to succeed\n");
     }
 
-    /*too bad this causes a crash in win32k */
-#if 0
     /* test triple attach */
     {
         ret = AttachThreadInput( data[0].tid, data[1].tid, TRUE);
@@ -294,7 +328,6 @@ void Test_SimpleParameters()
         ret = AttachThreadInput( data[1].tid, data[2].tid, FALSE);
         ok(ret==1, "expected AttachThreadInput to succeed\n");
     }
-#endif
 }
 
 void Test_Focus() //Focus Active Capture Foreground Capture
@@ -408,6 +441,7 @@ void Test_Focus() //Focus Active Capture Foreground Capture
 void Test_UnaffectedMessages()
 {
     BOOL ret;
+    LRESULT res;
 
     EMPTY_CACHE_(&data[0].cache);
     EMPTY_CACHE_(&data[1].cache);
@@ -444,8 +478,10 @@ void Test_UnaffectedMessages()
     }
     
     /* test messages send to the wrong thread */
-    SendMessage(data[0].hWnd, WM_USER, 0,0);
-    SendMessage(data[1].hWnd, WM_USER, 1,0);
+    res = SendMessageTimeout(data[0].hWnd, WM_USER, 0,0, SMTO_NORMAL, 1000, NULL);
+    ok (res != ERROR_TIMEOUT, "SendMessageTimeout timed out\n");
+    res = SendMessageTimeout(data[1].hWnd, WM_USER, 1,0, SMTO_NORMAL, 1000, NULL);
+    ok (res != ERROR_TIMEOUT, "SendMessageTimeout timed out\n");
 
     {
         MSG_ENTRY Thread0_chain[]={
@@ -461,11 +497,14 @@ void Test_UnaffectedMessages()
         ret = AttachThreadInput( data[2].tid, data[1].tid , TRUE);
         ok(ret==1, "expected AttachThreadInput to succeed\n");
 
-        SendMessage(data[0].hWnd, WM_USER, 2,0);
-        SendMessage(data[1].hWnd, WM_USER, 3,0);
+        res = SendMessageTimeout(data[0].hWnd, WM_USER, 2,0, SMTO_NORMAL, 1000, NULL);
+        ok (res != ERROR_TIMEOUT, "SendMessageTimeout timed out\n");
+        res = SendMessageTimeout(data[1].hWnd, WM_USER, 3,0, SMTO_NORMAL, 1000, NULL);
+        ok (res != ERROR_TIMEOUT, "SendMessageTimeout timed out\n");
         
         /* Try to send a fake input message */
-        SendMessage(data[1].hWnd, WM_MOUSEMOVE, 0,0);
+        res = SendMessageTimeout(data[1].hWnd, WM_MOUSEMOVE, 0,0, SMTO_NORMAL, 1000, NULL);
+        ok (res != ERROR_TIMEOUT, "SendMessageTimeout timed out\n");
 
         COMPARE_CACHE_(&data[0].cache, Thread0_chain);
         COMPARE_CACHE_(&data[1].cache, Thread1_chain);
@@ -596,9 +635,13 @@ START_TEST(AttachThreadInput)
         return;
 
     Test_SimpleParameters();
+    cleanup_attachments();
     Test_Focus();
+    cleanup_attachments();
     Test_UnaffectedMessages();
+    cleanup_attachments();
     Test_SendInput();
+    cleanup_attachments();
 
     if(hMouseHookLL)
         UnhookWindowsHookEx(hMouseHookLL);
