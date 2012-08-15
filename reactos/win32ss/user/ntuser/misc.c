@@ -360,7 +360,7 @@ NtUserGetGUIThreadInfo(
 
    SafeGui.hwndActive = MsgQueue->spwndActive ? UserHMGetHandle(MsgQueue->spwndActive) : 0;
    SafeGui.hwndFocus = MsgQueue->spwndFocus ? UserHMGetHandle(MsgQueue->spwndFocus) : 0;
-   SafeGui.hwndCapture = MsgQueue->CaptureWindow;
+   SafeGui.hwndCapture = MsgQueue->spwndCapture ? UserHMGetHandle(MsgQueue->spwndCapture) : 0;
    SafeGui.hwndMenuOwner = MsgQueue->MenuOwner;
    SafeGui.hwndMoveSize = MsgQueue->MoveSize;
    SafeGui.hwndCaret = CaretInfo->hWnd;

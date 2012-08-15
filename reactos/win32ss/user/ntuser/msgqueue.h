@@ -75,7 +75,6 @@ typedef struct _USER_MESSAGE_QUEUE
   /* Last time PeekMessage() was called. */
   ULONG LastMsgRead;
   /* Current capture window for this queue. */
-  HWND CaptureWindow;
   PWND spwndCapture;
   /* Current window with focus (ie. receives keyboard input) for this queue. */
   PWND spwndFocus;

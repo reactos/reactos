@@ -454,7 +454,6 @@ UserAttachThreadInput(PTHREADINFO ptiFrom, PTHREADINFO ptiTo, BOOL fAttach)
         ptiFrom->MessageQueue->spwndActive = ptiFrom->pqAttach->spwndActive;
         ptiFrom->MessageQueue->spwndFocus = ptiFrom->pqAttach->spwndFocus;
         ptiFrom->MessageQueue->CursorObject = ptiFrom->pqAttach->CursorObject;
-        ptiFrom->MessageQueue->CaptureWindow = ptiFrom->pqAttach->CaptureWindow;
         ptiFrom->MessageQueue->spwndCapture = ptiFrom->pqAttach->spwndCapture;
         ptiFrom->MessageQueue->QF_flags ^= ((ptiFrom->MessageQueue->QF_flags ^ ptiFrom->pqAttach->QF_flags) & QF_CAPTURELOCKED);
         ptiFrom->MessageQueue->CaretInfo = ptiFrom->pqAttach->CaretInfo;
@@ -489,6 +488,7 @@ UserAttachThreadInput(PTHREADINFO ptiFrom, PTHREADINFO ptiTo, BOOL fAttach)
         ptiFrom->MessageQueue->CursorObject = NULL;
         ptiFrom->MessageQueue->spwndActive = NULL;
         ptiFrom->MessageQueue->spwndFocus = NULL;
+        ptiFrom->MessageQueue->spwndCapture = NULL;
         ptiFrom->pqAttach = NULL;
         ptiTo->MessageQueue->iCursorLevel -= ptiFrom->iCursorLevel;
     }

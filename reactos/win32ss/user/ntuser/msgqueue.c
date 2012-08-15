@@ -1343,10 +1343,11 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, UINT first, UINT 
     pDesk = pwndDesktop->head.rpdesk;
 
     /* find the window to dispatch this mouse message to */
-    if (MessageQueue->CaptureWindow)
+    if (MessageQueue->spwndCapture)
     {
         hittest = HTCLIENT;
-        pwndMsg = IntGetWindowObject(MessageQueue->CaptureWindow);
+        pwndMsg = MessageQueue->spwndCapture;
+        if (pwndMsg) UserReferenceObject(pwndMsg);
     }
     else
     {
@@ -1521,7 +1522,7 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, UINT first, UINT 
         RETURN(FALSE);
     }
 
-    if ((*RemoveMessages == FALSE) || MessageQueue->CaptureWindow)
+    if ((*RemoveMessages == FALSE) || MessageQueue->spwndCapture)
     {
         /* Accept the message */
         msg->message = message;
@@ -2180,8 +2181,8 @@ MsqSetStateWindow(PUSER_MESSAGE_QUEUE MessageQueue, ULONG Type, HWND hWnd)
    switch(Type)
    {
       case MSQ_STATE_CAPTURE:
-         Prev = MessageQueue->CaptureWindow;
-         MessageQueue->CaptureWindow = hWnd;
+         Prev = MessageQueue->spwndCapture ? UserHMGetHandle(MessageQueue->spwndCapture) : 0;
+         MessageQueue->spwndCapture = UserGetWindowObject(hWnd);
          return Prev;
       case MSQ_STATE_ACTIVE:
          Prev = MessageQueue->spwndActive ? UserHMGetHandle(MessageQueue->spwndActive) : 0;

@@ -2430,8 +2430,8 @@ BOOLEAN FASTCALL co_UserDestroyWindow(PWND Window)
       Window->head.pti->MessageQueue->spwndFocus = NULL;
    if (Window->head.pti->MessageQueue->spwndActivePrev == Window)
       Window->head.pti->MessageQueue->spwndActivePrev = NULL;
-   if (Window->head.pti->MessageQueue->CaptureWindow == Window->head.h)
-      Window->head.pti->MessageQueue->CaptureWindow = NULL;
+   if (Window->head.pti->MessageQueue->spwndCapture == Window)
+      Window->head.pti->MessageQueue->spwndCapture = NULL;
 
    /*
     * Check if this window is the Shell's Desktop Window. If so set hShellWindow to NULL

@@ -29,7 +29,7 @@ HWND FASTCALL
 IntGetCaptureWindow(VOID)
 {
    PUSER_MESSAGE_QUEUE ForegroundQueue = IntGetFocusMessageQueue();
-   return ForegroundQueue != NULL ? ForegroundQueue->CaptureWindow : 0;
+   return ( ForegroundQueue ? (ForegroundQueue->spwndCapture ? UserHMGetHandle(ForegroundQueue->spwndCapture) : 0) : 0);
 }
 
 HWND FASTCALL
@@ -655,7 +655,7 @@ IntGetCapture(VOID)
 
    pti = PsGetCurrentThreadWin32Thread();
    ThreadQueue = pti->MessageQueue;
-   RETURN( ThreadQueue ? ThreadQueue->CaptureWindow : 0);
+   RETURN( ThreadQueue ? (ThreadQueue->spwndCapture ? UserHMGetHandle(ThreadQueue->spwndCapture) : 0) : 0);
 
 CLEANUP:
    TRACE("Leave IntGetCapture, ret=%i\n",_ret_);
@@ -705,7 +705,7 @@ co_UserSetCapture(HWND hWnd)
       ThreadQueue->QF_flags &= ~QF_CAPTURELOCKED;
    }
 
-   ThreadQueue->CaptureWindow = hWnd;
+   ThreadQueue->spwndCapture = Window;
 
    if (hWnd == NULL) // Release mode.
    {
