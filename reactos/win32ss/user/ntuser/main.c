@@ -490,9 +490,9 @@ UserDestroyThreadInfo(struct _ETHREAD *Thread)
     }
 
     /* Free the message queue */
-    if(ptiCurrent->MessageQueue)
+    if (ptiCurrent->MessageQueue)
     {
-       MsqDestroyMessageQueue(ptiCurrent->MessageQueue);
+       MsqDestroyMessageQueue(ptiCurrent);
     }
 
     /* Find the THREADINFO in the PROCESSINFO's list */

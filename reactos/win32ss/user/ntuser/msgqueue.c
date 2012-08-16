@@ -1902,15 +1902,14 @@ MsqInitializeMessageQueue(struct _ETHREAD *Thread, PUSER_MESSAGE_QUEUE MessageQu
 }
 
 VOID FASTCALL
-MsqCleanupMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
+MsqCleanupMessageQueue(PTHREADINFO pti)
 {
+   PUSER_MESSAGE_QUEUE MessageQueue;
    PLIST_ENTRY CurrentEntry;
    PUSER_MESSAGE CurrentMessage;
    PUSER_SENT_MESSAGE CurrentSentMessage;
-   PTHREADINFO pti;
 
-   pti = MessageQueue->Thread->Tcb.Win32Thread;
-
+   MessageQueue = pti->MessageQueue;
 
    /* cleanup posted messages */
    while (!IsListEmpty(&MessageQueue->PostedMessagesListHead))
@@ -2026,7 +2025,7 @@ MsqCleanupMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
    }
 
    // Clear it all out.
-   if(pti->pcti)
+   if (pti->pcti)
    {
        pti->pcti->fsWakeBits = 0;
        pti->pcti->fsChangeBits = 0;
@@ -2059,7 +2058,6 @@ MsqCleanupMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
 
        UserDereferenceObject(pCursor);
    }
-
 }
 
 PUSER_MESSAGE_QUEUE FASTCALL
@@ -2090,9 +2088,10 @@ MsqCreateMessageQueue(struct _ETHREAD *Thread)
 }
 
 VOID FASTCALL
-MsqDestroyMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
+MsqDestroyMessageQueue(PTHREADINFO pti)
 {
    PDESKTOP desk;
+   PUSER_MESSAGE_QUEUE MessageQueue = pti->MessageQueue;
 
    MessageQueue->QF_flags |= QF_INDESTROY;
 
@@ -2104,7 +2103,7 @@ MsqDestroyMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
    }
 
    /* clean it up */
-   MsqCleanupMessageQueue(MessageQueue);
+   MsqCleanupMessageQueue(pti);
 
    if (MessageQueue->NewMessagesHandle != NULL)
       ZwClose(MessageQueue->NewMessagesHandle);

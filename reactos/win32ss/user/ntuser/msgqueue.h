@@ -50,6 +50,7 @@ typedef struct _USER_MESSAGE_QUEUE
   /* Reference counter, only access this variable with interlocked functions! */
   LONG References;
 
+  PTHREADINFO ptiSysLock;
   /* Owner of the message queue */
   struct _ETHREAD *Thread;
   /* Queue of messages sent to the queue. */
@@ -182,7 +183,7 @@ co_MsqPeekMouseMove(IN PUSER_MESSAGE_QUEUE MessageQueue,
                     OUT MSG* pMsg);
 BOOLEAN FASTCALL MsqInitializeMessageQueue(struct _ETHREAD *Thread, PUSER_MESSAGE_QUEUE MessageQueue);
 PUSER_MESSAGE_QUEUE FASTCALL MsqCreateMessageQueue(struct _ETHREAD *Thread);
-VOID FASTCALL MsqDestroyMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue);
+VOID FASTCALL MsqDestroyMessageQueue(PTHREADINFO);
 INIT_FUNCTION NTSTATUS NTAPI MsqInitializeImpl(VOID);
 BOOLEAN FASTCALL co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue);
 NTSTATUS FASTCALL
