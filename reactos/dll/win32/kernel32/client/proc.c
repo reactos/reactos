@@ -2976,7 +2976,11 @@ GetAppName:
         IMAGE_SUBSYSTEM_WINDOWS_CUI != SectionImageInfo.SubSystemType)
     {
         DPRINT1("Invalid subsystem %d\n", SectionImageInfo.SubSystemType);
-        SetLastError(ERROR_BAD_EXE_FORMAT);
+        /*
+         * Despite the name of the error code suggests, it corresponds to the
+         * well-known "The %1 application cannot be run in Win32 mode" message.
+         */
+        SetLastError(ERROR_CHILD_NOT_COMPLETE);
         goto Cleanup;
     }
 
@@ -3269,7 +3273,7 @@ Cleanup:
     if (hSection) NtClose(hSection);
     if (hThread)
     {
-        /* We don't know any more details then this */
+        /* We don't know any more details than this */
         NtTerminateProcess(hProcess, STATUS_UNSUCCESSFUL);
         NtClose(hThread);
     }
