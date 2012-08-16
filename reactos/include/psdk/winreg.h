@@ -1,9 +1,12 @@
-#ifndef _WINREG_
-#define _WINREG_
+#ifndef _WINREG_H
+#define _WINREG_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#include <reason.h>
+
 #define HKEY_CLASSES_ROOT ((HKEY)0x80000000)
 #define HKEY_CURRENT_USER ((HKEY)0x80000001)
 #define HKEY_LOCAL_MACHINE ((HKEY)0x80000002)
@@ -33,6 +36,16 @@ extern "C" {
 #define REG_NOTIFY_CHANGE_ATTRIBUTES 2
 #define REG_NOTIFY_CHANGE_LAST_SET 4
 #define REG_NOTIFY_CHANGE_SECURITY 8
+
+/* Shutdown flags for InitiateShutdownA/W */
+#define SHUTDOWN_FORCE_OTHERS           0x00000001
+#define SHUTDOWN_FORCE_SELF             0x00000002
+#define SHUTDOWN_GRACE_OVERRIDE         0x00000020
+#define SHUTDOWN_INSTALL_UPDATES        0x00000040
+#define SHUTDOWN_NOREBOOT               0x00000010
+#define SHUTDOWN_POWEROFF               0x00000008
+#define SHUTDOWN_RESTART                0x00000004
+#define SHUTDOWN_RESTARTAPPS            0x00000080
 
 #define RRF_RT_REG_NONE         (1 << 0)
 #define RRF_RT_REG_SZ           (1 << 1)
@@ -64,8 +77,14 @@ typedef struct value_entW {
 } VALENTW,*PVALENTW;
 BOOL WINAPI AbortSystemShutdownA(LPCSTR);
 BOOL WINAPI AbortSystemShutdownW(LPCWSTR);
+#if (_WIN32_WINNT >= 0x0600)
+DWORD WINAPI InitiateShutdownA(LPSTR, LPSTR, DWORD, DWORD, DWORD);
+DWORD WINAPI InitiateShutdownW(LPWSTR, LPWSTR, DWORD, DWORD, DWORD);
+#endif
 BOOL WINAPI InitiateSystemShutdownA(LPSTR,LPSTR,DWORD,BOOL,BOOL);
 BOOL WINAPI InitiateSystemShutdownW(LPWSTR,LPWSTR,DWORD,BOOL,BOOL);
+BOOL WINAPI InitiateSystemShutdownExA(LPSTR,LPSTR,DWORD,BOOL,BOOL,DWORD);
+BOOL WINAPI InitiateSystemShutdownExW(LPWSTR,LPWSTR,DWORD,BOOL,BOOL,DWORD);
 LONG WINAPI RegCloseKey(HKEY);
 LONG WINAPI RegConnectRegistryA(LPCSTR,HKEY,PHKEY);
 LONG WINAPI RegConnectRegistryW(LPCWSTR,HKEY,PHKEY);
@@ -158,8 +177,10 @@ LONG WINAPI RegUnLoadKeyW(HKEY,LPCWSTR);
 typedef VALENTW VALENT,*PVALENT;
 #define AbortSystemShutdown AbortSystemShutdownW
 #define InitiateSystemShutdown InitiateSystemShutdownW
+#define InitiateSystemShutdownEx InitiateSystemShutdownExW
 #define RegConnectRegistry RegConnectRegistryW
 #if (_WIN32_WINNT >= 0x0600)
+#define InitiateShutdown InitiateShutdownW
 #define RegCopyTree RegCopyTreeW
 #endif
 #define RegCreateKey RegCreateKeyW
@@ -201,8 +222,10 @@ typedef VALENTW VALENT,*PVALENT;
 typedef VALENTA VALENT,*PVALENT;
 #define AbortSystemShutdown AbortSystemShutdownA
 #define InitiateSystemShutdown InitiateSystemShutdownA
+#define InitiateSystemShutdownEx InitiateSystemShutdownExA
 #define RegConnectRegistry RegConnectRegistryA
 #if (_WIN32_WINNT >= 0x0600)
+#define InitiateShutdown InitiateShutdownA
 #define RegCopyTree RegCopyTreeA
 #endif
 #define RegCreateKey RegCreateKeyA
