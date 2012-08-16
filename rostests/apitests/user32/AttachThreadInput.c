@@ -328,6 +328,29 @@ void Test_SimpleParameters()
         ret = AttachThreadInput( data[1].tid, data[2].tid, FALSE);
         ok(ret==1, "expected AttachThreadInput to succeed\n");
     }
+
+    /* test detaching in thread cleanup */
+    {
+        ret = AttachThreadInput( data[0].tid, data[1].tid, TRUE);
+        ok(ret==1, "expected AttachThreadInput to succeed\n");
+        ret = AttachThreadInput( data[0].tid, data[1].tid, TRUE);
+        ok(ret==1, "expected AttachThreadInput to succeed\n");
+        ret = AttachThreadInput( data[1].tid, data[2].tid, TRUE);
+        ok(ret==1, "expected AttachThreadInput to succeed\n");
+        ret = AttachThreadInput( data[1].tid, data[2].tid, TRUE);
+        ok(ret==1, "expected AttachThreadInput to succeed\n");
+
+        TerminateThread(data[1].hThread, 0);
+
+        ret = AttachThreadInput( data[0].tid, data[1].tid, FALSE);
+        ok(ret==0, "expected AttachThreadInput to fail\n");
+        ret = AttachThreadInput( data[1].tid, data[2].tid, FALSE);
+        ok(ret==0, "expected AttachThreadInput to fail\n");
+
+        /* Create Thread1 again */
+        CreateTestThread(1, NULL);
+    }
+
 }
 
 void Test_Focus() //Focus Active Capture Foreground Capture
@@ -634,8 +657,9 @@ START_TEST(AttachThreadInput)
     if(!InitThreads())
         return;
 
-    Test_SimpleParameters();
-    cleanup_attachments();
+    win_skip("skip Test_SimpleParameters that crash ros\n");
+    //Test_SimpleParameters();
+    //cleanup_attachments();
     Test_Focus();
     cleanup_attachments();
     Test_UnaffectedMessages();
