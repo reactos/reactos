@@ -829,7 +829,7 @@ static const char * GetHwndString(HWND hw)
   return "unknown handle";
 }
 
-static void test_initial_focus(void)
+static void test_focus(void)
 {
     /* Test 1:
      * This test intentionally returns FALSE in response to WM_INITDIALOG
@@ -901,6 +901,8 @@ static void test_initial_focus(void)
         HRSRC hResource;
         HANDLE hTemplate;
         DLGTEMPLATE* pTemplate;
+        HWND hTextbox;
+        DWORD selectionStart = 0xdead, selectionEnd = 0xbeef;
 
         hResource = FindResourceA(g_hinst,"FOCUS_TEST_DIALOG", RT_DIALOG);
         hTemplate = LoadResource(g_hinst, hResource);
@@ -912,6 +914,20 @@ static void test_initial_focus(void)
 
         ok ((g_hwndInitialFocusT1 == 0),
             "Focus should not be set for an invisible DS_CONTROL dialog %p.\n", g_hwndInitialFocusT1);
+
+        /* Also make sure that WM_SETFOCUS selects the textbox's text */
+        hTextbox = GetDlgItem(hDlg, 200);
+        SendMessage(hTextbox, WM_SETTEXT, 0, (LPARAM)"Hello world");
+
+        SendMessage(hDlg, WM_SETFOCUS, 0, 0);
+        SendMessage(hTextbox, EM_GETSEL, (WPARAM)&selectionStart, (LPARAM)&selectionEnd);
+        ok(selectionStart == 0 && selectionEnd == 11, "Text selection after WM_SETFOCUS is [%i, %i) expected [0, 11)\n", selectionStart, selectionEnd);
+
+        /* but WM_ACTIVATE does not */
+        SendMessage(hTextbox, EM_SETSEL, 0, 0);
+        SendMessage(hDlg, WM_ACTIVATE, WA_ACTIVE, 0);
+        SendMessage(hTextbox, EM_GETSEL, (WPARAM)&selectionStart, (LPARAM)&selectionEnd);
+        ok(selectionStart == 0 && selectionEnd == 0, "Text selection after WM_ACTIVATE is [%i, %i) expected [0, 0)\n", selectionStart, selectionEnd);
 
         DestroyWindow(hDlg);
     }
@@ -930,13 +946,25 @@ static void test_initial_focus(void)
         pTemplate = LockResource(hTemplate);
 
         hDlg = CreateDialogIndirectParamA(g_hinst, pTemplate, NULL, focusDlgWinProc, 0);
-        g_hwndInitialFocusT1 = GetFocus();
+        ok(hDlg != 0, "Failed to create test dialog.\n");
         hLabel = GetDlgItem(hDlg, 200);
-        ok (hDlg != 0, "Failed to create test dialog.\n");
 
-        ok ((g_hwndInitialFocusT1 == hLabel),
-            "Focus should have been set to the first control, expected (%p) got (%p).\n",
-            hLabel, g_hwndInitialFocusT1);
+        ok(GetFocus() == hLabel, "Focus not set to label, focus=%p dialog=%p label=%p\n", GetFocus(), hDlg, hLabel);
+
+        DestroyWindow(hDlg);
+
+        /* Also check focus after WM_ACTIVATE and WM_SETFOCUS */
+        hDlg = CreateDialogIndirectParamA(g_hinst, pTemplate, NULL, NULL, 0);
+        ok(hDlg != 0, "Failed to create test dialog.\n");
+        hLabel = GetDlgItem(hDlg, 200);
+
+        SetFocus(NULL);
+        SendMessage(hDlg, WM_ACTIVATE, WA_ACTIVE, 0);
+        ok(GetFocus() == NULL, "Focus set on WM_ACTIVATE, focus=%p dialog=%p label=%p\n", GetFocus(), hDlg, hLabel);
+
+        SetFocus(NULL);
+        SendMessage(hDlg, WM_SETFOCUS, 0, 0);
+        ok(GetFocus() == hLabel, "Focus not set to label on WM_SETFOCUS, focus=%p dialog=%p label=%p\n", GetFocus(), hDlg, hLabel);
 
         DestroyWindow(hDlg);
     }
@@ -1405,7 +1433,7 @@ START_TEST(dialog)
     test_GetNextDlgItem();
     test_IsDialogMessage();
     test_WM_NEXTDLGCTL();
-    test_initial_focus();
+    test_focus();
     test_GetDlgItem();
     test_GetDlgItemText();
     test_DialogBoxParamA();
