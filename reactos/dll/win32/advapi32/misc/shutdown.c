@@ -1,13 +1,10 @@
-/* $Id$
- *
- * COPYRIGHT:       See COPYING in the top level directory
+/*
+ * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
- * FILE:        lib/advapi32/misc/shutdown.c
+ * FILE:        dll/win32/advapi32/misc/shutdown.c
  * PURPOSE:     System shutdown functions
- * PROGRAMMER:      Emanuele Aliberti
- * UPDATE HISTORY:
- *      19990413 EA     created
- *      19990515 EA
+ * PROGRAMMER:  Lee Schroeder <spaceseel at gmail dot com>    
+ *              Emanuele Aliberti
  */
 
 #include <advapi32.h>
