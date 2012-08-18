@@ -13,10 +13,10 @@ REGISTER_SYSCLASS DefaultServerClasses[] =
 {
   { ((PWSTR)((ULONG_PTR)(WORD)(0x8001))),
     CS_GLOBALCLASS|CS_DBLCLKS,
-    NULL,
-    0,
+    NULL, // Use User32 procs
+    sizeof(ULONG)*2,
     (HICON)IDC_ARROW,
-    (HBRUSH)(COLOR_BACKGROUND + 1),
+    (HBRUSH)(COLOR_BACKGROUND),
     FNID_DESKTOP,
     ICLS_DESKTOP
   },
@@ -47,6 +47,17 @@ REGISTER_SYSCLASS DefaultServerClasses[] =
     FNID_SCROLLBAR,
     ICLS_SCROLLBAR
   },
+#if 0
+  { ((PWSTR)((ULONG_PTR)(WORD)(0x8006))), // Tooltips
+    CS_PARENTDC|CS_DBLCLKS,
+    NULL, // Use User32 procs
+    0,
+    (HICON)IDC_ARROW,
+    0,
+    FNID_TOOLTIPS,
+    ICLS_TOOLTIPS
+  },
+#endif
   { ((PWSTR)((ULONG_PTR)(WORD)(0x8004))), // IconTitle is here for now...
     0,
     NULL, // Use User32 procs
@@ -1948,6 +1959,7 @@ UserRegisterSystemClasses(VOID)
     WNDCLASSEXW wc;
     PCLS Class;
     BOOL Ret = TRUE;
+    HBRUSH hBrush;
     DWORD Flags = 0;
 
     if (ppi->W32PF_flags & W32PF_CLASSESREGISTERED)
@@ -1992,7 +2004,12 @@ UserRegisterSystemClasses(VOID)
         wc.cbWndExtra = DefaultServerClasses[i].ExtraBytes;
         wc.hIcon = NULL;
         wc.hCursor = DefaultServerClasses[i].hCursor;
-        wc.hbrBackground = DefaultServerClasses[i].hBrush;
+        hBrush = DefaultServerClasses[i].hBrush;
+        if (hBrush <= (HBRUSH)COLOR_MENUBAR)
+        {
+            hBrush = IntGetSysColorBrush((INT)hBrush);
+        }
+        wc.hbrBackground = hBrush;
         wc.lpszMenuName = NULL;
         wc.lpszClassName = ClassName.Buffer;
         wc.hIconSm = NULL;

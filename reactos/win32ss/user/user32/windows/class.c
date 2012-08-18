@@ -210,12 +210,6 @@ GetClassInfoExA(
         return FALSE;
     }
 
-    if (!RegisterDefaultClasses)
-    {
-        ERR("GetClassInfoExA RegisterSystemControls\n");
-        RegisterSystemControls();
-    }
-
     if (IS_ATOM(lpszClass))
     {
         ClassName.Buffer = (PWSTR)((ULONG_PTR)lpszClass);
@@ -228,6 +222,12 @@ GetClassInfoExA(
             SetLastError(ERROR_NOT_ENOUGH_MEMORY);
             return FALSE;
         }
+    }
+
+    if (!RegisterDefaultClasses)
+    {
+        ERR("GetClassInfoExA RegisterSystemControls\n");
+        RegisterSystemControls();
     }
 
     Ret = NtUserGetClassInfo(hInstance,
@@ -289,12 +289,6 @@ GetClassInfoExW(
         return FALSE;
     }
 
-    if (!RegisterDefaultClasses)
-    {
-       ERR("GetClassInfoExW RegisterSystemControls\n");
-       RegisterSystemControls();
-    }
-
     if (IS_ATOM(lpszClass))
     {
         ClassName.Buffer = (PWSTR)((ULONG_PTR)lpszClass);
@@ -303,6 +297,12 @@ GetClassInfoExW(
     {
         RtlInitUnicodeString(&ClassName,
                              lpszClass);
+    }
+
+    if (!RegisterDefaultClasses)
+    {
+       ERR("GetClassInfoExW RegisterSystemControls\n");
+       RegisterSystemControls();
     }
 
     Ret = NtUserGetClassInfo( hInstance,
