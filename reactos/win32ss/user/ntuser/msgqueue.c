@@ -1859,11 +1859,13 @@ HungAppSysTimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
 }
 
 BOOLEAN FASTCALL
-MsqInitializeMessageQueue(struct _ETHREAD *Thread, PUSER_MESSAGE_QUEUE MessageQueue)
+MsqInitializeMessageQueue(PTHREADINFO pti, PUSER_MESSAGE_QUEUE MessageQueue)
 {
+   struct _ETHREAD *Thread;
    LARGE_INTEGER LargeTickCount;
    NTSTATUS Status;
 
+   Thread = pti->pEThread;
    MessageQueue->Thread = Thread;
    MessageQueue->CaretInfo = (PTHRDCARETINFO)(MessageQueue + 1);
    InitializeListHead(&MessageQueue->PostedMessagesListHead);
@@ -2061,7 +2063,7 @@ MsqCleanupMessageQueue(PTHREADINFO pti)
 }
 
 PUSER_MESSAGE_QUEUE FASTCALL
-MsqCreateMessageQueue(struct _ETHREAD *Thread)
+MsqCreateMessageQueue(PTHREADINFO pti)
 {
    PUSER_MESSAGE_QUEUE MessageQueue;
 
@@ -2078,7 +2080,7 @@ MsqCreateMessageQueue(struct _ETHREAD *Thread)
    /* hold at least one reference until it'll be destroyed */
    IntReferenceMessageQueue(MessageQueue);
    /* initialize the queue */
-   if (!MsqInitializeMessageQueue(Thread, MessageQueue))
+   if (!MsqInitializeMessageQueue(pti, MessageQueue))
    {
       IntDereferenceMessageQueue(MessageQueue);
       return NULL;

@@ -270,7 +270,7 @@ UserCreateThreadInfo(struct _ETHREAD *Thread)
     ptiCurrent->ptiSibling = ptiCurrent->ppi->ptiList;
     ptiCurrent->ppi->ptiList = ptiCurrent;
     ptiCurrent->ppi->cThreads++;
-    ptiCurrent->MessageQueue = MsqCreateMessageQueue(Thread);
+    ptiCurrent->MessageQueue = MsqCreateMessageQueue(ptiCurrent);
     if(ptiCurrent->MessageQueue == NULL)
     {
         ERR_CH(UserThread,"Failed to allocate message loop\n");

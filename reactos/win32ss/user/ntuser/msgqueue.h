@@ -181,8 +181,8 @@ co_MsqPeekMouseMove(IN PUSER_MESSAGE_QUEUE MessageQueue,
                     IN UINT MsgFilterLow,
                     IN UINT MsgFilterHigh,
                     OUT MSG* pMsg);
-BOOLEAN FASTCALL MsqInitializeMessageQueue(struct _ETHREAD *Thread, PUSER_MESSAGE_QUEUE MessageQueue);
-PUSER_MESSAGE_QUEUE FASTCALL MsqCreateMessageQueue(struct _ETHREAD *Thread);
+BOOLEAN FASTCALL MsqInitializeMessageQueue(PTHREADINFO, PUSER_MESSAGE_QUEUE);
+PUSER_MESSAGE_QUEUE FASTCALL MsqCreateMessageQueue(PTHREADINFO);
 VOID FASTCALL MsqDestroyMessageQueue(PTHREADINFO);
 INIT_FUNCTION NTSTATUS NTAPI MsqInitializeImpl(VOID);
 BOOLEAN FASTCALL co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue);
