@@ -435,7 +435,7 @@ typedef enum tagHH_GPROPID {
     HH_GPROPID_CONTENT_LANGUAGE = 5
 } HH_GPROPID;
 
-#ifdef __WIDL_OAIDL_H
+#ifdef __oaidl_h__
 
 typedef struct tagHH_GLOBAL_PROPERTY
 {
@@ -443,7 +443,7 @@ typedef struct tagHH_GLOBAL_PROPERTY
     VARIANT     var;
 } HH_GLOBAL_PROPERTY ;
 
-#endif /* __WIDL_OAIDL_H */
+#endif /* __oaidl_h__ */
 
 #ifdef __cplusplus
 }

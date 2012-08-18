@@ -167,21 +167,67 @@ const char *get_name(const var_t *v)
     return buffer;
 }
 
-static void write_field(FILE *h, var_t *v)
-{
-  if (!v) return;
-  if (v->type) {
-    indent(h, 0);
-    write_type_def_or_decl(h, v->type, TRUE, v->name);
-    fprintf(h, ";\n");
-  }
-}
-
 static void write_fields(FILE *h, var_list_t *fields)
 {
+    unsigned nameless_struct_cnt = 0, nameless_struct_i = 0, nameless_union_cnt = 0, nameless_union_i = 0;
+    const char *name;
+    char buf[32];
     var_t *v;
+
     if (!fields) return;
-    LIST_FOR_EACH_ENTRY( v, fields, var_t, entry ) write_field(h, v);
+
+    LIST_FOR_EACH_ENTRY( v, fields, var_t, entry ) {
+        if (!v || !v->type) continue;
+
+        switch(type_get_type_detect_alias(v->type)) {
+        case TYPE_STRUCT:
+        case TYPE_ENCAPSULATED_UNION:
+            nameless_struct_cnt++;
+            break;
+        case TYPE_UNION:
+            nameless_union_cnt++;
+            break;
+        default:
+            ;
+        }
+    }
+
+    LIST_FOR_EACH_ENTRY( v, fields, var_t, entry ) {
+        if (!v || !v->type) continue;
+
+        indent(h, 0);
+        name = v->name;
+
+        switch(type_get_type_detect_alias(v->type)) {
+        case TYPE_STRUCT:
+        case TYPE_ENCAPSULATED_UNION:
+            if(!v->name) {
+                fprintf(h, "__C89_NAMELESS ");
+                if(nameless_struct_cnt == 1) {
+                    name = "__C89_NAMELESSSTRUCTNAME";
+                }else if(nameless_struct_i < 5 /* # of supporting macros */) {
+                    sprintf(buf, "__C89_NAMELESSSTRUCTNAME%d", ++nameless_struct_i);
+                    name = buf;
+                }
+            }
+            break;
+        case TYPE_UNION:
+            if(!v->name) {
+                fprintf(h, "__C89_NAMELESS ");
+                if(nameless_union_cnt == 1) {
+                    name = "__C89_NAMELESSUNIONNAME";
+                }else if(nameless_union_i < 8 /* # of supporting macros */ ) {
+                    sprintf(buf, "__C89_NAMELESSUNIONNAME%d", ++nameless_union_i);
+                    name = buf;
+                }
+            }
+            break;
+        default:
+            ;
+        }
+        write_type_def_or_decl(h, v->type, TRUE, name);
+        fprintf(h, ";\n");
+    }
 }
 
 static void write_enums(FILE *h, var_list_t *enums)
@@ -1371,8 +1417,8 @@ void write_header(const statement_list_t *stmts)
   fprintf(header, "#include <ole2.h>\n");
   fprintf(header, "#endif\n\n");
 
-  fprintf(header, "#ifndef __WIDL_%s\n", header_token);
-  fprintf(header, "#define __WIDL_%s\n\n", header_token);
+  fprintf(header, "#ifndef __%s__\n", header_token);
+  fprintf(header, "#define __%s__\n\n", header_token);
 
   fprintf(header, "/* Forward declarations */\n\n");
   write_forward_decls(header, stmts);
@@ -1394,7 +1440,7 @@ void write_header(const statement_list_t *stmts)
   fprintf(header, "\n");
 
   end_cplusplus_guard(header);
-  fprintf(header, "#endif /* __WIDL_%s */\n", header_token);
+  fprintf(header, "#endif /* __%s__ */\n", header_token);
 
   fclose(header);
 }

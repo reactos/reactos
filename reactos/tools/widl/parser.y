@@ -740,6 +740,10 @@ s_field:  m_attributes decl_spec declarator	{ $$ = declare_var(check_field_attrs
 						                $2, $3, FALSE);
 						  free($3);
 						}
+	| m_attributes structdef		{ var_t *v = make_var(NULL);
+						  v->type = $2; v->attrs = $1;
+						  $$ = v;
+						}
 	;
 
 funcdef: declaration				{ $$ = $1;

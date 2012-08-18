@@ -541,7 +541,7 @@ public:
 // WIDL temp hack : when the interface contains 'long' WIDL writes it out as a 'LONG'
 // Setting the prototype to LONG in this class breaks building with MSVC so we use 
 // the correct 'long' type here and temp hack it for WIDL generated prototypes.
-#ifdef __WIDL_EXDISP_H
+#ifdef __exdisp_h__
 #define long LONG
 #endif
 	virtual HRESULT STDMETHODCALLTYPE get_Left(long *pl);
@@ -552,7 +552,7 @@ public:
 	virtual HRESULT STDMETHODCALLTYPE put_Width(long Width);
 	virtual HRESULT STDMETHODCALLTYPE get_Height(long *pl);
 	virtual HRESULT STDMETHODCALLTYPE put_Height(long Height);
-#ifdef __WIDL_EXDISP_H
+#ifdef __exdisp_h__
 #undef long
 #endif
 	virtual HRESULT STDMETHODCALLTYPE get_LocationName(BSTR *LocationName);
@@ -2537,7 +2537,7 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::get_Type(BSTR *Type)
 {
 	return E_NOTIMPL;
 }
-#ifdef __WIDL_EXDISP_H
+#ifdef __exdisp_h__
 #define long LONG
 #endif
 HRESULT STDMETHODCALLTYPE CShellBrowser::get_Left(long *pl)
