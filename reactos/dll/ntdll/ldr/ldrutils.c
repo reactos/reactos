@@ -2415,37 +2415,38 @@ LdrpLoadDll(IN BOOLEAN Redirected,
 {
     PPEB Peb = NtCurrentPeb();
     NTSTATUS Status = STATUS_SUCCESS;
-    PWCHAR p1, p2;
+    PWCHAR p1, p2, p1min;
     WCHAR c;
-    WCHAR NameBuffer[266];
+    WCHAR NameBuffer[MAX_PATH+6];
     LPWSTR RawDllName;
     UNICODE_STRING RawDllNameString;
     PLDR_DATA_TABLE_ENTRY LdrEntry;
     BOOLEAN InInit = LdrpInLdrInit;
-
-    /* Find the name without the extension */
-    p1 = DllName->Buffer;
-    p2 = NULL;
-    while (*p1)
-    {
-        c = *p1++;
-        if (c == L'.')
-        {
-            p2 = p1;
-        }
-        else if (c == L'\\')
-        {
-            p2 = NULL;
-        }
-    }
 
     /* Save the Raw DLL Name */
     RawDllName = NameBuffer;
     if (DllName->Length >= sizeof(NameBuffer)) return STATUS_NAME_TOO_LONG;
     RtlMoveMemory(RawDllName, DllName->Buffer, DllName->Length);
 
-    /* Check if no extension was found or if we got a slash */
-    if (!(p2) || (*p2 == '\\'))
+    /* Find the name without the extension */
+    p1 = DllName->Buffer + DllName->Length / sizeof(WCHAR) - 1;
+    p2 = NULL;
+    for (p1min = DllName->Buffer; p1 >= p1min; p1--)
+    {
+        c = *p1;
+        if (c == L'.')
+        {
+            p2 = p1;
+            break;
+        }
+        else if (c == L'\\')
+        {
+            break;
+        }
+    }
+
+    /* Check if no extension was found */
+    if (!p2)
     {
         /* Check that we have space to add one */
         if ((DllName->Length + LdrApiDefaultExtension.Length + sizeof(UNICODE_NULL)) >=
