@@ -2579,7 +2579,7 @@ HRESULT STDMETHODCALLTYPE CShellBrowser::put_Height(long Height)
 {
 	return E_NOTIMPL;
 }
-#ifdef __WIDL_EXDISP_H
+#ifdef __exdisp_h__
 #undef long
 #endif
 HRESULT STDMETHODCALLTYPE CShellBrowser::get_LocationName(BSTR *LocationName)
