@@ -34,6 +34,7 @@ NtUserAttachThreadInput(
   BOOL Ret = FALSE;
 
   UserEnterExclusive();
+  ERR("Enter NtUserAttachThreadInput %s\n",(fAttach ? "TRUE" : "FALSE" ));
   Status = PsLookupThreadByThreadId((HANDLE)idAttach, &Thread);
   if (!NT_SUCCESS(Status))
   {
@@ -53,9 +54,15 @@ NtUserAttachThreadInput(
   ObDereferenceObject(Thread);
   ObDereferenceObject(ThreadTo);
 
-  Ret = UserAttachThreadInput( pti, ptiTo, fAttach);
+  Status = UserAttachThreadInput( pti, ptiTo, fAttach);
+  if (!NT_SUCCESS(Status))
+  {
+     EngSetLastError(RtlNtStatusToDosError(Status));
+  }
+  else Ret = TRUE;
 
 Exit:
+  ERR("Leave NtUserAttachThreadInput, ret=%d\n",Ret);
   UserLeave();
   return Ret;
 }

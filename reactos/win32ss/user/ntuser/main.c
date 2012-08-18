@@ -401,6 +401,28 @@ UserDestroyThreadInfo(struct _ETHREAD *Thread)
     ppiCurrent = ptiCurrent->ppi;
     ASSERT(ppiCurrent);
 
+    // ptiTo
+    if (IsThreadAttach(ptiCurrent))
+    {
+       PTHREADINFO ptiFrom = IsThreadAttach(ptiCurrent);
+       TRACE_CH(UserThread,"Attached Thread ptiTo is getting switched!\n");
+       UserAttachThreadInput(ptiFrom, ptiCurrent, FALSE);
+    }
+    
+    // ptiFrom
+    if (ptiCurrent->pqAttach && ptiCurrent->MessageQueue)
+    {
+       PTHREADINFO ptiTo;
+       ptiTo = PsGetThreadWin32Thread(ptiCurrent->MessageQueue->Thread);
+       TRACE_CH(UserThread,"Attached Thread ptiFrom is getting switched!\n");
+       if (ptiTo) UserAttachThreadInput( ptiCurrent, ptiTo, FALSE);
+       else
+       {
+          // eThread maybe okay but Win32Thread already made NULL!
+          ERR_CH(UserThread,"Attached Thread ptiFrom did not switch due to ptiTo is NULL!\n");
+       }
+    }
+
     /* Decrement thread count and check if its 0 */
     ppiCurrent->cThreads--;
 
@@ -470,23 +492,6 @@ UserDestroyThreadInfo(struct _ETHREAD *Thread)
 
             psle = PopEntryList(&ptiCurrent->ReferencesList);
         }
-    }
-
-    // ptiTo
-    if (IsThreadAttach(ptiCurrent))
-    {
-       PTHREADINFO ptiFrom = IsThreadAttach(ptiCurrent);
-       TRACE_CH(UserThread,"Attached Thread ptiTo is getting switched!\n");
-       UserAttachThreadInput(ptiFrom, ptiCurrent, FALSE);
-    }
-    
-    // ptiFrom
-    if (ptiCurrent->pqAttach && ptiCurrent->MessageQueue)
-    {
-       PTHREADINFO ptiTo;
-       ptiTo = PsGetThreadWin32Thread(ptiCurrent->MessageQueue->Thread);
-       TRACE_CH(UserThread,"Attached Thread ptiFrom is getting switched!\n");
-       UserAttachThreadInput( ptiCurrent, ptiTo, FALSE);
     }
 
     /* Free the message queue */
