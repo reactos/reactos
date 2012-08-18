@@ -68,6 +68,9 @@
 #define SWP_NOCLIENTMOVE 0x1000
 #define SWP_STATECHANGED 0x8000
 
+/* NtUserSetScrollInfo mask to return original position before it is change */
+#define SIF_PREVIOUSPOS 4096
+
 /* Non SDK Queue state flags. */
 #define QS_SMRESULT 0x8000 /* see "Undoc. Windows" */
 

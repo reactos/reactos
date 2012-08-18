@@ -608,7 +608,7 @@ static LRESULT handle_internal_message( PWND pWnd, UINT msg, WPARAM wparam, LPAR
          pWnd == UserGetMessageWindow() )  // pWnd->fnid == FNID_MESSAGEWND
        return 0;
 
-    TRACE("Internal Event Msg %p\n",msg);
+    TRACE("Internal Event Msg %p hWnd 0x%x\n",msg,pWnd->head.h);
 
     switch(msg)
     {
@@ -742,7 +742,6 @@ co_IntPeekMessage( PMSG Msg,
                    BOOL bGMSG )
 {
     PTHREADINFO pti;
-    //PCLIENTINFO pci;
     LARGE_INTEGER LargeTickCount;
     PUSER_MESSAGE_QUEUE ThreadQueue;
     BOOL RemoveMessages;
@@ -751,10 +750,14 @@ co_IntPeekMessage( PMSG Msg,
 
     pti = PsGetCurrentThreadWin32Thread();
     ThreadQueue = pti->MessageQueue;
-    //pci = pti->pClientInfo;
 
     RemoveMessages = RemoveMsg & PM_REMOVE;
     ProcessMask = HIWORD(RemoveMsg);
+
+    if (ThreadQueue->ptiSysLock && ThreadQueue->ptiSysLock != pti)
+    {
+       ERR("PeekMessage: Thread Q 0x%p is locked 0x%p to another pti 0x%p!\n", ThreadQueue, ThreadQueue->ptiSysLock, pti );
+    }
 
  /* Hint, "If wMsgFilterMin and wMsgFilterMax are both zero, PeekMessage returns
     all available messages (that is, no range filtering is performed)".        */
@@ -1182,6 +1185,7 @@ UserPostMessage( HWND Wnd,
         Window = UserGetWindowObject(Wnd);
         if ( !Window )
         {
+            ERR("UserPostMessage: Invalid handle 0x%p!\n",Wnd);
             return FALSE;
         }
 
@@ -1246,6 +1250,7 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
 
     if (!(Window = UserGetWindowObject(hWnd)))
     {
+        TRACE("SendMessageTimeoutSingle: Invalid handle 0x%p!\n",hWnd);
         RETURN( FALSE);
     }
 
@@ -1491,6 +1496,7 @@ co_IntSendMessageWithCallBack( HWND hWnd,
 
     if (!(Window = UserGetWindowObject(hWnd)))
     {
+        TRACE("SendMessageWithCallBack: Invalid handle 0x%p!\n",hWnd);
         RETURN(FALSE);
     }
 
@@ -1514,6 +1520,8 @@ co_IntSendMessageWithCallBack( HWND hWnd,
     if (Msg & 0x80000000 &&
         Window->head.pti->MessageQueue == Win32Thread->MessageQueue)
     {
+       if (Win32Thread->TIF_flags & TIF_INCLEANUP) RETURN( FALSE);
+
        ERR("SMWCB: Internal Message!\n");
        Result = (ULONG_PTR)handle_internal_message( Window, Msg, wParam, lParam );
        if (uResult) *uResult = Result;
@@ -1650,6 +1658,7 @@ co_IntPostOrSendMessage( HWND hWnd,
 
     if(!(Window = UserGetWindowObject(hWnd)))
     {
+        TRACE("PostOrSendMessage: Invalid handle 0x%p!\n",hWnd);
         return 0;
     }
 
@@ -2158,6 +2167,8 @@ NtUserTranslateMessage(LPMSG lpMsg, UINT flags)
     return Ret;
 }
 
+LRESULT APIENTRY ScrollBarWndProc(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam);
+
 BOOL APIENTRY
 NtUserMessageCall( HWND hWnd,
                    UINT Msg,
@@ -2178,18 +2189,7 @@ NtUserMessageCall( HWND hWnd,
     {
     case FNID_SCROLLBAR:
         {
-           switch(Msg)
-           {
-               case WM_ENABLE:
-                  {
-                     Window = UserGetWindowObject(hWnd);
-                     if (Window->pSBInfo)
-                     {
-                        Window->pSBInfo->WSBflags = wParam ? ESB_ENABLE_BOTH : ESB_DISABLE_BOTH;
-                     }
-                  }
-                  break;
-           }
+           lResult = ScrollBarWndProc(hWnd, Msg, wParam, lParam);
            break;
         }
     case FNID_DEFWINDOWPROC:
@@ -2675,6 +2675,7 @@ NtUserMessageCall( HWND hWnd,
     case FNID_DEFWINDOWPROC:
     case FNID_CALLWNDPROC:
     case FNID_CALLWNDPROCRET:
+    case FNID_SCROLLBAR:
         if (ResultInfo)
         {
             _SEH2_TRY
