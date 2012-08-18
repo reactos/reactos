@@ -42,6 +42,12 @@ IntChildrenWindowFromPoint(PWND pWndTop, INT x, INT y)
 {
     PWND pWnd, pWndChild;
 
+    if ( !pWndTop )
+    {
+       pWndTop = UserGetDesktopWindow();
+       if ( !pWndTop ) return NULL;
+    }
+
     if (!(pWndTop->style & WS_VISIBLE)) return NULL;
     if ((pWndTop->style & WS_DISABLED)) return NULL;
     if (!IntPtInWindow(pWndTop, x, y)) return NULL;
@@ -1338,7 +1344,7 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, UINT first, UINT 
     pwndDesktop = UserGetDesktopWindow();
     MessageQueue = pti->MessageQueue;
     CurInfo = IntGetSysCursorInfo();
-    pwndMsg = UserGetWindowObject(msg->hwnd);
+    pwndMsg = ValidateHwndNoErr(msg->hwnd);
     clk_msg = MessageQueue->msgDblClk;
     pDesk = pwndDesktop->head.rpdesk;
 
@@ -1350,8 +1356,9 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, UINT first, UINT 
         if (pwndMsg) UserReferenceObject(pwndMsg);
     }
     else
-    {
-        pwndMsg = co_WinPosWindowFromPoint(pwndMsg, &msg->pt, &hittest);
+    {   // Fix wine Msg test_HTTRANSPARENT. Start with a NULL window.
+        // http://www.winehq.org/pipermail/wine-patches/2012-August/116776.html
+        pwndMsg = co_WinPosWindowFromPoint(NULL, &msg->pt, &hittest);
     }
 
     TRACE("Got mouse message for 0x%x, hittest: 0x%x\n", msg->hwnd, hittest );

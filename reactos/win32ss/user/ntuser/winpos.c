@@ -2111,7 +2111,7 @@ co_WinPosSearchChildren(
         {
             for (phWnd = List; *phWnd; ++phWnd)
             {
-                if (!(pwndChild = UserGetWindowObject(*phWnd)))
+                if (!(pwndChild = ValidateHwndNoErr(*phWnd)))
                 {
                     continue;
                 }
@@ -2130,13 +2130,18 @@ co_WinPosSearchChildren(
         }
     }
 
-    *HitTest = (USHORT)co_IntSendMessage(ScopeWin->head.h, WM_NCHITTEST, 0,
-                                         MAKELONG(Point->x, Point->y));
-    if ((*HitTest) == (USHORT)HTTRANSPARENT)
+    if (ScopeWin->head.pti == PsGetCurrentThreadWin32Thread())
     {
-         UserDereferenceObject(ScopeWin);
-         return NULL;
+       *HitTest = (USHORT)co_IntSendMessage(ScopeWin->head.h, WM_NCHITTEST, 0,
+                                            MAKELONG(Point->x, Point->y));
+       if ((*HitTest) == (USHORT)HTTRANSPARENT)
+       {
+           UserDereferenceObject(ScopeWin);
+           return NULL;
+       }
     }
+    else
+       *HitTest = HTCLIENT;
 
     return ScopeWin;
 }
@@ -2163,7 +2168,7 @@ co_WinPosWindowFromPoint(PWND ScopeWin, POINT *WinPoint, USHORT* HitTest)
    Window = co_WinPosSearchChildren(ScopeWin, &Point, HitTest);
 
    UserDerefObjectCo(ScopeWin);
-   if(Window)
+   if (Window)
        ASSERT_REFS_CO(Window);
    ASSERT_REFS_CO(ScopeWin);
 
@@ -2193,7 +2198,7 @@ IntRealChildWindowFromPoint(PWND Parent, LONG x, LONG y)
       for (phWnd = List; *phWnd; phWnd++)
       {
          PWND Child;
-         if ((Child = UserGetWindowObject(*phWnd)))
+         if ((Child = ValidateHwndNoErr(*phWnd)))
          {
             if ( Child->style & WS_VISIBLE && IntPtInWindow(Child, Pt.x, Pt.y) )
             {
@@ -2238,7 +2243,7 @@ IntChildWindowFromPointEx(PWND Parent, LONG x, LONG y, UINT uiFlags)
       for (phWnd = List; *phWnd; phWnd++)
       {
          PWND Child;
-         if ((Child = UserGetWindowObject(*phWnd)))
+         if ((Child = ValidateHwndNoErr(*phWnd)))
          {
             if (uiFlags & (CWP_SKIPINVISIBLE|CWP_SKIPDISABLED))
             {
@@ -3098,9 +3103,9 @@ NtUserWindowFromPoint(LONG X, LONG Y)
       //pti = PsGetCurrentThreadWin32Thread();
       Window = co_WinPosWindowFromPoint(DesktopWindow, &pt, &hittest);
 
-      if(Window)
+      if (Window)
       {
-         Ret = Window->head.h;
+         Ret = UserHMGetHandle(Window);
 
          RETURN( Ret);
       }
