@@ -1842,6 +1842,8 @@ WSPGetSockName(IN SOCKET Handle,
         }
     }
 
+    HeapFree(GlobalHeap, 0, TdiAddress);
+
     return MsafdReturnWithErrno ( Status, lpErrno, 0, NULL );
 }
 
@@ -1933,7 +1935,7 @@ WSPGetPeerName(IN SOCKET s,
                            SocketAddress->Address[0].Address,
                            SocketAddress->Address[0].AddressLength);
             *NameLength = Socket->SharedData.SizeOfRemoteAddress;
-            AFD_DbgPrint (MID_TRACE, ("NameLength %d Address: %s Port %x\n",
+            AFD_DbgPrint (MID_TRACE, ("NameLength %d Address: %x Port %x\n",
                           *NameLength, ((struct sockaddr_in *)Name)->sin_addr.s_addr,
                           ((struct sockaddr_in *)Name)->sin_port));
             HeapFree(GlobalHeap, 0, SocketAddress);
@@ -1946,6 +1948,8 @@ WSPGetPeerName(IN SOCKET s,
             return SOCKET_ERROR;
         }
     }
+
+    HeapFree(GlobalHeap, 0, SocketAddress);
 
     return MsafdReturnWithErrno ( Status, lpErrno, 0, NULL );
 }
