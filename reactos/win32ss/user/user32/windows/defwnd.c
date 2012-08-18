@@ -1245,7 +1245,7 @@ User32DefWindowProc(HWND hWnd,
             }
             return (0);
         }
-
+/*
         case WM_SYNCPAINT:
         {
             HRGN hRgn;
@@ -1272,7 +1272,7 @@ User32DefWindowProc(HWND hWnd,
             }
             return (0);
         }
-
+*/
         case WM_CLOSE:
         {
             DestroyWindow(hWnd);
@@ -1816,6 +1816,8 @@ User32DefWindowProc(HWND hWnd,
 /* Move to win32k !*/
         case WM_SHOWWINDOW:
             if (!lParam) break; // Call when it is necessary.
+        case WM_SYNCPAINT:
+        case WM_SETREDRAW:
         case WM_CLIENTSHUTDOWN:
         case WM_GETHOTKEY:
         case WM_SETHOTKEY:
