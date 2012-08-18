@@ -816,6 +816,28 @@ const var_t *is_callas(const attr_list_t *a)
   return get_attrp(a, ATTR_CALLAS);
 }
 
+static int is_inherited_method(const type_t *iface, const var_t *func)
+{
+  while ((iface = type_iface_get_inherit(iface)))
+  {
+    const statement_t *stmt;
+    STATEMENTS_FOR_EACH_FUNC(stmt, type_iface_get_stmts(iface))
+    {
+      const var_t *funccmp = stmt->u.var;
+
+      if (!is_callas(func->attrs))
+      {
+         char inherit_name[256];
+         /* compare full name including property prefix */
+         strcpy(inherit_name, get_name(funccmp));
+         if (!strcmp(inherit_name, get_name(func))) return 1;
+      }
+    }
+  }
+
+  return 0;
+}
+
 static void write_method_macro(FILE *header, const type_t *iface, const char *name)
 {
   const statement_t *stmt;
@@ -834,7 +856,7 @@ static void write_method_macro(FILE *header, const type_t *iface, const char *na
       first_iface = 0;
     }
 
-    if (!is_callas(func->attrs)) {
+    if (!is_callas(func->attrs) && !is_inherited_method(iface, func)) {
       const var_t *arg;
 
       fprintf(header, "#define %s_%s(This", name, get_name(func));
@@ -876,6 +898,13 @@ void write_args(FILE *h, const var_list_t *args, const char *name, int method, i
         else fprintf(h, ",");
     }
     write_type_decl(h, arg->type, arg->name);
+    if (method == 2) {
+        const expr_t *expr = get_attrp(arg->attrs, ATTR_DEFAULTVALUE);
+        if (expr) {
+            fprintf(h, " = ");
+            write_expr( h, expr, 0, 1, NULL, NULL, "" );
+        }
+    }
     count++;
   }
   if (do_indent) indentation--;
@@ -902,6 +931,43 @@ static void write_cpp_method_def(FILE *header, const type_t *iface)
   }
 }
 
+static void write_inline_wrappers(FILE *header, const type_t *iface, const char *name)
+{
+  const statement_t *stmt;
+  int first_iface = 1;
+
+  if (type_iface_get_inherit(iface))
+    write_inline_wrappers(header, type_iface_get_inherit(iface), name);
+
+  STATEMENTS_FOR_EACH_FUNC(stmt, type_iface_get_stmts(iface))
+  {
+    const var_t *func = stmt->u.var;
+
+    if (first_iface)
+    {
+      fprintf(header, "/*** %s methods ***/\n", iface->name);
+      first_iface = 0;
+    }
+
+    if (!is_callas(func->attrs) && !is_inherited_method(iface, func)) {
+      const var_t *arg;
+
+      fprintf(header, "static FORCEINLINE ");
+      write_type_decl_left(header, type_function_get_rettype(func->type));
+      fprintf(header, " %s_%s(", name, get_name(func));
+      write_args(header, type_get_function_args(func->type), name, 1, FALSE);
+      fprintf(header, ") {\n");
+      fprintf(header, "    %s", is_void(type_function_get_rettype(func->type)) ? "" : "return ");
+      fprintf(header, "This->lpVtbl->%s(This", get_name(func));
+      if (type_get_function_args(func->type))
+          LIST_FOR_EACH_ENTRY( arg, type_get_function_args(func->type), const var_t, entry )
+              fprintf(header, ",%s", arg->name);
+      fprintf(header, ");\n");
+      fprintf(header, "}\n");
+    }
+  }
+}
+
 static void do_write_c_method_def(FILE *header, const type_t *iface, const char *name)
 {
   const statement_t *stmt;
@@ -923,7 +989,10 @@ static void do_write_c_method_def(FILE *header, const type_t *iface, const char 
       if (!callconv) callconv = "STDMETHODCALLTYPE";
       indent(header, 0);
       write_type_decl_left(header, type_function_get_rettype(func->type));
-      fprintf(header, " (%s *%s)(\n", callconv, get_name(func));
+      if (is_inherited_method(iface, func))
+        fprintf(header, " (%s *%s_%s)(\n", callconv, iface->name, func->name);
+      else
+        fprintf(header, " (%s *%s)(\n", callconv, get_name(func));
       write_args(header, type_get_function_args(func->type), name, 1, TRUE);
       fprintf(header, ");\n");
       fprintf(header, "\n");
@@ -1150,8 +1219,11 @@ static void write_com_interface_end(FILE *header, type_t *iface)
   fprintf(header, "#ifdef COBJMACROS\n");
   /* dispinterfaces don't have real functions, so don't write macros for them,
    * only for the interface this interface inherits from, i.e. IDispatch */
+  fprintf(header, "#ifndef WIDL_C_INLINE_WRAPPERS\n");
   write_method_macro(header, dispinterface ? type_iface_get_inherit(iface) : iface, iface->name);
-  fprintf(header, "#endif\n");
+  fprintf(header, "#else\n");
+  write_inline_wrappers(header, dispinterface ? type_iface_get_inherit(iface) : iface, iface->name);
+  fprintf(header, "#endif\n");  fprintf(header, "#endif\n");
   fprintf(header, "\n");
   fprintf(header, "#endif\n");
   fprintf(header, "\n");

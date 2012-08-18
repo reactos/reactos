@@ -175,11 +175,10 @@ static void write_function_stub(const type_t *iface, const var_t *func, unsigned
                 /* if the context_handle attribute appears in the chain of types
                  * without pointers being followed, then the context handle must
                  * be direct, otherwise it is a pointer */
-                int is_ch_ptr = is_aliaschain_attr(var->type, ATTR_CONTEXTHANDLE) ? FALSE : TRUE;
+                const char *ch_ptr = is_aliaschain_attr(var->type, ATTR_CONTEXTHANDLE) ? "*" : "";
                 print_server("(");
                 write_type_decl_left(server, var->type);
-                fprintf(server, ")%sNDRSContextValue(__frame->%s)",
-                        is_ch_ptr ? "" : "*", var->name);
+                fprintf(server, ")%sNDRSContextValue(__frame->%s)", ch_ptr, var->name);
             }
             else
             {
