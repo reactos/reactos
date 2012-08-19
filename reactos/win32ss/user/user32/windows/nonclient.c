@@ -995,7 +995,8 @@ DefWndNCLButtonDown(HWND hWnd, WPARAM wParam, LPARAM lParam)
         }
         case HTSYSMENU:
         {
-	  if (GetWindowLongPtrW(hWnd, GWL_STYLE) & WS_SYSMENU)
+          LONG style = GetWindowLongPtrW( hWnd, GWL_STYLE );
+          if (style & WS_SYSMENU)
             {
 	      SendMessageW(hWnd, WM_SYSCOMMAND, SC_MOUSEMENU + HTSYSMENU,
 			   lParam);
@@ -1036,6 +1037,8 @@ DefWndNCLButtonDown(HWND hWnd, WPARAM wParam, LPARAM lParam)
             SendMessageW(hWnd, WM_SYSCOMMAND, SC_SIZE + wParam - (HTLEFT - WMSZ_LEFT), lParam);
             break;
         }
+        case HTBORDER:
+            break;
     }
     return(0);
 }
