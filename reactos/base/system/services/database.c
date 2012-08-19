@@ -902,7 +902,7 @@ ScmControlService(PSERVICE Service,
 
     /* Calculate the total length of the start command line */
     PacketSize = sizeof(SCM_CONTROL_PACKET);
-    PacketSize += (wcslen(Service->lpServiceName) + 1) * sizeof(WCHAR);
+    PacketSize += (DWORD)((wcslen(Service->lpServiceName) + 1) * sizeof(WCHAR));
 
     ControlPacket = HeapAlloc(GetProcessHeap(),
                               HEAP_ZERO_MEMORY,
@@ -1117,7 +1117,7 @@ ScmSendStartCommand(PSERVICE Service,
 
     /* Calculate the total length of the start command line */
     PacketSize = sizeof(SCM_CONTROL_PACKET) +
-                 (wcslen(Service->lpServiceName) + 1) * sizeof(WCHAR);
+                 (DWORD)((wcslen(Service->lpServiceName) + 1) * sizeof(WCHAR));
 
     /* Calculate the required packet size for the start arguments */
     if (argc > 0 && argv != NULL)
@@ -1128,7 +1128,7 @@ ScmSendStartCommand(PSERVICE Service,
         for (i = 0; i < argc; i++)
         {
             DPRINT("Argv[%lu]: %S\n", i, argv[i]);
-            PacketSize += (wcslen(argv[i]) + 1) * sizeof(WCHAR) + sizeof(PWSTR);
+            PacketSize += (DWORD)((wcslen(argv[i]) + 1) * sizeof(WCHAR) + sizeof(PWSTR));
         }
     }
 
