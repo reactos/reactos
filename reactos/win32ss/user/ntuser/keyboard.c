@@ -803,11 +803,20 @@ ProcessKeyEvent(WORD wVk, WORD wScanCode, DWORD dwFlags, BOOL bInjected, DWORD d
     if (wSimpleVk == VK_SHIFT) /* shift can't be extended */
         bExt = FALSE;
 
+    /* If we have a focus queue, post a keyboard message */
+    pFocusQueue = IntGetFocusMessageQueue();
+    TRACE("ProcessKeyEvent Q 0x%p Active pWnd 0x%p Focus pWnd 0x%p\n",
+           pFocusQueue,
+           (pFocusQueue ?  pFocusQueue->spwndActive : 0),
+           (pFocusQueue ?  pFocusQueue->spwndFocus : 0));
+
     /* If it is F10 or ALT is down and CTRL is up, it's a system key */
-    if (wVk == VK_F10 ||
+    if ( wVk == VK_F10 ||
         (wSimpleVk == VK_MENU && bMenuDownRecently) ||
         (IS_KEY_DOWN(gafAsyncKeyState, VK_MENU) &&
-        !IS_KEY_DOWN(gafAsyncKeyState, VK_CONTROL)))
+        !IS_KEY_DOWN(gafAsyncKeyState, VK_CONTROL)) ||
+         // See MSDN WM_SYSKEYDOWN/UP fixes last wine Win test_keyboard_input.
+        (pFocusQueue && !pFocusQueue->spwndFocus) )
     {
         bMenuDownRecently = FALSE; // reset
         if (bIsDown)
@@ -843,24 +852,29 @@ ProcessKeyEvent(WORD wVk, WORD wScanCode, DWORD dwFlags, BOOL bInjected, DWORD d
        TRACE("Alt-Tab/Esc Pressed wParam %x\n",wVk);
     }
 
-    /* If we have a focus queue, post a keyboard message */
-    pFocusQueue = IntGetFocusMessageQueue();
-    TRACE("ProcessKeyEvent Q 0x%p Focus pWnd 0x%p\n",pFocusQueue, pFocusQueue ?  pFocusQueue->spwndFocus : 0);
     if (bIsDown && wVk == VK_SNAPSHOT)
     {
         if (pFocusQueue &&
             IS_KEY_DOWN(gafAsyncKeyState, VK_MENU) &&
             !IS_KEY_DOWN(gafAsyncKeyState, VK_CONTROL))
         {
-            SnapWindow(pFocusQueue->spwndFocus ? UserHMGetHandle(pFocusQueue->spwndFocus) : 0);
+            // Snap from Active Window, Focus can be null.
+            SnapWindow(pFocusQueue->spwndActive ? UserHMGetHandle(pFocusQueue->spwndActive) : 0);
         }
         else
-            SnapWindow(NULL);
+            SnapWindow(NULL); // Snap Desktop.
     }
     else if (pFocusQueue && bPostMsg)
     {
+        PWND Wnd = pFocusQueue->spwndFocus;
+        if (!Wnd)
+        {
+           // Focus can be null so going with Active. WM_SYSKEYXXX last wine Win test_keyboard_input.
+           Wnd = pFocusQueue->spwndActive;
+        }
+
         /* Init message */
-        Msg.hwnd = pFocusQueue->spwndFocus ? UserHMGetHandle(pFocusQueue->spwndFocus) : 0;
+        Msg.hwnd = UserHMGetHandle(Wnd);
         Msg.wParam = wFixedVk & 0xFF; /* Note: It's simplified by msg queue */
         Msg.lParam = MAKELPARAM(1, wScanCode);
         Msg.time = dwTime;
