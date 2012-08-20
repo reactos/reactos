@@ -1090,7 +1090,8 @@ IntProcessOwnerSwap(PWND Wnd, PWND WndNewOwner, PWND WndOldOwner)
               Wnd->head.pti == WndNewOwner->head.pti ||
               WndOldOwner->head.pti != WndNewOwner->head.pti )
          {
-            UserAttachThreadInput(Wnd->head.pti, WndOldOwner->head.pti, FALSE);
+            ERR("ProcessOwnerSwap Old out.\n");
+            //UserAttachThreadInput(Wnd->head.pti, WndOldOwner->head.pti, FALSE);
          }
       }
    }
@@ -1101,7 +1102,8 @@ IntProcessOwnerSwap(PWND Wnd, PWND WndNewOwner, PWND WndOldOwner)
          if (!WndOldOwner ||
               WndOldOwner->head.pti != WndNewOwner->head.pti )
          {
-            UserAttachThreadInput(Wnd->head.pti, WndNewOwner->head.pti, TRUE);
+            ERR("ProcessOwnerSwap New in.\n");
+            //UserAttachThreadInput(Wnd->head.pti, WndNewOwner->head.pti, TRUE);
          }
       }
    }
@@ -1243,14 +1245,16 @@ co_IntSetParent(PWND Wnd, PWND WndNewParent)
       {
          if (Wnd->head.pti != WndOldParent->head.pti)
          {
-            UserAttachThreadInput(Wnd->head.pti, WndOldParent->head.pti, FALSE);
+            ERR("SetParent Old out.\n");
+            //UserAttachThreadInput(Wnd->head.pti, WndOldParent->head.pti, FALSE);
          }
       }
       if ( WndNewParent != co_GetDesktopWindow(Wnd))
       {
          if (Wnd->head.pti != WndNewParent->head.pti)
          {
-            UserAttachThreadInput(Wnd->head.pti, WndNewParent->head.pti, TRUE);
+            ERR("SetParent New in.\n");
+            //UserAttachThreadInput(Wnd->head.pti, WndNewParent->head.pti, TRUE);
          }
       }
    }
@@ -1938,7 +1942,8 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
             Class->atomClassName != gpsi->atomSysClass[ICLS_IME] &&
             pti != pWnd->spwndOwner->head.pti)
        {
-          UserAttachThreadInput(pti, pWnd->spwndOwner->head.pti, TRUE);
+          ERR("CreateWindow Owner in.\n");
+          //UserAttachThreadInput(pti, pWnd->spwndOwner->head.pti, TRUE);
        }
    }
 
@@ -2221,7 +2226,8 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
       {
          if (pti != Window->spwndParent->head.pti)
          {
-            UserAttachThreadInput(pti, Window->spwndParent->head.pti, TRUE);
+            ERR("CreateWindow Parent in.\n");
+            //UserAttachThreadInput(pti, Window->spwndParent->head.pti, TRUE);
          }
       }
    }
@@ -2558,7 +2564,8 @@ BOOLEAN FASTCALL co_UserDestroyWindow(PWND Window)
       {
          if (Window->spwndOwner)
          {
-            UserAttachThreadInput(Window->head.pti, Window->spwndOwner->head.pti, FALSE);
+            ERR("DestroyWindow Owner out.\n");
+            //UserAttachThreadInput(Window->head.pti, Window->spwndOwner->head.pti, FALSE);
          }
       }
    }
@@ -2596,7 +2603,8 @@ BOOLEAN FASTCALL co_UserDestroyWindow(PWND Window)
       {
          if (!IntIsTopLevelWindow(Window))
          {
-            UserAttachThreadInput(Window->head.pti, Window->spwndParent->head.pti, FALSE);
+            ERR("DestroyWindow Parent out.\n");
+            //UserAttachThreadInput(Window->head.pti, Window->spwndParent->head.pti, FALSE);
          }
       }
    }
