@@ -327,12 +327,8 @@ LibTCPBindCallback(void *arg)
         goto done;
     }
 
-    /* If this address file is shared, set the SOF_REUSEADDR flag in the PCB */
-    ASSERT(msg->Input.Bind.Connection->AddressFile != NULL);
-    if (msg->Input.Bind.Connection->AddressFile->Sharers != 1)
-    {
-        pcb->so_options |= SOF_REUSEADDR;
-    }
+    /* We're guaranteed that the local address is valid to bind at this point */
+    pcb->so_options |= SOF_REUSEADDR;
 
     msg->Output.Bind.Error = tcp_bind(pcb,
                                       msg->Input.Bind.IpAddress,
