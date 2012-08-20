@@ -632,7 +632,7 @@ static LRESULT handle_internal_message( PWND pWnd, UINT msg, WPARAM wparam, LPAR
        {
           PWND Window = (PWND)wparam;
           if (wparam) UserRefObjectCo(Window, &Ref);
-          lRes = (LRESULT)co_IntSetActiveWindow(Window,NULL,(BOOL)lparam,TRUE);
+          lRes = (LRESULT)co_IntSetActiveWindow(Window,NULL,(BOOL)lparam,TRUE,TRUE);
           if (wparam) UserDerefObjectCo(Window);
           return lRes;
        }
@@ -1807,11 +1807,9 @@ DWORD APIENTRY
 IntGetQueueStatus(DWORD Changes)
 {
     PTHREADINFO pti;
-    //PUSER_MESSAGE_QUEUE Queue;
     DWORD Result;
 
     pti = PsGetCurrentThreadWin32Thread();
-    //Queue = pti->MessageQueue;
 // wine:
     Changes &= (QS_ALLINPUT|QS_ALLPOSTMESSAGE|QS_SMRESULT);
 
@@ -2159,7 +2157,7 @@ NtUserTranslateMessage(LPMSG lpMsg, UINT flags)
     }
     else
     {
-        ERR("No Window for Translate. hwnd 0x%p Msg %d\n",SafeMsg.hwnd,SafeMsg.message);
+        TRACE("No Window for Translate. hwnd 0x%p Msg %d\n",SafeMsg.hwnd,SafeMsg.message);
         Ret = FALSE;
     }
     UserLeave();
@@ -2190,6 +2188,12 @@ NtUserMessageCall( HWND hWnd,
     case FNID_SCROLLBAR:
         {
            lResult = ScrollBarWndProc(hWnd, Msg, wParam, lParam);
+           break;
+        }
+    case FNID_DESKTOP:
+        {
+           Window = UserGetWindowObject(hWnd);
+           if (Window) lResult = DesktopWindowProc(Window, Msg, wParam, lParam);
            break;
         }
     case FNID_DEFWINDOWPROC:
@@ -2676,6 +2680,7 @@ NtUserMessageCall( HWND hWnd,
     case FNID_CALLWNDPROC:
     case FNID_CALLWNDPROCRET:
     case FNID_SCROLLBAR:
+    case FNID_DESKTOP:
         if (ResultInfo)
         {
             _SEH2_TRY

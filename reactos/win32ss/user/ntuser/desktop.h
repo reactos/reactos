@@ -39,6 +39,10 @@ typedef struct _DESKTOP
 #define DF_DESKWNDDESTROYED 0x00010000
 #define DF_DYING            0x00020000
 
+// Index offset for Desktop data. Should these be global?
+#define DT_GWL_PROCESSID 0
+#define DT_GWL_THREADID  4
+
 #define DESKTOP_READ       STANDARD_RIGHTS_READ      | \
                            DESKTOP_ENUMERATE         | \
                            DESKTOP_READOBJECTS
@@ -146,7 +150,7 @@ IntParseDesktopPath(PEPROCESS Process,
 VOID APIENTRY UserRedrawDesktop(VOID);
 BOOL IntRegisterShellHookWindow(HWND hWnd);
 BOOL IntDeRegisterShellHookWindow(HWND hWnd);
-VOID co_IntShellHookNotify(WPARAM Message, LPARAM lParam);
+VOID co_IntShellHookNotify(WPARAM Message, WPARAM wParam, LPARAM lParam);
 HDC FASTCALL UserGetDesktopDC(ULONG,BOOL,BOOL);
 
 #define IntIsActiveDesktop(Desktop) \
@@ -277,6 +281,6 @@ DesktopHeapAddressToUser(PVOID lpMem)
 
 PWND FASTCALL IntGetThreadDesktopWindow(PTHREADINFO);
 PWND FASTCALL co_GetDesktopWindow(PWND);
-
+BOOL FASTCALL IntPaintDesktop(HDC);
 LRESULT FASTCALL DesktopWindowProc(PWND, UINT, WPARAM, LPARAM);
 /* EOF */

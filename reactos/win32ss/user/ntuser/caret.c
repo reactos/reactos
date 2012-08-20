@@ -202,11 +202,11 @@ BOOL FASTCALL co_UserShowCaret(PWND Window OPTIONAL)
       return FALSE;
    }
 
-   if(!ThreadQueue->CaretInfo->Visible && ThreadQueue->CaretInfo->hWnd)
+   if (!ThreadQueue->CaretInfo->Visible)
    {
       ThreadQueue->CaretInfo->Visible = 1;
-      pWnd = UserGetWindowObject(ThreadQueue->CaretInfo->hWnd);
-      if (!ThreadQueue->CaretInfo->Showing)
+      pWnd = ValidateHwndNoErr(ThreadQueue->CaretInfo->hWnd);
+      if (!ThreadQueue->CaretInfo->Showing && pWnd)
       {
          co_IntSendMessage(ThreadQueue->CaretInfo->hWnd, WM_SYSTIMER, IDCARETTIMER, 0);
          IntNotifyWinEvent(EVENT_OBJECT_SHOW, pWnd, OBJID_CARET, OBJID_CARET, 0);

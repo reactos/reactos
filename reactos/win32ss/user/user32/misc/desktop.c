@@ -29,13 +29,61 @@ const struct builtin_class_descr DESKTOP_builtin_class =
   (HBRUSH)(COLOR_BACKGROUND+1)    /* brush */
 };
 #endif
+
 LRESULT
 WINAPI
-DesktopWndProc( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+DesktopWndProcW(HWND Wnd,
+                UINT Msg,
+                WPARAM wParam,
+                LPARAM lParam)
 {
-    TRACE("Desktop Class Atom! hWnd 0x%x, Msg %d\n", hwnd, message);
-    if (message == WM_NCCREATE) return TRUE;
-    return 0;  /* all other messages are ignored */
+   PAINTSTRUCT PS;
+   TRACE("Desktop W Class Atom! hWnd 0x%x, Msg %d\n", Wnd, Msg);
+
+   switch(Msg)
+   {
+      case WM_NCCREATE:
+      case WM_CREATE:
+      case WM_CLOSE:
+      case WM_DISPLAYCHANGE:
+        {
+          LRESULT lResult;
+          NtUserMessageCall( Wnd, Msg, wParam, lParam, (ULONG_PTR)&lResult, FNID_DESKTOP, FALSE);
+          return lResult;
+        }
+
+      case WM_ERASEBKGND:
+          PaintDesktop((HDC)wParam);
+          return 1;
+
+      case WM_PAINT:
+          if (BeginPaint(Wnd, &PS))
+          {
+             EndPaint(Wnd, &PS);   
+          }
+          return 0;
+
+      case WM_SYSCOLORCHANGE:
+          RedrawWindow(Wnd, NULL, NULL, RDW_INVALIDATE|RDW_ERASE|RDW_ALLCHILDREN);
+          break;
+
+      case WM_PALETTECHANGED:
+          if (Wnd == (HWND)wParam) break;
+      case WM_QUERYNEWPALETTE:
+        {
+          HDC hdc = GetWindowDC( Wnd );
+          PaintDesktop(hdc);
+          ReleaseDC( Wnd, hdc );
+          break;
+        }
+
+      case WM_SETCURSOR:
+          return (LRESULT)SetCursor(LoadCursorW(0, (LPCWSTR)IDC_ARROW));
+
+      default:
+          return DefWindowProcW(Wnd, Msg, wParam, lParam);
+   }
+   return 0;
 }
 
 VOID

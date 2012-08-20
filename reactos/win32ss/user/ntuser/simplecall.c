@@ -123,7 +123,7 @@ NtUserCallNoParam(DWORD Routine)
       case NOPARAM_ROUTINE_ZAPACTIVEANDFOUS:
       {
          PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
-         ERR("Zapping the Active and Focus window out of the Queue!\n");
+         TRACE("Zapping the Active and Focus window out of the Queue!\n");
          pti->MessageQueue->spwndFocus = NULL;
          pti->MessageQueue->spwndActive = NULL;
          RETURN(0);
@@ -572,7 +572,7 @@ NtUserCallHwndLock(
                                 SWP_FRAMECHANGED );
          if (!Window->spwndOwner && !IntGetParent(Window))
          {
-            co_IntShellHookNotify(HSHELL_REDRAW, (LPARAM) hWnd);
+            co_IntShellHookNotify(HSHELL_REDRAW, (WPARAM) hWnd, FALSE); // FIXME Flashing?
          }
          Ret = TRUE;
          break;

@@ -550,6 +550,8 @@ HWND FASTCALL IntGetCurrentThreadDesktopWindow(VOID)
 LRESULT FASTCALL
 DesktopWindowProc(PWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
+   ULONG Value;
+   //ERR("DesktopWindowProc\n");
    switch (Msg)
    {
       case WM_NCCREATE:
@@ -558,6 +560,20 @@ DesktopWindowProc(PWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
             Wnd->fnid = FNID_DESKTOP;
          }
          return (LRESULT)TRUE;
+
+      case WM_CREATE:
+         Value = HandleToULong(PsGetCurrentProcessId());
+         // Save Process ID
+         co_UserSetWindowLong(UserHMGetHandle(Wnd), DT_GWL_PROCESSID, Value, FALSE);
+         Value = HandleToULong(PsGetCurrentThreadId());
+         // Save Thread ID
+         co_UserSetWindowLong(UserHMGetHandle(Wnd), DT_GWL_THREADID, Value, FALSE);
+      case WM_CLOSE: 
+         return 0;
+
+      case WM_DISPLAYCHANGE:
+         co_WinPosSetWindowPos(Wnd, 0, 0, 0, LOWORD(lParam), HIWORD(lParam), SWP_NOZORDER | SWP_NOACTIVATE);
+         break;
    }
    return 0;
 }
@@ -605,17 +621,6 @@ UserRedrawDesktop()
 NTSTATUS FASTCALL
 co_IntShowDesktop(PDESKTOP Desktop, ULONG Width, ULONG Height)
 {
-//#if 0
-   CSR_API_MESSAGE Request;
-
-   Request.Type = MAKE_CSR_API(SHOW_DESKTOP, CSR_GUI);
-   Request.Data.ShowDesktopRequest.DesktopWindow = Desktop->DesktopWindow;
-   Request.Data.ShowDesktopRequest.Width = Width;
-   Request.Data.ShowDesktopRequest.Height = Height;
-
-   return co_CsrNotify(&Request);
-//#endif
-#if 0 // DESKTOPWNDPROC
    PWND Window;
 
    Window = IntGetWindowObject(Desktop->DesktopWindow);
@@ -629,7 +634,6 @@ co_IntShowDesktop(PDESKTOP Desktop, ULONG Width, ULONG Height)
 
    co_UserRedrawWindow( Window, NULL, 0, RDW_UPDATENOW | RDW_ALLCHILDREN);
    return STATUS_SUCCESS;
-#endif
 }
 
 NTSTATUS FASTCALL
@@ -680,7 +684,7 @@ UserBuildShellHookHwndList(PDESKTOP Desktop)
  * notifications. The lParam contents depend on the Message. See
  * MSDN for more details (RegisterShellHookWindow)
  */
-VOID co_IntShellHookNotify(WPARAM Message, LPARAM lParam)
+VOID co_IntShellHookNotify(WPARAM Message, WPARAM wParam, LPARAM lParam)
 {
    PDESKTOP Desktop = IntGetActiveDesktop();
    HWND* HwndList;
@@ -700,6 +704,8 @@ VOID co_IntShellHookNotify(WPARAM Message, LPARAM lParam)
       return;
    }
 
+   // FIXME: System Tray Support.
+
    HwndList = UserBuildShellHookHwndList(Desktop);
    if (HwndList)
    {
@@ -711,12 +717,16 @@ VOID co_IntShellHookNotify(WPARAM Message, LPARAM lParam)
          co_IntPostOrSendMessage(*cursor,
                                  gpsi->uiShellMsg,
                                  Message,
-                                 lParam);
+                                 (Message == HSHELL_LANGUAGE ? lParam : (LPARAM)wParam) );
       }
 
       ExFreePool(HwndList);
    }
 
+   if (ISITHOOKED(WH_SHELL))
+   {
+      co_HOOK_CallHooks(WH_SHELL, Message, wParam, lParam);
+   }
 }
 
 /*
@@ -996,7 +1006,6 @@ IntPaintDesktop(HDC hDC)
    return TRUE;
 }
 
-
 /* SYSCALLS *******************************************************************/
 
 /*
@@ -1069,6 +1078,8 @@ NtUserCreateDesktop(
       ptiCurrent->TIF_flags |= TIF_DISABLEHOOKS;
       ptiCurrent->pClientInfo->dwTIFlags = ptiCurrent->TIF_flags;
    }
+   /*else
+   {ERR("NtUserCreateDesktop: No ptiCurrent\n");}*/
    DesktopName.Buffer = NULL;
 
    /*
@@ -1169,9 +1180,9 @@ NtUserCreateDesktop(
    {
       InitializeListHead(&DesktopObject->pDeskInfo->aphkStart[i]);
    }
-//#if 0
+
    /*
-    * Create a handle for CSRSS and notify CSRSS for Creating Desktop Background Window.
+    * Create a handle for CSRSS and notify CSRSS for Creating Desktop Background Windows and Threads.
     */
    Request.Type = MAKE_CSR_API(CREATE_DESKTOP, CSR_GUI);
    Status = CsrInsertObject(Desktop,
@@ -1194,51 +1205,9 @@ NtUserCreateDesktop(
       SetLastNtError(Status);
       RETURN( NULL);
    }
-//#endif
+
    if (ptiCurrent && !ptiCurrent->rpdesk) IntSetThreadDesktop(Desktop,FALSE);
 
-  /*
-     Based on wine/server/window.c in get_desktop_window.
-   */
-
-#if 0 // DESKTOPWNDPROC from Revision 6908 Dedicated to GvG!
-   // Turn on when server side proc is ready.
-   //
-   // Create desktop window.
-   //
-   /*
-      Currently this works but it hangs in
-      co_IntShowDesktop->co_UserRedrawWindow->co_IntPaintWindows->co_IntSendMessage
-      Commenting out co_UserRedrawWindow will allow it to run with gui issues.
-    */
-   ClassName.Buffer = ((PWSTR)((ULONG_PTR)(WORD)(gpsi->atomSysClass[ICLS_DESKTOP])));
-   ClassName.Length = 0;
-   RtlZeroMemory(&WindowName, sizeof(WindowName));
-
-   RtlZeroMemory(&Cs, sizeof(Cs));
-   Cs.x = UserGetSystemMetrics(SM_XVIRTUALSCREEN);
-   Cs.y = UserGetSystemMetrics(SM_YVIRTUALSCREEN);
-   Cs.cx = UserGetSystemMetrics(SM_CXVIRTUALSCREEN);
-   Cs.cy = UserGetSystemMetrics(SM_CYVIRTUALSCREEN);
-   Cs.style = WS_POPUP|WS_CLIPCHILDREN;
-   Cs.hInstance = hModClient; // Experimental mode... hModuleWin; // Server side winproc!
-   Cs.lpszName = (LPCWSTR) &WindowName;
-   Cs.lpszClass = (LPCWSTR) &ClassName;
-
-   pWnd = co_UserCreateWindowEx(&Cs, &ClassName, &WindowName, NULL);
-   if (!pWnd)
-   {
-      ERR("Failed to create Desktop window handle\n");
-   }
-   else
-   { // Should be set in window.c, Justin Case,
-      if (!DesktopObject->DesktopWindow)
-      {
-         DesktopObject->pDeskInfo->spwnd = pWnd;
-         DesktopObject->DesktopWindow = UserHMGetHandle(pWnd);
-      }
-   }
-#endif
    ClassName.Buffer = ((PWSTR)((ULONG_PTR)(WORD)(gpsi->atomSysClass[ICLS_HWNDMESSAGE])));
    ClassName.Length = 0;
    RtlZeroMemory(&WindowName, sizeof(WindowName));

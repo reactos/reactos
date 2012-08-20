@@ -997,6 +997,7 @@ co_MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
    PUSER_MESSAGE_QUEUE ThreadQueue;
    LARGE_INTEGER Timeout;
    PLIST_ENTRY Entry;
+   PWND pWnd;
    LRESULT Result = 0;   //// Result could be trashed. ////
 
    pti = PsGetCurrentThreadWin32Thread();
@@ -1015,14 +1016,27 @@ co_MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
 
    if ( HookMessage == MSQ_NORMAL )
    {
+      pWnd = ValidateHwndNoErr(Wnd);
+
       // These can not cross International Border lines!
-      if ( pti->ppi != ptirec->ppi )
+      if ( pti->ppi != ptirec->ppi && pWnd )
       {
          switch(Msg)
          {
+             // Handle the special case when working with password transfers across bordering processes.
              case EM_GETLINE:
              case EM_SETPASSWORDCHAR:
              case WM_GETTEXT:
+                // Look for edit controls setup for passwords.
+                if ( gpsi->atomSysClass[ICLS_EDIT] == pWnd->pcls->atomClassName && // Use atomNVClassName.
+                     pWnd->style & ES_PASSWORD )
+                {
+                   if (uResult) *uResult = -1;
+                   ERR("Running across the border without a passport!\n");
+                   EngSetLastError(ERROR_ACCESS_DENIED);
+                   return STATUS_UNSUCCESSFUL;
+                }
+                break;
              case WM_NOTIFY:
                 if (uResult) *uResult = -1;
                 ERR("Running across the border without a passport!\n");
@@ -1551,13 +1565,12 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, UINT first, UINT 
 
         /* Activate the window if needed */
 
-        if (pwndMsg != pti->MessageQueue->spwndActive) //msg->hwnd != UserGetForegroundWindow())
+        if (pwndMsg != MessageQueue->spwndActive)
         {
             PWND pwndTop = pwndMsg;
-            while (pwndTop)
+            while (pwndTop && ((pwndTop->style & (WS_POPUP|WS_CHILD)) == WS_CHILD))
             {
-                if ((pwndTop->style & (WS_POPUP|WS_CHILD)) != WS_CHILD) break;
-                pwndTop = IntGetParent( pwndTop );
+                pwndTop = pwndTop->spwndParent;
             }
 
             if (pwndTop && pwndTop != pwndDesktop)
@@ -1673,9 +1686,22 @@ co_MsqPeekMouseMove(IN PUSER_MESSAGE_QUEUE MessageQueue,
 {
     BOOL AcceptMessage;
     MSG msg;
+    PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
 
     if(!(MessageQueue->MouseMoved))
         return FALSE;
+
+    if (!MessageQueue->ptiSysLock)
+    {
+       MessageQueue->ptiSysLock = pti;
+       pti->pcti->CTI_flags |= CTI_THREADSYSLOCK;
+    }
+
+    if (MessageQueue->ptiSysLock != pti)
+    {
+       ERR("MsqPeekMouseMove: Thread Q is locked to another pti!\n");
+       return FALSE;
+    }
 
     msg = MessageQueue->MouseMoveMsg;
 
@@ -1690,7 +1716,9 @@ co_MsqPeekMouseMove(IN PUSER_MESSAGE_QUEUE MessageQueue,
         MessageQueue->MouseMoved = FALSE;
     }
 
-   return AcceptMessage;
+    MessageQueue->ptiSysLock = NULL;
+    pti->pcti->CTI_flags &= ~CTI_THREADSYSLOCK;
+    return AcceptMessage;
 }
 
 /* check whether a message filter contains at least one potential hardware message */
@@ -1724,6 +1752,8 @@ co_MsqPeekHardwareMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
     PUSER_MESSAGE CurrentMessage;
     PLIST_ENTRY ListHead, CurrentEntry = NULL;
     MSG msg;
+    BOOL Ret = FALSE;
+    PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
 
     if (!filter_contains_hw_range( MsgFilterLow, MsgFilterHigh )) return FALSE;
 
@@ -1731,6 +1761,18 @@ co_MsqPeekHardwareMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
     CurrentEntry = ListHead->Flink;
 
     if (IsListEmpty(CurrentEntry)) return FALSE;
+
+    if (!MessageQueue->ptiSysLock)
+    {
+       MessageQueue->ptiSysLock = pti;
+       pti->pcti->CTI_flags |= CTI_THREADSYSLOCK;
+    }
+
+    if (MessageQueue->ptiSysLock != pti)
+    {
+       ERR("MsqPeekHardwareMessage: Thread Q is locked to another pti!\n");
+       return FALSE;
+    }
 
     CurrentMessage = CONTAINING_RECORD(CurrentEntry, USER_MESSAGE,
                                           ListEntry);
@@ -1766,7 +1808,8 @@ co_MsqPeekHardwareMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
            if (AcceptMessage)
            {
               *pMsg = msg;
-              return TRUE;
+              Ret = TRUE;
+              break;
            }
         }
         CurrentMessage = CONTAINING_RECORD(CurrentEntry, USER_MESSAGE,
@@ -1774,7 +1817,9 @@ co_MsqPeekHardwareMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
     }
     while(CurrentEntry != ListHead);
 
-    return FALSE;
+    MessageQueue->ptiSysLock = NULL;
+    pti->pcti->CTI_flags &= ~CTI_THREADSYSLOCK;
+    return Ret;
 }
 
 BOOLEAN APIENTRY
@@ -1789,11 +1834,25 @@ MsqPeekMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
    PLIST_ENTRY CurrentEntry;
    PUSER_MESSAGE CurrentMessage;
    PLIST_ENTRY ListHead;
+   BOOL Ret = FALSE;
+   PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
 
    CurrentEntry = MessageQueue->PostedMessagesListHead.Flink;
    ListHead = &MessageQueue->PostedMessagesListHead;
 
    if (IsListEmpty(CurrentEntry)) return FALSE;
+
+   if (!MessageQueue->ptiSysLock)
+   {
+      MessageQueue->ptiSysLock = pti;
+      pti->pcti->CTI_flags |= CTI_THREADSYSLOCK;
+   }
+
+   if (MessageQueue->ptiSysLock != pti)
+   {
+      ERR("MsqPeekMessage: Thread Q is locked to another pti!\n");
+      return FALSE;
+   }
 
    CurrentMessage = CONTAINING_RECORD(CurrentEntry, USER_MESSAGE,
                                          ListEntry);
@@ -1822,14 +1881,17 @@ MsqPeekMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
              ClearMsgBitsMask(MessageQueue, CurrentMessage->QS_Flags);
              MsqDestroyMessage(CurrentMessage);
          }
-         return(TRUE);
+         Ret = TRUE;
+         break;
       }
       CurrentMessage = CONTAINING_RECORD(CurrentEntry, USER_MESSAGE,
                                          ListEntry);
    }
    while (CurrentEntry != ListHead);
 
-   return(FALSE);
+   MessageQueue->ptiSysLock = NULL;
+   pti->pcti->CTI_flags &= ~CTI_THREADSYSLOCK;
+   return Ret;
 }
 
 NTSTATUS FASTCALL
@@ -2190,15 +2252,15 @@ MsqSetStateWindow(PUSER_MESSAGE_QUEUE MessageQueue, ULONG Type, HWND hWnd)
    {
       case MSQ_STATE_CAPTURE:
          Prev = MessageQueue->spwndCapture ? UserHMGetHandle(MessageQueue->spwndCapture) : 0;
-         MessageQueue->spwndCapture = UserGetWindowObject(hWnd);
+         MessageQueue->spwndCapture = ValidateHwndNoErr(hWnd);
          return Prev;
       case MSQ_STATE_ACTIVE:
          Prev = MessageQueue->spwndActive ? UserHMGetHandle(MessageQueue->spwndActive) : 0;
-         MessageQueue->spwndActive = UserGetWindowObject(hWnd);
+         MessageQueue->spwndActive = ValidateHwndNoErr(hWnd);
          return Prev;
       case MSQ_STATE_FOCUS:
          Prev = MessageQueue->spwndFocus ? UserHMGetHandle(MessageQueue->spwndFocus) : 0;
-         MessageQueue->spwndFocus = UserGetWindowObject(hWnd);
+         MessageQueue->spwndFocus = ValidateHwndNoErr(hWnd);
          return Prev;
       case MSQ_STATE_MENUOWNER:
          Prev = MessageQueue->MenuOwner;

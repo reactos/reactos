@@ -32,7 +32,19 @@
 #define W32PF_MANUALGUICHECK         (0x02000000)
 #define W32PF_CREATEDWINORDC         (0x04000000)
 #define W32PF_APIHOOKLOADED          (0x08000000)
+/*
+#define QSIDCOUNTS 6
 
+typedef enum _QS_ROS_TYPES
+{
+    QSRosKey = 0,
+    QSRosMouseMove,
+    QSRosMouseButton,
+    QSRosPostMessage,
+    QSRosSendMessage,
+    QSRosHotKey,
+}QS_ROS_TYPES,*PQS_ROS_TYPES;
+*/
 extern BOOL ClientPfnInit;
 extern HINSTANCE hModClient;
 extern HANDLE hModuleWin;    // This Win32k Instance.
@@ -77,10 +89,13 @@ typedef struct _THREADINFO
     PCLIENTINFO         pClientInfo;
     FLONG               TIF_flags;
     PUNICODE_STRING     pstrAppName;
+    LIST_ENTRY          psmsSent;        // DispatchingMessagesHead
     struct _USER_SENT_MESSAGE *pusmCurrent;
+    LIST_ENTRY          psmsReceiveList; // SentMessagesListHead
     LONG                timeLast;
     ULONG_PTR           idLast;
-    INT                 exitCode;
+    BOOLEAN             QuitPosted;
+    INT                 exitCode;     // QuitExitCode
     HDESK               hdesk;
     UINT                cPaintsReady; /* Count of paints pending. */
     UINT                cTimersReady; /* Count of timers pending. */
@@ -94,16 +109,27 @@ typedef struct _THREADINFO
     LPARAM              lParamHkCurrent;
     WPARAM              wParamHkCurrent;
     struct tagSBTRACK*  pSBTrack;
-    HANDLE              hEventQueueClient;
-    PKEVENT             pEventQueueServer;
+    HANDLE              hEventQueueClient; // NewMessagesHandle
+    PKEVENT             pEventQueueServer; // NewMessages
     LIST_ENTRY          PtiLink;
     INT                 iCursorLevel;
     POINT               ptLast;
+
+    LIST_ENTRY          mlPost; // PostedMessagesListHead
 
     LIST_ENTRY          aphkStart[NB_HOOKS];
     CLIENTTHREADINFO    cti;  // Used only when no Desktop or pcti NULL.
 
     /* ReactOS */
+
+    /* Queue state tracking */
+    // Send list QS_SENDMESSAGE
+    // Post list QS_POSTMESSAGE|QS_HOTKEY|QS_PAINT|QS_TIMER|QS_KEY
+    // Hard list QS_MOUSE|QS_KEY only
+    // Accounting of queue bit sets, the rest are flags. QS_TIMER QS_PAINT counts are handled in thread information.
+    //DWORD nCntsQBits[QSIDCOUNTS]; // QS_KEY QS_MOUSEMOVE QS_MOUSEBUTTON QS_POSTMESSAGE QS_SENDMESSAGE QS_HOTKEY
+
+    LIST_ENTRY LocalDispatchingMessagesHead;
     LIST_ENTRY WindowListHead;
     LIST_ENTRY W32CallbackListHead;
     SINGLE_LIST_ENTRY  ReferencesList;

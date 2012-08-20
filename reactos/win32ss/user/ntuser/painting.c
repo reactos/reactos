@@ -810,7 +810,7 @@ co_IntFixCaret(PWND Window, RECTL *lprc, UINT flags)
    CaretInfo = ActiveMessageQueue->CaretInfo;
    hWndCaret = CaretInfo->hWnd;
 
-   WndCaret = UserGetWindowObject(hWndCaret);
+   WndCaret = ValidateHwndNoErr(hWndCaret);
 
    // FIXME: Check for WndCaret can be NULL
    if (WndCaret == Window ||
@@ -1720,7 +1720,7 @@ NtUserScrollWindowEx(
                           ((flags & SW_SCROLLCHILDREN) ? RDW_ALLCHILDREN : 0));
    }
 
-   if ((CaretWnd = UserGetWindowObject(hwndCaret)))
+   if (hwndCaret && (CaretWnd = UserGetWindowObject(hwndCaret)))
    {
       UserRefObjectCo(CaretWnd, &CaretRef);
 
@@ -1974,8 +1974,6 @@ cleanup:
 
    return Ret;
 }
-
-BOOL FASTCALL IntPaintDesktop(HDC hDC);
 
 INT
 FASTCALL

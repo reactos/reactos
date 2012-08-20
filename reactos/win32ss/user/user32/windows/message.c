@@ -1158,7 +1158,33 @@ map_wparam_AtoW( UINT message, WPARAM wparam )
     return wparam;
 }
 
++LRESULT
++WINAPI
+DesktopWndProcA( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+{
+  LRESULT Result;
+  MSG AnsiMsg, UcMsg;
 
+  TRACE("Desktop A Class Atom! hWnd 0x%x, Msg %d\n", hwnd, message);
+
+  AnsiMsg.hwnd = hwnd;
+  AnsiMsg.message = message;
+  AnsiMsg.wParam = wParam;
+  AnsiMsg.lParam = lParam;
+
+  // Desktop is always Unicode so convert Ansi here.
+  if (!MsgiAnsiToUnicodeMessage(hwnd, &UcMsg, &AnsiMsg))
+  {
+     return FALSE;
+  }
+
+  Result = DesktopWndProcW(hwnd, message, UcMsg.wParam, UcMsg.lParam);
+ 
+  MsgiAnsiToUnicodeCleanup(&UcMsg, &AnsiMsg);
+
+  return Result;
+ }
+ 
 /*
  * @implemented
  */

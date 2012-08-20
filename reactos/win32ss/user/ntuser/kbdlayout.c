@@ -644,7 +644,7 @@ NtUserLoadKeyboardLayoutEx(
 
     /* Send shell message */
     if (!(Flags & KLF_NOTELLSHELL))
-        co_IntShellHookNotify(HSHELL_LANGUAGE, (LPARAM)hkl);
+        co_IntShellHookNotify(HSHELL_LANGUAGE, 0, (LPARAM)hkl);
 
     /* Return hkl on success */
     hklRet = (HKL)hkl;
@@ -713,7 +713,7 @@ NtUserActivateKeyboardLayout(
 
         /* Send shell message */
         if (!(Flags & KLF_NOTELLSHELL))
-            co_IntShellHookNotify(HSHELL_LANGUAGE, (LPARAM)hkl);
+            co_IntShellHookNotify(HSHELL_LANGUAGE, 0, (LPARAM)hkl);
     }
 
 cleanup:

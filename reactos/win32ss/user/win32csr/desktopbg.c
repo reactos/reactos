@@ -1,10 +1,27 @@
-/* $Id$
- *
- * reactos/subsys/csrss/win32csr/desktopbg.c
+/*
+ * win32ss/user/win32csr/desktopbg.c
  *
  * Desktop background window functions
  *
  * ReactOS Operating System
+ *
+ * Looks as a hax fix to a problem of not having a proper class window proc support
+ * which ReactOS has now.
+ *
+ * Notes on reason why this is here:
+ * http://www.reactos.org/archives/public/ros-kernel/2003-November/000538.html
+ * http://www.reactos.org/archives/public/ros-kernel/2003-November/000545.html
+ * http://www.reactos.org/archives/public/ros-kernel/2003-November/000586.html
+ * http://www.reactos.org/archives/public/ros-kernel/2003-November/000674.html
+ * Revision 6908 Move desktop window proc from WIN32K to CSRSS
+ * Bugs 42, 48 and 57.
+ *
+ * http://www.reactos.org/archives/public/ros-kernel/2003-December/001186.html
+ *
+ 
+   Now this is used to start Desktops Threads with TEB support.
+   These first three are Application, Winlogon and ScreenSaver desktops. 
+ 
  */
 
 #define NDEBUG
@@ -36,7 +53,7 @@ typedef struct tagPRIVATE_NOTIFY_DESKTOP
 
 static BOOL BgInitialized = FALSE;
 static HWND VisibleDesktopWindow = NULL;
-
+#if 0
 static
 LRESULT
 CALLBACK
@@ -160,7 +177,7 @@ DtbgInit(VOID)
 
     return TRUE;
 }
-
+#endif
 static
 DWORD
 WINAPI
@@ -169,6 +186,8 @@ DtbgDesktopThread(PVOID Data)
     HWND BackgroundWnd;
     MSG msg;
     PDTBG_THREAD_DATA ThreadData = (PDTBG_THREAD_DATA)Data;
+
+    DPRINT("DtbgDesktopThread\n");
 
     if (!SetThreadDesktop(ThreadData->Desktop))
     {
@@ -181,9 +200,12 @@ DtbgDesktopThread(PVOID Data)
     BackgroundWnd = CreateWindowW((LPCWSTR)DESKTOP_WINDOW_ATOM,
                                   L"",
                                   WS_POPUP | WS_CLIPCHILDREN,
-                                  0, 0, 0, 0,
+                                  GetSystemMetrics(SM_XVIRTUALSCREEN),
+                                  GetSystemMetrics(SM_YVIRTUALSCREEN),
+                                  GetSystemMetrics(SM_CXVIRTUALSCREEN),
+                                  GetSystemMetrics(SM_CYVIRTUALSCREEN),
                                   NULL, NULL,
-                                  (HINSTANCE)GetModuleHandleW(NULL),
+                                  (HINSTANCE)GetModuleHandleW(L"user32.dll"), // Run in win32k/user32.
                                   NULL);
 
     if (NULL == BackgroundWnd)
@@ -194,15 +216,22 @@ DtbgDesktopThread(PVOID Data)
         return 1;
     }
 
+    DPRINT("BackgroundWnd 0x%p\n",BackgroundWnd);
+
     ThreadData->Status = STATUS_SUCCESS;
     SetEvent(ThreadData->Event);
 
     while (GetMessageW(&msg, NULL, 0, 0))
     {
+        if (msg.message == WM_QUIT)
+        {
+           DPRINT1("DtbgDesktopThread WM_QUIT\n");
+        }
         TranslateMessage(&msg);
         DispatchMessageW(&msg);
     }
 
+    DPRINT1("DtbgDesktopThread Exit\n");
     return 1;
 }
 
@@ -217,8 +246,8 @@ CSR_API(CsrCreateDesktop)
     {
         BgInitialized = TRUE;
 
-        if (!DtbgInit())
-            return STATUS_UNSUCCESSFUL;
+       // if (!DtbgInit())
+       //     return STATUS_UNSUCCESSFUL;
     }
 
     /*
@@ -259,6 +288,7 @@ CSR_API(CsrCreateDesktop)
 
 CSR_API(CsrShowDesktop)
 {
+#if 0
     PRIVATE_NOTIFY_DESKTOP nmh;
     DPRINT("CsrShowDesktop\n");
 
@@ -276,12 +306,13 @@ CSR_API(CsrShowDesktop)
     {
         return STATUS_UNSUCCESSFUL;
     }
-
+#endif
     return STATUS_SUCCESS;
 }
 
 CSR_API(CsrHideDesktop)
 {
+#if 0
     PRIVATE_NOTIFY_DESKTOP nmh;
     DPRINT("CsrHideDesktop\n");
 
@@ -296,7 +327,7 @@ CSR_API(CsrHideDesktop)
     {
         return STATUS_UNSUCCESSFUL;
     }
-
+#endif
     return STATUS_SUCCESS;
 }
 
@@ -304,6 +335,8 @@ BOOL
 FASTCALL
 DtbgIsDesktopVisible(VOID)
 {
+    VisibleDesktopWindow = GetDesktopWindow(); // DESKTOPWNDPROC
+
     if (VisibleDesktopWindow != NULL &&
             !IsWindowVisible(VisibleDesktopWindow))
     {
