@@ -54,6 +54,8 @@
 
 #define SO_REUSE                        1
 
+#define SO_REUSE_RXTOALL                1
+
 /* FIXME: These MSS and TCP Window definitions assume an MTU
  * of 1500. We need to add some code to lwIP which would allow us
  * to change these values based upon the interface we are 
