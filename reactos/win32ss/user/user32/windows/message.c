@@ -1158,8 +1158,8 @@ map_wparam_AtoW( UINT message, WPARAM wparam )
     return wparam;
 }
 
-+LRESULT
-+WINAPI
+LRESULT
+WINAPI
 DesktopWndProcA( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
   LRESULT Result;
