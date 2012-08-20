@@ -10,7 +10,7 @@
 
 #include "afd.h"
 
-NTSTATUS WarmSocketForBind( PAFD_FCB FCB ) {
+NTSTATUS WarmSocketForBind( PAFD_FCB FCB, ULONG ShareType ) {
     NTSTATUS Status;
 
     AFD_DbgPrint(MID_TRACE,("Called (AF %d)\n",
@@ -27,6 +27,7 @@ NTSTATUS WarmSocketForBind( PAFD_FCB FCB ) {
 
     Status = TdiOpenAddressFile(&FCB->TdiDeviceName,
                                 FCB->LocalAddress,
+                                ShareType,
                                 &FCB->AddressFile.Handle,
                                 &FCB->AddressFile.Object );
     if (!NT_SUCCESS(Status))
@@ -92,7 +93,7 @@ AfdBindSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
                                          FCB->LocalAddress );
 
     if( NT_SUCCESS(Status) )
-        Status = WarmSocketForBind( FCB );
+        Status = WarmSocketForBind( FCB, BindReq->ShareType );
     AFD_DbgPrint(MID_TRACE,("FCB->Flags %x\n", FCB->Flags));
 
     if (NT_SUCCESS(Status))

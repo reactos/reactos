@@ -2140,6 +2140,12 @@ WSPGetSockOpt(IN SOCKET Handle,
                     BufferSize = sizeof(BOOL);
                     break;
 
+                case SO_EXCLUSIVEADDRUSE:
+                    BoolBuffer = (Socket->SharedData.ExclusiveAddressUse != 0);
+                    Buffer = &BoolBuffer;
+                    BufferSize = sizeof(BOOL);
+                    break;
+
                 case SO_ERROR:
                     /* HACK: This needs to be properly tracked */
                     IntBuffer = 0;
@@ -2228,6 +2234,24 @@ WSPSetSockOpt(
                   return SOCKET_ERROR;
               }
               Socket->SharedData.LingerData.l_onoff = (*optval != 0) ? 0 : 1;
+              return 0;
+
+           case SO_REUSEADDR:
+              if (optlen < sizeof(BOOL))
+              {
+                  *lpErrno = WSAEFAULT;
+                  return SOCKET_ERROR;
+              }
+              Socket->SharedData.ReuseAddresses = (*optval != 0) ? 1 : 0;
+              return 0;
+
+           case SO_EXCLUSIVEADDRUSE:
+              if (optlen < sizeof(BOOL))
+              {
+                  *lpErrno = WSAEFAULT;
+                  return SOCKET_ERROR;
+              }
+              Socket->SharedData.ExclusiveAddressUse = (*optval != 0) ? 1 : 0;
               return 0;
 
            case SO_LINGER:

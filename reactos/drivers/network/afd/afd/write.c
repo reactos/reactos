@@ -527,7 +527,7 @@ AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
                                       Address[0].AddressType );
 
         if( FCB->LocalAddress ) {
-            Status = WarmSocketForBind( FCB );
+            Status = WarmSocketForBind( FCB, AFD_SHARE_WILDCARD );
 
             if( NT_SUCCESS(Status) )
                 FCB->State = SOCKET_STATE_BOUND;

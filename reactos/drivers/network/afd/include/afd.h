@@ -223,7 +223,7 @@ typedef struct _AFD_FCB {
 
 /* bind.c */
 
-NTSTATUS WarmSocketForBind( PAFD_FCB FCB );
+NTSTATUS WarmSocketForBind( PAFD_FCB FCB, ULONG ShareType );
 NTSTATUS NTAPI
 AfdBindSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	      PIO_STACK_LOCATION IrpSp);
@@ -367,6 +367,7 @@ VOID SignalSocket(
 NTSTATUS TdiOpenAddressFile(
     PUNICODE_STRING DeviceName,
     PTRANSPORT_ADDRESS Name,
+    ULONG ShareType,
     PHANDLE AddressHandle,
     PFILE_OBJECT *AddressObject);
 

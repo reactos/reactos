@@ -89,6 +89,7 @@ static NTSTATUS TdiOpenDevice(
     PUNICODE_STRING DeviceName,
     ULONG EaLength,
     PFILE_FULL_EA_INFORMATION EaInfo,
+    ULONG ShareType,
     PHANDLE Handle,
     PFILE_OBJECT *Object)
 /*
@@ -106,8 +107,21 @@ static NTSTATUS TdiOpenDevice(
     OBJECT_ATTRIBUTES Attr;
     IO_STATUS_BLOCK Iosb;
     NTSTATUS Status;
+    ULONG ShareAccess;
 
-    AFD_DbgPrint(MAX_TRACE, ("Called. DeviceName (%wZ)\n", DeviceName));
+    AFD_DbgPrint(MAX_TRACE, ("Called. DeviceName (%wZ, %d)\n", DeviceName, ShareType));
+
+    /* Determine the share access */
+    if (ShareType != AFD_SHARE_REUSE)
+    {
+        /* Exclusive access */
+        ShareAccess = 0;
+    }
+    else
+    {
+        /* Shared access */
+        ShareAccess = FILE_SHARE_READ | FILE_SHARE_WRITE;
+    }
 
     InitializeObjectAttributes(&Attr,                   /* Attribute buffer */
                                DeviceName,              /* Device name */
@@ -122,7 +136,7 @@ static NTSTATUS TdiOpenDevice(
                           &Iosb,                                /* IO status */
                           0,                                    /* Initial allocation size */
                           FILE_ATTRIBUTE_NORMAL,                /* File attributes */
-                          0,                                    /* Share access */
+                          ShareAccess,                          /* Share access */
                           FILE_OPEN_IF,                         /* Create disposition */
                           0,                                    /* Create options */
                           EaInfo,                               /* EA buffer */
@@ -156,6 +170,7 @@ static NTSTATUS TdiOpenDevice(
 NTSTATUS TdiOpenAddressFile(
     PUNICODE_STRING DeviceName,
     PTRANSPORT_ADDRESS Name,
+    ULONG ShareType,
     PHANDLE AddressHandle,
     PFILE_OBJECT *AddressObject)
 /*
@@ -199,6 +214,7 @@ NTSTATUS TdiOpenAddressFile(
     Status = TdiOpenDevice(DeviceName,
                            EaLength,
                            EaInfo,
+                           ShareType,
                            AddressHandle,
                            AddressObject);
     ExFreePool(EaInfo);
@@ -300,6 +316,7 @@ NTSTATUS TdiOpenConnectionEndpointFile(
     Status = TdiOpenDevice(DeviceName,
                            EaLength,
                            EaInfo,
+                           AFD_SHARE_UNIQUE,
                            ConnectionHandle,
                            ConnectionObject);
     ExFreePool(EaInfo);
