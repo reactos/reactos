@@ -317,6 +317,7 @@ void
 LibTCPBindCallback(void *arg)
 {
     struct lwip_callback_msg *msg = arg;
+    PTCP_PCB pcb = msg->Input.Bind.Connection->SocketContext;
 
     ASSERT(msg);
 
@@ -326,7 +327,14 @@ LibTCPBindCallback(void *arg)
         goto done;
     }
 
-    msg->Output.Bind.Error = tcp_bind((PTCP_PCB)msg->Input.Bind.Connection->SocketContext,
+    /* If this address file is shared, set the SOF_REUSEADDR flag in the PCB */
+    ASSERT(msg->Input.Bind.Connection->AddressFile != NULL);
+    if (msg->Input.Bind.Connection->AddressFile->Sharers != 1)
+    {
+        pcb->so_options |= SOF_REUSEADDR;
+    }
+
+    msg->Output.Bind.Error = tcp_bind(pcb,
                                       msg->Input.Bind.IpAddress,
                                       ntohs(msg->Input.Bind.Port));
 
