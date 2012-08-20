@@ -591,13 +591,14 @@ co_IntSetActiveWindow(PWND Wnd OPTIONAL, HWND * Prev, BOOL bMouse, BOOL bFocus, 
    if (bFocus && !(ThreadQueue->QF_flags & QF_FOCUSNULLSINCEACTIVE))
    {
       /* Do not change focus if the window is no longer active */
-      if ( !Wnd || IntGetNonChildAncestor(ThreadQueue->spwndFocus) != ThreadQueue->spwndActive)
+      if (ThreadQueue->spwndActive == Wnd)
       {
-         PWND pWndTemp = Wnd;
-         if (ThreadQueue->spwndActive && ThreadQueue->spwndActive->style & WS_MINIMIZE)
-            pWndTemp = NULL;
-         TRACE("SAW is setting Focus! 0x%p Temp 0x%p\n",Wnd, pWndTemp);
-         IntSendFocusMessages(pti, pWndTemp);
+         if (!ThreadQueue->spwndFocus ||
+             !Wnd ||
+              UserGetAncestor(ThreadQueue->spwndFocus, GA_ROOT) != Wnd)
+         {
+            co_UserSetFocus(Wnd);
+         }
       }
    }
 
