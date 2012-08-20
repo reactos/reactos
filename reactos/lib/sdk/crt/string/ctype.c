@@ -551,6 +551,8 @@ const unsigned short _wctype[] = {
 const unsigned short *_pctype = _ctype + 1;
 const unsigned short *_pwctype = _wctype + 1;
 
+extern const unsigned short wine_wctype_table[];
+
 /*
  * @implemented
  */
@@ -587,7 +589,7 @@ int _isctype (int c, int ctypeFlags)
  */
 int iswctype(wint_t wc, wctype_t wctypeFlags)
 {
-   return (_pwctype[(unsigned char)(wc & 0xFF)] & wctypeFlags);
+   return (wine_wctype_table[wine_wctype_table[wc >> 8] + (wc & 0xff)] & wctypeFlags);
 }
 
 /*
@@ -597,7 +599,7 @@ int iswctype(wint_t wc, wctype_t wctypeFlags)
  */
 int is_wctype(wint_t wc, wctype_t wctypeFlags)
 {
-   return (_pwctype[(unsigned char)(wc & 0xFF)] & wctypeFlags);
+   return (wine_wctype_table[wine_wctype_table[wc >> 8] + (wc & 0xff)] & wctypeFlags);
 }
 
 /*

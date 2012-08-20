@@ -281,6 +281,7 @@ list(APPEND CRT_SOURCE
     string/wcs.c
     string/wcstol.c
     string/wcstoul.c
+    string/wctype.c
     string/wsplitp.c
     string/wtoi.c
     string/wtoi64.c
