@@ -50,7 +50,7 @@ namespace std
 
   unexpected_handler set_unexpected(unexpected_handler) throw();
 
-  DECLSPEC_NORETURN void unexpected();
+  __MINGW_ATTRIB_NORETURN void unexpected();
 
   bool uncaught_exception() throw();
 
@@ -59,7 +59,7 @@ namespace std
 
 typedef void (*terminate_handler) ();
 terminate_handler set_terminate(terminate_handler) throw();
-DECLSPEC_NORETURN void terminate() throw();
+__MINGW_ATTRIB_NORETURN void terminate() throw();
 
 } // extern "C++"
 
