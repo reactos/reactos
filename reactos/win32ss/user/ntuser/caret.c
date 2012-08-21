@@ -42,15 +42,15 @@ co_IntDestroyCaret(PTHREADINFO Win32Thread)
    if(!ThreadQueue || !ThreadQueue->CaretInfo)
       return FALSE;
 
+   pWnd = ValidateHwndNoErr(ThreadQueue->CaretInfo->hWnd);
    co_IntHideCaret(ThreadQueue->CaretInfo);
    ThreadQueue->CaretInfo->Bitmap = (HBITMAP)0;
    ThreadQueue->CaretInfo->hWnd = (HWND)0;
    ThreadQueue->CaretInfo->Size.cx = ThreadQueue->CaretInfo->Size.cy = 0;
    ThreadQueue->CaretInfo->Showing = 0;
    ThreadQueue->CaretInfo->Visible = 0;
-   if (ThreadQueue->CaretInfo->hWnd)
+   if (pWnd)
    {
-      pWnd = UserGetWindowObject(ThreadQueue->CaretInfo->hWnd);
       IntNotifyWinEvent(EVENT_OBJECT_DESTROY, pWnd, OBJID_CARET, CHILDID_SELF, 0);
    }
    return TRUE;
