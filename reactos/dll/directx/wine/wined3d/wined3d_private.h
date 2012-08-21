@@ -37,7 +37,6 @@
 #include "winuser.h"
 #include "wine/debug.h"
 #include "wine/unicode.h"
-#include "wine/port.h"
 
 #include "objbase.h"
 #include "wine/wined3d.h"
