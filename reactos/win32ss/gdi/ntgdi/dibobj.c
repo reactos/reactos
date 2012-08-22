@@ -447,8 +447,16 @@ NtGdiSetDIBitsToDeviceInternal(
         DC_UnlockDc(pDC);
         goto Exit2;
     }
-
-    pSurf = pDC->dclevel.pSurface;
+    
+    /*
+     * Select the right surface.
+     * NOTE: we don't call DC_vPrepareDCsForBlit, because we don't
+     * care about mouse, visible region or brushes in this API.
+     */
+    if(pDC->dctype == DCTYPE_DIRECT)
+        pSurf = pDC->ppdev->pSurface;
+    else
+        pSurf = pDC->dclevel.pSurface;
     if (!pSurf)
     {
         DC_UnlockDc(pDC);
@@ -1113,7 +1121,15 @@ NtGdiStretchDIBitsInternal(
         goto cleanup;
     }
 
-    psurfDst = pdc->dclevel.pSurface;
+    /*
+     * Select the right surface.
+     * NOTE: we don't call DC_vPrepareDCsForBlit, because we don't
+     * care about mouse, visible region or brushes in this API.
+     */
+    if(pdc->dctype == DCTYPE_DIRECT)
+        psurfDst = pdc->ppdev->pSurface;
+    else
+        psurfDst = pdc->dclevel.pSurface;
     if (!psurfDst)
     {
         // CHECKME
