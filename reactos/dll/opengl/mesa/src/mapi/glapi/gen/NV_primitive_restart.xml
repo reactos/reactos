@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<!DOCTYPE OpenGLAPI SYSTEM "gl_API.dtd">
+
+<!-- Note: no GLX protocol info yet. -->
+
+
+<OpenGLAPI>
+
+<category name="GL_NV_primitive_restart" number="285">
+
+    <enum name="PRIMITIVE_RESTART_NV"        value="0x8558"/>
+    <enum name="PRIMITIVE_RESTART_INDEX_NV"  value="0x8559"/>
+
+    <function name="PrimitiveRestartNV" offset="assign">
+    </function>
+
+    <function name="PrimitiveRestartIndexNV" offset="assign">
+	<param name="index" type="GLuint"/>
+    </function>
+
+</category>
+
+</OpenGLAPI>

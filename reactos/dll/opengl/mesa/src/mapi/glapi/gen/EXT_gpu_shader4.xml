@@ -1,0 +1,249 @@
+<?xml version="1.0"?>
+<!DOCTYPE OpenGLAPI SYSTEM "gl_API.dtd">
+
+<OpenGLAPI>
+
+<category name="GL_EXT_gpu_shader4" number="326">
+
+    <enum name="VERTEX_ATTRIB_ARRAY_INTEGER_EXT"        value="0x88FD"/>
+    <enum name="SAMPLER_1D_ARRAY_EXT"                   value="0x8DC0"/>
+    <enum name="SAMPLER_2D_ARRAY_EXT"                   value="0x8DC1"/>
+    <enum name="SAMPLER_BUFFER_EXT"                     value="0x8DC2"/>
+    <enum name="SAMPLER_1D_ARRAY_SHADOW_EXT"            value="0x8DC3"/>
+    <enum name="SAMPLER_2D_ARRAY_SHADOW_EXT"            value="0x8DC4"/>
+    <enum name="SAMPLER_CUBE_SHADOW_EXT"                value="0x8DC5"/>
+    <enum name="UNSIGNED_INT_VEC2_EXT"                  value="0x8DC6"/>
+    <enum name="UNSIGNED_INT_VEC3_EXT"                  value="0x8DC7"/>
+    <enum name="UNSIGNED_INT_VEC4_EXT"                  value="0x8DC8"/>
+    <enum name="INT_SAMPLER_1D_EXT"                     value="0x8DC9"/>
+    <enum name="INT_SAMPLER_2D_EXT"                     value="0x8DCA"/>
+    <enum name="INT_SAMPLER_3D_EXT"                     value="0x8DCB"/>
+    <enum name="INT_SAMPLER_CUBE_EXT"                   value="0x8DCC"/>
+    <enum name="INT_SAMPLER_2D_RECT_EXT"                value="0x8DCD"/>
+    <enum name="INT_SAMPLER_1D_ARRAY_EXT"               value="0x8DCE"/>
+    <enum name="INT_SAMPLER_2D_ARRAY_EXT"               value="0x8DCF"/>
+    <enum name="INT_SAMPLER_BUFFER_EXT"                 value="0x8DD0"/>
+    <enum name="UNSIGNED_INT_SAMPLER_1D_EXT"            value="0x8DD1"/>
+    <enum name="UNSIGNED_INT_SAMPLER_2D_EXT"            value="0x8DD2"/>
+    <enum name="UNSIGNED_INT_SAMPLER_3D_EXT"            value="0x8DD3"/>
+    <enum name="UNSIGNED_INT_SAMPLER_CUBE_EXT"          value="0x8DD4"/>
+    <enum name="UNSIGNED_INT_SAMPLER_2D_RECT_EXT"       value="0x8DD5"/>
+    <enum name="UNSIGNED_INT_SAMPLER_1D_ARRAY_EXT"      value="0x8DD6"/>
+    <enum name="UNSIGNED_INT_SAMPLER_2D_ARRAY_EXT"      value="0x8DD7"/>
+    <enum name="UNSIGNED_INT_SAMPLER_BUFFER_EXT"        value="0x8DD8"/>
+
+    <!-- There is no MIN_PROGRAM_TEXEL_OFFSET_EXT in glext.h.  There is
+         MIN_PROGRAM_TEXEL_OFFSET_NV and MIN_PROGRAM_TEXEL_OFFSET (OpenGL
+         3.0).  Same goes for MAX_PROGRAM_TEXEL_OFFSET_EXT.
+    -->
+    <enum name="MIN_PROGRAM_TEXEL_OFFSET"               value="0x8904">
+        <size name="Get" mode="get"/>
+    </enum>
+    <enum name="MAX_PROGRAM_TEXEL_OFFSET"               value="0x8905">
+        <size name="Get" mode="get"/>
+    </enum>
+
+
+    <function name="VertexAttribI1iEXT" offset="assign">
+        <param name="index" type="GLuint"/>
+        <param name="x" type="GLint"/>
+    </function>
+
+    <function name="VertexAttribI2iEXT" offset="assign">
+        <param name="index" type="GLuint"/>
+        <param name="x" type="GLint"/>
+        <param name="y" type="GLint"/>
+    </function>
+
+    <function name="VertexAttribI3iEXT" offset="assign">
+        <param name="index" type="GLuint"/>
+        <param name="x" type="GLint"/>
+        <param name="y" type="GLint"/>
+        <param name="z" type="GLint"/>
+    </function>
+
+    <function name="VertexAttribI4iEXT" offset="assign">
+        <param name="index" type="GLuint"/>
+        <param name="x" type="GLint"/>
+        <param name="y" type="GLint"/>
+        <param name="z" type="GLint"/>
+        <param name="w" type="GLint"/>
+    </function>
+
+    <function name="VertexAttribI1uiEXT" offset="assign">
+        <param name="index" type="GLuint"/>
+        <param name="x" type="GLuint"/>
+    </function>
+
+    <function name="VertexAttribI2uiEXT" offset="assign">
+        <param name="index" type="GLuint"/>
+        <param name="x" type="GLuint"/>
+        <param name="y" type="GLuint"/>
+    </function>
+
+    <function name="VertexAttribI3uiEXT" offset="assign">
+        <param name="index" type="GLuint"/>
+        <param name="x" type="GLuint"/>
+        <param name="y" type="GLuint"/>
+        <param name="z" type="GLuint"/>
+    </function>
+
+    <function name="VertexAttribI4uiEXT" offset="assign">
+        <param name="index" type="GLuint"/>
+        <param name="x" type="GLuint"/>
+        <param name="y" type="GLuint"/>
+        <param name="z" type="GLuint"/>
+        <param name="w" type="GLuint"/>
+    </function>
+
+    <function name="VertexAttribI1ivEXT" offset="assign">
+        <param name="index" type="GLuint"/>
+        <param name="v" type="const GLint *"/>
+    </function>
+
+    <function name="VertexAttribI2ivEXT" offset="assign">
+        <param name="index" type="GLuint"/>
+        <param name="v" type="const GLint *"/>
+    </function>
+
+    <function name="VertexAttribI3ivEXT" offset="assign">
+        <param name="index" type="GLuint"/>
+        <param name="v" type="const GLint *"/>
+    </function>
+
+    <function name="VertexAttribI4ivEXT" offset="assign">
+        <param name="index" type="GLuint"/>
+        <param name="v" type="const GLint *"/>
+    </function>
+
+    <function name="VertexAttribI1uivEXT" offset="assign">
+        <param name="index" type="GLuint"/>
+        <param name="v" type="const GLuint *"/>
+    </function>
+
+    <function name="VertexAttribI2uivEXT" offset="assign">
+        <param name="index" type="GLuint"/>
+        <param name="v" type="const GLuint *"/>
+    </function>
+
+    <function name="VertexAttribI3uivEXT" offset="assign">
+        <param name="index" type="GLuint"/>
+        <param name="v" type="const GLuint *"/>
+    </function>
+
+    <function name="VertexAttribI4uivEXT" offset="assign">
+        <param name="index" type="GLuint"/>
+        <param name="v" type="const GLuint *"/>
+    </function>
+
+    <function name="VertexAttribI4bvEXT" offset="assign">
+        <param name="index" type="GLuint"/>
+        <param name="v" type="const GLbyte *"/>
+    </function>
+
+    <function name="VertexAttribI4svEXT" offset="assign">
+        <param name="index" type="GLuint"/>
+        <param name="v" type="const GLshort *"/>
+    </function>
+
+    <function name="VertexAttribI4ubvEXT" offset="assign">
+        <param name="index" type="GLuint"/>
+        <param name="v" type="const GLubyte *"/>
+    </function>
+
+    <function name="VertexAttribI4usvEXT" offset="assign">
+        <param name="index" type="GLuint"/>
+        <param name="v" type="const GLushort *"/>
+    </function>
+
+    <function name="VertexAttribIPointerEXT" offset="assign">
+        <param name="index" type="GLuint"/>
+        <param name="size" type="GLint"/>
+        <param name="type" type="GLenum"/>
+        <param name="stride" type="GLsizei"/>
+        <param name="pointer" type="const GLvoid *"/>
+    </function>
+
+    <function name="GetVertexAttribIivEXT" offset="assign">
+        <param name="index" type="GLuint"/>
+        <param name="pname" type="GLenum"/>
+        <param name="params" type="GLint *"/>
+    </function>
+
+    <function name="GetVertexAttribIuivEXT" offset="assign">
+        <param name="index" type="GLuint"/>
+        <param name="pname" type="GLenum"/>
+        <param name="params" type="GLuint *"/>
+    </function>
+
+    <function name="Uniform1uiEXT" offset="assign">
+        <param name="location" type="GLint"/>
+        <param name="x" type="GLuint"/>
+    </function>
+
+    <function name="Uniform2uiEXT" offset="assign">
+        <param name="location" type="GLint"/>
+        <param name="x" type="GLuint"/>
+        <param name="y" type="GLuint"/>
+    </function>
+
+    <function name="Uniform3uiEXT" offset="assign">
+        <param name="location" type="GLint"/>
+        <param name="x" type="GLuint"/>
+        <param name="y" type="GLuint"/>
+        <param name="z" type="GLuint"/>
+    </function>
+
+    <function name="Uniform4uiEXT" offset="assign">
+        <param name="location" type="GLint"/>
+        <param name="x" type="GLuint"/>
+        <param name="y" type="GLuint"/>
+        <param name="z" type="GLuint"/>
+        <param name="w" type="GLuint"/>
+    </function>
+
+    <function name="Uniform1uivEXT" offset="assign">
+        <param name="location" type="GLint"/>
+	<param name="count" type="GLsizei"/>
+        <param name="value" type="const GLuint *"/>
+    </function>
+
+    <function name="Uniform2uivEXT" offset="assign">
+        <param name="location" type="GLint"/>
+	<param name="count" type="GLsizei"/>
+        <param name="value" type="const GLuint *"/>
+    </function>
+
+    <function name="Uniform3uivEXT" offset="assign">
+        <param name="location" type="GLint"/>
+	<param name="count" type="GLsizei"/>
+        <param name="value" type="const GLuint *"/>
+    </function>
+
+    <function name="Uniform4uivEXT" offset="assign">
+        <param name="location" type="GLint"/>
+	<param name="count" type="GLsizei"/>
+        <param name="value" type="const GLuint *"/>
+    </function>
+
+    <function name="GetUniformuivEXT" offset="assign">
+        <param name="program" type="GLuint"/>
+        <param name="location" type="GLint"/>
+        <param name="params" type="GLuint *"/>
+    </function>
+
+    <function name="BindFragDataLocationEXT" offset="assign">
+        <param name="program" type="GLuint"/>
+        <param name="colorNumber" type="GLuint"/>
+        <param name="name" type="const GLchar *"/>
+    </function>
+
+    <function name="GetFragDataLocationEXT" offset="assign">
+	<return type="GLint"/>
+        <param name="program" type="GLuint"/>
+        <param name="name" type="const GLchar *"/>
+    </function>
+
+</category>
+
+</OpenGLAPI>

@@ -1,0 +1,134 @@
+Import('env')
+
+# 
+# Auxiliary modules
+#
+
+SConscript('auxiliary/SConscript')
+
+#
+# Drivers
+#
+
+SConscript([
+    'drivers/galahad/SConscript',
+    'drivers/identity/SConscript',
+    'drivers/llvmpipe/SConscript',
+    'drivers/rbug/SConscript',
+    'drivers/softpipe/SConscript',
+    'drivers/svga/SConscript',
+    'drivers/trace/SConscript',
+])
+
+if not env['msvc']:
+    # These drivers do not build on MSVC compilers
+    SConscript([
+        'drivers/i915/SConscript',
+        'drivers/r300/SConscript',
+    ])
+
+if env['drm']:
+    # These drivers depend on drm headers
+    if env['drm_radeon']:
+        SConscript([
+            'drivers/r600/SConscript',
+        ])
+    # XXX: nouveau drivers have a tight dependency on libdrm, so to enable
+    # we need some version logic before we enable them. Also, ATM there is
+    # no nouveau target in scons
+    # if env['drm_nouveau']:
+    #     SConscript([
+    #         'drivers/nouveau/SConscript', 
+    #         'drivers/nv50/SConscript', 
+    #         'drivers/nvc0/SConscript', 
+    #         'drivers/nvfx/SConscript',
+    #     ])
+
+#
+# State trackers
+#
+
+# Needed by some state trackers
+SConscript('winsys/sw/null/SConscript')
+
+if not env['embedded']:
+    SConscript('state_trackers/vega/SConscript')
+    if env['platform'] not in ['darwin']:
+        SConscript('state_trackers/egl/SConscript')
+
+    if env['x11']:
+        SConscript('state_trackers/glx/xlib/SConscript')
+
+    if env['dri']:
+        SConscript('state_trackers/dri/SConscript')
+
+    if env['dri'] and env['xorg']:
+        SConscript('state_trackers/xorg/SConscript')
+
+    if env['platform'] == 'windows':
+        SConscript('state_trackers/wgl/SConscript')
+
+#
+# Winsys
+# 
+
+SConscript('winsys/SConscript')
+
+#
+# Targets
+#
+
+SConscript([
+    'targets/graw-null/SConscript',
+])
+
+if not env['embedded']:
+    if env['platform'] not in ['darwin']:
+        SConscript([
+            'targets/egl-static/SConscript'
+        ])
+
+    if env['x11']:
+        SConscript([
+            'targets/graw-xlib/SConscript',
+            'targets/libgl-xlib/SConscript',
+        ])
+
+    if env['platform'] == 'windows':
+        SConscript([
+            'targets/graw-gdi/SConscript',
+            'targets/libgl-gdi/SConscript',
+        ])
+
+    if env['dri']:
+        SConscript([
+            'targets/SConscript.dri',
+            'targets/dri-swrast/SConscript',
+            'targets/dri-vmwgfx/SConscript',
+            #'targets/dri-nouveau/SConscript',
+        ])
+        if env['drm_intel']:
+            SConscript([
+                'targets/dri-i915/SConscript',
+            ])
+        if env['drm_radeon']:
+            SConscript([
+                'targets/dri-r300/SConscript',
+                'targets/dri-r600/SConscript',
+            ])
+
+    if env['xorg'] and env['drm']:
+        SConscript([
+            #'targets/xorg-i915/SConscript',
+            #'targets/xorg-nouveau/SConscript',
+            #'targets/xorg-radeon/SConscript',
+        ])
+
+
+#
+# Unit tests & tools
+#
+
+if not env['embedded']:
+    SConscript('tests/unit/SConscript')
+    SConscript('tests/graw/SConscript')

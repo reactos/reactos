@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<!DOCTYPE OpenGLAPI SYSTEM "gl_API.dtd">
+
+<OpenGLAPI>
+
+<category name="GL_ARB_seamless_cube_map" number="65">
+    <enum name="TEXTURE_CUBE_MAP_SEAMLESS"     count="1"  value="0x88F4">
+        <size name="Get" mode="get"/>
+    </enum>
+</category>
+
+</OpenGLAPI>

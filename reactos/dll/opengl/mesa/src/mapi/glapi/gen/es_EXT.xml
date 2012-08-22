@@ -1,0 +1,630 @@
+<?xml version="1.0"?>
+<!DOCTYPE OpenGLAPI SYSTEM "../gen/gl_API.dtd">
+
+<!-- OpenGL ES specific extensions -->
+
+<OpenGLAPI>
+
+<!-- part of es1.1 extension pack -->
+<category name="GL_OES_blend_equation_separate" number="1">
+    <enum name="BLEND_EQUATION_RGB_OES"                   value="0x8009"/>
+    <enum name="BLEND_EQUATION_ALPHA_OES"                 value="0x883D"/>
+
+    <function name="BlendEquationSeparateOES" alias="BlendEquationSeparateEXT" static_dispatch="false">
+        <param name="modeRGB" type="GLenum"/>
+        <param name="modeA" type="GLenum"/>
+    </function>
+</category>
+
+<!-- part of es1.1 extension pack -->
+<category name="GL_OES_blend_func_separate" number="2">
+    <enum name="BLEND_DST_RGB_OES"                        value="0x80C8"/>
+    <enum name="BLEND_SRC_RGB_OES"                        value="0x80C9"/>
+    <enum name="BLEND_DST_ALPHA_OES"                      value="0x80CA"/>
+    <enum name="BLEND_SRC_ALPHA_OES"                      value="0x80CB"/>
+
+    <function name="BlendFuncSeparateOES" alias="BlendFuncSeparateEXT" static_dispatch="false">
+        <param name="sfactorRGB" type="GLenum"/>
+        <param name="dfactorRGB" type="GLenum"/>
+        <param name="sfactorAlpha" type="GLenum"/>
+        <param name="dfactorAlpha" type="GLenum"/>
+    </function>
+</category>
+
+<!-- part of es1.1 extension pack -->
+<category name="GL_OES_blend_subtract" number="3">
+    <enum name="FUNC_ADD_OES"                             value="0x8006"/>
+    <enum name="BLEND_EQUATION_OES"                       value="0x8009"/>
+    <enum name="FUNC_SUBTRACT_OES"                        value="0x800A"/>
+    <enum name="FUNC_REVERSE_SUBTRACT_OES"                value="0x800B"/>
+
+    <function name="BlendEquationOES" alias="BlendEquation" static_dispatch="false">
+        <param name="mode" type="GLenum"/>
+    </function>
+</category>
+
+<!-- core addition to es1.0 and later -->
+<category name="GL_OES_byte_coordinates" number="4">
+    <enum name="BYTE"                                     value="0x1400"/>
+</category>
+
+<category name="GL_OES_compressed_ETC1_RGB8_texture" number="5">
+    <enum name="ETC1_RGB8_OES"                            value="0x8D64"/>
+</category>
+
+<category name="GL_OES_compressed_paletted_texture" number="6">
+    <enum name="PALETTE4_RGB8_OES"                        value="0x8B90"/>
+    <enum name="PALETTE4_RGBA8_OES"                       value="0x8B91"/>
+    <enum name="PALETTE4_R5_G6_B5_OES"                    value="0x8B92"/>
+    <enum name="PALETTE4_RGBA4_OES"                       value="0x8B93"/>
+    <enum name="PALETTE4_RGB5_A1_OES"                     value="0x8B94"/>
+    <enum name="PALETTE8_RGB8_OES"                        value="0x8B95"/>
+    <enum name="PALETTE8_RGBA8_OES"                       value="0x8B96"/>
+    <enum name="PALETTE8_R5_G6_B5_OES"                    value="0x8B97"/>
+    <enum name="PALETTE8_RGBA4_OES"                       value="0x8B98"/>
+    <enum name="PALETTE8_RGB5_A1_OES"                     value="0x8B99"/>
+</category>
+
+<!-- optional for es1.1 -->
+<category name="GL_OES_draw_texture" number="7">
+    <enum name="TEXTURE_CROP_RECT_OES"                    value="0x8B9D"/>
+
+    <function name="DrawTexiOES" offset="assign" static_dispatch="false">
+        <param name="x" type="GLint"/>
+        <param name="y" type="GLint"/>
+        <param name="z" type="GLint"/>
+        <param name="width" type="GLint"/>
+        <param name="height" type="GLint"/>
+    </function>
+
+    <function name="DrawTexivOES" offset="assign" static_dispatch="false">
+        <param name="coords" type="const GLint *" count="5"/>
+    </function>
+
+    <function name="DrawTexfOES" offset="assign" static_dispatch="false">
+        <param name="x" type="GLfloat"/>
+        <param name="y" type="GLfloat"/>
+        <param name="z" type="GLfloat"/>
+        <param name="width" type="GLfloat"/>
+        <param name="height" type="GLfloat"/>
+    </function>
+
+    <function name="DrawTexfvOES" offset="assign" static_dispatch="false">
+        <param name="coords" type="const GLfloat *" count="5"/>
+    </function>
+
+    <function name="DrawTexsOES" offset="assign" static_dispatch="false">
+        <param name="x" type="GLshort"/>
+        <param name="y" type="GLshort"/>
+        <param name="z" type="GLshort"/>
+        <param name="width" type="GLshort"/>
+        <param name="height" type="GLshort"/>
+    </function>
+
+    <function name="DrawTexsvOES" offset="assign" static_dispatch="false">
+        <param name="coords" type="const GLshort *" count="5"/>
+    </function>
+
+    <function name="DrawTexxOES" offset="assign" static_dispatch="false">
+        <param name="x" type="GLfixed"/>
+        <param name="y" type="GLfixed"/>
+        <param name="z" type="GLfixed"/>
+        <param name="width" type="GLfixed"/>
+        <param name="height" type="GLfixed"/>
+    </function>
+
+    <function name="DrawTexxvOES" offset="assign" static_dispatch="false">
+        <param name="coords" type="const GLfixed *" count="5"/>
+    </function>
+
+    <!-- TexParameter{ifx}v is skipped here -->
+</category>
+
+<!-- core addition to es1.0 and later -->
+<!-- 9. GL_OES_fixed_point -->
+
+<!-- part of es1.1 extension pack -->
+<category name="GL_OES_framebuffer_object" number="10">
+    <enum name="NONE_OES"                                 value="0"/>
+    <enum name="INVALID_FRAMEBUFFER_OPERATION_OES"        value="0x0506"/>
+    <enum name="RGBA4_OES"                                value="0x8056"/>
+    <enum name="RGB5_A1_OES"                              value="0x8057"/>
+    <enum name="DEPTH_COMPONENT16_OES"                    value="0x81A5"/>
+
+    <enum name="MAX_RENDERBUFFER_SIZE_OES"                value="0x84E8"/>
+    <enum name="FRAMEBUFFER_BINDING_OES"                  value="0x8CA6"/>
+    <enum name="RENDERBUFFER_BINDING_OES"                 value="0x8CA7"/>
+    <enum name="FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE_OES"   value="0x8CD0"/>
+    <enum name="FRAMEBUFFER_ATTACHMENT_OBJECT_NAME_OES"   value="0x8CD1"/>
+    <enum name="FRAMEBUFFER_ATTACHMENT_TEXTURE_LEVEL_OES" value="0x8CD2"/>
+    <enum name="FRAMEBUFFER_ATTACHMENT_TEXTURE_CUBE_MAP_FACE_OES" value="0x8CD3"/>
+    <enum name="FRAMEBUFFER_ATTACHMENT_TEXTURE_3D_ZOFFSET_OES" value="0x8CD4"/>
+    <enum name="FRAMEBUFFER_COMPLETE_OES"                 value="0x8CD5"/>
+    <enum name="FRAMEBUFFER_INCOMPLETE_ATTACHMENT_OES"    value="0x8CD6"/>
+    <enum name="FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT_OES" value="0x8CD7"/>
+    <enum name="FRAMEBUFFER_INCOMPLETE_DIMENSIONS_OES"    value="0x8CD9"/>
+    <enum name="FRAMEBUFFER_INCOMPLETE_FORMATS_OES"       value="0x8CDA"/>
+    <enum name="FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER_OES"   value="0x8CDB"/>
+    <enum name="FRAMEBUFFER_INCOMPLETE_READ_BUFFER_OES"   value="0x8CDC"/>
+    <enum name="FRAMEBUFFER_UNSUPPORTED_OES"              value="0x8CDD"/>
+    <enum name="COLOR_ATTACHMENT0_OES"                    value="0x8CE0"/>
+    <enum name="DEPTH_ATTACHMENT_OES"                     value="0x8D00"/>
+    <enum name="STENCIL_ATTACHMENT_OES"                   value="0x8D20"/>
+    <enum name="FRAMEBUFFER_OES"                          value="0x8D40"/>
+    <enum name="RENDERBUFFER_OES"                         value="0x8D41"/>
+    <enum name="RENDERBUFFER_WIDTH_OES"                   value="0x8D42"/>
+    <enum name="RENDERBUFFER_HEIGHT_OES"                  value="0x8D43"/>
+    <enum name="RENDERBUFFER_INTERNAL_FORMAT_OES"         value="0x8D44"/>
+    <enum name="STENCIL_INDEX1_OES"                       value="0x8D46"/>
+    <enum name="STENCIL_INDEX4_OES"                       value="0x8D47"/>
+    <enum name="STENCIL_INDEX8_OES"                       value="0x8D48"/>
+    <enum name="RENDERBUFFER_RED_SIZE_OES"                value="0x8D50"/>
+    <enum name="RENDERBUFFER_GREEN_SIZE_OES"              value="0x8D51"/>
+    <enum name="RENDERBUFFER_BLUE_SIZE_OES"               value="0x8D52"/>
+    <enum name="RENDERBUFFER_ALPHA_SIZE_OES"              value="0x8D53"/>
+    <enum name="RENDERBUFFER_DEPTH_SIZE_OES"              value="0x8D54"/>
+    <enum name="RENDERBUFFER_STENCIL_SIZE_OES"            value="0x8D55"/>
+    <enum name="RGB565_OES"                               value="0x8D62"/>
+
+    <function name="BindFramebufferOES" alias="BindFramebufferEXT" static_dispatch="false">
+        <param name="target" type="GLenum"/>
+        <param name="framebuffer" type="GLuint"/>
+    </function>
+
+    <function name="BindRenderbufferOES" alias="BindRenderbufferEXT" static_dispatch="false">
+        <param name="target" type="GLenum"/>
+        <param name="renderbuffer" type="GLuint"/>
+    </function>
+
+    <function name="CheckFramebufferStatusOES" alias="CheckFramebufferStatusEXT" static_dispatch="false">
+        <param name="target" type="GLenum"/>
+	<return type="GLenum"/>
+    </function>
+
+    <function name="DeleteFramebuffersOES" alias="DeleteFramebuffersEXT" static_dispatch="false">
+        <param name="n" type="GLsizei" counter="true"/>
+        <param name="framebuffers" type="const GLuint *" count="n"/>
+    </function>
+
+    <function name="DeleteRenderbuffersOES" alias="DeleteRenderbuffersEXT" static_dispatch="false">
+        <param name="n" type="GLsizei" counter="true"/>
+        <param name="renderbuffers" type="const GLuint *" count="n"/>
+    </function>
+
+    <function name="FramebufferRenderbufferOES" alias="FramebufferRenderbufferEXT" static_dispatch="false">
+        <param name="target" type="GLenum"/>
+        <param name="attachment" type="GLenum"/>
+        <param name="renderbuffertarget" type="GLenum"/>
+        <param name="renderbuffer" type="GLuint"/>
+    </function>
+
+    <function name="FramebufferTexture2DOES" alias="FramebufferTexture2DEXT" static_dispatch="false">
+        <param name="target" type="GLenum"/>
+        <param name="attachment" type="GLenum"/>
+        <param name="textarget" type="GLenum"/>
+        <param name="texture" type="GLuint"/>
+        <param name="level" type="GLint"/>
+    </function>
+
+    <function name="GenerateMipmapOES" alias="GenerateMipmapEXT" static_dispatch="false">
+        <param name="target" type="GLenum"/>
+    </function>
+
+    <function name="GenFramebuffersOES" alias="GenFramebuffersEXT" static_dispatch="false">
+        <param name="n" type="GLsizei" counter="true"/>
+        <param name="framebuffers" type="GLuint *" count="n" output="true"/>
+    </function>
+
+    <function name="GenRenderbuffersOES" alias="GenRenderbuffersEXT" static_dispatch="false">
+        <param name="n" type="GLsizei" counter="true"/>
+        <param name="renderbuffers" type="GLuint *" count="n" output="true"/>
+    </function>
+
+    <function name="GetFramebufferAttachmentParameterivOES" alias="GetFramebufferAttachmentParameterivEXT" static_dispatch="false">
+        <param name="target" type="GLenum"/>
+        <param name="attachment" type="GLenum"/>
+        <param name="pname" type="GLenum"/>
+        <param name="params" type="GLint *" output="true"/>
+    </function>
+
+    <function name="GetRenderbufferParameterivOES" alias="GetRenderbufferParameterivEXT" static_dispatch="false">
+        <param name="target" type="GLenum"/>
+        <param name="pname" type="GLenum"/>
+        <param name="params" type="GLint *" output="true"/>
+    </function>
+
+    <function name="IsFramebufferOES" alias="IsFramebufferEXT" static_dispatch="false">
+        <param name="framebuffer" type="GLuint"/>
+	<return type="GLboolean"/>
+    </function>
+
+    <function name="IsRenderbufferOES" alias="IsRenderbufferEXT" static_dispatch="false">
+        <param name="renderbuffer" type="GLuint"/>
+	<return type="GLboolean"/>
+    </function>
+
+    <function name="RenderbufferStorageOES" alias="RenderbufferStorageEXT" static_dispatch="false">
+        <param name="target" type="GLenum"/>
+        <param name="internalformat" type="GLenum"/>
+        <param name="width" type="GLsizei"/>
+        <param name="height" type="GLsizei"/>
+    </function>
+</category>
+
+<!-- core addition to es1.1 -->
+<category name="GL_OES_matrix_get" number="11">
+    <enum name="MODELVIEW_MATRIX_FLOAT_AS_INT_BITS_OES"   value="0x898D"/>
+    <enum name="PROJECTION_MATRIX_FLOAT_AS_INT_BITS_OES"  value="0x898E"/>
+    <enum name="TEXTURE_MATRIX_FLOAT_AS_INT_BITS_OES"	  value="0x898F"/>
+</category>
+
+<!-- optional for es1.1 -->
+<category name="GL_OES_matrix_palette" number="12">
+    <enum name="MAX_VERTEX_UNITS_OES"                     value="0x86A4"/>
+    <enum name="WEIGHT_ARRAY_TYPE_OES"                    value="0x86A9"/>
+    <enum name="WEIGHT_ARRAY_STRIDE_OES"                  value="0x86AA"/>
+    <enum name="WEIGHT_ARRAY_SIZE_OES"                    value="0x86AB"/>
+    <enum name="WEIGHT_ARRAY_POINTER_OES"                 value="0x86AC"/>
+    <enum name="WEIGHT_ARRAY_OES"                         value="0x86AD"/>
+    <enum name="MATRIX_PALETTE_OES"                       value="0x8840"/>
+    <enum name="MAX_PALETTE_MATRICES_OES"                 value="0x8842"/>
+    <enum name="CURRENT_PALETTE_MATRIX_OES"               value="0x8843"/>
+    <enum name="MATRIX_INDEX_ARRAY_OES"                   value="0x8844"/>
+    <enum name="MATRIX_INDEX_ARRAY_SIZE_OES"              value="0x8846"/>
+    <enum name="MATRIX_INDEX_ARRAY_TYPE_OES"              value="0x8847"/>
+    <enum name="MATRIX_INDEX_ARRAY_STRIDE_OES"            value="0x8848"/>
+    <enum name="MATRIX_INDEX_ARRAY_POINTER_OES"           value="0x8849"/>
+    <enum name="WEIGHT_ARRAY_BUFFER_BINDING_OES"          value="0x889E"/>
+    <enum name="MATRIX_INDEX_ARRAY_BUFFER_BINDING_OES"    value="0x8B9E"/>
+
+    <function name="CurrentPaletteMatrixOES" alias="CurrentPaletteMatrixARB" static_dispatch="false">
+        <param name="matrixpaletteindex" type="GLuint"/>
+    </function>
+
+    <!-- no offset -->
+    <function name="LoadPaletteFromModelViewMatrixOES" static_dispatch="false">
+    </function>
+
+    <function name="MatrixIndexPointerOES" alias="MatrixIndexPointerARB" static_dispatch="false">
+        <param name="size" type="GLint"/>
+        <param name="type" type="GLenum"/>
+        <param name="stride" type="GLsizei"/>
+        <param name="pointer" type="const GLvoid *"/>
+    </function>
+
+    <function name="WeightPointerOES" alias="WeightPointerARB" static_dispatch="false">
+        <param name="size" type="GLint"/>
+        <param name="type" type="GLenum"/>
+        <param name="stride" type="GLsizei"/>
+        <param name="pointer" type="const GLvoid *"/>
+    </function>
+</category>
+
+<!-- required for es1.1 -->
+<category name="GL_OES_point_size_array" number="14">
+    <enum name="POINT_SIZE_ARRAY_TYPE_OES"                value="0x898A"/>
+    <enum name="POINT_SIZE_ARRAY_STRIDE_OES"	          value="0x898B"/>
+    <enum name="POINT_SIZE_ARRAY_POINTER_OES"	          value="0x898C"/>
+    <enum name="POINT_SIZE_ARRAY_OES"                     value="0x8B9C"/>
+    <enum name="POINT_SIZE_ARRAY_BUFFER_BINDING_OES"	  value="0x8B9F"/>
+
+    <function name="PointSizePointerOES" offset="assign" static_dispatch="false">
+        <param name="type" type="GLenum"/>
+        <param name="stride" type="GLsizei"/>
+        <param name="pointer" type="const GLvoid *"/>
+    </function>
+</category>
+
+<!-- required for es1.1 -->
+<category name="GL_OES_point_sprite" number="15">
+    <enum name="POINT_SPRITE_OES"                         value="0x8861"/>
+    <enum name="COORD_REPLACE_OES"	                  value="0x8862"/>
+</category>
+
+<!-- optional for es1.0 -->
+<category name="GL_OES_query_matrix" number="16">
+    <function name="QueryMatrixxOES" offset="assign" static_dispatch="false">
+        <param name="mantissa" type="GLfixed *" count="16" />
+        <param name="exponent" type="GLint *" count="16" />
+	<return type="GLbitfield"/>
+    </function>
+</category>
+
+<!-- required for es1.0 and later -->
+<!-- 17. GL_OES_read_format -->
+
+<!-- core addition to es1.0 and later -->
+<!-- 18. GL_OES_single_precision -->
+
+<!-- part of es1.1 extension pack -->
+<category name="GL_OES_texture_cube_map" number="20">
+    <enum name="TEXTURE_GEN_MODE_OES"                     value="0x2500"/>
+    <enum name="NORMAL_MAP_OES"                           value="0x8511"/>
+    <enum name="REFLECTION_MAP_OES"                       value="0x8512"/>
+    <enum name="TEXTURE_CUBE_MAP_OES"                     value="0x8513"/>
+    <enum name="TEXTURE_BINDING_CUBE_MAP_OES"             value="0x8514"/>
+    <enum name="TEXTURE_CUBE_MAP_POSITIVE_X_OES"          value="0x8515"/>
+    <enum name="TEXTURE_CUBE_MAP_NEGATIVE_X_OES"          value="0x8516"/>
+    <enum name="TEXTURE_CUBE_MAP_POSITIVE_Y_OES"          value="0x8517"/>
+    <enum name="TEXTURE_CUBE_MAP_NEGATIVE_Y_OES"          value="0x8518"/>
+    <enum name="TEXTURE_CUBE_MAP_POSITIVE_Z_OES"          value="0x8519"/>
+    <enum name="TEXTURE_CUBE_MAP_NEGATIVE_Z_OES"          value="0x851A"/>
+    <enum name="MAX_CUBE_MAP_TEXTURE_SIZE_OES"            value="0x851C"/>
+    <enum name="TEXTURE_GEN_STR_OES"                      value="0x8D60"/>
+
+    <function name="GetTexGenfvOES" alias="GetTexGenfv" static_dispatch="false">
+        <param name="coord" type="GLenum"/>
+        <param name="pname" type="GLenum"/>
+        <param name="params" type="GLfloat *" output="true" variable_param="pname"/>
+    </function>
+
+    <function name="GetTexGenivOES" alias="GetTexGeniv" static_dispatch="false">
+        <param name="coord" type="GLenum"/>
+        <param name="pname" type="GLenum"/>
+        <param name="params" type="GLint *" output="true" variable_param="pname"/>
+    </function>
+
+    <function name="TexGenfOES" alias="TexGenf" static_dispatch="false">
+        <param name="coord" type="GLenum"/>
+        <param name="pname" type="GLenum"/>
+        <param name="param" type="GLfloat"/>
+    </function>
+
+    <function name="TexGenfvOES" alias="TexGenfv" static_dispatch="false">
+        <param name="coord" type="GLenum"/>
+        <param name="pname" type="GLenum"/>
+        <param name="params" type="const GLfloat *" variable_param="pname"/>
+    </function>
+
+    <function name="TexGeniOES" alias="TexGeni" static_dispatch="false">
+        <param name="coord" type="GLenum"/>
+        <param name="pname" type="GLenum"/>
+        <param name="param" type="GLint"/>
+    </function>
+
+    <function name="TexGenivOES" alias="TexGeniv" static_dispatch="false">
+        <param name="coord" type="GLenum"/>
+        <param name="pname" type="GLenum"/>
+        <param name="params" type="const GLint *" variable_param="pname"/>
+    </function>
+</category>
+
+<category name="GL_OES_texture_env_crossbar" number="21">
+    <!-- No new functions, types, enums. -->
+</category>
+
+<category name="GL_OES_texture_mirrored_repeat" number="22">
+    <!-- No new functions, types, enums. -->
+</category>
+
+<!-- 23. GL_OES_EGL_image -->
+
+<category name="GL_OES_depth24" number="24">
+    <enum name="DEPTH_COMPONENT24_OES"                    value="0x81A6"/>
+</category>
+
+<category name="GL_OES_depth32" number="25">
+    <enum name="DEPTH_COMPONENT32_OES"                    value="0x81A7"/>
+</category>
+
+<!-- 26. GL_OES_element_index_uint -->
+
+<!-- 27. GL_OES_fbo_render_mipmap -->
+
+<category name="GL_OES_mapbuffer" number="29">
+    <enum name="WRITE_ONLY_OES"                           value="0x88B9"/>
+    <enum name="BUFFER_ACCESS_OES"                        value="0x88BB"/>
+    <enum name="BUFFER_MAPPED_OES"                        value="0x88BC"/>
+    <enum name="BUFFER_MAP_POINTER_OES"                   value="0x88BD"/>
+
+    <function name="GetBufferPointervOES" alias="GetBufferPointervARB" static_dispatch="false">
+        <param name="target" type="GLenum"/>
+        <param name="pname" type="GLenum"/>
+        <param name="params" type="GLvoid **"/>
+    </function>
+
+    <function name="MapBufferOES" alias="MapBufferARB" static_dispatch="false">
+        <param name="target" type="GLenum"/>
+        <param name="access" type="GLenum"/>
+	<return type="GLvoid *"/>
+    </function>
+
+    <function name="UnmapBufferOES" alias="UnmapBufferARB" static_dispatch="false">
+        <param name="target" type="GLenum"/>
+	<return type="GLboolean"/>
+    </function>
+</category>
+
+<category name="GL_OES_rgb8_rgba8" number="30">
+    <enum name="RGB8_OES"                                 value="0x8051"/>
+    <enum name="RGBA8_OES"                                value="0x8058"/>
+</category>
+
+<category name="GL_OES_stencil1" number="31">
+    <enum name="STENCIL_INDEX1_OES"                       value="0x8D46"/>
+</category>
+
+<category name="GL_OES_stencil4" number="32">
+    <enum name="STENCIL_INDEX4_OES"                       value="0x8D47"/>
+</category>
+
+<category name="GL_OES_stencil8" number="33">
+    <enum name="STENCIL_INDEX8_OES"                       value="0x8D48"/>
+</category>
+
+<category name="GL_OES_texture_3D" number="34">
+    <enum name="TEXTURE_BINDING_3D_OES"                   value="0x806A"/>
+    <enum name="TEXTURE_3D_OES"                           value="0x806F"/>
+    <enum name="TEXTURE_WRAP_R_OES"                       value="0x8072"/>
+    <enum name="MAX_3D_TEXTURE_SIZE_OES"                  value="0x8073"/>
+    <enum name="SAMPLER_3D_OES"                           value="0x8B5F"/>
+    <enum name="FRAMEBUFFER_ATTACHMENT_TEXTURE_3D_ZOFFSET_OES" value="0x8CD4"/>
+
+    <function name="CompressedTexImage3DOES" alias="CompressedTexImage3DARB" static_dispatch="false">
+        <param name="target" type="GLenum"/>
+        <param name="level" type="GLint"/>
+        <param name="internalformat" type="GLenum"/>
+        <param name="width" type="GLsizei"/>
+        <param name="height" type="GLsizei"/>
+        <param name="depth" type="GLsizei"/>
+        <param name="border" type="GLint"/>
+        <param name="imageSize" type="GLsizei" counter="true"/>
+        <param name="data" type="const GLvoid *" count="imageSize"/>
+    </function>
+
+    <function name="CompressedTexSubImage3DOES" alias="CompressedTexSubImage3DARB" static_dispatch="false">
+        <param name="target" type="GLenum"/>
+        <param name="level" type="GLint"/>
+        <param name="xoffset" type="GLint"/>
+        <param name="yoffset" type="GLint"/>
+        <param name="zoffset" type="GLint"/>
+        <param name="width" type="GLsizei"/>
+        <param name="height" type="GLsizei"/>
+        <param name="depth" type="GLsizei"/>
+        <param name="format" type="GLenum"/>
+        <param name="imageSize" type="GLsizei" counter="true"/>
+        <param name="data" type="const GLvoid *" count="imageSize"/>
+    </function>
+
+    <function name="CopyTexSubImage3DOES" alias="CopyTexSubImage3D" static_dispatch="false">
+        <param name="target" type="GLenum"/>
+        <param name="level" type="GLint"/>
+        <param name="xoffset" type="GLint"/>
+        <param name="yoffset" type="GLint"/>
+        <param name="zoffset" type="GLint"/>
+        <param name="x" type="GLint"/>
+        <param name="y" type="GLint"/>
+        <param name="width" type="GLsizei"/>
+        <param name="height" type="GLsizei"/>
+    </function>
+
+    <function name="FramebufferTexture3DOES" alias="FramebufferTexture3DEXT" static_dispatch="false">
+        <param name="target" type="GLenum"/>
+        <param name="attachment" type="GLenum"/>
+        <param name="textarget" type="GLenum"/>
+        <param name="texture" type="GLuint"/>
+        <param name="level" type="GLint"/>
+        <param name="zoffset" type="GLint"/>
+    </function>
+
+    <function name="TexImage3DOES" alias="TexImage3D" static_dispatch="false">
+        <param name="target" type="GLenum"/>
+        <param name="level" type="GLint"/>
+        <param name="internalformat" type="GLenum"/>
+        <param name="width" type="GLsizei"/>
+        <param name="height" type="GLsizei"/>
+        <param name="depth" type="GLsizei"/>
+        <param name="border" type="GLint"/>
+        <param name="format" type="GLenum"/>
+        <param name="type" type="GLenum"/>
+        <param name="pixels" type="const GLvoid *" img_width="width" img_height="height" img_depth="depth" img_format="format" img_type="type" img_target="target" img_null_flag="true" img_pad_dimensions="true"/>
+    </function>
+
+    <function name="TexSubImage3DOES" alias="TexSubImage3D" static_dispatch="false">
+        <param name="target" type="GLenum"/>
+        <param name="level" type="GLint"/>
+        <param name="xoffset" type="GLint"/>
+        <param name="yoffset" type="GLint"/>
+        <param name="zoffset" type="GLint"/>
+        <param name="width" type="GLsizei"/>
+        <param name="height" type="GLsizei"/>
+        <param name="depth" type="GLsizei"/>
+        <param name="format" type="GLenum"/>
+        <param name="type" type="GLenum"/>
+        <param name="UNUSED" type="GLuint" padding="true"/>
+        <param name="pixels" type="const GLvoid *" img_width="width" img_height="height" img_depth="depth" img_xoff="xoffset" img_yoff="yoffset" img_zoff="zoffset" img_format="format" img_type="type" img_target="target" img_pad_dimensions="true"/>
+    </function>
+</category>
+
+<!-- the other name is OES_texture_float_linear -->
+<!-- 35. GL_OES_texture_half_float_linear -->
+
+<!-- the other name is OES_texture_float -->
+<category name="GL_OES_texture_half_float" number="36">
+    <enum name="HALF_FLOAT_OES"                           value="0x8D61"/>
+</category>
+
+<!-- 37. GL_OES_texture_npot -->
+
+<category name="GL_OES_vertex_half_float" number="38">
+    <enum name="HALF_FLOAT_OES"                           value="0x8D61"/>
+</category>
+
+<!-- 41. GL_EXT_texture_filter_anisotropic -->
+
+<category name="GL_EXT_texture_type_2_10_10_10_REV" number="42">
+    <enum name="UNSIGNED_INT_2_10_10_10_REV_EXT"          value="0x8368"/>
+</category>
+
+<category name="GL_OES_packed_depth_stencil" number="43">
+    <enum name="DEPTH_STENCIL_OES"                        value="0x84F9"/>
+    <enum name="UNSIGNED_INT_24_8_OES"                    value="0x84FA"/>
+    <enum name="DEPTH24_STENCIL8_OES"                     value="0x88F0"/>
+</category>
+
+<!-- 44. GL_OES_depth_texture -->
+
+<category name="GL_OES_standard_derivatives" number="45">
+    <enum name="FRAGMENT_SHADER_DERIVATIVE_HINT_OES"      value="0x8B8B"/>
+</category>
+
+<category name="GL_OES_vertex_type_10_10_10_2" number="46">
+    <enum name="UNSIGNED_INT_10_10_10_2_OES"              value="0x8DF6"/>
+    <enum name="INT_10_10_10_2_OES"                       value="0x8DF7"/>
+</category>
+
+<category name="GL_OES_get_program_binary" number="47">
+    <enum name="PROGRAM_BINARY_LENGTH_OES"                value="0x8741"/>
+    <enum name="NUM_PROGRAM_BINARY_FORMATS_OES"           value="0x87FE"/>
+    <enum name="PROGRAM_BINARY_FORMATS_OES"               value="0x87FF"/>
+
+    <function name="GetProgramBinaryOES" alias="GetProgramBinary" static_dispatch="false">
+        <param name="program" type="GLuint"/>
+        <param name="bufSize" type="GLsizei"/>
+        <param name="length" type="GLsizei *"/>
+        <param name="binaryFormat" type="GLenum *"/>
+        <param name="binary" type="GLvoid *"/>
+    </function>
+
+    <function name="ProgramBinaryOES" alias="ProgramBinary" static_dispatch="false">
+        <param name="program" type="GLuint"/>
+        <param name="binaryFormat" type="GLenum"/>
+        <param name="binary" type="const GLvoid *"/>
+        <param name="length" type="GLint"/>
+    </function>
+</category>
+
+<category name="GL_EXT_texture_compression_dxt1" number="49">
+    <enum name="COMPRESSED_RGB_S3TC_DXT1_EXT"             value="0x83F0"/>
+    <enum name="COMPRESSED_RGBA_S3TC_DXT1_EXT"            value="0x83F1"/>
+</category>
+
+<category name="GL_EXT_texture_format_BGRA8888" number="51">
+    <enum name="BGRA_EXT"                                 value="0x80E1"/>
+</category>
+
+<category name="GL_EXT_texture_lod_bias" number="60">
+    <enum name="TEXTURE_FILTER_CONTROL_EXT"               value="0x8500"/>
+    <enum name="TEXTURE_LOD_BIAS_EXT"                     value="0x8501"/>
+    <enum name="MAX_TEXTURE_LOD_BIAS_EXT"                 value="0x84FD"/>
+</category>
+
+<!-- 65. GL_EXT_blend_minmax -->
+
+<category name="GL_EXT_read_format_bgra" number="66">
+    <enum name="BGRA_EXT"                                 value="0x80E1"/>
+    <enum name="UNSIGNED_SHORT_4_4_4_4_REV_EXT"           value="0x8365"/>
+    <enum name="UNSIGNED_SHORT_1_5_5_5_REV_EXT"           value="0x8366"/>
+</category>
+
+<!-- 69. GL_EXT_multi_draw_arrays -->
+
+<!-- 87. GL_OES_EGL_image_external -->
+<category name="GL_OES_EGL_image_external" number="87">
+    <enum name="TEXTURE_EXTERNAL_OES"                     value="0x8D65"/>
+    <enum name="SAMPLER_EXTERNAL_OES"                     value="0x8D66"/>
+    <enum name="TEXTURE_BINDING_EXTERNAL_OES"             value="0x8D67"/>
+    <enum name="REQUIRED_TEXTURE_IMAGE_UNITS_OES"         value="0x8D68"/>
+</category>
+
+</OpenGLAPI>

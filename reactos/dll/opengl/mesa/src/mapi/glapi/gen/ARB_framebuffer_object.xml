@@ -1,0 +1,275 @@
+<?xml version="1.0"?>
+<!DOCTYPE OpenGLAPI SYSTEM "gl_API.dtd">
+
+<!-- Note: no GLX protocol info yet. -->
+
+
+<OpenGLAPI>
+<category name="GL_ARB_framebuffer_object" number="45">
+    <enum name="FRAMEBUFFER"                              value="0x8D40"/>
+    <enum name="READ_FRAMEBUFFER"                         value="0x8CA8"/>
+    <enum name="DRAW_FRAMEBUFFER"                         value="0x8CA9"/>
+
+    <enum name="RENDERBUFFER"                             value="0x8D41"/>
+
+    <enum name="STENCIL_INDEX1"                           value="0x8D46"/>
+    <enum name="STENCIL_INDEX4"                           value="0x8D47"/>
+    <enum name="STENCIL_INDEX8"                           value="0x8D48"/>
+    <enum name="STENCIL_INDEX16"                          value="0x8D49"/>
+
+    <enum name="RENDERBUFFER_WIDTH"              value="0x8D42"/>
+    <enum name="RENDERBUFFER_HEIGHT"             value="0x8D43"/>
+    <enum name="RENDERBUFFER_INTERNAL_FORMAT"    value="0x8D44"/>
+    <enum name="RENDERBUFFER_RED_SIZE"           value="0x8D50"/>
+    <enum name="RENDERBUFFER_GREEN_SIZE"         value="0x8D51"/>
+    <enum name="RENDERBUFFER_BLUE_SIZE"          value="0x8D52"/>
+    <enum name="RENDERBUFFER_ALPHA_SIZE"         value="0x8D53"/>
+    <enum name="RENDERBUFFER_DEPTH_SIZE"         value="0x8D54"/>
+    <enum name="RENDERBUFFER_STENCIL_SIZE"       value="0x8D55"/>
+    <enum name="RENDERBUFFER_SAMPLES"            value="0x8CAB"/>
+
+    <enum name="FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE" count="1" value="0x8CD0">
+        <size name="GetFramebufferAttachmentParameteriv" mode="get"/>
+    </enum>
+    <enum name="FRAMEBUFFER_ATTACHMENT_OBJECT_NAME" count="1" value="0x8CD1">
+        <size name="GetFramebufferAttachmentParameteriv" mode="get"/>
+    </enum>
+    <enum name="FRAMEBUFFER_ATTACHMENT_TEXTURE_LEVEL" count="1" value="0x8CD2">
+        <size name="GetFramebufferAttachmentParameteriv" mode="get"/>
+    </enum>
+    <enum name="FRAMEBUFFER_ATTACHMENT_TEXTURE_CUBE_MAP_FACE" count="1" value="0x8CD3">
+        <size name="GetFramebufferAttachmentParameteriv" mode="get"/>
+    </enum>
+    <enum name="FRAMEBUFFER_ATTACHMENT_TEXTURE_LAYER" count="1" value="0x8CD4">
+        <size name="GetFramebufferAttachmentParameteriv" mode="get"/>
+    </enum>
+    <enum name="FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING" count="1" value="0x8210">
+        <size name="GetFramebufferAttachmentParameteriv" mode="get"/>
+    </enum>
+    <enum name="FRAMEBUFFER_ATTACHMENT_COMPONENT_TYPE" count="1" value="0x8211">
+        <size name="GetFramebufferAttachmentParameteriv" mode="get"/>
+    </enum>
+    <enum name="FRAMEBUFFER_ATTACHMENT_RED_SIZE" count="1" value="0x8212">
+        <size name="GetFramebufferAttachmentParameteriv" mode="get"/>
+    </enum>
+    <enum name="FRAMEBUFFER_ATTACHMENT_GREEN_SIZE" count="1" value="0x8213">
+        <size name="GetFramebufferAttachmentParameteriv" mode="get"/>
+    </enum>
+    <enum name="FRAMEBUFFER_ATTACHMENT_BLUE_SIZE" count="1" value="0x8214">
+        <size name="GetFramebufferAttachmentParameteriv" mode="get"/>
+    </enum>
+    <enum name="FRAMEBUFFER_ATTACHMENT_ALPHA_SIZE" count="1" value="0x8215">
+        <size name="GetFramebufferAttachmentParameteriv" mode="get"/>
+    </enum>
+    <enum name="FRAMEBUFFER_ATTACHMENT_DEPTH_SIZE" count="1" value="0x8216">
+        <size name="GetFramebufferAttachmentParameteriv" mode="get"/>
+    </enum>
+    <enum name="FRAMEBUFFER_ATTACHMENT_STENCIL_SIZE" count="1" value="0x8217">
+        <size name="GetFramebufferAttachmentParameteriv" mode="get"/>
+    </enum>
+
+    <enum name="SRGB"                                      value="0x8C40"/>
+    <enum name="UNSIGNED_NORMALIZED"                       value="0x8C17"/>
+    <enum name="FRAMEBUFFER_DEFAULT"                       value="0x8218"/>
+    <enum name="INDEX"                                     value="0x8222"/>
+
+    <enum name="COLOR_ATTACHMENT0"                         value="0x8CE0"/>
+    <enum name="COLOR_ATTACHMENT1"                         value="0x8CE1"/>
+    <enum name="COLOR_ATTACHMENT2"                         value="0x8CE2"/>
+    <enum name="COLOR_ATTACHMENT3"                         value="0x8CE3"/>
+    <enum name="COLOR_ATTACHMENT4"                         value="0x8CE4"/>
+    <enum name="COLOR_ATTACHMENT5"                         value="0x8CE5"/>
+    <enum name="COLOR_ATTACHMENT6"                         value="0x8CE6"/>
+    <enum name="COLOR_ATTACHMENT7"                         value="0x8CE7"/>
+    <enum name="COLOR_ATTACHMENT8"                         value="0x8CE8"/>
+    <enum name="COLOR_ATTACHMENT9"                         value="0x8CE9"/>
+    <enum name="COLOR_ATTACHMENT10"                        value="0x8CEA"/>
+    <enum name="COLOR_ATTACHMENT11"                        value="0x8CEB"/>
+    <enum name="COLOR_ATTACHMENT12"                        value="0x8CEC"/>
+    <enum name="COLOR_ATTACHMENT13"                        value="0x8CED"/>
+    <enum name="COLOR_ATTACHMENT14"                        value="0x8CEE"/>
+    <enum name="COLOR_ATTACHMENT15"                        value="0x8CEF"/>
+    <enum name="DEPTH_ATTACHMENT"                          value="0x8D00"/>
+    <enum name="STENCIL_ATTACHMENT"                        value="0x8D20"/>
+    <enum name="DEPTH_STENCIL_ATTACHMENT"                  value="0x821A"/>
+
+    <enum name="MAX_SAMPLES"                     count="1" value="0x8D57">
+        <size name="Get" mode="get"/>
+    </enum>
+
+    <enum name="FRAMEBUFFER_COMPLETE"                      value="0x8CD5"/>
+    <enum name="FRAMEBUFFER_INCOMPLETE_ATTACHMENT"         value="0x8CD6"/>
+    <enum name="FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT" value="0x8CD7"/>
+    <enum name="FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER"        value="0x8CDB"/>
+    <enum name="FRAMEBUFFER_INCOMPLETE_READ_BUFFER"        value="0x8CDC"/>
+    <enum name="FRAMEBUFFER_UNSUPPORTED"                   value="0x8CDD"/>
+    <enum name="FRAMEBUFFER_INCOMPLETE_MULTISAMPLE"        value="0x8D56"/>
+    <enum name="FRAMEBUFFER_UNDEFINED"                     value="0x8219"/>
+
+    <enum name="FRAMEBUFFER_BINDING"             count="1" value="0x8CA6">
+        <size name="Get" mode="get"/>
+    </enum>
+    <enum name="DRAW_FRAMEBUFFER_BINDING"        count="1" value="0x8CA6">
+        <size name="Get" mode="get"/>
+    </enum>
+    <enum name="READ_FRAMEBUFFER_BINDING"        count="1" value="0x8CAA">
+        <size name="Get" mode="get"/>
+    </enum>
+    <enum name="RENDERBUFFER_BINDING"            count="1" value="0x8CA7">
+        <size name="Get" mode="get"/>
+    </enum>
+    <enum name="MAX_COLOR_ATTACHMENTS"           count="1" value="0x8CDF">
+        <size name="Get" mode="get"/>
+    </enum>
+    <enum name="MAX_RENDERBUFFER_SIZE"           count="1" value="0x84E8">
+        <size name="Get" mode="get"/>
+    </enum>
+
+    <enum name="INVALID_FRAMEBUFFER_OPERATION"            value="0x0506"/>
+
+    <enum name="DEPTH_STENCIL"                            value="0x84F9"/>
+
+    <enum name="UNSIGNED_INT_24_8"                        value="0x84FA"/>
+
+    <enum name="DEPTH24_STENCIL8"                         value="0x88F0"/>
+
+    <enum name="TEXTURE_STENCIL_SIZE"          count="1"  value="0x88F1">
+        <size name="GetTexLevelParameterfv" mode="get"/>
+        <size name="GetTexLevelParameteriv" mode="get"/>
+    </enum>
+
+
+
+    <function name="IsRenderbuffer" alias="IsRenderbufferEXT">
+        <param name="renderbuffer" type="GLuint"/>
+	<return type="GLboolean"/>
+    </function>
+
+    <function name="BindRenderbuffer" alias="BindRenderbufferEXT">
+        <param name="target" type="GLenum"/>
+        <param name="renderbuffer" type="GLuint"/>
+    </function>
+
+    <function name="DeleteRenderbuffers" alias="DeleteRenderbuffersEXT">
+        <param name="n" type="GLsizei" counter="true"/>
+        <param name="renderbuffers" type="const GLuint *" count="n"/>
+    </function>
+
+    <function name="GenRenderbuffers" alias="GenRenderbuffersEXT">
+        <param name="n" type="GLsizei" counter="true"/>
+        <param name="renderbuffers" type="GLuint *" count="n" output="true"/>
+    </function>
+
+    <function name="RenderbufferStorage" alias="RenderbufferStorageEXT">
+        <param name="target" type="GLenum"/>
+        <param name="internalformat" type="GLenum"/>
+        <param name="width" type="GLsizei"/>
+        <param name="height" type="GLsizei"/>
+    </function>
+
+    <function name="RenderbufferStorageMultisample" offset="assign">
+        <param name="target" type="GLenum"/>
+        <param name="samples" type="GLsizei"/>
+        <param name="internalformat" type="GLenum"/>
+        <param name="width" type="GLsizei"/>
+        <param name="height" type="GLsizei"/>
+        <glx rop="4331"/>
+    </function>
+
+    <function name="GetRenderbufferParameteriv" alias="GetRenderbufferParameterivEXT">
+        <param name="target" type="GLenum"/>
+        <param name="pname" type="GLenum"/>
+        <param name="params" type="GLint *" output="true"/>
+    </function>
+
+    <function name="IsFramebuffer" alias="IsFramebufferEXT">
+        <param name="framebuffer" type="GLuint"/>
+	<return type="GLboolean"/>
+    </function>
+
+    <function name="BindFramebuffer" alias="BindFramebufferEXT">
+        <param name="target" type="GLenum"/>
+        <param name="framebuffer" type="GLuint"/>
+    </function>
+
+    <function name="DeleteFramebuffers" alias="DeleteFramebuffersEXT">
+        <param name="n" type="GLsizei" counter="true"/>
+        <param name="framebuffers" type="const GLuint *" count="n"/>
+    </function>
+
+    <function name="GenFramebuffers" alias="GenFramebuffersEXT">
+        <param name="n" type="GLsizei" counter="true"/>
+        <param name="framebuffers" type="GLuint *" count="n" output="true"/>
+    </function>
+
+    <function name="CheckFramebufferStatus" alias="CheckFramebufferStatusEXT">
+        <param name="target" type="GLenum"/>
+	<return type="GLenum"/>
+    </function>
+
+    <function name="FramebufferTexture1D" alias="FramebufferTexture1DEXT">
+        <param name="target" type="GLenum"/>
+        <param name="attachment" type="GLenum"/>
+        <param name="textarget" type="GLenum"/>
+        <param name="texture" type="GLuint"/>
+        <param name="level" type="GLint"/>
+    </function>
+
+    <function name="FramebufferTexture2D" alias="FramebufferTexture2DEXT">
+        <param name="target" type="GLenum"/>
+        <param name="attachment" type="GLenum"/>
+        <param name="textarget" type="GLenum"/>
+        <param name="texture" type="GLuint"/>
+        <param name="level" type="GLint"/>
+    </function>
+
+    <function name="FramebufferTexture3D" alias="FramebufferTexture3DEXT">
+        <param name="target" type="GLenum"/>
+        <param name="attachment" type="GLenum"/>
+        <param name="textarget" type="GLenum"/>
+        <param name="texture" type="GLuint"/>
+        <param name="level" type="GLint"/>
+        <param name="zoffset" type="GLint"/>
+    </function>
+
+    <function name="FramebufferTextureLayer" alias="FramebufferTextureLayerEXT">
+        <param name="target" type="GLenum"/>
+        <param name="attachment" type="GLenum"/>
+        <param name="texture" type="GLuint"/>
+        <param name="level" type="GLint"/>
+        <param name="layer" type="GLint"/>
+    </function>
+
+    <function name="FramebufferRenderbuffer" alias="FramebufferRenderbufferEXT">
+        <param name="target" type="GLenum"/>
+        <param name="attachment" type="GLenum"/>
+        <param name="renderbuffertarget" type="GLenum"/>
+        <param name="renderbuffer" type="GLuint"/>
+    </function>
+
+    <function name="GetFramebufferAttachmentParameteriv" alias="GetFramebufferAttachmentParameterivEXT">
+        <param name="target" type="GLenum"/>
+        <param name="attachment" type="GLenum"/>
+        <param name="pname" type="GLenum"/>
+        <param name="params" type="GLint *" output="true"/>
+    </function>
+
+    <function name="BlitFramebuffer" alias="BlitFramebufferEXT">
+        <param name="srcX0" type="GLint"/>
+        <param name="srcY0" type="GLint"/>
+        <param name="srcX1" type="GLint"/>
+        <param name="srcY1" type="GLint"/>
+        <param name="dstX0" type="GLint"/>
+        <param name="dstY0" type="GLint"/>
+        <param name="dstX1" type="GLint"/>
+        <param name="dstY1" type="GLint"/>
+        <param name="mask" type="GLbitfield"/>
+        <param name="filter" type="GLenum"/>
+    </function>
+
+    <function name="GenerateMipmap" alias="GenerateMipmapEXT">
+        <param name="target" type="GLenum"/>
+    </function>
+</category>
+
+</OpenGLAPI>

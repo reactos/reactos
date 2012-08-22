@@ -1,0 +1,2 @@
+#define foo() bar
+foo()

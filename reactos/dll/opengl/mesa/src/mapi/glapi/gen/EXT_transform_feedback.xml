@@ -1,0 +1,118 @@
+<?xml version="1.0"?>
+<!DOCTYPE OpenGLAPI SYSTEM "gl_API.dtd">
+
+<!-- Note: no GLX protocol info yet. -->
+
+
+<OpenGLAPI>
+
+<category name="GL_EXT_transform_feedback" number="352">
+
+  <enum name="TRANSFORM_FEEDBACK_BUFFER_EXT"                  value="0x8C8E"/>
+  <enum name="TRANSFORM_FEEDBACK_BUFFER_START_EXT"            value="0x8C84"/>
+  <enum name="TRANSFORM_FEEDBACK_BUFFER_SIZE_EXT"             value="0x8C85"/>
+  <enum name="TRANSFORM_FEEDBACK_BUFFER_BINDING_EXT"          value="0x8C8F"/>
+  <enum name="INTERLEAVED_ATTRIBS_EXT"                        value="0x8C8C"/>
+  <enum name="SEPARATE_ATTRIBS_EXT"                           value="0x8C8D"/>
+  <enum name="PRIMITIVES_GENERATED_EXT"                       value="0x8C87"/>
+  <enum name="TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN_EXT"      value="0x8C88"/>
+  <enum name="RASTERIZER_DISCARD_EXT"                         value="0x8C89"/>
+  <enum name="MAX_TRANSFORM_FEEDBACK_INTERLEAVED_COMPONENTS_EXT" value="0x8C8A"/>
+  <enum name="MAX_TRANSFORM_FEEDBACK_SEPARATE_ATTRIBS_EXT"    value="0x8C8B"/>
+  <enum name="MAX_TRANSFORM_FEEDBACK_SEPARATE_COMPONENTS_EXT" value="0x8C80"/>
+  <enum name="TRANSFORM_FEEDBACK_VARYINGS_EXT"                value="0x8C83"/>
+  <enum name="TRANSFORM_FEEDBACK_BUFFER_MODE_EXT"             value="0x8C7F"/>
+  <enum name="TRANSFORM_FEEDBACK_VARYING_MAX_LENGTH_EXT"      value="0x8C76"/>
+
+  <function name="BindBufferRangeEXT" offset="assign">
+    <param name="target" type="GLenum"/>
+    <param name="index" type="GLuint"/>
+    <param name="buffer" type="GLuint"/>
+    <param name="offset" type="GLintptr"/>
+    <param name="size" type="GLsizeiptr"/>
+  </function>
+
+  <function name="BindBufferOffsetEXT" offset="assign">
+    <param name="target" type="GLenum"/>
+    <param name="index" type="GLuint"/>
+    <param name="buffer" type="GLuint"/>
+    <param name="offset" type="GLintptr"/>
+  </function>
+
+  <function name="BindBufferBaseEXT" offset="assign">
+    <param name="target" type="GLenum"/>
+    <param name="index" type="GLuint"/>
+    <param name="buffer" type="GLuint"/>
+  </function>
+
+  <function name="BeginTransformFeedbackEXT" offset="assign">
+    <param name="mode" type="GLenum"/>
+  </function>
+
+  <function name="EndTransformFeedbackEXT" offset="assign">
+  </function>
+
+  <function name="TransformFeedbackVaryingsEXT" offset="assign">
+    <param name="program" type="GLuint"/>
+    <param name="count" type="GLsizei"/>
+    <param name="varyings" type="const char **"/>
+    <param name="bufferMode" type="GLenum"/>
+  </function>
+
+  <function name="GetTransformFeedbackVaryingEXT" offset="assign">
+    <param name="program" type="GLuint"/>
+    <param name="index" type="GLuint"/>
+    <param name="bufSize" type="GLsizei"/>
+    <param name="length" type="GLsizei *"/>
+    <param name="size" type="GLsizei *"/>
+    <param name="type" type="GLenum *"/>
+    <param name="name" type="GLchar *"/>
+  </function>
+
+  <!-- Note: the glGetIntegerIndexedvEXT() and glGetBooleanIndexedvEXT
+       functions are defined in the EXT_draw_buffers2.xml file -->
+
+</category>
+
+
+<category name="GL_ARB_transform_feedback2" number="93">
+
+  <enum name="TRANSFORM_FEEDBACK"                  value="0x8E22"/>
+  <enum name="TRANSFORM_FEEDBACK_BUFFER_PAUSED"    value="0x8E23"/>
+  <enum name="TRANSFORM_FEEDBACK_BUFFER_ACTIVE"    value="0x8E24"/>
+  <enum name="TRANSFORM_FEEDBACK_BINDING"          value="0x8E25"/>
+
+  <function name="BindTransformFeedback" offset="assign">
+    <param name="target" type="GLenum"/>
+    <param name="id" type="GLuint"/>
+  </function>
+
+  <function name="DeleteTransformFeedbacks" offset="assign">
+    <param name="n" type="GLsizei"/>
+    <param name="ids" type="const GLuint *"/>
+  </function>
+
+  <function name="GenTransformFeedbacks" offset="assign">
+    <param name="n" type="GLsizei"/>
+    <param name="ids" type="GLuint *"/>
+  </function>
+
+  <function name="IsTransformFeedback" offset="assign">
+    <param name="id" type="GLuint"/>
+    <return type="GLboolean"/>
+  </function>
+
+  <function name="PauseTransformFeedback" offset="assign">
+  </function>
+
+  <function name="ResumeTransformFeedback" offset="assign">
+  </function>
+
+  <function name="DrawTransformFeedback" offset="assign">
+    <param name="mode" type="GLenum"/>
+    <param name="id" type="GLuint"/>
+  </function>
+
+</category>
+ 
+</OpenGLAPI>

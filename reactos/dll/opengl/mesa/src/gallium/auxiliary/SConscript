@@ -1,0 +1,72 @@
+Import('*')
+
+from sys import executable as python_cmd
+
+env.Append(CPPPATH = [
+    'indices',
+    'util',
+])
+
+env.CodeGenerate(
+    target = 'indices/u_indices_gen.c', 
+    script = 'indices/u_indices_gen.py', 
+    source = [],
+    command = python_cmd + ' $SCRIPT > $TARGET'
+)
+
+env.CodeGenerate(
+    target = 'indices/u_unfilled_gen.c', 
+    script = 'indices/u_unfilled_gen.py', 
+    source = [],
+    command = python_cmd + ' $SCRIPT > $TARGET'
+)
+
+env.CodeGenerate(
+    target = 'util/u_format_srgb.c', 
+    script = 'util/u_format_srgb.py', 
+    source = [],
+    command = python_cmd + ' $SCRIPT > $TARGET'
+)
+
+env.CodeGenerate(
+    target = 'util/u_format_table.c',
+    script = '#src/gallium/auxiliary/util/u_format_table.py',
+    source = ['#src/gallium/auxiliary/util/u_format.csv'],
+    command = python_cmd + ' $SCRIPT $SOURCE > $TARGET'
+)
+
+env.CodeGenerate(
+    target = 'util/u_half.c',
+    script = 'util/u_half.py',
+    source = [],
+    command = python_cmd + ' $SCRIPT > $TARGET'
+)
+
+env.Depends('util/u_format_table.c', [
+    '#src/gallium/auxiliary/util/u_format_parse.py',
+    'util/u_format_pack.py', 
+])
+
+source = env.ParseSourceList('Makefile.sources', [
+    'C_SOURCES',
+    'GENERATED_SOURCES'
+])
+
+if env['llvm']:
+    source += env.ParseSourceList('Makefile.sources', [
+        'GALLIVM_SOURCES',
+        'GALLIVM_CPP_SOURCES'
+    ])
+
+    if env['toolchain'] == 'crossmingw':
+        # compile lp_bld_misc.cpp without -gstabs option
+        source = env.compile_without_gstabs(source, "gallivm/lp_bld_misc.cpp")
+
+gallium = env.ConvenienceLibrary(
+    target = 'gallium',
+    source = source,
+)
+
+env.Alias('gallium', gallium)
+
+Export('gallium')
