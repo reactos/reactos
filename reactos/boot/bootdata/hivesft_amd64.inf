@@ -187,7 +187,7 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\MCI Extensions","wvx",0x00000
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\OpenGLDrivers","DefaultDriver",0x00000000,"Mesa"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\OpenGLDrivers\Mesa","Version",0x00010001,0x00000002
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\OpenGLDrivers\Mesa","Dll",0x00000000,"mesa32"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\OpenGLDrivers\Mesa","DriverVersion",0x00010001,0x00000010
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\OpenGLDrivers\Mesa","DriverVersion",0x00010001,0x00000001
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\OpenGLDrivers\Mesa","Flags",0x00010001,0x00000001
 
 ; User Profile List
