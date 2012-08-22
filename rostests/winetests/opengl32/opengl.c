@@ -159,7 +159,8 @@ static void test_pbuffers(HDC hdc)
     if(iPixelFormat != 0)
     {
         HDC pbuffer_hdc;
-        HPBUFFERARB pbuffer = pwglCreatePbufferARB(hdc, iPixelFormat, 640 /* width */, 480 /* height */, NULL);
+        int attrib = 0;
+        HPBUFFERARB pbuffer = pwglCreatePbufferARB(hdc, iPixelFormat, 640 /* width */, 480 /* height */, &attrib);
         if(!pbuffer)
             skip("Pbuffer creation failed!\n");
 
