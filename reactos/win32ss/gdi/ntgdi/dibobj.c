@@ -445,26 +445,8 @@ NtGdiSetDIBitsToDeviceInternal(
     if (pDC->dctype == DC_TYPE_INFO)
     {
         DC_UnlockDc(pDC);
-        goto Exit2;
+        goto Exit;
     }
-    
-    /*
-     * Select the right surface.
-     * NOTE: we don't call DC_vPrepareDCsForBlit, because we don't
-     * care about mouse, visible region or brushes in this API.
-     */
-    if(pDC->dctype == DCTYPE_DIRECT)
-        pSurf = pDC->ppdev->pSurface;
-    else
-        pSurf = pDC->dclevel.pSurface;
-    if (!pSurf)
-    {
-        DC_UnlockDc(pDC);
-        ret = ScanLines;
-        goto Exit2;
-    }
-
-    pDestSurf = &pSurf->SurfObj;
 
     rcDest.left = XDest;
     rcDest.top = YDest;
@@ -483,7 +465,7 @@ NtGdiSetDIBitsToDeviceInternal(
 
     SourceSize.cx = bmi->bmiHeader.biWidth;
     SourceSize.cy = ScanLines;
-
+    
     //DIBWidth = WIDTH_BYTES_ALIGN32(SourceSize.cx, bmi->bmiHeader.biBitCount);
 
     hSourceBitmap = GreCreateBitmapEx(bmi->bmiHeader.biWidth,
@@ -510,8 +492,6 @@ NtGdiSetDIBitsToDeviceInternal(
         goto Exit;
     }
 
-    ASSERT(pSurf->ppal);
-
     /* Create a palette for the DIB */
     ppalDIB = CreateDIBPalette(bmi, pDC, ColorUse);
     if (!ppalDIB)
@@ -520,6 +500,18 @@ NtGdiSetDIBitsToDeviceInternal(
         Status = STATUS_NO_MEMORY;
         goto Exit;
     }
+    
+    /* This is actually a blit */
+    DC_vPrepareDCsForBlit(pDC, rcDest, NULL, rcDest);
+    pSurf = pDC->dclevel.pSurface;
+    if (!pSurf)
+    {
+        DC_vFinishBlit(pDC, NULL);
+        ret = ScanLines;
+        goto Exit;
+    }
+    
+    ASSERT(pSurf->ppal);
 
     /* Initialize EXLATEOBJ */
     EXLATEOBJ_vInitialize(&exlo,
@@ -528,6 +520,8 @@ NtGdiSetDIBitsToDeviceInternal(
                           RGB(0xff, 0xff, 0xff),
                           pDC->pdcattr->crBackgroundClr,
                           pDC->pdcattr->crForegroundClr);
+                          
+    pDestSurf = &pSurf->SurfObj;
 
     /* Copy the bits */
     DPRINT("BitsToDev with dstsurf=(%d|%d) (%d|%d), src=(%d|%d) w=%d h=%d\n",
@@ -547,6 +541,9 @@ NtGdiSetDIBitsToDeviceInternal(
 
     /* Cleanup EXLATEOBJ */
     EXLATEOBJ_vCleanup(&exlo);
+    
+    /* We're done */
+    DC_vFinishBlit(pDC, NULL);
 
 Exit:
     if (NT_SUCCESS(Status))
@@ -1121,22 +1118,6 @@ NtGdiStretchDIBitsInternal(
         goto cleanup;
     }
 
-    /*
-     * Select the right surface.
-     * NOTE: we don't call DC_vPrepareDCsForBlit, because we don't
-     * care about mouse, visible region or brushes in this API.
-     */
-    if(pdc->dctype == DCTYPE_DIRECT)
-        psurfDst = pdc->ppdev->pSurface;
-    else
-        psurfDst = pdc->dclevel.pSurface;
-    if (!psurfDst)
-    {
-        // CHECKME
-        bResult = TRUE;
-        goto cleanup;
-    }
-
     /* Calculate source and destination rect */
     rcSrc.left = xSrc;
     rcSrc.top = ySrc;
@@ -1148,7 +1129,7 @@ NtGdiStretchDIBitsInternal(
     rcDst.bottom = rcDst.top + cyDst;
     IntLPtoDP(pdc, (POINTL*)&rcDst, 2);
     RECTL_vOffsetRect(&rcDst, pdc->ptlDCOrig.x, pdc->ptlDCOrig.y);
-
+    
     hbmTmp = GreCreateBitmapEx(pbmi->bmiHeader.biWidth,
                                pbmi->bmiHeader.biHeight,
                                0,
@@ -1180,6 +1161,18 @@ NtGdiStretchDIBitsInternal(
         goto cleanup;
     }
 
+    /* Prepare DC for blit */
+    DC_vPrepareDCsForBlit(pdc, rcDst, NULL, rcSrc);
+    
+    psurfDst = pdc->dclevel.pSurface;
+    if (!psurfDst)
+    {
+        DC_vFinishBlit(pdc, NULL);
+        // CHECKME
+        bResult = TRUE;
+        goto cleanup;
+    }
+    
     /* Initialize XLATEOBJ */
     EXLATEOBJ_vInitialize(&exlo,
                           ppalDIB,
@@ -1187,9 +1180,6 @@ NtGdiStretchDIBitsInternal(
                           RGB(0xff, 0xff, 0xff),
                           pdc->pdcattr->crBackgroundClr,
                           pdc->pdcattr->crForegroundClr);
-
-    /* Prepare DC for blit */
-    DC_vPrepareDCsForBlit(pdc, rcDst, NULL, rcSrc);
 
     /* Perform the stretch operation */
     bResult = IntEngStretchBlt(&psurfDst->SurfObj,
