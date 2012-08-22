@@ -203,7 +203,7 @@ RtlCreateUserProcess(IN PUNICODE_STRING ImageFileName,
     Status = RtlpMapFile(ImageFileName,
                          Attributes,
                          &hSection);
-    if(!NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status))
     {
         DPRINT1("Could not map process image\n");
         return Status;
@@ -263,11 +263,11 @@ RtlCreateUserProcess(IN PUNICODE_STRING ImageFileName,
     }
 
     /* Get some information about the process */
-    ZwQueryInformationProcess(ProcessInfo->ProcessHandle,
-                              ProcessBasicInformation,
-                              &ProcessBasicInfo,
-                              sizeof(ProcessBasicInfo),
-                              NULL);
+    Status = ZwQueryInformationProcess(ProcessInfo->ProcessHandle,
+                                       ProcessBasicInformation,
+                                       &ProcessBasicInfo,
+                                       sizeof(ProcessBasicInfo),
+                                       NULL);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Could not query Process Info\n");
