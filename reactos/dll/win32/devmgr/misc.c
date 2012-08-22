@@ -130,6 +130,7 @@ AllocAndLoadStringsCat(OUT LPWSTR *lpTarget,
                 if (!(Ret = LoadStringW(hInst, uID[i], s, ln)))
                 {
                     LocalFree((HLOCAL)(*lpTarget));
+                    return 0;
                 }
 
                 s += Ret;
