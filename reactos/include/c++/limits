@@ -938,7 +938,11 @@ namespace std
         // infinity
         static const bool has_infinity = true;
         static float infinity( ) throw( )
-            {return _FInf._Float;}
+            //{return _FInf._Float;}
+        {
+            static const unsigned __inf_bytes = 0x7f800000;
+            return *(float*)&__inf_bytes;
+        }
 
         // Denormalization
         static const float_denorm_style has_denorm = denorm_present;
