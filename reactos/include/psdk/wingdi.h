@@ -2,6 +2,8 @@
 #define _WINGDI_H
 #define _WINGDI_
 
+#ifndef NOGDI
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -3460,4 +3462,6 @@ WINGDIAPI INT       WINAPI SelectVisRgn(HDC,HRGN);
 #ifdef __cplusplus
 }
 #endif
-#endif
+
+#endif //!NOGDI
+#endif // _WINGDI_H
