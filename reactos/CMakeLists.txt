@@ -43,7 +43,7 @@ endif()
 # Compiler flags handling
 include(cmake/compilerflags.cmake)
 
-add_definitions(-D__REACTOS__ -D__ROS_CMAKE__)
+add_definitions(-D__REACTOS__)
 
 if(NOT CMAKE_CROSSCOMPILING)
 
