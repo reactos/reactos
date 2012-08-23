@@ -342,8 +342,8 @@ NTSTATUS FileOpenAddress(
 
   if (!AddrIsUnspecified(&AddrFile->Address) &&
       !AddrLocateInterface(&AddrFile->Address)) {
-	  ExFreePoolWithTag(AddrFile, ADDR_FILE_TAG);
 	  TI_DbgPrint(MIN_TRACE, ("Non-local address given (0x%X).\n", A2S(&AddrFile->Address)));
+	  ExFreePoolWithTag(AddrFile, ADDR_FILE_TAG);
 	  return STATUS_INVALID_ADDRESS;
   }
 
