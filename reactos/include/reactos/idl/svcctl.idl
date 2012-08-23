@@ -4,7 +4,7 @@
 
 #include <ms-dtyp.idl>
 
-const unsigned int MAX_SERVICE_NAME_LENGTH = 255;
+const unsigned int MAX_SERVICE_NAME_LENGTH = 256;
 const unsigned short SC_MAX_DEPEND_SIZE = 4 * 1024;
 const unsigned short SC_MAX_NAME_LENGTH = MAX_SERVICE_NAME_LENGTH + 1;
 const unsigned short SC_MAX_PATH_LENGTH = 32 * 1024;
@@ -485,7 +485,7 @@ interface svcctl
         [in, string, unique] LPSTR lpBinaryPathName,
         [in, string, unique] LPSTR lpLoadOrderGroup,
         [in, out, unique] LPDWORD lpdwTagId,
-        [in, unique, size_is(dwDependSize)] LPSTR lpDependencies,
+        [in, unique, size_is(dwDependSize)] LPBYTE lpDependencies,
         [in, range(0, SC_MAX_DEPEND_SIZE)] DWORD dwDependSize,
         [in, string, unique] LPSTR lpServiceStartName,
         [in, unique, size_is(dwPwSize)] LPBYTE lpPassword,

@@ -1955,7 +1955,7 @@ DWORD RChangeServiceConfigW(
 
     if (lpPassword != NULL)
     {
-        /* FIXME: Write password */
+        /* FIXME: Decrypt and write password */
     }
 
 done:
@@ -2293,7 +2293,7 @@ DWORD RCreateServiceW(
 
     if (lpPassword != NULL)
     {
-        /* FIXME: Write password */
+        /* FIXME: Decrypt and write password */
     }
 
     dwError = ScmCreateServiceHandle(lpService,
@@ -3118,7 +3118,7 @@ DWORD RChangeServiceConfigA(
     LPSTR lpBinaryPathName,
     LPSTR lpLoadOrderGroup,
     LPDWORD lpdwTagId,
-    LPSTR lpDependencies,
+    LPBYTE lpDependencies,
     DWORD dwDependSize,
     LPSTR lpServiceStartName,
     LPBYTE lpPassword,
@@ -3134,7 +3134,6 @@ DWORD RChangeServiceConfigA(
     LPWSTR lpCanonicalImagePathW = NULL;
     LPWSTR lpLoadOrderGroupW = NULL;
     LPWSTR lpDependenciesW = NULL;
-    // LPWSTR lpPasswordW = NULL;
 
     DPRINT("RChangeServiceConfigA() called\n");
     DPRINT("dwServiceType = %lu\n", dwServiceType);
@@ -3374,7 +3373,7 @@ DWORD RChangeServiceConfigA(
     {
         lpDependenciesW = HeapAlloc(GetProcessHeap(),
                                     0,
-                                    (strlen(lpDependencies) + 1) * sizeof(WCHAR));
+                                    (strlen((LPSTR)lpDependencies) + 1) * sizeof(WCHAR));
         if (lpDependenciesW == NULL)
         {
             dwError = ERROR_NOT_ENOUGH_MEMORY;
@@ -3383,10 +3382,10 @@ DWORD RChangeServiceConfigA(
 
         MultiByteToWideChar(CP_ACP,
                             0,
-                            lpDependencies,
+                            (LPSTR)lpDependencies,
                             dwDependSize,
                             lpDependenciesW,
-                            (int)(strlen(lpDependencies) + 1));
+                            (int)(strlen((LPSTR)lpDependencies) + 1));
 
         dwError = ScmWriteDependencies(hServiceKey,
                                        (LPWSTR)lpDependenciesW,
@@ -3397,7 +3396,7 @@ DWORD RChangeServiceConfigA(
 
     if (lpPassword != NULL)
     {
-        /* FIXME: Write password */
+        /* FIXME: Decrypt and write password */
     }
 
 done:
