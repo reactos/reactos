@@ -1,24 +1,41 @@
 
-if(NOT MSVC)
-    set_cpp()
-endif()
-
-add_definitions(
-    -DRESOLVE_3D_TEXTURE_SUPPORT
-    -DBUILD_GL32
-    -DLIBRARYBUILD)
-
-include_directories(
+include_directories(#BEFORE
     include
     libnurbs/internals
     libnurbs/interface
     libnurbs/nurbtess
-    libtess
-    libutil)
+)
 
+add_definitions(
+    -DBUILD_GLU32
+    -DNDEBUG
+    -DLIBRARYBUILD
+    -DRESOLVE_3D_TEXTURE_SUPPORT
+)
+
+#this library uses C++
+set_cpp()
+
+# we must ue our own spec file
 spec2def(glu32.dll glu32.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
+    libutil/error.c
+    libutil/glue.c
+    libutil/mipmap.c
+    libutil/project.c
+    libutil/quad.c
+    libutil/registry.c
+    libtess/dict.c
+    libtess/geom.c
+    libtess/memalloc.c
+    libtess/mesh.c
+    libtess/normal.c
+    libtess/priorityq.c
+    libtess/render.c
+    libtess/sweep.c
+    libtess/tess.c
+    libtess/tessmono.c
     libnurbs/interface/bezierEval.cc
     libnurbs/interface/bezierPatch.cc
     libnurbs/interface/bezierPatchMesh.cc
@@ -92,27 +109,11 @@ list(APPEND SOURCE
     libnurbs/nurbtess/sampleMonoPoly.cc
     libnurbs/nurbtess/sampledLine.cc
     libnurbs/nurbtess/searchTree.cc
-    libtess/dict.c
-    libtess/geom.c
-    libtess/memalloc.c
-    libtess/mesh.c
-    libtess/normal.c
-    libtess/priorityq.c
-    libtess/render.c
-    libtess/sweep.c
-    libtess/tess.c
-    libtess/tessmono.c
-    libutil/error.c
-    libutil/glue.c
-    libutil/mipmap.c
-    libutil/project.c
-    libutil/quad.c
-    libutil/registry.c
-    ${CMAKE_CURRENT_BINARY_DIR}/glu32.def)
+    ${CMAKE_CURRENT_BINARY_DIR}/glu32.def
+)
 
 add_library(glu32 SHARED ${SOURCE})
-allow_warnings(glu32)
-set_module_type(glu32 win32dll ENTRYPOINT 0 )
+set_module_type(glu32 win32dll ENTRYPOINT 0)
 
 add_importlibs(glu32
     opengl32
@@ -122,4 +123,3 @@ add_importlibs(glu32
     ntdll)
 
 add_cd_file(TARGET glu32 DESTINATION reactos/system32 FOR all)
-

@@ -23,7 +23,6 @@ add_definitions(
     -DWIN32
     -D_WINDOWS
     -DPIPE_SUBSYSTEM_WINDOWS_USER
-    -DWIN32_LEAN_AND_MEAN
     -D_DLL
 #    -DDEBUG
 )

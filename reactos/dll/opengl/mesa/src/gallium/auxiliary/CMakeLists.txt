@@ -3,6 +3,8 @@ include_directories(
     indices
     util)
     
+add_definitions(-DWIN32_LEAN_AND_MEAN)
+    
 list(APPEND SOURCE
 #generated files
     ../../../generated/gallium/auxiliary/indices/u_indices_gen.c

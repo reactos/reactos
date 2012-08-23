@@ -7,6 +7,8 @@ include_directories(
     ../../winsys/sw
 )
 
+add_definitions(-DWIN32_LEAN_AND_MEAN)
+
 list(APPEND SOURCE
     libgl_gdi.c)
 
