@@ -173,7 +173,9 @@ endif()
 
 if(NOT MSVC AND CMAKE_VERSION VERSION_GREATER 2.8.7)
     add_library(freeldr_pe SHARED $<TARGET_OBJECTS:freeldr_common> ${FREELDR_BASE_SOURCE})
+    add_dependencies(freeldr_pe bugcodes)
     add_library(freeldr_pe_dbg SHARED EXCLUDE_FROM_ALL $<TARGET_OBJECTS:freeldr_common> ${FREELDR_BASE_SOURCE})
+    add_dependencies(freeldr_pe_dbg bugcodes)
 else()
     add_library(freeldr_pe SHARED ${FREELDR_BASE_SOURCE})
     add_library(freeldr_pe_dbg SHARED EXCLUDE_FROM_ALL ${FREELDR_BASE_SOURCE})
@@ -220,7 +222,7 @@ concatenate_files(
 
 add_custom_target(freeldr ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/freeldr.sys)
 
-# rename freeldr on livecd to setupldr.sys because isoboot.bin search for setupldr.sys
+# rename freeldr on livecd to setupldr.sys because isoboot.bin looks for setupldr.sys
 add_cd_file(TARGET freeldr FILE ${CMAKE_CURRENT_BINARY_DIR}/freeldr.sys DESTINATION loader NO_CAB FOR bootcd regtest)
 add_cd_file(TARGET freeldr FILE ${CMAKE_CURRENT_BINARY_DIR}/freeldr.sys DESTINATION loader NO_CAB FOR livecd NAME_ON_CD setupldr.sys)
 
@@ -233,7 +235,9 @@ endif()
 
 if(NOT MSVC AND CMAKE_VERSION VERSION_GREATER 2.8.7)
     add_library(setupldr_pe SHARED $<TARGET_OBJECTS:freeldr_common> ${FREELDR_BASE_SOURCE} ${SETUPLDR_SOURCE})
+    add_dependencies(setupldr_pe bugcodes)
     add_library(setupldr_pe_dbg SHARED EXCLUDE_FROM_ALL $<TARGET_OBJECTS:freeldr_common> ${FREELDR_BASE_SOURCE} ${SETUPLDR_SOURCE})
+    add_dependencies(setupldr_pe_dbg bugcodes)
 else()
     add_library(setupldr_pe SHARED ${FREELDR_BASE_SOURCE} ${SETUPLDR_SOURCE})
     add_library(setupldr_pe_dbg SHARED EXCLUDE_FROM_ALL ${FREELDR_BASE_SOURCE} ${SETUPLDR_SOURCE})
