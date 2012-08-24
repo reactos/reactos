@@ -401,7 +401,7 @@ SatisfyPacketRecvRequest( PAFD_FCB FCB, PIRP Irp,
 
     if (!(RecvReq->TdiFlags & TDI_RECEIVE_PEEK))
     {
-        FCB->Recv.Content -= *TotalBytesCopied;
+        FCB->Recv.Content -= DatagramRecv->Len;
         ExFreePool( DatagramRecv->Address );
         ExFreePool( DatagramRecv );
     }
