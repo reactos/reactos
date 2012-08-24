@@ -2017,6 +2017,19 @@ WSPIoctl(IN  SOCKET Handle,
 				*lpcbBytesReturned = sizeof(ULONG);
 				return NO_ERROR;
 			}
+        case SIOCATMARK:
+            if (cbOutBuffer < sizeof(BOOL) || IS_INTRESOURCE(lpvOutBuffer))
+            {
+                *lpErrno = WSAEFAULT;
+                return SOCKET_ERROR;
+            }
+
+            /* FIXME: Return false for now */
+            *(BOOL*)lpvOutBuffer = FALSE;
+
+            *lpcbBytesReturned = sizeof(BOOL);
+            *lpErrno = NO_ERROR;
+            return NO_ERROR;
         case SIO_GET_EXTENSION_FUNCTION_POINTER:
             *lpErrno = WSAEINVAL;
             return SOCKET_ERROR;

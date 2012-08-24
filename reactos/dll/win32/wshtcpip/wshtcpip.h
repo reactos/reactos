@@ -42,6 +42,7 @@ typedef struct _SOCKET_CONTEXT {
     DWORD AddrFileInstance;
     SOCKET_STATE SocketState;
     PQUEUED_REQUEST RequestQueue;
+    BOOL DontRoute;
 } SOCKET_CONTEXT, *PSOCKET_CONTEXT;
 
 #endif /* __WSHTCPIP_H */
