@@ -266,7 +266,19 @@ extern const ULONG MmProtectToValue[32];
 //
 #define MiProtoPteToPte(x)                  \
     (PMMPTE)((ULONG_PTR)MmPagedPoolStart +  \
-             (((x)->u.Proto.ProtoAddressHigh << 7) | (x)->u.Proto.ProtoAddressLow))
+             (((x)->u.Proto.ProtoAddressHigh << 9) | (x)->u.Proto.ProtoAddressLow << 2))
+
+//
+// Decodes a Prototype PTE into the underlying PTE
+//
+#define MiSubsectionPteToSubsection(x)                              \
+    ((x)->u.Subsect.WhichPool == PagedPool) ?                       \
+        (PMMPTE)((ULONG_PTR)MmSubsectionBase +                      \
+                 (((x)->u.Subsect.SubsectionAddressHigh << 7) |     \
+                   (x)->u.Subsect.SubsectionAddressLow << 3)) :     \
+        (PMMPTE)((ULONG_PTR)MmNonPagedPoolEnd -                     \
+                (((x)->u.Subsect.SubsectionAddressHigh << 7) |      \
+                  (x)->u.Subsect.SubsectionAddressLow << 3))
 #endif
 
 //
@@ -631,7 +643,6 @@ extern PVOID MmSystemCacheStart;
 extern PVOID MmSystemCacheEnd;
 extern MMSUPPORT MmSystemCacheWs;
 extern SIZE_T MmAllocatedNonPagedPool;
-extern ULONG_PTR MmSubsectionBase;
 extern ULONG MmSpecialPoolTag;
 extern PVOID MmHyperSpaceEnd;
 extern PMMWSL MmSystemCacheWorkingSetList;
@@ -694,6 +705,7 @@ extern MM_AVL_TABLE MmSectionBasedRoot;
 extern KGUARDED_MUTEX MmSectionBasedMutex;
 extern PVOID MmHighSectionBase;
 extern SIZE_T MmSystemLockPagesCount;
+extern ULONG_PTR MmSubsectionBase;
 
 BOOLEAN
 FORCEINLINE
@@ -875,15 +887,58 @@ MI_MAKE_PROTOTYPE_PTE(IN PMMPTE NewPte,
 
     /*
      * Prototype PTEs are only valid in paged pool by design, this little trick
-     * lets us only use 28 bits for the adress of the PTE
+     * lets us only use 30 bits for the adress of the PTE, as long as the area
+     * stays 1024MB At most.
      */
     Offset = (ULONG_PTR)PointerPte - (ULONG_PTR)MmPagedPoolStart;
 
-    /* 7 bits go in the "low", and the other 21 bits go in the "high" */
-    NewPte->u.Proto.ProtoAddressLow = Offset & 0x7F;
-    NewPte->u.Proto.ProtoAddressHigh = (Offset & 0xFFFFFF80) >> 7;
-    ASSERT(MiProtoPteToPte(NewPte) == PointerPte);
+    /*
+     * 7 bits go in the "low" (but we assume the bottom 2 are zero)
+     * and the other 21 bits go in the "high"
+     */
+    NewPte->u.Proto.ProtoAddressLow = (Offset & 0x1FC) >> 2;
+    NewPte->u.Proto.ProtoAddressHigh = (Offset & 0x3FFFFE00) >> 9;
 }
+
+//
+// Builds a Subsection PTE for the address of the Segment
+//
+FORCEINLINE
+VOID
+MI_MAKE_SUBSECTION_PTE(IN PMMPTE NewPte,
+                       IN PVOID Segment)
+{
+    ULONG_PTR Offset;
+
+    /* Mark this as a prototype */
+    NewPte->u.Long = 0;
+    NewPte->u.Subsect.Prototype = 1;
+
+    /*
+     * Segments are only valid either in nonpaged pool. We store the 20 bit
+     * difference either from the top or bottom of nonpaged pool, giving a
+     * maximum of 128MB to each delta, meaning nonpaged pool cannot exceed
+     * 256MB.
+     */
+    if ((ULONG_PTR)Segment < ((ULONG_PTR)MmSubsectionBase + (128 * _1MB)))
+    {
+        Offset = (ULONG_PTR)Segment - (ULONG_PTR)MmSubsectionBase;
+        NewPte->u.Subsect.WhichPool = PagedPool;
+    }
+    else
+    {
+        Offset = (ULONG_PTR)MmNonPagedPoolEnd - (ULONG_PTR)Segment;
+        NewPte->u.Subsect.WhichPool = NonPagedPool;
+    }
+
+    /*
+     * 4 bits go in the "low" (but we assume the bottom 3 are zero)
+     * and the other 20 bits go in the "high"
+     */
+    NewPte->u.Subsect.SubsectionAddressLow = (Offset & 0x78) >> 3;
+    NewPte->u.Subsect.SubsectionAddressHigh = (Offset & 0xFFFFF80) >> 7;
+}
+
 #endif
 
 //

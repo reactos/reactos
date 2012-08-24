@@ -1742,18 +1742,15 @@ UserFault:
     {
         /* Get the protection code and check if this is a proto PTE */
         ProtectionCode = TempPte.u.Soft.Protection;
-        DPRINT1("Code: %lx\n", ProtectionCode);
         if (TempPte.u.Soft.Prototype)
         {
             /* Do we need to go find the real PTE? */
-            DPRINT1("Soft: %lx\n", TempPte.u.Soft.PageFileHigh);
             if (TempPte.u.Soft.PageFileHigh == MI_PTE_LOOKUP_NEEDED)
             {
                 /* Get the prototype pte and VAD for it */
                 ProtoPte = MiCheckVirtualAddress(Address,
                                                  &ProtectionCode,
                                                  &Vad);
-                DPRINT1("Address: %p ProtoP %p Code: %lx Vad: %p\n", Address, ProtoPte, ProtectionCode, Vad);
                 if (!ProtoPte)
                 {
                     ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
