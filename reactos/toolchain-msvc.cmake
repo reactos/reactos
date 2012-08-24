@@ -6,6 +6,7 @@ set(CMAKE_SYSTEM_PROCESSOR i686)
 # which compilers to use for C and C++
 set(CMAKE_C_COMPILER cl)
 set(CMAKE_CXX_COMPILER cl)
+set(CMAKE_MC_COMPILER mc)
 set(CMAKE_RC_COMPILER rc)
 if(${ARCH} MATCHES amd64)
     set(CMAKE_ASM_COMPILER ml64)
