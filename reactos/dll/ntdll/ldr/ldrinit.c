@@ -1479,7 +1479,7 @@ LdrpInitializeProcess(IN PCONTEXT Context,
     ULONG HeapFlags;
     PIMAGE_NT_HEADERS NtHeader;
     LPWSTR NtDllName = NULL;
-    NTSTATUS Status;
+    NTSTATUS Status, ImportStatus;
     NLSTABLEINFO NlsTable;
     PIMAGE_LOAD_CONFIG_DIRECTORY LoadConfig;
     PTEB Teb = NtCurrentTeb();
@@ -1989,7 +1989,7 @@ LdrpInitializeProcess(IN PCONTEXT Context,
     }
 
     /* Walk the IAT and load all the DLLs */
-    LdrpWalkImportDescriptor(LdrpDefaultPath.Buffer, LdrpImageEntry);
+    ImportStatus = LdrpWalkImportDescriptor(LdrpDefaultPath.Buffer, LdrpImageEntry);
 
     /* Check if relocation is needed */
     if (Peb->ImageBaseAddress != (PVOID)NtHeader->OptionalHeader.ImageBase)
@@ -2039,6 +2039,9 @@ LdrpInitializeProcess(IN PCONTEXT Context,
 
     /* Phase 0 is done */
     LdrpLdrDatabaseIsSetup = TRUE;
+
+    /* Check whether all static imports were properly loaded and return here */
+    if (!NT_SUCCESS(ImportStatus)) return ImportStatus;
 
     /* Initialize TLS */
     Status = LdrpInitializeTls();
