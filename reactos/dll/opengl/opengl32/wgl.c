@@ -129,6 +129,8 @@ VOID
 ROSGL_DeleteDCDataForICD( GLDRIVERDATA *icd )
 {
     GLDCDATA *p, **pptr;
+    
+    return;
 
     /* synchronize */
     if (WaitForSingleObject( OPENGL32_processdata.dcdata_mutex, INFINITE ) ==
