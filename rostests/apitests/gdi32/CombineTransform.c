@@ -54,14 +54,14 @@ void Test_CombineTransform()
     BOOL ret;
 
     /* Test NULL paramters */
+    set_xform(&xform1, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0);
+    set_xform(&xform2, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0);
     SetLastError(ERROR_SUCCESS);
     ret = CombineTransform(&xform3, &xform1, NULL);
     ok_int(ret, 0);
     ret = CombineTransform(&xform3, NULL, &xform2);
     ok_int(ret, 0);
     ret = CombineTransform(NULL, &xform1, &xform2);
-    ok_int(ret, 0);
-    ret = CombineTransform(&xform3, &xform1, &xform2);
     ok_int(ret, 0);
     ok_int(GetLastError(), ERROR_SUCCESS);
 
