@@ -309,7 +309,7 @@ ChangeServiceConfigA(SC_HANDLE hService,
 
     /* FIXME: Encrypt the password */
     lpEncryptedPassword = (LPBYTE)lpPassword;
-    dwPasswordLength = (strlen(lpPassword) + 1) * sizeof(CHAR);
+    dwPasswordLength = (lpPassword ? (strlen(lpPassword) + 1) * sizeof(CHAR) : 0);
 
     RpcTryExcept
     {
@@ -387,7 +387,7 @@ ChangeServiceConfigW(SC_HANDLE hService,
 
     /* FIXME: Encrypt the password */
     lpEncryptedPassword = (LPBYTE)lpPassword;
-    dwPasswordLength = (wcslen(lpPassword) + 1) * sizeof(WCHAR);
+    dwPasswordLength = (lpPassword ? (wcslen(lpPassword) + 1) * sizeof(WCHAR) : 0);
 
     RpcTryExcept
     {
@@ -577,7 +577,7 @@ CreateServiceA(SC_HANDLE hSCManager,
 
     /* FIXME: Encrypt the password */
     lpEncryptedPassword = (LPBYTE)lpPassword;
-    dwPasswordLength = (strlen(lpPassword) + 1) * sizeof(CHAR);
+    dwPasswordLength = (lpPassword ? (strlen(lpPassword) + 1) * sizeof(CHAR) : 0);
 
     RpcTryExcept
     {
@@ -671,7 +671,7 @@ CreateServiceW(SC_HANDLE hSCManager,
 
     /* FIXME: Encrypt the password */
     lpEncryptedPassword = (LPBYTE)lpPassword;
-    dwPasswordLength = (wcslen(lpPassword) + 1) * sizeof(WCHAR);
+    dwPasswordLength = (lpPassword ? (wcslen(lpPassword) + 1) * sizeof(WCHAR) : 0);
 
     RpcTryExcept
     {
