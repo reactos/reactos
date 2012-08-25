@@ -11,14 +11,15 @@
 
 #include "lsasrv.h"
 
-
-static RTL_CRITICAL_SECTION PolicyHandleTableLock;
-
 WINE_DEFAULT_DEBUG_CHANNEL(lsasrv);
 
 
-/* FUNCTIONS ***************************************************************/
+/* GLOBALS *****************************************************************/
 
+static RTL_CRITICAL_SECTION PolicyHandleTableLock;
+
+
+/* FUNCTIONS ***************************************************************/
 
 VOID
 LsarStartRpcServer(VOID)
@@ -629,8 +630,87 @@ NTSTATUS WINAPI LsarCreateSecret(
     ACCESS_MASK DesiredAccess,
     LSAPR_HANDLE *SecretHandle)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PLSA_DB_OBJECT PolicyObject;
+    PLSA_DB_OBJECT SecretsObject = NULL;
+    PLSA_DB_OBJECT SecretObject = NULL;
+    LARGE_INTEGER Time;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    /* Validate the PolicyHandle */
+    Status = LsapValidateDbObject(PolicyHandle,
+                                  LsaDbPolicyObject,
+                                  POLICY_CREATE_SECRET,
+                                  &PolicyObject);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("LsapValidateDbObject returned 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Open the Secrets object */
+    Status = LsapOpenDbObject(PolicyObject,
+                              L"Secrets",
+                              LsaDbContainerObject,
+                              0,
+                              &SecretsObject);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("LsapCreateDbObject (Secrets) failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    /* Get the current time */
+    Status = NtQuerySystemTime(&Time);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("NtQuerySystemTime failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    /* Create the Secret object */
+    Status = LsapCreateDbObject(SecretsObject,
+                                SecretName->Buffer,
+                                LsaDbSecretObject,
+                                DesiredAccess,
+                                &SecretObject);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("LsapCreateDbObject (Secret) failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    /* Set the CurrentTime attribute */
+    Status = LsapSetObjectAttribute(SecretObject,
+                                    L"CurrentTime",
+                                    (PVOID)&Time,
+                                    sizeof(LARGE_INTEGER));
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("LsapSetObjectAttribute (CurrentTime) failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    /* Set the OldTime attribute */
+    Status = LsapSetObjectAttribute(SecretObject,
+                                    L"OldTime",
+                                    (PVOID)&Time,
+                                    sizeof(LARGE_INTEGER));
+
+done:
+    if (!NT_SUCCESS(Status))
+    {
+        if (SecretObject != NULL)
+            LsapCloseDbObject(SecretObject);
+    }
+    else
+    {
+        *SecretHandle = (LSAPR_HANDLE)SecretObject;
+    }
+
+    if (SecretsObject != NULL)
+        LsapCloseDbObject(SecretsObject);
+
+    return STATUS_SUCCESS;
 }
 
 
@@ -958,8 +1038,28 @@ NTSTATUS WINAPI LsarGetSystemAccessAccount(
     LSAPR_HANDLE AccountHandle,
     ACCESS_MASK *SystemAccess)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PLSA_DB_OBJECT AccountObject;
+    ULONG Size;
+    NTSTATUS Status;
+
+    /* Validate the account handle */
+    Status = LsapValidateDbObject(AccountHandle,
+                                  LsaDbAccountObject,
+                                  ACCOUNT_VIEW,
+                                  &AccountObject);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("Invalid handle (Status %lx)\n", Status);
+        return Status;
+    }
+
+    /* Get the system access flags */
+    Status = LsapGetObjectAttribute(AccountObject,
+                                    L"ActSysAc",
+                                    SystemAccess,
+                                    &Size);
+
+    return Status;
 }
 
 
@@ -968,8 +1068,27 @@ NTSTATUS WINAPI LsarSetSystemAccessAccount(
     LSAPR_HANDLE AccountHandle,
     ACCESS_MASK SystemAccess)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PLSA_DB_OBJECT AccountObject;
+    NTSTATUS Status;
+
+    /* Validate the account handle */
+    Status = LsapValidateDbObject(AccountHandle,
+                                  LsaDbAccountObject,
+                                  ACCOUNT_ADJUST_SYSTEM_ACCESS,
+                                  &AccountObject);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("Invalid handle (Status %lx)\n", Status);
+        return Status;
+    }
+
+    /* Set the system access flags */
+    Status = LsapSetObjectAttribute(AccountObject,
+                                    L"ActSysAc",
+                                    &SystemAccess,
+                                    sizeof(ACCESS_MASK));
+
+    return Status;
 }
 
 
@@ -1014,8 +1133,61 @@ NTSTATUS WINAPI LsarOpenSecret(
     ACCESS_MASK DesiredAccess,
     LSAPR_HANDLE *SecretHandle)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PLSA_DB_OBJECT PolicyObject;
+    PLSA_DB_OBJECT SecretsObject = NULL;
+    PLSA_DB_OBJECT SecretObject = NULL;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    /* Validate the PolicyHandle */
+    Status = LsapValidateDbObject(PolicyHandle,
+                                  LsaDbPolicyObject,
+                                  POLICY_CREATE_SECRET,
+                                  &PolicyObject);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("LsapValidateDbObject returned 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Open the Secrets object */
+    Status = LsapOpenDbObject(PolicyObject,
+                              L"Secrets",
+                              LsaDbContainerObject,
+                              0,
+                              &SecretsObject);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("LsapCreateDbObject (Secrets) failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    /* Create the secret object */
+    Status = LsapOpenDbObject(SecretsObject,
+                              SecretName->Buffer,
+                              LsaDbSecretObject,
+                              DesiredAccess,
+                              &SecretObject);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("LsapOpenDbObject (Secret) failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+done:
+    if (!NT_SUCCESS(Status))
+    {
+        if (SecretObject != NULL)
+            LsapCloseDbObject(SecretObject);
+    }
+    else
+    {
+        *SecretHandle = (LSAPR_HANDLE)SecretObject;
+    }
+
+    if (SecretsObject != NULL)
+        LsapCloseDbObject(SecretsObject);
+
+    return STATUS_SUCCESS;
 }
 
 
@@ -1147,7 +1319,7 @@ NTSTATUS WINAPI LsarEnmuerateAccountRights(
 
     Status = LsapValidateDbObject(PolicyHandle,
                                   LsaDbPolicyObject,
-                                  0, /* FIXME */
+                                  ACCOUNT_VIEW,
                                   &PolicyObject);
     if (!NT_SUCCESS(Status))
         return Status;

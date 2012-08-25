@@ -152,7 +152,8 @@ LsaAddAccountRights(IN LSA_HANDLE PolicyHandle,
     LSAPR_USER_RIGHT_SET UserRightSet;
     NTSTATUS Status;
 
-    TRACE("(%p,%p,%p,0x%08x) stub\n", PolicyHandle, AccountSid, UserRights, CountOfRights);
+    TRACE("LsaAddAccountRights(%p %p %p 0x%08x)\n",
+          PolicyHandle, AccountSid, UserRights, CountOfRights);
 
     UserRightSet.Entries = CountOfRights;
     UserRightSet.UserRights = (PRPC_UNICODE_STRING)UserRights;
@@ -184,7 +185,8 @@ LsaAddPrivilegesToAccount(IN LSA_HANDLE AccountHandle,
 {
     NTSTATUS Status;
 
-    TRACE("(%p,%p) stub\n", AccountHandle, PrivilegeSet);
+    TRACE("LsaAddPrivilegesToAccount(%p %p)\n",
+          AccountHandle, PrivilegeSet);
 
     RpcTryExcept
     {
@@ -213,7 +215,8 @@ LsaCreateAccount(IN LSA_HANDLE PolicyHandle,
 {
     NTSTATUS Status;
 
-    TRACE("(%p,%p,0x%08x,%p)\n", PolicyHandle, AccountSid, DesiredAccess, AccountHandle);
+    TRACE("LsaCreateAccount(%p %p 0x%08x %p)\n",
+          PolicyHandle, AccountSid, DesiredAccess, AccountHandle);
 
     RpcTryExcept
     {
@@ -221,6 +224,38 @@ LsaCreateAccount(IN LSA_HANDLE PolicyHandle,
                                    AccountSid,
                                    DesiredAccess,
                                    AccountHandle);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
+
+/*
+ * @implemented
+ */
+NTSTATUS
+WINAPI
+LsaCreateSecret(IN LSA_HANDLE PolicyHandle,
+                IN PLSA_UNICODE_STRING SecretName,
+                IN ACCESS_MASK DesiredAccess,
+                OUT PLSA_HANDLE SecretHandle)
+{
+    NTSTATUS Status;
+
+    TRACE("LsaCreateSecret(%p %p 0x%08lx %p)\n",
+          PolicyHandle, SecretName, DesiredAccess, SecretHandle);
+
+    RpcTryExcept
+    {
+        Status = LsarCreateSecret((LSAPR_HANDLE)PolicyHandle,
+                                  (PRPC_UNICODE_STRING)SecretName,
+                                  DesiredAccess,
+                                  SecretHandle);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -441,6 +476,33 @@ LsaFreeMemory(IN PVOID Buffer)
 {
     TRACE("(%p)\n", Buffer);
     return RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
+}
+
+
+/*
+ * @implemented
+ */
+NTSTATUS
+WINAPI
+LsaGetSystemAccessAccount(IN LSA_HANDLE AccountHandle,
+                          OUT PULONG SystemAccess)
+{
+    NTSTATUS Status;
+
+    TRACE("(%p,%p)\n", AccountHandle, SystemAccess);
+
+    RpcTryExcept
+    {
+        Status = LsarGetSystemAccessAccount((LSAPR_HANDLE)AccountHandle,
+                                            (ACCESS_MASK *)SystemAccess);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
 }
 
 
@@ -765,6 +827,39 @@ LsaOpenPolicy(IN PLSA_UNICODE_STRING SystemName,
     RpcEndExcept;
 
     TRACE("LsaOpenPolicy() done (Status: 0x%08lx)\n", Status);
+
+    return Status;
+}
+
+
+NTSTATUS
+WINAPI
+LsaOpenSecret(IN LSA_HANDLE PolicyHandle,
+              IN PLSA_UNICODE_STRING SecretName,
+              IN ACCESS_MASK DesiredAccess,
+              OUT PLSA_HANDLE SecretHandle)
+{
+    NTSTATUS Status;
+
+    TRACE("LsaOpenSecret(%p %p 0x%08x %p)\n",
+          PolicyHandle, SecretName, DesiredAccess, SecretHandle);
+
+    RpcTryExcept
+    {
+        *SecretHandle = NULL;
+
+        Status = LsarOpenSecret((LSAPR_HANDLE)PolicyHandle,
+                                (PRPC_UNICODE_STRING)SecretName,
+                                DesiredAccess,
+                                SecretHandle);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    TRACE("LsaOpenSecret() done (Status: 0x%08lx)\n", Status);
 
     return Status;
 }

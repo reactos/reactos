@@ -349,7 +349,7 @@
 @ stub LsaClearAuditLog
 @ stdcall LsaClose(ptr)
 @ stdcall LsaCreateAccount(ptr ptr long ptr)
-@ stub LsaCreateSecret
+@ stdcall LsaCreateSecret(ptr ptr long ptr)
 @ stdcall LsaCreateTrustedDomain(ptr ptr long ptr)
 @ stdcall LsaCreateTrustedDomainEx(ptr ptr ptr long ptr)
 @ stdcall LsaDelete(ptr)
@@ -364,7 +364,7 @@
 @ stdcall LsaFreeMemory(ptr)
 @ stub LsaGetQuotasForAccount
 @ stub LsaGetRemoteUserName
-@ stub LsaGetSystemAccessAccount
+@ stdcall LsaGetSystemAccessAccount(ptr ptr)
 @ stdcall LsaGetUserName(ptr ptr)
 @ stub LsaICLookupNames
 @ stub LsaICLookupNamesWithCreds
@@ -380,7 +380,7 @@
 @ stdcall LsaOpenAccount(ptr ptr long ptr)
 @ stdcall LsaOpenPolicy(ptr ptr long ptr)
 @ stub LsaOpenPolicySce
-@ stub LsaOpenSecret
+@ stdcall LsaOpenSecret(ptr ptr long ptr)
 @ stub LsaOpenTrustedDomain
 @ stdcall LsaOpenTrustedDomainByName(ptr ptr long ptr)
 @ stdcall LsaQueryDomainInformationPolicy(ptr long ptr)
