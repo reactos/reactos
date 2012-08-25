@@ -110,6 +110,14 @@ extern void __cdecl _SEH2Return(void);
 }
 #endif
 
+/* Prevent gcc from inlining functions that use SEH. */
+#if ((__GNUC__ >= 4) && (__GNUC_MINOR__ >= 7))
+extern inline __attribute__((always_inline)) __attribute__((returns_twice)) void _SEH_DontInline() {}
+#define __PREVENT_GCC_FROM_INLINING_SEH_FUNCTIONS() _SEH_DontInline();
+#else
+#define __PREVENT_GCC_FROM_INLINING_SEH_FUNCTIONS()
+#endif
+
 /* A no-op side effect that scares GCC */
 #define __SEH_SIDE_EFFECT __asm__ __volatile__("#")
 
@@ -246,6 +254,7 @@ extern void __cdecl _SEH2Return(void);
 	auto __SEH_DECLARE_FINALLY(_SEHFinally);
 
 #define _SEH2_TRY \
+	__PREVENT_GCC_FROM_INLINING_SEH_FUNCTIONS() \
 	__SEH_BEGIN_SCOPE \
 	{ \
 		__SEH_SCOPE_LOCALS; \
