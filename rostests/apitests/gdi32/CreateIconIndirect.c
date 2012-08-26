@@ -135,7 +135,7 @@ Test_GetIconInfo(BOOL fIcon)
 }
 
 
-START_TEST(GetIconInfo)
+START_TEST(CreateIconIndirect)
 {
     HCURSOR hcursor;
     HICON hicon;
