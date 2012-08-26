@@ -19,7 +19,7 @@ set(REACTOS_SOURCE_DIR_NATIVE ${REACTOS_SOURCE_DIR})
  if(CMAKE_HOST_SYSTEM_NAME MATCHES Windows)
 string(REPLACE "/" "\\" REACTOS_SOURCE_DIR_NATIVE ${REACTOS_SOURCE_DIR})
 endif()
-add_compile_flags("-fdebug-prefix-map=${REACTOS_SOURCE_DIR_NATIVE}=ReactOS")
+add_compile_flags("-fdebug-prefix-map=\"${REACTOS_SOURCE_DIR_NATIVE}\"=ReactOS")
 
 # Debugging
 if(SEPARATE_DBG)
