@@ -18,6 +18,7 @@
    #define do_spawnT do_spawnW
    #define valisttosT valisttosW
    #define extT extW
+   #define access_dirT access_dirW
 #else
    #define sT "s"
    #define find_execT find_execA
@@ -25,6 +26,7 @@
    #define do_spawnT do_spawnA
    #define valisttosT valisttosA
    #define extT extA
+   #define access_dirT access_dirA
 #endif
 
 #define MK_STR(s) #s
