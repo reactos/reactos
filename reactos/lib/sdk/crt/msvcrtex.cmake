@@ -66,7 +66,9 @@ elseif(ARCH MATCHES amd64)
 endif()
 
 if(MSVC)
-    list(APPEND MSVCRTEX_SOURCE startup/mscmain.c)
+    list(APPEND MSVCRTEX_SOURCE 
+        startup/mscmain.c
+        startup/mscdllmain.c)
 else()
     list(APPEND MSVCRTEX_SOURCE startup/gccmain.c)
 endif()
