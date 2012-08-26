@@ -775,7 +775,7 @@ interface lsarpc
 
     /* Function 29 */
     NTSTATUS __stdcall LsarSetSecret(
-        [in] LSAPR_HANDLE *SecretHandle,
+        [in] LSAPR_HANDLE SecretHandle,
         [in, unique] PLSAPR_CR_CIPHER_VALUE EncryptedCurrentValue,
         [in, unique] PLSAPR_CR_CIPHER_VALUE EncryptedOldValue);
 

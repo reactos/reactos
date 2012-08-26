@@ -30,6 +30,8 @@ extern "C" {
 #define ACCOUNT_ADJUST_QUOTAS 4
 #define ACCOUNT_ADJUST_SYSTEM_ACCESS 8
 
+#define SECRET_SET_VALUE 1
+#define SECRET_QUERY_VALUE 2
 
 
 #ifdef __cplusplus

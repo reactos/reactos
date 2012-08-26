@@ -402,7 +402,7 @@
 @ stub LsaSetQuotasForAccount
 @ stdcall LsaSetSecret(ptr ptr ptr)
 @ stub LsaSetSecurityObject
-@ stub LsaSetSystemAccessAccount
+@ stdcall LsaSetSystemAccessAccount(ptr long)
 @ stdcall LsaSetTrustedDomainInfoByName(ptr ptr long ptr)
 @ stdcall LsaSetTrustedDomainInformation(ptr ptr long ptr)
 @ stdcall LsaStorePrivateData(ptr ptr ptr)

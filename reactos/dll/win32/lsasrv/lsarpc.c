@@ -1193,12 +1193,96 @@ done:
 
 /* Function 29 */
 NTSTATUS WINAPI LsarSetSecret(
-    LSAPR_HANDLE *SecretHandle,
+    LSAPR_HANDLE SecretHandle,
     PLSAPR_CR_CIPHER_VALUE EncryptedCurrentValue,
     PLSAPR_CR_CIPHER_VALUE EncryptedOldValue)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PLSA_DB_OBJECT SecretObject;
+    PBYTE CurrentValue = NULL;
+    PBYTE OldValue = NULL;
+    ULONG CurrentValueLength = 0;
+    ULONG OldValueLength = 0;
+    LARGE_INTEGER Time;
+    NTSTATUS Status;
+
+    /* Validate the SecretHandle */
+    Status = LsapValidateDbObject(SecretHandle,
+                                  LsaDbSecretObject,
+                                  SECRET_SET_VALUE,
+                                  &SecretObject);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("LsapValidateDbObject returned 0x%08lx\n", Status);
+        return Status;
+    }
+
+    if (EncryptedCurrentValue != NULL)
+    {
+        /* FIXME: Decrypt the current value */
+        CurrentValue = EncryptedCurrentValue->Buffer;
+        CurrentValueLength = EncryptedCurrentValue->MaximumLength;
+    }
+
+    /* Set the current value */
+    Status = LsapSetObjectAttribute(SecretObject,
+                                    L"CurrentValue",
+                                    CurrentValue,
+                                    CurrentValueLength);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("LsapSetObjectAttribute failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    /* Get the current time */
+    Status = NtQuerySystemTime(&Time);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("NtQuerySystemTime failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    /* Set the current time */
+    Status = LsapSetObjectAttribute(SecretObject,
+                                    L"CurrentTime",
+                                    &Time,
+                                    sizeof(LARGE_INTEGER));
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("LsapSetObjectAttribute failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    if (EncryptedOldValue != NULL)
+    {
+        /* FIXME: Decrypt the old value */
+        OldValue = EncryptedOldValue->Buffer;
+        OldValueLength = EncryptedOldValue->MaximumLength;
+    }
+
+    /* Set the old value */
+    Status = LsapSetObjectAttribute(SecretObject,
+                                    L"OldValue",
+                                    OldValue,
+                                    OldValueLength);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("LsapSetObjectAttribute failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    /* Set the old time */
+    Status = LsapSetObjectAttribute(SecretObject,
+                                    L"OldTime",
+                                    &Time,
+                                    sizeof(LARGE_INTEGER));
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("LsapSetObjectAttribute failed (Status 0x%08lx)\n", Status);
+    }
+
+done:
+    return Status;
 }
 
 

@@ -1027,7 +1027,8 @@ LsaRemoveAccountRights(IN LSA_HANDLE PolicyHandle,
 {
     LSAPR_USER_RIGHT_SET UserRightSet;
 
-    TRACE("(%p,%p,%d,%p,0x%08x) stub\n", PolicyHandle, AccountSid, AllRights, UserRights, CountOfRights);
+    TRACE("LsaRemoveAccountRights(%p %p %d %p 0x%08x) stub\n",
+          PolicyHandle, AccountSid, AllRights, UserRights, CountOfRights);
 
     UserRightSet.Entries = CountOfRights;
     UserRightSet.UserRights = (PRPC_UNICODE_STRING)UserRights;
@@ -1089,7 +1090,8 @@ LsaSetInformationPolicy(IN LSA_HANDLE PolicyHandle,
 {
     NTSTATUS Status;
 
-    TRACE("(%p,0x%08x,%p)\n", PolicyHandle, InformationClass, Buffer);
+    TRACE("LsaSetInformationPolicy(%p 0x%08x %p)\n",
+          PolicyHandle, InformationClass, Buffer);
 
     RpcTryExcept
     {
@@ -1108,17 +1110,106 @@ LsaSetInformationPolicy(IN LSA_HANDLE PolicyHandle,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
-NTSTATUS WINAPI LsaSetSecret(
-    IN LSA_HANDLE SecretHandle,
-    IN PLSA_UNICODE_STRING EncryptedCurrentValue,
-    IN PLSA_UNICODE_STRING EncryptedOldValue)
+NTSTATUS
+WINAPI
+LsaSetSecret(IN LSA_HANDLE SecretHandle,
+             IN PLSA_UNICODE_STRING CurrentValue OPTIONAL,
+             IN PLSA_UNICODE_STRING OldValue OPTIONAL)
 {
-    FIXME("(%p,%p,%p) stub\n", SecretHandle, EncryptedCurrentValue,
-            EncryptedOldValue);
-    return STATUS_SUCCESS;
+    PLSAPR_CR_CIPHER_VALUE EncryptedCurrentValue = NULL;
+    PLSAPR_CR_CIPHER_VALUE EncryptedOldValue = NULL;
+    SIZE_T BufferSize;
+    NTSTATUS Status;
+
+    TRACE("LsaSetSecret(%p,%p,%p)\n",
+          SecretHandle, EncryptedCurrentValue, EncryptedOldValue);
+
+    if (CurrentValue != NULL)
+    {
+        BufferSize = sizeof(LSAPR_CR_CIPHER_VALUE) + CurrentValue->MaximumLength;
+        EncryptedCurrentValue = midl_user_allocate(BufferSize);
+        if (EncryptedCurrentValue == NULL)
+        {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            goto done;
+        }
+
+        EncryptedCurrentValue->Length = CurrentValue->Length;
+        EncryptedCurrentValue->MaximumLength = CurrentValue->MaximumLength;
+        EncryptedCurrentValue->Buffer = (BYTE *)(EncryptedCurrentValue + 1);
+        if (EncryptedCurrentValue->Buffer != NULL)
+            memcpy(EncryptedCurrentValue->Buffer, CurrentValue->Buffer, CurrentValue->Length);
+    }
+
+    if (OldValue != NULL)
+    {
+        BufferSize = sizeof(LSAPR_CR_CIPHER_VALUE) + OldValue->MaximumLength;
+        EncryptedOldValue = midl_user_allocate(BufferSize);
+        if (EncryptedOldValue == NULL)
+        {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            goto done;
+        }
+
+        EncryptedOldValue->Length = OldValue->Length;
+        EncryptedOldValue->MaximumLength = OldValue->MaximumLength;
+        EncryptedOldValue->Buffer = (BYTE*)(EncryptedOldValue + 1);
+        if (EncryptedOldValue->Buffer != NULL)
+            memcpy(EncryptedOldValue->Buffer, OldValue->Buffer, OldValue->Length);
+    }
+
+    RpcTryExcept
+    {
+        Status = LsarSetSecret((LSAPR_HANDLE)SecretHandle,
+                               EncryptedCurrentValue,
+                               EncryptedOldValue);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+done:
+    if (EncryptedCurrentValue != NULL)
+        midl_user_free(EncryptedCurrentValue);
+
+    if (EncryptedOldValue != NULL)
+        midl_user_free(EncryptedOldValue);
+
+    return Status;
 }
+
+
+/*
+ * @implemented
+ */
+NTSTATUS
+WINAPI
+LsaSetSystemAccessAccount(IN LSA_HANDLE AccountHandle,
+                          IN ULONG SystemAccess)
+{
+    NTSTATUS Status;
+
+    TRACE("LsaSetSystemAccessAccount(%p 0x%lx)\n",
+          AccountHandle, SystemAccess);
+
+    RpcTryExcept
+    {
+        Status = LsarSetSystemAccessAccount((LSAPR_HANDLE)AccountHandle,
+                                            SystemAccess);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
 
 /*
  * @unimplemented
