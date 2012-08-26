@@ -60,6 +60,7 @@ void LibTCPEnqueuePacket(PCONNECTION_ENDPOINT Connection, struct pbuf *p)
 
     qp = (PQUEUE_ENTRY)ExAllocateFromNPagedLookasideList(&QueueEntryLookasideList);
     qp->p = p;
+    qp->Offset = 0;
 
     ExInterlockedInsertTailList(&Connection->PacketQueue, &qp->ListEntry, &Connection->Lock);
 }
@@ -82,9 +83,10 @@ NTSTATUS LibTCPGetDataFromConnectionQueue(PCONNECTION_ENDPOINT Connection, PUCHA
 {
     PQUEUE_ENTRY qp;
     struct pbuf* p;
-    NTSTATUS Status = STATUS_PENDING;
-    UINT ReadLength, ExistingDataLength;
+    NTSTATUS Status;
+    UINT ReadLength, PayloadLength;
     KIRQL OldIrql;
+    PUCHAR Payload;
 
     (*Received) = 0;
 
@@ -95,49 +97,53 @@ NTSTATUS LibTCPGetDataFromConnectionQueue(PCONNECTION_ENDPOINT Connection, PUCHA
         while ((qp = LibTCPDequeuePacket(Connection)) != NULL)
         {
             p = qp->p;
-            ExistingDataLength = (*Received);
 
-            Status = STATUS_SUCCESS;
+            /* Calculate the payload first */
+            Payload = p->payload;
+            Payload += qp->Offset;
+            PayloadLength = p->len;
+            PayloadLength -= qp->Offset;
 
-            ReadLength = MIN(p->tot_len, RecvLen);
-            if (ReadLength != p->tot_len)
+            /* Check if we're reading the whole buffer */
+            ReadLength = MIN(PayloadLength, RecvLen);
+            if (ReadLength != PayloadLength)
             {
-                if (ExistingDataLength)
-                {
-                    /* The packet was too big but we used some data already so give it another shot later */
-                    InsertHeadList(&Connection->PacketQueue, &qp->ListEntry);
-                    break;
-                }
-                else
-                {
-                    /* The packet is just too big to fit fully in our buffer, even when empty so
-                     * return an informative status but still copy all the data we can fit.
-                     */
-                    Status = STATUS_BUFFER_OVERFLOW;
-                }
+                /* Save this one for later */
+                qp->Offset += ReadLength;
+                InsertHeadList(&Connection->PacketQueue, &qp->ListEntry);
+                qp = NULL;
             }
 
             UnlockObject(Connection, OldIrql);
 
             /* Return to a lower IRQL because the receive buffer may be pageable memory */
-            for (; (*Received) < ReadLength + ExistingDataLength; (*Received) += p->len, p = p->next)
-            {
-                RtlCopyMemory(RecvBuffer + (*Received), p->payload, p->len);
-            }
+            RtlCopyMemory(RecvBuffer,
+                          Payload,
+                          ReadLength);
 
             LockObject(Connection, &OldIrql);
 
+            /* Update trackers */
             RecvLen -= ReadLength;
+            RecvBuffer += ReadLength;
+            (*Received) += ReadLength;
 
-            /* Use this special pbuf free callback function because we're outside tcpip thread */
-            pbuf_free_callback(qp->p);
+            if (qp != NULL)
+            {
+                /* Use this special pbuf free callback function because we're outside tcpip thread */
+                pbuf_free_callback(qp->p);
 
-            ExFreeToNPagedLookasideList(&QueueEntryLookasideList, qp);
+                ExFreeToNPagedLookasideList(&QueueEntryLookasideList, qp);
+            }
+            else
+            {
+                /* If we get here, it means we've filled the buffer */
+                ASSERT(RecvLen == 0);
+            }
+
+            Status = STATUS_SUCCESS;
 
             if (!RecvLen)
-                break;
-
-            if (Status != STATUS_SUCCESS)
                 break;
         }
     }
@@ -196,6 +202,8 @@ err_t
 InternalRecvEventHandler(void *arg, PTCP_PCB pcb, struct pbuf *p, const err_t err)
 {
     PCONNECTION_ENDPOINT Connection = arg;
+    struct pbuf *pb;
+    ULONG RecvLen;
 
     /* Make sure the socket didn't get closed */
     if (!arg)
@@ -208,9 +216,19 @@ InternalRecvEventHandler(void *arg, PTCP_PCB pcb, struct pbuf *p, const err_t er
 
     if (p)
     {
-        LibTCPEnqueuePacket(Connection, p);
+        pb = p;
+        RecvLen = 0;
+        while (pb != NULL)
+        {
+            /* Enqueue this buffer */
+            LibTCPEnqueuePacket(Connection, pb);
+            RecvLen += pb->len;
 
-        tcp_recved(pcb, p->tot_len);
+            /* Advance and unchain the buffer */
+            pb = pbuf_dechain(pb);;
+        }
+
+        tcp_recved(pcb, RecvLen);
 
         TCPRecvEventHandler(arg);
     }

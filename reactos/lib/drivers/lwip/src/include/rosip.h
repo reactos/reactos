@@ -15,6 +15,7 @@ typedef struct tcp_pcb* PTCP_PCB;
 typedef struct _QUEUE_ENTRY
 {
     struct pbuf *p;
+    ULONG Offset;
     LIST_ENTRY ListEntry;
 } QUEUE_ENTRY, *PQUEUE_ENTRY;
 
