@@ -50,6 +50,8 @@ typedef struct
 typedef int PROCESSOR_STATE;
 #endif
 
+/* TODO: these need to be rewritten in proper assembly to account for registers
+ *       saved by the caller */
 #if defined(_MSC_VER) && defined(_M_IX86)
 #define SaveState(State) do                                                 \
 {                                                                           \
@@ -74,19 +76,20 @@ typedef int PROCESSOR_STATE;
 #elif defined(__GNUC__) && defined(_M_IX86)
 #define SaveState(State)                                                    \
     asm volatile(                                                           \
-        "movl\t%%esi, (%%ecx)\n\t"                                            \
-        "movl\t%%edi, 4(%%ecx)\n\t"                                           \
-        "movl\t%%ebx, 8(%%ecx)\n\t"                                           \
-        "movl\t%%ebp, 12(%%ecx)\n\t"                                          \
-        "movl\t%%esp, 16(%%ecx)"                                              \
+        "movl\t%%esi, (%%ecx)\n\t"                                          \
+        "movl\t%%edi, 4(%%ecx)\n\t"                                         \
+        "movl\t%%ebx, 8(%%ecx)\n\t"                                         \
+        "movl\t%%ebp, 12(%%ecx)\n\t"                                        \
+        "movl\t%%esp, 16(%%ecx)"                                            \
         : : "c" (&State) : "memory"                                         \
     );
 
 #define CheckState(OldState, NewState) do                                   \
 {                                                                           \
-    ok_eq_hex((OldState)->esi, (NewState)->esi);                            \
+    /* TODO: GCC 4.7 uses esi and saves it before, so this is okay */       \
+    /*ok_eq_hex((OldState)->esi, (NewState)->esi);*/                        \
     ok_eq_hex((OldState)->edi, (NewState)->edi);                            \
-    /* TODO: GCC uses ebx and saves it before, so this is okay */           \
+    /* TODO: GCC 4.4 uses ebx and saves it before, so this is okay */       \
     /*ok_eq_hex((OldState)->ebx, (NewState)->ebx);*/                        \
     ok_eq_hex((OldState)->ebp, (NewState)->ebp);                            \
     ok_eq_hex((OldState)->esp, (NewState)->esp);                            \
@@ -94,15 +97,15 @@ typedef int PROCESSOR_STATE;
 #elif defined(__GNUC__) && defined(_M_AMD64)
 #define SaveState(State)                                                    \
     asm volatile(                                                           \
-        "mov\t%%rsi, (%%rcx)\n\t"                                             \
-        "mov\t%%rdi, 8(%%rcx)\n\t"                                            \
-        "mov\t%%rbx, 16(%%rcx)\n\t"                                           \
-        "mov\t%%rbp, 24(%%rcx)\n\t"                                           \
-        "mov\t%%rsp, 32(%%rcx)\n\t"                                           \
-        "mov\t%%r12, 40(%%rcx)\n\t"                                           \
-        "mov\t%%r13, 48(%%rcx)\n\t"                                           \
-        "mov\t%%r14, 56(%%rcx)\n\t"                                           \
-        "mov\t%%r15, 64(%%rcx)"                                               \
+        "mov\t%%rsi, (%%rcx)\n\t"                                           \
+        "mov\t%%rdi, 8(%%rcx)\n\t"                                          \
+        "mov\t%%rbx, 16(%%rcx)\n\t"                                         \
+        "mov\t%%rbp, 24(%%rcx)\n\t"                                         \
+        "mov\t%%rsp, 32(%%rcx)\n\t"                                         \
+        "mov\t%%r12, 40(%%rcx)\n\t"                                         \
+        "mov\t%%r13, 48(%%rcx)\n\t"                                         \
+        "mov\t%%r14, 56(%%rcx)\n\t"                                         \
+        "mov\t%%r15, 64(%%rcx)"                                             \
         : : "c" (&State) : "memory"                                         \
     );
 
