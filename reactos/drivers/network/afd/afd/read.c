@@ -6,52 +6,83 @@
  * PROGRAMMER:       Art Yerkes (ayerkes@speakeasy.net)
  * UPDATE HISTORY:
  * 20040708 Created
- *
- * Improve buffering code
- *
- * We're keeping data receiving in one of two states:
- * A) Some data available in the FCB
- *    FCB->Recv.BytesUsed != FCB->Recv.Content
- *    FCB->ReceiveIrp.InFlightRequest == NULL
- *    AFD_EVENT_RECEIVE set in FCB->PollState
- * B) No data available in the FCB
- *    FCB->Recv.BytesUsed == FCB->Recv.Content (== 0)
- *    FCB->RecieveIrp.InFlightRequest != NULL
- *    AFD_EVENT_RECEIVED not set in FCB->PollState
- * So basically we either have data available or a TDI receive
- * in flight.
  */
 #include "afd.h"
 
+static VOID RefillSocketBuffer( PAFD_FCB FCB )
+{
+    /* Make sure nothing's in flight first */
+    if (FCB->ReceiveIrp.InFlightRequest) return;
+
+    /* Now ensure that receive is still allowed */
+    if (FCB->TdiReceiveClosed) return;
+
+    /* Check if the buffer is full */
+    if (FCB->Recv.Content == FCB->Recv.Size)
+    {
+        /* If there are bytes used, we can solve this problem */
+        if (FCB->Recv.BytesUsed != 0)
+        {
+            /* Reposition the unused portion to the beginning of the receive window */
+            RtlMoveMemory(FCB->Recv.Window,
+                          FCB->Recv.Window + FCB->Recv.BytesUsed,
+                          FCB->Recv.Content - FCB->Recv.BytesUsed);
+
+            FCB->Recv.Content -= FCB->Recv.BytesUsed;
+            FCB->Recv.BytesUsed = 0;
+        }
+        else
+        {
+            /* No space in the buffer to receive */
+            return;
+        }
+    }
+
+    AFD_DbgPrint(MID_TRACE,("Replenishing buffer\n"));
+
+    TdiReceive( &FCB->ReceiveIrp.InFlightRequest,
+                FCB->Connection.Object,
+                TDI_RECEIVE_NORMAL,
+                FCB->Recv.Window + FCB->Recv.Content,
+                FCB->Recv.Size - FCB->Recv.Content,
+                &FCB->ReceiveIrp.Iosb,
+                ReceiveComplete,
+                FCB );
+}
+
 static VOID HandleReceiveComplete( PAFD_FCB FCB, NTSTATUS Status, ULONG_PTR Information )
 {
-    FCB->Recv.BytesUsed = 0;
-
     /* We got closed while the receive was in progress */
     if (FCB->TdiReceiveClosed)
     {
         FCB->Recv.Content = 0;
+        FCB->Recv.BytesUsed = 0;
     }
-    /* Receive successful with new data */
-    else if (Status == STATUS_SUCCESS && Information)
-    {
-        FCB->Recv.Content = Information;
-    }
-    /* Receive successful with no data (graceful closure) */
+    /* Receive successful */
     else if (Status == STATUS_SUCCESS)
     {
-        FCB->Recv.Content = 0;
-        FCB->TdiReceiveClosed = TRUE;
+        FCB->Recv.Content += Information;
+        ASSERT(FCB->Recv.Content <= FCB->Recv.Size);
 
-        /* Signal graceful receive shutdown */
-        FCB->PollState |= AFD_EVENT_DISCONNECT;
-        FCB->PollStatus[FD_CLOSE_BIT] = Status;
+        /* Check for graceful closure */
+        if (Information == 0)
+        {
+            FCB->TdiReceiveClosed = TRUE;
 
-        PollReeval( FCB->DeviceExt, FCB->FileObject );
+            /* Signal graceful receive shutdown */
+            FCB->PollState |= AFD_EVENT_DISCONNECT;
+            FCB->PollStatus[FD_CLOSE_BIT] = Status;
+
+            PollReeval( FCB->DeviceExt, FCB->FileObject );
+        }
+
+        /* Issue another receive IRP to keep the buffer well stocked */
+        RefillSocketBuffer(FCB);
     }
     /* Receive failed with no data (unexpected closure) */
     else
     {
+        FCB->Recv.BytesUsed = 0;
         FCB->Recv.Content = 0;
         FCB->TdiReceiveClosed = TRUE;
 
@@ -67,22 +98,6 @@ static BOOLEAN CantReadMore( PAFD_FCB FCB ) {
     UINT BytesAvailable = FCB->Recv.Content - FCB->Recv.BytesUsed;
 
     return !BytesAvailable && FCB->TdiReceiveClosed;
-}
-
-static VOID RefillSocketBuffer( PAFD_FCB FCB ) {
-    if( !FCB->ReceiveIrp.InFlightRequest &&
-        !FCB->TdiReceiveClosed ) {
-        AFD_DbgPrint(MID_TRACE,("Replenishing buffer\n"));
-
-        TdiReceive( &FCB->ReceiveIrp.InFlightRequest,
-                    FCB->Connection.Object,
-                    TDI_RECEIVE_NORMAL,
-                    FCB->Recv.Window,
-                    FCB->Recv.Size,
-                    &FCB->ReceiveIrp.Iosb,
-                    ReceiveComplete,
-                    FCB );
-    }
 }
 
 static NTSTATUS TryToSatisfyRecvRequestFromBuffer( PAFD_FCB FCB,
@@ -137,13 +152,8 @@ static NTSTATUS TryToSatisfyRecvRequestFromBuffer( PAFD_FCB FCB,
         }
     }
 
-    /* If there's nothing left in our buffer start a new request */
-    if( FCB->Recv.BytesUsed == FCB->Recv.Content ) {
-        FCB->Recv.BytesUsed = FCB->Recv.Content = 0;
-        FCB->PollState &= ~AFD_EVENT_RECEIVE;
-
-        RefillSocketBuffer( FCB );
-    }
+    /* Issue another receive IRP to keep the buffer well stocked */
+    RefillSocketBuffer(FCB);
 
     return STATUS_SUCCESS;
 }
