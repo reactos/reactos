@@ -1335,6 +1335,7 @@ MiDecrementReferenceCount(IN PMMPFN Pfn1,
     }
 
     /* Check to see which list this page should go into */
+    ASSERT(FALSE);
     if (Pfn1->u3.e1.Modified == 1)
     {
         /* Push it into the modified page list */
