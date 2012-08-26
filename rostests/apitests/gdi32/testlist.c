@@ -75,7 +75,7 @@ const struct test winetest_testlist[] =
     { "CreateDIBPatternBrush", func_CreateDIBPatternBrush },
     { "CreateFont", func_CreateFont },
     { "CreateFontIndirect", func_CreateFontIndirect },
-    { "CreateIconIndirect", func_CreateFontIndirect },
+    { "CreateIconIndirect", func_CreateIconIndirect },
     { "CreatePen", func_CreatePen },
     { "CreateRectRgn", func_CreateRectRgn },
     { "DPtoLP", func_DPtoLP },
