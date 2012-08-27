@@ -83,18 +83,6 @@ if(CMAKE_VERSION VERSION_GREATER 2.8.7)
     add_library(lib_hal_up OBJECT ${HAL_UP_SOURCE})
 endif()
 
-list(APPEND HAL_PIC_SOURCE
-    generic/profil.c
-    generic/timer.c
-    generic/systimer.S
-    generic/trap.S
-    up/halinit_up.c
-    up/pic.c)
-
-if(CMAKE_VERSION VERSION_GREATER 2.8.7)
-    add_library(lib_hal_pic OBJECT ${HAL_PIC_SOURCE})
-endif()
-
 list(APPEND HAL_APIC_SOURCE
     apic/apic.c
     apic/apictimer.c
@@ -105,6 +93,18 @@ list(APPEND HAL_APIC_SOURCE
     apic/tsccal.S)
 
 if(ARCH STREQUAL "i386")
+    list(APPEND HAL_PIC_SOURCE
+        generic/profil.c
+        generic/timer.c
+        generic/systimer.S
+        generic/trap.S
+        up/halinit_up.c
+        up/pic.c)
+
+    if(CMAKE_VERSION VERSION_GREATER 2.8.7)
+        add_library(lib_hal_pic OBJECT ${HAL_PIC_SOURCE})
+    endif()
+
     list(APPEND MINI_HAL_SOURCE
         generic/portio.c
         generic/systimer.S
