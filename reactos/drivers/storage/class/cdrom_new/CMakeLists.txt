@@ -11,7 +11,7 @@ add_library(cdrom_new SHARED ${SOURCE})
 
 target_link_libraries(cdrom_new libcntpr wdmguid)
 
-if(ARCH MATCHES i386)
+if(ARCH STREQUAL "i386")
     # FIXME: http://www.cmake.org/Bug/view.php?id=12998
     if(MSVC)
         #add_target_compile_flags(cdrom_new "/Gz")

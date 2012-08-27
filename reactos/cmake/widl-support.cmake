@@ -1,8 +1,8 @@
 
 #idl files support
-if(ARCH MATCHES i386)
+if(ARCH STREQUAL "i386")
     set(IDL_FLAGS -m32 --win32)
-elseif(ARCH MATCHES amd64)
+elseif(ARCH STREQUAL "amd64")
     set(IDL_FLAGS -m64 --win64)
 else()
     set(IDL_FLAGS "")
@@ -60,10 +60,10 @@ function(add_rpc_files __type)
     get_includes(INCLUDES)
     get_defines(DEFINES)
     # Is it a client or server module?
-    if(__type STREQUAL server)
+    if(__type STREQUAL "server")
         set(__server_client -Oif -s -o)
         set(__suffix _s)
-    elseif(__type STREQUAL client)
+    elseif(__type STREQUAL "client")
         set(__server_client -Oif -c -o)
         set(__suffix _c)
     else()

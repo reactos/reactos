@@ -20,7 +20,7 @@ list(APPEND HAL_GENERIC_SOURCE
     generic/sysinfo.c
     generic/usage.c)
 
-if(ARCH STREQUAL i386)
+if(ARCH STREQUAL "i386")
     list(APPEND HAL_GENERIC_SOURCE
         generic/bios.c
         generic/portio.c)
@@ -104,7 +104,7 @@ list(APPEND HAL_APIC_SOURCE
     apic/tsc.c
     apic/tsccal.S)
 
-if(ARCH STREQUAL i386)
+if(ARCH STREQUAL "i386")
     list(APPEND MINI_HAL_SOURCE
         generic/portio.c
         generic/systimer.S
@@ -207,7 +207,7 @@ if(ARCH STREQUAL i386)
     add_target_compile_definitions(mini_hal _BLDR_ _MINIHAL_)
     add_dependencies(mini_hal psdk bugcodes asm)
 
-elseif(ARCH STREQUAL amd64)
+elseif(ARCH STREQUAL "amd64")
 
     spec2def(hal.dll ../hal.spec ADD_IMPORTLIB)
 

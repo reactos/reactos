@@ -6,12 +6,12 @@ endif()
 
 spec2def(freeldr.sys freeldr.spec)
 
-if(ARCH MATCHES i386)
+if(ARCH STREQUAL "i386")
     CreateBootSectorTarget(frldr16
         ${CMAKE_CURRENT_SOURCE_DIR}/arch/realmode/i386.S
         ${CMAKE_CURRENT_BINARY_DIR}/frldr16.bin
         F800)
-elseif(ARCH MATCHES amd64)
+elseif(ARCH STREQUAL "amd64")
     CreateBootSectorTarget(frldr16
         ${CMAKE_CURRENT_SOURCE_DIR}/arch/realmode/amd64.S
         ${CMAKE_CURRENT_BINARY_DIR}/frldr16.bin
@@ -26,10 +26,8 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/elf)
 
 add_definitions(-D_NTHAL_ -D_BLDR_ -D_NTSYSTEM_)
 
-if(ARCH MATCHES arm)
-    if(SARCH MATCHES omap-zoom2)
-        add_definitions(-D_ZOOM2_)
-    endif()
+if((ARCH STREQUAL "arm") AND (SARCH STREQUAL "omap-zoom2"))
+    add_definitions(-D_ZOOM2_)
 endif()
 
 list(APPEND FREELDR_COMMON_SOURCE
@@ -80,7 +78,7 @@ list(APPEND FREELDR_COMMON_SOURCE
     windows/wlmemory.c
     windows/wlregistry.c)
 
-if(ARCH MATCHES i386)
+if(ARCH STREQUAL "i386")
     list(APPEND FREELDR_COMMON_SOURCE
         arch/i386/archmach.c
         arch/i386/custom.c
@@ -125,7 +123,7 @@ if(ARCH MATCHES i386)
         list(APPEND FREELDR_COMMON_SOURCE
             arch/i386/drvmap.S)
     endif()
-elseif(ARCH MATCHES amd64)
+elseif(ARCH STREQUAL "amd64")
     list(APPEND FREELDR_COMMON_SOURCE
         arch/amd64/entry.S
         arch/amd64/int386.S
@@ -157,7 +155,7 @@ else()
     add_dependencies(freeldr_common bugcodes)
 endif()
 
-if(ARCH MATCHES i386 AND NOT MSVC)
+if(ARCH STREQUAL "i386" AND NOT MSVC)
     list(APPEND FREELDR_BASE_SOURCE arch/i386/multiboot.S)
 endif()
 
@@ -197,7 +195,7 @@ set_image_base(freeldr_pe_dbg 0x10000)
 set_subsystem(freeldr_pe_dbg native)
 set_entrypoint(freeldr_pe_dbg RealEntryPoint)
 
-if(ARCH MATCHES i386)
+if(ARCH STREQUAL "i386")
     target_link_libraries(freeldr_pe mini_hal)
     target_link_libraries(freeldr_pe_dbg mini_hal)
 endif()
@@ -229,7 +227,7 @@ add_cd_file(TARGET freeldr FILE ${CMAKE_CURRENT_BINARY_DIR}/freeldr.sys DESTINAT
 list(APPEND SETUPLDR_SOURCE
     inffile/inffile.c)
 
-if(ARCH MATCHES i386 OR ARCH MATCHES amd64)
+if(ARCH STREQUAL "i386" OR ARCH STREQUAL "amd64")
     list(APPEND SETUPLDR_SOURCE windows/setupldr.c)
 endif()
 
@@ -262,7 +260,7 @@ set_image_base(setupldr_pe_dbg 0x10000)
 set_subsystem(setupldr_pe_dbg native)
 set_entrypoint(setupldr_pe_dbg RealEntryPoint)
 
-if(ARCH MATCHES i386)
+if(ARCH STREQUAL "i386")
     target_link_libraries(setupldr_pe mini_hal)
     target_link_libraries(setupldr_pe_dbg mini_hal)
 endif()

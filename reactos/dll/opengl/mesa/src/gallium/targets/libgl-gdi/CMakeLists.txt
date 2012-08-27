@@ -14,7 +14,7 @@ list(APPEND SOURCE
 
 # We don't need a specfile here, as opengl application link against opengl32
 # and gallium is kind enough to provide good def files for both MSVC/mingw-w64 and mingw32
-if(MSVC OR (ARCH MATCHES amd64))
+if(MSVC OR (ARCH STREQUAL "amd64"))
     list(APPEND SOURCE ../../state_trackers/wgl/opengl32.def)
 else()    
     list(APPEND SOURCE ../../state_trackers/wgl/opengl32.mingw.def)

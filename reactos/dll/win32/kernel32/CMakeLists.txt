@@ -79,15 +79,15 @@ list(APPEND SOURCE
     kernel32.rc
     ${CMAKE_CURRENT_BINARY_DIR}/kernel32.def)
 
-if(ARCH MATCHES i386)
+if(ARCH STREQUAL "i386")
 list(APPEND SOURCE
     client/i386/fiber.S
     client/i386/thread.S)
-elseif(ARCH MATCHES amd64)
+elseif(ARCH STREQUAL "amd64")
 list(APPEND SOURCE
     client/amd64/fiber.S
     client/amd64/thread.S)
-endif(ARCH MATCHES i386)
+endif(ARCH STREQUAL "i386")
 
 add_library(kernel32 SHARED ${SOURCE})
 

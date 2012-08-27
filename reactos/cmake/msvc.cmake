@@ -1,5 +1,6 @@
 
-if(${CMAKE_BUILD_TYPE} MATCHES Debug)
+#if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     # no optimization
 elseif(OPTIMIZE STREQUAL "1")
     add_definitions(/O1)
@@ -13,7 +14,7 @@ elseif(OPTIMIZE STREQUAL "5")
     add_definitions(/GF /Gy /Ob2 /Os /Ox /GS-)
 endif()
 
-if(ARCH MATCHES i386)
+if(ARCH STREQUAL "i386")
     add_definitions(/DWIN32 /D_WINDOWS)
 endif()
 
@@ -23,7 +24,7 @@ add_compile_flags("/X /GR- /GS- /Zl /W3")
 
 # HACK: for VS 11+ we need to explicitly disable SSE, which is off by
 # default for older compilers. See bug #7174
-if (MSVC_VERSION GREATER 1699 AND ARCH MATCHES i386)
+if (MSVC_VERSION GREATER 1699 AND ARCH STREQUAL "i386")
     add_compile_flags("/arch:IA32")
 endif ()
 
@@ -31,12 +32,14 @@ endif ()
 add_compile_flags("/we4700")
 
 # Debugging
-if(${CMAKE_BUILD_TYPE} MATCHES Debug)
+#if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     if(NOT (_PREFAST_ OR _VS_ANALYZE_))
         add_compile_flags("/Zi")
     endif()
     add_compile_flags("/Ob0 /Od")
-elseif(${CMAKE_BUILD_TYPE} MATCHES Release)
+#elseif(${CMAKE_BUILD_TYPE} STREQUAL "Release")
+elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
     add_compile_flags("/Ob2 /D NDEBUG")
 endif()
 
@@ -87,7 +90,7 @@ endmacro()
 function(set_entrypoint _module _entrypoint)
     if(${_entrypoint} STREQUAL "0")
         add_target_link_flags(${_module} "/NOENTRY")
-    elseif(ARCH MATCHES i386)
+    elseif(ARCH STREQUAL "i386")
         set(_entrysymbol ${_entrypoint})
         if(${ARGC} GREATER 2)
             set(_entrysymbol ${_entrysymbol}@${ARGV2})
@@ -107,9 +110,9 @@ function(set_image_base MODULE IMAGE_BASE)
 endfunction()
 
 function(set_module_type_toolchain MODULE TYPE)
-    if((${TYPE} STREQUAL win32dll) OR (${TYPE} STREQUAL win32ocx) OR (${TYPE} STREQUAL cpl))
+    if((${TYPE} STREQUAL "win32dll") OR (${TYPE} STREQUAL "win32ocx") OR (${TYPE} STREQUAL "cpl"))
         add_target_link_flags(${MODULE} "/DLL")
-    elseif(${TYPE} STREQUAL kernelmodedriver)
+    elseif(${TYPE} STREQUAL "kernelmodedriver")
         add_target_link_flags(${MODULE} "/DRIVER")
     endif()
 endfunction()
@@ -166,7 +169,7 @@ function(generate_import_lib _libname _dllname _spec_file)
     set_target_properties(${_libname} PROPERTIES STATIC_LIBRARY_FLAGS "/DEF:${_def_file}")
 endfunction()
 
-if(${ARCH} MATCHES amd64)
+if(ARCH STREQUAL "amd64")
     add_definitions(/D__x86_64)
     set(SPEC2DEF_ARCH x86_64)
 else()
@@ -211,7 +214,7 @@ set(PSEH_LIB "pseh")
 # Use a full path for the x86 version of ml when using x64 VS.
 # It's not a problem when using the DDK/WDK because, in x64 mode,
 # both the x86 and x64 versions of ml are available.
-if((ARCH MATCHES amd64) AND (DEFINED ENV{VCINSTALLDIR}))
+if((ARCH STREQUAL "amd64") AND (DEFINED ENV{VCINSTALLDIR}))
     set(CMAKE_ASM16_COMPILER $ENV{VCINSTALLDIR}/bin/ml.exe)
 else()
     set(CMAKE_ASM16_COMPILER ml.exe)

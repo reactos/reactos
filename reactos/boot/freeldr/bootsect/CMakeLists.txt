@@ -1,5 +1,5 @@
 
-if(ARCH MATCHES i386 OR ARCH MATCHES amd64)
+if(ARCH STREQUAL "i386" OR ARCH STREQUAL "amd64")
 
 CreateBootSectorTarget(dosmbr ${CMAKE_CURRENT_SOURCE_DIR}/dosmbr.S ${CMAKE_CURRENT_BINARY_DIR}/dosmbr.bin 7c00)
 CreateBootSectorTarget(ext2 ${CMAKE_CURRENT_SOURCE_DIR}/ext2.S ${CMAKE_CURRENT_BINARY_DIR}/ext2.bin 0)

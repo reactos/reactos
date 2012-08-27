@@ -3,7 +3,7 @@ include_directories(
     include
     acpica/include)
 
-if(ARCH MATCHES amd64)
+if(ARCH STREQUAL "amd64")
     add_definitions(-DWIN64)
 endif()
 

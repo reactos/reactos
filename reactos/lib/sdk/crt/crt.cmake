@@ -339,7 +339,7 @@ list(APPEND CRT_SOURCE
     wine/heap.c
     wine/undname.c)
 
-if(ARCH MATCHES i386)
+if(ARCH STREQUAL "i386")
     list(APPEND CRT_SOURCE
         except/i386/chkesp.s
         except/i386/prolog.s
@@ -416,7 +416,7 @@ if(ARCH MATCHES i386)
         list(APPEND CRT_SOURCE
             except/i386/cpp.s)
     endif()
-elseif(ARCH MATCHES amd64)
+elseif(ARCH STREQUAL "amd64")
     list(APPEND CRT_SOURCE
         except/amd64/seh.s
         except/amd64/ehandler.c
@@ -452,7 +452,7 @@ elseif(ARCH MATCHES amd64)
     endif()
 endif()
 
-if(NOT ARCH MATCHES i386)
+if(NOT ARCH STREQUAL "i386")
     list(APPEND CRT_SOURCE
         math/cos.c
         math/sin.c

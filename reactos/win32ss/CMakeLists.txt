@@ -189,7 +189,7 @@ else()
         ${GENDIB_FILES})
 endif()
 
-if(ARCH MATCHES i386)
+if(ARCH STREQUAL "i386")
 list(APPEND SOURCE
     gdi/dib/i386/dib24bpp_hline.s
     gdi/dib/i386/dib32bpp_hline.s

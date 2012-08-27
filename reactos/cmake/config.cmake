@@ -28,7 +28,7 @@ set(GDB FALSE CACHE BOOL
 "Whether to compile for debugging with GDB.
 If you don't use GDB, don't	enable this.")
 
-if(${CMAKE_BUILD_TYPE} MATCHES Release)
+if(CMAKE_BUILD_TYPE STREQUAL "Release")
     set(DBG FALSE CACHE BOOL
 "Whether to compile for debugging.")
 else()
@@ -39,7 +39,7 @@ endif()
 if(MSVC)
     set(KDBG FALSE CACHE BOOL
 "Whether to compile in the integrated kernel debugger.")
-    if(${CMAKE_BUILD_TYPE} MATCHES Release)
+    if(CMAKE_BUILD_TYPE STREQUAL "Release")
         set(_WINKD_ FALSE CACHE BOOL "Whether to compile with the KD protocol.")
     else()
         set(_WINKD_ TRUE CACHE BOOL "Whether to compile with the KD protocol.")

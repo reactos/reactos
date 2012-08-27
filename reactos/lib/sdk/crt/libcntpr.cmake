@@ -65,7 +65,7 @@ list(APPEND LIBCNTPR_SOURCE
     wstring/wcsspn.c
     wstring/wcsstr.c)
 
-if(ARCH MATCHES i386)
+if(ARCH STREQUAL "i386")
     list(APPEND LIBCNTPR_SOURCE
         except/i386/chkstk_asm.s
         except/i386/seh.s
@@ -104,7 +104,7 @@ if(ARCH MATCHES i386)
     if(NOT MSVC)
         list(APPEND LIBCNTPR_SOURCE except/i386/chkstk_ms.s)
     endif()
-elseif(ARCH MATCHES amd64)
+elseif(ARCH STREQUAL "amd64")
     list(APPEND LIBCNTPR_SOURCE
         except/amd64/ehandler.c
         except/amd64/chkstk_asm.s
@@ -128,7 +128,7 @@ elseif(ARCH MATCHES amd64)
         math/amd64/tan.S)
 endif()
 
-if(ARCH MATCHES i386)
+if(ARCH STREQUAL "i386")
     list(APPEND LIBCNTPR_SOURCE
         mem/i386/memchr_asm.s
         mem/i386/memmove_asm.s

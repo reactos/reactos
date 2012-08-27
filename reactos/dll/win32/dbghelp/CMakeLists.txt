@@ -6,7 +6,7 @@ add_definitions(
     -DHAVE_ALLOCA_H
     -D_IMAGEHLP_SOURCE_)
 
-if(ARCH MATCHES amd64)
+if(ARCH STREQUAL "amd64")
     add_definitions(-DUNW_FLAG_NHANDLER=0 -DUNW_FLAG_EHANDLER=1 -DUNW_FLAG_UHANDLER=2 -DUNW_FLAG_CHAININFO=3)
 endif()
 

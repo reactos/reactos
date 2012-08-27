@@ -247,7 +247,7 @@ if(NOT MSVC_IDE)
     endfunction()
 endif()
 
-if(CMAKE_HOST_SYSTEM_NAME MATCHES Windows)
+if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
     macro(to_win_path _cmake_path _native_path)
         string(REPLACE "/" "\\" ${_native_path} "${_cmake_path}")
     endmacro()

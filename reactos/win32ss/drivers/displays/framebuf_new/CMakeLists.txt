@@ -13,7 +13,7 @@ add_library(framebuf_new SHARED
     ${SOURCE}
     framebuf_new.rc)
 
-if(ARCH MATCHES i386)
+if(ARCH STREQUAL "i386")
     # FIXME: http://www.cmake.org/Bug/view.php?id=12998
     if(MSVC)
         #add_target_compile_flags(framebuf_new "/Gz")

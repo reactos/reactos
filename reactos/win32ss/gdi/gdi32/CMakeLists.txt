@@ -8,7 +8,7 @@ include_directories(
 
 spec2def(gdi32.dll gdi32.spec ADD_IMPORTLIB)
 
-if(ARCH MATCHES i386)
+if(ARCH STREQUAL "i386")
     list(APPEND SOURCE
         objects/efloat.c)
 endif()
