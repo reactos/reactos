@@ -1046,23 +1046,38 @@ CleanupPendingIrp(PAFD_FCB FCB, PIRP Irp, PIO_STACK_LOCATION IrpSp, PAFD_ACTIVE_
     PAFD_SEND_INFO SendReq;
     PAFD_POLL_INFO PollReq;
 
-    if (IrpSp->Parameters.DeviceIoControl.IoControlCode == IOCTL_AFD_RECV ||
-        IrpSp->MajorFunction == IRP_MJ_READ)
+    if (IrpSp->MajorFunction == IRP_MJ_READ)
     {
         RecvReq = GetLockedData(Irp, IrpSp);
         UnlockBuffers(RecvReq->BufferArray, RecvReq->BufferCount, CheckUnlockExtraBuffers(FCB, IrpSp));
     }
-    else if (IrpSp->Parameters.DeviceIoControl.IoControlCode == IOCTL_AFD_SEND ||
-             IrpSp->MajorFunction == IRP_MJ_WRITE)
+    else if (IrpSp->MajorFunction == IRP_MJ_WRITE)
     {
         SendReq = GetLockedData(Irp, IrpSp);
         UnlockBuffers(SendReq->BufferArray, SendReq->BufferCount, CheckUnlockExtraBuffers(FCB, IrpSp));
     }
-    else if (IrpSp->Parameters.DeviceIoControl.IoControlCode == IOCTL_AFD_SELECT)
+    else
     {
-        PollReq = Irp->AssociatedIrp.SystemBuffer;
-        ZeroEvents(PollReq->Handles, PollReq->HandleCount);
-        SignalSocket(Poll, NULL, PollReq, STATUS_CANCELLED);
+        ASSERT(IrpSp->MajorFunction == IRP_MJ_DEVICE_CONTROL);
+
+        if (IrpSp->Parameters.DeviceIoControl.IoControlCode == IOCTL_AFD_RECV)
+        {
+            RecvReq = GetLockedData(Irp, IrpSp);
+            UnlockBuffers(RecvReq->BufferArray, RecvReq->BufferCount, CheckUnlockExtraBuffers(FCB, IrpSp));
+        }
+        else if (IrpSp->Parameters.DeviceIoControl.IoControlCode == IOCTL_AFD_SEND)
+        {
+            SendReq = GetLockedData(Irp, IrpSp);
+            UnlockBuffers(SendReq->BufferArray, SendReq->BufferCount, CheckUnlockExtraBuffers(FCB, IrpSp));
+        }
+        else if (IrpSp->Parameters.DeviceIoControl.IoControlCode == IOCTL_AFD_SELECT)
+        {
+            ASSERT(Poll);
+
+            PollReq = Irp->AssociatedIrp.SystemBuffer;
+            ZeroEvents(PollReq->Handles, PollReq->HandleCount);
+            SignalSocket(Poll, NULL, PollReq, STATUS_CANCELLED);
+        }
     }
 }
 
