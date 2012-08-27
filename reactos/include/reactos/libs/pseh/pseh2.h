@@ -112,7 +112,7 @@ extern void __cdecl _SEH2Return(void);
 
 /* Prevent gcc from inlining functions that use SEH. */
 #if ((__GNUC__ >= 4) && (__GNUC_MINOR__ >= 7))
-extern inline __attribute__((always_inline)) __attribute__((returns_twice)) void _SEH_DontInline() {}
+static inline __attribute__((always_inline)) __attribute__((returns_twice)) void _SEH_DontInline() {}
 #define __PREVENT_GCC_FROM_INLINING_SEH_FUNCTIONS() _SEH_DontInline();
 #else
 #define __PREVENT_GCC_FROM_INLINING_SEH_FUNCTIONS()
