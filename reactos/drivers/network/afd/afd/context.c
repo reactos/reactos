@@ -60,7 +60,7 @@ AfdSetContext( PDEVICE_OBJECT DeviceObject, PIRP Irp,
                PIO_STACK_LOCATION IrpSp ) {
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
-    PVOID Context = LockRequest(Irp, IrpSp);
+    PVOID Context = LockRequest(Irp, IrpSp, FALSE);
 
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
 

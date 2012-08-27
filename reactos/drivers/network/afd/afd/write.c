@@ -299,7 +299,7 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
                                            0 );
         }
 
-        if( !(SendReq = LockRequest( Irp, IrpSp )) )
+        if( !(SendReq = LockRequest( Irp, IrpSp, FALSE )) )
             return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY, Irp, 0 );
 
         /* Must lock buffers before handing off user data */
@@ -369,7 +369,7 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         return UnlockAndMaybeComplete(FCB, STATUS_FILE_CLOSED, Irp, 0);
     }
 
-    if( !(SendReq = LockRequest( Irp, IrpSp )) )
+    if( !(SendReq = LockRequest( Irp, IrpSp, FALSE )) )
         return UnlockAndMaybeComplete
             ( FCB, STATUS_NO_MEMORY, Irp, TotalBytesCopied );
 
@@ -516,7 +516,7 @@ AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         return UnlockAndMaybeComplete(FCB, STATUS_FILE_CLOSED, Irp, 0);
     }
 
-    if( !(SendReq = LockRequest( Irp, IrpSp )) )
+    if( !(SendReq = LockRequest( Irp, IrpSp, FALSE )) )
         return UnlockAndMaybeComplete(FCB, STATUS_NO_MEMORY, Irp, 0);
 
     if (FCB->State == SOCKET_STATE_CREATED)

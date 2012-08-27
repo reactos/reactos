@@ -72,7 +72,7 @@ AfdSetDisconnectOptions(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 {
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
-    PVOID DisconnectOptions = LockRequest(Irp, IrpSp);
+    PVOID DisconnectOptions = LockRequest(Irp, IrpSp, FALSE);
     UINT DisconnectOptionsSize = IrpSp->Parameters.DeviceIoControl.InputBufferLength;
 
     if (!SocketAcquireStateLock(FCB)) return LostSocket(Irp);
@@ -108,7 +108,7 @@ AfdSetDisconnectOptionsSize(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 {
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
-    PUINT DisconnectOptionsSize = LockRequest(Irp, IrpSp);
+    PUINT DisconnectOptionsSize = LockRequest(Irp, IrpSp, FALSE);
     UINT BufferSize = IrpSp->Parameters.DeviceIoControl.InputBufferLength;
 
     if (!SocketAcquireStateLock(FCB)) return LostSocket(Irp);
@@ -172,7 +172,7 @@ AfdSetDisconnectData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 {
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
-    PVOID DisconnectData = LockRequest(Irp, IrpSp);
+    PVOID DisconnectData = LockRequest(Irp, IrpSp, FALSE);
     UINT DisconnectDataSize = IrpSp->Parameters.DeviceIoControl.InputBufferLength;
 
     if (!SocketAcquireStateLock(FCB)) return LostSocket(Irp);
@@ -208,7 +208,7 @@ AfdSetDisconnectDataSize(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 {
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
-    PUINT DisconnectDataSize = LockRequest(Irp, IrpSp);
+    PUINT DisconnectDataSize = LockRequest(Irp, IrpSp, FALSE);
     UINT BufferSize = IrpSp->Parameters.DeviceIoControl.InputBufferLength;
 
     if (!SocketAcquireStateLock(FCB)) return LostSocket(Irp);
@@ -244,7 +244,7 @@ AfdGetTdiHandles(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 {
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
-    PULONG HandleFlags = LockRequest(Irp, IrpSp);
+    PULONG HandleFlags = LockRequest(Irp, IrpSp, TRUE);
     PAFD_TDI_HANDLE_DATA HandleData = Irp->UserBuffer;
 
     if (!SocketAcquireStateLock(FCB)) return LostSocket(Irp);
@@ -680,7 +680,7 @@ AfdDisconnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if (!SocketAcquireStateLock(FCB)) return LostSocket(Irp);
 
-    if (!(DisReq = LockRequest(Irp, IrpSp)))
+    if (!(DisReq = LockRequest(Irp, IrpSp, FALSE)))
         return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY,
                                        Irp, 0 );
 

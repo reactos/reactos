@@ -13,7 +13,7 @@ NTSTATUS NTAPI
 AfdGetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
             PIO_STACK_LOCATION IrpSp ) {
     NTSTATUS Status = STATUS_SUCCESS;
-    PAFD_INFO InfoReq = LockRequest(Irp, IrpSp);
+    PAFD_INFO InfoReq = LockRequest(Irp, IrpSp, TRUE);
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
     PLIST_ENTRY CurrentEntry;
@@ -99,7 +99,7 @@ NTSTATUS NTAPI
 AfdSetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
             PIO_STACK_LOCATION IrpSp ) {
     NTSTATUS Status = STATUS_SUCCESS;
-    PAFD_INFO InfoReq = LockRequest(Irp, IrpSp);
+    PAFD_INFO InfoReq = LockRequest(Irp, IrpSp, FALSE);
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
     PCHAR NewBuffer;

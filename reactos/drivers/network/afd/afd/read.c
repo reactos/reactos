@@ -445,7 +445,7 @@ AfdConnectedSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
                                        Irp, 0 );
     }
 
-    if( !(RecvReq = LockRequest( Irp, IrpSp )) )
+    if( !(RecvReq = LockRequest( Irp, IrpSp, FALSE )) )
         return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY,
                                        Irp, 0 );
 
@@ -715,7 +715,7 @@ AfdPacketSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         return UnlockAndMaybeComplete(FCB, STATUS_FILE_CLOSED, Irp, 0);
     }
 
-    if( !(RecvReq = LockRequest( Irp, IrpSp )) )
+    if( !(RecvReq = LockRequest( Irp, IrpSp, FALSE )) )
         return UnlockAndMaybeComplete(FCB, STATUS_NO_MEMORY, Irp, 0);
 
     AFD_DbgPrint(MID_TRACE,("Recv flags %x\n", RecvReq->AfdFlags));

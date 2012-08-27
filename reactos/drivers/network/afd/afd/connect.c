@@ -44,7 +44,7 @@ AfdSetConnectOptions(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 {
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
-    PVOID ConnectOptions = LockRequest(Irp, IrpSp);
+    PVOID ConnectOptions = LockRequest(Irp, IrpSp, FALSE);
     UINT ConnectOptionsSize = IrpSp->Parameters.DeviceIoControl.InputBufferLength;
 
     if (!SocketAcquireStateLock(FCB)) return LostSocket(Irp);
@@ -80,7 +80,7 @@ AfdSetConnectOptionsSize(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 {
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
-    PUINT ConnectOptionsSize = LockRequest(Irp, IrpSp);
+    PUINT ConnectOptionsSize = LockRequest(Irp, IrpSp, FALSE);
     UINT BufferSize = IrpSp->Parameters.DeviceIoControl.InputBufferLength;
 
     if (!SocketAcquireStateLock(FCB)) return LostSocket(Irp);
@@ -144,7 +144,7 @@ AfdSetConnectData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 {
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
-    PVOID ConnectData = LockRequest(Irp, IrpSp);
+    PVOID ConnectData = LockRequest(Irp, IrpSp, FALSE);
     UINT ConnectDataSize = IrpSp->Parameters.DeviceIoControl.InputBufferLength;
 
     if (!SocketAcquireStateLock(FCB)) return LostSocket(Irp);
@@ -179,7 +179,7 @@ AfdSetConnectDataSize(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 {
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
-    PUINT ConnectDataSize = LockRequest(Irp, IrpSp);
+    PUINT ConnectDataSize = LockRequest(Irp, IrpSp, FALSE);
     UINT BufferSize = IrpSp->Parameters.DeviceIoControl.InputBufferLength;
 
     if (!SocketAcquireStateLock(FCB)) return LostSocket(Irp);
@@ -406,7 +406,7 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     AFD_DbgPrint(MID_TRACE,("Called on %x\n", FCB));
 
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
-    if( !(ConnectReq = LockRequest( Irp, IrpSp )) )
+    if( !(ConnectReq = LockRequest( Irp, IrpSp, FALSE )) )
         return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY, Irp,
                                        0 );
 

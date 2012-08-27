@@ -12,12 +12,13 @@
 PVOID GetLockedData(PIRP Irp, PIO_STACK_LOCATION IrpSp)
 {
     ASSERT(Irp->MdlAddress);
+    ASSERT(Irp->Tail.Overlay.DriverContext[0]);
 
-    return MmGetSystemAddressForMdlSafe(Irp->MdlAddress, NormalPagePriority);
+    return Irp->Tail.Overlay.DriverContext[0];
 }
 
 /* Lock a method_neither request so it'll be available from DISPATCH_LEVEL */
-PVOID LockRequest( PIRP Irp, PIO_STACK_LOCATION IrpSp ) {
+PVOID LockRequest( PIRP Irp, PIO_STACK_LOCATION IrpSp, BOOLEAN Output ) {
     BOOLEAN LockFailed = FALSE;
 
     ASSERT(!Irp->MdlAddress);
@@ -84,12 +85,55 @@ PVOID LockRequest( PIRP Irp, PIO_STACK_LOCATION IrpSp ) {
             return NULL;
     }
 
+    /* The mapped address goes in index 1 */
+    Irp->Tail.Overlay.DriverContext[1] = MmGetSystemAddressForMdlSafe(Irp->MdlAddress, NormalPagePriority);
+    if (!Irp->Tail.Overlay.DriverContext[1])
+    {
+        AFD_DbgPrint(MIN_TRACE,("Failed to get mapped address\n"));
+        MmUnlockPages(Irp->MdlAddress);
+        IoFreeMdl( Irp->MdlAddress );
+        Irp->MdlAddress = NULL;
+        return NULL;
+    }
+
+    /* The allocated address goes in index 0 */
+    Irp->Tail.Overlay.DriverContext[0] = ExAllocatePool(NonPagedPool, MmGetMdlByteCount(Irp->MdlAddress));
+    if (!Irp->Tail.Overlay.DriverContext[0])
+    {
+        AFD_DbgPrint(MIN_TRACE,("Failed to allocate memory\n"));
+        MmUnlockPages(Irp->MdlAddress);
+        IoFreeMdl( Irp->MdlAddress );
+        Irp->MdlAddress = NULL;
+        return NULL;
+    }
+
+    RtlCopyMemory(Irp->Tail.Overlay.DriverContext[0],
+                  Irp->Tail.Overlay.DriverContext[1],
+                  MmGetMdlByteCount(Irp->MdlAddress));
+
+    /* If we don't want a copy back, we zero the mapped address pointer */
+    if (!Output)
+    {
+        Irp->Tail.Overlay.DriverContext[1] = NULL;
+    }
+
     return GetLockedData(Irp, IrpSp);
 }
 
 VOID UnlockRequest( PIRP Irp, PIO_STACK_LOCATION IrpSp )
 {
     ASSERT(Irp->MdlAddress);
+    ASSERT(Irp->Tail.Overlay.DriverContext[0]);
+
+    /* Check if we need to copy stuff back */
+    if (Irp->Tail.Overlay.DriverContext[1] != NULL)
+    {
+        RtlCopyMemory(Irp->Tail.Overlay.DriverContext[1],
+                      Irp->Tail.Overlay.DriverContext[0],
+                      MmGetMdlByteCount(Irp->MdlAddress));
+    }
+
+    ExFreePool(Irp->Tail.Overlay.DriverContext[0]);
     MmUnlockPages( Irp->MdlAddress );
     IoFreeMdl( Irp->MdlAddress );
     Irp->MdlAddress = NULL;
