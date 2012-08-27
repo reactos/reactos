@@ -21,6 +21,7 @@ list(APPEND MSVCRTEX_SOURCE
     startup/charmax.c
     startup/merr.c
     startup/atonexit.c
+    startup/dllmain.c
     startup/txtmode.c
     startup/pesect.c
     startup/tlsmcrt.c
@@ -66,9 +67,7 @@ elseif(ARCH STREQUAL "amd64")
 endif()
 
 if(MSVC)
-    list(APPEND MSVCRTEX_SOURCE 
-        startup/mscmain.c
-        startup/mscdllmain.c)
+    list(APPEND MSVCRTEX_SOURCE startup/mscmain.c)
 else()
     list(APPEND MSVCRTEX_SOURCE startup/gccmain.c)
 endif()

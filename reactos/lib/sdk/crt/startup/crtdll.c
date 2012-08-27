@@ -50,19 +50,7 @@ extern _PVFV *__onexitend;
 
 extern int mingw_app_type;
 
-/* 
- * It is possible that a DLL provides no DllMain entry point.
- * Mark it as a weak symbol for GCC.
- * Tests show that at link time, MSVC looks for a function first in the object files provided, and then
- * in the libraries. This means that we must provide a basic implementation in msvcrtex, which will be used 
- * if none is found in the object files provided to link.exe.
- * This also means that we can't rely on a DllMain function implemented in a static library when linking a DLL.
- */
-#ifdef __GNUC__
-extern WINBOOL WINAPI DllMain (HANDLE hDllHandle, DWORD dwReason, LPVOID lpreserved) __attribute__((weak));
-#else
 extern WINBOOL WINAPI DllMain (HANDLE hDllHandle, DWORD dwReason, LPVOID lpreserved);
-#endif
 
 extern WINBOOL WINAPI DllEntryPoint (HANDLE, DWORD, LPVOID);
 
@@ -210,12 +198,10 @@ __DllMainCRTStartup (HANDLE hDllHandle, DWORD dwReason, LPVOID lpreserved)
     }
   if (dwReason == DLL_PROCESS_ATTACH)
     __main ();
-  if(DllMain)
-    retcode = DllMain(hDllHandle,dwReason,lpreserved);
+  retcode = DllMain(hDllHandle,dwReason,lpreserved);
   if (dwReason == DLL_PROCESS_ATTACH && ! retcode)
     {
-    if(DllMain)
-	  DllMain (hDllHandle, DLL_PROCESS_DETACH, lpreserved);
+	DllMain (hDllHandle, DLL_PROCESS_DETACH, lpreserved);
 	DllEntryPoint (hDllHandle, DLL_PROCESS_DETACH, lpreserved);
 	_CRT_INIT (hDllHandle, DLL_PROCESS_DETACH, lpreserved);
     }
