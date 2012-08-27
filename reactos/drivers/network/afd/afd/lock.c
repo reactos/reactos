@@ -105,15 +105,15 @@ PAFD_WSABUF LockBuffers( PAFD_WSABUF Buf, UINT Count,
     UINT i;
     /* Copy the buffer array so we don't lose it */
     UINT Lock = LockAddress ? 2 : 0;
-    UINT Size = sizeof(AFD_WSABUF) * (Count + Lock);
-    PAFD_WSABUF NewBuf = ExAllocatePool( PagedPool, Size * 2 );
+    UINT Size = (sizeof(AFD_WSABUF) + sizeof(AFD_MAPBUF)) * (Count + Lock);
+    PAFD_WSABUF NewBuf = ExAllocatePool( PagedPool, Size );
     BOOLEAN LockFailed = FALSE;
     PAFD_MAPBUF MapBuf;
 
     AFD_DbgPrint(MID_TRACE,("Called(%08x)\n", NewBuf));
 
     if( NewBuf ) {
-        RtlZeroMemory(NewBuf, Size * 2);
+        RtlZeroMemory(NewBuf, Size);
 
         MapBuf = (PAFD_MAPBUF)(NewBuf + Count + Lock);
 
