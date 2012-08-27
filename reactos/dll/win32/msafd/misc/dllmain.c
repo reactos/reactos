@@ -376,6 +376,10 @@ TranslateNtStatusError(NTSTATUS Status)
           DbgPrint("MSAFD: STATUS_REMOTE_DISCONNECT\n");
           return WSAECONNRESET;
 
+       case STATUS_ACCESS_VIOLATION:
+          DbgPrint("MSAFD: STATUS_ACCESS_VIOLATION\n");
+          return WSAEFAULT;
+
        default:
           DbgPrint("MSAFD: Unhandled NTSTATUS value: 0x%x\n", Status);
           return WSAENETDOWN;
