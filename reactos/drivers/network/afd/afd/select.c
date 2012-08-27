@@ -324,6 +324,8 @@ AfdEnumEvents( PDEVICE_OBJECT DeviceObject, PIRP Irp,
     PAFD_ENUM_NETWORK_EVENTS_INFO EnumReq =
         (PAFD_ENUM_NETWORK_EVENTS_INFO)LockRequest( Irp, IrpSp, TRUE );
     PAFD_FCB FCB = FileObject->FsContext;
+    PKEVENT UserEvent;
+    NTSTATUS Status;
 
     AFD_DbgPrint(MID_TRACE,("Called (FCB %x)\n", FCB));
 
@@ -335,6 +337,23 @@ AfdEnumEvents( PDEVICE_OBJECT DeviceObject, PIRP Irp,
          return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY, Irp, 0 );
     }
 
+    Status = ObReferenceObjectByHandle(EnumReq->Event,
+                                       EVENT_ALL_ACCESS,
+                                       ExEventObjectType,
+                                       UserMode,
+                                       (PVOID *)&UserEvent,
+                                       NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        AFD_DbgPrint(MIN_TRACE,("Unable to reference event %x\n", Status));
+        return UnlockAndMaybeComplete(FCB, Status, Irp, 0);
+    }
+
+    /* Clear the event */
+    KeClearEvent(UserEvent);
+    ObDereferenceObject(UserEvent);
+
+    /* Copy the poll state */
     EnumReq->PollEvents = FCB->PollState;
     RtlCopyMemory( EnumReq->EventStatus,
                    FCB->PollStatus,
