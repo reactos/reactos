@@ -436,6 +436,8 @@ AfdConnectedSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
 
+    FCB->EventSelectDisabled &= ~AFD_EVENT_RECEIVE;
+
     if( !(FCB->Flags & AFD_ENDPOINT_CONNECTIONLESS) &&
         FCB->State != SOCKET_STATE_CONNECTED &&
         FCB->State != SOCKET_STATE_CONNECTING ) {
@@ -460,8 +462,6 @@ AfdConnectedSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         return UnlockAndMaybeComplete( FCB, STATUS_ACCESS_VIOLATION,
                                       Irp, 0 );
     }
-
-    FCB->EventSelectDisabled &= ~AFD_EVENT_RECEIVE;
 
     if( FCB->Flags & AFD_ENDPOINT_CONNECTIONLESS )
     {
@@ -704,6 +704,8 @@ AfdPacketSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
 
+    FCB->EventSelectDisabled &= ~AFD_EVENT_RECEIVE;
+
     /* Check that the socket is bound */
     if( FCB->State != SOCKET_STATE_BOUND )
     {
@@ -731,8 +733,6 @@ AfdPacketSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     if( !RecvReq->BufferArray ) { /* access violation in userspace */
         return UnlockAndMaybeComplete(FCB, STATUS_ACCESS_VIOLATION, Irp, 0);
     }
-
-    FCB->EventSelectDisabled &= ~AFD_EVENT_RECEIVE;
 
     if (!IsListEmpty(&FCB->DatagramList))
     {

@@ -327,6 +327,8 @@ NTSTATUS AfdAccept( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
 
+    FCB->EventSelectDisabled &= ~AFD_EVENT_ACCEPT;
+
     for( PendingConn = FCB->PendingConnections.Flink;
          PendingConn != &FCB->PendingConnections;
          PendingConn = PendingConn->Flink ) {
@@ -363,8 +365,6 @@ NTSTATUS AfdAccept( PDEVICE_OBJECT DeviceObject, PIRP Irp,
             AFD_DbgPrint(MID_TRACE,("Completed a wait for accept\n"));
 
             ExFreePool( PendingConnObj );
-
-            FCB->EventSelectDisabled &= ~AFD_EVENT_ACCEPT;
 
             if( !IsListEmpty( &FCB->PendingConnections ) )
             {
