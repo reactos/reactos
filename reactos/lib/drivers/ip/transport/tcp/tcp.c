@@ -544,6 +544,7 @@ NTSTATUS TCPSendData
     Status = TCPTranslateError(LibTCPSend(Connection,
                                           BufferData,
                                           SendLength,
+                                          BytesSent,
                                           FALSE));
     
     TI_DbgPrint(DEBUG_TCP,("[IP, TCPSendData] Send: %x, %d\n", Status, SendLength));
@@ -562,18 +563,9 @@ NTSTATUS TCPSendData
         
         Bucket->Request.RequestNotifyObject = Complete;
         Bucket->Request.RequestContext = Context;
-        *BytesSent = 0;
         
         InsertTailList( &Connection->SendRequest, &Bucket->Entry );
         TI_DbgPrint(DEBUG_TCP,("[IP, TCPSendData] Queued write irp\n"));
-    }
-    else if (Status == STATUS_SUCCESS)
-    {
-        *BytesSent = SendLength;
-    }
-    else
-    {
-        *BytesSent = 0;
     }
 
     UnlockObject(Connection, OldIrql);

@@ -383,6 +383,7 @@ TCPSendEventHandler(void *arg, u16_t space)
     PIRP Irp;
     NTSTATUS Status;
     PMDL Mdl;
+    ULONG BytesSent;
     
     ReferenceObject(Connection);
 
@@ -412,9 +413,9 @@ TCPSendEventHandler(void *arg, u16_t space)
         
         Status = TCPTranslateError(LibTCPSend(Connection,
                                               SendBuffer,
-                                              SendLen, TRUE));
+                                              SendLen, &BytesSent, TRUE));
         
-        TI_DbgPrint(DEBUG_TCP,("TCP Bytes: %d\n", SendLen));
+        TI_DbgPrint(DEBUG_TCP,("TCP Bytes: %d\n", BytesSent));
         
         if( Status == STATUS_PENDING )
         {
@@ -430,7 +431,7 @@ TCPSendEventHandler(void *arg, u16_t space)
                          Bucket->Request, Status));
             
             Bucket->Status = Status;
-            Bucket->Information = (Bucket->Status == STATUS_SUCCESS) ? SendLen : 0;
+            Bucket->Information = (Bucket->Status == STATUS_SUCCESS) ? BytesSent : 0;
                         
             CompleteBucket(Connection, Bucket, FALSE);
         }

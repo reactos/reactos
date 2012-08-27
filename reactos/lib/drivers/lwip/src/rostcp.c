@@ -443,6 +443,9 @@ void
 LibTCPSendCallback(void *arg)
 {
     struct lwip_callback_msg *msg = arg;
+    PTCP_PCB pcb = msg->Input.Send.Connection->SocketContext;
+    ULONG SendLength;
+    UCHAR SendFlags;
 
     ASSERT(msg);
 
@@ -458,19 +461,37 @@ LibTCPSendCallback(void *arg)
         goto done;
     }
 
-    msg->Output.Send.Error = tcp_write((PTCP_PCB)msg->Input.Send.Connection->SocketContext,
-                                       msg->Input.Send.Data,
-                                       msg->Input.Send.DataLength,
-                                       TCP_WRITE_FLAG_COPY);
-    if (msg->Output.Send.Error == ERR_MEM)
+    SendFlags = TCP_WRITE_FLAG_COPY;
+    SendLength = msg->Input.Send.DataLength;
+    if (tcp_sndbuf(pcb) == 0)
     {
         /* No buffer space so return pending */
         msg->Output.Send.Error = ERR_INPROGRESS;
+        goto done;
     }
-    else if (msg->Output.Send.Error == ERR_OK)
+    else if (tcp_sndbuf(pcb) < SendLength)
+    {
+        /* We've got some room so let's send what we can */
+        SendLength = tcp_sndbuf(pcb);
+
+        /* Don't set the push flag */
+        SendFlags |= TCP_WRITE_FLAG_MORE;
+    }
+
+    msg->Output.Send.Error = tcp_write(pcb,
+                                       msg->Input.Send.Data,
+                                       SendLength,
+                                       SendFlags);
+    if (msg->Output.Send.Error == ERR_OK)
     {
         /* Queued successfully so try to send it */
         tcp_output((PTCP_PCB)msg->Input.Send.Connection->SocketContext);
+        msg->Output.Send.Information = SendLength;
+    }
+    else if (msg->Output.Send.Error == ERR_MEM)
+    {
+        /* The queue is too long */
+        msg->Output.Send.Error = ERR_INPROGRESS;
     }
 
 done:
@@ -478,7 +499,7 @@ done:
 }
 
 err_t
-LibTCPSend(PCONNECTION_ENDPOINT Connection, void *const dataptr, const u16_t len, const int safe)
+LibTCPSend(PCONNECTION_ENDPOINT Connection, void *const dataptr, const u16_t len, u32_t *sent, const int safe)
 {
     err_t ret;
     struct lwip_callback_msg *msg;
@@ -500,6 +521,11 @@ LibTCPSend(PCONNECTION_ENDPOINT Connection, void *const dataptr, const u16_t len
             ret = msg->Output.Send.Error;
         else
             ret = ERR_CLSD;
+
+        if (ret == ERR_OK)
+            *sent = msg->Output.Send.Information;
+        else
+            *sent = 0;
 
         ExFreeToNPagedLookasideList(&MessageLookasideList, msg);
 
