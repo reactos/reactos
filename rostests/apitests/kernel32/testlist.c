@@ -8,6 +8,7 @@
 extern void func_GetCurrentDirectory(void);
 extern void func_GetDriveType(void);
 extern void func_GetModuleFileName(void);
+extern void func_lstrcpynW(void);
 extern void func_SetCurrentDirectory(void);
 
 const struct test winetest_testlist[] =
@@ -15,6 +16,7 @@ const struct test winetest_testlist[] =
     { "GetCurrentDirectory",    func_GetCurrentDirectory },
     { "GetDriveType",           func_GetDriveType },
     { "GetModuleFileName",      func_GetModuleFileName },
+    { "lstrcpynW",              func_lstrcpynW },
     { "SetCurrentDirectory",    func_SetCurrentDirectory },
 
     { 0, 0 }

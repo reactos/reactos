@@ -5,6 +5,7 @@ list(APPEND SOURCE
     GetCurrentDirectory.c
     GetDriveType.c
     GetModuleFileName.c
+    lstrcpynW.c
     SetCurrentDirectory.c
     testlist.c)
 
