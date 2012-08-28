@@ -64,7 +64,7 @@
  * add support for other transport mediums */
 #define TCP_MSS                         1460
 
-#define TCP_WND                         (TCP_MSS * 6)
+#define TCP_WND                         0xFFFF
 
 #define TCP_SND_BUF                     TCP_WND
 
