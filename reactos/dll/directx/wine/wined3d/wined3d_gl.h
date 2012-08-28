@@ -46,12 +46,6 @@
 #ifndef __WINE_WINED3D_GL_H
 #define __WINE_WINED3D_GL_H
 
-#ifdef USE_WIN32_OPENGL
-#define WINE_GLAPI __stdcall
-#else
-#define WINE_GLAPI
-#endif
-
 /****************************************************
  * OpenGL 1.0/1.1/1.2/1.3
  *     types, #defines and function pointers
@@ -896,473 +890,9 @@ typedef struct __GLsync *GLsync;
 #define GL_STENCIL_BACK_WRITEMASK                           0x8ca5
 typedef char GLchar;
 #endif
-typedef void (WINE_GLAPI *PGLFNBLENDEQUATIONSEPARATEPROC)(GLenum modeRGB, GLenum modeAlpha);
-typedef void (WINE_GLAPI *PGLFNDRAWBUFFERSPROC)(GLsizei n, const GLenum *bufs);
-typedef void (WINE_GLAPI *PGLFNSTENCILOPSEPARATEPROC)(GLenum face, GLenum sfail, GLenum dpfail, GLenum dppass);
-typedef void (WINE_GLAPI *PGLFNSTENCILFUNCSEPARATEPROC)(GLenum frontfunc, GLenum backfunc, GLint ref, GLuint mask);
-typedef void (WINE_GLAPI *PGLFNSTENCILMASKSEPARATEPROC)(GLenum face, GLuint mask);
-typedef void (WINE_GLAPI *PGLFNATTACHSHADERPROC)(GLuint program, GLuint shader);
-typedef void (WINE_GLAPI *PGLFNBINDATTRIBLOCATIONPROC)(GLuint program, GLuint index, const GLchar *name);
-typedef void (WINE_GLAPI *PGLFNCOMPILESHADERPROC)(GLuint shader);
-typedef GLuint (WINE_GLAPI *PGLFNCREATEPROGRAMPROC)(void);
-typedef GLuint (WINE_GLAPI *PGLFNCREATESHADERPROC)(GLenum type);
-typedef void (WINE_GLAPI *PGLFNDELETEPROGRAMPROC)(GLuint program);
-typedef void (WINE_GLAPI *PGLFNDELETESHADERPROC)(GLuint shader);
-typedef void (WINE_GLAPI *PGLFNDETACHSHADERPROC)(GLuint program, GLuint shader);
-typedef void (WINE_GLAPI *PGLFNDISABLEVERTEXATTRIBARRAYPROC)(GLuint index);
-typedef void (WINE_GLAPI *PGLFNENABLEVERTEXATTRIBARRAYPROC)(GLuint index);
-typedef void (WINE_GLAPI *PGLFNGETACTIVEATTRIBPROC)(GLuint program,
-        GLuint index, GLsizei bufSize, GLsizei *length, GLint *size, GLenum *type, GLchar *name);
-typedef void (WINE_GLAPI *PGLFNGETACTIVEUNIFORMPROC)(GLuint program,
-        GLuint index, GLsizei bufSize, GLsizei *length, GLint *size, GLenum *type, GLchar *name);
-typedef void (WINE_GLAPI *PGLFNGETATTACHEDSHADERSPROC)(GLuint program, GLsizei maxCount, GLsizei *count, GLuint *obj);
-typedef GLint (WINE_GLAPI *PGLFNGETATTRIBLOCATIONPROC)(GLuint program, const GLchar *name);
-typedef void (WINE_GLAPI *PGLFNGETPROGRAMIVPROC)(GLuint program, GLenum pname, GLint *params);
-typedef void (WINE_GLAPI *PGLFNGETPROGRAMINFOLOGPROC)(GLuint program,
-        GLsizei bufSize, GLsizei *length, GLchar *infoLog);
-typedef void (WINE_GLAPI *PGLFNGETSHADERIVPROC)(GLuint shader, GLenum pname, GLint *params);
-typedef void (WINE_GLAPI *PGLFNGETSHADERINFOLOGPROC)(GLuint shader, GLsizei bufSize, GLsizei *length, GLchar *infoLog);
-typedef void (WINE_GLAPI *PGLFNGETSHADERSOURCEPROC)(GLuint shader, GLsizei bufSize, GLsizei *length, GLchar *source);
-typedef GLint (WINE_GLAPI *PGLFNGETUNIFORMLOCATIONPROC)(GLuint program, const GLchar *name);
-typedef void (WINE_GLAPI *PGLFNGETUNIFORMFVPROC)(GLuint program, GLint location, GLfloat *params);
-typedef void (WINE_GLAPI *PGLFNGETUNIFORMIVPROC)(GLuint program, GLint location, GLint *params);
-typedef void (WINE_GLAPI *PGLFNGETVERTEXATTRIBDVPROC)(GLuint index, GLenum pname, GLdouble *params);
-typedef void (WINE_GLAPI *PGLFNGETVERTEXATTRIBFVPROC)(GLuint index, GLenum pname, GLfloat *params);
-typedef void (WINE_GLAPI *PGLFNGETVERTEXATTRIBIVPROC)(GLuint index, GLenum pname, GLint *params);
-typedef void (WINE_GLAPI *PGLFNGETVERTEXATTRIBPOINTERVPROC)(GLuint index, GLenum pname, GLvoid* *pointer);
-typedef GLboolean (WINE_GLAPI *PGLFNISPROGRAMPROC)(GLuint program);
-typedef GLboolean (WINE_GLAPI *PGLFNISSHADERPROC)(GLuint shader);
-typedef void (WINE_GLAPI *PGLFNLINKPROGRAMPROC)(GLuint program);
-typedef void (WINE_GLAPI *PGLFNSHADERSOURCEPROC)(GLuint shader,
-        GLsizei count, const GLchar* *string, const GLint *length);
-typedef void (WINE_GLAPI *PGLFNUSEPROGRAMPROC)(GLuint program);
-typedef void (WINE_GLAPI *PGLFNUNIFORM1FPROC)(GLint location, GLfloat v0);
-typedef void (WINE_GLAPI *PGLFNUNIFORM2FPROC)(GLint location, GLfloat v0, GLfloat v1);
-typedef void (WINE_GLAPI *PGLFNUNIFORM3FPROC)(GLint location, GLfloat v0, GLfloat v1, GLfloat v2);
-typedef void (WINE_GLAPI *PGLFNUNIFORM4FPROC)(GLint location, GLfloat v0, GLfloat v1, GLfloat v2, GLfloat v3);
-typedef void (WINE_GLAPI *PGLFNUNIFORM1IPROC)(GLint location, GLint v0);
-typedef void (WINE_GLAPI *PGLFNUNIFORM2IPROC)(GLint location, GLint v0, GLint v1);
-typedef void (WINE_GLAPI *PGLFNUNIFORM3IPROC)(GLint location, GLint v0, GLint v1, GLint v2);
-typedef void (WINE_GLAPI *PGLFNUNIFORM4IPROC)(GLint location, GLint v0, GLint v1, GLint v2, GLint v3);
-typedef void (WINE_GLAPI *PGLFNUNIFORM1FVPROC)(GLint location, GLsizei count, const GLfloat *value);
-typedef void (WINE_GLAPI *PGLFNUNIFORM2FVPROC)(GLint location, GLsizei count, const GLfloat *value);
-typedef void (WINE_GLAPI *PGLFNUNIFORM3FVPROC)(GLint location, GLsizei count, const GLfloat *value);
-typedef void (WINE_GLAPI *PGLFNUNIFORM4FVPROC)(GLint location, GLsizei count, const GLfloat *value);
-typedef void (WINE_GLAPI *PGLFNUNIFORM1IVPROC)(GLint location, GLsizei count, const GLint *value);
-typedef void (WINE_GLAPI *PGLFNUNIFORM2IVPROC)(GLint location, GLsizei count, const GLint *value);
-typedef void (WINE_GLAPI *PGLFNUNIFORM3IVPROC)(GLint location, GLsizei count, const GLint *value);
-typedef void (WINE_GLAPI *PGLFNUNIFORM4IVPROC)(GLint location, GLsizei count, const GLint *value);
-typedef void (WINE_GLAPI *PGLFNUNIFORMMATRIX2FVPROC)(GLint location,
-        GLsizei count, GLboolean transpose, const GLfloat *value);
-typedef void (WINE_GLAPI *PGLFNUNIFORMMATRIX3FVPROC)(GLint location,
-        GLsizei count, GLboolean transpose, const GLfloat *value);
-typedef void (WINE_GLAPI *PGLFNUNIFORMMATRIX4FVPROC)(GLint location,
-        GLsizei count, GLboolean transpose, const GLfloat *value);
-typedef void (WINE_GLAPI *PGLFNVALIDATEPROGRAMPROC)(GLuint program);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB1DPROC)(GLuint index, GLdouble x);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB1DVPROC)(GLuint index, const GLdouble *v);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB1FPROC)(GLuint index, GLfloat x);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB1FVPROC)(GLuint index, const GLfloat *v);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB1SPROC)(GLuint index, GLshort x);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB1SVPROC)(GLuint index, const GLshort *v);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB2DPROC)(GLuint index, GLdouble x, GLdouble y);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB2DVPROC)(GLuint index, const GLdouble *v);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB2FPROC)(GLuint index, GLfloat x, GLfloat y);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB2FVPROC)(GLuint index, const GLfloat *v);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB2SPROC)(GLuint index, GLshort x, GLshort y);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB2SVPROC)(GLuint index, const GLshort *v);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB3DPROC)(GLuint index, GLdouble x, GLdouble y, GLdouble z);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB3DVPROC)(GLuint index, const GLdouble *v);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB3FPROC)(GLuint index, GLfloat x, GLfloat y, GLfloat z);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB3FVPROC)(GLuint index, const GLfloat *v);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB3SPROC)(GLuint index, GLshort x, GLshort y, GLshort z);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB3SVPROC)(GLuint index, const GLshort *v);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB4NBVPROC)(GLuint index, const GLbyte *v);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB4NIVPROC)(GLuint index, const GLint *v);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB4NSVPROC)(GLuint index, const GLshort *v);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB4NUBPROC)(GLuint index, GLubyte x, GLubyte y, GLubyte z, GLubyte w);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB4NUBVPROC)(GLuint index, const GLubyte *v);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB4NUIVPROC)(GLuint index, const GLuint *v);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB4NUSVPROC)(GLuint index, const GLushort *v);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB4BVPROC)(GLuint index, const GLbyte *v);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB4DPROC)(GLuint index, GLdouble x, GLdouble y, GLdouble z, GLdouble w);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB4DVPROC)(GLuint index, const GLdouble *v);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB4FPROC)(GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB4FVPROC)(GLuint index, const GLfloat *v);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB4IVPROC)(GLuint index, const GLint *v);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB4SPROC)(GLuint index, GLshort x, GLshort y, GLshort z, GLshort w);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB4SVPROC)(GLuint index, const GLshort *v);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB4UBVPROC)(GLuint index, const GLubyte *v);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB4UIVPROC)(GLuint index, const GLuint *v);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB4USVPROC)(GLuint index, const GLushort *v);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIBPOINTERPROC)(GLuint index,
-        GLint size, GLenum type, GLboolean normalized, GLsizei stride, const GLvoid *pointer);
 
-void (WINE_GLAPI *glAccum)(GLenum op, GLfloat value) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glAlphaFunc)(GLenum func, GLclampf ref) DECLSPEC_HIDDEN;
-GLboolean (WINE_GLAPI *glAreTexturesResident)(GLsizei n, const GLuint *textures, GLboolean *residences) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glArrayElement)(GLint i) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glBegin)(GLenum mode) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glBindTexture)(GLenum target, GLuint texture) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glBitmap)(GLsizei width, GLsizei height, GLfloat xorig,
-        GLfloat yorig, GLfloat xmove, GLfloat ymove, const GLubyte *bitmap) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glBlendFunc)(GLenum sfactor, GLenum dfactor) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glCallList)(GLuint list) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glCallLists)(GLsizei n, GLenum type, const GLvoid *lists) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glClear)(GLbitfield mask) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glClearAccum)(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glClearColor)(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glClearDepth)(GLclampd depth) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glClearIndex)(GLfloat c) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glClearStencil)(GLint s) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glClipPlane)(GLenum plane, const GLdouble *equation) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glColor3b)(GLbyte red, GLbyte green, GLbyte blue) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glColor3bv)(const GLbyte *v) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glColor3d)(GLdouble red, GLdouble green, GLdouble blue) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glColor3dv)(const GLdouble *v) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glColor3f)(GLfloat red, GLfloat green, GLfloat blue) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glColor3fv)(const GLfloat *v) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glColor3i)(GLint red, GLint green, GLint blue) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glColor3iv)(const GLint *v) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glColor3s)(GLshort red, GLshort green, GLshort blue) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glColor3sv)(const GLshort *v) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glColor3ub)(GLubyte red, GLubyte green, GLubyte blue) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glColor3ubv)(const GLubyte *v) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glColor3ui)(GLuint red, GLuint green, GLuint blue) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glColor3uiv)(const GLuint *v) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glColor3us)(GLushort red, GLushort green, GLushort blue) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glColor3usv)(const GLushort *v) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glColor4b)(GLbyte red, GLbyte green, GLbyte blue, GLbyte alpha) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glColor4bv)(const GLbyte *v) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glColor4d)(GLdouble red, GLdouble green, GLdouble blue, GLdouble alpha) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glColor4dv)(const GLdouble *v) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glColor4f)(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glColor4fv)(const GLfloat *v) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glColor4i)(GLint red, GLint green, GLint blue, GLint alpha) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glColor4iv)(const GLint *v) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glColor4s)(GLshort red, GLshort green, GLshort blue, GLshort alpha) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glColor4sv)(const GLshort *v) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glColor4ub)(GLubyte red, GLubyte green, GLubyte blue, GLubyte alpha) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glColor4ubv)(const GLubyte *v) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glColor4ui)(GLuint red, GLuint green, GLuint blue, GLuint alpha) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glColor4uiv)(const GLuint *v) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glColor4us)(GLushort red, GLushort green, GLushort blue, GLushort alpha) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glColor4usv)(const GLushort *v) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glColorMask)(GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glColorMaterial)(GLenum face, GLenum mode) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glColorPointer)(GLint size, GLenum type, GLsizei stride, const GLvoid *pointer) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glCopyPixels)(GLint x, GLint y, GLsizei width, GLsizei height, GLenum type) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glCopyTexImage1D)(GLenum target, GLint level,
-        GLenum internalformat, GLint x, GLint y, GLsizei width, GLint border) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glCopyTexImage2D)(GLenum target, GLint level,
-        GLenum internalformat, GLint x, GLint y, GLsizei width, GLsizei height, GLint border) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glCopyTexSubImage1D)(GLenum target, GLint level,
-        GLint xoffset, GLint x, GLint y, GLsizei width) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glCopyTexSubImage2D)(GLenum target, GLint level,
-        GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glCullFace)(GLenum mode) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glDeleteLists)(GLuint list, GLsizei range) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glDeleteTextures)(GLsizei n, const GLuint *textures) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glDepthFunc)(GLenum func) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glDepthMask)(GLboolean flag) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glDepthRange)(GLclampd nearParam, GLclampd farParam) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glDisable)(GLenum cap) DECLSPEC_HIDDEN;
 void (WINE_GLAPI *glDisableWINE)(GLenum cap) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glDisableClientState)(GLenum array) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glDrawArrays)(GLenum mode, GLint first, GLsizei count) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glDrawBuffer)(GLenum mode) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glDrawElements)(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glDrawPixels)(GLsizei width, GLsizei height, GLenum format,
-        GLenum type, const GLvoid *pixels) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glEdgeFlag)(GLboolean flag) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glEdgeFlagPointer)(GLsizei stride, const GLvoid *pointer) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glEdgeFlagv)(const GLboolean *flag) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glEnable)(GLenum cap) DECLSPEC_HIDDEN;
 void (WINE_GLAPI *glEnableWINE)(GLenum cap) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glEnableClientState)(GLenum array) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glEnd)(void) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glEndList)(void) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glEvalCoord1d)(GLdouble u) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glEvalCoord1dv)(const GLdouble *u) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glEvalCoord1f)(GLfloat u) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glEvalCoord1fv)(const GLfloat *u) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glEvalCoord2d)(GLdouble u, GLdouble v) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glEvalCoord2dv)(const GLdouble *u) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glEvalCoord2f)(GLfloat u, GLfloat v) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glEvalCoord2fv)(const GLfloat *u) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glEvalMesh1)(GLenum mode, GLint i1, GLint i2) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glEvalMesh2)(GLenum mode, GLint i1, GLint i2, GLint j1, GLint j2) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glEvalPoint1)(GLint i) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glEvalPoint2)(GLint i, GLint j) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glFeedbackBuffer)(GLsizei size, GLenum type, GLfloat *buffer) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glFogf)(GLenum pname, GLfloat param) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glFogfv)(GLenum pname, const GLfloat *params) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glFogi)(GLenum pname, GLint param) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glFogiv)(GLenum pname, const GLint *params) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glFrontFace)(GLenum mode) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glFrustum)(GLdouble left, GLdouble right, GLdouble bottom,
-        GLdouble top, GLdouble zNear, GLdouble zFar) DECLSPEC_HIDDEN;
-GLuint (WINE_GLAPI *glGenLists)(GLsizei range) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glGenTextures)(GLsizei n, GLuint *textures) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glGetBooleanv)(GLenum pname, GLboolean *params) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glGetClipPlane)(GLenum plane, GLdouble *equation) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glGetDoublev)(GLenum pname, GLdouble *params) DECLSPEC_HIDDEN;
-GLenum (WINE_GLAPI *glGetError)(void) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glGetFloatv)(GLenum pname, GLfloat *params) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glGetIntegerv)(GLenum pname, GLint *params) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glGetLightfv)(GLenum light, GLenum pname, GLfloat *params) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glGetLightiv)(GLenum light, GLenum pname, GLint *params) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glGetMapdv)(GLenum target, GLenum query, GLdouble *v) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glGetMapfv)(GLenum target, GLenum query, GLfloat *v) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glGetMapiv)(GLenum target, GLenum query, GLint *v) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glGetMaterialfv)(GLenum face, GLenum pname, GLfloat *params) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glGetMaterialiv)(GLenum face, GLenum pname, GLint *params) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glGetPixelMapfv)(GLenum map, GLfloat *values) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glGetPixelMapuiv)(GLenum map, GLuint *values) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glGetPixelMapusv)(GLenum map, GLushort *values) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glGetPointerv)(GLenum pname, GLvoid **params) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glGetPolygonStipple)(GLubyte *mask) DECLSPEC_HIDDEN;
-const GLubyte * (WINE_GLAPI *glGetString)(GLenum name) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glGetTexEnvfv)(GLenum target, GLenum pname, GLfloat *params) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glGetTexEnviv)(GLenum target, GLenum pname, GLint *params) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glGetTexGendv)(GLenum coord, GLenum pname, GLdouble *params) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glGetTexGenfv)(GLenum coord, GLenum pname, GLfloat *params) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glGetTexGeniv)(GLenum coord, GLenum pname, GLint *params) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glGetTexImage)(GLenum target, GLint level, GLenum format,
-        GLenum type, GLvoid *pixels) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glGetTexLevelParameterfv)(GLenum target, GLint level, GLenum pname, GLfloat *params) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glGetTexLevelParameteriv)(GLenum target, GLint level, GLenum pname, GLint *params) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glGetTexParameterfv)(GLenum target, GLenum pname, GLfloat *params) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glGetTexParameteriv)(GLenum target, GLenum pname, GLint *params) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glHint)(GLenum target, GLenum mode) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glIndexMask)(GLuint mask) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glIndexPointer)(GLenum type, GLsizei stride, const GLvoid *pointer) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glIndexd)(GLdouble c) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glIndexdv)(const GLdouble *c) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glIndexf)(GLfloat c) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glIndexfv)(const GLfloat *c) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glIndexi)(GLint c) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glIndexiv)(const GLint *c) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glIndexs)(GLshort c) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glIndexsv)(const GLshort *c) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glIndexub)(GLubyte c) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glIndexubv)(const GLubyte *c) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glInitNames)(void) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glInterleavedArrays)(GLenum format, GLsizei stride, const GLvoid *pointer) DECLSPEC_HIDDEN;
-GLboolean (WINE_GLAPI *glIsEnabled)(GLenum cap) DECLSPEC_HIDDEN;
-GLboolean (WINE_GLAPI *glIsList)(GLuint list) DECLSPEC_HIDDEN;
-GLboolean (WINE_GLAPI *glIsTexture)(GLuint texture) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glLightModelf)(GLenum pname, GLfloat param) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glLightModelfv)(GLenum pname, const GLfloat *params) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glLightModeli)(GLenum pname, GLint param) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glLightModeliv)(GLenum pname, const GLint *params) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glLightf)(GLenum light, GLenum pname, GLfloat param) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glLightfv)(GLenum light, GLenum pname, const GLfloat *params) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glLighti)(GLenum light, GLenum pname, GLint param) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glLightiv)(GLenum light, GLenum pname, const GLint *params) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glLineStipple)(GLint factor, GLushort pattern) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glLineWidth)(GLfloat width) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glListBase)(GLuint base) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glLoadIdentity)(void) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glLoadMatrixd)(const GLdouble *m) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glLoadMatrixf)(const GLfloat *m) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glLoadName)(GLuint name) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glLogicOp)(GLenum opcode) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glMap1d)(GLenum target, GLdouble u1, GLdouble u2,
-        GLint stride, GLint order, const GLdouble *points) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glMap1f)(GLenum target, GLfloat u1, GLfloat u2, GLint stride,
-        GLint order, const GLfloat *points) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glMap2d)(GLenum target, GLdouble u1, GLdouble u2, GLint ustride, GLint uorder,
-        GLdouble v1, GLdouble v2, GLint vstride, GLint vorder, const GLdouble *points) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glMap2f)(GLenum target, GLfloat u1, GLfloat u2, GLint ustride, GLint uorder,
-        GLfloat v1, GLfloat v2, GLint vstride, GLint vorder, const GLfloat *points) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glMapGrid1d)(GLint un, GLdouble u1, GLdouble u2) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glMapGrid1f)(GLint un, GLfloat u1, GLfloat u2) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glMapGrid2d)(GLint un, GLdouble u1, GLdouble u2, GLint vn, GLdouble v1, GLdouble v2) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glMapGrid2f)(GLint un, GLfloat u1, GLfloat u2, GLint vn, GLfloat v1, GLfloat v2) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glMaterialf)(GLenum face, GLenum pname, GLfloat param) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glMaterialfv)(GLenum face, GLenum pname, const GLfloat *params) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glMateriali)(GLenum face, GLenum pname, GLint param) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glMaterialiv)(GLenum face, GLenum pname, const GLint *params) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glMatrixMode)(GLenum mode) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glMultMatrixd)(const GLdouble *m) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glMultMatrixf)(const GLfloat *m) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glNewList)(GLuint list, GLenum mode) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glNormal3b)(GLbyte nx, GLbyte ny, GLbyte nz) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glNormal3bv)(const GLbyte *v) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glNormal3d)(GLdouble nx, GLdouble ny, GLdouble nz) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glNormal3dv)(const GLdouble *v) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glNormal3f)(GLfloat nx, GLfloat ny, GLfloat nz) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glNormal3fv)(const GLfloat *v) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glNormal3i)(GLint nx, GLint ny, GLint nz) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glNormal3iv)(const GLint *v) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glNormal3s)(GLshort nx, GLshort ny, GLshort nz) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glNormal3sv)(const GLshort *v) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glNormalPointer)(GLenum type, GLsizei stride, const GLvoid *pointer) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glOrtho)(GLdouble left, GLdouble right, GLdouble bottom,
-        GLdouble top, GLdouble zNear, GLdouble zFar) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glPassThrough)(GLfloat token) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glPixelMapfv)(GLenum map, GLint mapsize, const GLfloat *values) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glPixelMapuiv)(GLenum map, GLint mapsize, const GLuint *values) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glPixelMapusv)(GLenum map, GLint mapsize, const GLushort *values) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glPixelStoref)(GLenum pname, GLfloat param) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glPixelStorei)(GLenum pname, GLint param) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glPixelTransferf)(GLenum pname, GLfloat param) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glPixelTransferi)(GLenum pname, GLint param) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glPixelZoom)(GLfloat xfactor, GLfloat yfactor) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glPointSize)(GLfloat size) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glPolygonMode)(GLenum face, GLenum mode) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glPolygonOffset)(GLfloat factor, GLfloat units) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glPolygonStipple)(const GLubyte *mask) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glPopAttrib)(void) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glPopClientAttrib)(void) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glPopMatrix)(void) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glPopName)(void) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glPrioritizeTextures)(GLsizei n, const GLuint *textures, const GLclampf *priorities) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glPushAttrib)(GLbitfield mask) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glPushClientAttrib)(GLbitfield mask) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glPushMatrix)(void) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glPushName)(GLuint name) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glRasterPos2d)(GLdouble x, GLdouble y) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glRasterPos2dv)(const GLdouble *v) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glRasterPos2f)(GLfloat x, GLfloat y) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glRasterPos2fv)(const GLfloat *v) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glRasterPos2i)(GLint x, GLint y) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glRasterPos2iv)(const GLint *v) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glRasterPos2s)(GLshort x, GLshort y) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glRasterPos2sv)(const GLshort *v) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glRasterPos3d)(GLdouble x, GLdouble y, GLdouble z) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glRasterPos3dv)(const GLdouble *v) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glRasterPos3f)(GLfloat x, GLfloat y, GLfloat z) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glRasterPos3fv)(const GLfloat *v) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glRasterPos3i)(GLint x, GLint y, GLint z) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glRasterPos3iv)(const GLint *v) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glRasterPos3s)(GLshort x, GLshort y, GLshort z) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glRasterPos3sv)(const GLshort *v) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glRasterPos4d)(GLdouble x, GLdouble y, GLdouble z, GLdouble w) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glRasterPos4dv)(const GLdouble *v) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glRasterPos4f)(GLfloat x, GLfloat y, GLfloat z, GLfloat w) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glRasterPos4fv)(const GLfloat *v) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glRasterPos4i)(GLint x, GLint y, GLint z, GLint w) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glRasterPos4iv)(const GLint *v) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glRasterPos4s)(GLshort x, GLshort y, GLshort z, GLshort w) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glRasterPos4sv)(const GLshort *v) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glReadBuffer)(GLenum mode) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glReadPixels)(GLint x, GLint y, GLsizei width, GLsizei height,
-        GLenum format, GLenum type, GLvoid *pixels) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glRectd)(GLdouble x1, GLdouble y1, GLdouble x2, GLdouble y2) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glRectdv)(const GLdouble *v1, const GLdouble *v2) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glRectf)(GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glRectfv)(const GLfloat *v1, const GLfloat *v2) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glRecti)(GLint x1, GLint y1, GLint x2, GLint y2) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glRectiv)(const GLint *v1, const GLint *v2) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glRects)(GLshort x1, GLshort y1, GLshort x2, GLshort y2) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glRectsv)(const GLshort *v1, const GLshort *v2) DECLSPEC_HIDDEN;
-GLint (WINE_GLAPI *glRenderMode)(GLenum mode) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glRotated)(GLdouble angle, GLdouble x, GLdouble y, GLdouble z) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glRotatef)(GLfloat angle, GLfloat x, GLfloat y, GLfloat z) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glScaled)(GLdouble x, GLdouble y, GLdouble z) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glScalef)(GLfloat x, GLfloat y, GLfloat z) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glScissor)(GLint x, GLint y, GLsizei width, GLsizei height) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glSelectBuffer)(GLsizei size, GLuint *buffer) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glShadeModel)(GLenum mode) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glStencilFunc)(GLenum func, GLint ref, GLuint mask) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glStencilMask)(GLuint mask) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glStencilOp)(GLenum fail, GLenum zfail, GLenum zpass) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glTexCoord1d)(GLdouble s) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glTexCoord1dv)(const GLdouble *v) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glTexCoord1f)(GLfloat s) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glTexCoord1fv)(const GLfloat *v) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glTexCoord1i)(GLint s) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glTexCoord1iv)(const GLint *v) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glTexCoord1s)(GLshort s) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glTexCoord1sv)(const GLshort *v) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glTexCoord2d)(GLdouble s, GLdouble t) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glTexCoord2dv)(const GLdouble *v) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glTexCoord2f)(GLfloat s, GLfloat t) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glTexCoord2fv)(const GLfloat *v) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glTexCoord2i)(GLint s, GLint t) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glTexCoord2iv)(const GLint *v) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glTexCoord2s)(GLshort s, GLshort t) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glTexCoord2sv)(const GLshort *v) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glTexCoord3d)(GLdouble s, GLdouble t, GLdouble r) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glTexCoord3dv)(const GLdouble *v) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glTexCoord3f)(GLfloat s, GLfloat t, GLfloat r) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glTexCoord3fv)(const GLfloat *v) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glTexCoord3i)(GLint s, GLint t, GLint r) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glTexCoord3iv)(const GLint *v) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glTexCoord3s)(GLshort s, GLshort t, GLshort r) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glTexCoord3sv)(const GLshort *v) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glTexCoord4d)(GLdouble s, GLdouble t, GLdouble r, GLdouble q) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glTexCoord4dv)(const GLdouble *v) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glTexCoord4f)(GLfloat s, GLfloat t, GLfloat r, GLfloat q) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glTexCoord4fv)(const GLfloat *v) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glTexCoord4i)(GLint s, GLint t, GLint r, GLint q) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glTexCoord4iv)(const GLint *v) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glTexCoord4s)(GLshort s, GLshort t, GLshort r, GLshort q) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glTexCoord4sv)(const GLshort *v) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glTexCoordPointer)(GLint size, GLenum type, GLsizei stride, const GLvoid *pointer) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glTexEnvf)(GLenum target, GLenum pname, GLfloat param) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glTexEnvfv)(GLenum target, GLenum pname, const GLfloat *params) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glTexEnvi)(GLenum target, GLenum pname, GLint param) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glTexEnviv)(GLenum target, GLenum pname, const GLint *params) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glTexGend)(GLenum coord, GLenum pname, GLdouble param) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glTexGendv)(GLenum coord, GLenum pname, const GLdouble *params) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glTexGenf)(GLenum coord, GLenum pname, GLfloat param) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glTexGenfv)(GLenum coord, GLenum pname, const GLfloat *params) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glTexGeni)(GLenum coord, GLenum pname, GLint param) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glTexGeniv)(GLenum coord, GLenum pname, const GLint *params) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glTexImage1D)(GLenum target, GLint level, GLint internalformat, GLsizei width,
-        GLint border, GLenum format, GLenum type, const GLvoid *pixels) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glTexImage2D)(GLenum target, GLint level, GLint internalformat, GLsizei width,
-        GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid *pixels) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glTexParameterf)(GLenum target, GLenum pname, GLfloat param) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glTexParameterfv)(GLenum target, GLenum pname, const GLfloat *params) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glTexParameteri)(GLenum target, GLenum pname, GLint param) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glTexParameteriv)(GLenum target, GLenum pname, const GLint *params) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glTexSubImage1D)(GLenum target, GLint level, GLint xoffset,
-        GLsizei width, GLenum format, GLenum type, const GLvoid *pixels) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glTexSubImage2D)(GLenum target, GLint level, GLint xoffset, GLint yoffset,
-        GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid *pixels) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glTranslated)(GLdouble x, GLdouble y, GLdouble z) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glTranslatef)(GLfloat x, GLfloat y, GLfloat z) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glVertex2d)(GLdouble x, GLdouble y) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glVertex2dv)(const GLdouble *v) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glVertex2f)(GLfloat x, GLfloat y) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glVertex2fv)(const GLfloat *v) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glVertex2i)(GLint x, GLint y) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glVertex2iv)(const GLint *v) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glVertex2s)(GLshort x, GLshort y) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glVertex2sv)(const GLshort *v) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glVertex3d)(GLdouble x, GLdouble y, GLdouble z) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glVertex3dv)(const GLdouble *v) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glVertex3f)(GLfloat x, GLfloat y, GLfloat z) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glVertex3fv)(const GLfloat *v) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glVertex3i)(GLint x, GLint y, GLint z) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glVertex3iv)(const GLint *v) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glVertex3s)(GLshort x, GLshort y, GLshort z) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glVertex3sv)(const GLshort *v) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glVertex4d)(GLdouble x, GLdouble y, GLdouble z, GLdouble w) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glVertex4dv)(const GLdouble *v) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glVertex4f)(GLfloat x, GLfloat y, GLfloat z, GLfloat w) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glVertex4fv)(const GLfloat *v) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glVertex4i)(GLint x, GLint y, GLint z, GLint w) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glVertex4iv)(const GLint *v) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glVertex4s)(GLshort x, GLshort y, GLshort z, GLshort w) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glVertex4sv)(const GLshort *v) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glVertexPointer)(GLint size, GLenum type, GLsizei stride, const GLvoid *pointer) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glViewport)(GLint x, GLint y, GLsizei width, GLsizei height) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glPointParameterfv)(GLenum pname, const GLfloat *params) DECLSPEC_HIDDEN;
-void (WINE_GLAPI *glPointParameteri)(GLenum name, GLint value) DECLSPEC_HIDDEN;
-
-/* glFinish and glFlush are always loaded from opengl32.dll, thus they always have
- * __stdcall calling convention.
- *
- * They are wgl functions and must not be called inside the gl lock, give them a
- * name that makes this clear
- */
-void (__stdcall *wglFinish)(void) DECLSPEC_HIDDEN;
-void (__stdcall *wglFlush)(void) DECLSPEC_HIDDEN;
 
 /* WGL functions */
 HGLRC (WINAPI *pwglCreateContext)(HDC) DECLSPEC_HIDDEN;
@@ -1372,344 +902,6 @@ HDC (WINAPI *pwglGetCurrentDC)(void) DECLSPEC_HIDDEN;
 PROC (WINAPI *pwglGetProcAddress)(LPCSTR) DECLSPEC_HIDDEN;
 BOOL (WINAPI *pwglMakeCurrent)(HDC, HGLRC) DECLSPEC_HIDDEN;
 BOOL (WINAPI *pwglShareLists)(HGLRC, HGLRC) DECLSPEC_HIDDEN;
-
-#define GL_FUNCS_GEN \
-    USE_GL_FUNC(glAccum) \
-    USE_GL_FUNC(glAlphaFunc) \
-    USE_GL_FUNC(glAreTexturesResident) \
-    USE_GL_FUNC(glArrayElement) \
-    USE_GL_FUNC(glBegin) \
-    USE_GL_FUNC(glBindTexture) \
-    USE_GL_FUNC(glBitmap) \
-    USE_GL_FUNC(glBlendFunc) \
-    USE_GL_FUNC(glCallList) \
-    USE_GL_FUNC(glCallLists) \
-    USE_GL_FUNC(glClear) \
-    USE_GL_FUNC(glClearAccum) \
-    USE_GL_FUNC(glClearColor) \
-    USE_GL_FUNC(glClearDepth) \
-    USE_GL_FUNC(glClearIndex) \
-    USE_GL_FUNC(glClearStencil) \
-    USE_GL_FUNC(glClipPlane) \
-    USE_GL_FUNC(glColor3b) \
-    USE_GL_FUNC(glColor3bv) \
-    USE_GL_FUNC(glColor3d) \
-    USE_GL_FUNC(glColor3dv) \
-    USE_GL_FUNC(glColor3f) \
-    USE_GL_FUNC(glColor3fv) \
-    USE_GL_FUNC(glColor3i) \
-    USE_GL_FUNC(glColor3iv) \
-    USE_GL_FUNC(glColor3s) \
-    USE_GL_FUNC(glColor3sv) \
-    USE_GL_FUNC(glColor3ub) \
-    USE_GL_FUNC(glColor3ubv) \
-    USE_GL_FUNC(glColor3ui) \
-    USE_GL_FUNC(glColor3uiv) \
-    USE_GL_FUNC(glColor3us) \
-    USE_GL_FUNC(glColor3usv) \
-    USE_GL_FUNC(glColor4b) \
-    USE_GL_FUNC(glColor4bv) \
-    USE_GL_FUNC(glColor4d) \
-    USE_GL_FUNC(glColor4dv) \
-    USE_GL_FUNC(glColor4f) \
-    USE_GL_FUNC(glColor4fv) \
-    USE_GL_FUNC(glColor4i) \
-    USE_GL_FUNC(glColor4iv) \
-    USE_GL_FUNC(glColor4s) \
-    USE_GL_FUNC(glColor4sv) \
-    USE_GL_FUNC(glColor4ub) \
-    USE_GL_FUNC(glColor4ubv) \
-    USE_GL_FUNC(glColor4ui) \
-    USE_GL_FUNC(glColor4uiv) \
-    USE_GL_FUNC(glColor4us) \
-    USE_GL_FUNC(glColor4usv) \
-    USE_GL_FUNC(glColorMask) \
-    USE_GL_FUNC(glColorMaterial) \
-    USE_GL_FUNC(glColorPointer) \
-    USE_GL_FUNC(glCopyPixels) \
-    USE_GL_FUNC(glCopyTexImage1D) \
-    USE_GL_FUNC(glCopyTexImage2D) \
-    USE_GL_FUNC(glCopyTexSubImage1D) \
-    USE_GL_FUNC(glCopyTexSubImage2D) \
-    USE_GL_FUNC(glCullFace) \
-    USE_GL_FUNC(glDeleteLists) \
-    USE_GL_FUNC(glDeleteTextures) \
-    USE_GL_FUNC(glDepthFunc) \
-    USE_GL_FUNC(glDepthMask) \
-    USE_GL_FUNC(glDepthRange) \
-    USE_GL_FUNC(glDisable) \
-    USE_GL_FUNC(glDisableClientState) \
-    USE_GL_FUNC(glDrawArrays) \
-    USE_GL_FUNC(glDrawBuffer) \
-    USE_GL_FUNC(glDrawElements) \
-    USE_GL_FUNC(glDrawPixels) \
-    USE_GL_FUNC(glEdgeFlag) \
-    USE_GL_FUNC(glEdgeFlagPointer) \
-    USE_GL_FUNC(glEdgeFlagv) \
-    USE_GL_FUNC(glEnable) \
-    USE_GL_FUNC(glEnableClientState) \
-    USE_GL_FUNC(glEnd) \
-    USE_GL_FUNC(glEndList) \
-    USE_GL_FUNC(glEvalCoord1d) \
-    USE_GL_FUNC(glEvalCoord1dv) \
-    USE_GL_FUNC(glEvalCoord1f) \
-    USE_GL_FUNC(glEvalCoord1fv) \
-    USE_GL_FUNC(glEvalCoord2d) \
-    USE_GL_FUNC(glEvalCoord2dv) \
-    USE_GL_FUNC(glEvalCoord2f) \
-    USE_GL_FUNC(glEvalCoord2fv) \
-    USE_GL_FUNC(glEvalMesh1) \
-    USE_GL_FUNC(glEvalMesh2) \
-    USE_GL_FUNC(glEvalPoint1) \
-    USE_GL_FUNC(glEvalPoint2) \
-    USE_GL_FUNC(glFeedbackBuffer) \
-    USE_GL_FUNC(glFogf) \
-    USE_GL_FUNC(glFogfv) \
-    USE_GL_FUNC(glFogi) \
-    USE_GL_FUNC(glFogiv) \
-    USE_GL_FUNC(glFrontFace) \
-    USE_GL_FUNC(glFrustum) \
-    USE_GL_FUNC(glGenLists) \
-    USE_GL_FUNC(glGenTextures) \
-    USE_GL_FUNC(glGetBooleanv) \
-    USE_GL_FUNC(glGetClipPlane) \
-    USE_GL_FUNC(glGetDoublev) \
-    USE_GL_FUNC(glGetError) \
-    USE_GL_FUNC(glGetFloatv) \
-    USE_GL_FUNC(glGetIntegerv) \
-    USE_GL_FUNC(glGetLightfv) \
-    USE_GL_FUNC(glGetLightiv) \
-    USE_GL_FUNC(glGetMapdv) \
-    USE_GL_FUNC(glGetMapfv) \
-    USE_GL_FUNC(glGetMapiv) \
-    USE_GL_FUNC(glGetMaterialfv) \
-    USE_GL_FUNC(glGetMaterialiv) \
-    USE_GL_FUNC(glGetPixelMapfv) \
-    USE_GL_FUNC(glGetPixelMapuiv) \
-    USE_GL_FUNC(glGetPixelMapusv) \
-    USE_GL_FUNC(glGetPointerv) \
-    USE_GL_FUNC(glGetPolygonStipple) \
-    USE_GL_FUNC(glGetString) \
-    USE_GL_FUNC(glGetTexEnvfv) \
-    USE_GL_FUNC(glGetTexEnviv) \
-    USE_GL_FUNC(glGetTexGendv) \
-    USE_GL_FUNC(glGetTexGenfv) \
-    USE_GL_FUNC(glGetTexGeniv) \
-    USE_GL_FUNC(glGetTexImage) \
-    USE_GL_FUNC(glGetTexLevelParameterfv) \
-    USE_GL_FUNC(glGetTexLevelParameteriv) \
-    USE_GL_FUNC(glGetTexParameterfv) \
-    USE_GL_FUNC(glGetTexParameteriv) \
-    USE_GL_FUNC(glHint) \
-    USE_GL_FUNC(glIndexMask) \
-    USE_GL_FUNC(glIndexPointer) \
-    USE_GL_FUNC(glIndexd) \
-    USE_GL_FUNC(glIndexdv) \
-    USE_GL_FUNC(glIndexf) \
-    USE_GL_FUNC(glIndexfv) \
-    USE_GL_FUNC(glIndexi) \
-    USE_GL_FUNC(glIndexiv) \
-    USE_GL_FUNC(glIndexs) \
-    USE_GL_FUNC(glIndexsv) \
-    USE_GL_FUNC(glIndexub) \
-    USE_GL_FUNC(glIndexubv) \
-    USE_GL_FUNC(glInitNames) \
-    USE_GL_FUNC(glInterleavedArrays) \
-    USE_GL_FUNC(glIsEnabled) \
-    USE_GL_FUNC(glIsList) \
-    USE_GL_FUNC(glIsTexture) \
-    USE_GL_FUNC(glLightModelf) \
-    USE_GL_FUNC(glLightModelfv) \
-    USE_GL_FUNC(glLightModeli) \
-    USE_GL_FUNC(glLightModeliv) \
-    USE_GL_FUNC(glLightf) \
-    USE_GL_FUNC(glLightfv) \
-    USE_GL_FUNC(glLighti) \
-    USE_GL_FUNC(glLightiv) \
-    USE_GL_FUNC(glLineStipple) \
-    USE_GL_FUNC(glLineWidth) \
-    USE_GL_FUNC(glListBase) \
-    USE_GL_FUNC(glLoadIdentity) \
-    USE_GL_FUNC(glLoadMatrixd) \
-    USE_GL_FUNC(glLoadMatrixf) \
-    USE_GL_FUNC(glLoadName) \
-    USE_GL_FUNC(glLogicOp) \
-    USE_GL_FUNC(glMap1d) \
-    USE_GL_FUNC(glMap1f) \
-    USE_GL_FUNC(glMap2d) \
-    USE_GL_FUNC(glMap2f) \
-    USE_GL_FUNC(glMapGrid1d) \
-    USE_GL_FUNC(glMapGrid1f) \
-    USE_GL_FUNC(glMapGrid2d) \
-    USE_GL_FUNC(glMapGrid2f) \
-    USE_GL_FUNC(glMaterialf) \
-    USE_GL_FUNC(glMaterialfv) \
-    USE_GL_FUNC(glMateriali) \
-    USE_GL_FUNC(glMaterialiv) \
-    USE_GL_FUNC(glMatrixMode) \
-    USE_GL_FUNC(glMultMatrixd) \
-    USE_GL_FUNC(glMultMatrixf) \
-    USE_GL_FUNC(glNewList) \
-    USE_GL_FUNC(glNormal3b) \
-    USE_GL_FUNC(glNormal3bv) \
-    USE_GL_FUNC(glNormal3d) \
-    USE_GL_FUNC(glNormal3dv) \
-    USE_GL_FUNC(glNormal3f) \
-    USE_GL_FUNC(glNormal3fv) \
-    USE_GL_FUNC(glNormal3i) \
-    USE_GL_FUNC(glNormal3iv) \
-    USE_GL_FUNC(glNormal3s) \
-    USE_GL_FUNC(glNormal3sv) \
-    USE_GL_FUNC(glNormalPointer) \
-    USE_GL_FUNC(glOrtho) \
-    USE_GL_FUNC(glPassThrough) \
-    USE_GL_FUNC(glPixelMapfv) \
-    USE_GL_FUNC(glPixelMapuiv) \
-    USE_GL_FUNC(glPixelMapusv) \
-    USE_GL_FUNC(glPixelStoref) \
-    USE_GL_FUNC(glPixelStorei) \
-    USE_GL_FUNC(glPixelTransferf) \
-    USE_GL_FUNC(glPixelTransferi) \
-    USE_GL_FUNC(glPixelZoom) \
-    USE_GL_FUNC(glPointSize) \
-    USE_GL_FUNC(glPolygonMode) \
-    USE_GL_FUNC(glPolygonOffset) \
-    USE_GL_FUNC(glPolygonStipple) \
-    USE_GL_FUNC(glPopAttrib) \
-    USE_GL_FUNC(glPopClientAttrib) \
-    USE_GL_FUNC(glPopMatrix) \
-    USE_GL_FUNC(glPopName) \
-    USE_GL_FUNC(glPrioritizeTextures) \
-    USE_GL_FUNC(glPushAttrib) \
-    USE_GL_FUNC(glPushClientAttrib) \
-    USE_GL_FUNC(glPushMatrix) \
-    USE_GL_FUNC(glPushName) \
-    USE_GL_FUNC(glRasterPos2d) \
-    USE_GL_FUNC(glRasterPos2dv) \
-    USE_GL_FUNC(glRasterPos2f) \
-    USE_GL_FUNC(glRasterPos2fv) \
-    USE_GL_FUNC(glRasterPos2i) \
-    USE_GL_FUNC(glRasterPos2iv) \
-    USE_GL_FUNC(glRasterPos2s) \
-    USE_GL_FUNC(glRasterPos2sv) \
-    USE_GL_FUNC(glRasterPos3d) \
-    USE_GL_FUNC(glRasterPos3dv) \
-    USE_GL_FUNC(glRasterPos3f) \
-    USE_GL_FUNC(glRasterPos3fv) \
-    USE_GL_FUNC(glRasterPos3i) \
-    USE_GL_FUNC(glRasterPos3iv) \
-    USE_GL_FUNC(glRasterPos3s) \
-    USE_GL_FUNC(glRasterPos3sv) \
-    USE_GL_FUNC(glRasterPos4d) \
-    USE_GL_FUNC(glRasterPos4dv) \
-    USE_GL_FUNC(glRasterPos4f) \
-    USE_GL_FUNC(glRasterPos4fv) \
-    USE_GL_FUNC(glRasterPos4i) \
-    USE_GL_FUNC(glRasterPos4iv) \
-    USE_GL_FUNC(glRasterPos4s) \
-    USE_GL_FUNC(glRasterPos4sv) \
-    USE_GL_FUNC(glReadBuffer) \
-    USE_GL_FUNC(glReadPixels) \
-    USE_GL_FUNC(glRectd) \
-    USE_GL_FUNC(glRectdv) \
-    USE_GL_FUNC(glRectf) \
-    USE_GL_FUNC(glRectfv) \
-    USE_GL_FUNC(glRecti) \
-    USE_GL_FUNC(glRectiv) \
-    USE_GL_FUNC(glRects) \
-    USE_GL_FUNC(glRectsv) \
-    USE_GL_FUNC(glRenderMode) \
-    USE_GL_FUNC(glRotated) \
-    USE_GL_FUNC(glRotatef) \
-    USE_GL_FUNC(glScaled) \
-    USE_GL_FUNC(glScalef) \
-    USE_GL_FUNC(glScissor) \
-    USE_GL_FUNC(glSelectBuffer) \
-    USE_GL_FUNC(glShadeModel) \
-    USE_GL_FUNC(glStencilFunc) \
-    USE_GL_FUNC(glStencilMask) \
-    USE_GL_FUNC(glStencilOp) \
-    USE_GL_FUNC(glTexCoord1d) \
-    USE_GL_FUNC(glTexCoord1dv) \
-    USE_GL_FUNC(glTexCoord1f) \
-    USE_GL_FUNC(glTexCoord1fv) \
-    USE_GL_FUNC(glTexCoord1i) \
-    USE_GL_FUNC(glTexCoord1iv) \
-    USE_GL_FUNC(glTexCoord1s) \
-    USE_GL_FUNC(glTexCoord1sv) \
-    USE_GL_FUNC(glTexCoord2d) \
-    USE_GL_FUNC(glTexCoord2dv) \
-    USE_GL_FUNC(glTexCoord2f) \
-    USE_GL_FUNC(glTexCoord2fv) \
-    USE_GL_FUNC(glTexCoord2i) \
-    USE_GL_FUNC(glTexCoord2iv) \
-    USE_GL_FUNC(glTexCoord2s) \
-    USE_GL_FUNC(glTexCoord2sv) \
-    USE_GL_FUNC(glTexCoord3d) \
-    USE_GL_FUNC(glTexCoord3dv) \
-    USE_GL_FUNC(glTexCoord3f) \
-    USE_GL_FUNC(glTexCoord3fv) \
-    USE_GL_FUNC(glTexCoord3i) \
-    USE_GL_FUNC(glTexCoord3iv) \
-    USE_GL_FUNC(glTexCoord3s) \
-    USE_GL_FUNC(glTexCoord3sv) \
-    USE_GL_FUNC(glTexCoord4d) \
-    USE_GL_FUNC(glTexCoord4dv) \
-    USE_GL_FUNC(glTexCoord4f) \
-    USE_GL_FUNC(glTexCoord4fv) \
-    USE_GL_FUNC(glTexCoord4i) \
-    USE_GL_FUNC(glTexCoord4iv) \
-    USE_GL_FUNC(glTexCoord4s) \
-    USE_GL_FUNC(glTexCoord4sv) \
-    USE_GL_FUNC(glTexCoordPointer) \
-    USE_GL_FUNC(glTexEnvf) \
-    USE_GL_FUNC(glTexEnvfv) \
-    USE_GL_FUNC(glTexEnvi) \
-    USE_GL_FUNC(glTexEnviv) \
-    USE_GL_FUNC(glTexGend) \
-    USE_GL_FUNC(glTexGendv) \
-    USE_GL_FUNC(glTexGenf) \
-    USE_GL_FUNC(glTexGenfv) \
-    USE_GL_FUNC(glTexGeni) \
-    USE_GL_FUNC(glTexGeniv) \
-    USE_GL_FUNC(glTexImage1D) \
-    USE_GL_FUNC(glTexImage2D) \
-    USE_GL_FUNC(glTexParameterf) \
-    USE_GL_FUNC(glTexParameterfv) \
-    USE_GL_FUNC(glTexParameteri) \
-    USE_GL_FUNC(glTexParameteriv) \
-    USE_GL_FUNC(glTexSubImage1D) \
-    USE_GL_FUNC(glTexSubImage2D) \
-    USE_GL_FUNC(glTranslated) \
-    USE_GL_FUNC(glTranslatef) \
-    USE_GL_FUNC(glVertex2d) \
-    USE_GL_FUNC(glVertex2dv) \
-    USE_GL_FUNC(glVertex2f) \
-    USE_GL_FUNC(glVertex2fv) \
-    USE_GL_FUNC(glVertex2i) \
-    USE_GL_FUNC(glVertex2iv) \
-    USE_GL_FUNC(glVertex2s) \
-    USE_GL_FUNC(glVertex2sv) \
-    USE_GL_FUNC(glVertex3d) \
-    USE_GL_FUNC(glVertex3dv) \
-    USE_GL_FUNC(glVertex3f) \
-    USE_GL_FUNC(glVertex3fv) \
-    USE_GL_FUNC(glVertex3i) \
-    USE_GL_FUNC(glVertex3iv) \
-    USE_GL_FUNC(glVertex3s) \
-    USE_GL_FUNC(glVertex3sv) \
-    USE_GL_FUNC(glVertex4d) \
-    USE_GL_FUNC(glVertex4dv) \
-    USE_GL_FUNC(glVertex4f) \
-    USE_GL_FUNC(glVertex4fv) \
-    USE_GL_FUNC(glVertex4i) \
-    USE_GL_FUNC(glVertex4iv) \
-    USE_GL_FUNC(glVertex4s) \
-    USE_GL_FUNC(glVertex4sv) \
-    USE_GL_FUNC(glVertexPointer) \
-    USE_GL_FUNC(glViewport) \
-    USE_GL_FUNC(glPointParameterfv) \
-    USE_GL_FUNC(glPointParameteri) \
 
 #define WGL_FUNCS_GEN \
     USE_WGL_FUNC(wglCreateContext) \
@@ -1730,7 +922,6 @@ enum wined3d_gl_extension
     APPLE_FENCE,
     APPLE_FLOAT_PIXELS,
     APPLE_FLUSH_BUFFER_RANGE,
-    APPLE_FLUSH_RENDER,
     APPLE_YCBCR_422,
     /* ARB */
     ARB_COLOR_BUFFER_FLOAT,
@@ -1742,6 +933,7 @@ enum wined3d_gl_extension
     ARB_FRAGMENT_PROGRAM,
     ARB_FRAGMENT_SHADER,
     ARB_FRAMEBUFFER_OBJECT,
+    ARB_FRAMEBUFFER_SRGB,
     ARB_GEOMETRY_SHADER4,
     ARB_HALF_FLOAT_PIXEL,
     ARB_HALF_FLOAT_VERTEX,
@@ -1860,14 +1052,6 @@ enum wined3d_gl_extension
 #define GL_DRAW_PIXELS_APPLE                                0x8a0a
 #define GL_FENCE_APPLE                                      0x8a0b
 #endif
-typedef void (WINE_GLAPI *PGLFNGENFENCESAPPLEPROC)(GLsizei, GLuint *);
-typedef void (WINE_GLAPI *PGLFNDELETEFENCESAPPLEPROC)(GLuint, const GLuint *);
-typedef void (WINE_GLAPI *PGLFNSETFENCEAPPLEPROC)(GLuint);
-typedef GLboolean (WINE_GLAPI *PGLFNTESTFENCEAPPLEPROC)(GLuint);
-typedef void (WINE_GLAPI *PGLFNFINISHFENCEAPPLEPROC)(GLuint);
-typedef GLboolean (WINE_GLAPI *PGLFNISFENCEAPPLEPROC)(GLuint);
-typedef GLboolean (WINE_GLAPI *PGLFNTESTOBJECTAPPLEPROC)(GLenum, GLuint);
-typedef void (WINE_GLAPI *PGLFNFINISHOBJECTAPPLEPROC)(GLenum, GLuint);
 
 /* GL_APPLE_float_pixels */
 #ifndef GL_APPLE_float_pixels
@@ -1894,12 +1078,6 @@ typedef void (WINE_GLAPI *PGLFNFINISHOBJECTAPPLEPROC)(GLenum, GLuint);
 #define GL_BUFFER_SERIALIZED_MODIFY_APPLE                   0x8a12
 #define GL_BUFFER_FLUSHING_UNMAP_APPLE                      0x8a13
 #endif
-typedef void (WINE_GLAPI *PGLFNBUFFERPARAMETERIAPPLE)(GLenum target, GLenum pname, GLint param);
-typedef void (WINE_GLAPI *PGLFNFLUSHMAPPEDBUFFERRANGEAPPLE)(GLenum target, GLintptr offset, GLsizeiptr size);
-
-/* GL_APPLE_flush_render */
-typedef void (WINE_GLAPI *PGLFNFLUSHRENDERAPPLEPROC)(void);
-typedef void (WINE_GLAPI *PGLFNFINISHRENDERAPPLEPROC)(void);
 
 /* GL_APPLE_ycbcr_422 */
 #ifndef GL_APPLE_ycbcr_422
@@ -1918,7 +1096,6 @@ typedef void (WINE_GLAPI *PGLFNFINISHRENDERAPPLEPROC)(void);
 #define GL_CLAMP_READ_COLOR_ARB                             0x891c
 #define GL_FIXED_ONLY_ARB                                   0x891d
 #endif
-typedef void (WINE_GLAPI *PGLFNCLAMPCOLORARBPROC)(GLenum target, GLenum clamp);
 
 /* GL_ARB_depth_buffer_float */
 #ifndef GL_ARB_depth_buffer_float
@@ -1965,20 +1142,11 @@ typedef void (WINE_GLAPI *PGLFNCLAMPCOLORARBPROC)(GLenum target, GLenum clamp);
 #define GL_DRAW_BUFFER14_ARB                                0x8833
 #define GL_DRAW_BUFFER15_ARB                                0x8834
 #endif
-typedef void (WINE_GLAPI *PGLFNDRAWBUFFERSARBPROC)(GLsizei n, const GLenum *bufs);
 
 /* GL_ARB_draw_elements_base_vertex */
 #ifndef GL_ARB_draw_elements_base_vertex
 #define GL_ARB_draw_elements_base_vertex 1
 #endif
-typedef void (WINE_GLAPI *PGLFNDRAWELEMENTSBASEVERTEXPROC)(GLenum mode, GLsizei count, GLenum type,
-        const GLvoid *indices, GLint basevertex);
-typedef void (WINE_GLAPI *PGLFNDRAWRANGEELEMENTSBASEVERTEXPROC)(GLenum mode, GLuint start, GLuint end,
-        GLsizei count, GLenum type, const GLvoid *indices, GLint basevertex);
-typedef void (WINE_GLAPI *PGLFNDRAWELEMENTSINSTANCEDBASEVERTEXPROC)(GLenum mode, GLsizei count,
-        GLenum type, const GLvoid *indices, GLsizei primcount, GLint basevertex);
-typedef void (WINE_GLAPI *PGLFNMULTIDRAWELEMENTSBASEVERTEXPROC)(GLenum mode, GLsizei *count, GLenum type,
-        const GLvoid **indices, GLsizei primcount, GLint *basevertex);
 
 /* GL_ARB_fragment_program */
 #ifndef GL_ARB_fragment_program
@@ -2087,35 +1255,12 @@ typedef void (WINE_GLAPI *PGLFNMULTIDRAWELEMENTSBASEVERTEXPROC)(GLenum mode, GLs
 #define GL_DEPTH24_STENCIL8                                 0x88f0
 #define GL_TEXTURE_STENCIL_SIZE                             0x88f1
 #endif
-typedef GLboolean (WINE_GLAPI *PGLFNGLISRENDERBUFFERPROC)(GLuint renderbuffer);
-typedef void (WINE_GLAPI *PGLFNGLBINDRENDERBUFFERPROC)(GLenum target, GLuint renderbuffer);
-typedef void (WINE_GLAPI *PGLFNGLDELETERENDERBUFFERSPROC)(GLsizei n, const GLuint *renderbuffers);
-typedef void (WINE_GLAPI *PGLFNGLGENRENDERBUFFERSPROC)(GLsizei n, GLuint *renderbuffers);
-typedef void (WINE_GLAPI *PGLFNGLRENDERBUFFERSTORAGEPROC)(GLenum target, GLenum internalformat,
-        GLsizei width, GLsizei height);
-typedef void (WINE_GLAPI *PGLFNRENDERBUFFERSTORAGEMULTISAMPLEPROC)(GLenum target, GLsizei samples,
-        GLenum internalformat, GLsizei width, GLsizei height);
-typedef void (WINE_GLAPI *PGLFNGLGETRENDERBUFFERPARAMETERIVPROC)(GLenum target, GLenum pname, GLint *params);
-typedef GLboolean (WINE_GLAPI *PGLFNGLISFRAMEBUFFERPROC)(GLuint framebuffer);
-typedef void (WINE_GLAPI *PGLFNGLBINDFRAMEBUFFERPROC)(GLenum target, GLuint framebuffer);
-typedef void (WINE_GLAPI *PGLFNGLDELETEFRAMEBUFFERSPROC)(GLsizei n, const GLuint *framebuffers);
-typedef void (WINE_GLAPI *PGLFNGLGENFRAMEBUFFERSPROC)(GLsizei n, GLuint *framebuffers);
-typedef GLenum (WINE_GLAPI *PGLFNGLCHECKFRAMEBUFFERSTATUSPROC)(GLenum target);
-typedef void (WINE_GLAPI *PGLFNGLFRAMEBUFFERTEXTURE1DPROC)(GLenum target, GLenum attachment,
-        GLenum textarget, GLuint texture, GLint level);
-typedef void (WINE_GLAPI *PGLFNGLFRAMEBUFFERTEXTURE2DPROC)(GLenum target, GLenum attachment,
-        GLenum textarget, GLuint texture, GLint level);
-typedef void (WINE_GLAPI *PGLFNGLFRAMEBUFFERTEXTURE3DPROC)(GLenum target, GLenum attachment,
-        GLenum textarget, GLuint texture, GLint level, GLint layer);
-typedef void (WINE_GLAPI *PGLFNGLFRAMEBUFFERTEXTURELAYERPROC)(GLenum target, GLenum attachment,
-        GLuint texture, GLint level, GLint layer);
-typedef void (WINE_GLAPI *PGLFNGLFRAMEBUFFERRENDERBUFFERPROC)(GLenum target, GLenum attachment,
-        GLenum renderbuffertarget, GLuint renderbuffer);
-typedef void (WINE_GLAPI *PGLFNGLGETFRAMEBUFFERATTACHMENTPARAMETERIVPROC)(GLenum target, GLenum attachment,
-        GLenum pname, GLint *params);
-typedef void (WINE_GLAPI *PGLFNGLBLITFRAMEBUFFERPROC)(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1,
-        GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1, GLbitfield mask, GLenum filter);
-typedef void (WINE_GLAPI *PGLFNGLGENERATEMIPMAPPROC)(GLenum target);
+
+/* GL_ARB_framebuffer_sRGB */
+#ifndef GL_ARB_framebuffer_sRGB
+#define GL_ARB_framebuffer_sRGB 1
+#define GL_FRAMEBUFFER_SRGB                                 0x8db9
+#endif
 
 /* GL_ARB_geometry_shader4 */
 #ifndef GL_ARB_geometry_shader4
@@ -2141,13 +1286,6 @@ typedef void (WINE_GLAPI *PGLFNGLGENERATEMIPMAPPROC)(GLenum target);
 #define GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_LAYER             0x8cd4
 #define GL_PROGRAM_POINT_SIZE_ARB                           0x8642
 #endif
-typedef void (WINE_GLAPI *PGLFNPROGRAMPARAMETERIARBPROC)(GLuint program, GLenum pname, GLint value);
-typedef void (WINE_GLAPI *PGLFNFRAMEBUFFERTEXTUREARBPROC)(GLenum target, GLenum attachment,
-        GLuint texture, GLint level);
-typedef void (WINE_GLAPI *PGLFNFRAMEBUFFERTEXTURELAYERARBPROC)(GLenum target, GLenum attachment,
-        GLuint texture, GLint level, GLint layer);
-typedef void (WINE_GLAPI *PGLFNFRAMEBUFFERTEXTUREFACEARBPROC)(GLenum target, GLenum attachment,
-        GLuint texture, GLint level, GLenum face);
 
 /* GL_ARB_half_float_pixel */
 #ifndef GL_ARB_half_float_pixel
@@ -2178,8 +1316,6 @@ typedef void (WINE_GLAPI *PGLFNFRAMEBUFFERTEXTUREFACEARBPROC)(GLenum target, GLe
 #define GL_MAP_FLUSH_EXPLICIT_BIT                           0x0010
 #define GL_MAP_UNSYNCHRONIZED_BIT                           0x0020
 #endif
-typedef GLvoid *(WINE_GLAPI *PGLFNMAPBUFFERRANGEPROC)(GLenum target, GLintptr offset, GLsizeiptr length, GLbitfield access);
-typedef void (WINE_GLAPI *PGLFNFLUSHMAPPEDBUFFERRANGEPROC)(GLenum target, GLintptr offset, GLsizeiptr length);
 
 /* GL_ARB_multisample */
 #ifndef GL_ARB_multisample
@@ -2194,7 +1330,6 @@ typedef void (WINE_GLAPI *PGLFNFLUSHMAPPEDBUFFERRANGEPROC)(GLenum target, GLintp
 #define GL_SAMPLE_COVERAGE_INVERT_ARB                       0x80ab
 #define GL_MULTISAMPLE_BIT_ARB                              0x20000000
 #endif
-typedef void (WINE_GLAPI *WINED3D_PFNGLSAMPLECOVERAGEARBPROC)(GLclampf value, GLboolean invert);
 
 /* GL_ARB_multitexture */
 #ifndef GL_ARB_multitexture
@@ -2235,19 +1370,6 @@ typedef void (WINE_GLAPI *WINED3D_PFNGLSAMPLECOVERAGEARBPROC)(GLclampf value, GL
 #define GL_CLIENT_ACTIVE_TEXTURE_ARB                        0x84e1
 #define GL_MAX_TEXTURE_UNITS_ARB                            0x84e2
 #endif
-typedef void (WINE_GLAPI *WINED3D_PFNGLACTIVETEXTUREARBPROC)(GLenum texture);
-typedef void (WINE_GLAPI *WINED3D_PFNGLCLIENTACTIVETEXTUREARBPROC)(GLenum texture);
-typedef void (WINE_GLAPI *WINED3D_PFNGLMULTITEXCOORD1FARBPROC)(GLenum target, GLfloat s);
-typedef void (WINE_GLAPI *WINED3D_PFNGLMULTITEXCOORD1FVARBPROC)(GLenum target, const GLfloat *v);
-typedef void (WINE_GLAPI *WINED3D_PFNGLMULTITEXCOORD2FARBPROC)(GLenum target, GLfloat s, GLfloat t);
-typedef void (WINE_GLAPI *WINED3D_PFNGLMULTITEXCOORD2FVARBPROC)(GLenum target, const GLfloat *v);
-typedef void (WINE_GLAPI *WINED3D_PFNGLMULTITEXCOORD3FARBPROC)(GLenum target, GLfloat s, GLfloat t, GLfloat r);
-typedef void (WINE_GLAPI *WINED3D_PFNGLMULTITEXCOORD3FVARBPROC)(GLenum target, const GLfloat *v);
-typedef void (WINE_GLAPI *WINED3D_PFNGLMULTITEXCOORD4FARBPROC)(GLenum target,
-        GLfloat s, GLfloat t, GLfloat r, GLfloat q);
-typedef void (WINE_GLAPI *WINED3D_PFNGLMULTITEXCOORD4FVARBPROC)(GLenum target, const GLfloat *v);
-typedef void (WINE_GLAPI *WINED3D_PFNGLMULTITEXCOORD2SVARBPROC)(GLenum target, const GLshort *v);
-typedef void (WINE_GLAPI *WINED3D_PFNGLMULTITEXCOORD4SVARBPROC)(GLenum target, const GLshort *v);
 
 /* GL_ARB_occlusion_query */
 #ifndef GL_ARB_occlusion_query
@@ -2258,14 +1380,6 @@ typedef void (WINE_GLAPI *WINED3D_PFNGLMULTITEXCOORD4SVARBPROC)(GLenum target, c
 #define GL_QUERY_RESULT_ARB                                 0x8866
 #define GL_QUERY_RESULT_AVAILABLE_ARB                       0x8867
 #endif
-typedef void (WINE_GLAPI *PGLFNGENQUERIESARBPROC)(GLsizei n, GLuint *queries);
-typedef void (WINE_GLAPI *PGLFNDELETEQUERIESARBPROC)(GLsizei n, const GLuint *queries);
-typedef GLboolean (WINE_GLAPI *PGLFNISQUERYARBPROC)(GLuint query);
-typedef void (WINE_GLAPI *PGLFNBEGINQUERYARBPROC)(GLenum target, GLuint query);
-typedef void (WINE_GLAPI *PGLFNENDQUERYARBPROC)(GLenum target);
-typedef void (WINE_GLAPI *PGLFNGETQUERYIVARBPROC)(GLenum target, GLenum pname, GLint *params);
-typedef void (WINE_GLAPI *PGLFNGETQUERYOBJECTIVARBPROC)(GLuint query, GLenum pname, GLint *params);
-typedef void (WINE_GLAPI *PGLFNGETQUERYOBJECTUIVARBPROC)(GLuint query, GLenum pname, GLuint *params);
 
 /* GL_ARB_pixel_buffer_object */
 #ifndef GL_ARB_pixel_buffer_object
@@ -2284,8 +1398,6 @@ typedef void (WINE_GLAPI *PGLFNGETQUERYOBJECTUIVARBPROC)(GLuint query, GLenum pn
 #define GL_POINT_FADE_THRESHOLD_SIZE_ARB                    0x8128
 #define GL_POINT_DISTANCE_ATTENUATION_ARB                   0x8129
 #endif
-typedef void (WINE_GLAPI *PGLFNGLPOINTPARAMETERFARBPROC)(GLenum pname, GLfloat param);
-typedef void (WINE_GLAPI *PGLFNGLPOINTPARAMETERFVARBPROC)(GLenum pname, const GLfloat *params);
 
 /* GL_ARB_point_sprite */
 #ifndef GL_ARB_point_sprite
@@ -2302,7 +1414,6 @@ typedef void (WINE_GLAPI *PGLFNGLPOINTPARAMETERFVARBPROC)(GLenum pname, const GL
 #define GL_PROVOKING_VERTEX                                 0x8e4f
 #define GL_QUADS_FOLLOW_PROVOKING_VERTEX_CONVENTION         0x8e4c
 #endif
-typedef void (WINE_GLAPI *PGLFNGLPROVOKINGVERTEXPROC)(GLenum mode);
 
 /* GL_ARB_shader_objects */
 #ifndef GL_ARB_shader_objects
@@ -2378,14 +1489,6 @@ typedef unsigned int GLhandleARB;
 #define GL_CONDITION_SATISFIED                  0x911c
 #define GL_WAIT_FAILED                          0x911d
 #endif
-typedef GLsync (WINE_GLAPI *PGLFNFENCESYNCPROC)(GLenum condition, GLbitfield flags);
-typedef GLboolean (WINE_GLAPI *PGLFNISSYNCPROC)(GLsync sync);
-typedef GLvoid (WINE_GLAPI *PGLFNDELETESYNCPROC)(GLsync sync);
-typedef GLenum (WINE_GLAPI *PGLFNCLIENTWAITSYNCPROC)(GLsync sync, GLbitfield flags, GLuint64 timeout);
-typedef GLvoid (WINE_GLAPI *PGLFNWAITSYNCPROC)(GLsync sync, GLbitfield flags, GLuint64 timeout);
-typedef GLvoid (WINE_GLAPI *PGLFNGETINTEGER64VPROC)(GLenum pname, GLint64 *params);
-typedef GLvoid (WINE_GLAPI *PGLFNGETSYNCIVPROC)(GLsync sync, GLenum pname, GLsizei bufsize,
-        GLsizei *length, GLint *values);
 
 /* GL_ARB_texture_border_clamp */
 #ifndef GL_ARB_texture_border_clamp
@@ -2525,16 +1628,6 @@ typedef GLvoid (WINE_GLAPI *PGLFNGETSYNCIVPROC)(GLsync sync, GLenum pname, GLsiz
 #define GL_MODELVIEW30_ARB                                  0x873e
 #define GL_MODELVIEW31_ARB                                  0x873f
 #endif
-typedef void (WINE_GLAPI *PGLFNGLWEIGHTPOINTERARB)(GLint size, GLenum type, GLsizei stride, const GLvoid *pointer);
-typedef void (WINE_GLAPI *PGLFNGLWEIGHTBV)(GLint size, const GLbyte *weights);
-typedef void (WINE_GLAPI *PGLFNGLWEIGHTSV)(GLint size, const GLshort *weights);
-typedef void (WINE_GLAPI *PGLFNGLWEIGHTIV)(GLint size, const GLint *weights);
-typedef void (WINE_GLAPI *PGLFNGLWEIGHTFV)(GLint size, const GLfloat *weights);
-typedef void (WINE_GLAPI *PGLFNGLWEIGHTDV)(GLint size, const GLdouble *weights);
-typedef void (WINE_GLAPI *PGLFNGLWEIGHTUBV)(GLint size, const GLubyte *weights);
-typedef void (WINE_GLAPI *PGLFNGLWEIGHTUSV)(GLint size, const GLushort *weights);
-typedef void (WINE_GLAPI *PGLFNGLWEIGHTUIV)(GLint size, const GLuint *weights);
-typedef void (WINE_GLAPI *PGLFNGLVERTEXBLENDARB)(GLint count);
 
 /* GL_ARB_vertex_buffer_object */
 #ifndef GL_ARB_vertex_buffer_object
@@ -2571,18 +1664,6 @@ typedef void (WINE_GLAPI *PGLFNGLVERTEXBLENDARB)(GLint count);
 #define GL_DYNAMIC_READ_ARB                                 0x88e9
 #define GL_DYNAMIC_COPY_ARB                                 0x88ea
 #endif
-typedef void (WINE_GLAPI *PGLFNBINDBUFFERARBPROC)(GLenum target, GLuint buffer);
-typedef void (WINE_GLAPI *PGLFNDELETEBUFFERSARBPROC)(GLsizei n, const GLuint *buffers);
-typedef void (WINE_GLAPI *PGLFNGENBUFFERSARBPROC)(GLsizei n, GLuint *buffers);
-typedef GLboolean (WINE_GLAPI *PGLFNISBUFFERARBPROC)(GLuint buffer);
-typedef void (WINE_GLAPI *PGLFNBUFFERDATAARBPROC)(GLenum target, GLsizeiptr size, const GLvoid *data, GLenum usage);
-typedef void (WINE_GLAPI *PGLFNBUFFERSUBDATAARBPROC)(GLenum target,
-        GLintptr offset, GLsizeiptr size, const GLvoid *data);
-typedef void (WINE_GLAPI *PGLFNGETBUFFERSUBDATAARBPROC)(GLenum target, GLintptr offset, GLsizeiptr size, GLvoid *data);
-typedef GLvoid* (WINE_GLAPI *PGLFNMAPBUFFERARBPROC)(GLenum  target, GLenum access);
-typedef GLboolean (WINE_GLAPI *PGLFNUNMAPBUFFERARBPROC)(GLenum target);
-typedef void (WINE_GLAPI *PGLFNGETBUFFERPARAMETERIVARBPROC)(GLenum target, GLenum pname, GLint *params);
-typedef void (WINE_GLAPI *PGLFNGETBUFFERPOINTERVARBPROC)(GLenum target, GLenum pname, GLvoid* *params);
 
 /* GL_ARB_vertex_program */
 #ifndef GL_ARB_vertex_program
@@ -2667,73 +1748,6 @@ typedef void (WINE_GLAPI *PGLFNGETBUFFERPOINTERVARBPROC)(GLenum target, GLenum p
 #define GL_MATRIX30_ARB                                     0x88de
 #define GL_MATRIX31_ARB                                     0x88df
 #endif
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB1DARBPROC)(GLuint index, GLdouble x);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB1DVARBPROC)(GLuint index, const GLdouble *v);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB1FARBPROC)(GLuint index, GLfloat x);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB1FVARBPROC)(GLuint index, const GLfloat *v);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB1SARBPROC)(GLuint index, GLshort x);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB1SVARBPROC)(GLuint index, const GLshort *v);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB2DARBPROC)(GLuint index, GLdouble x, GLdouble y);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB2DVARBPROC)(GLuint index, const GLdouble *v);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB2FARBPROC)(GLuint index, GLfloat x, GLfloat y);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB2FVARBPROC)(GLuint index, const GLfloat *v);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB2SARBPROC)(GLuint index, GLshort x, GLshort y);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB2SVARBPROC)(GLuint index, const GLshort *v);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB3DARBPROC)(GLuint index, GLdouble x, GLdouble y, GLdouble z);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB3DVARBPROC)(GLuint index, const GLdouble *v);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB3FARBPROC)(GLuint index, GLfloat x, GLfloat y, GLfloat z);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB3FVARBPROC)(GLuint index, const GLfloat *v);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB3SARBPROC)(GLuint index, GLshort x, GLshort y, GLshort z);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB3SVARBPROC)(GLuint index, const GLshort *v);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB4NBVARBPROC)(GLuint index, const GLbyte *v);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB4NIVARBPROC)(GLuint index, const GLint *v);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB4NSVARBPROC)(GLuint index, const GLshort *v);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB4NUBARBPROC)(GLuint index, GLubyte x, GLubyte y, GLubyte z, GLubyte w);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB4NUBVARBPROC)(GLuint index, const GLubyte *v);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB4NUIVARBPROC)(GLuint index, const GLuint *v);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB4NUSVARBPROC)(GLuint index, const GLushort *v);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB4BVARBPROC)(GLuint index, const GLbyte *v);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB4DARBPROC)(GLuint index, GLdouble x, GLdouble y, GLdouble z, GLdouble w);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB4DVARBPROC)(GLuint index, const GLdouble *v);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB4FARBPROC)(GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB4FVARBPROC)(GLuint index, const GLfloat *v);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB4IVARBPROC)(GLuint index, const GLint *v);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB4SARBPROC)(GLuint index, GLshort x, GLshort y, GLshort z, GLshort w);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB4SVARBPROC)(GLuint index, const GLshort *v);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB4UBVARBPROC)(GLuint index, const GLubyte *v);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB4UIVARBPROC)(GLuint index, const GLuint *v);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB4USVARBPROC)(GLuint index, const GLushort *v);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIBPOINTERARBPROC)(GLuint index, GLint size,
-        GLenum type, GLboolean normalized, GLsizei stride, const GLvoid *pointer);
-typedef void (WINE_GLAPI *PGLFNENABLEVERTEXATTRIBARRAYARBPROC)(GLuint index);
-typedef void (WINE_GLAPI *PGLFNDISABLEVERTEXATTRIBARRAYARBPROC)(GLuint index);
-typedef void (WINE_GLAPI *PGLFNPROGRAMSTRINGARBPROC)(GLenum target, GLenum format, GLsizei len, const GLvoid *string);
-typedef void (WINE_GLAPI *PGLFNBINDPROGRAMARBPROC)(GLenum target, GLuint program);
-typedef void (WINE_GLAPI *PGLFNDELETEPROGRAMSARBPROC)(GLsizei n, const GLuint *programs);
-typedef void (WINE_GLAPI *PGLFNGENPROGRAMSARBPROC)(GLsizei n, GLuint *programs);
-typedef void (WINE_GLAPI *PGLFNPROGRAMENVPARAMETER4DARBPROC)(GLenum target,
-        GLuint index, GLdouble x, GLdouble y, GLdouble z, GLdouble w);
-typedef void (WINE_GLAPI *PGLFNPROGRAMENVPARAMETER4DVARBPROC)(GLenum target, GLuint index, const GLdouble *params);
-typedef void (WINE_GLAPI *PGLFNPROGRAMENVPARAMETER4FARBPROC)(GLenum target,
-        GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w);
-typedef void (WINE_GLAPI *PGLFNPROGRAMENVPARAMETER4FVARBPROC)(GLenum target, GLuint index, const GLfloat *params);
-typedef void (WINE_GLAPI *PGLFNPROGRAMLOCALPARAMETER4DARBPROC)(GLenum target,
-        GLuint index, GLdouble x, GLdouble y, GLdouble z, GLdouble w);
-typedef void (WINE_GLAPI *PGLFNPROGRAMLOCALPARAMETER4DVARBPROC)(GLenum target, GLuint index, const GLdouble *params);
-typedef void (WINE_GLAPI *PGLFNPROGRAMLOCALPARAMETER4FARBPROC)(GLenum target,
-        GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w);
-typedef void (WINE_GLAPI *PGLFNPROGRAMLOCALPARAMETER4FVARBPROC)(GLenum target, GLuint index, const GLfloat *params);
-typedef void (WINE_GLAPI *PGLFNGETPROGRAMENVPARAMETERDVARBPROC)(GLenum target, GLuint index, GLdouble *params);
-typedef void (WINE_GLAPI *PGLFNGETPROGRAMENVPARAMETERFVARBPROC)(GLenum target, GLuint index, GLfloat *params);
-typedef void (WINE_GLAPI *PGLFNGETPROGRAMLOCALPARAMETERDVARBPROC)(GLenum target, GLuint index, GLdouble *params);
-typedef void (WINE_GLAPI *PGLFNGETPROGRAMLOCALPARAMETERFVARBPROC)(GLenum target, GLuint index, GLfloat *params);
-typedef void (WINE_GLAPI *PGLFNGETPROGRAMIVARBPROC)(GLenum target, GLenum pname, GLint *params);
-typedef void (WINE_GLAPI *PGLFNGETPROGRAMSTRINGARBPROC)(GLenum target, GLenum pname, GLvoid *string);
-typedef void (WINE_GLAPI *PGLFNGETVERTEXATTRIBDVARBPROC)(GLuint index, GLenum pname, GLdouble *params);
-typedef void (WINE_GLAPI *PGLFNGETVERTEXATTRIBFVARBPROC)(GLuint index, GLenum pname, GLfloat *params);
-typedef void (WINE_GLAPI *PGLFNGETVERTEXATTRIBIVARBPROC)(GLuint index, GLenum pname, GLint *params);
-typedef void (WINE_GLAPI *PGLFNGETVERTEXATTRIBPOINTERVARBPROC)(GLuint index, GLenum pname, GLvoid* *pointer);
-typedef GLboolean (WINE_GLAPI *PGLFNISPROGRAMARBPROC)(GLuint program);
 
 /* GL_ARB_vertex_shader */
 #ifndef GL_ARB_vertex_shader
@@ -2746,57 +1760,6 @@ typedef GLboolean (WINE_GLAPI *PGLFNISPROGRAMARBPROC)(GLuint program);
 #define GL_OBJECT_ACTIVE_ATTRIBUTES_ARB                     0x8b89
 #define GL_OBJECT_ACTIVE_ATTRIBUTE_MAX_LENGTH_ARB           0x8b8a
 #endif
-typedef void (WINE_GLAPI *WINED3D_PFNGLGETOBJECTPARAMETERIVARBPROC)(GLhandleARB obj, GLenum pname, GLint *params);
-typedef void (WINE_GLAPI *WINED3D_PFNGLGETOBJECTPARAMETERFVARBPROC)(GLhandleARB obj, GLenum pname, GLfloat *params);
-typedef GLint (WINE_GLAPI *WINED3D_PFNGLGETUNIFORMLOCATIONARBPROC)(GLhandleARB programObj, const GLcharARB *name);
-typedef void (WINE_GLAPI *WINED3D_PFNGLGETACTIVEUNIFORMARBPROC)(GLhandleARB programObj, GLuint index,
-        GLsizei maxLength, GLsizei *length, GLint *size, GLenum *type, GLcharARB *name);
-typedef void (WINE_GLAPI *WINED3D_PFNGLUNIFORM1IARBPROC)(GLint location, GLint v0);
-typedef void (WINE_GLAPI *WINED3D_PFNGLUNIFORM2IARBPROC)(GLint location, GLint v0, GLint v1);
-typedef void (WINE_GLAPI *WINED3D_PFNGLUNIFORM3IARBPROC)(GLint location, GLint v0, GLint v1, GLint v2);
-typedef void (WINE_GLAPI *WINED3D_PFNGLUNIFORM4IARBPROC)(GLint location, GLint v0, GLint v1, GLint v2, GLint v3);
-typedef void (WINE_GLAPI *WINED3D_PFNGLUNIFORM1FARBPROC)(GLint location, GLfloat v0);
-typedef void (WINE_GLAPI *WINED3D_PFNGLUNIFORM2FARBPROC)(GLint location, GLfloat v0, GLfloat v1);
-typedef void (WINE_GLAPI *WINED3D_PFNGLUNIFORM3FARBPROC)(GLint location, GLfloat v0, GLfloat v1, GLfloat v2);
-typedef void (WINE_GLAPI *WINED3D_PFNGLUNIFORM4FARBPROC)(GLint location,
-        GLfloat v0, GLfloat v1, GLfloat v2, GLfloat v3);
-typedef void (WINE_GLAPI *WINED3D_PFNGLUNIFORM1IVARBPROC)(GLint location, GLsizei count, const GLint *value);
-typedef void (WINE_GLAPI *WINED3D_PFNGLUNIFORM2IVARBPROC)(GLint location, GLsizei count, const GLint *value);
-typedef void (WINE_GLAPI *WINED3D_PFNGLUNIFORM3IVARBPROC)(GLint location, GLsizei count, const GLint *value);
-typedef void (WINE_GLAPI *WINED3D_PFNGLUNIFORM4IVARBPROC)(GLint location, GLsizei count, const GLint *value);
-typedef void (WINE_GLAPI *WINED3D_PFNGLUNIFORM1FVARBPROC)(GLint location, GLsizei count, const GLfloat *value);
-typedef void (WINE_GLAPI *WINED3D_PFNGLUNIFORM2FVARBPROC)(GLint location, GLsizei count, const GLfloat *value);
-typedef void (WINE_GLAPI *WINED3D_PFNGLUNIFORM3FVARBPROC)(GLint location, GLsizei count, const GLfloat *value);
-typedef void (WINE_GLAPI *WINED3D_PFNGLUNIFORM4FVARBPROC)(GLint location, GLsizei count, const GLfloat *value);
-typedef void (WINE_GLAPI *WINED3D_PFNGLUNIFORMMATRIX2FVARBPROC)(GLint location,
-        GLsizei count, GLboolean transpose, const GLfloat *value);
-typedef void (WINE_GLAPI *WINED3D_PFNGLUNIFORMMATRIX3FVARBPROC)(GLint location,
-        GLsizei count, GLboolean transpose, const GLfloat *value);
-typedef void (WINE_GLAPI *WINED3D_PFNGLUNIFORMMATRIX4FVARBPROC)(GLint location,
-        GLsizei count, GLboolean transpose, const GLfloat *value);
-typedef void (WINE_GLAPI *WINED3D_PFNGLGETUNIFORMFVARBPROC)(GLhandleARB programObj, GLint location, GLfloat *params);
-typedef void (WINE_GLAPI *WINED3D_PFNGLGETUNIFORMIVARBPROC)(GLhandleARB programObj, GLint location, GLint *params);
-typedef void (WINE_GLAPI *WINED3D_PFNGLGETINFOLOGARBPROC)(GLhandleARB obj,
-        GLsizei maxLength, GLsizei *length, GLcharARB *infoLog);
-typedef void (WINE_GLAPI *WINED3D_PFNGLUSEPROGRAMOBJECTARBPROC)(GLhandleARB programObj);
-typedef GLhandleARB (WINE_GLAPI *WINED3D_PFNGLCREATESHADEROBJECTARBPROC)(GLenum shaderType);
-typedef void (WINE_GLAPI *WINED3D_PFNGLSHADERSOURCEARBPROC)(GLhandleARB shaderObj,
-        GLsizei count, const GLcharARB* *string, const GLint *length);
-typedef void (WINE_GLAPI *WINED3D_PFNGLCOMPILESHADERARBPROC)(GLhandleARB shaderObj);
-typedef GLhandleARB (WINE_GLAPI *WINED3D_PFNGLCREATEPROGRAMOBJECTARBPROC)(void);
-typedef void (WINE_GLAPI *WINED3D_PFNGLATTACHOBJECTARBPROC)(GLhandleARB containerObj, GLhandleARB obj);
-typedef void (WINE_GLAPI *WINED3D_PFNGLLINKPROGRAMARBPROC)(GLhandleARB programObj);
-typedef void (WINE_GLAPI *WINED3D_PFNGLDETACHOBJECTARBPROC)(GLhandleARB containerObj, GLhandleARB attachedObj);
-typedef void (WINE_GLAPI *WINED3D_PFNGLDELETEOBJECTARBPROC)(GLhandleARB obj);
-typedef void (WINE_GLAPI *WINED3D_PFNGLVALIDATEPROGRAMARBPROC)(GLhandleARB programObj);
-typedef void (WINE_GLAPI *WINED3D_PFNGLGETATTACHEDOBJECTSARBPROC)(GLhandleARB containerObj,
-        GLsizei maxCount, GLsizei *count, GLhandleARB *obj);
-typedef GLhandleARB (WINE_GLAPI *WINED3D_PFNGLGETHANDLEARBPROC)(GLenum pname);
-typedef void (WINE_GLAPI *WINED3D_PFNGLGETSHADERSOURCEARBPROC)(GLhandleARB obj,
-        GLsizei maxLength, GLsizei *length, GLcharARB *source);
-typedef void (WINE_GLAPI *WINED3D_PFNGLBINDATTRIBLOCATIONARBPROC)(GLhandleARB programObj,
-        GLuint index, const GLcharARB *name);
-typedef GLint (WINE_GLAPI *WINED3D_PFNGLGETATTRIBLOCATIONARBPROC)(GLhandleARB programObj, const GLcharARB *name);
 
 /* GL_ATI_fragment_shader */
 #ifndef GL_ATI_fragment_shader
@@ -2846,34 +1809,6 @@ typedef GLint (WINE_GLAPI *WINED3D_PFNGLGETATTRIBLOCATIONARBPROC)(GLhandleARB pr
 #define GL_NEGATE_BIT_ATI                                   0x00000004
 #define GL_BIAS_BIT_ATI                                     0x00000008
 #endif
-typedef GLuint (WINE_GLAPI *PGLFNGENFRAGMENTSHADERSATI)(GLuint range);
-typedef void (WINE_GLAPI *PGLFNBINDFRAGMENTSHADERATI)(GLuint id);
-typedef void (WINE_GLAPI *PGLFNDELETEFRAGMENTSHADERATI)(GLuint id);
-typedef void (WINE_GLAPI *PGLFNBEGINFRAGMENTSHADERATI)(void);
-typedef void (WINE_GLAPI *PGLFNENDFRAGMENTSHADERATI)(void);
-typedef void (WINE_GLAPI *PGLFNPASSTEXCOORDATI)(GLuint dst, GLuint coord, GLenum swizzle);
-typedef void (WINE_GLAPI *PGLFNSAMPLEMAPATI)(GLuint dst, GLuint interp, GLenum swizzle);
-typedef void (WINE_GLAPI *PGLFNCOLORFRAGMENTOP1ATI)(GLenum op, GLuint dst, GLuint dstMask,
-        GLuint dstMod, GLuint arg1, GLuint arg1Rep, GLuint arg1Mod);
-typedef void (WINE_GLAPI *PGLFNCOLORFRAGMENTOP2ATI)(GLenum op, GLuint dst, GLuint dstMask,
-        GLuint dstMod, GLuint arg1, GLuint arg1Rep,
-        GLuint arg1Mod, GLuint arg2, GLuint arg2Rep,
-        GLuint arg2Mod);
-typedef void (WINE_GLAPI *PGLFNCOLORFRAGMENTOP3ATI)(GLenum op, GLuint dst, GLuint dstMask,
-        GLuint dstMod, GLuint arg1, GLuint arg1Rep,
-        GLuint arg1Mod, GLuint arg2, GLuint arg2Rep,
-        GLuint arg2Mod, GLuint arg3, GLuint arg3Rep,
-        GLuint arg3Mod);
-typedef void (WINE_GLAPI *PGLFNALPHAFRAGMENTOP1ATI)(GLenum op, GLuint dst, GLuint dstMod,
-        GLuint arg1, GLuint arg1Rep, GLuint arg1Mod);
-typedef void (WINE_GLAPI *PGLFNALPHAFRAGMENTOP2ATI)(GLenum op, GLuint dst, GLuint dstMod,
-        GLuint arg1, GLuint arg1Rep, GLuint arg1Mod,
-        GLuint arg2, GLuint arg2Rep, GLuint arg2Mod);
-typedef void (WINE_GLAPI *PGLFNALPHAFRAGMENTOP3ATI)(GLenum op, GLuint dst, GLuint dstMod,
-        GLuint arg1, GLuint arg1Rep, GLuint arg1Mod,
-        GLuint arg2, GLuint arg2Rep, GLuint arg2Mod,
-        GLuint arg3, GLuint arg3Rep, GLuint arg3Mod);
-typedef void (WINE_GLAPI *PGLFNSETFRAGMENTSHADERCONSTANTATI)(GLuint dst, const GLfloat *value);
 
 /* GL_ATI_separate_stencil */
 #ifndef GL_ATI_separate_stencil
@@ -2883,8 +1818,6 @@ typedef void (WINE_GLAPI *PGLFNSETFRAGMENTSHADERCONSTANTATI)(GLuint dst, const G
 #define GL_STENCIL_BACK_PASS_DEPTH_FAIL_ATI                 0x8802
 #define GL_STENCIL_BACK_PASS_DEPTH_PASS_ATI                 0x8803
 #endif
-typedef void (WINE_GLAPI *PGLFNSTENCILOPSEPARATEATIPROC)(GLenum, GLenum, GLenum, GLenum);
-typedef void (WINE_GLAPI *PGLFNSTENCILFUNCSEPARATEATIPROC)(GLenum, GLenum, GLint, GLuint);
 
 /* GL_ATI_texture_compression_3dc */
 #ifndef GL_ATI_texture_compression_3dc
@@ -2918,11 +1851,6 @@ typedef void (WINE_GLAPI *PGLFNSTENCILFUNCSEPARATEATIPROC)(GLenum, GLenum, GLint
 #define GL_ONE_MINUS_CONSTANT_ALPHA_EXT                     0x8004
 #define GL_BLEND_COLOR_EXT                                  0x8005
 #endif
-typedef GLvoid (WINE_GLAPI *PGLFNBLENDCOLOREXTPROC)(GLclampf red,
-        GLclampf green, GLclampf blue, GLclampf alpha);
-
-/* GL_EXT_blend_equation_separate */
-typedef void (WINE_GLAPI *PGLFNBLENDEQUATIONSEPARATEEXTPROC)(GLenum modeRGB, GLenum modeAlpha);
 
 /* GL_EXT_blend_func_separate */
 #ifndef GL_EXT_blend_func_separate
@@ -2932,8 +1860,6 @@ typedef void (WINE_GLAPI *PGLFNBLENDEQUATIONSEPARATEEXTPROC)(GLenum modeRGB, GLe
 #define GL_BLEND_DST_ALPHA_EXT                              0x80ca
 #define GL_BLEND_SRC_ALPHA_EXT                              0x80cb
 #endif
-typedef void (WINE_GLAPI *PGLFNBLENDFUNCSEPARATEEXTPROC)(GLenum sfactorRGB, GLenum dfactorRGB,
-        GLenum sfactorAlpha, GLenum dfactorAlpha);
 
 /* GL_EXT_blend_minmax */
 #ifndef GL_EXT_blend_minmax
@@ -2943,7 +1869,6 @@ typedef void (WINE_GLAPI *PGLFNBLENDFUNCSEPARATEEXTPROC)(GLenum sfactorRGB, GLen
 #define GL_MAX_EXT                                          0x8008
 #define GL_BLEND_EQUATION_EXT                               0x8009
 #endif
-typedef void (WINE_GLAPI *PGLFNBLENDEQUATIONEXTPROC)(GLenum mode);
 
 /* GL_EXT_blend_subtract */
 #ifndef GL_EXT_blend_subtract
@@ -2958,16 +1883,6 @@ typedef void (WINE_GLAPI *PGLFNBLENDEQUATIONEXTPROC)(GLenum mode);
 #define GL_DEPTH_BOUNDS_TEST_EXT                            0x8890
 #define GL_DEPTH_BOUNDS_EXT                                 0x8891
 #endif
-typedef void (WINE_GLAPI *PGLFNDEPTHBOUNDSEXTPROC)(GLclampd zmin, GLclampd zmax);
-
-/* GL_EXT_draw_buffers2 */
-typedef GLvoid (WINE_GLAPI *PGLFNCOLORMASKINDEXEDEXTPROC)(GLuint buffer_idx, GLboolean r, GLboolean g,
-        GLboolean b, GLboolean a);
-typedef GLvoid (WINE_GLAPI *PGLFNGETBOOLEANINDEXEDVEXTPROC)(GLenum param, GLuint index, GLboolean *value);
-typedef GLvoid (WINE_GLAPI *PGLFNGETINTEGERINDEXEDVEXTPROC)(GLenum param, GLuint index, GLint *value);
-typedef GLvoid (WINE_GLAPI *PGLFNENABLEINDEXEDEXTPROC)(GLenum target, GLuint index);
-typedef GLvoid (WINE_GLAPI *PGLFNDISABLEINDEXEDEXTPROC)(GLenum target, GLuint index);
-typedef GLboolean (WINE_GLAPI *PGLFNISENABLEDINDEXEDEXTPROC)(GLenum target, GLuint index);
 
 /* GL_EXT_fog_coord */
 #ifndef GL_EXT_fog_coord
@@ -2981,11 +1896,6 @@ typedef GLboolean (WINE_GLAPI *PGLFNISENABLEDINDEXEDEXTPROC)(GLenum target, GLui
 #define GL_FOG_COORDINATE_ARRAY_POINTER_EXT                 0x8456
 #define GL_FOG_COORDINATE_ARRAY_EXT                         0x8457
 #endif
-typedef void (WINE_GLAPI *PGLFNGLFOGCOORDFEXTPROC)(GLfloat coord);
-typedef void (WINE_GLAPI *PGLFNGLFOGCOORDFVEXTPROC)(const GLfloat *coord);
-typedef void (WINE_GLAPI *PGLFNGLFOGCOORDDEXTPROC)(GLdouble coord);
-typedef void (WINE_GLAPI *PGLFNGLFOGCOORDDVEXTPROC)(const GLdouble *coord);
-typedef void (WINE_GLAPI *PGLFNGLFOGCOORDPOINTEREXTPROC)(GLenum type, GLsizei stride, GLvoid *data);
 
 /* GL_EXT_framebuffer_blit */
 #ifndef GL_EXT_framebuffer_blit
@@ -2995,8 +1905,6 @@ typedef void (WINE_GLAPI *PGLFNGLFOGCOORDPOINTEREXTPROC)(GLenum type, GLsizei st
 #define GL_DRAW_FRAMEBUFFER_BINDING_EXT                     0x8ca6
 #define GL_READ_FRAMEBUFFER_BINDING_EXT                     0x8caa
 #endif
-typedef void (WINE_GLAPI *PGLFNGLBLITFRAMEBUFFEREXTPROC)(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1,
-        GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1, GLbitfield mask, GLenum filter);
 
 /* GL_EXT_framebuffer_multisample */
 #ifndef GL_EXT_framebuffer_multisample
@@ -3005,8 +1913,6 @@ typedef void (WINE_GLAPI *PGLFNGLBLITFRAMEBUFFEREXTPROC)(GLint srcX0, GLint srcY
 #define GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE_EXT           0x8d56
 #define GL_MAX_SAMPLES_EXT                                  0x8d57
 #endif
-typedef void (WINE_GLAPI *PGLFNRENDERBUFFERSTORAGEMULTISAMPLEEXTPROC)(GLenum target, GLsizei samples,
-        GLenum internalformat, GLsizei width, GLsizei height);
 
 /* GL_EXT_framebuffer_object */
 #ifndef GL_EXT_framebuffer_object
@@ -3063,38 +1969,11 @@ typedef void (WINE_GLAPI *PGLFNRENDERBUFFERSTORAGEMULTISAMPLEEXTPROC)(GLenum tar
 #define GL_MAX_RENDERBUFFER_SIZE_EXT                        0x84e8
 #define GL_INVALID_FRAMEBUFFER_OPERATION_EXT                0x0506
 #endif
-typedef GLboolean (WINE_GLAPI *PGLFNGLISRENDERBUFFEREXTPROC)(GLuint renderbuffer);
-typedef void (WINE_GLAPI *PGLFNGLBINDRENDERBUFFEREXTPROC)(GLenum target, GLuint renderbuffer);
-typedef void (WINE_GLAPI *PGLFNGLDELETERENDERBUFFERSEXTPROC)(GLsizei n, const GLuint *renderbuffers);
-typedef void (WINE_GLAPI *PGLFNGLGENRENDERBUFFERSEXTPROC)(GLsizei n, GLuint *renderbuffers);
-typedef void (WINE_GLAPI *PGLFNGLRENDERBUFFERSTORAGEEXTPROC)(GLenum target,
-        GLenum internalformat, GLsizei width, GLsizei height);
-typedef void (WINE_GLAPI *PGLFNGLGETRENDERBUFFERPARAMETERIVEXTPROC)(GLenum target, GLenum pname, GLint *params);
-typedef GLboolean (WINE_GLAPI *PGLFNGLISFRAMEBUFFEREXTPROC)(GLuint framebuffer);
-typedef void (WINE_GLAPI *PGLFNGLBINDFRAMEBUFFEREXTPROC)(GLenum target, GLuint framebuffer);
-typedef void (WINE_GLAPI *PGLFNGLDELETEFRAMEBUFFERSEXTPROC)(GLsizei n, const GLuint *framebuffers);
-typedef void (WINE_GLAPI *PGLFNGLGENFRAMEBUFFERSEXTPROC)(GLsizei n, GLuint *framebuffers);
-typedef GLenum (WINE_GLAPI *PGLFNGLCHECKFRAMEBUFFERSTATUSEXTPROC)(GLenum target);
-typedef void (WINE_GLAPI *PGLFNGLFRAMEBUFFERTEXTURE1DEXTPROC)(GLenum target, GLenum attachment,
-        GLenum textarget, GLuint texture, GLint level);
-typedef void (WINE_GLAPI *PGLFNGLFRAMEBUFFERTEXTURE2DEXTPROC)(GLenum target, GLenum attachment,
-        GLenum textarget, GLuint texture, GLint level);
-typedef void (WINE_GLAPI *PGLFNGLFRAMEBUFFERTEXTURE3DEXTPROC)(GLenum target, GLenum attachment,
-        GLenum textarget, GLuint texture, GLint level, GLint zoffset);
-typedef void (WINE_GLAPI *PGLFNGLFRAMEBUFFERRENDERBUFFEREXTPROC)(GLenum target, GLenum attachment,
-        GLenum renderbuffertarget, GLuint renderbuffer);
-typedef void (WINE_GLAPI *PGLFNGLGETFRAMEBUFFERATTACHMENTPARAMETERIVEXTPROC)(GLenum target,
-        GLenum attachment, GLenum pname, GLint *params);
-typedef void (WINE_GLAPI *PGLFNGLGENERATEMIPMAPEXTPROC)(GLenum target);
 
 /* GL_EXT_gpu_program_parameters */
 #ifndef GL_EXT_gpu_program_parameters
 #define GL_EXT_gpu_program_parameters 1
 #endif
-typedef void (WINE_GLAPI *PGLFNPROGRAMENVPARAMETERS4FVEXTPROC)(GLenum target,
-        GLuint index, GLsizei count, const float *params);
-typedef void (WINE_GLAPI *PGLFNPROGRAMLOCALPARAMETERS4FVEXTPROC)(GLenum target,
-        GLuint index, GLsizei count, const float *params);
 
 /* GL_EXT_gpu_shader4 */
 #ifndef GL_EXT_gpu_shader4
@@ -3128,41 +2007,6 @@ typedef void (WINE_GLAPI *PGLFNPROGRAMLOCALPARAMETERS4FVEXTPROC)(GLenum target,
 #define GL_MIN_PROGRAM_TEXEL_OFFSET_EXT                     0x8904
 #define GL_MAX_PROGRAM_TEXEL_OFFSET_EXT                     0x8905
 #endif
-typedef GLvoid (WINE_GLAPI *PGLFNVERTEXATTRIBI1IEXTPROC)(GLuint index, GLint x);
-typedef GLvoid (WINE_GLAPI *PGLFNVERTEXATTRIBI2IEXTPROC)(GLuint index, GLint x, GLint y);
-typedef GLvoid (WINE_GLAPI *PGLFNVERTEXATTRIBI3IEXTPROC)(GLuint index, GLint x, GLint y, GLint z);
-typedef GLvoid (WINE_GLAPI *PGLFNVERTEXATTRIBI4IEXTPROC)(GLuint index, GLint x, GLint y, GLint z, GLint w);
-typedef GLvoid (WINE_GLAPI *PGLFNVERTEXATTRIBI1UIEXTPROC)(GLuint index, GLuint x);
-typedef GLvoid (WINE_GLAPI *PGLFNVERTEXATTRIBI2UIEXTPROC)(GLuint index, GLuint x, GLuint y);
-typedef GLvoid (WINE_GLAPI *PGLFNVERTEXATTRIBI3UIEXTPROC)(GLuint index, GLuint x, GLuint y, GLuint z);
-typedef GLvoid (WINE_GLAPI *PGLFNVERTEXATTRIBI4UIEXTPROC)(GLuint index, GLuint x, GLuint y, GLuint z, GLuint w);
-typedef GLvoid (WINE_GLAPI *PGLFNVERTEXATTRIBI1IVEXTPROC)(GLuint index, const GLint *v);
-typedef GLvoid (WINE_GLAPI *PGLFNVERTEXATTRIBI2IVEXTPROC)(GLuint index, const GLint *v);
-typedef GLvoid (WINE_GLAPI *PGLFNVERTEXATTRIBI3IVEXTPROC)(GLuint index, const GLint *v);
-typedef GLvoid (WINE_GLAPI *PGLFNVERTEXATTRIBI4IVEXTPROC)(GLuint index, const GLint *v);
-typedef GLvoid (WINE_GLAPI *PGLFNVERTEXATTRIBI1UIVEXTPROC)(GLuint index, const GLuint *v);
-typedef GLvoid (WINE_GLAPI *PGLFNVERTEXATTRIBI2UIVEXTPROC)(GLuint index, const GLuint *v);
-typedef GLvoid (WINE_GLAPI *PGLFNVERTEXATTRIBI3UIVEXTPROC)(GLuint index, const GLuint *v);
-typedef GLvoid (WINE_GLAPI *PGLFNVERTEXATTRIBI4UIVEXTPROC)(GLuint index, const GLuint *v);
-typedef GLvoid (WINE_GLAPI *PGLFNVERTEXATTRIBI4BVEXTPROC)(GLuint index, const GLbyte *v);
-typedef GLvoid (WINE_GLAPI *PGLFNVERTEXATTRIBI4SVEXTPROC)(GLuint index, const GLshort *v);
-typedef GLvoid (WINE_GLAPI *PGLFNVERTEXATTRIBI4UBVEXTPROC)(GLuint index, const GLubyte *v);
-typedef GLvoid (WINE_GLAPI *PGLFNVERTEXATTRIBI4USVEXTPROC)(GLuint index, const GLushort *v);
-typedef GLvoid (WINE_GLAPI *PGLFNVERTEXATTRIBIPOINTEREXTPROC)(GLuint index, GLint size, GLenum type,
-        GLsizei stride, const GLvoid *pointer);
-typedef GLvoid (WINE_GLAPI *PGLFNGETVERTEXATTRIBIIVEXTPROC)(GLuint index, GLenum pname, GLint *params);
-typedef GLvoid (WINE_GLAPI *PGLFNGETVERTEXATTRIBIUIVEXTPROC)(GLuint index, GLenum pname, GLuint *params);
-typedef GLvoid (WINE_GLAPI *PGLFNUNIFORM1UIEXTPROC)(GLint location, GLuint v0);
-typedef GLvoid (WINE_GLAPI *PGLFNUNIFORM2UIEXTPROC)(GLint location, GLuint v0, GLuint v1);
-typedef GLvoid (WINE_GLAPI *PGLFNUNIFORM3UIEXTPROC)(GLint location, GLuint v0, GLuint v1, GLuint v2);
-typedef GLvoid (WINE_GLAPI *PGLFNUNIFORM4UIEXTPROC)(GLint location, GLuint v0, GLuint v1, GLuint v2, GLuint v3);
-typedef GLvoid (WINE_GLAPI *PGLFNUNIFORM1UIVEXTPROC)(GLint location, GLsizei count, const GLuint *value);
-typedef GLvoid (WINE_GLAPI *PGLFNUNIFORM2UIVEXTPROC)(GLint location, GLsizei count, const GLuint *value);
-typedef GLvoid (WINE_GLAPI *PGLFNUNIFORM3UIVEXTPROC)(GLint location, GLsizei count, const GLuint *value);
-typedef GLvoid (WINE_GLAPI *PGLFNUNIFORM4UIVEXTPROC)(GLint location, GLsizei count, const GLuint *value);
-typedef GLvoid (WINE_GLAPI *PGLFNGETUNIFORMUIVEXTPROC)(GLuint program, GLint location, const GLuint *params);
-typedef GLvoid (WINE_GLAPI *PGLFNBINDFRAGDATALOCATIONEXTPROC)(GLuint program, GLuint color_number, const GLchar *name);
-typedef GLint (WINE_GLAPI *PGLFNGETFRAGDATALOCATIONEXTPROC)(GLuint program, const GLchar *name);
 
 /* GL_EXT_packed_depth_stencil */
 #ifndef GL_EXT_packed_depth_stencil
@@ -3184,8 +2028,6 @@ typedef GLint (WINE_GLAPI *PGLFNGETFRAGDATALOCATIONEXTPROC)(GLuint program, cons
 #define GL_COLOR_INDEX16_EXT                                0x80e7
 #define GL_TEXTURE_INDEX_SIZE_EXT                           0x80ed
 #endif
-typedef void (WINE_GLAPI *PGLFNGLCOLORTABLEEXTPROC)(GLenum target, GLenum internalFormat,
-        GLsizei width, GLenum format, GLenum type, const GLvoid *table);
 
 /* GL_EXT_point_parameters */
 #ifndef GL_EXT_point_parameters
@@ -3195,8 +2037,6 @@ typedef void (WINE_GLAPI *PGLFNGLCOLORTABLEEXTPROC)(GLenum target, GLenum intern
 #define GL_POINT_FADE_THRESHOLD_SIZE_EXT                    0x8128
 #define GL_DISTANCE_ATTENUATION_EXT                         0x8129
 #endif
-typedef void (WINE_GLAPI *PGLFNGLPOINTPARAMETERFEXTPROC)(GLenum pname, GLfloat param);
-typedef void (WINE_GLAPI *PGLFNGLPOINTPARAMETERFVEXTPROC)(GLenum pname, const GLfloat *params);
 
 /* GL_EXT_provoking_vertex */
 #ifndef GL_EXT_provoking_vertex
@@ -3206,7 +2046,6 @@ typedef void (WINE_GLAPI *PGLFNGLPOINTPARAMETERFVEXTPROC)(GLenum pname, const GL
 #define GL_PROVOKING_VERTEX_EXT                             0x8e4f
 #define GL_QUADS_FOLLOW_PROVOKING_VERTEX_CONVENTION_EXT     0x8e4c
 #endif
-typedef void (WINE_GLAPI *PGLFNGLPROVOKINGVERTEXEXTPROC)(GLenum mode);
 
 /* GL_EXT_secondary_color */
 #ifndef GL_EXT_secondary_color
@@ -3219,12 +2058,6 @@ typedef void (WINE_GLAPI *PGLFNGLPROVOKINGVERTEXEXTPROC)(GLenum mode);
 #define GL_SECONDARY_COLOR_ARRAY_POINTER_EXT                0x845d
 #define GL_SECONDARY_COLOR_ARRAY_EXT                        0x845e
 #endif
-typedef void (WINE_GLAPI *PGLFNGLSECONDARYCOLOR3FEXTPROC)(GLfloat red, GLfloat green, GLfloat blue);
-typedef void (WINE_GLAPI *PGLFNGLSECONDARYCOLOR3FVEXTPROC)(const GLfloat *v);
-typedef void (WINE_GLAPI *PGLFNGLSECONDARYCOLOR3UBEXTPROC)(GLubyte red, GLubyte green, GLubyte blue);
-typedef void (WINE_GLAPI *PGLFNGLSECONDARYCOLOR3UBVEXTPROC)(const GLubyte *v);
-typedef void (WINE_GLAPI *PGLFNGLSECONDARYCOLORPOINTEREXTPROC)(GLint size, GLenum type,
-        GLsizei stride, const GLvoid *pointer);
 
 /* GL_EXT_stencil_two_side */
 #ifndef GL_EXT_stencil_two_side
@@ -3232,7 +2065,6 @@ typedef void (WINE_GLAPI *PGLFNGLSECONDARYCOLORPOINTEREXTPROC)(GLint size, GLenu
 #define GL_STENCIL_TEST_TWO_SIDE_EXT                        0x8910
 #define GL_ACTIVE_STENCIL_FACE_EXT                          0x8911
 #endif
-typedef void (WINE_GLAPI *PGLFNACTIVESTENCILFACEEXTPROC)(GLenum face);
 
 /* GL_EXT_stencil_wrap */
 #ifndef GL_EXT_stencil_wrap
@@ -3254,10 +2086,6 @@ typedef void (WINE_GLAPI *PGLFNACTIVESTENCILFACEEXTPROC)(GLenum face);
 #define GL_TEXTURE_WRAP_R_EXT                               0x8072
 #define GL_MAX_3D_TEXTURE_SIZE_EXT                          0x8073
 #endif
-typedef void (WINE_GLAPI *PGLFNGLTEXIMAGE3DEXTPROC)(GLenum target, GLint level, GLenum internalformat,
-        GLsizei width, GLsizei height, GLsizei depth, GLint border, GLenum format, GLenum type, const GLvoid *pixels);
-typedef void (WINE_GLAPI *PGLFNGLTEXSUBIMAGE3DEXTPROC)(GLenum target, GLint level, GLint xoffset, GLint yoffset,
-        GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type, const GLvoid *pixels);
 
 /* GL_EXT_texture_compression_rgtc */
 #ifndef GL_EXT_texture_compression_rgtc
@@ -3276,20 +2104,6 @@ typedef void (WINE_GLAPI *PGLFNGLTEXSUBIMAGE3DEXTPROC)(GLenum target, GLint leve
 #define GL_COMPRESSED_RGBA_S3TC_DXT3_EXT                    0x83f2
 #define GL_COMPRESSED_RGBA_S3TC_DXT5_EXT                    0x83f3
 #endif
-typedef void (WINE_GLAPI *PGLFNCOMPRESSEDTEXIMAGE3DPROC)(GLenum target, GLint level, GLenum internalformat,
-        GLsizei width, GLsizei height, GLsizei depth, GLint border, GLsizei imageSize, const GLvoid *data);
-typedef void (WINE_GLAPI *PGLFNCOMPRESSEDTEXIMAGE2DPROC)(GLenum target, GLint level, GLenum internalformat,
-        GLsizei width, GLsizei height, GLint border, GLsizei imageSize, const GLvoid *data);
-typedef void (WINE_GLAPI *PGLFNCOMPRESSEDTEXIMAGE1DPROC)(GLenum target, GLint level, GLenum internalformat,
-        GLsizei width, GLint border, GLsizei imageSize, const GLvoid *data);
-typedef void (WINE_GLAPI *PGLFNCOMPRESSEDTEXSUBIMAGE3DPROC)(GLenum target, GLint level,
-        GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth,
-        GLenum format, GLsizei imageSize, const GLvoid *data);
-typedef void (WINE_GLAPI *PGLFNCOMPRESSEDTEXSUBIMAGE2DPROC)(GLenum target, GLint level, GLint xoffset, GLint yoffset,
-        GLsizei width, GLsizei height, GLenum format, GLsizei imageSize, const GLvoid *data);
-typedef void (WINE_GLAPI *PGLFNCOMPRESSEDTEXSUBIMAGE1DPROC)(GLenum target, GLint level, GLint xoffset,
-        GLsizei width, GLenum format, GLsizei imageSize, const GLvoid *data);
-typedef void (WINE_GLAPI *PGLFNGETCOMPRESSEDTEXIMAGEPROC)(GLenum target, GLint level, void *img);
 
 /* GL_EXT_texture_env_combine */
 #ifndef GL_EXT_texture_env_combine
@@ -3402,13 +2216,6 @@ typedef void (WINE_GLAPI *PGLFNGETCOMPRESSEDTEXIMAGEPROC)(GLenum target, GLint l
 #define GL_FENCE_STATUS_NV                                  0x84f3
 #define GL_FENCE_CONDITION_NV                               0x84f4
 #endif
-typedef void (WINE_GLAPI *PGLFNGENFENCESNVPROC)(GLsizei, GLuint *);
-typedef void (WINE_GLAPI *PGLFNDELETEFENCESNVPROC)(GLuint, const GLuint *);
-typedef void (WINE_GLAPI *PGLFNSETFENCENVPROC)(GLuint, GLenum);
-typedef GLboolean (WINE_GLAPI *PGLFNTESTFENCENVPROC)(GLuint);
-typedef void (WINE_GLAPI *PGLFNFINISHFENCENVPROC)(GLuint);
-typedef GLboolean (WINE_GLAPI *PGLFNISFENCENVPROC)(GLuint);
-typedef void (WINE_GLAPI *PGLFNGETFENCEIVNVPROC)(GLuint, GLenum, GLint *);
 
 /* GL_NV_fog_distance */
 #ifndef GL_NV_fog_distance
@@ -3425,52 +2232,6 @@ typedef void (WINE_GLAPI *PGLFNGETFENCEIVNVPROC)(GLuint, GLenum, GLint *);
 typedef unsigned short GLhalfNV;
 #define GL_HALF_FLOAT_NV                                    0x140b
 #endif
-typedef void (WINE_GLAPI *PGLFNVERTEX2HNVPROC)(GLhalfNV x, GLhalfNV y);
-typedef void (WINE_GLAPI *PGLFNVERTEX2HVNVPROC)(const GLhalfNV *v);
-typedef void (WINE_GLAPI *PGLFNVERTEX3HNVPROC)(GLhalfNV x, GLhalfNV y, GLhalfNV z);
-typedef void (WINE_GLAPI *PGLFNVERTEX3HVNVPROC)(const GLhalfNV *v);
-typedef void (WINE_GLAPI *PGLFNVERTEX4HNVPROC)(GLhalfNV x, GLhalfNV y, GLhalfNV z, GLhalfNV w);
-typedef void (WINE_GLAPI *PGLFNVERTEX4HVNVPROC)(const GLhalfNV *v);
-typedef void (WINE_GLAPI *PGLFNNORMAL3HNVPROC)(GLhalfNV nx, GLhalfNV ny, GLhalfNV nz);
-typedef void (WINE_GLAPI *PGLFNNORMAL3HVNVPROC)(const GLhalfNV *v);
-typedef void (WINE_GLAPI *PGLFNCOLOR3HNVPROC)(GLhalfNV red, GLhalfNV green, GLhalfNV blue);
-typedef void (WINE_GLAPI *PGLFNCOLOR3HVNVPROC)(const GLhalfNV *v);
-typedef void (WINE_GLAPI *PGLFNCOLOR4HNVPROC)(GLhalfNV red, GLhalfNV green, GLhalfNV blue, GLhalfNV alpha);
-typedef void (WINE_GLAPI *PGLFNCOLOR4HVNVPROC)(const GLhalfNV *v);
-typedef void (WINE_GLAPI *PGLFNTEXCOORD1HNVPROC)(GLhalfNV s);
-typedef void (WINE_GLAPI *PGLFNTEXCOORD1HVNVPROC)(const GLhalfNV *v);
-typedef void (WINE_GLAPI *PGLFNTEXCOORD2HNVPROC)(GLhalfNV s, GLhalfNV t);
-typedef void (WINE_GLAPI *PGLFNTEXCOORD2HVNVPROC)(const GLhalfNV *v);
-typedef void (WINE_GLAPI *PGLFNTEXCOORD3HNVPROC)(GLhalfNV s, GLhalfNV t, GLhalfNV r);
-typedef void (WINE_GLAPI *PGLFNTEXCOORD3HVNVPROC)(const GLhalfNV *v);
-typedef void (WINE_GLAPI *PGLFNTEXCOORD4HNVPROC)(GLhalfNV s, GLhalfNV t, GLhalfNV r, GLhalfNV q);
-typedef void (WINE_GLAPI *PGLFNTEXCOORD4HVNVPROC)(const GLhalfNV *v);
-typedef void (WINE_GLAPI *PGLFNMULTITEXCOORD1HNVPROC)(GLenum target, GLhalfNV s);
-typedef void (WINE_GLAPI *PGLFNMULTITEXCOORD1HVNVPROC)(GLenum target, const GLhalfNV *v);
-typedef void (WINE_GLAPI *PGLFNMULTITEXCOORD2HNVPROC)(GLenum target, GLhalfNV s, GLhalfNV t);
-typedef void (WINE_GLAPI *PGLFNMULTITEXCOORD2HVNVPROC)(GLenum target, const GLhalfNV *v);
-typedef void (WINE_GLAPI *PGLFNMULTITEXCOORD3HNVPROC)(GLenum target, GLhalfNV s, GLhalfNV t, GLhalfNV r);
-typedef void (WINE_GLAPI *PGLFNMULTITEXCOORD3HVNVPROC)(GLenum target, const GLhalfNV *v);
-typedef void (WINE_GLAPI *PGLFNMULTITEXCOORD4HNVPROC)(GLenum target, GLhalfNV s, GLhalfNV t, GLhalfNV r, GLhalfNV q);
-typedef void (WINE_GLAPI *PGLFNMULTITEXCOORD4HVNVPROC)(GLenum target, const GLhalfNV *v);
-typedef void (WINE_GLAPI *PGLFNFOGCOORDHNVPROC)(GLhalfNV fog);
-typedef void (WINE_GLAPI *PGLFNFOGCOORDHVNVPROC)(const GLhalfNV *fog);
-typedef void (WINE_GLAPI *PGLFNSECONDARYCOLOR3HNVPROC)(GLhalfNV red, GLhalfNV green, GLhalfNV blue);
-typedef void (WINE_GLAPI *PGLFNSECONDARYCOLOR3HVNVPROC)(const GLhalfNV *v);
-typedef void (WINE_GLAPI *PGLFNVERTEXWEIGHTHNVPROC)(GLhalfNV weight);
-typedef void (WINE_GLAPI *PGLFNVERTEXWEIGHTHVNVPROC)(const GLhalfNV *weight);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB1HNVPROC)(GLuint index, GLhalfNV x);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB1HVNVPROC)(GLuint index, const GLhalfNV *v);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB2HNVPROC)(GLuint index, GLhalfNV x, GLhalfNV y);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB2HVNVPROC)(GLuint index, const GLhalfNV *v);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB3HNVPROC)(GLuint index, GLhalfNV x, GLhalfNV y, GLhalfNV z);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB3HVNVPROC)(GLuint index, const GLhalfNV *v);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB4HNVPROC)(GLuint index, GLhalfNV x, GLhalfNV y, GLhalfNV z, GLhalfNV w);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIB4HVNVPROC)(GLuint index, const GLhalfNV *v);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIBS1HVNVPROC)(GLuint index, GLsizei n, const GLhalfNV *v);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIBS2HVNVPROC)(GLuint index, GLsizei n, const GLhalfNV *v);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIBS3HVNVPROC)(GLuint index, GLsizei n, const GLhalfNV *v);
-typedef void (WINE_GLAPI *PGLFNVERTEXATTRIBS4HVNVPROC)(GLuint index, GLsizei n, const GLhalfNV *v);
 
 /* GL_NV_light_max_exponent */
 #ifndef GL_NV_light_max_exponent
@@ -3486,8 +2247,6 @@ typedef void (WINE_GLAPI *PGLFNVERTEXATTRIBS4HVNVPROC)(GLuint index, GLsizei n, 
 #define GL_NV_COORD_REPLACE_NV                              0x8862
 #define GL_NV_POINT_SPRITE_R_MODE_NV                        0x8863
 #endif
-typedef void (WINE_GLAPI *PGLFNPOINTPARAMETERIVNVPROC)(GLenum pname, const GLint *params);
-typedef void (WINE_GLAPI *PGLFNPOINTPARAMETERINVPROC)(GLenum pname, GLint param);
 
 /* GL_NV_register_combiners */
 #ifndef GL_NV_register_combiners
@@ -3549,35 +2308,12 @@ typedef void (WINE_GLAPI *PGLFNPOINTPARAMETERINVPROC)(GLenum pname, GLint param)
 /* reuse GL_NONE */
 /* reuse GL_FOG */
 #endif
-typedef void (WINE_GLAPI *PGLFNCOMBINERPARAMETERFVNVPROC)(GLenum pname, const GLfloat *params);
-typedef void (WINE_GLAPI *PGLFNCOMBINERPARAMETERFNVPROC)(GLenum pname, GLfloat param);
-typedef void (WINE_GLAPI *PGLFNCOMBINERPARAMETERIVNVPROC)(GLenum pname, const GLint *params);
-typedef void (WINE_GLAPI *PGLFNCOMBINERPARAMETERINVPROC)(GLenum pname, GLint param);
-typedef void (WINE_GLAPI *PGLFNCOMBINERINPUTNVPROC)(GLenum stage, GLenum portion,
-        GLenum variable, GLenum input, GLenum mapping, GLenum componentUsage);
-typedef void (WINE_GLAPI *PGLFNCOMBINEROUTPUTNVPROC)(GLenum stage, GLenum portion,
-        GLenum abOutput, GLenum cdOutput, GLenum sumOutput, GLenum scale, GLenum bias,
-        GLboolean abDotProduct, GLboolean cdDotProduct, GLboolean muxSum);
-typedef void (WINE_GLAPI *PGLFNFINALCOMBINERINPUTNVPROC)(GLenum variable, GLenum input,
-        GLenum mapping, GLenum componentUsage);
-typedef void (WINE_GLAPI *PGLFNGETCOMBINERINPUTPARAMETERFVNVPROC)(GLenum stage, GLenum portion,
-        GLenum variable, GLenum pname, GLfloat *params);
-typedef void (WINE_GLAPI *PGLFNGETCOMBINERINPUTPARAMETERIVNVPROC)(GLenum stage, GLenum portion,
-        GLenum variable, GLenum pname, GLint *params);
-typedef void (WINE_GLAPI *PGLFNGETCOMBINEROUTPUTPARAMETERFVNVPROC)(GLenum stage, GLenum portion,
-        GLenum pname, GLfloat *params);
-typedef void (WINE_GLAPI *PGLFNGETCOMBINEROUTPUTPARAMETERIVNVPROC)(GLenum stage, GLenum portion,
-        GLenum pname, GLint *params);
-typedef void (WINE_GLAPI *PGLFNGETFINALCOMBINERINPUTPARAMETERFVNVPROC)(GLenum variable, GLenum pname, GLfloat *params);
-typedef void (WINE_GLAPI *PGLFNGETFINALCOMBINERINPUTPARAMETERIVNVPROC)(GLenum variable, GLenum pname, GLint *params);
 
 /* GL_NV_register_combiners2 */
 #ifndef GL_NV_register_combiners2
 #define GL_NV_register_combiners2 1
 #define GL_PER_STAGE_CONSTANTS_NV                           0x8535
 #endif
-typedef void (WINE_GLAPI *PGLFNCOMBINERSTAGEPARAMETERFVNVPROC)(GLenum stage, GLenum pname, const GLfloat *params);
-typedef void (WINE_GLAPI *PGLFNGETCOMBINERSTAGEPARAMETERFVNVPROC)(GLenum stage, GLenum pname, GLfloat *params);
 
 /* GL_NV_texgen_reflection */
 #ifndef GL_NV_texgen_reflection
@@ -3694,834 +2430,407 @@ typedef void (WINE_GLAPI *PGLFNGETCOMBINERSTAGEPARAMETERFVNVPROC)(GLenum stage, 
 #define GL_GENERATE_MIPMAP_HINT_SGIS                        0x8192
 #endif
 
-/* WGL_ARB_extensions_string */
-typedef const char *(WINAPI *WINED3D_PFNWGLGETEXTENSIONSSTRINGARBPROC)(HDC hdc);
-
-/* WGL_ARB_multisample */
-#ifndef WGL_ARB_multisample
-#define WGL_ARB_multisample 1
-#define WGL_SAMPLE_BUFFERS_ARB                              0x2041
-#define WGL_SAMPLES_ARB                                     0x2042
-#endif
-
-/* WGL_ARB_pixel_format */
-#ifndef WGL_ARB_pixel_format
-#define WGL_ARB_pixel_format 1
-#define WGL_NUMBER_PIXEL_FORMATS_ARB                        0x2000
-#define WGL_DRAW_TO_WINDOW_ARB                              0x2001
-#define WGL_DRAW_TO_BITMAP_ARB                              0x2002
-#define WGL_ACCELERATION_ARB                                0x2003
-#define WGL_NEED_PALETTE_ARB                                0x2004
-#define WGL_NEED_SYSTEM_PALETTE_ARB                         0x2005
-#define WGL_SWAP_LAYER_BUFFERS_ARB                          0x2006
-#define WGL_SWAP_METHOD_ARB                                 0x2007
-#define WGL_NUMBER_OVERLAYS_ARB                             0x2008
-#define WGL_NUMBER_UNDERLAYS_ARB                            0x2009
-#define WGL_TRANSPARENT_ARB                                 0x200a
-#define WGL_TRANSPARENT_RED_VALUE_ARB                       0x2037
-#define WGL_TRANSPARENT_GREEN_VALUE_ARB                     0x2038
-#define WGL_TRANSPARENT_BLUE_VALUE_ARB                      0x2039
-#define WGL_TRANSPARENT_ALPHA_VALUE_ARB                     0x203a
-#define WGL_TRANSPARENT_INDEX_VALUE_ARB                     0x203b
-#define WGL_SHARE_DEPTH_ARB                                 0x200c
-#define WGL_SHARE_STENCIL_ARB                               0x200d
-#define WGL_SHARE_ACCUM_ARB                                 0x200e
-#define WGL_SUPPORT_GDI_ARB                                 0x200f
-#define WGL_SUPPORT_OPENGL_ARB                              0x2010
-#define WGL_DOUBLE_BUFFER_ARB                               0x2011
-#define WGL_STEREO_ARB                                      0x2012
-#define WGL_PIXEL_TYPE_ARB                                  0x2013
-#define WGL_COLOR_BITS_ARB                                  0x2014
-#define WGL_RED_BITS_ARB                                    0x2015
-#define WGL_RED_SHIFT_ARB                                   0x2016
-#define WGL_GREEN_BITS_ARB                                  0x2017
-#define WGL_GREEN_SHIFT_ARB                                 0x2018
-#define WGL_BLUE_BITS_ARB                                   0x2019
-#define WGL_BLUE_SHIFT_ARB                                  0x201a
-#define WGL_ALPHA_BITS_ARB                                  0x201b
-#define WGL_ALPHA_SHIFT_ARB                                 0x201c
-#define WGL_ACCUM_BITS_ARB                                  0x201d
-#define WGL_ACCUM_RED_BITS_ARB                              0x201e
-#define WGL_ACCUM_GREEN_BITS_ARB                            0x201f
-#define WGL_ACCUM_BLUE_BITS_ARB                             0x2020
-#define WGL_ACCUM_ALPHA_BITS_ARB                            0x2021
-#define WGL_DEPTH_BITS_ARB                                  0x2022
-#define WGL_STENCIL_BITS_ARB                                0x2023
-#define WGL_AUX_BUFFERS_ARB                                 0x2024
-#define WGL_NO_ACCELERATION_ARB                             0x2025
-#define WGL_GENERIC_ACCELERATION_ARB                        0x2026
-#define WGL_FULL_ACCELERATION_ARB                           0x2027
-#define WGL_SWAP_EXCHANGE_ARB                               0x2028
-#define WGL_SWAP_COPY_ARB                                   0x2029
-#define WGL_SWAP_UNDEFINED_ARB                              0x202a
-#define WGL_TYPE_RGBA_ARB                                   0x202b
-#define WGL_TYPE_COLORINDEX_ARB                             0x202c
-#endif
-typedef BOOL (WINAPI *WINED3D_PFNWGLGETPIXELFORMATATTRIBIVARBPROC)(HDC hdc, int iPixelFormat,
-        int iLayerPlane, UINT nAttributes, const int *piAttributes, int *piValues);
-typedef BOOL (WINAPI *WINED3D_PFNWGLGETPIXELFORMATATTRIBFVARBPROC)(HDC hdc, int iPixelFormat,
-        int iLayerPlane, UINT nAttributes, const int *piAttributes, FLOAT *pfValues);
-typedef BOOL (WINAPI *WINED3D_PFNWGLCHOOSEPIXELFORMATARBPROC)(HDC hdc, const int *piAttribIList,
-        const FLOAT *pfAttribFList, UINT nMaxFormats, int *piFormats, UINT *nNumFormats);
-
-/* WGL_ARB_pixel_format_float */
-#ifndef WGL_ARB_pixel_format_float
-#define WGL_ARB_pixel_format_float 1
-#define WGL_TYPE_RGBA_FLOAT_ARB                             0x21a0
-#endif
-
-/* WGL_WINE_pixel_format_passthrough */
-typedef BOOL (WINAPI *WINED3D_PFNWGLSETPIXELFORMATWINE)(HDC hdc, int iPixelFormat,
-        const PIXELFORMATDESCRIPTOR *ppfd);
-
-typedef BOOL (WINAPI *WINED3D_PFNWGLSWAPINTERVALEXTPROC)(int interval);
+#include "wine/wglext.h"
 
 #define GL_EXT_FUNCS_GEN \
     /* GL_APPLE_fence */ \
-    USE_GL_FUNC(PGLFNGENFENCESAPPLEPROC, \
-            glGenFencesAPPLE,                           APPLE_FENCE,                    NULL) \
-    USE_GL_FUNC(PGLFNDELETEFENCESAPPLEPROC, \
-            glDeleteFencesAPPLE,                        APPLE_FENCE,                    NULL) \
-    USE_GL_FUNC(PGLFNSETFENCEAPPLEPROC, \
-            glSetFenceAPPLE,                            APPLE_FENCE,                    NULL) \
-    USE_GL_FUNC(PGLFNTESTFENCEAPPLEPROC, \
-            glTestFenceAPPLE,                           APPLE_FENCE,                    NULL) \
-    USE_GL_FUNC(PGLFNFINISHFENCEAPPLEPROC, \
-            glFinishFenceAPPLE,                         APPLE_FENCE,                    NULL) \
-    USE_GL_FUNC(PGLFNISFENCEAPPLEPROC, \
-            glIsFenceAPPLE,                             APPLE_FENCE,                    NULL) \
-    USE_GL_FUNC(PGLFNTESTOBJECTAPPLEPROC, \
-            glTestObjectAPPLE,                          APPLE_FENCE,                    NULL) \
-    USE_GL_FUNC(PGLFNFINISHOBJECTAPPLEPROC, \
-            glFinishObjectAPPLE,                        APPLE_FENCE,                    NULL) \
+    USE_GL_FUNC(glDeleteFencesAPPLE) \
+    USE_GL_FUNC(glFinishFenceAPPLE) \
+    USE_GL_FUNC(glFinishObjectAPPLE) \
+    USE_GL_FUNC(glGenFencesAPPLE) \
+    USE_GL_FUNC(glIsFenceAPPLE) \
+    USE_GL_FUNC(glSetFenceAPPLE) \
+    USE_GL_FUNC(glTestFenceAPPLE) \
+    USE_GL_FUNC(glTestObjectAPPLE) \
     /* GL_APPLE_flush_buffer_range */ \
-    USE_GL_FUNC(PGLFNBUFFERPARAMETERIAPPLE, \
-            glBufferParameteriAPPLE,                    APPLE_FLUSH_BUFFER_RANGE,       NULL) \
-    USE_GL_FUNC(PGLFNFLUSHMAPPEDBUFFERRANGEAPPLE, \
-            glFlushMappedBufferRangeAPPLE,              APPLE_FLUSH_BUFFER_RANGE,       NULL) \
-    /* GL_APPLE_flush_render */ \
-    USE_GL_FUNC(PGLFNFLUSHRENDERAPPLEPROC, \
-            glFlushRenderAPPLE,                         APPLE_FLUSH_RENDER,             NULL) \
-    USE_GL_FUNC(PGLFNFINISHRENDERAPPLEPROC, \
-            glFinishRenderAPPLE,                        APPLE_FLUSH_RENDER,             NULL) \
+    USE_GL_FUNC(glBufferParameteriAPPLE) \
+    USE_GL_FUNC(glFlushMappedBufferRangeAPPLE) \
     /* GL_ARB_color_buffer_float */ \
-    USE_GL_FUNC(PGLFNCLAMPCOLORARBPROC, \
-            glClampColorARB,                            ARB_COLOR_BUFFER_FLOAT,         NULL) \
+    USE_GL_FUNC(glClampColorARB) \
     /* GL_ARB_draw_buffers */ \
-    USE_GL_FUNC(PGLFNDRAWBUFFERSARBPROC, \
-            glDrawBuffersARB,                           ARB_DRAW_BUFFERS,               NULL) \
+    USE_GL_FUNC(glDrawBuffersARB) \
     /* GL_ARB_draw_elements_base_vertex */ \
-    USE_GL_FUNC(PGLFNDRAWELEMENTSBASEVERTEXPROC, \
-            glDrawElementsBaseVertex,                   ARB_DRAW_ELEMENTS_BASE_VERTEX,  NULL) \
-    USE_GL_FUNC(PGLFNDRAWRANGEELEMENTSBASEVERTEXPROC, \
-            glDrawRangeElementsBaseVertex,              ARB_DRAW_ELEMENTS_BASE_VERTEX,  NULL) \
-    USE_GL_FUNC(PGLFNDRAWELEMENTSINSTANCEDBASEVERTEXPROC, \
-            glDrawElementsInstancedBaseVertex,          ARB_DRAW_ELEMENTS_BASE_VERTEX,  NULL) \
-    USE_GL_FUNC(PGLFNMULTIDRAWELEMENTSBASEVERTEXPROC, \
-            glMultiDrawElementsBaseVertex,              ARB_DRAW_ELEMENTS_BASE_VERTEX,  NULL) \
+    USE_GL_FUNC(glDrawElementsBaseVertex) \
+    USE_GL_FUNC(glDrawElementsInstancedBaseVertex) \
+    USE_GL_FUNC(glDrawRangeElementsBaseVertex) \
+    USE_GL_FUNC(glMultiDrawElementsBaseVertex) \
     /* GL_ARB_framebuffer_object */ \
-    USE_GL_FUNC(PGLFNGLISRENDERBUFFERPROC, \
-            glIsRenderbuffer,                           ARB_FRAMEBUFFER_OBJECT,         NULL) \
-    USE_GL_FUNC(PGLFNGLBINDRENDERBUFFERPROC, \
-            glBindRenderbuffer,                         ARB_FRAMEBUFFER_OBJECT,         NULL) \
-    USE_GL_FUNC(PGLFNGLDELETERENDERBUFFERSPROC, \
-            glDeleteRenderbuffers,                      ARB_FRAMEBUFFER_OBJECT,         NULL) \
-    USE_GL_FUNC(PGLFNGLGENRENDERBUFFERSPROC, \
-            glGenRenderbuffers,                         ARB_FRAMEBUFFER_OBJECT,         NULL) \
-    USE_GL_FUNC(PGLFNGLRENDERBUFFERSTORAGEPROC, \
-            glRenderbufferStorage,                      ARB_FRAMEBUFFER_OBJECT,         NULL) \
-    USE_GL_FUNC(PGLFNRENDERBUFFERSTORAGEMULTISAMPLEPROC, \
-            glRenderbufferStorageMultisample,           ARB_FRAMEBUFFER_OBJECT,         NULL) \
-    USE_GL_FUNC(PGLFNGLGETRENDERBUFFERPARAMETERIVPROC, \
-            glGetRenderbufferParameteriv,               ARB_FRAMEBUFFER_OBJECT,         NULL) \
-    USE_GL_FUNC(PGLFNGLISFRAMEBUFFERPROC, \
-            glIsFramebuffer,                            ARB_FRAMEBUFFER_OBJECT,         NULL) \
-    USE_GL_FUNC(PGLFNGLBINDFRAMEBUFFERPROC, \
-            glBindFramebuffer,                          ARB_FRAMEBUFFER_OBJECT,         NULL) \
-    USE_GL_FUNC(PGLFNGLDELETEFRAMEBUFFERSPROC, \
-            glDeleteFramebuffers,                       ARB_FRAMEBUFFER_OBJECT,         NULL) \
-    USE_GL_FUNC(PGLFNGLGENFRAMEBUFFERSPROC, \
-            glGenFramebuffers,                          ARB_FRAMEBUFFER_OBJECT,         NULL) \
-    USE_GL_FUNC(PGLFNGLCHECKFRAMEBUFFERSTATUSPROC, \
-            glCheckFramebufferStatus,                   ARB_FRAMEBUFFER_OBJECT,         NULL) \
-    USE_GL_FUNC(PGLFNGLFRAMEBUFFERTEXTURE1DPROC, \
-            glFramebufferTexture1D,                     ARB_FRAMEBUFFER_OBJECT,         NULL) \
-    USE_GL_FUNC(PGLFNGLFRAMEBUFFERTEXTURE2DPROC, \
-            glFramebufferTexture2D,                     ARB_FRAMEBUFFER_OBJECT,         NULL) \
-    USE_GL_FUNC(PGLFNGLFRAMEBUFFERTEXTURE3DPROC, \
-            glFramebufferTexture3D,                     ARB_FRAMEBUFFER_OBJECT,         NULL) \
-    USE_GL_FUNC(PGLFNGLFRAMEBUFFERTEXTURELAYERPROC,     \
-            glFramebufferTextureLayer,                  ARB_FRAMEBUFFER_OBJECT,         NULL) \
-    USE_GL_FUNC(PGLFNGLFRAMEBUFFERRENDERBUFFERPROC, \
-            glFramebufferRenderbuffer,                  ARB_FRAMEBUFFER_OBJECT,         NULL) \
-    USE_GL_FUNC(PGLFNGLGETFRAMEBUFFERATTACHMENTPARAMETERIVPROC, \
-            glGetFramebufferAttachmentParameteriv,      ARB_FRAMEBUFFER_OBJECT,         NULL) \
-    USE_GL_FUNC(PGLFNGLBLITFRAMEBUFFERPROC, \
-            glBlitFramebuffer,                          ARB_FRAMEBUFFER_OBJECT,         NULL) \
-    USE_GL_FUNC(PGLFNGLGENERATEMIPMAPPROC, \
-            glGenerateMipmap,                           ARB_FRAMEBUFFER_OBJECT,         NULL) \
+    USE_GL_FUNC(glBindFramebuffer) \
+    USE_GL_FUNC(glBindRenderbuffer) \
+    USE_GL_FUNC(glBlitFramebuffer) \
+    USE_GL_FUNC(glCheckFramebufferStatus) \
+    USE_GL_FUNC(glDeleteFramebuffers) \
+    USE_GL_FUNC(glDeleteRenderbuffers) \
+    USE_GL_FUNC(glFramebufferRenderbuffer) \
+    USE_GL_FUNC(glFramebufferTexture1D) \
+    USE_GL_FUNC(glFramebufferTexture2D) \
+    USE_GL_FUNC(glFramebufferTexture3D) \
+    USE_GL_FUNC(glFramebufferTextureLayer) \
+    USE_GL_FUNC(glGenFramebuffers) \
+    USE_GL_FUNC(glGenRenderbuffers) \
+    USE_GL_FUNC(glGenerateMipmap) \
+    USE_GL_FUNC(glGetFramebufferAttachmentParameteriv) \
+    USE_GL_FUNC(glGetRenderbufferParameteriv) \
+    USE_GL_FUNC(glIsFramebuffer) \
+    USE_GL_FUNC(glIsRenderbuffer) \
+    USE_GL_FUNC(glRenderbufferStorage) \
+    USE_GL_FUNC(glRenderbufferStorageMultisample) \
     /* GL_ARB_geometry_shader4 */ \
-    USE_GL_FUNC(PGLFNPROGRAMPARAMETERIARBPROC, \
-            glProgramParameteriARB,                     ARB_GEOMETRY_SHADER4,           NULL) \
-    USE_GL_FUNC(PGLFNFRAMEBUFFERTEXTUREARBPROC, \
-            glFramebufferTextureARB,                    ARB_GEOMETRY_SHADER4,           NULL) \
-    USE_GL_FUNC(PGLFNFRAMEBUFFERTEXTURELAYERARBPROC, \
-            glFramebufferTextureLayerARB,               ARB_GEOMETRY_SHADER4,           NULL) \
-    USE_GL_FUNC(PGLFNFRAMEBUFFERTEXTUREFACEARBPROC, \
-            glFramebufferTextureFaceARB,                ARB_GEOMETRY_SHADER4,           NULL) \
+    USE_GL_FUNC(glFramebufferTextureARB) \
+    USE_GL_FUNC(glFramebufferTextureFaceARB) \
+    USE_GL_FUNC(glFramebufferTextureLayerARB) \
+    USE_GL_FUNC(glProgramParameteriARB) \
     /* GL_ARB_map_buffer_range */ \
-    USE_GL_FUNC(PGLFNMAPBUFFERRANGEPROC, \
-            glMapBufferRange,                           ARB_MAP_BUFFER_RANGE,           NULL) \
-    USE_GL_FUNC(PGLFNFLUSHMAPPEDBUFFERRANGEPROC, \
-            glFlushMappedBufferRange,                   ARB_MAP_BUFFER_RANGE,           NULL) \
+    USE_GL_FUNC(glFlushMappedBufferRange) \
+    USE_GL_FUNC(glMapBufferRange) \
     /* GL_ARB_multisample */ \
-    USE_GL_FUNC(WINED3D_PFNGLSAMPLECOVERAGEARBPROC, \
-            glSampleCoverageARB,                        ARB_MULTISAMPLE,                NULL) \
+    USE_GL_FUNC(glSampleCoverageARB) \
     /* GL_ARB_multitexture */ \
-    USE_GL_FUNC(WINED3D_PFNGLACTIVETEXTUREARBPROC, \
-            glActiveTextureARB,                         ARB_MULTITEXTURE,               NULL) \
-    USE_GL_FUNC(WINED3D_PFNGLCLIENTACTIVETEXTUREARBPROC, \
-            glClientActiveTextureARB,                   ARB_MULTITEXTURE,               NULL) \
-    USE_GL_FUNC(WINED3D_PFNGLMULTITEXCOORD1FARBPROC, \
-            glMultiTexCoord1fARB,                       ARB_MULTITEXTURE,               NULL) \
-    USE_GL_FUNC(WINED3D_PFNGLMULTITEXCOORD1FVARBPROC, \
-            glMultiTexCoord1fvARB,                      ARB_MULTITEXTURE,               NULL) \
-    USE_GL_FUNC(WINED3D_PFNGLMULTITEXCOORD2FARBPROC, \
-            glMultiTexCoord2fARB,                       ARB_MULTITEXTURE,               NULL) \
-    USE_GL_FUNC(WINED3D_PFNGLMULTITEXCOORD2FVARBPROC, \
-            glMultiTexCoord2fvARB,                      ARB_MULTITEXTURE,               NULL) \
-    USE_GL_FUNC(WINED3D_PFNGLMULTITEXCOORD3FARBPROC, \
-            glMultiTexCoord3fARB,                       ARB_MULTITEXTURE,               NULL) \
-    USE_GL_FUNC(WINED3D_PFNGLMULTITEXCOORD3FVARBPROC, \
-            glMultiTexCoord3fvARB,                      ARB_MULTITEXTURE,               NULL) \
-    USE_GL_FUNC(WINED3D_PFNGLMULTITEXCOORD4FARBPROC, \
-            glMultiTexCoord4fARB,                       ARB_MULTITEXTURE,               NULL) \
-    USE_GL_FUNC(WINED3D_PFNGLMULTITEXCOORD4FVARBPROC, \
-            glMultiTexCoord4fvARB,                      ARB_MULTITEXTURE,               NULL) \
-    USE_GL_FUNC(WINED3D_PFNGLMULTITEXCOORD2SVARBPROC, \
-            glMultiTexCoord2svARB,                      ARB_MULTITEXTURE,               NULL) \
-    USE_GL_FUNC(WINED3D_PFNGLMULTITEXCOORD4SVARBPROC, \
-            glMultiTexCoord4svARB,                      ARB_MULTITEXTURE,               NULL) \
+    USE_GL_FUNC(glActiveTextureARB) \
+    USE_GL_FUNC(glClientActiveTextureARB) \
+    USE_GL_FUNC(glMultiTexCoord1fARB) \
+    USE_GL_FUNC(glMultiTexCoord1fvARB) \
+    USE_GL_FUNC(glMultiTexCoord2fARB) \
+    USE_GL_FUNC(glMultiTexCoord2fvARB) \
+    USE_GL_FUNC(glMultiTexCoord2svARB) \
+    USE_GL_FUNC(glMultiTexCoord3fARB) \
+    USE_GL_FUNC(glMultiTexCoord3fvARB) \
+    USE_GL_FUNC(glMultiTexCoord4fARB) \
+    USE_GL_FUNC(glMultiTexCoord4fvARB) \
+    USE_GL_FUNC(glMultiTexCoord4svARB) \
     /* GL_ARB_occlusion_query */ \
-    USE_GL_FUNC(PGLFNGENQUERIESARBPROC, \
-            glGenQueriesARB,                            ARB_OCCLUSION_QUERY,            NULL) \
-    USE_GL_FUNC(PGLFNDELETEQUERIESARBPROC, \
-            glDeleteQueriesARB,                         ARB_OCCLUSION_QUERY,            NULL) \
-    USE_GL_FUNC(PGLFNBEGINQUERYARBPROC, \
-            glBeginQueryARB,                            ARB_OCCLUSION_QUERY,            NULL) \
-    USE_GL_FUNC(PGLFNENDQUERYARBPROC, \
-            glEndQueryARB,                              ARB_OCCLUSION_QUERY,            NULL) \
-    USE_GL_FUNC(PGLFNGETQUERYOBJECTIVARBPROC, \
-            glGetQueryObjectivARB,                      ARB_OCCLUSION_QUERY,            NULL) \
-    USE_GL_FUNC(PGLFNGETQUERYOBJECTUIVARBPROC, \
-            glGetQueryObjectuivARB,                     ARB_OCCLUSION_QUERY,            NULL) \
+    USE_GL_FUNC(glBeginQueryARB) \
+    USE_GL_FUNC(glDeleteQueriesARB) \
+    USE_GL_FUNC(glEndQueryARB) \
+    USE_GL_FUNC(glGenQueriesARB) \
+    USE_GL_FUNC(glGetQueryObjectivARB) \
+    USE_GL_FUNC(glGetQueryObjectuivARB) \
     /* GL_ARB_point_parameters */ \
-    USE_GL_FUNC(PGLFNGLPOINTPARAMETERFARBPROC, \
-            glPointParameterfARB,                       ARB_POINT_PARAMETERS,           NULL) \
-    USE_GL_FUNC(PGLFNGLPOINTPARAMETERFVARBPROC, \
-            glPointParameterfvARB,                      ARB_POINT_PARAMETERS,           NULL) \
+    USE_GL_FUNC(glPointParameterfARB) \
+    USE_GL_FUNC(glPointParameterfvARB) \
     /* GL_ARB_provoking_vertex */ \
-    USE_GL_FUNC(PGLFNGLPROVOKINGVERTEXPROC, \
-            glProvokingVertex,                          ARB_PROVOKING_VERTEX,           NULL) \
+    USE_GL_FUNC(glProvokingVertex) \
     /* GL_ARB_shader_objects */ \
-    USE_GL_FUNC(WINED3D_PFNGLGETOBJECTPARAMETERIVARBPROC, \
-            glGetObjectParameterivARB,                  ARB_SHADER_OBJECTS,             NULL) \
-    USE_GL_FUNC(WINED3D_PFNGLGETOBJECTPARAMETERFVARBPROC, \
-            glGetObjectParameterfvARB,                  ARB_SHADER_OBJECTS,             NULL) \
-    USE_GL_FUNC(WINED3D_PFNGLGETUNIFORMLOCATIONARBPROC, \
-            glGetUniformLocationARB,                    ARB_SHADER_OBJECTS,             NULL) \
-    USE_GL_FUNC(WINED3D_PFNGLGETACTIVEUNIFORMARBPROC, \
-            glGetActiveUniformARB,                      ARB_SHADER_OBJECTS,             NULL) \
-    USE_GL_FUNC(WINED3D_PFNGLUNIFORM1IARBPROC, \
-            glUniform1iARB,                             ARB_SHADER_OBJECTS,             NULL) \
-    USE_GL_FUNC(WINED3D_PFNGLUNIFORM2IARBPROC, \
-            glUniform2iARB,                             ARB_SHADER_OBJECTS,             NULL) \
-    USE_GL_FUNC(WINED3D_PFNGLUNIFORM3IARBPROC, \
-            glUniform3iARB,                             ARB_SHADER_OBJECTS,             NULL) \
-    USE_GL_FUNC(WINED3D_PFNGLUNIFORM4IARBPROC, \
-            glUniform4iARB,                             ARB_SHADER_OBJECTS,             NULL) \
-    USE_GL_FUNC(WINED3D_PFNGLUNIFORM1FARBPROC, \
-            glUniform1fARB,                             ARB_SHADER_OBJECTS,             NULL) \
-    USE_GL_FUNC(WINED3D_PFNGLUNIFORM2FARBPROC, \
-            glUniform2fARB,                             ARB_SHADER_OBJECTS,             NULL) \
-    USE_GL_FUNC(WINED3D_PFNGLUNIFORM3FARBPROC, \
-            glUniform3fARB,                             ARB_SHADER_OBJECTS,             NULL) \
-    USE_GL_FUNC(WINED3D_PFNGLUNIFORM4FARBPROC, \
-            glUniform4fARB,                             ARB_SHADER_OBJECTS,             NULL) \
-    USE_GL_FUNC(WINED3D_PFNGLUNIFORM1FVARBPROC, \
-            glUniform1fvARB,                            ARB_SHADER_OBJECTS,             NULL) \
-    USE_GL_FUNC(WINED3D_PFNGLUNIFORM2FVARBPROC, \
-            glUniform2fvARB,                            ARB_SHADER_OBJECTS,             NULL) \
-    USE_GL_FUNC(WINED3D_PFNGLUNIFORM3FVARBPROC, \
-            glUniform3fvARB,                            ARB_SHADER_OBJECTS,             NULL) \
-    USE_GL_FUNC(WINED3D_PFNGLUNIFORM4FVARBPROC, \
-            glUniform4fvARB,                            ARB_SHADER_OBJECTS,             NULL) \
-    USE_GL_FUNC(WINED3D_PFNGLUNIFORM1IVARBPROC, \
-            glUniform1ivARB,                            ARB_SHADER_OBJECTS,             NULL) \
-    USE_GL_FUNC(WINED3D_PFNGLUNIFORM2IVARBPROC, \
-            glUniform2ivARB,                            ARB_SHADER_OBJECTS,             NULL) \
-    USE_GL_FUNC(WINED3D_PFNGLUNIFORM3IVARBPROC, \
-            glUniform3ivARB,                            ARB_SHADER_OBJECTS,             NULL) \
-    USE_GL_FUNC(WINED3D_PFNGLUNIFORM4IVARBPROC, \
-            glUniform4ivARB,                            ARB_SHADER_OBJECTS,             NULL) \
-    USE_GL_FUNC(WINED3D_PFNGLUNIFORMMATRIX2FVARBPROC, \
-            glUniformMatrix2fvARB,                      ARB_SHADER_OBJECTS,             NULL) \
-    USE_GL_FUNC(WINED3D_PFNGLUNIFORMMATRIX3FVARBPROC, \
-            glUniformMatrix3fvARB,                      ARB_SHADER_OBJECTS,             NULL) \
-    USE_GL_FUNC(WINED3D_PFNGLUNIFORMMATRIX4FVARBPROC, \
-            glUniformMatrix4fvARB,                      ARB_SHADER_OBJECTS,             NULL) \
-    USE_GL_FUNC(WINED3D_PFNGLGETUNIFORMFVARBPROC, \
-            glGetUniformfvARB,                          ARB_SHADER_OBJECTS,             NULL) \
-    USE_GL_FUNC(WINED3D_PFNGLGETUNIFORMIVARBPROC, \
-            glGetUniformivARB,                          ARB_SHADER_OBJECTS,             NULL) \
-    USE_GL_FUNC(WINED3D_PFNGLGETINFOLOGARBPROC, \
-            glGetInfoLogARB,                            ARB_SHADER_OBJECTS,             NULL) \
-    USE_GL_FUNC(WINED3D_PFNGLUSEPROGRAMOBJECTARBPROC, \
-            glUseProgramObjectARB,                      ARB_SHADER_OBJECTS,             NULL) \
-    USE_GL_FUNC(WINED3D_PFNGLCREATESHADEROBJECTARBPROC, \
-            glCreateShaderObjectARB,                    ARB_SHADER_OBJECTS,             NULL) \
-    USE_GL_FUNC(WINED3D_PFNGLSHADERSOURCEARBPROC, \
-            glShaderSourceARB,                          ARB_SHADER_OBJECTS,             NULL) \
-    USE_GL_FUNC(WINED3D_PFNGLCOMPILESHADERARBPROC, \
-            glCompileShaderARB,                         ARB_SHADER_OBJECTS,             NULL) \
-    USE_GL_FUNC(WINED3D_PFNGLCREATEPROGRAMOBJECTARBPROC, \
-            glCreateProgramObjectARB,                   ARB_SHADER_OBJECTS,             NULL) \
-    USE_GL_FUNC(WINED3D_PFNGLATTACHOBJECTARBPROC, \
-            glAttachObjectARB,                          ARB_SHADER_OBJECTS,             NULL) \
-    USE_GL_FUNC(WINED3D_PFNGLLINKPROGRAMARBPROC, \
-            glLinkProgramARB,                           ARB_SHADER_OBJECTS,             NULL) \
-    USE_GL_FUNC(WINED3D_PFNGLDETACHOBJECTARBPROC, \
-            glDetachObjectARB,                          ARB_SHADER_OBJECTS,             NULL) \
-    USE_GL_FUNC(WINED3D_PFNGLDELETEOBJECTARBPROC, \
-            glDeleteObjectARB,                          ARB_SHADER_OBJECTS,             NULL) \
-    USE_GL_FUNC(WINED3D_PFNGLVALIDATEPROGRAMARBPROC, \
-            glValidateProgramARB,                       ARB_SHADER_OBJECTS,             NULL) \
-    USE_GL_FUNC(WINED3D_PFNGLGETATTACHEDOBJECTSARBPROC, \
-            glGetAttachedObjectsARB,                    ARB_SHADER_OBJECTS,             NULL) \
-    USE_GL_FUNC(WINED3D_PFNGLGETHANDLEARBPROC, \
-            glGetHandleARB,                             ARB_SHADER_OBJECTS,             NULL) \
-    USE_GL_FUNC(WINED3D_PFNGLGETSHADERSOURCEARBPROC, \
-            glGetShaderSourceARB,                       ARB_SHADER_OBJECTS,             NULL) \
-    USE_GL_FUNC(WINED3D_PFNGLBINDATTRIBLOCATIONARBPROC, \
-            glBindAttribLocationARB,                    ARB_SHADER_OBJECTS,             NULL) \
-    USE_GL_FUNC(WINED3D_PFNGLGETATTRIBLOCATIONARBPROC, \
-            glGetAttribLocationARB,                     ARB_SHADER_OBJECTS,             NULL) \
+    USE_GL_FUNC(glAttachObjectARB) \
+    USE_GL_FUNC(glBindAttribLocationARB) \
+    USE_GL_FUNC(glCompileShaderARB) \
+    USE_GL_FUNC(glCreateProgramObjectARB) \
+    USE_GL_FUNC(glCreateShaderObjectARB) \
+    USE_GL_FUNC(glDeleteObjectARB) \
+    USE_GL_FUNC(glDetachObjectARB) \
+    USE_GL_FUNC(glGetActiveUniformARB) \
+    USE_GL_FUNC(glGetAttachedObjectsARB) \
+    USE_GL_FUNC(glGetAttribLocationARB) \
+    USE_GL_FUNC(glGetHandleARB) \
+    USE_GL_FUNC(glGetInfoLogARB) \
+    USE_GL_FUNC(glGetObjectParameterfvARB) \
+    USE_GL_FUNC(glGetObjectParameterivARB) \
+    USE_GL_FUNC(glGetShaderSourceARB) \
+    USE_GL_FUNC(glGetUniformLocationARB) \
+    USE_GL_FUNC(glGetUniformfvARB) \
+    USE_GL_FUNC(glGetUniformivARB) \
+    USE_GL_FUNC(glLinkProgramARB) \
+    USE_GL_FUNC(glShaderSourceARB) \
+    USE_GL_FUNC(glUniform1fARB) \
+    USE_GL_FUNC(glUniform1fvARB) \
+    USE_GL_FUNC(glUniform1iARB) \
+    USE_GL_FUNC(glUniform1ivARB) \
+    USE_GL_FUNC(glUniform2fARB) \
+    USE_GL_FUNC(glUniform2fvARB) \
+    USE_GL_FUNC(glUniform2iARB) \
+    USE_GL_FUNC(glUniform2ivARB) \
+    USE_GL_FUNC(glUniform3fARB) \
+    USE_GL_FUNC(glUniform3fvARB) \
+    USE_GL_FUNC(glUniform3iARB) \
+    USE_GL_FUNC(glUniform3ivARB) \
+    USE_GL_FUNC(glUniform4fARB) \
+    USE_GL_FUNC(glUniform4fvARB) \
+    USE_GL_FUNC(glUniform4iARB) \
+    USE_GL_FUNC(glUniform4ivARB) \
+    USE_GL_FUNC(glUniformMatrix2fvARB) \
+    USE_GL_FUNC(glUniformMatrix3fvARB) \
+    USE_GL_FUNC(glUniformMatrix4fvARB) \
+    USE_GL_FUNC(glUseProgramObjectARB) \
+    USE_GL_FUNC(glValidateProgramARB) \
     /* GL_ARB_sync */ \
-    USE_GL_FUNC(PGLFNFENCESYNCPROC, \
-            glFenceSync,                                ARB_SYNC,                       NULL) \
-    USE_GL_FUNC(PGLFNISSYNCPROC, \
-            glIsSync,                                   ARB_SYNC,                       NULL) \
-    USE_GL_FUNC(PGLFNDELETESYNCPROC, \
-            glDeleteSync,                               ARB_SYNC,                       NULL) \
-    USE_GL_FUNC(PGLFNCLIENTWAITSYNCPROC, \
-            glClientWaitSync,                           ARB_SYNC,                       NULL) \
-    USE_GL_FUNC(PGLFNWAITSYNCPROC, \
-            glWaitSync,                                 ARB_SYNC,                       NULL) \
-    USE_GL_FUNC(PGLFNGETINTEGER64VPROC, \
-            glGetInteger64v,                            ARB_SYNC,                       NULL) \
-    USE_GL_FUNC(PGLFNGETSYNCIVPROC, \
-            glGetSynciv,                                ARB_SYNC,                       NULL) \
+    USE_GL_FUNC(glClientWaitSync) \
+    USE_GL_FUNC(glDeleteSync) \
+    USE_GL_FUNC(glFenceSync) \
+    USE_GL_FUNC(glGetInteger64v) \
+    USE_GL_FUNC(glGetSynciv) \
+    USE_GL_FUNC(glIsSync) \
+    USE_GL_FUNC(glWaitSync) \
     /* GL_ARB_texture_compression */ \
-    USE_GL_FUNC(PGLFNCOMPRESSEDTEXIMAGE2DPROC, \
-            glCompressedTexImage2DARB,                  ARB_TEXTURE_COMPRESSION,        NULL) \
-    USE_GL_FUNC(PGLFNCOMPRESSEDTEXIMAGE3DPROC, \
-            glCompressedTexImage3DARB,                  ARB_TEXTURE_COMPRESSION,        NULL) \
-    USE_GL_FUNC(PGLFNCOMPRESSEDTEXSUBIMAGE2DPROC, \
-            glCompressedTexSubImage2DARB,               ARB_TEXTURE_COMPRESSION,        NULL) \
-    USE_GL_FUNC(PGLFNCOMPRESSEDTEXSUBIMAGE3DPROC, \
-            glCompressedTexSubImage3DARB,               ARB_TEXTURE_COMPRESSION,        NULL) \
-    USE_GL_FUNC(PGLFNGETCOMPRESSEDTEXIMAGEPROC, \
-            glGetCompressedTexImageARB,                 ARB_TEXTURE_COMPRESSION,        NULL) \
+    USE_GL_FUNC(glCompressedTexImage2DARB) \
+    USE_GL_FUNC(glCompressedTexImage3DARB) \
+    USE_GL_FUNC(glCompressedTexSubImage2DARB) \
+    USE_GL_FUNC(glCompressedTexSubImage3DARB) \
+    USE_GL_FUNC(glGetCompressedTexImageARB) \
     /* GL_ARB_vertex_blend */ \
-    USE_GL_FUNC(PGLFNGLWEIGHTPOINTERARB, \
-            glWeightPointerARB,                         ARB_VERTEX_BLEND,               NULL) \
-    USE_GL_FUNC(PGLFNGLWEIGHTBV, \
-            glWeightbvARB,                              ARB_VERTEX_BLEND,               NULL) \
-    USE_GL_FUNC(PGLFNGLWEIGHTSV, \
-            glWeightsvARB,                              ARB_VERTEX_BLEND,               NULL) \
-    USE_GL_FUNC(PGLFNGLWEIGHTIV, \
-            glWeightivARB,                              ARB_VERTEX_BLEND,               NULL) \
-    USE_GL_FUNC(PGLFNGLWEIGHTFV, \
-            glWeightfvARB,                              ARB_VERTEX_BLEND,               NULL) \
-    USE_GL_FUNC(PGLFNGLWEIGHTDV, \
-            glWeightdvARB,                              ARB_VERTEX_BLEND,               NULL) \
-    USE_GL_FUNC(PGLFNGLWEIGHTUBV, \
-            glWeightubvARB,                             ARB_VERTEX_BLEND,               NULL) \
-    USE_GL_FUNC(PGLFNGLWEIGHTUSV, \
-            glWeightusvARB,                             ARB_VERTEX_BLEND,               NULL) \
-    USE_GL_FUNC(PGLFNGLWEIGHTUIV, \
-            glWeightuivARB,                             ARB_VERTEX_BLEND,               NULL) \
-    USE_GL_FUNC(PGLFNGLVERTEXBLENDARB, \
-            glVertexBlendARB,                           ARB_VERTEX_BLEND,               NULL) \
+    USE_GL_FUNC(glVertexBlendARB) \
+    USE_GL_FUNC(glWeightPointerARB) \
+    USE_GL_FUNC(glWeightbvARB) \
+    USE_GL_FUNC(glWeightdvARB) \
+    USE_GL_FUNC(glWeightfvARB) \
+    USE_GL_FUNC(glWeightivARB) \
+    USE_GL_FUNC(glWeightsvARB) \
+    USE_GL_FUNC(glWeightubvARB) \
+    USE_GL_FUNC(glWeightuivARB) \
+    USE_GL_FUNC(glWeightusvARB) \
     /* GL_ARB_vertex_buffer_object */ \
-    USE_GL_FUNC(PGLFNBINDBUFFERARBPROC, \
-            glBindBufferARB,                            ARB_VERTEX_BUFFER_OBJECT,       NULL) \
-    USE_GL_FUNC(PGLFNDELETEBUFFERSARBPROC, \
-            glDeleteBuffersARB,                         ARB_VERTEX_BUFFER_OBJECT,       NULL) \
-    USE_GL_FUNC(PGLFNGENBUFFERSARBPROC, \
-            glGenBuffersARB,                            ARB_VERTEX_BUFFER_OBJECT,       NULL) \
-    USE_GL_FUNC(PGLFNISBUFFERARBPROC, \
-            glIsBufferARB,                              ARB_VERTEX_BUFFER_OBJECT,       NULL) \
-    USE_GL_FUNC(PGLFNBUFFERDATAARBPROC, \
-            glBufferDataARB,                            ARB_VERTEX_BUFFER_OBJECT,       NULL) \
-    USE_GL_FUNC(PGLFNBUFFERSUBDATAARBPROC, \
-            glBufferSubDataARB,                         ARB_VERTEX_BUFFER_OBJECT,       NULL) \
-    USE_GL_FUNC(PGLFNGETBUFFERSUBDATAARBPROC, \
-            glGetBufferSubDataARB,                      ARB_VERTEX_BUFFER_OBJECT,       NULL) \
-    USE_GL_FUNC(PGLFNMAPBUFFERARBPROC, \
-            glMapBufferARB,                             ARB_VERTEX_BUFFER_OBJECT,       NULL) \
-    USE_GL_FUNC(PGLFNUNMAPBUFFERARBPROC, \
-            glUnmapBufferARB,                           ARB_VERTEX_BUFFER_OBJECT,       NULL) \
-    USE_GL_FUNC(PGLFNGETBUFFERPARAMETERIVARBPROC, \
-            glGetBufferParameterivARB,                  ARB_VERTEX_BUFFER_OBJECT,       NULL) \
-    USE_GL_FUNC(PGLFNGETBUFFERPOINTERVARBPROC, \
-            glGetBufferPointervARB,                     ARB_VERTEX_BUFFER_OBJECT,       NULL) \
+    USE_GL_FUNC(glBindBufferARB) \
+    USE_GL_FUNC(glBufferDataARB) \
+    USE_GL_FUNC(glBufferSubDataARB) \
+    USE_GL_FUNC(glDeleteBuffersARB) \
+    USE_GL_FUNC(glGenBuffersARB) \
+    USE_GL_FUNC(glGetBufferParameterivARB) \
+    USE_GL_FUNC(glGetBufferPointervARB) \
+    USE_GL_FUNC(glGetBufferSubDataARB) \
+    USE_GL_FUNC(glIsBufferARB) \
+    USE_GL_FUNC(glMapBufferARB) \
+    USE_GL_FUNC(glUnmapBufferARB) \
     /* GL_ARB_vertex_program */ \
-    USE_GL_FUNC(PGLFNGENPROGRAMSARBPROC, \
-            glGenProgramsARB,                           ARB_VERTEX_PROGRAM,             NULL) \
-    USE_GL_FUNC(PGLFNBINDPROGRAMARBPROC, \
-            glBindProgramARB,                           ARB_VERTEX_PROGRAM,             NULL) \
-    USE_GL_FUNC(PGLFNPROGRAMSTRINGARBPROC, \
-            glProgramStringARB,                         ARB_VERTEX_PROGRAM,             NULL) \
-    USE_GL_FUNC(PGLFNDELETEPROGRAMSARBPROC, \
-            glDeleteProgramsARB,                        ARB_VERTEX_PROGRAM,             NULL) \
-    USE_GL_FUNC(PGLFNPROGRAMENVPARAMETER4FVARBPROC, \
-            glProgramEnvParameter4fvARB,                ARB_VERTEX_PROGRAM,             NULL) \
-    USE_GL_FUNC(PGLFNPROGRAMLOCALPARAMETER4FVARBPROC, \
-            glProgramLocalParameter4fvARB,              ARB_VERTEX_PROGRAM,             NULL) \
-    USE_GL_FUNC(PGLFNVERTEXATTRIBPOINTERARBPROC, \
-            glVertexAttribPointerARB,                   ARB_VERTEX_PROGRAM,             NULL) \
-    USE_GL_FUNC(PGLFNENABLEVERTEXATTRIBARRAYARBPROC, \
-            glEnableVertexAttribArrayARB,               ARB_VERTEX_PROGRAM,             NULL) \
-    USE_GL_FUNC(PGLFNDISABLEVERTEXATTRIBARRAYARBPROC, \
-            glDisableVertexAttribArrayARB,              ARB_VERTEX_PROGRAM,             NULL) \
-    USE_GL_FUNC(PGLFNVERTEXATTRIB1DARBPROC, \
-            glVertexAttrib1dARB,                        ARB_VERTEX_PROGRAM,             NULL) \
-    USE_GL_FUNC(PGLFNVERTEXATTRIB1DVARBPROC, \
-            glVertexAttrib1dvARB,                       ARB_VERTEX_PROGRAM,             NULL) \
-    USE_GL_FUNC(PGLFNVERTEXATTRIB1FARBPROC, \
-            glVertexAttrib1fARB,                        ARB_VERTEX_PROGRAM,             NULL) \
-    USE_GL_FUNC(PGLFNVERTEXATTRIB1FVARBPROC, \
-            glVertexAttrib1fvARB,                       ARB_VERTEX_PROGRAM,             NULL) \
-    USE_GL_FUNC(PGLFNVERTEXATTRIB1SARBPROC, \
-            glVertexAttrib1sARB,                        ARB_VERTEX_PROGRAM,             NULL) \
-    USE_GL_FUNC(PGLFNVERTEXATTRIB1SVARBPROC, \
-            glVertexAttrib1svARB,                       ARB_VERTEX_PROGRAM,             NULL) \
-    USE_GL_FUNC(PGLFNVERTEXATTRIB2DARBPROC, \
-            glVertexAttrib2dARB,                        ARB_VERTEX_PROGRAM,             NULL) \
-    USE_GL_FUNC(PGLFNVERTEXATTRIB2DVARBPROC, \
-            glVertexAttrib2dvARB,                       ARB_VERTEX_PROGRAM,             NULL) \
-    USE_GL_FUNC(PGLFNVERTEXATTRIB2FARBPROC, \
-            glVertexAttrib2fARB,                        ARB_VERTEX_PROGRAM,             NULL) \
-    USE_GL_FUNC(PGLFNVERTEXATTRIB2FVARBPROC, \
-            glVertexAttrib2fvARB,                       ARB_VERTEX_PROGRAM,             NULL) \
-    USE_GL_FUNC(PGLFNVERTEXATTRIB2SARBPROC, \
-            glVertexAttrib2sARB,                        ARB_VERTEX_PROGRAM,             NULL) \
-    USE_GL_FUNC(PGLFNVERTEXATTRIB2SVARBPROC, \
-            glVertexAttrib2svARB,                       ARB_VERTEX_PROGRAM,             NULL) \
-    USE_GL_FUNC(PGLFNVERTEXATTRIB3DARBPROC, \
-            glVertexAttrib3dARB,                        ARB_VERTEX_PROGRAM,             NULL) \
-    USE_GL_FUNC(PGLFNVERTEXATTRIB3DVARBPROC, \
-            glVertexAttrib3dvARB,                       ARB_VERTEX_PROGRAM,             NULL) \
-    USE_GL_FUNC(PGLFNVERTEXATTRIB3FARBPROC, \
-            glVertexAttrib3fARB,                        ARB_VERTEX_PROGRAM,             NULL) \
-    USE_GL_FUNC(PGLFNVERTEXATTRIB3FVARBPROC, \
-            glVertexAttrib3fvARB,                       ARB_VERTEX_PROGRAM,             NULL) \
-    USE_GL_FUNC(PGLFNVERTEXATTRIB3SARBPROC, \
-            glVertexAttrib3sARB,                        ARB_VERTEX_PROGRAM,             NULL) \
-    USE_GL_FUNC(PGLFNVERTEXATTRIB3SVARBPROC, \
-            glVertexAttrib3svARB,                       ARB_VERTEX_PROGRAM,             NULL) \
-    USE_GL_FUNC(PGLFNVERTEXATTRIB4NBVARBPROC, \
-            glVertexAttrib4NbvARB,                      ARB_VERTEX_PROGRAM,             NULL) \
-    USE_GL_FUNC(PGLFNVERTEXATTRIB4NIVARBPROC, \
-            glVertexAttrib4NivARB,                      ARB_VERTEX_PROGRAM,             NULL) \
-    USE_GL_FUNC(PGLFNVERTEXATTRIB4NSVARBPROC, \
-            glVertexAttrib4NsvARB,                      ARB_VERTEX_PROGRAM,             NULL) \
-    USE_GL_FUNC(PGLFNVERTEXATTRIB4NUBARBPROC, \
-            glVertexAttrib4NubARB,                      ARB_VERTEX_PROGRAM,             NULL) \
-    USE_GL_FUNC(PGLFNVERTEXATTRIB4NUBVARBPROC, \
-            glVertexAttrib4NubvARB,                     ARB_VERTEX_PROGRAM,             NULL) \
-    USE_GL_FUNC(PGLFNVERTEXATTRIB4NUIVARBPROC, \
-            glVertexAttrib4NuivARB,                     ARB_VERTEX_PROGRAM,             NULL) \
-    USE_GL_FUNC(PGLFNVERTEXATTRIB4NUSVARBPROC, \
-            glVertexAttrib4NusvARB,                     ARB_VERTEX_PROGRAM,             NULL) \
-    USE_GL_FUNC(PGLFNVERTEXATTRIB4BVARBPROC, \
-            glVertexAttrib4bvARB,                       ARB_VERTEX_PROGRAM,             NULL) \
-    USE_GL_FUNC(PGLFNVERTEXATTRIB4DARBPROC, \
-            glVertexAttrib4dARB,                        ARB_VERTEX_PROGRAM,             NULL) \
-    USE_GL_FUNC(PGLFNVERTEXATTRIB4DVARBPROC, \
-            glVertexAttrib4dvARB,                       ARB_VERTEX_PROGRAM,             NULL) \
-    USE_GL_FUNC(PGLFNVERTEXATTRIB4FARBPROC, \
-            glVertexAttrib4fARB,                        ARB_VERTEX_PROGRAM,             NULL) \
-    USE_GL_FUNC(PGLFNVERTEXATTRIB4FVARBPROC, \
-            glVertexAttrib4fvARB,                       ARB_VERTEX_PROGRAM,             NULL) \
-    USE_GL_FUNC(PGLFNVERTEXATTRIB4IVARBPROC, \
-            glVertexAttrib4ivARB,                       ARB_VERTEX_PROGRAM,             NULL) \
-    USE_GL_FUNC(PGLFNVERTEXATTRIB4SARBPROC, \
-            glVertexAttrib4sARB,                        ARB_VERTEX_PROGRAM,             NULL) \
-    USE_GL_FUNC(PGLFNVERTEXATTRIB4SVARBPROC, \
-            glVertexAttrib4svARB,                       ARB_VERTEX_PROGRAM,             NULL) \
-    USE_GL_FUNC(PGLFNVERTEXATTRIB4UBVARBPROC, \
-            glVertexAttrib4ubvARB,                      ARB_VERTEX_PROGRAM,             NULL) \
-    USE_GL_FUNC(PGLFNVERTEXATTRIB4UIVARBPROC, \
-            glVertexAttrib4uivARB,                      ARB_VERTEX_PROGRAM,             NULL) \
-    USE_GL_FUNC(PGLFNVERTEXATTRIB4USVARBPROC, \
-            glVertexAttrib4usvARB,                      ARB_VERTEX_PROGRAM,             NULL) \
-    USE_GL_FUNC(PGLFNGETPROGRAMIVARBPROC, \
-            glGetProgramivARB,                          ARB_VERTEX_PROGRAM,             NULL) \
+    USE_GL_FUNC(glBindProgramARB) \
+    USE_GL_FUNC(glDeleteProgramsARB) \
+    USE_GL_FUNC(glDisableVertexAttribArrayARB) \
+    USE_GL_FUNC(glEnableVertexAttribArrayARB) \
+    USE_GL_FUNC(glGenProgramsARB) \
+    USE_GL_FUNC(glGetProgramivARB) \
+    USE_GL_FUNC(glProgramEnvParameter4fvARB) \
+    USE_GL_FUNC(glProgramLocalParameter4fvARB) \
+    USE_GL_FUNC(glProgramStringARB) \
+    USE_GL_FUNC(glVertexAttrib1dARB) \
+    USE_GL_FUNC(glVertexAttrib1dvARB) \
+    USE_GL_FUNC(glVertexAttrib1fARB) \
+    USE_GL_FUNC(glVertexAttrib1fvARB) \
+    USE_GL_FUNC(glVertexAttrib1sARB) \
+    USE_GL_FUNC(glVertexAttrib1svARB) \
+    USE_GL_FUNC(glVertexAttrib2dARB) \
+    USE_GL_FUNC(glVertexAttrib2dvARB) \
+    USE_GL_FUNC(glVertexAttrib2fARB) \
+    USE_GL_FUNC(glVertexAttrib2fvARB) \
+    USE_GL_FUNC(glVertexAttrib2sARB) \
+    USE_GL_FUNC(glVertexAttrib2svARB) \
+    USE_GL_FUNC(glVertexAttrib3dARB) \
+    USE_GL_FUNC(glVertexAttrib3dvARB) \
+    USE_GL_FUNC(glVertexAttrib3fARB) \
+    USE_GL_FUNC(glVertexAttrib3fvARB) \
+    USE_GL_FUNC(glVertexAttrib3sARB) \
+    USE_GL_FUNC(glVertexAttrib3svARB) \
+    USE_GL_FUNC(glVertexAttrib4NbvARB) \
+    USE_GL_FUNC(glVertexAttrib4NivARB) \
+    USE_GL_FUNC(glVertexAttrib4NsvARB) \
+    USE_GL_FUNC(glVertexAttrib4NubARB) \
+    USE_GL_FUNC(glVertexAttrib4NubvARB) \
+    USE_GL_FUNC(glVertexAttrib4NuivARB) \
+    USE_GL_FUNC(glVertexAttrib4NusvARB) \
+    USE_GL_FUNC(glVertexAttrib4bvARB) \
+    USE_GL_FUNC(glVertexAttrib4dARB) \
+    USE_GL_FUNC(glVertexAttrib4dvARB) \
+    USE_GL_FUNC(glVertexAttrib4fARB) \
+    USE_GL_FUNC(glVertexAttrib4fvARB) \
+    USE_GL_FUNC(glVertexAttrib4ivARB) \
+    USE_GL_FUNC(glVertexAttrib4sARB) \
+    USE_GL_FUNC(glVertexAttrib4svARB) \
+    USE_GL_FUNC(glVertexAttrib4ubvARB) \
+    USE_GL_FUNC(glVertexAttrib4uivARB) \
+    USE_GL_FUNC(glVertexAttrib4usvARB) \
+    USE_GL_FUNC(glVertexAttribPointerARB) \
     /* GL_ATI_fragment_shader */ \
-    USE_GL_FUNC(PGLFNGENFRAGMENTSHADERSATI, \
-            glGenFragmentShadersATI,                    ATI_FRAGMENT_SHADER,            NULL) \
-    USE_GL_FUNC(PGLFNBINDFRAGMENTSHADERATI, \
-            glBindFragmentShaderATI,                    ATI_FRAGMENT_SHADER,            NULL) \
-    USE_GL_FUNC(PGLFNDELETEFRAGMENTSHADERATI, \
-            glDeleteFragmentShaderATI,                  ATI_FRAGMENT_SHADER,            NULL) \
-    USE_GL_FUNC(PGLFNBEGINFRAGMENTSHADERATI, \
-            glBeginFragmentShaderATI,                   ATI_FRAGMENT_SHADER,            NULL) \
-    USE_GL_FUNC(PGLFNENDFRAGMENTSHADERATI, \
-            glEndFragmentShaderATI,                     ATI_FRAGMENT_SHADER,            NULL) \
-    USE_GL_FUNC(PGLFNPASSTEXCOORDATI, \
-            glPassTexCoordATI,                          ATI_FRAGMENT_SHADER,            NULL) \
-    USE_GL_FUNC(PGLFNSAMPLEMAPATI, \
-            glSampleMapATI,                             ATI_FRAGMENT_SHADER,            NULL) \
-    USE_GL_FUNC(PGLFNCOLORFRAGMENTOP1ATI, \
-            glColorFragmentOp1ATI,                      ATI_FRAGMENT_SHADER,            NULL) \
-    USE_GL_FUNC(PGLFNCOLORFRAGMENTOP2ATI, \
-            glColorFragmentOp2ATI,                      ATI_FRAGMENT_SHADER,            NULL) \
-    USE_GL_FUNC(PGLFNCOLORFRAGMENTOP3ATI, \
-            glColorFragmentOp3ATI,                      ATI_FRAGMENT_SHADER,            NULL) \
-    USE_GL_FUNC(PGLFNALPHAFRAGMENTOP1ATI, \
-            glAlphaFragmentOp1ATI,                      ATI_FRAGMENT_SHADER,            NULL) \
-    USE_GL_FUNC(PGLFNALPHAFRAGMENTOP2ATI, \
-            glAlphaFragmentOp2ATI,                      ATI_FRAGMENT_SHADER,            NULL) \
-    USE_GL_FUNC(PGLFNALPHAFRAGMENTOP3ATI, \
-            glAlphaFragmentOp3ATI,                      ATI_FRAGMENT_SHADER,            NULL) \
-    USE_GL_FUNC(PGLFNSETFRAGMENTSHADERCONSTANTATI, \
-            glSetFragmentShaderConstantATI,             ATI_FRAGMENT_SHADER,            NULL) \
+    USE_GL_FUNC(glAlphaFragmentOp1ATI) \
+    USE_GL_FUNC(glAlphaFragmentOp2ATI) \
+    USE_GL_FUNC(glAlphaFragmentOp3ATI) \
+    USE_GL_FUNC(glBeginFragmentShaderATI) \
+    USE_GL_FUNC(glBindFragmentShaderATI) \
+    USE_GL_FUNC(glColorFragmentOp1ATI) \
+    USE_GL_FUNC(glColorFragmentOp2ATI) \
+    USE_GL_FUNC(glColorFragmentOp3ATI) \
+    USE_GL_FUNC(glDeleteFragmentShaderATI) \
+    USE_GL_FUNC(glEndFragmentShaderATI) \
+    USE_GL_FUNC(glGenFragmentShadersATI) \
+    USE_GL_FUNC(glPassTexCoordATI) \
+    USE_GL_FUNC(glSampleMapATI) \
+    USE_GL_FUNC(glSetFragmentShaderConstantATI) \
     /* GL_ATI_separate_stencil */ \
-    USE_GL_FUNC(PGLFNSTENCILOPSEPARATEATIPROC, \
-            glStencilOpSeparateATI,                     ATI_SEPARATE_STENCIL,           NULL) \
-    USE_GL_FUNC(PGLFNSTENCILFUNCSEPARATEATIPROC, \
-            glStencilFuncSeparateATI,                   ATI_SEPARATE_STENCIL,           NULL) \
+    USE_GL_FUNC(glStencilOpSeparateATI) \
+    USE_GL_FUNC(glStencilFuncSeparateATI) \
     /* GL_EXT_blend_color */ \
-    USE_GL_FUNC(PGLFNBLENDCOLOREXTPROC, \
-            glBlendColorEXT,                            EXT_BLEND_COLOR,                NULL) \
+    USE_GL_FUNC(glBlendColorEXT) \
     /* GL_EXT_blend_equation_separate */ \
-    USE_GL_FUNC(PGLFNBLENDFUNCSEPARATEEXTPROC, \
-            glBlendFuncSeparateEXT,                     EXT_BLEND_FUNC_SEPARATE,        NULL) \
+    USE_GL_FUNC(glBlendFuncSeparateEXT) \
     /* GL_EXT_blend_func_separate */ \
-    USE_GL_FUNC(PGLFNBLENDEQUATIONSEPARATEEXTPROC, \
-            glBlendEquationSeparateEXT,                 EXT_BLEND_EQUATION_SEPARATE,    NULL) \
+    USE_GL_FUNC(glBlendEquationSeparateEXT) \
     /* GL_EXT_blend_minmax */ \
-    USE_GL_FUNC(PGLFNBLENDEQUATIONEXTPROC, \
-            glBlendEquationEXT,                         EXT_BLEND_MINMAX,               NULL) \
+    USE_GL_FUNC(glBlendEquationEXT) \
     /* GL_EXT_depth_bounds_test */ \
-    USE_GL_FUNC(PGLFNDEPTHBOUNDSEXTPROC, \
-            glDepthBoundsEXT,                           EXT_DEPTH_BOUNDS_TEST,          NULL) \
+    USE_GL_FUNC(glDepthBoundsEXT) \
     /* GL_EXT_draw_buffers2 */ \
-    USE_GL_FUNC(PGLFNCOLORMASKINDEXEDEXTPROC, \
-            glColorMaskIndexedEXT,                      EXT_DRAW_BUFFERS2,              NULL) \
-    USE_GL_FUNC(PGLFNGETBOOLEANINDEXEDVEXTPROC, \
-            glGetBooleanIndexedvEXT,                    EXT_DRAW_BUFFERS2,              NULL) \
-    USE_GL_FUNC(PGLFNGETINTEGERINDEXEDVEXTPROC, \
-            glGetIntegerIndexedvEXT,                    EXT_DRAW_BUFFERS2,              NULL) \
-    USE_GL_FUNC(PGLFNENABLEINDEXEDEXTPROC, \
-            glEnableIndexedEXT,                         EXT_DRAW_BUFFERS2,              NULL) \
-    USE_GL_FUNC(PGLFNDISABLEINDEXEDEXTPROC, \
-            glDisableIndexedEXT,                        EXT_DRAW_BUFFERS2,              NULL) \
-    USE_GL_FUNC(PGLFNISENABLEDINDEXEDEXTPROC, \
-            glIsEnabledIndexedEXT,                      EXT_DRAW_BUFFERS2,              NULL) \
+    USE_GL_FUNC(glColorMaskIndexedEXT) \
+    USE_GL_FUNC(glDisableIndexedEXT) \
+    USE_GL_FUNC(glEnableIndexedEXT) \
+    USE_GL_FUNC(glGetBooleanIndexedvEXT) \
+    USE_GL_FUNC(glGetIntegerIndexedvEXT) \
+    USE_GL_FUNC(glIsEnabledIndexedEXT) \
     /* GL_EXT_fog_coord */ \
-    USE_GL_FUNC(PGLFNGLFOGCOORDFEXTPROC, \
-            glFogCoordfEXT,                             EXT_FOG_COORD,                  NULL) \
-    USE_GL_FUNC(PGLFNGLFOGCOORDFVEXTPROC, \
-            glFogCoordfvEXT,                            EXT_FOG_COORD,                  NULL) \
-    USE_GL_FUNC(PGLFNGLFOGCOORDDEXTPROC, \
-            glFogCoorddEXT,                             EXT_FOG_COORD,                  NULL) \
-    USE_GL_FUNC(PGLFNGLFOGCOORDDVEXTPROC, \
-            glFogCoorddvEXT,                            EXT_FOG_COORD,                  NULL) \
-    USE_GL_FUNC(PGLFNGLFOGCOORDPOINTEREXTPROC, \
-            glFogCoordPointerEXT,                       EXT_FOG_COORD,                  NULL) \
+    USE_GL_FUNC(glFogCoordPointerEXT) \
+    USE_GL_FUNC(glFogCoorddEXT) \
+    USE_GL_FUNC(glFogCoorddvEXT) \
+    USE_GL_FUNC(glFogCoordfEXT) \
+    USE_GL_FUNC(glFogCoordfvEXT) \
     /* GL_EXT_framebuffer_blit */ \
-    USE_GL_FUNC(PGLFNGLBLITFRAMEBUFFEREXTPROC, \
-            glBlitFramebufferEXT,                       EXT_FRAMEBUFFER_BLIT,           NULL) \
+    USE_GL_FUNC(glBlitFramebufferEXT) \
     /* GL_EXT_framebuffer_multisample */ \
-    USE_GL_FUNC(PGLFNRENDERBUFFERSTORAGEMULTISAMPLEEXTPROC, \
-            glRenderbufferStorageMultisampleEXT,        EXT_FRAMEBUFFER_MULTISAMPLE,    NULL) \
+    USE_GL_FUNC(glRenderbufferStorageMultisampleEXT) \
     /* GL_EXT_framebuffer_object */ \
-    USE_GL_FUNC(PGLFNGLISRENDERBUFFEREXTPROC, \
-            glIsRenderbufferEXT,                        EXT_FRAMEBUFFER_OBJECT,         NULL) \
-    USE_GL_FUNC(PGLFNGLBINDRENDERBUFFEREXTPROC, \
-            glBindRenderbufferEXT,                      EXT_FRAMEBUFFER_OBJECT,         NULL) \
-    USE_GL_FUNC(PGLFNGLDELETERENDERBUFFERSEXTPROC, \
-            glDeleteRenderbuffersEXT,                   EXT_FRAMEBUFFER_OBJECT,         NULL) \
-    USE_GL_FUNC(PGLFNGLGENRENDERBUFFERSEXTPROC, \
-            glGenRenderbuffersEXT,                      EXT_FRAMEBUFFER_OBJECT,         NULL) \
-    USE_GL_FUNC(PGLFNGLRENDERBUFFERSTORAGEEXTPROC, \
-            glRenderbufferStorageEXT,                   EXT_FRAMEBUFFER_OBJECT,         NULL) \
-    USE_GL_FUNC(PGLFNGLISFRAMEBUFFEREXTPROC, \
-            glIsFramebufferEXT,                         EXT_FRAMEBUFFER_OBJECT,         NULL) \
-    USE_GL_FUNC(PGLFNGLBINDFRAMEBUFFEREXTPROC, \
-            glBindFramebufferEXT,                       EXT_FRAMEBUFFER_OBJECT,         NULL) \
-    USE_GL_FUNC(PGLFNGLDELETEFRAMEBUFFERSEXTPROC, \
-            glDeleteFramebuffersEXT,                    EXT_FRAMEBUFFER_OBJECT,         NULL) \
-    USE_GL_FUNC(PGLFNGLGENFRAMEBUFFERSEXTPROC, \
-            glGenFramebuffersEXT,                       EXT_FRAMEBUFFER_OBJECT,         NULL) \
-    USE_GL_FUNC(PGLFNGLCHECKFRAMEBUFFERSTATUSEXTPROC, \
-            glCheckFramebufferStatusEXT,                EXT_FRAMEBUFFER_OBJECT,         NULL) \
-    USE_GL_FUNC(PGLFNGLFRAMEBUFFERTEXTURE1DEXTPROC, \
-            glFramebufferTexture1DEXT,                  EXT_FRAMEBUFFER_OBJECT,         NULL) \
-    USE_GL_FUNC(PGLFNGLFRAMEBUFFERTEXTURE2DEXTPROC, \
-            glFramebufferTexture2DEXT,                  EXT_FRAMEBUFFER_OBJECT,         NULL) \
-    USE_GL_FUNC(PGLFNGLFRAMEBUFFERTEXTURE3DEXTPROC, \
-            glFramebufferTexture3DEXT,                  EXT_FRAMEBUFFER_OBJECT,         NULL) \
-    USE_GL_FUNC(PGLFNGLFRAMEBUFFERRENDERBUFFEREXTPROC, \
-            glFramebufferRenderbufferEXT,               EXT_FRAMEBUFFER_OBJECT,         NULL) \
-    USE_GL_FUNC(PGLFNGLGENERATEMIPMAPEXTPROC, \
-            glGenerateMipmapEXT,                        EXT_FRAMEBUFFER_OBJECT,         NULL) \
-    USE_GL_FUNC(PGLFNGLGETRENDERBUFFERPARAMETERIVEXTPROC, \
-            glGetRenderbufferParameterivEXT,            EXT_FRAMEBUFFER_OBJECT,         NULL) \
-    USE_GL_FUNC(PGLFNGLGETFRAMEBUFFERATTACHMENTPARAMETERIVEXTPROC, \
-            glGetFramebufferAttachmentParameterivEXT,   EXT_FRAMEBUFFER_OBJECT,         NULL) \
+    USE_GL_FUNC(glBindFramebufferEXT) \
+    USE_GL_FUNC(glBindRenderbufferEXT) \
+    USE_GL_FUNC(glCheckFramebufferStatusEXT) \
+    USE_GL_FUNC(glDeleteFramebuffersEXT) \
+    USE_GL_FUNC(glDeleteRenderbuffersEXT) \
+    USE_GL_FUNC(glFramebufferRenderbufferEXT) \
+    USE_GL_FUNC(glFramebufferTexture1DEXT) \
+    USE_GL_FUNC(glFramebufferTexture2DEXT) \
+    USE_GL_FUNC(glFramebufferTexture3DEXT) \
+    USE_GL_FUNC(glGenFramebuffersEXT) \
+    USE_GL_FUNC(glGenRenderbuffersEXT) \
+    USE_GL_FUNC(glGenerateMipmapEXT) \
+    USE_GL_FUNC(glGetFramebufferAttachmentParameterivEXT) \
+    USE_GL_FUNC(glGetRenderbufferParameterivEXT) \
+    USE_GL_FUNC(glIsFramebufferEXT) \
+    USE_GL_FUNC(glIsRenderbufferEXT) \
+    USE_GL_FUNC(glRenderbufferStorageEXT) \
     /* GL_EXT_gpu_program_parameters */ \
-    USE_GL_FUNC(PGLFNPROGRAMENVPARAMETERS4FVEXTPROC, \
-            glProgramEnvParameters4fvEXT,               EXT_GPU_PROGRAM_PARAMETERS,     NULL) \
-    USE_GL_FUNC(PGLFNPROGRAMLOCALPARAMETERS4FVEXTPROC, \
-            glProgramLocalParameters4fvEXT,             EXT_GPU_PROGRAM_PARAMETERS,     NULL) \
+    USE_GL_FUNC(glProgramEnvParameters4fvEXT) \
+    USE_GL_FUNC(glProgramLocalParameters4fvEXT) \
     /* GL_EXT_gpu_shader4 */\
-    USE_GL_FUNC(PGLFNVERTEXATTRIBI1IEXTPROC, \
-            glVertexAttribI1iEXT,                       EXT_GPU_SHADER4,                NULL) \
-    USE_GL_FUNC(PGLFNVERTEXATTRIBI2IEXTPROC, \
-            glVertexAttribI2iEXT,                       EXT_GPU_SHADER4,                NULL) \
-    USE_GL_FUNC(PGLFNVERTEXATTRIBI3IEXTPROC, \
-            glVertexAttribI3iEXT,                       EXT_GPU_SHADER4,                NULL) \
-    USE_GL_FUNC(PGLFNVERTEXATTRIBI4IEXTPROC, \
-            glVertexAttribI4iEXT,                       EXT_GPU_SHADER4,                NULL) \
-    USE_GL_FUNC(PGLFNVERTEXATTRIBI1UIEXTPROC, \
-            glVertexAttribI1uiEXT,                      EXT_GPU_SHADER4,                NULL) \
-    USE_GL_FUNC(PGLFNVERTEXATTRIBI2UIEXTPROC, \
-            glVertexAttribI2uiEXT,                      EXT_GPU_SHADER4,                NULL) \
-    USE_GL_FUNC(PGLFNVERTEXATTRIBI3UIEXTPROC, \
-            glVertexAttribI3uiEXT,                      EXT_GPU_SHADER4,                NULL) \
-    USE_GL_FUNC(PGLFNVERTEXATTRIBI4UIEXTPROC, \
-            glVertexAttribI4uiEXT,                      EXT_GPU_SHADER4,                NULL) \
-    USE_GL_FUNC(PGLFNVERTEXATTRIBI1IVEXTPROC, \
-            glVertexAttribI1ivEXT,                      EXT_GPU_SHADER4,                NULL) \
-    USE_GL_FUNC(PGLFNVERTEXATTRIBI2IVEXTPROC, \
-            glVertexAttribI2ivEXT,                      EXT_GPU_SHADER4,                NULL) \
-    USE_GL_FUNC(PGLFNVERTEXATTRIBI3IVEXTPROC, \
-            glVertexAttribI3ivEXT,                      EXT_GPU_SHADER4,                NULL) \
-    USE_GL_FUNC(PGLFNVERTEXATTRIBI4IVEXTPROC, \
-            glVertexAttribI4ivEXT,                      EXT_GPU_SHADER4,                NULL) \
-    USE_GL_FUNC(PGLFNVERTEXATTRIBI1UIVEXTPROC, \
-            glVertexAttribI1uivEXT,                     EXT_GPU_SHADER4,                NULL) \
-    USE_GL_FUNC(PGLFNVERTEXATTRIBI2UIVEXTPROC, \
-            glVertexAttribI2uivEXT,                     EXT_GPU_SHADER4,                NULL) \
-    USE_GL_FUNC(PGLFNVERTEXATTRIBI3UIVEXTPROC, \
-            glVertexAttribI3uivEXT,                     EXT_GPU_SHADER4,                NULL) \
-    USE_GL_FUNC(PGLFNVERTEXATTRIBI4UIVEXTPROC, \
-            glVertexAttribI4uivEXT,                     EXT_GPU_SHADER4,                NULL) \
-    USE_GL_FUNC(PGLFNVERTEXATTRIBI4BVEXTPROC, \
-            glVertexAttribI4bvEXT,                      EXT_GPU_SHADER4,                NULL) \
-    USE_GL_FUNC(PGLFNVERTEXATTRIBI4SVEXTPROC, \
-            glVertexAttribI4svEXT,                      EXT_GPU_SHADER4,                NULL) \
-    USE_GL_FUNC(PGLFNVERTEXATTRIBI4UBVEXTPROC, \
-            glVertexAttribI4ubvEXT,                     EXT_GPU_SHADER4,                NULL) \
-    USE_GL_FUNC(PGLFNVERTEXATTRIBI4USVEXTPROC, \
-            glVertexAttribI4usvEXT,                     EXT_GPU_SHADER4,                NULL) \
-    USE_GL_FUNC(PGLFNVERTEXATTRIBIPOINTEREXTPROC, \
-            glVertexAttribIPointerEXT,                  EXT_GPU_SHADER4,                NULL) \
-    USE_GL_FUNC(PGLFNGETVERTEXATTRIBIIVEXTPROC, \
-            glVertexAttribIivEXT,                       EXT_GPU_SHADER4,                NULL) \
-    USE_GL_FUNC(PGLFNGETVERTEXATTRIBIUIVEXTPROC, \
-            glVertexAttribIuivEXT,                      EXT_GPU_SHADER4,                NULL) \
-    USE_GL_FUNC(PGLFNUNIFORM1UIEXTPROC, \
-            glUniform1uiEXT,                            EXT_GPU_SHADER4,                NULL) \
-    USE_GL_FUNC(PGLFNUNIFORM2UIEXTPROC, \
-            glUniform2uiEXT,                            EXT_GPU_SHADER4,                NULL) \
-    USE_GL_FUNC(PGLFNUNIFORM3UIEXTPROC, \
-            glUniform3uiEXT,                            EXT_GPU_SHADER4,                NULL) \
-    USE_GL_FUNC(PGLFNUNIFORM4UIEXTPROC, \
-            glUniform4uiEXT,                            EXT_GPU_SHADER4,                NULL) \
-    USE_GL_FUNC(PGLFNUNIFORM1UIVEXTPROC, \
-            glUniform1uivEXT,                           EXT_GPU_SHADER4,                NULL) \
-    USE_GL_FUNC(PGLFNUNIFORM2UIVEXTPROC, \
-            glUniform2uivEXT,                           EXT_GPU_SHADER4,                NULL) \
-    USE_GL_FUNC(PGLFNUNIFORM3UIVEXTPROC, \
-            glUniform3uivEXT,                           EXT_GPU_SHADER4,                NULL) \
-    USE_GL_FUNC(PGLFNUNIFORM4UIVEXTPROC, \
-            glUniform4uivEXT,                           EXT_GPU_SHADER4,                NULL) \
-    USE_GL_FUNC(PGLFNGETUNIFORMUIVEXTPROC, \
-            glGetUniformuivEXT,                         EXT_GPU_SHADER4,                NULL) \
-    USE_GL_FUNC(PGLFNBINDFRAGDATALOCATIONEXTPROC, \
-            glBindFragDataLocationEXT,                  EXT_GPU_SHADER4,                NULL) \
-    USE_GL_FUNC(PGLFNGETFRAGDATALOCATIONEXTPROC, \
-            glGetFragDataLocationEXT,                   EXT_GPU_SHADER4,                NULL) \
+    USE_GL_FUNC(glBindFragDataLocationEXT) \
+    USE_GL_FUNC(glGetFragDataLocationEXT) \
+    USE_GL_FUNC(glGetUniformuivEXT) \
+    USE_GL_FUNC(glGetVertexAttribIivEXT) \
+    USE_GL_FUNC(glGetVertexAttribIuivEXT) \
+    USE_GL_FUNC(glUniform1uiEXT) \
+    USE_GL_FUNC(glUniform1uivEXT) \
+    USE_GL_FUNC(glUniform2uiEXT) \
+    USE_GL_FUNC(glUniform2uivEXT) \
+    USE_GL_FUNC(glUniform3uiEXT) \
+    USE_GL_FUNC(glUniform3uivEXT) \
+    USE_GL_FUNC(glUniform4uiEXT) \
+    USE_GL_FUNC(glUniform4uivEXT) \
+    USE_GL_FUNC(glVertexAttribI1iEXT) \
+    USE_GL_FUNC(glVertexAttribI1ivEXT) \
+    USE_GL_FUNC(glVertexAttribI1uiEXT) \
+    USE_GL_FUNC(glVertexAttribI1uivEXT) \
+    USE_GL_FUNC(glVertexAttribI2iEXT) \
+    USE_GL_FUNC(glVertexAttribI2ivEXT) \
+    USE_GL_FUNC(glVertexAttribI2uiEXT) \
+    USE_GL_FUNC(glVertexAttribI2uivEXT) \
+    USE_GL_FUNC(glVertexAttribI3iEXT) \
+    USE_GL_FUNC(glVertexAttribI3ivEXT) \
+    USE_GL_FUNC(glVertexAttribI3uiEXT) \
+    USE_GL_FUNC(glVertexAttribI3uivEXT) \
+    USE_GL_FUNC(glVertexAttribI4bvEXT) \
+    USE_GL_FUNC(glVertexAttribI4iEXT) \
+    USE_GL_FUNC(glVertexAttribI4ivEXT) \
+    USE_GL_FUNC(glVertexAttribI4svEXT) \
+    USE_GL_FUNC(glVertexAttribI4ubvEXT) \
+    USE_GL_FUNC(glVertexAttribI4uiEXT) \
+    USE_GL_FUNC(glVertexAttribI4uivEXT) \
+    USE_GL_FUNC(glVertexAttribI4usvEXT) \
+    USE_GL_FUNC(glVertexAttribIPointerEXT) \
     /* GL_EXT_paletted_texture */ \
-    USE_GL_FUNC(PGLFNGLCOLORTABLEEXTPROC, \
-            glColorTableEXT,                            EXT_PALETTED_TEXTURE,           NULL) \
+    USE_GL_FUNC(glColorTableEXT) \
     /* GL_EXT_point_parameters */ \
-    USE_GL_FUNC(PGLFNGLPOINTPARAMETERFEXTPROC, \
-            glPointParameterfEXT,                       EXT_POINT_PARAMETERS,           NULL) \
-    USE_GL_FUNC(PGLFNGLPOINTPARAMETERFVEXTPROC, \
-            glPointParameterfvEXT,                      EXT_POINT_PARAMETERS,           NULL) \
+    USE_GL_FUNC(glPointParameterfEXT) \
+    USE_GL_FUNC(glPointParameterfvEXT) \
     /* GL_EXT_provoking_vertex */ \
-    USE_GL_FUNC(PGLFNGLPROVOKINGVERTEXEXTPROC, \
-            glProvokingVertexEXT,                       EXT_PROVOKING_VERTEX,           NULL) \
+    USE_GL_FUNC(glProvokingVertexEXT) \
     /* GL_EXT_secondary_color */ \
-    USE_GL_FUNC(PGLFNGLSECONDARYCOLOR3UBEXTPROC, \
-            glSecondaryColor3ubEXT,                     EXT_SECONDARY_COLOR,            NULL) \
-    USE_GL_FUNC(PGLFNGLSECONDARYCOLOR3UBVEXTPROC, \
-            glSecondaryColor3ubvEXT,                    EXT_SECONDARY_COLOR,            NULL) \
-    USE_GL_FUNC(PGLFNGLSECONDARYCOLOR3FEXTPROC, \
-            glSecondaryColor3fEXT,                      EXT_SECONDARY_COLOR,            NULL) \
-    USE_GL_FUNC(PGLFNGLSECONDARYCOLOR3FVEXTPROC, \
-            glSecondaryColor3fvEXT,                     EXT_SECONDARY_COLOR,            NULL) \
-    USE_GL_FUNC(PGLFNGLSECONDARYCOLORPOINTEREXTPROC, \
-            glSecondaryColorPointerEXT,                 EXT_SECONDARY_COLOR,            NULL) \
+    USE_GL_FUNC(glSecondaryColor3fEXT) \
+    USE_GL_FUNC(glSecondaryColor3fvEXT) \
+    USE_GL_FUNC(glSecondaryColor3ubEXT) \
+    USE_GL_FUNC(glSecondaryColor3ubvEXT) \
+    USE_GL_FUNC(glSecondaryColorPointerEXT) \
     /* GL_EXT_stencil_two_side */ \
-    USE_GL_FUNC(PGLFNACTIVESTENCILFACEEXTPROC, \
-            glActiveStencilFaceEXT,                     EXT_STENCIL_TWO_SIDE,           NULL) \
+    USE_GL_FUNC(glActiveStencilFaceEXT) \
     /* GL_EXT_texture3D */ \
-    USE_GL_FUNC(PGLFNGLTEXIMAGE3DEXTPROC, \
-            glTexImage3DEXT,                            EXT_TEXTURE3D,                  glTexImage3D) \
-    USE_GL_FUNC(PGLFNGLTEXSUBIMAGE3DEXTPROC, \
-            glTexSubImage3DEXT,                         EXT_TEXTURE3D,                  glTexSubImage3D) \
+    USE_GL_FUNC(glTexImage3D) \
+    USE_GL_FUNC(glTexImage3DEXT) \
+    USE_GL_FUNC(glTexSubImage3D) \
+    USE_GL_FUNC(glTexSubImage3DEXT) \
     /* GL_NV_fence */ \
-    USE_GL_FUNC(PGLFNGENFENCESNVPROC, \
-            glGenFencesNV,                              NV_FENCE,                       NULL) \
-    USE_GL_FUNC(PGLFNDELETEFENCESNVPROC, \
-            glDeleteFencesNV,                           NV_FENCE,                       NULL) \
-    USE_GL_FUNC(PGLFNSETFENCENVPROC,    \
-            glSetFenceNV,                               NV_FENCE,                       NULL) \
-    USE_GL_FUNC(PGLFNTESTFENCENVPROC, \
-            glTestFenceNV,                              NV_FENCE,                       NULL) \
-    USE_GL_FUNC(PGLFNFINISHFENCENVPROC, \
-            glFinishFenceNV,                            NV_FENCE,                       NULL) \
-    USE_GL_FUNC(PGLFNISFENCENVPROC, \
-            glIsFenceNV,                                NV_FENCE,                       NULL) \
-    USE_GL_FUNC(PGLFNGETFENCEIVNVPROC, \
-            glGetFenceivNV,                             NV_FENCE,                       NULL) \
+    USE_GL_FUNC(glDeleteFencesNV) \
+    USE_GL_FUNC(glFinishFenceNV) \
+    USE_GL_FUNC(glGenFencesNV) \
+    USE_GL_FUNC(glGetFenceivNV) \
+    USE_GL_FUNC(glIsFenceNV) \
+    USE_GL_FUNC(glSetFenceNV) \
+    USE_GL_FUNC(glTestFenceNV) \
     /* GL_NV_half_float */ \
-    USE_GL_FUNC(PGLFNVERTEX2HNVPROC, \
-            glVertex2hNV,                               NV_HALF_FLOAT,                  NULL) \
-    USE_GL_FUNC(PGLFNVERTEX2HVNVPROC, \
-            glVertex2hvNV,                              NV_HALF_FLOAT,                  NULL) \
-    USE_GL_FUNC(PGLFNVERTEX3HNVPROC, \
-            glVertex3hNV,                               NV_HALF_FLOAT,                  NULL) \
-    USE_GL_FUNC(PGLFNVERTEX3HVNVPROC, \
-            glVertex3hvNV,                              NV_HALF_FLOAT,                  NULL) \
-    USE_GL_FUNC(PGLFNVERTEX4HNVPROC, \
-            glVertex4hNV,                               NV_HALF_FLOAT,                  NULL) \
-    USE_GL_FUNC(PGLFNVERTEX4HVNVPROC, \
-            glVertex4hvNV,                              NV_HALF_FLOAT,                  NULL) \
-    USE_GL_FUNC(PGLFNNORMAL3HNVPROC, \
-            glNormal3hNV,                               NV_HALF_FLOAT,                  NULL) \
-    USE_GL_FUNC(PGLFNNORMAL3HVNVPROC, \
-            glNormal3hvNV,                              NV_HALF_FLOAT,                  NULL) \
-    USE_GL_FUNC(PGLFNCOLOR3HNVPROC, \
-            glColor3hNV,                                NV_HALF_FLOAT,                  NULL) \
-    USE_GL_FUNC(PGLFNCOLOR3HVNVPROC, \
-            glColor3hvNV,                               NV_HALF_FLOAT,                  NULL) \
-    USE_GL_FUNC(PGLFNCOLOR4HNVPROC, \
-            glColor4hNV,                                NV_HALF_FLOAT,                  NULL) \
-    USE_GL_FUNC(PGLFNCOLOR4HVNVPROC, \
-            glColor4hvNV,                               NV_HALF_FLOAT,                  NULL) \
-    USE_GL_FUNC(PGLFNTEXCOORD1HNVPROC, \
-            glTexCoord1hNV,                             NV_HALF_FLOAT,                  NULL) \
-    USE_GL_FUNC(PGLFNTEXCOORD1HVNVPROC, \
-            glTexCoord1hvNV,                            NV_HALF_FLOAT,                  NULL) \
-    USE_GL_FUNC(PGLFNTEXCOORD2HNVPROC, \
-            glTexCoord2hNV,                             NV_HALF_FLOAT,                  NULL) \
-    USE_GL_FUNC(PGLFNTEXCOORD2HVNVPROC, \
-            glTexCoord2hvNV,                            NV_HALF_FLOAT,                  NULL) \
-    USE_GL_FUNC(PGLFNTEXCOORD3HNVPROC, \
-            glTexCoord3hNV,                             NV_HALF_FLOAT,                  NULL) \
-    USE_GL_FUNC(PGLFNTEXCOORD3HVNVPROC, \
-            glTexCoord3hvNV,                            NV_HALF_FLOAT,                  NULL) \
-    USE_GL_FUNC(PGLFNTEXCOORD4HNVPROC, \
-            glTexCoord4hNV,                             NV_HALF_FLOAT,                  NULL) \
-    USE_GL_FUNC(PGLFNTEXCOORD4HVNVPROC, \
-            glTexCoord4hvNV,                            NV_HALF_FLOAT,                  NULL) \
-    USE_GL_FUNC(PGLFNMULTITEXCOORD1HNVPROC, \
-            glMultiTexCoord1hNV,                        NV_HALF_FLOAT,                  NULL) \
-    USE_GL_FUNC(PGLFNMULTITEXCOORD1HVNVPROC, \
-            glMultiTexCoord1hvNV,                       NV_HALF_FLOAT,                  NULL) \
-    USE_GL_FUNC(PGLFNMULTITEXCOORD2HNVPROC, \
-            glMultiTexCoord2hNV,                        NV_HALF_FLOAT,                  NULL) \
-    USE_GL_FUNC(PGLFNMULTITEXCOORD2HVNVPROC, \
-            glMultiTexCoord2hvNV,                       NV_HALF_FLOAT,                  NULL) \
-    USE_GL_FUNC(PGLFNMULTITEXCOORD3HNVPROC, \
-            glMultiTexCoord3hNV,                        NV_HALF_FLOAT,                  NULL) \
-    USE_GL_FUNC(PGLFNMULTITEXCOORD3HVNVPROC, \
-            glMultiTexCoord3hvNV,                       NV_HALF_FLOAT,                  NULL) \
-    USE_GL_FUNC(PGLFNMULTITEXCOORD4HNVPROC, \
-            glMultiTexCoord4hNV,                        NV_HALF_FLOAT,                  NULL) \
-    USE_GL_FUNC(PGLFNMULTITEXCOORD4HVNVPROC, \
-            glMultiTexCoord4hvNV,                       NV_HALF_FLOAT,                  NULL) \
-    USE_GL_FUNC(PGLFNFOGCOORDHNVPROC, \
-            glFogCoordhNV,                              NV_HALF_FLOAT,                  NULL) \
-    USE_GL_FUNC(PGLFNFOGCOORDHVNVPROC, \
-            glFogCoordhvNV,                             NV_HALF_FLOAT,                  NULL) \
-    USE_GL_FUNC(PGLFNSECONDARYCOLOR3HNVPROC, \
-            glSecondaryColor3hNV,                       NV_HALF_FLOAT,                  NULL) \
-    USE_GL_FUNC(PGLFNSECONDARYCOLOR3HVNVPROC, \
-            glSecondaryColor3hvNV,                      NV_HALF_FLOAT,                  NULL) \
-    USE_GL_FUNC(PGLFNVERTEXWEIGHTHNVPROC, \
-            glVertexWeighthNV,                          NV_HALF_FLOAT,                  NULL) \
-    USE_GL_FUNC(PGLFNVERTEXWEIGHTHVNVPROC, \
-            glVertexWeighthvNV,                         NV_HALF_FLOAT,                  NULL) \
-    USE_GL_FUNC(PGLFNVERTEXATTRIB1HNVPROC, \
-            glVertexAttrib1hNV,                         NV_HALF_FLOAT,                  NULL) \
-    USE_GL_FUNC(PGLFNVERTEXATTRIB1HVNVPROC, \
-            glVertexAttrib1hvNV,                        NV_HALF_FLOAT,                  NULL) \
-    USE_GL_FUNC(PGLFNVERTEXATTRIB2HNVPROC, \
-            glVertexAttrib2hNV,                         NV_HALF_FLOAT,                  NULL) \
-    USE_GL_FUNC(PGLFNVERTEXATTRIB2HVNVPROC, \
-            glVertexAttrib2hvNV,                        NV_HALF_FLOAT,                  NULL) \
-    USE_GL_FUNC(PGLFNVERTEXATTRIB3HNVPROC, \
-            glVertexAttrib3hNV,                         NV_HALF_FLOAT,                  NULL) \
-    USE_GL_FUNC(PGLFNVERTEXATTRIB3HVNVPROC, \
-            glVertexAttrib3hvNV,                        NV_HALF_FLOAT,                  NULL) \
-    USE_GL_FUNC(PGLFNVERTEXATTRIB4HNVPROC, \
-            glVertexAttrib4hNV,                         NV_HALF_FLOAT,                  NULL) \
-    USE_GL_FUNC(PGLFNVERTEXATTRIB4HVNVPROC, \
-            glVertexAttrib4hvNV,                        NV_HALF_FLOAT,                  NULL) \
-    USE_GL_FUNC(PGLFNVERTEXATTRIBS1HVNVPROC, \
-            glVertexAttribs1hvNV,                       NV_HALF_FLOAT,                  NULL) \
-    USE_GL_FUNC(PGLFNVERTEXATTRIBS2HVNVPROC, \
-            glVertexAttribs2hvNV,                       NV_HALF_FLOAT,                  NULL) \
-    USE_GL_FUNC(PGLFNVERTEXATTRIBS3HVNVPROC, \
-            glVertexAttribs3hvNV,                       NV_HALF_FLOAT,                  NULL) \
-    USE_GL_FUNC(PGLFNVERTEXATTRIBS4HVNVPROC, \
-            glVertexAttribs4hvNV,                       NV_HALF_FLOAT,                  NULL) \
+    USE_GL_FUNC(glColor3hNV) \
+    USE_GL_FUNC(glColor3hvNV) \
+    USE_GL_FUNC(glColor4hNV) \
+    USE_GL_FUNC(glColor4hvNV) \
+    USE_GL_FUNC(glFogCoordhNV) \
+    USE_GL_FUNC(glFogCoordhvNV) \
+    USE_GL_FUNC(glMultiTexCoord1hNV) \
+    USE_GL_FUNC(glMultiTexCoord1hvNV) \
+    USE_GL_FUNC(glMultiTexCoord2hNV) \
+    USE_GL_FUNC(glMultiTexCoord2hvNV) \
+    USE_GL_FUNC(glMultiTexCoord3hNV) \
+    USE_GL_FUNC(glMultiTexCoord3hvNV) \
+    USE_GL_FUNC(glMultiTexCoord4hNV) \
+    USE_GL_FUNC(glMultiTexCoord4hvNV) \
+    USE_GL_FUNC(glNormal3hNV) \
+    USE_GL_FUNC(glNormal3hvNV) \
+    USE_GL_FUNC(glSecondaryColor3hNV) \
+    USE_GL_FUNC(glSecondaryColor3hvNV) \
+    USE_GL_FUNC(glTexCoord1hNV) \
+    USE_GL_FUNC(glTexCoord1hvNV) \
+    USE_GL_FUNC(glTexCoord2hNV) \
+    USE_GL_FUNC(glTexCoord2hvNV) \
+    USE_GL_FUNC(glTexCoord3hNV) \
+    USE_GL_FUNC(glTexCoord3hvNV) \
+    USE_GL_FUNC(glTexCoord4hNV) \
+    USE_GL_FUNC(glTexCoord4hvNV) \
+    USE_GL_FUNC(glVertex2hNV) \
+    USE_GL_FUNC(glVertex2hvNV) \
+    USE_GL_FUNC(glVertex3hNV) \
+    USE_GL_FUNC(glVertex3hvNV) \
+    USE_GL_FUNC(glVertex4hNV) \
+    USE_GL_FUNC(glVertex4hvNV) \
+    USE_GL_FUNC(glVertexAttrib1hNV) \
+    USE_GL_FUNC(glVertexAttrib1hvNV) \
+    USE_GL_FUNC(glVertexAttrib2hNV) \
+    USE_GL_FUNC(glVertexAttrib2hvNV) \
+    USE_GL_FUNC(glVertexAttrib3hNV) \
+    USE_GL_FUNC(glVertexAttrib3hvNV) \
+    USE_GL_FUNC(glVertexAttrib4hNV) \
+    USE_GL_FUNC(glVertexAttrib4hvNV) \
+    USE_GL_FUNC(glVertexAttribs1hvNV) \
+    USE_GL_FUNC(glVertexAttribs2hvNV) \
+    USE_GL_FUNC(glVertexAttribs3hvNV) \
+    USE_GL_FUNC(glVertexAttribs4hvNV) \
+    USE_GL_FUNC(glVertexWeighthNV) \
+    USE_GL_FUNC(glVertexWeighthvNV) \
     /* GL_NV_point_sprite */ \
-    USE_GL_FUNC(PGLFNPOINTPARAMETERIVNVPROC, \
-            glPointParameterivNV,                       NV_POINT_SPRITE,                NULL) \
-    USE_GL_FUNC(PGLFNPOINTPARAMETERINVPROC, \
-            glPointParameteriNV,                        NV_POINT_SPRITE,                NULL) \
+    USE_GL_FUNC(glPointParameteri) \
+    USE_GL_FUNC(glPointParameteriNV) \
+    USE_GL_FUNC(glPointParameteriv) \
+    USE_GL_FUNC(glPointParameterivNV) \
     /* GL_NV_register_combiners */ \
-    USE_GL_FUNC(PGLFNCOMBINERINPUTNVPROC, \
-            glCombinerInputNV,                          NV_REGISTER_COMBINERS,          NULL) \
-    USE_GL_FUNC(PGLFNCOMBINEROUTPUTNVPROC, \
-            glCombinerOutputNV,                         NV_REGISTER_COMBINERS,          NULL) \
-    USE_GL_FUNC(PGLFNCOMBINERPARAMETERFNVPROC, \
-            glCombinerParameterfNV,                     NV_REGISTER_COMBINERS,          NULL) \
-    USE_GL_FUNC(PGLFNCOMBINERPARAMETERFVNVPROC, \
-            glCombinerParameterfvNV,                    NV_REGISTER_COMBINERS,          NULL) \
-    USE_GL_FUNC(PGLFNCOMBINERPARAMETERINVPROC, \
-            glCombinerParameteriNV,                     NV_REGISTER_COMBINERS,          NULL) \
-    USE_GL_FUNC(PGLFNCOMBINERPARAMETERIVNVPROC, \
-            glCombinerParameterivNV,                    NV_REGISTER_COMBINERS,          NULL) \
-    USE_GL_FUNC(PGLFNFINALCOMBINERINPUTNVPROC, \
-            glFinalCombinerInputNV,                     NV_REGISTER_COMBINERS,          NULL) \
-
-#define WGL_EXT_FUNCS_GEN \
-    USE_GL_FUNC(WINED3D_PFNWGLGETEXTENSIONSSTRINGARBPROC,       wglGetExtensionsStringARB,      0, NULL) \
-    USE_GL_FUNC(WINED3D_PFNWGLGETPIXELFORMATATTRIBIVARBPROC,    wglGetPixelFormatAttribivARB,   0, NULL) \
-    USE_GL_FUNC(WINED3D_PFNWGLGETPIXELFORMATATTRIBFVARBPROC,    wglGetPixelFormatAttribfvARB,   0, NULL) \
-    USE_GL_FUNC(WINED3D_PFNWGLCHOOSEPIXELFORMATARBPROC,         wglChoosePixelFormatARB,        0, NULL) \
-    USE_GL_FUNC(WINED3D_PFNWGLSETPIXELFORMATWINE,               wglSetPixelFormatWINE,          0, NULL) \
-    USE_GL_FUNC(WINED3D_PFNWGLSWAPINTERVALEXTPROC,              wglSwapIntervalEXT,             0, NULL)
+    USE_GL_FUNC(glCombinerInputNV) \
+    USE_GL_FUNC(glCombinerOutputNV) \
+    USE_GL_FUNC(glCombinerParameterfNV) \
+    USE_GL_FUNC(glCombinerParameterfvNV) \
+    USE_GL_FUNC(glCombinerParameteriNV) \
+    USE_GL_FUNC(glCombinerParameterivNV) \
+    USE_GL_FUNC(glFinalCombinerInputNV) \
+    /* WGL extensions */ \
+    USE_GL_FUNC(wglChoosePixelFormatARB) \
+    USE_GL_FUNC(wglGetExtensionsStringARB) \
+    USE_GL_FUNC(wglGetPixelFormatAttribfvARB) \
+    USE_GL_FUNC(wglGetPixelFormatAttribivARB) \
+    USE_GL_FUNC(wglSetPixelFormatWINE) \
+    USE_GL_FUNC(wglSwapIntervalEXT)
 
 #endif /* __WINE_WINED3D_GL */

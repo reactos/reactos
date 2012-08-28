@@ -12,7 +12,6 @@ spec2def(d3d8.dll d3d8.spec)
 
 list(APPEND SOURCE
     buffer.c
-    cubetexture.c
     d3d8_main.c
     device.c
     directx.c
@@ -22,7 +21,6 @@ list(APPEND SOURCE
     texture.c
     vertexdeclaration.c
     volume.c
-    volumetexture.c
     version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/d3d8.def)
 

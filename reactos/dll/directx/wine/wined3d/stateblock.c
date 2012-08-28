@@ -829,10 +829,10 @@ HRESULT CDECL wined3d_stateblock_capture(struct wined3d_stateblock *stateblock)
     {
         if (!(map & 1)) continue;
 
-        if (memcmp(src_state->clip_planes[i], stateblock->state.clip_planes[i], sizeof(*stateblock->state.clip_planes)))
+        if (memcmp(&stateblock->state.clip_planes[i], &src_state->clip_planes[i], sizeof(src_state->clip_planes[i])))
         {
             TRACE("Updating clipplane %u.\n", i);
-            memcpy(stateblock->state.clip_planes[i], src_state->clip_planes[i], sizeof(*stateblock->state.clip_planes));
+            stateblock->state.clip_planes[i] = src_state->clip_planes[i];
         }
     }
 
@@ -925,8 +925,7 @@ HRESULT CDECL wined3d_stateblock_apply(const struct wined3d_stateblock *stateblo
     unsigned int i;
     DWORD map;
 
-    TRACE("Applying stateblock %p of type %#x to device %p.\n",
-            stateblock, stateblock->blockType, device);
+    TRACE("Applying stateblock %p to device %p.\n", stateblock, device);
 
     if (stateblock->changed.vertexShader)
         wined3d_device_set_vertex_shader(device, stateblock->state.vertex_shader);
@@ -1059,15 +1058,9 @@ HRESULT CDECL wined3d_stateblock_apply(const struct wined3d_stateblock *stateblo
     map = stateblock->changed.clipplane;
     for (i = 0; map; map >>= 1, ++i)
     {
-        float clip[4];
-
         if (!(map & 1)) continue;
 
-        clip[0] = (float) stateblock->state.clip_planes[i][0];
-        clip[1] = (float) stateblock->state.clip_planes[i][1];
-        clip[2] = (float) stateblock->state.clip_planes[i][2];
-        clip[3] = (float) stateblock->state.clip_planes[i][3];
-        wined3d_device_set_clip_plane(device, i, clip);
+        wined3d_device_set_clip_plane(device, i, &stateblock->state.clip_planes[i]);
     }
 
     stateblock->device->stateBlock->state.lowest_disabled_stage = MAX_TEXTURES - 1;
@@ -1106,17 +1099,15 @@ void stateblock_init_default_state(struct wined3d_stateblock *stateblock)
 
     TRACE("stateblock %p.\n", stateblock);
 
-    stateblock->blockType = WINED3D_SBT_INIT;
-
     memset(stateblock->changed.pixelShaderConstantsF, 0, device->d3d_pshader_constantF * sizeof(BOOL));
     memset(stateblock->changed.vertexShaderConstantsF, 0, device->d3d_vshader_constantF * sizeof(BOOL));
 
     /* Set some of the defaults for lights, transforms etc */
-    memcpy(&state->transforms[WINED3D_TS_PROJECTION], identity, sizeof(identity));
-    memcpy(&state->transforms[WINED3D_TS_VIEW], identity, sizeof(identity));
+    memcpy(&state->transforms[WINED3D_TS_PROJECTION], &identity, sizeof(identity));
+    memcpy(&state->transforms[WINED3D_TS_VIEW], &identity, sizeof(identity));
     for (i = 0; i < 256; ++i)
     {
-        memcpy(&state->transforms[WINED3D_TS_WORLD_MATRIX(i)], identity, sizeof(identity));
+        memcpy(&state->transforms[WINED3D_TS_WORLD_MATRIX(i)], &identity, sizeof(identity));
     }
 
     state->fb = &device->fb;
@@ -1237,7 +1228,7 @@ void stateblock_init_default_state(struct wined3d_stateblock *stateblock)
     state->render_states[WINED3D_RS_COLORWRITEENABLE1] = 0x0000000f;
     state->render_states[WINED3D_RS_COLORWRITEENABLE2] = 0x0000000f;
     state->render_states[WINED3D_RS_COLORWRITEENABLE3] = 0x0000000f;
-    state->render_states[WINED3D_RS_BLENDFACTOR] = 0xFFFFFFFF;
+    state->render_states[WINED3D_RS_BLENDFACTOR] = 0xffffffff;
     state->render_states[WINED3D_RS_SRGBWRITEENABLE] = 0;
     state->render_states[WINED3D_RS_DEPTHBIAS] = 0;
     state->render_states[WINED3D_RS_WRAP8] = 0;
@@ -1257,7 +1248,7 @@ void stateblock_init_default_state(struct wined3d_stateblock *stateblock)
     for (i = 0; i < MAX_TEXTURES; ++i)
     {
         TRACE("Setting up default texture states for texture Stage %u.\n", i);
-        memcpy(&state->transforms[WINED3D_TS_TEXTURE0 + i], identity, sizeof(identity));
+        memcpy(&state->transforms[WINED3D_TS_TEXTURE0 + i], &identity, sizeof(identity));
         state->texture_states[i][WINED3D_TSS_COLOR_OP] = i ? WINED3D_TOP_DISABLE : WINED3D_TOP_MODULATE;
         state->texture_states[i][WINED3D_TSS_COLOR_ARG1] = WINED3DTA_TEXTURE;
         state->texture_states[i][WINED3D_TSS_COLOR_ARG2] = WINED3DTA_CURRENT;
@@ -1345,7 +1336,6 @@ static HRESULT stateblock_init(struct wined3d_stateblock *stateblock,
 
     stateblock->ref = 1;
     stateblock->device = device;
-    stateblock->blockType = type;
 
     for (i = 0; i < LIGHTMAP_SIZE; i++)
     {

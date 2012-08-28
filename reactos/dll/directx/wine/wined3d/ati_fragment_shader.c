@@ -19,11 +19,11 @@
  */
 
 #include "config.h"
+#include "wine/port.h"
 
 #include <math.h>
 #include <stdio.h>
 
-#include "wine/port.h"
 #include "wined3d_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d_shader);
@@ -1093,13 +1093,16 @@ static const struct StateEntryTemplate atifs_fragmentstate_template[] = {
 };
 
 /* Context activation and GL locking are done by the caller. */
-static void atifs_enable(BOOL enable)
+static void atifs_enable(const struct wined3d_gl_info *gl_info, BOOL enable)
 {
-    if(enable) {
-        glEnable(GL_FRAGMENT_SHADER_ATI);
+    if (enable)
+    {
+        gl_info->gl_ops.gl.p_glEnable(GL_FRAGMENT_SHADER_ATI);
         checkGLcall("glEnable(GL_FRAGMENT_SHADER_ATI)");
-    } else {
-        glDisable(GL_FRAGMENT_SHADER_ATI);
+    }
+    else
+    {
+        gl_info->gl_ops.gl.p_glDisable(GL_FRAGMENT_SHADER_ATI);
         checkGLcall("glDisable(GL_FRAGMENT_SHADER_ATI)");
     }
 }

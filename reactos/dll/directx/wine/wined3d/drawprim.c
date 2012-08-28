@@ -26,6 +26,7 @@
 
 #include "config.h"
 #include "wine/port.h"
+
 #include "wined3d_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d_draw);
@@ -48,14 +49,14 @@ static void drawStridedFast(const struct wined3d_gl_info *gl_info, GLenum primit
         }
         else
         {
-            glDrawElements(primitive_type, count,
+            gl_info->gl_ops.gl.p_glDrawElements(primitive_type, count,
                     idxtype, (const char *)idx_data + (idx_size * start_idx));
             checkGLcall("glDrawElements");
         }
     }
     else
     {
-        glDrawArrays(primitive_type, start_idx, count);
+        gl_info->gl_ops.gl.p_glDrawArrays(primitive_type, start_idx, count);
         checkGLcall("glDrawArrays");
     }
 }
@@ -106,7 +107,7 @@ static void drawStridedSlow(const struct wined3d_device *device, const struct wi
     }
 
     /* Start drawing in GL */
-    glBegin(glPrimType);
+    gl_info->gl_ops.gl.p_glBegin(glPrimType);
 
     if (si->use_map & (1 << WINED3D_FFP_POSITION))
     {
@@ -121,7 +122,7 @@ static void drawStridedSlow(const struct wined3d_device *device, const struct wi
     }
     else
     {
-        glNormal3f(0, 0, 0);
+        gl_info->gl_ops.gl.p_glNormal3f(0, 0, 0);
     }
 
     num_untracked_materials = context->num_untracked_materials;
@@ -135,7 +136,7 @@ static void drawStridedSlow(const struct wined3d_device *device, const struct wi
     }
     else
     {
-        glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+        gl_info->gl_ops.gl.p_glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
     }
 
     if (si->use_map & (1 << WINED3D_FFP_SPECULAR))
@@ -210,7 +211,7 @@ static void drawStridedSlow(const struct wined3d_device *device, const struct wi
             if (gl_info->supported[ARB_MULTITEXTURE])
                 GL_EXTCALL(glMultiTexCoord4fARB(GL_TEXTURE0_ARB + texture_idx, 0, 0, 0, 1));
             else
-                glTexCoord4f(0, 0, 0, 1);
+                gl_info->gl_ops.gl.p_glTexCoord4f(0, 0, 0, 1);
         }
     }
 
@@ -270,7 +271,7 @@ static void drawStridedSlow(const struct wined3d_device *device, const struct wi
 
                 for (i = 0; i < num_untracked_materials; ++i)
                 {
-                    glMaterialfv(GL_FRONT_AND_BACK, context->untracked_materials[i], color);
+                    gl_info->gl_ops.gl.p_glMaterialfv(GL_FRONT_AND_BACK, context->untracked_materials[i], color);
                 }
             }
         }
@@ -305,7 +306,7 @@ static void drawStridedSlow(const struct wined3d_device *device, const struct wi
         if (!idxData) ++SkipnStrides;
     }
 
-    glEnd();
+    gl_info->gl_ops.gl.p_glEnd();
     checkGLcall("glEnd and previous calls");
 }
 
@@ -448,7 +449,7 @@ static void drawStridedSlowVs(const struct wined3d_gl_info *gl_info, const struc
     }
 
     /* Start drawing in GL */
-    glBegin(glPrimitiveType);
+    gl_info->gl_ops.gl.p_glBegin(glPrimitiveType);
 
     for (vx_index = 0; vx_index < numberOfVertices; ++vx_index)
     {
@@ -472,7 +473,7 @@ static void drawStridedSlowVs(const struct wined3d_gl_info *gl_info, const struc
         SkipnStrides++;
     }
 
-    glEnd();
+    gl_info->gl_ops.gl.p_glEnd();
 }
 
 /* GL locking is done by the caller */
@@ -547,8 +548,8 @@ static void drawStridedInstanced(const struct wined3d_gl_info *gl_info, const st
         }
         else
         {
-            glDrawElements(glPrimitiveType, numberOfVertices, idxtype,
-                        (const char *)idxData+(idxSize * startIdx));
+            gl_info->gl_ops.gl.p_glDrawElements(glPrimitiveType, numberOfVertices, idxtype,
+                        (const char *)idxData + (idxSize * startIdx));
             checkGLcall("glDrawElements");
         }
     }
@@ -576,9 +577,10 @@ static void remove_vbos(const struct wined3d_gl_info *gl_info,
 }
 
 /* Routine common to the draw primitive and draw indexed primitive routines */
-void drawPrimitive(struct wined3d_device *device, UINT index_count, UINT StartIdx, UINT idxSize, const void *idxData)
+void drawPrimitive(struct wined3d_device *device, UINT index_count, UINT StartIdx, BOOL indexed, const void *idxData)
 {
     const struct wined3d_state *state = &device->stateBlock->state;
+    const struct wined3d_gl_info *gl_info;
     struct wined3d_context *context;
     unsigned int i;
 
@@ -608,6 +610,7 @@ void drawPrimitive(struct wined3d_device *device, UINT index_count, UINT StartId
         WARN("Invalid context, skipping draw.\n");
         return;
     }
+    gl_info = context->gl_info;
 
     if (device->fb.depth_stencil)
     {
@@ -653,8 +656,8 @@ void drawPrimitive(struct wined3d_device *device, UINT index_count, UINT StartId
         surface_modify_ds_location(ds, location, ds->ds_current_size.cx, ds->ds_current_size.cy);
     }
 
-    if ((!context->gl_info->supported[WINED3D_GL_VERSION_2_0]
-            || (!glPointParameteri && !context->gl_info->supported[NV_POINT_SPRITE]))
+    if ((!gl_info->supported[WINED3D_GL_VERSION_2_0]
+            || !gl_info->supported[NV_POINT_SPRITE])
             && context->render_offscreen
             && state->render_states[WINED3D_RS_POINTSPRITEENABLE]
             && state->gl_primitive_type == GL_POINTS)
@@ -670,6 +673,24 @@ void drawPrimitive(struct wined3d_device *device, UINT index_count, UINT StartId
         BOOL emulation = FALSE;
         const struct wined3d_stream_info *stream_info = &device->strided_streams;
         struct wined3d_stream_info stridedlcl;
+        UINT idx_size = 0;
+
+        if (indexed)
+        {
+            if (!state->user_stream)
+            {
+                struct wined3d_buffer *index_buffer = state->index_buffer;
+                if (!index_buffer->buffer_object || !stream_info->all_vbo)
+                    idxData = index_buffer->resource.allocatedMemory;
+                else
+                    idxData = NULL;
+            }
+
+            if (state->index_format == WINED3DFMT_R16_UINT)
+                idx_size = 2;
+            else
+                idx_size = 4;
+        }
 
         if (!use_vs(state))
         {
@@ -703,7 +724,7 @@ void drawPrimitive(struct wined3d_device *device, UINT index_count, UINT StartId
             if(emulation) {
                 stream_info = &stridedlcl;
                 memcpy(&stridedlcl, &device->strided_streams, sizeof(stridedlcl));
-                remove_vbos(context->gl_info, state, &stridedlcl);
+                remove_vbos(gl_info, state, &stridedlcl);
             }
         }
 
@@ -719,24 +740,24 @@ void drawPrimitive(struct wined3d_device *device, UINT index_count, UINT StartId
                 } else {
                     TRACE("Using immediate mode with vertex shaders for half float emulation\n");
                 }
-                drawStridedSlowVs(context->gl_info, state, stream_info,
-                        index_count, glPrimType, idxData, idxSize, StartIdx);
+                drawStridedSlowVs(gl_info, state, stream_info,
+                        index_count, glPrimType, idxData, idx_size, StartIdx);
             }
             else
             {
                 drawStridedSlow(device, context, stream_info, index_count,
-                        glPrimType, idxData, idxSize, StartIdx);
+                        glPrimType, idxData, idx_size, StartIdx);
             }
         }
         else if (device->instancedDraw)
         {
             /* Instancing emulation with mixing immediate mode and arrays */
-            drawStridedInstanced(context->gl_info, state, stream_info,
-                    index_count, glPrimType, idxData, idxSize, StartIdx, base_vertex_index);
+            drawStridedInstanced(gl_info, state, stream_info,
+                    index_count, glPrimType, idxData, idx_size, StartIdx, base_vertex_index);
         }
         else
         {
-            drawStridedFast(context->gl_info, glPrimType, index_count, idxSize, idxData, StartIdx, base_vertex_index);
+            drawStridedFast(gl_info, glPrimType, index_count, idx_size, idxData, StartIdx, base_vertex_index);
         }
     }
 
@@ -748,7 +769,8 @@ void drawPrimitive(struct wined3d_device *device, UINT index_count, UINT StartId
         wined3d_event_query_issue(device->buffer_queries[i], device);
     }
 
-    if (wined3d_settings.strict_draw_ordering) wglFlush(); /* Flush to ensure ordering across contexts. */
+    if (wined3d_settings.strict_draw_ordering)
+        gl_info->gl_ops.gl.p_glFlush(); /* Flush to ensure ordering across contexts. */
 
     context_release(context);
 
@@ -789,7 +811,7 @@ static void normalize_normal(float *n) {
  * responsible of taking care that either the gl states are restored, or the context activated
  * for drawing to reset the lastWasBlit flag.
  */
-HRESULT tesselate_rectpatch(struct wined3d_device *This, struct WineD3DRectPatch *patch)
+HRESULT tesselate_rectpatch(struct wined3d_device *This, struct wined3d_rect_patch *patch)
 {
     unsigned int i, j, num_quads, out_vertex_size, buffer_size, d3d_out_vertex_size;
     const struct wined3d_rect_patch_info *info = &patch->rect_patch_info;
@@ -797,6 +819,7 @@ HRESULT tesselate_rectpatch(struct wined3d_device *This, struct WineD3DRectPatch
     struct wined3d_state *state = &This->stateBlock->state;
     struct wined3d_stream_info stream_info;
     struct wined3d_stream_info_element *e;
+    const struct wined3d_gl_info *gl_info;
     struct wined3d_context *context;
     struct wined3d_shader *vs;
     const BYTE *data;
@@ -808,13 +831,14 @@ HRESULT tesselate_rectpatch(struct wined3d_device *This, struct WineD3DRectPatch
      * takes care of dirtifying. Dirtifying is preferred over pushing / popping, since drawing the
      * patch (as opposed to normal draws) will most likely need different changes anyway. */
     context = context_acquire(This, NULL);
+    gl_info = context->gl_info;
     context_apply_blit_state(context, This);
 
     /* First, locate the position data. This is provided in a vertex buffer in
      * the stateblock. Beware of VBOs. */
     vs = state->vertex_shader;
     state->vertex_shader = NULL;
-    device_stream_info_from_declaration(This, &stream_info, NULL);
+    device_stream_info_from_declaration(This, &stream_info);
     state->vertex_shader = vs;
 
     e = &stream_info.elements[WINED3D_FFP_POSITION];
@@ -863,20 +887,20 @@ HRESULT tesselate_rectpatch(struct wined3d_device *This, struct WineD3DRectPatch
 
     ENTER_GL();
 
-    glMatrixMode(GL_PROJECTION);
+    gl_info->gl_ops.gl.p_glMatrixMode(GL_PROJECTION);
     checkGLcall("glMatrixMode(GL_PROJECTION)");
-    glLoadIdentity();
+    gl_info->gl_ops.gl.p_glLoadIdentity();
     checkGLcall("glLoadIdentity()");
-    glScalef(1.0f / (max_x), 1.0f / (max_y), max_z == 0.0f ? 1.0f : 1.0f / (2.0f * max_z));
-    glTranslatef(0.0f, 0.0f, 0.5f);
+    gl_info->gl_ops.gl.p_glScalef(1.0f / (max_x), 1.0f / (max_y), max_z == 0.0f ? 1.0f : 1.0f / (2.0f * max_z));
+    gl_info->gl_ops.gl.p_glTranslatef(0.0f, 0.0f, 0.5f);
     checkGLcall("glScalef");
-    glViewport(-max_x, -max_y, 2 * (max_x), 2 * (max_y));
+    gl_info->gl_ops.gl.p_glViewport(-max_x, -max_y, 2 * (max_x), 2 * (max_y));
     checkGLcall("glViewport");
 
     /* Some states to take care of. If we're in wireframe opengl will produce lines, and confuse
      * our feedback buffer parser
      */
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    gl_info->gl_ops.gl.p_glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     checkGLcall("glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)");
     context_invalidate_state(context, STATE_RENDER(WINED3D_RS_FILLMODE));
     if (patch->has_normals)
@@ -886,47 +910,47 @@ HRESULT tesselate_rectpatch(struct wined3d_device *This, struct WineD3DRectPatch
         static const GLfloat green[] = {0.0f, 1.0f, 0.0f, 0.0f};
         static const GLfloat blue[]  = {0.0f, 0.0f, 1.0f, 0.0f};
         static const GLfloat white[] = {1.0f, 1.0f, 1.0f, 1.0f};
-        glEnable(GL_LIGHTING);
+        gl_info->gl_ops.gl.p_glEnable(GL_LIGHTING);
         checkGLcall("glEnable(GL_LIGHTING)");
-        glLightModelfv(GL_LIGHT_MODEL_AMBIENT, black);
+        gl_info->gl_ops.gl.p_glLightModelfv(GL_LIGHT_MODEL_AMBIENT, black);
         checkGLcall("glLightModel for MODEL_AMBIENT");
         context_invalidate_state(context, STATE_RENDER(WINED3D_RS_AMBIENT));
 
         for (i = 3; i < context->gl_info->limits.lights; ++i)
         {
-            glDisable(GL_LIGHT0 + i);
+            gl_info->gl_ops.gl.p_glDisable(GL_LIGHT0 + i);
             checkGLcall("glDisable(GL_LIGHT0 + i)");
             context_invalidate_state(context, STATE_ACTIVELIGHT(i));
         }
 
         context_invalidate_state(context, STATE_ACTIVELIGHT(0));
-        glLightfv(GL_LIGHT0, GL_DIFFUSE, red);
-        glLightfv(GL_LIGHT0, GL_SPECULAR, black);
-        glLightfv(GL_LIGHT0, GL_AMBIENT, black);
-        glLightfv(GL_LIGHT0, GL_POSITION, red);
-        glEnable(GL_LIGHT0);
+        gl_info->gl_ops.gl.p_glLightfv(GL_LIGHT0, GL_DIFFUSE, red);
+        gl_info->gl_ops.gl.p_glLightfv(GL_LIGHT0, GL_SPECULAR, black);
+        gl_info->gl_ops.gl.p_glLightfv(GL_LIGHT0, GL_AMBIENT, black);
+        gl_info->gl_ops.gl.p_glLightfv(GL_LIGHT0, GL_POSITION, red);
+        gl_info->gl_ops.gl.p_glEnable(GL_LIGHT0);
         checkGLcall("Setting up light 1");
         context_invalidate_state(context, STATE_ACTIVELIGHT(1));
-        glLightfv(GL_LIGHT1, GL_DIFFUSE, green);
-        glLightfv(GL_LIGHT1, GL_SPECULAR, black);
-        glLightfv(GL_LIGHT1, GL_AMBIENT, black);
-        glLightfv(GL_LIGHT1, GL_POSITION, green);
-        glEnable(GL_LIGHT1);
+        gl_info->gl_ops.gl.p_glLightfv(GL_LIGHT1, GL_DIFFUSE, green);
+        gl_info->gl_ops.gl.p_glLightfv(GL_LIGHT1, GL_SPECULAR, black);
+        gl_info->gl_ops.gl.p_glLightfv(GL_LIGHT1, GL_AMBIENT, black);
+        gl_info->gl_ops.gl.p_glLightfv(GL_LIGHT1, GL_POSITION, green);
+        gl_info->gl_ops.gl.p_glEnable(GL_LIGHT1);
         checkGLcall("Setting up light 2");
         context_invalidate_state(context, STATE_ACTIVELIGHT(2));
-        glLightfv(GL_LIGHT2, GL_DIFFUSE, blue);
-        glLightfv(GL_LIGHT2, GL_SPECULAR, black);
-        glLightfv(GL_LIGHT2, GL_AMBIENT, black);
-        glLightfv(GL_LIGHT2, GL_POSITION, blue);
-        glEnable(GL_LIGHT2);
+        gl_info->gl_ops.gl.p_glLightfv(GL_LIGHT2, GL_DIFFUSE, blue);
+        gl_info->gl_ops.gl.p_glLightfv(GL_LIGHT2, GL_SPECULAR, black);
+        gl_info->gl_ops.gl.p_glLightfv(GL_LIGHT2, GL_AMBIENT, black);
+        gl_info->gl_ops.gl.p_glLightfv(GL_LIGHT2, GL_POSITION, blue);
+        gl_info->gl_ops.gl.p_glEnable(GL_LIGHT2);
         checkGLcall("Setting up light 3");
 
         context_invalidate_state(context, STATE_MATERIAL);
         context_invalidate_state(context, STATE_RENDER(WINED3D_RS_COLORVERTEX));
-        glDisable(GL_COLOR_MATERIAL);
-        glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, black);
-        glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, black);
-        glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, white);
+        gl_info->gl_ops.gl.p_glDisable(GL_COLOR_MATERIAL);
+        gl_info->gl_ops.gl.p_glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, black);
+        gl_info->gl_ops.gl.p_glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, black);
+        gl_info->gl_ops.gl.p_glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, white);
         checkGLcall("Setting up materials");
     }
 
@@ -938,26 +962,33 @@ HRESULT tesselate_rectpatch(struct wined3d_device *This, struct WineD3DRectPatch
     num_quads = ceilf(patch->numSegs[0]) * ceilf(patch->numSegs[1]);
     out_vertex_size = 3 /* position */;
     d3d_out_vertex_size = 3;
-    glEnable(GL_MAP2_VERTEX_3);
-    if(patch->has_normals && patch->has_texcoords) {
+    gl_info->gl_ops.gl.p_glEnable(GL_MAP2_VERTEX_3);
+    if (patch->has_normals && patch->has_texcoords)
+    {
         FIXME("Texcoords not handled yet\n");
         feedback_type = GL_3D_COLOR_TEXTURE;
         out_vertex_size += 8;
         d3d_out_vertex_size += 7;
-        glEnable(GL_AUTO_NORMAL);
-        glEnable(GL_MAP2_TEXTURE_COORD_4);
-    } else if(patch->has_texcoords) {
+        gl_info->gl_ops.gl.p_glEnable(GL_AUTO_NORMAL);
+        gl_info->gl_ops.gl.p_glEnable(GL_MAP2_TEXTURE_COORD_4);
+    }
+    else if (patch->has_texcoords)
+    {
         FIXME("Texcoords not handled yet\n");
         feedback_type = GL_3D_COLOR_TEXTURE;
         out_vertex_size += 7;
         d3d_out_vertex_size += 4;
-        glEnable(GL_MAP2_TEXTURE_COORD_4);
-    } else if(patch->has_normals) {
+        gl_info->gl_ops.gl.p_glEnable(GL_MAP2_TEXTURE_COORD_4);
+    }
+    else if (patch->has_normals)
+    {
         feedback_type = GL_3D_COLOR;
         out_vertex_size += 4;
         d3d_out_vertex_size += 3;
-        glEnable(GL_AUTO_NORMAL);
-    } else {
+        gl_info->gl_ops.gl.p_glEnable(GL_AUTO_NORMAL);
+    }
+    else
+    {
         feedback_type = GL_3D;
     }
     checkGLcall("glEnable vertex attrib generation");
@@ -966,31 +997,32 @@ HRESULT tesselate_rectpatch(struct wined3d_device *This, struct WineD3DRectPatch
                    + 4 * num_quads /* 2 triangle markers per quad + num verts in tri */;
     feedbuffer = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, buffer_size * sizeof(float) * 8);
 
-    glMap2f(GL_MAP2_VERTEX_3,
+    gl_info->gl_ops.gl.p_glMap2f(GL_MAP2_VERTEX_3,
             0.0f, 1.0f, vtxStride / sizeof(float), info->width,
             0.0f, 1.0f, info->stride * vtxStride / sizeof(float), info->height,
             (const GLfloat *)data);
     checkGLcall("glMap2f");
     if (patch->has_texcoords)
     {
-        glMap2f(GL_MAP2_TEXTURE_COORD_4,
+        gl_info->gl_ops.gl.p_glMap2f(GL_MAP2_TEXTURE_COORD_4,
                 0.0f, 1.0f, vtxStride / sizeof(float), info->width,
                 0.0f, 1.0f, info->stride * vtxStride / sizeof(float), info->height,
                 (const GLfloat *)data);
         checkGLcall("glMap2f");
     }
-    glMapGrid2f(ceilf(patch->numSegs[0]), 0.0f, 1.0f, ceilf(patch->numSegs[1]), 0.0f, 1.0f);
+    gl_info->gl_ops.gl.p_glMapGrid2f(ceilf(patch->numSegs[0]), 0.0f, 1.0f, ceilf(patch->numSegs[1]), 0.0f, 1.0f);
     checkGLcall("glMapGrid2f");
 
-    glFeedbackBuffer(buffer_size * 2, feedback_type, feedbuffer);
+    gl_info->gl_ops.gl.p_glFeedbackBuffer(buffer_size * 2, feedback_type, feedbuffer);
     checkGLcall("glFeedbackBuffer");
-    glRenderMode(GL_FEEDBACK);
+    gl_info->gl_ops.gl.p_glRenderMode(GL_FEEDBACK);
 
-    glEvalMesh2(GL_FILL, 0, ceilf(patch->numSegs[0]), 0, ceilf(patch->numSegs[1]));
+    gl_info->gl_ops.gl.p_glEvalMesh2(GL_FILL, 0, ceilf(patch->numSegs[0]), 0, ceilf(patch->numSegs[1]));
     checkGLcall("glEvalMesh2");
 
-    i = glRenderMode(GL_RENDER);
-    if(i == -1) {
+    i = gl_info->gl_ops.gl.p_glRenderMode(GL_RENDER);
+    if (i == -1)
+    {
         LEAVE_GL();
         ERR("Feedback failed. Expected %d elements back\n", buffer_size);
         HeapFree(GetProcessHeap(), 0, feedbuffer);
@@ -1057,16 +1089,16 @@ HRESULT tesselate_rectpatch(struct wined3d_device *This, struct WineD3DRectPatch
         static const GLfloat x[] = {-1.0f,  0.0f,  0.0f, 0.0f};
         static const GLfloat y[] = { 0.0f, -1.0f,  0.0f, 0.0f};
         static const GLfloat z[] = { 0.0f,  0.0f, -1.0f, 0.0f};
-        glLightfv(GL_LIGHT0, GL_POSITION, x);
-        glLightfv(GL_LIGHT1, GL_POSITION, y);
-        glLightfv(GL_LIGHT2, GL_POSITION, z);
+        gl_info->gl_ops.gl.p_glLightfv(GL_LIGHT0, GL_POSITION, x);
+        gl_info->gl_ops.gl.p_glLightfv(GL_LIGHT1, GL_POSITION, y);
+        gl_info->gl_ops.gl.p_glLightfv(GL_LIGHT2, GL_POSITION, z);
         checkGLcall("Setting up reverse light directions");
 
-        glRenderMode(GL_FEEDBACK);
+        gl_info->gl_ops.gl.p_glRenderMode(GL_FEEDBACK);
         checkGLcall("glRenderMode(GL_FEEDBACK)");
-        glEvalMesh2(GL_FILL, 0, ceilf(patch->numSegs[0]), 0, ceilf(patch->numSegs[1]));
+        gl_info->gl_ops.gl.p_glEvalMesh2(GL_FILL, 0, ceilf(patch->numSegs[0]), 0, ceilf(patch->numSegs[1]));
         checkGLcall("glEvalMesh2");
-        i = glRenderMode(GL_RENDER);
+        i = gl_info->gl_ops.gl.p_glRenderMode(GL_RENDER);
         checkGLcall("glRenderMode(GL_RENDER)");
 
         i = 0;
@@ -1108,10 +1140,10 @@ HRESULT tesselate_rectpatch(struct wined3d_device *This, struct WineD3DRectPatch
         }
     }
 
-    glDisable(GL_MAP2_VERTEX_3);
-    glDisable(GL_AUTO_NORMAL);
-    glDisable(GL_MAP2_NORMAL);
-    glDisable(GL_MAP2_TEXTURE_COORD_4);
+    gl_info->gl_ops.gl.p_glDisable(GL_MAP2_VERTEX_3);
+    gl_info->gl_ops.gl.p_glDisable(GL_AUTO_NORMAL);
+    gl_info->gl_ops.gl.p_glDisable(GL_MAP2_NORMAL);
+    gl_info->gl_ops.gl.p_glDisable(GL_MAP2_TEXTURE_COORD_4);
     checkGLcall("glDisable vertex attrib generation");
     LEAVE_GL();
 

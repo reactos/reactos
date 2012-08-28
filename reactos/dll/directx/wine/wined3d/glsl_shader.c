@@ -30,15 +30,17 @@
  */
 
 #include "config.h"
+#include "wine/port.h"
+
 #include <limits.h>
 #include <stdio.h>
-#include "wine/port.h"
+
 #include "wined3d_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d_shader);
 WINE_DECLARE_DEBUG_CHANNEL(d3d_constants);
-WINE_DECLARE_DEBUG_CHANNEL(d3d_caps);
 WINE_DECLARE_DEBUG_CHANNEL(d3d);
+WINE_DECLARE_DEBUG_CHANNEL(winediag);
 
 #define WINED3D_GLSL_SAMPLE_PROJECTED   0x1
 #define WINED3D_GLSL_SAMPLE_RECT        0x2
@@ -961,6 +963,17 @@ static void shader_generate_glsl_declarations(const struct wined3d_context *cont
                 max_constantsF -= count_bits(reg_maps->boolean_constants);
                 /* Set by driver quirks in directx.c */
                 max_constantsF -= gl_info->reserved_glsl_constants;
+
+                if (max_constantsF < shader->limits.constant_float)
+                {
+                    static unsigned int once;
+
+                    if (!once++)
+                        ERR_(winediag)("The hardware does not support enough uniform components to run this shader,"
+                                " it may not render correctly.\n");
+                    else
+                        WARN("The hardware does not support enough uniform components to run this shader.\n");
+                }
             }
             else
             {
@@ -3686,7 +3699,7 @@ static void shader_glsl_input_pack(const struct wined3d_shader *shader, struct w
         semantic_idx = input_signature[i].semantic_idx;
         shader_glsl_write_mask_to_str(input_signature[i].mask, reg_mask);
 
-        if (shader_match_semantic(semantic_name, WINED3DDECLUSAGE_TEXCOORD))
+        if (shader_match_semantic(semantic_name, WINED3D_DECL_USAGE_TEXCOORD))
         {
             if (semantic_idx < 8 && vertexprocessing == pretransformed)
                 shader_addline(buffer, "IN[%u]%s = gl_TexCoord[%u]%s;\n",
@@ -3695,7 +3708,7 @@ static void shader_glsl_input_pack(const struct wined3d_shader *shader, struct w
                 shader_addline(buffer, "IN[%u]%s = vec4(0.0, 0.0, 0.0, 0.0)%s;\n",
                         shader->u.ps.input_reg_map[i], reg_mask, reg_mask);
         }
-        else if (shader_match_semantic(semantic_name, WINED3DDECLUSAGE_COLOR))
+        else if (shader_match_semantic(semantic_name, WINED3D_DECL_USAGE_COLOR))
         {
             if (!semantic_idx)
                 shader_addline(buffer, "IN[%u]%s = vec4(gl_Color)%s;\n",
@@ -3894,7 +3907,7 @@ static GLhandleARB generate_param_reorder_function(struct wined3d_shader_buffer 
             write_mask = output_signature[i].mask;
             shader_glsl_write_mask_to_str(write_mask, reg_mask);
 
-            if (shader_match_semantic(semantic_name, WINED3DDECLUSAGE_COLOR))
+            if (shader_match_semantic(semantic_name, WINED3D_DECL_USAGE_COLOR))
             {
                 if (!semantic_idx)
                     shader_addline(buffer, "gl_FrontColor%s = OUT[%u]%s;\n",
@@ -3903,12 +3916,12 @@ static GLhandleARB generate_param_reorder_function(struct wined3d_shader_buffer 
                     shader_addline(buffer, "gl_FrontSecondaryColor%s = OUT[%u]%s;\n",
                             reg_mask, i, reg_mask);
             }
-            else if (shader_match_semantic(semantic_name, WINED3DDECLUSAGE_POSITION))
+            else if (shader_match_semantic(semantic_name, WINED3D_DECL_USAGE_POSITION))
             {
                 shader_addline(buffer, "gl_Position%s = OUT[%u]%s;\n",
                         reg_mask, i, reg_mask);
             }
-            else if (shader_match_semantic(semantic_name, WINED3DDECLUSAGE_TEXCOORD))
+            else if (shader_match_semantic(semantic_name, WINED3D_DECL_USAGE_TEXCOORD))
             {
                 if (semantic_idx < 8)
                 {
@@ -3921,17 +3934,16 @@ static GLhandleARB generate_param_reorder_function(struct wined3d_shader_buffer 
                         shader_addline(buffer, "gl_TexCoord[%u].w = 1.0;\n", semantic_idx);
                 }
             }
-            else if (shader_match_semantic(semantic_name, WINED3DDECLUSAGE_PSIZE))
+            else if (shader_match_semantic(semantic_name, WINED3D_DECL_USAGE_PSIZE))
             {
                 shader_addline(buffer, "gl_PointSize = OUT[%u].%c;\n", i, reg_mask[1]);
             }
-            else if (shader_match_semantic(semantic_name, WINED3DDECLUSAGE_FOG))
+            else if (shader_match_semantic(semantic_name, WINED3D_DECL_USAGE_FOG))
             {
-                shader_addline(buffer, "gl_FogFragCoord = OUT[%u].%c;\n", i, reg_mask[1]);
+                shader_addline(buffer, "gl_FogFragCoord = clamp(OUT[%u].%c, 0.0, 1.0);\n", i, reg_mask[1]);
             }
         }
         shader_addline(buffer, "}\n");
-
     }
     else
     {
@@ -3948,12 +3960,12 @@ static GLhandleARB generate_param_reorder_function(struct wined3d_shader_buffer 
             semantic_name = output_signature[i].semantic_name;
             shader_glsl_write_mask_to_str(output_signature[i].mask, reg_mask);
 
-            if (shader_match_semantic(semantic_name, WINED3DDECLUSAGE_POSITION))
+            if (shader_match_semantic(semantic_name, WINED3D_DECL_USAGE_POSITION))
             {
                 shader_addline(buffer, "gl_Position%s = OUT[%u]%s;\n",
                         reg_mask, i, reg_mask);
             }
-            else if (shader_match_semantic(semantic_name, WINED3DDECLUSAGE_PSIZE))
+            else if (shader_match_semantic(semantic_name, WINED3D_DECL_USAGE_PSIZE))
             {
                 shader_addline(buffer, "gl_PointSize = OUT[%u].%c;\n", i, reg_mask[1]);
             }
@@ -4978,10 +4990,8 @@ static void shader_glsl_get_caps(const struct wined3d_gl_info *gl_info, struct s
 
     caps->VSClipping = TRUE;
 
-    TRACE_(d3d_caps)("Hardware vertex shader version %u enabled (GLSL).\n",
-            caps->VertexShaderVersion);
-    TRACE_(d3d_caps)("Hardware pixel shader version %u enabled (GLSL).\n",
-            caps->PixelShaderVersion);
+    TRACE("Hardware vertex shader version %u enabled (GLSL).\n", caps->VertexShaderVersion);
+    TRACE("Hardware pixel shader version %u enabled (GLSL).\n", caps->PixelShaderVersion);
 }
 
 static BOOL shader_glsl_color_fixup_supported(struct color_fixup_desc fixup)

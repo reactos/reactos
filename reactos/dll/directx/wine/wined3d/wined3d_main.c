@@ -23,9 +23,9 @@
  */
 
 #include "config.h"
+#include "wine/port.h"
 
 #include "initguid.h"
-#include "wine/port.h"
 #include "wined3d_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d);
@@ -47,10 +47,6 @@ struct wined3d_wndproc_table
 };
 
 static struct wined3d_wndproc_table wndproc_table;
-
-int num_lock = 0;
-void (CDECL *wine_tsx11_lock_ptr)(void) = NULL;
-void (CDECL *wine_tsx11_unlock_ptr)(void) = NULL;
 
 static CRITICAL_SECTION wined3d_cs;
 static CRITICAL_SECTION_DEBUG wined3d_cs_debug =
@@ -87,23 +83,23 @@ struct wined3d_settings wined3d_settings =
     NULL,           /* No wine logo by default */
     TRUE,           /* Multisampling enabled by default. */
     FALSE,          /* No strict draw ordering. */
-    FALSE,          /* Try to render onscreen by default. */
+    TRUE,           /* Don't try to render onscreen by default. */
 };
 
 /* Do not call while under the GL lock. */
-struct wined3d * CDECL wined3d_create(UINT version, DWORD flags, void *parent)
+struct wined3d * CDECL wined3d_create(UINT version, DWORD flags)
 {
     struct wined3d *object;
     HRESULT hr;
 
-    object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*object));
+    object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, FIELD_OFFSET(struct wined3d, adapters[1]));
     if (!object)
     {
         ERR("Failed to allocate wined3d object memory.\n");
         return NULL;
     }
 
-    hr = wined3d_init(object, version, flags, parent);
+    hr = wined3d_init(object, version, flags);
     if (FAILED(hr))
     {
         WARN("Failed to initialize wined3d object, hr %#x.\n", hr);
@@ -132,14 +128,9 @@ static DWORD get_config_key_dword(HKEY defkey, HKEY appkey, const char *name, DW
     return ERROR_FILE_NOT_FOUND;
 }
 
-static void CDECL wined3d_do_nothing(void)
-{
-}
-
 static BOOL wined3d_dll_init(HINSTANCE hInstDLL)
 {
     DWORD wined3d_context_tls_idx;
-    HMODULE mod;
     char buffer[MAX_PATH+10];
     DWORD size = sizeof(buffer);
     HKEY hkey = 0;
@@ -183,17 +174,6 @@ static BOOL wined3d_dll_init(HINSTANCE hInstDLL)
 
     DisableThreadLibraryCalls(hInstDLL);
 
-    mod = GetModuleHandleA( "winex11.drv" );
-    if (mod)
-    {
-        wine_tsx11_lock_ptr   = (void *)GetProcAddress( mod, "wine_tsx11_lock" );
-        wine_tsx11_unlock_ptr = (void *)GetProcAddress( mod, "wine_tsx11_unlock" );
-    }
-    else /* We are most likely on Windows */
-    {
-        wine_tsx11_lock_ptr   = wined3d_do_nothing;
-        wine_tsx11_unlock_ptr = wined3d_do_nothing;
-    }
     /* @@ Wine registry key: HKCU\Software\Wine\Direct3D */
     if ( RegOpenKeyA( HKEY_CURRENT_USER, "Software\\Wine\\Direct3D", &hkey ) ) hkey = 0;
 
@@ -338,10 +318,10 @@ static BOOL wined3d_dll_init(HINSTANCE hInstDLL)
             wined3d_settings.strict_draw_ordering = TRUE;
         }
         if (!get_config_key(hkey, appkey, "AlwaysOffscreen", buffer, size)
-                && !strcmp(buffer,"enabled"))
+                && !strcmp(buffer,"disabled"))
         {
-            TRACE("Always rendering backbuffers offscreen.\n");
-            wined3d_settings.always_offscreen = TRUE;
+            TRACE("Not always rendering backbuffers offscreen.\n");
+            wined3d_settings.always_offscreen = FALSE;
         }
     }
     if (wined3d_settings.vs_mode == VS_HW)
@@ -445,7 +425,11 @@ static LRESULT CALLBACK wined3d_wndproc(HWND window, UINT message, WPARAM wparam
     proc = entry->proc;
     wined3d_wndproc_mutex_unlock();
 
-    return device_process_message(device, window, unicode, message, wparam, lparam, proc);
+    if (device)
+        return device_process_message(device, window, unicode, message, wparam, lparam, proc);
+    if (unicode)
+        return CallWindowProcW(proc, window, message, wparam, lparam);
+    return CallWindowProcA(proc, window, message, wparam, lparam);
 }
 
 BOOL wined3d_register_window(HWND window, struct wined3d_device *device)
@@ -516,6 +500,7 @@ void wined3d_unregister_window(HWND window)
         proc = GetWindowLongPtrW(window, GWLP_WNDPROC);
         if (proc != (LONG_PTR)wined3d_wndproc)
         {
+            entry->device = NULL;
             wined3d_wndproc_mutex_unlock();
             WARN("Not unregistering window %p, window proc %#lx doesn't match wined3d window proc %p.\n",
                     window, proc, wined3d_wndproc);
@@ -529,6 +514,7 @@ void wined3d_unregister_window(HWND window)
         proc = GetWindowLongPtrA(window, GWLP_WNDPROC);
         if (proc != (LONG_PTR)wined3d_wndproc)
         {
+            entry->device = NULL;
             wined3d_wndproc_mutex_unlock();
             WARN("Not unregistering window %p, window proc %#lx doesn't match wined3d window proc %p.\n",
                     window, proc, wined3d_wndproc);

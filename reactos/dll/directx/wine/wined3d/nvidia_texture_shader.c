@@ -20,11 +20,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 #include "config.h"
+#include "wine/port.h"
 
 #include <math.h>
 #include <stdio.h>
 
-#include "wine/port.h"
 #include "wined3d_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d);
@@ -33,6 +33,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(d3d);
 
 static void nvts_activate_dimensions(const struct wined3d_state *state, DWORD stage, struct wined3d_context *context)
 {
+    const struct wined3d_gl_info *gl_info = context->gl_info;
     BOOL bumpmap = FALSE;
 
     if (stage > 0
@@ -50,24 +51,28 @@ static void nvts_activate_dimensions(const struct wined3d_state *state, DWORD st
         switch (state->textures[stage]->target)
         {
             case GL_TEXTURE_2D:
-                glTexEnvi(GL_TEXTURE_SHADER_NV, GL_SHADER_OPERATION_NV, bumpmap ? GL_OFFSET_TEXTURE_2D_NV : GL_TEXTURE_2D);
+                gl_info->gl_ops.gl.p_glTexEnvi(GL_TEXTURE_SHADER_NV, GL_SHADER_OPERATION_NV,
+                        bumpmap ? GL_OFFSET_TEXTURE_2D_NV : GL_TEXTURE_2D);
                 checkGLcall("glTexEnvi(GL_TEXTURE_SHADER_NV, GL_SHADER_OPERATION_NV, ...)");
                 break;
             case GL_TEXTURE_RECTANGLE_ARB:
-                glTexEnvi(GL_TEXTURE_SHADER_NV, GL_SHADER_OPERATION_NV, bumpmap ? GL_OFFSET_TEXTURE_2D_NV : GL_TEXTURE_RECTANGLE_ARB);
+                gl_info->gl_ops.gl.p_glTexEnvi(GL_TEXTURE_SHADER_NV, GL_SHADER_OPERATION_NV,
+                        bumpmap ? GL_OFFSET_TEXTURE_2D_NV : GL_TEXTURE_RECTANGLE_ARB);
                 checkGLcall("glTexEnvi(GL_TEXTURE_SHADER_NV, GL_SHADER_OPERATION_NV, ...)");
                 break;
             case GL_TEXTURE_3D:
-                glTexEnvi(GL_TEXTURE_SHADER_NV, GL_SHADER_OPERATION_NV, GL_TEXTURE_3D);
+                gl_info->gl_ops.gl.p_glTexEnvi(GL_TEXTURE_SHADER_NV, GL_SHADER_OPERATION_NV, GL_TEXTURE_3D);
                 checkGLcall("glTexEnvi(GL_TEXTURE_SHADER_NV, GL_SHADER_OPERATION_NV, GL_TEXTURE_3D)");
                 break;
             case GL_TEXTURE_CUBE_MAP_ARB:
-                glTexEnvi(GL_TEXTURE_SHADER_NV, GL_SHADER_OPERATION_NV, GL_TEXTURE_CUBE_MAP_ARB);
+                gl_info->gl_ops.gl.p_glTexEnvi(GL_TEXTURE_SHADER_NV, GL_SHADER_OPERATION_NV, GL_TEXTURE_CUBE_MAP_ARB);
                 checkGLcall("glTexEnvi(GL_TEXTURE_SHADER_NV, GL_SHADER_OPERATION_NV, GL_TEXTURE_CUBE_MAP_ARB)");
                 break;
         }
-    } else {
-        glTexEnvi(GL_TEXTURE_SHADER_NV, GL_SHADER_OPERATION_NV, GL_NONE);
+    }
+    else
+    {
+        gl_info->gl_ops.gl.p_glTexEnvi(GL_TEXTURE_SHADER_NV, GL_SHADER_OPERATION_NV, GL_NONE);
         checkGLcall("glTexEnvi(GL_TEXTURE_SHADER_NV, GL_SHADER_OPERATION_NV, GL_NONE)");
     }
 }
@@ -494,12 +499,12 @@ static void nvrc_colorop(struct wined3d_context *context, const struct wined3d_s
 
     if (state->lowest_disabled_stage > 0)
     {
-        glEnable(GL_REGISTER_COMBINERS_NV);
+        gl_info->gl_ops.gl.p_glEnable(GL_REGISTER_COMBINERS_NV);
         GL_EXTCALL(glCombinerParameteriNV(GL_NUM_GENERAL_COMBINERS_NV, state->lowest_disabled_stage));
     }
     else
     {
-        glDisable(GL_REGISTER_COMBINERS_NV);
+        gl_info->gl_ops.gl.p_glDisable(GL_REGISTER_COMBINERS_NV);
     }
     if (stage >= state->lowest_disabled_stage)
     {
@@ -507,23 +512,23 @@ static void nvrc_colorop(struct wined3d_context *context, const struct wined3d_s
         if (mapped_stage != WINED3D_UNMAPPED_STAGE)
         {
             /* Disable everything here */
-            glDisable(GL_TEXTURE_2D);
+            gl_info->gl_ops.gl.p_glDisable(GL_TEXTURE_2D);
             checkGLcall("glDisable(GL_TEXTURE_2D)");
-            glDisable(GL_TEXTURE_3D);
+            gl_info->gl_ops.gl.p_glDisable(GL_TEXTURE_3D);
             checkGLcall("glDisable(GL_TEXTURE_3D)");
             if (gl_info->supported[ARB_TEXTURE_CUBE_MAP])
             {
-                glDisable(GL_TEXTURE_CUBE_MAP_ARB);
+                gl_info->gl_ops.gl.p_glDisable(GL_TEXTURE_CUBE_MAP_ARB);
                 checkGLcall("glDisable(GL_TEXTURE_CUBE_MAP_ARB)");
             }
             if (gl_info->supported[ARB_TEXTURE_RECTANGLE])
             {
-                glDisable(GL_TEXTURE_RECTANGLE_ARB);
+                gl_info->gl_ops.gl.p_glDisable(GL_TEXTURE_RECTANGLE_ARB);
                 checkGLcall("glDisable(GL_TEXTURE_RECTANGLE_ARB)");
             }
             if (gl_info->supported[NV_TEXTURE_SHADER2] && mapped_stage < gl_info->limits.textures)
             {
-                glTexEnvi(GL_TEXTURE_SHADER_NV, GL_SHADER_OPERATION_NV, GL_NONE);
+                gl_info->gl_ops.gl.p_glTexEnvi(GL_TEXTURE_SHADER_NV, GL_SHADER_OPERATION_NV, GL_NONE);
             }
         }
         /* All done */
@@ -615,7 +620,7 @@ static void nvts_bumpenvmat(struct wined3d_context *context, const struct wined3
         mat[1][0] = *((float *)&state->texture_states[stage][WINED3D_TSS_BUMPENV_MAT01]);
         mat[0][1] = *((float *)&state->texture_states[stage][WINED3D_TSS_BUMPENV_MAT10]);
         mat[1][1] = *((float *)&state->texture_states[stage][WINED3D_TSS_BUMPENV_MAT11]);
-        glTexEnvfv(GL_TEXTURE_SHADER_NV, GL_OFFSET_TEXTURE_MATRIX_NV, (float *)mat);
+        gl_info->gl_ops.gl.p_glTexEnvfv(GL_TEXTURE_SHADER_NV, GL_OFFSET_TEXTURE_MATRIX_NV, (float *)mat);
         checkGLcall("glTexEnvfv(GL_TEXTURE_SHADER_NV, GL_OFFSET_TEXTURE_MATRIX_NV, mat)");
     }
 }
@@ -630,16 +635,32 @@ static void nvrc_texfactor(struct wined3d_context *context, const struct wined3d
 }
 
 /* Context activation is done by the caller. */
-static void nvrc_enable(BOOL enable) {}
+static void nvrc_enable(const struct wined3d_gl_info *gl_info, BOOL enable)
+{
+    if (enable)
+    {
+        gl_info->gl_ops.gl.p_glEnable(GL_REGISTER_COMBINERS_NV);
+        checkGLcall("glEnable(GL_REGISTER_COMBINERS_NV)");
+    }
+    else
+    {
+        gl_info->gl_ops.gl.p_glDisable(GL_REGISTER_COMBINERS_NV);
+        checkGLcall("glDisable(GL_REGISTER_COMBINERS_NV)");
+    }
+}
 
 /* Context activation and GL locking are done by the caller. */
-static void nvts_enable(BOOL enable)
+static void nvts_enable(const struct wined3d_gl_info *gl_info, BOOL enable)
 {
-    if(enable) {
-        glEnable(GL_TEXTURE_SHADER_NV);
+    nvrc_enable(gl_info, enable);
+    if (enable)
+    {
+        gl_info->gl_ops.gl.p_glEnable(GL_TEXTURE_SHADER_NV);
         checkGLcall("glEnable(GL_TEXTURE_SHADER_NV)");
-    } else {
-        glDisable(GL_TEXTURE_SHADER_NV);
+    }
+    else
+    {
+        gl_info->gl_ops.gl.p_glDisable(GL_TEXTURE_SHADER_NV);
         checkGLcall("glDisable(GL_TEXTURE_SHADER_NV)");
     }
 }

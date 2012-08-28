@@ -20,11 +20,13 @@
  */
 
 #include "config.h"
+#include "wine/port.h"
+
 #include <stdio.h>
 #ifdef HAVE_FLOAT_H
 # include <float.h>
 #endif
-#include "wine/port.h"
+
 #include "wined3d_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d);
@@ -739,7 +741,7 @@ static BOOL context_set_pixel_format(const struct wined3d_gl_info *gl_info, HDC 
      * when really needed. */
     if (gl_info->supported[WGL_WINE_PIXEL_FORMAT_PASSTHROUGH])
     {
-        if (!GL_EXTCALL(wglSetPixelFormatWINE(dc, format, NULL)))
+        if (!GL_EXTCALL(wglSetPixelFormatWINE(dc, format)))
         {
             ERR("wglSetPixelFormatWINE failed to set pixel format %d on device context %p.\n",
                     format, dc);
@@ -1242,24 +1244,24 @@ static void bind_dummy_textures(const struct wined3d_device *device, const struc
         GL_EXTCALL(glActiveTextureARB(GL_TEXTURE0_ARB + i));
         checkGLcall("glActiveTextureARB");
 
-        glBindTexture(GL_TEXTURE_2D, device->dummy_texture_2d[i]);
+        gl_info->gl_ops.gl.p_glBindTexture(GL_TEXTURE_2D, device->dummy_texture_2d[i]);
         checkGLcall("glBindTexture");
 
         if (gl_info->supported[ARB_TEXTURE_RECTANGLE])
         {
-            glBindTexture(GL_TEXTURE_RECTANGLE_ARB, device->dummy_texture_rect[i]);
+            gl_info->gl_ops.gl.p_glBindTexture(GL_TEXTURE_RECTANGLE_ARB, device->dummy_texture_rect[i]);
             checkGLcall("glBindTexture");
         }
 
         if (gl_info->supported[EXT_TEXTURE3D])
         {
-            glBindTexture(GL_TEXTURE_3D, device->dummy_texture_3d[i]);
+            gl_info->gl_ops.gl.p_glBindTexture(GL_TEXTURE_3D, device->dummy_texture_3d[i]);
             checkGLcall("glBindTexture");
         }
 
         if (gl_info->supported[ARB_TEXTURE_CUBE_MAP])
         {
-            glBindTexture(GL_TEXTURE_CUBE_MAP, device->dummy_texture_cube[i]);
+            gl_info->gl_ops.gl.p_glBindTexture(GL_TEXTURE_CUBE_MAP, device->dummy_texture_cube[i]);
             checkGLcall("glBindTexture");
         }
     }
@@ -1474,47 +1476,46 @@ struct wined3d_context *context_create(struct wined3d_swapchain *swapchain,
 
     ENTER_GL();
 
-    glGetIntegerv(GL_AUX_BUFFERS, &ret->aux_buffers);
+    gl_info->gl_ops.gl.p_glGetIntegerv(GL_AUX_BUFFERS, &ret->aux_buffers);
 
     TRACE("Setting up the screen\n");
     /* Clear the screen */
-    glClearColor(1.0f, 0.0f, 0.0f, 0.0f);
+    gl_info->gl_ops.gl.p_glClearColor(1.0f, 0.0f, 0.0f, 0.0f);
     checkGLcall("glClearColor");
-    glClearIndex(0);
-    glClearDepth(1);
-    glClearStencil(0xffff);
+    gl_info->gl_ops.gl.p_glClearIndex(0);
+    gl_info->gl_ops.gl.p_glClearDepth(1);
+    gl_info->gl_ops.gl.p_glClearStencil(0xffff);
 
     checkGLcall("glClear");
 
-    glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE);
+    gl_info->gl_ops.gl.p_glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE);
     checkGLcall("glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE);");
 
-    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE_EXT);
+    gl_info->gl_ops.gl.p_glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE_EXT);
     checkGLcall("glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE_EXT);");
 
-    glLightModeli(GL_LIGHT_MODEL_COLOR_CONTROL, GL_SEPARATE_SPECULAR_COLOR);
+    gl_info->gl_ops.gl.p_glLightModeli(GL_LIGHT_MODEL_COLOR_CONTROL, GL_SEPARATE_SPECULAR_COLOR);
     checkGLcall("glLightModeli(GL_LIGHT_MODEL_COLOR_CONTROL, GL_SEPARATE_SPECULAR_COLOR);");
 
-    glPixelStorei(GL_PACK_ALIGNMENT, device->surface_alignment);
+    gl_info->gl_ops.gl.p_glPixelStorei(GL_PACK_ALIGNMENT, device->surface_alignment);
     checkGLcall("glPixelStorei(GL_PACK_ALIGNMENT, device->surface_alignment);");
-    glPixelStorei(GL_UNPACK_ALIGNMENT, device->surface_alignment);
+    gl_info->gl_ops.gl.p_glPixelStorei(GL_UNPACK_ALIGNMENT, device->surface_alignment);
     checkGLcall("glPixelStorei(GL_UNPACK_ALIGNMENT, device->surface_alignment);");
 
     if (gl_info->supported[APPLE_CLIENT_STORAGE])
     {
-        /* Most textures will use client storage if supported. Exceptions are non-native power of 2 textures
-         * and textures in DIB sections(due to the memory protection).
-         */
-        glPixelStorei(GL_UNPACK_CLIENT_STORAGE_APPLE, GL_TRUE);
+        /* Most textures will use client storage if supported. Exceptions are
+         * non-native power of 2 textures and textures in DIB sections. */
+        gl_info->gl_ops.gl.p_glPixelStorei(GL_UNPACK_CLIENT_STORAGE_APPLE, GL_TRUE);
         checkGLcall("glPixelStorei(GL_UNPACK_CLIENT_STORAGE_APPLE, GL_TRUE)");
     }
     if (gl_info->supported[ARB_VERTEX_BLEND])
     {
-        /* Direct3D always uses n-1 weights for n world matrices and uses 1 - sum for the last one
-         * this is equal to GL_WEIGHT_SUM_UNITY_ARB. Enabling it doesn't do anything unless
-         * GL_VERTEX_BLEND_ARB isn't enabled too
-         */
-        glEnable(GL_WEIGHT_SUM_UNITY_ARB);
+        /* Direct3D always uses n-1 weights for n world matrices and uses
+         * 1 - sum for the last one this is equal to GL_WEIGHT_SUM_UNITY_ARB.
+         * Enabling it doesn't do anything unless GL_VERTEX_BLEND_ARB isn't
+         * enabled as well. */
+        gl_info->gl_ops.gl.p_glEnable(GL_WEIGHT_SUM_UNITY_ARB);
         checkGLcall("glEnable(GL_WEIGHT_SUM_UNITY_ARB)");
     }
     if (gl_info->supported[NV_TEXTURE_SHADER2])
@@ -1525,7 +1526,8 @@ struct wined3d_context *context_create(struct wined3d_swapchain *swapchain,
         for (s = 1; s < gl_info->limits.textures; ++s)
         {
             context_active_texture(ret, gl_info, s);
-            glTexEnvi(GL_TEXTURE_SHADER_NV, GL_PREVIOUS_TEXTURE_INPUT_NV, GL_TEXTURE0_ARB + s - 1);
+            gl_info->gl_ops.gl.p_glTexEnvi(GL_TEXTURE_SHADER_NV,
+                    GL_PREVIOUS_TEXTURE_INPUT_NV, GL_TEXTURE0_ARB + s - 1);
             checkGLcall("glTexEnvi(GL_TEXTURE_SHADER_NV, GL_PREVIOUS_TEXTURE_INPUT_NV, ...");
         }
     }
@@ -1554,7 +1556,7 @@ struct wined3d_context *context_create(struct wined3d_swapchain *swapchain,
         for (s = 0; s < gl_info->limits.textures; ++s)
         {
             context_active_texture(ret, gl_info, s);
-            glTexEnvi(GL_POINT_SPRITE_ARB, GL_COORD_REPLACE_ARB, GL_TRUE);
+            gl_info->gl_ops.gl.p_glTexEnvi(GL_POINT_SPRITE_ARB, GL_COORD_REPLACE_ARB, GL_TRUE);
             checkGLcall("glTexEnvi(GL_POINT_SPRITE_ARB, GL_COORD_REPLACE_ARB, GL_TRUE)");
         }
     }
@@ -1567,7 +1569,7 @@ struct wined3d_context *context_create(struct wined3d_swapchain *swapchain,
     {
         GL_EXTCALL(glProvokingVertexEXT(GL_FIRST_VERTEX_CONVENTION_EXT));
     }
-    device->frag_pipe->enable_extension(TRUE);
+    device->frag_pipe->enable_extension(gl_info, TRUE);
 
     /* If this happens to be the first context for the device, dummy textures
      * are not created yet. In that case, they will be created (and bound) by
@@ -1621,7 +1623,7 @@ void context_destroy(struct wined3d_device *device, struct wined3d_context *cont
 }
 
 /* GL locking is done by the caller */
-static void set_blit_dimension(UINT width, UINT height)
+static void set_blit_dimension(const struct wined3d_gl_info *gl_info, UINT width, UINT height)
 {
     const GLdouble projection[] =
     {
@@ -1631,12 +1633,32 @@ static void set_blit_dimension(UINT width, UINT height)
                -1.0,         -1.0, -1.0, 1.0,
     };
 
-    glMatrixMode(GL_PROJECTION);
+    gl_info->gl_ops.gl.p_glMatrixMode(GL_PROJECTION);
     checkGLcall("glMatrixMode(GL_PROJECTION)");
-    glLoadMatrixd(projection);
+    gl_info->gl_ops.gl.p_glLoadMatrixd(projection);
     checkGLcall("glLoadMatrixd");
-    glViewport(0, 0, width, height);
+    gl_info->gl_ops.gl.p_glViewport(0, 0, width, height);
     checkGLcall("glViewport");
+}
+
+static void context_get_rt_size(const struct wined3d_context *context, SIZE *size)
+{
+    const struct wined3d_surface *rt = context->current_rt;
+
+    if (rt->container.type == WINED3D_CONTAINER_SWAPCHAIN
+            && rt->container.u.swapchain->front_buffer == rt)
+    {
+        RECT window_size;
+
+        GetClientRect(context->win_handle, &window_size);
+        size->cx = window_size.right - window_size.left;
+        size->cy = window_size.bottom - window_size.top;
+
+        return;
+    }
+
+    size->cx = rt->resource.width;
+    size->cy = rt->resource.height;
 }
 
 /*****************************************************************************
@@ -1660,21 +1682,24 @@ static void SetupForBlit(const struct wined3d_device *device, struct wined3d_con
 {
     int i;
     const struct wined3d_gl_info *gl_info = context->gl_info;
-    UINT width = context->current_rt->resource.width;
-    UINT height = context->current_rt->resource.height;
     DWORD sampler;
+    SIZE rt_size;
 
     TRACE("Setting up context %p for blitting\n", context);
-    if(context->last_was_blit) {
-        if(context->blit_w != width || context->blit_h != height) {
+
+    context_get_rt_size(context, &rt_size);
+
+    if (context->last_was_blit)
+    {
+        if (context->blit_w != rt_size.cx || context->blit_h != rt_size.cy)
+        {
             ENTER_GL();
-            set_blit_dimension(width, height);
+            set_blit_dimension(gl_info, rt_size.cx, rt_size.cy);
             LEAVE_GL();
-            context->blit_w = width; context->blit_h = height;
-            /* No need to dirtify here, the states are still dirtified because they weren't
-             * applied since the last SetupForBlit call. Otherwise last_was_blit would not
-             * be set
-             */
+            context->blit_w = rt_size.cx;
+            context->blit_h = rt_size.cy;
+            /* No need to dirtify here, the states are still dirtified because
+             * they weren't applied since the last SetupForBlit() call. */
         }
         TRACE("Context is already set up for blitting, nothing to do\n");
         return;
@@ -1711,20 +1736,20 @@ static void SetupForBlit(const struct wined3d_device *device, struct wined3d_con
 
         if (gl_info->supported[ARB_TEXTURE_CUBE_MAP])
         {
-            glDisable(GL_TEXTURE_CUBE_MAP_ARB);
+            gl_info->gl_ops.gl.p_glDisable(GL_TEXTURE_CUBE_MAP_ARB);
             checkGLcall("glDisable GL_TEXTURE_CUBE_MAP_ARB");
         }
-        glDisable(GL_TEXTURE_3D);
+        gl_info->gl_ops.gl.p_glDisable(GL_TEXTURE_3D);
         checkGLcall("glDisable GL_TEXTURE_3D");
         if (gl_info->supported[ARB_TEXTURE_RECTANGLE])
         {
-            glDisable(GL_TEXTURE_RECTANGLE_ARB);
+            gl_info->gl_ops.gl.p_glDisable(GL_TEXTURE_RECTANGLE_ARB);
             checkGLcall("glDisable GL_TEXTURE_RECTANGLE_ARB");
         }
-        glDisable(GL_TEXTURE_2D);
+        gl_info->gl_ops.gl.p_glDisable(GL_TEXTURE_2D);
         checkGLcall("glDisable GL_TEXTURE_2D");
 
-        glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+        gl_info->gl_ops.gl.p_glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
         checkGLcall("glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);");
 
         if (sampler != WINED3D_UNMAPPED_STAGE)
@@ -1740,31 +1765,30 @@ static void SetupForBlit(const struct wined3d_device *device, struct wined3d_con
 
     if (gl_info->supported[ARB_TEXTURE_CUBE_MAP])
     {
-        glDisable(GL_TEXTURE_CUBE_MAP_ARB);
+        gl_info->gl_ops.gl.p_glDisable(GL_TEXTURE_CUBE_MAP_ARB);
         checkGLcall("glDisable GL_TEXTURE_CUBE_MAP_ARB");
     }
-    glDisable(GL_TEXTURE_3D);
+    gl_info->gl_ops.gl.p_glDisable(GL_TEXTURE_3D);
     checkGLcall("glDisable GL_TEXTURE_3D");
     if (gl_info->supported[ARB_TEXTURE_RECTANGLE])
     {
-        glDisable(GL_TEXTURE_RECTANGLE_ARB);
+        gl_info->gl_ops.gl.p_glDisable(GL_TEXTURE_RECTANGLE_ARB);
         checkGLcall("glDisable GL_TEXTURE_RECTANGLE_ARB");
     }
-    glDisable(GL_TEXTURE_2D);
+    gl_info->gl_ops.gl.p_glDisable(GL_TEXTURE_2D);
     checkGLcall("glDisable GL_TEXTURE_2D");
 
-    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+    gl_info->gl_ops.gl.p_glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 
-    glMatrixMode(GL_TEXTURE);
+    gl_info->gl_ops.gl.p_glMatrixMode(GL_TEXTURE);
     checkGLcall("glMatrixMode(GL_TEXTURE)");
-    glLoadIdentity();
+    gl_info->gl_ops.gl.p_glLoadIdentity();
     checkGLcall("glLoadIdentity()");
 
     if (gl_info->supported[EXT_TEXTURE_LOD_BIAS])
     {
-        glTexEnvf(GL_TEXTURE_FILTER_CONTROL_EXT,
-                  GL_TEXTURE_LOD_BIAS_EXT,
-                  0.0f);
+        gl_info->gl_ops.gl.p_glTexEnvf(GL_TEXTURE_FILTER_CONTROL_EXT,
+                GL_TEXTURE_LOD_BIAS_EXT, 0.0f);
         checkGLcall("glTexEnvf GL_TEXTURE_LOD_BIAS_EXT ...");
     }
 
@@ -1779,37 +1803,37 @@ static void SetupForBlit(const struct wined3d_device *device, struct wined3d_con
     }
 
     /* Other misc states */
-    glDisable(GL_ALPHA_TEST);
+    gl_info->gl_ops.gl.p_glDisable(GL_ALPHA_TEST);
     checkGLcall("glDisable(GL_ALPHA_TEST)");
     context_invalidate_state(context, STATE_RENDER(WINED3D_RS_ALPHATESTENABLE));
-    glDisable(GL_LIGHTING);
+    gl_info->gl_ops.gl.p_glDisable(GL_LIGHTING);
     checkGLcall("glDisable GL_LIGHTING");
     context_invalidate_state(context, STATE_RENDER(WINED3D_RS_LIGHTING));
-    glDisable(GL_DEPTH_TEST);
+    gl_info->gl_ops.gl.p_glDisable(GL_DEPTH_TEST);
     checkGLcall("glDisable GL_DEPTH_TEST");
     context_invalidate_state(context, STATE_RENDER(WINED3D_RS_ZENABLE));
     glDisableWINE(GL_FOG);
     checkGLcall("glDisable GL_FOG");
     context_invalidate_state(context, STATE_RENDER(WINED3D_RS_FOGENABLE));
-    glDisable(GL_BLEND);
+    gl_info->gl_ops.gl.p_glDisable(GL_BLEND);
     checkGLcall("glDisable GL_BLEND");
     context_invalidate_state(context, STATE_RENDER(WINED3D_RS_ALPHABLENDENABLE));
-    glDisable(GL_CULL_FACE);
+    gl_info->gl_ops.gl.p_glDisable(GL_CULL_FACE);
     checkGLcall("glDisable GL_CULL_FACE");
     context_invalidate_state(context, STATE_RENDER(WINED3D_RS_CULLMODE));
-    glDisable(GL_STENCIL_TEST);
+    gl_info->gl_ops.gl.p_glDisable(GL_STENCIL_TEST);
     checkGLcall("glDisable GL_STENCIL_TEST");
     context_invalidate_state(context, STATE_RENDER(WINED3D_RS_STENCILENABLE));
-    glDisable(GL_SCISSOR_TEST);
+    gl_info->gl_ops.gl.p_glDisable(GL_SCISSOR_TEST);
     checkGLcall("glDisable GL_SCISSOR_TEST");
     context_invalidate_state(context, STATE_RENDER(WINED3D_RS_SCISSORTESTENABLE));
     if (gl_info->supported[ARB_POINT_SPRITE])
     {
-        glDisable(GL_POINT_SPRITE_ARB);
+        gl_info->gl_ops.gl.p_glDisable(GL_POINT_SPRITE_ARB);
         checkGLcall("glDisable GL_POINT_SPRITE_ARB");
         context_invalidate_state(context, STATE_RENDER(WINED3D_RS_POINTSPRITEENABLE));
     }
-    glColorMask(GL_TRUE, GL_TRUE,GL_TRUE,GL_TRUE);
+    gl_info->gl_ops.gl.p_glColorMask(GL_TRUE, GL_TRUE,GL_TRUE,GL_TRUE);
     checkGLcall("glColorMask");
     context_invalidate_state(context, STATE_RENDER(WINED3D_RS_COLORWRITEENABLE));
     context_invalidate_state(context, STATE_RENDER(WINED3D_RS_COLORWRITEENABLE1));
@@ -1817,35 +1841,36 @@ static void SetupForBlit(const struct wined3d_device *device, struct wined3d_con
     context_invalidate_state(context, STATE_RENDER(WINED3D_RS_COLORWRITEENABLE3));
     if (gl_info->supported[EXT_SECONDARY_COLOR])
     {
-        glDisable(GL_COLOR_SUM_EXT);
+        gl_info->gl_ops.gl.p_glDisable(GL_COLOR_SUM_EXT);
         context_invalidate_state(context, STATE_RENDER(WINED3D_RS_SPECULARENABLE));
         checkGLcall("glDisable(GL_COLOR_SUM_EXT)");
     }
 
     /* Setup transforms */
-    glMatrixMode(GL_MODELVIEW);
+    gl_info->gl_ops.gl.p_glMatrixMode(GL_MODELVIEW);
     checkGLcall("glMatrixMode(GL_MODELVIEW)");
-    glLoadIdentity();
+    gl_info->gl_ops.gl.p_glLoadIdentity();
     checkGLcall("glLoadIdentity()");
     context_invalidate_state(context, STATE_TRANSFORM(WINED3D_TS_WORLD_MATRIX(0)));
 
     context->last_was_rhw = TRUE;
     context_invalidate_state(context, STATE_VDECL); /* because of last_was_rhw = TRUE */
 
-    glDisable(GL_CLIP_PLANE0); checkGLcall("glDisable(clip plane 0)");
-    glDisable(GL_CLIP_PLANE1); checkGLcall("glDisable(clip plane 1)");
-    glDisable(GL_CLIP_PLANE2); checkGLcall("glDisable(clip plane 2)");
-    glDisable(GL_CLIP_PLANE3); checkGLcall("glDisable(clip plane 3)");
-    glDisable(GL_CLIP_PLANE4); checkGLcall("glDisable(clip plane 4)");
-    glDisable(GL_CLIP_PLANE5); checkGLcall("glDisable(clip plane 5)");
+    gl_info->gl_ops.gl.p_glDisable(GL_CLIP_PLANE0); checkGLcall("glDisable(clip plane 0)");
+    gl_info->gl_ops.gl.p_glDisable(GL_CLIP_PLANE1); checkGLcall("glDisable(clip plane 1)");
+    gl_info->gl_ops.gl.p_glDisable(GL_CLIP_PLANE2); checkGLcall("glDisable(clip plane 2)");
+    gl_info->gl_ops.gl.p_glDisable(GL_CLIP_PLANE3); checkGLcall("glDisable(clip plane 3)");
+    gl_info->gl_ops.gl.p_glDisable(GL_CLIP_PLANE4); checkGLcall("glDisable(clip plane 4)");
+    gl_info->gl_ops.gl.p_glDisable(GL_CLIP_PLANE5); checkGLcall("glDisable(clip plane 5)");
     context_invalidate_state(context, STATE_RENDER(WINED3D_RS_CLIPPING));
 
-    set_blit_dimension(width, height);
-    device->frag_pipe->enable_extension(FALSE);
+    set_blit_dimension(gl_info, rt_size.cx, rt_size.cy);
+    device->frag_pipe->enable_extension(gl_info, FALSE);
 
     LEAVE_GL();
 
-    context->blit_w = width; context->blit_h = height;
+    context->blit_w = rt_size.cx;
+    context->blit_h = rt_size.cy;
     context_invalidate_state(context, STATE_VIEWPORT);
     context_invalidate_state(context, STATE_TRANSFORM(WINED3D_TS_PROJECTION));
 }
@@ -1863,21 +1888,22 @@ static inline GLenum draw_buffer_from_rt_mask(DWORD rt_mask)
 /* Context activation and GL locking are done by the caller. */
 static void context_apply_draw_buffers(struct wined3d_context *context, DWORD rt_mask)
 {
+    const struct wined3d_gl_info *gl_info = context->gl_info;
+
     if (!rt_mask)
     {
-        glDrawBuffer(GL_NONE);
+        gl_info->gl_ops.gl.p_glDrawBuffer(GL_NONE);
         checkGLcall("glDrawBuffer()");
     }
     else if (is_rt_mask_onscreen(rt_mask))
     {
-        glDrawBuffer(draw_buffer_from_rt_mask(rt_mask));
+        gl_info->gl_ops.gl.p_glDrawBuffer(draw_buffer_from_rt_mask(rt_mask));
         checkGLcall("glDrawBuffer()");
     }
     else
     {
         if (wined3d_settings.offscreen_rendering_mode == ORM_FBO)
         {
-            const struct wined3d_gl_info *gl_info = context->gl_info;
             unsigned int i = 0;
 
             while (rt_mask)
@@ -1898,7 +1924,7 @@ static void context_apply_draw_buffers(struct wined3d_context *context, DWORD rt
             }
             else
             {
-                glDrawBuffer(context->draw_buffers[0]);
+                gl_info->gl_ops.gl.p_glDrawBuffer(context->draw_buffers[0]);
                 checkGLcall("glDrawBuffer()");
             }
         }
@@ -1912,7 +1938,9 @@ static void context_apply_draw_buffers(struct wined3d_context *context, DWORD rt
 /* GL locking is done by the caller. */
 void context_set_draw_buffer(struct wined3d_context *context, GLenum buffer)
 {
-    glDrawBuffer(buffer);
+    const struct wined3d_gl_info *gl_info = context->gl_info;
+
+    gl_info->gl_ops.gl.p_glDrawBuffer(buffer);
     checkGLcall("glDrawBuffer()");
     if (context->current_fbo)
         context->current_fbo->rt_mask = context_generate_rt_mask(buffer);
@@ -1930,12 +1958,13 @@ void context_active_texture(struct wined3d_context *context, const struct wined3
 
 void context_bind_texture(struct wined3d_context *context, GLenum target, GLuint name)
 {
+    const struct wined3d_gl_info *gl_info = context->gl_info;
     DWORD unit = context->active_texture;
     DWORD old_texture_type = context->texture_type[unit];
 
     if (name)
     {
-        glBindTexture(target, name);
+        gl_info->gl_ops.gl.p_glBindTexture(target, name);
         checkGLcall("glBindTexture");
     }
     else
@@ -1953,19 +1982,19 @@ void context_bind_texture(struct wined3d_context *context, GLenum target, GLuint
                 /* nothing to do */
                 break;
             case GL_TEXTURE_2D:
-                glBindTexture(GL_TEXTURE_2D, device->dummy_texture_2d[unit]);
+                gl_info->gl_ops.gl.p_glBindTexture(GL_TEXTURE_2D, device->dummy_texture_2d[unit]);
                 checkGLcall("glBindTexture");
                 break;
             case GL_TEXTURE_RECTANGLE_ARB:
-                glBindTexture(GL_TEXTURE_RECTANGLE_ARB, device->dummy_texture_rect[unit]);
+                gl_info->gl_ops.gl.p_glBindTexture(GL_TEXTURE_RECTANGLE_ARB, device->dummy_texture_rect[unit]);
                 checkGLcall("glBindTexture");
                 break;
             case GL_TEXTURE_CUBE_MAP:
-                glBindTexture(GL_TEXTURE_CUBE_MAP, device->dummy_texture_cube[unit]);
+                gl_info->gl_ops.gl.p_glBindTexture(GL_TEXTURE_CUBE_MAP, device->dummy_texture_cube[unit]);
                 checkGLcall("glBindTexture");
                 break;
             case GL_TEXTURE_3D:
-                glBindTexture(GL_TEXTURE_3D, device->dummy_texture_3d[unit]);
+                gl_info->gl_ops.gl.p_glBindTexture(GL_TEXTURE_3D, device->dummy_texture_3d[unit]);
                 checkGLcall("glBindTexture");
                 break;
             default:
@@ -2042,7 +2071,7 @@ static DWORD context_generate_rt_mask_no_fbo(const struct wined3d_device *device
 void context_apply_blit_state(struct wined3d_context *context, const struct wined3d_device *device)
 {
     struct wined3d_surface *rt = context->current_rt;
-    DWORD rt_mask, old_mask;
+    DWORD rt_mask, *cur_mask;
 
     if (wined3d_settings.offscreen_rendering_mode == ORM_FBO)
     {
@@ -2073,13 +2102,13 @@ void context_apply_blit_state(struct wined3d_context *context, const struct wine
         rt_mask = context_generate_rt_mask_no_fbo(device, rt);
     }
 
-    old_mask = context->current_fbo ? context->current_fbo->rt_mask : context->draw_buffers_mask;
+    cur_mask = context->current_fbo ? &context->current_fbo->rt_mask : &context->draw_buffers_mask;
 
     ENTER_GL();
-    if (rt_mask != old_mask)
+    if (rt_mask != *cur_mask)
     {
         context_apply_draw_buffers(context, rt_mask);
-        context->draw_buffers_mask = rt_mask;
+        *cur_mask = rt_mask;
     }
 
     if (wined3d_settings.offscreen_rendering_mode == ORM_FBO)
@@ -2113,7 +2142,8 @@ static BOOL context_validate_rt_config(UINT rt_count,
 BOOL context_apply_clear_state(struct wined3d_context *context, const struct wined3d_device *device,
         UINT rt_count, const struct wined3d_fb_state *fb)
 {
-    DWORD rt_mask = 0, old_mask;
+    const struct wined3d_gl_info *gl_info = context->gl_info;
+    DWORD rt_mask = 0, *cur_mask;
     UINT i;
     struct wined3d_surface **rts = fb->render_targets;
 
@@ -2144,7 +2174,7 @@ BOOL context_apply_clear_state(struct wined3d_context *context, const struct win
                 }
                 context_apply_fbo_state(context, GL_FRAMEBUFFER, context->blit_targets, fb->depth_stencil,
                         rt_count ? rts[0]->draw_binding : SFLAG_INTEXTURE);
-                glReadBuffer(GL_NONE);
+                gl_info->gl_ops.gl.p_glReadBuffer(GL_NONE);
                 checkGLcall("glReadBuffer");
             }
             else
@@ -2178,13 +2208,13 @@ BOOL context_apply_clear_state(struct wined3d_context *context, const struct win
         rt_mask = context_generate_rt_mask_no_fbo(device, rt_count ? rts[0] : NULL);
     }
 
-    old_mask = context->current_fbo ? context->current_fbo->rt_mask : context->draw_buffers_mask;
+    cur_mask = context->current_fbo ? &context->current_fbo->rt_mask : &context->draw_buffers_mask;
 
     ENTER_GL();
-    if (rt_mask != old_mask)
+    if (rt_mask != *cur_mask)
     {
         context_apply_draw_buffers(context, rt_mask);
-        context->draw_buffers_mask = rt_mask;
+        *cur_mask = rt_mask;
         context_invalidate_state(context, STATE_FRAMEBUFFER);
     }
 
@@ -2195,15 +2225,15 @@ BOOL context_apply_clear_state(struct wined3d_context *context, const struct win
 
     if (context->last_was_blit)
     {
-        device->frag_pipe->enable_extension(TRUE);
+        device->frag_pipe->enable_extension(gl_info, TRUE);
         context->last_was_blit = FALSE;
     }
 
     /* Blending and clearing should be orthogonal, but tests on the nvidia
      * driver show that disabling blending when clearing improves the clearing
      * performance incredibly. */
-    glDisable(GL_BLEND);
-    glEnable(GL_SCISSOR_TEST);
+    gl_info->gl_ops.gl.p_glDisable(GL_BLEND);
+    gl_info->gl_ops.gl.p_glEnable(GL_SCISSOR_TEST);
     checkGLcall("glEnable GL_SCISSOR_TEST");
     LEAVE_GL();
 
@@ -2245,9 +2275,10 @@ static DWORD find_draw_buffers_mask(const struct wined3d_context *context, const
 void context_state_fb(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
 {
     const struct wined3d_device *device = context->swapchain->device;
+    const struct wined3d_gl_info *gl_info = context->gl_info;
     const struct wined3d_fb_state *fb = state->fb;
     DWORD rt_mask = find_draw_buffers_mask(context, device);
-    DWORD old_mask;
+    DWORD *cur_mask;
 
     if (wined3d_settings.offscreen_rendering_mode == ORM_FBO)
     {
@@ -2259,16 +2290,16 @@ void context_state_fb(struct wined3d_context *context, const struct wined3d_stat
         {
             context_apply_fbo_state(context, GL_FRAMEBUFFER, fb->render_targets, fb->depth_stencil,
                     fb->render_targets[0]->draw_binding);
-            glReadBuffer(GL_NONE);
+            gl_info->gl_ops.gl.p_glReadBuffer(GL_NONE);
             checkGLcall("glReadBuffer");
         }
     }
 
-    old_mask = context->current_fbo ? context->current_fbo->rt_mask : context->draw_buffers_mask;
-    if (rt_mask != old_mask)
+    cur_mask = context->current_fbo ? &context->current_fbo->rt_mask : &context->draw_buffers_mask;
+    if (rt_mask != *cur_mask)
     {
         context_apply_draw_buffers(context, rt_mask);
-        context->draw_buffers_mask = rt_mask;
+        *cur_mask = rt_mask;
     }
 }
 
@@ -2276,16 +2307,16 @@ void context_state_fb(struct wined3d_context *context, const struct wined3d_stat
 void context_state_drawbuf(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
 {
     const struct wined3d_device *device = context->swapchain->device;
-    DWORD rt_mask, old_mask;
+    DWORD rt_mask, *cur_mask;
 
     if (isStateDirty(context, STATE_FRAMEBUFFER)) return;
 
-    old_mask = context->current_fbo ? context->current_fbo->rt_mask : context->draw_buffers_mask;
+    cur_mask = context->current_fbo ? &context->current_fbo->rt_mask : &context->draw_buffers_mask;
     rt_mask = find_draw_buffers_mask(context, device);
-    if (rt_mask != old_mask)
+    if (rt_mask != *cur_mask)
     {
         context_apply_draw_buffers(context, rt_mask);
-        context->draw_buffers_mask = rt_mask;
+        *cur_mask = rt_mask;
     }
 }
 
@@ -2313,12 +2344,17 @@ BOOL context_apply_draw_state(struct wined3d_context *context, struct wined3d_de
     device_preload_textures(device);
     if (isStateDirty(context, STATE_VDECL) || isStateDirty(context, STATE_STREAMSRC))
         device_update_stream_info(device, context->gl_info);
+    if (state->index_buffer && !state->user_stream)
+    {
+        if (device->strided_streams.all_vbo)
+            wined3d_buffer_preload(state->index_buffer);
+        else
+            buffer_get_sysmem(state->index_buffer, context->gl_info);
+    }
 
     ENTER_GL();
     if (context->last_was_blit)
-    {
-        device->frag_pipe->enable_extension(TRUE);
-    }
+        device->frag_pipe->enable_extension(context->gl_info, TRUE);
 
     for (i = 0; i < context->numDirtyEntries; ++i)
     {
@@ -2362,7 +2398,7 @@ static void context_setup_target(struct wined3d_context *context, struct wined3d
         if (old->id != new->id)
         {
             /* Disable blending when the alpha mask has changed and when a format doesn't support blending. */
-            if ((old->alpha_mask && !new->alpha_mask) || (!old->alpha_mask && new->alpha_mask)
+            if ((old->alpha_size && !new->alpha_size) || (!old->alpha_size && new->alpha_size)
                     || !(new->flags & WINED3DFMT_FLAG_POSTPIXELSHADER_BLENDING))
                 context_invalidate_state(context, STATE_RENDER(WINED3D_RS_ALPHABLENDENABLE));
 
@@ -2458,7 +2494,7 @@ struct wined3d_context *context_acquire(const struct wined3d_device *device, str
         else
         {
             ENTER_GL();
-            device->frag_pipe->enable_extension(!context->last_was_blit);
+            device->frag_pipe->enable_extension(context->gl_info, !context->last_was_blit);
             LEAVE_GL();
         }
     }
