@@ -5,11 +5,7 @@ add_definitions(
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-set_rc_compiler()
-
 spec2def(ddraw.dll ddraw.spec ADD_IMPORTLIB)
-
-add_idl_reg_script(ddraw_classes.idl)
 
 list(APPEND SOURCE
     clipper.c
@@ -26,8 +22,7 @@ list(APPEND SOURCE
     vertexbuffer.c
     viewport.c
     ${CMAKE_CURRENT_BINARY_DIR}/ddraw_stubs.c
-    ${CMAKE_CURRENT_BINARY_DIR}/ddraw.def
-    ${CMAKE_CURRENT_BINARY_DIR}/ddraw_classes_r.res)
+    ${CMAKE_CURRENT_BINARY_DIR}/ddraw.def)
 
 add_library(ddraw SHARED
     ${SOURCE}
