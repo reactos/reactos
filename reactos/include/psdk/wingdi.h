@@ -1233,6 +1233,11 @@ extern "C" {
 #define DM_DISPLAYFIXEDOUTPUT 0x20000000
 #endif
 
+#define DMDO_DEFAULT            0
+#define DMDO_90                 1
+#define DMDO_180                2
+#define DMDO_270                3
+
 #define DMICMMETHOD_NONE	1
 #define DMICMMETHOD_SYSTEM	2
 #define DMICMMETHOD_DRIVER	3
