@@ -152,8 +152,8 @@ static NTSTATUS NTAPI SendComplete
 
     ASSERT(SendLength == 0);
 
-   while( !HaltSendQueue && !IsListEmpty( &FCB->PendingIrpList[FUNCTION_SEND] ) ) {
-        NextIrpEntry = RemoveHeadList(&FCB->PendingIrpList[FUNCTION_SEND]);
+   if ( !HaltSendQueue && !IsListEmpty( &FCB->PendingIrpList[FUNCTION_SEND] ) ) {
+        NextIrpEntry = FCB->PendingIrpList[FUNCTION_SEND].Flink;
         NextIrp = CONTAINING_RECORD(NextIrpEntry, IRP, Tail.Overlay.ListEntry);
         NextIrpSp = IoGetCurrentIrpStackLocation( NextIrp );
         SendReq = GetLockedData(NextIrp, NextIrpSp);
@@ -178,8 +178,7 @@ static NTSTATUS NTAPI SendComplete
            if (SendLength <= FCB->Send.Size && !((SendReq->AfdFlags & AFD_IMMEDIATE) || (FCB->NonBlocking)))
            {
                FCB->PollState &= ~AFD_EVENT_SEND;
-               InsertHeadList(&FCB->PendingIrpList[FUNCTION_SEND],
-                              &NextIrp->Tail.Overlay.ListEntry);
+
                NextIrp = NULL;
            }
 
@@ -191,30 +190,31 @@ static NTSTATUS NTAPI SendComplete
                /* We should never be non-overlapped and get to this point */
                ASSERT(SendReq->AfdFlags & AFD_OVERLAPPED);
 
-               InsertHeadList(&FCB->PendingIrpList[FUNCTION_SEND],
-                              &NextIrp->Tail.Overlay.ListEntry);
                NextIrp = NULL;
            }
         }
 
-        if (NextIrp == NULL)
-            break;
+        if (NextIrp != NULL)
+        {
+            for( i = 0; i < SendReq->BufferCount; i++ ) {
+                BytesCopied = MIN(SendReq->BufferArray[i].len, SpaceAvail);
 
-        for( i = 0; i < SendReq->BufferCount; i++ ) {
-            BytesCopied = MIN(SendReq->BufferArray[i].len, SpaceAvail);
+                Map[i].BufferAddress =
+                   MmMapLockedPages( Map[i].Mdl, KernelMode );
 
-            Map[i].BufferAddress =
-                MmMapLockedPages( Map[i].Mdl, KernelMode );
+                RtlCopyMemory( FCB->Send.Window + FCB->Send.BytesUsed,
+                               Map[i].BufferAddress,
+                               BytesCopied );
 
-            RtlCopyMemory( FCB->Send.Window + FCB->Send.BytesUsed,
-                           Map[i].BufferAddress,
-                           BytesCopied );
+                MmUnmapLockedPages( Map[i].BufferAddress, Map[i].Mdl );
 
-            MmUnmapLockedPages( Map[i].BufferAddress, Map[i].Mdl );
+                TotalBytesCopied += BytesCopied;
+                SpaceAvail -= BytesCopied;
+                FCB->Send.BytesUsed += BytesCopied;
+            }
 
-            TotalBytesCopied += BytesCopied;
-            SpaceAvail -= BytesCopied;
-            FCB->Send.BytesUsed += BytesCopied;
+            NextIrp->IoStatus.Information = TotalBytesCopied;
+            NextIrp->Tail.Overlay.DriverContext[3] = (PVOID)NextIrp->IoStatus.Information;
         }
     }
 
