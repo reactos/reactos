@@ -109,3 +109,21 @@ function(add_iid_library TARGET)
 	add_dependencies(${TARGET} psdk)
     set_target_properties(${TARGET} PROPERTIES EXCLUDE_FROM_ALL TRUE)
 endfunction()
+
+function(add_idl_reg_script IDL_FILE)
+    get_filename_component(FILE ${IDL_FILE} NAME)
+    if(FILE STREQUAL "${IDL_FILE}")
+        set(IDL_FILE_FULL "${CMAKE_CURRENT_SOURCE_DIR}/${IDL_FILE}")
+    else()
+        set(IDL_FILE_FULL ${IDL_FILE})
+    endif()
+    get_includes(INCLUDES)
+    get_defines(DEFINES)
+    get_filename_component(NAME ${IDL_FILE} NAME_WE)
+    add_custom_command(
+        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_r.res
+        COMMAND native-widl ${INCLUDES} ${DEFINES} ${IDL_FLAGS} -r -o ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_r.res ${IDL_FILE_FULL}
+        DEPENDS ${IDL_FILE_FULL} native-widl)
+    set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${NAME}_r.res PROPERTIES 
+        GENERATED TRUE EXTERNAL_OBJECT TRUE)
+endfunction()
