@@ -11,18 +11,18 @@ LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
 IDD_ABOUT DIALOGEX 10, 10, 130, 62
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "Про програму"
+CAPTION "РџСЂРѕ РїСЂРѕРіСЂР°РјСѓ"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON           IDI_MAIN,                     IDC_STATIC, 10, 10, 20, 20
-    LTEXT          "Редактор VGA-шрифтів ReactOS",    IDC_STATIC, 37, 10, 93, 10
+    LTEXT          "Р РµРґР°РєС‚РѕСЂ VGA-С€СЂРёС„С‚С–РІ ReactOS",    IDC_STATIC, 37, 10, 93, 10
     LTEXT          "Copyright 2008 Colin Finck", IDC_STATIC, 37, 20, 93, 10
     DEFPUSHBUTTON  "OK",                         IDCANCEL,   40, 44, 55, 15
 END
 
 IDD_EDITGLYPH DIALOGEX 32768, 32768, 246, 197
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Редагування символа"
+CAPTION "Р РµРґР°РіСѓРІР°РЅРЅСЏ СЃРёРјРІРѕР»Р°"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_EDIT_GLYPH_TOOLBOX, TOOLBARCLASSNAMEA,          CCS_NODIVIDER | CCS_NORESIZE, 5, 5, 24, 82
@@ -30,65 +30,65 @@ BEGIN
     CONTROL "", IDC_EDIT_GLYPH_PREVIEW, EDIT_GLYPH_PREVIEW_CLASSW,  0, 209, 5, 32, 32
 
     DEFPUSHBUTTON "OK", IDOK, 48, 177, 70, 14
-    PUSHBUTTON "Скасувати", IDCANCEL, 125, 177, 70, 14
+    PUSHBUTTON "РЎРєР°СЃСѓРІР°С‚Рё", IDCANCEL, 125, 177, 70, 14
 END
 
 IDM_MAINMENU MENU
 BEGIN
-    POPUP "&Файл"
+    POPUP "&Р¤Р°Р№Р»"
     BEGIN
-        MENUITEM "&Створити\tCtrl+N", ID_FILE_NEW
-        MENUITEM "&Відкрити...\tCtrl+O", ID_FILE_OPEN
-        MENUITEM "&Закрити", ID_FILE_CLOSE
+        MENUITEM "&РЎС‚РІРѕСЂРёС‚Рё\tCtrl+N", ID_FILE_NEW
+        MENUITEM "&Р’С–РґРєСЂРёС‚Рё...\tCtrl+O", ID_FILE_OPEN
+        MENUITEM "&Р—Р°РєСЂРёС‚Рё", ID_FILE_CLOSE
         MENUITEM SEPARATOR
-        MENUITEM "З&берегти\tCtrl+S", ID_FILE_SAVE
-        MENUITEM "Зберегти &як...", ID_FILE_SAVE_AS
+        MENUITEM "Р—&Р±РµСЂРµРіС‚Рё\tCtrl+S", ID_FILE_SAVE
+        MENUITEM "Р—Р±РµСЂРµРіС‚Рё &СЏРє...", ID_FILE_SAVE_AS
         MENUITEM SEPARATOR
-        MENUITEM "В&ихід\tAlt+F4", ID_FILE_EXIT
+        MENUITEM "Р’&РёС…С–Рґ\tAlt+F4", ID_FILE_EXIT
     END
 
-    POPUP "&Правка"
+    POPUP "&РџСЂР°РІРєР°"
     BEGIN
-        MENUITEM "Копіювати\tCtrl+C", ID_EDIT_COPY
-        MENUITEM "Вставити\tCtrl+V", ID_EDIT_PASTE
+        MENUITEM "РљРѕРїС–СЋРІР°С‚Рё\tCtrl+C", ID_EDIT_COPY
+        MENUITEM "Р’СЃС‚Р°РІРёС‚Рё\tCtrl+V", ID_EDIT_PASTE
         MENUITEM SEPARATOR
-        MENUITEM "Редагувати символ...", ID_EDIT_GLYPH
+        MENUITEM "Р РµРґР°РіСѓРІР°С‚Рё СЃРёРјРІРѕР»...", ID_EDIT_GLYPH
     END
 
-    POPUP "&Вікно"
+    POPUP "&Р’С–РєРЅРѕ"
     BEGIN
-        MENUITEM "&Каскадом", ID_WINDOW_CASCADE
-        MENUITEM "&Горизонтально", ID_WINDOW_TILE_HORZ
-        MENUITEM "&Вертикально", ID_WINDOW_TILE_VERT
-        MENUITEM "Упорядкувати &значки", ID_WINDOW_ARRANGE
+        MENUITEM "&РљР°СЃРєР°РґРѕРј", ID_WINDOW_CASCADE
+        MENUITEM "&Р“РѕСЂРёР·РѕРЅС‚Р°Р»СЊРЅРѕ", ID_WINDOW_TILE_HORZ
+        MENUITEM "&Р’РµСЂС‚РёРєР°Р»СЊРЅРѕ", ID_WINDOW_TILE_VERT
+        MENUITEM "РЈРїРѕСЂСЏРґРєСѓРІР°С‚Рё &Р·РЅР°С‡РєРё", ID_WINDOW_ARRANGE
         MENUITEM SEPARATOR
-        MENUITEM "&Наступне\tCtrl+F6", ID_WINDOW_NEXT
+        MENUITEM "&РќР°СЃС‚СѓРїРЅРµ\tCtrl+F6", ID_WINDOW_NEXT
     END
 
-    POPUP "&Довідка"
+    POPUP "&Р”РѕРІС–РґРєР°"
     BEGIN
-        MENUITEM "&Про програму...", ID_HELP_ABOUT
+        MENUITEM "&РџСЂРѕ РїСЂРѕРіСЂР°РјСѓ...", ID_HELP_ABOUT
     END
 END
 
 STRINGTABLE
 BEGIN
-    IDS_OPENFILTER, "Всі підтримувані формати (*.bin,*.psf)|*.bin;*.psf|Двійкові файли шрифтів (*.bin)|*.bin|Екранні шрифти ПК версії 1 (*.psf)|*.psf|"
-    IDS_SAVEFILTER, "Двійкові файли шрифтів (*.bin)|*.bin|"
-    IDS_OPENERROR, "Помилка при відкритті файлу! (Номер помилки %1!u!)"
-    IDS_READERROR, "Помилка при читанні файлу! (Номер помилки %1!u!)"
-    IDS_WRITEERROR, "Помилка при запису файлу! (Номер помилки %1!u!)"
-    IDS_UNSUPPORTEDFORMAT, "Непідтримуваний формат файлу!"
-    IDS_UNSUPPORTEDPSF, "Непідтримуваний формат PSF шрифта! Редактор підтримує тільки шрифти 8x8 без спеціальних режимів."
-    IDS_DOCNAME, "Шрифт %1!u!"
-    IDS_SAVEPROMPT, "Файл ""%1"" був змінений, але не збережений.\n\nЗберегти його?"
-    IDS_APPTITLE, "Редактор VGA-шрифтів ReactOS"
-    IDS_CLOSEEDIT, "Будь ласка закрийте всі відкриті вікна Редагування спочатку!"
+    IDS_OPENFILTER, "Р’СЃС– РїС–РґС‚СЂРёРјСѓРІР°РЅС– С„РѕСЂРјР°С‚Рё (*.bin,*.psf)|*.bin;*.psf|Р”РІС–Р№РєРѕРІС– С„Р°Р№Р»Рё С€СЂРёС„С‚С–РІ (*.bin)|*.bin|Р•РєСЂР°РЅРЅС– С€СЂРёС„С‚Рё РџРљ РІРµСЂСЃС–С— 1 (*.psf)|*.psf|"
+    IDS_SAVEFILTER, "Р”РІС–Р№РєРѕРІС– С„Р°Р№Р»Рё С€СЂРёС„С‚С–РІ (*.bin)|*.bin|"
+    IDS_OPENERROR, "РџРѕРјРёР»РєР° РїСЂРё РІС–РґРєСЂРёС‚С‚С– С„Р°Р№Р»Сѓ! (РќРѕРјРµСЂ РїРѕРјРёР»РєРё %1!u!)"
+    IDS_READERROR, "РџРѕРјРёР»РєР° РїСЂРё С‡РёС‚Р°РЅРЅС– С„Р°Р№Р»Сѓ! (РќРѕРјРµСЂ РїРѕРјРёР»РєРё %1!u!)"
+    IDS_WRITEERROR, "РџРѕРјРёР»РєР° РїСЂРё Р·Р°РїРёСЃСѓ С„Р°Р№Р»Сѓ! (РќРѕРјРµСЂ РїРѕРјРёР»РєРё %1!u!)"
+    IDS_UNSUPPORTEDFORMAT, "РќРµРїС–РґС‚СЂРёРјСѓРІР°РЅРёР№ С„РѕСЂРјР°С‚ С„Р°Р№Р»Сѓ!"
+    IDS_UNSUPPORTEDPSF, "РќРµРїС–РґС‚СЂРёРјСѓРІР°РЅРёР№ С„РѕСЂРјР°С‚ PSF С€СЂРёС„С‚Р°! Р РµРґР°РєС‚РѕСЂ РїС–РґС‚СЂРёРјСѓС” С‚С–Р»СЊРєРё С€СЂРёС„С‚Рё 8x8 Р±РµР· СЃРїРµС†С–Р°Р»СЊРЅРёС… СЂРµР¶РёРјС–РІ."
+    IDS_DOCNAME, "РЁСЂРёС„С‚ %1!u!"
+    IDS_SAVEPROMPT, "Р¤Р°Р№Р» ""%1"" Р±СѓРІ Р·РјС–РЅРµРЅРёР№, Р°Р»Рµ РЅРµ Р·Р±РµСЂРµР¶РµРЅРёР№.\n\nР—Р±РµСЂРµРіС‚Рё Р№РѕРіРѕ?"
+    IDS_APPTITLE, "Р РµРґР°РєС‚РѕСЂ VGA-С€СЂРёС„С‚С–РІ ReactOS"
+    IDS_CLOSEEDIT, "Р‘СѓРґСЊ Р»Р°СЃРєР° Р·Р°РєСЂРёР№С‚Рµ РІСЃС– РІС–РґРєСЂРёС‚С– РІС–РєРЅР° Р РµРґР°РіСѓРІР°РЅРЅСЏ СЃРїРѕС‡Р°С‚РєСѓ!"
 
-    IDS_TOOLTIP_NEW, "Створити"
-    IDS_TOOLTIP_OPEN, "Відкрити"
-    IDS_TOOLTIP_SAVE, "Зберегти"
-    IDS_TOOLTIP_EDIT_GLYPH, "Редагувати символ"
-    IDS_TOOLTIP_COPY, "Копіювати"
-    IDS_TOOLTIP_PASTE, "Вставити"
+    IDS_TOOLTIP_NEW, "РЎС‚РІРѕСЂРёС‚Рё"
+    IDS_TOOLTIP_OPEN, "Р’С–РґРєСЂРёС‚Рё"
+    IDS_TOOLTIP_SAVE, "Р—Р±РµСЂРµРіС‚Рё"
+    IDS_TOOLTIP_EDIT_GLYPH, "Р РµРґР°РіСѓРІР°С‚Рё СЃРёРјРІРѕР»"
+    IDS_TOOLTIP_COPY, "РљРѕРїС–СЋРІР°С‚Рё"
+    IDS_TOOLTIP_PASTE, "Р’СЃС‚Р°РІРёС‚Рё"
 END

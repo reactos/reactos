@@ -22,7 +22,7 @@ END
 
 IDD_EDITGLYPH DIALOGEX 32768, 32768, 246, 197
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Edycja Glifów"
+CAPTION "Edycja GlifÃ³w"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_EDIT_GLYPH_TOOLBOX, TOOLBARCLASSNAMEA,          CCS_NODIVIDER | CCS_NORESIZE, 5, 5, 24, 82
@@ -38,13 +38,13 @@ BEGIN
     POPUP "&Plik"
     BEGIN
         MENUITEM "&Nowy\tCtrl+N", ID_FILE_NEW
-        MENUITEM "&Otwórz.\tCtrl+O", ID_FILE_OPEN
+        MENUITEM "&OtwÃ³rz.\tCtrl+O", ID_FILE_OPEN
         MENUITEM "Zamknij", ID_FILE_CLOSE
         MENUITEM SEPARATOR
         MENUITEM "Zapisz\tCtrl+S", ID_FILE_SAVE
         MENUITEM "Zapisz jako", ID_FILE_SAVE_AS
         MENUITEM SEPARATOR
-        MENUITEM "WyjdŸ\tAlt+F4", ID_FILE_EXIT
+        MENUITEM "WyjdÅº\tAlt+F4", ID_FILE_EXIT
     END
 
     POPUP "&Edit"
@@ -60,9 +60,9 @@ BEGIN
         MENUITEM "&Kaskadowo", ID_WINDOW_CASCADE
         MENUITEM "Ustaw &poziomo", ID_WINDOW_TILE_HORZ
         MENUITEM "Ustaw pio&nowo", ID_WINDOW_TILE_VERT
-        MENUITEM "&Uporz¹dkuj ikony", ID_WINDOW_ARRANGE
+        MENUITEM "&UporzÄ…dkuj ikony", ID_WINDOW_ARRANGE
         MENUITEM SEPARATOR
-        MENUITEM "Nas&têpne\tCtrl+F6", ID_WINDOW_NEXT
+        MENUITEM "Nas&tÄ™pne\tCtrl+F6", ID_WINDOW_NEXT
     END
 
     POPUP "&Pomoc"
@@ -73,20 +73,20 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_OPENFILTER, "Wszystkie obs³ugiwane (*.bin,*.psf)|*.bin;*.psf|Czcionki binarne (*.bin)|*.bin|Czcionki PSF V1 (*.psf)|*.psf|"
+    IDS_OPENFILTER, "Wszystkie obsÅ‚ugiwane (*.bin,*.psf)|*.bin;*.psf|Czcionki binarne (*.bin)|*.bin|Czcionki PSF V1 (*.psf)|*.psf|"
     IDS_SAVEFILTER, "Czcionki binarne (*.bin)|*.bin|"
-    IDS_OPENERROR, "B³¹d poczas otwierania pliku! (B³¹d nr. %1!u!)"
-    IDS_READERROR, "B³¹d poczas wczytywania pliku! (B³¹d nr. %1!u!)"
-    IDS_WRITEERROR, "B³¹d podczas zapisu do pliku! (B³¹d nr. %1!u!)"
-    IDS_UNSUPPORTEDFORMAT, "Nieobs³ugiwany format czcionki!"
-    IDS_UNSUPPORTEDPSF, "Nieobs³ugiwana wersja PSF! Edytor obs³uguje wy³¹cznie czcionki rozmiaru 8x8, bez dodatków."
+    IDS_OPENERROR, "BÅ‚Ä…d poczas otwierania pliku! (BÅ‚Ä…d nr. %1!u!)"
+    IDS_READERROR, "BÅ‚Ä…d poczas wczytywania pliku! (BÅ‚Ä…d nr. %1!u!)"
+    IDS_WRITEERROR, "BÅ‚Ä…d podczas zapisu do pliku! (BÅ‚Ä…d nr. %1!u!)"
+    IDS_UNSUPPORTEDFORMAT, "NieobsÅ‚ugiwany format czcionki!"
+    IDS_UNSUPPORTEDPSF, "NieobsÅ‚ugiwana wersja PSF! Edytor obsÅ‚uguje wyÅ‚Ä…cznie czcionki rozmiaru 8x8, bez dodatkÃ³w."
     IDS_DOCNAME, "Czcionka %1!u!"
-    IDS_SAVEPROMPT, "Plik ""%1"" zosta³ zmieniony, ale nie zapisany.\n\nCzy chcesz zapisaæ zmiany?"
+    IDS_SAVEPROMPT, "Plik ""%1"" zostaÅ‚ zmieniony, ale nie zapisany.\n\nCzy chcesz zapisaÄ‡ zmiany?"
     IDS_APPTITLE, "Edytor czcionek VGA dla ReactOS"
-    IDS_CLOSEEDIT, "Proszê najpierw zamkn¹æ wszystkie okna Edycji!"
+    IDS_CLOSEEDIT, "ProszÄ™ najpierw zamknÄ…Ä‡ wszystkie okna Edycji!"
 
     IDS_TOOLTIP_NEW, "Nowy"
-    IDS_TOOLTIP_OPEN, "Otwórz"
+    IDS_TOOLTIP_OPEN, "OtwÃ³rz"
     IDS_TOOLTIP_SAVE, "Zapisz"
     IDS_TOOLTIP_EDIT_GLYPH, "Edytuj Glify"
     IDS_TOOLTIP_COPY, "Copy"

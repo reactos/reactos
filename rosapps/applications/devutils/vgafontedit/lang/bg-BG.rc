@@ -11,84 +11,84 @@ LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
 IDD_ABOUT DIALOGEX 10, 10, 185, 62
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "За"
+CAPTION "Р—Р°"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON           IDI_MAIN,                     IDC_STATIC, 10, 10, 20, 20
-    LTEXT          "Шрифтовия обработчик на РеактОС",    IDC_STATIC, 37, 10, 145, 10
-    LTEXT          "Възпроизводствено право 2008 Colin Finck", IDC_STATIC, 37, 20, 145, 10
-    DEFPUSHBUTTON  "Добре",                         IDCANCEL,   70, 44, 55, 15
+    LTEXT          "РЁСЂРёС„С‚РѕРІРёСЏ РѕР±СЂР°Р±РѕС‚С‡РёРє РЅР° Р РµР°РєС‚РћРЎ",    IDC_STATIC, 37, 10, 145, 10
+    LTEXT          "Р’СЉР·РїСЂРѕРёР·РІРѕРґСЃС‚РІРµРЅРѕ РїСЂР°РІРѕ 2008 Colin Finck", IDC_STATIC, 37, 20, 145, 10
+    DEFPUSHBUTTON  "Р”РѕР±СЂРµ",                         IDCANCEL,   70, 44, 55, 15
 END
 
 IDD_EDITGLYPH DIALOGEX 32768, 32768, 246, 197
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Обработка на знак"
+CAPTION "РћР±СЂР°Р±РѕС‚РєР° РЅР° Р·РЅР°Рє"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_EDIT_GLYPH_TOOLBOX, TOOLBARCLASSNAMEA,          CCS_NODIVIDER | CCS_NORESIZE, 5, 5, 24, 82
     CONTROL "", IDC_EDIT_GLYPH_EDIT,    EDIT_GLYPH_EDIT_CLASSW,     0, 39, 5, 160, 160
     CONTROL "", IDC_EDIT_GLYPH_PREVIEW, EDIT_GLYPH_PREVIEW_CLASSW,  0, 209, 5, 32, 32
 
-    DEFPUSHBUTTON "Добре", IDOK, 48, 177, 70, 14
-    PUSHBUTTON "Отказ", IDCANCEL, 125, 177, 70, 14
+    DEFPUSHBUTTON "Р”РѕР±СЂРµ", IDOK, 48, 177, 70, 14
+    PUSHBUTTON "РћС‚РєР°Р·", IDCANCEL, 125, 177, 70, 14
 END
 
 IDM_MAINMENU MENU
 BEGIN
-    POPUP "&Файл"
+    POPUP "&Р¤Р°Р№Р»"
     BEGIN
-        MENUITEM "&Нов\tCtrl+N", ID_FILE_NEW
-        MENUITEM "&Отваряне...\tCtrl+O", ID_FILE_OPEN
-        MENUITEM "Затваряне", ID_FILE_CLOSE
+        MENUITEM "&РќРѕРІ\tCtrl+N", ID_FILE_NEW
+        MENUITEM "&РћС‚РІР°СЂСЏРЅРµ...\tCtrl+O", ID_FILE_OPEN
+        MENUITEM "Р—Р°С‚РІР°СЂСЏРЅРµ", ID_FILE_CLOSE
         MENUITEM SEPARATOR
-        MENUITEM "Запис\tCtrl+S", ID_FILE_SAVE
-        MENUITEM "Запис като...", ID_FILE_SAVE_AS
+        MENUITEM "Р—Р°РїРёСЃ\tCtrl+S", ID_FILE_SAVE
+        MENUITEM "Р—Р°РїРёСЃ РєР°С‚Рѕ...", ID_FILE_SAVE_AS
         MENUITEM SEPARATOR
-        MENUITEM "Изход като\tAlt+F4", ID_FILE_EXIT
+        MENUITEM "РР·С…РѕРґ РєР°С‚Рѕ\tAlt+F4", ID_FILE_EXIT
     END
 
-    POPUP "&Обработка"
+    POPUP "&РћР±СЂР°Р±РѕС‚РєР°"
     BEGIN
-        MENUITEM "&Запомняне\tCtrl+C", ID_EDIT_COPY
-        MENUITEM "&Поставяне\tCtrl+V", ID_EDIT_PASTE
+        MENUITEM "&Р—Р°РїРѕРјРЅСЏРЅРµ\tCtrl+C", ID_EDIT_COPY
+        MENUITEM "&РџРѕСЃС‚Р°РІСЏРЅРµ\tCtrl+V", ID_EDIT_PASTE
         MENUITEM SEPARATOR
-        MENUITEM "Обработка на знак...", ID_EDIT_GLYPH
+        MENUITEM "РћР±СЂР°Р±РѕС‚РєР° РЅР° Р·РЅР°Рє...", ID_EDIT_GLYPH
     END
 
-    POPUP "&Прозорец"
+    POPUP "&РџСЂРѕР·РѕСЂРµС†"
     BEGIN
-        MENUITEM "&Надипляне", ID_WINDOW_CASCADE
-        MENUITEM "&Водоравно настелване", ID_WINDOW_TILE_HORZ
-        MENUITEM "&Отвесно настелване", ID_WINDOW_TILE_VERT
-        MENUITEM "Под&реждане на значетата", ID_WINDOW_ARRANGE
+        MENUITEM "&РќР°РґРёРїР»СЏРЅРµ", ID_WINDOW_CASCADE
+        MENUITEM "&Р’РѕРґРѕСЂР°РІРЅРѕ РЅР°СЃС‚РµР»РІР°РЅРµ", ID_WINDOW_TILE_HORZ
+        MENUITEM "&РћС‚РІРµСЃРЅРѕ РЅР°СЃС‚РµР»РІР°РЅРµ", ID_WINDOW_TILE_VERT
+        MENUITEM "РџРѕРґ&СЂРµР¶РґР°РЅРµ РЅР° Р·РЅР°С‡РµС‚Р°С‚Р°", ID_WINDOW_ARRANGE
         MENUITEM SEPARATOR
-        MENUITEM "&Следващ\tCtrl+F6", ID_WINDOW_NEXT
+        MENUITEM "&РЎР»РµРґРІР°С‰\tCtrl+F6", ID_WINDOW_NEXT
     END
 
-    POPUP "Помо&щ"
+    POPUP "РџРѕРјРѕ&С‰"
     BEGIN
-        MENUITEM "&За...", ID_HELP_ABOUT
+        MENUITEM "&Р—Р°...", ID_HELP_ABOUT
     END
 END
 
 STRINGTABLE
 BEGIN
-    IDS_OPENFILTER, "Всички поддържани формати (*.bin,*.psf)|*.bin;*.psf|Двоичен шрифтов файл (*.bin)|*.bin|Екранен шрифт за ЛС, версия 1 (*.psf)|*.psf|"
-    IDS_SAVEFILTER, "Двоични шрифтови файлове (*.bin)|*.bin|"
-    IDS_OPENERROR, "Грешка при отваряне на файла! (Грешка %1!u!)"
-    IDS_READERROR, "Грешка при четене на файла! (Грешка %1!u!)"
-    IDS_WRITEERROR, "Грешка при записване на файла! (Грешка %1!u!)"
-    IDS_UNSUPPORTEDFORMAT, "Неподдържан файлов формат!"
-    IDS_UNSUPPORTEDPSF, "Неподдържан формат шрифт PSF! Обработчикът поддържа само шрифтове 8x8, без раширени режими."
-    IDS_DOCNAME, "Шрифт %1!u!"
-    IDS_SAVEPROMPT, "Файлът ""%1"" е променен, но не е съхранен.\n\nискате ли да го съхрнаите?"
-    IDS_APPTITLE, "Обработчикът на РеактОС за VGA шрифтове"
-    IDS_CLOSEEDIT, "Първо затворете всички прозорци за обработка!"
+    IDS_OPENFILTER, "Р’СЃРёС‡РєРё РїРѕРґРґСЉСЂР¶Р°РЅРё С„РѕСЂРјР°С‚Рё (*.bin,*.psf)|*.bin;*.psf|Р”РІРѕРёС‡РµРЅ С€СЂРёС„С‚РѕРІ С„Р°Р№Р» (*.bin)|*.bin|Р•РєСЂР°РЅРµРЅ С€СЂРёС„С‚ Р·Р° Р›РЎ, РІРµСЂСЃРёСЏ 1 (*.psf)|*.psf|"
+    IDS_SAVEFILTER, "Р”РІРѕРёС‡РЅРё С€СЂРёС„С‚РѕРІРё С„Р°Р№Р»РѕРІРµ (*.bin)|*.bin|"
+    IDS_OPENERROR, "Р“СЂРµС€РєР° РїСЂРё РѕС‚РІР°СЂСЏРЅРµ РЅР° С„Р°Р№Р»Р°! (Р“СЂРµС€РєР° %1!u!)"
+    IDS_READERROR, "Р“СЂРµС€РєР° РїСЂРё С‡РµС‚РµРЅРµ РЅР° С„Р°Р№Р»Р°! (Р“СЂРµС€РєР° %1!u!)"
+    IDS_WRITEERROR, "Р“СЂРµС€РєР° РїСЂРё Р·Р°РїРёСЃРІР°РЅРµ РЅР° С„Р°Р№Р»Р°! (Р“СЂРµС€РєР° %1!u!)"
+    IDS_UNSUPPORTEDFORMAT, "РќРµРїРѕРґРґСЉСЂР¶Р°РЅ С„Р°Р№Р»РѕРІ С„РѕСЂРјР°С‚!"
+    IDS_UNSUPPORTEDPSF, "РќРµРїРѕРґРґСЉСЂР¶Р°РЅ С„РѕСЂРјР°С‚ С€СЂРёС„С‚ PSF! РћР±СЂР°Р±РѕС‚С‡РёРєСЉС‚ РїРѕРґРґСЉСЂР¶Р° СЃР°РјРѕ С€СЂРёС„С‚РѕРІРµ 8x8, Р±РµР· СЂР°С€РёСЂРµРЅРё СЂРµР¶РёРјРё."
+    IDS_DOCNAME, "РЁСЂРёС„С‚ %1!u!"
+    IDS_SAVEPROMPT, "Р¤Р°Р№Р»СЉС‚ ""%1"" Рµ РїСЂРѕРјРµРЅРµРЅ, РЅРѕ РЅРµ Рµ СЃСЉС…СЂР°РЅРµРЅ.\n\nРёСЃРєР°С‚Рµ Р»Рё РґР° РіРѕ СЃСЉС…СЂРЅР°РёС‚Рµ?"
+    IDS_APPTITLE, "РћР±СЂР°Р±РѕС‚С‡РёРєСЉС‚ РЅР° Р РµР°РєС‚РћРЎ Р·Р° VGA С€СЂРёС„С‚РѕРІРµ"
+    IDS_CLOSEEDIT, "РџСЉСЂРІРѕ Р·Р°С‚РІРѕСЂРµС‚Рµ РІСЃРёС‡РєРё РїСЂРѕР·РѕСЂС†Рё Р·Р° РѕР±СЂР°Р±РѕС‚РєР°!"
 
-    IDS_TOOLTIP_NEW, "Нов"
-    IDS_TOOLTIP_OPEN, "Отваряне"
-    IDS_TOOLTIP_SAVE, "Запис"
-    IDS_TOOLTIP_EDIT_GLYPH, "Обработка на знак"
-    IDS_TOOLTIP_COPY, "Запомняне"
-    IDS_TOOLTIP_PASTE, "Поставяне"
+    IDS_TOOLTIP_NEW, "РќРѕРІ"
+    IDS_TOOLTIP_OPEN, "РћС‚РІР°СЂСЏРЅРµ"
+    IDS_TOOLTIP_SAVE, "Р—Р°РїРёСЃ"
+    IDS_TOOLTIP_EDIT_GLYPH, "РћР±СЂР°Р±РѕС‚РєР° РЅР° Р·РЅР°Рє"
+    IDS_TOOLTIP_COPY, "Р—Р°РїРѕРјРЅСЏРЅРµ"
+    IDS_TOOLTIP_PASTE, "РџРѕСЃС‚Р°РІСЏРЅРµ"
 END

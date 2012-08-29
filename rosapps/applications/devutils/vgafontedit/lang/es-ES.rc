@@ -47,7 +47,7 @@ BEGIN
         MENUITEM "Salir\tAlt+F4", ID_FILE_EXIT
     END
 
-    POPUP "&Edición"
+    POPUP "&EdiciÃ³n"
     BEGIN
         MENUITEM "Copiar\tCtrl+C", ID_EDIT_COPY
         MENUITEM "Pegar\tCtrl+V", ID_EDIT_PASTE
@@ -73,17 +73,17 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_OPENFILTER, "Todos los formatos soportados (*.bin,*.psf)|*.bin;*.psf|Archivos binarios de Fuentes (*.bin)|*.bin|Fuente de pantalla de PC Versión 1 (*.psf)|*.psf|"
+    IDS_OPENFILTER, "Todos los formatos soportados (*.bin,*.psf)|*.bin;*.psf|Archivos binarios de Fuentes (*.bin)|*.bin|Fuente de pantalla de PC VersiÃ³n 1 (*.psf)|*.psf|"
     IDS_SAVEFILTER, "Archivos binarios de Fuentes (*.bin)|*.bin|"
-    IDS_OPENERROR, "¡Error al abrir el archivo! (Error número %1!u!)"
-    IDS_READERROR, "¡Error al leer el archivo! (Error número %1!u!)"
-    IDS_WRITEERROR, "¡Error al escribir el archivo! (Error número %1!u!)"
-    IDS_UNSUPPORTEDFORMAT, "¡Formato de archivo no soportado!"
-    IDS_UNSUPPORTEDPSF, "¡Formato de fuente PSF no soportado! El editor sólo soporta fuentes 8x8 fonts sin modos especiales."
+    IDS_OPENERROR, "Â¡Error al abrir el archivo! (Error nÃºmero %1!u!)"
+    IDS_READERROR, "Â¡Error al leer el archivo! (Error nÃºmero %1!u!)"
+    IDS_WRITEERROR, "Â¡Error al escribir el archivo! (Error nÃºmero %1!u!)"
+    IDS_UNSUPPORTEDFORMAT, "Â¡Formato de archivo no soportado!"
+    IDS_UNSUPPORTEDPSF, "Â¡Formato de fuente PSF no soportado! El editor sÃ³lo soporta fuentes 8x8 fonts sin modos especiales."
     IDS_DOCNAME, "Fuente %1!u!"
-    IDS_SAVEPROMPT, "El archivo ""%1"" ha sido modificado, pero no guardado.\n\n¿Quiere guardarlo ahora?"
+    IDS_SAVEPROMPT, "El archivo ""%1"" ha sido modificado, pero no guardado.\n\nÂ¿Quiere guardarlo ahora?"
     IDS_APPTITLE, "ReactOS VGA Font Editor"
-    IDS_CLOSEEDIT, "¡Por favor, cierre todas las ventanas de Edición abiertas primero!"
+    IDS_CLOSEEDIT, "Â¡Por favor, cierre todas las ventanas de EdiciÃ³n abiertas primero!"
 
     IDS_TOOLTIP_NEW, "Nuevo"
     IDS_TOOLTIP_OPEN, "Abrir"

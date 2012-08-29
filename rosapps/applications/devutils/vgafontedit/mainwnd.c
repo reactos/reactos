@@ -137,11 +137,11 @@ InitMainWnd(IN PMAIN_WND_INFO Info)
     // Add the toolbar bitmaps
     tbab.hInst = HINST_COMMCTRL;
     tbab.nID = IDB_STD_SMALL_COLOR;
-    iStandardBitmaps = SendMessageW(Info->hToolbar, TB_ADDBITMAP, 0, (LPARAM)&tbab);
+    iStandardBitmaps = (INT)SendMessageW(Info->hToolbar, TB_ADDBITMAP, 0, (LPARAM)&tbab);
 
     tbab.hInst = hInstance;
     tbab.nID = IDB_MAIN_TOOLBAR;
-    iCustomBitmaps = SendMessageW(Info->hToolbar, TB_ADDBITMAP, 0, (LPARAM)&tbab);
+    iCustomBitmaps = (INT)SendMessageW(Info->hToolbar, TB_ADDBITMAP, 0, (LPARAM)&tbab);
 
     // Add the toolbar buttons
     AddToolbarButton(Info, iStandardBitmaps + STD_FILENEW, ID_FILE_NEW, IDS_TOOLTIP_NEW);

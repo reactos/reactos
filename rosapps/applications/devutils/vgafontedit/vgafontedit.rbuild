@@ -10,7 +10,7 @@
 	<file>fontboxeswnd.c</file>
 	<file>fontwnd.c</file>
 	<file>main.c</file>
-	<file>main.rc</file>
+	<file>vgafontedit.rc</file>
 	<file>mainwnd.c</file>
 	<file>misc.c</file>
 	<file>opensave.c</file>

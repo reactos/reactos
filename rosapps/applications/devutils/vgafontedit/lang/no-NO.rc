@@ -38,7 +38,7 @@ BEGIN
     POPUP "&Fil"
     BEGIN
         MENUITEM "&Ny\tCtrl+N", ID_FILE_NEW
-        MENUITEM "&Åpne...\tCtrl+O", ID_FILE_OPEN
+        MENUITEM "&Ã…pne...\tCtrl+O", ID_FILE_OPEN
         MENUITEM "Lukk", ID_FILE_CLOSE
         MENUITEM SEPARATOR
         MENUITEM "Lagre\tCtrl+S", ID_FILE_SAVE
@@ -73,20 +73,20 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_OPENFILTER, "Alle støttet formater (*.bin,*.psf)|*.bin;*.psf|Binære skrifttype filer (*.bin)|*.bin|PC skjerm skrifttype versjon 1 (*.psf)|*.psf|"
-    IDS_SAVEFILTER, "Binære skrifttype filer (*.bin)|*.bin|"
-    IDS_OPENERROR, "Feil med å åpne filen! (Feil nummer %1!u!)"
-    IDS_READERROR, "Feil med å lese filen! (Feil nummer %1!u!)"
-    IDS_WRITEERROR, "Feil med å lagre filen! (Feil nummer %1!u!)"
-    IDS_UNSUPPORTEDFORMAT, "Filformatet er ikke støttet!"
-    IDS_UNSUPPORTEDPSF, "Ikke støttet PSF filformat/skriftformat! Programmet støtter bare 8x8 skrift med ingen spesielle modus."
+    IDS_OPENFILTER, "Alle stÃ¸ttet formater (*.bin,*.psf)|*.bin;*.psf|BinÃ¦re skrifttype filer (*.bin)|*.bin|PC skjerm skrifttype versjon 1 (*.psf)|*.psf|"
+    IDS_SAVEFILTER, "BinÃ¦re skrifttype filer (*.bin)|*.bin|"
+    IDS_OPENERROR, "Feil med Ã¥ Ã¥pne filen! (Feil nummer %1!u!)"
+    IDS_READERROR, "Feil med Ã¥ lese filen! (Feil nummer %1!u!)"
+    IDS_WRITEERROR, "Feil med Ã¥ lagre filen! (Feil nummer %1!u!)"
+    IDS_UNSUPPORTEDFORMAT, "Filformatet er ikke stÃ¸ttet!"
+    IDS_UNSUPPORTEDPSF, "Ikke stÃ¸ttet PSF filformat/skriftformat! Programmet stÃ¸tter bare 8x8 skrift med ingen spesielle modus."
     IDS_DOCNAME, "Skrifttype %1!u!"
     IDS_SAVEPROMPT, "Filen ""%1"" har blitt endret, men har ikke blitt lagret.\n\nVil du lagre denne?"
     IDS_APPTITLE, "ReactOS VGA Skriftredigering"
-    IDS_CLOSEEDIT, "Vennligst lukk alle åpne vinduer først!"
+    IDS_CLOSEEDIT, "Vennligst lukk alle Ã¥pne vinduer fÃ¸rst!"
 
     IDS_TOOLTIP_NEW, "Ny"
-    IDS_TOOLTIP_OPEN, "Åpne"
+    IDS_TOOLTIP_OPEN, "Ã…pne"
     IDS_TOOLTIP_SAVE, "Lagre"
     IDS_TOOLTIP_EDIT_GLYPH, "Rediger Glyph"
     IDS_TOOLTIP_COPY, "Kopier"

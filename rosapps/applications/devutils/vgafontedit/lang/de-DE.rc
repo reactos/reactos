@@ -38,8 +38,8 @@ BEGIN
     POPUP "&Datei"
     BEGIN
         MENUITEM "&Neu\tStrg+N", ID_FILE_NEW
-        MENUITEM "&Öffnen...\tStrg+O", ID_FILE_OPEN
-        MENUITEM "Schließen", ID_FILE_CLOSE
+        MENUITEM "&Ã–ffnen...\tStrg+O", ID_FILE_OPEN
+        MENUITEM "SchlieÃŸen", ID_FILE_CLOSE
         MENUITEM SEPARATOR
         MENUITEM "Speichern\tStrg+S", ID_FILE_SAVE
         MENUITEM "Speichern unter...", ID_FILE_SAVE_AS
@@ -50,19 +50,19 @@ BEGIN
     POPUP "&Bearbeiten"
     BEGIN
         MENUITEM "Kopieren\tStrg+C", ID_EDIT_COPY
-        MENUITEM "Einfügen\tStrg+V", ID_EDIT_PASTE
+        MENUITEM "EinfÃ¼gen\tStrg+V", ID_EDIT_PASTE
         MENUITEM SEPARATOR
         MENUITEM "Schriftzeichen bearbeiten...", ID_EDIT_GLYPH
     END
 
     POPUP "&Fenster"
     BEGIN
-        MENUITEM "&Überlappend", ID_WINDOW_CASCADE
+        MENUITEM "&Ãœberlappend", ID_WINDOW_CASCADE
         MENUITEM "&Horizontal teilen", ID_WINDOW_TILE_HORZ
         MENUITEM "&Vertikal teilen", ID_WINDOW_TILE_VERT
         MENUITEM "&Symbole anordnen", ID_WINDOW_ARRANGE
         MENUITEM SEPARATOR
-        MENUITEM "Nächs&tes\tStrg+F6", ID_WINDOW_NEXT
+        MENUITEM "NÃ¤chs&tes\tStrg+F6", ID_WINDOW_NEXT
     END
 
     POPUP "&Hilfe"
@@ -73,22 +73,22 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_OPENFILTER, "Alle unterstützten Formate (*.bin,*.psf)|*.bin;*.psf|Binäre Schriftdateien (*.bin)|*.bin|PC Screen Fonts Version 1 (*.psf)|*.psf|"
-    IDS_SAVEFILTER, "Binäre Schriftdateien (*.bin)|*.bin|"
-    IDS_OPENERROR, "Fehler beim Öffnen der Datei! (Fehlernummer %1!u!)"
+    IDS_OPENFILTER, "Alle unterstÃ¼tzten Formate (*.bin,*.psf)|*.bin;*.psf|BinÃ¤re Schriftdateien (*.bin)|*.bin|PC Screen Fonts Version 1 (*.psf)|*.psf|"
+    IDS_SAVEFILTER, "BinÃ¤re Schriftdateien (*.bin)|*.bin|"
+    IDS_OPENERROR, "Fehler beim Ã–ffnen der Datei! (Fehlernummer %1!u!)"
     IDS_READERROR, "Fehler beim Lesen der Datei! (Fehlernummer %1!u!)"
     IDS_WRITEERROR, "Fehler beim Schreiben der Datei! (Fehlernummer %1!u!)"
-    IDS_UNSUPPORTEDFORMAT, "Nicht unterstütztes Dateiformat!"
-    IDS_UNSUPPORTEDPSF, "Nicht unterstütztes PSF-Format! Der Editor unterstützt nur Fonts im Format 8x8 ohne spezielle Modi."
+    IDS_UNSUPPORTEDFORMAT, "Nicht unterstÃ¼tztes Dateiformat!"
+    IDS_UNSUPPORTEDPSF, "Nicht unterstÃ¼tztes PSF-Format! Der Editor unterstÃ¼tzt nur Fonts im Format 8x8 ohne spezielle Modi."
     IDS_DOCNAME, "Font %1!u!"
-    IDS_SAVEPROMPT, "Die Datei ""%1"" wurde geändert.\n\nMöchten Sie die Änderungen speichern?"
+    IDS_SAVEPROMPT, "Die Datei ""%1"" wurde geÃ¤ndert.\n\nMÃ¶chten Sie die Ã„nderungen speichern?"
     IDS_APPTITLE, "ReactOS VGA Font Editor"
-    IDS_CLOSEEDIT, "Bitte schließen Sie zuerst alle offenen Bearbeitungs-Fenster!"
+    IDS_CLOSEEDIT, "Bitte schlieÃŸen Sie zuerst alle offenen Bearbeitungs-Fenster!"
 
     IDS_TOOLTIP_NEW, "Neu"
-    IDS_TOOLTIP_OPEN, "Öffnen"
+    IDS_TOOLTIP_OPEN, "Ã–ffnen"
     IDS_TOOLTIP_SAVE, "Speichern"
     IDS_TOOLTIP_EDIT_GLYPH, "Schriftzeichen bearbeiten"
     IDS_TOOLTIP_COPY, "Kopieren"
-    IDS_TOOLTIP_PASTE, "Einfügen"
+    IDS_TOOLTIP_PASTE, "EinfÃ¼gen"
 END

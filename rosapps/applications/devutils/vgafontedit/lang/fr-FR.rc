@@ -11,18 +11,18 @@ LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
 IDD_ABOUT DIALOGEX 10, 10, 130, 62
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "À propos de"
+CAPTION "Ã€ propos de"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON           IDI_MAIN,                     IDC_STATIC, 10, 10, 20, 20
-    LTEXT          "Éditeur de police VGA ReactOS",    IDC_STATIC, 37, 10, 93, 10
+    LTEXT          "Ã‰diteur de police VGA ReactOS",    IDC_STATIC, 37, 10, 93, 10
     LTEXT          "Copyright 2008 Colin Finck", IDC_STATIC, 37, 20, 93, 10
     DEFPUSHBUTTON  "OK",                         IDCANCEL,   40, 44, 55, 15
 END
 
 IDD_EDITGLYPH DIALOGEX 32768, 32768, 246, 197
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Éditer le glyphe"
+CAPTION "Ã‰diter le glyphe"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDC_EDIT_GLYPH_TOOLBOX, TOOLBARCLASSNAMEA,          CCS_NODIVIDER | CCS_NORESIZE, 5, 5, 24, 82
@@ -47,48 +47,48 @@ BEGIN
         MENUITEM "Quitter\tAlt+F4", ID_FILE_EXIT
     END
 
-    POPUP "&Édition"
+    POPUP "&Ã‰dition"
     BEGIN
         MENUITEM "Copier\tCtrl+C", ID_EDIT_COPY
         MENUITEM "Coller\tCtrl+V", ID_EDIT_PASTE
         MENUITEM SEPARATOR
-        MENUITEM "Éditer le glyphe...", ID_EDIT_GLYPH
+        MENUITEM "Ã‰diter le glyphe...", ID_EDIT_GLYPH
     END
 
-    POPUP "Fenêtres"
+    POPUP "FenÃªtres"
     BEGIN
         MENUITEM "En &cascade", ID_WINDOW_CASCADE
-        MENUITEM "Mosaïque &horizontale", ID_WINDOW_TILE_HORZ
-        MENUITEM "Mosaïque &verticale", ID_WINDOW_TILE_VERT
-        MENUITEM "&Arranger les icônes", ID_WINDOW_ARRANGE
+        MENUITEM "MosaÃ¯que &horizontale", ID_WINDOW_TILE_HORZ
+        MENUITEM "MosaÃ¯que &verticale", ID_WINDOW_TILE_VERT
+        MENUITEM "&Arranger les icÃ´nes", ID_WINDOW_ARRANGE
         MENUITEM SEPARATOR
         MENUITEM "Suivan&te\tCtrl+F6", ID_WINDOW_NEXT
     END
 
     POPUP "Aide"
     BEGIN
-        MENUITEM "&À propos de...", ID_HELP_ABOUT
+        MENUITEM "&Ã€ propos de...", ID_HELP_ABOUT
     END
 END
 
 STRINGTABLE
 BEGIN
-    IDS_OPENFILTER, "Tous les formats supportés (*.bin,*.psf)|*.bin;*.psf|Fichiers police binaires (*.bin)|*.bin|PC Screen Fonts Version 1 (*.psf)|*.psf|"
+    IDS_OPENFILTER, "Tous les formats supportÃ©s (*.bin,*.psf)|*.bin;*.psf|Fichiers police binaires (*.bin)|*.bin|PC Screen Fonts Version 1 (*.psf)|*.psf|"
     IDS_SAVEFILTER, "Fichiers police binaires (*.bin)|*.bin|"
-    IDS_OPENERROR, "Erreur lors de l'ouverture du fichier ! (Erreur numéro %1!u!)"
-    IDS_READERROR, "Erreur lors de la lecture du fichier ! (Erreur numéro %1!u!)"
-    IDS_WRITEERROR, "Erreur lors de l'écriture du fichier ! (Erreur numéro %1!u!)"
-    IDS_UNSUPPORTEDFORMAT, "Format de fichier non supporté!"
-    IDS_UNSUPPORTEDPSF, "Format de police PSF non supporté ! L'éditeur supporte seulement les polices 8x8 sans aucun mode spécial."
+    IDS_OPENERROR, "Erreur lors de l'ouverture du fichier ! (Erreur numÃ©ro %1!u!)"
+    IDS_READERROR, "Erreur lors de la lecture du fichier ! (Erreur numÃ©ro %1!u!)"
+    IDS_WRITEERROR, "Erreur lors de l'Ã©criture du fichier ! (Erreur numÃ©ro %1!u!)"
+    IDS_UNSUPPORTEDFORMAT, "Format de fichier non supportÃ©!"
+    IDS_UNSUPPORTEDPSF, "Format de police PSF non supportÃ© ! L'Ã©diteur supporte seulement les polices 8x8 sans aucun mode spÃ©cial."
     IDS_DOCNAME, "Police %1!u!"
-    IDS_SAVEPROMPT, "Le fichier ""%1"" a été modifié mais pas enregistré.\n\nVoulez-vous l'enregistrer ?"
-    IDS_APPTITLE, "Éditeur de police VGA ReactOS"
-    IDS_CLOSEEDIT, "Veuillez d'abord fermer toutes les fenêtres d'édition !"
+    IDS_SAVEPROMPT, "Le fichier ""%1"" a Ã©tÃ© modifiÃ© mais pas enregistrÃ©.\n\nVoulez-vous l'enregistrer ?"
+    IDS_APPTITLE, "Ã‰diteur de police VGA ReactOS"
+    IDS_CLOSEEDIT, "Veuillez d'abord fermer toutes les fenÃªtres d'Ã©dition !"
 
     IDS_TOOLTIP_NEW, "Nouveau"
     IDS_TOOLTIP_OPEN, "Ouvrir"
     IDS_TOOLTIP_SAVE, "Enregistrer"
-    IDS_TOOLTIP_EDIT_GLYPH, "Éditer le glyphe"
+    IDS_TOOLTIP_EDIT_GLYPH, "Ã‰diter le glyphe"
     IDS_TOOLTIP_COPY, "Copier"
     IDS_TOOLTIP_PASTE, "Coller"
 END

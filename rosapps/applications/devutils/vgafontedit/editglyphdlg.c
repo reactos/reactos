@@ -40,7 +40,7 @@ InitToolbox(IN PEDIT_GLYPH_INFO Info)
     // Add the Toolbox bitmaps
     tbab.hInst = hInstance;
     tbab.nID = IDB_EDIT_GLYPH_TOOLBOX;
-    iBitmap = SendMessageW(hToolbar, TB_ADDBITMAP, 0, (LPARAM)&tbab);
+    iBitmap = (INT)SendMessageW(hToolbar, TB_ADDBITMAP, 0, (LPARAM)&tbab);
 
     AddToolboxButton(hToolbar, iBitmap + TOOLBOX_PEN, ID_TOOLBOX_PEN, TBSTATE_ENABLED | TBSTATE_CHECKED);
 }
