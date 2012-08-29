@@ -343,7 +343,7 @@ FloatToolbarCreateHistoryGui(PMAIN_WND_INFO Info)
 
 static VOID
 DoTimer(PFLT_WND FltInfo,
-        UINT idTimer)
+        UINT_PTR idTimer)
 {
     switch (idTimer)
     {
@@ -414,7 +414,7 @@ DoTimer(PFLT_WND FltInfo,
 
         case ID_TIMER3:
         {
-            LONG Style;
+            LONG_PTR Style;
 
             Style = GetWindowLongPtr(FltInfo->hSelf,
                                      GWL_EXSTYLE);

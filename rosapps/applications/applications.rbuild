@@ -19,6 +19,10 @@
 	</directory>
 -->
 
+	<directory name="imagesoft">
+		<xi:include href="imagesoft/imagesoft.rbuild" />
+	</directory>
+
 	<directory name="net">
 		<xi:include href="net/directory.rbuild" />
 	</directory>

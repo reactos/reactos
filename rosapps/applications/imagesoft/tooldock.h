@@ -66,8 +66,8 @@ typedef struct _DOCKBAR_ITEM
 } DOCKBAR_ITEM, *PDOCKBAR_ITEM;
 
 typedef VOID (CALLBACK *PDOCKBAR_PARENTRESIZE)(PVOID Context,
-                                               WORD cx,
-                                               WORD cy);
+                                               LONG cx,
+                                               LONG cy);
 
 #define DOCKS_COUNT 4
 typedef struct _TOOLBAR_DOCKS

@@ -22,7 +22,7 @@ BEGIN
     MENUITEM "Ant&eprima di stampa",      ID_PRINTPRE,GRAYED
     MENUITEM "S&tampa...",           ID_PRINT,   GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "Pr&opriet‡...",      ID_PROP,    GRAYED
+    MENUITEM "Pr&opriet√†...",      ID_PROP,    GRAYED
     MENUITEM SEPARATOR
     MENUITEM "&Esci\tAlt+F4",       ID_EXIT
   END
@@ -47,9 +47,9 @@ BEGIN
   END
   POPUP "Co&rreggi"
   BEGIN
-    MENUITEM "Luminosit‡...",        ID_BRIGHTNESS
+    MENUITEM "Luminosit√†...",        ID_BRIGHTNESS
     MENUITEM "Contrasto...",         ID_CONTRAST
-    MENUITEM "Tonalit‡/Saturazione...", -1, GRAYED
+    MENUITEM "Tonalit√†/Saturazione...", -1, GRAYED
     POPUP "Colore"
     BEGIN
       MENUITEM "Bianco e nero",    ID_BLACKANDWHITE
@@ -90,15 +90,13 @@ IDR_POPUP MENU
 BEGIN
   POPUP "popup"
   BEGIN
-
     MENUITEM SEPARATOR
-
   END
 END
 
 
 IDD_BRIGHTNESS DIALOGEX 6, 5, 193, 120
-CAPTION "Luminosit‡"
+CAPTION "Luminosit√†"
 FONT 8,"MS Shell Dlg", 0, 0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 BEGIN
@@ -129,13 +127,13 @@ END
 
 
 IDD_IMAGE_PROP DIALOGEX 6, 5, 156, 163
-CAPTION "Propriet‡ dell'immagine"
+CAPTION "Propriet√† dell'immagine"
 FONT 8,"MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 BEGIN
   LTEXT      "Nome:", IDC_STATIC, 12, 5, 38, 9
   EDITTEXT   IDC_IMAGE_NAME_EDIT,  58, 3, 94, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-  GROUPBOX   "Propriet‡ Canvas", IDC_STATIC, 4, 22, 148, 98
+  GROUPBOX   "Propriet√† Canvas", IDC_STATIC, 4, 22, 148, 98
   LTEXT      "Tipo immagine:", IDC_STATIC, 12, 36, 42, 9
   CONTROL    "", IDC_IMAGETYPE, "ComboBox", WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST, 58, 35, 88, 54
   LTEXT      "Larghezza:", IDC_STATIC, 12, 51, 42, 9
@@ -147,7 +145,7 @@ BEGIN
   LTEXT      "Risoluzione:", IDC_STATIC, 12, 84, 42, 9
   EDITTEXT   IDC_RES_EDIT, 58, 83, 32, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_NUMBER
   LTEXT      "", IDC_RES_STAT, 94, 84, 40, 9
-  LTEXT      "Unit‡:", IDC_STATIC, 12, 99, 42, 9
+  LTEXT      "Unit√†:", IDC_STATIC, 12, 99, 42, 9
   CONTROL    "", IDC_UNIT, "ComboBox", WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST, 58, 99, 54, 50
   LTEXT      "Dimensione:", IDC_STATIC, 12, 125, 42, 9
   LTEXT      "", IDC_IMAGE_SIZE, 58, 125, 54, 9
@@ -157,7 +155,7 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_LICENSE "Questo programma Ë software libero; puoi distribuirlo e/o modificarlo nei termini di licenza di 'GNU General Public License' come pubblicata dalla 'Free Software Foundation'; entrambe le versioni 2 della Licenza, o (a vostra scelta) qualunque versione successiva.\r\n\r\nQuesto programma Ë distribuito con l'augurio che sia utile, ma PRIVO DI OGNI GARANZIA; privo anche della garanzia implicita di VENDIBILITA' o ADEGUATEZZA PER UNO SPECIFICO USO. Vedi la 'GNU General Public License' per ulteriori dettagli.\r\n\r\nVoi dovreste aver ricevuto una copia della 'GNU General Public License' assieme a questo programma; se non Ë cosi' scrivete a 'Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA'."
+  IDS_LICENSE "Questo programma √® software libero; puoi distribuirlo e/o modificarlo nei termini di licenza di 'GNU General Public License' come pubblicata dalla 'Free Software Foundation'; entrambe le versioni 2 della Licenza, o (a vostra scelta) qualunque versione successiva.\r\n\r\nQuesto programma √® distribuito con l'augurio che sia utile, ma PRIVO DI OGNI GARANZIA; privo anche della garanzia implicita di VENDIBILITA' o ADEGUATEZZA PER UNO SPECIFICO USO. Vedi la 'GNU General Public License' per ulteriori dettagli.\r\n\r\nVoi dovreste aver ricevuto una copia della 'GNU General Public License' assieme a questo programma; se non √® cosi' scrivete a 'Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA'."
   IDS_READY             "Pronto."
   IDS_TOOLBAR_STANDARD  "Standard"
   IDS_TOOLBAR_TEST      "Test"

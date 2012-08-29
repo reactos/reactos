@@ -30,6 +30,7 @@ EnumFontSizes(ENUMLOGFONTEX *lpelfe,
                         idx,
                         ttsizes[i]);
         }
+
         return 0;
     }
 
@@ -146,7 +147,7 @@ FillFontStyleComboList(HWND hwndCombo)
     LOGFONT lf;
 
     /* FIXME: draw each font in its own style */
-    HFONT hFont = (HFONT) GetStockObject(DEFAULT_GUI_FONT);
+    HFONT hFont = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
     SendMessage(hwndCombo,
                 WM_SETFONT,
                 (WPARAM)hFont,

@@ -1,6 +1,7 @@
 add_subdirectory(cmdutils)
 add_subdirectory(devutils)
 #add_subdirectory(fraginator)
+add_subdirectory(imagesoft)
 #add_subdirectory(net)
 add_subdirectory(notevil)
 add_subdirectory(screensavers)

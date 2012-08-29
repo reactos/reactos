@@ -52,8 +52,8 @@ BEGIN
     MENUITEM "Hue/Saturasi...",     -1, GRAYED
     POPUP "Warna"
     BEGIN
-      MENUITEM "Hitam dan Putih"    ID_BLACKANDWHITE
-      MENUITEM "Balikkan Warna"     ID_INVERTCOLORS
+      MENUITEM "Hitam dan Putih",   ID_BLACKANDWHITE
+      MENUITEM "Balikkan Warna",    ID_INVERTCOLORS
     END
     MENUITEM SEPARATOR
     MENUITEM "Blur",                ID_BLUR
@@ -90,9 +90,7 @@ IDR_POPUP MENU
 BEGIN
   POPUP "popup"
   BEGIN
-
     MENUITEM SEPARATOR
-
   END
 END
 

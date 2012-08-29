@@ -13,7 +13,8 @@ _tWinMain(HINSTANCE hThisInstance,
     HWND hMainWnd;
     MSG Msg;
     BOOL bRet;
-    int Ret = 1, len;
+    int Ret = 1;
+    size_t len;
     INITCOMMONCONTROLSEX icex;
 
     hInstance = hThisInstance;
@@ -23,13 +24,13 @@ _tWinMain(HINSTANCE hThisInstance,
     icex.dwICC = ICC_BAR_CLASSES | ICC_COOL_CLASSES;
     InitCommonControlsEx(&icex);
 
-    if (!AllocAndLoadString(&lpAppName, hInstance, IDS_APPNAME) ||
-        !AllocAndLoadString(&lpVersion, hInstance, IDS_VERSION) )
+    if ( !AllocAndLoadString(&lpAppName, hInstance, IDS_APPNAME) ||
+         !AllocAndLoadString(&lpVersion, hInstance, IDS_VERSION) )
     {
         return Ret;
     }
 
-    len = (int)_tcslen(lpAppName) + (int)_tcslen(lpVersion);
+    len = _tcslen(lpAppName) + _tcslen(lpVersion);
     lpTitle = HeapAlloc(ProcessHeap,
                         0,
                         (len + 2) * sizeof(TCHAR));
@@ -61,10 +62,10 @@ _tWinMain(HINSTANCE hThisInstance,
                     if (hMainWnd != NULL)
                     {
                         /* pump the message queue */
-                        while((bRet = GetMessage(&Msg,
-                                                 NULL,
-                                                 0,
-                                                 0) != 0))
+                        while ((bRet = GetMessage(&Msg,
+                                                  NULL,
+                                                  0,
+                                                  0) != 0))
                         {
                             if (bRet != (BOOL)-1)
                             {

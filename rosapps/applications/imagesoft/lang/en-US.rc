@@ -52,8 +52,8 @@ BEGIN
     MENUITEM "Hue/Saturation...",   -1, GRAYED
     POPUP "Color"
     BEGIN
-      MENUITEM "Black and White"    ID_BLACKANDWHITE
-      MENUITEM "Invert Colors"      ID_INVERTCOLORS
+      MENUITEM "Black and White",   ID_BLACKANDWHITE
+      MENUITEM "Invert Colors",     ID_INVERTCOLORS
     END
     MENUITEM SEPARATOR
     MENUITEM "Blur",                ID_BLUR
@@ -90,9 +90,7 @@ IDR_POPUP MENU
 BEGIN
   POPUP "popup"
   BEGIN
-
     MENUITEM SEPARATOR
-
   END
 END
 

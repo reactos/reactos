@@ -20,9 +20,9 @@
 			<file>imagesoft.c</file>
 			<file>imgedwnd.c</file>
 			<file>mainwnd.c</file>
+			<file>misc.c</file>
 			<file>opensave.c</file>
 			<file>tooldock.c</file>
-			<file>misc.c</file>
 		</compilationunit>
 		<file>imagesoft.rc</file>
 		<pch>precomp.h</pch>

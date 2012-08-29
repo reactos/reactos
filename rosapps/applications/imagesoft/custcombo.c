@@ -8,11 +8,11 @@ FlatComboProc(HWND hwnd,
               LPARAM lParam)
 {
     HDC hdc;
-    PAINTSTRUCT    ps;
+    PAINTSTRUCT ps;
     RECT rect, rect2;
     POINT pt;
 
-    WNDPROC OldComboProc = (WNDPROC)GetWindowLong(hwnd, GWL_USERDATA);
+    WNDPROC OldComboProc = (WNDPROC)GetWindowLongPtr(hwnd, GWLP_USERDATA);
 
     static BOOL fMouseDown  = FALSE;
     static BOOL fButtonDown = FALSE;
@@ -198,16 +198,16 @@ FlatComboProc(HWND hwnd,
 
 VOID MakeFlatCombo(HWND hwndCombo)
 {
-    LONG OldComboProc;
+    LONG_PTR OldComboProc;
 
     /* Remember old window procedure */
-    OldComboProc = GetWindowLongPtr(hwndCombo, GWL_WNDPROC);
+    OldComboProc = GetWindowLongPtr(hwndCombo, GWLP_WNDPROC);
     SetWindowLongPtr(hwndCombo,
-                     GWL_USERDATA,
+                     GWLP_USERDATA,
                      OldComboProc);
 
     /* Perform the subclass */
     SetWindowLongPtr(hwndCombo,
-                     GWL_WNDPROC,
+                     GWLP_WNDPROC,
                      (LONG_PTR)FlatComboProc);
 }

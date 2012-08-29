@@ -350,8 +350,8 @@ ImageEditWndProc(HWND hwnd,
                      yMouse,
                      NULL);
 
-            xMouse = (short)LOWORD(lParam);
-            yMouse = (short)HIWORD(lParam);
+            xMouse = LOWORD(lParam);
+            yMouse = HIWORD(lParam);
 
             LineTo(hDC,
                    xMouse,

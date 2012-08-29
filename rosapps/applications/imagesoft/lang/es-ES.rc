@@ -49,19 +49,19 @@ BEGIN
   BEGIN
     MENUITEM "Brillo...",       ID_BRIGHTNESS
     MENUITEM "Contraste...",         ID_CONTRAST
-    MENUITEM "Matiz/Saturación...",   -1, GRAYED
+    MENUITEM "Matiz/SaturaciÃ³n...",   -1, GRAYED
     POPUP "Color"
     BEGIN
-      MENUITEM "Blanco y negro"    ID_BLACKANDWHITE
-      MENUITEM "Invertir Colores"     ID_INVERTCOLORS
+      MENUITEM "Blanco y negro",   ID_BLACKANDWHITE
+      MENUITEM "Invertir Colores",    ID_INVERTCOLORS
     END
     MENUITEM SEPARATOR
     MENUITEM "Contorno",                ID_BLUR
     MENUITEM "Afilar",             ID_SHARPEN
     MENUITEM "Suavizar bordes",        -1, GRAYED
-    MENUITEM "Añadir Sombra",          -1, GRAYED
+    MENUITEM "AÃ±adir Sombra",          -1, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "Tamaño de la Imagen...",       -1, GRAYED
+    MENUITEM "TamaÃ±o de la Imagen...",       -1, GRAYED
     MENUITEM "Voltear",                -1, GRAYED
     MENUITEM "Espejo",              -1, GRAYED
     MENUITEM "Rotar",              -1, GRAYED
@@ -90,9 +90,7 @@ IDR_POPUP MENU
 BEGIN
   POPUP "popup"
   BEGIN
-
     MENUITEM SEPARATOR
-
   END
 END
 
@@ -144,12 +142,12 @@ BEGIN
   LTEXT      "Altura:", IDC_STATIC, 12, 68, 42, 9
   EDITTEXT   IDC_HEIGHT_EDIT, 58, 66, 32, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_NUMBER
   LTEXT      "", IDC_HEIGHT_STAT, 94, 68, 40, 9
-  LTEXT      "Resolución:", IDC_STATIC, 12, 84, 42, 9
+  LTEXT      "ResoluciÃ³n:", IDC_STATIC, 12, 84, 42, 9
   EDITTEXT   IDC_RES_EDIT, 58, 83, 32, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_NUMBER
   LTEXT      "", IDC_RES_STAT, 94, 84, 40, 9
   LTEXT      "Unidades:", IDC_STATIC, 12, 99, 42, 9
   CONTROL    "", IDC_UNIT, "ComboBox", WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST, 58, 99, 54, 50
-  LTEXT      "Tamaño de la imagen:", IDC_STATIC, 12, 125, 42, 9
+  LTEXT      "TamaÃ±o de la imagen:", IDC_STATIC, 12, 125, 42, 9
   LTEXT      "", IDC_IMAGE_SIZE, 58, 125, 54, 9
   PUSHBUTTON "Aceptar", IDOK, 50, 144, 48, 13
   PUSHBUTTON "Cancelar", IDCANCEL, 102, 144, 48, 13
@@ -159,7 +157,7 @@ STRINGTABLE DISCARDABLE
 BEGIN
   IDS_LICENSE           "This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA."
   IDS_READY             " Preparado."
-  IDS_TOOLBAR_STANDARD  "Estándar"
+  IDS_TOOLBAR_STANDARD  "EstÃ¡ndar"
   IDS_TOOLBAR_TEST      "Prueba"
   IDS_IMAGE_NAME        "Imagen %1!u!"
   IDS_FLT_TOOLS         "Herramientas"
@@ -210,10 +208,10 @@ BEGIN
   IDS_HINT_CLOSEALL     " Cerrar todas las ventanas."
   IDS_HINT_SAVE         " Guardar el documento activo."
   IDS_HINT_SAVEAS       " Guardar el documento activo con un nuevo nombre."
-  IDS_HINT_PRINTPRE     " Previsualizar impresión."
+  IDS_HINT_PRINTPRE     " Previsualizar impresiÃ³n."
   IDS_HINT_PRINT        " Imprimir el documento activo."
   IDS_HINT_PROP         " Mostrar las propiedades de la imagen activa."
-  IDS_HINT_EXIT         " Cerrar esta aplicación."
+  IDS_HINT_EXIT         " Cerrar esta aplicaciÃ³n."
 
   IDS_HINT_TOOLS        " Mostrar u ocultar la ventana flotante de herramientas."
   IDS_HINT_COLORS       " Mostrar u ocultar la ventana flotante de colores."
@@ -221,12 +219,12 @@ BEGIN
   IDS_HINT_STATUS       " Mostrar u ocultar la barra de estado."
 
   IDS_HINT_CASCADE      " Colocar las ventanas superpuestas."
-  IDS_HINT_TILE_HORZ    " Colocar las ventanas sin superponer los títulos."
-  IDS_HINT_TILE_VERT    " Colocar las ventanas sin superponer los títulos."
+  IDS_HINT_TILE_HORZ    " Colocar las ventanas sin superponer los tÃ­tulos."
+  IDS_HINT_TILE_VERT    " Colocar las ventanas sin superponer los tÃ­tulos."
   IDS_HINT_ARRANGE      " Colocar los iconos en la parte baja de la ventana."
   IDS_HINT_NEXT         " Activar la siguiente ventana."
 
-  IDS_HINT_SYS_RESTORE  " Restaurar esta ventana al tamaño normal."
+  IDS_HINT_SYS_RESTORE  " Restaurar esta ventana al tamaÃ±o normal."
   IDS_HINT_SYS_MOVE     " Mover esta ventana."
   IDS_HINT_SYS_SIZE     " Redimensionar esta ventana."
   IDS_HINT_SYS_MINIMIZE " Minimizar esta ventana a un icono."

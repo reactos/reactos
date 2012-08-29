@@ -677,8 +677,8 @@ CreateToolbars(PMAIN_WND_INFO Info)
 
 static VOID CALLBACK
 MainWndResize(PVOID Context,
-              WORD cx,
-              WORD cy)
+              LONG cx,
+              LONG cy)
 {
     RECT rcClient = {0};
     RECT rcStatus = {0};
