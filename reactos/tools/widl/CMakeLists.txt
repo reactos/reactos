@@ -1,6 +1,8 @@
 
 if(MSVC)
-    add_definitions(-Dsnprintf=_snprintf)
+    add_definitions(
+        -Dsnprintf=_snprintf
+        -Dvsnprintf=_vsnprintf)
     list(APPEND SOURCE getopt.c)
 endif()
 
