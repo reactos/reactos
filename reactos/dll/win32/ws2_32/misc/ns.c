@@ -1275,7 +1275,7 @@ getservbyname(IN  CONST CHAR FAR* name,
         WS_DbgPrint(MAX_TRACE,("Aliase %d: %s\n", i, Aliases[i]));
     }
 
-    memcpy(p->Getservbyname,
+    memcpy(p->Getservbyname->Aliases,
            Aliases,
            sizeof(Aliases));
 
@@ -1457,7 +1457,7 @@ getservbyport(IN  INT port,
         WS_DbgPrint(MAX_TRACE,("Aliases %d: %s\n", i, Aliases[i]));
     }
 
-    memcpy(p->Getservbyport,Aliases,sizeof(Aliases));
+    memcpy(p->Getservbyport->Aliases,Aliases,sizeof(Aliases));
 
     /* Create the struct proper */
     p->Getservbyport->ServerEntry.s_name = ServiceName;
