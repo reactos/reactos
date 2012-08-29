@@ -1211,7 +1211,7 @@ CsrShutdownProcesses(IN PLUID CallerLuid,
     BOOLEAN FirstTry;
     ULONG i;
     PCSR_SERVER_DLL ServerDll;
-    ULONG Result;
+    ULONG Result = 0;
 
     /* Acquire process lock */
     CsrAcquireProcessLock();
