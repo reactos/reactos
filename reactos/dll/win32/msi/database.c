@@ -130,7 +130,7 @@ UINT msi_clone_open_stream( MSIDATABASE *db, IStorage *stg, LPCWSTR name, IStrea
 UINT msi_get_raw_stream( MSIDATABASE *db, LPCWSTR stname, IStream **stm )
 {
     HRESULT r;
-    IStorage *stg;
+    IStorage *stg = 0;
     WCHAR decoded[MAX_STREAM_NAME_LEN];
 
     decode_streamname( stname, decoded );
