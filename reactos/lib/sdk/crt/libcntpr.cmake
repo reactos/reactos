@@ -27,6 +27,8 @@ list(APPEND LIBCNTPR_SOURCE
     search/lfind.c
     stdlib/qsort.c
     string/ctype.c
+    string/iswctype.c
+    string/is_wctype.c
     string/scanf.c
     string/strcspn.c
     string/stricmp.c
@@ -182,7 +184,7 @@ else()
 endif()
 
 add_library(libcntpr ${LIBCNTPR_SOURCE})
-add_target_compile_definitions(libcntpr 
+add_target_compile_definitions(libcntpr
     NO_RTL_INLINES
     _NTSYSTEM_
     _NTDLLBUILD_

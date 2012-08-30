@@ -57,6 +57,8 @@ VOID BootMain(LPSTR CmdLine)
 }
 
 // We need to emulate these, because the original ones don't work in freeldr
+// These functions are here, because they need to be in the main compilation unit
+// and cannot be in a library.
 int __cdecl wctomb(char *mbchar, wchar_t wchar)
 {
     *mbchar = (char)wchar;
@@ -68,3 +70,10 @@ int __cdecl mbtowc (wchar_t *wchar, const char *mbchar, size_t count)
     *wchar = (wchar_t)*mbchar;
     return 1;
 }
+
+// The wctype table is 144 KB, too much for poor freeldr
+int iswctype(wint_t wc, wctype_t wctypeFlags)
+{
+    return _isctype((char)wc, wctypeFlags);
+}
+

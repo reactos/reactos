@@ -252,6 +252,8 @@ list(APPEND CRT_SOURCE
     string/atoi64.c
     string/atol.c
     string/ctype.c
+    string/iswctype.c
+    string/is_wctype.c
     string/itoa.c
     string/itow.c
     string/scanf.c

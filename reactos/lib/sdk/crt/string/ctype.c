@@ -587,24 +587,6 @@ int _isctype (int c, int ctypeFlags)
 /*
  * @implemented
  */
-int iswctype(wint_t wc, wctype_t wctypeFlags)
-{
-   return (wine_wctype_table[wine_wctype_table[wc >> 8] + (wc & 0xff)] & wctypeFlags);
-}
-
-/*
- * obsolete
- *
- * @implemented
- */
-int is_wctype(wint_t wc, wctype_t wctypeFlags)
-{
-   return (wine_wctype_table[wine_wctype_table[wc >> 8] + (wc & 0xff)] & wctypeFlags);
-}
-
-/*
- * @implemented
- */
 int isalpha(int c)
 {
    return(_isctype(c, _ALPHA));
