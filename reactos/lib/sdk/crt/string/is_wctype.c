@@ -1,6 +1,6 @@
 #include <string.h>
 
-extern const unsigned short wine_wctype_table[];
+int iswctype(wint_t wc, wctype_t wctypeFlags);
 
 /*
  * obsolete
