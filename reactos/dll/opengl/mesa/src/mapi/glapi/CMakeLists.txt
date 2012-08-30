@@ -7,6 +7,13 @@ add_definitions(
     -DKHRONOS_DLL_EXPORTS
 )
 
+if((ARCH STREQUAL "i386") AND (NOT MSVC))
+    list(APPEND SOURCE glapi_x86.S)
+    add_definitions(
+        -DUSE_X86_ASM
+        -DSTDCALL_API)
+endif()
+
 include_directories(
     ../../mesa
     ..)

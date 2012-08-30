@@ -17,9 +17,9 @@ list(APPEND SOURCE
     ../../generated/glsl/glsl_parser.cpp
     ../../generated/glsl/builtin_function.cpp
 # Regular files
-    glcpp/pp.c
     strtod.c
 	ralloc.c
+    glcpp/pp.c
     ast_expr.cpp
 	ast_function.cpp
 	ast_to_hir.cpp

@@ -1,5 +1,10 @@
 
-# add_subdirectory(drivers/osmesa) its time will come
+add_definitions(
+    -DFEATURE_GL=1
+    -D_GDI32_           # prevent gl* being declared __declspec(dllimport) in MS headers
+    -DBUILD_GL32        # declare gl* as __declspec(dllexport) in Mesa headers
+    -D_GLAPI_NO_EXPORTS # prevent _glapi_* from being declared __declspec(dllimport)
+)
 
 # From Sconscript
 include_directories(
@@ -8,15 +13,38 @@ include_directories(
     .
     ../../generated/mesa)
     
-# This library use C++
+# This library uses C++
 set_cpp()
 
-add_definitions(
-    -DFEATURE_GL=1
-    -D_GDI32_ # prevent gl* being declared __declspec(dllimport) in MS headers
-    -DBUILD_GL32 # declare gl* as __declspec(dllexport) in Mesa headers
-    -D_GLAPI_NO_EXPORTS # prevent _glapi_* from being declared __declspec(dllimport)
-)
+if((ARCH STREQUAL "i386") AND (NOT MSVC))
+    list(APPEND SOURCE
+        x86/common_x86.c
+        # x86/x86_xform.c
+        # x86/3dnow.c
+        # x86/sse.c
+        x86/common_x86_asm.S
+        x86/x86_xform2.S
+        x86/x86_xform3.S
+        x86/x86_xform4.S
+        x86/x86_cliptest.S
+        x86/mmx_blend.S
+        x86/3dnow_xform1.S
+        x86/3dnow_xform2.S
+        x86/3dnow_xform3.S
+        x86/3dnow_xform4.S
+        x86/3dnow_normal.S
+        x86/sse_xform1.S
+        x86/sse_xform2.S
+        x86/sse_xform3.S
+        x86/sse_xform4.S
+        x86/sse_normal.S
+        x86/read_rgba_span_x86.S)
+    add_definitions(
+        -DUSE_X86_ASM
+        -DUSE_MMX_ASM
+        -DUSE_3DNOW_ASM
+        -DUSE_SSE_ASM)
+endif()
 
 list(APPEND SOURCE
 # generated files
@@ -25,6 +53,8 @@ list(APPEND SOURCE
 # regular files
     main/api_arrayelt.c
     main/api_exec.c
+    main/api_exec_es1.c
+    main/api_exec_es2.c
     main/api_loopback.c
     main/api_validate.c
     main/accum.c
@@ -129,55 +159,55 @@ list(APPEND SOURCE
     math/m_matrix.c
     math/m_translate.c
     math/m_vector.c
-    math/m_xform.c
-    swrast/s_aaline.c
-    swrast/s_aatriangle.c
-    swrast/s_alpha.c
-    swrast/s_atifragshader.c
-    swrast/s_bitmap.c
-    swrast/s_blend.c
-    swrast/s_blit.c
-    swrast/s_clear.c
-    swrast/s_copypix.c
-    swrast/s_context.c
-    swrast/s_depth.c
-    swrast/s_drawpix.c
-    swrast/s_feedback.c
-    swrast/s_fog.c
-    swrast/s_fragprog.c
-    swrast/s_lines.c
-    swrast/s_logic.c
-    swrast/s_masking.c
-    swrast/s_points.c
-    swrast/s_renderbuffer.c
-    swrast/s_span.c
-    swrast/s_stencil.c
-    swrast/s_texcombine.c
-    swrast/s_texfetch.c
-    swrast/s_texfilter.c
-    swrast/s_texrender.c
-    swrast/s_texture.c
-    swrast/s_triangle.c
-    swrast/s_zoom.c
-    swrast_setup/ss_context.c
-    swrast_setup/ss_triangle.c
-    tnl/t_context.c
-    tnl/t_pipeline.c
-    tnl/t_draw.c
-    tnl/t_rasterpos.c
-    tnl/t_vb_program.c
-    tnl/t_vb_render.c
-    tnl/t_vb_texgen.c
-    tnl/t_vb_texmat.c
-    tnl/t_vb_vertex.c
-    tnl/t_vb_fog.c
-    tnl/t_vb_light.c
-    tnl/t_vb_normals.c
-    tnl/t_vb_points.c
-    tnl/t_vp_build.c
-    tnl/t_vertex.c
-    tnl/t_vertex_sse.c
-    tnl/t_vertex_generic.c
+    # math/m_xform.c
+    # swrast/s_aaline.c
+    # swrast/s_aatriangle.c
+    # swrast/s_alpha.c
+    # swrast/s_atifragshader.c
+    # swrast/s_bitmap.c
+    # swrast/s_blend.c
+    # swrast/s_blit.c
+    # swrast/s_clear.c
+    # swrast/s_copypix.c
+    # swrast/s_context.c
+    # swrast/s_depth.c
+    # swrast/s_drawpix.c
+    # swrast/s_feedback.c
+    # swrast/s_fog.c
+    # swrast/s_fragprog.c
+    # swrast/s_lines.c
+    # swrast/s_logic.c
+    # swrast/s_masking.c
+    # swrast/s_points.c
+    # swrast/s_renderbuffer.c
+    # swrast/s_span.c
+    # swrast/s_stencil.c
+    # swrast/s_texcombine.c
+    # swrast/s_texfetch.c
+    # swrast/s_texfilter.c
+    # swrast/s_texrender.c
+    # swrast/s_texture.c
+    # swrast/s_triangle.c
+    # swrast/s_zoom.c
+    # swrast_setup/ss_context.c
+    # swrast_setup/ss_triangle.c
+    # tnl/t_context.c
+    # tnl/t_pipeline.c
+    # tnl/t_draw.c
+    # tnl/t_rasterpos.c
+    # tnl/t_vb_program.c
+    # tnl/t_vb_render.c
+    # tnl/t_vb_texgen.c
+    # tnl/t_vb_texmat.c
+    # tnl/t_vb_vertex.c
+    # tnl/t_vb_fog.c
+    # tnl/t_vb_light.c
+    # tnl/t_vb_normals.c
+    # tnl/t_vb_points.c
+    # tnl/t_vp_build.c
+    # tnl/t_vertex.c
+    # tnl/t_vertex_sse.c
+    # tnl/t_vertex_generic.c
     vbo/vbo_context.c
     vbo/vbo_exec.c
     vbo/vbo_exec_api.c
@@ -262,11 +292,12 @@ list(APPEND SOURCE
     program/sampler.cpp
     program/symbol_table.c
     program/string_to_uint_map.cpp
-    drivers/common/driverfuncs.c
-    drivers/common/meta.c)
+    # drivers/common/driverfuncs.c
+    # drivers/common/meta.c
+)
     
 if(NOT MSVC)
     add_compile_flags("-Wno-format")
 endif()
-    
+
 add_library(mesa_core STATIC EXCLUDE_FROM_ALL ${SOURCE})

@@ -91,7 +91,7 @@ GL_PREFIX(fn, fn_alt):					\
 	TEST_L(EAX, EAX) ;				\
 	JE(1f) ;					\
 	JMP(GL_OFFSET(off)) ;				\
-1:	CALL(_glapi_get_dispatch) ;			\
+1:	CALL(GLNAME(_glapi_get_dispatch)) ;			\
 	JMP(GL_OFFSET(off))
 #else /* Non-threaded version. */
 #  define GL_STUB(fn,off,fn_alt)			\

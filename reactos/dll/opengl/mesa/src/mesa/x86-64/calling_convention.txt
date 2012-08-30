@@ -1,0 +1,50 @@
+Register Usage
+rax      temporary register; with variable arguments passes information
+         about the number of SSE registers used; 1st return register
+
+rbx*     callee-saved register; optionally used as base pointer
+
+rcx      used to pass 4th integer argument to functions
+
+rdx      used to pass 3rd argument to functions 2nd return register
+
+rsp*     stack pointer
+
+rbp*     callee-saved register; optionally used as frame pointer
+
+rsi      used to pass 2nd argument to functions
+
+rdi      used to pass 1st argument to functions
+
+r8       used to pass 5th argument to functions
+
+r9       used to pass 6th argument to functions
+
+r10      temporary register, used for passing a function's static chain pointer
+
+r11      temporary register
+
+r12-15*  callee-saved registers
+
+xmm0­1   used to pass and return floating point arguments
+
+xmm2­7   used to pass floating point arguments
+
+xmm8­15  temporary registers
+
+mmx0­7   temporary registers
+
+st0      temporary register; used to return long double arguments
+
+st1      temporary registers; used to return long double arguments
+
+st2­7    temporary registers
+
+fs       Reserved for system use (as thread specific data register)
+
+	
+
+*) must be preserved across function calls
+
+Integer arguments from list: rdi,rsi,rdx,rcx,r8,r9,stack
+Floating point arguments from list: xmm0-xmm7
