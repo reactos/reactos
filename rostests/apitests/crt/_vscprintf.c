@@ -25,7 +25,6 @@ START_TEST(_vscprintf)
     call_varargs(12, "%S world!", L"hello");
     call_varargs(12, "%s world!", "hello");
     call_varargs(11, "%u cookies", 100);
-    /* Test NULL argument */
-    call_varargs(-1, NULL);
-    ok(errno == EINVAL, "Expected EINVAL, got %u\n", errno);
+    /* Do not test NULL argument. That is verified to SEGV on a */
+    /* release-build with VC10 and MS' msvcrt. */
 }

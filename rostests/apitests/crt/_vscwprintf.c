@@ -25,10 +25,6 @@ START_TEST(_vscwprintf)
     call_varargs(19, L"%s world!", "hello");
     call_varargs(12, L"%s world!", L"hello");
     call_varargs(17, L"Jack ate %u pies", 100);
-    
-    /* Test NULL argument */
-    call_varargs(-1, NULL);
-#if defined(TEST_MSVCRT) /* NTDLL doesn't use/set errno */
-    ok(errno == EINVAL, "Expected EINVAL, got %u\n", errno);
-#endif
+    /* Do not test NULL argument. That is verified to SEGV on a */
+    /* release-build with VC10 and MS' msvcrt. */
 }
