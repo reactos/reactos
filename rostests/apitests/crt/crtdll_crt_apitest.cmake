@@ -525,7 +525,7 @@ list(APPEND SOURCE_CRTDLL
 #    wscanf.c
 )
 
-if (ARCH MATCHES i386)
+if(ARCH STREQUAL "i386")
     list(APPEND SOURCE_CRTDLL
     #    _CIpow.c
     #    _ftol.c
@@ -542,7 +542,7 @@ if (ARCH MATCHES i386)
     #    _aullshr.c
     #    _chkstk.c
     )
-elseif (ARCH MATCHES amd64)
+elseif(ARCH STREQUAL "amd64")
     list(APPEND SOURCE_CRTDLL
     #    __C_specific_handler
     #    _setjmp.c

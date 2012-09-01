@@ -1263,7 +1263,7 @@ list(APPEND SOURCE_MSVCRT
 #    wscanf_s.c
 )
 
-if (ARCH MATCHES i386)
+if(ARCH STREQUAL "i386")
     list(APPEND SOURCE_MSVCRT
     #    _CIacos.c
     #    _CIasin.c
@@ -1350,7 +1350,7 @@ if (ARCH MATCHES i386)
     #    _seh_longjmp_unwind.c
     #    -norelay _setjmp3.c
     )
-elseif (ARCH MATCHES amd64)
+elseif(ARCH STREQUAL "amd64")
     list(APPEND SOURCE_MSVCRT
     #    __C_specific_handler
     #    _setjmp.c

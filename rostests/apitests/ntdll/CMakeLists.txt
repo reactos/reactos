@@ -16,7 +16,7 @@ list(APPEND SOURCE
     ZwContinue.c
     testlist.c)
 
-if(ARCH MATCHES i386)
+if(ARCH STREQUAL "i386")
     list(APPEND SOURCE i386/ZwContinue.S)
 endif()
 

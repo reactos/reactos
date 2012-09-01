@@ -124,7 +124,7 @@ list(APPEND SOURCE_NTDLL
 #    wcstoul.c
 )
 
-if (ARCH MATCHES i386)
+if(ARCH STREQUAL "i386")
     list(APPEND SOURCE_NTDLL
     #    _CIpow.c
     #    _ftol.c
@@ -141,7 +141,7 @@ if (ARCH MATCHES i386)
     #    _aullshr.c
     #    _chkstk.c
     )
-elseif (ARCH MATCHES amd64)
+elseif(ARCH STREQUAL "amd64")
     list(APPEND SOURCE_NTDLL
     #    __C_specific_handler
     #    _setjmp.c
