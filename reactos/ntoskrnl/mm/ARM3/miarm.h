@@ -1367,8 +1367,13 @@ MiReferenceProbedPageAndBumpLockCount(IN PMMPFN Pfn1)
         /* On ARM3 pages, we should see a valid share count */
         ASSERT((Pfn1->u2.ShareCount != 0) && (Pfn1->u3.e1.PageLocation == ActiveAndValid));
 
-        /* We don't support mapping a prototype page yet */
-        ASSERT((Pfn1->u3.e1.PrototypePte == 0) && (Pfn1->OriginalPte.u.Soft.Prototype == 0));
+        /* Is it a prototype PTE? */
+        if ((Pfn1->u3.e1.PrototypePte == 1) &&
+            (Pfn1->OriginalPte.u.Soft.Prototype == 1))
+        {
+            /* FIXME: We should charge commit */
+            DPRINT1("Not charging commit for prototype PTE\n");
+        }
     }
 
     /* More locked pages! */
