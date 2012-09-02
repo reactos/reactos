@@ -1827,6 +1827,46 @@ MiIsEntireRangeCommitted(IN ULONG_PTR StartingAddress,
 
 NTSTATUS
 NTAPI
+MiRosProtectVirtualMemory(IN PEPROCESS Process,
+                          IN OUT PVOID *BaseAddress,
+                          IN OUT PSIZE_T NumberOfBytesToProtect,
+                          IN ULONG NewAccessProtection,
+                          OUT PULONG OldAccessProtection OPTIONAL)
+{
+    PMEMORY_AREA MemoryArea;
+    PMMSUPPORT AddressSpace;
+    ULONG OldAccessProtection_;
+    NTSTATUS Status;
+
+    *NumberOfBytesToProtect = PAGE_ROUND_UP((ULONG_PTR)(*BaseAddress) + (*NumberOfBytesToProtect)) - PAGE_ROUND_DOWN(*BaseAddress);
+    *BaseAddress = (PVOID)PAGE_ROUND_DOWN(*BaseAddress);
+
+    AddressSpace = &Process->Vm;
+    MmLockAddressSpace(AddressSpace);
+    MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, *BaseAddress);
+    if (MemoryArea == NULL || MemoryArea->DeleteInProgress)
+    {
+        MmUnlockAddressSpace(AddressSpace);
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    if (OldAccessProtection == NULL) OldAccessProtection = &OldAccessProtection_;
+
+    ASSERT(MemoryArea->Type == MEMORY_AREA_SECTION_VIEW);
+    Status = MmProtectSectionView(AddressSpace,
+                                  MemoryArea,
+                                  *BaseAddress,
+                                  *NumberOfBytesToProtect,
+                                  NewAccessProtection,
+                                  OldAccessProtection);
+
+    MmUnlockAddressSpace(AddressSpace);
+
+    return Status;
+}
+
+NTSTATUS
+NTAPI
 MiProtectVirtualMemory(IN PEPROCESS Process,
                        IN OUT PVOID *BaseAddress,
                        IN OUT PSIZE_T NumberOfBytesToProtect,
@@ -1855,6 +1895,18 @@ MiProtectVirtualMemory(IN PEPROCESS Process,
     {
         DPRINT1("Invalid protection mask\n");
         return STATUS_INVALID_PAGE_PROTECTION;
+    }
+    
+    /* Check for ROS specific memory area */
+    MemoryArea = MmLocateMemoryAreaByAddress(&Process->Vm, *BaseAddress);
+    if ((MemoryArea) && (MemoryArea->Type == MEMORY_AREA_SECTION_VIEW))
+    {
+        /* Evil hack */
+        return MiRosProtectVirtualMemory(Process,
+                                         BaseAddress,
+                                         NumberOfBytesToProtect,
+                                         NewAccessProtection,
+                                         OldAccessProtection);
     }
 
     /* Lock the address space and make sure the process isn't already dead */
@@ -1902,15 +1954,6 @@ MiProtectVirtualMemory(IN PEPROCESS Process,
         DPRINT1("Trying to change protection of a NoChange VAD\n");
         Status = STATUS_INVALID_PAGE_PROTECTION;
         goto FailPath;
-    }
-
-    /* Check for ROS specific memory area */
-    MemoryArea = MmLocateMemoryAreaByAddress(&Process->Vm, *BaseAddress);
-    if ((MemoryArea) && (MemoryArea->Type == MEMORY_AREA_SECTION_VIEW))
-    {
-        /* Empirical evidence suggests this is only used in one critical scenario and is always a no-op */
-        OldProtect = NewAccessProtection;
-        goto RosReturn;
     }
 
     /* Is this section, or private memory? */
@@ -2064,7 +2107,7 @@ MiProtectVirtualMemory(IN PEPROCESS Process,
         /* Unlock the working set */
         //MiUnlockProcessWorkingSet(Thread, Process);
     }
-RosReturn:
+
     /* Unlock the address space */
     MmUnlockAddressSpace(AddressSpace);
 
@@ -3809,7 +3852,7 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
         Status = STATUS_INVALID_PARAMETER;
         goto FailPathNoLock;
     }
-    if ((AllocationType & MEM_PHYSICAL) ==MEM_PHYSICAL)
+    if ((AllocationType & MEM_PHYSICAL) == MEM_PHYSICAL)
     {
         DPRINT1("MEM_PHYSICAL not supported\n");
         Status = STATUS_INVALID_PARAMETER;
