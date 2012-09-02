@@ -1085,7 +1085,9 @@ MiDispatchFault(IN BOOLEAN StoreInstruction,
                                             Process,
                                             LockIrql,
                                             TrapInformation);
-            ASSERT(Status == STATUS_SUCCESS);
+            //ASSERT(Status != STATUS_ISSUE_PAGING_IO);
+            //ASSERT(Status != STATUS_REFAULT);
+            //ASSERT(Status != STATUS_PTE_CHANGED);
 
             /* Did the routine clean out the PFN or should we? */
             if (OutPfn)
