@@ -1837,7 +1837,6 @@ UserFault:
                              Vad);
 
     /* Return the status */
-    ASSERT(NT_SUCCESS(Status));
     ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
     MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
     return Status;
