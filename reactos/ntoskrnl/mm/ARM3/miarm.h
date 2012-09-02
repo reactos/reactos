@@ -94,8 +94,8 @@ C_ASSERT(SYSTEM_PD_SIZE == PAGE_SIZE);
 #endif
 
 //
-// Protection Bits part of the internal memory manager Protection Mask
-// Taken from http://www.reactos.org/wiki/Techwiki:Memory_management_in_the_Windows_XP_kernel
+// Protection Bits part of the internal memory manager Protection Mask, from:
+// http://reactos.org/wiki/Techwiki:Memory_management_in_the_Windows_XP_kernel
 // and public assertions.
 //
 #define MM_ZERO_ACCESS         0
@@ -1263,8 +1263,8 @@ MiDropLockCount(IN PMMPFN Pfn1)
         if ((Pfn1->u3.e1.PrototypePte == 1) &&
             (Pfn1->OriginalPte.u.Soft.Prototype == 1))
         {
-            /* We don't handle this */
-            ASSERT(FALSE);
+            /* FIXME: We should return commit */
+            DPRINT1("Not returning commit for prototype PTE\n");
         }
 
         /* Update the counter */
@@ -1301,8 +1301,8 @@ MiDereferencePfnAndDropLockCount(IN PMMPFN Pfn1)
             if ((Pfn1->u3.e1.PrototypePte == 1) &&
                 (Pfn1->OriginalPte.u.Soft.Prototype == 1))
             {
-                /* We don't handle this */
-                ASSERT(FALSE);
+                /* FIXME: We should return commit */
+                DPRINT1("Not returning commit for prototype PTE\n");
             }
 
             /* Update the counter, and drop a reference the long way */
@@ -1407,8 +1407,8 @@ MiReferenceUsedPageAndBumpLockCount(IN PMMPFN Pfn1)
     if ((Pfn1->u3.e1.PrototypePte == 1) &&
         (Pfn1->OriginalPte.u.Soft.Prototype == 1))
     {
-        /* We don't handle this */
-        ASSERT(FALSE);
+        /* FIXME: We should charge commit */
+        DPRINT1("Not charging commit for prototype PTE\n");
     }
 
     /* More locked pages! */
@@ -1456,8 +1456,8 @@ MiReferenceUnusedPageAndBumpLockCount(IN PMMPFN Pfn1)
     if ((Pfn1->u3.e1.PrototypePte == 1) &&
         (Pfn1->OriginalPte.u.Soft.Prototype == 1))
     {
-        /* We don't handle this */
-        ASSERT(FALSE);
+        /* FIXME: We should charge commit */
+        DPRINT1("Not charging commit for prototype PTE\n");
     }
 
     /* More locked pages! */
