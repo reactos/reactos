@@ -3803,31 +3803,31 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
         Status = STATUS_INVALID_PARAMETER;
         goto FailPathNoLock;
     }
-    if ((AllocationType & MEM_LARGE_PAGES) == 1)
+    if ((AllocationType & MEM_LARGE_PAGES) == MEM_LARGE_PAGES)
     {
         DPRINT1("MEM_LARGE_PAGES not supported\n");
         Status = STATUS_INVALID_PARAMETER;
         goto FailPathNoLock;
     }
-    if ((AllocationType & MEM_PHYSICAL) == 1)
+    if ((AllocationType & MEM_PHYSICAL) ==MEM_PHYSICAL)
     {
         DPRINT1("MEM_PHYSICAL not supported\n");
         Status = STATUS_INVALID_PARAMETER;
         goto FailPathNoLock;
     }
-    if ((AllocationType & MEM_WRITE_WATCH) == 1)
+    if ((AllocationType & MEM_WRITE_WATCH) == MEM_WRITE_WATCH)
     {
         DPRINT1("MEM_WRITE_WATCH not supported\n");
         Status = STATUS_INVALID_PARAMETER;
         goto FailPathNoLock;
     }
-    if ((AllocationType & MEM_TOP_DOWN) == 1)
+    if ((AllocationType & MEM_TOP_DOWN) == MEM_TOP_DOWN)
     {
         DPRINT1("MEM_TOP_DOWN not supported\n");
         Status = STATUS_INVALID_PARAMETER;
         goto FailPathNoLock;
     }
-    if ((AllocationType & MEM_RESET) == 1)
+    if ((AllocationType & MEM_RESET) == MEM_RESET)
     {
         DPRINT1("MEM_RESET not supported\n");
         Status = STATUS_INVALID_PARAMETER;
