@@ -307,6 +307,13 @@ extern const ULONG MmProtectToValue[32];
 #define MI_SESSION_DATA_PAGES_MAXIMUM (MM_ALLOCATION_GRANULARITY / PAGE_SIZE)
 #define MI_SESSION_TAG_PAGES_MAXIMUM  (MM_ALLOCATION_GRANULARITY / PAGE_SIZE)
 
+//
+// Used by MiCheckSecuredVad
+//
+#define MM_READ_WRITE_ALLOWED   11
+#define MM_READ_ONLY_ALLOWED    10
+#define MM_NO_ACCESS_ALLOWED    01
+#define MM_DELETE_CHECK         85
 
 //
 // System views are binned into 64K chunks
@@ -1865,6 +1872,15 @@ MiFindEmptyAddressRangeInTree(
     IN PMM_AVL_TABLE Table,
     OUT PMMADDRESS_NODE *PreviousVad,
     OUT PULONG_PTR Base
+);
+
+NTSTATUS
+NTAPI
+MiCheckSecuredVad(
+    IN PMMVAD Vad,
+    IN PVOID Base,
+    IN SIZE_T Size,
+    IN ULONG ProtectionMask
 );
 
 VOID

@@ -850,7 +850,7 @@ MiInsertPageInList(IN PMMPFNLIST ListHead,
     if (ListHead == &MmModifiedPageListHead)
     {
         /* For now, only single-prototype pages should end up in this path */
-        DPRINT1("Modified page being added: %lx\n", PageFrameIndex);
+        DPRINT("Modified page being added: %lx\n", PageFrameIndex);
         ASSERT(Pfn1->OriginalPte.u.Soft.Prototype == 0);
 
         /* Modified pages are colored when they are selected for page file */
@@ -1259,7 +1259,7 @@ MiDecrementShareCount(IN PMMPFN Pfn1,
             TempPte.u.Soft.Prototype = 0;
             TempPte.u.Soft.Protection = Pfn1->OriginalPte.u.Soft.Protection;
             MI_WRITE_INVALID_PTE(PointerPte, TempPte);
-            DPRINT1("Marking PTE: %p as transition (%p - %lx)\n", PointerPte, Pfn1, MiGetPfnEntryIndex(Pfn1));
+            DPRINT("Marking PTE: %p as transition (%p - %lx)\n", PointerPte, Pfn1, MiGetPfnEntryIndex(Pfn1));
         }
 
         /* Put the page in transition */

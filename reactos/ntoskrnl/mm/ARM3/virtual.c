@@ -4132,11 +4132,23 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
         }
 
         //
-        // We should make sure that the section's permissions aren't being messed with
+        // We should make sure that the section's permissions aren't being
+        // messed with
         //
         if (FoundVad->u.VadFlags.NoChange)
         {
-            DPRINT1("SEC_NO_CHANGE section being touched. Assuming this is ok\n");
+            //
+            // Make sure it's okay to touch it
+            //
+            Status = MiCheckSecuredVad(FoundVad,
+                                       PBaseAddress,
+                                       PRegionSize,
+                                       ProtectionMask);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("Secured VAD being messed around with\n");
+                goto FailPath;
+            }
         }
 
         //

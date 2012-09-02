@@ -771,7 +771,18 @@ MiUnmapViewOfSection(IN PEPROCESS Process,
     /* For SEC_NO_CHANGE sections, we need some extra checks */
     if (Vad->u.VadFlags.NoChange == 1)
     {
-        DPRINT1("Unmapping SEC_NO_CHANGE. Should validate if allowed!\n");
+        /* Are we allowed to mess with this VAD? */
+        Status = MiCheckSecuredVad(Vad,
+                                   (PVOID)(Vad->StartingVpn >> PAGE_SHIFT),
+                                   RegionSize,
+                                   MM_DELETE_CHECK);
+        if (!NT_SUCCESS(Status))
+        {
+            /* We failed */
+            DPRINT1("Trying to unmap protected VAD!\n");
+            if (!Flags) MmUnlockAddressSpace(&Process->Vm);
+            goto Quickie;
+        }
     }
 
     /* Not currently supported */

@@ -982,7 +982,7 @@ MiDispatchFault(IN BOOLEAN StoreInstruction,
                 {
                     /* This is a standby page, bring it back from the cache */
                     PageFrameIndex = TempPte.u.Trans.PageFrameNumber;
-                    DPRINT1("oooh, shiny, a soft fault! 0x%lx\n", PageFrameIndex);
+                    DPRINT("oooh, shiny, a soft fault! 0x%lx\n", PageFrameIndex);
                     Pfn1 = MI_PFN_ELEMENT(PageFrameIndex);
                     ASSERT(Pfn1->u3.e1.PageLocation != ActiveAndValid);
                     
