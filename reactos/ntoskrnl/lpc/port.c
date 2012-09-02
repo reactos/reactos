@@ -14,17 +14,17 @@
 
 /* GLOBALS *******************************************************************/
 
-POBJECT_TYPE LpcPortObjectType;
+POBJECT_TYPE LpcPortObjectType, LpcWaitablePortObjectType;
 ULONG LpcpMaxMessageSize;
 PAGED_LOOKASIDE_LIST LpcpMessagesLookaside;
 KGUARDED_MUTEX LpcpLock;
 ULONG LpcpTraceLevel = 0;
 ULONG LpcpNextMessageId = 1, LpcpNextCallbackId = 1;
 
-static GENERIC_MAPPING LpcpPortMapping = 
+static GENERIC_MAPPING LpcpPortMapping =
 {
-    STANDARD_RIGHTS_READ,
-    STANDARD_RIGHTS_WRITE,
+    READ_CONTROL | PORT_CONNECT,
+    DELETE | PORT_CONNECT,
     0,
     PORT_ALL_ACCESS
 };
@@ -46,18 +46,29 @@ LpcInitSystem(VOID)
     RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
     RtlInitUnicodeString(&Name, L"Port");
     ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
-    ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(LPCP_PORT_OBJECT);
-    ObjectTypeInitializer.DefaultPagedPoolCharge = sizeof(LPCP_NONPAGED_PORT_QUEUE);
+    ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(LPCP_NONPAGED_PORT_QUEUE);
+    ObjectTypeInitializer.DefaultPagedPoolCharge = FIELD_OFFSET(LPCP_PORT_OBJECT, WaitEvent);
     ObjectTypeInitializer.GenericMapping = LpcpPortMapping;
     ObjectTypeInitializer.PoolType = PagedPool;
     ObjectTypeInitializer.UseDefaultObject = TRUE;
     ObjectTypeInitializer.CloseProcedure = LpcpClosePort;
     ObjectTypeInitializer.DeleteProcedure = LpcpDeletePort;
     ObjectTypeInitializer.ValidAccessMask = PORT_ALL_ACCESS;
+    ObjectTypeInitializer.InvalidAttributes = OBJ_VALID_ATTRIBUTES & ~OBJ_CASE_INSENSITIVE;
     ObCreateObjectType(&Name,
                        &ObjectTypeInitializer,
                        NULL,
                        &LpcPortObjectType);
+
+    RtlInitUnicodeString(&Name, L"WaitablePort");
+    ObjectTypeInitializer.PoolType = NonPagedPool;
+    ObjectTypeInitializer.DefaultNonPagedPoolCharge += sizeof(LPCP_PORT_OBJECT);
+    ObjectTypeInitializer.DefaultPagedPoolCharge = 0;
+    ObjectTypeInitializer.UseDefaultObject = FALSE;
+    ObCreateObjectType(&Name,
+                       &ObjectTypeInitializer,
+                       NULL,
+                       &LpcWaitablePortObjectType);
 
     /* Allocate the LPC lookaside list */
     LpcpMaxMessageSize = LPCP_MAX_MESSAGE_SIZE;

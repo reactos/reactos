@@ -82,10 +82,10 @@ extern ULONG NTSYSAPI NtBuildNumber;
 //
 // Callback Object Access Mask
 //
-#define CALLBACK_ALL_ACCESS                 (STANDARD_RIGHTS_REQUIRED|SYNCHRONIZE|0x0001)
-#define CALLBACK_EXECUTE                    (STANDARD_RIGHTS_EXECUTE|SYNCHRONIZE|0x0001)
-#define CALLBACK_WRITE                      (STANDARD_RIGHTS_WRITE|SYNCHRONIZE|0x0001)
-#define CALLBACK_READ                       (STANDARD_RIGHTS_READ|SYNCHRONIZE|0x0001)
+#define CALLBACK_MODIFY_STATE               0x0001
+#define CALLBACK_ALL_ACCESS                 (STANDARD_RIGHTS_REQUIRED | \
+                                             SYNCHRONIZE | \
+                                             CALLBACK_MODIFY_STATE)
 
 //
 // Event Object Access Masks

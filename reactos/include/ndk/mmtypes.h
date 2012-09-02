@@ -416,6 +416,21 @@ typedef struct _SEGMENT
     MMPTE ThePtes[1];
 } SEGMENT, *PSEGMENT;
 
+typedef struct _MAPPED_FILE_SEGMENT
+{
+    struct _CONTROL_AREA *ControlArea;
+    ULONG TotalNumberOfPtes;
+    ULONG NonExtendedPtes;
+    ULONG Spare0;
+    UINT64 SizeOfSegment;
+    MMPTE SegmentPteTemplate;
+    SIZE_T NumberOfCommittedPages;
+    PMMEXTEND_INFO ExtendInfo;
+    SEGMENT_FLAGS SegmentFlags;
+    PVOID BasedAddress;
+    struct _MSUBSECTION *LastSubsectionHint;
+} MAPPED_FILE_SEGMENT, *PMAPPED_FILE_SEGMENT;
+
 //
 // Event Counter Structure
 //

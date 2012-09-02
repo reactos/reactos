@@ -664,13 +664,12 @@ ExpInitSystemPhase1(VOID)
     /* Initialize events and event pairs */
     ExpInitializeEventImplementation();
     ExpInitializeEventPairImplementation();
-    ExpInitializeKeyedEventImplementation();
-
-    /* Initialize callbacks */
-    ExpInitializeCallbacks();
-
+    
     /* Initialize mutants */
     ExpInitializeMutantImplementation();
+    
+    /* Initialize callbacks */
+    ExpInitializeCallbacks();
 
     /* Initialize semaphores */
     ExpInitializeSemaphoreImplementation();
@@ -683,6 +682,9 @@ ExpInitSystemPhase1(VOID)
 
     /* Initialize UUIDs */
     ExpInitUuids();
+    
+    /* Initialize keyed events */
+    ExpInitializeKeyedEventImplementation();
 
     /* Initialize Win32K */
     ExpWin32kInit();

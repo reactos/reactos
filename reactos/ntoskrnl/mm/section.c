@@ -2766,6 +2766,7 @@ MmInitSectionImplementation(VOID)
    ObjectTypeInitializer.DeleteProcedure = MmpDeleteSection;
    ObjectTypeInitializer.CloseProcedure = MmpCloseSection;
    ObjectTypeInitializer.ValidAccessMask = SECTION_ALL_ACCESS;
+   ObjectTypeInitializer.InvalidAttributes = OBJ_OPENLINK;
    ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &MmSectionObjectType);
 
    MmCreatePhysicalMemorySection();

@@ -23,8 +23,8 @@ POBJECT_TYPE ExEventPairObjectType = NULL;
 
 GENERIC_MAPPING ExEventPairMapping =
 {
-    STANDARD_RIGHTS_READ,
-    STANDARD_RIGHTS_WRITE,
+    STANDARD_RIGHTS_READ | SYNCHRONIZE,
+    STANDARD_RIGHTS_WRITE | SYNCHRONIZE,
     STANDARD_RIGHTS_EXECUTE | SYNCHRONIZE,
     EVENT_PAIR_ALL_ACCESS
 };
@@ -49,6 +49,7 @@ ExpInitializeEventPairImplementation(VOID)
     ObjectTypeInitializer.PoolType = NonPagedPool;
     ObjectTypeInitializer.ValidAccessMask = EVENT_PAIR_ALL_ACCESS;
     ObjectTypeInitializer.UseDefaultObject = TRUE;
+    ObjectTypeInitializer.InvalidAttributes = OBJ_OPENLINK;
     ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &ExEventPairObjectType);
 }
 

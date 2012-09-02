@@ -23,10 +23,11 @@ POBJECT_TYPE _ExEventObjectType = NULL;
 
 GENERIC_MAPPING ExpEventMapping =
 {
-    STANDARD_RIGHTS_READ | SYNCHRONIZE | EVENT_QUERY_STATE,
-    STANDARD_RIGHTS_WRITE | SYNCHRONIZE | EVENT_MODIFY_STATE,
-    STANDARD_RIGHTS_EXECUTE | SYNCHRONIZE | EVENT_QUERY_STATE,
-    EVENT_ALL_ACCESS};
+    STANDARD_RIGHTS_READ | EVENT_QUERY_STATE,
+    STANDARD_RIGHTS_WRITE | EVENT_MODIFY_STATE,
+    STANDARD_RIGHTS_EXECUTE | SYNCHRONIZE,
+    EVENT_ALL_ACCESS
+};
 
 static const INFORMATION_CLASS_INFO ExEventInfoClass[] =
 {
@@ -53,6 +54,7 @@ ExpInitializeEventImplementation(VOID)
     ObjectTypeInitializer.GenericMapping = ExpEventMapping;
     ObjectTypeInitializer.PoolType = NonPagedPool;
     ObjectTypeInitializer.ValidAccessMask = EVENT_ALL_ACCESS;
+    ObjectTypeInitializer.InvalidAttributes = OBJ_OPENLINK;
     ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &ExEventObjectType);
 }
 

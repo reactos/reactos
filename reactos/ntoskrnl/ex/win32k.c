@@ -151,6 +151,11 @@ ExpWin32kInit(VOID)
     ObjectTypeInitializer.DeleteProcedure = ExpWinStaObjectDelete;
     ObjectTypeInitializer.ParseProcedure = ExpWinStaObjectParse;
     ObjectTypeInitializer.OkayToCloseProcedure = ExpWindowStationOkToClose;
+    ObjectTypeInitializer.MaintainHandleCount = TRUE;
+    ObjectTypeInitializer.SecurityRequired = TRUE;
+    ObjectTypeInitializer.InvalidAttributes = OBJ_OPENLINK |
+                                              OBJ_PERMANENT |
+                                              OBJ_EXCLUSIVE;
     ObCreateObjectType(&Name,
                        &ObjectTypeInitializer,
                        NULL,

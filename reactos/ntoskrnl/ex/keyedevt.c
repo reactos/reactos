@@ -42,7 +42,7 @@ GENERIC_MAPPING ExpKeyedEventMapping =
 {
     STANDARD_RIGHTS_READ | EVENT_QUERY_STATE,
     STANDARD_RIGHTS_WRITE | EVENT_MODIFY_STATE,
-    STANDARD_RIGHTS_EXECUTE | EVENT_QUERY_STATE,
+    STANDARD_RIGHTS_EXECUTE,
     EVENT_ALL_ACCESS
 };
 
@@ -60,7 +60,8 @@ ExpInitializeKeyedEventImplementation(VOID)
     /* Set up the object type initializer */
     ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
     ObjectTypeInitializer.GenericMapping = ExpKeyedEventMapping;
-    ObjectTypeInitializer.PoolType = NonPagedPool;
+    ObjectTypeInitializer.PoolType = PagedPool;
+    ObjectTypeInitializer.ValidAccessMask = EVENT_ALL_ACCESS;
     //ObjectTypeInitializer.DeleteProcedure = ???;
     //ObjectTypeInitializer.OkayToCloseProcedure = ???;
 

@@ -500,8 +500,7 @@ PspInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Initialize Object Initializer */
     RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
     ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
-    ObjectTypeInitializer.InvalidAttributes = OBJ_OPENLINK |
-                                              OBJ_PERMANENT |
+    ObjectTypeInitializer.InvalidAttributes = OBJ_PERMANENT |
                                               OBJ_EXCLUSIVE |
                                               OBJ_OPENIF;
     ObjectTypeInitializer.PoolType = NonPagedPool;
@@ -529,6 +528,7 @@ PspInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
     ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(EJOB);
     ObjectTypeInitializer.GenericMapping = PspJobMapping;
+    ObjectTypeInitializer.InvalidAttributes = 0;
     ObjectTypeInitializer.ValidAccessMask = JOB_OBJECT_ALL_ACCESS;
     ObjectTypeInitializer.DeleteProcedure = PspDeleteJob;
     ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &PsJobType);

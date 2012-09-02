@@ -1495,7 +1495,7 @@ DbgkInitialize(VOID)
     ObjectTypeInitializer.GenericMapping = DbgkDebugObjectMapping;
     ObjectTypeInitializer.PoolType = NonPagedPool;
     ObjectTypeInitializer.ValidAccessMask = DEBUG_OBJECT_ALL_ACCESS;
-    ObjectTypeInitializer.UseDefaultObject = TRUE;
+    ObjectTypeInitializer.SecurityRequired = TRUE;
     ObjectTypeInitializer.CloseProcedure = DbgkpCloseObject;
     ObjectTypeInitializer.DeleteProcedure = DbgkpDeleteObject;
     ObCreateObjectType(&Name,

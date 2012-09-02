@@ -866,6 +866,7 @@ CmpCreateObjectTypes(VOID)
     ObjectTypeInitializer.QueryNameProcedure = CmpQueryKeyName;
     ObjectTypeInitializer.CloseProcedure = CmpCloseKeyObject;
     ObjectTypeInitializer.SecurityRequired = TRUE;
+    ObjectTypeInitializer.InvalidAttributes = OBJ_EXCLUSIVE | OBJ_PERMANENT;
 
     /* Create it */
     return ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &CmpKeyObjectType);
