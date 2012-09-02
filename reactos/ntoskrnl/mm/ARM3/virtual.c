@@ -3739,11 +3739,6 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
         }
     }
 
-    //
-    // Force PAGE_READWRITE for everything, for now
-    //
-    Protect = PAGE_READWRITE;
-
     /* Calculate the protection mask and make sure it's valid */
     ProtectionMask = MiMakeProtectionMask(Protect);
     if (ProtectionMask == MM_INVALID_PROTECTION)

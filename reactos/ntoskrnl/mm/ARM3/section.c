@@ -81,6 +81,29 @@ CHAR MmUserProtectionToMask2[16] =
     (CHAR)MM_INVALID_PROTECTION
 };
 
+ULONG MmCompatibleProtectionMask[8] =
+{
+    PAGE_NOACCESS,
+    
+    PAGE_NOACCESS | PAGE_READONLY | PAGE_WRITECOPY,
+    
+    PAGE_NOACCESS | PAGE_EXECUTE,
+    
+    PAGE_NOACCESS | PAGE_READONLY | PAGE_WRITECOPY | PAGE_EXECUTE |
+    PAGE_EXECUTE_READ,
+    
+    PAGE_NOACCESS | PAGE_READONLY | PAGE_WRITECOPY | PAGE_READWRITE,
+    
+    PAGE_NOACCESS | PAGE_READONLY | PAGE_WRITECOPY,
+    
+    PAGE_NOACCESS | PAGE_READONLY | PAGE_WRITECOPY | PAGE_READWRITE |
+    PAGE_EXECUTE | PAGE_EXECUTE_READ | PAGE_EXECUTE_READWRITE |
+    PAGE_EXECUTE_WRITECOPY,
+    
+    PAGE_NOACCESS | PAGE_READONLY | PAGE_WRITECOPY | PAGE_EXECUTE |
+    PAGE_EXECUTE_READ | PAGE_EXECUTE_WRITECOPY
+};
+
 MMSESSION MmSession;
 KGUARDED_MUTEX MmSectionCommitMutex;
 MM_AVL_TABLE MmSectionBasedRoot;
@@ -88,6 +111,29 @@ KGUARDED_MUTEX MmSectionBasedMutex;
 PVOID MmHighSectionBase;
 
 /* PRIVATE FUNCTIONS **********************************************************/
+
+BOOLEAN
+NTAPI
+MiIsProtectionCompatible(IN ULONG SectionPageProtection,
+                         IN ULONG NewSectionPageProtection)
+{
+    ULONG ProtectionMask, CompatibleMask;
+
+    /* Calculate the protection mask and make sure it's valid */
+    ProtectionMask = MiMakeProtectionMask(SectionPageProtection);
+    if (ProtectionMask == MM_INVALID_PROTECTION)
+    {
+        DPRINT1("Invalid protection mask\n");
+        return FALSE;
+    }
+
+    /* Calculate the compatible mask */
+    CompatibleMask = MmCompatibleProtectionMask[ProtectionMask & 0x7] |
+                     PAGE_GUARD | PAGE_NOCACHE | PAGE_WRITECOMBINE;
+
+    /* See if the mapping protection is compatible with the create protection */
+    return ((CompatibleMask | NewSectionPageProtection) == CompatibleMask);
+}
 
 ACCESS_MASK
 NTAPI
@@ -2424,9 +2470,6 @@ MmMapViewOfArm3Section(IN PVOID SectionObject,
     NTSTATUS Status;
     PAGED_CODE();
 
-    /* Force PAGE_READWRITE for everything, for now */
-    Protect = PAGE_READWRITE;
-
     /* Get the segment and control area */
     Section = (PSECTION)SectionObject;
     ControlArea = Section->Segment->ControlArea;
@@ -2438,14 +2481,12 @@ MmMapViewOfArm3Section(IN PVOID SectionObject,
     ASSERT((AllocationType & MEM_RESERVE) == 0);
     ASSERT(ControlArea->u.Flags.PhysicalMemory == 0);
 
-#if 0
-    /* FIXME: Check if the mapping protection is compatible with the create */
+    /* Check if the mapping protection is compatible with the create */
     if (!MiIsProtectionCompatible(Section->InitialPageProtection, Protect))
     {
         DPRINT1("Mapping protection is incompatible\n");
         return STATUS_SECTION_PROTECTION;
     }
-#endif
 
     /* Check if the offset and size would cause an overflow */
     if (((ULONG64)SectionOffset->QuadPart + *ViewSize) <

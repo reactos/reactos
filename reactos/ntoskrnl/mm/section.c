@@ -4986,7 +4986,11 @@ MmCreateSection (OUT PVOID  * Section,
 #endif
     else
     {
-        ASSERT(AllocationAttributes & SEC_PHYSICALMEMORY);
+        if ((AllocationAttributes & SEC_PHYSICALMEMORY) == 0)
+        {
+            DPRINT1("Invalid path: %lx %p %p\n", AllocationAttributes, FileObject, FileHandle);
+        }
+//        ASSERT(AllocationAttributes & SEC_PHYSICALMEMORY);
         Status = MmCreatePageFileSection(SectionObject,
                                          DesiredAccess,
                                          ObjectAttributes,
