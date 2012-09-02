@@ -2217,7 +2217,6 @@ MmCreateArm3Section(OUT PVOID *SectionObject,
             /* Yep, use the entered size */
             Section.SizeOfSection.QuadPart = InputMaximumSize->QuadPart;
         }
-
     }
     else
     {

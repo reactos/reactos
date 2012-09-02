@@ -2009,20 +2009,6 @@ MiQueryMemorySectionName(
 
 NTSTATUS
 NTAPI
-MiRosAllocateVirtualMemory(
-    IN HANDLE ProcessHandle,
-    IN PEPROCESS Process,
-    IN PMEMORY_AREA MemoryArea,
-    IN PMMSUPPORT AddressSpace,
-    IN OUT PVOID* UBaseAddress,
-    IN BOOLEAN Attached,
-    IN OUT PSIZE_T URegionSize,
-    IN ULONG AllocationType,
-    IN ULONG Protect
-);
-
-NTSTATUS
-NTAPI
 MiRosUnmapViewInSystemSpace(
     IN PVOID MappedBase
 );

@@ -1749,6 +1749,82 @@ MiQueryMemoryBasicInformation(IN HANDLE ProcessHandle,
     return Status;
 }
 
+ULONG
+NTAPI
+MiIsEntireRangeCommitted(IN ULONG_PTR StartingAddress,
+                         IN ULONG_PTR EndingAddress,
+                         IN PMMVAD Vad,
+                         IN PEPROCESS Process)
+{
+    PMMPTE PointerPte, LastPte, PointerPde;
+    BOOLEAN OnBoundary = TRUE;
+    PAGED_CODE();
+
+    /* Get the PDE and PTE addresses */
+    PointerPde = MiAddressToPde(StartingAddress);
+    PointerPte = MiAddressToPte(StartingAddress);
+    LastPte = MiAddressToPte(EndingAddress);
+
+    /* Loop all the PTEs */
+    while (PointerPte <= LastPte)
+    {
+        /* Check if we've hit an new PDE boundary */
+        if (OnBoundary)
+        {
+            /* Is this PDE demand zero? */
+            PointerPde = MiAddressToPte(PointerPte);
+            if (PointerPde->u.Long != 0)
+            {
+                /* It isn't -- is it valid? */
+                if (PointerPde->u.Hard.Valid == 0)
+                {
+                    /* Nope, fault it in */
+                    PointerPte = MiPteToAddress(PointerPde);
+                    MiMakeSystemAddressValid(PointerPte, Process);
+                }
+            }
+            else
+            {
+                /* The PTE was already valid, so move to the next one */
+                PointerPde++;
+                PointerPte = MiPteToAddress(PointerPde);
+
+                /* Is the entire VAD committed? If not, fail */
+                if (!Vad->u.VadFlags.MemCommit) return FALSE;
+
+                /* Everything is committed so far past the range, return true */
+                if (PointerPte > LastPte) return TRUE;
+            }
+        }
+
+        /* Is the PTE demand zero? */
+        if (PointerPte->u.Long == 0)
+        {
+            /* Is the entire VAD committed? If not, fail */
+            if (!Vad->u.VadFlags.MemCommit) return FALSE;
+        }
+        else
+        {
+            /* It isn't -- is it a decommited, invalid, or faulted PTE? */
+            if ((PointerPte->u.Soft.Protection == MM_DECOMMIT) &&
+                (PointerPte->u.Hard.Valid == 0) &&
+                ((PointerPte->u.Soft.Prototype == 0) ||
+                 (PointerPte->u.Soft.PageFileHigh == MI_PTE_LOOKUP_NEEDED)))
+            {
+                /* Then part of the range is decommitted, so fail */
+                return FALSE;
+            }
+        }
+
+        /* Move to the next PTE */
+        PointerPte++;
+        OnBoundary = MiIsPteOnPdeBoundary(PointerPte);
+    }
+
+    /* All PTEs seem valid, and no VAD checks failed, the range is okay */
+    return TRUE;
+}
+
 NTSTATUS
 NTAPI
 MiProtectVirtualMemory(IN PEPROCESS Process,
@@ -1765,19 +1841,9 @@ MiProtectVirtualMemory(IN PEPROCESS Process,
     MMPTE PteContents;
     //PUSHORT UsedPageTableEntries;
     PMMPFN Pfn1;
-    ULONG ProtectionMask;
+    ULONG ProtectionMask, OldProtect;
+    BOOLEAN Committed;
     NTSTATUS Status = STATUS_SUCCESS;
-
-    /* Check for ROS specific memory area */
-    MemoryArea = MmLocateMemoryAreaByAddress(&Process->Vm, *BaseAddress);
-    if ((MemoryArea) && (MemoryArea->Type == MEMORY_AREA_SECTION_VIEW))
-    {
-        return MiRosProtectVirtualMemory(Process,
-                                         BaseAddress,
-                                         NumberOfBytesToProtect,
-                                         NewAccessProtection,
-                                         OldAccessProtection);
-    }
 
     /* Calcualte base address for the VAD */
     StartingAddress = (ULONG_PTR)PAGE_ALIGN((*BaseAddress));
@@ -1838,10 +1904,53 @@ MiProtectVirtualMemory(IN PEPROCESS Process,
         goto FailPath;
     }
 
+    /* Check for ROS specific memory area */
+    MemoryArea = MmLocateMemoryAreaByAddress(&Process->Vm, *BaseAddress);
+    if ((MemoryArea) && (MemoryArea->Type == MEMORY_AREA_SECTION_VIEW))
+    {
+        /* Empirical evidence suggests this is only used in one critical scenario and is always a no-op */
+        OldProtect = NewAccessProtection;
+        goto RosReturn;
+    }
+
+    /* Is this section, or private memory? */
     if (Vad->u.VadFlags.PrivateMemory == 0)
     {
-        /* This is a section, handled by the ROS specific code above */
-        UNIMPLEMENTED;
+        /* Not yet supported */
+        if (Vad->u.VadFlags.VadType == VadLargePageSection)
+        {
+            DPRINT1("Illegal VAD for attempting to set protection\n");
+            Status = STATUS_CONFLICTING_ADDRESSES;
+            goto FailPath;
+        }
+
+        /* Rotate VADs are not yet supported */
+        if (Vad->u.VadFlags.VadType == VadRotatePhysical)
+        {
+            DPRINT1("Illegal VAD for attempting to set protection\n");
+            Status = STATUS_CONFLICTING_ADDRESSES;
+            goto FailPath;
+        }
+
+        /* Not valid on section files */
+        if (NewAccessProtection & (PAGE_NOCACHE | PAGE_WRITECOMBINE))
+        {
+            /* Fail */
+            DPRINT1("Invalid protection flags for section\n");
+            Status = STATUS_INVALID_PARAMETER_4;
+            goto FailPath;
+        }
+
+        /* Check if data or page file mapping protection PTE is compatible */
+        if (!Vad->ControlArea->u.Flags.Image)
+        {
+            /* Not yet */
+            DPRINT1("Fixme: Not checking for valid protection\n");
+        }
+
+        /* This is a section, and this is not yet supported */
+        DPRINT1("Section protection not yet supported\n");
+        OldProtect = 0;
     }
     else
     {
@@ -1849,13 +1958,26 @@ MiProtectVirtualMemory(IN PEPROCESS Process,
         if ((NewAccessProtection & PAGE_WRITECOPY) ||
             (NewAccessProtection & PAGE_EXECUTE_WRITECOPY))
         {
+            DPRINT1("Invalid protection flags for private memory\n");
             Status = STATUS_INVALID_PARAMETER_4;
             goto FailPath;
         }
 
         //MiLockProcessWorkingSet(Thread, Process);
 
-        /* TODO: Check if all pages in this range are committed */
+        /* Check if all pages in this range are committed */
+        Committed = MiIsEntireRangeCommitted(StartingAddress,
+                                             EndingAddress,
+                                             Vad,
+                                             Process);
+        if (!Committed)
+        {
+            /* Fail */
+            DPRINT1("The entire range is not committed\n");
+            Status = STATUS_NOT_COMMITTED;
+            //MiUnlockProcessWorkingSet(Thread, Process);
+            goto FailPath;
+        }
 
         /* Compute starting and ending PTE and PDE addresses */
         PointerPde = MiAddressToPde(StartingAddress);
@@ -1869,13 +1991,13 @@ MiProtectVirtualMemory(IN PEPROCESS Process,
         if (PointerPte->u.Long != 0)
         {
             /* Capture the page protection and make the PDE valid */
-            *OldAccessProtection = MiGetPageProtection(PointerPte);
+            OldProtect = MiGetPageProtection(PointerPte);
             MiMakePdeExistAndMakeValid(PointerPde, Process, MM_NOIRQL);
         }
         else
         {
             /* Grab the old protection from the VAD itself */
-            *OldAccessProtection = MmProtectToValue[Vad->u.VadFlags.Protection];
+            OldProtect = MmProtectToValue[Vad->u.VadFlags.Protection];
         }
 
         /* Loop all the PTEs now */
@@ -1911,19 +2033,18 @@ MiProtectVirtualMemory(IN PEPROCESS Process,
                 if ((NewAccessProtection & PAGE_NOACCESS) ||
                     (NewAccessProtection & PAGE_GUARD))
                 {
-                    /* TODO */
+                    /* The page should be in the WS and we should make it transition now */
                     UNIMPLEMENTED;
+                    //continue;
                 }
-                else
-                {
-                    /* Write the protection mask and write it with a TLB flush */
-                    Pfn1->OriginalPte.u.Soft.Protection = ProtectionMask;
-                    MiFlushTbAndCapture(Vad,
-                                        PointerPte,
-                                        ProtectionMask,
-                                        Pfn1,
-                                        TRUE);
-                }
+
+                /* Write the protection mask and write it with a TLB flush */
+                Pfn1->OriginalPte.u.Soft.Protection = ProtectionMask;
+                MiFlushTbAndCapture(Vad,
+                                    PointerPte,
+                                    ProtectionMask,
+                                    Pfn1,
+                                    TRUE);
             }
             else
             {
@@ -1933,23 +2054,29 @@ MiProtectVirtualMemory(IN PEPROCESS Process,
 
                 /* The PTE is already demand-zero, just update the protection mask */
                 PointerPte->u.Soft.Protection = ProtectionMask;
+                ASSERT(PointerPte->u.Long != 0);
             }
 
+            /* Move to the next PTE */
             PointerPte++;
         }
 
-        /* Unlock the working set and update quota charges if needed, then return */
+        /* Unlock the working set */
         //MiUnlockProcessWorkingSet(Thread, Process);
     }
-
-FailPath:
+RosReturn:
     /* Unlock the address space */
     MmUnlockAddressSpace(AddressSpace);
 
-    /* Return parameters */
-    *NumberOfBytesToProtect = (SIZE_T)((PUCHAR)EndingAddress - (PUCHAR)StartingAddress + 1);
+    /* Return parameters and success */
+    *NumberOfBytesToProtect = EndingAddress - StartingAddress + 1;
     *BaseAddress = (PVOID)StartingAddress;
+    *OldAccessProtection = OldProtect;
+    return STATUS_SUCCESS;
 
+FailPath:
+    /* Unlock the address space and return the failure code */
+    MmUnlockAddressSpace(AddressSpace);
     return Status;
 }
 
@@ -3668,15 +3795,50 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
     }
 
     //
-    // Assert on the things we don't yet support
+    // Fail on the things we don't yet support
     //
-    ASSERT(ZeroBits == 0);
-    ASSERT((AllocationType & MEM_LARGE_PAGES) == 0);
-    ASSERT((AllocationType & MEM_PHYSICAL) == 0);
-    ASSERT((AllocationType & MEM_WRITE_WATCH) == 0);
-    ASSERT((AllocationType & MEM_TOP_DOWN) == 0);
-    ASSERT((AllocationType & MEM_RESET) == 0);
-    ASSERT(Process->VmTopDown == 0);
+    if (ZeroBits != 0)
+    {
+        DPRINT1("Zero bits not supported\n");
+        Status = STATUS_INVALID_PARAMETER;
+        goto FailPathNoLock;
+    }
+    if ((AllocationType & MEM_LARGE_PAGES) == 1)
+    {
+        DPRINT1("MEM_LARGE_PAGES not supported\n");
+        Status = STATUS_INVALID_PARAMETER;
+        goto FailPathNoLock;
+    }
+    if ((AllocationType & MEM_PHYSICAL) == 1)
+    {
+        DPRINT1("MEM_PHYSICAL not supported\n");
+        Status = STATUS_INVALID_PARAMETER;
+        goto FailPathNoLock;
+    }
+    if ((AllocationType & MEM_WRITE_WATCH) == 1)
+    {
+        DPRINT1("MEM_WRITE_WATCH not supported\n");
+        Status = STATUS_INVALID_PARAMETER;
+        goto FailPathNoLock;
+    }
+    if ((AllocationType & MEM_TOP_DOWN) == 1)
+    {
+        DPRINT1("MEM_TOP_DOWN not supported\n");
+        Status = STATUS_INVALID_PARAMETER;
+        goto FailPathNoLock;
+    }
+    if ((AllocationType & MEM_RESET) == 1)
+    {
+        DPRINT1("MEM_RESET not supported\n");
+        Status = STATUS_INVALID_PARAMETER;
+        goto FailPathNoLock;
+    }
+    if (Process->VmTopDown == 1)
+    {
+        DPRINT1("VmTopDown not supported\n");
+        Status = STATUS_INVALID_PARAMETER;
+        goto FailPathNoLock;
+    }
 
     //
     // Check if the caller is reserving memory, or committing memory and letting
@@ -3895,24 +4057,10 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
     }
 
     //
-    // If this is an existing section view, we call the old RosMm routine which
-    // has the relevant code required to handle the section scenario. In the future
-    // we will limit this even more so that there's almost nothing that the code
-    // needs to do, and it will become part of section.c in RosMm
+    // Make sure this is an ARM3 section
     //
     MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, (PVOID)PAGE_ROUND_DOWN(PBaseAddress));
-    if (MemoryArea->Type != MEMORY_AREA_OWNED_BY_ARM3)
-    {
-        return MiRosAllocateVirtualMemory(ProcessHandle,
-                                          Process,
-                                          MemoryArea,
-                                          AddressSpace,
-                                          UBaseAddress,
-                                          Attached,
-                                          URegionSize,
-                                          AllocationType,
-                                          Protect);
-    }
+    ASSERT(MemoryArea->Type == MEMORY_AREA_OWNED_BY_ARM3);
 
     // Is this a previously reserved section being committed? If so, enter the
     // special section path
@@ -4324,12 +4472,21 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
     }
 
     //
-    // These ASSERTs are here because ReactOS ARM3 does not currently implement
-    // any other kinds of VADs.
+    // Only private memory (except rotate VADs) can be freed through here */
     //
-    ASSERT(Vad->u.VadFlags.PrivateMemory == 1);
+    if ((!(Vad->u.VadFlags.PrivateMemory) &&
+         (Vad->u.VadFlags.VadType != VadRotatePhysical)) ||
+        (Vad->u.VadFlags.VadType == VadDevicePhysicalMemory))
+    {
+        DPRINT1("Attempt to free section memory\n");
+        Status = STATUS_UNABLE_TO_DELETE_SECTION;
+        goto FailPath;
+    }
+
+    //
+    // ARM3 does not yet handle protected VM
+    //
     ASSERT(Vad->u.VadFlags.NoChange == 0);
-    ASSERT(Vad->u.VadFlags.VadType == VadNone);
 
     //
     // Finally, make sure there is a ReactOS Mm MEMORY_AREA for this allocation
@@ -4345,6 +4502,11 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
     //
     if (FreeType & MEM_RELEASE)
     {
+        //
+        // ARM3 only supports this VAD in this path
+        //
+        ASSERT(Vad->u.VadFlags.VadType == VadNone);
+
         //
         // Is the caller trying to remove the whole VAD, or remove only a portion
         // of it? If no region size is specified, then the assumption is that the
