@@ -1718,17 +1718,13 @@ VOID
 MmLockAddressSpace(PMMSUPPORT AddressSpace)
 {
     KeAcquireGuardedMutex(&CONTAINING_RECORD(AddressSpace, EPROCESS, Vm)->AddressCreationLock);
-    //ASSERT(Thread->OwnsProcessAddressSpaceExclusive == 0);
-    //Thread->OwnsProcessAddressSpaceExclusive = TRUE;
 }
 
 FORCEINLINE
 VOID
 MmUnlockAddressSpace(PMMSUPPORT AddressSpace)
 {
-    //ASSERT(Thread->OwnsProcessAddressSpaceExclusive == 1);
     KeReleaseGuardedMutex(&CONTAINING_RECORD(AddressSpace, EPROCESS, Vm)->AddressCreationLock);
-    //Thread->OwnsProcessAddressSpaceExclusive = 0;
 }
 
 FORCEINLINE

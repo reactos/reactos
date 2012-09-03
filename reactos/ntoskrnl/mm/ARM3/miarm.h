@@ -1041,6 +1041,14 @@ BOOLEAN
 MI_WS_OWNER(IN PEPROCESS Process)
 {
     /* Check if this process is the owner, and that the thread owns the WS */
+    if (PsGetCurrentThread()->OwnsProcessWorkingSetExclusive == 0)
+    {
+        DPRINT1("Thread: %p is not an owner\n", PsGetCurrentThread());
+    }
+    if (KeGetCurrentThread()->ApcState.Process != &Process->Pcb)
+    {
+        DPRINT1("Current thread %p is attached to another process %p\n", PsGetCurrentThread(), Process);
+    }
     return ((KeGetCurrentThread()->ApcState.Process == &Process->Pcb) &&
             ((PsGetCurrentThread()->OwnsProcessWorkingSetExclusive) ||
              (PsGetCurrentThread()->OwnsProcessWorkingSetShared)));
@@ -1083,6 +1091,13 @@ MiDecrementReferenceCount(
     IN PFN_NUMBER PageFrameIndex
 );
 
+FORCEINLINE
+BOOLEAN
+MI_IS_WS_UNSAFE(IN PEPROCESS Process)
+{
+    return (Process->Vm.Flags.AcquiredUnsafe == TRUE);
+}
+
 //
 // Locks the working set for the given process
 //
@@ -1099,12 +1114,57 @@ MiLockProcessWorkingSet(IN PEPROCESS Process,
     KeEnterGuardedRegion();
     ASSERT(!MM_ANY_WS_LOCK_HELD(Thread));
 
-    /* FIXME: Actually lock it (we can't because Vm is used by MAREAs) */
+    /* Lock the working set */
+    ExAcquirePushLockExclusive(&Process->Vm.WorkingSetMutex);
 
-    /* FIXME: This also can't be checked because Vm is used by MAREAs) */
-    //ASSERT(Process->Vm.Flags.AcquiredUnsafe == 0);
+    /* Now claim that we own the lock */
+    ASSERT(!MI_IS_WS_UNSAFE(Process));
+    ASSERT(Thread->OwnsProcessWorkingSetExclusive == FALSE);
+    Thread->OwnsProcessWorkingSetExclusive = TRUE;
+}
 
-    /* Okay, now we can own it exclusively */
+FORCEINLINE
+VOID
+MiLockProcessWorkingSetShared(IN PEPROCESS Process,
+                              IN PETHREAD Thread)
+{
+    /* Shouldn't already be owning the process working set */
+    ASSERT(Thread->OwnsProcessWorkingSetShared == FALSE);
+    ASSERT(Thread->OwnsProcessWorkingSetExclusive == FALSE);
+
+    /* Block APCs, make sure that still nothing is already held */
+    KeEnterGuardedRegion();
+    ASSERT(!MM_ANY_WS_LOCK_HELD(Thread));
+
+    /* Lock the working set */
+    ExAcquirePushLockShared(&Process->Vm.WorkingSetMutex);
+
+    /* Now claim that we own the lock */
+    ASSERT(!MI_IS_WS_UNSAFE(Process));
+    ASSERT(Thread->OwnsProcessWorkingSetShared == FALSE);
+    ASSERT(Thread->OwnsProcessWorkingSetExclusive == FALSE);
+    Thread->OwnsProcessWorkingSetShared = TRUE;
+}
+
+FORCEINLINE
+VOID
+MiLockProcessWorkingSetUnsafe(IN PEPROCESS Process,
+                              IN PETHREAD Thread)
+{
+    /* Shouldn't already be owning the process working set */
+    ASSERT(Thread->OwnsProcessWorkingSetExclusive == FALSE);
+
+    /* APCs must be blocked, make sure that still nothing is already held */
+    ASSERT(KeAreAllApcsDisabled() == TRUE);
+    ASSERT(!MM_ANY_WS_LOCK_HELD(Thread));
+
+    /* Lock the working set */
+    ExAcquirePushLockExclusive(&Process->Vm.WorkingSetMutex);
+
+    /* Now claim that we own the lock */
+    ASSERT(!MI_IS_WS_UNSAFE(Process));
+    Process->Vm.Flags.AcquiredUnsafe = 1;
+    ASSERT(Thread->OwnsProcessWorkingSetExclusive == FALSE);
     Thread->OwnsProcessWorkingSetExclusive = TRUE;
 }
 
@@ -1116,19 +1176,43 @@ VOID
 MiUnlockProcessWorkingSet(IN PEPROCESS Process,
                           IN PETHREAD Thread)
 {
-    /* Make sure this process really is owner, and it was a safe acquisition */
+    /* Make sure we are the owner of a safe acquisition */
     ASSERT(MI_WS_OWNER(Process));
-    /* This can't be checked because Vm is used by MAREAs) */
-    //ASSERT(Process->Vm.Flags.AcquiredUnsafe == 0);
+    ASSERT(!MI_IS_WS_UNSAFE(Process));
 
     /* The thread doesn't own it anymore */
     ASSERT(Thread->OwnsProcessWorkingSetExclusive == TRUE);
     Thread->OwnsProcessWorkingSetExclusive = FALSE;
 
-    /* FIXME: Actually release it (we can't because Vm is used by MAREAs) */
-
-    /* Unblock APCs */
+    /* Release the lock and re-enable APCs */
+    ExReleasePushLockExclusive(&Process->Vm.WorkingSetMutex);
     KeLeaveGuardedRegion();
+}
+
+//
+// Unlocks the working set for the given process
+//
+FORCEINLINE
+VOID
+MiUnlockProcessWorkingSetUnsafe(IN PEPROCESS Process,
+                                IN PETHREAD Thread)
+{
+    /* Make sure we are the owner of an unsafe acquisition */
+    ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
+    ASSERT(KeAreAllApcsDisabled() == TRUE);
+    ASSERT(MI_WS_OWNER(Process));
+    ASSERT(MI_IS_WS_UNSAFE(Process));
+
+    /* No longer unsafe */
+    Process->Vm.Flags.AcquiredUnsafe = 0;
+
+    /* The thread doesn't own it anymore */
+    ASSERT(Thread->OwnsProcessWorkingSetExclusive == TRUE);
+    Thread->OwnsProcessWorkingSetExclusive = FALSE;
+
+    /* Release the lock but don't touch APC state */
+    ExReleasePushLockExclusive(&Process->Vm.WorkingSetMutex);
+    ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
 }
 
 //
@@ -1148,7 +1232,8 @@ MiLockWorkingSet(IN PETHREAD Thread,
     /* Thread shouldn't already be owning something */
     ASSERT(!MM_ANY_WS_LOCK_HELD(Thread));
 
-    /* FIXME: Actually lock it (we can't because Vm is used by MAREAs) */
+    /* Lock this working set */
+    ExAcquirePushLockExclusive(&WorkingSet->WorkingSetMutex);
 
     /* Which working set is this? */
     if (WorkingSet == &MmSystemCacheWs)
@@ -1208,10 +1293,66 @@ MiUnlockWorkingSet(IN PETHREAD Thread,
         Thread->OwnsProcessWorkingSetExclusive = FALSE;
     }
 
-    /* FIXME: Actually release it (we can't because Vm is used by MAREAs) */
+    /* Release the working set lock */
+    ExReleasePushLockExclusive(&WorkingSet->WorkingSetMutex);
 
     /* Unblock APCs */
     KeLeaveGuardedRegion();
+}
+
+FORCEINLINE
+VOID
+MiUnlockProcessWorkingSetForFault(IN PEPROCESS Process,
+                                  IN PETHREAD Thread,
+                                  IN BOOLEAN Safe,
+                                  IN BOOLEAN Shared)
+{
+    ASSERT(MI_WS_OWNER(Process));
+
+    /* Check if the current owner is unsafe */
+    if (MI_IS_WS_UNSAFE(Process))
+    {
+        /* Release unsafely */
+        MiUnlockProcessWorkingSetUnsafe(Process, Thread);
+        Safe = FALSE;
+        Shared = FALSE;
+    }
+    else if (Thread->OwnsProcessWorkingSetExclusive == 1)
+    {
+        /* Owner is safe and exclusive, release normally */
+        MiUnlockProcessWorkingSet(Process, Thread);
+        Safe = TRUE;
+        Shared = FALSE;
+    }
+    else
+    {
+        /* Owner is shared (implies safe), release normally */
+        ASSERT(FALSE);
+        Safe = TRUE;
+        Shared = TRUE;
+    }
+}
+
+FORCEINLINE
+VOID
+MiLockProcessWorkingSetForFault(IN PEPROCESS Process,
+                                IN PETHREAD Thread,
+                                IN BOOLEAN Safe,
+                                IN BOOLEAN Shared)
+{
+    ASSERT(Shared == FALSE);
+
+    /* Check if this was a safe lock or not */
+    if (Safe)
+    {
+        /* Reacquire safely */
+        MiLockProcessWorkingSet(Process, Thread);
+    }
+    else
+    {
+        /* Reacquire unsafely */
+        MiLockProcessWorkingSetUnsafe(Process, Thread);
+    }
 }
 
 //

@@ -205,7 +205,7 @@ MiMakeSystemAddressValid(IN PVOID PageTableVirtualAddress,
                          IN PEPROCESS CurrentProcess)
 {
     NTSTATUS Status;
-    BOOLEAN WsWasLocked = FALSE, LockChange = FALSE;
+    BOOLEAN WsShared = FALSE, WsSafe = FALSE, LockChange = FALSE;
     PETHREAD CurrentThread = PsGetCurrentThread();
 
     /* Must be a non-pool page table, since those are double-mapped already */
@@ -219,13 +219,11 @@ MiMakeSystemAddressValid(IN PVOID PageTableVirtualAddress,
     /* Check if the page table is valid */
     while (!MmIsAddressValid(PageTableVirtualAddress))
     {
-        /* Check if the WS is locked */
-        if (CurrentThread->OwnsProcessWorkingSetExclusive)
-        {
-            /* Unlock the working set and remember it was locked */
-            MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
-            WsWasLocked = TRUE;
-        }
+        /* Release the working set lock */
+        MiUnlockProcessWorkingSetForFault(CurrentProcess,
+                                          CurrentThread,
+                                          WsSafe,
+                                          WsShared);
 
         /* Fault it in */
         Status = MmAccessFault(FALSE, PageTableVirtualAddress, KernelMode, NULL);
@@ -240,7 +238,10 @@ MiMakeSystemAddressValid(IN PVOID PageTableVirtualAddress,
         }
 
         /* Lock the working set again */
-        if (WsWasLocked) MiLockProcessWorkingSet(CurrentProcess, CurrentThread);
+        MiLockProcessWorkingSetForFault(CurrentProcess,
+                                        CurrentThread,
+                                        WsSafe,
+                                        WsShared);
 
         /* This flag will be useful later when we do better locking */
         LockChange = TRUE;
@@ -1884,8 +1885,9 @@ MiProtectVirtualMemory(IN PEPROCESS Process,
     ULONG ProtectionMask, OldProtect;
     BOOLEAN Committed;
     NTSTATUS Status = STATUS_SUCCESS;
+    PETHREAD Thread = PsGetCurrentThread();
 
-    /* Calcualte base address for the VAD */
+    /* Calculate base address for the VAD */
     StartingAddress = (ULONG_PTR)PAGE_ALIGN((*BaseAddress));
     EndingAddress = (((ULONG_PTR)*BaseAddress + *NumberOfBytesToProtect - 1) | (PAGE_SIZE - 1));
 
@@ -1896,7 +1898,7 @@ MiProtectVirtualMemory(IN PEPROCESS Process,
         DPRINT1("Invalid protection mask\n");
         return STATUS_INVALID_PAGE_PROTECTION;
     }
-    
+
     /* Check for ROS specific memory area */
     MemoryArea = MmLocateMemoryAreaByAddress(&Process->Vm, *BaseAddress);
     if ((MemoryArea) && (MemoryArea->Type == MEMORY_AREA_SECTION_VIEW))
@@ -2006,7 +2008,8 @@ MiProtectVirtualMemory(IN PEPROCESS Process,
             goto FailPath;
         }
 
-        //MiLockProcessWorkingSet(Thread, Process);
+        /* Lock the working set */
+        MiLockProcessWorkingSetUnsafe(Process, Thread);
 
         /* Check if all pages in this range are committed */
         Committed = MiIsEntireRangeCommitted(StartingAddress,
@@ -2018,7 +2021,7 @@ MiProtectVirtualMemory(IN PEPROCESS Process,
             /* Fail */
             DPRINT1("The entire range is not committed\n");
             Status = STATUS_NOT_COMMITTED;
-            //MiUnlockProcessWorkingSet(Thread, Process);
+            MiUnlockProcessWorkingSetUnsafe(Process, Thread);
             goto FailPath;
         }
 
@@ -2105,7 +2108,7 @@ MiProtectVirtualMemory(IN PEPROCESS Process,
         }
 
         /* Unlock the working set */
-        //MiUnlockProcessWorkingSet(Thread, Process);
+        MiUnlockProcessWorkingSetUnsafe(Process, Thread);
     }
 
     /* Unlock the address space */
@@ -2278,7 +2281,7 @@ MiDecommitPages(IN PVOID StartingAddress,
     PointerPde = MiAddressToPde(StartingAddress);
     PointerPte = MiAddressToPte(StartingAddress);
     if (Vad->u.VadFlags.MemCommit) CommitPte = MiAddressToPte(Vad->EndingVpn << PAGE_SHIFT);
-    MiLockWorkingSet(CurrentThread, &Process->Vm);
+    MiLockProcessWorkingSetUnsafe(Process, CurrentThread);
 
     //
     // Make the PDE valid, and now loop through each page's worth of data
@@ -2403,7 +2406,7 @@ MiDecommitPages(IN PVOID StartingAddress,
     // release the working set and return the commit reduction accounting.
     //
     if (PteCount) MiProcessValidPteList(ValidPteList, PteCount);
-    MiUnlockWorkingSet(CurrentThread, &Process->Vm);
+    MiUnlockProcessWorkingSetUnsafe(Process, CurrentThread);
     return CommitReduction;
 }
 
@@ -3992,10 +3995,10 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
         //
         // Lock the working set and insert the VAD into the process VAD tree
         //
-        MiLockProcessWorkingSet(Process, CurrentThread);
+        MiLockProcessWorkingSetUnsafe(Process, CurrentThread);
         Vad->ControlArea = NULL; // For Memory-Area hack
         MiInsertVad(Vad, Process);
-        MiUnlockProcessWorkingSet(Process, CurrentThread);
+        MiUnlockProcessWorkingSetUnsafe(Process, CurrentThread);
 
         //
         // Update the virtual size of the process, and if this is now the highest
@@ -4254,7 +4257,7 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
     //
     // Lock the working set while we play with user pages and page tables
     //
-    //MiLockWorkingSet(CurrentThread, AddressSpace);
+    MiLockProcessWorkingSetUnsafe(Process, CurrentThread);
 
     //
     // Make the current page table valid, and then loop each page within it
@@ -4335,7 +4338,7 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
     // the target process if it was not the current process. Also dereference the
     // target process if this wasn't the case.
     //
-    //MiUnlockProcessWorkingSet(Process, CurrentThread);
+    MiUnlockProcessWorkingSetUnsafe(Process, CurrentThread);
     Status = STATUS_SUCCESS;
 FailPath:
     MmUnlockAddressSpace(AddressSpace);
@@ -4584,7 +4587,7 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
             //
             // Finally lock the working set and remove the VAD from the VAD tree
             //
-            MiLockWorkingSet(CurrentThread, AddressSpace);
+            MiLockProcessWorkingSetUnsafe(Process, CurrentThread);
             ASSERT(Process->VadRoot.NumberGenericTableElements >= 1);
             MiRemoveNode((PMMADDRESS_NODE)Vad, &Process->VadRoot);
         }
@@ -4614,7 +4617,7 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
                     // the code path above when the caller sets a zero region size
                     // and the whole VAD is destroyed
                     //
-                    MiLockWorkingSet(CurrentThread, AddressSpace);
+                    MiLockProcessWorkingSetUnsafe(Process, CurrentThread);
                     ASSERT(Process->VadRoot.NumberGenericTableElements >= 1);
                     MiRemoveNode((PMMADDRESS_NODE)Vad, &Process->VadRoot);
                 }
@@ -4653,7 +4656,7 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
                     // and then change the ending address of the VAD to be a bit
                     // smaller.
                     //
-                    MiLockWorkingSet(CurrentThread, AddressSpace);
+                    MiLockProcessWorkingSetUnsafe(Process, CurrentThread);
                     CommitReduction = MiCalculatePageCommitment(StartingAddress,
                                                                 EndingAddress,
                                                                 Vad,
@@ -4695,7 +4698,7 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
         // around with process pages.
         //
         MiDeleteVirtualAddresses(StartingAddress, EndingAddress, NULL);
-        MiUnlockWorkingSet(CurrentThread, AddressSpace);
+        MiUnlockProcessWorkingSetUnsafe(Process, CurrentThread);
         Status = STATUS_SUCCESS;
 
 FinalPath:

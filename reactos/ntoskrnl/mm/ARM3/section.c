@@ -84,22 +84,22 @@ CHAR MmUserProtectionToMask2[16] =
 ULONG MmCompatibleProtectionMask[8] =
 {
     PAGE_NOACCESS,
-    
+
     PAGE_NOACCESS | PAGE_READONLY | PAGE_WRITECOPY,
-    
+
     PAGE_NOACCESS | PAGE_EXECUTE,
-    
+
     PAGE_NOACCESS | PAGE_READONLY | PAGE_WRITECOPY | PAGE_EXECUTE |
     PAGE_EXECUTE_READ,
-    
+
     PAGE_NOACCESS | PAGE_READONLY | PAGE_WRITECOPY | PAGE_READWRITE,
-    
+
     PAGE_NOACCESS | PAGE_READONLY | PAGE_WRITECOPY,
-    
+
     PAGE_NOACCESS | PAGE_READONLY | PAGE_WRITECOPY | PAGE_READWRITE |
     PAGE_EXECUTE | PAGE_EXECUTE_READ | PAGE_EXECUTE_READWRITE |
     PAGE_EXECUTE_WRITECOPY,
-    
+
     PAGE_NOACCESS | PAGE_READONLY | PAGE_WRITECOPY | PAGE_EXECUTE |
     PAGE_EXECUTE_READ | PAGE_EXECUTE_WRITECOPY
 };
@@ -713,11 +713,29 @@ MiCheckControlArea(IN PCONTROL_AREA ControlArea,
 
 VOID
 NTAPI
+MiDereferenceControlArea(IN PCONTROL_AREA ControlArea)
+{
+    KIRQL OldIrql;
+
+    /* Lock the PFN database */
+    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+
+    /* Drop reference counts */
+    ControlArea->NumberOfMappedViews--;
+    ControlArea->NumberOfUserReferences--;
+
+    /* Check if it's time to delete the CA. This releases the lock */
+    MiCheckControlArea(ControlArea, OldIrql);
+}
+
+VOID
+NTAPI
 MiRemoveMappedView(IN PEPROCESS CurrentProcess,
                    IN PMMVAD Vad)
 {
     KIRQL OldIrql;
     PCONTROL_AREA ControlArea;
+    PETHREAD CurrentThread = PsGetCurrentThread();
 
     /* Get the control area */
     ControlArea = Vad->ControlArea;
@@ -734,7 +752,7 @@ MiRemoveMappedView(IN PEPROCESS CurrentProcess,
                              Vad);
 
     /* Release the working set */
-    MiUnlockProcessWorkingSet(CurrentProcess, PsGetCurrentThread());
+    MiUnlockProcessWorkingSetUnsafe(CurrentProcess, CurrentThread);
 
     /* Lock the PFN database */
     OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
@@ -760,6 +778,8 @@ MiUnmapViewOfSection(IN PEPROCESS Process,
     PVOID DbgBase = NULL;
     SIZE_T RegionSize;
     NTSTATUS Status;
+    PETHREAD CurrentThread = PsGetCurrentThread();
+    PEPROCESS CurrentProcess = PsGetCurrentProcess();
     PAGED_CODE();
 
     /* Check for Mm Region */
@@ -771,7 +791,7 @@ MiUnmapViewOfSection(IN PEPROCESS Process,
     }
 
     /* Check if we should attach to the process */
-    if (PsGetCurrentProcess() != Process)
+    if (CurrentProcess != Process)
     {
         /* The process is different, do an attach */
         KeStackAttachProcess(&Process->Pcb, &ApcState);
@@ -837,13 +857,13 @@ MiUnmapViewOfSection(IN PEPROCESS Process,
     /* FIXME: Remove VAD charges */
 
     /* Lock the working set */
-    MiLockWorkingSet(PsGetCurrentThread(), &Process->Vm);
+    MiLockProcessWorkingSetUnsafe(Process, CurrentThread);
 
     /* Remove the VAD */
     ASSERT(Process->VadRoot.NumberGenericTableElements >= 1);
     MiRemoveNode((PMMADDRESS_NODE)Vad, &Process->VadRoot);
 
-    /* Remove the PTEs for this view */
+    /* Remove the PTEs for this view, which also releases the working set lock */
     MiRemoveMappedView(Process, Vad);
 
     /* FIXME: Remove commitment */
@@ -1205,7 +1225,8 @@ MiMapViewOfDataSection(IN PCONTROL_AREA ControlArea,
                                       &Process->VadRoot))
         {
             DPRINT1("Conflict with SEC_BASED or manually based section!\n");
-            return STATUS_CONFLICTING_ADDRESSES; // FIXME: CA Leak
+            MiDereferenceControlArea(ControlArea);
+            return STATUS_CONFLICTING_ADDRESSES;
         }
     }
 
@@ -1213,7 +1234,11 @@ MiMapViewOfDataSection(IN PCONTROL_AREA ControlArea,
     /* FIXME: we are allocating a LONG VAD for ReactOS compatibility only */
     ASSERT((AllocationType & MEM_RESERVE) == 0); /* ARM3 does not support this */
     Vad = ExAllocatePoolWithTag(NonPagedPool, sizeof(MMVAD_LONG), 'ldaV');
-    if (!Vad) return STATUS_INSUFFICIENT_RESOURCES; /* FIXME: CA Leak */
+    if (!Vad)
+    {
+        MiDereferenceControlArea(ControlArea);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
     RtlZeroMemory(Vad, sizeof(MMVAD_LONG));
     Vad->u4.Banked = (PVOID)0xDEADBABE;
 
@@ -1244,13 +1269,13 @@ MiMapViewOfDataSection(IN PCONTROL_AREA ControlArea,
     Status = STATUS_SUCCESS;
 
     /* Pretend as if we own the working set */
-    MiLockProcessWorkingSet(Process, Thread);
+    MiLockProcessWorkingSetUnsafe(Process, Thread);
 
     /* Insert the VAD */
     MiInsertVad((PMMVAD)Vad, Process);
 
     /* Release the working set */
-    MiUnlockProcessWorkingSet(Process, Thread);
+    MiUnlockProcessWorkingSetUnsafe(Process, Thread);
 
     /* Windows stores this for accounting purposes, do so as well */
     if (!Segment->u2.FirstMappedVa) Segment->u2.FirstMappedVa = (PVOID)StartAddress;
@@ -1797,7 +1822,7 @@ MiSetProtectionOnSection(IN PEPROCESS Process,
     PMMPFN Pfn1;
     ULONG ProtectionMask, QuotaCharge = 0;
     PUSHORT UsedPageTableEntries;
-    //PETHREAD Thread = PsGetCurrentThread();
+    PETHREAD Thread = PsGetCurrentThread();
     PAGED_CODE();
 
     //
@@ -1829,7 +1854,7 @@ MiSetProtectionOnSection(IN PEPROCESS Process,
     //
     // Get the PTE and PDE for the address, as well as the final PTE
     //
-    //MiLockProcessWorkingSet(Thread, Process);
+    MiLockProcessWorkingSetUnsafe(Process, Thread);
     PointerPde = MiAddressToPde(StartingAddress);
     PointerPte = MiAddressToPte(StartingAddress);
     LastPte = MiAddressToPte(EndingAddress);
@@ -1943,7 +1968,7 @@ MiSetProtectionOnSection(IN PEPROCESS Process,
     //
     // Unlock the working set and update quota charges if needed, then return
     //
-    //MiUnlockProcessWorkingSet(Thread, Process);
+    MiUnlockProcessWorkingSetUnsafe(Process, Thread);
     if ((QuotaCharge > 0) && (!DontCharge))
     {
         FoundVad->u.VadFlags.CommitCharge -= QuotaCharge;
