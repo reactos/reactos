@@ -1684,8 +1684,7 @@ UserFault:
         if (Address <= MM_HIGHEST_USER_ADDRESS)
         {
             /* Add an additional page table reference */
-            MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]++;
-            ASSERT(MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] <= PTE_COUNT);
+            MiIncrementPageTableReferences(Address);
         }
 
         /* Did we get a prototype PTE back? */

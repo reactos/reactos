@@ -589,10 +589,8 @@ MiDeleteVirtualAddresses(IN ULONG_PTR Va,
             TempPte = *PointerPte;
             if (TempPte.u.Long)
             {
-                DPRINT("Decrement used PTEs by address: %lx\n", Va);
-                (*UsedPageTableEntries)--;
+                *UsedPageTableEntries -= 1;
                 ASSERT((*UsedPageTableEntries) < PTE_COUNT);
-                DPRINT("Refs: %lx\n", (*UsedPageTableEntries));
 
                 /* Check if the PTE is actually mapped in */
                 if (TempPte.u.Long & 0xFFFFFC01)
@@ -653,14 +651,10 @@ MiDeleteVirtualAddresses(IN ULONG_PTR Va,
         /* The PDE should still be valid at this point */
         ASSERT(PointerPde->u.Hard.Valid == 1);
 
-        DPRINT("Should check if handles for: %p are zero (PDE: %lx)\n", Va, PointerPde->u.Hard.PageFrameNumber);
-        if (!(*UsedPageTableEntries))
+        if (*UsedPageTableEntries == 0)
         {
-            DPRINT("They are!\n");
             if (PointerPde->u.Long != 0)
             {
-                DPRINT("PDE active: %lx in %16s\n", PointerPde->u.Hard.PageFrameNumber, CurrentProcess->ImageFileName);
-
                 /* Delete the PTE proper */
                 MiDeletePte(PointerPde,
                             MiPteToAddress(PointerPde),
@@ -1880,7 +1874,6 @@ MiProtectVirtualMemory(IN PEPROCESS Process,
     ULONG_PTR StartingAddress, EndingAddress;
     PMMPTE PointerPde, PointerPte, LastPte;
     MMPTE PteContents;
-    //PUSHORT UsedPageTableEntries;
     PMMPFN Pfn1;
     ULONG ProtectionMask, OldProtect;
     BOOLEAN Committed;
@@ -2050,24 +2043,23 @@ MiProtectVirtualMemory(IN PEPROCESS Process,
         while (PointerPte <= LastPte)
         {
             /* Check if we've crossed a PDE boundary and make the new PDE valid too */
-            if ((((ULONG_PTR)PointerPte) & (SYSTEM_PD_SIZE - 1)) == 0)
+            if (MiIsPteOnPdeBoundary(PointerPte))
             {
                 PointerPde = MiAddressToPte(PointerPte);
                 MiMakePdeExistAndMakeValid(PointerPde, Process, MM_NOIRQL);
             }
 
-            /* Capture the PTE and see what we're dealing with */
+            /* Capture the PTE and check if it was empty */
             PteContents = *PointerPte;
             if (PteContents.u.Long == 0)
             {
                 /* This used to be a zero PTE and it no longer is, so we must add a
                    reference to the pagetable. */
-                //UsedPageTableEntries = &MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(MiPteToAddress(PointerPte))];
-                //(*UsedPageTableEntries)++;
-                //ASSERT((*UsedPageTableEntries) <= PTE_COUNT);
-                DPRINT1("HACK: Not increasing UsedPageTableEntries count!\n");
+                MiIncrementPageTableReferences(MiPteToAddress(PointerPte));
             }
-            else if (PteContents.u.Hard.Valid == 1)
+
+            /* Check what kind of PTE we are dealing with */
+            if (PteContents.u.Hard.Valid == 1)
             {
                 /* Get the PFN entry */
                 Pfn1 = MiGetPfnEntry(PFN_FROM_PTE(&PteContents));
@@ -2080,8 +2072,11 @@ MiProtectVirtualMemory(IN PEPROCESS Process,
                     (NewAccessProtection & PAGE_GUARD))
                 {
                     /* The page should be in the WS and we should make it transition now */
-                    UNIMPLEMENTED;
-                    //continue;
+                    DPRINT1("Making valid page invalid is not yet supported!\n");
+                    Status = STATUS_NOT_IMPLEMENTED;
+                    /* Unlock the working set */
+                    MiUnlockProcessWorkingSetUnsafe(Process, Thread);
+                    goto FailPath;
                 }
 
                 /* Write the protection mask and write it with a TLB flush */
@@ -2270,7 +2265,6 @@ MiDecommitPages(IN PVOID StartingAddress,
     ULONG PteCount = 0;
     PMMPFN Pfn1;
     MMPTE PteContents;
-    PUSHORT UsedPageTableEntries;
     PETHREAD CurrentThread = PsGetCurrentThread();
 
     //
@@ -2292,7 +2286,7 @@ MiDecommitPages(IN PVOID StartingAddress,
         //
         // Check if we've crossed a PDE boundary
         //
-        if ((((ULONG_PTR)PointerPte) & (SYSTEM_PD_SIZE - 1)) == 0)
+        if (MiIsPteOnPdeBoundary(PointerPte))
         {
             //
             // Get the new PDE and flush the valid PTEs we had built up until
@@ -2383,9 +2377,7 @@ MiDecommitPages(IN PVOID StartingAddress,
             // This used to be a zero PTE and it no longer is, so we must add a
             // reference to the pagetable.
             //
-            UsedPageTableEntries = &MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(StartingAddress)];
-            (*UsedPageTableEntries)++;
-            ASSERT((*UsedPageTableEntries) <= PTE_COUNT);
+            MiIncrementPageTableReferences(StartingAddress);
 
             //
             // Next, we account for decommitted PTEs and make the PTE as such
@@ -3648,7 +3640,6 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
     PMEMORY_AREA MemoryArea;
     PFN_NUMBER PageCount;
     PMMVAD Vad, FoundVad;
-    PUSHORT UsedPageTableEntries;
     NTSTATUS Status;
     PMMSUPPORT AddressSpace;
     PVOID PBaseAddress;
@@ -4268,7 +4259,7 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
         //
         // Have we crossed into a new page table?
         //
-        if (!(((ULONG_PTR)PointerPte) & (SYSTEM_PD_SIZE - 1)))
+        if (MiIsPteOnPdeBoundary(PointerPte))
         {
             //
             // Get the PDE and now make it valid too
@@ -4286,9 +4277,7 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
             // First increment the count of pages in the page table for this
             // process
             //
-            UsedPageTableEntries = &MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(MiPteToAddress(PointerPte))];
-            (*UsedPageTableEntries)++;
-            ASSERT((*UsedPageTableEntries) <= PTE_COUNT);
+            MiIncrementPageTableReferences(MiPteToAddress(PointerPte));
 
             //
             // And now write the invalid demand-zero PTE as requested

@@ -1619,6 +1619,41 @@ MiReferenceUnusedPageAndBumpLockCount(IN PMMPFN Pfn1)
     }
 }
 
+FORCEINLINE
+VOID
+MiIncrementPageTableReferences(IN PVOID Address)
+{
+    PUSHORT RefCount;
+
+    RefCount = &MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)];
+
+    *RefCount += 1;
+    ASSERT(*RefCount <= PTE_PER_PAGE);
+}
+
+FORCEINLINE
+VOID
+MiDecrementPageTableReferences(IN PVOID Address)
+{
+    PUSHORT RefCount;
+
+    RefCount = &MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)];
+
+    *RefCount -= 1;
+    ASSERT(*RefCount < PTE_PER_PAGE);
+}
+
+FORCEINLINE
+USHORT
+MiQueryPageTableReferences(IN PVOID Address)
+{
+    PUSHORT RefCount;
+
+    RefCount = &MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)];
+
+    return *RefCount;
+}
+
 BOOLEAN
 NTAPI
 MmArmInitSystem(

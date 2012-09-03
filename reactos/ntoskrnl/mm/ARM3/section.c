@@ -1821,7 +1821,6 @@ MiSetProtectionOnSection(IN PEPROCESS Process,
     PMMPDE PointerPde;
     PMMPFN Pfn1;
     ULONG ProtectionMask, QuotaCharge = 0;
-    PUSHORT UsedPageTableEntries;
     PETHREAD Thread = PsGetCurrentThread();
     PAGED_CODE();
 
@@ -1914,9 +1913,7 @@ MiSetProtectionOnSection(IN PEPROCESS Process,
             // This used to be a zero PTE and it no longer is, so we must add a
             // reference to the pagetable.
             //
-            UsedPageTableEntries = &MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(MiPteToAddress(PointerPte))];
-            (*UsedPageTableEntries)++;
-            ASSERT((*UsedPageTableEntries) <= PTE_COUNT);
+            MiIncrementPageTableReferences(MiPteToAddress(PointerPte));
 
             //
             // Create the demand-zero prototype PTE
