@@ -409,7 +409,7 @@ WSPCloseSocket(IN SOCKET Handle,
 
     /* Create the Wait Event */
     Status = NtCreateEvent(&SockEvent,
-                           GENERIC_READ | GENERIC_WRITE,
+                           EVENT_ALL_ACCESS,
                            NULL,
                            1,
                            FALSE);
@@ -615,7 +615,7 @@ WSPBind(SOCKET Handle,
     }
 
     Status = NtCreateEvent(&SockEvent,
-                           GENERIC_READ | GENERIC_WRITE,
+                           EVENT_ALL_ACCESS,
                            NULL,
                            1,
                            FALSE);
@@ -737,7 +737,7 @@ WSPListen(SOCKET Handle,
         return 0;
 
     Status = NtCreateEvent(&SockEvent,
-                           GENERIC_READ | GENERIC_WRITE,
+                           EVENT_ALL_ACCESS,
                            NULL,
                            1,
                            FALSE);
@@ -863,7 +863,7 @@ WSPSelect(IN int nfds,
     }
 
     Status = NtCreateEvent(&SockEvent,
-                           GENERIC_READ | GENERIC_WRITE,
+                           EVENT_ALL_ACCESS,
                            NULL,
                            1,
                            FALSE);
@@ -1062,7 +1062,7 @@ WSPAccept(SOCKET Handle,
     HANDLE                      SockEvent;
 
     Status = NtCreateEvent(&SockEvent,
-                           GENERIC_READ | GENERIC_WRITE,
+                           EVENT_ALL_ACCESS,
                            NULL,
                            1,
                            FALSE);
@@ -1447,7 +1447,7 @@ WSPConnect(SOCKET Handle,
     int                     SocketDataLength;
 
     Status = NtCreateEvent(&SockEvent,
-                           GENERIC_READ | GENERIC_WRITE,
+                           EVENT_ALL_ACCESS,
                            NULL,
                            1,
                            FALSE);
@@ -1682,7 +1682,7 @@ WSPShutdown(SOCKET Handle,
     HANDLE                  SockEvent;
 
     Status = NtCreateEvent(&SockEvent,
-                           GENERIC_READ | GENERIC_WRITE,
+                           EVENT_ALL_ACCESS,
                            NULL,
                            1,
                            FALSE);
@@ -1764,7 +1764,7 @@ WSPGetSockName(IN SOCKET Handle,
     HANDLE                  SockEvent;
 
     Status = NtCreateEvent(&SockEvent,
-                           GENERIC_READ | GENERIC_WRITE,
+                           EVENT_ALL_ACCESS,
                            NULL,
                            1,
                            FALSE);
@@ -1867,7 +1867,7 @@ WSPGetPeerName(IN SOCKET s,
     HANDLE                  SockEvent;
 
     Status = NtCreateEvent(&SockEvent,
-                           GENERIC_READ | GENERIC_WRITE,
+                           EVENT_ALL_ACCESS,
                            NULL,
                            1,
                            FALSE);
@@ -2443,7 +2443,7 @@ GetSocketInformation(PSOCKET_INFORMATION Socket,
     HANDLE              SockEvent;
 
     Status = NtCreateEvent(&SockEvent,
-                           GENERIC_READ | GENERIC_WRITE,
+                           EVENT_ALL_ACCESS,
                            NULL,
                            1,
                            FALSE);
@@ -2510,7 +2510,7 @@ SetSocketInformation(PSOCKET_INFORMATION Socket,
     HANDLE              SockEvent;
 
     Status = NtCreateEvent(&SockEvent,
-                           GENERIC_READ | GENERIC_WRITE,
+                           EVENT_ALL_ACCESS,
                            NULL,
                            1,
                            FALSE);
@@ -2592,7 +2592,7 @@ int CreateContext(PSOCKET_INFORMATION Socket)
     HANDLE              SockEvent;
 
     Status = NtCreateEvent(&SockEvent,
-                           GENERIC_READ | GENERIC_WRITE,
+                           EVENT_ALL_ACCESS,
                            NULL,
                            1,
                            FALSE);

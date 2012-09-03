@@ -123,7 +123,7 @@ WSPRecv(SOCKET Handle,
        return SOCKET_ERROR;
     }
 
-    Status = NtCreateEvent( &SockEvent, GENERIC_READ | GENERIC_WRITE,
+    Status = NtCreateEvent( &SockEvent, EVENT_ALL_ACCESS,
                             NULL, 1, FALSE );
 
     if( !NT_SUCCESS(Status) )
@@ -292,7 +292,7 @@ WSPRecvFrom(SOCKET Handle,
                        lpErrno);
     }
 
-    Status = NtCreateEvent( &SockEvent, GENERIC_READ | GENERIC_WRITE,
+    Status = NtCreateEvent( &SockEvent, EVENT_ALL_ACCESS,
                             NULL, 1, FALSE );
 
     if( !NT_SUCCESS(Status) )
@@ -442,7 +442,7 @@ WSPSend(SOCKET Handle,
        return SOCKET_ERROR;
     }
 
-    Status = NtCreateEvent( &SockEvent, GENERIC_READ | GENERIC_WRITE,
+    Status = NtCreateEvent( &SockEvent, EVENT_ALL_ACCESS,
                             NULL, 1, FALSE );
 
     if( !NT_SUCCESS(Status) )
@@ -616,7 +616,7 @@ WSPSendTo(SOCKET Handle,
     }
 
     Status = NtCreateEvent(&SockEvent,
-                           GENERIC_READ | GENERIC_WRITE,
+                           EVENT_ALL_ACCESS,
                            NULL, 1, FALSE);
 
     if (!NT_SUCCESS(Status))
