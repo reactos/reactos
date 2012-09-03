@@ -25,11 +25,14 @@ typedef struct _EX_KEYED_EVENT
     } HashTable[NUM_KEY_HASH_BUCKETS];
 } EX_KEYED_EVENT, *PEX_KEYED_EVENT;
 
-VOID
+NTSTATUS
 NTAPI
-ExpInitializeKeyedEvent(
-    _Out_ PEX_KEYED_EVENT KeyedEvent);
-
+ZwCreateKeyedEvent(
+    _Out_ PHANDLE OutHandle,
+    _In_ ACCESS_MASK AccessMask,
+    _In_ POBJECT_ATTRIBUTES ObjectAttributes,
+    _In_ ULONG Flags);
+        
 #define KeGetCurrentProcess() ((PKPROCESS)PsGetCurrentProcess())
 
 /* GLOBALS *******************************************************************/
@@ -46,7 +49,6 @@ GENERIC_MAPPING ExpKeyedEventMapping =
     EVENT_ALL_ACCESS
 };
 
-
 /* FUNCTIONS *****************************************************************/
 
 VOID
@@ -55,49 +57,46 @@ ExpInitializeKeyedEventImplementation(VOID)
 {
     OBJECT_TYPE_INITIALIZER ObjectTypeInitializer = {0};
     UNICODE_STRING TypeName = RTL_CONSTANT_STRING(L"KeyedEvent");
+    UNICODE_STRING Name = RTL_CONSTANT_STRING(L"\\KernelObjects\\CritSecOutOfMemoryEvent");
     NTSTATUS Status;
+    HANDLE EventHandle;
+    OBJECT_ATTRIBUTES ObjectAttributes;
 
     /* Set up the object type initializer */
     ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
     ObjectTypeInitializer.GenericMapping = ExpKeyedEventMapping;
     ObjectTypeInitializer.PoolType = PagedPool;
     ObjectTypeInitializer.ValidAccessMask = EVENT_ALL_ACCESS;
-    //ObjectTypeInitializer.DeleteProcedure = ???;
-    //ObjectTypeInitializer.OkayToCloseProcedure = ???;
+    ObjectTypeInitializer.UseDefaultObject = TRUE;
 
     /* Create the keyed event object type */
     Status = ObCreateObjectType(&TypeName,
                                 &ObjectTypeInitializer,
                                 NULL,
                                 &ExKeyedEventObjectType);
+    if (!NT_SUCCESS(Status)) return;
 
-    /* Check for success */
-    if (!NT_SUCCESS(Status))
+    /* Create the out of memory event for critical sections */
+    InitializeObjectAttributes(&ObjectAttributes, &Name, OBJ_PERMANENT, NULL, NULL);
+    Status = ZwCreateKeyedEvent(&EventHandle,
+                                EVENT_ALL_ACCESS,
+                                &ObjectAttributes,
+                                0);
+    if (NT_SUCCESS(Status))
     {
-        // FIXME
-        KeBugCheck(0);
+        /* Take a reference so we can get rid of the handle */
+        Status = ObReferenceObjectByHandle(EventHandle,
+                                           EVENT_ALL_ACCESS,
+                                           ExKeyedEventObjectType,
+                                           KernelMode,
+                                           (PVOID*)&ExpCritSecOutOfMemoryEvent,
+                                           NULL);
+        ZwClose(EventHandle);
     }
-
-    /* Create the global keyed event for critical sections on low memory */
-    Status = ObCreateObject(KernelMode,
-                            ExKeyedEventObjectType,
-                            NULL,
-                            UserMode,
-                            NULL,
-                            sizeof(EX_KEYED_EVENT),
-                            0,
-                            0,
-                            (PVOID*)&ExpCritSecOutOfMemoryEvent);
-
-    /* Check for success */
-    if (!NT_SUCCESS(Status))
+    else
     {
-        // FIXME
-        KeBugCheck(0);
+        DPRINT1("Failed to create keyed event: %lx\n", Status);
     }
-
-    /* Initalize the keyed event */
-    ExpInitializeKeyedEvent(ExpCritSecOutOfMemoryEvent);
 }
 
 VOID
