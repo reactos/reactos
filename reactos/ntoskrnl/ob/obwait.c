@@ -165,6 +165,7 @@ NtWaitForMultipleObjects(IN ULONG ObjectCount,
         {
             /* Fail, handle is invalid */
             Status = STATUS_INVALID_HANDLE;
+            DPRINT1("Invalid handle passed to NtWaitForMultipleObjects\n");
             goto Quickie;
         }
 
@@ -174,6 +175,7 @@ NtWaitForMultipleObjects(IN ULONG ObjectCount,
         {
             /* Unlock the entry and fail */
             ExUnlockHandleTableEntry(HandleTable, HandleEntry);
+            DPRINT1("Handle does not have SYNCHRONIZE access\n");
             Status = STATUS_ACCESS_DENIED;
             goto Quickie;
         }
@@ -228,6 +230,7 @@ NtWaitForMultipleObjects(IN ULONG ObjectCount,
                 {
                     /* Fail */
                     Status = STATUS_INVALID_PARAMETER_MIX;
+                    DPRINT1("Passed a duplicate object to NtWaitForMultipleObjects\n");
                     goto Quickie;
                 }
             }
@@ -416,6 +419,10 @@ NtWaitForSingleObject(IN HANDLE ObjectHandle,
 
         /* Dereference the Object */
         ObDereferenceObject(Object);
+    }
+    else
+    {
+        DPRINT1("Failed to reference the handle with status 0x%x\n", Status);
     }
 
     /* Return the status */
