@@ -32,7 +32,7 @@ ZwCreateKeyedEvent(
     _In_ ACCESS_MASK AccessMask,
     _In_ POBJECT_ATTRIBUTES ObjectAttributes,
     _In_ ULONG Flags);
-        
+
 #define KeGetCurrentProcess() ((PKPROCESS)PsGetCurrentProcess())
 
 /* GLOBALS *******************************************************************/
@@ -51,7 +51,8 @@ GENERIC_MAPPING ExpKeyedEventMapping =
 
 /* FUNCTIONS *****************************************************************/
 
-VOID
+BOOLEAN
+INIT_FUNCTION
 NTAPI
 ExpInitializeKeyedEventImplementation(VOID)
 {
@@ -74,7 +75,7 @@ ExpInitializeKeyedEventImplementation(VOID)
                                 &ObjectTypeInitializer,
                                 NULL,
                                 &ExKeyedEventObjectType);
-    if (!NT_SUCCESS(Status)) return;
+    if (!NT_SUCCESS(Status)) return FALSE;
 
     /* Create the out of memory event for critical sections */
     InitializeObjectAttributes(&ObjectAttributes, &Name, OBJ_PERMANENT, NULL, NULL);
@@ -92,11 +93,10 @@ ExpInitializeKeyedEventImplementation(VOID)
                                            (PVOID*)&ExpCritSecOutOfMemoryEvent,
                                            NULL);
         ZwClose(EventHandle);
+        return TRUE;
     }
-    else
-    {
-        DPRINT1("Failed to create keyed event: %lx\n", Status);
-    }
+
+    return FALSE;
 }
 
 VOID

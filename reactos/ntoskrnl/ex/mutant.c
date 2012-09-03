@@ -50,13 +50,14 @@ ExpDeleteMutant(PVOID ObjectBody)
                     FALSE);
 }
 
-VOID
+BOOLEAN
 INIT_FUNCTION
 NTAPI
 ExpInitializeMutantImplementation(VOID)
 {
     OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
     UNICODE_STRING Name;
+    NTSTATUS Status;
     DPRINT("Creating Mutant Object Type\n");
 
     /* Create the Event Pair Object Type */
@@ -68,7 +69,9 @@ ExpInitializeMutantImplementation(VOID)
     ObjectTypeInitializer.PoolType = NonPagedPool;
     ObjectTypeInitializer.DeleteProcedure = ExpDeleteMutant;
     ObjectTypeInitializer.ValidAccessMask = MUTANT_ALL_ACCESS;
-    ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &ExMutantObjectType);
+    Status = ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &ExMutantObjectType);
+    if (!NT_SUCCESS(Status)) return FALSE;
+    return TRUE;
 }
 
 /*

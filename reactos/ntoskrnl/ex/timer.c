@@ -216,13 +216,14 @@ ExpTimerApcKernelRoutine(IN PKAPC Apc,
     ObDereferenceObjectEx(Timer, DerefsToDo);
 }
 
-VOID
+BOOLEAN
 INIT_FUNCTION
 NTAPI
 ExpInitializeTimerImplementation(VOID)
 {
     OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
     UNICODE_STRING Name;
+    NTSTATUS Status;
 
     /* Create the Timer Object Type */
     RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
@@ -234,11 +235,13 @@ ExpInitializeTimerImplementation(VOID)
     ObjectTypeInitializer.PoolType = NonPagedPool;
     ObjectTypeInitializer.ValidAccessMask = TIMER_ALL_ACCESS;
     ObjectTypeInitializer.DeleteProcedure = ExpDeleteTimer;
-    ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &ExTimerType);
+    Status = ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &ExTimerType);
+    if (!NT_SUCCESS(Status)) return FALSE;
 
     /* Initialize the Wait List and Lock */
     KeInitializeSpinLock(&ExpWakeListLock);
     InitializeListHead(&ExpWakeList);
+    return TRUE;
 }
 
 /* PUBLIC FUNCTIONS **********************************************************/

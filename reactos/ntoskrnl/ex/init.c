@@ -662,32 +662,68 @@ ExpInitSystemPhase1(VOID)
     ExpInitializePushLocks();
 
     /* Initialize events and event pairs */
-    ExpInitializeEventImplementation();
-    ExpInitializeEventPairImplementation();
+    if (ExpInitializeEventImplementation() == FALSE)
+    {
+        DPRINT1("Executive: Event initialization failed\n");
+        return FALSE;
+    }
+    if (ExpInitializeEventPairImplementation() == FALSE)
+    {
+        DPRINT1("Executive: Event Pair initialization failed\n");
+        return FALSE;
+    }
     
     /* Initialize mutants */
-    ExpInitializeMutantImplementation();
+    if (ExpInitializeMutantImplementation() == FALSE)
+    {
+        DPRINT1("Executive: Mutant initialization failed\n");
+        return FALSE;
+    }
     
     /* Initialize callbacks */
-    ExpInitializeCallbacks();
-
+    if (ExpInitializeCallbacks() == FALSE)
+    {
+        DPRINT1("Executive: Callback initialization failed\n");
+        return FALSE;
+    }
+    
     /* Initialize semaphores */
-    ExpInitializeSemaphoreImplementation();
-
+    if (ExpInitializeSemaphoreImplementation() == FALSE)
+    {
+        DPRINT1("Executive: Semaphore initialization failed\n");
+        return FALSE;
+    }
+    
     /* Initialize timers */
-    ExpInitializeTimerImplementation();
-
+    if (ExpInitializeTimerImplementation() == FALSE)
+    {
+        DPRINT1("Executive: Timer initialization failed\n");
+        return FALSE;
+    }
+    
     /* Initialize profiling */
-    ExpInitializeProfileImplementation();
-
+    if (ExpInitializeProfileImplementation() == FALSE)
+    {
+        DPRINT1("Executive: Profile initialization failed\n");
+        return FALSE;
+    }
+    
     /* Initialize UUIDs */
     ExpInitUuids();
     
     /* Initialize keyed events */
-    ExpInitializeKeyedEventImplementation();
-
+    if (ExpInitializeKeyedEventImplementation() == FALSE)
+    {
+        DPRINT1("Executive: Keyed event initialization failed\n");
+        return FALSE;
+    }
+    
     /* Initialize Win32K */
-    ExpWin32kInit();
+    if (ExpWin32kInit() == FALSE)
+    {
+        DPRINT1("Executive: Win32 initialization failed\n");
+        return FALSE;
+    }
     return TRUE;
 }
 

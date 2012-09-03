@@ -37,13 +37,14 @@ static const INFORMATION_CLASS_INFO ExEventInfoClass[] =
 
 /* FUNCTIONS *****************************************************************/
 
-VOID
+BOOLEAN
 INIT_FUNCTION
 NTAPI
 ExpInitializeEventImplementation(VOID)
 {
     OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
     UNICODE_STRING Name;
+    NTSTATUS Status;
     DPRINT("Creating Event Object Type\n");
 
     /* Create the Event Object Type */
@@ -55,7 +56,9 @@ ExpInitializeEventImplementation(VOID)
     ObjectTypeInitializer.PoolType = NonPagedPool;
     ObjectTypeInitializer.ValidAccessMask = EVENT_ALL_ACCESS;
     ObjectTypeInitializer.InvalidAttributes = OBJ_OPENLINK;
-    ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &ExEventObjectType);
+    Status = ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &ExEventObjectType);
+    if (!NT_SUCCESS(Status)) return FALSE;
+    return TRUE;
 }
 
 /*

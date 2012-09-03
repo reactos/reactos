@@ -61,13 +61,14 @@ ExpDeleteProfile(PVOID ObjectBody)
     if (Profile->Process) ObDereferenceObject(Profile->Process);
 }
 
-VOID
+BOOLEAN
 INIT_FUNCTION
 NTAPI
 ExpInitializeProfileImplementation(VOID)
 {
     OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
     UNICODE_STRING Name;
+    NTSTATUS Status;
     DPRINT("Creating Profile Object Type\n");
 
     /* Initialize the Mutex to lock the States */
@@ -83,7 +84,9 @@ ExpInitializeProfileImplementation(VOID)
     ObjectTypeInitializer.DeleteProcedure = ExpDeleteProfile;
     ObjectTypeInitializer.ValidAccessMask = PROFILE_ALL_ACCESS;
     ObjectTypeInitializer.InvalidAttributes = OBJ_OPENLINK;
-    ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &ExProfileObjectType);
+    Status = ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &ExProfileObjectType);
+    if (!NT_SUCCESS(Status)) return FALSE;
+    return TRUE;
 }
 
 NTSTATUS

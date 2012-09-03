@@ -31,13 +31,14 @@ GENERIC_MAPPING ExEventPairMapping =
 
 /* FUNCTIONS *****************************************************************/
 
-VOID
+BOOLEAN
 INIT_FUNCTION
 NTAPI
 ExpInitializeEventPairImplementation(VOID)
 {
     OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
     UNICODE_STRING Name;
+    NTSTATUS Status;
     DPRINT("Creating Event Pair Object Type\n");
 
     /* Create the Event Pair Object Type */
@@ -50,7 +51,9 @@ ExpInitializeEventPairImplementation(VOID)
     ObjectTypeInitializer.ValidAccessMask = EVENT_PAIR_ALL_ACCESS;
     ObjectTypeInitializer.UseDefaultObject = TRUE;
     ObjectTypeInitializer.InvalidAttributes = OBJ_OPENLINK;
-    ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &ExEventPairObjectType);
+    Status = ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &ExEventPairObjectType);
+    if (!NT_SUCCESS(Status)) return FALSE;
+    return TRUE;
 }
 
 NTSTATUS

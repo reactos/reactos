@@ -133,13 +133,14 @@ ExpDesktopDelete(PVOID DeletedObject)
     ExpDesktopObjectDelete(&Parameters);
 }
 
-VOID
+BOOLEAN
 INIT_FUNCTION
 NTAPI
 ExpWin32kInit(VOID)
 {
     OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
     UNICODE_STRING Name;
+    NTSTATUS Status;
     DPRINT("Creating Win32 Object Types\n");
 
     /* Create the window station Object Type */
@@ -151,16 +152,17 @@ ExpWin32kInit(VOID)
     ObjectTypeInitializer.DeleteProcedure = ExpWinStaObjectDelete;
     ObjectTypeInitializer.ParseProcedure = ExpWinStaObjectParse;
     ObjectTypeInitializer.OkayToCloseProcedure = ExpWindowStationOkToClose;
-    ObjectTypeInitializer.MaintainHandleCount = TRUE;
     ObjectTypeInitializer.SecurityRequired = TRUE;
     ObjectTypeInitializer.InvalidAttributes = OBJ_OPENLINK |
                                               OBJ_PERMANENT |
                                               OBJ_EXCLUSIVE;
-    ObCreateObjectType(&Name,
-                       &ObjectTypeInitializer,
-                       NULL,
-                       &ExWindowStationObjectType);
-
+    ObjectTypeInitializer.ValidAccessMask = STANDARD_RIGHTS_REQUIRED;
+    Status = ObCreateObjectType(&Name,
+                                &ObjectTypeInitializer,
+                                NULL,
+                                &ExWindowStationObjectType);
+    if (!NT_SUCCESS(Status)) return FALSE;
+    
     /* Create desktop object type */
     RtlInitUnicodeString(&Name, L"Desktop");
     ObjectTypeInitializer.GenericMapping = ExpDesktopMapping;
@@ -171,6 +173,9 @@ ExpWin32kInit(VOID)
                        &ObjectTypeInitializer,
                        NULL,
                        &ExDesktopObjectType);
+    if (!NT_SUCCESS(Status)) return FALSE;
+    
+    return TRUE;
 }
 
 /* EOF */
