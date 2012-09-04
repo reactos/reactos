@@ -123,7 +123,6 @@ PVOID LockRequest( PIRP Irp,
                 }
 
                 /* We need to create the info struct that AFD expects for all send/recv requests */
-                C_ASSERT(sizeof(AFD_RECV_INFO) == sizeof(AFD_SEND_INFO));
                 AfdInfo = ExAllocatePool(NonPagedPool, sizeof(AFD_RECV_INFO) + sizeof(AFD_WSABUF));
                 if (!AfdInfo)
                 {
