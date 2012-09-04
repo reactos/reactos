@@ -2317,7 +2317,7 @@ static BOOL end_of_read_data( http_request_t *req )
 /* fetch some more data into the read buffer (the read section must be held) */
 static DWORD refill_read_buffer(http_request_t *req, read_mode_t read_mode, DWORD *read_bytes)
 {
-    DWORD res, read=0;
+    DWORD res, read=0, want;
 
     if(req->read_size == sizeof(req->read_buf))
         return ERROR_SUCCESS;
@@ -2328,8 +2328,10 @@ static DWORD refill_read_buffer(http_request_t *req, read_mode_t read_mode, DWOR
         req->read_pos = 0;
     }
 
+    want = sizeof(req->read_buf) - req->read_size;
     res = req->data_stream->vtbl->read(req->data_stream, req, req->read_buf+req->read_size,
-            sizeof(req->read_buf)-req->read_size, &read, read_mode);
+            want, &read, read_mode);
+    assert(read <= want);
     req->read_size += read;
 
     TRACE("read %u bytes, read_size %u\n", read, req->read_size);
@@ -2370,8 +2372,11 @@ static DWORD netconn_read(data_stream_t *stream, http_request_t *req, BYTE *buf,
 
     size = min(size, netconn_stream->content_length-netconn_stream->content_read);
 
-    if(read_mode == READMODE_NOBLOCK)
-        size = min(size, netconn_get_avail_data(stream, req));
+    if(read_mode == READMODE_NOBLOCK) {
+        DWORD avail = netconn_get_avail_data(stream, req);
+        if (size > avail)
+            size = avail;
+    }
 
     if(size && req->netconn) {
         if(NETCON_recv(req->netconn, buf, size, read_mode == READMODE_SYNC ? MSG_WAITALL : 0, &len) != ERROR_SUCCESS)
