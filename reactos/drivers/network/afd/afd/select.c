@@ -259,7 +259,7 @@ AfdEventSelect( PDEVICE_OBJECT DeviceObject, PIRP Irp,
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     NTSTATUS Status = STATUS_NO_MEMORY;
     PAFD_EVENT_SELECT_INFO EventSelectInfo =
-        (PAFD_EVENT_SELECT_INFO)LockRequest( Irp, IrpSp, FALSE );
+        (PAFD_EVENT_SELECT_INFO)LockRequest( Irp, IrpSp, FALSE, NULL );
     PAFD_FCB FCB = FileObject->FsContext;
 
     if( !SocketAcquireStateLock( FCB ) ) {
@@ -319,7 +319,7 @@ AfdEnumEvents( PDEVICE_OBJECT DeviceObject, PIRP Irp,
                PIO_STACK_LOCATION IrpSp ) {
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_ENUM_NETWORK_EVENTS_INFO EnumReq =
-        (PAFD_ENUM_NETWORK_EVENTS_INFO)LockRequest( Irp, IrpSp, TRUE );
+        (PAFD_ENUM_NETWORK_EVENTS_INFO)LockRequest( Irp, IrpSp, TRUE, NULL );
     PAFD_FCB FCB = FileObject->FsContext;
     PKEVENT UserEvent;
     NTSTATUS Status;

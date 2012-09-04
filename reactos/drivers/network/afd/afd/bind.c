@@ -81,7 +81,7 @@ AfdBindSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     AFD_DbgPrint(MID_TRACE,("Called\n"));
 
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
-    if( !(BindReq = LockRequest( Irp, IrpSp, FALSE )) )
+    if( !(BindReq = LockRequest( Irp, IrpSp, FALSE, NULL )) )
         return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY,
                                        Irp, 0 );
 

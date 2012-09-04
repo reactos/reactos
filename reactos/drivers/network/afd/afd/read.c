@@ -431,6 +431,7 @@ AfdConnectedSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     UINT TotalBytesCopied = 0;
     PAFD_STORED_DATAGRAM DatagramRecv;
     PLIST_ENTRY ListEntry;
+    KPROCESSOR_MODE LockMode;
 
     AFD_DbgPrint(MID_TRACE,("Called on %x\n", FCB));
 
@@ -447,7 +448,7 @@ AfdConnectedSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
                                        Irp, 0 );
     }
 
-    if( !(RecvReq = LockRequest( Irp, IrpSp, FALSE )) )
+    if( !(RecvReq = LockRequest( Irp, IrpSp, FALSE, &LockMode )) )
         return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY,
                                        Irp, 0 );
 
@@ -456,7 +457,7 @@ AfdConnectedSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     RecvReq->BufferArray = LockBuffers( RecvReq->BufferArray,
                                        RecvReq->BufferCount,
                                        NULL, NULL,
-                                       TRUE, FALSE );
+                                       TRUE, FALSE, LockMode );
 
     if( !RecvReq->BufferArray ) {
         return UnlockAndMaybeComplete( FCB, STATUS_ACCESS_VIOLATION,
@@ -699,6 +700,7 @@ AfdPacketSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     PAFD_RECV_INFO_UDP RecvReq;
     PLIST_ENTRY ListEntry;
     PAFD_STORED_DATAGRAM DatagramRecv;
+    KPROCESSOR_MODE LockMode;
 
     AFD_DbgPrint(MID_TRACE,("Called on %x\n", FCB));
 
@@ -719,7 +721,7 @@ AfdPacketSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         return UnlockAndMaybeComplete(FCB, STATUS_FILE_CLOSED, Irp, 0);
     }
 
-    if( !(RecvReq = LockRequest( Irp, IrpSp, FALSE )) )
+    if( !(RecvReq = LockRequest( Irp, IrpSp, FALSE, &LockMode )) )
         return UnlockAndMaybeComplete(FCB, STATUS_NO_MEMORY, Irp, 0);
 
     AFD_DbgPrint(MID_TRACE,("Recv flags %x\n", RecvReq->AfdFlags));
@@ -728,7 +730,7 @@ AfdPacketSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
                                         RecvReq->BufferCount,
                                         RecvReq->Address,
                                         RecvReq->AddressLength,
-                                        TRUE, TRUE );
+                                        TRUE, TRUE, LockMode );
 
     if( !RecvReq->BufferArray ) { /* access violation in userspace */
         return UnlockAndMaybeComplete(FCB, STATUS_ACCESS_VIOLATION, Irp, 0);

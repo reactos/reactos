@@ -298,7 +298,8 @@ NTSTATUS AfdAccept( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
 PAFD_WSABUF LockBuffers( PAFD_WSABUF Buf, UINT Count,
 			 PVOID AddressBuf, PINT AddressLen,
-			 BOOLEAN Write, BOOLEAN LockAddress );
+			 BOOLEAN Write, BOOLEAN LockAddress,
+             KPROCESSOR_MODE LockMode );
 VOID UnlockBuffers( PAFD_WSABUF Buf, UINT Count, BOOL Address );
 BOOLEAN SocketAcquireStateLock( PAFD_FCB FCB );
 NTSTATUS NTAPI UnlockAndMaybeComplete
@@ -308,7 +309,7 @@ VOID SocketStateUnlock( PAFD_FCB FCB );
 NTSTATUS LostSocket( PIRP Irp );
 PAFD_HANDLE LockHandles( PAFD_HANDLE HandleArray, UINT HandleCount );
 VOID UnlockHandles( PAFD_HANDLE HandleArray, UINT HandleCount );
-PVOID LockRequest( PIRP Irp, PIO_STACK_LOCATION IrpSp, BOOLEAN Output );
+PVOID LockRequest( PIRP Irp, PIO_STACK_LOCATION IrpSp, BOOLEAN Output, KPROCESSOR_MODE *LockMode );
 VOID UnlockRequest( PIRP Irp, PIO_STACK_LOCATION IrpSp );
 PVOID GetLockedData( PIRP Irp, PIO_STACK_LOCATION IrpSp );
 NTSTATUS LeaveIrpUntilLater( PAFD_FCB FCB, PIRP Irp, UINT Function );

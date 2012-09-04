@@ -327,6 +327,7 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     PAFD_FCB FCB = FileObject->FsContext;
     PAFD_SEND_INFO SendReq;
     UINT TotalBytesCopied = 0, i, SpaceAvail = 0, BytesCopied, SendLength;
+    KPROCESSOR_MODE LockMode;
 
     AFD_DbgPrint(MID_TRACE,("Called on %x\n", FCB));
 
@@ -347,14 +348,14 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
                                            0 );
         }
 
-        if( !(SendReq = LockRequest( Irp, IrpSp, FALSE )) )
+        if( !(SendReq = LockRequest( Irp, IrpSp, FALSE, &LockMode )) )
             return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY, Irp, 0 );
 
         /* Must lock buffers before handing off user data */
         SendReq->BufferArray = LockBuffers( SendReq->BufferArray,
                                             SendReq->BufferCount,
                                             NULL, NULL,
-                                            FALSE, FALSE );
+                                            FALSE, FALSE, LockMode );
 
         if( !SendReq->BufferArray ) {
             return UnlockAndMaybeComplete( FCB, STATUS_ACCESS_VIOLATION,
@@ -416,14 +417,14 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         return UnlockAndMaybeComplete(FCB, STATUS_FILE_CLOSED, Irp, 0);
     }
 
-    if( !(SendReq = LockRequest( Irp, IrpSp, FALSE )) )
+    if( !(SendReq = LockRequest( Irp, IrpSp, FALSE, &LockMode )) )
         return UnlockAndMaybeComplete
             ( FCB, STATUS_NO_MEMORY, Irp, 0 );
 
     SendReq->BufferArray = LockBuffers( SendReq->BufferArray,
                                         SendReq->BufferCount,
                                         NULL, NULL,
-                                        FALSE, FALSE );
+                                        FALSE, FALSE, LockMode );
 
     if( !SendReq->BufferArray ) {
         return UnlockAndMaybeComplete( FCB, STATUS_ACCESS_VIOLATION,
@@ -556,6 +557,7 @@ AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
     PAFD_SEND_INFO_UDP SendReq;
+    KPROCESSOR_MODE LockMode;
 
     AFD_DbgPrint(MID_TRACE,("Called on %x\n", FCB));
 
@@ -577,7 +579,7 @@ AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         return UnlockAndMaybeComplete(FCB, STATUS_FILE_CLOSED, Irp, 0);
     }
 
-    if( !(SendReq = LockRequest( Irp, IrpSp, FALSE )) )
+    if( !(SendReq = LockRequest( Irp, IrpSp, FALSE, &LockMode )) )
         return UnlockAndMaybeComplete(FCB, STATUS_NO_MEMORY, Irp, 0);
 
     if (FCB->State == SOCKET_STATE_CREATED)
@@ -602,7 +604,7 @@ AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     SendReq->BufferArray = LockBuffers( SendReq->BufferArray,
                                         SendReq->BufferCount,
                                         NULL, NULL,
-                                        FALSE, FALSE );
+                                        FALSE, FALSE, LockMode );
 
     if( !SendReq->BufferArray )
         return UnlockAndMaybeComplete( FCB, STATUS_ACCESS_VIOLATION,
