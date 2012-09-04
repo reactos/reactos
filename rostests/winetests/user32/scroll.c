@@ -375,7 +375,7 @@ todo_wine
     ret = EnableScrollBar( hwnd, SB_HORZ, ESB_ENABLE_BOTH);
     ok( !ret, "Horizontal window scroll bar was not enabled\n");
     DestroyWindow( hwnd);
-    /* finally, check if adding a WS_[HV]SColl style of a  window makes the scroll info
+    /* finally, check if adding a WS_[HV]SCROLL style of a window makes the scroll info
      * available */
     if( style & (WS_HSCROLL | WS_VSCROLL)) return;/* only test if not yet set */
     /* Start with a clean window */

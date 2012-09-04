@@ -1172,7 +1172,7 @@ static void test_shell_window(void)
     ok(!ret, "third call to SetShellWindow(hwnd1)\n"); */
 
     SetWindowLong(hwnd1, GWL_EXSTYLE, GetWindowLong(hwnd1,GWL_EXSTYLE)|WS_EX_TOPMOST);
-    ret = GetWindowLong(hwnd1,GWL_EXSTYLE)&WS_EX_TOPMOST? TRUE: FALSE;
+    ret = (GetWindowLong(hwnd1,GWL_EXSTYLE) & WS_EX_TOPMOST) != 0;
     ok(!ret, "SetWindowExStyle(hwnd1, WS_EX_TOPMOST)\n");
 
     ret = DestroyWindow(hwnd1);
@@ -2157,6 +2157,14 @@ static void test_SetWindowPos(HWND hwnd, HWND hwnd2)
     DestroyWindow(hwnd_grandchild);
     DestroyWindow(hwnd_child);
     DestroyWindow(hwnd_child2);
+
+    hwnd_child = create_tool_window(WS_CHILD|WS_POPUP|WS_SYSMENU, hwnd2);
+    ok(!!hwnd_child, "Failed to create child window (%d)\n", GetLastError());
+    ret = SetWindowPos(hwnd_child, NULL, 0, 0, 0, 0, SWP_NOSIZE|SWP_NOMOVE|SWP_NOACTIVATE|SWP_SHOWWINDOW);
+    ok(ret, "Got %d\n", ret);
+    flush_events( TRUE );
+    todo_wine check_active_state(hwnd2, hwnd2, hwnd2);
+    DestroyWindow(hwnd_child);
 }
 
 static void test_SetMenu(HWND parent)
@@ -6680,7 +6688,7 @@ static void test_FlashWindowEx(void)
 {
     HWND hwnd;
     FLASHWINFO finfo;
-    BOOL ret;
+    BOOL prev, ret;
 
     if (!pFlashWindowEx)
     {
@@ -6749,8 +6757,7 @@ static void test_FlashWindowEx(void)
        "FlashWindowEx returned with %d\n", GetLastError());
 
     SetLastError(0xdeadbeef);
-    ret = pFlashWindowEx(&finfo);
-    ok(ret, "previous window state should be active\n");
+    prev = pFlashWindowEx(&finfo);
 
     ok(finfo.cbSize == sizeof(FLASHWINFO), "FlashWindowEx modified cdSize to %x\n", finfo.cbSize);
     ok(finfo.hwnd == hwnd, "FlashWindowEx modified hwnd to %p\n", finfo.hwnd);
@@ -6762,7 +6769,7 @@ static void test_FlashWindowEx(void)
     SetLastError(0xdeadbeef);
     ret = pFlashWindowEx(&finfo);
 todo_wine
-    ok(!ret, "previous window state should not be active\n");
+    ok(prev != ret, "previous window state should be different\n");
 
     DestroyWindow( hwnd );
 }

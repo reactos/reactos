@@ -177,7 +177,7 @@ static void test_ChangeDisplaySettingsEx(void)
     dm.dmDriverExtra = 1;
     res = pChangeDisplaySettingsExA(NULL, &dm, NULL, CDS_TEST, NULL);
     ok(res == DISP_CHANGE_SUCCESSFUL,
-       "ChangeDisplaySettingsExW returned %d, expected DISP_CHANGE_BADMODE\n", res);
+       "ChangeDisplaySettingsExW returned %d, expected DISP_CHANGE_SUCCESSFUL\n", res);
     ok(dm.dmDriverExtra == 1, "ChangeDisplaySettingsExA shouldn't reset dmDriverExtra to 0\n");
 
     memset(&dmW, 0, sizeof(dmW));
@@ -201,7 +201,7 @@ static void test_ChangeDisplaySettingsEx(void)
     if (GetLastError() != ERROR_CALL_NOT_IMPLEMENTED)
     {
         ok(res == DISP_CHANGE_SUCCESSFUL,
-           "ChangeDisplaySettingsExW returned %d, expected DISP_CHANGE_BADMODE\n", res);
+           "ChangeDisplaySettingsExW returned %d, expected DISP_CHANGE_SUCCESSFUL\n", res);
         ok(dmW.dmDriverExtra == 1, "ChangeDisplaySettingsExW shouldn't reset dmDriverExtra to 0\n");
     }
 

@@ -66,6 +66,7 @@ static void test_ClipboardOwner(void)
     ok( ret, "CloseClipboard error %d\n", GetLastError());
 
     ok(OpenClipboard(hWnd1), "OpenClipboard failed\n");
+    todo_wine ok(OpenClipboard(hWnd1), "OpenClipboard second time in the same hwnd failed\n");
 
     SetLastError(0xdeadbeef);
     ret = OpenClipboard(hWnd2);

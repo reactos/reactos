@@ -371,6 +371,110 @@ static void test_enumdesktops(void)
     ok(GetLastError() == 0xdeadbeef, "LastError is set to %08x\n", GetLastError());
 }
 
+/* Miscellaneous tests */
+
+static void test_getuserobjectinformation(void)
+{
+    HDESK desk;
+    WCHAR bufferW[20];
+    char buffer[20];
+    WCHAR foobarTestW[] = {'f','o','o','b','a','r','T','e','s','t',0};
+    WCHAR DesktopW[] = {'D','e','s','k','t','o','p',0};
+    DWORD size;
+    BOOL ret;
+
+    desk = CreateDesktop("foobarTest", NULL, NULL, 0, DESKTOP_ALL_ACCESS, NULL);
+    ok(desk != 0, "open foobarTest desktop failed\n");
+
+    strcpy(buffer, "blahblah");
+
+    /** Tests for UOI_NAME **/
+
+    /* Get size, test size and return value/error code */
+    SetLastError(0xdeadbeef);
+    size = 0xdeadbeef;
+    ret = GetUserObjectInformationA(desk, UOI_NAME, NULL, 0, &size);
+
+    ok(!ret, "GetUserObjectInformationA returned %x\n", ret);
+    ok(GetLastError() == ERROR_INSUFFICIENT_BUFFER, "LastError is set to %08x\n", GetLastError());
+    ok(size == 22, "size is set to %d\n", size); /* Windows returns Unicode length (11*2) */
+
+    /* Get string */
+    SetLastError(0xdeadbeef);
+    size = 0xdeadbeef;
+    ret = GetUserObjectInformationA(desk, UOI_NAME, buffer, sizeof(buffer), &size);
+
+    ok(ret, "GetUserObjectInformationA returned %x\n", ret);
+    ok(GetLastError() == 0xdeadbeef, "LastError is set to %08x\n", GetLastError());
+
+    ok(strcmp(buffer, "foobarTest") == 0, "Buffer is set to '%s'\n", buffer);
+    ok(size == 11, "size is set to %d\n", size); /* 11 bytes in 'foobarTest\0' */
+
+    /* Get size, test size and return value/error code (Unicode) */
+    SetLastError(0xdeadbeef);
+    size = 0xdeadbeef;
+    ret = GetUserObjectInformationW(desk, UOI_NAME, NULL, 0, &size);
+
+    ok(!ret, "GetUserObjectInformationW returned %x\n", ret);
+    ok(GetLastError() == ERROR_INSUFFICIENT_BUFFER, "LastError is set to %08x\n", GetLastError());
+    ok(size == 22, "size is set to %d\n", size);  /* 22 bytes in 'foobarTest\0' in Unicode */
+
+    /* Get string (Unicode) */
+    SetLastError(0xdeadbeef);
+    size = 0xdeadbeef;
+    ret = GetUserObjectInformationW(desk, UOI_NAME, bufferW, sizeof(bufferW), &size);
+
+    ok(ret, "GetUserObjectInformationW returned %x\n", ret);
+    ok(GetLastError() == 0xdeadbeef, "LastError is set to %08x\n", GetLastError());
+
+    ok(lstrcmpW(bufferW, foobarTestW) == 0, "Buffer is not set to 'foobarTest'\n");
+    ok(size == 22, "size is set to %d\n", size);  /* 22 bytes in 'foobarTest\0' in Unicode */
+
+    /** Tests for UOI_TYPE **/
+
+    /* Get size, test size and return value/error code */
+    SetLastError(0xdeadbeef);
+    size = 0xdeadbeef;
+    ret = GetUserObjectInformationA(desk, UOI_TYPE, NULL, 0, &size);
+
+    ok(!ret, "GetUserObjectInformationA returned %x\n", ret);
+    ok(GetLastError() == ERROR_INSUFFICIENT_BUFFER, "LastError is set to %08x\n", GetLastError());
+    ok(size == 16, "size is set to %d\n", size); /* Windows returns Unicode length (8*2) */
+
+    /* Get string */
+    SetLastError(0xdeadbeef);
+    size = 0xdeadbeef;
+    ret = GetUserObjectInformationA(desk, UOI_TYPE, buffer, sizeof(buffer), &size);
+
+    ok(ret, "GetUserObjectInformationA returned %x\n", ret);
+    ok(GetLastError() == 0xdeadbeef, "LastError is set to %08x\n", GetLastError());
+
+    ok(strcmp(buffer, "Desktop") == 0, "Buffer is set to '%s'\n", buffer);
+    ok(size == 8, "size is set to %d\n", size); /* 8 bytes in 'Desktop\0' */
+
+    /* Get size, test size and return value/error code (Unicode) */
+    size = 0xdeadbeef;
+    SetLastError(0xdeadbeef);
+    ret = GetUserObjectInformationW(desk, UOI_TYPE, NULL, 0, &size);
+
+    ok(!ret, "GetUserObjectInformationW returned %x\n", ret);
+    ok(GetLastError() == ERROR_INSUFFICIENT_BUFFER, "LastError is set to %08x\n", GetLastError());
+    ok(size == 16, "size is set to %d\n", size);  /* 16 bytes in 'Desktop\0' in Unicode */
+
+    /* Get string (Unicode) */
+    SetLastError(0xdeadbeef);
+    size = 0xdeadbeef;
+    ret = GetUserObjectInformationW(desk, UOI_TYPE, bufferW, sizeof(bufferW), &size);
+
+    ok(ret, "GetUserObjectInformationW returned %x\n", ret);
+    ok(GetLastError() == 0xdeadbeef, "LastError is set to %08x\n", GetLastError());
+
+    ok(lstrcmpW(bufferW, DesktopW) == 0, "Buffer is not set to 'Desktop'\n");
+    ok(size == 16, "size is set to %d\n", size);  /* 16 bytes in 'Desktop\0' in Unicode */
+
+    ok(CloseDesktop(desk), "CloseDesktop failed\n");
+}
+
 START_TEST(winstation)
 {
     /* Check whether this platform supports WindowStation calls */
@@ -386,4 +490,5 @@ START_TEST(winstation)
     test_enumstations();
     test_enumdesktops();
     test_handles();
+    test_getuserobjectinformation();
 }

@@ -1335,7 +1335,6 @@ static void test_listbox_dlgdir(void)
     ok (itemCount == itemCount_justDrives + itemCount_allDirs,
         "DlgDirList() incorrectly filled the listbox!\n");
 
-
     /* Now test DlgDirSelectEx() in normal operation */
     /* Fill with everything - drives, directory and all plain files. */
     strcpy(pathBuffer, "*");
@@ -1412,6 +1411,8 @@ static void test_listbox_dlgdir(void)
         }
     }
 
+    DeleteFileA( "wtest1.tmp.c" );
+
     /* Now test DlgDirSelectEx() in abnormal operation */
     /* Fill list with bogus entries, that look somewhat valid */
     SendMessage(g_listBox, LB_RESETCONTENT, 0, 0);
@@ -1472,9 +1473,29 @@ static void test_listbox_dlgdir(void)
             ok (!strcmp(pathBuffer, tempBuffer), "Formatted file should be %s, got %s\n", tempBuffer, pathBuffer);
         }
     }
-    DestroyWindow(hWnd);
 
-    DeleteFileA( "wtest1.tmp.c" );
+    /* Test behavior when loading folders from root with and without wildcard */
+    strcpy(pathBuffer, "C:\\");
+    res = DlgDirList(hWnd, pathBuffer, ID_TEST_LISTBOX, 0, DDL_DIRECTORY | DDL_EXCLUSIVE);
+    ok(res || broken(!res) /* NT4/W2K */, "DlgDirList failed to list C:\\ folders\n");
+    todo_wine ok(!strcmp(pathBuffer, "*") || broken(!res) /* NT4/W2K */,
+       "DlgDirList set the invalid path spec '%s', expected '*'\n", pathBuffer);
+
+    strcpy(pathBuffer, "C:\\*");
+    res = DlgDirList(hWnd, pathBuffer, ID_TEST_LISTBOX, 0, DDL_DIRECTORY | DDL_EXCLUSIVE);
+    ok(res || broken(!res) /* NT4/W2K */, "DlgDirList failed to list C:\\* folders\n");
+    ok(!strcmp(pathBuffer, "*") || broken(!res) /* NT4/W2K */,
+       "DlgDirList set the invalid path spec '%s', expected '*'\n", pathBuffer);
+
+    /* Try loading files from an invalid folder */
+    SetLastError(0xdeadbeef);
+    strcpy(pathBuffer, "C:\\INVALID$$DIR");
+    res = DlgDirList(hWnd, pathBuffer, ID_TEST_LISTBOX, 0, DDL_DIRECTORY | DDL_EXCLUSIVE);
+    todo_wine ok(!res, "DlgDirList should have failed with 0 but %d was returned\n", res);
+    todo_wine ok(GetLastError() == ERROR_NO_WILDCARD_CHARACTERS,
+       "GetLastError should return 0x589, got 0x%X\n",GetLastError());
+
+    DestroyWindow(hWnd);
 }
 
 START_TEST(listbox)

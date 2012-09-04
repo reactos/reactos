@@ -39,12 +39,14 @@ struct edit_notify {
 static struct edit_notify notifications;
 
 static BOOL (WINAPI *pEndMenu) (void);
+static BOOL (WINAPI *pGetMenuBarInfo)(HWND,LONG,LONG,PMENUBARINFO);
 
 static void init_function_pointers(void)
 {
     HMODULE hdll = GetModuleHandleA("user32");
 
     pEndMenu = (void*)GetProcAddress(hdll, "EndMenu");
+    pGetMenuBarInfo = (void*)GetProcAddress(hdll, "GetMenuBarInfo");
 }
 
 static INT_PTR CALLBACK multi_edit_dialog_proc(HWND hdlg, UINT msg, WPARAM wparam, LPARAM lparam)
@@ -2134,6 +2136,7 @@ static void test_child_edit_wmkeydown(void)
 
 static int got_en_setfocus = 0;
 static int got_wm_capturechanged = 0;
+static LRESULT (CALLBACK *p_edit_proc)(HWND, UINT, WPARAM, LPARAM);
 
 static LRESULT CALLBACK edit4_wnd_procA(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
@@ -2156,7 +2159,50 @@ static LRESULT CALLBACK edit4_wnd_procA(HWND hWnd, UINT msg, WPARAM wParam, LPAR
     return DefWindowProcA(hWnd, msg, wParam, lParam);
 }
 
-static void test_contextmenu_focus(void)
+static LRESULT CALLBACK edit_proc_proxy(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    switch (msg) {
+        case WM_ENTERIDLE: {
+            MENUBARINFO mbi;
+            BOOL ret;
+            HWND ctx_menu = (HWND)lParam;
+
+            memset(&mbi, 0, sizeof(mbi));
+            mbi.cbSize = sizeof(mbi);
+            SetLastError(0xdeadbeef);
+            ret = pGetMenuBarInfo(ctx_menu, OBJID_CLIENT, 0, &mbi);
+            ok(ret || broken(!ret && GetLastError()==ERROR_INVALID_WINDOW_HANDLE) /* NT */,
+                    "GetMenuBarInfo failed\n");
+            if (ret)
+            {
+                ok(mbi.hMenu != NULL, "mbi.hMenu = NULL\n");
+                ok(!mbi.hwndMenu, "mbi.hwndMenu != NULL\n");
+                ok(mbi.fBarFocused, "mbi.fBarFocused = FALSE\n");
+                ok(mbi.fFocused, "mbi.fFocused = FALSE\n");
+            }
+
+            memset(&mbi, 0, sizeof(mbi));
+            mbi.cbSize = sizeof(mbi);
+            SetLastError(0xdeadbeef);
+            ret = pGetMenuBarInfo(ctx_menu, OBJID_CLIENT, 1, &mbi);
+            ok(ret || broken(!ret && GetLastError()==ERROR_INVALID_WINDOW_HANDLE) /* NT */,
+                    "GetMenuBarInfo failed\n");
+            if (ret)
+            {
+                ok(mbi.hMenu != NULL, "mbi.hMenu = NULL\n");
+                ok(!mbi.hwndMenu, "mbi.hwndMenu != NULL\n");
+                ok(mbi.fBarFocused, "mbi.fBarFocused = FALSE\n");
+                ok(!mbi.fFocused, "mbi.fFocused = TRUE\n");
+            }
+
+            pEndMenu();
+            break;
+        }
+    }
+    return p_edit_proc(hWnd, msg, wParam, lParam);
+}
+
+static void test_contextmenu(void)
 {
     HWND hwndMain, hwndEdit;
 
@@ -2171,14 +2217,16 @@ static void test_contextmenu_focus(void)
     assert(hwndEdit);
 
     SetFocus(NULL);
-
     SetCapture(hwndMain);
-
     SendMessage(hwndEdit, WM_CONTEXTMENU, (WPARAM)hwndEdit, MAKEWORD(10, 10));
-
     ok(got_en_setfocus, "edit box didn't get focused\n");
-
     ok(got_wm_capturechanged, "main window capture did not change\n");
+
+    if (pGetMenuBarInfo)
+    {
+        p_edit_proc = (void*)SetWindowLongPtr(hwndEdit, GWLP_WNDPROC, (ULONG_PTR)edit_proc_proxy);
+        SendMessage(hwndEdit, WM_CONTEXTMENU, (WPARAM)hwndEdit, MAKEWORD(10, 10));
+    }
 
     DestroyWindow (hwndEdit);
     DestroyWindow (hwndMain);
@@ -2516,7 +2564,7 @@ START_TEST(edit)
     test_fontsize();
     test_dialogmode();
     if (pEndMenu)
-        test_contextmenu_focus();
+        test_contextmenu();
     else
         win_skip("EndMenu is not available\n");
 

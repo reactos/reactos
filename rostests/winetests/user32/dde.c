@@ -1924,7 +1924,7 @@ static void test_DdeCreateDataHandle(void)
     ok(err == DMLERR_INVALIDPARAMETER, "Expected DMLERR_INVALIDPARAMETER, got %d\n", err);
 
     ret = DdeUninitialize(dde_inst2);
-    ok(res == DMLERR_NO_ERROR, "Expected DMLERR_NO_ERROR, got %d\n", res);
+    ok(ret == TRUE, "Expected TRUE, got %d\n", ret);
 
 
     /* NULL pSrc */
@@ -2037,7 +2037,7 @@ static void test_DdeCreateDataHandle(void)
     ok(ret == TRUE, "Expected TRUE, got %d\n", ret);
 
     ret = DdeUninitialize(dde_inst);
-    ok(res == DMLERR_NO_ERROR, "Expected DMLERR_NO_ERROR, got %d\n", res);
+    ok(ret == TRUE, "Expected TRUE, got %d\n", ret);
 }
 
 static void test_DdeCreateStringHandle(void)
@@ -2459,7 +2459,6 @@ static HDDEDATA CALLBACK server_end_to_end_callback(UINT uType, UINT uFmt, HCONV
         size = DdeQueryStringA(server_pid, hsz1, str, MAX_PATH, CP_WINANSI);
         ok(!lstrcmpA(str, test_topic), "Expected %s, got %s, msg_index=%d\n",
                              test_topic, str, msg_index);
-        ok(size == 12, "Expected 12, got %d, msg_index=%d\n", size, msg_index);
         ok(size == 12, "Expected 12, got %d, msg_index=%d\n", size, msg_index);
 
         size = DdeGetData(hdata, NULL, 0, 0);

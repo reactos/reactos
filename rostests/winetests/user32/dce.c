@@ -406,6 +406,56 @@ static void test_begin_paint(void)
         "clip box should have been reset %d,%d-%d,%d\n", rect.left, rect.top, rect.right, rect.bottom );
 }
 
+/* test ScrollWindow with window DCs */
+static void test_scroll_window(void)
+{
+    PAINTSTRUCT ps;
+    HDC hdc;
+    RECT clip, rect;
+
+    /* ScrollWindow uses the window DC, ScrollWindowEx doesn't */
+
+    UpdateWindow( hwnd_owndc );
+    SetRect( &clip, 25, 25, 50, 50 );
+    ScrollWindow( hwnd_owndc, -5, -10, NULL, &clip );
+    hdc = BeginPaint( hwnd_owndc, &ps );
+    SetRectEmpty( &rect );
+    GetClipBox( hdc, &rect );
+    ok( rect.left >= 25 && rect.top >= 25 && rect.right <= 50 && rect.bottom <= 50,
+        "invalid clip box %d,%d-%d,%d\n", rect.left, rect.top, rect.right, rect.bottom );
+    EndPaint( hwnd_owndc, &ps );
+
+    SetViewportExtEx( hdc, 2, 3, NULL );
+    SetViewportOrgEx( hdc, 30, 20, NULL );
+
+    ScrollWindow( hwnd_owndc, -5, -10, NULL, &clip );
+    hdc = BeginPaint( hwnd_owndc, &ps );
+    SetRectEmpty( &rect );
+    GetClipBox( hdc, &rect );
+    ok( rect.left >= 25 && rect.top >= 25 && rect.right <= 50 && rect.bottom <= 50,
+        "invalid clip box %d,%d-%d,%d\n", rect.left, rect.top, rect.right, rect.bottom );
+    EndPaint( hwnd_owndc, &ps );
+
+    ScrollWindowEx( hwnd_owndc, -5, -10, NULL, &clip, 0, NULL, SW_INVALIDATE | SW_ERASE );
+    hdc = BeginPaint( hwnd_owndc, &ps );
+    SetRectEmpty( &rect );
+    GetClipBox( hdc, &rect );
+    ok( rect.left >= -5 && rect.top >= 5 && rect.right <= 20 && rect.bottom <= 30,
+        "invalid clip box %d,%d-%d,%d\n", rect.left, rect.top, rect.right, rect.bottom );
+    EndPaint( hwnd_owndc, &ps );
+
+    SetViewportExtEx( hdc, 1, 1, NULL );
+    SetViewportOrgEx( hdc, 0, 0, NULL );
+
+    ScrollWindowEx( hwnd_owndc, -5, -10, NULL, &clip, 0, NULL, SW_INVALIDATE | SW_ERASE );
+    hdc = BeginPaint( hwnd_owndc, &ps );
+    SetRectEmpty( &rect );
+    GetClipBox( hdc, &rect );
+    ok( rect.left >= 25 && rect.top >= 25 && rect.right <= 50 && rect.bottom <= 50,
+        "invalid clip box %d,%d-%d,%d\n", rect.left, rect.top, rect.right, rect.bottom );
+    EndPaint( hwnd_owndc, &ps );
+}
+
 static void test_invisible_create(void)
 {
     HWND hwnd_owndc = CreateWindowA("owndc_class", NULL, WS_OVERLAPPED,
@@ -559,6 +609,7 @@ START_TEST(dce)
     test_parameters();
     test_dc_visrgn();
     test_begin_paint();
+    test_scroll_window();
     test_invisible_create();
     test_dc_layout();
 
