@@ -1493,7 +1493,7 @@ co_WinPosSetWindowPos(
    INT cx,
    INT cy,
    UINT flags
-)
+   )
 {
    WINDOWPOS WinPos;
    RECTL NewWindowRect;

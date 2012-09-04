@@ -282,5 +282,5 @@ DesktopHeapAddressToUser(PVOID lpMem)
 PWND FASTCALL IntGetThreadDesktopWindow(PTHREADINFO);
 PWND FASTCALL co_GetDesktopWindow(PWND);
 BOOL FASTCALL IntPaintDesktop(HDC);
-LRESULT FASTCALL DesktopWindowProc(PWND, UINT, WPARAM, LPARAM);
+BOOL FASTCALL DesktopWindowProc(PWND, UINT, WPARAM, LPARAM, LRESULT *);
 /* EOF */

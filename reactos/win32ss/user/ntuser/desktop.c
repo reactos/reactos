@@ -547,11 +547,15 @@ HWND FASTCALL IntGetCurrentThreadDesktopWindow(VOID)
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
-LRESULT FASTCALL
-DesktopWindowProc(PWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
+BOOL FASTCALL
+DesktopWindowProc(PWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam, LRESULT *lResult)
 {
+   PAINTSTRUCT Ps;
    ULONG Value;
    //ERR("DesktopWindowProc\n");
+
+   *lResult = 0; 
+
    switch (Msg)
    {
       case WM_NCCREATE:
@@ -559,7 +563,8 @@ DesktopWindowProc(PWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
          {
             Wnd->fnid = FNID_DESKTOP;
          }
-         return (LRESULT)TRUE;
+         *lResult = (LRESULT)TRUE;
+         return TRUE;
 
       case WM_CREATE:
          Value = HandleToULong(PsGetCurrentProcessId());
@@ -568,14 +573,31 @@ DesktopWindowProc(PWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
          Value = HandleToULong(PsGetCurrentThreadId());
          // Save Thread ID
          co_UserSetWindowLong(UserHMGetHandle(Wnd), DT_GWL_THREADID, Value, FALSE);
-      case WM_CLOSE: 
-         return 0;
+      case WM_CLOSE:
+         return TRUE;
 
       case WM_DISPLAYCHANGE:
          co_WinPosSetWindowPos(Wnd, 0, 0, 0, LOWORD(lParam), HIWORD(lParam), SWP_NOZORDER | SWP_NOACTIVATE);
-         break;
-   }
-   return 0;
+         return TRUE;
+
+      case WM_ERASEBKGND:
+         IntPaintDesktop((HDC)wParam);
+         *lResult = 1;
+         return TRUE;
+
+      case WM_PAINT:
+      {
+         if (IntBeginPaint(Wnd, &Ps))
+         {
+            IntEndPaint(Wnd, &Ps);
+         }
+         return TRUE;
+      }
+      case WM_SYSCOLORCHANGE:
+         co_UserRedrawWindow(Wnd, NULL, NULL, RDW_INVALIDATE|RDW_ERASE|RDW_ALLCHILDREN);
+         return TRUE;
+   } 
+   return FALSE; // Not processed so go with callback.
 }
 
 HDC FASTCALL
@@ -934,7 +956,6 @@ IntPaintDesktop(HDC hDC)
         /* Black desktop background in Safe Mode */
         DesktopBrush = StockObjects[BLACK_BRUSH];
     }
-
     /* Back ground is set to none, clear the screen */
     if (doPatBlt)
     {
@@ -993,16 +1014,13 @@ IntPaintDesktop(HDC hDC)
                 GreExtTextOutW(hDC, rect.left, rect.top, 0, NULL, s_wszSafeMode, len, NULL, 0);
                 IntGdiSetTextAlign(hDC, TA_LEFT|TA_BASELINE);
                 GreExtTextOutW(hDC, rect.left, rect.bottom, 0, NULL, s_wszSafeMode, len, NULL, 0);
-
             }
-
 
          IntGdiSetBkMode(hDC, mode_old);
          IntGdiSetTextAlign(hDC, align_old);
          IntGdiSetTextColor(hDC, color_old);
       }
    }
-
    return TRUE;
 }
 

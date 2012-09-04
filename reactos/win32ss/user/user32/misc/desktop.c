@@ -37,35 +37,23 @@ DesktopWndProcW(HWND Wnd,
                 WPARAM wParam,
                 LPARAM lParam)
 {
-   PAINTSTRUCT PS;
    TRACE("Desktop W Class Atom! hWnd 0x%x, Msg %d\n", Wnd, Msg);
 
    switch(Msg)
    {
+      case WM_ERASEBKGND:
       case WM_NCCREATE:
       case WM_CREATE:
       case WM_CLOSE:
       case WM_DISPLAYCHANGE:
+      case WM_PAINT:
+      case WM_SYSCOLORCHANGE:
         {
           LRESULT lResult;
           NtUserMessageCall( Wnd, Msg, wParam, lParam, (ULONG_PTR)&lResult, FNID_DESKTOP, FALSE);
+          TRACE("Desktop lResult %d\n", lResult);
           return lResult;
         }
-
-      case WM_ERASEBKGND:
-          PaintDesktop((HDC)wParam);
-          return 1;
-
-      case WM_PAINT:
-          if (BeginPaint(Wnd, &PS))
-          {
-             EndPaint(Wnd, &PS);   
-          }
-          return 0;
-
-      case WM_SYSCOLORCHANGE:
-          RedrawWindow(Wnd, NULL, NULL, RDW_INVALIDATE|RDW_ERASE|RDW_ALLCHILDREN);
-          break;
 
       case WM_PALETTECHANGED:
           if (Wnd == (HWND)wParam) break;

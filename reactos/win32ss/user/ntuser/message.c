@@ -649,6 +649,7 @@ IntDispatchMessage(PMSG pMsg)
     PTHREADINFO pti;
     PWND Window = NULL;
     HRGN hrgn;
+    BOOL DoCallBack = TRUE;
 
     if (pMsg->hwnd)
     {
@@ -704,12 +705,23 @@ IntDispatchMessage(PMSG pMsg)
     if ( Window->state & WNDS_SERVERSIDEWINDOWPROC )
     {
        TRACE("Dispatch: Server Side Window Procedure\n");
+       switch(Window->fnid)
+       {
+          case FNID_DESKTOP:
+            DoCallBack = !DesktopWindowProc( Window,
+                                             pMsg->message,
+                                             pMsg->wParam,
+                                             pMsg->lParam,
+                                            &retval);
+            break;
+       }
     }
 
     /* Since we are doing a callback on the same thread right away, there is
        no need to copy the lparam to kernel mode and then back to usermode.
        We just pretend it isn't a pointer */
 
+    if (DoCallBack)
     retval = co_IntCallWindowProc( Window->lpfnWndProc,
                                    !Window->Unicode,
                                    pMsg->hwnd,
@@ -1247,6 +1259,7 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
     ULONG_PTR Hi, Lo, Result = 0;
     DECLARE_RETURN(LRESULT);
     USER_REFERENCE_ENTRY Ref;
+    BOOL DoCallBack = TRUE;
 
     if (!(Window = UserGetWindowObject(hWnd)))
     {
@@ -1289,6 +1302,17 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
               RETURN( FALSE);
            }
            /* Return after server side call, IntCallWndProcRet will not be called. */
+           switch(Window->fnid)
+           {
+              case FNID_DESKTOP:
+                DoCallBack = !DesktopWindowProc(Window, Msg, wParam, lParam,(LRESULT*)&Result);
+                break;
+           }
+           if (!DoCallBack)
+           {
+              if (uResult) *uResult = Result;
+              RETURN( TRUE);
+           }
         }
         /* See if this message type is present in the table */
         MsgMemoryEntry = FindMsgMemory(Msg);
@@ -1493,6 +1517,7 @@ co_IntSendMessageWithCallBack( HWND hWnd,
     DECLARE_RETURN(LRESULT);
     USER_REFERENCE_ENTRY Ref;
     PUSER_SENT_MESSAGE Message;
+    BOOL DoCallBack = TRUE;
 
     if (!(Window = UserGetWindowObject(hWnd)))
     {
@@ -1560,8 +1585,15 @@ co_IntSendMessageWithCallBack( HWND hWnd,
         if ( Window->state & WNDS_SERVERSIDEWINDOWPROC )
         {
            TRACE("SMWCB: Server Side Window Procedure\n");
+           switch(Window->fnid)
+           {
+              case FNID_DESKTOP:
+                DoCallBack = !DesktopWindowProc(Window, Msg, wParam, lParamPacked, (LRESULT*)&Result);
+                break;
+           }
         }
 
+        if (DoCallBack)
         Result = (ULONG_PTR)co_IntCallWindowProc( Window->lpfnWndProc,
                                                   !Window->Unicode,
                                                   hWnd,
@@ -2193,7 +2225,12 @@ NtUserMessageCall( HWND hWnd,
     case FNID_DESKTOP:
         {
            Window = UserGetWindowObject(hWnd);
-           if (Window) lResult = DesktopWindowProc(Window, Msg, wParam, lParam);
+           if (Window)
+           {
+              ERR("FNID_DESKTOP IN\n");
+              Ret = DesktopWindowProc(Window, Msg, wParam, lParam, &lResult);
+              ERR("FNID_DESKTOP OUT\n");
+           }
            break;
         }
     case FNID_DEFWINDOWPROC:

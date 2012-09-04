@@ -916,6 +916,105 @@ IntFlashWindowEx(PWND pWnd, PFLASHWINFO pfwi)
    return Ret;
 }
 
+HDC FASTCALL
+IntBeginPaint(PWND Window, PPAINTSTRUCT Ps)
+{
+   co_UserHideCaret(Window);
+
+   Window->state2 |= WNDS2_STARTPAINT;
+   Window->state &= ~WNDS_PAINTNOTPROCESSED;
+
+   if (Window->state & WNDS_SENDNCPAINT)
+   {
+      HRGN hRgn;
+
+      Window->state &= ~WNDS_UPDATEDIRTY;
+      hRgn = IntGetNCUpdateRgn(Window, FALSE);
+      Window->state &= ~WNDS_SENDNCPAINT;
+      co_IntSendMessage(UserHMGetHandle(Window), WM_NCPAINT, (WPARAM)hRgn, 0);
+      if (hRgn != HRGN_WINDOW && hRgn != NULL && GreIsHandleValid(hRgn))
+      {
+         /* NOTE: The region can already be deleted! */
+         GreDeleteObject(hRgn);
+      }
+   }
+   else
+   {
+      Window->state &= ~WNDS_UPDATEDIRTY;
+   }
+
+   RtlZeroMemory(Ps, sizeof(PAINTSTRUCT));
+
+   Ps->hdc = UserGetDCEx( Window,
+                         Window->hrgnUpdate,
+                         DCX_INTERSECTRGN | DCX_USESTYLE);
+   if (!Ps->hdc)
+   {
+      return NULL;
+   }
+
+   if (Window->hrgnUpdate != NULL)
+   {
+      MsqDecPaintCountQueue(Window->head.pti->MessageQueue);
+      GdiGetClipBox(Ps->hdc, &Ps->rcPaint);
+      IntGdiSetRegionOwner(Window->hrgnUpdate, GDI_OBJ_HMGR_POWNED);
+      /* The region is part of the dc now and belongs to the process! */
+      Window->hrgnUpdate = NULL;
+   }
+   else
+   {
+      if (Window->state & WNDS_INTERNALPAINT)
+         MsqDecPaintCountQueue(Window->head.pti->MessageQueue);
+
+      IntGetClientRect(Window, &Ps->rcPaint);
+   }
+
+   Window->state &= ~WNDS_INTERNALPAINT;
+
+   if (Window->state & WNDS_SENDERASEBACKGROUND)
+   {
+      Window->state &= ~(WNDS_SENDERASEBACKGROUND|WNDS_ERASEBACKGROUND);
+      Ps->fErase = !co_IntSendMessage(UserHMGetHandle(Window), WM_ERASEBKGND, (WPARAM)Ps->hdc, 0);
+      if ( Ps->fErase )
+      {
+         Window->state |= (WNDS_SENDERASEBACKGROUND|WNDS_ERASEBACKGROUND);
+      }
+   }
+   else
+   {
+      Ps->fErase = FALSE;
+   }
+   if (Window->hrgnUpdate)
+   {
+      if (!(Window->style & WS_CLIPCHILDREN))
+      {
+         PWND Child;
+         for (Child = Window->spwndChild; Child; Child = Child->spwndNext)
+         {
+            if (Child->hrgnUpdate == NULL && Child->state & WNDS_SENDNCPAINT) // Helped fixing test_redrawnow.
+            IntInvalidateWindows(Child, Window->hrgnUpdate, RDW_FRAME | RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
+         }
+      }
+   }
+   return Ps->hdc;
+}
+
+BOOL FASTCALL
+IntEndPaint(PWND Wnd, PPAINTSTRUCT Ps)
+{
+   HDC hdc = NULL;
+
+   hdc = Ps->hdc;
+
+   UserReleaseDC(Wnd, hdc, TRUE);
+
+   Wnd->state2 &= ~(WNDS2_WMPAINTSENT|WNDS2_STARTPAINT);
+
+   co_UserShowCaret(Wnd);
+
+   return TRUE;
+}
+
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 /*
@@ -931,8 +1030,9 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* UnsafePs)
    PWND Window = NULL;
    PAINTSTRUCT Ps;
    NTSTATUS Status;
-   DECLARE_RETURN(HDC);
+   HDC hDC;
    USER_REFERENCE_ENTRY Ref;
+   DECLARE_RETURN(HDC);
 
    TRACE("Enter NtUserBeginPaint\n");
    UserEnterExclusive();
@@ -944,83 +1044,7 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* UnsafePs)
 
    UserRefObjectCo(Window, &Ref);
 
-   co_UserHideCaret(Window);
-
-   Window->state2 |= WNDS2_STARTPAINT;
-   Window->state &= ~WNDS_PAINTNOTPROCESSED;
-
-   if (Window->state & WNDS_SENDNCPAINT)
-   {
-      HRGN hRgn;
-
-      Window->state &= ~WNDS_UPDATEDIRTY;
-      hRgn = IntGetNCUpdateRgn(Window, FALSE);
-      Window->state &= ~WNDS_SENDNCPAINT;
-      co_IntSendMessage(hWnd, WM_NCPAINT, (WPARAM)hRgn, 0);
-      if (hRgn != HRGN_WINDOW && hRgn != NULL && GreIsHandleValid(hRgn))
-      {
-         /* NOTE: The region can already be deleted! */
-         GreDeleteObject(hRgn);
-      }
-   }
-   else
-   {
-      Window->state &= ~WNDS_UPDATEDIRTY;
-   }
-
-   RtlZeroMemory(&Ps, sizeof(PAINTSTRUCT));
-
-   Ps.hdc = UserGetDCEx( Window,
-                         Window->hrgnUpdate,
-                         DCX_INTERSECTRGN | DCX_USESTYLE);
-   if (!Ps.hdc)
-   {
-      RETURN(NULL);
-   }
-
-   if (Window->hrgnUpdate != NULL)
-   {
-      MsqDecPaintCountQueue(Window->head.pti->MessageQueue);
-      GdiGetClipBox(Ps.hdc, &Ps.rcPaint);
-      IntGdiSetRegionOwner(Window->hrgnUpdate, GDI_OBJ_HMGR_POWNED);
-      /* The region is part of the dc now and belongs to the process! */
-      Window->hrgnUpdate = NULL;
-   }
-   else
-   {
-      if (Window->state & WNDS_INTERNALPAINT)
-         MsqDecPaintCountQueue(Window->head.pti->MessageQueue);
-
-      IntGetClientRect(Window, &Ps.rcPaint);
-   }
-
-   Window->state &= ~WNDS_INTERNALPAINT;
-
-   if (Window->state & WNDS_SENDERASEBACKGROUND)
-   {
-      Window->state &= ~(WNDS_SENDERASEBACKGROUND|WNDS_ERASEBACKGROUND);
-      Ps.fErase = !co_IntSendMessage(hWnd, WM_ERASEBKGND, (WPARAM)Ps.hdc, 0);
-      if ( Ps.fErase )
-      {
-         Window->state |= (WNDS_SENDERASEBACKGROUND|WNDS_ERASEBACKGROUND);
-      }
-   }
-   else
-   {
-      Ps.fErase = FALSE;
-   }
-   if (Window->hrgnUpdate)
-   {
-      if (!(Window->style & WS_CLIPCHILDREN))
-      {
-         PWND Child;
-         for (Child = Window->spwndChild; Child; Child = Child->spwndNext)
-         {
-            if (Child->hrgnUpdate == NULL && Child->state & WNDS_SENDNCPAINT) // Helped fixing test_redrawnow.
-            IntInvalidateWindows(Child, Window->hrgnUpdate, RDW_FRAME | RDW_ERASE | RDW_INVALIDATE | RDW_ALLCHILDREN);
-         }
-      }
-   }
+   hDC = IntBeginPaint(Window, &Ps);
 
    Status = MmCopyToCaller(UnsafePs, &Ps, sizeof(PAINTSTRUCT));
    if (! NT_SUCCESS(Status))
@@ -1029,7 +1053,7 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* UnsafePs)
       RETURN(NULL);
    }
 
-   RETURN(Ps.hdc);
+   RETURN(hDC);
 
 CLEANUP:
    if (Window) UserDerefObjectCo(Window);
@@ -1051,10 +1075,10 @@ BOOL APIENTRY
 NtUserEndPaint(HWND hWnd, CONST PAINTSTRUCT* pUnsafePs)
 {
    NTSTATUS Status = STATUS_SUCCESS;
-   PWND Window;
-   DECLARE_RETURN(BOOL);
+   PWND Window = NULL;
+   PAINTSTRUCT Ps;
    USER_REFERENCE_ENTRY Ref;
-   HDC hdc = NULL;
+   DECLARE_RETURN(BOOL);
 
    TRACE("Enter NtUserEndPaint\n");
    UserEnterExclusive();
@@ -1067,7 +1091,7 @@ NtUserEndPaint(HWND hWnd, CONST PAINTSTRUCT* pUnsafePs)
    _SEH2_TRY
    {
       ProbeForRead(pUnsafePs, sizeof(*pUnsafePs), 1);
-      hdc = pUnsafePs->hdc;
+      RtlCopyMemory(&Ps, pUnsafePs, sizeof(PAINTSTRUCT));
    }
    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
@@ -1079,17 +1103,13 @@ NtUserEndPaint(HWND hWnd, CONST PAINTSTRUCT* pUnsafePs)
       RETURN(FALSE);
    }
 
-   UserReleaseDC(Window, hdc, TRUE);
-
-   Window->state2 &= ~(WNDS2_WMPAINTSENT|WNDS2_STARTPAINT);
-
    UserRefObjectCo(Window, &Ref);
-   co_UserShowCaret(Window);
-   UserDerefObjectCo(Window);
 
-   RETURN(TRUE);
+   RETURN(IntEndPaint(Window, &Ps));
 
 CLEANUP:
+   if (Window) UserDerefObjectCo(Window);
+
    TRACE("Leave NtUserEndPaint, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
