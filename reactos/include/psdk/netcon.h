@@ -188,7 +188,7 @@ DECLARE_INTERFACE_(INetConnectionConnectUi, IUnknown)
     STDMETHOD_(ULONG,Release) (THIS) PURE;
     STDMETHOD_(HRESULT,SetConnection)(THIS_ INetConnection* pCon) PURE;
     STDMETHOD_(HRESULT,Connect) (THIS_ HWND hwndParent, DWORD dwFlags) PURE;
-    STDMETHOD_(HRESULT,Disconnect) (THIS_ HWND hwndParent, DWORD dwFlags);
+    STDMETHOD_(HRESULT,Disconnect) (THIS_ HWND hwndParent, DWORD dwFlags) PURE;
 };
 
 #if !defined(__cplusplus) || defined(CINTERFACE)
