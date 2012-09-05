@@ -22,7 +22,7 @@ static PCSRSS_API_DEFINITION ApiDefinitions = NULL;
 UNICODE_STRING CsrApiPortName;
 volatile LONG CsrpStaticThreadCount;
 volatile LONG CsrpDynamicThreadTotal;
-ULONG CsrMaxApiRequestThreads;
+extern ULONG CsrMaxApiRequestThreads;
 
 /* FUNCTIONS *****************************************************************/
 

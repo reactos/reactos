@@ -152,8 +152,6 @@ typedef struct _UNIQUE_ID_WORK_ITEM
     ULONG StackSize;                          // 0x2C
 } UNIQUE_ID_WORK_ITEM, *PUNIQUE_ID_WORK_ITEM; // 0x30
 
-PDEVICE_OBJECT gdeviceObject;
-
 /* Memory allocation helpers */
 #define AllocatePool(Size) ExAllocatePoolWithTag(PagedPool, Size, 'AtnM')
 #define FreePool(P)        ExFreePoolWithTag(P, 'AtnM')
@@ -168,6 +166,7 @@ PDEVICE_OBJECT gdeviceObject;
 /* mountmgr.c */
 
 extern UNICODE_STRING DosDevicesMount;
+extern PDEVICE_OBJECT gdeviceObject;
 extern UNICODE_STRING ReparseIndex;
 extern UNICODE_STRING DeviceFloppy;
 extern UNICODE_STRING DeviceMount;

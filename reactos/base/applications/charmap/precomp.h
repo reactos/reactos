@@ -57,8 +57,8 @@ typedef struct {
     BOOL IsAdvancedView;
 } SETTINGS;
 
-SETTINGS Settings;
-HWND hCharmapDlg;
+extern SETTINGS Settings;
+extern HWND hCharmapDlg;
 
 LRESULT CALLBACK LrgCellWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 

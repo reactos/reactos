@@ -91,8 +91,6 @@ extern PMMWSL MmWorkingSetList;
 
 /* GLOBALS *******************************************************************/
 
-ULONG_PTR MmSubsectionBase;
-
 static const INFORMATION_CLASS_INFO ExSectionInfoClass[] =
 {
     ICI_SQ_SAME( sizeof(SECTION_BASIC_INFORMATION), sizeof(ULONG), ICIF_QUERY ), /* SectionBasicInformation */
