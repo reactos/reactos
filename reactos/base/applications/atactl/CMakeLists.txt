@@ -1,3 +1,4 @@
+set_cpp()
 
 add_definitions(-DUSER_MODE)
 include_directories(${REACTOS_SOURCE_DIR}/drivers/storage/ide/uniata)
