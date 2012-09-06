@@ -139,7 +139,7 @@ NDIS_POBJECT_TO_HANDLE ( PNDIS_HANDLE_OBJECT obj )
   return (NDIS_HANDLE)obj;
 }
 
-const WCHAR* NDIS_FILE_FOLDER = L"\\SystemRoot\\System32\\Drivers\\";
+static const WCHAR NDIS_FILE_FOLDER[] = L"\\SystemRoot\\System32\\Drivers\\";
 
 /*
  * @implemented
@@ -242,8 +242,8 @@ NdisOpenFile(
   *Status = NDIS_STATUS_SUCCESS;
   FullFileName.Buffer = NULL;
 
-  FullFileName.Length = sizeof(NDIS_FILE_FOLDER);
-  FullFileName.MaximumLength = FileName->MaximumLength + sizeof(NDIS_FILE_FOLDER);
+  FullFileName.Length = sizeof(NDIS_FILE_FOLDER) - sizeof(UNICODE_NULL);
+  FullFileName.MaximumLength = FileName->MaximumLength + FullFileName.Length;
   FullFileName.Buffer = ExAllocatePool ( NonPagedPool, FullFileName.MaximumLength );
 
   if ( !FullFileName.Buffer )

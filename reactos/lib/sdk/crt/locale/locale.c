@@ -74,8 +74,8 @@ typedef struct {
   LANGID found_lang_id;
 } locale_search_t;
 
-unsigned int __setlc_active;
-unsigned int __unguarded_readlc_active;
+extern unsigned int __setlc_active;
+extern unsigned int __unguarded_readlc_active;
 int _current_category;	/* used by setlocale */
 const char *_current_locale;
 

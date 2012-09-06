@@ -38,7 +38,7 @@ PDEVICE_OBJECT gdeviceObject;
 KEVENT UnloadEvent;
 LONG Unloading;
 
-PWSTR Cunc = L"\\??\\C:";
+static const WCHAR Cunc[] = L"\\??\\C:";
 
 /*
  * TODO:
