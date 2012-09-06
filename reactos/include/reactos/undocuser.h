@@ -71,6 +71,9 @@
 /* NtUserSetScrollInfo mask to return original position before it is change */
 #define SIF_PREVIOUSPOS 4096
 
+/* ScrollWindow uses the window DC, ScrollWindowEx doesn't */
+#define SW_SCROLLWNDDCE 0x8000
+
 /* Non SDK Queue state flags. */
 #define QS_SMRESULT 0x8000 /* see "Undoc. Windows" */
 

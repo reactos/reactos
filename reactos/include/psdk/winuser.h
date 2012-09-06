@@ -2501,6 +2501,9 @@ extern "C" {
 #define SW_SCROLLCHILDREN 1
 #define SW_INVALIDATE 2
 #define SW_ERASE 4
+#if(WINVER >= 0x0500)
+#define SW_SMOOTHSCROLL 16
+#endif
 #define SC_SIZE 0xF000
 #define SC_MOVE 0xF010
 #define SC_MINIMIZE 0xF020
