@@ -2227,9 +2227,9 @@ NtUserMessageCall( HWND hWnd,
            Window = UserGetWindowObject(hWnd);
            if (Window)
            {
-              ERR("FNID_DESKTOP IN\n");
+              //ERR("FNID_DESKTOP IN\n");
               Ret = DesktopWindowProc(Window, Msg, wParam, lParam, &lResult);
-              ERR("FNID_DESKTOP OUT\n");
+              //ERR("FNID_DESKTOP OUT\n");
            }
            break;
         }
