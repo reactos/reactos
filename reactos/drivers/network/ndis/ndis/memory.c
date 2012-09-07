@@ -13,7 +13,6 @@
 
 #include "ndissys.h"
 
-
 /*
  * @implemented
  */
@@ -50,7 +49,6 @@ NdisAllocateMemoryWithTag(
 }
 
 
-
 /*
  * @implemented
  */
@@ -104,7 +102,6 @@ NdisAllocateMemory(
   return NDIS_STATUS_SUCCESS;
 }
 
-
 /*
  * @implemented
  */
@@ -143,7 +140,6 @@ NdisFreeMemory(
   }
 }
 
-
 /*
  * @implemented
  */
@@ -184,7 +180,6 @@ NdisMAllocateSharedMemory(
       Adapter->NdisMiniportBlock.SystemAdapterObject, Length, PhysicalAddress, Cached);
 }
 
-
 VOID
 NTAPI
 NdisMFreeSharedMemoryPassive(
@@ -212,7 +207,6 @@ NdisMFreeSharedMemoryPassive(
   ExFreePool(Memory);
 }
 
-
 /*
  * @implemented
  */

@@ -167,7 +167,6 @@ MiniIsBusy(
     return Busy;
 }
 
-
 VOID
 MiniIndicateData(
     PLOGICAL_ADAPTER    Adapter,
@@ -282,7 +281,8 @@ NdisReturnPackets(
             KeLowerIrql(OldIrql);
         }
     }
-}
+}
+
 VOID NTAPI
 MiniIndicateReceivePacket(
     IN  NDIS_HANDLE    MiniportAdapterHandle,
@@ -425,7 +425,6 @@ MiniIndicateReceivePacket(
     KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql);
 }
 
-
 VOID NTAPI
 MiniResetComplete(
     IN  NDIS_HANDLE MiniportAdapterHandle,
@@ -917,7 +916,6 @@ MiniportHangDpc(
   }
 }
 
-
 VOID
 FASTCALL
 MiniQueueWorkItem(
@@ -991,7 +989,6 @@ MiniQueueWorkItem(
     KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql);
 }
 
-
 NDIS_STATUS
 FASTCALL
 MiniDequeueWorkItem(
@@ -1050,7 +1047,6 @@ MiniDequeueWorkItem(
     }
 }
 
-
 NDIS_STATUS
 MiniDoRequest(
     PLOGICAL_ADAPTER Adapter,
@@ -1121,7 +1117,6 @@ MiniDoRequest(
     return Status;
 }
 
-
 /*
  * @implemented
  */
@@ -1142,7 +1137,6 @@ NdisMSetInformationComplete(
   KeLowerIrql(OldIrql);
 }
 
-
 /*
  * @implemented
  */
@@ -1322,7 +1316,6 @@ MiniportWorker(IN PDEVICE_OBJECT DeviceObject, IN PVOID Context)
 }
 
 
-
 VOID
 NTAPI
 MiniStatus(
@@ -1356,7 +1349,6 @@ MiniStatus(
     KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql);
 }
 
-
 VOID
 NTAPI
 MiniStatusComplete(
@@ -1384,7 +1376,6 @@ MiniStatusComplete(
     KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql);
 }
 
-
 /*
  * @implemented
  */
@@ -1529,7 +1520,6 @@ NdisMIndicateStatusComplete(
     MiniStatusComplete(MiniportAdapterHandle);
 }
 
-
 /*
  * @implemented
  */
@@ -1614,7 +1604,6 @@ NdisInitializeWrapper(
   *NdisWrapperHandle = Miniport;
 }
 
-
 VOID NTAPI NdisIBugcheckCallback(
     IN PVOID   Buffer,
     IN ULONG   Length)
@@ -1634,7 +1623,6 @@ VOID NTAPI NdisIBugcheckCallback(
     sh(Context->DriverContext);
 }
 
-
 /*
  * @implemented
  */
@@ -1685,7 +1673,6 @@ NdisMRegisterAdapterShutdownHandler(
   IoRegisterShutdownNotification(Adapter->NdisMiniportBlock.DeviceObject);
 }
 
-
 NDIS_STATUS
 DoQueries(
     PLOGICAL_ADAPTER Adapter,
@@ -1775,7 +1762,6 @@ DoQueries(
   return STATUS_SUCCESS;
 }
 
-
 NTSTATUS
 NTAPI
 NdisIForwardIrpAndWaitCompletionRoutine(
@@ -1791,7 +1777,6 @@ NdisIForwardIrpAndWaitCompletionRoutine(
   return STATUS_MORE_PROCESSING_REQUIRED;
 }
 
-
 NTSTATUS
 NTAPI
 NdisIForwardIrpAndWait(PLOGICAL_ADAPTER Adapter, PIRP Irp)
@@ -1826,7 +1811,6 @@ NdisICreateClose(
   return STATUS_SUCCESS;
 }
 
-
 NTSTATUS
 NTAPI
 NdisIPnPStartDevice(
@@ -2153,7 +2137,6 @@ NdisIPnPStartDevice(
   return STATUS_SUCCESS;
 }
 
-
 NTSTATUS
 NTAPI
 NdisIPnPStopDevice(
@@ -2275,7 +2258,6 @@ NdisIDeviceIoControl(
   return Status;
 }
 
-
 NTSTATUS
 NTAPI
 NdisIDispatchPnp(
@@ -2348,7 +2330,6 @@ NdisIDispatchPnp(
   return IoCallDriver(Adapter->NdisMiniportBlock.NextDeviceObject, Irp);
 }
 
-
 NTSTATUS
 NTAPI
 NdisIAddDevice(
@@ -2713,7 +2694,6 @@ NdisMRegisterMiniport(
   return NDIS_STATUS_SUCCESS;
 }
 
-
 /*
  * @implemented
  */
@@ -2728,7 +2708,6 @@ NdisMResetComplete(
   MiniResetComplete(MiniportAdapterHandle, Status, AddressingReset);
 }
 
-
 /*
  * @implemented
  */
@@ -2751,7 +2730,6 @@ NdisMSendComplete(
   MiniSendComplete(MiniportAdapterHandle, Packet, Status);
 }
 
-
 /*
  * @implemented
  */
@@ -2764,7 +2742,6 @@ NdisMSendResourcesAvailable(
   MiniSendResourcesAvailable(MiniportAdapterHandle);
 }
 
-
 /*
  * @implemented
  */
@@ -2780,7 +2757,6 @@ NdisMTransferDataComplete(
   MiniTransferDataComplete(MiniportAdapterHandle, Packet, Status, BytesTransferred);
 }
 
-
 /*
  * @implemented
  */
@@ -2807,7 +2783,6 @@ NdisMSetAttributes(
                        AdapterType);
 }
 
-
 /*
  * @implemented
  */
@@ -2853,7 +2828,6 @@ NdisMSetAttributesEx(
   }
 }
 
-
 /*
  * @implemented
  */
@@ -2881,7 +2855,6 @@ NdisMSleep(
   KeWaitForSingleObject(&Timer, Executive, KernelMode, FALSE, 0);
 }
 
-
 /*
  * @implemented
  */
@@ -2897,7 +2870,6 @@ NdisMSynchronizeWithInterrupt(
 				SynchronizeContext));
 }
 
-
 /*
  * @unimplemented
  */
@@ -2940,7 +2912,6 @@ NdisMWriteLogData(
     return NDIS_STATUS_FAILURE;
 }
 
-
 /*
  * @implemented
  */

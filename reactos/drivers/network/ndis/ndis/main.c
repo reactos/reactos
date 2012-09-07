@@ -23,7 +23,7 @@ ULONG DebugTraceLevel = MIN_TRACE;
 
 LONG CancelId;
 
-
+
 VOID NTAPI MainUnload(
     PDRIVER_OBJECT DriverObject)
 /*
@@ -35,7 +35,7 @@ VOID NTAPI MainUnload(
   NDIS_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 }
 
-
+
 NTSTATUS
 NTAPI
 DriverEntry(
@@ -68,7 +68,7 @@ DriverEntry(
   return STATUS_SUCCESS;
 }
 
-
+
 /*
  * @implemented
  */
@@ -96,7 +96,7 @@ NdisWriteErrorLogEntry(
   /* ASSERT(0); */
 }
 
-
+
 /*
  * @implemented
  */

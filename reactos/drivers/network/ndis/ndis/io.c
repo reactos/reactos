@@ -13,7 +13,6 @@
 
 #include "ndissys.h"
 
-
 VOID NTAPI HandleDeferredProcessing(
     IN  PKDPC   Dpc,
     IN  PVOID   DeferredContext,
@@ -47,7 +46,6 @@ VOID NTAPI HandleDeferredProcessing(
   NDIS_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 }
 
-
 BOOLEAN NTAPI ServiceRoutine(
     IN  PKINTERRUPT Interrupt,
     IN  PVOID       ServiceContext)
@@ -94,7 +92,6 @@ BOOLEAN NTAPI ServiceRoutine(
   return InterruptRecognized;
 }
 
-
 /*
  * @implemented
  */
@@ -109,7 +106,6 @@ NdisImmediateReadPortUchar(
   *Data = READ_PORT_UCHAR(UlongToPtr(Port)); // FIXME: What to do with WrapperConfigurationContext?
 }
 
-
 /*
  * @implemented
  */
@@ -124,7 +120,6 @@ NdisImmediateReadPortUlong(
   *Data = READ_PORT_ULONG(UlongToPtr(Port)); // FIXME: What to do with WrapperConfigurationContext?
 }
 
-
 /*
  * @implemented
  */
@@ -139,7 +134,6 @@ NdisImmediateReadPortUshort(
   *Data = READ_PORT_USHORT(UlongToPtr(Port)); // FIXME: What to do with WrapperConfigurationContext?
 }
 
-
 /*
  * @implemented
  */
@@ -154,7 +148,6 @@ NdisImmediateWritePortUchar(
   WRITE_PORT_UCHAR(UlongToPtr(Port), Data); // FIXME: What to do with WrapperConfigurationContext?
 }
 
-
 /*
  * @implemented
  */
@@ -169,7 +162,6 @@ NdisImmediateWritePortUlong(
   WRITE_PORT_ULONG(UlongToPtr(Port), Data); // FIXME: What to do with WrapperConfigurationContext?
 }
 
-
 /*
  * @implemented
  */
@@ -212,7 +204,8 @@ IO_ALLOCATION_ACTION NTAPI NdisSubordinateMapRegisterCallback (
     
     /* We have to hold the object open to keep our lock on the system DMA controller */
     return KeepObject;
-}
+}
+
 IO_ALLOCATION_ACTION NTAPI NdisBusMasterMapRegisterCallback (
     IN PDEVICE_OBJECT  DeviceObject,
     IN PIRP            Irp,
@@ -242,7 +235,8 @@ IO_ALLOCATION_ACTION NTAPI NdisBusMasterMapRegisterCallback (
 
   /* We're a bus master so we can go ahead and deallocate the object now */
   return DeallocateObjectKeepRegisters;
-}
+}
+
 /*
  * @implemented
  */
@@ -635,7 +629,6 @@ NdisMStartBufferPhysicalMapping(
   *ArraySize = LoopCount;
 }
 
-
 /*
  * @implemented
  */
@@ -673,7 +666,6 @@ NdisMCompleteBufferPhysicalMapping(
       Adapter->NdisMiniportBlock.MapRegisters[PhysicalMapRegister].WriteToDevice);
 }
 
-
 /*
  * @implemented
  */
@@ -693,7 +685,6 @@ NdisMDeregisterDmaChannel(
     ExFreePool(DmaBlock);
 }
 
-
 /*
  * @implemented
  */
@@ -715,7 +706,6 @@ NdisMDeregisterInterrupt(
         Interrupt->Miniport->Interrupt = NULL;
 }
 
-
 /*
  * @implemented
  */
@@ -769,7 +759,6 @@ NdisMFreeMapRegisters(
  ExFreePool(Adapter->NdisMiniportBlock.MapRegisters);
 }
 
-
 /*
  * @implemented
  */
@@ -822,7 +811,6 @@ NdisMMapIoSpace(
   return NDIS_STATUS_SUCCESS;
 }
 
-
 /*
  * @implemented
  */
@@ -840,7 +828,6 @@ NdisMReadDmaCounter(
   return AdapterObject->DmaOperations->ReadDmaCounter(AdapterObject);
 }
 
-
 /*
  * @implemented
  */
@@ -858,7 +845,6 @@ NdisMGetDmaAlignment(
   return AdapterObject->DmaOperations->GetDmaAlignment(AdapterObject);
 }
 
-
 /*
  * @implemented
  */
@@ -938,7 +924,8 @@ NdisAllocateDmaChannel(OUT PNDIS_STATUS            Status,
                                       FALSE,
                                       DmaDescription,
                                       MaximumLength);
-}
+}
+
 /*
  * @implemented
  */
@@ -1016,7 +1003,6 @@ NdisMRegisterInterrupt(
   return NDIS_STATUS_FAILURE;
 }
 
-
 /*
  * @implemented
  */
