@@ -4219,6 +4219,26 @@ GetMenu(HWND hWnd)
 /*
  * @implemented
  */
+BOOL WINAPI GetMenuBarInfo( HWND hwnd, LONG idObject, LONG idItem, PMENUBARINFO pmbi )
+{
+    BOOL Ret;
+    Ret = NtUserGetMenuBarInfo( hwnd, idObject, idItem, pmbi);
+    // Reason to move to server side!!!!!
+    if (!Ret) return Ret;
+    // EL HAXZO!!!
+    pmbi->fBarFocused = top_popup_hmenu == pmbi->hMenu;
+    if (!idItem)
+    {
+        pmbi->fFocused = pmbi->fBarFocused;
+    }
+
+    return TRUE;
+}
+
+
+/*
+ * @implemented
+ */
 LONG WINAPI
 GetMenuCheckMarkDimensions(VOID)
 {
