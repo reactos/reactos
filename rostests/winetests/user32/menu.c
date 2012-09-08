@@ -2180,7 +2180,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam,
         default:
             return( DefWindowProcA( hWnd, msg, wParam, lParam ) );
     }
-
+#if 0
     if(pGetMenuBarInfo)
     {
         MENUBARINFO mbi;
@@ -2226,7 +2226,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam,
         ok(!(bMenuVisible && (state & MF_HILITE)) == !mbi.fFocused,
                 "msg %x: GetMenuBarInfo.fFocused (%d) is wrong\n", msg, mbi.fFocused != 0);
     }
-
+#endif
     if (msg == WM_EXITMENULOOP)
         bMenuVisible = FALSE;
     else if (msg == WM_INITMENUPOPUP)
