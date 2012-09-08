@@ -468,12 +468,12 @@ DestroyMenu(HMENU hMenu)
     return NtUserDestroyMenu(hMenu);
 }
 
-EXTINLINE BOOL WINAPI
+/*EXTINLINE BOOL WINAPI
 GetMenuBarInfo(HWND hwnd, LONG idObject, LONG idItem, PMENUBARINFO pmbi)
 {
     return NtUserGetMenuBarInfo(hwnd, idObject, idItem, pmbi);
 }
-
+*/
 EXTINLINE BOOL WINAPI
 GetMenuItemRect(HWND hWnd, HMENU hMenu, UINT uItem, LPRECT lprcItem)
 {
