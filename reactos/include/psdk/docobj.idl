@@ -407,3 +407,5 @@ cpp_quote("#define IID_IMsoDocumentSite           IID_IOleDocumentSite")
 cpp_quote("#define IID_IMsoView                   IID_IOleDocumentView")
 cpp_quote("#define IID_IEnumMsoView               IID_IEnumOleDocumentViews")
 cpp_quote("#define IID_IMsoCommandTarget          IID_IOleCommandTarget")
+
+cpp_quote("EXTERN_C const GUID SID_SContainerDispatch;")

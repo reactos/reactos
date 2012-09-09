@@ -35,8 +35,6 @@
  * First include the version 2 headers so that we don't redefine their
  * uuids - they're already in libuuid
  */
-#include "xmldom.h"
-#include "xmldso.h"
 #include "msxml.h"
 
 /* Now we can initialize the rest of the uuids */

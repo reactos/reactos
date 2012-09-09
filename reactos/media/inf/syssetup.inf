@@ -64,7 +64,11 @@ AddReg=Classes
 11,,msimtf.dll,1
 11,,msisip.dll,1
 11,,mstask.dll,1
+11,,msxml.dll,1
+11,,msxml2.dll,1
 11,,msxml3.dll,1
+11,,msxml4.dll,1
+11,,msxml6.dll,1
 11,,netcfgx.dll,1
 11,,netshell.dll,1
 11,,objsel.dll,1

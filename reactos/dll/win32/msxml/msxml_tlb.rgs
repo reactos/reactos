@@ -1,0 +1,231 @@
+HKCR
+{
+    NoRemove Typelib
+    {
+        NoRemove '{D63E0CE2-A0A2-11D0-9C02-00C04FC99C8E}'
+        {
+            '2.0' = s 'Microsoft XML, v2.0'
+            {
+                '0' { win32 = s '%MODULE%' }
+                FLAGS = s '0'
+            }
+        }
+    }
+    NoRemove Interface
+    {
+        '{2933BF80-7B36-11D2-B20E-00C04F983E60}' = s 'IXMLDOMNode'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{D63E0CE2-A0A2-11D0-9C02-00C04FC99C8E}' { val Version = s '2.0' }
+        }
+        '{2933BF81-7B36-11D2-B20E-00C04F983E60}' = s 'IXMLDOMDocument'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{D63E0CE2-A0A2-11D0-9C02-00C04FC99C8E}' { val Version = s '2.0' }
+        }
+        '{2933BF82-7B36-11D2-B20E-00C04F983E60}' = s 'IXMLDOMNodeList'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{D63E0CE2-A0A2-11D0-9C02-00C04FC99C8E}' { val Version = s '2.0' }
+        }
+        '{2933BF83-7B36-11D2-B20E-00C04F983E60}' = s 'IXMLDOMNamedNodeMap'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{D63E0CE2-A0A2-11D0-9C02-00C04FC99C8E}' { val Version = s '2.0' }
+        }
+        '{3EFAA413-272F-11D2-836F-0000F87A7782}' = s 'IXMLDOMDocumentFragment'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{D63E0CE2-A0A2-11D0-9C02-00C04FC99C8E}' { val Version = s '2.0' }
+        }
+        '{2933BF84-7B36-11D2-B20E-00C04F983E60}' = s 'IXMLDOMCharacterData'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{D63E0CE2-A0A2-11D0-9C02-00C04FC99C8E}' { val Version = s '2.0' }
+        }
+        '{2933BF85-7B36-11D2-B20E-00C04F983E60}' = s 'IXMLDOMAttribute'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{D63E0CE2-A0A2-11D0-9C02-00C04FC99C8E}' { val Version = s '2.0' }
+        }
+        '{2933BF86-7B36-11D2-B20E-00C04F983E60}' = s 'IXMLDOMElement'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{D63E0CE2-A0A2-11D0-9C02-00C04FC99C8E}' { val Version = s '2.0' }
+        }
+        '{2933BF87-7B36-11D2-B20E-00C04F983E60}' = s 'IXMLDOMText'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{D63E0CE2-A0A2-11D0-9C02-00C04FC99C8E}' { val Version = s '2.0' }
+        }
+        '{2933BF88-7B36-11D2-B20E-00C04F983E60}' = s 'IXMLDOMComment'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{D63E0CE2-A0A2-11D0-9C02-00C04FC99C8E}' { val Version = s '2.0' }
+        }
+        '{2933BF89-7B36-11D2-B20E-00C04F983E60}' = s 'IXMLDOMProcessingInstruction'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{D63E0CE2-A0A2-11D0-9C02-00C04FC99C8E}' { val Version = s '2.0' }
+        }
+        '{2933BF8A-7B36-11D2-B20E-00C04F983E60}' = s 'IXMLDOMCDATASection'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{D63E0CE2-A0A2-11D0-9C02-00C04FC99C8E}' { val Version = s '2.0' }
+        }
+        '{2933BF8B-7B36-11D2-B20E-00C04F983E60}' = s 'IXMLDOMDocumentType'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{D63E0CE2-A0A2-11D0-9C02-00C04FC99C8E}' { val Version = s '2.0' }
+        }
+        '{2933BF8C-7B36-11D2-B20E-00C04F983E60}' = s 'IXMLDOMNotation'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{D63E0CE2-A0A2-11D0-9C02-00C04FC99C8E}' { val Version = s '2.0' }
+        }
+        '{2933BF8D-7B36-11D2-B20E-00C04F983E60}' = s 'IXMLDOMEntity'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{D63E0CE2-A0A2-11D0-9C02-00C04FC99C8E}' { val Version = s '2.0' }
+        }
+        '{2933BF8E-7B36-11D2-B20E-00C04F983E60}' = s 'IXMLDOMEntityReference'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{D63E0CE2-A0A2-11D0-9C02-00C04FC99C8E}' { val Version = s '2.0' }
+        }
+        '{2933BF8F-7B36-11D2-B20E-00C04F983E60}' = s 'IXMLDOMImplementation'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{D63E0CE2-A0A2-11D0-9C02-00C04FC99C8E}' { val Version = s '2.0' }
+        }
+        '{3EFAA426-272F-11D2-836F-0000F87A7782}' = s 'IXMLDOMParseError'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{D63E0CE2-A0A2-11D0-9C02-00C04FC99C8E}' { val Version = s '2.0' }
+        }
+        '{3EFAA427-272F-11D2-836F-0000F87A7782}' = s 'XMLDOMDocumentEvents'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{D63E0CE2-A0A2-11D0-9C02-00C04FC99C8E}' { val Version = s '2.0' }
+        }
+        '{ED8C108D-4349-11D2-91A4-00C04F7969E8}' = s 'IXMLHttpRequest'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{D63E0CE2-A0A2-11D0-9C02-00C04FC99C8E}' { val Version = s '2.0' }
+        }
+        '{310AFA62-0575-11D2-9CA9-0060B0EC3D39}' = s 'IXMLDSOControl'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{D63E0CE2-A0A2-11D0-9C02-00C04FC99C8E}' { val Version = s '2.0' }
+        }
+        '{65725580-9B5D-11D0-9BFE-00C04FC99C8E}' = s 'IXMLElementCollection'
+        {
+            ProxyStubClsid = s '{00020424-0000-0000-C000-000000000046}'
+            ProxyStubClsid32 = s '{00020424-0000-0000-C000-000000000046}'
+            TypeLib = s '{D63E0CE2-A0A2-11D0-9C02-00C04FC99C8E}' { val Version = s '2.0' }
+        }
+    }
+    NoRemove CLSID
+    {
+        '{2933BF90-7B36-11D2-B20E-00C04F983E60}' = s 'XML DOM Document'
+        {
+            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Both' }
+            ProgId = s 'Microsoft.XMLDOM.1.0'
+            TypeLib = s '{D63E0CE2-A0A2-11D0-9C02-00C04FC99C8E}'
+            Version = s '1.0'
+            VersionIndependentProgId = s 'Microsoft.XMLDOM'
+        }
+        '{2933BF91-7B36-11D2-B20E-00C04F983E60}' = s 'Free Threaded XML DOM Document'
+        {
+            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Both' }
+            ProgId = s 'Microsoft.FreeThreadedXMLDOM.1.0'
+            TypeLib = s '{D63E0CE2-A0A2-11D0-9C02-00C04FC99C8E}'
+            Version = s '1.0'
+            VersionIndependentProgId = s 'Microsoft.FreeThreadedXMLDOM'
+        }
+        '{ED8C108E-4349-11D2-91A4-00C04F7969E8}' = s 'XML HTTP Request'
+        {
+            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Apartment' }
+            ProgId = s 'Microsoft.XMLHTTP.1.0'
+            TypeLib = s '{D63E0CE2-A0A2-11D0-9C02-00C04FC99C8E}'
+            Version = s '1.0'
+            VersionIndependentProgId = s 'Microsoft.XMLHTTP'
+        }
+        '{550DDA30-0541-11D2-9CA9-0060B0EC3D39}' = s 'XML Data Source Object'
+        {
+            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Apartment' }
+            ProgId = s 'Microsoft.XMLDSO.1.0'
+            TypeLib = s '{D63E0CE2-A0A2-11D0-9C02-00C04FC99C8E}'
+            Version = s '1.0'
+            VersionIndependentProgId = s 'Microsoft.XMLDSO'
+        }
+        '{CFC399AF-D876-11D0-9C10-00C04FC99C8E}' = s 'Msxml'
+        {
+            InprocServer32 = s '%MODULE%' { val ThreadingModel = s 'Both' }
+            ProgId = s 'Msxml'
+            TypeLib = s '{D63E0CE2-A0A2-11D0-9C02-00C04FC99C8E}'
+            Version = s '1.0'
+        }
+    }
+    'Microsoft.XMLDOM.1.0' = s 'XML DOM Document'
+    {
+        CLSID = s '{2933BF90-7B36-11D2-B20E-00C04F983E60}'
+    }
+    'Microsoft.XMLDOM' = s 'XML DOM Document'
+    {
+        CLSID = s '{2933BF90-7B36-11D2-B20E-00C04F983E60}'
+        CurVer = s 'Microsoft.XMLDOM.1.0'
+    }
+    'Microsoft.FreeThreadedXMLDOM.1.0' = s 'Free Threaded XML DOM Document'
+    {
+        CLSID = s '{2933BF91-7B36-11D2-B20E-00C04F983E60}'
+    }
+    'Microsoft.FreeThreadedXMLDOM' = s 'Free Threaded XML DOM Document'
+    {
+        CLSID = s '{2933BF91-7B36-11D2-B20E-00C04F983E60}'
+        CurVer = s 'Microsoft.FreeThreadedXMLDOM.1.0'
+    }
+    'Microsoft.XMLHTTP.1.0' = s 'XML HTTP Request'
+    {
+        CLSID = s '{ED8C108E-4349-11D2-91A4-00C04F7969E8}'
+    }
+    'Microsoft.XMLHTTP' = s 'XML HTTP Request'
+    {
+        CLSID = s '{ED8C108E-4349-11D2-91A4-00C04F7969E8}'
+        CurVer = s 'Microsoft.XMLHTTP.1.0'
+    }
+    'Microsoft.XMLDSO.1.0' = s 'XML Data Source Object'
+    {
+        CLSID = s '{550DDA30-0541-11D2-9CA9-0060B0EC3D39}'
+    }
+    'Microsoft.XMLDSO' = s 'XML Data Source Object'
+    {
+        CLSID = s '{550DDA30-0541-11D2-9CA9-0060B0EC3D39}'
+        CurVer = s 'Microsoft.XMLDSO.1.0'
+    }
+    'Msxml' = s 'Msxml'
+    {
+        CLSID = s '{CFC399AF-D876-11D0-9C10-00C04FC99C8E}'
+    }
+}

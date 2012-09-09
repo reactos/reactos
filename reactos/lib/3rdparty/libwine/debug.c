@@ -239,7 +239,7 @@ const char *wine_dbg_sprintf( const char *format, ... )
 
 /* varargs wrapper for funcs.dbg_vlog */
 int wine_dbg_log( enum __wine_debug_class cls, struct __wine_debug_channel *channel,
-                  const char *file, const char *func, const int line, const char *format, ... )
+                  const char *func, const char *format, ... )
 {
     int ret;
     va_list valist;
@@ -247,7 +247,7 @@ int wine_dbg_log( enum __wine_debug_class cls, struct __wine_debug_channel *chan
     if (!(__wine_dbg_get_channel_flags( channel ) & (1 << cls))) return -1;
 
     va_start(valist, format);
-    ret = funcs.dbg_vlog( cls, channel, file, func, line, format, valist );
+    ret = funcs.dbg_vlog( cls, channel, func, format, valist );
     va_end(valist);
     return ret;
 }
@@ -258,7 +258,7 @@ int wine_dbg_log( enum __wine_debug_class cls, struct __wine_debug_channel *chan
 static char *get_temp_buffer( size_t size )
 {
     static char *list[32];
-    static LONG pos;
+    static int pos;
     char *ret;
     int idx;
 
@@ -278,7 +278,7 @@ static void release_temp_buffer( char *buffer, size_t size )
 /* default implementation of wine_dbgstr_an */
 static const char *default_dbgstr_an( const char *str, int n )
 {
-    static const char hex[16] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
+    static const char hex[16] = "0123456789abcdef";
     char *dst, *res;
     size_t size;
 
@@ -350,7 +350,7 @@ static const char *default_dbgstr_wn( const WCHAR *str, int n )
     }
     if (n < 0) n = 0;
     size = 12 + min( 300, n * 5 );
-    dst = res = funcs.get_temp_buffer( n * 5 + 7 );
+    dst = res = funcs.get_temp_buffer( size );
     *dst++ = 'L';
     *dst++ = '"';
     while (n-- > 0 && dst <= res + size - 10)
@@ -396,13 +396,12 @@ static int default_dbg_vprintf( const char *format, va_list args )
 
 /* default implementation of wine_dbg_vlog */
 static int default_dbg_vlog( enum __wine_debug_class cls, struct __wine_debug_channel *channel,
-                             const char *file, const char *func, const int line, const char *format, va_list args )
+                             const char *func, const char *format, va_list args )
 {
     int ret = 0;
 
     if (cls < sizeof(debug_classes)/sizeof(debug_classes[0]))
-        ret += wine_dbg_printf( "%s:", debug_classes[cls] );
-    ret += wine_dbg_printf ( "(%s:%d) ", file, line );
+        ret += wine_dbg_printf( "%s:%s:%s ", debug_classes[cls], channel->name, func );
     if (format)
         ret += funcs.dbg_vprintf( format, args );
     return ret;
