@@ -140,7 +140,7 @@ NtCreateEvent(OUT PHANDLE EventHandle,
                             (PVOID*)&Event);
 
     /* Check for Success */
-    if(NT_SUCCESS(Status))
+    if (NT_SUCCESS(Status))
     {
         /* Initalize the Event */
         KeInitializeEvent(Event,
@@ -156,7 +156,7 @@ NtCreateEvent(OUT PHANDLE EventHandle,
                                  &hEvent);
 
         /* Check for success */
-        if(NT_SUCCESS(Status))
+        if (NT_SUCCESS(Status))
         {
             /* Enter SEH for return */
             _SEH2_TRY

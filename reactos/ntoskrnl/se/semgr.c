@@ -1072,7 +1072,7 @@ NtAccessCheckByType(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
                     IN ULONG ObjectTypeLength,
                     IN PGENERIC_MAPPING GenericMapping,
                     IN PPRIVILEGE_SET PrivilegeSet,
-                    IN ULONG PrivilegeSetLength,
+                    IN OUT PULONG PrivilegeSetLength,
                     OUT PACCESS_MASK GrantedAccess,
                     OUT PNTSTATUS AccessStatus)
 {
@@ -1113,7 +1113,7 @@ NtAccessCheckByTypeResultList(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
                               IN ULONG ObjectTypeLength,
                               IN PGENERIC_MAPPING GenericMapping,
                               IN PPRIVILEGE_SET PrivilegeSet,
-                              IN ULONG PrivilegeSetLength,
+                              IN OUT PULONG PrivilegeSetLength,
                               OUT PACCESS_MASK GrantedAccess,
                               OUT PNTSTATUS AccessStatus)
 {
