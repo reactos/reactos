@@ -10,7 +10,8 @@ extern void func_domdoc(void);
 extern void func_saxreader(void);
 extern void func_schema(void);
 extern void func_xmldoc(void);
-extern void func_xmlelem(void);
+extern void func_xmlparser(void);
+extern void func_xmlview(void);
 
 const struct test winetest_testlist[] =
 {
@@ -18,6 +19,7 @@ const struct test winetest_testlist[] =
     { "saxreader", func_saxreader },
     { "schema", func_schema },
     { "xmldoc", func_xmldoc },
-    { "xmlelem", func_xmlelem },
+    { "xmlparser", func_xmlparser },
+    { "xmlview", func_xmlview },
     { 0, 0 }
 };

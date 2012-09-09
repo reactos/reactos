@@ -1,7 +1,5 @@
 
-add_definitions(
-    -D__ROS_LONG64__
-    -D_DLL -D__USE_CRTIMP)
+add_definitions(-D__ROS_LONG64__)
 
 list(APPEND SOURCE
     domdoc.c
@@ -9,9 +7,12 @@ list(APPEND SOURCE
     schema.c
     testlist.c
     xmldoc.c
-    xmlelem.c)
+    xmlparser.c
+    xmlview.c)
 
-add_executable(msxml3_winetest ${SOURCE})
+add_executable(msxml3_winetest ${SOURCE} rsrc.rc)
+add_idl_headers(xmlparser_idlheader_test xmlparser.idl)
+add_dependencies(msxml3_winetest xmlparser_idlheader_test)
 target_link_libraries(msxml3_winetest wine)
 set_module_type(msxml3_winetest win32cui)
 add_importlibs(msxml3_winetest user32 ole32 oleaut32 msvcrt kernel32 ntdll)
