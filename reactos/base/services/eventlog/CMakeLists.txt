@@ -17,7 +17,7 @@ list(APPEND SOURCE
 add_executable(eventlog ${SOURCE})
 
 if(NOT MSVC)
-    target_link_libraries(eventlog pseh)
+    target_link_libraries(eventlog ${PSEH_LIB})
 endif()
 
 set_module_type(eventlog win32cui UNICODE)

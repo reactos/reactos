@@ -22,7 +22,7 @@ list(APPEND SOURCE
 add_executable(services ${SOURCE})
 
 if(NOT MSVC)
-    target_link_libraries(services pseh)
+    target_link_libraries(services ${PSEH_LIB})
 endif()
 
 set_module_type(services win32cui UNICODE)

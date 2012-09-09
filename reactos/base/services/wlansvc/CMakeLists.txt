@@ -10,7 +10,7 @@ add_executable(wlansvc
     ${CMAKE_CURRENT_BINARY_DIR}/wlansvc_s.c)
 
 if(NOT MSVC)
-    target_link_libraries(wlansvc pseh)
+    target_link_libraries(wlansvc ${PSEH_LIB})
 endif()
 
 set_module_type(wlansvc win32cui UNICODE)
