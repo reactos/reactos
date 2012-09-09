@@ -200,10 +200,6 @@ typedef struct _SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX {
 #endif
 #define MAXIMUM_PROCESSORS          MAXIMUM_PROC_PER_GROUP
 
-/* Exception Records */
-#define EXCEPTION_NONCONTINUABLE     1
-#define EXCEPTION_MAXIMUM_PARAMETERS 15
-
 #define EXCEPTION_DIVIDED_BY_ZERO       0
 #define EXCEPTION_DEBUG                 1
 #define EXCEPTION_NMI                   2
@@ -220,39 +216,6 @@ typedef struct _SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX {
 #define EXCEPTION_RESERVED_TRAP         0x0F
 #define EXCEPTION_NPX_ERROR             0x010
 #define EXCEPTION_ALIGNMENT_CHECK       0x011
-
-typedef struct _EXCEPTION_RECORD {
-  NTSTATUS ExceptionCode;
-  ULONG ExceptionFlags;
-  struct _EXCEPTION_RECORD *ExceptionRecord;
-  PVOID ExceptionAddress;
-  ULONG NumberParameters;
-  ULONG_PTR ExceptionInformation[EXCEPTION_MAXIMUM_PARAMETERS];
-} EXCEPTION_RECORD, *PEXCEPTION_RECORD;
-
-typedef struct _EXCEPTION_RECORD32 {
-  NTSTATUS ExceptionCode;
-  ULONG ExceptionFlags;
-  ULONG ExceptionRecord;
-  ULONG ExceptionAddress;
-  ULONG NumberParameters;
-  ULONG ExceptionInformation[EXCEPTION_MAXIMUM_PARAMETERS];
-} EXCEPTION_RECORD32, *PEXCEPTION_RECORD32;
-
-typedef struct _EXCEPTION_RECORD64 {
-  NTSTATUS ExceptionCode;
-  ULONG ExceptionFlags;
-  ULONG64 ExceptionRecord;
-  ULONG64 ExceptionAddress;
-  ULONG NumberParameters;
-  ULONG __unusedAlignment;
-  ULONG64 ExceptionInformation[EXCEPTION_MAXIMUM_PARAMETERS];
-} EXCEPTION_RECORD64, *PEXCEPTION_RECORD64;
-
-typedef struct _EXCEPTION_POINTERS {
-  PEXCEPTION_RECORD ExceptionRecord;
-  PCONTEXT ContextRecord;
-} EXCEPTION_POINTERS, *PEXCEPTION_POINTERS;
 
 typedef enum _KBUGCHECK_CALLBACK_REASON {
   KbCallbackInvalid,

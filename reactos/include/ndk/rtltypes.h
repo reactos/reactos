@@ -54,16 +54,9 @@ Author:
 #define RTL_DRIVE_LETTER_VALID (USHORT)0x0001
 
 //
-// Exception Flags
+// End of Exception List
 //
 #define EXCEPTION_CHAIN_END                                 ((PEXCEPTION_REGISTRATION_RECORD)-1)
-#define EXCEPTION_UNWINDING                                 0x02
-#define EXCEPTION_EXIT_UNWIND                               0x04
-#define EXCEPTION_STACK_INVALID                             0x08
-#define EXCEPTION_UNWIND                                    (EXCEPTION_UNWINDING + EXCEPTION_EXIT_UNWIND)
-#define EXCEPTION_NESTED_CALL                               0x10
-#define EXCEPTION_TARGET_UNWIND                             0x20
-#define EXCEPTION_COLLIDED_UNWIND                           0x20
 
 //
 // Range and Range List Flags
