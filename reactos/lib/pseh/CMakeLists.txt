@@ -1,8 +1,12 @@
 
 if(NOT MSVC)
 
-    list(APPEND SOURCE framebased.c)
-    if(ARCH STREQUAL "i386")
+    if (USE_PSEH3)
+        include_directories(${REACTOS_SOURCE_DIR}/include/reactos/libs/pseh)
+        list(APPEND SOURCE
+            i386/pseh3.c
+            i386/pseh3_i386.S)
+    elseif(ARCH STREQUAL "i386")
         list(APPEND SOURCE
             i386/framebased.S
             i386/framebased-gcchack.c
