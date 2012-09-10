@@ -147,6 +147,14 @@ UniataAhciStatus(
     IN ULONG DeviceNumber
     );
 
+VOID
+NTAPI
+UniataAhciSnapAtaRegs(
+    IN PHW_CHANNEL chan,
+    IN ULONG DeviceNumber,
+ IN OUT PIDEREGS_EX regs
+    );
+
 ULONG
 NTAPI
 UniataAhciSetupFIS_H2D(
@@ -192,6 +200,18 @@ UniataAhciSendPIOCommand(
     IN USHORT feature,
     IN USHORT ahci_flags,
     IN ULONG flags,
+    IN ULONG timeout
+    );
+
+UCHAR
+NTAPI
+UniataAhciSendPIOCommandDirect(
+    IN PVOID HwDeviceExtension,
+    IN ULONG lChannel,
+    IN ULONG DeviceNumber,
+    IN PSCSI_REQUEST_BLOCK Srb,
+    IN PIDEREGS_EX regs,
+    IN ULONG wait_flags,
     IN ULONG timeout
     );
 
@@ -386,5 +406,9 @@ BuildAhciInternalSrb (
     IN PUCHAR Buffer = NULL,
     IN ULONG Length = 0
     );
+
+#define UniataAhciChanImplemented(deviceExtension, c) \
+    (((deviceExtension)->AHCI_PI) & (1 << c))
+
 
 #endif //__UNIATA_SATA__H__
