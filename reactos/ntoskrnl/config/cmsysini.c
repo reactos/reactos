@@ -1381,7 +1381,8 @@ CmpInitializeHiveList(IN USHORT Flag)
         /* Check if we created a new hive */
         if (CmpMachineHiveList[i].CmHive2)
         {
-            /* TODO: Add to HiveList key */
+            /* Add to HiveList key */
+            CmpAddToHiveFileList(CmpMachineHiveList[i].CmHive2);
         }
     }
 
@@ -1569,7 +1570,8 @@ CmInitSystem1(VOID)
         KeBugCheckEx(CONFIG_INITIALIZATION_FAILED, 1, 12, Status, 0);
     }
 
-    /* FIXME: Add to HiveList key */
+    /* Add to HiveList key */
+    CmpAddToHiveFileList(HardwareHive);
 
     /* Free the security descriptor */
     ExFreePoolWithTag(SecurityDescriptor, TAG_CM);

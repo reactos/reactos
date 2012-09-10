@@ -624,9 +624,22 @@ CmCheckRegistry(
 //
 // Hive List Routines
 //
+BOOLEAN
+NTAPI
+CmpGetHiveName(
+    IN  PCMHIVE Hive,
+    OUT PUNICODE_STRING HiveName
+);
+
 NTSTATUS
 NTAPI
 CmpAddToHiveFileList(
+    IN PCMHIVE Hive
+);
+
+VOID
+NTAPI
+CmpRemoveFromHiveFileList(
     IN PCMHIVE Hive
 );
 
