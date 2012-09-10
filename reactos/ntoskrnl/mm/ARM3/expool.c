@@ -1583,6 +1583,7 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
     //
     i = (USHORT)((NumberOfBytes + sizeof(POOL_HEADER) + (POOL_BLOCK_SIZE - 1))
                  / POOL_BLOCK_SIZE);
+    ASSERT(i < POOL_LISTS_PER_PAGE);
 
     //
     // Handle lookaside list optimization for both paged and nonpaged pool
@@ -1664,7 +1665,6 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
                 // Try again!
                 //
                 ExUnlockPool(PoolDesc, OldIrql);
-                ListHead++;
                 continue;
             }
 
