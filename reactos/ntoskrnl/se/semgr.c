@@ -286,65 +286,6 @@ SeDefaultObjectMethod(IN PVOID Object,
     return STATUS_SUCCESS;
 }
 
-static BOOLEAN
-SepSidInToken(PACCESS_TOKEN _Token,
-              PSID Sid)
-{
-    ULONG i;
-    PTOKEN Token = (PTOKEN)_Token;
-
-    PAGED_CODE();
-
-    SidInTokenCalls++;
-    if (!(SidInTokenCalls % 10000)) DPRINT1("SidInToken Calls: %d\n", SidInTokenCalls);
-
-    if (Token->UserAndGroupCount == 0)
-    {
-        return FALSE;
-    }
-
-    for (i=0; i<Token->UserAndGroupCount; i++)
-    {
-        if (RtlEqualSid(Sid, Token->UserAndGroups[i].Sid))
-        {
-            if ((i == 0)|| (Token->UserAndGroups[i].Attributes & SE_GROUP_ENABLED))
-            {
-                return TRUE;
-            }
-
-            return FALSE;
-        }
-    }
-
-    return FALSE;
-}
-
-static BOOLEAN
-SepTokenIsOwner(PACCESS_TOKEN Token,
-                PSECURITY_DESCRIPTOR SecurityDescriptor)
-{
-    NTSTATUS Status;
-    PSID Sid = NULL;
-    BOOLEAN Defaulted;
-
-    Status = RtlGetOwnerSecurityDescriptor(SecurityDescriptor,
-                                           &Sid,
-                                           &Defaulted);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("RtlGetOwnerSecurityDescriptor() failed (Status %lx)\n", Status);
-        return FALSE;
-    }
-
-    if (Sid == NULL)
-    {
-        DPRINT1("Owner Sid is NULL\n");
-        return FALSE;
-    }
-
-    return SepSidInToken(Token, Sid);
-}
-
 VOID
 NTAPI
 SeQuerySecurityAccessMask(IN SECURITY_INFORMATION SecurityInformation,
@@ -840,7 +781,8 @@ SeAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
              SubjectSecurityContext->ClientToken : SubjectSecurityContext->PrimaryToken;
 
         if (SepTokenIsOwner(Token,
-                            SecurityDescriptor))
+                            SecurityDescriptor,
+                            FALSE))
         {
             if (DesiredAccess & MAXIMUM_ALLOWED)
                 PreviouslyGrantedAccess |= (WRITE_DAC | READ_CONTROL);
@@ -1007,16 +949,16 @@ NtAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     }
 
     /* Set up the subject context, and lock it */
-    SubjectSecurityContext.ClientToken = Token;
-    SubjectSecurityContext.ImpersonationLevel = Token->ImpersonationLevel;
-    SubjectSecurityContext.PrimaryToken = NULL;
-    SubjectSecurityContext.ProcessAuditId = NULL;
-    SeLockSubjectContext(&SubjectSecurityContext);
+    SeCaptureSubjectContext(&SubjectSecurityContext);
+
+    /* Lock the token */
+    KeEnterCriticalRegion();
+    ExAcquireResourceSharedLite(Token->TokenLock, TRUE);
 
     /* Check if the token is the owner and grant WRITE_DAC and READ_CONTROL rights */
     if (DesiredAccess & (WRITE_DAC | READ_CONTROL | MAXIMUM_ALLOWED))
     {
-        if (SepTokenIsOwner(Token, SecurityDescriptor)) // FIXME: use CapturedSecurityDescriptor
+        if (SepTokenIsOwner(Token, SecurityDescriptor, FALSE)) // FIXME: use CapturedSecurityDescriptor
         {
             if (DesiredAccess & MAXIMUM_ALLOWED)
                 PreviouslyGrantedAccess |= (WRITE_DAC | READ_CONTROL);
@@ -1046,8 +988,10 @@ NtAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
                        AccessStatus);
     }
 
-    /* Unlock subject context */
-    SeUnlockSubjectContext(&SubjectSecurityContext);
+    /* Release subject context and unlock the token */
+    SeReleaseSubjectContext(&SubjectSecurityContext);
+    ExReleaseResourceLite(Token->TokenLock);
+    KeLeaveCriticalRegion();
 
     /* Release the captured security descriptor */
     SeReleaseSecurityDescriptor(CapturedSecurityDescriptor,

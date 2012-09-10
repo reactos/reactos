@@ -1,5 +1,81 @@
 #pragma once
 
+PSID
+FORCEINLINE
+SepGetGroupFromDescriptor(PVOID _Descriptor)
+{
+    PISECURITY_DESCRIPTOR Descriptor = (PISECURITY_DESCRIPTOR)_Descriptor;
+    PISECURITY_DESCRIPTOR_RELATIVE SdRel;
+
+    if (Descriptor->Control & SE_SELF_RELATIVE)
+    {
+        SdRel = (PISECURITY_DESCRIPTOR_RELATIVE)Descriptor;
+        if (!SdRel->Group) return NULL;
+        return (PSID)((ULONG_PTR)Descriptor + SdRel->Group);
+    }
+    else
+    {
+        return Descriptor->Group;
+    }
+}
+
+PSID
+FORCEINLINE
+SepGetOwnerFromDescriptor(PVOID _Descriptor)
+{
+    PISECURITY_DESCRIPTOR Descriptor = (PISECURITY_DESCRIPTOR)_Descriptor;
+    PISECURITY_DESCRIPTOR_RELATIVE SdRel;
+
+    if (Descriptor->Control & SE_SELF_RELATIVE)
+    {
+        SdRel = (PISECURITY_DESCRIPTOR_RELATIVE)Descriptor;
+        if (!SdRel->Owner) return NULL;
+        return (PSID)((ULONG_PTR)Descriptor + SdRel->Owner);
+    }
+    else
+    {
+        return Descriptor->Owner;
+    }
+}
+
+PACL
+FORCEINLINE
+SepGetDaclFromDescriptor(PVOID _Descriptor)
+{
+    PISECURITY_DESCRIPTOR Descriptor = (PISECURITY_DESCRIPTOR)_Descriptor;
+    PISECURITY_DESCRIPTOR_RELATIVE SdRel;
+
+    if (Descriptor->Control & SE_SELF_RELATIVE)
+    {
+        SdRel = (PISECURITY_DESCRIPTOR_RELATIVE)Descriptor;
+        if (!SdRel->Dacl) return NULL;
+        return (PACL)((ULONG_PTR)Descriptor + SdRel->Dacl);
+    }
+    else
+    {
+        return Descriptor->Dacl;
+    }
+}
+
+PACL
+FORCEINLINE
+SepGetSaclFromDescriptor(PVOID _Descriptor)
+{
+    PISECURITY_DESCRIPTOR Descriptor = (PISECURITY_DESCRIPTOR)_Descriptor;
+    PISECURITY_DESCRIPTOR_RELATIVE SdRel;
+
+    if (Descriptor->Control & SE_SELF_RELATIVE)
+    {
+        SdRel = (PISECURITY_DESCRIPTOR_RELATIVE)Descriptor;
+        if (!SdRel->Sacl) return NULL;
+        return (PACL)((ULONG_PTR)Descriptor + SdRel->Sacl);
+    }
+    else
+    {
+        return Descriptor->Sacl;
+    }
+}
+
 /* SID Authorities */
 extern SID_IDENTIFIER_AUTHORITY SeNullSidAuthority;
 extern SID_IDENTIFIER_AUTHORITY SeWorldSidAuthority;
@@ -79,6 +155,34 @@ extern PSECURITY_DESCRIPTOR SePublicOpenSd;
 extern PSECURITY_DESCRIPTOR SePublicOpenUnrestrictedSd;
 extern PSECURITY_DESCRIPTOR SeSystemDefaultSd;
 extern PSECURITY_DESCRIPTOR SeUnrestrictedSd;
+
+//
+// Token Functions
+//
+BOOLEAN
+NTAPI
+SepTokenIsOwner(
+    IN PACCESS_TOKEN _Token,
+    IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+    IN BOOLEAN TokenLocked
+);
+
+BOOLEAN
+NTAPI
+SepSidInToken(
+    IN PACCESS_TOKEN _Token,
+    IN PSID Sid
+);
+
+BOOLEAN
+NTAPI
+SepSidInTokenEx(
+    IN PACCESS_TOKEN _Token,
+    IN PSID PrincipalSelfSid,
+    IN PSID _Sid,
+    IN BOOLEAN Deny,
+    IN BOOLEAN Restricted
+);
 
 /* Functions */
 BOOLEAN
