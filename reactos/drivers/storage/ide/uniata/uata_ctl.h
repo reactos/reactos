@@ -204,14 +204,8 @@ typedef struct _ATA_PASS_THROUGH_DIRECT {
   ULONG  TimeOutValue;
   ULONG  ReservedAsUlong;
   PVOID  DataBuffer;
-  union {
-      UCHAR  PreviousTaskFile[8];
-      IDEREGS Regs;
-  };
-  union {
-      UCHAR  CurrentTaskFile[8];
-      IDEREGS RegsH;
-  };
+  UCHAR  PreviousTaskFile[8];
+  UCHAR  CurrentTaskFile[8];
 } ATA_PASS_THROUGH_DIRECT, *PATA_PASS_THROUGH_DIRECT;
 
 #define    ATA_FLAGS_DRDY_REQUIRED 0x01 // Wait for DRDY status from the device before sending the command to the device.
@@ -220,8 +214,6 @@ typedef struct _ATA_PASS_THROUGH_DIRECT {
 #define    ATA_FLAGS_48BIT_COMMAND 0x08 // The ATA command to be send uses the 48 bit LBA feature set.
                                         //   When this flag is set, the contents of the PreviousTaskFile member in the
                                         //   ATA_PASS_THROUGH_DIRECT structure should be valid.
-#define    ATA_FLAGS_USE_DMA       0x10 // Set the transfer mode to DMA.
-#define    ATA_FLAGS_NO_MULTIPLE   0x20 // Read single sector only.
 
 #endif //ATA_FLAGS_DRDY_REQUIRED
 
@@ -229,19 +221,13 @@ typedef struct _ATA_PASS_THROUGH_DIRECT {
 
 #pragma pack(push, 1)
 typedef struct _IDEREGS_EX {
-    union {
-        UCHAR    bFeaturesReg;           // Used for specifying SMART "commands" on input.
-        UCHAR    bErrorReg;              // Error on output.
-    };
+        UCHAR    bFeaturesReg;           // Used for specifying SMART "commands".
         UCHAR    bSectorCountReg;        // IDE sector count register
         UCHAR    bSectorNumberReg;       // IDE sector number register
         UCHAR    bCylLowReg;             // IDE low order cylinder value
         UCHAR    bCylHighReg;            // IDE high order cylinder value
         UCHAR    bDriveHeadReg;          // IDE drive/head register
-    union {
         UCHAR    bCommandReg;            // Actual IDE command.
-        UCHAR    bStatusReg;             // Status register.
-    };
         UCHAR    bOpFlags;               // 00 - send
                                          // 01 - read regs
                                          // 08 - lba48
@@ -250,12 +236,9 @@ typedef struct _IDEREGS_EX {
 #define UNIATA_SPTI_EX_SND               0x00
 #define UNIATA_SPTI_EX_RCV               0x01
 #define UNIATA_SPTI_EX_LBA48             0x08
-//#define UNIATA_SPTI_EX_SPEC_TO           0x10
+#define UNIATA_SPTI_EX_SPEC_TO           0x10
 //#define UNIATA_SPTI_EX_FREEZE_TO         0x20 // do not reset device on timeout and keep interrupts disabled
-#define UNIATA_SPTI_EX_USE_DMA 	         0x10 // Force DMA transfer mode
-
-// use 'invalid' combination to specify special TO options
-#define UNIATA_SPTI_EX_SPEC_TO           (ATA_FLAGS_DATA_OUT | ATA_FLAGS_DATA_IN)
+#define UNIATA_SPTI_EX_USE_DMA 	         0x20 // Force DMA transfer mode
 
         UCHAR    bFeaturesRegH;          // feature (high part for LBA48 mode)
         UCHAR    bSectorCountRegH;       // IDE sector count register (high part for LBA48 mode)
@@ -304,19 +287,6 @@ typedef struct _UNIATA_CTL {
         UNIATA_REG_IO_HDR       RegIo;
     };
 } UNIATA_CTL, *PUNIATA_CTL;
-
-typedef struct _SCSI_PASS_THROUGH_WITH_BUFFERS {
-    SCSI_PASS_THROUGH spt;
-    ULONG             Filler;      // realign buffers to double word boundary
-    UCHAR             ucSenseBuf[32];
-    UCHAR             ucDataBuf[512]; // recommended minimum
-} SCSI_PASS_THROUGH_WITH_BUFFERS, *PSCSI_PASS_THROUGH_WITH_BUFFERS;
-
-typedef struct _SCSI_PASS_THROUGH_DIRECT_WITH_BUFFER {
-    SCSI_PASS_THROUGH_DIRECT sptd;
-    ULONG             Filler;      // realign buffer to double word boundary
-    UCHAR             ucSenseBuf[32];
-} SCSI_PASS_THROUGH_DIRECT_WITH_BUFFER, *PSCSI_PASS_THROUGH_DIRECT_WITH_BUFFER;
 
 #endif //UNIATA_CORE
 

@@ -178,7 +178,6 @@ UniataChipDetectChannels(
             KdPrint2((PRINT_PREFIX "New ITE PATA 1 chan\n"));
         }
         break;
-#if 0
     case ATA_INTEL_ID:
         /* New Intel PATA controllers */
         if(g_opt_VirtualMachine != VM_VBOX &&
@@ -194,7 +193,6 @@ UniataChipDetectChannels(
             KdPrint2((PRINT_PREFIX "New Intel PATA 1 chan\n"));
         }
         break;
-#endif // this code is removed from newer FreeBSD
     case ATA_JMICRON_ID:
         /* New JMicron PATA controllers */
         if(deviceExtension->DevID == ATA_JMB361 ||
@@ -1420,11 +1418,6 @@ generic_cable80(
     ULONG slotNumber = deviceExtension->slotNumber;
     ULONG SystemIoBusNumber = deviceExtension->SystemIoBusNumber;
 
-    if(deviceExtension->MaxTransferMode <= ATA_UDMA2) {
-        KdPrint2((PRINT_PREFIX "generic_cable80(%d, %#x, %d) <= UDMA2\n", channel, pci_reg, bit_offs));
-        return FALSE;
-    }
-
     //ULONG ChipType  = deviceExtension->HwFlags & CHIPTYPE_MASK;
     PHW_CHANNEL chan;
     ULONG  c; // logical channel (for Compatible Mode controllers)
@@ -1474,27 +1467,6 @@ UniAtaReadLunConfig(
 
     tmp32 = AtapiRegCheckDevValue(deviceExtension, channel, DeviceNumber, L"PreferedTransferMode", 0xffffffff);
     LunExt->opt_PreferedTransferMode = tmp32;
-
-    tmp32 = AtapiRegCheckDevValue(deviceExtension, channel, DeviceNumber, L"AdvancedPowerMode", ATA_C_F_APM_CNT_MIN_NO_STANDBY);
-    if(tmp32 > 0xfe) {
-        tmp32 = 0xfe; // max. performance
-    }
-    LunExt->opt_AdvPowerMode = (UCHAR)tmp32;
-
-    tmp32 = AtapiRegCheckDevValue(deviceExtension, channel, DeviceNumber, L"AcousticMgmt", ATA_C_F_AAM_CNT_MAX_POWER_SAVE);
-    if(tmp32 > 0xfe) {
-        tmp32 = 0xfe; // max. performance
-    } else
-    if(tmp32 < 0x80) {
-        tmp32 = 0x0; // disable feature
-    }
-    LunExt->opt_AcousticMode = (UCHAR)tmp32;
-
-    tmp32 = AtapiRegCheckDevValue(deviceExtension, channel, DeviceNumber, L"StandbyTimer", 0);
-    if(tmp32 == 0xfe) {
-        tmp32 = 0xff;
-    }
-    LunExt->opt_StandbyTimer = (UCHAR)tmp32;
 
     tmp32 = AtapiRegCheckDevValue(deviceExtension, channel, DeviceNumber, L"ReadOnly", 0);
     if(tmp32 <= 2) {
@@ -1651,7 +1623,6 @@ AtapiChipInit(
     ULONG  tmp32;
     ULONG  c; // logical channel (for Compatible Mode controllers)
     BOOLEAN CheckCable = FALSE;
-    BOOLEAN GlobalInit = FALSE;
     //ULONG BaseIoAddress;
 
     switch(channel) {
@@ -1660,7 +1631,6 @@ AtapiChipInit(
         /* FALLTHROUGH */
     case CHAN_NOT_SPECIFIED:
         c = CHAN_NOT_SPECIFIED;
-        GlobalInit = TRUE;
         break;
     default:
         //c = channel - deviceExtension->Channel; // logical channel (for Compatible Mode controllers)
@@ -1696,27 +1666,6 @@ AtapiChipInit(
         } else {
             KdPrint2((PRINT_PREFIX "  AHCI non-existent channel\n" ));
             return FALSE;
-        }
-    }
-
-    if((WinVer_Id() > WinVer_NT) &&
-       GlobalInit &&
-       deviceExtension->MasterDev) {
-        PCI_COMMON_CONFIG pciData;
-        ULONG busDataRead;
-
-        KdPrint2((PRINT_PREFIX "  re-enable IO resources of MasterDev\n" ));
-
-        busDataRead = HalGetBusData
-                      //ScsiPortGetBusData
-                                   (
-                                    //HwDeviceExtension,
-                                    PCIConfiguration, SystemIoBusNumber, slotNumber,
-                                    &pciData, PCI_COMMON_HDR_LENGTH);
-        if(busDataRead == PCI_COMMON_HDR_LENGTH) {
-            UniataEnableIoPCI(SystemIoBusNumber, slotNumber, &pciData);
-        } else {
-            KdPrint2((PRINT_PREFIX "  re-enable IO resources of MasterDev FAILED\n" ));
         }
     }
 
@@ -1829,16 +1778,8 @@ AtapiChipInit(
                 KdPrint2((PRINT_PREFIX "Base init\n"));
                 /* force all ports active "the legacy way" */
                 ChangePciConfig2(0x92, (a | 0x0f));
-
-                if(deviceExtension->BaseIoAddressSATA_0.Addr && (ChipFlags & ICH7)) {
-                    /* Set SCRAE bit to enable registers access. */
-                    ChangePciConfig4(0x94, (a | (1 << 9)));
-                    /* Set Ports Implemented register bits. */
-                    AtapiWritePortEx4(NULL, (ULONGIO_PTR)(&deviceExtension->BaseIoAddressSATA_0), 0x0c,
-                         AtapiReadPortEx4(NULL, (ULONGIO_PTR)(&deviceExtension->BaseIoAddressSATA_0), 0x0c) | 0xff);
-                }
                 /* enable PCI interrupt */
-                ChangePciConfig2(offsetof(PCI_COMMON_CONFIG, Command), (a & ~0x0400));
+                ChangePciConfig2(/*PCIR_COMMAND*/0x04, (a & ~0x0400));
 
             } else {
 
@@ -1926,7 +1867,7 @@ AtapiChipInit(
 
             break;
         }
-        if(deviceExtension->MaxTransferMode <= ATA_UDMA2)
+        if(deviceExtension->MaxTransferMode < ATA_UDMA2)
             break;
         // check 80-pin cable
         if(c == CHAN_NOT_SPECIFIED) {
@@ -1934,12 +1875,7 @@ AtapiChipInit(
         } else {
             chan = &deviceExtension->chan[c];
             GetPciConfig2(0x54, reg54);
-            KdPrint2((PRINT_PREFIX " intel 80-pin check (reg54=%x)\n", reg54));
-            if(reg54 == 0x0000 || reg54 == 0xffff) {
-                KdPrint2((PRINT_PREFIX " check failed (not supported)\n"));
-            } else
-            if( ((reg54 >> (channel*2)) & 30) == 0) {
-                KdPrint2((PRINT_PREFIX " intel 40-pin\n"));
+            if( ((reg54 >> (channel*2)) & 30) != 30) {
                 chan->MaxTransferMode = min(deviceExtension->MaxTransferMode, ATA_UDMA2);
             }
         }
@@ -2243,7 +2179,7 @@ AtapiChipInit(
             // no init for SATA
             if(ChipFlags & (UNIATA_SATA | VIASATA)) {
                 /* enable PCI interrupt */
-                ChangePciConfig2(offsetof(PCI_COMMON_CONFIG, Command), (a & ~0x0400));
+                ChangePciConfig2(/*PCIR_COMMAND*/0x04, (a & ~0x0400));
 
                /*
                 * vt6420/1 has problems talking to some drives.  The following
@@ -2302,8 +2238,6 @@ AtapiChipInit(
             // no init for SATA
             if(ChipFlags & (UNIATA_SATA | VIASATA)) {
                 if((ChipFlags & VIABAR) && (c >= 2)) {
-                    // this is PATA channel
-                    chan->MaxTransferMode = ATA_UDMA5;
                     break;
                 }
                 UniataSataWritePort4(chan, IDX_SATA_SError, 0xffffffff, 0);

@@ -387,9 +387,7 @@ typedef struct _MODE_PARAMETER_HEADER_10 {
 #define IDE_COMMAND_DOOR_LOCK        0xDE
 #define IDE_COMMAND_DOOR_UNLOCK      0xDF
 #define IDE_COMMAND_STANDBY_IMMED    0xE0 // flush and spin down
-#define IDE_COMMAND_IDLE_IMMED       0xE1
 #define IDE_COMMAND_STANDBY          0xE2 // flush and spin down and enable autopowerdown timer
-#define IDE_COMMAND_IDLE             0xE3
 #define IDE_COMMAND_READ_PM          0xE4 // SATA PM
 #define IDE_COMMAND_SLEEP            0xE6 // flush, spin down and deactivate interface
 #define IDE_COMMAND_FLUSH_CACHE      0xE7
@@ -560,25 +558,6 @@ typedef union _ATAPI_REGISTERS_2 {
 
 #define         ATA_C_F_ENAB_MEDIASTAT  0x95    /* enable media status */
 #define         ATA_C_F_DIS_MEDIASTAT   0x31    /* disable media status */
-
-#define         ATA_C_F_ENAB_APM        0x05    /* enable advanced power management */
-#define         ATA_C_F_DIS_APM         0x85    /* disable advanced power management */
-#define           ATA_C_F_APM_CNT_MAX_PERF        0xfe    /* maximum performance */
-#define           ATA_C_F_APM_CNT_MIN_NO_STANDBY  0x80    /* min. power w/o standby */
-#define           ATA_C_F_APM_CNT_MIN_STANDBY     0x01    /* min. power with standby */
-
-#define         ATA_C_F_ENAB_ACOUSTIC   0x42    /* enable acoustic management */
-#define         ATA_C_F_DIS_ACOUSTIC    0xc2    /* disable acoustic management */
-#define           ATA_C_F_AAM_CNT_MAX_PERF        0xfe    /* maximum performance */
-#define           ATA_C_F_AAM_CNT_MAX_POWER_SAVE  0x80    /* min. power */
-
-// New SMART Feature definitions
-#ifndef READ_LOG_SECTOR
-#define READ_LOG_SECTOR     0xD5
-#define WRITE_LOG_SECTOR    0xD6
-#define WRITE_THRESHOLDS    0xD7
-#define AUTO_OFFLINE        0xDB
-#endif // READ_LOG_SECTOR
 
 //
 // ATAPI interrupt reasons
@@ -941,7 +920,6 @@ typedef struct _IDENTIFY_DATA {
     union {
         USHORT Integrity;                       // 255
         struct {
-#define ATA_ChecksumValid    0xA5
             USHORT ChecksumValid:8;
             USHORT Checksum:8;
         };
@@ -1560,17 +1538,12 @@ ata_is_sata(
     return (ident->SataCapabilities && ident->SataCapabilities != 0xffff);
 } // end ata_is_sata()
 
-#define IDENT_MODE_MAX     FALSE
-#define IDENT_MODE_ACTIVE  TRUE
-
 __inline
 LONG
 ata_cur_mode_from_ident(
-    PIDENTIFY_DATA ident,
-    BOOLEAN Active
+    PIDENTIFY_DATA ident
     )
 {
-    USHORT mode;
     if(ata_is_sata(ident)) {
         if(ident->SataCapabilities & ATA_SATA_GEN3) {
             return ATA_SA600;
@@ -1585,24 +1558,22 @@ ata_cur_mode_from_ident(
     }
 
     if (ident->UdmaModesValid) {
-        mode = Active ? ident->UltraDMAActive : ident->UltraDMASupport;
-        if (mode & 0x40)
+        if (ident->UltraDMAActive & 0x40)
             return ATA_UDMA0+6;
-        if (mode & 0x20)
+        if (ident->UltraDMAActive & 0x20)
             return ATA_UDMA0+5;
-        if (mode & 0x10)
+        if (ident->UltraDMAActive & 0x10)
             return ATA_UDMA0+4;
-        if (mode & 0x08)
+        if (ident->UltraDMAActive & 0x08)
             return ATA_UDMA0+3;
-        if (mode & 0x04)
+        if (ident->UltraDMAActive & 0x04)
             return ATA_UDMA0+2;
-        if (mode & 0x02)
+        if (ident->UltraDMAActive & 0x02)
             return ATA_UDMA0+1;
-        if (mode & 0x01)
+        if (ident->UltraDMAActive & 0x01)
             return ATA_UDMA0+0;
     }
 
-    mode = Active ? ident->MultiWordDMAActive : ident->MultiWordDMASupport;
     if (ident->MultiWordDMAActive & 0x04)
         return ATA_WDMA0+2;
     if (ident->MultiWordDMAActive & 0x02)
@@ -1610,7 +1581,6 @@ ata_cur_mode_from_ident(
     if (ident->MultiWordDMAActive & 0x01)
         return ATA_WDMA0+0;
 
-    mode = Active ? ident->SingleWordDMAActive : ident->SingleWordDMASupport;
     if (ident->SingleWordDMAActive & 0x04)
         return ATA_SDMA0+2;
     if (ident->SingleWordDMAActive & 0x02)
@@ -1619,15 +1589,13 @@ ata_cur_mode_from_ident(
         return ATA_SDMA0+0;
 
     if (ident->PioTimingsValid) {
-        mode = ident->AdvancedPIOModes;
-        if (mode & AdvancedPIOModes_5)
+        if (ident->AdvancedPIOModes & AdvancedPIOModes_5)
             return ATA_PIO0+5;
-        if (mode & AdvancedPIOModes_4)
+        if (ident->AdvancedPIOModes & AdvancedPIOModes_4)
             return ATA_PIO0+4;
-        if (mode & AdvancedPIOModes_3) 
+        if (ident->AdvancedPIOModes & AdvancedPIOModes_3) 
             return ATA_PIO0+3;
-    }
-    mode = ident->PioCycleTimingMode;
+    }        
     if (ident->PioCycleTimingMode == 2)
         return ATA_PIO0+2;
     if (ident->PioCycleTimingMode == 1)
