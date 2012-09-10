@@ -242,8 +242,11 @@ HvGetCell(
    PHHIVE RegistryHive,
    HCELL_INDEX CellOffset);
 
-#define HvReleaseCell(h, c)     \
-    if (h->ReleaseCellRoutine) h->ReleaseCellRoutine(h, c)
+#define HvReleaseCell(h, c)             \
+do {                                    \
+    if ((h)->ReleaseCellRoutine)        \
+        (h)->ReleaseCellRoutine(h, c);  \
+} while(0)
 
 LONG CMAPI
 HvGetCellSize(
