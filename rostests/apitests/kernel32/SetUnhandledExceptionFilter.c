@@ -8,7 +8,7 @@
 #define WIN32_NO_STATUS
 #include <stdio.h>
 #include <wine/test.h>
-#include <windows.h>
+#include <ndk/rtltypes.h>
 
 /*
  * Keep these returning different values, to prevent compiler folding
