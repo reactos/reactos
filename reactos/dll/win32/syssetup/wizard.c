@@ -786,33 +786,45 @@ SetKeyboardLayoutName(HWND hwnd)
 
 
 static BOOL
-RunControlPanelApplet(HWND hwnd, WCHAR *lpCommandLine)
+RunControlPanelApplet(HWND hwnd, PCWSTR pwszCPLParameters)
 {
-    STARTUPINFOW StartupInfo;
-    PROCESS_INFORMATION ProcessInformation;
-
-    ZeroMemory(&StartupInfo, sizeof(STARTUPINFOW));
-    StartupInfo.cb = sizeof(STARTUPINFOW);
-
-    if (!CreateProcessW(NULL,
-                        lpCommandLine,
-                        NULL,
-                        NULL,
-                        FALSE,
-                        0,
-                        NULL,
-                        NULL,
-                        &StartupInfo,
-                        &ProcessInformation))
+    if (pwszCPLParameters)
     {
-        MessageBoxW(hwnd, L"Error: failed to launch rundll32", NULL, MB_ICONERROR);
+        STARTUPINFOW StartupInfo;
+        PROCESS_INFORMATION ProcessInformation;
+        WCHAR CmdLine[MAX_PATH] = L"rundll32.exe shell32.dll,Control_RunDLL ";
+
+        ZeroMemory(&StartupInfo, sizeof(STARTUPINFOW));
+        StartupInfo.cb = sizeof(STARTUPINFOW);
+
+        ASSERT(_countof(CmdLine) > wcslen(CmdLine) + wcslen(pwszCPLParameters));
+        wcscat(CmdLine, pwszCPLParameters);
+
+        if (!CreateProcessW(NULL,
+                            CmdLine,
+                            NULL,
+                            NULL,
+                            FALSE,
+                            0,
+                            NULL,
+                            NULL,
+                            &StartupInfo,
+                            &ProcessInformation))
+        {
+            MessageBoxW(hwnd, L"Error: Failed to launch the Control Panel Applet.", NULL, MB_ICONERROR);
+            return FALSE;
+        }
+
+        WaitForSingleObject(ProcessInformation.hProcess, INFINITE);
+        CloseHandle(ProcessInformation.hThread);
+        CloseHandle(ProcessInformation.hProcess);
+        return TRUE;
+    }
+    else
+    {
+        MessageBoxW(hwnd, L"Error: Failed to launch the Control Panel Applet.", NULL, MB_ICONERROR);
         return FALSE;
     }
-
-    WaitForSingleObject(ProcessInformation.hProcess, INFINITE);
-    CloseHandle(ProcessInformation.hThread);
-    CloseHandle(ProcessInformation.hProcess);
-    return TRUE;
 }
 
 static VOID
@@ -866,12 +878,12 @@ LocalePageDlgProc(HWND hwndDlg,
                 switch (LOWORD(wParam))
                 {
                     case IDC_CUSTOMLOCALE:
-                        RunControlPanelApplet(hwndDlg, L"rundll32.exe shell32.dll,Control_RunDLL intl.cpl,,5");
+                        RunControlPanelApplet(hwndDlg, L"intl.cpl,,5");
                         /* FIXME: Update input locale name */
                         break;
 
                     case IDC_CUSTOMLAYOUT:
-                        RunControlPanelApplet(hwndDlg, L"rundll32.exe shell32.dll,Control_RunDLL input.dll,@1");
+                        RunControlPanelApplet(hwndDlg, L"input.dll,@1");
                         break;
                 }
             }
@@ -888,13 +900,18 @@ LocalePageDlgProc(HWND hwndDlg,
                     PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
                     if (SetupData->UnattendSetup)
                     {
-                        WCHAR wszPath[MAX_PATH], wszBuf[1024];
+                        WCHAR wszPath[MAX_PATH];
                         if (GetRosInstallCD(wszPath, _countof(wszPath)))
-                            swprintf(wszBuf, L"rundll32.exe shell32.dll,Control_RunDLL intl.cpl,,/f:\"%sreactos\\unattend.inf\"", wszPath);
+                        {
+                            WCHAR wszParams[1024];
+                            swprintf(wszParams, L"intl.cpl,,/f:\"%sreactos\\unattend.inf\"", wszPath);
+                            RunControlPanelApplet(hwndDlg, wszParams);
+                        }
                         else
-                            wcscpy(wszBuf, L"rundll32.exe shell32.dll,Control_RunDLL intl.cpl,,/f:\"unattend.inf\"");
+                        {
+                            RunControlPanelApplet(hwndDlg, L"intl.cpl,,/f:\"unattend.inf\"");
+                        }
 
-                        RunControlPanelApplet(hwndDlg, wszBuf);
                         SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, IDD_DATETIMEPAGE);
                         return TRUE;
                     }
