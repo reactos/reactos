@@ -297,28 +297,32 @@ KiNpxHandler(IN PKTRAP_FRAME TrapFrame,
     }
 
     /* Get legal exceptions that software should handle */
-    Error &= (FSW_STACK_FAULT |
-              FSW_INVALID_OPERATION |
-              FSW_DENORMAL |
-              FSW_ZERO_DIVIDE |
-              FSW_OVERFLOW |
-              FSW_UNDERFLOW |
-              FSW_PRECISION);
+    /* We do this by first masking off from the Mask the bits we need, */
+    /* This is done so we can keep the FSW_STACK_FAULT bit in Error. */
+    Mask &= (FSW_INVALID_OPERATION |
+             FSW_DENORMAL |
+             FSW_ZERO_DIVIDE |
+             FSW_OVERFLOW |
+             FSW_UNDERFLOW |
+             FSW_PRECISION);
     Error &= ~Mask;
-    
-    if (Error & FSW_STACK_FAULT)
-    {
-        /* Issue stack check fault */
-        KiDispatchException2Args(STATUS_FLOAT_STACK_CHECK,
-                                 ErrorOffset,
-                                 0,
-                                 DataOffset,
-                                 TrapFrame);
-    }
 
     /* Check for invalid operation */
     if (Error & FSW_INVALID_OPERATION)
     {
+        /* NOTE: Stack fault is handled differently than any other case. */
+        /* 1. It's only raised for invalid operation. */
+        /* 2. It's only raised if invalid operation is not masked. */
+        if (Error & FSW_STACK_FAULT)
+        {
+            /* Issue stack check fault */
+            KiDispatchException2Args(STATUS_FLOAT_STACK_CHECK,
+                                     ErrorOffset,
+                                     0,
+                                     DataOffset,
+                                     TrapFrame);
+        }
+
         /* Issue fault */
         KiDispatchException1Args(STATUS_FLOAT_INVALID_OPERATION,
                                  ErrorOffset,
