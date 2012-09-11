@@ -297,7 +297,8 @@ KiNpxHandler(IN PKTRAP_FRAME TrapFrame,
     }
 
     /* Get legal exceptions that software should handle */
-    Error &= (FSW_INVALID_OPERATION |
+    Error &= (FSW_STACK_FAULT |
+              FSW_INVALID_OPERATION |
               FSW_DENORMAL |
               FSW_ZERO_DIVIDE |
               FSW_OVERFLOW |
