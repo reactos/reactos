@@ -13,12 +13,12 @@
 #define BSS_START           HEX(6F00)
 #define FREELDR_BASE        HEX(F800)
 #define FREELDR_PE_BASE    HEX(10000)
-#define DISKREADBUFFER     HEX(80000) /* Buffer to store data read in from the disk via the BIOS */
-#define STACKLOWLIMIT      HEX(90000)
+#define FILESYSBUFFER      HEX(80000) /* Buffer to store file system data (e.g. cluster buffer for FAT) */
+#define DISKREADBUFFER     HEX(90000) /* Buffer to store data read in from the disk via the BIOS */
 #define STACK32ADDR        HEX(98000) /* The 32-bit stack top will be at 9000:8000, or 0xA8000 */
 #define STACK64ADDR	       HEX(98000) /* The 64-bit stack top will be at 98000 */
 #define BIOSCALLBUFFER     HEX(98000) /* Buffer to store temporary data for any Int386() call */
-#define DISKREADBUFFER_SIZE HEX(10000)
+#define DISKREADBUFFER_SIZE 512
 
 #define BIOSCALLBUFSEGMENT (BIOSCALLBUFFER/16) /* Buffer to store temporary data for any Int386() call */
 #define BIOSCALLBUFOFFSET   HEX(0000) /* Buffer to store temporary data for any Int386() call */

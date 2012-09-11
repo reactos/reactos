@@ -113,47 +113,32 @@ static LONG DiskOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
 static LONG DiskRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
 {
     DISKCONTEXT* Context = FsGetDeviceSpecific(FileId);
-    UCHAR      * Ptr = (UCHAR*)Buffer;
-    ULONG        Length, TotalSectors, MaxSectors, ReadSectors;
-    BOOLEAN      ret;
-    ULONGLONG    SectorOffset;
+    UCHAR* Ptr = (UCHAR*)Buffer;
+    ULONG i, Length;
+    BOOLEAN ret;
 
-    TotalSectors = (N + Context->SectorSize - 1) / Context->SectorSize;
-    MaxSectors   = DISKREADBUFFER_SIZE / Context->SectorSize;
-    SectorOffset = Context->SectorNumber + Context->SectorOffset;
-
-    ret = 0;
-
-    while (TotalSectors)
+    *Count = 0;
+    i = 0;
+    while (N > 0)
     {
-        ReadSectors = TotalSectors;
-        if (ReadSectors > MaxSectors)
-            ReadSectors = MaxSectors;
-
+        Length = N;
+        if (Length > Context->SectorSize)
+            Length = Context->SectorSize;
         ret = MachDiskReadLogicalSectors(
             Context->DriveNumber,
-            SectorOffset,
-            ReadSectors,
+            Context->SectorNumber + Context->SectorOffset + i,
+            1,
             (PVOID)DISKREADBUFFER);
         if (!ret)
-            break;
-
-        Length = ReadSectors * Context->SectorSize;
-        if (Length > N)
-            Length = N;
-
+            return EIO;
         RtlCopyMemory(Ptr, (PVOID)DISKREADBUFFER, Length);
-
         Ptr += Length;
-        N   -= Length;
-
-        SectorOffset += ReadSectors;
-        TotalSectors -= ReadSectors;
+        *Count += Length;
+        N -= Length;
+        i++;
     }
 
-    *Count = Ptr - (UCHAR *)Buffer;
-
-    return (!ret) ? EIO : ESUCCESS;
+    return ESUCCESS;
 }
 
 static LONG DiskSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
