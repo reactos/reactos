@@ -10,14 +10,16 @@ extern void func_GetDriveType(void);
 extern void func_GetModuleFileName(void);
 extern void func_lstrcpynW(void);
 extern void func_SetCurrentDirectory(void);
+extern void func_SetUnhandledExceptionFilter(void);
 
 const struct test winetest_testlist[] =
 {
-    { "GetCurrentDirectory",    func_GetCurrentDirectory },
-    { "GetDriveType",           func_GetDriveType },
-    { "GetModuleFileName",      func_GetModuleFileName },
-    { "lstrcpynW",              func_lstrcpynW },
-    { "SetCurrentDirectory",    func_SetCurrentDirectory },
+    { "GetCurrentDirectory",         func_GetCurrentDirectory },
+    { "GetDriveType",                func_GetDriveType },
+    { "GetModuleFileName",           func_GetModuleFileName },
+    { "lstrcpynW",                   func_lstrcpynW },
+    { "SetCurrentDirectory",         func_SetCurrentDirectory },
+    { "SetUnhandledExceptionFilter", func_SetUnhandledExceptionFilter},
 
     { 0, 0 }
 };

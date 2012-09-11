@@ -7,6 +7,7 @@ list(APPEND SOURCE
     GetModuleFileName.c
     lstrcpynW.c
     SetCurrentDirectory.c
+    SetUnhandledExceptionFilter.c
     testlist.c)
 
 add_executable(kernel32_apitest ${SOURCE})
