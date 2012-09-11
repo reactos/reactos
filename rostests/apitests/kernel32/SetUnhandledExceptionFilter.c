@@ -14,8 +14,8 @@
  * Keep these returning different values, to prevent compiler folding
  * them into a single function, thereby voiding the test
  */
-WINAPI LONG Filter1(LPEXCEPTION_POINTERS p) { return 0; }
-WINAPI LONG Filter2(LPEXCEPTION_POINTERS p) { return 1; }
+LONG WINAPI Filter1(LPEXCEPTION_POINTERS p) { return 0; }
+LONG WINAPI Filter2(LPEXCEPTION_POINTERS p) { return 1; }
 
 
 /*
