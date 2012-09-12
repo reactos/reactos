@@ -184,16 +184,21 @@ extern PSECURITY_DESCRIPTOR SeUnrestrictedSd;
 
 
 #define SepAcquireTokenLockExclusive(Token)                                    \
+{                                                                              \
     KeEnterCriticalRegion();                                                   \
     ExAcquireResourceExclusive(((PTOKEN)Token)->TokenLock, TRUE);              \
-
+}
 #define SepAcquireTokenLockShared(Token)                                       \
+{                                                                              \
     KeEnterCriticalRegion();                                                   \
     ExAcquireResourceShared(((PTOKEN)Token)->TokenLock, TRUE);                 \
+}
 
 #define SepReleaseTokenLock(Token)                                             \
+{                                                                              \
     ExReleaseResource(((PTOKEN)Token)->TokenLock);                             \
     KeLeaveCriticalRegion();                                                   \
+}
 
 //
 // Token Functions
