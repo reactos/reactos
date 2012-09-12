@@ -952,8 +952,7 @@ NtAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     SeCaptureSubjectContext(&SubjectSecurityContext);
 
     /* Lock the token */
-    KeEnterCriticalRegion();
-    ExAcquireResourceSharedLite(Token->TokenLock, TRUE);
+    SepAcquireTokenLockShared(Token);
 
     /* Check if the token is the owner and grant WRITE_DAC and READ_CONTROL rights */
     if (DesiredAccess & (WRITE_DAC | READ_CONTROL | MAXIMUM_ALLOWED))
@@ -990,8 +989,7 @@ NtAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
 
     /* Release subject context and unlock the token */
     SeReleaseSubjectContext(&SubjectSecurityContext);
-    ExReleaseResourceLite(Token->TokenLock);
-    KeLeaveCriticalRegion();
+    SepReleaseTokenLock(Token);
 
     /* Release the captured security descriptor */
     SeReleaseSecurityDescriptor(CapturedSecurityDescriptor,

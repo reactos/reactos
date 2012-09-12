@@ -1,5 +1,29 @@
 #pragma once
 
+typedef struct _KNOWN_ACE
+{
+    ACE_HEADER Header;
+    ACCESS_MASK Mask;
+    ULONG SidStart;
+} KNOWN_ACE, *PKNOWN_ACE;
+
+typedef struct _KNOWN_OBJECT_ACE
+{
+    ACE_HEADER Header;
+    ACCESS_MASK Mask;
+    ULONG Flags;
+    ULONG SidStart;
+} KNOWN_OBJECT_ACE, *PKNOWN_OBJECT_ACE;
+
+typedef struct _KNOWN_COMPOUND_ACE
+{
+    ACE_HEADER Header;
+    ACCESS_MASK Mask;
+    USHORT CompoundAceType;
+    USHORT Reserved;
+    ULONG SidStart;
+} KNOWN_COMPOUND_ACE, *PKNOWN_COMPOUND_ACE;
+
 PSID
 FORCEINLINE
 SepGetGroupFromDescriptor(PVOID _Descriptor)
@@ -75,6 +99,8 @@ SepGetSaclFromDescriptor(PVOID _Descriptor)
         return Descriptor->Sacl;
     }
 }
+
+#ifndef RTL_H
 
 /* SID Authorities */
 extern SID_IDENTIFIER_AUTHORITY SeNullSidAuthority;
@@ -155,6 +181,19 @@ extern PSECURITY_DESCRIPTOR SePublicOpenSd;
 extern PSECURITY_DESCRIPTOR SePublicOpenUnrestrictedSd;
 extern PSECURITY_DESCRIPTOR SeSystemDefaultSd;
 extern PSECURITY_DESCRIPTOR SeUnrestrictedSd;
+
+
+#define SepAcquireTokenLockExclusive(Token)                                    \
+    KeEnterCriticalRegion();                                                   \
+    ExAcquireResourceExclusive(((PTOKEN)Token)->TokenLock, TRUE);              \
+
+#define SepAcquireTokenLockShared(Token)                                       \
+    KeEnterCriticalRegion();                                                   \
+    ExAcquireResourceShared(((PTOKEN)Token)->TokenLock, TRUE);                 \
+
+#define SepReleaseTokenLock(Token)                                             \
+    ExReleaseResource(((PTOKEN)Token)->TokenLock);                             \
+    KeLeaveCriticalRegion();                                                   \
 
 //
 // Token Functions
@@ -434,24 +473,6 @@ SeCopyClientToken(
     OUT PACCESS_TOKEN* NewToken
 );
 
-#define SepAcquireTokenLockExclusive(Token)                                    \
-  do {                                                                         \
-    KeEnterCriticalRegion();                                                   \
-    ExAcquireResourceExclusive(((PTOKEN)Token)->TokenLock, TRUE);              \
-  while(0)
-
-#define SepAcquireTokenLockShared(Token)                                       \
-  do {                                                                         \
-    KeEnterCriticalRegion();                                                   \
-    ExAcquireResourceShared(((PTOKEN)Token)->TokenLock, TRUE);                 \
-  while(0)
-
-#define SepReleaseTokenLock(Token)                                             \
-  do {                                                                         \
-    ExReleaseResource(((PTOKEN)Token)->TokenLock);                             \
-    KeLeaveCriticalRegion();                                                   \
-  while(0)
-
 VOID NTAPI
 SeQuerySecurityAccessMask(IN SECURITY_INFORMATION SecurityInformation,
                           OUT PACCESS_MASK DesiredAccess);
@@ -459,5 +480,7 @@ SeQuerySecurityAccessMask(IN SECURITY_INFORMATION SecurityInformation,
 VOID NTAPI
 SeSetSecurityAccessMask(IN SECURITY_INFORMATION SecurityInformation,
                         OUT PACCESS_MASK DesiredAccess);
+
+#endif
 
 /* EOF */

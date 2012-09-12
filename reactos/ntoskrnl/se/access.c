@@ -130,11 +130,7 @@ SepTokenIsOwner(IN PACCESS_TOKEN _Token,
     ASSERT(Sid != NULL);
 
     /* Lock the token if needed */
-    if (!TokenLocked)
-    {
-        KeEnterCriticalRegion();
-        ExAcquireResourceSharedLite(Token->TokenLock, TRUE);
-    }
+    if (!TokenLocked) SepAcquireTokenLockShared(Token);
 
     /* Check if the owner SID is found, handling restricted case as well */
     Result = SepSidInToken(Token, Sid);
@@ -144,11 +140,7 @@ SepTokenIsOwner(IN PACCESS_TOKEN _Token,
     }
 
     /* Release the lock if we had acquired it */
-    if (!TokenLocked)
-    {
-        ExReleaseResourceLite(Token->TokenLock);
-        KeLeaveCriticalRegion();
-    }
+    if (!TokenLocked) SepReleaseTokenLock(Token);
 
     /* Return the result */
     return Result;
@@ -168,15 +160,13 @@ SeGetTokenControlInformation(IN PACCESS_TOKEN _Token,
     TokenControl->TokenSource = Token->TokenSource;
 
     /* Lock the token */
-    KeEnterCriticalRegion();
-    ExAcquireResourceSharedLite(Token->TokenLock, TRUE);
+    SepAcquireTokenLockShared(Token);
 
     /* Capture the modified it */
     TokenControl->ModifiedId = Token->ModifiedId;
 
     /* Unlock it */
-    ExReleaseResourceLite(Token->TokenLock);
-    KeLeaveCriticalRegion();
+    SepReleaseTokenLock(Token);
 }
 
 NTSTATUS
@@ -327,13 +317,11 @@ SeLockSubjectContext(IN PSECURITY_SUBJECT_CONTEXT SubjectContext)
     ClientToken = SubjectContext->ClientToken;
 
     /* Always lock the primary */
-    KeEnterCriticalRegion();
-    ExAcquireResourceSharedLite(PrimaryToken->TokenLock, TRUE);
+    SepAcquireTokenLockShared(PrimaryToken);
 
     /* Lock the impersonation one if it's there */
     if (!ClientToken) return;
-    KeEnterCriticalRegion();
-    ExAcquireResourceSharedLite(ClientToken->TokenLock, TRUE);
+    SepAcquireTokenLockShared(ClientToken);
 }
 
 /*
@@ -351,13 +339,11 @@ SeUnlockSubjectContext(IN PSECURITY_SUBJECT_CONTEXT SubjectContext)
     ClientToken = SubjectContext->ClientToken;
 
     /* Always unlock the primary one */
-    ExReleaseResourceLite(PrimaryToken->TokenLock);
-    KeLeaveCriticalRegion();
+    SepReleaseTokenLock(PrimaryToken);
 
     /* Unlock the impersonation one if it's there */
     if (!ClientToken) return;
-    ExReleaseResourceLite(ClientToken->TokenLock);
-    KeLeaveCriticalRegion();
+    SepReleaseTokenLock(ClientToken);
 }
 
 /*
