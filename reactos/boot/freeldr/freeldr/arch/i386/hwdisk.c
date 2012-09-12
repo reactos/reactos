@@ -150,7 +150,7 @@ static LONG DiskRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
         TotalSectors -= ReadSectors;
     }
 
-    *Count = Ptr - (UCHAR *)Buffer;
+    *Count = (ULONG)(Ptr - (UCHAR*)Buffer);
 
     return (!ret) ? EIO : ESUCCESS;
 }
