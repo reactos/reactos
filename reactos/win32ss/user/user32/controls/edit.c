@@ -411,6 +411,12 @@ static SCRIPT_STRING_ANALYSIS EDIT_UpdateUniscribeData_linedef(EDITSTATE *es, HD
 	return line_def->ssa;
 }
 
+static inline INT get_vertical_line_count(EDITSTATE *es)
+{
+	INT vlc = (es->format_rect.bottom - es->format_rect.top) / es->line_height;
+	return max(1,vlc);
+}
+
 static SCRIPT_STRING_ANALYSIS EDIT_UpdateUniscribeData(EDITSTATE *es, HDC dc, INT line)
 {
 	LINEDEF *line_def;
@@ -473,6 +479,7 @@ static void EDIT_BuildLineDefs_ML(EDITSTATE *es, INT istart, INT iend, INT delta
 	INT line_count = es->line_count;
 	INT orig_net_length;
 	RECT rc;
+	INT vlc;
 
 	if (istart == iend && delta == 0)
 		return;
@@ -513,6 +520,7 @@ static void EDIT_BuildLineDefs_ML(EDITSTATE *es, INT istart, INT iend, INT delta
 
 	fw = es->format_rect.right - es->format_rect.left;
 	current_position = es->text + current_line->index;
+	vlc = get_vertical_line_count(es);
 	do {
 		if (current_line != start_line)
 		{
@@ -696,6 +704,11 @@ static void EDIT_BuildLineDefs_ML(EDITSTATE *es, INT istart, INT iend, INT delta
 		es->text_width = max(es->text_width, current_line->width);
 		current_position += current_line->length;
 		previous_line = current_line;
+
+		/* Discard data for non-visible lines. It will be calculated as needed */
+		if ((line_index < es->y_offset) || (line_index > es->y_offset + vlc))
+			EDIT_InvalidateUniscribeData_linedef(current_line);
+
 		current_line = current_line->next;
 		line_index++;
 	} while (previous_line->ending != END_0);
@@ -1442,13 +1455,6 @@ static void EDIT_SL_InvalidateText(EDITSTATE *es, INT start, INT end)
 	EDIT_GetLineRect(es, 0, start, end, &line_rect);
 	if (IntersectRect(&rc, &line_rect, &es->format_rect))
 		EDIT_UpdateText(es, &rc, TRUE);
-}
-
-
-static inline INT get_vertical_line_count(EDITSTATE *es)
-{
-	INT vlc = (es->format_rect.bottom - es->format_rect.top) / es->line_height;
-	return max(1,vlc);
 }
 
 /*********************************************************************
@@ -3544,6 +3550,12 @@ static LRESULT EDIT_WM_KeyDown(EDITSTATE *es, INT key)
             if ((es->style & ES_MULTILINE) && EDIT_IsInsideDialog(es))
                 SendMessageW(es->hwndParent, WM_NEXTDLGCTL, shift, 0);
             break;
+        case VK_BACK:
+            if (control)
+            {
+               FIXME("Ctrl+Backspace\n"); // See bug 1419.
+            }
+            break;
 	}
         return TRUE;
 }
@@ -4618,6 +4630,7 @@ static LRESULT EDIT_WM_NCDestroy(EDITSTATE *es)
 		pc = pp;
 	}
 
+	EDIT_InvalidateUniscribeData(es);
 	SetWindowLongPtrW( es->hwndSelf, 0, 0 );
 	HeapFree(GetProcessHeap(), 0, es->undo_text);
 	HeapFree(GetProcessHeap(), 0, es);
