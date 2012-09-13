@@ -684,47 +684,47 @@ NtGdiSetColorAdjustment(
     return FALSE;
 }
 
-COLORREF APIENTRY NtGdiGetNearestColor(HDC hDC, COLORREF Color)
+COLORREF
+APIENTRY
+NtGdiGetNearestColor(
+    _In_ HDC hDC,
+    _In_ COLORREF Color)
 {
-   COLORREF nearest = CLR_INVALID;
-   PDC dc;
-   PPALETTE palGDI;
-   LONG RBits, GBits, BBits;
+    COLORREF nearest = CLR_INVALID;
+    PDC dc;
+    EXLATEOBJ exlo;
+    PPALETTE ppal;
 
-   dc = DC_LockDc(hDC);
-   if (NULL != dc)
-   {
-      HPALETTE hpal = dc->dclevel.hpal;
-      palGDI = PALETTE_ShareLockPalette(hpal);
-      if (!palGDI)
-      {
-         DC_UnlockDc(dc);
-         return nearest;
-      }
+    dc = DC_LockDc(hDC);
 
-      if (palGDI->flFlags & PAL_INDEXED)
-      {
-         ULONG index;
-         index = PALETTE_ulGetNearestPaletteIndex(palGDI, Color);
-         nearest = PALETTE_ulGetRGBColorFromIndex(palGDI, index);
-      }
-      else if (palGDI->flFlags & PAL_RGB || palGDI->flFlags & PAL_BGR)
-      {
-         nearest = Color;
-      }
-      else if (palGDI->flFlags & PAL_BITFIELDS)
-      {
-         RBits = 8 - GetNumberOfBits(palGDI->RedMask);
-         GBits = 8 - GetNumberOfBits(palGDI->GreenMask);
-         BBits = 8 - GetNumberOfBits(palGDI->BlueMask);
-         nearest = RGB(
-            (GetRValue(Color) >> RBits) << RBits,
-            (GetGValue(Color) >> GBits) << GBits,
-            (GetBValue(Color) >> BBits) << BBits);
-      }
-      PALETTE_ShareUnlockPalette(palGDI);
-      DC_UnlockDc(dc);
-   }
+    if(dc == NULL)
+    {
+        EngSetLastError(ERROR_INVALID_HANDLE);
+        return CLR_INVALID;
+    }
+    
+    if(dc->dclevel.pSurface == NULL)
+        ppal = gppalMono;
+    else
+        ppal = dc->dclevel.pSurface->ppal;
+    
+    /* Translate the color to the DC format */
+    Color = TranslateCOLORREF(dc, Color);
+    
+    /* XLATE it back to RGB color space */
+    EXLATEOBJ_vInitialize(&exlo,
+        ppal,
+        &gpalRGB,
+        0,
+        RGB(0xff, 0xff, 0xff),
+        RGB(0, 0, 0));
+    
+    nearest = XLATEOBJ_iXlate(&exlo.xlo, Color);
+    
+    EXLATEOBJ_vCleanup(&exlo);
+    
+    /* We're done */
+    DC_UnlockDc(dc);
 
    return nearest;
 }
