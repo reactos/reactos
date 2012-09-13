@@ -65,7 +65,8 @@ BOOLEAN NTAPI ServiceRoutine(
 
   NDIS_DbgPrint(MAX_TRACE, ("Called. Interrupt (0x%X)\n", NdisInterrupt));
 
-  if (NdisInterrupt->IsrRequested) {
+  /* FIXME: This probably isn't the right check for MiniportInitialize, but we need to see what Windows uses here */
+  if ((NdisMiniportBlock->PnPDeviceState != NdisPnPDeviceStarted) || (NdisInterrupt->IsrRequested)) {
       NDIS_DbgPrint(MAX_TRACE, ("Calling MiniportISR\n"));
       (*NdisMiniportBlock->DriverHandle->MiniportCharacteristics.ISRHandler)(
           &InterruptRecognized,

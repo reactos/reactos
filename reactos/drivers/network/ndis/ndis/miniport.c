@@ -2161,6 +2161,10 @@ NdisIPnPStopDevice(
 
   KeCancelTimer(&Adapter->NdisMiniportBlock.WakeUpDpcTimer.Timer);
 
+  /* Set this here so MiniportISR will be forced to run for interrupts generated in MiniportHalt */
+  Adapter->NdisMiniportBlock.OldPnPDeviceState = Adapter->NdisMiniportBlock.PnPDeviceState;
+  Adapter->NdisMiniportBlock.PnPDeviceState = NdisPnPDeviceStopped;
+
   (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.HaltHandler)(Adapter);
 
   IoSetDeviceInterfaceState(&Adapter->NdisMiniportBlock.SymbolicLinkName, FALSE);
@@ -2187,9 +2191,6 @@ NdisIPnPStopDevice(
       EthDeleteFilter(Adapter->NdisMiniportBlock.EthDB);
       Adapter->NdisMiniportBlock.EthDB = NULL;
     }
-
-  Adapter->NdisMiniportBlock.OldPnPDeviceState = Adapter->NdisMiniportBlock.PnPDeviceState;
-  Adapter->NdisMiniportBlock.PnPDeviceState = NdisPnPDeviceStopped;
 
   return STATUS_SUCCESS;
 }
