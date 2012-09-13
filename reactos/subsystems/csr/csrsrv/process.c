@@ -1211,7 +1211,7 @@ CsrShutdownProcesses(IN PLUID CallerLuid,
     BOOLEAN FirstTry;
     ULONG i;
     PCSR_SERVER_DLL ServerDll;
-    ULONG Result = 0;
+    ULONG Result = 0; /* Intentionally invalid enumeratee to silence compiler warning */
 
     /* Acquire process lock */
     CsrAcquireProcessLock();
