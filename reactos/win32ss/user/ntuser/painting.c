@@ -1613,6 +1613,7 @@ NtUserScrollWindowEx(
    HDC hDC;
    HRGN hrgnOwn = NULL, hrgnTemp;
    HWND hwndCaret;
+   DWORD dcxflags = 0;
    NTSTATUS Status = STATUS_SUCCESS;
    DECLARE_RETURN(DWORD);
    USER_REFERENCE_ENTRY Ref, CaretRef;
@@ -1669,7 +1670,25 @@ NtUserScrollWindowEx(
    else
       hrgnOwn = IntSysCreateRectRgn(0, 0, 0, 0);
 
-   hDC = UserGetDCEx(Window, 0, DCX_CACHE | DCX_USESTYLE);
+   /* ScrollWindow uses the window DC, ScrollWindowEx doesn't */
+   if (flags & SW_SCROLLWNDDCE)
+   {
+      dcxflags = DCX_USESTYLE;
+
+      if (!(Window->pcls->style & (CS_OWNDC|CS_CLASSDC)))
+         dcxflags |= DCX_CACHE; // AH??? wine~ If not Powned or with Class go Cheap! 
+
+      if (flags & SW_SCROLLCHILDREN && Window->style & WS_CLIPCHILDREN)
+         dcxflags |= DCX_CACHE|DCX_NOCLIPCHILDREN;
+   }
+   else
+   {
+       /* So in this case ScrollWindowEx uses Cache DC. */
+       dcxflags = DCX_CACHE|DCX_USESTYLE;
+       if (flags & SW_SCROLLCHILDREN) dcxflags |= DCX_NOCLIPCHILDREN;
+   }
+
+   hDC = UserGetDCEx(Window, 0, dcxflags);
    if (!hDC)
    {
       /* FIXME: SetLastError? */
