@@ -5,7 +5,7 @@
 
 /* The definitions look so crappy, because the code doesn't care 
    whether the source is an array or an integer */
-#define MOV_DD_SWP(a,b) ((a) = RtlUlongByteSwap(*(PULONG)&(b)))
+#define MOV_DD_SWP(a,b) ( ((PULONG)&(a))[0] = RtlUlongByteSwap(*(PULONG)&(b)))
 #define MOV_DW_SWP(a,b) ( ((PUSHORT)&(a))[0] = RtlUshortByteSwap(*(PUSHORT)&(b)))
 #define MOV_SWP_DW2DD(a,b) ((a) = RtlUshortByteSwap(*(PUSHORT)&(b)))
 #define MOV_QD_SWP(a,b) { ((PULONG)&(a))[0] = RtlUlongByteSwap( ((PULONG)&(b))[1]); ((PULONG)&(a))[1] = RtlUlongByteSwap( ((PULONG)&(b))[0]); }

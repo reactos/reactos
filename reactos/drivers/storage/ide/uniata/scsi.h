@@ -392,12 +392,21 @@ typedef union _CDB {
         UCHAR Immediate: 1;
         UCHAR Reserved1 : 4;
         UCHAR Lun : 3;
-        UCHAR Reserved2[2];
+        UCHAR Reserved2;
+        UCHAR FormatLayerNumber : 2;
+        UCHAR Reserved2_2 : 6;
         UCHAR Start : 1;
         UCHAR LoadEject : 1;
-        UCHAR Reserved3 : 6;
+        UCHAR FL : 1;
+        UCHAR Reserved3 : 1;
+        UCHAR PowerConditions : 4;
         UCHAR Control;
     } START_STOP, *PSTART_STOP;
+
+#define StartStop_Power_NoChg    0x00
+#define StartStop_Power_Idle     0x02
+#define StartStop_Power_Standby  0x03
+#define StartStop_Power_Sleep    0x05
 
     struct _MEDIA_REMOVAL {
         UCHAR OperationCode;
@@ -685,6 +694,14 @@ typedef union _CDB {
         UCHAR Control;
     } SET_READ_AHEAD, *PSET_READ_AHEAD;
 
+    struct _REPORT_LUNS {
+        UCHAR OperationCode;    // 0xA0 - SCSIOP_REPORT_LUNS
+        UCHAR Reserved1[5];
+        UCHAR AllocationLength[4];
+        UCHAR Reserved2[1];
+        UCHAR Control;
+    } REPORT_LUNS, *PREPORT_LUNS;
+
 #define SendOpc_DoOpc   0x01
 
     struct _SEND_OPC_INFO {
@@ -901,6 +918,7 @@ typedef union _CDB {
 
   #define SCSIOP_SA_READ_CAPACITY16     0x10
 
+#define SCSIOP_REPORT_LUNS          0xA0
 #define SCSIOP_BLANK                0xA1
 #define SCSIOP_SEND_KEY             0xA3
 #define SCSIOP_REPORT_KEY           0xA4
@@ -1393,6 +1411,9 @@ typedef struct _SENSE_DATA {
 #define IOCTL_SCSI_MINIPORT_ENABLE_DISABLE_AUTOSAVE ((FILE_DEVICE_SCSI << 16) + 0x0507)
 #define IOCTL_SCSI_MINIPORT_SAVE_ATTRIBUTE_VALUES   ((FILE_DEVICE_SCSI << 16) + 0x0508)
 #define IOCTL_SCSI_MINIPORT_EXECUTE_OFFLINE_DIAGS   ((FILE_DEVICE_SCSI << 16) + 0x0509)
+#define IOCTL_SCSI_MINIPORT_ENABLE_DISABLE_AUTO_OFFLINE ((FILE_DEVICE_SCSI << 16) + 0x050a)
+#define IOCTL_SCSI_MINIPORT_READ_SMART_LOG              ((FILE_DEVICE_SCSI << 16) + 0x050b)
+#define IOCTL_SCSI_MINIPORT_WRITE_SMART_LOG             ((FILE_DEVICE_SCSI << 16) + 0x050c)
 
 // Read Capacity Data - returned in Big Endian format
 
@@ -2901,6 +2922,12 @@ typedef struct _DVD_RPC_KEY {
     UCHAR RpcScheme;
     UCHAR Reserved2[1];
 } DVD_RPC_KEY, * PDVD_RPC_KEY;
+
+typedef struct _REPORT_LUNS_INFO_HDR {
+    UCHAR ListLength[4];
+    UCHAR Reserved[4];
+} REPORT_LUNS_INFO_HDR, *PREPORT_LUNS_INFO_HDR;
+
 
 #pragma pack(pop)
 
