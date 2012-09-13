@@ -552,14 +552,23 @@ NtGdiSetBoundsRect(
     return ret;
 }
 
-/* Translates a COLORREF to the right color in the specified DC color space */ 
+/* Translates a COLORREF to the right color in the specified DC color space */
 ULONG
 TranslateCOLORREF(PDC pdc, COLORREF crColor)
 {
-    PPALETTE ppalDC, ppalSurface;
+    PSURFACE psurfDC;
+    PPALETTE ppalDC;
     ULONG index, ulColor, iBitmapFormat;
     EXLATEOBJ exlo;
 
+    /* Get the DC surface */
+    psurfDC = pdc->dclevel.pSurface;
+
+    /* If no surface is selected, use the default bitmap */
+    if (!psurfDC)
+        psurfDC = psurfDefaultBitmap;
+
+    /* Check what color type this is */
     switch (crColor >> 24)
     {
         case 0x00: /* RGB color */
@@ -594,7 +603,7 @@ TranslateCOLORREF(PDC pdc, COLORREF crColor)
 
         case 0x10: /* DIBINDEX */
             /* Mask the value to match the target bpp */
-            iBitmapFormat = pdc->dclevel.pSurface->SurfObj.iBitmapFormat;
+            iBitmapFormat = psurfDC->SurfObj.iBitmapFormat;
             if (iBitmapFormat == BMF_1BPP) index = crColor & 0x1;
             else if (iBitmapFormat == BMF_4BPP) index = crColor & 0xf;
             else if (iBitmapFormat == BMF_8BPP) index = crColor & 0xFF;
@@ -608,8 +617,7 @@ TranslateCOLORREF(PDC pdc, COLORREF crColor)
     }
 
     /* Initialize an XLATEOBJ from RGB to the target surface */
-    ppalSurface = pdc->dclevel.pSurface->ppal;
-    EXLATEOBJ_vInitialize(&exlo, &gpalRGB, ppalSurface, 0xFFFFFF, 0, 0);
+    EXLATEOBJ_vInitialize(&exlo, &gpalRGB, psurfDC->ppal, 0xFFFFFF, 0, 0);
 
     /* Translate the color to the target format */
     ulColor = XLATEOBJ_iXlate(&exlo.xlo, crColor);
