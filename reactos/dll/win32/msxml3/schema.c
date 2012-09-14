@@ -68,7 +68,7 @@ static const xmlChar XDR_schema[] = "Schema";
 static const xmlChar XDR_nsURI[] = "urn:schemas-microsoft-com:xml-data";
 static const xmlChar DT_nsURI[] = "urn:schemas-microsoft-com:datatypes";
 
-static xmlChar const*   datatypes_src;
+static xmlChar *        datatypes_src;
 static int              datatypes_len;
 static HGLOBAL          datatypes_handle;
 static HRSRC            datatypes_rsrc;
@@ -728,7 +728,6 @@ static xmlParserInputPtr external_entity_loader(const char *URL, const char *ID,
 
 void schemasInit(void)
 {
-    int len;
     xmlChar* buf;
     if (!(datatypes_rsrc = FindResourceA(MSXML_hInstance, "DATATYPES", "XML")))
     {
@@ -742,14 +741,14 @@ void schemasInit(void)
         return;
     }
     buf = LockResource(datatypes_handle);
-    len = SizeofResource(MSXML_hInstance, datatypes_rsrc) - 1;
+    datatypes_len = SizeofResource(MSXML_hInstance, datatypes_rsrc) - 1;
 
     /* Resource is loaded as raw data,
      * need a null-terminated string */
-    while (buf[len] != '>')
-        buf[len--] = 0;
-    datatypes_src = buf;
-    datatypes_len = len + 1;
+    while (buf[datatypes_len - 1] != '>') datatypes_len--;
+    datatypes_src = HeapAlloc(GetProcessHeap(), 0, datatypes_len + 1);
+    memcpy(datatypes_src, buf, datatypes_len);
+    datatypes_src[datatypes_len] = 0;
 
     if (xmlGetExternalEntityLoader() != external_entity_loader)
     {
@@ -761,6 +760,7 @@ void schemasInit(void)
 void schemasCleanup(void)
 {
     xmlSchemaFree(datatypes_schema);
+    HeapFree(GetProcessHeap(), 0, datatypes_src);
     xmlSetExternalEntityLoader(_external_entity_loader);
 }
 
