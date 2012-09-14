@@ -5,6 +5,8 @@ if(MSVC)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 endif()
 
+add_executable(bin2c bin2c.c)
+
 add_subdirectory(cabman)
 add_subdirectory(cdmake)
 add_subdirectory(gendib)
