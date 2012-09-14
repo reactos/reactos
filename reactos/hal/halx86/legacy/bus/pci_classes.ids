@@ -1,0 +1,203 @@
+#
+# Extracted from the pci.ids database from http://pciids.sourceforge.net/
+#
+
+#
+#	List of PCI ID's
+#
+#	Version: 2012.09.06
+#	Date:    2012-09-06 03:15:02
+#
+#	Maintained by Martin Mares <mj@ucw.cz> and other volunteers from the
+#	PCI ID Project at http://pci-ids.ucw.cz/.
+#
+#	New data are always welcome, especially if they are accurate. If you have
+#	anything to contribute, please follow the instructions at the web site.
+#
+#	This file can be distributed under either the GNU General Public License
+#	(version 2 or higher) or the 3-clause BSD License.
+#
+
+# List of known device classes, subclasses and programming interfaces
+
+# Syntax:
+# C class	class_name
+#	subclass	subclass_name  		<-- single tab
+#		prog-if  prog-if_name  	<-- two tabs
+
+C 00  Unclassified device
+	00  Non-VGA unclassified device
+	01  VGA compatible unclassified device
+C 01  Mass storage controller
+	00  SCSI storage controller
+	01  IDE interface
+	02  Floppy disk controller
+	03  IPI bus controller
+	04  RAID bus controller
+	05  ATA controller
+		20  ADMA single stepping
+		30  ADMA continuous operation
+	06  SATA controller
+		00  Vendor specific
+		01  AHCI 1.0
+	07  Serial Attached SCSI controller
+	08  Non-Volatile memory controller
+	80  Mass storage controller
+C 02  Network controller
+	00  Ethernet controller
+	01  Token ring network controller
+	02  FDDI network controller
+	03  ATM network controller
+	04  ISDN controller
+	05  WorldFip controller
+	06  PICMG controller
+	80  Network controller
+C 03  Display controller
+	00  VGA compatible controller
+		00  VGA controller
+		01  8514 controller
+	01  XGA compatible controller
+	02  3D controller
+	80  Display controller
+C 04  Multimedia controller
+	00  Multimedia video controller
+	01  Multimedia audio controller
+	02  Computer telephony device
+	03  Audio device
+	80  Multimedia controller
+C 05  Memory controller
+	00  RAM memory
+	01  FLASH memory
+	80  Memory controller
+C 06  Bridge
+	00  Host bridge
+	01  ISA bridge
+	02  EISA bridge
+	03  MicroChannel bridge
+	04  PCI bridge
+		00  Normal decode
+		01  Subtractive decode
+	05  PCMCIA bridge
+	06  NuBus bridge
+	07  CardBus bridge
+	08  RACEway bridge
+		00  Transparent mode
+		01  Endpoint mode
+	09  Semi-transparent PCI-to-PCI bridge
+		40  Primary bus towards host CPU
+		80  Secondary bus towards host CPU
+	0a  InfiniBand to PCI host bridge
+	80  Bridge
+C 07  Communication controller
+	00  Serial controller
+		00  8250
+		01  16450
+		02  16550
+		03  16650
+		04  16750
+		05  16850
+		06  16950
+	01  Parallel controller
+		00  SPP
+		01  BiDir
+		02  ECP
+		03  IEEE1284
+		fe  IEEE1284 Target
+	02  Multiport serial controller
+	03  Modem
+		00  Generic
+		01  Hayes/16450
+		02  Hayes/16550
+		03  Hayes/16650
+		04  Hayes/16750
+	04  GPIB controller
+	05  Smard Card controller
+	80  Communication controller
+C 08  Generic system peripheral
+	00  PIC
+		00  8259
+		01  ISA PIC
+		02  EISA PIC
+		10  IO-APIC
+		20  IO(X)-APIC
+	01  DMA controller
+		00  8237
+		01  ISA DMA
+		02  EISA DMA
+	02  Timer
+		00  8254
+		01  ISA Timer
+		02  EISA Timers
+	03  RTC
+		00  Generic
+		01  ISA RTC
+	04  PCI Hot-plug controller
+	05  SD Host controller
+	06  IOMMU
+	80  System peripheral
+C 09  Input device controller
+	00  Keyboard controller
+	01  Digitizer Pen
+	02  Mouse controller
+	03  Scanner controller
+	04  Gameport controller
+		00  Generic
+		10  Extended
+	80  Input device controller
+C 0a  Docking station
+	00  Generic Docking Station
+	80  Docking Station
+C 0b  Processor
+	00  386
+	01  486
+	02  Pentium
+	10  Alpha
+	20  Power PC
+	30  MIPS
+	40  Co-processor
+C 0c  Serial bus controller
+	00  FireWire (IEEE 1394)
+		00  Generic
+		10  OHCI
+	01  ACCESS Bus
+	02  SSA
+	03  USB controller
+		00  UHCI
+		10  OHCI
+		20  EHCI
+		30  XHCI
+		80  Unspecified
+		fe  USB Device
+	04  Fibre Channel
+	05  SMBus
+	06  InfiniBand
+	07  IPMI SMIC interface
+	08  SERCOS interface
+	09  CANBUS
+C 0d  Wireless controller
+	00  IRDA controller
+	01  Consumer IR controller
+	10  RF controller
+	11  Bluetooth
+	12  Broadband
+	20  802.1a controller
+	21  802.1b controller
+	80  Wireless controller
+C 0e  Intelligent controller
+	00  I2O
+C 0f  Satellite communications controller
+	01  Satellite TV controller
+	02  Satellite audio communication controller
+	03  Satellite voice communication controller
+	04  Satellite data communication controller
+C 10  Encryption controller
+	00  Network and computing encryption device
+	10  Entertainment encryption device
+	80  Encryption controller
+C 11  Signal processing controller
+	00  DPIO module
+	01  Performance counters
+	10  Communication synchronizer
+	20  Signal processing management
+	80  Signal processing controller
+C ff  Unassigned class

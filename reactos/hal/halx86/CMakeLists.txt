@@ -35,27 +35,46 @@ endif()
 
 add_pch(lib_hal_generic include/hal.h)
 
-list(APPEND HAL_LEGACY_SOURCE
-    legacy/bus/bushndlr.c
-    legacy/bus/cmosbus.c
-    legacy/bus/isabus.c
-    legacy/bus/pcibus.c
-    legacy/bus/pcidata.c
-    legacy/bus/sysbus.c
-    legacy/bussupp.c
-    legacy/halpnpdd.c
-    legacy/halpcat.c)
+if(ARCH STREQUAL "i386")
 
-if(CMAKE_VERSION VERSION_GREATER 2.8.7)
-    add_library(lib_hal_legacy OBJECT ${HAL_LEGACY_SOURCE})
-else()
-    add_library(lib_hal_legacy ${HAL_LEGACY_SOURCE})
-endif()
+    #####################################
+    # Generate the pcidata source files in the x86 build
+    #
+    add_custom_command(
+        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/pci_classes.c ${CMAKE_CURRENT_BINARY_DIR}/pci_classes.h
+        COMMAND native-bin2c ${CMAKE_CURRENT_SOURCE_DIR}/legacy/bus/pci_classes.ids ${CMAKE_CURRENT_BINARY_DIR}/pci_classes.c ${CMAKE_CURRENT_BINARY_DIR}/pci_classes.h ClassTable INIT_FUNCTION ${CMAKE_CURRENT_SOURCE_DIR}/include/hal.h
+        DEPENDS native-bin2c ${CMAKE_CURRENT_SOURCE_DIR}/legacy/bus/pci_classes.ids)
 
-#add_pch(lib_hal_legacy include/hal.h)
+    add_custom_command(
+        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/pci_vendors.c ${CMAKE_CURRENT_BINARY_DIR}/pci_vendors.h
+        COMMAND native-bin2c ${CMAKE_CURRENT_SOURCE_DIR}/legacy/bus/pci_vendors.ids ${CMAKE_CURRENT_BINARY_DIR}/pci_vendors.c ${CMAKE_CURRENT_BINARY_DIR}/pci_vendors.h VendorTable INIT_FUNCTION ${CMAKE_CURRENT_SOURCE_DIR}/include/hal.h
+        DEPENDS native-bin2c ${CMAKE_CURRENT_SOURCE_DIR}/legacy/bus/pci_vendors.ids)
+    #####################################
 
-if(NOT CMAKE_VERSION VERSION_GREATER 2.8.7)
-    target_link_libraries(lib_hal_legacy lib_hal_generic)
+    list(APPEND HAL_LEGACY_SOURCE
+        legacy/bus/bushndlr.c
+        legacy/bus/cmosbus.c
+        legacy/bus/isabus.c
+        legacy/bus/pcibus.c
+        ${CMAKE_CURRENT_BINARY_DIR}/pci_classes.c
+        ${CMAKE_CURRENT_BINARY_DIR}/pci_vendors.c
+        legacy/bus/sysbus.c
+        legacy/bussupp.c
+        legacy/halpnpdd.c
+        legacy/halpcat.c)
+
+    if(CMAKE_VERSION VERSION_GREATER 2.8.7)
+        add_library(lib_hal_legacy OBJECT ${HAL_LEGACY_SOURCE})
+    else()
+        add_library(lib_hal_legacy ${HAL_LEGACY_SOURCE})
+    endif()
+
+    #add_pch(lib_hal_legacy include/hal.h)
+
+    if(NOT CMAKE_VERSION VERSION_GREATER 2.8.7)
+        target_link_libraries(lib_hal_legacy lib_hal_generic)
+    endif()
+
 endif()
 
 list(APPEND HAL_ACPI_SOURCE

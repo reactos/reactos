@@ -687,6 +687,12 @@ ShowSize(ULONG x)
     DbgPrint("]\n");
 }
 
+/*
+ * These includes are required to define
+ * the ClassTable and VendorTable arrays.
+ */
+#include "pci_classes.h"
+#include "pci_vendors.h"
 VOID
 NTAPI
 INIT_FUNCTION
@@ -695,8 +701,6 @@ HalpDebugPciDumpBus(IN ULONG i,
                     IN ULONG k,
                     IN PPCI_COMMON_CONFIG PciData)
 {
-    extern CHAR ClassTable[3922];
-    extern CHAR VendorTable[642355];
     PCHAR p, ClassName, SubClassName, VendorName, ProductName, SubVendorName;
     ULONG Length;
     CHAR LookupString[16] = "";
@@ -707,19 +711,19 @@ HalpDebugPciDumpBus(IN ULONG i,
     ULONG Size, Mem, b;
 
     /* Isolate the class name */
-    sprintf(LookupString, "C %02x", PciData->BaseClass);
+    sprintf(LookupString, "C %02x  ", PciData->BaseClass);
     ClassName = strstr(ClassTable, LookupString);
     if (ClassName)
     {
         /* Isolate the subclass name */
         ClassName += 6;
-        sprintf(LookupString, "\t%02x", PciData->SubClass);
+        sprintf(LookupString, "\t%02x  ", PciData->SubClass);
         SubClassName = strstr(ClassName, LookupString);
         if (SubClassName)
         {
             /* Copy the subclass into our buffer */
             SubClassName += 5;
-            p = strchr(SubClassName, '\r');
+            p = strpbrk(SubClassName, "\r\n");
             Length = p - SubClassName;
             if (Length >= sizeof(bSubClassName)) Length = sizeof(bSubClassName) - 1;
             strncpy(bSubClassName, SubClassName, Length);
@@ -728,26 +732,26 @@ HalpDebugPciDumpBus(IN ULONG i,
     }
 
     /* Isolate the vendor name */
-    sprintf(LookupString, "\n%04x  ", PciData->VendorID);
+    sprintf(LookupString, "%04x  ", PciData->VendorID);
     VendorName = strstr(VendorTable, LookupString);
     if (VendorName)
     {
         /* Copy the vendor name into our buffer */
-        VendorName += 7;
-        p = strchr(VendorName, '\r');
+        VendorName += 6;
+        p = strpbrk(VendorName, "\r\n");
         Length = p - VendorName;
         if (Length >= sizeof(bVendorName)) Length = sizeof(bVendorName) - 1;
         strncpy(bVendorName, VendorName, Length);
         bVendorName[Length] = '\0';
 
         /* Isolate the product name */
-        sprintf(LookupString, "\t%04x", PciData->DeviceID);
+        sprintf(LookupString, "\t%04x  ", PciData->DeviceID);
         ProductName = strstr(VendorName, LookupString);
         if (ProductName)
         {
             /* Copy the product name into our buffer */
             ProductName += 7;
-            p = strchr(ProductName, '\r');
+            p = strpbrk(ProductName, "\r\n");
             Length = p - ProductName;
             if (Length >= sizeof(bProductName)) Length = sizeof(bProductName) - 1;
             strncpy(bProductName, ProductName, Length);
@@ -763,7 +767,7 @@ HalpDebugPciDumpBus(IN ULONG i,
             {
                 /* Copy the subvendor name into our buffer */
                 SubVendorName += 13;
-                p = strchr(SubVendorName, '\r');
+                p = strpbrk(SubVendorName, "\r\n");
                 Length = p - SubVendorName;
                 if (Length >= sizeof(bSubVendorName)) Length = sizeof(bSubVendorName) - 1;
                 strncpy(bSubVendorName, SubVendorName, Length);
