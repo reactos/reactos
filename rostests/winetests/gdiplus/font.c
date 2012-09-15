@@ -87,6 +87,7 @@ static void test_createfont(void)
     GdipDeleteFontFamily(fontfamily);
 }
 
+#if CORE_6660_IS_FIXED
 static void test_logfont(void)
 {
     LOGFONTA lfa, lfa2;
@@ -274,6 +275,7 @@ static void test_fontfamily (void)
 
     GdipDeleteFontFamily(clonedFontFamily);
 }
+#endif // CORE_6660_IS_FIXED
 
 static void test_fontfamily_properties (void)
 {
@@ -740,8 +742,10 @@ START_TEST(font)
     test_font_metrics();
 #endif
     test_createfont();
+#if CORE_6660_IS_FIXED
     test_logfont();
     test_fontfamily();
+#endif
     test_fontfamily_properties();
     test_getgenerics();
     test_installedfonts();

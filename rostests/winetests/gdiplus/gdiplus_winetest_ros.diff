@@ -31,31 +31,32 @@ Index: graphics.c
 
 Index: font.c
 ===================================================================
---- font.c      (revision 57206)
+--- font.c      (revision 57301)
 +++ font.c      (working copy)
-@@ -485,6 +485,7 @@
+@@ -87,6 +87,7 @@
      GdipDeleteFontFamily(fontfamily);
  }
 
 +#if CORE_6660_IS_FIXED
- static int CALLBACK font_enum_proc(const LOGFONTW *lfe, const TEXTMETRICW *ntme,
-                                    DWORD type, LPARAM lparam)
+ static void test_logfont(void)
  {
-@@ -721,6 +722,7 @@
-     GdipDeleteGraphics(graphics);
-     DeleteDC(hdc);
+     LOGFONTA lfa, lfa2;
+@@ -274,6 +275,7 @@
+
+     GdipDeleteFontFamily(clonedFontFamily);
  }
 +#endif // CORE_6660_IS_FIXED
 
- START_TEST(font)
+ static void test_fontfamily_properties (void)
  {
-@@ -734,7 +736,9 @@
-
-     GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
-
-+#if CORE_6660_IS_FIXED
+@@ -740,8 +742,10 @@
      test_font_metrics();
-+#endif
+ #endif
      test_createfont();
++#if CORE_6660_IS_FIXED
      test_logfont();
      test_fontfamily();
++#endif
+     test_fontfamily_properties();
+     test_getgenerics();
+     test_installedfonts();
