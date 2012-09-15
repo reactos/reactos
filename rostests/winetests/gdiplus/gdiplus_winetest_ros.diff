@@ -28,3 +28,34 @@ Index: graphics.c
      test_get_set_interpolation();
      test_get_set_textrenderinghint();
      test_getdc_scaled();
+
+Index: font.c
+===================================================================
+--- font.c      (revision 57206)
++++ font.c      (working copy)
+@@ -485,6 +485,7 @@
+     GdipDeleteFontFamily(fontfamily);
+ }
+
++#if CORE_6660_IS_FIXED
+ static int CALLBACK font_enum_proc(const LOGFONTW *lfe, const TEXTMETRICW *ntme,
+                                    DWORD type, LPARAM lparam)
+ {
+@@ -721,6 +722,7 @@
+     GdipDeleteGraphics(graphics);
+     DeleteDC(hdc);
+ }
++#endif // CORE_6660_IS_FIXED
+
+ START_TEST(font)
+ {
+@@ -734,7 +736,9 @@
+
+     GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
+
++#if CORE_6660_IS_FIXED
+     test_font_metrics();
++#endif
+     test_createfont();
+     test_logfont();
+     test_fontfamily();

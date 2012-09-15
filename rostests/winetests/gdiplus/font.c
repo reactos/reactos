@@ -485,6 +485,7 @@ static void test_heightgivendpi(void)
     GdipDeleteFontFamily(fontfamily);
 }
 
+#if CORE_6660_IS_FIXED
 static int CALLBACK font_enum_proc(const LOGFONTW *lfe, const TEXTMETRICW *ntme,
                                    DWORD type, LPARAM lparam)
 {
@@ -721,6 +722,7 @@ static void test_font_metrics(void)
     GdipDeleteGraphics(graphics);
     DeleteDC(hdc);
 }
+#endif // CORE_6660_IS_FIXED
 
 START_TEST(font)
 {
@@ -734,7 +736,9 @@ START_TEST(font)
 
     GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
 
+#if CORE_6660_IS_FIXED
     test_font_metrics();
+#endif
     test_createfont();
     test_logfont();
     test_fontfamily();
