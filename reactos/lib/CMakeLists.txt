@@ -1,6 +1,6 @@
 
 add_subdirectory(cmlib)
-add_subdirectory(newinflib)
+add_subdirectory(inflib)
 
 if(CMAKE_CROSSCOMPILING)
 
