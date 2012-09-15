@@ -87,6 +87,11 @@ static HRESULT WINAPI xmlnodelist_QueryInterface(
 
     TRACE("(%p)->(%s %p)\n", This, debugstr_guid(riid), ppvObject);
 
+    if (!ppvObject)
+    {
+        return E_POINTER;
+    }
+
     if ( IsEqualGUID( riid, &IID_IUnknown ) ||
          IsEqualGUID( riid, &IID_IDispatch ) ||
          IsEqualGUID( riid, &IID_IXMLDOMNodeList ) )
