@@ -43,6 +43,7 @@ START_TEST(RtlException)
 
     /* We cannot test this in kernel mode easily - the stack is just "somewhere"
      * in system space, and there's no guard page below it */
+#if CORE_6640_IS_FIXED
 #ifdef KMT_USER_MODE
     /* Overflow the stack - must cause a special exception */
     KmtStartSeh()
@@ -55,4 +56,5 @@ START_TEST(RtlException)
         }
     KmtEndSeh(STATUS_STACK_OVERFLOW);
 #endif
+#endif /* CORE_6640_IS_FIXED */
 }
