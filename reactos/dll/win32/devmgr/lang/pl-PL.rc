@@ -1,4 +1,4 @@
-/*
+﻿/*
  *         translated by (Sebastian Gasiorek,Wiktor Maryniowski, 2005-12-12)
  *         xxrogers@users.sourceforge.net
  *         https://sourceforge.net/projects/reactospl
@@ -42,26 +42,26 @@ STRINGTABLE
 BEGIN
     IDS_DEV_NO_PROBLEM "To urządzenie działa prawidłowo."
     IDS_DEV_NOT_CONFIGURED "To urządzenie nie jest poprawnie skonfigurowane."
-    IDS_DEV_DEVLOADER_FAILED "ReactOS nie może załadować sterownika dla tego urządzenia, ponieważ system raportuje dwa rodzaje magistrali typu $1."
-    IDS_DEV_DEVLOADER_FAILED2 "System ładowania sprzętu $1 nie mógł załadować sterownika dla tego urządzenia."
+    IDS_DEV_DEVLOADER_FAILED "ReactOS nie może załadować sterownika dla tego urządzenia, ponieważ system raportuje dwa rodzaje magistrali typu %1."
+    IDS_DEV_DEVLOADER_FAILED2 "System ładowania sprzętu %1 nie mógł załadować sterownika dla tego urządzenia."
     IDS_DEV_OUT_OF_MEMORY "Sterownik dla tego urządzenia może nie być prawidłowy lub system może nie pracować poprawnie."
     IDS_DEV_ENTRY_IS_WRONG_TYPE "Urządzenie nie działa poprawnie, ponieważ jeden ze sterowników nie jest prawidłowy lub jest źle zarejestrowany."
     IDS_DEV_LACKED_ARBITRATOR "Sterownik urządzenia wymaga zasobów, których ReactOS nie potrafi przydzielić."
     IDS_DEV_BOOT_CONFIG_CONFLICT "Inne urządzenie używa żądanych zasobów."
     IDS_DEV_FAILED_FILTER "Sterownik dla tego urządzenia powinien być zainstalowany ponownie."
-    IDS_DEV_DEVLOADER_NOT_FOUND "Urządzenie nie działa prawidłowo, ponieważ ReactOS nie mógł załadować pliku $1, który ładuje sterownik dla tego urządzenia."
-    IDS_DEV_DEVLOADER_NOT_FOUND2 "Urządzenie nie działa prawidłowo, ponieważ plik $1, który ładuje sterownik dla tego urządzenia jest błędny."
+    IDS_DEV_DEVLOADER_NOT_FOUND "Urządzenie nie działa prawidłowo, ponieważ ReactOS nie mógł załadować pliku %1, który ładuje sterownik dla tego urządzenia."
+    IDS_DEV_DEVLOADER_NOT_FOUND2 "Urządzenie nie działa prawidłowo, ponieważ plik %1, który ładuje sterownik dla tego urządzenia jest błędny."
     IDS_DEV_DEVLOADER_NOT_FOUND3 "Błąd urządzenia: Spróbuj zmienić sterownik tego urządzenia. Jeśli to nie pomoże, poszukaj rozwiązania w dokumentacji sprzętu."
     IDS_DEV_INVALID_DATA "Urządzenie nie działa prawidłowo, ponieważ BIOS Twojego komputera raportuje, że zasoby dla urządzenia nie są prawidłowe."
     IDS_DEV_INVALID_DATA2 "Urządzenie nie działa prawidłowo, ponieważ BIOS urządzenia raportuje, że zasoby dla urządzenia nie są prawidłowe. "
     IDS_DEV_FAILED_START "Urządzenie nie jest obecne, nie działa poprawnie lub nie wszystkie sterowniki urządzenia zostały zainstalowane."
     IDS_DEV_LIAR "ReactOS został zatrzymany podczs próby uruchomienia urządzenia, dlatego nie będzie próbował uruchamiać tego urządzenia w przyszłości."
-    IDS_DEV_NORMAL_CONFLICT "Urządzenie nie mogło odnaleźć żadnych wolnych zasobów $1."
+    IDS_DEV_NORMAL_CONFLICT "Urządzenie nie mogło odnaleźć żadnych wolnych zasobów %1."
     IDS_DEV_NOT_VERIFIED "Urządzenie nie jest obecne, nie działa poprawnie lub nie wszystkie sterowniki urządzenia zostały zainstalowane."
     IDS_DEV_NEED_RESTART "Urządzenie nie będzie działać prawidłowo dopóki nie uruchomisz ponownie komputera."
     IDS_DEV_REENUMERATION "To urządzenie powoduje konflikt zasobów."
     IDS_DEV_PARTIAL_LOG_CONF "ReactOS nie mógł zidentyfikować wszystkich zasobów, których używa urządzenie."
-    IDS_DEV_UNKNOWN_RESOURCE "Plik informacji sterownika $1 informuje, że urządzenie podrzędne używa zasobów, których nie rozpoznaje urządzenie nadrzędne."
+    IDS_DEV_UNKNOWN_RESOURCE "Plik informacji sterownika %1 informuje, że urządzenie podrzędne używa zasobów, których nie rozpoznaje urządzenie nadrzędne."
     IDS_DEV_REINSTALL "Sterownik dla tego urządzenia powinien być zainstalowany ponownie."
     IDS_DEV_REGISTRY "Wpis może nie być prawidłowy."
     IDS_DEV_WILL_BE_REMOVED "ReactOS usuwa to urządzenie."
@@ -77,7 +77,7 @@ BEGIN
     IDS_DEV_FAILED_INSTALL "Nie zainstalowano sterownika dla tego urządzenia."
     IDS_DEV_HARDWARE_DISABLED "Urządzenie jest wyłączone, ponieważ BIOS nie przydzielił żadnych zasobów dla tego urządzenia."
     IDS_DEV_CANT_SHARE_IRQ "Urządzenie żąda przerwania (IRQ), którego używa inne urządzenia i którego nie można współdzielić. Musisz zmienić ustawienia lub usunąć sterownik powodujący konflikt."
-    IDS_DEV_FAILED_ADD "Urządzenie nie działa prawidłowo, ponieważ $1 również nie działa poprawnie."
+    IDS_DEV_FAILED_ADD "Urządzenie nie działa prawidłowo, ponieważ %1 również nie działa poprawnie."
     IDS_DEV_DISABLED_SERVICE "ReactOS nie mógł zainstalować sterownika dla urządzenia, ponieważ nie mógł uzyskać dostępu do lokacji zawartej w pliku instalacyjnym."
     IDS_DEV_TRANSLATION_FAILED "Sterownik nie jest przeznaczony dla tego urządzenia."
     IDS_DEV_NO_SOFTCONFIG "ReactOS nie mógł określić ustawień dla tego urządzenia. Poszukaj rozwiązania w dokumentacji urządzenia i użyj ustawień zasobów, aby skonfigurować je ręcznie."

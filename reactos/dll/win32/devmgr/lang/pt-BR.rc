@@ -1,4 +1,4 @@
-// Brazilian Portuguese language resource file (Marcelo Zamperetti, 2007-07-21)
+﻿// Brazilian Portuguese language resource file (Marcelo Zamperetti, 2007-07-21)
 
 LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 
@@ -34,26 +34,26 @@ STRINGTABLE
 BEGIN
     IDS_DEV_NO_PROBLEM "Este dispositivo está funcionando corretamente."
     IDS_DEV_NOT_CONFIGURED "Este dispositivo não está corretamente configurado."
-    IDS_DEV_DEVLOADER_FAILED "O ReactOS não pôde carregar o driver para este dispositivo porque o computador está relatando dois tipos de barramento $1."
-    IDS_DEV_DEVLOADER_FAILED2 "O(s) carregadore(es) do dispositivo $1 não pôde/puderam carregar o driver do dispositivo para este dispositivo."
+    IDS_DEV_DEVLOADER_FAILED "O ReactOS não pôde carregar o driver para este dispositivo porque o computador está relatando dois tipos de barramento %1."
+    IDS_DEV_DEVLOADER_FAILED2 "O(s) carregadore(es) do dispositivo %1 não pôde/puderam carregar o driver do dispositivo para este dispositivo."
     IDS_DEV_OUT_OF_MEMORY "O driver para este dispositivo pode estar danificado, ou seu sistema com pouca memória ou insuficiência de outros recursos."
     IDS_DEV_ENTRY_IS_WRONG_TYPE "Este dispositivo não está funcionando corretamente porque um de seus drivers pode estar danificado, ou seu registro pode estar danificado."
     IDS_DEV_LACKED_ARBITRATOR "O driver para este dispositivo requisitou um recurso que o ReactOS não sabe como manusear."
     IDS_DEV_BOOT_CONFIG_CONFLICT "Outro dispositivo está usando os recursos que este dispositivo necessita."
     IDS_DEV_FAILED_FILTER "Os drivers para este dispositivo precisam ser reinstalados."
-    IDS_DEV_DEVLOADER_NOT_FOUND "Este dispositivo não está funcionando corretamente porque o ReactOS não pôde carregar o arquivo $1 que carrega os drivers para o dispositivo."
-    IDS_DEV_DEVLOADER_NOT_FOUND2 "Este dispositivo não está funcionando corretamente porque o arquivo $1 que carrega os drivers para este dispositivo está danificado."
+    IDS_DEV_DEVLOADER_NOT_FOUND "Este dispositivo não está funcionando corretamente porque o ReactOS não pôde carregar o arquivo %1 que carrega os drivers para o dispositivo."
+    IDS_DEV_DEVLOADER_NOT_FOUND2 "Este dispositivo não está funcionando corretamente porque o arquivo %1 que carrega os drivers para este dispositivo está danificado."
     IDS_DEV_DEVLOADER_NOT_FOUND3 "Falha no dispositivo: tente mudar o driver para este dispositivo. Se isto não funcionar, consulte a documentação do seu hardware."
     IDS_DEV_INVALID_DATA "Este dispositivo não está funcionando corretamente porque a BIOS do seu computador está reportando os recursos para este dispositivo incorretamente."
     IDS_DEV_INVALID_DATA2 "Este dispositivo não está funcionando corretamente porque a BIOS do dispositivo está reportando os recursos para este dispositivo incorretamente."
     IDS_DEV_FAILED_START "Este dispositivo não está presente, não está funcionando corretamente ou não tem todos os drivers instalados."
     IDS_DEV_LIAR "O ReactOS parou de responder enquanto tentava inicializar este dispositivo e em conseqüência não irá mais tentar inicializá-lo."
-    IDS_DEV_NORMAL_CONFLICT "Este dispositivo não pôde encontrar recursos $1 livres para utilizar."
+    IDS_DEV_NORMAL_CONFLICT "Este dispositivo não pôde encontrar recursos %1 livres para utilizar."
     IDS_DEV_NOT_VERIFIED "Este dispositivo não está presente, não está funcionando corretamente ou não tem todos os drivers instalados."
     IDS_DEV_NEED_RESTART "Este dispositivo não pode funcionar corretamente até que o computador seja reiniciado."
     IDS_DEV_REENUMERATION "Este dispositivo está causando um conflito de recursos."
     IDS_DEV_PARTIAL_LOG_CONF "O ReactOS não pôde identificar todos os recursos que este dispositivo utiliza."
-    IDS_DEV_UNKNOWN_RESOURCE "O arquivo $1 de informações de driver está indicando que este dispositivo filho utilize um recurso que o dispositivo pai não possui ou reconhece."
+    IDS_DEV_UNKNOWN_RESOURCE "O arquivo %1 de informações de driver está indicando que este dispositivo filho utilize um recurso que o dispositivo pai não possui ou reconhece."
     IDS_DEV_REINSTALL "Os drivers para este dispositivo precisam ser reinstalados."
     IDS_DEV_REGISTRY "Seu registro pode estar danificado."
     IDS_DEV_WILL_BE_REMOVED "O ReactOS está removendo este dispositivo."
@@ -69,7 +69,7 @@ BEGIN
     IDS_DEV_FAILED_INSTALL "Os drivers para este dispositivo não estão instalados."
     IDS_DEV_HARDWARE_DISABLED "Este dispositivo está desativado porque a BIOS para o dispositivo não lhe deu nenhum recurso."
     IDS_DEV_CANT_SHARE_IRQ "Este dispositivo está utilizando um recurso de Requisição de Interrupção (IRQ) que está em uso por outro dispositivo e não pode ser compartilhado.\nVocê pode alterar a configuração conflitante ou remover o driver de modo real que está causando o conflito."
-    IDS_DEV_FAILED_ADD "Este dispositivo não está funcionando corretamente porque $1 não está funcionando corretamente."
+    IDS_DEV_FAILED_ADD "Este dispositivo não está funcionando corretamente porque %1 não está funcionando corretamente."
     IDS_DEV_DISABLED_SERVICE "O ReactOS não pode instalar os drivers para este dispositivo porque não consegue acessar o drive ou local de rede que possui os arquivos de configuração."
     IDS_DEV_TRANSLATION_FAILED "Este dispositivo não está respondendo ao seu driver."
     IDS_DEV_NO_SOFTCONFIG "O ReactOS não pode determinar as configurações para este dispositivo. Consulte a documentação que veio com este dispositivo e utilize a guia Recursos para definir a configuração."

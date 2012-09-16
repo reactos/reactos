@@ -1,4 +1,4 @@
-// Spanish language resource file (Samuel Serapion Vega 2005-12-10)
+﻿// Spanish language resource file (Samuel Serapion Vega 2005-12-10)
 // Actualizado Javier Remacha (2008-01-12)
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
@@ -35,26 +35,26 @@ STRINGTABLE
 BEGIN
     IDS_DEV_NO_PROBLEM "Este dispositivo está funcionando correctamente."
     IDS_DEV_NOT_CONFIGURED "Este dispositivo no esta configurado correctamente."
-    IDS_DEV_DEVLOADER_FAILED "ReactOS no podría cargar el controlador para este dispositivo porque la computadora está reportando dos $1 tipos de Bus."
-    IDS_DEV_DEVLOADER_FAILED2 "El cargador(es) de $1 no puede cargar el controlador del dispositivo."
+    IDS_DEV_DEVLOADER_FAILED "ReactOS no podría cargar el controlador para este dispositivo porque la computadora está reportando dos %1 tipos de Bus."
+    IDS_DEV_DEVLOADER_FAILED2 "El cargador(es) de %1 no puede cargar el controlador del dispositivo."
     IDS_DEV_OUT_OF_MEMORY "El controlador para este dispositivo puede estar dañado, o su sistema puede estar bajo en memoria u otros recursos."
     IDS_DEV_ENTRY_IS_WRONG_TYPE "Este dispositivo no está funcionando correctamente porque uno de sus controladores estan dañados, o su registro esta corrupto."
     IDS_DEV_LACKED_ARBITRATOR "El controlador para este dispositivo solicitó un recurso que ReactOS no sabe dirigir."
     IDS_DEV_BOOT_CONFIG_CONFLICT "Otro dispositivo está utilizando los recursos que necesita de este dispositivo."
     IDS_DEV_FAILED_FILTER "Los controladors para este dispositivo necesitan ser reinstalados."
-    IDS_DEV_DEVLOADER_NOT_FOUND "Este dispositivo no está funcionando correctamente porque ReactOS no puede cargar el archivo $1 que carga los controladors para el dispositivo."
-    IDS_DEV_DEVLOADER_NOT_FOUND2 "Este dispositivo no está funcionando correctamente porque el archivo $1 que carga los controladors para este dispositivo esta dañado."
+    IDS_DEV_DEVLOADER_NOT_FOUND "Este dispositivo no está funcionando correctamente porque ReactOS no puede cargar el archivo %1 que carga los controladors para el dispositivo."
+    IDS_DEV_DEVLOADER_NOT_FOUND2 "Este dispositivo no está funcionando correctamente porque el archivo %1 que carga los controladors para este dispositivo esta dañado."
     IDS_DEV_DEVLOADER_NOT_FOUND3 "Falla del dispositivo: Trate de cambiar el controlador para este dispositivo. Si eso no funciona, vea la documentación de su hardware."
     IDS_DEV_INVALID_DATA "Este dispositivo no está funcionando correctamente porque la BIOS en su computadora está reportando los recursos para el dispositivo incorrectamente."
     IDS_DEV_INVALID_DATA2 "Este dispositivo no está funcionando correctamente porque la BIOS en el dispositivo está reportando los recursos para el dispositivo incorrectamente."
     IDS_DEV_FAILED_START "Este dispositivo o no esta presente, no trabajando correctamente, o no tiene todos los controladors instalados."
     IDS_DEV_LIAR "ReactOS paró de responder mientras que procuraba encender este dispositivo, y por lo tanto nunca procurará encender este dispositivo otra vez."
-    IDS_DEV_NORMAL_CONFLICT "Este dispositivo no puede encontrar ningun $1 recurso libre para utilizar."
+    IDS_DEV_NORMAL_CONFLICT "Este dispositivo no puede encontrar ningun %1 recurso libre para utilizar."
     IDS_DEV_NOT_VERIFIED "Este dispositivo no esta presente, no trabaja correctamente, o no tiene todos los controladors instalados."
     IDS_DEV_NEED_RESTART "Este dispositivo no puede trabajar correctamente hasta que usted reinicie su equipo."
     IDS_DEV_REENUMERATION "Este dispositivo está causando un conflicto de recursos."
     IDS_DEV_PARTIAL_LOG_CONF "ReactOS no puede identificar todos los recursos que este dispositivo usa."
-    IDS_DEV_UNKNOWN_RESOURCE "El archivo de información del controlador $1 está diciendo que este dispositivo hijo utiliza un recurso que el dispositivo padre no tiene o no reconoce."
+    IDS_DEV_UNKNOWN_RESOURCE "El archivo de información del controlador %1 está diciendo que este dispositivo hijo utiliza un recurso que el dispositivo padre no tiene o no reconoce."
     IDS_DEV_REINSTALL  "Los controladors para este dispositivo necesitan ser reinstalados."
     IDS_DEV_REGISTRY "Su registro puede estar corrupto."
     IDS_DEV_WILL_BE_REMOVED "ReactOS esta removiendo este dispositivo."
@@ -70,7 +70,7 @@ BEGIN
     IDS_DEV_FAILED_INSTALL "Los controladors para este dispositivo no están instalados."
     IDS_DEV_HARDWARE_DISABLED "Este dispositivo es deshabilitado porque la BIOS para el dispositivo no le dio ningún recurso."
     IDS_DEV_CANT_SHARE_IRQ "Este dispositivo está utilizando un recurso de la petición de interrupción (IRQ) que usa otro dispositivo y no puede ser compartido. Usted debe cambiar la opción que esta confligiendo o remover el real-mode controlador que causa el conflicto."
-    IDS_DEV_FAILED_ADD "Este dispositivo no está funcionando correctamente porque $1 no está trabajando correctamente."
+    IDS_DEV_FAILED_ADD "Este dispositivo no está funcionando correctamente porque %1 no está trabajando correctamente."
     IDS_DEV_DISABLED_SERVICE "ReactOS no puede instalar los controladors para este dispositivo porque no se puede acceder al disco o la localización en la red que tiene los archivos de instalación."
     IDS_DEV_TRANSLATION_FAILED "Este dispositivo no responde a su controlador."
     IDS_DEV_NO_SOFTCONFIG "ReactOS no puede determinar las propiedades de este dispositivo. Consulte la documentación que vino con este dispositivo y utiliza la pestaña del recurso para fijar la configuración correcta."

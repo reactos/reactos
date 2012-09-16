@@ -1,4 +1,4 @@
-// French language resource file (Sylvain Petreolle)
+﻿// French language resource file (Sylvain Petreolle)
 
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
@@ -33,26 +33,26 @@ STRINGTABLE
 BEGIN
     IDS_DEV_NO_PROBLEM "Ce périphérique fonctionne correctement."
     IDS_DEV_NOT_CONFIGURED "Ce périphérique n'est pas configuré correctement."
-    IDS_DEV_DEVLOADER_FAILED "ReactOS n'a pas pu charger le pilote de ce périphérique car l'ordinateur signale deux types de bus $1."
-    IDS_DEV_DEVLOADER_FAILED2 "Le(s) chargeur(s) de périphérique $1 pour ce périphérique n'ont pas pu charger le driver."
+    IDS_DEV_DEVLOADER_FAILED "ReactOS n'a pas pu charger le pilote de ce périphérique car l'ordinateur signale deux types de bus %1."
+    IDS_DEV_DEVLOADER_FAILED2 "Le(s) chargeur(s) de périphérique %1 pour ce périphérique n'ont pas pu charger le driver."
     IDS_DEV_OUT_OF_MEMORY "Le pilote de ce périphérique peut être mauvais, ou votre système peut être à court de mémoire ou d'autres ressources."
     IDS_DEV_ENTRY_IS_WRONG_TYPE "Ce périphérique ne fonctionne pas correctement parce qu'un des pilotes de ce périphérique peut être mauvais, ou votre base de registres peut être mauvaise."
     IDS_DEV_LACKED_ARBITRATOR "Le pilote de ce périphérique a demandé une ressource que ReactOS ne sait pas prendre en compte."
     IDS_DEV_BOOT_CONFIG_CONFLICT "Un autre périphérique utilise les ressources nécéssaires à ce périphérique."
     IDS_DEV_FAILED_FILTER "Les pilotes de ce périphérique doivent être réinstallés."
-    IDS_DEV_DEVLOADER_NOT_FOUND "Ce périphérique ne fonctionne pas correctement parce que ReactOS ne peut charger le fichier $1 qui charge les pilotes de ce périphérique."
-    IDS_DEV_DEVLOADER_NOT_FOUND2 "Ce périphérique ne fonctionne pas correctement parce que le fichier $1 qui charge les pilotes de ce périphérique est mauvais."
+    IDS_DEV_DEVLOADER_NOT_FOUND "Ce périphérique ne fonctionne pas correctement parce que ReactOS ne peut charger le fichier %1 qui charge les pilotes de ce périphérique."
+    IDS_DEV_DEVLOADER_NOT_FOUND2 "Ce périphérique ne fonctionne pas correctement parce que le fichier %1 qui charge les pilotes de ce périphérique est mauvais."
     IDS_DEV_DEVLOADER_NOT_FOUND3 "Erreur du périphérique: Essayez de changer le pilote du périphérique. Si cela ne fonctionne pas, consultez la documentation du matériel."
     IDS_DEV_INVALID_DATA "Ce périphérique ne fonctionne pas correctement parce que le BIOS de votre ordinateur rapporte incorrectement les ressources de ce périphérique."
     IDS_DEV_INVALID_DATA2 "Ce périphérique ne fonctionne pas correctement parce que le BIOS de votre ordinateur rapporte incorrectement les ressources de ce périphérique. "
     IDS_DEV_FAILED_START "Ce périphérique est soit non présent, ne fonctionne pas correctement, ou n'a pas tous les pilotes installés."
     IDS_DEV_LIAR "ReactOS a arrêté de fonctionner en essayant de démarrer ce périphérique, et n'essayera donc plus de le démarrer de nouveau."
-    IDS_DEV_NORMAL_CONFLICT "Ce périphérique ne peut pas trouver de ressources $1 à utiliser."
+    IDS_DEV_NORMAL_CONFLICT "Ce périphérique ne peut pas trouver de ressources %1 à utiliser."
     IDS_DEV_NOT_VERIFIED "Ce périphérique est soit non présent, ne fonctionne pas correctement, ou n'a pas tous les pilotes installés."
     IDS_DEV_NEED_RESTART "Ce périphérique ne peut fonctionner correctement tant que vous n'aurez pas redémarré votre ordinateur."
     IDS_DEV_REENUMERATION "Ce périphérique cause un conflit de ressources."
     IDS_DEV_PARTIAL_LOG_CONF "ReactOS n'a pas pu identifier toutes les ressources utilisées par ce périphérique."
-    IDS_DEV_UNKNOWN_RESOURCE "Le fichier d'information du pilote $1 indique à ce périphérique enfant d'utiliser une ressource que le périphérique parent n'a ou ne reconnait pas."
+    IDS_DEV_UNKNOWN_RESOURCE "Le fichier d'information du pilote %1 indique à ce périphérique enfant d'utiliser une ressource que le périphérique parent n'a ou ne reconnait pas."
     IDS_DEV_REINSTALL "Les pilotes de ce périphérique doivent être réinstallés."
     IDS_DEV_REGISTRY "Votre base de registre peut être mauvaise."
     IDS_DEV_WILL_BE_REMOVED "ReactOS est en train de supprimer ce périphérique."
@@ -68,7 +68,7 @@ BEGIN
     IDS_DEV_FAILED_INSTALL "Les pilotes de ce périphérique ne sont pas installés."
     IDS_DEV_HARDWARE_DISABLED "Ce périphérique est désactivé car le BIOS ne lui a pas donné de ressources."
     IDS_DEV_CANT_SHARE_IRQ "Ce périphérique utilise une Interruption Matérielle (IRQ) qui est utilisée par un autre périphérique et ne peut être partagée.\nVous devez changer les réglages en conflit ou enlever le pilote en mode-réel causant le conflit."
-    IDS_DEV_FAILED_ADD "Ce périphérique ne fonctionne pas correctement parce que $1 ne fonctionne pas correctement."
+    IDS_DEV_FAILED_ADD "Ce périphérique ne fonctionne pas correctement parce que %1 ne fonctionne pas correctement."
     IDS_DEV_DISABLED_SERVICE "ReactOS ne peut pas installer les pilotes pour ce périphérique car il ne peut pas accéder au lecteur ou à l'emplacement réseau contenant les fichiers d'installation."
     IDS_DEV_TRANSLATION_FAILED "Ce périphérique ne répond pas à son pilote."
     IDS_DEV_NO_SOFTCONFIG "ReactOS ne peut pas déterminer les réglages de ce périphérique. Consultez la documentation accompagnant ce périphérique et utilisez la page des Ressources pour modifier la configuration."
