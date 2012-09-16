@@ -1721,6 +1721,7 @@ static BOOL (WINAPI *pTrackMouseEvent)(TRACKMOUSEEVENT*);
 static BOOL (WINAPI *pUnhookWinEvent)(HWINEVENTHOOK);
 static BOOL (WINAPI *pGetMonitorInfoA)(HMONITOR,LPMONITORINFO);
 static HMONITOR (WINAPI *pMonitorFromPoint)(POINT,DWORD);
+static BOOL (WINAPI *pUpdateLayeredWindow)(HWND,HDC,POINT*,SIZE*,HDC,POINT*,COLORREF,BLENDFUNCTION*,DWORD);
 /* kernel32 functions */
 static BOOL (WINAPI *pGetCPInfoExA)(UINT, DWORD, LPCPINFOEXA);
 
@@ -1744,6 +1745,7 @@ static void init_procs(void)
     GET_PROC(user32, UnhookWinEvent)
     GET_PROC(user32, GetMonitorInfoA)
     GET_PROC(user32, MonitorFromPoint)
+    GET_PROC(user32, UpdateLayeredWindow)
 
     GET_PROC(kernel32, GetCPInfoExA)
 
@@ -13772,6 +13774,131 @@ todo_wine
     CloseHandle(hthread);
 }
 
+static const struct message WmSetLayeredStyle[] = {
+    { WM_STYLECHANGING, sent },
+    { WM_STYLECHANGED, sent },
+    { WM_GETTEXT, sent|defwinproc|optional },
+    { 0 }
+};
+
+static const struct message WmSetLayeredStyle2[] = {
+    { WM_STYLECHANGING, sent },
+    { WM_STYLECHANGED, sent },
+    { WM_WINDOWPOSCHANGING, sent|optional|wparam|defwinproc, SWP_FRAMECHANGED|SWP_NOACTIVATE|SWP_NOSIZE|SWP_NOMOVE|SWP_NOCLIENTSIZE|SWP_NOCLIENTMOVE },
+    { WM_NCCALCSIZE, sent|optional|wparam|defwinproc, 1 },
+    { WM_WINDOWPOSCHANGED, sent|optional|wparam|defwinproc, SWP_FRAMECHANGED|SWP_NOACTIVATE|SWP_NOSIZE|SWP_NOMOVE },
+    { WM_MOVE, sent|optional|defwinproc|wparam, 0 },
+    { WM_SIZE, sent|optional|defwinproc|wparam, SIZE_RESTORED },
+    { 0 }
+};
+
+static void test_layered_window(void)
+{
+    HWND hwnd;
+    HDC hdc;
+    HBITMAP bmp;
+    BOOL ret;
+    SIZE size;
+    POINT pos, src;
+    RECT rect, client;
+
+    if (!pUpdateLayeredWindow)
+    {
+        win_skip( "UpdateLayeredWindow not supported\n" );
+        return;
+    }
+
+    hdc = CreateCompatibleDC( 0 );
+    bmp = CreateCompatibleBitmap( hdc, 300, 300 );
+    SelectObject( hdc, bmp );
+
+    hwnd = CreateWindowExA(0, "TestWindowClass", NULL, WS_CAPTION | WS_THICKFRAME | WS_SYSMENU,
+                           100, 100, 300, 300, 0, 0, 0, NULL);
+    ok( hwnd != 0, "failed to create window\n" );
+    ShowWindow( hwnd, SW_SHOWNORMAL );
+    UpdateWindow( hwnd );
+    flush_events();
+    flush_sequence();
+
+    GetWindowRect( hwnd, &rect );
+    GetClientRect( hwnd, &client );
+    ok( client.right < rect.right - rect.left, "wrong client area\n" );
+    ok( client.bottom < rect.bottom - rect.top, "wrong client area\n" );
+
+    src.x = src.y = 0;
+    pos.x = pos.y = 300;
+    size.cx = size.cy = 250;
+    ret = pUpdateLayeredWindow( hwnd, 0, &pos, &size, hdc, &src, 0, NULL, ULW_OPAQUE );
+    ok( !ret, "UpdateLayeredWindow should fail on non-layered window\n" );
+    ok( GetLastError() == ERROR_INVALID_PARAMETER, "wrong error %u\n", GetLastError() );
+    SetWindowLong( hwnd, GWL_EXSTYLE, GetWindowLong(hwnd, GWL_EXSTYLE) | WS_EX_LAYERED );
+    ok_sequence( WmSetLayeredStyle, "WmSetLayeredStyle", FALSE );
+
+    ret = pUpdateLayeredWindow( hwnd, 0, &pos, &size, hdc, &src, 0, NULL, ULW_OPAQUE );
+    ok( ret, "UpdateLayeredWindow failed err %u\n", GetLastError() );
+    ok_sequence( WmEmptySeq, "UpdateLayeredWindow", FALSE );
+    GetWindowRect( hwnd, &rect );
+    ok( rect.left == 300 && rect.top == 300 && rect.right == 550 && rect.bottom == 550,
+        "wrong window rect %d,%d,%d,%d\n", rect.left, rect.top, rect.right, rect.bottom );
+    GetClientRect( hwnd, &rect );
+    ok( rect.right == client.right - 50 && rect.bottom == client.bottom - 50,
+        "wrong client rect %d,%d,%d,%d\n", rect.left, rect.top, rect.right, rect.bottom );
+
+    size.cx = 150;
+    pos.y = 200;
+    ret = pUpdateLayeredWindow( hwnd, 0, &pos, &size, hdc, &src, 0, NULL, ULW_OPAQUE );
+    ok( ret, "UpdateLayeredWindow failed err %u\n", GetLastError() );
+    ok_sequence( WmEmptySeq, "UpdateLayeredWindow", FALSE );
+    GetWindowRect( hwnd, &rect );
+    ok( rect.left == 300 && rect.top == 200 && rect.right == 450 && rect.bottom == 450,
+        "wrong window rect %d,%d,%d,%d\n", rect.left, rect.top, rect.right, rect.bottom );
+    GetClientRect( hwnd, &rect );
+    ok( rect.right == client.right - 150 && rect.bottom == client.bottom - 50,
+        "wrong client rect %d,%d,%d,%d\n", rect.left, rect.top, rect.right, rect.bottom );
+
+    SetWindowLong( hwnd, GWL_STYLE,
+                   GetWindowLong(hwnd, GWL_STYLE) & ~(WS_CAPTION | WS_THICKFRAME | WS_SYSMENU) );
+    ok_sequence( WmSetLayeredStyle2, "WmSetLayeredStyle2", FALSE );
+
+    size.cx = 200;
+    pos.x = 200;
+    ret = pUpdateLayeredWindow( hwnd, 0, &pos, &size, hdc, &src, 0, NULL, ULW_OPAQUE );
+    ok( ret, "UpdateLayeredWindow failed err %u\n", GetLastError() );
+    ok_sequence( WmEmptySeq, "UpdateLayeredWindow", FALSE );
+    GetWindowRect( hwnd, &rect );
+    ok( rect.left == 200 && rect.top == 200 && rect.right == 400 && rect.bottom == 450,
+        "wrong window rect %d,%d,%d,%d\n", rect.left, rect.top, rect.right, rect.bottom );
+    GetClientRect( hwnd, &rect );
+    ok( (rect.right == 200 && rect.bottom == 250) ||
+        broken(rect.right == client.right - 100 && rect.bottom == client.bottom - 50),
+        "wrong client rect %d,%d,%d,%d\n", rect.left, rect.top, rect.right, rect.bottom );
+
+    size.cx = 0;
+    ret = pUpdateLayeredWindow( hwnd, 0, &pos, &size, hdc, &src, 0, NULL, ULW_OPAQUE );
+    ok( !ret, "UpdateLayeredWindow should fail on non-layered window\n" );
+    ok( GetLastError() == ERROR_INVALID_PARAMETER || broken(ERROR_MR_MID_NOT_FOUND) /* win7 */,
+        "wrong error %u\n", GetLastError() );
+    size.cx = 1;
+    size.cy = -1;
+    ret = pUpdateLayeredWindow( hwnd, 0, &pos, &size, hdc, &src, 0, NULL, ULW_OPAQUE );
+    ok( !ret, "UpdateLayeredWindow should fail on non-layered window\n" );
+    ok( GetLastError() == ERROR_INVALID_PARAMETER, "wrong error %u\n", GetLastError() );
+
+    SetWindowLong( hwnd, GWL_EXSTYLE, GetWindowLong(hwnd, GWL_EXSTYLE) & ~WS_EX_LAYERED );
+    ok_sequence( WmSetLayeredStyle, "WmSetLayeredStyle", FALSE );
+    GetWindowRect( hwnd, &rect );
+    ok( rect.left == 200 && rect.top == 200 && rect.right == 400 && rect.bottom == 450,
+        "wrong window rect %d,%d,%d,%d\n", rect.left, rect.top, rect.right, rect.bottom );
+    GetClientRect( hwnd, &rect );
+    ok( (rect.right == 200 && rect.bottom == 250) ||
+        broken(rect.right == client.right - 100 && rect.bottom == client.bottom - 50),
+        "wrong client rect %d,%d,%d,%d\n", rect.left, rect.top, rect.right, rect.bottom );
+
+    DestroyWindow( hwnd );
+    DeleteDC( hdc );
+    DeleteObject( bmp );
+}
+
 START_TEST(msg)
 {
     char **test_argv;
@@ -13884,6 +14011,7 @@ START_TEST(msg)
     test_clipboard_viewers();
     test_keyflags();
     test_hotkey();
+    test_layered_window();
     /* keep it the last test, under Windows it tends to break the tests
      * which rely on active/foreground windows being correct.
      */
