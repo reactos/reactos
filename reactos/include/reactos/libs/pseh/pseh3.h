@@ -88,7 +88,7 @@ void * __cdecl __attribute__((error("Can only be used inside an exception filter
 
 #define _SEH3$_DECLARE_EXCEPT_INTRINSICS() \
     inline __attribute__((always_inline, gnu_inline)) \
-    unsigned long _exception_code() { return _SEH3$_TrylevelFrame.ExceptionPointers->ExceptionRecord->ExceptionCode; } \
+    unsigned long _exception_code() { return _SEH3$_TrylevelFrame.ExceptionPointers->ExceptionRecord->ExceptionCode; }
 
 /* This is an asm wrapper around _SEH3$_RegisterFrame */
 #define _SEH3$_RegisterFrame(_TrylevelFrame, _DataTable, _Target) \
@@ -139,7 +139,7 @@ void * __cdecl __attribute__((error("Can only be used inside an exception filter
     _SEH3$_NESTED_FUNC_OPEN(_Name) \
         /* Declare the intrinsics for the finally function */ \
         inline __attribute__((always_inline, gnu_inline)) \
-        int _abnormal_termination() { return (_SEH3$_TrylevelFrame.ScopeTable != 0); } \
+        int _abnormal_termination() { return (_SEH3$_TrylevelFrame.ScopeTable != 0); }
 
 #define _SEH3$_FILTER(_Filter, _FilterExpression) \
     (__builtin_constant_p(_FilterExpression) ? (void*)(unsigned long)(unsigned char)(unsigned long)(_FilterExpression) : _Filter)
