@@ -1447,6 +1447,9 @@ static void _expect_list_len(IXMLDOMNodeList *list, LONG len, int line)
 #define EXPECT_HR(hr,hr_exp) \
     ok(hr == hr_exp, "got 0x%08x, expected 0x%08x\n", hr, hr_exp)
 
+#define EXPECT_NOT_HR(hr,hr_exp) \
+    ok(hr != hr_exp, "got 0x%08x, expected not 0x%08x\n", hr, hr_exp)
+
 static const WCHAR szEmpty[] = { 0 };
 static const WCHAR szIncomplete[] = {
     '<','?','x','m','l',' ',
@@ -4244,6 +4247,30 @@ static void test_get_text(void)
     free_bstrs();
 }
 
+/*
+ * This function is to display that xmlnodelist_QueryInterface
+ * generates SEGV for these conditions, and once fixed make sure
+ * it never does it again.
+ */
+static void verify_nodelist_query_interface(IXMLDOMNodeList *node_list)
+{
+    HRESULT hr;
+    /*
+     * NOTE: The following calls are supposed to test wine's
+     * xmlnodelist_QueryInterface behaving properly.
+     * While we should be able to expect E_POINTER (due to the NULL pointer),
+     * it seems MS' own implementation(s) violate the spec and return
+     * E_INVALIDARG. To not get cought be a potentially correct implementation
+     * in the future, we check for NOT S_OK.
+     */
+    hr = IXMLDOMNodeList_QueryInterface(node_list, &IID_IUnknown, NULL);
+    EXPECT_NOT_HR(hr, S_OK);
+    hr = IXMLDOMNodeList_QueryInterface(node_list, &IID_IDispatch, NULL);
+    EXPECT_NOT_HR(hr, S_OK);
+    hr = IXMLDOMNodeList_QueryInterface(node_list, &IID_IXMLDOMNodeList, NULL);
+    EXPECT_NOT_HR(hr, S_OK);
+}
+
 static void test_get_childNodes(void)
 {
     IXMLDOMNodeList *node_list, *node_list2;
@@ -4270,6 +4297,8 @@ static void test_get_childNodes(void)
 
     hr = IXMLDOMElement_get_childNodes( element, &node_list );
     EXPECT_HR(hr, S_OK);
+
+    verify_nodelist_query_interface(node_list);
 
     hr = IXMLDOMNodeList_get_length( node_list, &len );
     EXPECT_HR(hr, S_OK);
