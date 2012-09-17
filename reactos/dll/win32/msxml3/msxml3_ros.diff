@@ -24,17 +24,18 @@ Index: msxml3.spec
 
 Index: nodelist.c
 ===================================================================
---- nodelist.c  (revision 57307)
+--- nodelist.c  (revision 57316)
 +++ nodelist.c  (working copy)
-@@ -87,6 +87,11 @@
+@@ -89,7 +89,11 @@
 
-     TRACE("(%p)->(%s %p)\n", This, debugstr_guid(riid), ppvObject);
+     if (!ppvObject)
+     {
+-        return E_POINTER;
++        /* NOTE: Interface documentation for IUnknown explicitly states
++         * this case should return E_POINTER. Empirical data proves
++         * MS violates this contract and instead return E_INVALIDARG.
++         */
++        return E_INVALIDARG;
+     }
 
-+    if (!ppvObject)
-+    {
-+        return E_POINTER;
-+    }
-+
      if ( IsEqualGUID( riid, &IID_IUnknown ) ||
-          IsEqualGUID( riid, &IID_IDispatch ) ||
-          IsEqualGUID( riid, &IID_IXMLDOMNodeList ) )

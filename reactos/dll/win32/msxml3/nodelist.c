@@ -89,7 +89,11 @@ static HRESULT WINAPI xmlnodelist_QueryInterface(
 
     if (!ppvObject)
     {
-        return E_POINTER;
+        /* NOTE: Interface documentation for IUnknown explicitly states
+         * this case should return E_POINTER. Empirical data proves
+         * MS violates this contract and instead return E_INVALIDARG.
+         */
+        return E_INVALIDARG;
     }
 
     if ( IsEqualGUID( riid, &IID_IUnknown ) ||
