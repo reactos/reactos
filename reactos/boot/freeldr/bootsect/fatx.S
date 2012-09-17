@@ -574,7 +574,7 @@ PutChars:
  *               Padding and boot sector signature                            *
  ******************************************************************************/
     /* Pad to 509 bytes */
- //   .org 509
+    .org 509
 
 BootPartition:
     .byte 0
