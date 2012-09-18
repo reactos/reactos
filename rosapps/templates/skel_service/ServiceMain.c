@@ -100,7 +100,7 @@ CreateServiceThread(PSERVICEINFO pServInfo)
 }
 
 
-VOID WINAPI
+DWORD WINAPI
 ServerCtrlHandler(DWORD dwControl,
                   DWORD dwEventType,
                   LPVOID lpEventData,
@@ -118,29 +118,34 @@ ServerCtrlHandler(DWORD dwControl,
             pServInfo->servStatus.dwWin32ExitCode = 0;
             pServInfo->servStatus.dwWaitHint = 0;
             UpdateStatus(pServInfo, SERVICE_STOP_PENDING, 1);
-            break;
+            return ERROR_SUCCESS;
 
         case SERVICE_CONTROL_PAUSE:
             LogEvent(_T("Setting the service to SERVICE_PAUSED"), 0, 0, LOG_FILE);
             InterlockedExchange((LONG *)&bPause, TRUE);
             UpdateStatus(pServInfo, SERVICE_PAUSED, 0);
-            break;
+            return ERROR_SUCCESS;
 
         case SERVICE_CONTROL_CONTINUE:
             LogEvent(_T("Setting the service to SERVICE_RUNNING"), 0, 0, LOG_FILE);
             InterlockedExchange((LONG *)&bPause, FALSE);
             UpdateStatus(pServInfo, SERVICE_RUNNING, 0);
-            break;
+            return ERROR_SUCCESS;
 
         case SERVICE_CONTROL_INTERROGATE:
-            break;
+            return ERROR_SUCCESS;
 
         default:
-            if (dwControl > 127 && dwControl < 256) /* user defined */
+            if (dwControl >= 128 && dwControl <= 255) /* User defined */
+            {
                 LogEvent(_T("User defined control code"), 0, 0, LOG_FILE);
+                return ERROR_SUCCESS;
+            }
             else
+            {
                 LogEvent(_T("ERROR: Bad control code"), 0, 0, LOG_FILE);
-            break;
+                return ERROR_INVALID_SERVICE_CONTROL;
+            }
     }
 }
 
