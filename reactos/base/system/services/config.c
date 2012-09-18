@@ -246,19 +246,17 @@ ScmIsDeleteFlagSet(HKEY hServiceKey)
 
 DWORD
 ScmReadString(HKEY hServiceKey,
-              LPWSTR lpValueName,
+              LPCWSTR lpValueName,
               LPWSTR *lpValue)
 {
-    DWORD dwError;
-    DWORD dwSize;
-    DWORD dwType;
-    DWORD dwSizeNeeded;
-    LPWSTR expanded = NULL;
+    DWORD dwError = 0;
+    DWORD dwSize = 0;
+    DWORD dwType = 0;
     LPWSTR ptr = NULL;
+    LPWSTR expanded = NULL;
 
     *lpValue = NULL;
 
-    dwSize = 0;
     dwError = RegQueryValueExW(hServiceKey,
                                lpValueName,
                                0,
@@ -268,7 +266,7 @@ ScmReadString(HKEY hServiceKey,
     if (dwError != ERROR_SUCCESS)
         return dwError;
 
-    ptr = HeapAlloc(GetProcessHeap(), 0, dwSize);
+    ptr = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwSize);
     if (ptr == NULL)
         return ERROR_NOT_ENOUGH_MEMORY;
 
@@ -279,38 +277,46 @@ ScmReadString(HKEY hServiceKey,
                                (LPBYTE)ptr,
                                &dwSize);
     if (dwError != ERROR_SUCCESS)
-        goto done;
+    {
+        HeapFree(GetProcessHeap(), 0, ptr);
+        return dwError;
+    }
 
     if (dwType == REG_EXPAND_SZ)
     {
         /* Expand the value... */
-        dwSizeNeeded = ExpandEnvironmentStringsW((LPCWSTR)ptr, NULL, 0);
-        if (dwSizeNeeded == 0)
+        dwSize = ExpandEnvironmentStringsW(ptr, NULL, 0);
+        if (dwSize > 0)
+        {
+            expanded = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwSize * sizeof(WCHAR));
+            if (expanded)
+            {
+                if (dwSize == ExpandEnvironmentStringsW(ptr, expanded, dwSize))
+                {
+                    *lpValue = expanded;
+                    dwError = ERROR_SUCCESS;
+                }
+                else
+                {
+                    dwError = GetLastError();
+                    HeapFree(GetProcessHeap(), 0, expanded);
+                }
+            }
+            else
+            {
+                dwError = ERROR_NOT_ENOUGH_MEMORY;
+            }
+        }
+        else
         {
             dwError = GetLastError();
-            goto done;
         }
-        expanded = HeapAlloc(GetProcessHeap(), 0, dwSizeNeeded * sizeof(WCHAR));
-        if (dwSizeNeeded < ExpandEnvironmentStringsW((LPCWSTR)ptr, expanded, dwSizeNeeded))
-        {
-            dwError = GetLastError();
-            goto done;
-        }
-        *lpValue = expanded;
+
         HeapFree(GetProcessHeap(), 0, ptr);
-        dwError = ERROR_SUCCESS;
     }
     else
     {
         *lpValue = ptr;
-    }
-
-done:
-    if (dwError != ERROR_SUCCESS)
-    {
-        HeapFree(GetProcessHeap(), 0, ptr);
-        if (expanded)
-            HeapFree(GetProcessHeap(), 0, expanded);
     }
 
     return dwError;

@@ -106,7 +106,7 @@ DWORD ScmMarkServiceForDelete(PSERVICE pService);
 BOOL ScmIsDeleteFlagSet(HKEY hServiceKey);
 
 DWORD ScmReadString(HKEY hServiceKey,
-                    LPWSTR lpValueName,
+                    LPCWSTR lpValueName,
                     LPWSTR *lpValue);
 
 DWORD

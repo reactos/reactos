@@ -591,7 +591,7 @@ ScmDeleteRegKey(HKEY hKey, LPCWSTR lpszSubKey)
             if (dwMaxSubkeyLen > sizeof(szNameBuf) / sizeof(WCHAR))
             {
                 /* Name too big: alloc a buffer for it */
-                lpszName = HeapAlloc(GetProcessHeap(), 0, dwMaxSubkeyLen * sizeof(WCHAR));
+                lpszName = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwMaxSubkeyLen * sizeof(WCHAR));
             }
 
             if (!lpszName)

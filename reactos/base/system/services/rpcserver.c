@@ -301,7 +301,7 @@ ScmAssignNewTag(PSERVICE lpService)
     if (dwError != ERROR_SUCCESS && dwError != ERROR_MORE_DATA)
         goto findFreeTag;
 
-    pdwGroupTags = HeapAlloc(GetProcessHeap(), 0, cbDataSize);
+    pdwGroupTags = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, cbDataSize);
     if (!pdwGroupTags)
     {
         dwError = ERROR_NOT_ENOUGH_MEMORY;
@@ -1635,11 +1635,6 @@ DWORD RSetServiceStatus(
     }
 
     lpService = (PSERVICE)hServiceStatus;
-    if (lpService == NULL)
-    {
-        DPRINT("lpService == NULL!\n");
-        return ERROR_INVALID_HANDLE;
-    }
 
     /* Check current state */
     if (!ScmIsValidServiceState(lpServiceStatus->dwCurrentState))
@@ -1819,7 +1814,7 @@ DWORD RChangeServiceConfigW(
 
         /* Update the display name */
         lpDisplayNameW = HeapAlloc(GetProcessHeap(),
-                                   0,
+                                   HEAP_ZERO_MEMORY,
                                    (wcslen(lpDisplayName) + 1) * sizeof(WCHAR));
         if (lpDisplayNameW == NULL)
         {
@@ -2142,7 +2137,8 @@ DWORD RCreateServiceW(
         *lpDisplayName != 0 &&
         _wcsicmp(lpService->lpDisplayName, lpDisplayName) != 0)
     {
-        lpService->lpDisplayName = HeapAlloc(GetProcessHeap(), 0,
+        lpService->lpDisplayName = HeapAlloc(GetProcessHeap(),
+                                             HEAP_ZERO_MEMORY,
                                              (wcslen(lpDisplayName) + 1) * sizeof(WCHAR));
         if (lpService->lpDisplayName == NULL)
         {
@@ -2424,7 +2420,7 @@ DWORD REnumDependentServicesW(
 
     /* Allocate memory for array of service pointers */
     lpServicesArray = HeapAlloc(GetProcessHeap(),
-                                0,
+                                HEAP_ZERO_MEMORY,
                                 (dwServicesReturned + 1) * sizeof(PSERVICE));
     if (!lpServicesArray)
     {
@@ -2447,7 +2443,7 @@ DWORD REnumDependentServicesW(
         goto Done;
     }
 
-    lpServicesPtr = (LPENUM_SERVICE_STATUSW) lpServices;
+    lpServicesPtr = (LPENUM_SERVICE_STATUSW)lpServices;
     lpStr = (LPWSTR)(lpServices + (dwServicesReturned * sizeof(ENUM_SERVICE_STATUSW)));
 
     /* Copy EnumDepenedentService to Buffer */
@@ -2470,7 +2466,7 @@ DWORD REnumDependentServicesW(
         lpServicesPtr->lpServiceName = (LPWSTR)((ULONG_PTR)lpStr - (ULONG_PTR)lpServices);
         lpStr += (wcslen(lpService->lpServiceName) + 1);
 
-        lpServicesPtr ++;
+        lpServicesPtr++;
     }
 
     *lpServicesReturned = dwServicesReturned;
@@ -3190,7 +3186,7 @@ DWORD RChangeServiceConfigA(
     {
         /* Set the display name */
         lpDisplayNameW = HeapAlloc(GetProcessHeap(),
-                                   0,
+                                   HEAP_ZERO_MEMORY,
                                    (strlen(lpDisplayName) + 1) * sizeof(WCHAR));
         if (lpDisplayNameW == NULL)
         {
@@ -3268,7 +3264,7 @@ DWORD RChangeServiceConfigA(
     {
         /* Set the image path */
         lpBinaryPathNameW = HeapAlloc(GetProcessHeap(),
-                                      0,
+                                      HEAP_ZERO_MEMORY,
                                       (strlen(lpBinaryPathName) + 1) * sizeof(WCHAR));
         if (lpBinaryPathNameW == NULL)
         {
@@ -3314,7 +3310,7 @@ DWORD RChangeServiceConfigA(
     if (lpLoadOrderGroup != NULL && *lpLoadOrderGroup != 0)
     {
         lpLoadOrderGroupW = HeapAlloc(GetProcessHeap(),
-                                      0,
+                                      HEAP_ZERO_MEMORY,
                                       (strlen(lpLoadOrderGroup) + 1) * sizeof(WCHAR));
         if (lpLoadOrderGroupW == NULL)
         {
@@ -3372,7 +3368,7 @@ DWORD RChangeServiceConfigA(
     if (lpDependencies != NULL && *lpDependencies != 0)
     {
         lpDependenciesW = HeapAlloc(GetProcessHeap(),
-                                    0,
+                                    HEAP_ZERO_MEMORY,
                                     (strlen((LPSTR)lpDependencies) + 1) * sizeof(WCHAR));
         if (lpDependenciesW == NULL)
         {
@@ -3446,7 +3442,7 @@ DWORD RCreateServiceA(
     if (lpServiceName)
     {
         len = MultiByteToWideChar(CP_ACP, 0, lpServiceName, -1, NULL, 0);
-        lpServiceNameW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+        lpServiceNameW = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len * sizeof(WCHAR));
         if (!lpServiceNameW)
         {
             SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -3458,7 +3454,7 @@ DWORD RCreateServiceA(
     if (lpDisplayName)
     {
         len = MultiByteToWideChar(CP_ACP, 0, lpDisplayName, -1, NULL, 0);
-        lpDisplayNameW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+        lpDisplayNameW = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len * sizeof(WCHAR));
         if (!lpDisplayNameW)
         {
             SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -3470,7 +3466,7 @@ DWORD RCreateServiceA(
     if (lpBinaryPathName)
     {
         len = MultiByteToWideChar(CP_ACP, 0, lpBinaryPathName, -1, NULL, 0);
-        lpBinaryPathNameW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+        lpBinaryPathNameW = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len * sizeof(WCHAR));
         if (!lpBinaryPathNameW)
         {
             SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -3482,7 +3478,7 @@ DWORD RCreateServiceA(
     if (lpLoadOrderGroup)
     {
         len = MultiByteToWideChar(CP_ACP, 0, lpLoadOrderGroup, -1, NULL, 0);
-        lpLoadOrderGroupW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+        lpLoadOrderGroupW = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len * sizeof(WCHAR));
         if (!lpLoadOrderGroupW)
         {
             SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -3502,7 +3498,7 @@ DWORD RCreateServiceA(
         }
         dwDependenciesLength++;
 
-        lpDependenciesW = HeapAlloc(GetProcessHeap(), 0, dwDependenciesLength * sizeof(WCHAR));
+        lpDependenciesW = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwDependenciesLength * sizeof(WCHAR));
         if (!lpDependenciesW)
         {
             SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -3514,7 +3510,7 @@ DWORD RCreateServiceA(
     if (lpServiceStartName)
     {
         len = MultiByteToWideChar(CP_ACP, 0, lpServiceStartName, -1, NULL, 0);
-        lpServiceStartNameW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+        lpServiceStartNameW = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len * sizeof(WCHAR));
         if (!lpServiceStartNameW)
         {
             SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -3638,7 +3634,7 @@ DWORD REnumDependentServicesA(
 
     /* Allocate memory for array of service pointers */
     lpServicesArray = HeapAlloc(GetProcessHeap(),
-                                0,
+                                HEAP_ZERO_MEMORY,
                                 (dwServicesReturned + 1) * sizeof(PSERVICE));
     if (!lpServicesArray)
     {
@@ -3698,7 +3694,7 @@ DWORD REnumDependentServicesA(
         lpServicesPtr->lpServiceName = (LPSTR)((ULONG_PTR)lpStr - (ULONG_PTR)lpServices);
         lpStr += strlen(lpStr) + 1;
 
-        lpServicesPtr ++;
+        lpServicesPtr++;
     }
 
     *lpServicesReturned = dwServicesReturned;
@@ -4755,7 +4751,7 @@ DWORD RChangeServiceConfig2A(
             dwLength = (DWORD)((strlen(Info.lpDescription) + 1) * sizeof(WCHAR));
 
             lpServiceDescriptonW = HeapAlloc(GetProcessHeap(),
-                                             0,
+                                             HEAP_ZERO_MEMORY,
                                              dwLength + sizeof(SERVICE_DESCRIPTIONW));
             if (!lpServiceDescriptonW)
             {
@@ -4797,7 +4793,7 @@ DWORD RChangeServiceConfig2A(
             dwLength = dwRebootLen + dwCommandLen + sizeof(SERVICE_FAILURE_ACTIONSW);
 
             lpServiceFailureActionsW = HeapAlloc(GetProcessHeap(),
-                                                 0,
+                                                 HEAP_ZERO_MEMORY,
                                                  dwLength);
             if (!lpServiceFailureActionsW)
             {

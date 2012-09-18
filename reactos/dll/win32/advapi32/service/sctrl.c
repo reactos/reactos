@@ -290,6 +290,9 @@ ScBuildUnicodeArgsVector(PSCM_CONTROL_PACKET ControlPacket,
     LPWSTR *lpArg;
     DWORD i;
 
+    if (ControlPacket == NULL || lpArgCount == NULL || lpArgVector == NULL)
+        return ERROR_INVALID_PARAMETER;
+
     *lpArgCount = 0;
     *lpArgVector = NULL;
 
@@ -333,6 +336,9 @@ ScBuildAnsiArgsVector(PSCM_CONTROL_PACKET ControlPacket,
     DWORD dwUnicodeSize;
     DWORD dwAnsiSize;
     DWORD i;
+
+    if (ControlPacket == NULL || lpArgCount == NULL || lpArgVector == NULL)
+        return ERROR_INVALID_PARAMETER;
 
     *lpArgCount = 0;
     *lpArgVector = NULL;
@@ -398,6 +404,9 @@ ScStartService(PACTIVE_SERVICE lpService,
     HANDLE ThreadHandle;
     DWORD ThreadId;
     DWORD dwError;
+
+    if (lpService == NULL || ControlPacket == NULL)
+        return ERROR_INVALID_PARAMETER;
 
     TRACE("ScStartService() called\n");
     TRACE("Size: %lu\n", ControlPacket->dwSize);
@@ -470,6 +479,9 @@ static DWORD
 ScControlService(PACTIVE_SERVICE lpService,
                  PSCM_CONTROL_PACKET ControlPacket)
 {
+    if (lpService == NULL || ControlPacket == NULL)
+        return ERROR_INVALID_PARAMETER;
+
     TRACE("ScControlService() called\n");
     TRACE("Size: %lu\n", ControlPacket->dwSize);
     TRACE("Service: %S\n", (PWSTR)((PBYTE)ControlPacket + ControlPacket->dwServiceNameOffset));
@@ -504,6 +516,9 @@ ScServiceDispatcher(HANDLE hPipe,
     DWORD dwError;
 
     TRACE("ScDispatcherLoop() called\n");
+
+    if (ControlPacket == NULL || dwBufferSize < sizeof(SCM_CONTROL_PACKET))
+        return FALSE;
 
     while (TRUE)
     {
