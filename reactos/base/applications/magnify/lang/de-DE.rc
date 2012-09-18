@@ -54,7 +54,7 @@ FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,193,76,50,14
     ICON            IDI_ICON,IDC_STATIC,7,17,20,20
-    LTEXT           "Die Bildschirmlupe ist für Personen mit leichten visuellen Einschränkungen gedacht und stellt lediglich Grundfunktionen zur Verfügung. Die meisten Nutzer werden jedoch eine Bildschirmlupe mit mehr Funktionen für die alltägliche Nutzung benötigen.",IDC_STATIC,36,7,207,33
+    LTEXT           "Die Bildschirmlupe ist für Personen mit leichten visuellen Einschränkungen gedacht und stellt lediglich Grundfunktionen zur Verfügung. Die meisten Nutzer werden jedoch eine Bildschirmlupe mit mehr Funktionen für die alltägliche Nutzung benötigen.",IDC_STATIC,36,7,207,43
     CONTROL         "Diese Nachricht nicht mehr anzeigen",IDC_SHOWWARNINGCHECK, "Button",BS_AUTOCHECKBOX | WS_TABSTOP,43,80,137,10
 END
 
