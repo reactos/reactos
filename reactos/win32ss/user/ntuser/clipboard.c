@@ -18,7 +18,7 @@ DBG_DEFAULT_CHANNEL(UserClipbrd);
 #define IS_DATA_SYNTHESIZED(ce) ((ce)->hData == DATA_SYNTH_USER || (ce)->hData == DATA_SYNTH_KRNL)
 
 PWINSTATION_OBJECT static FASTCALL
-IntGetWinStaForCbAccess()
+IntGetWinStaForCbAccess(VOID)
 {
     HWINSTA hWinSta;
     PWINSTATION_OBJECT pWinStaObj;

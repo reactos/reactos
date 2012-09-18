@@ -26,7 +26,7 @@ IntGdiUnreferencePdev(PPDEVOBJ ppdev, DWORD CleanUpType)
 }
 
 BOOL FASTCALL
-IntCreatePrimarySurface()
+IntCreatePrimarySurface(VOID)
 {
     SIZEL SurfSize;
     SURFOBJ *pso;
@@ -66,7 +66,7 @@ IntCreatePrimarySurface()
 }
 
 VOID FASTCALL
-IntDestroyPrimarySurface()
+IntDestroyPrimarySurface(VOID)
 {
     UNIMPLEMENTED;
 }

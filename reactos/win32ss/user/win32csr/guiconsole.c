@@ -1712,7 +1712,7 @@ GuiConsoleResize(HWND hWnd, WPARAM wParam, LPARAM lParam)
 
 VOID
 FASTCALL
-GuiConsoleHandleScrollbarMenu()
+GuiConsoleHandleScrollbarMenu(VOID)
 {
     HMENU hMenu;
 

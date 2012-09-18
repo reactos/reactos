@@ -131,7 +131,7 @@ IntHookModuleUnloaded(PDESKTOP pdesk, int iHookID, HHOOK hHook)
 
 BOOL
 FASTCALL
-UserLoadApiHook()
+UserLoadApiHook(VOID)
 {
     return IntLoadHookModule(WH_APIHOOK, 0, FALSE);
 }
@@ -206,7 +206,7 @@ UserRegisterUserApiHook(
 
 BOOL
 FASTCALL
-UserUnregisterUserApiHook()
+UserUnregisterUserApiHook(VOID)
 {
     PTHREADINFO pti;
 
