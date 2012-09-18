@@ -102,7 +102,7 @@ FsRtlIsNameInExpressionPrivate(IN PUNICODE_STRING Expression,
     while (NamePosition < Name->Length / sizeof(WCHAR) && ExpressionPosition < Expression->Length / sizeof(WCHAR))
     {
         /* Basic check to test if chars are equal */
-        if ((Expression->Buffer[ExpressionPosition] == (IgnoreCase ? UpcaseTable[Name->Buffer[NamePosition]] : Name->Buffer[NamePosition])))
+        if (Expression->Buffer[ExpressionPosition] == (IgnoreCase ? UpcaseTable[Name->Buffer[NamePosition]] : Name->Buffer[NamePosition]))
         {
             NamePosition++;
             ExpressionPosition++;
