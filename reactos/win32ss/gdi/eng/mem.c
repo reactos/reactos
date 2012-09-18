@@ -44,7 +44,11 @@ VOID
 APIENTRY
 EngFreeMem(PVOID pvBaseAddress)
 {
-    ExFreePool(pvBaseAddress);
+    /* Windows allows to pass NULL */
+    if (pvBaseAddress)
+    {
+        ExFreePool(pvBaseAddress);
+    }
 }
 
 /*
