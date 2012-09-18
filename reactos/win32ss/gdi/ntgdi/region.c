@@ -2911,6 +2911,12 @@ REGION_PtsToRegion(
 
     numRects = ((numFullPtBlocks * NUMPTSTOBUFFER) + iCurPtBlock) >> 1;
 
+    /* Make sure, we have at least one rect */
+    if (numRects == 0)
+    {
+        numRects = 1;
+    }
+
     if (!(temp = ExAllocatePoolWithTag(PagedPool, numRects * sizeof(RECT), TAG_REGION)))
     {
         return 0;
