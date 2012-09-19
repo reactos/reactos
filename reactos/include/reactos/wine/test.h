@@ -649,7 +649,7 @@ int main( int argc, char **argv )
 #define ok_size_t(expression, result) \
     do { \
         size_t _value = (expression); \
-        ok(_value == (result), "Wrong value for '%s', expected: " #result " (%p), got: %p\n", \
+        ok(_value == (result), "Wrong value for '%s', expected: " #result " (%Ix), got: %Ix\n", \
            #expression, (size_t)(result), _value); \
     } while (0)
 
