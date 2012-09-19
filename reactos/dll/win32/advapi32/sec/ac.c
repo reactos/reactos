@@ -394,36 +394,6 @@ AddAuditAccessObjectAce(PACL pAcl,
     return TRUE;
 }
 
-
-/*
- * @implemented
- */
-BOOL
-WINAPI
-AddMandatoryAce(IN OUT PACL pAcl,
-                IN DWORD dwAceRevision,
-                IN DWORD AceFlags,
-                IN DWORD MandatoryPolicy,
-                IN PSID pLabelSid)
-{
-    NTSTATUS Status;
-
-    Status = RtlAddMandatoryAce(pAcl,
-                                dwAceRevision,
-                                AceFlags,
-                                MandatoryPolicy,
-                                SYSTEM_MANDATORY_LABEL_ACE_TYPE,
-                                pLabelSid);
-    if (!NT_SUCCESS(Status))
-    {
-        SetLastError(RtlNtStatusToDosError(Status));
-        return FALSE;
-    }
-
-    return TRUE;
-}
-
-
 /*
  * @implemented
  */

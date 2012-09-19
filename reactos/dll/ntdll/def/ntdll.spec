@@ -435,7 +435,7 @@
 ;@ stdcall RtlAddCompoundAce
 ;@ stdcall RtlAddRange ; 5.0 and 5.1 only
 @ stdcall -arch=x86_64 RtlAddFunctionTable(ptr long long)
-@ stdcall RtlAddMandatoryAce(ptr long long long long ptr)
+;@ stdcall RtlAddMandatoryAce(ptr long long long long ptr)
 @ stdcall RtlAddRefActivationContext(ptr)
 ;@ stdcall RtlAddRefMemoryStream
 @ stdcall RtlAddVectoredContinueHandler(long ptr)

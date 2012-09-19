@@ -32,7 +32,7 @@ LsapInitLsa(VOID)
     /* Start the RPC server */
     LsarStartRpcServer();
 
-    TRACE("Creating notification event!\n");
+    DbgPrint("Creating notification event!\n");
     /* Notify the service manager */
     hEvent = CreateEventW(NULL,
                           TRUE,
@@ -41,7 +41,7 @@ LsapInitLsa(VOID)
     if (hEvent == NULL)
     {
         dwError = GetLastError();
-        TRACE("Failed to create the notication event (Error %lu)\n", dwError);
+        DbgPrint("Failed to create the notication event (Error %lu)\n", dwError);
 
         if (dwError == ERROR_ALREADY_EXISTS)
         {
@@ -50,13 +50,13 @@ LsapInitLsa(VOID)
                                 L"LSA_RPC_SERVER_ACTIVE");
             if (hEvent == NULL)
             {
-               ERR("Could not open the notification event (Error %lu)\n", GetLastError());
+               DbgPrint("Could not open the notification event (Error %lu)\n", GetLastError());
                return STATUS_UNSUCCESSFUL;
             }
         }
     }
 
-    TRACE("Set notification event!\n");
+    DbgPrint("Set notification event!\n");
     SetEvent(hEvent);
 
     /* NOTE: Do not close the event handle!!!! */
