@@ -188,6 +188,7 @@ NTSTATUS WINAPI LsarQueryInformationPolicy(
     PLSAPR_POLICY_INFORMATION *PolicyInformation)
 {
     PLSA_DB_OBJECT DbObject;
+    ACCESS_MASK DesiredAccess = 0;
     NTSTATUS Status;
 
     TRACE("LsarQueryInformationPolicy(%p,0x%08x,%p)\n",
@@ -198,9 +199,34 @@ NTSTATUS WINAPI LsarQueryInformationPolicy(
         TRACE("*PolicyInformation %p\n", *PolicyInformation);
     }
 
+    switch (InformationClass)
+    {
+        case PolicyAuditLogInformation:
+        case PolicyAuditEventsInformation:
+        case PolicyAuditFullQueryInformation:
+            DesiredAccess = POLICY_VIEW_AUDIT_INFORMATION;
+            break;
+
+        case PolicyPrimaryDomainInformation:
+        case PolicyAccountDomainInformation:
+        case PolicyLsaServerRoleInformation:
+        case PolicyReplicaSourceInformation:
+        case PolicyDefaultQuotaInformation:
+            DesiredAccess = POLICY_VIEW_LOCAL_INFORMATION;
+            break;
+
+        case PolicyPdAccountInformation:
+            DesiredAccess = POLICY_GET_PRIVATE_INFORMATION;
+            break;
+
+        default:
+            ERR("Invalid InformationClass!\n");
+            return STATUS_INVALID_PARAMETER;
+    }
+
     Status = LsapValidateDbObject(PolicyHandle,
                                   LsaDbPolicyObject,
-                                  0, /* FIXME */
+                                  DesiredAccess,
                                   &DbObject);
     if (!NT_SUCCESS(Status))
         return Status;
@@ -236,7 +262,7 @@ NTSTATUS WINAPI LsarQueryInformationPolicy(
         case PolicyAuditFullSetInformation:
         case PolicyAuditFullQueryInformation:
         case PolicyEfsInformation:
-            FIXME("category not implemented\n");
+            FIXME("Information class not implemented\n");
             Status = STATUS_UNSUCCESSFUL;
             break;
     }
