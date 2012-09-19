@@ -5,6 +5,7 @@ list(APPEND ANSI_SOURCE
 list(APPEND UNICODE_SOURCE
     errcodes.mc
     neteventmsg.mc
+    ntiologc.mc
     ntstatus.mc
     pciclass.mc)
 

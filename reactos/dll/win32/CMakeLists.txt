@@ -55,6 +55,7 @@ add_subdirectory(inetcomm)
 add_subdirectory(inetmib1)
 add_subdirectory(initpki)
 add_subdirectory(inseng)
+add_subdirectory(iologmsg)
 add_subdirectory(iphlpapi)
 #add_subdirectory(iprtprio) # not built in trunk
 add_subdirectory(itircl)
