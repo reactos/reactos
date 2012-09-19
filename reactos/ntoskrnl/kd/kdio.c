@@ -426,7 +426,7 @@ KdpScreenPrint(LPSTR Message,
     /* Invariant: always_true(KdpDmesgFreeBytes == KdpDmesgBufferSize);
      * set num to min(KdpDmesgFreeBytes, Length).
      */
-    num = (Length < KdpDmesgFreeBytes) ? Length : KdpDmesgFreeBytes; 
+    num = (Length < KdpDmesgFreeBytes) ? Length : KdpDmesgFreeBytes;
     beg = KdpDmesgCurrentPosition;
     if (num != 0)
     {
@@ -477,36 +477,36 @@ KdpScreenInit(PKD_DISPATCH_TABLE DispatchTable,
     }
     else if (BootPhase == 1)
     {
-      /* Allocate a buffer for dmesg log buffer. +1 for terminating null,
-       * see kdbp_cli.c:KdbpCmdDmesg()/2
-       */
-      KdpDmesgBuffer = ExAllocatePool(NonPagedPool, KdpDmesgBufferSize + 1);
-      RtlZeroMemory(KdpDmesgBuffer, KdpDmesgBufferSize + 1);
-      KdpDmesgFreeBytes = KdpDmesgBufferSize;
-      KdbDmesgTotalWritten = 0;
+        /* Allocate a buffer for dmesg log buffer. +1 for terminating null,
+         * see kdbp_cli.c:KdbpCmdDmesg()/2
+         */
+        KdpDmesgBuffer = ExAllocatePool(NonPagedPool, KdpDmesgBufferSize + 1);
+        RtlZeroMemory(KdpDmesgBuffer, KdpDmesgBufferSize + 1);
+        KdpDmesgFreeBytes = KdpDmesgBufferSize;
+        KdbDmesgTotalWritten = 0;
 
-      /* Take control of the display */
-      InbvAcquireDisplayOwnership();
-      InbvResetDisplay();
-      InbvSolidColorFill(0, 0, 639, 479, 0);
-      InbvSetTextColor(15);
-      InbvSetScrollRegion(0, 0, 639, 479);
-      InbvInstallDisplayStringFilter(NULL);
-      InbvEnableDisplayString(TRUE);
+        /* Take control of the display */
+        InbvAcquireDisplayOwnership();
+        InbvResetDisplay();
+        InbvSolidColorFill(0, 0, 639, 479, 0);
+        InbvSetTextColor(15);
+        InbvSetScrollRegion(0, 0, 639, 479);
+        InbvInstallDisplayStringFilter(NULL);
+        InbvEnableDisplayString(TRUE);
 
-      /* Initialize spinlock */
-      KeInitializeSpinLock(&KdpDmesgLogSpinLock);
+        /* Initialize spinlock */
+        KeInitializeSpinLock(&KdpDmesgLogSpinLock);
 
-      /* Display separator + ReactOS version at start of the debug log */
-      DPRINT1("-----------------------------------------------------\n");
-      DPRINT1("ReactOS "KERNEL_VERSION_STR" (Build "KERNEL_VERSION_BUILD_STR")\n");
-      MemSizeMBs = MmNumberOfPhysicalPages * PAGE_SIZE / 1024 / 1024;
-      DPRINT1("%u System Processor [%u MB Memory]\n", KeNumberProcessors, MemSizeMBs);
-      DPRINT1("Command Line: %s\n", KeLoaderBlock->LoadOptions);
-      DPRINT1("ARC Paths: %s %s %s %s\n", KeLoaderBlock->ArcBootDeviceName,
-                                          KeLoaderBlock->NtHalPathName,
-                                          KeLoaderBlock->ArcHalDeviceName,
-                                          KeLoaderBlock->NtBootPathName);
+        /* Display separator + ReactOS version at start of the debug log */
+        DPRINT1("-----------------------------------------------------\n");
+        DPRINT1("ReactOS "KERNEL_VERSION_STR" (Build "KERNEL_VERSION_BUILD_STR")\n");
+        MemSizeMBs = MmNumberOfPhysicalPages * PAGE_SIZE / 1024 / 1024;
+        DPRINT1("%u System Processor [%u MB Memory]\n", KeNumberProcessors, MemSizeMBs);
+        DPRINT1("Command Line: %s\n", KeLoaderBlock->LoadOptions);
+        DPRINT1("ARC Paths: %s %s %s %s\n", KeLoaderBlock->ArcBootDeviceName,
+                                            KeLoaderBlock->NtHalPathName,
+                                            KeLoaderBlock->ArcHalDeviceName,
+                                            KeLoaderBlock->NtBootPathName);
     }
     else if (BootPhase == 2)
     {
