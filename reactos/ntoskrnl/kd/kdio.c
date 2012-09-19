@@ -43,6 +43,55 @@ volatile ULONG KdbDmesgTotalWritten = 0;
 KSPIN_LOCK KdpDmesgLogSpinLock;
 volatile BOOLEAN KdbpIsInDmesgMode = FALSE;
 
+/* UTILITY FUNCTIONS *********************************************************/
+
+/*
+ * Get the total size of the memory before
+ * Mm is initialized, by counting the number
+ * of physical pages. Useful for debug logging.
+ *
+ * Strongly inspired by:
+ * mm\ARM3\mminit.c : MiScanMemoryDescriptors(...)
+ */
+SIZE_T
+NTAPI
+KdpGetMemorySizeInMBs(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
+{
+    PLIST_ENTRY ListEntry;
+    PMEMORY_ALLOCATION_DESCRIPTOR Descriptor;
+    SIZE_T NumberOfPhysicalPages = 0;
+
+    /* Loop the memory descriptors */
+    for (ListEntry = LoaderBlock->MemoryDescriptorListHead.Flink;
+         ListEntry != &LoaderBlock->MemoryDescriptorListHead;
+         ListEntry = ListEntry->Flink)
+    {
+        /* Get the descriptor */
+        Descriptor = CONTAINING_RECORD(ListEntry,
+                                       MEMORY_ALLOCATION_DESCRIPTOR,
+                                       ListEntry);
+
+        /* Check if this is invisible memory */
+        if ((Descriptor->MemoryType == LoaderFirmwarePermanent) ||
+            (Descriptor->MemoryType == LoaderSpecialMemory) ||
+            (Descriptor->MemoryType == LoaderHALCachedMemory) ||
+            (Descriptor->MemoryType == LoaderBBTMemory))
+        {
+            /* Skip this descriptor */
+            continue;
+        }
+
+        /* Check if this is bad memory */
+        if (Descriptor->MemoryType != LoaderBad)
+        {
+            /* Count this in the total of pages */
+            NumberOfPhysicalPages += Descriptor->PageCount;
+        }
+    }
+
+    return NumberOfPhysicalPages * PAGE_SIZE / 1024 / 1024;
+}
+
 /* FILE DEBUG LOG FUNCTIONS **************************************************/
 
 VOID
@@ -325,7 +374,7 @@ KdpSerialInit(PKD_DISPATCH_TABLE DispatchTable,
         /* Display separator + ReactOS version at start of the debug log */
         DPRINT1("-----------------------------------------------------\n");
         DPRINT1("ReactOS "KERNEL_VERSION_STR" (Build "KERNEL_VERSION_BUILD_STR")\n");
-        MemSizeMBs = MmNumberOfPhysicalPages * PAGE_SIZE / 1024 / 1024;
+        MemSizeMBs = KdpGetMemorySizeInMBs(KeLoaderBlock);
         DPRINT1("%u System Processor [%u MB Memory]\n", KeNumberProcessors, MemSizeMBs);
         DPRINT1("Command Line: %s\n", KeLoaderBlock->LoadOptions);
         DPRINT1("ARC Paths: %s %s %s %s\n", KeLoaderBlock->ArcBootDeviceName,
