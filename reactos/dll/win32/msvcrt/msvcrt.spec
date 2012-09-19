@@ -1272,7 +1272,7 @@
 # stub mbsrtowcs
 # stub mbsrtowcs_s
 @ cdecl mbstowcs(ptr str long)
-# stub mbstowcs_s
+@ cdecl mbstowcs_s(ptr ptr long str long)
 @ cdecl mbtowc(wstr str long)
 @ cdecl memchr(ptr long long)
 @ cdecl memcmp(ptr ptr long)

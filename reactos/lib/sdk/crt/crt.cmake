@@ -256,6 +256,7 @@ list(APPEND CRT_SOURCE
     string/is_wctype.c
     string/itoa.c
     string/itow.c
+    string/mbstowcs_s.c
     string/scanf.c
     string/splitp.c
     string/strcoll.c
