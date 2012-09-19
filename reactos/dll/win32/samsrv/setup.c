@@ -471,7 +471,7 @@ SampGetAccountDomainInfo(PPOLICY_ACCOUNT_DOMAIN_INFO *AccountDomainInfo)
 
     Status = LsaOpenPolicy(NULL,
                            &ObjectAttributes,
-                           POLICY_TRUST_ADMIN,
+                           POLICY_VIEW_LOCAL_INFORMATION,
                            &PolicyHandle);
     if (Status != STATUS_SUCCESS)
     {
