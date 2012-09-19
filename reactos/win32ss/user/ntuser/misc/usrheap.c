@@ -188,7 +188,7 @@ UserCreateHeap(OUT PSECTION_OBJECT *SectionObject,
                              NULL,
                              &SizeHeap,
                              PAGE_EXECUTE_READWRITE, /* Would prefer PAGE_READWRITE, but thanks to RTL heaps... */
-                             SEC_RESERVE,
+                             SEC_RESERVE | 1,
                              NULL,
                              NULL);
 
@@ -198,9 +198,9 @@ UserCreateHeap(OUT PSECTION_OBJECT *SectionObject,
         return FALSE;
     }
 
-    Status = MmMapViewInSystemSpace(*SectionObject,
-                                    SystemBase,
-                                    &HeapSize);
+    Status = MmMapViewInSessionSpace(*SectionObject,
+                                     SystemBase,
+                                     &HeapSize);
     if (!NT_SUCCESS(Status))
     {
         ObDereferenceObject(*SectionObject);

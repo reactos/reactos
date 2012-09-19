@@ -11,10 +11,6 @@
 #define NDEBUG
 #include <debug.h>
 
-// HACK!!!
-#define MmMapViewInSessionSpace MmMapViewInSystemSpace
-#define MmUnmapViewInSessionSpace MmUnmapViewInSystemSpace
-
 HANDLE ghSystem32Directory;
 HANDLE ghRootDirectory;
 
@@ -127,6 +123,48 @@ EngCreateSection(
 
     return pSection;
 }
+
+PVOID
+NTAPI
+EngCreateSectionHack(
+    IN ULONG fl,
+    IN SIZE_T cjSize,
+    IN ULONG ulTag)
+{
+    NTSTATUS Status;
+    PENGSECTION pSection;
+    PVOID pvSectionObject;
+    LARGE_INTEGER liSize;
+
+    /* Allocate a section object */
+    pSection = EngAllocMem(0, sizeof(ENGSECTION), 'stsU');
+    if (!pSection) return NULL;
+
+    liSize.QuadPart = cjSize;
+    Status = MmCreateSection(&pvSectionObject,
+                             SECTION_ALL_ACCESS,
+                             NULL,
+                             &liSize,
+                             PAGE_READWRITE,
+                             SEC_COMMIT | 1,
+                             NULL,
+                             NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to create a section Status=0x%x\n", Status);
+        EngFreeMem(pSection);
+        return NULL;
+    }
+
+    /* Set the fields of the section */
+    pSection->ulTag = ulTag;
+    pSection->pvSectionObject = pvSectionObject;
+    pSection->pvMappedBase = NULL;
+    pSection->cjViewSize = cjSize;
+
+    return pSection;
+}
+
 
 
 BOOL
@@ -250,7 +288,7 @@ EngAllocSectionMem(
     if (cjSize == 0) return NULL;
 
     /* Allocate a section object */
-    pSection = EngCreateSection(fl, cjSize, ulTag);
+    pSection = EngCreateSectionHack(fl, cjSize, ulTag);
     if (!pSection)
     {
         *ppvSection = NULL;
@@ -408,10 +446,10 @@ EngMapModule(
 
     pFileView->cjView = 0;
 
-    /* Map the section in session space */
-    Status = MmMapViewInSessionSpace(pFileView->pSection,
-                                     &pFileView->pvKView,
-                                     &pFileView->cjView);
+	/* FIXME: Use system space because ARM3 doesn't support executable sections yet */
+    Status = MmMapViewInSystemSpace(pFileView->pSection,
+                                    &pFileView->pvKView,
+                                    &pFileView->cjView);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to map a section Status=0x%x\n", Status);
@@ -430,8 +468,8 @@ EngFreeModule(IN HANDLE h)
     PFILEVIEW pFileView = (PFILEVIEW)h;
     NTSTATUS Status;
 
-    /* Unmap the section */
-    Status = MmUnmapViewInSessionSpace(pFileView->pvKView);
+	/* FIXME: Use system space because ARM3 doesn't support executable sections yet */
+    Status = MmUnmapViewInSystemSpace(pFileView->pvKView);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("MmUnmapViewInSessionSpace failed: 0x%lx\n", Status);

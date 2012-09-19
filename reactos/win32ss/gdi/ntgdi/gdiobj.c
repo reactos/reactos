@@ -60,8 +60,6 @@
 #define ASSERT_EXCLUSIVE_OBJECT_TYPE(objt)
 #endif
 
-#define MmMapViewInSessionSpace MmMapViewInSystemSpace
-
 #if defined(_M_IX86) || defined(_M_AMD64)
 #define InterlockedOr16 _InterlockedOr16
 #endif
@@ -166,7 +164,7 @@ InitGdiHandleTable(void)
                              NULL,
                              &liSize,
                              PAGE_READWRITE,
-                             SEC_COMMIT,
+                             SEC_COMMIT | 0x1,
                              NULL,
                              NULL);
     if (!NT_SUCCESS(status))
