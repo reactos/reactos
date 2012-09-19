@@ -309,7 +309,7 @@ static FILE* alloc_fp(void)
   unsigned int i;
   FILE *file;
 
-  for (i = 3; i < max_streams; i++)
+  for (i = 3; i < (unsigned int)max_streams; i++)
   {
     file = get_file(i);
     if (!file)
@@ -386,17 +386,17 @@ unsigned create_io_inherit_block(WORD *size, BYTE **block)
       *handle_ptr = INVALID_HANDLE_VALUE;
     }
     wxflag_ptr++; handle_ptr++;
-  } 
+  }
   return TRUE;
 }
 
-/* INTERNAL: Set up all file descriptors, 
- * as well as default streams (stdin, stderr and stdout) 
+/* INTERNAL: Set up all file descriptors,
+ * as well as default streams (stdin, stderr and stdout)
  */
 void msvcrt_init_io(void)
 {
   STARTUPINFOA  si;
-  int           i;
+  unsigned int  i;
   ioinfo        *fdinfo;
 
   InitializeCriticalSection(&file_cs);
@@ -1017,7 +1017,7 @@ __int64 CDECL _lseeki64(int fd, __int64 offset, int whence)
  */
 LONG CDECL _lseek(int fd, LONG offset, int whence)
 {
-    return _lseeki64(fd, offset, whence);
+    return (LONG)_lseeki64(fd, offset, whence);
 }
 
 /*********************************************************************
@@ -1563,7 +1563,7 @@ int CDECL _sopen_s( int *fd, const char *path, int oflags, int shflags, int pmod
     else
       creation = OPEN_EXISTING;
   }
-  
+
   switch( shflags )
   {
     case _SH_DENYRW:
@@ -2339,12 +2339,12 @@ wint_t CDECL fgetwc(FILE* file)
       wcp = (char *)&wc;
       for(i=0; i<sizeof(wc); i++)
       {
-        if (file->_cnt>0) 
+        if (file->_cnt>0)
         {
           file->_cnt--;
           chp = file->_ptr++;
           wcp[i] = *chp;
-        } 
+        }
         else
         {
           j = _filbuf(file);
@@ -2363,7 +2363,7 @@ wint_t CDECL fgetwc(FILE* file)
       _unlock_file(file);
       return wc;
     }
-    
+
   c = fgetc(file);
   if ((__mb_cur_max > 1) && isleadbyte(c))
     {
@@ -2470,7 +2470,7 @@ size_t CDECL fwrite(const void *ptr, size_t size, size_t nmemb, FILE* file)
 
     _lock_file(file);
     if(file->_cnt) {
-        int pcnt=(file->_cnt>wrcnt)? wrcnt: file->_cnt;
+        int pcnt=((unsigned)file->_cnt>wrcnt)? wrcnt: file->_cnt;
         memcpy(file->_ptr, ptr, pcnt);
         file->_cnt -= pcnt;
         file->_ptr += pcnt;
@@ -2693,7 +2693,7 @@ size_t CDECL fread(void *ptr, size_t size, size_t nmemb, FILE* file)
 
   /* first buffered data */
   if(file->_cnt>0) {
-	int pcnt= (rcnt>file->_cnt)? file->_cnt:rcnt;
+	int pcnt= (rcnt>(unsigned int)file->_cnt)? file->_cnt:rcnt;
 	memcpy(ptr, file->_ptr, pcnt);
 	file->_cnt -= pcnt;
 	file->_ptr += pcnt;
@@ -2720,7 +2720,7 @@ size_t CDECL fread(void *ptr, size_t size, size_t nmemb, FILE* file)
       }
       file->_cnt = _read(file->_file, file->_base, file->_bufsiz);
       file->_ptr = file->_base;
-      i = (file->_cnt<rcnt) ? file->_cnt : rcnt;
+      i = ((unsigned int)file->_cnt<rcnt) ? file->_cnt : rcnt;
       /* If the buffer fill reaches eof but fread wouldn't, clear eof. */
       if (i > 0 && i < file->_cnt) {
         get_ioinfo(file->_file)->wxflag &= ~WX_ATEOF;
@@ -2830,7 +2830,7 @@ int CDECL fsetpos(FILE* file, const fpos_t *pos)
   /* Discard buffered input */
   file->_cnt = 0;
   file->_ptr = file->_base;
-  
+
   /* Reset direction of i/o */
   if(file->_flag & _IORW) {
         file->_flag &= ~(_IOREAD|_IOWRT);
@@ -2884,7 +2884,7 @@ __int64 CDECL _ftelli64(FILE* file)
  */
 LONG CDECL ftell(FILE* file)
 {
-  return _ftelli64(file);
+  return (LONG)_ftelli64(file);
 }
 
 /*********************************************************************

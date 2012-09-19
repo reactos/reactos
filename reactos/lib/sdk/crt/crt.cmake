@@ -187,9 +187,9 @@ list(APPEND CRT_SOURCE
     startup/mingw_helpers.c
     startup/natstart.c
     startup/charmax.c
-    startup/merr.c
-    startup/atonexit.c
-    startup/txtmode.c
+    #startup/merr.c
+    #startup/atonexit.c
+    #startup/txtmode.c
     startup/pesect.c
     startup/tlsmcrt.c
     startup/tlsthrd.c
