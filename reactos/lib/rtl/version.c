@@ -154,37 +154,38 @@ RtlVerifyVersionInfo(
 /*
  * @implemented
  */
-ULONGLONG NTAPI
+ULONGLONG
+NTAPI
 VerSetConditionMask(IN ULONGLONG dwlConditionMask,
                     IN DWORD dwTypeBitMask,
                     IN BYTE dwConditionMask)
 {
-  if(dwTypeBitMask == 0)
+    if (dwTypeBitMask == 0)
+        return dwlConditionMask;
+
+    dwConditionMask &= VER_CONDITION_MASK;
+
+    if (dwConditionMask == 0)
+        return dwlConditionMask;
+
+    if (dwTypeBitMask & VER_PRODUCT_TYPE)
+        dwlConditionMask |= dwConditionMask << 7 * VER_NUM_BITS_PER_CONDITION_MASK;
+    else if (dwTypeBitMask & VER_SUITENAME)
+        dwlConditionMask |= dwConditionMask << 6 * VER_NUM_BITS_PER_CONDITION_MASK;
+    else if (dwTypeBitMask & VER_SERVICEPACKMAJOR)
+        dwlConditionMask |= dwConditionMask << 5 * VER_NUM_BITS_PER_CONDITION_MASK;
+    else if (dwTypeBitMask & VER_SERVICEPACKMINOR)
+        dwlConditionMask |= dwConditionMask << 4 * VER_NUM_BITS_PER_CONDITION_MASK;
+    else if (dwTypeBitMask & VER_PLATFORMID)
+        dwlConditionMask |= dwConditionMask << 3 * VER_NUM_BITS_PER_CONDITION_MASK;
+    else if (dwTypeBitMask & VER_BUILDNUMBER)
+        dwlConditionMask |= dwConditionMask << 2 * VER_NUM_BITS_PER_CONDITION_MASK;
+    else if (dwTypeBitMask & VER_MAJORVERSION)
+        dwlConditionMask |= dwConditionMask << 1 * VER_NUM_BITS_PER_CONDITION_MASK;
+    else if (dwTypeBitMask & VER_MINORVERSION)
+        dwlConditionMask |= dwConditionMask << 0 * VER_NUM_BITS_PER_CONDITION_MASK;
+
     return dwlConditionMask;
-
-  dwConditionMask &= VER_CONDITION_MASK;
-
-  if(dwConditionMask == 0)
-    return dwlConditionMask;
-
-  if(dwTypeBitMask & VER_PRODUCT_TYPE)
-    dwlConditionMask |= dwConditionMask << 7 * VER_NUM_BITS_PER_CONDITION_MASK;
-  else if(dwTypeBitMask & VER_SUITENAME)
-    dwlConditionMask |= dwConditionMask << 6 * VER_NUM_BITS_PER_CONDITION_MASK;
-  else if(dwTypeBitMask & VER_SERVICEPACKMAJOR)
-    dwlConditionMask |= dwConditionMask << 5 * VER_NUM_BITS_PER_CONDITION_MASK;
-  else if(dwTypeBitMask & VER_SERVICEPACKMINOR)
-    dwlConditionMask |= dwConditionMask << 4 * VER_NUM_BITS_PER_CONDITION_MASK;
-  else if(dwTypeBitMask & VER_PLATFORMID)
-    dwlConditionMask |= dwConditionMask << 3 * VER_NUM_BITS_PER_CONDITION_MASK;
-  else if(dwTypeBitMask & VER_BUILDNUMBER)
-    dwlConditionMask |= dwConditionMask << 2 * VER_NUM_BITS_PER_CONDITION_MASK;
-  else if(dwTypeBitMask & VER_MAJORVERSION)
-    dwlConditionMask |= dwConditionMask << 1 * VER_NUM_BITS_PER_CONDITION_MASK;
-  else if(dwTypeBitMask & VER_MINORVERSION)
-    dwlConditionMask |= dwConditionMask << 0 * VER_NUM_BITS_PER_CONDITION_MASK;
-
-  return dwlConditionMask;
 }
 
 /* EOF */

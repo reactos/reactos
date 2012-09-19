@@ -127,7 +127,7 @@ Wait_thread_proc(LPVOID Arg)
  *|WT_EXECUTELONGFUNCTION - Hints that the execution can take a long time.
  *|WT_TRANSFER_IMPERSONATION - Executes the function with the current access token.
  */
-NTSTATUS 
+NTSTATUS
 NTAPI
 RtlRegisterWait(PHANDLE NewWaitObject, 
                 HANDLE Object,
@@ -194,8 +194,8 @@ RtlRegisterWait(PHANDLE NewWaitObject,
  *  Success: STATUS_SUCCESS.
  *  Failure: Any NTSTATUS code.
  */
-NTSTATUS 
-NTAPI 
+NTSTATUS
+NTAPI
 RtlDeregisterWaitEx(HANDLE WaitHandle,
                     HANDLE CompletionEvent)
 {
