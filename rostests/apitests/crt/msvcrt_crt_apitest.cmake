@@ -1118,7 +1118,7 @@ list(APPEND SOURCE_MSVCRT
 #    mbsrtowcs
 #    mbsrtowcs_s
 #    mbstowcs.c
-#    mbstowcs_s
+    mbstowcs_s
 #    mbtowc.c
 #    memchr.c
 #    memcmp.c
