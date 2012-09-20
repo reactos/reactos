@@ -2398,7 +2398,7 @@ MmArmInitSystem(IN ULONG Phase,
         }
         else
         {
-            /* Check for LanMan server */
+            /* Check for LanMan server (La for LanmanNT) */
             if (MmProductType == '\0a\0L')
             {
                 /* This is a domain controller */
@@ -2406,7 +2406,7 @@ MmArmInitSystem(IN ULONG Phase,
             }
             else
             {
-                /* Otherwise it must be a normal server */
+                /* Otherwise it must be a normal server (Se for ServerNT) */
                 SharedUserData->NtProductType = NtProductServer;
             }
 

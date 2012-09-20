@@ -3,7 +3,7 @@
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/ntdll/rtl/process.c
  * PURPOSE:         Process functions
- * PROGRAMMER:      Ariadne ( ariadne@xs4all.nl)
+ * PROGRAMMER:      Ariadne (ariadne@xs4all.nl)
  * UPDATE HISTORY:
  *                  Created 01/11/98
  */
@@ -31,9 +31,9 @@
  *
  * NOTE
  *	ProductType can be one of the following values:
- *	  1	Workstation (Winnt)
- *	  2	Server (Lanmannt)
- *	  3	Advanced Server (Servernt)
+ *	  1	Workstation (WinNT)
+ *	  2	Server (LanmanNT)
+ *	  3	Advanced Server (ServerNT)
  *
  * REVISIONS
  * 	2000-08-10 ekohl
@@ -56,46 +56,48 @@ RtlGetNtProductType(PNT_PRODUCT_TYPE ProductType)
  *	Get the version numbers of the run time library.
  *
  * ARGUMENTS
- *	major [OUT]	Destination for the Major version
- *	minor [OUT]	Destination for the Minor version
- *	build [OUT]	Destination for the Build version
+ *	pdwMajorVersion [OUT]	Destination for the Major version
+ *	pdwMinorVersion [OUT]	Destination for the Minor version
+ *	pdwBuildNumber  [OUT]	Destination for the Build version
  *
  * RETURN VALUE
  *	Nothing.
  *
- * NOTE
- *	Introduced in Windows XP (NT5.1)
+ * NOTES
+ *	- Introduced in Windows XP (NT 5.1)
+ *	- Since this call didn't exist before XP, we report at least the version
+ *	  5.1. This fixes the loading of msvcrt.dll as released with XP Home,
+ *	  which fails in DLLMain() if the major version isn't 5.
  *
  * @implemented
  */
 
-void NTAPI
-RtlGetNtVersionNumbers(LPDWORD major, LPDWORD minor, LPDWORD build)
+VOID NTAPI
+RtlGetNtVersionNumbers(OUT LPDWORD pdwMajorVersion,
+                       OUT LPDWORD pdwMinorVersion,
+                       OUT LPDWORD pdwBuildNumber)
 {
-	PPEB pPeb = NtCurrentPeb();
+    PPEB pPeb = NtCurrentPeb();
 
-	if (major)
-	{
-		/* msvcrt.dll as released with XP Home fails in DLLMain() if the
-		 * major version is not 5. So, we should never set a version < 5 ...
-		 * This makes sense since this call didn't exist before XP anyway.
-		 */
-		*major = pPeb->OSMajorVersion < 5 ? 5 : pPeb->OSMajorVersion;
-	}
+    if (pdwMajorVersion)
+    {
+        *pdwMajorVersion = pPeb->OSMajorVersion < 5 ? 5 : pPeb->OSMajorVersion;
+    }
 
-	if (minor)
-	{
-		if (pPeb->OSMinorVersion <= 5)
-			*minor = pPeb->OSMinorVersion < 1 ? 1 : pPeb->OSMinorVersion;
-		else
-			*minor = pPeb->OSMinorVersion;
-	}
+    if (pdwMinorVersion)
+    {
+        if ( (pPeb->OSMajorVersion  < 5) ||
+            ((pPeb->OSMajorVersion == 5) && (pPeb->OSMinorVersion < 1)) )
+            *pdwMinorVersion = 1;
+        else
+            *pdwMinorVersion = pPeb->OSMinorVersion;
+    }
 
-	if (build)
-	{
-		/* FIXME: Does anybody know the real formula? */
-		*build = (0xF0000000 | pPeb->OSBuildNumber);
-	}
+    if (pdwBuildNumber)
+    {
+        /* Windows really does this! */
+        *pdwBuildNumber = (0xF0000000 | pPeb->OSBuildNumber);
+    }
 }
 
 /*
@@ -134,7 +136,7 @@ RtlGetVersion(RTL_OSVERSIONINFOW *Info)
          RTL_OSVERSIONINFOEXW *InfoEx = (RTL_OSVERSIONINFOEXW *)Info;
          InfoEx->wServicePackMajor = (Peb->OSCSDVersion >> 8) & 0xFF;
          InfoEx->wServicePackMinor = Peb->OSCSDVersion & 0xFF;
-         InfoEx->wSuiteMask = SharedUserData->SuiteMask;
+         InfoEx->wSuiteMask = SharedUserData->SuiteMask & 0xFFFF;
          InfoEx->wProductType = SharedUserData->NtProductType;
       }
 

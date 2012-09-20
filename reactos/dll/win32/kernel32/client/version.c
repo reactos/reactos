@@ -73,12 +73,11 @@ WINAPI
 GetVersion(VOID)
 {
     PPEB Peb = NtCurrentPeb();
-    DWORD Result;
 
-    Result = MAKELONG(MAKEWORD(Peb->OSMajorVersion, Peb->OSMinorVersion),
-                      (Peb->OSPlatformId ^ 2) << 14);
-    Result |= LOWORD(Peb->OSBuildNumber) << 16;
-    return Result;
+    return (DWORD)( ((Peb->OSPlatformId ^ 2) << 30) |
+                     (Peb->OSBuildNumber     << 16) |
+                     (Peb->OSMinorVersion    << 8 ) |
+                      Peb->OSMajorVersion );
 }
 
 /*

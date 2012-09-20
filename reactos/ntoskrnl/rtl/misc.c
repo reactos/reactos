@@ -67,7 +67,7 @@ RtlGetVersion(IN OUT PRTL_OSVERSIONINFOW lpVersionInformation)
          RTL_OSVERSIONINFOEXW *InfoEx = (RTL_OSVERSIONINFOEXW *)lpVersionInformation;
          InfoEx->wServicePackMajor = (USHORT)(CmNtCSDVersion >> 8) & 0xFF;
          InfoEx->wServicePackMinor = (USHORT)(CmNtCSDVersion & 0xFF);
-         InfoEx->wSuiteMask = (USHORT)SharedUserData->SuiteMask;
+         InfoEx->wSuiteMask = (USHORT)(SharedUserData->SuiteMask & 0xFFFF);
          InfoEx->wProductType = SharedUserData->NtProductType;
       }
 

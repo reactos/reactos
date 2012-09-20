@@ -1077,15 +1077,16 @@ ExpInitializeExecutive(IN ULONG Cpu,
     CmGetSystemControlValues(LoaderBlock->RegistryBase, CmControlVector);
 
     /* Load static defaults for Service Pack 1 and add our SVN revision */
+    /* Format of CSD : SPMajor - SPMinor */
     CmNtCSDVersion = 0x100 | (KERNEL_VERSION_BUILD_HEX << 16);
     CmNtCSDReleaseType = 0;
 
     /* Set Service Pack data for Service Pack 1 */
-    CmNtSpBuildNumber = 1830;
+    CmNtSpBuildNumber = VER_PRODUCTBUILD_QFE;
     if (!(CmNtCSDVersion & 0xFFFF0000))
     {
         /* Check the release type */
-        if (CmNtCSDReleaseType == 1) CmNtSpBuildNumber |= 1830 << 16;
+        if (CmNtCSDReleaseType == 1) CmNtSpBuildNumber |= VER_PRODUCTBUILD_QFE << 16;
     }
 
     /* Add loaded CmNtGlobalFlag value */
