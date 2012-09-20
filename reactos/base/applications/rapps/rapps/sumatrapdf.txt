@@ -23,6 +23,9 @@ Description = Sumatra PDF est un lecteur PDF lÃ©ger, libre et open-source.
 [Section.0410]
 Description = Sumatra PDF è un visualizzatore di file PDF. E' molto leggero ed è open source.
 
+[Section.0413]
+Description = Sumatra PDF is een slanke, gratis, open-bron PDF lezer.
+
 [Section.0415]
 Description = Sumatra PDF to mały, darmowy, otwarty czytnik PDF.
 
@@ -30,3 +33,6 @@ Description = Sumatra PDF to mały, darmowy, otwarty czytnik PDF.
 Description = Lector PDF - ușor, gratuit (open-source), și portabil.
 Size = 4.48Mo
 URLSite = http://blog.kowalczyk.info/software/sumatrapdf/free-pdf-reader-ro.html
+
+[Section.0813]
+Description = Sumatra PDF is een slanke, gratis, open-bron PDF lezer.

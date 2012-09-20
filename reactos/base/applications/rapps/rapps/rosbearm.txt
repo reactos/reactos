@@ -20,6 +20,9 @@ Description = Te permite compilar el código de ReactOS ARM. Para más instrucci
 [Section.040c]
 Description = Vous permet de compiler le code source de ReactOS pour ARM. Pour plus d'instruction, reportez-vous au wiki ReactOS.
 
+[Section.0413]
+Description = Maakt het mogelijk om de ReactOS ARM broncode te bouwen. Meer instructies vind u op de ReactOS wiki.
+
 [Section.0415]
 Description = Pozwala zbudować obraz płyty ReactOS ARM ze źródeł. Więcej informacji na Wiki ReactOS.
 
@@ -29,3 +32,6 @@ Size = 11.15Mo
 
 [Section.0422]
 Description = Дозволяє зібрати ReactOS ARM з вихідних кодів. За детальною інформацією дивіться в ReactOS Вікі.
+
+[Section.0813]
+Description = Maakt het mogelijk om de ReactOS ARM broncode te bouwen. Meer instructies vind u op de ReactOS wiki.

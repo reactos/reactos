@@ -20,6 +20,9 @@ Description = El más popular cliente para Internet Relay Chat (IRC).
 [Section.040c]
 Description = Le client le plus populaire pour l'Internet Relay Chat (IRC).
 
+[Section.0413]
+Description = De meest populaire afnemer voor Internet Relay Chat (IRC).
+
 [Section.0410]
 Description = Il famoso client per Internet Relay Chat (IRC).
 
@@ -33,3 +36,6 @@ Size = 1.82Mo
 
 [Section.0422]
 Description = Найпопулярніший клієнт IRC (Internet Relay Chat).
+
+[Section.0813]
+Description = De meest populaire afnemer voor Internet Relay Chat (IRC).

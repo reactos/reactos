@@ -20,6 +20,9 @@ Description = Un buen CD Ripper/ conversor de archivos de audio.
 [Section.040c]
 Description = Un très bon extracteur de CD/convertisseur de fichier audio.
 
+[Section.0413]
+Description = Een goede CD Ripper/Audio-bestandsomzetter
+
 [Section.0415]
 Description = Bardzo dobry CD Ripper/konwerter plików audio.
 
@@ -29,3 +32,6 @@ Size = 3.57Mo
 
 [Section.0422]
 Description = Чудовий CD Ріппер/Конвертер аудіо файлів.
+
+[Section.0813]
+Description = Een goede CD Ripper/Audio-bestandsomzetter

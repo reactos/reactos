@@ -23,6 +23,10 @@ Description = MSXML3 para varios instaladores MSI.
 Licence = Inconnue
 Description = MSXML3 est nécessaire pour certains installateurs MSI.
 
+[Section.0413]
+Licence = Ongekend
+Description = MSXML3 is nodig voor bepaalde MSI installaties. Bevat: msxml3.dll, msxml3a.dll, msxml3r.dll.
+
 [Section.0415]
 Licence = Nieznana
 Description = Niektóre spośród plików instalacyjnych MSI potrzebują parsera MSXML3.
@@ -35,3 +39,7 @@ Size = 1.85Mo
 [Section.0422]
 Licence = Невідома
 Description = MSXML3 необхідна для декотрих MSI інсталяторів.
+
+[Section.0813]
+Licence = Ongekend
+Description = MSXML3 is nodig voor bepaalde MSI installaties. Bevat: msxml3.dll, msxml3a.dll, msxml3r.dll.

@@ -24,6 +24,10 @@ Description = Pequeño y rápido cliente BitTorrent.
 Licence = Gratuit pour une utilisation non-commerciale
 Description = Client BitTorrent petit et rapide.
 
+[Section.0413]
+Licence = Freeware voor niet-commerciëel gebruik
+Description = Kleine en snelle BitTorrent afnemer.
+
 [Section.0415]
 Licence = Freeware (do użytku domowego)
 Description = Mały i szybki klient BitTorrent.
@@ -40,3 +44,8 @@ Description = Маленький и быстрый клиент BitTorrent.
 [Section.0422]
 Licence = Безплатна для некомерційного використання
 Description = Маленький і швидкий клієнт BitTorrent.
+
+[Section.0813]
+Licence = Freeware voor niet-commerciëel gebruik
+Description = Kleine en snelle BitTorrent afnemer.
+

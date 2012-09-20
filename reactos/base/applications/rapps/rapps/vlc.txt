@@ -23,6 +23,9 @@ Description = Un lecteur media.
 [Section.0410]
 Description = Un lettore multimediale.
 
+[Section.0413]
+Description = Een mediaspeler.
+
 [Section.0415]
 Description = Odtwarzacz multimediów.
 
@@ -38,3 +41,6 @@ Description = Multimediálny prehrávač.
 
 [Section.0422]
 Description = Мультимедійний програвач.
+
+[Section.0813]
+Description = Een mediaspeler.

@@ -20,6 +20,9 @@ Description = Aplicación de mensajería instantánea multiprotocolo de código 
 [Section.040c]
 Description = Application de messagerie instantannée multi-protocoles open source - pourrait ne pas fonctionner complètement.
 
+[Section.0413]
+Description = Open-bron multi-protocol instant message toepassing - werkt mogelijk niet volledig.
+
 [Section.0415]
 Description = Otwarty komunikator internetowy, obsługujący wiele różnych protokołów (m.in. GG, Tlen, Jabber, ICQ, IRC) - może nie działać prawidłowo.
 
@@ -29,3 +32,6 @@ Size = 3.1Mo
 
 [Section.0422]
 Description = Відкрита мультипротокольна програма миттєвих повідомлень - може не працювати повністю.
+
+[Section.0813]
+Description = Open-bron multi-protocol instant message toepassing - werkt mogelijk niet volledig.

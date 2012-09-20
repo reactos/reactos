@@ -20,6 +20,9 @@ Description = KDE para Windows.
 [Section.040c]
 Description = KDE pour Windows.
 
+[Section.0413]
+Description = KDE voor Windows.
+
 [Section.0410]
 Description = KDE per Windows.
 
@@ -32,3 +35,6 @@ Size = 2.21Mo
 
 [Section.0422]
 Description = KDE для Windows.
+
+[Section.0813]
+Description = KDE voor Windows.

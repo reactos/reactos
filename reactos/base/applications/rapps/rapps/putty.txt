@@ -23,6 +23,9 @@ Description = Un client SSH, Telnet, rlogin et raw TCP gratuit.
 [Section.0410]
 Description = Un client SSH, Telnet, rlogin, and raw TCP gratuito.
 
+[Section.0413]
+Description = Een gratis SSH, Telnet, rlogin en pure TCP afnemer.
+
 [Section.0415]
 Description = Darmowy klient obsługujący protokoły SSH, Telnet, rlogin oraz bezpośrednie TCP.
 
@@ -32,3 +35,6 @@ Size = 1.76Mo
 
 [Section.0422]
 Description = Безплатний SSH, Telnet, rlogin та raw TCP клієнт.
+
+[Section.0813]
+Description = Een gratis SSH, Telnet, rlogin en pure TCP afnemer.

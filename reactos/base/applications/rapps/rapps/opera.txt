@@ -26,6 +26,9 @@ Description = Le populaire navigateur Opera avec beaucoup de fonctionnalités av
 [Section.0410]
 Description = Il famoso browser Opera con features avanzate come un client BitTorrent integrato e la gestione delle Mail.
 
+[Section.0413]
+Description = De populaire Opera Browser met vele gevorderde mogelijkheden, inclusief e-mail en BitTorrent afnemers.
+
 [Section.0415]
 Description = Popularna przeglądarka internetowa z wieloma zaawansowanymi funkcjami, zawierająca klientów: poczty oraz BitTorrent.
 
@@ -39,3 +42,6 @@ Description = Популярный браузер со многими допол
 
 [Section.0422]
 Description = Популярний браузер з багатьма додатковими можливостями, який включає в себе поштовий та BitTorrent клієнти.
+
+[Section.0813]
+Description = De populaire Opera Browser met vele gevorderde mogelijkheden, inclusief e-mail en BitTorrent afnemers.

@@ -29,6 +29,12 @@ URLSite = http://fr.openoffice.org/
 Size = 120.0MB
 URLDownload = http://dfn.dl.sourceforge.net/project/openofficeorg.mirror/localized/fr/3.4.1/Apache_OpenOffice_incubating_3.4.1_Win_x86_install_fr.exe
 
+[Section.0413]
+Description = Open-bron Office Pakket.
+URLSite = http://nl.openoffice.org/
+Size = 134.33MB
+URLDownload = http://dfn.dl.sourceforge.net/project/openofficeorg.mirror/localized/nl/3.3.0/OOo_3.3.0_Win_x86_install_nl.exe
+
 [Section.0415]
 Description = Otwarty pakiet biurowy.
 URLSite = http://pl.openoffice.org/

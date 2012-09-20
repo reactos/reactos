@@ -20,6 +20,9 @@ Description = Clon de Breakout usando las librerias SDL.
 [Section.040c]
 Description = Clone de casse-brique utilisant la bibliothèque SDL.
 
+[Section.0413]
+Description = Breakout kloon, gebruikt SDL.
+
 [Section.0415]
 Description = Klon Breakouta/Arkanoida napisany przy użyciu biblioteki SDL.
 
@@ -29,3 +32,6 @@ Size = 3.03Mo
 
 [Section.0422]
 Description = Клон Breakouta/Arkanoida, що використовує бібліотеки SDL.
+
+[Section.0813]
+Description = Breakout kloon, gebruikt SDL.

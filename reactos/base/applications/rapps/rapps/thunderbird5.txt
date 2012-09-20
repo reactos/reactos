@@ -29,6 +29,12 @@ Size = 17.8MB
 URLSite = http://www.mozilla-europe.org/fr/products/thunderbird/
 URLDownload = http://releases.mozilla.org/pub/mozilla.org/thunderbird/releases/15.0/win32/fr/Thunderbird%20Setup%2015.0.exe
 
+[Section.0413]
+Description = De meest populaire en een van de beste gratis e-mail-programma's.
+Size = 18.1MB
+URLSite = http://www.mozilla-europe.org/nl/products/thunderbird/
+URLDownload = http://releases.mozilla.org/pub/mozilla.org/thunderbird/releases/14.0/win32/nl/Thunderbird%20Setup%2014.0.exe
+
 [Section.0415]
 Description = Najpopularniejszy i jeden z najlepszych darmowych klientów poczty.
 Size = 18.3MB

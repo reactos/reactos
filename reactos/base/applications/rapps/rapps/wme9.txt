@@ -20,6 +20,9 @@ Licence = Desconocida
 [Section.040c]
 Licence = Inconnue
 
+[Section.0413]
+License = Ongekend
+
 [Section.0415]
 Licence = Nieznana
 
@@ -32,3 +35,6 @@ Description = Neznáma
 
 [Section.0422]
 Licence = Невідома
+
+[Section.0813]
+License = Ongekend

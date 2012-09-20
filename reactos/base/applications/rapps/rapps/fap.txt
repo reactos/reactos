@@ -20,6 +20,9 @@ Description = Reproductor de audio simple y ligero.
 [Section.040c]
 Description = Lecteur audio simple et léger.
 
+[Section.0413]
+Description = Eenvoudige en lichte audio speler.
+
 [Section.0415]
 Description = Prosty i lekki odtwarzacz audio.
 
@@ -29,3 +32,6 @@ Size = 1.86Mo
 
 [Section.0422]
 Description = Простий та маленький програвач аудіо файлів.
+
+[Section.0813]
+Description = Eenvoudige en lichte audio speler.

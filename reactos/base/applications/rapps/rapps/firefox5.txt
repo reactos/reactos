@@ -29,6 +29,11 @@ Size = 15.9MB
 URLSite = http://www.mozilla-europe.org/fr/
 URLDownload = http://releases.mozilla.org/pub/mozilla.org/firefox/releases/15.0.1/win32/fr/Firefox%20Setup%2015.0.1.exe
 
+[Section.0413]
+Description = De meest populaire en een van de beste gratis Web browsers.
+URLSite = http://www.mozilla-europe.org/nl/
+URLDownload = http://releases.mozilla.org/pub/mozilla.org/firefox/releases/14.0.1/win32/nl-NL/Firefox%20Setup%2014.0.1.exe
+
 [Section.0414]
 Description = Mest populære og best også gratis nettleserene der ute.
 Size = 15.6MB
