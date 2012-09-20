@@ -278,6 +278,7 @@ NTSTATUS WINAPI LsarSetInformationPolicy(
     PLSAPR_POLICY_INFORMATION PolicyInformation)
 {
     PLSA_DB_OBJECT DbObject;
+    ACCESS_MASK DesiredAccess = 0;
     NTSTATUS Status;
 
     TRACE("LsarSetInformationPolicy(%p,0x%08x,%p)\n",
@@ -288,9 +289,39 @@ NTSTATUS WINAPI LsarSetInformationPolicy(
         TRACE("*PolicyInformation %p\n", *PolicyInformation);
     }
 
+    switch (InformationClass)
+    {
+        case PolicyAuditLogInformation:
+        case PolicyAuditFullSetInformation:
+            DesiredAccess = POLICY_AUDIT_LOG_ADMIN;
+            break;
+
+        case PolicyAuditEventsInformation:
+            DesiredAccess = POLICY_SET_AUDIT_REQUIREMENTS;
+            break;
+
+        case PolicyPrimaryDomainInformation:
+        case PolicyAccountDomainInformation:
+            DesiredAccess = POLICY_TRUST_ADMIN;
+            break;
+
+        case PolicyLsaServerRoleInformation:
+        case PolicyReplicaSourceInformation:
+            DesiredAccess = POLICY_SERVER_ADMIN;
+            break;
+
+        case PolicyDefaultQuotaInformation:
+            DesiredAccess = POLICY_SET_DEFAULT_QUOTA_LIMITS;
+            break;
+
+        default:
+            ERR("Invalid InformationClass!\n");
+            return STATUS_INVALID_PARAMETER;
+    }
+
     Status = LsapValidateDbObject(PolicyHandle,
                                   LsaDbPolicyObject,
-                                  0, /* FIXME */
+                                  DesiredAccess,
                                   &DbObject);
     if (!NT_SUCCESS(Status))
         return Status;
@@ -1338,7 +1369,7 @@ NTSTATUS WINAPI LsarLookupPrivilegeValue(
 
     Status = LsapValidateDbObject(PolicyHandle,
                                   LsaDbPolicyObject,
-                                  0, /* FIXME */
+                                  POLICY_LOOKUP_NAMES,
                                   NULL);
     if (!NT_SUCCESS(Status))
     {
@@ -1368,7 +1399,7 @@ NTSTATUS WINAPI LsarLookupPrivilegeName(
 
     Status = LsapValidateDbObject(PolicyHandle,
                                   LsaDbPolicyObject,
-                                  0, /* FIXME */
+                                  POLICY_LOOKUP_NAMES,
                                   NULL);
     if (!NT_SUCCESS(Status))
     {
