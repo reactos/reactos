@@ -172,7 +172,7 @@ MiCheckPdeForSessionSpace(IN PVOID Address)
 
         /* Now get the session-specific page table for this address */
         SessionAddress = MiPteToAddress(Address);
-        PointerPde = MiAddressToPde(Address);
+        PointerPde = MiAddressToPte(Address);
         if (PointerPde->u.Hard.Valid) return STATUS_WAIT_1;
 
         /* It's not valid, so find it in the page table array */
