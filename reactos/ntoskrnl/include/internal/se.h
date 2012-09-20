@@ -69,6 +69,8 @@ SepGetDaclFromDescriptor(PVOID _Descriptor)
     PISECURITY_DESCRIPTOR Descriptor = (PISECURITY_DESCRIPTOR)_Descriptor;
     PISECURITY_DESCRIPTOR_RELATIVE SdRel;
 
+    if (!(Descriptor->Control & SE_DACL_PRESENT)) return NULL;
+
     if (Descriptor->Control & SE_SELF_RELATIVE)
     {
         SdRel = (PISECURITY_DESCRIPTOR_RELATIVE)Descriptor;
@@ -87,6 +89,8 @@ SepGetSaclFromDescriptor(PVOID _Descriptor)
 {
     PISECURITY_DESCRIPTOR Descriptor = (PISECURITY_DESCRIPTOR)_Descriptor;
     PISECURITY_DESCRIPTOR_RELATIVE SdRel;
+
+    if (!(Descriptor->Control & SE_SACL_PRESENT)) return NULL;
 
     if (Descriptor->Control & SE_SELF_RELATIVE)
     {
