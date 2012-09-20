@@ -387,7 +387,7 @@
 @ stdcall LsaQueryForestTrustInformation(ptr ptr ptr)
 @ stdcall LsaQueryInfoTrustedDomain(long long long)
 @ stdcall LsaQueryInformationPolicy(ptr long ptr)
-@ stub LsaQuerySecret
+@ stdcall LsaQuerySecret(ptr ptr ptr ptr ptr)
 @ stub LsaQuerySecurityObject
 @ stdcall LsaQueryTrustedDomainInfo(ptr ptr long ptr)
 @ stdcall LsaQueryTrustedDomainInfoByName(ptr ptr long ptr)

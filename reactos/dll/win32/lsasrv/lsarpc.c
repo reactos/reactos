@@ -1262,6 +1262,9 @@ NTSTATUS WINAPI LsarSetSecret(
     LARGE_INTEGER Time;
     NTSTATUS Status;
 
+    TRACE("LsarSetSecret(%p %p %p)\n", SecretHandle,
+          EncryptedCurrentValue, EncryptedOldValue);
+
     /* Validate the SecretHandle */
     Status = LsapValidateDbObject(SecretHandle,
                                   LsaDbSecretObject,
@@ -1351,8 +1354,175 @@ NTSTATUS WINAPI LsarQuerySecret(
     PLSAPR_CR_CIPHER_VALUE *EncryptedOldValue,
     PLARGE_INTEGER OldValueSetTime)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PLSA_DB_OBJECT SecretObject;
+    PLSAPR_CR_CIPHER_VALUE EncCurrentValue = NULL;
+    PLSAPR_CR_CIPHER_VALUE EncOldValue = NULL;
+    PBYTE CurrentValue = NULL;
+    PBYTE OldValue = NULL;
+    ULONG CurrentValueLength = 0;
+    ULONG OldValueLength = 0;
+    ULONG BufferSize;
+    NTSTATUS Status;
+
+    TRACE("LsarQuerySecret(%p %p %p %p %p)\n", SecretHandle,
+          EncryptedCurrentValue, CurrentValueSetTime,
+          EncryptedOldValue, OldValueSetTime);
+
+    /* Validate the SecretHandle */
+    Status = LsapValidateDbObject(SecretHandle,
+                                  LsaDbSecretObject,
+                                  SECRET_QUERY_VALUE,
+                                  &SecretObject);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("LsapValidateDbObject returned 0x%08lx\n", Status);
+        return Status;
+    }
+
+    if (EncryptedCurrentValue != NULL)
+    {
+        CurrentValueLength = 0;
+
+        /* Get the size of the current value */
+        Status = LsapGetObjectAttribute(SecretObject,
+                                        L"CurrentValue",
+                                        NULL,
+                                        &CurrentValueLength);
+        if (!NT_SUCCESS(Status))
+            goto done;
+
+        /* Allocate a buffer for the current value */
+        CurrentValue = midl_user_allocate(CurrentValueLength);
+        if (CurrentValue == NULL)
+        {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            goto done;
+        }
+
+        /* Get the current value */
+        Status = LsapGetObjectAttribute(SecretObject,
+                                        L"CurrentValue",
+                                        CurrentValue,
+                                        &CurrentValueLength);
+        if (!NT_SUCCESS(Status))
+            goto done;
+
+        /* Allocate a buffer for the encrypted current value */
+        EncCurrentValue = midl_user_allocate(sizeof(LSAPR_CR_CIPHER_VALUE));
+        if (EncCurrentValue == NULL)
+        {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            goto done;
+        }
+
+        /* FIXME: Encrypt the current value */
+        EncCurrentValue->Length = (USHORT)(CurrentValueLength - sizeof(WCHAR));
+        EncCurrentValue->MaximumLength = (USHORT)CurrentValueLength;
+        EncCurrentValue->Buffer = (PBYTE)CurrentValue;
+    }
+
+    if (CurrentValueSetTime != NULL)
+    {
+        BufferSize = sizeof(LARGE_INTEGER);
+
+        /* Get the current value time */
+        Status = LsapGetObjectAttribute(SecretObject,
+                                        L"CurrentTime",
+                                        (PBYTE)CurrentValueSetTime,
+                                        &BufferSize);
+        if (!NT_SUCCESS(Status))
+            goto done;
+    }
+
+    if (EncryptedOldValue != NULL)
+    {
+        OldValueLength = 0;
+
+        /* Get the size of the old value */
+        Status = LsapGetObjectAttribute(SecretObject,
+                                        L"OldValue",
+                                        NULL,
+                                        &OldValueLength);
+        if (!NT_SUCCESS(Status))
+            goto done;
+
+        /* Allocate a buffer for the old value */
+        OldValue = midl_user_allocate(OldValueLength);
+        if (OldValue == NULL)
+        {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            goto done;
+        }
+
+        /* Get the old value */
+        Status = LsapGetObjectAttribute(SecretObject,
+                                        L"OldValue",
+                                        OldValue,
+                                        &OldValueLength);
+        if (!NT_SUCCESS(Status))
+            goto done;
+
+        /* Allocate a buffer for the encrypted old value */
+        EncOldValue = midl_user_allocate(sizeof(LSAPR_CR_CIPHER_VALUE) + OldValueLength);
+        if (EncOldValue == NULL)
+        {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            goto done;
+        }
+
+        /* FIXME: Encrypt the old value */
+        EncOldValue->Length = (USHORT)(OldValueLength - sizeof(WCHAR));
+        EncOldValue->MaximumLength = (USHORT)OldValueLength;
+        EncOldValue->Buffer = (PBYTE)OldValue;
+    }
+
+    if (OldValueSetTime != NULL)
+    {
+        BufferSize = sizeof(LARGE_INTEGER);
+
+        /* Get the old value time */
+        Status = LsapGetObjectAttribute(SecretObject,
+                                        L"OldTime",
+                                        (PBYTE)OldValueSetTime,
+                                        &BufferSize);
+        if (!NT_SUCCESS(Status))
+            goto done;
+    }
+
+
+done:
+    if (NT_SUCCESS(Status))
+    {
+        if (EncryptedCurrentValue != NULL)
+            *EncryptedCurrentValue = EncCurrentValue;
+
+        if (EncryptedOldValue != NULL)
+            *EncryptedOldValue = EncOldValue;
+    }
+    else
+    {
+        if (EncryptedCurrentValue != NULL)
+            *EncryptedCurrentValue = NULL;
+
+        if (EncryptedOldValue != NULL)
+            *EncryptedOldValue = NULL;
+
+        if (EncCurrentValue != NULL)
+            midl_user_free(EncCurrentValue);
+
+        if (EncOldValue != NULL)
+            midl_user_free(EncOldValue);
+
+        if (CurrentValue != NULL)
+            midl_user_free(CurrentValue);
+
+        if (OldValue != NULL)
+            midl_user_free(OldValue);
+    }
+
+    TRACE("LsarQuerySecret done (Status 0x%08lx)\n", Status);
+
+    return Status;
 }
 
 

@@ -968,6 +968,125 @@ LsaQueryInformationPolicy(IN LSA_HANDLE PolicyHandle,
  */
 NTSTATUS
 WINAPI
+LsaQuerySecret(IN LSA_HANDLE SecretHandle,
+               OUT PLSA_UNICODE_STRING *CurrentValue OPTIONAL,
+               OUT PLARGE_INTEGER CurrentValueSetTime OPTIONAL,
+               OUT PLSA_UNICODE_STRING *OldValue OPTIONAL,
+               OUT PLARGE_INTEGER OldValueSetTime OPTIONAL)
+{
+    PLSAPR_CR_CIPHER_VALUE EncryptedCurrentValue = NULL;
+    PLSAPR_CR_CIPHER_VALUE EncryptedOldValue = NULL;
+    PLSA_UNICODE_STRING DecryptedCurrentValue = NULL;
+    PLSA_UNICODE_STRING DecryptedOldValue = NULL;
+    SIZE_T BufferSize;
+    NTSTATUS Status;
+
+    RpcTryExcept
+    {
+        Status = LsarQuerySecret((PLSAPR_HANDLE)SecretHandle,
+                                 &EncryptedCurrentValue,
+                                 CurrentValueSetTime,
+                                 &EncryptedOldValue,
+                                 OldValueSetTime);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    /* Decrypt the current value */
+    if (CurrentValue != NULL)
+    {
+         if (EncryptedCurrentValue == NULL)
+         {
+             *CurrentValue = NULL;
+         }
+         else
+         {
+             /* FIXME: Decrypt the current value */
+             BufferSize = sizeof(LSA_UNICODE_STRING) + EncryptedCurrentValue->MaximumLength;
+             DecryptedCurrentValue = midl_user_allocate(BufferSize);
+             if (DecryptedCurrentValue == NULL)
+             {
+                 Status = STATUS_INSUFFICIENT_RESOURCES;
+                 goto done;
+             }
+
+             DecryptedCurrentValue->Length = (USHORT)EncryptedCurrentValue->Length;
+             DecryptedCurrentValue->MaximumLength = (USHORT)EncryptedCurrentValue->MaximumLength;
+             DecryptedCurrentValue->Buffer = (PWSTR)(DecryptedCurrentValue + 1);
+             RtlCopyMemory(DecryptedCurrentValue->Buffer,
+                           EncryptedCurrentValue->Buffer,
+                           EncryptedCurrentValue->Length);
+
+             *CurrentValue = DecryptedCurrentValue;
+         }
+    }
+
+    /* Decrypt the old value */
+    if (OldValue != NULL)
+    {
+         if (EncryptedOldValue == NULL)
+         {
+             *OldValue = NULL;
+         }
+         else
+         {
+             /* FIXME: Decrypt the old value */
+             BufferSize = sizeof(LSA_UNICODE_STRING) + EncryptedOldValue->MaximumLength;
+             DecryptedOldValue = midl_user_allocate(BufferSize);
+             if (DecryptedOldValue == NULL)
+             {
+                 Status = STATUS_INSUFFICIENT_RESOURCES;
+                 goto done;
+             }
+
+             DecryptedOldValue->Length = (USHORT)EncryptedOldValue->Length;
+             DecryptedOldValue->MaximumLength = (USHORT)EncryptedOldValue->MaximumLength;
+             DecryptedOldValue->Buffer = (PWSTR)(DecryptedOldValue + 1);
+             RtlCopyMemory(DecryptedOldValue->Buffer,
+                           EncryptedOldValue->Buffer,
+                           EncryptedOldValue->Length);
+
+             *OldValue = DecryptedOldValue;
+         }
+    }
+
+done:
+    if (!NT_SUCCESS(Status))
+    {
+        if (DecryptedCurrentValue != NULL)
+            midl_user_free(DecryptedCurrentValue);
+
+        if (DecryptedOldValue != NULL)
+            midl_user_free(DecryptedOldValue);
+
+        if (CurrentValue != NULL)
+            *CurrentValue = NULL;
+
+        if (OldValue != NULL)
+            *OldValue = NULL;
+    }
+
+    if (EncryptedCurrentValue != NULL)
+        midl_user_free(EncryptedCurrentValue);
+
+    if (EncryptedOldValue != NULL)
+        midl_user_free(EncryptedOldValue);
+
+    return Status;
+}
+
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+WINAPI
 LsaQueryTrustedDomainInfo(
     LSA_HANDLE PolicyHandle,
     PSID TrustedDomainSid,
