@@ -3,7 +3,8 @@
  * PROJECT:         ReactOS system libraries
  * PURPOSE:         Runtime code
  * FILE:            lib/rtl/version.c
- * PROGRAMER:       Filip Navara
+ * PROGRAMERS:      Filip Navara
+ *                  Hermes BELUSCA - MAITO
  */
 
 /* INCLUDES *****************************************************************/
@@ -22,6 +23,10 @@ RtlGetVersion(
     );
 
 /* FUNCTIONS ****************************************************************/
+
+static BYTE
+RtlpVerGetCondition(IN ULONGLONG dwlConditionMask,
+                    IN DWORD dwTypeBitMask);
 
 static BOOLEAN
 RtlpVerCompare(ULONG left, ULONG right, UCHAR condition)
@@ -67,7 +72,7 @@ RtlVerifyVersionInfo(
      */
 
     ver.dwOSVersionInfoSize = sizeof(ver);
-    status = RtlGetVersion( (PRTL_OSVERSIONINFOW)&ver );
+    status = RtlGetVersion((PRTL_OSVERSIONINFOW)&ver);
     if (status != STATUS_SUCCESS) return status;
 
     if (!TypeMask || !ConditionMask) return STATUS_INVALID_PARAMETER;
@@ -76,14 +81,14 @@ RtlVerifyVersionInfo(
     {
         comparison = RtlpVerCompare(ver.wProductType,
                                     VersionInfo->wProductType,
-                                    ConditionMask >> 7 * VER_NUM_BITS_PER_CONDITION_MASK & VER_CONDITION_MASK);
+                                    RtlpVerGetCondition(ConditionMask, VER_PRODUCT_TYPE));
         if (!comparison)
             return STATUS_REVISION_MISMATCH;
     }
 
     if (TypeMask & VER_SUITENAME)
     {
-        switch (ConditionMask >> 6 * VER_NUM_BITS_PER_CONDITION_MASK & VER_CONDITION_MASK)
+        switch (RtlpVerGetCondition(ConditionMask, VER_SUITENAME))
         {
             case VER_AND:
                 if ((VersionInfo->wSuiteMask & ver.wSuiteMask) != VersionInfo->wSuiteMask)
@@ -106,7 +111,7 @@ RtlVerifyVersionInfo(
     {
         comparison = RtlpVerCompare(ver.dwPlatformId,
                                     VersionInfo->dwPlatformId,
-                                    ConditionMask >> 3 * VER_NUM_BITS_PER_CONDITION_MASK & VER_CONDITION_MASK);
+                                    RtlpVerGetCondition(ConditionMask, VER_PLATFORMID));
         if (!comparison)
             return STATUS_REVISION_MISMATCH;
     }
@@ -115,24 +120,21 @@ RtlVerifyVersionInfo(
     {
         comparison = RtlpVerCompare(ver.dwBuildNumber,
                                     VersionInfo->dwBuildNumber,
-                                    ConditionMask >> 2 * VER_NUM_BITS_PER_CONDITION_MASK & VER_CONDITION_MASK);
+                                    RtlpVerGetCondition(ConditionMask, VER_BUILDNUMBER));
         if (!comparison)
             return STATUS_REVISION_MISMATCH;
     }
 
-    if (TypeMask & (VER_MAJORVERSION|VER_MINORVERSION|VER_SERVICEPACKMAJOR|VER_SERVICEPACKMINOR))
+    TypeMask &= VER_MAJORVERSION|VER_MINORVERSION|VER_SERVICEPACKMAJOR|VER_SERVICEPACKMINOR;
+    if (TypeMask)
     {
-        UCHAR condition = 0;
         BOOLEAN do_next_check = TRUE;
-
-        if (TypeMask & VER_MAJORVERSION)
-            condition = ConditionMask >> 1 * VER_NUM_BITS_PER_CONDITION_MASK & VER_CONDITION_MASK;
-        else if (TypeMask & VER_MINORVERSION)
-            condition = ConditionMask >> 0 * VER_NUM_BITS_PER_CONDITION_MASK & VER_CONDITION_MASK;
-        else if (TypeMask & VER_SERVICEPACKMAJOR)
-            condition = ConditionMask >> 5 * VER_NUM_BITS_PER_CONDITION_MASK & VER_CONDITION_MASK;
-        else if (TypeMask & VER_SERVICEPACKMINOR)
-            condition = ConditionMask >> 4 * VER_NUM_BITS_PER_CONDITION_MASK & VER_CONDITION_MASK;
+        /*
+         * Select the leading comparison operator (for example, the comparison
+         * operator for VER_MAJORVERSION supersedes the others for VER_MINORVERSION,
+         * VER_SERVICEPACKMAJOR and VER_SERVICEPACKMINOR).
+         */
+        BYTE condition = RtlpVerGetCondition(ConditionMask, TypeMask);
 
         comparison = TRUE;
         if (TypeMask & VER_MAJORVERSION)
@@ -173,6 +175,40 @@ RtlVerifyVersionInfo(
     return STATUS_SUCCESS;
 }
 
+static BYTE
+RtlpVerGetCondition(IN ULONGLONG dwlConditionMask,
+                    IN DWORD dwTypeBitMask)
+{
+    BYTE bConditionMask = 0;
+
+    if (dwTypeBitMask & VER_PRODUCT_TYPE)
+        bConditionMask |= dwlConditionMask >> 7 * VER_NUM_BITS_PER_CONDITION_MASK;
+    else if (dwTypeBitMask & VER_SUITENAME)
+        bConditionMask |= dwlConditionMask >> 6 * VER_NUM_BITS_PER_CONDITION_MASK;
+    else if (dwTypeBitMask & VER_PLATFORMID)
+        bConditionMask |= dwlConditionMask >> 3 * VER_NUM_BITS_PER_CONDITION_MASK;
+    else if (dwTypeBitMask & VER_BUILDNUMBER)
+        bConditionMask |= dwlConditionMask >> 2 * VER_NUM_BITS_PER_CONDITION_MASK;
+    /*
+     * We choose here the lexicographical order on the 4D space
+     * {(Major ; Minor ; SP Major ; SP Minor)} to select the
+     * appropriate comparison operator.
+     * Therefore the following 'else if' instructions must be in this order.
+     */
+    else if (dwTypeBitMask & VER_MAJORVERSION)
+        bConditionMask |= dwlConditionMask >> 1 * VER_NUM_BITS_PER_CONDITION_MASK;
+    else if (dwTypeBitMask & VER_MINORVERSION)
+        bConditionMask |= dwlConditionMask >> 0 * VER_NUM_BITS_PER_CONDITION_MASK;
+    else if (dwTypeBitMask & VER_SERVICEPACKMAJOR)
+        bConditionMask |= dwlConditionMask >> 5 * VER_NUM_BITS_PER_CONDITION_MASK;
+    else if (dwTypeBitMask & VER_SERVICEPACKMINOR)
+        bConditionMask |= dwlConditionMask >> 4 * VER_NUM_BITS_PER_CONDITION_MASK;
+
+    bConditionMask &= VER_CONDITION_MASK;
+
+    return bConditionMask;
+}
+
 /*
  * @implemented
  */
@@ -180,32 +216,32 @@ ULONGLONG
 NTAPI
 VerSetConditionMask(IN ULONGLONG dwlConditionMask,
                     IN DWORD dwTypeBitMask,
-                    IN BYTE dwConditionMask)
+                    IN BYTE bConditionMask)
 {
     if (dwTypeBitMask == 0)
         return dwlConditionMask;
 
-    dwConditionMask &= VER_CONDITION_MASK;
+    bConditionMask &= VER_CONDITION_MASK;
 
-    if (dwConditionMask == 0)
+    if (bConditionMask == 0)
         return dwlConditionMask;
 
     if (dwTypeBitMask & VER_PRODUCT_TYPE)
-        dwlConditionMask |= dwConditionMask << 7 * VER_NUM_BITS_PER_CONDITION_MASK;
+        dwlConditionMask |= bConditionMask << 7 * VER_NUM_BITS_PER_CONDITION_MASK;
     else if (dwTypeBitMask & VER_SUITENAME)
-        dwlConditionMask |= dwConditionMask << 6 * VER_NUM_BITS_PER_CONDITION_MASK;
+        dwlConditionMask |= bConditionMask << 6 * VER_NUM_BITS_PER_CONDITION_MASK;
     else if (dwTypeBitMask & VER_SERVICEPACKMAJOR)
-        dwlConditionMask |= dwConditionMask << 5 * VER_NUM_BITS_PER_CONDITION_MASK;
+        dwlConditionMask |= bConditionMask << 5 * VER_NUM_BITS_PER_CONDITION_MASK;
     else if (dwTypeBitMask & VER_SERVICEPACKMINOR)
-        dwlConditionMask |= dwConditionMask << 4 * VER_NUM_BITS_PER_CONDITION_MASK;
+        dwlConditionMask |= bConditionMask << 4 * VER_NUM_BITS_PER_CONDITION_MASK;
     else if (dwTypeBitMask & VER_PLATFORMID)
-        dwlConditionMask |= dwConditionMask << 3 * VER_NUM_BITS_PER_CONDITION_MASK;
+        dwlConditionMask |= bConditionMask << 3 * VER_NUM_BITS_PER_CONDITION_MASK;
     else if (dwTypeBitMask & VER_BUILDNUMBER)
-        dwlConditionMask |= dwConditionMask << 2 * VER_NUM_BITS_PER_CONDITION_MASK;
+        dwlConditionMask |= bConditionMask << 2 * VER_NUM_BITS_PER_CONDITION_MASK;
     else if (dwTypeBitMask & VER_MAJORVERSION)
-        dwlConditionMask |= dwConditionMask << 1 * VER_NUM_BITS_PER_CONDITION_MASK;
+        dwlConditionMask |= bConditionMask << 1 * VER_NUM_BITS_PER_CONDITION_MASK;
     else if (dwTypeBitMask & VER_MINORVERSION)
-        dwlConditionMask |= dwConditionMask << 0 * VER_NUM_BITS_PER_CONDITION_MASK;
+        dwlConditionMask |= bConditionMask << 0 * VER_NUM_BITS_PER_CONDITION_MASK;
 
     return dwlConditionMask;
 }
