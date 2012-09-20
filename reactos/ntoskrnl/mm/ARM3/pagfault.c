@@ -153,7 +153,7 @@ MiCheckPdeForSessionSpace(IN PVOID Address)
 {
     MMPTE TempPde;
     PMMPTE PointerPde;
-    PVOID SessionPageTable;
+    PVOID SessionAddress;
     ULONG Index;
 
     /* Is this a session PTE? */
@@ -171,12 +171,12 @@ MiCheckPdeForSessionSpace(IN PVOID Address)
         }
 
         /* Now get the session-specific page table for this address */
-        SessionPageTable = MiPteToAddress(Address);
-        PointerPde = MiPteToAddress(Address);
+        SessionAddress = MiPteToAddress(Address);
+        PointerPde = MiAddressToPde(Address);
         if (PointerPde->u.Hard.Valid) return STATUS_WAIT_1;
 
         /* It's not valid, so find it in the page table array */
-        Index = ((ULONG_PTR)SessionPageTable - (ULONG_PTR)MmSessionBase) >> 22;
+        Index = ((ULONG_PTR)SessionAddress - (ULONG_PTR)MmSessionBase) >> 22;
         TempPde.u.Long = MmSessionSpace->PageTables[Index].u.Long;
         if (TempPde.u.Hard.Valid)
         {
@@ -187,7 +187,7 @@ MiCheckPdeForSessionSpace(IN PVOID Address)
 
         /* We don't seem to have allocated a page table for this address yet? */
         DbgPrint("MiCheckPdeForSessionSpace: No Session PDE for PTE %p, %p\n",
-                 PointerPde->u.Long, SessionPageTable);
+                 PointerPde->u.Long, SessionAddress);
         DbgBreakPoint();
         return STATUS_ACCESS_VIOLATION;
     }
