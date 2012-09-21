@@ -10,11 +10,15 @@
  *      20030202 KJK compressed stubs
  *
  */
+
 #include <advapi32.h>
+
 WINE_DEFAULT_DEBUG_CHANNEL(advapi);
 
 
-static BOOL LsapIsLocalComputer(PLSA_UNICODE_STRING ServerName)
+static
+BOOL
+LsapIsLocalComputer(PLSA_UNICODE_STRING ServerName)
 {
     DWORD dwSize = MAX_COMPUTERNAME_LENGTH + 1;
     BOOL Result;
@@ -34,7 +38,8 @@ static BOOL LsapIsLocalComputer(PLSA_UNICODE_STRING ServerName)
 }
 
 
-handle_t __RPC_USER
+handle_t
+__RPC_USER
 PLSAPR_SERVER_NAME_bind(PLSAPR_SERVER_NAME pszSystemName)
 {
     handle_t hBinding = NULL;
@@ -73,7 +78,8 @@ PLSAPR_SERVER_NAME_bind(PLSAPR_SERVER_NAME pszSystemName)
 }
 
 
-void __RPC_USER
+void
+__RPC_USER
 PLSAPR_SERVER_NAME_unbind(PLSAPR_SERVER_NAME pszSystemName,
                           handle_t hBinding)
 {
@@ -86,56 +92,6 @@ PLSAPR_SERVER_NAME_unbind(PLSAPR_SERVER_NAME pszSystemName,
     {
         TRACE("RpcBindingFree returned 0x%x\n", status);
     }
-}
-
-
-/*
- * @implemented
- */
-NTSTATUS
-WINAPI
-LsaClose(IN LSA_HANDLE ObjectHandle)
-{
-    NTSTATUS Status;
-
-    TRACE("LsaClose(0x%p) called\n", ObjectHandle);
-
-    RpcTryExcept
-    {
-        Status = LsarClose((PLSAPR_HANDLE)&ObjectHandle);
-    }
-    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
-    {
-        Status = I_RpcMapWin32Status(RpcExceptionCode());
-    }
-    RpcEndExcept;
-
-    return Status;
-}
-
-
-/*
- * @implemented
- */
-NTSTATUS
-WINAPI
-LsaDelete(IN LSA_HANDLE ObjectHandle)
-{
-    NTSTATUS Status;
-
-    TRACE("LsaDelete(0x%p) called\n", ObjectHandle);
-
-    RpcTryExcept
-    {
-        Status = LsarDelete((LSAPR_HANDLE)ObjectHandle);
-    }
-    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
-    {
-        Status = I_RpcMapWin32Status(RpcExceptionCode());
-    }
-    RpcEndExcept;
-
-    return Status;
 }
 
 
@@ -207,6 +163,56 @@ LsaAddPrivilegesToAccount(IN LSA_HANDLE AccountHandle,
  * @implemented
  */
 NTSTATUS
+NTAPI
+LsaClearAuditLog(IN LSA_HANDLE PolicyHandle)
+{
+    NTSTATUS Status;
+
+    TRACE("LsaClearAuditLog(%p)\n", PolicyHandle);
+
+    RpcTryExcept
+    {
+        Status = LsarClearAuditLog((LSAPR_HANDLE)PolicyHandle);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
+
+/*
+ * @implemented
+ */
+NTSTATUS
+WINAPI
+LsaClose(IN LSA_HANDLE ObjectHandle)
+{
+    NTSTATUS Status;
+
+    TRACE("LsaClose(%p) called\n", ObjectHandle);
+
+    RpcTryExcept
+    {
+        Status = LsarClose((PLSAPR_HANDLE)&ObjectHandle);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
+
+/*
+ * @implemented
+ */
+NTSTATUS
 WINAPI
 LsaCreateAccount(IN LSA_HANDLE PolicyHandle,
                  IN PSID AccountSid,
@@ -215,7 +221,7 @@ LsaCreateAccount(IN LSA_HANDLE PolicyHandle,
 {
     NTSTATUS Status;
 
-    TRACE("LsaCreateAccount(%p %p 0x%08x %p)\n",
+    TRACE("LsaCreateAccount(%p %p 0x%08lx %p)\n",
           PolicyHandle, AccountSid, DesiredAccess, AccountHandle);
 
     RpcTryExcept
@@ -279,8 +285,8 @@ LsaCreateTrustedDomain(IN LSA_HANDLE PolicyHandle,
 {
     NTSTATUS Status;
 
-    TRACE("(%p,%p,0x%08x,%p)\n", PolicyHandle, TrustedDomainInformation,
-          DesiredAccess, TrustedDomainHandle);
+    TRACE("LsaCreateTrustedDomain(%p %p 0x%08lx %p)\n",
+          PolicyHandle, TrustedDomainInformation, DesiredAccess, TrustedDomainHandle);
 
     RpcTryExcept
     {
@@ -304,16 +310,41 @@ LsaCreateTrustedDomain(IN LSA_HANDLE PolicyHandle,
  */
 NTSTATUS
 WINAPI
-LsaCreateTrustedDomainEx(
-    LSA_HANDLE PolicyHandle,
-    PTRUSTED_DOMAIN_INFORMATION_EX TrustedDomainInformation,
-    PTRUSTED_DOMAIN_AUTH_INFORMATION AuthenticationInformation,
-    ACCESS_MASK DesiredAccess,
-    PLSA_HANDLE TrustedDomainHandle)
+LsaCreateTrustedDomainEx(IN LSA_HANDLE PolicyHandle,
+                         IN PTRUSTED_DOMAIN_INFORMATION_EX TrustedDomainInformation,
+                         IN PTRUSTED_DOMAIN_AUTH_INFORMATION AuthenticationInformation,
+                         IN ACCESS_MASK DesiredAccess,
+                         OUT PLSA_HANDLE TrustedDomainHandle)
 {
-    FIXME("(%p,%p,%p,0x%08x,%p) stub\n", PolicyHandle, TrustedDomainInformation, AuthenticationInformation,
+    FIXME("LsaCreateTrustedDomainEx(%p %p %p 0x%08lx %p) stub\n",
+          PolicyHandle, TrustedDomainInformation, AuthenticationInformation,
           DesiredAccess, TrustedDomainHandle);
     return STATUS_SUCCESS;
+}
+
+
+/*
+ * @implemented
+ */
+NTSTATUS
+WINAPI
+LsaDelete(IN LSA_HANDLE ObjectHandle)
+{
+    NTSTATUS Status;
+
+    TRACE("LsaDelete(%p)\n", ObjectHandle);
+
+    RpcTryExcept
+    {
+        Status = LsarDelete((LSAPR_HANDLE)ObjectHandle);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
 }
 
 
@@ -327,7 +358,8 @@ LsaDeleteTrustedDomain(IN LSA_HANDLE PolicyHandle,
 {
     NTSTATUS Status;
 
-    TRACE("(%p,%p)\n", PolicyHandle, TrustedDomainSid);
+    TRACE("LsaDeleteTrustedDomain(%p %p)\n",
+          PolicyHandle, TrustedDomainSid);
 
     RpcTryExcept
     {
@@ -357,7 +389,8 @@ LsaEnumerateAccountRights(IN LSA_HANDLE PolicyHandle,
     LSAPR_USER_RIGHT_SET UserRightsSet;
     NTSTATUS Status;
 
-    TRACE("(%p,%p,%p,%p) stub\n", PolicyHandle, AccountSid, UserRights, CountOfRights);
+    TRACE("LsaEnumerateAccountRights(%p %p %p %p)\n",
+          PolicyHandle, AccountSid, UserRights, CountOfRights);
 
     UserRightsSet.Entries = 0;
     UserRightsSet.UserRights = NULL;
@@ -391,13 +424,13 @@ LsaEnumerateAccountRights(IN LSA_HANDLE PolicyHandle,
  */
 NTSTATUS
 WINAPI
-LsaEnumerateAccountsWithUserRight(
-    LSA_HANDLE PolicyHandle,
-    OPTIONAL PLSA_UNICODE_STRING UserRights,
-    PVOID *EnumerationBuffer,
-    PULONG CountReturned)
+LsaEnumerateAccountsWithUserRight(IN LSA_HANDLE PolicyHandle,
+                                  IN PLSA_UNICODE_STRING UserRight OPTIONAL,
+                                  OUT PVOID *Buffer,
+                                  OUT PULONG CountReturned)
 {
-    FIXME("(%p,%p,%p,%p) stub\n", PolicyHandle, UserRights, EnumerationBuffer, CountReturned);
+    FIXME("LsaEnumerateAccountsWithUserRight(%p %p %p %p) stub\n",
+          PolicyHandle, UserRight, Buffer, CountReturned);
     return STATUS_NO_MORE_ENTRIES;
 }
 
@@ -412,7 +445,8 @@ LsaEnumeratePrivilegesOfAccount(IN LSA_HANDLE AccountHandle,
 {
     NTSTATUS Status;
 
-    TRACE("(%p,%p) stub\n", AccountHandle, Privileges);
+    TRACE("LsaEnumeratePrivilegesOfAccount(%p %p)\n",
+          AccountHandle, Privileges);
 
     RpcTryExcept
     {
@@ -434,15 +468,15 @@ LsaEnumeratePrivilegesOfAccount(IN LSA_HANDLE AccountHandle,
  */
 NTSTATUS
 WINAPI
-LsaEnumerateTrustedDomains(
-    LSA_HANDLE PolicyHandle,
-    PLSA_ENUMERATION_HANDLE EnumerationContext,
-    PVOID *Buffer,
-    ULONG PreferedMaximumLength,
-    PULONG CountReturned)
+LsaEnumerateTrustedDomains(IN LSA_HANDLE PolicyHandle,
+                           IN OUT PLSA_ENUMERATION_HANDLE EnumerationContext,
+                           OUT PVOID *Buffer,
+                           IN ULONG PreferedMaximumLength,
+                           OUT PULONG CountReturned)
 {
-    FIXME("(%p,%p,%p,0x%08x,%p) stub\n", PolicyHandle, EnumerationContext,
-        Buffer, PreferedMaximumLength, CountReturned);
+    FIXME("LsaEnumerateTrustedDomains(%p %p %p %lu %p) stub\n",
+          PolicyHandle, EnumerationContext, Buffer,
+          PreferedMaximumLength, CountReturned);
 
     if (CountReturned) *CountReturned = 0;
     return STATUS_SUCCESS;
@@ -453,15 +487,16 @@ LsaEnumerateTrustedDomains(
  */
 NTSTATUS
 WINAPI
-LsaEnumerateTrustedDomainsEx(
-    LSA_HANDLE PolicyHandle,
-    PLSA_ENUMERATION_HANDLE EnumerationContext,
-    PVOID *Buffer,
-    ULONG PreferedMaximumLength,
-    PULONG CountReturned)
+LsaEnumerateTrustedDomainsEx(IN LSA_HANDLE PolicyHandle,
+                             IN OUT PLSA_ENUMERATION_HANDLE EnumerationContext,
+                             OUT PVOID *Buffer,
+                             IN ULONG PreferedMaximumLength,
+                             OUT PULONG CountReturned)
 {
-    FIXME("(%p,%p,%p,0x%08x,%p) stub\n", PolicyHandle, EnumerationContext, Buffer,
-        PreferedMaximumLength, CountReturned);
+    FIXME("LsaEnumerateTrustedDomainsEx(%p %p %p %lu %p) stub\n",
+          PolicyHandle, EnumerationContext, Buffer,
+          PreferedMaximumLength, CountReturned);
+
     if (CountReturned) *CountReturned = 0;
     return STATUS_SUCCESS;
 }
@@ -474,7 +509,7 @@ NTSTATUS
 WINAPI
 LsaFreeMemory(IN PVOID Buffer)
 {
-    TRACE("(%p)\n", Buffer);
+    TRACE("LsaFreeMemory(%p)\n", Buffer);
     return RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
 }
 
@@ -489,7 +524,8 @@ LsaGetSystemAccessAccount(IN LSA_HANDLE AccountHandle,
 {
     NTSTATUS Status;
 
-    TRACE("(%p,%p)\n", AccountHandle, SystemAccess);
+    TRACE("LsaGetSystemAccessAccount(%p %p)\n",
+          AccountHandle, SystemAccess);
 
     RpcTryExcept
     {
@@ -503,6 +539,20 @@ LsaGetSystemAccessAccount(IN LSA_HANDLE AccountHandle,
     RpcEndExcept;
 
     return Status;
+}
+
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+WINAPI
+LsaGetUserName(PUNICODE_STRING *UserName,
+               PUNICODE_STRING *DomainName)
+{
+    FIXME("LsaGetUserName(%p %p) stub\n",
+          UserName, DomainName);
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 
@@ -521,8 +571,8 @@ LsaLookupNames(IN LSA_HANDLE PolicyHandle,
     ULONG MappedCount = 0;
     NTSTATUS Status;
 
-    TRACE("(%p,0x%08x,%p,%p,%p)\n", PolicyHandle, Count, Names,
-          ReferencedDomains, Sids);
+    TRACE("LsaLookupNames(%p %lu %p %p %p)\n",
+          PolicyHandle, Count, Names, ReferencedDomains, Sids);
 
     if (ReferencedDomains == NULL || Sids == NULL)
         return STATUS_INVALID_PARAMETER;
@@ -573,8 +623,8 @@ LsaLookupNames2(IN LSA_HANDLE PolicyHandle,
     ULONG MappedCount = 0;
     NTSTATUS Status;
 
-    TRACE("(%p,0x%08x,0x%08x,%p,%p,%p) stub\n", PolicyHandle, Flags,
-          Count, Names, ReferencedDomains, Sids);
+    TRACE("LsaLookupNames2(%p 0x%08x %lu %p %p %p)\n",
+          PolicyHandle, Flags, Count, Names, ReferencedDomains, Sids);
 
     if (ReferencedDomains == NULL || Sids == NULL)
         return STATUS_INVALID_PARAMETER;
@@ -623,7 +673,8 @@ LsaLookupPrivilegeName(IN LSA_HANDLE PolicyHandle,
     PRPC_UNICODE_STRING NameBuffer = NULL;
     NTSTATUS Status;
 
-    TRACE("(%p,%p,%p)\n", PolicyHandle, Value, Name);
+    TRACE("LsaLookupPrivilegeName(%p %p %p)\n",
+          PolicyHandle, Value, Name);
 
     RpcTryExcept
     {
@@ -658,7 +709,8 @@ LsaLookupPrivilegeValue(IN LSA_HANDLE PolicyHandle,
     LUID Luid;
     NTSTATUS Status;
 
-    TRACE("(%p,%p,%p)\n", PolicyHandle, Name, Value);
+    TRACE("LsaLookupPrivilegeValue(%p %p %p)\n",
+          PolicyHandle, Name, Value);
 
     RpcTryExcept
     {
@@ -694,8 +746,8 @@ LsaLookupSids(IN LSA_HANDLE PolicyHandle,
     ULONG MappedCount = 0;
     NTSTATUS  Status;
 
-    TRACE("(%p,%u,%p,%p,%p)\n", PolicyHandle, Count, Sids,
-          ReferencedDomains, Names);
+    TRACE("LsaLookupSids(%p %lu %p %p %p)\n",
+          PolicyHandle, Count, Sids, ReferencedDomains, Names);
 
     if (Count == 0)
         return STATUS_INVALID_PARAMETER;
@@ -747,7 +799,7 @@ ULONG
 WINAPI
 LsaNtStatusToWinError(IN NTSTATUS Status)
 {
-    TRACE("(%lx)\n", Status);
+    TRACE("LsaNtStatusToWinError(0x%lx)\n", Status);
     return RtlNtStatusToDosError(Status);
 }
 
@@ -764,7 +816,8 @@ LsaOpenAccount(IN LSA_HANDLE PolicyHandle,
 {
     NTSTATUS Status;
 
-    TRACE("(%p,%p,0x%08lx,%p)\n", PolicyHandle, AccountSid, DesiredAccess, AccountHandle);
+    TRACE("LsaOpenAccount(%p %p 0x%08lx %p)\n",
+          PolicyHandle, AccountSid, DesiredAccess, AccountHandle);
 
     RpcTryExcept
     {
@@ -796,14 +849,14 @@ LsaOpenAccount(IN LSA_HANDLE PolicyHandle,
  */
 NTSTATUS
 WINAPI
-LsaOpenPolicy(IN PLSA_UNICODE_STRING SystemName,
+LsaOpenPolicy(IN PLSA_UNICODE_STRING SystemName OPTIONAL,
               IN PLSA_OBJECT_ATTRIBUTES ObjectAttributes,
               IN ACCESS_MASK DesiredAccess,
               OUT PLSA_HANDLE PolicyHandle)
 {
     NTSTATUS Status;
 
-    TRACE("LsaOpenPolicy (%s,%p,0x%08x,%p)\n",
+    TRACE("LsaOpenPolicy(%s %p 0x%08lx %p)\n",
           SystemName ? debugstr_w(SystemName->Buffer) : "(null)",
           ObjectAttributes, DesiredAccess, PolicyHandle);
 
@@ -841,7 +894,7 @@ LsaOpenSecret(IN LSA_HANDLE PolicyHandle,
 {
     NTSTATUS Status;
 
-    TRACE("LsaOpenSecret(%p %p 0x%08x %p)\n",
+    TRACE("LsaOpenSecret(%p %p 0x%08lx %p)\n",
           PolicyHandle, SecretName, DesiredAccess, SecretHandle);
 
     RpcTryExcept
@@ -877,8 +930,8 @@ LsaOpenTrustedDomainByName(IN LSA_HANDLE PolicyHandle,
 {
     NTSTATUS Status;
 
-    TRACE("(%p,%p,0x%08x,%p)\n", PolicyHandle, TrustedDomainName,
-          DesiredAccess, TrustedDomainHandle);
+    TRACE("LsaOpenTrustedDomainByName(%p %p 0x%08lx %p)\n",
+          PolicyHandle, TrustedDomainName, DesiredAccess, TrustedDomainHandle);
 
     RpcTryExcept
     {
@@ -902,12 +955,12 @@ LsaOpenTrustedDomainByName(IN LSA_HANDLE PolicyHandle,
  */
 NTSTATUS
 WINAPI
-LsaQueryDomainInformationPolicy(
-    LSA_HANDLE PolicyHandle,
-    POLICY_DOMAIN_INFORMATION_CLASS InformationClass,
-    PVOID *Buffer)
+LsaQueryDomainInformationPolicy(IN LSA_HANDLE PolicyHandle,
+                                IN POLICY_DOMAIN_INFORMATION_CLASS InformationClass,
+                                OUT PVOID *Buffer)
 {
-    FIXME("(%p,0x%08x,%p)\n", PolicyHandle, InformationClass, Buffer);
+    FIXME("LsaQueryDomainInformationPolicy(%p %lu %p) stub\n",
+          PolicyHandle, InformationClass, Buffer);
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -917,12 +970,27 @@ LsaQueryDomainInformationPolicy(
  */
 NTSTATUS
 WINAPI
-LsaQueryForestTrustInformation(
-    LSA_HANDLE PolicyHandle,
-    PLSA_UNICODE_STRING TrustedDomainName,
-    PLSA_FOREST_TRUST_INFORMATION * ForestTrustInfo)
+LsaQueryForestTrustInformation(IN LSA_HANDLE PolicyHandle,
+                               IN PLSA_UNICODE_STRING TrustedDomainName,
+                               OUT PLSA_FOREST_TRUST_INFORMATION *ForestTrustInfo)
 {
-    FIXME("(%p,%p,%p) stub\n", PolicyHandle, TrustedDomainName, ForestTrustInfo);
+    FIXME("LsaQueryForestTrustInformation(%p %p %p) stub\n",
+          PolicyHandle, TrustedDomainName, ForestTrustInfo);
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+WINAPI
+LsaQueryInfoTrustedDomain(IN LSA_HANDLE TrustedDomainHandle,
+                          IN TRUSTED_INFORMATION_CLASS InformationClass,
+                          OUT PVOID *Buffer)
+{
+    FIXME("LsaQueryInfoTrustedDomain(%p %d %p) stub\n",
+          TrustedDomainHandle, InformationClass, Buffer);
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -939,7 +1007,8 @@ LsaQueryInformationPolicy(IN LSA_HANDLE PolicyHandle,
     PLSAPR_POLICY_INFORMATION PolicyInformation = NULL;
     NTSTATUS Status;
 
-    TRACE("(%p,0x%08x,%p)\n", PolicyHandle, InformationClass, Buffer);
+    TRACE("LsaQueryInformationPolicy(%p %d %p)\n",
+          PolicyHandle, InformationClass, Buffer);
 
     RpcTryExcept
     {
@@ -980,6 +1049,10 @@ LsaQuerySecret(IN LSA_HANDLE SecretHandle,
     PLSA_UNICODE_STRING DecryptedOldValue = NULL;
     SIZE_T BufferSize;
     NTSTATUS Status;
+
+    TRACE("LsaQuerySecret(%p %p %p %p %p)\n",
+          SecretHandle, CurrentValue, CurrentValueSetTime,
+          OldValue, OldValueSetTime);
 
     RpcTryExcept
     {
@@ -1087,13 +1160,13 @@ done:
  */
 NTSTATUS
 WINAPI
-LsaQueryTrustedDomainInfo(
-    LSA_HANDLE PolicyHandle,
-    PSID TrustedDomainSid,
-    TRUSTED_INFORMATION_CLASS InformationClass,
-    PVOID *Buffer)
+LsaQueryTrustedDomainInfo(IN LSA_HANDLE PolicyHandle,
+                          IN PSID TrustedDomainSid,
+                          IN TRUSTED_INFORMATION_CLASS InformationClass,
+                          OUT PVOID *Buffer)
 {
-    FIXME("(%p,%p,%d,%p) stub\n", PolicyHandle, TrustedDomainSid, InformationClass, Buffer);
+    FIXME("LsaQueryTrustedDomainInfo(%p %p %d %p) stub\n",
+          PolicyHandle, TrustedDomainSid, InformationClass, Buffer);
     return STATUS_OBJECT_NAME_NOT_FOUND;
 }
 
@@ -1110,7 +1183,8 @@ LsaQueryTrustedDomainInfoByName(IN LSA_HANDLE PolicyHandle,
 {
     NTSTATUS Status;
 
-    TRACE("(%p,%p,%d,%p)\n", PolicyHandle, TrustedDomainName, InformationClass, Buffer);
+    TRACE("LsaQueryTrustedDomainInfoByName(%p %p %d %p)\n",
+          PolicyHandle, TrustedDomainName, InformationClass, Buffer);
 
     if (InformationClass == TrustedDomainAuthInformationInternal ||
         InformationClass == TrustedDomainFullInformationInternal)
@@ -1134,6 +1208,20 @@ LsaQueryTrustedDomainInfoByName(IN LSA_HANDLE PolicyHandle,
 
 
 /*
+ * @unimplemented
+ */
+NTSTATUS
+WINAPI
+LsaRegisterPolicyChangeNotification(IN POLICY_NOTIFICATION_INFORMATION_CLASS InformationClass,
+                                    IN HANDLE NotificationEventHandle)
+{
+    FIXME("LsaRegisterPolicyChangeNotification(%d %p) stub\n",
+          InformationClass, NotificationEventHandle);
+    return STATUS_UNSUCCESSFUL;
+}
+
+
+/*
  * @implemented
  */
 NTSTATUS
@@ -1146,7 +1234,7 @@ LsaRemoveAccountRights(IN LSA_HANDLE PolicyHandle,
 {
     LSAPR_USER_RIGHT_SET UserRightSet;
 
-    TRACE("LsaRemoveAccountRights(%p %p %d %p 0x%08x) stub\n",
+    TRACE("LsaRemoveAccountRights(%p %p %d %p %lu)\n",
           PolicyHandle, AccountSid, AllRights, UserRights, CountOfRights);
 
     UserRightSet.Entries = CountOfRights;
@@ -1174,27 +1262,45 @@ LsaRemoveAccountRights(IN LSA_HANDLE PolicyHandle,
  */
 NTSTATUS
 WINAPI
-LsaRetrievePrivateData(
-    LSA_HANDLE PolicyHandle,
-    PLSA_UNICODE_STRING KeyName,
-    PLSA_UNICODE_STRING *PrivateData)
+LsaRetrievePrivateData(IN LSA_HANDLE PolicyHandle,
+                       IN PLSA_UNICODE_STRING KeyName,
+                       OUT PLSA_UNICODE_STRING *PrivateData)
 {
-    FIXME("(%p,%p,%p) stub\n", PolicyHandle, KeyName, PrivateData);
+    FIXME("LsaRetrievePrivateData(%p %p %p) stub\n",
+          PolicyHandle, KeyName, PrivateData);
     return STATUS_OBJECT_NAME_NOT_FOUND;
 }
+
 
 /*
  * @unimplemented
  */
 NTSTATUS
 WINAPI
-LsaSetDomainInformationPolicy(
-    LSA_HANDLE PolicyHandle,
-    POLICY_DOMAIN_INFORMATION_CLASS InformationClass,
-    PVOID Buffer)
+LsaSetDomainInformationPolicy(IN LSA_HANDLE PolicyHandle,
+                              IN POLICY_DOMAIN_INFORMATION_CLASS InformationClass,
+                              IN PVOID Buffer OPTIONAL)
 {
-    FIXME("(%p,0x%08x,%p) stub\n", PolicyHandle, InformationClass, Buffer);
+    FIXME("LsaSetDomainInformationPolicy(%p %d %p) stub\n",
+          PolicyHandle, InformationClass, Buffer);
     return STATUS_UNSUCCESSFUL;
+}
+
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+WINAPI
+LsaSetForestTrustInformation(IN LSA_HANDLE PolicyHandle,
+                             IN PLSA_UNICODE_STRING TrustedDomainName,
+                             IN PLSA_FOREST_TRUST_INFORMATION ForestTrustInfo,
+                             IN BOOL CheckOnly,
+                             OUT PLSA_FOREST_TRUST_COLLISION_INFORMATION *CollisionInfo)
+{
+    FIXME("LsaSetForestTrustInformation(%p %p %p %d %p) stub\n",
+          PolicyHandle, TrustedDomainName, ForestTrustInfo, CheckOnly, CollisionInfo);
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 
@@ -1209,7 +1315,7 @@ LsaSetInformationPolicy(IN LSA_HANDLE PolicyHandle,
 {
     NTSTATUS Status;
 
-    TRACE("LsaSetInformationPolicy(%p 0x%08x %p)\n",
+    TRACE("LsaSetInformationPolicy(%p %d %p)\n",
           PolicyHandle, InformationClass, Buffer);
 
     RpcTryExcept
@@ -1242,7 +1348,7 @@ LsaSetSecret(IN LSA_HANDLE SecretHandle,
     SIZE_T BufferSize;
     NTSTATUS Status;
 
-    TRACE("LsaSetSecret(%p,%p,%p)\n",
+    TRACE("LsaSetSecret(%p %p %p)\n",
           SecretHandle, EncryptedCurrentValue, EncryptedOldValue);
 
     if (CurrentValue != NULL)
@@ -1335,108 +1441,59 @@ LsaSetSystemAccessAccount(IN LSA_HANDLE AccountHandle,
  */
 NTSTATUS
 WINAPI
-LsaSetForestTrustInformation(
-    LSA_HANDLE PolicyHandle,
-    PLSA_UNICODE_STRING TrustedDomainName,
-    PLSA_FOREST_TRUST_INFORMATION ForestTrustInfo,
-    BOOL CheckOnly,
-    PLSA_FOREST_TRUST_COLLISION_INFORMATION *CollisionInfo)
+LsaSetTrustedDomainInfoByName(IN LSA_HANDLE PolicyHandle,
+                              IN PLSA_UNICODE_STRING TrustedDomainName,
+                              IN TRUSTED_INFORMATION_CLASS InformationClass,
+                              IN PVOID Buffer)
 {
-    FIXME("(%p,%p,%p,%d,%p) stub\n", PolicyHandle, TrustedDomainName, ForestTrustInfo, CheckOnly, CollisionInfo);
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-/*
- * @unimplemented
- */
-NTSTATUS
-WINAPI
-LsaSetTrustedDomainInfoByName(
-    LSA_HANDLE PolicyHandle,
-    PLSA_UNICODE_STRING TrustedDomainName,
-    TRUSTED_INFORMATION_CLASS InformationClass,
-    PVOID Buffer)
-{
-    FIXME("(%p,%p,%d,%p) stub\n", PolicyHandle, TrustedDomainName, InformationClass, Buffer);
+    FIXME("LsaSetTrustedDomainInfoByName(%p %p %d %p) stub\n",
+          PolicyHandle, TrustedDomainName, InformationClass, Buffer);
     return STATUS_SUCCESS;
 }
 
-/*
- * @unimplemented
- */
-NTSTATUS WINAPI LsaRegisterPolicyChangeNotification(
-    POLICY_NOTIFICATION_INFORMATION_CLASS class,
-    HANDLE event)
-{
-    FIXME("(%d,%p) stub\n", class, event);
-    return STATUS_UNSUCCESSFUL;
-}
 
 /*
  * @unimplemented
  */
 NTSTATUS
 WINAPI
-LsaSetTrustedDomainInformation(
-    LSA_HANDLE PolicyHandle,
-    PSID TrustedDomainSid,
-    TRUSTED_INFORMATION_CLASS InformationClass,
-    PVOID Buffer)
+LsaSetTrustedDomainInformation(IN LSA_HANDLE PolicyHandle,
+                               IN PSID TrustedDomainSid,
+                               IN TRUSTED_INFORMATION_CLASS InformationClass,
+                               IN PVOID Buffer)
 {
-    FIXME("(%p,%p,%d,%p) stub\n", PolicyHandle, TrustedDomainSid, InformationClass, Buffer);
+    FIXME("LsaSetTrustedDomainInformation(%p %p %d %p) stub\n",
+          PolicyHandle, TrustedDomainSid, InformationClass, Buffer);
     return STATUS_SUCCESS;
 }
 
+
 /*
  * @unimplemented
  */
 NTSTATUS
 WINAPI
-LsaStorePrivateData(
-    LSA_HANDLE PolicyHandle,
-    PLSA_UNICODE_STRING KeyName,
-    PLSA_UNICODE_STRING PrivateData)
+LsaStorePrivateData(IN LSA_HANDLE PolicyHandle,
+                    IN PLSA_UNICODE_STRING KeyName,
+                    IN PLSA_UNICODE_STRING PrivateData OPTIONAL)
 {
-    FIXME("(%p,%p,%p) stub\n", PolicyHandle, KeyName, PrivateData);
+    FIXME("LsaStorePrivateData(%p %p %p) stub\n",
+          PolicyHandle, KeyName, PrivateData);
     return STATUS_OBJECT_NAME_NOT_FOUND;
 }
 
+
 /*
  * @unimplemented
  */
-NTSTATUS WINAPI LsaUnregisterPolicyChangeNotification(
-    POLICY_NOTIFICATION_INFORMATION_CLASS class,
-    HANDLE event)
+NTSTATUS
+WINAPI
+LsaUnregisterPolicyChangeNotification(IN POLICY_NOTIFICATION_INFORMATION_CLASS InformationClass,
+                                      IN HANDLE NotificationEventHandle)
 {
-    FIXME("(%d,%p) stub\n", class, event);
+    FIXME("(%d %p) stub\n",
+          InformationClass, NotificationEventHandle);
     return STATUS_SUCCESS;
 }
-
-/*
- * @unimplemented
- */
-NTSTATUS
-WINAPI
-LsaGetUserName(
-    PUNICODE_STRING *UserName,
-    PUNICODE_STRING *DomainName)
-{
-    FIXME("(%p,%p) stub\n", UserName, DomainName);
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-/*
- * @unimplemented
- */
-NTSTATUS
-WINAPI
-LsaQueryInfoTrustedDomain (DWORD Unknonw0,
-			   DWORD Unknonw1,
-			   DWORD Unknonw2)
-{
-    FIXME("(%d,%d,%d) stub\n", Unknonw0, Unknonw1, Unknonw2);
-    return STATUS_NOT_IMPLEMENTED;
-}
-
 
 /* EOF */

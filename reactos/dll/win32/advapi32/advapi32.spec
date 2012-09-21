@@ -346,7 +346,7 @@
 @ stub LookupSecurityDescriptorPartsW
 @ stdcall LsaAddAccountRights(ptr ptr ptr long)
 @ stdcall LsaAddPrivilegesToAccount(ptr ptr)
-@ stub LsaClearAuditLog
+@ stdcall LsaClearAuditLog(ptr)
 @ stdcall LsaClose(ptr)
 @ stdcall LsaCreateAccount(ptr ptr long ptr)
 @ stdcall LsaCreateSecret(ptr ptr long ptr)
