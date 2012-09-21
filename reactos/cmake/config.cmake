@@ -52,6 +52,9 @@ else()
 "Whether to compile with the KD protocol.")
 endif()
 
+set(CMAKE_BUILD_TYPE "Debug" CACHE STRING 
+"Choose the type of build, options are: None(CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release RelWithDebInfo MinSizeRel." FORCE)
+
 set(_ELF_ FALSE CACHE BOOL
 "Whether to compile support for ELF files.
 Do not enable unless you know what you're doing.")
