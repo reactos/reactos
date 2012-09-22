@@ -547,12 +547,40 @@ LsaGetSystemAccessAccount(IN LSA_HANDLE AccountHandle,
  */
 NTSTATUS
 WINAPI
-LsaGetUserName(PUNICODE_STRING *UserName,
-               PUNICODE_STRING *DomainName)
+LsaGetUserName(OUT PUNICODE_STRING *UserName,
+               OUT PUNICODE_STRING *DomainName OPTIONAL)
 {
-    FIXME("LsaGetUserName(%p %p) stub\n",
+    PRPC_UNICODE_STRING UserNameString = NULL;
+    PRPC_UNICODE_STRING DomainNameString = NULL;
+    NTSTATUS Status;
+
+    TRACE("LsaGetUserName(%p %p)\n",
           UserName, DomainName);
-    return STATUS_NOT_IMPLEMENTED;
+
+    RpcTryExcept
+    {
+        Status = LsarGetUserName(NULL,
+                                 &UserNameString,
+                                 (DomainName != NULL) ? &DomainNameString : NULL);
+
+        *UserName = (PUNICODE_STRING)UserNameString;
+
+        if (DomainName != NULL)
+            *DomainName = (PUNICODE_STRING)DomainNameString;
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        if (UserNameString != NULL)
+            MIDL_user_free(UserNameString);
+
+        if (DomainNameString != NULL)
+            MIDL_user_free(DomainNameString);
+
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
 }
 
 
@@ -913,6 +941,38 @@ LsaOpenSecret(IN LSA_HANDLE PolicyHandle,
     RpcEndExcept;
 
     TRACE("LsaOpenSecret() done (Status: 0x%08lx)\n", Status);
+
+    return Status;
+}
+
+
+/*
+ * @implemented
+ */
+NTSTATUS
+WINAPI
+LsaOpenTrustedDomain(IN LSA_HANDLE PolicyHandle,
+                     IN PSID TrustedDomainSid,
+                     IN ACCESS_MASK DesiredAccess,
+                     OUT PLSA_HANDLE TrustedDomainHandle)
+{
+    NTSTATUS Status;
+
+    TRACE("LsaOpenTrustedDomain(%p %p 0x%08lx %p)\n",
+          PolicyHandle, TrustedDomainSid, DesiredAccess, TrustedDomainHandle);
+
+    RpcTryExcept
+    {
+        Status = LsarOpenTrustedDomain((LSAPR_HANDLE)PolicyHandle,
+                                       (PRPC_SID)TrustedDomainSid,
+                                       DesiredAccess,
+                                       (PLSAPR_HANDLE)TrustedDomainHandle);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
 
     return Status;
 }

@@ -381,7 +381,7 @@
 @ stdcall LsaOpenPolicy(ptr ptr long ptr)
 @ stub LsaOpenPolicySce
 @ stdcall LsaOpenSecret(ptr ptr long ptr)
-@ stub LsaOpenTrustedDomain
+@ stdcall LsaOpenTrustedDomain(ptr ptr long ptr)
 @ stdcall LsaOpenTrustedDomainByName(ptr ptr long ptr)
 @ stdcall LsaQueryDomainInformationPolicy(ptr long ptr)
 @ stdcall LsaQueryForestTrustInformation(ptr ptr ptr)
