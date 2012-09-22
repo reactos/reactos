@@ -554,7 +554,7 @@ DesktopWindowProc(PWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam, LRESULT *lRe
    ULONG Value;
    //ERR("DesktopWindowProc\n");
 
-   *lResult = 0; 
+   *lResult = 0;
 
    switch (Msg)
    {
@@ -596,7 +596,7 @@ DesktopWindowProc(PWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam, LRESULT *lRe
       case WM_SYSCOLORCHANGE:
          co_UserRedrawWindow(Wnd, NULL, NULL, RDW_INVALIDATE|RDW_ERASE|RDW_ALLCHILDREN);
          return TRUE;
-   } 
+   }
    return FALSE; // Not processed so go with callback.
 }
 
@@ -813,6 +813,12 @@ BOOL IntDeRegisterShellHookWindow(HWND hWnd)
 static VOID
 IntFreeDesktopHeap(IN OUT PDESKTOP Desktop)
 {
+    if (Desktop->pheapDesktop != NULL)
+    {
+        MmUnmapViewInSessionSpace(Desktop->pheapDesktop);
+        Desktop->pheapDesktop = NULL;
+    }
+
     if (Desktop->hsectionDesktop != NULL)
     {
         ObDereferenceObject(Desktop->hsectionDesktop);
