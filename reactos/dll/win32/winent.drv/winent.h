@@ -30,13 +30,13 @@
 #define NTOS_USER_MODE
 #include <ndk/ntndk.h>
 #include <winddi.h>
-#include <win32k/ntgdityp.h>
+#include <ntgdityp.h>
 #include "wine/rosuser.h"
 #include "wine/ntrosgdi.h"
 #include "wine/list.h"
 #include "wine/unicode.h"
 #include "wine/server.h"
-#include "win32k/ntgdihdl.h"
+#include <ntgdihdl.h>
 #include <pseh/pseh2.h>
 
 /* GDI escapes */
