@@ -2870,7 +2870,11 @@ ScsiPortDeviceControl(IN PDEVICE_OBJECT DeviceObject,
           break;
 
       default:
-          DPRINT1("  unknown ioctl code: 0x%lX\n", Stack->Parameters.DeviceIoControl.IoControlCode);
+          if ('M' == (Stack->Parameters.DeviceIoControl.IoControlCode >> 16)) {
+            DPRINT1("  got ioctl intended for the mount manager: 0x%lX\n", Stack->Parameters.DeviceIoControl.IoControlCode);
+          } else {
+            DPRINT1("  unknown ioctl code: 0x%lX\n", Stack->Parameters.DeviceIoControl.IoControlCode);
+          }
           Status = STATUS_NOT_IMPLEMENTED;
           break;
     }
