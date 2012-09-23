@@ -32,6 +32,7 @@
 #include "wingdi.h"
 #include "winnls.h"
 #include "controls.h"
+#include "user_private.h"
 
 static HBRUSH hbrushPattern;
 static HBITMAP hbitmapWallPaper;

@@ -92,7 +92,7 @@ BOOL WINAPI RegisterLogonProcess(DWORD dwProcessId, BOOL bRegister)
     NTSTATUS Status;
 
     CsrRequest = MAKE_CSR_API(REGISTER_LOGON_PROCESS, CSR_GUI);
-    Request.Data.RegisterLogonProcessRequest.ProcessId = dwProcessId;
+    Request.Data.RegisterLogonProcessRequest.ProcessId = (HANDLE)dwProcessId;
     Request.Data.RegisterLogonProcessRequest.Register = bRegister;
 
     Status = CsrClientCallServer(&Request,

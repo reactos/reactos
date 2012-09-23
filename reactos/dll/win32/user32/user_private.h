@@ -36,6 +36,10 @@
 #ifndef __REACTOS__
 #define WM_SYSTIMER	    0x0118
 #define WM_POPUPSYSTEMMENU  0x0313
+#else
+// Hack to silence IDC_ARROW cast errors
+#undef MAKEINTRESOURCE
+#define MAKEINTRESOURCE(i) ((ULONG_PTR)((WORD)(i)))
 #endif
 
 /* internal messages codes */

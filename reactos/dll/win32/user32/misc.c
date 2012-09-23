@@ -426,7 +426,7 @@ BOOL WINAPI GetMonitorInfoW(HMONITOR hMonitor, LPMONITORINFO lpMonitorInfo)
  */
 BOOL WINAPI EnumDisplayMonitors( HDC hdc, LPCRECT rect, MONITORENUMPROC proc, LPARAM lp )
 {
-    return USER_Driver->pEnumDisplayMonitors( hdc, rect, proc, lp );
+    return USER_Driver->pEnumDisplayMonitors( hdc, (LPRECT)rect, proc, lp );
 }
 
 /***********************************************************************
