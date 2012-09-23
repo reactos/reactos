@@ -1,10 +1,7 @@
-#include "include/reactos/msvctarget.h"
-#undef i386
-
-@ stdcall FLOATOBJ_AddFloatObj(ptr ptr)
-@ stdcall FLOATOBJ_DivFloatObj(ptr ptr)
-@ stdcall FLOATOBJ_MulFloatObj(ptr ptr)
-@ stdcall FLOATOBJ_SubFloatObj(ptr ptr)
+@ stdcall -arch=i386 FLOATOBJ_AddFloatObj(ptr ptr)
+@ stdcall -arch=i386 FLOATOBJ_DivFloatObj(ptr ptr)
+@ stdcall -arch=i386 FLOATOBJ_MulFloatObj(ptr ptr)
+@ stdcall -arch=i386 FLOATOBJ_SubFloatObj(ptr ptr)
 @ stdcall BRUSHOBJ_hGetColorTransform(ptr)
 @ stdcall BRUSHOBJ_pvAllocRbrush(ptr long)
 @ stdcall BRUSHOBJ_pvGetRbrush(ptr)

@@ -46,12 +46,12 @@ typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
 #include <csrss/csrss.h>
 
 /* Public Win32K Headers */
-#include <win32k/callback.h>
-#include <win32k/ntusrtyp.h>
-#include <win32k/ntuser.h>
-#include <win32k/ntgdityp.h>
-#include <win32k/ntgdihdl.h>
-#include <psdk/ntgdi.h>
+#include <include/callback.h>
+#include <include/ntusrtyp.h>
+#include <include/ntuser.h>
+#include <include/ntgdityp.h>
+#include <include/ntgdihdl.h>
+#include <ntgdi.h>
 
 /* Internal  Win32K Header */
 #include <win32kp.h>
