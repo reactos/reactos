@@ -1,0 +1,41 @@
+So to sum up all the ideas + how arwinss would fit:
+
+win32ss\user\user32
+win32ss\user\ntuser
+win32ss\user\win32csr
+win32ss\gdi\gdi32
+win32ss\gdi\ntgdi
+win32ss\gdi\eng
+win32ss\gdi\dib
+win32ss\include
+win32ss\misc
+win32ss\reactx\ntddraw
+win32ss\reactx\ddraw
+win32ss\reactx\d3d*
+win32ss\reactx\dxapi
+win32ss\reactx\dxg
+win32ss\reactx\dxgthk
+
+win32k = ntuser + ntgdi + eng + dib + ntddraw
+
+arwinss\user\user32                (wine's user32)
+arwinss\user\userdrv               ('driver dll' that connects wine's user32 to win32k)
+arwinss\user\ntuser                (mostly shared parts like keyboard layouts, monitors, DisplaySettings)
+arwinss\user\win32csr              (same with trunk + minor changes)
+arwinss\user\wineserver            (parts of wine's server)
+arwinss\gdi\gdi32                  (wine's gdi32)
+arwinss\gdi\gdidrv                 ('driver dll' that connects wine's gdi32 to win32k)
+arwinss\gdi\ntgdi                  (glue code that connects trunk's gre with wine's gdi32)
+arwinss\gdi\gre                    (part of trunk's gre)
+arwinss\gdi\eng                    (trunk's eng)
+arwinss\gdi\dib                    (trunk's dib)
+arwinss\include
+arwinss\misc                       (trunk's misc)
+arwinss\reactx\ddraw
+arwinss\reactx\d3d*
+arwinss\reactx\wined3d
+
+win32k = ntuser + ntgdi + eng + dib + wineserver
+winent = userdrv + gdidrv
+
+note that winent is a normal usermode dll that does all the system calls
