@@ -316,10 +316,30 @@ LsaCreateTrustedDomainEx(IN LSA_HANDLE PolicyHandle,
                          IN ACCESS_MASK DesiredAccess,
                          OUT PLSA_HANDLE TrustedDomainHandle)
 {
-    FIXME("LsaCreateTrustedDomainEx(%p %p %p 0x%08lx %p) stub\n",
+    PLSAPR_TRUSTED_DOMAIN_AUTH_INFORMATION_INTERNAL EncryptedAuthInfo = NULL;
+    NTSTATUS Status;
+
+    TRACE("LsaCreateTrustedDomainEx(%p %p %p 0x%08lx %p) stub\n",
           PolicyHandle, TrustedDomainInformation, AuthenticationInformation,
           DesiredAccess, TrustedDomainHandle);
-    return STATUS_SUCCESS;
+
+    RpcTryExcept
+    {
+        /* FIXME: Encrypt AuthenticationInformation */
+
+        Status = LsarCreateTrustedDomainEx2((LSAPR_HANDLE)PolicyHandle,
+                                            (PLSAPR_TRUSTED_DOMAIN_INFORMATION_EX)TrustedDomainInformation,
+                                            EncryptedAuthInfo,
+                                            DesiredAccess,
+                                            (PLSAPR_HANDLE)TrustedDomainHandle);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
 }
 
 
@@ -412,6 +432,50 @@ LsaEnumerateAccountRights(IN LSA_HANDLE PolicyHandle,
         {
             MIDL_user_free(UserRightsSet.UserRights);
         }
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
+
+/*
+ * @implemented
+ */
+NTSTATUS
+WINAPI
+LsaEnumerateAccounts(IN LSA_HANDLE PolicyHandle,
+                     IN OUT PLSA_ENUMERATION_HANDLE EnumerationContext,
+                     OUT PVOID *Buffer,
+                     IN ULONG PreferedMaximumLength,
+                     OUT PULONG CountReturned)
+{
+    LSAPR_ACCOUNT_ENUM_BUFFER AccountEnumBuffer;
+    NTSTATUS Status;
+
+    TRACE("LsaEnumerateAccounts(%p %p %p %lu %p)\n",
+          PolicyHandle, EnumerationContext, Buffer,
+          PreferedMaximumLength, CountReturned);
+
+    AccountEnumBuffer.EntriesRead = 0;
+    AccountEnumBuffer.Information = NULL;
+
+    RpcTryExcept
+    {
+        Status = LsarEnumerateAccounts((LSAPR_HANDLE)PolicyHandle,
+                                       EnumerationContext,
+                                       &AccountEnumBuffer,
+                                       PreferedMaximumLength);
+
+        *Buffer = AccountEnumBuffer.Information;
+        *CountReturned = AccountEnumBuffer.EntriesRead;
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        if (AccountEnumBuffer.Information != NULL)
+            MIDL_user_free(AccountEnumBuffer.Information);
+
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
     }
     RpcEndExcept;
 
