@@ -1,4 +1,3 @@
-
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS net command 
@@ -12,24 +11,12 @@
 #include <string.h>
 #include <stdlib.h>
 #include <windows.h>
+#include <winsvc.h>
 
-void help(void);
-int unimplemented(void);
+VOID help(VOID);
+INT unimplemented(INT argc, WCHAR **argv);
 
 
-INT cmdHelp(INT argc, CHAR **argv);
-
-INT cmdStart(INT argc, CHAR **argv );
-INT start_service(CHAR *service);
-
-INT cmdStop(INT argc, CHAR **argv );
-INT stop_service(CHAR *service);
-
-/* Control and start rpcclient */
-BOOL myCreateProcessStartGetSzie(CHAR *cmdline, LONG *size);
-BOOL myCreateProcessStart(CHAR *cmdline, CHAR *srvlst, LONG size);
-BOOL myCreateProcess(HANDLE hChildStdoutWr, HANDLE hChildStdinRd, CHAR *cmdline);
-LONG ReadPipe(HANDLE hStdoutWr, HANDLE hStdoutRd, CHAR *srvlst, LONG size);
-LONG ReadPipeSize(HANDLE hStdoutWr, HANDLE hStdoutRd); 
-INT row_scanner_service(CHAR *buffer, LONG* pos, LONG size, CHAR *name,CHAR *save);
-
+INT cmdHelp(INT argc, WCHAR **argv);
+INT cmdStart(INT argc, WCHAR **argv);
+INT cmdStop(INT argc, WCHAR **argv);
