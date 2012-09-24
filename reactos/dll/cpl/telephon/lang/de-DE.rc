@@ -1,7 +1,0 @@
-LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
-
-STRINGTABLE 
-BEGIN
-	IDS_CPLSYSTEMNAME "Telefon- und Modemeinstellungen"
-	IDS_CPLSYSTEMDESCRIPTION "Konfiguriert Wählregeln zum Telefonieren und Modemoptionen."
-END

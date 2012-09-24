@@ -1,7 +1,0 @@
-@ stdcall EditAuditInfo(long)
-@ stdcall EditOwnerInfo(long)
-@ stdcall EditPermissionInfo(long)
-@ stdcall FMExtensionProcW(ptr long long)
-@ stdcall SedDiscretionaryAclEditor(ptr ptr wstr ptr ptr wstr ptr ptr ptr long long ptr long)
-@ stdcall SedSystemAclEditor(ptr ptr wstr ptr ptr wstr ptr ptr ptr long ptr long)
-@ stdcall SedTakeOwnership(ptr ptr wstr wstr wstr long ptr ptr ptr long long ptr ptr long)

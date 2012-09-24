@@ -1,5 +1,0 @@
-Add missing units into conversion dialog.
-
-Add translations to html help files.
-
-Add translations of conversion stuff to various imported languages.
