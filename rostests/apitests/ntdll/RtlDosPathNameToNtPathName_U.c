@@ -9,6 +9,7 @@
  *   non-ANSI characters somewhere in the path, all bets are currently off.
  * - Remove hard-coded path size limits.
  * - Un-tabify to match style of other code.
+ * - Clean up cruft. Probably remove the option of running it stand-alone.
  */
 
 /* Test to see that ntdll.RtlDosPathNameToNtPathName_U behaves _exactly_
@@ -80,12 +81,14 @@ RtlDosPathNameToNtPathName_U_t RtlDosPathNameToNtPathName_U;
 #endif // !COMPILE_AS_ROSTEST
 
 
-static void report_error(const char* pszErr)
+static void check_result(BOOLEAN bOK, const char* pszErr)
 {
 #ifdef COMPILE_AS_ROSTEST
-	ok(FALSE, "%s\n", pszErr);
+	ok(bOK, "%s\n", pszErr);
 #else
-	printf("\a** %s!\n", pszErr);
+	if (!bOK) {
+		printf("\a** %s!\n", pszErr);
+	}
 #endif
 }
 
@@ -114,11 +117,10 @@ static void test2(LPCWSTR pwsz, LPCWSTR pwszExpected, LPCWSTR pwszExpectedPartNa
 
 	bOK = RtlDosPathNameToNtPathName_U(pwsz, &NtName, (PCWSTR*)&PartName, &RelativeName);
 
+	check_result(bOK, "RtlDosPathNameToNtPathName_U failed");
 	if (!bOK) {
-		report_error("RtlDosPathNameToNtPathName_U failed");
 		printf("input: \"%S\"\n", pwsz);
 		return;
-//		exit(1);
 	}
 
 #if !defined(COMPILE_AS_ROSTEST) && defined(PRINT_INFO)
@@ -135,42 +137,44 @@ static void test2(LPCWSTR pwsz, LPCWSTR pwszExpected, LPCWSTR pwszExpectedPartNa
 #endif
 
 	// Disregarding input, output (NtName) shall always start with "\??\".
-	if (memcmp(NtName.Buffer, L"\\??\\", 8)) {
-		report_error("NtName does not start with \"\\??\\\"");
+	bOK = NtName.Length >= 8 &&
+	      memcmp(NtName.Buffer, L"\\??\\", 8) == 0;
+	check_result(bOK, "NtName does not start with \"\\??\\\"");
+	if (!bOK) {
 		return;
-//		exit(1);
 	}
+
 	if (pwszExpected) {
 		PWSTR pwszActual = NtName.Buffer + 4;
 		const size_t lenExp = wcslen(pwszExpected);
 		const size_t lenAct = (NtName.Length - 8) / 2;
-		if (lenExp != lenAct ||
-		    memcmp(pwszActual, pwszExpected, lenExp * 2))
+		bOK = (lenExp == lenAct) &&
+		      memcmp(pwszActual, pwszExpected, lenExp * 2) == 0;
+		check_result(bOK, "Actual NtName does not match expectations!");
+		if (!bOK)
 		{
-			report_error("Actual NtName does not match expectations!");
 			printf("Expected: %2u chars \"%S\"\n", lenExp, pwszExpected);
 			printf("Actual  : %2u chars \"%S\"\n", lenAct, lenAct ? pwszActual : L"(null)");
 			return;
-//			exit(1);
 		}
 	} else
 	if (NtName.Length)
 	{
 		PWSTR pwszActual = NtName.Buffer + 4;
 		const size_t lenAct = (NtName.Length - 8) / 2;
-		report_error("Unexpected NtName (expected NULL)");
+		check_result(FALSE, "Actual NtName does not match expectations!");
 		printf("Actual  : %2u chars \"%S\"\n", lenAct, pwszActual);
 	}
 
 	if (pwszExpectedPartName) {
 		if (!PartName) {
-			report_error("Actual PartName is unexpectedly NULL!");
+			check_result(FALSE, "Actual PartName is unexpectedly NULL!");
 			printf("Expected: \"%S\"\n", pwszExpectedPartName);
 			return;
-//			exit(1);
 		}
-		if (wcscmp(PartName, pwszExpectedPartName)) {
-			report_error("Actual PartName does not match expected!");
+		bOK = wcscmp(PartName, pwszExpectedPartName) == 0;
+		check_result(bOK, "Actual PartName does not match expected!");
+		if (!bOK) {
 			printf("Expected: \"%S\"\n", pwszExpectedPartName);
 			printf("Actual  : \"%S\"\n", PartName);
 			return;
@@ -178,7 +182,7 @@ static void test2(LPCWSTR pwsz, LPCWSTR pwszExpected, LPCWSTR pwszExpectedPartNa
 	} else
 	if (PartName)
 	{
-		report_error("Unexpected PartName (expected NULL)");
+		check_result(FALSE, "Unexpected PartName (expected NULL)");
 		printf("Actual  : %S\n", PartName);
 	}
 }
