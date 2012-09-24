@@ -5,6 +5,7 @@ list(APPEND SOURCE
     RtlBitmap.c
     RtlDetermineDosPathNameType.c
     RtlDoesFileExists.c
+    RtlDosPathNameToNtPathName_U.c
     RtlDosSearchPath_U.c
     RtlDosSearchPath_Ustr.c
     RtlGetFullPathName_U.c

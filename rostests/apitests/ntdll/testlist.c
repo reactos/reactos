@@ -11,6 +11,7 @@ extern void func_NtSystemInformation(void);
 extern void func_RtlBitmap(void);
 extern void func_RtlDetermineDosPathNameType(void);
 extern void func_RtlDoesFileExists(void);
+extern void func_RtlDosPathNameToNtPathName_U(void);
 extern void func_RtlDosSearchPath_U(void);
 extern void func_RtlDosSearchPath_Ustr(void);
 extern void func_RtlGetFullPathName_U(void);
@@ -28,6 +29,7 @@ const struct test winetest_testlist[] =
     { "RtlBitmapApi",                   func_RtlBitmap },
     { "RtlDetermineDosPathNameType",    func_RtlDetermineDosPathNameType },
     { "RtlDoesFileExists",              func_RtlDoesFileExists },
+    { "RtlDosPathNameToNtPathName_U",   func_RtlDosPathNameToNtPathName_U },
     { "RtlDosSearchPath_U",             func_RtlDosSearchPath_U },
     { "RtlDosSearchPath_Ustr",          func_RtlDosSearchPath_Ustr },
     { "RtlGetFullPathName_U",           func_RtlGetFullPathName_U },
