@@ -7,8 +7,8 @@ Copyright (C) Microsoft Corporation, 1999
 
 #include "sec.h"
 
-
 NTSTATUS
+NTAPI
 CdRomGetRpc0Settings(
     IN PDEVICE_OBJECT Fdo
     )
@@ -21,9 +21,9 @@ CdRomGetRpc0Settings(
 
     return STATUS_SUCCESS;
 }
-
 
 NTSTATUS
+NTAPI
 CdRomSetRpc0Settings(
     IN PDEVICE_OBJECT Fdo,
     IN UCHAR NewRegion
@@ -31,8 +31,3 @@ CdRomSetRpc0Settings(
 {
     return STATUS_SUCCESS;
 }
-
-
-
-
-
