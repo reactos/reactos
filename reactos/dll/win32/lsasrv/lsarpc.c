@@ -248,6 +248,11 @@ NTSTATUS WINAPI LsarQueryInformationPolicy(
                                             PolicyInformation);
             break;
 
+        case PolicyDefaultQuotaInformation: /* 8 */
+            Status = LsarQueryDefaultQuota(PolicyHandle,
+                                           PolicyInformation);
+            break;
+
         case PolicyDnsDomainInformation:     /* 12 (0xc) */
             Status = LsarQueryDnsDomain(PolicyHandle,
                                         PolicyInformation);
@@ -257,7 +262,6 @@ NTSTATUS WINAPI LsarQueryInformationPolicy(
         case PolicyPdAccountInformation:
         case PolicyLsaServerRoleInformation:
         case PolicyReplicaSourceInformation:
-        case PolicyDefaultQuotaInformation:
         case PolicyModificationInformation:
         case PolicyAuditFullSetInformation:
         case PolicyAuditFullQueryInformation:

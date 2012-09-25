@@ -114,6 +114,10 @@ LsarQueryAccountDomain(PLSA_DB_OBJECT PolicyObject,
                        PLSAPR_POLICY_INFORMATION *PolicyInformation);
 
 NTSTATUS
+LsarQueryDefaultQuota(PLSA_DB_OBJECT PolicyObject,
+                      PLSAPR_POLICY_INFORMATION *PolicyInformation);
+
+NTSTATUS
 LsarQueryDnsDomain(PLSA_DB_OBJECT PolicyObject,
                    PLSAPR_POLICY_INFORMATION *PolicyInformation);
 

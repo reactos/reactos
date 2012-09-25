@@ -226,9 +226,18 @@ LsapCreateRandomDomainSid(OUT PSID *Sid)
 static NTSTATUS
 LsapCreateDatabaseObjects(VOID)
 {
+    POLICY_DEFAULT_QUOTA_INFO QuotaInfo;
     PLSA_DB_OBJECT PolicyObject = NULL;
     PSID AccountDomainSid = NULL;
     NTSTATUS Status;
+
+    /* Initialize the default quota limits */
+    QuotaInfo.QuotaLimits.PagedPoolLimit = 0x2000000;
+    QuotaInfo.QuotaLimits.NonPagedPoolLimit = 0x100000;
+    QuotaInfo.QuotaLimits.MinimumWorkingSetSize = 0x10000;
+    QuotaInfo.QuotaLimits.MaximumWorkingSetSize = 0xF000000;
+    QuotaInfo.QuotaLimits.PagefileLimit = 0;
+    QuotaInfo.QuotaLimits.TimeLimit.QuadPart = 0;
 
     /* Create a random domain SID */
     Status = LsapCreateRandomDomainSid(&AccountDomainSid);
@@ -263,6 +272,12 @@ LsapCreateDatabaseObjects(VOID)
                            L"PolAcDmS",
                            AccountDomainSid,
                            RtlLengthSid(AccountDomainSid));
+
+    /* Set the default quota limits attribute */
+    LsapSetObjectAttribute(PolicyObject,
+                           L"DefQuota",
+                           &QuotaInfo,
+                           sizeof(POLICY_DEFAULT_QUOTA_INFO));
 
 done:
     if (PolicyObject != NULL)
