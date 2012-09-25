@@ -50,8 +50,8 @@ Test_NoParamRoutine_DestroyCaret(PTESTINFO pti) /* 5 */
 INT
 Test_NoParamRoutine_LoadUserApiHook(PTESTINFO pti) /* 0x1d */
 {
-	DWORD dwRet;
-	dwRet = NtUserCallNoParam(_NOPARAM_ROUTINE_LOADUSERAPIHOOK);
+	//DWORD dwRet;
+	/* dwRet = */NtUserCallNoParam(_NOPARAM_ROUTINE_LOADUSERAPIHOOK);
 
 //	TEST(dwRet != 0);
 	return APISTATUS_NORMAL;

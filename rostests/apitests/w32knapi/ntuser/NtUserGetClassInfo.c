@@ -15,7 +15,7 @@ Test_NtUserGetClassInfo(PTESTINFO pti)
 {
 	WNDCLASSEXW wclex, wclex2 = {0};
 	UNICODE_STRING us;
-	PWSTR pwstr;
+	PWSTR pwstr = NULL;
 
 	us.Length = 8;
 	us.MaximumLength = 8;
