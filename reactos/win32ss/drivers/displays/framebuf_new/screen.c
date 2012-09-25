@@ -39,7 +39,7 @@ const DEVINFO gDevInfoFrameBuffer = {
 *
 \**************************************************************************/
 
-BOOL bInitSURF(PPDEV ppdev, BOOL bFirst)
+BOOL NTAPI bInitSURF(PPDEV ppdev, BOOL bFirst)
 {
     DWORD returnedDataLength;
     DWORD MaxWidth, MaxHeight;
@@ -168,7 +168,7 @@ BOOL bInitSURF(PPDEV ppdev, BOOL bFirst)
 *
 \**************************************************************************/
 
-VOID vDisableSURF(PPDEV ppdev)
+VOID NTAPI vDisableSURF(PPDEV ppdev)
 {
     DWORD returnedDataLength;
     VIDEO_MEMORY videoMemory;
@@ -197,7 +197,7 @@ VOID vDisableSURF(PPDEV ppdev)
 *
 \**************************************************************************/
 
-BOOL bInitPDEV(
+BOOL NTAPI bInitPDEV(
 PPDEV ppdev,
 DEVMODEW *pDevMode,
 GDIINFO *pGdiInfo,
@@ -503,7 +503,7 @@ DEVINFO *pDevInfo)
 *
 \**************************************************************************/
 
-DWORD getAvailableModes(
+DWORD NTAPI getAvailableModes(
 HANDLE hDriver,
 PVIDEO_MODE_INFORMATION *modeInformation,
 DWORD *cbModeSize)
