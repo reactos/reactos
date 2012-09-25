@@ -421,17 +421,15 @@ LsaEnumerateAccountRights(IN LSA_HANDLE PolicyHandle,
                                             AccountSid,
                                             &UserRightsSet);
 
-        *CountOfRights = UserRightsSet.Entries;
         *UserRights = (PUNICODE_STRING)UserRightsSet.UserRights;
+        *CountOfRights = UserRightsSet.Entries;
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
         Status = I_RpcMapWin32Status(RpcExceptionCode());
 
         if (UserRightsSet.UserRights != NULL)
-        {
             MIDL_user_free(UserRightsSet.UserRights);
-        }
     }
     RpcEndExcept;
 
@@ -484,7 +482,7 @@ LsaEnumerateAccounts(IN LSA_HANDLE PolicyHandle,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 WINAPI
@@ -493,9 +491,79 @@ LsaEnumerateAccountsWithUserRight(IN LSA_HANDLE PolicyHandle,
                                   OUT PVOID *Buffer,
                                   OUT PULONG CountReturned)
 {
-    FIXME("LsaEnumerateAccountsWithUserRight(%p %p %p %p) stub\n",
+    LSAPR_ACCOUNT_ENUM_BUFFER AccountEnumBuffer;
+    NTSTATUS Status;
+
+    TRACE("LsaEnumerateAccountsWithUserRight(%p %p %p %p) stub\n",
           PolicyHandle, UserRight, Buffer, CountReturned);
-    return STATUS_NO_MORE_ENTRIES;
+
+    AccountEnumBuffer.EntriesRead = 0;
+    AccountEnumBuffer.Information = NULL;
+
+    RpcTryExcept
+    {
+        Status = LsarEnumerateAccountsWithUserRight((LSAPR_HANDLE)PolicyHandle,
+                                                    (PRPC_UNICODE_STRING)UserRight,
+                                                    &AccountEnumBuffer);
+
+        *Buffer = AccountEnumBuffer.Information;
+        *CountReturned = AccountEnumBuffer.EntriesRead;
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        if (AccountEnumBuffer.Information != NULL)
+            MIDL_user_free(AccountEnumBuffer.Information);
+
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
+
+/*
+ * @implemented
+ */
+NTSTATUS
+WINAPI
+LsaEnumeratePrivileges(IN LSA_HANDLE PolicyHandle,
+                       IN OUT PLSA_ENUMERATION_HANDLE EnumerationContext,
+                       OUT PVOID *Buffer,
+                       IN ULONG PreferedMaximumLength,
+                       OUT PULONG CountReturned)
+{
+    LSAPR_PRIVILEGE_ENUM_BUFFER PrivilegeEnumBuffer;
+    NTSTATUS Status;
+
+    TRACE("LsaEnumeratePrivileges(%p %p %p %lu %p)\n",
+          PolicyHandle, EnumerationContext, Buffer,
+          PreferedMaximumLength, CountReturned);
+
+    PrivilegeEnumBuffer.Entries = 0;
+    PrivilegeEnumBuffer.Privileges = NULL;
+
+    RpcTryExcept
+    {
+        Status = LsarEnumeratePrivileges((LSAPR_HANDLE)PolicyHandle,
+                                         EnumerationContext,
+                                         &PrivilegeEnumBuffer,
+                                         PreferedMaximumLength);
+
+        *Buffer = PrivilegeEnumBuffer.Privileges;
+        *CountReturned = PrivilegeEnumBuffer.Entries;
+
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        if (PrivilegeEnumBuffer.Privileges != NULL)
+            MIDL_user_free(PrivilegeEnumBuffer.Privileges);
+
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
 }
 
 
@@ -542,9 +610,12 @@ LsaEnumerateTrustedDomains(IN LSA_HANDLE PolicyHandle,
           PolicyHandle, EnumerationContext, Buffer,
           PreferedMaximumLength, CountReturned);
 
-    if (CountReturned) *CountReturned = 0;
+    if (CountReturned)
+        *CountReturned = 0;
+
     return STATUS_SUCCESS;
 }
+
 
 /*
  * @unimplemented
@@ -561,7 +632,9 @@ LsaEnumerateTrustedDomainsEx(IN LSA_HANDLE PolicyHandle,
           PolicyHandle, EnumerationContext, Buffer,
           PreferedMaximumLength, CountReturned);
 
-    if (CountReturned) *CountReturned = 0;
+    if (CountReturned)
+        *CountReturned = 0;
+
     return STATUS_SUCCESS;
 }
 
@@ -575,6 +648,34 @@ LsaFreeMemory(IN PVOID Buffer)
 {
     TRACE("LsaFreeMemory(%p)\n", Buffer);
     return RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
+}
+
+
+/*
+ * @implemented
+ */
+NTSTATUS
+WINAPI
+LsaGetQuotasForAccount(IN LSA_HANDLE AccountHandle,
+                       OUT PQUOTA_LIMITS QuotaLimits)
+{
+    NTSTATUS Status;
+
+    TRACE("LsaGetQuotasForAccount(%p %p)\n",
+          AccountHandle, QuotaLimits);
+
+    RpcTryExcept
+    {
+        Status = LsarGetQuotasForAccount((LSAPR_HANDLE)AccountHandle,
+                                         QuotaLimits);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
 }
 
 
@@ -607,7 +708,7 @@ LsaGetSystemAccessAccount(IN LSA_HANDLE AccountHandle,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 WINAPI
@@ -1447,6 +1548,34 @@ LsaSetInformationPolicy(IN LSA_HANDLE PolicyHandle,
         Status = LsarSetInformationPolicy((LSAPR_HANDLE)PolicyHandle,
                                           InformationClass,
                                           (PLSAPR_POLICY_INFORMATION)Buffer);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
+
+/*
+ * @implemented
+ */
+NTSTATUS
+WINAPI
+LsaSetQuotasForAccount(IN LSA_HANDLE AccountHandle,
+                       IN PQUOTA_LIMITS QuotaLimits)
+{
+    NTSTATUS Status;
+
+    TRACE("LsaSetQuotasForAccount(%p %p)\n",
+          AccountHandle, QuotaLimits);
+
+    RpcTryExcept
+    {
+        Status = LsarSetQuotasForAccount((LSAPR_HANDLE)AccountHandle,
+                                         QuotaLimits);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {

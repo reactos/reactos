@@ -357,12 +357,12 @@
 @ stdcall LsaEnumerateAccountRights(ptr ptr ptr ptr)
 @ stdcall LsaEnumerateAccounts(ptr ptr ptr long ptr)
 @ stdcall LsaEnumerateAccountsWithUserRight(ptr ptr ptr ptr)
-@ stub LsaEnumeratePrivileges
+@ stdcall LsaEnumeratePrivileges(ptr ptr ptr long ptr)
 @ stdcall LsaEnumeratePrivilegesOfAccount(ptr ptr)
 @ stdcall LsaEnumerateTrustedDomains(ptr ptr ptr long ptr)
 @ stdcall LsaEnumerateTrustedDomainsEx(ptr ptr ptr long ptr)
 @ stdcall LsaFreeMemory(ptr)
-@ stub LsaGetQuotasForAccount
+@ stdcall LsaGetQuotasForAccount(ptr ptr)
 @ stub LsaGetRemoteUserName
 @ stdcall LsaGetSystemAccessAccount(ptr ptr)
 @ stdcall LsaGetUserName(ptr ptr)
@@ -399,7 +399,7 @@
 @ stdcall LsaSetForestTrustInformation(ptr ptr ptr long ptr)
 @ stdcall LsaSetInformationPolicy(long long ptr)
 @ stub LsaSetInformationTrustedDomain
-@ stub LsaSetQuotasForAccount
+@ stdcall LsaSetQuotasForAccount(ptr ptr)
 @ stdcall LsaSetSecret(ptr ptr ptr)
 @ stub LsaSetSecurityObject
 @ stdcall LsaSetSystemAccessAccount(ptr long)
