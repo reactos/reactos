@@ -242,7 +242,9 @@ typedef enum _POLICY_INFORMATION_CLASS {
   PolicyAuditFullSetInformation,
   PolicyAuditFullQueryInformation,
   PolicyDnsDomainInformation,
-  PolicyEfsInformation
+  PolicyDnsDomainInformationInt,
+  PolicyLocalAccountDomainInformation,
+  PolicyLastEntry
 } POLICY_INFORMATION_CLASS, *PPOLICY_INFORMATION_CLASS;
 typedef enum _POLICY_AUDIT_EVENT_TYPE {
   AuditCategorySystem,
@@ -255,21 +257,6 @@ typedef enum _POLICY_AUDIT_EVENT_TYPE {
   AuditCategoryDirectoryServiceAccess,
   AuditCategoryAccountLogon
 } POLICY_AUDIT_EVENT_TYPE, *PPOLICY_AUDIT_EVENT_TYPE;
-typedef enum _POLICY_LOCAL_INFORMATION_CLASS {
-  PolicyLocalAuditEventsInformation = 1,
-  PolicyLocalPdAccountInformation,
-  PolicyLocalAccountDomainInformation,
-  PolicyLocalLsaServerRoleInformation,
-  PolicyLocalReplicaSourceInformation,
-  PolicyLocalModificationInformation,
-  PolicyLocalAuditFullSetInformation,
-  PolicyLocalAuditFullQueryInformation,
-  PolicyLocalDnsDomainInformation,
-  PolicyLocalIPSecReferenceInformation,
-  PolicyLocalMachinePasswordInformation,
-  PolicyLocalQualityOfServiceInformation,
-  PolicyLocalPolicyLocationInformation
-} POLICY_LOCAL_INFORMATION_CLASS, *PPOLICY_LOCAL_INFORMATION_CLASS;
 typedef enum _POLICY_DOMAIN_INFORMATION_CLASS {
   PolicyDomainIPSecReferenceInformation = 1,
   PolicyDomainQualityOfServiceInformation,
@@ -728,8 +715,6 @@ NTSTATUS NTAPI LsaOpenTrustedDomainByName(LSA_HANDLE,PLSA_UNICODE_STRING,
 NTSTATUS NTAPI LsaQueryDomainInformationPolicy(LSA_HANDLE,
                             POLICY_DOMAIN_INFORMATION_CLASS,PVOID*);
 NTSTATUS NTAPI LsaQueryInformationPolicy(LSA_HANDLE,POLICY_INFORMATION_CLASS,PVOID*);
-NTSTATUS NTAPI LsaQueryLocalInformationPolicy(LSA_HANDLE,
-                            POLICY_LOCAL_INFORMATION_CLASS,PVOID*);
 NTSTATUS NTAPI LsaQuerySecret(LSA_HANDLE,PLSA_UNICODE_STRING*,PLARGE_INTEGER,
                               PLSA_UNICODE_STRING*,PLARGE_INTEGER);
 NTSTATUS NTAPI LsaQueryTrustedDomainInfo(LSA_HANDLE,PSID,
@@ -744,8 +729,6 @@ NTSTATUS NTAPI LsaRetrievePrivateData(LSA_HANDLE,PLSA_UNICODE_STRING,
 NTSTATUS NTAPI LsaSetDomainInformationPolicy(LSA_HANDLE,
                             POLICY_DOMAIN_INFORMATION_CLASS,PVOID);
 NTSTATUS NTAPI LsaSetInformationPolicy(LSA_HANDLE,POLICY_INFORMATION_CLASS, PVOID);
-NTSTATUS NTAPI LsaSetLocalInformationPolicy(LSA_HANDLE,
-                            POLICY_LOCAL_INFORMATION_CLASS,PVOID);
 NTSTATUS NTAPI LsaSetQuotasForAccount(LSA_HANDLE,PQUOTA_LIMITS);
 NTSTATUS NTAPI LsaSetSecret(LSA_HANDLE,PLSA_UNICODE_STRING,PLSA_UNICODE_STRING);
 NTSTATUS NTAPI LsaSetSystemAccessAccount(LSA_HANDLE,ULONG);

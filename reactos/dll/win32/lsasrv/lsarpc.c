@@ -212,6 +212,9 @@ NTSTATUS WINAPI LsarQueryInformationPolicy(
         case PolicyLsaServerRoleInformation:
         case PolicyReplicaSourceInformation:
         case PolicyDefaultQuotaInformation:
+        case PolicyDnsDomainInformation:
+        case PolicyDnsDomainInformationInt:
+        case PolicyLocalAccountDomainInformation:
             DesiredAccess = POLICY_VIEW_LOCAL_INFORMATION;
             break;
 
@@ -219,6 +222,7 @@ NTSTATUS WINAPI LsarQueryInformationPolicy(
             DesiredAccess = POLICY_GET_PRIVATE_INFORMATION;
             break;
 
+        case PolicyLastEntry:
         default:
             ERR("Invalid InformationClass!\n");
             return STATUS_INVALID_PARAMETER;
@@ -265,10 +269,16 @@ NTSTATUS WINAPI LsarQueryInformationPolicy(
         case PolicyModificationInformation:
         case PolicyAuditFullSetInformation:
         case PolicyAuditFullQueryInformation:
-        case PolicyEfsInformation:
+        case PolicyDnsDomainInformationInt:
+        case PolicyLocalAccountDomainInformation:
             FIXME("Information class not implemented\n");
             Status = STATUS_UNSUCCESSFUL;
             break;
+
+        case PolicyLastEntry:
+        default:
+            ERR("Invalid InformationClass!\n");
+            Status = STATUS_INVALID_PARAMETER;
     }
 
     return Status;
