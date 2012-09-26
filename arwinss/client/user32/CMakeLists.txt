@@ -16,7 +16,7 @@ spec2def(user32.dll user32.spec ADD_IMPORTLIB)
 include_directories(
     BEFORE ${REACTOS_SOURCE_DIR}/include/reactos/wine
     ${REACTOS_SOURCE_DIR}/include/reactos/subsys
-    ${REACTOS_SOURCE_DIR}/include/reactos/wine
+    ${REACTOS_SOURCE_DIR}/arwinss/include
     ${REACTOS_SOURCE_DIR}/win32ss/include
     )
 

@@ -7,6 +7,7 @@ add_definitions(-D_WINE)
 include_directories(
     include
     ${REACTOS_SOURCE_DIR}/include/reactos/wine
+    ${REACTOS_SOURCE_DIR}/arwinss/include
     ${REACTOS_SOURCE_DIR}/lib/3rdparty/freetype/include
     ${REACTOS_SOURCE_DIR}/win32ss/include)
 

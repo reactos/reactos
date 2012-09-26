@@ -39,7 +39,7 @@
 
 #include "controls.h"
 #include "user_private.h"
-#include "rosuser.h"
+#include "wine/rosuser.h"
 #include "wine/unicode.h"
 #include "wine/debug.h"
 

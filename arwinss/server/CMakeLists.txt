@@ -7,7 +7,8 @@ include_directories(
     ${REACTOS_SOURCE_DIR}/ntoskrnl/include
     ${REACTOS_SOURCE_DIR}/lib/3rdparty/freetype/include
     ${REACTOS_SOURCE_DIR}/include/reactos/subsys
-    ${REACTOS_SOURCE_DIR}/include/reactos/drivers)
+    ${REACTOS_SOURCE_DIR}/include/reactos/drivers
+    ${REACTOS_SOURCE_DIR}/arwinss/include)
 
 add_definitions(
     -DLANGPACK
