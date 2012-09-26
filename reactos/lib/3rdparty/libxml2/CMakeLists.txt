@@ -1,7 +1,5 @@
 
-include_directories(
-    include
-    ${REACTOS_SOURCE_DIR}/lib/3rdparty/libwin-iconv)
+include_directories(include)
 
 add_definitions(
     -D__MINGW32__
@@ -12,8 +10,6 @@ add_definitions(
     -D_WINDOWS
     -DWIN32
     -DHAVE_CONFIG_H
-    -DLIBXML_ICONV_ENABLED
-    -DICONV_CONST=const
     -D_DLL -D__USE_CRTIMP)
 
 list(APPEND SOURCE
