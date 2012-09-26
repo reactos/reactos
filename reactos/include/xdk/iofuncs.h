@@ -821,8 +821,8 @@ IoCreateDevice(
   _Outptr_result_nullonfailure_
   _At_(*DeviceObject,
     __drv_allocatesMem(Mem)
-    _When_((((_In_function_class_(DRIVER_INITIALIZE))
-      ||(_In_function_class_(DRIVER_DISPATCH)))),
+    _When_(((_In_function_class_(DRIVER_INITIALIZE))
+      ||(_In_function_class_(DRIVER_DISPATCH))),
       __drv_aliasesMem))
     PDEVICE_OBJECT *DeviceObject);
 

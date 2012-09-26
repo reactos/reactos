@@ -298,8 +298,8 @@ MmMapIoSpace(
   _In_ MEMORY_CACHING_TYPE CacheType);
 
 _Must_inspect_result_
-_When_(AccessMode==0, _IRQL_requires_max_(DISPATCH_LEVEL))
-_When_(AccessMode==1, _Maybe_raises_SEH_exception_ _IRQL_requires_max_(APC_LEVEL))
+_When_(AccessMode==KernelMode, _IRQL_requires_max_(DISPATCH_LEVEL))
+_When_(AccessMode==UserMode, _Maybe_raises_SEH_exception_ _IRQL_requires_max_(APC_LEVEL))
 NTKERNELAPI
 PVOID
 NTAPI
@@ -574,59 +574,6 @@ NTAPI
 MmAddPhysicalMemory(
   _In_ PPHYSICAL_ADDRESS StartAddress,
   _Inout_ PLARGE_INTEGER NumberOfBytes);
-
-_Must_inspect_result_
-_IRQL_requires_max_(DISPATCH_LEVEL)
-_When_(return != NULL, _Post_writable_byte_size_(NumberOfBytes))
-NTKERNELAPI
-PVOID
-NTAPI
-MmAllocateContiguousMemory(
-  _In_ SIZE_T NumberOfBytes,
-  _In_ PHYSICAL_ADDRESS HighestAcceptableAddress);
-
-_Must_inspect_result_
-_IRQL_requires_max_(DISPATCH_LEVEL)
-_When_(return != NULL, _Post_writable_byte_size_(NumberOfBytes))
-NTKERNELAPI
-PVOID
-NTAPI
-MmAllocateContiguousMemorySpecifyCache(
-  _In_ SIZE_T NumberOfBytes,
-  _In_ PHYSICAL_ADDRESS LowestAcceptableAddress,
-  _In_ PHYSICAL_ADDRESS HighestAcceptableAddress,
-  _In_opt_ PHYSICAL_ADDRESS BoundaryAddressMultiple,
-  _In_ MEMORY_CACHING_TYPE CacheType);
-
-_Must_inspect_result_
-_IRQL_requires_max_(DISPATCH_LEVEL)
-_When_(return != NULL, _Post_writable_byte_size_(NumberOfBytes))
-NTKERNELAPI
-PVOID
-NTAPI
-MmAllocateContiguousMemorySpecifyCacheNode(
-  _In_ SIZE_T NumberOfBytes,
-  _In_ PHYSICAL_ADDRESS LowestAcceptableAddress,
-  _In_ PHYSICAL_ADDRESS HighestAcceptableAddress,
-  _In_opt_ PHYSICAL_ADDRESS BoundaryAddressMultiple,
-  _In_ MEMORY_CACHING_TYPE CacheType,
-  _In_ NODE_REQUIREMENT PreferredNode);
-
-_IRQL_requires_max_(DISPATCH_LEVEL)
-NTKERNELAPI
-VOID
-NTAPI
-MmFreeContiguousMemory(
-  _In_ PVOID BaseAddress);
-
-_IRQL_requires_max_(DISPATCH_LEVEL)
-NTKERNELAPI
-VOID
-NTAPI
-MmFreeContiguousMemorySpecifyCache(
-  _In_reads_bytes_(NumberOfBytes) PVOID BaseAddress,
-  _In_ SIZE_T NumberOfBytes,
-  _In_ MEMORY_CACHING_TYPE CacheType);
 $endif (_NTDDK_)
 $if (_NTIFS_)
 

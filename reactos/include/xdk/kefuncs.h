@@ -640,8 +640,8 @@ KeInsertHeadQueue(
   _Inout_ PLIST_ENTRY Entry);
 
 _IRQL_requires_min_(PASSIVE_LEVEL)
-_When_((Timeout==NULL || *Timeout!=0), _IRQL_requires_max_(APC_LEVEL))
-_When_((Timeout!=NULL && *Timeout==0), _IRQL_requires_max_(DISPATCH_LEVEL))
+_When_((Timeout==NULL || Timeout->QuadPart!=0), _IRQL_requires_max_(APC_LEVEL))
+_When_((Timeout!=NULL && Timeout->QuadPart==0), _IRQL_requires_max_(DISPATCH_LEVEL))
 NTKERNELAPI
 PLIST_ENTRY
 NTAPI

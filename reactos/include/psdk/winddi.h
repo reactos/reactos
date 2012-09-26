@@ -1256,7 +1256,7 @@ EngAllocMem(
     _In_ ULONG ulTag);
 
 _Must_inspect_result_
-_Ret_opt_bytecount_(cj)
+_Ret_opt_bytecount_(cjMemSize)
 WIN32KAPI
 PVOID
 APIENTRY
@@ -1558,6 +1558,7 @@ APIENTRY
 EngDeleteWnd(
     _In_ _Post_ptr_invalid_ WNDOBJ *pwo);
 
+_Success_(return==0)
 WIN32KAPI
 DWORD
 APIENTRY

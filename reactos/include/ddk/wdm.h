@@ -11399,8 +11399,8 @@ MmMapIoSpace(
   _In_ MEMORY_CACHING_TYPE CacheType);
 
 _Must_inspect_result_
-_When_(AccessMode==0, _IRQL_requires_max_(DISPATCH_LEVEL))
-_When_(AccessMode==1, _Maybe_raises_SEH_exception_ _IRQL_requires_max_(APC_LEVEL))
+_When_(AccessMode==KernelMode, _IRQL_requires_max_(DISPATCH_LEVEL))
+_When_(AccessMode==UserMode, _Maybe_raises_SEH_exception_ _IRQL_requires_max_(APC_LEVEL))
 NTKERNELAPI
 PVOID
 NTAPI
@@ -12618,8 +12618,8 @@ IoCreateDevice(
   _Outptr_result_nullonfailure_
   _At_(*DeviceObject,
     __drv_allocatesMem(Mem)
-    _When_((((_In_function_class_(DRIVER_INITIALIZE))
-      ||(_In_function_class_(DRIVER_DISPATCH)))),
+    _When_(((_In_function_class_(DRIVER_INITIALIZE))
+      ||(_In_function_class_(DRIVER_DISPATCH))),
       __drv_aliasesMem))
     PDEVICE_OBJECT *DeviceObject);
 

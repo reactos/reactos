@@ -193,8 +193,9 @@ NtGdiGetOutlineTextMetricsInternalW(
     _Out_opt_ OUTLINETEXTMETRICW *potmw,
     _Out_ TMDIFF *ptmd);
 
+_Success_(return != FALSE)
 W32KAPI
-BOOL _Success_(return != FALSE)
+BOOL
 APIENTRY
 NtGdiGetAndSetDCDword(
     _In_ HDC hdc,
@@ -404,8 +405,9 @@ NtGdiGetWidthTable(
     OUT FLONG *pflInfo
 );
 
+_Success_(return != 0)
 W32KAPI
-INT _Success_(return != 0)
+INT
 APIENTRY
 NtGdiDescribePixelFormat(
     _In_ HDC hdc,
@@ -1646,8 +1648,9 @@ NtGdiSetFontXform(
     _In_ DWORD dwxScale,
     _In_ DWORD dwyScale);
 
+_Success_(return != FALSE)
 W32KAPI
-BOOL _Success_(return != FALSE)
+BOOL
 APIENTRY
 NtGdiGetMiterLimit(
     _In_ HDC hdc,
@@ -2357,8 +2360,9 @@ NtGdiLineTo(
     _In_ INT x,
     _In_ INT y);
 
+_Success_(return != FALSE)
 W32KAPI
-BOOL _Success_(return != FALSE)
+BOOL
 APIENTRY
 NtGdiMoveTo(
     _In_ HDC hdc,
@@ -2405,8 +2409,9 @@ NtGdiStretchBlt(
     _In_ DWORD dwRop,
     _In_ DWORD dwBackColor);
 
+_Success_(return != FALSE)
 W32KAPI
-BOOL _Success_(return != FALSE)
+BOOL
 APIENTRY
 NtGdiSetBrushOrg(
     _In_ HDC hdc,

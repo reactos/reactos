@@ -726,6 +726,7 @@ RtlLogStackBackTrace(
     VOID
 );
 
+#ifdef NTOS_MODE_USER
 //
 // Heap Functions
 //
@@ -803,13 +804,6 @@ RtlFreeHeap(
     IN HANDLE HeapHandle,
     IN ULONG Flags,
     IN PVOID P
-);
-
-NTSYSAPI
-ULONG
-NTAPI
-RtlGetNtGlobalFlags(
-    VOID
 );
 
 ULONG
@@ -943,15 +937,6 @@ RtlSetUserFlagsHeap(
 );
 
 NTSYSAPI
-SIZE_T
-NTAPI
-RtlSizeHeap(
-    IN PVOID HeapHandle,
-    IN ULONG Flags,
-    IN PVOID MemoryPointer
-);
-
-NTSYSAPI
 BOOLEAN
 NTAPI
 RtlValidateHeap(
@@ -969,6 +954,18 @@ RtlWalkHeap(
 );
 
 #define RtlGetProcessHeap() (NtCurrentPeb()->ProcessHeap)
+
+#endif // NTOS_MODE_USER
+
+NTSYSAPI
+SIZE_T
+NTAPI
+RtlSizeHeap(
+    IN PVOID HeapHandle,
+    IN ULONG Flags,
+    IN PVOID MemoryPointer
+);
+
 
 //
 // Security Functions
