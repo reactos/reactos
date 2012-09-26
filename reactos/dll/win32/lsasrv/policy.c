@@ -612,42 +612,215 @@ LsarQueryDnsDomain(PLSA_DB_OBJECT PolicyObject,
                    PLSAPR_POLICY_INFORMATION *PolicyInformation)
 {
     PLSAPR_POLICY_DNS_DOMAIN_INFO p = NULL;
+    PUNICODE_STRING DomainName;
+    ULONG AttributeSize;
+    NTSTATUS Status;
+
+    *PolicyInformation = NULL;
 
     p = MIDL_user_allocate(sizeof(LSAPR_POLICY_DNS_DOMAIN_INFO));
     if (p == NULL)
         return STATUS_INSUFFICIENT_RESOURCES;
 
-    p->Name.Length = 0;
-    p->Name.MaximumLength = 0;
-    p->Name.Buffer = NULL;
-#if 0
-            p->Name.Length = wcslen(L"COMPUTERNAME");
-            p->Name.MaximumLength = p->Name.Length + sizeof(WCHAR);
-            p->Name.Buffer = MIDL_user_allocate(p->Name.MaximumLength);
+    /* Primary Domain Name */
+    AttributeSize = 0;
+    Status = LsapGetObjectAttribute(PolicyObject,
+                                    L"PolPrDmN",
+                                    NULL,
+                                    &AttributeSize);
+    if (!NT_SUCCESS(Status))
+    {
+        goto done;
+    }
+
+    if (AttributeSize > 0)
+    {
+        DomainName = MIDL_user_allocate(AttributeSize);
+        if (DomainName == NULL)
+        {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            goto done;
+        }
+
+        Status = LsapGetObjectAttribute(PolicyObject,
+                                        L"PolPrDmN",
+                                        DomainName,
+                                        &AttributeSize);
+        if (Status == STATUS_SUCCESS)
+        {
+            DomainName->Buffer = (LPWSTR)((ULONG_PTR)DomainName + (ULONG_PTR)DomainName->Buffer);
+
+            TRACE("PrimaryDomainName: %wZ\n", DomainName);
+
+            p->Name.Buffer = MIDL_user_allocate(DomainName->MaximumLength);
             if (p->Name.Buffer == NULL)
             {
-                MIDL_user_free(p);
-                return STATUS_INSUFFICIENT_RESOURCES;
+                MIDL_user_free(DomainName);
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+                goto done;
             }
 
-            wcscpy(p->Name.Buffer, L"COMPUTERNAME");
-#endif
+            p->Name.Length = DomainName->Length;
+            p->Name.MaximumLength = DomainName->MaximumLength;
+            memcpy(p->Name.Buffer,
+                   DomainName->Buffer,
+                   DomainName->MaximumLength);
+        }
 
-    p->DnsDomainName.Length = 0;
-    p->DnsDomainName.MaximumLength = 0;
-    p->DnsDomainName.Buffer = NULL;
+        MIDL_user_free(DomainName);
+    }
 
-    p->DnsForestName.Length = 0;
-    p->DnsForestName.MaximumLength = 0;
-    p->DnsForestName.Buffer = 0;
+    /* Primary Domain SID */
+    AttributeSize = 0;
+    Status = LsapGetObjectAttribute(PolicyObject,
+                                    L"PolPrDmS",
+                                    NULL,
+                                    &AttributeSize);
+    if (!NT_SUCCESS(Status))
+    {
+        goto done;
+    }
 
-    memset(&p->DomainGuid, 0, sizeof(GUID));
+    if (AttributeSize > 0)
+    {
+        p->Sid = MIDL_user_allocate(AttributeSize);
+        if (p->Sid == NULL)
+        {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            goto done;
+        }
 
-    p->Sid = NULL; /* no domain, no workgroup */
+        Status = LsapGetObjectAttribute(PolicyObject,
+                                        L"PolPrDmS",
+                                        p->Sid,
+                                        &AttributeSize);
+    }
+
+    /* DNS Domain Name */
+    AttributeSize = 0;
+    Status = LsapGetObjectAttribute(PolicyObject,
+                                    L"PolDnDDN",
+                                    NULL,
+                                    &AttributeSize);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    if (AttributeSize > 0)
+    {
+        DomainName = MIDL_user_allocate(AttributeSize);
+        if (DomainName == NULL)
+        {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            goto done;
+        }
+
+        Status = LsapGetObjectAttribute(PolicyObject,
+                                        L"PolDnDDN",
+                                        DomainName,
+                                        &AttributeSize);
+        if (Status == STATUS_SUCCESS)
+        {
+            DomainName->Buffer = (LPWSTR)((ULONG_PTR)DomainName + (ULONG_PTR)DomainName->Buffer);
+
+            TRACE("DNS Domain Name: %wZ\n", DomainName);
+
+            p->DnsDomainName.Buffer = MIDL_user_allocate(DomainName->MaximumLength);
+            if (p->DnsDomainName.Buffer == NULL)
+            {
+                MIDL_user_free(DomainName);
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+                goto done;
+            }
+
+            p->DnsDomainName.Length = DomainName->Length;
+            p->DnsDomainName.MaximumLength = DomainName->MaximumLength;
+            memcpy(p->DnsDomainName.Buffer,
+                   DomainName->Buffer,
+                   DomainName->MaximumLength);
+        }
+
+        MIDL_user_free(DomainName);
+    }
+
+    /* DNS Forest Name */
+    AttributeSize = 0;
+    Status = LsapGetObjectAttribute(PolicyObject,
+                                    L"PolDnTrN",
+                                    NULL,
+                                    &AttributeSize);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    if (AttributeSize > 0)
+    {
+        DomainName = MIDL_user_allocate(AttributeSize);
+        if (DomainName == NULL)
+        {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            goto done;
+        }
+
+        Status = LsapGetObjectAttribute(PolicyObject,
+                                        L"PolDnTrN",
+                                        DomainName,
+                                        &AttributeSize);
+        if (Status == STATUS_SUCCESS)
+        {
+            DomainName->Buffer = (LPWSTR)((ULONG_PTR)DomainName + (ULONG_PTR)DomainName->Buffer);
+
+            TRACE("DNS Forest Name: %wZ\n", DomainName);
+
+            p->DnsForestName.Buffer = MIDL_user_allocate(DomainName->MaximumLength);
+            if (p->DnsForestName.Buffer == NULL)
+            {
+                MIDL_user_free(DomainName);
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+                goto done;
+            }
+
+            p->DnsForestName.Length = DomainName->Length;
+            p->DnsForestName.MaximumLength = DomainName->MaximumLength;
+            memcpy(p->DnsForestName.Buffer,
+                   DomainName->Buffer,
+                   DomainName->MaximumLength);
+        }
+
+        MIDL_user_free(DomainName);
+    }
+
+    /* DNS Domain GUID */
+    AttributeSize = sizeof(GUID);
+    Status = LsapGetObjectAttribute(PolicyObject,
+                                    L"PolDnDmG",
+                                    &(p->DomainGuid),
+                                    &AttributeSize);
+    if (!NT_SUCCESS(Status))
+        goto done;
 
     *PolicyInformation = (PLSAPR_POLICY_INFORMATION)p;
 
-    return STATUS_SUCCESS;
+done:
+    if (!NT_SUCCESS(Status))
+    {
+        if (p)
+        {
+            if (p->Name.Buffer)
+                MIDL_user_free(p->Name.Buffer);
+
+            if (p->DnsDomainName.Buffer)
+                MIDL_user_free(p->DnsDomainName.Buffer);
+
+            if (p->DnsForestName.Buffer)
+                MIDL_user_free(p->DnsForestName.Buffer);
+
+            if (p->Sid)
+                MIDL_user_free(p->Sid);
+
+            MIDL_user_free(p);
+        }
+    }
+
+    return Status;
 }
 
 

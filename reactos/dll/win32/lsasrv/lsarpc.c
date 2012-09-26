@@ -212,6 +212,7 @@ NTSTATUS WINAPI LsarQueryInformationPolicy(
         case PolicyLsaServerRoleInformation:
         case PolicyReplicaSourceInformation:
         case PolicyDefaultQuotaInformation:
+        case PolicyModificationInformation:
         case PolicyDnsDomainInformation:
         case PolicyDnsDomainInformationInt:
         case PolicyLocalAccountDomainInformation:

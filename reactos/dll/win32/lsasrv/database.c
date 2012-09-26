@@ -231,7 +231,7 @@ LsapCreateDatabaseObjects(VOID)
     POLICY_MODIFICATION_INFO ModificationInfo;
     POLICY_AUDIT_FULL_QUERY_INFO AuditFullInfo = {FALSE, FALSE};
     POLICY_AUDIT_LOG_INFO AuditLogInfo;
-
+    GUID DnsDomainGuid;
     PLSA_DB_OBJECT PolicyObject = NULL;
     PSID AccountDomainSid = NULL;
     ULONG AuditEventsCount;
@@ -255,6 +255,7 @@ LsapCreateDatabaseObjects(VOID)
     AuditLogInfo.TimeToShutdown.QuadPart = 0;		// LARGE_INTEGER
     AuditLogInfo.NextAuditRecordId = 0;			// DWORD
 
+    /* Initialize the Audit Events attribute */
     AuditEventsCount = AuditCategoryAccountLogon - AuditCategorySystem + 1;
     AuditEventsSize = sizeof(LSAP_POLICY_AUDIT_EVENTS_DATA) + AuditEventsCount * sizeof(DWORD);
     AuditEventsInfo = RtlAllocateHeap(RtlGetProcessHeap(),
@@ -267,6 +268,9 @@ LsapCreateDatabaseObjects(VOID)
     AuditEventsInfo->MaximumAuditEventCount = AuditEventsCount;
     for (i = 0; i < AuditEventsCount; i++)
         AuditEventsInfo->AuditEvents[i] = 0;
+
+    /* Initialize the DNS Domain GUID attribute */
+    memset(&DnsDomainGuid, 0, sizeof(GUID));
 
     /* Initialize the modification attribute */
     ModificationInfo.ModifiedId.QuadPart = 0;
@@ -335,6 +339,24 @@ LsapCreateDatabaseObjects(VOID)
                            L"PolAdtEv",
                            &AuditEventsInfo,
                            AuditEventsSize);
+
+    /* Set the DNS Domain Name attribute */
+    LsapSetObjectAttribute(PolicyObject,
+                           L"PolDnDDN",
+                           NULL,
+                           0);
+
+    /* Set the DNS Forest Name attribute */
+    LsapSetObjectAttribute(PolicyObject,
+                           L"PolDnTrN",
+                           NULL,
+                           0);
+
+    /* Set the DNS Domain GUID attribute */
+    LsapSetObjectAttribute(PolicyObject,
+                           L"PolDnDmG",
+                           &DnsDomainGuid,
+                           sizeof(GUID));
 
 done:
     if (AuditEventsInfo != NULL)
