@@ -6,6 +6,7 @@
  */
 
 #define WIN32_NO_STATUS
+#define UNICODE
 #include <wine/test.h>
 #include <pseh/pseh2.h>
 #include <ndk/rtlfuncs.h>
@@ -24,6 +25,19 @@ RtlGetFullPathName_UstrEx(
     OUT PSIZE_T LengthNeeded OPTIONAL
 );
 */
+
+NTSTATUS
+(NTAPI
+*pRtlGetFullPathName_UstrEx)(
+    IN PUNICODE_STRING FileName,
+    IN PUNICODE_STRING StaticString,
+    IN PUNICODE_STRING DynamicString,
+    IN PUNICODE_STRING *StringUsed,
+    IN PSIZE_T FilePartSize OPTIONAL,
+    OUT PBOOLEAN NameInvalid,
+    OUT RTL_PATH_TYPE* PathType,
+    OUT PSIZE_T LengthNeeded OPTIONAL
+);
 
 #define StartSeh()                  ExceptionStatus = STATUS_SUCCESS; _SEH2_TRY {
 #define EndSeh(ExpectedStatus)      } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) { ExceptionStatus = _SEH2_GetExceptionCode(); } _SEH2_END; ok(ExceptionStatus == ExpectedStatus, "Exception %lx, expected %lx\n", ExceptionStatus, ExpectedStatus)
@@ -212,7 +226,7 @@ RunTestCases(VOID)
         NameInvalid = (BOOLEAN)-1;
         LengthNeeded = 1234;
         StartSeh()
-            Status = RtlGetFullPathName_UstrEx(&FileName,
+            Status = pRtlGetFullPathName_UstrEx(&FileName,
                                                &FullPathName,
                                                NULL,
                                                &StringUsed,
@@ -287,28 +301,35 @@ START_TEST(RtlGetFullPathName_UstrEx)
     SIZE_T LengthNeeded;
     BOOLEAN Okay;
 
+    pRtlGetFullPathName_UstrEx = (PVOID)GetProcAddress(GetModuleHandle(L"ntdll"), "RtlGetFullPathName_UstrEx");
+    if (!pRtlGetFullPathName_UstrEx)
+    {
+        skip("RtlGetFullPathName_UstrEx unavailable\n");
+        return;
+    }
+
     /* NULL parameters */
     StartSeh()
-        RtlGetFullPathName_UstrEx(NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+        pRtlGetFullPathName_UstrEx(NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
     EndSeh(STATUS_ACCESS_VIOLATION);
 
     RtlInitUnicodeString(&FileName, NULL);
     TempString = FileName;
     StartSeh()
-        RtlGetFullPathName_UstrEx(&FileName, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+        pRtlGetFullPathName_UstrEx(&FileName, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
     EndSeh(STATUS_ACCESS_VIOLATION);
     ok_eq_ustr(&FileName, &TempString);
 
     RtlInitUnicodeString(&FileName, L"");
     TempString = FileName;
     StartSeh()
-        RtlGetFullPathName_UstrEx(&FileName, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+        pRtlGetFullPathName_UstrEx(&FileName, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
     EndSeh(STATUS_ACCESS_VIOLATION);
     ok_eq_ustr(&FileName, &TempString);
 
     PathType = RtlPathTypeNotSet;
     StartSeh()
-        RtlGetFullPathName_UstrEx(NULL, NULL, NULL, NULL, NULL, NULL, &PathType, NULL);
+        pRtlGetFullPathName_UstrEx(NULL, NULL, NULL, NULL, NULL, NULL, &PathType, NULL);
     EndSeh(STATUS_ACCESS_VIOLATION);
     ok(PathType == RtlPathTypeUnknown ||
        broken(PathType == RtlPathTypeNotSet) /* Win7 */, "PathType = %d\n", PathType);
@@ -320,7 +341,7 @@ START_TEST(RtlGetFullPathName_UstrEx)
     NameInvalid = (BOOLEAN)-1;
     LengthNeeded = 1234;
     StartSeh()
-        RtlGetFullPathName_UstrEx(NULL, NULL, NULL, &StringUsed, &FilePartSize, &NameInvalid, &PathType, &LengthNeeded);
+        pRtlGetFullPathName_UstrEx(NULL, NULL, NULL, &StringUsed, &FilePartSize, &NameInvalid, &PathType, &LengthNeeded);
     EndSeh(STATUS_ACCESS_VIOLATION);
     ok(StringUsed == NULL, "StringUsed = %p\n", StringUsed);
     ok(FilePartSize == 0, "FilePartSize = %lu\n", (ULONG)FilePartSize);
@@ -336,7 +357,7 @@ START_TEST(RtlGetFullPathName_UstrEx)
     NameInvalid = (BOOLEAN)-1;
     LengthNeeded = 1234;
     StartSeh()
-        RtlGetFullPathName_UstrEx(&FileName, NULL, NULL, &StringUsed, &FilePartSize, &NameInvalid, NULL, &LengthNeeded);
+        pRtlGetFullPathName_UstrEx(&FileName, NULL, NULL, &StringUsed, &FilePartSize, &NameInvalid, NULL, &LengthNeeded);
     EndSeh(STATUS_ACCESS_VIOLATION);
     ok_eq_ustr(&FileName, &TempString);
     ok(StringUsed == NULL, "StringUsed = %p\n", StringUsed);
@@ -350,7 +371,7 @@ START_TEST(RtlGetFullPathName_UstrEx)
     TempString = FileName;
     PathType = RtlPathTypeNotSet;
     StartSeh()
-        Status = RtlGetFullPathName_UstrEx(&FileName, NULL, NULL, NULL, NULL, NULL, &PathType, NULL);
+        Status = pRtlGetFullPathName_UstrEx(&FileName, NULL, NULL, NULL, NULL, NULL, &PathType, NULL);
         ok(Status == STATUS_OBJECT_NAME_INVALID, "status = %lx\n", Status);
     EndSeh(STATUS_SUCCESS);
     ok_eq_ustr(&FileName, &TempString);
@@ -360,7 +381,7 @@ START_TEST(RtlGetFullPathName_UstrEx)
     TempString = FileName;
     PathType = RtlPathTypeNotSet;
     StartSeh()
-        Status = RtlGetFullPathName_UstrEx(&FileName, NULL, NULL, NULL, NULL, NULL, &PathType, NULL);
+        Status = pRtlGetFullPathName_UstrEx(&FileName, NULL, NULL, NULL, NULL, NULL, &PathType, NULL);
         ok(Status == STATUS_OBJECT_NAME_INVALID, "status = %lx\n", Status);
     EndSeh(STATUS_SUCCESS);
     ok_eq_ustr(&FileName, &TempString);
@@ -372,7 +393,7 @@ START_TEST(RtlGetFullPathName_UstrEx)
     PathType = RtlPathTypeNotSet;
     RtlFillMemory(NameInvalidArray, sizeof(NameInvalidArray), 0x55);
     StartSeh()
-        Status = RtlGetFullPathName_UstrEx(&FileName, NULL, NULL, NULL, NULL, NameInvalidArray, &PathType, NULL);
+        Status = pRtlGetFullPathName_UstrEx(&FileName, NULL, NULL, NULL, NULL, NameInvalidArray, &PathType, NULL);
         ok(Status == STATUS_OBJECT_NAME_INVALID, "status = %lx\n", Status);
     EndSeh(STATUS_SUCCESS);
     ok_eq_ustr(&FileName, &TempString);
@@ -386,7 +407,7 @@ START_TEST(RtlGetFullPathName_UstrEx)
     TempString = FileName;
     PathType = RtlPathTypeNotSet;
     StartSeh()
-        Status = RtlGetFullPathName_UstrEx(&FileName, NULL, NULL, NULL, NULL, NULL, &PathType, NULL);
+        Status = pRtlGetFullPathName_UstrEx(&FileName, NULL, NULL, NULL, NULL, NULL, &PathType, NULL);
         ok(Status == STATUS_BUFFER_TOO_SMALL, "status = %lx\n", Status);
     EndSeh(STATUS_SUCCESS);
     ok_eq_ustr(&FileName, &TempString);
@@ -398,7 +419,7 @@ START_TEST(RtlGetFullPathName_UstrEx)
     RtlInitUnicodeString(&StaticString, NULL);
     PathType = RtlPathTypeNotSet;
     StartSeh()
-        Status = RtlGetFullPathName_UstrEx(&FileName, &StaticString, NULL, NULL, NULL, NULL, &PathType, NULL);
+        Status = pRtlGetFullPathName_UstrEx(&FileName, &StaticString, NULL, NULL, NULL, NULL, &PathType, NULL);
         ok(Status == STATUS_BUFFER_TOO_SMALL, "status = %lx\n", Status);
     EndSeh(STATUS_SUCCESS);
     ok_eq_ustr(&FileName, &TempString);
