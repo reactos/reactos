@@ -226,9 +226,17 @@ LsapCreateRandomDomainSid(OUT PSID *Sid)
 static NTSTATUS
 LsapCreateDatabaseObjects(VOID)
 {
+    PLSAP_POLICY_AUDIT_EVENTS_DATA AuditEventsInfo = NULL;
     POLICY_DEFAULT_QUOTA_INFO QuotaInfo;
+    POLICY_MODIFICATION_INFO ModificationInfo;
+    POLICY_AUDIT_FULL_QUERY_INFO AuditFullInfo = {FALSE, FALSE};
+    POLICY_AUDIT_LOG_INFO AuditLogInfo;
+
     PLSA_DB_OBJECT PolicyObject = NULL;
     PSID AccountDomainSid = NULL;
+    ULONG AuditEventsCount;
+    ULONG AuditEventsSize;
+    ULONG i;
     NTSTATUS Status;
 
     /* Initialize the default quota limits */
@@ -239,10 +247,35 @@ LsapCreateDatabaseObjects(VOID)
     QuotaInfo.QuotaLimits.PagefileLimit = 0;
     QuotaInfo.QuotaLimits.TimeLimit.QuadPart = 0;
 
+    /* Initialize the audit log attribute */
+    AuditLogInfo.AuditLogPercentFull = 0;
+    AuditLogInfo.MaximumLogSize = 0;			// DWORD
+    AuditLogInfo.AuditRetentionPeriod.QuadPart = 0;	// LARGE_INTEGER
+    AuditLogInfo.AuditLogFullShutdownInProgress = 0;	// BYTE
+    AuditLogInfo.TimeToShutdown.QuadPart = 0;		// LARGE_INTEGER
+    AuditLogInfo.NextAuditRecordId = 0;			// DWORD
+
+    AuditEventsCount = AuditCategoryAccountLogon - AuditCategorySystem + 1;
+    AuditEventsSize = sizeof(LSAP_POLICY_AUDIT_EVENTS_DATA) + AuditEventsCount * sizeof(DWORD);
+    AuditEventsInfo = RtlAllocateHeap(RtlGetProcessHeap(),
+                                      0,
+                                      AuditEventsSize);
+    if (AuditEventsInfo == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    AuditEventsInfo->AuditingMode = FALSE;
+    AuditEventsInfo->MaximumAuditEventCount = AuditEventsCount;
+    for (i = 0; i < AuditEventsCount; i++)
+        AuditEventsInfo->AuditEvents[i] = 0;
+
+    /* Initialize the modification attribute */
+    ModificationInfo.ModifiedId.QuadPart = 0;
+    NtQuerySystemTime(&ModificationInfo.DatabaseCreationTime);
+
     /* Create a random domain SID */
     Status = LsapCreateRandomDomainSid(&AccountDomainSid);
     if (!NT_SUCCESS(Status))
-        return Status;
+        goto done;
 
     /* Open the 'Policy' object */
     Status = LsapOpenDbObject(NULL,
@@ -279,7 +312,34 @@ LsapCreateDatabaseObjects(VOID)
                            &QuotaInfo,
                            sizeof(POLICY_DEFAULT_QUOTA_INFO));
 
+    /* Set the modification attribute */
+    LsapSetObjectAttribute(PolicyObject,
+                           L"PolMod",
+                           &ModificationInfo,
+                           sizeof(POLICY_MODIFICATION_INFO));
+
+    /* Set the audit full attribute */
+    LsapSetObjectAttribute(PolicyObject,
+                           L"PolAdtFl",
+                           &AuditFullInfo,
+                           sizeof(POLICY_AUDIT_FULL_QUERY_INFO));
+
+    /* Set the audit log attribute */
+    LsapSetObjectAttribute(PolicyObject,
+                           L"PolAdtLg",
+                           &AuditLogInfo,
+                           sizeof(POLICY_AUDIT_LOG_INFO));
+
+    /* Set the audit events attribute */
+    LsapSetObjectAttribute(PolicyObject,
+                           L"PolAdtEv",
+                           &AuditEventsInfo,
+                           AuditEventsSize);
+
 done:
+    if (AuditEventsInfo != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, AuditEventsInfo);
+
     if (PolicyObject != NULL)
         LsapCloseDbObject(PolicyObject);
 

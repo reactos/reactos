@@ -240,14 +240,14 @@ typedef struct _POLICY_AUDIT_LOG_INFO {
     DWORD AuditLogPercentFull;
     DWORD MaximumLogSize;
     LARGE_INTEGER AuditRetentionPeriod;
-    BYTE AuditLogFullShutdownInProgress;
+    BOOLEAN AuditLogFullShutdownInProgress;
     LARGE_INTEGER TimeToShutdown;
     DWORD NextAuditRecordId;
 } POLICY_AUDIT_LOG_INFO, *PPOLICY_AUDIT_LOG_INFO;
 cpp_quote("#endif")
 
 typedef struct _LSAPR_POLICY_AUDIT_EVENTS_INFO {
-    BYTE AuditingMode;
+    BOOLEAN AuditingMode;
     [size_is(MaximumAuditEventCount)] DWORD *EventAuditingOptions;
     DWORD MaximumAuditEventCount;
 } LSAPR_POLICY_AUDIT_EVENTS_INFO, *PLSAPR_POLICY_AUDIT_EVENTS_INFO;
@@ -889,15 +889,13 @@ cpp_quote("#if _WIN32_WINNT >= 0x0500")
     NTSTATUS __stdcall LsarQueryInformationPolicy2(
         [in] LSAPR_HANDLE PolicyHandle,
         [in] POLICY_INFORMATION_CLASS InformationClass,
-        [out] unsigned long *PolicyInformation);
-        /* FIXME: should be [out, switch_is(InformationClass)] PLSAPR_POLICY_INFORMATION *PolicyInformation); */
+        [out, switch_is(InformationClass)] PLSAPR_POLICY_INFORMATION *PolicyInformation);
 
     /* Function 47 */
     NTSTATUS __stdcall LsarSetInformationPolicy2(
         [in] LSAPR_HANDLE PolicyHandle,
         [in] POLICY_INFORMATION_CLASS InformationClass,
-        [in] unsigned long PolicyInformation);
-        /* FIXME: should be [in, switch_is(InformationClass)] PLSAPR_POLICY_INFORMATION PolicyInformation); */
+        [in, switch_is(InformationClass)] PLSAPR_POLICY_INFORMATION PolicyInformation);
 
     /* Function 48 */
     NTSTATUS __stdcall LsarQueryTrustedDomainInfoByName(

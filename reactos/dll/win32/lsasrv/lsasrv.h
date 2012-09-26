@@ -53,6 +53,14 @@ typedef struct _LSA_DB_OBJECT
 #define LSAP_DB_SIGNATURE 0x12345678
 
 
+typedef struct _LSAP_POLICY_AUDIT_EVENTS_DATA
+{
+    BOOLEAN AuditingMode;
+    DWORD MaximumAuditEventCount;
+    DWORD AuditEvents[0];
+} LSAP_POLICY_AUDIT_EVENTS_DATA, *PLSAP_POLICY_AUDIT_EVENTS_DATA;
+
+
 /* authport.c */
 NTSTATUS
 StartAuthenticationPort(VOID);
@@ -102,6 +110,10 @@ LsarStartRpcServer(VOID);
 
 /* policy.c */
 NTSTATUS
+LsarQueryAuditLog(PLSA_DB_OBJECT PolicyObject,
+                  PLSAPR_POLICY_INFORMATION *PolicyInformation);
+
+NTSTATUS
 LsarQueryAuditEvents(PLSA_DB_OBJECT PolicyObject,
                      PLSAPR_POLICY_INFORMATION *PolicyInformation);
 
@@ -110,7 +122,19 @@ LsarQueryPrimaryDomain(PLSA_DB_OBJECT PolicyObject,
                        PLSAPR_POLICY_INFORMATION *PolicyInformation);
 
 NTSTATUS
+LsarQueryPdAccount(PLSA_DB_OBJECT PolicyObject,
+                   PLSAPR_POLICY_INFORMATION *PolicyInformation);
+
+NTSTATUS
 LsarQueryAccountDomain(PLSA_DB_OBJECT PolicyObject,
+                       PLSAPR_POLICY_INFORMATION *PolicyInformation);
+
+NTSTATUS
+LsarQueryServerRole(PLSA_DB_OBJECT PolicyObject,
+                    PLSAPR_POLICY_INFORMATION *PolicyInformation);
+
+NTSTATUS
+LsarQueryReplicaSource(PLSA_DB_OBJECT PolicyObject,
                        PLSAPR_POLICY_INFORMATION *PolicyInformation);
 
 NTSTATUS
@@ -118,8 +142,24 @@ LsarQueryDefaultQuota(PLSA_DB_OBJECT PolicyObject,
                       PLSAPR_POLICY_INFORMATION *PolicyInformation);
 
 NTSTATUS
+LsarQueryModification(PLSA_DB_OBJECT PolicyObject,
+                      PLSAPR_POLICY_INFORMATION *PolicyInformation);
+
+NTSTATUS
+LsarQueryAuditFull(PLSA_DB_OBJECT PolicyObject,
+                   PLSAPR_POLICY_INFORMATION *PolicyInformation);
+
+NTSTATUS
 LsarQueryDnsDomain(PLSA_DB_OBJECT PolicyObject,
                    PLSAPR_POLICY_INFORMATION *PolicyInformation);
+
+NTSTATUS
+LsarQueryDnsDomainInt(PLSA_DB_OBJECT PolicyObject,
+                      PLSAPR_POLICY_INFORMATION *PolicyInformation);
+
+NTSTATUS
+LsarQueryLocalAccountDomain(PLSA_DB_OBJECT PolicyObject,
+                            PLSAPR_POLICY_INFORMATION *PolicyInformation);
 
 NTSTATUS
 LsarSetPrimaryDomain(PLSA_DB_OBJECT PolicyObject,
