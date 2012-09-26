@@ -24,6 +24,7 @@
  * - \??\C:\
  *
  * Caveat: The "\??\*" form behaves different depending on Windows version.
+ *         Some tests will fail if there is no C: volume.
  *
  * Code is assumed to be compiled as 32-bit "ANSI" (i.e. with _UNICODE) undefined.
  */
@@ -214,20 +215,21 @@ typedef struct DirComponents
 	char szCDPlusSlash[512];
 	char* pszLastCDComponent;
 	char szCurDrive[4];
+	char szCurDriveSlash[4];
 	char szParentDir[512];
 	char szParentDirPlusSlash[512];
 	char szNextLastCDComponent[260];
 	const char* pszNextLastCDComponent;
-	const char* pszParentDir;
-	const char* pszParentDirPlusSlash;
+	const char* pszPD; // parent dir
+	const char* pszPDPlusSlash;
 } DirComponents;
 
 
 static void InitDirComponents(DirComponents* p)
 {
 	p->pszNextLastCDComponent = 0;
-	p->pszParentDir = 0;
-	p->pszParentDirPlusSlash = 0;
+	p->pszPD = 0;
+	p->pszPDPlusSlash = 0;
 
 	GetCurrentDirectory(sizeof(p->szCD) / sizeof(*p->szCD), p->szCD);
 
@@ -257,6 +259,7 @@ static void InitDirComponents(DirComponents* p)
 
 	memcpy(p->szCurDrive, p->szCD, 2);
 	p->szCurDrive[2] = 0;
+	sprintf(p->szCurDriveSlash, "%s\\", p->szCurDrive);
 
 	p->pszLastCDComponent = strrchr(p->szCD, '\\');
 	if (p->pszLastCDComponent)
@@ -264,7 +267,7 @@ static void InitDirComponents(DirComponents* p)
 		// We have a parent directory
 		memcpy(p->szParentDir, p->szCD, p->pszLastCDComponent - p->szCD);
 		p->szParentDir[p->pszLastCDComponent - p->szCD] = 0;
-		p->pszParentDir = p->szParentDir;
+		p->pszPD = p->szParentDir;
 		if (strlen(p->szParentDir) == 2 && p->szParentDir[1] == ':') {
 			// When run from root directory, this is expected to
 			// have a trailing backslash
@@ -274,7 +277,7 @@ static void InitDirComponents(DirComponents* p)
 		if (p->szParentDirPlusSlash[strlen(p->szParentDirPlusSlash)-1] != '\\') {
 			strcat(p->szParentDirPlusSlash, "\\");
 		}
-		p->pszParentDirPlusSlash = p->szParentDirPlusSlash;
+		p->pszPDPlusSlash = p->szParentDirPlusSlash;
 
 		// Check if we have a directory above that too.
 		*p->pszLastCDComponent = 0;
@@ -312,7 +315,7 @@ static void InitFunctionPointer()
 	}
 	RtlDosPathNameToNtPathName_U =
 		(RtlDosPathNameToNtPathName_U_t)GetProcAddress(hDll, "RtlDosPathNameToNtPathName_U");
-	if (!hDll) {
+	if (!RtlDosPathNameToNtPathName_U) {
 		printf("Major failure. Couldn't get RtlDosPathNameToNtPathName_U!\n");
 		exit(1);
 	}
@@ -338,6 +341,7 @@ int main()
 #endif // PRINT_INFO
 
 	DirComponents cd;
+	char szTmp[512];
 
 #ifndef COMPILE_AS_ROSTEST
 	InitFunctionPointer();
@@ -349,56 +353,193 @@ int main()
 	printf("WinVer: %d.%d\n", WinVerMaj, WinVerMin);
 	printf("pszLastCDComponent     \"%s\"\n", cd.pszLastCDComponent);
 	printf("pszNextLastCDComponent \"%s\"\n", cd.pszNextLastCDComponent);
-	printf("pszParentDir           \"%s\"\n", cd.pszParentDir);
-	printf("pszParentDirPlusSlash  \"%s\"\n", cd.pszParentDirPlusSlash);
+	printf("pszParentDir           \"%s\"\n", cd.pszPD);
+	printf("pszParentDirPlusSlash  \"%s\"\n", cd.pszPDPlusSlash);
 #endif
 
+// TODO: Verify that '.' and '?' namespaces aren't flipped.
+#define PREP0            /* The normal, filesystem, namespace. Fully parsed. */
+#define PREP1 "\\\\.\\"  /* The Win32 namespace. Only partially parsed. */
+#define PREP2 "\\\\?\\"  /* The device namespace. Only partially parsed. */
 
-#define PREP0
-#define PREP1 "\\\\.\\"
-#define PREP2 "\\\\?\\"
+	//         input name        NtName              PartName
+	// volume-absolute paths
+	test(PREP1 "C:"            , "C:"              , "C:");
+	test(PREP2 "C:"            , "C:"              , "C:");
+	test(PREP0 "C:\\"          , "C:\\"            , NULL);
+	test(PREP1 "C:\\"          , "C:\\"            , NULL);
+	test(PREP2 "C:\\"          , "C:\\"            , NULL);
+	test(PREP0 "C:\\foo"       , "C:\\foo"         , "foo");
+	test(PREP1 "C:\\foo"       , "C:\\foo"         , "foo");
+	test(PREP2 "C:\\foo"       , "C:\\foo"         , "foo");
+	test(PREP0 "C:\\foo\\"     , "C:\\foo\\"       , NULL);
+	test(PREP1 "C:\\foo\\"     , "C:\\foo\\"       , NULL);
+	test(PREP2 "C:\\foo\\"     , "C:\\foo\\"       , NULL);
+	test(PREP0 "C:\\foo\\bar"  , "C:\\foo\\bar"    , "bar");
+	test(PREP1 "C:\\foo\\bar"  , "C:\\foo\\bar"    , "bar");
+	test(PREP2 "C:\\foo\\bar"  , "C:\\foo\\bar"    , "bar");
+	test(PREP0 "C:\\foo\\bar\\", "C:\\foo\\bar\\"  , NULL);
+	test(PREP1 "C:\\foo\\bar\\", "C:\\foo\\bar\\"  , NULL);
+	test(PREP2 "C:\\foo\\bar\\", "C:\\foo\\bar\\"  , NULL);
+	// CD-relative paths
+	test(PREP0 "."             , cd.szCD           , cd.pszLastCDComponent);
+	test(PREP1 "."             , ""                , NULL);
+	test(PREP2 "."             , "."               , ".");
+	test(PREP0 ".\\"           , cd.szCDPlusSlash  , NULL);
+	test(PREP1 ".\\"           , ""                , NULL);
+	test(PREP2 ".\\"           , ".\\"             , NULL);
+	test(PREP0 ".\\."          , cd.szCD           , cd.pszLastCDComponent);
+	test(PREP1 ".\\."          , ""                , NULL);
+	test(PREP2 ".\\."          , ".\\."            , ".");
+	test(PREP0 ".\\.."         , cd.pszPD          , cd.pszNextLastCDComponent);
+	test(PREP1 ".\\.."         , ""                , NULL);
+	test(PREP2 ".\\.."         , ".\\.."           , "..");
+	test(PREP0 ".."            , cd.pszPD          , cd.pszNextLastCDComponent);
+	test(PREP1 ".."            , ""                , NULL);
+	test(PREP2 ".."            , ".."              , "..");
+	test(PREP0 "..\\"          , cd.pszPDPlusSlash , NULL);
+	test(PREP1 "..\\"          , ""                , NULL);
+	test(PREP2 "..\\"          , "..\\"            , NULL);
+	// malformed
+	test(PREP0 "..."           , cd.szCDPlusSlash  , NULL);
+	test(PREP1 "..."           , ""                , NULL);
+	test(PREP2 "..."           , "..."             , "...");
 
-	// The following tests shall return strictly defined strings,
-	// why we can use hard-coded expectations..
-	test(PREP1 "C:"            , "C:"             , "C:");
-	test(PREP2 "C:"            , "C:"             , "C:");
-	test(PREP0 "C:\\"          , "C:\\"           , NULL);
-	test(PREP1 "C:\\"          , "C:\\"           , NULL);
-	test(PREP2 "C:\\"          , "C:\\"           , NULL);
-	test(PREP0 "C:\\foo"       , "C:\\foo"        , "foo");
-	test(PREP1 "C:\\foo"       , "C:\\foo"        , "foo");
-	test(PREP2 "C:\\foo"       , "C:\\foo"        , "foo");
-	test(PREP0 "C:\\foo\\"     , "C:\\foo\\"      , NULL);
-	test(PREP1 "C:\\foo\\"     , "C:\\foo\\"      , NULL);
-	test(PREP2 "C:\\foo\\"     , "C:\\foo\\"      , NULL);
-	test(PREP0 "C:\\foo\\bar"  , "C:\\foo\\bar"   , "bar");
-	test(PREP1 "C:\\foo\\bar"  , "C:\\foo\\bar"   , "bar");
-	test(PREP2 "C:\\foo\\bar"  , "C:\\foo\\bar"   , "bar");
-	test(PREP0 "C:\\foo\\bar\\", "C:\\foo\\bar\\" , NULL);
-	test(PREP1 "C:\\foo\\bar\\", "C:\\foo\\bar\\" , NULL);
-	test(PREP2 "C:\\foo\\bar\\", "C:\\foo\\bar\\" , NULL);
-	test(PREP1 "."             , ""               , NULL);
-	test(PREP2 "."             , "."              , ".");
-	test(PREP1 ".\\"           , ""               , NULL);
-	test(PREP2 ".\\"           , ".\\"            , NULL);
-	test(PREP1 ".."            , ""               , NULL);
-	test(PREP2 ".."            , ".."             , "..");
-	test(PREP1 "..\\"          , ""               , NULL);
-	test(PREP2 "..\\"          , "..\\"           , NULL);
+	// Test a well-known "special" DOS device name.
+	test(PREP0 "NUL"           , "NUL"             , NULL);
+	test(PREP1 "NUL"           , "NUL"             , "NUL");
+	test(PREP2 "NUL"           , "NUL"             , "NUL");
+	test(PREP0 "NUL:"          , "NUL"             , NULL);
+	test(PREP1 "NUL:"          , "NUL:"            , "NUL:");
+	test(PREP2 "NUL:"          , "NUL:"            , "NUL:");
+	test(PREP0 "CON"           , "CON"             , NULL);
+	// NOTE: RtlDosPathNameToNtPathName_U as currently tested fails for
+	// the input "\\.\CON" on at least Windows XP sp2.
+//	test(PREP1 "CON"           , "CON"             , "CON");
+	test(PREP2 "CON"           , "CON"             , "CON");
+	test(PREP0 "CON:"          , "CON"             , NULL);
+	test(PREP1 "CON:"          , "CON:"            , "CON:");
+	test(PREP2 "CON:"          , "CON:"            , "CON:");
 
-	// The following tests returns results based on current directory.
-	test(PREP0 "."             , cd.szCD                 , cd.pszLastCDComponent);
-	test(PREP0 ".\\"           , cd.szCDPlusSlash        , NULL);
-	test(PREP0 ".."            , cd.pszParentDir         , cd.pszNextLastCDComponent);
-	test(PREP0 "..\\"          , cd.pszParentDirPlusSlash, NULL);
-	test(cd.szCD               , cd.szCD                 , cd.pszLastCDComponent);
-	test(cd.szCDPlusSlash      , cd.szCDPlusSlash        , NULL);
+	sprintf(szTmp, "%s\\%s", cd.szCD, "NUL:\\");
+	test(PREP0 "NUL:\\"        , szTmp             , NULL);
+	test(PREP1 "NUL:\\"        , "NUL:\\"          , NULL);
+	test(PREP2 "NUL:\\"        , "NUL:\\"          , NULL);
+	test(PREP0 "C:NUL"         , "NUL"             , NULL);
+	test(PREP1 "C:NUL"         , "C:NUL"           , "C:NUL");
+	test(PREP2 "C:NUL"         , "C:NUL"           , "C:NUL");
+	test(PREP0 "C:\\NUL"       , "NUL"             , NULL);
+	test(PREP1 "C:\\NUL"       , "C:\\NUL"         , "NUL");
+	test(PREP2 "C:\\NUL"       , "C:\\NUL"         , "NUL");
+	test(PREP0 "C:\\NUL\\"     , "C:\\NUL\\"       , NULL);
+	test(PREP1 "C:\\NUL\\"     , "C:\\NUL\\"       , NULL);
+	test(PREP2 "C:\\NUL\\"     , "C:\\NUL\\"       , NULL);
+
+	// root-paths
+	test(PREP0 "\\"            , cd.szCurDriveSlash, NULL);
+	test(PREP1 "\\"            , ""                , NULL);
+	test(PREP2 "\\"            , "\\"              , NULL);
+
+	test(PREP0 "\\."           , cd.szCurDriveSlash, NULL);
+	test(PREP1 "\\."           , ""                , NULL);
+	test(PREP2 "\\."           , "\\."             , ".");
+
+	test(PREP0 "\\.."          , cd.szCurDriveSlash, NULL);
+	test(PREP1 "\\.."          , ""                , NULL);
+	test(PREP2 "\\.."          , "\\.."            , "..");
+
+	test(PREP0 "\\..."         , cd.szCurDriveSlash, NULL);
+	test(PREP1 "\\..."         , ""                , NULL);
+	test(PREP2 "\\..."         , "\\..."           , "...");
+
+	sprintf(szTmp, "%s%s", cd.szCurDrive, "\\C:");
+	test(PREP0 "\\C:"          , szTmp              , "C:");
+	test(PREP1 "\\C:"          , "C:"               , "C:");
+	test(PREP2 "\\C:"          , "\\C:"             , "C:");
+
+	sprintf(szTmp, "%s%s", cd.szCurDrive, "\\C:\\");
+	test(PREP0 "\\C:\\"        , szTmp             , NULL);
+	test(PREP1 "\\C:\\"        , "C:\\"            , NULL);
+	test(PREP2 "\\C:\\"        , "\\C:\\"          , NULL);
+
+	// UNC paths
+	test(PREP0 "\\\\"          , "UNC\\"           , NULL);
+	test(PREP1 "\\\\"          , ""                , NULL);
+	test(PREP2 "\\\\"          , "\\\\"            , NULL);
+	test(PREP0 "\\\\\\"        , "UNC\\\\"         , NULL);
+	test(PREP1 "\\\\\\"        , ""                , NULL);
+	test(PREP2 "\\\\\\"        , "\\\\\\"          , NULL);
+	test(PREP0 "\\\\foo"       , "UNC\\foo"        , NULL);
+	test(PREP1 "\\\\foo"       , "foo"             , "foo");
+	test(PREP2 "\\\\foo"       , "\\\\foo"         , "foo");
+
+	test(PREP0 "\\\\foo\\.."   , "UNC\\foo\\"      , NULL);
+	test(PREP1 "\\\\foo\\.."   , ""                , NULL);
+	test(PREP2 "\\\\foo\\.."   , "\\\\foo\\.."     , "..");
+
+	test(PREP0 "\\\\foo\\"     , "UNC\\foo\\"      , NULL);
+	test(PREP1 "\\\\foo\\"     , "foo\\"           , NULL);
+	test(PREP2 "\\\\foo\\"     , "\\\\foo\\"       , NULL);
+	test(PREP0 "\\\\f\\b"      , "UNC\\f\\b"       , NULL);
+	test(PREP1 "\\\\f\\b"      , "f\\b"            , "b");
+	test(PREP2 "\\\\f\\b"      , "\\\\f\\b"        , "b");
+	test(PREP0 "\\\\f\\b\\"    , "UNC\\f\\b\\"     , NULL);
+	test(PREP1 "\\\\f\\b\\"    , "f\\b\\"          , NULL);
+	test(PREP2 "\\\\f\\b\\"    , "\\\\f\\b\\"      , NULL);
+
+	test(PREP0 "\\\\f\\b\\.."  , "UNC\\f\\b"       , NULL);
+	test(PREP1 "\\\\f\\b\\.."  , "f"               , "f");
+	test(PREP2 "\\\\f\\b\\.."  , "\\\\f\\b\\.."    , "..");
+
+	// strange border-cases
+	test(PREP0 "\\\\C:"        , "UNC\\C:"         , NULL);
+	test(PREP1 "\\\\C:"        , "C:"              , "C:");
+	test(PREP2 "\\\\C:"        , "\\\\C:"          , "C:");
+	test(PREP0 "\\\\C:\\"      , "UNC\\C:\\"       , NULL);
+	test(PREP1 "\\\\C:\\"      , "C:\\"            , NULL);
+	test(PREP2 "\\\\C:\\"      , "\\\\C:\\"        , NULL);
+	test(PREP0 "\\\\NUL"       , "UNC\\NUL"        , NULL);
+	test(PREP1 "\\\\NUL"       , "NUL"             , "NUL");
+	test(PREP2 "\\\\NUL"       , "\\\\NUL"         , "NUL");
+	test(PREP0 "\\\\NUL:"      , "UNC\\NUL:"       , NULL);
+	test(PREP1 "\\\\NUL:"      , "NUL:"            , "NUL:");
+	test(PREP2 "\\\\NUL:"      , "\\\\NUL:"        , "NUL:");
+	test(PREP0 "\\\\NUL:\\"    , "UNC\\NUL:\\"     , NULL);
+	test(PREP1 "\\\\NUL:\\"    , "NUL:\\"          , NULL);
+	test(PREP2 "\\\\NUL:\\"    , "\\\\NUL:\\"      , NULL);
+
+	// UNC + forward slashes
+	test(PREP0 "//"            , "UNC\\"           , NULL);
+	test(PREP1 "//"            , ""                , NULL);
+	test(PREP2 "//"            , "//"              , "//");
+	test(PREP0 "//C:"          , "UNC\\C:"         , NULL);
+	test(PREP1 "//C:"          , "C:"              , "C:");
+	test(PREP2 "//C:"          , "//C:"            , "//C:");
+	test(PREP0 "//C:/"         , "UNC\\C:\\"       , NULL);
+	test(PREP1 "//C:/"         , "C:\\"            , NULL);
+	test(PREP2 "//C:/"         , "//C:/"           , "//C:/");
+	test(PREP0 "//."           , ""                , NULL);
+	test(PREP1 "//."           , ""                , NULL);
+	test(PREP2 "//."           , "//."             , "//.");
+	test(PREP0 "//.."          , "UNC\\"           , NULL);
+	test(PREP1 "//.."          , ""                , NULL);
+	test(PREP2 "//.."          , "//.."            , "//..");
+	test(PREP0 "/./"           , cd.szCurDriveSlash, NULL);
+	test(PREP1 "/./"           , ""                , NULL);
+	test(PREP2 "/./"           , "/./"             , "/./");
+	test(PREP0 "//./"          , ""                , NULL);
+	test(PREP1 "//./"          , ""                , NULL);
+	test(PREP2 "//./"          , "//./"            , "//./");
+
+	test(cd.szCD               , cd.szCD           , cd.pszLastCDComponent);
+	test(cd.szCDPlusSlash      , cd.szCDPlusSlash  , NULL);
 
 #if 0
-	// This following test is "problematic", as it returns results based on
+	// The following tests are "problematic", as they return results based on
 	// what your CD on C: is, whether or not you actually run the program
-	// from C:. For that reason, it's currently disabled.
-	test(PREP0 "C:"            , "C:\\"                  , NULL);
+	// from C:. For that reason, they are currently disabled.
+	test(PREP0 "C:"            , "C:\\"+C_curdir         , C_curdir);
+	test(PREP0 "C:NUL\\"       , "C:\\"+C_curdir+"\\NUL\\" , NULL);
 #endif
 
 #if 0 // Disabled due to... see the comment inside the block.
@@ -412,9 +553,11 @@ int main()
 		// a full NT name ("\??\"), why it's not the end of the world
 		// that this test is currently disabled.
 		//
-		// NOTE: _At least_ XP sp2 prepends this.
-		// Prepending curdrive like this is most likely a bug, but for
-		// compatibility it may become a requirement to "shim" this.
+		// Some versions of Windows prepends driveletter + colon
+		// for the process' current volume.
+		// Prepending curdrive is most likely a bug that got fixed in
+		// later versions of Windows, but for compatibility it may
+		// become a requirement to "shim" this.
 		//
 		// Known operating systems prepending "Z:\??\" (assuming the
 		// process' CD is on the volume Z:):
@@ -426,12 +569,13 @@ int main()
 			sprintf(szPrepend, "%s\\??\\", cd.szCurDrive);
 		}
 
-		sprintf(szExp, "%s%s", szPrepend, "C:"); // Win7 64 (as 32-bit)
+		sprintf(szExp, "%s%s", szPrepend, "C:");
 		test("\\??\\C:", szExp, "C:");
 
 		sprintf(szExp, "%s%s", szPrepend, "C:\\");
 		test("\\??\\C:\\", szExp, NULL);
-	}
+
+}
 #endif
 
 #ifndef COMPILE_AS_ROSTEST
