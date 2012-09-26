@@ -77,7 +77,7 @@ typedef struct RTL_RELATIVE_NAME_U {
 
 typedef BOOLEAN (__stdcall *RtlDosPathNameToNtPathName_U_t)(PCWSTR,PUNICODE_STRING,PCWSTR*,PRTL_RELATIVE_NAME_U);
 
-RtlDosPathNameToNtPathName_U_t RtlDosPathNameToNtPathName_U;
+static RtlDosPathNameToNtPathName_U_t RtlDosPathNameToNtPathName_U;
 
 #endif // !COMPILE_AS_ROSTEST
 
@@ -85,10 +85,10 @@ RtlDosPathNameToNtPathName_U_t RtlDosPathNameToNtPathName_U;
 static void check_result(BOOLEAN bOK, const char* pszErr)
 {
 #ifdef COMPILE_AS_ROSTEST
-	ok(bOK, "%s\n", pszErr);
+	ok(bOK, "%s.\n", pszErr);
 #else
 	if (!bOK) {
-		printf("\a** %s!\n", pszErr);
+		printf("\a** %s.\n", pszErr);
 	}
 #endif
 }
@@ -128,12 +128,7 @@ static void test2(LPCWSTR pwsz, LPCWSTR pwszExpected, LPCWSTR pwszExpectedPartNa
 	printf("--------------------------\n");
 	printf("in          : \"%S\"\n", pwsz);
 	prucs("NtName", &NtName);
-	if (PartName) {
-		printf("PartName    : \"%S\"\n", PartName);
-	} else {
-		// This is not the place to test that printf handles NULL strings.
-		printf("PartName    : (null)\n");
-	}
+	printf("PartName    : \"%S\"\n", PartName ? PartName : L"(null)");
 //	prucs("RelativeName", &RelativeName.RelativeName);
 #endif
 
@@ -151,9 +146,10 @@ static void test2(LPCWSTR pwsz, LPCWSTR pwszExpected, LPCWSTR pwszExpectedPartNa
 		const size_t lenAct = (NtName.Length - 8) / 2;
 		bOK = (lenExp == lenAct) &&
 		      memcmp(pwszActual, pwszExpected, lenExp * 2) == 0;
-		check_result(bOK, "Actual NtName does not match expectations!");
+		check_result(bOK, "NtName does not match expected");
 		if (!bOK)
 		{
+			printf("input:  : %2u chars \"%S\"\n", wcslen(pwsz), pwsz);
 			printf("Expected: %2u chars \"%S\"\n", lenExp, pwszExpected);
 			printf("Actual  : %2u chars \"%S\"\n", lenAct, lenAct ? pwszActual : L"(null)");
 			return;
@@ -163,28 +159,29 @@ static void test2(LPCWSTR pwsz, LPCWSTR pwszExpected, LPCWSTR pwszExpectedPartNa
 	{
 		PWSTR pwszActual = NtName.Buffer + 4;
 		const size_t lenAct = (NtName.Length - 8) / 2;
-		check_result(FALSE, "Actual NtName does not match expectations!");
+		check_result(FALSE, "Unexpected NtName (expected NULL)");
+		printf("input:  : %2u chars \"%S\"\n", wcslen(pwsz), pwsz);
 		printf("Actual  : %2u chars \"%S\"\n", lenAct, pwszActual);
 	}
 
 	if (pwszExpectedPartName) {
-		if (!PartName) {
-			check_result(FALSE, "Actual PartName is unexpectedly NULL!");
-			printf("Expected: \"%S\"\n", pwszExpectedPartName);
-			return;
-		}
-		bOK = wcscmp(PartName, pwszExpectedPartName) == 0;
-		check_result(bOK, "Actual PartName does not match expected!");
+		const size_t lenExp = wcslen(pwszExpectedPartName);
+		const size_t lenAct = PartName ? wcslen(PartName) : 0;
+		bOK = (lenExp == lenAct) &&
+		      wcscmp(PartName, pwszExpectedPartName) == 0;
+		check_result(bOK, "PartName does not match expected");
 		if (!bOK) {
-			printf("Expected: \"%S\"\n", pwszExpectedPartName);
-			printf("Actual  : \"%S\"\n", PartName);
+			printf("input:  : %2u chars \"%S\"\n", wcslen(pwsz), pwsz);
+			printf("Expected: %2u chars \"%S\"\n", lenExp, pwszExpectedPartName);
+			printf("Actual  : %2u chars \"%S\"\n", lenAct, lenAct ? PartName : L"(null)");
 			return;
 		}
 	} else
 	if (PartName)
 	{
-		check_result(FALSE, "Unexpected PartName (expected NULL)");
-		printf("Actual  : %S\n", PartName);
+		check_result(FALSE, "Unexpected PartName (expected NULL).");
+		printf("input:  : %2u chars \"%S\"\n", wcslen(pwsz), pwsz);
+		printf("Actual  : %2u chars %S\n", wcslen(PartName), PartName);
 	}
 }
 
@@ -227,30 +224,34 @@ typedef struct DirComponents
 
 static void InitDirComponents(DirComponents* p)
 {
+	/* While the following code seems to work, it's an unholy mess
+	 * and should probably be cleaned up.
+	 */
+	BOOLEAN bOK;
+
 	p->pszNextLastCDComponent = 0;
 	p->pszPD = 0;
 	p->pszPDPlusSlash = 0;
 
 	GetCurrentDirectory(sizeof(p->szCD) / sizeof(*p->szCD), p->szCD);
 
-	if (strlen(p->szCD) < 2 || p->szCD[1] != ':') {
-		printf("Expected curdir to be a drive letter. It's not. It's \"%s\"\n", p->szCD);
-#ifdef COMPILE_AS_ROSTEST
-		ok(FALSE, "Expected curdir to be a drive letter. It's not. It's \"%s\"\n", p->szCD);
-#endif
+	bOK = strlen(p->szCD) >= 2 && p->szCD[1] == ':';
+	check_result(bOK, "Expected curdir to be a drive letter. It's not");
+
+	if (!bOK) {
+		printf("Curdir is \"%s\"\n", p->szCD);
 		exit(1);
 	}
 
-	// Note that if executed from the root directory, a slash already
-	// is appended. Take the opportunity to verify this.
-	if (p->szCD[2] != '\\') {
-		printf("CD is missing a slash as its third character! \"%s\"\n", p->szCD);
-#ifdef COMPILE_AS_ROSTEST
-		ok(FALSE, "CD is missing a slash as its third character! \"%s\"\n", p->szCD);
-#endif
+	bOK = p->szCD[2] == '\\';
+	check_result(bOK, "CD is missing a slash as its third character");
+	if (!bOK) {
+		printf("CD is \"%s\"\n", p->szCD);
 		exit(1);
 	}
 
+	// Note that if executed from the root directory, a backslash is
+	// already appended.
 	strcpy(p->szCDPlusSlash, p->szCD);
 	if (strlen(p->szCD) > 3) {
 		// Append trailing backslash
@@ -320,7 +321,20 @@ static void InitFunctionPointer()
 		exit(1);
 	}
 }
-#endif // !COMPILE_AS_ROSTEST
+
+# if defined(PRINT_INFO)
+static DWORD get_win_ver()
+{
+#  ifdef COMPILE_AS_ROSTEST
+    PPEB Peb = NtCurrentPeb();
+    const DWORD dwWinVer = (DWORD)(Peb->OSMinorVersion << 8) | Peb->OSMajorVersion;
+#  else
+	const DWORD dwWinVer = GetVersion();
+#  endif
+	return dwWinVer;
+}
+# endif /* PRINT_INFO */
+#endif /* !COMPILE_AS_ROSTEST */
 
 
 #ifdef COMPILE_AS_ROSTEST
@@ -330,12 +344,7 @@ int main()
 #endif
 {
 #if defined(PRINT_INFO)
-#ifdef COMPILE_AS_ROSTEST
-    PPEB Peb = NtCurrentPeb();
-    const DWORD dwWinVer = (DWORD)(Peb->OSMinorVersion << 8) | Peb->OSMajorVersion;
-#else
-	const DWORD dwWinVer = GetVersion();
-#endif
+	const DWORD dwWinVer = get_win_ver();
 	const BYTE  WinVerMaj = (BYTE)dwWinVer;
 	const BYTE  WinVerMin = HIBYTE(LOWORD(dwWinVer));
 #endif // PRINT_INFO
@@ -357,10 +366,9 @@ int main()
 	printf("pszParentDirPlusSlash  \"%s\"\n", cd.pszPDPlusSlash);
 #endif
 
-// TODO: Verify that '.' and '?' namespaces aren't flipped.
-#define PREP0            /* The normal, filesystem, namespace. Fully parsed. */
-#define PREP1 "\\\\.\\"  /* The Win32 namespace. Only partially parsed. */
-#define PREP2 "\\\\?\\"  /* The device namespace. Only partially parsed. */
+#define PREP0            /* The normal Win32 namespace. Fully parsed. */
+#define PREP1 "\\\\.\\"  /* The Win32 Device Namespace. Only partially parsed. */
+#define PREP2 "\\\\?\\"  /* The Win32 File Namespace. Only partially parsed. */
 
 	//         input name        NtName              PartName
 	// volume-absolute paths
@@ -381,7 +389,37 @@ int main()
 	test(PREP0 "C:\\foo\\bar\\", "C:\\foo\\bar\\"  , NULL);
 	test(PREP1 "C:\\foo\\bar\\", "C:\\foo\\bar\\"  , NULL);
 	test(PREP2 "C:\\foo\\bar\\", "C:\\foo\\bar\\"  , NULL);
+	test(PREP0 "C:\\foo\\.."   , "C:\\"            , NULL);
+	test(PREP1 "C:\\foo\\.."   , "C:"              , "C:");
+	test(PREP2 "C:\\foo\\.."   , "C:\\foo\\.."     , "..");
+	test(PREP0 "C:\\foo\\..\\" , "C:\\"            , NULL);
+	test(PREP1 "C:\\foo\\..\\" , "C:\\"            , NULL);
+	test(PREP2 "C:\\foo\\..\\" , "C:\\foo\\..\\"   , NULL);
+
+	test(PREP0 "C:\\f\\b\\.."  , "C:\\f"           , "f");
+	test(PREP1 "C:\\f\\b\\.."  , "C:\\f"           , "f");
+	test(PREP2 "C:\\f\\b\\.."  , "C:\\f\\b\\.."    , "..");
+	test(PREP0 "C:\\f\\b\\..\\", "C:\\f\\"         , NULL);
+	test(PREP1 "C:\\f\\b\\..\\", "C:\\f\\"         , NULL);
+	test(PREP2 "C:\\f\\b\\..\\", "C:\\f\\b\\..\\"  , NULL);
+
 	// CD-relative paths
+
+	// RtlDosPathNameToNtPathName_U makes no distinction for
+	// special device names, such as "PhysicalDisk0", "HarddiskVolume0"
+	// or "Global??". They all follow the same pattern as a named
+	// filesystem entry, why they implicitly tested by the following
+	// "foo" and "foo\" cases.
+	sprintf(szTmp, "%s%s", cd.szCDPlusSlash, "foo");
+	test(PREP0 "foo"           , szTmp             , "foo");
+	test(PREP1 "foo"           , "foo"             , "foo");
+	test(PREP2 "foo"           , "foo"             , "foo");
+
+	sprintf(szTmp, "%s%s", cd.szCDPlusSlash        , "foo\\");
+	test(PREP0 "foo\\"         , szTmp             , NULL);
+	test(PREP1 "foo\\"         , "foo\\"           , NULL);
+	test(PREP2 "foo\\"         , "foo\\"           , NULL);
+
 	test(PREP0 "."             , cd.szCD           , cd.pszLastCDComponent);
 	test(PREP1 "."             , ""                , NULL);
 	test(PREP2 "."             , "."               , ".");
@@ -405,7 +443,7 @@ int main()
 	test(PREP1 "..."           , ""                , NULL);
 	test(PREP2 "..."           , "..."             , "...");
 
-	// Test a well-known "special" DOS device name.
+	// Test well-known "special" DOS device names.
 	test(PREP0 "NUL"           , "NUL"             , NULL);
 	test(PREP1 "NUL"           , "NUL"             , "NUL");
 	test(PREP2 "NUL"           , "NUL"             , "NUL");
@@ -413,8 +451,8 @@ int main()
 	test(PREP1 "NUL:"          , "NUL:"            , "NUL:");
 	test(PREP2 "NUL:"          , "NUL:"            , "NUL:");
 	test(PREP0 "CON"           , "CON"             , NULL);
-	// NOTE: RtlDosPathNameToNtPathName_U as currently tested fails for
-	// the input "\\.\CON" on at least Windows XP sp2.
+	// NOTE: RtlDosPathNameToNtPathName_U (as currently tested) fails for
+	// the input "\\.\CON" on two widely different Windows versions.
 //	test(PREP1 "CON"           , "CON"             , "CON");
 	test(PREP2 "CON"           , "CON"             , "CON");
 	test(PREP0 "CON:"          , "CON"             , NULL);
@@ -452,6 +490,7 @@ int main()
 	test(PREP1 "\\..."         , ""                , NULL);
 	test(PREP2 "\\..."         , "\\..."           , "...");
 
+	// malformed
 	sprintf(szTmp, "%s%s", cd.szCurDrive, "\\C:");
 	test(PREP0 "\\C:"          , szTmp              , "C:");
 	test(PREP1 "\\C:"          , "C:"               , "C:");
@@ -491,7 +530,7 @@ int main()
 	test(PREP1 "\\\\f\\b\\.."  , "f"               , "f");
 	test(PREP2 "\\\\f\\b\\.."  , "\\\\f\\b\\.."    , "..");
 
-	// strange border-cases
+	// strange UNC-paths
 	test(PREP0 "\\\\C:"        , "UNC\\C:"         , NULL);
 	test(PREP1 "\\\\C:"        , "C:"              , "C:");
 	test(PREP2 "\\\\C:"        , "\\\\C:"          , "C:");
