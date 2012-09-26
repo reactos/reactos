@@ -1,4 +1,4 @@
-/* $Id$
+/* $Id: dir.c 55866 2012-02-25 21:09:28Z khornicek $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries

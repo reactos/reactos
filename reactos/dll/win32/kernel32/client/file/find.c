@@ -1,4 +1,4 @@
-/* $Id$
+/* $Id: find.c 53068 2011-08-04 22:18:01Z ion $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries

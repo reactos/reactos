@@ -1,4 +1,4 @@
-/* $Id$
+/* $Id: environ.c 54459 2011-11-20 17:00:39Z pschweitzer $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries

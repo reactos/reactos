@@ -1,4 +1,4 @@
-/* $Id$
+/* $Id: delete.c 56650 2012-05-23 16:51:22Z ion $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries

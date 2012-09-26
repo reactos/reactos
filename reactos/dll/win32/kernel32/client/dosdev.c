@@ -1,4 +1,4 @@
-/* $Id$
+/* $Id: dosdev.c 54326 2011-11-07 00:18:13Z ion $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries

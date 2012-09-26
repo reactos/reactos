@@ -1,4 +1,4 @@
-/* $Id$
+/* $Id: muldiv.c 37829 2008-12-03 17:33:13Z dgorbachev $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries

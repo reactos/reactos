@@ -1,4 +1,4 @@
-/* $Id$
+/* $Id: copy.c 55885 2012-02-27 17:10:44Z sir_richard $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries

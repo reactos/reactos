@@ -1,4 +1,4 @@
-/* $Id$
+/* $Id: hardlink.c 55790 2012-02-21 19:18:57Z ion $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
