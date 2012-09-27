@@ -1251,7 +1251,7 @@ list(APPEND SOURCE_MSVCRT
 #    wcstok_s.c
 #    wcstol.c
 #    wcstombs.c
-#    wcstombs_s.c
+    wcstombs_s.c
 #    wcstoul.c
 #    wcsxfrm.c
 #    wctob

@@ -7,6 +7,7 @@
 
 #if defined(TEST_MSVCRT)
 extern void func_mbstowcs_s(void);
+extern void func_wcstombs_s(void);
 extern void func__vscprintf(void);
 extern void func__vscwprintf(void);
 #endif
@@ -33,6 +34,7 @@ const struct test winetest_testlist[] =
 #if defined(TEST_STATIC_CRT)
 #elif defined(TEST_MSVCRT)
     { "mbstowcs_s", func_mbstowcs_s },
+    { "wcstombs_s", func_wcstombs_s },
     { "_vscprintf", func__vscprintf },
     { "_vscwprintf", func__vscwprintf },
 #elif defined(TEST_NTDLL)
