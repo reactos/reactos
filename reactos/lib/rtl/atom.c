@@ -103,6 +103,12 @@ RtlpCheckIntegerAtom(PWSTR AtomName,
         return TRUE;
      }
 
+   /*
+    * AtomName cannot be NULL because this
+    * case was caught by the previous test.
+    */
+   ASSERT(AtomName != NULL);
+
    if (*AtomName != L'#')
      return FALSE;
 

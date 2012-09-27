@@ -116,13 +116,24 @@ CmpInitializeHive(OUT PCMHIVE *RegistryHive,
     Hive->ViewLock = ExAllocatePoolWithTag(NonPagedPool,
                                            sizeof(KGUARDED_MUTEX),
                                            TAG_CM);
-    if (!Hive->ViewLock) return STATUS_INSUFFICIENT_RESOURCES;
+    if (!Hive->ViewLock)
+    {
+        /* Cleanup allocation and fail */
+        ExFreePoolWithTag(Hive, TAG_CM);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
 
     /* Allocate the flush lock */
     Hive->FlusherLock = ExAllocatePoolWithTag(NonPagedPool,
                                               sizeof(ERESOURCE),
                                               TAG_CM);
-    if (!Hive->FlusherLock) return STATUS_INSUFFICIENT_RESOURCES;
+    if (!Hive->FlusherLock)
+    {
+        /* Cleanup allocations and fail */
+        ExFreePoolWithTag(Hive->ViewLock, TAG_CM);
+        ExFreePoolWithTag(Hive, TAG_CM);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
 
     /* Setup the handles */
     Hive->FileHandles[HFILE_TYPE_PRIMARY] = Primary;
@@ -189,10 +200,10 @@ CmpInitializeHive(OUT PCMHIVE *RegistryHive,
                           (PUNICODE_STRING)FileName);
     if (!NT_SUCCESS(Status))
     {
-        /* Clear allocations and fail */
-        ExFreePool(Hive->ViewLock);
-        ExFreePool(Hive->FlusherLock);
-        ExFreePool(Hive);
+        /* Cleanup allocations and fail */
+        ExFreePoolWithTag(Hive->FlusherLock, TAG_CM);
+        ExFreePoolWithTag(Hive->ViewLock, TAG_CM);
+        ExFreePoolWithTag(Hive, TAG_CM);
         return Status;
     }
 
@@ -205,10 +216,10 @@ CmpInitializeHive(OUT PCMHIVE *RegistryHive,
         /* Verify integrity */
         if (CmCheckRegistry((PCMHIVE)Hive, TRUE))
         {
-            /* Free all alocations */
-            ExFreePool(Hive->ViewLock);
-            ExFreePool(Hive->FlusherLock);
-            ExFreePool(Hive);
+            /* Cleanup allocations and fail */
+            ExFreePoolWithTag(Hive->FlusherLock, TAG_CM);
+            ExFreePoolWithTag(Hive->ViewLock, TAG_CM);
+            ExFreePoolWithTag(Hive, TAG_CM);
             return STATUS_REGISTRY_CORRUPT;
         }
     }
@@ -231,10 +242,10 @@ NTSTATUS
 NTAPI
 CmpOpenHiveFiles(IN PCUNICODE_STRING BaseName,
                  IN PCWSTR Extension OPTIONAL,
-                 IN PHANDLE Primary,
-                 IN PHANDLE Log,
-                 IN PULONG PrimaryDisposition,
-                 IN PULONG LogDisposition,
+                 OUT PHANDLE Primary,
+                 OUT PHANDLE Log,
+                 OUT PULONG PrimaryDisposition,
+                 OUT PULONG LogDisposition,
                  IN BOOLEAN CreateAllowed,
                  IN BOOLEAN MarkAsSystemHive,
                  IN BOOLEAN NoBuffering,

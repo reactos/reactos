@@ -211,7 +211,7 @@ ExpInitNls(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     PLIST_ENTRY ListHead, NextEntry;
     PMEMORY_ALLOCATION_DESCRIPTOR MdBlock;
     ULONG NlsTablesEncountered = 0;
-    SIZE_T NlsTableSizes[3]; /* 3 NLS tables */
+    SIZE_T NlsTableSizes[3] = {0, 0, 0}; /* 3 NLS tables */
 
     /* Check if this is boot-time phase 0 initialization */
     if (!ExpInitializationPhase)
@@ -405,12 +405,11 @@ ExpLoadInitialProcess(IN PINIT_BUFFER InitBuffer,
     if (!NT_SUCCESS(Status))
     {
         /* Failed, display error */
-        p = InitBuffer->DebugBuffer;
-        _snwprintf(p,
-                   256 * sizeof(WCHAR),
+        _snwprintf(InitBuffer->DebugBuffer,
+                   sizeof(InitBuffer->DebugBuffer)/sizeof(WCHAR),
                    L"INIT: Unable to allocate Process Parameters. 0x%lx",
                    Status);
-        RtlInitUnicodeString(&DebugString, p);
+        RtlInitUnicodeString(&DebugString, InitBuffer->DebugBuffer);
         ZwDisplayString(&DebugString);
 
         /* Bugcheck the system */
@@ -434,12 +433,11 @@ ExpLoadInitialProcess(IN PINIT_BUFFER InitBuffer,
     if (!NT_SUCCESS(Status))
     {
         /* Failed, display error */
-        p = InitBuffer->DebugBuffer;
-        _snwprintf(p,
-                   256 * sizeof(WCHAR),
+        _snwprintf(InitBuffer->DebugBuffer,
+                   sizeof(InitBuffer->DebugBuffer)/sizeof(WCHAR),
                    L"INIT: Unable to allocate Process Environment. 0x%lx",
                    Status);
-        RtlInitUnicodeString(&DebugString, p);
+        RtlInitUnicodeString(&DebugString, InitBuffer->DebugBuffer);
         ZwDisplayString(&DebugString);
 
         /* Bugcheck the system */
@@ -560,12 +558,11 @@ ExpLoadInitialProcess(IN PINIT_BUFFER InitBuffer,
     if (!NT_SUCCESS(Status))
     {
         /* Failed, display error */
-        p = InitBuffer->DebugBuffer;
-        _snwprintf(p,
-                   256 * sizeof(WCHAR),
+        _snwprintf(InitBuffer->DebugBuffer,
+                   sizeof(InitBuffer->DebugBuffer)/sizeof(WCHAR),
                    L"INIT: Unable to create Session Manager. 0x%lx",
                    Status);
-        RtlInitUnicodeString(&DebugString, p);
+        RtlInitUnicodeString(&DebugString, InitBuffer->DebugBuffer);
         ZwDisplayString(&DebugString);
 
         /* Bugcheck the system */
@@ -577,12 +574,11 @@ ExpLoadInitialProcess(IN PINIT_BUFFER InitBuffer,
     if (!NT_SUCCESS(Status))
     {
         /* Failed, display error */
-        p = InitBuffer->DebugBuffer;
-        _snwprintf(p,
-                   256 * sizeof(WCHAR),
+        _snwprintf(InitBuffer->DebugBuffer,
+                   sizeof(InitBuffer->DebugBuffer)/sizeof(WCHAR),
                    L"INIT: Unable to resume Session Manager. 0x%lx",
                    Status);
-        RtlInitUnicodeString(&DebugString, p);
+        RtlInitUnicodeString(&DebugString, InitBuffer->DebugBuffer);
         ZwDisplayString(&DebugString);
 
         /* Bugcheck the system */

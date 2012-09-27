@@ -586,6 +586,13 @@ FsRtlNotifyFilterChangeDirectory(IN PNOTIFY_SYNC NotifySync,
         /* Allocate new notification */
         NotifyChange = ExAllocatePoolWithTag(PagedPool | POOL_RAISE_IF_ALLOCATION_FAILURE,
                                              sizeof(NOTIFY_CHANGE), 'FSrN');
+
+        /*
+         * If NotifyChange == NULL then an
+         * exception was already raised.
+         */
+        ASSERT(NotifyChange != NULL);
+
         RtlZeroMemory(NotifyChange, sizeof(NOTIFY_CHANGE));
 
         /* Set basic information */

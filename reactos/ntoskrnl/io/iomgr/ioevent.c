@@ -42,12 +42,17 @@ IopCreateEvent(IN PUNICODE_STRING EventName,
     if (!NT_SUCCESS(Status)) return NULL;
 
     /* Get a handle to it */
-    ObReferenceObjectByHandle(Handle,
-                              0,
-                              ExEventObjectType,
-                              KernelMode,
-                              (PVOID*)&Event,
-                              NULL);
+    Status = ObReferenceObjectByHandle(Handle,
+                                       0,
+                                       ExEventObjectType,
+                                       KernelMode,
+                                       (PVOID*)&Event,
+                                       NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        ZwClose(Handle);
+        return NULL;
+    }
 
     /* Dereference the extra count, and return the handle */
     ObDereferenceObject(Event);

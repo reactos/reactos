@@ -119,7 +119,7 @@ IopPerformSynchronousRequest(IN PDEVICE_OBJECT DeviceObject,
 {
     NTSTATUS Status;
     PKNORMAL_ROUTINE NormalRoutine;
-    PVOID NormalContext;
+    PVOID NormalContext = NULL;
     KIRQL OldIrql;
     PAGED_CODE();
     IOTRACE(IO_API_DEBUG, "IRP: %p. DO: %p. FO: %p \n",

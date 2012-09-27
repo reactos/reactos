@@ -142,7 +142,7 @@ KeStartProfile(IN PKPROFILE Profile,
     KeLowerIrql(OldIrql);
 
     /* Free the pool */
-    if (FreeBuffer) ExFreePool(SourceBuffer);
+    if (FreeBuffer) ExFreePoolWithTag(SourceBuffer, 'forP');
 
     /* Return whether we could start the profile */
     return StartedProfile;

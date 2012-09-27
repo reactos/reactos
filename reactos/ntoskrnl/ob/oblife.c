@@ -1429,7 +1429,7 @@ NtQueryObject(IN HANDLE ObjectHandle,
     POBJECT_HEADER ObjectHeader = NULL;
     POBJECT_HANDLE_ATTRIBUTE_INFORMATION HandleFlags;
     POBJECT_BASIC_INFORMATION BasicInfo;
-    ULONG InfoLength;
+    ULONG InfoLength = 0;
     PVOID Object = NULL;
     NTSTATUS Status;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();

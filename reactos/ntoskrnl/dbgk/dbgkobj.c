@@ -192,7 +192,7 @@ DbgkpQueueMessage(IN PEPROCESS Process,
             ObDereferenceObject(Process);
 
             /* Free the debug event */
-            ExFreePool(DebugEvent);
+            ExFreePoolWithTag(DebugEvent, 'EgbD');
         }
     }
 
@@ -418,7 +418,7 @@ DbgkpFreeDebugEvent(IN PDEBUG_EVENT DebugEvent)
     /* Dereference process and thread and free the event */
     ObDereferenceObject(DebugEvent->Process);
     ObDereferenceObject(DebugEvent->Thread);
-    ExFreePool(DebugEvent);
+    ExFreePoolWithTag(DebugEvent, 'EgbD');
 }
 
 VOID

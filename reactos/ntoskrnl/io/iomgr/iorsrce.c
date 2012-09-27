@@ -701,7 +701,7 @@ IopStoreSystemPartitionInformation(IN PUNICODE_STRING NtSystemPartitionDeviceNam
     UNICODE_STRING LinkTarget, KeyName;
     OBJECT_ATTRIBUTES ObjectAttributes;
     HANDLE LinkHandle, RegistryHandle, KeyHandle;
-    WCHAR LinkTargetBuffer[256], KeyNameBuffer[sizeof(L"SystemPartition") / sizeof(WCHAR)];
+    WCHAR LinkTargetBuffer[256];
     UNICODE_STRING CmRegistryMachineSystemName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\SYSTEM");
 
     ASSERT(NtSystemPartitionDeviceName->MaximumLength >= NtSystemPartitionDeviceName->Length + sizeof(WCHAR));
@@ -760,13 +760,9 @@ IopStoreSystemPartitionInformation(IN PUNICODE_STRING NtSystemPartitionDeviceNam
         return;
     }
 
-    /* We'll store in Setup subkey, and as we love fun, we use only one buffer for three writings... */
-    wcscpy(KeyNameBuffer, L"Setup");
-    KeyName.Length = sizeof(L"Setup") - sizeof(UNICODE_NULL);
-    KeyName.MaximumLength = sizeof(L"Setup");
-    KeyName.Buffer = KeyNameBuffer;
+    /* Open or create the Setup subkey where we'll store in */
+    RtlInitUnicodeString(&KeyName, L"Setup");
 
-    /* So, open or create the subkey */
     Status = IopCreateRegistryKeyEx(&KeyHandle,
                                     RegistryHandle,
                                     &KeyName,
@@ -784,9 +780,7 @@ IopStoreSystemPartitionInformation(IN PUNICODE_STRING NtSystemPartitionDeviceNam
     }
 
     /* Prepare first data writing... */
-    wcscpy(KeyNameBuffer, L"SystemPartition");
-    KeyName.Length = sizeof(L"SystemPartition") - sizeof(UNICODE_NULL);
-    KeyName.MaximumLength = sizeof(L"SystemPartition");
+    RtlInitUnicodeString(&KeyName, L"SystemPartition");
 
     /* Write SystemPartition value which is the target of the symbolic link */
     Status = ZwSetValueKey(KeyHandle,
@@ -800,10 +794,8 @@ IopStoreSystemPartitionInformation(IN PUNICODE_STRING NtSystemPartitionDeviceNam
         DPRINT("Failed writing SystemPartition value!\n");
     }
 
-    /* Prepare for second data writing... */ 
-    wcscpy(KeyName.Buffer, L"OsLoaderPath");
-    KeyName.Length = sizeof(L"OsLoaderPath") - sizeof(UNICODE_NULL);
-    KeyName.MaximumLength = sizeof(L"OsLoaderPath");
+    /* Prepare for second data writing... */
+    RtlInitUnicodeString(&KeyName, L"OsLoaderPath");
 
     /* Remove trailing slash if any (one slash only excepted) */
     if (OsLoaderPathName->Length > sizeof(WCHAR) &&

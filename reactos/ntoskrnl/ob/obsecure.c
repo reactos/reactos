@@ -217,7 +217,7 @@ ObCheckCreateObjectAccess(IN PVOID Object,
 {
     POBJECT_HEADER ObjectHeader;
     POBJECT_TYPE ObjectType;
-    PSECURITY_DESCRIPTOR SecurityDescriptor;
+    PSECURITY_DESCRIPTOR SecurityDescriptor = NULL;
     BOOLEAN SdAllocated;
     BOOLEAN Result = TRUE;
     ACCESS_MASK GrantedAccess = 0;
@@ -280,7 +280,7 @@ ObpCheckTraverseAccess(IN PVOID Object,
 {
     POBJECT_HEADER ObjectHeader;
     POBJECT_TYPE ObjectType;
-    PSECURITY_DESCRIPTOR SecurityDescriptor;
+    PSECURITY_DESCRIPTOR SecurityDescriptor = NULL;
     BOOLEAN SdAllocated;
     BOOLEAN Result;
     ACCESS_MASK GrantedAccess = 0;
@@ -338,7 +338,7 @@ ObpCheckObjectReference(IN PVOID Object,
 {
     POBJECT_HEADER ObjectHeader;
     POBJECT_TYPE ObjectType;
-    PSECURITY_DESCRIPTOR SecurityDescriptor;
+    PSECURITY_DESCRIPTOR SecurityDescriptor = NULL;
     BOOLEAN SdAllocated;
     BOOLEAN Result;
     ACCESS_MASK GrantedAccess = 0;

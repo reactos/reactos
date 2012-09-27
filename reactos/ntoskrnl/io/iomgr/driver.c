@@ -795,6 +795,11 @@ LdrProcessDriverModule(PLDR_DATA_TABLE_ENTRY LdrEntry,
                                       &MissingApiName,
                                       &MissingDriverName,
                                       &LoadedImports);
+
+    /* Free the temporary buffer */
+    ExFreePoolWithTag(Buffer, TAG_LDR_WSTR);
+
+    /* Check the result of the imports resolution */
     if (!NT_SUCCESS(Status)) return Status;
 
     /* Return */

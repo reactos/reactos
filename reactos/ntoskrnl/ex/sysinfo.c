@@ -150,7 +150,7 @@ ExGetCurrentProcessorCpuUsage(PULONG CpuUsage)
 
     Prcb = KeGetCurrentPrcb();
 
-    ScaledIdle = Prcb->IdleThread->KernelTime * 100;
+    ScaledIdle = (ULONGLONG)Prcb->IdleThread->KernelTime * 100;
     TotalTime = Prcb->KernelTime + Prcb->UserTime;
     if (TotalTime != 0)
         *CpuUsage = (ULONG)(100 - (ScaledIdle / TotalTime));
@@ -785,7 +785,7 @@ QSI_DEF(SystemProcessInformation)
                 }
               }
             }
-            if (!ImageNameLength && Process != PsIdleProcess && Process->ImageFileName)
+            if (!ImageNameLength && Process != PsIdleProcess)
             {
               ImageNameLength = (USHORT)strlen(Process->ImageFileName) * sizeof(WCHAR);
             }
@@ -824,7 +824,7 @@ QSI_DEF(SystemProcessInformation)
                         /* Release the memory allocated by SeLocateProcessImageName */
                         ExFreePool(ProcessImageName);
                     }
-                    else if (Process->ImageFileName)
+                    else
                     {
                         RtlInitAnsiString(&ImageName, Process->ImageFileName);
                         RtlAnsiStringToUnicodeString(&SpiCurrent->ImageName, &ImageName, FALSE);

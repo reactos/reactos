@@ -864,7 +864,7 @@ KdbpCmdRegs(
     else if (Argv[0][0] == 'c') /* cregs */
     {
         ULONG Cr0, Cr2, Cr3, Cr4;
-        KDESCRIPTOR Gdtr, Idtr;
+        KDESCRIPTOR Gdtr = {0, 0, 0}, Idtr = {0, 0, 0};
         USHORT Ldtr;
         static const PCHAR Cr0Bits[32] = { " PE", " MP", " EM", " TS", " ET", " NE", NULL, NULL,
                                            NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,

@@ -1104,7 +1104,7 @@ CmpLoadHiveThread(IN PVOID StartContext)
     //ULONG RegStart;
     ULONG PrimaryDisposition, SecondaryDisposition, ClusterSize;
     PCMHIVE CmHive;
-    HANDLE PrimaryHandle, LogHandle;
+    HANDLE PrimaryHandle = NULL, LogHandle = NULL;
     NTSTATUS Status = STATUS_SUCCESS;
     PVOID ErrorParameters;
     PAGED_CODE();

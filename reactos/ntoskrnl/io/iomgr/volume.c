@@ -377,11 +377,14 @@ IopShutdownBaseFileSystems(IN PLIST_ENTRY ListHead)
                                            NULL,
                                            &Event,
                                            &StatusBlock);
-        Status = IoCallDriver(DeviceObject, Irp);
-        if (Status == STATUS_PENDING)
+        if (Irp)
         {
-            /* Wait on the driver */
-            KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+            Status = IoCallDriver(DeviceObject, Irp);
+            if (Status == STATUS_PENDING)
+            {
+                /* Wait on the driver */
+                KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+            }
         }
 
         /* Reset the event */

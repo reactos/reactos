@@ -1006,7 +1006,7 @@ PspTerminateThreadByPointer(IN PETHREAD Thread,
     }
 
     /* We failed, free the APC */
-    ExFreePool(Apc);
+    ExFreePoolWithTag(Apc, TAG_TERMINATE_APC);
 
     /* Return Status */
     return Status;
