@@ -7,25 +7,25 @@
  */
 
 #include <precomp.h>
-#include <mbstring.h>
 
+_Check_return_wat_
 _CRTIMP
-_Check_return_opt_
 errno_t
 __cdecl
-mbstowcs_s(
-   _Out_opt_ size_t *pcchConverted,
-   _Out_writes_to_opt_(sizeInWords, *pcchConverted) wchar_t *pwcstr,
-   _In_ size_t sizeInWords,
-   _In_reads_or_z_(count) const char *pmbstr,
-   _In_ size_t count)
+wcstombs_s(
+    _Out_opt_ size_t * pcchConverted,
+    _Out_writes_bytes_to_opt_(cjDstSize, *pcchConverted)
+        char * pmbstrDst,
+    _In_ size_t cjDstSize,
+    _In_z_ const wchar_t * pwszSrc,
+    _In_ size_t cjMaxCount)
 {
-    size_t cchMax, cwcWritten;
+    size_t cchMax, cchConverted;
     errno_t retval = 0;
 
     /* Make sure, either we have a target buffer > 0 bytes, or no buffer */
-    if (!MSVCRT_CHECK_PMT( ((sizeInWords != 0) && (pwcstr != 0)) ||
-                           ((sizeInWords == 0) && (pwcstr == 0)) ))
+    if (!MSVCRT_CHECK_PMT( ((cjDstSize != 0) && (pmbstrDst != 0)) ||
+                           ((cjDstSize == 0) && (pmbstrDst == 0)) ))
     {
         _set_errno(EINVAL);
         return EINVAL;
@@ -38,42 +38,42 @@ mbstowcs_s(
         *pcchConverted = 0;
     }
 
-    if (!MSVCRT_CHECK_PMT((count == 0) || (pmbstr != 0)))
+    if (!MSVCRT_CHECK_PMT((cjMaxCount == 0) || (pwszSrc != 0)))
     {
         _set_errno(EINVAL);
         return EINVAL;
     }
 
     /* Check if there is anything to do */
-    if ((pwcstr == 0) && (pmbstr == 0))
+    if ((pmbstrDst == 0) && (pwszSrc == 0))
     {
         _set_errno(EINVAL);
         return EINVAL;
     }
 
-    /* Check if we have a multibyte string */
-    if (pmbstr)
+    /* Check if we have a wchar string */
+    if (pwszSrc)
     {
-        /* Check if we also have a wchar buffer */
-        if (pwcstr)
+        /* Check if we also have a multibyte buffer */
+        if (pmbstrDst)
         {
-            /* Calculate the maximum the we can write */
-            cchMax = (count < sizeInWords) ? count + 1 : sizeInWords;
+            /* Calculate the maximum that we can write */
+            cchMax = (cjMaxCount < cjDstSize) ? cjMaxCount + 1 : cjDstSize;
 
             /* Now do the conversion */
-            cwcWritten = mbstowcs(pwcstr, pmbstr, cchMax);
+            cchConverted = wcstombs(pmbstrDst, pwszSrc, cchMax);
 
             /* Check if the buffer was not zero terminated */
-            if (cwcWritten == cchMax)
+            if (cchConverted == cchMax)
             {
                 /* Check if we reached the max size of the dest buffer */
-                if (cwcWritten == sizeInWords)
+                if (cchConverted == cjDstSize)
                 {
                     /* Does the caller allow this? */
-                    if (count != _TRUNCATE)
+                    if (cjMaxCount != _TRUNCATE)
                     {
                         /* Not allowed, truncate to 0 length */
-                        pwcstr[0] = L'\0';
+                        pmbstrDst[0] = L'\0';
 
                         /* Return error */
                         _set_errno(ERANGE);
@@ -85,30 +85,30 @@ mbstowcs_s(
                 }
 
                 /* zero teminate the buffer */
-                pwcstr[cwcWritten - 1] = L'\0';
+                pmbstrDst[cchConverted - 1] = L'\0';
             }
             else
             {
                 /* The buffer is zero terminated, count the terminating char */
-                cwcWritten++;
+                cchConverted++;
             }
         }
         else
         {
             /* Get the length of the string, plus 0 terminator */
-            cwcWritten = _mbsnlen(pmbstr, count) + 1;
+            cchConverted = wcsnlen(pwszSrc, cjMaxCount) + 1;
         }
     }
     else
     {
-        cwcWritten = count + 1;
+        cchConverted = cjMaxCount + 1;
     }
 
     /* Check if we have a return value pointer */
     if (pcchConverted)
     {
         /* Default to 0 bytes written */
-        *pcchConverted = cwcWritten;
+        *pcchConverted = cchConverted;
     }
 
     return retval;

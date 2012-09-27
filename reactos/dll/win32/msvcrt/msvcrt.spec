@@ -435,7 +435,7 @@
 # stub _get_fmode
 # @ cdecl _get_heap_handle()
 @ cdecl _get_osfhandle(long)
-@ cdecl _get_osplatform(ptr) 
+@ cdecl _get_osplatform(ptr)
 # stub _get_osver
 @ cdecl _get_output_format()
 @ cdecl _get_pgmptr(ptr)
@@ -477,9 +477,9 @@
 @ cdecl _heapwalk(ptr)
 @ cdecl _hypot(double double)
 @ cdecl _i64toa(long long ptr long)
-@ cdecl _i64toa_s(long long ptr long long) 
+@ cdecl _i64toa_s(long long ptr long long)
 @ cdecl _i64tow(long long ptr long)
-@ cdecl _i64tow_s(long long ptr long long) 
+@ cdecl _i64tow_s(long long ptr long long)
 @ cdecl _initterm(ptr ptr)
 @ cdecl _initterm_e(ptr ptr)
 @ cdecl -arch=i386 _inp(long) MSVCRT__inp
@@ -1396,7 +1396,7 @@
 @ cdecl wcsncmp(wstr wstr long)
 @ cdecl wcsncpy(ptr wstr long)
 @ cdecl wcsncpy_s(ptr long wstr long)
-# stub wcsnlen
+@ cdecl wcsnlen(wstr long)
 @ cdecl wcspbrk(wstr wstr)
 @ cdecl wcsrchr(wstr long)
 # stub wcsrtombs
@@ -1408,7 +1408,7 @@
 @ cdecl wcstok_s(ptr wstr ptr)
 @ cdecl wcstol(wstr ptr long)
 @ cdecl wcstombs(ptr ptr long)
-# @ cdecl wcstombs_s(ptr ptr long wstr long)
+@ cdecl wcstombs_s(ptr ptr long wstr long)
 @ cdecl wcstoul(wstr ptr long)
 @ cdecl wcsxfrm(ptr wstr long)
 # stub wctob

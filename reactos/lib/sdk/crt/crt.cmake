@@ -247,6 +247,8 @@ list(APPEND CRT_SOURCE
     stdlib/wsenv.c
     stdlib/wmakpath.c
     stdlib/wmakpath_s.c
+    string/_mbsnlen.c
+    string/_mbstrnlen.c
     string/atof.c
     string/atoi.c
     string/atoi64.c
@@ -283,6 +285,7 @@ list(APPEND CRT_SOURCE
     string/strxfrm.c
     string/wcs.c
     string/wcstol.c
+    string/wcstombs_s.c
     string/wcstoul.c
     string/wctype.c
     string/wsplitp.c
