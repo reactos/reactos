@@ -543,10 +543,8 @@ EnumerateDevices(
             /* Terminate the string */
             SubKeyInfo->Name[SubKeyInfo->NameLength / sizeof(WCHAR)] = 0;
 
-            _snwprintf(
-                DevicePath,
-                sizeof(DevicePath) / sizeof(WCHAR),
-                L"%s\\%s", REGSTR_KEY_ROOTENUM, KeyInfo->Name);
+            _snwprintf(DevicePath, sizeof(DevicePath) / sizeof(WCHAR),
+                       L"%s\\%s", REGSTR_KEY_ROOTENUM, KeyInfo->Name);
             DPRINT("Found device %S\\%s!\n", DevicePath, SubKeyInfo->Name);
             if (LocateChildDevice(DeviceExtension, DevicePath, SubKeyInfo->Name, &Device) == STATUS_NO_SUCH_DEVICE)
             {
