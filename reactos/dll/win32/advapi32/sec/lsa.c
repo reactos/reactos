@@ -1381,6 +1381,51 @@ done:
 
 
 /*
+ * @implemented
+ */
+NTSTATUS
+WINAPI
+LsaQuerySecurityObject(IN LSA_HANDLE ObjectHandle,
+                       IN SECURITY_INFORMATION SecurityInformation,
+                       OUT PSECURITY_DESCRIPTOR *SecurityDescriptor)
+{
+    LSAPR_SR_SECURITY_DESCRIPTOR SdBuffer;
+    PLSAPR_SR_SECURITY_DESCRIPTOR SdPointer;
+    NTSTATUS Status;
+
+    TRACE("LsaQuerySecurityObject(%p %lx %p)\n",
+          ObjectHandle, SecurityInformation, SecurityDescriptor);
+
+    SdBuffer.Length = 0;
+    SdBuffer.SecurityDescriptor = NULL;
+
+    SdPointer = &SdBuffer;
+
+    RpcTryExcept
+    {
+        Status = LsarQuerySecurityObject((LSAPR_HANDLE)ObjectHandle,
+                                         SecurityInformation,
+                                         &SdPointer);
+        if (NT_SUCCESS(Status))
+        {
+            *SecurityDescriptor = SdBuffer.SecurityDescriptor;
+        }
+        else
+        {
+            *SecurityDescriptor = NULL;
+        }
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
+
+/*
  * @unimplemented
  */
 NTSTATUS
@@ -1656,6 +1701,60 @@ done:
 
     if (EncryptedOldValue != NULL)
         midl_user_free(EncryptedOldValue);
+
+    return Status;
+}
+
+
+/*
+ * @implemented
+ */
+NTSTATUS
+WINAPI
+LsaSetSecurityObject(IN LSA_HANDLE ObjectHandle,
+                     IN SECURITY_INFORMATION SecurityInformation,
+                     IN PSECURITY_DESCRIPTOR SecurityDescriptor)
+{
+    LSAPR_SR_SECURITY_DESCRIPTOR SdBuffer = {0, NULL};
+    ULONG SdLength = 0;
+    NTSTATUS Status;
+
+    TRACE("LsaSetSecurityObject(%p %lx %p)\n",
+          ObjectHandle, SecurityInformation, SecurityDescriptor);
+
+    Status = RtlMakeSelfRelativeSD(SecurityDescriptor,
+                                   NULL,
+                                   &SdLength);
+    if (Status != STATUS_BUFFER_TOO_SMALL)
+        return STATUS_INVALID_PARAMETER;
+
+    SdBuffer.SecurityDescriptor = MIDL_user_allocate(SdLength);
+    if (SdBuffer.SecurityDescriptor == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    Status = RtlMakeSelfRelativeSD(SecurityDescriptor,
+                                   (PSECURITY_DESCRIPTOR)SdBuffer.SecurityDescriptor,
+                                   &SdLength);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    SdBuffer.Length = SdLength;
+
+    RpcTryExcept
+    {
+        Status = LsarSetSecurityObject((LSAPR_HANDLE)ObjectHandle,
+                                       SecurityInformation,
+                                       &SdBuffer);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+done:
+    if (SdBuffer.SecurityDescriptor != NULL)
+        MIDL_user_free(SdBuffer.SecurityDescriptor);
 
     return Status;
 }

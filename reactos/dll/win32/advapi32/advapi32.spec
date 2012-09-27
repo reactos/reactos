@@ -388,7 +388,7 @@
 @ stdcall LsaQueryInfoTrustedDomain(long long long)
 @ stdcall LsaQueryInformationPolicy(ptr long ptr)
 @ stdcall LsaQuerySecret(ptr ptr ptr ptr ptr)
-@ stub LsaQuerySecurityObject
+@ stdcall LsaQuerySecurityObject(ptr long ptr)
 @ stdcall LsaQueryTrustedDomainInfo(ptr ptr long ptr)
 @ stdcall LsaQueryTrustedDomainInfoByName(ptr ptr long ptr)
 @ stdcall LsaRegisterPolicyChangeNotification(long long)
@@ -401,7 +401,7 @@
 @ stub LsaSetInformationTrustedDomain
 @ stdcall LsaSetQuotasForAccount(ptr ptr)
 @ stdcall LsaSetSecret(ptr ptr ptr)
-@ stub LsaSetSecurityObject
+@ stdcall LsaSetSecurityObject(ptr long ptr)
 @ stdcall LsaSetSystemAccessAccount(ptr long)
 @ stdcall LsaSetTrustedDomainInfoByName(ptr ptr long ptr)
 @ stdcall LsaSetTrustedDomainInformation(ptr ptr long ptr)
