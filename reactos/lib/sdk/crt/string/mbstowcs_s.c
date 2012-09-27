@@ -96,7 +96,7 @@ mbstowcs_s(
         else
         {
             /* Get the length of the string, plus 0 terminator */
-            cwcWritten = _mbsnlen(pmbstr, count) + 1;
+            cwcWritten = _mbsnlen((const unsigned char *)pmbstr, count) + 1;
         }
     }
     else
