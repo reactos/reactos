@@ -1,3 +1,6 @@
+#ifndef _SRV_H
+#define _SRV_H
+
 /* PSDK/NDK Headers */
 #define NTOS_MODE_USER
 #include <stdio.h>
@@ -35,3 +38,5 @@ extern HANDLE CsrHeap;
 /* Defines */
 #define ROUND_UP(n, align) ROUND_DOWN(((ULONG)n) + (align) - 1, (align))
 #define ROUND_DOWN(n, align) (((ULONG)n) & ~((align) - 1l))
+
+#endif

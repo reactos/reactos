@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS CSR Sub System
- * FILE:            subsys/csr/csrsrv/server.c
+ * FILE:            subsystems/win32/csrss/csrsrv/server.c
  * PURPOSE:         CSR Server DLL Server Functions
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
  */
