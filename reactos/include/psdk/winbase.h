@@ -228,6 +228,7 @@ extern "C" {
 #define CLRBREAK 9
 #define STILL_ACTIVE 0x103
 #define FIND_FIRST_EX_CASE_SENSITIVE 1
+#define FIND_FIRST_EX_LARGE_FETCH 2
 #define SCS_32BIT_BINARY 0
 #define SCS_64BIT_BINARY 6
 #define SCS_DOS_BINARY 1
@@ -923,6 +924,7 @@ typedef struct _FILE_ID_DESCRIPTOR {
 
 typedef enum _FINDEX_INFO_LEVELS {
 	FindExInfoStandard,
+	FindExInfoBasic,
 	FindExInfoMaxInfoLevel
 } FINDEX_INFO_LEVELS;
 
