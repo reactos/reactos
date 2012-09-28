@@ -555,7 +555,7 @@ MmCreateCacheSection(PROS_SECTION_OBJECT *SectionObject,
     {
         KeReleaseSpinLock(&FileObject->IrpListLock, OldIrql);
         DPRINTC("Free Segment %x\n", Segment);
-        ExFreePool(Segment);
+        ExFreePoolWithTag(Segment, TAG_MM_SECTION_SEGMENT);
 
         DPRINT("Filling out Segment info (previous data section)\n");
 

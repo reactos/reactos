@@ -200,7 +200,7 @@ Cleanup:
     //
     // Free the table if we failed and return status
     //
-    if (DriverThunks) ExFreePool(DriverThunks);
+    if (DriverThunks) ExFreePoolWithTag(DriverThunks, 'tVmM');
     return Status;
 }
 

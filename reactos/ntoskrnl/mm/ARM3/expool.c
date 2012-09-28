@@ -358,7 +358,7 @@ ExpComputeHashForTag(IN ULONG Tag,
     // Finally, AND with the bucket mask to generate a valid index/bucket into
     // the table
     //
-    ULONGLONG Result = 40543 * Tag;
+    ULONGLONG Result = (ULONGLONG)40543 * Tag;
     return (ULONG)BucketMask & ((ULONG)Result ^ (Result >> 32));
 }
 
@@ -1185,7 +1185,7 @@ ExGetPoolTagInfo(IN PSYSTEM_POOLTAG_INFORMATION SystemInformation,
     //
     // Free the "Generic DPC" temporary buffer, return the buffer length and status
     //
-    ExFreePool(Buffer);
+    ExFreePoolWithTag(Buffer, 'ofnI');
     if (ReturnLength) *ReturnLength = CurrentLength;
     return Status;
 }

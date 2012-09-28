@@ -1172,7 +1172,7 @@ MmFreeLoaderBlock(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     KeFlushCurrentTb();
 
     /* Free our run structure */
-    ExFreePool(Buffer);
+    ExFreePoolWithTag(Buffer, 'lMmM');
 }
 
 VOID

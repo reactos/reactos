@@ -663,7 +663,7 @@ MiResolveTransitionFault(IN PVOID FaultingAddress,
     ASSERT(Pfn1->u3.e1.ReadInProgress == 0);
 
     /* Windows checks there's some free pages and this isn't an in-page error */
-    ASSERT(MmAvailablePages >= 0);
+    ASSERT(MmAvailablePages > 0);
     ASSERT(Pfn1->u4.InPageError == 0);
 
     /* ReactOS checks for this */

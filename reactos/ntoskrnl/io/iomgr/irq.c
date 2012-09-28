@@ -103,7 +103,7 @@ IoConnectInterrupt(OUT PKINTERRUPT *InterruptObject,
                 if (FirstRun)
                 {
                     /* We failed early so just free this */
-                    ExFreePool(IoInterrupt);
+                    ExFreePoolWithTag(IoInterrupt, TAG_KINTERRUPT);
                 }
                 else
                 {
@@ -163,7 +163,7 @@ IoDisconnectInterrupt(PKINTERRUPT InterruptObject)
     }
 
     /* Free the I/O Interrupt */
-    ExFreePool(IoInterrupt);
+    ExFreePool(IoInterrupt); // ExFreePoolWithTag(IoInterrupt, TAG_KINTERRUPT);
 }
 
 /* EOF */

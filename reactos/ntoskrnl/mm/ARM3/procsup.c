@@ -118,7 +118,11 @@ MiCreatePebOrTeb(IN PEPROCESS Process,
                                                  Base,
                                                  &Parent);
         /* Bail out, if still nothing free was found */
-        if (Result == TableFoundNode) return STATUS_NO_MEMORY;
+        if (Result == TableFoundNode)
+        {
+            ExFreePoolWithTag(Vad, 'ldaV');
+            return STATUS_NO_MEMORY;
+        }
     }
 
     /* Validate that it came from the VAD ranges */
@@ -1857,6 +1861,7 @@ MiSessionCreateInternal(OUT PULONG SessionId)
     {
         /* We ran out of session IDs, we should expand */
         DPRINT1("Too many sessions created. Expansion not yet supported\n");
+        ExFreePoolWithTag(PageTables, 'tHmM');
         return STATUS_NO_MEMORY;
     }
 

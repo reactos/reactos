@@ -1761,17 +1761,12 @@ MmAccessFaultSectionView(PMMSUPPORT AddressSpace,
                                    Region->Protect,
                                    &NewPage,
                                    1);
-   if (!NT_SUCCESS(Status))
-   {
-      DPRINT("MmCreateVirtualMapping failed, not out of memory\n");
-       KeBugCheck(MEMORY_MANAGEMENT);
-      return(Status);
-   }
-   if (!NT_SUCCESS(Status))
-   {
-      DPRINT1("Unable to create virtual mapping\n");
-       KeBugCheck(MEMORY_MANAGEMENT);
-   }
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("MmCreateVirtualMapping failed, unable to create virtual mapping, not out of memory\n");
+        KeBugCheck(MEMORY_MANAGEMENT);
+        return(Status);
+    }
 
    /*
     * Unshare the old page.
@@ -3786,7 +3781,7 @@ MmCreateImageSection(PROS_SECTION_OBJECT *SectionObject,
          if(ImageSectionObject->Segments != NULL)
             ExFreePool(ImageSectionObject->Segments);
 
-         ExFreePool(ImageSectionObject);
+         ExFreePoolWithTag(ImageSectionObject, TAG_MM_SECTION_SEGMENT);
          ObDereferenceObject(Section);
          ObDereferenceObject(FileObject);
          return(StatusExeFmt);

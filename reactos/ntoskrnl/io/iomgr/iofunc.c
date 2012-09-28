@@ -1347,7 +1347,7 @@ NtLockFile(IN HANDLE FileHandle,
     {
         /* Allocating failed, clean up and return the exception code */
         IopCleanupAfterException(FileObject, Irp, Event, NULL);
-        if (LocalLength) ExFreePool(LocalLength);
+        if (LocalLength) ExFreePoolWithTag(LocalLength, TAG_LOCK);
 
         /* Return the exception code */
         _SEH2_YIELD(return _SEH2_GetExceptionCode());
@@ -1450,7 +1450,7 @@ NtQueryDirectoryFile(IN HANDLE FileHandle,
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Free buffer and return the exception code */
-            if (AuxBuffer) ExFreePool(AuxBuffer);
+            if (AuxBuffer) ExFreePoolWithTag(AuxBuffer, TAG_SYSB);
             _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
@@ -1466,7 +1466,7 @@ NtQueryDirectoryFile(IN HANDLE FileHandle,
     if (!NT_SUCCESS(Status))
     {
         /* Fail */
-        if (AuxBuffer) ExFreePool(AuxBuffer);
+        if (AuxBuffer) ExFreePoolWithTag(AuxBuffer, TAG_SYSB);
         return Status;
     }
 
@@ -1539,7 +1539,7 @@ NtQueryDirectoryFile(IN HANDLE FileHandle,
         {
             /* Allocating failed, clean up and return the exception code */
             IopCleanupAfterException(FileObject, Irp, Event, NULL);
-            if (AuxBuffer) ExFreePool(AuxBuffer);
+            if (AuxBuffer) ExFreePoolWithTag(AuxBuffer, TAG_SYSB);
 
             /* Return the exception code */
             _SEH2_YIELD(return _SEH2_GetExceptionCode());
@@ -1863,7 +1863,7 @@ NtQueryInformationFile(IN HANDLE FileHandle,
             _SEH2_END;
 
             /* Free the event */
-            ExFreePool(Event);
+            ExFreePoolWithTag(Event, TAG_IO);
         }
         else
         {
@@ -2465,7 +2465,7 @@ NtSetInformationFile(IN HANDLE FileHandle,
                          * Someone else set the completion port in the
                          * meanwhile, so dereference the port and fail.
                          */
-                        ExFreePool(Context);
+                        ExFreePoolWithTag(Context, IOC_TAG);
                         ObDereferenceObject(Queue);
                         Status = STATUS_INVALID_PARAMETER;
                     }
@@ -2524,7 +2524,7 @@ NtSetInformationFile(IN HANDLE FileHandle,
             _SEH2_END;
 
             /* Free the event */
-            ExFreePool(Event);
+            ExFreePoolWithTag(Event, TAG_IO);
         }
         else
         {
@@ -2555,7 +2555,7 @@ NtSetInformationFile(IN HANDLE FileHandle,
         {
             /* Clear it in the IRP for completion */
             Irp->UserEvent = NULL;
-            ExFreePool(Event);
+            ExFreePoolWithTag(Event, TAG_IO);
         }
 
         /* Set the caller IOSB */
@@ -2722,7 +2722,7 @@ NtUnlockFile(IN HANDLE FileHandle,
         /* Allocate a buffer */
         LocalLength = ExAllocatePoolWithTag(NonPagedPool,
                                             sizeof(LARGE_INTEGER),
-                                        TAG_LOCK);
+                                            TAG_LOCK);
 
         /* Set the length */
         *LocalLength = CapturedLength;
@@ -2733,7 +2733,7 @@ NtUnlockFile(IN HANDLE FileHandle,
     {
         /* Allocating failed, clean up and return the exception code */
         IopCleanupAfterException(FileObject, Irp, NULL, Event);
-        if (LocalLength) ExFreePool(LocalLength);
+        if (LocalLength) ExFreePoolWithTag(LocalLength, TAG_LOCK);
 
         /* Return the exception code */
         _SEH2_YIELD(return _SEH2_GetExceptionCode());

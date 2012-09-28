@@ -1,11 +1,11 @@
 /*
-* PROJECT:         ReactOS Kernel
-* LICENSE:         BSD - See COPYING.ARM in the top level directory
-* FILE:            ntoskrnl/mm/ARM3/sysldr.c
-* PURPOSE:         Contains the Kernel Loader (SYSLDR) for loading PE files.
-* PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
-*                  ReactOS Portable Systems Group
-*/
+ * PROJECT:         ReactOS Kernel
+ * LICENSE:         BSD - See COPYING.ARM in the top level directory
+ * FILE:            ntoskrnl/mm/ARM3/sysldr.c
+ * PURPOSE:         Contains the Kernel Loader (SYSLDR) for loading PE files.
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+ *                  ReactOS Portable Systems Group
+ */
 
 /* INCLUDES *******************************************************************/
 
@@ -2179,9 +2179,13 @@ MiInitializeLoadedModuleList(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         NewEntry->FullDllName.Buffer =
             ExAllocatePoolWithTag(PagedPool,
                                   LdrEntry->FullDllName.MaximumLength +
-                                  sizeof(UNICODE_NULL),
+                                      sizeof(UNICODE_NULL),
                                   TAG_LDR_WSTR);
-        if (!NewEntry->FullDllName.Buffer) return FALSE;
+        if (!NewEntry->FullDllName.Buffer)
+        {
+            ExFreePoolWithTag(NewEntry, TAG_MODULE_OBJECT);
+            return FALSE;
+        }
 
         /* Set the base name */
         NewEntry->BaseDllName.Buffer = (PVOID)(NewEntry + 1);
@@ -3436,3 +3440,4 @@ MmGetSystemRoutineAddress(IN PUNICODE_STRING SystemRoutineName)
     return ProcAddress;
 }
 
+/* EOF */

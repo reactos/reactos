@@ -1099,7 +1099,7 @@ MiDoPoolCopy(IN PEPROCESS SourceProcess,
             //
             // Check if we had allocated pool
             //
-            if (HavePoolAddress) ExFreePool(PoolAddress);
+            if (HavePoolAddress) ExFreePoolWithTag(PoolAddress, 'VmRw');
 
             //
             // Check if we failed during the probe
@@ -1160,7 +1160,7 @@ MiDoPoolCopy(IN PEPROCESS SourceProcess,
     //
     // Check if we had allocated pool
     //
-    if (HavePoolAddress) ExFreePool(PoolAddress);
+    if (HavePoolAddress) ExFreePoolWithTag(PoolAddress, 'VmRw');
 
     //
     // All bytes read
