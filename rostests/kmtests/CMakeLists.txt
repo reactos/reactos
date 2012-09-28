@@ -45,6 +45,7 @@ list(APPEND KMTEST_DRV_SOURCE
     ntos_ke/KeEvent.c
     ntos_ke/KeGuardedMutex.c
     ntos_ke/KeIrql.c
+    ntos_ke/KeMutex.c
     ntos_ke/KeProcessor.c
     ntos_ke/KeSpinLock.c
     ntos_ke/KeTimer.c
