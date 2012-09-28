@@ -688,9 +688,38 @@ LsaGetRemoteUserName(IN PLSA_UNICODE_STRING SystemName OPTIONAL,
                      OUT PLSA_UNICODE_STRING *UserName,
                      OUT PLSA_UNICODE_STRING *DomainName OPTIONAL)
 {
-    FIXME("LsaGetUserName(%p %p %p)\n",
-          SystemName, UserName, DomainName);
-    return STATUS_NOT_IMPLEMENTED;
+    PRPC_UNICODE_STRING UserNameString = NULL;
+    PRPC_UNICODE_STRING DomainNameString = NULL;
+    NTSTATUS Status;
+
+    TRACE("LsaGetRemoteUserName(%s %p %p)\n",
+          SystemName ? debugstr_w(SystemName->Buffer) : "(null)",
+          UserName, DomainName);
+
+    RpcTryExcept
+    {
+        Status = LsarGetUserName((PLSAPR_SERVER_NAME)SystemName,
+                                 &UserNameString,
+                                 (DomainName != NULL) ? &DomainNameString : NULL);
+
+        *UserName = (PLSA_UNICODE_STRING)UserNameString;
+
+        if (DomainName != NULL)
+            *DomainName = (PLSA_UNICODE_STRING)DomainNameString;
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        if (UserNameString != NULL)
+            MIDL_user_free(UserNameString);
+
+        if (DomainNameString != NULL)
+            MIDL_user_free(DomainNameString);
+
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
 }
 
 
@@ -1227,7 +1256,7 @@ LsaOpenTrustedDomainByName(IN LSA_HANDLE PolicyHandle,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 WINAPI
@@ -1235,9 +1264,30 @@ LsaQueryDomainInformationPolicy(IN LSA_HANDLE PolicyHandle,
                                 IN POLICY_DOMAIN_INFORMATION_CLASS InformationClass,
                                 OUT PVOID *Buffer)
 {
-    FIXME("LsaQueryDomainInformationPolicy(%p %lu %p) stub\n",
+    PLSAPR_POLICY_DOMAIN_INFORMATION PolicyInformation = NULL;
+    NTSTATUS Status;
+
+    TRACE("LsaQueryDomainInformationPolicy(%p %lu %p)\n",
           PolicyHandle, InformationClass, Buffer);
-    return STATUS_NOT_IMPLEMENTED;
+
+    RpcTryExcept
+    {
+        Status = LsarQueryDomainInformationPolicy((LSAPR_HANDLE)PolicyHandle,
+                                                  InformationClass,
+                                                  &PolicyInformation);
+
+        *Buffer = PolicyInformation;
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        if (PolicyInformation != NULL)
+            MIDL_user_free(PolicyInformation);
+
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
 }
 
 
@@ -1621,7 +1671,7 @@ LsaRetrievePrivateData(IN LSA_HANDLE PolicyHandle,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 WINAPI
@@ -1629,9 +1679,24 @@ LsaSetDomainInformationPolicy(IN LSA_HANDLE PolicyHandle,
                               IN POLICY_DOMAIN_INFORMATION_CLASS InformationClass,
                               IN PVOID Buffer OPTIONAL)
 {
-    FIXME("LsaSetDomainInformationPolicy(%p %d %p) stub\n",
+    NTSTATUS Status;
+
+    TRACE("LsaSetDomainInformationPolicy(%p %d %p)\n",
           PolicyHandle, InformationClass, Buffer);
-    return STATUS_UNSUCCESSFUL;
+
+    RpcTryExcept
+    {
+        Status = LsarSetDomainInformationPolicy((LSAPR_HANDLE)PolicyHandle,
+                                                InformationClass,
+                                                (PLSAPR_POLICY_DOMAIN_INFORMATION)Buffer);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
 }
 
 

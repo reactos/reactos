@@ -936,15 +936,13 @@ cpp_quote("#if _WIN32_WINNT >= 0x0500")
     NTSTATUS __stdcall LsarQueryDomainInformationPolicy(
         [in] LSAPR_HANDLE PolicyHandle,
         [in] POLICY_INFORMATION_CLASS InformationClass,
-        [out] unsigned long *PolicyInformation);
-        /* FIXME: should be [out, switch_is(InformationClass)] PLSAPR_POLICY_INFORMATION *PolicyInformation); */
+        [out, switch_is(InformationClass)] PLSAPR_POLICY_DOMAIN_INFORMATION *PolicyInformation);
 
     /* Function 54 */
     NTSTATUS __stdcall LsarSetDomainInformationPolicy(
         [in] LSAPR_HANDLE PolicyHandle,
         [in] POLICY_INFORMATION_CLASS InformationClass,
-        [in] unsigned long PolicyInformation);
-        /* FIXME: should be [in, switch_is(InformationClass)] PLSAPR_POLICY_INFORMATION PolicyInformation); */
+        [in, switch_is(InformationClass)] PLSAPR_POLICY_DOMAIN_INFORMATION PolicyInformation);
 
     /* Function 55 */
     NTSTATUS __stdcall LsarOpenTrustedDomainByName(
