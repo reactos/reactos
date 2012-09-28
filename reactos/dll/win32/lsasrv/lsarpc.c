@@ -1869,7 +1869,7 @@ NTSTATUS WINAPI LsarSetPolicyReplicationHandle(
 NTSTATUS WINAPI LsarQueryDomainInformationPolicy(
     LSAPR_HANDLE PolicyHandle,
     POLICY_INFORMATION_CLASS InformationClass,
-    unsigned long *PolicyInformation)
+    PLSAPR_POLICY_DOMAIN_INFORMATION *PolicyInformation)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
@@ -1880,7 +1880,7 @@ NTSTATUS WINAPI LsarQueryDomainInformationPolicy(
 NTSTATUS WINAPI LsarSetDomainInformationPolicy(
     LSAPR_HANDLE PolicyHandle,
     POLICY_INFORMATION_CLASS InformationClass,
-    unsigned long PolicyInformation)
+    PLSAPR_POLICY_DOMAIN_INFORMATION PolicyInformation)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
