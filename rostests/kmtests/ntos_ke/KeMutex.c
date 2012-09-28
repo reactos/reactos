@@ -56,7 +56,6 @@ VOID
 TestMutant(VOID)
 {
     KMUTANT Mutant;
-    PKTHREAD Thread = KeGetCurrentThread();
     LONG State;
 
     RtlFillMemory(&Mutant, sizeof(Mutant), 0x55);
