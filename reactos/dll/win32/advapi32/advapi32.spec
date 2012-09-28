@@ -363,29 +363,29 @@
 @ stdcall LsaEnumerateTrustedDomainsEx(ptr ptr ptr long ptr)
 @ stdcall LsaFreeMemory(ptr)
 @ stdcall LsaGetQuotasForAccount(ptr ptr)
-@ stub LsaGetRemoteUserName
+@ stdcall LsaGetRemoteUserName(ptr ptr ptr)
 @ stdcall LsaGetSystemAccessAccount(ptr ptr)
 @ stdcall LsaGetUserName(ptr ptr)
 @ stub LsaICLookupNames
 @ stub LsaICLookupNamesWithCreds
 @ stub LsaICLookupSids
 @ stub LsaICLookupSidsWithCreds
-@ stdcall LsaLookupNames(long long ptr ptr ptr)
+@ stdcall LsaLookupNames(ptr long ptr ptr ptr)
 @ stdcall LsaLookupNames2(ptr long long ptr ptr ptr)
-@ stub LsaLookupPrivilegeDisplayName
+@ stdcall LsaLookupPrivilegeDisplayName(ptr ptr ptr ptr)
 @ stdcall LsaLookupPrivilegeName(ptr ptr ptr)
 @ stdcall LsaLookupPrivilegeValue(ptr ptr ptr)
 @ stdcall LsaLookupSids(ptr long ptr ptr ptr)
 @ stdcall LsaNtStatusToWinError(long)
 @ stdcall LsaOpenAccount(ptr ptr long ptr)
 @ stdcall LsaOpenPolicy(ptr ptr long ptr)
-@ stub LsaOpenPolicySce
+@ stdcall LsaOpenPolicySce(ptr ptr long ptr)
 @ stdcall LsaOpenSecret(ptr ptr long ptr)
 @ stdcall LsaOpenTrustedDomain(ptr ptr long ptr)
 @ stdcall LsaOpenTrustedDomainByName(ptr ptr long ptr)
 @ stdcall LsaQueryDomainInformationPolicy(ptr long ptr)
 @ stdcall LsaQueryForestTrustInformation(ptr ptr ptr)
-@ stdcall LsaQueryInfoTrustedDomain(long long long)
+@ stdcall LsaQueryInfoTrustedDomain(ptr long ptr)
 @ stdcall LsaQueryInformationPolicy(ptr long ptr)
 @ stdcall LsaQuerySecret(ptr ptr ptr ptr ptr)
 @ stdcall LsaQuerySecurityObject(ptr long ptr)
@@ -393,12 +393,12 @@
 @ stdcall LsaQueryTrustedDomainInfoByName(ptr ptr long ptr)
 @ stdcall LsaRegisterPolicyChangeNotification(long long)
 @ stdcall LsaRemoveAccountRights(ptr ptr long ptr long)
-@ stub LsaRemovePrivilegesFromAccount
+@ stdcall LsaRemovePrivilegesFromAccount(ptr long ptr)
 @ stdcall LsaRetrievePrivateData(ptr ptr ptr)
 @ stdcall LsaSetDomainInformationPolicy(ptr long ptr)
 @ stdcall LsaSetForestTrustInformation(ptr ptr ptr long ptr)
-@ stdcall LsaSetInformationPolicy(long long ptr)
-@ stub LsaSetInformationTrustedDomain
+@ stdcall LsaSetInformationPolicy(ptr long ptr)
+@ stdcall LsaSetInformationTrustedDomain(ptr long ptr)
 @ stdcall LsaSetQuotasForAccount(ptr ptr)
 @ stdcall LsaSetSecret(ptr ptr ptr)
 @ stdcall LsaSetSecurityObject(ptr long ptr)

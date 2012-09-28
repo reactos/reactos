@@ -163,7 +163,7 @@ LsaAddPrivilegesToAccount(IN LSA_HANDLE AccountHandle,
  * @implemented
  */
 NTSTATUS
-NTAPI
+WINAPI
 LsaClearAuditLog(IN LSA_HANDLE PolicyHandle)
 {
     NTSTATUS Status;
@@ -680,6 +680,21 @@ LsaGetQuotasForAccount(IN LSA_HANDLE AccountHandle,
 
 
 /*
+ * @unimplemented
+ */
+NTSTATUS
+WINAPI
+LsaGetRemoteUserName(IN PLSA_UNICODE_STRING SystemName OPTIONAL,
+                     OUT PLSA_UNICODE_STRING *UserName,
+                     OUT PLSA_UNICODE_STRING *DomainName OPTIONAL)
+{
+    FIXME("LsaGetUserName(%p %p %p)\n",
+          SystemName, UserName, DomainName);
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+
+/*
  * @implemented
  */
 NTSTATUS
@@ -851,6 +866,22 @@ LsaLookupNames2(IN LSA_HANDLE PolicyHandle,
     RpcEndExcept;
 
     return Status;
+}
+
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+WINAPI
+LsaLookupPrivilegeDisplayName(IN LSA_HANDLE PolicyHandle,
+                              IN PLSA_UNICODE_STRING Name,
+                              OUT PLSA_UNICODE_STRING *DisplayName,
+                              OUT PSHORT LanguageReturned)
+{
+    FIXME("LsaLookupPrivilegeDisplayName(%p %p %p %p)\n",
+          PolicyHandle, Name, DisplayName, LanguageReturned);
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 
@@ -1078,6 +1109,26 @@ LsaOpenPolicy(IN PLSA_UNICODE_STRING SystemName OPTIONAL,
 }
 
 
+/*
+ * @unimplemented
+ */
+NTSTATUS
+WINAPI
+LsaOpenPolicySce(IN PLSA_UNICODE_STRING SystemName OPTIONAL,
+                 IN PLSA_OBJECT_ATTRIBUTES ObjectAttributes,
+                 IN ACCESS_MASK DesiredAccess,
+                 OUT PLSA_HANDLE PolicyHandle)
+{
+    FIXME("LsaOpenPolicySce(%s %p 0x%08lx %p)\n",
+          SystemName ? debugstr_w(SystemName->Buffer) : "(null)",
+          ObjectAttributes, DesiredAccess, PolicyHandle);
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+
+/*
+ * @implemented
+ */
 NTSTATUS
 WINAPI
 LsaOpenSecret(IN LSA_HANDLE PolicyHandle,
@@ -1528,6 +1579,33 @@ LsaRemoveAccountRights(IN LSA_HANDLE PolicyHandle,
 
 
 /*
+ * @implemented
+ */
+NTSTATUS
+WINAPI
+LsaRemovePrivilegesFromAccount(IN LSA_HANDLE AccountHandle,
+                               IN BOOLEAN AllPrivileges,
+                               IN PPRIVILEGE_SET Privileges OPTIONAL)
+{
+    NTSTATUS Status;
+
+    RpcTryExcept
+    {
+        Status = LsarRemovePrivilegesFromAccount((LSAPR_HANDLE)AccountHandle,
+                                                 AllPrivileges,
+                                                 (PLSAPR_PRIVILEGE_SET)Privileges);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
+
+/*
  * @unimplemented
  */
 NTSTATUS
@@ -1601,6 +1679,21 @@ LsaSetInformationPolicy(IN LSA_HANDLE PolicyHandle,
     RpcEndExcept;
 
     return Status;
+}
+
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+WINAPI
+LsaSetInformationTrustedDomain(IN LSA_HANDLE TrustedDomainHandle,
+                               IN TRUSTED_INFORMATION_CLASS InformationClass,
+                               IN PVOID Buffer)
+{
+    FIXME("LsaSetInformationTrustedDomain(%p %d %p)\n",
+          TrustedDomainHandle, InformationClass, Buffer);
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 
