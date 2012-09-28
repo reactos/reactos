@@ -15,7 +15,7 @@ Currently there is some stuff for set /a in there, which might stay there or see
 
 Once there is input taken in from the command line it is sent into ParseCommandLine().  
 In here we fist check for aliases and convert if need be.  
-THen we look for redirections using GetRedirection() which will remove any redirection symbols.  
+Then we look for redirections using GetRedirection() which will remove any redirection symbols.  
 and pass back info about where to redirect.  
 from this info it will do some switching around with the handles for where things go and send them as need be.  
 personally i dont like this code and i tried to chnage it before but failed.  

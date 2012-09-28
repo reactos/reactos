@@ -409,13 +409,18 @@ INT  cmd_prompt (LPTSTR);
 
 
 /* Prototypes for REDIR.C */
-enum { REDIR_READ, REDIR_WRITE, REDIR_APPEND };
+typedef enum _REDIR_MODE
+{
+	REDIR_READ   = 0,
+	REDIR_WRITE  = 1,
+	REDIR_APPEND = 2
+} REDIR_MODE;
 typedef struct _REDIRECTION
 {
 	struct _REDIRECTION *Next;
 	HANDLE OldHandle;
 	BYTE Number;
-	BYTE Type;
+	REDIR_MODE Mode;
 	TCHAR Filename[];
 } REDIRECTION;
 BOOL PerformRedirection(REDIRECTION *);
