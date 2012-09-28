@@ -747,6 +747,10 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager","ObjectDirectories",0x00
 
 ; DOS devices
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\DOS Devices","AUX",0x00000000,"\DosDevices\COM1"
+;; ReactOS specific - add a symbolic link to the first COM port, because it happens for whatever
+;; reason that the serial.sys driver doesn't create it when it creates the Serial0 device.
+;; When this functionality is repaired, the following line shall disappear.
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\DOS Devices","COM1",0x00000000,"\Device\Serial0"
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\DOS Devices","MAILSLOT",0x00000000,"\Device\MailSlot"
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\DOS Devices","NUL",0x00000000,"\Device\Null"
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\DOS Devices","PIPE",0x00000000,"\Device\NamedPipe"
