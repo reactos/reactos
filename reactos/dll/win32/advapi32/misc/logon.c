@@ -130,9 +130,18 @@ CreateProcessAsUserW(HANDLE hToken,
 /*
  * @unimplemented
  */
-BOOL WINAPI CreateProcessWithLogonW( LPCWSTR lpUsername, LPCWSTR lpDomain, LPCWSTR lpPassword, DWORD dwLogonFlags,
-    LPCWSTR lpApplicationName, LPWSTR lpCommandLine, DWORD dwCreationFlags, LPVOID lpEnvironment,
-    LPCWSTR lpCurrentDirectory, LPSTARTUPINFOW lpStartupInfo, LPPROCESS_INFORMATION lpProcessInformation )
+BOOL WINAPI
+CreateProcessWithLogonW(LPCWSTR lpUsername,
+                        LPCWSTR lpDomain,
+                        LPCWSTR lpPassword,
+                        DWORD dwLogonFlags,
+                        LPCWSTR lpApplicationName,
+                        LPWSTR lpCommandLine,
+                        DWORD dwCreationFlags,
+                        LPVOID lpEnvironment,
+                        LPCWSTR lpCurrentDirectory,
+                        LPSTARTUPINFOW lpStartupInfo,
+                        LPPROCESS_INFORMATION lpProcessInformation)
 {
     FIXME("%s %s %s 0x%08x %s %s 0x%08x %p %s %p %p stub\n", debugstr_w(lpUsername), debugstr_w(lpDomain),
     debugstr_w(lpPassword), dwLogonFlags, debugstr_w(lpApplicationName),
@@ -301,98 +310,6 @@ static BOOL WINAPI
 GetUserSid(LPCWSTR UserName,
            PSID *Sid)
 {
-#if 0
-    PSID lpSid;
-    DWORD dwLength;
-    HKEY hUsersKey;
-    HKEY hUserKey;
-
-    if (Sid != NULL)
-        *Sid = NULL;
-
-    /* Open the Users key */
-    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-                      L"SAM\\SAM\\Domains\\Account\\Users",
-                      0,
-                      KEY_READ,
-                      &hUsersKey))
-    {
-        ERR("Failed to open Users key! (Error %lu)\n", GetLastError());
-        return FALSE;
-    }
-
-    /* Open the user key */
-    if (RegOpenKeyExW(hUsersKey,
-                      UserName,
-                      0,
-                      KEY_READ,
-                      &hUserKey))
-    {
-        if (GetLastError() == ERROR_FILE_NOT_FOUND)
-        {
-            ERR("Invalid user name!\n");
-            SetLastError(ERROR_NO_SUCH_USER);
-        }
-        else
-        {
-            ERR("Failed to open user key! (Error %lu)\n", GetLastError());
-        }
-
-        RegCloseKey(hUsersKey);
-        return FALSE;
-    }
-
-    RegCloseKey (hUsersKey);
-
-    /* Get SID size */
-    dwLength = 0;
-    if (RegQueryValueExW(hUserKey,
-                         L"Sid",
-                         NULL,
-                         NULL,
-                         NULL,
-                         &dwLength))
-    {
-        ERR("Failed to read the SID size! (Error %lu)\n", GetLastError());
-        RegCloseKey(hUserKey);
-        return FALSE;
-    }
-
-    /* Allocate sid buffer */
-    TRACE("Required SID buffer size: %lu\n", dwLength);
-    lpSid = (PSID)RtlAllocateHeap(RtlGetProcessHeap(),
-                                  0,
-                                  dwLength);
-    if (lpSid == NULL)
-    {
-        ERR("Failed to allocate SID buffer!\n");
-        RegCloseKey(hUserKey);
-        return FALSE;
-    }
-
-    /* Read sid */
-    if (RegQueryValueExW(hUserKey,
-                         L"Sid",
-                         NULL,
-                         NULL,
-                         (LPBYTE)lpSid,
-                         &dwLength))
-    {
-        ERR("Failed to read the SID! (Error %lu)\n", GetLastError());
-        RtlFreeHeap(RtlGetProcessHeap(),
-                    0,
-                    lpSid);
-        RegCloseKey(hUserKey);
-        return FALSE;
-    }
-
-    RegCloseKey(hUserKey);
-
-    *Sid = lpSid;
-
-    return TRUE;
-#endif
-
     PSID AccountDomainSid = NULL;
     ULONG ulUserRid;
     DWORD dwLength;

@@ -3,7 +3,7 @@
  * PROJECT:     ReactOS system libraries
  * FILE:        dll/win32/advapi32/misc/shutdown.c
  * PURPOSE:     System shutdown functions
- * PROGRAMMER:  Lee Schroeder <spaceseel at gmail dot com>    
+ * PROGRAMMER:  Lee Schroeder <spaceseel at gmail dot com>
  *              Emanuele Aliberti
  */
 
@@ -64,7 +64,7 @@ InitiateSystemShutdownW(LPWSTR lpMachineName,
                         BOOL bForceAppsClosed,
                         BOOL bRebootAfterShutdown)
 {
-	return InitiateSystemShutdownExW(lpMachineName,
+    return InitiateSystemShutdownExW(lpMachineName,
                                      lpMessage,
                                      dwTimeout,
                                      bForceAppsClosed,
@@ -87,7 +87,7 @@ InitiateSystemShutdownA(LPSTR lpMachineName,
                         BOOL bForceAppsClosed,
                         BOOL bRebootAfterShutdown)
 {
-	return InitiateSystemShutdownExA(lpMachineName,
+    return InitiateSystemShutdownExA(lpMachineName,
                                      lpMessage,
                                      dwTimeout,
                                      bForceAppsClosed,
@@ -178,7 +178,7 @@ InitiateSystemShutdownExA(LPSTR lpMachineName,
             return FALSE;
         }
     }
-	
+
     rv = InitiateSystemShutdownExW(MachineNameW.Buffer,
                                    MessageW.Buffer,
                                    dwTimeout,

@@ -931,7 +931,7 @@ CreateNestedKey(PHKEY KeyHandle,
     LocalObjectAttributes.ObjectName = &LocalKeyName;
     FullNameLength = LocalKeyName.Length / sizeof(WCHAR);
 
-  LocalKeyHandle = NULL;
+    LocalKeyHandle = NULL;
 
     /* Remove the last part of the key name and try to create the key again. */
     while (Status == STATUS_OBJECT_NAME_NOT_FOUND)
