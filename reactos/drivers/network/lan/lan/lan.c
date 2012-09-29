@@ -313,6 +313,7 @@ ProtocolTransferDataComplete(
                         LA_DbgPrint(MID_TRACE,("Bytes returned %d\n",
                         ReadIrp->IoStatus.Information));
 
+                        #error move this out of SEH!
                         IoCompleteRequest(ReadIrp, IO_NETWORK_INCREMENT);
                     }
                     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
