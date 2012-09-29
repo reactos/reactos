@@ -434,6 +434,37 @@ static void test_asciimode2(void)
     unlink("ascii2.tst");
 }
 
+static void test_filemodeT(void)
+{
+    char DATA  [] = {26, 't', 'e', 's' ,'t'};
+    char DATA2 [100];
+    char temppath[MAX_PATH];
+    char tempfile[MAX_PATH];
+    FILE* f;
+    size_t bytesWritten;
+    size_t bytesRead;
+    WIN32_FIND_DATA findData;
+    HANDLE h;
+
+    GetTempPath (MAX_PATH, temppath);
+    GetTempFileName (temppath, "", 0, tempfile);
+
+    f = fopen(tempfile, "w+bDT");
+    bytesWritten = fwrite(DATA, 1, sizeof(DATA), f);
+    rewind(f);
+    bytesRead = fread(DATA2, 1, sizeof(DATA2), f);
+    fclose(f);
+
+    ok (bytesRead == bytesWritten && bytesRead == sizeof(DATA),
+        "fopen file mode 'T' wrongly interpreted as 't'\n" );
+
+    h = FindFirstFile(tempfile, &findData);
+
+    ok (h == INVALID_HANDLE_VALUE, "file wasn't deleted when closed.\n" );
+
+    if (h != INVALID_HANDLE_VALUE) FindClose(h);
+}
+
 static WCHAR* AtoW( const char* p )
 {
     WCHAR* buffer;
@@ -544,10 +575,21 @@ static void test_flsbuf( void )
                          bufmodes[bufmode], 0, ret);
     ret = _flsbuf(0xff,tempfh);
     ok(0xff == ret, "_flsbuf(0xff,tempfh) with bufmode %x expected %x got %x\n",
-                         bufmodes[bufmode], 0, ret);
+                         bufmodes[bufmode], 0xff, ret);
     ret = _flsbuf(0xffffffff,tempfh);
     ok(0xff == ret, "_flsbuf(0xffffffff,tempfh) with bufmode %x expected %x got %x\n",
-                         bufmodes[bufmode], 0, ret);
+                         bufmodes[bufmode], 0xff, ret);
+    if(tempfh->_base) {
+        fputc('x', tempfh);
+        tempfh->_cnt = -1;
+        tempfh->_base[1] = 'a';
+        ret = _flsbuf(0xab,tempfh);
+        ok(ret == 0xab, "_flsbuf(0xab,tempfh) with bufmode %x expected 0xab got %x\n",
+                bufmodes[bufmode], ret);
+        ok(tempfh->_base[1] == 'a', "tempfh->_base[1] should not be changed (%d)\n",
+                tempfh->_base[1]);
+    }
+
     fclose(tempfh);
   }
 
@@ -574,6 +616,58 @@ static void test_flsbuf( void )
   ok(c == 'Q', "first byte should be 'Q'\n");
   c = fgetc(tempfh);
   ok(c == EOF, "there should only be one byte\n");
+  fclose(tempfh);
+
+  unlink(tempf);
+  free(tempf);
+}
+
+static void test_fflush( void )
+{
+  static const char obuf[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
+  char buf1[16], buf2[24];
+  char *tempf;
+  FILE *tempfh;
+  int ret;
+
+  tempf=_tempnam(".","wne");
+
+  /* Prepare the file. */
+  tempfh = fopen(tempf,"wb");
+  ok(tempfh != NULL, "Can't open test file.\n");
+  fwrite(obuf, 1, sizeof(obuf), tempfh);
+  fclose(tempfh);
+
+  /* Open the file for input. */
+  tempfh = fopen(tempf,"rb");
+  ok(tempfh != NULL, "Can't open test file.\n");
+  fread(buf1, 1, sizeof(buf1), tempfh);
+
+  /* Using fflush() on input stream is undefined in ANSI.
+   * But MSDN says that it clears input buffer. */
+  _lseek(_fileno(tempfh), 0, SEEK_SET);
+  ret = fflush(tempfh);
+  ok(ret == 0, "expected 0, got %d\n", ret);
+  memset(buf2, '?', sizeof(buf2));
+  fread(buf2, 1, sizeof(buf2), tempfh);
+  ok(memcmp(buf1, buf2, sizeof(buf1)) == 0, "Got unexpected data (%c)\n", buf2[0]);
+
+  /* fflush(NULL) doesn't clear input buffer. */
+  _lseek(_fileno(tempfh), 0, SEEK_SET);
+  ret = fflush(NULL);
+  ok(ret == 0, "expected 0, got %d\n", ret);
+  memset(buf2, '?', sizeof(buf2));
+  fread(buf2, 1, sizeof(buf2), tempfh);
+  ok(memcmp(buf1, buf2, sizeof(buf1)) != 0, "Got unexpected data (%c)\n", buf2[0]);
+
+  /* _flushall() clears input buffer. */
+  _lseek(_fileno(tempfh), 0, SEEK_SET);
+  ret = _flushall();
+  ok(ret >= 0, "unexpected ret %d\n", ret);
+  memset(buf2, '?', sizeof(buf2));
+  fread(buf2, 1, sizeof(buf2), tempfh);
+  ok(memcmp(buf1, buf2, sizeof(buf1)) == 0, "Got unexpected data (%c)\n", buf2[0]);
+
   fclose(tempfh);
 
   unlink(tempf);
@@ -1565,12 +1659,14 @@ START_TEST(file)
     test_fileops();
     test_asciimode();
     test_asciimode2();
+    test_filemodeT();
     test_readmode(FALSE); /* binary mode */
     test_readmode(TRUE);  /* ascii mode */
     test_readboundary();
     test_fgetc();
     test_fputc();
     test_flsbuf();
+    test_fflush();
     test_fgetwc();
     test_ctrlz();
     test_file_put_get();

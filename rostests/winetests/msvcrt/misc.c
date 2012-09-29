@@ -23,7 +23,6 @@
 #include "msvcrt.h"
 
 static int (__cdecl *prand_s)(unsigned int *);
-static int (__cdecl *pmemcpy_s)(void *, MSVCRT_size_t, void*, MSVCRT_size_t);
 static int (__cdecl *pI10_OUTPUT)(long double, int, int, void*);
 static int (__cdecl *pstrerror_s)(char *, MSVCRT_size_t, int);
 static int (__cdecl *p_get_doserrno)(int *);
@@ -36,7 +35,6 @@ static void init(void)
     HMODULE hmod = GetModuleHandleA("msvcrt.dll");
 
     prand_s = (void *)GetProcAddress(hmod, "rand_s");
-    pmemcpy_s = (void*)GetProcAddress(hmod, "memcpy_s");
     pI10_OUTPUT = (void*)GetProcAddress(hmod, "$I10_OUTPUT");
     pstrerror_s = (void *)GetProcAddress(hmod, "strerror_s");
     p_get_doserrno = (void *)GetProcAddress(hmod, "_get_doserrno");
@@ -63,57 +61,6 @@ static void test_rand_s(void)
 
     ret = prand_s(&rand);
     ok(ret == 0, "Expected rand_s to return 0, got %d\n", ret);
-}
-
-static void test_memcpy_s(void)
-{
-    static char data[] = "data\0to\0be\0copied";
-    static char dest[32];
-    int ret;
-
-    if(!pmemcpy_s)
-    {
-        win_skip("memcpy_s is not available\n");
-        return;
-    }
-
-    errno = 0xdeadbeef;
-    ret = pmemcpy_s(NULL, 0, NULL, 0);
-    ok(ret == 0, "ret = %x\n", ret);
-    ok(errno == 0xdeadbeef, "errno = %x\n", errno);
-
-    errno = 0xdeadbeef;
-    dest[0] = 'x';
-    ret = pmemcpy_s(dest, 10, NULL, 0);
-    ok(ret == 0, "ret = %x\n", ret);
-    ok(errno == 0xdeadbeef, "errno = %x\n", errno);
-    ok(dest[0] == 'x', "dest[0] != \'x\'\n");
-
-    errno = 0xdeadbeef;
-    ret = pmemcpy_s(NULL, 10, data, 10);
-    ok(ret == EINVAL, "ret = %x\n", ret);
-    ok(errno == EINVAL, "errno = %x\n", errno);
-
-    errno = 0xdeadbeef;
-    dest[7] = 'x';
-    ret = pmemcpy_s(dest, 10, data, 5);
-    ok(ret == 0, "ret = %x\n", ret);
-    ok(errno == 0xdeadbeef, "errno = %x\n", errno);
-    ok(memcmp(dest, data, 10), "All data copied\n");
-    ok(!memcmp(dest, data, 5), "First five bytes are different\n");
-
-    errno = 0xdeadbeef;
-    ret = pmemcpy_s(data, 10, data, 10);
-    ok(ret == 0, "ret = %x\n", ret);
-    ok(errno == 0xdeadbeef, "errno = %x\n", errno);
-    ok(!memcmp(dest, data, 5), "data was destroyed during overwriting\n");
-
-    errno = 0xdeadbeef;
-    dest[0] = 'x';
-    ret = pmemcpy_s(dest, 5, data, 10);
-    ok(ret == ERANGE, "ret = %x\n", ret);
-    ok(errno == ERANGE, "errno = %x\n", errno);
-    ok(dest[0] == '\0', "dest[0] != \'\\0\'\n");
 }
 
 typedef struct _I10_OUTPUT_data {
@@ -367,7 +314,6 @@ START_TEST(misc)
     init();
 
     test_rand_s();
-    test_memcpy_s();
     test_I10_OUTPUT();
     test_strerror_s();
     test__get_doserrno();

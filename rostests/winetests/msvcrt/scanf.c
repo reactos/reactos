@@ -27,6 +27,7 @@ static void test_sscanf( void )
     char buffer[100], buffer1[100];
     char format[20];
     int result, ret;
+    LONGLONG result64;
     char c;
     void *ptr;
     float res1= -82.6267f, res2= 27.76f, res11, res12;
@@ -124,6 +125,25 @@ static void test_sscanf( void )
     ret = sscanf(buffer+2,"%*c%n",&number_so_far);
     ok(ret == 0 , "problem with format arg \"%%*c%%n\"\n");
     ok(number_so_far == 1,"Read wrong arg for \"%%n\" %d instead of 2\n",number_so_far);
+
+    result = 0xdeadbeef;
+    strcpy(buffer,"12345678");
+    ret = sscanf(buffer, "%hd", &result);
+    ok(ret == 1, "Wrong number of arguments read: %d\n", ret);
+    ok(result == 0xdead614e, "Wrong number read (%x)\n", result);
+
+    result = 0xdeadbeef;
+    ret = sscanf(buffer, "%hhd", &result);
+    ok(ret == 1, "Wrong number of arguments read: %d\n", ret);
+    ok(result == 0xbc614e, "Wrong number read (%x)\n", result);
+
+    strcpy(buffer,"12345678901234");
+    ret = sscanf(buffer, "%lld", &result64);
+    ok(ret == 1, "Wrong number of arguments read: %d\n", ret);
+    ret = sprintf(buffer1, "%lld", result64);
+    ok(ret==14 || broken(ret==10), "sprintf retuned %d\n", ret);
+    if(ret == 14)
+        ok(!strcmp(buffer, buffer1), "got %s, expected %s\n", buffer1, buffer);
 
     /* Check %i according to bug 1878 */
     strcpy(buffer,"123");
@@ -243,8 +263,25 @@ static void test_sscanf_s(void)
     ok(i==123, "i = %d\n", i);
 }
 
+static void test_swscanf( void )
+{
+    wchar_t buffer[100];
+    int result, ret;
+    static const WCHAR formatd[] = {'%','d',0};
+
+    /* check WEOF */
+    /* WEOF is an unsigned short -1 but swscanf returns int
+       so it should be sign-extended */
+    buffer[0] = 0;
+    ret = swscanf(buffer, formatd, &result);
+    /* msvcrt returns 0 but should return -1 (later versions do) */
+    ok( ret == (short)WEOF || broken(ret == 0),
+        "swscanf returns %x instead of %x\n", ret, WEOF );
+}
+
 START_TEST(scanf)
 {
     test_sscanf();
     test_sscanf_s();
+    test_swscanf();
 }

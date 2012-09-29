@@ -25,6 +25,7 @@
 
 static BOOL (__cdecl *p__crtGetStringTypeW)(DWORD, DWORD, const wchar_t*, int, WORD*);
 static int (__cdecl *pmemcpy_s)(void *, size_t, void*, size_t);
+void* __cdecl _Gettnames(void);
 
 static void init(void)
 {
@@ -471,10 +472,11 @@ static void test_setlocale(void)
     if(ret)
         ok(!strcmp(ret, "Polish_Poland.1250"), "ret = %s\n", ret);
 
-    ret = setlocale(LC_ALL, "portugese");
+    ret = setlocale(LC_ALL, "portuguese");
     ok(ret != NULL || broken (ret == NULL), "ret == NULL\n");
     if(ret)
-        ok(!strcmp(ret, "Portuguese_Brazil.1252"), "ret = %s\n", ret);
+        ok(!strcmp(ret, "Portuguese_Brazil.1252")
+        || broken(!strcmp(ret, "Portuguese_Portugal.1252")) /* NT4 */, "ret = %s\n", ret);
 
     ret = setlocale(LC_ALL, "portuguese-brazil");
     ok(ret != NULL || broken (ret == NULL), "ret == NULL\n");
@@ -616,10 +618,131 @@ static void test_crtGetStringTypeW(void)
     ok(!ret, "ret == TRUE\n");
 }
 
+static void test__Gettnames(void)
+{
+    struct {
+        char *str[43];
+        LCID lcid;
+        int  unk[2];
+        wchar_t *wstr[43];
+        char data[1];
+    } *ret;
+    int size;
+
+    if(!setlocale(LC_ALL, "english"))
+        return;
+
+    ret = _Gettnames();
+    size = ret->data-(char*)ret;
+    /* Newer version of the structure stores both ascii and unicode strings.
+     * Unicode strings are only initialized on Windows 7
+     */
+    if(sizeof(void*) == 8)
+        ok(size==0x2c0 || broken(size==0x170), "strucure size: %x\n", size);
+    else
+        ok(size==0x164 || broken(size==0xb8), "strucure size: %x\n", size);
+
+    ok(!strcmp(ret->str[0], "Sun"), "ret->str[0] = %s\n", ret->str[0]);
+    ok(!strcmp(ret->str[1], "Mon"), "ret->str[1] = %s\n", ret->str[1]);
+    ok(!strcmp(ret->str[2], "Tue"), "ret->str[2] = %s\n", ret->str[2]);
+    ok(!strcmp(ret->str[3], "Wed"), "ret->str[3] = %s\n", ret->str[3]);
+    ok(!strcmp(ret->str[4], "Thu"), "ret->str[4] = %s\n", ret->str[4]);
+    ok(!strcmp(ret->str[5], "Fri"), "ret->str[5] = %s\n", ret->str[5]);
+    ok(!strcmp(ret->str[6], "Sat"), "ret->str[6] = %s\n", ret->str[6]);
+    ok(!strcmp(ret->str[7], "Sunday"), "ret->str[7] = %s\n", ret->str[7]);
+    ok(!strcmp(ret->str[8], "Monday"), "ret->str[8] = %s\n", ret->str[8]);
+    ok(!strcmp(ret->str[9], "Tuesday"), "ret->str[9] = %s\n", ret->str[9]);
+    ok(!strcmp(ret->str[10], "Wednesday"), "ret->str[10] = %s\n", ret->str[10]);
+    ok(!strcmp(ret->str[11], "Thursday"), "ret->str[11] = %s\n", ret->str[11]);
+    ok(!strcmp(ret->str[12], "Friday"), "ret->str[12] = %s\n", ret->str[12]);
+    ok(!strcmp(ret->str[13], "Saturday"), "ret->str[13] = %s\n", ret->str[13]);
+    ok(!strcmp(ret->str[14], "Jan"), "ret->str[14] = %s\n", ret->str[14]);
+    ok(!strcmp(ret->str[15], "Feb"), "ret->str[15] = %s\n", ret->str[15]);
+    ok(!strcmp(ret->str[16], "Mar"), "ret->str[16] = %s\n", ret->str[16]);
+    ok(!strcmp(ret->str[17], "Apr"), "ret->str[17] = %s\n", ret->str[17]);
+    ok(!strcmp(ret->str[18], "May"), "ret->str[18] = %s\n", ret->str[18]);
+    ok(!strcmp(ret->str[19], "Jun"), "ret->str[19] = %s\n", ret->str[19]);
+    ok(!strcmp(ret->str[20], "Jul"), "ret->str[20] = %s\n", ret->str[20]);
+    ok(!strcmp(ret->str[21], "Aug"), "ret->str[21] = %s\n", ret->str[21]);
+    ok(!strcmp(ret->str[22], "Sep"), "ret->str[22] = %s\n", ret->str[22]);
+    ok(!strcmp(ret->str[23], "Oct"), "ret->str[23] = %s\n", ret->str[23]);
+    ok(!strcmp(ret->str[24], "Nov"), "ret->str[24] = %s\n", ret->str[24]);
+    ok(!strcmp(ret->str[25], "Dec"), "ret->str[25] = %s\n", ret->str[25]);
+    ok(!strcmp(ret->str[26], "January"), "ret->str[26] = %s\n", ret->str[26]);
+    ok(!strcmp(ret->str[27], "February"), "ret->str[27] = %s\n", ret->str[27]);
+    ok(!strcmp(ret->str[28], "March"), "ret->str[28] = %s\n", ret->str[28]);
+    ok(!strcmp(ret->str[29], "April"), "ret->str[29] = %s\n", ret->str[29]);
+    ok(!strcmp(ret->str[30], "May"), "ret->str[30] = %s\n", ret->str[30]);
+    ok(!strcmp(ret->str[31], "June"), "ret->str[31] = %s\n", ret->str[31]);
+    ok(!strcmp(ret->str[32], "July"), "ret->str[32] = %s\n", ret->str[32]);
+    ok(!strcmp(ret->str[33], "August"), "ret->str[33] = %s\n", ret->str[33]);
+    ok(!strcmp(ret->str[34], "September"), "ret->str[34] = %s\n", ret->str[34]);
+    ok(!strcmp(ret->str[35], "October"), "ret->str[35] = %s\n", ret->str[35]);
+    ok(!strcmp(ret->str[36], "November"), "ret->str[36] = %s\n", ret->str[36]);
+    ok(!strcmp(ret->str[37], "December"), "ret->str[37] = %s\n", ret->str[37]);
+    ok(!strcmp(ret->str[38], "AM"), "ret->str[38] = %s\n", ret->str[38]);
+    ok(!strcmp(ret->str[39], "PM"), "ret->str[39] = %s\n", ret->str[39]);
+    ok(!strcmp(ret->str[40], "M/d/yyyy") || broken(!strcmp(ret->str[40], "M/d/yy"))/*NT*/,
+            "ret->str[40] = %s\n", ret->str[40]);
+    ok(!strcmp(ret->str[41], "dddd, MMMM dd, yyyy"), "ret->str[41] = %s\n", ret->str[41]);
+    free(ret);
+
+    if(!setlocale(LC_TIME, "german"))
+        return;
+
+    ret = _Gettnames();
+    ok(!strcmp(ret->str[0], "So"), "ret->str[0] = %s\n", ret->str[0]);
+    ok(!strcmp(ret->str[1], "Mo"), "ret->str[1] = %s\n", ret->str[1]);
+    ok(!strcmp(ret->str[2], "Di"), "ret->str[2] = %s\n", ret->str[2]);
+    ok(!strcmp(ret->str[3], "Mi"), "ret->str[3] = %s\n", ret->str[3]);
+    ok(!strcmp(ret->str[4], "Do"), "ret->str[4] = %s\n", ret->str[4]);
+    ok(!strcmp(ret->str[5], "Fr"), "ret->str[5] = %s\n", ret->str[5]);
+    ok(!strcmp(ret->str[6], "Sa"), "ret->str[6] = %s\n", ret->str[6]);
+    ok(!strcmp(ret->str[7], "Sonntag"), "ret->str[7] = %s\n", ret->str[7]);
+    ok(!strcmp(ret->str[8], "Montag"), "ret->str[8] = %s\n", ret->str[8]);
+    ok(!strcmp(ret->str[9], "Dienstag"), "ret->str[9] = %s\n", ret->str[9]);
+    ok(!strcmp(ret->str[10], "Mittwoch"), "ret->str[10] = %s\n", ret->str[10]);
+    ok(!strcmp(ret->str[11], "Donnerstag"), "ret->str[11] = %s\n", ret->str[11]);
+    ok(!strcmp(ret->str[12], "Freitag"), "ret->str[12] = %s\n", ret->str[12]);
+    ok(!strcmp(ret->str[13], "Samstag"), "ret->str[13] = %s\n", ret->str[13]);
+    ok(!strcmp(ret->str[14], "Jan"), "ret->str[14] = %s\n", ret->str[14]);
+    ok(!strcmp(ret->str[15], "Feb"), "ret->str[15] = %s\n", ret->str[15]);
+    ok(!strcmp(ret->str[16], "Mrz"), "ret->str[16] = %s\n", ret->str[16]);
+    ok(!strcmp(ret->str[17], "Apr"), "ret->str[17] = %s\n", ret->str[17]);
+    ok(!strcmp(ret->str[18], "Mai"), "ret->str[18] = %s\n", ret->str[18]);
+    ok(!strcmp(ret->str[19], "Jun"), "ret->str[19] = %s\n", ret->str[19]);
+    ok(!strcmp(ret->str[20], "Jul"), "ret->str[20] = %s\n", ret->str[20]);
+    ok(!strcmp(ret->str[21], "Aug"), "ret->str[21] = %s\n", ret->str[21]);
+    ok(!strcmp(ret->str[22], "Sep"), "ret->str[22] = %s\n", ret->str[22]);
+    ok(!strcmp(ret->str[23], "Okt"), "ret->str[23] = %s\n", ret->str[23]);
+    ok(!strcmp(ret->str[24], "Nov"), "ret->str[24] = %s\n", ret->str[24]);
+    ok(!strcmp(ret->str[25], "Dez"), "ret->str[25] = %s\n", ret->str[25]);
+    ok(!strcmp(ret->str[26], "Januar"), "ret->str[26] = %s\n", ret->str[26]);
+    ok(!strcmp(ret->str[27], "Februar"), "ret->str[27] = %s\n", ret->str[27]);
+    ok(!strcmp(ret->str[29], "April"), "ret->str[29] = %s\n", ret->str[29]);
+    ok(!strcmp(ret->str[30], "Mai"), "ret->str[30] = %s\n", ret->str[30]);
+    ok(!strcmp(ret->str[31], "Juni"), "ret->str[31] = %s\n", ret->str[31]);
+    ok(!strcmp(ret->str[32], "Juli"), "ret->str[32] = %s\n", ret->str[32]);
+    ok(!strcmp(ret->str[33], "August"), "ret->str[33] = %s\n", ret->str[33]);
+    ok(!strcmp(ret->str[34], "September"), "ret->str[34] = %s\n", ret->str[34]);
+    ok(!strcmp(ret->str[35], "Oktober"), "ret->str[35] = %s\n", ret->str[35]);
+    ok(!strcmp(ret->str[36], "November"), "ret->str[36] = %s\n", ret->str[36]);
+    ok(!strcmp(ret->str[37], "Dezember"), "ret->str[37] = %s\n", ret->str[37]);
+    ok(!strcmp(ret->str[38], ""), "ret->str[38] = %s\n", ret->str[38]);
+    ok(!strcmp(ret->str[39], ""), "ret->str[39] = %s\n", ret->str[39]);
+    ok(!strcmp(ret->str[40], "dd.MM.yyyy") || broken(!strcmp(ret->str[40], "dd.MM.yy"))/*NT*/,
+            "ret->str[40] = %s\n", ret->str[40]);
+    ok(!strcmp(ret->str[41], "dddd, d. MMMM yyyy"), "ret->str[41] = %s\n", ret->str[41]);
+    free(ret);
+
+    setlocale(LC_ALL, "C");
+}
+
 START_TEST(locale)
 {
     init();
 
     test_crtGetStringTypeW();
     test_setlocale();
+    test__Gettnames();
 }
