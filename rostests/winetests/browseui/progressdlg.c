@@ -39,19 +39,19 @@ static void test_IProgressDialog_QueryInterface(void)
         return;
     }
 
-    hr = IUnknown_QueryInterface(dlg, &IID_IUnknown, NULL);
+    hr = IProgressDialog_QueryInterface(dlg, &IID_IUnknown, NULL);
     ok(hr == E_POINTER, "got 0x%x (expected E_POINTER)\n", hr);
 
-    hr = IUnknown_QueryInterface(dlg, &IID_IUnknown, (void**)&unk);
+    hr = IProgressDialog_QueryInterface(dlg, &IID_IUnknown, (void**)&unk);
     ok(hr == S_OK, "QueryInterface (IUnknown) returned 0x%x\n", hr);
     if (SUCCEEDED(hr)) {
         IUnknown_Release(unk);
     }
 
-    hr = IUnknown_QueryInterface(dlg, &IID_IOleWindow, (void**)&olewindow);
+    hr = IProgressDialog_QueryInterface(dlg, &IID_IOleWindow, (void**)&olewindow);
     ok(hr == S_OK, "QueryInterface (IOleWindow) returned 0x%x\n", hr);
     if (SUCCEEDED(hr)) {
-        hr = IUnknown_QueryInterface(olewindow, &IID_IProgressDialog, (void**)&dlg2);
+        hr = IOleWindow_QueryInterface(olewindow, &IID_IProgressDialog, (void**)&dlg2);
         ok(hr == S_OK, "QueryInterface (IProgressDialog) returned 0x%x\n", hr);
         if (SUCCEEDED(hr)) {
             IProgressDialog_Release(dlg2);
