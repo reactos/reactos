@@ -417,7 +417,7 @@ LsaEnumerateAccountRights(IN LSA_HANDLE PolicyHandle,
 
     RpcTryExcept
     {
-        Status = LsarEnmuerateAccountRights((LSAPR_HANDLE)PolicyHandle,
+        Status = LsarEnumerateAccountRights((LSAPR_HANDLE)PolicyHandle,
                                             AccountSid,
                                             &UserRightsSet);
 

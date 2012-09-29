@@ -9,6 +9,8 @@
 
 #include "lsasrv.h"
 
+WINE_DEFAULT_DEBUG_CHANNEL(lsasrv);
+
 
 typedef struct
 {
@@ -16,6 +18,8 @@ typedef struct
     LPCWSTR Name;
 } PRIVILEGE_DATA;
 
+
+/* GLOBALS *****************************************************************/
 
 static const PRIVILEGE_DATA WellKnownPrivileges[] =
 {
@@ -111,12 +115,107 @@ LsarpLookupPrivilegeValue(PUNICODE_STRING Name,
     {
         if (_wcsicmp(Name->Buffer, WellKnownPrivileges[Priv].Name) == 0)
         {
-//            Value->LowPart = WellKnownPrivileges[Priv].Luid.LowPart;
-//            Value->HighPart = WellKnownPrivileges[Priv].Luid.HighPart;
             *Value = WellKnownPrivileges[Priv].Luid;
             return STATUS_SUCCESS;
         }
     }
 
     return STATUS_NO_SUCH_PRIVILEGE;
+}
+
+
+NTSTATUS
+LsarpEnumeratePrivileges(DWORD *EnumerationContext,
+                         PLSAPR_PRIVILEGE_ENUM_BUFFER EnumerationBuffer,
+                         DWORD PreferedMaximumLength)
+{
+    PLSAPR_POLICY_PRIVILEGE_DEF Privileges = NULL;
+    ULONG EnumIndex;
+    ULONG EnumCount = 0;
+    ULONG RequiredLength = 0;
+    ULONG i;
+    BOOLEAN MoreEntries = FALSE;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    EnumIndex = *EnumerationContext;
+
+    for (; EnumIndex < sizeof(WellKnownPrivileges) / sizeof(WellKnownPrivileges[0]); EnumIndex++)
+    {
+        TRACE("EnumIndex: %lu\n", EnumIndex);
+        TRACE("Privilege Name: %S\n", WellKnownPrivileges[EnumIndex].Name);
+        TRACE("Name Length: %lu\n", wcslen(WellKnownPrivileges[EnumIndex].Name));
+
+        if ((RequiredLength +
+             wcslen(WellKnownPrivileges[EnumIndex].Name) * sizeof(WCHAR) +
+             sizeof(UNICODE_NULL) +
+             sizeof(LSAPR_POLICY_PRIVILEGE_DEF)) > PreferedMaximumLength)
+        {
+            MoreEntries = TRUE;
+            break;
+        }
+
+        RequiredLength += (wcslen(WellKnownPrivileges[EnumIndex].Name) * sizeof(WCHAR) +
+                           sizeof(UNICODE_NULL) + sizeof(LSAPR_POLICY_PRIVILEGE_DEF));
+        EnumCount++;
+    }
+
+    TRACE("EnumCount: %lu\n", EnumCount);
+    TRACE("RequiredLength: %lu\n", RequiredLength);
+
+    if (EnumCount == 0)
+        goto done;
+
+    Privileges = MIDL_user_allocate(EnumCount * sizeof(LSAPR_POLICY_PRIVILEGE_DEF));
+    if (Privileges == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
+
+    EnumIndex = *EnumerationContext;
+
+    for (i = 0; i < EnumCount; i++, EnumIndex++)
+    {
+        Privileges[i].LocalValue = WellKnownPrivileges[EnumIndex].Luid;
+
+        Privileges[i].Name.Length = (USHORT)wcslen(WellKnownPrivileges[EnumIndex].Name) * sizeof(WCHAR);
+        Privileges[i].Name.MaximumLength = (USHORT)Privileges[i].Name.Length + sizeof(UNICODE_NULL);
+
+        Privileges[i].Name.Buffer = MIDL_user_allocate(Privileges[i].Name.MaximumLength);
+        if (Privileges[i].Name.Buffer == NULL)
+        {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            goto done;
+        }
+
+        memcpy(Privileges[i].Name.Buffer,
+               WellKnownPrivileges[EnumIndex].Name,
+               Privileges[i].Name.Length);
+    }
+
+done:
+    if (NT_SUCCESS(Status))
+    {
+        EnumerationBuffer->Entries = EnumCount;
+        EnumerationBuffer->Privileges = Privileges;
+        *EnumerationContext += EnumCount;
+    }
+    else
+    {
+        if (Privileges != NULL)
+        {
+            for (i = 0; i < EnumCount; i++)
+            {
+                if (Privileges[i].Name.Buffer != NULL)
+                    MIDL_user_free(Privileges[i].Name.Buffer);
+            }
+
+            MIDL_user_free(Privileges);
+        }
+    }
+
+    if ((Status == STATUS_SUCCESS) && (MoreEntries == TRUE))
+        Status = STATUS_MORE_ENTRIES;
+
+    return Status;
 }

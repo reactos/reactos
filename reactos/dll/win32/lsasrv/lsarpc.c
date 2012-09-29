@@ -109,8 +109,26 @@ NTSTATUS WINAPI LsarEnumeratePrivileges(
     PLSAPR_PRIVILEGE_ENUM_BUFFER EnumerationBuffer,
     DWORD PreferedMaximumLength)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PLSA_DB_OBJECT PolicyObject;
+    NTSTATUS Status;
+
+    TRACE("LsarEnumeratePrivileges(%p %p %p %lu)\n",
+          PolicyHandle, EnumerationContext, EnumerationBuffer,
+          PreferedMaximumLength);
+
+    Status = LsapValidateDbObject(PolicyHandle,
+                                  LsaDbPolicyObject,
+                                  POLICY_VIEW_LOCAL_INFORMATION,
+                                  &PolicyObject);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    if (EnumerationContext == NULL)
+        return STATUS_INVALID_PARAMETER;
+
+    return LsarpEnumeratePrivileges(EnumerationContext,
+                                    EnumerationBuffer,
+                                    PreferedMaximumLength);
 }
 
 
@@ -1658,7 +1676,7 @@ NTSTATUS WINAPI LsarEnumerateAccountsWithUserRight(
 
 
 /* Function 36 */
-NTSTATUS WINAPI LsarEnmuerateAccountRights(
+NTSTATUS WINAPI LsarEnumerateAccountRights(
     LSAPR_HANDLE PolicyHandle,
     PRPC_SID AccountSid,
     PLSAPR_USER_RIGHT_SET UserRights)
@@ -1666,7 +1684,8 @@ NTSTATUS WINAPI LsarEnmuerateAccountRights(
     PLSA_DB_OBJECT PolicyObject;
     NTSTATUS Status;
 
-    FIXME("(%p,%p,%p) stub\n", PolicyHandle, AccountSid, UserRights);
+    TRACE("LsarEnumerateAccountRights(%p %p %p)\n",
+          PolicyHandle, AccountSid, UserRights);
 
     Status = LsapValidateDbObject(PolicyHandle,
                                   LsaDbPolicyObject,

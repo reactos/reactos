@@ -182,6 +182,11 @@ NTSTATUS
 LsarpLookupPrivilegeValue(PUNICODE_STRING Name,
                           PLUID Value);
 
+NTSTATUS
+LsarpEnumeratePrivileges(DWORD *EnumerationContext,
+                         PLSAPR_PRIVILEGE_ENUM_BUFFER EnumerationBuffer,
+                         DWORD PreferedMaximumLength);
+
 /* sids.h */
 NTSTATUS
 LsapInitSids(VOID);
