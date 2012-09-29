@@ -29,88 +29,91 @@
 
 int main(int argc, char* argv[])
 {
-  int i;
-  PSYMBOLFILE_HEADER SymbolFileHeader;
-  PIMAGE_DOS_HEADER PEDosHeader;
-  PIMAGE_FILE_HEADER PEFileHeader;
-  PIMAGE_OPTIONAL_HEADER PEOptHeader;
-  PIMAGE_SECTION_HEADER PESectionHeaders;
-  char* path1;
-  char* path2;
-  FILE* out;
-  size_t FileSize;
-  void *FileData;
-  char elfhdr[] = { '\377', 'E', 'L', 'F' };
+    int i;
+    PSYMBOLFILE_HEADER SymbolFileHeader;
+    PIMAGE_DOS_HEADER PEDosHeader;
+    PIMAGE_FILE_HEADER PEFileHeader;
+    PIMAGE_OPTIONAL_HEADER PEOptHeader;
+    PIMAGE_SECTION_HEADER PESectionHeaders;
+    char* path1;
+    char* path2;
+    FILE* out;
+    size_t FileSize;
+    void *FileData;
+    char elfhdr[] = { '\377', 'E', 'L', 'F' };
 
-  if (3 != argc)
+    if (3 != argc)
     {
-      fprintf(stderr, "Usage: rsym <exefile> <symfile>\n");
-      exit(1);
+        fprintf(stderr, "Usage: rsym <exefile> <symfile>\n");
+        exit(1);
     }
 
-  path1 = convert_path(argv[1]);
-  path2 = convert_path(argv[2]);
+    path1 = convert_path(argv[1]);
+    path2 = convert_path(argv[2]);
 
-  FileData = load_file ( path1, &FileSize );
-  if ( !FileData )
-  {
-    fprintf ( stderr, "An error occured loading '%s'\n", path1 );
-    exit(1);
-  }
-
-  /* Check if MZ header exists  */
-  PEDosHeader = (PIMAGE_DOS_HEADER) FileData;
-  if (PEDosHeader->e_magic != IMAGE_DOS_MAGIC || PEDosHeader->e_lfanew == 0L)
+    FileData = load_file(path1, &FileSize );
+    if ( !FileData )
     {
-      /* Ignore elf */
-      if (!memcmp(PEDosHeader, elfhdr, sizeof(elfhdr)))
-	exit(0);
-      perror("Input file is not a PE image.\n");
-      free(FileData);
-      exit(1);
+        fprintf ( stderr, "An error occured loading '%s'\n", path1 );
+        exit(1);
     }
 
-  /* Locate PE file header  */
-  /* sizeof(ULONG) = sizeof(MAGIC) */
-  PEFileHeader = (PIMAGE_FILE_HEADER)((char *) FileData + PEDosHeader->e_lfanew + sizeof(ULONG));
-
-  /* Locate optional header */
-  assert(sizeof(ULONG) == 4);
-  PEOptHeader = (PIMAGE_OPTIONAL_HEADER)(PEFileHeader + 1);
-
-  /* Locate PE section headers  */
-  PESectionHeaders = (PIMAGE_SECTION_HEADER)((char *) PEOptHeader + PEFileHeader->SizeOfOptionalHeader);
-
-  for (i = 0; i < PEFileHeader->NumberOfSections; i++) {
-	  if (PESectionHeaders[i].Name[0] == '/') {
-		  PESectionHeaders[i].Characteristics |= IMAGE_SCN_CNT_INITIALIZED_DATA;
-		  PESectionHeaders[i].Characteristics &= ~(IMAGE_SCN_MEM_PURGEABLE | IMAGE_SCN_MEM_DISCARDABLE);
-	  }
-  }
-
-  PESectionHeaders[PEFileHeader->NumberOfSections-1].SizeOfRawData =
-	  FileSize - PESectionHeaders[PEFileHeader->NumberOfSections-1].PointerToRawData;
-  if (PESectionHeaders[PEFileHeader->NumberOfSections-1].SizeOfRawData >
-	  PESectionHeaders[PEFileHeader->NumberOfSections-1].Misc.VirtualSize) {
-	  PESectionHeaders[PEFileHeader->NumberOfSections-1].Misc.VirtualSize =
-		  ROUND_UP(PESectionHeaders[PEFileHeader->NumberOfSections-1].SizeOfRawData, 
-				   PEOptHeader->SectionAlignment);
-	  PEOptHeader->SizeOfImage = PESectionHeaders[PEFileHeader->NumberOfSections-1].VirtualAddress + PESectionHeaders[PEFileHeader->NumberOfSections-1].Misc.VirtualSize;
-  }
-
-  out = fopen(path2, "wb");
-  if (out == NULL)
+    /* Check if MZ header exists  */
+    PEDosHeader = (PIMAGE_DOS_HEADER)FileData;
+    if (PEDosHeader->e_magic != IMAGE_DOS_MAGIC || PEDosHeader->e_lfanew == 0L)
     {
-      perror("Cannot open output file");
-      free(FileData);
-      exit(1);
+        /* Ignore elf */
+        if (!memcmp(PEDosHeader, elfhdr, sizeof(elfhdr)))
+            exit(0);
+        perror("Input file is not a PE image.\n");
+        free(FileData);
+        exit(1);
     }
 
-  fwrite(FileData, 1, FileSize, out);
-  fclose(out);
-  free(FileData);
+    /* Locate PE file header  */
+    /* sizeof(ULONG) = sizeof(MAGIC) */
+    PEFileHeader = (PIMAGE_FILE_HEADER)((char *) FileData + PEDosHeader->e_lfanew + sizeof(ULONG));
 
-  return 0;
+    /* Locate optional header */
+    assert(sizeof(ULONG) == 4);
+    PEOptHeader = (PIMAGE_OPTIONAL_HEADER)(PEFileHeader + 1);
+
+    /* Locate PE section headers  */
+    PESectionHeaders = (PIMAGE_SECTION_HEADER)((char *) PEOptHeader + PEFileHeader->SizeOfOptionalHeader);
+
+    for (i = 0; i < PEFileHeader->NumberOfSections; i++)
+    {
+        if (PESectionHeaders[i].Name[0] == '/')
+        {
+            PESectionHeaders[i].Characteristics |= IMAGE_SCN_CNT_INITIALIZED_DATA;
+            PESectionHeaders[i].Characteristics &= ~(IMAGE_SCN_MEM_PURGEABLE | IMAGE_SCN_MEM_DISCARDABLE);
+        }
+    }
+
+    PESectionHeaders[PEFileHeader->NumberOfSections-1].SizeOfRawData =
+        FileSize - PESectionHeaders[PEFileHeader->NumberOfSections-1].PointerToRawData;
+    if (PESectionHeaders[PEFileHeader->NumberOfSections-1].SizeOfRawData >
+            PESectionHeaders[PEFileHeader->NumberOfSections-1].Misc.VirtualSize)
+    {
+        PESectionHeaders[PEFileHeader->NumberOfSections-1].Misc.VirtualSize =
+            ROUND_UP(PESectionHeaders[PEFileHeader->NumberOfSections-1].SizeOfRawData,
+                     PEOptHeader->SectionAlignment);
+        PEOptHeader->SizeOfImage = PESectionHeaders[PEFileHeader->NumberOfSections-1].VirtualAddress + PESectionHeaders[PEFileHeader->NumberOfSections-1].Misc.VirtualSize;
+    }
+
+    out = fopen(path2, "wb");
+    if (out == NULL)
+    {
+        perror("Cannot open output file");
+        free(FileData);
+        exit(1);
+    }
+
+    fwrite(FileData, 1, FileSize, out);
+    fclose(out);
+    free(FileData);
+
+    return 0;
 }
 
 /* EOF */
