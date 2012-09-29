@@ -371,7 +371,7 @@ typedef struct _CRYPT_PROVIDER_DATA {
 #define CPD_UISTATE_MODE_ALLOW  0x00000002
 #define CPD_UISTATE_MODE_MASK   0x00000003
 
-typedef BOOL (CALLBACK *PFN_PROVUI_CALL)(HWND hWndSecurityDialog,
+typedef BOOL (*PFN_PROVUI_CALL)(HWND hWndSecurityDialog,
  struct _CRYPT_PROVIDER_DATA *pProvData);
 
 typedef struct _CRYPT_PROVUI_FUNCS {
