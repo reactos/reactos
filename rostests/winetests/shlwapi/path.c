@@ -17,7 +17,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <assert.h>
 #include <stdarg.h>
 #include <stdio.h>
 
@@ -37,7 +36,7 @@ static BOOL    (WINAPI *pPathAppendA)(LPSTR, LPCSTR);
 
 /* ################ */
 
-struct {
+static const struct {
     const char *url;
     const char *path;
     DWORD ret;
@@ -106,7 +105,7 @@ static struct {
     {NULL, FALSE}
 };
 
-struct {
+static const struct {
     const char *path;
     const char *result;
 } TEST_PATH_UNQUOTE_SPACES[] = {
@@ -1361,6 +1360,12 @@ static void test_PathGetDriveNumber(void)
 START_TEST(path)
 {
     HMODULE hShlwapi = GetModuleHandleA("shlwapi.dll");
+
+    /* SHCreateStreamOnFileEx was introduced in shlwapi v6.0 */
+    if(!GetProcAddress(hShlwapi, "SHCreateStreamOnFileEx")){
+        win_skip("Too old shlwapi version\n");
+        return;
+    }
 
     pPathCreateFromUrlA = (void*)GetProcAddress(hShlwapi, "PathCreateFromUrlA");
     pPathCreateFromUrlW = (void*)GetProcAddress(hShlwapi, "PathCreateFromUrlW");

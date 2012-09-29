@@ -281,12 +281,15 @@ static void test_SHCreateStreamOnFileA(DWORD mode, DWORD stgm)
     ok(stream != NULL, "SHCreateStreamOnFileA: expected a valid IStream object, got NULL\n");
 
     if (stream) {
+        BOOL delret;
         test_IStream_invalid_operations(stream, mode);
 
         refcount = IStream_Release(stream);
         ok(refcount == 0, "SHCreateStreamOnFileA: expected 0, got %d\n", refcount);
 
-        ok(DeleteFileA(test_file), "SHCreateStreamOnFileA: could not delete file '%s', got error %d\n", test_file, GetLastError());
+        delret = DeleteFileA(test_file);
+        ok(delret, "SHCreateStreamOnFileA: could not delete file '%s', got error %d\n",
+           test_file, GetLastError());
     }
 }
 
@@ -388,14 +391,15 @@ static void test_SHCreateStreamOnFileW(DWORD mode, DWORD stgm)
     ok(stream != NULL, "SHCreateStreamOnFileW: expected a valid IStream object, got NULL\n");
 
     if (stream) {
+        BOOL delret;
         test_IStream_invalid_operations(stream, mode);
 
         refcount = IStream_Release(stream);
         ok(refcount == 0, "SHCreateStreamOnFileW: expected 0, got %d\n", refcount);
 
-        ok(DeleteFileA(test_fileA),
-            "SHCreateStreamOnFileW: could not delete the test file, got error %d\n",
-            GetLastError());
+        delret = DeleteFileA(test_fileA);
+        ok(delret, "SHCreateStreamOnFileW: could not delete the test file, got error %d\n",
+           GetLastError());
     }
 }
 
@@ -409,6 +413,7 @@ static void test_SHCreateStreamOnFileEx(DWORD mode, DWORD stgm)
     WCHAR test_file[MAX_PATH];
     CHAR  test_fileA[MAX_PATH];
     static const CHAR testEx_txt[] = "\\testEx.txt";
+    BOOL delret;
 
     trace("SHCreateStreamOnFileEx: testing mode %d, STGM flags %08x\n", mode, stgm);
 
@@ -489,9 +494,9 @@ static void test_SHCreateStreamOnFileEx(DWORD mode, DWORD stgm)
         refcount = IStream_Release(stream);
         ok(refcount == 0, "SHCreateStreamOnFileEx: expected 0, got %d\n", refcount);
 
-        ok(DeleteFileA(test_fileA),
-            "SHCreateStreamOnFileEx: could not delete the test file, got error %d\n",
-            GetLastError());
+        delret = DeleteFileA(test_fileA);
+        ok(delret, "SHCreateStreamOnFileEx: could not delete the test file, got error %d\n",
+           GetLastError());
     }
 
     stream = NULL;
@@ -510,9 +515,9 @@ static void test_SHCreateStreamOnFileEx(DWORD mode, DWORD stgm)
         refcount = IStream_Release(stream);
         ok(refcount == 0, "SHCreateStreamOnFileEx: expected 0, got %d\n", refcount);
 
-        ok(DeleteFileA(test_fileA),
-            "SHCreateStreamOnFileEx: could not delete the test file, got error %d\n",
-            GetLastError());
+        delret = DeleteFileA(test_fileA);
+        ok(delret, "SHCreateStreamOnFileEx: could not delete the test file, got error %d\n",
+           GetLastError());
     }
 
     stream = NULL;
@@ -577,9 +582,9 @@ static void test_SHCreateStreamOnFileEx(DWORD mode, DWORD stgm)
         ok(refcount == 0, "SHCreateStreamOnFileEx: expected 0, got %d\n", refcount);
     }
 
-    ok(DeleteFileA(test_fileA),
-        "SHCreateStreamOnFileEx: could not delete the test file, got error %d\n",
-        GetLastError());
+    delret = DeleteFileA(test_fileA);
+    ok(delret, "SHCreateStreamOnFileEx: could not delete the test file, got error %d\n",
+       GetLastError());
 }
 
 

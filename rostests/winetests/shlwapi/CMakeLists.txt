@@ -1,7 +1,5 @@
 
-add_definitions(
-    -D__ROS_LONG64__
-    -D_DLL -D__USE_CRTIMP)
+add_definitions(-D__ROS_LONG64__)
 
 remove_definitions(-DWINVER=0x502 -D_WIN32_IE=0x600 -D_WIN32_WINNT=0x502)
 
@@ -15,9 +13,9 @@ list(APPEND SOURCE
     path.c
     shreg.c
     string.c
+    thread.c
     url.c
-    testlist.c
-    thread.c)
+    testlist.c)
 
 add_executable(shlwapi_winetest ${SOURCE})
 target_link_libraries(shlwapi_winetest wine uuid)

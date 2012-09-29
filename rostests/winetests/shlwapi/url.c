@@ -56,6 +56,8 @@ static HRESULT (WINAPI *pHashData)(LPBYTE, DWORD, LPBYTE, DWORD);
 static const char* TEST_URL_1 = "http://www.winehq.org/tests?date=10/10/1923";
 static const char* TEST_URL_2 = "http://localhost:8080/tests%2e.html?date=Mon%2010/10/1923";
 static const char* TEST_URL_3 = "http://foo:bar@localhost:21/internal.php?query=x&return=y";
+static const char* TEST_URL_4 = "http://foo:bar@google.*.com:21/internal.php?query=x&return=y";
+
 static const WCHAR winehqW[] = {'h','t','t','p',':','/','/','w','w','w','.','w','i','n','e','h','q','.','o','r','g','/',0};
 static const  CHAR winehqA[] = {'h','t','t','p',':','/','/','w','w','w','.','w','i','n','e','h','q','.','o','r','g','/',0};
 
@@ -83,9 +85,18 @@ static const TEST_URL_APPLY TEST_APPLY[] = {
     {"winehq.org", URL_APPLY_GUESSSCHEME | URL_APPLY_DEFAULT, S_OK, 17, "http://winehq.org"},
     {"winehq.org", URL_APPLY_GUESSSCHEME, S_FALSE, TEST_APPLY_MAX_LENGTH, untouchedA},
     {"winehq.org", URL_APPLY_DEFAULT, S_OK, 17, "http://winehq.org"},
+    {"http://www.winehq.org", URL_APPLY_GUESSSCHEME , S_FALSE, TEST_APPLY_MAX_LENGTH, untouchedA},
+    {"http://www.winehq.org", URL_APPLY_GUESSSCHEME | URL_APPLY_FORCEAPPLY, S_FALSE, TEST_APPLY_MAX_LENGTH, untouchedA},
+    {"http://www.winehq.org", URL_APPLY_GUESSSCHEME | URL_APPLY_FORCEAPPLY | URL_APPLY_DEFAULT, S_OK, 28, "http://http://www.winehq.org"},
+    {"http://www.winehq.org", URL_APPLY_GUESSSCHEME | URL_APPLY_DEFAULT, S_FALSE, TEST_APPLY_MAX_LENGTH, untouchedA},
     {"", URL_APPLY_GUESSSCHEME | URL_APPLY_DEFAULT, S_OK, 7, "http://"},
     {"", URL_APPLY_GUESSSCHEME, S_FALSE, TEST_APPLY_MAX_LENGTH, untouchedA},
-    {"", URL_APPLY_DEFAULT, S_OK, 7, "http://"}
+    {"", URL_APPLY_DEFAULT, S_OK, 7, "http://"},
+    {"u:\\windows", URL_APPLY_GUESSFILE | URL_APPLY_DEFAULT, S_OK, 18, "file:///u:/windows"},
+    {"u:\\windows", URL_APPLY_GUESSFILE, S_OK, 18, "file:///u:/windows"},
+    {"u:\\windows", URL_APPLY_DEFAULT, S_OK, 17, "http://u:\\windows"},
+    {"file:///c:/windows", URL_APPLY_GUESSFILE , S_FALSE, TEST_APPLY_MAX_LENGTH, untouchedA},
+    {"aa:\\windows", URL_APPLY_GUESSFILE , S_FALSE, TEST_APPLY_MAX_LENGTH, untouchedA},
 };
 
 /* ################ */
@@ -100,6 +111,8 @@ typedef struct _TEST_URL_CANONICALIZE {
 
 static const TEST_URL_CANONICALIZE TEST_CANONICALIZE[] = {
     {"http://www.winehq.org/tests/../tests/../..", 0, S_OK, "http://www.winehq.org/", TRUE},
+    {"http://www.winehq.org/..", 0, S_OK, "http://www.winehq.org/..", FALSE},
+    {"http://www.winehq.org/tests/tests2/../../tests", 0, S_OK, "http://www.winehq.org/tests", FALSE},
     {"http://www.winehq.org/tests/../tests", 0, S_OK, "http://www.winehq.org/tests", FALSE},
     {"http://www.winehq.org/tests\n", URL_WININET_COMPATIBILITY|URL_ESCAPE_SPACES_ONLY|URL_ESCAPE_UNSAFE, S_OK, "http://www.winehq.org/tests", FALSE},
     {"http://www.winehq.org/tests\r", URL_WININET_COMPATIBILITY|URL_ESCAPE_SPACES_ONLY|URL_ESCAPE_UNSAFE, S_OK, "http://www.winehq.org/tests", FALSE},
@@ -112,6 +125,7 @@ static const TEST_URL_CANONICALIZE TEST_CANONICALIZE[] = {
     {"http://www.winehq.org/tests/../", 0, S_OK, "http://www.winehq.org/", FALSE},
     {"http://www.winehq.org/tests/..?query=x&return=y", 0, S_OK, "http://www.winehq.org/?query=x&return=y", FALSE},
     {"http://www.winehq.org/tests/../?query=x&return=y", 0, S_OK, "http://www.winehq.org/?query=x&return=y", FALSE},
+    {"\tht\ttp\t://www\t.w\tineh\t\tq.or\tg\t/\ttests/..\t?\tquer\ty=x\t\t&re\tturn=y\t\t", 0, S_OK, "http://www.winehq.org/?query=x&return=y", FALSE},
     {"http://www.winehq.org/tests/..#example", 0, S_OK, "http://www.winehq.org/#example", FALSE},
     {"http://www.winehq.org/tests/../#example", 0, S_OK, "http://www.winehq.org/#example", FALSE},
     {"http://www.winehq.org/tests\\../#example", 0, S_OK, "http://www.winehq.org/#example", FALSE},
@@ -120,6 +134,9 @@ static const TEST_URL_CANONICALIZE TEST_CANONICALIZE[] = {
     {"http://www.winehq.org/tests/../#example", URL_DONT_SIMPLIFY, S_OK, "http://www.winehq.org/tests/../#example", FALSE},
     {"http://www.winehq.org/tests/foo bar", URL_ESCAPE_SPACES_ONLY| URL_DONT_ESCAPE_EXTRA_INFO , S_OK, "http://www.winehq.org/tests/foo%20bar", FALSE},
     {"http://www.winehq.org/tests/foo%20bar", URL_UNESCAPE , S_OK, "http://www.winehq.org/tests/foo bar", FALSE},
+    {"http://www.winehq.org", 0, S_OK, "http://www.winehq.org/", FALSE},
+    {"http:///www.winehq.org", 0, S_OK, "http:///www.winehq.org", FALSE},
+    {"http:////www.winehq.org", 0, S_OK, "http:////www.winehq.org", FALSE},
     {"file:///c:/tests/foo%20bar", URL_UNESCAPE , S_OK, "file:///c:/tests/foo bar", FALSE},
     {"file:///c:/tests\\foo%20bar", URL_UNESCAPE , S_OK, "file:///c:/tests/foo bar", FALSE},
     {"file:///c:/tests/foo%20bar", 0, S_OK, "file:///c:/tests/foo%20bar", FALSE},
@@ -134,6 +151,24 @@ static const TEST_URL_CANONICALIZE TEST_CANONICALIZE[] = {
     {"file:///c://tests/foo%20bar", URL_FILE_USE_PATHURL, S_OK, "file://c:\\\\tests\\foo bar", FALSE},
     {"file:///c:\\tests\\foo bar", 0, S_OK, "file:///c:/tests/foo bar", FALSE},
     {"file:///c:\\tests\\foo bar", URL_DONT_SIMPLIFY, S_OK, "file:///c:/tests/foo bar", FALSE},
+    {"file:///c:\\tests\\foobar", 0, S_OK, "file:///c:/tests/foobar", FALSE},
+    {"file:///c:\\tests\\foobar", URL_WININET_COMPATIBILITY, S_OK, "file://c:\\tests\\foobar", FALSE},
+    {"file://home/user/file", 0, S_OK, "file://home/user/file", FALSE},
+    {"file:///home/user/file", 0, S_OK, "file:///home/user/file", FALSE},
+    {"file:////home/user/file", 0, S_OK, "file://home/user/file", FALSE},
+    {"file://home/user/file", URL_WININET_COMPATIBILITY, S_OK, "file://\\\\home\\user\\file", FALSE},
+    {"file:///home/user/file", URL_WININET_COMPATIBILITY, S_OK, "file://\\home\\user\\file", FALSE},
+    {"file:////home/user/file", URL_WININET_COMPATIBILITY, S_OK, "file://\\\\home\\user\\file", FALSE},
+    {"file://///home/user/file", URL_WININET_COMPATIBILITY, S_OK, "file://\\\\home\\user\\file", FALSE},
+    {"file://C:/user/file", 0, S_OK, "file:///C:/user/file", FALSE},
+    {"file://C:/user/file/../asdf", 0, S_OK, "file:///C:/user/asdf", FALSE},
+    {"file:///C:/user/file", 0, S_OK, "file:///C:/user/file", FALSE},
+    {"file:////C:/user/file", 0, S_OK, "file:///C:/user/file", FALSE},
+    {"file://C:/user/file", URL_WININET_COMPATIBILITY, S_OK, "file://C:\\user\\file", FALSE},
+    {"file:///C:/user/file", URL_WININET_COMPATIBILITY, S_OK, "file://C:\\user\\file", FALSE},
+    {"file:////C:/user/file", URL_WININET_COMPATIBILITY, S_OK, "file://C:\\user\\file", FALSE},
+    {"http:///www.winehq.org", 0, S_OK, "http:///www.winehq.org", FALSE},
+    {"http:///www.winehq.org", URL_WININET_COMPATIBILITY, S_OK, "http:///www.winehq.org", FALSE},
     {"http://www.winehq.org/site/about", URL_FILE_USE_PATHURL, S_OK, "http://www.winehq.org/site/about", FALSE},
     {"file_://www.winehq.org/site/about", URL_FILE_USE_PATHURL, S_OK, "file_://www.winehq.org/site/about", FALSE},
     {"c:\\dir\\file", 0, S_OK, "file:///c:/dir/file", FALSE},
@@ -141,6 +176,7 @@ static const TEST_URL_CANONICALIZE TEST_CANONICALIZE[] = {
     {"c:dir\\file", 0, S_OK, "file:///c:dir/file", FALSE},
     {"c:\\tests\\foo bar", URL_FILE_USE_PATHURL, S_OK, "file://c:\\tests\\foo bar", FALSE},
     {"c:\\tests\\foo bar", 0, S_OK, "file:///c:/tests/foo%20bar", FALSE},
+    {"c\t:\t\\te\tsts\\fo\to \tbar\t", 0, S_OK, "file:///c:/tests/foo%20bar", FALSE},
     {"res://file", 0, S_OK, "res://file/", FALSE},
     {"res://file", URL_FILE_USE_PATHURL, S_OK, "res://file/", FALSE},
     {"res:///c:/tests/foo%20bar", URL_UNESCAPE , S_OK, "res:///c:/tests/foo bar", FALSE},
@@ -158,11 +194,19 @@ static const TEST_URL_CANONICALIZE TEST_CANONICALIZE[] = {
     {"res://c:\\tests/res\\foo%20bar/strange\\sth", URL_FILE_USE_PATHURL, S_OK, "res://c:\\tests/res\\foo%20bar/strange\\sth", FALSE},
     {"res://c:\\tests/res\\foo%20bar/strange\\sth", URL_UNESCAPE, S_OK, "res://c:\\tests/res\\foo bar/strange\\sth", FALSE},
     {"A", 0, S_OK, "A", FALSE},
+    {"../A", 0, S_OK, "../A", FALSE},
+    {"A/../B", 0, S_OK, "B", TRUE},
     {"/uri-res/N2R?urn:sha1:B3K", URL_DONT_ESCAPE_EXTRA_INFO | URL_WININET_COMPATIBILITY /*0x82000000*/, S_OK, "/uri-res/N2R?urn:sha1:B3K", FALSE} /*LimeWire online installer calls this*/,
     {"http:www.winehq.org/dir/../index.html", 0, S_OK, "http:www.winehq.org/index.html"},
     {"http://localhost/test.html", URL_FILE_USE_PATHURL, S_OK, "http://localhost/test.html"},
     {"http://localhost/te%20st.html", URL_FILE_USE_PATHURL, S_OK, "http://localhost/te%20st.html"},
-    {"http://www.winehq.org/%E6%A1%9C.html", URL_FILE_USE_PATHURL, S_OK, "http://www.winehq.org/%E6%A1%9C.html"}
+    {"http://www.winehq.org/%E6%A1%9C.html", URL_FILE_USE_PATHURL, S_OK, "http://www.winehq.org/%E6%A1%9C.html"},
+    {"mk:@MSITStore:C:\\Program Files/AutoCAD 2008\\Help/acad_acg.chm::/WSfacf1429558a55de1a7524c1004e616f8b-322b.htm", 0, S_OK, "mk:@MSITStore:C:\\Program Files/AutoCAD 2008\\Help/acad_acg.chm::/WSfacf1429558a55de1a7524c1004e616f8b-322b.htm"},
+    {"ftp:@MSITStore:C:\\Program Files/AutoCAD 2008\\Help/acad_acg.chm::/WSfacf1429558a55de1a7524c1004e616f8b-322b.htm", 0, S_OK, "ftp:@MSITStore:C:\\Program Files/AutoCAD 2008\\Help/acad_acg.chm::/WSfacf1429558a55de1a7524c1004e616f8b-322b.htm"},
+    {"file:@MSITStore:C:\\Program Files/AutoCAD 2008\\Help/acad_acg.chm::/WSfacf1429558a55de1a7524c1004e616f8b-322b.htm", 0, S_OK, "file:@MSITStore:C:/Program Files/AutoCAD 2008/Help/acad_acg.chm::/WSfacf1429558a55de1a7524c1004e616f8b-322b.htm"},
+    {"http:@MSITStore:C:\\Program Files/AutoCAD 2008\\Help/acad_acg.chm::/WSfacf1429558a55de1a7524c1004e616f8b-322b.htm", 0, S_OK, "http:@MSITStore:C:/Program Files/AutoCAD 2008/Help/acad_acg.chm::/WSfacf1429558a55de1a7524c1004e616f8b-322b.htm"},
+    {"http:@MSITStore:C:\\Program Files/AutoCAD 2008\\Help/acad_acg.chm::/WSfacf1429558a55de1a7524c1004e616f8b-322b.htm", URL_FILE_USE_PATHURL, S_OK, "http:@MSITStore:C:/Program Files/AutoCAD 2008/Help/acad_acg.chm::/WSfacf1429558a55de1a7524c1004e616f8b-322b.htm"},
+    {"mk:@MSITStore:C:\\Program Files/AutoCAD 2008\\Help/acad_acg.chm::/WSfacf1429558a55de1a7524c1004e616f8b-322b.htm", URL_FILE_USE_PATHURL, S_OK, "mk:@MSITStore:C:\\Program Files/AutoCAD 2008\\Help/acad_acg.chm::/WSfacf1429558a55de1a7524c1004e616f8b-322b.htm"},
 };
 
 /* ################ */
@@ -280,6 +324,9 @@ static const TEST_URL_COMBINE TEST_COMBINE[] = {
     {"http://www.winehq.org/tests/#example", "tests9", 0, S_OK, "http://www.winehq.org/tests/tests9"},
     {"http://www.winehq.org/tests/../tests/", "/tests10/..", URL_DONT_SIMPLIFY, S_OK, "http://www.winehq.org/tests10/.."},
     {"http://www.winehq.org/tests/../", "tests11", URL_DONT_SIMPLIFY, S_OK, "http://www.winehq.org/tests/../tests11"},
+    {"http://www.winehq.org/test12", "#", 0, S_OK, "http://www.winehq.org/test12#"},
+    {"http://www.winehq.org/test13#aaa", "#bbb", 0, S_OK, "http://www.winehq.org/test13#bbb"},
+    {"http://www.winehq.org/test14#aaa/bbb#ccc", "#", 0, S_OK, "http://www.winehq.org/test14#"},
     {"file:///C:\\dir\\file.txt", "test.txt", 0, S_OK, "file:///C:/dir/test.txt"},
     {"file:///C:\\dir\\file.txt#hash\\hash", "test.txt", 0, S_OK, "file:///C:/dir/file.txt#hash/test.txt"},
     {"file:///C:\\dir\\file.html#hash\\hash", "test.html", 0, S_OK, "file:///C:/dir/test.html"},
@@ -296,7 +343,7 @@ static const TEST_URL_COMBINE TEST_COMBINE[] = {
     {"foo:today", "foo:calendar", 0, S_OK, "foo:calendar"},
     {"foo:today", "bar:calendar", 0, S_OK, "bar:calendar"},
     {"foo:/today", "foo:calendar", 0, S_OK, "foo:/calendar"},
-    {"foo:/today/", "foo:calendar", 0, S_OK, "foo:/today/calendar"},
+    {"Foo:/today/", "fOo:calendar", 0, S_OK, "foo:/today/calendar"},
     {"mk:@MSITStore:dir/test.chm::dir/index.html", "image.jpg", 0, S_OK, "mk:@MSITStore:dir/test.chm::dir/image.jpg"},
     {"mk:@MSITStore:dir/test.chm::dir/dir2/index.html", "../image.jpg", 0, S_OK, "mk:@MSITStore:dir/test.chm::dir/image.jpg"},
     /* UrlCombine case 2 tests.  Schemes do not match */
@@ -318,7 +365,7 @@ static const TEST_URL_COMBINE TEST_COMBINE[] = {
     {"outbind://xxxxxxxxx/","http:wine16/dir",0, S_OK,"http:wine16/dir"},
     {"http://xxxxxxxxx","outbind:wine17/dir",URL_PLUGGABLE_PROTOCOL, S_OK,"outbind:wine17/dir"},
     {"xxx://xxxxxxxxx","ftp:wine18/dir",URL_PLUGGABLE_PROTOCOL, S_OK,"ftp:wine18/dir"},
-    {"ftp://xxxxxxxxx/","xxx:wine19/dir",URL_PLUGGABLE_PROTOCOL, S_OK,"xxx:wine19/dir"},
+    {"ftp://xxxxxxxxx/","xXx:wine19/dir",URL_PLUGGABLE_PROTOCOL, S_OK,"xxx:wine19/dir"},
     {"outbind://xxxxxxxxx/","http:wine20/dir",URL_PLUGGABLE_PROTOCOL, S_OK,"http:wine20/dir"},
     {"file:///c:/dir/file.txt","index.html?test=c:/abc",URL_ESCAPE_SPACES_ONLY|URL_DONT_ESCAPE_EXTRA_INFO,S_OK,"file:///c:/dir/index.html?test=c:/abc"}
 };
@@ -337,6 +384,7 @@ static const struct {
     {"c:foo\\bar", "file:///c:foo/bar", S_OK},
     {"c:\\foo/b a%r", "file:///c:/foo/b%20a%25r", S_OK},
     {"c:\\foo\\foo bar", "file:///c:/foo/foo%20bar", S_OK},
+    {"file:///c:/foo/bar", "file:///c:/foo/bar", S_FALSE},
 #if 0
     /* The following test fails on native shlwapi as distributed with Win95/98.
      * Wine matches the behaviour of later versions.
@@ -587,6 +635,9 @@ static void test_UrlGetPart(void)
   const char* http_url = "http://user:pass 123@www.wine hq.org";
   const char* res_url = "res://some.dll/find.dlg";
   const char* about_url = "about:blank";
+  const char* excid_url = "x-excid://36C00000/guid:{048B4E89-2E92-496F-A837-33BA02FF6D32}/Message.htm";
+  const char* foo_url = "foo://bar-url/test";
+  const char* short_url = "ascheme:";
 
   CHAR szPart[INTERNET_MAX_URL_LENGTH];
   DWORD dwSize;
@@ -623,6 +674,20 @@ static void test_UrlGetPart(void)
   ok(szPart[0]==0, "UrlGetPartA(\"hi\") return \"%s\" instead of \"\"\n", szPart);
   ok(dwSize == 0, "dwSize = %d\n", dwSize);
 
+  if(pUrlGetPartW)
+  {
+      const WCHAR hiW[] = {'h','i',0};
+      WCHAR bufW[5];
+
+      /* UrlGetPartW returns S_OK instead of S_FALSE */
+      dwSize = sizeof szPart;
+      bufW[0]='x'; bufW[1]=0;
+      res = pUrlGetPartW(hiW, bufW, &dwSize, URL_PART_SCHEME, 0);
+      todo_wine ok(res==S_OK, "UrlGetPartW(\"hi\") returned %08X\n", res);
+      ok(bufW[0] == 0, "UrlGetPartW(\"hi\") return \"%c\"\n", bufW[0]);
+      ok(dwSize == 0, "dwSize = %d\n", dwSize);
+  }
+
   dwSize = sizeof szPart;
   szPart[0]='x'; szPart[1]=0;
   res = pUrlGetPartA("hi", szPart, &dwSize, URL_PART_QUERY, 0);
@@ -637,12 +702,18 @@ static void test_UrlGetPart(void)
   test_url_part(TEST_URL_3, URL_PART_SCHEME, 0, "http");
   test_url_part(TEST_URL_3, URL_PART_QUERY, 0, "?query=x&return=y");
 
+  test_url_part(TEST_URL_4, URL_PART_HOSTNAME, 0, "google.*.com");
+
   test_url_part(file_url, URL_PART_HOSTNAME, 0, "h o s t");
 
   test_url_part(http_url, URL_PART_HOSTNAME, 0, "www.wine hq.org");
   test_url_part(http_url, URL_PART_PASSWORD, 0, "pass 123");
 
   test_url_part(about_url, URL_PART_SCHEME, 0, "about");
+
+  test_url_part(excid_url, URL_PART_SCHEME, 0, "x-excid");
+  test_url_part(foo_url, URL_PART_SCHEME, 0, "foo");
+  test_url_part(short_url, URL_PART_SCHEME, 0, "ascheme");
 
   dwSize = sizeof(szPart);
   res = pUrlGetPartA(about_url, szPart, &dwSize, URL_PART_HOSTNAME, 0);
@@ -674,6 +745,34 @@ static void test_UrlGetPart(void)
   szPart[0] = 'x'; szPart[1] = '\0';
   res = pUrlGetPartA("index.htm", szPart, &dwSize, URL_PART_HOSTNAME, 0);
   ok(res==E_FAIL, "returned %08x\n", res);
+
+  dwSize = sizeof(szPart);
+  szPart[0] = 'x'; szPart[1] = '\0';
+  res = pUrlGetPartA(excid_url, szPart, &dwSize, URL_PART_HOSTNAME, 0);
+  ok(res==E_FAIL, "returned %08x\n", res);
+  ok(szPart[0] == 'x', "szPart[0] = %c\n", szPart[0]);
+  ok(dwSize == sizeof(szPart), "dwSize = %d\n", dwSize);
+
+  dwSize = sizeof(szPart);
+  szPart[0] = 'x'; szPart[1] = '\0';
+  res = pUrlGetPartA(excid_url, szPart, &dwSize, URL_PART_QUERY, 0);
+  ok(res==S_FALSE, "returned %08x\n", res);
+  ok(szPart[0] == 0, "szPart[0] = %c\n", szPart[0]);
+  ok(dwSize == 0, "dwSize = %d\n", dwSize);
+
+  dwSize = sizeof(szPart);
+  szPart[0] = 'x'; szPart[1] = '\0';
+  res = pUrlGetPartA(foo_url, szPart, &dwSize, URL_PART_HOSTNAME, 0);
+  ok(res==E_FAIL, "returned %08x\n", res);
+  ok(szPart[0] == 'x', "szPart[0] = %c\n", szPart[0]);
+  ok(dwSize == sizeof(szPart), "dwSize = %d\n", dwSize);
+
+  dwSize = sizeof(szPart);
+  szPart[0] = 'x'; szPart[1] = '\0';
+  res = pUrlGetPartA(foo_url, szPart, &dwSize, URL_PART_QUERY, 0);
+  ok(res==S_FALSE, "returned %08x\n", res);
+  ok(szPart[0] == 0, "szPart[0] = %c\n", szPart[0]);
+  ok(dwSize == 0, "dwSize = %d\n", dwSize);
 }
 
 /* ########################### */
@@ -750,10 +849,13 @@ static void test_url_canonicalize(int index, const char *szUrl, DWORD dwFlags, H
 
 static void test_UrlEscape(void)
 {
+    static const WCHAR out[] = { 'f','o','o','%','2','0','b','a','r',0 };
+
     DWORD size = 0;
     HRESULT ret;
     unsigned int i;
     char empty_string[] = "";
+    WCHAR overwrite[] = { 'f','o','o',' ','b','a','r',0,0,0 };
 
     if (!pUrlEscapeA) {
         win_skip("UrlEscapeA noz found\n");
@@ -780,9 +882,28 @@ static void test_UrlEscape(void)
     ok(size == 1, "got %d, expected %d\n", size, 1);
 
     size = 1;
+    empty_string[0] = 127;
     ret = pUrlEscapeA("/woningplan/woonkamer basis.swf", empty_string, &size, URL_ESCAPE_SPACES_ONLY);
     ok(ret == E_POINTER, "got %x, expected %x\n", ret, E_POINTER);
     ok(size == 34, "got %d, expected %d\n", size, 34);
+    ok(empty_string[0] == 127, "String has changed, empty_string[0] = %d\n", empty_string[0]);
+
+    if(pUrlEscapeW) {
+        WCHAR wc;
+
+        size = sizeof(overwrite)/sizeof(WCHAR);
+        ret = pUrlEscapeW(overwrite, overwrite, &size, URL_ESCAPE_SPACES_ONLY);
+        ok(ret == S_OK, "got %x, expected S_OK\n", ret);
+        ok(size == 9, "got %d, expected 9\n", size);
+        ok(!lstrcmpW(overwrite, out), "got %s, expected %s\n", wine_dbgstr_w(overwrite), wine_dbgstr_w(out));
+
+        size = 1;
+        wc = 127;
+        ret = pUrlEscapeW(overwrite, &wc, &size, URL_ESCAPE_SPACES_ONLY);
+        ok(ret == E_POINTER, "got %x, expected %x\n", ret, E_POINTER);
+        ok(size == 10, "got %d, expected 10\n", size);
+        ok(wc == 127, "String has changed, wc = %d\n", wc);
+    }
 
     for(i=0; i<sizeof(TEST_ESCAPE)/sizeof(TEST_ESCAPE[0]); i++) {
         test_url_escape(TEST_ESCAPE[i].url, TEST_ESCAPE[i].flags,
@@ -1385,8 +1506,17 @@ static void test_HashData(void)
 
 START_TEST(url)
 {
+  char *pFunc;
 
   hShlwapi = GetModuleHandleA("shlwapi.dll");
+
+  /* SHCreateStreamOnFileEx was introduced in shlwapi v6.0 */
+  pFunc = (void*)GetProcAddress(hShlwapi, "SHCreateStreamOnFileEx");
+  if(!pFunc){
+      win_skip("Too old shlwapi version\n");
+      return;
+  }
+
   pUrlUnescapeA = (void *) GetProcAddress(hShlwapi, "UrlUnescapeA");
   pUrlUnescapeW = (void *) GetProcAddress(hShlwapi, "UrlUnescapeW");
   pUrlIsA = (void *) GetProcAddress(hShlwapi, "UrlIsA");

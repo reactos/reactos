@@ -21,6 +21,8 @@
 #include <stdarg.h>
 
 #define COBJMACROS
+#define CONST_VTABLE
+
 #include "windef.h"
 #include "winbase.h"
 #include "winerror.h"
@@ -37,13 +39,18 @@ static DWORD AddRef_called;
 
 typedef struct
 {
-  const IUnknownVtbl* lpVtbl;
+  IUnknown IUnknown_iface;
   LONG  *ref;
 } threadref;
 
+static inline threadref *impl_from_IUnknown(IUnknown *iface)
+{
+  return CONTAINING_RECORD(iface, threadref, IUnknown_iface);
+}
+
 static HRESULT WINAPI threadref_QueryInterface(IUnknown *iface, REFIID riid, LPVOID *ppvObj)
 {
-    threadref * This = (threadref *)iface;
+    threadref * This = impl_from_IUnknown(iface);
 
     trace("unexpected QueryInterface(%p, %p, %p) called\n", This, riid, ppvObj);
     *ppvObj = NULL;
@@ -52,7 +59,7 @@ static HRESULT WINAPI threadref_QueryInterface(IUnknown *iface, REFIID riid, LPV
 
 static ULONG WINAPI threadref_AddRef(IUnknown *iface)
 {
-    threadref * This = (threadref *)iface;
+    threadref * This = impl_from_IUnknown(iface);
 
     AddRef_called++;
     return InterlockedIncrement(This->ref);
@@ -60,7 +67,7 @@ static ULONG WINAPI threadref_AddRef(IUnknown *iface)
 
 static ULONG WINAPI threadref_Release(IUnknown *iface)
 {
-    threadref * This = (threadref *)iface;
+    threadref * This = impl_from_IUnknown(iface);
 
     trace("unexpected Release(%p) called\n", This);
     return InterlockedDecrement(This->ref);
@@ -76,7 +83,7 @@ static const IUnknownVtbl threadref_vt =
 
 static void init_threadref(threadref* iface, LONG *refcount)
 {
-  iface->lpVtbl = &threadref_vt;
+  iface->IUnknown_iface.lpVtbl = &threadref_vt;
   iface->ref = refcount;
 }
 
@@ -184,7 +191,7 @@ static void test_SHGetThreadRef(void)
 
     if (0) {
         /* this crash on Windows */
-        hr = pSHGetThreadRef(NULL);
+        pSHGetThreadRef(NULL);
     }
 }
 
@@ -209,7 +216,7 @@ static void test_SHSetThreadRef(void)
     init_threadref(&ref, &refcount);
     AddRef_called = 0;
     refcount = 1;
-    hr = pSHSetThreadRef( (IUnknown *)&ref);
+    hr = pSHSetThreadRef(&ref.IUnknown_iface);
     ok( (hr == S_OK) && (refcount == 1) && (!AddRef_called),
         "got 0x%x with %d, %d (expected S_OK with 1, 0)\n",
         hr, refcount, AddRef_called);
@@ -219,7 +226,7 @@ static void test_SHSetThreadRef(void)
     refcount = 1;
     punk = NULL;
     hr = pSHGetThreadRef(&punk);
-    ok( (hr == S_OK) && (punk == (IUnknown *)&ref) && (refcount == 2) && (AddRef_called == 1),
+    ok( (hr == S_OK) && (punk == &ref.IUnknown_iface) && (refcount == 2) && (AddRef_called == 1),
         "got 0x%x and %p with %d, %d (expected S_OK and %p with 2, 1)\n",
         hr, punk, refcount, AddRef_called, &ref);
 
