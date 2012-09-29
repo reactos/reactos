@@ -393,6 +393,7 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
         {
             /* this is a new request */
             Irp->IoStatus.Information = 0;
+            KeResetEvent(&Ccb->ReadEvent);
             Context->WaitEvent = &Ccb->ReadEvent;
             InsertTailList(&Ccb->ReadRequestListHead, &Context->ListEntry);
             if (Ccb->ReadRequestListHead.Flink != &Context->ListEntry)
@@ -454,6 +455,7 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
                     Status = STATUS_PIPE_BROKEN;
                     break;
                 }
+                KeResetEvent(&Ccb->ReadEvent);
                 ExReleaseFastMutex(&Ccb->DataListLock);
 
                 if (IoIsOperationSynchronous(Irp))
@@ -537,7 +539,6 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
                     {
                         KeSetEvent(&Ccb->OtherSide->WriteEvent, IO_NO_INCREMENT, FALSE);
                     }
-                    KeResetEvent(&Ccb->ReadEvent);
                     break;
                 }
             }
@@ -638,8 +639,6 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
                     }
                     else
                     {
-                        KeResetEvent(&Ccb->ReadEvent);
-
                         if ((Ccb->PipeState == FILE_PIPE_CONNECTED_STATE) && (Ccb->WriteQuotaAvailable > 0) && (Ccb->OtherSide))
                         {
                             KeSetEvent(&Ccb->OtherSide->WriteEvent, IO_NO_INCREMENT, FALSE);
@@ -831,6 +830,7 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
                 goto done;
             }
             KeSetEvent(&ReaderCcb->ReadEvent, IO_NO_INCREMENT, FALSE);
+            KeResetEvent(&Ccb->WriteEvent);
             ExReleaseFastMutex(&ReaderCcb->DataListLock);
 
             DPRINT("Write Waiting for buffer space (%wZ)\n", &Fcb->PipeName);
@@ -908,7 +908,6 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
             if (Length == 0)
             {
                 KeSetEvent(&ReaderCcb->ReadEvent, IO_NO_INCREMENT, FALSE);
-                KeResetEvent(&Ccb->WriteEvent);
                 break;
             }
         }
@@ -961,7 +960,6 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
             if (Information > 0)
             {
                 KeSetEvent(&ReaderCcb->ReadEvent, IO_NO_INCREMENT, FALSE);
-                KeResetEvent(&Ccb->WriteEvent);
                 break;
             }
         }
