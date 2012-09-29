@@ -27,14 +27,22 @@
 
 #include "rsym.h"
 
+int
+IsDebugSection(PIMAGE_SECTION_HEADER Section)
+{
+    /* This is a hack, but works for us */
+    return (Section->Name[0] == '/');
+}
+
 int main(int argc, char* argv[])
 {
-    int i;
+    unsigned int i;
     PSYMBOLFILE_HEADER SymbolFileHeader;
-    PIMAGE_DOS_HEADER PEDosHeader;
-    PIMAGE_FILE_HEADER PEFileHeader;
-    PIMAGE_OPTIONAL_HEADER PEOptHeader;
-    PIMAGE_SECTION_HEADER PESectionHeaders;
+    PIMAGE_NT_HEADERS NtHeaders;
+    PIMAGE_DOS_HEADER DosHeader;
+    PIMAGE_FILE_HEADER FileHeader;
+    PIMAGE_OPTIONAL_HEADER OptionalHeader;
+    PIMAGE_SECTION_HEADER SectionHeaders, LastSection;
     char* path1;
     char* path2;
     FILE* out;
@@ -42,7 +50,7 @@ int main(int argc, char* argv[])
     void *FileData;
     char elfhdr[] = { '\377', 'E', 'L', 'F' };
 
-    if (3 != argc)
+    if (argc != 3)
     {
         fprintf(stderr, "Usage: rsym <exefile> <symfile>\n");
         exit(1);
@@ -51,56 +59,66 @@ int main(int argc, char* argv[])
     path1 = convert_path(argv[1]);
     path2 = convert_path(argv[2]);
 
-    FileData = load_file(path1, &FileSize );
+    /* Load the input file into memory */
+    FileData = load_file( path1, &FileSize);
     if ( !FileData )
     {
-        fprintf ( stderr, "An error occured loading '%s'\n", path1 );
+        fprintf(stderr, "An error occured loading '%s'\n", path1);
         exit(1);
     }
 
     /* Check if MZ header exists  */
-    PEDosHeader = (PIMAGE_DOS_HEADER)FileData;
-    if (PEDosHeader->e_magic != IMAGE_DOS_MAGIC || PEDosHeader->e_lfanew == 0L)
+    DosHeader = (PIMAGE_DOS_HEADER) FileData;
+    if (DosHeader->e_magic != IMAGE_DOS_MAGIC || DosHeader->e_lfanew == 0L)
     {
         /* Ignore elf */
-        if (!memcmp(PEDosHeader, elfhdr, sizeof(elfhdr)))
+        if (!memcmp(DosHeader, elfhdr, sizeof(elfhdr)))
             exit(0);
         perror("Input file is not a PE image.\n");
         free(FileData);
         exit(1);
     }
 
-    /* Locate PE file header  */
-    /* sizeof(ULONG) = sizeof(MAGIC) */
-    PEFileHeader = (PIMAGE_FILE_HEADER)((char *) FileData + PEDosHeader->e_lfanew + sizeof(ULONG));
-
-    /* Locate optional header */
-    assert(sizeof(ULONG) == 4);
-    PEOptHeader = (PIMAGE_OPTIONAL_HEADER)(PEFileHeader + 1);
+    /* Locate the headers */
+    NtHeaders = (PIMAGE_NT_HEADERS)((char*)FileData + DosHeader->e_lfanew);
+    FileHeader = &NtHeaders->FileHeader;
+    OptionalHeader = &NtHeaders->OptionalHeader;
 
     /* Locate PE section headers  */
-    PESectionHeaders = (PIMAGE_SECTION_HEADER)((char *) PEOptHeader + PEFileHeader->SizeOfOptionalHeader);
+    SectionHeaders = (PIMAGE_SECTION_HEADER)((char*)OptionalHeader +
+                                             FileHeader->SizeOfOptionalHeader);
 
-    for (i = 0; i < PEFileHeader->NumberOfSections; i++)
+    /* Loop all sections */
+    for (i = 0; i < FileHeader->NumberOfSections; i++)
     {
-        if (PESectionHeaders[i].Name[0] == '/')
+        /* Check if this is a debug section */
+        if (IsDebugSection(&SectionHeaders[i]))
         {
-            PESectionHeaders[i].Characteristics |= IMAGE_SCN_CNT_INITIALIZED_DATA;
-            PESectionHeaders[i].Characteristics &= ~(IMAGE_SCN_MEM_PURGEABLE | IMAGE_SCN_MEM_DISCARDABLE);
+            /* Make sure we have the correct characteristics */
+            SectionHeaders[i].Characteristics |= IMAGE_SCN_CNT_INITIALIZED_DATA;
+            SectionHeaders[i].Characteristics &= ~(IMAGE_SCN_MEM_PURGEABLE | IMAGE_SCN_MEM_DISCARDABLE);
         }
     }
 
-    PESectionHeaders[PEFileHeader->NumberOfSections-1].SizeOfRawData =
-        FileSize - PESectionHeaders[PEFileHeader->NumberOfSections-1].PointerToRawData;
-    if (PESectionHeaders[PEFileHeader->NumberOfSections-1].SizeOfRawData >
-            PESectionHeaders[PEFileHeader->NumberOfSections-1].Misc.VirtualSize)
+    /* Get a pointer to the last section header */
+    LastSection = &SectionHeaders[FileHeader->NumberOfSections - 1];
+
+    /* Set the size of the last section to cover the rest of the PE */
+    LastSection->SizeOfRawData = FileSize - LastSection->PointerToRawData;
+
+    /* Check if the virtual section size is smaller than the raw data */
+    if (LastSection->Misc.VirtualSize < LastSection->SizeOfRawData)
     {
-        PESectionHeaders[PEFileHeader->NumberOfSections-1].Misc.VirtualSize =
-            ROUND_UP(PESectionHeaders[PEFileHeader->NumberOfSections-1].SizeOfRawData,
-                     PEOptHeader->SectionAlignment);
-        PEOptHeader->SizeOfImage = PESectionHeaders[PEFileHeader->NumberOfSections-1].VirtualAddress + PESectionHeaders[PEFileHeader->NumberOfSections-1].Misc.VirtualSize;
+        /* Make sure the virtual size of the section cover the raw data */
+        LastSection->Misc.VirtualSize = ROUND_UP(LastSection->SizeOfRawData,
+                                                 OptionalHeader->SectionAlignment);
+
+        /* Fix up image size */
+        OptionalHeader->SizeOfImage = LastSection->VirtualAddress +
+                                      LastSection->Misc.VirtualSize;
     }
 
+    /* Open the output file */
     out = fopen(path2, "wb");
     if (out == NULL)
     {
@@ -109,6 +127,7 @@ int main(int argc, char* argv[])
         exit(1);
     }
 
+    /* Write the output file */
     fwrite(FileData, 1, FileSize, out);
     fclose(out);
     free(FileData);
