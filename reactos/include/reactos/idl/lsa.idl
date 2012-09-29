@@ -902,16 +902,14 @@ cpp_quote("#if _WIN32_WINNT >= 0x0500")
         [in] LSAPR_HANDLE PolicyHandle,
         [in] PRPC_UNICODE_STRING TrustedDomainName,
         [in] POLICY_INFORMATION_CLASS InformationClass,
-        [out] unsigned long *PolicyInformation);
-        /* FIXME: should be [out, switch_is(InformationClass)] PLSAPR_POLICY_INFORMATION *PolicyInformation); */
+        [out, switch_is(InformationClass)] PLSAPR_TRUSTED_DOMAIN_INFO *PolicyInformation);
 
     /* Function 49 */
     NTSTATUS __stdcall LsarSetTrustedDomainInfoByName(
         [in] LSAPR_HANDLE PolicyHandle,
         [in] PRPC_UNICODE_STRING TrustedDomainName,
         [in] POLICY_INFORMATION_CLASS InformationClass,
-        [in] unsigned long PolicyInformation);
-        /* FIXME: should be [in, switch_is(InformationClass)] PLSAPR_POLICY_INFORMATION PolicyInformation); */
+        [in, switch_is(InformationClass)] PLSAPR_TRUSTED_DOMAIN_INFO PolicyInformation);
 
     /* Function 50 */
     NTSTATUS __stdcall LsarEnumerateTrustedDomainsEx(

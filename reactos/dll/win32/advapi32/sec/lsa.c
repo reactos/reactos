@@ -1566,7 +1566,7 @@ LsaQueryTrustedDomainInfoByName(IN LSA_HANDLE PolicyHandle,
         Status = LsarQueryTrustedDomainInfoByName((LSAPR_HANDLE)PolicyHandle,
                                                   (PRPC_UNICODE_STRING)TrustedDomainName,
                                                   InformationClass,
-                                                  (unsigned long *)Buffer); // Shuld be: (PLSAPR_POLICY_INFORMATION *)Buffer
+                                                  (PLSAPR_TRUSTED_DOMAIN_INFO *)Buffer);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {

@@ -1812,7 +1812,7 @@ NTSTATUS WINAPI LsarQueryTrustedDomainInfoByName(
     LSAPR_HANDLE PolicyHandle,
     PRPC_UNICODE_STRING TrustedDomainName,
     POLICY_INFORMATION_CLASS InformationClass,
-    unsigned long *PolicyInformation)
+    PLSAPR_TRUSTED_DOMAIN_INFO *PolicyInformation)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
@@ -1824,7 +1824,7 @@ NTSTATUS WINAPI LsarSetTrustedDomainInfoByName(
     LSAPR_HANDLE PolicyHandle,
     PRPC_UNICODE_STRING TrustedDomainName,
     POLICY_INFORMATION_CLASS InformationClass,
-    unsigned long PolicyInformation)
+    PLSAPR_TRUSTED_DOMAIN_INFO PolicyInformation)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
