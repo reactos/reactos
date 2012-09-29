@@ -444,8 +444,8 @@ ClasspCleanupDisableMcn(
 
 #if 1
 /*
- *  BUGBUG REMOVE this old function implementation as soon as the 
- *                  boottime pagefile problems with the new one (below) 
+ *  BUGBUG REMOVE this old function implementation as soon as the
+ *                  boottime pagefile problems with the new one (below)
  *                  are resolved.
  */
 NTSTATUS
@@ -460,10 +460,10 @@ ClasspEjectionControl(
     PFUNCTIONAL_DEVICE_EXTENSION FdoExtension = Fdo->DeviceExtension;
     PCOMMON_DEVICE_EXTENSION commonExtension =
         (PCOMMON_DEVICE_EXTENSION) FdoExtension;
-    
+
     PFILE_OBJECT_EXTENSION fsContext = NULL;
     NTSTATUS status;
-    PSCSI_REQUEST_BLOCK srb = NULL;
+    volatile PSCSI_REQUEST_BLOCK srb = NULL;
     BOOLEAN countChanged = FALSE;
 
     PAGED_CODE();
@@ -508,7 +508,7 @@ ClasspEjectionControl(
         //
 
         if(LockType == SecureMediaLock) {
-             
+
             PIO_STACK_LOCATION irpStack = IoGetCurrentIrpStackLocation(Irp);
             PFILE_OBJECT fileObject = irpStack->FileObject;
 
@@ -563,7 +563,7 @@ ClasspEjectionControl(
                     break;
                 }
             }
-        
+
         } else {
 
             //
@@ -621,25 +621,25 @@ ClasspEjectionControl(
 
             srb->CdbLength = 6;
             cdb->MEDIA_REMOVAL.OperationCode = SCSIOP_MEDIUM_REMOVAL;
-    
+
             //
             // TRUE - prevent media removal.
             // FALSE - allow media removal.
             //
-    
+
             cdb->MEDIA_REMOVAL.Prevent = Lock;
-    
+
             //
             // Set timeout value.
             //
-    
+
             srb->TimeOutValue = FdoExtension->TimeOutValue;
-    
+
             //
             // The actual lock operation on the device isn't so important
             // as the internal lock counts.  Ignore failures.
             //
-    
+
             status = ClassSendSrbSynchronous(FdoExtension->DeviceObject,
                                              srb,
                                              NULL,
@@ -653,7 +653,7 @@ ClasspEjectionControl(
             DebugPrint((2,
                         "ClasspEjectionControl: FAILED status %x -- "
                         "reverting lock counts\n", status));
-            
+
             if (countChanged) {
 
                 //
@@ -662,7 +662,7 @@ ClasspEjectionControl(
                 //
 
                 if(Lock) {
-                    
+
                     switch(LockType) {
 
                         case SimpleMediaLock: {
@@ -755,9 +755,9 @@ ClasspEjectionControl(
     BOOLEAN fileHandleOk = TRUE;
     BOOLEAN countChanged = FALSE;
     NTSTATUS status;
-    
+
     PAGED_CODE();
-    
+
     status = KeWaitForSingleObject(
                 &fdoExt->EjectSynchronizationEvent,
                 UserRequest,
@@ -803,7 +803,7 @@ ClasspEjectionControl(
                     fdoExt->LockCount++;
                     countChanged = TRUE;
                     break;
-                case SecureMediaLock: 
+                case SecureMediaLock:
                     fsContext->LockCount++;
                     fdoExt->ProtectedLockCount++;
                     countChanged = TRUE;
@@ -813,14 +813,14 @@ ClasspEjectionControl(
                     countChanged = TRUE;
                     break;
             }
-        } 
+        }
         else {
             /*
              *  This is an unlock command.  If it's a secured one then make sure
              *  the caller has a lock outstanding or return an error.
              */
             switch (LockType){
-                case SimpleMediaLock: 
+                case SimpleMediaLock:
                     if (fdoExt->LockCount > 0){
                         fdoExt->LockCount--;
                         countChanged = TRUE;
@@ -859,7 +859,7 @@ ClasspEjectionControl(
                (fdoExt->ProtectedLockCount ||
                 fdoExt->InternalLockCount ||
                 fdoExt->LockCount)){
-                
+
                 /*
                  *  The lock count is still positive, so don't unlock yet.
                  */
@@ -873,14 +873,14 @@ ClasspEjectionControl(
             }
             else {
                 TRANSFER_PACKET *pkt;
-                
+
                 pkt = DequeueFreeTransferPacket(Fdo, TRUE);
                 if (pkt){
                     KEVENT event;
-                    
+
                     /*
                      *  Store the number of packets servicing the irp (one)
-                     *  inside the original IRP.  It will be used to counted down 
+                     *  inside the original IRP.  It will be used to counted down
                      *  to zero when the packet completes.
                      *  Initialize the original IRP's status to success.
                      *  If the packet fails, we will set it to the error status.
@@ -893,10 +893,10 @@ ClasspEjectionControl(
                      *  and wait for the packet to complete.  The result
                      *  status will be written to the original irp.
                      */
-                    KeInitializeEvent(&event, SynchronizationEvent, FALSE);                
+                    KeInitializeEvent(&event, SynchronizationEvent, FALSE);
                     SetupEjectionTransferPacket(pkt, Lock, &event, Irp);
                     SubmitTransferPacket(pkt);
-                    KeWaitForSingleObject(&event, Executive, KernelMode, FALSE, NULL);        
+                    KeWaitForSingleObject(&event, Executive, KernelMode, FALSE, NULL);
                     status = Irp->IoStatus.Status;
                 }
                 else {
@@ -961,7 +961,7 @@ ClasspEjectionControl(
     }
 
 
-    
+
     KeSetEvent(&fdoExt->EjectSynchronizationEvent, IO_NO_INCREMENT, FALSE);
 
     return status;

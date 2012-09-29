@@ -1330,29 +1330,21 @@ NtLockFile(IN HANDLE FileHandle,
     StackPtr->MinorFunction = IRP_MN_LOCK;
     StackPtr->FileObject = FileObject;
 
-    /* Enter SEH */
-    _SEH2_TRY
+    /* Allocate local buffer */
+    LocalLength = ExAllocatePoolWithTag(NonPagedPool,
+                                        sizeof(LARGE_INTEGER),
+                                        TAG_LOCK);
+    if (!LocalLength)
     {
-        /* Allocate local buffer */
-        LocalLength = ExAllocatePoolWithTag(NonPagedPool,
-                                            sizeof(LARGE_INTEGER),
-                                            TAG_LOCK);
-
-        /* Set the length */
-        *LocalLength = CapturedLength;
-        Irp->Tail.Overlay.AuxiliaryBuffer = (PVOID)LocalLength;
-        StackPtr->Parameters.LockControl.Length = LocalLength;
-    }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        /* Allocating failed, clean up and return the exception code */
+        /* Allocating failed, clean up and return failure */
         IopCleanupAfterException(FileObject, Irp, Event, NULL);
-        if (LocalLength) ExFreePoolWithTag(LocalLength, TAG_LOCK);
-
-        /* Return the exception code */
-        _SEH2_YIELD(return _SEH2_GetExceptionCode());
+        return STATUS_INSUFFICIENT_RESOURCES;
     }
-    _SEH2_END;
+
+    /* Set the length */
+    *LocalLength = CapturedLength;
+    Irp->Tail.Overlay.AuxiliaryBuffer = (PVOID)LocalLength;
+    StackPtr->Parameters.LockControl.Length = LocalLength;
 
     /* Set Parameters */
     StackPtr->Parameters.LockControl.ByteOffset = CapturedByteOffset;
@@ -1397,7 +1389,7 @@ NtQueryDirectoryFile(IN HANDLE FileHandle,
     NTSTATUS Status;
     BOOLEAN LockedForSynch = FALSE;
     PKEVENT Event = NULL;
-    PVOID AuxBuffer = NULL;
+    volatile PVOID AuxBuffer = NULL;
     PMDL Mdl;
     UNICODE_STRING CapturedFileName;
     PUNICODE_STRING SearchPattern;
@@ -1526,25 +1518,19 @@ NtQueryDirectoryFile(IN HANDLE FileHandle,
     /* Check if this is buffered I/O */
     if (DeviceObject->Flags & DO_BUFFERED_IO)
     {
-        /* Enter SEH */
-        _SEH2_TRY
-        {
-            /* Allocate a buffer */
-            Irp->AssociatedIrp.SystemBuffer =
-                ExAllocatePoolWithTag(NonPagedPool,
-                                      Length,
-                                      TAG_SYSB);
-        }
-        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        /* Allocate a buffer */
+        Irp->AssociatedIrp.SystemBuffer = ExAllocatePoolWithTag(NonPagedPool,
+                                                                Length,
+                                                                TAG_SYSB);
+        if (!Irp->AssociatedIrp.SystemBuffer)
         {
             /* Allocating failed, clean up and return the exception code */
             IopCleanupAfterException(FileObject, Irp, Event, NULL);
             if (AuxBuffer) ExFreePoolWithTag(AuxBuffer, TAG_SYSB);
 
             /* Return the exception code */
-            _SEH2_YIELD(return _SEH2_GetExceptionCode());
+            return STATUS_INSUFFICIENT_RESOURCES;
         }
-        _SEH2_END;
 
         /* Set the buffer and flags */
         Irp->UserBuffer = FileInformation;

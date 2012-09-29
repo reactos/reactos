@@ -1700,8 +1700,8 @@ IoCreateFile(OUT PHANDLE FileHandle,
     KPROCESSOR_MODE AccessMode;
     HANDLE LocalHandle = 0;
     LARGE_INTEGER SafeAllocationSize;
-    PVOID SystemEaBuffer = NULL;
-    NTSTATUS Status;
+    volatile PVOID SystemEaBuffer = NULL;
+    NTSTATUS Status = STATUS_SUCCESS;
     OPEN_PACKET OpenPacket;
     ULONG EaErrorOffset;
 
@@ -1738,9 +1738,7 @@ IoCreateFile(OUT PHANDLE FileHandle,
 
             if ((EaBuffer) && (EaLength))
             {
-                ProbeForRead(EaBuffer,
-                             EaLength,
-                             sizeof(ULONG));
+                ProbeForRead(EaBuffer, EaLength, sizeof(ULONG));
 
                 /* marshal EaBuffer */
                 SystemEaBuffer = ExAllocatePoolWithTag(NonPagedPool,
@@ -1757,24 +1755,14 @@ IoCreateFile(OUT PHANDLE FileHandle,
                 Status = IoCheckEaBufferValidity(SystemEaBuffer,
                                                  EaLength,
                                                  &EaErrorOffset);
-                if (!NT_SUCCESS(Status))
-                {
-                    DPRINT1("FIXME: IoCheckEaBufferValidity() failed with "
-                        "Status: %lx\n",Status);
-
-                    /* Free EA Buffer and return the error */
-                    ExFreePoolWithTag(SystemEaBuffer, TAG_EA);
-                    _SEH2_YIELD(return Status);
-                }
+                IoStatusBlock->Status = Status;
+                IoStatusBlock->Information = EaErrorOffset;
             }
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            /* Free SystemEaBuffer if needed */
-            if (SystemEaBuffer) ExFreePoolWithTag(SystemEaBuffer, TAG_EA);
-
             /* Return the exception code */
-            _SEH2_YIELD(return _SEH2_GetExceptionCode());
+            Status = _SEH2_GetExceptionCode();
         }
         _SEH2_END;
     }
@@ -1816,12 +1804,19 @@ IoCreateFile(OUT PHANDLE FileHandle,
             Status = IoCheckEaBufferValidity(SystemEaBuffer,
                                              EaLength,
                                              &EaErrorOffset);
-            if (!NT_SUCCESS(Status))
-            {
-                DPRINT1("FIXME: IoCheckEaBufferValidity() failed with "
-                        "Status: %lx\n",Status);
-            }
+            IoStatusBlock->Status = Status;
+            IoStatusBlock->Information = EaErrorOffset;
         }
+    }
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("FIXME: IoCheckEaBufferValidity() failed with Status: %lx\n",
+                Status);
+
+        /* Free SystemEaBuffer if needed and return the error */
+        if (SystemEaBuffer) ExFreePoolWithTag(SystemEaBuffer, TAG_EA);
+        return Status;
     }
 
     /* Setup the Open Packet */

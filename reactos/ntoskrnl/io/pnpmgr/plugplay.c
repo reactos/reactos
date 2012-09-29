@@ -167,7 +167,7 @@ static NTSTATUS
 IopCaptureUnicodeString(PUNICODE_STRING DstName, PUNICODE_STRING SrcName)
 {
     NTSTATUS Status = STATUS_SUCCESS;
-    UNICODE_STRING Name;
+    volatile UNICODE_STRING Name;
 
     Name.Buffer = NULL;
     _SEH2_TRY
