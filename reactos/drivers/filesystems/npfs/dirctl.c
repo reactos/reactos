@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
- * FILE:       drivers/filesastems/npfs/dirctl.c
+ * FILE:       drivers/filesystems/npfs/dirctl.c
  * PURPOSE:    Named pipe filesystem
  * PROGRAMMER: Eric Kohl
  */
@@ -55,7 +55,8 @@ NpfsQueryDirectory(PNPFS_CCB Ccb,
     /* Determine Buffer for result */
     if (Irp->MdlAddress)
     {
-        Buffer = MmGetSystemAddressForMdl(Irp->MdlAddress);
+        Buffer = MmGetSystemAddressForMdlSafe(Irp->MdlAddress,
+                                              NormalPagePriority);
     }
     else
     {
@@ -297,6 +298,8 @@ NpfsDirectoryControl(PDEVICE_OBJECT DeviceObject,
     //PNPFS_FCB Fcb;
     NTSTATUS Status;
     ULONG Size = 0;
+
+    UNREFERENCED_PARAMETER(DeviceObject);
 
     DPRINT("NpfsDirectoryControl() called\n");
 

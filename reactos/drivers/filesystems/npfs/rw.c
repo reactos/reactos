@@ -1,7 +1,7 @@
 /*
 * COPYRIGHT:  See COPYING in the top level directory
 * PROJECT:    ReactOS kernel
-* FILE:       drivers/fs/np/rw.c
+* FILE:       drivers/filesystems/npfs/rw.c
 * PURPOSE:    Named pipe filesystem
 * PROGRAMMER: David Welch <welch@cwcom.net>
 *             Michael Martin
@@ -115,6 +115,7 @@ NpfsReadWriteCancelRoutine(IN PDEVICE_OBJECT DeviceObject,
     }
 }
 
+static KSTART_ROUTINE NpfsWaiterThread;
 static VOID NTAPI
 NpfsWaiterThread(PVOID InitContext)
 {
@@ -175,7 +176,7 @@ NpfsWaiterThread(PVOID InitContext)
         }
         else
         {
-            /* someone has add a new wait request or cancelled an old one */
+            /* someone has added a new wait request or cancelled an old one */
             Irp = NULL;
 
             /* Look for cancelled requests */
@@ -183,16 +184,16 @@ NpfsWaiterThread(PVOID InitContext)
             {
                 if (ThreadContext->WaitIrpArray[i] == NULL)
                 {
-                   ThreadContext->Count--;
-                   ThreadContext->Vcb->EmptyWaiterCount++;
-                   ThreadContext->WaitObjectArray[i] = ThreadContext->WaitObjectArray[ThreadContext->Count];
-                   ThreadContext->WaitIrpArray[i] = ThreadContext->WaitIrpArray[ThreadContext->Count];
+                    ThreadContext->Count--;
+                    ThreadContext->Vcb->EmptyWaiterCount++;
+                    ThreadContext->WaitObjectArray[i] = ThreadContext->WaitObjectArray[ThreadContext->Count];
+                    ThreadContext->WaitIrpArray[i] = ThreadContext->WaitIrpArray[ThreadContext->Count];
                 }
             }
         }
         if (ThreadContext->Count == 1 && ThreadContext->Vcb->EmptyWaiterCount >= MAXIMUM_WAIT_OBJECTS)
         {
-            /* it exist an other thread with empty wait slots, we can remove our thread from the list */
+            /* there is another thread with empty wait slots, we can remove our thread from the list */
             RemoveEntryList(&ThreadContext->ListEntry);
             ExFreePoolWithTag(ThreadContext, TAG_NPFS_THREAD_CONTEXT);
             KeUnlockMutex(&ThreadContext->Vcb->PipeListLock);
@@ -416,10 +417,11 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
 
     while (1)
     {
-        Buffer = MmGetSystemAddressForMdl(Irp->MdlAddress);
+        Buffer = MmGetSystemAddressForMdlSafe(Irp->MdlAddress,
+                                              NormalPagePriority);
         Information = Irp->IoStatus.Information;
         Length = IoGetCurrentIrpStackLocation(Irp)->Parameters.Read.Length;
-        ASSERT (Information <= Length);
+        ASSERT(Information <= Length);
         Buffer = (PVOID)((ULONG_PTR)Buffer + Information);
         Length -= Information;
         Status = STATUS_SUCCESS;
@@ -443,7 +445,8 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
                 {
                     break;
                 }
-                if (((Ccb->PipeState != FILE_PIPE_CONNECTED_STATE) || (!Ccb->OtherSide)) && (Ccb->ReadDataAvailable == 0))
+                ASSERT(Ccb->ReadDataAvailable == 0);
+                if ((Ccb->PipeState != FILE_PIPE_CONNECTED_STATE) || (!Ccb->OtherSide))
                 {
                     DPRINT("PipeState: %x\n", Ccb->PipeState);
                     Status = STATUS_PIPE_BROKEN;
@@ -556,7 +559,7 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
                 {
                     ULONG NextMessageLength = 0;
 
-                    /*First get the size of the message */
+                    /* First get the size of the message */
                     memcpy(&NextMessageLength, Ccb->ReadPtr, sizeof(NextMessageLength));
 
                     if ((NextMessageLength == 0) || (NextMessageLength > Ccb->ReadDataAvailable))
@@ -579,7 +582,7 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
                         /* Client only requested part of the message */
                         {
                             /* Calculate the remaining message new size */
-                            ULONG NewMessageSize = NextMessageLength-CopyLength;
+                            ULONG NewMessageSize = NextMessageLength - CopyLength;
 
                             /* Update ReadPtr to point to new Message size location */
                             Ccb->ReadPtr = (PVOID)((ULONG_PTR)Ccb->ReadPtr + CopyLength);
@@ -616,7 +619,7 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
 
                     Ccb->ReadDataAvailable -= CopyLength;
 
-                    if ((ULONG)Ccb->WriteQuotaAvailable > (ULONG)Ccb->MaxDataLength) ASSERT(FALSE);
+                    ASSERT(Ccb->WriteQuotaAvailable <= Ccb->MaxDataLength);
                 }
 
                 if (Information > 0)
@@ -740,6 +743,8 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
     ULONG CopyLength;
     ULONG TempLength;
 
+    UNREFERENCED_PARAMETER(DeviceObject);
+
     DPRINT("NpfsWrite()\n");
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
@@ -794,7 +799,7 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
     }
 
     Status = STATUS_SUCCESS;
-    Buffer = MmGetSystemAddressForMdlSafe (Irp->MdlAddress, NormalPagePriority);
+    Buffer = MmGetSystemAddressForMdlSafe(Irp->MdlAddress, NormalPagePriority);
 
     if (!Buffer)
     {
@@ -813,7 +818,7 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
     HexDump(Buffer, Length);
 #endif
 
-    while(1)
+    while (1)
     {
         if (ReaderCcb->WriteQuotaAvailable == 0)
         {

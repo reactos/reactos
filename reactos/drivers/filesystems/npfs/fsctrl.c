@@ -1,7 +1,7 @@
 /*
 * COPYRIGHT:  See COPYING in the top level directory
 * PROJECT:    ReactOS kernel
-* FILE:       drivers/fs/np/fsctrl.c
+* FILE:       drivers/filesystems/npfs/fsctrl.c
 * PURPOSE:    Named pipe filesystem
 * PROGRAMMER: David Welch <welch@cwcom.net>
 *             Eric Kohl
@@ -25,6 +25,8 @@ NpfsListeningCancelRoutine(IN PDEVICE_OBJECT DeviceObject,
                            IN PIRP Irp)
 {
     PNPFS_WAITER_ENTRY Waiter;
+
+    UNREFERENCED_PARAMETER(DeviceObject);
 
     Waiter = (PNPFS_WAITER_ENTRY)&Irp->Tail.Overlay.DriverContext;
 
@@ -795,6 +797,7 @@ NpfsFlushBuffers(PDEVICE_OBJECT DeviceObject,
                  PIRP Irp)
 {
     /* FIXME: Implement */
+    UNREFERENCED_PARAMETER(DeviceObject);
 
     Irp->IoStatus.Status = STATUS_SUCCESS;
     Irp->IoStatus.Information = 0;
