@@ -107,50 +107,56 @@ NtAddAtom(IN PWSTR AtomName,
         DPRINT1("Atom name too long\n");
         return STATUS_INVALID_PARAMETER;
     }
-    
-    /* Re-use the given name if kernel mode or no atom name */
-    CapturedName = AtomName;
 
-    /* Check if we're called from user-mode*/
-    if (PreviousMode != KernelMode)
+    /* Check if we're called from user-mode or kernel-mode */
+    if (PreviousMode == KernelMode)
     {
-        /* Enter SEH */
-        _SEH2_TRY
+        /* Re-use the given name if kernel mode */
+        CapturedName = AtomName;
+    }
+    else
+    {
+        /* Check if we have a name */
+        if (AtomName)
         {
-            /* Check if we have a name */
-            if (AtomName)
+            /* Allocate an aligned buffer + the null char */
+            CapturedSize = ((AtomNameLength + sizeof(WCHAR)) &
+                            ~(sizeof(WCHAR) -1));
+            CapturedName = ExAllocatePoolWithTag(PagedPool,
+                                                 CapturedSize,
+                                                 TAG_ATOM);
+
+            if (!CapturedName)
+            {
+                /* Fail the call */
+                return STATUS_INSUFFICIENT_RESOURCES;
+            }
+
+            /* Enter SEH */
+            _SEH2_TRY
             {
                 /* Probe the atom */
                 ProbeForRead(AtomName, AtomNameLength, sizeof(WCHAR));
 
-                /* Allocate an aligned buffer + the null char */
-                CapturedSize = ((AtomNameLength + sizeof(WCHAR)) &~
-                                (sizeof(WCHAR) -1));
-                CapturedName = ExAllocatePoolWithTag(PagedPool,
-                                                     CapturedSize,
-                                                     TAG_ATOM);
-                if (!CapturedName)
-                {
-                    /* Fail the call */
-                    Status = STATUS_INSUFFICIENT_RESOURCES;
-                }
-                else
-                {
-                    /* Copy the name and null-terminate it */
-                    RtlCopyMemory(CapturedName, AtomName, AtomNameLength);
-                    CapturedName[AtomNameLength / sizeof(WCHAR)] = UNICODE_NULL;
-                }
+                /* Copy the name and null-terminate it */
+                RtlCopyMemory(CapturedName, AtomName, AtomNameLength);
+                CapturedName[AtomNameLength / sizeof(WCHAR)] = UNICODE_NULL;
 
                 /* Probe the atom too */
                 if (Atom) ProbeForWriteUshort(Atom);
             }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                /* Return the exception code */
+                _SEH2_YIELD(return _SEH2_GetExceptionCode());
+            }
+            _SEH2_END;
         }
-        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        else
         {
-            /* Return the exception code */
-            _SEH2_YIELD(return _SEH2_GetExceptionCode());
+            /* No name */
+            CapturedName = NULL;
         }
-        _SEH2_END;
     }
 
     /* Call the runtime function */
@@ -172,7 +178,7 @@ NtAddAtom(IN PWSTR AtomName,
     }
 
     /* If we captured anything, free it */
-    if ((CapturedName) && (CapturedName != AtomName))
+    if ((CapturedName != NULL) && (CapturedName != AtomName))
         ExFreePoolWithTag(CapturedName, TAG_ATOM);
 
     /* Return to caller */
@@ -258,7 +264,7 @@ NtFindAtom(IN PWSTR AtomName,
         DPRINT1("Atom name too long\n");
         return STATUS_INVALID_PARAMETER;
     }
-    
+
     /* Re-use the given name if kernel mode or no atom name */
     CapturedName = AtomName;
 

@@ -349,8 +349,12 @@ NTSTATUS
 NTAPI
 NtQueryDefaultUILanguage(OUT LANGID* LanguageId)
 {
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
+    LANGID SafeLanguageId;
     PAGED_CODE();
+
+    /* Call the executive helper routine */
+    Status = ExpGetCurrentUserUILanguage(L"MultiUILanguageId", &SafeLanguageId);
 
     /* Enter SEH for probing */
     _SEH2_TRY
@@ -362,11 +366,14 @@ NtQueryDefaultUILanguage(OUT LANGID* LanguageId)
             ProbeForWriteLangid(LanguageId);
         }
 
-        /* Call the executive helper routine */
-        Status = ExpGetCurrentUserUILanguage(L"MultiUILanguageId", LanguageId);
         if (NT_SUCCESS(Status))
         {
             /* Success, return the language */
+            *LanguageId = SafeLanguageId;
+        }
+        else
+        {
+            /* Failed, use fallback value */
             *LanguageId = PsInstallUILanguageId;
         }
     }

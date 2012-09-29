@@ -211,27 +211,22 @@ NtQuerySystemEnvironmentValue(IN PUNICODE_STRING VariableName,
     ANSI_STRING AName;
     UNICODE_STRING WName;
     ARC_STATUS Result;
-    PCH Value;
+    PCH AnsiValueBuffer;
     ANSI_STRING AValue;
     UNICODE_STRING WValue;
     KPROCESSOR_MODE PreviousMode;
     NTSTATUS Status;
     PAGED_CODE();
 
+    /* Check if the call came from user mode */
     PreviousMode = ExGetPreviousMode();
-
     if (PreviousMode != KernelMode)
     {
         _SEH2_TRY
         {
-            ProbeForRead(VariableName,
-                         sizeof(UNICODE_STRING),
-                         sizeof(ULONG));
-
-            ProbeForWrite(ValueBuffer,
-                          ValueBufferLength,
-                          sizeof(WCHAR));
-
+            /* Probe the input and output buffers */
+            ProbeForRead(VariableName, sizeof(UNICODE_STRING), sizeof(ULONG));
+            ProbeForWrite(ValueBuffer, ValueBufferLength, sizeof(WCHAR));
             if (ReturnLength != NULL) ProbeForWriteUlong(ReturnLength);
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -240,102 +235,79 @@ NtQuerySystemEnvironmentValue(IN PUNICODE_STRING VariableName,
             _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
+
+    }
+
+    /* Allocate a buffer for the value */
+    AnsiValueBuffer = ExAllocatePoolWithTag(NonPagedPool, ValueBufferLength, 'pmeT');
+    if (AnsiValueBuffer == NULL)
+    {
+        return STATUS_INSUFFICIENT_RESOURCES;
     }
 
     /*
      * Copy the name to kernel space if necessary and convert it to ANSI.
      */
-    Status = ProbeAndCaptureUnicodeString(&WName,
-                                          PreviousMode,
-                                          VariableName);
-    if (NT_SUCCESS(Status))
+    Status = ProbeAndCaptureUnicodeString(&WName, PreviousMode, VariableName);
+    if (!NT_SUCCESS(Status))
     {
-        /*
-         * according to ntinternals the SeSystemEnvironmentName privilege is required!
-         */
-        if (!SeSinglePrivilegeCheck(SeSystemEnvironmentPrivilege,
-                                    PreviousMode))
-        {
-            ReleaseCapturedUnicodeString(&WName, PreviousMode);
-            DPRINT1("NtQuerySystemEnvironmentValue: Caller requires the SeSystemEnvironmentPrivilege privilege!\n");
-            return STATUS_PRIVILEGE_NOT_HELD;
-        }
+        return Status;
+    }
 
-        /*
-         * convert the value name to ansi
-         */
-        Status = RtlUnicodeStringToAnsiString(&AName, &WName, TRUE);
+    /*
+     * according to ntinternals the SeSystemEnvironmentName privilege is required!
+     */
+    if (!SeSinglePrivilegeCheck(SeSystemEnvironmentPrivilege, PreviousMode))
+    {
         ReleaseCapturedUnicodeString(&WName, PreviousMode);
+        DPRINT1("NtQuerySystemEnvironmentValue: Caller requires the SeSystemEnvironmentPrivilege privilege!\n");
+        return STATUS_PRIVILEGE_NOT_HELD;
+    }
 
-        if (!NT_SUCCESS(Status)) return Status;
+    /* Convert the value name to ansi and release the captured unicode string */
+    Status = RtlUnicodeStringToAnsiString(&AName, &WName, TRUE);
+    ReleaseCapturedUnicodeString(&WName, PreviousMode);
+    if (!NT_SUCCESS(Status)) return Status;
 
-        /*
-         * Create a temporary buffer for the value
-         */
-        Value = ExAllocatePool(NonPagedPool, ValueBufferLength);
-        if (Value == NULL)
-        {
-            RtlFreeAnsiString(&AName);
-            return STATUS_INSUFFICIENT_RESOURCES;
-        }
+    /* Get the environment variable */
+    Result = HalGetEnvironmentVariable(AName.Buffer,
+                                       (USHORT)ValueBufferLength,
+                                       AnsiValueBuffer);
 
-        /*
-         * Get the environment variable
-         */
-        Result = HalGetEnvironmentVariable(AName.Buffer,
-                                           (USHORT)ValueBufferLength,
-                                           Value);
-        if (!Result)
-        {
-            RtlFreeAnsiString(&AName);
-            ExFreePool(Value);
-            return STATUS_UNSUCCESSFUL;
-        }
-
-        /*
-         * Convert the result to UNICODE, protect with SEH in case the value buffer
-         * isn't NULL-terminated!
-         */
+    /* Check if we had success */
+    if (Result == ESUCCESS)
+    {
+        /* Copy the result back to the caller. */
         _SEH2_TRY
         {
-            RtlInitAnsiString(&AValue, Value);
-            Status = RtlAnsiStringToUnicodeString(&WValue, &AValue, TRUE);
+            /* Initialize ansi string from the result */
+            RtlInitAnsiString(&AValue, AnsiValueBuffer);
+
+            /* Initialize a unicode string from the callers buffer */
+            RtlInitEmptyUnicodeString(&WValue, ValueBuffer, ValueBufferLength);
+
+            /* Convert the result to unicode */
+            Status = RtlAnsiStringToUnicodeString(&WValue, &AValue, FALSE);
+
+            if (ReturnLength != NULL)
+            {
+                *ReturnLength = WValue.Length;
+            }
         }
         _SEH2_EXCEPT(ExSystemExceptionFilter())
         {
             Status = _SEH2_GetExceptionCode();
         }
         _SEH2_END;
-
-        if (NT_SUCCESS(Status))
-        {
-            /*
-             * Copy the result back to the caller.
-             */
-            _SEH2_TRY
-            {
-                RtlCopyMemory(ValueBuffer, WValue.Buffer, WValue.Length);
-                ValueBuffer[WValue.Length / sizeof(WCHAR)] = L'\0';
-                if (ReturnLength != NULL)
-                {
-                    *ReturnLength = WValue.Length + sizeof(WCHAR);
-                }
-
-                Status = STATUS_SUCCESS;
-            }
-            _SEH2_EXCEPT(ExSystemExceptionFilter())
-            {
-                Status = _SEH2_GetExceptionCode();
-            }
-            _SEH2_END;
-        }
-
-        /*
-         * Cleanup allocated resources.
-         */
-        RtlFreeAnsiString(&AName);
-        ExFreePool(Value);
     }
+    else
+    {
+        Status = STATUS_UNSUCCESSFUL;
+    }
+
+    /* Cleanup allocated resources. */
+    RtlFreeAnsiString(&AName);
+    ExFreePoolWithTag(AnsiValueBuffer, 'pmeT');
 
     return Status;
 }
@@ -466,7 +438,7 @@ ExQueryPoolUsage(OUT PULONG PagedPoolPages,
                  OUT PULONG NonPagedPoolAllocs,
                  OUT PULONG NonPagedPoolFrees,
                  OUT PULONG NonPagedPoolLookasideHits);
-    
+
 /* Class 0 - Basic Information */
 QSI_DEF(SystemBasicInformation)
 {
@@ -741,7 +713,7 @@ QSI_DEF(SystemProcessInformation)
         do
         {
             SpiCurrent = (PSYSTEM_PROCESS_INFORMATION) Current;
-            
+
             if ((Process->ProcessExiting) &&
                 (Process->Pcb.Header.SignalState) &&
                 !(Process->ActiveThreads) &&
@@ -1801,9 +1773,9 @@ SSI_DEF(SystemCreateSession)
     ULONG SessionId;
     KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
     NTSTATUS Status;
-    
+
     if (Size != sizeof(ULONG)) return STATUS_INFO_LENGTH_MISMATCH;
-    
+
     if (PreviousMode != KernelMode)
     {
         if (!SeSinglePrivilegeCheck(SeLoadDriverPrivilege, PreviousMode))
@@ -1811,7 +1783,7 @@ SSI_DEF(SystemCreateSession)
             return STATUS_PRIVILEGE_NOT_HELD;
         }
     }
-    
+
     Status = MmSessionCreate(&SessionId);
     if (NT_SUCCESS(Status)) *(PULONG)Buffer = SessionId;
 
@@ -1824,9 +1796,9 @@ SSI_DEF(SystemDeleteSession)
 {
     ULONG SessionId;
     KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
-    
+
     if (Size != sizeof(ULONG)) return STATUS_INFO_LENGTH_MISMATCH;
-    
+
     if (PreviousMode != KernelMode)
     {
         if (!SeSinglePrivilegeCheck(SeLoadDriverPrivilege, PreviousMode))
@@ -1834,9 +1806,9 @@ SSI_DEF(SystemDeleteSession)
             return STATUS_PRIVILEGE_NOT_HELD;
         }
     }
-    
+
     SessionId = *(PULONG)Buffer;
-    
+
     return MmSessionDelete(SessionId);
 }
 

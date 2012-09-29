@@ -523,7 +523,7 @@ NtRaiseHardError(IN NTSTATUS ErrorStatus,
     ULONG SafeResponse;
     UNICODE_STRING SafeString;
     ULONG i;
-    ULONG ParamSize;
+    ULONG ParamSize = 0;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
 
     /* Validate parameter count */
@@ -534,7 +534,7 @@ NtRaiseHardError(IN NTSTATUS ErrorStatus,
     }
 
     /* Make sure we have some at least */
-    if ((Parameters) && !(NumberOfParameters))
+    if ((Parameters != NULL) && (NumberOfParameters == 0))
     {
         /* Fail */
         return STATUS_INVALID_PARAMETER_2;
@@ -561,6 +561,20 @@ NtRaiseHardError(IN NTSTATUS ErrorStatus,
                 return STATUS_INVALID_PARAMETER_4;
         }
 
+        /* Check if we have parameters */
+        if (Parameters)
+        {
+            /* Calculate size of the parameters */
+            ParamSize = sizeof(ULONG_PTR) * NumberOfParameters;
+
+            /* Allocate a safe buffer */
+            SafeParams = ExAllocatePoolWithTag(PagedPool, ParamSize, TAG_ERR);
+            if (!SafeParams)
+            {
+                return STATUS_INSUFFICIENT_RESOURCES;
+            }
+        }
+
         /* Enter SEH Block */
         _SEH2_TRY
         {
@@ -571,13 +585,7 @@ NtRaiseHardError(IN NTSTATUS ErrorStatus,
             if (Parameters)
             {
                 /* Validate the parameter pointers */
-                ParamSize = sizeof(ULONG_PTR) * NumberOfParameters;
                 ProbeForRead(Parameters, ParamSize, sizeof(ULONG_PTR));
-
-                /* Allocate a safe buffer */
-                SafeParams = ExAllocatePoolWithTag(PagedPool,
-                                                   ParamSize,
-                                                   TAG_ERR);
 
                 /* Copy them */
                 RtlCopyMemory(SafeParams, Parameters, ParamSize);
