@@ -760,6 +760,10 @@ void WINAPI PathRemoveArgsW(LPWSTR lpszPath)
  * PARAMS
  *  lpszPath [I/O] Path to remove the extension from
  *
+ * NOTES
+ *  The NUL terminator must be written only if extension exists
+ *  and if the pointed character is not already NUL.
+ *
  * RETURNS
  *  Nothing.
  */
@@ -770,7 +774,8 @@ void WINAPI PathRemoveExtensionA(LPSTR lpszPath)
   if (lpszPath)
   {
     lpszPath = PathFindExtensionA(lpszPath);
-    *lpszPath = '\0';
+    if (lpszPath && *lpszPath != '\0')
+      *lpszPath = '\0';
   }
 }
 
@@ -786,7 +791,8 @@ void WINAPI PathRemoveExtensionW(LPWSTR lpszPath)
   if (lpszPath)
   {
     lpszPath = PathFindExtensionW(lpszPath);
-    *lpszPath = '\0';
+    if (lpszPath && *lpszPath != '\0')
+      *lpszPath = '\0';
   }
 }
 
@@ -1074,7 +1080,7 @@ int WINAPI PathParseIconLocationW(LPWSTR lpszPath)
  */
 BOOL WINAPI PathFileExistsDefExtW(LPWSTR lpszPath,DWORD dwWhich)
 {
-  static const WCHAR pszExts[7][5] = { { '.', 'p', 'i', 'f', 0},
+  static const WCHAR pszExts[][5]  = { { '.', 'p', 'i', 'f', 0},
                                        { '.', 'c', 'o', 'm', 0},
                                        { '.', 'e', 'x', 'e', 0},
                                        { '.', 'b', 'a', 't', 0},
@@ -1708,7 +1714,7 @@ BOOL WINAPI PathFileExistsA(LPCSTR lpszPath)
   iPrevErrMode = SetErrorMode(SEM_FAILCRITICALERRORS);
   dwAttr = GetFileAttributesA(lpszPath);
   SetErrorMode(iPrevErrMode);
-  return dwAttr == INVALID_FILE_ATTRIBUTES ? FALSE : TRUE;
+  return dwAttr != INVALID_FILE_ATTRIBUTES;
 }
 
 /*************************************************************************
@@ -1729,7 +1735,7 @@ BOOL WINAPI PathFileExistsW(LPCWSTR lpszPath)
   iPrevErrMode = SetErrorMode(SEM_FAILCRITICALERRORS);
   dwAttr = GetFileAttributesW(lpszPath);
   SetErrorMode(iPrevErrMode);
-  return dwAttr == INVALID_FILE_ATTRIBUTES ? FALSE : TRUE;
+  return dwAttr != INVALID_FILE_ATTRIBUTES;
 }
 
 /*************************************************************************
@@ -2416,7 +2422,7 @@ BOOL WINAPI PathCanonicalizeW(LPWSTR lpszBuf, LPCWSTR lpszPath)
       else if (lpszSrc[1] == '.' && (lpszDst == lpszBuf || lpszDst[-1] == '\\'))
       {
         /* \.. backs up a directory, over the root if it has no \ following X:.
-         * .. is ignored if it would remove a UNC server name or inital \\
+         * .. is ignored if it would remove a UNC server name or initial \\
          */
         if (lpszDst != lpszBuf)
         {
@@ -2974,7 +2980,7 @@ UINT WINAPI PathGetCharTypeW(WCHAR ch)
   {
      if (ch < 126)
      {
-       if ((ch & 0x1 && ch != ';') || !ch || isalnum(ch) || ch == '$' || ch == '&' || ch == '(' ||
+         if (((ch & 0x1) && ch != ';') || !ch || isalnum(ch) || ch == '$' || ch == '&' || ch == '(' ||
             ch == '.' || ch == '@' || ch == '^' ||
             ch == '\'' || ch == 130 || ch == '`')
          flags |= GCT_SHORTCHAR; /* All these are valid for DOS */

@@ -30,13 +30,13 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
-HINSTANCE shlwapi_hInstance = 0;
-DWORD SHLWAPI_ThreadRef_index = TLS_OUT_OF_INDEXES;
+DECLSPEC_HIDDEN HINSTANCE shlwapi_hInstance = 0;
+DECLSPEC_HIDDEN DWORD SHLWAPI_ThreadRef_index = TLS_OUT_OF_INDEXES;
 
 /*************************************************************************
  * SHLWAPI {SHLWAPI}
  *
- * The Shell Light-Weight Api dll provides a large number of utility functions
+ * The Shell Light-Weight API dll provides a large number of utility functions
  * which are commonly required by Win32 programs. Originally distributed with
  * Internet Explorer as a free download, it became a core part of Windows when
  * Internet Explorer was 'integrated' into the O/S with the release of Win98.
@@ -51,7 +51,7 @@ DWORD SHLWAPI_ThreadRef_index = TLS_OUT_OF_INDEXES;
  * SHLWAPI DllMain
  *
  * NOTES
- *  calling oleinitialize here breaks sone apps.
+ *  calling oleinitialize here breaks some apps.
  */
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID fImpLoad)
 {

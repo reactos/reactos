@@ -1119,11 +1119,6 @@ typedef struct
 
 HRESULT WINAPI QISearch(void* base, const QITAB *pqit, REFIID riid, void **ppv);
 
-HANDLE WINAPI SHAllocShared(LPVOID pv, ULONG cb, DWORD pid);
-BOOL WINAPI SHFreeShared(HANDLE hMem, DWORD pid);
-LPVOID WINAPI SHLockShared(HANDLE hMem, DWORD pid);
-BOOL WINAPI SHUnlockShared(LPVOID pv);
-
 #include <poppack.h> 
 
 #ifdef __cplusplus

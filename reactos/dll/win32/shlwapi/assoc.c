@@ -103,6 +103,42 @@ HRESULT WINAPI AssocCreate(CLSID clsid, REFIID refiid, void **lpInterface)
 }
 
 /*************************************************************************
+ * AssocGetPerceivedType  [SHLWAPI.@]
+ *
+ * Detect the type of a file by inspecting its extension
+ *
+ * PARAMS
+ *  lpszExt     [I] File extension to evaluate.
+ *  lpType      [O] Pointer to perceived type
+ *  lpFlag      [O] Pointer to perceived type flag
+ *  lppszType   [O] Address to pointer for perceived type text
+ *
+ * RETURNS
+ *  Success: S_OK. lpType and lpFlag contain the perceived type and
+ *           its information. If lppszType is not NULL, it will point
+ *           to a string with perceived type text.
+ *  Failure: An HRESULT error code indicating the error.
+ *
+ * NOTES
+ *  lppszType is optional and it can be NULL.
+ *  if lpType or lpFlag are NULL, the function will crash.
+ *  if lpszExt is NULL, an error is returned.
+ *
+ * BUGS
+ *   Unimplemented.
+ */
+HRESULT WINAPI AssocGetPerceivedType(LPCWSTR lpszExt, PERCEIVED *lpType,
+                                     INT *lpFlag, LPWSTR *lppszType)
+{
+  FIXME("(%s, %p, %p, %p) not supported\n", debugstr_w(lpszExt), lpType, lpFlag, lppszType);
+
+  if (lpszExt == NULL)
+    return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
+
+  return E_NOTIMPL;
+}
+
+/*************************************************************************
  * AssocQueryKeyW  [SHLWAPI.@]
  *
  * See AssocQueryKeyA.
@@ -113,7 +149,7 @@ HRESULT WINAPI AssocQueryKeyW(ASSOCF cfFlags, ASSOCKEY assockey, LPCWSTR pszAsso
   HRESULT hRet;
   IQueryAssociations* lpAssoc;
 
-  TRACE("(0x%8x,0x%8x,%s,%s,%p)\n", cfFlags, assockey, debugstr_w(pszAssoc),
+  TRACE("(0x%x,%d,%s,%s,%p)\n", cfFlags, assockey, debugstr_w(pszAssoc),
         debugstr_w(pszExtra), phkeyOut);
 
   hRet = AssocCreate( CLSID_QueryAssociations, &IID_IQueryAssociations, (void **)&lpAssoc );
@@ -152,7 +188,7 @@ HRESULT WINAPI AssocQueryKeyA(ASSOCF cfFlags, ASSOCKEY assockey, LPCSTR pszAssoc
   WCHAR szExtraW[MAX_PATH], *lpszExtraW = NULL;
   HRESULT hRet = E_OUTOFMEMORY;
 
-  TRACE("(0x%8x,0x%8x,%s,%s,%p)\n", cfFlags, assockey, debugstr_a(pszAssoc),
+  TRACE("(0x%x,%d,%s,%s,%p)\n", cfFlags, assockey, debugstr_a(pszAssoc),
         debugstr_a(pszExtra), phkeyOut);
 
   if (SHLWAPI_ParamAToW(pszAssoc, szAssocW, MAX_PATH, &lpszAssocW) &&
@@ -181,7 +217,7 @@ HRESULT WINAPI AssocQueryStringW(ASSOCF cfFlags, ASSOCSTR str, LPCWSTR pszAssoc,
   HRESULT hRet;
   IQueryAssociations* lpAssoc;
 
-  TRACE("(0x%8x,0x%8x,%s,%s,%p,%p)\n", cfFlags, str, debugstr_w(pszAssoc),
+  TRACE("(0x%x,%d,%s,%s,%p,%p)\n", cfFlags, str, debugstr_w(pszAssoc),
         debugstr_w(pszExtra), pszOut, pcchOut);
 
   if (!pcchOut)
@@ -225,7 +261,7 @@ HRESULT WINAPI AssocQueryStringA(ASSOCF cfFlags, ASSOCSTR str, LPCSTR pszAssoc,
   WCHAR szExtraW[MAX_PATH], *lpszExtraW = NULL;
   HRESULT hRet = E_OUTOFMEMORY;
 
-  TRACE("(0x%8x,0x%8x,%s,%s,%p,%p)\n", cfFlags, str, debugstr_a(pszAssoc),
+  TRACE("(0x%x,0x%d,%s,%s,%p,%p)\n", cfFlags, str, debugstr_a(pszAssoc),
         debugstr_a(pszExtra), pszOut, pcchOut);
 
   if (!pcchOut)
@@ -278,7 +314,7 @@ HRESULT WINAPI AssocQueryStringByKeyW(ASSOCF cfFlags, ASSOCSTR str, HKEY hkAssoc
   HRESULT hRet;
   IQueryAssociations* lpAssoc;
 
-  TRACE("(0x%8x,0x%8x,%p,%s,%p,%p)\n", cfFlags, str, hkAssoc,
+  TRACE("(0x%x,0x%d,%p,%s,%p,%p)\n", cfFlags, str, hkAssoc,
         debugstr_w(pszExtra), pszOut, pcchOut);
 
   hRet = AssocCreate( CLSID_QueryAssociations, &IID_IQueryAssociations, (void **)&lpAssoc );
@@ -320,7 +356,7 @@ HRESULT WINAPI AssocQueryStringByKeyA(ASSOCF cfFlags, ASSOCSTR str, HKEY hkAssoc
   WCHAR szReturnW[MAX_PATH], *lpszReturnW = szReturnW;
   HRESULT hRet = E_OUTOFMEMORY;
 
-  TRACE("(0x%8x,0x%8x,%p,%s,%p,%p)\n", cfFlags, str, hkAssoc,
+  TRACE("(0x%x,0x%d,%p,%s,%p,%p)\n", cfFlags, str, hkAssoc,
         debugstr_a(pszExtra), pszOut, pcchOut);
 
   if (!pcchOut)

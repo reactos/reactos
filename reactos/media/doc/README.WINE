@@ -162,7 +162,7 @@ reactos/dll/win32/shdoclc         # Synced to Wine-1.2
 reactos/dll/win32/shdocvw         # Autosync
 reactos/dll/win32/shell32         # Forked at Wine-20071011
 reactos/dll/win32/shfolder        # Autosync
-reactos/dll/win32/shlwapi         # Autosync
+reactos/dll/win32/shlwapi         # Synced to Wine-1.5.13
 reactos/dll/win32/slbcsp          # Synced to Wine-1.5.4
 reactos/dll/win32/snmpapi         # Synced to Wine-1.5.4
 reactos/dll/win32/softpub         # Synced to Wine-1.5.4
