@@ -135,6 +135,30 @@ DWORD WINAPI SHNetConnectionDialog(
 	DWORD dwType);
 
 /****************************************************************************
+ * Memory Routines
+ */
+
+/* The Platform SDK's shlobj.h header defines similar functions with a
+ * leading underscore. However those are unusable because of the leading
+ * underscore, because they have an incorrect calling convention, and
+ * because these functions are not exported by name anyway.
+ */
+HANDLE WINAPI SHAllocShared(
+	LPVOID pv,
+	ULONG cb,
+	DWORD pid);
+
+BOOL WINAPI SHFreeShared(
+	HANDLE hMem,
+	DWORD pid);
+
+LPVOID WINAPI SHLockShared(
+	HANDLE hMem,
+	DWORD pid);
+
+BOOL WINAPI SHUnlockShared(LPVOID pv);
+
+/****************************************************************************
  * Cabinet Window Messages
  */
 
