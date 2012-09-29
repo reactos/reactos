@@ -119,7 +119,7 @@ static KSTART_ROUTINE NpfsWaiterThread;
 static VOID NTAPI
 NpfsWaiterThread(PVOID InitContext)
 {
-    PNPFS_THREAD_CONTEXT ThreadContext = (PNPFS_THREAD_CONTEXT) InitContext;
+    PNPFS_THREAD_CONTEXT ThreadContext = InitContext;
     ULONG CurrentCount;
     ULONG Count = 0, i;
     PIRP Irp = NULL;
@@ -194,9 +194,11 @@ NpfsWaiterThread(PVOID InitContext)
         if (ThreadContext->Count == 1 && ThreadContext->Vcb->EmptyWaiterCount >= MAXIMUM_WAIT_OBJECTS)
         {
             /* there is another thread with empty wait slots, we can remove our thread from the list */
+            ASSERT(Irp == NULL);
+            ThreadContext->Vcb->EmptyWaiterCount -= MAXIMUM_WAIT_OBJECTS - 1;
             RemoveEntryList(&ThreadContext->ListEntry);
-            ExFreePoolWithTag(ThreadContext, TAG_NPFS_THREAD_CONTEXT);
             KeUnlockMutex(&ThreadContext->Vcb->PipeListLock);
+            ExFreePoolWithTag(ThreadContext, TAG_NPFS_THREAD_CONTEXT);
             break;
         }
     }
@@ -499,7 +501,7 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
             /* If the pipe type and read mode are both byte stream */
             if (Ccb->Fcb->PipeType == FILE_PIPE_BYTE_STREAM_TYPE)
             {
-                DPRINT("Byte stream mode: Ccb->Data %x\n", Ccb->Data);
+                DPRINT("Byte stream mode: Ccb->Data %p\n", Ccb->Data);
                 /* Byte stream mode */
                 while (Length > 0 && Ccb->ReadDataAvailable > 0)
                 {
@@ -541,7 +543,7 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
             }
             else if (Ccb->Fcb->PipeType == FILE_PIPE_MESSAGE_TYPE)
             {
-                DPRINT("Message mode: Ccb>Data %x\n", Ccb->Data);
+                DPRINT("Message mode: Ccb>Data %p\n", Ccb->Data);
 
                 /* Check if buffer is full and the read pointer is not at the start of the buffer */
                 if ((Ccb->WriteQuotaAvailable == 0) && (Ccb->ReadPtr > Ccb->Data))
@@ -611,7 +613,7 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
                         Ccb->ReadPtr = Ccb->Data;
                     }
 #ifndef NDEBUG
-                    DPRINT("Length %d Buffer %x\n",CopyLength,Buffer);
+                    DPRINT("Length %d Buffer %x\n", CopyLength, Buffer);
                     HexDump((PUCHAR)Buffer, CopyLength);
 #endif
 
@@ -812,7 +814,7 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
 
     ExAcquireFastMutex(&ReaderCcb->DataListLock);
 
-    DPRINT("Length %d Buffer %x Offset %x\n",Length,Buffer,Offset);
+    DPRINT("Length %lu Buffer %p Offset %lu\n", Length, Buffer, Offset);
 
 #ifndef NDEBUG
     HexDump(Buffer, Length);
@@ -854,7 +856,7 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
             */
             if (Ccb->PipeState != FILE_PIPE_CONNECTED_STATE || !Ccb->OtherSide)
             {
-                DPRINT("PipeState: %x\n", Ccb->PipeState);
+                DPRINT("PipeState: %lx\n", Ccb->PipeState);
                 Status = STATUS_PIPE_BROKEN;
                 goto done;
             }
@@ -869,7 +871,7 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
 
         if (Ccb->Fcb->PipeType == FILE_PIPE_BYTE_STREAM_TYPE)
         {
-            DPRINT("Byte stream mode: Ccb->Data %x, Ccb->WritePtr %x\n", ReaderCcb->Data, ReaderCcb->WritePtr);
+            DPRINT("Byte stream mode: Ccb->Data %p, Ccb->WritePtr %p\n", ReaderCcb->Data, ReaderCcb->WritePtr);
 
             while (Length > 0 && ReaderCcb->WriteQuotaAvailable > 0)
             {
@@ -913,7 +915,7 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
         else if (Ccb->Fcb->PipeType == FILE_PIPE_MESSAGE_TYPE)
         {
             /* For Message Type Pipe, the Pipes memory will be used to store the size of each message */
-            DPRINT("Message mode: Ccb->Data %x, Ccb->WritePtr %x\n",ReaderCcb->Data, ReaderCcb->WritePtr);
+            DPRINT("Message mode: Ccb->Data %p, Ccb->WritePtr %p\n", ReaderCcb->Data, ReaderCcb->WritePtr);
             if (Length > 0)
             {
                 /* Verify the WritePtr is still inside the buffer */
@@ -921,7 +923,7 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
                 ((ULONG_PTR)ReaderCcb->WritePtr < (ULONG_PTR)ReaderCcb->Data))
                 {
                     DPRINT1("NPFS is writing out of its buffer. Report to developer!\n");
-                    DPRINT1("ReaderCcb->WritePtr %x, ReaderCcb->Data %x, ReaderCcb->MaxDataLength %lu\n",
+                    DPRINT1("ReaderCcb->WritePtr %p, ReaderCcb->Data %p, ReaderCcb->MaxDataLength %lu\n",
                         ReaderCcb->WritePtr, ReaderCcb->Data, ReaderCcb->MaxDataLength);
                     ASSERT(FALSE);
                 }

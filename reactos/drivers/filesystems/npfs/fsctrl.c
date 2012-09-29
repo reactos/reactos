@@ -361,7 +361,7 @@ NpfsWaitPipe(PIRP Irp,
     /* Fail if not pipe was found */
     if (Fcb == NULL)
     {
-        DPRINT("No pipe found!\n", Fcb);
+        DPRINT("No pipe found!\n");
         return STATUS_OBJECT_NAME_NOT_FOUND;
     }
 
@@ -483,7 +483,7 @@ NpfsWaitPipe2(PIRP Irp,
     /* Fail if not pipe was found */
     if (Fcb == NULL)
     {
-        DPRINT("No pipe found!\n", Fcb);
+        DPRINT("No pipe found!\n");
         return STATUS_OBJECT_NAME_NOT_FOUND;
     }
 
@@ -583,7 +583,7 @@ NpfsPeekPipe(PIRP Irp,
     DPRINT("OutputBufferLength: %lu\n", OutputBufferLength);
 
     /* Validate parameters */
-    if (OutputBufferLength < FIELD_OFFSET(FILE_PIPE_PEEK_BUFFER, Data[0]))
+    if (OutputBufferLength < (ULONG)FIELD_OFFSET(FILE_PIPE_PEEK_BUFFER, Data[0]))
     {
         DPRINT1("Buffer too small\n");
         return STATUS_INVALID_PARAMETER;
@@ -601,7 +601,7 @@ NpfsPeekPipe(PIRP Irp,
 
     ExAcquireFastMutex(&Ccb->DataListLock);
     BufferPtr = Ccb->ReadPtr;
-    DPRINT("BufferPtr = %x\n", BufferPtr);
+    DPRINT("BufferPtr = %p\n", BufferPtr);
     if (Ccb->Fcb->PipeType == FILE_PIPE_BYTE_STREAM_TYPE)
     {
         DPRINT("Byte Stream Mode\n");
@@ -609,7 +609,7 @@ NpfsPeekPipe(PIRP Irp,
         DPRINT("Reply->MessageLength  %lu\n", Reply->MessageLength);
         MessageCount = 1;
 
-        if (OutputBufferLength >= FIELD_OFFSET(FILE_PIPE_PEEK_BUFFER, Data[Ccb->ReadDataAvailable]))
+        if (OutputBufferLength >= (ULONG)FIELD_OFFSET(FILE_PIPE_PEEK_BUFFER, Data[Ccb->ReadDataAvailable]))
         {
             RtlCopyMemory(Reply->Data, BufferPtr, Ccb->ReadDataAvailable);
             ReturnLength = Ccb->ReadDataAvailable;
@@ -639,7 +639,7 @@ NpfsPeekPipe(PIRP Irp,
                 /* If its the first message, copy the Message if the size of buffer is large enough */
                 if (MessageCount == 1)
                 {
-                    if (OutputBufferLength >= FIELD_OFFSET(FILE_PIPE_PEEK_BUFFER, Data[MessageLength]))
+                    if (OutputBufferLength >= (ULONG)FIELD_OFFSET(FILE_PIPE_PEEK_BUFFER, Data[MessageLength]))
                     {
                         RtlCopyMemory(Reply->Data,
                                       (PVOID)((ULONG_PTR)BufferPtr + sizeof(MessageLength)),
@@ -649,7 +649,7 @@ NpfsPeekPipe(PIRP Irp,
                 }
 
                 BufferPtr = (PVOID)((ULONG_PTR)BufferPtr + sizeof(MessageLength) + MessageLength);
-                DPRINT("BufferPtr = %x\n", BufferPtr);
+                DPRINT("BufferPtr = %p\n", BufferPtr);
                 DPRINT("ReadDataAvailable: %lu\n", ReadDataAvailable);
             }
 

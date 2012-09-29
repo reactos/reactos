@@ -67,7 +67,7 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
         &DeviceObject);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT("Failed to create named pipe device! (Status %x)\n", Status);
+        DPRINT1("Failed to create named pipe device! (Status %lx)\n", Status);
         return Status;
     }
 
