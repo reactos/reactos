@@ -1007,6 +1007,7 @@ NtGdiGetDIBitsInternal(
     PBITMAPINFO pbmi;
     HANDLE hSecure = NULL;
     INT iResult = 0;
+    UINT cjAlloc;
 
     /* Check for bad iUsage */
     if (iUsage > 2) return 0;
@@ -1022,10 +1023,10 @@ NtGdiGetDIBitsInternal(
 
     // HACK: the underlying code sucks and doesn't care for the size, so we
     // give it the maximum ever needed
-    cjMaxInfo = sizeof(BITMAPV5HEADER) + 256 * sizeof(RGBQUAD);
+    cjAlloc = sizeof(BITMAPV5HEADER) + 256 * sizeof(RGBQUAD);
 
     /* Allocate a buffer the bitmapinfo */
-    pbmi = ExAllocatePoolWithTag(PagedPool, cjMaxInfo, 'imBG');
+    pbmi = ExAllocatePoolWithTag(PagedPool, cjAlloc, 'imBG');
     if (!pbmi)
     {
         /* Fail */
