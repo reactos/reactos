@@ -33,7 +33,6 @@
 typedef enum _LSA_DB_OBJECT_TYPE
 {
     LsaDbIgnoreObject,
-    LsaDbContainerObject,
     LsaDbPolicyObject,
     LsaDbAccountObject,
     LsaDbDomainObject,
@@ -71,6 +70,7 @@ LsapInitDatabase(VOID);
 
 NTSTATUS
 LsapCreateDbObject(IN PLSA_DB_OBJECT ParentObject,
+                   IN LPWSTR ContainerName,
                    IN LPWSTR ObjectName,
                    IN LSA_DB_OBJECT_TYPE HandleType,
                    IN ACCESS_MASK DesiredAccess,
@@ -78,6 +78,7 @@ LsapCreateDbObject(IN PLSA_DB_OBJECT ParentObject,
 
 NTSTATUS
 LsapOpenDbObject(IN PLSA_DB_OBJECT ParentObject,
+                 IN LPWSTR ContainerName,
                  IN LPWSTR ObjectName,
                  IN LSA_DB_OBJECT_TYPE ObjectType,
                  IN ACCESS_MASK DesiredAccess,

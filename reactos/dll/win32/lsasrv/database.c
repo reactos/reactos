@@ -283,6 +283,7 @@ LsapCreateDatabaseObjects(VOID)
 
     /* Open the 'Policy' object */
     Status = LsapOpenDbObject(NULL,
+                              NULL,
                               L"Policy",
                               LsaDbPolicyObject,
                               0,
@@ -427,6 +428,7 @@ LsapInitDatabase(VOID)
 
 NTSTATUS
 LsapCreateDbObject(IN PLSA_DB_OBJECT ParentObject,
+                   IN LPWSTR ContainerName,
                    IN LPWSTR ObjectName,
                    IN LSA_DB_OBJECT_TYPE ObjectType,
                    IN ACCESS_MASK DesiredAccess,
@@ -436,7 +438,8 @@ LsapCreateDbObject(IN PLSA_DB_OBJECT ParentObject,
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING KeyName;
     HANDLE ParentKeyHandle;
-    HANDLE ObjectKeyHandle;
+    HANDLE ContainerKeyHandle = NULL;
+    HANDLE ObjectKeyHandle = NULL;
     NTSTATUS Status;
 
     if (DbObject == NULL)
@@ -447,25 +450,73 @@ LsapCreateDbObject(IN PLSA_DB_OBJECT ParentObject,
     else
         ParentKeyHandle = ParentObject->KeyHandle;
 
-    RtlInitUnicodeString(&KeyName,
-                         ObjectName);
-
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &KeyName,
-                               OBJ_CASE_INSENSITIVE,
-                               ParentKeyHandle,
-                               NULL);
-
-    Status = NtCreateKey(&ObjectKeyHandle,
-                         KEY_ALL_ACCESS,
-                         &ObjectAttributes,
-                         0,
-                         NULL,
-                         0,
-                         NULL);
-    if (!NT_SUCCESS(Status))
+    if (ContainerName != NULL)
     {
-        return Status;
+        /* Open the container key */
+        RtlInitUnicodeString(&KeyName,
+                             ContainerName);
+
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   &KeyName,
+                                   OBJ_CASE_INSENSITIVE,
+                                   ParentKeyHandle,
+                                   NULL);
+
+        Status = NtOpenKey(&ContainerKeyHandle,
+                           KEY_ALL_ACCESS,
+                           &ObjectAttributes);
+        if (!NT_SUCCESS(Status))
+        {
+            return Status;
+        }
+
+        /* Open the object key */
+        RtlInitUnicodeString(&KeyName,
+                             ObjectName);
+
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   &KeyName,
+                                   OBJ_CASE_INSENSITIVE,
+                                   ContainerKeyHandle,
+                                   NULL);
+
+        Status = NtCreateKey(&ObjectKeyHandle,
+                             KEY_ALL_ACCESS,
+                             &ObjectAttributes,
+                             0,
+                             NULL,
+                             0,
+                             NULL);
+
+        NtClose(ContainerKeyHandle);
+
+        if (!NT_SUCCESS(Status))
+        {
+            return Status;
+        }
+    }
+    else
+    {
+        RtlInitUnicodeString(&KeyName,
+                             ObjectName);
+
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   &KeyName,
+                                   OBJ_CASE_INSENSITIVE,
+                                   ParentKeyHandle,
+                                   NULL);
+
+        Status = NtCreateKey(&ObjectKeyHandle,
+                             KEY_ALL_ACCESS,
+                             &ObjectAttributes,
+                             0,
+                             NULL,
+                             0,
+                             NULL);
+        if (!NT_SUCCESS(Status))
+        {
+            return Status;
+        }
     }
 
     NewObject = RtlAllocateHeap(RtlGetProcessHeap(),
@@ -495,6 +546,7 @@ LsapCreateDbObject(IN PLSA_DB_OBJECT ParentObject,
 
 NTSTATUS
 LsapOpenDbObject(IN PLSA_DB_OBJECT ParentObject,
+                 IN LPWSTR ContainerName,
                  IN LPWSTR ObjectName,
                  IN LSA_DB_OBJECT_TYPE ObjectType,
                  IN ACCESS_MASK DesiredAccess,
@@ -504,7 +556,8 @@ LsapOpenDbObject(IN PLSA_DB_OBJECT ParentObject,
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING KeyName;
     HANDLE ParentKeyHandle;
-    HANDLE ObjectKeyHandle;
+    HANDLE ContainerKeyHandle = NULL;
+    HANDLE ObjectKeyHandle = NULL;
     NTSTATUS Status;
 
     if (DbObject == NULL)
@@ -515,26 +568,71 @@ LsapOpenDbObject(IN PLSA_DB_OBJECT ParentObject,
     else
         ParentKeyHandle = ParentObject->KeyHandle;
 
-    RtlInitUnicodeString(&KeyName,
-                         ObjectName);
-
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &KeyName,
-                               OBJ_CASE_INSENSITIVE,
-                               ParentKeyHandle,
-                               NULL);
-
-    Status = NtOpenKey(&ObjectKeyHandle,
-                       KEY_ALL_ACCESS,
-                       &ObjectAttributes);
-    if (!NT_SUCCESS(Status))
+    if (ContainerName != NULL)
     {
-        return Status;
+        /* Open the container key */
+        RtlInitUnicodeString(&KeyName,
+                             ContainerName);
+
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   &KeyName,
+                                   OBJ_CASE_INSENSITIVE,
+                                   ParentKeyHandle,
+                                   NULL);
+
+        Status = NtOpenKey(&ContainerKeyHandle,
+                           KEY_ALL_ACCESS,
+                           &ObjectAttributes);
+        if (!NT_SUCCESS(Status))
+        {
+            return Status;
+        }
+
+        /* Open the object key */
+        RtlInitUnicodeString(&KeyName,
+                             ObjectName);
+
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   &KeyName,
+                                   OBJ_CASE_INSENSITIVE,
+                                   ContainerKeyHandle,
+                                   NULL);
+
+        Status = NtOpenKey(&ObjectKeyHandle,
+                           KEY_ALL_ACCESS,
+                           &ObjectAttributes);
+
+        NtClose(ContainerKeyHandle);
+
+        if (!NT_SUCCESS(Status))
+        {
+            return Status;
+        }
+    }
+    else
+    {
+        /* Open the object key */
+        RtlInitUnicodeString(&KeyName,
+                             ObjectName);
+
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   &KeyName,
+                                   OBJ_CASE_INSENSITIVE,
+                                   ParentKeyHandle,
+                                   NULL);
+
+        Status = NtOpenKey(&ObjectKeyHandle,
+                           KEY_ALL_ACCESS,
+                           &ObjectAttributes);
+        if (!NT_SUCCESS(Status))
+        {
+            return Status;
+        }
     }
 
     NewObject = RtlAllocateHeap(RtlGetProcessHeap(),
-                                  0,
-                                  sizeof(LSA_DB_OBJECT));
+                                0,
+                                sizeof(LSA_DB_OBJECT));
     if (NewObject == NULL)
     {
         NtClose(ObjectKeyHandle);

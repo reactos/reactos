@@ -183,6 +183,7 @@ NTSTATUS WINAPI LsarOpenPolicy(
     RtlEnterCriticalSection(&PolicyHandleTableLock);
 
     Status = LsapOpenDbObject(NULL,
+                              NULL,
                               L"Policy",
                               LsaDbPolicyObject,
                               DesiredAccess,
@@ -435,7 +436,6 @@ NTSTATUS WINAPI LsarCreateAccount(
     LSAPR_HANDLE *AccountHandle)
 {
     PLSA_DB_OBJECT PolicyObject;
-    PLSA_DB_OBJECT AccountsObject = NULL;
     PLSA_DB_OBJECT AccountObject = NULL;
     LPWSTR SidString = NULL;
     NTSTATUS Status = STATUS_SUCCESS;
@@ -455,18 +455,6 @@ NTSTATUS WINAPI LsarCreateAccount(
         return Status;
     }
 
-    /* Open the Accounts object */
-    Status = LsapOpenDbObject(PolicyObject,
-                              L"Accounts",
-                              LsaDbContainerObject,
-                              0,
-                              &AccountsObject);
-    if (!NT_SUCCESS(Status))
-    {
-        ERR("LsapCreateDbObject (Accounts) failed (Status 0x%08lx)\n", Status);
-        goto done;
-    }
-
     /* Create SID string */
     if (!ConvertSidToStringSid((PSID)AccountSid,
                                &SidString))
@@ -477,14 +465,15 @@ NTSTATUS WINAPI LsarCreateAccount(
     }
 
     /* Create the Account object */
-    Status = LsapCreateDbObject(AccountsObject,
+    Status = LsapCreateDbObject(PolicyObject,
+                                L"Accounts",
                                 SidString,
                                 LsaDbAccountObject,
                                 DesiredAccess,
                                 &AccountObject);
     if (!NT_SUCCESS(Status))
     {
-        ERR("LsapCreateDbObject (Account) failed (Status 0x%08lx)\n", Status);
+        ERR("LsapCreateDbObject failed (Status 0x%08lx)\n", Status);
         goto done;
     }
 
@@ -507,9 +496,6 @@ done:
     {
         *AccountHandle = (LSAPR_HANDLE)AccountObject;
     }
-
-    if (AccountsObject != NULL)
-        LsapCloseDbObject(AccountsObject);
 
     return STATUS_SUCCESS;
 }
@@ -750,7 +736,6 @@ NTSTATUS WINAPI LsarCreateSecret(
     LSAPR_HANDLE *SecretHandle)
 {
     PLSA_DB_OBJECT PolicyObject;
-    PLSA_DB_OBJECT SecretsObject = NULL;
     PLSA_DB_OBJECT SecretObject = NULL;
     LARGE_INTEGER Time;
     NTSTATUS Status = STATUS_SUCCESS;
@@ -766,18 +751,6 @@ NTSTATUS WINAPI LsarCreateSecret(
         return Status;
     }
 
-    /* Open the Secrets object */
-    Status = LsapOpenDbObject(PolicyObject,
-                              L"Secrets",
-                              LsaDbContainerObject,
-                              0,
-                              &SecretsObject);
-    if (!NT_SUCCESS(Status))
-    {
-        ERR("LsapCreateDbObject (Secrets) failed (Status 0x%08lx)\n", Status);
-        goto done;
-    }
-
     /* Get the current time */
     Status = NtQuerySystemTime(&Time);
     if (!NT_SUCCESS(Status))
@@ -787,14 +760,15 @@ NTSTATUS WINAPI LsarCreateSecret(
     }
 
     /* Create the Secret object */
-    Status = LsapCreateDbObject(SecretsObject,
+    Status = LsapCreateDbObject(PolicyObject,
+                                L"Secrets",
                                 SecretName->Buffer,
                                 LsaDbSecretObject,
                                 DesiredAccess,
                                 &SecretObject);
     if (!NT_SUCCESS(Status))
     {
-        ERR("LsapCreateDbObject (Secret) failed (Status 0x%08lx)\n", Status);
+        ERR("LsapCreateDbObject failed (Status 0x%08lx)\n", Status);
         goto done;
     }
 
@@ -826,9 +800,6 @@ done:
         *SecretHandle = (LSAPR_HANDLE)SecretObject;
     }
 
-    if (SecretsObject != NULL)
-        LsapCloseDbObject(SecretsObject);
-
     return STATUS_SUCCESS;
 }
 
@@ -841,7 +812,6 @@ NTSTATUS WINAPI LsarOpenAccount(
     LSAPR_HANDLE *AccountHandle)
 {
     PLSA_DB_OBJECT PolicyObject;
-    PLSA_DB_OBJECT AccountsObject = NULL;
     PLSA_DB_OBJECT AccountObject = NULL;
     LPWSTR SidString = NULL;
     NTSTATUS Status = STATUS_SUCCESS;
@@ -861,18 +831,6 @@ NTSTATUS WINAPI LsarOpenAccount(
         return Status;
     }
 
-    /* Open the Accounts object */
-    Status = LsapOpenDbObject(PolicyObject,
-                              L"Accounts",
-                              LsaDbContainerObject,
-                              0,
-                              &AccountsObject);
-    if (!NT_SUCCESS(Status))
-    {
-        ERR("LsapOpenDbObject (Accounts) failed (Status 0x%08lx)\n", Status);
-        goto done;
-    }
-
     /* Create SID string */
     if (!ConvertSidToStringSid((PSID)AccountSid,
                                &SidString))
@@ -883,14 +841,15 @@ NTSTATUS WINAPI LsarOpenAccount(
     }
 
     /* Create the Account object */
-    Status = LsapOpenDbObject(AccountsObject,
+    Status = LsapOpenDbObject(PolicyObject,
+                              L"Accounts",
                               SidString,
                               LsaDbAccountObject,
                               DesiredAccess,
                               &AccountObject);
     if (!NT_SUCCESS(Status))
     {
-        ERR("LsapOpenDbObject (Account) failed (Status 0x%08lx)\n", Status);
+        ERR("LsapOpenDbObject failed (Status 0x%08lx)\n", Status);
         goto done;
     }
 
@@ -913,9 +872,6 @@ done:
     {
         *AccountHandle = (LSAPR_HANDLE)AccountObject;
     }
-
-    if (AccountsObject != NULL)
-        LsapCloseDbObject(AccountsObject);
 
     return Status;
 }
@@ -1257,7 +1213,6 @@ NTSTATUS WINAPI LsarOpenSecret(
     LSAPR_HANDLE *SecretHandle)
 {
     PLSA_DB_OBJECT PolicyObject;
-    PLSA_DB_OBJECT SecretsObject = NULL;
     PLSA_DB_OBJECT SecretObject = NULL;
     NTSTATUS Status = STATUS_SUCCESS;
 
@@ -1272,27 +1227,16 @@ NTSTATUS WINAPI LsarOpenSecret(
         return Status;
     }
 
-    /* Open the Secrets object */
+    /* Create the secret object */
     Status = LsapOpenDbObject(PolicyObject,
                               L"Secrets",
-                              LsaDbContainerObject,
-                              0,
-                              &SecretsObject);
-    if (!NT_SUCCESS(Status))
-    {
-        ERR("LsapCreateDbObject (Secrets) failed (Status 0x%08lx)\n", Status);
-        goto done;
-    }
-
-    /* Create the secret object */
-    Status = LsapOpenDbObject(SecretsObject,
                               SecretName->Buffer,
                               LsaDbSecretObject,
                               DesiredAccess,
                               &SecretObject);
     if (!NT_SUCCESS(Status))
     {
-        ERR("LsapOpenDbObject (Secret) failed (Status 0x%08lx)\n", Status);
+        ERR("LsapOpenDbObject failed (Status 0x%08lx)\n", Status);
         goto done;
     }
 
@@ -1306,9 +1250,6 @@ done:
     {
         *SecretHandle = (LSAPR_HANDLE)SecretObject;
     }
-
-    if (SecretsObject != NULL)
-        LsapCloseDbObject(SecretsObject);
 
     return STATUS_SUCCESS;
 }
