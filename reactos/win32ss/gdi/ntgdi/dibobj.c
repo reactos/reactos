@@ -1020,6 +1020,10 @@ NtGdiGetDIBitsInternal(
     /* Use maximum size */
     cjMaxInfo = min(cjMaxInfo, sizeof(BITMAPV5HEADER) + 256 * sizeof(RGBQUAD));
 
+    // HACK: the underlying code sucks and doesn't care for the size, so we
+    // give it the maximum ever needed
+    cjMaxInfo = sizeof(BITMAPV5HEADER) + 256 * sizeof(RGBQUAD);
+
     /* Allocate a buffer the bitmapinfo */
     pbmi = ExAllocatePoolWithTag(PagedPool, cjMaxInfo, 'imBG');
     if (!pbmi)
