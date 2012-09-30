@@ -130,7 +130,7 @@ StartOneService(INT argc, WCHAR **argv)
 
     for (i = 2; i < argc; i++)
     {
-        lpArgVectors[i] = argv[i + 2];
+        lpArgVectors[i - 2] = argv[i];
     }
 
     if (!StartServiceW(hService,

@@ -29,7 +29,6 @@ INT cmdStop(INT argc, WCHAR **argv)
                               SC_MANAGER_ENUMERATE_SERVICE);
     if (hManager == NULL)
     {
-printf("1\n");
         dwError = GetLastError();
         nError = 1;
         goto done;
@@ -40,7 +39,6 @@ printf("1\n");
                             SERVICE_STOP);
     if (hService == NULL)
     {
-printf("2\n");
         dwError = GetLastError();
         nError = 1;
         goto done;
@@ -48,7 +46,6 @@ printf("2\n");
 
     if (!ControlService(hService, SERVICE_CONTROL_STOP, &ServiceStatus))
     {
-printf("3\n");
         dwError = GetLastError();
         nError = 1;
         goto done;
