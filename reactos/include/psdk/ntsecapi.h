@@ -105,6 +105,12 @@ extern "C" {
 #define SE_NETWORK_LOGON_NAME TEXT("SeNetworkLogonRight")
 #define SE_BATCH_LOGON_NAME TEXT("SeBatchLogonRight")
 #define SE_SERVICE_LOGON_NAME TEXT("SeServiceLogonRight")
+#define SE_DENY_INTERACTIVE_LOGON_NAME TEXT("SeDenyInteractiveLogonRight")
+#define SE_DENY_NETWORK_LOGON_NAME TEXT("SeDenyNetworkLogonRight")
+#define SE_DENY_BATCH_LOGON_NAME TEXT("SeDenyBatchLogonRight")
+#define SE_DENY_SERVICE_LOGON_NAME TEXT("SeDenyServiceLogonRight")
+#define SE_REMOTE_INTERACTIVE_LOGON_NAME TEXT("SeRemoteInteractiveLogonRight")
+#define SE_DENY_REMOTE_INTERACTIVE_LOGON_NAME TEXT("SeDenyRemoteInteractiveLogonRight")
 #define TRUST_ATTRIBUTE_NON_TRANSITIVE 1
 #define TRUST_ATTRIBUTE_UPLEVEL_ONLY 2
 #define TRUST_ATTRIBUTE_TREE_PARENT 4194304
