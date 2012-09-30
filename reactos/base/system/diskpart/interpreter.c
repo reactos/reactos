@@ -156,6 +156,7 @@ InterpretMain(VOID)
 
     while (bRun == TRUE)
     {
+        args_count = 0;
         memset(args_vector, 0, sizeof(args_vector));
 
         /* shown just before the input where the user places commands */
