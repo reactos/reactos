@@ -440,6 +440,10 @@ NTSTATUS WINAPI LsarCreateAccount(
     LPWSTR SidString = NULL;
     NTSTATUS Status = STATUS_SUCCESS;
 
+    /* Validate the AccountSid */
+    if (!RtlValidSid(AccountSid))
+        return STATUS_INVALID_PARAMETER;
+
     /* Validate the PolicyHandle */
     Status = LsapValidateDbObject(PolicyHandle,
                                   LsaDbPolicyObject,
@@ -842,10 +846,14 @@ NTSTATUS WINAPI LsarOpenAccount(
     LPWSTR SidString = NULL;
     NTSTATUS Status = STATUS_SUCCESS;
 
+    /* Validate the AccountSid */
+    if (!RtlValidSid(AccountSid))
+        return STATUS_INVALID_PARAMETER;
+
     /* Validate the PolicyHandle */
     Status = LsapValidateDbObject(PolicyHandle,
                                   LsaDbPolicyObject,
-                                  POLICY_CREATE_ACCOUNT,
+                                  0,
                                   &PolicyObject);
     if (!NT_SUCCESS(Status))
     {
@@ -861,7 +869,7 @@ NTSTATUS WINAPI LsarOpenAccount(
                               &AccountsObject);
     if (!NT_SUCCESS(Status))
     {
-        ERR("LsapCreateDbObject (Accounts) failed (Status 0x%08lx)\n", Status);
+        ERR("LsapOpenDbObject (Accounts) failed (Status 0x%08lx)\n", Status);
         goto done;
     }
 
@@ -909,7 +917,7 @@ done:
     if (AccountsObject != NULL)
         LsapCloseDbObject(AccountsObject);
 
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 
