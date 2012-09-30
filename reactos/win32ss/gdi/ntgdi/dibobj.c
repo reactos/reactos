@@ -465,7 +465,7 @@ NtGdiSetDIBitsToDeviceInternal(
 
     SourceSize.cx = bmi->bmiHeader.biWidth;
     SourceSize.cy = ScanLines;
-    
+
     //DIBWidth = WIDTH_BYTES_ALIGN32(SourceSize.cx, bmi->bmiHeader.biBitCount);
 
     hSourceBitmap = GreCreateBitmapEx(bmi->bmiHeader.biWidth,
@@ -500,7 +500,7 @@ NtGdiSetDIBitsToDeviceInternal(
         Status = STATUS_NO_MEMORY;
         goto Exit;
     }
-    
+
     /* This is actually a blit */
     DC_vPrepareDCsForBlit(pDC, rcDest, NULL, rcDest);
     pSurf = pDC->dclevel.pSurface;
@@ -510,7 +510,7 @@ NtGdiSetDIBitsToDeviceInternal(
         ret = ScanLines;
         goto Exit;
     }
-    
+
     ASSERT(pSurf->ppal);
 
     /* Initialize EXLATEOBJ */
@@ -520,7 +520,7 @@ NtGdiSetDIBitsToDeviceInternal(
                           RGB(0xff, 0xff, 0xff),
                           pDC->pdcattr->crBackgroundClr,
                           pDC->pdcattr->crForegroundClr);
-                          
+
     pDestSurf = &pSurf->SurfObj;
 
     /* Copy the bits */
@@ -541,7 +541,7 @@ NtGdiSetDIBitsToDeviceInternal(
 
     /* Cleanup EXLATEOBJ */
     EXLATEOBJ_vCleanup(&exlo);
-    
+
     /* We're done */
     DC_vFinishBlit(pDC, NULL);
 
@@ -565,7 +565,7 @@ Exit2:
 /* Converts a device-dependent bitmap to a DIB */
 INT
 APIENTRY
-NtGdiGetDIBitsInternal(
+GreGetDIBitsInternal(
     HDC hDC,
     HBITMAP hBitmap,
     UINT StartScan,
@@ -587,30 +587,11 @@ NtGdiGetDIBitsInternal(
     RGBTRIPLE* rgbTriples;
     RGBQUAD* rgbQuads;
     VOID* colorPtr;
-    NTSTATUS Status = STATUS_SUCCESS;
 
     DPRINT("Entered NtGdiGetDIBitsInternal()\n");
 
     if ((Usage && Usage != DIB_PAL_COLORS) || !Info || !hBitmap)
         return 0;
-
-    _SEH2_TRY
-    {
-        /* Probe for read and write */
-        ProbeForRead(Info, MaxInfo, 1);
-        ProbeForWrite(Info, MaxInfo, 1);
-        if (Bits) ProbeForWrite(Bits, MaxBits, 1);
-    }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        Status = _SEH2_GetExceptionCode();
-    }
-    _SEH2_END
-
-    if (!NT_SUCCESS(Status))
-    {
-        return 0;
-    }
 
     colorPtr = (LPBYTE)Info + Info->bmiHeader.biSize;
     rgbTriples = colorPtr;
@@ -834,7 +815,6 @@ NtGdiGetDIBitsInternal(
                                     colorTriple->rgbtRed =   (r * 0xff) / 5;
                                     colorTriple->rgbtGreen = (g * 0xff) / 5;
                                     colorTriple->rgbtBlue =  (b * 0xff) / 5;
-                                    color++;
                                 }
                             }
                         }
@@ -994,22 +974,7 @@ NtGdiGetDIBitsInternal(
             ScanLines = 0;
         else
         {
-            Status = STATUS_SUCCESS;
-            _SEH2_TRY
-            {
-                RtlCopyMemory(Bits, pDIBits, DIB_GetDIBImageBytes (width, ScanLines, bpp));
-            }
-            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-            {
-                Status = _SEH2_GetExceptionCode();
-            }
-            _SEH2_END
-
-            if(!NT_SUCCESS(Status))
-            {
-                DPRINT1("Unable to copy bits to the user provided pointer\n");
-                ScanLines = 0;
-            }
+            RtlCopyMemory(Bits, pDIBits, DIB_GetDIBImageBytes (width, ScanLines, bpp));
         }
 
         GreDeleteObject(hBmpDest);
@@ -1025,6 +990,109 @@ done:
 
     return ScanLines;
 }
+
+INT
+APIENTRY
+NtGdiGetDIBitsInternal(
+    _In_ HDC hdc,
+    _In_ HBITMAP hbm,
+    _In_ UINT iStartScan,
+    _In_ UINT cScans,
+    _Out_opt_ LPBYTE pjBits,
+    _Inout_ LPBITMAPINFO pbmiUser,
+    _In_ UINT iUsage,
+    _In_ UINT cjMaxBits,
+    _In_ UINT cjMaxInfo)
+{
+    PBITMAPINFO pbmi;
+    HANDLE hSecure = NULL;
+    INT iResult = 0;
+
+    /* Check for bad iUsage */
+    if (iUsage > 2) return 0;
+
+    /* Check if the size of the bitmap info is large enough */
+    if (cjMaxInfo < sizeof(BITMAPINFOHEADER))
+    {
+        return 0;
+    }
+
+    /* Use maximum size */
+    cjMaxInfo = min(cjMaxInfo, sizeof(BITMAPV5HEADER) + 256 * sizeof(RGBQUAD));
+
+    /* Allocate a buffer the bitmapinfo */
+    pbmi = ExAllocatePoolWithTag(PagedPool, cjMaxInfo, 'imBG');
+    if (!pbmi)
+    {
+        /* Fail */
+        return 0;
+    }
+
+    /* Use SEH */
+    _SEH2_TRY
+    {
+        /* Probe and copy the BITMAPINFO */
+        ProbeForWrite(pbmiUser, cjMaxInfo, 1);
+        RtlCopyMemory(pbmi, pbmiUser, cjMaxInfo);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        _SEH2_YIELD(goto cleanup;)
+    }
+    _SEH2_END;
+
+    /* Check if the header size is large enough */
+    if ((pbmi->bmiHeader.biSize < sizeof(BITMAPINFOHEADER)) ||
+        (pbmi->bmiHeader.biSize > cjMaxInfo))
+    {
+        goto cleanup;
+    }
+
+    /* Check if the caller provided bitmap bits */
+    if (pjBits)
+    {
+        /* Secure the user mode memory */
+        hSecure = EngSecureMem(pjBits, cjMaxBits);
+        if (!hSecure)
+        {
+            goto cleanup;
+        }
+    }
+
+    /* Now call the internal function */
+    iResult = GreGetDIBitsInternal(hdc,
+                                   hbm,
+                                   iStartScan,
+                                   cScans,
+                                   pjBits,
+                                   pbmi,
+                                   iUsage,
+                                   cjMaxBits,
+                                   cjMaxInfo);
+
+    /* Check for success */
+    if (iResult)
+    {
+        /* Use SEH to copy back to user mode */
+        _SEH2_TRY
+        {
+            /* Buffer is already probed, copy the data back */
+            RtlCopyMemory(pbmiUser, pbmi, cjMaxInfo);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            /* Ignore */
+        }
+        _SEH2_END;
+    }
+
+cleanup:
+    if (hSecure) EngUnsecureMem(hSecure);
+    ExFreePoolWithTag(pbmi, 'imBG');
+
+    return iResult;
+}
+
 
 #define ROP_TO_ROP4(Rop) ((Rop) >> 16)
 
@@ -1129,7 +1197,7 @@ NtGdiStretchDIBitsInternal(
     rcDst.bottom = rcDst.top + cyDst;
     IntLPtoDP(pdc, (POINTL*)&rcDst, 2);
     RECTL_vOffsetRect(&rcDst, pdc->ptlDCOrig.x, pdc->ptlDCOrig.y);
-    
+
     hbmTmp = GreCreateBitmapEx(pbmi->bmiHeader.biWidth,
                                pbmi->bmiHeader.biHeight,
                                0,
@@ -1163,7 +1231,7 @@ NtGdiStretchDIBitsInternal(
 
     /* Prepare DC for blit */
     DC_vPrepareDCsForBlit(pdc, rcDst, NULL, rcSrc);
-    
+
     psurfDst = pdc->dclevel.pSurface;
     if (!psurfDst)
     {
@@ -1172,7 +1240,7 @@ NtGdiStretchDIBitsInternal(
         bResult = TRUE;
         goto cleanup;
     }
-    
+
     /* Initialize XLATEOBJ */
     EXLATEOBJ_vInitialize(&exlo,
                           ppalDIB,

@@ -135,47 +135,80 @@ IntIsClipboardOpenByMe(PWINSTATION_OBJECT pWinSta)
 }
 
 VOID static NTAPI
-IntSynthesizeDib(PWINSTATION_OBJECT pWinStaObj, HBITMAP hBm)
+IntSynthesizeDib(
+    PWINSTATION_OBJECT pWinStaObj,
+    HBITMAP hbm)
 {
     HDC hdc;
-    BITMAP bm;
-    BITMAPINFO bi;
-    SURFACE *psurf;
-    PCLIPBOARDDATA pMemObj;
+    ULONG cjInfoSize, cjDataSize;
+    PCLIPBOARDDATA pClipboardData;
     HANDLE hMem;
+    INT iResult;
+    struct
+    {
+        BITMAPINFOHEADER bmih;
+        RGBQUAD rgbColors[256];
+    } bmiBuffer;
+    PBITMAPINFO pbmi = (PBITMAPINFO)&bmiBuffer;
 
+    /* Get the display DC */
     hdc = UserGetDCEx(NULL, NULL, DCX_USESTYLE);
     if (!hdc)
-        return;
-
-    psurf = SURFACE_ShareLockSurface(hBm);
-    if (!psurf)
-        goto cleanup;
-    BITMAP_GetObject(psurf, sizeof(BITMAP), (PVOID)&bm);
-    SURFACE_ShareUnlockSurface(psurf);
-
-    bi.bmiHeader.biSize	= sizeof(BITMAPINFOHEADER);
-    bi.bmiHeader.biWidth = bm.bmWidth;
-    bi.bmiHeader.biHeight = bm.bmHeight;
-    bi.bmiHeader.biPlanes = bm.bmPlanes;
-    bi.bmiHeader.biBitCount	= bm.bmBitsPixel;
-    bi.bmiHeader.biCompression = BI_RGB;
-    bi.bmiHeader.biSizeImage = 0;
-    bi.bmiHeader.biXPelsPerMeter = 0;
-    bi.bmiHeader.biYPelsPerMeter = 0;
-    bi.bmiHeader.biClrUsed = 0;
-
-    NtGdiGetDIBitsInternal(hdc, hBm, 0, bm.bmHeight, NULL, &bi, DIB_RGB_COLORS, 0, 0);
-
-    pMemObj = (PCLIPBOARDDATA)UserCreateObject(gHandleTable, NULL, &hMem, otClipBoardData,
-                                               sizeof(BITMAPINFOHEADER) + bi.bmiHeader.biSizeImage);
-    if(pMemObj)
     {
-        pMemObj->cbData = sizeof(BITMAPINFOHEADER) + bi.bmiHeader.biSizeImage;
-        memcpy(pMemObj->Data, &bi, sizeof(BITMAPINFOHEADER));
-        NtGdiGetDIBitsInternal(hdc, hBm, 0, bm.bmHeight, (LPBYTE)pMemObj->Data + sizeof(BITMAPINFOHEADER), &bi, DIB_RGB_COLORS, 0, 0);
-        IntAddFormatedData(pWinStaObj, CF_DIB, hMem, TRUE, TRUE);
+        return;
     }
+
+    /* Get information about the bitmap format */
+    iResult = GreGetDIBitsInternal(hdc,
+                                   hbm,
+                                   0,
+                                   0,
+                                   NULL,
+                                   pbmi,
+                                   DIB_RGB_COLORS,
+                                   0,
+                                   sizeof(bmiBuffer));
+    if (iResult == 0)
+    {
+       goto cleanup;
+    }
+
+    /* Get the size for a full BITMAPINFO */
+    cjInfoSize = DIB_BitmapInfoSize(pbmi, DIB_RGB_COLORS);
+
+    /* Calculate the size of the clipboard data, which is a packed DIB */
+    cjDataSize = cjInfoSize + pbmi->bmiHeader.biSizeImage;
+
+    /* Create the clipboard data */
+    pClipboardData = (PCLIPBOARDDATA)UserCreateObject(gHandleTable,
+                                                      NULL,
+                                                      &hMem,
+                                                      otClipBoardData,
+                                                      cjDataSize);
+    if (!pClipboardData)
+    {
+        goto cleanup;
+    }
+
+    /* Set the data size */
+    pClipboardData->cbData = cjDataSize;
+
+    /* Copy the BITMAPINFOHEADER */
+    memcpy(pClipboardData->Data, pbmi, sizeof(BITMAPINFOHEADER));
+
+    /* Get the bitmap bits and the color table */
+    iResult = GreGetDIBitsInternal(hdc,
+                                   hbm,
+                                   0,
+                                   abs(pbmi->bmiHeader.biHeight),
+                                   (LPBYTE)pClipboardData->Data + cjInfoSize,
+                                   (LPBITMAPINFO)pClipboardData->Data,
+                                   DIB_RGB_COLORS,
+                                   pbmi->bmiHeader.biSizeImage,
+                                   cjInfoSize);
+
+    /* Add the clipboard data */
+    IntAddFormatedData(pWinStaObj, CF_DIB, hMem, TRUE, TRUE);
 
 cleanup:
     UserReleaseDC(NULL, hdc, FALSE);

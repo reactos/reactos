@@ -10,4 +10,17 @@ HPALETTE FASTCALL BuildDIBPalette (CONST BITMAPINFO *bmi);
 BITMAPINFO* FASTCALL DIB_ConvertBitmapInfo(CONST BITMAPINFO* bmi, DWORD Usage);
 VOID FASTCALL DIB_FreeConvertedBitmapInfo(BITMAPINFO* converted, BITMAPINFO* orig);
 
+INT
+APIENTRY
+GreGetDIBitsInternal(
+    HDC hDC,
+    HBITMAP hBitmap,
+    UINT StartScan,
+    UINT ScanLines,
+    LPBYTE Bits,
+    LPBITMAPINFO Info,
+    UINT Usage,
+    UINT MaxBits,
+    UINT MaxInfo);
+
 #define DIB_PAL_BRUSHHACK 3
