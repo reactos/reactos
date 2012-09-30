@@ -27,7 +27,7 @@ EFtoF(EFLOAT_S * efp)
     Exp = efp->lExp;
     Sign = SIGN(Mant);
 
-    if (Sign) Mant = -Mant;
+    if (Sign) Mant = -(LONG)Mant;
     Mant >>= 7;
     Exp += (EXCESS-1);
 

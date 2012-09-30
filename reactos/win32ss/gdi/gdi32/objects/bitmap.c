@@ -449,13 +449,52 @@ CreateDIBitmap( HDC hDC,
     HBITMAP hBmp;
     NTSTATUS Status = STATUS_SUCCESS;
 
-    if (!Header) return 0;
+    /* Check for CBM_CREATDIB */
+    if (Init & CBM_CREATDIB)
+    {
+        /* CBM_CREATDIB needs Data. */
+        if (!Data)
+        {
+            return 0;
+        }
 
+        /* It only works with PAL or RGB */
+        if (ColorUse > DIB_PAL_COLORS)
+        {
+            GdiSetLastError(ERROR_INVALID_PARAMETER);
+            return 0;
+        }
+    }
+
+    /* Header is required */
+    if (!Header)
+    {
+        GdiSetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
+
+    /* Get the bitmap format and dimensions */
     if (DIB_GetBitmapInfo(Header, &width, &height, &planes, &bpp, &compr, &dibsize) == -1)
     {
         GdiSetLastError(ERROR_INVALID_PARAMETER);
         return NULL;
     }
+
+    /* Check if the Compr is incompatible */
+    if ((compr == BI_JPEG) || (compr == BI_PNG) || (compr == BI_BITFIELDS)) return 0;
+
+    /* Only DIB_RGB_COLORS (0), DIB_PAL_COLORS (1) and 2 are valid. */
+    if (ColorUse > DIB_PAL_COLORS + 1)
+    {
+        GdiSetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
+
+    /* Negative width is not allowed */
+    if (width < 0) return 0;
+
+    /* Top-down DIBs have a negative height. */
+    height = abs(height);
 
 // For Icm support.
 // GdiGetHandleUserData(hdc, GDI_OBJECT_TYPE_DC, (PVOID)&pDc_Attr))
