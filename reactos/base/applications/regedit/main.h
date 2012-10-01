@@ -94,7 +94,8 @@ extern void ResizeWnd(int cx, int cy);
 extern LPCTSTR get_root_key_name(HKEY hRootKey);
 
 /* error.c */
-extern void ErrorMessageBox(HWND hWnd, LPCTSTR title, DWORD code);
+extern int ErrorMessageBox(HWND hWnd, LPCTSTR lpTitle, DWORD dwErrorCode, ...);
+extern int InfoMessageBox(HWND hWnd, UINT uType, LPCTSTR lpTitle, LPCTSTR lpMessage, ...);
 
 /* find.c */
 extern void FindDialog(HWND hWnd);

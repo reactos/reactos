@@ -1,7 +1,7 @@
 /*
  * Windows regedit.exe registry editor implementation.
  *
- * Copyright 2002 Andriy Palamarchuk
+ * Copyright (C) 2002 Andriy Palamarchuk
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -258,11 +258,12 @@ BOOL ProcessCmdLine(LPWSTR lpCmdLine)
         {
             if (chu == L'S')
             {
+                /* Silence dialogs */
                 silent = TRUE;
             }
             else if (chu == L'V')
             {
-                /* ignore these switches */
+                /* Ignore this switch */
             }
             else
             {
@@ -323,14 +324,21 @@ BOOL ProcessCmdLine(LPWSTR lpCmdLine)
 
     if (*s && action == ACTION_UNDEF)
     {
-        TCHAR szTitle[256], szText[256];
-        LoadString(hInst, IDS_APP_TITLE, szTitle, COUNT_OF(szTitle));
-        LoadString(hInst, IDS_IMPORT_PROMPT, szText, COUNT_OF(szText));
-        /* request import confirmation */
-        if (silent || MessageBox(NULL, szText, szTitle, MB_YESNO) == IDYES) 
-            action = ACTION_ADD;
+        if (!silent)
+        {
+            TCHAR szTitle[256], szText[256];
+            LoadString(hInst, IDS_APP_TITLE, szTitle, COUNT_OF(szTitle));
+            LoadString(hInst, IDS_IMPORT_PROMPT, szText, COUNT_OF(szText));
+            /* request import confirmation */
+            if (MessageBox(NULL, szText, szTitle, MB_YESNO) == IDYES) 
+                action = ACTION_ADD;
+            else
+                return TRUE;
+        }
         else
-            return TRUE;
+        {
+            action = ACTION_ADD;
+        }
     }
     if (action == ACTION_UNDEF)
         return FALSE;

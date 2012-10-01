@@ -2,9 +2,9 @@
  * Registry processing routines. Routines, common for registry
  * processing frontends.
  *
- * Copyright 1999 Sylvain St-Germain
- * Copyright 2002 Andriy Palamarchuk
- * Copyright 2008 Alexander N. S?rnes <alex@thehandofagony.com>
+ * Copyright (C) 1999 Sylvain St-Germain
+ * Copyright (C) 2002 Andriy Palamarchuk
+ * Copyright (C) 2008 Alexander N. Sørnes <alex@thehandofagony.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
