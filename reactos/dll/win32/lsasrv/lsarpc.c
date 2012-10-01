@@ -259,6 +259,7 @@ NTSTATUS WINAPI LsarQueryInformationPolicy(
         case PolicyAuditLogInformation:      /* 1 */
             Status = LsarQueryAuditLog(PolicyHandle,
                                        PolicyInformation);
+            break;
 
         case PolicyAuditEventsInformation:   /* 2 */
             Status = LsarQueryAuditEvents(PolicyHandle,
@@ -273,6 +274,7 @@ NTSTATUS WINAPI LsarQueryInformationPolicy(
         case PolicyPdAccountInformation:     /* 4 */
             Status = LsarQueryPdAccount(PolicyHandle,
                                         PolicyInformation);
+            break;
 
         case PolicyAccountDomainInformation: /* 5 */
             Status = LsarQueryAccountDomain(PolicyHandle,
@@ -287,6 +289,7 @@ NTSTATUS WINAPI LsarQueryInformationPolicy(
         case PolicyReplicaSourceInformation: /* 7 */
             Status = LsarQueryReplicaSource(PolicyHandle,
                                             PolicyInformation);
+            break;
 
         case PolicyDefaultQuotaInformation:  /* 8 */
             Status = LsarQueryDefaultQuota(PolicyHandle,
