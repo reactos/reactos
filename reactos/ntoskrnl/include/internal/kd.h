@@ -68,6 +68,21 @@ KdPortPutByteEx(
 
 #if defined(KDBG) || DBG
 
+#if KDBG
+typedef
+BOOLEAN
+(NTAPI *PKDBG_CLI_ROUTINE)(
+    IN PCHAR Command,
+    IN ULONG Argc,
+    IN PCH Argv[]);
+
+BOOLEAN
+NTAPI
+KdbRegisterCliCallback(
+    PVOID Callback,
+    BOOLEAN Deregister);
+#endif
+
 VOID
 KdbSymProcessSymbols(
     IN PLDR_DATA_TABLE_ENTRY LdrEntry);

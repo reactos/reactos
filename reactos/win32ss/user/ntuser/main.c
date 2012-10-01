@@ -11,6 +11,7 @@
 
 #define NDEBUG
 #include <debug.h>
+#include <kdros.h>
 
 HANDLE hModuleWin;
 
@@ -87,6 +88,9 @@ Win32kProcessCallback(struct _EPROCESS *Process,
 
 #if DBG
         DbgInitDebugChannels();
+#if KDBG
+        KdRosRegisterCliCallback(DbgGdiKdbgCliCallback);
+#endif
 #endif
 
         TRACE_CH(UserProcess,"Allocated ppi 0x%p for PID:0x%lx\n", ppiCurrent, HandleToUlong(Process->UniqueProcessId));
@@ -408,7 +412,7 @@ UserDestroyThreadInfo(struct _ETHREAD *Thread)
        TRACE_CH(UserThread,"Attached Thread ptiTo is getting switched!\n");
        UserAttachThreadInput(ptiFrom, ptiCurrent, FALSE);
     }
-    
+
     // ptiFrom
     if (ptiCurrent->pqAttach && ptiCurrent->MessageQueue)
     {

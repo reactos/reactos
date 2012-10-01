@@ -118,7 +118,7 @@ CompareBacktraces(ULONG idx1, ULONG idx2)
 
 VOID
 NTAPI
-DbgDumpGdiHandleTable(void)
+DbgDumpGdiHandleTableWithBT(void)
 {
     static int leak_reported = 0;
     int i, j, idx, nTraces = 0;
@@ -729,6 +729,36 @@ BOOL DbgInitDebugChannels()
     return ret;
 }
 
-#endif
+
+#if KDBG
+
+BOOLEAN
+NTAPI
+DbgGdiKdbgCliCallback(
+    IN PCHAR pszCommand,
+    IN ULONG argc,
+    IN PCH argv[])
+{
+
+    if (stricmp(argv[0], "gdi!dumpht") == 0)
+    {
+        DbgDumpGdiHandleTable(argc - 1, argv + 1);
+    }
+    else if (stricmp(argv[0], "gdi!handle") == 0)
+    {
+        DbgDumpHandleInfo(argv[1]);
+    }
+    else
+    {
+        /* Not handled */
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+#endif // KDBG
+
+#endif // DBG
 
 /* EOF */
