@@ -1240,7 +1240,7 @@ NTSTATUS
 NTAPI
 RtlCopySecurityDescriptor(
     IN PSECURITY_DESCRIPTOR pSourceSecurityDescriptor,
-    OUT PSECURITY_DESCRIPTOR pDestinationSecurityDescriptor
+    OUT PSECURITY_DESCRIPTOR *pDestinationSecurityDescriptor
 );
 
 NTSYSAPI
