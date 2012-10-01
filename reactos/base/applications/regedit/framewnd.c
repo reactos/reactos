@@ -469,7 +469,7 @@ static BOOL ImportRegistryFile(HWND hWnd)
             {
                 /* Show successful import */
                 LoadString(hInst, IDS_APP_TITLE, szTitle, COUNT_OF(szTitle));
-                LoadString(hInst, IDS_IMPORTED_OK, szText, COUNT_OF(szText));
+                LoadString(hInst, IDS_IMPORT_OK, szText, COUNT_OF(szText));
                 MessageBox(NULL, szText, szTitle, MB_OK);
                 bRet = TRUE;
             }

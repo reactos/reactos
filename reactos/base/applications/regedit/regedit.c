@@ -164,7 +164,7 @@ BOOL PerformRegAction(REGEDIT_ACTION action, LPWSTR s, BOOL silent)
             import_registry_file(fp);
             get_file_name(&s, filename);
             LoadString(hInst, IDS_APP_TITLE, szTitle, COUNT_OF(szTitle));
-            LoadString(hInst, IDS_IMPORTED_OK, szText, COUNT_OF(szText));
+            LoadString(hInst, IDS_IMPORT_OK, szText, COUNT_OF(szText));
             /* show successful import */
             if (!silent)
                 MessageBox(NULL, szText, szTitle, MB_OK);
