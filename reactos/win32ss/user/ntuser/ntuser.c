@@ -20,6 +20,7 @@ ATOM AtomFlashWndState; // Window Flash State atom.
 BOOL gbInitialized;
 HINSTANCE hModClient = NULL;
 BOOL ClientPfnInit = FALSE;
+PEPROCESS gpepCSRSS;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
@@ -46,7 +47,7 @@ InitUserAtoms(VOID)
   gpsi->atomIconProp = IntAddGlobalAtom(L"SysIC", TRUE);
 
   gpsi->atomFrostedWindowProp = IntAddGlobalAtom(L"SysFrostedWindow", TRUE);
-  
+
   AtomWndObj = IntAddGlobalAtom(L"SysWNDO", TRUE);
   AtomLayer = IntAddGlobalAtom(L"SysLayer", TRUE);
   AtomFlashWndState = IntAddGlobalAtom(L"FlashWState", TRUE);
@@ -175,6 +176,9 @@ NtUserInitialize(
         UserLeave();
         return STATUS_UNSUCCESSFUL;
     }
+
+    /* Save EPROCESS of CSRSS */
+    gpepCSRSS = PsGetCurrentProcess();
 
 // Initialize Power Request List.
 // Initialize Media Change.
