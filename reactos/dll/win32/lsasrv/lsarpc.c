@@ -1219,7 +1219,7 @@ NTSTATUS WINAPI LsarOpenSecret(
     /* Validate the PolicyHandle */
     Status = LsapValidateDbObject(PolicyHandle,
                                   LsaDbPolicyObject,
-                                  POLICY_CREATE_SECRET,
+                                  0,
                                   &PolicyObject);
     if (!NT_SUCCESS(Status))
     {
@@ -1251,7 +1251,7 @@ done:
         *SecretHandle = (LSAPR_HANDLE)SecretObject;
     }
 
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 
