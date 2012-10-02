@@ -23,30 +23,31 @@
 
 static const char *usage =
     "Usage:\n"
-    "    regedit filename\n"
+    "    regedit filenames\n"
     "    regedit /E filename [regpath]\n"
     "    regedit /D regpath\n"
     "\n"
-    "filename - registry file name\n"
-    "regpath - name of the registry key\n"
+    "filenames - List of registry files names\n"
+    "filename  - Registry file name\n"
+    "regpath   - Name of the registry key\n"
     "\n"
     "When is called without any switches adds contents of the specified\n"
-    "registry file to the registry\n"
+    "registry files to the registry.\n"
     "\n"
     "Switches:\n"
-    "    /E - exports contents of the specified registry key to the specified\n"
-    "	file. Exports the whole registry if no key is specified.\n"
-    "    /D - deletes specified registry key\n"
-    "    /S - silent execution, can be used with any other switch.\n"
-    "	The only existing mode, exists for compatibility with Windows regedit.\n"
-    "    /V - advanced mode, can be used with any other switch.\n"
-    "	Ignored, exists for compatibility with Windows regedit.\n"
-    "    /L - location of system.dat file. Can be used with any other switch.\n"
-    "	Ignored. Exists for compatibility with Windows regedit.\n"
-    "    /R - location of user.dat file. Can be used with any other switch.\n"
-    "	Ignored. Exists for compatibility with Windows regedit.\n"
-    "    /? - print this help. Any other switches are ignored.\n"
-    "    /C - create registry from. Not implemented.\n"
+    "    /E - Exports contents of the specified registry key to the specified\n"
+    "         file. Exports the whole registry if no key is specified.\n"
+    "    /D - Deletes specified registry key\n"
+    "    /S - Silent execution, can be used with any other switch.\n"
+    "         The only existing mode, exists for compatibility with Windows regedit.\n"
+    "    /V - Advanced mode, can be used with any other switch.\n"
+    "         Ignored, exists for compatibility with Windows regedit.\n"
+    "    /L - Location of system.dat file. Can be used with any other switch.\n"
+    "         Ignored. Exists for compatibility with Windows regedit.\n"
+    "    /R - Location of user.dat file. Can be used with any other switch.\n"
+    "         Ignored. Exists for compatibility with Windows regedit.\n"
+    "    /? - Print this help. Any other switches are ignored.\n"
+    "    /C - Create registry from. Not implemented.\n"
     "\n"
     "The switches are case-insensitive, can be prefixed either by '-' or '/'.\n"
     "This program is command-line compatible with Microsoft Windows\n"
@@ -74,10 +75,10 @@ const CHAR *getAppName(void)
  *      where *s[0] is the first symbol of the file name.
  * file_name - buffer to write the file name to.
  */
-void get_file_name(LPWSTR *command_line, LPWSTR file_name)
+void get_file_name(LPTSTR *command_line, LPTSTR file_name)
 {
-    WCHAR *s = *command_line;
-    int pos = 0;                /* position of pointer "s" in *command_line */
+    TCHAR *s = *command_line;
+    int pos = 0; /* position of pointer "s" in *command_line */
     file_name[0] = 0;
 
     if (!s[0])
@@ -85,11 +86,11 @@ void get_file_name(LPWSTR *command_line, LPWSTR file_name)
         return;
     }
 
-    if (s[0] == L'"')
+    if (s[0] == _T('"'))
     {
         s++;
         (*command_line)++;
-        while(s[0] != L'"')
+        while(s[0] != _T('"'))
         {
             if (!s[0])
             {
@@ -102,7 +103,7 @@ void get_file_name(LPWSTR *command_line, LPWSTR file_name)
     }
     else
     {
-        while(s[0] && !iswspace(s[0]))
+        while(s[0] && !_istspace(s[0]))
         {
             s++;
             pos++;
@@ -110,13 +111,13 @@ void get_file_name(LPWSTR *command_line, LPWSTR file_name)
     }
     memcpy(file_name, *command_line, pos * sizeof(WCHAR));
     /* remove the last backslash */
-    if (file_name[pos - 1] == L'\\')
+    if (file_name[pos - 1] == _T('\\'))
     {
-        file_name[pos - 1] = L'\0';
+        file_name[pos - 1] = _T('\0');
     }
     else
     {
-        file_name[pos] = L'\0';
+        file_name[pos] = _T('\0');
     }
 
     if (s[0])
@@ -124,7 +125,7 @@ void get_file_name(LPWSTR *command_line, LPWSTR file_name)
         s++;
         pos++;
     }
-    while(s[0] && iswspace(s[0]))
+    while(s[0] && _istspace(s[0]))
     {
         s++;
         pos++;
@@ -132,88 +133,116 @@ void get_file_name(LPWSTR *command_line, LPWSTR file_name)
     (*command_line) += pos;
 }
 
-BOOL PerformRegAction(REGEDIT_ACTION action, LPWSTR s, BOOL silent)
+BOOL PerformRegAction(REGEDIT_ACTION action, LPTSTR s, BOOL silent)
 {
-    TCHAR szTitle[256], szText[256];
     switch (action)
     {
-    case ACTION_ADD:
-    {
-        WCHAR filename[MAX_PATH];
-        FILE *fp;
-
-        get_file_name(&s, filename);
-        if (!filename[0])
+        case ACTION_ADD:
         {
-            fprintf(stderr, "%s: No file name is specified\n", getAppName());
-            fprintf(stderr, usage);
-            exit(4);
-        }
+            TCHAR szTitle[512], szText[512];
+            TCHAR filename[MAX_PATH];
+            FILE *fp;
 
-        while(filename[0])
-        {
-            fp = _wfopen(filename, L"r");
-            if (fp == NULL)
-            {
-                LPSTR p = GetMultiByteString(filename);
-                perror("");
-                fprintf(stderr, "%s: Can't open file \"%s\"\n", getAppName(), p);
-                HeapFree(GetProcessHeap(), 0, p);
-                exit(5);
-            }
-            import_registry_file(fp);
             get_file_name(&s, filename);
+            if (!filename[0])
+            {
+                fprintf(stderr, "%s: No file name is specified\n", getAppName());
+                fprintf(stderr, usage);
+                exit(4);
+            }
+
             LoadString(hInst, IDS_APP_TITLE, szTitle, COUNT_OF(szTitle));
-            LoadString(hInst, IDS_IMPORT_OK, szText, COUNT_OF(szText));
-            /* show successful import */
-            if (!silent)
-                MessageBox(NULL, szText, szTitle, MB_OK);
-        }
-        break;
-    }
-    case ACTION_DELETE:
-    {
-        WCHAR reg_key_name[KEY_MAX_LEN];
-        get_file_name(&s, reg_key_name);
-        if (!reg_key_name[0])
-        {
-            fprintf(stderr, "%s: No registry key is specified for removal\n", getAppName());
-            fprintf(stderr, usage);
-            exit(6);
-        }
-        delete_registry_key(reg_key_name);
-        break;
-    }
-    case ACTION_EXPORT:
-    {
-        WCHAR filename[MAX_PATH];
 
-        filename[0] = _T('\0');
-        get_file_name(&s, filename);
-        if (!filename[0])
-        {
-            fprintf(stderr, "%s: No file name is specified\n", getAppName());
-            fprintf(stderr, usage);
-            exit(7);
+            while (filename[0])
+            {
+                /* Request import confirmation */
+                if (!silent)
+                {
+                    LoadString(hInst, IDS_IMPORT_PROMPT, szText, COUNT_OF(szText));
+
+                    if (InfoMessageBox(NULL, MB_YESNO | MB_ICONWARNING, szTitle, szText, filename) != IDYES)
+                        goto cont;
+                }
+
+                fp = _tfopen(filename, _T("r"));
+                if (fp != NULL)
+                {
+                    import_registry_file(fp);
+
+                    /* Show successful import */
+                    if (!silent)
+                    {
+                        LoadString(hInst, IDS_IMPORT_OK, szText, COUNT_OF(szText));
+                        InfoMessageBox(NULL, MB_OK | MB_ICONINFORMATION, szTitle, szText, filename);
+                    }
+                }
+                else
+                {
+                    LPSTR p = GetMultiByteString(filename);
+                    perror("");
+                    fprintf(stderr, "%s: Can't open file \"%s\"\n", getAppName(), p);
+                    HeapFree(GetProcessHeap(), 0, p);
+
+                    /* Error opening the file */
+                    if (!silent)
+                    {
+                        LoadString(hInst, IDS_IMPORT_ERROR, szText, COUNT_OF(szText));
+                        InfoMessageBox(NULL, MB_OK | MB_ICONERROR, szTitle, szText, filename);
+                    }
+                }
+
+cont:
+                get_file_name(&s, filename);
+            }
+            break;
         }
 
-        if (s[0])
+        case ACTION_DELETE:
         {
-            WCHAR reg_key_name[KEY_MAX_LEN];
+            TCHAR reg_key_name[KEY_MAX_LEN];
             get_file_name(&s, reg_key_name);
-            export_registry_key(filename, reg_key_name, REG_FORMAT_4);
+            if (!reg_key_name[0])
+            {
+                fprintf(stderr, "%s: No registry key is specified for removal\n", getAppName());
+                fprintf(stderr, usage);
+                exit(6);
+            }
+            delete_registry_key(reg_key_name);
+            break;
         }
-        else
+
+        case ACTION_EXPORT:
         {
-            export_registry_key(filename, NULL, REG_FORMAT_4);
+            TCHAR filename[MAX_PATH];
+
+            filename[0] = _T('\0');
+            get_file_name(&s, filename);
+            if (!filename[0])
+            {
+                fprintf(stderr, "%s: No file name is specified\n", getAppName());
+                fprintf(stderr, usage);
+                exit(7);
+            }
+
+            if (s[0])
+            {
+                TCHAR reg_key_name[KEY_MAX_LEN];
+                get_file_name(&s, reg_key_name);
+                export_registry_key(filename, reg_key_name, REG_FORMAT_4);
+            }
+            else
+            {
+                export_registry_key(filename, NULL, REG_FORMAT_4);
+            }
+            break;
         }
-        break;
+
+        default:
+            fprintf(stderr, "%s: Unhandled action!\n", getAppName());
+            exit(8);
+            break;
     }
-    default:
-        fprintf(stderr, "%s: Unhandled action!\n", getAppName());
-        exit(8);
-        break;
-    }
+
     return TRUE;
 }
 
@@ -233,35 +262,35 @@ static void error_unknown_switch(WCHAR chu, LPWSTR s)
     else
     {
         fprintf(stderr, "%s: Alphabetic character is expected after '%c' "
-                "in swit ch specification\n", getAppName(), *(s - 1));
+                        "in switch specification\n", getAppName(), *(s - 1));
     }
     exit(1);
 }
 
-BOOL ProcessCmdLine(LPWSTR lpCmdLine)
+BOOL ProcessCmdLine(LPTSTR lpCmdLine)
 {
     BOOL silent = FALSE;
     REGEDIT_ACTION action = ACTION_UNDEF;
-    LPWSTR s = lpCmdLine;       /* command line pointer */
-    WCHAR ch = *s;              /* current character */
+    LPTSTR s = lpCmdLine;       /* command line pointer */
+    TCHAR ch = *s;              /* current character */
 
-    while (ch && ((ch == L'-') || (ch == L'/')))
+    while (ch && ((ch == _T('-')) || (ch == _T('/'))))
     {
-        WCHAR chu;
-        WCHAR ch2;
+        TCHAR chu;
+        TCHAR ch2;
 
         s++;
         ch = *s;
         ch2 = *(s + 1);
-        chu = (WCHAR)towupper(ch);
-        if (!ch2 || iswspace(ch2))
+        chu = _totupper(ch);
+        if (!ch2 || _istspace(ch2))
         {
-            if (chu == L'S')
+            if (chu == _T('S'))
             {
                 /* Silence dialogs */
                 silent = TRUE;
             }
-            else if (chu == L'V')
+            else if (chu == _T('V'))
             {
                 /* Ignore this switch */
             }
@@ -269,41 +298,41 @@ BOOL ProcessCmdLine(LPWSTR lpCmdLine)
             {
                 switch (chu)
                 {
-                case L'D':
-                    action = ACTION_DELETE;
-                    break;
-                case L'E':
-                    action = ACTION_EXPORT;
-                    break;
-                case L'?':
-                    fprintf(stderr, usage);
-                    exit(3);
-                    break;
-                default:
-                    error_unknown_switch(chu, s);
-                    break;
+                    case _T('D'):
+                        action = ACTION_DELETE;
+                        break;
+                    case _T('E'):
+                        action = ACTION_EXPORT;
+                        break;
+                    case _T('?'):
+                        fprintf(stderr, usage);
+                        exit(3);
+                        break;
+                    default:
+                        error_unknown_switch(chu, s);
+                        break;
                 }
             }
             s++;
         }
         else
         {
-            if (ch2 == L':')
+            if (ch2 == _T(':'))
             {
                 switch (chu)
                 {
-                case L'L':
-                    /* fall through */
-                case L'R':
-                    s += 2;
-                    while (*s && !iswspace(*s))
-                    {
-                        s++;
-                    }
-                    break;
-                default:
-                    error_unknown_switch(chu, s);
-                    break;
+                    case _T('L'):
+                        /* fall through */
+                    case _T('R'):
+                        s += 2;
+                        while (*s && !_istspace(*s))
+                        {
+                            s++;
+                        }
+                        break;
+                    default:
+                        error_unknown_switch(chu, s);
+                        break;
                 }
             }
             else
@@ -315,7 +344,7 @@ BOOL ProcessCmdLine(LPWSTR lpCmdLine)
         }
         /* skip spaces to the next parameter */
         ch = *s;
-        while (ch && iswspace(ch))
+        while (ch && _istspace(ch))
         {
             s++;
             ch = *s;
@@ -323,25 +352,10 @@ BOOL ProcessCmdLine(LPWSTR lpCmdLine)
     }
 
     if (*s && action == ACTION_UNDEF)
-    {
-        if (!silent)
-        {
-            TCHAR szTitle[256], szText[256];
-            LoadString(hInst, IDS_APP_TITLE, szTitle, COUNT_OF(szTitle));
-            LoadString(hInst, IDS_IMPORT_PROMPT, szText, COUNT_OF(szText));
-            /* request import confirmation */
-            if (MessageBox(NULL, szText, szTitle, MB_YESNO) == IDYES) 
-                action = ACTION_ADD;
-            else
-                return TRUE;
-        }
-        else
-        {
-            action = ACTION_ADD;
-        }
-    }
-    if (action == ACTION_UNDEF)
-        return FALSE;
+        action = ACTION_ADD;
 
-    return PerformRegAction(action, s, silent);
+    if (action != ACTION_UNDEF)
+        return PerformRegAction(action, s, silent);
+    else
+        return FALSE;
 }
