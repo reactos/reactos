@@ -147,6 +147,7 @@ RtlCreateSecurityDescriptorRelative(IN PISECURITY_DESCRIPTOR_RELATIVE SecurityDe
     /* Setup an empty SD */
     RtlZeroMemory(SecurityDescriptor, sizeof(*SecurityDescriptor));
     SecurityDescriptor->Revision = SECURITY_DESCRIPTOR_REVISION;
+    SecurityDescriptor->Control = SE_SELF_RELATIVE;
 
     /* All good */
     return STATUS_SUCCESS;
@@ -560,14 +561,14 @@ RtlSetAttributesSecurityDescriptor(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     if (Sd->Revision != SECURITY_DESCRIPTOR_REVISION) return STATUS_UNKNOWN_REVISION;
 
     /* Mask out flags which are not attributes */
-    Control &= ~SE_DACL_UNTRUSTED |
-                SE_SERVER_SECURITY |
-                SE_DACL_AUTO_INHERIT_REQ |
-                SE_SACL_AUTO_INHERIT_REQ |
-                SE_DACL_AUTO_INHERITED |
-                SE_SACL_AUTO_INHERITED |
-                SE_DACL_PROTECTED |
-                SE_SACL_PROTECTED;
+    Control &= SE_DACL_UNTRUSTED |
+               SE_SERVER_SECURITY |
+               SE_DACL_AUTO_INHERIT_REQ |
+               SE_SACL_AUTO_INHERIT_REQ |
+               SE_DACL_AUTO_INHERITED |
+               SE_SACL_AUTO_INHERITED |
+               SE_DACL_PROTECTED |
+               SE_SACL_PROTECTED;
 
     /* Call the newer API */
     return RtlSetControlSecurityDescriptor(SecurityDescriptor, Control, Control);
@@ -1153,7 +1154,7 @@ RtlValidRelativeSecurityDescriptor(IN PSECURITY_DESCRIPTOR SecurityDescriptorInp
         }
 
         /* Read the group, check if it's valid and if the buffer contains it */
-        Group = (PSID)((ULONG_PTR)Sd->Owner + (ULONG_PTR)Sd);
+        Group = (PSID)((ULONG_PTR)Sd->Group + (ULONG_PTR)Sd);
         if (!RtlValidSid(Group) || (Length < RtlLengthSid(Group))) return FALSE;
     }
     else if (RequiredInformation & GROUP_SECURITY_INFORMATION)
