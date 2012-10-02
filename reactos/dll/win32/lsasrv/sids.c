@@ -17,7 +17,7 @@ typedef struct _WELL_KNOWN_SID
     PSID Sid;
     UNICODE_STRING Name;
     UNICODE_STRING Domain;
-    SID_NAME_USE NameUse;
+    SID_NAME_USE Use;
 } WELL_KNOWN_SID, *PWELL_KNOWN_SID;
 
 
@@ -155,7 +155,7 @@ LsapCreateSid(PSID_IDENTIFIER_AUTHORITY IdentifierAuthority,
               PULONG SubAuthorities,
               PWSTR Name,
               PWSTR Domain,
-              SID_NAME_USE NameUse)
+              SID_NAME_USE Use)
 {
     PWELL_KNOWN_SID SidEntry;
     PULONG p;
@@ -192,7 +192,7 @@ LsapCreateSid(PSID_IDENTIFIER_AUTHORITY IdentifierAuthority,
     RtlInitUnicodeString(&SidEntry->Domain,
                          Domain);
 
-    SidEntry->NameUse = NameUse;
+    SidEntry->Use = Use;
 
     InsertTailList(&WellKnownSidListHead,
                    &SidEntry->ListEntry);
@@ -275,8 +275,8 @@ LsapInitSids(VOID)
     LsapCreateSid(&NtAuthority,
                   0,
                   NULL,
-                  L"NT Pseudo Domain",
-                  L"NT Pseudo Domain",
+                  L"NT AUTHORITY",
+                  L"NT AUTHORITY",
                   SidTypeDomain);
 
     /* Dialup Sid */
@@ -625,7 +625,7 @@ TRACE("i: %lu\n", i);
         ptr = LsapLookupWellKnownSid(Sids[i]);
         if (ptr != NULL)
         {
-            OutputNames[i].Use = ptr->NameUse;
+            OutputNames[i].Use = ptr->Use;
 
             OutputNames[i].DomainIndex = i; /* Fixme */
 
@@ -635,18 +635,33 @@ TRACE("i: %lu\n", i);
             RtlCopyMemory(OutputNames[i].Name.Buffer, ptr->Name.Buffer, ptr->Name.MaximumLength);
 
             Mapped++;
+            continue;
         }
-        else
-        {
-            OutputNames[i].Use = SidTypeWellKnownGroup;
-            OutputNames[i].DomainIndex = i;
-            OutputNames[i].Name.Buffer = MIDL_user_allocate(UserName.MaximumLength);
-            OutputNames[i].Name.Length = UserName.Length;
-            OutputNames[i].Name.MaximumLength = UserName.MaximumLength;
-            RtlCopyMemory(OutputNames[i].Name.Buffer, UserName.Buffer, UserName.MaximumLength);
 
-            Mapped++;
-        }
+        /* Check for buildin domain SID */
+
+        /* Check for account domain SID */
+
+        /* Check for primary domain SID (later) */
+
+        /* Check for trusted domain SID (later) */
+
+        /* Check for builtin domain account SID */
+
+        /* Check for account domain account SID */
+
+        /* Check for primary domain account SID (later) */
+
+
+        /* Unknown SID */
+        OutputNames[i].Use = SidTypeWellKnownGroup;
+        OutputNames[i].DomainIndex = i;
+        OutputNames[i].Name.Buffer = MIDL_user_allocate(UserName.MaximumLength);
+        OutputNames[i].Name.Length = UserName.Length;
+        OutputNames[i].Name.MaximumLength = UserName.MaximumLength;
+        RtlCopyMemory(OutputNames[i].Name.Buffer, UserName.Buffer, UserName.MaximumLength);
+
+        Mapped++;
     }
 
     if (Mapped == 0)
@@ -655,6 +670,301 @@ TRACE("i: %lu\n", i);
         Status = STATUS_SOME_NOT_MAPPED;
     else
         Status = STATUS_SUCCESS;
+
+    return Status;
+}
+
+
+PWELL_KNOWN_SID
+LsapLookupWellKnownName(LPWSTR Domain,
+                        LPWSTR Account)
+{
+    PLIST_ENTRY ListEntry;
+    PWELL_KNOWN_SID Ptr;
+
+    ListEntry = WellKnownSidListHead.Flink;
+    while (ListEntry != &WellKnownSidListHead)
+    {
+        Ptr = CONTAINING_RECORD(ListEntry,
+                                WELL_KNOWN_SID,
+                                ListEntry);
+        if (_wcsicmp(Account, Ptr->Name.Buffer) == 0)
+            return Ptr;
+
+        ListEntry = ListEntry->Flink;
+    }
+
+    return NULL;
+}
+
+
+static
+NTSTATUS
+LsapSplitNames(DWORD Count,
+               PRPC_UNICODE_STRING Names,
+               PRPC_UNICODE_STRING *DomainNames,
+               PRPC_UNICODE_STRING *AccountNames)
+{
+    PRPC_UNICODE_STRING DomainsBuffer = NULL;
+    PRPC_UNICODE_STRING AccountsBuffer = NULL;
+    ULONG DomainLength;
+    ULONG i;
+    LPWSTR Ptr;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    DomainsBuffer = MIDL_user_allocate(Count * sizeof(RPC_UNICODE_STRING));
+    if (DomainsBuffer == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
+
+    AccountsBuffer = MIDL_user_allocate(Count * sizeof(RPC_UNICODE_STRING));
+    if (AccountsBuffer == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
+
+    for (i = 0; i < Count; i++)
+    {
+TRACE("Name: %S\n", Names[i].Buffer);
+
+        Ptr = wcschr(Names[i].Buffer, L'\\');
+        if (Ptr == NULL)
+        {
+            AccountsBuffer[i].Length = Names[i].Length;
+            AccountsBuffer[i].MaximumLength = Names[i].MaximumLength;
+            AccountsBuffer[i].Buffer = MIDL_user_allocate(AccountsBuffer[i].MaximumLength);
+            if (AccountsBuffer[i].Buffer == NULL)
+            {
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+                goto done;
+            }
+
+            CopyMemory(AccountsBuffer[i].Buffer,
+                       Names[i].Buffer,
+                       AccountsBuffer[i].Length);
+            AccountsBuffer[i].Buffer[AccountsBuffer[i].Length / sizeof(WCHAR)] = UNICODE_NULL;
+
+TRACE("Account name: %S\n", AccountsBuffer[i].Buffer);
+        }
+        else
+        {
+            DomainLength = (ULONG)((ULONG_PTR)Ptr - (ULONG_PTR)Names[i].Buffer);
+            if (DomainLength > 0)
+            {
+                DomainsBuffer[i].Length = (USHORT)DomainLength * sizeof(WCHAR);
+                DomainsBuffer[i].MaximumLength = DomainsBuffer[i].Length + sizeof(WCHAR);
+                DomainsBuffer[i].Buffer = MIDL_user_allocate(DomainsBuffer[i].MaximumLength);
+                if (DomainsBuffer[i].Buffer == NULL)
+                {
+                    Status = STATUS_INSUFFICIENT_RESOURCES;
+                    goto done;
+                }
+
+                CopyMemory(DomainsBuffer[i].Buffer,
+                           Names[i].Buffer,
+                           DomainsBuffer[i].Length);
+                DomainsBuffer[i].Buffer[DomainsBuffer[i].Length / sizeof(WCHAR)] = UNICODE_NULL;
+
+TRACE("Domain name: %S\n", DomainsBuffer[i].Buffer);
+            }
+
+            AccountsBuffer[i].Length = Names[i].Length - (USHORT)((DomainLength + 1) * sizeof(WCHAR));
+            AccountsBuffer[i].MaximumLength = AccountsBuffer[i].Length + sizeof(WCHAR);
+            AccountsBuffer[i].Buffer = MIDL_user_allocate(AccountsBuffer[i].MaximumLength);
+            if (AccountsBuffer[i].Buffer == NULL)
+            {
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+                goto done;
+            }
+
+            CopyMemory(AccountsBuffer[i].Buffer,
+                       &(Names[i].Buffer[DomainLength + 1]),
+                       AccountsBuffer[i].Length);
+            AccountsBuffer[i].Buffer[AccountsBuffer[i].Length / sizeof(WCHAR)] = UNICODE_NULL;
+
+TRACE("Account name: %S\n", AccountsBuffer[i].Buffer);
+        }
+    }
+
+done:
+    if (!NT_SUCCESS(Status))
+    {
+        if (AccountsBuffer != NULL)
+        {
+            for (i = 0; i < Count; i++)
+            {
+                if (AccountsBuffer[i].Buffer != NULL)
+                    MIDL_user_free(AccountsBuffer[i].Buffer);
+            }
+
+            MIDL_user_free(AccountsBuffer);
+        }
+
+        if (DomainsBuffer != NULL)
+        {
+            for (i = 0; i < Count; i++)
+            {
+                if (DomainsBuffer[i].Buffer != NULL)
+                    MIDL_user_free(DomainsBuffer[i].Buffer);
+            }
+
+            MIDL_user_free(DomainsBuffer);
+        }
+    }
+    else
+    {
+        *DomainNames = DomainsBuffer;
+        *AccountNames = AccountsBuffer;
+    }
+
+    return Status;
+}
+
+
+NTSTATUS
+LsapLookupNames(DWORD Count,
+                PRPC_UNICODE_STRING Names,
+                PLSAPR_REFERENCED_DOMAIN_LIST *ReferencedDomains,
+                PLSAPR_TRANSLATED_SIDS_EX2 TranslatedSids,
+                LSAP_LOOKUP_LEVEL LookupLevel,
+                DWORD *MappedCount,
+                DWORD LookupOptions,
+                DWORD ClientRevision)
+{
+    PLSAPR_REFERENCED_DOMAIN_LIST DomainsBuffer = NULL;
+    PLSAPR_TRANSLATED_SID_EX2 SidsBuffer = NULL;
+    PRPC_UNICODE_STRING DomainNames = NULL;
+    PRPC_UNICODE_STRING AccountNames = NULL;
+    ULONG SidsBufferLength;
+//    ULONG DomainSidLength;
+//    ULONG AccountSidLength;
+//    PSID DomainSid;
+//    PSID AccountSid;
+    ULONG i;
+    ULONG Mapped = 0;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    PWELL_KNOWN_SID ptr;
+
+TRACE("\n");
+
+    TranslatedSids->Entries = Count;
+    TranslatedSids->Sids = NULL;
+    *ReferencedDomains = NULL;
+
+    SidsBufferLength = Count * sizeof(LSAPR_TRANSLATED_SID_EX2);
+    SidsBuffer = MIDL_user_allocate(SidsBufferLength);
+    if (SidsBuffer == NULL)
+    {
+TRACE("\n");
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
+
+    DomainsBuffer = MIDL_user_allocate(sizeof(LSAPR_REFERENCED_DOMAIN_LIST));
+    if (DomainsBuffer == NULL)
+    {
+TRACE("\n");
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
+
+    DomainsBuffer->Entries = Count;
+    DomainsBuffer->Domains = MIDL_user_allocate(Count * sizeof(LSA_TRUST_INFORMATION));
+    if (DomainsBuffer->Domains == NULL)
+    {
+TRACE("\n");
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
+
+    Status = LsapSplitNames(Count,
+                            Names,
+                            &DomainNames,
+                            &AccountNames);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("LsapSplitNames failed! (Status %lx)\n", Status);
+        goto done;
+    }
+
+    for (i = 0; i < Count; i++)
+    {
+TRACE("Name: %S\n", Names[i].Buffer);
+
+TRACE("Domain name: %S\n", DomainNames[i].Buffer);
+TRACE("Account name: %S\n", AccountNames[i].Buffer);
+
+        ptr = LsapLookupWellKnownName(DomainNames[i].Buffer,
+                                      AccountNames[i].Buffer);
+        if (ptr != NULL)
+        {
+TRACE("Found well known account!\n");
+            SidsBuffer[i].Use = ptr->Use;
+            SidsBuffer[i].Sid = ptr->Sid;
+
+            SidsBuffer[i].DomainIndex = -1;
+            SidsBuffer[i].Flags = 0;
+
+
+            Mapped++;
+            continue;
+        }
+
+
+
+    }
+
+done:
+    TRACE("done: Status %lx\n", Status);
+
+    if (DomainNames != NULL)
+    {
+        for (i = 0; i < Count; i++)
+        {
+            if (DomainNames[i].Buffer != NULL)
+                MIDL_user_free(DomainNames[i].Buffer);
+        }
+
+        MIDL_user_free(DomainNames);
+    }
+
+    if (AccountNames != NULL)
+    {
+        for (i = 0; i < Count; i++)
+        {
+            if (AccountNames[i].Buffer != NULL)
+                MIDL_user_free(AccountNames[i].Buffer);
+        }
+
+        MIDL_user_free(AccountNames);
+    }
+
+    if (!NT_SUCCESS(Status))
+    {
+        if (DomainsBuffer != NULL)
+        {
+            if (DomainsBuffer->Domains != NULL)
+                MIDL_user_free(DomainsBuffer->Domains);
+
+            MIDL_user_free(DomainsBuffer);
+        }
+
+        if (SidsBuffer != NULL)
+            MIDL_user_free(SidsBuffer);
+    }
+    else
+    {
+        *MappedCount = Mapped;
+
+        if (Mapped == 0)
+            Status = STATUS_NONE_MAPPED;
+        else if (Mapped < Count)
+            Status = STATUS_SOME_NOT_MAPPED;
+    }
 
     return Status;
 }

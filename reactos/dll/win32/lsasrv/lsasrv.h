@@ -196,3 +196,14 @@ NTSTATUS
 LsapLookupSids(PLSAPR_SID_ENUM_BUFFER SidEnumBuffer,
                PLSAPR_TRANSLATED_NAME OutputNames);
 
+NTSTATUS
+LsapLookupNames(DWORD Count,
+                PRPC_UNICODE_STRING Names,
+                PLSAPR_REFERENCED_DOMAIN_LIST *ReferencedDomains,
+                PLSAPR_TRANSLATED_SIDS_EX2 TranslatedSids,
+                LSAP_LOOKUP_LEVEL LookupLevel,
+                DWORD *MappedCount,
+                DWORD LookupOptions,
+                DWORD ClientRevision);
+
+/* EOF */
