@@ -175,6 +175,8 @@ BOOL PerformRegAction(REGEDIT_ACTION action, LPTSTR s, BOOL silent)
                         LoadString(hInst, IDS_IMPORT_OK, szText, COUNT_OF(szText));
                         InfoMessageBox(NULL, MB_OK | MB_ICONINFORMATION, szTitle, szText, filename);
                     }
+
+                    fclose(fp);
                 }
                 else
                 {
