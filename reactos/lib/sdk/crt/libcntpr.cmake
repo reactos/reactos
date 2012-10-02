@@ -80,6 +80,7 @@ if(ARCH STREQUAL "i386")
         math/i386/allshl_asm.s
         math/i386/allshr_asm.s
         math/i386/atan_asm.s
+        math/i386/atan2_asm.s
         math/i386/aulldiv_asm.s
         math/i386/aulldvrm_asm.s
         math/i386/aullrem_asm.s

@@ -194,12 +194,7 @@ list(APPEND SOURCE
     gdi/dib/i386/dib24bpp_hline.s
     gdi/dib/i386/dib32bpp_hline.s
     gdi/dib/i386/dib32bpp_colorfill.s
-    gdi/eng/i386/floatobj.S
-    user/ntuser/misc/i386/cos_asm.s
-    user/ntuser/misc/i386/sin_asm.s
-    user/ntuser/misc/i386/atan2_asm.s
-    user/ntuser/misc/i386/floor_asm.s
-    user/ntuser/misc/i386/ceil_asm.s)
+    gdi/eng/i386/floatobj.S)
 else()
 list(APPEND SOURCE
     gdi/dib/dib24bppc.c
