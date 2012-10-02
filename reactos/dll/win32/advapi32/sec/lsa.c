@@ -1292,7 +1292,7 @@ LsaQueryDomainInformationPolicy(IN LSA_HANDLE PolicyHandle,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 WINAPI
@@ -1300,9 +1300,25 @@ LsaQueryForestTrustInformation(IN LSA_HANDLE PolicyHandle,
                                IN PLSA_UNICODE_STRING TrustedDomainName,
                                OUT PLSA_FOREST_TRUST_INFORMATION *ForestTrustInfo)
 {
-    FIXME("LsaQueryForestTrustInformation(%p %p %p) stub\n",
+    NTSTATUS Status;
+
+    TRACE("LsaQueryForestTrustInformation(%p %p %p)\n",
           PolicyHandle, TrustedDomainName, ForestTrustInfo);
-    return STATUS_NOT_IMPLEMENTED;
+
+    RpcTryExcept
+    {
+        Status = LsarQueryForestTrustInformation((LSAPR_HANDLE)PolicyHandle,
+                                                 TrustedDomainName,
+                                                 ForestTrustDomainInfo,
+                                                 ForestTrustInfo);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
 }
 
 
@@ -1701,7 +1717,7 @@ LsaSetDomainInformationPolicy(IN LSA_HANDLE PolicyHandle,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 WINAPI
@@ -1711,9 +1727,27 @@ LsaSetForestTrustInformation(IN LSA_HANDLE PolicyHandle,
                              IN BOOL CheckOnly,
                              OUT PLSA_FOREST_TRUST_COLLISION_INFORMATION *CollisionInfo)
 {
-    FIXME("LsaSetForestTrustInformation(%p %p %p %d %p) stub\n",
+    NTSTATUS Status;
+
+    TRACE("LsaSetForestTrustInformation(%p %p %p %d %p)\n",
           PolicyHandle, TrustedDomainName, ForestTrustInfo, CheckOnly, CollisionInfo);
-    return STATUS_NOT_IMPLEMENTED;
+
+    RpcTryExcept
+    {
+        Status = LsarSetForestTrustInformation((LSAPR_HANDLE)PolicyHandle,
+                                               TrustedDomainName,
+                                               ForestTrustDomainInfo,
+                                               ForestTrustInfo,
+                                               CheckOnly,
+                                               CollisionInfo);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
 }
 
 
