@@ -423,6 +423,7 @@ DbgLogEvent(PSLIST_HEADER pslh, LOG_EVENT_TYPE nEventType, LPARAM lParam)
 #define REL_ADDR(va) ((ULONG_PTR)va - (ULONG_PTR)&__ImageBase)
 
 VOID
+NTAPI
 DbgPrintEvent(PLOGENTRY pLogEntry)
 {
     PSTR pstr;
@@ -465,7 +466,6 @@ DbgDumpEventList(PSLIST_HEADER pslh)
         pLogEntry = CONTAINING_RECORD(psle, LOGENTRY, sleLink);
         DbgPrintEvent(pLogEntry);
     }
-
 }
 
 VOID
@@ -729,35 +729,6 @@ BOOL DbgInitDebugChannels()
     return ret;
 }
 
-
-#if KDBG
-
-BOOLEAN
-NTAPI
-DbgGdiKdbgCliCallback(
-    IN PCHAR pszCommand,
-    IN ULONG argc,
-    IN PCH argv[])
-{
-
-    if (stricmp(argv[0], "gdi!dumpht") == 0)
-    {
-        DbgDumpGdiHandleTable(argc - 1, argv + 1);
-    }
-    else if (stricmp(argv[0], "gdi!handle") == 0)
-    {
-        DbgDumpHandleInfo(argv[1]);
-    }
-    else
-    {
-        /* Not handled */
-        return FALSE;
-    }
-
-    return TRUE;
-}
-
-#endif // KDBG
 
 #endif // DBG
 

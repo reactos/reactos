@@ -179,16 +179,3 @@ BOOL    NTAPI GDIOBJ_ConvertToStockObj(HGDIOBJ *hObj);
 POBJ    NTAPI GDIOBJ_AllocObjWithHandle(ULONG ObjectType, ULONG cjSize);
 PGDIOBJ NTAPI GDIOBJ_ShareLockObj(HGDIOBJ hObj, DWORD ObjectType);
 PVOID   NTAPI GDI_MapHandleTable(PEPROCESS Process);
-
-#if DBG && KDBG
-VOID
-NTAPI
-DbgDumpGdiHandleTable(
-    ULONG argc,
-    char *argv[]);
-
-VOID
-NTAPI
-DbgDumpHandleInfo(
-    char *argv);
-#endif

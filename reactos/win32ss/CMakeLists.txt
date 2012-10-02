@@ -206,6 +206,11 @@ list(APPEND SOURCE
     gdi/dib/dib32bppc.c)
 endif()
 
+if(KDBG)
+    list(APPEND SOURCE
+        gdi/ntgdi/gdikdbgext.c)
+endif()
+
 add_library(win32k SHARED
     ${CMAKE_CURRENT_BINARY_DIR}/win32k.def
     ${SOURCE})
