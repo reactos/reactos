@@ -10,4 +10,3 @@ add_library(clb SHARED
 
 set_module_type(clb win32dll UNICODE)
 add_importlibs(clb user32 gdi32 comctl32 kernel32 ntdll)
-    
