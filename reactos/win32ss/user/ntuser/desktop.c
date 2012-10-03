@@ -1081,7 +1081,7 @@ NtUserCreateDesktop(
    PVOID DesktopHeapSystemBase = NULL;
    SIZE_T DesktopInfoSize;
    BOOLEAN Context;
-   ULONG_PTR HeapSize = 4 * 1024 * 1024; /* FIXME */
+   ULONG_PTR HeapSize = 400 * 1024; /* FIXME: Windows uses 200KB by default */
    UNICODE_STRING ClassName;
    LARGE_STRING WindowName;
    BOOL NoHooks = FALSE;
