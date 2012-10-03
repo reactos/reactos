@@ -12,7 +12,7 @@
 #include <shellapi.h>
 #include <shlwapi.h>
 #include <stdlib.h>
-#include <tchar.h>
+//#include <tchar.h>
 #include <process.h>
 #include <stdio.h>
 #include <limits.h>
@@ -29,4 +29,7 @@
 #include "regproc.h"
 #include "hexedit.h"
 #include "security.h"
+
 #endif
+
+/* EOF */

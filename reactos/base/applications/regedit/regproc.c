@@ -60,7 +60,7 @@ static HKEY reg_class_keys[REG_CLASS_NUMBER] =
 #define CHECK_ENOUGH_MEMORY(p) \
 if (!(p)) \
 { \
-    fprintf(stderr,"%s: file %s, line %d: Not enough memory\n", \
+    fprintf(stderr,"%S: file %s, line %d: Not enough memory\n", \
             getAppName(), __FILE__, __LINE__); \
     exit(NOT_ENOUGH_MEMORY); \
 }
@@ -154,7 +154,7 @@ static BOOL convertHexToDWord(WCHAR* str, DWORD *dw)
     WideCharToMultiByte(CP_ACP, 0, str, -1, buf, 9, NULL, NULL);
     if (lstrlenW(str) > 8 || sscanf(buf, "%lx%c", dw, &dummy) != 1)
     {
-        fprintf(stderr,"%s: ERROR, invalid hex value\n", getAppName());
+        fprintf(stderr,"%S: ERROR, invalid hex value\n", getAppName());
         return FALSE;
     }
     return TRUE;
@@ -185,7 +185,7 @@ static BYTE* convertHexCSVToHex(WCHAR *str, DWORD *size)
         if (end == s || wc > 0xff || (*end && *end != L','))
         {
             char* strA = GetMultiByteString(s);
-            fprintf(stderr,"%s: ERROR converting CSV hex stream. Invalid value at '%s'\n",
+            fprintf(stderr,"%S: ERROR converting CSV hex stream. Invalid value at '%s'\n",
                     getAppName(), strA);
             HeapFree(GetProcessHeap(), 0, data);
             HeapFree(GetProcessHeap(), 0, strA);
@@ -423,7 +423,7 @@ static LONG setValue(WCHAR* val_name, WCHAR* val_data, BOOL is_unicode)
     }
     else                                /* unknown format */
     {
-        fprintf(stderr,"%s: ERROR, unknown data format\n", getAppName());
+        fprintf(stderr,"%S: ERROR, unknown data format\n", getAppName());
         return ERROR_INVALID_DATA;
     }
 
@@ -573,7 +573,7 @@ static void processSetValue(WCHAR* line, BOOL is_unicode)
     {
         char* val_nameA = GetMultiByteString(val_name);
         char* val_dataA = GetMultiByteString(val_data);
-        fprintf(stderr,"%s: ERROR Key %s not created. Value: %s, Data: %s\n",
+        fprintf(stderr,"%S: ERROR Key %s not created. Value: %s, Data: %s\n",
         getAppName(),
         currentKeyName,
         val_nameA,
@@ -619,7 +619,7 @@ static void processRegEntry(WCHAR* stdInput, BOOL isUnicode)
         else if ( openKeyW(stdInput) != ERROR_SUCCESS )
         {
             char* stdInputA = GetMultiByteString(stdInput);
-            fprintf(stderr,"%s: setValue failed to open key %s\n",
+            fprintf(stderr,"%S: setValue failed to open key %s\n",
             getAppName(), stdInputA);
             HeapFree(GetProcessHeap(), 0, stdInputA);
         }
@@ -750,7 +750,7 @@ static void processRegLinesA(FILE *in)
 
                 if(c == EOF)
                 {
-                    fprintf(stderr,"%s: ERROR - invalid continuation.\n",
+                    fprintf(stderr,"%S: ERROR - invalid continuation.\n",
                     getAppName());
                 }
                 else
@@ -923,7 +923,7 @@ static void REGPROC_print_error(void)
     NULL, error_code, 0, (LPTSTR) &lpMsgBuf, 0, NULL);
     if (!status)
     {
-        fprintf(stderr,"%s: Cannot display message for error %ld, status %ld\n",
+        fprintf(stderr,"%S: Cannot display message for error %ld, status %ld\n",
         getAppName(), error_code, GetLastError());
         exit(1);
     }
@@ -1262,7 +1262,7 @@ BOOL unicode)
             {
                 char* key_nameA = GetMultiByteString(*reg_key_name_buf);
                 char* value_nameA = GetMultiByteString(*val_name_buf);
-                fprintf(stderr,"%s: warning - unsupported registry format '%ld', "
+                fprintf(stderr,"%S: warning - unsupported registry format '%ld', "
                 "treat as binary\n",
                 getAppName(), value_type);
                 fprintf(stderr,"key name: \"%s\"\n", key_nameA);
@@ -1345,7 +1345,7 @@ static FILE *REGPROC_open_export_file(WCHAR *file_name, BOOL unicode)
         {
             CHAR* file_nameA = GetMultiByteString(file_name);
             perror("");
-            fprintf(stderr,"%s: Can't open file \"%s\"\n", getAppName(), file_nameA);
+            fprintf(stderr,"%S: Can't open file \"%s\"\n", getAppName(), file_nameA);
             HeapFree(GetProcessHeap(), 0, file_nameA);
             exit(1);
         }
@@ -1408,7 +1408,7 @@ BOOL export_registry_key(WCHAR *file_name, WCHAR *reg_key_name, DWORD format)
         if (!parseKeyName(reg_key_name, &reg_key_class, &branch_name))
         {
             CHAR* key_nameA = GetMultiByteString(reg_key_name);
-            fprintf(stderr,"%s: Incorrect registry class specification in '%s'\n",
+            fprintf(stderr,"%S: Incorrect registry class specification in '%s'\n",
             getAppName(), key_nameA);
             HeapFree(GetProcessHeap(), 0, key_nameA);
             exit(1);
@@ -1436,7 +1436,7 @@ BOOL export_registry_key(WCHAR *file_name, WCHAR *reg_key_name, DWORD format)
         else
         {
             CHAR* key_nameA = GetMultiByteString(reg_key_name);
-            fprintf(stderr,"%s: Can't export. Registry key '%s' does not exist!\n",
+            fprintf(stderr,"%S: Can't export. Registry key '%s' does not exist!\n",
             getAppName(), key_nameA);
             HeapFree(GetProcessHeap(), 0, key_nameA);
             REGPROC_print_error();
@@ -1520,7 +1520,7 @@ void delete_registry_key(WCHAR *reg_key_name)
     if (!parseKeyName(reg_key_name, &key_class, &key_name))
     {
         char* reg_key_nameA = GetMultiByteString(reg_key_name);
-        fprintf(stderr,"%s: Incorrect registry class specification in '%s'\n",
+        fprintf(stderr,"%S: Incorrect registry class specification in '%s'\n",
         getAppName(), reg_key_nameA);
         HeapFree(GetProcessHeap(), 0, reg_key_nameA);
         exit(1);
@@ -1528,7 +1528,7 @@ void delete_registry_key(WCHAR *reg_key_name)
     if (!*key_name)
     {
         char* reg_key_nameA = GetMultiByteString(reg_key_name);
-        fprintf(stderr,"%s: Can't delete registry class '%s'\n",
+        fprintf(stderr,"%S: Can't delete registry class '%s'\n",
         getAppName(), reg_key_nameA);
         HeapFree(GetProcessHeap(), 0, reg_key_nameA);
         exit(1);

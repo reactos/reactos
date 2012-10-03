@@ -21,7 +21,7 @@
 
 #include <regedit.h>
 
-const TCHAR g_szGeneralRegKey[] = _T("Software\\Microsoft\\Windows\\CurrentVersion\\Applets\\Regedit");
+const WCHAR g_szGeneralRegKey[] = L"Software\\Microsoft\\Windows\\CurrentVersion\\Applets\\Regedit";
 
 /* 
 VV,VV,VV,VV,WA,WA,WA,WA,WB,WB,WB,WB,R1,R1,R1,R1
@@ -47,33 +47,34 @@ DD = size of 'data' coumn
 SB = status bar (1=visible / 0=hidden)
 */
 
-typedef struct{
-WINDOWPLACEMENT       tPlacement;
-int                   TreeViewSize;
-int                   NameColumnSize;
-int                   TypeColumnSize;
-int                   DataColumnSize;
-BOOL                  StatusBarVisible;
+typedef struct
+{
+    WINDOWPLACEMENT tPlacement;
+    int             TreeViewSize;
+    int             NameColumnSize;
+    int             TypeColumnSize;
+    int             DataColumnSize;
+    BOOL            StatusBarVisible;
 } RegistryBinaryConfig;
 
 extern void LoadSettings(void)
 {
     HKEY hKey = NULL;
-    TCHAR szBuffer[MAX_PATH];
+    WCHAR szBuffer[MAX_PATH];
 
-    if (RegOpenKey(HKEY_CURRENT_USER, g_szGeneralRegKey, &hKey) == ERROR_SUCCESS)
+    if (RegOpenKeyW(HKEY_CURRENT_USER, g_szGeneralRegKey, &hKey) == ERROR_SUCCESS)
     {
         RegistryBinaryConfig tConfig;
         DWORD iBufferSize = sizeof(tConfig);
 
-        if (RegQueryValueEx(hKey, L"View", NULL, NULL, (LPBYTE)&tConfig, &iBufferSize) == ERROR_SUCCESS)
+        if (RegQueryValueExW(hKey, L"View", NULL, NULL, (LPBYTE)&tConfig, &iBufferSize) == ERROR_SUCCESS)
         {
-            if ( iBufferSize == sizeof(tConfig) )
+            if (iBufferSize == sizeof(tConfig))
             {
                 RECT rcTemp;
 
                 /* Update status bar settings */
-                CheckMenuItem(GetSubMenu(hMenuFrame, ID_VIEW_MENU), ID_VIEW_STATUSBAR, MF_BYCOMMAND|(tConfig.StatusBarVisible ? MF_CHECKED : MF_UNCHECKED));
+                CheckMenuItem(GetSubMenu(hMenuFrame, ID_VIEW_MENU), ID_VIEW_STATUSBAR, MF_BYCOMMAND | (tConfig.StatusBarVisible ? MF_CHECKED : MF_UNCHECKED));
                 ShowWindow(hStatusBar, (tConfig.StatusBarVisible ? SW_SHOW : SW_HIDE));
 
                 /* Update listview column width */
@@ -95,7 +96,7 @@ extern void LoadSettings(void)
         }
 
         /* Restore key position */
-        if (QueryStringValue(HKEY_CURRENT_USER, g_szGeneralRegKey, _T("LastKey"), szBuffer, COUNT_OF(szBuffer)) == ERROR_SUCCESS)
+        if (QueryStringValue(HKEY_CURRENT_USER, g_szGeneralRegKey, L"LastKey", szBuffer, COUNT_OF(szBuffer)) == ERROR_SUCCESS)
         {
             SelectNode(g_pChildWnd->hTreeWnd, szBuffer);
         }
@@ -113,14 +114,14 @@ extern void SaveSettings(void)
 {
     HKEY hKey = NULL;
 
-    if (RegCreateKey(HKEY_CURRENT_USER, g_szGeneralRegKey, &hKey) == ERROR_SUCCESS)
+    if (RegCreateKeyW(HKEY_CURRENT_USER, g_szGeneralRegKey, &hKey) == ERROR_SUCCESS)
     {
-        if (RegOpenKey(HKEY_CURRENT_USER, g_szGeneralRegKey, &hKey) == ERROR_SUCCESS)
+        if (RegOpenKeyW(HKEY_CURRENT_USER, g_szGeneralRegKey, &hKey) == ERROR_SUCCESS)
         {
             RegistryBinaryConfig tConfig;
             DWORD iBufferSize = sizeof(tConfig);
-            TCHAR szBuffer[MAX_PATH];
-            LPCTSTR keyPath, rootName;
+            WCHAR szBuffer[MAX_PATH];
+            LPCWSTR keyPath, rootName;
             HKEY hRootKey;
 
             /* Save key position */
@@ -128,12 +129,12 @@ extern void SaveSettings(void)
             if (keyPath)
             {
                 rootName = get_root_key_name(hRootKey);
-                _sntprintf(szBuffer, COUNT_OF(szBuffer), _T("My Computer\\%s\\%s"), rootName, keyPath);
-                RegSetValueEx(hKey, _T("LastKey"), 0, REG_SZ, (LPBYTE) szBuffer, (DWORD) _tcslen(szBuffer) * sizeof(szBuffer[0]));
+                _snwprintf(szBuffer, COUNT_OF(szBuffer), L"My Computer\\%s\\%s", rootName, keyPath);
+                RegSetValueExW(hKey, L"LastKey", 0, REG_SZ, (LPBYTE) szBuffer, (DWORD)wcslen(szBuffer) * sizeof(WCHAR));
             }
 
             /* Get statusbar settings */
-            tConfig.StatusBarVisible = ((GetMenuState(GetSubMenu(hMenuFrame, ID_VIEW_MENU), ID_VIEW_STATUSBAR, MF_BYCOMMAND) & MF_CHECKED) ? 1 : 0 );
+            tConfig.StatusBarVisible = ((GetMenuState(GetSubMenu(hMenuFrame, ID_VIEW_MENU), ID_VIEW_STATUSBAR, MF_BYCOMMAND) & MF_CHECKED) ? 1 : 0);
 
             /* Get splitter position */
             tConfig.TreeViewSize = g_pChildWnd->nSplitPos;
@@ -148,9 +149,11 @@ extern void SaveSettings(void)
             GetWindowPlacement(hFrameWnd , &tConfig.tPlacement);
 
             /* Save all the data */
-            RegSetValueEx(hKey, L"View", 0, REG_BINARY, (LPBYTE)&tConfig, iBufferSize);
+            RegSetValueExW(hKey, L"View", 0, REG_BINARY, (LPBYTE)&tConfig, iBufferSize);
 
             RegCloseKey(hKey);
         }
     }
 }
+
+/* EOF */
