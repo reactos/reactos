@@ -241,7 +241,7 @@ KeBoostPriorityThread(IN PKTHREAD Thread,
     {
         /* Lock the thread */
         KiAcquireThreadLock(Thread);
-        
+
         /* Check again, and make sure there's not already a boost */
         if ((Thread->Priority < LOW_REALTIME_PRIORITY) &&
             !(Thread->PriorityDecrement))
@@ -266,7 +266,7 @@ KeBoostPriorityThread(IN PKTHREAD Thread,
         /* Release thread lock */
         KiReleaseThreadLock(Thread);
     }
-    
+
     /* Release the dispatcher lokc */
     KiReleaseDispatcherLock(OldIrql);
 }
@@ -457,6 +457,7 @@ KeRundownThread(VOID)
     {
         /* Get the Mutant */
         Mutant = CONTAINING_RECORD(NextEntry, KMUTANT, MutantListEntry);
+        ASSERT_MUTANT(Mutant);
 
         /* Make sure it's not terminating with APCs off */
         if (Mutant->ApcDisable)
