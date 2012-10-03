@@ -12,7 +12,6 @@
 #include <shellapi.h>
 #include <shlwapi.h>
 #include <stdlib.h>
-//#include <tchar.h>
 #include <process.h>
 #include <stdio.h>
 #include <limits.h>
