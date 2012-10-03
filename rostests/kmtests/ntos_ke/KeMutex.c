@@ -51,43 +51,88 @@ C_ASSERT(sizeof(KMUTANT) == MUTANT_SIZE * sizeof(ULONG));
     ok_eq_uint((Mutex)->ApcDisable, ExpectedApcDisable);                        \
 } while (0)
 
+#define CheckApcs(KernelApcsDisabled, SpecialApcsDisabled, AllApcsDisabled, Irql) do    \
+{                                                                                       \
+    ok_eq_bool(KeAreApcsDisabled(), KernelApcsDisabled || SpecialApcsDisabled);         \
+    ok_eq_int(Thread->KernelApcDisable, KernelApcsDisabled);                            \
+    ok_eq_bool(KeAreAllApcsDisabled(), AllApcsDisabled);                                \
+    ok_eq_int(Thread->SpecialApcDisable, SpecialApcsDisabled);                          \
+    ok_irql(Irql);                                                                      \
+} while (0)
+
 static
 VOID
 TestMutant(VOID)
 {
+    NTSTATUS Status;
     KMUTANT Mutant;
     LONG State;
+    PKTHREAD Thread = KeGetCurrentThread();
 
+    CheckApcs(0, 0, FALSE, PASSIVE_LEVEL);
     RtlFillMemory(&Mutant, sizeof(Mutant), 0x55);
     KeInitializeMutant(&Mutant, FALSE);
-    ok_irql(PASSIVE_LEVEL);
     CheckMutex(&Mutant, FALSE, TRUE, 0);
+    CheckApcs(0, 0, FALSE, PASSIVE_LEVEL);
 
     RtlFillMemory(&Mutant, sizeof(Mutant), 0x55);
     KeInitializeMutant(&Mutant, TRUE);
-    ok_irql(PASSIVE_LEVEL);
+    CheckApcs(0, 0, FALSE, PASSIVE_LEVEL);
     CheckMutex(&Mutant, TRUE, TRUE, 0);
     State = KeReleaseMutant(&Mutant, 1, FALSE, FALSE);
     ok_eq_long(State, 0);
-    ok_irql(PASSIVE_LEVEL);
     CheckMutex(&Mutant, FALSE, FALSE, 0);
+    CheckApcs(0, 0, FALSE, PASSIVE_LEVEL);
+
+    /* Acquire and release */
+    Status = KeWaitForSingleObject(&Mutant,
+                                   Executive,
+                                   KernelMode,
+                                   FALSE,
+                                   NULL);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    CheckMutex(&Mutant, TRUE, TRUE, 0);
+    CheckApcs(0, 0, FALSE, PASSIVE_LEVEL);
+
+    State = KeReleaseMutant(&Mutant, 1, FALSE, FALSE);
+    ok_eq_long(State, 0);
+    CheckMutex(&Mutant, FALSE, FALSE, 0);
+    CheckApcs(0, 0, FALSE, PASSIVE_LEVEL);
 }
 
 static
 VOID
 TestMutex(VOID)
 {
+    NTSTATUS Status;
     KMUTEX Mutex;
+    LONG State;
+    PKTHREAD Thread = KeGetCurrentThread();
 
+    CheckApcs(0, 0, FALSE, PASSIVE_LEVEL);
     RtlFillMemory(&Mutex, sizeof(Mutex), 0x55);
     KeInitializeMutex(&Mutex, 0);
-    ok_irql(PASSIVE_LEVEL);
     CheckMutex(&Mutex, FALSE, TRUE, 1);
+    CheckApcs(0, 0, FALSE, PASSIVE_LEVEL);
 
     RtlFillMemory(&Mutex, sizeof(Mutex), 0x55);
     KeInitializeMutex(&Mutex, 123);
-    ok_irql(PASSIVE_LEVEL);
     CheckMutex(&Mutex, FALSE, TRUE, 1);
+    CheckApcs(0, 0, FALSE, PASSIVE_LEVEL);
+
+    Status = KeWaitForSingleObject(&Mutex,
+                                   Executive,
+                                   KernelMode,
+                                   FALSE,
+                                   NULL);
+    ok_eq_hex(Status, STATUS_SUCCESS);
+    CheckMutex(&Mutex, TRUE, FALSE, 1);
+    CheckApcs(-1, 0, FALSE, PASSIVE_LEVEL);
+
+    State = KeReleaseMutex(&Mutex, FALSE);
+    ok_eq_long(State, 0);
+    CheckMutex(&Mutex, FALSE, FALSE, 1);
+    CheckApcs(0, 0, FALSE, PASSIVE_LEVEL);
 }
 
 START_TEST(KeMutex)
