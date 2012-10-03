@@ -686,55 +686,6 @@ KiReleaseDeviceQueueLock(IN PKLOCK_QUEUE_HANDLE DeviceLock)
 }
 
 //
-// Satisfies the wait of any dispatcher object
-//
-#define KiSatisfyObjectWait(Object, Thread)                                 \
-{                                                                           \
-    /* Special case for Mutants */                                          \
-    if ((Object)->Header.Type == MutantObject)                              \
-    {                                                                       \
-        /* Decrease the Signal State */                                     \
-        (Object)->Header.SignalState--;                                     \
-                                                                            \
-        /* Check if it's now non-signaled */                                \
-        if (!(Object)->Header.SignalState)                                  \
-        {                                                                   \
-            /* Set the Owner Thread */                                      \
-            (Object)->OwnerThread = Thread;                                 \
-                                                                            \
-            /* Disable APCs if needed */                                    \
-            Thread->KernelApcDisable = Thread->KernelApcDisable -           \
-                                       (Object)->ApcDisable;                \
-                                                                            \
-            /* Check if it's abandoned */                                   \
-            if ((Object)->Abandoned)                                        \
-            {                                                               \
-                /* Unabandon it */                                          \
-                (Object)->Abandoned = FALSE;                                \
-                                                                            \
-                /* Return Status */                                         \
-                Thread->WaitStatus = STATUS_ABANDONED;                      \
-            }                                                               \
-                                                                            \
-            /* Insert it into the Mutant List */                            \
-            InsertHeadList(Thread->MutantListHead.Blink,                    \
-                           &(Object)->MutantListEntry);                     \
-        }                                                                   \
-    }                                                                       \
-    else if (((Object)->Header.Type & TIMER_OR_EVENT_TYPE) ==               \
-             EventSynchronizationObject)                                    \
-    {                                                                       \
-        /* Synchronization Timers and Events just get un-signaled */        \
-        (Object)->Header.SignalState = 0;                                   \
-    }                                                                       \
-    else if ((Object)->Header.Type == SemaphoreObject)                      \
-    {                                                                       \
-        /* These ones can have multiple states, so we only decrease it */   \
-        (Object)->Header.SignalState--;                                     \
-    }                                                                       \
-}
-
-//
 // Satisfies the wait of a mutant dispatcher object
 //
 #define KiSatisfyMutantWait(Object, Thread)                                 \
@@ -783,6 +734,22 @@ KiReleaseDeviceQueueLock(IN PKLOCK_QUEUE_HANDLE DeviceLock)
     {                                                                       \
         /* These ones can have multiple states, so we only decrease it */   \
         (Object)->Header.SignalState--;                                     \
+    }                                                                       \
+}
+
+//
+// Satisfies the wait of any dispatcher object
+//
+#define KiSatisfyObjectWait(Object, Thread)                                 \
+{                                                                           \
+    /* Special case for Mutants */                                          \
+    if ((Object)->Header.Type == MutantObject)                              \
+    {                                                                       \
+        KiSatisfyMutantWait((Object), (Thread));                            \
+    }                                                                       \
+    else                                                                    \
+    {                                                                       \
+        KiSatisfyNonMutantWait(Object);                                     \
     }                                                                       \
 }
 
