@@ -676,8 +676,7 @@ TRACE("i: %lu\n", i);
 
 
 PWELL_KNOWN_SID
-LsapLookupWellKnownName(LPWSTR Domain,
-                        LPWSTR Account)
+LsapLookupWellKnownName(PUNICODE_STRING Name)
 {
     PLIST_ENTRY ListEntry;
     PWELL_KNOWN_SID Ptr;
@@ -688,7 +687,7 @@ LsapLookupWellKnownName(LPWSTR Domain,
         Ptr = CONTAINING_RECORD(ListEntry,
                                 WELL_KNOWN_SID,
                                 ListEntry);
-        if (_wcsicmp(Account, Ptr->Name.Buffer) == 0)
+        if (RtlEqualUnicodeString(Name, &Ptr->Name, TRUE))
             return Ptr;
 
         ListEntry = ListEntry->Flink;
@@ -708,6 +707,7 @@ LsapSplitNames(DWORD Count,
     PRPC_UNICODE_STRING DomainsBuffer = NULL;
     PRPC_UNICODE_STRING AccountsBuffer = NULL;
     ULONG DomainLength;
+    ULONG AccountLength;
     ULONG i;
     LPWSTR Ptr;
     NTSTATUS Status = STATUS_SUCCESS;
@@ -728,13 +728,15 @@ LsapSplitNames(DWORD Count,
 
     for (i = 0; i < Count; i++)
     {
-TRACE("Name: %S\n", Names[i].Buffer);
+//TRACE("Name: %wZ\n", &Names[i]);
 
         Ptr = wcschr(Names[i].Buffer, L'\\');
         if (Ptr == NULL)
         {
+            AccountLength = Names[i].Length / sizeof(WCHAR);
+
             AccountsBuffer[i].Length = Names[i].Length;
-            AccountsBuffer[i].MaximumLength = Names[i].MaximumLength;
+            AccountsBuffer[i].MaximumLength = AccountsBuffer[i].Length + sizeof(WCHAR);
             AccountsBuffer[i].Buffer = MIDL_user_allocate(AccountsBuffer[i].MaximumLength);
             if (AccountsBuffer[i].Buffer == NULL)
             {
@@ -745,13 +747,17 @@ TRACE("Name: %S\n", Names[i].Buffer);
             CopyMemory(AccountsBuffer[i].Buffer,
                        Names[i].Buffer,
                        AccountsBuffer[i].Length);
-            AccountsBuffer[i].Buffer[AccountsBuffer[i].Length / sizeof(WCHAR)] = UNICODE_NULL;
+            AccountsBuffer[i].Buffer[AccountLength] = UNICODE_NULL;
 
-TRACE("Account name: %S\n", AccountsBuffer[i].Buffer);
+//TRACE("Account name: %wZ\n", &AccountsBuffer[i]);
         }
         else
         {
-            DomainLength = (ULONG)((ULONG_PTR)Ptr - (ULONG_PTR)Names[i].Buffer);
+            DomainLength = (ULONG)(ULONG_PTR)(Ptr - Names[i].Buffer);
+            AccountLength = (Names[i].Length / sizeof(WCHAR)) - DomainLength - 1;
+//TRACE("DomainLength: %u\n", DomainLength);
+//TRACE("AccountLength: %u\n", AccountLength);
+
             if (DomainLength > 0)
             {
                 DomainsBuffer[i].Length = (USHORT)DomainLength * sizeof(WCHAR);
@@ -766,12 +772,12 @@ TRACE("Account name: %S\n", AccountsBuffer[i].Buffer);
                 CopyMemory(DomainsBuffer[i].Buffer,
                            Names[i].Buffer,
                            DomainsBuffer[i].Length);
-                DomainsBuffer[i].Buffer[DomainsBuffer[i].Length / sizeof(WCHAR)] = UNICODE_NULL;
+                DomainsBuffer[i].Buffer[DomainLength] = UNICODE_NULL;
 
-TRACE("Domain name: %S\n", DomainsBuffer[i].Buffer);
+//TRACE("Domain name: %wZ\n", &DomainsBuffer[i]);
             }
 
-            AccountsBuffer[i].Length = Names[i].Length - (USHORT)((DomainLength + 1) * sizeof(WCHAR));
+            AccountsBuffer[i].Length = (USHORT)AccountLength * sizeof(WCHAR);
             AccountsBuffer[i].MaximumLength = AccountsBuffer[i].Length + sizeof(WCHAR);
             AccountsBuffer[i].Buffer = MIDL_user_allocate(AccountsBuffer[i].MaximumLength);
             if (AccountsBuffer[i].Buffer == NULL)
@@ -783,9 +789,9 @@ TRACE("Domain name: %S\n", DomainsBuffer[i].Buffer);
             CopyMemory(AccountsBuffer[i].Buffer,
                        &(Names[i].Buffer[DomainLength + 1]),
                        AccountsBuffer[i].Length);
-            AccountsBuffer[i].Buffer[AccountsBuffer[i].Length / sizeof(WCHAR)] = UNICODE_NULL;
+            AccountsBuffer[i].Buffer[AccountLength] = UNICODE_NULL;
 
-TRACE("Account name: %S\n", AccountsBuffer[i].Buffer);
+//TRACE("Account name: %wZ\n", &AccountsBuffer[i]);
         }
     }
 
@@ -849,9 +855,9 @@ LsapLookupNames(DWORD Count,
 
     PWELL_KNOWN_SID ptr;
 
-TRACE("\n");
+//TRACE("()\n");
 
-    TranslatedSids->Entries = Count;
+    TranslatedSids->Entries = 0;
     TranslatedSids->Sids = NULL;
     *ReferencedDomains = NULL;
 
@@ -859,7 +865,7 @@ TRACE("\n");
     SidsBuffer = MIDL_user_allocate(SidsBufferLength);
     if (SidsBuffer == NULL)
     {
-TRACE("\n");
+//TRACE("\n");
         Status = STATUS_INSUFFICIENT_RESOURCES;
         goto done;
     }
@@ -867,18 +873,26 @@ TRACE("\n");
     DomainsBuffer = MIDL_user_allocate(sizeof(LSAPR_REFERENCED_DOMAIN_LIST));
     if (DomainsBuffer == NULL)
     {
-TRACE("\n");
+//TRACE("\n");
         Status = STATUS_INSUFFICIENT_RESOURCES;
         goto done;
     }
 
-    DomainsBuffer->Entries = Count;
+    DomainsBuffer->Entries = 0; //Count;
     DomainsBuffer->Domains = MIDL_user_allocate(Count * sizeof(LSA_TRUST_INFORMATION));
     if (DomainsBuffer->Domains == NULL)
     {
-TRACE("\n");
+//TRACE("\n");
         Status = STATUS_INSUFFICIENT_RESOURCES;
         goto done;
+    }
+
+    for (i = 0; i < Count; i++)
+    {
+        SidsBuffer[i].Use = SidTypeUnknown;
+        SidsBuffer[i].Sid = NULL;
+        SidsBuffer[i].DomainIndex = -1;
+        SidsBuffer[i].Flags = 0;
     }
 
     Status = LsapSplitNames(Count,
@@ -893,22 +907,39 @@ TRACE("\n");
 
     for (i = 0; i < Count; i++)
     {
-TRACE("Name: %S\n", Names[i].Buffer);
+//TRACE("Name: %wZ\n", &Names[i]);
 
-TRACE("Domain name: %S\n", DomainNames[i].Buffer);
-TRACE("Account name: %S\n", AccountNames[i].Buffer);
+//TRACE("Domain name: %wZ\n", &DomainNames[i]);
+//TRACE("Account name: %wZ\n", &AccountNames[i]);
 
-        ptr = LsapLookupWellKnownName(DomainNames[i].Buffer,
-                                      AccountNames[i].Buffer);
+        ptr = LsapLookupWellKnownName((PUNICODE_STRING)&AccountNames[i]);
         if (ptr != NULL)
         {
-TRACE("Found well known account!\n");
+//TRACE("Found well known account!\n");
             SidsBuffer[i].Use = ptr->Use;
             SidsBuffer[i].Sid = ptr->Sid;
 
             SidsBuffer[i].DomainIndex = -1;
             SidsBuffer[i].Flags = 0;
 
+#if 0
+            if (DomainNames[i].Buffer != NULL)
+            {
+                ptr2= LsapLookupWellKnownName((PUNICODE_STRING)&DomainNames[i].Buffer);
+                if (ptr2 != NULL)
+                {
+
+                }
+            }
+            else if (ptr->Domain.Length != 0)
+            {
+
+            }
+            else
+            {
+
+            }
+#endif
 
             Mapped++;
             continue;
@@ -919,10 +950,11 @@ TRACE("Found well known account!\n");
     }
 
 done:
-    TRACE("done: Status %lx\n", Status);
+//    TRACE("done: Status %lx\n", Status);
 
     if (DomainNames != NULL)
     {
+//TRACE("Free DomainNames\n");
         for (i = 0; i < Count; i++)
         {
             if (DomainNames[i].Buffer != NULL)
@@ -934,10 +966,14 @@ done:
 
     if (AccountNames != NULL)
     {
+//TRACE("Free AccountNames\n");
         for (i = 0; i < Count; i++)
         {
+//TRACE("i: %lu\n", i);
             if (AccountNames[i].Buffer != NULL)
+            {
                 MIDL_user_free(AccountNames[i].Buffer);
+            }
         }
 
         MIDL_user_free(AccountNames);
@@ -945,6 +981,9 @@ done:
 
     if (!NT_SUCCESS(Status))
     {
+//TRACE("Failure!\n");
+
+//TRACE("Free DomainsBuffer\n");
         if (DomainsBuffer != NULL)
         {
             if (DomainsBuffer->Domains != NULL)
@@ -953,11 +992,17 @@ done:
             MIDL_user_free(DomainsBuffer);
         }
 
+//TRACE("Free SidsBuffer\n");
         if (SidsBuffer != NULL)
             MIDL_user_free(SidsBuffer);
     }
     else
     {
+//TRACE("Success!\n");
+
+        *ReferencedDomains = DomainsBuffer;
+        TranslatedSids->Entries = Count;
+        TranslatedSids->Sids = SidsBuffer;
         *MappedCount = Mapped;
 
         if (Mapped == 0)
@@ -965,6 +1010,8 @@ done:
         else if (Mapped < Count)
             Status = STATUS_SOME_NOT_MAPPED;
     }
+
+//    TRACE("done: Status %lx\n", Status);
 
     return Status;
 }
