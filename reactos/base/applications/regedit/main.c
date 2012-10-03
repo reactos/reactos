@@ -197,7 +197,6 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
 
     UNREFERENCED_PARAMETER(hPrevInstance);
 
-    InfoMessageBox(NULL, MB_OK | MB_ICONERROR, L"Main", L"Main '%1'", lpCmdLine);
     if (ProcessCmdLine(lpCmdLine))
     {
         return 0;
