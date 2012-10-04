@@ -208,12 +208,12 @@ RtlGetDaclSecurityDescriptor(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     if (Sd->Revision != SECURITY_DESCRIPTOR_REVISION) return STATUS_UNKNOWN_REVISION;
 
     /* Is there a DACL? */
-    *DaclPresent = Sd->Control & SE_DACL_PRESENT;
+    *DaclPresent = (Sd->Control & SE_DACL_PRESENT) == SE_DACL_PRESENT;
     if (*DaclPresent)
     {
         /* Yes, return it, and check if defaulted */
         *Dacl = SepGetDaclFromDescriptor(Sd);
-        *DaclDefaulted = Sd->Control & SE_DACL_DEFAULTED;
+        *DaclDefaulted = (Sd->Control & SE_DACL_DEFAULTED) == SE_DACL_DEFAULTED;
     }
 
     /* All good */
@@ -237,12 +237,12 @@ RtlGetSaclSecurityDescriptor(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     if (Sd->Revision != SECURITY_DESCRIPTOR_REVISION) return STATUS_UNKNOWN_REVISION;
 
     /* Is there a SACL? */
-    *SaclPresent = Sd->Control & SE_SACL_PRESENT;
+    *SaclPresent = (Sd->Control & SE_SACL_PRESENT) == SE_SACL_PRESENT;
     if (*SaclPresent)
     {
         /* Yes, return it, and check if defaulted */
         *Sacl = SepGetSaclFromDescriptor(Sd);
-        *SaclDefaulted = Sd->Control & SE_SACL_DEFAULTED;
+        *SaclDefaulted = (Sd->Control & SE_SACL_DEFAULTED) == SE_SACL_DEFAULTED;
     }
 
     /* All good */
@@ -266,7 +266,7 @@ RtlGetOwnerSecurityDescriptor(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
 
     /* Get the owner and if defaulted */
     *Owner = SepGetOwnerFromDescriptor(Sd);
-    *OwnerDefaulted = Sd->Control & SE_OWNER_DEFAULTED;
+    *OwnerDefaulted = (Sd->Control & SE_OWNER_DEFAULTED) == SE_OWNER_DEFAULTED;
 
     /* All good */
     return STATUS_SUCCESS;
@@ -289,7 +289,7 @@ RtlGetGroupSecurityDescriptor(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
 
     /* Get the group and if defaulted */
     *Group = SepGetGroupFromDescriptor(Sd);
-    *GroupDefaulted = Sd->Control & SE_GROUP_DEFAULTED;
+    *GroupDefaulted = (Sd->Control & SE_GROUP_DEFAULTED) == SE_GROUP_DEFAULTED;
 
     /* All good */
     return STATUS_SUCCESS;
@@ -1164,7 +1164,7 @@ RtlValidRelativeSecurityDescriptor(IN PSECURITY_DESCRIPTOR SecurityDescriptorInp
     }
 
     /* Is there a DACL? */
-    if (Sd->Control & SE_DACL_PRESENT)
+    if ((Sd->Control & SE_DACL_PRESENT) == SE_DACL_PRESENT)
     {
         /* Try to access it */
         if (!RtlpValidateSDOffsetAndSize(Sd->Dacl,
@@ -1182,7 +1182,7 @@ RtlValidRelativeSecurityDescriptor(IN PSECURITY_DESCRIPTOR SecurityDescriptorInp
     }
 
     /* Is there a SACL? */
-    if (Sd->Control & SE_SACL_PRESENT)
+    if ((Sd->Control & SE_SACL_PRESENT) == SE_SACL_PRESENT)
     {
         /* Try to access it */
         if (!RtlpValidateSDOffsetAndSize(Sd->Sacl,
