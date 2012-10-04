@@ -830,6 +830,54 @@ done:
 }
 
 
+static NTSTATUS
+LsapAddDomainToDomainsList(PLSAPR_REFERENCED_DOMAIN_LIST ReferencedDomains,
+                           PUNICODE_STRING Name,
+                           PSID Sid,
+                           PULONG Index)
+{
+    ULONG i;
+
+    i = 0;
+    while (i < ReferencedDomains->Entries &&
+           ReferencedDomains->Domains[i].Sid != NULL)
+    {
+        if (RtlEqualSid(Sid, ReferencedDomains->Domains[i].Sid))
+        {
+            *Index = i;
+            return STATUS_SUCCESS;
+        }
+
+        i++;
+    }
+
+    ReferencedDomains->Domains[i].Sid = MIDL_user_allocate(RtlLengthSid(Sid));
+    if (ReferencedDomains->Domains[i].Sid == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    RtlCopySid(RtlLengthSid(Sid), ReferencedDomains->Domains[i].Sid, Sid);
+
+    ReferencedDomains->Domains[i].Name.Length = Name->Length;
+    ReferencedDomains->Domains[i].Name.MaximumLength = Name->MaximumLength;
+    ReferencedDomains->Domains[i].Name.Buffer = MIDL_user_allocate(Name->MaximumLength);
+    if (ReferencedDomains->Domains[i].Sid == NULL)
+    {
+        MIDL_user_free(ReferencedDomains->Domains[i].Sid);
+        ReferencedDomains->Domains[i].Sid = NULL;
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    RtlCopyMemory(ReferencedDomains->Domains[i].Name.Buffer,
+                  Name->Buffer,
+                  Name->MaximumLength);
+
+    ReferencedDomains->Entries++;
+    *Index = i;
+
+    return STATUS_SUCCESS;
+}
+
+
 NTSTATUS
 LsapLookupNames(DWORD Count,
                 PRPC_UNICODE_STRING Names,
@@ -845,6 +893,7 @@ LsapLookupNames(DWORD Count,
     PRPC_UNICODE_STRING DomainNames = NULL;
     PRPC_UNICODE_STRING AccountNames = NULL;
     ULONG SidsBufferLength;
+    ULONG DomainIndex;
 //    ULONG DomainSidLength;
 //    ULONG AccountSidLength;
 //    PSID DomainSid;
@@ -853,7 +902,7 @@ LsapLookupNames(DWORD Count,
     ULONG Mapped = 0;
     NTSTATUS Status = STATUS_SUCCESS;
 
-    PWELL_KNOWN_SID ptr;
+    PWELL_KNOWN_SID ptr, ptr2;
 
 //TRACE("()\n");
 
@@ -878,7 +927,6 @@ LsapLookupNames(DWORD Count,
         goto done;
     }
 
-    DomainsBuffer->Entries = 0; //Count;
     DomainsBuffer->Domains = MIDL_user_allocate(Count * sizeof(LSA_TRUST_INFORMATION));
     if (DomainsBuffer->Domains == NULL)
     {
@@ -886,6 +934,8 @@ LsapLookupNames(DWORD Count,
         Status = STATUS_INSUFFICIENT_RESOURCES;
         goto done;
     }
+    DomainsBuffer->Entries = 0;
+    DomainsBuffer->MaxEntries = Count;
 
     for (i = 0; i < Count; i++)
     {
@@ -911,7 +961,7 @@ LsapLookupNames(DWORD Count,
 
 //TRACE("Domain name: %wZ\n", &DomainNames[i]);
 //TRACE("Account name: %wZ\n", &AccountNames[i]);
-
+        ptr2 = NULL;
         ptr = LsapLookupWellKnownName((PUNICODE_STRING)&AccountNames[i]);
         if (ptr != NULL)
         {
@@ -922,24 +972,33 @@ LsapLookupNames(DWORD Count,
             SidsBuffer[i].DomainIndex = -1;
             SidsBuffer[i].Flags = 0;
 
-#if 0
-            if (DomainNames[i].Buffer != NULL)
+            if (DomainNames[i].Length != 0)
             {
-                ptr2= LsapLookupWellKnownName((PUNICODE_STRING)&DomainNames[i].Buffer);
+                ptr2= LsapLookupWellKnownName((PUNICODE_STRING)&DomainNames[i]);
                 if (ptr2 != NULL)
                 {
-
+                    Status = LsapAddDomainToDomainsList(DomainsBuffer,
+                                                        &ptr2->Name,
+                                                        ptr2->Sid,
+                                                        &DomainIndex);
+                    if (NT_SUCCESS(Status))
+                        SidsBuffer[i].DomainIndex = DomainIndex;
                 }
             }
-            else if (ptr->Domain.Length != 0)
-            {
 
-            }
-            else
+            if (ptr2 == NULL && ptr->Domain.Length != 0)
             {
-
+                ptr2= LsapLookupWellKnownName(&ptr->Domain);
+                if (ptr2 != NULL)
+                {
+                    Status = LsapAddDomainToDomainsList(DomainsBuffer,
+                                                        &ptr2->Name,
+                                                        ptr2->Sid,
+                                                        &DomainIndex);
+                    if (NT_SUCCESS(Status))
+                        SidsBuffer[i].DomainIndex = DomainIndex;
+                }
             }
-#endif
 
             Mapped++;
             continue;
