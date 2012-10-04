@@ -508,7 +508,7 @@
 @ stdcall RtlCopyUnicodeString(ptr ptr)
 @ stdcall RtlCreateAcl(ptr long long)
 @ stdcall RtlCreateActivationContext(ptr ptr)
-;@ stdcall RtlCreateAndSetSD
+@ stdcall RtlCreateAndSetSD(ptr long ptr ptr ptr)
 @ stdcall RtlCreateAtomTable(long ptr)
 @ stdcall RtlCreateBootStatusDataFile()
 @ stdcall RtlCreateEnvironment(long ptr)
