@@ -1633,22 +1633,109 @@ NTSTATUS WINAPI LsarEnumerateAccountRights(
     PRPC_SID AccountSid,
     PLSAPR_USER_RIGHT_SET UserRights)
 {
-    PLSA_DB_OBJECT PolicyObject;
+    LSAPR_HANDLE AccountHandle;
+    PLSAPR_PRIVILEGE_SET PrivilegeSet = NULL;
+    PRPC_UNICODE_STRING RightsBuffer = NULL;
+    PRPC_UNICODE_STRING PrivilegeString;
+    ULONG RightsCount;
+    ULONG RightsIndex;
+    ULONG PrivIndex;
     NTSTATUS Status;
 
     TRACE("LsarEnumerateAccountRights(%p %p %p)\n",
           PolicyHandle, AccountSid, UserRights);
 
-    Status = LsapValidateDbObject(PolicyHandle,
-                                  LsaDbPolicyObject,
-                                  ACCOUNT_VIEW,
-                                  &PolicyObject);
+    /* Open the account */
+    Status = LsarOpenAccount(PolicyHandle,
+                             AccountSid,
+                             ACCOUNT_VIEW,
+                             &AccountHandle);
     if (!NT_SUCCESS(Status))
+    {
+        ERR("LsarOpenAccount returned 0x%08lx\n", Status);
         return Status;
+    }
 
-    UserRights->Entries = 0;
-    UserRights->UserRights = NULL;
-    return STATUS_OBJECT_NAME_NOT_FOUND;
+    /* Enumerate the privileges */
+    Status = LsarEnumeratePrivilegesAccount(AccountHandle,
+                                            &PrivilegeSet);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("LsarEnumeratePrivilegesAccount returned 0x%08lx\n", Status);
+        goto done;
+    }
+
+    /* FIXME: Get account rights */
+
+
+    RightsCount = PrivilegeSet->PrivilegeCount;
+
+    /* FIXME: Count account rights */
+
+
+    /* We are done if there are no rights to be enumerated */
+    if (RightsCount == 0)
+    {
+        UserRights->Entries = 0;
+        UserRights->UserRights = NULL;
+        Status = STATUS_SUCCESS;
+        goto done;
+    }
+
+    /* Allocate a buffer for the account rights */
+    RightsBuffer = MIDL_user_allocate(RightsCount * sizeof(RPC_UNICODE_STRING));
+    if (RightsBuffer == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
+
+    /* Copy the privileges into the buffer */
+    RightsIndex = 0;
+    for (PrivIndex = 0; PrivIndex < PrivilegeSet->PrivilegeCount; PrivIndex++)
+    {
+        PrivilegeString = NULL;
+        Status = LsarLookupPrivilegeName(PolicyHandle,
+                                         (PLUID)&PrivilegeSet->Privilege[PrivIndex].Luid,
+                                         (PRPC_UNICODE_STRING *)&PrivilegeString);
+        if (!NT_SUCCESS(Status))
+            goto done;
+
+        RightsBuffer[RightsIndex].Length = PrivilegeString->Length;
+        RightsBuffer[RightsIndex].MaximumLength = PrivilegeString->MaximumLength;
+        RightsBuffer[RightsIndex].Buffer = PrivilegeString->Buffer;
+
+        MIDL_user_free(PrivilegeString);
+        RightsIndex++;
+    }
+
+    /* FIXME: Copy account rights into the buffer */
+
+
+    UserRights->Entries = RightsCount;
+    UserRights->UserRights = (PRPC_UNICODE_STRING)RightsBuffer;
+
+done:
+    if (!NT_SUCCESS(Status))
+    {
+        if (RightsBuffer != NULL)
+        {
+            for (RightsIndex = 0; RightsIndex < RightsCount; RightsIndex++)
+            {
+                if (RightsBuffer[RightsIndex].Buffer != NULL)
+                    MIDL_user_free(RightsBuffer[RightsIndex].Buffer);
+            }
+
+            MIDL_user_free(RightsBuffer);
+        }
+    }
+
+    if (PrivilegeSet != NULL)
+        MIDL_user_free(PrivilegeSet);
+
+    LsarClose(&AccountHandle);
+
+    return Status;
 }
 
 
