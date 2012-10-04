@@ -1021,8 +1021,10 @@ MiMapViewInSystemSpace(IN PVOID Section,
     /* Check if the caller wanted a larger section than the view */
     if (*ViewSize > SectionSize)
     {
-        /* We should probably fail. FIXME TODO */
-        ASSERT(FALSE);
+        /* Fail */
+        DPRINT1("View is too large\n");
+        MiDereferenceControlArea(ControlArea);
+        return STATUS_INVALID_VIEW_SIZE;
     }
 
     /* Get the number of 64K buckets required for this mapping */
@@ -1032,14 +1034,22 @@ MiMapViewInSystemSpace(IN PVOID Section,
     /* Check if the view is more than 4GB large */
     if (Buckets >= MI_SYSTEM_VIEW_BUCKET_SIZE)
     {
-        /* We should probably fail */
-        ASSERT(FALSE);
+        /* Fail */
+        DPRINT1("View is too large\n");
+        MiDereferenceControlArea(ControlArea);
+        return STATUS_INVALID_VIEW_SIZE;
     }
 
     /* Insert this view into system space and get a base address for it */
     Base = MiInsertInSystemSpace(Session, Buckets, ControlArea);
-    ASSERT(Base);
-
+    if (!Base)
+    {
+        /* Fail */
+        DPRINT1("Out of system space\n");
+        MiDereferenceControlArea(ControlArea);
+        return STATUS_NO_MEMORY;
+    }
+    
     /* What's the underlying session? */
     if (Session == &MmSession)
     {
