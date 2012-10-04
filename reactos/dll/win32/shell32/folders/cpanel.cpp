@@ -540,7 +540,7 @@ HRESULT WINAPI CControlPanelFolder::GetUIObjectOf(HWND hwndOwner,
             //
             pObj = (IContextMenu *)this;
             this->apidl = apidl;
-            cidl = cidl;
+            this->cidl = cidl;
             pObj->AddRef();
             hr = S_OK;
         } else if (IsEqualIID(riid, IID_IDataObject) && (cidl >= 1)) {

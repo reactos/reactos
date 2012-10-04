@@ -2828,7 +2828,7 @@ HRESULT WINAPI CDefView::SetAdvise(DWORD aspects, DWORD advf, IAdviseSink *pAdvS
     FIXME("partial stub: %p %08x %08x %p\n", this, aspects, advf, pAdvSink);
 
     /* FIXME: we set the AdviseSink, but never use it to send any advice */
-    pAdvSink = pAdvSink;
+    this->pAdvSink = pAdvSink;
     dwAspects = aspects;
     dwAdvf = advf;
 
