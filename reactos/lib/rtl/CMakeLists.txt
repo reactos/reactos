@@ -39,6 +39,7 @@ list(APPEND SOURCE
     nls.c
     path.c
     ppb.c
+    priv.c
     process.c
     propvar.c
     random.c

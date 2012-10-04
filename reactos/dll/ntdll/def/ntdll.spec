@@ -491,7 +491,7 @@
 ;@ stdcall RtlConvertPropertyToVariant
 @ stdcall RtlConvertSharedToExclusive(ptr)
 @ stdcall RtlConvertSidToUnicodeString(ptr ptr long)
-;@ stdcall RtlConvertToAutoInheritSecurityObject
+@ stdcall RtlConvertToAutoInheritSecurityObject(ptr ptr ptr ptr long ptr)
 ;@ stdcall RtlConvertUiListToApiList
 @ stdcall -arch=win32 -ret64 RtlConvertUlongToLargeInteger(long)
 ;@ stdcall RtlConvertVariantToProperty
@@ -525,7 +525,7 @@
 @ stdcall RtlCreateUnicodeString(ptr wstr)
 @ stdcall RtlCreateUnicodeStringFromAsciiz(ptr str)
 @ stdcall RtlCreateUserProcess(ptr long ptr ptr ptr ptr long ptr ptr ptr)
-;@ stdcall RtlCreateUserSecurityObject
+@ stdcall RtlCreateUserSecurityObject(ptr long ptr ptr long ptr ptr)
 @ stdcall RtlCreateUserThread(long ptr long ptr long long ptr ptr ptr ptr)
 @ stdcall RtlCustomCPToUnicodeN(ptr wstr long ptr str long)
 @ stdcall RtlCutoverTimeToSystemTime(ptr ptr ptr long)
@@ -788,11 +788,11 @@
 ;@ stdcall RtlMultiAppendUnicodeStringBuffer
 @ stdcall RtlMultiByteToUnicodeN(ptr long ptr ptr long)
 @ stdcall RtlMultiByteToUnicodeSize(ptr str long)
-;@ stdcall RtlNewInstanceSecurityObject
-;@ stdcall RtlNewSecurityGrantedAccess
+@ stdcall RtlNewInstanceSecurityObject(long long ptr ptr ptr ptr ptr long ptr ptr)
+@ stdcall RtlNewSecurityGrantedAccess(long ptr ptr ptr ptr ptr)
 @ stdcall RtlNewSecurityObject(ptr ptr ptr long ptr ptr)
-;@ stdcall RtlNewSecurityObjectEx
-;@ stdcall RtlNewSecurityObjectWithMultipleInheritance
+@ stdcall RtlNewSecurityObjectEx(ptr ptr ptr ptr long long ptr ptr)
+@ stdcall RtlNewSecurityObjectWithMultipleInheritance(ptr ptr ptr ptr long long long ptr ptr)
 @ stdcall RtlNormalizeProcessParams(ptr)
 @ stdcall RtlNtPathNameToDosPathName(ptr ptr ptr ptr) ; CHECKME
 @ stdcall RtlNtStatusToDosError(long)
@@ -893,7 +893,7 @@
 @ stdcall RtlSetSaclSecurityDescriptor(ptr long ptr long)
 @ stdcall RtlSetSecurityDescriptorRMControl(ptr ptr)
 @ stdcall RtlSetSecurityObject(long ptr ptr ptr ptr)
-;@ stdcall RtlSetSecurityObjectEx
+@ stdcall RtlSetSecurityObjectEx(long ptr ptr long ptr ptr)
 @ stdcall RtlSetThreadErrorMode(long ptr)
 @ stdcall RtlSetThreadIsCritical(long ptr long)
 @ stdcall RtlSetThreadPoolStartFunc(ptr ptr)
