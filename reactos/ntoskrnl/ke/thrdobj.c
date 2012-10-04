@@ -470,9 +470,6 @@ KeRundownThread(VOID)
                          0);
         }
 
-        /* Move on, but save NextEntry before we remove */
-        NextEntry = NextEntry->Flink;
-
         /* Now we can remove it */
         RemoveEntryList(&Mutant->MutantListEntry);
 
@@ -487,6 +484,9 @@ KeRundownThread(VOID)
             /* Wake the Mutant */
             KiWaitTest(&Mutant->Header, MUTANT_INCREMENT);
         }
+
+        /* Move on */
+        NextEntry = Thread->MutantListHead.Flink;
     }
 
     /* Release the Lock */
