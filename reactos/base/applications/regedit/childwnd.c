@@ -325,7 +325,8 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         WNDPROC oldproc;
         HFONT hFont;
         WCHAR buffer[MAX_PATH];
-        /* load "My Computer" string */
+
+        /* Load "My Computer" string */
         LoadStringW(hInst, IDS_MY_COMPUTER, buffer, COUNT_OF(buffer));
 
         g_pChildWnd = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(ChildWnd));

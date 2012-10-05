@@ -129,8 +129,13 @@ extern void SaveSettings(void)
             if (keyPath)
             {
                 rootName = get_root_key_name(hRootKey);
-                _snwprintf(szBuffer, COUNT_OF(szBuffer), L"My Computer\\%s\\%s", rootName, keyPath);
-                RegSetValueExW(hKey, L"LastKey", 0, REG_SZ, (LPBYTE) szBuffer, (DWORD)wcslen(szBuffer) * sizeof(WCHAR));
+
+                /* Load "My Computer" string and complete it */
+                LoadStringW(hInst, IDS_MY_COMPUTER, szBuffer, COUNT_OF(szBuffer));
+                wcscat(szBuffer, L"\\"); wcscat(szBuffer, rootName);
+                wcscat(szBuffer, L"\\"); wcscat(szBuffer, keyPath);
+
+                RegSetValueExW(hKey, L"LastKey", 0, REG_SZ, (LPBYTE)szBuffer, (DWORD)wcslen(szBuffer) * sizeof(WCHAR));
             }
 
             /* Get statusbar settings */

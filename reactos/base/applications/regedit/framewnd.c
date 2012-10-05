@@ -85,8 +85,7 @@ static void OnInitMenu(HWND hWnd)
     }
     else
     {
-        while(RemoveMenu(hMenu, s_nFavoriteMenuSubPos, MF_BYPOSITION))
-            ;
+        while(RemoveMenu(hMenu, s_nFavoriteMenuSubPos, MF_BYPOSITION)) ;
     }
 
     lResult = RegOpenKeyW(HKEY_CURRENT_USER, s_szFavoritesRegKey, &hKey);
@@ -436,7 +435,7 @@ static BOOL ImportRegistryFile(HWND hWnd)
 {
     BOOL bRet = FALSE;
     OPENFILENAME ofn;
-    WCHAR Caption[128], szTitle[256], szText[256];
+    WCHAR Caption[128], szTitle[512], szText[512];
     HKEY hKeyRoot;
     LPCWSTR pszKeyPath;
 
@@ -455,14 +454,15 @@ static BOOL ImportRegistryFile(HWND hWnd)
             wcsicmp(ofn.lpstrFile + ofn.nFileExtension, L"reg") == 0) /* REGEDIT4 or Windows Registry Editor Version 5.00 */
         {
             /* Open the file */
-            FILE *fp = _wfopen(ofn.lpstrFile, L"r");
+            FILE* fp = _wfopen(ofn.lpstrFile, L"r");
 
             /* Import it */
             if (fp == NULL || !import_registry_file(fp))
             {
-                LPSTR p = GetMultiByteString(ofn.lpstrFile);
-                fwprintf(stderr, L"Can't open file \"%s\"\n", p);
-                HeapFree(GetProcessHeap(), 0, p);
+                /* Error opening the file */
+                LoadStringW(hInst, IDS_APP_TITLE, szTitle, COUNT_OF(szTitle));
+                LoadStringW(hInst, IDS_IMPORT_ERROR, szText, COUNT_OF(szText));
+                InfoMessageBox(hWnd, MB_OK | MB_ICONERROR, szTitle, szText, ofn.lpstrFile);
                 bRet = FALSE;
             }
             else
@@ -470,7 +470,7 @@ static BOOL ImportRegistryFile(HWND hWnd)
                 /* Show successful import */
                 LoadStringW(hInst, IDS_APP_TITLE, szTitle, COUNT_OF(szTitle));
                 LoadStringW(hInst, IDS_IMPORT_OK, szText, COUNT_OF(szText));
-                MessageBoxW(NULL, szText, szTitle, MB_OK);
+                InfoMessageBox(hWnd, MB_OK | MB_ICONINFORMATION, szTitle, szText, ofn.lpstrFile);
                 bRet = TRUE;
             }
 
@@ -582,7 +582,7 @@ BOOL ExportRegistryFile(HWND hWnd)
     BOOL bRet = FALSE;
     OPENFILENAME ofn;
     WCHAR ExportKeyPath[_MAX_PATH];
-    WCHAR Caption[128];
+    WCHAR Caption[128], szTitle[512], szText[512];
     HKEY hKeyRoot;
     LPCWSTR pszKeyPath;
 
@@ -664,9 +664,10 @@ BOOL ExportRegistryFile(HWND hWnd)
                                          (ofn.nFilterIndex == 3 ? REG_FORMAT_4
                                                                 : REG_FORMAT_5)))
                 {
-                    LPSTR p = GetMultiByteString(ofn.lpstrFile);
-                    fwprintf(stderr, L"Can't open file \"%s\"\n", p);
-                    HeapFree(GetProcessHeap(), 0, p);
+                    /* Error creating the file */
+                    LoadStringW(hInst, IDS_APP_TITLE, szTitle, COUNT_OF(szTitle));
+                    LoadStringW(hInst, IDS_EXPORT_ERROR, szText, COUNT_OF(szText));
+                    InfoMessageBox(hWnd, MB_OK | MB_ICONERROR, szTitle, szText, ofn.lpstrFile);
                     bRet = FALSE;
                 }
                 else

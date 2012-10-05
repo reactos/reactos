@@ -146,9 +146,8 @@ BOOL PerformRegAction(REGEDIT_ACTION action, LPWSTR s, BOOL silent)
             get_file_name(&s, filename);
             if (!filename[0])
             {
-                fwprintf(stderr, L"%s: No file name is specified\n", getAppName());
-                // fwprintf(stderr, usage);
-                MessageBoxW(NULL, usage, NULL, MB_OK | MB_ICONINFORMATION);
+                InfoMessageBox(NULL, MB_OK | MB_ICONINFORMATION, NULL, L"No file name is specified.");
+                InfoMessageBox(NULL, MB_OK | MB_ICONINFORMATION, NULL, usage);
                 exit(4);
             }
 
@@ -165,27 +164,12 @@ BOOL PerformRegAction(REGEDIT_ACTION action, LPWSTR s, BOOL silent)
                         goto cont;
                 }
 
+                /* Open the file */
                 fp = _wfopen(filename, L"r");
-                if (fp != NULL)
+
+                /* Import it */
+                if (fp == NULL || !import_registry_file(fp))
                 {
-                    import_registry_file(fp);
-
-                    /* Show successful import */
-                    if (!silent)
-                    {
-                        LoadStringW(hInst, IDS_IMPORT_OK, szText, COUNT_OF(szText));
-                        InfoMessageBox(NULL, MB_OK | MB_ICONINFORMATION, szTitle, szText, filename);
-                    }
-
-                    fclose(fp);
-                }
-                else
-                {
-                    //LPSTR p = GetMultiByteString(filename);
-                    //perror("");
-                    fwprintf(stderr, L"%s: Can't open file \"%s\"\n", getAppName(), filename /*p*/);
-                    //HeapFree(GetProcessHeap(), 0, p);
-
                     /* Error opening the file */
                     if (!silent)
                     {
@@ -193,6 +177,18 @@ BOOL PerformRegAction(REGEDIT_ACTION action, LPWSTR s, BOOL silent)
                         InfoMessageBox(NULL, MB_OK | MB_ICONERROR, szTitle, szText, filename);
                     }
                 }
+                else
+                {
+                    /* Show successful import */
+                    if (!silent)
+                    {
+                        LoadStringW(hInst, IDS_IMPORT_OK, szText, COUNT_OF(szText));
+                        InfoMessageBox(NULL, MB_OK | MB_ICONINFORMATION, szTitle, szText, filename);
+                    }
+                }
+
+                /* Close the file */
+                if (fp) fclose(fp);
 
 cont:
                 get_file_name(&s, filename);
@@ -206,9 +202,8 @@ cont:
             get_file_name(&s, reg_key_name);
             if (!reg_key_name[0])
             {
-                fwprintf(stderr, L"%s: No registry key is specified for removal\n", getAppName());
-                // fwprintf(stderr, usage);
-                MessageBoxW(NULL, usage, NULL, MB_OK | MB_ICONINFORMATION);
+                InfoMessageBox(NULL, MB_OK | MB_ICONINFORMATION, NULL, L"No registry key is specified for removal.");
+                InfoMessageBox(NULL, MB_OK | MB_ICONINFORMATION, NULL, usage);
                 exit(6);
             }
             delete_registry_key(reg_key_name);
@@ -223,9 +218,8 @@ cont:
             get_file_name(&s, filename);
             if (!filename[0])
             {
-                fwprintf(stderr, L"%s: No file name is specified\n", getAppName());
-                // fwprintf(stderr, usage);
-                MessageBoxW(NULL, usage, NULL, MB_OK | MB_ICONINFORMATION);
+                InfoMessageBox(NULL, MB_OK | MB_ICONINFORMATION, NULL, L"No file name is specified.");
+                InfoMessageBox(NULL, MB_OK | MB_ICONINFORMATION, NULL, usage);
                 exit(7);
             }
 
@@ -310,8 +304,7 @@ BOOL ProcessCmdLine(LPWSTR lpCmdLine)
                         action = ACTION_EXPORT;
                         break;
                     case L'?':
-                        //fwprintf(stderr, usage);
-                        MessageBoxW(NULL, usage, NULL, MB_OK | MB_ICONINFORMATION);
+                        InfoMessageBox(NULL, MB_OK | MB_ICONINFORMATION, NULL, usage);
                         exit(3);
                         break;
                     default:

@@ -601,9 +601,7 @@ BOOL CreateNewKey(HWND hwndTV, HTREEITEM hItem)
         }
         else if (!hNewKey)
         {
-            WCHAR sz[256];
-            wsprintf(sz, L"Cannot create new key!\n\nError Code: %d", nResult);
-            MessageBoxW(hFrameWnd, sz, NULL, MB_ICONERROR);
+            InfoMessageBox(hFrameWnd, MB_OK | MB_ICONERROR, NULL, L"Cannot create new key!\n\nError Code: %d", nResult);
             goto done;
         }
     }
@@ -668,9 +666,16 @@ BOOL SelectNode(HWND hwndTV, LPCWSTR keyPath)
     LPCWSTR s;
     TVITEM tvi;
 
-    /* Total no-good hack */
-    if (!_wcsnicmp(keyPath, L"My Computer\\", 12))
-        keyPath += 12;
+    /* Load "My Computer" string... */
+    LoadStringW(hInst, IDS_MY_COMPUTER, szBuffer, COUNT_OF(szBuffer));
+    wcscat(szBuffer, L"\\");
+
+    /* ... and remove it from the key path */
+    if (!_wcsnicmp(keyPath, szBuffer, wcslen(szBuffer)))
+        keyPath += wcslen(szBuffer);
+
+    /* Reinitialize szBuffer */
+    szBuffer[0] = L'\0';
 
     hRoot = TreeView_GetRoot(hwndTV);
     hItem = hRoot;
