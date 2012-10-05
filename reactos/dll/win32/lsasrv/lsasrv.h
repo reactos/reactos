@@ -193,10 +193,6 @@ NTSTATUS
 LsapInitSids(VOID);
 
 NTSTATUS
-LsapLookupSids(PLSAPR_SID_ENUM_BUFFER SidEnumBuffer,
-               PLSAPR_TRANSLATED_NAME OutputNames);
-
-NTSTATUS
 LsapLookupNames(DWORD Count,
                 PRPC_UNICODE_STRING Names,
                 PLSAPR_REFERENCED_DOMAIN_LIST *ReferencedDomains,
@@ -205,5 +201,12 @@ LsapLookupNames(DWORD Count,
                 DWORD *MappedCount,
                 DWORD LookupOptions,
                 DWORD ClientRevision);
+
+NTSTATUS
+LsapLookupSids(PLSAPR_SID_ENUM_BUFFER SidEnumBuffer,
+               PLSAPR_REFERENCED_DOMAIN_LIST *ReferencedDomains,
+               PLSAPR_TRANSLATED_NAMES TranslatedNames,
+               LSAP_LOOKUP_LEVEL LookupLevel,
+               DWORD *MappedCount);
 
 /* EOF */

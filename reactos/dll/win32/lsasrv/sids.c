@@ -161,7 +161,7 @@ LsapCreateSid(PSID_IDENTIFIER_AUTHORITY IdentifierAuthority,
     PULONG p;
     ULONG i;
 
-    SidEntry = RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(WELL_KNOWN_SID));
+    SidEntry = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(WELL_KNOWN_SID));
     if (SidEntry == NULL)
         return FALSE;
 
@@ -204,9 +204,17 @@ LsapCreateSid(PSID_IDENTIFIER_AUTHORITY IdentifierAuthority,
 NTSTATUS
 LsapInitSids(VOID)
 {
-    ULONG SubAuthorities[5];
+    ULONG SubAuthorities[8];
 
     InitializeListHead(&WellKnownSidListHead);
+
+    /* NT Authority */
+    LsapCreateSid(&NtAuthority,
+                  0,
+                  NULL,
+                  L"NT AUTHORITY",
+                  L"NT AUTHORITY",
+                  SidTypeDomain);
 
     /* Null Sid */
     SubAuthorities[0] = SECURITY_NULL_RID;
@@ -270,14 +278,6 @@ LsapInitSids(VOID)
                   L"CREATOR GROUP SERVER",
                   L"",
                   SidTypeWellKnownGroup);
-
-    /* NT Domain Sid */
-    LsapCreateSid(&NtAuthority,
-                  0,
-                  NULL,
-                  L"NT AUTHORITY",
-                  L"NT AUTHORITY",
-                  SidTypeDomain);
 
     /* Dialup Sid */
     SubAuthorities[0] = SECURITY_DIALUP_RID;
@@ -603,78 +603,6 @@ LsapLookupWellKnownSid(PSID Sid)
 }
 
 
-NTSTATUS
-LsapLookupSids(PLSAPR_SID_ENUM_BUFFER SidEnumBuffer,
-               PLSAPR_TRANSLATED_NAME OutputNames)
-{
-    static const UNICODE_STRING UserName = RTL_CONSTANT_STRING(L"Administrator");
-    PWELL_KNOWN_SID ptr;
-    ULONG Mapped = 0;
-    ULONG i;
-    NTSTATUS Status;
-
-    PSID *Sids = (PSID *) SidEnumBuffer->SidInfo;
-
-TRACE("LsapLookupSids(%p, %p)\n", SidEnumBuffer, OutputNames);
-TRACE("SidEnumBuffer->Entries: %lu\n", SidEnumBuffer->Entries);
-TRACE("SidEnumBuffer->SidInfo: %p\n", SidEnumBuffer->SidInfo);
-
-    for (i = 0; i < SidEnumBuffer->Entries; i++)
-    {
-TRACE("i: %lu\n", i);
-        ptr = LsapLookupWellKnownSid(Sids[i]);
-        if (ptr != NULL)
-        {
-            OutputNames[i].Use = ptr->Use;
-
-            OutputNames[i].DomainIndex = i; /* Fixme */
-
-            OutputNames[i].Name.Buffer = MIDL_user_allocate(ptr->Name.MaximumLength);
-            OutputNames[i].Name.Length = ptr->Name.Length;
-            OutputNames[i].Name.MaximumLength = ptr->Name.MaximumLength;
-            RtlCopyMemory(OutputNames[i].Name.Buffer, ptr->Name.Buffer, ptr->Name.MaximumLength);
-
-            Mapped++;
-            continue;
-        }
-
-        /* Check for buildin domain SID */
-
-        /* Check for account domain SID */
-
-        /* Check for primary domain SID (later) */
-
-        /* Check for trusted domain SID (later) */
-
-        /* Check for builtin domain account SID */
-
-        /* Check for account domain account SID */
-
-        /* Check for primary domain account SID (later) */
-
-
-        /* Unknown SID */
-        OutputNames[i].Use = SidTypeWellKnownGroup;
-        OutputNames[i].DomainIndex = i;
-        OutputNames[i].Name.Buffer = MIDL_user_allocate(UserName.MaximumLength);
-        OutputNames[i].Name.Length = UserName.Length;
-        OutputNames[i].Name.MaximumLength = UserName.MaximumLength;
-        RtlCopyMemory(OutputNames[i].Name.Buffer, UserName.Buffer, UserName.MaximumLength);
-
-        Mapped++;
-    }
-
-    if (Mapped == 0)
-        Status = STATUS_NONE_MAPPED;
-    else if (Mapped < SidEnumBuffer->Entries)
-        Status = STATUS_SOME_NOT_MAPPED;
-    else
-        Status = STATUS_SUCCESS;
-
-    return Status;
-}
-
-
 PWELL_KNOWN_SID
 LsapLookupWellKnownName(PUNICODE_STRING Name)
 {
@@ -688,7 +616,9 @@ LsapLookupWellKnownName(PUNICODE_STRING Name)
                                 WELL_KNOWN_SID,
                                 ListEntry);
         if (RtlEqualUnicodeString(Name, &Ptr->Name, TRUE))
+        {
             return Ptr;
+        }
 
         ListEntry = ListEntry->Flink;
     }
@@ -1071,6 +1001,162 @@ done:
     }
 
 //    TRACE("done: Status %lx\n", Status);
+
+    return Status;
+}
+
+
+NTSTATUS
+LsapLookupSids(PLSAPR_SID_ENUM_BUFFER SidEnumBuffer,
+               PLSAPR_REFERENCED_DOMAIN_LIST *ReferencedDomains,
+               PLSAPR_TRANSLATED_NAMES TranslatedNames,
+               LSAP_LOOKUP_LEVEL LookupLevel,
+               DWORD *MappedCount)
+{
+    PLSAPR_REFERENCED_DOMAIN_LIST DomainsBuffer = NULL;
+    PLSAPR_TRANSLATED_NAME NamesBuffer = NULL;
+    ULONG NamesBufferLength;
+    ULONG DomainIndex;
+    ULONG i;
+    ULONG Mapped = 0;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    PWELL_KNOWN_SID ptr, ptr2;
+
+    SID_IDENTIFIER_AUTHORITY IdentifierAuthority = {SECURITY_NT_AUTHORITY};
+    static const UNICODE_STRING DomainName = RTL_CONSTANT_STRING(L"DOMAIN");
+    static const UNICODE_STRING AdminName = RTL_CONSTANT_STRING(L"Administrator");
+    PSID AdminsSid = NULL;
+    ULONG SidLength;
+
+
+    NamesBufferLength = SidEnumBuffer->Entries * sizeof(LSA_TRANSLATED_NAME);
+    NamesBuffer = MIDL_user_allocate(NamesBufferLength);
+    if (NamesBuffer == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
+
+    DomainsBuffer = MIDL_user_allocate(sizeof(LSAPR_REFERENCED_DOMAIN_LIST));
+    if (DomainsBuffer == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
+
+    DomainsBuffer->Domains = MIDL_user_allocate(SidEnumBuffer->Entries * sizeof(LSA_TRUST_INFORMATION));
+    if (DomainsBuffer->Domains == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
+
+    DomainsBuffer->Entries = 0;
+    DomainsBuffer->MaxEntries = SidEnumBuffer->Entries;
+
+    /* Initialize all name entries */
+    for (i = 0; i < SidEnumBuffer->Entries; i++)
+    {
+        NamesBuffer[i].Use = SidTypeUnknown;
+        NamesBuffer[i].Name.Length = 0;
+        NamesBuffer[i].Name.MaximumLength = 0;
+        NamesBuffer[i].Name.Buffer = NULL;
+        NamesBuffer[i].DomainIndex = -1;
+    }
+
+
+    Status = RtlAllocateAndInitializeSid(&IdentifierAuthority,
+                                         2,
+                                         SECURITY_BUILTIN_DOMAIN_RID,
+                                         DOMAIN_ALIAS_RID_ADMINS,
+                                         0, 0, 0, 0, 0, 0,
+                                         &AdminsSid);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+
+    SidLength = RtlLengthSid(AdminsSid);
+
+
+    for (i = 0; i < SidEnumBuffer->Entries; i++)
+    {
+        ptr = LsapLookupWellKnownSid(SidEnumBuffer->SidInfo[i].Sid);
+        if (ptr != NULL)
+        {
+            NamesBuffer[i].Use = ptr->Use;
+
+            NamesBuffer[i].Name.Buffer = MIDL_user_allocate(ptr->Name.MaximumLength);
+            NamesBuffer[i].Name.Length = ptr->Name.Length;
+            NamesBuffer[i].Name.MaximumLength = ptr->Name.MaximumLength;
+            RtlCopyMemory(NamesBuffer[i].Name.Buffer, ptr->Name.Buffer, ptr->Name.MaximumLength);
+
+            ptr2= LsapLookupWellKnownName(&ptr->Domain);
+            if (ptr2 != NULL)
+            {
+                Status = LsapAddDomainToDomainsList(DomainsBuffer,
+                                                    &ptr2->Name,
+                                                    ptr2->Sid,
+                                                    &DomainIndex);
+                if (NT_SUCCESS(Status))
+                    NamesBuffer[i].DomainIndex = DomainIndex;
+            }
+
+            Mapped++;
+            continue;
+        }
+
+
+        /* Hack: Map the SID to the Admin Account if it is not a well-known SID */
+        NamesBuffer[i].Use = SidTypeWellKnownGroup;
+        NamesBuffer[i].Name.Length = AdminName.Length;
+        NamesBuffer[i].Name.MaximumLength = AdminName.MaximumLength;
+        NamesBuffer[i].Name.Buffer = MIDL_user_allocate(AdminName.MaximumLength);
+        RtlCopyMemory(NamesBuffer[i].Name.Buffer, AdminName.Buffer, AdminName.MaximumLength);
+
+        Status = LsapAddDomainToDomainsList(DomainsBuffer,
+                                            (PUNICODE_STRING)&DomainName,
+                                            AdminsSid,
+                                            &DomainIndex);
+        if (NT_SUCCESS(Status))
+            NamesBuffer[i].DomainIndex = DomainIndex;
+
+        Mapped++;
+        continue;
+
+
+    }
+
+done:
+    if (AdminsSid != NULL)
+        RtlFreeSid(AdminsSid);
+
+
+    if (!NT_SUCCESS(Status))
+    {
+        if (DomainsBuffer != NULL)
+        {
+            if (DomainsBuffer->Domains != NULL)
+                MIDL_user_free(DomainsBuffer->Domains);
+
+            MIDL_user_free(DomainsBuffer);
+        }
+
+        if (NamesBuffer != NULL)
+            MIDL_user_free(NamesBuffer);
+    }
+    else
+    {
+        *ReferencedDomains = DomainsBuffer;
+        TranslatedNames->Entries = SidEnumBuffer->Entries;
+        TranslatedNames->Names = NamesBuffer;
+        *MappedCount = Mapped;
+
+        if (Mapped == 0)
+            Status = STATUS_NONE_MAPPED;
+        else if (Mapped < SidEnumBuffer->Entries)
+            Status = STATUS_SOME_NOT_MAPPED;
+    }
 
     return Status;
 }
