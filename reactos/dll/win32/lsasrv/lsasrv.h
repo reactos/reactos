@@ -205,8 +205,10 @@ LsapLookupNames(DWORD Count,
 NTSTATUS
 LsapLookupSids(PLSAPR_SID_ENUM_BUFFER SidEnumBuffer,
                PLSAPR_REFERENCED_DOMAIN_LIST *ReferencedDomains,
-               PLSAPR_TRANSLATED_NAMES TranslatedNames,
+               PLSAPR_TRANSLATED_NAMES_EX TranslatedNames,
                LSAP_LOOKUP_LEVEL LookupLevel,
-               DWORD *MappedCount);
+               DWORD *MappedCount,
+               DWORD LookupOptions,
+               DWORD ClientRevision);
 
 /* EOF */

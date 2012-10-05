@@ -1009,12 +1009,14 @@ done:
 NTSTATUS
 LsapLookupSids(PLSAPR_SID_ENUM_BUFFER SidEnumBuffer,
                PLSAPR_REFERENCED_DOMAIN_LIST *ReferencedDomains,
-               PLSAPR_TRANSLATED_NAMES TranslatedNames,
+               PLSAPR_TRANSLATED_NAMES_EX TranslatedNames,
                LSAP_LOOKUP_LEVEL LookupLevel,
-               DWORD *MappedCount)
+               DWORD *MappedCount,
+               DWORD LookupOptions,
+               DWORD ClientRevision)
 {
     PLSAPR_REFERENCED_DOMAIN_LIST DomainsBuffer = NULL;
-    PLSAPR_TRANSLATED_NAME NamesBuffer = NULL;
+    PLSAPR_TRANSLATED_NAME_EX NamesBuffer = NULL;
     ULONG NamesBufferLength;
     ULONG DomainIndex;
     ULONG i;
@@ -1030,7 +1032,7 @@ LsapLookupSids(PLSAPR_SID_ENUM_BUFFER SidEnumBuffer,
     ULONG SidLength;
 
 
-    NamesBufferLength = SidEnumBuffer->Entries * sizeof(LSA_TRANSLATED_NAME);
+    NamesBufferLength = SidEnumBuffer->Entries * sizeof(LSAPR_TRANSLATED_NAME_EX);
     NamesBuffer = MIDL_user_allocate(NamesBufferLength);
     if (NamesBuffer == NULL)
     {
@@ -1063,6 +1065,7 @@ LsapLookupSids(PLSAPR_SID_ENUM_BUFFER SidEnumBuffer,
         NamesBuffer[i].Name.MaximumLength = 0;
         NamesBuffer[i].Name.Buffer = NULL;
         NamesBuffer[i].DomainIndex = -1;
+        NamesBuffer[i].Flags = 0;
     }
 
 
@@ -1085,6 +1088,7 @@ LsapLookupSids(PLSAPR_SID_ENUM_BUFFER SidEnumBuffer,
         if (ptr != NULL)
         {
             NamesBuffer[i].Use = ptr->Use;
+            NamesBuffer[i].Flags = 0;
 
             NamesBuffer[i].Name.Buffer = MIDL_user_allocate(ptr->Name.MaximumLength);
             NamesBuffer[i].Name.Length = ptr->Name.Length;
@@ -1109,6 +1113,7 @@ LsapLookupSids(PLSAPR_SID_ENUM_BUFFER SidEnumBuffer,
 
         /* Hack: Map the SID to the Admin Account if it is not a well-known SID */
         NamesBuffer[i].Use = SidTypeWellKnownGroup;
+        NamesBuffer[i].Flags = 0;
         NamesBuffer[i].Name.Length = AdminName.Length;
         NamesBuffer[i].Name.MaximumLength = AdminName.MaximumLength;
         NamesBuffer[i].Name.Buffer = MIDL_user_allocate(AdminName.MaximumLength);

@@ -647,23 +647,49 @@ NTSTATUS WINAPI LsarLookupSids(
     LSAP_LOOKUP_LEVEL LookupLevel,
     DWORD *MappedCount)
 {
+    LSAPR_TRANSLATED_NAMES_EX TranslatedNamesEx;
+    ULONG i;
     NTSTATUS Status;
 
-    TRACE("LsarLookupSids(%p, %p, %p, %p, %d, %p)\n",
+    TRACE("(%p %p %p %p %d %p)\n",
           PolicyHandle, SidEnumBuffer, ReferencedDomains, TranslatedNames,
           LookupLevel, MappedCount);
 
+    /* FIXME: Fail, if there is an invalid SID in the SidEnumBuffer */
+
     TranslatedNames->Entries = SidEnumBuffer->Entries;
-    TranslatedNames->Names = NULL;
+    TranslatedNames->Names = MIDL_user_allocate(SidEnumBuffer->Entries * sizeof(LSAPR_TRANSLATED_NAME));
+    if (TranslatedNames->Names == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
     *ReferencedDomains = NULL;
 
-    /* FIXME: Fail, if there is an invalid SID in the SidEnumBuffer */
+    TranslatedNamesEx.Entries = SidEnumBuffer->Entries;
+    TranslatedNamesEx.Names = NULL;;
 
     Status = LsapLookupSids(SidEnumBuffer,
                             ReferencedDomains,
-                            TranslatedNames,
+                            &TranslatedNamesEx,
                             LookupLevel,
-                            MappedCount);
+                            MappedCount,
+                            0,
+                            0);
+    if (!NT_SUCCESS(Status))
+    {
+        MIDL_user_free(TranslatedNamesEx.Names);
+        return Status;
+    }
+
+    for (i = 0; i < TranslatedNamesEx.Entries; i++)
+    {
+        TranslatedNames->Names[i].Use = TranslatedNamesEx.Names[i].Use;
+        TranslatedNames->Names[i].Name.Length = TranslatedNamesEx.Names[i].Name.Length;
+        TranslatedNames->Names[i].Name.MaximumLength = TranslatedNamesEx.Names[i].Name.MaximumLength;
+        TranslatedNames->Names[i].Name.Buffer = TranslatedNamesEx.Names[i].Name.Buffer;
+        TranslatedNames->Names[i].DomainIndex = TranslatedNamesEx.Names[i].DomainIndex;
+    }
+
+    MIDL_user_free(TranslatedNamesEx.Names);
 
     return Status;
 }
@@ -1915,8 +1941,27 @@ NTSTATUS WINAPI LsarLookupSids2(
     DWORD LookupOptions,
     DWORD ClientRevision)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status;
+
+    TRACE("(%p %p %p %p %d %p %lu %lu)\n",
+          PolicyHandle, SidEnumBuffer, ReferencedDomains, TranslatedNames,
+          LookupLevel, MappedCount, LookupOptions, ClientRevision);
+
+    TranslatedNames->Entries = SidEnumBuffer->Entries;
+    TranslatedNames->Names = NULL;
+    *ReferencedDomains = NULL;
+
+    /* FIXME: Fail, if there is an invalid SID in the SidEnumBuffer */
+
+    Status = LsapLookupSids(SidEnumBuffer,
+                            ReferencedDomains,
+                            TranslatedNames,
+                            LookupLevel,
+                            MappedCount,
+                            LookupOptions,
+                            ClientRevision);
+
+    return Status;
 }
 
 
@@ -2142,8 +2187,27 @@ NTSTATUS WINAPI LsarLookupSids3(
     DWORD LookupOptions,
     DWORD ClientRevision)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status;
+
+    TRACE("(%p %p %p %p %d %p %lu %lu)\n",
+          PolicyHandle, SidEnumBuffer, ReferencedDomains, TranslatedNames,
+          LookupLevel, MappedCount, LookupOptions, ClientRevision);
+
+    TranslatedNames->Entries = SidEnumBuffer->Entries;
+    TranslatedNames->Names = NULL;
+    *ReferencedDomains = NULL;
+
+    /* FIXME: Fail, if there is an invalid SID in the SidEnumBuffer */
+
+    Status = LsapLookupSids(SidEnumBuffer,
+                            ReferencedDomains,
+                            TranslatedNames,
+                            LookupLevel,
+                            MappedCount,
+                            LookupOptions,
+                            ClientRevision);
+
+    return Status;
 }
 
 
