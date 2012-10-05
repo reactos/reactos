@@ -727,7 +727,7 @@ HRESULT WINAPI CDrivesFolder::SetNameOf(HWND hwndOwner, LPCITEMIDLIST pidl,
     }
 
     wcscpy(sName, lpName);
-    SHFree(sName);
+    SHFree(this->sName);
     this->sName = sName;
     TRACE("result %s\n", debugstr_w(sName));
     return S_OK;
