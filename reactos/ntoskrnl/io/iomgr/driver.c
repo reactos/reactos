@@ -1770,7 +1770,7 @@ IoAllocateDriverObjectExtension(IN PDRIVER_OBJECT DriverObject,
     if (!Inserted)
     {
         /* Free the entry and fail */
-        ExFreePool(NewDriverExtension);
+        ExFreePoolWithTag(NewDriverExtension, TAG_DRIVER_EXTENSION);
         return STATUS_OBJECT_NAME_COLLISION;
     }
 

@@ -1605,7 +1605,7 @@ FstubWritePartitionTableMBR(IN PDISK_INFORMATION Disk,
                                    DriveLayout);
 
     /* Free allocated structure and return */
-    ExFreePool(DriveLayout);
+    ExFreePoolWithTag(DriveLayout, 'BtsF');
     return Status;
 }
 

@@ -486,21 +486,14 @@ IoAllocateErrorLogEntry(IN PVOID IoObject,
 {
     PERROR_LOG_ENTRY LogEntry;
     ULONG LogEntrySize;
-    PDRIVER_OBJECT DriverObject;
     PDEVICE_OBJECT DeviceObject;
+    PDRIVER_OBJECT DriverObject;
 
     /* Make sure we have an object */
     if (!IoObject) return NULL;
 
     /* Check if we're past our buffer */
     if (IopTotalLogSize > PAGE_SIZE) return NULL;
-
-    /* Calculate the total size and allocate it */
-    LogEntrySize = sizeof(ERROR_LOG_ENTRY) + EntrySize;
-    LogEntry = ExAllocatePoolWithTag(NonPagedPool,
-                                     LogEntrySize,
-                                     TAG_ERROR_LOG);
-    if (!LogEntry) return NULL;
 
     /* Check if this is a device object or driver object */
     if (((PDEVICE_OBJECT)IoObject)->Type == IO_TYPE_DEVICE)
@@ -511,15 +504,22 @@ IoAllocateErrorLogEntry(IN PVOID IoObject,
     }
     else if (((PDEVICE_OBJECT)IoObject)->Type == IO_TYPE_DRIVER)
     {
-        /* It's a driver, so we don' thave a device */
+        /* It's a driver, so we don't have a device */
         DeviceObject = NULL;
-        DriverObject = IoObject;
+        DriverObject = (PDRIVER_OBJECT)IoObject;
     }
     else
     {
         /* Fail */
         return NULL;
     }
+
+    /* Calculate the total size and allocate it */
+    LogEntrySize = sizeof(ERROR_LOG_ENTRY) + EntrySize;
+    LogEntry = ExAllocatePoolWithTag(NonPagedPool,
+                                     LogEntrySize,
+                                     TAG_ERROR_LOG);
+    if (!LogEntry) return NULL;
 
     /* Reference the Objects */
     if (DeviceObject) ObReferenceObject(DeviceObject);
