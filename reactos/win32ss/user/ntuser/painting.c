@@ -1611,9 +1611,11 @@ NtUserScrollWindowEx(
    INT Result;
    PWND Window = NULL, CaretWnd;
    HDC hDC;
-   HRGN hrgnOwn = NULL, hrgnTemp;
+   HRGN hrgnOwn = NULL, hrgnTemp, hrgnWinupd = NULL;
    HWND hwndCaret;
    DWORD dcxflags = 0;
+   int rdw_flags;
+   BOOL bOwnRgn = TRUE;
    NTSTATUS Status = STATUS_SUCCESS;
    DECLARE_RETURN(DWORD);
    USER_REFERENCE_ENTRY Ref, CaretRef;
@@ -1666,7 +1668,10 @@ NtUserScrollWindowEx(
    }
 
    if (hrgnUpdate)
+   {
       hrgnOwn = hrgnUpdate;
+      bOwnRgn = FALSE;
+   }
    else
       hrgnOwn = IntSysCreateRectRgn(0, 0, 0, 0);
 
@@ -1695,6 +1700,8 @@ NtUserScrollWindowEx(
       RETURN(ERROR);
    }
 
+   rdw_flags = (flags & SW_ERASE) && (flags & SW_INVALIDATE) ? RDW_INVALIDATE | RDW_ERASE  : RDW_INVALIDATE ;
+
    rcCaret = rcScroll;
    hwndCaret = co_IntFixCaret(Window, &rcCaret, flags);
 
@@ -1710,16 +1717,22 @@ NtUserScrollWindowEx(
 
    /*
     * Take into account the fact that some damage may have occurred during
-    * the scroll.
+    * the scroll. Keep a copy in hrgnWinupd to be added to hrngUpdate at the end.
     */
 
    hrgnTemp = IntSysCreateRectRgn(0, 0, 0, 0);
    if (co_UserGetUpdateRgn(Window, hrgnTemp, FALSE) != NULLREGION)
    {
       HRGN hrgnClip = IntSysCreateRectRgnIndirect(&rcClip);
+      if (!bOwnRgn)
+      {
+         hrgnWinupd = IntSysCreateRectRgn( 0, 0, 0, 0);
+         NtGdiCombineRgn( hrgnWinupd, hrgnTemp, 0, RGN_COPY);
+      }
       NtGdiOffsetRgn(hrgnTemp, dx, dy);
       NtGdiCombineRgn(hrgnTemp, hrgnTemp, hrgnClip, RGN_AND);
-      co_UserRedrawWindow(Window, NULL, hrgnTemp, RDW_INVALIDATE | RDW_ERASE);
+      if (!bOwnRgn) NtGdiCombineRgn( hrgnWinupd, hrgnWinupd, hrgnTemp, RGN_OR );
+      co_UserRedrawWindow(Window, NULL, hrgnTemp, rdw_flags );
       GreDeleteObject(hrgnClip);
    }
    GreDeleteObject(hrgnTemp);
@@ -1746,7 +1759,7 @@ NtUserScrollWindowEx(
             UserRefObjectCo(Child, &WndRef);
             co_WinPosSetWindowPos(Child, 0, rcChild.left + dx, rcChild.top + dy, 0, 0,
                                   SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE |
-                                  SWP_NOREDRAW);
+                                  SWP_NOREDRAW | SWP_DEFERERASE);
             UserDerefObjectCo(Child);
          }
       }
@@ -1754,7 +1767,7 @@ NtUserScrollWindowEx(
 
    if (flags & (SW_INVALIDATE | SW_ERASE))
    {
-      co_UserRedrawWindow(Window, NULL, hrgnOwn, RDW_INVALIDATE | RDW_ERASE |
+      co_UserRedrawWindow(Window, NULL, hrgnOwn, rdw_flags |
                           ((flags & SW_ERASE) ? RDW_ERASENOW : 0) |
                           ((flags & SW_SCROLLCHILDREN) ? RDW_ALLCHILDREN : 0));
    }
@@ -1793,6 +1806,12 @@ NtUserScrollWindowEx(
    RETURN(Result);
 
 CLEANUP:
+   if (hrgnWinupd && !bOwnRgn)
+   {
+      NtGdiCombineRgn( hrgnOwn, hrgnOwn, hrgnWinupd, RGN_OR);
+      GreDeleteObject(hrgnWinupd);
+   }
+
    if (hrgnOwn && !hrgnUpdate)
    {
       GreDeleteObject(hrgnOwn);
