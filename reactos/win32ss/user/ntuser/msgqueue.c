@@ -874,6 +874,9 @@ MsqRemoveWindowMessagesFromQueue(PVOID pWindow)
       }
    }
 
+   /* Reference we message queue, so it won't get deleted */
+   IntReferenceMessageQueue(MessageQueue);
+
    /* remove the sent messages for this window */
    CurrentEntry = MessageQueue->SentMessagesListHead.Flink;
    ListHead = &MessageQueue->SentMessagesListHead;
@@ -930,6 +933,9 @@ MsqRemoveWindowMessagesFromQueue(PVOID pWindow)
          CurrentEntry = CurrentEntry->Flink;
       }
    }
+
+   /* Remove the reference we added */
+   IntDereferenceMessageQueue(MessageQueue);
 }
 
 BOOL FASTCALL
