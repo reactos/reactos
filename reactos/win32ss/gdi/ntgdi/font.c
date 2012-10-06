@@ -1056,7 +1056,7 @@ NtGdiHfontCreate(
 {
   ENUMLOGFONTEXDVW SafeLogfont;
   HFONT hNewFont;
-  PTEXTOBJ TextObj;
+  PLFONT plfont;
   NTSTATUS Status = STATUS_SUCCESS;
 
   /* Silence GCC warnings */
@@ -1084,25 +1084,26 @@ NtGdiHfontCreate(
       return NULL;
   }
 
-  TextObj = TEXTOBJ_AllocTextWithHandle();
-  if (!TextObj)
+  plfont = LFONT_AllocFontWithHandle();
+  if (!plfont)
   {
       return NULL;
   }
-  hNewFont = TextObj->BaseObject.hHmgr;
+  hNewFont = plfont->BaseObject.hHmgr;
 
-  TextObj->lft = lft;
-  TextObj->fl  = fl;
-  RtlCopyMemory (&TextObj->logfont, &SafeLogfont, sizeof(ENUMLOGFONTEXDVW));
+  plfont->lft = lft;
+  plfont->fl  = fl;
+  RtlCopyMemory (&plfont->logfont, &SafeLogfont, sizeof(ENUMLOGFONTEXDVW));
+  ExInitializePushLock(&plfont->lock);
 
   if (SafeLogfont.elfEnumLogfontEx.elfLogFont.lfEscapement !=
       SafeLogfont.elfEnumLogfontEx.elfLogFont.lfOrientation)
   {
     /* This should really depend on whether GM_ADVANCED is set */
-    TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfOrientation =
-    TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfEscapement;
+    plfont->logfont.elfEnumLogfontEx.elfLogFont.lfOrientation =
+    plfont->logfont.elfEnumLogfontEx.elfLogFont.lfEscapement;
   }
-  TEXTOBJ_UnlockText(TextObj);
+  LFONT_UnlockFont(plfont);
 
   if (pvCliData && hNewFont)
   {

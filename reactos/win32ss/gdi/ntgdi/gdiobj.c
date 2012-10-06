@@ -51,8 +51,7 @@
            (objt) == GDIObjType_BRUSH_TYPE)
 #define ASSERT_EXCLUSIVE_OBJECT_TYPE(objt) \
     ASSERT((objt) == GDIObjType_DC_TYPE || \
-           (objt) == GDIObjType_RGN_TYPE || \
-           (objt) == GDIObjType_LFONT_TYPE)
+           (objt) == GDIObjType_RGN_TYPE)
 #else
 #define DBG_INCREASE_LOCK_COUNT(ppi, hobj)
 #define DBG_DECREASE_LOCK_COUNT(x, y)

@@ -447,23 +447,24 @@ IntGetFontRenderMode(LOGFONTW *logfont)
 NTSTATUS FASTCALL
 TextIntCreateFontIndirect(CONST LPLOGFONTW lf, HFONT *NewFont)
 {
-    PTEXTOBJ TextObj;
+    PLFONT plfont;
 
-    TextObj = TEXTOBJ_AllocTextWithHandle();
-    if (!TextObj)
+    plfont = LFONT_AllocFontWithHandle();
+    if (!plfont)
     {
         return STATUS_NO_MEMORY;
     }
 
-    *NewFont = TextObj->BaseObject.hHmgr;
-    RtlCopyMemory(&TextObj->logfont.elfEnumLogfontEx.elfLogFont, lf, sizeof(LOGFONTW));
+    ExInitializePushLock(&plfont->lock);
+    *NewFont = plfont->BaseObject.hHmgr;
+    RtlCopyMemory(&plfont->logfont.elfEnumLogfontEx.elfLogFont, lf, sizeof(LOGFONTW));
     if (lf->lfEscapement != lf->lfOrientation)
     {
         /* This should really depend on whether GM_ADVANCED is set */
-        TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfOrientation =
-            TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfEscapement;
+        plfont->logfont.elfEnumLogfontEx.elfLogFont.lfOrientation =
+            plfont->logfont.elfEnumLogfontEx.elfLogFont.lfEscapement;
     }
-    TEXTOBJ_UnlockText(TextObj);
+    LFONT_UnlockFont(plfont);
 
     return STATUS_SUCCESS;
 }
