@@ -80,18 +80,15 @@ BmfdQueryGlyphAndBitmap(
     ULONG cjSize)
 {
     PBMFD_FACE pface = pfont->pface;
-    PGLYPHENTRY pge = (PGLYPHENTRY)(pface->pCharTable + hg);
+    PGLYPHENTRY pge;
     ULONG xSrc, ySrc, cxSrc, cySrc;
     ULONG xDst, yDst, cxDst, cyDst;
     ULONG xScale, yScale;
     ULONG ulGlyphOffset, cjDstRow, color;
     PVOID pvSrc0, pvDst0;
 
-    if (!pge)
-    {
-        DbgPrint("no glyph handle given!\n");
-        return FD_ERROR;
-    }
+    /* The glyph handle is the byte offset to the glyph in the table */
+    pge = (PGLYPHENTRY)(pface->pCharTable + hg);
 
     /* Get the bitmap offset depending on file version */
     if (pface->ulVersion >= 0x300)
@@ -151,7 +148,7 @@ BmfdQueryGlyphAndBitmap(
         /* Verify that the buffer is big enough */
         if (cjSize < FIELD_OFFSET(GLYPHBITS, aj) + cyDst * cjDstRow)
         {
-            DbgPrint("Buffer too small (%ld), %ld,%ld\n", 
+            DbgPrint("Buffer too small (%ld), %ld,%ld\n",
                      cjSize, cxSrc, cySrc);
             return FD_ERROR;
         }
@@ -245,7 +242,7 @@ BmfdQueryMaxExtents(
         }
 
         pFontInfo = pfont->pface->pFontInfo;
-        
+
         xScale = pfont->xScale;
         yScale = pfont->yScale;
 
@@ -329,7 +326,7 @@ BmfdQueryFontData(
     PBMFD_FACE pface = &pfile->aface[pfo->iFace - 1];
     PBMFD_FONT pfont= BmfdGetFontInstance(pfo, pface);
 
-    DbgPrint("BmfdQueryFontData(pfo=%p, iMode=%ld, hg=%p, pgd=%p, pv=%p, cjSize=%ld)\n", 
+    DbgPrint("BmfdQueryFontData(pfo=%p, iMode=%ld, hg=%p, pgd=%p, pv=%p, cjSize=%ld)\n",
              pfo, iMode, hg, pgd, pv, cjSize);
 //    __debugbreak();
 
@@ -340,7 +337,7 @@ BmfdQueryFontData(
 
         case QFD_MAXEXTENTS: /* 3 */
             return BmfdQueryMaxExtents(pfont, pv, cjSize);
-            
+
             /* we support nothing else */
         default:
             return FD_ERROR;
