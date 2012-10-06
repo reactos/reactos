@@ -103,6 +103,7 @@ KdpServiceDispatcher(ULONG Service,
         case 'RbdK':
         {
             Result = KdbRegisterCliCallback(Buffer1, Buffer1Length);
+            break;
         }
 #endif /* KDBG */
 #endif /* DBG */
