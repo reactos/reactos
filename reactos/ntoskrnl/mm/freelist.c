@@ -345,7 +345,7 @@ MiAllocatePagesForMdl(IN PHYSICAL_ADDRESS LowAddress,
         // If we didn' tfind any pages at all, fail
         //
         DPRINT1("NO MDL PAGES!\n");
-        ExFreePool(Mdl);
+        ExFreePoolWithTag(Mdl, TAG_MDL);
         return NULL;
     }
 

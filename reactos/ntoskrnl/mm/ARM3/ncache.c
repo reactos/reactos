@@ -71,7 +71,7 @@ MmAllocateNonCachedMemory(IN SIZE_T NumberOfBytes)
         //
         ASSERT(PageCount > MdlPageCount);
         MmFreePagesFromMdl(Mdl);
-        ExFreePool(Mdl);
+        ExFreePoolWithTag(Mdl, TAG_MDL);
         return NULL;
     }
 
@@ -86,7 +86,7 @@ MmAllocateNonCachedMemory(IN SIZE_T NumberOfBytes)
         // Out of memory...
         //
         MmFreePagesFromMdl(Mdl);
-        ExFreePool(Mdl);
+        ExFreePoolWithTag(Mdl, TAG_MDL);
         return NULL;
     }
 
@@ -201,7 +201,7 @@ MmFreeNonCachedMemory(IN PVOID BaseAddress,
     // Kill the MDL (and underlying pages)
     //
     MmFreePagesFromMdl(Mdl);
-    ExFreePool(Mdl);
+    ExFreePoolWithTag(Mdl, TAG_MDL);
 
     //
     // Now free the system PTEs for the underlying VA
