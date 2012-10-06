@@ -450,14 +450,14 @@ NtGdiPolyPolyDraw( IN HDC hDC,
     if (!dc)
     {
         EngSetLastError(ERROR_INVALID_HANDLE);
-        ExFreePool(pTemp);
+        ExFreePoolWithTag(pTemp, TAG_SHAPE);
         return FALSE;
     }
 
     if (dc->dctype == DC_TYPE_INFO)
     {
         DC_UnlockDc(dc);
-        ExFreePool(pTemp);
+        ExFreePoolWithTag(pTemp, TAG_SHAPE);
         /* Yes, Windows really returns TRUE in this case */
         return TRUE;
     }
@@ -497,7 +497,7 @@ NtGdiPolyPolyDraw( IN HDC hDC,
     /* Cleanup and return */
     DC_vFinishBlit(dc, NULL);
     DC_UnlockDc(dc);
-    ExFreePool(pTemp);
+    ExFreePoolWithTag(pTemp, TAG_SHAPE);
 
     return (ULONG_PTR)Ret;
 }

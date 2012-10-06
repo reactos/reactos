@@ -557,7 +557,7 @@ Exit:
     if (hSourceBitmap) EngDeleteSurface((HSURF)hSourceBitmap);
     DC_UnlockDc(pDC);
 Exit2:
-    ExFreePool(pbmiSafe);
+    ExFreePoolWithTag(pbmiSafe, 'pmTG');
     return ret;
 }
 

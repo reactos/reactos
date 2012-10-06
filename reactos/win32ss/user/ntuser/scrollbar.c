@@ -90,7 +90,7 @@ IntGetScrollBarRect (PWND Wnd, INT nBar, RECTL *lprect)
          lprect->bottom += UserGetSystemMetrics (SM_CYHSCROLL);
          if (Wnd->style & WS_BORDER)
          {
-            lprect->left--; 
+            lprect->left--;
             lprect->right++;
          }
          else if (Wnd->style & WS_VSCROLL)
@@ -113,7 +113,7 @@ IntGetScrollBarRect (PWND Wnd, INT nBar, RECTL *lprect)
          }
          if (Wnd->style & WS_BORDER)
          {
-            lprect->top--;   
+            lprect->top--;
             lprect->bottom++;
          }
          else if (Wnd->style & WS_HSCROLL)
@@ -618,7 +618,7 @@ IntDestroyScrollBars(PWND Window)
    {
       DesktopHeapFree(Window->head.rpdesk, Window->pSBInfo);
       Window->pSBInfo = NULL;
-      ExFreePool(Window->pSBInfoex);
+      ExFreePoolWithTag(Window->pSBInfoex, TAG_SBARINFO);
       Window->pSBInfoex = NULL;
       return TRUE;
    }
@@ -802,7 +802,7 @@ NtUserSBGetParms(
    {
       RtlCopyMemory(&psi, lpsi, sizeof(SCROLLINFO));
       if (pSBData)
-      { 
+      {
          RtlCopyMemory(&SBDataSafe, pSBData, sizeof(SBDATA));
       }
    }

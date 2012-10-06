@@ -153,10 +153,10 @@ co_IntSendActivateMessages(PWND WindowPrev, PWND Window, BOOL MouseActivate, BOO
          List = IntWinListChildren(UserGetDesktopWindow());
          if ( List )
          {
-            if ( OldTID ) 
+            if ( OldTID )
             {
                ptiOld->TIF_flags |= TIF_INACTIVATEAPPMSG;
-               ptiOld->pClientInfo->dwTIFlags = ptiOld->TIF_flags;           
+               ptiOld->pClientInfo->dwTIFlags = ptiOld->TIF_flags;
 
                for (phWnd = List; *phWnd; ++phWnd)
                {
@@ -186,13 +186,13 @@ co_IntSendActivateMessages(PWND WindowPrev, PWND Window, BOOL MouseActivate, BOO
                   }
                }
             }
-            ExFreePool(List);
+            ExFreePoolWithTag(List, USERTAG_WINDOWLIST);
          }
       }
       if (WindowPrev)
          UserDerefObjectCo(WindowPrev); // Now allow the previous window to die.
 
-      if (Window->state & WNDS_ACTIVEFRAME) 
+      if (Window->state & WNDS_ACTIVEFRAME)
       {  // If already active frame do not allow NCPaint.
          //ERR("SendActivateMessage Is Active Frame!\n");
          Window->state |= WNDS_NONCPAINT;
@@ -345,7 +345,7 @@ CanForceFG(PPROCESSINFO ppi)
 /*
    MSDN:
    The system restricts which processes can set the foreground window. A process
-   can set the foreground window only if one of the following conditions is true: 
+   can set the foreground window only if one of the following conditions is true:
 
     * The process is the foreground process.
     * The process was started by the foreground process.
@@ -353,7 +353,7 @@ CanForceFG(PPROCESSINFO ppi)
     * There is no foreground process.
     * The foreground process is being debugged.
     * The foreground is not locked (see LockSetForegroundWindow).
-    * The foreground lock time-out has expired (see SPI_GETFOREGROUNDLOCKTIMEOUT in SystemParametersInfo). 
+    * The foreground lock time-out has expired (see SPI_GETFOREGROUNDLOCKTIMEOUT in SystemParametersInfo).
     * No menus are active.
 */
 
@@ -404,7 +404,7 @@ co_IntSetForegroundAndFocusWindow(PWND Wnd, BOOL MouseActivate)
          ( CanForceFG(pti->ppi) || pti->TIF_flags & (TIF_SYSTEMTHREAD|TIF_CSRSSTHREAD|TIF_ALLOWFOREGROUNDACTIVATE) )) ||
         pti->ppi == ppiScrnSaver
       )
-   { 
+   {
       IntSetFocusMessageQueue(Wnd->head.pti->MessageQueue);
       gptiForeground = Wnd->head.pti;
       TRACE("Set Foreground pti 0x%p Q 0x%p\n",Wnd->head.pti, Wnd->head.pti->MessageQueue);
@@ -416,7 +416,7 @@ co_IntSetForegroundAndFocusWindow(PWND Wnd, BOOL MouseActivate)
  */
       FindRemoveAsyncMsg(Wnd); // Do this to fix test_SFW todos!
       fgRet = TRUE;
-   } 
+   }
 
    //  Fix FG Bounce with regedit.
    if (hWndPrev != hWnd )
@@ -655,7 +655,7 @@ co_UserSetFocus(PWND Window)
          if (!pwndTop->spwndParent || pwndTop->spwndParent == UserGetDesktopWindow())
          {
             if ((pwndTop->style & (WS_POPUP|WS_CHILD)) == WS_CHILD) return 0;
-            break;         
+            break;
          }
          if (pwndTop->spwndParent == UserGetMessageWindow()) return 0;
          pwndTop = pwndTop->spwndParent;
@@ -781,7 +781,7 @@ co_UserSetCapture(HWND hWnd)
          return NULL;
       }
    }
-   
+
    hWndPrev = MsqSetStateWindow(ThreadQueue, MSQ_STATE_CAPTURE, hWnd);
 
    if (hWndPrev)

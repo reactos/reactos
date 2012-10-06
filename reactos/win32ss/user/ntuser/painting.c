@@ -386,7 +386,7 @@ co_IntPaintWindows(PWND Wnd, ULONG Flags, BOOL Recurse)
                UserDerefObjectCo(Wnd);
             }
          }
-         ExFreePool(List);
+         ExFreePoolWithTag(List, USERTAG_WINDOWLIST);
       }
    }
 }
@@ -505,7 +505,7 @@ IntInvalidateWindows(PWND Wnd, HRGN hRgn, ULONG Flags)
 
       if (Flags & RDW_VALIDATE && RgnType != NULLREGION)
       {
-         if (Flags & RDW_NOFRAME) 
+         if (Flags & RDW_NOFRAME)
             Wnd->state &= ~WNDS_SENDNCPAINT;
          if (Flags & RDW_NOERASE)
             Wnd->state &= ~(WNDS_SENDERASEBACKGROUND|WNDS_ERASEBACKGROUND);
@@ -1681,7 +1681,7 @@ NtUserScrollWindowEx(
       dcxflags = DCX_USESTYLE;
 
       if (!(Window->pcls->style & (CS_OWNDC|CS_CLASSDC)))
-         dcxflags |= DCX_CACHE; // AH??? wine~ If not Powned or with Class go Cheap! 
+         dcxflags |= DCX_CACHE; // AH??? wine~ If not Powned or with Class go Cheap!
 
       if (flags & SW_SCROLLCHILDREN && Window->style & WS_CLIPCHILDREN)
          dcxflags |= DCX_CACHE|DCX_NOCLIPCHILDREN;
@@ -2053,7 +2053,7 @@ UserRealizePalette(HDC hdc)
             ERR("RealizePalette Desktop.");
             hdc = UserGetWindowDC(pWnd);
             IntPaintDesktop(hdc);
-            UserReleaseDC(pWnd,hdc,FALSE);            
+            UserReleaseDC(pWnd,hdc,FALSE);
          }
          UserSendNotifyMessage((HWND)HWND_BROADCAST, WM_PALETTECHANGED, (WPARAM)hWnd, 0);
       }

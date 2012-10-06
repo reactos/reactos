@@ -1402,7 +1402,7 @@ ftGdiGlyphCacheSet(
         NewEntry = (PFONT_CACHE_ENTRY)FontCacheListHead.Blink;
         FT_Done_Glyph((FT_Glyph)NewEntry->BitmapGlyph);
         RemoveTailList(&FontCacheListHead);
-        ExFreePool(NewEntry);
+        ExFreePoolWithTag(NewEntry, TAG_FONT);
         FontCacheNumEntries--;
     }
 
@@ -2584,7 +2584,7 @@ GetFontScore(LOGFONTW *LogFont, PUNICODE_STRING FaceName, PFONTGDI FontGDI)
         Score += 25;
     }
 
-    ExFreePool(Otm);
+    ExFreePoolWithTag(Otm, GDITAG_TEXT);
 
     return Score;
 }
@@ -2850,7 +2850,7 @@ IntGdiGetFontResourceInfo(
     /* Get the full path name */
     if (!IntGetFullFileName(NameInfo1, Size, FileName))
     {
-        ExFreePool(NameInfo1);
+        ExFreePoolWithTag(NameInfo1, TAG_FINF);
         return FALSE;
     }
 
@@ -2858,7 +2858,7 @@ IntGdiGetFontResourceInfo(
     NameInfo2 = ExAllocatePoolWithTag(PagedPool, Size, TAG_FINF);
     if (!NameInfo2)
     {
-        ExFreePool(NameInfo1);
+        ExFreePoolWithTag(NameInfo1, TAG_FINF);
         EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return FALSE;
     }
@@ -2888,7 +2888,7 @@ IntGdiGetFontResourceInfo(
     IntUnLockGlobalFonts;
 
     /* Free the buffers */
-    ExFreePool(NameInfo1);
+    ExFreePoolWithTag(NameInfo1, TAG_FINF);
     ExFreePool(NameInfo2);
 
     if (!bFound && dwType != 5)
@@ -3041,7 +3041,7 @@ NtGdiGetFontFamilyInfo(HDC Dc,
     if (! GetFontFamilyInfoForList(&LogFont, Info, &Count, Size, &FontListHead) )
     {
         IntUnLockGlobalFonts;
-        ExFreePool(Info);
+        ExFreePoolWithTag(Info, GDITAG_TEXT);
         return -1;
     }
     IntUnLockGlobalFonts;
@@ -3053,7 +3053,7 @@ NtGdiGetFontFamilyInfo(HDC Dc,
                                    &Win32Process->PrivateFontListHead))
     {
         IntUnLockProcessPrivateFonts(Win32Process);
-        ExFreePool(Info);
+        ExFreePoolWithTag(Info, GDITAG_TEXT);
         return -1;
     }
     IntUnLockProcessPrivateFonts(Win32Process);
@@ -3061,7 +3061,7 @@ NtGdiGetFontFamilyInfo(HDC Dc,
     /* Enumerate font families in the registry */
     if (! GetFontFamilyInfoForSubstitutes(&LogFont, Info, &Count, Size))
     {
-        ExFreePool(Info);
+        ExFreePoolWithTag(Info, GDITAG_TEXT);
         return -1;
     }
 
@@ -3072,13 +3072,13 @@ NtGdiGetFontFamilyInfo(HDC Dc,
                                 (Count < Size ? Count : Size) * sizeof(FONTFAMILYINFO));
         if (! NT_SUCCESS(Status))
         {
-            ExFreePool(Info);
+            ExFreePoolWithTag(Info, GDITAG_TEXT);
             EngSetLastError(ERROR_INVALID_PARAMETER);
             return -1;
         }
     }
 
-    ExFreePool(Info);
+    ExFreePoolWithTag(Info, GDITAG_TEXT);
 
     return Count;
 }
@@ -3778,7 +3778,7 @@ NtGdiGetCharABCWidthsW(
     dc = DC_LockDc(hDC);
     if (dc == NULL)
     {
-        ExFreePool(SafeBuff);
+        ExFreePoolWithTag(SafeBuff, GDITAG_TEXT);
         EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
@@ -3789,7 +3789,7 @@ NtGdiGetCharABCWidthsW(
 
     if (TextObj == NULL)
     {
-        ExFreePool(SafeBuff);
+        ExFreePoolWithTag(SafeBuff, GDITAG_TEXT);
         EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
@@ -3812,7 +3812,7 @@ NtGdiGetCharABCWidthsW(
         if (!found)
         {
             DPRINT1("WARNING: Could not find desired charmap!\n");
-            ExFreePool(SafeBuff);
+            ExFreePoolWithTag(SafeBuff, GDITAG_TEXT);
             EngSetLastError(ERROR_INVALID_HANDLE);
             return FALSE;
         }
@@ -3880,10 +3880,10 @@ NtGdiGetCharABCWidthsW(
     if (! NT_SUCCESS(Status))
     {
         SetLastNtError(Status);
-        ExFreePool(SafeBuff);
+        ExFreePoolWithTag(SafeBuff, GDITAG_TEXT);
         return FALSE;
     }
-    ExFreePool(SafeBuff);
+    ExFreePoolWithTag(SafeBuff, GDITAG_TEXT);
     DPRINT("NtGdiGetCharABCWidths Worked!\n");
     return TRUE;
 }
@@ -3945,7 +3945,7 @@ NtGdiGetCharWidthW(
     dc = DC_LockDc(hDC);
     if (dc == NULL)
     {
-        ExFreePool(SafeBuff);
+        ExFreePoolWithTag(SafeBuff, GDITAG_TEXT);
         EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
@@ -3956,7 +3956,7 @@ NtGdiGetCharWidthW(
 
     if (TextObj == NULL)
     {
-        ExFreePool(SafeBuff);
+        ExFreePoolWithTag(SafeBuff, GDITAG_TEXT);
         EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
@@ -4021,7 +4021,7 @@ NtGdiGetCharWidthW(
     IntUnLockFreeType;
     TEXTOBJ_UnlockText(TextObj);
     MmCopyToCaller(Buffer, SafeBuff, BufferSize);
-    ExFreePool(SafeBuff);
+    ExFreePoolWithTag(SafeBuff, GDITAG_TEXT);
     return TRUE;
 }
 
@@ -4088,7 +4088,7 @@ GreGetGlyphIndicesW(
         }
         IntGetOutlineTextMetrics(FontGDI, Size, potm);
         DefChar = potm->otmTextMetrics.tmDefaultChar; // May need this.
-        ExFreePool(potm);
+        ExFreePoolWithTag(potm, GDITAG_TEXT);
     }
 
     IntLockFreeType;
@@ -4183,7 +4183,7 @@ NtGdiGetGlyphIndicesW(
         }
         IntGetOutlineTextMetrics(FontGDI, Size, potm);
         DefChar = potm->otmTextMetrics.tmDefaultChar; // May need this.
-        ExFreePool(potm);
+        ExFreePoolWithTag(potm, GDITAG_TEXT);
     }
 
     _SEH2_TRY

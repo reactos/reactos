@@ -65,7 +65,7 @@ IntGetClientRect(PWND Wnd, RECTL *Rect)
       Rect->bottom = UserGetSystemMetrics(SM_CYMINIMIZED);
       return;
    }
-   if ( Wnd != UserGetDesktopWindow()) // Wnd->fnid != FNID_DESKTOP ) 
+   if ( Wnd != UserGetDesktopWindow()) // Wnd->fnid != FNID_DESKTOP )
    {
       *Rect = Wnd->rcClient;
       RECTL_vOffsetRect(Rect, -Wnd->rcClient.left, -Wnd->rcClient.top);
@@ -177,7 +177,7 @@ PWND FASTCALL IntGetLastTopMostWindow(VOID)
 BOOL FASTCALL ActivateOtherWindowMin(PWND Wnd)
 {
     BOOL ActivePrev, FindTopWnd;
-    PWND pWndTopMost, pWndChild, pWndSetActive, pWndTemp, pWndDesk; 
+    PWND pWndTopMost, pWndChild, pWndSetActive, pWndTemp, pWndDesk;
     USER_REFERENCE_ENTRY Ref;
     PTHREADINFO pti = gptiCurrent;
 
@@ -398,7 +398,7 @@ co_WinPosArrangeIconicWindows(PWND parent)
          //ERR("X:%d Y:%d\n",x,y);
       }
    }
-   ExFreePool(List);
+   ExFreePoolWithTag(List, USERTAG_WINDOWLIST);
    return yspacing;
 }
 
@@ -431,7 +431,7 @@ WinPosFindIconPos(PWND Window, POINT *Pos)
 
    //ERR("X:%d Y:%d XS:%d YS:%d\n",Pos->x,Pos->y,xspacing,yspacing);
 
-   // Set to default position when minimized. 
+   // Set to default position when minimized.
    Pos->x = x + UserGetSystemMetrics(SM_CXBORDER);
    Pos->y = y - yspacing - UserGetSystemMetrics(SM_CYBORDER);
 
@@ -752,7 +752,7 @@ co_WinPosMinMaximize(PWND Wnd, UINT ShowFlag, RECT* NewPos)
       switch (ShowFlag)
       {
          case SW_SHOWMINNOACTIVE:
-         case SW_SHOWMINIMIZED:  
+         case SW_SHOWMINIMIZED:
          case SW_FORCEMINIMIZE:
          case SW_MINIMIZE:
             {
@@ -1323,7 +1323,7 @@ WinPosDoOwnedPopups(PWND Window, HWND hWndInsertAfter)
             hWndInsertAfter = List[i];
          }
       }
-      ExFreePool(List);
+      ExFreePoolWithTag(List, USERTAG_WINDOWLIST);
    }
 
    return hWndInsertAfter;
@@ -1637,7 +1637,7 @@ co_WinPosSetWindowPos(
             IntLinkWindow(Window, InsertAfterWindow);
          }
 
-         if ( ( WinPos.hwndInsertAfter == HWND_TOPMOST || 
+         if ( ( WinPos.hwndInsertAfter == HWND_TOPMOST ||
                ( Window->ExStyle & WS_EX_TOPMOST && Window->spwndPrev && Window->spwndPrev->ExStyle & WS_EX_TOPMOST ) ||
                ( Window->spwndNext && Window->spwndNext->ExStyle & WS_EX_TOPMOST ) ) &&
                !bNoTopMost )
@@ -1932,7 +1932,7 @@ co_WinPosSetWindowPos(
    }
 
    /* And last, send the WM_WINDOWPOSCHANGED message */
- 
+
    TRACE("\tstatus flags = %04x\n", WinPos.flags & SWP_AGG_STATUSFLAGS);
 
    if ((WinPos.flags & SWP_AGG_STATUSFLAGS) != SWP_AGG_NOPOSCHANGE)
@@ -2174,7 +2174,7 @@ co_WinPosShowWindow(PWND Wnd, INT Cmd)
 
    /* We can't activate a child window */
    if ((Wnd->style & WS_CHILD) &&
-       !(Wnd->ExStyle & WS_EX_MDICHILD) && 
+       !(Wnd->ExStyle & WS_EX_MDICHILD) &&
        Cmd != SW_SHOWNA)
    {
       //ERR("SWP Child No active and ZOrder\n");
@@ -2297,12 +2297,12 @@ co_WinPosSearchChildren(
                 if(pwndChild != NULL)
                 {
                     /* We found a window. Don't send any more WM_NCHITTEST messages */
-                    ExFreePool(List);
+                    ExFreePoolWithTag(List, USERTAG_WINDOWLIST);
                     UserDereferenceObject(ScopeWin);
                     return pwndChild;
                 }
             }
-            ExFreePool(List);
+            ExFreePoolWithTag(List, USERTAG_WINDOWLIST);
         }
     }
 
@@ -2381,14 +2381,14 @@ IntRealChildWindowFromPoint(PWND Parent, LONG x, LONG y)
                if ( Child->pcls->atomClassName != gpsi->atomSysClass[ICLS_BUTTON] ||
                    (Child->style & BS_TYPEMASK) != BS_GROUPBOX )
                {
-                  ExFreePool(List);
+                  ExFreePoolWithTag(List, USERTAG_WINDOWLIST);
                   return Child;
                }
                pwndHit = Child;
             }
          }
       }
-      ExFreePool(List);
+      ExFreePoolWithTag(List, USERTAG_WINDOWLIST);
    }
    return pwndHit ? pwndHit : Parent;
 }
@@ -2439,7 +2439,7 @@ IntChildWindowFromPointEx(PWND Parent, LONG x, LONG y, UINT uiFlags)
             }
          }
       }
-      ExFreePool(List);
+      ExFreePoolWithTag(List, USERTAG_WINDOWLIST);
    }
    return pwndHit ? pwndHit : Parent;
 }

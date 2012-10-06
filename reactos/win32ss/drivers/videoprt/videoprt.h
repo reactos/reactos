@@ -44,6 +44,7 @@
 
 #define TAG_VIDEO_PORT  'PDIV'
 #define TAG_VIDEO_PORT_BUFFER  '\0mpV'
+#define TAG_REQUEST_PACKET 'qRpV'
 
 typedef struct _VIDEO_PORT_ADDRESS_MAPPING
 {

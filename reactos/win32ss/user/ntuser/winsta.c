@@ -1092,7 +1092,7 @@ BuildWindowStationNameList(
    {
       if (Buffer != InitialBuffer)
       {
-         ExFreePool(Buffer);
+         ExFreePoolWithTag(Buffer, TAG_WINSTA);
       }
       return Status;
    }
@@ -1107,7 +1107,7 @@ BuildWindowStationNameList(
       {
          if (Buffer != InitialBuffer)
          {
-            ExFreePool(Buffer);
+            ExFreePoolWithTag(Buffer, TAG_WINSTA);
          }
          return Status;
       }
@@ -1117,7 +1117,7 @@ BuildWindowStationNameList(
       {
          if (Buffer != InitialBuffer)
          {
-            ExFreePool(Buffer);
+            ExFreePoolWithTag(Buffer, TAG_WINSTA);
          }
          return Status;
       }
@@ -1129,7 +1129,7 @@ BuildWindowStationNameList(
     */
    if (NULL != Buffer && Buffer != InitialBuffer)
    {
-      ExFreePool(Buffer);
+      ExFreePoolWithTag(Buffer, TAG_WINSTA);
    }
 
    return STATUS_SUCCESS;

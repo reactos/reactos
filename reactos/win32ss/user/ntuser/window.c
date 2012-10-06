@@ -304,7 +304,7 @@ IntValidateOwnerDepth(PWND Wnd, PWND Owner)
       Owner = Owner->spwndOwner;
       Depth++;
    }
-   return FALSE; 
+   return FALSE;
 }
 
 /***********************************************************************
@@ -473,7 +473,7 @@ static LRESULT co_UserFreeWindow(PWND Window,
             UserDereferenceObject(Child);
          }
       }
-      ExFreePool(Children);
+      ExFreePoolWithTag(Children, USERTAG_WINDOWLIST);
    }
 
    if(SendMessages)
@@ -1206,7 +1206,7 @@ co_IntSetParent(PWND Wnd, PWND WndNewParent)
 
    WndOldParent = Wnd->spwndParent;
 
-   if ( WndOldParent && 
+   if ( WndOldParent &&
         WndOldParent->ExStyle & WS_EX_LAYOUTRTL)
       pt.x = Wnd->rcWindow.right;
    else
@@ -1224,7 +1224,7 @@ co_IntSetParent(PWND Wnd, PWND WndNewParent)
       /* Set the new parent */
       Wnd->spwndParent = WndNewParent;
 
-      if ( Wnd->style & WS_CHILD && 
+      if ( Wnd->style & WS_CHILD &&
            Wnd->spwndOwner &&
            Wnd->spwndOwner->ExStyle & WS_EX_TOPMOST )
       {
@@ -1931,7 +1931,7 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
        if (!IntValidateOwnerDepth(pWnd, Owner))
        {
           EngSetLastError(ERROR_INVALID_PARAMETER);
-          goto Error; 
+          goto Error;
        }
        if ( pWnd->spwndOwner &&
             pWnd->spwndOwner->ExStyle & WS_EX_TOPMOST )
@@ -2395,7 +2395,7 @@ ProbeAndCaptureLargeString(
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Cleanup and fail */
-            ExFreePool(pvBuffer);
+            ExFreePoolWithTag(pvBuffer, TAG_STRING);
             _SEH2_YIELD(return _SEH2_GetExceptionCode();)
         }
         _SEH2_END
@@ -2682,7 +2682,7 @@ BOOLEAN FASTCALL co_UserDestroyWindow(PWND Window)
                }
 
             }
-            ExFreePool(Children);
+            ExFreePoolWithTag(Children, USERTAG_WINDOWLIST);
          }
          if (! GotOne)
          {
@@ -2794,7 +2794,7 @@ IntFindWindow(PWND Parent,
          }
       }
       }
-      ExFreePool(List);
+      ExFreePoolWithTag(List, USERTAG_WINDOWLIST);
    }
 
    return Ret;
@@ -2987,7 +2987,7 @@ NtUserFindWindowEx(HWND hwndParent,
                 }
 
              }
-             ExFreePool(List);
+             ExFreePoolWithTag(List, USERTAG_WINDOWLIST);
           }
        }
        else
@@ -4158,7 +4158,7 @@ IntShowOwnedPopups(PWND OwnerWnd, BOOL fShow )
       }
 
    }
-   ExFreePool( win_array );
+   ExFreePoolWithTag(win_array, USERTAG_WINDOWLIST);
    TRACE("Leave ShowOwnedPopups\n");
    return TRUE;
 }

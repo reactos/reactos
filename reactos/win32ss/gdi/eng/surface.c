@@ -99,7 +99,7 @@ SURFACE_Cleanup(PVOID ObjectBody)
         else if (psurf->SurfObj.fjBitmap & BMF_POOLALLOC)
         {
             /* Free a pool allocation */
-            ExFreePool(pvBits);
+            EngFreeMem(pvBits);
         }
     }
 

@@ -2882,7 +2882,7 @@ REGION_FreeStorage(ScanLineListBlock *pSLLBlock)
     while (pSLLBlock)
     {
         tmpSLLBlock = pSLLBlock->next;
-        ExFreePool(pSLLBlock);
+        ExFreePoolWithTag(pSLLBlock, TAG_REGION);
         pSLLBlock = tmpSLLBlock;
     }
 }

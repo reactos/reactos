@@ -1590,7 +1590,7 @@ UserGetClassName(IN PCLS Class,
 
     if (Ansi && szTemp != NULL && szTemp != szStaticTemp)
     {
-        ExFreePool(szTemp);
+        ExFreePoolWithTag(szTemp, USERTAG_CLASS);
     }
 
     return Ret;

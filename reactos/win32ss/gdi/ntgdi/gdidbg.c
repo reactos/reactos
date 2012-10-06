@@ -246,7 +246,7 @@ DbgGdiHTIntegrityCheck()
 	while (i)
 	{
 		pEntry = &GdiHandleTable->Entries[i];
-		if (i > GDI_HANDLE_COUNT)
+		if (i >= GDI_HANDLE_COUNT)
 		{
 		    DPRINT1("nDeleted=%lu\n", nDeleted);
 		    ASSERT(FALSE);

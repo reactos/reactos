@@ -742,7 +742,7 @@ VOID co_IntShellHookNotify(WPARAM Message, WPARAM wParam, LPARAM lParam)
                                  (Message == HSHELL_LANGUAGE ? lParam : (LPARAM)wParam) );
       }
 
-      ExFreePool(HwndList);
+      ExFreePoolWithTag(HwndList, USERTAG_WINDOWLIST);
    }
 
    if (ISITHOOKED(WH_SHELL))
@@ -802,7 +802,7 @@ BOOL IntDeRegisterShellHookWindow(HWND hWnd)
       if (Current->hWnd == hWnd)
       {
          RemoveEntryList(&Current->ListEntry);
-         ExFreePool(Current);
+         ExFreePoolWithTag(Current, TAG_WINSTA);
          return TRUE;
       }
    }

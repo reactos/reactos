@@ -152,7 +152,7 @@ IntFreeMenuItem(PMENU_OBJECT Menu, PMENU_ITEM MenuItem, BOOL bRecurse)
    }
 
    /* Free memory */
-   ExFreePool(MenuItem);
+   ExFreePoolWithTag(MenuItem, TAG_MENUITEM);
 
    return TRUE;
 }

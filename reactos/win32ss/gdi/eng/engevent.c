@@ -67,7 +67,7 @@ EngDeleteEvent(IN PEVENT Event)
     }
 
     /* Free the allocated memory */
-    ExFreePool(Event);
+    ExFreePoolWithTag(Event, GDITAG_ENG_EVENT);
 
     /* Return success */
     return TRUE;
@@ -136,7 +136,7 @@ EngMapEvent(IN HDEV hDev,
     else
     {
         /* Free the allocation */
-        ExFreePool(EngEvent);
+        ExFreePoolWithTag(EngEvent, GDITAG_ENG_EVENT);
         EngEvent = NULL;
     }
 
@@ -156,7 +156,7 @@ EngUnmapEvent(IN PEVENT Event)
     ObDereferenceObject(Event->pKEvent);
 
     /* Free the Eng object */
-    ExFreePool(Event);
+    ExFreePoolWithTag(Event, GDITAG_ENG_EVENT);
     return TRUE;
 }
 

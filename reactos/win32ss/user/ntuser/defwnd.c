@@ -69,7 +69,7 @@ IntClientShutdown(
              lResult = MCSR_SHUTDOWNFINISHED;
           }
       }
-      ExFreePool(List);
+      ExFreePoolWithTag(List, USERTAG_WINDOWLIST);
    }
    if (List && (lResult == MCSR_DONOTSHUTDOWN)) return lResult;
 /*
