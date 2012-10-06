@@ -235,44 +235,40 @@ NtQuerySystemEnvironmentValue(IN PUNICODE_STRING VariableName,
             _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
-
     }
 
-    /* Allocate a buffer for the value */
-    AnsiValueBuffer = ExAllocatePoolWithTag(NonPagedPool, ValueBufferLength, 'pmeT');
-    if (AnsiValueBuffer == NULL)
+    /* According to NTInternals the SeSystemEnvironmentName privilege is required! */
+    if (!SeSinglePrivilegeCheck(SeSystemEnvironmentPrivilege, PreviousMode))
     {
-        return STATUS_INSUFFICIENT_RESOURCES;
+        DPRINT1("NtQuerySystemEnvironmentValue: Caller requires the SeSystemEnvironmentPrivilege privilege!\n");
+        return STATUS_PRIVILEGE_NOT_HELD;
     }
 
-    /*
-     * Copy the name to kernel space if necessary and convert it to ANSI.
-     */
+    /* Copy the name to kernel space if necessary */
     Status = ProbeAndCaptureUnicodeString(&WName, PreviousMode, VariableName);
     if (!NT_SUCCESS(Status))
     {
         return Status;
     }
 
-    /*
-     * according to ntinternals the SeSystemEnvironmentName privilege is required!
-     */
-    if (!SeSinglePrivilegeCheck(SeSystemEnvironmentPrivilege, PreviousMode))
-    {
-        ReleaseCapturedUnicodeString(&WName, PreviousMode);
-        DPRINT1("NtQuerySystemEnvironmentValue: Caller requires the SeSystemEnvironmentPrivilege privilege!\n");
-        return STATUS_PRIVILEGE_NOT_HELD;
-    }
-
-    /* Convert the value name to ansi and release the captured unicode string */
+    /* Convert the name to ANSI and release the captured UNICODE string */
     Status = RtlUnicodeStringToAnsiString(&AName, &WName, TRUE);
     ReleaseCapturedUnicodeString(&WName, PreviousMode);
     if (!NT_SUCCESS(Status)) return Status;
 
-    /* Get the environment variable */
+    /* Allocate a buffer for the ANSI environment variable */
+    AnsiValueBuffer = ExAllocatePoolWithTag(NonPagedPool, ValueBufferLength, 'pmeT');
+    if (AnsiValueBuffer == NULL)
+    {
+        RtlFreeAnsiString(&AName);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* Get the environment variable and free the ANSI name */
     Result = HalGetEnvironmentVariable(AName.Buffer,
                                        (USHORT)ValueBufferLength,
                                        AnsiValueBuffer);
+    RtlFreeAnsiString(&AName);
 
     /* Check if we had success */
     if (Result == ESUCCESS)
@@ -280,13 +276,13 @@ NtQuerySystemEnvironmentValue(IN PUNICODE_STRING VariableName,
         /* Copy the result back to the caller. */
         _SEH2_TRY
         {
-            /* Initialize ansi string from the result */
+            /* Initialize ANSI string from the result */
             RtlInitAnsiString(&AValue, AnsiValueBuffer);
 
-            /* Initialize a unicode string from the callers buffer */
+            /* Initialize a UNICODE string from the callers buffer */
             RtlInitEmptyUnicodeString(&WValue, ValueBuffer, ValueBufferLength);
 
-            /* Convert the result to unicode */
+            /* Convert the result to UNICODE */
             Status = RtlAnsiStringToUnicodeString(&WValue, &AValue, FALSE);
 
             if (ReturnLength != NULL)
@@ -305,8 +301,7 @@ NtQuerySystemEnvironmentValue(IN PUNICODE_STRING VariableName,
         Status = STATUS_UNSUCCESSFUL;
     }
 
-    /* Cleanup allocated resources. */
-    RtlFreeAnsiString(&AName);
+    /* Free the allocated ANSI value buffer */
     ExFreePoolWithTag(AnsiValueBuffer, 'pmeT');
 
     return Status;
