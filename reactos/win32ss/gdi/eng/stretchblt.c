@@ -440,7 +440,7 @@ IntEngStretchBlt(SURFOBJ *psoDest,
         return TRUE;
     }
 
-    if (ClipRegion)
+    if (ClipRegion->iDComplexity != DC_TRIVIAL)
     {
         if (!RECTL_bIntersectRect(&OutputRect, &InputClippedRect,
                                &ClipRegion->rclBounds))
