@@ -269,7 +269,7 @@ FstubConvertExtendedToLayout(IN PDRIVE_LAYOUT_INFORMATION_EX LayoutEx)
     DriveLayout = ExAllocatePoolWithTag(NonPagedPool,
                                         FIELD_OFFSET(DRIVE_LAYOUT_INFORMATION, PartitionEntry) +
                                         LayoutEx->PartitionCount * sizeof(PARTITION_INFORMATION),
-                                        'BtsF');
+                                        TAG_FSTUB);
     if (!DriveLayout)
     {
         return NULL;
@@ -1605,7 +1605,7 @@ FstubWritePartitionTableMBR(IN PDISK_INFORMATION Disk,
                                    DriveLayout);
 
     /* Free allocated structure and return */
-    ExFreePoolWithTag(DriveLayout, 'BtsF');
+    ExFreePoolWithTag(DriveLayout, TAG_FSTUB);
     return Status;
 }
 
