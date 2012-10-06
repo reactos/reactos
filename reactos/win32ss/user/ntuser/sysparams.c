@@ -741,7 +741,7 @@ SpiNotifyNCMetricsChanged()
         UserDerefObjectCo(pwndCurrent);
     }
 
-    ExFreePool(ahwnd);
+    ExFreePoolWithTag(ahwnd, USERTAG_WINDOWLIST);
 
     return TRUE;
 }
