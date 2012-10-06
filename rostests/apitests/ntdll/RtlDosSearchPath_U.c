@@ -101,7 +101,7 @@ CheckBuffer(
 START_TEST(RtlDosSearchPath_U)
 {
     NTSTATUS ExceptionStatus;
-    ULONG Length;
+    ULONG Length = 0;
     WCHAR Buffer[MAX_PATH];
     PWSTR PartName;
     BOOLEAN Okay;
