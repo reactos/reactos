@@ -192,6 +192,9 @@ LsarpEnumeratePrivileges(DWORD *EnumerationContext,
 NTSTATUS
 LsapInitSids(VOID);
 
+ULONG
+LsapGetRelativeIdFromSid(PSID Sid);
+
 NTSTATUS
 LsapLookupNames(DWORD Count,
                 PRPC_UNICODE_STRING Names,
