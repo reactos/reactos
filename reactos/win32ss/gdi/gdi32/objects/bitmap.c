@@ -362,8 +362,14 @@ CreateCompatibleBitmap(
     else
     {
         HBITMAP hBmp = NULL;
-        char buffer[sizeof(DIBSECTION) + 256*sizeof(RGBQUAD)];
-        DIBSECTION* pDIBs = (DIBSECTION*)buffer;
+        struct
+        {
+            BITMAP bitmap;
+            BITMAPINFOHEADER bmih;
+            RGBQUAD rgbquad[256];
+        } buffer;
+        DIBSECTION* pDIBs = (DIBSECTION*)&buffer;
+        BITMAPINFO* pbmi = (BITMAPINFO*)&buffer.bmih;
 
         hBmp = NtGdiGetDCObject(hDC, GDI_OBJECT_TYPE_BITMAP);
 
@@ -371,12 +377,12 @@ CreateCompatibleBitmap(
             return NULL;
 
         if ( pDIBs->dsBm.bmBitsPixel <= 8 )
-            GetDIBColorTable(hDC, 0, 256, (RGBQUAD *)&pDIBs->dsBitfields[0]);
+            GetDIBColorTable(hDC, 0, 256, buffer.rgbquad);
 
         pDIBs->dsBmih.biWidth = Width;
         pDIBs->dsBmih.biHeight = Height;
 
-        return CreateDIBSection(hDC, (CONST BITMAPINFO *)&pDIBs->dsBmih, 0, NULL, NULL, 0);
+        return CreateDIBSection(hDC, pbmi, DIB_RGB_COLORS, NULL, NULL, 0);
     }
     return NULL;
 }
