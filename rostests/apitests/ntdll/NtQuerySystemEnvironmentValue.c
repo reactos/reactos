@@ -16,7 +16,7 @@
 
 #define COUNT_OF(x) (sizeof((x))/sizeof((x)[0]))
 
-static struct TEST_CASES
+typedef struct _TEST_CASE
 {
     NTSTATUS        Result;
     UNICODE_STRING  VariableName;
@@ -24,7 +24,9 @@ static struct TEST_CASES
     ULONG           ValueBufferLength;
     ULONG           MinimalExpectedReturnedLength;
     ULONG           MaximalExpectedReturnedLength;
-} TestCases[] =
+} TEST_CASE, *PTEST_CASE;
+
+static TEST_CASE TestCases[] =
 {
     //
     // Non-existent variable name.
@@ -47,20 +49,18 @@ static struct TEST_CASES
     {STATUS_SUCCESS           , RTL_CONSTANT_STRING(L"LastKnownGood"), TRUE , MAX_BUFFER_LENGTH, MIN_BUFFER_LENGTH, MAX_BUFFER_LENGTH},
 };
 
-static NTSTATUS Test_API(IN  BOOLEAN AdjustPrivileges,
-                         IN  PUNICODE_STRING VariableName,
-                         OUT PWSTR ValueBuffer,
-                         IN  ULONG ValueBufferLength,
-                         IN  OUT PULONG ReturnLength OPTIONAL)
+static void Test_API(IN PTEST_CASE TestCase)
 {
-    NTSTATUS Status;
-    BOOLEAN  WasEnabled;
+    NTSTATUS Status = STATUS_SUCCESS;
+    BOOLEAN  WasEnabled = FALSE;
+    WCHAR    ValueBuffer[MAX_BUFFER_LENGTH / sizeof(WCHAR)];
+    ULONG    ReturnedLength = 0;
 
     //
     // Adjust the privileges if asked for (we need to
     // have already administrator privileges to do so).
     //
-    if (AdjustPrivileges)
+    if (TestCase->AdjustPrivileges)
     {
         Status = RtlAdjustPrivilege(SE_SYSTEM_ENVIRONMENT_PRIVILEGE,
                                     TRUE,
@@ -72,12 +72,12 @@ static NTSTATUS Test_API(IN  BOOLEAN AdjustPrivileges,
     //
     // Get the system environment value and set the privilege back.
     //
-    Status = NtQuerySystemEnvironmentValue(VariableName,
+    Status = NtQuerySystemEnvironmentValue(&TestCase->VariableName,
                                            ValueBuffer,
-                                           ValueBufferLength,
-                                           ReturnLength);
+                                           TestCase->ValueBufferLength,
+                                           &ReturnedLength);
 
-    if (AdjustPrivileges)
+    if (TestCase->AdjustPrivileges)
     {
         RtlAdjustPrivilege(SE_SYSTEM_ENVIRONMENT_PRIVILEGE,
                            WasEnabled,
@@ -85,34 +85,28 @@ static NTSTATUS Test_API(IN  BOOLEAN AdjustPrivileges,
                            &WasEnabled);
     }
 
-    return Status;
+    //
+    // Now check the results.
+    //
+    ok(Status == TestCase->Result,
+       "NtQuerySystemEnvironmentValue failed, returned 0x%08lx, expected 0x%08lx\n",
+       Status,
+       TestCase->Result);
+
+    ok( ((TestCase->MinimalExpectedReturnedLength <= ReturnedLength) && (ReturnedLength <= TestCase->MaximalExpectedReturnedLength)),
+        "Returned length %lu, expected between %lu and %lu\n",
+        ReturnedLength,
+        TestCase->MinimalExpectedReturnedLength,
+        TestCase->MaximalExpectedReturnedLength);
 }
 
 START_TEST(NtQuerySystemEnvironmentValue)
 {
-    NTSTATUS Status;
-    WCHAR ValueBuffer[MAX_BUFFER_LENGTH / sizeof(WCHAR)];
-    ULONG ReturnedLength = 0;
     ULONG i;
 
     for (i = 0 ; i < COUNT_OF(TestCases) ; ++i)
     {
-        Status = Test_API(TestCases[i].AdjustPrivileges,
-                          &TestCases[i].VariableName,
-                          ValueBuffer,
-                          TestCases[i].ValueBufferLength,
-                          &ReturnedLength);
-
-        ok(Status == TestCases[i].Result,
-           "NtQuerySystemEnvironmentValue failed, returned 0x%08lx, expected 0x%08lx\n",
-           Status,
-           TestCases[i].Result);
-
-        ok( ((TestCases[i].MinimalExpectedReturnedLength <= ReturnedLength) && (ReturnedLength <= TestCases[i].MaximalExpectedReturnedLength)),
-            "Returned length %lu, expected between %lu and %lu\n",
-            ReturnedLength,
-            TestCases[i].MinimalExpectedReturnedLength,
-            TestCases[i].MaximalExpectedReturnedLength);
+        Test_API(&TestCases[i]);
     }
 }
 
