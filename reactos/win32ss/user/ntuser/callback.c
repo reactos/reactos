@@ -78,7 +78,7 @@ IntCleanupThreadCallbacks(PTHREADINFO W32Thread)
                               ListEntry);
 
       /* Free memory */
-      ExFreePool(Mem);
+      ExFreePoolWithTag(Mem, USERTAG_CALLBACK);
    }
 }
 
@@ -115,7 +115,8 @@ IntRestoreTebWndCallback (HWND hWnd, PWND pWnd, PVOID pActCtx)
 /* FUNCTIONS *****************************************************************/
 
 /* Calls ClientLoadLibrary in user32 */
-HMODULE
+BOOL
+NTAPI
 co_IntClientLoadLibrary(PUNICODE_STRING pstrLibName,
                         PUNICODE_STRING pstrInitFunc,
                         BOOL Unload,
@@ -126,7 +127,7 @@ co_IntClientLoadLibrary(PUNICODE_STRING pstrLibName,
    ULONG ArgumentLength;
    PCLIENT_LOAD_LIBRARY_ARGUMENTS pArguments;
    NTSTATUS Status;
-   HMODULE Result;
+   BOOL bResult;
    ULONG_PTR pLibNameBuffer = 0, pInitFuncBuffer = 0;
 
    TRACE("co_IntClientLoadLibrary: %S, %S, %d, %d\n", pstrLibName->Buffer, pstrLibName->Buffer, Unload, ApiHook);
@@ -209,17 +210,17 @@ co_IntClientLoadLibrary(PUNICODE_STRING pstrLibName,
 
    _SEH2_TRY
    {
+       /* Probe and copy the usermode result data */
        ProbeForRead(ResultPointer, sizeof(HMODULE), 1);
-       /* Simulate old behaviour: copy into our local buffer */
-       Result = *(HMODULE*)ResultPointer;
+       bResult = *(BOOL*)ResultPointer;
    }
    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
-       Result = 0;
+       bResult = FALSE;
    }
    _SEH2_END;
 
-   return Result;
+   return bResult;
 }
 
 VOID APIENTRY

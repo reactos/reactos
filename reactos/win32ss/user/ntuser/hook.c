@@ -31,7 +31,7 @@ BOOL
 IntLoadHookModule(int iHookID, HHOOK hHook, BOOL Unload)
 {
    PPROCESSINFO ppi;
-   HMODULE hmod;
+   BOOL bResult;
 
    ppi = PsGetCurrentProcessWin32Process();
 
@@ -49,26 +49,24 @@ IntLoadHookModule(int iHookID, HHOOK hHook, BOOL Unload)
             ppi->W32PF_flags |= W32PF_APIHOOKLOADED;
 
             /* Call ClientLoadLibrary in user32 */
-            hmod = co_IntClientLoadLibrary(&strUahModule, &strUahInitFunc, Unload, TRUE);
-            TRACE("co_IntClientLoadLibrary returned %d\n", hmod );
-            if(hmod == 0)
+            bResult = co_IntClientLoadLibrary(&strUahModule, &strUahInitFunc, Unload, TRUE);
+            TRACE("co_IntClientLoadLibrary returned %d\n", bResult );
+            if (!bResult)
             {
                 /* Remove the flag we set before */
                 ppi->W32PF_flags &= ~W32PF_APIHOOKLOADED;
-                return FALSE;
             }
-            return TRUE;
+            return bResult;
         }
         else if(Unload && (ppi->W32PF_flags & W32PF_APIHOOKLOADED))
         {
             /* Call ClientLoadLibrary in user32 */
-            hmod = co_IntClientLoadLibrary(NULL, NULL, Unload, TRUE);
-            if(hmod != 0)
+            bResult = co_IntClientLoadLibrary(NULL, NULL, Unload, TRUE);
+            if (bResult)
             {
                 ppi->W32PF_flags &= ~W32PF_APIHOOKLOADED;
-                return TRUE;
             }
-            return FALSE;
+            return bResult;
         }
 
         return TRUE;
@@ -500,7 +498,7 @@ co_IntCallDebugHook(PHOOK Hook,
         if (BadChk)
         {
             ERR("HOOK WH_DEBUG read from Debug.lParam ERROR!\n");
-            ExFreePool(HooklParam);
+            ExFreePoolWithTag(HooklParam, TAG_HOOK);
             return lResult;
         }
     }

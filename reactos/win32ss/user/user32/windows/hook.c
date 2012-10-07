@@ -427,104 +427,109 @@ SetWindowsHookExW(
   return IntSetWindowsHook(idHook, lpfn, hMod, dwThreadId, FALSE);
 }
 
-HINSTANCE ClientLoadLibrary(PUNICODE_STRING pstrLibName,
-                            PUNICODE_STRING pstrInitFunc,
-                            BOOL Unload,
-                            BOOL ApiHook)
+static
+BOOL
+ClientLoadLibrary(
+    PUNICODE_STRING pstrLibName,
+    PUNICODE_STRING pstrInitFunc,
+    BOOL bUnload,
+    BOOL bApiHook)
 {
     HINSTANCE hLibrary;
     PVOID pInitFunction;
-    //NTSTATUS Status;
+    NTSTATUS Status;
     ANSI_STRING InitFuncName;
-    BOOL Result = FALSE;
+    BOOL bResult = FALSE;
 
     TRACE("ClientLoadLibrary: pid: %d, strLibraryName: %S, "
-          "strInitFuncName: %S, Unload: %d, ApiHook:%d\n",
+          "strInitFuncName: %S, bUnload: %d, bApiHook:%d\n",
           GetCurrentProcessId(),
           pstrLibName->Buffer,
           pstrInitFunc->Buffer,
-          Unload,
-          ApiHook);
+          bUnload,
+          bApiHook);
 
     /* Check if we have to load the module */
-    if(Unload == FALSE)
+    if (bUnload == FALSE)
     {
         ASSERT(pstrLibName->Buffer != NULL);
 
         /* Load it */
         hLibrary = LoadLibrary(pstrLibName->Buffer);
-        if(hLibrary == 0)
+        if (hLibrary == 0)
         {
-            return hLibrary;
+            return FALSE;
         }
 
-        if(ApiHook == FALSE)
+        if (!bApiHook)
         {
             /* There is nothing more to do for a global hook*/
-            return hLibrary;
+            return TRUE;
         }
 
         /* Initialize the user api hook */
         ASSERT(pstrInitFunc->Buffer);
-
-        /*Status = */ RtlUnicodeStringToAnsiString(&InitFuncName,
+        Status = RtlUnicodeStringToAnsiString(&InitFuncName,
                                               pstrInitFunc,
                                               TRUE);
+        if (!NT_SUCCESS(Status))
+        {
+            FreeLibrary(hLibrary);
+            return FALSE;
+        }
 
         /* Get the address of the initialization routine */
         pInitFunction = GetProcAddress(hLibrary, InitFuncName.Buffer);
-        if(pInitFunction)
+        if (pInitFunction)
         {
             /* Call the initialization routine */
-            Result = InitUserApiHook(hLibrary, (USERAPIHOOKPROC)pInitFunction);
+            bResult = InitUserApiHook(hLibrary, (USERAPIHOOKPROC)pInitFunction);
         }
+
         RtlFreeAnsiString(&InitFuncName);
 
         /* In case of error unload the library */
-        if(Result == FALSE)
+        if (bResult == FALSE)
         {
             FreeLibrary(hLibrary);
-            hLibrary = 0;
         }
     }
     else
     {
         /* Cleanup user api hook before unloading */
-        if(ApiHook == TRUE)
+        if (bApiHook)
         {
             hLibrary = ghmodUserApiHook;
-            Result = ClearUserApiHook(ghmodUserApiHook);
+            bResult = ClearUserApiHook(ghmodUserApiHook);
+
             /* Check if we can we unload it now */
-            if(Result == FALSE)
+            if (!bResult)
             {
                 /* Return success because we are going to free
                    the library in EndUserApiHook*/
-                return hLibrary;
+                return TRUE;
             }
         }
         else
         {
+            /* Get the library handle from the name */
             hLibrary = GetModuleHandle(pstrLibName->Buffer);
-            Result = (hLibrary != 0);
-        }
-
-        if(Result == TRUE)
-        {
-            Result = FreeLibrary(hLibrary);
-            if(Result == FALSE)
+            if (hLibrary == NULL)
             {
-                hLibrary = 0;
+                return FALSE;
             }
         }
+
+        bResult = FreeLibrary(hLibrary);
     }
 
-    return hLibrary;
+    return bResult;
 }
 
 NTSTATUS WINAPI
 User32CallClientLoadLibraryFromKernel(PVOID Arguments, ULONG ArgumentLength)
 {
-    HINSTANCE Result;
+    BOOL bResult;
     PCLIENT_LOAD_LIBRARY_ARGUMENTS Argument;
 
     /* Retireve the callback parameters */
@@ -539,12 +544,12 @@ User32CallClientLoadLibraryFromKernel(PVOID Arguments, ULONG ArgumentLength)
     }
 
     /* Call the implementation of the callback */
-    Result = ClientLoadLibrary(&Argument->strLibraryName,
-                               &Argument->strInitFuncName,
-                               Argument->Unload,
-                               Argument->ApiHook);
+    bResult = ClientLoadLibrary(&Argument->strLibraryName,
+                                &Argument->strInitFuncName,
+                                Argument->Unload,
+                                Argument->ApiHook);
 
-    return ZwCallbackReturn(&Result, sizeof(HINSTANCE), STATUS_SUCCESS);
+    return ZwCallbackReturn(&bResult, sizeof(HINSTANCE), STATUS_SUCCESS);
 }
 
 NTSTATUS WINAPI
