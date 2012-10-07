@@ -17,6 +17,17 @@ WINE_DEFAULT_DEBUG_CHANNEL(lsasrv);
 
 static HANDLE SecurityKeyHandle = NULL;
 
+SID_IDENTIFIER_AUTHORITY NullSidAuthority    = {SECURITY_NULL_SID_AUTHORITY};
+SID_IDENTIFIER_AUTHORITY WorldSidAuthority   = {SECURITY_WORLD_SID_AUTHORITY};
+SID_IDENTIFIER_AUTHORITY LocalSidAuthority   = {SECURITY_LOCAL_SID_AUTHORITY};
+SID_IDENTIFIER_AUTHORITY CreatorSidAuthority = {SECURITY_CREATOR_SID_AUTHORITY};
+SID_IDENTIFIER_AUTHORITY NtAuthority         = {SECURITY_NT_AUTHORITY};
+
+PSID BuiltinDomainSid = NULL;
+PSID AccountDomainSid = NULL;
+UNICODE_STRING BuiltinDomainName = {0, 0, NULL};
+UNICODE_STRING AccountDomainName = {0, 0, NULL};
+
 
 /* FUNCTIONS ***************************************************************/
 
@@ -202,14 +213,13 @@ Done:
 static NTSTATUS
 LsapCreateRandomDomainSid(OUT PSID *Sid)
 {
-    SID_IDENTIFIER_AUTHORITY SystemAuthority = {SECURITY_NT_AUTHORITY};
     LARGE_INTEGER SystemTime;
     PULONG Seed;
 
     NtQuerySystemTime(&SystemTime);
     Seed = &SystemTime.u.LowPart;
 
-    return RtlAllocateAndInitializeSid(&SystemAuthority,
+    return RtlAllocateAndInitializeSid(&NtAuthority,
                                        4,
                                        SECURITY_NT_NON_UNIQUE,
                                        RtlUniform(Seed),
@@ -380,6 +390,137 @@ LsapUpdateDatabase(VOID)
 }
 
 
+static NTSTATUS
+LsapGetDomainInfo(VOID)
+{
+    PLSA_DB_OBJECT PolicyObject = NULL;
+    PUNICODE_STRING DomainName = NULL;
+    ULONG AttributeSize;
+    LPWSTR SidString = NULL;
+    NTSTATUS Status;
+
+    /* Get the built-in domain SID and name */
+    Status = RtlAllocateAndInitializeSid(&NtAuthority,
+                                         1,
+                                         SECURITY_BUILTIN_DOMAIN_RID,
+                                         0, 0, 0, 0, 0, 0, 0,
+                                         &BuiltinDomainSid);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    /**/
+    RtlInitUnicodeString(&BuiltinDomainName,
+                         L"BUILTIN");
+
+    /* Open the 'Policy' object */
+    Status = LsapOpenDbObject(NULL,
+                              NULL,
+                              L"Policy",
+                              LsaDbPolicyObject,
+                              0,
+                              &PolicyObject);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    /* Get the account domain SID */
+    AttributeSize = 0;
+    Status = LsapGetObjectAttribute(PolicyObject,
+                                    L"PolAcDmS",
+                                    NULL,
+                                    &AttributeSize);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    if (AttributeSize > 0)
+    {
+        AccountDomainSid = RtlAllocateHeap(RtlGetProcessHeap(),
+                                           HEAP_ZERO_MEMORY,
+                                           AttributeSize);
+        if (AccountDomainSid == NULL)
+        {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            goto done;
+        }
+
+        Status = LsapGetObjectAttribute(PolicyObject,
+                                        L"PolAcDmS",
+                                        AccountDomainSid,
+                                        &AttributeSize);
+        if (!NT_SUCCESS(Status))
+            goto done;
+    }
+
+    /* Get the account domain name */
+    AttributeSize = 0;
+    Status = LsapGetObjectAttribute(PolicyObject,
+                                    L"PolAcDmN",
+                                    NULL,
+                                    &AttributeSize);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    if (AttributeSize > 0)
+    {
+        DomainName = RtlAllocateHeap(RtlGetProcessHeap(),
+                                     HEAP_ZERO_MEMORY,
+                                     AttributeSize);
+        if (DomainName == NULL)
+        {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            goto done;
+        }
+
+        Status = LsapGetObjectAttribute(PolicyObject,
+                                        L"PolAcDmN",
+                                        DomainName,
+                                        &AttributeSize);
+        if (!NT_SUCCESS(Status))
+            goto done;
+
+        DomainName->Buffer = (LPWSTR)((ULONG_PTR)DomainName + (ULONG_PTR)DomainName->Buffer);
+
+        AccountDomainName.Length = DomainName->Length;
+        AccountDomainName.MaximumLength = DomainName->Length + sizeof(WCHAR);
+        AccountDomainName.Buffer = RtlAllocateHeap(RtlGetProcessHeap(),
+                                                   HEAP_ZERO_MEMORY,
+                                                   AccountDomainName.MaximumLength);
+        if (AccountDomainName.Buffer == NULL)
+        {
+            ERR("Failed to allocate the account domain name buffer\n");
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            goto done;
+        }
+
+        RtlCopyMemory(AccountDomainName.Buffer,
+                      DomainName->Buffer,
+                      DomainName->Length);
+    }
+
+    ConvertSidToStringSidW(BuiltinDomainSid, &SidString);
+    TRACE("Builtin Domain SID: %S\n", SidString);
+    LocalFree(SidString);
+    SidString = NULL;
+
+    TRACE("Builtin Domain Name: %wZ\n", &BuiltinDomainName);
+
+    ConvertSidToStringSidW(AccountDomainSid, &SidString);
+    TRACE("Account Domain SID: %S\n", SidString);
+    LocalFree(SidString);
+    SidString = NULL;
+
+    TRACE("Account Domain Name: %wZ\n", &AccountDomainName);
+
+done:
+    if (DomainName != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, DomainName);
+
+    if (PolicyObject != NULL)
+        LsapCloseDbObject(PolicyObject);
+
+    return Status;
+}
+
+
 NTSTATUS
 LsapInitDatabase(VOID)
 {
@@ -418,6 +559,13 @@ LsapInitDatabase(VOID)
             ERR("Failed to update the LSA database (Status: 0x%08lx)\n", Status);
             return Status;
         }
+    }
+
+    Status = LsapGetDomainInfo();
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("Failed to get the domain information (Status: 0x%08lx)\n", Status);
+        return Status;
     }
 
     TRACE("LsapInitDatabase() done\n");

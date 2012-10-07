@@ -60,6 +60,18 @@ typedef struct _LSAP_POLICY_AUDIT_EVENTS_DATA
 } LSAP_POLICY_AUDIT_EVENTS_DATA, *PLSAP_POLICY_AUDIT_EVENTS_DATA;
 
 
+extern SID_IDENTIFIER_AUTHORITY NullSidAuthority;
+extern SID_IDENTIFIER_AUTHORITY WorldSidAuthority;
+extern SID_IDENTIFIER_AUTHORITY LocalSidAuthority;
+extern SID_IDENTIFIER_AUTHORITY CreatorSidAuthority;
+extern SID_IDENTIFIER_AUTHORITY NtAuthority;
+
+extern PSID BuiltinDomainSid;
+extern UNICODE_STRING BuiltinDomainName;
+extern PSID AccountDomainSid;
+extern UNICODE_STRING AccountDomainName;
+
+
 /* authport.c */
 NTSTATUS
 StartAuthenticationPort(VOID);

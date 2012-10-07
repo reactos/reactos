@@ -21,15 +21,7 @@ typedef struct _WELL_KNOWN_SID
 } WELL_KNOWN_SID, *PWELL_KNOWN_SID;
 
 
-static SID_IDENTIFIER_AUTHORITY NullSidAuthority    = {SECURITY_NULL_SID_AUTHORITY};
-static SID_IDENTIFIER_AUTHORITY WorldSidAuthority   = {SECURITY_WORLD_SID_AUTHORITY};
-static SID_IDENTIFIER_AUTHORITY LocalSidAuthority   = {SECURITY_LOCAL_SID_AUTHORITY};
-static SID_IDENTIFIER_AUTHORITY CreatorSidAuthority = {SECURITY_CREATOR_SID_AUTHORITY};
-static SID_IDENTIFIER_AUTHORITY NtAuthority         = {SECURITY_NT_AUTHORITY};
-
 LIST_ENTRY WellKnownSidListHead;
-
-
 
 #if 0
 typedef struct _AccountSid
@@ -820,6 +812,119 @@ LsapGetRelativeIdFromSid(PSID Sid_)
 }
 
 
+static
+NTSTATUS
+LsapLookupIsolatedNames(DWORD Count,
+                        PRPC_UNICODE_STRING DomainNames,
+                        PRPC_UNICODE_STRING AccountNames,
+                        PLSAPR_REFERENCED_DOMAIN_LIST DomainsBuffer,
+                        PLSAPR_TRANSLATED_SID_EX2 SidsBuffer,
+                        PULONG Mapped)
+{
+    PWELL_KNOWN_SID ptr, ptr2;
+    ULONG DomainIndex;
+    ULONG i;
+    NTSTATUS Status = STATUS_SUCCESS;
+    LPWSTR SidString = NULL;
+
+    for (i = 0; i < Count; i++)
+    {
+        /* Ignore names which were already mapped */
+        if (SidsBuffer[i].Use != SidTypeUnknown)
+            continue;
+
+        /* Ignore fully qualified account names */
+        if (DomainNames[i].Length != 0)
+            continue;
+
+        /* Look-up all well-known names */
+        ptr = LsapLookupWellKnownName((PUNICODE_STRING)&AccountNames[i]);
+        if (ptr != NULL)
+        {
+            SidsBuffer[i].Use = ptr->Use;
+            SidsBuffer[i].Sid = ptr->Sid;
+            SidsBuffer[i].DomainIndex = -1;
+            SidsBuffer[i].Flags = 0;
+
+            if (ptr->Use == SidTypeDomain)
+            {
+                Status = LsapAddDomainToDomainsList(DomainsBuffer,
+                                                    &ptr->Name,
+                                                    ptr->Sid,
+                                                    &DomainIndex);
+                if (!NT_SUCCESS(Status))
+                    goto done;
+
+                SidsBuffer[i].DomainIndex = DomainIndex;
+            }
+            else
+            {
+                ptr2= LsapLookupWellKnownName(&ptr->Domain);
+                if (ptr2 != NULL)
+                {
+                    Status = LsapAddDomainToDomainsList(DomainsBuffer,
+                                                        &ptr2->Name,
+                                                        ptr2->Sid,
+                                                        &DomainIndex);
+                    if (!NT_SUCCESS(Status))
+                        goto done;
+
+                    SidsBuffer[i].DomainIndex = DomainIndex;
+                }
+            }
+
+            (*Mapped)++;
+            continue;
+        }
+
+        /* FIXME: Look-up the built-in domain */
+
+        ConvertSidToStringSidW(AccountDomainSid, &SidString);
+        TRACE("Account Domain SID: %S\n", SidString);
+        LocalFree(SidString);
+        SidString = NULL;
+
+        TRACE("Account Domain Name: %wZ\n", &AccountDomainName);
+
+        /* Look-up the account domain */
+        if (RtlEqualUnicodeString((PUNICODE_STRING)&AccountNames[i], &AccountDomainName, TRUE))
+        {
+            SidsBuffer[i].Use = SidTypeDomain;
+            SidsBuffer[i].Sid = AccountDomainSid;
+            SidsBuffer[i].DomainIndex = -1;
+            SidsBuffer[i].Flags = 0;
+
+            Status = LsapAddDomainToDomainsList(DomainsBuffer,
+                                                &AccountDomainName,
+                                                AccountDomainSid,
+                                                &DomainIndex);
+            if (!NT_SUCCESS(Status))
+                goto done;
+
+            SidsBuffer[i].DomainIndex = DomainIndex;
+
+            (*Mapped)++;
+            continue;
+        }
+
+        /* FIXME: Look-up the primary domain */
+
+        /* FIXME: Look-up the trusted domains */
+
+        /* FIXME: Look-up accounts in the built-in domain */
+
+        /* FIXME: Look-up accounts in the account domain */
+
+        /* FIXME: Look-up accounts in the primary domain */
+
+        /* FIXME: Look-up accounts in the trusted domains */
+    }
+
+done:
+    return Status;
+}
+
+
 NTSTATUS
 LsapLookupNames(DWORD Count,
                 PRPC_UNICODE_STRING Names,
@@ -835,12 +940,12 @@ LsapLookupNames(DWORD Count,
     PRPC_UNICODE_STRING DomainNames = NULL;
     PRPC_UNICODE_STRING AccountNames = NULL;
     ULONG SidsBufferLength;
-    ULONG DomainIndex;
+//    ULONG DomainIndex;
     ULONG i;
     ULONG Mapped = 0;
     NTSTATUS Status = STATUS_SUCCESS;
 
-    PWELL_KNOWN_SID ptr, ptr2;
+//    PWELL_KNOWN_SID ptr, ptr2;
 
 //TRACE("()\n");
 
@@ -893,6 +998,20 @@ LsapLookupNames(DWORD Count,
         goto done;
     }
 
+    Status = LsapLookupIsolatedNames(Count,
+                                     DomainNames,
+                                     AccountNames,
+                                     DomainsBuffer,
+                                     SidsBuffer,
+                                     &Mapped);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    if (Mapped == Count)
+        goto done;
+
+
+#if 0
     for (i = 0; i < Count; i++)
     {
 //TRACE("Name: %wZ\n", &Names[i]);
@@ -941,10 +1060,8 @@ LsapLookupNames(DWORD Count,
             Mapped++;
             continue;
         }
-
-
-
     }
+#endif
 
 done:
 //    TRACE("done: Status %lx\n", Status);
