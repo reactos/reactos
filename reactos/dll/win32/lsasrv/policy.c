@@ -16,6 +16,29 @@ WINE_DEFAULT_DEBUG_CHANNEL(lsasrv);
 /* FUNCTIONS ***************************************************************/
 
 NTSTATUS
+WINAPI
+LsaIOpenPolicyTrusted(OUT LSAPR_HANDLE *PolicyHandle)
+{
+    PLSA_DB_OBJECT PolicyObject;
+    NTSTATUS Status;
+
+    TRACE("(%p)\n", PolicyHandle);
+
+    Status = LsapOpenDbObject(NULL,
+                              NULL,
+                              L"Policy",
+                              LsaDbPolicyObject,
+                              POLICY_ALL_ACCESS,
+                              &PolicyObject);
+
+    if (NT_SUCCESS(Status))
+        *PolicyHandle = (LSAPR_HANDLE)PolicyObject;
+
+    return Status;
+}
+
+
+NTSTATUS
 LsarSetPrimaryDomain(PLSA_DB_OBJECT PolicyObject,
                      PLSAPR_POLICY_PRIMARY_DOM_INFO Info)
 {
@@ -24,7 +47,7 @@ LsarSetPrimaryDomain(PLSA_DB_OBJECT PolicyObject,
     NTSTATUS Status;
     LPWSTR Ptr;
 
-    TRACE("LsarSetPrimaryDomain(%p, %p)\n", PolicyObject, Info);
+    TRACE("(%p %p)\n", PolicyObject, Info);
 
     Length = sizeof(UNICODE_STRING) + Info->Name.MaximumLength;
     Buffer = RtlAllocateHeap(RtlGetProcessHeap(),
@@ -71,7 +94,7 @@ LsarSetAccountDomain(PLSA_DB_OBJECT PolicyObject,
     NTSTATUS Status;
     LPWSTR Ptr;
 
-    TRACE("LsarSetAccountDomain(%p, %p)\n", PolicyObject, Info);
+    TRACE("(%p %p)\n", PolicyObject, Info);
 
     Length = sizeof(UNICODE_STRING) + Info->DomainName.MaximumLength;
     Buffer = RtlAllocateHeap(RtlGetProcessHeap(),
@@ -538,6 +561,7 @@ NTSTATUS
 LsarQueryReplicaSource(PLSA_DB_OBJECT PolicyObject,
                        PLSAPR_POLICY_INFORMATION *PolicyInformation)
 {
+    FIXME("\n");
     *PolicyInformation = NULL;
     return STATUS_NOT_IMPLEMENTED;
 }
@@ -828,6 +852,7 @@ NTSTATUS
 LsarQueryDnsDomainInt(PLSA_DB_OBJECT PolicyObject,
                       PLSAPR_POLICY_INFORMATION *PolicyInformation)
 {
+    FIXME("\n");
     *PolicyInformation = NULL;
     return STATUS_NOT_IMPLEMENTED;
 }
@@ -837,6 +862,7 @@ NTSTATUS
 LsarQueryLocalAccountDomain(PLSA_DB_OBJECT PolicyObject,
                             PLSAPR_POLICY_INFORMATION *PolicyInformation)
 {
+    FIXME("\n");
     *PolicyInformation = NULL;
     return STATUS_NOT_IMPLEMENTED;
 }

@@ -22,7 +22,7 @@
  @ stub LsaIGetSerialNumberPolicy2
  @ stub LsaIHealthCheck
  @ stub LsaIInitializeWellKnownSids
- @ stub LsaIOpenPolicyTrusted
+ @ stdcall LsaIOpenPolicyTrusted(ptr)
  @ stub LsaIQueryInformationPolicyTrusted
  @ stub LsaISetPrivateData
  @ stub LsaISetSerialNumberPolicy
