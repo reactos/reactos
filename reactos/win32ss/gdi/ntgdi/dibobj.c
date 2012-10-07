@@ -815,6 +815,7 @@ GreGetDIBitsInternal(
                                     colorTriple->rgbtRed =   (r * 0xff) / 5;
                                     colorTriple->rgbtGreen = (g * 0xff) / 5;
                                     colorTriple->rgbtBlue =  (b * 0xff) / 5;
+                                    colorTriple++;
                                 }
                             }
                         }
