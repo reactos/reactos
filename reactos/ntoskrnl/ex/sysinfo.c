@@ -14,6 +14,9 @@
 #define NDEBUG
 #include <debug.h>
 
+/* The maximum size of an environment value (in bytes) */
+#define MAX_ENVVAL_SIZE 1024
+
 FAST_MUTEX ExpEnvironmentLock;
 ERESOURCE ExpFirmwareTableResource;
 LIST_ENTRY ExpFirmwareTableProviderListHead;
@@ -246,10 +249,7 @@ NtQuerySystemEnvironmentValue(IN PUNICODE_STRING VariableName,
 
     /* Copy the name to kernel space if necessary */
     Status = ProbeAndCaptureUnicodeString(&WName, PreviousMode, VariableName);
-    if (!NT_SUCCESS(Status))
-    {
-        return Status;
-    }
+    if (!NT_SUCCESS(Status)) return Status;
 
     /* Convert the name to ANSI and release the captured UNICODE string */
     Status = RtlUnicodeStringToAnsiString(&AName, &WName, TRUE);
@@ -257,7 +257,7 @@ NtQuerySystemEnvironmentValue(IN PUNICODE_STRING VariableName,
     if (!NT_SUCCESS(Status)) return Status;
 
     /* Allocate a buffer for the ANSI environment variable */
-    AnsiValueBuffer = ExAllocatePoolWithTag(NonPagedPool, ValueBufferLength, 'pmeT');
+    AnsiValueBuffer = ExAllocatePoolWithTag(NonPagedPool, MAX_ENVVAL_SIZE, 'rvnE');
     if (AnsiValueBuffer == NULL)
     {
         RtlFreeAnsiString(&AName);
@@ -266,7 +266,7 @@ NtQuerySystemEnvironmentValue(IN PUNICODE_STRING VariableName,
 
     /* Get the environment variable and free the ANSI name */
     Result = HalGetEnvironmentVariable(AName.Buffer,
-                                       (USHORT)ValueBufferLength,
+                                       MAX_ENVVAL_SIZE,
                                        AnsiValueBuffer);
     RtlFreeAnsiString(&AName);
 
@@ -286,9 +286,7 @@ NtQuerySystemEnvironmentValue(IN PUNICODE_STRING VariableName,
             Status = RtlAnsiStringToUnicodeString(&WValue, &AValue, FALSE);
 
             if (ReturnLength != NULL)
-            {
                 *ReturnLength = WValue.Length;
-            }
         }
         _SEH2_EXCEPT(ExSystemExceptionFilter())
         {
@@ -302,7 +300,7 @@ NtQuerySystemEnvironmentValue(IN PUNICODE_STRING VariableName,
     }
 
     /* Free the allocated ANSI value buffer */
-    ExFreePoolWithTag(AnsiValueBuffer, 'pmeT');
+    ExFreePoolWithTag(AnsiValueBuffer, 'rvnE');
 
     return Status;
 }
