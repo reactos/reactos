@@ -43,7 +43,7 @@ KSPIN_LOCK ExpTaggedPoolLock;
 ULONG PoolHitTag;
 BOOLEAN ExStopBadTags;
 KSPIN_LOCK ExpLargePoolTableLock;
-LONG ExpPoolBigEntriesInUse;
+ULONG ExpPoolBigEntriesInUse;
 ULONG ExpPoolFlags;
 ULONG ExPoolFailures;
 
@@ -1246,10 +1246,10 @@ ExpAddTagForBigPages(IN PVOID Va,
             // keep losing the race or that we are not finding a free entry anymore,
             // which implies a massive number of concurrent big pool allocations.
             //
-            InterlockedIncrement(&ExpPoolBigEntriesInUse);
+            InterlockedIncrementUL(&ExpPoolBigEntriesInUse);
             if ((i >= 16) && (ExpPoolBigEntriesInUse > (TableSize / 4)))
             {
-                DPRINT1("Should attempt expansion since we now have %d entries\n",
+                DPRINT1("Should attempt expansion since we now have %lu entries\n",
                         ExpPoolBigEntriesInUse);
             }
 
@@ -1348,7 +1348,7 @@ ExpFindAndRemoveTagBigPages(IN PVOID Va,
     // the lock and return the tag that was located
     //
     InterlockedIncrement((PLONG)&Entry->Va);
-    InterlockedDecrement(&ExpPoolBigEntriesInUse);
+    InterlockedDecrementUL(&ExpPoolBigEntriesInUse);
     KeReleaseSpinLock(&ExpLargePoolTableLock, OldIrql);
     return PoolTag;
 }

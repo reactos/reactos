@@ -222,7 +222,7 @@ RtlEqualPrefixSid(IN PSID Sid1_,
             if (!Sid1->SubAuthorityCount) return TRUE;
 
             /* Now compare all the subauthority values BUT the last one */
-            for (i = 0; i < (Sid1->SubAuthorityCount - 1); i++)
+            for (i = 0; (i + 1) < Sid1->SubAuthorityCount; i++)
             {
                 /* Does any mismatch? */
                 if (Sid1->SubAuthority[i] != Sid2->SubAuthority[i])

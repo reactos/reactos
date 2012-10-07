@@ -1049,7 +1049,7 @@ MiMapViewInSystemSpace(IN PVOID Section,
         MiDereferenceControlArea(ControlArea);
         return STATUS_NO_MEMORY;
     }
-    
+
     /* What's the underlying session? */
     if (Session == &MmSession)
     {
@@ -2472,7 +2472,7 @@ MmCreateArm3Section(OUT PVOID *SectionObject,
     ASSERT(ControlArea->u.Flags.WasPurged == FALSE);
 
     /* Make sure the segment and the section are the same size, or the section is smaller */
-    ASSERT(NewSection->SizeOfSection.QuadPart <= NewSection->Segment->SizeOfSegment);
+    ASSERT((ULONG64)NewSection->SizeOfSection.QuadPart <= NewSection->Segment->SizeOfSegment);
 
     /* Return the object and the creation status */
     *SectionObject = (PVOID)NewSection;

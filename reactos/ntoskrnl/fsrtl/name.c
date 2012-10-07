@@ -27,6 +27,7 @@ FsRtlIsNameInExpressionPrivate(IN PUNICODE_STRING Expression,
     PUSHORT BackTracking = NULL;
     UNICODE_STRING IntExpression;
     USHORT ExpressionPosition = 0, NamePosition = 0, MatchingChars;
+    WCHAR CompareChar;
     PAGED_CODE();
 
     /* Check if we were given strings at all */
@@ -99,10 +100,13 @@ FsRtlIsNameInExpressionPrivate(IN PUNICODE_STRING Expression,
         }
     }
 
-    while (NamePosition < Name->Length / sizeof(WCHAR) && ExpressionPosition < Expression->Length / sizeof(WCHAR))
+    while ((NamePosition < Name->Length / sizeof(WCHAR)) &&
+           (ExpressionPosition < Expression->Length / sizeof(WCHAR)))
     {
         /* Basic check to test if chars are equal */
-        if (Expression->Buffer[ExpressionPosition] == (IgnoreCase ? UpcaseTable[Name->Buffer[NamePosition]] : Name->Buffer[NamePosition]))
+        CompareChar = IgnoreCase ? UpcaseTable[Name->Buffer[NamePosition]] :
+                                   Name->Buffer[NamePosition];
+        if (Expression->Buffer[ExpressionPosition] == CompareChar)
         {
             NamePosition++;
             ExpressionPosition++;
@@ -118,7 +122,8 @@ FsRtlIsNameInExpressionPrivate(IN PUNICODE_STRING Expression,
         else if (Expression->Buffer[ExpressionPosition] == L'*')
         {
             /* Skip contigous stars */
-            while (ExpressionPosition + 1 < Expression->Length / sizeof(WCHAR) && Expression->Buffer[ExpressionPosition + 1] == L'*')
+            while ((ExpressionPosition + 1 < (USHORT)(Expression->Length / sizeof(WCHAR))) &&
+                   (Expression->Buffer[ExpressionPosition + 1] == L'*'))
             {
                 ExpressionPosition++;
             }
@@ -409,7 +414,7 @@ FsRtlDoesNameContainWildCards(IN PUNICODE_STRING Name)
  *
  * @param Expression
  *        The string in which we've to find Name. It can contain wildcards.
- *        If IgnoreCase is set to TRUE, this string MUST BE uppercase. 
+ *        If IgnoreCase is set to TRUE, this string MUST BE uppercase.
  *
  * @param Name
  *        The string to find. It cannot contain wildcards
@@ -419,7 +424,7 @@ FsRtlDoesNameContainWildCards(IN PUNICODE_STRING Name)
  *
  * @param UpcaseTable
  *        If not NULL, and if IgnoreCase is set to TRUE, it will be used to
- *        upcase the both strings 
+ *        upcase the both strings
  *
  * @return TRUE if Name is in Expression, FALSE otherwise
  *

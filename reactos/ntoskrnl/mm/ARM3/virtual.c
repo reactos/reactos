@@ -1744,7 +1744,7 @@ MiQueryMemoryBasicInformation(IN HANDLE ProcessHandle,
     return Status;
 }
 
-ULONG
+BOOLEAN
 NTAPI
 MiIsEntireRangeCommitted(IN ULONG_PTR StartingAddress,
                          IN ULONG_PTR EndingAddress,

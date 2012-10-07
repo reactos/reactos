@@ -38,7 +38,7 @@ RtlAreAnyAccessesGranted(IN ACCESS_MASK GrantedAccess,
     PAGED_CODE_RTL();
 
     /* Return if there's any leftover bits after granting all of them */
-    return (GrantedAccess & DesiredAccess);
+    return ((GrantedAccess & DesiredAccess) != 0);
 }
 
 /*

@@ -280,7 +280,7 @@ NtQuerySystemEnvironmentValue(IN PUNICODE_STRING VariableName,
             RtlInitAnsiString(&AValue, AnsiValueBuffer);
 
             /* Initialize a UNICODE string from the callers buffer */
-            RtlInitEmptyUnicodeString(&WValue, ValueBuffer, ValueBufferLength);
+            RtlInitEmptyUnicodeString(&WValue, ValueBuffer, (USHORT)ValueBufferLength);
 
             /* Convert the result to UNICODE */
             Status = RtlAnsiStringToUnicodeString(&WValue, &AValue, FALSE);

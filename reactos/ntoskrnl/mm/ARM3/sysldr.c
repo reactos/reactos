@@ -1385,7 +1385,7 @@ MiFreeInitializationCode(IN PVOID InitStart,
 
     /*  Compute the number of pages we expect to free */
     PagesFreed = (PFN_NUMBER)(MiAddressToPte(InitEnd) - PointerPte + 1);
-    
+
     /* Try to actually free them */
     PagesFreed = MiDeleteSystemPageableVm(PointerPte,
                                           PagesFreed,
@@ -1406,7 +1406,7 @@ MiFindInitializationCode(OUT PVOID *StartVa,
     PIMAGE_NT_HEADERS NtHeader;
     PIMAGE_SECTION_HEADER Section, LastSection;
     BOOLEAN InitFound;
-    
+
     /* So we don't free our own code yet */
     InitCode = (ULONG_PTR)&MiFindInitializationCode;
 
@@ -1423,7 +1423,7 @@ MiFindInitializationCode(OUT PVOID *StartVa,
         /* Get the loader entry and its DLL base */
         LdrEntry = CONTAINING_RECORD(NextEntry, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
         DllBase = (ULONG_PTR)LdrEntry->DllBase;
-        
+
         /* Get the NT header */
         NtHeader = RtlImageNtHeader((PVOID)DllBase);
         if (!NtHeader)
@@ -1454,13 +1454,13 @@ MiFindInitializationCode(OUT PVOID *StartVa,
             {
                 /* Pick the biggest size -- either raw or virtual */
                 Size = max(Section->SizeOfRawData, Section->Misc.VirtualSize);
-                
+
                 /* Read the section alignment */
                 Alignment = NtHeader->OptionalHeader.SectionAlignment;
 
                 /* Align the start and end addresses appropriately */
                 InitStart = DllBase + Section->VirtualAddress;
-                InitEnd = ((Alignment + InitStart + Size - 2) & 0xFFFFF000) - 1;                        
+                InitEnd = ((Alignment + InitStart + Size - 2) & 0xFFFFF000) - 1;
                 InitStart = (InitStart + (PAGE_SIZE - 1)) & 0xFFFFF000;
 
                 /* Have we reached the last section? */
@@ -1532,12 +1532,12 @@ MiFindInitializationCode(OUT PVOID *StartVa,
                     }
                 }
             }
-            
+
             /* Move to the next section */
             SectionCount--;
             Section++;
         }
-        
+
         /* Move to the next module */
         NextEntry = NextEntry->Flink;
     }
@@ -1546,7 +1546,7 @@ MiFindInitializationCode(OUT PVOID *StartVa,
     KeLeaveCriticalRegion();
 }
 
-/* 
+/*
  * Note: This function assumes that all discardable sections are at the end of
  * the PE file. It searches backwards until it finds the non-discardable section
  */
@@ -2960,7 +2960,8 @@ LoaderScan:
                             0);
         if (!NT_SUCCESS(Status))
         {
-            DPRINT1("ZwOpenFile failed with status 0x%x\n", Status);
+            DPRINT1("ZwOpenFile failed for '%wZ' with status 0x%x\n",
+                    FileName, Status);
             goto Quickie;
         }
 
