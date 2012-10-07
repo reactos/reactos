@@ -10,6 +10,55 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(lsasrv);
 
+typedef wchar_t *PSAMPR_SERVER_NAME;
+typedef void *SAMPR_HANDLE;
+
+typedef struct _SAMPR_RETURNED_USTRING_ARRAY
+{
+    unsigned long Count;
+    PRPC_UNICODE_STRING Element;
+} SAMPR_RETURNED_USTRING_ARRAY, *PSAMPR_RETURNED_USTRING_ARRAY;
+
+typedef struct _SAMPR_ULONG_ARRAY
+{
+    unsigned long Count;
+    unsigned long *Element;
+} SAMPR_ULONG_ARRAY, *PSAMPR_ULONG_ARRAY;
+
+
+VOID
+NTAPI
+SamIFree_SAMPR_RETURNED_USTRING_ARRAY(PSAMPR_RETURNED_USTRING_ARRAY Ptr);
+
+VOID
+NTAPI
+SamIFree_SAMPR_ULONG_ARRAY(PSAMPR_ULONG_ARRAY Ptr);
+
+NTSTATUS
+NTAPI
+SamrConnect(IN PSAMPR_SERVER_NAME ServerName,
+            OUT SAMPR_HANDLE *ServerHandle,
+            IN ACCESS_MASK DesiredAccess);
+
+NTSTATUS
+NTAPI
+SamrCloseHandle(IN OUT SAMPR_HANDLE *SamHandle);
+
+NTSTATUS
+NTAPI
+SamrOpenDomain(IN SAMPR_HANDLE ServerHandle,
+               IN ACCESS_MASK DesiredAccess,
+               IN PRPC_SID DomainId,
+               OUT SAMPR_HANDLE *DomainHandle);
+
+NTSTATUS
+NTAPI
+SamrLookupIdsInDomain(IN SAMPR_HANDLE DomainHandle,
+                      IN ULONG Count,
+                      IN ULONG *RelativeIds,
+                      OUT PSAMPR_RETURNED_USTRING_ARRAY Names,
+                      OUT PSAMPR_ULONG_ARRAY Use);
+
 
 typedef struct _WELL_KNOWN_SID
 {
@@ -800,6 +849,40 @@ LsapAddDomainToDomainsList(PLSAPR_REFERENCED_DOMAIN_LIST ReferencedDomains,
 }
 
 
+static BOOLEAN
+LsapIsPrefixSid(IN PSID PrefixSid,
+                IN PSID Sid)
+{
+    PISID Sid1 = PrefixSid, Sid2 = Sid;
+    ULONG i;
+
+    if (Sid1->Revision != Sid2->Revision)
+        return FALSE;
+
+    if ((Sid1->IdentifierAuthority.Value[0] != Sid2->IdentifierAuthority.Value[0]) ||
+        (Sid1->IdentifierAuthority.Value[1] != Sid2->IdentifierAuthority.Value[1]) ||
+        (Sid1->IdentifierAuthority.Value[2] != Sid2->IdentifierAuthority.Value[2]) ||
+        (Sid1->IdentifierAuthority.Value[3] != Sid2->IdentifierAuthority.Value[3]) ||
+        (Sid1->IdentifierAuthority.Value[4] != Sid2->IdentifierAuthority.Value[4]) ||
+        (Sid1->IdentifierAuthority.Value[5] != Sid2->IdentifierAuthority.Value[5]))
+        return FALSE;
+
+    if (Sid1->SubAuthorityCount >= Sid2->SubAuthorityCount)
+        return FALSE;
+
+    if (Sid1->SubAuthorityCount == 0)
+        return TRUE;
+
+    for (i = 0; i < Sid1->SubAuthorityCount; i++)
+    {
+        if (Sid1->SubAuthority[i] != Sid2->SubAuthority[i])
+            return FALSE;
+    }
+
+    return TRUE;
+}
+
+
 ULONG
 LsapGetRelativeIdFromSid(PSID Sid_)
 {
@@ -1150,7 +1233,7 @@ LsapLookupWellKnownSids(PLSAPR_SID_ENUM_BUFFER SidEnumBuffer,
             continue;
 
         ConvertSidToStringSidW(SidEnumBuffer->SidInfo[i].Sid, &SidString);
-        TRACE("Unmapped SID: %S\n", SidString);
+        TRACE("Mapping SID: %S\n", SidString);
         LocalFree(SidString);
         SidString = NULL;
 
@@ -1172,8 +1255,10 @@ LsapLookupWellKnownSids(PLSAPR_SID_ENUM_BUFFER SidEnumBuffer,
                                                     &ptr2->Name,
                                                     ptr2->Sid,
                                                     &DomainIndex);
-                if (NT_SUCCESS(Status))
-                    NamesBuffer[i].DomainIndex = DomainIndex;
+                if (!NT_SUCCESS(Status))
+                    goto done;
+
+                NamesBuffer[i].DomainIndex = DomainIndex;
             }
 
             TRACE("Mapped to: %wZ\n", &NamesBuffer[i].Name);
@@ -1182,18 +1267,45 @@ LsapLookupWellKnownSids(PLSAPR_SID_ENUM_BUFFER SidEnumBuffer,
         }
     }
 
+done:
     return Status;
 }
 
 
 static NTSTATUS
-LsapLookupLocalDomainSids(PLSAPR_SID_ENUM_BUFFER SidEnumBuffer,
-                          PLSAPR_TRANSLATED_NAME_EX NamesBuffer,
-                          PLSAPR_REFERENCED_DOMAIN_LIST DomainsBuffer,
-                          PULONG Mapped)
+LsapLookupAccountDomainSids(PLSAPR_SID_ENUM_BUFFER SidEnumBuffer,
+                            PLSAPR_TRANSLATED_NAME_EX NamesBuffer,
+                            PLSAPR_REFERENCED_DOMAIN_LIST DomainsBuffer,
+                            PULONG Mapped)
 {
+    SAMPR_HANDLE ServerHandle = NULL;
+    SAMPR_HANDLE DomainHandle = NULL;
+    SAMPR_RETURNED_USTRING_ARRAY Names = {0, NULL};
+    SAMPR_ULONG_ARRAY Use = {0, NULL};
     LPWSTR SidString = NULL;
+    ULONG DomainIndex;
+    ULONG RelativeIds[1];
     ULONG i;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    Status = SamrConnect(NULL,
+                         &ServerHandle,
+                         SAM_SERVER_CONNECT | SAM_SERVER_LOOKUP_DOMAIN);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SamrConnect failed (Status %08lx)\n", Status);
+        goto done;
+    }
+
+    Status = SamrOpenDomain(ServerHandle,
+                            DOMAIN_LOOKUP,
+                            AccountDomainSid,
+                            &DomainHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SamOpenDomain failed (Status %08lx)\n", Status);
+        goto done;
+    }
 
     for (i = 0; i < SidEnumBuffer->Entries; i++)
     {
@@ -1202,12 +1314,103 @@ LsapLookupLocalDomainSids(PLSAPR_SID_ENUM_BUFFER SidEnumBuffer,
             continue;
 
         ConvertSidToStringSidW(SidEnumBuffer->SidInfo[i].Sid, &SidString);
-        TRACE("Unmapped SID: %S\n", SidString);
+        TRACE("Mapping SID: %S\n", SidString);
         LocalFree(SidString);
         SidString = NULL;
+
+        if (RtlEqualSid(AccountDomainSid, SidEnumBuffer->SidInfo[i].Sid))
+        {
+            TRACE("Found account domain!\n");
+
+            NamesBuffer[i].Use = SidTypeDomain;
+            NamesBuffer[i].Flags = 0;
+
+            NamesBuffer[i].Name.Length = AccountDomainName.Length;
+            NamesBuffer[i].Name.MaximumLength = AccountDomainName.MaximumLength;
+            NamesBuffer[i].Name.Buffer = MIDL_user_allocate(AccountDomainName.MaximumLength);
+            if (NamesBuffer[i].Name.Buffer == NULL)
+            {
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+                goto done;
+            }
+
+            RtlCopyMemory(NamesBuffer[i].Name.Buffer, AccountDomainName.Buffer, AccountDomainName.MaximumLength);
+
+            Status = LsapAddDomainToDomainsList(DomainsBuffer,
+                                                &AccountDomainName,
+                                                AccountDomainSid,
+                                                &DomainIndex);
+            if (!NT_SUCCESS(Status))
+                goto done;
+
+            NamesBuffer[i].DomainIndex = DomainIndex;
+
+            TRACE("Mapped to: %wZ\n", &NamesBuffer[i].Name);
+
+            (*Mapped)++;
+            continue;
+        }
+        else if (LsapIsPrefixSid(AccountDomainSid, SidEnumBuffer->SidInfo[i].Sid))
+        {
+            TRACE("Found account domain account!\n");
+
+            RelativeIds[0] = LsapGetRelativeIdFromSid(SidEnumBuffer->SidInfo[i].Sid);
+
+            Status = SamrLookupIdsInDomain(DomainHandle,
+                                           1,
+                                           RelativeIds,
+                                           &Names,
+                                           &Use);
+            if (!NT_SUCCESS(Status))
+            {
+                TRACE("SamLookupIdsInDomain failed (Status %08lx)\n", Status);
+                goto done;
+            }
+
+            NamesBuffer[i].Use = Use.Element[0]; //SidTypeUser;
+            NamesBuffer[i].Flags = 0;
+
+            NamesBuffer[i].Name.Length = Names.Element[0].Length; //TestName.Length;
+            NamesBuffer[i].Name.MaximumLength = Names.Element[0].MaximumLength; //TestName.MaximumLength;
+            NamesBuffer[i].Name.Buffer = MIDL_user_allocate(Names.Element[0].MaximumLength);
+            if (NamesBuffer[i].Name.Buffer == NULL)
+            {
+                SamIFree_SAMPR_RETURNED_USTRING_ARRAY(&Names);
+                SamIFree_SAMPR_ULONG_ARRAY(&Use);
+
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+                goto done;
+            }
+
+            RtlCopyMemory(NamesBuffer[i].Name.Buffer, Names.Element[0].Buffer, Names.Element[0].MaximumLength);
+
+            SamIFree_SAMPR_RETURNED_USTRING_ARRAY(&Names);
+            SamIFree_SAMPR_ULONG_ARRAY(&Use);
+
+            Status = LsapAddDomainToDomainsList(DomainsBuffer,
+                                                &AccountDomainName,
+                                                AccountDomainSid,
+                                                &DomainIndex);
+            if (!NT_SUCCESS(Status))
+                goto done;
+
+            NamesBuffer[i].DomainIndex = DomainIndex;
+
+            TRACE("Mapped to: %wZ\n", &NamesBuffer[i].Name);
+
+            (*Mapped)++;
+            continue;
+        }
     }
 
-    return STATUS_SUCCESS;
+done:
+    if (DomainHandle != NULL)
+        SamrCloseHandle(DomainHandle);
+
+    if (ServerHandle != NULL)
+        SamrCloseHandle(ServerHandle);
+
+    return Status;
 }
 
 
@@ -1218,8 +1421,8 @@ LsapLookupUnknownSids(PLSAPR_SID_ENUM_BUFFER SidEnumBuffer,
                       PULONG Mapped)
 {
     SID_IDENTIFIER_AUTHORITY IdentifierAuthority = {SECURITY_NT_AUTHORITY};
-    static const UNICODE_STRING DomainName = RTL_CONSTANT_STRING(L"DOMAIN");
-    static const UNICODE_STRING AdminName = RTL_CONSTANT_STRING(L"Administrator");
+    static const UNICODE_STRING DomainName = RTL_CONSTANT_STRING(L"UNKNOWN");
+    static const UNICODE_STRING AdminName = RTL_CONSTANT_STRING(L"Test");
     PSID AdminsSid = NULL;
     LPWSTR SidString = NULL;
     ULONG SidLength;
@@ -1246,7 +1449,7 @@ LsapLookupUnknownSids(PLSAPR_SID_ENUM_BUFFER SidEnumBuffer,
 
 
         ConvertSidToStringSidW(SidEnumBuffer->SidInfo[i].Sid, &SidString);
-        TRACE("Unmapped SID: %S\n", SidString);
+        TRACE("Mapping SID: %S\n", SidString);
         LocalFree(SidString);
         SidString = NULL;
 
@@ -1257,14 +1460,22 @@ LsapLookupUnknownSids(PLSAPR_SID_ENUM_BUFFER SidEnumBuffer,
         NamesBuffer[i].Name.Length = AdminName.Length;
         NamesBuffer[i].Name.MaximumLength = AdminName.MaximumLength;
         NamesBuffer[i].Name.Buffer = MIDL_user_allocate(AdminName.MaximumLength);
+        if (NamesBuffer[i].Name.Buffer == NULL)
+        {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            goto done;
+        }
+
         RtlCopyMemory(NamesBuffer[i].Name.Buffer, AdminName.Buffer, AdminName.MaximumLength);
 
         Status = LsapAddDomainToDomainsList(DomainsBuffer,
                                             (PUNICODE_STRING)&DomainName,
                                             AdminsSid,
                                             &DomainIndex);
-        if (NT_SUCCESS(Status))
-            NamesBuffer[i].DomainIndex = DomainIndex;
+        if (!NT_SUCCESS(Status))
+            goto done;
+
+        NamesBuffer[i].DomainIndex = DomainIndex;
 
         TRACE("Mapped to: %wZ\n", &NamesBuffer[i].Name);
 
@@ -1331,7 +1542,7 @@ LsapLookupSids(PLSAPR_SID_ENUM_BUFFER SidEnumBuffer,
         NamesBuffer[i].Flags = 0;
     }
 
-    /* Look-up all well-known SIDs */
+    /* Look-up well-known SIDs */
     Status = LsapLookupWellKnownSids(SidEnumBuffer,
                                      NamesBuffer,
                                      DomainsBuffer,
@@ -1342,11 +1553,11 @@ LsapLookupSids(PLSAPR_SID_ENUM_BUFFER SidEnumBuffer,
     if (Mapped == SidEnumBuffer->Entries)
         goto done;
 
-    /* Look-up all Domain SIDs */
-    Status = LsapLookupLocalDomainSids(SidEnumBuffer,
-                                       NamesBuffer,
-                                       DomainsBuffer,
-                                       &Mapped);
+    /* Look-up account domain SIDs */
+    Status = LsapLookupAccountDomainSids(SidEnumBuffer,
+                                         NamesBuffer,
+                                         DomainsBuffer,
+                                         &Mapped);
     if (!NT_SUCCESS(Status))
         goto done;
 
