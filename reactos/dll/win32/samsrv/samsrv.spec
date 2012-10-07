@@ -10,9 +10,9 @@
 @ stub SamIFree_SAMPR_GET_MEMBERS_BUFFER
 @ stub SamIFree_SAMPR_GROUP_INFO_BUFFER
 @ stub SamIFree_SAMPR_PSID_ARRAY
-@ stub SamIFree_SAMPR_RETURNED_USTRING_ARRAY
+@ stdcall SamIFree_SAMPR_RETURNED_USTRING_ARRAY(ptr)
 @ stub SamIFree_SAMPR_SR_SECURITY_DESCRIPTOR
-@ stub SamIFree_SAMPR_ULONG_ARRAY
+@ stdcall SamIFree_SAMPR_ULONG_ARRAY(ptr)
 @ stub SamIFree_SAMPR_USER_INFO_BUFFER
 @ stub SamIGetPrivateData
 @ stub SamIGetSerialNumberDomain

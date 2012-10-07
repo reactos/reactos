@@ -63,4 +63,39 @@ SampInitializeRegistry(VOID)
     return STATUS_SUCCESS;
 }
 
+
+VOID
+NTAPI
+SamIFree_SAMPR_RETURNED_USTRING_ARRAY(PSAMPR_RETURNED_USTRING_ARRAY Ptr)
+{
+    ULONG i;
+
+    if (Ptr != NULL)
+    {
+        if (Ptr->Element != NULL)
+        {
+            for (i = 0; i < Ptr->Count; i++)
+            {
+                if (Ptr->Element[i].Buffer != NULL)
+                    MIDL_user_free(Ptr->Element[i].Buffer);
+            }
+
+            MIDL_user_free(Ptr->Element);
+        }
+    }
+}
+
+
+VOID
+NTAPI
+SamIFree_SAMPR_ULONG_ARRAY(PSAMPR_ULONG_ARRAY Ptr)
+{
+    if (Ptr != NULL)
+    {
+        if (Ptr->Element != NULL)
+            MIDL_user_free(Ptr->Element);
+    }
+
+}
+
 /* EOF */
