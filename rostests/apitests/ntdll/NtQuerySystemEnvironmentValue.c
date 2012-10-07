@@ -49,7 +49,8 @@ static TEST_CASE TestCases[] =
     {STATUS_SUCCESS           , RTL_CONSTANT_STRING(L"LastKnownGood"), TRUE , MAX_BUFFER_LENGTH, MIN_BUFFER_LENGTH, MAX_BUFFER_LENGTH},
 };
 
-static void Test_API(IN PTEST_CASE TestCase)
+static void Test_API(IN ULONG TestNumber,
+                     IN PTEST_CASE TestCase)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     BOOLEAN  WasEnabled = FALSE;
@@ -66,7 +67,7 @@ static void Test_API(IN PTEST_CASE TestCase)
                                     TRUE,
                                     FALSE,
                                     &WasEnabled);
-        ok(NT_SUCCESS(Status), "RtlAdjustPrivilege failed : 0x%08lx\n", Status);
+        ok(NT_SUCCESS(Status), "RtlAdjustPrivilege(%lu) failed : 0x%08lx\n", TestNumber, Status);
     }
 
     //
@@ -89,12 +90,14 @@ static void Test_API(IN PTEST_CASE TestCase)
     // Now check the results.
     //
     ok(Status == TestCase->Result,
-       "NtQuerySystemEnvironmentValue failed, returned 0x%08lx, expected 0x%08lx\n",
+       "NtQuerySystemEnvironmentValue(%lu) failed : returned 0x%08lx, expected 0x%08lx\n",
+       TestNumber,
        Status,
        TestCase->Result);
 
     ok( ((TestCase->MinimalExpectedReturnedLength <= ReturnedLength) && (ReturnedLength <= TestCase->MaximalExpectedReturnedLength)),
-        "Returned length %lu, expected between %lu and %lu\n",
+        "NtQuerySystemEnvironmentValue(%lu) failed : returned length %lu, expected between %lu and %lu\n",
+        TestNumber,
         ReturnedLength,
         TestCase->MinimalExpectedReturnedLength,
         TestCase->MaximalExpectedReturnedLength);
@@ -106,7 +109,7 @@ START_TEST(NtQuerySystemEnvironmentValue)
 
     for (i = 0 ; i < COUNT_OF(TestCases) ; ++i)
     {
-        Test_API(&TestCases[i]);
+        Test_API(i, &TestCases[i]);
     }
 }
 
