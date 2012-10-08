@@ -1104,6 +1104,8 @@ LsapLookupIsolatedBuiltinNames(DWORD Count,
         if (DomainNames[i].Length != 0)
             continue;
 
+        TRACE("Mapping name: %wZ\n", &AccountNames[i]);
+
         Status = SamrLookupNamesInDomain(DomainHandle,
                                          1,
                                          &AccountNames[i],
@@ -1111,6 +1113,8 @@ LsapLookupIsolatedBuiltinNames(DWORD Count,
                                          &Use);
         if (NT_SUCCESS(Status))
         {
+            TRACE("Found relative ID: %lu\n", RelativeIds.Element[0]);
+
             SidsBuffer[i].Use = Use.Element[0];
             SidsBuffer[i].Sid = CreateSidFromSidAndRid(BuiltinDomainSid,
                                                        RelativeIds.Element[0]);
@@ -1507,7 +1511,9 @@ LsapLookupNames(DWORD Count,
                                      DomainsBuffer,
                                      SidsBuffer,
                                      &Mapped);
-    if (!NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status) &&
+        Status != STATUS_NONE_MAPPED &&
+        Status != STATUS_SOME_NOT_MAPPED)
         goto done;
 
     if (Mapped == Count)
@@ -1520,7 +1526,9 @@ LsapLookupNames(DWORD Count,
                                             DomainsBuffer,
                                             SidsBuffer,
                                             &Mapped);
-    if (!NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status) &&
+        Status != STATUS_NONE_MAPPED &&
+        Status != STATUS_SOME_NOT_MAPPED)
         goto done;
 
     if (Mapped == Count)
@@ -1533,7 +1541,9 @@ LsapLookupNames(DWORD Count,
                                             DomainsBuffer,
                                             SidsBuffer,
                                             &Mapped);
-    if (!NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status) &&
+        Status != STATUS_NONE_MAPPED &&
+        Status != STATUS_SOME_NOT_MAPPED)
         goto done;
 
     if (Mapped == Count)
@@ -1547,7 +1557,9 @@ LsapLookupNames(DWORD Count,
                                     DomainsBuffer,
                                     SidsBuffer,
                                     &Mapped);
-    if (!NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status) &&
+        Status != STATUS_NONE_MAPPED &&
+        Status != STATUS_SOME_NOT_MAPPED)
         goto done;
 
     if (Mapped == Count)
@@ -1560,7 +1572,9 @@ LsapLookupNames(DWORD Count,
                                     DomainsBuffer,
                                     SidsBuffer,
                                     &Mapped);
-    if (!NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status) &&
+        Status != STATUS_NONE_MAPPED &&
+        Status != STATUS_SOME_NOT_MAPPED)
         goto done;
 
     if (Mapped == Count)
@@ -1768,7 +1782,6 @@ LsapLookupBuiltinDomainSids(PLSAPR_SID_ENUM_BUFFER SidEnumBuffer,
             TRACE("Mapped to: %wZ\n", &NamesBuffer[i].Name);
 
             (*Mapped)++;
-            continue;
         }
         else if (LsapIsPrefixSid(BuiltinDomainSid, SidEnumBuffer->SidInfo[i].Sid))
         {
@@ -1781,45 +1794,43 @@ LsapLookupBuiltinDomainSids(PLSAPR_SID_ENUM_BUFFER SidEnumBuffer,
                                            RelativeIds,
                                            &Names,
                                            &Use);
-            if (!NT_SUCCESS(Status))
+            if (NT_SUCCESS(Status))
             {
-                TRACE("SamLookupIdsInDomain failed (Status %08lx)\n", Status);
-                goto done;
-            }
+                NamesBuffer[i].Use = Use.Element[0];
+                NamesBuffer[i].Flags = 0;
 
-            NamesBuffer[i].Use = Use.Element[0];
-            NamesBuffer[i].Flags = 0;
+                NamesBuffer[i].Name.Length = Names.Element[0].Length;
+                NamesBuffer[i].Name.MaximumLength = Names.Element[0].MaximumLength;
+                NamesBuffer[i].Name.Buffer = MIDL_user_allocate(Names.Element[0].MaximumLength);
+                if (NamesBuffer[i].Name.Buffer == NULL)
+                {
+                    SamIFree_SAMPR_RETURNED_USTRING_ARRAY(&Names);
+                    SamIFree_SAMPR_ULONG_ARRAY(&Use);
 
-            NamesBuffer[i].Name.Length = Names.Element[0].Length;
-            NamesBuffer[i].Name.MaximumLength = Names.Element[0].MaximumLength;
-            NamesBuffer[i].Name.Buffer = MIDL_user_allocate(Names.Element[0].MaximumLength);
-            if (NamesBuffer[i].Name.Buffer == NULL)
-            {
+                    Status = STATUS_INSUFFICIENT_RESOURCES;
+                    goto done;
+                }
+
+                RtlCopyMemory(NamesBuffer[i].Name.Buffer,
+                              Names.Element[0].Buffer,
+                              Names.Element[0].MaximumLength);
+
                 SamIFree_SAMPR_RETURNED_USTRING_ARRAY(&Names);
                 SamIFree_SAMPR_ULONG_ARRAY(&Use);
 
-                Status = STATUS_INSUFFICIENT_RESOURCES;
-                goto done;
+                Status = LsapAddDomainToDomainsList(DomainsBuffer,
+                                                    &BuiltinDomainName,
+                                                    BuiltinDomainSid,
+                                                    &DomainIndex);
+                if (!NT_SUCCESS(Status))
+                    goto done;
+
+                NamesBuffer[i].DomainIndex = DomainIndex;
+
+                TRACE("Mapped to: %wZ\n", &NamesBuffer[i].Name);
+
+                (*Mapped)++;
             }
-
-            RtlCopyMemory(NamesBuffer[i].Name.Buffer, Names.Element[0].Buffer, Names.Element[0].MaximumLength);
-
-            SamIFree_SAMPR_RETURNED_USTRING_ARRAY(&Names);
-            SamIFree_SAMPR_ULONG_ARRAY(&Use);
-
-            Status = LsapAddDomainToDomainsList(DomainsBuffer,
-                                                &BuiltinDomainName,
-                                                BuiltinDomainSid,
-                                                &DomainIndex);
-            if (!NT_SUCCESS(Status))
-                goto done;
-
-            NamesBuffer[i].DomainIndex = DomainIndex;
-
-            TRACE("Mapped to: %wZ\n", &NamesBuffer[i].Name);
-
-            (*Mapped)++;
-            continue;
         }
     }
 
@@ -1910,7 +1921,6 @@ LsapLookupAccountDomainSids(PLSAPR_SID_ENUM_BUFFER SidEnumBuffer,
             TRACE("Mapped to: %wZ\n", &NamesBuffer[i].Name);
 
             (*Mapped)++;
-            continue;
         }
         else if (LsapIsPrefixSid(AccountDomainSid, SidEnumBuffer->SidInfo[i].Sid))
         {
@@ -1923,45 +1933,43 @@ LsapLookupAccountDomainSids(PLSAPR_SID_ENUM_BUFFER SidEnumBuffer,
                                            RelativeIds,
                                            &Names,
                                            &Use);
-            if (!NT_SUCCESS(Status))
+            if (NT_SUCCESS(Status))
             {
-                TRACE("SamLookupIdsInDomain failed (Status %08lx)\n", Status);
-                goto done;
-            }
+                NamesBuffer[i].Use = Use.Element[0];
+                NamesBuffer[i].Flags = 0;
 
-            NamesBuffer[i].Use = Use.Element[0];
-            NamesBuffer[i].Flags = 0;
+                NamesBuffer[i].Name.Length = Names.Element[0].Length;
+                NamesBuffer[i].Name.MaximumLength = Names.Element[0].MaximumLength;
+                NamesBuffer[i].Name.Buffer = MIDL_user_allocate(Names.Element[0].MaximumLength);
+                if (NamesBuffer[i].Name.Buffer == NULL)
+                {
+                    SamIFree_SAMPR_RETURNED_USTRING_ARRAY(&Names);
+                    SamIFree_SAMPR_ULONG_ARRAY(&Use);
 
-            NamesBuffer[i].Name.Length = Names.Element[0].Length;
-            NamesBuffer[i].Name.MaximumLength = Names.Element[0].MaximumLength;
-            NamesBuffer[i].Name.Buffer = MIDL_user_allocate(Names.Element[0].MaximumLength);
-            if (NamesBuffer[i].Name.Buffer == NULL)
-            {
+                    Status = STATUS_INSUFFICIENT_RESOURCES;
+                    goto done;
+                }
+
+                RtlCopyMemory(NamesBuffer[i].Name.Buffer,
+                              Names.Element[0].Buffer,
+                              Names.Element[0].MaximumLength);
+
                 SamIFree_SAMPR_RETURNED_USTRING_ARRAY(&Names);
                 SamIFree_SAMPR_ULONG_ARRAY(&Use);
 
-                Status = STATUS_INSUFFICIENT_RESOURCES;
-                goto done;
+                Status = LsapAddDomainToDomainsList(DomainsBuffer,
+                                                    &AccountDomainName,
+                                                    AccountDomainSid,
+                                                    &DomainIndex);
+                if (!NT_SUCCESS(Status))
+                    goto done;
+
+                NamesBuffer[i].DomainIndex = DomainIndex;
+
+                TRACE("Mapped to: %wZ\n", &NamesBuffer[i].Name);
+
+                (*Mapped)++;
             }
-
-            RtlCopyMemory(NamesBuffer[i].Name.Buffer, Names.Element[0].Buffer, Names.Element[0].MaximumLength);
-
-            SamIFree_SAMPR_RETURNED_USTRING_ARRAY(&Names);
-            SamIFree_SAMPR_ULONG_ARRAY(&Use);
-
-            Status = LsapAddDomainToDomainsList(DomainsBuffer,
-                                                &AccountDomainName,
-                                                AccountDomainSid,
-                                                &DomainIndex);
-            if (!NT_SUCCESS(Status))
-                goto done;
-
-            NamesBuffer[i].DomainIndex = DomainIndex;
-
-            TRACE("Mapped to: %wZ\n", &NamesBuffer[i].Name);
-
-            (*Mapped)++;
-            continue;
         }
     }
 
@@ -2109,7 +2117,9 @@ LsapLookupSids(PLSAPR_SID_ENUM_BUFFER SidEnumBuffer,
                                      NamesBuffer,
                                      DomainsBuffer,
                                      &Mapped);
-    if (!NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status) &&
+        Status != STATUS_NONE_MAPPED &&
+        Status != STATUS_SOME_NOT_MAPPED)
         goto done;
 
     if (Mapped == SidEnumBuffer->Entries)
@@ -2120,7 +2130,9 @@ LsapLookupSids(PLSAPR_SID_ENUM_BUFFER SidEnumBuffer,
                                          NamesBuffer,
                                          DomainsBuffer,
                                          &Mapped);
-    if (!NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status) &&
+        Status != STATUS_NONE_MAPPED &&
+        Status != STATUS_SOME_NOT_MAPPED)
         goto done;
 
     if (Mapped == SidEnumBuffer->Entries)
@@ -2131,7 +2143,9 @@ LsapLookupSids(PLSAPR_SID_ENUM_BUFFER SidEnumBuffer,
                                          NamesBuffer,
                                          DomainsBuffer,
                                          &Mapped);
-    if (!NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status) &&
+        Status != STATUS_NONE_MAPPED &&
+        Status != STATUS_SOME_NOT_MAPPED)
         goto done;
 
     if (Mapped == SidEnumBuffer->Entries)
@@ -2142,7 +2156,9 @@ LsapLookupSids(PLSAPR_SID_ENUM_BUFFER SidEnumBuffer,
                                    NamesBuffer,
                                    DomainsBuffer,
                                    &Mapped);
-    if (!NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status) &&
+        Status != STATUS_NONE_MAPPED &&
+        Status != STATUS_SOME_NOT_MAPPED)
         goto done;
 
 done:
