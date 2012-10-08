@@ -81,6 +81,8 @@ SamIFree_SAMPR_RETURNED_USTRING_ARRAY(PSAMPR_RETURNED_USTRING_ARRAY Ptr)
             }
 
             MIDL_user_free(Ptr->Element);
+            Ptr->Element = NULL;
+            Ptr->Count = 0;
         }
     }
 }
@@ -93,7 +95,11 @@ SamIFree_SAMPR_ULONG_ARRAY(PSAMPR_ULONG_ARRAY Ptr)
     if (Ptr != NULL)
     {
         if (Ptr->Element != NULL)
+        {
             MIDL_user_free(Ptr->Element);
+            Ptr->Element = NULL;
+            Ptr->Count = 0;
+        }
     }
 
 }
