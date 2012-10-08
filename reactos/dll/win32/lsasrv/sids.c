@@ -59,6 +59,14 @@ SamrLookupIdsInDomain(IN SAMPR_HANDLE DomainHandle,
                       OUT PSAMPR_RETURNED_USTRING_ARRAY Names,
                       OUT PSAMPR_ULONG_ARRAY Use);
 
+NTSTATUS
+NTAPI
+SamrLookupNamesInDomain(IN SAMPR_HANDLE DomainHandle,
+                        IN ULONG Count,
+                        IN RPC_UNICODE_STRING Names[],
+                        OUT PSAMPR_ULONG_ARRAY RelativeIds,
+                        OUT PSAMPR_ULONG_ARRAY Use);
+
 
 typedef struct _WELL_KNOWN_SID
 {
@@ -895,6 +903,44 @@ LsapGetRelativeIdFromSid(PSID Sid_)
 }
 
 
+static PSID
+CreateSidFromSidAndRid(PSID SrcSid,
+                       ULONG RelativeId)
+{
+    UCHAR RidCount;
+    PSID DstSid;
+    ULONG i;
+    ULONG DstSidSize;
+    PULONG p, q;
+
+    RidCount = *RtlSubAuthorityCountSid(SrcSid);
+    if (RidCount >= 8)
+        return NULL;
+
+    DstSidSize = RtlLengthRequiredSid(RidCount + 1);
+
+    DstSid = MIDL_user_allocate(DstSidSize);
+    if (DstSid == NULL)
+        return FALSE;
+
+    RtlInitializeSid(DstSid,
+                     RtlIdentifierAuthoritySid(SrcSid),
+                     RidCount + 1);
+
+    for (i = 0; i < (ULONG)RidCount; i++)
+    {
+        p = RtlSubAuthoritySid(SrcSid, i);
+        q = RtlSubAuthoritySid(DstSid, i);
+        *q = *p;
+    }
+
+    q = RtlSubAuthoritySid(DstSid, (ULONG)RidCount);
+    *q = RelativeId;
+
+    return DstSid;
+}
+
+
 static
 NTSTATUS
 LsapLookupIsolatedNames(DWORD Count,
@@ -908,7 +954,6 @@ LsapLookupIsolatedNames(DWORD Count,
     ULONG DomainIndex;
     ULONG i;
     NTSTATUS Status = STATUS_SUCCESS;
-    LPWSTR SidString = NULL;
 
     for (i = 0; i < Count; i++)
     {
@@ -960,14 +1005,26 @@ LsapLookupIsolatedNames(DWORD Count,
             continue;
         }
 
-        /* FIXME: Look-up the built-in domain */
+        /* Look-up the built-in domain */
+        if (RtlEqualUnicodeString((PUNICODE_STRING)&AccountNames[i], &BuiltinDomainName, TRUE))
+        {
+            SidsBuffer[i].Use = SidTypeDomain;
+            SidsBuffer[i].Sid = BuiltinDomainSid;
+            SidsBuffer[i].DomainIndex = -1;
+            SidsBuffer[i].Flags = 0;
 
-        ConvertSidToStringSidW(AccountDomainSid, &SidString);
-        TRACE("Account Domain SID: %S\n", SidString);
-        LocalFree(SidString);
-        SidString = NULL;
+            Status = LsapAddDomainToDomainsList(DomainsBuffer,
+                                                &BuiltinDomainName,
+                                                BuiltinDomainSid,
+                                                &DomainIndex);
+            if (!NT_SUCCESS(Status))
+                goto done;
 
-        TRACE("Account Domain Name: %wZ\n", &AccountDomainName);
+            SidsBuffer[i].DomainIndex = DomainIndex;
+
+            (*Mapped)++;
+            continue;
+        }
 
         /* Look-up the account domain */
         if (RtlEqualUnicodeString((PUNICODE_STRING)&AccountNames[i], &AccountDomainName, TRUE))
@@ -994,18 +1051,380 @@ LsapLookupIsolatedNames(DWORD Count,
 
         /* FIXME: Look-up the trusted domains */
 
-        /* FIXME: Look-up accounts in the built-in domain */
-
-        /* FIXME: Look-up accounts in the account domain */
-
-        /* FIXME: Look-up accounts in the primary domain */
-
-        /* FIXME: Look-up accounts in the trusted domains */
     }
 
 done:
     return Status;
 }
+
+
+static
+NTSTATUS
+LsapLookupIsolatedBuiltinNames(DWORD Count,
+                               PRPC_UNICODE_STRING DomainNames,
+                               PRPC_UNICODE_STRING AccountNames,
+                               PLSAPR_REFERENCED_DOMAIN_LIST DomainsBuffer,
+                               PLSAPR_TRANSLATED_SID_EX2 SidsBuffer,
+                               PULONG Mapped)
+{
+    SAMPR_HANDLE ServerHandle = NULL;
+    SAMPR_HANDLE DomainHandle = NULL;
+    SAMPR_ULONG_ARRAY RelativeIds = {0, NULL};
+    SAMPR_ULONG_ARRAY Use = {0, NULL};
+    ULONG DomainIndex;
+    ULONG i;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    Status = SamrConnect(NULL,
+                         &ServerHandle,
+                         SAM_SERVER_CONNECT | SAM_SERVER_LOOKUP_DOMAIN);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SamrConnect failed (Status %08lx)\n", Status);
+        goto done;
+    }
+
+    Status = SamrOpenDomain(ServerHandle,
+                            DOMAIN_LOOKUP,
+                            BuiltinDomainSid,
+                            &DomainHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SamOpenDomain failed (Status %08lx)\n", Status);
+        goto done;
+    }
+
+    for (i = 0; i < Count; i++)
+    {
+        /* Ignore names which were already mapped */
+        if (SidsBuffer[i].Use != SidTypeUnknown)
+            continue;
+
+        /* Ignore fully qualified account names */
+        if (DomainNames[i].Length != 0)
+            continue;
+
+        Status = SamrLookupNamesInDomain(DomainHandle,
+                                         1,
+                                         &AccountNames[i],
+                                         &RelativeIds,
+                                         &Use);
+        if (NT_SUCCESS(Status))
+        {
+            SidsBuffer[i].Use = Use.Element[0];
+            SidsBuffer[i].Sid = CreateSidFromSidAndRid(BuiltinDomainSid,
+                                                       RelativeIds.Element[0]);
+            if (SidsBuffer[i].Sid == NULL)
+                goto done;
+
+            SidsBuffer[i].DomainIndex = -1;
+            SidsBuffer[i].Flags = 0;
+
+            Status = LsapAddDomainToDomainsList(DomainsBuffer,
+                                                &BuiltinDomainName,
+                                                BuiltinDomainSid,
+                                                &DomainIndex);
+            if (!NT_SUCCESS(Status))
+                goto done;
+
+            SidsBuffer[i].DomainIndex = DomainIndex;
+
+            (*Mapped)++;
+        }
+
+        SamIFree_SAMPR_ULONG_ARRAY(&RelativeIds);
+        SamIFree_SAMPR_ULONG_ARRAY(&Use);
+    }
+
+done:
+    if (DomainHandle != NULL)
+        SamrCloseHandle(&DomainHandle);
+
+    if (ServerHandle != NULL)
+        SamrCloseHandle(&ServerHandle);
+
+    return Status;
+}
+
+
+static
+NTSTATUS
+LsapLookupIsolatedAccountNames(DWORD Count,
+                               PRPC_UNICODE_STRING DomainNames,
+                               PRPC_UNICODE_STRING AccountNames,
+                               PLSAPR_REFERENCED_DOMAIN_LIST DomainsBuffer,
+                               PLSAPR_TRANSLATED_SID_EX2 SidsBuffer,
+                               PULONG Mapped)
+{
+    SAMPR_HANDLE ServerHandle = NULL;
+    SAMPR_HANDLE DomainHandle = NULL;
+    SAMPR_ULONG_ARRAY RelativeIds = {0, NULL};
+    SAMPR_ULONG_ARRAY Use = {0, NULL};
+    ULONG DomainIndex;
+    ULONG i;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    TRACE("()\n");
+
+    Status = SamrConnect(NULL,
+                         &ServerHandle,
+                         SAM_SERVER_CONNECT | SAM_SERVER_LOOKUP_DOMAIN);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SamrConnect failed (Status %08lx)\n", Status);
+        goto done;
+    }
+
+    Status = SamrOpenDomain(ServerHandle,
+                            DOMAIN_LOOKUP,
+                            AccountDomainSid,
+                            &DomainHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SamOpenDomain failed (Status %08lx)\n", Status);
+        goto done;
+    }
+
+    for (i = 0; i < Count; i++)
+    {
+        /* Ignore names which were already mapped */
+        if (SidsBuffer[i].Use != SidTypeUnknown)
+            continue;
+
+        /* Ignore fully qualified account names */
+        if (DomainNames[i].Length != 0)
+            continue;
+
+        TRACE("Mapping name: %wZ\n", &AccountNames[i]);
+
+        Status = SamrLookupNamesInDomain(DomainHandle,
+                                         1,
+                                         &AccountNames[i],
+                                         &RelativeIds,
+                                         &Use);
+        if (NT_SUCCESS(Status))
+        {
+            TRACE("Found relative ID: %lu\n", RelativeIds.Element[0]);
+
+            SidsBuffer[i].Use = Use.Element[0];
+            SidsBuffer[i].Sid = CreateSidFromSidAndRid(AccountDomainSid,
+                                                       RelativeIds.Element[0]);
+            if (SidsBuffer[i].Sid == NULL)
+                goto done;
+
+            SidsBuffer[i].DomainIndex = -1;
+            SidsBuffer[i].Flags = 0;
+
+            Status = LsapAddDomainToDomainsList(DomainsBuffer,
+                                                &AccountDomainName,
+                                                AccountDomainSid,
+                                                &DomainIndex);
+            if (!NT_SUCCESS(Status))
+                goto done;
+
+            SidsBuffer[i].DomainIndex = DomainIndex;
+
+            (*Mapped)++;
+        }
+
+        SamIFree_SAMPR_ULONG_ARRAY(&RelativeIds);
+        SamIFree_SAMPR_ULONG_ARRAY(&Use);
+    }
+
+done:
+    if (DomainHandle != NULL)
+        SamrCloseHandle(&DomainHandle);
+
+    if (ServerHandle != NULL)
+        SamrCloseHandle(&ServerHandle);
+
+    return Status;
+}
+
+
+static
+NTSTATUS
+LsapLookupBuiltinNames(DWORD Count,
+                       PRPC_UNICODE_STRING DomainNames,
+                       PRPC_UNICODE_STRING AccountNames,
+                       PLSAPR_REFERENCED_DOMAIN_LIST DomainsBuffer,
+                       PLSAPR_TRANSLATED_SID_EX2 SidsBuffer,
+                       PULONG Mapped)
+{
+    SAMPR_HANDLE ServerHandle = NULL;
+    SAMPR_HANDLE DomainHandle = NULL;
+    SAMPR_ULONG_ARRAY RelativeIds = {0, NULL};
+    SAMPR_ULONG_ARRAY Use = {0, NULL};
+    ULONG DomainIndex;
+    ULONG i;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    Status = SamrConnect(NULL,
+                         &ServerHandle,
+                         SAM_SERVER_CONNECT | SAM_SERVER_LOOKUP_DOMAIN);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SamrConnect failed (Status %08lx)\n", Status);
+        goto done;
+    }
+
+    Status = SamrOpenDomain(ServerHandle,
+                            DOMAIN_LOOKUP,
+                            BuiltinDomainSid,
+                            &DomainHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SamOpenDomain failed (Status %08lx)\n", Status);
+        goto done;
+    }
+
+    for (i = 0; i < Count; i++)
+    {
+        /* Ignore names which were already mapped */
+        if (SidsBuffer[i].Use != SidTypeUnknown)
+            continue;
+
+        /* Ignore isolated account names */
+        if (DomainNames[i].Length == 0)
+            continue;
+
+        if (!RtlEqualUnicodeString((PUNICODE_STRING)&DomainNames[i], &BuiltinDomainName, TRUE))
+            continue;
+
+        Status = SamrLookupNamesInDomain(DomainHandle,
+                                         1,
+                                         &AccountNames[i],
+                                         &RelativeIds,
+                                         &Use);
+        if (NT_SUCCESS(Status))
+        {
+            SidsBuffer[i].Use = Use.Element[0];
+            SidsBuffer[i].Sid = CreateSidFromSidAndRid(BuiltinDomainSid,
+                                                       RelativeIds.Element[0]);
+            if (SidsBuffer[i].Sid == NULL)
+                goto done;
+
+            SidsBuffer[i].DomainIndex = -1;
+            SidsBuffer[i].Flags = 0;
+
+            Status = LsapAddDomainToDomainsList(DomainsBuffer,
+                                                &BuiltinDomainName,
+                                                BuiltinDomainSid,
+                                                &DomainIndex);
+            if (!NT_SUCCESS(Status))
+                goto done;
+
+            SidsBuffer[i].DomainIndex = DomainIndex;
+
+            (*Mapped)++;
+        }
+
+        SamIFree_SAMPR_ULONG_ARRAY(&RelativeIds);
+        SamIFree_SAMPR_ULONG_ARRAY(&Use);
+    }
+
+done:
+    if (DomainHandle != NULL)
+        SamrCloseHandle(&DomainHandle);
+
+    if (ServerHandle != NULL)
+        SamrCloseHandle(&ServerHandle);
+
+    return Status;
+}
+
+
+static
+NTSTATUS
+LsapLookupAccountNames(DWORD Count,
+                       PRPC_UNICODE_STRING DomainNames,
+                       PRPC_UNICODE_STRING AccountNames,
+                       PLSAPR_REFERENCED_DOMAIN_LIST DomainsBuffer,
+                       PLSAPR_TRANSLATED_SID_EX2 SidsBuffer,
+                       PULONG Mapped)
+{
+    SAMPR_HANDLE ServerHandle = NULL;
+    SAMPR_HANDLE DomainHandle = NULL;
+    SAMPR_ULONG_ARRAY RelativeIds = {0, NULL};
+    SAMPR_ULONG_ARRAY Use = {0, NULL};
+    ULONG DomainIndex;
+    ULONG i;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    Status = SamrConnect(NULL,
+                         &ServerHandle,
+                         SAM_SERVER_CONNECT | SAM_SERVER_LOOKUP_DOMAIN);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SamrConnect failed (Status %08lx)\n", Status);
+        goto done;
+    }
+
+    Status = SamrOpenDomain(ServerHandle,
+                            DOMAIN_LOOKUP,
+                            AccountDomainSid,
+                            &DomainHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SamOpenDomain failed (Status %08lx)\n", Status);
+        goto done;
+    }
+
+    for (i = 0; i < Count; i++)
+    {
+        /* Ignore names which were already mapped */
+        if (SidsBuffer[i].Use != SidTypeUnknown)
+            continue;
+
+        /* Ignore isolated account names */
+        if (DomainNames[i].Length == 0)
+            continue;
+
+        if (!RtlEqualUnicodeString((PUNICODE_STRING)&DomainNames[i], &AccountDomainName, TRUE))
+            continue;
+
+        Status = SamrLookupNamesInDomain(DomainHandle,
+                                         1,
+                                         &AccountNames[i],
+                                         &RelativeIds,
+                                         &Use);
+        if (NT_SUCCESS(Status))
+        {
+            SidsBuffer[i].Use = Use.Element[0];
+            SidsBuffer[i].Sid = CreateSidFromSidAndRid(AccountDomainSid,
+                                                       RelativeIds.Element[0]);
+            if (SidsBuffer[i].Sid == NULL)
+                goto done;
+
+            SidsBuffer[i].DomainIndex = -1;
+            SidsBuffer[i].Flags = 0;
+
+            Status = LsapAddDomainToDomainsList(DomainsBuffer,
+                                                &AccountDomainName,
+                                                AccountDomainSid,
+                                                &DomainIndex);
+            if (!NT_SUCCESS(Status))
+                goto done;
+
+            SidsBuffer[i].DomainIndex = DomainIndex;
+
+            (*Mapped)++;
+        }
+
+        SamIFree_SAMPR_ULONG_ARRAY(&RelativeIds);
+        SamIFree_SAMPR_ULONG_ARRAY(&Use);
+    }
+
+done:
+    if (DomainHandle != NULL)
+        SamrCloseHandle(&DomainHandle);
+
+    if (ServerHandle != NULL)
+        SamrCloseHandle(&ServerHandle);
+
+    return Status;
+}
+
 
 
 NTSTATUS
@@ -1081,6 +1500,7 @@ LsapLookupNames(DWORD Count,
         goto done;
     }
 
+
     Status = LsapLookupIsolatedNames(Count,
                                      DomainNames,
                                      AccountNames,
@@ -1094,57 +1514,57 @@ LsapLookupNames(DWORD Count,
         goto done;
 
 
-#if 0
-    for (i = 0; i < Count; i++)
-    {
-//TRACE("Name: %wZ\n", &Names[i]);
+    Status = LsapLookupIsolatedBuiltinNames(Count,
+                                            DomainNames,
+                                            AccountNames,
+                                            DomainsBuffer,
+                                            SidsBuffer,
+                                            &Mapped);
+    if (!NT_SUCCESS(Status))
+        goto done;
 
-//TRACE("Domain name: %wZ\n", &DomainNames[i]);
-//TRACE("Account name: %wZ\n", &AccountNames[i]);
-        ptr2 = NULL;
-        ptr = LsapLookupWellKnownName((PUNICODE_STRING)&AccountNames[i]);
-        if (ptr != NULL)
-        {
-//TRACE("Found well known account!\n");
-            SidsBuffer[i].Use = ptr->Use;
-            SidsBuffer[i].Sid = ptr->Sid;
+    if (Mapped == Count)
+        goto done;
 
-            SidsBuffer[i].DomainIndex = -1;
-            SidsBuffer[i].Flags = 0;
 
-            if (DomainNames[i].Length != 0)
-            {
-                ptr2= LsapLookupWellKnownName((PUNICODE_STRING)&DomainNames[i]);
-                if (ptr2 != NULL)
-                {
-                    Status = LsapAddDomainToDomainsList(DomainsBuffer,
-                                                        &ptr2->Name,
-                                                        ptr2->Sid,
-                                                        &DomainIndex);
-                    if (NT_SUCCESS(Status))
-                        SidsBuffer[i].DomainIndex = DomainIndex;
-                }
-            }
+    Status = LsapLookupIsolatedAccountNames(Count,
+                                            DomainNames,
+                                            AccountNames,
+                                            DomainsBuffer,
+                                            SidsBuffer,
+                                            &Mapped);
+    if (!NT_SUCCESS(Status))
+        goto done;
 
-            if (ptr2 == NULL && ptr->Domain.Length != 0)
-            {
-                ptr2= LsapLookupWellKnownName(&ptr->Domain);
-                if (ptr2 != NULL)
-                {
-                    Status = LsapAddDomainToDomainsList(DomainsBuffer,
-                                                        &ptr2->Name,
-                                                        ptr2->Sid,
-                                                        &DomainIndex);
-                    if (NT_SUCCESS(Status))
-                        SidsBuffer[i].DomainIndex = DomainIndex;
-                }
-            }
+    if (Mapped == Count)
+        goto done;
 
-            Mapped++;
-            continue;
-        }
-    }
-#endif
+
+
+    Status = LsapLookupBuiltinNames(Count,
+                                    DomainNames,
+                                    AccountNames,
+                                    DomainsBuffer,
+                                    SidsBuffer,
+                                    &Mapped);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    if (Mapped == Count)
+        goto done;
+
+
+    Status = LsapLookupAccountNames(Count,
+                                    DomainNames,
+                                    AccountNames,
+                                    DomainsBuffer,
+                                    SidsBuffer,
+                                    &Mapped);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    if (Mapped == Count)
+        goto done;
 
 done:
 //    TRACE("done: Status %lx\n", Status);
@@ -1273,6 +1693,148 @@ done:
 
 
 static NTSTATUS
+LsapLookupBuiltinDomainSids(PLSAPR_SID_ENUM_BUFFER SidEnumBuffer,
+                            PLSAPR_TRANSLATED_NAME_EX NamesBuffer,
+                            PLSAPR_REFERENCED_DOMAIN_LIST DomainsBuffer,
+                            PULONG Mapped)
+{
+    SAMPR_HANDLE ServerHandle = NULL;
+    SAMPR_HANDLE DomainHandle = NULL;
+    SAMPR_RETURNED_USTRING_ARRAY Names = {0, NULL};
+    SAMPR_ULONG_ARRAY Use = {0, NULL};
+    LPWSTR SidString = NULL;
+    ULONG DomainIndex;
+    ULONG RelativeIds[1];
+    ULONG i;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    Status = SamrConnect(NULL,
+                         &ServerHandle,
+                         SAM_SERVER_CONNECT | SAM_SERVER_LOOKUP_DOMAIN);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SamrConnect failed (Status %08lx)\n", Status);
+        goto done;
+    }
+
+    Status = SamrOpenDomain(ServerHandle,
+                            DOMAIN_LOOKUP,
+                            BuiltinDomainSid,
+                            &DomainHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SamOpenDomain failed (Status %08lx)\n", Status);
+        goto done;
+    }
+
+    for (i = 0; i < SidEnumBuffer->Entries; i++)
+    {
+        /* Ignore SIDs which are already mapped */
+        if (NamesBuffer[i].Use != SidTypeUnknown)
+            continue;
+
+        ConvertSidToStringSidW(SidEnumBuffer->SidInfo[i].Sid, &SidString);
+        TRACE("Mapping SID: %S\n", SidString);
+        LocalFree(SidString);
+        SidString = NULL;
+
+        if (RtlEqualSid(BuiltinDomainSid, SidEnumBuffer->SidInfo[i].Sid))
+        {
+            TRACE("Found builtin domain!\n");
+
+            NamesBuffer[i].Use = SidTypeDomain;
+            NamesBuffer[i].Flags = 0;
+
+            NamesBuffer[i].Name.Length = BuiltinDomainName.Length;
+            NamesBuffer[i].Name.MaximumLength = BuiltinDomainName.MaximumLength;
+            NamesBuffer[i].Name.Buffer = MIDL_user_allocate(BuiltinDomainName.MaximumLength);
+            if (NamesBuffer[i].Name.Buffer == NULL)
+            {
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+                goto done;
+            }
+
+            RtlCopyMemory(NamesBuffer[i].Name.Buffer, BuiltinDomainName.Buffer, BuiltinDomainName.MaximumLength);
+
+            Status = LsapAddDomainToDomainsList(DomainsBuffer,
+                                                &BuiltinDomainName,
+                                                BuiltinDomainSid,
+                                                &DomainIndex);
+            if (!NT_SUCCESS(Status))
+                goto done;
+
+            NamesBuffer[i].DomainIndex = DomainIndex;
+
+            TRACE("Mapped to: %wZ\n", &NamesBuffer[i].Name);
+
+            (*Mapped)++;
+            continue;
+        }
+        else if (LsapIsPrefixSid(BuiltinDomainSid, SidEnumBuffer->SidInfo[i].Sid))
+        {
+            TRACE("Found builtin domain account!\n");
+
+            RelativeIds[0] = LsapGetRelativeIdFromSid(SidEnumBuffer->SidInfo[i].Sid);
+
+            Status = SamrLookupIdsInDomain(DomainHandle,
+                                           1,
+                                           RelativeIds,
+                                           &Names,
+                                           &Use);
+            if (!NT_SUCCESS(Status))
+            {
+                TRACE("SamLookupIdsInDomain failed (Status %08lx)\n", Status);
+                goto done;
+            }
+
+            NamesBuffer[i].Use = Use.Element[0];
+            NamesBuffer[i].Flags = 0;
+
+            NamesBuffer[i].Name.Length = Names.Element[0].Length;
+            NamesBuffer[i].Name.MaximumLength = Names.Element[0].MaximumLength;
+            NamesBuffer[i].Name.Buffer = MIDL_user_allocate(Names.Element[0].MaximumLength);
+            if (NamesBuffer[i].Name.Buffer == NULL)
+            {
+                SamIFree_SAMPR_RETURNED_USTRING_ARRAY(&Names);
+                SamIFree_SAMPR_ULONG_ARRAY(&Use);
+
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+                goto done;
+            }
+
+            RtlCopyMemory(NamesBuffer[i].Name.Buffer, Names.Element[0].Buffer, Names.Element[0].MaximumLength);
+
+            SamIFree_SAMPR_RETURNED_USTRING_ARRAY(&Names);
+            SamIFree_SAMPR_ULONG_ARRAY(&Use);
+
+            Status = LsapAddDomainToDomainsList(DomainsBuffer,
+                                                &BuiltinDomainName,
+                                                BuiltinDomainSid,
+                                                &DomainIndex);
+            if (!NT_SUCCESS(Status))
+                goto done;
+
+            NamesBuffer[i].DomainIndex = DomainIndex;
+
+            TRACE("Mapped to: %wZ\n", &NamesBuffer[i].Name);
+
+            (*Mapped)++;
+            continue;
+        }
+    }
+
+done:
+    if (DomainHandle != NULL)
+        SamrCloseHandle(&DomainHandle);
+
+    if (ServerHandle != NULL)
+        SamrCloseHandle(&ServerHandle);
+
+    return Status;
+}
+
+
+static NTSTATUS
 LsapLookupAccountDomainSids(PLSAPR_SID_ENUM_BUFFER SidEnumBuffer,
                             PLSAPR_TRANSLATED_NAME_EX NamesBuffer,
                             PLSAPR_REFERENCED_DOMAIN_LIST DomainsBuffer,
@@ -1367,11 +1929,11 @@ LsapLookupAccountDomainSids(PLSAPR_SID_ENUM_BUFFER SidEnumBuffer,
                 goto done;
             }
 
-            NamesBuffer[i].Use = Use.Element[0]; //SidTypeUser;
+            NamesBuffer[i].Use = Use.Element[0];
             NamesBuffer[i].Flags = 0;
 
-            NamesBuffer[i].Name.Length = Names.Element[0].Length; //TestName.Length;
-            NamesBuffer[i].Name.MaximumLength = Names.Element[0].MaximumLength; //TestName.MaximumLength;
+            NamesBuffer[i].Name.Length = Names.Element[0].Length;
+            NamesBuffer[i].Name.MaximumLength = Names.Element[0].MaximumLength;
             NamesBuffer[i].Name.Buffer = MIDL_user_allocate(Names.Element[0].MaximumLength);
             if (NamesBuffer[i].Name.Buffer == NULL)
             {
@@ -1405,10 +1967,10 @@ LsapLookupAccountDomainSids(PLSAPR_SID_ENUM_BUFFER SidEnumBuffer,
 
 done:
     if (DomainHandle != NULL)
-        SamrCloseHandle(DomainHandle);
+        SamrCloseHandle(&DomainHandle);
 
     if (ServerHandle != NULL)
-        SamrCloseHandle(ServerHandle);
+        SamrCloseHandle(&ServerHandle);
 
     return Status;
 }
@@ -1547,6 +2109,17 @@ LsapLookupSids(PLSAPR_SID_ENUM_BUFFER SidEnumBuffer,
                                      NamesBuffer,
                                      DomainsBuffer,
                                      &Mapped);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    if (Mapped == SidEnumBuffer->Entries)
+        goto done;
+
+    /* Look-up builtin domain SIDs */
+    Status = LsapLookupBuiltinDomainSids(SidEnumBuffer,
+                                         NamesBuffer,
+                                         DomainsBuffer,
+                                         &Mapped);
     if (!NT_SUCCESS(Status))
         goto done;
 
