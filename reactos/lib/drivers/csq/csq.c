@@ -23,7 +23,6 @@
  * all happen at DISPATCH_LEVEL all of the time, so thread switching on a single
  * processor can create races too.
  */
-/* $Id$ */
 
 #include <ntdef.h>
 #undef DECLSPEC_IMPORT
@@ -68,11 +67,10 @@ static VOID NTAPI IopCsqCancelRoutine(PDEVICE_OBJECT DeviceObject,
 
 	/* Now that we have our CSQ, complete the IRP */
 	Csq->CsqAcquireLock(Csq, &Irql);
-		{
-			Csq->CsqRemoveIrp(Csq, Irp);
-			Csq->CsqCompleteCanceledIrp(Csq, Irp);
-		}
+	Csq->CsqRemoveIrp(Csq, Irp);
 	Csq->CsqReleaseLock(Csq, Irql);
+
+	Csq->CsqCompleteCanceledIrp(Csq, Irp);
 }
 
 
