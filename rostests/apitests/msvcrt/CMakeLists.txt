@@ -1,7 +1,10 @@
 
+add_subdirectory(cmdline_util)
+
 add_definitions(-D_DLL -D__USE_CRTIMP)
 
 list(APPEND SOURCE
+    CommandLine.c
     ieee.c
     splitpath.c
     testlist.c)
