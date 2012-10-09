@@ -1085,7 +1085,7 @@ for_ugly_chips:
                     KdPrint2((PRINT_PREFIX "PATA part\n"));
                 } else {
 
-                    if(/*(ChipFlags & ICH5) &&*/ BaseMemAddress) {
+                    if(!(ChipFlags & ICH7) && BaseMemAddress) {
                         KdPrint2((PRINT_PREFIX "BaseMemAddress[5] -> indexed\n"));
                         chan->RegTranslation[IDX_INDEXED_ADDR].Addr        = BaseMemAddress + 0;
                         chan->RegTranslation[IDX_INDEXED_ADDR].MemIo       = MemIo;
@@ -1094,17 +1094,20 @@ for_ugly_chips:
                     }
                     if((ChipFlags & ICH5) || BaseMemAddress) {
 
-                        KdPrint2((PRINT_PREFIX "io indexed\n"));
+                        KdPrint2((PRINT_PREFIX "io proc()\n"));
                         // Rather interesting way of register access...
                         ChipType = INTEL_IDX;
                         deviceExtension->HwFlags &= ~CHIPTYPE_MASK;
                         deviceExtension->HwFlags |= ChipType;
 
-                        chan->RegTranslation[IDX_SATA_SStatus].Addr        = 0x200*c + 0;
+                        if(ChipFlags & ICH7) {
+                            KdPrint2((PRINT_PREFIX "ICH7 way\n"));
+                        }
+                        chan->RegTranslation[IDX_SATA_SStatus].Addr        = 0x200*c + 0; // this is fake non-zero value
                         chan->RegTranslation[IDX_SATA_SStatus].Proc        = 1;
-                        chan->RegTranslation[IDX_SATA_SError].Addr         = 0x200*c + 2;
+                        chan->RegTranslation[IDX_SATA_SError].Addr         = 0x200*c + 2; // this is fake non-zero value
                         chan->RegTranslation[IDX_SATA_SError].Proc         = 1;
-                        chan->RegTranslation[IDX_SATA_SControl].Addr       = 0x200*c + 1;
+                        chan->RegTranslation[IDX_SATA_SControl].Addr       = 0x200*c + 1; // this is fake non-zero value
                         chan->RegTranslation[IDX_SATA_SControl].Proc       = 1;
                     }
                 }
@@ -1835,7 +1838,7 @@ AtapiChipInit(
                     ChangePciConfig4(0x94, (a | (1 << 9)));
                     /* Set Ports Implemented register bits. */
                     AtapiWritePortEx4(NULL, (ULONGIO_PTR)(&deviceExtension->BaseIoAddressSATA_0), 0x0c,
-                         AtapiReadPortEx4(NULL, (ULONGIO_PTR)(&deviceExtension->BaseIoAddressSATA_0), 0x0c) | 0xff);
+                         AtapiReadPortEx4(NULL, (ULONGIO_PTR)(&deviceExtension->BaseIoAddressSATA_0), 0x0c) | 0x0f);
                 }
                 /* enable PCI interrupt */
                 ChangePciConfig2(offsetof(PCI_COMMON_CONFIG, Command), (a & ~0x0400));
@@ -1883,24 +1886,29 @@ AtapiChipInit(
                     KdPrint2((PRINT_PREFIX "other Intel\n"));
                     switch(tmp8 & 0x03) {
                     case 0:
+                        KdPrint2((PRINT_PREFIX "0 -> %d/%d\n", 0+c, 2+c));
                         chan->lun[0]->SATA_lun_map = 0+c;
                         chan->lun[1]->SATA_lun_map = 2+c;
                         break;
                     case 2:
                         if(c==0) {
+                            KdPrint2((PRINT_PREFIX "2 -> %d/%d\n", 0, 2));
                             chan->lun[0]->SATA_lun_map = 0;
                             chan->lun[1]->SATA_lun_map = 2;
                         } else {
                             // PATA
+                            KdPrint2((PRINT_PREFIX "PATA\n"));
                             IsPata = TRUE;
                         }
                         break;
                     case 1:
                         if(c==1) {
+                            KdPrint2((PRINT_PREFIX "2 -> %d/%d\n", 1, 3));
                             chan->lun[0]->SATA_lun_map = 1;
                             chan->lun[1]->SATA_lun_map = 3;
                         } else {
                             // PATA
+                            KdPrint2((PRINT_PREFIX "PATA\n"));
                             IsPata = TRUE;
                         }
                         break;

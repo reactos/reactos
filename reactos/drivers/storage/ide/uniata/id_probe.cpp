@@ -93,11 +93,15 @@ UniataEnableIoPCI(
 {
     ULONG i;
     ULONG busDataRead;
+    USHORT CmdOrig;
 
     // Enable Busmastering, IO-space and Mem-space
+    // Note: write to CONFIG *may* cause controller to interrupt (not handled yet)
+    // even if no bits are updated. Was observed on ICH7
     KdPrint2((PRINT_PREFIX "Enabling Mem/Io spaces and busmastering...\n"));
     KdPrint2((PRINT_PREFIX "Initial pciData.Command = %#x\n", pciData->Command));
     for(i=0; i<3; i++) {
+        CmdOrig = pciData->Command;
         switch(i) {
         case 0:
             KdPrint2((PRINT_PREFIX "PCI_ENABLE_IO_SPACE\n"));
@@ -112,17 +116,20 @@ UniataEnableIoPCI(
             pciData->Command |= PCI_ENABLE_BUS_MASTER;
             break;
         }
+        if(CmdOrig == pciData->Command) {
+            continue;
+        }
         HalSetBusDataByOffset(  PCIConfiguration, busNumber, slotNumber,
                                 &(pciData->Command),
                                 offsetof(PCI_COMMON_CONFIG, Command),
                                 sizeof(pciData->Command));
-        KdPrint2((PRINT_PREFIX "InterruptLine = %#x\n", pciData->u.type0.InterruptLine));
 
         // reread config space
         busDataRead = HalGetBusData(PCIConfiguration, busNumber, slotNumber,
                                     pciData, PCI_COMMON_HDR_LENGTH);
         KdPrint2((PRINT_PREFIX "New pciData.Command = %#x\n", pciData->Command));
     }
+    KdPrint2((PRINT_PREFIX "InterruptLine = %#x\n", pciData->u.type0.InterruptLine));
     KdPrint2((PRINT_PREFIX "Final pciData.Command = %#x\n", pciData->Command));
     return pciData->Command;
 } // end UniataEnableIoPCI()
@@ -1635,7 +1642,7 @@ UniataFindBusMasterController(
             AtapiStallExecution(10);
             GetBaseStatus(chan, statusByte);
             skip_find_dev = FALSE;
-            if(!(deviceExtension->HwFlags & UNIATA_NO_SLAVE)) {
+            if(!(deviceExtension->HwFlags & UNIATA_NO_SLAVE) && (deviceExtension->NumberLuns > 1)) {
                 if ((statusByte & 0xf8) == 0xf8 ||
                     (statusByte == 0xa5)) {
                     // Check slave.
@@ -1668,6 +1675,32 @@ UniataFindBusMasterController(
             }
 //#ifdef UNIATA_INIT_ON_PROBE
 //        }
+#else //UNIATA_INIT_ON_PROBE
+            KdPrint2((PRINT_PREFIX "clean IDE intr 0\n"));
+
+            SelectDrive(chan, 0);
+            AtapiStallExecution(10);
+            GetBaseStatus(chan, statusByte);
+
+            if(!(deviceExtension->HwFlags & UNIATA_NO_SLAVE) && (deviceExtension->NumberLuns > 1)) {
+                KdPrint2((PRINT_PREFIX "clean IDE intr 1\n"));
+
+                SelectDrive(chan, 1);
+                AtapiStallExecution(1);
+                GetBaseStatus(chan, statusByte);
+
+                SelectDrive(chan, 0);
+            }
+
+            statusByte = GetDmaStatus(deviceExtension, c);
+            KdPrint2((PRINT_PREFIX "  DMA status %#x\n", statusByte));
+            if(statusByte & BM_STATUS_INTR) {
+                // bullshit, we have DMA interrupt, but had never initiate DMA operation
+                KdPrint2((PRINT_PREFIX "  clear unexpected DMA intr\n"));
+                AtapiDmaDone(deviceExtension, 0, c, NULL);
+                GetBaseStatus(chan, statusByte);
+            }
+
 #endif //UNIATA_INIT_ON_PROBE
         }
         found = TRUE;

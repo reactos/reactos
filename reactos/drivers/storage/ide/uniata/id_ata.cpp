@@ -6976,11 +6976,16 @@ GetLba2:
         }
 
         // check if DMA read/write
-        if(deviceExtension->HwFlags & UNIATA_SATA) {
+        if(deviceExtension->HwFlags & UNIATA_AHCI) {
             KdPrint2((PRINT_PREFIX "AtapiSendCommand: force use dma (ahci)\n"));
             use_dma = TRUE;
             goto setup_dma;
         } else
+/*        if((deviceExtension->HwFlags & UNIATA_SATA) && (LunExt->OrigTransferMode >= ATA_DMA)) {
+            KdPrint2((PRINT_PREFIX "AtapiSendCommand: force use dma (sata)\n"));
+            use_dma = TRUE;
+            goto setup_dma;
+        } else*/
         if(Srb->Cdb[0] == SCSIOP_REQUEST_SENSE) {
             KdPrint2((PRINT_PREFIX "AtapiSendCommand: SCSIOP_REQUEST_SENSE, no DMA setup\n"));
         } else
@@ -7434,6 +7439,28 @@ make_reset:
                 LunExt->IdentifyData.AtapiCmdSize ? 8 : 6,
                 0);
 
+    GetStatus(chan, statusByte);
+    KdPrint3((PRINT_PREFIX "AtapiSendCommand: cmd status (%#x)\n", statusByte));
+
+    if(statusByte & IDE_STATUS_ERROR) {
+        GetBaseStatus(chan, statusByte);
+        KdPrint3((PRINT_PREFIX "AtapiSendCommand: Error on cmd: (%#x)\n", statusByte));
+        // Read the error reg. to clear it and fail this request.
+        AtaReq->ReqState = REQ_STATE_TRANSFER_COMPLETE;
+        return MapError(deviceExtension, Srb);
+    }
+/*    if(statusByte & IDE_STATUS_DSC) {
+        KdPrint3((PRINT_PREFIX "AtapiSendCommand: DSC on cmd: (%#x)\n", statusByte));
+        // Read the error reg. to clear it and fail this request.
+        statusByte = AtapiReadPort1(chan, IDX_IO1_i_Error);
+        KdPrint3((PRINT_PREFIX "AtapiSendCommand: Err on cmd: (%#x)\n", statusByte));
+        if(statusByte >> 4) {
+            GetBaseStatus(chan, statusByte);
+            AtaReq->ReqState = REQ_STATE_TRANSFER_COMPLETE;
+            return MapError(deviceExtension, Srb);
+        }
+    }
+*/
     if(chan->ChannelCtrlFlags & CTRFLAGS_DMA_OPERATION) {
         AtapiDmaStart(HwDeviceExtension, DeviceNumber, lChannel, Srb);
     }
@@ -7642,7 +7669,7 @@ default_no_prep:
 
             // Fill in vendor identification fields.
             for (i = 0; i < 24; i += 2) {
-                MOV_DW_SWP(inquiryData->VendorId[i], ((PUCHAR)identifyData->ModelNumber)[i]);
+                MOV_DW_SWP(inquiryData->DeviceIdentificationString[i], ((PUCHAR)identifyData->ModelNumber)[i]);
             }
 /*
             // Initialize unused portion of product id.
@@ -10732,6 +10759,8 @@ HalDisplayString (
     PUCHAR String
     );
 
+#define DEBUG_MSG_BUFFER_SIZE   512
+
 extern "C"
 VOID
 _cdecl
@@ -10741,17 +10770,23 @@ _PrintNtConsole(
     )
 {
     int len;
-    UCHAR dbg_print_tmp_buff[512];
+    UCHAR dbg_print_tmp_buff[DEBUG_MSG_BUFFER_SIZE];
 //    UNICODE_STRING msgBuff;
     va_list ap;
     va_start(ap, DebugMessage);
 
-    len = _vsnprintf((PCHAR)&dbg_print_tmp_buff[0], 511, DebugMessage, ap);
+    len = _vsnprintf((PCHAR)&dbg_print_tmp_buff[0], DEBUG_MSG_BUFFER_SIZE-1, DebugMessage, ap);
 
-    dbg_print_tmp_buff[511] = 0;
+    dbg_print_tmp_buff[DEBUG_MSG_BUFFER_SIZE-1] = 0;
 
-    KdPrint(((PCHAR)&(dbg_print_tmp_buff[0])));
+    //DbgPrint(((PCHAR)&(dbg_print_tmp_buff[0]))); // already done in KdPrint macro
     HalDisplayString(dbg_print_tmp_buff);
+
+#ifdef _DEBUG
+    if(g_LogToDisplay > 1) {
+        AtapiStallExecution(g_LogToDisplay*1000);
+    }
+#endif // _DEBUG
 
     va_end(ap);
 

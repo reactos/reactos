@@ -302,6 +302,24 @@ UniataSataReadPort4(
                 SetPciConfig4(0xa0, offs);
                 GetPciConfig4(0xa4, offs);
                 return offs;
+            } else 
+            if(deviceExtension->HwFlags & ICH7) {
+                offs = 0x100+chan->lun[p]->SATA_lun_map*0x80;
+                KdPrint3((PRINT_PREFIX "  ICH7 way, offs %#x\n", offs));
+                switch(io_port_ndx) {
+                case IDX_SATA_SStatus:
+                    offs += IDX_AHCI_P_SStatus;
+                    break;
+                case IDX_SATA_SError:
+                    offs += IDX_AHCI_P_SError;
+                    break;
+                case IDX_SATA_SControl:
+                    offs += IDX_AHCI_P_SControl;
+                    break;
+                default:
+                    return -1;
+                }
+                return AtapiReadPortEx4(NULL, (ULONGIO_PTR)(&deviceExtension->BaseIoAddressSATA_0), offs);
             } else {
                 offs = ((deviceExtension->Channel+chan->lChannel)*2+p) * 0x100;
                 KdPrint3((PRINT_PREFIX "  def way, offs %#x\n", offs));
@@ -371,6 +389,25 @@ UniataSataWritePort4(
                 }
                 SetPciConfig4(0xa0, offs);
                 SetPciConfig4(0xa4, data);
+                return;
+            } else 
+            if(deviceExtension->HwFlags & ICH7) {
+                offs = 0x100+chan->lun[p]->SATA_lun_map*0x80;
+                KdPrint3((PRINT_PREFIX "  ICH7 way, offs %#x\n", offs));
+                switch(io_port_ndx) {
+                case IDX_SATA_SStatus:
+                    offs += IDX_AHCI_P_SStatus;
+                    break;
+                case IDX_SATA_SError:
+                    offs += IDX_AHCI_P_SError;
+                    break;
+                case IDX_SATA_SControl:
+                    offs += IDX_AHCI_P_SControl;
+                    break;
+                default:
+                    return;
+                }
+                AtapiWritePortEx4(NULL, (ULONGIO_PTR)(&deviceExtension->BaseIoAddressSATA_0), offs, data);
                 return;
             } else {
                 offs = ((deviceExtension->Channel+chan->lChannel)*2+p) * 0x100;

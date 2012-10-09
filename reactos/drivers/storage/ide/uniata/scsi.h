@@ -1100,9 +1100,14 @@ typedef struct _INQUIRYDATA {
     UCHAR Wide16Bit : 1;
     UCHAR Wide32Bit : 1;
     UCHAR RelativeAddressing : 1;
-    UCHAR VendorId[8];
-    UCHAR ProductId[16];
-    UCHAR ProductRevisionLevel[4];
+    union {
+    UCHAR DeviceIdentificationString[28];
+        struct {
+            UCHAR VendorId[8];
+            UCHAR ProductId[16];
+            UCHAR ProductRevisionLevel[4];
+        };
+    };
     UCHAR VendorSpecific[20];
     UCHAR Reserved3[40];
 } INQUIRYDATA, *PINQUIRYDATA;

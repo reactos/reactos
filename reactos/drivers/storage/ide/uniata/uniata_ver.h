@@ -1,10 +1,10 @@
-#define UNIATA_VER_STR         "43f5"
-#define UNIATA_VER_DOT         0.43.6.5
+#define UNIATA_VER_STR         "44b1"
+#define UNIATA_VER_DOT         0.44.2.1
 #define UNIATA_VER_MJ          0
-#define UNIATA_VER_MN          43
-#define UNIATA_VER_SUB_MJ      6
-#define UNIATA_VER_SUB_MN      5
-#define UNIATA_VER_DOT_COMMA   0,43,6,5
-#define UNIATA_VER_DOT_STR     "0.43.6.5"
+#define UNIATA_VER_MN          44
+#define UNIATA_VER_SUB_MJ      2
+#define UNIATA_VER_SUB_MN      1
+#define UNIATA_VER_DOT_COMMA   0,44,2,1
+#define UNIATA_VER_DOT_STR     "0.44.2.1"
 #define UNIATA_VER_YEAR        2012
 #define UNIATA_VER_YEAR_STR    "2012"

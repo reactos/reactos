@@ -623,6 +623,9 @@ typedef struct _IDE_AHCI_PORT_REGISTERS {
 #define IDX_AHCI_P_TFD                    (FIELD_OFFSET(IDE_AHCI_PORT_REGISTERS, TFD))
 #define IDX_AHCI_P_SIG                    (FIELD_OFFSET(IDE_AHCI_PORT_REGISTERS, SIG))
 #define IDX_AHCI_P_CMD                    (FIELD_OFFSET(IDE_AHCI_PORT_REGISTERS, CMD))
+#define IDX_AHCI_P_SStatus                (FIELD_OFFSET(IDE_AHCI_PORT_REGISTERS, SStatus))
+#define IDX_AHCI_P_SControl               (FIELD_OFFSET(IDE_AHCI_PORT_REGISTERS, SControl))
+#define IDX_AHCI_P_SError                 (FIELD_OFFSET(IDE_AHCI_PORT_REGISTERS, SError))
 #define IDX_AHCI_P_ACT                    (FIELD_OFFSET(IDE_AHCI_PORT_REGISTERS, SACT))
 
 #define IDX_AHCI_P_SNTF                   (FIELD_OFFSET(IDE_AHCI_PORT_REGISTERS, SNTF))

@@ -1012,7 +1012,7 @@ AtapiDmaInit(
         /****************/
 
         KdPrint2((PRINT_PREFIX "SATA Generic\n"));
-        if((udmamode >= 5) || (ChipFlags & UNIATA_AHCI) || (chan->MaxTransferMode >= ATA_SA150)) {
+        if((udmamode >= 5) || (ChipFlags & UNIATA_AHCI) || ((udmamode >= 0) && (chan->MaxTransferMode >= ATA_SA150))) {
             /* some drives report UDMA6, some UDMA5 */
             /* ATAPI may not have SataCapabilities set in IDENTIFY DATA */
             if(ata_is_sata(&(LunExt->IdentifyData))) {
