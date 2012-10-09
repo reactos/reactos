@@ -2,7 +2,7 @@
  * PROJECT:         ReactOS API Tests
  * LICENSE:         GPLv2+ - See COPYING in the top level directory
  * PURPOSE:         Test for CRT command-line handling.
- * PROGRAMMER:      HermËs B…LUSCA - MAœTO <hermes.belusca@sfr.fr>
+ * PROGRAMMER:      Herm√®s B√âLUSCA - MA√èTO <hermes.belusca@sfr.fr>
  */
 
 #define WIN32_NO_STATUS
