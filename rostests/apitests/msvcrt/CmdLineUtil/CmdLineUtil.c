@@ -10,6 +10,8 @@
 #include <windows.h>
 #include <ndk/ntndk.h>
 
+#include "CmdLineUtil.h"
+
 int APIENTRY wWinMain(HINSTANCE hInstance,
                       HINSTANCE hPrevInstance,
                       LPWSTR    lpCmdLine,
@@ -23,7 +25,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
     UNICODE_STRING CmdLine_U = NtCurrentPeb()->ProcessParameters->CommandLine;
 
     /* Write the results into a file. */
-    HANDLE hFile = CreateFileW(L"C:\\cmdline.dat",
+    HANDLE hFile = CreateFileW(DATAFILE,
                                GENERIC_WRITE,
                                0, NULL,
                                CREATE_ALWAYS,

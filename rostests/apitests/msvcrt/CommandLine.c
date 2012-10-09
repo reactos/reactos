@@ -11,20 +11,16 @@
 #include <wine/test.h>
 #include <ndk/ntndk.h>
 
-#define COUNT_OF(x) (sizeof((x))/sizeof((x)[0]))
+#include "./CmdLineUtil/CmdLineUtil.h"
 
-/*
- * The path to the data file is hardcoded in cmdline_util.c
- * Please synchronize it whenever you do a change.
- */
-#define DATAFILE    L"C:\\cmdline.dat"
+#define COUNT_OF(x) (sizeof((x))/sizeof((x)[0]))
 
 /**
  * Extracts the command tail from the command line
  * (deletes the program's name and keep the rest).
  **/
 #define SPACECHAR   L' '
-#define DQUOTECHAR  L'\"'
+#define DQUOTECHAR  L'"'
 
 LPWSTR ExtractCmdLine(IN LPWSTR lpszCommandLine)
 {
@@ -98,18 +94,18 @@ typedef struct _TEST_CASE
 
 static TEST_CASE TestCases[] =
 {
-    {L"cmdline_util.exe"},
-    {L"cmdline_util.exe foo bar"},
-    {L"cmdline_util.exe \"foo bar\""},
-    {L"cmdline_util.exe foo \"bar John\" Doe"},
+    {L"CmdLineUtil.exe"},
+    {L"CmdLineUtil.exe foo bar"},
+    {L"CmdLineUtil.exe \"foo bar\""},
+    {L"CmdLineUtil.exe foo \"bar John\" Doe"},
 
-    {L"\"cmdline_util.exe\""},
-    {L"\"cmdline_util.exe\" foo bar"},
-    {L"\"cmdline_util.exe\" \"foo bar\""},
-    {L"\"cmdline_util.exe\" foo \"bar John\" Doe"},
+    {L"\"CmdLineUtil.exe\""},
+    {L"\"CmdLineUtil.exe\" foo bar"},
+    {L"\"CmdLineUtil.exe\" \"foo bar\""},
+    {L"\"CmdLineUtil.exe\" foo \"bar John\" Doe"},
 
-    {L"\"cmdline_util.exe\""},
-    {L"\"cmdline_util.exe \"foo bar\"\""},
+    {L"\"CmdLineUtil.exe\""},
+    {L"\"CmdLineUtil.exe \"foo bar\"\""},
 };
 
 static void Test_CommandLine(IN ULONG TestNumber,
@@ -237,6 +233,7 @@ static void Test_CommandLine(IN ULONG TestNumber,
             ExtractCmdLine_U(&NTCmdLine);
 
             /* Print the results */
+            /*
             *(LPWSTR)((ULONG_PTR)NTCmdLine.Buffer + NTCmdLine.Length) = 0;
             printf("WinMain cmdline = '%S'\n"
                    "Win32   cmdline = '%S'\n"
@@ -245,6 +242,7 @@ static void Test_CommandLine(IN ULONG TestNumber,
                    WinMainCmdLine,
                    Win32CmdLine,
                    NTCmdLine.Buffer, NTCmdLine.Length);
+            */
 
             /*
              * Now check the results.
