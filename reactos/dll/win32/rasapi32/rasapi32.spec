@@ -47,6 +47,7 @@
 @ stub RasGetHport
 @ stdcall RasGetProjectionInfoA(ptr ptr ptr ptr)
 @ stdcall RasGetProjectionInfoW(ptr ptr ptr ptr)
+@ stub RasGetLinkStatistics
 @ stub RasGetSubEntryHandleA
 @ stub RasGetSubEntryHandleW
 @ stub RasGetSubEntryPropertiesA
