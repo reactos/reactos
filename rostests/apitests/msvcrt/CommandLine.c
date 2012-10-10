@@ -135,6 +135,7 @@ static void Test_CommandLine(IN ULONG TestNumber,
     if (TestCase->bEncloseProgramNameInQuotes && bWasntInQuotes)
         wcscat(CmdLine, L"\"");
 
+    /* Add a separating space and copy the tested command line parameters. */
     wcscat(CmdLine, L" ");
     wcscat(CmdLine, TestCase->CmdLine);
 
@@ -306,7 +307,7 @@ START_TEST(CommandLine)
 
     wcscat(UtilityProgramDirectory, L"data\\CmdLineUtil.exe");
 
-    /* Close the opened quote if needed, and add a separating space */
+    /* Close the opened quote if needed. */
     if (UtilityProgramDirectory[0] == L'"') wcscat(UtilityProgramDirectory, L"\"");
 
 
