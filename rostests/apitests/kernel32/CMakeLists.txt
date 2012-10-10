@@ -6,6 +6,7 @@ list(APPEND SOURCE
     GetDriveType.c
     GetModuleFileName.c
     lstrcpynW.c
+	MultiByteToWideChar.c
     SetCurrentDirectory.c
     SetUnhandledExceptionFilter.c
     testlist.c)

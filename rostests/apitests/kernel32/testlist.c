@@ -9,6 +9,7 @@ extern void func_GetCurrentDirectory(void);
 extern void func_GetDriveType(void);
 extern void func_GetModuleFileName(void);
 extern void func_lstrcpynW(void);
+extern void func_MultiByteToWideChar(void);
 extern void func_SetCurrentDirectory(void);
 extern void func_SetUnhandledExceptionFilter(void);
 
@@ -18,6 +19,7 @@ const struct test winetest_testlist[] =
     { "GetDriveType",                func_GetDriveType },
     { "GetModuleFileName",           func_GetModuleFileName },
     { "lstrcpynW",                   func_lstrcpynW },
+    { "MultiByteToWideChar",         func_MultiByteToWideChar },
     { "SetCurrentDirectory",         func_SetCurrentDirectory },
     { "SetUnhandledExceptionFilter", func_SetUnhandledExceptionFilter},
 
