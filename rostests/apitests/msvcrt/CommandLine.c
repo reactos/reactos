@@ -286,17 +286,16 @@ START_TEST(CommandLine)
 {
     ULONG i;
 
-    DWORD dwError;
+    DWORD dwRet;
     LPWSTR p = NULL;
 
 
     /*
      * Initialize the UtilityProgramDirectory variable.
      */
-    GetModuleFileNameW(NULL, UtilityProgramDirectory, COUNT_OF(UtilityProgramDirectory));
-    dwError = GetLastError();
-    ok(dwError == ERROR_SUCCESS, "ERROR: Cannot retrieve the path to the current running process, last error %lu\n", dwError);
-    if (dwError != ERROR_SUCCESS) return;
+    dwRet = GetModuleFileNameW(NULL, UtilityProgramDirectory, COUNT_OF(UtilityProgramDirectory));
+    ok(dwRet != 0, "ERROR: Cannot retrieve the path to the current running process, last error %lu\n", GetLastError());
+    if (dwRet == 0) return;
 
     /* Path : executable.exe or "executable.exe" or C:\path\executable.exe or "C:\path\executable.exe" */
     p = wcsrchr(UtilityProgramDirectory, L'\\');
