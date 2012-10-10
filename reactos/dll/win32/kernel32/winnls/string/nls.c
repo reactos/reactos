@@ -359,7 +359,7 @@ IntMultiByteToWideCharUTF8(DWORD Flags,
     WCHAR WideChar;
     LONG Count;
 
-    if (Flags != 0)
+    if (Flags != 0 && Flags != MB_ERR_INVALID_CHARS)
     {
         SetLastError(ERROR_INVALID_FLAGS);
         return 0;
