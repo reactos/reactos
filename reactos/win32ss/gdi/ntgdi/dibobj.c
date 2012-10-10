@@ -1038,7 +1038,7 @@ NtGdiGetDIBitsInternal(
     _SEH2_TRY
     {
         /* Probe and copy the BITMAPINFO */
-        ProbeForWrite(pbmiUser, cjMaxInfo, 1);
+        ProbeForRead(pbmiUser, cjMaxInfo, 1);
         RtlCopyMemory(pbmi, pbmiUser, cjMaxInfo);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -1082,7 +1082,8 @@ NtGdiGetDIBitsInternal(
         /* Use SEH to copy back to user mode */
         _SEH2_TRY
         {
-            /* Buffer is already probed, copy the data back */
+            /* Copy the data back */
+            ProbeForWrite(pbmiUser, cjMaxInfo, 1); 
             RtlCopyMemory(pbmiUser, pbmi, cjMaxInfo);
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -1551,7 +1552,7 @@ DIB_CreateDIBSection(
     HBITMAP res = 0;
     SURFACE *bmp = NULL;
     void *mapBits = NULL;
-    PPALETTE ppalDIB;
+    PPALETTE ppalDIB = NULL;
 
     // Fill BITMAP32 structure with DIB data
     CONST BITMAPINFOHEADER *bi = &bmi->bmiHeader;
@@ -1685,15 +1686,10 @@ DIB_CreateDIBSection(
 
     /* Create a palette for the DIB */
     ppalDIB = CreateDIBPalette(bmi, dc, usage);
-    if (ppalDIB)
-    {
-        SURFACE_vSetPalette(bmp, ppalDIB);
-        PALETTE_ShareUnlockPalette(ppalDIB);
-    }
 
     // Clean up in case of errors
 cleanup:
-    if (!res || !bmp || !bm.bmBits)
+    if (!res || !bmp || !bm.bmBits || !ppalDIB)
     {
         DPRINT("Got an error res=%p, bmp=%p, bm.bmBits=%p\n", res, bmp, bm.bmBits);
         if (bm.bmBits)
@@ -1709,17 +1705,28 @@ cleanup:
         }
 
         if (bmp)
+        {
+            SURFACE_ShareUnlockSurface(bmp);
             bmp = NULL;
+        }
 
         if (res)
         {
             GreDeleteObject(res);
             res = 0;
         }
+        
+        if(ppalDIB)
+        {
+            PALETTE_ShareUnlockPalette(ppalDIB);
+        }
     }
 
     if (bmp)
     {
+        /* If we're here, everything went fine */
+        SURFACE_vSetPalette(bmp, ppalDIB);
+        PALETTE_ShareUnlockPalette(ppalDIB);
         SURFACE_ShareUnlockSurface(bmp);
     }
 

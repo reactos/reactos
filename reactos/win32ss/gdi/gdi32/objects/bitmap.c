@@ -13,7 +13,7 @@
  * 11/16/1999 (RJJ) lifted from wine
  */
 
-INT FASTCALL DIB_BitmapInfoSize(const BITMAPINFO * info, WORD coloruse)
+INT FASTCALL DIB_BitmapInfoSize(const BITMAPINFO * info, WORD coloruse, BOOL max)
 {
     unsigned int colors, size, masks = 0;
 
@@ -26,7 +26,7 @@ INT FASTCALL DIB_BitmapInfoSize(const BITMAPINFO * info, WORD coloruse)
     }
     else  /* assume BITMAPINFOHEADER */
     {
-        colors = info->bmiHeader.biClrUsed;
+        colors = max ? 1 << info->bmiHeader.biBitCount : info->bmiHeader.biClrUsed;
         if (colors > 256) colors = 256;
         if (!colors && (info->bmiHeader.biBitCount <= 8))
             colors = 1 << info->bmiHeader.biBitCount;
@@ -409,7 +409,8 @@ GetDIBits(
     }
 
     cjBmpScanSize = DIB_BitmapMaxBitsSize(lpbmi, cScanLines);
-    cjInfoSize = DIB_BitmapInfoSize(lpbmi, uUsage);
+    /* Caller must provide maximum size possible */
+    cjInfoSize = DIB_BitmapInfoSize(lpbmi, uUsage, TRUE);
 
     if ( lpvBits )
     {
