@@ -86,26 +86,29 @@ VOID ExtractCmdLine_U(IN OUT PUNICODE_STRING pCommandLine_U)
     return;
 }
 
+/******************************************************************************/
 
+/* The path to the utility program run by this test. */
+static WCHAR UtilityProgramDirectory[MAX_PATH];
+
+/* The list of tests. */
 typedef struct _TEST_CASE
 {
     LPWSTR CmdLine;
+    BOOL   bEncloseProgramNameInQuotes;
 } TEST_CASE, *PTEST_CASE;
 
 static TEST_CASE TestCases[] =
 {
-    {L"CmdLineUtil.exe"},
-    {L"CmdLineUtil.exe foo bar"},
-    {L"CmdLineUtil.exe \"foo bar\""},
-    {L"CmdLineUtil.exe foo \"bar John\" Doe"},
+    {L"", FALSE},
+    {L"foo bar", FALSE},
+    {L"\"foo bar\"", FALSE},
+    {L"foo \"bar John\" Doe", FALSE},
 
-    {L"\"CmdLineUtil.exe\""},
-    {L"\"CmdLineUtil.exe\" foo bar"},
-    {L"\"CmdLineUtil.exe\" \"foo bar\""},
-    {L"\"CmdLineUtil.exe\" foo \"bar John\" Doe"},
-
-    {L"\"CmdLineUtil.exe\""},
-    {L"\"CmdLineUtil.exe \"foo bar\"\""},
+    {L"", TRUE},
+    {L"foo bar", TRUE},
+    {L"\"foo bar\"", TRUE},
+    {L"foo \"bar John\" Doe", TRUE},
 };
 
 static void Test_CommandLine(IN ULONG TestNumber,
@@ -113,7 +116,8 @@ static void Test_CommandLine(IN ULONG TestNumber,
 {
     BOOL bRet;
 
-    WCHAR CmdLine[MAX_PATH];
+    BOOL bWasntInQuotes = (UtilityProgramDirectory[0] != L'"');
+    WCHAR CmdLine[MAX_PATH] = L"";
     STARTUPINFOW si;
     PROCESS_INFORMATION pi;
 
@@ -121,7 +125,19 @@ static void Test_CommandLine(IN ULONG TestNumber,
     ZeroMemory(&pi, sizeof(pi));
     si.cb = sizeof(si);
 
-    wcscpy(CmdLine, TestCase->CmdLine);
+
+    /* Initialize the command line. */
+    if (TestCase->bEncloseProgramNameInQuotes && bWasntInQuotes)
+        wcscpy(CmdLine, L"\"");
+
+    wcscat(CmdLine, UtilityProgramDirectory);
+
+    if (TestCase->bEncloseProgramNameInQuotes && bWasntInQuotes)
+        wcscat(CmdLine, L"\"");
+
+    wcscat(CmdLine, L" ");
+    wcscat(CmdLine, TestCase->CmdLine);
+
 
     /*
      * Launch the utility program and wait till it's terminated.
@@ -133,7 +149,7 @@ static void Test_CommandLine(IN ULONG TestNumber,
                           CREATE_UNICODE_ENVIRONMENT,
                           NULL, NULL,
                           &si, &pi);
-    ok(bRet, "Test %lu - Failed to launch ' %S ', error = %lu.\n", TestNumber, TestCase->CmdLine, GetLastError());
+    ok(bRet, "Test %lu - Failed to launch ' %S ', error = %lu.\n", TestNumber, CmdLine, GetLastError());
 
     if (bRet)
     {
@@ -269,6 +285,34 @@ START_TEST(CommandLine)
 {
     ULONG i;
 
+    DWORD dwError;
+    LPWSTR p = NULL;
+
+
+    /*
+     * Initialize the UtilityProgramDirectory variable.
+     */
+    GetModuleFileNameW(NULL, UtilityProgramDirectory, COUNT_OF(UtilityProgramDirectory));
+    dwError = GetLastError();
+    ok(dwError == ERROR_SUCCESS, "ERROR: Cannot retrieve the path to the current running process, last error %lu\n", dwError);
+    if (dwError != ERROR_SUCCESS) return;
+
+    /* Path : executable.exe or "executable.exe" or C:\path\executable.exe or "C:\path\executable.exe" */
+    p = wcsrchr(UtilityProgramDirectory, L'\\');
+    if (p && *p != 0)
+        *++p = 0; /* Null-terminate there : C:\path\ or "C:\path\ */
+    else
+        UtilityProgramDirectory[0] = 0; /* Suppress the executable.exe name */
+
+    wcscat(UtilityProgramDirectory, L"data\\CmdLineUtil.exe");
+
+    /* Close the opened quote if needed, and add a separating space */
+    if (UtilityProgramDirectory[0] == L'"') wcscat(UtilityProgramDirectory, L"\"");
+
+
+    /*
+     * Now launch the tests.
+     */
     for (i = 0 ; i < COUNT_OF(TestCases) ; ++i)
     {
         Test_CommandLine(i, &TestCases[i]);
