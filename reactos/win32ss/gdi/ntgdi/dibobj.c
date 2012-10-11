@@ -1014,7 +1014,7 @@ NtGdiGetDIBitsInternal(
     if (iUsage > 2) return 0;
 
     /* Check if the size of the bitmap info is large enough */
-    if (cjMaxInfo < sizeof(BITMAPINFOHEADER))
+    if (cjMaxInfo < sizeof(BITMAPCOREHEADER))
     {
         return 0;
     }
@@ -1048,7 +1048,7 @@ NtGdiGetDIBitsInternal(
     _SEH2_END;
 
     /* Check if the header size is large enough */
-    if ((pbmi->bmiHeader.biSize < sizeof(BITMAPINFOHEADER)) ||
+    if ((pbmi->bmiHeader.biSize < sizeof(BITMAPCOREHEADER)) ||
         (pbmi->bmiHeader.biSize > cjMaxInfo))
     {
         goto cleanup;
