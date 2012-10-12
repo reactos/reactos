@@ -23,8 +23,6 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-#if ROSTESTS_81_IS_FIXED
-
 #include "windef.h"
 #include "winbase.h"
 #include "initguid.h"
@@ -5274,11 +5272,8 @@ static void test_IPersistHistory(void)
     ok(ref == 0, "ref=%d, expected 0\n", ref);
 }
 
-#endif /* ROSTESTS_81_IS_FIXED*/
-
 START_TEST(htmldoc)
 {
-#if ROSTESTS_81_IS_FIXED
     CoInitialize(NULL);
     container_hwnd = create_container_window();
     register_protocol();
@@ -5304,5 +5299,4 @@ START_TEST(htmldoc)
 
     DestroyWindow(container_hwnd);
     CoUninitialize();
-#endif /* ROSTESTS_81_IS_FIXED*/
 }
