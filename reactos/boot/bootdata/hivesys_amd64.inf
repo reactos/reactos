@@ -1132,12 +1132,11 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Print\Printers",,0x00000012
 
 HKLM,"SYSTEM\CurrentControlSet\Control\ProductOptions","ProductType",2,"WinNT"
 HKLM,"SYSTEM\CurrentControlSet\Control\ProductOptions","ProductSuite",0x00010002,""
+; Some installers check for SP1
+HKLM,"SYSTEM\CurrentControlSet\Control\Windows","CSDVersion",0x00010001,0x00000100
 
 HKLM,"SYSTEM\CurrentControlSet\Control\SecurityProviders","SecurityProviders",2,"schannel.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\SecurityProviders\SaslProfiles",,0x00000012
-
-; Some installers check for SP6
-HKLM,"SYSTEM\CurrentControlSet\Control\Windows","CSDVersion",0x00010001,0x00000600
 
 ; Service groups
 HKLM,"SYSTEM\CurrentControlSet\Control\ServiceGroupOrder","List",0x00010000, \

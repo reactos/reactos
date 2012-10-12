@@ -693,8 +693,8 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale\Alternate Sorts","00021004",0x
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale\Alternate Sorts","00021404",0x00000000,""
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\Locale\Alternate Sorts","00030404",0x00000000,""
 
-; Some installers check for SP6
-HKLM,"SYSTEM\CurrentControlSet\Control\Windows","CSDVersion",0x00010001,0x00000600
+; Some installers check for SP1
+HKLM,"SYSTEM\CurrentControlSet\Control\Windows","CSDVersion",0x00010001,0x00000100
 
 ; Service groups
 HKLM,"SYSTEM\CurrentControlSet\Control\ServiceGroupOrder","List",0x00010000, \
