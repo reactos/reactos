@@ -1398,7 +1398,9 @@ static const IStreamVtbl StreamVtbl = {
     istream_Clone
 };
 
+#if CORE_6738_IS_FIXED
 static IStream savestream = { &StreamVtbl };
+#endif
 
 #define EXPECT_CHILDREN(node) _expect_children((IXMLDOMNode*)node, __LINE__)
 static void _expect_children(IXMLDOMNode *node, int line)
@@ -7274,6 +7276,7 @@ static void test_put_dataType( void )
     free_bstrs();
 }
 
+#if CORE_6738_IS_FIXED
 static void test_save(void)
 {
     IXMLDOMDocument *doc, *doc2;
@@ -7410,6 +7413,7 @@ static void test_save(void)
     IXMLDOMDocument_Release(doc);
     free_bstrs();
 }
+#endif /* CORE_6738_IS_FIXED */
 
 static void test_testTransforms(void)
 {
@@ -12538,7 +12542,9 @@ START_TEST(domdoc)
     test_XSLPattern();
     test_cloneNode();
     test_xmlTypes();
+#if CORE_6738_IS_FIXED
     test_save();
+#endif
     test_testTransforms();
     test_namespaces_basic();
     test_namespaces_change();
