@@ -10,8 +10,6 @@
 #include <advapi32.h>
 WINE_DEFAULT_DEBUG_CHANNEL(advapi);
 
-#define USZ {0,0,0}
-
 /**********************************************************************
  *      AbortSystemShutdownW
  *
@@ -28,7 +26,7 @@ AbortSystemShutdownW(LPCWSTR lpMachineName)
 /**********************************************************************
  *      AbortSystemShutdownA
  *
- * @unimplemented
+ * see AbortSystemShutdownW
  */
 BOOL WINAPI
 AbortSystemShutdownA(LPCSTR lpMachineName)
@@ -42,8 +40,8 @@ AbortSystemShutdownA(LPCSTR lpMachineName)
     Status = RtlAnsiStringToUnicodeString(&MachineNameW, &MachineNameA, TRUE);
     if (STATUS_SUCCESS != Status)
     {
-            SetLastError(RtlNtStatusToDosError(Status));
-            return FALSE;
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
     }
 
     rv = AbortSystemShutdownW(MachineNameW.Buffer);
@@ -71,7 +69,8 @@ InitiateSystemShutdownW(LPWSTR lpMachineName,
                                      bRebootAfterShutdown,
                                      SHTDN_REASON_MAJOR_OTHER |
                                      SHTDN_REASON_MINOR_OTHER |
-                                     SHTDN_REASON_FLAG_PLANNED);
+                                     SHTDN_REASON_FLAG_PLANNED
+                                     /* SHTDN_REASON_MAJOR_LEGACY_API */);
 }
 
 /**********************************************************************
@@ -94,7 +93,8 @@ InitiateSystemShutdownA(LPSTR lpMachineName,
                                      bRebootAfterShutdown,
                                      SHTDN_REASON_MAJOR_OTHER |
                                      SHTDN_REASON_MINOR_OTHER |
-                                     SHTDN_REASON_FLAG_PLANNED);
+                                     SHTDN_REASON_FLAG_PLANNED
+                                     /* SHTDN_REASON_MAJOR_LEGACY_API */);
 }
 
 /******************************************************************************
@@ -110,23 +110,37 @@ InitiateSystemShutdownExW(LPWSTR lpMachineName,
                           BOOL bRebootAfterShutdown,
                           DWORD dwReason)
 {
-    SHUTDOWN_ACTION Action = ShutdownNoReboot;
+    SHUTDOWN_ACTION action;
     NTSTATUS Status;
+    ULONG Timeout_ms;
 
-    if (lpMachineName)
+    /* Convert to milliseconds so we can use the value later on */
+    Timeout_ms = dwTimeout * 1000;
+
+    if (lpMachineName != NULL)
     {
-        /* FIXME: remote machine shutdown not supported yet */
+        /* FIXME: Remote system shutdown not supported yet */
         SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
         return FALSE;
     }
-
-    if (dwTimeout)
+    else /* The local system is being used */
     {
+        /* FIXME: Right now, only basic shutting down and rebooting
+        is supported */
+        if(bRebootAfterShutdown == TRUE)
+        {
+            action = ShutdownReboot;
+        }
+        else
+        {
+            action = ShutdownNoReboot;
+        }
+
+        Status = NtShutdownSystem(action);
     }
 
-    Status = NtShutdownSystem(Action);
     SetLastError(RtlNtStatusToDosError(Status));
-    return FALSE;
+    return (Status == STATUS_SUCCESS);
 }
 
 /******************************************************************************
@@ -186,6 +200,8 @@ InitiateSystemShutdownExA(LPSTR lpMachineName,
                                    bRebootAfterShutdown,
                                    dwReason);
     LastError = GetLastError();
+
+    /* Clear the values of both strings */
     if (lpMachineName)
         RtlFreeUnicodeString(&MachineNameW);
 
@@ -215,7 +231,7 @@ InitiateShutdownW(LPWSTR lpMachineName,
 /******************************************************************************
  * InitiateShutdownA [ADVAPI32.@]
  * 
- * @unimplamented
+ * see InitiateShutdownW
  */
 DWORD WINAPI
 InitiateShutdownA(LPSTR lpMachineName,
@@ -267,6 +283,8 @@ InitiateShutdownA(LPSTR lpMachineName,
                            dwShutdownFlags,
                            dwReason);
     LastError = GetLastError();
+
+    /* Clear the values of both strings */
     if (lpMachineName)
         RtlFreeUnicodeString(&MachineNameW);
 
