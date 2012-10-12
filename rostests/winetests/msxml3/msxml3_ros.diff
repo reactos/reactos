@@ -52,3 +52,43 @@ Index: domdoc.c
      hr = IXMLDOMNodeList_get_length( node_list, &len );
      EXPECT_HR(hr, S_OK);
      ok( len == 4, "len %d\n", len);
+Index: domdoc.c
+===================================================================
+--- domdoc.c	(revision 57539)
++++ domdoc.c	(revision 57540)
+@@ -1398,7 +1398,9 @@
+     istream_Clone
+ };
+ 
++#if CORE_6738_IS_FIXED
+ static IStream savestream = { &StreamVtbl };
++#endif
+ 
+ #define EXPECT_CHILDREN(node) _expect_children((IXMLDOMNode*)node, __LINE__)
+ static void _expect_children(IXMLDOMNode *node, int line)
+@@ -7274,6 +7276,7 @@
+     free_bstrs();
+ }
+ 
++#if CORE_6738_IS_FIXED
+ static void test_save(void)
+ {
+     IXMLDOMDocument *doc, *doc2;
+@@ -7410,6 +7413,7 @@
+     IXMLDOMDocument_Release(doc);
+     free_bstrs();
+ }
++#endif /* CORE_6738_IS_FIXED */
+ 
+ static void test_testTransforms(void)
+ {
+@@ -12538,7 +12542,9 @@
+     test_XSLPattern();
+     test_cloneNode();
+     test_xmlTypes();
++#if CORE_6738_IS_FIXED
+     test_save();
++#endif
+     test_testTransforms();
+     test_namespaces_basic();
+     test_namespaces_change();
