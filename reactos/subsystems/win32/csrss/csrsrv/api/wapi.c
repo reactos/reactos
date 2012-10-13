@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * subsystems/win32/csrss/csrsrv/api/wapi.c
  *
  * CSRSS port message processing
@@ -206,7 +205,9 @@ CsrCallServerFromServer(PCSR_API_MESSAGE ReceiveMsg,
 
     /* Return success */
     return STATUS_SUCCESS;
+
 #else // Hacky reactos code
+
     PCSR_PROCESS ProcessData;
 
     /* Get the Process Data */
@@ -249,7 +250,7 @@ CsrCallServerFromServer(PCSR_API_MESSAGE ReceiveMsg,
  * @param None
  *
  * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL
- *         othwerwise.
+ *         otherwise.
  *
  * @remarks None.
  *
@@ -298,8 +299,8 @@ CsrApiPortInitialize(VOID)
     /* Create the Port Object */
     Status = NtCreatePort(&CsrApiPort,
                           &ObjectAttributes,
-                          LPC_MAX_DATA_LENGTH, // hack
-                          LPC_MAX_MESSAGE_LENGTH, // hack
+                          LPC_MAX_DATA_LENGTH, // hack ; sizeof(CSR_CONNECTION_INFO),
+                          LPC_MAX_MESSAGE_LENGTH, // hack ; sizeof(CSR_API_MESSAGE),
                           16 * PAGE_SIZE);
     if (NT_SUCCESS(Status))
     {
@@ -745,7 +746,7 @@ BasepFakeStaticServerData(VOID)
 }
 
 NTSTATUS WINAPI
-CsrpHandleConnectionRequest (PPORT_MESSAGE Request)
+CsrpHandleConnectionRequest(PPORT_MESSAGE Request)
 {
     NTSTATUS Status;
     HANDLE ServerPort = NULL;//, ServerThread = NULL;
@@ -844,6 +845,19 @@ CsrpHandleConnectionRequest (PPORT_MESSAGE Request)
     return Status;
 }
 
+/*++
+ * @name CsrConnectToUser
+ * @implemented NT4
+ *
+ * The CsrConnectToUser connects to the User subsystem.
+ *
+ * @param None
+ *
+ * @return A pointer to the CSR Thread
+ *
+ * @remarks None.
+ *
+ *--*/
 PCSR_THREAD
 NTAPI
 CsrConnectToUser(VOID)

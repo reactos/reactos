@@ -17,7 +17,7 @@
 /* GLOBALS ********************************************************************/
 
 RTL_CRITICAL_SECTION ProcessDataLock;
-PCSR_PROCESS CsrRootProcess;
+PCSR_PROCESS CsrRootProcess = NULL;
 SECURITY_QUALITY_OF_SERVICE CsrSecurityQos =
 {
     sizeof(SECURITY_QUALITY_OF_SERVICE),
@@ -25,7 +25,7 @@ SECURITY_QUALITY_OF_SERVICE CsrSecurityQos =
     SECURITY_STATIC_TRACKING,
     FALSE
 };
-LONG CsrProcessSequenceCount = 5;
+ULONG CsrProcessSequenceCount = 5;
 extern ULONG CsrTotalPerProcessDataLength;
 
 /* FUNCTIONS ******************************************************************/
@@ -64,6 +64,26 @@ CsrSetToShutdownPriority(VOID)
     }
 }
 
+/*++
+ * @name CsrGetProcessLuid
+ * @implemented NT4
+ *
+ * Do nothing for 500ms.
+ *
+ * @param hProcess
+ *        Optional handle to the process whose LUID should be returned.
+ *
+ * @param Luid
+ *        Pointer to a LUID Pointer which will receive the CSR Process' LUID
+ *
+ * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL
+ *         otherwise.
+ *
+ * @remarks If hProcess is not supplied, then the current thread's token will
+ *          be used. If that too is missing, then the current process' token
+ *          will be used.
+ *
+ *--*/
 NTSTATUS
 NTAPI
 CsrGetProcessLuid(HANDLE hProcess OPTIONAL,
@@ -148,6 +168,20 @@ CsrGetProcessLuid(HANDLE hProcess OPTIONAL,
     return Status;
 }
 
+/*++
+ * @name CsrImpersonateClient
+ * @implemented NT4
+ *
+ * The CsrImpersonateClient will impersonate the given CSR Thread.
+ *
+ * @param CsrThread
+ *        Pointer to the CSR Thread to impersonate.
+ *
+ * @return TRUE if impersionation suceeded, false otherwise.
+ *
+ * @remarks Impersonation can be recursive.
+ *
+ *--*/
 BOOLEAN
 NTAPI
 CsrImpersonateClient(IN PCSR_THREAD CsrThread)
@@ -173,6 +207,10 @@ CsrImpersonateClient(IN PCSR_THREAD CsrThread)
     if (!NT_SUCCESS(Status))
     {
         /* Failure */
+/*
+        DPRINT1("CSRSS: Can't impersonate client thread - Status = %lx\n", Status);
+        if (Status != STATUS_BAD_IMPERSONATION_LEVEL) DbgBreakPoint();
+*/
         return FALSE;
     }
 
@@ -183,6 +221,21 @@ CsrImpersonateClient(IN PCSR_THREAD CsrThread)
     return TRUE;
 }
 
+/*++
+ * @name CsrRevertToSelf
+ * @implemented NT4
+ *
+ * The CsrRevertToSelf routine will attempt to remove an active impersonation.
+ *
+ * @param None.
+ *
+ * @return TRUE if the reversion was succesful, false otherwise.
+ *
+ * @remarks Impersonation can be recursive; as such, the impersonation token
+ *          will only be deleted once the CSR Thread's impersonaton count
+ *          has reached zero.
+ *
+ *--*/
 BOOLEAN
 NTAPI
 CsrRevertToSelf(VOID)
@@ -197,6 +250,7 @@ CsrRevertToSelf(VOID)
         /* Make sure impersonation is on */
         if (!CurrentThread->ImpersonationCount)
         {
+            // DPRINT1("CSRSS: CsrRevertToSelf called while not impersonating\n");
             return FALSE;
         }
         else if (--CurrentThread->ImpersonationCount > 0)
@@ -216,18 +270,33 @@ CsrRevertToSelf(VOID)
     return NT_SUCCESS(Status);
 }
 
+/*++
+ * @name FindProcessForShutdown
+ *
+ * The FindProcessForShutdown routine returns a CSR Process which is ready
+ * to be shutdown, and sets the appropriate shutdown flags for it.
+ *
+ * @param CallerLuid
+ *        Pointer to the LUID of the CSR Process calling this routine.
+ *
+ * @return Pointer to a CSR Process which is ready to be shutdown.
+ *
+ * @remarks None.
+ *
+ *--*/
 PCSR_PROCESS
 NTAPI
 FindProcessForShutdown(IN PLUID CallerLuid)
 {
     PCSR_PROCESS CsrProcess, ReturnCsrProcess = NULL;
+    // PCSR_THREAD CsrThread;
     NTSTATUS Status;
     ULONG Level = 0;
     LUID ProcessLuid;
     LUID SystemLuid = SYSTEM_LUID;
-    BOOLEAN IsSystemLuid = FALSE, IsOurLuid = FALSE;
+    // BOOLEAN IsSystemLuid = FALSE, IsOurLuid = FALSE;
     PLIST_ENTRY NextEntry;
-    
+
     /* Set the List Pointers */
     NextEntry = CsrRootProcess->ListLink.Flink;
     while (NextEntry != &CsrRootProcess->ListLink)
@@ -237,10 +306,10 @@ FindProcessForShutdown(IN PLUID CallerLuid)
 
         /* Move to the next entry */
         NextEntry = NextEntry->Flink;
-        
+
         /* Skip this process if it's already been processed */
         if (CsrProcess->Flags & CsrProcessSkipShutdown) continue;
-    
+
         /* Get the LUID of this Process */
         Status = CsrGetProcessLuid(CsrProcess->ProcessHandle, &ProcessLuid);
 
@@ -248,29 +317,41 @@ FindProcessForShutdown(IN PLUID CallerLuid)
         if (Status == STATUS_ACCESS_DENIED)
         {
             /* FIXME:Check if we have any threads */
+/*
+            if (CsrProcess->ThreadCount)
+            {
+                /\* Impersonate one of the threads and retry *\/
+                CsrThread = CONTAINING_RECORD(CsrProcess->ThreadList.Flink,
+                                              CSR_THREAD,
+                                              Link);
+                CsrImpersonateClient(CsrThread);
+                Status = CsrGetProcessLuid(NULL, &ProcessLuid);
+                CsrRevertToSelf();
+            }
+*/
         }
-        
+
         if (!NT_SUCCESS(Status))
         {
             /* We didn't have access, so skip it */
             CsrProcess->Flags |= CsrProcessSkipShutdown;
             continue;
         }
-        
+
         /* Check if this is the System LUID */
-        if ((IsSystemLuid = RtlEqualLuid(&ProcessLuid, &SystemLuid)))
+        if ((/*IsSystemLuid =*/ RtlEqualLuid(&ProcessLuid, &SystemLuid)))
         {
             /* Mark this process */
             CsrProcess->ShutdownFlags |= CsrShutdownSystem;
         }
-        else if (!(IsOurLuid = RtlEqualLuid(&ProcessLuid, CallerLuid)))
+        else if (!(/*IsOurLuid =*/ RtlEqualLuid(&ProcessLuid, CallerLuid)))
         {
             /* Our LUID doesn't match with the caller's */
             CsrProcess->ShutdownFlags |= CsrShutdownOther;
         }
-        
+
         /* Check if we're past the previous level */
-        if (CsrProcess->ShutdownLevel > Level)
+        if (CsrProcess->ShutdownLevel > Level /* || !ReturnCsrProcess */)
         {
             /* Update the level */
             Level = CsrProcess->ShutdownLevel;
@@ -279,14 +360,14 @@ FindProcessForShutdown(IN PLUID CallerLuid)
             ReturnCsrProcess = CsrProcess;
         }
     }
-    
+
     /* Check if we found a process */
     if (ReturnCsrProcess)
     {
         /* Skip this one next time */
         ReturnCsrProcess->Flags |= CsrProcessSkipShutdown;
     }
-    
+
     return ReturnCsrProcess;
 }
 
@@ -604,7 +685,7 @@ CsrDestroyProcess(IN PCLIENT_ID Cid,
  *        column.
  *
  * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL
- *         othwerwise.
+ *         otherwise.
  *
  * @remarks None.
  *
@@ -903,7 +984,7 @@ CsrAllocateProcess(VOID)
 /*++
  * @name CsrLockedReferenceProcess
  *
- * The CsrLockedReferenceProcess refences a CSR Process while the
+ * The CsrLockedReferenceProcess references a CSR Process while the
  * Process Lock is already being held.
  *
  * @param CsrProcess
@@ -923,7 +1004,7 @@ CsrLockedReferenceProcess(IN PCSR_PROCESS CsrProcess)
 }
 
 /*++
- * @name CsrServerInitialization
+ * @name CsrInitializeProcessStructure
  * @implemented NT4
  *
  * The CsrInitializeProcessStructure routine sets up support for CSR Processes
@@ -932,7 +1013,7 @@ CsrLockedReferenceProcess(IN PCSR_PROCESS CsrProcess)
  * @param None.
  *
  * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL
- *         othwerwise.
+ *         otherwise.
  *
  * @remarks None.
  *
@@ -1099,7 +1180,7 @@ CsrInsertProcess(IN PCSR_PROCESS Parent OPTIONAL,
  *        CSR Process corresponding to the given Process ID.
  *
  * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL
- *         othwerwise.
+ *         otherwise.
  *
  * @remarks Locking a CSR Process is defined as acquiring an extra
  *          reference to it and returning with the Process Lock held.

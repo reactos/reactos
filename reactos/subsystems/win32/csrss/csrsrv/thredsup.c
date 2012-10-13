@@ -2,7 +2,7 @@
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS CSR Sub System
  * FILE:            subsystems/win32/csrss/csrsrv/thredsup.c
- * PURPOSE:         CSR Process Management
+ * PURPOSE:         CSR Server DLL Thread Implementation
  * PROGRAMMERS:     ReactOS Portable Systems Group
  *                  Alex Ionescu
  */
@@ -101,6 +101,19 @@ UnProtectHandle(IN HANDLE ObjectHandle)
     return FALSE;
 }
 
+/*++
+ * @name CsrAllocateThread
+ *
+ * The CsrAllocateThread routine allocates a new CSR Thread object.
+ *
+ * @param CsrProcess
+ *        Pointer to the CSR Process which will contain this CSR Thread.
+ *
+ * @return Pointer to the newly allocated CSR Thread.
+ *
+ * @remarks None.
+ *
+ *--*/
 PCSR_THREAD
 NTAPI
 CsrAllocateThread(IN PCSR_PROCESS CsrProcess)
@@ -125,7 +138,7 @@ CsrAllocateThread(IN PCSR_PROCESS CsrProcess)
 /*++
  * @name CsrLockedReferenceThread
  *
- * The CsrLockedReferenceThread refences a CSR Thread while the
+ * The CsrLockedReferenceThread references a CSR Thread while the
  * Process Lock is already being held.
  *
  * @param CsrThread
@@ -144,6 +157,26 @@ CsrLockedReferenceThread(IN PCSR_THREAD CsrThread)
     ++CsrThread->ReferenceCount;
 }
 
+/*++
+ * @name CsrLocateThreadByClientId
+ *
+ * The CsrLocateThreadByClientId routine locates the CSR Thread and,
+ * optionally, its parent CSR Process, corresponding to a Client ID.
+ *
+ * @param Process
+ *        Optional pointer to a CSR Process pointer which will contain
+ *        the CSR Thread's parent.
+ *
+ * @param ClientId
+ *        Pointer to a Client ID structure containing the Unique Thread ID
+ *        to look up.
+ *
+ * @return Pointer to the CSR Thread corresponding to this CID, or NULL if
+ *         none was found.
+ *
+ * @remarks None.
+ *
+ *--*/
 PCSR_THREAD
 NTAPI
 CsrLocateThreadByClientId(OUT PCSR_PROCESS *Process OPTIONAL,
@@ -152,6 +185,7 @@ CsrLocateThreadByClientId(OUT PCSR_PROCESS *Process OPTIONAL,
     ULONG i;
     PLIST_ENTRY ListHead, NextEntry;
     PCSR_THREAD FoundThread;
+    // ASSERT(ProcessStructureListLocked());
 
     /* Hash the Thread */
     i = CsrHashThread(ClientId->UniqueThread);
@@ -185,6 +219,27 @@ CsrLocateThreadByClientId(OUT PCSR_PROCESS *Process OPTIONAL,
     return NULL;
 }
 
+/*++
+ * @name CsrLocateThreadInProcess
+ *
+ * The CsrLocateThreadInProcess routine locates the CSR Thread
+ * corresponding to a Client ID inside a specific CSR Process.
+ *
+ * @param Process
+ *        Optional pointer to the CSR Process which contains the CSR Thread
+ *        that will be looked up.
+ *
+ * @param ClientId
+ *        Pointer to a Client ID structure containing the Unique Thread ID
+ *        to look up.
+ *
+ * @return Pointer to the CSR Thread corresponding to this CID, or NULL if
+ *         none was found.
+ *
+ * @remarks If the CsrProcess argument is NULL, the lookup will be done inside
+ *          CsrRootProcess.
+ *
+ *--*/
 PCSR_THREAD
 NTAPI
 CsrLocateThreadInProcess(IN PCSR_PROCESS CsrProcess OPTIONAL,
@@ -219,12 +274,30 @@ CsrLocateThreadInProcess(IN PCSR_PROCESS CsrProcess OPTIONAL,
     return FoundThread;
 }
 
+/*++
+ * @name CsrInsertThread
+ *
+ * The CsrInsertThread routine inserts a CSR Thread into its parent's
+ * Thread List and into the Thread Hash Table.
+ *
+ * @param Process
+ *        Pointer to the CSR Process containing this CSR Thread.
+ *
+ * @param Thread
+ *        Pointer to the CSR Thread to be inserted.
+ *
+ * @return None.
+ *
+ * @remarks None.
+ *
+ *--*/
 VOID
 NTAPI
 CsrInsertThread(IN PCSR_PROCESS Process,
                 IN PCSR_THREAD Thread)
 {
     ULONG i;
+    // ASSERT(ProcessStructureListLocked());
 
     /* Insert it into the Regular List */
     InsertTailList(&Process->ThreadList, &Thread->Link);
@@ -240,14 +313,49 @@ CsrInsertThread(IN PCSR_PROCESS Process,
     InsertHeadList(&CsrThreadHashTable[i], &Thread->HashLinks);
 }
 
+/*++
+ * @name CsrDeallocateThread
+ *
+ * The CsrDeallocateThread frees the memory associated with a CSR Thread.
+ *
+ * @param CsrThread
+ *        Pointer to the CSR Thread to be freed.
+ *
+ * @return None.
+ *
+ * @remarks Do not call this routine. It is reserved for the internal
+ *          thread management routines when a CSR Thread has been cleanly
+ *          dereferenced and killed.
+ *
+ *--*/
 VOID
 NTAPI
 CsrDeallocateThread(IN PCSR_THREAD CsrThread)
 {
     /* Free the process object from the heap */
+    // ASSERT(CsrThread->WaitBlock == NULL);
     RtlFreeHeap(CsrHeap, 0, CsrThread);
 }
 
+/*++
+ * @name CsrRemoveThread
+ *
+ * The CsrRemoveThread function undoes a CsrInsertThread operation and
+ * removes the CSR Thread from the the Hash Table and Thread List.
+ *
+ * @param CsrThread
+ *        Pointer to the CSR Thread to remove.
+ *
+ * @return None.
+ *
+ * @remarks If this CSR Thread is the last one inside a CSR Process, the
+ *          parent will be dereferenced and the CsrProcessLastThreadTerminated
+ *          flag will be set.
+ *
+ *          After executing this routine, the CSR Thread will have the
+ *          CsrThreadInTermination flag set.
+ *
+ *--*/
 VOID
 NTAPI
 CsrRemoveThread(IN PCSR_THREAD CsrThread)
@@ -297,7 +405,7 @@ CsrRemoveThread(IN PCSR_THREAD CsrThread)
  *        with this CSR Thread.
  *
  * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL
- *         othwerwise.
+ *         otherwise.
  *
  * @remarks None.
  *
@@ -382,6 +490,24 @@ CsrCreateRemoteThread(IN HANDLE hThread,
     return STATUS_SUCCESS;
 }
 
+/*++
+ * @name CsrThreadRefcountZero
+ *
+ * The CsrThreadRefcountZero routine is executed when a CSR Thread has lost
+ * all its active references. It removes and de-allocates the CSR Thread.
+ *
+ * @param CsrThread
+ *        Pointer to the CSR Thread that is to be deleted.
+ *
+ * @return None.
+ *
+ * @remarks Do not call this routine. It is reserved for the internal
+ *          thread management routines when a CSR Thread has lost all
+ *          its references.
+ *
+ *          This routine is called with the Process Lock held.
+ *
+ *--*/
 VOID
 NTAPI
 CsrThreadRefcountZero(IN PCSR_THREAD CsrThread)
@@ -483,7 +609,7 @@ CsrDestroyThread(IN PCLIENT_ID Cid)
 /*++
  * @name CsrLockedDereferenceThread
  *
- * The CsrLockedDereferenceThread derefences a CSR Thread while the
+ * The CsrLockedDereferenceThread dereferences a CSR Thread while the
  * Process Lock is already being held.
  *
  * @param CsrThread
@@ -511,6 +637,29 @@ CsrLockedDereferenceThread(IN PCSR_THREAD CsrThread)
     }
 }
 
+/*++
+ * @name CsrCreateThread
+ * @implemented NT4
+ *
+ * The CsrCreateThread routine creates a CSR Thread object for an NT Thread.
+ *
+ * @param CsrProcess
+ *        Pointer to the CSR Process which will contain the CSR Thread.
+ *
+ * @param hThread
+ *        Handle to an existing NT Thread to which to associate this
+ *        CSR Thread.
+ *
+ * @param ClientId
+ *        Pointer to the Client ID structure of the NT Thread to associate
+ *        with this CSR Thread.
+ *
+ * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL
+ *         otherwise.
+ *
+ * @remarks None.
+ *
+ *--*/
 NTSTATUS
 NTAPI
 CsrCreateThread(IN PCSR_PROCESS CsrProcess,

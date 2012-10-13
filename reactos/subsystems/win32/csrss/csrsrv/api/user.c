@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * subsystems/win32/csrss/csrsrv/api/user.c
  *
  * User functions

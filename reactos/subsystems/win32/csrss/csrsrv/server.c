@@ -98,7 +98,7 @@ CsrServerDllInitialization(IN PCSR_SERVER_DLL LoadedServerDll)
  *        assumed.
  *
  * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL
- *         othwerwise.
+ *         otherwise.
  *
  * @remarks None.
  *
@@ -340,7 +340,7 @@ CsrSrvClientConnect(IN OUT PCSR_API_MESSAGE ApiMessage,
  *        specifies various arguments for the shared section.
  *
  * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL
- *         othwerwise.
+ *         otherwise.
  *
  * @remarks None.
  *
@@ -463,7 +463,7 @@ CsrSrvCreateSharedSection(IN PCHAR ParameterValue)
  *        connection.
  *
  * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL
- *         othwerwise.
+ *         otherwise.
  *
  * @remarks None.
  *

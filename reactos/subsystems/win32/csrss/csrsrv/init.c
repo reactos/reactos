@@ -3,7 +3,8 @@
  * PROJECT:         ReactOS CSR Sub System
  * FILE:            subsystems/win32/csrss/csrsrv/init.c
  * PURPOSE:         CSR Server DLL Initialization
- * PROGRAMMERS:     ReactOS Portable Systems Group
+ * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
+ *                  ReactOS Portable Systems Group
  */
 
 /* INCLUDES *******************************************************************/
@@ -111,7 +112,7 @@ BasepFakeStaticServerData(VOID);
  * @param None.
  *
  * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL
- *         othwerwise.
+ *         otherwise.
  *
  * @remarks None.
  *
@@ -226,7 +227,7 @@ Quickie:
  *        Handle fo the Object Directory to protect.
  *
  * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL
- *         othwerwise.
+ *         otherwise.
  *
  * @remarks None.
  *
@@ -249,7 +250,7 @@ CsrSetDirectorySecurity(IN HANDLE ObjectDirectory)
  *        Pointer to the Security Descriptor to return.
  *
  * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL
- *         othwerwise.
+ *         otherwise.
  *
  * @remarks Depending on the DOS Devices Protection Mode (set in the registry),
  *          regular users may or may not have full access to the directory.
@@ -466,7 +467,7 @@ FreeDosDevicesProtection(IN PSECURITY_DESCRIPTOR DosDevicesSd)
  *        Session ID for which to create the directories.
  *
  * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL
- *         othwerwise.
+ *         otherwise.
  *
  * @remarks None.
  *
@@ -597,7 +598,7 @@ CsrCreateSessionObjectDirectory(IN ULONG Session)
  *        Array of arguments.
  *
  * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL
- *         othwerwise.
+ *         otherwise.
  *
  * @remarks None.
  *
@@ -754,6 +755,7 @@ CsrParseServerCommandLine(IN ULONG ArgumentCount,
 //            {
 //                Status = CsrLoadServerDll(ParameterValue, EntryPoint, 2);
 //            }
+            // Status = CsrLoadServerDll(ParameterValue, EntryPoint, DllIndex);
             if (!NT_SUCCESS(Status))
             {
                 DPRINT1("CSRSS: *** Failed loading ServerDll=%s (Status == 0x%x)\n",
@@ -786,7 +788,7 @@ CsrParseServerCommandLine(IN ULONG ArgumentCount,
  *        Pointer to a pointer to the security descriptor to create.
  *
  * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL
- *         othwerwise.
+ *         otherwise.
  *
  * @remarks None.
  *
@@ -826,7 +828,7 @@ CsrCreateLocalSystemSD(OUT PSECURITY_DESCRIPTOR *LocalSystemSd)
         return Status;
     }
 
-    /* Create the DACL for it*/
+    /* Create the DACL for it */
     RtlCreateAcl(Dacl, Length, ACL_REVISION2);
 
     /* Create the ACE */
@@ -863,7 +865,7 @@ CsrCreateLocalSystemSD(OUT PSECURITY_DESCRIPTOR *LocalSystemSd)
  * @param None
  *
  * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL
- *         othwerwise.
+ *         otherwise.
  *
  * @remarks None.
  *
@@ -945,6 +947,25 @@ CsrSbApiPortInitialize(VOID)
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
+/*++
+ * @name CsrServerInitialization
+ * @implemented NT4
+ *
+ * The CsrServerInitialization routine is the native (not Server) entrypoint
+ * of this Server DLL. It serves as the entrypoint for csrss.
+ *
+ * @param ArgumentCount
+ *        Number of arguments on the command line.
+ *
+ * @param Arguments
+ *        Array of arguments from the command line.
+ *
+ * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL
+ *         otherwise.
+ *
+ * @remarks None.
+ *
+ *--*/
 NTSTATUS
 NTAPI
 CsrServerInitialization(IN ULONG ArgumentCount,
@@ -1085,11 +1106,33 @@ CsrServerInitialization(IN ULONG ArgumentCount,
     return Status;
 }
 
+/*++
+ * @name CsrPopulateDosDevices
+ * @unimplemented NT5.1
+ *
+ * The CsrPopulateDosDevices routine uses the DOS Device Map from the Kernel
+ * to populate the Dos Devices Object Directory for the session.
+ *
+ * @param None.
+ *
+ * @return None.
+ *
+ * @remarks None.
+ *
+ *--*/
+VOID
+NTAPI
+CsrPopulateDosDevices(VOID)
+{
+    DPRINT1("Deprecated API\n");
+    return;
+}
+
 BOOL
 NTAPI
-DllMain(HANDLE hDll,
-        DWORD dwReason,
-        LPVOID lpReserved)
+DllMain(IN HANDLE hDll,
+        IN DWORD dwReason,
+        IN LPVOID lpReserved)
 {
     /* We don't do much */
     UNREFERENCED_PARAMETER(hDll);

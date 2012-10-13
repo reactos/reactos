@@ -192,7 +192,7 @@ CsrDereferenceNtSession(IN PCSR_NT_SESSION Session,
  * @param ApiMessage
  *        Pointer to the Session Manager API Message.
  *
- * @return TRUE in case of success, FALSE othwerwise.
+ * @return TRUE in case of success, FALSE otherwise.
  *
  * @remarks The CsrSbCreateSession routine will initialize a new CSR NT
  *          Session and allocate a new CSR Process for the subsystem process.
@@ -339,7 +339,7 @@ CsrSbCreateSession(IN PSB_API_MSG ApiMessage)
  * @param ApiMessage
  *        Pointer to the Session Manager API Message.
  *
- * @return TRUE in case of success, FALSE othwerwise.
+ * @return TRUE in case of success, FALSE otherwise.
  *
  * @remarks The CsrSbForeignSessionComplete API is not yet implemented.
  *
@@ -362,7 +362,7 @@ CsrSbForeignSessionComplete(IN PSB_API_MSG ApiMessage)
  * @param ApiMessage
  *        Pointer to the Session Manager API Message.
  *
- * @return TRUE in case of success, FALSE othwerwise.
+ * @return TRUE in case of success, FALSE otherwise.
  *
  * @remarks The CsrSbTerminateSession API is not yet implemented.
  *
@@ -384,7 +384,7 @@ CsrSbTerminateSession(IN PSB_API_MSG ApiMessage)
  * @param ApiMessage
  *        Pointer to the Session Manager API Message.
  *
- * @return TRUE in case of success, FALSE othwerwise.
+ * @return TRUE in case of success, FALSE otherwise.
  *
  * @remarks The CsrSbCreateProcess API is not yet implemented.
  *
