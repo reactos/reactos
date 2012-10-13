@@ -51,6 +51,17 @@ LdrFindResource_U(
 
 NTSTATUS
 NTAPI
+LdrEnumResources(
+    IN PVOID BaseAddress,
+    IN PLDR_RESOURCE_INFO ResourceInfo,
+    IN ULONG Level,
+    IN OUT ULONG *ResourceCount,
+    OUT PLDR_ENUM_RESOURCE_INFO Resources OPTIONAL
+);
+
+
+NTSTATUS
+NTAPI
 LdrFindResourceDirectory_U(
     IN PVOID BaseAddress,
     IN PLDR_RESOURCE_INFO ResourceInfo,

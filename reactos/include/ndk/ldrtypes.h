@@ -170,8 +170,18 @@ typedef struct _LDR_RESOURCE_INFO
 {
     ULONG_PTR Type;
     ULONG_PTR Name;
-    ULONG Language;
+    ULONG_PTR Language;
 } LDR_RESOURCE_INFO, *PLDR_RESOURCE_INFO;
+
+typedef struct _LDR_ENUM_RESOURCE_INFO
+{
+    ULONG_PTR Type;
+    ULONG_PTR Name;
+    ULONG_PTR Language;
+    PVOID Data;
+    SIZE_T Size;
+    ULONG_PTR Reserved;
+} LDR_ENUM_RESOURCE_INFO, *PLDR_ENUM_RESOURCE_INFO;
 
 //
 // DLL Notifications
