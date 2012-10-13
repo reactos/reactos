@@ -5,6 +5,7 @@
 #define STANDALONE
 #include "wine/test.h"
 
+extern void func_LdrEnumResources(void);
 extern void func_NtAllocateVirtualMemory(void);
 extern void func_NtFreeVirtualMemory(void);
 extern void func_NtQuerySystemEnvironmentValue(void);
@@ -24,6 +25,7 @@ extern void func_ZwContinue(void);
 
 const struct test winetest_testlist[] =
 {
+    { "LdrEnumResources",               func_LdrEnumResources },
     { "NtAllocateVirtualMemory",        func_NtAllocateVirtualMemory },
     { "NtFreeVirtualMemory",            func_NtFreeVirtualMemory },
     { "NtQuerySystemEnvironmentValue",  func_NtQuerySystemEnvironmentValue },

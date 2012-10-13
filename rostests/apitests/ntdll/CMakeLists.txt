@@ -1,5 +1,6 @@
 
 list(APPEND SOURCE
+    LdrEnumResources.c
     NtAllocateVirtualMemory.c
     NtFreeVirtualMemory.c
     NtQuerySystemEnvironmentValue.c
