@@ -182,7 +182,7 @@ InitializeTestImage(
     ResourceDirectory->VirtualAddress = FIELD_OFFSET(TEST_IMAGE, Resources);
     ResourceDirectory->Size = sizeof(TEST_RESOURCES);
 
-    strcpy(TestImage->SectionHeaders[0].Name, ".rsrc");
+    strcpy((char*)TestImage->SectionHeaders[0].Name, ".rsrc");
     TestImage->SectionHeaders[0].Misc.VirtualSize = sizeof(TEST_IMAGE);
     TestImage->SectionHeaders[0].VirtualAddress = FIELD_OFFSET(TEST_IMAGE, Resources);
     TestImage->SectionHeaders[0].SizeOfRawData = sizeof(TEST_IMAGE);
