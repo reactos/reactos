@@ -115,7 +115,7 @@ extern HINSTANCE hInst;
 extern INT SelectedEnumType;
 extern SETTINGS_INFO SettingsInfo;
 VOID SaveSettings(HWND hwnd);
-VOID FillDafaultSettings(PSETTINGS_INFO pSettingsInfo);
+VOID FillDefaultSettings(PSETTINGS_INFO pSettingsInfo);
 
 /* listview.c */
 extern HWND hListView;

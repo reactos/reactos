@@ -6,6 +6,7 @@
  * PROGRAMMERS:     Dmitry Chapyshev (dmitry@reactos.org)
  */
 
+#define _WIN32_DCOM // For CoInitializeEx, etc...
 #include "rapps.h"
 
 SETTINGS_INFO NewSettingsInfo;
@@ -16,27 +17,35 @@ SETTINGS_INFO NewSettingsInfo;
 BOOL
 ChooseFolder(HWND hwnd)
 {
-    BROWSEINFO fi;
-    LPCITEMIDLIST lpItemList;
+    BOOL bRet = FALSE;
+    BROWSEINFO bi;
     WCHAR szPath[MAX_PATH], szBuf[MAX_STR_LEN];
 
     LoadStringW(hInst, IDS_CHOOSE_FOLDER_TEXT, szBuf, sizeof(szBuf) / sizeof(TCHAR));
 
-    ZeroMemory(&fi, sizeof(BROWSEINFO));
-    fi.hwndOwner = hwnd;
-    fi.lpszTitle = szBuf;
-    fi.ulFlags = BIF_DONTGOBELOWDOMAIN | BIF_RETURNONLYFSDIRS | BIF_BROWSEFORCOMPUTER | BIF_NEWDIALOGSTYLE;
-    fi.lpfn = NULL;
-    fi.lParam = -1;
-    fi.iImage = 0;
+    ZeroMemory(&bi, sizeof(bi));
+    bi.hwndOwner = hwnd;
+    bi.pidlRoot  = NULL;
+    bi.lpszTitle = szBuf;
+    bi.ulFlags   = BIF_USENEWUI | BIF_DONTGOBELOWDOMAIN | BIF_RETURNONLYFSDIRS | /* BIF_BROWSEFILEJUNCTIONS | */ BIF_VALIDATE;
 
-    if (!(lpItemList = SHBrowseForFolder(&fi))) return FALSE;
-    SHGetPathFromIDList(lpItemList, szPath);
+    if (SUCCEEDED(CoInitializeEx(NULL, COINIT_APARTMENTTHREADED)))
+    {
+        LPITEMIDLIST lpItemList = SHBrowseForFolder(&bi);
+        if (lpItemList && SHGetPathFromIDList(lpItemList, szPath))
+        {
+            if (szPath[0] != 0)
+            {
+                SetDlgItemTextW(hwnd, IDC_DOWNLOAD_DIR_EDIT, szPath);
+                bRet = TRUE;
+            }
+        }
 
-    if (wcslen(szPath) == 0) return FALSE;
-    SetDlgItemTextW(hwnd, IDC_DOWNLOAD_DIR_EDIT, szPath);
+        CoTaskMemFree(lpItemList);
+        CoUninitialize();
+    }
 
-    return TRUE;
+    return bRet;
 }
 
 static VOID
@@ -89,7 +98,7 @@ SettingsDlgProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam)
                     break;
 
                 case IDC_DEFAULT_SETTINGS:
-                    FillDafaultSettings(&NewSettingsInfo);
+                    FillDefaultSettings(&NewSettingsInfo);
                     InitSettingsControls(hDlg, NewSettingsInfo);
                     break;
 
