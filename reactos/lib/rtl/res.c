@@ -286,12 +286,14 @@ LdrFindResourceDirectory_U(IN PVOID BaseAddress,
 /*
  * @unimplemented
  */
-NTSTATUS NTAPI
-LdrEnumResources(IN PVOID BaseAddress,
-                 IN PLDR_RESOURCE_INFO ResourceInfo,
-                 IN ULONG Level,
-                 IN OUT PULONG ResourceCount,
-                 OUT PVOID Resources  OPTIONAL)
+NTSTATUS
+NTAPI
+LdrEnumResources(
+    IN PVOID BaseAddress,
+    IN PLDR_RESOURCE_INFO ResourceInfo,
+    IN ULONG Level,
+    IN OUT PULONG ResourceCount,
+    OUT PLDR_ENUM_RESOURCE_INFO Resources OPTIONAL)
 {
 	UNIMPLEMENTED;
 	return STATUS_NOT_IMPLEMENTED;
