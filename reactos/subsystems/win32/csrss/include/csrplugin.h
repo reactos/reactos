@@ -21,17 +21,17 @@
 #include "api.h"
 
 typedef NTSTATUS (WINAPI *CSRSS_ENUM_PROCESSES_PROC)(CSRSS_ENUM_PROCESS_PROC EnumProc,
-                                                      PVOID Context);
+                                                     PVOID Context);
 
 typedef struct tagCSRSS_EXPORTED_FUNCS
 {
-  CSRSS_ENUM_PROCESSES_PROC CsrEnumProcessesProc;
+    CSRSS_ENUM_PROCESSES_PROC CsrEnumProcessesProc;
 } CSRSS_EXPORTED_FUNCS, *PCSRSS_EXPORTED_FUNCS;
 
 typedef BOOL (WINAPI *CSRPLUGIN_INIT_COMPLETE_PROC)(void);
 
 typedef VOID (WINAPI *CSRPLUGIN_HARDERROR_PROC)(IN PCSR_THREAD ThreadData,
-                                                 IN PHARDERROR_MSG HardErrorMessage);
+                                                IN PHARDERROR_MSG HardErrorMessage);
 
 typedef NTSTATUS (WINAPI *CSRPLUGIN_PROCESS_INHERIT_PROC)(IN PCSR_PROCESS SourceProcessData,
                                                           IN PCSR_PROCESS TargetProcessData);
@@ -40,13 +40,13 @@ typedef ULONG (WINAPI *CSRPLUGIN_PROCESS_DELETED_PROC)(IN PCSR_PROCESS ProcessDa
 
 typedef struct tagCSRSS_SERVER_PROCS
 {
-  CSRPLUGIN_INIT_COMPLETE_PROC InitCompleteProc;
-  CSRPLUGIN_HARDERROR_PROC HardErrorProc;
-  CSRPLUGIN_PROCESS_INHERIT_PROC ProcessInheritProc;
-  CSRPLUGIN_PROCESS_DELETED_PROC ProcessDeletedProc;
+    CSRPLUGIN_INIT_COMPLETE_PROC InitCompleteProc;
+    CSRPLUGIN_HARDERROR_PROC HardErrorProc;
+    CSRPLUGIN_PROCESS_INHERIT_PROC ProcessInheritProc;
+    CSRPLUGIN_PROCESS_DELETED_PROC ProcessDeletedProc;
 } CSRPLUGIN_SERVER_PROCS, *PCSRPLUGIN_SERVER_PROCS;
 
 typedef BOOL (WINAPI *CSRPLUGIN_INITIALIZE_PROC)(PCSRSS_API_DEFINITION *ApiDefinitions,
-                                                  PCSRPLUGIN_SERVER_PROCS ServerProcs);
+                                                 PCSRPLUGIN_SERVER_PROCS ServerProcs);
 
 /* EOF */

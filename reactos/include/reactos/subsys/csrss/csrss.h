@@ -92,35 +92,35 @@ typedef struct
 
 typedef struct
 {
-   HANDLE ConsoleHandle;
-   BOOL Unicode;
-   ULONG NrCharactersToWrite;
-   ULONG NrCharactersWritten;
-   HANDLE UnpauseEvent;
-   BYTE Buffer[0];
+    HANDLE ConsoleHandle;
+    BOOL Unicode;
+    ULONG NrCharactersToWrite;
+    ULONG NrCharactersWritten;
+    HANDLE UnpauseEvent;
+    BYTE Buffer[0];
 } CSRSS_WRITE_CONSOLE, *PCSRSS_WRITE_CONSOLE;
 
 typedef struct
 {
-   HANDLE ConsoleHandle;
-   BOOL Unicode;
-   WORD NrCharactersToRead;
-   WORD NrCharactersRead;
-   HANDLE EventHandle;
-   PVOID Buffer;
-   UNICODE_STRING ExeName;
-   DWORD CtrlWakeupMask;
-   DWORD ControlKeyState;
+    HANDLE ConsoleHandle;
+    BOOL Unicode;
+    WORD NrCharactersToRead;
+    WORD NrCharactersRead;
+    HANDLE EventHandle;
+    PVOID Buffer;
+    UNICODE_STRING ExeName;
+    DWORD CtrlWakeupMask;
+    DWORD ControlKeyState;
 } CSRSS_READ_CONSOLE, *PCSRSS_READ_CONSOLE;
 
 typedef struct
 {
-   PCONTROLDISPATCHER CtrlDispatcher;
-   BOOLEAN ConsoleNeeded;
-   INT ShowCmd;
-   HANDLE Console;
-   HANDLE InputHandle;
-   HANDLE OutputHandle;
+    PCONTROLDISPATCHER CtrlDispatcher;
+    BOOLEAN ConsoleNeeded;
+    INT ShowCmd;
+    HANDLE Console;
+    HANDLE InputHandle;
+    HANDLE OutputHandle;
 } CSRSS_ALLOC_CONSOLE, *PCSRSS_ALLOC_CONSOLE;
 
 typedef struct
@@ -130,254 +130,254 @@ typedef struct
 
 typedef struct
 {
-   HANDLE ConsoleHandle;
-   CONSOLE_SCREEN_BUFFER_INFO Info;
+    HANDLE ConsoleHandle;
+    CONSOLE_SCREEN_BUFFER_INFO Info;
 } CSRSS_SCREEN_BUFFER_INFO, *PCSRSS_SCREEN_BUFFER_INFO;
 
 typedef struct
 {
-   HANDLE ConsoleHandle;
-   COORD Position;
+    HANDLE ConsoleHandle;
+    COORD Position;
 } CSRSS_SET_CURSOR, *PCSRSS_SET_CURSOR;
 
 typedef struct
 {
-   HANDLE ConsoleHandle;
-   BOOL Unicode;
-   union
-   {
-     CHAR AsciiChar;
-     WCHAR UnicodeChar;
-   } Char;
-   COORD Position;
-   WORD Length;
-   ULONG NrCharactersWritten;
+    HANDLE ConsoleHandle;
+    BOOL Unicode;
+    union
+    {
+        CHAR AsciiChar;
+        WCHAR UnicodeChar;
+    } Char;
+    COORD Position;
+    WORD Length;
+    ULONG NrCharactersWritten;
 } CSRSS_FILL_OUTPUT, *PCSRSS_FILL_OUTPUT;
 
 typedef struct
 {
-   HANDLE ConsoleHandle;
-   CHAR Attribute;
-   COORD Coord;
-   WORD Length;
+    HANDLE ConsoleHandle;
+    CHAR Attribute;
+    COORD Coord;
+    WORD Length;
 } CSRSS_FILL_OUTPUT_ATTRIB, *PCSRSS_FILL_OUTPUT_ATTRIB;
 
 typedef struct
 {
-   HANDLE ConsoleHandle;
-   BOOL Unicode;
-   INPUT_RECORD Input;
-   BOOL MoreEvents;
-   HANDLE Event;
+    HANDLE ConsoleHandle;
+    BOOL Unicode;
+    INPUT_RECORD Input;
+    BOOL MoreEvents;
+    HANDLE Event;
 } CSRSS_READ_INPUT, *PCSRSS_READ_INPUT;
 
 typedef struct
 {
-   HANDLE ConsoleHandle;
-   BOOL Unicode;
-   WORD Length;
-   COORD Coord;
-   COORD EndCoord;
-   ULONG NrCharactersWritten;
-   CHAR String[0];
+    HANDLE ConsoleHandle;
+    BOOL Unicode;
+    WORD Length;
+    COORD Coord;
+    COORD EndCoord;
+    ULONG NrCharactersWritten;
+    CHAR String[0];
 } CSRSS_WRITE_CONSOLE_OUTPUT_CHAR, *PCSRSS_WRITE_CONSOLE_OUTPUT_CHAR;
 
 typedef struct
 {
-   HANDLE ConsoleHandle;
-   WORD Length;
-   COORD Coord;
-   COORD EndCoord;
-   WORD Attribute[0];
+    HANDLE ConsoleHandle;
+    WORD Length;
+    COORD Coord;
+    COORD EndCoord;
+    WORD Attribute[0];
 } CSRSS_WRITE_CONSOLE_OUTPUT_ATTRIB, *PCSRSS_WRITE_CONSOLE_OUTPUT_ATTRIB;
 
 typedef struct
 {
-   HANDLE ConsoleHandle;
-   CONSOLE_CURSOR_INFO Info;
+    HANDLE ConsoleHandle;
+    CONSOLE_CURSOR_INFO Info;
 } CSRSS_GET_CURSOR_INFO, *PCSRSS_GET_CURSOR_INFO;
 
 typedef struct
 {
-   HANDLE ConsoleHandle;
-   CONSOLE_CURSOR_INFO Info;
+    HANDLE ConsoleHandle;
+    CONSOLE_CURSOR_INFO Info;
 } CSRSS_SET_CURSOR_INFO, *PCSRSS_SET_CURSOR_INFO;
 
 typedef struct
 {
-   HANDLE ConsoleHandle;
-   WORD Attrib;
+    HANDLE ConsoleHandle;
+    WORD Attrib;
 } CSRSS_SET_ATTRIB, *PCSRSS_SET_ATTRIB;
 
 typedef struct
 {
-  HANDLE ConsoleHandle;
-  DWORD Mode;
+    HANDLE ConsoleHandle;
+    DWORD Mode;
 } CSRSS_SET_CONSOLE_MODE, *PCSRSS_SET_CONSOLE_MODE;
 
 typedef struct
 {
-  HANDLE ConsoleHandle;
-  DWORD ConsoleMode;
+    HANDLE ConsoleHandle;
+    DWORD ConsoleMode;
 } CSRSS_GET_CONSOLE_MODE, *PCSRSS_GET_CONSOLE_MODE;
 
 typedef struct
 {
-   DWORD Access;
-   DWORD ShareMode;
-   BOOL Inheritable;
-   HANDLE OutputHandle;  /* handle to newly created screen buffer */
+    DWORD Access;
+    DWORD ShareMode;
+    BOOL Inheritable;
+    HANDLE OutputHandle;  /* handle to newly created screen buffer */
 } CSRSS_CREATE_SCREEN_BUFFER, *PCSRSS_CREATE_SCREEN_BUFFER;
 
 typedef struct
 {
-   HANDLE OutputHandle;  /* handle to screen buffer to switch to */
+    HANDLE OutputHandle;  /* handle to screen buffer to switch to */
 } CSRSS_SET_SCREEN_BUFFER, *PCSRSS_SET_SCREEN_BUFFER;
 
 typedef struct
 {
-	HANDLE	UniqueThread;
-	CLIENT_ID	Cid;
+    HANDLE  UniqueThread;
+    CLIENT_ID Cid;
 } CSRSS_IDENTIFY_ALERTABLE_THREAD, *PCSRSS_IDENTIFY_ALERTABLE_THREAD;
 
 typedef struct
 {
-  DWORD Length;
-  PWCHAR Title;
+    DWORD Length;
+    PWCHAR Title;
 } CSRSS_SET_TITLE, *PCSRSS_SET_TITLE;
 
 typedef struct
 {
-  DWORD Length;
-  PWCHAR Title;
+    DWORD Length;
+    PWCHAR Title;
 } CSRSS_GET_TITLE, *PCSRSS_GET_TITLE;
 
 typedef struct
 {
-  HANDLE ConsoleHandle;
-  BOOL Unicode;
-  COORD BufferSize;
-  COORD BufferCoord;
-  SMALL_RECT WriteRegion;
-  CHAR_INFO* CharInfo;
+    HANDLE ConsoleHandle;
+    BOOL Unicode;
+    COORD BufferSize;
+    COORD BufferCoord;
+    SMALL_RECT WriteRegion;
+    CHAR_INFO* CharInfo;
 } CSRSS_WRITE_CONSOLE_OUTPUT, *PCSRSS_WRITE_CONSOLE_OUTPUT;
 
 typedef struct
 {
-   HANDLE ConsoleInput;
+    HANDLE ConsoleInput;
 } CSRSS_FLUSH_INPUT_BUFFER, *PCSRSS_FLUSH_INPUT_BUFFER;
 
 typedef struct
 {
-  HANDLE ConsoleHandle;
-  BOOL Unicode;
-  SMALL_RECT ScrollRectangle;
-  BOOLEAN UseClipRectangle;
-  SMALL_RECT ClipRectangle;
-  COORD DestinationOrigin;
-  CHAR_INFO Fill;
+    HANDLE ConsoleHandle;
+    BOOL Unicode;
+    SMALL_RECT ScrollRectangle;
+    BOOLEAN UseClipRectangle;
+    SMALL_RECT ClipRectangle;
+    COORD DestinationOrigin;
+    CHAR_INFO Fill;
 } CSRSS_SCROLL_CONSOLE_SCREEN_BUFFER, *PCSRSS_SCROLL_CONSOLE_SCREEN_BUFFER;
 
 typedef struct
 {
-  HANDLE ConsoleHandle;
-  BOOL Unicode;
-  DWORD NumCharsToRead;
-  COORD ReadCoord;
-  COORD EndCoord;
-  DWORD CharsRead;
-  CHAR String[0];
-}CSRSS_READ_CONSOLE_OUTPUT_CHAR, *PCSRSS_READ_CONSOLE_OUTPUT_CHAR;
+    HANDLE ConsoleHandle;
+    BOOL Unicode;
+    DWORD NumCharsToRead;
+    COORD ReadCoord;
+    COORD EndCoord;
+    DWORD CharsRead;
+    CHAR String[0];
+} CSRSS_READ_CONSOLE_OUTPUT_CHAR, *PCSRSS_READ_CONSOLE_OUTPUT_CHAR;
 
 typedef struct
 {
-  HANDLE ConsoleHandle;
-  DWORD NumAttrsToRead;
-  COORD ReadCoord;
-  COORD EndCoord;
-  WORD Attribute[0];
-}CSRSS_READ_CONSOLE_OUTPUT_ATTRIB, *PCSRSS_READ_CONSOLE_OUTPUT_ATTRIB;
+    HANDLE ConsoleHandle;
+    DWORD NumAttrsToRead;
+    COORD ReadCoord;
+    COORD EndCoord;
+    WORD Attribute[0];
+} CSRSS_READ_CONSOLE_OUTPUT_ATTRIB, *PCSRSS_READ_CONSOLE_OUTPUT_ATTRIB;
 
 typedef struct
 {
-  HANDLE ConsoleHandle;
-  DWORD NumInputEvents;
-}CSRSS_GET_NUM_INPUT_EVENTS, *PCSRSS_GET_NUM_INPUT_EVENTS;
+    HANDLE ConsoleHandle;
+    DWORD NumInputEvents;
+} CSRSS_GET_NUM_INPUT_EVENTS, *PCSRSS_GET_NUM_INPUT_EVENTS;
 
 typedef struct
 {
-  HANDLE ProcessId;
+    HANDLE ProcessId;
 } CSRSS_REGISTER_SERVICES_PROCESS, *PCSRSS_REGISTER_SERVICES_PROCESS;
 
 typedef struct
 {
-  UINT Flags;
-  DWORD Reserved;
+    UINT Flags;
+    DWORD Reserved;
 } CSRSS_EXIT_REACTOS, *PCSRSS_EXIT_REACTOS;
 
 typedef struct
 {
-  DWORD Level;
-  DWORD Flags;
+    DWORD Level;
+    DWORD Flags;
 } CSRSS_SET_SHUTDOWN_PARAMETERS, *PCSRSS_SET_SHUTDOWN_PARAMETERS;
 
 typedef struct
 {
-  DWORD Level;
-  DWORD Flags;
+    DWORD Level;
+    DWORD Flags;
 } CSRSS_GET_SHUTDOWN_PARAMETERS, *PCSRSS_GET_SHUTDOWN_PARAMETERS;
 
 typedef struct
 {
-  HANDLE ConsoleHandle;
-  BOOL Unicode;
-  DWORD Length;
-  INPUT_RECORD* InputRecord;
+    HANDLE ConsoleHandle;
+    BOOL Unicode;
+    DWORD Length;
+    INPUT_RECORD* InputRecord;
 } CSRSS_PEEK_CONSOLE_INPUT, *PCSRSS_PEEK_CONSOLE_INPUT;
 
 typedef struct
 {
-  HANDLE ConsoleHandle;
-  BOOL Unicode;
-  COORD BufferSize;
-  COORD BufferCoord;
-  SMALL_RECT ReadRegion;
-  CHAR_INFO* CharInfo;
+    HANDLE ConsoleHandle;
+    BOOL Unicode;
+    COORD BufferSize;
+    COORD BufferCoord;
+    SMALL_RECT ReadRegion;
+    CHAR_INFO* CharInfo;
 } CSRSS_READ_CONSOLE_OUTPUT, *PCSRSS_READ_CONSOLE_OUTPUT;
 
 typedef struct
 {
-  HANDLE ConsoleHandle;
-  BOOL Unicode;
-  DWORD Length;
-  INPUT_RECORD* InputRecord;
+    HANDLE ConsoleHandle;
+    BOOL Unicode;
+    DWORD Length;
+    INPUT_RECORD* InputRecord;
 } CSRSS_WRITE_CONSOLE_INPUT, *PCSRSS_WRITE_CONSOLE_INPUT;
 
 typedef struct
 {
-  DWORD Access;
-  BOOL Inheritable;
-  HANDLE Handle;
-  DWORD ShareMode;
+    DWORD Access;
+    BOOL Inheritable;
+    HANDLE Handle;
+    DWORD ShareMode;
 } CSRSS_GET_INPUT_HANDLE, *PCSRSS_GET_INPUT_HANDLE,
   CSRSS_GET_OUTPUT_HANDLE, *PCSRSS_GET_OUTPUT_HANDLE;
 
 typedef struct
 {
-  HANDLE Handle;
+    HANDLE Handle;
 } CSRSS_CLOSE_HANDLE, *PCSRSS_CLOSE_HANDLE;
 
 typedef struct
 {
-  HANDLE Handle;
+    HANDLE Handle;
 } CSRSS_VERIFY_HANDLE, *PCSRSS_VERIFY_HANDLE;
 
 typedef struct
 {
-  HANDLE Handle;
-  DWORD Access;
-  BOOL Inheritable;
-  DWORD Options;
+    HANDLE Handle;
+    DWORD Access;
+    BOOL Inheritable;
+    DWORD Options;
 } CSRSS_DUPLICATE_HANDLE, *PCSRSS_DUPLICATE_HANDLE;
 
 #define CONSOLE_HARDWARE_STATE_GET 0
@@ -388,72 +388,72 @@ typedef struct
 
 typedef struct
 {
-  HANDLE ConsoleHandle;
-  DWORD SetGet; /* 0=get; 1=set */
-  DWORD State;
+    HANDLE ConsoleHandle;
+    DWORD SetGet; /* 0=get; 1=set */
+    DWORD State;
 } CSRSS_SETGET_CONSOLE_HW_STATE, *PCSRSS_SETGET_CONSOLE_HW_STATE;
 
 typedef struct
 {
-  HWND   WindowHandle;
+    HWND   WindowHandle;
 } CSRSS_GET_CONSOLE_WINDOW, *PCSRSS_GET_CONSOLE_WINDOW;
 
 typedef struct
 {
-  HICON  WindowIcon;
+    HICON  WindowIcon;
 } CSRSS_SET_CONSOLE_ICON, *PCSRSS_SET_CONSOLE_ICON;
 
 typedef struct
 {
-  HDESK DesktopHandle;
+    HDESK DesktopHandle;
 } CSRSS_CREATE_DESKTOP, *PCSRSS_CREATE_DESKTOP;
 
 typedef struct
 {
-  HWND DesktopWindow;
-  ULONG Width;
-  ULONG Height;
+    HWND DesktopWindow;
+    ULONG Width;
+    ULONG Height;
 } CSRSS_SHOW_DESKTOP, *PCSRSS_SHOW_DESKTOP;
 
 typedef struct
 {
-  HWND DesktopWindow;
+    HWND DesktopWindow;
 } CSRSS_HIDE_DESKTOP, *PCSRSS_HIDE_DESKTOP;
 
 typedef struct
 {
-  HWND LogonNotifyWindow;
+    HWND LogonNotifyWindow;
 } CSRSS_SET_LOGON_NOTIFY_WINDOW, *PCSRSS_SET_LOGON_NOTIFY_WINDOW;
 
 typedef struct
 {
-  HANDLE ProcessId;
-  BOOL Register;
+    HANDLE ProcessId;
+    BOOL Register;
 } CSRSS_REGISTER_LOGON_PROCESS, *PCSRSS_REGISTER_LOGON_PROCESS;
 
 typedef struct
 {
-  UINT CodePage;
+    UINT CodePage;
 } CSRSS_GET_CONSOLE_CP, *PCSRSS_GET_CONSOLE_CP;
 
 typedef struct
 {
-  UINT CodePage;
+    UINT CodePage;
 } CSRSS_SET_CONSOLE_CP, *PCSRSS_SET_CONSOLE_CP;
 
 typedef struct
 {
-  UINT CodePage;
+    UINT CodePage;
 } CSRSS_GET_CONSOLE_OUTPUT_CP, *PCSRSS_GET_CONSOLE_OUTPUT_CP;
 
 typedef struct
 {
-  UINT CodePage;
+    UINT CodePage;
 } CSRSS_SET_CONSOLE_OUTPUT_CP, *PCSRSS_SET_CONSOLE_OUTPUT_CP;
 
 typedef struct
 {
-  HANDLE InputWaitHandle;
+    HANDLE InputWaitHandle;
 } CSRSS_GET_INPUT_WAIT_HANDLE, *PCSRSS_GET_INPUT_WAIT_HANDLE;
 
 typedef struct
@@ -474,58 +474,58 @@ typedef struct
 
 typedef struct
 {
-  LPWSTR lpExeName;
-  DWORD BytesWritten;
-  DWORD AliasBufferLength;
-  LPWSTR AliasBuffer;
+    LPWSTR lpExeName;
+    DWORD BytesWritten;
+    DWORD AliasBufferLength;
+    LPWSTR AliasBuffer;
 } CSRSS_GET_ALL_CONSOLE_ALIASES, *PCSRSS_GET_ALL_CONSOLE_ALIAS;
 
 typedef struct
 {
-  LPWSTR lpExeName;
-  DWORD Length;
+    LPWSTR lpExeName;
+    DWORD Length;
 } CSRSS_GET_ALL_CONSOLE_ALIASES_LENGTH, *PCSRSS_GET_ALL_CONSOLE_ALIASES_LENGTH;
 
 typedef struct
 {
-  DWORD BytesWritten;
-  DWORD Length;
-  LPWSTR ExeNames;
-}  CSRSS_GET_CONSOLE_ALIASES_EXES, *PCSRSS_GET_CONSOLE_ALIASES_EXES;
+    DWORD BytesWritten;
+    DWORD Length;
+    LPWSTR ExeNames;
+} CSRSS_GET_CONSOLE_ALIASES_EXES, *PCSRSS_GET_CONSOLE_ALIASES_EXES;
 
 typedef struct
 {
-  DWORD Length;
+    DWORD Length;
 } CSRSS_GET_CONSOLE_ALIASES_EXES_LENGTH, *PCSRSS_GET_CONSOLE_ALIASES_EXES_LENGTH;
 
 typedef struct
 {
-  DWORD Event;
-  DWORD ProcessGroup;
+    DWORD Event;
+    DWORD ProcessGroup;
 } CSRSS_GENERATE_CTRL_EVENT, *PCSRSS_GENERATE_CTRL_EVENT;
 
 typedef struct
 {
-  HANDLE OutputHandle;
-  COORD Size;
+    HANDLE OutputHandle;
+    COORD Size;
 } CSRSS_SET_SCREEN_BUFFER_SIZE, *PCSRSS_SET_SCREEN_BUFFER_SIZE;
 
 typedef struct
 {
-  CONSOLE_SELECTION_INFO Info;
+    CONSOLE_SELECTION_INFO Info;
 } CSRSS_GET_CONSOLE_SELECTION_INFO, *PCSRSS_GET_CONSOLE_SELECTION_INFO;
 
 typedef struct
 {
-  UNICODE_STRING ExeName;
-  DWORD Length;
+    UNICODE_STRING ExeName;
+    DWORD Length;
 } CSRSS_GET_COMMAND_HISTORY_LENGTH, *PCSRSS_GET_COMMAND_HISTORY_LENGTH;
 
 typedef struct
 {
-  UNICODE_STRING ExeName;
-  PWCHAR History;
-  DWORD Length;
+    UNICODE_STRING ExeName;
+    PWCHAR History;
+    DWORD Length;
 } CSRSS_GET_COMMAND_HISTORY, *PCSRSS_GET_COMMAND_HISTORY;
 
 typedef struct
@@ -535,21 +535,21 @@ typedef struct
 
 typedef struct
 {
-  UNICODE_STRING ExeName;
-  DWORD NumCommands;
+    UNICODE_STRING ExeName;
+    DWORD NumCommands;
 } CSRSS_SET_HISTORY_NUMBER_COMMANDS, *PCSRSS_SET_HISTORY_NUMBER_COMMANDS;
 
 typedef struct
 {
-  DWORD HistoryBufferSize;
-  DWORD NumberOfHistoryBuffers;
-  DWORD dwFlags;
+    DWORD HistoryBufferSize;
+    DWORD NumberOfHistoryBuffers;
+    DWORD dwFlags;
 } CSRSS_GET_HISTORY_INFO, *PCSRSS_GET_HISTORY_INFO,
   CSRSS_SET_HISTORY_INFO, *PCSRSS_SET_HISTORY_INFO;;
 
 typedef struct
 {
-  UINT UniqueID;
+    UINT UniqueID;
 } CSRSS_GET_TEMP_FILE, *PCSRSS_GET_TEMP_FILE;
 
 typedef struct

@@ -36,9 +36,9 @@
 
 typedef enum _CSR_THREAD_FLAGS
 {
-    CsrThreadAltertable = 0x1,
-    CsrThreadInTermination = 0x2,
-    CsrThreadTerminated = 0x4,
+    CsrThreadAltertable     = 0x1,
+    CsrThreadInTermination  = 0x2,
+    CsrThreadTerminated     = 0x4,
     CsrThreadIsServerThread = 0x10
 } CSR_THREAD_FLAGS, *PCSR_THREAD_FLAGS;
 
@@ -52,7 +52,7 @@ typedef enum _SHUTDOWN_RESULT
 typedef enum _CSR_SHUTDOWN_FLAGS
 {
     CsrShutdownSystem = 4,
-    CsrShutdownOther = 8
+    CsrShutdownOther  = 8
 } CSR_SHUTDOWN_FLAGS, *PCSR_SHUTDOWN_FLAGS;
 
 typedef enum _CSR_DEBUG_FLAGS
@@ -63,21 +63,21 @@ typedef enum _CSR_DEBUG_FLAGS
 
 typedef enum _CSR_PROCESS_FLAGS
 {
-    CsrProcessTerminating = 0x1,
-    CsrProcessSkipShutdown = 0x2,
-    CsrProcessNormalPriority = 0x10,
-    CsrProcessIdlePriority = 0x20,
-    CsrProcessHighPriority = 0x40,
-    CsrProcessRealtimePriority = 0x80,
-    CsrProcessCreateNewGroup = 0x100,
-    CsrProcessTerminated = 0x200,
+    CsrProcessTerminating          = 0x1,
+    CsrProcessSkipShutdown         = 0x2,
+    CsrProcessNormalPriority       = 0x10,
+    CsrProcessIdlePriority         = 0x20,
+    CsrProcessHighPriority         = 0x40,
+    CsrProcessRealtimePriority     = 0x80,
+    CsrProcessCreateNewGroup       = 0x100,
+    CsrProcessTerminated           = 0x200,
     CsrProcessLastThreadTerminated = 0x400,
-    CsrProcessIsConsoleApp = 0x800
+    CsrProcessIsConsoleApp         = 0x800
 } CSR_PROCESS_FLAGS, *PCSR_PROCESS_FLAGS;
 
 #define CsrProcessPriorityFlags (CsrProcessNormalPriority | \
-                                 CsrProcessIdlePriority | \
-                                 CsrProcessHighPriority | \
+                                 CsrProcessIdlePriority   | \
+                                 CsrProcessHighPriority   | \
                                  CsrProcessRealtimePriority)
 
 typedef struct _CSRSS_CON_PROCESS_DATA
@@ -240,9 +240,9 @@ typedef NTSTATUS (WINAPI *CSRSS_API_PROC)(PCSR_PROCESS ProcessData,
 
 typedef struct _CSRSS_API_DEFINITION
 {
-  ULONG Type;
-  ULONG MinRequestSize;
-  CSRSS_API_PROC Handler;
+    ULONG Type;
+    ULONG MinRequestSize;
+    CSRSS_API_PROC Handler;
 } CSRSS_API_DEFINITION, *PCSRSS_API_DEFINITION;
 
 #define CSRSS_DEFINE_API(Func, Handler) \
@@ -255,9 +255,9 @@ typedef struct _CSRSS_LISTEN_DATA
   PCSRSS_API_DEFINITION *ApiDefinitions;
 } CSRSS_LISTEN_DATA, *PCSRSS_LISTEN_DATA;
 
-#define CSR_API(n) NTSTATUS WINAPI n (\
-PCSR_PROCESS ProcessData,\
-PCSR_API_MESSAGE Request)
+#define CSR_API(n) NTSTATUS WINAPI n (  \
+    PCSR_PROCESS ProcessData,           \
+    PCSR_API_MESSAGE Request)
 
 /* init.c */
 extern HANDLE hBootstrapOk;
