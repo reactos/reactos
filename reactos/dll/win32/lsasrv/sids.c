@@ -921,7 +921,7 @@ CreateSidFromSidAndRid(PSID SrcSid,
 
     DstSid = MIDL_user_allocate(DstSidSize);
     if (DstSid == NULL)
-        return FALSE;
+        return NULL;
 
     RtlInitializeSid(DstSid,
                      RtlIdentifierAuthoritySid(SrcSid),
@@ -941,6 +941,40 @@ CreateSidFromSidAndRid(PSID SrcSid,
 }
 
 
+static PSID
+CreateDomainSidFromAccountSid(PSID AccountSid)
+{
+    UCHAR RidCount;
+    PSID DomainSid;
+    ULONG i;
+    ULONG DstSidSize;
+    PULONG p, q;
+
+    RidCount = *RtlSubAuthorityCountSid(AccountSid);
+    if (RidCount > 0)
+        RidCount--;
+
+    DstSidSize = RtlLengthRequiredSid(RidCount);
+
+    DomainSid = MIDL_user_allocate(DstSidSize);
+    if (DomainSid == NULL)
+        return NULL;
+
+    RtlInitializeSid(DomainSid,
+                     RtlIdentifierAuthoritySid(AccountSid),
+                     RidCount);
+
+    for (i = 0; i < (ULONG)RidCount; i++)
+    {
+        p = RtlSubAuthoritySid(AccountSid, i);
+        q = RtlSubAuthoritySid(DomainSid, i);
+        *q = *p;
+    }
+
+    return DomainSid;
+}
+
+
 static
 NTSTATUS
 LsapLookupIsolatedNames(DWORD Count,
@@ -950,7 +984,9 @@ LsapLookupIsolatedNames(DWORD Count,
                         PLSAPR_TRANSLATED_SID_EX2 SidsBuffer,
                         PULONG Mapped)
 {
+    UNICODE_STRING EmptyDomainName = RTL_CONSTANT_STRING(L"");
     PWELL_KNOWN_SID ptr, ptr2;
+    PSID DomainSid;
     ULONG DomainIndex;
     ULONG i;
     NTSTATUS Status = STATUS_SUCCESS;
@@ -964,6 +1000,8 @@ LsapLookupIsolatedNames(DWORD Count,
         /* Ignore fully qualified account names */
         if (DomainNames[i].Length != 0)
             continue;
+
+        TRACE("Mapping name: %wZ\n", &AccountNames[i]);
 
         /* Look-up all well-known names */
         ptr = LsapLookupWellKnownName((PUNICODE_STRING)&AccountNames[i]);
@@ -994,6 +1032,31 @@ LsapLookupIsolatedNames(DWORD Count,
                                                         &ptr2->Name,
                                                         ptr2->Sid,
                                                         &DomainIndex);
+                    if (!NT_SUCCESS(Status))
+                        goto done;
+
+                    SidsBuffer[i].DomainIndex = DomainIndex;
+                }
+                else
+                {
+                    DomainSid = CreateDomainSidFromAccountSid(ptr->Sid);
+                    if (DomainSid == NULL)
+                    {
+                        Status = STATUS_INSUFFICIENT_RESOURCES;
+                        goto done;
+                    }
+
+                    Status = LsapAddDomainToDomainsList(DomainsBuffer,
+                                                        &EmptyDomainName,
+                                                        DomainSid,
+                                                        &DomainIndex);
+
+                    if (DomainSid != NULL)
+                    {
+                        MIDL_user_free(DomainSid);
+                        DomainSid = NULL;
+                    }
+
                     if (!NT_SUCCESS(Status))
                         goto done;
 
@@ -1054,6 +1117,7 @@ LsapLookupIsolatedNames(DWORD Count,
     }
 
 done:
+
     return Status;
 }
 
@@ -1430,7 +1494,6 @@ done:
 }
 
 
-
 NTSTATUS
 LsapLookupNames(DWORD Count,
                 PRPC_UNICODE_STRING Names,
@@ -1514,7 +1577,10 @@ LsapLookupNames(DWORD Count,
     if (!NT_SUCCESS(Status) &&
         Status != STATUS_NONE_MAPPED &&
         Status != STATUS_SOME_NOT_MAPPED)
+    {
+        TRACE("LsapLookupIsolatedNames failed! (Status %lx)\n", Status);
         goto done;
+    }
 
     if (Mapped == Count)
         goto done;
@@ -1529,7 +1595,10 @@ LsapLookupNames(DWORD Count,
     if (!NT_SUCCESS(Status) &&
         Status != STATUS_NONE_MAPPED &&
         Status != STATUS_SOME_NOT_MAPPED)
+    {
+        TRACE("LsapLookupIsolatedBuiltinNames failed! (Status %lx)\n", Status);
         goto done;
+    }
 
     if (Mapped == Count)
         goto done;
@@ -1544,7 +1613,10 @@ LsapLookupNames(DWORD Count,
     if (!NT_SUCCESS(Status) &&
         Status != STATUS_NONE_MAPPED &&
         Status != STATUS_SOME_NOT_MAPPED)
+    {
+        TRACE("LsapLookupIsolatedAccountNames failed! (Status %lx)\n", Status);
         goto done;
+    }
 
     if (Mapped == Count)
         goto done;
@@ -1560,7 +1632,10 @@ LsapLookupNames(DWORD Count,
     if (!NT_SUCCESS(Status) &&
         Status != STATUS_NONE_MAPPED &&
         Status != STATUS_SOME_NOT_MAPPED)
+    {
+        TRACE("LsapLookupBuiltinNames failed! (Status %lx)\n", Status);
         goto done;
+    }
 
     if (Mapped == Count)
         goto done;
@@ -1575,7 +1650,10 @@ LsapLookupNames(DWORD Count,
     if (!NT_SUCCESS(Status) &&
         Status != STATUS_NONE_MAPPED &&
         Status != STATUS_SOME_NOT_MAPPED)
+    {
+        TRACE("LsapLookupAccountNames failed! (Status %lx)\n", Status);
         goto done;
+    }
 
     if (Mapped == Count)
         goto done;
