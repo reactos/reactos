@@ -316,7 +316,9 @@ static BOOL screen_reader = FALSE;
 static UINT mouse_hover_width = 4;
 static UINT mouse_hover_height = 4;
 static UINT mouse_hover_time = 400;
+#if (_WIN32_WINNT >= 0x0600)
 static UINT mouse_scroll_chars = 3;
+#endif
 static UINT mouse_scroll_lines = 3;
 static UINT menu_show_delay = 400;
 static UINT menu_drop_alignment = 0;
@@ -2141,7 +2143,7 @@ BOOL WINAPI SystemParametersInfoW( UINT uiAction, UINT uiParam,
                               SPI_SETMENUSHOWDELAY_VALNAME,
                               &menu_show_delay, uiParam, fWinIni );
         break;
-
+#if (_WIN32_WINNT >= 0x0600)
     case SPI_GETWHEELSCROLLCHARS:			/*    108  _WIN32_WINNT >= 0x400 || _WIN32_WINDOW > 0x400 */
         ret = get_uint_param( SPI_SETMOUSESCROLLCHARS_IDX,
                               SPI_SETMOUSESCROLLCHARS_REGKEY,
@@ -2155,7 +2157,7 @@ BOOL WINAPI SystemParametersInfoW( UINT uiAction, UINT uiParam,
                               SPI_SETMOUSESCROLLCHARS_VALNAME,
                               &mouse_scroll_chars, uiParam, fWinIni );
         break;
-
+#endif
     WINE_SPI_FIXME(SPI_GETSHOWIMEUI);		/*    110  _WIN32_WINNT >= 0x400 || _WIN32_WINDOW > 0x400 */
     WINE_SPI_FIXME(SPI_SETSHOWIMEUI);		/*    111  _WIN32_WINNT >= 0x400 || _WIN32_WINDOW > 0x400 */
 
@@ -2331,6 +2333,7 @@ BOOL WINAPI SystemParametersInfoW( UINT uiAction, UINT uiParam,
         ret = set_user_pref_param( 3, 0x80, PtrToUlong(pvParam), fWinIni );
         break;
 
+#if (_WIN32_WINNT >= 0x0600)
     /* _WIN32_WINNT >= 0x600 */
     WINE_SPI_FIXME(SPI_GETDISABLEOVERLAPPEDCONTENT);
     WINE_SPI_FIXME(SPI_SETDISABLEOVERLAPPEDCONTENT);
@@ -2340,7 +2343,7 @@ BOOL WINAPI SystemParametersInfoW( UINT uiAction, UINT uiParam,
     WINE_SPI_FIXME(SPI_SETCLEARTYPE);
     WINE_SPI_FIXME(SPI_GETSPEECHRECOGNITION);
     WINE_SPI_FIXME(SPI_SETSPEECHRECOGNITION);
-
+#endif
     case SPI_GETFOREGROUNDLOCKTIMEOUT:          /* 0x2000  _WIN32_WINNT >= 0x500 || _WIN32_WINDOW > 0x400 */
         ret = get_uint_param( SPI_SETFOREGROUNDLOCKTIMEOUT_IDX,
                               SPI_SETFOREGROUNDLOCKTIMEOUT_REGKEY,

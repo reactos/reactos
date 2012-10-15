@@ -1,16 +1,6 @@
 add_definitions(-D__WINESRC__
                 -D_WINE)
 
-remove_definitions(-DWINVER=0x502
-                   -D_WIN32_WINNT=0x502
-                   -D_WIN32_WINDOWS=0x502
-                   -D_SETUPAPI_VER=0x502)
-
-add_definitions(-DWINVER=0x0600
-                -D_WIN32_WINNT=0x0600
-                -D_WIN32_WINDOWS=0x600
-                -D_SETUPAPI_VER=0x600)
-
 spec2def(user32.dll user32.spec ADD_IMPORTLIB)
 
 include_directories(
