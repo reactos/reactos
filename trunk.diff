@@ -1,6 +1,6 @@
 Index: base/shell/explorer/desktop/desktop.cpp
 ===================================================================
---- base/shell/explorer/desktop/desktop.cpp	(revision 57368)
+--- base/shell/explorer/desktop/desktop.cpp	(revision 57501)
 +++ base/shell/explorer/desktop/desktop.cpp	(working copy)
 @@ -327,8 +327,8 @@
  HWND DesktopWindow::Create()
@@ -15,7 +15,7 @@ Index: base/shell/explorer/desktop/desktop.cpp
  	int height = GetSystemMetrics(SM_CYSCREEN);
 Index: cmake/baseaddress.cmake
 ===================================================================
---- cmake/baseaddress.cmake	(revision 57368)
+--- cmake/baseaddress.cmake	(revision 57501)
 +++ cmake/baseaddress.cmake	(working copy)
 @@ -1,7 +1,7 @@
  set(baseaddress_ntdll                0x77f20000)
@@ -33,7 +33,7 @@ Index: cmake/baseaddress.cmake
 +set(baseaddress_freetypd             0x709b0000)
 Index: cmake/config.cmake
 ===================================================================
---- cmake/config.cmake	(revision 57368)
+--- cmake/config.cmake	(revision 57501)
 +++ cmake/config.cmake	(working copy)
 @@ -26,7 +26,7 @@
  
@@ -54,33 +54,11 @@ Index: cmake/config.cmake
  set(NSWPAT FALSE CACHE BOOL
  "Whether to compile apps/libs with features covered software patents or not.
  If you live in a country where software patents are valid/apply, don't
-Index: cmake/gcc.cmake
-===================================================================
---- cmake/gcc.cmake	(revision 57368)
-+++ cmake/gcc.cmake	(working copy)
-@@ -171,7 +171,7 @@
- 
- SET(CMAKE_C_COMPILE_OBJECT "${CCACHE} <CMAKE_C_COMPILER> <DEFINES> <FLAGS> -o <OBJECT> -c <SOURCE>")
- SET(CMAKE_CXX_COMPILE_OBJECT "${CCACHE} <CMAKE_CXX_COMPILER>  <DEFINES> <FLAGS> -o <OBJECT> -c <SOURCE>")
--set(CMAKE_ASM_COMPILE_OBJECT "<CMAKE_ASM_COMPILER> -x assembler-with-cpp -o <OBJECT> -I${REACTOS_SOURCE_DIR}/include/asm -I${REACTOS_BINARY_DIR}/include/asm <FLAGS> <DEFINES> -D__ASM__ -c <SOURCE>")
-+set(CMAKE_ASM_COMPILE_OBJECT "<CMAKE_ASM_COMPILER> -x assembler-with-cpp -o <OBJECT> -I\"${REACTOS_SOURCE_DIR}/include/asm\" -I\"${REACTOS_BINARY_DIR}/include/asm\" <FLAGS> <DEFINES> -D__ASM__ -c <SOURCE>")
- 
- set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> -O coff <FLAGS> -DRC_INVOKED -D__WIN32__=1 -D__FLAT__=1 ${I18N_DEFS} <DEFINES> <SOURCE> <OBJECT>")
- set(CMAKE_DEPFILE_FLAGS_RC "--preprocessor \"${MINGW_TOOLCHAIN_PREFIX}gcc -E -xc-header -MMD -MF <DEPFILE> -MT <OBJECT>\" ")
-@@ -353,7 +353,7 @@
- 
-     add_custom_command(
-         OUTPUT ${_object_file}
--        COMMAND ${CMAKE_ASM_COMPILER} -x assembler-with-cpp -o ${_object_file} -I${REACTOS_SOURCE_DIR}/include/asm -I${REACTOS_BINARY_DIR}/include/asm -D__ASM__ -c ${_asm_file}
-+        COMMAND ${CMAKE_ASM_COMPILER} -x assembler-with-cpp -o ${_object_file} -I\"${REACTOS_SOURCE_DIR}/include/asm\" -I\"${REACTOS_BINARY_DIR}/include/asm\" -D__ASM__ -c ${_asm_file}
-         DEPENDS ${_asm_file})
- 
-     add_custom_command(
 Index: CMakeLists.txt
 ===================================================================
---- CMakeLists.txt	(revision 57368)
+--- CMakeLists.txt	(revision 57501)
 +++ CMakeLists.txt	(working copy)
-@@ -126,16 +126,20 @@
+@@ -126,6 +126,10 @@
          add_definitions(-D_WINKD_=1)
      endif()
  
@@ -91,20 +69,6 @@ Index: CMakeLists.txt
      if(USE_PSEH3)
          add_definitions(-D_USE_PSEH3=1)
      endif()
- 
-     # Version Options
--    add_definitions(-DWINVER=0x502
-+    add_definitions(-DWINVER=0x600
-                     -D_WIN32_IE=0x600
--                    -D_WIN32_WINNT=0x502
--                    -D_WIN32_WINDOWS=0x502
--                    -D_SETUPAPI_VER=0x502)
-+                    -D_WIN32_WINNT=0x600
-+                    -D_WIN32_WINDOWS=0x600
-+                    -D_SETUPAPI_VER=0x600)
- 
-     # Arch Options
-     if(ARCH STREQUAL "i386")
 @@ -245,6 +249,9 @@
      add_subdirectory(ntoskrnl)
      add_subdirectory(subsystems)
@@ -117,9 +81,9 @@ Index: CMakeLists.txt
  
 Index: drivers/filesystems/npfs/create.c
 ===================================================================
---- drivers/filesystems/npfs/create.c	(revision 57368)
+--- drivers/filesystems/npfs/create.c	(revision 57501)
 +++ drivers/filesystems/npfs/create.c	(working copy)
-@@ -226,6 +226,9 @@
+@@ -227,6 +227,9 @@
      }
  
      Ccb->FileObject = FileObject;
@@ -131,7 +95,7 @@ Index: drivers/filesystems/npfs/create.c
      FileObject->FsContext2 = Ccb;
 Index: include/asm/syscalls.inc
 ===================================================================
---- include/asm/syscalls.inc	(revision 57368)
+--- include/asm/syscalls.inc	(revision 57501)
 +++ include/asm/syscalls.inc	(working copy)
 @@ -95,6 +95,7 @@
  
@@ -151,9 +115,9 @@ Index: include/asm/syscalls.inc
      .ENDP
 Index: include/psdk/winddi.h
 ===================================================================
---- include/psdk/winddi.h	(revision 57368)
+--- include/psdk/winddi.h	(revision 57501)
 +++ include/psdk/winddi.h	(working copy)
-@@ -2665,7 +2665,7 @@
+@@ -2666,7 +2666,7 @@
      _In_ ULONG cjSize,
      _Out_bytecap_(cjSize) FONTINFO *pfi);
  
@@ -164,7 +128,7 @@ Index: include/psdk/winddi.h
  FONTOBJ_pGetGammaTables(
 Index: include/psdk/winuser.h
 ===================================================================
---- include/psdk/winuser.h	(revision 57368)
+--- include/psdk/winuser.h	(revision 57501)
 +++ include/psdk/winuser.h	(working copy)
 @@ -2818,8 +2818,8 @@
  typedef LRESULT(CALLBACK *HOOKPROC)(int,WPARAM,LPARAM);
@@ -179,7 +143,7 @@ Index: include/psdk/winuser.h
  typedef LRESULT(CALLBACK *WNDPROC)(HWND,UINT,WPARAM,LPARAM);
 Index: include/reactos/wine/config.h
 ===================================================================
---- include/reactos/wine/config.h	(revision 57368)
+--- include/reactos/wine/config.h	(revision 57501)
 +++ include/reactos/wine/config.h	(working copy)
 @@ -1,3 +1,5 @@
 +#include "reactos/buildno.h"
@@ -189,7 +153,7 @@ Index: include/reactos/wine/config.h
  /* Define to a function attribute for Microsoft hotpatch assembly prefix. */
 Index: lib/3rdparty/CMakeLists.txt
 ===================================================================
---- lib/3rdparty/CMakeLists.txt	(revision 57368)
+--- lib/3rdparty/CMakeLists.txt	(revision 57501)
 +++ lib/3rdparty/CMakeLists.txt	(working copy)
 @@ -3,7 +3,9 @@
  add_subdirectory(bzip2)
@@ -203,7 +167,7 @@ Index: lib/3rdparty/CMakeLists.txt
  add_subdirectory(libsamplerate)
 Index: lib/3rdparty/freetype/CMakeLists.txt
 ===================================================================
---- lib/3rdparty/freetype/CMakeLists.txt	(revision 57368)
+--- lib/3rdparty/freetype/CMakeLists.txt	(revision 57501)
 +++ lib/3rdparty/freetype/CMakeLists.txt	(working copy)
 @@ -11,7 +11,9 @@
    src/base/ftbbox.c
@@ -217,7 +181,7 @@ Index: lib/3rdparty/freetype/CMakeLists.txt
    src/base/ftgxval.c
 Index: win32ss/CMakeLists.txt
 ===================================================================
---- win32ss/CMakeLists.txt	(revision 57368)
+--- win32ss/CMakeLists.txt	(revision 57501)
 +++ win32ss/CMakeLists.txt	(working copy)
 @@ -10,10 +10,12 @@
      add_subdirectory(gdi/diblib)
@@ -242,7 +206,7 @@ Index: win32ss/CMakeLists.txt
 \ No newline at end of file
 Index: win32ss/drivers/CMakeLists.txt
 ===================================================================
---- win32ss/drivers/CMakeLists.txt	(revision 57368)
+--- win32ss/drivers/CMakeLists.txt	(revision 57501)
 +++ win32ss/drivers/CMakeLists.txt	(working copy)
 @@ -1,5 +1,7 @@
  
@@ -254,7 +218,7 @@ Index: win32ss/drivers/CMakeLists.txt
  add_subdirectory(videoprt)
 Index: win32ss/include/ntgdihdl.h
 ===================================================================
---- win32ss/include/ntgdihdl.h	(revision 57368)
+--- win32ss/include/ntgdihdl.h	(revision 57501)
 +++ win32ss/include/ntgdihdl.h	(working copy)
 @@ -270,6 +270,7 @@
      DWORD           dwCFCount;
@@ -286,7 +250,7 @@ Index: win32ss/include/ntgdihdl.h
      FLONG    AttrFlags;
 Index: win32ss/user/win32csr/CMakeLists.txt
 ===================================================================
---- win32ss/user/win32csr/CMakeLists.txt	(revision 57368)
+--- win32ss/user/win32csr/CMakeLists.txt	(revision 57501)
 +++ win32ss/user/win32csr/CMakeLists.txt	(working copy)
 @@ -22,6 +22,7 @@
      file.c
@@ -298,7 +262,7 @@ Index: win32ss/user/win32csr/CMakeLists.txt
      tuiconsole.c
 Index: win32ss/user/win32csr/desktopbg.c
 ===================================================================
---- win32ss/user/win32csr/desktopbg.c	(revision 57368)
+--- win32ss/user/win32csr/desktopbg.c	(revision 57501)
 +++ win32ss/user/win32csr/desktopbg.c	(working copy)
 @@ -53,7 +53,9 @@
  
@@ -423,7 +387,7 @@ Index: win32ss/user/win32csr/desktopbg.c
  
 Index: win32ss/user/win32csr/dllmain.c
 ===================================================================
---- win32ss/user/win32csr/dllmain.c	(revision 57368)
+--- win32ss/user/win32csr/dllmain.c	(revision 57501)
 +++ win32ss/user/win32csr/dllmain.c	(working copy)
 @@ -16,6 +16,9 @@
  extern VOID WINAPI PrivateCsrssManualGuiCheck(LONG Check);
