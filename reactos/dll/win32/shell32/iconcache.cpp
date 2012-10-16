@@ -367,6 +367,7 @@ INT SIC_GetIconIndex (LPCWSTR sSourceFile, INT dwSourceIndex, DWORD dwFlags )
     LeaveCriticalSection(&SHELL32_SicCS);
     return ret;
 }
+
 /*****************************************************************************
  * SIC_Initialize            [internal]
  */
@@ -378,6 +379,7 @@ BOOL SIC_Initialize(void)
     HDC hDC;
     INT bpp;
     DWORD ilMask;
+    BOOL result = FALSE;
 
     TRACE("Entered SIC_Initialize\n");
 
@@ -397,11 +399,11 @@ BOOL SIC_Initialize(void)
     if (!hDC)
     {
         ERR("Failed to create information context (error %d)\n", GetLastError());
-        return FALSE;
+        goto end;
     }
 
     bpp = GetDeviceCaps(hDC, BITSPIXEL);
-    ReleaseDC(NULL, hDC);
+    DeleteDC(hDC);
 
     if (bpp <= 4)
         ilMask = ILC_COLOR4;
@@ -428,61 +430,83 @@ BOOL SIC_Initialize(void)
                                           ilMask,
                                           100,
                                           100);
+    if (!ShellSmallIconList)
+    {
+        ERR("Failed to create the small icon list.\n");
+        goto end;
+    }
 
     ShellBigIconList = ImageList_Create(cx_large,
                                         cy_large,
                                         ilMask,
                                         100,
                                         100);
-    if (ShellSmallIconList)
+    if (!ShellBigIconList)
     {
-        /* Load the document icon, which is used as the default if an icon isn't found. */
-        hSm = (HICON)LoadImageW(shell32_hInstance,
-                                MAKEINTRESOURCEW(IDI_SHELL_DOCUMENT),
-                                IMAGE_ICON,
-                                cx_small,
-                                cy_small,
-                                LR_SHARED | LR_DEFAULTCOLOR);
-        if (!hSm)
-        {
-            ERR("Failed to load IDI_SHELL_DOCUMENT icon1!\n");
-            return FALSE;
-        }
+        ERR("Failed to create the big icon list.\n");
+        goto end;
     }
-    else
+    
+    /* Load the document icon, which is used as the default if an icon isn't found. */
+    hSm = (HICON)LoadImageW(shell32_hInstance,
+                            MAKEINTRESOURCEW(IDI_SHELL_DOCUMENT),
+                            IMAGE_ICON,
+                            cx_small,
+                            cy_small,
+                            LR_SHARED | LR_DEFAULTCOLOR);
+    if (!hSm)
     {
-        ERR("Failed to load ShellSmallIconList\n");
-        return FALSE;
+        ERR("Failed to load small IDI_SHELL_DOCUMENT icon!\n");
+        goto end;
     }
 
-    if (ShellBigIconList)
+    hLg = (HICON)LoadImageW(shell32_hInstance,
+                            MAKEINTRESOURCEW(IDI_SHELL_DOCUMENT),
+                            IMAGE_ICON,
+                            cx_large,
+                            cy_large,
+                            LR_SHARED | LR_DEFAULTCOLOR);
+    if (!hLg)
     {
-        hLg = (HICON)LoadImageW(shell32_hInstance,
-                                MAKEINTRESOURCEW(IDI_SHELL_DOCUMENT),
-                                IMAGE_ICON,
-                                cx_large,
-                                cy_large,
-                                LR_SHARED | LR_DEFAULTCOLOR);
-        if (!hLg)
-        {
-            ERR("Failed to load IDI_SHELL_DOCUMENT icon2!\n");
-            DestroyIcon(hSm);
-            return FALSE;
-        }
-    }
-    else
-    {
-        ERR("Failed to load ShellBigIconList\n");
-        return FALSE;
+        ERR("Failed to load large IDI_SHELL_DOCUMENT icon!\n");
+        goto end;
     }
 
-    SIC_IconAppend(swShell32Name, IDI_SHELL_DOCUMENT-1, hSm, hLg, 0);
-    SIC_IconAppend(swShell32Name, -IDI_SHELL_DOCUMENT, hSm, hLg, 0);
+    if(SIC_IconAppend(swShell32Name, IDI_SHELL_DOCUMENT-1, hSm, hLg, 0) == INVALID_INDEX)
+    {
+        ERR("Failed to add IDI_SHELL_DOCUMENT icon to cache.\n");
+        goto end;
+    }
+    if(SIC_IconAppend(swShell32Name, -IDI_SHELL_DOCUMENT, hSm, hLg, 0) == INVALID_INDEX)
+    {
+        ERR("Failed to add IDI_SHELL_DOCUMENT icon to cache.\n");
+        goto end;
+    }
+    
+    /* Everything went fine */
+    result = TRUE;
+    
+end:
+    /* The image list keeps a copy of the icons, we must destroy them */
+    if(hSm) DestroyIcon(hSm);
+    if(hLg) DestroyIcon(hLg);
+    
+    /* Clean everything if something went wrong */
+    if(!result)
+    {
+        if(sic_hdpa) DPA_Destroy(sic_hdpa);
+        if(ShellSmallIconList) ImageList_Destroy(ShellSmallIconList);
+        if(ShellBigIconList) ImageList_Destroy(ShellSmallIconList);
+        sic_hdpa = NULL;
+        ShellSmallIconList = NULL;
+        ShellBigIconList = NULL;
+    }
 
     TRACE("hIconSmall=%p hIconBig=%p\n",ShellSmallIconList, ShellBigIconList);
 
-    return TRUE;
+    return result;
 }
+
 /*************************************************************************
  * SIC_Destroy
  *
