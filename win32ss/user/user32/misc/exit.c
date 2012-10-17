@@ -65,27 +65,25 @@
  */
 BOOL WINAPI
 ExitWindowsEx(UINT uFlags,
-	      DWORD dwReserved)
+              DWORD dwReserved)
 {
-  CSR_API_MESSAGE Request;
-  ULONG CsrRequest;
-  NTSTATUS Status;
+    CSR_API_MESSAGE Request;
+    NTSTATUS Status;
 
-  CsrRequest = MAKE_CSR_API(EXIT_REACTOS, CSR_GUI);
-  Request.Data.ExitReactosRequest.Flags = uFlags;
-  Request.Data.ExitReactosRequest.Reserved = dwReserved;
+    Request.Data.ExitReactosRequest.Flags = uFlags;
+    Request.Data.ExitReactosRequest.Reserved = dwReserved;
 
-  Status = CsrClientCallServer(&Request,
-			       NULL,
-                   CsrRequest,
-			       sizeof(CSR_API_MESSAGE));
-  if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
+    Status = CsrClientCallServer(&Request,
+                                 NULL,
+                                 CSR_CREATE_API_NUMBER(CSR_GUI, EXIT_REACTOS),
+                                 sizeof(CSR_API_MESSAGE));
+    if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
     {
-      SetLastError(RtlNtStatusToDosError(Status));
-      return(FALSE);
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
     }
 
-  return(TRUE);
+    return TRUE;
 }
 
 
@@ -95,24 +93,22 @@ ExitWindowsEx(UINT uFlags,
 BOOL WINAPI
 RegisterServicesProcess(DWORD ServicesProcessId)
 {
-  CSR_API_MESSAGE Request;
-  ULONG CsrRequest;
-  NTSTATUS Status;
+    CSR_API_MESSAGE Request;
+    NTSTATUS Status;
 
-  CsrRequest = MAKE_CSR_API(REGISTER_SERVICES_PROCESS, CSR_GUI);
-  Request.Data.RegisterServicesProcessRequest.ProcessId = UlongToHandle(ServicesProcessId);
+    Request.Data.RegisterServicesProcessRequest.ProcessId = UlongToHandle(ServicesProcessId);
 
-  Status = CsrClientCallServer(&Request,
-                   NULL,
-			       CsrRequest,
-			       sizeof(CSR_API_MESSAGE));
-  if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
+    Status = CsrClientCallServer(&Request,
+                                 NULL,
+                                 CSR_CREATE_API_NUMBER(CSR_GUI, REGISTER_SERVICES_PROCESS),
+                                 sizeof(CSR_API_MESSAGE));
+    if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
     {
-      SetLastError(RtlNtStatusToDosError(Status));
-      return(FALSE);
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
     }
 
-  return(TRUE);
+    return TRUE;
 }
 
 /* EOF */

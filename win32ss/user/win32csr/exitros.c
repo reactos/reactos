@@ -18,20 +18,20 @@ static HANDLE LogonProcess = NULL;
 
 CSR_API(CsrRegisterLogonProcess)
 {
-    if (Request->Data.RegisterLogonProcessRequest.Register)
+    if (ApiMessage->Data.RegisterLogonProcessRequest.Register)
     {
         if (0 != LogonProcess)
         {
             return STATUS_LOGON_SESSION_EXISTS;
         }
-        LogonProcess = Request->Data.RegisterLogonProcessRequest.ProcessId;
+        LogonProcess = ApiMessage->Data.RegisterLogonProcessRequest.ProcessId;
     }
     else
     {
-        if (Request->Header.ClientId.UniqueProcess != LogonProcess)
+        if (ApiMessage->Header.ClientId.UniqueProcess != LogonProcess)
         {
             DPRINT1("Current logon process 0x%x, can't deregister from process 0x%x\n",
-                    LogonProcess, Request->Header.ClientId.UniqueProcess);
+                    LogonProcess, ApiMessage->Header.ClientId.UniqueProcess);
             return STATUS_NOT_LOGON_PROCESS;
         }
         LogonProcess = 0;
@@ -44,7 +44,7 @@ CSR_API(CsrSetLogonNotifyWindow)
 {
     DWORD WindowCreator;
 
-    if (0 == GetWindowThreadProcessId(Request->Data.SetLogonNotifyWindowRequest.LogonNotifyWindow,
+    if (0 == GetWindowThreadProcessId(ApiMessage->Data.SetLogonNotifyWindowRequest.LogonNotifyWindow,
                                       &WindowCreator))
     {
         DPRINT1("Can't get window creator\n");
@@ -56,7 +56,7 @@ CSR_API(CsrSetLogonNotifyWindow)
         return STATUS_ACCESS_DENIED;
     }
 
-    LogonNotifyWindow = Request->Data.SetLogonNotifyWindowRequest.LogonNotifyWindow;
+    LogonNotifyWindow = ApiMessage->Data.SetLogonNotifyWindowRequest.LogonNotifyWindow;
 
     return STATUS_SUCCESS;
 }
@@ -915,16 +915,16 @@ UserExitReactos(DWORD UserProcessId, UINT Flags)
 
 CSR_API(CsrExitReactos)
 {
-    if (0 == (Request->Data.ExitReactosRequest.Flags & EWX_INTERNAL_FLAG))
+    if (0 == (ApiMessage->Data.ExitReactosRequest.Flags & EWX_INTERNAL_FLAG))
     {
-        return UserExitReactos((DWORD_PTR) Request->Header.ClientId.UniqueProcess,
-                               Request->Data.ExitReactosRequest.Flags);
+        return UserExitReactos((DWORD_PTR) ApiMessage->Header.ClientId.UniqueProcess,
+                               ApiMessage->Data.ExitReactosRequest.Flags);
     }
     else
     {
-        return InternalExitReactos((DWORD_PTR) Request->Header.ClientId.UniqueProcess,
-                                   (DWORD_PTR) Request->Header.ClientId.UniqueThread,
-                                   Request->Data.ExitReactosRequest.Flags);
+        return InternalExitReactos((DWORD_PTR) ApiMessage->Header.ClientId.UniqueProcess,
+                                   (DWORD_PTR) ApiMessage->Header.ClientId.UniqueThread,
+                                   ApiMessage->Data.ExitReactosRequest.Flags);
     }
 }
 

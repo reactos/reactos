@@ -187,7 +187,7 @@ NTAPI
 CsrImpersonateClient(IN PCSR_THREAD CsrThread)
 {
     NTSTATUS Status;
-    PCSR_THREAD CurrentThread = NtCurrentTeb()->CsrClientThread;
+    PCSR_THREAD CurrentThread = CsrGetClientThread();
 
     /* Use the current thread if none given */
     if (!CsrThread) CsrThread = CurrentThread;
@@ -241,7 +241,7 @@ NTAPI
 CsrRevertToSelf(VOID)
 {
     NTSTATUS Status;
-    PCSR_THREAD CurrentThread = NtCurrentTeb()->CsrClientThread;
+    PCSR_THREAD CurrentThread = CsrGetClientThread();
     HANDLE ImpersonationToken = NULL;
 
     /* Check if we have a Current Thread */
@@ -699,7 +699,7 @@ CsrCreateProcess(IN HANDLE hProcess,
                  IN ULONG Flags,
                  IN PCLIENT_ID DebugCid)
 {
-    PCSR_THREAD CurrentThread = NtCurrentTeb()->CsrClientThread;
+    PCSR_THREAD CurrentThread = CsrGetClientThread();
     CLIENT_ID CurrentCid;
     PCSR_PROCESS CurrentProcess;
 //    PVOID ProcessData;

@@ -36,7 +36,8 @@
 #include <ndk/umfuncs.h>
 
 /* CSRSS Header */
-#include <csrss/csrss.h>
+#include <csrss/client.h>
+#include <csrss/csrss.h> // FIXME: data header.
 
 /* C Headers */
 #include <ctype.h>

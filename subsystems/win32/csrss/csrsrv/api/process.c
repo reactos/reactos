@@ -28,20 +28,22 @@ CSR_API(CsrSrvCreateProcess)
      NTSTATUS Status;
      HANDLE ProcessHandle, ThreadHandle;
      PCSR_THREAD CsrThread;
-     PCSR_PROCESS NewProcessData;
+     PCSR_PROCESS Process, NewProcess;
      ULONG Flags, VdmPower = 0, DebugFlags = 0;
 
      /* Get the current client thread */
-     CsrThread = NtCurrentTeb()->CsrClientThread;
+     CsrThread = CsrGetClientThread();
      ASSERT(CsrThread != NULL);
 
+     Process = CsrThread->Process;
+
      /* Extract the flags out of the process handle */
-     Flags = (ULONG_PTR)Request->Data.CreateProcessRequest.ProcessHandle & 3;
-     Request->Data.CreateProcessRequest.ProcessHandle = (HANDLE)((ULONG_PTR)Request->Data.CreateProcessRequest.ProcessHandle & ~3);
+     Flags = (ULONG_PTR)ApiMessage->Data.CreateProcessRequest.ProcessHandle & 3;
+     ApiMessage->Data.CreateProcessRequest.ProcessHandle = (HANDLE)((ULONG_PTR)ApiMessage->Data.CreateProcessRequest.ProcessHandle & ~3);
 
      /* Duplicate the process handle */
-     Status = NtDuplicateObject(CsrThread->Process->ProcessHandle,
-                                Request->Data.CreateProcessRequest.ProcessHandle,
+     Status = NtDuplicateObject(Process->ProcessHandle,
+                                ApiMessage->Data.CreateProcessRequest.ProcessHandle,
                                 NtCurrentProcess(),
                                 &ProcessHandle,
                                 0,
@@ -54,8 +56,8 @@ CSR_API(CsrSrvCreateProcess)
      }
 
      /* Duplicate the thread handle */
-     Status = NtDuplicateObject(CsrThread->Process->ProcessHandle,
-                                Request->Data.CreateProcessRequest.ThreadHandle,
+     Status = NtDuplicateObject(Process->ProcessHandle,
+                                ApiMessage->Data.CreateProcessRequest.ThreadHandle,
                                 NtCurrentProcess(),
                                 &ThreadHandle,
                                 0,
@@ -86,7 +88,7 @@ CSR_API(CsrSrvCreateProcess)
     }
     
     /* Convert some flags. FIXME: More need conversion */
-    if (Request->Data.CreateProcessRequest.CreationFlags & CREATE_NEW_PROCESS_GROUP)
+    if (ApiMessage->Data.CreateProcessRequest.CreationFlags & CREATE_NEW_PROCESS_GROUP)
     {
         DebugFlags |= CsrProcessCreateNewGroup;
     }
@@ -96,8 +98,8 @@ CSR_API(CsrSrvCreateProcess)
     /* Call CSRSRV to create the CSR_PROCESS structure and the first CSR_THREAD */
     Status = CsrCreateProcess(ProcessHandle,
                               ThreadHandle,
-                              &Request->Data.CreateProcessRequest.ClientId,
-                              CsrThread->Process->NtSession,
+                              &ApiMessage->Data.CreateProcessRequest.ClientId,
+                              Process->NtSession,
                               DebugFlags,
                               NULL);
     if (Status == STATUS_THREAD_IS_TERMINATING)
@@ -118,16 +120,16 @@ CSR_API(CsrSrvCreateProcess)
     /* FIXME: VDM vodoo */
     
     /* ReactOS Compatibility */
-    Status = CsrLockProcessByClientId(Request->Data.CreateProcessRequest.ClientId.UniqueProcess, &NewProcessData);
+    Status = CsrLockProcessByClientId(ApiMessage->Data.CreateProcessRequest.ClientId.UniqueProcess, &NewProcess);
     ASSERT(Status == STATUS_SUCCESS);
-    if (!(Request->Data.CreateProcessRequest.CreationFlags & (CREATE_NEW_CONSOLE | DETACHED_PROCESS)))
+    if (!(ApiMessage->Data.CreateProcessRequest.CreationFlags & (CREATE_NEW_CONSOLE | DETACHED_PROCESS)))
     {
-        NewProcessData->ParentConsole = ProcessData->Console;
-        NewProcessData->bInheritHandles = Request->Data.CreateProcessRequest.bInheritHandles;
+        NewProcess->ParentConsole = Process->Console;
+        NewProcess->bInheritHandles = ApiMessage->Data.CreateProcessRequest.bInheritHandles;
     }
-    RtlInitializeCriticalSection(&NewProcessData->HandleTableLock);
-    CallProcessCreated(ProcessData, NewProcessData);
-    CsrUnlockProcess(NewProcessData);
+    RtlInitializeCriticalSection(&NewProcess->HandleTableLock);
+    CallProcessCreated(Process, NewProcess);
+    CsrUnlockProcess(NewProcess);
 
     /* Return the result of this operation */
     return Status;
@@ -141,36 +143,36 @@ CSR_API(CsrSrvCreateThread)
     PCSR_PROCESS CsrProcess;
     
     /* Get the current CSR thread */
-    CurrentThread = NtCurrentTeb()->CsrClientThread;
+    CurrentThread = CsrGetClientThread();
     if (!CurrentThread)
     {
         DPRINT1("Server Thread TID: [%lx.%lx]\n",
-                Request->Data.CreateThreadRequest.ClientId.UniqueProcess,
-                Request->Data.CreateThreadRequest.ClientId.UniqueThread);
+                ApiMessage->Data.CreateThreadRequest.ClientId.UniqueProcess,
+                ApiMessage->Data.CreateThreadRequest.ClientId.UniqueThread);
         return STATUS_SUCCESS; // server-to-server
     }
 
     /* Get the CSR Process for this request */
     CsrProcess = CurrentThread->Process;
     if (CsrProcess->ClientId.UniqueProcess !=
-        Request->Data.CreateThreadRequest.ClientId.UniqueProcess)
+        ApiMessage->Data.CreateThreadRequest.ClientId.UniqueProcess)
     {
         /* This is a remote thread request -- is it within the server itself? */
-        if (Request->Data.CreateThreadRequest.ClientId.UniqueProcess == NtCurrentTeb()->ClientId.UniqueProcess)
+        if (ApiMessage->Data.CreateThreadRequest.ClientId.UniqueProcess == NtCurrentTeb()->ClientId.UniqueProcess)
         {
             /* Accept this without any further work */
             return STATUS_SUCCESS;
         }
 
         /* Get the real CSR Process for the remote thread's process */
-        Status = CsrLockProcessByClientId(Request->Data.CreateThreadRequest.ClientId.UniqueProcess,
+        Status = CsrLockProcessByClientId(ApiMessage->Data.CreateThreadRequest.ClientId.UniqueProcess,
                                           &CsrProcess);
         if (!NT_SUCCESS(Status)) return Status;
     }
 
     /* Duplicate the thread handle so we can own it */
     Status = NtDuplicateObject(CurrentThread->Process->ProcessHandle,
-                               Request->Data.CreateThreadRequest.ThreadHandle,
+                               ApiMessage->Data.CreateThreadRequest.ThreadHandle,
                                NtCurrentProcess(),
                                &ThreadHandle,
                                0,
@@ -181,7 +183,7 @@ CSR_API(CsrSrvCreateThread)
         /* Call CSRSRV to tell it about the new thread */
         Status = CsrCreateThread(CsrProcess,
                                  ThreadHandle,
-                                 &Request->Data.CreateThreadRequest.ClientId);
+                                 &ApiMessage->Data.CreateThreadRequest.ClientId);
     }
 
     /* Unlock the process and return */
@@ -191,39 +193,42 @@ CSR_API(CsrSrvCreateThread)
 
 CSR_API(CsrTerminateProcess)
 {
-    PCSR_THREAD CsrThread = NtCurrentTeb()->CsrClientThread;
+    PCSR_THREAD CsrThread = CsrGetClientThread();
     ASSERT(CsrThread != NULL);
 
     /* Set magic flag so we don't reply this message back */
-    Request->Type = 0xBABE;
+    ApiMessage->ApiNumber = 0xBABE;
 
     /* Remove the CSR_THREADs and CSR_PROCESS */
     return CsrDestroyProcess(&CsrThread->ClientId,
-                             (NTSTATUS)Request->Data.TerminateProcessRequest.uExitCode);
+                             (NTSTATUS)ApiMessage->Data.TerminateProcessRequest.uExitCode);
 }
 
 CSR_API(CsrConnectProcess)
 {
-
-   return(STATUS_SUCCESS);
+    return STATUS_SUCCESS;
 }
 
 CSR_API(CsrGetShutdownParameters)
 {
+    PCSR_THREAD CsrThread = CsrGetClientThread();
+    ASSERT(CsrThread);
 
-  Request->Data.GetShutdownParametersRequest.Level = ProcessData->ShutdownLevel;
-  Request->Data.GetShutdownParametersRequest.Flags = ProcessData->ShutdownFlags;
+    ApiMessage->Data.GetShutdownParametersRequest.Level = CsrThread->Process->ShutdownLevel;
+    ApiMessage->Data.GetShutdownParametersRequest.Flags = CsrThread->Process->ShutdownFlags;
 
-  return(STATUS_SUCCESS);
+    return STATUS_SUCCESS;
 }
 
 CSR_API(CsrSetShutdownParameters)
 {
+    PCSR_THREAD CsrThread = CsrGetClientThread();
+    ASSERT(CsrThread);
 
-  ProcessData->ShutdownLevel = Request->Data.SetShutdownParametersRequest.Level;
-  ProcessData->ShutdownFlags = Request->Data.SetShutdownParametersRequest.Flags;
+    CsrThread->Process->ShutdownLevel = ApiMessage->Data.SetShutdownParametersRequest.Level;
+    CsrThread->Process->ShutdownFlags = ApiMessage->Data.SetShutdownParametersRequest.Flags;
 
-  return(STATUS_SUCCESS);
+    return STATUS_SUCCESS;
 }
 
 /* EOF */

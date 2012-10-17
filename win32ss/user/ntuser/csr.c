@@ -34,7 +34,7 @@ CsrInit(void)
                           NULL,
                           NULL,
                           &ConnectInfoLength);
-   if (! NT_SUCCESS(Status))
+   if (!NT_SUCCESS(Status))
    {
       return Status;
    }

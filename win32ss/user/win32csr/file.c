@@ -73,9 +73,9 @@ CSR_API(CsrGetTempFile)
     DPRINT("CsrGetTempFile entered\n");
 
     /* Return 16-bits ID */
-    Request->Data.GetTempFile.UniqueID = (++CsrGetTempFileUnique & 0xFFFF);
+    ApiMessage->Data.GetTempFile.UniqueID = (++CsrGetTempFileUnique & 0xFFFF);
 
-    DPRINT("Returning: %u\n", Request->Data.GetTempFile.UniqueID);
+    DPRINT("Returning: %u\n", ApiMessage->Data.GetTempFile.UniqueID);
 
     return STATUS_SUCCESS;
 }
@@ -106,16 +106,16 @@ CSR_API(CsrDefineDosDevice)
     PWSTR lpBuffer;
 
     DPRINT("CsrDefineDosDevice entered, Flags:%d, DeviceName:%wZ, TargetName:%wZ\n",
-           Request->Data.DefineDosDeviceRequest.dwFlags,
-           &Request->Data.DefineDosDeviceRequest.DeviceName,
-           &Request->Data.DefineDosDeviceRequest.TargetName);
+           ApiMessage->Data.DefineDosDeviceRequest.dwFlags,
+           &ApiMessage->Data.DefineDosDeviceRequest.DeviceName,
+           &ApiMessage->Data.DefineDosDeviceRequest.TargetName);
 
     Matched = AddHistory = FALSE;
     HistoryEntry = NULL;
     AdminSid = SystemSid = WorldSid = NULL;
     SecurityDescriptor = NULL;
     ListHead = &DosDeviceHistory;
-    dwFlags = Request->Data.DefineDosDeviceRequest.dwFlags;
+    dwFlags = ApiMessage->Data.DefineDosDeviceRequest.dwFlags;
 
     /* Validate the flags */
     if ( (dwFlags & 0xFFFFFFF0) ||
@@ -137,13 +137,13 @@ CSR_API(CsrDefineDosDevice)
     {
         Status =
             RtlUpcaseUnicodeString(&RequestDeviceName,
-                                   &Request->Data.DefineDosDeviceRequest.DeviceName,
+                                   &ApiMessage->Data.DefineDosDeviceRequest.DeviceName,
                                    TRUE);
         if (! NT_SUCCESS(Status))
             _SEH2_LEAVE;
 
         RequestLinkTarget =
-            &Request->Data.DefineDosDeviceRequest.TargetName;
+            &ApiMessage->Data.DefineDosDeviceRequest.TargetName;
         lpBuffer = (PWSTR) RtlAllocateHeap(Win32CsrApiHeap,
                                            HEAP_ZERO_MEMORY,
                                            RequestDeviceName.MaximumLength + 5 * sizeof(WCHAR));

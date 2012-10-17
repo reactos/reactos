@@ -281,7 +281,7 @@ CsrSrvClientConnect(IN OUT PCSR_API_MESSAGE ApiMessage,
     NTSTATUS Status;
     PCSR_CLIENT_CONNECT ClientConnect;
     PCSR_SERVER_DLL ServerDll;
-    PCSR_PROCESS CurrentProcess = ((PCSR_THREAD)NtCurrentTeb()->CsrClientThread)->Process;
+    PCSR_PROCESS CurrentProcess = CsrGetClientThread()->Process;
 
     /* Load the Message, set default reply */
     ClientConnect = (PCSR_CLIENT_CONNECT)&ApiMessage->CsrClientConnect;
@@ -525,7 +525,7 @@ NTAPI
 CsrSrvIdentifyAlertableThread(IN OUT PCSR_API_MESSAGE ApiMessage,
                               IN OUT PULONG Reply)
 {
-    PCSR_THREAD CsrThread = NtCurrentTeb()->CsrClientThread;
+    PCSR_THREAD CsrThread = CsrGetClientThread();
 
     /* Set the alertable flag */
     CsrThread->Flags |= CsrThreadAltertable;

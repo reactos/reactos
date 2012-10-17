@@ -32,7 +32,7 @@ CSR_API(CsrRegisterServicesProcess)
     }
   else
     {
-      ServicesProcessId = (ULONG_PTR)Request->Data.RegisterServicesProcessRequest.ProcessId;
+      ServicesProcessId = (ULONG_PTR)ApiMessage->Data.RegisterServicesProcessRequest.ProcessId;
       ServicesProcessIdValid = TRUE;
       return STATUS_SUCCESS;
     }

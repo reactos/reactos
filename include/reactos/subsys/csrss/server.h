@@ -1,9 +1,11 @@
 /*
  * PROJECT:         ReactOS Native Headers
- * FILE:            include/subsys/csr/server.h
+ * FILE:            include/subsys/csrss/server.h
  * PURPOSE:         Public Definitions for CSR Servers
- * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
+ * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
+ *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
+
 #ifndef _CSRSERVER_H
 #define _CSRSERVER_H
 
@@ -12,9 +14,10 @@
 #pragma warning (disable:4201)
 #endif
 
-/* DEPENDENCIES **************************************************************/
+#include "msg.h"
 
 /* TYPES **********************************************************************/
+
 typedef struct _CSR_NT_SESSION
 {
     ULONG ReferenceCount;
@@ -22,6 +25,20 @@ typedef struct _CSR_NT_SESSION
     ULONG SessionId;
 } CSR_NT_SESSION, *PCSR_NT_SESSION;
 
+/*** old thingie, remove it later... (put it in winsrv -- console) ***/
+typedef struct _CSRSS_CON_PROCESS_DATA
+{
+    HANDLE ConsoleEvent;
+    struct tagCSRSS_CONSOLE *Console;
+    struct tagCSRSS_CONSOLE *ParentConsole;
+    BOOL bInheritHandles;
+    RTL_CRITICAL_SECTION HandleTableLock;
+    ULONG HandleTableSize;
+    struct _CSRSS_HANDLE *HandleTable;
+    PCONTROLDISPATCHER CtrlDispatcher;
+    LIST_ENTRY ConsoleLink;
+} CSRSS_CON_PROCESS_DATA, *PCSRSS_CON_PROCESS_DATA;
+/*********************************************************************/
 typedef struct _CSR_PROCESS
 {
     CLIENT_ID ClientId;
@@ -47,7 +64,8 @@ typedef struct _CSR_PROCESS
     ULONG Reserved;
     ULONG ShutdownLevel;
     ULONG ShutdownFlags;
-    PVOID ServerData[ANYSIZE_ARRAY];
+//    PVOID ServerData[ANYSIZE_ARRAY];
+    CSRSS_CON_PROCESS_DATA; //// FIXME: Remove it after we activate the previous member.
 } CSR_PROCESS, *PCSR_PROCESS;
 
 typedef struct _CSR_THREAD
@@ -64,33 +82,36 @@ typedef struct _CSR_THREAD
     ULONG ImpersonationCount;
 } CSR_THREAD, *PCSR_THREAD;
 
-/* ENUMERATIONS **************************************************************/
-#define CSR_SRV_SERVER 0
+#define CsrGetClientThread() \
+    ((PCSR_THREAD)(NtCurrentTeb()->CsrClientThread))
+
+
+/* ENUMERATIONS ***************************************************************/
 
 typedef enum _CSR_PROCESS_FLAGS
 {
-    CsrProcessTerminating = 0x1,
-    CsrProcessSkipShutdown = 0x2,
-    CsrProcessNormalPriority = 0x10,
-    CsrProcessIdlePriority = 0x20,
-    CsrProcessHighPriority = 0x40,
-    CsrProcessRealtimePriority = 0x80,
-    CsrProcessCreateNewGroup = 0x100,
-    CsrProcessTerminated = 0x200,
+    CsrProcessTerminating          = 0x1,
+    CsrProcessSkipShutdown         = 0x2,
+    CsrProcessNormalPriority       = 0x10,
+    CsrProcessIdlePriority         = 0x20,
+    CsrProcessHighPriority         = 0x40,
+    CsrProcessRealtimePriority     = 0x80,
+    CsrProcessCreateNewGroup       = 0x100,
+    CsrProcessTerminated           = 0x200,
     CsrProcessLastThreadTerminated = 0x400,
-    CsrProcessIsConsoleApp = 0x800
+    CsrProcessIsConsoleApp         = 0x800
 } CSR_PROCESS_FLAGS, *PCSR_PROCESS_FLAGS;
 
 #define CsrProcessPriorityFlags (CsrProcessNormalPriority | \
-                                 CsrProcessIdlePriority | \
-                                 CsrProcessHighPriority | \
+                                 CsrProcessIdlePriority   | \
+                                 CsrProcessHighPriority   | \
                                  CsrProcessRealtimePriority)
 
 typedef enum _CSR_THREAD_FLAGS
 {
-    CsrThreadAltertable = 0x1,
-    CsrThreadInTermination = 0x2,
-    CsrThreadTerminated = 0x4,
+    CsrThreadAltertable     = 0x1,
+    CsrThreadInTermination  = 0x2,
+    CsrThreadTerminated     = 0x4,
     CsrThreadIsServerThread = 0x10
 } CSR_THREAD_FLAGS, *PCSR_THREAD_FLAGS;
 
@@ -104,7 +125,7 @@ typedef enum _SHUTDOWN_RESULT
 typedef enum _CSR_SHUTDOWN_FLAGS
 {
     CsrShutdownSystem = 4,
-    CsrShutdownOther = 8
+    CsrShutdownOther  = 8
 } CSR_SHUTDOWN_FLAGS, *PCSR_SHUTDOWN_FLAGS;
 
 typedef enum _CSR_DEBUG_FLAGS
@@ -113,7 +134,48 @@ typedef enum _CSR_DEBUG_FLAGS
     CsrDebugProcessChildren = 2
 } CSR_PROCESS_DEBUG_FLAGS, *PCSR_PROCESS_DEBUG_FLAGS;
 
-/* FUNCTION TYPES ************************************************************/
+
+/*
+ * Wait block
+ */
+typedef
+BOOLEAN
+(*CSR_WAIT_FUNCTION)(
+    IN PLIST_ENTRY WaitList,
+    IN PCSR_THREAD WaitThread,
+    IN PCSR_API_MESSAGE WaitApiMessage,
+    IN PVOID WaitContext,
+    IN PVOID WaitArgument1,
+    IN PVOID WaitArgument2,
+    IN ULONG WaitFlags
+);
+
+typedef struct _CSR_WAIT_BLOCK
+{
+    ULONG Size;
+    LIST_ENTRY WaitList;
+    LIST_ENTRY UserWaitList;
+    PVOID WaitContext;
+    PCSR_THREAD WaitThread;
+    CSR_WAIT_FUNCTION WaitFunction;
+    CSR_API_MESSAGE WaitApiMessage;
+} CSR_WAIT_BLOCK, *PCSR_WAIT_BLOCK;
+
+
+/*
+ * Server DLL structure
+ */
+typedef
+NTSTATUS
+(NTAPI *PCSR_API_ROUTINE)(
+    IN OUT PCSR_API_MESSAGE ApiMessage,
+    OUT PULONG Reply
+);
+
+#define CSR_API(n) NTSTATUS NTAPI n (   \
+    IN OUT PCSR_API_MESSAGE ApiMessage, \
+    OUT PULONG Reply)
+
 typedef
 NTSTATUS
 (NTAPI *PCSR_CONNECT_CALLBACK)(
@@ -148,69 +210,6 @@ ULONG
     IN BOOLEAN FirstPhase
 );
 
-
-/* FIXME: Put into public NDK Header */
-typedef ULONG CSR_API_NUMBER;
-
-#define CSR_MAKE_OPCODE(s,m) ((s) << 16) | (m)
-#define CSR_API_ID_FROM_OPCODE(n) ((ULONG)((USHORT)(n)))
-#define CSR_SERVER_ID_FROM_OPCODE(n) (ULONG)((n) >> 16)
-
-typedef struct _CSR_CONNECTION_INFO
-{
-    ULONG Unknown[2];
-    HANDLE ObjectDirectory;
-    PVOID SharedSectionBase;
-    PVOID SharedSectionHeap;
-    PVOID SharedSectionData;
-    ULONG DebugFlags;
-    ULONG Unknown2[3];
-    HANDLE ProcessId;
-} CSR_CONNECTION_INFO, *PCSR_CONNECTION_INFO;
-
-typedef struct _CSR_CLIENT_CONNECT
-{
-    ULONG ServerId;
-    PVOID ConnectionInfo;
-    ULONG ConnectionInfoSize;
-} CSR_CLIENT_CONNECT, *PCSR_CLIENT_CONNECT;
-
-typedef struct _CSR_API_MESSAGE
-{
-    PORT_MESSAGE Header;
-    union
-    {
-        CSR_CONNECTION_INFO ConnectionInfo;
-        struct
-        {
-            PVOID CsrCaptureData;
-            CSR_API_NUMBER Opcode;
-            ULONG Status;
-            ULONG Reserved;
-            union
-            {
-                CSR_CLIENT_CONNECT CsrClientConnect;
-            };
-        };
-    };
-} CSR_API_MESSAGE, *PCSR_API_MESSAGE;
-
-typedef struct _CSR_CAPTURE_BUFFER
-{
-    ULONG Size;
-    struct _CSR_CAPTURE_BUFFER *PreviousCaptureBuffer;
-    ULONG PointerCount;
-    ULONG_PTR BufferEnd;
-} CSR_CAPTURE_BUFFER, *PCSR_CAPTURE_BUFFER;
-
-/* Private data resumes here */
-typedef
-NTSTATUS
-(NTAPI *PCSR_API_ROUTINE)(
-    IN OUT PCSR_API_MESSAGE ApiMessage,
-    IN OUT PULONG Reply
-);
-
 typedef struct _CSR_SERVER_DLL
 {
     ULONG Length;
@@ -234,44 +233,78 @@ typedef struct _CSR_SERVER_DLL
     ULONG Unknown2[3];
 } CSR_SERVER_DLL, *PCSR_SERVER_DLL;
 
+
+/* FUNCTION TYPES *************************************************************/
+
 typedef
 NTSTATUS
-(NTAPI *PCSR_SERVER_DLL_INIT_CALLBACK)(IN PCSR_SERVER_DLL ServerDll);
+(NTAPI *PCSR_SERVER_DLL_INIT_CALLBACK)(IN PCSR_SERVER_DLL LoadedServerDll);
 
-typedef
-BOOLEAN
-(*CSR_WAIT_FUNCTION)(
-    IN PLIST_ENTRY WaitList,
-    IN PCSR_THREAD WaitThread,
-    IN PCSR_API_MESSAGE WaitApiMessage,
-    IN PVOID WaitContext,
-    IN PVOID WaitArgument1,
-    IN PVOID WaitArgument2,
-    IN ULONG WaitFlags
-);
+/*
+NTSTATUS
+NTAPI
+CsrServerDllInitialization(IN PCSR_SERVER_DLL LoadedServerDll);
+*/
 
-typedef struct _CSR_WAIT_BLOCK
-{
-    ULONG Size;
-    LIST_ENTRY WaitList;
-    LIST_ENTRY UserWaitList;
-    PVOID WaitContext;
-    PCSR_THREAD WaitThread;
-    CSR_WAIT_FUNCTION WaitFunction;
-    CSR_API_MESSAGE WaitApiMessage;
-} CSR_WAIT_BLOCK, *PCSR_WAIT_BLOCK;
 
 /* PROTOTYPES ****************************************************************/
 
 NTSTATUS
 NTAPI
 CsrServerInitialization(
-    ULONG ArgumentCount,
-    PCHAR Arguments[]
+    IN ULONG ArgumentCount,
+    IN PCHAR Arguments[]
 );
+
+///////////
+BOOLEAN
+NTAPI
+CsrCaptureArguments(
+    IN PCSR_THREAD CsrThread,
+    IN PCSR_API_MESSAGE ApiMessage
+);
+
+VOID
+NTAPI
+CsrReleaseCapturedArguments(IN PCSR_API_MESSAGE ApiMessage);
+//////////
+
+PCSR_THREAD
+NTAPI
+CsrAddStaticServerThread(
+    IN HANDLE hThread,
+    IN PCLIENT_ID ClientId,
+    IN ULONG ThreadFlags
+);
+
+PCSR_THREAD
+NTAPI
+CsrConnectToUser(VOID);
+
+BOOLEAN
+NTAPI
+CsrImpersonateClient(IN PCSR_THREAD CsrThread);
+
+BOOLEAN
+NTAPI
+CsrRevertToSelf(VOID);
+
+VOID
+NTAPI
+CsrSetBackgroundPriority(IN PCSR_PROCESS CsrProcess);
+
+LONG
+NTAPI
+CsrUnhandledExceptionFilter(
+    IN PEXCEPTION_POINTERS ExceptionInfo
+);
+
+
 
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif
 
-#endif
+#endif // _CSRSERVER_H
+
+/* EOF */

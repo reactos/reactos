@@ -1208,7 +1208,7 @@ NtUserCreateDesktop(
    /*
     * Create a handle for CSRSS and notify CSRSS for Creating Desktop Background Windows and Threads.
     */
-   Request.Type = MAKE_CSR_API(CREATE_DESKTOP, CSR_GUI);
+   Request.ApiNumber = CSR_CREATE_API_NUMBER(CSR_GUI, CREATE_DESKTOP);
    Status = CsrInsertObject(Desktop,
                             GENERIC_ALL,
                             (HANDLE*)&Request.Data.CreateDesktopRequest.DesktopHandle);

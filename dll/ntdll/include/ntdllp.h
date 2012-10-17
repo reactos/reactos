@@ -143,11 +143,11 @@ LdrpFreeUnicodeString(PUNICODE_STRING String);
 /* FIXME: Cleanup this mess */
 typedef NTSTATUS (NTAPI *PEPFUNC)(PPEB);
 NTSTATUS LdrMapSections(HANDLE ProcessHandle,
-			PVOID ImageBase,
-			HANDLE SectionHandle,
-			PIMAGE_NT_HEADERS NTHeaders);
+                        PVOID ImageBase,
+                        HANDLE SectionHandle,
+                        PIMAGE_NT_HEADERS NTHeaders);
 NTSTATUS LdrMapNTDllForProcess(HANDLE ProcessHandle,
-			       PHANDLE NTDllSectionHandle);
+                               PHANDLE NTDllSectionHandle);
 ULONG
 LdrpGetResidentSize(PIMAGE_NT_HEADERS NTHeaders);
 

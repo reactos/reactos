@@ -30,30 +30,31 @@ CSR_API(CsrReadConsole)
     PWCHAR UnicodeBuffer;
     ULONG i = 0;
     ULONG nNumberOfCharsToRead, CharSize;
+    PCSR_PROCESS ProcessData = CsrGetClientThread()->Process;
     PCSRSS_CONSOLE Console;
     NTSTATUS Status;
 
     DPRINT("CsrReadConsole\n");
 
-    CharSize = (Request->Data.ReadConsoleRequest.Unicode ? sizeof(WCHAR) : sizeof(CHAR));
+    CharSize = (ApiMessage->Data.ReadConsoleRequest.Unicode ? sizeof(WCHAR) : sizeof(CHAR));
 
-    nNumberOfCharsToRead = Request->Data.ReadConsoleRequest.NrCharactersToRead;
+    nNumberOfCharsToRead = ApiMessage->Data.ReadConsoleRequest.NrCharactersToRead;
 
-    Buffer = (PCHAR)Request->Data.ReadConsoleRequest.Buffer;
+    Buffer = (PCHAR)ApiMessage->Data.ReadConsoleRequest.Buffer;
     UnicodeBuffer = (PWCHAR)Buffer;
     if (!Win32CsrValidateBuffer(ProcessData, Buffer, nNumberOfCharsToRead, CharSize))
         return STATUS_ACCESS_VIOLATION;
 
-    if (Request->Data.ReadConsoleRequest.NrCharactersRead * sizeof(WCHAR) > nNumberOfCharsToRead * CharSize)
+    if (ApiMessage->Data.ReadConsoleRequest.NrCharactersRead * sizeof(WCHAR) > nNumberOfCharsToRead * CharSize)
         return STATUS_INVALID_PARAMETER;
 
-    Status = ConioLockConsole(ProcessData, Request->Data.ReadConsoleRequest.ConsoleHandle,
+    Status = ConioLockConsole(ProcessData, ApiMessage->Data.ReadConsoleRequest.ConsoleHandle,
                               &Console, GENERIC_READ);
     if (! NT_SUCCESS(Status))
     {
         return Status;
     }
-    Request->Data.ReadConsoleRequest.EventHandle = ProcessData->ConsoleEvent;
+    ApiMessage->Data.ReadConsoleRequest.EventHandle = ProcessData->ConsoleEvent;
 
     Status = STATUS_PENDING; /* we haven't read anything (yet) */
     if (Console->Mode & ENABLE_LINE_INPUT)
@@ -71,8 +72,8 @@ CSR_API(CsrReadConsole)
             Console->LineComplete = FALSE;
             Console->LineUpPressed = FALSE;
             Console->LineInsertToggle = 0;
-            Console->LineWakeupMask = Request->Data.ReadConsoleRequest.CtrlWakeupMask;
-            Console->LineSize = Request->Data.ReadConsoleRequest.NrCharactersRead;
+            Console->LineWakeupMask = ApiMessage->Data.ReadConsoleRequest.CtrlWakeupMask;
+            Console->LineSize = ApiMessage->Data.ReadConsoleRequest.NrCharactersRead;
             Console->LinePos = Console->LineSize;
             /* pre-filling the buffer is only allowed in the Unicode API,
              * so we don't need to worry about conversion */
@@ -100,7 +101,7 @@ CSR_API(CsrReadConsole)
                     && Input->InputEvent.Event.KeyEvent.bKeyDown)
             {
                 LineInputKeyDown(Console, &Input->InputEvent.Event.KeyEvent);
-                Request->Data.ReadConsoleRequest.ControlKeyState = Input->InputEvent.Event.KeyEvent.dwControlKeyState;
+                ApiMessage->Data.ReadConsoleRequest.ControlKeyState = Input->InputEvent.Event.KeyEvent.dwControlKeyState;
             }
             HeapFree(Win32CsrApiHeap, 0, Input);
         }
@@ -111,7 +112,7 @@ CSR_API(CsrReadConsole)
             while (i < nNumberOfCharsToRead && Console->LinePos != Console->LineSize)
             {
                 WCHAR Char = Console->LineBuffer[Console->LinePos++];
-                if (Request->Data.ReadConsoleRequest.Unicode)
+                if (ApiMessage->Data.ReadConsoleRequest.Unicode)
                     UnicodeBuffer[i++] = Char;
                 else
                     ConsoleInputUnicodeCharToAnsiChar(Console, &Buffer[i++], &Char);
@@ -144,7 +145,7 @@ CSR_API(CsrReadConsole)
                     && Input->InputEvent.Event.KeyEvent.uChar.UnicodeChar != L'\0')
             {
                 WCHAR Char = Input->InputEvent.Event.KeyEvent.uChar.UnicodeChar;
-                if (Request->Data.ReadConsoleRequest.Unicode)
+                if (ApiMessage->Data.ReadConsoleRequest.Unicode)
                     UnicodeBuffer[i++] = Char;
                 else
                     ConsoleInputUnicodeCharToAnsiChar(Console, &Buffer[i++], &Char);
@@ -154,7 +155,7 @@ CSR_API(CsrReadConsole)
         }
     }
 done:
-    Request->Data.ReadConsoleRequest.NrCharactersRead = i;
+    ApiMessage->Data.ReadConsoleRequest.NrCharactersRead = i;
     ConioUnlockConsole(Console);
 
     return Status;
@@ -423,6 +424,7 @@ ConioProcessKey(MSG *msg, PCSRSS_CONSOLE Console, BOOL TextMode)
 CSR_API(CsrReadInputEvent)
 {
     PLIST_ENTRY CurrentEntry;
+    PCSR_PROCESS ProcessData = CsrGetClientThread()->Process;
     PCSRSS_CONSOLE Console;
     NTSTATUS Status;
     BOOLEAN Done = FALSE;
@@ -430,9 +432,9 @@ CSR_API(CsrReadInputEvent)
 
     DPRINT("CsrReadInputEvent\n");
 
-    Request->Data.ReadInputRequest.Event = ProcessData->ConsoleEvent;
+    ApiMessage->Data.ReadInputRequest.Event = ProcessData->ConsoleEvent;
 
-    Status = ConioLockConsole(ProcessData, Request->Data.ReadInputRequest.ConsoleHandle, &Console, GENERIC_READ);
+    Status = ConioLockConsole(ProcessData, ApiMessage->Data.ReadInputRequest.ConsoleHandle, &Console, GENERIC_READ);
     if (! NT_SUCCESS(Status))
     {
         return Status;
@@ -447,7 +449,7 @@ CSR_API(CsrReadInputEvent)
 
         if (Done)
         {
-            Request->Data.ReadInputRequest.MoreEvents = TRUE;
+            ApiMessage->Data.ReadInputRequest.MoreEvents = TRUE;
             break;
         }
 
@@ -455,10 +457,10 @@ CSR_API(CsrReadInputEvent)
 
         if (!Done)
         {
-            Request->Data.ReadInputRequest.Input = Input->InputEvent;
-            if (Request->Data.ReadInputRequest.Unicode == FALSE)
+            ApiMessage->Data.ReadInputRequest.Input = Input->InputEvent;
+            if (ApiMessage->Data.ReadInputRequest.Unicode == FALSE)
             {
-                ConioInputEventToAnsi(Console, &Request->Data.ReadInputRequest.Input);
+                ConioInputEventToAnsi(Console, &ApiMessage->Data.ReadInputRequest.Input);
             }
             Done = TRUE;
         }
@@ -490,8 +492,8 @@ CSR_API(CsrFlushInputBuffer)
 
     DPRINT("CsrFlushInputBuffer\n");
 
-    Status = ConioLockConsole(ProcessData,
-                              Request->Data.FlushInputBufferRequest.ConsoleInput,
+    Status = ConioLockConsole(CsrGetClientThread()->Process,
+                              ApiMessage->Data.FlushInputBufferRequest.ConsoleInput,
                               &Console,
                               GENERIC_WRITE);
     if(! NT_SUCCESS(Status))
@@ -523,7 +525,7 @@ CSR_API(CsrGetNumberOfConsoleInputEvents)
 
     DPRINT("CsrGetNumberOfConsoleInputEvents\n");
 
-    Status = ConioLockConsole(ProcessData, Request->Data.GetNumInputEventsRequest.ConsoleHandle, &Console, GENERIC_READ);
+    Status = ConioLockConsole(CsrGetClientThread()->Process, ApiMessage->Data.GetNumInputEventsRequest.ConsoleHandle, &Console, GENERIC_READ);
     if (! NT_SUCCESS(Status))
     {
         return Status;
@@ -541,7 +543,7 @@ CSR_API(CsrGetNumberOfConsoleInputEvents)
 
     ConioUnlockConsole(Console);
 
-    Request->Data.GetNumInputEventsRequest.NumInputEvents = NumEvents;
+    ApiMessage->Data.GetNumInputEventsRequest.NumInputEvents = NumEvents;
 
     return STATUS_SUCCESS;
 }
@@ -549,6 +551,7 @@ CSR_API(CsrGetNumberOfConsoleInputEvents)
 CSR_API(CsrPeekConsoleInput)
 {
     NTSTATUS Status;
+    PCSR_PROCESS ProcessData = CsrGetClientThread()->Process;
     PCSRSS_CONSOLE Console;
     DWORD Length;
     PLIST_ENTRY CurrentItem;
@@ -558,14 +561,14 @@ CSR_API(CsrPeekConsoleInput)
 
     DPRINT("CsrPeekConsoleInput\n");
 
-    Status = ConioLockConsole(ProcessData, Request->Data.GetNumInputEventsRequest.ConsoleHandle, &Console, GENERIC_READ);
+    Status = ConioLockConsole(ProcessData, ApiMessage->Data.GetNumInputEventsRequest.ConsoleHandle, &Console, GENERIC_READ);
     if(! NT_SUCCESS(Status))
     {
         return Status;
     }
 
-    InputRecord = Request->Data.PeekConsoleInputRequest.InputRecord;
-    Length = Request->Data.PeekConsoleInputRequest.Length;
+    InputRecord = ApiMessage->Data.PeekConsoleInputRequest.InputRecord;
+    Length = ApiMessage->Data.PeekConsoleInputRequest.Length;
 
     if (!Win32CsrValidateBuffer(ProcessData, InputRecord, Length, sizeof(INPUT_RECORD)))
     {
@@ -586,7 +589,7 @@ CSR_API(CsrPeekConsoleInput)
             ++NumItems;
             *InputRecord = Item->InputEvent;
 
-            if (Request->Data.PeekConsoleInputRequest.Unicode == FALSE)
+            if (ApiMessage->Data.PeekConsoleInputRequest.Unicode == FALSE)
             {
                 ConioInputEventToAnsi(Console, InputRecord);
             }
@@ -598,7 +601,7 @@ CSR_API(CsrPeekConsoleInput)
 
     ConioUnlockConsole(Console);
 
-    Request->Data.PeekConsoleInputRequest.Length = NumItems;
+    ApiMessage->Data.PeekConsoleInputRequest.Length = NumItems;
 
     return STATUS_SUCCESS;
 }
@@ -606,6 +609,7 @@ CSR_API(CsrPeekConsoleInput)
 CSR_API(CsrWriteConsoleInput)
 {
     PINPUT_RECORD InputRecord;
+    PCSR_PROCESS ProcessData = CsrGetClientThread()->Process;
     PCSRSS_CONSOLE Console;
     NTSTATUS Status;
     DWORD Length;
@@ -613,14 +617,14 @@ CSR_API(CsrWriteConsoleInput)
 
     DPRINT("CsrWriteConsoleInput\n");
 
-    Status = ConioLockConsole(ProcessData, Request->Data.WriteConsoleInputRequest.ConsoleHandle, &Console, GENERIC_WRITE);
+    Status = ConioLockConsole(ProcessData, ApiMessage->Data.WriteConsoleInputRequest.ConsoleHandle, &Console, GENERIC_WRITE);
     if (! NT_SUCCESS(Status))
     {
         return Status;
     }
 
-    InputRecord = Request->Data.WriteConsoleInputRequest.InputRecord;
-    Length = Request->Data.WriteConsoleInputRequest.Length;
+    InputRecord = ApiMessage->Data.WriteConsoleInputRequest.InputRecord;
+    Length = ApiMessage->Data.WriteConsoleInputRequest.Length;
 
     if (!Win32CsrValidateBuffer(ProcessData, InputRecord, Length, sizeof(INPUT_RECORD)))
     {
@@ -630,7 +634,7 @@ CSR_API(CsrWriteConsoleInput)
 
     for (i = 0; i < Length && NT_SUCCESS(Status); i++)
     {
-        if (!Request->Data.WriteConsoleInputRequest.Unicode &&
+        if (!ApiMessage->Data.WriteConsoleInputRequest.Unicode &&
             InputRecord->EventType == KEY_EVENT)
         {
             CHAR AsciiChar = InputRecord->Event.KeyEvent.uChar.AsciiChar;
@@ -643,7 +647,7 @@ CSR_API(CsrWriteConsoleInput)
 
     ConioUnlockConsole(Console);
 
-    Request->Data.WriteConsoleInputRequest.Length = i;
+    ApiMessage->Data.WriteConsoleInputRequest.Length = i;
 
     return Status;
 }

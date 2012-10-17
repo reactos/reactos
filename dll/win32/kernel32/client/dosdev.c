@@ -183,7 +183,7 @@ DefineDosDeviceW(
 
         Status = CsrClientCallServer(&Request,
                                      CaptureBuffer,
-                                     MAKE_CSR_API(DEFINE_DOS_DEVICE, CSR_CONSOLE),
+                                     CSR_CREATE_API_NUMBER(CSR_CONSOLE, DEFINE_DOS_DEVICE),
                                      sizeof(CSR_API_MESSAGE));
         CsrFreeCaptureBuffer(CaptureBuffer);
 

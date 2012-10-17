@@ -29,8 +29,9 @@
 #include <ndk/rtlfuncs.h>
 #include <ndk/umfuncs.h>
 
-/* CSRSS Headers */
-#include <csrss/csrss.h>
+/* CSRSS Header */
+#include <csrss/client.h>
+#include <csrss/csrss.h> // FIXME: data header.
 
 /* Public Win32K Headers */
 #include <ntusrtyp.h>

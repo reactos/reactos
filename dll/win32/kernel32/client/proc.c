@@ -508,7 +508,7 @@ BasepNotifyCsrOfThread(IN HANDLE ThreadHandle,
     /* Call CSR */
     Status = CsrClientCallServer(&CsrRequest,
                                  NULL,
-                                 MAKE_CSR_API(Request, CSR_NATIVE),
+                                 CSR_CREATE_API_NUMBER(CSR_NATIVE, Request),
                                  sizeof(CSR_API_MESSAGE));
     if (!NT_SUCCESS(Status) || !NT_SUCCESS(CsrRequest.Status))
     {
@@ -584,7 +584,7 @@ BasepCreateFirstThread(HANDLE ProcessHandle,
     /* Call CSR */
     Status = CsrClientCallServer(&CsrRequest,
                                  NULL,
-                                 MAKE_CSR_API(Request, CSR_NATIVE),
+                                 CSR_CREATE_API_NUMBER(CSR_NATIVE, Request),
                                  sizeof(CSR_API_MESSAGE));
     if (!NT_SUCCESS(Status) || !NT_SUCCESS(CsrRequest.Status))
     {
@@ -1182,7 +1182,7 @@ GetProcessShutdownParameters(OUT LPDWORD lpdwLevel,
     /* Ask CSRSS for shutdown information */
     Status = CsrClientCallServer(&CsrRequest,
                                  NULL,
-                                 MAKE_CSR_API(GET_SHUTDOWN_PARAMETERS, CSR_NATIVE),
+                                 CSR_CREATE_API_NUMBER(CSR_NATIVE, GET_SHUTDOWN_PARAMETERS),
                                  sizeof(CSR_API_MESSAGE));
     if (!(NT_SUCCESS(Status)) || !(NT_SUCCESS(CsrRequest.Status)))
     {
@@ -1213,7 +1213,7 @@ SetProcessShutdownParameters(IN DWORD dwLevel,
     CsrRequest.Data.SetShutdownParametersRequest.Flags = dwFlags;
     Status = CsrClientCallServer(&CsrRequest,
                                  NULL,
-                                 MAKE_CSR_API(SET_SHUTDOWN_PARAMETERS, CSR_NATIVE),
+                                 CSR_CREATE_API_NUMBER(CSR_NATIVE, SET_SHUTDOWN_PARAMETERS),
                                  sizeof(CSR_API_MESSAGE));
     if (!NT_SUCCESS(Status) || !NT_SUCCESS(CsrRequest.Status))
     {
@@ -1760,7 +1760,7 @@ ExitProcess(IN UINT uExitCode)
         CsrRequest.Data.TerminateProcessRequest.uExitCode = uExitCode;
         CsrClientCallServer(&CsrRequest,
                             NULL,
-                            MAKE_CSR_API(TERMINATE_PROCESS, CSR_NATIVE),
+                            CSR_CREATE_API_NUMBER(CSR_NATIVE, TERMINATE_PROCESS),
                             sizeof(CSR_API_MESSAGE));
 
         /* Now do it again */

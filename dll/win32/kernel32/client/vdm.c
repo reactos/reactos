@@ -89,7 +89,6 @@ BaseUpdateVDMEntry(IN ULONG UpdateIndex,
 {
     NTSTATUS Status;
     CSR_API_MESSAGE Msg;
-    ULONG CsrRequest = MAKE_CSR_API(UPDATE_VDM_ENTRY, CSR_CONSOLE);
 
     /* Check what update is being sent */
     switch (UpdateIndex)
@@ -133,7 +132,10 @@ BaseUpdateVDMEntry(IN ULONG UpdateIndex,
     Msg.Data.UpdateVdmEntry.BinaryType = BinaryType;
 
     /* Send the message to CSRSS */
-    Status = CsrClientCallServer(&Msg, NULL, CsrRequest, sizeof(Msg));
+    Status = CsrClientCallServer(&Msg,
+                                 NULL,
+                                 CSR_CREATE_API_NUMBER(CSR_CONSOLE, UPDATE_VDM_ENTRY),
+                                 sizeof(Msg));
     if (!(NT_SUCCESS(Status)) || !(NT_SUCCESS(Msg.Status)))
     {
         /* Handle failure */
@@ -160,7 +162,6 @@ BaseCheckForVDM(IN HANDLE ProcessHandle,
     NTSTATUS Status;
     EVENT_BASIC_INFORMATION EventBasicInfo;
     CSR_API_MESSAGE Msg;
-    ULONG CsrRequest = MAKE_CSR_API(GET_VDM_EXIT_CODE, CSR_CONSOLE);
 
     /* It's VDM if the process is actually a wait handle (an event) */
     Status = NtQueryEvent(ProcessHandle,
@@ -175,7 +176,10 @@ BaseCheckForVDM(IN HANDLE ProcessHandle,
     Msg.Data.GetVdmExitCode.hParent = ProcessHandle;
 
     /* Call CSRSS */
-    Status = CsrClientCallServer(&Msg, NULL, CsrRequest, sizeof(Msg));
+    Status = CsrClientCallServer(&Msg,
+                                 NULL,
+                                 CSR_CREATE_API_NUMBER(CSR_CONSOLE, GET_VDM_EXIT_CODE),
+                                 sizeof(Msg));
     if (!NT_SUCCESS(Status)) return FALSE;
 
     /* Get the exit code from the reply */

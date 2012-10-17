@@ -158,7 +158,10 @@ GetTempFileNameW(IN LPCWSTR lpPathName,
         /* If user didn't gave any ID, ask Csrss to give one */
         if (!uUnique)
         {
-            CsrClientCallServer(&ApiMessage, NULL, MAKE_CSR_API(GET_TEMP_FILE, CSR_NATIVE), sizeof(CSR_API_MESSAGE));
+            CsrClientCallServer(&ApiMessage,
+                                NULL,
+                                CSR_CREATE_API_NUMBER(CSR_NATIVE, GET_TEMP_FILE),
+                                sizeof(CSR_API_MESSAGE));
             if (ApiMessage.Data.GetTempFile.UniqueID == 0)
             {
                 Num++;

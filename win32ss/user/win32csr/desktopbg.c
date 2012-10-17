@@ -254,7 +254,7 @@ CSR_API(CsrCreateDesktop)
      * The desktop handle we got from win32k is in
      * the scope of CSRSS so we can just use it.
      */
-    ThreadData.Desktop = Request->Data.CreateDesktopRequest.DesktopHandle;
+    ThreadData.Desktop = ApiMessage->Data.CreateDesktopRequest.DesktopHandle;
 
     ThreadData.Event = CreateEventW(NULL, FALSE, FALSE, NULL);
 
@@ -292,14 +292,14 @@ CSR_API(CsrShowDesktop)
     PRIVATE_NOTIFY_DESKTOP nmh;
     DPRINT("CsrShowDesktop\n");
 
-    nmh.hdr.hwndFrom = Request->Data.ShowDesktopRequest.DesktopWindow;
+    nmh.hdr.hwndFrom = ApiMessage->Data.ShowDesktopRequest.DesktopWindow;
     nmh.hdr.idFrom = 0;
     nmh.hdr.code = PM_SHOW_DESKTOP;
 
-    nmh.ShowDesktop.Width = (int)Request->Data.ShowDesktopRequest.Width;
-    nmh.ShowDesktop.Height = (int)Request->Data.ShowDesktopRequest.Height;
+    nmh.ShowDesktop.Width = (int)ApiMessage->Data.ShowDesktopRequest.Width;
+    nmh.ShowDesktop.Height = (int)ApiMessage->Data.ShowDesktopRequest.Height;
 
-    if (SendMessageW(Request->Data.ShowDesktopRequest.DesktopWindow,
+    if (SendMessageW(ApiMessage->Data.ShowDesktopRequest.DesktopWindow,
                      WM_NOTIFY,
                      (WPARAM)nmh.hdr.hwndFrom,
                      (LPARAM)&nmh))
@@ -316,11 +316,11 @@ CSR_API(CsrHideDesktop)
     PRIVATE_NOTIFY_DESKTOP nmh;
     DPRINT("CsrHideDesktop\n");
 
-    nmh.hdr.hwndFrom = Request->Data.ShowDesktopRequest.DesktopWindow;
+    nmh.hdr.hwndFrom = ApiMessage->Data.ShowDesktopRequest.DesktopWindow;
     nmh.hdr.idFrom = 0;
     nmh.hdr.code = PM_HIDE_DESKTOP;
 
-    if (SendMessageW(Request->Data.ShowDesktopRequest.DesktopWindow,
+    if (SendMessageW(ApiMessage->Data.ShowDesktopRequest.DesktopWindow,
                      WM_NOTIFY,
                      (WPARAM)nmh.hdr.hwndFrom,
                      (LPARAM)&nmh))

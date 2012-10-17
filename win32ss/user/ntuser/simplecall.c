@@ -52,7 +52,7 @@ co_IntRegisterLogonProcess(HANDLE ProcessId, BOOL Register)
 
    ObDereferenceObject(Process);
 
-   Request.Type = MAKE_CSR_API(REGISTER_LOGON_PROCESS, CSR_GUI);
+   Request.ApiNumber = CSR_CREATE_API_NUMBER(CSR_GUI, REGISTER_LOGON_PROCESS);
    Request.Data.RegisterLogonProcessRequest.ProcessId = ProcessId;
    Request.Data.RegisterLogonProcessRequest.Register = Register;
 

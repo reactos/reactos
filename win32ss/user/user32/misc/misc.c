@@ -52,25 +52,23 @@ BOOL
 WINAPI
 SetLogonNotifyWindow (HWND Wnd, HWINSTA WinSta)
 {
-  /* Maybe we should call NtUserSetLogonNotifyWindow and let that one inform CSRSS??? */
-  CSR_API_MESSAGE Request;
-  ULONG CsrRequest;
-  NTSTATUS Status;
+    /* Maybe we should call NtUserSetLogonNotifyWindow and let that one inform CSRSS??? */
+    CSR_API_MESSAGE Request;
+    NTSTATUS Status;
 
-  CsrRequest = MAKE_CSR_API(SET_LOGON_NOTIFY_WINDOW, CSR_GUI);
-  Request.Data.SetLogonNotifyWindowRequest.LogonNotifyWindow = Wnd;
+    Request.Data.SetLogonNotifyWindowRequest.LogonNotifyWindow = Wnd;
 
-  Status = CsrClientCallServer(&Request,
-			       NULL,
-                   CsrRequest,
-			       sizeof(CSR_API_MESSAGE));
-  if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
+    Status = CsrClientCallServer(&Request,
+                                 NULL,
+                                 CSR_CREATE_API_NUMBER(CSR_GUI, SET_LOGON_NOTIFY_WINDOW),
+                                 sizeof(CSR_API_MESSAGE));
+    if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
     {
-      SetLastError(RtlNtStatusToDosError(Status));
-      return(FALSE);
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
     }
 
-  return NtUserSetLogonNotifyWindow(Wnd);
+    return NtUserSetLogonNotifyWindow(Wnd);
 }
 
 /*

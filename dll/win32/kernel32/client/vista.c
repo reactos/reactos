@@ -319,22 +319,28 @@ WINAPI
 GetConsoleHistoryInfo(PCONSOLE_HISTORY_INFO lpConsoleHistoryInfo)
 {
     CSR_API_MESSAGE Request;
-    ULONG CsrRequest = MAKE_CSR_API(GET_HISTORY_INFO, CSR_CONSOLE);
     NTSTATUS Status;
+
     if (lpConsoleHistoryInfo->cbSize != sizeof(CONSOLE_HISTORY_INFO))
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
-    Status = CsrClientCallServer(&Request, NULL, CsrRequest, sizeof(CSR_API_MESSAGE));
+
+    Status = CsrClientCallServer(&Request,
+                                 NULL,
+                                 CSR_CREATE_API_NUMBER(CSR_CONSOLE, GET_HISTORY_INFO),
+                                 sizeof(CSR_API_MESSAGE));
     if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
     {
         BaseSetLastNTError(Status);
         return FALSE;
     }
+
     lpConsoleHistoryInfo->HistoryBufferSize      = Request.Data.GetHistoryInfo.HistoryBufferSize;
     lpConsoleHistoryInfo->NumberOfHistoryBuffers = Request.Data.GetHistoryInfo.NumberOfHistoryBuffers;
     lpConsoleHistoryInfo->dwFlags                = Request.Data.GetHistoryInfo.dwFlags;
+
     return TRUE;
 }
 
@@ -349,22 +355,28 @@ WINAPI
 SetConsoleHistoryInfo(IN PCONSOLE_HISTORY_INFO lpConsoleHistoryInfo)
 {
     CSR_API_MESSAGE Request;
-    ULONG CsrRequest = MAKE_CSR_API(GET_HISTORY_INFO, CSR_CONSOLE);
     NTSTATUS Status;
+
     if (lpConsoleHistoryInfo->cbSize != sizeof(CONSOLE_HISTORY_INFO))
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
+
     Request.Data.SetHistoryInfo.HistoryBufferSize      = lpConsoleHistoryInfo->HistoryBufferSize;
     Request.Data.SetHistoryInfo.NumberOfHistoryBuffers = lpConsoleHistoryInfo->NumberOfHistoryBuffers;
     Request.Data.SetHistoryInfo.dwFlags                = lpConsoleHistoryInfo->dwFlags;
-    Status = CsrClientCallServer(&Request, NULL, CsrRequest, sizeof(CSR_API_MESSAGE));
+
+    Status = CsrClientCallServer(&Request,
+                                 NULL,
+                                 CSR_CREATE_API_NUMBER(CSR_CONSOLE, GET_HISTORY_INFO),
+                                 sizeof(CSR_API_MESSAGE));
     if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
     {
         BaseSetLastNTError(Status);
         return FALSE;
     }
+
     return TRUE;
 }
 

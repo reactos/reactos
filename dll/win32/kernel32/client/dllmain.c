@@ -62,7 +62,6 @@ WINAPI
 BasepInitConsole(VOID)
 {
     CSR_API_MESSAGE Request;
-    ULONG CsrRequest;
     NTSTATUS Status;
     BOOLEAN NotConsole = FALSE;
     PRTL_USER_PROCESS_PARAMETERS Parameters = NtCurrentPeb()->ProcessParameters;
@@ -178,11 +177,10 @@ BasepInitConsole(VOID)
      * console message to the Base Server. When we finally have a Console
      * Server, this code should be changed to send connection data instead.
      */
-    CsrRequest = MAKE_CSR_API(ALLOC_CONSOLE, CSR_CONSOLE);
     Request.Data.AllocConsoleRequest.CtrlDispatcher = ConsoleControlDispatcher;
     Status = CsrClientCallServer(&Request,
                                  NULL,
-                                 CsrRequest,
+                                 CSR_CREATE_API_NUMBER(CSR_CONSOLE, ALLOC_CONSOLE),
                                  sizeof(CSR_API_MESSAGE));
     if(!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
     {

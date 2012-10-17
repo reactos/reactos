@@ -27,7 +27,6 @@ typedef NTSTATUS
 PCSR_SERVER_API_ROUTINE CsrServerApiRoutine;
 
 #define UNICODE_PATH_SEP L"\\"
-#define CSR_PORT_NAME L"ApiPort"
 
 /* FUNCTIONS *****************************************************************/
 
@@ -63,8 +62,7 @@ CsrClientCallServer(PCSR_API_MESSAGE ApiMessage,
     ApiMessage->Header.u1.s1.TotalLength = RequestLength;
 
     /* Fill out the CSR Header */
-    ApiMessage->Type = ApiNumber;
-    //ApiMessage->Opcode = ApiNumber; <- Activate with new CSR
+    ApiMessage->ApiNumber = ApiNumber;
     ApiMessage->CsrCaptureData = NULL;
 
     DPRINT("API: %lx, u1.s1.DataLength: %x, u1.s1.TotalLength: %x\n", 
@@ -332,9 +330,8 @@ CsrClientConnectToServer(PWSTR ObjectDirectory,
     HANDLE hCsrSrv;
     ANSI_STRING CsrServerRoutineName;
     PCSR_CAPTURE_BUFFER CaptureBuffer;
-    CSR_API_MESSAGE RosApiMessage;
-    CSR_API_MESSAGE2 ApiMessage;
-    PCSR_CLIENT_CONNECT ClientConnect = &ApiMessage.ClientConnect;
+    CSR_API_MESSAGE ApiMessage;
+    PCSR_CLIENT_CONNECT ClientConnect = &ApiMessage.Data.CsrClientConnect;
 
     /* Validate the Connection Info */
     DPRINT("CsrClientConnectToServer: %lx %p\n", ServerId, ConnectionInfo);
@@ -437,14 +434,14 @@ CsrClientConnectToServer(PWSTR ObjectDirectory,
 #if 0
         Status = CsrClientCallServer(&ApiMessage,
                                      CaptureBuffer,
-                                     CSR_MAKE_OPCODE(CsrpClientConnect,
-                                                     CSR_SRV_DLL),
+                                     CSR_CREATE_API_NUMBER(CSR_SRV_DLL, CsrpClientConnect),
                                      sizeof(CSR_CLIENT_CONNECT));
-#endif
-        Status = CsrClientCallServer(&RosApiMessage,
-                                     NULL,
-                                     MAKE_CSR_API(CONNECT_PROCESS, CSR_NATIVE),
+#else
+        Status = CsrClientCallServer(&ApiMessage,
+                                     CaptureBuffer,
+                                     CSR_CREATE_API_NUMBER(CSR_NATIVE, CONNECT_PROCESS),
                                      sizeof(CSR_API_MESSAGE));
+#endif
     }
     else
     {

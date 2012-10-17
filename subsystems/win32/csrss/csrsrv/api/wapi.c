@@ -62,39 +62,47 @@ CsrApiRegisterDefinitions(PCSRSS_API_DEFINITION NewDefinitions)
   return STATUS_SUCCESS;
 }
 
+/*
 VOID
 FASTCALL
 CsrApiCallHandler(PCSR_PROCESS ProcessData,
                   PCSR_API_MESSAGE Request)
+*/
+VOID
+FASTCALL
+CsrApiCallHandler(
+    IN OUT PCSR_API_MESSAGE ApiMessage,
+    OUT PULONG Reply
+)
 {
   unsigned DefIndex;
-  ULONG Type;
+  ULONG ApiId;
 
-  DPRINT("CSR: Calling handler for type: %x.\n", Request->Type);
-  Type = Request->Type & 0xFFFF; /* FIXME: USE MACRO */
-  DPRINT("CSR: API Number: %x ServerID: %x\n",Type, Request->Type >> 16);
+  DPRINT("CSR: Calling handler for ApiNumber: %x.\n", ApiMessage->ApiNumber);
+  ApiId = CSR_API_NUMBER_TO_API_ID(ApiMessage->ApiNumber);
+  DPRINT("CSR: ApiID: %x ServerID: %x\n", ApiId, CSR_API_NUMBER_TO_SERVER_ID(ApiMessage->ApiNumber));
 
   /* FIXME: Extract DefIndex instead of looping */
   for (DefIndex = 0; DefIndex < ApiDefinitionsCount; DefIndex++)
     {
-      if (ApiDefinitions[DefIndex].Type == Type)
+      if (ApiDefinitions[DefIndex].ApiID == ApiId)
         {
-          if (Request->Header.u1.s1.DataLength < ApiDefinitions[DefIndex].MinRequestSize)
+          if (ApiMessage->Header.u1.s1.DataLength < ApiDefinitions[DefIndex].MinRequestSize)
             {
-              DPRINT1("Request type %d min request size %d actual %d\n",
-                      Type, ApiDefinitions[DefIndex].MinRequestSize,
-                      Request->Header.u1.s1.DataLength);
-              Request->Status = STATUS_INVALID_PARAMETER;
+              DPRINT1("Request ApiID %d min request size %d actual %d\n",
+                      ApiId, ApiDefinitions[DefIndex].MinRequestSize,
+                      ApiMessage->Header.u1.s1.DataLength);
+              ApiMessage->Status = STATUS_INVALID_PARAMETER;
             }
           else
             {
-              Request->Status = (ApiDefinitions[DefIndex].Handler)(ProcessData, Request);
+              ApiMessage->Status = (ApiDefinitions[DefIndex].Handler)(ApiMessage, Reply);
             }
           return;
         }
     }
-  DPRINT1("CSR: Unknown request type 0x%x\n", Request->Type);
-  Request->Status = STATUS_INVALID_SYSTEM_SERVICE;
+  DPRINT1("CSR: Unknown request ApiNumber 0x%x\n", ApiMessage->ApiNumber);
+  ApiMessage->Status = STATUS_INVALID_SYSTEM_SERVICE;
 }
 
 VOID
@@ -127,7 +135,7 @@ CsrHandleHardError(IN PCSR_THREAD ThreadData,
  *        Pointer to the CSR API Message to receive from the server.
  *
  * @return STATUS_SUCCESS in case of success, STATUS_ILLEGAL_FUNCTION
- *         if the opcode is invalid, or STATUS_ACCESS_VIOLATION if there
+ *         if the ApiNumber is invalid, or STATUS_ACCESS_VIOLATION if there
  *         was a problem executing the API.
  *
  * @remarks None.
@@ -146,7 +154,7 @@ CsrCallServerFromServer(PCSR_API_MESSAGE ReceiveMsg,
     NTSTATUS Status;
 
     /* Get the Server ID */
-    ServerId = CSR_SERVER_ID_FROM_OPCODE(ReceiveMsg->Opcode);
+    ServerId = CSR_SERVER_ID_FROM_OPCODE(ReceiveMsg->ApiNumber);
 
     /* Make sure that the ID is within limits, and the Server DLL loaded */
     if ((ServerId >= CSR_SERVER_DLL_MAX) ||
@@ -160,7 +168,7 @@ CsrCallServerFromServer(PCSR_API_MESSAGE ReceiveMsg,
     else
     {
         /* Get the API ID */
-        ApiId = CSR_API_ID_FROM_OPCODE(ReceiveMsg->Opcode);
+        ApiId = CSR_API_NUMBER_TO_API_ID(ReceiveMsg->ApiNumber);
 
         /* Normalize it with our Base ID */
         ApiId -= ServerDll->ApiBase;
@@ -209,6 +217,7 @@ CsrCallServerFromServer(PCSR_API_MESSAGE ReceiveMsg,
 #else // Hacky reactos code
 
     PCSR_PROCESS ProcessData;
+    ULONG ReplyCode;
 
     /* Get the Process Data */
     CsrLockProcessByClientId(&ReceiveMsg->Header.ClientId.UniqueProcess, &ProcessData);
@@ -223,7 +232,7 @@ CsrCallServerFromServer(PCSR_API_MESSAGE ReceiveMsg,
     _SEH2_TRY
     {
         /* Call the API and get the result */
-        CsrApiCallHandler(ProcessData, ReplyMsg);
+        CsrApiCallHandler(ReplyMsg, /*ProcessData*/ &ReplyCode);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -1163,7 +1172,7 @@ HandleHardError:
             {
                 /* This is an API Message coming from a non-CSR Thread */
                 DPRINT1("No thread found for request %lx and clientID %lx.%lx\n",
-                        Request->Type & 0xFFFF,
+                        Request->ApiNumber & 0xFFFF,
                         Request->Header.ClientId.UniqueProcess,
                         Request->Header.ClientId.UniqueThread);
                 Reply = Request;
@@ -1276,12 +1285,14 @@ HandleHardError:
         ReplyPort = CsrThread->Process->ClientPort;
 
         DPRINT("CSR: Got CSR API: %x [Message Origin: %x]\n",
-                Request->Type,
+                Request->ApiNumber,
                 Request->Header.ClientId.UniqueThread);
 
         /* Validation complete, start SEH */
         _SEH2_TRY
         {
+            ULONG ReplyCode;
+
             /* Make sure we have enough threads */
             CsrpCheckRequestThreads();
 
@@ -1289,7 +1300,7 @@ HandleHardError:
             NtCurrentTeb()->CsrClientThread = CsrThread;
 
             /* Call the Handler */
-            CsrApiCallHandler(CsrThread->Process, Request);
+            CsrApiCallHandler(Request, &ReplyCode);
 
             /* Increase the static thread count */
             _InterlockedIncrement(&CsrpStaticThreadCount);
@@ -1298,7 +1309,7 @@ HandleHardError:
             NtCurrentTeb()->CsrClientThread = ServerThread;
 
             /* Check if this is a dead client now */
-            if (Request->Type == 0xBABE)
+            if (Request->ApiNumber == 0xBABE)
             {
                 /* Reply to the death message */
                 NtReplyPort(ReplyPort, &Reply->Header);

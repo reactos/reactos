@@ -668,7 +668,7 @@ CsrCreateThread(IN PCSR_PROCESS CsrProcess,
 {
     PCSR_THREAD CsrThread;
     PCSR_PROCESS CurrentProcess;
-    PCSR_THREAD CurrentThread = NtCurrentTeb()->CsrClientThread;
+    PCSR_THREAD CurrentThread = CsrGetClientThread();
     CLIENT_ID CurrentCid;
     KERNEL_USER_TIMES KernelTimes;
 
