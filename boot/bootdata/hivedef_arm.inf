@@ -1453,7 +1453,7 @@ HKCU,"Software\Microsoft\Windows\CurrentVersion\Explorer\CLSID\{20D04FE0-3AEA-10
 
 ; default shell
 HKCU,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon",,0x00000012
-HKCU,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon","Shell",0x00020000,"%SystemRoot%\system32\cmd.exe"
+HKCU,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon","Shell",0x00020000,"%SystemRoot%\explorer.exe"
 
 HKCU,"SOFTWARE\Microsoft\Windows NT",,0x00000012
 HKCU,"SOFTWARE\Microsoft\Windows NT\CurrentVersion",,0x00000012
