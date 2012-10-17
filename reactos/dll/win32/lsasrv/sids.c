@@ -472,12 +472,26 @@ LsapInitSids(VOID)
                   L"NT AUTHORITY",
                   SidTypeWellKnownGroup);
 
+    LsapCreateSid(&NtAuthority,
+                  1,
+                  SubAuthorities,
+                  L"LOCALSERVICE",
+                  L"NT AUTHORITY",
+                  SidTypeWellKnownGroup);
+
     /* Network Service Sid */
     SubAuthorities[0] = SECURITY_NETWORK_SERVICE_RID;
     LsapCreateSid(&NtAuthority,
                   1,
                   SubAuthorities,
                   L"NETWORK SERVICE",
+                  L"NT AUTHORITY",
+                  SidTypeWellKnownGroup);
+
+    LsapCreateSid(&NtAuthority,
+                  1,
+                  SubAuthorities,
+                  L"NETWORKSERVICE",
                   L"NT AUTHORITY",
                   SidTypeWellKnownGroup);
 
@@ -2062,82 +2076,6 @@ done:
 }
 
 
-static NTSTATUS
-LsapLookupUnknownSids(PLSAPR_SID_ENUM_BUFFER SidEnumBuffer,
-                      PLSAPR_TRANSLATED_NAME_EX NamesBuffer,
-                      PLSAPR_REFERENCED_DOMAIN_LIST DomainsBuffer,
-                      PULONG Mapped)
-{
-    SID_IDENTIFIER_AUTHORITY IdentifierAuthority = {SECURITY_NT_AUTHORITY};
-    static const UNICODE_STRING DomainName = RTL_CONSTANT_STRING(L"UNKNOWN");
-    static const UNICODE_STRING AdminName = RTL_CONSTANT_STRING(L"Test");
-    PSID AdminsSid = NULL;
-    LPWSTR SidString = NULL;
-    ULONG SidLength;
-    ULONG DomainIndex;
-    ULONG i;
-    NTSTATUS Status;
-
-    Status = RtlAllocateAndInitializeSid(&IdentifierAuthority,
-                                         2,
-                                         SECURITY_BUILTIN_DOMAIN_RID,
-                                         DOMAIN_ALIAS_RID_ADMINS,
-                                         0, 0, 0, 0, 0, 0,
-                                         &AdminsSid);
-    if (!NT_SUCCESS(Status))
-        goto done;
-
-    SidLength = RtlLengthSid(AdminsSid);
-
-    for (i = 0; i < SidEnumBuffer->Entries; i++)
-    {
-        /* Ignore SIDs which are already mapped */
-        if (NamesBuffer[i].Use != SidTypeUnknown)
-            continue;
-
-
-        ConvertSidToStringSidW(SidEnumBuffer->SidInfo[i].Sid, &SidString);
-        TRACE("Mapping SID: %S\n", SidString);
-        LocalFree(SidString);
-        SidString = NULL;
-
-
-        /* Hack: Map the SID to the Admin Account if it is not a well-known SID */
-        NamesBuffer[i].Use = SidTypeUser;
-        NamesBuffer[i].Flags = 0;
-        NamesBuffer[i].Name.Length = AdminName.Length;
-        NamesBuffer[i].Name.MaximumLength = AdminName.MaximumLength;
-        NamesBuffer[i].Name.Buffer = MIDL_user_allocate(AdminName.MaximumLength);
-        if (NamesBuffer[i].Name.Buffer == NULL)
-        {
-            Status = STATUS_INSUFFICIENT_RESOURCES;
-            goto done;
-        }
-
-        RtlCopyMemory(NamesBuffer[i].Name.Buffer, AdminName.Buffer, AdminName.MaximumLength);
-
-        Status = LsapAddDomainToDomainsList(DomainsBuffer,
-                                            (PUNICODE_STRING)&DomainName,
-                                            AdminsSid,
-                                            &DomainIndex);
-        if (!NT_SUCCESS(Status))
-            goto done;
-
-        NamesBuffer[i].DomainIndex = DomainIndex;
-
-        TRACE("Mapped to: %wZ\n", &NamesBuffer[i].Name);
-
-        (*Mapped)++;
-    }
-
-done:
-    if (AdminsSid != NULL)
-        RtlFreeSid(AdminsSid);
-
-    return Status;
-}
-
-
 NTSTATUS
 LsapLookupSids(PLSAPR_SID_ENUM_BUFFER SidEnumBuffer,
                PLSAPR_REFERENCED_DOMAIN_LIST *ReferencedDomains,
@@ -2227,16 +2165,6 @@ LsapLookupSids(PLSAPR_SID_ENUM_BUFFER SidEnumBuffer,
         goto done;
 
     if (Mapped == SidEnumBuffer->Entries)
-        goto done;
-
-    /* Map unknown SIDs */
-    Status = LsapLookupUnknownSids(SidEnumBuffer,
-                                   NamesBuffer,
-                                   DomainsBuffer,
-                                   &Mapped);
-    if (!NT_SUCCESS(Status) &&
-        Status != STATUS_NONE_MAPPED &&
-        Status != STATUS_SOME_NOT_MAPPED)
         goto done;
 
 done:
