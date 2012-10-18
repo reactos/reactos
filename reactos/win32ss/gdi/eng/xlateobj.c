@@ -600,6 +600,21 @@ EXLATEOBJ_vInitXlateFromDCs(
     pexlo->ppalDstDc = pdcDst->dclevel.ppal;
 }
 
+VOID NTAPI EXLATEOBJ_vInitSrcMonoXlate(
+    PEXLATEOBJ pexlo,
+    PPALETTE ppalDst,
+    COLORREF crBackgroundClr,
+    COLORREF crForegroundClr)
+{
+    /* Normal initialisation, with mono palette as source */
+    EXLATEOBJ_vInitialize(pexlo,
+                          gppalMono,
+                          ppalDst,
+                          0,
+                          crBackgroundClr,
+                          crForegroundClr);
+}
+
 VOID
 NTAPI
 EXLATEOBJ_vCleanup(PEXLATEOBJ pexlo)
