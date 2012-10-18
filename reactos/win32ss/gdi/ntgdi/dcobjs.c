@@ -43,7 +43,7 @@ DC_vUpdateFillBrush(PDC pdc)
     if (pdcattr->ulDirty_ & DIRTY_FILL)
     {
         /* Update eboFill */
-        EBRUSHOBJ_vUpdate(&pdc->eboFill, pdc->dclevel.pbrFill, pdc);
+        EBRUSHOBJ_vUpdateFromDC(&pdc->eboFill, pdc->dclevel.pbrFill, pdc);
     }
 
     /* Check for DC brush */
@@ -90,7 +90,7 @@ DC_vUpdateLineBrush(PDC pdc)
     if (pdcattr->ulDirty_ & DIRTY_LINE)
     {
         /* Update eboLine */
-        EBRUSHOBJ_vUpdate(&pdc->eboLine, pdc->dclevel.pbrLine, pdc);
+        EBRUSHOBJ_vUpdateFromDC(&pdc->eboLine, pdc->dclevel.pbrLine, pdc);
     }
 
     /* Check for DC pen */
@@ -113,7 +113,7 @@ DC_vUpdateTextBrush(PDC pdc)
     /* Timo : The text brush should never be changed.
      * Jérôme : Yeah, but its palette must be updated anyway! */
     if(pdcattr->ulDirty_ & DIRTY_TEXT)
-        EBRUSHOBJ_vUpdate(&pdc->eboText, pbrDefaultBrush, pdc);
+        EBRUSHOBJ_vUpdateFromDC(&pdc->eboText, pbrDefaultBrush, pdc);
 
     /* Update the eboText's solid color */
     EBRUSHOBJ_vSetSolidRGBColor(&pdc->eboText, pdcattr->crForegroundClr);
@@ -129,7 +129,7 @@ DC_vUpdateBackgroundBrush(PDC pdc)
     PDC_ATTR pdcattr = pdc->pdcattr;
 
     if(pdcattr->ulDirty_ & DIRTY_BACKGROUND)
-        EBRUSHOBJ_vUpdate(&pdc->eboBackground, pbrDefaultBrush, pdc);
+        EBRUSHOBJ_vUpdateFromDC(&pdc->eboBackground, pbrDefaultBrush, pdc);
 
     /* Update the eboBackground's solid color */
     EBRUSHOBJ_vSetSolidRGBColor(&pdc->eboBackground, pdcattr->crBackgroundClr);

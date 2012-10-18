@@ -853,7 +853,7 @@ IntGdiPolyPatBlt(
         if (pbrush != NULL)
         {
             /* Initialize a brush object */
-            EBRUSHOBJ_vInit(&eboFill, pbrush, pdc);
+            EBRUSHOBJ_vInitFromDC(&eboFill, pbrush, pdc);
 
             IntPatBlt(
                 pdc,
