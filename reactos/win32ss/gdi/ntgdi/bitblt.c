@@ -7,9 +7,7 @@
  */
 
 #include <win32k.h>
-
-#define NDEBUG
-#include <debug.h>
+DBG_DEFAULT_CHANNEL(GdiBlt);
 
 #define ROP_USES_SOURCE(Rop)  (((((Rop) & 0xCC0000) >> 2) != ((Rop) & 0x330000)) || ((((Rop) & 0xCC000000) >> 2) != ((Rop) & 0x33000000)))
 #define ROP_USES_MASK(Rop)    (((Rop) & 0xFF000000) != (((Rop) & 0xff0000) << 8))
@@ -49,12 +47,12 @@ NtGdiAlphaBlend(
         return FALSE;
     }
 
-    DPRINT("Locking DCs\n");
+    TRACE("Locking DCs\n");
     ahDC[0] = hDCDest;
     ahDC[1] = hDCSrc ;
     if (!GDIOBJ_bLockMultipleObjects(2, (HGDIOBJ*)ahDC, apObj, GDIObjType_DC_TYPE))
     {
-        DPRINT1("Invalid dc handle (dest=0x%p, src=0x%p) passed to NtGdiAlphaBlend\n", hDCDest, hDCSrc);
+        WARN("Invalid dc handle (dest=0x%p, src=0x%p) passed to NtGdiAlphaBlend\n", hDCDest, hDCSrc);
         EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
@@ -102,7 +100,7 @@ NtGdiAlphaBlend(
     }
 
     /* Prepare DCs for blit */
-    DPRINT("Preparing DCs for blit\n");
+    TRACE("Preparing DCs for blit\n");
     DC_vPrepareDCsForBlit(DCDest, DestRect, DCSrc, SourceRect);
 
     /* Determine surfaces to be used in the bitblt */
@@ -124,7 +122,7 @@ NtGdiAlphaBlend(
     EXLATEOBJ_vInitXlateFromDCs(&exlo, DCSrc, DCDest);
 
     /* Perform the alpha blend operation */
-    DPRINT("Performing the alpha blend\n");
+    TRACE("Performing the alpha blend\n");
     bResult = IntEngAlphaBlend(&BitmapDest->SurfObj,
                                &BitmapSrc->SurfObj,
                                DCDest->rosdc.CombinedClip,
@@ -135,7 +133,7 @@ NtGdiAlphaBlend(
 
     EXLATEOBJ_vCleanup(&exlo);
 leave :
-    DPRINT("Finishing blit\n");
+    TRACE("Finishing blit\n");
     DC_vFinishBlit(DCDest, DCSrc);
     GDIOBJ_vUnlockObject(&DCSrc->BaseObject);
     GDIOBJ_vUnlockObject(&DCDest->BaseObject);
@@ -197,12 +195,12 @@ NtGdiTransparentBlt(
     BOOL Ret = FALSE;
     EXLATEOBJ exlo;
 
-    DPRINT("Locking DCs\n");
+    TRACE("Locking DCs\n");
     ahDC[0] = hdcDst;
     ahDC[1] = hdcSrc ;
     if (!GDIOBJ_bLockMultipleObjects(2, (HGDIOBJ*)ahDC, apObj, GDIObjType_DC_TYPE))
     {
-        DPRINT1("Invalid dc handle (dest=0x%p, src=0x%p) passed to NtGdiAlphaBlend\n", hdcDst, hdcSrc);
+        WARN("Invalid dc handle (dest=0x%p, src=0x%p) passed to NtGdiAlphaBlend\n", hdcDst, hdcSrc);
         EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
@@ -343,7 +341,7 @@ NtGdiMaskBlt(
     }
     else if(psurfMask)
     {
-        DPRINT1("Getting Mask bitmap without needing it?\n");
+        WARN("Getting Mask bitmap without needing it?\n");
         SURFACE_ShareUnlockSurface(psurfMask);
         psurfMask = NULL;
     }
@@ -351,12 +349,12 @@ NtGdiMaskBlt(
     MaskPoint.y = yMask;
 
     /* Take care of source and destination bitmap */
-    DPRINT("Locking DCs\n");
+    TRACE("Locking DCs\n");
     ahDC[0] = hdcDest;
     ahDC[1] = UsesSource ? hdcSrc : NULL;
     if (!GDIOBJ_bLockMultipleObjects(2, (HGDIOBJ*)ahDC, apObj, GDIObjType_DC_TYPE))
     {
-        DPRINT1("Invalid dc handle (dest=0x%p, src=0x%p) passed to NtGdiAlphaBlend\n", hdcDest, hdcSrc);
+        WARN("Invalid dc handle (dest=0x%p, src=0x%p) passed to NtGdiAlphaBlend\n", hdcDest, hdcSrc);
         EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
@@ -367,7 +365,7 @@ NtGdiMaskBlt(
     if (NULL == DCDest)
     {
         if(DCSrc) DC_UnlockDc(DCSrc);
-        DPRINT("Invalid destination dc handle (0x%p) passed to NtGdiBitBlt\n", hdcDest);
+        WARN("Invalid destination dc handle (0x%p) passed to NtGdiBitBlt\n", hdcDest);
         return FALSE;
     }
 
@@ -497,7 +495,7 @@ NtGdiPlgBlt(
     IN INT yMask,
     IN DWORD crBackColor)
 {
-    UNIMPLEMENTED;
+    FIXME("NtGdiPlgBlt: unimplemented.\n");
     return FALSE;
 }
 
@@ -558,7 +556,7 @@ GreStretchBltMask(
     ahDC[2] = UsesMask ? hDCMask : NULL;
     if (!GDIOBJ_bLockMultipleObjects(3, (HGDIOBJ*)ahDC, apObj, GDIObjType_DC_TYPE))
     {
-        DPRINT1("Invalid dc handle (dest=0x%p, src=0x%p) passed to NtGdiAlphaBlend\n", hDCDest, hDCSrc);
+        WARN("Invalid dc handle (dest=0x%p, src=0x%p) passed to GreStretchBltMask\n", hDCDest, hDCSrc);
         EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
@@ -651,7 +649,7 @@ GreStretchBltMask(
             (BitmapMask->SurfObj.sizlBitmap.cx < WidthSrc ||
              BitmapMask->SurfObj.sizlBitmap.cy < HeightSrc))
         {
-            DPRINT1("%dx%d mask is smaller than %dx%d bitmap\n",
+            WARN("%dx%d mask is smaller than %dx%d bitmap\n",
                     BitmapMask->SurfObj.sizlBitmap.cx, BitmapMask->SurfObj.sizlBitmap.cy,
                     WidthSrc, HeightSrc);
             EXLATEOBJ_vCleanup(&exlo);
