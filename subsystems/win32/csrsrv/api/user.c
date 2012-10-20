@@ -23,7 +23,7 @@ static ULONG_PTR ServicesProcessId;
 
 /* FUNCTIONS *****************************************************************/
 
-CSR_API(CsrRegisterServicesProcess)
+CSR_API(SrvRegisterServicesProcess)
 {
   if (ServicesProcessIdValid == TRUE)
     {

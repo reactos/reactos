@@ -71,11 +71,11 @@ NTSTATUS NTAPI CsrServerInitialization(ULONG ArgumentCount, PCHAR Arguments[]);
 
 /* api/process.c */
 CSR_API(CsrConnectProcess);
-CSR_API(CsrSrvCreateProcess);
-CSR_API(CsrTerminateProcess);
-CSR_API(CsrSrvCreateThread);
-CSR_API(CsrGetShutdownParameters);
-CSR_API(CsrSetShutdownParameters);
+CSR_API(BaseSrvCreateProcess);
+CSR_API(BaseSrvExitProcess);
+CSR_API(BaseSrvCreateThread);
+CSR_API(BaseSrvGetProcessShutdownParam);
+CSR_API(BaseSrvSetProcessShutdownParam);
 
 VOID
 NTAPI
@@ -263,6 +263,6 @@ CsrLoadServerDll(IN PCHAR DllString,
                  IN ULONG ServerId);
 
 /* api/user.c */
-CSR_API(CsrRegisterServicesProcess);
+CSR_API(SrvRegisterServicesProcess);
 
 /* EOF */

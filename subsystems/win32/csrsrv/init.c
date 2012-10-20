@@ -94,13 +94,12 @@ CallProcessCreated(IN PCSR_PROCESS SourceProcessData,
  ***/
 CSRSS_API_DEFINITION NativeDefinitions[] =
 {
-    CSRSS_DEFINE_API(CREATE_PROCESS,               CsrSrvCreateProcess),
-    CSRSS_DEFINE_API(CREATE_THREAD,                CsrSrvCreateThread),
-    CSRSS_DEFINE_API(TERMINATE_PROCESS,            CsrTerminateProcess),
-    CSRSS_DEFINE_API(CONNECT_PROCESS,              CsrConnectProcess),
-    CSRSS_DEFINE_API(REGISTER_SERVICES_PROCESS,    CsrRegisterServicesProcess),
-    CSRSS_DEFINE_API(GET_SHUTDOWN_PARAMETERS,      CsrGetShutdownParameters),
-    CSRSS_DEFINE_API(SET_SHUTDOWN_PARAMETERS,      CsrSetShutdownParameters),
+    CSRSS_DEFINE_API(CREATE_PROCESS,               BaseSrvCreateProcess),
+    CSRSS_DEFINE_API(CREATE_THREAD,                BaseSrvCreateThread),
+    CSRSS_DEFINE_API(TERMINATE_PROCESS,            BaseSrvExitProcess),
+    CSRSS_DEFINE_API(REGISTER_SERVICES_PROCESS,    SrvRegisterServicesProcess),
+    CSRSS_DEFINE_API(GET_SHUTDOWN_PARAMETERS,      BaseSrvGetProcessShutdownParam),
+    CSRSS_DEFINE_API(SET_SHUTDOWN_PARAMETERS,      BaseSrvSetProcessShutdownParam),
     { 0, 0, NULL }
 };
 

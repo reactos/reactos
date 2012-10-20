@@ -23,7 +23,14 @@ extern NTSTATUS CallProcessCreated(PCSR_PROCESS, PCSR_PROCESS);
  *	CSRSS API
  *********************************************************************/
 
-CSR_API(CsrSrvCreateProcess)
+/***
+ *** Some APIs from here will go to basesrv.dll, some others to winsrv.dll.
+ *** Furthermore, this structure uses the old definition of APIs list.
+ *** The new one is in fact three arrays, one of APIs pointers, one other of
+ *** corresponding indexes, and the third one of names (not very efficient...).
+ ***/
+
+CSR_API(BaseSrvCreateProcess)
 {
      NTSTATUS Status;
      HANDLE ProcessHandle, ThreadHandle;
@@ -135,7 +142,7 @@ CSR_API(CsrSrvCreateProcess)
     return Status;
 }
 
-CSR_API(CsrSrvCreateThread)
+CSR_API(BaseSrvCreateThread)
 {
     PCSR_THREAD CurrentThread;
     HANDLE ThreadHandle;
@@ -191,7 +198,7 @@ CSR_API(CsrSrvCreateThread)
     return Status;
 }
 
-CSR_API(CsrTerminateProcess)
+CSR_API(BaseSrvExitProcess)
 {
     PCSR_THREAD CsrThread = CsrGetClientThread();
     ASSERT(CsrThread != NULL);
@@ -204,12 +211,7 @@ CSR_API(CsrTerminateProcess)
                              (NTSTATUS)ApiMessage->Data.TerminateProcessRequest.uExitCode);
 }
 
-CSR_API(CsrConnectProcess)
-{
-    return STATUS_SUCCESS;
-}
-
-CSR_API(CsrGetShutdownParameters)
+CSR_API(BaseSrvGetProcessShutdownParam)
 {
     PCSR_THREAD CsrThread = CsrGetClientThread();
     ASSERT(CsrThread);
@@ -220,7 +222,7 @@ CSR_API(CsrGetShutdownParameters)
     return STATUS_SUCCESS;
 }
 
-CSR_API(CsrSetShutdownParameters)
+CSR_API(BaseSrvSetProcessShutdownParam)
 {
     PCSR_THREAD CsrThread = CsrGetClientThread();
     ASSERT(CsrThread);
