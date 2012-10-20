@@ -1,6 +1,6 @@
 @ stdcall SamAddMemberToAlias(ptr ptr)
-@ stub SamAddMemberToGroup
-@ stub SamAddMultipleMembersToAlias
+@ stdcall SamAddMemberToGroup(ptr long long)
+@ stdcall SamAddMultipleMembersToAlias(ptr ptr long)
 @ stub SamChangePasswordUser2
 @ stub SamChangePasswordUser3
 @ stub SamChangePasswordUser
@@ -13,7 +13,7 @@
 @ stdcall SamCreateUserInDomain(ptr ptr long ptr ptr)
 @ stub SamDeleteAlias
 @ stub SamDeleteGroup
-@ stub SamDeleteUser
+@ stdcall SamDeleteUser(ptr)
 @ stdcall SamEnumerateAliasesInDomain(ptr ptr ptr long ptr)
 @ stdcall SamEnumerateDomainsInSamServer(ptr ptr ptr long ptr)
 @ stdcall SamEnumerateGroupsInDomain(ptr ptr ptr long ptr)

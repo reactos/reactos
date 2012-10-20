@@ -130,6 +130,66 @@ SamAddMemberToAlias(IN SAM_HANDLE AliasHandle,
 
 NTSTATUS
 NTAPI
+SamAddMemberToGroup(IN SAM_HANDLE GroupHandle,
+                    IN ULONG MemberId,
+                    IN ULONG Attributes)
+{
+    NTSTATUS Status;
+
+    TRACE("SamAddMemberToGroup(%p %lu %lx)",
+          GroupHandle, MemberId, Attributes);
+
+    RpcTryExcept
+    {
+        Status = SamrAddMemberToGroup((SAMPR_HANDLE)GroupHandle,
+                                      MemberId,
+                                      Attributes);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
+
+NTSTATUS
+NTAPI
+SamAddMultipleMembersToAlias(IN SAM_HANDLE AliasHandle,
+                             IN PSID *MemberIds,
+                             IN ULONG MemberCount)
+{
+    SAMPR_PSID_ARRAY Buffer;
+    NTSTATUS Status;
+
+    TRACE("SamAddMultipleMembersToAlias(%p %p %lu)\n",
+          AliasHandle, MemberIds, MemberCount);
+
+    if (MemberIds == NULL)
+        return STATUS_INVALID_PARAMETER_2;
+
+    Buffer.Count = MemberCount;
+    Buffer.Sids  = (PSAMPR_SID_INFORMATION)MemberIds;
+
+    RpcTryExcept
+    {
+        Status = SamrAddMultipleMembersToAlias((SAMPR_HANDLE)AliasHandle,
+                                               &Buffer);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
+
+NTSTATUS
+NTAPI
 SamCloseHandle(IN SAM_HANDLE SamHandle)
 {
     NTSTATUS Status;
@@ -309,6 +369,34 @@ SamCreateUserInDomain(IN SAM_HANDLE DomainHandle,
                                         DesiredAccess,
                                         (SAMPR_HANDLE *)UserHandle,
                                         RelativeId);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
+
+NTSTATUS
+NTAPI
+SamDeleteUser(IN SAM_HANDLE UserHandle)
+{
+    SAMPR_HANDLE LocalUserHandle;
+    NTSTATUS Status;
+
+    TRACE("SamDeleteUser(%p)\n", UserHandle);
+
+    LocalUserHandle = (SAMPR_HANDLE)UserHandle;
+
+    if (LocalUserHandle == NULL)
+        return STATUS_INVALID_HANDLE;
+
+    RpcTryExcept
+    {
+        Status = SamrDeleteUser(&LocalUserHandle);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {

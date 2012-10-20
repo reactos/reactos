@@ -324,6 +324,12 @@ SamAddMemberToGroup(IN SAM_HANDLE GroupHandle,
 
 NTSTATUS
 NTAPI
+SamAddMultipleMembersToAlias(IN SAM_HANDLE AliasHandle,
+                             IN PSID *MemberIds,
+                             IN ULONG MemberCount);
+
+NTSTATUS
+NTAPI
 SamCloseHandle(IN SAM_HANDLE SamHandle);
 
 NTSTATUS
@@ -366,6 +372,10 @@ SamCreateUserInDomain(IN SAM_HANDLE DomainHandle,
                       IN ACCESS_MASK DesiredAccess,
                       OUT PSAM_HANDLE UserHandle,
                       OUT PULONG RelativeId);
+
+NTSTATUS
+NTAPI
+SamDeleteUser(IN SAM_HANDLE UserHandle);
 
 NTSTATUS
 NTAPI
