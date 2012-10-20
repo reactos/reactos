@@ -72,8 +72,8 @@ typedef struct _WELL_KNOWN_SID
 {
     LIST_ENTRY ListEntry;
     PSID Sid;
-    UNICODE_STRING Name;
-    UNICODE_STRING Domain;
+    UNICODE_STRING AccountName;
+    UNICODE_STRING DomainName;
     SID_NAME_USE Use;
 } WELL_KNOWN_SID, *PWELL_KNOWN_SID;
 
@@ -202,8 +202,8 @@ BOOLEAN
 LsapCreateSid(PSID_IDENTIFIER_AUTHORITY IdentifierAuthority,
               UCHAR SubAuthorityCount,
               PULONG SubAuthorities,
-              PWSTR Name,
-              PWSTR Domain,
+              PWSTR AccountName,
+              PWSTR DomainName,
               SID_NAME_USE Use)
 {
     PWELL_KNOWN_SID SidEntry;
@@ -235,11 +235,11 @@ LsapCreateSid(PSID_IDENTIFIER_AUTHORITY IdentifierAuthority,
         *p = SubAuthorities[i];
     }
 
-    RtlInitUnicodeString(&SidEntry->Name,
-                         Name);
+    RtlInitUnicodeString(&SidEntry->AccountName,
+                         AccountName);
 
-    RtlInitUnicodeString(&SidEntry->Domain,
-                         Domain);
+    RtlInitUnicodeString(&SidEntry->DomainName,
+                         DomainName);
 
     SidEntry->Use = Use;
 
@@ -667,7 +667,7 @@ LsapLookupWellKnownSid(PSID Sid)
 
 
 PWELL_KNOWN_SID
-LsapLookupWellKnownName(PUNICODE_STRING Name)
+LsapLookupIsolatedWellKnownName(PUNICODE_STRING AccountName)
 {
     PLIST_ENTRY ListEntry;
     PWELL_KNOWN_SID Ptr;
@@ -678,7 +678,33 @@ LsapLookupWellKnownName(PUNICODE_STRING Name)
         Ptr = CONTAINING_RECORD(ListEntry,
                                 WELL_KNOWN_SID,
                                 ListEntry);
-        if (RtlEqualUnicodeString(Name, &Ptr->Name, TRUE))
+        if (RtlEqualUnicodeString(AccountName, &Ptr->AccountName, TRUE))
+        {
+            return Ptr;
+        }
+
+        ListEntry = ListEntry->Flink;
+    }
+
+    return NULL;
+}
+
+
+PWELL_KNOWN_SID
+LsapLookupFullyQualifiedWellKnownName(PUNICODE_STRING AccountName,
+                                      PUNICODE_STRING DomainName)
+{
+    PLIST_ENTRY ListEntry;
+    PWELL_KNOWN_SID Ptr;
+
+    ListEntry = WellKnownSidListHead.Flink;
+    while (ListEntry != &WellKnownSidListHead)
+    {
+        Ptr = CONTAINING_RECORD(ListEntry,
+                                WELL_KNOWN_SID,
+                                ListEntry);
+        if (RtlEqualUnicodeString(AccountName, &Ptr->AccountName, TRUE) &&
+            RtlEqualUnicodeString(DomainName, &Ptr->DomainName, TRUE))
         {
             return Ptr;
         }
@@ -989,6 +1015,37 @@ CreateDomainSidFromAccountSid(PSID AccountSid)
 }
 
 
+static PSID
+LsapCopySid(PSID SrcSid)
+{
+    UCHAR RidCount;
+    PSID DstSid;
+    ULONG i;
+    ULONG DstSidSize;
+    PULONG p, q;
+
+    RidCount = *RtlSubAuthorityCountSid(SrcSid);
+    DstSidSize = RtlLengthRequiredSid(RidCount);
+
+    DstSid = MIDL_user_allocate(DstSidSize);
+    if (DstSid == NULL)
+        return NULL;
+
+    RtlInitializeSid(DstSid,
+                     RtlIdentifierAuthoritySid(SrcSid),
+                     RidCount);
+
+    for (i = 0; i < (ULONG)RidCount; i++)
+    {
+        p = RtlSubAuthoritySid(SrcSid, i);
+        q = RtlSubAuthoritySid(DstSid, i);
+        *q = *p;
+    }
+
+    return DstSid;
+}
+
+
 static
 NTSTATUS
 LsapLookupIsolatedNames(DWORD Count,
@@ -1018,18 +1075,24 @@ LsapLookupIsolatedNames(DWORD Count,
         TRACE("Mapping name: %wZ\n", &AccountNames[i]);
 
         /* Look-up all well-known names */
-        ptr = LsapLookupWellKnownName((PUNICODE_STRING)&AccountNames[i]);
+        ptr = LsapLookupIsolatedWellKnownName((PUNICODE_STRING)&AccountNames[i]);
         if (ptr != NULL)
         {
             SidsBuffer[i].Use = ptr->Use;
-            SidsBuffer[i].Sid = ptr->Sid;
+            SidsBuffer[i].Sid = LsapCopySid(ptr->Sid);
+            if (SidsBuffer[i].Sid == NULL)
+            {
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+                goto done;
+            }
+
             SidsBuffer[i].DomainIndex = -1;
             SidsBuffer[i].Flags = 0;
 
             if (ptr->Use == SidTypeDomain)
             {
                 Status = LsapAddDomainToDomainsList(DomainsBuffer,
-                                                    &ptr->Name,
+                                                    &ptr->AccountName,
                                                     ptr->Sid,
                                                     &DomainIndex);
                 if (!NT_SUCCESS(Status))
@@ -1039,11 +1102,11 @@ LsapLookupIsolatedNames(DWORD Count,
             }
             else
             {
-                ptr2= LsapLookupWellKnownName(&ptr->Domain);
+                ptr2= LsapLookupIsolatedWellKnownName(&ptr->DomainName);
                 if (ptr2 != NULL)
                 {
                     Status = LsapAddDomainToDomainsList(DomainsBuffer,
-                                                        &ptr2->Name,
+                                                        &ptr2->AccountName,
                                                         ptr2->Sid,
                                                         &DomainIndex);
                     if (!NT_SUCCESS(Status))
@@ -1086,7 +1149,13 @@ LsapLookupIsolatedNames(DWORD Count,
         if (RtlEqualUnicodeString((PUNICODE_STRING)&AccountNames[i], &BuiltinDomainName, TRUE))
         {
             SidsBuffer[i].Use = SidTypeDomain;
-            SidsBuffer[i].Sid = BuiltinDomainSid;
+            SidsBuffer[i].Sid = LsapCopySid(BuiltinDomainSid);
+            if (SidsBuffer[i].Sid == NULL)
+            {
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+                goto done;
+            }
+
             SidsBuffer[i].DomainIndex = -1;
             SidsBuffer[i].Flags = 0;
 
@@ -1107,7 +1176,12 @@ LsapLookupIsolatedNames(DWORD Count,
         if (RtlEqualUnicodeString((PUNICODE_STRING)&AccountNames[i], &AccountDomainName, TRUE))
         {
             SidsBuffer[i].Use = SidTypeDomain;
-            SidsBuffer[i].Sid = AccountDomainSid;
+            SidsBuffer[i].Sid = LsapCopySid(AccountDomainSid);
+            if (SidsBuffer[i].Sid == NULL)
+            {
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+                goto done;
+            }
             SidsBuffer[i].DomainIndex = -1;
             SidsBuffer[i].Flags = 0;
 
@@ -1197,7 +1271,10 @@ LsapLookupIsolatedBuiltinNames(DWORD Count,
             SidsBuffer[i].Sid = CreateSidFromSidAndRid(BuiltinDomainSid,
                                                        RelativeIds.Element[0]);
             if (SidsBuffer[i].Sid == NULL)
+            {
+                Status = STATUS_INSUFFICIENT_RESOURCES;
                 goto done;
+            }
 
             SidsBuffer[i].DomainIndex = -1;
             SidsBuffer[i].Flags = 0;
@@ -1292,7 +1369,10 @@ LsapLookupIsolatedAccountNames(DWORD Count,
             SidsBuffer[i].Sid = CreateSidFromSidAndRid(AccountDomainSid,
                                                        RelativeIds.Element[0]);
             if (SidsBuffer[i].Sid == NULL)
+            {
+                Status = STATUS_INSUFFICIENT_RESOURCES;
                 goto done;
+            }
 
             SidsBuffer[i].DomainIndex = -1;
             SidsBuffer[i].Flags = 0;
@@ -1320,6 +1400,114 @@ done:
     if (ServerHandle != NULL)
         SamrCloseHandle(&ServerHandle);
 
+    return Status;
+}
+
+
+static
+NTSTATUS
+LsapLookupFullyQualifiedWellKnownNames(DWORD Count,
+                                       PRPC_UNICODE_STRING DomainNames,
+                                       PRPC_UNICODE_STRING AccountNames,
+                                       PLSAPR_REFERENCED_DOMAIN_LIST DomainsBuffer,
+                                       PLSAPR_TRANSLATED_SID_EX2 SidsBuffer,
+                                       PULONG Mapped)
+{
+    UNICODE_STRING EmptyDomainName = RTL_CONSTANT_STRING(L"");
+    PWELL_KNOWN_SID ptr, ptr2;
+    PSID DomainSid;
+    ULONG DomainIndex;
+    ULONG i;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    for (i = 0; i < Count; i++)
+    {
+        /* Ignore names which were already mapped */
+        if (SidsBuffer[i].Use != SidTypeUnknown)
+            continue;
+
+        /* Ignore isolated account names */
+        if (DomainNames[i].Length == 0)
+            continue;
+
+        TRACE("Mapping name: %wZ\\%wZ\n", &DomainNames[i], &AccountNames[i]);
+
+        /* Look-up all well-known names */
+        ptr = LsapLookupFullyQualifiedWellKnownName((PUNICODE_STRING)&AccountNames[i],
+                                                    (PUNICODE_STRING)&DomainNames[i]);
+        if (ptr != NULL)
+        {
+            TRACE("Found it! (%wZ\\%wZ)\n", &ptr->DomainName, &ptr->AccountName);
+
+            SidsBuffer[i].Use = ptr->Use;
+            SidsBuffer[i].Sid = LsapCopySid(ptr->Sid);
+            if (SidsBuffer[i].Sid == NULL)
+            {
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+                goto done;
+            }
+
+            SidsBuffer[i].DomainIndex = -1;
+            SidsBuffer[i].Flags = 0;
+
+            if (ptr->Use == SidTypeDomain)
+            {
+                Status = LsapAddDomainToDomainsList(DomainsBuffer,
+                                                    &ptr->AccountName,
+                                                    ptr->Sid,
+                                                    &DomainIndex);
+                if (!NT_SUCCESS(Status))
+                    goto done;
+
+                SidsBuffer[i].DomainIndex = DomainIndex;
+            }
+            else
+            {
+                ptr2= LsapLookupIsolatedWellKnownName(&ptr->DomainName);
+                if (ptr2 != NULL)
+                {
+                    Status = LsapAddDomainToDomainsList(DomainsBuffer,
+                                                        &ptr2->AccountName,
+                                                        ptr2->Sid,
+                                                        &DomainIndex);
+                    if (!NT_SUCCESS(Status))
+                        goto done;
+
+                    SidsBuffer[i].DomainIndex = DomainIndex;
+                }
+                else
+                {
+                    DomainSid = CreateDomainSidFromAccountSid(ptr->Sid);
+                    if (DomainSid == NULL)
+                    {
+                        Status = STATUS_INSUFFICIENT_RESOURCES;
+                        goto done;
+                    }
+
+                    Status = LsapAddDomainToDomainsList(DomainsBuffer,
+                                                        &EmptyDomainName,
+                                                        DomainSid,
+                                                        &DomainIndex);
+
+                    if (DomainSid != NULL)
+                    {
+                        MIDL_user_free(DomainSid);
+                        DomainSid = NULL;
+                    }
+
+                    if (!NT_SUCCESS(Status))
+                        goto done;
+
+                    SidsBuffer[i].DomainIndex = DomainIndex;
+                }
+            }
+
+            (*Mapped)++;
+            continue;
+        }
+    }
+
+done:
     return Status;
 }
 
@@ -1373,6 +1561,8 @@ LsapLookupBuiltinNames(DWORD Count,
         if (!RtlEqualUnicodeString((PUNICODE_STRING)&DomainNames[i], &BuiltinDomainName, TRUE))
             continue;
 
+        TRACE("Mapping name: %wZ\\%wZ\n", &DomainNames[i], &AccountNames[i]);
+
         Status = SamrLookupNamesInDomain(DomainHandle,
                                          1,
                                          &AccountNames[i],
@@ -1384,7 +1574,10 @@ LsapLookupBuiltinNames(DWORD Count,
             SidsBuffer[i].Sid = CreateSidFromSidAndRid(BuiltinDomainSid,
                                                        RelativeIds.Element[0]);
             if (SidsBuffer[i].Sid == NULL)
+            {
+                Status = STATUS_INSUFFICIENT_RESOURCES;
                 goto done;
+            }
 
             SidsBuffer[i].DomainIndex = -1;
             SidsBuffer[i].Flags = 0;
@@ -1465,6 +1658,8 @@ LsapLookupAccountNames(DWORD Count,
         if (!RtlEqualUnicodeString((PUNICODE_STRING)&DomainNames[i], &AccountDomainName, TRUE))
             continue;
 
+        TRACE("Mapping name: %wZ\\%wZ\n", &DomainNames[i], &AccountNames[i]);
+
         Status = SamrLookupNamesInDomain(DomainHandle,
                                          1,
                                          &AccountNames[i],
@@ -1476,7 +1671,10 @@ LsapLookupAccountNames(DWORD Count,
             SidsBuffer[i].Sid = CreateSidFromSidAndRid(AccountDomainSid,
                                                        RelativeIds.Element[0]);
             if (SidsBuffer[i].Sid == NULL)
+            {
+                Status = STATUS_INSUFFICIENT_RESOURCES;
                 goto done;
+            }
 
             SidsBuffer[i].DomainIndex = -1;
             SidsBuffer[i].Flags = 0;
@@ -1523,12 +1721,9 @@ LsapLookupNames(DWORD Count,
     PRPC_UNICODE_STRING DomainNames = NULL;
     PRPC_UNICODE_STRING AccountNames = NULL;
     ULONG SidsBufferLength;
-//    ULONG DomainIndex;
     ULONG i;
     ULONG Mapped = 0;
     NTSTATUS Status = STATUS_SUCCESS;
-
-//    PWELL_KNOWN_SID ptr, ptr2;
 
 //TRACE("()\n");
 
@@ -1635,7 +1830,22 @@ LsapLookupNames(DWORD Count,
     if (Mapped == Count)
         goto done;
 
+    Status = LsapLookupFullyQualifiedWellKnownNames(Count,
+                                                    DomainNames,
+                                                    AccountNames,
+                                                    DomainsBuffer,
+                                                    SidsBuffer,
+                                                    &Mapped);
+    if (!NT_SUCCESS(Status) &&
+        Status != STATUS_NONE_MAPPED &&
+        Status != STATUS_SOME_NOT_MAPPED)
+    {
+        TRACE("LsapLookupFullyQualifiedWellKnownNames failed! (Status %lx)\n", Status);
+        goto done;
+    }
 
+    if (Mapped == Count)
+        goto done;
 
     Status = LsapLookupBuiltinNames(Count,
                                     DomainNames,
@@ -1769,16 +1979,22 @@ LsapLookupWellKnownSids(PLSAPR_SID_ENUM_BUFFER SidEnumBuffer,
             NamesBuffer[i].Use = ptr->Use;
             NamesBuffer[i].Flags = 0;
 
-            NamesBuffer[i].Name.Buffer = MIDL_user_allocate(ptr->Name.MaximumLength);
-            NamesBuffer[i].Name.Length = ptr->Name.Length;
-            NamesBuffer[i].Name.MaximumLength = ptr->Name.MaximumLength;
-            RtlCopyMemory(NamesBuffer[i].Name.Buffer, ptr->Name.Buffer, ptr->Name.MaximumLength);
+            NamesBuffer[i].Name.Length = ptr->AccountName.Length;
+            NamesBuffer[i].Name.MaximumLength = ptr->AccountName.MaximumLength;
+            NamesBuffer[i].Name.Buffer = MIDL_user_allocate(ptr->AccountName.MaximumLength);
+            if (NamesBuffer[i].Name.Buffer == NULL)
+            {
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+                goto done;
+            }
 
-            ptr2= LsapLookupWellKnownName(&ptr->Domain);
+            RtlCopyMemory(NamesBuffer[i].Name.Buffer, ptr->AccountName.Buffer, ptr->AccountName.MaximumLength);
+
+            ptr2= LsapLookupIsolatedWellKnownName(&ptr->DomainName);
             if (ptr2 != NULL)
             {
                 Status = LsapAddDomainToDomainsList(DomainsBuffer,
-                                                    &ptr2->Name,
+                                                    &ptr2->AccountName,
                                                     ptr2->Sid,
                                                     &DomainIndex);
                 if (!NT_SUCCESS(Status))
