@@ -431,17 +431,16 @@ CsrClientConnectToServer(PWSTR ObjectDirectory,
         *ConnectionInfoSize = ClientConnect->ConnectionInfoSize;
 
         /* Call CSR */
-#if 0
         Status = CsrClientCallServer(&ApiMessage,
                                      CaptureBuffer,
                                      CSR_CREATE_API_NUMBER(CSR_SRV_DLL, CsrpClientConnect),
                                      sizeof(CSR_CLIENT_CONNECT));
-#else
+/*
         Status = CsrClientCallServer(&ApiMessage,
                                      CaptureBuffer,
                                      CSR_CREATE_API_NUMBER(CSR_NATIVE, CONNECT_PROCESS),
                                      sizeof(CSR_API_MESSAGE));
-#endif
+*/
     }
     else
     {
