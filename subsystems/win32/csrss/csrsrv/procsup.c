@@ -1,10 +1,10 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS CSR Sub System
+ * PROJECT:         ReactOS CSR SubSystem
  * FILE:            subsystems/win32/csrss/csrsrv/procsup.c
- * PURPOSE:         CSR Process Management
+ * PURPOSE:         CSR Server DLL Process Management
  * PROGRAMMERS:     ReactOS Portable Systems Group
- *                  Alex Ionescu
+ *                  Alex Ionescu (alex@relsoft.net)
  */
  
 /* INCLUDES *******************************************************************/
@@ -16,7 +16,7 @@
 
 /* GLOBALS ********************************************************************/
 
-RTL_CRITICAL_SECTION ProcessDataLock;
+RTL_CRITICAL_SECTION CsrProcessLock;
 PCSR_PROCESS CsrRootProcess = NULL;
 SECURITY_QUALITY_OF_SERVICE CsrSecurityQos =
 {
@@ -26,13 +26,28 @@ SECURITY_QUALITY_OF_SERVICE CsrSecurityQos =
     FALSE
 };
 ULONG CsrProcessSequenceCount = 5;
-extern ULONG CsrTotalPerProcessDataLength;
+extern ULONG CsrTotalPerProcessDataLength; // remove 'extern' if not needed.
 
-/* FUNCTIONS ******************************************************************/
 
+/* PRIVATE FUNCTIONS **********************************************************/
+
+/*++
+ * @name CsrpSetToNormalPriority
+ *
+ * The CsrpSetToNormalPriority routine sets the current NT Process'
+ * priority to the normal priority for CSR Processes.
+ *
+ * @param None.
+ *
+ * @return None.
+ *
+ * @remarks The "Normal" Priority corresponds to the Normal Forground
+ *          Priority (9) plus a boost of 4.
+ *
+ *--*/
 VOID
 NTAPI
-CsrSetToNormalPriority(VOID)
+CsrSetToNormalPriority(VOID) // CsrpSetToNormalPriority
 {
     KPRIORITY BasePriority = (8 + 1) + 4;
 
@@ -43,9 +58,24 @@ CsrSetToNormalPriority(VOID)
                             sizeof(KPRIORITY));
 }
 
+/*++
+ * @name CsrpSetToShutdownPriority
+ *
+ * The CsrpSetToShutdownPriority routine sets the current NT Process'
+ * priority to the boosted priority for CSR Processes doing shutdown.
+ * Additonally, it acquires the Shutdown Privilege required for shutdown.
+ *
+ * @param None.
+ *
+ * @return None.
+ *
+ * @remarks The "Shutdown" Priority corresponds to the Normal Forground
+ *          Priority (9) plus a boost of 6.
+ *
+ *--*/
 VOID
 NTAPI
-CsrSetToShutdownPriority(VOID)
+CsrSetToShutdownPriority(VOID) // CsrpSetToShutdownPriority
 {
     KPRIORITY SetBasePriority = (8 + 1) + 6;
     BOOLEAN Old;
@@ -63,6 +93,410 @@ CsrSetToShutdownPriority(VOID)
                                 sizeof(KPRIORITY));
     }
 }
+
+/*++
+ * @name FindProcessForShutdown
+ *
+ * The FindProcessForShutdown routine returns a CSR Process which is ready
+ * to be shutdown, and sets the appropriate shutdown flags for it.
+ *
+ * @param CallerLuid
+ *        Pointer to the LUID of the CSR Process calling this routine.
+ *
+ * @return Pointer to a CSR Process which is ready to be shutdown.
+ *
+ * @remarks None.
+ *
+ *--*/
+PCSR_PROCESS
+NTAPI
+FindProcessForShutdown(IN PLUID CallerLuid)
+{
+    PCSR_PROCESS CsrProcess, ReturnCsrProcess = NULL;
+    // PCSR_THREAD CsrThread;
+    NTSTATUS Status;
+    ULONG Level = 0;
+    LUID ProcessLuid;
+    LUID SystemLuid = SYSTEM_LUID;
+    // BOOLEAN IsSystemLuid = FALSE, IsOurLuid = FALSE;
+    PLIST_ENTRY NextEntry;
+
+    /* Set the List Pointers */
+    NextEntry = CsrRootProcess->ListLink.Flink;
+    while (NextEntry != &CsrRootProcess->ListLink)
+    {
+        /* Get the process */
+        CsrProcess = CONTAINING_RECORD(NextEntry, CSR_PROCESS, ListLink);
+
+        /* Move to the next entry */
+        NextEntry = NextEntry->Flink;
+
+        /* Skip this process if it's already been processed */
+        if (CsrProcess->Flags & CsrProcessSkipShutdown) continue;
+
+        /* Get the LUID of this Process */
+        Status = CsrGetProcessLuid(CsrProcess->ProcessHandle, &ProcessLuid);
+
+        /* Check if we didn't get access to the LUID */
+        if (Status == STATUS_ACCESS_DENIED)
+        {
+            /* FIXME: Check if we have any threads */
+/*
+            /\* Check if we have any threads *\/
+            if (CsrProcess->ThreadCount)
+            {
+                /\* Impersonate one of the threads and retry *\/
+                CsrThread = CONTAINING_RECORD(CsrProcess->ThreadList.Flink,
+                                              CSR_THREAD,
+                                              Link);
+                CsrImpersonateClient(CsrThread);
+                Status = CsrGetProcessLuid(NULL, &ProcessLuid);
+                CsrRevertToSelf();
+            }
+*/
+        }
+
+        if (!NT_SUCCESS(Status))
+        {
+            /* We didn't have access, so skip it */
+            CsrProcess->Flags |= CsrProcessSkipShutdown;
+            continue;
+        }
+
+        /* Check if this is the System LUID */
+        if ((/*IsSystemLuid =*/ RtlEqualLuid(&ProcessLuid, &SystemLuid)))
+        {
+            /* Mark this process */
+            CsrProcess->ShutdownFlags |= CsrShutdownSystem;
+        }
+        else if (!(/*IsOurLuid =*/ RtlEqualLuid(&ProcessLuid, CallerLuid)))
+        {
+            /* Our LUID doesn't match with the caller's */
+            CsrProcess->ShutdownFlags |= CsrShutdownOther;
+        }
+
+        /* Check if we're past the previous level */
+        // FIXME: if ((CsrProcess->ShutdownLevel > Level) || !(ReturnCsrProcess))
+        if (CsrProcess->ShutdownLevel > Level /* || !ReturnCsrProcess */)
+        {
+            /* Update the level */
+            Level = CsrProcess->ShutdownLevel;
+
+            /* Set the final process */
+            ReturnCsrProcess = CsrProcess;
+        }
+    }
+
+    /* Check if we found a process */
+    if (ReturnCsrProcess)
+    {
+        /* Skip this one next time */
+        ReturnCsrProcess->Flags |= CsrProcessSkipShutdown;
+    }
+
+    return ReturnCsrProcess;
+}
+
+/*++
+ * @name CsrProcessRefcountZero
+ *
+ * The CsrProcessRefcountZero routine is executed when a CSR Process has lost
+ * all its active references. It removes and de-allocates the CSR Process.
+ *
+ * @param CsrProcess
+ *        Pointer to the CSR Process that is to be deleted.
+ *
+ * @return None.
+ *
+ * @remarks Do not call this routine. It is reserved for the internal
+ *          thread management routines when a CSR Process has lost all
+ *          its references.
+ *
+ *          This routine is called with the Process Lock held.
+ *
+ *--*/
+VOID
+NTAPI
+CsrProcessRefcountZero(IN PCSR_PROCESS CsrProcess)
+{
+    ASSERT(ProcessStructureListLocked());
+
+    /* Remove the Process from the list */
+    CsrRemoveProcess(CsrProcess);
+
+    /* Check if there's a session */
+    if (CsrProcess->NtSession)
+    {
+        /* Dereference the Session */
+        CsrDereferenceNtSession(CsrProcess->NtSession, 0);
+    }
+
+    /* Close the Client Port if there is one */
+    if (CsrProcess->ClientPort) NtClose(CsrProcess->ClientPort);
+
+    /* Close the process handle */
+    NtClose(CsrProcess->ProcessHandle);
+
+    /* Free the Proces Object */
+    CsrDeallocateProcess(CsrProcess);
+}
+
+/*++
+ * @name CsrLockedDereferenceProcess
+ *
+ * The CsrLockedDereferenceProcess dereferences a CSR Process while the
+ * Process Lock is already being held.
+ *
+ * @param CsrProcess
+ *        Pointer to the CSR Process to be dereferenced.
+ *
+ * @return None.
+ *
+ * @remarks This routine will return with the Process Lock held.
+ *
+ *--*/
+VOID
+NTAPI
+CsrLockedDereferenceProcess(PCSR_PROCESS CsrProcess)
+{
+    LONG LockCount;
+
+    /* Decrease reference count */
+    LockCount = --CsrProcess->ReferenceCount;
+    ASSERT(LockCount >= 0);
+    if (!LockCount)
+    {
+        /* Call the generic cleanup code */
+        DPRINT1("Should kill process: %p\n", CsrProcess);
+        CsrProcessRefcountZero(CsrProcess);
+        CsrAcquireProcessLock();
+    }
+}
+
+/*++
+ * @name CsrAllocateProcess
+ * @implemented NT4
+ *
+ * The CsrAllocateProcess routine allocates a new CSR Process object.
+ *
+ * @return Pointer to the newly allocated CSR Process.
+ *
+ * @remarks None.
+ *
+ *--*/
+PCSR_PROCESS
+NTAPI
+CsrAllocateProcess(VOID)
+{
+    PCSR_PROCESS CsrProcess;
+    ULONG TotalSize;
+
+    /* Calculate the amount of memory this should take */
+    TotalSize = sizeof(CSR_PROCESS) +
+                (CSR_SERVER_DLL_MAX * sizeof(PVOID)) +
+                CsrTotalPerProcessDataLength;
+
+    /* Allocate a Process */
+    CsrProcess = RtlAllocateHeap(CsrHeap, HEAP_ZERO_MEMORY, TotalSize);
+    if (!CsrProcess) return NULL;
+
+    /* Handle the Sequence Number and protect against overflow */
+    CsrProcess->SequenceNumber = CsrProcessSequenceCount++;
+    if (CsrProcessSequenceCount < 5) CsrProcessSequenceCount = 5;
+
+    /* Increase the reference count */
+    CsrProcess->ReferenceCount++;
+
+    /* Initialize the Thread List */
+    InitializeListHead(&CsrProcess->ThreadList);
+
+    /* Return the Process */
+    return CsrProcess;
+}
+
+/*++
+ * @name CsrLockedReferenceProcess
+ *
+ * The CsrLockedReferenceProcess references a CSR Process while the
+ * Process Lock is already being held.
+ *
+ * @param CsrProcess
+ *        Pointer to the CSR Process to be referenced.
+ *
+ * @return None.
+ *
+ * @remarks This routine will return with the Process Lock held.
+ *
+ *--*/
+VOID
+NTAPI
+CsrLockedReferenceProcess(IN PCSR_PROCESS CsrProcess)
+{
+    /* Increment the reference count */
+    ++CsrProcess->ReferenceCount;
+}
+
+/*++
+ * @name CsrInitializeProcessStructure
+ * @implemented NT4
+ *
+ * The CsrInitializeProcessStructure routine sets up support for CSR Processes
+ * and CSR Threads.
+ *
+ * @param None.
+ *
+ * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL
+ *         otherwise.
+ *
+ * @remarks None.
+ *
+ *--*/
+NTSTATUS
+NTAPI
+CsrInitializeProcessStructure(VOID)
+{
+    NTSTATUS Status;
+    ULONG i;
+
+    /* Initialize the Lock */
+    Status = RtlInitializeCriticalSection(&CsrProcessLock);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* Set up the Root Process */
+    CsrRootProcess = CsrAllocateProcess();
+    if (!CsrRootProcess) return STATUS_NO_MEMORY;
+
+    /* Set up the minimal information for it */
+    InitializeListHead(&CsrRootProcess->ListLink);
+    CsrRootProcess->ProcessHandle = (HANDLE)-1;
+    CsrRootProcess->ClientId = NtCurrentTeb()->ClientId;
+
+    /* Initialize the Thread Hash List */
+    for (i = 0; i < 256; i++) InitializeListHead(&CsrThreadHashTable[i]);
+
+    /* Initialize the Wait Lock */
+    return RtlInitializeCriticalSection(&CsrWaitListsLock);
+}
+
+/*++
+ * @name CsrDeallocateProcess
+ *
+ * The CsrDeallocateProcess frees the memory associated with a CSR Process.
+ *
+ * @param CsrProcess
+ *        Pointer to the CSR Process to be freed.
+ *
+ * @return None.
+ *
+ * @remarks Do not call this routine. It is reserved for the internal
+ *          thread management routines when a CSR Process has been cleanly
+ *          dereferenced and killed.
+ *
+ *--*/
+VOID
+NTAPI
+CsrDeallocateProcess(IN PCSR_PROCESS CsrProcess)
+{
+    /* Free the process object from the heap */
+    RtlFreeHeap(CsrHeap, 0, CsrProcess);
+}
+
+/*++
+ * @name CsrRemoveProcess
+ *
+ * The CsrRemoveProcess function undoes a CsrInsertProcess operation and
+ * removes the CSR Process from the Process List and notifies Server DLLs
+ * of this removal.
+ *
+ * @param CsrProcess
+ *        Pointer to the CSR Process to remove.
+ *
+ * @return None.
+ *
+ * @remarks None.
+ *
+ *--*/
+VOID
+NTAPI
+CsrRemoveProcess(IN PCSR_PROCESS CsrProcess)
+{
+    PCSR_SERVER_DLL ServerDll;
+    ULONG i;
+    ASSERT(ProcessStructureListLocked());
+
+    /* Remove us from the Process List */
+    RemoveEntryList(&CsrProcess->ListLink);
+
+    /* Release the lock */
+    CsrReleaseProcessLock();
+
+    /* Loop every Server DLL */
+    for (i = 0; i < CSR_SERVER_DLL_MAX; i++)
+    {
+        /* Get the Server DLL */
+        ServerDll = CsrLoadedServerDll[i];
+
+        /* Check if it's valid and if it has a Disconnect Callback */
+        if ((ServerDll) && (ServerDll->DisconnectCallback))
+        {
+            /* Call it */
+            ServerDll->DisconnectCallback(CsrProcess);
+        }
+    }
+}
+
+/*++
+ * @name CsrInsertProcess
+ *
+ * The CsrInsertProcess routine inserts a CSR Process into the Process List
+ * and notifies Server DLLs of the creation of a new CSR Process.
+ *
+ * @param Parent
+ *        Optional pointer to the CSR Process creating this CSR Process.
+ *
+ * @param CurrentProcess
+ *        Optional pointer to the current CSR Process.
+ *
+ * @param CsrProcess
+ *        Pointer to the CSR Process which is to be inserted.
+ *
+ * @return None.
+ *
+ * @remarks None.
+ *
+ *--*/
+VOID
+NTAPI
+CsrInsertProcess(IN PCSR_PROCESS Parent OPTIONAL,
+                 IN PCSR_PROCESS CurrentProcess OPTIONAL,
+                 IN PCSR_PROCESS CsrProcess)
+{
+    PCSR_SERVER_DLL ServerDll;
+    ULONG i;
+    ASSERT(ProcessStructureListLocked());
+
+    /* Set the parent */
+    CsrProcess->Parent = Parent;
+
+    /* Insert it into the Root List */
+    InsertTailList(&CsrRootProcess->ListLink, &CsrProcess->ListLink);
+
+    /* Notify the Server DLLs */
+    for (i = 0; i < CSR_SERVER_DLL_MAX; i++)
+    {
+        /* Get the current Server DLL */
+        ServerDll = CsrLoadedServerDll[i];
+
+        /* Make sure it's valid and that it has callback */
+        if ((ServerDll) && (ServerDll->NewProcessCallback))
+        {
+            ServerDll->NewProcessCallback(CurrentProcess, CsrProcess);
+        }
+    }
+}
+
+
+/* PUBLIC FUNCTIONS ***********************************************************/
 
 /*++
  * @name CsrGetProcessLuid
@@ -251,6 +685,7 @@ CsrRevertToSelf(VOID)
         if (!CurrentThread->ImpersonationCount)
         {
             // DPRINT1("CSRSS: CsrRevertToSelf called while not impersonating\n");
+            // DbgBreakPoint();
             return FALSE;
         }
         else if (--CurrentThread->ImpersonationCount > 0)
@@ -268,275 +703,6 @@ CsrRevertToSelf(VOID)
 
     /* Return TRUE or FALSE */
     return NT_SUCCESS(Status);
-}
-
-/*++
- * @name FindProcessForShutdown
- *
- * The FindProcessForShutdown routine returns a CSR Process which is ready
- * to be shutdown, and sets the appropriate shutdown flags for it.
- *
- * @param CallerLuid
- *        Pointer to the LUID of the CSR Process calling this routine.
- *
- * @return Pointer to a CSR Process which is ready to be shutdown.
- *
- * @remarks None.
- *
- *--*/
-PCSR_PROCESS
-NTAPI
-FindProcessForShutdown(IN PLUID CallerLuid)
-{
-    PCSR_PROCESS CsrProcess, ReturnCsrProcess = NULL;
-    // PCSR_THREAD CsrThread;
-    NTSTATUS Status;
-    ULONG Level = 0;
-    LUID ProcessLuid;
-    LUID SystemLuid = SYSTEM_LUID;
-    // BOOLEAN IsSystemLuid = FALSE, IsOurLuid = FALSE;
-    PLIST_ENTRY NextEntry;
-
-    /* Set the List Pointers */
-    NextEntry = CsrRootProcess->ListLink.Flink;
-    while (NextEntry != &CsrRootProcess->ListLink)
-    {
-        /* Get the process */
-        CsrProcess = CONTAINING_RECORD(NextEntry, CSR_PROCESS, ListLink);
-
-        /* Move to the next entry */
-        NextEntry = NextEntry->Flink;
-
-        /* Skip this process if it's already been processed */
-        if (CsrProcess->Flags & CsrProcessSkipShutdown) continue;
-
-        /* Get the LUID of this Process */
-        Status = CsrGetProcessLuid(CsrProcess->ProcessHandle, &ProcessLuid);
-
-        /* Check if we didn't get access to the LUID */
-        if (Status == STATUS_ACCESS_DENIED)
-        {
-            /* FIXME:Check if we have any threads */
-/*
-            if (CsrProcess->ThreadCount)
-            {
-                /\* Impersonate one of the threads and retry *\/
-                CsrThread = CONTAINING_RECORD(CsrProcess->ThreadList.Flink,
-                                              CSR_THREAD,
-                                              Link);
-                CsrImpersonateClient(CsrThread);
-                Status = CsrGetProcessLuid(NULL, &ProcessLuid);
-                CsrRevertToSelf();
-            }
-*/
-        }
-
-        if (!NT_SUCCESS(Status))
-        {
-            /* We didn't have access, so skip it */
-            CsrProcess->Flags |= CsrProcessSkipShutdown;
-            continue;
-        }
-
-        /* Check if this is the System LUID */
-        if ((/*IsSystemLuid =*/ RtlEqualLuid(&ProcessLuid, &SystemLuid)))
-        {
-            /* Mark this process */
-            CsrProcess->ShutdownFlags |= CsrShutdownSystem;
-        }
-        else if (!(/*IsOurLuid =*/ RtlEqualLuid(&ProcessLuid, CallerLuid)))
-        {
-            /* Our LUID doesn't match with the caller's */
-            CsrProcess->ShutdownFlags |= CsrShutdownOther;
-        }
-
-        /* Check if we're past the previous level */
-        if (CsrProcess->ShutdownLevel > Level /* || !ReturnCsrProcess */)
-        {
-            /* Update the level */
-            Level = CsrProcess->ShutdownLevel;
-
-            /* Set the final process */
-            ReturnCsrProcess = CsrProcess;
-        }
-    }
-
-    /* Check if we found a process */
-    if (ReturnCsrProcess)
-    {
-        /* Skip this one next time */
-        ReturnCsrProcess->Flags |= CsrProcessSkipShutdown;
-    }
-
-    return ReturnCsrProcess;
-}
-
-/* This is really "CsrShutdownProcess", mostly */
-NTSTATUS
-WINAPI
-CsrEnumProcesses(IN CSRSS_ENUM_PROCESS_PROC EnumProc,
-                 IN PVOID Context)
-{
-    PVOID* RealContext = (PVOID*)Context;
-    PLUID CallerLuid = RealContext[0];
-    PCSR_PROCESS CsrProcess = NULL;
-    NTSTATUS Status = STATUS_UNSUCCESSFUL;
-    BOOLEAN FirstTry;
-    PLIST_ENTRY NextEntry;
-    ULONG Result = 0;
-
-    /* Acquire process lock */
-    CsrAcquireProcessLock();
-    
-    /* Get the list pointers */
-    NextEntry = CsrRootProcess->ListLink.Flink;
-    while (NextEntry != &CsrRootProcess->ListLink)
-    {
-        /* Get the Process */
-        CsrProcess = CONTAINING_RECORD(NextEntry, CSR_PROCESS, ListLink);
-
-        /* Remove the skip flag, set shutdown flags to 0*/
-        CsrProcess->Flags &= ~CsrProcessSkipShutdown;
-        CsrProcess->ShutdownFlags = 0;
-
-        /* Move to the next */
-        NextEntry = NextEntry->Flink;
-    }
-    
-    /* Set shudown Priority */
-    CsrSetToShutdownPriority();
-
-    /* Loop all processes */
-    //DPRINT1("Enumerating for LUID: %lx %lx\n", CallerLuid->HighPart, CallerLuid->LowPart);
-    
-    /* Start looping */
-    while (TRUE)
-    {
-        /* Find the next process to shutdown */
-        FirstTry = TRUE;
-        if (!(CsrProcess = FindProcessForShutdown(CallerLuid)))
-        {
-            /* Done, quit */
-            CsrReleaseProcessLock();
-            Status = STATUS_SUCCESS;
-            goto Quickie;
-        }
-
-LoopAgain:
-        /* Release the lock, make the callback, and acquire it back */
-        //DPRINT1("Found process: %lx\n", CsrProcess->ClientId.UniqueProcess);
-        CsrReleaseProcessLock();
-        Result = (ULONG)EnumProc(CsrProcess, (PVOID)((ULONG_PTR)Context | FirstTry));
-        CsrAcquireProcessLock();
-
-        /* Check the result */
-        //DPRINT1("Result: %d\n", Result);
-        if (Result == CsrShutdownCsrProcess)
-        {
-            /* The callback unlocked the process */
-            break;
-        }
-        else if (Result == CsrShutdownNonCsrProcess)
-        {
-            /* A non-CSR process, the callback didn't touch it */
-            //continue;
-        }
-        else if (Result == CsrShutdownCancelled)
-        {
-            /* Shutdown was cancelled, unlock and exit */
-            CsrReleaseProcessLock();
-            Status = STATUS_CANCELLED;
-            goto Quickie;
-        }
-
-        /* No matches during the first try, so loop again */
-        if (FirstTry && Result == CsrShutdownNonCsrProcess)
-        {
-            FirstTry = FALSE;
-            goto LoopAgain;
-        }
-    }
-
-Quickie:
-    /* Return to normal priority */
-    CsrSetToNormalPriority();
-    return Status;
-}
-
-/*++
- * @name CsrProcessRefcountZero
- *
- * The CsrProcessRefcountZero routine is executed when a CSR Process has lost
- * all its active references. It removes and de-allocates the CSR Process.
- *
- * @param CsrProcess
- *        Pointer to the CSR Process that is to be deleted.
- *
- * @return None.
- *
- * @remarks Do not call this routine. It is reserved for the internal
- *          thread management routines when a CSR Process has lost all
- *          its references.
- *
- *          This routine is called with the Process Lock held.
- *
- *--*/
-VOID
-NTAPI
-CsrProcessRefcountZero(IN PCSR_PROCESS CsrProcess)
-{
-    ASSERT(ProcessStructureListLocked());
-
-    /* Remove the Process from the list */
-    CsrRemoveProcess(CsrProcess);
-
-    /* Check if there's a session */
-    if (CsrProcess->NtSession)
-    {
-        /* Dereference the Session */
-        CsrDereferenceNtSession(CsrProcess->NtSession, 0);
-    }
-
-    /* Close the Client Port if there is one */
-    if (CsrProcess->ClientPort) NtClose(CsrProcess->ClientPort);
-
-    /* Close the process handle */
-    NtClose(CsrProcess->ProcessHandle);
-
-    /* Free the Proces Object */
-    CsrDeallocateProcess(CsrProcess);
-}
-
-/*++
- * @name CsrLockedDereferenceProcess
- *
- * The CsrLockedDereferenceProcess dereferences a CSR Process while the
- * Process Lock is already being held.
- *
- * @param CsrProcess
- *        Pointer to the CSR Process to be dereferenced.
- *
- * @return None.
- *
- * @remarks This routine will return with the Process Lock held.
- *
- *--*/
-VOID
-NTAPI
-CsrLockedDereferenceProcess(PCSR_PROCESS CsrProcess)
-{
-    LONG LockCount;
-
-    /* Decrease reference count */
-    LockCount = --CsrProcess->ReferenceCount;
-    ASSERT(LockCount >= 0);
-    if (!LockCount)
-    {
-        /* Call the generic cleanup code */
-        DPRINT1("Should kill process: %p\n", CsrProcess);
-        CsrProcessRefcountZero(CsrProcess);
-        CsrAcquireProcessLock();
-    }
 }
 
 /*++
@@ -702,8 +868,8 @@ CsrCreateProcess(IN HANDLE hProcess,
     PCSR_THREAD CurrentThread = CsrGetClientThread();
     CLIENT_ID CurrentCid;
     PCSR_PROCESS CurrentProcess;
-//    PVOID ProcessData;
-//    ULONG i;
+    PVOID ProcessData;
+    ULONG i;
     PCSR_PROCESS CsrProcess;
     NTSTATUS Status;
     PCSR_THREAD CsrThread;
@@ -731,7 +897,6 @@ CsrCreateProcess(IN HANDLE hProcess,
         return STATUS_NO_MEMORY;
     }
 
-#if 0
     /* Inherit the Process Data */
     CurrentProcess = CurrentThread->Process;
     ProcessData = &CurrentProcess->ServerData[CSR_SERVER_DLL_MAX];
@@ -758,9 +923,8 @@ CsrCreateProcess(IN HANDLE hProcess,
             CsrProcess->ServerData[i] = NULL;
         }
     }
-#endif
 
-    /* Set the Exception port to us */
+    /* Set the Exception port for us */
     Status = NtSetInformationProcess(hProcess,
                                      ProcessExceptionPort,
                                      &CsrApiPort,
@@ -773,7 +937,7 @@ CsrCreateProcess(IN HANDLE hProcess,
         return STATUS_NO_MEMORY;
     }
 
-    /* If Check if CreateProcess got CREATE_NEW_PROCESS_GROUP */
+    /* Check if CreateProcess got CREATE_NEW_PROCESS_GROUP */
     if (!(Flags & CsrProcessCreateNewGroup))
     {
         /* Create new data */
@@ -811,10 +975,10 @@ CsrCreateProcess(IN HANDLE hProcess,
         CsrProcess->DebugCid = *DebugCid;
     }
 
-    /* Check if we debugging is enabled */
+    /* Check if Debugging is enabled */
     if (CsrProcess->DebugFlags)
     {
-        /* Set the Debug Port to us */
+        /* Set the Debug Port for us */
         Status = NtSetInformationProcess(hProcess,
                                          ProcessDebugPort,
                                          &CsrApiPort,
@@ -941,231 +1105,6 @@ CsrSetBackgroundPriority(IN PCSR_PROCESS CsrProcess)
 }
 
 /*++
- * @name CsrAllocateProcess
- * @implemented NT4
- *
- * The CsrAllocateProcess routine allocates a new CSR Process object.
- *
- * @return Pointer to the newly allocated CSR Process.
- *
- * @remarks None.
- *
- *--*/
-PCSR_PROCESS
-NTAPI
-CsrAllocateProcess(VOID)
-{
-    PCSR_PROCESS CsrProcess;
-    ULONG TotalSize;
-
-    /* Calculate the amount of memory this should take */
-    TotalSize = sizeof(CSR_PROCESS) +
-                (CSR_SERVER_DLL_MAX * sizeof(PVOID)) +
-                CsrTotalPerProcessDataLength;
-
-    /* Allocate a Process */
-    CsrProcess = RtlAllocateHeap(CsrHeap, HEAP_ZERO_MEMORY, TotalSize);
-    if (!CsrProcess) return NULL;
-
-    /* Handle the Sequence Number and protect against overflow */
-    CsrProcess->SequenceNumber = CsrProcessSequenceCount++;
-    if (CsrProcessSequenceCount < 5) CsrProcessSequenceCount = 5;
-
-    /* Increase the reference count */
-    CsrProcess->ReferenceCount++;
-
-    /* Initialize the Thread List */
-    InitializeListHead(&CsrProcess->ThreadList);
-
-    /* Return the Process */
-    return CsrProcess;
-}
-
-/*++
- * @name CsrLockedReferenceProcess
- *
- * The CsrLockedReferenceProcess references a CSR Process while the
- * Process Lock is already being held.
- *
- * @param CsrProcess
- *        Pointer to the CSR Process to be referenced.
- *
- * @return None.
- *
- * @remarks This routine will return with the Process Lock held.
- *
- *--*/
-VOID
-NTAPI
-CsrLockedReferenceProcess(IN PCSR_PROCESS CsrProcess)
-{
-    /* Increment the reference count */
-    ++CsrProcess->ReferenceCount;
-}
-
-/*++
- * @name CsrInitializeProcessStructure
- * @implemented NT4
- *
- * The CsrInitializeProcessStructure routine sets up support for CSR Processes
- * and CSR Threads.
- *
- * @param None.
- *
- * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL
- *         otherwise.
- *
- * @remarks None.
- *
- *--*/
-NTSTATUS
-NTAPI
-CsrInitializeProcessStructure(VOID)
-{
-    NTSTATUS Status;
-    ULONG i;
-
-    /* Initialize the Lock */
-    Status = RtlInitializeCriticalSection(&ProcessDataLock);
-    if (!NT_SUCCESS(Status)) return Status;
-
-    /* Set up the Root Process */
-    CsrRootProcess = CsrAllocateProcess();
-    if (!CsrRootProcess) return STATUS_NO_MEMORY;
-
-    /* Set up the minimal information for it */
-    InitializeListHead(&CsrRootProcess->ListLink);
-    CsrRootProcess->ProcessHandle = (HANDLE)-1;
-    CsrRootProcess->ClientId = NtCurrentTeb()->ClientId;
-
-    /* Initialize the Thread Hash List */
-    for (i = 0; i < 256; i++) InitializeListHead(&CsrThreadHashTable[i]);
-
-    /* Initialize the Wait Lock */
-    return RtlInitializeCriticalSection(&CsrWaitListsLock);
-}
-
-/*++
- * @name CsrDeallocateProcess
- *
- * The CsrDeallocateProcess frees the memory associated with a CSR Process.
- *
- * @param CsrProcess
- *        Pointer to the CSR Process to be freed.
- *
- * @return None.
- *
- * @remarks Do not call this routine. It is reserved for the internal
- *          thread management routines when a CSR Process has been cleanly
- *          dereferenced and killed.
- *
- *--*/
-VOID
-NTAPI
-CsrDeallocateProcess(IN PCSR_PROCESS CsrProcess)
-{
-    /* Free the process object from the heap */
-    RtlFreeHeap(CsrHeap, 0, CsrProcess);
-}
-
-/*++
- * @name CsrRemoveProcess
- *
- * The CsrRemoveProcess function undoes a CsrInsertProcess operation and
- * removes the CSR Process from the Process List and notifies Server DLLs
- * of this removal.
- *
- * @param CsrProcess
- *        Pointer to the CSR Process to remove.
- *
- * @return None.
- *
- * @remarks None.
- *
- *--*/
-VOID
-NTAPI
-CsrRemoveProcess(IN PCSR_PROCESS CsrProcess)
-{
-    PCSR_SERVER_DLL ServerDll;
-    ULONG i;
-    ASSERT(ProcessStructureListLocked());
-
-    /* Remove us from the Process List */
-    RemoveEntryList(&CsrProcess->ListLink);
-
-    /* Release the lock */
-    CsrReleaseProcessLock();
-
-    /* Loop every Server DLL */
-    for (i = 0; i < CSR_SERVER_DLL_MAX; i++)
-    {
-        /* Get the Server DLL */
-        ServerDll = CsrLoadedServerDll[i];
-
-        /* Check if it's valid and if it has a Disconnect Callback */
-        if ((ServerDll) && (ServerDll->DisconnectCallback))
-        {
-            /* Call it */
-            ServerDll->DisconnectCallback(CsrProcess);
-        }
-    }
-}
-
-/*++
- * @name CsrInsertProcess
- *
- * The CsrInsertProcess routine inserts a CSR Process into the Process List
- * and notifies Server DLLs of the creation of a new CSR Process.
- *
- * @param Parent
- *        Optional pointer to the CSR Process creating this CSR Process.
- *
- * @param CurrentProcess
- *        Optional pointer to the current CSR Process.
- *
- * @param CsrProcess
- *        Pointer to the CSR Process which is to be inserted.
- *
- * @return None.
- *
- * @remarks None.
- *
- *--*/
-VOID
-NTAPI
-CsrInsertProcess(IN PCSR_PROCESS Parent OPTIONAL,
-                 IN PCSR_PROCESS CurrentProcess OPTIONAL,
-                 IN PCSR_PROCESS CsrProcess)
-{
-#if 0
-    PCSR_SERVER_DLL ServerDll;
-    ULONG i;
-#endif
-    ASSERT(ProcessStructureListLocked());
-
-    /* Set the parent */
-    CsrProcess->Parent = Parent;
-
-    /* Insert it into the Root List */
-    InsertTailList(&CsrRootProcess->ListLink, &CsrProcess->ListLink);
-#if 0
-    /* Notify the Server DLLs */
-    for (i = 0; i < CSR_SERVER_DLL_MAX; i++)
-    {
-        /* Get the current Server DLL */
-        ServerDll = CsrLoadedServerDll[i];
-
-        /* Make sure it's valid and that it has callback */
-        if ((ServerDll) && (ServerDll->NewProcessCallback))
-        {
-            ServerDll->NewProcessCallback(CurrentProcess, CsrProcess);
-        }
-    }
-#endif
-}
-
-/*++
  * @name CsrLockProcessByClientId
  * @implemented NT4
  *
@@ -1235,6 +1174,310 @@ CsrLockProcessByClientId(IN HANDLE Pid,
     
     /* Return the result */
     return Status;
+}
+
+/*++
+ * @name CsrShutdownProcesses
+ * @implemented NT4
+ *
+ * The CsrShutdownProcesses routine shuts down every CSR Process possible
+ * and calls each Server DLL's shutdown notification.
+ *
+ * @param CallerLuid
+ *        Pointer to the LUID of the CSR Process that is ordering the
+ *        shutdown.
+ *
+ * @param Flags
+ *        Flags to send to the shutdown notification routine.
+ *
+ * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL
+ *         otherwise.
+ *
+ * @remarks None.
+ *
+ *--*/
+NTSTATUS
+NTAPI
+CsrShutdownProcesses(IN PLUID CallerLuid,
+                     IN ULONG Flags)
+{
+    PLIST_ENTRY NextEntry;
+    PCSR_PROCESS CsrProcess;
+    NTSTATUS Status;
+    BOOLEAN FirstTry;
+    ULONG i;
+    PCSR_SERVER_DLL ServerDll;
+    ULONG Result = 0; /* Intentionally invalid enumeratee to silence compiler warning */
+
+    /* Acquire process lock */
+    CsrAcquireProcessLock();
+
+    /* Add shutdown flag */
+    CsrRootProcess->ShutdownFlags |= CsrShutdownSystem;
+
+    /* Get the list pointers */
+    NextEntry = CsrRootProcess->ListLink.Flink;
+    while (NextEntry != &CsrRootProcess->ListLink)
+    {
+        /* Get the Process */
+        CsrProcess = CONTAINING_RECORD(NextEntry, CSR_PROCESS, ListLink);
+
+        /* Remove the skip flag, set shutdown flags to 0*/
+        CsrProcess->Flags &= ~CsrProcessSkipShutdown;
+        CsrProcess->ShutdownFlags = 0;
+
+        /* Move to the next */
+        NextEntry = NextEntry->Flink;
+    }
+
+    /* Set shudown Priority */
+    CsrpSetToShutdownPriority();
+
+    /* Start looping */
+    while (TRUE)
+    {
+        /* Find the next process to shutdown */
+        CsrProcess = FindProcessForShutdown(CallerLuid);
+        if (!CsrProcess) break;
+
+        /* Increase reference to process */
+        CsrProcess->ReferenceCount++;
+
+        FirstTry = TRUE;
+        while (TRUE)
+        {
+            /* Loop all the servers */
+            for (i = 0; i < CSR_SERVER_DLL_MAX; i++)
+            {
+                /* Get the current server */
+                ServerDll = CsrLoadedServerDll[i];
+                if ((ServerDll) && (ServerDll->ShutdownProcessCallback))
+                {
+                    /* Release the lock, make the callback, and acquire it back */
+                    CsrReleaseProcessLock();
+                    Result = ServerDll->ShutdownProcessCallback(CsrProcess,
+                                                                Flags,
+                                                                FirstTry);
+                    CsrAcquireProcessLock();
+
+                    /* Check the result */
+                    if (Result == CsrShutdownCsrProcess)
+                    {
+                        /* The callback unlocked the process */
+                        break;
+                    }
+                    else if (Result == CsrShutdownCancelled)
+                    {
+                        /* Check if this was a forced shutdown */
+                        if (Flags & EWX_FORCE)
+                        {
+                            DPRINT1("Process %x cancelled forced shutdown (Dll = %d)\n",
+                                     CsrProcess->ClientId.UniqueProcess, i);
+                            DbgBreakPoint();
+                        }
+
+                        /* Shutdown was cancelled, unlock and exit */
+                        CsrReleaseProcessLock();
+                        Status = STATUS_CANCELLED;
+                        goto Quickie;
+                    }
+                }
+            }
+
+            /* No matches during the first try, so loop again */
+            if ((FirstTry) && (Result == CsrShutdownNonCsrProcess))
+            {
+                FirstTry = FALSE;
+                continue;
+            }
+
+            /* Second try, break out */
+            break;
+        }
+
+        /* We've reached the final loop here, so dereference */
+        if (i == CSR_SERVER_DLL_MAX) CsrLockedDereferenceProcess(CsrProcess);
+    }
+
+    /* Success path */
+    CsrReleaseProcessLock();
+    Status = STATUS_SUCCESS;
+
+Quickie:
+    /* Return to normal priority */
+    CsrpSetToNormalPriority();
+    return Status;
+}
+
+/* FIXME: Temporary hack. This is really "CsrShutdownProcess", mostly. Used by win32csr */
+NTSTATUS
+WINAPI
+CsrEnumProcesses(IN CSRSS_ENUM_PROCESS_PROC EnumProc,
+                 IN PVOID Context)
+{
+    PVOID* RealContext = (PVOID*)Context;
+    PLUID CallerLuid = RealContext[0];
+    PCSR_PROCESS CsrProcess = NULL;
+    NTSTATUS Status = STATUS_UNSUCCESSFUL;
+    BOOLEAN FirstTry;
+    PLIST_ENTRY NextEntry;
+    ULONG Result = 0;
+
+    /* Acquire process lock */
+    CsrAcquireProcessLock();
+    
+    /* Get the list pointers */
+    NextEntry = CsrRootProcess->ListLink.Flink;
+    while (NextEntry != &CsrRootProcess->ListLink)
+    {
+        /* Get the Process */
+        CsrProcess = CONTAINING_RECORD(NextEntry, CSR_PROCESS, ListLink);
+
+        /* Remove the skip flag, set shutdown flags to 0*/
+        CsrProcess->Flags &= ~CsrProcessSkipShutdown;
+        CsrProcess->ShutdownFlags = 0;
+
+        /* Move to the next */
+        NextEntry = NextEntry->Flink;
+    }
+    
+    /* Set shudown Priority */
+    CsrSetToShutdownPriority();
+
+    /* Loop all processes */
+    //DPRINT1("Enumerating for LUID: %lx %lx\n", CallerLuid->HighPart, CallerLuid->LowPart);
+    
+    /* Start looping */
+    while (TRUE)
+    {
+        /* Find the next process to shutdown */
+        FirstTry = TRUE;
+        if (!(CsrProcess = FindProcessForShutdown(CallerLuid)))
+        {
+            /* Done, quit */
+            CsrReleaseProcessLock();
+            Status = STATUS_SUCCESS;
+            goto Quickie;
+        }
+
+LoopAgain:
+        /* Release the lock, make the callback, and acquire it back */
+        //DPRINT1("Found process: %lx\n", CsrProcess->ClientId.UniqueProcess);
+        CsrReleaseProcessLock();
+        Result = (ULONG)EnumProc(CsrProcess, (PVOID)((ULONG_PTR)Context | FirstTry));
+        CsrAcquireProcessLock();
+
+        /* Check the result */
+        //DPRINT1("Result: %d\n", Result);
+        if (Result == CsrShutdownCsrProcess)
+        {
+            /* The callback unlocked the process */
+            break;
+        }
+        else if (Result == CsrShutdownNonCsrProcess)
+        {
+            /* A non-CSR process, the callback didn't touch it */
+            //continue;
+        }
+        else if (Result == CsrShutdownCancelled)
+        {
+            /* Shutdown was cancelled, unlock and exit */
+            CsrReleaseProcessLock();
+            Status = STATUS_CANCELLED;
+            goto Quickie;
+        }
+
+        /* No matches during the first try, so loop again */
+        if (FirstTry && Result == CsrShutdownNonCsrProcess)
+        {
+            FirstTry = FALSE;
+            goto LoopAgain;
+        }
+    }
+
+Quickie:
+    /* Return to normal priority */
+    CsrSetToNormalPriority();
+    return Status;
+}
+
+/*++
+ * @name CsrDebugProcess
+ * @implemented NT4
+ *
+ * The CsrDebugProcess routine is deprecated in NT 5.1 and higher. It is
+ * exported only for compatibility with older CSR Server DLLs.
+ *
+ * @param CsrProcess
+ *        Deprecated.
+ *
+ * @return Deprecated
+ *
+ * @remarks Deprecated.
+ *
+ *--*/
+NTSTATUS
+NTAPI
+CsrDebugProcess(IN PCSR_PROCESS CsrProcess)
+{
+    /* CSR does not handle debugging anymore */
+    DPRINT("CSRSRV: %s(%08lx) called\n", __FUNCTION__, CsrProcess);
+    return STATUS_UNSUCCESSFUL;
+}
+
+/*++
+ * @name CsrDebugProcessStop
+ * @implemented NT4
+ *
+ * The CsrDebugProcessStop routine is deprecated in NT 5.1 and higher. It is
+ * exported only for compatibility with older CSR Server DLLs.
+ *
+ * @param CsrProcess
+ *        Deprecated.
+ *
+ * @return Deprecated
+ *
+ * @remarks Deprecated.
+ *
+ *--*/
+NTSTATUS
+NTAPI
+CsrDebugProcessStop(IN PCSR_PROCESS CsrProcess)
+{
+    /* CSR does not handle debugging anymore */
+    DPRINT("CSRSRV: %s(%08lx) called\n", __FUNCTION__, CsrProcess);
+    return STATUS_UNSUCCESSFUL;
+}
+
+/*++
+ * @name CsrSetForegroundPriority
+ * @implemented NT4
+ *
+ * The CsrSetForegroundPriority routine sets the priority for the given CSR
+ * Process as a Foreground priority.
+ *
+ * @param CsrProcess
+ *        Pointer to the CSR Process whose priority will be modified.
+ *
+ * @return None.
+ *
+ * @remarks None.
+ *
+ *--*/
+VOID
+NTAPI
+CsrSetForegroundPriority(IN PCSR_PROCESS CsrProcess)
+{
+    PROCESS_PRIORITY_CLASS PriorityClass;
+
+    /* Set the Foreground bit on */
+    PriorityClass.Foreground = TRUE;
+
+    /* Set the new Priority */
+    NtSetInformationProcess(CsrProcess->ProcessHandle,
+                            ProcessPriorityClass,
+                            &PriorityClass,
+                            sizeof(PriorityClass));
 }
 
 /* EOF */

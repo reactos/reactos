@@ -1,10 +1,10 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS CSR Sub System
+ * PROJECT:         ReactOS CSR SubSystem
  * FILE:            subsystems/win32/csrss/csrsrv/thredsup.c
- * PURPOSE:         CSR Server DLL Thread Implementation
+ * PURPOSE:         CSR Server DLL Thread Management
  * PROGRAMMERS:     ReactOS Portable Systems Group
- *                  Alex Ionescu
+ *                  Alex Ionescu (alex@relsoft.net)
  */
 
 /* INCLUDES *******************************************************************/
@@ -21,7 +21,8 @@
 
 LIST_ENTRY CsrThreadHashTable[256];
 
-/* FUNCTIONS ******************************************************************/
+
+/* PRIVATE FUNCTIONS **********************************************************/
 
 /*++
  * @name ProtectHandle
@@ -201,6 +202,7 @@ CsrLocateThreadByClientId(OUT PCSR_PROCESS *Process OPTIONAL,
         FoundThread = CONTAINING_RECORD(NextEntry, CSR_THREAD, HashLinks);
 
         /* Compare the CID */
+        // FIXME: if (*(PULONGLONG)&FoundThread->ClientId == *(PULONGLONG)ClientId)
         if (FoundThread->ClientId.UniqueThread == ClientId->UniqueThread)
         {
             /* Match found, return the process */
@@ -390,6 +392,87 @@ CsrRemoveThread(IN PCSR_THREAD CsrThread)
 }
 
 /*++
+ * @name CsrThreadRefcountZero
+ *
+ * The CsrThreadRefcountZero routine is executed when a CSR Thread has lost
+ * all its active references. It removes and de-allocates the CSR Thread.
+ *
+ * @param CsrThread
+ *        Pointer to the CSR Thread that is to be deleted.
+ *
+ * @return None.
+ *
+ * @remarks Do not call this routine. It is reserved for the internal
+ *          thread management routines when a CSR Thread has lost all
+ *          its references.
+ *
+ *          This routine is called with the Process Lock held.
+ *
+ *--*/
+VOID
+NTAPI
+CsrThreadRefcountZero(IN PCSR_THREAD CsrThread)
+{
+    PCSR_PROCESS CsrProcess = CsrThread->Process;
+    NTSTATUS Status;
+    ASSERT(ProcessStructureListLocked());
+
+    /* Remove this thread */
+    CsrRemoveThread(CsrThread);
+
+    /* Release the Process Lock */
+    CsrReleaseProcessLock();
+
+    /* Close the NT Thread Handle */
+    if (CsrThread->ThreadHandle)
+    {
+        UnProtectHandle(CsrThread->ThreadHandle);
+        Status = NtClose(CsrThread->ThreadHandle);
+        ASSERT(NT_SUCCESS(Status));
+    }
+
+    /* De-allocate the CSR Thread Object */
+    CsrDeallocateThread(CsrThread);
+
+    /* Remove a reference from the process */
+    CsrDereferenceProcess(CsrProcess);
+}
+
+/*++
+ * @name CsrLockedDereferenceThread
+ *
+ * The CsrLockedDereferenceThread dereferences a CSR Thread while the
+ * Process Lock is already being held.
+ *
+ * @param CsrThread
+ *        Pointer to the CSR Thread to be dereferenced.
+ *
+ * @return None.
+ *
+ * @remarks This routine will return with the Process Lock held.
+ *
+ *--*/
+VOID
+NTAPI
+CsrLockedDereferenceThread(IN PCSR_THREAD CsrThread)
+{
+    LONG LockCount;
+
+    /* Decrease reference count */
+    LockCount = --CsrThread->ReferenceCount;
+    ASSERT(LockCount >= 0);
+    if (!LockCount)
+    {
+        /* Call the generic cleanup code */
+        CsrThreadRefcountZero(CsrThread);
+        CsrAcquireProcessLock();
+    }
+}
+
+
+/* PUBLIC FUNCTIONS ***********************************************************/
+
+/*++
  * @name CsrCreateRemoteThread
  * @implemented NT4
  *
@@ -491,53 +574,6 @@ CsrCreateRemoteThread(IN HANDLE hThread,
 }
 
 /*++
- * @name CsrThreadRefcountZero
- *
- * The CsrThreadRefcountZero routine is executed when a CSR Thread has lost
- * all its active references. It removes and de-allocates the CSR Thread.
- *
- * @param CsrThread
- *        Pointer to the CSR Thread that is to be deleted.
- *
- * @return None.
- *
- * @remarks Do not call this routine. It is reserved for the internal
- *          thread management routines when a CSR Thread has lost all
- *          its references.
- *
- *          This routine is called with the Process Lock held.
- *
- *--*/
-VOID
-NTAPI
-CsrThreadRefcountZero(IN PCSR_THREAD CsrThread)
-{
-    PCSR_PROCESS CsrProcess = CsrThread->Process;
-    NTSTATUS Status;
-    ASSERT(ProcessStructureListLocked());
-
-    /* Remove this thread */
-    CsrRemoveThread(CsrThread);
-
-    /* Release the Process Lock */
-    CsrReleaseProcessLock();
-
-    /* Close the NT Thread Handle */
-    if (CsrThread->ThreadHandle)
-    {
-        UnProtectHandle(CsrThread->ThreadHandle);
-        Status = NtClose(CsrThread->ThreadHandle);
-        ASSERT(NT_SUCCESS(Status));
-    }
-
-    /* De-allocate the CSR Thread Object */
-    CsrDeallocateThread(CsrThread);
-
-    /* Remove a reference from the process */
-    CsrDereferenceProcess(CsrProcess);
-}
-
-/*++
  * @name CsrDestroyThread
  * @implemented NT4
  *
@@ -607,37 +643,6 @@ CsrDestroyThread(IN PCLIENT_ID Cid)
 }
 
 /*++
- * @name CsrLockedDereferenceThread
- *
- * The CsrLockedDereferenceThread dereferences a CSR Thread while the
- * Process Lock is already being held.
- *
- * @param CsrThread
- *        Pointer to the CSR Thread to be dereferenced.
- *
- * @return None.
- *
- * @remarks This routine will return with the Process Lock held.
- *
- *--*/
-VOID
-NTAPI
-CsrLockedDereferenceThread(IN PCSR_THREAD CsrThread)
-{
-    LONG LockCount;
-
-    /* Decrease reference count */
-    LockCount = --CsrThread->ReferenceCount;
-    ASSERT(LockCount >= 0);
-    if (!LockCount)
-    {
-        /* Call the generic cleanup code */
-        CsrThreadRefcountZero(CsrThread);
-        CsrAcquireProcessLock();
-    }
-}
-
-/*++
  * @name CsrCreateThread
  * @implemented NT4
  *
@@ -662,6 +667,79 @@ CsrLockedDereferenceThread(IN PCSR_THREAD CsrThread)
  *--*/
 NTSTATUS
 NTAPI
+#if 0
+CsrCreateThread(IN PCSR_PROCESS CsrProcess,
+                IN HANDLE hThread,
+                IN PCLIENT_ID ClientId,
+                IN BOOLEAN HaveClient)
+{
+    NTSTATUS Status;
+    PCSR_THREAD CsrThread, CurrentThread;
+    PCSR_PROCESS CurrentProcess;
+    CLIENT_ID CurrentCid;
+    KERNEL_USER_TIMES KernelTimes;
+    DPRINT("CSRSRV: %s called\n", __FUNCTION__);
+
+    if (HaveClient)
+    {
+        /* Get the current thread and CID */
+        CurrentThread = NtCurrentTeb()->CsrClientThread;
+        CurrentCid = CurrentThread->ClientId;
+
+        /* Acquire the Process Lock */
+        CsrAcquireProcessLock();
+
+        /* Get the current Process and make sure the Thread is valid with this CID */
+        CurrentThread = CsrLocateThreadByClientId(&CurrentProcess, &CurrentCid);
+        if (!CurrentThread)
+        {
+            DPRINT1("CSRSRV:%s: invalid thread!\n", __FUNCTION__);
+            CsrReleaseProcessLock();
+            return STATUS_THREAD_IS_TERMINATING;
+        }
+    }
+    else
+    {
+        /* Acquire the Process Lock */
+        CsrAcquireProcessLock();
+    }
+
+    /* Get the Thread Create Time */
+    Status = NtQueryInformationThread(hThread,
+                                      ThreadTimes,
+                                      (PVOID)&KernelTimes,
+                                      sizeof(KernelTimes),
+                                      NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        CsrReleaseProcessLock();
+        return Status;
+    }
+
+    /* Allocate a CSR Thread Structure */
+    CsrThread = CsrAllocateThread(CsrProcess);
+    if (!CsrThread)
+    {
+        DPRINT1("CSRSRV:%s: out of memory!\n", __FUNCTION__);
+        CsrReleaseProcessLock();
+        return STATUS_NO_MEMORY;
+    }
+
+    /* Save the data we have */
+    CsrThread->CreateTime = KernelTimes.CreateTime;
+    CsrThread->ClientId = *ClientId;
+    CsrThread->ThreadHandle = hThread;
+    ProtectHandle(hThread);
+    CsrThread->Flags = 0;
+
+    /* Insert the Thread into the Process */
+    CsrInsertThread(CsrProcess, CsrThread);
+
+    /* Release the lock and return */
+    CsrReleaseProcessLock();
+    return STATUS_SUCCESS;
+}
+#else
 CsrCreateThread(IN PCSR_PROCESS CsrProcess,
                 IN HANDLE hThread,
                 IN PCLIENT_ID ClientId)
@@ -718,6 +796,7 @@ CsrCreateThread(IN PCSR_PROCESS CsrProcess,
     CsrReleaseProcessLock();
     return STATUS_SUCCESS;
 }
+#endif
 
 /*++
  * @name CsrAddStaticServerThread
@@ -814,6 +893,231 @@ CsrDereferenceThread(IN PCSR_THREAD CsrThread)
         /* Just release the lock */
         CsrReleaseProcessLock();
     }
+}
+
+
+/*++
+ * @name CsrExecServerThread
+ * @implemented NT4
+ *
+ * The CsrExecServerThread routine creates an NT Thread and then
+ * initializes a CSR Thread for it.
+ *
+ * @param ThreadHandler
+ *        Pointer to the thread's startup routine.
+ *
+ * @param Flags
+ *        Initial CSR Thread Flags to set to the CSR Thread.
+ *
+ * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL
+ *         otherwise.
+ *
+ * @remarks This routine is similar to CsrAddStaticServerThread, but it
+ *          also creates an NT Thread instead of expecting one to already
+ *          exist.
+ *
+ *--*/
+NTSTATUS
+NTAPI
+CsrExecServerThread(IN PVOID ThreadHandler,
+                    IN ULONG Flags)
+{
+    PCSR_THREAD CsrThread;
+    HANDLE hThread;
+    CLIENT_ID ClientId;
+    NTSTATUS Status;
+
+    /* Acquire process lock */
+    CsrAcquireProcessLock();
+
+    /* Allocate a CSR Thread in the Root Process */
+    ASSERT(CsrRootProcess != NULL);
+    CsrThread = CsrAllocateThread(CsrRootProcess);
+    if (!CsrThread)
+    {
+        /* Fail */
+        CsrReleaseProcessLock();
+        return STATUS_NO_MEMORY;
+    }
+
+    /* Create the Thread */
+    Status = RtlCreateUserThread(NtCurrentProcess(),
+                                 NULL,
+                                 FALSE,
+                                 0,
+                                 0,
+                                 0,
+                                 ThreadHandler,
+                                 NULL,
+                                 &hThread,
+                                 &ClientId);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Fail */
+        CsrDeallocateThread(CsrThread);
+        CsrReleaseProcessLock();
+        return Status;
+    }
+
+    /* Setup the Thread Object */
+    CsrThread->ThreadHandle = hThread;
+    ProtectHandle(hThread);
+    CsrThread->ClientId = ClientId;
+    CsrThread->Flags = Flags;
+
+    /* Insert it into the Thread List */
+    InsertHeadList(&CsrRootProcess->ThreadList, &CsrThread->Link);
+
+    /* Increase the thread count */
+    CsrRootProcess->ThreadCount++;
+
+    /* Return */
+    CsrReleaseProcessLock();
+    return Status;
+}
+
+/*++
+ * @name CsrLockThreadByClientId
+ * @implemented NT4
+ *
+ * The CsrLockThreadByClientId routine locks the CSR Thread corresponding
+ * to the given Thread ID and optionally returns it.
+ *
+ * @param Tid
+ *        Thread ID corresponding to the CSR Thread which will be locked.
+ *
+ * @param CsrThread
+ *        Optional pointer to a CSR Thread pointer which will hold the
+ *        CSR Thread corresponding to the given Thread ID.
+ *
+ * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL
+ *         otherwise.
+ *
+ * @remarks Locking a CSR Thread is defined as acquiring an extra
+ *          reference to it and returning with the Process Lock held.
+ *
+ *--*/
+NTSTATUS
+NTAPI
+CsrLockThreadByClientId(IN HANDLE Tid,
+                        OUT PCSR_THREAD *CsrThread)
+{
+    PLIST_ENTRY NextEntry;
+    PCSR_THREAD CurrentThread = NULL;
+    NTSTATUS Status = STATUS_UNSUCCESSFUL;
+    ULONG i;
+
+    /* Acquire the lock */
+    CsrAcquireProcessLock();
+
+    /* Assume failure */
+    ASSERT(CsrThread != NULL);
+    *CsrThread = NULL;
+
+    /* Convert to Hash */
+    i = CsrHashThread(Tid);
+
+    /* Setup the List Pointers */
+    NextEntry = CsrThreadHashTable[i].Flink;
+
+    /* Start Loop */
+    while (NextEntry != &CsrThreadHashTable[i])
+    {
+        /* Get the Process */
+        CurrentThread = CONTAINING_RECORD(NextEntry, CSR_THREAD, HashLinks);
+
+        /* Check for PID Match */
+        if ((CurrentThread->ClientId.UniqueThread == Tid) &&
+            !(CurrentThread->Flags & CsrThreadTerminated))
+        {
+            /* Get out of here */
+            break;
+        }
+
+        /* Next entry */
+        NextEntry = NextEntry->Flink;
+    }
+
+    /* Nothing found if we got back to the list */
+    if (NextEntry == &CsrThreadHashTable[i]) CurrentThread = NULL;
+
+    /* Did the loop find something? */
+    if (CurrentThread)
+    {
+        /* Reference the found thread */
+        Status = STATUS_SUCCESS;
+        CurrentThread->ReferenceCount++;
+        *CsrThread = CurrentThread;
+    }
+    else
+    {
+        /* Nothing found, release the lock */
+        Status = STATUS_UNSUCCESSFUL;
+        CsrReleaseProcessLock();
+    }
+
+    /* Return the status */
+    return Status;
+}
+
+/*++
+ * @name CsrReferenceThread
+ * @implemented NT4
+ *
+ * The CsrReferenceThread routine increases the active reference count of
+ * a CSR Thread.
+ *
+ * @param CsrThread
+ *        Pointer to the CSR Thread whose reference count will be increased.
+ *
+ * @return None.
+ *
+ * @remarks Do not use this routine if the Process Lock is already held.
+ *
+ *--*/
+VOID
+NTAPI
+CsrReferenceThread(IN PCSR_THREAD CsrThread)
+{
+    /* Acquire process lock */
+    CsrAcquireProcessLock();
+
+    /* Sanity checks */
+    ASSERT(CsrThread->Flags & CsrThreadTerminated); // CSR_THREAD_DESTROYED in ASSERT
+    ASSERT(CsrThread->ReferenceCount != 0);
+
+    /* Increment reference count */
+    CsrThread->ReferenceCount++;
+
+    /* Release the lock */
+    CsrReleaseProcessLock();
+}
+
+/*++
+ * @name CsrUnlockThread
+ * @implemented NT4
+ *
+ * The CsrUnlockThread undoes a previous CsrLockThreadByClientId operation.
+ *
+ * @param CsrThread
+ *        Pointer to a previously locked CSR Thread.
+ *
+ * @return STATUS_SUCCESS.
+ *
+ * @remarks This routine must be called with the Process Lock held.
+ *
+ *--*/
+NTSTATUS
+NTAPI
+CsrUnlockThread(IN PCSR_THREAD CsrThread)
+{
+    /* Dereference the Thread */
+    ASSERT(ProcessStructureListLocked());
+    CsrLockedDereferenceThread(CsrThread);
+
+    /* Release the lock and return */
+    CsrReleaseProcessLock();
+    return STATUS_SUCCESS;
 }
 
 /* EOF */

@@ -15,13 +15,13 @@
 
 
 #define CsrAcquireProcessLock() \
-    RtlEnterCriticalSection(&ProcessDataLock); // CsrProcessLock
+    RtlEnterCriticalSection(&CsrProcessLock);
 
 #define CsrReleaseProcessLock() \
-    RtlLeaveCriticalSection(&ProcessDataLock);
+    RtlLeaveCriticalSection(&CsrProcessLock);
 
 #define ProcessStructureListLocked() \
-    (ProcessDataLock.OwningThread == NtCurrentTeb()->ClientId.UniqueThread)
+    (CsrProcessLock.OwningThread == NtCurrentTeb()->ClientId.UniqueThread)
 
 #define CsrAcquireWaitLock() \
     RtlEnterCriticalSection(&CsrWaitListsLock);
@@ -119,7 +119,7 @@ extern HANDLE CsrSmApiPort;
 extern HANDLE CsrSbApiPort;
 extern LIST_ENTRY CsrThreadHashTable[256];
 extern PCSR_PROCESS CsrRootProcess;
-extern RTL_CRITICAL_SECTION ProcessDataLock, CsrWaitListsLock;
+extern RTL_CRITICAL_SECTION CsrProcessLock, CsrWaitListsLock;
 extern UNICODE_STRING CsrDirectoryName;
 extern ULONG CsrDebug;
 extern ULONG CsrTotalPerProcessDataLength;

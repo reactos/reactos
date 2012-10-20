@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS CSR Sub System
+ * PROJECT:         ReactOS CSR SubSystem
  * FILE:            subsystems/win32/csrss/csrsrv/session.c
  * PURPOSE:         CSR Server DLL Session Implementation
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
@@ -17,6 +17,16 @@
 
 RTL_CRITICAL_SECTION CsrNtSessionLock;
 LIST_ENTRY CsrNtSessionList;
+
+// Does it exist a enumeration associated with it ?
+PSB_API_ROUTINE CsrServerSbApiDispatch[5] =
+{
+    CsrSbCreateSession,
+    CsrSbTerminateSession,
+    CsrSbForeignSessionComplete,
+    CsrSbCreateProcess,
+    NULL
+};
 
 PCHAR CsrServerSbApiName[5] =
 {
@@ -208,8 +218,8 @@ CsrSbCreateSession(IN PSB_API_MSG ApiMessage)
     NTSTATUS Status;
     KERNEL_USER_TIMES KernelTimes;
     PCSR_THREAD CsrThread;
-    //PVOID ProcessData;
-    //ULONG i;
+    PVOID ProcessData;
+    ULONG i;
 
     /* Save the Process and Thread Handles */
     hProcess = CreateSession->ProcessInfo.ProcessHandle;
@@ -292,7 +302,7 @@ CsrSbCreateSession(IN PSB_API_MSG ApiMessage)
 
     /* Set the Process Priority */
     CsrSetBackgroundPriority(CsrProcess);
-#if 0
+
     /* Get the first data location */
     ProcessData = &CsrProcess->ServerData[CSR_SERVER_DLL_MAX];
 
@@ -315,10 +325,10 @@ CsrSbCreateSession(IN PSB_API_MSG ApiMessage)
             CsrProcess->ServerData[i] = NULL;
         }
     }
-#else
-    /* HACKZ: should go in BaseSrv part of CreateCallback done in Insert below */
-    RtlInitializeCriticalSection(&CsrProcess->HandleTableLock);
-#endif
+
+    /* HACK: FIXME: should go in BaseSrv part of CreateCallback done in Insert below */
+    // RtlInitializeCriticalSection(&CsrProcess->HandleTableLock);
+
     /* Insert the Process */
     CsrInsertProcess(NULL, NULL, CsrProcess);
 
@@ -396,15 +406,6 @@ CsrSbCreateProcess(IN PSB_API_MSG ApiMessage)
     ApiMessage->ReturnValue = STATUS_NOT_IMPLEMENTED;
     return TRUE;
 }
-
-PSB_API_ROUTINE CsrServerSbApiDispatch[5] =
-{
-    CsrSbCreateSession,
-    CsrSbTerminateSession,
-    CsrSbForeignSessionComplete,
-    CsrSbCreateProcess,
-    NULL
-};
 
 /*++
  * @name CsrSbApiHandleConnectionRequest

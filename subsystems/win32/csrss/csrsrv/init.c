@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS CSR Sub System
+ * PROJECT:         ReactOS CSR SubSystem
  * FILE:            subsystems/win32/csrss/csrsrv/init.c
  * PURPOSE:         CSR Server DLL Initialization
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
@@ -10,6 +10,7 @@
 /* INCLUDES *******************************************************************/
 
 #include "srv.h"
+
 #define NDEBUG
 #include <debug.h>
 
@@ -40,7 +41,7 @@ VOID
 CallHardError(IN PCSR_THREAD ThreadData,
               IN PHARDERROR_MSG HardErrorMessage)
 {
-    unsigned i;
+    ULONG i;
     PCSR_SERVER_DLL ServerDll;
 
     DPRINT("CSR: %s called\n", __FUNCTION__);
@@ -64,7 +65,7 @@ CallProcessCreated(IN PCSR_PROCESS SourceProcessData,
                    IN PCSR_PROCESS TargetProcessData)
 {
     NTSTATUS Status = STATUS_SUCCESS;
-    unsigned i;
+    ULONG i;
     PCSR_SERVER_DLL ServerDll;
 
     DPRINT("CSR: %s called\n", __FUNCTION__);
@@ -85,8 +86,14 @@ CallProcessCreated(IN PCSR_PROCESS SourceProcessData,
     return Status;
 }
 
+/***
+ *** Some APIs from here will go to basesrv.dll, some others to winsrv.dll.
+ *** Furthermore, this structure uses the old definition of APIs list.
+ *** The new one is in fact three arrays, one of APIs pointers, one other of
+ *** corresponding indexes, and the third one of names (not very efficient...).
+ ***/
 CSRSS_API_DEFINITION NativeDefinitions[] =
-  {
+{
     CSRSS_DEFINE_API(CREATE_PROCESS,               CsrSrvCreateProcess),
     CSRSS_DEFINE_API(CREATE_THREAD,                CsrSrvCreateThread),
     CSRSS_DEFINE_API(TERMINATE_PROCESS,            CsrTerminateProcess),
@@ -95,13 +102,9 @@ CSRSS_API_DEFINITION NativeDefinitions[] =
     CSRSS_DEFINE_API(GET_SHUTDOWN_PARAMETERS,      CsrGetShutdownParameters),
     CSRSS_DEFINE_API(SET_SHUTDOWN_PARAMETERS,      CsrSetShutdownParameters),
     { 0, 0, NULL }
-  };
+};
 
 /* === INIT ROUTINES === */
-
-VOID
-WINAPI
-BasepFakeStaticServerData(VOID);
 
 /*++
  * @name CsrSetProcessSecurity
@@ -640,9 +643,10 @@ CsrParseServerCommandLine(IN ULONG ArgumentCount,
         ParameterValue = NULL;
         ParameterValue = strchr(ParameterName, '=');
         if (ParameterValue) *ParameterValue++ = ANSI_NULL;
+        DPRINT1("Name=%s, Value=%s\n", ParameterName, ParameterValue);
 
         /* Check for Object Directory */
-        if (!_stricmp(ParameterName, "ObjectDirectory"))
+        if (_stricmp(ParameterName, "ObjectDirectory") == 0)
         {
             /* Check if a session ID is specified */
             if (SessionId)
@@ -674,26 +678,26 @@ CsrParseServerCommandLine(IN ULONG ArgumentCount,
             Status = CsrSetDirectorySecurity(CsrObjectDirectory);
             if (!NT_SUCCESS(Status)) return Status;
         }
-        else if (!_stricmp(ParameterName, "SubSystemType"))
+        else if (_stricmp(ParameterName, "SubSystemType") == 0)
         {
             /* Ignored */
         }
-        else if (!_stricmp(ParameterName, "MaxRequestThreads"))
+        else if (_stricmp(ParameterName, "MaxRequestThreads") == 0)
         {
             Status = RtlCharToInteger(ParameterValue,
                                       0,
                                       &CsrMaxApiRequestThreads);
         }
-        else if (!_stricmp(ParameterName, "RequestThreads"))
+        else if (_stricmp(ParameterName, "RequestThreads") == 0)
         {
             /* Ignored */
             Status = STATUS_SUCCESS;
         }
-        else if (!_stricmp(ParameterName, "ProfileControl"))
+        else if (_stricmp(ParameterName, "ProfileControl") == 0)
         {
             /* Ignored */
         }
-        else if (!_stricmp(ParameterName, "SharedSection"))
+        else if (_stricmp(ParameterName, "SharedSection") == 0)
         {
             /* Create the Section */
             Status = CsrSrvCreateSharedSection(ParameterValue);
@@ -705,9 +709,9 @@ CsrParseServerCommandLine(IN ULONG ArgumentCount,
             }
 
             /* Load us */
-            Status = CsrLoadServerDll("CSRSS", NULL, CSR_SRV_SERVER);
+            Status = CsrLoadServerDll("CSRSS" /* "CSRSRV" */, NULL, CSR_SRV_SERVER);
         }
-        else if (!_stricmp(ParameterName, "ServerDLL"))
+        else if (_stricmp(ParameterName, "ServerDLL") == 0)
         {
             /* Loop the command line */
             EntryPoint = NULL;
@@ -743,19 +747,7 @@ CsrParseServerCommandLine(IN ULONG ArgumentCount,
 
             /* Load it */
             if (CsrDebug & 1) DPRINT1("CSRSS: Loading ServerDll=%s:%s\n", ParameterValue, EntryPoint);
-
-            /* Hackito ergo sum */
-            Status = STATUS_SUCCESS;
-            if (strstr(ParameterValue, "basesrv"))
-            {
-                DPRINT1("Fake basesrv init\n");
-                BasepFakeStaticServerData();
-            }
-//            else
-//            {
-//                Status = CsrLoadServerDll(ParameterValue, EntryPoint, 2);
-//            }
-            // Status = CsrLoadServerDll(ParameterValue, EntryPoint, DllIndex);
+            Status = CsrLoadServerDll(ParameterValue, EntryPoint, DllIndex);
             if (!NT_SUCCESS(Status))
             {
                 DPRINT1("CSRSS: *** Failed loading ServerDll=%s (Status == 0x%x)\n",
@@ -763,9 +755,10 @@ CsrParseServerCommandLine(IN ULONG ArgumentCount,
                 return Status;
             }
         }
-        else if (!_stricmp(ParameterName, "Windows"))
+        else if (_stricmp(ParameterName, "Windows") == 0)
         {
             /* Ignored */
+            // Check whether we want to start in pure GUI or pure CLI.
         }
         else
         {
@@ -945,6 +938,8 @@ CsrSbApiPortInitialize(VOID)
     return Status;
 }
 
+
+
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 /*++
@@ -1053,12 +1048,16 @@ CsrServerInitialization(IN ULONG ArgumentCount,
         return Status;
     }
 
-    /* Initialize Win32csr */
+    ////////////////////////////    ADDED    ////////////////////////////
+    /*
+    /\* Initialize Win32csr *\/
     Status = CsrLoadServerDll("win32csr", "Win32CsrInitialization", 2);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("CSRSRV failed in %s with status %lx\n", "CsrLoadServerDll", Status);
     }
+    */
+    ////////////////////////////  END ADDED  ////////////////////////////
 
     /* Initialize the API Port for SM communication */
     Status = CsrSbApiPortInitialize();
@@ -1138,6 +1137,7 @@ DllMain(IN HANDLE hDll,
     UNREFERENCED_PARAMETER(hDll);
     UNREFERENCED_PARAMETER(dwReason);
     UNREFERENCED_PARAMETER(lpReserved);
+
     return TRUE;
 }
 

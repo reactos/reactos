@@ -1,8 +1,7 @@
 
 include_directories(
     include
-    ${REACTOS_SOURCE_DIR}/include/reactos/subsys
-    ${REACTOS_SOURCE_DIR}/include/reactos/drivers)
+    ${REACTOS_SOURCE_DIR}/include/reactos/subsys)
 
 add_executable(csrss csrss.c csrss.rc)
 

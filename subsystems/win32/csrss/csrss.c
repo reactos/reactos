@@ -2,8 +2,8 @@
  * PROJECT:         ReactOS Client Server Runtime SubSystem (CSRSS)
  * LICENSE:         BSD - See COPYING.ARM in root directory
  * FILE:            subsystems/win32/csrss/csrss.c
- * PURPOSE:         Main Executable Code
- * PROGRAMMERS:     Alex Ionescu
+ * PURPOSE:         CSRSS Main Executable Code
+ * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
  *                  ReactOS Portable Systems Group
  */
 
@@ -14,6 +14,8 @@
 #define NTOS_MODE_USER
 #include <ndk/ntndk.h>
 #include <api.h>
+// #include <csr/server.h>
+
 #define NDEBUG
 #include <debug.h>
 
@@ -41,7 +43,7 @@ _main(int argc,
 {
     KPRIORITY BasePriority = (8 + 1) + 4;
     NTSTATUS Status;
-    //ULONG Response;
+    //ULONG Response; // see the #if 0
     UNREFERENCED_PARAMETER(envp);
     UNREFERENCED_PARAMETER(DebugFlag);
 
@@ -83,7 +85,7 @@ _main(int argc,
     CsrpSetDefaultProcessHardErrorMode();
 
     /* If this is Session 0, make sure killing us bugchecks the system */
-    if (!NtCurrentPeb()->SessionId) RtlSetProcessIsCritical(TRUE, NULL, FALSE);
+    if (NtCurrentPeb()->SessionId == 0) RtlSetProcessIsCritical(TRUE, NULL, FALSE);
 
     /* Kill this thread. CSRSRV keeps us going */
     NtTerminateThread(NtCurrentThread(), Status);
