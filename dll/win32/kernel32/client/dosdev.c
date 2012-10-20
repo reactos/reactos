@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/kernel32/file/dosdev.c
  * PURPOSE:         Dos device functions
- * PROGRAMMER:      Ariadne ( ariadne@xs4all.nl)
+ * PROGRAMMER:      Ariadne (ariadne@xs4all.nl)
  * UPDATE HISTORY:
  *                  Created 01/11/98
  */
@@ -183,7 +183,7 @@ DefineDosDeviceW(
 
         Status = CsrClientCallServer(&Request,
                                      CaptureBuffer,
-                                     CSR_CREATE_API_NUMBER(CSR_CONSOLE, DEFINE_DOS_DEVICE),
+                                     CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepDefineDosDevice),
                                      sizeof(CSR_API_MESSAGE));
         CsrFreeCaptureBuffer(CaptureBuffer);
 

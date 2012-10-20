@@ -1,6 +1,0 @@
-; $Id$
-LIBRARY basesrv.dll
-EXPORTS
-BaseSetProcessCreateNotify@4
-ServerDllInitialization@8
-; EOF

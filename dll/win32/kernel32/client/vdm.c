@@ -134,7 +134,7 @@ BaseUpdateVDMEntry(IN ULONG UpdateIndex,
     /* Send the message to CSRSS */
     Status = CsrClientCallServer(&Msg,
                                  NULL,
-                                 CSR_CREATE_API_NUMBER(CSR_CONSOLE, UPDATE_VDM_ENTRY),
+                                 CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepUpdateVDMEntry),
                                  sizeof(Msg));
     if (!(NT_SUCCESS(Status)) || !(NT_SUCCESS(Msg.Status)))
     {
@@ -178,7 +178,7 @@ BaseCheckForVDM(IN HANDLE ProcessHandle,
     /* Call CSRSS */
     Status = CsrClientCallServer(&Msg,
                                  NULL,
-                                 CSR_CREATE_API_NUMBER(CSR_CONSOLE, GET_VDM_EXIT_CODE),
+                                 CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepCheckVDM /* BasepGetVDMExitCode */),
                                  sizeof(Msg));
     if (!NT_SUCCESS(Status)) return FALSE;
 

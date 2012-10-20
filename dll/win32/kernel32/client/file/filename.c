@@ -160,7 +160,7 @@ GetTempFileNameW(IN LPCWSTR lpPathName,
         {
             CsrClientCallServer(&ApiMessage,
                                 NULL,
-                                CSR_CREATE_API_NUMBER(CSR_NATIVE, GET_TEMP_FILE),
+                                CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepGetTempFile),
                                 sizeof(CSR_API_MESSAGE));
             if (ApiMessage.Data.GetTempFile.UniqueID == 0)
             {

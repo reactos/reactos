@@ -1,73 +1,461 @@
-/* $Id$
- *
- * init.c - ReactOS/Win32 base enviroment subsystem server
- *
- * ReactOS Operating System
- *
- * --------------------------------------------------------------------
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * --------------------------------------------------------------------
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS/Win32 base enviroment subsystem server
+ * FILE:            subsystems/win/basesrv/init.c
+ * PURPOSE:         Initialization
+ * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
+
 #include "basesrv.h"
 
 #define NDEBUG
 #include <debug.h>
 
-HANDLE BaseApiPort = (HANDLE) 0;
+HANDLE DllHandle = NULL;
+HANDLE BaseApiPort = NULL;
 
-/**********************************************************************
- * NAME							PRIVATE
- * 	BaseStaticServerThread/1
- */
-VOID WINAPI BaseStaticServerThread (PVOID x)
+extern LIST_ENTRY DosDeviceHistory;
+extern RTL_CRITICAL_SECTION BaseDefineDosDeviceCritSec;
+
+// Windows NT 4 tables, adapted from http://j00ru.vexillium.org/csrss_list/api_list.html#Windows_NT
+// It is for testing purposes. After that I will update it to 2k3 version and add stubs.
+// Some names are also deduced from the subsystems/win32/csrss/csrsrv/server.c ones.
+PCSR_API_ROUTINE BaseServerApiDispatchTable[BasepMaxApiNumber] =
 {
-	NTSTATUS Status = STATUS_SUCCESS;
-	PPORT_MESSAGE Request = (PPORT_MESSAGE) x;
-	PPORT_MESSAGE Reply = NULL;
-	ULONG MessageType = 0;
+    BaseSrvCreateProcess,
+    BaseSrvCreateThread,
+    BaseSrvGetTempFile,
+    BaseSrvExitProcess,
+    // BaseSrvDebugProcess,
+    BaseSrvCheckVDM,
+    BaseSrvUpdateVDMEntry,
+    // BaseSrvGetNextVDMCommand,
+    // BaseSrvExitVDM,
+    // BaseSrvIsFirstVDM,
+    BaseSrvGetVDMExitCode,
+    // BaseSrvSetReenterCount,
+    BaseSrvSetProcessShutdownParam,
+    BaseSrvGetProcessShutdownParam,
+    // BaseSrvNlsSetUserInfo,
+    // BaseSrvNlsSetMultipleUserInfo,
+    // BaseSrvNlsCreateSortSection,
+    // BaseSrvNlsPreserveSection,
+    // BaseSrvSetVDMCurDirs,
+    // BaseSrvGetVDMCurDirs,
+    // BaseSrvBatNotification,
+    // BaseSrvRegisterWowExec,
+    BaseSrvSoundSentryNotification,
+    // BaseSrvRefreshIniFileMapping,
+    BaseSrvDefineDosDevice
+};
 
-	DPRINT("BASESRV: %s called\n", __FUNCTION__);
+BOOLEAN BaseServerApiServerValidTable[BasepMaxApiNumber] =
+{
+    TRUE,    // SrvCreateProcess,
+    TRUE,    // SrvCreateThread,
+    TRUE,    // SrvGetTempFile,
+    FALSE,   // SrvExitProcess,
+    // FALSE,   // SrvDebugProcess,
+    TRUE,    // SrvCheckVDM,
+    TRUE,    // SrvUpdateVDMEntry
+    // TRUE,    // SrvGetNextVDMCommand
+    // TRUE,    // SrvExitVDM
+    // TRUE,    // SrvIsFirstVDM
+    TRUE,    // SrvGetVDMExitCode
+    // TRUE,    // SrvSetReenterCount
+    TRUE,    // SrvSetProcessShutdownParam
+    TRUE,    // SrvGetProcessShutdownParam
+    // TRUE,    // SrvNlsSetUserInfo
+    // TRUE,    // SrvNlsSetMultipleUserInfo
+    // TRUE,    // SrvNlsCreateSortSection
+    // TRUE,    // SrvNlsPreserveSection
+    // TRUE,    // SrvSetVDMCurDirs
+    // TRUE,    // SrvGetVDMCurDirs
+    // TRUE,    // SrvBatNotification
+    // TRUE,    // SrvRegisterWowExec
+    TRUE,    // SrvSoundSentryNotification
+    // TRUE,    // SrvRefreshIniFileMapping
+    TRUE,    // SrvDefineDosDevice
+    // FALSE
+};
 
-	MessageType = Request->u2.s2.Type;
-	DPRINT("BASESRV: %s received a message (Type=%d)\n",
-		__FUNCTION__, MessageType);
-	switch (MessageType)
-	{
-		default:
-			Reply = Request;
-			Status = NtReplyPort (BaseApiPort, Reply);
-			break;
-	}
+PCHAR BaseServerApiNameTable[BasepMaxApiNumber] =
+{
+    "BaseCreateProcess",
+    "BaseCreateThread",
+    "BaseGetTempFile",
+    "BaseExitProcess",
+    // "BaseDebugProcess",
+    "BaseCheckVDM",
+    "BaseUpdateVDMEntry",
+    // "BaseGetNextVDMCommand",
+    // "BaseExitVDM",
+    // "BaseIsFirstVDM",
+    "BaseGetVDMExitCode",
+    // "BaseSetReenterCount",
+    "BaseSetProcessShutdownParam",
+    "BaseGetProcessShutdownParam",
+    // "BaseNlsSetUserInfo",
+    // "BaseNlsSetMultipleUserInfo",
+    // "BaseNlsCreateSortSection",
+    // "BaseNlsPreserveSection",
+    // "BaseSetVDMCurDirs",
+    // "BaseGetVDMCurDirs",
+    // "BaseBatNotification",
+    // "BaseRegisterWowExec",
+    "BaseSoundSentryNotification",
+    // "BaseSrvRefreshIniFileMapping"
+    "BaseDefineDosDevice",
+    // NULL
+};
+
+
+/* FUNCTIONS ******************************************************************/
+
+VOID
+NTAPI
+BasepFakeStaticServerData(VOID)
+{
+    NTSTATUS Status;
+    WCHAR Buffer[MAX_PATH];
+    PWCHAR HeapBuffer;
+    UNICODE_STRING SystemRootString;
+    UNICODE_STRING UnexpandedSystemRootString = RTL_CONSTANT_STRING(L"%SystemRoot%");
+    UNICODE_STRING BaseSrvCSDString;
+    UNICODE_STRING BaseSrvWindowsDirectory;
+    UNICODE_STRING BaseSrvWindowsSystemDirectory;
+    UNICODE_STRING BnoString;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    ULONG SessionId;
+    HANDLE BaseSrvNamedObjectDirectory;
+    HANDLE BaseSrvRestrictedObjectDirectory;
+    PACL BnoDacl, BnoRestrictedDacl;
+    PSECURITY_DESCRIPTOR BnoSd;
+    HANDLE SymHandle;
+    UNICODE_STRING DirectoryName, SymlinkName;
+    ULONG LuidEnabled;
+    RTL_QUERY_REGISTRY_TABLE BaseServerRegistryConfigurationTable[2] =
+    {
+        {
+            NULL,
+            RTL_QUERY_REGISTRY_DIRECT,
+            L"CSDVersion",
+            &BaseSrvCSDString,
+            REG_NONE, NULL, 0
+        },
+
+        {0}
+    };
+
+    /* Get the session ID */
+    SessionId = NtCurrentPeb()->SessionId;
+
+    /* Get the Windows directory */
+    RtlInitEmptyUnicodeString(&SystemRootString, Buffer, sizeof(Buffer));
+    Status = RtlExpandEnvironmentStrings_U(NULL,
+                                           &UnexpandedSystemRootString,
+                                           &SystemRootString,
+                                           NULL);
+    ASSERT(NT_SUCCESS(Status));
+
+    /* Create the base directory */
+    Buffer[SystemRootString.Length / sizeof(WCHAR)] = UNICODE_NULL;
+    Status = RtlCreateUnicodeString(&BaseSrvWindowsDirectory,
+                                    SystemRootString.Buffer);
+    ASSERT(NT_SUCCESS(Status));
+
+    /* Create the system directory */
+    wcscat(SystemRootString.Buffer, L"\\System32");
+    Status = RtlCreateUnicodeString(&BaseSrvWindowsSystemDirectory,
+                                    SystemRootString.Buffer);
+    ASSERT(NT_SUCCESS(Status));
+
+    /* FIXME: Check Session ID */
+    wcscpy(Buffer, L"\\BaseNamedObjects");
+    RtlInitUnicodeString(&BnoString, Buffer);
+
+    /* Allocate the server data */
+    BaseStaticServerData = RtlAllocateHeap(CsrSrvSharedSectionHeap,
+                                           HEAP_ZERO_MEMORY,
+                                           sizeof(BASE_STATIC_SERVER_DATA));
+    ASSERT(BaseStaticServerData != NULL);
+
+    /* Process timezone information */
+    BaseStaticServerData->TermsrvClientTimeZoneId = TIME_ZONE_ID_INVALID;
+    BaseStaticServerData->TermsrvClientTimeZoneChangeNum = 0;
+    Status = NtQuerySystemInformation(SystemTimeOfDayInformation,
+                                      &BaseStaticServerData->TimeOfDay,
+                                      sizeof(BaseStaticServerData->TimeOfDay),
+                                      NULL);
+    ASSERT(NT_SUCCESS(Status));
+
+    /* Make a shared heap copy of the Windows directory */
+    BaseStaticServerData->WindowsDirectory = BaseSrvWindowsDirectory;
+    HeapBuffer = RtlAllocateHeap(CsrSrvSharedSectionHeap,
+                                 0,
+                                 BaseSrvWindowsDirectory.MaximumLength);
+    ASSERT(HeapBuffer);
+    RtlCopyMemory(HeapBuffer,
+                  BaseStaticServerData->WindowsDirectory.Buffer,
+                  BaseSrvWindowsDirectory.MaximumLength);
+    BaseStaticServerData->WindowsDirectory.Buffer = HeapBuffer;
+
+    /* Make a shared heap copy of the System directory */
+    BaseStaticServerData->WindowsSystemDirectory = BaseSrvWindowsSystemDirectory;
+    HeapBuffer = RtlAllocateHeap(CsrSrvSharedSectionHeap,
+                                 0,
+                                 BaseSrvWindowsSystemDirectory.MaximumLength);
+    ASSERT(HeapBuffer);
+    RtlCopyMemory(HeapBuffer,
+                  BaseStaticServerData->WindowsSystemDirectory.Buffer,
+                  BaseSrvWindowsSystemDirectory.MaximumLength);
+    BaseStaticServerData->WindowsSystemDirectory.Buffer = HeapBuffer;
+
+    /* This string is not used */
+    RtlInitEmptyUnicodeString(&BaseStaticServerData->WindowsSys32x86Directory,
+                              NULL,
+                              0);
+
+    /* Make a shared heap copy of the BNO directory */
+    BaseStaticServerData->NamedObjectDirectory = BnoString;
+    BaseStaticServerData->NamedObjectDirectory.MaximumLength = BnoString.Length +
+                                                               sizeof(UNICODE_NULL);
+    HeapBuffer = RtlAllocateHeap(CsrSrvSharedSectionHeap,
+                                 0,
+                                 BaseStaticServerData->NamedObjectDirectory.MaximumLength);
+    ASSERT(HeapBuffer);
+    RtlCopyMemory(HeapBuffer,
+                  BaseStaticServerData->NamedObjectDirectory.Buffer,
+                  BaseStaticServerData->NamedObjectDirectory.MaximumLength);
+    BaseStaticServerData->NamedObjectDirectory.Buffer = HeapBuffer;
+
+    /*
+     * Confirmed that in Windows, CSDNumber and RCNumber are actually Length
+     * and MaximumLength of the CSD String, since the same UNICODE_STRING is
+     * being queried twice, the first time as a ULONG!
+     *
+     * Somehow, in Windows this doesn't cause a buffer overflow, but it might
+     * in ReactOS, so this code is disabled until someone figures out WTF.
+     */
+    BaseStaticServerData->CSDNumber = 0;
+    BaseStaticServerData->RCNumber = 0;
+
+    /* Initialize the CSD string and query its value from the registry */
+    RtlInitEmptyUnicodeString(&BaseSrvCSDString, Buffer, sizeof(Buffer));
+    Status = RtlQueryRegistryValues(RTL_REGISTRY_WINDOWS_NT,
+                                    L"",
+                                    BaseServerRegistryConfigurationTable,
+                                    NULL,
+                                    NULL);
+    if (NT_SUCCESS(Status))
+    {
+        /* Copy into the shared buffer */
+        wcsncpy(BaseStaticServerData->CSDVersion,
+                BaseSrvCSDString.Buffer,
+                BaseSrvCSDString.Length / sizeof(WCHAR));
+    }
+    else
+    {
+        /* NULL-terminate to indicate nothing is there */
+        BaseStaticServerData->CSDVersion[0] = UNICODE_NULL;
+    }
+
+    /* Cache the system information */
+    Status = NtQuerySystemInformation(SystemBasicInformation,
+                                      &BaseStaticServerData->SysInfo,
+                                      sizeof(BaseStaticServerData->SysInfo),
+                                      NULL);
+    ASSERT(NT_SUCCESS(Status));
+
+    /* FIXME: Should query the registry for these */
+    BaseStaticServerData->DefaultSeparateVDM = FALSE;
+    BaseStaticServerData->IsWowTaskReady = FALSE;
+
+    /* Allocate a security descriptor and create it */
+    BnoSd = RtlAllocateHeap(CsrHeap, 0, 1024);
+    ASSERT(BnoSd);
+    Status = RtlCreateSecurityDescriptor(BnoSd, SECURITY_DESCRIPTOR_REVISION);
+    ASSERT(NT_SUCCESS(Status));
+
+    /* Create the BNO and \Restricted DACLs */
+    Status = CreateBaseAcls(&BnoDacl, &BnoRestrictedDacl);
+    ASSERT(NT_SUCCESS(Status));
+
+    /* Set the BNO DACL as active for now */
+    Status = RtlSetDaclSecurityDescriptor(BnoSd, TRUE, BnoDacl, FALSE);
+    ASSERT(NT_SUCCESS(Status));
+
+    /* Create the BNO directory */
+    RtlInitUnicodeString(&BnoString, L"\\BaseNamedObjects");
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &BnoString,
+                               OBJ_OPENIF | OBJ_PERMANENT | OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               BnoSd);
+    Status = NtCreateDirectoryObject(&BaseSrvNamedObjectDirectory,
+                                     DIRECTORY_ALL_ACCESS,
+                                     &ObjectAttributes);
+    ASSERT(NT_SUCCESS(Status));
+
+    /* Check if we are session 0 */
+    if (SessionId == 0)
+    {
+        /* Mark this as a session 0 directory */
+        Status = NtSetInformationObject(BaseSrvNamedObjectDirectory,
+                                        ObjectSessionInformation,
+                                        NULL,
+                                        0);
+        ASSERT(NT_SUCCESS(Status));
+    }
+
+    /* Check if LUID device maps are enabled */
+    Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessLUIDDeviceMapsEnabled,
+                                       &LuidEnabled,
+                                       sizeof(LuidEnabled),
+                                       NULL);
+    ASSERT(NT_SUCCESS(Status));
+    BaseStaticServerData->LUIDDeviceMapsEnabled = LuidEnabled;
+    if (!BaseStaticServerData->LUIDDeviceMapsEnabled)
+    {
+        /* Make Global point back to BNO */
+        RtlInitUnicodeString(&DirectoryName, L"Global");
+        RtlInitUnicodeString(&SymlinkName, L"\\BaseNamedObjects");
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   &DirectoryName,
+                                   OBJ_OPENIF | OBJ_PERMANENT | OBJ_CASE_INSENSITIVE,
+                                   BaseSrvNamedObjectDirectory,
+                                   BnoSd);
+        Status = NtCreateSymbolicLinkObject(&SymHandle,
+                                            SYMBOLIC_LINK_ALL_ACCESS,
+                                            &ObjectAttributes,
+                                            &SymlinkName);
+        if ((NT_SUCCESS(Status)) && SessionId == 0) NtClose(SymHandle);
+
+        /* Make local point back to \Sessions\x\BNO */
+        RtlInitUnicodeString(&DirectoryName, L"Local");
+        ASSERT(SessionId == 0);
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   &DirectoryName,
+                                   OBJ_OPENIF | OBJ_PERMANENT | OBJ_CASE_INSENSITIVE,
+                                   BaseSrvNamedObjectDirectory,
+                                   BnoSd);
+        Status = NtCreateSymbolicLinkObject(&SymHandle,
+                                            SYMBOLIC_LINK_ALL_ACCESS,
+                                            &ObjectAttributes,
+                                            &SymlinkName);
+        if ((NT_SUCCESS(Status)) && SessionId == 0) NtClose(SymHandle);
+
+        /* Make Session point back to BNOLINKS */
+        RtlInitUnicodeString(&DirectoryName, L"Session");
+        RtlInitUnicodeString(&SymlinkName, L"\\Sessions\\BNOLINKS");
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   &DirectoryName,
+                                   OBJ_OPENIF | OBJ_PERMANENT | OBJ_CASE_INSENSITIVE,
+                                   BaseSrvNamedObjectDirectory,
+                                   BnoSd);
+        Status = NtCreateSymbolicLinkObject(&SymHandle,
+                                            SYMBOLIC_LINK_ALL_ACCESS,
+                                            &ObjectAttributes,
+                                            &SymlinkName);
+        if ((NT_SUCCESS(Status)) && SessionId == 0) NtClose(SymHandle);
+
+        /* Create the BNO\Restricted directory and set the restricted DACL */
+        RtlInitUnicodeString(&DirectoryName, L"Restricted");
+        Status = RtlSetDaclSecurityDescriptor(BnoSd, TRUE, BnoRestrictedDacl, FALSE);
+        ASSERT(NT_SUCCESS(Status));
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   &DirectoryName,
+                                   OBJ_OPENIF | OBJ_PERMANENT | OBJ_CASE_INSENSITIVE,
+                                   BaseSrvNamedObjectDirectory,
+                                   BnoSd);
+        Status = NtCreateDirectoryObject(&BaseSrvRestrictedObjectDirectory,
+                                         DIRECTORY_ALL_ACCESS,
+                                         &ObjectAttributes);
+        ASSERT(NT_SUCCESS(Status));
+    }
+
+    /* Finally, set the pointer */
+    CsrSrvSharedStaticServerData[CSR_CONSOLE] = BaseStaticServerData;
 }
 
 
-NTSTATUS WINAPI ServerDllInitialization (ULONG ArgumentCount, LPWSTR *Argument)
+VOID WINAPI BaseStaticServerThread(PVOID x)
 {
-	NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status = STATUS_SUCCESS;
+    PPORT_MESSAGE Request = (PPORT_MESSAGE)x;
+    PPORT_MESSAGE Reply = NULL;
+    ULONG MessageType = 0;
 
-	DPRINT("BASSRV: %s(%ld,...) called\n", __FUNCTION__, ArgumentCount);
+    DPRINT("BASESRV: %s called\n", __FUNCTION__);
 
-	BaseApiPort = CsrQueryApiPort ();
-	Status = CsrAddStaticServerThread (BaseStaticServerThread);
-	if (NT_SUCCESS(Status))
-	{
-		//TODO initialize the BASE server
-	}
-	return STATUS_SUCCESS;
+    MessageType = Request->u2.s2.Type;
+    DPRINT("BASESRV: %s received a message (Type=%d)\n",
+           __FUNCTION__, MessageType);
+    switch (MessageType)
+    {
+        default:
+            Reply = Request;
+            Status = NtReplyPort(BaseApiPort, Reply);
+            break;
+    }
+}
+
+
+CSR_SERVER_DLL_INIT(ServerDllInitialization)
+{
+    // NTSTATUS Status = STATUS_SUCCESS;
+
+/*
+    DPRINT("BASSRV: %s(%ld,...) called\n", __FUNCTION__, ArgumentCount);
+
+    BaseApiPort = CsrQueryApiPort ();
+    Status = CsrAddStaticServerThread(BaseStaticServerThread);
+    if (NT_SUCCESS(Status))
+    {
+        //TODO initialize the BASE server
+    }
+    return STATUS_SUCCESS;
+*/
+
+    /* Setup the DLL Object */
+    LoadedServerDll->ApiBase = BASESRV_FIRST_API_NUMBER; // ApiNumberBase
+    LoadedServerDll->HighestApiSupported = BasepMaxApiNumber; // MaxApiNumber
+    LoadedServerDll->DispatchTable = BaseServerApiDispatchTable;
+    LoadedServerDll->ValidTable = BaseServerApiServerValidTable;
+    LoadedServerDll->NameTable = BaseServerApiNameTable;
+    LoadedServerDll->SizeOfProcessData = 0;
+    LoadedServerDll->ConnectCallback = NULL;
+    LoadedServerDll->DisconnectCallback = NULL;
+
+    BasepFakeStaticServerData();
+
+    RtlInitializeCriticalSection(&BaseDefineDosDeviceCritSec);
+    InitializeListHead(&DosDeviceHistory);
+
+    /* All done */
+    return STATUS_SUCCESS;
+}
+
+BOOL
+NTAPI
+DllMain(IN HANDLE hDll,
+        IN DWORD dwReason,
+        IN LPVOID lpReserved)
+{
+    UNREFERENCED_PARAMETER(dwReason);
+    UNREFERENCED_PARAMETER(lpReserved);
+
+    if (DLL_PROCESS_ATTACH == dwReason)
+    {
+        DllHandle = hDll;
+    }
+    else if (DLL_PROCESS_DETACH == dwReason)
+    {
+        BaseCleanupDefineDosDevice();
+    }
+
+    return TRUE;
 }
 
 /* EOF */

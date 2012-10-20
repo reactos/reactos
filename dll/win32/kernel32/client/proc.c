@@ -494,7 +494,6 @@ WINAPI
 BasepNotifyCsrOfThread(IN HANDLE ThreadHandle,
                        IN PCLIENT_ID ClientId)
 {
-    ULONG Request = CREATE_THREAD;
     CSR_API_MESSAGE CsrRequest;
     NTSTATUS Status;
 
@@ -508,7 +507,7 @@ BasepNotifyCsrOfThread(IN HANDLE ThreadHandle,
     /* Call CSR */
     Status = CsrClientCallServer(&CsrRequest,
                                  NULL,
-                                 CSR_CREATE_API_NUMBER(CSR_NATIVE, Request),
+                                 CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepCreateThread),
                                  sizeof(CSR_API_MESSAGE));
     if (!NT_SUCCESS(Status) || !NT_SUCCESS(CsrRequest.Status))
     {
@@ -538,7 +537,6 @@ BasepCreateFirstThread(HANDLE ProcessHandle,
     INITIAL_TEB InitialTeb;
     NTSTATUS Status;
     HANDLE hThread;
-    ULONG Request = CREATE_PROCESS;
     CSR_API_MESSAGE CsrRequest;
     DPRINT("BasepCreateFirstThread. hProcess: %lx\n", ProcessHandle);
 
@@ -584,7 +582,7 @@ BasepCreateFirstThread(HANDLE ProcessHandle,
     /* Call CSR */
     Status = CsrClientCallServer(&CsrRequest,
                                  NULL,
-                                 CSR_CREATE_API_NUMBER(CSR_NATIVE, Request),
+                                 CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepCreateProcess),
                                  sizeof(CSR_API_MESSAGE));
     if (!NT_SUCCESS(Status) || !NT_SUCCESS(CsrRequest.Status))
     {
@@ -1182,7 +1180,7 @@ GetProcessShutdownParameters(OUT LPDWORD lpdwLevel,
     /* Ask CSRSS for shutdown information */
     Status = CsrClientCallServer(&CsrRequest,
                                  NULL,
-                                 CSR_CREATE_API_NUMBER(CSR_NATIVE, GET_SHUTDOWN_PARAMETERS),
+                                 CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepGetProcessShutdownParam),
                                  sizeof(CSR_API_MESSAGE));
     if (!(NT_SUCCESS(Status)) || !(NT_SUCCESS(CsrRequest.Status)))
     {
@@ -1213,7 +1211,7 @@ SetProcessShutdownParameters(IN DWORD dwLevel,
     CsrRequest.Data.SetShutdownParametersRequest.Flags = dwFlags;
     Status = CsrClientCallServer(&CsrRequest,
                                  NULL,
-                                 CSR_CREATE_API_NUMBER(CSR_NATIVE, SET_SHUTDOWN_PARAMETERS),
+                                 CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepSetProcessShutdownParam),
                                  sizeof(CSR_API_MESSAGE));
     if (!NT_SUCCESS(Status) || !NT_SUCCESS(CsrRequest.Status))
     {
@@ -1760,7 +1758,7 @@ ExitProcess(IN UINT uExitCode)
         CsrRequest.Data.TerminateProcessRequest.uExitCode = uExitCode;
         CsrClientCallServer(&CsrRequest,
                             NULL,
-                            CSR_CREATE_API_NUMBER(CSR_NATIVE, TERMINATE_PROCESS),
+                            CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepExitProcess),
                             sizeof(CSR_API_MESSAGE));
 
         /* Now do it again */

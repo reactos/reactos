@@ -1,12 +1,13 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS CSR Sub System
+ * PROJECT:         ReactOS CSR SubSystem
  * FILE:            subsystems/win32/csrss/csrsrv/server.c
  * PURPOSE:         CSR Server DLL Server Functions
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
  */
 
 /* INCLUDES ******************************************************************/
+
 #include "srv.h"
 
 #define NDEBUG
@@ -14,7 +15,25 @@
 
 /* DATA **********************************************************************/
 
-PCSR_API_ROUTINE CsrServerApiDispatchTable[5] =
+/*** Must go elsewhere ***/
+#define CSR_SERVER_DLL_MAX 4
+
+#define CSRSRV_SERVERDLL_INDEX          0
+#define CSRSRV_FIRST_API_NUMBER         0
+
+typedef enum _CSR_SRV_API_NUMBER
+{
+    CsrpClientConnect = CSRSRV_FIRST_API_NUMBER,
+    CsrpThreadConnect,
+    CsrpProfileControl,
+    CsrpIdentifyAlertable,
+    CsrpSetPriorityClass,
+
+    CsrpMaxApiNumber
+} CSR_SRV_API_NUMBER, *PCSR_SRV_API_NUMBER;
+/*************************/
+
+PCSR_API_ROUTINE CsrServerApiDispatchTable[CsrpMaxApiNumber] =
 {
     CsrSrvClientConnect,
     CsrSrvUnusedFunction,
@@ -23,7 +42,7 @@ PCSR_API_ROUTINE CsrServerApiDispatchTable[5] =
     CsrSrvSetPriorityClass
 };
 
-BOOLEAN CsrServerApiServerValidTable[5] =
+BOOLEAN CsrServerApiServerValidTable[CsrpMaxApiNumber] =
 {
     TRUE,
     FALSE,
@@ -32,7 +51,7 @@ BOOLEAN CsrServerApiServerValidTable[5] =
     TRUE
 };
 
-PCHAR CsrServerApiNameTable[5] =
+PCHAR CsrServerApiNameTable[CsrpMaxApiNumber] =
 {
     "ClientConnect",
     "ThreadConnect",
@@ -65,9 +84,7 @@ HANDLE CsrSrvSharedSection;
  * @remarks None.
  *
  *--*/
-NTSTATUS
-NTAPI
-CsrServerDllInitialization(IN PCSR_SERVER_DLL LoadedServerDll)
+CSR_SERVER_DLL_INIT(CsrServerDllInitialization)
 {
     /* Setup the DLL Object */
     LoadedServerDll->ApiBase = 0;
@@ -133,7 +150,7 @@ CsrLoadServerDll(IN PCHAR DllString,
     if (!NT_SUCCESS(Status)) return Status;
 
     /* If we are loading ourselves, don't actually load us */
-    if (ServerId != CSR_SRV_SERVER)
+    if (ServerId != CSRSRV_SERVERDLL_INDEX)
     {
         /* Load the DLL */
         Status = LdrLoadDll(NULL, 0, &TempString, &hServerDll);
@@ -186,8 +203,7 @@ CsrLoadServerDll(IN PCHAR DllString,
     {
         /* Initialize a string for the entrypoint, or use the default */
         RtlInitAnsiString(&EntryPointString,
-                          !(EntryPoint) ? "ServerDllInitialization" :
-                                          EntryPoint);
+                          EntryPoint ? EntryPoint : "ServerDllInitialization");
 
         /* Get a pointer to it */
         Status = LdrGetProcedureAddress(hServerDll,
@@ -207,8 +223,6 @@ CsrLoadServerDll(IN PCHAR DllString,
     {
         /* Get the result from the Server DLL */
         Status = ServerDllInitProcedure(ServerDll);
-
-        /* Check for Success */
         if (NT_SUCCESS(Status))
         {
             /*
@@ -227,11 +241,13 @@ CsrLoadServerDll(IN PCHAR DllString,
                 CsrSrvSharedStaticServerData[ServerDll->ServerId] = ServerDll->SharedSection;
             }
 
-            /* ReactOS Specific hax */
+#if 0 /* HACK: ReactOS Specific hax. REMOVE IT. */
             if (ServerDll->HighestApiSupported == 0xDEADBABE)
             {
+                // CSRSS_API_DEFINITIONS == Old structure.
                 Status = CsrApiRegisterDefinitions((PVOID)ServerDll->DispatchTable);
             }
+#endif
         }
         else
         {
@@ -275,9 +291,6 @@ NTAPI
 CsrSrvClientConnect(IN OUT PCSR_API_MESSAGE ApiMessage,
                     IN OUT PULONG Reply OPTIONAL)
 {
-    /* Hack */
-    return STATUS_SUCCESS;
-#if 0
     NTSTATUS Status;
     PCSR_CLIENT_CONNECT ClientConnect;
     PCSR_SERVER_DLL ServerDll;
@@ -326,7 +339,6 @@ CsrSrvClientConnect(IN OUT PCSR_API_MESSAGE ApiMessage,
 
     /* Return status */
     return Status;
-#endif
 }
 
 /*++
@@ -628,7 +640,7 @@ CsrSetCallingSpooler(ULONG Reserved)
  * @remarks None.
  *
  *--*/
-LONG
+EXCEPTION_DISPOSITION
 NTAPI
 CsrUnhandledExceptionFilter(IN PEXCEPTION_POINTERS ExceptionInfo)
 {

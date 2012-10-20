@@ -60,6 +60,7 @@ CallHardError(IN PCSR_THREAD ThreadData,
     }
 }
 
+#if 0
 NTSTATUS
 CallProcessCreated(IN PCSR_PROCESS SourceProcessData,
                    IN PCSR_PROCESS TargetProcessData)
@@ -85,22 +86,11 @@ CallProcessCreated(IN PCSR_PROCESS SourceProcessData,
 
     return Status;
 }
+#endif
 
-/***
- *** Some APIs from here will go to basesrv.dll, some others to winsrv.dll.
- *** Furthermore, this structure uses the old definition of APIs list.
- *** The new one is in fact three arrays, one of APIs pointers, one other of
- *** corresponding indexes, and the third one of names (not very efficient...).
- ***/
 CSRSS_API_DEFINITION NativeDefinitions[] =
 {
-    CSRSS_DEFINE_API(CREATE_PROCESS,               BaseSrvCreateProcess),
-    CSRSS_DEFINE_API(CREATE_THREAD,                BaseSrvCreateThread),
-    CSRSS_DEFINE_API(TERMINATE_PROCESS,            BaseSrvExitProcess),
-    CSRSS_DEFINE_API(REGISTER_SERVICES_PROCESS,    SrvRegisterServicesProcess),
-    CSRSS_DEFINE_API(GET_SHUTDOWN_PARAMETERS,      BaseSrvGetProcessShutdownParam),
-    CSRSS_DEFINE_API(SET_SHUTDOWN_PARAMETERS,      BaseSrvSetProcessShutdownParam),
-    { 0, 0, NULL }
+    CSRSS_DEFINE_API(REGISTER_SERVICES_PROCESS, SrvRegisterServicesProcess), // winsrv.dll
 };
 
 /* === INIT ROUTINES === */
@@ -708,7 +698,7 @@ CsrParseServerCommandLine(IN ULONG ArgumentCount,
             }
 
             /* Load us */
-            Status = CsrLoadServerDll("CSRSS" /* "CSRSRV" */, NULL, CSR_SRV_SERVER);
+            Status = CsrLoadServerDll("CSRSS" /* "CSRSRV" */, NULL, CSRSRV_SERVERDLL_INDEX);
         }
         else if (_stricmp(ParameterName, "ServerDLL") == 0)
         {
@@ -1032,11 +1022,13 @@ CsrServerInitialization(IN ULONG ArgumentCount,
         return Status;
     }
 
+#if 0
     Status = CsrApiRegisterDefinitions(NativeDefinitions);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("CSRSRV failed in %s with status %lx\n", "CsrApiRegisterDefinitions", Status);
     }
+#endif
 
     /* Now initialize our API Port */
     Status = CsrApiPortInitialize();
@@ -1046,17 +1038,6 @@ CsrServerInitialization(IN ULONG ArgumentCount,
                 __FUNCTION__, Status);
         return Status;
     }
-
-    ////////////////////////////    ADDED    ////////////////////////////
-    /*
-    /\* Initialize Win32csr *\/
-    Status = CsrLoadServerDll("win32csr", "Win32CsrInitialization", 2);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("CSRSRV failed in %s with status %lx\n", "CsrLoadServerDll", Status);
-    }
-    */
-    ////////////////////////////  END ADDED  ////////////////////////////
 
     /* Initialize the API Port for SM communication */
     Status = CsrSbApiPortInitialize();

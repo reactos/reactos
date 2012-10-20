@@ -9,19 +9,85 @@
 /* INCLUDES ******************************************************************/
 #define NDEBUG
 #include "w32csr.h"
-#include "file.h"
 #include <debug.h>
 
 /* Not defined in any header file */
 extern VOID WINAPI PrivateCsrssManualGuiCheck(LONG Check);
-extern LIST_ENTRY DosDeviceHistory;
-extern RTL_CRITICAL_SECTION Win32CsrDefineDosDeviceCritSec;
 
 /* GLOBALS *******************************************************************/
 
 HANDLE Win32CsrApiHeap;
 HINSTANCE Win32CsrDllHandle = NULL;
 
+PCSR_API_ROUTINE Win32CsrApiDefinitions[] =
+{
+    CsrGetHandle,
+    CsrGetHandle,
+    CsrCloseHandle,
+    CsrVerifyHandle,
+    CsrDuplicateHandle,
+    CsrGetInputWaitHandle,
+    CsrWriteConsole,
+    CsrReadConsole,
+    CsrAllocConsole,
+    CsrFreeConsole,
+    CsrGetScreenBufferInfo,
+    CsrSetCursor,
+    CsrFillOutputChar,
+    CsrReadInputEvent,
+    CsrWriteConsoleOutputChar,
+    CsrWriteConsoleOutputAttrib,
+    CsrFillOutputAttrib,
+    CsrGetCursorInfo,
+    CsrSetCursorInfo,
+    CsrSetTextAttrib,
+    CsrGetConsoleMode,
+    CsrSetConsoleMode,
+    CsrCreateScreenBuffer,
+    CsrSetScreenBuffer,
+    CsrSetTitle,
+    CsrGetTitle,
+    CsrWriteConsoleOutput,
+    CsrFlushInputBuffer,
+    CsrScrollConsoleScreenBuffer,
+    CsrReadConsoleOutputChar,
+    CsrReadConsoleOutputAttrib,
+    CsrGetNumberOfConsoleInputEvents,
+    CsrExitReactos,
+    CsrPeekConsoleInput,
+    CsrReadConsoleOutput,
+    CsrWriteConsoleInput,
+    CsrHardwareStateProperty,
+    CsrGetConsoleWindow,
+    CsrCreateDesktop,
+    CsrShowDesktop,
+    CsrHideDesktop,
+    CsrSetConsoleIcon,
+    CsrSetLogonNotifyWindow,
+    CsrRegisterLogonProcess,
+    CsrGetConsoleCodePage,
+    CsrSetConsoleCodePage,
+    CsrGetConsoleOutputCodePage,
+    CsrSetConsoleOutputCodePage,
+    CsrGetProcessList,
+    CsrAddConsoleAlias,
+    CsrGetConsoleAlias,
+    CsrGetAllConsoleAliases,
+    CsrGetAllConsoleAliasesLength,
+    CsrGetConsoleAliasesExes,
+    CsrGetConsoleAliasesExesLength,
+    CsrGenerateCtrlEvent,
+    CsrSetScreenBufferSize,
+    CsrGetConsoleSelectionInfo,
+    CsrGetCommandHistoryLength,
+    CsrGetCommandHistory,
+    CsrExpungeCommandHistory,
+    CsrSetHistoryNumberCommands,
+    CsrGetHistoryInfo,
+    CsrSetHistoryInfo
+};
+
+/*
 static CSRSS_API_DEFINITION Win32CsrApiDefinitions[] =
 {
     CSRSS_DEFINE_API(GET_INPUT_HANDLE,             CsrGetHandle),
@@ -88,11 +154,9 @@ static CSRSS_API_DEFINITION Win32CsrApiDefinitions[] =
     CSRSS_DEFINE_API(SET_HISTORY_NUMBER_COMMANDS,  CsrSetHistoryNumberCommands),
     CSRSS_DEFINE_API(GET_HISTORY_INFO,             CsrGetHistoryInfo),
     CSRSS_DEFINE_API(SET_HISTORY_INFO,             CsrSetHistoryInfo),
-    CSRSS_DEFINE_API(GET_TEMP_FILE,                CsrGetTempFile),
-    CSRSS_DEFINE_API(DEFINE_DOS_DEVICE,            CsrDefineDosDevice),
-    CSRSS_DEFINE_API(SOUND_SENTRY,                 CsrSoundSentry),
     { 0, 0, NULL }
 };
+*/
 
 static HHOOK hhk = NULL;
 
@@ -268,10 +332,6 @@ DllMain(HANDLE hDll,
 //   BUG ALERT! BUG ALERT! BUG ALERT! BUG ALERT! BUG ALERT! BUG ALERT! BUG ALERT!
     }
 
-    if (DLL_PROCESS_DETACH == dwReason)
-    {
-        CsrCleanupDefineDosDevice();
-    }
     return TRUE;
 }
 
@@ -324,9 +384,7 @@ CreateSystemThreads(PVOID pParam)
     return 0;
 }
 
-NTSTATUS
-WINAPI
-Win32CsrInitialization(IN PCSR_SERVER_DLL ServerDll)
+CSR_SERVER_DLL_INIT(Win32CsrInitialization)
 {
     HANDLE ServerThread;
     CLIENT_ID ClientId;
@@ -334,23 +392,25 @@ Win32CsrInitialization(IN PCSR_SERVER_DLL ServerDll)
 
     Win32CsrApiHeap = RtlGetProcessHeap();
     
-    CsrpInitVideo();
+    CsrpInitVideo(); // Must go into winsrv.dll
 
     NtUserInitialize(0, NULL, NULL);
 
     PrivateCsrssManualGuiCheck(0);
-    CsrInitConsoleSupport();
+    CsrInitConsoleSupport(); // Go into consrv.dll
 
-    /* HACK */
-    ServerDll->DispatchTable = (PVOID)Win32CsrApiDefinitions;
-    ServerDll->HighestApiSupported = 0xDEADBABE;
-    
-    ServerDll->HardErrorCallback = Win32CsrHardError;
-    ServerDll->NewProcessCallback = Win32CsrDuplicateHandleTable;
-    ServerDll->DisconnectCallback = Win32CsrReleaseConsole;
-
-    RtlInitializeCriticalSection(&Win32CsrDefineDosDeviceCritSec);
-    InitializeListHead(&DosDeviceHistory);
+    /* Setup the DLL Object */
+    LoadedServerDll->ApiBase = BASESRV_FIRST_API_NUMBER; // ApiNumberBase
+    LoadedServerDll->HighestApiSupported = BasepMaxApiNumber; // MaxApiNumber
+    LoadedServerDll->DispatchTable = Win32CsrApiDefinitions;
+    // LoadedServerDll->ValidTable = BaseServerApiServerValidTable;
+    // LoadedServerDll->NameTable = BaseServerApiNameTable;
+    // LoadedServerDll->SizeOfProcessData = 0;
+    // LoadedServerDll->ConnectCallback = NULL;
+    // LoadedServerDll->DisconnectCallback = NULL;
+    LoadedServerDll->HardErrorCallback = Win32CsrHardError;
+    LoadedServerDll->NewProcessCallback = Win32CsrDuplicateHandleTable;
+    LoadedServerDll->DisconnectCallback = Win32CsrReleaseConsole;
 
     /* Start Raw Input Threads */
     Status = RtlCreateUserThread(NtCurrentProcess(), NULL, TRUE, 0, 0, 0, (PTHREAD_START_ROUTINE)CreateSystemThreads, (PVOID)0, &ServerThread, &ClientId);

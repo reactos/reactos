@@ -1,6 +1,7 @@
 /*
  * subsystems/win32/csrss/csrsrv/api/wapi.c
  *
+ * "\windows\ApiPort" port process management functions
  * CSRSS port message processing
  *
  * ReactOS Operating System
@@ -25,6 +26,7 @@ extern ULONG CsrMaxApiRequestThreads;
 
 /* FUNCTIONS *****************************************************************/
 
+#if 0
 NTSTATUS FASTCALL
 CsrApiRegisterDefinitions(PCSRSS_API_DEFINITION NewDefinitions)
 {
@@ -61,6 +63,7 @@ CsrApiRegisterDefinitions(PCSRSS_API_DEFINITION NewDefinitions)
 
   return STATUS_SUCCESS;
 }
+#endif
 
 /*
 VOID
@@ -146,7 +149,7 @@ NTAPI
 CsrCallServerFromServer(PCSR_API_MESSAGE ReceiveMsg,
                         PCSR_API_MESSAGE ReplyMsg)
 {
-#if 0 // real code
+#if 1 // Real code
     ULONG ServerId;
     PCSR_SERVER_DLL ServerDll;
     ULONG ApiId;
@@ -199,6 +202,7 @@ CsrCallServerFromServer(PCSR_API_MESSAGE ReceiveMsg,
     _SEH2_TRY
     {
         /* Call the API and get the result */
+        /// CsrApiCallHandler(ReplyMsg, /*ProcessData*/ &ReplyCode); ///
         Status = (ServerDll->DispatchTable[ApiId])(ReceiveMsg, &Reply);
 
         /* Return the result, no matter what it is */

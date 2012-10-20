@@ -1,0 +1,24 @@
+
+include_directories(${REACTOS_SOURCE_DIR}/subsystems/win32/csrss/include
+                    ${REACTOS_SOURCE_DIR}/include/reactos/subsys)
+
+spec2def(basesrv.dll basesrv.spec)
+
+list(APPEND SOURCE
+    init.c
+    server.c
+    basesrv.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/basesrv.def)
+
+add_library(basesrv SHARED ${SOURCE})
+
+target_link_libraries(basesrv ${PSEH_LIB})
+
+set_module_type(basesrv win32dll)
+
+add_importlibs(basesrv ntdll csrsrv)
+
+#add_pch(basesrv w32csr.h)
+
+add_dependencies(basesrv bugcodes)
+add_cd_file(TARGET basesrv DESTINATION reactos/system32 FOR all)

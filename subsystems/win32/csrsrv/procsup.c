@@ -26,7 +26,7 @@ SECURITY_QUALITY_OF_SERVICE CsrSecurityQos =
     FALSE
 };
 ULONG CsrProcessSequenceCount = 5;
-extern ULONG CsrTotalPerProcessDataLength; // remove 'extern' if not needed.
+extern ULONG CsrTotalPerProcessDataLength;
 
 
 /* PRIVATE FUNCTIONS **********************************************************/

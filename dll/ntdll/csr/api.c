@@ -48,7 +48,7 @@ CsrSetPriorityClass(HANDLE hProcess,
     /* Call it */
     Status = CsrClientCallServer(&ApiMessage,
                                  NULL,
-                                 CSR_CREATE_API_NUMBER(CSR_SRV_SERVER, CsrpSetPriorityClass),
+                                 CSR_CREATE_API_NUMBER(CSRSRV_SERVERDLL_INDEX, CsrpSetPriorityClass),
                                  sizeof(CSR_SET_PRIORITY_CLASS));
     
     /* Return what we got, if requested */
@@ -63,7 +63,7 @@ CsrSetPriorityClass(HANDLE hProcess,
  */
 NTSTATUS
 NTAPI
-CsrIdentifyAlertableThread (VOID)
+CsrIdentifyAlertableThread(VOID)
 {
     NTSTATUS Status;
     CSR_API_MESSAGE ApiMessage;
@@ -77,7 +77,7 @@ CsrIdentifyAlertableThread (VOID)
     /* Call it */
     Status = CsrClientCallServer(&ApiMessage,
                                  NULL,
-                                 CSR_CREATE_API_NUMBER(CSR_SRV_SERVER, CsrpIdentifyAlertable),
+                                 CSR_CREATE_API_NUMBER(CSRSRV_SERVERDLL_INDEX, CsrpIdentifyAlertable),
                                  sizeof(CSR_SET_PRIORITY_CLASS));
 
     /* Return to caller */

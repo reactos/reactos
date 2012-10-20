@@ -7,6 +7,72 @@
 
 #include <drivers/blue/ntddblue.h>
 
+
+
+#define CSRSS_MAX_WRITE_CONSOLE                 (LPC_MAX_DATA_LENGTH - CSR_API_MESSAGE_HEADER_SIZE(CSRSS_WRITE_CONSOLE))
+#define CSRSS_MAX_WRITE_CONSOLE_OUTPUT_CHAR     (LPC_MAX_DATA_LENGTH - CSR_API_MESSAGE_HEADER_SIZE(CSRSS_WRITE_CONSOLE_OUTPUT_CHAR))
+#define CSRSS_MAX_WRITE_CONSOLE_OUTPUT_ATTRIB   (LPC_MAX_DATA_LENGTH - CSR_API_MESSAGE_HEADER_SIZE(CSRSS_WRITE_CONSOLE_OUTPUT_ATTRIB))
+#define CSRSS_MAX_READ_CONSOLE_OUTPUT_CHAR      (LPC_MAX_DATA_LENGTH - CSR_API_MESSAGE_HEADER_SIZE(CSRSS_READ_CONSOLE_OUTPUT_CHAR))
+#define CSRSS_MAX_READ_CONSOLE_OUTPUT_ATTRIB    (LPC_MAX_DATA_LENGTH - CSR_API_MESSAGE_HEADER_SIZE(CSRSS_READ_CONSOLE_OUTPUT_ATTRIB))
+
+#define WRITE_CONSOLE                   (0x2)
+#define READ_CONSOLE                    (0x3)
+#define ALLOC_CONSOLE                   (0x4)
+#define FREE_CONSOLE                    (0x5)
+#define SCREEN_BUFFER_INFO              (0x7)
+#define SET_CURSOR                      (0x8)
+#define FILL_OUTPUT                     (0x9)
+#define READ_INPUT                      (0xA)
+#define WRITE_CONSOLE_OUTPUT_CHAR       (0xB)
+#define WRITE_CONSOLE_OUTPUT_ATTRIB     (0xC)
+#define FILL_OUTPUT_ATTRIB              (0xD)
+#define GET_CURSOR_INFO                 (0xE)
+#define SET_CURSOR_INFO                 (0xF)
+#define SET_ATTRIB                      (0x10)
+#define GET_CONSOLE_MODE                (0x11)
+#define SET_CONSOLE_MODE                (0x12)
+#define CREATE_SCREEN_BUFFER            (0x13)
+#define SET_SCREEN_BUFFER               (0x14)
+#define SET_TITLE                       (0x15)
+#define GET_TITLE                       (0x16)
+#define WRITE_CONSOLE_OUTPUT            (0x17)
+#define FLUSH_INPUT_BUFFER              (0x18)
+#define SCROLL_CONSOLE_SCREEN_BUFFER    (0x19)
+#define READ_CONSOLE_OUTPUT_CHAR        (0x1A)
+#define READ_CONSOLE_OUTPUT_ATTRIB      (0x1B)
+#define GET_NUM_INPUT_EVENTS            (0x1C)
+#define PEEK_CONSOLE_INPUT              (0x21)
+#define READ_CONSOLE_OUTPUT             (0x22)
+#define WRITE_CONSOLE_INPUT             (0x23)
+#define GET_INPUT_HANDLE                (0x24)
+#define GET_OUTPUT_HANDLE               (0x25)
+#define SETGET_CONSOLE_HW_STATE         (0x29)
+#define GET_CONSOLE_WINDOW              (0x2A)
+#define SET_CONSOLE_ICON                (0x2E)
+#define GET_CONSOLE_CP                  (0x31)
+#define SET_CONSOLE_CP                  (0x32)
+#define GET_CONSOLE_OUTPUT_CP           (0x33)
+#define SET_CONSOLE_OUTPUT_CP           (0x34)
+#define ADD_CONSOLE_ALIAS               (0x38)
+#define GET_CONSOLE_ALIAS               (0x39)
+#define GET_ALL_CONSOLE_ALIASES         (0x3A)
+#define GET_ALL_CONSOLE_ALIASES_LENGTH  (0x3B)
+#define GET_CONSOLE_ALIASES_EXES        (0x3C)
+#define GET_CONSOLE_ALIASES_EXES_LENGTH (0x3D)
+#define GENERATE_CTRL_EVENT             (0x3E)
+#define SET_SCREEN_BUFFER_SIZE          (0x40)
+#define GET_CONSOLE_SELECTION_INFO      (0x41)
+#define GET_COMMAND_HISTORY_LENGTH      (0x42)
+#define GET_COMMAND_HISTORY             (0x43)
+#define EXPUNGE_COMMAND_HISTORY         (0x44)
+#define SET_HISTORY_NUMBER_COMMANDS     (0x45)
+#define GET_HISTORY_INFO                (0x46)
+#define SET_HISTORY_INFO                (0x47)
+
+
+
+
+
 typedef struct
 {
     HANDLE ConsoleHandle;
@@ -386,6 +452,77 @@ typedef struct
 {
     UINT CodePage;
 } CSRSS_SET_CONSOLE_OUTPUT_CP, *PCSRSS_SET_CONSOLE_OUTPUT_CP;
+
+
+
+
+
+
+
+
+
+
+
+
+#if 0
+
+                CSRSS_WRITE_CONSOLE WriteConsoleRequest;
+                CSRSS_READ_CONSOLE ReadConsoleRequest;
+                CSRSS_ALLOC_CONSOLE AllocConsoleRequest;
+                CSRSS_FREE_CONSOLE FreeConsoleRequest;
+                CSRSS_SCREEN_BUFFER_INFO ScreenBufferInfoRequest;
+                CSRSS_SET_CURSOR SetCursorRequest;
+                CSRSS_FILL_OUTPUT FillOutputRequest;
+                CSRSS_FILL_OUTPUT_ATTRIB FillOutputAttribRequest;
+                CSRSS_READ_INPUT ReadInputRequest;
+                CSRSS_WRITE_CONSOLE_OUTPUT_CHAR WriteConsoleOutputCharRequest;
+                CSRSS_WRITE_CONSOLE_OUTPUT_ATTRIB WriteConsoleOutputAttribRequest;
+                CSRSS_GET_CURSOR_INFO GetCursorInfoRequest;
+                CSRSS_SET_CURSOR_INFO SetCursorInfoRequest;
+                CSRSS_SET_ATTRIB SetAttribRequest;
+                CSRSS_SET_CONSOLE_MODE SetConsoleModeRequest;
+                CSRSS_GET_CONSOLE_MODE GetConsoleModeRequest;
+                CSRSS_CREATE_SCREEN_BUFFER CreateScreenBufferRequest;
+                CSRSS_SET_SCREEN_BUFFER SetScreenBufferRequest;
+                CSRSS_SET_TITLE SetTitleRequest;
+                CSRSS_GET_TITLE GetTitleRequest;
+                CSRSS_WRITE_CONSOLE_OUTPUT WriteConsoleOutputRequest;
+                CSRSS_FLUSH_INPUT_BUFFER FlushInputBufferRequest;
+                CSRSS_SCROLL_CONSOLE_SCREEN_BUFFER ScrollConsoleScreenBufferRequest;
+                CSRSS_READ_CONSOLE_OUTPUT_CHAR ReadConsoleOutputCharRequest;
+                CSRSS_READ_CONSOLE_OUTPUT_ATTRIB ReadConsoleOutputAttribRequest;
+                CSRSS_PEEK_CONSOLE_INPUT PeekConsoleInputRequest;
+                CSRSS_READ_CONSOLE_OUTPUT ReadConsoleOutputRequest;
+                CSRSS_WRITE_CONSOLE_INPUT WriteConsoleInputRequest;
+                CSRSS_GET_INPUT_HANDLE GetInputHandleRequest;
+                CSRSS_GET_OUTPUT_HANDLE GetOutputHandleRequest;
+                CSRSS_SETGET_CONSOLE_HW_STATE ConsoleHardwareStateRequest;
+                CSRSS_GET_CONSOLE_WINDOW GetConsoleWindowRequest;
+                CSRSS_SET_CONSOLE_ICON SetConsoleIconRequest;
+                CSRSS_ADD_CONSOLE_ALIAS AddConsoleAlias;
+                CSRSS_GET_CONSOLE_ALIAS GetConsoleAlias;
+                CSRSS_GET_ALL_CONSOLE_ALIASES GetAllConsoleAlias;
+                CSRSS_GET_ALL_CONSOLE_ALIASES_LENGTH GetAllConsoleAliasesLength;
+                CSRSS_GET_CONSOLE_ALIASES_EXES GetConsoleAliasesExes;
+                CSRSS_GET_CONSOLE_ALIASES_EXES_LENGTH GetConsoleAliasesExesLength;
+                CSRSS_GENERATE_CTRL_EVENT GenerateCtrlEvent;
+                CSRSS_GET_NUM_INPUT_EVENTS GetNumInputEventsRequest;
+                CSRSS_SET_SCREEN_BUFFER_SIZE SetScreenBufferSize;
+                CSRSS_GET_CONSOLE_SELECTION_INFO GetConsoleSelectionInfo;
+                CSRSS_GET_COMMAND_HISTORY_LENGTH GetCommandHistoryLength;
+                CSRSS_GET_COMMAND_HISTORY GetCommandHistory;
+                CSRSS_EXPUNGE_COMMAND_HISTORY ExpungeCommandHistory;
+                CSRSS_SET_HISTORY_NUMBER_COMMANDS SetHistoryNumberCommands;
+                CSRSS_GET_HISTORY_INFO GetHistoryInfo;
+                CSRSS_SET_HISTORY_INFO SetHistoryInfo;
+                CSRSS_GET_CONSOLE_CP GetConsoleCodePage;
+                CSRSS_SET_CONSOLE_CP SetConsoleCodePage;
+                CSRSS_GET_CONSOLE_OUTPUT_CP GetConsoleOutputCodePage;
+                CSRSS_SET_CONSOLE_OUTPUT_CP SetConsoleOutputCodePage;
+
+#endif
+
+
 
 #endif // __CSRCONS_H__
 
