@@ -99,11 +99,13 @@ typedef struct _SAMPR_SR_SECURITY_DESCRIPTOR
     [size_is(Length)] unsigned char* SecurityDescriptor;
 } SAMPR_SR_SECURITY_DESCRIPTOR, *PSAMPR_SR_SECURITY_DESCRIPTOR;
 
+cpp_quote("#ifndef _NTSAM_")
 typedef struct _GROUP_MEMBERSHIP
 {
     unsigned long RelativeId;
     unsigned long Attributes;
 } GROUP_MEMBERSHIP, *PGROUP_MEMBERSHIP;
+cpp_quote("#endif")
 
 typedef struct _SAMPR_GET_GROUPS_BUFFER
 {

@@ -382,6 +382,62 @@ SamCreateUserInDomain(IN SAM_HANDLE DomainHandle,
 
 NTSTATUS
 NTAPI
+SamDeleteAlias(IN SAM_HANDLE AliasHandle)
+{
+    SAMPR_HANDLE LocalAliasHandle;
+    NTSTATUS Status;
+
+    TRACE("SamDeleteAlias(%p)\n", AliasHandle);
+
+    LocalAliasHandle = (SAMPR_HANDLE)AliasHandle;
+
+    if (LocalAliasHandle == NULL)
+        return STATUS_INVALID_HANDLE;
+
+    RpcTryExcept
+    {
+        Status = SamrDeleteAlias(&LocalAliasHandle);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
+
+NTSTATUS
+NTAPI
+SamDeleteGroup(IN SAM_HANDLE GroupHandle)
+{
+    SAMPR_HANDLE LocalGroupHandle;
+    NTSTATUS Status;
+
+    TRACE("SamDeleteGroup(%p)\n", GroupHandle);
+
+    LocalGroupHandle = (SAMPR_HANDLE)GroupHandle;
+
+    if (LocalGroupHandle == NULL)
+        return STATUS_INVALID_HANDLE;
+
+    RpcTryExcept
+    {
+        Status = SamrDeleteGroup(&LocalGroupHandle);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
+
+NTSTATUS
+NTAPI
 SamDeleteUser(IN SAM_HANDLE UserHandle)
 {
     SAMPR_HANDLE LocalUserHandle;
@@ -667,6 +723,50 @@ SamGetAliasMembership(IN SAM_HANDLE DomainHandle,
 
 NTSTATUS
 NTAPI
+SamGetGroupsForUser(IN SAM_HANDLE UserHandle,
+                    OUT PGROUP_MEMBERSHIP *Groups,
+                    OUT PULONG MembershipCount)
+{
+    PSAMPR_GET_GROUPS_BUFFER GroupsBuffer = NULL;
+    NTSTATUS Status;
+
+    TRACE("SamGetGroupsForUser(%p %p %p)\n",
+          UserHandle, Groups, MembershipCount);
+
+    RpcTryExcept
+    {
+        Status = SamrGetGroupsForUser((SAMPR_HANDLE)UserHandle,
+                                      &GroupsBuffer);
+        if (NT_SUCCESS(Status))
+        {
+            *Groups = GroupsBuffer->Groups;
+            *MembershipCount = GroupsBuffer->MembershipCount;
+
+            MIDL_user_free(GroupsBuffer);
+        }
+        else
+        {
+            if (GroupsBuffer != NULL)
+            {
+                if (GroupsBuffer->Groups != NULL)
+                    MIDL_user_free(GroupsBuffer->Groups);
+
+                MIDL_user_free(GroupsBuffer);
+            }
+        }
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
+
+NTSTATUS
+NTAPI
 SamGetMembersInAlias(IN SAM_HANDLE AliasHandle,
                      OUT PSID **MemberIds,
                      OUT PULONG MemberCount)
@@ -696,6 +796,55 @@ SamGetMembersInAlias(IN SAM_HANDLE AliasHandle,
             *MemberIds = (PSID *)SidArray.Sids;
         }
 
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
+
+NTSTATUS
+NTAPI
+SamGetMembersInGroup(IN SAM_HANDLE GroupHandle,
+                     OUT PULONG *MemberIds,
+                     OUT PULONG *Attributes,
+                     OUT PULONG MemberCount)
+{
+    PSAMPR_GET_MEMBERS_BUFFER MembersBuffer = NULL;
+    NTSTATUS Status;
+
+    TRACE("SamGetMembersInGroup(%p %p %p %p)\n",
+          GroupHandle, MemberIds, Attributes, MemberCount);
+
+    RpcTryExcept
+    {
+        Status = SamrGetMembersInGroup((SAMPR_HANDLE)GroupHandle,
+                                       &MembersBuffer);
+        if (NT_SUCCESS(Status))
+        {
+            *MemberIds = MembersBuffer->Members;
+            *Attributes = MembersBuffer->Attributes;
+            *MemberCount = MembersBuffer->MemberCount;
+
+            MIDL_user_free(MembersBuffer);
+        }
+        else
+        {
+            if (MembersBuffer != NULL)
+            {
+                if (MembersBuffer->Members != NULL)
+                    MIDL_user_free(MembersBuffer->Members);
+
+                if (MembersBuffer->Attributes != NULL)
+                    MIDL_user_free(MembersBuffer->Attributes);
+
+                MIDL_user_free(MembersBuffer);
+            }
+        }
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -1147,6 +1296,53 @@ SamQueryInformationUser(IN SAM_HANDLE UserHandle,
 
 NTSTATUS
 NTAPI
+SamQuerySecurityObject(IN SAM_HANDLE ObjectHandle,
+                       IN SECURITY_INFORMATION SecurityInformation,
+                       OUT PSECURITY_DESCRIPTOR *SecurityDescriptor)
+{
+    SAMPR_SR_SECURITY_DESCRIPTOR LocalSecurityDescriptor;
+    PSAMPR_SR_SECURITY_DESCRIPTOR pLocalSecurityDescriptor;
+    NTSTATUS Status;
+
+    TRACE("SamQuerySecurityObject(%p %lu %p)\n",
+          ObjectHandle, SecurityInformation, SecurityDescriptor);
+
+    LocalSecurityDescriptor.Length = 0;
+    LocalSecurityDescriptor.SecurityDescriptor = NULL;
+
+    RpcTryExcept
+    {
+        pLocalSecurityDescriptor = &LocalSecurityDescriptor;
+
+        Status = SamrQuerySecurityObject((SAMPR_HANDLE)ObjectHandle,
+                                         SecurityInformation,
+                                         &pLocalSecurityDescriptor);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    *SecurityDescriptor = LocalSecurityDescriptor.SecurityDescriptor;
+
+    return Status;
+}
+
+
+NTSTATUS
+NTAPI
+SamRidToSid(IN SAM_HANDLE ObjectHandle,
+            IN ULONG Rid,
+            OUT PSID *Sid)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+
+NTSTATUS
+NTAPI
 SamSetInformationAlias(IN SAM_HANDLE AliasHandle,
                        IN ALIAS_INFORMATION_CLASS AliasInformationClass,
                        IN PVOID Buffer)
@@ -1248,6 +1444,88 @@ SamSetInformationUser(IN SAM_HANDLE UserHandle,
         Status = I_RpcMapWin32Status(RpcExceptionCode());
     }
     RpcEndExcept;
+
+    return Status;
+}
+
+
+NTSTATUS
+NTAPI
+SamSetMemberAttributesOfGroup(IN SAM_HANDLE GroupHandle,
+                              IN ULONG MemberId,
+                              IN ULONG Attributes)
+{
+    NTSTATUS Status;
+
+    TRACE("SamSetMemberAttributesOfGroup(%p %lu 0x%lx)\n",
+          GroupHandle, MemberId, Attributes);
+
+    RpcTryExcept
+    {
+        Status = SamrSetMemberAttributesOfGroup((SAMPR_HANDLE)GroupHandle,
+                                                MemberId,
+                                                Attributes);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
+
+NTSTATUS
+NTAPI
+SamSetSecurityObject(IN SAM_HANDLE ObjectHandle,
+                     IN SECURITY_INFORMATION SecurityInformation,
+                     IN PSECURITY_DESCRIPTOR SecurityDescriptor)
+{
+    SAMPR_SR_SECURITY_DESCRIPTOR DescriptorToPass;
+    ULONG Length;
+    NTSTATUS Status;
+
+    TRACE("SamSetSecurityObject(%p %lu %p)\n",
+          ObjectHandle, SecurityInformation, SecurityDescriptor);
+
+    /* Retrieve the length of the relative security descriptor */
+    Length = 0;
+    Status = RtlMakeSelfRelativeSD(SecurityDescriptor,
+                                   NULL,
+                                   &Length);
+    if (Status != STATUS_BUFFER_TOO_SMALL)
+        return STATUS_INVALID_PARAMETER;
+
+
+    /* Allocate a buffer for the security descriptor */
+    DescriptorToPass.Length = Length;
+    DescriptorToPass.SecurityDescriptor = MIDL_user_allocate(Length);
+    if (DescriptorToPass.SecurityDescriptor == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    /* Convert the given security descriptor to a relative security descriptor */
+    Status = RtlMakeSelfRelativeSD(SecurityDescriptor,
+                                   (PSECURITY_DESCRIPTOR)DescriptorToPass.SecurityDescriptor,
+                                   &Length);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    RpcTryExcept
+    {
+        Status = SamrSetSecurityObject((SAMPR_HANDLE)ObjectHandle,
+                                       SecurityInformation,
+                                       &DescriptorToPass);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+done:
+    if (DescriptorToPass.SecurityDescriptor != NULL)
+        MIDL_user_free(DescriptorToPass.SecurityDescriptor);
 
     return Status;
 }

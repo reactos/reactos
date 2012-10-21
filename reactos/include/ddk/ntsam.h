@@ -271,6 +271,12 @@ typedef enum _GROUP_INFORMATION_CLASS
     GroupReplicationInformation
 } GROUP_INFORMATION_CLASS;
 
+typedef struct _GROUP_MEMBERSHIP
+{
+    ULONG RelativeId;
+    ULONG Attributes;
+} GROUP_MEMBERSHIP, *PGROUP_MEMBERSHIP;
+
 typedef enum _USER_INFORMATION_CLASS
 {
     UserGeneralInformation = 1,
@@ -375,6 +381,14 @@ SamCreateUserInDomain(IN SAM_HANDLE DomainHandle,
 
 NTSTATUS
 NTAPI
+SamDeleteAlias(IN SAM_HANDLE AliasHandle);
+
+NTSTATUS
+NTAPI
+SamDeleteGroup(IN SAM_HANDLE GroupHandle);
+
+NTSTATUS
+NTAPI
 SamDeleteUser(IN SAM_HANDLE UserHandle);
 
 NTSTATUS
@@ -424,8 +438,21 @@ SamGetAliasMembership(IN SAM_HANDLE DomainHandle,
 
 NTSTATUS
 NTAPI
+SamGetGroupsForUser(IN SAM_HANDLE UserHandle,
+                    OUT PGROUP_MEMBERSHIP *Groups,
+                    OUT PULONG MembershipCount);
+
+NTSTATUS
+NTAPI
 SamGetMembersInAlias(IN SAM_HANDLE AliasHandle,
                      OUT PSID **MemberIds,
+                     OUT PULONG MemberCount);
+
+NTSTATUS
+NTAPI
+SamGetMembersInGroup(IN SAM_HANDLE GroupHandle,
+                     OUT PULONG *MemberIds,
+                     OUT PULONG *Attributes,
                      OUT PULONG MemberCount);
 
 NTSTATUS
@@ -504,8 +531,20 @@ SamQueryInformationUser(IN SAM_HANDLE UserHandle,
 
 NTSTATUS
 NTAPI
+SamQuerySecurityObject(IN SAM_HANDLE ObjectHandle,
+                       IN SECURITY_INFORMATION SecurityInformation,
+                       OUT PSECURITY_DESCRIPTOR *SecurityDescriptor);
+
+NTSTATUS
+NTAPI
 SamRemoveMemberFromAlias(IN SAM_HANDLE AliasHandle,
                          IN PSID MemberId);
+
+NTSTATUS
+NTAPI
+SamRidToSid(IN SAM_HANDLE ObjectHandle,
+            IN ULONG Rid,
+            OUT PSID *Sid);
 
 NTSTATUS
 NTAPI
@@ -530,6 +569,18 @@ NTAPI
 SamSetInformationUser(IN SAM_HANDLE UserHandle,
                       IN USER_INFORMATION_CLASS UserInformationClass,
                       IN PVOID Buffer);
+
+NTSTATUS
+NTAPI
+SamSetMemberAttributesOfGroup(IN SAM_HANDLE GroupHandle,
+                              IN ULONG MemberId,
+                              IN ULONG Attributes);
+
+NTSTATUS
+NTAPI
+SamSetSecurityObject(IN SAM_HANDLE ObjectHandle,
+                     IN SECURITY_INFORMATION SecurityInformation,
+                     IN PSECURITY_DESCRIPTOR SecurityDescriptor);
 
 NTSTATUS
 NTAPI
