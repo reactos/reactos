@@ -12,15 +12,44 @@
 #include <debug.h>
 
 
-extern NTSTATUS CallProcessCreated(PCSR_PROCESS, PCSR_PROCESS); // TODO: Import it from csrsrv/init.c
+// extern NTSTATUS CallProcessCreated(PCSR_PROCESS, PCSR_PROCESS); // TODO: Import it from csrsrv/init.c
+// Remove it and correct csrsrv instead...
+#if 0
+NTSTATUS
+CallProcessCreated(IN PCSR_PROCESS SourceProcessData,
+                   IN PCSR_PROCESS TargetProcessData)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+    ULONG i;
+    PCSR_SERVER_DLL ServerDll;
+
+    DPRINT("CSR: %s called\n", __FUNCTION__);
+
+    /* Notify the Server DLLs */
+    for (i = 0; i < CSR_SERVER_DLL_MAX; i++)
+    {
+        /* Get the current Server DLL */
+        ServerDll = CsrLoadedServerDll[i];
+
+        /* Make sure it's valid and that it has callback */
+        if ((ServerDll) && (ServerDll->NewProcessCallback))
+        {
+            Status = ServerDll->NewProcessCallback(SourceProcessData, TargetProcessData);
+        }
+    }
+
+    return Status;
+}
+#endif
 
 CSR_API(BaseSrvCreateProcess)
 {
     NTSTATUS Status;
+    PBASE_CREATE_PROCESS CreateProcessRequest = &((PBASE_API_MESSAGE)ApiMessage)->Data.CreateProcessRequest;
     HANDLE ProcessHandle, ThreadHandle;
     PCSR_THREAD CsrThread;
-    PCSR_PROCESS Process, NewProcess;
-    ULONG Flags, VdmPower = 0, DebugFlags = 0;
+    PCSR_PROCESS Process; // , NewProcess;
+    ULONG /* Flags, */ VdmPower = 0, DebugFlags = 0;
 
     /* Get the current client thread */
     CsrThread = CsrGetClientThread();
@@ -29,12 +58,12 @@ CSR_API(BaseSrvCreateProcess)
     Process = CsrThread->Process;
 
     /* Extract the flags out of the process handle */
-    Flags = (ULONG_PTR)ApiMessage->Data.CreateProcessRequest.ProcessHandle & 3;
-    ApiMessage->Data.CreateProcessRequest.ProcessHandle = (HANDLE)((ULONG_PTR)ApiMessage->Data.CreateProcessRequest.ProcessHandle & ~3);
+    // Flags = (ULONG_PTR)CreateProcessRequest->ProcessHandle & 3;
+    CreateProcessRequest->ProcessHandle = (HANDLE)((ULONG_PTR)CreateProcessRequest->ProcessHandle & ~3);
 
     /* Duplicate the process handle */
     Status = NtDuplicateObject(Process->ProcessHandle,
-                               ApiMessage->Data.CreateProcessRequest.ProcessHandle,
+                               CreateProcessRequest->ProcessHandle,
                                NtCurrentProcess(),
                                &ProcessHandle,
                                0,
@@ -48,7 +77,7 @@ CSR_API(BaseSrvCreateProcess)
 
     /* Duplicate the thread handle */
     Status = NtDuplicateObject(Process->ProcessHandle,
-                               ApiMessage->Data.CreateProcessRequest.ThreadHandle,
+                               CreateProcessRequest->ThreadHandle,
                                NtCurrentProcess(),
                                &ThreadHandle,
                                0,
@@ -79,7 +108,7 @@ CSR_API(BaseSrvCreateProcess)
     }
 
     /* Convert some flags. FIXME: More need conversion */
-    if (ApiMessage->Data.CreateProcessRequest.CreationFlags & CREATE_NEW_PROCESS_GROUP)
+    if (CreateProcessRequest->CreationFlags & CREATE_NEW_PROCESS_GROUP)
     {
         DebugFlags |= CsrProcessCreateNewGroup;
     }
@@ -89,7 +118,7 @@ CSR_API(BaseSrvCreateProcess)
     /* Call CSRSRV to create the CSR_PROCESS structure and the first CSR_THREAD */
     Status = CsrCreateProcess(ProcessHandle,
                               ThreadHandle,
-                              &ApiMessage->Data.CreateProcessRequest.ClientId,
+                              &CreateProcessRequest->ClientId,
                               Process->NtSession,
                               DebugFlags,
                               NULL);
@@ -111,16 +140,18 @@ CSR_API(BaseSrvCreateProcess)
     /* FIXME: VDM vodoo */
 
     /* ReactOS Compatibility */
-    Status = CsrLockProcessByClientId(ApiMessage->Data.CreateProcessRequest.ClientId.UniqueProcess, &NewProcess);
+#if 0
+    Status = CsrLockProcessByClientId(CreateProcessRequest->ClientId.UniqueProcess, &NewProcess);
     ASSERT(Status == STATUS_SUCCESS);
-    if (!(ApiMessage->Data.CreateProcessRequest.CreationFlags & (CREATE_NEW_CONSOLE | DETACHED_PROCESS)))
+    if (!(CreateProcessRequest->CreationFlags & (CREATE_NEW_CONSOLE | DETACHED_PROCESS)))
     {
         NewProcess->ParentConsole = Process->Console;
-        NewProcess->bInheritHandles = ApiMessage->Data.CreateProcessRequest.bInheritHandles;
+        NewProcess->bInheritHandles = CreateProcessRequest->bInheritHandles;
     }
     RtlInitializeCriticalSection(&NewProcess->HandleTableLock);
     CallProcessCreated(Process, NewProcess);
     CsrUnlockProcess(NewProcess);
+#endif
 
     /* Return the result of this operation */
     return Status;
@@ -128,9 +159,10 @@ CSR_API(BaseSrvCreateProcess)
 
 CSR_API(BaseSrvCreateThread)
 {
+    NTSTATUS Status;
+    PBASE_CREATE_THREAD CreateThreadRequest = &((PBASE_API_MESSAGE)ApiMessage)->Data.CreateThreadRequest;
     PCSR_THREAD CurrentThread;
     HANDLE ThreadHandle;
-    NTSTATUS Status;
     PCSR_PROCESS CsrProcess;
 
     /* Get the current CSR thread */
@@ -138,32 +170,32 @@ CSR_API(BaseSrvCreateThread)
     if (!CurrentThread)
     {
         DPRINT1("Server Thread TID: [%lx.%lx]\n",
-        ApiMessage->Data.CreateThreadRequest.ClientId.UniqueProcess,
-        ApiMessage->Data.CreateThreadRequest.ClientId.UniqueThread);
+        CreateThreadRequest->ClientId.UniqueProcess,
+        CreateThreadRequest->ClientId.UniqueThread);
         return STATUS_SUCCESS; // server-to-server
     }
 
     /* Get the CSR Process for this request */
     CsrProcess = CurrentThread->Process;
     if (CsrProcess->ClientId.UniqueProcess !=
-        ApiMessage->Data.CreateThreadRequest.ClientId.UniqueProcess)
+        CreateThreadRequest->ClientId.UniqueProcess)
     {
         /* This is a remote thread request -- is it within the server itself? */
-        if (ApiMessage->Data.CreateThreadRequest.ClientId.UniqueProcess == NtCurrentTeb()->ClientId.UniqueProcess)
+        if (CreateThreadRequest->ClientId.UniqueProcess == NtCurrentTeb()->ClientId.UniqueProcess)
         {
             /* Accept this without any further work */
             return STATUS_SUCCESS;
         }
 
         /* Get the real CSR Process for the remote thread's process */
-        Status = CsrLockProcessByClientId(ApiMessage->Data.CreateThreadRequest.ClientId.UniqueProcess,
+        Status = CsrLockProcessByClientId(CreateThreadRequest->ClientId.UniqueProcess,
                                           &CsrProcess);
         if (!NT_SUCCESS(Status)) return Status;
     }
 
     /* Duplicate the thread handle so we can own it */
     Status = NtDuplicateObject(CurrentThread->Process->ProcessHandle,
-                               ApiMessage->Data.CreateThreadRequest.ThreadHandle,
+                               CreateThreadRequest->ThreadHandle,
                                NtCurrentProcess(),
                                &ThreadHandle,
                                0,
@@ -174,7 +206,7 @@ CSR_API(BaseSrvCreateThread)
         /* Call CSRSRV to tell it about the new thread */
         Status = CsrCreateThread(CsrProcess,
                                  ThreadHandle,
-                                 &ApiMessage->Data.CreateThreadRequest.ClientId);
+                                 &CreateThreadRequest->ClientId);
     }
 
     /* Unlock the process and return */
@@ -185,11 +217,12 @@ CSR_API(BaseSrvCreateThread)
 CSR_API(BaseSrvGetTempFile)
 {
     static UINT CsrGetTempFileUnique = 0;
+    PBASE_GET_TEMP_FILE GetTempFile = &((PBASE_API_MESSAGE)ApiMessage)->Data.GetTempFile;
 
     /* Return 16-bits ID */
-    ApiMessage->Data.GetTempFile.UniqueID = (++CsrGetTempFileUnique & 0xFFFF);
+    GetTempFile->UniqueID = (++CsrGetTempFileUnique & 0xFFFF);
 
-    DPRINT("Returning: %u\n", ApiMessage->Data.GetTempFile.UniqueID);
+    DPRINT("Returning: %u\n", GetTempFile->UniqueID);
 
     return STATUS_SUCCESS;
 }
@@ -204,27 +237,29 @@ CSR_API(BaseSrvExitProcess)
 
     /* Remove the CSR_THREADs and CSR_PROCESS */
     return CsrDestroyProcess(&CsrThread->ClientId,
-                             (NTSTATUS)ApiMessage->Data.TerminateProcessRequest.uExitCode);
+                             (NTSTATUS)((PBASE_API_MESSAGE)ApiMessage)->Data.ExitProcessRequest.uExitCode);
 }
 
 CSR_API(BaseSrvGetProcessShutdownParam)
 {
+    PBASE_GET_PROCESS_SHUTDOWN_PARAMS GetShutdownParametersRequest = &((PBASE_API_MESSAGE)ApiMessage)->Data.GetShutdownParametersRequest;
     PCSR_THREAD CsrThread = CsrGetClientThread();
     ASSERT(CsrThread);
 
-    ApiMessage->Data.GetShutdownParametersRequest.Level = CsrThread->Process->ShutdownLevel;
-    ApiMessage->Data.GetShutdownParametersRequest.Flags = CsrThread->Process->ShutdownFlags;
+    GetShutdownParametersRequest->Level = CsrThread->Process->ShutdownLevel;
+    GetShutdownParametersRequest->Flags = CsrThread->Process->ShutdownFlags;
 
     return STATUS_SUCCESS;
 }
 
 CSR_API(BaseSrvSetProcessShutdownParam)
 {
+    PBASE_SET_PROCESS_SHUTDOWN_PARAMS SetShutdownParametersRequest = &((PBASE_API_MESSAGE)ApiMessage)->Data.SetShutdownParametersRequest;
     PCSR_THREAD CsrThread = CsrGetClientThread();
     ASSERT(CsrThread);
 
-    CsrThread->Process->ShutdownLevel = ApiMessage->Data.SetShutdownParametersRequest.Level;
-    CsrThread->Process->ShutdownFlags = ApiMessage->Data.SetShutdownParametersRequest.Flags;
+    CsrThread->Process->ShutdownLevel = SetShutdownParametersRequest->Level;
+    CsrThread->Process->ShutdownFlags = SetShutdownParametersRequest->Flags;
 
     return STATUS_SUCCESS;
 }
@@ -284,21 +319,56 @@ CSR_API(BaseSrvSoundSentryNotification)
  *** Dos Devices (C) Pierre Schweitzer (pierre.schweitzer@reactos.org)
  ***/
 
-typedef struct tagCSRSS_DOS_DEVICE_HISTORY_ENTRY
+typedef struct tagBASE_DOS_DEVICE_HISTORY_ENTRY
 {
     UNICODE_STRING Device;
     UNICODE_STRING Target;
     LIST_ENTRY Entry;
-} CSRSS_DOS_DEVICE_HISTORY_ENTRY, *PCSRSS_DOS_DEVICE_HISTORY_ENTRY;
+} BASE_DOS_DEVICE_HISTORY_ENTRY, *PBASE_DOS_DEVICE_HISTORY_ENTRY;
 
 LIST_ENTRY DosDeviceHistory;
 RTL_CRITICAL_SECTION BaseDefineDosDeviceCritSec;
 
+VOID BaseCleanupDefineDosDevice(VOID)
+{
+    PLIST_ENTRY Entry, ListHead;
+    PBASE_DOS_DEVICE_HISTORY_ENTRY HistoryEntry;
+
+    (void) RtlDeleteCriticalSection(&BaseDefineDosDeviceCritSec);
+
+    ListHead = &DosDeviceHistory;
+    Entry = ListHead->Flink;
+    while (Entry != ListHead)
+    {
+        HistoryEntry = (PBASE_DOS_DEVICE_HISTORY_ENTRY)
+            CONTAINING_RECORD(Entry,
+                              BASE_DOS_DEVICE_HISTORY_ENTRY,
+                              Entry);
+        Entry = Entry->Flink;
+
+        if (HistoryEntry)
+        {
+            if (HistoryEntry->Target.Buffer)
+                (void) RtlFreeHeap(BaseSrvHeap,
+                                   0,
+                                   HistoryEntry->Target.Buffer);
+            if (HistoryEntry->Device.Buffer)
+                (void) RtlFreeHeap(BaseSrvHeap,
+                                   0,
+                                   HistoryEntry->Device.Buffer);
+            (void) RtlFreeHeap(BaseSrvHeap,
+                               0,
+                               HistoryEntry);
+        }
+    }
+}
+
 CSR_API(BaseSrvDefineDosDevice)
 {
+    NTSTATUS Status;
+    PBASE_DEFINE_DOS_DEVICE DefineDosDeviceRequest = &((PBASE_API_MESSAGE)ApiMessage)->Data.DefineDosDeviceRequest;
     OBJECT_ATTRIBUTES ObjectAttributes;
     HANDLE LinkHandle = NULL;
-    NTSTATUS Status;
     UNICODE_STRING DeviceName = {0};
     UNICODE_STRING RequestDeviceName = {0};
     UNICODE_STRING LinkTarget = {0};
@@ -312,7 +382,7 @@ CSR_API(BaseSrvDefineDosDevice)
     PSID SystemSid;
     PSID WorldSid;
     ULONG SidLength;
-    PCSRSS_DOS_DEVICE_HISTORY_ENTRY HistoryEntry;
+    PBASE_DOS_DEVICE_HISTORY_ENTRY HistoryEntry;
     PLIST_ENTRY Entry;
     PLIST_ENTRY ListHead;
     BOOLEAN Matched, AddHistory;
@@ -320,16 +390,16 @@ CSR_API(BaseSrvDefineDosDevice)
     PWSTR lpBuffer;
 
     DPRINT("CsrDefineDosDevice entered, Flags:%d, DeviceName:%wZ, TargetName:%wZ\n",
-           ApiMessage->Data.DefineDosDeviceRequest.dwFlags,
-           &ApiMessage->Data.DefineDosDeviceRequest.DeviceName,
-           &ApiMessage->Data.DefineDosDeviceRequest.TargetName);
+           DefineDosDeviceRequest->dwFlags,
+           &DefineDosDeviceRequest->DeviceName,
+           &DefineDosDeviceRequest->TargetName);
 
     Matched = AddHistory = FALSE;
     HistoryEntry = NULL;
     AdminSid = SystemSid = WorldSid = NULL;
     SecurityDescriptor = NULL;
     ListHead = &DosDeviceHistory;
-    dwFlags = ApiMessage->Data.DefineDosDeviceRequest.dwFlags;
+    dwFlags = DefineDosDeviceRequest->dwFlags;
 
     /* Validate the flags */
     if ( (dwFlags & 0xFFFFFFF0) ||
@@ -351,14 +421,13 @@ CSR_API(BaseSrvDefineDosDevice)
     {
         Status =
             RtlUpcaseUnicodeString(&RequestDeviceName,
-                                   &ApiMessage->Data.DefineDosDeviceRequest.DeviceName,
+                                   &DefineDosDeviceRequest->DeviceName,
                                    TRUE);
         if (! NT_SUCCESS(Status))
             _SEH2_LEAVE;
 
-        RequestLinkTarget =
-            &ApiMessage->Data.DefineDosDeviceRequest.TargetName;
-        lpBuffer = (PWSTR) RtlAllocateHeap(Win32CsrApiHeap,
+        RequestLinkTarget = &DefineDosDeviceRequest->TargetName;
+        lpBuffer = (PWSTR) RtlAllocateHeap(BaseSrvHeap,
                                            HEAP_ZERO_MEMORY,
                                            RequestDeviceName.MaximumLength + 5 * sizeof(WCHAR));
         if (! lpBuffer)
@@ -392,7 +461,7 @@ CSR_API(BaseSrvDefineDosDevice)
                 LinkTarget.Length = 0;
                 LinkTarget.MaximumLength = Length;
                 LinkTarget.Buffer = (PWSTR)
-                    RtlAllocateHeap(Win32CsrApiHeap,
+                    RtlAllocateHeap(BaseSrvHeap,
                                     HEAP_ZERO_MEMORY,
                                     Length);
                 if (! LinkTarget.Buffer)
@@ -444,9 +513,9 @@ CSR_API(BaseSrvDefineDosDevice)
                     Entry = ListHead->Flink;
                     while (Entry != ListHead)
                     {
-                        HistoryEntry = (PCSRSS_DOS_DEVICE_HISTORY_ENTRY)
+                        HistoryEntry = (PBASE_DOS_DEVICE_HISTORY_ENTRY)
                             CONTAINING_RECORD(Entry,
-                                              CSRSS_DOS_DEVICE_HISTORY_ENTRY,
+                                              BASE_DOS_DEVICE_HISTORY_ENTRY,
                                               Entry);
                         Matched =
                             ! RtlCompareUnicodeString(&RequestDeviceName,
@@ -473,9 +542,9 @@ CSR_API(BaseSrvDefineDosDevice)
                     Entry = ListHead->Flink;
                     while (Entry != ListHead)
                     {
-                        HistoryEntry = (PCSRSS_DOS_DEVICE_HISTORY_ENTRY)
+                        HistoryEntry = (PBASE_DOS_DEVICE_HISTORY_ENTRY)
                             CONTAINING_RECORD(Entry,
-                                              CSRSS_DOS_DEVICE_HISTORY_ENTRY,
+                                              BASE_DOS_DEVICE_HISTORY_ENTRY,
                                               Entry);
                         Matched =
                             ! RtlCompareUnicodeString(&RequestDeviceName,
@@ -551,10 +620,10 @@ CSR_API(BaseSrvDefineDosDevice)
 
         if (AddHistory)
         {
-            HistoryEntry = (PCSRSS_DOS_DEVICE_HISTORY_ENTRY)
-                RtlAllocateHeap(Win32CsrApiHeap,
+            HistoryEntry = (PBASE_DOS_DEVICE_HISTORY_ENTRY)
+                RtlAllocateHeap(BaseSrvHeap,
                                 HEAP_ZERO_MEMORY,
-                                sizeof(CSRSS_DOS_DEVICE_HISTORY_ENTRY));
+                                sizeof(BASE_DOS_DEVICE_HISTORY_ENTRY));
             if (! HistoryEntry)
             {
                 DPRINT1("Failed to allocate memory\n");
@@ -563,7 +632,7 @@ CSR_API(BaseSrvDefineDosDevice)
             }
 
             HistoryEntry->Target.Buffer =
-                RtlAllocateHeap(Win32CsrApiHeap,
+                RtlAllocateHeap(BaseSrvHeap,
                                 HEAP_ZERO_MEMORY,
                                 LinkTarget.Length);
             if (! HistoryEntry->Target.Buffer)
@@ -579,7 +648,7 @@ CSR_API(BaseSrvDefineDosDevice)
                                  &LinkTarget);
 
             HistoryEntry->Device.Buffer =
-                RtlAllocateHeap(Win32CsrApiHeap,
+                RtlAllocateHeap(BaseSrvHeap,
                                 HEAP_ZERO_MEMORY,
                                 RequestDeviceName.Length);
             if (! HistoryEntry->Device.Buffer)
@@ -641,7 +710,7 @@ CSR_API(BaseSrvDefineDosDevice)
             RtlLengthSid(WorldSid);
         Length = sizeof(ACL) + SidLength + 3 * sizeof(ACCESS_ALLOWED_ACE);
 
-        SecurityDescriptor = RtlAllocateHeap(Win32CsrApiHeap,
+        SecurityDescriptor = RtlAllocateHeap(BaseSrvHeap,
                                              0,
                                              SECURITY_DESCRIPTOR_MIN_LENGTH + Length);
         if (! SecurityDescriptor)
@@ -723,15 +792,15 @@ CSR_API(BaseSrvDefineDosDevice)
     {
         (void) RtlLeaveCriticalSection(&BaseDefineDosDeviceCritSec);
         if (DeviceName.Buffer)
-            (void) RtlFreeHeap(Win32CsrApiHeap,
+            (void) RtlFreeHeap(BaseSrvHeap,
                                0,
                                DeviceName.Buffer);
         if (LinkTarget.Buffer)
-            (void) RtlFreeHeap(Win32CsrApiHeap,
+            (void) RtlFreeHeap(BaseSrvHeap,
                                0,
                                LinkTarget.Buffer);
         if (SecurityDescriptor)
-            (void) RtlFreeHeap(Win32CsrApiHeap,
+            (void) RtlFreeHeap(BaseSrvHeap,
                                0,
                                SecurityDescriptor);
         if (LinkHandle)
@@ -746,14 +815,14 @@ CSR_API(BaseSrvDefineDosDevice)
         if (HistoryEntry)
         {
             if (HistoryEntry->Target.Buffer)
-                (void) RtlFreeHeap(Win32CsrApiHeap,
+                (void) RtlFreeHeap(BaseSrvHeap,
                                    0,
                                    HistoryEntry->Target.Buffer);
             if (HistoryEntry->Device.Buffer)
-                (void) RtlFreeHeap(Win32CsrApiHeap,
+                (void) RtlFreeHeap(BaseSrvHeap,
                                    0,
                                    HistoryEntry->Device.Buffer);
-            (void) RtlFreeHeap(Win32CsrApiHeap,
+            (void) RtlFreeHeap(BaseSrvHeap,
                                0,
                                HistoryEntry);
         }
@@ -762,40 +831,6 @@ CSR_API(BaseSrvDefineDosDevice)
 
     DPRINT("CsrDefineDosDevice Exit, Statux: 0x%x\n", Status);
     return Status;
-}
-
-VOID BaseCleanupDefineDosDevice(VOID)
-{
-    PLIST_ENTRY Entry, ListHead;
-    PCSRSS_DOS_DEVICE_HISTORY_ENTRY HistoryEntry;
-
-    (void) RtlDeleteCriticalSection(&BaseDefineDosDeviceCritSec);
-
-    ListHead = &DosDeviceHistory;
-    Entry = ListHead->Flink;
-    while (Entry != ListHead)
-    {
-        HistoryEntry = (PCSRSS_DOS_DEVICE_HISTORY_ENTRY)
-            CONTAINING_RECORD(Entry,
-                              CSRSS_DOS_DEVICE_HISTORY_ENTRY,
-                              Entry);
-        Entry = Entry->Flink;
-
-        if (HistoryEntry)
-        {
-            if (HistoryEntry->Target.Buffer)
-                (void) RtlFreeHeap(Win32CsrApiHeap,
-                                   0,
-                                   HistoryEntry->Target.Buffer);
-            if (HistoryEntry->Device.Buffer)
-                (void) RtlFreeHeap(Win32CsrApiHeap,
-                                   0,
-                                   HistoryEntry->Device.Buffer);
-            (void) RtlFreeHeap(Win32CsrApiHeap,
-                               0,
-                               HistoryEntry);
-        }
-    }
 }
 
 

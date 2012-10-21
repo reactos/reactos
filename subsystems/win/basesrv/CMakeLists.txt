@@ -1,6 +1,5 @@
 
-include_directories(${REACTOS_SOURCE_DIR}/subsystems/win32/csrss/include
-                    ${REACTOS_SOURCE_DIR}/include/reactos/subsys)
+include_directories(${REACTOS_SOURCE_DIR}/include/reactos/subsys)
 
 spec2def(basesrv.dll basesrv.spec)
 
@@ -14,7 +13,7 @@ add_library(basesrv SHARED ${SOURCE})
 
 target_link_libraries(basesrv ${PSEH_LIB})
 
-set_module_type(basesrv win32dll)
+set_module_type(basesrv nativedll) # win32dll
 
 add_importlibs(basesrv ntdll csrsrv)
 

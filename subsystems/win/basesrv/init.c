@@ -14,6 +14,11 @@
 HANDLE DllHandle = NULL;
 HANDLE BaseApiPort = NULL;
 
+/* Memory */
+HANDLE BaseSrvHeap = NULL;          // Our own heap.
+HANDLE BaseSrvSharedHeap = NULL;    // Shared heap with CSR. (CsrSrvSharedSectionHeap)
+PBASE_STATIC_SERVER_DATA BaseStaticServerData = NULL;   // Data that we can share amongst processes. Initialized inside BaseSrvSharedHeap.
+
 extern LIST_ENTRY DosDeviceHistory;
 extern RTL_CRITICAL_SECTION BaseDefineDosDeviceCritSec;
 
@@ -27,12 +32,12 @@ PCSR_API_ROUTINE BaseServerApiDispatchTable[BasepMaxApiNumber] =
     BaseSrvGetTempFile,
     BaseSrvExitProcess,
     // BaseSrvDebugProcess,
-    BaseSrvCheckVDM,
-    BaseSrvUpdateVDMEntry,
+    // BaseSrvCheckVDM,
+    // BaseSrvUpdateVDMEntry,
     // BaseSrvGetNextVDMCommand,
     // BaseSrvExitVDM,
     // BaseSrvIsFirstVDM,
-    BaseSrvGetVDMExitCode,
+    // BaseSrvGetVDMExitCode,
     // BaseSrvSetReenterCount,
     BaseSrvSetProcessShutdownParam,
     BaseSrvGetProcessShutdownParam,
@@ -56,12 +61,12 @@ BOOLEAN BaseServerApiServerValidTable[BasepMaxApiNumber] =
     TRUE,    // SrvGetTempFile,
     FALSE,   // SrvExitProcess,
     // FALSE,   // SrvDebugProcess,
-    TRUE,    // SrvCheckVDM,
-    TRUE,    // SrvUpdateVDMEntry
+    // TRUE,    // SrvCheckVDM,
+    // TRUE,    // SrvUpdateVDMEntry
     // TRUE,    // SrvGetNextVDMCommand
     // TRUE,    // SrvExitVDM
     // TRUE,    // SrvIsFirstVDM
-    TRUE,    // SrvGetVDMExitCode
+    // TRUE,    // SrvGetVDMExitCode
     // TRUE,    // SrvSetReenterCount
     TRUE,    // SrvSetProcessShutdownParam
     TRUE,    // SrvGetProcessShutdownParam
@@ -86,12 +91,12 @@ PCHAR BaseServerApiNameTable[BasepMaxApiNumber] =
     "BaseGetTempFile",
     "BaseExitProcess",
     // "BaseDebugProcess",
-    "BaseCheckVDM",
-    "BaseUpdateVDMEntry",
+    // "BaseCheckVDM",
+    // "BaseUpdateVDMEntry",
     // "BaseGetNextVDMCommand",
     // "BaseExitVDM",
     // "BaseIsFirstVDM",
-    "BaseGetVDMExitCode",
+    // "BaseGetVDMExitCode",
     // "BaseSetReenterCount",
     "BaseSetProcessShutdownParam",
     "BaseGetProcessShutdownParam",
@@ -112,9 +117,126 @@ PCHAR BaseServerApiNameTable[BasepMaxApiNumber] =
 
 /* FUNCTIONS ******************************************************************/
 
+NTSTATUS
+NTAPI
+CreateBaseAcls(OUT PACL* Dacl,
+               OUT PACL* RestrictedDacl)
+{
+    PSID SystemSid, WorldSid, RestrictedSid;
+    SID_IDENTIFIER_AUTHORITY NtAuthority = {SECURITY_NT_AUTHORITY};
+    SID_IDENTIFIER_AUTHORITY WorldAuthority = {SECURITY_WORLD_SID_AUTHORITY};
+    NTSTATUS Status;
+    // UCHAR KeyValueBuffer[0x40];
+    // PKEY_VALUE_PARTIAL_INFORMATION KeyValuePartialInfo;
+    // UNICODE_STRING KeyName;
+    // ULONG ProtectionMode = 0;
+    ULONG AclLength; // , ResultLength;
+    // HANDLE hKey;
+    // OBJECT_ATTRIBUTES ObjectAttributes;
+
+    /* Open the Session Manager Key */
+    /*
+    RtlInitUnicodeString(&KeyName, SM_REG_KEY);
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &KeyName,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+    Status = NtOpenKey(&hKey, KEY_READ, &ObjectAttributes);
+    if (NT_SUCCESS(Status))
+    {
+        /\* Read the key value *\/
+        RtlInitUnicodeString(&KeyName, L"ProtectionMode");
+        Status = NtQueryValueKey(hKey,
+                                 &KeyName,
+                                 KeyValuePartialInformation,
+                                 KeyValueBuffer,
+                                 sizeof(KeyValueBuffer),
+                                 &ResultLength);
+
+        /\* Make sure it's what we expect it to be *\/
+        KeyValuePartialInfo = (PKEY_VALUE_PARTIAL_INFORMATION)KeyValueBuffer;
+        if ((NT_SUCCESS(Status)) && (KeyValuePartialInfo->Type == REG_DWORD) &&
+            (*(PULONG)KeyValuePartialInfo->Data))
+        {
+            /\* Save the Protection Mode *\/
+            // ProtectionMode = *(PULONG)KeyValuePartialInfo->Data;
+        }
+
+        /\* Close the handle *\/
+        NtClose(hKey);
+    }
+    */
+
+    /* Allocate the System SID */
+    Status = RtlAllocateAndInitializeSid(&NtAuthority,
+                                         1, SECURITY_LOCAL_SYSTEM_RID,
+                                         0, 0, 0, 0, 0, 0, 0,
+                                         &SystemSid);
+    ASSERT(NT_SUCCESS(Status));
+
+    /* Allocate the World SID */
+    Status = RtlAllocateAndInitializeSid(&WorldAuthority,
+                                         1, SECURITY_WORLD_RID,
+                                         0, 0, 0, 0, 0, 0, 0,
+                                         &WorldSid);
+    ASSERT(NT_SUCCESS(Status));
+
+    /* Allocate the restricted SID */
+    Status = RtlAllocateAndInitializeSid(&NtAuthority,
+                                         1, SECURITY_RESTRICTED_CODE_RID,
+                                         0, 0, 0, 0, 0, 0, 0,
+                                         &RestrictedSid);
+    ASSERT(NT_SUCCESS(Status));
+
+    /* Allocate one ACL with 3 ACEs each for one SID */
+    AclLength = sizeof(ACL) + 3 * sizeof(ACCESS_ALLOWED_ACE) +
+                RtlLengthSid(SystemSid) +
+                RtlLengthSid(RestrictedSid) +
+                RtlLengthSid(WorldSid);
+    *Dacl = RtlAllocateHeap(BaseSrvHeap, 0, AclLength);
+    ASSERT(*Dacl != NULL);
+
+    /* Set the correct header fields */
+    Status = RtlCreateAcl(*Dacl, AclLength, ACL_REVISION2);
+    ASSERT(NT_SUCCESS(Status));
+
+    /* Give the appropriate rights to each SID */
+    /* FIXME: Should check SessionId/ProtectionMode */
+    Status = RtlAddAccessAllowedAce(*Dacl, ACL_REVISION2, DIRECTORY_QUERY | DIRECTORY_TRAVERSE | DIRECTORY_CREATE_OBJECT | DIRECTORY_CREATE_SUBDIRECTORY | READ_CONTROL, WorldSid);
+    ASSERT(NT_SUCCESS(Status));
+    Status = RtlAddAccessAllowedAce(*Dacl, ACL_REVISION2, DIRECTORY_ALL_ACCESS, SystemSid);
+    ASSERT(NT_SUCCESS(Status));
+    Status = RtlAddAccessAllowedAce(*Dacl, ACL_REVISION2, DIRECTORY_TRAVERSE, RestrictedSid);
+    ASSERT(NT_SUCCESS(Status));
+
+    /* Now allocate the restricted DACL */
+    *RestrictedDacl = RtlAllocateHeap(BaseSrvHeap, 0, AclLength);
+    ASSERT(*RestrictedDacl != NULL);
+
+    /* Initialize it */
+    Status = RtlCreateAcl(*RestrictedDacl, AclLength, ACL_REVISION2);
+    ASSERT(NT_SUCCESS(Status));
+
+    /* And add the same ACEs as before */
+    /* FIXME: Not really fully correct */
+    Status = RtlAddAccessAllowedAce(*RestrictedDacl, ACL_REVISION2, DIRECTORY_QUERY | DIRECTORY_TRAVERSE | DIRECTORY_CREATE_OBJECT | DIRECTORY_CREATE_SUBDIRECTORY | READ_CONTROL, WorldSid);
+    ASSERT(NT_SUCCESS(Status));
+    Status = RtlAddAccessAllowedAce(*RestrictedDacl, ACL_REVISION2, DIRECTORY_ALL_ACCESS, SystemSid);
+    ASSERT(NT_SUCCESS(Status));
+    Status = RtlAddAccessAllowedAce(*RestrictedDacl, ACL_REVISION2, DIRECTORY_TRAVERSE, RestrictedSid);
+    ASSERT(NT_SUCCESS(Status));
+
+    /* The SIDs are captured, can free them now */
+    RtlFreeHeap(BaseSrvHeap, 0, SystemSid);
+    RtlFreeHeap(BaseSrvHeap, 0, WorldSid);
+    RtlFreeHeap(BaseSrvHeap, 0, RestrictedSid);
+    return Status;
+}
+
 VOID
 NTAPI
-BasepFakeStaticServerData(VOID)
+BaseInitializeStaticServerData(IN PCSR_SERVER_DLL LoadedServerDll)
 {
     NTSTATUS Status;
     WCHAR Buffer[MAX_PATH];
@@ -147,6 +269,10 @@ BasepFakeStaticServerData(VOID)
         {0}
     };
 
+    /* Initialize memory */
+    BaseSrvHeap = RtlGetProcessHeap();  // Initialize our own heap.
+    BaseSrvSharedHeap = LoadedServerDll->SharedSection; // Get the CSR shared heap.
+
     /* Get the session ID */
     SessionId = NtCurrentPeb()->SessionId;
 
@@ -175,7 +301,7 @@ BasepFakeStaticServerData(VOID)
     RtlInitUnicodeString(&BnoString, Buffer);
 
     /* Allocate the server data */
-    BaseStaticServerData = RtlAllocateHeap(CsrSrvSharedSectionHeap,
+    BaseStaticServerData = RtlAllocateHeap(BaseSrvSharedHeap,
                                            HEAP_ZERO_MEMORY,
                                            sizeof(BASE_STATIC_SERVER_DATA));
     ASSERT(BaseStaticServerData != NULL);
@@ -191,7 +317,7 @@ BasepFakeStaticServerData(VOID)
 
     /* Make a shared heap copy of the Windows directory */
     BaseStaticServerData->WindowsDirectory = BaseSrvWindowsDirectory;
-    HeapBuffer = RtlAllocateHeap(CsrSrvSharedSectionHeap,
+    HeapBuffer = RtlAllocateHeap(BaseSrvSharedHeap,
                                  0,
                                  BaseSrvWindowsDirectory.MaximumLength);
     ASSERT(HeapBuffer);
@@ -202,7 +328,7 @@ BasepFakeStaticServerData(VOID)
 
     /* Make a shared heap copy of the System directory */
     BaseStaticServerData->WindowsSystemDirectory = BaseSrvWindowsSystemDirectory;
-    HeapBuffer = RtlAllocateHeap(CsrSrvSharedSectionHeap,
+    HeapBuffer = RtlAllocateHeap(BaseSrvSharedHeap,
                                  0,
                                  BaseSrvWindowsSystemDirectory.MaximumLength);
     ASSERT(HeapBuffer);
@@ -220,7 +346,7 @@ BasepFakeStaticServerData(VOID)
     BaseStaticServerData->NamedObjectDirectory = BnoString;
     BaseStaticServerData->NamedObjectDirectory.MaximumLength = BnoString.Length +
                                                                sizeof(UNICODE_NULL);
-    HeapBuffer = RtlAllocateHeap(CsrSrvSharedSectionHeap,
+    HeapBuffer = RtlAllocateHeap(BaseSrvSharedHeap,
                                  0,
                                  BaseStaticServerData->NamedObjectDirectory.MaximumLength);
     ASSERT(HeapBuffer);
@@ -272,7 +398,7 @@ BasepFakeStaticServerData(VOID)
     BaseStaticServerData->IsWowTaskReady = FALSE;
 
     /* Allocate a security descriptor and create it */
-    BnoSd = RtlAllocateHeap(CsrHeap, 0, 1024);
+    BnoSd = RtlAllocateHeap(BaseSrvHeap, 0, 1024);
     ASSERT(BnoSd);
     Status = RtlCreateSecurityDescriptor(BnoSd, SECURITY_DESCRIPTOR_REVISION);
     ASSERT(NT_SUCCESS(Status));
@@ -376,13 +502,14 @@ BasepFakeStaticServerData(VOID)
     }
 
     /* Finally, set the pointer */
-    CsrSrvSharedStaticServerData[CSR_CONSOLE] = BaseStaticServerData;
+    // CsrSrvSharedStaticServerData[CSR_CONSOLE] = BaseStaticServerData;
+    LoadedServerDll->SharedSection = BaseStaticServerData;
 }
 
 
 VOID WINAPI BaseStaticServerThread(PVOID x)
 {
-    NTSTATUS Status = STATUS_SUCCESS;
+    // NTSTATUS Status = STATUS_SUCCESS;
     PPORT_MESSAGE Request = (PPORT_MESSAGE)x;
     PPORT_MESSAGE Reply = NULL;
     ULONG MessageType = 0;
@@ -396,7 +523,7 @@ VOID WINAPI BaseStaticServerThread(PVOID x)
     {
         default:
             Reply = Request;
-            Status = NtReplyPort(BaseApiPort, Reply);
+            /* Status =*/ NtReplyPort(BaseApiPort, Reply);
             break;
     }
 }
@@ -427,8 +554,7 @@ CSR_SERVER_DLL_INIT(ServerDllInitialization)
     LoadedServerDll->SizeOfProcessData = 0;
     LoadedServerDll->ConnectCallback = NULL;
     LoadedServerDll->DisconnectCallback = NULL;
-
-    BasepFakeStaticServerData();
+    BaseInitializeStaticServerData(LoadedServerDll);
 
     RtlInitializeCriticalSection(&BaseDefineDosDeviceCritSec);
     InitializeListHead(&DosDeviceHistory);
