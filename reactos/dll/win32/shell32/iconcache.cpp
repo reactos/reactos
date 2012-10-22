@@ -321,7 +321,8 @@ fail:
  *  appends an icon pair to the end of the cache
  */
 static INT SIC_IconAppend (LPCWSTR sSourceFile, INT dwSourceIndex, HICON hSmallIcon, HICON hBigIcon, DWORD dwFlags)
-{    LPSIC_ENTRY lpsice;
+{
+    LPSIC_ENTRY lpsice;
     INT ret, index, index1;
     WCHAR path[MAX_PATH];
     TRACE("%s %i %p %p\n", debugstr_w(sSourceFile), dwSourceIndex, hSmallIcon ,hBigIcon);
@@ -340,23 +341,38 @@ static INT SIC_IconAppend (LPCWSTR sSourceFile, INT dwSourceIndex, HICON hSmallI
     index = DPA_InsertPtr(sic_hdpa, 0x7fff, lpsice);
     if ( INVALID_INDEX == index )
     {
-      HeapFree(GetProcessHeap(), 0, lpsice->sSourceFile);
-      SHFree(lpsice);
-      ret = INVALID_INDEX;
+        ret = INVALID_INDEX;
+        goto leave;
     }
-    else
+
+    index = ImageList_AddIcon (ShellSmallIconList, hSmallIcon);
+    index1= ImageList_AddIcon (ShellBigIconList, hBigIcon);
+
+    /* Something went wrong when allocating a new image in the list. Abort. */
+    if((index == -1) || (index1 == -1))
     {
-      index = ImageList_AddIcon (ShellSmallIconList, hSmallIcon);
-      index1= ImageList_AddIcon (ShellBigIconList, hBigIcon);
-
-      if (index!=index1)
-      {
-        FIXME("iconlists out of sync 0x%x 0x%x\n", index, index1);
-      }
-      lpsice->dwListIndex = index;
-      ret = lpsice->dwListIndex;
+        WARN("Something went wrong when adding the icon to the list: small - 0x%x, big - 0x%x.\n",
+            index, index1);
+        if(index != -1) ImageList_Remove(ShellSmallIconList, index);
+        if(index1 != -1) ImageList_Remove(ShellBigIconList, index1);
+        ret = INVALID_INDEX;
+        goto leave;
     }
 
+    if (index!=index1)
+    {
+        FIXME("iconlists out of sync 0x%x 0x%x\n", index, index1);
+        /* What to do ???? */
+    }
+    lpsice->dwListIndex = index;
+    ret = lpsice->dwListIndex;
+
+leave:
+    if(ret == INVALID_INDEX)
+    {
+        HeapFree(GetProcessHeap(), 0, lpsice->sSourceFile);
+        SHFree(lpsice);
+    }
     LeaveCriticalSection(&SHELL32_SicCS);
     return ret;
 }
@@ -367,23 +383,23 @@ static INT SIC_IconAppend (LPCWSTR sSourceFile, INT dwSourceIndex, HICON hSmallI
  *  gets small/big icon by number from a file
  */
 static INT SIC_LoadIcon (LPCWSTR sSourceFile, INT dwSourceIndex, DWORD dwFlags)
-{    HICON    hiconLarge=0;
-    HICON    hiconSmall=0;
-    HICON     hiconLargeShortcut;
-    HICON    hiconSmallShortcut;
-
-#if defined(__CYGWIN__) || defined (__MINGW32__) || defined(_MSC_VER)
+{
+    HICON hiconLarge=0;
+    HICON hiconSmall=0;
+    UINT ret;
     static UINT (WINAPI*PrivateExtractIconExW)(LPCWSTR,int,HICON*,HICON*,UINT) = NULL;
 
-    if (!PrivateExtractIconExW) {
+    if (!PrivateExtractIconExW)
+    {
         HMODULE hUser32 = GetModuleHandleA("user32");
         PrivateExtractIconExW = (UINT(WINAPI*)(LPCWSTR,int,HICON*,HICON*,UINT)) GetProcAddress(hUser32, "PrivateExtractIconExW");
     }
 
-        if (PrivateExtractIconExW)
+    if (PrivateExtractIconExW)
+    {
         PrivateExtractIconExW(sSourceFile, dwSourceIndex, &hiconLarge, &hiconSmall, 1);
+    }
     else
-#endif
     {
         PrivateExtractIconsW(sSourceFile, dwSourceIndex, 32, 32, &hiconLarge, NULL, 1, 0);
         PrivateExtractIconsW(sSourceFile, dwSourceIndex, 16, 16, &hiconSmall, NULL, 1, 0);
@@ -391,29 +407,36 @@ static INT SIC_LoadIcon (LPCWSTR sSourceFile, INT dwSourceIndex, DWORD dwFlags)
 
     if ( !hiconLarge ||  !hiconSmall)
     {
-      WARN("failure loading icon %i from %s (%p %p)\n", dwSourceIndex, debugstr_w(sSourceFile), hiconLarge, hiconSmall);
-      return -1;
+        WARN("failure loading icon %i from %s (%p %p)\n", dwSourceIndex, debugstr_w(sSourceFile), hiconLarge, hiconSmall);
+        if(hiconLarge) DestroyIcon(hiconLarge);
+        if(hiconSmall) DestroyIcon(hiconSmall);
+        return INVALID_INDEX;
     }
 
     if (0 != (dwFlags & GIL_FORSHORTCUT))
     {
-      hiconLargeShortcut = SIC_OverlayShortcutImage(hiconLarge, TRUE);
-      hiconSmallShortcut = SIC_OverlayShortcutImage(hiconSmall, FALSE);
-      if (NULL != hiconLargeShortcut && NULL != hiconSmallShortcut)
-      {
-        hiconLarge = hiconLargeShortcut;
-        hiconSmall = hiconSmallShortcut;
-      }
-      else
-      {
-        WARN("Failed to create shortcut overlayed icons\n");
-        if (NULL != hiconLargeShortcut) DestroyIcon(hiconLargeShortcut);
-        if (NULL != hiconSmallShortcut) DestroyIcon(hiconSmallShortcut);
-        dwFlags &= ~ GIL_FORSHORTCUT;
-      }
+        HICON hiconLargeShortcut = SIC_OverlayShortcutImage(hiconLarge, TRUE);
+        HICON hiconSmallShortcut = SIC_OverlayShortcutImage(hiconSmall, FALSE);
+        if (NULL != hiconLargeShortcut && NULL != hiconSmallShortcut)
+        {
+            DestroyIcon(hiconLarge);
+            DestroyIcon(hiconSmall);
+            hiconLarge = hiconLargeShortcut;
+            hiconSmall = hiconSmallShortcut;
+        }
+        else
+        {
+            WARN("Failed to create shortcut overlayed icons\n");
+            if (NULL != hiconLargeShortcut) DestroyIcon(hiconLargeShortcut);
+            if (NULL != hiconSmallShortcut) DestroyIcon(hiconSmallShortcut);
+            dwFlags &= ~ GIL_FORSHORTCUT;
+        }
     }
 
-    return SIC_IconAppend (sSourceFile, dwSourceIndex, hiconSmall, hiconLarge, dwFlags);
+    ret = SIC_IconAppend (sSourceFile, dwSourceIndex, hiconSmall, hiconLarge, dwFlags);
+    DestroyIcon(hiconLarge);
+    DestroyIcon(hiconSmall);
+    return ret;
 }
 /*****************************************************************************
  * SIC_GetIconIndex            [internal]
