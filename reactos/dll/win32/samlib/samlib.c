@@ -171,7 +171,7 @@ SamAddMultipleMembersToAlias(IN SAM_HANDLE AliasHandle,
         return STATUS_INVALID_PARAMETER_2;
 
     Buffer.Count = MemberCount;
-    Buffer.Sids  = (PSAMPR_SID_INFORMATION)MemberIds;
+    Buffer.Sids = (PSAMPR_SID_INFORMATION)MemberIds;
 
     RpcTryExcept
     {
@@ -1325,6 +1325,114 @@ SamQuerySecurityObject(IN SAM_HANDLE ObjectHandle,
     RpcEndExcept;
 
     *SecurityDescriptor = LocalSecurityDescriptor.SecurityDescriptor;
+
+    return Status;
+}
+
+
+NTSTATUS
+NTAPI
+SamRemoveMemberFromAlias(IN SAM_HANDLE AliasHandle,
+                         IN PSID MemberId)
+{
+    NTSTATUS Status;
+
+    TRACE("SamRemoveMemberFromAlias(%p %ul)\n",
+          AliasHandle, MemberId);
+
+    RpcTryExcept
+    {
+        Status = SamrRemoveMemberFromAlias((SAMPR_HANDLE)AliasHandle,
+                                           MemberId);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
+
+NTSTATUS
+NTAPI
+SamRemoveMemberFromForeignDomain(IN SAM_HANDLE DomainHandle,
+                                 IN PSID MemberId)
+{
+    NTSTATUS Status;
+
+    TRACE("SamRemoveMemberFromForeignDomain(%p %ul)\n",
+          DomainHandle, MemberId);
+
+    RpcTryExcept
+    {
+        Status = SamrRemoveMemberFromForeignDomain((SAMPR_HANDLE)DomainHandle,
+                                                   MemberId);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
+
+NTSTATUS
+NTAPI
+SamRemoveMemberFromGroup(IN SAM_HANDLE GroupHandle,
+                         IN ULONG MemberId)
+{
+    NTSTATUS Status;
+
+    TRACE("SamRemoveMemberFromGroup(%p %ul)\n",
+          GroupHandle, MemberId);
+
+    RpcTryExcept
+    {
+        Status = SamrRemoveMemberFromGroup((SAMPR_HANDLE)GroupHandle,
+                                           MemberId);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
+
+NTSTATUS
+NTAPI
+SamRemoveMultipleMembersFromAlias(IN SAM_HANDLE AliasHandle,
+                                  IN PSID *MemberIds,
+                                  IN ULONG MemberCount)
+{
+    SAMPR_PSID_ARRAY Buffer;
+    NTSTATUS Status;
+
+    TRACE("SamRemoveMultipleMembersFromAlias(%p %p %lu)\n",
+          AliasHandle, MemberIds, MemberCount);
+
+    if (MemberIds == NULL)
+        return STATUS_INVALID_PARAMETER_2;
+
+    Buffer.Count = MemberCount;
+    Buffer.Sids = (PSAMPR_SID_INFORMATION)MemberIds;
+
+    RpcTryExcept
+    {
+        Status = SamrRemoveMultipleMembersFromAlias((SAMPR_HANDLE)AliasHandle,
+                                                    &Buffer);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
 
     return Status;
 }

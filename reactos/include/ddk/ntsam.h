@@ -542,6 +542,22 @@ SamRemoveMemberFromAlias(IN SAM_HANDLE AliasHandle,
 
 NTSTATUS
 NTAPI
+SamRemoveMemberFromForeignDomain(IN SAM_HANDLE DomainHandle,
+                                 IN PSID MemberId);
+
+NTSTATUS
+NTAPI
+SamRemoveMemberFromGroup(IN SAM_HANDLE GroupHandle,
+                         IN ULONG MemberId);
+
+NTSTATUS
+NTAPI
+SamRemoveMultipleMembersFromAlias(IN SAM_HANDLE AliasHandle,
+                                  IN PSID *MemberIds,
+                                  IN ULONG MemberCount);
+
+NTSTATUS
+NTAPI
 SamRidToSid(IN SAM_HANDLE ObjectHandle,
             IN ULONG Rid,
             OUT PSID *Sid);

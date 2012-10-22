@@ -38,10 +38,10 @@
 @ stdcall SamQueryInformationGroup(ptr long ptr)
 @ stdcall SamQueryInformationUser(ptr long ptr)
 @ stdcall SamQuerySecurityObject(ptr long ptr)
-@ stub SamRemoveMemberFromAlias
-@ stub SamRemoveMemberFromForeignDomain
-@ stub SamRemoveMemberFromGroup
-@ stub SamRemoveMultipleMembersFromAlias
+@ stdcall SamRemoveMemberFromAlias(ptr long)
+@ stdcall SamRemoveMemberFromForeignDomain(ptr long)
+@ stdcall SamRemoveMemberFromGroup(ptr long)
+@ stdcall SamRemoveMultipleMembersFromAlias(ptr ptr long)
 @ stdcall SamRidToSid(ptr long ptr)
 @ stdcall SamSetInformationAlias(ptr long ptr)
 @ stdcall SamSetInformationDomain(ptr long ptr)
