@@ -17,7 +17,5 @@ set_module_type(basesrv nativedll) # win32dll
 
 add_importlibs(basesrv ntdll csrsrv)
 
-#add_pch(basesrv w32csr.h)
-
 add_dependencies(basesrv bugcodes)
 add_cd_file(TARGET basesrv DESTINATION reactos/system32 FOR all)
