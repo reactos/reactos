@@ -103,8 +103,9 @@ typedef struct _HUB_DEVICE_EXTENSION
     PVOID RootHubHandle;
     USB_BUS_INTERFACE_USBDI_V2 DeviceInterface;
 
-
     UNICODE_STRING SymbolicLinkName;
+    ULONG InstanceCount;
+
 } HUB_DEVICE_EXTENSION, *PHUB_DEVICE_EXTENSION;
 
 // createclose.c

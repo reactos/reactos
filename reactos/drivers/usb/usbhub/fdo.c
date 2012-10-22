@@ -819,6 +819,7 @@ CreateDeviceIds(
     LPWSTR DeviceString;
     WCHAR Buffer[200];
     PHUB_CHILDDEVICE_EXTENSION UsbChildExtension;
+    PHUB_DEVICE_EXTENSION HubDeviceExtension;
     PUSB_DEVICE_DESCRIPTOR DeviceDescriptor;
     PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor;
     PUSB_INTERFACE_DESCRIPTOR InterfaceDescriptor;
@@ -827,6 +828,9 @@ CreateDeviceIds(
     // get child device extension
     //
     UsbChildExtension = (PHUB_CHILDDEVICE_EXTENSION)UsbChildDeviceObject->DeviceExtension;
+
+    // get hub device extension
+    HubDeviceExtension = (PHUB_DEVICE_EXTENSION) UsbChildExtension->ParentDeviceObject->DeviceExtension;
 
     //
     // get device descriptor
@@ -1011,10 +1015,12 @@ CreateDeviceIds(
     //
     if (UsbChildExtension->DeviceDesc.iSerialNumber)
     {
+       LPWSTR SerialBuffer = NULL;
+
         Status = GetUsbStringDescriptor(UsbChildDeviceObject,
                                         UsbChildExtension->DeviceDesc.iSerialNumber,
                                         0,
-                                        (PVOID*)&UsbChildExtension->usInstanceId.Buffer,
+                                        (PVOID*)&SerialBuffer,
                                         &UsbChildExtension->usInstanceId.Length);
         if (!NT_SUCCESS(Status))
         {
@@ -1022,15 +1028,31 @@ CreateDeviceIds(
             return Status;
         }
 
-        UsbChildExtension->usInstanceId.MaximumLength = UsbChildExtension->usInstanceId.Length;
-        DPRINT("Usb InstanceId %wZ\n", &UsbChildExtension->usInstanceId);
+        // construct instance id buffer
+        Index = swprintf(Buffer, L"%04d&%s", HubDeviceExtension->InstanceCount, SerialBuffer) + 1;
+        UsbChildExtension->usInstanceId.Buffer = (LPWSTR)ExAllocatePool(NonPagedPool, Index * sizeof(WCHAR));
+        if (UsbChildExtension->usInstanceId.Buffer == NULL)
+        {
+            DPRINT1("Error: failed to allocate %lu bytes\n", Index * sizeof(WCHAR));
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            return Status;
+        }
+
+        //
+        // copy instance id
+        //
+        RtlCopyMemory(UsbChildExtension->usInstanceId.Buffer, Buffer, Index * sizeof(WCHAR));
+        UsbChildExtension->usInstanceId.Length = UsbChildExtension->usInstanceId.MaximumLength = Index * sizeof(WCHAR);
+        ExFreePool(SerialBuffer);
+
+        DPRINT("Usb InstanceId %wZ InstanceCount %x\n", &UsbChildExtension->usInstanceId, HubDeviceExtension->InstanceCount);
     }
     else
     {
        //
        // the device did not provide a serial number, lets create a pseudo instance id
        //
-       Index = swprintf(Buffer, L"0&%04d", UsbChildExtension->PortNumber) + 1;
+       Index = swprintf(Buffer, L"%04d&%04d", HubDeviceExtension->InstanceCount, UsbChildExtension->PortNumber) + 1;
        UsbChildExtension->usInstanceId.Buffer = (LPWSTR)ExAllocatePool(NonPagedPool, Index * sizeof(WCHAR));
        if (UsbChildExtension->usInstanceId.Buffer == NULL)
        {
@@ -1304,6 +1326,7 @@ CreateUsbChildDeviceObject(
     }
 
     HubDeviceExtension->ChildDeviceObject[ChildDeviceCount] = NewChildDeviceObject;
+    HubDeviceExtension->InstanceCount++;
 
     IoInvalidateDeviceRelations(RootHubDeviceObject, BusRelations);
     return STATUS_SUCCESS;
