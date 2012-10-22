@@ -109,6 +109,22 @@ typedef struct
     //
     UCHAR StopReadReport;
 
+    //
+    // mouse absolute
+    //
+    UCHAR MouseAbsolute;
+
+    //
+    // value caps x
+    //
+    HIDP_VALUE_CAPS ValueCapsX;
+
+    //
+    // value caps y button
+    //
+    HIDP_VALUE_CAPS ValueCapsY;
+
+
 }MOUHID_DEVICE_EXTENSION, *PMOUHID_DEVICE_EXTENSION;
 
 #define WHEEL_DELTA 120

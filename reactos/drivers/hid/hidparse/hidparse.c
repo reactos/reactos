@@ -309,6 +309,38 @@ HidP_GetScaledUsageValue(
 HIDAPI
 NTSTATUS
 NTAPI
+HidP_GetUsageValue(
+  IN HIDP_REPORT_TYPE  ReportType,
+  IN USAGE  UsagePage,
+  IN USHORT  LinkCollection,
+  IN USAGE  Usage,
+  OUT PULONG  UsageValue,
+  IN PHIDP_PREPARSED_DATA  PreparsedData,
+  IN PCHAR  Report,
+  IN ULONG  ReportLength)
+{
+    HID_PARSER Parser;
+
+    //
+    // sanity check
+    //
+    ASSERT(ReportType == HidP_Input || ReportType == HidP_Output || ReportType == HidP_Feature);
+
+    //
+    // init parser
+    //
+    HidParser_InitParser(AllocFunction, FreeFunction, ZeroFunction, CopyFunction, DebugFunction, &Parser);
+
+    //
+    // get scaled usage value
+    //
+    return HidParser_GetUsageValue(&Parser, PreparsedData, ReportType, UsagePage, LinkCollection, Usage, UsageValue, Report, ReportLength);
+}
+
+
+HIDAPI
+NTSTATUS
+NTAPI
 HidP_TranslateUsageAndPagesToI8042ScanCodes(
    IN PUSAGE_AND_PAGE  ChangedUsageList,
    IN ULONG  UsageListLength,
@@ -399,24 +431,6 @@ HidP_GetLinkCollectionNodes(
     OUT PHIDP_LINK_COLLECTION_NODE  LinkCollectionNodes,
     IN OUT PULONG  LinkCollectionNodesLength,
     IN PHIDP_PREPARSED_DATA  PreparsedData)
-{
-    UNIMPLEMENTED
-    ASSERT(FALSE);
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-HIDAPI
-NTSTATUS
-NTAPI
-HidP_GetUsageValue(
-  IN HIDP_REPORT_TYPE  ReportType,
-  IN USAGE  UsagePage,
-  IN USHORT  LinkCollection,
-  IN USAGE  Usage,
-  OUT PULONG  UsageValue,
-  IN PHIDP_PREPARSED_DATA  PreparsedData,
-  IN PCHAR  Report,
-  IN ULONG  ReportLength)
 {
     UNIMPLEMENTED
     ASSERT(FALSE);
