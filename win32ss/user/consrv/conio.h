@@ -1,4 +1,4 @@
-/* $Id$
+/* $Id: conio.h 55617 2012-02-15 20:29:08Z ion $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -149,22 +149,6 @@ VOID FASTCALL ConioUnpause(PCSRSS_CONSOLE Console, UINT Flags);
 VOID FASTCALL ConioConsoleCtrlEvent(DWORD Event, PCSR_PROCESS ProcessData);
 VOID FASTCALL ConioConsoleCtrlEventTimeout(DWORD Event, PCSR_PROCESS ProcessData,
                                            DWORD Timeout);
-CSR_API(CsrAllocConsole);
-CSR_API(CsrFreeConsole);
-CSR_API(CsrSetConsoleMode);
-CSR_API(CsrGetConsoleMode);
-CSR_API(CsrSetTitle);
-CSR_API(CsrGetTitle);
-CSR_API(CsrHardwareStateProperty);
-CSR_API(CsrGetConsoleWindow);
-CSR_API(CsrSetConsoleIcon);
-CSR_API(CsrGetConsoleCodePage);
-CSR_API(CsrSetConsoleCodePage);
-CSR_API(CsrGetConsoleOutputCodePage);
-CSR_API(CsrSetConsoleOutputCodePage);
-CSR_API(CsrGetProcessList);
-CSR_API(CsrGenerateCtrlEvent);
-CSR_API(CsrGetConsoleSelectionInfo);
 
 /* coninput.c */
 #define ConioLockConsole(ProcessData, Handle, Ptr, Access) \
@@ -172,12 +156,6 @@ CSR_API(CsrGetConsoleSelectionInfo);
 #define ConioUnlockConsole(Console) \
     Win32CsrUnlockObject((Object_t *) Console)
 void WINAPI ConioProcessKey(MSG *msg, PCSRSS_CONSOLE Console, BOOL TextMode);
-CSR_API(CsrReadConsole);
-CSR_API(CsrReadInputEvent);
-CSR_API(CsrFlushInputBuffer);
-CSR_API(CsrGetNumberOfConsoleInputEvents);
-CSR_API(CsrPeekConsoleInput);
-CSR_API(CsrWriteConsoleInput);
 
 /* conoutput.c */
 #define ConioRectHeight(Rect) \
@@ -196,43 +174,12 @@ NTSTATUS FASTCALL CsrInitConsoleScreenBuffer(PCSRSS_CONSOLE Console, PCSRSS_SCRE
 VOID WINAPI ConioDeleteScreenBuffer(PCSRSS_SCREEN_BUFFER Buffer);
 DWORD FASTCALL ConioEffectiveCursorSize(PCSRSS_CONSOLE Console, DWORD Scale);
 
-CSR_API(CsrWriteConsole);
-CSR_API(CsrGetScreenBufferInfo);
-CSR_API(CsrSetCursor);
-CSR_API(CsrWriteConsoleOutputChar);
-CSR_API(CsrFillOutputChar);
-CSR_API(CsrWriteConsoleOutputAttrib);
-CSR_API(CsrFillOutputAttrib);
-CSR_API(CsrGetCursorInfo);
-CSR_API(CsrSetCursorInfo);
-CSR_API(CsrSetTextAttrib);
-CSR_API(CsrCreateScreenBuffer);
-CSR_API(CsrSetScreenBuffer);
-CSR_API(CsrWriteConsoleOutput);
-CSR_API(CsrScrollConsoleScreenBuffer);
-CSR_API(CsrReadConsoleOutputChar);
-CSR_API(CsrReadConsoleOutputAttrib);
-CSR_API(CsrReadConsoleOutput);
-CSR_API(CsrSetScreenBufferSize);
-
 /* alias.c */
 VOID IntDeleteAllAliases(struct tagALIAS_HEADER *RootHeader);
-CSR_API(CsrAddConsoleAlias);
-CSR_API(CsrGetConsoleAlias);
-CSR_API(CsrGetAllConsoleAliases);
-CSR_API(CsrGetAllConsoleAliasesLength);
-CSR_API(CsrGetConsoleAliasesExes);
-CSR_API(CsrGetConsoleAliasesExesLength);
 
 /* lineinput.c */
 struct tagHISTORY_BUFFER;
 VOID FASTCALL HistoryDeleteBuffer(struct tagHISTORY_BUFFER *Hist);
-CSR_API(CsrGetCommandHistoryLength);
-CSR_API(CsrGetCommandHistory);
-CSR_API(CsrExpungeCommandHistory);
-CSR_API(CsrSetHistoryNumberCommands);
-CSR_API(CsrGetHistoryInfo);
-CSR_API(CsrSetHistoryInfo);
 VOID FASTCALL LineInputKeyDown(PCSRSS_CONSOLE Console, KEY_EVENT_RECORD *KeyEvent);
 
 /* EOF */

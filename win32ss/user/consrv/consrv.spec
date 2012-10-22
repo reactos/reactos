@@ -1,0 +1,1 @@
+@ stdcall ConServerDllInitialization(ptr)

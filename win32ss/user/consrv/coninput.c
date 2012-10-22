@@ -1,5 +1,5 @@
 /*
- * reactos/subsys/csrss/win32csr/conio.c
+ * reactos/win32ss/user/consrv/conio.c
  *
  * Console I/O functions
  *
@@ -22,7 +22,7 @@
 
 /* FUNCTIONS *****************************************************************/
 
-CSR_API(CsrReadConsole)
+CSR_API(SrvReadConsole)
 {
     PLIST_ENTRY CurrentEntry;
     ConsoleInput *Input;
@@ -34,7 +34,7 @@ CSR_API(CsrReadConsole)
     PCSRSS_CONSOLE Console;
     NTSTATUS Status;
 
-    DPRINT("CsrReadConsole\n");
+    DPRINT("SrvReadConsole\n");
 
     CharSize = (ApiMessage->Data.ReadConsoleRequest.Unicode ? sizeof(WCHAR) : sizeof(CHAR));
 
@@ -63,7 +63,7 @@ CSR_API(CsrReadConsole)
         {
             /* Starting a new line */
             Console->LineMaxSize = max(256, nNumberOfCharsToRead);
-            Console->LineBuffer = HeapAlloc(Win32CsrApiHeap, 0, Console->LineMaxSize * sizeof(WCHAR));
+            Console->LineBuffer = HeapAlloc(ConSrvHeap, 0, Console->LineMaxSize * sizeof(WCHAR));
             if (Console->LineBuffer == NULL)
             {
                 Status = STATUS_NO_MEMORY;
@@ -103,7 +103,7 @@ CSR_API(CsrReadConsole)
                 LineInputKeyDown(Console, &Input->InputEvent.Event.KeyEvent);
                 ApiMessage->Data.ReadConsoleRequest.ControlKeyState = Input->InputEvent.Event.KeyEvent.dwControlKeyState;
             }
-            HeapFree(Win32CsrApiHeap, 0, Input);
+            HeapFree(ConSrvHeap, 0, Input);
         }
 
         /* Check if we have a complete line to read from */
@@ -120,7 +120,7 @@ CSR_API(CsrReadConsole)
             if (Console->LinePos == Console->LineSize)
             {
                 /* Entire line has been read */
-                HeapFree(Win32CsrApiHeap, 0, Console->LineBuffer);
+                HeapFree(ConSrvHeap, 0, Console->LineBuffer);
                 Console->LineBuffer = NULL;
             }
             Status = STATUS_SUCCESS;
@@ -151,7 +151,7 @@ CSR_API(CsrReadConsole)
                     ConsoleInputUnicodeCharToAnsiChar(Console, &Buffer[i++], &Char);
                 Status = STATUS_SUCCESS; /* did read something */
             }
-            HeapFree(Win32CsrApiHeap, 0, Input);
+            HeapFree(ConSrvHeap, 0, Input);
         }
     }
 done:
@@ -208,7 +208,7 @@ ConioProcessChar(PCSRSS_CONSOLE Console,
     }
 
     /* add event to the queue */
-    ConInRec = RtlAllocateHeap(Win32CsrApiHeap, 0, sizeof(ConsoleInput));
+    ConInRec = RtlAllocateHeap(ConSrvHeap, 0, sizeof(ConsoleInput));
     if (ConInRec == NULL)
         return STATUS_INSUFFICIENT_RESOURCES;
     ConInRec->InputEvent = *InputEvent;
@@ -465,7 +465,7 @@ CSR_API(CsrReadInputEvent)
             Done = TRUE;
         }
 
-        HeapFree(Win32CsrApiHeap, 0, Input);
+        HeapFree(ConSrvHeap, 0, Input);
     }
 
     if (Done)
@@ -483,14 +483,14 @@ CSR_API(CsrReadInputEvent)
     return Status;
 }
 
-CSR_API(CsrFlushInputBuffer)
+CSR_API(SrvFlushConsoleInputBuffer)
 {
     PLIST_ENTRY CurrentEntry;
     PCSRSS_CONSOLE Console;
     ConsoleInput* Input;
     NTSTATUS Status;
 
-    DPRINT("CsrFlushInputBuffer\n");
+    DPRINT("SrvFlushConsoleInputBuffer\n");
 
     Status = ConioLockConsole(CsrGetClientThread()->Process,
                               ApiMessage->Data.FlushInputBufferRequest.ConsoleInput,
@@ -507,7 +507,7 @@ CSR_API(CsrFlushInputBuffer)
         CurrentEntry = RemoveHeadList(&Console->InputEvents);
         Input = CONTAINING_RECORD(CurrentEntry, ConsoleInput, ListEntry);
         /* Destroy the event */
-        HeapFree(Win32CsrApiHeap, 0, Input);
+        HeapFree(ConSrvHeap, 0, Input);
     }
     ResetEvent(Console->ActiveEvent);
 
@@ -516,14 +516,14 @@ CSR_API(CsrFlushInputBuffer)
     return STATUS_SUCCESS;
 }
 
-CSR_API(CsrGetNumberOfConsoleInputEvents)
+CSR_API(SrvGetConsoleNumberOfInputEvents)
 {
     NTSTATUS Status;
     PCSRSS_CONSOLE Console;
     PLIST_ENTRY CurrentItem;
     DWORD NumEvents;
 
-    DPRINT("CsrGetNumberOfConsoleInputEvents\n");
+    DPRINT("SrvGetConsoleNumberOfInputEvents\n");
 
     Status = ConioLockConsole(CsrGetClientThread()->Process, ApiMessage->Data.GetNumInputEventsRequest.ConsoleHandle, &Console, GENERIC_READ);
     if (! NT_SUCCESS(Status))
@@ -548,7 +548,7 @@ CSR_API(CsrGetNumberOfConsoleInputEvents)
     return STATUS_SUCCESS;
 }
 
-CSR_API(CsrPeekConsoleInput)
+CSR_API(SrvGetConsoleInput)
 {
     NTSTATUS Status;
     PCSR_PROCESS ProcessData = CsrGetClientThread()->Process;
@@ -559,7 +559,7 @@ CSR_API(CsrPeekConsoleInput)
     ConsoleInput* Item;
     UINT NumItems;
 
-    DPRINT("CsrPeekConsoleInput\n");
+    DPRINT("SrvGetConsoleInput\n");
 
     Status = ConioLockConsole(ProcessData, ApiMessage->Data.GetNumInputEventsRequest.ConsoleHandle, &Console, GENERIC_READ);
     if(! NT_SUCCESS(Status))
@@ -606,7 +606,7 @@ CSR_API(CsrPeekConsoleInput)
     return STATUS_SUCCESS;
 }
 
-CSR_API(CsrWriteConsoleInput)
+CSR_API(SrvWriteConsoleInput)
 {
     PINPUT_RECORD InputRecord;
     PCSR_PROCESS ProcessData = CsrGetClientThread()->Process;
@@ -615,7 +615,7 @@ CSR_API(CsrWriteConsoleInput)
     DWORD Length;
     DWORD i;
 
-    DPRINT("CsrWriteConsoleInput\n");
+    DPRINT("SrvWriteConsoleInput\n");
 
     Status = ConioLockConsole(ProcessData, ApiMessage->Data.WriteConsoleInputRequest.ConsoleHandle, &Console, GENERIC_WRITE);
     if (! NT_SUCCESS(Status))

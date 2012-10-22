@@ -1,4 +1,4 @@
-/* $Id$
+/* $Id: win32csr.h 55699 2012-02-19 06:44:09Z ion $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -14,30 +14,31 @@
 extern HANDLE Win32CsrApiHeap;
 extern HINSTANCE Win32CsrDllHandle;
 
+
+
+/********** Move that to consrv ************/
+
 typedef struct Object_tt
 {
-  LONG Type;
-  struct tagCSRSS_CONSOLE *Console;
-  LONG AccessRead, AccessWrite;
-  LONG ExclusiveRead, ExclusiveWrite;
-  LONG HandleCount;
+    LONG Type;
+    struct tagCSRSS_CONSOLE *Console;
+    LONG AccessRead, AccessWrite;
+    LONG ExclusiveRead, ExclusiveWrite;
+    LONG HandleCount;
 } Object_t;
 
 typedef struct _CSRSS_HANDLE
 {
-  Object_t *Object;
-  DWORD Access;
-  BOOL Inheritable;
-  DWORD ShareMode;
+    Object_t *Object;
+    DWORD Access;
+    BOOL Inheritable;
+    DWORD ShareMode;
 } CSRSS_HANDLE, *PCSRSS_HANDLE;
 
-typedef VOID (WINAPI *CSR_CLEANUP_OBJECT_PROC)(Object_t *Object);
-
-typedef struct tagCSRSS_OBJECT_DEFINITION
-{
-  LONG Type;
-  CSR_CLEANUP_OBJECT_PROC CsrCleanupObjectProc;
-} CSRSS_OBJECT_DEFINITION, *PCSRSS_OBJECT_DEFINITION;
+BOOL FASTCALL Win32CsrValidateBuffer(PCSR_PROCESS ProcessData,
+                                     PVOID Buffer,
+                                     SIZE_T NumElements,
+                                     SIZE_T ElementSize);
 
 /* handle.c */
 NTSTATUS FASTCALL Win32CsrInsertObject(PCSR_PROCESS ProcessData,
@@ -52,9 +53,11 @@ NTSTATUS FASTCALL Win32CsrLockObject(PCSR_PROCESS ProcessData,
                                      DWORD Access,
                                      long Type);
 VOID FASTCALL Win32CsrUnlockObject(Object_t *Object);
+
 NTSTATUS FASTCALL Win32CsrReleaseObject(PCSR_PROCESS ProcessData,
                                         HANDLE Object);
 VOID WINAPI Win32CsrReleaseConsole(PCSR_PROCESS ProcessData);
+
 NTSTATUS WINAPI Win32CsrDuplicateHandleTable(PCSR_PROCESS SourceProcessData,
                                              PCSR_PROCESS TargetProcessData);
 CSR_API(CsrGetHandle);
@@ -63,10 +66,24 @@ CSR_API(CsrVerifyHandle);
 CSR_API(CsrDuplicateHandle);
 CSR_API(CsrGetInputWaitHandle);
 
-BOOL FASTCALL Win32CsrValidateBuffer(PCSR_PROCESS ProcessData,
-                                     PVOID Buffer,
-                                     SIZE_T NumElements,
-                                     SIZE_T ElementSize);
+/*******************************************/
+
+
+
+
+
+
+
+/*
+typedef VOID (WINAPI *CSR_CLEANUP_OBJECT_PROC)(Object_t *Object);
+
+typedef struct tagCSRSS_OBJECT_DEFINITION
+{
+  LONG Type;
+  CSR_CLEANUP_OBJECT_PROC CsrCleanupObjectProc;
+} CSRSS_OBJECT_DEFINITION, *PCSRSS_OBJECT_DEFINITION;
+*/
+
 NTSTATUS FASTCALL Win32CsrEnumProcesses(CSRSS_ENUM_PROCESS_PROC EnumProc,
                                         PVOID Context);
 
@@ -74,7 +91,5 @@ NTSTATUS FASTCALL Win32CsrEnumProcesses(CSRSS_ENUM_PROCESS_PROC EnumProc,
 CSR_API(CsrExitReactos);
 CSR_API(CsrSetLogonNotifyWindow);
 CSR_API(CsrRegisterLogonProcess);
-
-CSR_API(CsrSoundSentry);
 
 /* EOF */

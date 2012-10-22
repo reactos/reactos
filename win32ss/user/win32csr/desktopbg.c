@@ -29,6 +29,9 @@
 #include "w32csr.h"
 #include <debug.h>
 
+/***
+ *** Move it into winsrv
+ ***/
 #define DESKTOP_WINDOW_ATOM 32769
 
 #define PM_SHOW_DESKTOP 1

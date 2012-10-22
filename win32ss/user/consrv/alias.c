@@ -55,7 +55,7 @@ IntCreateAliasHeader(LPCWSTR lpExeName)
     PALIAS_HEADER Entry;
     UINT dwLength = wcslen(lpExeName) + 1;
 
-    Entry = RtlAllocateHeap(Win32CsrApiHeap, 0, sizeof(ALIAS_HEADER) + sizeof(WCHAR) * dwLength);
+    Entry = RtlAllocateHeap(ConSrvHeap, 0, sizeof(ALIAS_HEADER) + sizeof(WCHAR) * dwLength);
     if (!Entry)
         return Entry;
 
@@ -142,7 +142,7 @@ IntCreateAliasEntry(LPCWSTR lpSource, LPCWSTR lpTarget)
     dwSource = wcslen(lpSource) + 1;
     dwTarget = wcslen(lpTarget) + 1;
 
-    Entry = RtlAllocateHeap(Win32CsrApiHeap, 0, sizeof(ALIAS_ENTRY) + sizeof(WCHAR) * (dwSource + dwTarget));
+    Entry = RtlAllocateHeap(ConSrvHeap, 0, sizeof(ALIAS_ENTRY) + sizeof(WCHAR) * (dwSource + dwTarget));
     if (!Entry)
         return Entry;
 
@@ -254,7 +254,7 @@ IntDeleteAliasEntry(PALIAS_HEADER Header, PALIAS_ENTRY Entry)
         if (CurEntry == Entry)
         {
             *LastLink = Entry->Next;
-            RtlFreeHeap(Win32CsrApiHeap, 0, Entry);
+            RtlFreeHeap(ConSrvHeap, 0, Entry);
             return;
         }
         LastLink = &CurEntry->Next;
@@ -271,13 +271,13 @@ IntDeleteAllAliases(PALIAS_HEADER RootHeader)
         for (Entry = Header->Data; Entry; Entry = NextEntry)
         {
             NextEntry = Entry->Next;
-            RtlFreeHeap(Win32CsrApiHeap, 0, Entry);
+            RtlFreeHeap(ConSrvHeap, 0, Entry);
         }
-        RtlFreeHeap(Win32CsrApiHeap, 0, Header);
+        RtlFreeHeap(ConSrvHeap, 0, Header);
     }
 }
 
-CSR_API(CsrAddConsoleAlias)
+CSR_API(SrvAddConsoleAlias)
 {
     PCSRSS_CONSOLE Console;
     PALIAS_HEADER Header;
@@ -295,7 +295,7 @@ CSR_API(CsrAddConsoleAlias)
     lpExeName = (WCHAR*)((ULONG_PTR)ApiMessage + sizeof(CSR_API_MESSAGE) + ApiMessage->Data.AddConsoleAlias.SourceLength * sizeof(WCHAR));
     lpTarget = (ApiMessage->Data.AddConsoleAlias.TargetLength != 0 ? lpExeName + ApiMessage->Data.AddConsoleAlias.ExeLength : NULL);
 
-    DPRINT("CsrAddConsoleAlias entered ApiMessage %p lpSource %p lpExeName %p lpTarget %p\n", ApiMessage, lpSource, lpExeName, lpTarget);
+    DPRINT("SrvAddConsoleAlias entered ApiMessage %p lpSource %p lpExeName %p lpTarget %p\n", ApiMessage, lpSource, lpExeName, lpTarget);
 
     if (lpExeName == NULL || lpSource == NULL)
     {
@@ -349,7 +349,7 @@ CSR_API(CsrAddConsoleAlias)
     return STATUS_SUCCESS;
 }
 
-CSR_API(CsrGetConsoleAlias)
+CSR_API(SrvGetConsoleAlias)
 {
     PCSRSS_CONSOLE Console;
     PALIAS_HEADER Header;
@@ -364,7 +364,7 @@ CSR_API(CsrGetConsoleAlias)
     lpTarget = ApiMessage->Data.GetConsoleAlias.TargetBuffer;
 
 
-    DPRINT("CsrGetConsoleAlias entered lpExeName %p lpSource %p TargetBuffer %p TargetBufferLength %u\n",
+    DPRINT("SrvGetConsoleAlias entered lpExeName %p lpSource %p TargetBuffer %p TargetBufferLength %u\n",
            lpExeName, lpSource, lpTarget, ApiMessage->Data.GetConsoleAlias.TargetBufferLength);
 
     if (ApiMessage->Data.GetConsoleAlias.ExeLength == 0 || lpTarget == NULL ||
@@ -413,7 +413,7 @@ CSR_API(CsrGetConsoleAlias)
     return STATUS_SUCCESS;
 }
 
-CSR_API(CsrGetAllConsoleAliases)
+CSR_API(SrvGetConsoleAliases)
 {
     PCSRSS_CONSOLE Console;
     ULONG BytesWritten;
@@ -461,7 +461,7 @@ CSR_API(CsrGetAllConsoleAliases)
     return STATUS_SUCCESS;
 }
 
-CSR_API(CsrGetAllConsoleAliasesLength)
+CSR_API(SrvGetConsoleAliasesLength)
 {
     PCSRSS_CONSOLE Console;
     PALIAS_HEADER Header;
@@ -491,13 +491,13 @@ CSR_API(CsrGetAllConsoleAliasesLength)
     return STATUS_SUCCESS;
 }
 
-CSR_API(CsrGetConsoleAliasesExes)
+CSR_API(SrvGetConsoleAliasExes)
 {
     PCSRSS_CONSOLE Console;
     UINT BytesWritten;
     UINT ExesLength;
 
-    DPRINT("CsrGetConsoleAliasesExes entered\n");
+    DPRINT("SrvGetConsoleAliasExes entered\n");
 
     ApiMessage->Status = ConioConsoleFromProcessData(CsrGetClientThread()->Process, &Console);
     if (!NT_SUCCESS(ApiMessage->Status))
@@ -537,10 +537,10 @@ CSR_API(CsrGetConsoleAliasesExes)
     return STATUS_SUCCESS;
 }
 
-CSR_API(CsrGetConsoleAliasesExesLength)
+CSR_API(SrvGetConsoleAliasExesLength)
 {
     PCSRSS_CONSOLE Console;
-    DPRINT("CsrGetConsoleAliasesExesLength entered\n");
+    DPRINT("SrvGetConsoleAliasExesLength entered\n");
 
     ApiMessage->Status = ConioConsoleFromProcessData(CsrGetClientThread()->Process, &Console);
     if (NT_SUCCESS(ApiMessage->Status))

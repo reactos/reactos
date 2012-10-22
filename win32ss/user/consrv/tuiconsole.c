@@ -1,8 +1,8 @@
-/* $Id$
+/* $Id: tuiconsole.c 47693 2010-06-08 06:38:14Z jmorlan $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            subsys/csrss/win32csr/tuiconsole.c
+ * FILE:            win32ss/user/consrv/tuiconsole.c
  * PURPOSE:         Implementation of text-mode consoles
  */
 
@@ -161,7 +161,7 @@ TuiDrawRegion(PCSRSS_CONSOLE Console, SMALL_RECT *Region)
 
     ConsoleDrawSize = sizeof(CONSOLE_DRAW) +
                       (ConioRectWidth(Region) * ConioRectHeight(Region)) * 2;
-    ConsoleDraw = HeapAlloc(Win32CsrApiHeap, 0, ConsoleDrawSize);
+    ConsoleDraw = HeapAlloc(ConSrvHeap, 0, ConsoleDrawSize);
     if (NULL == ConsoleDraw)
     {
         DPRINT1("HeapAlloc failed\n");
@@ -180,11 +180,11 @@ TuiDrawRegion(PCSRSS_CONSOLE Console, SMALL_RECT *Region)
                           NULL, 0, ConsoleDraw, ConsoleDrawSize, &BytesReturned, NULL))
     {
         DPRINT1("Failed to draw console\n");
-        HeapFree(Win32CsrApiHeap, 0, ConsoleDraw);
+        HeapFree(ConSrvHeap, 0, ConsoleDraw);
         return;
     }
 
-    HeapFree(Win32CsrApiHeap, 0, ConsoleDraw);
+    HeapFree(ConSrvHeap, 0, ConsoleDraw);
 }
 
 static VOID WINAPI
@@ -437,7 +437,7 @@ TuiSwapConsole(int Next)
         SwapConsole = (0 < Next ? SwapConsole->Next : SwapConsole->Prev);
         Title.MaximumLength = RtlUnicodeStringToAnsiSize(&SwapConsole->Title);
         Title.Length = 0;
-        Buffer = HeapAlloc(Win32CsrApiHeap,
+        Buffer = HeapAlloc(ConSrvHeap,
                            0,
                            sizeof(COORD) + Title.MaximumLength);
         pos = (COORD *)Buffer;
@@ -454,7 +454,7 @@ TuiSwapConsole(int Next)
         {
             DPRINT1( "Error writing to console\n" );
         }
-        HeapFree(Win32CsrApiHeap, 0, Buffer);
+        HeapFree(ConSrvHeap, 0, Buffer);
         LeaveCriticalSection(&ActiveConsoleLock);
 
         return TRUE;

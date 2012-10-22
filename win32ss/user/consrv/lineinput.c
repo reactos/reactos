@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS CSRSS
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            subsystems/win32/csrss/win32csr/lineinput.c
+ * FILE:            win32ss/user/consrv/lineinput.c
  * PURPOSE:         Console line input functions
  * PROGRAMMERS:     Jeffrey Morlan
  */
@@ -40,15 +40,15 @@ HistoryCurrentBuffer(PCSRSS_CONSOLE Console)
     }
 
     /* Couldn't find the buffer, create a new one */
-    Hist = HeapAlloc(Win32CsrApiHeap, 0, sizeof(HISTORY_BUFFER) + ExeName.Length);
+    Hist = HeapAlloc(ConSrvHeap, 0, sizeof(HISTORY_BUFFER) + ExeName.Length);
     if (!Hist)
         return NULL;
     Hist->MaxEntries = Console->HistoryBufferSize;
     Hist->NumEntries = 0;
-    Hist->Entries = HeapAlloc(Win32CsrApiHeap, 0, Hist->MaxEntries * sizeof(UNICODE_STRING));
+    Hist->Entries = HeapAlloc(ConSrvHeap, 0, Hist->MaxEntries * sizeof(UNICODE_STRING));
     if (!Hist->Entries)
     {
-        HeapFree(Win32CsrApiHeap, 0, Hist);
+        HeapFree(ConSrvHeap, 0, Hist);
         return NULL;
     }
     Hist->ExeName.Length = Hist->ExeName.MaximumLength = ExeName.Length;
@@ -142,12 +142,12 @@ HistoryDeleteBuffer(PHISTORY_BUFFER Hist)
         return;
     while (Hist->NumEntries != 0)
         RtlFreeUnicodeString(&Hist->Entries[--Hist->NumEntries]);
-    HeapFree(Win32CsrApiHeap, 0, Hist->Entries);
+    HeapFree(ConSrvHeap, 0, Hist->Entries);
     RemoveEntryList(&Hist->ListEntry);
-    HeapFree(Win32CsrApiHeap, 0, Hist);
+    HeapFree(ConSrvHeap, 0, Hist);
 }
 
-CSR_API(CsrGetCommandHistoryLength)
+CSR_API(SrvGetConsoleCommandHistoryLength)
 {
     PCSR_PROCESS ProcessData = CsrGetClientThread()->Process;
     PCSRSS_CONSOLE Console;
@@ -178,7 +178,7 @@ CSR_API(CsrGetCommandHistoryLength)
     return Status;
 }
 
-CSR_API(CsrGetCommandHistory)
+CSR_API(SrvGetConsoleCommandHistory)
 {
     PCSR_PROCESS ProcessData = CsrGetClientThread()->Process;
     PCSRSS_CONSOLE Console;
@@ -221,7 +221,7 @@ CSR_API(CsrGetCommandHistory)
     return Status;
 }
 
-CSR_API(CsrExpungeCommandHistory)
+CSR_API(SrvExpungeConsoleCommandHistory)
 {
     PCSR_PROCESS ProcessData = CsrGetClientThread()->Process;
     PCSRSS_CONSOLE Console;
@@ -245,7 +245,7 @@ CSR_API(CsrExpungeCommandHistory)
     return Status;
 }
 
-CSR_API(CsrSetHistoryNumberCommands)
+CSR_API(SrvSetConsoleNumberOfCommands)
 {
     PCSR_PROCESS ProcessData = CsrGetClientThread()->Process;
     PCSRSS_CONSOLE Console;
@@ -268,7 +268,7 @@ CSR_API(CsrSetHistoryNumberCommands)
         if (Hist)
         {
             OldEntryList = Hist->Entries;
-            NewEntryList = HeapAlloc(Win32CsrApiHeap, 0,
+            NewEntryList = HeapAlloc(ConSrvHeap, 0,
                                      MaxEntries * sizeof(UNICODE_STRING));
             if (!NewEntryList)
             {
@@ -286,7 +286,7 @@ CSR_API(CsrSetHistoryNumberCommands)
                 Hist->MaxEntries = MaxEntries;
                 Hist->Entries = memcpy(NewEntryList, Hist->Entries,
                                        Hist->NumEntries * sizeof(UNICODE_STRING));
-                HeapFree(Win32CsrApiHeap, 0, OldEntryList);
+                HeapFree(ConSrvHeap, 0, OldEntryList);
             }
         }
         ConioUnlockConsole(Console);
@@ -294,7 +294,7 @@ CSR_API(CsrSetHistoryNumberCommands)
     return Status;
 }
 
-CSR_API(CsrGetHistoryInfo)
+CSR_API(SrvGetConsoleHistory)
 {
     PCSRSS_CONSOLE Console;
     NTSTATUS Status = ConioConsoleFromProcessData(CsrGetClientThread()->Process, &Console);
@@ -308,7 +308,7 @@ CSR_API(CsrGetHistoryInfo)
     return Status;
 }
 
-CSR_API(CsrSetHistoryInfo)
+CSR_API(SrvSetConsoleHistory)
 {
     PCSRSS_CONSOLE Console;
     NTSTATUS Status = ConioConsoleFromProcessData(CsrGetClientThread()->Process, &Console);

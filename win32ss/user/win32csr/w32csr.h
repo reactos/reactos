@@ -12,16 +12,11 @@
 #include <conio.h>
 #include <csrplugin.h>
 #include <desktopbg.h>
-#include "guiconsole.h"
-#include "tuiconsole.h"
 
 /* Public Win32K Headers */
 #include <ntuser.h>
 
 #include "resource.h"
-
-/* shared header with console.dll */
-#include "console.h"
 
 VOID
 WINAPI

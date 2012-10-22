@@ -1,6 +1,3 @@
-/*
- * CSRSS Console management structures.
- */
 
 #ifndef __CONMSG_H__
 #define __CONMSG_H__
@@ -13,74 +10,101 @@
 #define CONSRV_SERVERDLL_INDEX      2
 #define CONSRV_FIRST_API_NUMBER     512
 
-/* w32 console server - move to con.h */
-CSR_SERVER_DLL_INIT(ConServerDllInitialization);
-
-// Windows NT 4 table, adapted from http://j00ru.vexillium.org/csrss_list/api_list.html#Windows_NT
-// It is for testing purposes. After that I will update it to 2k3 version and add stubs.
+// Windows 2k3 tables, adapted from http://j00ru.vexillium.org/csrss_list/api_list.html#Windows_2k3
+// plus a little bit of Windows 7. It is for testing purposes. After that I will add stubs.
+// Some names are also deduced from the subsystems/win32/csrss/csrsrv/server.c ones.
 typedef enum _CONSRV_API_NUMBER
 {
-    BasepCreateProcess = CONSRV_FIRST_API_NUMBER,
+    // ConsolepOpenConsole = CONSRV_FIRST_API_NUMBER,
+    ConsolepGetConsoleInput = CONSRV_FIRST_API_NUMBER,
+    ConsolepWriteConsoleInput,
+    ConsolepReadConsoleOutput,
+    ConsolepWriteConsoleOutput,
+    // ConsolepReadConsoleOutputString,
+    // ConsolepWriteConsoleOutputString,
+    // ConsolepFillConsoleOutput,
+    ConsolepGetMode,
+    // ConsolepGetNumberOfFonts,
+    ConsolepGetNumberOfInputEvents,
+    ConsolepGetScreenBufferInfo,
+    ConsolepGetCursorInfo,
+    // ConsolepGetMouseInfo,
+    // ConsolepGetFontInfo,
+    // ConsolepGetFontSize,
+    // ConsolepGetCurrentFont,
+    ConsolepSetMode,
+    ConsolepSetActiveScreenBuffer,
+    ConsolepFlushInputBuffer,
+    // ConsolepGetLargestWindowSize,
+    ConsolepSetScreenBufferSize,
+    // ConsolepSetCursorPosition,
+    ConsolepSetCursorInfo,
+    // ConsolepSetWindowInfo,
+    ConsolepScrollScreenBuffer,
+    // ConsolepSetTextAttribute,
+    // ConsolepSetFont,
+    ConsolepSetIcon,
+    ConsolepReadConsole,
+    ConsolepWriteConsole,
+    ConsolepDuplicateHandle,
+    // ConsolepGetHandleInformation,
+    // ConsolepSetHandleInformation,
+    ConsolepCloseHandle,
+    ConsolepVerifyIoHandle,
+    ConsolepAlloc,
+    ConsolepFree,
+    ConsolepGetTitle,
+    ConsolepSetTitle,
+    ConsolepCreateScreenBuffer,
+    // ConsolepInvalidateBitMapRect,
+    // ConsolepVDMOperation,
+    ConsolepSetCursor,
+    // ConsolepShowCursor,
+    // ConsolepMenuControl,
+    // ConsolepSetPalette,
+    // ConsolepSetDisplayMode,
+    // ConsolepRegisterVDM,
+    ConsolepGetHardwareState,
+    ConsolepSetHardwareState,
+    // ConsolepGetDisplayMode,
+    ConsolepAddAlias,
+    ConsolepGetAlias,
+    ConsolepGetAliasesLength,
+    ConsolepGetAliasExesLength,
+    ConsolepGetAliases,
+    ConsolepGetAliasExes,
+    ConsolepExpungeCommandHistory,
+    ConsolepSetNumberOfCommands,
+    ConsolepGetCommandHistoryLength,
+    ConsolepGetCommandHistory,
+    // ConsolepSetCommandHistoryMode,
+    ConsolepGetCP,
+    ConsolepSetCP,
+    // ConsolepSetKeyShortcuts,
+    // ConsolepSetMenuClose,
+    // ConsolepNotifyLastClose,
+    ConsolepGenerateCtrlEvent,
+    // ConsolepGetKeyboardLayoutName,
+    ConsolepGetConsoleWindow,
+    // ConsolepCharType,
+    // ConsolepSetLocalEUDC,
+    // ConsolepSetCursorMode,
+    // ConsolepGetCursorMode,
+    // ConsolepRegisterOS2,
+    // ConsolepSetOS2OemFormat,
+    // ConsolepGetNlsMode,
+    // ConsolepSetNlsMode,
+    // ConsolepRegisterConsoleIME,
+    // ConsolepUnregisterConsoleIME,
+    // ConsolepGetLangId,
+    // ConsolepAttach,
+    ConsolepGetSelectionInfo,
+    ConsolepGetProcessList,
+    ConsolepGetHistory,
+    ConsolepSetHistory,
 
-
-#define WRITE_CONSOLE                   (0x2)
-#define READ_CONSOLE                    (0x3)
-#define ALLOC_CONSOLE                   (0x4)
-#define FREE_CONSOLE                    (0x5)
-#define SCREEN_BUFFER_INFO              (0x7)
-#define SET_CURSOR                      (0x8)
-#define FILL_OUTPUT                     (0x9)
-#define READ_INPUT                      (0xA)
-#define WRITE_CONSOLE_OUTPUT_CHAR       (0xB)
-#define WRITE_CONSOLE_OUTPUT_ATTRIB     (0xC)
-#define FILL_OUTPUT_ATTRIB              (0xD)
-#define GET_CURSOR_INFO                 (0xE)
-#define SET_CURSOR_INFO                 (0xF)
-#define SET_ATTRIB                      (0x10)
-#define GET_CONSOLE_MODE                (0x11)
-#define SET_CONSOLE_MODE                (0x12)
-#define CREATE_SCREEN_BUFFER            (0x13)
-#define SET_SCREEN_BUFFER               (0x14)
-#define SET_TITLE                       (0x15)
-#define GET_TITLE                       (0x16)
-#define WRITE_CONSOLE_OUTPUT            (0x17)
-#define FLUSH_INPUT_BUFFER              (0x18)
-#define SCROLL_CONSOLE_SCREEN_BUFFER    (0x19)
-#define READ_CONSOLE_OUTPUT_CHAR        (0x1A)
-#define READ_CONSOLE_OUTPUT_ATTRIB      (0x1B)
-#define GET_NUM_INPUT_EVENTS            (0x1C)
-#define PEEK_CONSOLE_INPUT              (0x21)
-#define READ_CONSOLE_OUTPUT             (0x22)
-#define WRITE_CONSOLE_INPUT             (0x23)
-#define GET_INPUT_HANDLE                (0x24)
-#define GET_OUTPUT_HANDLE               (0x25)
-#define SETGET_CONSOLE_HW_STATE         (0x29)
-#define GET_CONSOLE_WINDOW              (0x2A)
-#define SET_CONSOLE_ICON                (0x2E)
-#define GET_CONSOLE_CP                  (0x31)
-#define SET_CONSOLE_CP                  (0x32)
-#define GET_CONSOLE_OUTPUT_CP           (0x33)
-#define SET_CONSOLE_OUTPUT_CP           (0x34)
-#define ADD_CONSOLE_ALIAS               (0x38)
-#define GET_CONSOLE_ALIAS               (0x39)
-#define GET_ALL_CONSOLE_ALIASES         (0x3A)
-#define GET_ALL_CONSOLE_ALIASES_LENGTH  (0x3B)
-#define GET_CONSOLE_ALIASES_EXES        (0x3C)
-#define GET_CONSOLE_ALIASES_EXES_LENGTH (0x3D)
-#define GENERATE_CTRL_EVENT             (0x3E)
-#define SET_SCREEN_BUFFER_SIZE          (0x40)
-#define GET_CONSOLE_SELECTION_INFO      (0x41)
-#define GET_COMMAND_HISTORY_LENGTH      (0x42)
-#define GET_COMMAND_HISTORY             (0x43)
-#define EXPUNGE_COMMAND_HISTORY         (0x44)
-#define SET_HISTORY_NUMBER_COMMANDS     (0x45)
-#define GET_HISTORY_INFO                (0x46)
-#define SET_HISTORY_INFO                (0x47)
-
-
-    BasepMaxApiNumber
+    ConsolepMaxApiNumber
 } CONSRV_API_NUMBER, *PCONSRV_API_NUMBER;
-
 
 
 #define CSRSS_MAX_WRITE_CONSOLE                 (LPC_MAX_DATA_LENGTH - CSR_API_MESSAGE_HEADER_SIZE(CSRSS_WRITE_CONSOLE))

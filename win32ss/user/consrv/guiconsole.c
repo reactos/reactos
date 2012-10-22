@@ -1,8 +1,8 @@
-/* $Id$
+/* $Id: guiconsole.c 57326 2012-09-18 21:45:00Z akhaldi $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            subsys/csrss/win32csr/guiconsole.c
+ * FILE:            win32ss/user/consrv/guiconsole.c
  * PURPOSE:         Implementation of gui-mode consoles
  */
 
@@ -13,7 +13,14 @@
 #include <debug.h>
 
 /* Not defined in any header file */
-extern VOID WINAPI PrivateCsrssManualGuiCheck(LONG Check);
+// extern VOID WINAPI PrivateCsrssManualGuiCheck(LONG Check);
+// From win32ss/user/win32csr/dllmain.c
+VOID
+WINAPI
+PrivateCsrssManualGuiCheck(LONG Check)
+{
+    NtUserCallOneParam(Check, ONEPARAM_ROUTINE_CSRSS_GUICHECK);
+}
 
 /* GLOBALS *******************************************************************/
 
@@ -730,7 +737,7 @@ GuiConsoleHandleNcCreate(HWND hWnd, CREATESTRUCTW *Create)
     {
         DPRINT1("GuiConsoleNcCreate: CreateFont failed\n");
         DeleteCriticalSection(&GuiData->Lock);
-        HeapFree(Win32CsrApiHeap, 0, GuiData);
+        HeapFree(ConSrvHeap, 0, GuiData);
         return FALSE;
     }
     Dc = GetDC(hWnd);
@@ -739,7 +746,7 @@ GuiConsoleHandleNcCreate(HWND hWnd, CREATESTRUCTW *Create)
         DPRINT1("GuiConsoleNcCreate: GetDC failed\n");
         DeleteObject(GuiData->Font);
         DeleteCriticalSection(&GuiData->Lock);
-        HeapFree(Win32CsrApiHeap, 0, GuiData);
+        HeapFree(ConSrvHeap, 0, GuiData);
         return FALSE;
     }
     OldFont = SelectObject(Dc, GuiData->Font);
@@ -749,7 +756,7 @@ GuiConsoleHandleNcCreate(HWND hWnd, CREATESTRUCTW *Create)
         ReleaseDC(hWnd, Dc);
         DeleteObject(GuiData->Font);
         DeleteCriticalSection(&GuiData->Lock);
-        HeapFree(Win32CsrApiHeap, 0, GuiData);
+        HeapFree(ConSrvHeap, 0, GuiData);
         return FALSE;
     }
     if (! GetTextMetricsW(Dc, &Metrics))
@@ -759,7 +766,7 @@ GuiConsoleHandleNcCreate(HWND hWnd, CREATESTRUCTW *Create)
         ReleaseDC(hWnd, Dc);
         DeleteObject(GuiData->Font);
         DeleteCriticalSection(&GuiData->Lock);
-        HeapFree(Win32CsrApiHeap, 0, GuiData);
+        HeapFree(ConSrvHeap, 0, GuiData);
         return FALSE;
     }
     GuiData->CharWidth = Metrics.tmMaxCharWidth;
@@ -1299,7 +1306,7 @@ GuiConsoleHandleNcDestroy(HWND hWnd)
     if (GuiData->ConsoleLibrary)
         FreeLibrary(GuiData->ConsoleLibrary);
 
-    HeapFree(Win32CsrApiHeap, 0, GuiData);
+    HeapFree(ConSrvHeap, 0, GuiData);
 }
 
 static COORD
@@ -1756,7 +1763,7 @@ GuiResizeBuffer(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER ScreenBuffer, COORD
     if (Size.X == ScreenBuffer->MaxX && Size.Y == ScreenBuffer->MaxY)
         return STATUS_SUCCESS;
 
-    Buffer = HeapAlloc(Win32CsrApiHeap, 0, Size.X * Size.Y * 2);
+    Buffer = HeapAlloc(ConSrvHeap, 0, Size.X * Size.Y * 2);
     if (!Buffer)
         return STATUS_NO_MEMORY;
 
@@ -1807,7 +1814,7 @@ GuiResizeBuffer(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER ScreenBuffer, COORD
     }
 
     (void)InterlockedExchangePointer((PVOID volatile  *)&ScreenBuffer->Buffer, Buffer);
-    HeapFree(Win32CsrApiHeap, 0, OldBuffer);
+    HeapFree(ConSrvHeap, 0, OldBuffer);
     ScreenBuffer->MaxX = Size.X;
     ScreenBuffer->MaxY = Size.Y;
     ScreenBuffer->VirtualY = 0;
@@ -2071,7 +2078,7 @@ GuiConsoleNotifyWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         SetWindowLongW(hWnd, GWL_USERDATA, 0);
         return 0;
     case PM_CREATE_CONSOLE:
-        Buffer = HeapAlloc(Win32CsrApiHeap, 0,
+        Buffer = HeapAlloc(ConSrvHeap, 0,
                            Console->Title.Length + sizeof(WCHAR));
         if (NULL != Buffer)
         {
@@ -2097,7 +2104,7 @@ GuiConsoleNotifyWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
                                     (PVOID) Console);
         if (NULL != Buffer)
         {
-            HeapFree(Win32CsrApiHeap, 0, Buffer);
+            HeapFree(ConSrvHeap, 0, Buffer);
         }
         if (NULL != NewWindow)
         {
@@ -2229,7 +2236,7 @@ GuiChangeTitle(PCSRSS_CONSOLE Console)
 {
     PWCHAR Buffer, Title;
 
-    Buffer = HeapAlloc(Win32CsrApiHeap, 0,
+    Buffer = HeapAlloc(ConSrvHeap, 0,
                        Console->Title.Length + sizeof(WCHAR));
     if (NULL != Buffer)
     {
@@ -2246,7 +2253,7 @@ GuiChangeTitle(PCSRSS_CONSOLE Console)
 
     if (NULL != Buffer)
     {
-        HeapFree(Win32CsrApiHeap, 0, Buffer);
+        HeapFree(ConSrvHeap, 0, Buffer);
     }
 
     return TRUE;
@@ -2331,7 +2338,7 @@ GuiInitConsole(PCSRSS_CONSOLE Console, int ShowCmd)
             return STATUS_UNSUCCESSFUL;
         }
     }
-    GuiData = HeapAlloc(Win32CsrApiHeap, HEAP_ZERO_MEMORY,
+    GuiData = HeapAlloc(ConSrvHeap, HEAP_ZERO_MEMORY,
                         sizeof(GUI_CONSOLE_DATA));
     if (!GuiData)
     {

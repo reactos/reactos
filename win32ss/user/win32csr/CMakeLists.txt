@@ -1,29 +1,18 @@
 
 include_directories(
     BEFORE .
-    ${REACTOS_SOURCE_DIR}/subsystems/win32/csrss/include
+    ${REACTOS_SOURCE_DIR}/subsystems/win32/csrsrv/include
     ${REACTOS_SOURCE_DIR}/include/reactos/subsys
     ${REACTOS_SOURCE_DIR}/include/reactos/drivers
-    ${REACTOS_SOURCE_DIR}/dll/cpl/console
     ${REACTOS_SOURCE_DIR}/win32ss/include)
 
 spec2def(win32csr.dll win32csr.spec)
 
-set_rc_compiler()
-
 list(APPEND SOURCE
-    alias.c
-    coninput.c
-    conoutput.c
-    console.c
     desktopbg.c
     dllmain.c
     exitros.c
-    guiconsole.c
-    handle.c
     harderror.c
-    lineinput.c
-    tuiconsole.c
     win32csr.rc
     ${CMAKE_CURRENT_BINARY_DIR}/win32csr.def)
 

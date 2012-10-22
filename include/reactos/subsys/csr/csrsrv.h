@@ -226,7 +226,7 @@ typedef struct _CSR_SERVER_DLL
     ULONG ApiBase; // ApiNumberBase
     ULONG HighestApiSupported; // MaxApiNumber
     PCSR_API_ROUTINE *DispatchTable;
-    PBOOLEAN ValidTable;
+    PBOOLEAN ValidTable; // Table of booleans which describe whether or not a server function call is valid when it is called via CsrCallServerFromServer.
     PCHAR *NameTable;
     ULONG SizeOfProcessData;
     PCSR_CONNECT_CALLBACK ConnectCallback;

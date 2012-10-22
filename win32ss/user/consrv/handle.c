@@ -1,4 +1,4 @@
-/* $Id$
+/* $Id: handle.c 57570 2012-10-17 23:10:40Z hbelusca $
  *
  * reactos/subsys/csrss/api/handle.c
  *
@@ -36,8 +36,7 @@ AdjustHandleCounts(PCSRSS_HANDLE Entry, INT Change)
 }
 
 static VOID
-Win32CsrCreateHandleEntry(
-    PCSRSS_HANDLE Entry)
+Win32CsrCreateHandleEntry(PCSRSS_HANDLE Entry)
 {
     Object_t *Object = Entry->Object;
     EnterCriticalSection(&Object->Console->Lock);
@@ -46,8 +45,7 @@ Win32CsrCreateHandleEntry(
 }
 
 static VOID
-Win32CsrCloseHandleEntry(
-    PCSRSS_HANDLE Entry)
+Win32CsrCloseHandleEntry(PCSRSS_HANDLE Entry)
 {
     Object_t *Object = Entry->Object;
     if (Object != NULL)
@@ -72,9 +70,8 @@ Win32CsrCloseHandleEntry(
 
 NTSTATUS
 FASTCALL
-Win32CsrReleaseObject(
-    PCSR_PROCESS ProcessData,
-    HANDLE Handle)
+Win32CsrReleaseObject(PCSR_PROCESS ProcessData,
+                      HANDLE Handle)
 {
     ULONG_PTR h = (ULONG_PTR)Handle >> 2;
     Object_t *Object;
@@ -134,8 +131,7 @@ Win32CsrUnlockObject(Object_t *Object)
 
 VOID
 WINAPI
-Win32CsrReleaseConsole(
-    PCSR_PROCESS ProcessData)
+Win32CsrReleaseConsole(PCSR_PROCESS ProcessData)
 {
     PCSRSS_CONSOLE Console;
     ULONG i;
@@ -146,7 +142,7 @@ Win32CsrReleaseConsole(
     for (i = 0; i < ProcessData->HandleTableSize; i++)
         Win32CsrCloseHandleEntry(&ProcessData->HandleTable[i]);
     ProcessData->HandleTableSize = 0;
-    RtlFreeHeap(Win32CsrApiHeap, 0, ProcessData->HandleTable);
+    RtlFreeHeap(ConSrvHeap, 0, ProcessData->HandleTable);
     ProcessData->HandleTable = NULL;
 
     Console = ProcessData->Console;
@@ -166,13 +162,12 @@ Win32CsrReleaseConsole(
 
 NTSTATUS
 FASTCALL
-Win32CsrInsertObject(
-    PCSR_PROCESS ProcessData,
-    PHANDLE Handle,
-    Object_t *Object,
-    DWORD Access,
-    BOOL Inheritable,
-    DWORD ShareMode)
+Win32CsrInsertObject(PCSR_PROCESS ProcessData,
+                     PHANDLE Handle,
+                     Object_t *Object,
+                     DWORD Access,
+                     BOOL Inheritable,
+                     DWORD ShareMode)
 {
     ULONG i;
     PCSRSS_HANDLE Block;
@@ -188,7 +183,7 @@ Win32CsrInsertObject(
     }
     if (i >= ProcessData->HandleTableSize)
     {
-        Block = RtlAllocateHeap(Win32CsrApiHeap,
+        Block = RtlAllocateHeap(ConSrvHeap,
                                 HEAP_ZERO_MEMORY,
                                 (ProcessData->HandleTableSize + 64) * sizeof(CSRSS_HANDLE));
         if (Block == NULL)
@@ -199,7 +194,7 @@ Win32CsrInsertObject(
         RtlCopyMemory(Block,
                       ProcessData->HandleTable,
                       ProcessData->HandleTableSize * sizeof(CSRSS_HANDLE));
-        RtlFreeHeap(Win32CsrApiHeap, 0, ProcessData->HandleTable);
+        RtlFreeHeap(ConSrvHeap, 0, ProcessData->HandleTable);
         ProcessData->HandleTable = Block;
         ProcessData->HandleTableSize += 64;
     }
@@ -215,9 +210,8 @@ Win32CsrInsertObject(
 
 NTSTATUS
 WINAPI
-Win32CsrDuplicateHandleTable(
-    PCSR_PROCESS SourceProcessData,
-    PCSR_PROCESS TargetProcessData)
+Win32CsrDuplicateHandleTable(PCSR_PROCESS SourceProcessData,
+                             PCSR_PROCESS TargetProcessData)
 {
     ULONG i;
     
@@ -233,7 +227,7 @@ Win32CsrDuplicateHandleTable(
 
     /* we are called from CreateProcessData, it isn't necessary to lock the target process data */
 
-    TargetProcessData->HandleTable = RtlAllocateHeap(Win32CsrApiHeap,
+    TargetProcessData->HandleTable = RtlAllocateHeap(ConSrvHeap,
                                                      HEAP_ZERO_MEMORY,
                                                      SourceProcessData->HandleTableSize
                                                              * sizeof(CSRSS_HANDLE));
@@ -302,12 +296,14 @@ CSR_API(CsrGetHandle)
     return Status;
 }
 
-CSR_API(CsrCloseHandle)
+// CSR_API(CsrSetHandle) ??
+
+CSR_API(SrvCloseHandle)
 {
     return Win32CsrReleaseObject(CsrGetClientThread()->Process, ApiMessage->Data.CloseHandleRequest.Handle);
 }
 
-CSR_API(CsrVerifyHandle)
+CSR_API(SrvVerifyConsoleIoHandle)
 {
     ULONG_PTR Index;
     NTSTATUS Status = STATUS_SUCCESS;
@@ -326,7 +322,7 @@ CSR_API(CsrVerifyHandle)
     return Status;
 }
 
-CSR_API(CsrDuplicateHandle)
+CSR_API(SrvDuplicateHandle)
 {
     ULONG_PTR Index;
     PCSRSS_HANDLE Entry;
