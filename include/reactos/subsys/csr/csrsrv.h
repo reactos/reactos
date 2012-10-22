@@ -1,20 +1,24 @@
 /*
  * PROJECT:         ReactOS Native Headers
- * FILE:            include/subsys/csrss/server.h
+ * FILE:            include/subsys/csrss/csrsrv.h
  * PURPOSE:         Public Definitions for CSR Servers
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
-#ifndef _CSRSERVER_H
-#define _CSRSERVER_H
+#ifndef _CSRSRV_H
+#define _CSRSRV_H
 
+// see http://code.google.com/p/ontl/source/browse/branches/x64/ntl/nt/csr.hxx?r=67
+
+/*
 #ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning (disable:4201)
 #endif
+*/
 
-#include "msg.h"
+#include "csrmsg.h"
 
 /* TYPES **********************************************************************/
 
@@ -64,7 +68,7 @@ typedef struct _CSR_PROCESS
     ULONG Reserved;
     ULONG ShutdownLevel;
     ULONG ShutdownFlags;
-//    PVOID ServerData[ANYSIZE_ARRAY];
+    PVOID ServerData[ANYSIZE_ARRAY]; // ServerDllPerProcessData // One structure per CSR server.
     CSRSS_CON_PROCESS_DATA; //// FIXME: Remove it after we activate the previous member.
 } CSR_PROCESS, *PCSR_PROCESS;
 
@@ -172,9 +176,10 @@ NTSTATUS
     OUT PULONG Reply
 );
 
-#define CSR_API(n) NTSTATUS NTAPI n (   \
+#define CSR_API(n) NTSTATUS NTAPI n(    \
     IN OUT PCSR_API_MESSAGE ApiMessage, \
     OUT PULONG Reply)
+    // IN OUT PCSR_REPLY_STATUS ReplyStatus)
 
 typedef
 NTSTATUS
@@ -218,8 +223,8 @@ typedef struct _CSR_SERVER_DLL
     HANDLE ServerHandle;
     ULONG ServerId;
     ULONG Unknown;
-    ULONG ApiBase;
-    ULONG HighestApiSupported;
+    ULONG ApiBase; // ApiNumberBase
+    ULONG HighestApiSupported; // MaxApiNumber
     PCSR_API_ROUTINE *DispatchTable;
     PBOOLEAN ValidTable;
     PCHAR *NameTable;
@@ -227,7 +232,7 @@ typedef struct _CSR_SERVER_DLL
     PCSR_CONNECT_CALLBACK ConnectCallback;
     PCSR_DISCONNECT_CALLBACK DisconnectCallback;
     PCSR_HARDERROR_CALLBACK HardErrorCallback;
-    PVOID SharedSection;
+    PVOID SharedSection; // SharedStaticServerData
     PCSR_NEWPROCESS_CALLBACK NewProcessCallback;
     PCSR_SHUTDOWNPROCESS_CALLBACK ShutdownProcessCallback;
     ULONG Unknown2[3];
@@ -240,50 +245,149 @@ typedef
 NTSTATUS
 (NTAPI *PCSR_SERVER_DLL_INIT_CALLBACK)(IN PCSR_SERVER_DLL LoadedServerDll);
 
-/*
-NTSTATUS
-NTAPI
-CsrServerDllInitialization(IN PCSR_SERVER_DLL LoadedServerDll);
-*/
+#define CSR_SERVER_DLL_INIT(n) NTSTATUS NTAPI n(IN PCSR_SERVER_DLL LoadedServerDll)
 
 
 /* PROTOTYPES ****************************************************************/
 
-NTSTATUS
-NTAPI
-CsrServerInitialization(
-    IN ULONG ArgumentCount,
-    IN PCHAR Arguments[]
-);
-
 ///////////
 BOOLEAN
 NTAPI
-CsrCaptureArguments(
-    IN PCSR_THREAD CsrThread,
-    IN PCSR_API_MESSAGE ApiMessage
-);
+CsrCaptureArguments(IN PCSR_THREAD CsrThread,
+                    IN PCSR_API_MESSAGE ApiMessage);
 
 VOID
 NTAPI
 CsrReleaseCapturedArguments(IN PCSR_API_MESSAGE ApiMessage);
 //////////
 
+
+
+NTSTATUS
+NTAPI
+CsrServerInitialization(IN ULONG ArgumentCount,
+                        IN PCHAR Arguments[]);
+
 PCSR_THREAD
 NTAPI
-CsrAddStaticServerThread(
-    IN HANDLE hThread,
-    IN PCLIENT_ID ClientId,
-    IN ULONG ThreadFlags
-);
+CsrAddStaticServerThread(IN HANDLE hThread,
+                         IN PCLIENT_ID ClientId,
+                         IN ULONG ThreadFlags);
+
+NTSTATUS
+NTAPI
+CsrCallServerFromServer(IN PCSR_API_MESSAGE ReceiveMsg,
+                        IN OUT PCSR_API_MESSAGE ReplyMsg);
 
 PCSR_THREAD
 NTAPI
 CsrConnectToUser(VOID);
 
+NTSTATUS
+NTAPI
+CsrCreateProcess(IN HANDLE hProcess,
+                 IN HANDLE hThread,
+                 IN PCLIENT_ID ClientId,
+                 IN PCSR_NT_SESSION NtSession,
+                 IN ULONG Flags,
+                 IN PCLIENT_ID DebugCid);
+
+NTSTATUS
+NTAPI
+CsrCreateRemoteThread(IN HANDLE hThread,
+                      IN PCLIENT_ID ClientId);
+
+NTSTATUS
+NTAPI
+CsrCreateThread(IN PCSR_PROCESS CsrProcess,
+                IN HANDLE hThread,
+                IN PCLIENT_ID ClientId);
+
+BOOLEAN
+NTAPI
+CsrCreateWait(IN PLIST_ENTRY WaitList,
+              IN CSR_WAIT_FUNCTION WaitFunction,
+              IN PCSR_THREAD CsrWaitThread,
+              IN OUT PCSR_API_MESSAGE WaitApiMessage,
+              IN PVOID WaitContext,
+              IN PLIST_ENTRY UserWaitList OPTIONAL);
+
+NTSTATUS
+NTAPI
+CsrDebugProcess(IN PCSR_PROCESS CsrProcess);
+
+NTSTATUS
+NTAPI
+CsrDebugProcessStop(IN PCSR_PROCESS CsrProcess);
+
+VOID
+NTAPI
+CsrDereferenceProcess(IN PCSR_PROCESS CsrProcess);
+
+VOID
+NTAPI
+CsrDereferenceThread(IN PCSR_THREAD CsrThread);
+
+VOID
+NTAPI
+CsrDereferenceWait(IN PLIST_ENTRY WaitList);
+
+NTSTATUS
+NTAPI
+CsrDestroyProcess(IN PCLIENT_ID Cid,
+                  IN NTSTATUS ExitStatus);
+
+NTSTATUS
+NTAPI
+CsrDestroyThread(IN PCLIENT_ID Cid);
+
+NTSTATUS
+NTAPI
+CsrExecServerThread(IN PVOID ThreadHandler,
+                    IN ULONG Flags);
+
+NTSTATUS
+NTAPI
+CsrGetProcessLuid(IN HANDLE hProcess OPTIONAL,
+                  OUT PLUID Luid);
+
 BOOLEAN
 NTAPI
 CsrImpersonateClient(IN PCSR_THREAD CsrThread);
+
+NTSTATUS
+NTAPI
+CsrLockProcessByClientId(IN HANDLE Pid,
+                         OUT PCSR_PROCESS *CsrProcess OPTIONAL);
+
+NTSTATUS
+NTAPI
+CsrLockThreadByClientId(IN HANDLE Tid,
+                        OUT PCSR_THREAD *CsrThread);
+
+VOID
+NTAPI
+CsrMoveSatisfiedWait(IN PLIST_ENTRY NewEntry,
+                     IN PLIST_ENTRY WaitList);
+
+BOOLEAN
+NTAPI
+CsrNotifyWait(IN PLIST_ENTRY WaitList,
+              IN ULONG WaitType,
+              IN PVOID WaitArgument1,
+              IN PVOID WaitArgument2);
+
+VOID
+NTAPI
+CsrPopulateDosDevices(VOID);
+
+HANDLE
+NTAPI
+CsrQueryApiPort(VOID);
+
+VOID
+NTAPI
+CsrReferenceThread(IN PCSR_THREAD CsrThread);
 
 BOOLEAN
 NTAPI
@@ -293,17 +397,48 @@ VOID
 NTAPI
 CsrSetBackgroundPriority(IN PCSR_PROCESS CsrProcess);
 
-LONG
+VOID
 NTAPI
-CsrUnhandledExceptionFilter(
-    IN PEXCEPTION_POINTERS ExceptionInfo
-);
+CsrSetCallingSpooler(ULONG Reserved);
 
+VOID
+NTAPI
+CsrSetForegroundPriority(IN PCSR_PROCESS CsrProcess);
 
+NTSTATUS
+NTAPI
+CsrShutdownProcesses(IN PLUID CallerLuid,
+                     IN ULONG Flags);
 
+EXCEPTION_DISPOSITION
+NTAPI
+CsrUnhandledExceptionFilter(IN PEXCEPTION_POINTERS ExceptionInfo);
+
+NTSTATUS
+NTAPI
+CsrUnlockProcess(IN PCSR_PROCESS CsrProcess);
+
+NTSTATUS
+NTAPI
+CsrUnlockThread(IN PCSR_THREAD CsrThread);
+
+BOOLEAN
+NTAPI
+CsrValidateMessageBuffer(IN PCSR_API_MESSAGE ApiMessage,
+                         IN PVOID *Buffer,
+                         IN ULONG ArgumentSize,
+                         IN ULONG ArgumentCount);
+
+BOOLEAN
+NTAPI
+CsrValidateMessageString(IN PCSR_API_MESSAGE ApiMessage,
+                         IN LPWSTR *MessageString);
+
+/*
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif
+*/
 
 #endif // _CSRSERVER_H
 

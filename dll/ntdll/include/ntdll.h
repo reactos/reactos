@@ -42,8 +42,7 @@
 #include "ntdllp.h"
 
 /* CSRSS Header */
-#include <csrss/client.h>
-#include <csrss/csrss.h> // FIXME: data header.
+#include <csr/csrcl.h>
 
 /* PSEH */
 #include <pseh/pseh2.h>

@@ -10,7 +10,7 @@
 #include <ndk/ntndk.h>
 
 /* CSR Header */
-//#include <csr/server.h>
+#include <csr/csrsrv.h>
 
 /* PSEH for SEH Support */
 #include <pseh/pseh2.h>
@@ -20,11 +20,10 @@
 #include <sm/smmsg.h>
 
 /* Internal CSRSS Headers */
-#include <api.h>
-#include <csrplugin.h>
+#include "include/api.h"
+#include "include/csrplugin.h"
 
-extern HANDLE CsrHeap;
-
+/* Defines */
 #define SM_REG_KEY \
     L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Session Manager"
 
@@ -35,7 +34,6 @@ extern HANDLE CsrHeap;
 #define CSR_PORT_NAME       L"ApiPort"
 #define UNICODE_PATH_SEP    L"\\"
 
-/* Defines */
 #define ROUND_UP(n, align) ROUND_DOWN(((ULONG)n) + (align) - 1, (align))
 #define ROUND_DOWN(n, align) (((ULONG)n) & ~((align) - 1l))
 

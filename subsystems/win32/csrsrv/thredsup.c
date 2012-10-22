@@ -473,6 +473,67 @@ CsrLockedDereferenceThread(IN PCSR_THREAD CsrThread)
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 /*++
+ * @name CsrAddStaticServerThread
+ * @implemented NT4
+ *
+ * The CsrAddStaticServerThread routine adds a new CSR Thread to the
+ * CSR Server Process (CsrRootProcess).
+ *
+ * @param hThread
+ *        Handle to an existing NT Thread to which to associate this
+ *        CSR Thread.
+ *
+ * @param ClientId
+ *        Pointer to the Client ID structure of the NT Thread to associate
+ *        with this CSR Thread.
+ *
+ * @param ThreadFlags
+ *        Initial CSR Thread Flags to associate to this CSR Thread. Usually
+ *        CsrThreadIsServerThread.
+ *
+ * @return Pointer to the newly allocated CSR Thread.
+ *
+ * @remarks None.
+ *
+ *--*/
+PCSR_THREAD
+NTAPI
+CsrAddStaticServerThread(IN HANDLE hThread,
+                         IN PCLIENT_ID ClientId,
+                         IN ULONG ThreadFlags)
+{
+    PCSR_THREAD CsrThread;
+
+    /* Get the Lock */
+    CsrAcquireProcessLock();
+
+    /* Allocate the Server Thread */
+    CsrThread = CsrAllocateThread(CsrRootProcess);
+    if (CsrThread)
+    {
+        /* Setup the Object */
+        CsrThread->ThreadHandle = hThread;
+        ProtectHandle(hThread);
+        CsrThread->ClientId = *ClientId;
+        CsrThread->Flags = ThreadFlags;
+
+        /* Insert it into the Thread List */
+        InsertTailList(&CsrRootProcess->ThreadList, &CsrThread->Link);
+
+        /* Increment the thread count */
+        CsrRootProcess->ThreadCount++;
+    }
+    else
+    {
+        DPRINT1("CsrAddStaticServerThread: alloc failed for thread 0x%x\n", hThread);
+    }
+
+    /* Release the Process Lock and return */
+    CsrReleaseProcessLock();
+    return CsrThread;
+}
+
+/*++
  * @name CsrCreateRemoteThread
  * @implemented NT4
  *
@@ -570,75 +631,6 @@ CsrCreateRemoteThread(IN HANDLE hThread,
 
     /* Release the lock and return */
     CsrUnlockProcess(CsrProcess);
-    return STATUS_SUCCESS;
-}
-
-/*++
- * @name CsrDestroyThread
- * @implemented NT4
- *
- * The CsrDestroyThread routine destroys the CSR Thread corresponding to
- * a given Thread ID.
- *
- * @param Cid
- *        Pointer to the Client ID Structure corresponding to the CSR
- *        Thread which is about to be destroyed.
- *
- * @return STATUS_SUCCESS in case of success, STATUS_THREAD_IS_TERMINATING
- *         if the CSR Thread is already terminating.
- *
- * @remarks None.
- *
- *--*/
-NTSTATUS
-NTAPI
-CsrDestroyThread(IN PCLIENT_ID Cid)
-{
-    CLIENT_ID ClientId = *Cid;
-    PCSR_THREAD CsrThread;
-    PCSR_PROCESS CsrProcess;
-
-    /* Acquire lock */
-    CsrAcquireProcessLock();
-
-    /* Find the thread */
-    CsrThread = CsrLocateThreadByClientId(&CsrProcess,
-                                          &ClientId);
-
-    /* Make sure we got one back, and that it's not already gone */
-    if (!CsrThread || CsrThread->Flags & CsrThreadTerminated)
-    {
-        /* Release the lock and return failure */
-        CsrReleaseProcessLock();
-        return STATUS_THREAD_IS_TERMINATING;
-    }
-
-    /* Set the terminated flag */
-    CsrThread->Flags |= CsrThreadTerminated;
-
-    /* Acquire the Wait Lock */
-    CsrAcquireWaitLock();
-
-    /* Do we have an active wait block? */
-    if (CsrThread->WaitBlock)
-    {
-        /* Notify waiters of termination */
-        CsrNotifyWaitBlock(CsrThread->WaitBlock,
-                           NULL,
-                           NULL,
-                           NULL,
-                           CsrProcessTerminating,
-                           TRUE);
-    }
-
-    /* Release the Wait Lock */
-    CsrReleaseWaitLock();
-
-    /* Dereference the thread */
-    CsrLockedDereferenceThread(CsrThread);
-
-    /* Release the Process Lock and return success */
-    CsrReleaseProcessLock();
     return STATUS_SUCCESS;
 }
 
@@ -799,67 +791,6 @@ CsrCreateThread(IN PCSR_PROCESS CsrProcess,
 #endif
 
 /*++
- * @name CsrAddStaticServerThread
- * @implemented NT4
- *
- * The CsrAddStaticServerThread routine adds a new CSR Thread to the
- * CSR Server Process (CsrRootProcess).
- *
- * @param hThread
- *        Handle to an existing NT Thread to which to associate this
- *        CSR Thread.
- *
- * @param ClientId
- *        Pointer to the Client ID structure of the NT Thread to associate
- *        with this CSR Thread.
- *
- * @param ThreadFlags
- *        Initial CSR Thread Flags to associate to this CSR Thread. Usually
- *        CsrThreadIsServerThread.
- *
- * @return Pointer to the newly allocated CSR Thread.
- *
- * @remarks None.
- *
- *--*/
-PCSR_THREAD
-NTAPI
-CsrAddStaticServerThread(IN HANDLE hThread,
-                         IN PCLIENT_ID ClientId,
-                         IN ULONG ThreadFlags)
-{
-    PCSR_THREAD CsrThread;
-
-    /* Get the Lock */
-    CsrAcquireProcessLock();
-
-    /* Allocate the Server Thread */
-    CsrThread = CsrAllocateThread(CsrRootProcess);
-    if (CsrThread)
-    {
-        /* Setup the Object */
-        CsrThread->ThreadHandle = hThread;
-        ProtectHandle(hThread);
-        CsrThread->ClientId = *ClientId;
-        CsrThread->Flags = ThreadFlags;
-
-        /* Insert it into the Thread List */
-        InsertTailList(&CsrRootProcess->ThreadList, &CsrThread->Link);
-
-        /* Increment the thread count */
-        CsrRootProcess->ThreadCount++;
-    }
-    else
-    {
-        DPRINT1("CsrAddStaticServerThread: alloc failed for thread 0x%x\n", hThread);
-    }
-
-    /* Release the Process Lock and return */
-    CsrReleaseProcessLock();
-    return CsrThread;
-}
-
-/*++
  * @name CsrDereferenceThread
  * @implemented NT4
  *
@@ -895,6 +826,74 @@ CsrDereferenceThread(IN PCSR_THREAD CsrThread)
     }
 }
 
+/*++
+ * @name CsrDestroyThread
+ * @implemented NT4
+ *
+ * The CsrDestroyThread routine destroys the CSR Thread corresponding to
+ * a given Thread ID.
+ *
+ * @param Cid
+ *        Pointer to the Client ID Structure corresponding to the CSR
+ *        Thread which is about to be destroyed.
+ *
+ * @return STATUS_SUCCESS in case of success, STATUS_THREAD_IS_TERMINATING
+ *         if the CSR Thread is already terminating.
+ *
+ * @remarks None.
+ *
+ *--*/
+NTSTATUS
+NTAPI
+CsrDestroyThread(IN PCLIENT_ID Cid)
+{
+    CLIENT_ID ClientId = *Cid;
+    PCSR_THREAD CsrThread;
+    PCSR_PROCESS CsrProcess;
+
+    /* Acquire lock */
+    CsrAcquireProcessLock();
+
+    /* Find the thread */
+    CsrThread = CsrLocateThreadByClientId(&CsrProcess,
+                                          &ClientId);
+
+    /* Make sure we got one back, and that it's not already gone */
+    if (!CsrThread || CsrThread->Flags & CsrThreadTerminated)
+    {
+        /* Release the lock and return failure */
+        CsrReleaseProcessLock();
+        return STATUS_THREAD_IS_TERMINATING;
+    }
+
+    /* Set the terminated flag */
+    CsrThread->Flags |= CsrThreadTerminated;
+
+    /* Acquire the Wait Lock */
+    CsrAcquireWaitLock();
+
+    /* Do we have an active wait block? */
+    if (CsrThread->WaitBlock)
+    {
+        /* Notify waiters of termination */
+        CsrNotifyWaitBlock(CsrThread->WaitBlock,
+                           NULL,
+                           NULL,
+                           NULL,
+                           CsrProcessTerminating,
+                           TRUE);
+    }
+
+    /* Release the Wait Lock */
+    CsrReleaseWaitLock();
+
+    /* Dereference the thread */
+    CsrLockedDereferenceThread(CsrThread);
+
+    /* Release the Process Lock and return success */
+    CsrReleaseProcessLock();
+    return STATUS_SUCCESS;
+}
 
 /*++
  * @name CsrExecServerThread

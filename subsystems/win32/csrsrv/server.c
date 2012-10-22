@@ -15,24 +15,6 @@
 
 /* DATA **********************************************************************/
 
-/*** Must go elsewhere ***/
-#define CSR_SERVER_DLL_MAX 4
-
-#define CSRSRV_SERVERDLL_INDEX          0
-#define CSRSRV_FIRST_API_NUMBER         0
-
-typedef enum _CSR_SRV_API_NUMBER
-{
-    CsrpClientConnect = CSRSRV_FIRST_API_NUMBER,
-    CsrpThreadConnect,
-    CsrpProfileControl,
-    CsrpIdentifyAlertable,
-    CsrpSetPriorityClass,
-
-    CsrpMaxApiNumber
-} CSR_SRV_API_NUMBER, *PCSR_SRV_API_NUMBER;
-/*************************/
-
 PCSR_API_ROUTINE CsrServerApiDispatchTable[CsrpMaxApiNumber] =
 {
     CsrSrvClientConnect,
@@ -186,7 +168,7 @@ CsrLoadServerDll(IN PCHAR DllString,
 
     /* Set up the Object */
     ServerDll->Length = Size;
-    ServerDll->SharedSection = CsrSrvSharedSectionHeap;
+    ServerDll->SharedSection = CsrSrvSharedSectionHeap; // Send to the server dll our shared heap pointer.
     ServerDll->Event = CsrInitializationEvent;
     ServerDll->Name.Length = DllName.Length;
     ServerDll->Name.MaximumLength = DllName.MaximumLength;
@@ -297,7 +279,7 @@ CsrSrvClientConnect(IN OUT PCSR_API_MESSAGE ApiMessage,
     PCSR_PROCESS CurrentProcess = CsrGetClientThread()->Process;
 
     /* Load the Message, set default reply */
-    ClientConnect = (PCSR_CLIENT_CONNECT)&ApiMessage->CsrClientConnect;
+    ClientConnect = &ApiMessage->Data.CsrClientConnect;
     *Reply = 0;
 
     /* Validate the ServerID */

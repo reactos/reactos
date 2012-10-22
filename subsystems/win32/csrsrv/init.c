@@ -16,15 +16,15 @@
 
 /* DATA ***********************************************************************/
 
-HANDLE CsrHeap = (HANDLE) 0;
-HANDLE CsrObjectDirectory = (HANDLE) 0;
+HANDLE CsrHeap = NULL;
+HANDLE CsrObjectDirectory = NULL;
 UNICODE_STRING CsrDirectoryName;
 UNICODE_STRING CsrSbApiPortName;
-HANDLE CsrSbApiPort = 0;
+HANDLE CsrSbApiPort = NULL;
 PCSR_THREAD CsrSbApiRequestThreadPtr;
-HANDLE CsrSmApiPort;
-HANDLE hSbApiPort = (HANDLE) 0;
-HANDLE CsrApiPort = (HANDLE) 0;
+HANDLE CsrSmApiPort = NULL;
+HANDLE hSbApiPort = NULL;
+HANDLE CsrApiPort = NULL;
 ULONG CsrDebug = 0;//0xFFFFFFFF;
 ULONG CsrMaxApiRequestThreads;
 ULONG CsrTotalPerProcessDataLength;
@@ -34,6 +34,7 @@ HANDLE SessionObjectDirectory;
 HANDLE DosDevicesDirectory;
 HANDLE CsrInitializationEvent;
 SYSTEM_BASIC_INFORMATION CsrNtSysInfo;
+
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -59,34 +60,6 @@ CallHardError(IN PCSR_THREAD ThreadData,
         }
     }
 }
-
-#if 0
-NTSTATUS
-CallProcessCreated(IN PCSR_PROCESS SourceProcessData,
-                   IN PCSR_PROCESS TargetProcessData)
-{
-    NTSTATUS Status = STATUS_SUCCESS;
-    ULONG i;
-    PCSR_SERVER_DLL ServerDll;
-
-    DPRINT("CSR: %s called\n", __FUNCTION__);
-
-    /* Notify the Server DLLs */
-    for (i = 0; i < CSR_SERVER_DLL_MAX; i++)
-    {
-        /* Get the current Server DLL */
-        ServerDll = CsrLoadedServerDll[i];
-
-        /* Make sure it's valid and that it has callback */
-        if ((ServerDll) && (ServerDll->NewProcessCallback))
-        {
-            Status = ServerDll->NewProcessCallback(SourceProcessData, TargetProcessData);
-        }
-    }
-
-    return Status;
-}
-#endif
 
 CSRSS_API_DEFINITION NativeDefinitions[] =
 {
@@ -928,7 +901,6 @@ CsrSbApiPortInitialize(VOID)
 }
 
 
-
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 /*++
@@ -1103,7 +1075,7 @@ VOID
 NTAPI
 CsrPopulateDosDevices(VOID)
 {
-    DPRINT1("Deprecated API\n");
+    DPRINT1("Deprecated API in r55585.\n");
     return;
 }
 

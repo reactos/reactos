@@ -543,7 +543,7 @@ CsrSbApiRequestThread(IN PVOID Parameter)
         {
             ReceiveMsg.ApiNumber = SbpMaxApiNumber;
             DPRINT1("CSRSS: %lx is invalid Sb ApiNumber\n", ReceiveMsg.ApiNumber);
-         }
+        }
 
         /* Reuse the message */
         ReplyMsg = &ReceiveMsg;

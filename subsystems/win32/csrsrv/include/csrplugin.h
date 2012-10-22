@@ -18,15 +18,21 @@
 #pragma once
 
 #include <windows.h>
-#include "api.h"
 
+#include <csr/csrcl.h>
+//#include "api.h"
+
+/*
 typedef NTSTATUS (WINAPI *CSRSS_ENUM_PROCESSES_PROC)(CSRSS_ENUM_PROCESS_PROC EnumProc,
                                                      PVOID Context);
+typedef NTSTATUS (WINAPI *CSRSS_ENUM_PROCESS_PROC)(PCSR_PROCESS ProcessData,
+                                                   PVOID Context);
 
 typedef struct tagCSRSS_EXPORTED_FUNCS
 {
     CSRSS_ENUM_PROCESSES_PROC CsrEnumProcessesProc;
 } CSRSS_EXPORTED_FUNCS, *PCSRSS_EXPORTED_FUNCS;
+*/
 
 typedef BOOL (WINAPI *CSRPLUGIN_INIT_COMPLETE_PROC)(void);
 

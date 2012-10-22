@@ -11,8 +11,10 @@
 #include <ndk/psfuncs.h>
 #include <ndk/rtlfuncs.h>
 
-#include <csrss/server.h>
+#include <csr/csrsrv.h>
 
+
+extern RTL_CRITICAL_SECTION CsrProcessLock, CsrWaitListsLock;
 
 #define CsrAcquireProcessLock() \
     RtlEnterCriticalSection(&CsrProcessLock);
@@ -36,7 +38,12 @@
     RtlLeaveCriticalSection(&CsrNtSessionLock);
 
 
+#define CSR_SERVER_DLL_MAX  4
 
+
+/***
+ *** Old structure. Deprecated.
+ ***/
 typedef struct _CSRSS_API_DEFINITION
 {
     ULONG ApiID;
@@ -46,6 +53,7 @@ typedef struct _CSRSS_API_DEFINITION
 
 #define CSRSS_DEFINE_API(Func, Handler) \
     { Func, sizeof(CSRSS_##Func), Handler }
+
 
 
 
@@ -64,22 +72,66 @@ typedef struct _CSRSS_LISTEN_DATA
  ******************************************************************************/
 
 
-
-/* init.c */
 extern HANDLE hBootstrapOk;
-NTSTATUS NTAPI CsrServerInitialization(ULONG ArgumentCount, PCHAR Arguments[]);
+extern HANDLE CsrApiPort;
+extern HANDLE CsrSmApiPort;
+extern HANDLE CsrSbApiPort;
+extern LIST_ENTRY CsrThreadHashTable[256];
+extern PCSR_PROCESS CsrRootProcess;
+extern UNICODE_STRING CsrDirectoryName;
+extern ULONG CsrDebug;
+extern ULONG CsrTotalPerProcessDataLength;
+extern SYSTEM_BASIC_INFORMATION CsrNtSysInfo;
+extern HANDLE CsrHeap;
+extern PVOID CsrSrvSharedSectionHeap;
+extern PVOID *CsrSrvSharedStaticServerData;
+extern HANDLE CsrInitializationEvent;
+extern PCSR_SERVER_DLL CsrLoadedServerDll[CSR_SERVER_DLL_MAX];
+extern ULONG CsrMaxApiRequestThreads;
 
-/* api/process.c */
-CSR_API(CsrConnectProcess);
-CSR_API(BaseSrvCreateProcess);
-CSR_API(BaseSrvExitProcess);
-CSR_API(BaseSrvCreateThread);
-CSR_API(BaseSrvGetProcessShutdownParam);
-CSR_API(BaseSrvSetProcessShutdownParam);
+/****************************************************/
+extern UNICODE_STRING CsrSbApiPortName;
+extern UNICODE_STRING CsrApiPortName;
+extern RTL_CRITICAL_SECTION CsrProcessLock;
+extern RTL_CRITICAL_SECTION CsrWaitListsLock;
+extern HANDLE CsrObjectDirectory;
+extern PSB_API_ROUTINE CsrServerSbApiDispatch[5];
+/****************************************************/
+
+
+
+CSR_API(CsrSrvClientConnect);
+CSR_API(CsrSrvUnusedFunction);
+CSR_API(CsrSrvIdentifyAlertableThread);
+CSR_API(CsrSrvSetPriorityClass);
+CSR_API(SrvRegisterServicesProcess);
+
+
+/***
+
+BOOLEAN
+NTAPI
+CsrCaptureArguments(
+    IN PCSR_THREAD CsrThread,
+    IN PCSR_API_MESSAGE ApiMessage
+);
 
 VOID
 NTAPI
-CsrSetBackgroundPriority(IN PCSR_PROCESS CsrProcess);
+CsrReleaseCapturedArguments(IN PCSR_API_MESSAGE ApiMessage);
+
+NTSTATUS
+NTAPI
+CsrServerDllInitialization(IN PCSR_SERVER_DLL LoadedServerDll);
+
+***/
+
+NTSTATUS
+NTAPI
+CsrLoadServerDll(IN PCHAR DllString,
+                 IN PCHAR EntryPoint OPTIONAL,
+                 IN ULONG ServerId);
+
 
 PCSR_THREAD
 NTAPI
@@ -99,78 +151,71 @@ CsrRemoveProcess(IN PCSR_PROCESS CsrProcess);
 
 VOID
 NTAPI
-CsrDereferenceThread(IN PCSR_THREAD CsrThread);
-
-VOID
-NTAPI
 CsrInsertProcess(IN PCSR_PROCESS Parent OPTIONAL,
                  IN PCSR_PROCESS CurrentProcess OPTIONAL,
                  IN PCSR_PROCESS CsrProcess);
 
 
-/* api/wapi.c */
 NTSTATUS FASTCALL CsrApiRegisterDefinitions(PCSRSS_API_DEFINITION NewDefinitions);
 VOID FASTCALL CsrApiCallHandler(IN OUT PCSR_API_MESSAGE ApiMessage, OUT PULONG Reply);
-VOID WINAPI CsrSbApiRequestThread (PVOID PortHandle);
-VOID NTAPI ClientConnectionThread(HANDLE ServerPort);
 
-extern HANDLE CsrApiPort;
-extern HANDLE CsrSmApiPort;
-extern HANDLE CsrSbApiPort;
-extern LIST_ENTRY CsrThreadHashTable[256];
-extern PCSR_PROCESS CsrRootProcess;
-extern RTL_CRITICAL_SECTION CsrProcessLock, CsrWaitListsLock;
-extern UNICODE_STRING CsrDirectoryName;
-extern ULONG CsrDebug;
-extern ULONG CsrTotalPerProcessDataLength;
-extern SYSTEM_BASIC_INFORMATION CsrNtSysInfo;
-extern PVOID CsrSrvSharedSectionHeap;
-extern PVOID *CsrSrvSharedStaticServerData;
-extern HANDLE CsrInitializationEvent;
-extern PCSR_SERVER_DLL CsrLoadedServerDll[CSR_SERVER_DLL_MAX];
-extern ULONG CsrMaxApiRequestThreads;
+NTSTATUS
+NTAPI
+CsrApiRequestThread(IN PVOID Parameter); // HANDLE ServerPort ??
+
+VOID
+NTAPI
+CsrSbApiRequestThread(IN PVOID Parameter);
 
 NTSTATUS
 NTAPI
 CsrApiPortInitialize(VOID);
 
-NTSTATUS
-NTAPI
-CsrCreateProcess(IN HANDLE hProcess,
-                 IN HANDLE hThread,
-                 IN PCLIENT_ID ClientId,
-                 IN PCSR_NT_SESSION NtSession,
-                 IN ULONG Flags,
-                 IN PCLIENT_ID DebugCid);
-
 BOOLEAN
 NTAPI
 ProtectHandle(IN HANDLE ObjectHandle);
 
+BOOLEAN
+NTAPI
+UnProtectHandle(IN HANDLE ObjectHandle);
+
 VOID
 NTAPI
 CsrInsertThread(IN PCSR_PROCESS Process,
-IN PCSR_THREAD Thread);
+                IN PCSR_THREAD Thread);
+
+VOID
+NTAPI
+CsrLockedReferenceProcess(IN PCSR_PROCESS CsrProcess);
 
 VOID
 NTAPI
 CsrLockedReferenceThread(IN PCSR_THREAD CsrThread);
 
-/* api/process.c */
-typedef NTSTATUS (WINAPI *CSRSS_ENUM_PROCESS_PROC)(PCSR_PROCESS ProcessData,
-                                                   PVOID Context);
-NTSTATUS WINAPI CsrInitializeProcessStructure(VOID);
+NTSTATUS
+NTAPI
+CsrInitializeProcessStructure(VOID);
 
-NTSTATUS WINAPI CsrEnumProcesses(CSRSS_ENUM_PROCESS_PROC EnumProc, PVOID Context);
-PCSR_THREAD NTAPI CsrAddStaticServerThread(IN HANDLE hThread, IN PCLIENT_ID ClientId, IN  ULONG ThreadFlags);
-PCSR_THREAD NTAPI CsrLocateThreadInProcess(IN PCSR_PROCESS CsrProcess OPTIONAL, IN PCLIENT_ID Cid);
-PCSR_THREAD NTAPI CsrLocateThreadByClientId(OUT PCSR_PROCESS *Process OPTIONAL, IN PCLIENT_ID ClientId);
-NTSTATUS NTAPI CsrLockProcessByClientId(IN HANDLE Pid, OUT PCSR_PROCESS *CsrProcess OPTIONAL);
-NTSTATUS NTAPI CsrCreateThread(IN PCSR_PROCESS CsrProcess, IN HANDLE hThread, IN PCLIENT_ID ClientId);
-NTSTATUS NTAPI CsrUnlockProcess(IN PCSR_PROCESS CsrProcess);
+// NTSTATUS WINAPI CsrEnumProcesses(CSRSS_ENUM_PROCESS_PROC EnumProc,
+//                                  PVOID Context);
+PCSR_THREAD
+NTAPI
+CsrLocateThreadInProcess(IN PCSR_PROCESS CsrProcess OPTIONAL,
+                         IN PCLIENT_ID Cid);
+PCSR_THREAD
+NTAPI
+CsrLocateThreadByClientId(OUT PCSR_PROCESS *Process OPTIONAL,
+                          IN PCLIENT_ID ClientId);
 
-//hack
-VOID NTAPI CsrThreadRefcountZero(IN PCSR_THREAD CsrThread);
+// HACK
+VOID
+NTAPI
+CsrProcessRefcountZero(IN PCSR_PROCESS CsrProcess);
+
+// HACK
+VOID
+NTAPI
+CsrThreadRefcountZero(IN PCSR_THREAD CsrThread);
 
 NTSTATUS
 NTAPI
@@ -179,48 +224,15 @@ CsrInitializeNtSessionList(VOID);
 NTSTATUS
 NTAPI
 CsrSrvAttachSharedSection(IN PCSR_PROCESS CsrProcess OPTIONAL,
-OUT PCSR_CONNECTION_INFO ConnectInfo);
+                          OUT PCSR_CONNECTION_INFO ConnectInfo);
 
 NTSTATUS
 NTAPI
 CsrSrvCreateSharedSection(IN PCHAR ParameterValue);
 
-NTSTATUS
+VOID
 NTAPI
-CsrSrvClientConnect(
-    IN OUT PCSR_API_MESSAGE ApiMessage,
-    IN OUT PULONG Reply
-);
-
-NTSTATUS
-NTAPI
-CsrSrvUnusedFunction(
-    IN OUT PCSR_API_MESSAGE ApiMessage,
-    IN OUT PULONG Reply
-);
-
-NTSTATUS
-NTAPI
-CsrSrvIdentifyAlertableThread(
-    IN OUT PCSR_API_MESSAGE ApiMessage,
-    IN OUT PULONG Reply
-);
-
-NTSTATUS
-NTAPI
-CsrSrvSetPriorityClass(
-    IN OUT PCSR_API_MESSAGE ApiMessage,
-    IN OUT PULONG Reply
-);
-
-NTSTATUS
-NTAPI
-CsrDestroyProcess(IN PCLIENT_ID Cid,
-IN NTSTATUS ExitStatus);
-
-NTSTATUS
-NTAPI
-CsrDestroyThread(IN PCLIENT_ID Cid);
+CsrLockedDereferenceProcess(PCSR_PROCESS CsrProcess);
 
 VOID
 NTAPI
@@ -239,30 +251,63 @@ VOID
 NTAPI
 CsrReferenceNtSession(IN PCSR_NT_SESSION Session);
 
-LONG
-NTAPI
-CsrUnhandledExceptionFilter(IN PEXCEPTION_POINTERS ExceptionInfo);
-
 VOID
 NTAPI
 CsrDereferenceNtSession(IN PCSR_NT_SESSION Session,
-IN NTSTATUS ExitStatus);
+                        IN NTSTATUS ExitStatus);
 
-VOID
-NTAPI
-CsrLockedDereferenceProcess(PCSR_PROCESS CsrProcess);
-
-VOID
-NTAPI
-CsrDereferenceProcess(IN PCSR_PROCESS CsrProcess);
+/******************************************************************************
+ ******************************************************************************/
 
 NTSTATUS
 NTAPI
-CsrLoadServerDll(IN PCHAR DllString,
-                 IN PCHAR EntryPoint OPTIONAL,
-                 IN ULONG ServerId);
+CsrCreateSessionObjectDirectory(IN ULONG SessionId);
 
-/* api/user.c */
-CSR_API(SrvRegisterServicesProcess);
+NTSTATUS
+NTAPI
+CsrCreateObjectDirectory(IN PCHAR ObjectDirectory);
+
+NTSTATUS
+NTAPI
+CsrSbApiPortInitialize(VOID);
+
+BOOLEAN
+NTAPI
+CsrSbCreateSession(IN PSB_API_MSG ApiMessage);
+
+BOOLEAN
+NTAPI
+CsrSbTerminateSession(IN PSB_API_MSG ApiMessage);
+
+BOOLEAN
+NTAPI
+CsrSbForeignSessionComplete(IN PSB_API_MSG ApiMessage);
+
+BOOLEAN
+NTAPI
+CsrSbCreateProcess(IN PSB_API_MSG ApiMessage);
+
+NTSTATUS
+NTAPI
+CsrSbApiHandleConnectionRequest(IN PSB_API_MSG Message);
+
+NTSTATUS
+NTAPI
+CsrApiHandleConnectionRequest(IN PCSR_API_MESSAGE ApiMessage);
+
+/** this API is used with CsrPopulateDosDevices, deprecated in r55585.
+NTSTATUS
+NTAPI
+CsrPopulateDosDevicesDirectory(IN HANDLE DosDevicesDirectory,
+                               IN PPROCESS_DEVICEMAP_INFORMATION DeviceMap);
+**/
+
+NTSTATUS
+NTAPI
+CsrCreateLocalSystemSD(OUT PSECURITY_DESCRIPTOR *LocalSystemSd);
+
+NTSTATUS
+NTAPI
+CsrSetDirectorySecurity(IN HANDLE ObjectDirectory);
 
 /* EOF */

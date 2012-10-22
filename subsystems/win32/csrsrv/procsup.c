@@ -499,344 +499,6 @@ CsrInsertProcess(IN PCSR_PROCESS Parent OPTIONAL,
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 /*++
- * @name CsrGetProcessLuid
- * @implemented NT4
- *
- * Do nothing for 500ms.
- *
- * @param hProcess
- *        Optional handle to the process whose LUID should be returned.
- *
- * @param Luid
- *        Pointer to a LUID Pointer which will receive the CSR Process' LUID
- *
- * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL
- *         otherwise.
- *
- * @remarks If hProcess is not supplied, then the current thread's token will
- *          be used. If that too is missing, then the current process' token
- *          will be used.
- *
- *--*/
-NTSTATUS
-NTAPI
-CsrGetProcessLuid(HANDLE hProcess OPTIONAL,
-                  PLUID Luid)
-{
-    HANDLE hToken = NULL;
-    NTSTATUS Status;
-    ULONG Length;
-    PTOKEN_STATISTICS TokenStats;
-
-    /* Check if we have a handle to a CSR Process */
-    if (!hProcess)
-    {
-        /* We don't, so try opening the Thread's Token */
-        Status = NtOpenThreadToken(NtCurrentThread(),
-                                   TOKEN_QUERY,
-                                   FALSE,
-                                   &hToken);
-
-        /* Check for success */
-        if (!NT_SUCCESS(Status))
-        {
-            /* If we got some other failure, then return and quit */
-            if (Status != STATUS_NO_TOKEN) return Status;
-
-            /* We don't have a Thread Token, use a Process Token */
-            hProcess = NtCurrentProcess();
-            hToken = NULL;
-        }
-    }
-
-    /* Check if we have a token by now */
-    if (!hToken)
-    {
-        /* No token yet, so open the Process Token */
-        Status = NtOpenProcessToken(hProcess,
-                                    TOKEN_QUERY,
-                                    &hToken);
-        if (!NT_SUCCESS(Status))
-        {
-            /* Still no token, return the error */
-            return Status;
-        }
-    }
-
-    /* Now get the size we'll need for the Token Information */
-    Status = NtQueryInformationToken(hToken,
-                                     TokenStatistics,
-                                     NULL,
-                                     0,
-                                     &Length);
-
-    /* Allocate memory for the Token Info */
-    if (!(TokenStats = RtlAllocateHeap(CsrHeap, 0, Length)))
-    {
-        /* Fail and close the token */
-        NtClose(hToken);
-        return STATUS_NO_MEMORY;
-    }
-
-    /* Now query the information */
-    Status = NtQueryInformationToken(hToken,
-                                     TokenStatistics,
-                                     TokenStats,
-                                     Length,
-                                     &Length);
-
-    /* Close the handle */
-    NtClose(hToken);
-
-    /* Check for success */
-    if (NT_SUCCESS(Status))
-    {
-        /* Return the LUID */
-        *Luid = TokenStats->AuthenticationId;
-    }
-
-    /* Free the query information */
-    RtlFreeHeap(CsrHeap, 0, TokenStats);
-
-    /* Return the Status */
-    return Status;
-}
-
-/*++
- * @name CsrImpersonateClient
- * @implemented NT4
- *
- * The CsrImpersonateClient will impersonate the given CSR Thread.
- *
- * @param CsrThread
- *        Pointer to the CSR Thread to impersonate.
- *
- * @return TRUE if impersionation suceeded, false otherwise.
- *
- * @remarks Impersonation can be recursive.
- *
- *--*/
-BOOLEAN
-NTAPI
-CsrImpersonateClient(IN PCSR_THREAD CsrThread)
-{
-    NTSTATUS Status;
-    PCSR_THREAD CurrentThread = CsrGetClientThread();
-
-    /* Use the current thread if none given */
-    if (!CsrThread) CsrThread = CurrentThread;
-
-    /* Still no thread, something is wrong */
-    if (!CsrThread)
-    {
-        /* Failure */
-        return FALSE;
-    }
-
-    /* Make the call */
-    Status = NtImpersonateThread(NtCurrentThread(),
-                                 CsrThread->ThreadHandle,
-                                 &CsrSecurityQos);
-
-    if (!NT_SUCCESS(Status))
-    {
-        /* Failure */
-/*
-        DPRINT1("CSRSS: Can't impersonate client thread - Status = %lx\n", Status);
-        if (Status != STATUS_BAD_IMPERSONATION_LEVEL) DbgBreakPoint();
-*/
-        return FALSE;
-    }
-
-    /* Increase the impersonation count for the current thread */
-    if (CurrentThread) ++CurrentThread->ImpersonationCount;
-
-    /* Return Success */
-    return TRUE;
-}
-
-/*++
- * @name CsrRevertToSelf
- * @implemented NT4
- *
- * The CsrRevertToSelf routine will attempt to remove an active impersonation.
- *
- * @param None.
- *
- * @return TRUE if the reversion was succesful, false otherwise.
- *
- * @remarks Impersonation can be recursive; as such, the impersonation token
- *          will only be deleted once the CSR Thread's impersonaton count
- *          has reached zero.
- *
- *--*/
-BOOLEAN
-NTAPI
-CsrRevertToSelf(VOID)
-{
-    NTSTATUS Status;
-    PCSR_THREAD CurrentThread = CsrGetClientThread();
-    HANDLE ImpersonationToken = NULL;
-
-    /* Check if we have a Current Thread */
-    if (CurrentThread)
-    {
-        /* Make sure impersonation is on */
-        if (!CurrentThread->ImpersonationCount)
-        {
-            // DPRINT1("CSRSS: CsrRevertToSelf called while not impersonating\n");
-            // DbgBreakPoint();
-            return FALSE;
-        }
-        else if (--CurrentThread->ImpersonationCount > 0)
-        {
-            /* Success; impersonation count decreased but still not zero */
-            return TRUE;
-        }
-    }
-
-    /* Impersonation has been totally removed, revert to ourselves */
-    Status = NtSetInformationThread(NtCurrentThread(),
-                                    ThreadImpersonationToken,
-                                    &ImpersonationToken,
-                                    sizeof(HANDLE));
-
-    /* Return TRUE or FALSE */
-    return NT_SUCCESS(Status);
-}
-
-/*++
- * @name CsrDereferenceProcess
- * @implemented NT4
- *
- * The CsrDereferenceProcess routine removes a reference from a CSR Process.
- *
- * @param CsrThread
- *        Pointer to the CSR Process to dereference.
- *
- * @return None.
- *
- * @remarks If the reference count has reached zero (ie: the CSR Process has
- *          no more active references), it will be deleted.
- *
- *--*/
-VOID
-NTAPI
-CsrDereferenceProcess(IN PCSR_PROCESS CsrProcess)
-{
-    LONG LockCount;
-
-    /* Acquire process lock */
-    CsrAcquireProcessLock();
-
-    /* Decrease reference count */
-    LockCount = --CsrProcess->ReferenceCount;
-    ASSERT(LockCount >= 0);
-    if (!LockCount)
-    {
-        /* Call the generic cleanup code */
-        CsrProcessRefcountZero(CsrProcess);
-    }
-    else
-    {
-        /* Just release the lock */
-        CsrReleaseProcessLock();
-    }
-}
-
-/*++
- * @name CsrDestroyProcess
- * @implemented NT4
- *
- * The CsrDestroyProcess routine destroys the CSR Process corresponding to
- * a given Client ID.
- *
- * @param Cid
- *        Pointer to the Client ID Structure corresponding to the CSR
- *        Process which is about to be destroyed.
- *
- * @param ExitStatus
- *        Unused.
- *
- * @return STATUS_SUCCESS in case of success, STATUS_THREAD_IS_TERMINATING
- *         if the CSR Process is already terminating.
- *
- * @remarks None.
- *
- *--*/
-NTSTATUS
-NTAPI
-CsrDestroyProcess(IN PCLIENT_ID Cid,
-                  IN NTSTATUS ExitStatus)
-{
-    PCSR_THREAD CsrThread;
-    PCSR_PROCESS CsrProcess;
-    CLIENT_ID ClientId = *Cid;
-    PLIST_ENTRY NextEntry;
-
-    /* Acquire lock */
-    CsrAcquireProcessLock();
-
-    /* Find the thread */
-    CsrThread = CsrLocateThreadByClientId(&CsrProcess, &ClientId);
-
-    /* Make sure we got one back, and that it's not already gone */
-    if (!(CsrThread) || (CsrProcess->Flags & CsrProcessTerminating))
-    {
-        /* Release the lock and return failure */
-        CsrReleaseProcessLock();
-        return STATUS_THREAD_IS_TERMINATING;
-    }
-
-    /* Set the terminated flag */
-    CsrProcess->Flags |= CsrProcessTerminating;
-
-    /* Get the List Pointers */
-    NextEntry = CsrProcess->ThreadList.Flink;
-    while (NextEntry != &CsrProcess->ThreadList)
-    {
-        /* Get the current thread entry */
-        CsrThread = CONTAINING_RECORD(NextEntry, CSR_THREAD, Link);
-
-        /* Make sure the thread isn't already dead */
-        if (CsrThread->Flags & CsrThreadTerminated)
-        {
-            NextEntry = NextEntry->Flink;
-            continue;
-        }
-
-        /* Set the Terminated flag */
-        CsrThread->Flags |= CsrThreadTerminated;
-
-        /* Acquire the Wait Lock */
-        CsrAcquireWaitLock();
-
-        /* Do we have an active wait block? */
-        if (CsrThread->WaitBlock)
-        {
-            /* Notify waiters of termination */
-            CsrNotifyWaitBlock(CsrThread->WaitBlock,
-                               NULL,
-                               NULL,
-                               NULL,
-                               CsrProcessTerminating,
-                               TRUE);
-        }
-
-        /* Release the Wait Lock */
-        CsrReleaseWaitLock();
-
-        /* Dereference the thread */
-        CsrLockedDereferenceThread(CsrThread);
-        NextEntry = CsrProcess->ThreadList.Flink;
-    }
-
-    /* Release the Process Lock and return success */
-    CsrReleaseProcessLock();
-    return STATUS_SUCCESS;
-}
-
-/*++
  * @name CsrCreateProcess
  * @implemented NT4
  *
@@ -1048,60 +710,339 @@ CsrCreateProcess(IN HANDLE hProcess,
 }
 
 /*++
- * @name CsrUnlockProcess
+ * @name CsrDebugProcess
  * @implemented NT4
  *
- * The CsrUnlockProcess undoes a previous CsrLockProcessByClientId operation.
+ * The CsrDebugProcess routine is deprecated in NT 5.1 and higher. It is
+ * exported only for compatibility with older CSR Server DLLs.
  *
  * @param CsrProcess
- *        Pointer to a previously locked CSR Process.
+ *        Deprecated.
  *
- * @return STATUS_SUCCESS.
+ * @return Deprecated
  *
- * @remarks This routine must be called with the Process Lock held.
+ * @remarks Deprecated.
  *
  *--*/
 NTSTATUS
 NTAPI
-CsrUnlockProcess(IN PCSR_PROCESS CsrProcess)
+CsrDebugProcess(IN PCSR_PROCESS CsrProcess)
 {
-    /* Dereference the process */
-    CsrLockedDereferenceProcess(CsrProcess);
+    /* CSR does not handle debugging anymore */
+    DPRINT("CSRSRV: %s(%08lx) called\n", __FUNCTION__, CsrProcess);
+    return STATUS_UNSUCCESSFUL;
+}
 
-    /* Release the lock and return */
+/*++
+ * @name CsrDebugProcessStop
+ * @implemented NT4
+ *
+ * The CsrDebugProcessStop routine is deprecated in NT 5.1 and higher. It is
+ * exported only for compatibility with older CSR Server DLLs.
+ *
+ * @param CsrProcess
+ *        Deprecated.
+ *
+ * @return Deprecated
+ *
+ * @remarks Deprecated.
+ *
+ *--*/
+NTSTATUS
+NTAPI
+CsrDebugProcessStop(IN PCSR_PROCESS CsrProcess)
+{
+    /* CSR does not handle debugging anymore */
+    DPRINT("CSRSRV: %s(%08lx) called\n", __FUNCTION__, CsrProcess);
+    return STATUS_UNSUCCESSFUL;
+}
+
+/*++
+ * @name CsrDereferenceProcess
+ * @implemented NT4
+ *
+ * The CsrDereferenceProcess routine removes a reference from a CSR Process.
+ *
+ * @param CsrThread
+ *        Pointer to the CSR Process to dereference.
+ *
+ * @return None.
+ *
+ * @remarks If the reference count has reached zero (ie: the CSR Process has
+ *          no more active references), it will be deleted.
+ *
+ *--*/
+VOID
+NTAPI
+CsrDereferenceProcess(IN PCSR_PROCESS CsrProcess)
+{
+    LONG LockCount;
+
+    /* Acquire process lock */
+    CsrAcquireProcessLock();
+
+    /* Decrease reference count */
+    LockCount = --CsrProcess->ReferenceCount;
+    ASSERT(LockCount >= 0);
+    if (!LockCount)
+    {
+        /* Call the generic cleanup code */
+        CsrProcessRefcountZero(CsrProcess);
+    }
+    else
+    {
+        /* Just release the lock */
+        CsrReleaseProcessLock();
+    }
+}
+
+/*++
+ * @name CsrDestroyProcess
+ * @implemented NT4
+ *
+ * The CsrDestroyProcess routine destroys the CSR Process corresponding to
+ * a given Client ID.
+ *
+ * @param Cid
+ *        Pointer to the Client ID Structure corresponding to the CSR
+ *        Process which is about to be destroyed.
+ *
+ * @param ExitStatus
+ *        Unused.
+ *
+ * @return STATUS_SUCCESS in case of success, STATUS_THREAD_IS_TERMINATING
+ *         if the CSR Process is already terminating.
+ *
+ * @remarks None.
+ *
+ *--*/
+NTSTATUS
+NTAPI
+CsrDestroyProcess(IN PCLIENT_ID Cid,
+                  IN NTSTATUS ExitStatus)
+{
+    PCSR_THREAD CsrThread;
+    PCSR_PROCESS CsrProcess;
+    CLIENT_ID ClientId = *Cid;
+    PLIST_ENTRY NextEntry;
+
+    /* Acquire lock */
+    CsrAcquireProcessLock();
+
+    /* Find the thread */
+    CsrThread = CsrLocateThreadByClientId(&CsrProcess, &ClientId);
+
+    /* Make sure we got one back, and that it's not already gone */
+    if (!(CsrThread) || (CsrProcess->Flags & CsrProcessTerminating))
+    {
+        /* Release the lock and return failure */
+        CsrReleaseProcessLock();
+        return STATUS_THREAD_IS_TERMINATING;
+    }
+
+    /* Set the terminated flag */
+    CsrProcess->Flags |= CsrProcessTerminating;
+
+    /* Get the List Pointers */
+    NextEntry = CsrProcess->ThreadList.Flink;
+    while (NextEntry != &CsrProcess->ThreadList)
+    {
+        /* Get the current thread entry */
+        CsrThread = CONTAINING_RECORD(NextEntry, CSR_THREAD, Link);
+
+        /* Make sure the thread isn't already dead */
+        if (CsrThread->Flags & CsrThreadTerminated)
+        {
+            NextEntry = NextEntry->Flink;
+            continue;
+        }
+
+        /* Set the Terminated flag */
+        CsrThread->Flags |= CsrThreadTerminated;
+
+        /* Acquire the Wait Lock */
+        CsrAcquireWaitLock();
+
+        /* Do we have an active wait block? */
+        if (CsrThread->WaitBlock)
+        {
+            /* Notify waiters of termination */
+            CsrNotifyWaitBlock(CsrThread->WaitBlock,
+                               NULL,
+                               NULL,
+                               NULL,
+                               CsrProcessTerminating,
+                               TRUE);
+        }
+
+        /* Release the Wait Lock */
+        CsrReleaseWaitLock();
+
+        /* Dereference the thread */
+        CsrLockedDereferenceThread(CsrThread);
+        NextEntry = CsrProcess->ThreadList.Flink;
+    }
+
+    /* Release the Process Lock and return success */
     CsrReleaseProcessLock();
     return STATUS_SUCCESS;
 }
 
 /*++
- * @name CsrSetBackgroundPriority
+ * @name CsrGetProcessLuid
  * @implemented NT4
  *
- * The CsrSetBackgroundPriority routine sets the priority for the given CSR
- * Process as a Background priority.
+ * Do nothing for 500ms.
  *
- * @param CsrProcess
- *        Pointer to the CSR Process whose priority will be modified.
+ * @param hProcess
+ *        Optional handle to the process whose LUID should be returned.
  *
- * @return None.
+ * @param Luid
+ *        Pointer to a LUID Pointer which will receive the CSR Process' LUID
  *
- * @remarks None.
+ * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL
+ *         otherwise.
+ *
+ * @remarks If hProcess is not supplied, then the current thread's token will
+ *          be used. If that too is missing, then the current process' token
+ *          will be used.
  *
  *--*/
-VOID
+NTSTATUS
 NTAPI
-CsrSetBackgroundPriority(IN PCSR_PROCESS CsrProcess)
+CsrGetProcessLuid(IN HANDLE hProcess OPTIONAL,
+                  OUT PLUID Luid)
 {
-    PROCESS_PRIORITY_CLASS PriorityClass;
+    HANDLE hToken = NULL;
+    NTSTATUS Status;
+    ULONG Length;
+    PTOKEN_STATISTICS TokenStats;
 
-    /* Set the Foreground bit off */
-    PriorityClass.Foreground = FALSE;
+    /* Check if we have a handle to a CSR Process */
+    if (!hProcess)
+    {
+        /* We don't, so try opening the Thread's Token */
+        Status = NtOpenThreadToken(NtCurrentThread(),
+                                   TOKEN_QUERY,
+                                   FALSE,
+                                   &hToken);
 
-    /* Set the new Priority */
-    NtSetInformationProcess(CsrProcess->ProcessHandle,
-                            ProcessPriorityClass,
-                            &PriorityClass,
-                            sizeof(PriorityClass));
+        /* Check for success */
+        if (!NT_SUCCESS(Status))
+        {
+            /* If we got some other failure, then return and quit */
+            if (Status != STATUS_NO_TOKEN) return Status;
+
+            /* We don't have a Thread Token, use a Process Token */
+            hProcess = NtCurrentProcess();
+            hToken = NULL;
+        }
+    }
+
+    /* Check if we have a token by now */
+    if (!hToken)
+    {
+        /* No token yet, so open the Process Token */
+        Status = NtOpenProcessToken(hProcess,
+                                    TOKEN_QUERY,
+                                    &hToken);
+        if (!NT_SUCCESS(Status))
+        {
+            /* Still no token, return the error */
+            return Status;
+        }
+    }
+
+    /* Now get the size we'll need for the Token Information */
+    Status = NtQueryInformationToken(hToken,
+                                     TokenStatistics,
+                                     NULL,
+                                     0,
+                                     &Length);
+
+    /* Allocate memory for the Token Info */
+    if (!(TokenStats = RtlAllocateHeap(CsrHeap, 0, Length)))
+    {
+        /* Fail and close the token */
+        NtClose(hToken);
+        return STATUS_NO_MEMORY;
+    }
+
+    /* Now query the information */
+    Status = NtQueryInformationToken(hToken,
+                                     TokenStatistics,
+                                     TokenStats,
+                                     Length,
+                                     &Length);
+
+    /* Close the handle */
+    NtClose(hToken);
+
+    /* Check for success */
+    if (NT_SUCCESS(Status))
+    {
+        /* Return the LUID */
+        *Luid = TokenStats->AuthenticationId;
+    }
+
+    /* Free the query information */
+    RtlFreeHeap(CsrHeap, 0, TokenStats);
+
+    /* Return the Status */
+    return Status;
+}
+
+/*++
+ * @name CsrImpersonateClient
+ * @implemented NT4
+ *
+ * The CsrImpersonateClient will impersonate the given CSR Thread.
+ *
+ * @param CsrThread
+ *        Pointer to the CSR Thread to impersonate.
+ *
+ * @return TRUE if impersionation suceeded, false otherwise.
+ *
+ * @remarks Impersonation can be recursive.
+ *
+ *--*/
+BOOLEAN
+NTAPI
+CsrImpersonateClient(IN PCSR_THREAD CsrThread)
+{
+    NTSTATUS Status;
+    PCSR_THREAD CurrentThread = CsrGetClientThread();
+
+    /* Use the current thread if none given */
+    if (!CsrThread) CsrThread = CurrentThread;
+
+    /* Still no thread, something is wrong */
+    if (!CsrThread)
+    {
+        /* Failure */
+        return FALSE;
+    }
+
+    /* Make the call */
+    Status = NtImpersonateThread(NtCurrentThread(),
+                                 CsrThread->ThreadHandle,
+                                 &CsrSecurityQos);
+
+    if (!NT_SUCCESS(Status))
+    {
+        /* Failure */
+/*
+        DPRINT1("CSRSS: Can't impersonate client thread - Status = %lx\n", Status);
+        if (Status != STATUS_BAD_IMPERSONATION_LEVEL) DbgBreakPoint();
+*/
+        return FALSE;
+    }
+
+    /* Increase the impersonation count for the current thread */
+    if (CurrentThread) ++CurrentThread->ImpersonationCount;
+
+    /* Return Success */
+    return TRUE;
 }
 
 /*++
@@ -1177,6 +1118,118 @@ CsrLockProcessByClientId(IN HANDLE Pid,
 }
 
 /*++
+ * @name CsrRevertToSelf
+ * @implemented NT4
+ *
+ * The CsrRevertToSelf routine will attempt to remove an active impersonation.
+ *
+ * @param None.
+ *
+ * @return TRUE if the reversion was succesful, false otherwise.
+ *
+ * @remarks Impersonation can be recursive; as such, the impersonation token
+ *          will only be deleted once the CSR Thread's impersonaton count
+ *          has reached zero.
+ *
+ *--*/
+BOOLEAN
+NTAPI
+CsrRevertToSelf(VOID)
+{
+    NTSTATUS Status;
+    PCSR_THREAD CurrentThread = CsrGetClientThread();
+    HANDLE ImpersonationToken = NULL;
+
+    /* Check if we have a Current Thread */
+    if (CurrentThread)
+    {
+        /* Make sure impersonation is on */
+        if (!CurrentThread->ImpersonationCount)
+        {
+            // DPRINT1("CSRSS: CsrRevertToSelf called while not impersonating\n");
+            // DbgBreakPoint();
+            return FALSE;
+        }
+        else if (--CurrentThread->ImpersonationCount > 0)
+        {
+            /* Success; impersonation count decreased but still not zero */
+            return TRUE;
+        }
+    }
+
+    /* Impersonation has been totally removed, revert to ourselves */
+    Status = NtSetInformationThread(NtCurrentThread(),
+                                    ThreadImpersonationToken,
+                                    &ImpersonationToken,
+                                    sizeof(HANDLE));
+
+    /* Return TRUE or FALSE */
+    return NT_SUCCESS(Status);
+}
+
+/*++
+ * @name CsrSetBackgroundPriority
+ * @implemented NT4
+ *
+ * The CsrSetBackgroundPriority routine sets the priority for the given CSR
+ * Process as a Background priority.
+ *
+ * @param CsrProcess
+ *        Pointer to the CSR Process whose priority will be modified.
+ *
+ * @return None.
+ *
+ * @remarks None.
+ *
+ *--*/
+VOID
+NTAPI
+CsrSetBackgroundPriority(IN PCSR_PROCESS CsrProcess)
+{
+    PROCESS_PRIORITY_CLASS PriorityClass;
+
+    /* Set the Foreground bit off */
+    PriorityClass.Foreground = FALSE;
+
+    /* Set the new Priority */
+    NtSetInformationProcess(CsrProcess->ProcessHandle,
+                            ProcessPriorityClass,
+                            &PriorityClass,
+                            sizeof(PriorityClass));
+}
+
+/*++
+ * @name CsrSetForegroundPriority
+ * @implemented NT4
+ *
+ * The CsrSetForegroundPriority routine sets the priority for the given CSR
+ * Process as a Foreground priority.
+ *
+ * @param CsrProcess
+ *        Pointer to the CSR Process whose priority will be modified.
+ *
+ * @return None.
+ *
+ * @remarks None.
+ *
+ *--*/
+VOID
+NTAPI
+CsrSetForegroundPriority(IN PCSR_PROCESS CsrProcess)
+{
+    PROCESS_PRIORITY_CLASS PriorityClass;
+
+    /* Set the Foreground bit on */
+    PriorityClass.Foreground = TRUE;
+
+    /* Set the new Priority */
+    NtSetInformationProcess(CsrProcess->ProcessHandle,
+                            ProcessPriorityClass,
+                            &PriorityClass,
+                            sizeof(PriorityClass));
+}
+
+/*++
  * @name CsrShutdownProcesses
  * @implemented NT4
  *
@@ -1231,7 +1284,8 @@ CsrShutdownProcesses(IN PLUID CallerLuid,
     }
 
     /* Set shudown Priority */
-    CsrpSetToShutdownPriority();
+    // CsrpSetToShutdownPriority();
+    CsrSetToShutdownPriority();
 
     /* Start looping */
     while (TRUE)
@@ -1305,11 +1359,14 @@ CsrShutdownProcesses(IN PLUID CallerLuid,
 
 Quickie:
     /* Return to normal priority */
-    CsrpSetToNormalPriority();
+    // CsrpSetToNormalPriority();
+    CsrSetToNormalPriority();
+
     return Status;
 }
 
 /* FIXME: Temporary hack. This is really "CsrShutdownProcess", mostly. Used by win32csr */
+#if 0
 NTSTATUS
 WINAPI
 CsrEnumProcesses(IN CSRSS_ENUM_PROCESS_PROC EnumProc,
@@ -1400,84 +1457,32 @@ Quickie:
     CsrSetToNormalPriority();
     return Status;
 }
+#endif
 
 /*++
- * @name CsrDebugProcess
+ * @name CsrUnlockProcess
  * @implemented NT4
  *
- * The CsrDebugProcess routine is deprecated in NT 5.1 and higher. It is
- * exported only for compatibility with older CSR Server DLLs.
+ * The CsrUnlockProcess undoes a previous CsrLockProcessByClientId operation.
  *
  * @param CsrProcess
- *        Deprecated.
+ *        Pointer to a previously locked CSR Process.
  *
- * @return Deprecated
+ * @return STATUS_SUCCESS.
  *
- * @remarks Deprecated.
+ * @remarks This routine must be called with the Process Lock held.
  *
  *--*/
 NTSTATUS
 NTAPI
-CsrDebugProcess(IN PCSR_PROCESS CsrProcess)
+CsrUnlockProcess(IN PCSR_PROCESS CsrProcess)
 {
-    /* CSR does not handle debugging anymore */
-    DPRINT("CSRSRV: %s(%08lx) called\n", __FUNCTION__, CsrProcess);
-    return STATUS_UNSUCCESSFUL;
-}
+    /* Dereference the process */
+    CsrLockedDereferenceProcess(CsrProcess);
 
-/*++
- * @name CsrDebugProcessStop
- * @implemented NT4
- *
- * The CsrDebugProcessStop routine is deprecated in NT 5.1 and higher. It is
- * exported only for compatibility with older CSR Server DLLs.
- *
- * @param CsrProcess
- *        Deprecated.
- *
- * @return Deprecated
- *
- * @remarks Deprecated.
- *
- *--*/
-NTSTATUS
-NTAPI
-CsrDebugProcessStop(IN PCSR_PROCESS CsrProcess)
-{
-    /* CSR does not handle debugging anymore */
-    DPRINT("CSRSRV: %s(%08lx) called\n", __FUNCTION__, CsrProcess);
-    return STATUS_UNSUCCESSFUL;
-}
-
-/*++
- * @name CsrSetForegroundPriority
- * @implemented NT4
- *
- * The CsrSetForegroundPriority routine sets the priority for the given CSR
- * Process as a Foreground priority.
- *
- * @param CsrProcess
- *        Pointer to the CSR Process whose priority will be modified.
- *
- * @return None.
- *
- * @remarks None.
- *
- *--*/
-VOID
-NTAPI
-CsrSetForegroundPriority(IN PCSR_PROCESS CsrProcess)
-{
-    PROCESS_PRIORITY_CLASS PriorityClass;
-
-    /* Set the Foreground bit on */
-    PriorityClass.Foreground = TRUE;
-
-    /* Set the new Priority */
-    NtSetInformationProcess(CsrProcess->ProcessHandle,
-                            ProcessPriorityClass,
-                            &PriorityClass,
-                            sizeof(PriorityClass));
+    /* Release the lock and return */
+    CsrReleaseProcessLock();
+    return STATUS_SUCCESS;
 }
 
 /* EOF */

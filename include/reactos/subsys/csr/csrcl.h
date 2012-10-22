@@ -6,10 +6,10 @@
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
-#ifndef _CSRCLIENT_H
-#define _CSRCLIENT_H
+#ifndef _CSRCL_H
+#define _CSRCL_H
 
-#include "msg.h"
+#include "csrmsg.h"
 
 /*
 BOOLEAN
@@ -58,13 +58,6 @@ CsrCaptureMessageBuffer(IN OUT PCSR_CAPTURE_BUFFER CaptureBuffer,
                         IN PVOID MessageString,
                         IN ULONG StringLength,
                         OUT PVOID* CapturedData);
-
-BOOLEAN
-NTAPI
-CsrValidateMessageBuffer(IN PCSR_API_MESSAGE ApiMessage,
-                         IN PVOID* Buffer,
-                         IN ULONG ArgumentSize,
-                         IN ULONG ArgumentCount);
 
 VOID
 NTAPI

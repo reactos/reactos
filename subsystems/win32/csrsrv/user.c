@@ -25,16 +25,16 @@ static ULONG_PTR ServicesProcessId;
 
 CSR_API(SrvRegisterServicesProcess)
 {
-  if (ServicesProcessIdValid == TRUE)
+    if (ServicesProcessIdValid == TRUE)
     {
-      /* Only accept a single call */
-      return STATUS_INVALID_PARAMETER;
+        /* Only accept a single call */
+        return STATUS_INVALID_PARAMETER;
     }
-  else
+    else
     {
-      ServicesProcessId = (ULONG_PTR)ApiMessage->Data.RegisterServicesProcessRequest.ProcessId;
-      ServicesProcessIdValid = TRUE;
-      return STATUS_SUCCESS;
+        ServicesProcessId = (ULONG_PTR)ApiMessage->Data.RegisterServicesProcessRequest.ProcessId;
+        ServicesProcessIdValid = TRUE;
+        return STATUS_SUCCESS;
     }
 }
 

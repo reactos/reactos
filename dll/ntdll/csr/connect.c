@@ -433,7 +433,7 @@ CsrClientConnectToServer(PWSTR ObjectDirectory,
         /* Call CSR */
         Status = CsrClientCallServer(&ApiMessage,
                                      CaptureBuffer,
-                                     CSR_CREATE_API_NUMBER(CSR_SRV_DLL, CsrpClientConnect),
+                                     CSR_CREATE_API_NUMBER(CSRSRV_SERVERDLL_INDEX, CsrpClientConnect),
                                      sizeof(CSR_CLIENT_CONNECT));
 /*
         Status = CsrClientCallServer(&ApiMessage,

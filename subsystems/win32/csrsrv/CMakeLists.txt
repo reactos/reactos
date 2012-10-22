@@ -5,15 +5,14 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/subsys)
 spec2def(csrsrv.dll csrsrv.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
-    api/process.c
-    api/user.c
-    api/wapi.c
-    procsup.c
-    thredsup.c
+    api.c
     init.c
-    wait.c
-    session.c
+    procsup.c
     server.c
+    session.c
+    thredsup.c
+    user.c
+    wait.c
     ${CMAKE_CURRENT_BINARY_DIR}/csrsrv.def)
 
 add_library(csrsrv SHARED ${SOURCE})
