@@ -1035,6 +1035,9 @@ IoDeleteDevice(IN PDEVICE_OBJECT DeviceObject)
     /* Set the pending delete flag */
     IoGetDevObjExtension(DeviceObject)->ExtensionFlags |= DOE_DELETE_PENDING;
 
+    /* Unlink with the power manager */
+    if (DeviceObject->Vpb) PoRemoveVolumeDevice(DeviceObject);
+
     /* Check if the device object can be unloaded */
     if (!DeviceObject->ReferenceCount) IopUnloadDevice(DeviceObject);
 }
