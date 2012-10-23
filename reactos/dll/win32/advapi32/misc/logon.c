@@ -310,53 +310,72 @@ static BOOL WINAPI
 GetUserSid(LPCWSTR UserName,
            PSID *Sid)
 {
-    PSID AccountDomainSid = NULL;
-    ULONG ulUserRid;
-    DWORD dwLength;
-    HKEY hNamesKey = NULL;
-    BOOL bResult = TRUE;
+    PSID SidBuffer = NULL;
+    PWSTR DomainBuffer = NULL;
+    DWORD cbSidSize = 0;
+    DWORD cchDomSize = 0;
+    SID_NAME_USE Use;
+    BOOL res = TRUE;
 
-    if (!GetAccountDomainSid(&AccountDomainSid))
-    {
+    *Sid = NULL;
+
+    LookupAccountNameW(NULL,
+                       UserName,
+                       NULL,
+                       &cbSidSize,
+                       NULL,
+                       &cchDomSize,
+                       &Use);
+
+    if (cbSidSize == 0 || cchDomSize == 0)
         return FALSE;
-    }
 
-    /* Open the Users\Names key */
-    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-                      L"SAM\\SAM\\Domains\\Account\\Users\\Names",
-                      0,
-                      KEY_READ,
-                      &hNamesKey))
+    SidBuffer = RtlAllocateHeap(RtlGetProcessHeap(),
+                                HEAP_ZERO_MEMORY,
+                                cbSidSize);
+    if (SidBuffer == NULL)
+        return FALSE;
+
+    DomainBuffer = RtlAllocateHeap(RtlGetProcessHeap(),
+                                   HEAP_ZERO_MEMORY,
+                                   cchDomSize * sizeof(WCHAR));
+    if (DomainBuffer == NULL)
     {
-        ERR("Failed to open Users\\Names key! (Error %lu)\n", GetLastError());
-        bResult = FALSE;
+        res = FALSE;
         goto done;
     }
 
-    /* Read the user RID */
-    dwLength = sizeof(ULONG);
-    if (RegQueryValueExW(hNamesKey,
-                         UserName,
-                         NULL,
-                         NULL,
-                        (LPBYTE)&ulUserRid,
-                        &dwLength))
+    if (!LookupAccountNameW(NULL,
+                            UserName,
+                            SidBuffer,
+                            &cbSidSize,
+                            DomainBuffer,
+                            &cchDomSize,
+                            &Use))
     {
-        ERR("Failed to read the SID! (Error %ld)\n", GetLastError());
-        bResult = FALSE;
+        res = FALSE;
         goto done;
     }
 
-    *Sid = AppendRidToSid(AccountDomainSid, ulUserRid);
+    if (Use != SidTypeUser)
+    {
+        res = FALSE;
+        goto done;
+    }
+
+    *Sid = SidBuffer;
 
 done:
-    if (hNamesKey != NULL)
-        RegCloseKey(hNamesKey);
+    if (DomainBuffer != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, DomainBuffer);
 
-    if (AccountDomainSid != NULL)
-        RtlFreeHeap(RtlGetProcessHeap(), 0, AccountDomainSid);
+    if (res == FALSE)
+    {
+        if (SidBuffer != NULL)
+            RtlFreeHeap(RtlGetProcessHeap(), 0, SidBuffer);
+    }
 
-    return bResult;
+    return res;
 }
 
 
@@ -593,8 +612,8 @@ LogonUserW(LPWSTR lpszUsername,
     TOKEN_USER TokenUser;
     TOKEN_OWNER TokenOwner;
     TOKEN_PRIMARY_GROUP TokenPrimaryGroup;
-    PTOKEN_GROUPS TokenGroups;
-    PTOKEN_PRIVILEGES TokenPrivileges;
+    PTOKEN_GROUPS TokenGroups = NULL;
+    PTOKEN_PRIVILEGES TokenPrivileges = NULL;
     TOKEN_DEFAULT_DACL TokenDefaultDacl;
     LARGE_INTEGER ExpirationTime;
     LUID AuthenticationId;
@@ -603,10 +622,10 @@ LogonUserW(LPWSTR lpszUsername,
     PSID PrimaryGroupSid = NULL;
     PSID OwnerSid = NULL;
     PSID LocalSystemSid;
-    PACL Dacl;
-    NTSTATUS Status;
+    PACL Dacl = NULL;
     SID_IDENTIFIER_AUTHORITY SystemAuthority = {SECURITY_NT_AUTHORITY};
     unsigned i;
+    NTSTATUS Status = STATUS_SUCCESS;
 
     Qos.Length = sizeof(SECURITY_QUALITY_OF_SERVICE);
     Qos.ImpersonationLevel = SecurityAnonymous;
@@ -641,11 +660,10 @@ LogonUserW(LPWSTR lpszUsername,
     /* Allocate and initialize token groups */
     TokenGroups = AllocateGroupSids(&PrimaryGroupSid,
                                     &OwnerSid);
-    if (NULL == TokenGroups)
+    if (TokenGroups == NULL)
     {
-        RtlFreeSid(UserSid);
-        SetLastError(ERROR_OUTOFMEMORY);
-        return FALSE;
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
     }
 
     /* Allocate and initialize token privileges */
@@ -653,12 +671,10 @@ LogonUserW(LPWSTR lpszUsername,
                                       sizeof(TOKEN_PRIVILEGES)
                                     + sizeof(DefaultPrivs) / sizeof(DefaultPrivs[0])
                                       * sizeof(LUID_AND_ATTRIBUTES));
-    if (NULL == TokenPrivileges)
+    if (TokenPrivileges == NULL)
     {
-        FreeGroupSids(TokenGroups);
-        RtlFreeSid(UserSid);
-        SetLastError(ERROR_OUTOFMEMORY);
-        return FALSE;
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
     }
 
     TokenPrivileges->PrivilegeCount = 0;
@@ -683,21 +699,13 @@ LogonUserW(LPWSTR lpszUsername,
     Dacl = RtlAllocateHeap(GetProcessHeap(), 0, 1024);
     if (Dacl == NULL)
     {
-        FreeGroupSids(TokenGroups);
-        RtlFreeSid(UserSid);
-        SetLastError(ERROR_OUTOFMEMORY);
-        return FALSE;
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
     }
 
     Status = RtlCreateAcl(Dacl, 1024, ACL_REVISION);
     if (!NT_SUCCESS(Status))
-    {
-        RtlFreeHeap(GetProcessHeap(), 0, Dacl);
-        FreeGroupSids(TokenGroups);
-        RtlFreeHeap(GetProcessHeap(), 0, TokenPrivileges);
-        RtlFreeSid(UserSid);
-        return FALSE;
-    }
+        goto done;
 
     RtlAddAccessAllowedAce(Dacl,
                            ACL_REVISION,
@@ -754,10 +762,18 @@ LogonUserW(LPWSTR lpszUsername,
                            &TokenDefaultDacl,
                            &TokenSource);
 
-    RtlFreeHeap(GetProcessHeap(), 0, Dacl);
-    FreeGroupSids(TokenGroups);
-    RtlFreeHeap(GetProcessHeap(), 0, TokenPrivileges);
-    RtlFreeSid(UserSid);
+done:
+    if (Dacl != NULL)
+        RtlFreeHeap(GetProcessHeap(), 0, Dacl);
+
+    if (TokenGroups != NULL)
+        FreeGroupSids(TokenGroups);
+
+    if (TokenPrivileges != NULL)
+        RtlFreeHeap(GetProcessHeap(), 0, TokenPrivileges);
+
+    if (UserSid != NULL)
+        RtlFreeHeap(GetProcessHeap(), 0, UserSid);
 
     return NT_SUCCESS(Status);
 }
