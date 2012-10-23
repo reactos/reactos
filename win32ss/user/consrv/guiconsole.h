@@ -1,12 +1,12 @@
-/* $Id: guiconsole.h 57326 2012-09-18 21:45:00Z akhaldi $
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            win32ss/user/consrv/guiconsole.h
  * PURPOSE:         Interface to GUI consoles
  */
 
-#include "api.h"
+// #include "api.h"
+#include "conio.h"
 
 #define CONGUI_MIN_WIDTH      10
 #define CONGUI_MIN_HEIGHT     10

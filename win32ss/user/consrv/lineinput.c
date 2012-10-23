@@ -8,8 +8,10 @@
 
 /* INCLUDES ******************************************************************/
 
+#include "consrv.h"
+#include "conio.h"
+
 #define NDEBUG
-#include "w32csr.h"
 #include <debug.h>
 
 typedef struct tagHISTORY_BUFFER
@@ -149,6 +151,7 @@ HistoryDeleteBuffer(PHISTORY_BUFFER Hist)
 
 CSR_API(SrvGetConsoleCommandHistoryLength)
 {
+    PCSRSS_GET_COMMAND_HISTORY_LENGTH GetCommandHistoryLength = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetCommandHistoryLength;
     PCSR_PROCESS ProcessData = CsrGetClientThread()->Process;
     PCSRSS_CONSOLE Console;
     NTSTATUS Status;
@@ -157,8 +160,8 @@ CSR_API(SrvGetConsoleCommandHistoryLength)
     INT i;
 
     if (!Win32CsrValidateBuffer(ProcessData,
-                                ApiMessage->Data.GetCommandHistoryLength.ExeName.Buffer,
-                                ApiMessage->Data.GetCommandHistoryLength.ExeName.Length, 1))
+                                GetCommandHistoryLength->ExeName.Buffer,
+                                GetCommandHistoryLength->ExeName.Length, 1))
     {
         return STATUS_ACCESS_VIOLATION;
     }
@@ -166,13 +169,13 @@ CSR_API(SrvGetConsoleCommandHistoryLength)
     Status = ConioConsoleFromProcessData(ProcessData, &Console);
     if (NT_SUCCESS(Status))
     {
-        Hist = HistoryFindBuffer(Console, &ApiMessage->Data.GetCommandHistory.ExeName);
+        Hist = HistoryFindBuffer(Console, &GetCommandHistoryLength->ExeName);
         if (Hist)
         {
             for (i = 0; i < Hist->NumEntries; i++)
                 Length += Hist->Entries[i].Length + sizeof(WCHAR);
         }
-        ApiMessage->Data.GetCommandHistoryLength.Length = Length;
+        GetCommandHistoryLength->Length = Length;
         ConioUnlockConsole(Console);
     }
     return Status;
@@ -180,18 +183,19 @@ CSR_API(SrvGetConsoleCommandHistoryLength)
 
 CSR_API(SrvGetConsoleCommandHistory)
 {
+    PCSRSS_GET_COMMAND_HISTORY GetCommandHistory = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetCommandHistory;
     PCSR_PROCESS ProcessData = CsrGetClientThread()->Process;
     PCSRSS_CONSOLE Console;
     NTSTATUS Status;
     PHISTORY_BUFFER Hist;
-    PBYTE Buffer = (PBYTE)ApiMessage->Data.GetCommandHistory.History;
-    ULONG BufferSize = ApiMessage->Data.GetCommandHistory.Length;
+    PBYTE Buffer = (PBYTE)GetCommandHistory->History;
+    ULONG BufferSize = GetCommandHistory->Length;
     INT i;
 
     if (!Win32CsrValidateBuffer(ProcessData, Buffer, BufferSize, 1) ||
         !Win32CsrValidateBuffer(ProcessData,
-                                ApiMessage->Data.GetCommandHistory.ExeName.Buffer,
-                                ApiMessage->Data.GetCommandHistory.ExeName.Length, 1))
+                                GetCommandHistory->ExeName.Buffer,
+                                GetCommandHistory->ExeName.Length, 1))
     {
         return STATUS_ACCESS_VIOLATION;
     }
@@ -199,7 +203,7 @@ CSR_API(SrvGetConsoleCommandHistory)
     Status = ConioConsoleFromProcessData(ProcessData, &Console);
     if (NT_SUCCESS(Status))
     {
-        Hist = HistoryFindBuffer(Console, &ApiMessage->Data.GetCommandHistory.ExeName);
+        Hist = HistoryFindBuffer(Console, &GetCommandHistory->ExeName);
         if (Hist)
         {
             for (i = 0; i < Hist->NumEntries; i++)
@@ -215,7 +219,7 @@ CSR_API(SrvGetConsoleCommandHistory)
                 Buffer += sizeof(WCHAR);
             }
         }
-        ApiMessage->Data.GetCommandHistory.Length = Buffer - (PBYTE)ApiMessage->Data.GetCommandHistory.History;
+        GetCommandHistory->Length = Buffer - (PBYTE)GetCommandHistory->History;
         ConioUnlockConsole(Console);
     }
     return Status;
@@ -223,14 +227,15 @@ CSR_API(SrvGetConsoleCommandHistory)
 
 CSR_API(SrvExpungeConsoleCommandHistory)
 {
+    PCSRSS_EXPUNGE_COMMAND_HISTORY ExpungeCommandHistory = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.ExpungeCommandHistory;
     PCSR_PROCESS ProcessData = CsrGetClientThread()->Process;
     PCSRSS_CONSOLE Console;
     PHISTORY_BUFFER Hist;
     NTSTATUS Status;
 
     if (!Win32CsrValidateBuffer(ProcessData,
-                                ApiMessage->Data.ExpungeCommandHistory.ExeName.Buffer,
-                                ApiMessage->Data.ExpungeCommandHistory.ExeName.Length, 1))
+                                ExpungeCommandHistory->ExeName.Buffer,
+                                ExpungeCommandHistory->ExeName.Length, 1))
     {
         return STATUS_ACCESS_VIOLATION;
     }
@@ -238,7 +243,7 @@ CSR_API(SrvExpungeConsoleCommandHistory)
     Status = ConioConsoleFromProcessData(ProcessData, &Console);
     if (NT_SUCCESS(Status))
     {
-        Hist = HistoryFindBuffer(Console, &ApiMessage->Data.ExpungeCommandHistory.ExeName);
+        Hist = HistoryFindBuffer(Console, &ExpungeCommandHistory->ExeName);
         HistoryDeleteBuffer(Hist);
         ConioUnlockConsole(Console);
     }
@@ -247,16 +252,17 @@ CSR_API(SrvExpungeConsoleCommandHistory)
 
 CSR_API(SrvSetConsoleNumberOfCommands)
 {
+    PCSRSS_SET_HISTORY_NUMBER_COMMANDS SetHistoryNumberCommands = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.SetHistoryNumberCommands;
     PCSR_PROCESS ProcessData = CsrGetClientThread()->Process;
     PCSRSS_CONSOLE Console;
     PHISTORY_BUFFER Hist;
     NTSTATUS Status;
-    WORD MaxEntries = ApiMessage->Data.SetHistoryNumberCommands.NumCommands;
+    WORD MaxEntries = SetHistoryNumberCommands->NumCommands;
     PUNICODE_STRING OldEntryList, NewEntryList;
 
     if (!Win32CsrValidateBuffer(ProcessData,
-                                ApiMessage->Data.SetHistoryNumberCommands.ExeName.Buffer,
-                                ApiMessage->Data.SetHistoryNumberCommands.ExeName.Length, 1))
+                                SetHistoryNumberCommands->ExeName.Buffer,
+                                SetHistoryNumberCommands->ExeName.Length, 1))
     {
         return STATUS_ACCESS_VIOLATION;
     }
@@ -264,7 +270,7 @@ CSR_API(SrvSetConsoleNumberOfCommands)
     Status = ConioConsoleFromProcessData(ProcessData, &Console);
     if (NT_SUCCESS(Status))
     {
-        Hist = HistoryFindBuffer(Console, &ApiMessage->Data.SetHistoryNumberCommands.ExeName);
+        Hist = HistoryFindBuffer(Console, &SetHistoryNumberCommands->ExeName);
         if (Hist)
         {
             OldEntryList = Hist->Entries;
@@ -296,13 +302,14 @@ CSR_API(SrvSetConsoleNumberOfCommands)
 
 CSR_API(SrvGetConsoleHistory)
 {
+    PCSRSS_GET_HISTORY_INFO GetHistoryInfo = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetHistoryInfo;
     PCSRSS_CONSOLE Console;
     NTSTATUS Status = ConioConsoleFromProcessData(CsrGetClientThread()->Process, &Console);
     if (NT_SUCCESS(Status))
     {
-        ApiMessage->Data.SetHistoryInfo.HistoryBufferSize      = Console->HistoryBufferSize;
-        ApiMessage->Data.SetHistoryInfo.NumberOfHistoryBuffers = Console->NumberOfHistoryBuffers;
-        ApiMessage->Data.SetHistoryInfo.dwFlags                = Console->HistoryNoDup;
+        GetHistoryInfo->HistoryBufferSize      = Console->HistoryBufferSize;
+        GetHistoryInfo->NumberOfHistoryBuffers = Console->NumberOfHistoryBuffers;
+        GetHistoryInfo->dwFlags                = Console->HistoryNoDup;
         ConioUnlockConsole(Console);
     }
     return Status;
@@ -310,13 +317,14 @@ CSR_API(SrvGetConsoleHistory)
 
 CSR_API(SrvSetConsoleHistory)
 {
+    PCSRSS_SET_HISTORY_INFO SetHistoryInfo = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.SetHistoryInfo;
     PCSRSS_CONSOLE Console;
     NTSTATUS Status = ConioConsoleFromProcessData(CsrGetClientThread()->Process, &Console);
     if (NT_SUCCESS(Status))
     {
-        Console->HistoryBufferSize      = (WORD)ApiMessage->Data.SetHistoryInfo.HistoryBufferSize;
-        Console->NumberOfHistoryBuffers = (WORD)ApiMessage->Data.SetHistoryInfo.NumberOfHistoryBuffers;
-        Console->HistoryNoDup           = ApiMessage->Data.SetHistoryInfo.dwFlags & HISTORY_NO_DUP_FLAG;
+        Console->HistoryBufferSize      = (WORD)SetHistoryInfo->HistoryBufferSize;
+        Console->NumberOfHistoryBuffers = (WORD)SetHistoryInfo->NumberOfHistoryBuffers;
+        Console->HistoryNoDup           = SetHistoryInfo->dwFlags & HISTORY_NO_DUP_FLAG;
         ConioUnlockConsole(Console);
     }
     return Status;

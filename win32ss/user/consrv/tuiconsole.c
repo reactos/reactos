@@ -1,13 +1,15 @@
-/* $Id: tuiconsole.c 47693 2010-06-08 06:38:14Z jmorlan $
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            win32ss/user/consrv/tuiconsole.c
  * PURPOSE:         Implementation of text-mode consoles
  */
 
+#include "consrv.h"
+#include "tuiconsole.h"
+#include <drivers/blue/ntddblue.h>
+
 #define NDEBUG
-#include "w32csr.h"
 #include <debug.h>
 
 CRITICAL_SECTION ActiveConsoleLock;

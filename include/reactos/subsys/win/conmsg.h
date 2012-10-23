@@ -4,9 +4,6 @@
 
 #pragma once
 
-// Remove it.
-#include <drivers/blue/ntddblue.h>
-
 #define CONSRV_SERVERDLL_INDEX      2
 #define CONSRV_FIRST_API_NUMBER     512
 
@@ -47,7 +44,7 @@ typedef enum _CONSRV_API_NUMBER
     ConsolepReadConsole,
     ConsolepWriteConsole,
     ConsolepDuplicateHandle,
-    // ConsolepGetHandleInformation,
+    /**/ ConsolepGetHandleInformation /**/,
     // ConsolepSetHandleInformation,
     ConsolepCloseHandle,
     ConsolepVerifyIoHandle,
@@ -397,7 +394,7 @@ typedef struct
     DWORD BytesWritten;
     DWORD AliasBufferLength;
     LPWSTR AliasBuffer;
-} CSRSS_GET_ALL_CONSOLE_ALIASES, *PCSRSS_GET_ALL_CONSOLE_ALIAS;
+} CSRSS_GET_ALL_CONSOLE_ALIASES, *PCSRSS_GET_ALL_CONSOLE_ALIASES;
 
 typedef struct
 {
@@ -472,7 +469,6 @@ typedef struct
 } CSRSS_GET_HISTORY_INFO, *PCSRSS_GET_HISTORY_INFO,
   CSRSS_SET_HISTORY_INFO, *PCSRSS_SET_HISTORY_INFO;;
 
-  
 typedef struct
 {
     UINT CodePage;
@@ -533,6 +529,10 @@ typedef struct _CONSOLE_API_MESSAGE
         CSRSS_WRITE_CONSOLE_INPUT WriteConsoleInputRequest;
         CSRSS_GET_INPUT_HANDLE GetInputHandleRequest;
         CSRSS_GET_OUTPUT_HANDLE GetOutputHandleRequest;
+        CSRSS_CLOSE_HANDLE CloseHandleRequest;
+        CSRSS_VERIFY_HANDLE VerifyHandleRequest;
+        CSRSS_DUPLICATE_HANDLE DuplicateHandleRequest;
+        CSRSS_GET_INPUT_WAIT_HANDLE GetConsoleInputWaitHandle;
         CSRSS_SETGET_CONSOLE_HW_STATE ConsoleHardwareStateRequest;
         CSRSS_GET_CONSOLE_WINDOW GetConsoleWindowRequest;
         CSRSS_SET_CONSOLE_ICON SetConsoleIconRequest;

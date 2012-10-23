@@ -12,6 +12,7 @@ endif()
 
 add_subdirectory(gdi/gdi32)
 add_subdirectory(reactx)
+add_subdirectory(user/consrv)
 add_subdirectory(user/user32)
 add_subdirectory(user/win32csr)
 

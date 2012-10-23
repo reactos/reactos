@@ -7,6 +7,7 @@
  */
 
 #include "consrv.h"
+#include "conio.h"
 
 #define NDEBUG
 #include <debug.h>

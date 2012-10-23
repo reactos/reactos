@@ -122,11 +122,6 @@ typedef struct _CSR_API_MESSAGE
                 CSRSS_REGISTER_SERVICES_PROCESS RegisterServicesProcessRequest;
                 CSRSS_EXIT_REACTOS ExitReactosRequest;
 
-                CSRSS_CLOSE_HANDLE CloseHandleRequest;
-                CSRSS_VERIFY_HANDLE VerifyHandleRequest;
-                CSRSS_DUPLICATE_HANDLE DuplicateHandleRequest;
-                CSRSS_GET_INPUT_WAIT_HANDLE GetConsoleInputWaitHandle;
-
                 CSRSS_CREATE_DESKTOP CreateDesktopRequest;
                 CSRSS_SHOW_DESKTOP ShowDesktopRequest;
                 CSRSS_HIDE_DESKTOP HideDesktopRequest;

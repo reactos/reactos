@@ -19,9 +19,8 @@
 #include <sm/helper.h>
 #include <sm/smmsg.h>
 
-/* Internal CSRSS Headers */
+/* Internal CSRSS Header */
 #include "include/api.h"
-#include "include/csrplugin.h"
 
 /* Defines */
 #define SM_REG_KEY \

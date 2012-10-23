@@ -1,5 +1,4 @@
-/* $Id: conio.h 55617 2012-02-15 20:29:08Z ion $
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            subsys/csrss/include/conio.h
@@ -8,8 +7,7 @@
 
 #pragma once
 
-#include "api.h"
-#include "win32csr.h"
+// #include "api.h"
 
 #define CSR_DEFAULT_CURSOR_SIZE 25
 
@@ -36,79 +34,77 @@
 
 typedef struct tagCSRSS_SCREEN_BUFFER
 {
-  Object_t Header;                 /* Object header */
-  BYTE *Buffer;                    /* pointer to screen buffer */
-  USHORT MaxX, MaxY;               /* size of the entire scrollback buffer */
-  USHORT ShowX, ShowY;             /* beginning offset for the actual display area */
-  ULONG CurrentX;                  /* Current X cursor position */
-  ULONG CurrentY;                  /* Current Y cursor position */
-  WORD DefaultAttrib;              /* default char attribute */
-  USHORT VirtualY;                 /* top row of buffer being displayed, reported to callers */
-  CONSOLE_CURSOR_INFO CursorInfo;
-  USHORT Mode;
-  LIST_ENTRY ListEntry;            /* entry in console's list of buffers */
+    Object_t Header;                 /* Object header */
+    BYTE *Buffer;                    /* pointer to screen buffer */
+    USHORT MaxX, MaxY;               /* size of the entire scrollback buffer */
+    USHORT ShowX, ShowY;             /* beginning offset for the actual display area */
+    ULONG CurrentX;                  /* Current X cursor position */
+    ULONG CurrentY;                  /* Current Y cursor position */
+    WORD DefaultAttrib;              /* default char attribute */
+    USHORT VirtualY;                 /* top row of buffer being displayed, reported to callers */
+    CONSOLE_CURSOR_INFO CursorInfo;
+    USHORT Mode;
+    LIST_ENTRY ListEntry;            /* entry in console's list of buffers */
 } CSRSS_SCREEN_BUFFER, *PCSRSS_SCREEN_BUFFER;
-
-typedef struct tagCSRSS_CONSOLE *PCSRSS_CONSOLE;
-
-typedef struct tagCSRSS_CONSOLE_VTBL
-{
-  VOID (WINAPI *InitScreenBuffer)(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER ScreenBuffer);
-  VOID (WINAPI *WriteStream)(PCSRSS_CONSOLE Console, SMALL_RECT *Block, LONG CursorStartX, LONG CursorStartY,
-                              UINT ScrolledLines, CHAR *Buffer, UINT Length);
-  VOID (WINAPI *DrawRegion)(PCSRSS_CONSOLE Console, SMALL_RECT *Region);
-  BOOL (WINAPI *SetCursorInfo)(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER ScreenBuffer);
-  BOOL (WINAPI *SetScreenInfo)(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER ScreenBuffer,
-                                UINT OldCursorX, UINT OldCursorY);
-  BOOL (WINAPI *UpdateScreenInfo)(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER ScreenBuffer);
-  BOOL (WINAPI *ChangeTitle)(PCSRSS_CONSOLE Console);
-  VOID (WINAPI *CleanupConsole)(PCSRSS_CONSOLE Console);
-  BOOL (WINAPI *ChangeIcon)(PCSRSS_CONSOLE Console, HICON hWindowIcon);
-  NTSTATUS (WINAPI *ResizeBuffer)(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER ScreenBuffer, COORD Size);
-} CSRSS_CONSOLE_VTBL, *PCSRSS_CONSOLE_VTBL;
 
 typedef struct tagCSRSS_CONSOLE
 {
-  Object_t Header;                      /* Object header */
-  LONG ReferenceCount;
-  CRITICAL_SECTION Lock;
-  PCSRSS_CONSOLE Prev, Next;            /* Next and Prev consoles in console wheel */
-  HANDLE ActiveEvent;
-  LIST_ENTRY InputEvents;               /* List head for input event queue */
-  PWCHAR LineBuffer;                    /* current line being input, in line buffered mode */
-  WORD LineMaxSize;                     /* maximum size of line in characters (including CR+LF) */
-  WORD LineSize;                        /* current size of line */
-  WORD LinePos;                         /* current position within line */
-  BOOLEAN LineComplete;                 /* user pressed enter, ready to send back to client */
-  BOOLEAN LineUpPressed;
-  BOOLEAN LineInsertToggle;             /* replace character over cursor instead of inserting */
-  ULONG LineWakeupMask;                 /* bitmap of which control characters will end line input */
-  LIST_ENTRY HistoryBuffers;
-  WORD HistoryBufferSize;               /* size for newly created history buffers */
-  WORD NumberOfHistoryBuffers;          /* maximum number of history buffers allowed */
-  BOOLEAN HistoryNoDup;                 /* remove old duplicate history entries */
-  LIST_ENTRY BufferList;                /* List of all screen buffers for this console */
-  PCSRSS_SCREEN_BUFFER ActiveBuffer;    /* Pointer to currently active screen buffer */
-  WORD Mode;                            /* Console mode flags */
-  UNICODE_STRING Title;                 /* Title of console */
-  DWORD HardwareState;                  /* _GDI_MANAGED, _DIRECT */
-  HWND hWindow;
-  COORD Size;
-  PVOID PrivateData;
-  UINT CodePage;
-  UINT OutputCodePage;
-  PCSRSS_CONSOLE_VTBL Vtbl;
-  LIST_ENTRY ProcessList;
-  struct tagALIAS_HEADER *Aliases;
-  CONSOLE_SELECTION_INFO Selection;
-  BYTE PauseFlags;
-  HANDLE UnpauseEvent;
-} CSRSS_CONSOLE;
+    Object_t Header;                      /* Object header */
+    LONG ReferenceCount;
+    CRITICAL_SECTION Lock;
+    struct tagCSRSS_CONSOLE *Prev, *Next; /* Next and Prev consoles in console wheel */
+    HANDLE ActiveEvent;
+    LIST_ENTRY InputEvents;               /* List head for input event queue */
+    PWCHAR LineBuffer;                    /* current line being input, in line buffered mode */
+    WORD LineMaxSize;                     /* maximum size of line in characters (including CR+LF) */
+    WORD LineSize;                        /* current size of line */
+    WORD LinePos;                         /* current position within line */
+    BOOLEAN LineComplete;                 /* user pressed enter, ready to send back to client */
+    BOOLEAN LineUpPressed;
+    BOOLEAN LineInsertToggle;             /* replace character over cursor instead of inserting */
+    ULONG LineWakeupMask;                 /* bitmap of which control characters will end line input */
+    LIST_ENTRY HistoryBuffers;
+    WORD HistoryBufferSize;               /* size for newly created history buffers */
+    WORD NumberOfHistoryBuffers;          /* maximum number of history buffers allowed */
+    BOOLEAN HistoryNoDup;                 /* remove old duplicate history entries */
+    LIST_ENTRY BufferList;                /* List of all screen buffers for this console */
+    PCSRSS_SCREEN_BUFFER ActiveBuffer;    /* Pointer to currently active screen buffer */
+    WORD Mode;                            /* Console mode flags */
+    UNICODE_STRING Title;                 /* Title of console */
+    DWORD HardwareState;                  /* _GDI_MANAGED, _DIRECT */
+    HWND hWindow;
+    COORD Size;
+    PVOID PrivateData;
+    UINT CodePage;
+    UINT OutputCodePage;
+    struct tagCSRSS_CONSOLE_VTBL *Vtbl;
+    LIST_ENTRY ProcessList;
+    struct tagALIAS_HEADER *Aliases;
+    CONSOLE_SELECTION_INFO Selection;
+    BYTE PauseFlags;
+    HANDLE UnpauseEvent;
+} CSRSS_CONSOLE, *PCSRSS_CONSOLE;
+
+typedef struct tagCSRSS_CONSOLE_VTBL
+{
+    VOID (WINAPI *InitScreenBuffer)(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER ScreenBuffer);
+    VOID (WINAPI *WriteStream)(PCSRSS_CONSOLE Console, SMALL_RECT *Block, LONG CursorStartX, LONG CursorStartY,
+                               UINT ScrolledLines, CHAR *Buffer, UINT Length);
+    VOID (WINAPI *DrawRegion)(PCSRSS_CONSOLE Console, SMALL_RECT *Region);
+    BOOL (WINAPI *SetCursorInfo)(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER ScreenBuffer);
+    BOOL (WINAPI *SetScreenInfo)(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER ScreenBuffer,
+                                 UINT OldCursorX, UINT OldCursorY);
+    BOOL (WINAPI *UpdateScreenInfo)(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER ScreenBuffer);
+    BOOL (WINAPI *ChangeTitle)(PCSRSS_CONSOLE Console);
+    VOID (WINAPI *CleanupConsole)(PCSRSS_CONSOLE Console);
+    BOOL (WINAPI *ChangeIcon)(PCSRSS_CONSOLE Console, HICON hWindowIcon);
+    NTSTATUS (WINAPI *ResizeBuffer)(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER ScreenBuffer, COORD Size);
+} CSRSS_CONSOLE_VTBL, *PCSRSS_CONSOLE_VTBL;
 
 typedef struct ConsoleInput_t
 {
-  LIST_ENTRY ListEntry;
-  INPUT_RECORD InputEvent;
+    LIST_ENTRY ListEntry;
+    INPUT_RECORD InputEvent;
 } ConsoleInput;
 
 /* CONSOLE_SELECTION_INFO dwFlags values */

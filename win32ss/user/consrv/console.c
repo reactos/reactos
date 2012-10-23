@@ -8,11 +8,30 @@
 
 /* INCLUDES ******************************************************************/
 
+#include "consrv.h"
+#include "guiconsole.h"
+#include "tuiconsole.h"
+
 #define NDEBUG
-#include "w32csr.h"
 #include <debug.h>
 
 /* FUNCTIONS *****************************************************************/
+
+/*** Taken from win32ss/user/win32csr/desktopbg.c ***/
+BOOL FASTCALL
+DtbgIsDesktopVisible(VOID)
+{
+    HWND VisibleDesktopWindow = GetDesktopWindow(); // DESKTOPWNDPROC
+
+    if (VisibleDesktopWindow != NULL &&
+            !IsWindowVisible(VisibleDesktopWindow))
+    {
+        VisibleDesktopWindow = NULL;
+    }
+
+    return VisibleDesktopWindow != NULL;
+}
+/****************************************************/
 
 NTSTATUS FASTCALL
 ConioConsoleFromProcessData(PCSR_PROCESS ProcessData, PCSRSS_CONSOLE *Console)
@@ -82,11 +101,11 @@ CsrInitConsole(PCSRSS_CONSOLE Console, int ShowCmd)
     hInst = GetModuleHandleW(L"win32csr");
     if (LoadStringW(hInst,IDS_COMMAND_PROMPT,Title,sizeof(Title)/sizeof(Title[0])))
     {
-	RtlCreateUnicodeString(&Console->Title, Title);
+        RtlCreateUnicodeString(&Console->Title, Title);
     }
     else
     {
-	RtlCreateUnicodeString(&Console->Title, L"Command Prompt");
+        RtlCreateUnicodeString(&Console->Title, L"Command Prompt");
     }
 
     Console->ReferenceCount = 0;
@@ -174,6 +193,7 @@ CsrInitConsole(PCSRSS_CONSOLE Console, int ShowCmd)
 
 CSR_API(SrvAllocConsole)
 {
+    PCSRSS_ALLOC_CONSOLE AllocConsoleRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.AllocConsoleRequest;
     PCSR_PROCESS ProcessData = CsrGetClientThread()->Process;
     PCSRSS_CONSOLE Console;
     NTSTATUS Status = STATUS_SUCCESS;
@@ -190,7 +210,7 @@ CSR_API(SrvAllocConsole)
     }
 
     /* If we don't need a console, then get out of here */
-    if (!ApiMessage->Data.AllocConsoleRequest.ConsoleNeeded)
+    if (!AllocConsoleRequest->ConsoleNeeded)
     {
         DPRINT("No console needed\n");
         RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
@@ -198,8 +218,8 @@ CSR_API(SrvAllocConsole)
     }
 
     /* If we already have one, then don't create a new one... */
-    if (!ApiMessage->Data.AllocConsoleRequest.Console ||
-            ApiMessage->Data.AllocConsoleRequest.Console != ProcessData->ParentConsole)
+    if (!AllocConsoleRequest->Console ||
+            AllocConsoleRequest->Console != ProcessData->ParentConsole)
     {
         /* Allocate a console structure */
         NewConsole = TRUE;
@@ -215,7 +235,7 @@ CSR_API(SrvAllocConsole)
         /* insert process data required for GUI initialization */
         InsertHeadList(&Console->ProcessList, &ProcessData->ConsoleLink);
         /* Initialize the Console */
-        Status = CsrInitConsole(Console, ApiMessage->Data.AllocConsoleRequest.ShowCmd);
+        Status = CsrInitConsole(Console, AllocConsoleRequest->ShowCmd);
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("Console init failed\n");
@@ -227,14 +247,14 @@ CSR_API(SrvAllocConsole)
     else
     {
         /* Reuse our current console */
-        Console = ApiMessage->Data.AllocConsoleRequest.Console;
+        Console = AllocConsoleRequest->Console;
     }
 
     /* Set the Process Console */
     ProcessData->Console = Console;
 
     /* Return it to the caller */
-    ApiMessage->Data.AllocConsoleRequest.Console = Console;
+    AllocConsoleRequest->Console = Console;
 
     /* Add a reference count because the process is tied to the console */
     _InterlockedIncrement(&Console->ReferenceCount);
@@ -243,7 +263,7 @@ CSR_API(SrvAllocConsole)
     {
         /* Insert the Objects */
         Status = Win32CsrInsertObject(ProcessData,
-                                      &ApiMessage->Data.AllocConsoleRequest.InputHandle,
+                                      &AllocConsoleRequest->InputHandle,
                                       &Console->Header,
                                       GENERIC_READ | GENERIC_WRITE,
                                       TRUE,
@@ -258,7 +278,7 @@ CSR_API(SrvAllocConsole)
         }
 
         Status = Win32CsrInsertObject(ProcessData,
-                                      &ApiMessage->Data.AllocConsoleRequest.OutputHandle,
+                                      &AllocConsoleRequest->OutputHandle,
                                       &Console->ActiveBuffer->Header,
                                       GENERIC_READ | GENERIC_WRITE,
                                       TRUE,
@@ -268,7 +288,7 @@ CSR_API(SrvAllocConsole)
             DPRINT1("Failed to insert object\n");
             ConioDeleteConsole((Object_t *) Console);
             Win32CsrReleaseObject(ProcessData,
-                                  ApiMessage->Data.AllocConsoleRequest.InputHandle);
+                                  AllocConsoleRequest->InputHandle);
             ProcessData->Console = 0;
             RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
             return Status;
@@ -289,9 +309,9 @@ CSR_API(SrvAllocConsole)
         if (NewConsole || !ProcessData->bInheritHandles)
         {
             Win32CsrReleaseObject(ProcessData,
-                                  ApiMessage->Data.AllocConsoleRequest.OutputHandle);
+                                  AllocConsoleRequest->OutputHandle);
             Win32CsrReleaseObject(ProcessData,
-                                  ApiMessage->Data.AllocConsoleRequest.InputHandle);
+                                  AllocConsoleRequest->InputHandle);
         }
         ProcessData->Console = 0;
         RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
@@ -299,7 +319,7 @@ CSR_API(SrvAllocConsole)
     }
 
     /* Set the Ctrl Dispatcher */
-    ProcessData->CtrlDispatcher = ApiMessage->Data.AllocConsoleRequest.CtrlDispatcher;
+    ProcessData->CtrlDispatcher = AllocConsoleRequest->CtrlDispatcher;
     DPRINT("CSRSS:CtrlDispatcher address: %x\n", ProcessData->CtrlDispatcher);
 
     if (!NewConsole)
@@ -386,13 +406,14 @@ ConioUnpause(PCSRSS_CONSOLE Console, UINT Flags)
 CSR_API(SrvSetConsoleMode)
 {
     NTSTATUS Status;
+    PCSRSS_SET_CONSOLE_MODE SetConsoleModeRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.SetConsoleModeRequest;
     PCSRSS_CONSOLE Console;
     PCSRSS_SCREEN_BUFFER Buff;
 
     DPRINT("SrvSetConsoleMode\n");
 
     Status = Win32CsrLockObject(CsrGetClientThread()->Process,
-                                ApiMessage->Data.SetConsoleModeRequest.ConsoleHandle,
+                                SetConsoleModeRequest->ConsoleHandle,
                                 (Object_t **) &Console, GENERIC_WRITE, 0);
     if (! NT_SUCCESS(Status))
     {
@@ -402,11 +423,11 @@ CSR_API(SrvSetConsoleMode)
     Buff = (PCSRSS_SCREEN_BUFFER)Console;
     if (CONIO_CONSOLE_MAGIC == Console->Header.Type)
     {
-        Console->Mode = ApiMessage->Data.SetConsoleModeRequest.Mode & CONSOLE_INPUT_MODE_VALID;
+        Console->Mode = SetConsoleModeRequest->Mode & CONSOLE_INPUT_MODE_VALID;
     }
     else if (CONIO_SCREEN_BUFFER_MAGIC == Console->Header.Type)
     {
-        Buff->Mode = ApiMessage->Data.SetConsoleModeRequest.Mode & CONSOLE_OUTPUT_MODE_VALID;
+        Buff->Mode = SetConsoleModeRequest->Mode & CONSOLE_OUTPUT_MODE_VALID;
     }
     else
     {
@@ -421,12 +442,13 @@ CSR_API(SrvSetConsoleMode)
 CSR_API(SrvGetConsoleMode)
 {
     NTSTATUS Status;
+    PCSRSS_GET_CONSOLE_MODE GetConsoleModeRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetConsoleModeRequest;
     PCSRSS_CONSOLE Console;
-    PCSRSS_SCREEN_BUFFER Buff;   /* gee, I really wish I could use an anonymous union here */
+    PCSRSS_SCREEN_BUFFER Buff;
 
     DPRINT("SrvGetConsoleMode\n");
 
-    Status = Win32CsrLockObject(CsrGetClientThread()->Process, ApiMessage->Data.GetConsoleModeRequest.ConsoleHandle,
+    Status = Win32CsrLockObject(CsrGetClientThread()->Process, GetConsoleModeRequest->ConsoleHandle,
                                 (Object_t **) &Console, GENERIC_READ, 0);
     if (! NT_SUCCESS(Status))
     {
@@ -436,11 +458,11 @@ CSR_API(SrvGetConsoleMode)
     Buff = (PCSRSS_SCREEN_BUFFER) Console;
     if (CONIO_CONSOLE_MAGIC == Console->Header.Type)
     {
-        ApiMessage->Data.GetConsoleModeRequest.ConsoleMode = Console->Mode;
+        GetConsoleModeRequest->ConsoleMode = Console->Mode;
     }
     else if (CONIO_SCREEN_BUFFER_MAGIC == Buff->Header.Type)
     {
-        ApiMessage->Data.GetConsoleModeRequest.ConsoleMode = Buff->Mode;
+        GetConsoleModeRequest->ConsoleMode = Buff->Mode;
     }
     else
     {
@@ -454,14 +476,15 @@ CSR_API(SrvGetConsoleMode)
 CSR_API(SrvSetConsoleTitle)
 {
     NTSTATUS Status;
+    PCSRSS_SET_TITLE SetTitleRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.SetTitleRequest;
     PCSR_PROCESS ProcessData = CsrGetClientThread()->Process;
     PCSRSS_CONSOLE Console;
     PWCHAR Buffer;
 
     DPRINT("SrvSetConsoleTitle\n");
 
-    if (!Win32CsrValidateBuffer(ProcessData, ApiMessage->Data.SetTitleRequest.Title,
-                                ApiMessage->Data.SetTitleRequest.Length, 1))
+    if (!Win32CsrValidateBuffer(ProcessData, SetTitleRequest->Title,
+                                SetTitleRequest->Length, 1))
     {
         return STATUS_ACCESS_VIOLATION;
     }
@@ -469,14 +492,14 @@ CSR_API(SrvSetConsoleTitle)
     Status = ConioConsoleFromProcessData(ProcessData, &Console);
     if(NT_SUCCESS(Status))
     {
-        Buffer =  RtlAllocateHeap(RtlGetProcessHeap(), 0, ApiMessage->Data.SetTitleRequest.Length);
+        Buffer =  RtlAllocateHeap(RtlGetProcessHeap(), 0, SetTitleRequest->Length);
         if (Buffer)
         {
             /* copy title to console */
             RtlFreeUnicodeString(&Console->Title);
             Console->Title.Buffer = Buffer;
-            Console->Title.Length = Console->Title.MaximumLength = ApiMessage->Data.SetTitleRequest.Length;
-            memcpy(Console->Title.Buffer, ApiMessage->Data.SetTitleRequest.Title, Console->Title.Length);
+            Console->Title.Length = Console->Title.MaximumLength = SetTitleRequest->Length;
+            memcpy(Console->Title.Buffer, SetTitleRequest->Title, Console->Title.Length);
             if (! ConioChangeTitle(Console))
             {
                 Status = STATUS_UNSUCCESSFUL;
@@ -499,15 +522,15 @@ CSR_API(SrvSetConsoleTitle)
 CSR_API(SrvGetConsoleTitle)
 {
     NTSTATUS Status;
+    PCSRSS_GET_TITLE GetTitleRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetTitleRequest;
     PCSR_PROCESS ProcessData = CsrGetClientThread()->Process;
     PCSRSS_CONSOLE Console;
     DWORD Length;
 
     DPRINT("SrvGetConsoleTitle\n");
 
-
-    if (!Win32CsrValidateBuffer(ProcessData, ApiMessage->Data.GetTitleRequest.Title,
-                                ApiMessage->Data.GetTitleRequest.Length, 1))
+    if (!Win32CsrValidateBuffer(ProcessData, GetTitleRequest->Title,
+                                GetTitleRequest->Length, 1))
     {
         return STATUS_ACCESS_VIOLATION;
     }
@@ -520,14 +543,14 @@ CSR_API(SrvGetConsoleTitle)
     }
 
     /* Copy title of the console to the user title buffer */
-    if (ApiMessage->Data.GetTitleRequest.Length >= sizeof(WCHAR))
+    if (GetTitleRequest->Length >= sizeof(WCHAR))
     {
-        Length = min(ApiMessage->Data.GetTitleRequest.Length - sizeof(WCHAR), Console->Title.Length);
-        memcpy(ApiMessage->Data.GetTitleRequest.Title, Console->Title.Buffer, Length);
-        ApiMessage->Data.GetTitleRequest.Title[Length / sizeof(WCHAR)] = L'\0';
+        Length = min(GetTitleRequest->Length - sizeof(WCHAR), Console->Title.Length);
+        memcpy(GetTitleRequest->Title, Console->Title.Buffer, Length);
+        GetTitleRequest->Title[Length / sizeof(WCHAR)] = L'\0';
     }
 
-    ApiMessage->Data.GetTitleRequest.Length = Console->Title.Length;
+    GetTitleRequest->Length = Console->Title.Length;
 
     ConioUnlockConsole(Console);
     return STATUS_SUCCESS;
@@ -570,13 +593,14 @@ SetConsoleHardwareState(PCSRSS_CONSOLE Console, DWORD ConsoleHwState)
 
 CSR_API(SrvGetConsoleHardwareState)
 {
+    PCSRSS_SETGET_CONSOLE_HW_STATE ConsoleHardwareStateRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.ConsoleHardwareStateRequest;
     PCSRSS_CONSOLE Console;
     NTSTATUS Status;
 
     DPRINT("SrvGetConsoleHardwareState\n");
 
     Status = ConioLockConsole(CsrGetClientThread()->Process,
-                              ApiMessage->Data.ConsoleHardwareStateRequest.ConsoleHandle,
+                              ConsoleHardwareStateRequest->ConsoleHandle,
                               &Console,
                               GENERIC_READ);
     if (! NT_SUCCESS(Status))
@@ -585,15 +609,15 @@ CSR_API(SrvGetConsoleHardwareState)
         return Status;
     }
 
-    switch (ApiMessage->Data.ConsoleHardwareStateRequest.SetGet)
+    switch (ConsoleHardwareStateRequest->SetGet)
     {
     case CONSOLE_HARDWARE_STATE_GET:
-        ApiMessage->Data.ConsoleHardwareStateRequest.State = Console->HardwareState;
+        ConsoleHardwareStateRequest->State = Console->HardwareState;
         break;
 
     case CONSOLE_HARDWARE_STATE_SET:
         DPRINT("Setting console hardware state.\n");
-        Status = SetConsoleHardwareState(Console, ApiMessage->Data.ConsoleHardwareStateRequest.State);
+        Status = SetConsoleHardwareState(Console, ConsoleHardwareStateRequest->State);
         break;
 
     default:
@@ -608,13 +632,14 @@ CSR_API(SrvGetConsoleHardwareState)
 
 CSR_API(SrvSetConsoleHardwareState)
 {
+    PCSRSS_SETGET_CONSOLE_HW_STATE ConsoleHardwareStateRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.ConsoleHardwareStateRequest;
     PCSRSS_CONSOLE Console;
     NTSTATUS Status;
 
     DPRINT("SrvSetConsoleHardwareState\n");
 
     Status = ConioLockConsole(CsrGetClientThread()->Process,
-                              ApiMessage->Data.ConsoleHardwareStateRequest.ConsoleHandle,
+                              ConsoleHardwareStateRequest->ConsoleHandle,
                               &Console,
                               GENERIC_READ);
     if (! NT_SUCCESS(Status))
@@ -623,15 +648,15 @@ CSR_API(SrvSetConsoleHardwareState)
         return Status;
     }
 
-    switch (ApiMessage->Data.ConsoleHardwareStateRequest.SetGet)
+    switch (ConsoleHardwareStateRequest->SetGet)
     {
     case CONSOLE_HARDWARE_STATE_GET:
-        ApiMessage->Data.ConsoleHardwareStateRequest.State = Console->HardwareState;
+        ConsoleHardwareStateRequest->State = Console->HardwareState;
         break;
 
     case CONSOLE_HARDWARE_STATE_SET:
         DPRINT("Setting console hardware state.\n");
-        Status = SetConsoleHardwareState(Console, ApiMessage->Data.ConsoleHardwareStateRequest.State);
+        Status = SetConsoleHardwareState(Console, ConsoleHardwareStateRequest->State);
         break;
 
     default:
@@ -646,6 +671,7 @@ CSR_API(SrvSetConsoleHardwareState)
 
 CSR_API(SrvGetConsoleWindow)
 {
+    PCSRSS_GET_CONSOLE_WINDOW GetConsoleWindowRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetConsoleWindowRequest;
     PCSRSS_CONSOLE Console;
     NTSTATUS Status;
 
@@ -657,7 +683,7 @@ CSR_API(SrvGetConsoleWindow)
         return Status;
     }
 
-    ApiMessage->Data.GetConsoleWindowRequest.WindowHandle = Console->hWindow;
+    GetConsoleWindowRequest->WindowHandle = Console->hWindow;
     ConioUnlockConsole(Console);
 
     return STATUS_SUCCESS;
@@ -665,6 +691,7 @@ CSR_API(SrvGetConsoleWindow)
 
 CSR_API(SrvSetConsoleIcon)
 {
+    PCSRSS_SET_CONSOLE_ICON SetConsoleIconRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.SetConsoleIconRequest;
     PCSRSS_CONSOLE Console;
     NTSTATUS Status;
 
@@ -676,7 +703,7 @@ CSR_API(SrvSetConsoleIcon)
         return Status;
     }
 
-    Status = (ConioChangeIcon(Console, ApiMessage->Data.SetConsoleIconRequest.WindowIcon)
+    Status = (ConioChangeIcon(Console, SetConsoleIconRequest->WindowIcon)
               ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL);
     ConioUnlockConsole(Console);
 
@@ -685,6 +712,7 @@ CSR_API(SrvSetConsoleIcon)
 
 CSR_API(SrvGetConsoleCP)
 {
+    PCSRSS_GET_CONSOLE_CP GetConsoleCodePage = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetConsoleCodePage;
     PCSRSS_CONSOLE Console;
     NTSTATUS Status;
 
@@ -696,13 +724,14 @@ CSR_API(SrvGetConsoleCP)
         return Status;
     }
 
-    ApiMessage->Data.GetConsoleCodePage.CodePage = Console->CodePage;
+    GetConsoleCodePage->CodePage = Console->CodePage;
     ConioUnlockConsole(Console);
     return STATUS_SUCCESS;
 }
 
 CSR_API(CsrGetConsoleOutputCodePage) // TODO: Merge this function with the other one.
 {
+    PCSRSS_GET_CONSOLE_OUTPUT_CP GetConsoleOutputCodePage = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetConsoleOutputCodePage;
     PCSRSS_CONSOLE Console;
     NTSTATUS Status;
 
@@ -714,13 +743,14 @@ CSR_API(CsrGetConsoleOutputCodePage) // TODO: Merge this function with the other
         return Status;
     }
 
-    ApiMessage->Data.GetConsoleOutputCodePage.CodePage = Console->OutputCodePage;
+    GetConsoleOutputCodePage->CodePage = Console->OutputCodePage;
     ConioUnlockConsole(Console);
     return STATUS_SUCCESS;
 }
 
 CSR_API(SrvSetConsoleCP)
 {
+    PCSRSS_SET_CONSOLE_CP SetConsoleCodePage = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.SetConsoleCodePage;
     PCSRSS_CONSOLE Console;
     NTSTATUS Status;
 
@@ -732,9 +762,9 @@ CSR_API(SrvSetConsoleCP)
         return Status;
     }
 
-    if (IsValidCodePage(ApiMessage->Data.SetConsoleCodePage.CodePage))
+    if (IsValidCodePage(SetConsoleCodePage->CodePage))
     {
-        Console->CodePage = ApiMessage->Data.SetConsoleCodePage.CodePage;
+        Console->CodePage = SetConsoleCodePage->CodePage;
         ConioUnlockConsole(Console);
         return STATUS_SUCCESS;
     }
@@ -745,6 +775,7 @@ CSR_API(SrvSetConsoleCP)
 
 CSR_API(CsrSetConsoleOutputCodePage) // TODO: Merge this function with the other one.
 {
+    PCSRSS_SET_CONSOLE_OUTPUT_CP SetConsoleOutputCodePage = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.SetConsoleOutputCodePage;
     PCSRSS_CONSOLE Console;
     NTSTATUS Status;
 
@@ -756,9 +787,9 @@ CSR_API(CsrSetConsoleOutputCodePage) // TODO: Merge this function with the other
         return Status;
     }
 
-    if (IsValidCodePage(ApiMessage->Data.SetConsoleOutputCodePage.CodePage))
+    if (IsValidCodePage(SetConsoleOutputCodePage->CodePage))
     {
-        Console->OutputCodePage = ApiMessage->Data.SetConsoleOutputCodePage.CodePage;
+        Console->OutputCodePage = SetConsoleOutputCodePage->CodePage;
         ConioUnlockConsole(Console);
         return STATUS_SUCCESS;
     }
@@ -808,6 +839,7 @@ CSR_API(SrvGetConsoleProcessList)
 
 CSR_API(SrvGenerateConsoleCtrlEvent)
 {
+    PCSRSS_GENERATE_CTRL_EVENT GenerateCtrlEvent = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GenerateCtrlEvent;
     PCSRSS_CONSOLE Console;
     PCSR_PROCESS current;
     PLIST_ENTRY current_entry;
@@ -820,7 +852,7 @@ CSR_API(SrvGenerateConsoleCtrlEvent)
         return Status;
     }
 
-    Group = ApiMessage->Data.GenerateCtrlEvent.ProcessGroup;
+    Group = GenerateCtrlEvent->ProcessGroup;
     Status = STATUS_INVALID_PARAMETER;
     for (current_entry = Console->ProcessList.Flink;
             current_entry != &Console->ProcessList;
@@ -829,7 +861,7 @@ CSR_API(SrvGenerateConsoleCtrlEvent)
         current = CONTAINING_RECORD(current_entry, CSR_PROCESS, ConsoleLink);
         if (Group == 0 || current->ProcessGroupId == Group)
         {
-            ConioConsoleCtrlEvent(ApiMessage->Data.GenerateCtrlEvent.Event, current);
+            ConioConsoleCtrlEvent(GenerateCtrlEvent->Event, current);
             Status = STATUS_SUCCESS;
         }
     }
@@ -842,14 +874,15 @@ CSR_API(SrvGenerateConsoleCtrlEvent)
 CSR_API(SrvGetConsoleSelectionInfo)
 {
     NTSTATUS Status;
+    PCSRSS_GET_CONSOLE_SELECTION_INFO GetConsoleSelectionInfo = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetConsoleSelectionInfo;
     PCSRSS_CONSOLE Console;
 
     Status = ConioConsoleFromProcessData(CsrGetClientThread()->Process, &Console);
     if (NT_SUCCESS(Status))
     {
-        memset(&ApiMessage->Data.GetConsoleSelectionInfo.Info, 0, sizeof(CONSOLE_SELECTION_INFO));
+        memset(&GetConsoleSelectionInfo->Info, 0, sizeof(CONSOLE_SELECTION_INFO));
         if (Console->Selection.dwFlags != 0)
-            ApiMessage->Data.GetConsoleSelectionInfo.Info = Console->Selection;
+            GetConsoleSelectionInfo->Info = Console->Selection;
         ConioUnlockConsole(Console);
     }
     return Status;

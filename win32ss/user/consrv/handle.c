@@ -1,5 +1,4 @@
-/* $Id: handle.c 57570 2012-10-17 23:10:40Z hbelusca $
- *
+/*
  * reactos/subsys/csrss/api/handle.c
  *
  * CSRSS handle functions
@@ -9,10 +8,21 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <w32csr.h>
+#include "consrv.h"
+#include "conio.h"
 
 #define NDEBUG
 #include <debug.h>
+
+
+typedef struct _CSRSS_HANDLE
+{
+    Object_t *Object;
+    DWORD Access;
+    BOOL Inheritable;
+    DWORD ShareMode;
+} CSRSS_HANDLE, *PCSRSS_HANDLE;
+
 
 /* FUNCTIONS *****************************************************************/
 
@@ -253,21 +263,22 @@ Win32CsrDuplicateHandleTable(PCSR_PROCESS SourceProcessData,
 CSR_API(CsrGetHandle)
 {
     NTSTATUS Status = STATUS_SUCCESS;
+    PCSRSS_GET_INPUT_HANDLE GetInputHandleRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetInputHandleRequest;
     PCSR_PROCESS ProcessData = CsrGetClientThread()->Process;
 
-    ApiMessage->Data.GetInputHandleRequest.Handle = INVALID_HANDLE_VALUE;
+    GetInputHandleRequest->Handle = INVALID_HANDLE_VALUE;
 
     RtlEnterCriticalSection(&ProcessData->HandleTableLock);
     if (ProcessData->Console)
     {
-        DWORD DesiredAccess = ApiMessage->Data.GetInputHandleRequest.Access;
-        DWORD ShareMode = ApiMessage->Data.GetInputHandleRequest.ShareMode;
+        DWORD DesiredAccess = GetInputHandleRequest->Access;
+        DWORD ShareMode = GetInputHandleRequest->ShareMode;
 
         PCSRSS_CONSOLE Console = ProcessData->Console;
         Object_t *Object;
 
         EnterCriticalSection(&Console->Lock);
-        if (ApiMessage->ApiNumber == GET_OUTPUT_HANDLE)
+        if (ApiMessage->ApiNumber == ConsolepGetHandleInformation)
             Object = &Console->ActiveBuffer->Header;
         else
             Object = &Console->Header;
@@ -283,10 +294,10 @@ CSR_API(CsrGetHandle)
         else
         {
             Status = Win32CsrInsertObject(ProcessData,
-                                          &ApiMessage->Data.GetInputHandleRequest.Handle,
+                                          &GetInputHandleRequest->Handle,
                                           Object,
                                           DesiredAccess,
-                                          ApiMessage->Data.GetInputHandleRequest.Inheritable,
+                                          GetInputHandleRequest->Inheritable,
                                           ShareMode);
         }
         LeaveCriticalSection(&Console->Lock);
@@ -300,16 +311,19 @@ CSR_API(CsrGetHandle)
 
 CSR_API(SrvCloseHandle)
 {
-    return Win32CsrReleaseObject(CsrGetClientThread()->Process, ApiMessage->Data.CloseHandleRequest.Handle);
+    PCSRSS_CLOSE_HANDLE CloseHandleRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.CloseHandleRequest;
+
+    return Win32CsrReleaseObject(CsrGetClientThread()->Process, CloseHandleRequest->Handle);
 }
 
 CSR_API(SrvVerifyConsoleIoHandle)
 {
-    ULONG_PTR Index;
     NTSTATUS Status = STATUS_SUCCESS;
+    PCSRSS_VERIFY_HANDLE VerifyHandleRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.VerifyHandleRequest;
     PCSR_PROCESS ProcessData = CsrGetClientThread()->Process;
+    ULONG_PTR Index;
 
-    Index = (ULONG_PTR)ApiMessage->Data.VerifyHandleRequest.Handle >> 2;
+    Index = (ULONG_PTR)VerifyHandleRequest->Handle >> 2;
     RtlEnterCriticalSection(&ProcessData->HandleTableLock);
     if (Index >= ProcessData->HandleTableSize ||
         ProcessData->HandleTable[Index].Object == NULL)
@@ -327,43 +341,44 @@ CSR_API(SrvDuplicateHandle)
     ULONG_PTR Index;
     PCSRSS_HANDLE Entry;
     DWORD DesiredAccess;
+    PCSRSS_DUPLICATE_HANDLE DuplicateHandleRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.DuplicateHandleRequest;
     PCSR_PROCESS ProcessData = CsrGetClientThread()->Process;
 
-    Index = (ULONG_PTR)ApiMessage->Data.DuplicateHandleRequest.Handle >> 2;
+    Index = (ULONG_PTR)DuplicateHandleRequest->Handle >> 2;
     RtlEnterCriticalSection(&ProcessData->HandleTableLock);
     if (Index >= ProcessData->HandleTableSize
         || (Entry = &ProcessData->HandleTable[Index])->Object == NULL)
     {
-        DPRINT1("Couldn't dup invalid handle %p\n", ApiMessage->Data.DuplicateHandleRequest.Handle);
+        DPRINT1("Couldn't dup invalid handle %p\n", DuplicateHandleRequest->Handle);
         RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
         return STATUS_INVALID_HANDLE;
     }
 
-    if (ApiMessage->Data.DuplicateHandleRequest.Options & DUPLICATE_SAME_ACCESS)
+    if (DuplicateHandleRequest->Options & DUPLICATE_SAME_ACCESS)
     {
         DesiredAccess = Entry->Access;
     }
     else
     {
-        DesiredAccess = ApiMessage->Data.DuplicateHandleRequest.Access;
+        DesiredAccess = DuplicateHandleRequest->Access;
         /* Make sure the source handle has all the desired flags */
         if (~Entry->Access & DesiredAccess)
         {
             DPRINT1("Handle %p only has access %X; requested %X\n",
-                ApiMessage->Data.DuplicateHandleRequest.Handle, Entry->Access, DesiredAccess);
+                DuplicateHandleRequest->Handle, Entry->Access, DesiredAccess);
             RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
             return STATUS_INVALID_PARAMETER;
         }
     }
 
     ApiMessage->Status = Win32CsrInsertObject(ProcessData,
-                                           &ApiMessage->Data.DuplicateHandleRequest.Handle,
+                                           &DuplicateHandleRequest->Handle,
                                            Entry->Object,
                                            DesiredAccess,
-                                           ApiMessage->Data.DuplicateHandleRequest.Inheritable,
+                                           DuplicateHandleRequest->Inheritable,
                                            Entry->ShareMode);
     if (NT_SUCCESS(ApiMessage->Status)
-        && ApiMessage->Data.DuplicateHandleRequest.Options & DUPLICATE_CLOSE_SOURCE)
+        && DuplicateHandleRequest->Options & DUPLICATE_CLOSE_SOURCE)
     {
         Win32CsrCloseHandleEntry(Entry);
     }
@@ -374,7 +389,9 @@ CSR_API(SrvDuplicateHandle)
 
 CSR_API(CsrGetInputWaitHandle)
 {
-    ApiMessage->Data.GetConsoleInputWaitHandle.InputWaitHandle = CsrGetClientThread()->Process->ConsoleEvent;
+    PCSRSS_GET_INPUT_WAIT_HANDLE GetConsoleInputWaitHandle = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetConsoleInputWaitHandle;
+
+    GetConsoleInputWaitHandle->InputWaitHandle = CsrGetClientThread()->Process->ConsoleEvent;
     return STATUS_SUCCESS;
 }
 
