@@ -1221,6 +1221,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\KnownDlls","olecli32",0x0
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\KnownDlls","olesvr32",0x00000000,"olesvr32.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\KnownDlls","olethk32",0x00000000,"olethk32.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\KnownDlls","rpcrt4",0x00000000,"rpcrt4.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\KnownDlls","setupapi",0x00000000,"setupapi.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\KnownDlls","shell32",0x00000000,"shell32.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\KnownDlls","url",0x00000000,"url.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\KnownDlls","urlmon",0x00000000,"urlmon.dll"

@@ -71,6 +71,7 @@ typedef struct
     PSCSI_REQUEST_BLOCK LastTimerActiveSrb;                                              // last timer tick active srb
     ULONG SrbErrorHandlingActive;                                                        // error handling of srb is activated
     ULONG TimerWorkQueueEnabled;                                                         // timer work queue enabled
+    ULONG InstanceCount;                                                                 // pdo instance count
 }FDO_DEVICE_EXTENSION, *PFDO_DEVICE_EXTENSION;
 
 typedef struct
@@ -364,8 +365,7 @@ USBSTOR_PdoHandlePnp(
 NTSTATUS
 USBSTOR_CreatePDO(
     IN PDEVICE_OBJECT DeviceObject,
-    IN UCHAR LUN,
-    OUT PDEVICE_OBJECT *ChildDeviceObject);
+    IN UCHAR LUN);
 
 //---------------------------------------------------------------------
 //

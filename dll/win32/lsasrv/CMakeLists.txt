@@ -13,11 +13,11 @@ spec2def(lsasrv.dll lsasrv.spec ADD_IMPORTLIB)
 list(APPEND SOURCE
     authport.c
     database.c
+    lookup.c
     lsarpc.c
     lsasrv.c
     policy.c
     privileges.c
-    sids.c
     lsasrv.rc
     ${CMAKE_CURRENT_BINARY_DIR}/lsasrv_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/lsasrv.def

@@ -676,9 +676,9 @@ USBSTOR_PdoHandleQueryInstanceId(
     else
     {
         //
-        // FIXME: should use some random value
+        // use instance count and LUN
         //
-        swprintf(Buffer, L"%s&%d", L"00000000", PDODeviceExtension->LUN);
+        swprintf(Buffer, L"%04d&%d", FDODeviceExtension->InstanceCount, PDODeviceExtension->LUN);
     }
 
     //
@@ -897,7 +897,7 @@ USBSTOR_PdoHandlePnp(
                // check if no unique id
                //
                Caps = (PDEVICE_CAPABILITIES)IoStack->Parameters.DeviceCapabilities.Capabilities;
-               Caps->UniqueID = TRUE; //FIXME
+               Caps->UniqueID = FALSE; // no unique id is supported
                Caps->Removable = TRUE; //FIXME
            }
            break;
@@ -926,6 +926,11 @@ USBSTOR_PdoHandlePnp(
            //
            // no-op for PDO
            //
+           Status = STATUS_SUCCESS;
+           break;
+       }
+       case IRP_MN_SURPRISE_REMOVAL:
+       {
            Status = STATUS_SUCCESS;
            break;
        }
@@ -1256,13 +1261,19 @@ USBSTOR_SendFormatCapacityIrp(
 NTSTATUS
 USBSTOR_CreatePDO(
     IN PDEVICE_OBJECT DeviceObject,
-    IN UCHAR LUN,
-    OUT PDEVICE_OBJECT *ChildDeviceObject)
+    IN UCHAR LUN)
 {
     PDEVICE_OBJECT PDO;
     NTSTATUS Status;
     PPDO_DEVICE_EXTENSION PDODeviceExtension;
     PUFI_INQUIRY_RESPONSE Response;
+    PFDO_DEVICE_EXTENSION FDODeviceExtension;
+
+    //
+    // get device extension
+    //
+    FDODeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
 
     //
     // create child device object
@@ -1292,7 +1303,7 @@ USBSTOR_CreatePDO(
     RtlZeroMemory(PDODeviceExtension, sizeof(PDO_DEVICE_EXTENSION));
     PDODeviceExtension->Common.IsFDO = FALSE;
     PDODeviceExtension->LowerDeviceObject = DeviceObject;
-    PDODeviceExtension->PDODeviceObject = ChildDeviceObject;
+    PDODeviceExtension->PDODeviceObject = &FDODeviceExtension->ChildPDO[LUN];
     PDODeviceExtension->Self = PDO;
     PDODeviceExtension->LUN = LUN;
 
@@ -1309,7 +1320,7 @@ USBSTOR_CreatePDO(
     //
     // output device object
     //
-    *ChildDeviceObject = PDO;
+    FDODeviceExtension->ChildPDO[LUN] = PDO;
 
     //
     // send inquiry command by irp

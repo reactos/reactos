@@ -125,10 +125,19 @@ USBSTOR_FdoHandleRemoveDevice(
     IN OUT PIRP Irp)
 {
     NTSTATUS Status;
+    ULONG Index;
 
-    DPRINT("Handling FDO removal\n");
+    DPRINT("Handling FDO removal %p\n", DeviceObject);
 
-    /* We don't need to request removal of our children here */
+    /* FIXME: wait for devices finished processing */
+    for(Index = 0; Index < 16; Index++)
+    {
+        if (DeviceExtension->ChildPDO[Index] != NULL)
+        {
+            DPRINT("Deleting PDO %p RefCount %x AttachedDevice %p \n", DeviceExtension->ChildPDO[Index], DeviceExtension->ChildPDO[Index]->ReferenceCount, DeviceExtension->ChildPDO[Index]->AttachedDevice);
+            IoDeleteDevice(DeviceExtension->ChildPDO[Index]);
+        }
+    }
 
     /* Send the IRP down the stack */
     IoSkipCurrentIrpStackLocation(Irp);
@@ -264,7 +273,7 @@ USBSTOR_FdoHandleStartDevice(
         //
         // create pdo
         //
-        Status = USBSTOR_CreatePDO(DeviceObject, Index, &DeviceExtension->ChildPDO[Index]);
+        Status = USBSTOR_CreatePDO(DeviceObject, Index);
 
         //
         // check for failure
@@ -282,6 +291,7 @@ USBSTOR_FdoHandleStartDevice(
         // increment pdo index
         //
         Index++;
+        DeviceExtension->InstanceCount++;
 
     }while(Index < DeviceExtension->MaxLUN);
 
@@ -340,8 +350,20 @@ USBSTOR_FdoHandlePnp(
 
     switch(IoStack->MinorFunction)
     {
+       case IRP_MN_SURPRISE_REMOVAL:
+       {
+           DPRINT("IRP_MN_SURPRISE_REMOVAL %p\n", DeviceObject);
+           Irp->IoStatus.Status = STATUS_SUCCESS;
+
+            //
+            // forward irp to next device object
+            //
+            IoSkipCurrentIrpStackLocation(Irp);
+            return IoCallDriver(DeviceExtension->LowerDeviceObject, Irp);
+       }
        case IRP_MN_QUERY_DEVICE_RELATIONS:
        {
+           DPRINT("IRP_MN_QUERY_DEVICE_RELATIONS %p\n", DeviceObject);
            Status = USBSTOR_FdoHandleDeviceRelations(DeviceExtension, Irp);
            break;
        }

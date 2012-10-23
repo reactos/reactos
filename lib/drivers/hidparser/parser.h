@@ -327,6 +327,17 @@ HidParser_GetScaledUsageValueWithReport(
     IN PCHAR ReportDescriptor,
     IN ULONG ReportDescriptorLength);
 
+HIDPARSER_STATUS
+HidParser_GetUsageValueWithReport(
+    IN PHID_PARSER Parser,
+    IN PVOID CollectionContext,
+    IN UCHAR ReportType,
+    IN USAGE UsagePage,
+    IN USAGE  Usage,
+    OUT PULONG UsageValue,
+    IN PCHAR ReportDescriptor,
+    IN ULONG ReportDescriptorLength);
+
 /* parser.c */
 
 HIDPARSER_STATUS

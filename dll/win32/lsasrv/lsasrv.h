@@ -118,6 +118,32 @@ LsapSetObjectAttribute(PLSA_DB_OBJECT DbObject,
                        LPVOID AttributeData,
                        ULONG AttributeSize);
 
+/* lookup.c */
+NTSTATUS
+LsapInitSids(VOID);
+
+ULONG
+LsapGetRelativeIdFromSid(PSID Sid);
+
+NTSTATUS
+LsapLookupNames(DWORD Count,
+                PRPC_UNICODE_STRING Names,
+                PLSAPR_REFERENCED_DOMAIN_LIST *ReferencedDomains,
+                PLSAPR_TRANSLATED_SIDS_EX2 TranslatedSids,
+                LSAP_LOOKUP_LEVEL LookupLevel,
+                DWORD *MappedCount,
+                DWORD LookupOptions,
+                DWORD ClientRevision);
+
+NTSTATUS
+LsapLookupSids(PLSAPR_SID_ENUM_BUFFER SidEnumBuffer,
+               PLSAPR_REFERENCED_DOMAIN_LIST *ReferencedDomains,
+               PLSAPR_TRANSLATED_NAMES_EX TranslatedNames,
+               LSAP_LOOKUP_LEVEL LookupLevel,
+               DWORD *MappedCount,
+               DWORD LookupOptions,
+               DWORD ClientRevision);
+
 /* lsarpc.c */
 VOID
 LsarStartRpcServer(VOID);
@@ -200,31 +226,5 @@ NTSTATUS
 LsarpEnumeratePrivileges(DWORD *EnumerationContext,
                          PLSAPR_PRIVILEGE_ENUM_BUFFER EnumerationBuffer,
                          DWORD PreferedMaximumLength);
-
-/* sids.h */
-NTSTATUS
-LsapInitSids(VOID);
-
-ULONG
-LsapGetRelativeIdFromSid(PSID Sid);
-
-NTSTATUS
-LsapLookupNames(DWORD Count,
-                PRPC_UNICODE_STRING Names,
-                PLSAPR_REFERENCED_DOMAIN_LIST *ReferencedDomains,
-                PLSAPR_TRANSLATED_SIDS_EX2 TranslatedSids,
-                LSAP_LOOKUP_LEVEL LookupLevel,
-                DWORD *MappedCount,
-                DWORD LookupOptions,
-                DWORD ClientRevision);
-
-NTSTATUS
-LsapLookupSids(PLSAPR_SID_ENUM_BUFFER SidEnumBuffer,
-               PLSAPR_REFERENCED_DOMAIN_LIST *ReferencedDomains,
-               PLSAPR_TRANSLATED_NAMES_EX TranslatedNames,
-               LSAP_LOOKUP_LEVEL LookupLevel,
-               DWORD *MappedCount,
-               DWORD LookupOptions,
-               DWORD ClientRevision);
 
 /* EOF */

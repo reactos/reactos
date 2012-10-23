@@ -1042,7 +1042,14 @@ CLEANUP:
 }
 #endif
 
-/* Mostly inspired from wine code */
+/* Mostly inspired from wine code.
+ * We use low level functions because:
+ *  - at this point, the icon bitmap could have a different bit depth than the DC,
+ *    making it thus impossible to use NtCreateCompatibleDC and selecting the bitmap.
+ *    This happens after a mode setting change.
+ *  - it avoids massive GDI objects locking when only the destination surface needs it.
+ *  - It makes (small) performance gains.
+ */
 BOOL
 UserDrawIconEx(
     HDC hDc,
@@ -1055,128 +1062,220 @@ UserDrawIconEx(
     HBRUSH hbrFlickerFreeDraw,
     UINT diFlags)
 {
+    PSURFACE psurfDest, psurfMask, psurfColor, psurfOffScreen;
+    PDC pdc = NULL;
     BOOL Ret = FALSE;
     HBITMAP hbmMask, hbmColor;
-    BITMAP bmpColor, bm;
-    BOOL DoFlickerFree;
-    INT iOldBkColor = 0, iOldTxtColor = 0;
-
-    HDC hMemDC, hDestDC = hDc;
-    HGDIOBJ hOldOffBrush = 0;
-    HGDIOBJ hOldOffBmp = 0;
-    HBITMAP hTmpBmp = 0, hOffBmp = 0;
-    BOOL bAlpha = FALSE;
-    INT x=xLeft, y=yTop;
+    BOOL bOffScreen, bAlpha = FALSE;
+    RECTL rcDest, rcSrc;
+    CLIPOBJ* pdcClipObj = NULL;
+    EXLATEOBJ exlo;
+    
+    /* Stupid case */
+    if((diFlags & DI_NORMAL) == 0)
+    {
+        ERR("DrawIconEx called without mask or color bitmap to draw.\n");
+        return FALSE;
+    }
 
     hbmMask = pIcon->IconInfo.hbmMask;
     hbmColor = pIcon->IconInfo.hbmColor;
-
+    
     if (istepIfAniCur)
         ERR("NtUserDrawIconEx: istepIfAniCur is not supported!\n");
-
-    if (!hbmMask || !GreGetObject(hbmMask, sizeof(BITMAP), (PVOID)&bm))
+    
+    /*
+     * Get our objects. 
+     * Shared locks are enough, we are only reading those bitmaps
+     */
+    psurfMask = SURFACE_ShareLockSurface(hbmMask);
+    if(psurfMask == NULL)
     {
+        ERR("Unable to lock the mask surface.\n");
         return FALSE;
     }
-
-    if (hbmColor && !GreGetObject(hbmColor, sizeof(BITMAP), (PVOID)&bmpColor))
+    
+    /* Color bitmap is not mandatory */
+    if(hbmColor == NULL)
     {
+        /* But then the mask bitmap must have the information in it's bottom half */
+        ASSERT(psurfMask->SurfObj.sizlBitmap.cy == 2*pIcon->Size.cy);
+        psurfColor = NULL;
+    }
+    else if ((psurfColor = SURFACE_ShareLockSurface(hbmColor)) == NULL)
+    {
+        ERR("Unable to lock the color bitmap.\n");
+        SURFACE_ShareUnlockSurface(psurfMask);
         return FALSE;
     }
-
-    if(!(hMemDC = NtGdiCreateCompatibleDC(hDc)))
-    {
-        ERR("NtGdiCreateCompatibleDC failed!\n");
-        return FALSE;
-    }
+    
+    /* Set source rect */
+    RECTL_vSetRect(&rcSrc, 0, 0, pIcon->Size.cx, pIcon->Size.cy);
 
     /* Check for alpha */
-    if (hbmColor
-            && (bmpColor.bmBitsPixel == 32)
-            && (diFlags & DI_IMAGE))
+    if (psurfColor &&
+       (psurfColor->SurfObj.iBitmapFormat == BMF_32BPP) &&
+       (diFlags & DI_IMAGE))
     {
-        SURFACE *psurfOff = NULL;
         PFN_DIB_GetPixel fnSource_GetPixel = NULL;
         INT i, j;
 
         /* In order to correctly display 32 bit icons Windows first scans the image,
            because information about transparency is not stored in any image's headers */
-        psurfOff = SURFACE_ShareLockSurface(hbmColor);
-        if (psurfOff)
+        fnSource_GetPixel = DibFunctionsForBitmapFormat[BMF_32BPP].DIB_GetPixel;
+        for (i = 0; i < psurfColor->SurfObj.sizlBitmap.cx; i++)
         {
-            fnSource_GetPixel = DibFunctionsForBitmapFormat[psurfOff->SurfObj.iBitmapFormat].DIB_GetPixel;
-            if (fnSource_GetPixel)
+            for (j = 0; j < psurfColor->SurfObj.sizlBitmap.cy; j++)
             {
-                for (i = 0; i < psurfOff->SurfObj.sizlBitmap.cx; i++)
-                {
-                    for (j = 0; j < psurfOff->SurfObj.sizlBitmap.cy; j++)
-                    {
-                        bAlpha = ((BYTE)(fnSource_GetPixel(&psurfOff->SurfObj, i, j) >> 24) & 0xff);
-                        if (bAlpha)
-                            break;
-                    }
-                    if (bAlpha)
-                        break;
-                }
+                bAlpha = ((BYTE)(fnSource_GetPixel(&psurfColor->SurfObj, i, j) >> 24) & 0xff);
+                if (bAlpha)
+                    break;
             }
-            SURFACE_ShareUnlockSurface(psurfOff);
+            if (bAlpha)
+                break;
         }
     }
 
+    /* Fix width parameter, if needed */
     if (!cxWidth)
-        cxWidth = ((diFlags & DI_DEFAULTSIZE) ?
-                   UserGetSystemMetrics(SM_CXICON) : pIcon->Size.cx);
-
-    if (!cyHeight)
-        cyHeight = ((diFlags & DI_DEFAULTSIZE) ?
-                    UserGetSystemMetrics(SM_CYICON) : pIcon->Size.cy);
-
-    DoFlickerFree = (hbrFlickerFreeDraw &&
-                     (GDI_HANDLE_GET_TYPE(hbrFlickerFreeDraw) == GDI_OBJECT_TYPE_BRUSH));
-
-    if (DoFlickerFree)
     {
-        hDestDC = NtGdiCreateCompatibleDC(hDc);
-        if(!hDestDC)
-        {
-            ERR("NtGdiCreateCompatibleDC failed!\n");
-            Ret = FALSE;
-            goto Cleanup ;
-        }
-        hOffBmp = NtGdiCreateCompatibleBitmap(hDc, cxWidth, cyHeight);
-        if(!hOffBmp)
-        {
-            ERR("NtGdiCreateCompatibleBitmap failed!\n");
-            goto Cleanup ;
-        }
-        hOldOffBmp = NtGdiSelectBitmap(hDestDC, hOffBmp);
-        hOldOffBrush = NtGdiSelectBrush(hDestDC, hbrFlickerFreeDraw);
-        NtGdiPatBlt(hDestDC, 0, 0, cxWidth, cyHeight, PATCOPY);
-        NtGdiSelectBrush(hDestDC, hOldOffBrush);
-        x=y=0;
+        if(diFlags & DI_DEFAULTSIZE)
+            cxWidth = pIcon->IconInfo.fIcon ? 
+                UserGetSystemMetrics(SM_CXICON) : UserGetSystemMetrics(SM_CXCURSOR);
+        else
+            cxWidth = pIcon->Size.cx;
+    }
+    
+    /* Fix height parameter, if needed */
+    if (!cyHeight)
+    {
+        if(diFlags & DI_DEFAULTSIZE)
+            cyHeight = pIcon->IconInfo.fIcon ? 
+                UserGetSystemMetrics(SM_CYICON) : UserGetSystemMetrics(SM_CYCURSOR);
+        else
+            cyHeight = pIcon->Size.cy;
     }
 
-    /* Set Background/foreground colors */
-    iOldTxtColor = IntGdiSetTextColor(hDc, 0);          // Black
-    iOldBkColor = IntGdiSetBkColor(hDc, 0x00FFFFFF);    // White
+    /* Should we render off-screen? */
+    bOffScreen = hbrFlickerFreeDraw && (GDI_HANDLE_GET_TYPE(hbrFlickerFreeDraw) == GDI_OBJECT_TYPE_BRUSH);
 
+    if (bOffScreen)
+    {
+        /* Yes: Allocate and paint the offscreen surface */
+        EBRUSHOBJ eboFill;
+        PBRUSH pbrush = BRUSH_ShareLockBrush(hbrFlickerFreeDraw);
+        
+        TRACE("Performing off-screen rendering.\n");
+        
+        if(!pbrush)
+        {
+            ERR("Failed to get brush object.\n");
+            SURFACE_ShareUnlockSurface(psurfMask);
+            if(psurfColor) SURFACE_ShareUnlockSurface(psurfColor);
+            return FALSE;
+        }
+
+        psurfOffScreen = SURFACE_AllocSurface(STYPE_BITMAP,
+            cxWidth, cyHeight, psurfColor->SurfObj.iBitmapFormat,
+            0, 0, NULL);
+        if(!psurfOffScreen)
+        {
+            ERR("Failed to allocate the off-screen surface.\n");
+            SURFACE_ShareUnlockSurface(psurfMask);
+            if(psurfColor) SURFACE_ShareUnlockSurface(psurfColor);
+            BRUSH_ShareUnlockBrush(pbrush);
+            return FALSE;
+        }
+        
+        /* Paint the brush */
+        EBRUSHOBJ_vInit(&eboFill, pbrush, psurfOffScreen, 0x00FFFFFF, 0, NULL);
+        RECTL_vSetRect(&rcDest, 0, 0, cxWidth, cyHeight);
+        
+        Ret = IntEngBitBlt(&psurfOffScreen->SurfObj,
+            NULL,
+            NULL,
+            NULL,
+            NULL,
+            &rcDest,
+            NULL,
+            NULL,
+            &eboFill.BrushObject,
+            &pbrush->ptOrigin,
+            ROP4_PATCOPY);
+
+        /* Clean up everything */
+        EBRUSHOBJ_vCleanup(&eboFill);
+        BRUSH_ShareUnlockBrush(pbrush);
+            
+        if(!Ret)
+        {
+            ERR("Failed to paint the off-screen surface.\n");
+            SURFACE_ShareUnlockSurface(psurfMask);
+            if(psurfColor) SURFACE_ShareUnlockSurface(psurfColor);
+            GDIOBJ_vDeleteObject(&psurfOffScreen->BaseObject);
+            return FALSE;
+        }
+        
+        /* We now have our destination surface */
+        psurfDest = psurfOffScreen;
+    }
+    else
+    {
+        /* We directly draw to the DC */
+        TRACE("Performing on screen rendering.\n");
+        
+        psurfOffScreen = NULL;
+        pdc = DC_LockDc(hDc);
+        if(!pdc)
+        {
+            ERR("Could not lock the destination DC.\n");
+            SURFACE_ShareUnlockSurface(psurfMask);
+            if(psurfColor) SURFACE_ShareUnlockSurface(psurfColor);
+            return FALSE;
+        }
+        /* Calculate destination rectangle */
+        RECTL_vSetRect(&rcDest, xLeft, yTop, xLeft + cxWidth, yTop + cyHeight);
+        IntLPtoDP(pdc, (LPPOINT)&rcDest, 2);
+        RECTL_vOffsetRect(&rcDest, pdc->ptlDCOrig.x, pdc->ptlDCOrig.y);
+        
+        /* Prepare the underlying surface */
+        DC_vPrepareDCsForBlit(pdc, rcDest, NULL, rcDest);
+        
+        /* Get the clip object */
+        pdcClipObj = pdc->rosdc.CombinedClip;
+        
+        /* We now have our destination surface and rectangle */
+        psurfDest = pdc->dclevel.pSurface;
+        
+        if(psurfDest == NULL)
+        {
+            /* Empty DC */
+            DC_vFinishBlit(pdc, NULL);
+            DC_UnlockDc(pdc);
+            SURFACE_ShareUnlockSurface(psurfMask);
+            if(psurfColor) SURFACE_ShareUnlockSurface(psurfColor);
+            return FALSE;
+        }
+    }
+
+    /* Now do the rendering */
 	if(bAlpha && (diFlags & DI_IMAGE))
 	{
-		BLENDFUNCTION pixelblend = { AC_SRC_OVER, 0, 255, AC_SRC_ALPHA };
+	    BLENDOBJ blendobj = { {AC_SRC_OVER, 0, 255, AC_SRC_ALPHA } };
         BYTE Alpha;
         INT i, j;
-        PSURFACE psurf;
+        PSURFACE psurf = NULL;
         PBYTE ptr ;
-        HBITMAP hMemBmp = NULL;
+        HBITMAP hsurfCopy = NULL;
 
-        hMemBmp = BITMAP_CopyBitmap(hbmColor);
-        if(!hMemBmp)
+        hsurfCopy = BITMAP_CopyBitmap(hbmColor);
+        if(!hsurfCopy)
         {
             ERR("BITMAP_CopyBitmap failed!");
             goto CleanupAlpha;
         }
 
-        psurf = SURFACE_ShareLockSurface(hMemBmp);
+        psurf = SURFACE_ShareLockSurface(hsurfCopy);
         if(!psurf)
         {
             ERR("SURFACE_LockSurface failed!\n");
@@ -1197,109 +1296,181 @@ UserDrawIconEx(
 				ptr += 4;
             }
         }
-
-        SURFACE_ShareUnlockSurface(psurf);
-
-        hTmpBmp = NtGdiSelectBitmap(hMemDC, hMemBmp);
-
-        Ret = NtGdiAlphaBlend(hDestDC,
-					          x,
-						      y,
-                              cxWidth,
-                              cyHeight,
-                              hMemDC,
-                              0,
-                              0,
-                              pIcon->Size.cx,
-                              pIcon->Size.cy,
-                              pixelblend,
-                              NULL);
-        NtGdiSelectBitmap(hMemDC, hTmpBmp);
+        
+        /* Initialize color translation object */
+        EXLATEOBJ_vInitialize(&exlo, psurf->ppal, psurfDest->ppal, 0xFFFFFFFF, 0xFFFFFFFF, 0);
+        
+        /* Now do it */
+        Ret = IntEngAlphaBlend(&psurfDest->SurfObj,
+                               &psurf->SurfObj,
+                               pdcClipObj,
+                               &exlo.xlo,
+                               &rcDest,
+                               &rcSrc,
+                               &blendobj);
+        
+        EXLATEOBJ_vCleanup(&exlo);
+        
     CleanupAlpha:
-        if(hMemBmp) NtGdiDeleteObjectApp(hMemBmp);
+        if(psurf) SURFACE_ShareUnlockSurface(psurf);
+        if(hsurfCopy) NtGdiDeleteObjectApp(hsurfCopy);
 		if(Ret) goto done;
+		ERR("NtGdiAlphaBlend failed!\n");
     }
 
     if (diFlags & DI_MASK)
     {
-        DWORD rop = (diFlags & DI_IMAGE) ? SRCAND : SRCCOPY;
-        hTmpBmp = NtGdiSelectBitmap(hMemDC, hbmMask);
-        NtGdiStretchBlt(hDestDC,
-                        x,
-                        y,
-                        cxWidth,
-                        cyHeight,
-                        hMemDC,
-                        0,
-                        0,
-                        pIcon->Size.cx,
-                        pIcon->Size.cy,
-                        rop,
-                        0);
-        NtGdiSelectBitmap(hMemDC, hTmpBmp);
+        DWORD rop4 = (diFlags & DI_IMAGE) ? ROP4_SRCAND : ROP4_SRCCOPY;
+        
+        EXLATEOBJ_vInitSrcMonoXlate(&exlo, psurfDest->ppal, 0x00FFFFFF, 0);
+        
+        Ret = IntEngStretchBlt(&psurfDest->SurfObj,
+                               &psurfMask->SurfObj,
+                               NULL,
+                               pdcClipObj,
+                               &exlo.xlo,
+                               NULL,
+                               &rcDest,
+                               &rcSrc,
+                               NULL,
+                               NULL,
+                               NULL,
+                               rop4);
+        
+        EXLATEOBJ_vCleanup(&exlo);
+
+        if(!Ret)
+        {
+            ERR("Failed to mask the bitmap data.\n");
+            goto Cleanup;
+        }
     }
 
     if(diFlags & DI_IMAGE)
     {
-		if (hbmColor)
+		if (psurfColor)
         {
-            DWORD rop = (diFlags & DI_MASK) ? SRCINVERT : SRCCOPY ;
-            hTmpBmp = NtGdiSelectBitmap(hMemDC, hbmColor);
-            NtGdiStretchBlt(hDestDC,
-                            x,
-                            y,
-                            cxWidth,
-                            cyHeight,
-                            hMemDC,
-                            0,
-                            0,
-                            pIcon->Size.cx,
-                            pIcon->Size.cy,
-                            rop,
-                            0);
-            NtGdiSelectBitmap(hMemDC, hTmpBmp);
+            DWORD rop4 = (diFlags & DI_MASK) ? ROP4_SRCINVERT : ROP4_SRCCOPY ;
+            
+            EXLATEOBJ_vInitialize(&exlo, psurfColor->ppal, psurfDest->ppal, 0x00FFFFFF, 0x00FFFFFF, 0);
+            
+            Ret = IntEngStretchBlt(&psurfDest->SurfObj,
+                                   &psurfColor->SurfObj,
+                                   NULL,
+                                   pdcClipObj,
+                                   &exlo.xlo,
+                                   NULL,
+                                   &rcDest,
+                                   &rcSrc,
+                                   NULL,
+                                   NULL,
+                                   NULL,
+                                   rop4);
+        
+            EXLATEOBJ_vCleanup(&exlo);
+
+            if(!Ret)
+            {
+                ERR("Failed to render the icon bitmap.\n");
+                goto Cleanup;
+            }
         }
         else
         {
-            /* Mask bitmap holds the information in its second half */
-            DWORD rop = (diFlags & DI_MASK) ? SRCINVERT : SRCCOPY ;
-            hTmpBmp = NtGdiSelectBitmap(hMemDC, hbmMask);
-            NtGdiStretchBlt(hDestDC,
-                            x,
-                            y,
-                            cxWidth,
-                            cyHeight,
-                            hMemDC,
-                            0,
-                            pIcon->Size.cy,
-                            pIcon->Size.cx,
-                            pIcon->Size.cy,
-                            rop,
-                            0);
-            NtGdiSelectBitmap(hMemDC, hTmpBmp);
+            /* Mask bitmap holds the information in its bottom half */
+            DWORD rop4 = (diFlags & DI_MASK) ? ROP4_SRCINVERT : ROP4_SRCCOPY;
+            RECTL_vOffsetRect(&rcSrc, 0, pIcon->Size.cy);
+            
+            EXLATEOBJ_vInitSrcMonoXlate(&exlo, psurfDest->ppal, 0x00FFFFFF, 0);
+        
+            Ret = IntEngStretchBlt(&psurfDest->SurfObj,
+                                   &psurfMask->SurfObj,
+                                   NULL,
+                                   pdcClipObj,
+                                   &exlo.xlo,
+                                   NULL,
+                                   &rcDest,
+                                   &rcSrc,
+                                   NULL,
+                                   NULL,
+                                   NULL,
+                                   rop4);
+            
+            EXLATEOBJ_vCleanup(&exlo);
+
+            if(!Ret)
+            {
+                ERR("Failed to render the icon bitmap.\n");
+                goto Cleanup;
+            }
         }
     }
 
 done:
-    if(hDestDC != hDc)
+    /* We're done. Was it a double buffered draw ? */
+    if(bOffScreen)
     {
-        NtGdiBitBlt(hDc, xLeft, yTop, cxWidth, cyHeight, hDestDC, 0, 0, SRCCOPY, 0, 0);
+        /* Yes. Draw it back to our DC */
+        POINTL ptSrc = {0, 0};
+        pdc = DC_LockDc(hDc);
+        if(!pdc)
+        {
+            ERR("Could not lock the destination DC.\n");
+            return FALSE;
+        }
+        /* Calculate destination rectangle */
+        RECTL_vSetRect(&rcDest, xLeft, yTop, xLeft + cxWidth, yTop + cyHeight);
+        IntLPtoDP(pdc, (LPPOINT)&rcDest, 2);
+        RECTL_vOffsetRect(&rcDest, pdc->ptlDCOrig.x, pdc->ptlDCOrig.y);
+        
+        /* Prepare the underlying surface */
+        DC_vPrepareDCsForBlit(pdc, rcDest, NULL, rcDest);
+        
+        /* Get the clip object */
+        pdcClipObj = pdc->rosdc.CombinedClip;
+        
+        /* We now have our destination surface and rectangle */
+        psurfDest = pdc->dclevel.pSurface;
+        if(!psurfDest)
+        {
+            /* So, you did all of this for an empty DC. */
+            DC_UnlockDc(pdc);
+            goto Cleanup2;
+        }
+        
+        /* Color translation */
+        EXLATEOBJ_vInitialize(&exlo, psurfOffScreen->ppal, psurfDest->ppal, 0x00FFFFFF, 0x00FFFFFF, 0);
+        
+        /* Blt it! */
+        Ret = IntEngBitBlt(&psurfDest->SurfObj,
+                           &psurfOffScreen->SurfObj,
+                           NULL,
+                           pdcClipObj,
+                           &exlo.xlo,
+                           &rcDest,
+                           &ptSrc,
+                           NULL,
+                           NULL,
+                           NULL,
+                           ROP4_SRCCOPY);
+                           
+        EXLATEOBJ_vCleanup(&exlo);
     }
-
-    /* Restore foreground and background colors */
-    IntGdiSetBkColor(hDc, iOldBkColor);
-    IntGdiSetTextColor(hDc, iOldTxtColor);
-
-    Ret = TRUE ;
-
 Cleanup:
-    NtGdiDeleteObjectApp(hMemDC);
-    if(hDestDC != hDc)
+    if(pdc)
     {
-        if(hOldOffBmp) NtGdiSelectBitmap(hDestDC, hOldOffBmp);
-        NtGdiDeleteObjectApp(hDestDC);
-        if(hOffBmp) NtGdiDeleteObjectApp(hOffBmp);
+        DC_vFinishBlit(pdc, NULL);
+        DC_UnlockDc(pdc);
     }
+    
+Cleanup2:
+    /* Delete off screen rendering surface */
+    if(psurfOffScreen)
+        GDIOBJ_vDeleteObject(&psurfOffScreen->BaseObject);
+    
+    /* Unlock other surfaces */
+    SURFACE_ShareUnlockSurface(psurfMask);
+    if(psurfColor) SURFACE_ShareUnlockSurface(psurfColor);
 
     return Ret;
 }
