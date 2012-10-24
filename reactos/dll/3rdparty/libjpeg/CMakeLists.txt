@@ -3,7 +3,8 @@ add_definitions(
     -DWIN32
     -D_WINDOWS
     -D_MBCS
-    -DJPEG_DLL)
+    -DJPEG_DLL
+    -Dmain=mainptr)
 
 include_directories(
     ${REACTOS_SOURCE_DIR}/include/reactos/libs/libjpeg
