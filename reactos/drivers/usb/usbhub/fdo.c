@@ -1133,7 +1133,7 @@ CreateUsbChildDeviceObject(
     ULONG ChildDeviceCount, UsbDeviceNumber = 0;
     WCHAR CharDeviceName[64];
     UNICODE_STRING DeviceName;
-    ULONG ConfigDescSize, DeviceDescSize;
+    ULONG ConfigDescSize, DeviceDescSize, DeviceInfoSize;
     PVOID HubInterfaceBusContext;
     USB_CONFIGURATION_DESCRIPTOR ConfigDesc;
 
@@ -1312,6 +1312,14 @@ CreateUsbChildDeviceObject(
         DPRINT1("USBHUB: GetUsbDeviceDescriptor failed with status %x\n", Status);
         goto Cleanup;
     }
+
+    // query device details
+    Status = HubInterface->QueryDeviceInformation(HubInterfaceBusContext, 
+                                         UsbChildExtension->UsbDeviceHandle,
+                                         &UsbChildExtension->DeviceInformation,
+                                         sizeof(USB_DEVICE_INFORMATION_0),
+                                         &DeviceInfoSize);
+
 
     //DumpFullConfigurationDescriptor(UsbChildExtension->FullConfigDesc);
 
@@ -2047,8 +2055,164 @@ USBHUB_FdoHandleDeviceControl(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
-    DPRINT1("FdoHandleDeviceControl\n");
-    UNIMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
+    PIO_STACK_LOCATION IoStack;
+    NTSTATUS Status = STATUS_NOT_IMPLEMENTED;
+    PUSB_NODE_INFORMATION NodeInformation;
+    PHUB_DEVICE_EXTENSION HubDeviceExtension;
+    PUSB_NODE_CONNECTION_INFORMATION NodeConnectionInfo;
+    PHUB_CHILDDEVICE_EXTENSION ChildDeviceExtension;
+    PUSB_NODE_CONNECTION_DRIVERKEY_NAME NodeKey;
+    ULONG Index, Length;
+
+    // get stack location
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    // get device extension
+    HubDeviceExtension = (PHUB_DEVICE_EXTENSION) DeviceObject->DeviceExtension;
+
+    if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_USB_GET_NODE_INFORMATION)
+    {
+        // is the buffer big enough
+        if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(USB_NODE_INFORMATION))
+        {
+            // buffer too small
+            Status = STATUS_BUFFER_TOO_SMALL;
+        }
+        else
+        {
+            // get buffer
+            NodeInformation = (PUSB_NODE_INFORMATION)Irp->AssociatedIrp.SystemBuffer;
+
+            // sanity check
+            ASSERT(NodeInformation);
+
+            // init buffer
+            NodeInformation->NodeType = UsbHub;
+            RtlCopyMemory(&NodeInformation->u.HubInformation.HubDescriptor, &HubDeviceExtension->HubDescriptor, sizeof(USB_HUB_DESCRIPTOR));
+
+            // FIXME is hub powered
+            NodeInformation->u.HubInformation.HubIsBusPowered = TRUE;
+
+            // done
+            Irp->IoStatus.Information = sizeof(USB_NODE_INFORMATION);
+            Status = STATUS_SUCCESS;
+        }
+
+
+    }
+    else if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_USB_GET_NODE_CONNECTION_INFORMATION)
+    {
+        if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(USB_NODE_CONNECTION_INFORMATION))
+        {
+            // buffer too small
+            Status = STATUS_BUFFER_TOO_SMALL;
+        }
+        else
+        {
+            // get node connection info
+            NodeConnectionInfo = (PUSB_NODE_CONNECTION_INFORMATION)Irp->AssociatedIrp.SystemBuffer;
+
+            // sanity checks
+            ASSERT(NodeConnectionInfo);
+
+            for(Index = 0; Index < USB_MAXCHILDREN; Index++)
+            {
+                if (HubDeviceExtension->ChildDeviceObject[Index] == NULL)
+                    continue;
+
+                // get child device extension
+                ChildDeviceExtension = (PHUB_CHILDDEVICE_EXTENSION)HubDeviceExtension->ChildDeviceObject[Index]->DeviceExtension;
+
+                if (ChildDeviceExtension->PortNumber != NodeConnectionInfo->ConnectionIndex)
+                   continue;
+
+                // init node connection info
+                RtlCopyMemory(&NodeConnectionInfo->DeviceDescriptor, &ChildDeviceExtension->DeviceDesc, sizeof(USB_DEVICE_DESCRIPTOR));
+                NodeConnectionInfo->CurrentConfigurationValue = ChildDeviceExtension->FullConfigDesc->bConfigurationValue;
+                NodeConnectionInfo->DeviceIsHub = FALSE; //FIXME support hubs
+                NodeConnectionInfo->LowSpeed = ChildDeviceExtension->DeviceInformation.DeviceSpeed == UsbLowSpeed;
+                NodeConnectionInfo->DeviceAddress = ChildDeviceExtension->DeviceInformation.DeviceAddress;
+                NodeConnectionInfo->NumberOfOpenPipes = ChildDeviceExtension->DeviceInformation.NumberOfOpenPipes;
+                NodeConnectionInfo->ConnectionStatus = DeviceConnected; //FIXME
+
+                if (NodeConnectionInfo->NumberOfOpenPipes)
+                {
+                    DPRINT1("Need to copy pipe information\n");
+                }
+                break;
+            }
+
+            // done
+            Irp->IoStatus.Information = sizeof(USB_NODE_INFORMATION);
+            Status = STATUS_SUCCESS;
+        }
+    }
+    else if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_USB_GET_NODE_CONNECTION_DRIVERKEY_NAME)
+    {
+        if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(USB_NODE_CONNECTION_INFORMATION))
+        {
+            // buffer too small
+            Status = STATUS_BUFFER_TOO_SMALL;
+        }
+        else
+        {
+            // get node connection info
+            NodeKey = (PUSB_NODE_CONNECTION_DRIVERKEY_NAME)Irp->AssociatedIrp.SystemBuffer;
+
+            // sanity checks
+            ASSERT(NodeKey);
+
+            for(Index = 0; Index < USB_MAXCHILDREN; Index++)
+            {
+                if (HubDeviceExtension->ChildDeviceObject[Index] == NULL)
+                    continue;
+
+                // get child device extension
+                ChildDeviceExtension = (PHUB_CHILDDEVICE_EXTENSION)HubDeviceExtension->ChildDeviceObject[Index]->DeviceExtension;
+
+                if (ChildDeviceExtension->PortNumber != NodeKey->ConnectionIndex)
+                   continue;
+
+                // get driver key
+                Status = IoGetDeviceProperty(HubDeviceExtension->ChildDeviceObject[Index], DevicePropertyDriverKeyName,
+                                             IoStack->Parameters.DeviceIoControl.OutputBufferLength - sizeof(USB_NODE_CONNECTION_DRIVERKEY_NAME),
+                                             NodeKey->DriverKeyName,
+                                             &Length);
+
+                if (Status == STATUS_BUFFER_TOO_SMALL)
+                {
+                    // normalize status
+                    Status = STATUS_SUCCESS;
+                }
+
+                if (Length + sizeof(USB_NODE_CONNECTION_DRIVERKEY_NAME) > IoStack->Parameters.DeviceIoControl.OutputBufferLength)
+                {
+                    // terminate node key name
+                    NodeKey->DriverKeyName[0] = 0;
+                    Irp->IoStatus.Information = sizeof(USB_NODE_CONNECTION_DRIVERKEY_NAME);
+                }
+                else
+                {
+                    // result size
+                    Irp->IoStatus.Information = Length + sizeof(USB_NODE_CONNECTION_DRIVERKEY_NAME);
+                }
+
+                // length of driver name
+                NodeKey->ActualLength = Length + sizeof(USB_NODE_CONNECTION_DRIVERKEY_NAME);
+                break;
+            }
+        }
+    }
+    else
+    {
+        DPRINT1("UNIMPLEMENTED FdoHandleDeviceControl IoCtl %x InputBufferLength %x OutputBufferLength %x\n", IoStack->Parameters.DeviceIoControl.IoControlCode, 
+           IoStack->Parameters.DeviceIoControl.InputBufferLength, IoStack->Parameters.DeviceIoControl.OutputBufferLength);
+    }
+
+    // finish irp
+    Irp->IoStatus.Status = Status;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+    return Status;
 }
 
