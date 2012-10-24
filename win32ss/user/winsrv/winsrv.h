@@ -10,3 +10,8 @@
 #include <csr/server.h>
 #include <win/base.h>
 #include <win/windows.h>
+
+
+CSR_API(SrvRegisterServicesProcess);
+
+/* EOF */

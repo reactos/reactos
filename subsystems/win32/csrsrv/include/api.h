@@ -104,7 +104,6 @@ CSR_API(CsrSrvClientConnect);
 CSR_API(CsrSrvUnusedFunction);
 CSR_API(CsrSrvIdentifyAlertableThread);
 CSR_API(CsrSrvSetPriorityClass);
-CSR_API(SrvRegisterServicesProcess);
 
 
 /***
@@ -156,7 +155,10 @@ CsrInsertProcess(IN PCSR_PROCESS Parent OPTIONAL,
                  IN PCSR_PROCESS CsrProcess);
 
 
+#if 0
 NTSTATUS FASTCALL CsrApiRegisterDefinitions(PCSRSS_API_DEFINITION NewDefinitions);
+#endif
+
 VOID FASTCALL CsrApiCallHandler(IN OUT PCSR_API_MESSAGE ApiMessage, OUT PULONG Reply);
 
 NTSTATUS

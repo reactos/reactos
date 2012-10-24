@@ -1,5 +1,4 @@
-/* $Id: server.c 43790 2009-10-27 10:34:16Z dgorbachev $
- *
+/*
  * server.c - ReactOS/Win32 Console+User Enviroment Subsystem Server - Initialization
  *
  * ReactOS Operating System
@@ -21,11 +20,39 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  *
  * --------------------------------------------------------------------
+ *
+ * PROGRAMMER: Eric Kohl
  */
+
+/* INCLUDES ******************************************************************/
+
 #include "winsrv.h"
 
 //#define NDEBUG
 #include <debug.h>
 
+
+/* GLOBALS *******************************************************************/
+
+static BOOLEAN ServicesProcessIdValid = FALSE;
+static ULONG_PTR ServicesProcessId;
+
+
+/* FUNCTIONS *****************************************************************/
+
+CSR_API(SrvRegisterServicesProcess)
+{
+    if (ServicesProcessIdValid == TRUE)
+    {
+        /* Only accept a single call */
+        return STATUS_INVALID_PARAMETER;
+    }
+    else
+    {
+        ServicesProcessId = (ULONG_PTR)ApiMessage->Data.RegisterServicesProcessRequest.ProcessId;
+        ServicesProcessIdValid = TRUE;
+        return STATUS_SUCCESS;
+    }
+}
 
 /* EOF */

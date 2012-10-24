@@ -61,11 +61,6 @@ CallHardError(IN PCSR_THREAD ThreadData,
     }
 }
 
-CSRSS_API_DEFINITION NativeDefinitions[] =
-{
-    CSRSS_DEFINE_API(REGISTER_SERVICES_PROCESS, SrvRegisterServicesProcess), // winsrv.dll
-};
-
 /* === INIT ROUTINES === */
 
 /*++
@@ -993,14 +988,6 @@ CsrServerInitialization(IN ULONG ArgumentCount,
                 __FUNCTION__, Status);
         return Status;
     }
-
-#if 0
-    Status = CsrApiRegisterDefinitions(NativeDefinitions);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("CSRSRV failed in %s with status %lx\n", "CsrApiRegisterDefinitions", Status);
-    }
-#endif
 
     /* Now initialize our API Port */
     Status = CsrApiPortInitialize();

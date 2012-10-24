@@ -11,7 +11,6 @@ list(APPEND SOURCE
     server.c
     session.c
     thredsup.c
-    user.c
     wait.c
     csrsrv.rc
     ${CMAKE_CURRENT_BINARY_DIR}/csrsrv.def)
