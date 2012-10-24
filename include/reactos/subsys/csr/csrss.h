@@ -96,9 +96,11 @@ typedef struct
 #define CLOSE_HANDLE                    (0x26)
 #define VERIFY_HANDLE                   (0x27)
 #define DUPLICATE_HANDLE                (0x28)
+
 #define CREATE_DESKTOP                  (0x2B)
 #define SHOW_DESKTOP                    (0x2C)
 #define HIDE_DESKTOP                    (0x2D)
+
 #define SET_LOGON_NOTIFY_WINDOW         (0x2F)
 #define REGISTER_LOGON_PROCESS          (0x30)
 #define GET_INPUT_WAIT_HANDLE           (0x35)

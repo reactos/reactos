@@ -8,9 +8,6 @@
 
 #pragma once
 
-#include <csr/csrsrv.h>
-//#include "api.h"
-
 BOOL FASTCALL DtbgIsDesktopVisible(VOID);
 
 /* EOF */

@@ -8,35 +8,34 @@
 
 #pragma once
 
+/* PSDK/NDK Headers */
+#define WIN32_NO_STATUS
 #include <windows.h>
+#define NTOS_MODE_USER
+#include <ndk/ntndk.h>
+#include <psapi.h>
+
+/* External Winlogon Header */
+#include <winlogon.h>
+
+/* CSRSS Header */
+#include <csr/csrsrv.h>
+
+/* Internal CSRSS Headers */
+#include <win/winmsg.h>
+#include <desktopbg.h>
+
+/* Public Win32K Headers */
+#include <ntuser.h>
+
 #include <commctrl.h>
 
 extern HANDLE Win32CsrApiHeap;
 extern HINSTANCE Win32CsrDllHandle;
 
-/*
-typedef VOID (WINAPI *CSR_CLEANUP_OBJECT_PROC)(Object_t *Object);
-
-typedef struct tagCSRSS_OBJECT_DEFINITION
-{
-  LONG Type;
-  CSR_CLEANUP_OBJECT_PROC CsrCleanupObjectProc;
-} CSRSS_OBJECT_DEFINITION, *PCSRSS_OBJECT_DEFINITION;
-*/
-
-NTSTATUS FASTCALL Win32CsrEnumProcesses(CSRSS_ENUM_PROCESS_PROC EnumProc,
-                                        PVOID Context);
-
 /* desktopbg.c */
 CSR_API(CsrCreateDesktop);
 CSR_API(CsrShowDesktop);
 CSR_API(CsrHideDesktop);
-// CSR_API(CsrRegisterSystemClasses);
-
-/* exitros.c */
-/// Must go to winsrv.dll
-CSR_API(CsrExitReactos);
-CSR_API(CsrSetLogonNotifyWindow);
-CSR_API(CsrRegisterLogonProcess);
 
 /* EOF */

@@ -3,8 +3,6 @@
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
-1   ICON    DISCARDABLE     res/terminal.ico
-
 #include "lang/bg-BG.rc"
 #include "lang/cs-CZ.rc"
 #include "lang/de-DE.rc"

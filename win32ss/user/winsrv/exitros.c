@@ -1,15 +1,9 @@
-/* $Id: exitros.c 57570 2012-10-17 23:10:40Z hbelusca $
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS CSRSS subsystem
- * FILE:            subsys/csrss/win32csr/exitros.c
+ * FILE:            win32ss/user/winsrv/exitros.c
  * PURPOSE:         Logout/shutdown
  */
-
-
-/***
- *** Move it into winsrv
- ***/
 
 /* INCLUDES ******************************************************************/
 
@@ -19,8 +13,20 @@
 #define NDEBUG
 #include <debug.h>
 
+
+
 static HWND LogonNotifyWindow = NULL;
 static HANDLE LogonProcess = NULL;
+
+
+/* FUNCTIONS *****************************************************************/
+
+NTSTATUS FASTCALL
+Win32CsrEnumProcesses(CSRSS_ENUM_PROCESS_PROC EnumProc,
+                      PVOID Context)
+{
+    return CsrEnumProcesses(EnumProc, Context);
+}
 
 CSR_API(CsrRegisterLogonProcess)
 {

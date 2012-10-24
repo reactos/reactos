@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            subsys/csrss/win32csr/dllmain.c
+ * FILE:            win32ss/user/winsrv/dllmain.c
  * PURPOSE:         Initialization
  * PROGRAMMERS:     Dmitry Philippov (shedon@mail.ru)
  *                  Timo Kreuzer (timo.kreuzer@reactos.org)

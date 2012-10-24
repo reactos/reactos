@@ -11,8 +11,6 @@ spec2def(win32csr.dll win32csr.spec)
 list(APPEND SOURCE
     desktopbg.c
     dllmain.c
-    exitros.c
-    harderror.c
     win32csr.rc
     ${CMAKE_CURRENT_BINARY_DIR}/win32csr.def)
 
