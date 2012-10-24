@@ -8,16 +8,6 @@
 
 #pragma once
 
-#define IDD_END_NOW  10
-#define IDD_NOT_RESPONDING 11
-#define IDD_SWITCH_APP 12
-
-#define IDC_STATIC   -1
-#define IDC_PROGRESS 101
-#define IDC_END_NOW  102
-#define IDC_STATIC_CUR_APP 103
-
-
 #define ID_SYSTEM_EDIT_MARK 1001
 #define ID_SYSTEM_EDIT_COPY 1002
 #define ID_SYSTEM_EDIT_PASTE    1003
@@ -29,7 +19,7 @@
 
 #define NCPOPUP_MENU  103
 
-#define IDS_EDIT	  204
+#define IDS_EDIT      204
 #define IDS_MARK      205
 #define IDS_COPY      206
 #define IDS_PASTE     207
@@ -39,7 +29,7 @@
 #define IDS_DEFAULTS  211
 #define IDS_PROPERTIES 212
 
-//scrollbar resource ids
+// Scrollbar resource ids
 #define IDS_SCROLLHERE   304
 #define IDS_SCROLLTOP    305
 #define IDS_SCROLLBOTTOM 306
