@@ -50,7 +50,7 @@ add_library(libtiff SHARED
     tif_write.c
     tif_zip.c)
 
-set_module_type(libtiff win32dll ENTRYPOINT 0)
+set_module_type(libtiff win32dll)
 target_link_libraries(libtiff zlib getopt)
 add_importlibs(libtiff user32 msvcrt kernel32 ntdll)
 add_dependencies(libtiff psdk)
