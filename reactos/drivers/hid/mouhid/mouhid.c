@@ -92,7 +92,8 @@ MouHid_GetButtonMove(
 VOID
 MouHid_GetButtonFlags(
     IN PMOUHID_DEVICE_EXTENSION DeviceExtension,
-    OUT PUSHORT ButtonFlags)
+    OUT PUSHORT ButtonFlags,
+    OUT PUSHORT Flags)
 {
     NTSTATUS Status;
     USAGE Usage;
@@ -102,6 +103,7 @@ MouHid_GetButtonFlags(
 
     /* init flags */
     *ButtonFlags = 0;
+    *Flags = 0;
 
     /* get usages */
     CurrentUsageListLength = DeviceExtension->UsageListLength;
@@ -170,7 +172,7 @@ MouHid_GetButtonFlags(
     if (DeviceExtension->MouseAbsolute)
     {
         // mouse operates absolute
-        *ButtonFlags |= MOUSE_MOVE_ABSOLUTE;
+        *Flags |= MOUSE_MOVE_ABSOLUTE;
     }
 }
 
@@ -212,6 +214,7 @@ MouHid_ReadCompletion(
     NTSTATUS Status;
     LONG LastX, LastY;
     MOUSE_INPUT_DATA MouseInputData;
+    USHORT Flags;
 
     /* get device extension */
     DeviceExtension = (PMOUHID_DEVICE_EXTENSION)Context;
@@ -239,13 +242,14 @@ MouHid_ReadCompletion(
     MouHid_GetButtonMove(DeviceExtension, &LastX, &LastY);
 
     /* get mouse change flags */
-    MouHid_GetButtonFlags(DeviceExtension, &ButtonFlags);
+    MouHid_GetButtonFlags(DeviceExtension, &ButtonFlags, &Flags);
 
     /* init input data */
     RtlZeroMemory(&MouseInputData, sizeof(MOUSE_INPUT_DATA));
 
     /* init input data */
     MouseInputData.ButtonFlags = ButtonFlags;
+    MouseInputData.Flags = Flags;
     MouseInputData.LastX = LastX;
     MouseInputData.LastY = LastY;
 

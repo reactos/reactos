@@ -630,11 +630,10 @@ HidParser_GetUsageValueWithReport(
         ASSERT(ReportItem->ByteOffset < ReportDescriptorLength);
 
         //
-        // one extra shift for skipping the prepended report id
+        // FIXME: support items with variable bitlength
         //
-        Data = 0;
-        Parser->Copy(&Data, &ReportDescriptor[ReportItem->ByteOffset +1], min(sizeof(ULONG), ReportDescriptorLength - (ReportItem->ByteOffset + 1)));
-        //Data = ReportDescriptor[ReportItem->ByteOffset + 1];
+        ASSERT(ReportItem->BitCount == 16);
+        Data = (ReportDescriptor[ReportItem->ByteOffset +1] & 0xFF) | (ReportDescriptor[ReportItem->ByteOffset +2] & 0xFF) << 8;
 
         //
         // shift data
