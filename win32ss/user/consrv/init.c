@@ -328,12 +328,16 @@ VOID WINAPI ConsoleStaticServerThread(PVOID x)
 
 CSR_SERVER_DLL_INIT(ConServerDllInitialization)
 {
-    // NTSTATUS Status = STATUS_SUCCESS;
-
 /*
+    NTSTATUS Status = STATUS_SUCCESS;
+
     DPRINT("BASSRV: %s(%ld,...) called\n", __FUNCTION__, ArgumentCount);
 
-    BaseApiPort = CsrQueryApiPort ();
+    // Get the listening port from csrsrv.dll
+    BaseApiPort = CsrQueryApiPort();
+    if (BaseApiPort == NULL) return STATUS_UNSUCCESSFUL;
+
+    // Register our message dispatcher
     Status = CsrAddStaticServerThread(ConsoleStaticServerThread);
     if (NT_SUCCESS(Status))
     {
@@ -366,7 +370,7 @@ CSR_SERVER_DLL_INIT(ConServerDllInitialization)
 }
 
 BOOL
-NTAPI
+WINAPI
 DllMain(IN HANDLE hDll,
         IN DWORD dwReason,
         IN LPVOID lpReserved)

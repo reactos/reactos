@@ -42,25 +42,3 @@ FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     LTEXT           "",IDC_STATIC_CUR_APP,39,139,204,16,SS_SUNKEN,WS_EX_STATICEDGE
 END
-
-STRINGTABLE
-BEGIN
-  IDS_EDIT "Редагувати"
-  IDS_MARK "Виділити"
-  IDS_COPY "Копіювати\tEnter"
-  IDS_PASTE "Вставити"
-  IDS_SELECTALL "Виділити все"
-  IDS_SCROLL "Прокрутити"
-  IDS_FIND "Знайти..."
-  IDS_DEFAULTS "Замовчування"
-  IDS_PROPERTIES "Властивості"
-  IDS_SCROLLHERE "Прокрутити сюди"
-  IDS_SCROLLTOP "Прокрутити на початок"
-  IDS_SCROLLBOTTOM "Прокрутити на кінець"
-  IDS_SCROLLPAGE_UP "Попередня сотрінка"
-  IDS_SCROLLPAGE_DOWN "Наступна сторінка"
-  IDS_SCROLLUP "Прокрутити догори"
-  IDS_SCROLLDOWN "Прокрутити донизу"
-
-  IDS_COMMAND_PROMPT "Командний рядок"
-END

@@ -34,25 +34,3 @@ FONT 9, "MS UI Gothic", 400, 0, 0x1
 BEGIN
     LTEXT           "",IDC_STATIC_CUR_APP,39,139,204,16,SS_SUNKEN,WS_EX_STATICEDGE
 END
-
-STRINGTABLE
-BEGIN
-  IDS_EDIT "編集"
-  IDS_MARK "範囲指定"
-  IDS_COPY "コピー\tEnter"
-  IDS_PASTE "貼\り付け"
-  IDS_SELECTALL "すべて選択"
-  IDS_SCROLL "スクロール"
-  IDS_FIND "検索..."
-  IDS_DEFAULTS "規定値"
-  IDS_PROPERTIES "プロパティ"
-  IDS_SCROLLHERE "ここにスクロール"
-  IDS_SCROLLTOP "一番上にスクロール"
-  IDS_SCROLLBOTTOM "一番下にスクロール"
-  IDS_SCROLLPAGE_UP "Page up"
-  IDS_SCROLLPAGE_DOWN "Page down"
-  IDS_SCROLLUP "上にスクロール"
-  IDS_SCROLLDOWN "下にスクロール"
-
-  IDS_COMMAND_PROMPT "Command Prompt"
-END

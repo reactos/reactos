@@ -7,8 +7,10 @@
  */
 
 /* INCLUDES ******************************************************************/
-#define NDEBUG
+
 #include "w32csr.h"
+
+#define NDEBUG
 #include <debug.h>
 
 
@@ -332,17 +334,17 @@ CSR_SERVER_DLL_INIT(Win32CsrInitialization)
     PrivateCsrssManualGuiCheck(0);
 
     /* Setup the DLL Object */
-    LoadedServerDll->ApiBase = BASESRV_FIRST_API_NUMBER;
-    LoadedServerDll->HighestApiSupported = BasepMaxApiNumber;
+    LoadedServerDll->ApiBase = USERSRV_FIRST_API_NUMBER;
+    LoadedServerDll->HighestApiSupported = UserpMaxApiNumber;
     LoadedServerDll->DispatchTable = Win32CsrApiDefinitions;
-    // LoadedServerDll->ValidTable = BaseServerApiServerValidTable;
-    // LoadedServerDll->NameTable = BaseServerApiNameTable;
+    // LoadedServerDll->ValidTable = Win32CsrApiServerValidTable;
+    // LoadedServerDll->NameTable = Win32CsrApiNameTable;
     // LoadedServerDll->SizeOfProcessData = 0;
     // LoadedServerDll->ConnectCallback = NULL;
     // LoadedServerDll->DisconnectCallback = NULL;
     LoadedServerDll->HardErrorCallback = Win32CsrHardError;
-    LoadedServerDll->NewProcessCallback = Win32CsrDuplicateHandleTable;
-    LoadedServerDll->DisconnectCallback = Win32CsrReleaseConsole;
+    LoadedServerDll->NewProcessCallback = NULL;
+    LoadedServerDll->DisconnectCallback = NULL;
 
     /* Start Raw Input Threads */
     Status = RtlCreateUserThread(NtCurrentProcess(), NULL, TRUE, 0, 0, 0, (PTHREAD_START_ROUTINE)CreateSystemThreads, (PVOID)0, &ServerThread, &ClientId);

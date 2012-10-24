@@ -24,9 +24,9 @@
  
  */
 
-#define NDEBUG
-
 #include "w32csr.h"
+
+#define NDEBUG
 #include <debug.h>
 
 /***

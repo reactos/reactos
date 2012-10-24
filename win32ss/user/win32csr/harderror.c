@@ -9,9 +9,11 @@
 
 /* INCLUDES ******************************************************************/
 
-#define NDEBUG
 #include "w32csr.h"
+
+#define NDEBUG
 #include <debug.h>
+
 #include <strsafe.h>
 
 #define IDTRYAGAIN 10

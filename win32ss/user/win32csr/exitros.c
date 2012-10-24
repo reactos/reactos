@@ -12,10 +12,11 @@
  ***/
 
 /* INCLUDES ******************************************************************/
-#define NDEBUG
+
 #include "w32csr.h"
 #include <sddl.h>
-#include "resource.h"
+
+#define NDEBUG
 #include <debug.h>
 
 static HWND LogonNotifyWindow = NULL;

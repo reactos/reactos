@@ -40,25 +40,3 @@ FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     LTEXT           "",IDC_STATIC_CUR_APP,39,139,204,16,SS_SUNKEN,WS_EX_STATICEDGE
 END
-
-STRINGTABLE
-BEGIN
-  IDS_EDIT "Обработка"
-  IDS_MARK "Отбелязване"
-  IDS_COPY "Запомняне\tEnter"
-  IDS_PASTE "Поставяне"
-  IDS_SELECTALL "Избор на всичко"
-  IDS_SCROLL "Прелистване"
-  IDS_FIND "Търсене..."
-  IDS_DEFAULTS "Подразбирани"
-  IDS_PROPERTIES "Свойства"
-  IDS_SCROLLHERE "Прелистване тук"
-  IDS_SCROLLTOP "Прелистване до горе"
-  IDS_SCROLLBOTTOM "Прелистване до долу"
-  IDS_SCROLLPAGE_UP "Горна страница"
-  IDS_SCROLLPAGE_DOWN "Долна страница"
-  IDS_SCROLLUP "Прелистване нагоре"
-  IDS_SCROLLDOWN "Прелистване надолу"
-
-  IDS_COMMAND_PROMPT "Command Prompt"
-END

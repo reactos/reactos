@@ -9,8 +9,9 @@
 #include <winlogon.h>
 
 /* Internal CSRSS Headers */
-#include <conio.h>
-#include <csrplugin.h>
+#include <win/winmsg.h>
+//#include <conio.h>
+//#include <csrplugin.h>
 #include <desktopbg.h>
 
 /* Public Win32K Headers */

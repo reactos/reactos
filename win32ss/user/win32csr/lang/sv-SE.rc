@@ -41,25 +41,3 @@ FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     LTEXT           "",IDC_STATIC_CUR_APP,39,139,204,16,SS_SUNKEN,WS_EX_STATICEDGE
 END
-
-STRINGTABLE
-BEGIN
-  IDS_EDIT "Redigera"
-  IDS_MARK "Markera"
-  IDS_COPY "Kopiera\tEnter"
-  IDS_PASTE "Klistra in"
-  IDS_SELECTALL "Markera Allt"
-  IDS_SCROLL "Skrolla"
-  IDS_FIND "Sök..."
-  IDS_DEFAULTS "Ursprunglig"
-  IDS_PROPERTIES "Egenskaper"
-  IDS_SCROLLHERE "Skrolla hit"
-  IDS_SCROLLTOP "Skrolla till topp"
-  IDS_SCROLLBOTTOM "Skrolla till botten"
-  IDS_SCROLLPAGE_UP "Sida upp"
-  IDS_SCROLLPAGE_DOWN "Sida ner"
-  IDS_SCROLLUP "Skrolla upp"
-  IDS_SCROLLDOWN "Skrolla ner"
-
-  IDS_COMMAND_PROMPT "Command Prompt"
-END

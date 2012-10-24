@@ -34,25 +34,3 @@ FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     LTEXT           "",IDC_STATIC_CUR_APP,39,139,204,16,SS_SUNKEN,WS_EX_STATICEDGE
 END
-
-STRINGTABLE
-BEGIN
-  IDS_EDIT "Edit"
-  IDS_MARK "Mark"
-  IDS_COPY "Copy\tEnter"
-  IDS_PASTE "Paste"
-  IDS_SELECTALL "Select All"
-  IDS_SCROLL "Scroll"
-  IDS_FIND "Find..."
-  IDS_DEFAULTS "Defaults"
-  IDS_PROPERTIES "Properties"
-  IDS_SCROLLHERE "Scroll here"
-  IDS_SCROLLTOP "Scroll top"
-  IDS_SCROLLBOTTOM "Scroll bottom"
-  IDS_SCROLLPAGE_UP "Page up"
-  IDS_SCROLLPAGE_DOWN "Page down"
-  IDS_SCROLLUP "Scroll up"
-  IDS_SCROLLDOWN "Scroll down"
-
-  IDS_COMMAND_PROMPT "Command Prompt"
-END

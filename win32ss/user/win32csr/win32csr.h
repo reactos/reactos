@@ -27,6 +27,12 @@ typedef struct tagCSRSS_OBJECT_DEFINITION
 NTSTATUS FASTCALL Win32CsrEnumProcesses(CSRSS_ENUM_PROCESS_PROC EnumProc,
                                         PVOID Context);
 
+/* desktopbg.c */
+CSR_API(CsrCreateDesktop);
+CSR_API(CsrShowDesktop);
+CSR_API(CsrHideDesktop);
+// CSR_API(CsrRegisterSystemClasses);
+
 /* exitros.c */
 /// Must go to winsrv.dll
 CSR_API(CsrExitReactos);
