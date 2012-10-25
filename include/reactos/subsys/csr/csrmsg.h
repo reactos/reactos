@@ -75,6 +75,12 @@ typedef struct _CSR_SET_PRIORITY_CLASS
     ULONG PriorityClass;
 } CSR_SET_PRIORITY_CLASS, *PCSR_SET_PRIORITY_CLASS;
 
+typedef struct
+{
+    HANDLE  UniqueThread;
+    CLIENT_ID Cid;
+} CSRSS_IDENTIFY_ALERTABLE_THREAD, *PCSRSS_IDENTIFY_ALERTABLE_THREAD;
+
 typedef struct _CSR_CLIENT_CONNECT
 {
     ULONG ServerId;
@@ -118,19 +124,13 @@ typedef struct _CSR_API_MESSAGE
 
                 // ULONG_PTR ApiMessageData[39]; //// what to do ????
 
-            /*** Temporary ***/
+            /*** win32csr thingies to remove. ***/
 #if 1
-                CSRSS_REGISTER_SERVICES_PROCESS RegisterServicesProcessRequest;
-                CSRSS_EXIT_REACTOS ExitReactosRequest;
-
                 CSRSS_CREATE_DESKTOP CreateDesktopRequest;
                 CSRSS_SHOW_DESKTOP ShowDesktopRequest;
                 CSRSS_HIDE_DESKTOP HideDesktopRequest;
-                CSRSS_SET_LOGON_NOTIFY_WINDOW SetLogonNotifyWindowRequest;
-                CSRSS_REGISTER_LOGON_PROCESS RegisterLogonProcessRequest;
-                CSRSS_GET_PROCESS_LIST GetProcessListRequest;
 #endif
-            /*****************/
+            /************************************/
             } Data;
         };
     };

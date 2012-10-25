@@ -31,6 +31,7 @@ typedef struct _CSR_NT_SESSION
 } CSR_NT_SESSION, *PCSR_NT_SESSION;
 
 /*** old thingie, remove it later... (put it in winsrv -- console) ***/
+#include <win/conmsg.h>
 typedef struct _CSRSS_CON_PROCESS_DATA
 {
     HANDLE ConsoleEvent;

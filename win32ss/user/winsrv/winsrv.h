@@ -6,26 +6,47 @@
  * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
+#ifndef __WINSRV_H__
+#define __WINSRV_H__
+
 #pragma once
 
 /* PSDK/NDK Headers */
-#include <stdio.h>
+#define WIN32_NO_STATUS
 #include <windows.h>
-
 #define NTOS_MODE_USER
 #include <ndk/ntndk.h>
 
-#include <csr/server.h>
-#include <win/base.h>
-#include <win/windows.h>
+// #include <stdio.h>
 
+/* CSRSS Header */
+#include <csr/csrsrv.h>
+
+/* USER Headers */
+#include <win/winmsg.h>
+// #include <win/base.h>
+// #include <win/windows.h>
+
+#include "resource.h"
+
+
+/* init.c */
+BOOL WINAPI _UserSoundSentry(VOID);
+
+/* harderror.c */
 VOID
 WINAPI
 Win32CsrHardError(IN PCSR_THREAD ThreadData,
                   IN PHARDERROR_MSG Message);
-    
-CSR_API(SrvRegisterServicesProcess);
 
+
+/* shutdown.c */
+CSR_API(SrvExitWindowsEx);
+CSR_API(CsrSetLogonNotifyWindow);
+CSR_API(SrvRegisterLogonProcess);
+// CSR_API(CsrRegisterSystemClasses);
+
+CSR_API(SrvRegisterServicesProcess);
 
 
 /*****************************
@@ -40,12 +61,10 @@ typedef struct tagCSRSS_OBJECT_DEFINITION
 } CSRSS_OBJECT_DEFINITION, *PCSRSS_OBJECT_DEFINITION;
 *\/
 
-/\* exitros.c *\/
-CSR_API(CsrExitReactos);
-CSR_API(CsrSetLogonNotifyWindow);
-CSR_API(CsrRegisterLogonProcess);
-// CSR_API(CsrRegisterSystemClasses);
+
 
 *****************************/
+
+#endif // __WINSRV_H__
 
 /* EOF */

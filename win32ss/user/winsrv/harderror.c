@@ -9,7 +9,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include "w32csr.h"
+#include "winsrv.h"
 
 #define NDEBUG
 #include <debug.h>

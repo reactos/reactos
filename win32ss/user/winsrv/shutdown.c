@@ -8,7 +8,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include "w32csr.h"
+#include "winsrv.h"
 #include <sddl.h>
 
 #define NDEBUG

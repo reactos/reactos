@@ -800,6 +800,7 @@ CSR_API(CsrSetConsoleOutputCodePage) // TODO: Merge this function with the other
 
 CSR_API(SrvGetConsoleProcessList)
 {
+    PCSRSS_GET_PROCESS_LIST GetProcessListRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetProcessListRequest;
     PDWORD Buffer;
     PCSR_PROCESS ProcessData = CsrGetClientThread()->Process;
     PCSRSS_CONSOLE Console;
@@ -810,8 +811,8 @@ CSR_API(SrvGetConsoleProcessList)
 
     DPRINT("SrvGetConsoleProcessList\n");
 
-    Buffer = ApiMessage->Data.GetProcessListRequest.ProcessId;
-    if (!Win32CsrValidateBuffer(ProcessData, Buffer, ApiMessage->Data.GetProcessListRequest.nMaxIds, sizeof(DWORD)))
+    Buffer = GetProcessListRequest->ProcessId;
+    if (!Win32CsrValidateBuffer(ProcessData, Buffer, GetProcessListRequest->nMaxIds, sizeof(DWORD)))
         return STATUS_ACCESS_VIOLATION;
 
     Status = ConioConsoleFromProcessData(ProcessData, &Console);
@@ -825,7 +826,7 @@ CSR_API(SrvGetConsoleProcessList)
          current_entry = current_entry->Flink)
     {
         current = CONTAINING_RECORD(current_entry, CSR_PROCESS, ConsoleLink);
-        if (++nItems <= ApiMessage->Data.GetProcessListRequest.nMaxIds)
+        if (++nItems <= GetProcessListRequest->nMaxIds)
         {
             *Buffer++ = HandleToUlong(current->ClientId.UniqueProcess);
         }
@@ -833,7 +834,7 @@ CSR_API(SrvGetConsoleProcessList)
 
     ConioUnlockConsole(Console);
 
-    ApiMessage->Data.GetProcessListRequest.nProcessIdsTotal = nItems;
+    GetProcessListRequest->nProcessIdsTotal = nItems;
     return STATUS_SUCCESS;
 }
 

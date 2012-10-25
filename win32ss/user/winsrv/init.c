@@ -24,22 +24,35 @@ HANDLE UserSrvHeap = NULL;          // Our own heap.
 PCSR_API_ROUTINE UserServerApiDispatchTable[UserpMaxApiNumber] =
 {
     SrvExitWindowsEx,
-    SrvEndTask,
-    SrvLogon,
+    // SrvEndTask,
+    // SrvLogon,
     SrvRegisterServicesProcess, // Not present in Win7
-    SrvActivateDebugger,
-    SrvGetThreadConsoleDesktop, // Not present in Win7
-    SrvDeviceEvent,
+    // SrvActivateDebugger,
+    // SrvGetThreadConsoleDesktop, // Not present in Win7
+    // SrvDeviceEvent,
     SrvRegisterLogonProcess,    // Not present in Win7
-    SrvCreateSystemThreads,
-    SrvRecordShutdownReason,
-    SrvCancelShutdown,              // Added in Vista
-    SrvConsoleHandleOperation,      // Added in Win7
-    SrvGetSetShutdownBlockReason,   // Added in Vista
+    // SrvCreateSystemThreads,
+    // SrvRecordShutdownReason,
+    // SrvCancelShutdown,              // Added in Vista
+    // SrvConsoleHandleOperation,      // Added in Win7
+    // SrvGetSetShutdownBlockReason,   // Added in Vista
 };
 
 BOOLEAN UserServerApiServerValidTable[UserpMaxApiNumber] =
 {
+    FALSE,   // SrvExitWindowsEx
+    // FALSE,   // SrvEndTask
+    // FALSE,   // SrvLogon
+    FALSE,   // SrvRegisterServicesProcess
+    // FALSE,   // SrvActivateDebugger
+    // TRUE,    // SrvGetThreadConsoleDesktop
+    // FALSE,   // SrvDeviceEvent
+    FALSE,   // SrvRegisterLogonProcess
+    // FALSE,   // SrvCreateSystemThreads
+    // FALSE,   // SrvRecordShutdownReason
+    // FALSE,   // SrvCancelShutdown
+    // FALSE,   // SrvConsoleHandleOperation
+    // FALSE,   // SrvGetSetShutdownBlockReason
 
     // FALSE
 };
@@ -47,18 +60,18 @@ BOOLEAN UserServerApiServerValidTable[UserpMaxApiNumber] =
 PCHAR UserServerApiNameTable[UserpMaxApiNumber] =
 {
     "SrvExitWindowsEx",
-    "SrvEndTask",
-    "SrvLogon",
+    // "SrvEndTask",
+    // "SrvLogon",
     "SrvRegisterServicesProcess",
-    "SrvActivateDebugger",
-    "SrvGetThreadConsoleDesktop",
-    "SrvDeviceEvent",
+    // "SrvActivateDebugger",
+    // "SrvGetThreadConsoleDesktop",
+    // "SrvDeviceEvent",
     "SrvRegisterLogonProcess",
-    "SrvCreateSystemThreads",
-    "SrvRecordShutdownReason",
-    "SrvCancelShutdown",
-    "SrvConsoleHandleOperation",
-    "SrvGetSetShutdownBlockReason",
+    // "SrvCreateSystemThreads",
+    // "SrvRecordShutdownReason",
+    // "SrvCancelShutdown",
+    // "SrvConsoleHandleOperation",
+    // "SrvGetSetShutdownBlockReason",
 
     // NULL
 };
@@ -301,7 +314,7 @@ InitializeVideoAddressSpace(VOID)
  * TODO: the console one
  */
 NTSTATUS
-CsrpInitVideo (VOID)
+CsrpInitVideo(VOID)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(L"\\??\\DISPLAY1");
