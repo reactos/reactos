@@ -2062,6 +2062,7 @@ USBHUB_FdoHandleDeviceControl(
     PUSB_NODE_CONNECTION_INFORMATION NodeConnectionInfo;
     PHUB_CHILDDEVICE_EXTENSION ChildDeviceExtension;
     PUSB_NODE_CONNECTION_DRIVERKEY_NAME NodeKey;
+    PUSB_NODE_CONNECTION_NAME ConnectionName;
     ULONG Index, Length;
 
     // get stack location
@@ -2141,7 +2142,6 @@ USBHUB_FdoHandleDeviceControl(
                 }
                 break;
             }
-
             // done
             Irp->IoStatus.Information = sizeof(USB_NODE_INFORMATION);
             Status = STATUS_SUCCESS;
@@ -2188,7 +2188,7 @@ USBHUB_FdoHandleDeviceControl(
                 if (Length + sizeof(USB_NODE_CONNECTION_DRIVERKEY_NAME) > IoStack->Parameters.DeviceIoControl.OutputBufferLength)
                 {
                     // terminate node key name
-                    NodeKey->DriverKeyName[0] = 0;
+                    NodeKey->DriverKeyName[0] = UNICODE_NULL;
                     Irp->IoStatus.Information = sizeof(USB_NODE_CONNECTION_DRIVERKEY_NAME);
                 }
                 else
@@ -2201,6 +2201,25 @@ USBHUB_FdoHandleDeviceControl(
                 NodeKey->ActualLength = Length + sizeof(USB_NODE_CONNECTION_DRIVERKEY_NAME);
                 break;
             }
+        }
+    }
+    else if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_USB_GET_NODE_CONNECTION_NAME)
+    {
+        if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(USB_NODE_CONNECTION_NAME))
+        {
+            // buffer too small
+            Status = STATUS_BUFFER_TOO_SMALL;
+        }
+        else
+        {
+            // FIXME support hubs
+            ConnectionName = (PUSB_NODE_CONNECTION_NAME)Irp->AssociatedIrp.SystemBuffer;
+            ConnectionName->ActualLength = 0;
+            ConnectionName->NodeName[0] = UNICODE_NULL;
+
+            // done
+            Irp->IoStatus.Information = sizeof(USB_NODE_CONNECTION_NAME);
+            Status = STATUS_SUCCESS;
         }
     }
     else
