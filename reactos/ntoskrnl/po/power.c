@@ -21,6 +21,7 @@ typedef struct _REQUEST_POWER_ITEM
     PREQUEST_POWER_COMPLETE CompletionRoutine;
     POWER_STATE PowerState;
     PVOID Context;
+    PDEVICE_OBJECT TopDeviceObject;
 } REQUEST_POWER_ITEM, *PREQUEST_POWER_ITEM;
 
 typedef struct _POWER_STATE_TRAVERSE_CONTEXT
@@ -56,10 +57,10 @@ PopRequestPowerIrpCompletion(IN PDEVICE_OBJECT DeviceObject,
                                         RequestPowerItem->Context,
                                         &Irp->IoStatus);
 
-    ExFreePool(Context);
-
     IoFreeIrp(Irp);
-    ObDereferenceObject(DeviceObject);
+
+    ObDereferenceObject(RequestPowerItem->TopDeviceObject);
+    ExFreePool(Context);
 
     return STATUS_MORE_PROCESSING_REQUIRED;
 }
@@ -573,6 +574,7 @@ PoRequestPowerIrp(IN PDEVICE_OBJECT DeviceObject,
     RequestPowerItem->CompletionRoutine = CompletionFunction;
     RequestPowerItem->PowerState = PowerState;
     RequestPowerItem->Context = Context;
+    RequestPowerItem->TopDeviceObject = TopDeviceObject;
   
     if (pIrp != NULL)
         *pIrp = Irp;
