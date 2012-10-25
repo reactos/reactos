@@ -1,6 +1,13 @@
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS Client/Server Runtime SubSystem
+ * FILE:            include/reactos/subsys/win/base.h
+ * PURPOSE:         Public definitions for Base API Clients
+ * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)
+ */
 
-#ifndef __BASE_H__
-#define __BASE_H__
+#ifndef _BASE_H
+#define _BASE_H
 
 #pragma once
 
@@ -8,8 +15,6 @@ typedef VOID (CALLBACK * BASE_PROCESS_CREATE_NOTIFY_ROUTINE)(PVOID);
 
 NTSTATUS WINAPI BaseSetProcessCreateNotify (BASE_PROCESS_CREATE_NOTIFY_ROUTINE);
 CSR_SERVER_DLL_INIT(ServerDllInitialization);
-
-
 
 typedef struct _NLS_USER_INFO
 {
@@ -79,6 +84,6 @@ typedef struct _BASE_STATIC_SERVER_DATA
     ULONG TermsrvClientTimeZoneChangeNum;
 } BASE_STATIC_SERVER_DATA, *PBASE_STATIC_SERVER_DATA;
 
-#endif // __BASE_H__
+#endif // _BASE_H
 
 /* EOF */

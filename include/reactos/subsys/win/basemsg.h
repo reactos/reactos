@@ -1,6 +1,14 @@
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS Client/Server Runtime SubSystem
+ * FILE:            include/reactos/subsys/win/basemsg.h
+ * PURPOSE:         Public definitions for communication
+ *                  between Base API Clients and Servers
+ * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)
+ */
 
-#ifndef __BASEMSG_H__
-#define __BASEMSG_H__
+#ifndef _BASEMSG_H
+#define _BASEMSG_H
 
 #pragma once
 
@@ -177,7 +185,7 @@ typedef struct _BASE_API_MESSAGE
 
     PCSR_CAPTURE_BUFFER CsrCaptureData;
     CSR_API_NUMBER ApiNumber;
-    ULONG Status;
+    ULONG Status; // ReturnValue; // NTSTATUS Status
     ULONG Reserved;
     union
     {
@@ -195,6 +203,6 @@ typedef struct _BASE_API_MESSAGE
     } Data;
 } BASE_API_MESSAGE, *PBASE_API_MESSAGE;
 
-#endif // __BASEMSG_H__
+#endif // _BASEMSG_H
 
 /* EOF */

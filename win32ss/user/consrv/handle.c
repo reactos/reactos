@@ -1,9 +1,9 @@
 /*
- * reactos/subsys/csrss/api/handle.c
- *
- * CSRSS handle functions
- *
- * ReactOS Operating System
+ * LICENSE:         GPL - See COPYING in the top level directory
+ * PROJECT:         ReactOS Console Server DLL
+ * FILE:            win32ss/user/consrv/handle.c
+ * PURPOSE:         Handle functions
+ * PROGRAMMERS:
  */
 
 /* INCLUDES ******************************************************************/

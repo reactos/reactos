@@ -1,11 +1,11 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS system libraries
+ * PROJECT:         ReactOS Console Server DLL
  * FILE:            win32ss/user/consrv/tuiconsole.h
  * PURPOSE:         Interface to text-mode consoles
+ * PROGRAMMERS:
  */
 
-// #include "api.h"
 #include "conio.h"
 
 extern NTSTATUS FASTCALL TuiInitConsole(PCSRSS_CONSOLE Console);

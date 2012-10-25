@@ -1,3 +1,12 @@
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS Client/Server Runtime SubSystem
+ * FILE:            subsystems/win32/csrsrv/srv.h
+ * PURPOSE:         Main header - Definitions
+ * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
+ *                  ReactOS Portable Systems Group
+ */
+
 #ifndef _SRV_H
 #define _SRV_H
 
@@ -36,4 +45,6 @@
 #define ROUND_UP(n, align) ROUND_DOWN(((ULONG)n) + (align) - 1, (align))
 #define ROUND_DOWN(n, align) (((ULONG)n) & ~((align) - 1l))
 
-#endif
+#endif // _SRV_H
+
+/* EOF */

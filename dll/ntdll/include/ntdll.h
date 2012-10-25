@@ -42,7 +42,7 @@
 #include "ntdllp.h"
 
 /* CSRSS Header */
-#include <csr/csrcl.h>
+#include <csr/csr.h>
 
 /* PSEH */
 #include <pseh/pseh2.h>

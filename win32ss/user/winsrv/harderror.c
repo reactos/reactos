@@ -1,8 +1,8 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS system libraries
- * FILE:            win32ss/user/winsrv/dllmain.c
- * PURPOSE:         Initialization
+ * PROJECT:         ReactOS User API Server DLL
+ * FILE:            win32ss/user/winsrv/harderror.c
+ * PURPOSE:         Hard errors
  * PROGRAMMERS:     Dmitry Philippov (shedon@mail.ru)
  *                  Timo Kreuzer (timo.kreuzer@reactos.org)
  */

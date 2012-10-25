@@ -1,9 +1,9 @@
 /*
- * reactos/win32ss/user/consrv/conio.c
- *
- * Console I/O functions
- *
- * ReactOS Operating System
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS Console Server DLL
+ * FILE:            win32ss/user/consrv/coninput.c
+ * PURPOSE:         Console I/O functions
+ * PROGRAMMERS:
  */
 
 /* INCLUDES ******************************************************************/

@@ -1,6 +1,14 @@
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS Client/Server Runtime SubSystem
+ * FILE:            include/reactos/subsys/win/winmsg.h
+ * PURPOSE:         Public definitions for communication
+ *                  between User-Mode API Clients and Servers
+ * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)
+ */
 
-#ifndef __WINMSG_H__
-#define __WINMSG_H__
+#ifndef _WINMSG_H
+#define _WINMSG_H
 
 #pragma once
 
@@ -9,6 +17,6 @@
 
 // CSR_SERVER_DLL_INIT(UserServerDllInitialization);
 
-#endif // __WINMSG_H__
+#endif // _WINMSG_H
 
 /* EOF */

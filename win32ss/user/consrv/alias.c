@@ -1,10 +1,10 @@
 /*
- * PROJECT:     ReactOS CSRSS
- * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        subsystems/win32/csrss/api/alias.c
- * PURPOSE:     CSRSS alias support functions
- * COPYRIGHT:   Christoph Wittich
- *              Johannes Anderwald
+ * LICENSE:         GPL - See COPYING in the top level directory
+ * PROJECT:         ReactOS Console Server DLL
+ * FILE:            win32ss/user/consrv/alias.c
+ * PURPOSE:         Alias support functions
+ * PROGRAMMERS:     Christoph Wittich
+ *                  Johannes Anderwald
  */
 
 /* INCLUDES ******************************************************************/

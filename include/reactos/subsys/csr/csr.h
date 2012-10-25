@@ -1,13 +1,14 @@
 /*
- * PROJECT:         ReactOS Native Headers
- * FILE:            include/subsys/csrss/client.h
- * PURPOSE:         Public Definitions for CSR Clients
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS Client/Server Runtime SubSystem
+ * FILE:            include/reactos/subsys/csr/csr.h
+ * PURPOSE:         Public definitions for CSR Clients
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
-#ifndef _CSRCL_H
-#define _CSRCL_H
+#ifndef _CSR_H
+#define _CSR_H
 
 #include "csrmsg.h"
 
@@ -88,6 +89,6 @@ NTAPI
 CsrSetPriorityClass(IN HANDLE Process,
                     IN OUT PULONG PriorityClass);
 
-#endif // _CSRCLIENT_H
+#endif // _CSR_H
 
 /* EOF */

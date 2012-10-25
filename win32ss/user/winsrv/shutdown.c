@@ -1,8 +1,9 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS CSRSS subsystem
- * FILE:            win32ss/user/winsrv/exitros.c
+ * PROJECT:         ReactOS User API Server DLL
+ * FILE:            win32ss/user/winsrv/shutdown.c
  * PURPOSE:         Logout/shutdown
+ * PROGRAMMERS:
  */
 
 /* INCLUDES ******************************************************************/
@@ -28,7 +29,7 @@ Win32CsrEnumProcesses(CSRSS_ENUM_PROCESS_PROC EnumProc,
     return CsrEnumProcesses(EnumProc, Context);
 }
 
-CSR_API(CsrRegisterLogonProcess)
+CSR_API(SrvRegisterLogonProcess)
 {
     if (ApiMessage->Data.RegisterLogonProcessRequest.Register)
     {
@@ -925,7 +926,7 @@ UserExitReactos(DWORD UserProcessId, UINT Flags)
     return Status;
 }
 
-CSR_API(CsrExitReactos)
+CSR_API(SrvExitWindowsEx)
 {
     if (0 == (ApiMessage->Data.ExitReactosRequest.Flags & EWX_INTERNAL_FLAG))
     {

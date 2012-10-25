@@ -1,7 +1,8 @@
 /*
- * PROJECT:         ReactOS Native Headers
- * FILE:            include/subsys/csrss/csrsrv.h
- * PURPOSE:         Public Definitions for CSR Servers
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS Client/Server Runtime SubSystem
+ * FILE:            include/reactos/subsys/csr/csrsrv.h
+ * PURPOSE:         Public definitions for CSR Servers
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
@@ -440,6 +441,6 @@ CsrValidateMessageString(IN PCSR_API_MESSAGE ApiMessage,
 #endif
 */
 
-#endif // _CSRSERVER_H
+#endif // _CSRSRV_H
 
 /* EOF */

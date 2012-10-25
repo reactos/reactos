@@ -1,3 +1,10 @@
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS Console Server DLL
+ * FILE:            win32ss/user/consrv/consrv.h
+ * PURPOSE:         Main header - Definitions
+ * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)
+ */
 
 #ifndef __CONSRV_H__
 #define __CONSRV_H__

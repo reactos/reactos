@@ -1,8 +1,9 @@
 /*
- * PROJECT:         ReactOS Native Headers
- * FILE:            include/subsys/csrss/msg.h
- * PURPOSE:         Public Definitions for communication
- *                  between CSR Clients and Servers.
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS Client/Server Runtime SubSystem
+ * FILE:            include/reactos/subsys/csr/csrmsg.h
+ * PURPOSE:         Public definitions for communication
+ *                  between CSR Clients and Servers
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */

@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS/Win32 base enviroment subsystem server
+ * PROJECT:         ReactOS/Win32 Base enviroment Subsystem Server
  * FILE:            subsystems/win/basesrv/init.c
  * PURPOSE:         Initialization
  * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)

@@ -1,3 +1,11 @@
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS User API Server DLL
+ * FILE:            win32ss/user/winsrv/winsrv.h
+ * PURPOSE:         Main header - Definitions
+ * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)
+ */
+
 #pragma once
 
 /* PSDK/NDK Headers */

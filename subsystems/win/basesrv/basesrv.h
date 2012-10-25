@@ -1,3 +1,10 @@
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS/Win32 Base enviroment Subsystem Server
+ * FILE:            subsystems/win/basesrv/basesrv.h
+ * PURPOSE:         Main header - Definitions
+ * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)
+ */
 
 #ifndef __BASESRV_H__
 #define __BASESRV_H__

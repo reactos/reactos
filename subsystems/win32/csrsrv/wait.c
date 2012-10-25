@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS CSR Sub System
- * FILE:            subsystems/win32/csrss/csrsrv/wait.c
+ * PROJECT:         ReactOS Client/Server Runtime SubSystem
+ * FILE:            subsystems/win32/csrsrv/wait.c
  * PURPOSE:         CSR Server DLL Wait Implementation
  * PROGRAMMERS:     Emanuele Aliberti
  *                  Alex Ionescu (alex@relsoft.net)

@@ -1,7 +1,7 @@
 /*
- * PROJECT:         ReactOS CSRSS
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            win32ss/user/consrv/lineinput.c
+ * PROJECT:         ReactOS Console Server DLL
+ * FILE:            win32ss/user/consrv/tuiconsole.c
  * PURPOSE:         Console line input functions
  * PROGRAMMERS:     Jeffrey Morlan
  */

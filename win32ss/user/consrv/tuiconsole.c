@@ -1,8 +1,9 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS system libraries
+ * PROJECT:         ReactOS Console Server DLL
  * FILE:            win32ss/user/consrv/tuiconsole.c
- * PURPOSE:         Implementation of text-mode consoles
+ * PURPOSE:         Interface to text-mode consoles
+ * PROGRAMMERS:
  */
 
 #include "consrv.h"

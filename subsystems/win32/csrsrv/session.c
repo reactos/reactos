@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS CSR SubSystem
- * FILE:            subsystems/win32/csrss/csrsrv/session.c
+ * PROJECT:         ReactOS Client/Server Runtime SubSystem
+ * FILE:            subsystems/win32/csrsrv/session.c
  * PURPOSE:         CSR Server DLL Session Implementation
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
  */

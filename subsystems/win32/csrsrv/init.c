@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS CSR SubSystem
- * FILE:            subsystems/win32/csrss/csrsrv/init.c
+ * PROJECT:         ReactOS Client/Server Runtime SubSystem
+ * FILE:            subsystems/win32/csrsrv/init.c
  * PURPOSE:         CSR Server DLL Initialization
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
  *                  ReactOS Portable Systems Group

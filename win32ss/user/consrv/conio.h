@@ -1,13 +1,12 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS system libraries
- * FILE:            subsys/csrss/include/conio.h
- * PURPOSE:         CSRSS internal console I/O interface
+ * PROJECT:         ReactOS Console Server DLL
+ * FILE:            win32ss/user/consrv/conio.h
+ * PURPOSE:         Internal console I/O interface
+ * PROGRAMMERS:
  */
 
 #pragma once
-
-// #include "api.h"
 
 #define CSR_DEFAULT_CURSOR_SIZE 25
 

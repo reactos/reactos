@@ -1,11 +1,11 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS system libraries
+ * PROJECT:         ReactOS Console Server DLL
  * FILE:            win32ss/user/consrv/guiconsole.h
- * PURPOSE:         Interface to GUI consoles
+ * PURPOSE:         Interface to gui-mode consoles
+ * PROGRAMMERS:
  */
 
-// #include "api.h"
 #include "conio.h"
 
 #define CONGUI_MIN_WIDTH      10

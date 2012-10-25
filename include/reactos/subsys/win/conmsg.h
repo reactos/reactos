@@ -1,6 +1,14 @@
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS Client/Server Runtime SubSystem
+ * FILE:            include/reactos/subsys/win/conmsg.h
+ * PURPOSE:         Public definitions for communication
+ *                  between Console API Clients and Servers
+ * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)
+ */
 
-#ifndef __CONMSG_H__
-#define __CONMSG_H__
+#ifndef _CONMSG_H
+#define _CONMSG_H
 
 #pragma once
 
@@ -559,6 +567,6 @@ typedef struct _CONSOLE_API_MESSAGE
     } Data;
 } CONSOLE_API_MESSAGE, *PCONSOLE_API_MESSAGE;
 
-#endif // __CONMSG_H__
+#endif // _CONMSG_H
 
 /* EOF */

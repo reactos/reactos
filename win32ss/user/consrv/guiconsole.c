@@ -1,8 +1,9 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS system libraries
+ * PROJECT:         ReactOS Console Server DLL
  * FILE:            win32ss/user/consrv/guiconsole.c
  * PURPOSE:         Implementation of gui-mode consoles
+ * PROGRAMMERS:
  */
 
 /* INCLUDES ******************************************************************/
