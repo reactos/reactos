@@ -323,7 +323,7 @@ fail:
 static INT SIC_IconAppend (LPCWSTR sSourceFile, INT dwSourceIndex, HICON hSmallIcon, HICON hBigIcon, DWORD dwFlags)
 {
     LPSIC_ENTRY lpsice;
-    INT ret, index, index1;
+    INT ret, index, index1, indexDPA;
     WCHAR path[MAX_PATH];
     TRACE("%s %i %p %p\n", debugstr_w(sSourceFile), dwSourceIndex, hSmallIcon ,hBigIcon);
 
@@ -338,8 +338,8 @@ static INT SIC_IconAppend (LPCWSTR sSourceFile, INT dwSourceIndex, HICON hSmallI
 
     EnterCriticalSection(&SHELL32_SicCS);
 
-    index = DPA_InsertPtr(sic_hdpa, 0x7fff, lpsice);
-    if ( INVALID_INDEX == index )
+    indexDPA = DPA_InsertPtr(sic_hdpa, 0x7fff, lpsice);
+    if ( -1 == indexDPA )
     {
         ret = INVALID_INDEX;
         goto leave;
@@ -370,6 +370,7 @@ static INT SIC_IconAppend (LPCWSTR sSourceFile, INT dwSourceIndex, HICON hSmallI
 leave:
     if(ret == INVALID_INDEX)
     {
+        if(indexDPA != -1) DPA_DeletePtr(sic_hdpa, indexDPA);
         HeapFree(GetProcessHeap(), 0, lpsice->sSourceFile);
         SHFree(lpsice);
     }
