@@ -15,29 +15,32 @@
 #include <debug.h>
 
 
-
 static HWND LogonNotifyWindow = NULL;
 static HANDLE LogonProcess = NULL;
 
 
 /* FUNCTIONS *****************************************************************/
 
+/*
 NTSTATUS FASTCALL
 Win32CsrEnumProcesses(CSRSS_ENUM_PROCESS_PROC EnumProc,
                       PVOID Context)
 {
     return CsrEnumProcesses(EnumProc, Context);
 }
+*/
 
 CSR_API(SrvRegisterLogonProcess)
 {
-    if (ApiMessage->Data.RegisterLogonProcessRequest.Register)
+    PCSRSS_REGISTER_LOGON_PROCESS RegisterLogonProcessRequest = &((PUSER_API_MESSAGE)ApiMessage)->Data.RegisterLogonProcessRequest;
+
+    if (RegisterLogonProcessRequest->Register)
     {
         if (0 != LogonProcess)
         {
             return STATUS_LOGON_SESSION_EXISTS;
         }
-        LogonProcess = ApiMessage->Data.RegisterLogonProcessRequest.ProcessId;
+        LogonProcess = RegisterLogonProcessRequest->ProcessId;
     }
     else
     {
@@ -55,9 +58,10 @@ CSR_API(SrvRegisterLogonProcess)
 
 CSR_API(CsrSetLogonNotifyWindow)
 {
+    PCSRSS_SET_LOGON_NOTIFY_WINDOW SetLogonNotifyWindowRequest = &((PUSER_API_MESSAGE)ApiMessage)->Data.SetLogonNotifyWindowRequest;
     DWORD WindowCreator;
 
-    if (0 == GetWindowThreadProcessId(ApiMessage->Data.SetLogonNotifyWindowRequest.LogonNotifyWindow,
+    if (0 == GetWindowThreadProcessId(SetLogonNotifyWindowRequest->LogonNotifyWindow,
                                       &WindowCreator))
     {
         DPRINT1("Can't get window creator\n");
@@ -69,7 +73,7 @@ CSR_API(CsrSetLogonNotifyWindow)
         return STATUS_ACCESS_DENIED;
     }
 
-    LogonNotifyWindow = ApiMessage->Data.SetLogonNotifyWindowRequest.LogonNotifyWindow;
+    LogonNotifyWindow = SetLogonNotifyWindowRequest->LogonNotifyWindow;
 
     return STATUS_SUCCESS;
 }
@@ -142,14 +146,14 @@ EndNowDlgProc(HWND Dlg, UINT Msg, WPARAM wParam, LPARAM lParam)
         TitleLength = SendMessageW(NotifyContext->WndClient, WM_GETTEXTLENGTH,
                                    0, 0) +
                       GetWindowTextLengthW(Dlg);
-        Title = HeapAlloc(Win32CsrApiHeap, 0, (TitleLength + 1) * sizeof(WCHAR));
+        Title = HeapAlloc(UserSrvHeap, 0, (TitleLength + 1) * sizeof(WCHAR));
         if (NULL != Title)
         {
             Len = GetWindowTextW(Dlg, Title, TitleLength + 1);
             SendMessageW(NotifyContext->WndClient, WM_GETTEXT,
                          TitleLength + 1 - Len, (LPARAM) (Title + Len));
             SetWindowTextW(Dlg, Title);
-            HeapFree(Win32CsrApiHeap, 0, Title);
+            HeapFree(UserSrvHeap, 0, Title);
         }
         ProgressBar = GetDlgItem(Dlg, IDC_PROGRESS);
         SendMessageW(ProgressBar, PBM_SETRANGE32, 0,
@@ -467,6 +471,48 @@ NotifyTopLevelWindows(PNOTIFY_CONTEXT Context)
     return TRUE;
 }
 
+/*** Taken from win32ss/user/win32csr/desktopbg.c ***/
+BOOL FASTCALL
+DtbgIsDesktopVisible(VOID)
+{
+    HWND VisibleDesktopWindow = GetDesktopWindow(); // DESKTOPWNDPROC
+
+    if (VisibleDesktopWindow != NULL &&
+            !IsWindowVisible(VisibleDesktopWindow))
+    {
+        VisibleDesktopWindow = NULL;
+    }
+
+    return VisibleDesktopWindow != NULL;
+}
+/****************************************************/
+
+/*** Taken from win32ss/user/consrv/console.c ***/
+/* TODO: Find another way to do it. */
+VOID FASTCALL
+ConioConsoleCtrlEventTimeout(DWORD Event, PCSR_PROCESS ProcessData, DWORD Timeout)
+{
+    HANDLE Thread;
+
+    DPRINT("ConioConsoleCtrlEvent Parent ProcessId = %x\n", ProcessData->ClientId.UniqueProcess);
+
+    if (ProcessData->CtrlDispatcher)
+    {
+
+        Thread = CreateRemoteThread(ProcessData->ProcessHandle, NULL, 0,
+                                    (LPTHREAD_START_ROUTINE) ProcessData->CtrlDispatcher,
+                                    UlongToPtr(Event), 0, NULL);
+        if (NULL == Thread)
+        {
+            DPRINT1("Failed thread creation (Error: 0x%x)\n", GetLastError());
+            return;
+        }
+        WaitForSingleObject(Thread, Timeout);
+        CloseHandle(Thread);
+    }
+}
+/************************************************/
+
 static BOOL FASTCALL
 NotifyAndTerminateProcess(PCSR_PROCESS ProcessData,
                           PSHUTDOWN_SETTINGS ShutdownSettings,
@@ -555,6 +601,7 @@ typedef struct tagPROCESS_ENUM_CONTEXT
     DWORD CsrssProcess;
 } PROCESS_ENUM_CONTEXT, *PPROCESS_ENUM_CONTEXT;
 
+#if 0
 static NTSTATUS WINAPI
 ExitReactosProcessEnum(PCSR_PROCESS ProcessData, PVOID Data)
 {
@@ -610,7 +657,7 @@ ExitReactosProcessEnum(PCSR_PROCESS ProcessData, PVOID Data)
         {
             ProcessData->ShutdownLevel = 0;
         }
-        NewData = HeapAlloc(Win32CsrApiHeap, 0, (Context->ProcessCount + 1)
+        NewData = HeapAlloc(UserSrvHeap, 0, (Context->ProcessCount + 1)
                             * sizeof(PCSR_PROCESS));
         if (NULL == NewData)
         {
@@ -620,7 +667,7 @@ ExitReactosProcessEnum(PCSR_PROCESS ProcessData, PVOID Data)
         {
             memcpy(NewData, Context->ProcessData,
                    Context->ProcessCount * sizeof(PCSR_PROCESS));
-            HeapFree(Win32CsrApiHeap, 0, Context->ProcessData);
+            HeapFree(UserSrvHeap, 0, Context->ProcessData);
         }
         Context->ProcessData = NewData;
         Context->ProcessData[Context->ProcessCount] = ProcessData;
@@ -629,6 +676,7 @@ ExitReactosProcessEnum(PCSR_PROCESS ProcessData, PVOID Data)
 
     return STATUS_SUCCESS;
 }
+#endif
 
 static int
 ProcessDataCompare(const void *Elem1, const void *Elem2)
@@ -723,7 +771,7 @@ LoadShutdownSettings(PSID Sid, PSHUTDOWN_SETTINGS ShutdownSettings)
     }
     else
     {
-        KeyName = HeapAlloc(Win32CsrApiHeap, 0,
+        KeyName = HeapAlloc(UserSrvHeap, 0,
                             (wcslen(StringSid) + wcslen(Subkey) + 1) *
                             sizeof(WCHAR));
         if (NULL == KeyName)
@@ -739,7 +787,7 @@ LoadShutdownSettings(PSID Sid, PSHUTDOWN_SETTINGS ShutdownSettings)
     ErrCode = RegOpenKeyExW(HKEY_USERS, KeyName, 0, KEY_QUERY_VALUE, &DesktopKey);
     if (KeyName != InitialKeyName)
     {
-        HeapFree(Win32CsrApiHeap, 0, KeyName);
+        HeapFree(UserSrvHeap, 0, KeyName);
     }
     if (ERROR_SUCCESS != ErrCode)
     {
@@ -810,7 +858,7 @@ InternalExitReactos(DWORD ProcessId, DWORD ThreadId, UINT Flags)
     {
         if (sizeof(FixedUserInfo) < ReturnLength)
         {
-            UserInfo = HeapAlloc(Win32CsrApiHeap, 0, ReturnLength);
+            UserInfo = HeapAlloc(UserSrvHeap, 0, ReturnLength);
             if (NULL == UserInfo)
             {
                 DPRINT1("Unable to allocate %u bytes for user info\n",
@@ -823,7 +871,7 @@ InternalExitReactos(DWORD ProcessId, DWORD ThreadId, UINT Flags)
             {
                 DPRINT1("GetTokenInformation failed with error %d\n",
                         GetLastError());
-                HeapFree(Win32CsrApiHeap, 0, UserInfo);
+                HeapFree(UserSrvHeap, 0, UserInfo);
                 CloseHandle(CallerToken);
                 return STATUS_UNSUCCESSFUL;
             }
@@ -843,7 +891,7 @@ InternalExitReactos(DWORD ProcessId, DWORD ThreadId, UINT Flags)
     LoadShutdownSettings(UserInfo->User.Sid, &ShutdownSettings);
     if (UserInfo != (TOKEN_USER *) FixedUserInfo)
     {
-        HeapFree(Win32CsrApiHeap, 0, UserInfo);
+        HeapFree(UserSrvHeap, 0, UserInfo);
     }
     Context.CsrssProcess = GetCurrentProcessId();
     ShellWnd = GetShellWindow();
@@ -858,14 +906,14 @@ InternalExitReactos(DWORD ProcessId, DWORD ThreadId, UINT Flags)
         Context.ShellProcess = 0;
     }
 
-    Status = Win32CsrEnumProcesses(ExitReactosProcessEnum, &Context);
+    // Status = Win32CsrEnumProcesses(ExitReactosProcessEnum, &Context);
     if (! NT_SUCCESS(Status))
     {
         DPRINT1("Failed to enumerate registered processes, status 0x%x\n",
                 Status);
         if (NULL != Context.ProcessData)
         {
-            HeapFree(Win32CsrApiHeap, 0, Context.ProcessData);
+            HeapFree(UserSrvHeap, 0, Context.ProcessData);
         }
         return Status;
     }
@@ -890,7 +938,7 @@ InternalExitReactos(DWORD ProcessId, DWORD ThreadId, UINT Flags)
     /* Cleanup */
     if (NULL != Context.ProcessData)
     {
-        HeapFree(Win32CsrApiHeap, 0, Context.ProcessData);
+        HeapFree(UserSrvHeap, 0, Context.ProcessData);
     }
 
     return Status;
@@ -928,16 +976,18 @@ UserExitReactos(DWORD UserProcessId, UINT Flags)
 
 CSR_API(SrvExitWindowsEx)
 {
-    if (0 == (ApiMessage->Data.ExitReactosRequest.Flags & EWX_INTERNAL_FLAG))
+    PCSRSS_EXIT_REACTOS ExitReactosRequest = &((PUSER_API_MESSAGE)ApiMessage)->Data.ExitReactosRequest;
+
+    if (0 == (ExitReactosRequest->Flags & EWX_INTERNAL_FLAG))
     {
         return UserExitReactos((DWORD_PTR) ApiMessage->Header.ClientId.UniqueProcess,
-                               ApiMessage->Data.ExitReactosRequest.Flags);
+                               ExitReactosRequest->Flags);
     }
     else
     {
         return InternalExitReactos((DWORD_PTR) ApiMessage->Header.ClientId.UniqueProcess,
                                    (DWORD_PTR) ApiMessage->Header.ClientId.UniqueThread,
-                                   ApiMessage->Data.ExitReactosRequest.Flags);
+                                   ExitReactosRequest->Flags);
     }
 }
 

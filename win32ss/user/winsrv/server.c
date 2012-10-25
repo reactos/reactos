@@ -25,6 +25,8 @@ static ULONG_PTR ServicesProcessId;
 
 CSR_API(SrvRegisterServicesProcess)
 {
+    PCSRSS_REGISTER_SERVICES_PROCESS RegisterServicesProcessRequest = &((PUSER_API_MESSAGE)ApiMessage)->Data.RegisterServicesProcessRequest;
+
     if (ServicesProcessIdValid == TRUE)
     {
         /* Only accept a single call */
@@ -32,7 +34,7 @@ CSR_API(SrvRegisterServicesProcess)
     }
     else
     {
-        ServicesProcessId = (ULONG_PTR)ApiMessage->Data.RegisterServicesProcessRequest.ProcessId;
+        ServicesProcessId = (ULONG_PTR)RegisterServicesProcessRequest->ProcessId;
         ServicesProcessIdValid = TRUE;
         return STATUS_SUCCESS;
     }

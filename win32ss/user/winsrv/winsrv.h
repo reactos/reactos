@@ -19,6 +19,9 @@
 
 // #include <stdio.h>
 
+/* External Winlogon Header */
+#include <winlogon.h>
+
 /* CSRSS Header */
 #include <csr/csrsrv.h>
 
@@ -27,8 +30,15 @@
 // #include <win/base.h>
 // #include <win/windows.h>
 
+/* Public Win32 Headers */
+#include <commctrl.h>
+
 #include "resource.h"
 
+
+extern HANDLE UserSrvHeap;
+// extern HANDLE BaseSrvSharedHeap;
+// extern PBASE_STATIC_SERVER_DATA BaseStaticServerData;
 
 /* init.c */
 BOOL WINAPI _UserSoundSentry(VOID);

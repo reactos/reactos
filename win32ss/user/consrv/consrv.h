@@ -32,6 +32,7 @@
 /* Shared header with console.dll */
 #include "console.h"
 
+
 extern HANDLE ConSrvHeap;
 // extern HANDLE BaseSrvSharedHeap;
 // extern PBASE_STATIC_SERVER_DATA BaseStaticServerData;

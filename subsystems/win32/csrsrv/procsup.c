@@ -1365,7 +1365,7 @@ Quickie:
     return Status;
 }
 
-/* FIXME: Temporary hack. This is really "CsrShutdownProcess", mostly. Used by win32csr */
+/* FIXME: Temporary hack. This is really "CsrShutdownProcess", mostly. Used by winsrv */
 #if 0
 NTSTATUS
 WINAPI

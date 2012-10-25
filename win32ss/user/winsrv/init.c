@@ -9,6 +9,10 @@
 
 #include "winsrv.h"
 
+/* Public Win32K Headers */
+// For calling NtUser...()
+#include <ntuser.h>
+
 #define NDEBUG
 #include <debug.h>
 

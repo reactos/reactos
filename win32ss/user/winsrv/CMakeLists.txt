@@ -15,7 +15,7 @@ list(APPEND SOURCE
 
 add_library(winsrv SHARED ${SOURCE})
 
-# target_link_libraries(winsrv win32ksys ${PSEH_LIB}) # win32ksys because of NtUser...()
+target_link_libraries(winsrv win32ksys ${PSEH_LIB}) # win32ksys because of NtUser...()
 
 set_module_type(winsrv win32dll)
 
