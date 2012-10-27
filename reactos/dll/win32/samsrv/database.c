@@ -764,8 +764,8 @@ SampGetObjectAttributeString(PSAM_DB_OBJECT DbObject,
         goto done;
     }
 
-    String->Length = Length - sizeof(WCHAR);
-    String->MaximumLength = Length;
+    String->Length = (USHORT)(Length - sizeof(WCHAR));
+    String->MaximumLength = (USHORT)Length;
     String->Buffer = midl_user_allocate(Length);
     if (String->Buffer == NULL)
     {
