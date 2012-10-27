@@ -6,14 +6,14 @@
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
  */
 
-/* INCLUDES ******************************************************************/
+/* INCLUDES *******************************************************************/
 
 #include "srv.h"
 
 #define NDEBUG
 #include <debug.h>
 
-/* DATA **********************************************************************/
+/* DATA ***********************************************************************/
 
 RTL_CRITICAL_SECTION CsrNtSessionLock;
 LIST_ENTRY CsrNtSessionList;
@@ -37,7 +37,7 @@ PCHAR CsrServerSbApiName[5] =
     "Unknown Csr Sb Api Number"
 };
 
-/* PRIVATE FUNCTIONS *********************************************************/
+/* PRIVATE FUNCTIONS **********************************************************/
 
 /*++
  * @name CsrInitializeNtSessionList
@@ -191,7 +191,7 @@ CsrDereferenceNtSession(IN PCSR_NT_SESSION Session,
     }
 }
 
-/* SESSION MANAGER FUNCTIONS**************************************************/
+/* SESSION MANAGER FUNCTIONS **************************************************/
 
 /*++
  * @name CsrSbCreateSession

@@ -7,18 +7,18 @@
  *                  Alex Ionescu (alex@relsoft.net)
  */
 
-/* INCLUDES ******************************************************************/
+/* INCLUDES *******************************************************************/
 
 #include "srv.h"
 
 #define NDEBUG
 #include <debug.h>
 
-/* DATA **********************************************************************/
+/* DATA ***********************************************************************/
 
 RTL_CRITICAL_SECTION CsrWaitListsLock;
 
-/* PRIVATE FUNCTIONS *********************************************************/
+/* PRIVATE FUNCTIONS **********************************************************/
 
 /*++
  * @name CsrInitializeWait
@@ -183,7 +183,7 @@ CsrNotifyWaitBlock(IN PCSR_WAIT_BLOCK WaitBlock,
     return FALSE;
 }
 
-/* PUBLIC FUNCTIONS **********************************************************/
+/* PUBLIC FUNCTIONS ***********************************************************/
 
 /*++
  * @name CsrCreateWait

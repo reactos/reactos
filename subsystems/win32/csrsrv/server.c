@@ -6,14 +6,14 @@
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
  */
 
-/* INCLUDES ******************************************************************/
+/* INCLUDES *******************************************************************/
 
 #include "srv.h"
 
 #define NDEBUG
 #include <debug.h>
 
-/* DATA **********************************************************************/
+/* DATA ***********************************************************************/
 
 PCSR_API_ROUTINE CsrServerApiDispatchTable[CsrpMaxApiNumber] =
 {
@@ -49,7 +49,7 @@ PVOID *CsrSrvSharedStaticServerData;
 ULONG CsrSrvSharedSectionSize;
 HANDLE CsrSrvSharedSection;
 
-/* PRIVATE FUNCTIONS**********************************************************/
+/* PRIVATE FUNCTIONS **********************************************************/
 
 /*++
  * @name CsrServerDllInitialization
@@ -583,7 +583,7 @@ CsrSrvUnusedFunction(IN OUT PCSR_API_MESSAGE ApiMessage,
     return STATUS_INVALID_PARAMETER;
 }
 
-/* PUBLIC FUNCTIONS***********************************************************/
+/* PUBLIC FUNCTIONS ***********************************************************/
 
 /*++
  * @name CsrSetCallingSpooler

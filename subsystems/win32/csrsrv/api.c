@@ -7,14 +7,14 @@
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
  */
 
-/* INCLUDES ******************************************************************/
+/* INCLUDES *******************************************************************/
 
 #include "srv.h"
 
 #define NDEBUG
 #include <debug.h>
 
-/* GLOBALS *******************************************************************/
+/* GLOBALS ********************************************************************/
 
 static unsigned ApiDefinitionsCount = 0;
 static PCSRSS_API_DEFINITION ApiDefinitions = NULL;
@@ -25,7 +25,7 @@ volatile LONG CsrpStaticThreadCount;
 volatile LONG CsrpDynamicThreadTotal;
 extern ULONG CsrMaxApiRequestThreads;
 
-/* FUNCTIONS *****************************************************************/
+/* FUNCTIONS ******************************************************************/
 
 #if 0
 NTSTATUS FASTCALL
