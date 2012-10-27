@@ -3494,7 +3494,7 @@ noProxyTextures:
    }
 } /* closestFit() */
 
-GLint GLAPIENTRY
+GLAPI GLint GLAPIENTRY
 gluScaleImage(GLenum format, GLsizei widthin, GLsizei heightin,
 		    GLenum typein, const void *datain,
 		    GLsizei widthout, GLsizei heightout, GLenum typeout,
