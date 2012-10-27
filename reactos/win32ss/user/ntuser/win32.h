@@ -195,6 +195,7 @@ typedef struct _PROCESSINFO
   PTHREADINFO ptiList;
   PTHREADINFO ptiMainThread;
   struct _DESKTOP* rpdeskStartup;
+  PPROCESSINFO ppiNext;
   PCLS pclsPrivateList;
   PCLS pclsPublicList;
   INT cThreads;
@@ -224,6 +225,7 @@ typedef struct _PROCESSINFO
 
 #if DBG
   BYTE DbgChannelLevel[DbgChCount];
+  DWORD DbgHandleCount[USER_HANDLE_TYPE_COUNT];
 #endif
 } PROCESSINFO;
 

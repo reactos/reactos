@@ -26,6 +26,7 @@ PSERVERINFO gpsi = NULL; // Global User Server Information.
 
 SHORT gusLanguageID;
 PPROCESSINFO ppiScrnSaver;
+PPROCESSINFO gppiList = NULL;
 
 extern ULONG_PTR Win32kSSDT[];
 extern UCHAR Win32kSSPT[];
@@ -55,7 +56,7 @@ APIENTRY
 Win32kProcessCallback(struct _EPROCESS *Process,
                       BOOLEAN Create)
 {
-    PPROCESSINFO ppiCurrent;
+    PPROCESSINFO ppiCurrent, *pppi;
     DECLARE_RETURN(NTSTATUS);
 
     ASSERT(Process->Peb);
@@ -160,6 +161,10 @@ Win32kProcessCallback(struct _EPROCESS *Process,
         ASSERT(ppiCurrent->pPoolDcAttr);
         ASSERT(ppiCurrent->pPoolBrushAttr);
         ASSERT(ppiCurrent->pPoolRgnAttr);
+
+        /* Add the process to the global list */
+        ppiCurrent->ppiNext = gppiList;
+        gppiList = ppiCurrent;
     }
     else
     {
@@ -212,11 +217,25 @@ Win32kProcessCallback(struct _EPROCESS *Process,
 
         if (gppiInputProvider == ppiCurrent) gppiInputProvider = NULL;
 
+        pppi = &gppiList;
+        while (*pppi != NULL && *pppi != ppiCurrent)
+            pppi = &(*pppi)->ppiNext;
+
+        ASSERT(*pppi == ppiCurrent);
+
+        *pppi = ppiCurrent->ppiNext;
+
         TRACE_CH(UserProcess,"Freeing ppi 0x%p\n", ppiCurrent);
 
         /* Ftee the PROCESSINFO */
         PsSetProcessWin32Process(Process, NULL);
         ExFreePoolWithTag(ppiCurrent, USERTAG_PROCESSINFO);
+#if DBG
+        if (DBG_IS_CHANNEL_ENABLED(ppiCurrent, DbgChUserObj, WARN_LEVEL))
+        {
+            DbgUserDumpHandleTable();
+        }
+#endif
     }
 
     RETURN( STATUS_SUCCESS);

@@ -125,7 +125,7 @@
 
     #define DBG_ENABLE_CHANNEL(ppi,ch,level) ((ppi)->DbgChannelLevel[ch] |= level)
     #define DBG_DISABLE_CHANNEL(ppi,ch,level) ((ppi)->DbgChannelLevel[ch] &= ~level)
-    #define DBG_IS_CHANNEL_ENABLED(ppi,ch,level) ((ppi)->DbgChannelLevel[ch] & level)
+    #define DBG_IS_CHANNEL_ENABLED(ppi,ch,level) (((ppi)->DbgChannelLevel[ch] & level) == level)
 
     #define DBG_PRINT(ppi,ch,level,fmt, ...)  do {                            \
     if((level == ERR_LEVEL) || (ppi && DBG_IS_CHANNEL_ENABLED(ppi,ch,level))) \
