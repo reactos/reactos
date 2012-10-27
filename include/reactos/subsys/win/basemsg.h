@@ -191,13 +191,13 @@ typedef struct _BASE_API_MESSAGE
     {
         BASE_CREATE_PROCESS CreateProcessRequest;
         BASE_CREATE_THREAD CreateThreadRequest;
-        BASE_EXIT_PROCESS ExitProcessRequest; // CSRSS_TERMINATE_PROCESS TerminateProcessRequest;
+        BASE_EXIT_PROCESS ExitProcessRequest;
         BASE_GET_TEMP_FILE GetTempFile;
         BASE_CHECK_VDM CheckVdm;
         BASE_UPDATE_VDM_ENTRY UpdateVdmEntry;
         BASE_GET_VDM_EXIT_CODE GetVdmExitCode;
-        BASE_SET_PROCESS_SHUTDOWN_PARAMS SetShutdownParametersRequest; // CSRSS_SET_SHUTDOWN_PARAMETERS
-        BASE_GET_PROCESS_SHUTDOWN_PARAMS GetShutdownParametersRequest; // CSRSS_GET_SHUTDOWN_PARAMETERS
+        BASE_SET_PROCESS_SHUTDOWN_PARAMS SetShutdownParametersRequest;
+        BASE_GET_PROCESS_SHUTDOWN_PARAMS GetShutdownParametersRequest;
         BASE_SOUND_SENTRY SoundSentryRequest;
         BASE_DEFINE_DOS_DEVICE DefineDosDeviceRequest;
     } Data;
