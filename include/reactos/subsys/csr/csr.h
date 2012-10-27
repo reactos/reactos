@@ -33,10 +33,10 @@ CsrClientConnectToServer(IN PWSTR ObjectDirectory,
 
 NTSTATUS
 NTAPI
-CsrClientCallServer(IN OUT PCSR_API_MESSAGE Request,
+CsrClientCallServer(IN OUT PCSR_API_MESSAGE ApiMessage,
                     IN OUT PCSR_CAPTURE_BUFFER CaptureBuffer OPTIONAL,
-                    IN ULONG ApiNumber,
-                    IN ULONG RequestLength);
+                    IN CSR_API_NUMBER ApiNumber,
+                    IN ULONG DataLength);
 
 PVOID
 NTAPI

@@ -6,13 +6,13 @@
  * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
  */
 
-/* INCLUDES *****************************************************************/
+/* INCLUDES *******************************************************************/
 
 #include <ntdll.h>
 #define NDEBUG
 #include <debug.h>
 
-/* GLOBALS *******************************************************************/
+/* GLOBALS ********************************************************************/
 
 HANDLE CsrApiPort;
 HANDLE CsrProcessId;
@@ -28,7 +28,7 @@ PCSR_SERVER_API_ROUTINE CsrServerApiRoutine;
 
 #define UNICODE_PATH_SEP L"\\"
 
-/* FUNCTIONS *****************************************************************/
+/* FUNCTIONS ******************************************************************/
 
 /*
  * @implemented
@@ -45,10 +45,10 @@ CsrGetProcessId(VOID)
  */
 NTSTATUS 
 NTAPI
-CsrClientCallServer(PCSR_API_MESSAGE ApiMessage,
-                    PCSR_CAPTURE_BUFFER CaptureBuffer OPTIONAL,
-                    CSR_API_NUMBER ApiNumber,
-                    ULONG RequestLength)
+CsrClientCallServer(IN OUT PCSR_API_MESSAGE ApiMessage,
+                    IN OUT PCSR_CAPTURE_BUFFER CaptureBuffer OPTIONAL,
+                    IN CSR_API_NUMBER ApiNumber,
+                    IN ULONG DataLength)
 {
     NTSTATUS Status;
     ULONG PointerCount;
@@ -58,8 +58,11 @@ CsrClientCallServer(PCSR_API_MESSAGE ApiMessage,
 
     /* Fill out the Port Message Header */
     ApiMessage->Header.u2.ZeroInit = 0;
-    ApiMessage->Header.u1.s1.DataLength = RequestLength - sizeof(PORT_MESSAGE);
-    ApiMessage->Header.u1.s1.TotalLength = RequestLength;
+    ApiMessage->Header.u1.s1.TotalLength =
+        FIELD_OFFSET(CSR_API_MESSAGE, Data) + DataLength;
+        /* FIELD_OFFSET(CSR_API_MESSAGE, Data) <= sizeof(CSR_API_MESSAGE) - sizeof(ApiMessage->Data) */ 
+    ApiMessage->Header.u1.s1.DataLength =
+        ApiMessage->Header.u1.s1.TotalLength - sizeof(PORT_MESSAGE);
 
     /* Fill out the CSR Header */
     ApiMessage->ApiNumber = ApiNumber;
@@ -113,7 +116,7 @@ CsrClientCallServer(PCSR_API_MESSAGE ApiMessage,
         /* Check if we got a a Capture Buffer */
         if (CaptureBuffer)
         {
-            /* We have to convert from the remote view to our remote view */
+            /* We have to convert back from the remote view to our local view */
             DPRINT("Reconverting CaptureBuffer\n");
             ApiMessage->CsrCaptureData = (PVOID)((ULONG_PTR)
                                                  ApiMessage->CsrCaptureData -
@@ -168,7 +171,7 @@ CsrClientCallServer(PCSR_API_MESSAGE ApiMessage,
 
 NTSTATUS
 NTAPI
-CsrConnectToServer(IN PWSTR ObjectDirectory)
+CsrpConnectToServer(IN PWSTR ObjectDirectory)
 {
     ULONG PortNameLength;
     UNICODE_STRING PortName;
@@ -318,11 +321,11 @@ CsrConnectToServer(IN PWSTR ObjectDirectory)
  */
 NTSTATUS
 NTAPI
-CsrClientConnectToServer(PWSTR ObjectDirectory,
-                         ULONG ServerId,
-                         PVOID ConnectionInfo,
-                         PULONG ConnectionInfoSize,
-                         PBOOLEAN ServerToServerCall)
+CsrClientConnectToServer(IN PWSTR ObjectDirectory,
+                         IN ULONG ServerId,
+                         IN PVOID ConnectionInfo,
+                         IN OUT PULONG ConnectionInfoSize,
+                         OUT PBOOLEAN ServerToServerCall)
 {
     NTSTATUS Status;
     PIMAGE_NT_HEADERS NtHeader;
@@ -397,7 +400,7 @@ CsrClientConnectToServer(PWSTR ObjectDirectory,
         if (!CsrApiPort)
         {
             /* No, set it up now */
-            if (!NT_SUCCESS(Status = CsrConnectToServer(ObjectDirectory)))
+            if (!NT_SUCCESS(Status = CsrpConnectToServer(ObjectDirectory)))
             {
                 /* Failed */
                 DPRINT1("Failure to connect to CSR\n");
@@ -410,8 +413,7 @@ CsrClientConnectToServer(PWSTR ObjectDirectory,
         ClientConnect->ConnectionInfoSize = *ConnectionInfoSize;
 
         /* Setup a buffer for the connection info */
-        CaptureBuffer = CsrAllocateCaptureBuffer(1,
-                                                 ClientConnect->ConnectionInfoSize);
+        CaptureBuffer = CsrAllocateCaptureBuffer(1, ClientConnect->ConnectionInfoSize);
         if (CaptureBuffer == NULL)
         {
             return STATUS_INSUFFICIENT_RESOURCES;
@@ -435,12 +437,6 @@ CsrClientConnectToServer(PWSTR ObjectDirectory,
                                      CaptureBuffer,
                                      CSR_CREATE_API_NUMBER(CSRSRV_SERVERDLL_INDEX, CsrpClientConnect),
                                      sizeof(CSR_CLIENT_CONNECT));
-/*
-        Status = CsrClientCallServer(&ApiMessage,
-                                     CaptureBuffer,
-                                     CSR_CREATE_API_NUMBER(CSR_NATIVE, CONNECT_PROCESS),
-                                     sizeof(CSR_API_MESSAGE));
-*/
     }
     else
     {

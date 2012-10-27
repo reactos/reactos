@@ -94,7 +94,7 @@ typedef struct _CSR_CAPTURE_BUFFER
     struct _CSR_CAPTURE_BUFFER *PreviousCaptureBuffer;
     ULONG PointerCount;
     ULONG_PTR BufferEnd;
-    ULONG_PTR PointerArray[1]; // MessagePointerOffsets // Offsets within CSR_API_MSG of pointers
+    ULONG_PTR PointerArray[1];
 } CSR_CAPTURE_BUFFER, *PCSR_CAPTURE_BUFFER;
 
 
@@ -121,8 +121,6 @@ typedef struct _CSR_API_MESSAGE
 
                 CSR_SET_PRIORITY_CLASS SetPriorityClass;
                 CSR_IDENTIFY_ALTERTABLE_THREAD IdentifyAlertableThread;
-
-                // ULONG_PTR ApiMessageData[39]; //// what to do ????
 
             /*** win32csr thingies to remove. ***/
 #if 1

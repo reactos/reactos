@@ -6,16 +6,16 @@
  * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
  */
 
-/* INCLUDES *****************************************************************/
+/* INCLUDES *******************************************************************/
 
 #include <ntdll.h>
 #define NDEBUG
 #include <debug.h>
 
-/* GLOBALS *******************************************************************/
+/* GLOBALS ********************************************************************/
 extern HANDLE CsrApiPort;
 
-/* FUNCTIONS *****************************************************************/
+/* FUNCTIONS ******************************************************************/
 
 /*
  * @implemented
@@ -78,7 +78,7 @@ CsrIdentifyAlertableThread(VOID)
     Status = CsrClientCallServer(&ApiMessage,
                                  NULL,
                                  CSR_CREATE_API_NUMBER(CSRSRV_SERVERDLL_INDEX, CsrpIdentifyAlertable),
-                                 sizeof(CSR_SET_PRIORITY_CLASS));
+                                 sizeof(CSR_IDENTIFY_ALTERTABLE_THREAD));
 
     /* Return to caller */
     return Status;
