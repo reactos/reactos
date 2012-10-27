@@ -1220,7 +1220,8 @@ NtUserCreateDesktop(
       RETURN( NULL);
    }
 
-   Status = co_CsrNotify(&Request);
+   Status = co_CsrNotify((PCSR_API_MESSAGE)&Request,
+                         sizeof(CSR_API_MESSAGE));
    if (! NT_SUCCESS(Status))
    {
       CsrCloseHandle(Request.Data.CreateDesktopRequest.DesktopHandle);

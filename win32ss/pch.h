@@ -71,8 +71,8 @@ typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
 #include <pseh/pseh2.h>
 
 /* CSRSS Header */
-#include <csrss/client.h>
-#include <csrss/csrss.h> // FIXME: data header.
+#include <csr/csr.h>
+#include <csr/csrss.h> // FIXME: data header.
 
 /* Public Win32K headers */
 #include <include/callback.h>

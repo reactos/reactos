@@ -42,7 +42,7 @@ BOOL
 WINAPI
 RegisterLogonProcess(DWORD dwProcessId, BOOL bRegister)
 {
-  return NtUserxRegisterLogonProcess(dwProcessId,bRegister);
+    return NtUserxRegisterLogonProcess(dwProcessId, bRegister);
 }
 
 /*
@@ -50,7 +50,7 @@ RegisterLogonProcess(DWORD dwProcessId, BOOL bRegister)
  */
 BOOL
 WINAPI
-SetLogonNotifyWindow (HWND Wnd, HWINSTA WinSta)
+SetLogonNotifyWindow(HWND Wnd, HWINSTA WinSta)
 {
     /* Maybe we should call NtUserSetLogonNotifyWindow and let that one inform CSRSS??? */
     CSR_API_MESSAGE Request;

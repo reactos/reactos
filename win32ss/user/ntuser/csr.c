@@ -46,46 +46,51 @@ CsrInit(void)
 
 
 NTSTATUS FASTCALL
-co_CsrNotify(PCSR_API_MESSAGE Request)
+co_CsrNotify(IN OUT PCSR_API_MESSAGE ApiMessage,
+             IN ULONG DataLength)
 {
-   NTSTATUS Status;
-   PEPROCESS OldProcess;
+    NTSTATUS Status;
+    PEPROCESS OldProcess;
 
-   if (NULL == CsrProcess)
-   {
-      return STATUS_INVALID_PORT_HANDLE;
-   }
+    if (NULL == CsrProcess)
+    {
+        return STATUS_INVALID_PORT_HANDLE;
+    }
 
-   Request->Header.u2.ZeroInit = 0;
-   Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
-   Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
+    /* Fill out the Port Message Header */
+    ApiMessage->Header.u2.ZeroInit = 0;
+    ApiMessage->Header.u1.s1.TotalLength =
+        FIELD_OFFSET(CSR_API_MESSAGE, Data) + DataLength;
+        /* FIELD_OFFSET(CSR_API_MESSAGE, Data) <= sizeof(CSR_API_MESSAGE) - sizeof(ApiMessage->Data) */
+    ApiMessage->Header.u1.s1.DataLength =
+        ApiMessage->Header.u1.s1.TotalLength - sizeof(PORT_MESSAGE);
 
-   /* Switch to the process in which the WindowsApiPort handle is valid */
-   OldProcess = PsGetCurrentProcess();
-   if (CsrProcess != OldProcess)
-   {
-      KeAttachProcess(&CsrProcess->Pcb);
-   }
+    /* Switch to the process in which the WindowsApiPort handle is valid */
+    OldProcess = PsGetCurrentProcess();
+    if (CsrProcess != OldProcess)
+    {
+        KeAttachProcess(&CsrProcess->Pcb);
+    }
 
-   UserLeaveCo();
+    UserLeaveCo();
 
-   Status = ZwRequestWaitReplyPort(WindowsApiPort,
-                                   &Request->Header,
-                                   &Request->Header);
+    Status = ZwRequestWaitReplyPort(WindowsApiPort,
+                                    &ApiMessage->Header,
+                                    &ApiMessage->Header);
 
-   UserEnterCo();
+    UserEnterCo();
 
-   if (CsrProcess != OldProcess)
-   {
-      KeDetachProcess();
-   }
+    if (CsrProcess != OldProcess)
+    {
+        KeDetachProcess();
+    }
 
-   if (NT_SUCCESS(Status))
-   {
-      Status = Request->Status;
-   }
+    if (NT_SUCCESS(Status))
+    {
+        Status = ApiMessage->Status;
+    }
 
-   return Status;
+    return Status;
 }
 
 

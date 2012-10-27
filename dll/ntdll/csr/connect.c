@@ -60,7 +60,7 @@ CsrClientCallServer(IN OUT PCSR_API_MESSAGE ApiMessage,
     ApiMessage->Header.u2.ZeroInit = 0;
     ApiMessage->Header.u1.s1.TotalLength =
         FIELD_OFFSET(CSR_API_MESSAGE, Data) + DataLength;
-        /* FIELD_OFFSET(CSR_API_MESSAGE, Data) <= sizeof(CSR_API_MESSAGE) - sizeof(ApiMessage->Data) */ 
+        /* FIELD_OFFSET(CSR_API_MESSAGE, Data) <= sizeof(CSR_API_MESSAGE) - sizeof(ApiMessage->Data) */
     ApiMessage->Header.u1.s1.DataLength =
         ApiMessage->Header.u1.s1.TotalLength - sizeof(PORT_MESSAGE);
 

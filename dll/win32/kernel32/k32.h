@@ -37,6 +37,10 @@
 
 /* CSRSS Header */
 #include <csr/csr.h>
+#include <win/base.h>
+#include <win/basemsg.h>
+#include <win/conmsg.h>
+#include <win/winmsg.h>
 //#include <csr/csrss.h> // FIXME: data header.
 
 /* C Headers */

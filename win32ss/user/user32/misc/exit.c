@@ -67,17 +67,17 @@ BOOL WINAPI
 ExitWindowsEx(UINT uFlags,
               DWORD dwReserved)
 {
-    CSR_API_MESSAGE Request;
+    USER_API_MESSAGE ApiMessage;
     NTSTATUS Status;
 
-    Request.Data.ExitReactosRequest.Flags = uFlags;
-    Request.Data.ExitReactosRequest.Reserved = dwReserved;
+    ApiMessage.Data.ExitReactosRequest.Flags = uFlags;
+    ApiMessage.Data.ExitReactosRequest.Reserved = dwReserved;
 
-    Status = CsrClientCallServer(&Request,
+    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                                  NULL,
-                                 CSR_CREATE_API_NUMBER(CSR_GUI, EXIT_REACTOS),
-                                 sizeof(CSR_API_MESSAGE));
-    if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
+                                 CSR_CREATE_API_NUMBER(USERSRV_SERVERDLL_INDEX, UserpExitWindowsEx),
+                                 sizeof(CSRSS_EXIT_REACTOS));
+    if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = ApiMessage.Status))
     {
         SetLastError(RtlNtStatusToDosError(Status));
         return FALSE;
@@ -93,16 +93,16 @@ ExitWindowsEx(UINT uFlags,
 BOOL WINAPI
 RegisterServicesProcess(DWORD ServicesProcessId)
 {
-    CSR_API_MESSAGE Request;
+    USER_API_MESSAGE ApiMessage;
     NTSTATUS Status;
 
-    Request.Data.RegisterServicesProcessRequest.ProcessId = UlongToHandle(ServicesProcessId);
+    ApiMessage.Data.RegisterServicesProcessRequest.ProcessId = UlongToHandle(ServicesProcessId);
 
-    Status = CsrClientCallServer(&Request,
+    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                                  NULL,
-                                 CSR_CREATE_API_NUMBER(CSR_GUI, REGISTER_SERVICES_PROCESS),
-                                 sizeof(CSR_API_MESSAGE));
-    if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
+                                 CSR_CREATE_API_NUMBER(USERSRV_SERVERDLL_INDEX, UserpRegisterServicesProcess),
+                                 sizeof(CSRSS_REGISTER_SERVICES_PROCESS));
+    if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = ApiMessage.Status))
     {
         SetLastError(RtlNtStatusToDosError(Status));
         return FALSE;

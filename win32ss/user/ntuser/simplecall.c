@@ -17,7 +17,7 @@ co_IntRegisterLogonProcess(HANDLE ProcessId, BOOL Register)
 {
    PEPROCESS Process;
    NTSTATUS Status;
-   CSR_API_MESSAGE Request;
+   USER_API_MESSAGE Request;
 
    Status = PsLookupProcessByProcessId(ProcessId,
                                        &Process);
@@ -52,12 +52,13 @@ co_IntRegisterLogonProcess(HANDLE ProcessId, BOOL Register)
 
    ObDereferenceObject(Process);
 
-   Request.ApiNumber = CSR_CREATE_API_NUMBER(CSR_GUI, REGISTER_LOGON_PROCESS);
+   Request.ApiNumber = CSR_CREATE_API_NUMBER(USERSRV_SERVERDLL_INDEX, UserpRegisterLogonProcess);
    Request.Data.RegisterLogonProcessRequest.ProcessId = ProcessId;
    Request.Data.RegisterLogonProcessRequest.Register = Register;
 
-   Status = co_CsrNotify(&Request);
-   if (! NT_SUCCESS(Status))
+   Status = co_CsrNotify((PCSR_API_MESSAGE)&Request,
+                         sizeof(CSRSS_REGISTER_LOGON_PROCESS));
+   if (!NT_SUCCESS(Status))
    {
       ERR("Failed to register logon process with CSRSS\n");
       return FALSE;

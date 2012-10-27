@@ -30,8 +30,8 @@
 #include <ndk/umfuncs.h>
 
 /* CSRSS Header */
-#include <csrss/client.h>
-#include <csrss/csrss.h> // FIXME: data header.
+#include <csr/csr.h>
+#include <win/winmsg.h>
 
 /* Public Win32K Headers */
 #include <ntusrtyp.h>

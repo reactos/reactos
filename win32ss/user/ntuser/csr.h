@@ -12,7 +12,8 @@
 extern PEPROCESS CsrProcess;
 
 NTSTATUS FASTCALL CsrInit(void);
-NTSTATUS FASTCALL co_CsrNotify(PCSR_API_MESSAGE Request);
+NTSTATUS FASTCALL co_CsrNotify(IN OUT PCSR_API_MESSAGE ApiMessage,
+                               IN ULONG DataLength);
 NTSTATUS FASTCALL CsrCloseHandle(HANDLE Handle);
 NTSTATUS WINAPI CsrInsertObject(HANDLE ObjectHandle,
                                  ACCESS_MASK DesiredAccess,
