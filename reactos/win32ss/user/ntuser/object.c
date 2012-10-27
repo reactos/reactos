@@ -283,11 +283,11 @@ void *get_user_object_handle(PUSER_HANDLE_TABLE ht,  HANDLE* handle, USER_OBJECT
 
 BOOL FASTCALL UserCreateHandleTable(VOID)
 {
-
    PVOID mem;
+   INT HandleCount = 1024 * 4;
 
    // FIXME: Don't alloc all at once! Must be mapped into umode also...
-   mem = UserHeapAlloc(sizeof(USER_HANDLE_ENTRY) * 1024*2);
+   mem = UserHeapAlloc(sizeof(USER_HANDLE_ENTRY) * HandleCount);
    if (!mem)
    {
       ERR("Failed creating handle table\n");
@@ -303,7 +303,7 @@ BOOL FASTCALL UserCreateHandleTable(VOID)
    }
 
    // FIXME: Make auto growable
-   UserInitHandleTable(gHandleTable, mem, sizeof(USER_HANDLE_ENTRY) * 1024*2);
+   UserInitHandleTable(gHandleTable, mem, sizeof(USER_HANDLE_ENTRY) * HandleCount);
 
    return TRUE;
 }
