@@ -17,6 +17,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(samsrv);
 
 static SID_IDENTIFIER_AUTHORITY NtSidAuthority = {SECURITY_NT_AUTHORITY};
 
+
 /* FUNCTIONS ***************************************************************/
 
 VOID
@@ -3051,6 +3052,8 @@ done:
         Use->Count = 0;
     }
 
+    TRACE("Returned Status %lx\n", Status);
+
     return Status;
 }
 
@@ -3145,8 +3148,8 @@ SamrLookupIdsInDomain(IN SAMPR_HANDLE DomainHandle,
 
                     if (NT_SUCCESS(Status))
                     {
-                        Names->Element[i].MaximumLength = DataLength;
-                        Names->Element[i].Length = DataLength - sizeof(WCHAR);
+                        Names->Element[i].MaximumLength = (USHORT)DataLength;
+                        Names->Element[i].Length = (USHORT)(DataLength - sizeof(WCHAR));
 
                         Status = SampRegQueryValue(AccountKeyHandle,
                                                    L"Name",
@@ -3201,8 +3204,8 @@ SamrLookupIdsInDomain(IN SAMPR_HANDLE DomainHandle,
 
                     if (NT_SUCCESS(Status))
                     {
-                        Names->Element[i].MaximumLength = DataLength;
-                        Names->Element[i].Length = DataLength - sizeof(WCHAR);
+                        Names->Element[i].MaximumLength = (USHORT)DataLength;
+                        Names->Element[i].Length = (USHORT)(DataLength - sizeof(WCHAR));
 
                         Status = SampRegQueryValue(AccountKeyHandle,
                                                    L"Name",
@@ -3259,8 +3262,8 @@ SamrLookupIdsInDomain(IN SAMPR_HANDLE DomainHandle,
 
                     if (NT_SUCCESS(Status))
                     {
-                        Names->Element[i].MaximumLength = DataLength;
-                        Names->Element[i].Length = DataLength - sizeof(WCHAR);
+                        Names->Element[i].MaximumLength = (USHORT)DataLength;
+                        Names->Element[i].Length = (USHORT)(DataLength - sizeof(WCHAR));
 
                         Status = SampRegQueryValue(AccountKeyHandle,
                                                    L"Name",
@@ -4319,6 +4322,7 @@ done:
     return Status;
 }
 
+
 /* Function 34 */
 NTSTATUS
 NTAPI
@@ -4366,6 +4370,7 @@ SamrOpenUser(IN SAMPR_HANDLE DomainHandle,
 
     return STATUS_SUCCESS;
 }
+
 
 /* Function 35 */
 NTSTATUS
@@ -4676,8 +4681,6 @@ done:
 
     return Status;
 }
-
-
 
 
 static
@@ -6283,6 +6286,7 @@ SamrCreateUser2InDomain(IN SAMPR_HANDLE DomainHandle,
     return Status;
 }
 
+
 /* Function 51 */
 NTSTATUS
 NTAPI
@@ -6299,15 +6303,34 @@ SamrQueryDisplayInformation3(IN SAMPR_HANDLE DomainHandle,
     return STATUS_NOT_IMPLEMENTED;
 }
 
+
 /* Function 52 */
 NTSTATUS
 NTAPI
 SamrAddMultipleMembersToAlias(IN SAMPR_HANDLE AliasHandle,
                               IN PSAMPR_PSID_ARRAY MembersBuffer)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    ULONG i;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    TRACE("SamrAddMultipleMembersToAlias(%p %p)\n",
+          AliasHandle, MembersBuffer);
+
+    for (i = 0; i < MembersBuffer->Count; i++)
+    {
+        Status = SamrAddMemberToAlias(AliasHandle,
+                                      ((PSID *)MembersBuffer->Sids)[i]);
+
+        if (Status == STATUS_MEMBER_IN_ALIAS)
+            Status = STATUS_SUCCESS;
+
+        if (!NT_SUCCESS(Status))
+            break;
+    }
+
+    return Status;
 }
+
 
 /* Function 53 */
 NTSTATUS

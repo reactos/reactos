@@ -56,7 +56,8 @@ typedef enum _USER_OBJECT_TYPE
   otHidData,
   otDeviceInfo,
   otTouchInput,
-  otGestureInfo
+  otGestureInfo,
+  USER_HANDLE_TYPE_COUNT
 } USER_OBJECT_TYPE;
 
 typedef enum _USERTHREADINFOCLASS

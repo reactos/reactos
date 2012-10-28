@@ -26,7 +26,7 @@ add_library(libpng SHARED
     pngwtran.c
     pngwutil.c)
 
-set_entrypoint(libpng 0)
+set_module_type(libpng win32dll)
 target_link_libraries(libpng zlib)
 add_importlibs(libpng msvcrt kernel32 ntdll)
 add_dependencies(libpng psdk)

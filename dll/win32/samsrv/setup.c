@@ -224,6 +224,7 @@ SampCreateUserAccount(HKEY hDomainKey,
                       ULONG ulRelativeId)
 {
     SAM_USER_FIXED_DATA FixedUserData;
+    LPWSTR lpEmptyString = L"";
     DWORD dwDisposition;
     WCHAR szAccountKeyName[32];
     HKEY hAccountKey = NULL;
@@ -260,6 +261,62 @@ SampCreateUserAccount(HKEY hDomainKey,
                       REG_SZ,
                       (LPVOID)lpAccountName,
                       (wcslen(lpAccountName) + 1) * sizeof(WCHAR));
+
+        RegSetValueEx(hAccountKey,
+                      L"FullName",
+                      0,
+                      REG_SZ,
+                      (LPVOID)lpEmptyString,
+                      sizeof(WCHAR));
+
+        RegSetValueEx(hAccountKey,
+                      L"HomeDirectory",
+                      0,
+                      REG_SZ,
+                      (LPVOID)lpEmptyString,
+                      sizeof(WCHAR));
+
+        RegSetValueEx(hAccountKey,
+                      L"HomeDirectoryDrive",
+                      0,
+                      REG_SZ,
+                      (LPVOID)lpEmptyString,
+                      sizeof(WCHAR));
+
+        RegSetValueEx(hAccountKey,
+                      L"ScriptPath",
+                      0,
+                      REG_SZ,
+                      (LPVOID)lpEmptyString,
+                      sizeof(WCHAR));
+
+        RegSetValueEx(hAccountKey,
+                      L"ProfilePath",
+                      0,
+                      REG_SZ,
+                      (LPVOID)lpEmptyString,
+                      sizeof(WCHAR));
+
+        RegSetValueEx(hAccountKey,
+                      L"AdminComment",
+                      0,
+                      REG_SZ,
+                      (LPVOID)lpEmptyString,
+                      sizeof(WCHAR));
+
+        RegSetValueEx(hAccountKey,
+                      L"UserComment",
+                      0,
+                      REG_SZ,
+                      (LPVOID)lpEmptyString,
+                      sizeof(WCHAR));
+
+        RegSetValueEx(hAccountKey,
+                      L"WorkStations",
+                      0,
+                      REG_SZ,
+                      (LPVOID)lpEmptyString,
+                      sizeof(WCHAR));
 
         RegCloseKey(hAccountKey);
     }

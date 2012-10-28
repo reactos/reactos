@@ -12,6 +12,7 @@
 extern BOOL gbInitialized;
 extern PSERVERINFO gpsi;
 extern PTHREADINFO gptiCurrent;
+extern PPROCESSINFO gppiList;
 extern PPROCESSINFO ppiScrnSaver;
 extern PPROCESSINFO gppiInputProvider;
 
