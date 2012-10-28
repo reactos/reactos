@@ -331,6 +331,7 @@ Win32CsrInitialization(IN PCSR_SERVER_DLL ServerDll)
     HANDLE ServerThread;
     CLIENT_ID ClientId;
     NTSTATUS Status;
+    UINT i;
 
     Win32CsrApiHeap = RtlGetProcessHeap();
     
@@ -352,15 +353,18 @@ Win32CsrInitialization(IN PCSR_SERVER_DLL ServerDll)
     RtlInitializeCriticalSection(&Win32CsrDefineDosDeviceCritSec);
     InitializeListHead(&DosDeviceHistory);
 
-    /* Start Raw Input Threads */
-    Status = RtlCreateUserThread(NtCurrentProcess(), NULL, TRUE, 0, 0, 0, (PTHREAD_START_ROUTINE)CreateSystemThreads, (PVOID)0, &ServerThread, &ClientId);
-    if (NT_SUCCESS(Status))
+    /* Start the Raw Input Thread and the Desktop Thread */
+    for (i = 0; i < 2; ++i)
     {
-        NtResumeThread(ServerThread, NULL);
-        NtClose(ServerThread);
+        Status = RtlCreateUserThread(NtCurrentProcess(), NULL, TRUE, 0, 0, 0, (PTHREAD_START_ROUTINE)CreateSystemThreads, (PVOID)i, &ServerThread, &ClientId);
+        if (NT_SUCCESS(Status))
+        {
+            NtResumeThread(ServerThread, NULL);
+            NtClose(ServerThread);
+        }
+        else
+            DPRINT1("Cannot start Raw Input Thread!\n");
     }
-    else
-        DPRINT1("Cannot start Raw Input Thread!\n");
 
     return STATUS_SUCCESS;
 }

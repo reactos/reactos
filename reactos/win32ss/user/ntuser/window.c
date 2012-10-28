@@ -1661,7 +1661,8 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
                                         PCLS Class,
                                         PWND ParentWindow,
                                         PWND OwnerWindow,
-                                        PVOID acbiBuffer)
+                                        PVOID acbiBuffer,
+                                        PDESKTOP pdeskCreated)
 {
    PWND pWnd = NULL;
    HWND hWnd;
@@ -1670,7 +1671,7 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
    BOOL MenuChanged;
    BOOL bUnicodeWindow;
 
-   pti = PsGetCurrentThreadWin32Thread();
+   pti = pdeskCreated ? gptiDesktopThread : GetW32ThreadInfo();
 
    if (!(Cs->dwExStyle & WS_EX_LAYOUTRTL))
    {
@@ -1690,8 +1691,7 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
          */
          if ( Class->fnid != FNID_DIALOG )
          {
-            PPROCESSINFO ppi = PsGetCurrentProcessWin32Process();
-            if (ppi->dwLayout & LAYOUT_RTL)
+            if (pti->ppi->dwLayout & LAYOUT_RTL)
             {
                Cs->dwExStyle |= WS_EX_LAYOUTRTL;
             }
@@ -1713,7 +1713,8 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
 
    /* Allocate the new window */
    pWnd = (PWND) UserCreateObject( gHandleTable,
-                                   pti->rpdesk,
+                                   pdeskCreated ? pdeskCreated : pti->rpdesk,
+                                   pti,
                                   (PHANDLE)&hWnd,
                                    otWindow,
                                    sizeof(WND) + Class->cbwndExtra);
@@ -1723,14 +1724,14 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
       goto AllocError;
    }
 
-   TRACE("Created object with handle %X\n", hWnd);
+   TRACE("Created window object with handle %X\n", hWnd);
 
-   if (NULL == pti->rpdesk->DesktopWindow)
+   if (pdeskCreated && pdeskCreated->DesktopWindow == NULL )
    {  /* HACK: Helper for win32csr/desktopbg.c */
       /* If there is no desktop window yet, we must be creating it */
       TRACE("CreateWindow setting desktop.\n");
-      pti->rpdesk->DesktopWindow = hWnd;
-      pti->rpdesk->pDeskInfo->spwnd = pWnd;
+      pdeskCreated->DesktopWindow = hWnd;
+      pdeskCreated->pDeskInfo->spwnd = pWnd;
    }
 
    /*
@@ -2010,7 +2011,7 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
    pCbtCreate = NULL;
 
    /* Get the class and reference it */
-   Class = IntGetAndReferenceClass(ClassName, Cs->hInstance);
+   Class = IntGetAndReferenceClass(ClassName, Cs->hInstance, FALSE);
    if(!Class)
    {
        ERR("Failed to find class %wZ\n", ClassName);
@@ -2059,7 +2060,8 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
                             Class,
                             ParentWindow,
                             OwnerWindow,
-                            acbiBuffer);
+                            acbiBuffer,
+                            NULL);
    if(!Window)
    {
        ERR("IntCreateWindow failed!\n");
@@ -2502,7 +2504,7 @@ NtUserCreateWindowEx(
     UserEnterExclusive();
 
     /* Call the internal function */
-    pwnd = co_UserCreateWindowEx(&Cs, &ustrClassName, plstrWindowName, acbiBuffer);
+    pwnd = co_UserCreateWindowEx(&Cs, &ustrClassName, plstrWindowName, acbiBuffer, NULL);
 
     if(!pwnd)
     {
@@ -2540,12 +2542,15 @@ BOOLEAN FASTCALL co_UserDestroyWindow(PWND Window)
 
    TRACE("co_UserDestroyWindow \n");
 
-   /* Check for owner thread */
-   if ( (Window->head.pti->pEThread != PsGetCurrentThread()) ||
-        Window->head.pti != PsGetCurrentThreadWin32Thread() )
+   /* Check for owner thread */  
+   if ( Window->head.pti != PsGetCurrentThreadWin32Thread())
    {
-      EngSetLastError(ERROR_ACCESS_DENIED);
-      return FALSE;
+       /* Check if we are destroying the desktop window */
+       if (! ((Window->head.rpdesk->dwDTFlags & DF_DESTROYED) && Window == Window->head.rpdesk->pDeskInfo->spwnd))
+       {
+           EngSetLastError(ERROR_ACCESS_DENIED);
+           return FALSE;
+       }
    }
 
    /* If window was created successfully and it is hooked */

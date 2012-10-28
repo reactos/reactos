@@ -73,6 +73,7 @@ extern PDESKTOP InputDesktop;
 extern HDESK InputDesktopHandle;
 extern PCLS DesktopWindowClass;
 extern HDC ScreenDeviceContext;
+extern PTHREADINFO gptiDesktopThread;
 
 typedef struct _SHELL_HOOK_WINDOW
 {
@@ -103,6 +104,12 @@ IntDesktopObjectDelete(PWIN32_DELETEMETHOD_PARAMETERS Parameters);
 
 NTSTATUS NTAPI 
 IntDesktopOkToClose(PWIN32_OKAYTOCLOSEMETHOD_PARAMETERS Parameters);
+
+NTSTATUS NTAPI 
+IntDesktopObjectOpen(PWIN32_OPENMETHOD_PARAMETERS Parameters);
+
+NTSTATUS NTAPI 
+IntDesktopObjectClose(PWIN32_CLOSEMETHOD_PARAMETERS Parameters);
 
 HDC FASTCALL
 IntGetScreenDC(VOID);
@@ -283,4 +290,6 @@ PWND FASTCALL IntGetThreadDesktopWindow(PTHREADINFO);
 PWND FASTCALL co_GetDesktopWindow(PWND);
 BOOL FASTCALL IntPaintDesktop(HDC);
 BOOL FASTCALL DesktopWindowProc(PWND, UINT, WPARAM, LPARAM, LRESULT *);
+BOOL FASTCALL UserMessageWindowProc(PWND pwnd, UINT Msg, WPARAM wParam, LPARAM lParam, LRESULT *lResult);
+VOID NTAPI DesktopThreadMain();
 /* EOF */

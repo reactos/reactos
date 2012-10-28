@@ -249,7 +249,8 @@ IntCreateMenu(PHANDLE Handle, BOOL IsMenuBar)
    PPROCESSINFO CurrentWin32Process;
 
    Menu = (PMENU_OBJECT)UserCreateObject( gHandleTable,
-                                          NULL,
+                                          NULL, 
+                                          NULL, 
                                           Handle,
                                           otMenu,
                                           sizeof(MENU_OBJECT));
@@ -360,8 +361,9 @@ IntCloneMenu(PMENU_OBJECT Source)
       return NULL;
 
    Menu = (PMENU_OBJECT)UserCreateObject( gHandleTable,
-                                          NULL,
-                                         &hMenu,
+                                          NULL, 
+                                          NULL, 
+                                          &hMenu,
                                           otMenu,
                                           sizeof(MENU_OBJECT));
    if(!Menu)

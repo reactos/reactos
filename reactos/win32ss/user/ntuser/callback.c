@@ -130,6 +130,9 @@ co_IntClientLoadLibrary(PUNICODE_STRING pstrLibName,
    BOOL bResult;
    ULONG_PTR pLibNameBuffer = 0, pInitFuncBuffer = 0;
 
+   /* Do not allow the desktop thread to do callback to user mode */
+   ASSERT(PsGetCurrentThreadWin32Thread() != gptiDesktopThread);
+
    TRACE("co_IntClientLoadLibrary: %S, %S, %d, %d\n", pstrLibName->Buffer, pstrLibName->Buffer, Unload, ApiHook);
 
    /* Calculate the size of the argument */
@@ -236,6 +239,9 @@ co_IntCallSentMessageCallback(SENDASYNCPROC CompletionCallback,
    ULONG ResultLength;
    NTSTATUS Status;
 
+   /* Do not allow the desktop thread to do callback to user mode */
+   ASSERT(PsGetCurrentThreadWin32Thread() != gptiDesktopThread);
+
    Arguments.Callback = CompletionCallback;
    Arguments.Wnd = hWnd;
    Arguments.Msg = Msg;
@@ -280,6 +286,9 @@ co_IntCallWindowProc(WNDPROC Proc,
    ULONG ResultLength;
    ULONG ArgumentLength;
    LRESULT Result;
+
+   /* Do not allow the desktop thread to do callback to user mode */
+   ASSERT(PsGetCurrentThreadWin32Thread() != gptiDesktopThread);
 
    if (0 < lParamBufferSize)
    {
@@ -364,6 +373,9 @@ co_IntLoadSysMenuTemplate()
    PVOID ResultPointer;
    ULONG ResultLength;
 
+   /* Do not allow the desktop thread to do callback to user mode */
+   ASSERT(PsGetCurrentThreadWin32Thread() != gptiDesktopThread);
+
    ResultPointer = NULL;
    ResultLength = sizeof(LRESULT);
 
@@ -394,6 +406,8 @@ co_IntLoadSysMenuTemplate()
    return (HMENU)Result;
 }
 
+extern HCURSOR gDesktopCursor;
+
 BOOL APIENTRY
 co_IntLoadDefaultCursors(VOID)
 {
@@ -402,8 +416,11 @@ co_IntLoadDefaultCursors(VOID)
    ULONG ResultLength;
    BOOL DefaultCursor = TRUE;
 
+   /* Do not allow the desktop thread to do callback to user mode */
+   ASSERT(PsGetCurrentThreadWin32Thread() != gptiDesktopThread);
+
    ResultPointer = NULL;
-   ResultLength = sizeof(LRESULT);
+   ResultLength = sizeof(HCURSOR);
 
    UserLeaveCo();
 
@@ -414,6 +431,9 @@ co_IntLoadDefaultCursors(VOID)
                                &ResultLength);
 
    UserEnterCo();
+
+   /* HACK: The desktop class doen't have a proper cursor yet, so set it here */
+    gDesktopCursor = *((HCURSOR*)ResultPointer);
 
    if (!NT_SUCCESS(Status))
    {
@@ -448,6 +468,8 @@ co_IntCallHookProc(INT HookId,
    UINT lParamSize = 0;
 
    ASSERT(Proc);
+   /* Do not allow the desktop thread to do callback to user mode */
+   ASSERT(PsGetCurrentThreadWin32Thread() != gptiDesktopThread);
 
    pti = PsGetCurrentThreadWin32Thread();
    if (pti->TIF_flags & TIF_INCLEANUP)
@@ -833,6 +855,9 @@ co_IntClientThreadSetup(VOID)
    NTSTATUS Status;
    ULONG ArgumentLength, ResultLength;
    PVOID Argument, ResultPointer;
+
+   /* Do not allow the desktop thread to do callback to user mode */
+   ASSERT(PsGetCurrentThreadWin32Thread() != gptiDesktopThread);
 
    ArgumentLength = ResultLength = 0;
    Argument = ResultPointer = NULL;

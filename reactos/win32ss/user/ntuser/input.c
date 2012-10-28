@@ -304,6 +304,7 @@ CreateSystemThreads(UINT Type)
     switch (Type)
     {
         case 0: RawInputThreadMain(); break;
+        case 1: DesktopThreadMain(); break;
         default: ERR("Wrong type: %x\n", Type);
     }
 

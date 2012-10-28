@@ -11,11 +11,17 @@
 #include <win32k.h>
 DBG_DEFAULT_CHANNEL(UserDesktop);
 
-static
-VOID
-IntFreeDesktopHeap(
-    IN OUT PDESKTOP Desktop
-);
+static NTSTATUS
+UserInitializeDesktop(PDESKTOP pdesk, PUNICODE_STRING DesktopName, PWINSTATION_OBJECT pwinsta);
+
+static NTSTATUS
+IntMapDesktopView(IN PDESKTOP pdesk);
+
+static NTSTATUS
+IntUnmapDesktopView(IN PDESKTOP pdesk);
+
+static VOID
+IntFreeDesktopHeap(IN PDESKTOP pdesk);
 
 /* GLOBALS *******************************************************************/
 
@@ -23,6 +29,8 @@ IntFreeDesktopHeap(
 PDESKTOP InputDesktop = NULL;
 HDESK InputDesktopHandle = NULL;
 HDC ScreenDeviceContext = NULL;
+PTHREADINFO gptiDesktopThread;
+HCURSOR gDesktopCursor = NULL;
 
 /* OBJECT CALLBACKS **********************************************************/
 
@@ -112,17 +120,16 @@ IntDesktopObjectParse(IN PVOID ParseObject,
                             sizeof(DESKTOP),
                             0,
                             0,
-                            (PVOID)&Desktop);
+                            (PVOID*)&Desktop);
     if (!NT_SUCCESS(Status)) return Status;
 
-    /* Initialize shell hook window list and set the parent */
-    RtlZeroMemory(Desktop, sizeof(DESKTOP));
-    InitializeListHead(&Desktop->ShellHookWindows);
-    Desktop->rpwinstaParent = (PWINSTATION_OBJECT)ParseObject;
-
-    /* Put the desktop on the window station's list of associated desktops */
-    InsertTailList(&Desktop->rpwinstaParent->DesktopListHead,
-                   &Desktop->ListEntry);
+    /* Initialize the desktop */
+    Status = UserInitializeDesktop(Desktop, RemainingName, WinStaObject);
+    if (!NT_SUCCESS(Status))
+    {
+        ObDereferenceObject(Desktop);
+        return Status;
+    }
 
     /* Set the desktop object and return success */
     *Object = Desktop;
@@ -133,22 +140,29 @@ IntDesktopObjectParse(IN PVOID ParseObject,
 VOID APIENTRY
 IntDesktopObjectDelete(PWIN32_DELETEMETHOD_PARAMETERS Parameters)
 {
-   PDESKTOP Desktop = (PDESKTOP)Parameters->Object;
+   PDESKTOP pdesk = (PDESKTOP)Parameters->Object;
 
-   TRACE("Deleting desktop object 0x%p\n", Desktop);
+   TRACE("Deleting desktop object 0x%p\n", pdesk);
+
+   ASSERT(pdesk->pDeskInfo->spwnd->spwndChild == NULL);
+
+   if (pdesk->pDeskInfo->spwnd)
+       co_UserDestroyWindow(pdesk->pDeskInfo->spwnd);
+
+   if (pdesk->spwndMessage)
+       co_UserDestroyWindow(pdesk->spwndMessage);
 
    /* Remove the desktop from the window station's list of associcated desktops */
-   RemoveEntryList(&Desktop->ListEntry);
+   RemoveEntryList(&pdesk->ListEntry);
 
-   IntFreeDesktopHeap(Desktop);
+   /* Free the heap */
+   IntFreeDesktopHeap(pdesk);
 }
 
 NTSTATUS NTAPI
 IntDesktopOkToClose(PWIN32_OKAYTOCLOSEMETHOD_PARAMETERS Parameters)
 {
-    PTHREADINFO pti;
-
-    pti = PsGetCurrentThreadWin32Thread();
+    PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
 
     if( pti == NULL)
     {
@@ -165,6 +179,29 @@ IntDesktopOkToClose(PWIN32_OKAYTOCLOSEMETHOD_PARAMETERS Parameters)
 
     return STATUS_SUCCESS;
 }
+
+NTSTATUS NTAPI IntDesktopObjectOpen(PWIN32_OPENMETHOD_PARAMETERS Parameters)
+{
+    PPROCESSINFO ppi = PsGetProcessWin32Process(Parameters->Process);
+    if (ppi == NULL)
+        return STATUS_SUCCESS;
+
+    return IntMapDesktopView((PDESKTOP)Parameters->Object);
+}
+
+NTSTATUS NTAPI IntDesktopObjectClose(PWIN32_CLOSEMETHOD_PARAMETERS Parameters)
+{
+    PPROCESSINFO ppi = PsGetProcessWin32Process(Parameters->Process);
+    if (ppi == NULL)
+    {
+        /* This happens when the process leaks desktop handles.
+         * At this point the PPROCESSINFO is already destroyed */
+         return STATUS_SUCCESS;
+    }
+
+    return IntUnmapDesktopView((PDESKTOP)Parameters->Object);
+}
+
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -596,8 +633,66 @@ DesktopWindowProc(PWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam, LRESULT *lRe
       case WM_SYSCOLORCHANGE:
          co_UserRedrawWindow(Wnd, NULL, NULL, RDW_INVALIDATE|RDW_ERASE|RDW_ALLCHILDREN);
          return TRUE;
+      case WM_SETCURSOR:
+      {
+          PCURICON_OBJECT pcurOld, pcurNew;
+          pcurNew = UserGetCurIconObject(gDesktopCursor);
+          if (!pcurNew)
+          {
+              return TRUE;
+          }
+          pcurOld = UserSetCursor(pcurNew, FALSE);
+          if (pcurOld)
+          {
+               UserDereferenceObject(pcurOld);
+          }
+      }
    }
-   return FALSE; // Not processed so go with callback.
+   return TRUE; /* We are done. Do not do any callbacks to user mode */
+}
+
+BOOL FASTCALL
+UserMessageWindowProc(PWND pwnd, UINT Msg, WPARAM wParam, LPARAM lParam, LRESULT *lResult)
+{
+    *lResult = 0;
+
+    switch(Msg)
+    {
+    case WM_NCCREATE:
+        pwnd->fnid |= FNID_MESSAGEWND;
+        *lResult = (LRESULT)TRUE;
+        break;
+    case WM_DESTROY:
+        pwnd->fnid |= FNID_DESTROY;
+        break;
+    }
+
+    return TRUE; /* We are done. Do not do any callbacks to user mode */
+}
+
+VOID NTAPI DesktopThreadMain()
+{
+    BOOL Ret;
+    MSG Msg;
+
+    gptiDesktopThread = PsGetCurrentThreadWin32Thread();
+
+    UserEnterExclusive();
+
+    /* Register system classes. This thread does not belong to any desktop so the
+       classes will be allocated from the shared heap */
+    UserRegisterSystemClasses();
+
+    while(TRUE)
+    {
+        Ret = co_IntGetPeekMessage(&Msg, 0, 0, 0, PM_REMOVE, TRUE);
+        if (Ret)
+        {
+            IntDispatchMessage(&Msg);
+        }
+    }
+
+    UserLeave();
 }
 
 HDC FASTCALL
@@ -813,6 +908,8 @@ BOOL IntDeRegisterShellHookWindow(HWND hWnd)
 static VOID
 IntFreeDesktopHeap(IN OUT PDESKTOP Desktop)
 {
+    /* FIXME: Disable until unmapping works in mm */
+#if 0
     if (Desktop->pheapDesktop != NULL)
     {
         MmUnmapViewInSessionSpace(Desktop->pheapDesktop);
@@ -824,6 +921,7 @@ IntFreeDesktopHeap(IN OUT PDESKTOP Desktop)
         ObDereferenceObject(Desktop->hsectionDesktop);
         Desktop->hsectionDesktop = NULL;
     }
+#endif
 }
 
 BOOL FASTCALL
@@ -1030,6 +1128,61 @@ IntPaintDesktop(HDC hDC)
    return TRUE;
 }
 
+static NTSTATUS
+UserInitializeDesktop(PDESKTOP pdesk, PUNICODE_STRING DesktopName, PWINSTATION_OBJECT pwinsta)
+{
+    PVOID DesktopHeapSystemBase = NULL;
+    ULONG_PTR HeapSize = 400 * 1024;
+    SIZE_T DesktopInfoSize;
+    ULONG i;
+
+    TRACE("UserInitializeDesktop desktop 0x%p with name %wZ\n", pdesk, DesktopName);
+
+    RtlZeroMemory(pdesk, sizeof(DESKTOP));
+
+    /* Link the desktop with the parent window station */
+    pdesk->rpwinstaParent = pwinsta;
+    InsertTailList(&pwinsta->DesktopListHead, &pdesk->ListEntry);
+
+    /* Create the desktop heap */
+    pdesk->hsectionDesktop = NULL;
+    pdesk->pheapDesktop = UserCreateHeap(&pdesk->hsectionDesktop,
+                                         &DesktopHeapSystemBase,
+                                         HeapSize);
+   if (pdesk->pheapDesktop == NULL)
+   {
+       ERR("Failed to create desktop heap!\n");
+       return STATUS_NO_MEMORY;
+   }
+
+   /* Create DESKTOPINFO */
+   DesktopInfoSize = sizeof(DESKTOPINFO) + DesktopName->Length + sizeof(WCHAR);
+   pdesk->pDeskInfo = RtlAllocateHeap(pdesk->pheapDesktop,
+                                      HEAP_NO_SERIALIZE | HEAP_ZERO_MEMORY,
+                                      DesktopInfoSize);
+   if (pdesk->pDeskInfo == NULL)
+   {
+       ERR("Failed to create the DESKTOP structure!\n");
+       return STATUS_NO_MEMORY;
+   }
+
+   /* Initialize the DESKTOPINFO */
+   pdesk->pDeskInfo->pvDesktopBase = DesktopHeapSystemBase;
+   pdesk->pDeskInfo->pvDesktopLimit = (PVOID)((ULONG_PTR)DesktopHeapSystemBase + HeapSize);
+   RtlCopyMemory(pdesk->pDeskInfo->szDesktopName,
+                 DesktopName->Buffer,
+                 DesktopName->Length + sizeof(WCHAR));
+   for (i = 0; i < NB_HOOKS; i++)
+   {
+      InitializeListHead(&pdesk->pDeskInfo->aphkStart[i]);
+   }
+
+   InitializeListHead(&pdesk->ShellHookWindows);
+   InitializeListHead(&pdesk->PtiList);
+
+   return STATUS_SUCCESS;
+}
+
 /* SYSCALLS *******************************************************************/
 
 /*
@@ -1073,43 +1226,35 @@ NtUserCreateDesktop(
    DWORD dwFlags,
    ACCESS_MASK dwDesiredAccess)
 {
-   PDESKTOP DesktopObject;
-   UNICODE_STRING DesktopName;
+   PDESKTOP pdesk = NULL;
    NTSTATUS Status = STATUS_SUCCESS;
-   HDESK Desktop;
-   CSR_API_MESSAGE Request;
-   PVOID DesktopHeapSystemBase = NULL;
-   SIZE_T DesktopInfoSize;
+   HDESK hdesk;
    BOOLEAN Context;
-   ULONG_PTR HeapSize = 400 * 1024; /* FIXME: Windows uses 200KB by default */
    UNICODE_STRING ClassName;
    LARGE_STRING WindowName;
    BOOL NoHooks = FALSE;
    PWND pWnd = NULL;
    CREATESTRUCTW Cs;
-   INT i;
    PTHREADINFO ptiCurrent;
+   PCLS pcls;
+
    DECLARE_RETURN(HDESK);
 
    TRACE("Enter NtUserCreateDesktop\n");
    UserEnterExclusive();
 
    ptiCurrent = PsGetCurrentThreadWin32Thread();
-   if (ptiCurrent)
-   {
+   ASSERT(ptiCurrent);
+   ASSERT(gptiDesktopThread);
+
    /* Turn off hooks when calling any CreateWindowEx from inside win32k. */
-      NoHooks = (ptiCurrent->TIF_flags & TIF_DISABLEHOOKS);
-      ptiCurrent->TIF_flags |= TIF_DISABLEHOOKS;
-      ptiCurrent->pClientInfo->dwTIFlags = ptiCurrent->TIF_flags;
-   }
-   /*else
-   {ERR("NtUserCreateDesktop: No ptiCurrent\n");}*/
-   DesktopName.Buffer = NULL;
+   NoHooks = (ptiCurrent->TIF_flags & TIF_DISABLEHOOKS);
+   ptiCurrent->TIF_flags |= TIF_DISABLEHOOKS;
+   ptiCurrent->pClientInfo->dwTIFlags = ptiCurrent->TIF_flags;
 
    /*
     * Try to open already existing desktop
     */
-
    Status = ObOpenObjectByName(
                ObjectAttributes,
                ExDesktopObjectType,
@@ -1117,141 +1262,98 @@ NtUserCreateDesktop(
                NULL,
                dwDesiredAccess,
                (PVOID)&Context,
-               (HANDLE*)&Desktop);
-   if (!NT_SUCCESS(Status)) RETURN(NULL);
+               (HANDLE*)&hdesk);
+   if (!NT_SUCCESS(Status)) 
+   {
+      ERR("ObOpenObjectByName failed to open/create desktop\n");
+      SetLastNtError(Status);
+      RETURN(NULL);
+   }
 
    /* In case the object was not created (eg if it existed), return now */
    if (Context == FALSE)
    {
        TRACE("NtUserCreateDesktop opened desktop %wZ\n", ObjectAttributes->ObjectName);
-       RETURN( Desktop);
-   }
-
-   /* Capture desktop name */
-   _SEH2_TRY
-   {
-      ProbeForRead( ObjectAttributes, sizeof(OBJECT_ATTRIBUTES),  1);
-
-      Status = IntSafeCopyUnicodeStringTerminateNULL(&DesktopName, ObjectAttributes->ObjectName);
-   }
-   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-   {
-      Status = _SEH2_GetExceptionCode();
-   }
-   _SEH2_END
-
-   if (! NT_SUCCESS(Status))
-   {
-      ERR("Failed reading Object Attributes from user space.\n");
-      SetLastNtError(Status);
-      RETURN( NULL);
+       RETURN( hdesk);
    }
 
    /* Reference the desktop */
-   Status = ObReferenceObjectByHandle(Desktop,
+   Status = ObReferenceObjectByHandle(hdesk,
                                       0,
                                       ExDesktopObjectType,
                                       KernelMode,
-                                      (PVOID)&DesktopObject,
+                                      (PVOID*)&pdesk,
                                       NULL);
    if (!NT_SUCCESS(Status))
    {
        ERR("Failed to reference desktop object\n");
+       SetLastNtError(Status);
        RETURN(NULL);
    }
 
-   TRACE("NtUserCreateDesktop created desktop 0x%p with name %wZ\n", DesktopObject, &DesktopName);
+   if (!ptiCurrent->rpdesk) IntSetThreadDesktop(hdesk,FALSE);
 
-   DesktopObject->hsectionDesktop = NULL;
-   DesktopObject->pheapDesktop = UserCreateHeap(&DesktopObject->hsectionDesktop,
-                                                &DesktopHeapSystemBase,
-                                                HeapSize);
-   if (DesktopObject->pheapDesktop == NULL)
-   {
-       ObDereferenceObject(DesktopObject);
-       ERR("Failed to create desktop heap!\n");
-       RETURN(NULL);
-   }
-
-   DesktopInfoSize = sizeof(DESKTOPINFO) + DesktopName.Length + sizeof(WCHAR);
-
-   DesktopObject->pDeskInfo = RtlAllocateHeap(DesktopObject->pheapDesktop,
-                                              HEAP_NO_SERIALIZE,
-                                              DesktopInfoSize);
-
-   if (DesktopObject->pDeskInfo == NULL)
-   {
-       ObDereferenceObject(DesktopObject);
-       ERR("Failed to create the DESKTOP structure!\n");
-       RETURN(NULL);
-   }
-
-   RtlZeroMemory(DesktopObject->pDeskInfo,
-                 DesktopInfoSize);
-
-   DesktopObject->pDeskInfo->pvDesktopBase = DesktopHeapSystemBase;
-   DesktopObject->pDeskInfo->pvDesktopLimit = (PVOID)((ULONG_PTR)DesktopHeapSystemBase + HeapSize);
-   RtlCopyMemory(DesktopObject->pDeskInfo->szDesktopName,
-                 DesktopName.Buffer,
-                 DesktopName.Length + sizeof(WCHAR));
-
-   /* Initialize some local (to win32k) desktop state. */
-   InitializeListHead(&DesktopObject->PtiList);
-   DesktopObject->ActiveMessageQueue = NULL;
-
-   /* Setup Global Hooks. */
-   for (i = 0; i < NB_HOOKS; i++)
-   {
-      InitializeListHead(&DesktopObject->pDeskInfo->aphkStart[i]);
-   }
-
-   /*
-    * Create a handle for CSRSS and notify CSRSS for Creating Desktop Background Windows and Threads.
+   /* Get the desktop window class. The thread desktop does not belong to any desktop
+    * so the classes created there (including the desktop class) are allocated in the shared heap
+    * It would cause problems if we used a class that belongs to the caller 
     */
-   Request.Type = MAKE_CSR_API(CREATE_DESKTOP, CSR_GUI);
-   Status = CsrInsertObject(Desktop,
-                            GENERIC_ALL,
-                            (HANDLE*)&Request.Data.CreateDesktopRequest.DesktopHandle);
-   if (! NT_SUCCESS(Status))
-   {
-      ERR("Failed to create desktop handle for CSRSS\n");
-      ZwClose(Desktop);
-      SetLastNtError(Status);
-      RETURN( NULL);
-   }
-
-   Status = co_CsrNotify(&Request);
-   if (! NT_SUCCESS(Status))
-   {
-      CsrCloseHandle(Request.Data.CreateDesktopRequest.DesktopHandle);
-      ERR("Failed to notify CSRSS about new desktop\n");
-      ZwClose(Desktop);
-      SetLastNtError(Status);
-      RETURN( NULL);
-   }
-
-   if (ptiCurrent && !ptiCurrent->rpdesk) IntSetThreadDesktop(Desktop,FALSE);
-
-   ClassName.Buffer = ((PWSTR)((ULONG_PTR)(WORD)(gpsi->atomSysClass[ICLS_HWNDMESSAGE])));
+   ClassName.Buffer = WC_DESKTOP;
    ClassName.Length = 0;
-   RtlZeroMemory(&WindowName, sizeof(WindowName));
+   pcls = IntGetAndReferenceClass(&ClassName, 0, TRUE);
+   if (pcls == NULL)
+   {
+      ASSERT(FALSE);
+      RETURN(NULL);
+   }
 
+   RtlZeroMemory(&WindowName, sizeof(WindowName));
    RtlZeroMemory(&Cs, sizeof(Cs));
-   Cs.cx = Cs.cy = 100;
+   Cs.x = UserGetSystemMetrics(SM_XVIRTUALSCREEN),
+   Cs.y = UserGetSystemMetrics(SM_YVIRTUALSCREEN),
+   Cs.cx = UserGetSystemMetrics(SM_CXVIRTUALSCREEN),
+   Cs.cy = UserGetSystemMetrics(SM_CYVIRTUALSCREEN),
    Cs.style = WS_POPUP|WS_CLIPCHILDREN;
-   Cs.hInstance = hModClient; // hModuleWin; // Server side winproc! Leave it to Timo to not pass on notes!
+   Cs.hInstance = hModClient; // hModuleWin; // Server side winproc!
    Cs.lpszName = (LPCWSTR) &WindowName;
    Cs.lpszClass = (LPCWSTR) &ClassName;
 
-   pWnd = co_UserCreateWindowEx(&Cs, &ClassName, &WindowName, NULL);
-   if (!pWnd)
+   /* Use IntCreateWindow instead of co_UserCreateWindowEx cause the later expects a thread with a desktop */
+   pWnd = IntCreateWindow(&Cs, &WindowName, pcls, NULL, NULL, NULL, pdesk);
+   if (pWnd == NULL)
    {
-      ERR("Failed to create Message window handle\n");
+      ERR("Failed to create desktop window for the new desktop\n");
+      RETURN(NULL);
    }
-   else
+
+   pdesk->DesktopWindow = pWnd->head.h;
+   pdesk->pDeskInfo->spwnd = pWnd;
+   pWnd->fnid = FNID_DESKTOP;
+   
+   ClassName.Buffer = MAKEINTATOM(gpsi->atomSysClass[ICLS_HWNDMESSAGE]);
+   ClassName.Length = 0;
+   pcls = IntGetAndReferenceClass(&ClassName, 0, TRUE);
+   if (pcls == NULL)
    {
-      DesktopObject->spwndMessage = pWnd;
+      ASSERT(FALSE);
+      RETURN(NULL);
    }
+
+   RtlZeroMemory(&WindowName, sizeof(WindowName));
+   RtlZeroMemory(&Cs, sizeof(Cs));
+   Cs.cx = Cs.cy = 100;
+   Cs.style = WS_POPUP|WS_CLIPCHILDREN;
+   Cs.hInstance = hModClient; // hModuleWin; // Server side winproc!
+   Cs.lpszName = (LPCWSTR) &WindowName;
+   Cs.lpszClass = (LPCWSTR) &ClassName;
+   pWnd = IntCreateWindow(&Cs, &WindowName, pcls, NULL, NULL, NULL, pdesk);
+   if (pWnd == NULL)
+   {
+      ERR("Failed to create message window for the new desktop\n");
+      RETURN(NULL);
+   }
+
+   pdesk->spwndMessage = pWnd;
+   pWnd->fnid = FNID_MESSAGEWND;
 
    /* Now,,,
       if !(WinStaObject->Flags & WSF_NOIO) is (not set) for desktop input output mode (see wiki)
@@ -1261,14 +1363,18 @@ NtUserCreateDesktop(
       The rest is same as message window.
       http://msdn.microsoft.com/en-us/library/bb760250(VS.85).aspx
    */
-   RETURN( Desktop);
+   RETURN( hdesk);
 
 CLEANUP:
-   if(DesktopName.Buffer != NULL)
+   if (pdesk != NULL)
    {
-       ExFreePoolWithTag(DesktopName.Buffer, TAG_STRING);
+       ObDereferenceObject(pdesk);
    }
-   if (!NoHooks && ptiCurrent)
+   if (_ret_ == NULL && hdesk != NULL)
+   {
+      ObCloseHandle(hdesk, UserMode);
+   }
+   if (!NoHooks)
    {
        ptiCurrent->TIF_flags &= ~TIF_DISABLEHOOKS;
        ptiCurrent->pClientInfo->dwTIFlags = ptiCurrent->TIF_flags;

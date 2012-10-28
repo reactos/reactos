@@ -641,9 +641,17 @@ IntReferenceClass(IN OUT PCLS BaseClass,
     PCLS Class;
     ASSERT(BaseClass->pclsBase == BaseClass);
 
-    Class = IntGetClassForDesktop(BaseClass,
-                                  ClassLink,
-                                  Desktop);
+    if (Desktop != NULL)
+    {
+        Class = IntGetClassForDesktop(BaseClass,
+                                      ClassLink,
+                                      Desktop);
+    }
+    else
+    {
+        Class = BaseClass;
+    }
+
     if (Class != NULL)
     {
         Class->cWndReferenceCount++;
@@ -1286,13 +1294,16 @@ FoundClass:
 }
 
 PCLS
-IntGetAndReferenceClass(PUNICODE_STRING ClassName, HINSTANCE hInstance)
+IntGetAndReferenceClass(PUNICODE_STRING ClassName, HINSTANCE hInstance, BOOL bDesktopThread)
 {
    PCLS *ClassLink, Class = NULL;
    RTL_ATOM ClassAtom;
    PTHREADINFO pti;
 
-   pti = PsGetCurrentThreadWin32Thread();
+   if (bDesktopThread)
+       pti = gptiDesktopThread;
+   else
+       pti = PsGetCurrentThreadWin32Thread();
 
    if ( !(pti->ppi->W32PF_flags & W32PF_CLASSESREGISTERED ))
    {

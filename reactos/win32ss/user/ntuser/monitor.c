@@ -32,7 +32,7 @@ static
 PMONITOR
 IntCreateMonitorObject()
 {
-    return UserCreateObject(gHandleTable, NULL, NULL, otMonitor, sizeof(MONITOR));
+    return UserCreateObject(gHandleTable, NULL, NULL, NULL, otMonitor, sizeof(MONITOR));
 }
 
 /* IntDestroyMonitorObject

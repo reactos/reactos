@@ -183,7 +183,8 @@ NtUserCallOneParam(
              if (count == 0) count = 8;
 
              psmwp = (PSMWP) UserCreateObject( gHandleTable,
-                                               NULL,
+                                               NULL, 
+                                               NULL, 
                                               (PHANDLE)&hDwp,
                                                otSMWP,
                                                sizeof(SMWP));

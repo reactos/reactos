@@ -36,6 +36,7 @@
 /* Win32 headers */
 /* FIXME: Defines in winbase.h that we need... */
 typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
+#define MAKEINTATOM(i) (LPWSTR)((ULONG_PTR)((WORD)(i)))
 #define WINBASEAPI
 #define STARTF_USESIZE 2
 #define STARTF_USEPOSITION 4

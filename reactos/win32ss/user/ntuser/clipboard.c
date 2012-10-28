@@ -182,6 +182,7 @@ IntSynthesizeDib(
     /* Create the clipboard data */
     pClipboardData = (PCLIPBOARDDATA)UserCreateObject(gHandleTable,
                                                       NULL,
+                                                      NULL,
                                                       &hMem,
                                                       otClipBoardData,
                                                       cjDataSize);
@@ -293,7 +294,7 @@ IntAddSynthesizedFormats(PWINSTATION_OBJECT pWinStaObj)
         PCLIPBOARDDATA pMemObj;
         HANDLE hMem;
 
-        pMemObj = (PCLIPBOARDDATA)UserCreateObject(gHandleTable, NULL, &hMem, otClipBoardData,
+        pMemObj = (PCLIPBOARDDATA)UserCreateObject(gHandleTable, NULL, NULL, &hMem, otClipBoardData,
                                                    sizeof(CLIPBOARDDATA) + sizeof(LCID));
         if (pMemObj)
         {
@@ -1080,7 +1081,7 @@ NtUserConvertMemHandle(
     UserEnterExclusive();
 
     /* Create Clipboard data object */
-    pMemObj = UserCreateObject(gHandleTable, NULL, &hMem, otClipBoardData, sizeof(CLIPBOARDDATA) + cbData);
+    pMemObj = UserCreateObject(gHandleTable, NULL, NULL, &hMem, otClipBoardData, sizeof(CLIPBOARDDATA) + cbData);
     if (!pMemObj)
         goto cleanup;
 

@@ -298,4 +298,13 @@ UserSetCursor(PCURICON_OBJECT NewCursor,
 DWORD APIENTRY IntGetQueueStatus(DWORD);
 
 UINT lParamMemorySize(UINT Msg, WPARAM wParam, LPARAM lParam);
+
+BOOL FASTCALL
+co_IntGetPeekMessage( PMSG pMsg,
+                      HWND hWnd,
+                      UINT MsgFilterMin,
+                      UINT MsgFilterMax,
+                      UINT RemoveMsg,
+                      BOOL bGMSG );
+
 /* EOF */
