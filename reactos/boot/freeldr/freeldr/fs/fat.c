@@ -906,16 +906,16 @@ BOOLEAN FatGetFatEntry(PFAT_VOLUME_INFO Volume, ULONG Cluster, ULONG* ClusterPoi
 	UINT32		ThisFatEntOffset;
 	ULONG SectorCount;
 	PUCHAR ReadBuffer;
-	BOOLEAN status = TRUE;;
+	BOOLEAN status = TRUE;
 
 	//TRACE("FatGetFatEntry() Retrieving FAT entry for cluster %d.\n", Cluster);
 
-    // We need a buffer for 2 secors
-    ReadBuffer = HeapAllocate(FrLdrTempHeap, 2 * Volume->BytesPerSector, 'xTAF');
-    if (!ReadBuffer)
-    {
-        return FALSE;
-    }
+	// We need a buffer for 2 secors
+	ReadBuffer = HeapAllocate(FrLdrTempHeap, 2 * Volume->BytesPerSector, 'xTAF');
+	if (!ReadBuffer)
+	{
+		return FALSE;
+	}
 
 	switch(Volume->FatType)
 	{
@@ -929,7 +929,6 @@ BOOLEAN FatGetFatEntry(PFAT_VOLUME_INFO Volume, ULONG Cluster, ULONG* ClusterPoi
 		TRACE("ThisFatSecNum: %d\n", ThisFatSecNum);
 		TRACE("ThisFatEntOffset: %d\n", ThisFatEntOffset);
 
-
 		if (ThisFatEntOffset == (Volume->BytesPerSector - 1))
 		{
 		    SectorCount = 2;
@@ -939,11 +938,11 @@ BOOLEAN FatGetFatEntry(PFAT_VOLUME_INFO Volume, ULONG Cluster, ULONG* ClusterPoi
 		    SectorCount = 1;
 		}
 
-        if (!FatReadVolumeSectors(Volume, ThisFatSecNum, SectorCount, ReadBuffer))
-        {
-            status = FALSE;
-            break;
-        }
+		if (!FatReadVolumeSectors(Volume, ThisFatSecNum, SectorCount, ReadBuffer))
+		{
+			status = FALSE;
+			break;
+		}
 
 		fat = *((USHORT *) (ReadBuffer + ThisFatEntOffset));
 		fat = SWAPW(fat);
@@ -963,8 +962,8 @@ BOOLEAN FatGetFatEntry(PFAT_VOLUME_INFO Volume, ULONG Cluster, ULONG* ClusterPoi
 
 		if (!FatReadVolumeSectors(Volume, ThisFatSecNum, 1, ReadBuffer))
 		{
-            status = FALSE;
-            break;
+			status = FALSE;
+			break;
 		}
 
 		fat = *((USHORT *) (ReadBuffer + ThisFatEntOffset));
@@ -992,17 +991,17 @@ BOOLEAN FatGetFatEntry(PFAT_VOLUME_INFO Volume, ULONG Cluster, ULONG* ClusterPoi
 
 	default:
 		ERR("Unknown FAT type %d\n", Volume->FatType);
-        status = FALSE;
-        break;
+		status = FALSE;
+		break;
 	}
 
 	//TRACE("FAT entry is 0x%x.\n", fat);
 
-    HeapFree(FrLdrTempHeap, ReadBuffer, 'xTAF');
+	HeapFree(FrLdrTempHeap, ReadBuffer, 'xTAF');
 
 	*ClusterPointer = fat;
 
-	return TRUE;
+	return status;
 }
 
 ULONG FatCountClustersInChain(PFAT_VOLUME_INFO Volume, ULONG StartCluster)
