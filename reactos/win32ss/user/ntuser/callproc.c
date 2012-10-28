@@ -46,6 +46,9 @@ CreateCallProc(IN PDESKTOP Desktop,
         NewCallProc->spcpdNext = NULL;
     }
 
+    /* Release the extra reference (UserCreateObject added 2 references) */
+    UserDereferenceObject(NewCallProc);
+
     return NewCallProc;
 }
 
