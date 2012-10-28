@@ -234,55 +234,54 @@ IntCreateCurIconHandle()
 }
 
 BOOLEAN FASTCALL
-IntDestroyCurIconObject(PCURICON_OBJECT CurIcon, BOOL ProcessCleanup)
+IntDestroyCurIconObject(PCURICON_OBJECT CurIcon, PPROCESSINFO ppi)
 {
     PSYSTEM_CURSORINFO CurInfo;
     HBITMAP bmpMask, bmpColor;
-    BOOLEAN Ret;
+    BOOLEAN Ret, bListEmpty, bFound = FALSE;
     PCURICON_PROCESS Current = NULL;
-    PPROCESSINFO W32Process = PsGetCurrentProcessWin32Process();
-
-    /* Private objects can only be destroyed by their own process */
-    if (NULL == CurIcon->hModule)
-    {
-        ASSERT(CurIcon->ProcessList.Flink->Flink == &CurIcon->ProcessList);
-        Current = CONTAINING_RECORD(CurIcon->ProcessList.Flink, CURICON_PROCESS, ListEntry);
-        if (Current->Process != W32Process)
-        {
-            ERR("Trying to destroy private icon/cursor of another process\n");
-            return FALSE;
-        }
-    }
-    else if (! ProcessCleanup)
-    {
-        TRACE("Trying to destroy shared icon/cursor\n");
-        return FALSE;
-    }
+    
+    /* For handles created without any data (error handling) */
+    if(IsListEmpty(&CurIcon->ProcessList))
+        goto emptyList;
 
     /* Now find this process in the list of processes referencing this object and
        remove it from that list */
     LIST_FOR_EACH(Current, &CurIcon->ProcessList, CURICON_PROCESS, ListEntry)
     {
-        if (Current->Process == W32Process)
+        if (Current->Process == ppi)
         {
-            RemoveEntryList(&Current->ListEntry);
+            bFound = TRUE;
+            bListEmpty = RemoveEntryList(&Current->ListEntry);
             break;
         }
+    }
+    
+    if(!bFound)
+    {
+        /* This object doesn't belong to this process */
+        EngSetLastError(ERROR_INVALID_HANDLE);
+        return FALSE;
     }
 
     ExFreeToPagedLookasideList(pgProcessLookasideList, Current);
 
     /* If there are still processes referencing this object we can't destroy it yet */
-    if (! IsListEmpty(&CurIcon->ProcessList))
+    if (!bListEmpty)
     {
+        if(CurIcon->head.ppi == ppi)
+        {
+            /* Set the first process of the list as owner */
+            Current = CONTAINING_RECORD(CurIcon->ProcessList.Flink, CURICON_PROCESS, ListEntry);
+            UserSetObjectOwner(CurIcon, otCursorIcon, Current->Process);
+        }
+        UserDereferenceObject(CurIcon);
         return TRUE;
     }
 
-
-    if (! ProcessCleanup)
-    {
-        RemoveEntryList(&CurIcon->ListEntry);
-    }
+emptyList:
+    /* Remove it from the list */
+    RemoveEntryList(&CurIcon->ListEntry);
 
     CurInfo = IntGetSysCursorInfo();
 
@@ -320,33 +319,13 @@ VOID FASTCALL
 IntCleanupCurIcons(struct _EPROCESS *Process, PPROCESSINFO Win32Process)
 {
     PCURICON_OBJECT CurIcon, tmp;
-    PCURICON_PROCESS ProcessData;
 
+    /* Run through the list of icon objects */
     LIST_FOR_EACH_SAFE(CurIcon, tmp, &gCurIconList, CURICON_OBJECT, ListEntry)
     {
         UserReferenceObject(CurIcon);
-        //    if(NT_SUCCESS(UserReferenceObjectByPointer(Object, otCursorIcon)))
-        {
-            LIST_FOR_EACH(ProcessData, &CurIcon->ProcessList, CURICON_PROCESS, ListEntry)
-            {
-                if (Win32Process == ProcessData->Process)
-                {
-                    RemoveEntryList(&CurIcon->ListEntry);
-                    IntDestroyCurIconObject(CurIcon, TRUE);
-                    CurIcon = NULL;
-                    break;
-                }
-            }
-
-//         UserDereferenceObject(Object);
-        }
-
-        if (CurIcon)
-        {
-            UserDereferenceObject(CurIcon);
-        }
+        IntDestroyCurIconObject(CurIcon, Win32Process);
     }
-
 }
 
 
@@ -649,7 +628,7 @@ NtUserDestroyCursor(
         RETURN(FALSE);
     }
 
-    ret = IntDestroyCurIconObject(CurIcon, FALSE);
+    ret = IntDestroyCurIconObject(CurIcon, PsGetCurrentProcessWin32Process());
     /* Note: IntDestroyCurIconObject will remove our reference for us! */
 
     RETURN(ret);

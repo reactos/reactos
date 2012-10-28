@@ -163,6 +163,6 @@ BOOL NTAPI W32kDosPathNameToNtPathName(PCWSTR, PUNICODE_STRING);
 #define LIST_FOR_EACH_SAFE(cursor, cursor2, list, type, field) \
     for ((cursor) = CONTAINING_RECORD((list)->Flink, type, field), \
          (cursor2) = CONTAINING_RECORD((cursor)->field.Flink, type, field); \
-         &(cursor)->field != (list) && ((&((cursor)->field)) != NULL); \
+         &(cursor)->field != (list); \
          (cursor) = (cursor2), \
          (cursor2) = CONTAINING_RECORD((cursor)->field.Flink, type, field))
