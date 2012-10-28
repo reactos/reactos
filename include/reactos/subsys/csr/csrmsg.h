@@ -97,9 +97,6 @@ typedef struct _CSR_CAPTURE_BUFFER
     ULONG_PTR PointerArray[1];
 } CSR_CAPTURE_BUFFER, *PCSR_CAPTURE_BUFFER;
 
-
-#include "csrss.h" // remove it when the data structures are not used anymore.
-
 /* Keep in sync with definition below. */
 // #define CSRSS_HEADER_SIZE (sizeof(PORT_MESSAGE) + sizeof(ULONG) + sizeof(NTSTATUS))
 
@@ -118,17 +115,8 @@ typedef struct _CSR_API_MESSAGE
             union
             {
                 CSR_CLIENT_CONNECT CsrClientConnect;
-
                 CSR_SET_PRIORITY_CLASS SetPriorityClass;
                 CSR_IDENTIFY_ALTERTABLE_THREAD IdentifyAlertableThread;
-
-            /*** win32csr thingies to remove. ***/
-#if 1
-                CSRSS_CREATE_DESKTOP CreateDesktopRequest;
-                CSRSS_SHOW_DESKTOP ShowDesktopRequest;
-                CSRSS_HIDE_DESKTOP HideDesktopRequest;
-#endif
-            /************************************/
             } Data;
         };
     };

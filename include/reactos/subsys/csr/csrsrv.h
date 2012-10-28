@@ -23,6 +23,9 @@
 
 /* TYPES **********************************************************************/
 
+// Used in ntdll/csr/connect.c
+#define CSR_CSRSS_SECTION_SIZE    (65536)
+
 typedef struct _CSR_NT_SESSION
 {
     ULONG ReferenceCount;
