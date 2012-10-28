@@ -315,20 +315,24 @@ PVOID
 FASTCALL
 UserCreateObject( PUSER_HANDLE_TABLE ht,
                   PDESKTOP pDesktop,
+                  PTHREADINFO pti,
                   HANDLE* h,
                   USER_OBJECT_TYPE type,
                   ULONG size)
 {
    HANDLE hi;
    PVOID Object;
-   PTHREADINFO pti;
    PPROCESSINFO ppi;
    BOOL dt;
    PDESKTOP rpdesk = pDesktop;
 
-   pti = GetW32ThreadInfo();
-   ppi = pti->ppi;
+   /* We could get the desktop for the new object from the pti however this is 
+    * not always the case for example when creating a new desktop window for 
+    * the desktop thread*/
+
+   if (!pti) pti = GetW32ThreadInfo();
    if (!pDesktop) rpdesk = pti->rpdesk;
+   ppi = pti->ppi;
 
    switch (type)
    {

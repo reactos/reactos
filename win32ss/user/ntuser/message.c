@@ -714,6 +714,13 @@ IntDispatchMessage(PMSG pMsg)
                                              pMsg->lParam,
                                             &retval);
             break;
+          case FNID_MESSAGEWND:
+            DoCallBack = !UserMessageWindowProc( Window,
+                                                 pMsg->message,
+                                                 pMsg->wParam,
+                                                 pMsg->lParam,
+                                                 &retval);
+            break;
        }
     }
 
@@ -1307,6 +1314,9 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
               case FNID_DESKTOP:
                 DoCallBack = !DesktopWindowProc(Window, Msg, wParam, lParam,(LRESULT*)&Result);
                 break;
+              case FNID_MESSAGEWND:
+                DoCallBack = !UserMessageWindowProc(Window, Msg, wParam, lParam,(LRESULT*)&Result);
+                break;
            }
            if (!DoCallBack)
            {
@@ -1589,6 +1599,9 @@ co_IntSendMessageWithCallBack( HWND hWnd,
            {
               case FNID_DESKTOP:
                 DoCallBack = !DesktopWindowProc(Window, Msg, wParam, lParamPacked, (LRESULT*)&Result);
+                break;
+              case FNID_MESSAGEWND:
+                DoCallBack = !UserMessageWindowProc(Window, Msg, wParam, lParam,(LRESULT*)&Result);
                 break;
            }
         }
@@ -2233,6 +2246,16 @@ NtUserMessageCall( HWND hWnd,
            }
            break;
         }
+
+   case FNID_MESSAGEWND:
+       {
+           Window = UserGetWindowObject(hWnd);
+           if (Window)
+           {
+                Ret = !UserMessageWindowProc(Window, Msg, wParam, lParam,&lResult);
+           }
+           break;
+       }
     case FNID_DEFWINDOWPROC:
         /* Validate input */
         if (hWnd)

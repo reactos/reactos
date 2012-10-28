@@ -39,7 +39,7 @@ IntDereferenceClass(IN OUT PCLS Class,
                     IN PPROCESSINFO pi);
 
 PCLS
-IntGetAndReferenceClass(PUNICODE_STRING ClassName, HINSTANCE hInstance);
+IntGetAndReferenceClass(PUNICODE_STRING ClassName, HINSTANCE hInstance, BOOL bDesktopThread);
 
 BOOL FASTCALL UserRegisterSystemClasses(VOID);
 

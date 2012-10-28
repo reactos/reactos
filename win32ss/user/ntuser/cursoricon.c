@@ -209,7 +209,7 @@ IntCreateCurIconHandle()
     PCURICON_OBJECT CurIcon;
     HANDLE hCurIcon;
 
-    CurIcon = UserCreateObject(gHandleTable, NULL, &hCurIcon, otCursorIcon, sizeof(CURICON_OBJECT));
+    CurIcon = UserCreateObject(gHandleTable, NULL, NULL, &hCurIcon, otCursorIcon, sizeof(CURICON_OBJECT));
 
     if (!CurIcon)
     {

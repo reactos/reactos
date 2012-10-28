@@ -378,7 +378,7 @@ NtUserSetWinEventHook(
       }
    }
    // Creator, pti is set here.
-   pEH = UserCreateObject(gHandleTable, NULL, &Handle, otEvent, sizeof(EVENTHOOK));
+   pEH = UserCreateObject(gHandleTable, NULL, NULL, &Handle, otEvent, sizeof(EVENTHOOK));
    if (pEH)
    {
       InsertTailList(&GlobalEvents->Events, &pEH->Chain);

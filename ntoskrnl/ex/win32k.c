@@ -40,6 +40,8 @@ PKWIN32_DELETEMETHOD_CALLOUT ExpWindowStationObjectDelete = NULL;
 PKWIN32_OKTOCLOSEMETHOD_CALLOUT ExpWindowStationObjectOkToClose = NULL;
 PKWIN32_OKTOCLOSEMETHOD_CALLOUT ExpDesktopObjectOkToClose = NULL;
 PKWIN32_DELETEMETHOD_CALLOUT ExpDesktopObjectDelete = NULL;
+PKWIN32_OPENMETHOD_CALLOUT ExpDesktopObjectOpen = NULL;
+PKWIN32_CLOSEMETHOD_CALLOUT ExpDesktopObjectClose = NULL;
 
 /* FUNCTIONS ****************************************************************/
 
@@ -133,6 +135,44 @@ ExpDesktopDelete(PVOID DeletedObject)
     ExpDesktopObjectDelete(&Parameters);
 }
 
+NTSTATUS
+NTAPI 
+ExpDesktopOpen(IN OB_OPEN_REASON Reason,
+               IN PEPROCESS Process OPTIONAL,
+               IN PVOID ObjectBody,
+               IN ACCESS_MASK GrantedAccess,
+               IN ULONG HandleCount)
+{
+    WIN32_OPENMETHOD_PARAMETERS Parameters;
+
+    Parameters.OpenReason = Reason;
+    Parameters.Process = Process;
+    Parameters.Object = ObjectBody;
+    Parameters.GrantedAccess = GrantedAccess;
+    Parameters.HandleCount = HandleCount;
+
+    return ExpDesktopObjectOpen(&Parameters);
+}
+
+VOID
+NTAPI 
+ExpDesktopClose(IN PEPROCESS Process OPTIONAL,
+                IN PVOID Object,
+                IN ACCESS_MASK GrantedAccess,
+                IN ULONG ProcessHandleCount,
+                IN ULONG SystemHandleCount)
+{
+    WIN32_CLOSEMETHOD_PARAMETERS Parameters;
+
+    Parameters.Process = Process;
+    Parameters.Object = Object;
+    Parameters.AccessMask = GrantedAccess;
+    Parameters.ProcessHandleCount = ProcessHandleCount;
+    Parameters.SystemHandleCount = SystemHandleCount;
+
+    ExpDesktopObjectClose(&Parameters);
+}
+
 BOOLEAN
 INIT_FUNCTION
 NTAPI
@@ -169,6 +209,8 @@ ExpWin32kInit(VOID)
     ObjectTypeInitializer.DeleteProcedure = ExpDesktopDelete;
     ObjectTypeInitializer.ParseProcedure = NULL;
     ObjectTypeInitializer.OkayToCloseProcedure = ExpDesktopOkToClose;
+    ObjectTypeInitializer.OpenProcedure = ExpDesktopOpen;
+    ObjectTypeInitializer.CloseProcedure = ExpDesktopClose;
     ObCreateObjectType(&Name,
                        &ObjectTypeInitializer,
                        NULL,

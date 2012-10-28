@@ -1569,7 +1569,7 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
     }
     ObDereferenceObject(WinStaObj);
 
-    Hook = UserCreateObject(gHandleTable, NULL, (PHANDLE)&Handle, otHook, sizeof(HOOK));
+    Hook = UserCreateObject(gHandleTable, NULL, NULL, (PHANDLE)&Handle, otHook, sizeof(HOOK));
 
     if (!Hook)
     {

@@ -471,7 +471,7 @@ NotifyTopLevelWindows(PNOTIFY_CONTEXT Context)
     return TRUE;
 }
 
-/*** Taken from win32ss/user/win32csr/desktopbg.c ***/
+/*** Taken from win32ss/user/consrv/console.c ***/
 BOOL FASTCALL
 DtbgIsDesktopVisible(VOID)
 {
@@ -485,9 +485,7 @@ DtbgIsDesktopVisible(VOID)
 
     return VisibleDesktopWindow != NULL;
 }
-/****************************************************/
 
-/*** Taken from win32ss/user/consrv/console.c ***/
 /* TODO: Find another way to do it. */
 VOID FASTCALL
 ConioConsoleCtrlEventTimeout(DWORD Event, PCSR_PROCESS ProcessData, DWORD Timeout)

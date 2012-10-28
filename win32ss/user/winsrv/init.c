@@ -356,6 +356,28 @@ PrivateCsrssManualGuiCheck(LONG Check)
     NtUserCallOneParam(Check, ONEPARAM_ROUTINE_CSRSS_GUICHECK);
 }
 
+static HHOOK hhk = NULL;
+
+/*** HACK from win32csr... ***/
+LRESULT
+CALLBACK
+KeyboardHookProc(int nCode,
+                 WPARAM wParam,
+                 LPARAM lParam)
+{
+    return CallNextHookEx(hhk, nCode, wParam, lParam);
+}
+/*** END - HACK from win32csr... ***/
+
+DWORD
+WINAPI
+CreateSystemThreads(PVOID pParam)
+{
+    NtUserCallOneParam((DWORD)pParam, ONEPARAM_ROUTINE_CREATESYSTEMTHREADS);
+    DPRINT1("This thread should not terminate!\n");
+    return 0;
+}
+
 CSR_SERVER_DLL_INIT(UserServerDllInitialization)
 {
 /*
@@ -378,6 +400,13 @@ CSR_SERVER_DLL_INIT(UserServerDllInitialization)
     return Status;
 */
 
+/*** From win32csr... ***/
+    HANDLE ServerThread;
+    CLIENT_ID ClientId;
+    NTSTATUS Status;
+    UINT i;
+/*** END - From win32csr... ***/
+
     /* Initialize memory */
     UserSrvHeap = RtlGetProcessHeap();  // Initialize our own heap.
     // BaseSrvSharedHeap = LoadedServerDll->SharedSection; // Get the CSR shared heap.
@@ -398,6 +427,21 @@ CSR_SERVER_DLL_INIT(UserServerDllInitialization)
     // LoadedServerDll->DisconnectCallback = Win32CsrReleaseConsole;
     // LoadedServerDll->NewProcessCallback = Win32CsrDuplicateHandleTable;
     LoadedServerDll->HardErrorCallback = Win32CsrHardError;
+
+/*** From win32csr... ***/
+    /* Start the Raw Input Thread and the Desktop Thread */
+    for (i = 0; i < 2; ++i)
+    {
+        Status = RtlCreateUserThread(NtCurrentProcess(), NULL, TRUE, 0, 0, 0, (PTHREAD_START_ROUTINE)CreateSystemThreads, (PVOID)i, &ServerThread, &ClientId);
+        if (NT_SUCCESS(Status))
+        {
+            NtResumeThread(ServerThread, NULL);
+            NtClose(ServerThread);
+        }
+        else
+            DPRINT1("Cannot start Raw Input Thread!\n");
+    }
+/*** END - From win32csr... ***/
 
     /* All done */
     return STATUS_SUCCESS;
@@ -422,6 +466,18 @@ DllMain(IN HANDLE hDll,
     if (DLL_PROCESS_ATTACH == dwReason)
     {
         DllHandle = hDll;
+
+/*** HACK from win32csr... ***/
+
+//
+// HACK HACK HACK ReactOS to BOOT! Initialization BUG ALERT! See bug 5655.
+//
+        hhk = SetWindowsHookEx(WH_KEYBOARD_LL, KeyboardHookProc, NULL, 0);
+// BUG ALERT! BUG ALERT! BUG ALERT! BUG ALERT! BUG ALERT! BUG ALERT! BUG ALERT!
+//  BUG ALERT! BUG ALERT! BUG ALERT! BUG ALERT! BUG ALERT! BUG ALERT! BUG ALERT!
+//   BUG ALERT! BUG ALERT! BUG ALERT! BUG ALERT! BUG ALERT! BUG ALERT! BUG ALERT!
+
+/*** END - HACK from win32csr... ***/
     }
 
     return TRUE;

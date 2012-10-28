@@ -229,10 +229,7 @@ co_IntInitializeDesktopGraphics(VOID)
 {
    TEXTMETRICW tmw;
    UNICODE_STRING DriverName = RTL_CONSTANT_STRING(L"DISPLAY");
-   if (! IntCreatePrimarySurface())
-   {
-      return FALSE;
-   }
+
    ScreenDeviceContext = IntGdiCreateDC(&DriverName, NULL, NULL, NULL, FALSE);
    if (NULL == ScreenDeviceContext)
    {
@@ -240,6 +237,11 @@ co_IntInitializeDesktopGraphics(VOID)
       return FALSE;
    }
    GreSetDCOwner(ScreenDeviceContext, GDI_OBJ_HMGR_PUBLIC);
+
+   if (! IntCreatePrimarySurface())
+   {
+      return FALSE;
+   }
 
    /* Setup the cursor */
    co_IntLoadDefaultCursors();

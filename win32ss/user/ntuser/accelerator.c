@@ -257,7 +257,7 @@ NtUserCreateAcceleratorTable(
         RETURN( (HACCEL) NULL );
     }
 
-    Accel = UserCreateObject(gHandleTable, NULL, (PHANDLE)&hAccel, otAccel, sizeof(ACCELERATOR_TABLE));
+    Accel = UserCreateObject(gHandleTable, NULL, NULL, (PHANDLE)&hAccel, otAccel, sizeof(ACCELERATOR_TABLE));
 
     if (Accel == NULL)
     {

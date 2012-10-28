@@ -101,7 +101,7 @@ IntTopLevelWindowFromPoint(INT x, INT y)
     }
 
     /* Window has not been found */
-    return NULL;
+    return pwndDesktop;
 }
 
 PCURICON_OBJECT

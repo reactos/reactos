@@ -35,6 +35,7 @@ CreateCallProc(IN PDESKTOP Desktop,
 
     NewCallProc = (PCALLPROCDATA)UserCreateObject(gHandleTable,
                                              Desktop,
+                                             NULL,
                                              &Handle,
                                              otCallProc,
                                              sizeof(CALLPROCDATA));

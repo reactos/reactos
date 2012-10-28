@@ -141,6 +141,9 @@ CsrpCaptureStringParameters(
     UNICODE_STRING TempStringU, ParamStringU;
     ANSI_STRING TempStringA;
 
+    if (SizeOfAllUnicodeStrings)
+        *SizeOfAllUnicodeStrings = 0;
+
     /* Read all strings from client space */
     for (nParam = 0; nParam < HardErrorMessage->NumberOfParameters; nParam++)
     {
@@ -227,7 +230,9 @@ CsrpCaptureStringParameters(
         return Status;
     }
 
-    *SizeOfAllUnicodeStrings = Size;
+    if (SizeOfAllUnicodeStrings)
+        *SizeOfAllUnicodeStrings = Size;
+
     return Status;
 }
 

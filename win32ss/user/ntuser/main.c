@@ -304,6 +304,7 @@ UserCreateThreadInfo(struct _ETHREAD *Thread)
     if (ptiCurrent->KeyboardLayout)
         UserReferenceObject(ptiCurrent->KeyboardLayout);
     ptiCurrent->TIF_flags &= ~TIF_INCLEANUP;
+    ptiCurrent->pcti = &ptiCurrent->cti;
 
     /* Initialize the CLIENTINFO */
     pci = (PCLIENTINFO)pTeb->Win32ClientInfo;
@@ -624,14 +625,16 @@ DriverEntry(
     DPRINT("Win32k hInstance 0x%p!\n",hModuleWin);
 
     /* Register Object Manager Callbacks */
-    CalloutData.WindowStationParseProcedure = IntWinStaObjectParse;
-    CalloutData.WindowStationDeleteProcedure = IntWinStaObjectDelete;
-    CalloutData.DesktopDeleteProcedure = IntDesktopObjectDelete;
     CalloutData.ProcessCallout = Win32kProcessCallback;
     CalloutData.ThreadCallout = Win32kThreadCallback;
-    CalloutData.BatchFlushRoutine = NtGdiFlushUserBatch;
-    CalloutData.DesktopOkToCloseProcedure = IntDesktopOkToClose;
+    CalloutData.WindowStationParseProcedure = IntWinStaObjectParse;
+    CalloutData.WindowStationDeleteProcedure = IntWinStaObjectDelete;
     CalloutData.WindowStationOkToCloseProcedure = IntWinstaOkToClose;
+    CalloutData.DesktopOkToCloseProcedure = IntDesktopOkToClose;
+    CalloutData.DesktopDeleteProcedure = IntDesktopObjectDelete;
+    CalloutData.DesktopCloseProcedure = IntDesktopObjectClose;
+    CalloutData.DesktopOpenProcedure = IntDesktopObjectOpen;
+    CalloutData.BatchFlushRoutine = NtGdiFlushUserBatch;
 
     /* Register our per-process and per-thread structures. */
     PsEstablishWin32Callouts((PWIN32_CALLOUTS_FPNS)&CalloutData);

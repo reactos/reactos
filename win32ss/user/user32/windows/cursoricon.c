@@ -2137,21 +2137,23 @@ User32SetupDefaultCursors(PVOID Arguments,
                           ULONG ArgumentLength)
 {
     BOOL *DefaultCursor = (BOOL*)Arguments;
-    LRESULT Result = TRUE;
+    HCURSOR hCursor; 
 
     if(*DefaultCursor)
     {
         /* set default cursor */
-        SetCursor(LoadCursorW(0, (LPCWSTR)IDC_ARROW));
+        hCursor = LoadCursorW(0, (LPCWSTR)IDC_ARROW);
+        SetCursor(hCursor);
     }
     else
     {
         /* FIXME load system cursor scheme */
         SetCursor(0);
-        SetCursor(LoadCursorW(0, (LPCWSTR)IDC_ARROW));
+        hCursor = LoadCursorW(0, (LPCWSTR)IDC_ARROW);
+        SetCursor(hCursor);
     }
 
-    return(ZwCallbackReturn(&Result, sizeof(LRESULT), STATUS_SUCCESS));
+    return(ZwCallbackReturn(&hCursor, sizeof(HCURSOR), STATUS_SUCCESS));
 }
 
 BOOL get_icon_size(HICON hIcon, SIZE *size)

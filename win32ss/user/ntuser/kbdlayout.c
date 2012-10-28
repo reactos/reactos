@@ -131,7 +131,7 @@ UserLoadKbdFile(PUNICODE_STRING pwszKLID)
                                  L"Control\\Keyboard Layouts\\";
 
     /* Create keyboard layout file object */
-    pkf = UserCreateObject(gHandleTable, NULL, NULL, otKBDfile, sizeof(KBDFILE));
+    pkf = UserCreateObject(gHandleTable, NULL, NULL, NULL, otKBDfile, sizeof(KBDFILE));
     if (!pkf)
     {
         ERR("Failed to create object!\n");
@@ -206,7 +206,7 @@ UserLoadKbdLayout(PUNICODE_STRING pwszKLID, HKL hKL)
     PKL pKl;
 
     /* Create keyboard layout object */
-    pKl = UserCreateObject(gHandleTable, NULL, NULL, otKBDlayout, sizeof(KL));
+    pKl = UserCreateObject(gHandleTable, NULL, NULL, NULL, otKBDlayout, sizeof(KL));
     if (!pKl)
     {
         ERR("Failed to create object!\n");

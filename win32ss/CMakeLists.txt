@@ -14,7 +14,6 @@ add_subdirectory(gdi/gdi32)
 add_subdirectory(reactx)
 add_subdirectory(user/consrv)
 add_subdirectory(user/user32)
-add_subdirectory(user/win32csr)
 add_subdirectory(user/winsrv)
 
 spec2def(win32k.sys win32k.spec ADD_IMPORTLIB)

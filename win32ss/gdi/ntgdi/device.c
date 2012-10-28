@@ -32,15 +32,15 @@ IntCreatePrimarySurface(VOID)
     SURFOBJ *pso;
     PDESKTOP rpDesk;
 
+    /* Create surface */
+    pso = &PDEVOBJ_pSurface(gppdevPrimary)->SurfObj;
+    SurfSize = pso->sizlBitmap;
+
     /* Attach monitor */
     UserAttachMonitor((HDEV)gppdevPrimary);
 
     DPRINT("IntCreatePrimarySurface, gppdevPrimary=%p, gppdevPrimary->pSurface = %p\n",
         gppdevPrimary, gppdevPrimary->pSurface);
-
-    /* Create surface */
-    pso = &PDEVOBJ_pSurface(gppdevPrimary)->SurfObj;
-    SurfSize = pso->sizlBitmap;
 
     /* Put the pointer in the center of the screen */
     gpsi->ptCursor.x = pso->sizlBitmap.cx / 2;
