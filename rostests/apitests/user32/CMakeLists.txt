@@ -3,6 +3,7 @@ list(APPEND SOURCE
     AttachThreadInput.c
     helper.c
     DeferWindowPos.c
+    DestroyCursorIcon.c
     desktop.c
     GetIconInfo.c
     GetKeyState.c
