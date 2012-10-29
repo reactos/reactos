@@ -2739,14 +2739,24 @@ NtUserSetCursorContents(
   HANDLE Handle,
   PICONINFO IconInfo);
 
-#if 0 // Correct type.
+#ifdef NEW_CURSORICON
 BOOL
 NTAPI
 NtUserSetCursorIconData(
-  HCURSOR hCursor,
-  PUNICODE_STRING ModuleName,
-  PUNICODE_STRING ResourceName,
-  PCURSORDATA pCursorData);
+  _In_ HCURSOR hCursor,
+  _In_ HINSTANCE hinst,
+  _In_ HRSRC hrsrc,
+  _In_ PICONINFO pii);
+#else
+BOOL
+NTAPI
+NtUserSetCursorIconData(
+  HANDLE Handle,
+  PBOOL fIcon,
+  POINT *Hotspot,
+  HMODULE hModule,
+  HRSRC hRsrc,
+  HRSRC hGroupRsrc);
 #endif
 
 DWORD
@@ -3360,16 +3370,6 @@ NTAPI
 NtUserMonitorFromWindow(
   IN HWND hWnd,
   IN DWORD dwFlags);
-
-BOOL
-NTAPI
-NtUserSetCursorIconData(
-  HANDLE Handle,
-  PBOOL fIcon,
-  POINT *Hotspot,
-  HMODULE hModule,
-  HRSRC hRsrc,
-  HRSRC hGroupRsrc);
 
 typedef struct _SETSCROLLBARINFO
 {

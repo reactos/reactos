@@ -8,6 +8,13 @@ typedef struct tagCURICON_PROCESS
   PPROCESSINFO Process;
 } CURICON_PROCESS, *PCURICON_PROCESS;
 
+typedef struct _CURICON_FRAME
+{
+    HBITMAP hbmMask;
+    HBITMAP hbmColor;
+    HBITMAP hbmAlpha;
+} CURICON_FRAME, *PCURICON_FRAME;
+
 typedef struct _CURICON_OBJECT
 {
   PROCMARKHEAD head;
@@ -16,10 +23,14 @@ typedef struct _CURICON_OBJECT
   LIST_ENTRY ProcessList;
   HMODULE hModule;
   HRSRC hRsrc;
+#ifndef NEW_CURSORICON
   HRSRC hGroupRsrc;
+#endif
   SIZE Size;
   BYTE Shadow;
-  ICONINFO IconInfo;
+  BOOL bIcon;
+  POINTL ptlHotspot;
+  CURICON_FRAME aFrame[1];
 } CURICON_OBJECT, *PCURICON_OBJECT;
 
 typedef struct _CURSORACCELERATION_INFO

@@ -146,10 +146,10 @@ UserSetCursor(
         {
             /* Call GDI to set the new screen cursor */
             GreSetPointerShape(hdcScreen,
-                               NewCursor->IconInfo.hbmMask,
-                               NewCursor->IconInfo.hbmColor,
-                               NewCursor->IconInfo.xHotspot,
-                               NewCursor->IconInfo.yHotspot,
+                               NewCursor->aFrame[0].hbmMask,
+                               NewCursor->aFrame[0].hbmColor,
+                               NewCursor->ptlHotspot.x,
+                               NewCursor->ptlHotspot.y,
                                gpsi->ptCursor.x,
                                gpsi->ptCursor.y);
         }
@@ -572,10 +572,10 @@ co_MsqInsertMouseMessage(MSG* Msg, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Hook
                {
                    /* Call GDI to set the new screen cursor */
                    GreSetPointerShape(hdcScreen,
-                                      MessageQueue->CursorObject->IconInfo.hbmMask,
-                                      MessageQueue->CursorObject->IconInfo.hbmColor,
-                                      MessageQueue->CursorObject->IconInfo.xHotspot,
-                                      MessageQueue->CursorObject->IconInfo.yHotspot,
+                                      MessageQueue->CursorObject->aFrame[0].hbmMask,
+                                      MessageQueue->CursorObject->aFrame[0].hbmColor,
+                                      MessageQueue->CursorObject->ptlHotspot.x,
+                                      MessageQueue->CursorObject->ptlHotspot.y,
                                       gpsi->ptCursor.x,
                                       gpsi->ptCursor.y);
                } else

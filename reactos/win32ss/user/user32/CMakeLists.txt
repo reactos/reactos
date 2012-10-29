@@ -41,7 +41,7 @@ list(APPEND SOURCE
     windows/caret.c
     windows/class.c
     windows/clipboard.c
-    windows/cursoricon.c
+#   windows/cursoricon.c
     windows/dc.c
     windows/defwnd.c
     windows/dialog.c
@@ -63,6 +63,12 @@ list(APPEND SOURCE
     windows/winpos.c
     user32.rc
     ${CMAKE_CURRENT_BINARY_DIR}/user32.def)
+
+if(USE_NEW_CURSORICON)
+    list(APPEND SOURCE windows/cursoricon_new.c)
+else()
+    list(APPEND SOURCE windows/cursoricon.c)
+endif()
 
 add_library(user32 SHARED ${SOURCE})
 set_module_type(user32 win32dll UNICODE)
