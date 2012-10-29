@@ -200,7 +200,6 @@ typedef struct tagHOOK
   struct _DESKTOP *rpdesk;
   /* ReactOS */
   LIST_ENTRY     Chain;      /* Hook chain entry */
-  struct _ETHREAD* Thread;   /* Thread owning the hook */
   HOOKPROC       Proc;       /* Hook function */
   BOOLEAN        Ansi;       /* Is it an Ansi hook? */
   UNICODE_STRING ModuleName; /* Module name for global hooks */
