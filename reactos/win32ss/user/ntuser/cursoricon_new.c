@@ -237,7 +237,7 @@ BOOLEAN FASTCALL
 IntDestroyCurIconObject(PCURICON_OBJECT CurIcon, PPROCESSINFO ppi)
 {
     PSYSTEM_CURSORINFO CurInfo;
-    HBITMAP bmpMask, bmpColor;
+    HBITMAP bmpMask, bmpColor, bmpAlpha;
     BOOLEAN Ret, bListEmpty, bFound = FALSE;
     PCURICON_PROCESS Current = NULL;
     
@@ -291,21 +291,28 @@ emptyList:
         UserSetCursor(NULL, TRUE);
     }
 
-    bmpMask = CurIcon->IconInfo.hbmMask;
-    bmpColor = CurIcon->IconInfo.hbmColor;
+    bmpMask = CurIcon->aFrame[0].hbmMask;
+    bmpColor = CurIcon->aFrame[0].hbmColor;
+    bmpAlpha = CurIcon->aFrame[0].hbmAlpha;
 
     /* Delete bitmaps */
     if (bmpMask)
     {
         GreSetObjectOwner(bmpMask, GDI_OBJ_HMGR_POWNED);
         GreDeleteObject(bmpMask);
-        CurIcon->IconInfo.hbmMask = NULL;
+        CurIcon->aFrame[0].hbmMask = NULL;
     }
     if (bmpColor)
     {
         GreSetObjectOwner(bmpColor, GDI_OBJ_HMGR_POWNED);
         GreDeleteObject(bmpColor);
-        CurIcon->IconInfo.hbmColor = NULL;
+        CurIcon->aFrame[0].hbmColor = NULL;
+    }
+    if (bmpAlpha)
+    {
+        GreSetObjectOwner(bmpAlpha, GDI_OBJ_HMGR_POWNED);
+        GreDeleteObject(bmpAlpha);
+        CurIcon->aFrame[0].hbmAlpha = NULL;
     }
 
     /* We were given a pointer, no need to keep the reference anylonger! */
@@ -361,18 +368,21 @@ NtUserGetIconInfo(
     {
         goto leave;
     }
-
-    RtlCopyMemory(&ii, &CurIcon->IconInfo, sizeof(ICONINFO));
+    
+    /* Fill data */
+    ii.fIcon = CurIcon->bIcon;
+    ii.xHotspot = CurIcon->ptlHotspot.x;
+    ii.yHotspot = CurIcon->ptlHotspot.y;
 
     /* Copy bitmaps */
-    ii.hbmMask = BITMAP_CopyBitmap(CurIcon->IconInfo.hbmMask);
-    ii.hbmColor = BITMAP_CopyBitmap(CurIcon->IconInfo.hbmColor);
+    ii.hbmMask = BITMAP_CopyBitmap(CurIcon->aFrame[0].hbmMask);
+    ii.hbmColor = BITMAP_CopyBitmap(CurIcon->aFrame[0].hbmColor);
 
     if (pbpp)
     {
         PSURFACE psurfBmp;
 
-        psurfBmp = SURFACE_ShareLockSurface(CurIcon->IconInfo.hbmColor);
+        psurfBmp = SURFACE_ShareLockSurface(CurIcon->aFrame[0].hbmColor);
         if (psurfBmp)
         {
             colorBpp = BitsPerFormat(psurfBmp->SurfObj.iBitmapFormat);
@@ -799,35 +809,103 @@ NtUserSetCursorContents(
         goto done;
     }
 
+#if 0
+    /* Check if we get valid information */
+    if(IconInfo.fIcon != CurInfo->bIcon)
+    {
+        EngSetLastError(ERROR_INVALID_PARAMETER);
+        goto done;
+    }
+#endif
+
     /* Delete old bitmaps */
-    if ((CurIcon->IconInfo.hbmColor)
-			&& (CurIcon->IconInfo.hbmColor != IconInfo.hbmColor))
-    {
-        GreDeleteObject(CurIcon->IconInfo.hbmColor);
-    }
-    if ((CurIcon->IconInfo.hbmMask)
-			&& CurIcon->IconInfo.hbmMask != IconInfo.hbmMask)
-    {
-        GreDeleteObject(CurIcon->IconInfo.hbmMask);
-    }
+    if (CurIcon->aFrame[0].hbmColor)
+        GreDeleteObject(CurIcon->aFrame[0].hbmColor);
+    if (CurIcon->aFrame[0].hbmMask)
+        GreDeleteObject(CurIcon->aFrame[0].hbmMask);
+    if(CurIcon->aFrame[0].hbmAlpha)
+        GreDeleteObject(CurIcon->aFrame[0].hbmAlpha);
 
-    /* Copy new IconInfo field */
-    CurIcon->IconInfo = IconInfo;
+    /* Set fields */
+    CurIcon->bIcon = IconInfo.fIcon;
+    CurIcon->ptlHotspot.x = IconInfo.xHotspot;
+    CurIcon->ptlHotspot.y = IconInfo.yHotspot;
+    CurIcon->aFrame[0].hbmMask = IconInfo.hbmMask;
+    CurIcon->aFrame[0].hbmColor = IconInfo.hbmColor;
+    CurIcon->aFrame[0].hbmAlpha = NULL;
 
-    if (CurIcon->IconInfo.hbmColor)
+    if (IconInfo.hbmColor)
     {
-        psurfBmp = SURFACE_ShareLockSurface(CurIcon->IconInfo.hbmColor);
+        BOOLEAN bAlpha = FALSE;
+        psurfBmp = SURFACE_ShareLockSurface(IconInfo.hbmColor);
         if (!psurfBmp)
             goto done;
-
         CurIcon->Size.cx = psurfBmp->SurfObj.sizlBitmap.cx;
         CurIcon->Size.cy = psurfBmp->SurfObj.sizlBitmap.cy;
+        
+        /* 32bpp bitmap is likely to have an alpha channel */
+        if(psurfBmp->SurfObj.iBitmapFormat == BMF_32BPP)
+        {
+            PFN_DIB_GetPixel fn_GetPixel = DibFunctionsForBitmapFormat[BMF_32BPP].DIB_GetPixel;
+            INT i, j;
+
+            fn_GetPixel = DibFunctionsForBitmapFormat[BMF_32BPP].DIB_GetPixel;
+            for (i = 0; i < psurfBmp->SurfObj.sizlBitmap.cx; i++)
+            {
+                for (j = 0; j < psurfBmp->SurfObj.sizlBitmap.cy; j++)
+                {
+                    bAlpha = ((BYTE)(fn_GetPixel(&psurfBmp->SurfObj, i, j) >> 24)) != 0;
+                    if (bAlpha)
+                        break;
+                }
+                if (bAlpha)
+                    break;
+            }
+        }
+        /* We're done with this one */
         SURFACE_ShareUnlockSurface(psurfBmp);
-        GreSetObjectOwner(CurIcon->IconInfo.hbmColor, GDI_OBJ_HMGR_PUBLIC);
+        GreSetObjectOwner(IconInfo.hbmColor, GDI_OBJ_HMGR_PUBLIC);
+        
+        if(bAlpha)
+        {
+            UCHAR Alpha;
+            PUCHAR ptr;
+            INT i, j;
+            /* Copy the bitmap */
+            CurIcon->aFrame[0].hbmAlpha = BITMAP_CopyBitmap(IconInfo.hbmColor);
+            if(!CurIcon->aFrame[0].hbmAlpha)
+            {
+                ERR("BITMAP_CopyBitmap failed!");
+                goto done;
+            }
+
+            psurfBmp = SURFACE_ShareLockSurface(CurIcon->aFrame[0].hbmAlpha);
+            if(!psurfBmp)
+            {
+                ERR("SURFACE_LockSurface failed!\n");
+                goto done;
+            }
+
+            /* Premultiply with the alpha channel value */
+            for (i = 0; i < psurfBmp->SurfObj.sizlBitmap.cy; i++)
+            {
+		        ptr = (PBYTE)psurfBmp->SurfObj.pvScan0 + i*psurfBmp->SurfObj.lDelta;
+                for (j = 0; j < psurfBmp->SurfObj.sizlBitmap.cx; j++)
+                {
+                    Alpha = ptr[3];
+                    ptr[0] = (ptr[0] * Alpha) / 0xff;
+                    ptr[1] = (ptr[1] * Alpha) / 0xff;
+                    ptr[2] = (ptr[2] * Alpha) / 0xff;
+			        ptr += 4;
+                }
+            }
+            SURFACE_ShareUnlockSurface(psurfBmp);
+            GreSetObjectOwner(CurIcon->aFrame[0].hbmAlpha, GDI_OBJ_HMGR_PUBLIC);
+        }
     }
     else
     {
-        psurfBmp = SURFACE_ShareLockSurface(CurIcon->IconInfo.hbmMask);
+        psurfBmp = SURFACE_ShareLockSurface(IconInfo.hbmMask);
         if (!psurfBmp)
             goto done;
 
@@ -836,11 +914,17 @@ NtUserSetCursorContents(
 
         SURFACE_ShareUnlockSurface(psurfBmp);
     }
-    GreSetObjectOwner(CurIcon->IconInfo.hbmMask, GDI_OBJ_HMGR_PUBLIC);
+    GreSetObjectOwner(IconInfo.hbmMask, GDI_OBJ_HMGR_PUBLIC);
 
     Ret = TRUE;
 
 done:
+
+    if(!Ret)
+    {
+        IntDestroyCurIconObject(CurIcon, PsGetCurrentProcessWin32Process());
+        CurIcon = NULL;
+    }
 
     if (CurIcon)
     {
@@ -858,20 +942,21 @@ CLEANUP:
 /*
  * @implemented
  */
-#if 0
+#ifdef NEW_CURSORICON
 BOOL
 APIENTRY
 NtUserSetCursorIconData(
-    HANDLE Handle,
-    HMODULE hModule,
-    PUNICODE_STRING pstrResName,
-    PICONINFO pIconInfo)
+  _In_ HCURSOR Handle,
+  _In_ HINSTANCE hinst,
+  _In_ HRSRC hrsrc,
+  _In_ PICONINFO pIconInfo)
 {
     PCURICON_OBJECT CurIcon;
     PSURFACE psurfBmp;
     NTSTATUS Status = STATUS_SUCCESS;
     BOOL Ret = FALSE;
     DECLARE_RETURN(BOOL);
+    ICONINFO ii;
 
     TRACE("Enter NtUserSetCursorIconData\n");
     UserEnterExclusive();
@@ -881,54 +966,96 @@ NtUserSetCursorIconData(
         RETURN(FALSE);
     }
 
-    CurIcon->hModule = hModule;
-    CurIcon->hRsrc = NULL; //hRsrc;
-    CurIcon->hGroupRsrc = NULL; //hGroupRsrc;
+    CurIcon->hModule = hinst;
+    CurIcon->hRsrc =hrsrc;
 
     _SEH2_TRY
     {
         ProbeForRead(pIconInfo, sizeof(ICONINFO), 1);
-        RtlCopyMemory(&CurIcon->IconInfo, pIconInfo, sizeof(ICONINFO));
-
-        CurIcon->IconInfo.hbmMask = BITMAP_CopyBitmap(pIconInfo->hbmMask);
-        CurIcon->IconInfo.hbmColor = BITMAP_CopyBitmap(pIconInfo->hbmColor);
-
-        if (CurIcon->IconInfo.hbmColor)
-        {
-            if ((psurfBmp = SURFACE_LockSurface(CurIcon->IconInfo.hbmColor)))
-            {
-                CurIcon->Size.cx = psurfBmp->SurfObj.sizlBitmap.cx;
-                CurIcon->Size.cy = psurfBmp->SurfObj.sizlBitmap.cy;
-                SURFACE_UnlockSurface(psurfBmp);
-                GreSetObjectOwner(CurIcon->IconInfo.hbmMask, GDI_OBJ_HMGR_PUBLIC);
-            }
-        }
-        if (CurIcon->IconInfo.hbmMask)
-        {
-            if (CurIcon->IconInfo.hbmColor == NULL)
-            {
-                if ((psurfBmp = SURFACE_LockSurface(CurIcon->IconInfo.hbmMask)))
-                {
-                    CurIcon->Size.cx = psurfBmp->SurfObj.sizlBitmap.cx;
-                    CurIcon->Size.cy = psurfBmp->SurfObj.sizlBitmap.cy;
-                    SURFACE_UnlockSurface(psurfBmp);
-                }
-            }
-            GreSetObjectOwner(CurIcon->IconInfo.hbmMask, GDI_OBJ_HMGR_PUBLIC);
-        }
+        ii = *pIconInfo;
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         Status = _SEH2_GetExceptionCode();
     }
     _SEH2_END
-
+    
     if (!NT_SUCCESS(Status))
+    {
         SetLastNtError(Status);
-    else
-        Ret = TRUE;
+        goto done;
+    }
+    
+    /* This is probably not what windows does, but consistency checks can't hurt */
+    if(CurIcon->bIcon != ii.fIcon)
+    {
+        EngSetLastError(ERROR_INVALID_PARAMETER);
+        goto done;
+    }
+    CurIcon->ptlHotspot.x = ii.xHotspot;
+    CurIcon->ptlHotspot.y = ii.yHotspot;
+    
+    if(!ii.hbmMask)
+    {
+        EngSetLastError(ERROR_INVALID_PARAMETER);
+        goto done;
+    }
+        
+    CurIcon->aFrame[0].hbmMask = BITMAP_CopyBitmap(ii.hbmMask);
+    if(!CurIcon->aFrame[0].hbmMask)
+        goto done;
 
+    if(ii.hbmColor)
+    {
+        CurIcon->aFrame[0].hbmColor = BITMAP_CopyBitmap(ii.hbmColor);
+        if(!CurIcon->aFrame[0].hbmColor)
+            goto done;
+    }
+
+    if (CurIcon->aFrame[0].hbmColor)
+    {
+        if ((psurfBmp = SURFACE_ShareLockSurface(CurIcon->aFrame[0].hbmColor)))
+        {
+            CurIcon->Size.cx = psurfBmp->SurfObj.sizlBitmap.cx;
+            CurIcon->Size.cy = psurfBmp->SurfObj.sizlBitmap.cy;
+            SURFACE_ShareUnlockSurface(psurfBmp);
+            GreSetObjectOwner(CurIcon->aFrame[0].hbmMask, GDI_OBJ_HMGR_PUBLIC);
+        }
+        else
+            goto done;
+    }
+    else
+    {
+       if ((psurfBmp = SURFACE_ShareLockSurface(CurIcon->aFrame[0].hbmMask)))
+        {
+            CurIcon->Size.cx = psurfBmp->SurfObj.sizlBitmap.cx;
+            CurIcon->Size.cy = psurfBmp->SurfObj.sizlBitmap.cy/2;
+            SURFACE_ShareUnlockSurface(psurfBmp);
+        }
+        else
+            goto done;
+    }
+    GreSetObjectOwner(CurIcon->aFrame[0].hbmMask, GDI_OBJ_HMGR_PUBLIC);
+    
+    Ret = TRUE;
+
+done:
     UserDereferenceObject(CurIcon);
+    if(!Ret)
+    {
+        if (CurIcon->aFrame[0].hbmMask)
+        {
+            GreSetObjectOwner(CurIcon->aFrame[0].hbmMask, GDI_OBJ_HMGR_POWNED);
+            GreDeleteObject(CurIcon->aFrame[0].hbmMask);
+            CurIcon->aFrame[0].hbmMask = NULL;
+        }
+        if (CurIcon->aFrame[0].hbmColor)
+        {
+            GreSetObjectOwner(CurIcon->aFrame[0].hbmColor, GDI_OBJ_HMGR_POWNED);
+            GreDeleteObject(CurIcon->aFrame[0].hbmColor);
+            CurIcon->aFrame[0].hbmColor = NULL;
+        }
+    }
     RETURN(Ret);
 
 CLEANUP:
@@ -949,7 +1076,6 @@ NtUserSetCursorIconData(
 {
     PCURICON_OBJECT CurIcon;
     NTSTATUS Status;
-    POINT SafeHotspot;
     BOOL Ret = FALSE;
     DECLARE_RETURN(BOOL);
 
@@ -968,7 +1094,7 @@ NtUserSetCursorIconData(
     /* Copy fields */
     if (fIcon)
     {
-        Status = MmCopyFromCaller(&CurIcon->IconInfo.fIcon, fIcon, sizeof(BOOL));
+        Status = MmCopyFromCaller(&CurIcon->bIcon, fIcon, sizeof(BOOL));
         if (!NT_SUCCESS(Status))
         {
             SetLastNtError(Status);
@@ -983,16 +1109,12 @@ NtUserSetCursorIconData(
 
     if (Hotspot)
     {
-        Status = MmCopyFromCaller(&SafeHotspot, Hotspot, sizeof(POINT));
-        if (NT_SUCCESS(Status))
+        Status = MmCopyFromCaller(&CurIcon->ptlHotspot, Hotspot, sizeof(POINT));
+        if (!NT_SUCCESS(Status))
         {
-            CurIcon->IconInfo.xHotspot = SafeHotspot.x;
-            CurIcon->IconInfo.yHotspot = SafeHotspot.y;
-
-            Ret = TRUE;
-        }
-        else
             SetLastNtError(Status);
+            goto done;
+        }
     }
 
     if (!fIcon && !Hotspot)
@@ -1004,10 +1126,14 @@ done:
 	if(Ret)
 	{
 		/* This icon is shared now */
-		GreSetObjectOwner(CurIcon->IconInfo.hbmMask, GDI_OBJ_HMGR_PUBLIC);
-		if(CurIcon->IconInfo.hbmColor)
+		GreSetObjectOwner(CurIcon->aFrame[0].hbmMask, GDI_OBJ_HMGR_PUBLIC);
+		if(CurIcon->aFrame[0].hbmColor)
 		{
-			GreSetObjectOwner(CurIcon->IconInfo.hbmColor, GDI_OBJ_HMGR_PUBLIC);
+			GreSetObjectOwner(CurIcon->aFrame[0].hbmColor, GDI_OBJ_HMGR_PUBLIC);
+		}
+		if(CurIcon->aFrame[0].hbmAlpha)
+		{
+			GreSetObjectOwner(CurIcon->aFrame[0].hbmAlpha, GDI_OBJ_HMGR_PUBLIC);
 		}
 	}
     UserDereferenceObject(CurIcon);
@@ -1044,8 +1170,8 @@ UserDrawIconEx(
     PSURFACE psurfDest, psurfMask, psurfColor, psurfOffScreen;
     PDC pdc = NULL;
     BOOL Ret = FALSE;
-    HBITMAP hbmMask, hbmColor;
-    BOOL bOffScreen, bAlpha = FALSE;
+    HBITMAP hbmMask, hbmColor, hbmAlpha;
+    BOOL bOffScreen;
     RECTL rcDest, rcSrc;
     CLIPOBJ* pdcClipObj = NULL;
     EXLATEOBJ exlo;
@@ -1057,8 +1183,9 @@ UserDrawIconEx(
         return FALSE;
     }
 
-    hbmMask = pIcon->IconInfo.hbmMask;
-    hbmColor = pIcon->IconInfo.hbmColor;
+    hbmMask = pIcon->aFrame[0].hbmMask;
+    hbmColor = pIcon->aFrame[0].hbmColor;
+    hbmAlpha = pIcon->aFrame[0].hbmAlpha;
     
     if (istepIfAniCur)
         ERR("NtUserDrawIconEx: istepIfAniCur is not supported!\n");
@@ -1091,35 +1218,11 @@ UserDrawIconEx(
     /* Set source rect */
     RECTL_vSetRect(&rcSrc, 0, 0, pIcon->Size.cx, pIcon->Size.cy);
 
-    /* Check for alpha */
-    if (psurfColor &&
-       (psurfColor->SurfObj.iBitmapFormat == BMF_32BPP) &&
-       (diFlags & DI_IMAGE))
-    {
-        PFN_DIB_GetPixel fnSource_GetPixel = NULL;
-        INT i, j;
-
-        /* In order to correctly display 32 bit icons Windows first scans the image,
-           because information about transparency is not stored in any image's headers */
-        fnSource_GetPixel = DibFunctionsForBitmapFormat[BMF_32BPP].DIB_GetPixel;
-        for (i = 0; i < psurfColor->SurfObj.sizlBitmap.cx; i++)
-        {
-            for (j = 0; j < psurfColor->SurfObj.sizlBitmap.cy; j++)
-            {
-                bAlpha = ((BYTE)(fnSource_GetPixel(&psurfColor->SurfObj, i, j) >> 24) & 0xff);
-                if (bAlpha)
-                    break;
-            }
-            if (bAlpha)
-                break;
-        }
-    }
-
     /* Fix width parameter, if needed */
     if (!cxWidth)
     {
         if(diFlags & DI_DEFAULTSIZE)
-            cxWidth = pIcon->IconInfo.fIcon ? 
+            cxWidth = pIcon->bIcon ? 
                 UserGetSystemMetrics(SM_CXICON) : UserGetSystemMetrics(SM_CXCURSOR);
         else
             cxWidth = pIcon->Size.cx;
@@ -1129,7 +1232,7 @@ UserDrawIconEx(
     if (!cyHeight)
     {
         if(diFlags & DI_DEFAULTSIZE)
-            cyHeight = pIcon->IconInfo.fIcon ? 
+            cyHeight = pIcon->bIcon ? 
                 UserGetSystemMetrics(SM_CYICON) : UserGetSystemMetrics(SM_CYCURSOR);
         else
             cyHeight = pIcon->Size.cy;
@@ -1238,42 +1341,16 @@ UserDrawIconEx(
     }
 
     /* Now do the rendering */
-	if(bAlpha && (diFlags & DI_IMAGE))
+	if(hbmAlpha && (diFlags & DI_IMAGE))
 	{
 	    BLENDOBJ blendobj = { {AC_SRC_OVER, 0, 255, AC_SRC_ALPHA } };
-        BYTE Alpha;
-        INT i, j;
         PSURFACE psurf = NULL;
-        PBYTE ptr ;
-        HBITMAP hsurfCopy = NULL;
 
-        hsurfCopy = BITMAP_CopyBitmap(hbmColor);
-        if(!hsurfCopy)
-        {
-            ERR("BITMAP_CopyBitmap failed!");
-            goto CleanupAlpha;
-        }
-
-        psurf = SURFACE_ShareLockSurface(hsurfCopy);
+        psurf = SURFACE_ShareLockSurface(hbmAlpha);
         if(!psurf)
         {
             ERR("SURFACE_LockSurface failed!\n");
-            goto CleanupAlpha;
-        }
-
-        /* Premultiply with the alpha channel value */
-        for (i = 0; i < psurf->SurfObj.sizlBitmap.cy; i++)
-        {
-			ptr = (PBYTE)psurf->SurfObj.pvScan0 + i*psurf->SurfObj.lDelta;
-            for (j = 0; j < psurf->SurfObj.sizlBitmap.cx; j++)
-            {
-                Alpha = ptr[3];
-                ptr[0] = (ptr[0] * Alpha) / 0xff;
-                ptr[1] = (ptr[1] * Alpha) / 0xff;
-                ptr[2] = (ptr[2] * Alpha) / 0xff;
-
-				ptr += 4;
-            }
+            goto NoAlpha;
         }
         
         /* Initialize color translation object */
@@ -1289,14 +1366,11 @@ UserDrawIconEx(
                                &blendobj);
         
         EXLATEOBJ_vCleanup(&exlo);
-        
-    CleanupAlpha:
-        if(psurf) SURFACE_ShareUnlockSurface(psurf);
-        if(hsurfCopy) NtGdiDeleteObjectApp(hsurfCopy);
-		if(Ret) goto done;
+        SURFACE_ShareUnlockSurface(psurf);
+        if(Ret) goto done;
 		ERR("NtGdiAlphaBlend failed!\n");
     }
-
+NoAlpha:
     if (diFlags & DI_MASK)
     {
         DWORD rop4 = (diFlags & DI_IMAGE) ? ROP4_SRCAND : ROP4_SRCCOPY;
