@@ -41,7 +41,11 @@ START_TEST(DestroyCursorIcon)
     ok(DestroyCursor(hcursor), "\n");
     
     /* In fact, it's still there */
+    ZeroMemory(&iconinfo, sizeof(iconinfo));
     ok(GetIconInfo(hcursor, &iconinfo), "\n");
+    ok(iconinfo.hbmMask != NULL, "\n");
+    ok(iconinfo.hbmColor != NULL, "\n");
+    ok(!iconinfo.fIcon, "\n");
     
     /* clean up */
     DeleteObject(iconinfo.hbmMask);
