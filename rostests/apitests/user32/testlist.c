@@ -7,6 +7,7 @@
 
 extern void func_AttachThreadInput(void);
 extern void func_DeferWindowPos(void);
+extern void func_DestroyCursorIcon(void);
 extern void func_desktop(void);
 extern void func_GetIconInfo(void);
 extern void func_GetKeyState(void);
@@ -28,6 +29,7 @@ const struct test winetest_testlist[] =
     { "AttachThreadInput", func_AttachThreadInput },
     { "desktop", func_desktop },
     { "DeferWindowPos", func_DeferWindowPos },
+    { "DestroyCursorIcon", func_DestroyCursorIcon },
     { "GetIconInfo", func_GetIconInfo },
     { "GetKeyState", func_GetKeyState },
     { "GetPeekMessage", func_GetPeekMessage },
