@@ -526,7 +526,7 @@ NtUserCloseWindowStation(
 
 	if (hWinSta == UserGetProcessWindowStation())
 	{
-        ERR("Attempted to close process window station");
+        ERR("Attempted to close process window station\n");
 		return FALSE;
 	}
 
@@ -612,19 +612,13 @@ NtUserGetObjectInformation(
 
    /* try windowstation */
    TRACE("Trying to open window station 0x%x\n", hObject);
-   Status = IntValidateWindowStationHandle(
+   Status = ObReferenceObjectByHandle(
                hObject,
-               UserMode,
                0,
-               &WinStaObject);
-
-
-   if (!NT_SUCCESS(Status) && Status != STATUS_OBJECT_TYPE_MISMATCH)
-   {
-      TRACE("Failed: 0x%x\n", Status);
-      SetLastNtError(Status);
-      return FALSE;
-   }
+               ExWindowStationObjectType,
+               UserMode,
+               (PVOID*)&WinStaObject,
+               NULL);
 
    if (Status == STATUS_OBJECT_TYPE_MISMATCH)
    {
@@ -635,13 +629,15 @@ NtUserGetObjectInformation(
                   UserMode,
                   0,
                   &DesktopObject);
-      if (!NT_SUCCESS(Status))
-      {
-         TRACE("Failed: 0x%x\n", Status);
-         SetLastNtError(Status);
-         return FALSE;
-      }
    }
+
+   if (!NT_SUCCESS(Status))
+   {
+      ERR("Failed: 0x%x\n", Status);
+      SetLastNtError(Status);
+      return FALSE;
+   }
+
    TRACE("WinSta or Desktop opened!!\n");
 
    /* get data */
@@ -713,8 +709,13 @@ NtUserGetObjectInformation(
    if (DesktopObject != NULL)
       ObDereferenceObject(DesktopObject);
 
-   SetLastNtError(Status);
-   return NT_SUCCESS(Status);
+   if (!NT_SUCCESS(Status))
+   {
+      SetLastNtError(Status);
+      return FALSE;
+   }
+
+   return TRUE;
 }
 
 /*
