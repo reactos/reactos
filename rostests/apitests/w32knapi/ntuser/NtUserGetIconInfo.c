@@ -109,7 +109,9 @@ Test_NtUserGetIconInfo(PTESTINFO pti)
 
 	TEST(hIcon != NULL);
 
-	RtlInitUnicodeString(&hInstStr, NULL);
+    hInstStr.Buffer = HeapAlloc(GetProcessHeap(), 0, MAX_PATH * sizeof(WCHAR));
+    hInstStr.MaximumLength = MAX_PATH;
+    hInstStr.Length = 0;
 	RtlInitUnicodeString(&ResourceStr, NULL);
 
 	TEST(NtUserGetIconInfo(hIcon,
@@ -119,15 +121,16 @@ Test_NtUserGetIconInfo(PTESTINFO pti)
 						   &bpp,
 						   FALSE) == TRUE);
 	
-	TESTX(hInstStr.Buffer == NULL, "hInstStr.buffer : %p\n", hInstStr.Buffer);
-	TEST(hInstStr.Length == 0);
-	TEST(hInstStr.MaximumLength == 0);
+	TEST(hInstStr.Length != 0);
+    hInstStr.Buffer[hInstStr.Length] = 0;
+	printf("%s,%i: hInstStr.buffer : %S\n", __FUNCTION__, __LINE__, hInstStr.Buffer);
 	TEST((LPCTSTR)ResourceStr.Buffer == MAKEINTRESOURCE(293));
 	TEST(ResourceStr.Length == 0);
 	TEST(ResourceStr.MaximumLength == 0);
 	TEST(bpp == 32);
 
-	RtlInitUnicodeString(&hInstStr, NULL);
+	ZeroMemory(hInstStr.Buffer, MAX_PATH*sizeof(WCHAR));
+    hInstStr.Length = 0;
 	RtlInitUnicodeString(&ResourceStr, NULL);
 
 	TEST(NtUserGetIconInfo(hIcon,
@@ -137,9 +140,9 @@ Test_NtUserGetIconInfo(PTESTINFO pti)
 						   &bpp,
 						   TRUE) == TRUE);
 	
-	TESTX(hInstStr.Buffer == NULL, "hInstStr.buffer : %p\n", hInstStr.Buffer);
-	TEST(hInstStr.Length == 0);
-	TEST(hInstStr.MaximumLength == 0);
+    TEST(hInstStr.Length != 0);
+    hInstStr.Buffer[hInstStr.Length] = 0;
+	printf("%s,%i: hInstStr.buffer : %S\n", __FUNCTION__, __LINE__, hInstStr.Buffer);
 	TEST((LPCTSTR)ResourceStr.Buffer == MAKEINTRESOURCE(293));
 	TEST(bpp == 32);
 
