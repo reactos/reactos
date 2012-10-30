@@ -14,6 +14,7 @@ extern void func_GetKeyState(void);
 extern void func_GetPeekMessage(void);
 extern void func_GetSystemMetrics(void);
 extern void func_InitializeLpkHooks(void);
+extern void func_LoadImage(void);
 extern void func_RealGetWindowClass(void);
 extern void func_ScrollDC(void);
 extern void func_ScrollWindowEx(void);
@@ -35,6 +36,7 @@ const struct test winetest_testlist[] =
     { "GetPeekMessage", func_GetPeekMessage },
     { "GetSystemMetrics", func_GetSystemMetrics },
     { "InitializeLpkHooks", func_InitializeLpkHooks },
+    { "LoadImage", func_LoadImage },
     { "RealGetWindowClass", func_RealGetWindowClass },
     { "ScrollDC", func_ScrollDC },
     { "ScrollWindowEx", func_ScrollWindowEx },

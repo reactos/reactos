@@ -10,6 +10,7 @@ list(APPEND SOURCE
     GetPeekMessage.c
     GetSystemMetrics.c
     InitializeLpkHooks.c
+    LoadImage.c
     RealGetWindowClass.c
     ScrollDC.c
     ScrollWindowEx.c
