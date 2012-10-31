@@ -132,6 +132,33 @@ void Test_InitialDesktop(char *argv0)
     test_CreateProcessWithDesktop(8, argv0, "NonExistantWinsta\\NonExistantDesktop", 0);
 }
 
+void Test_OpenInputDesktop()
+{
+    HDESK hDeskInput ,hDeskInput2;
+    HDESK hDeskInitial;
+    BOOL ret;
+
+    hDeskInput = OpenInputDesktop(0, FALSE, DESKTOP_ALL_ACCESS);
+    ok(hDeskInput != NULL, "OpenInputDesktop failed\n");
+    hDeskInitial = GetThreadDesktop( GetCurrentThreadId() );
+    ok(hDeskInitial != NULL, "GetThreadDesktop failed\n");
+    ok(hDeskInput != hDeskInitial, "OpenInputDesktop returned thread desktop\n");
+
+    hDeskInput2 = OpenInputDesktop(0, FALSE, DESKTOP_ALL_ACCESS);
+    ok(hDeskInput2 != NULL, "Second call to OpenInputDesktop failed\n");
+    ok(hDeskInput2 != hDeskInput, "Second call to OpenInputDesktop returned same handle\n"); 
+
+    ok(CloseDesktop(hDeskInput2) != 0, "CloseDesktop failed\n");
+
+    ret = SetThreadDesktop(hDeskInput);
+    ok(ret == TRUE, "SetThreadDesktop for input desktop failed\n");
+
+    ret = SetThreadDesktop(hDeskInitial);
+    ok(ret == TRUE, "SetThreadDesktop for initial desktop failed\n");
+
+    ok(CloseDesktop(hDeskInput) != 0, "CloseDesktop failed\n");
+}
+
 START_TEST(desktop)
 {
     char **test_argv;
@@ -151,4 +178,5 @@ START_TEST(desktop)
     }
 	
     Test_InitialDesktop(test_argv[0]);
+    Test_OpenInputDesktop();    
 }
