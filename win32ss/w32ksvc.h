@@ -517,7 +517,11 @@ SVC_(UserSetClipboardViewer, 1)
 SVC_(UserSetConsoleReserveKeys, 2)
 SVC_(UserSetCursor, 1)
 SVC_(UserSetCursorContents, 2)
+#ifdef NEW_CURSORICON
+SVC_(UserSetCursorIconData, 4)
+#else
 SVC_(UserSetCursorIconData, 6)
+#endif
 SVC_(UserSetDbgTag, 2)
 SVC_(UserSetFocus, 1)
 SVC_(UserSetImeHotKey, 5)
