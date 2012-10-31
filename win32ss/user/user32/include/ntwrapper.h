@@ -806,7 +806,7 @@ EXTINLINE PVOID NtUserxGetDesktopMapping(PVOID ptr)
 
 EXTINLINE BOOL NtUserxGetCursorPos(POINT* lpPoint)
 {
-    return (BOOL)NtUserCallOneParam((DWORD_PTR)lpPoint, ONEPARAM_ROUTINE_GETCURSORPOSITION);
+    return (BOOL)NtUserCallOneParam((DWORD_PTR)lpPoint, ONEPARAM_ROUTINE_GETCURSORPOS);
 }
 
 EXTINLINE BOOL NtUserxSetMenuBarHeight(HMENU menu, INT height)
