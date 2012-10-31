@@ -250,8 +250,8 @@ co_IntCallLowLevelHook(PHOOK Hook,
     BOOL Block = FALSE;
     ULONG_PTR uResult = 0;
 
-    if (Hook->Thread)
-       pti = Hook->Thread->Tcb.Win32Thread;
+    if (Hook->ptiHooked)
+       pti = Hook->ptiHooked;
     else
        pti = Hook->head.pti;
 
@@ -990,9 +990,9 @@ IntGetNextHook(PHOOK Hook)
     PLIST_ENTRY pLastHead, pElem;
     PTHREADINFO pti;
 
-    if (Hook->Thread)
+    if (Hook->ptiHooked)
     {
-       pti = ((PTHREADINFO)Hook->Thread->Tcb.Win32Thread);
+       pti = Hook->ptiHooked;
        pLastHead = &pti->aphkStart[HOOKID_TO_INDEX(HookId)];
     }
     else
@@ -1035,9 +1035,9 @@ IntRemoveHook(PHOOK Hook)
 
     HookId = Hook->HookId;
 
-    if (Hook->Thread) // Local
+    if (Hook->ptiHooked) // Local
     {
-       pti = ((PTHREADINFO)Hook->Thread->Tcb.Win32Thread);
+       pti = Hook->ptiHooked;
 
        IntFreeHook( Hook);
 
@@ -1496,8 +1496,6 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
 
        ptiHook = Thread->Tcb.Win32Thread;
 
-       ObDereferenceObject(Thread);
-
        if ( ptiHook->rpdesk != pti->rpdesk) // gptiCurrent->rpdesk)
        {
           ERR("Local hook wrong desktop HookId: %d\n",HookId);
@@ -1577,7 +1575,6 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
     }
 
     Hook->ihmod   = (INT)Mod; // Module Index from atom table, Do this for now.
-    Hook->Thread  = Thread; /* Set Thread, Null is Global. */
     Hook->HookId  = HookId;
     Hook->rpdesk  = ptiHook->rpdesk;
     Hook->phkNext = NULL; /* Dont use as a chain! Use link lists for chaining. */
@@ -1684,6 +1681,7 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
 
 CLEANUP:
     TRACE("Leave NtUserSetWindowsHookEx, ret=%i\n",_ret_);
+    if (Thread) ObDereferenceObject(Thread);
     UserLeave();
     END_CLEANUP;
 }

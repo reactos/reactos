@@ -1,5 +1,6 @@
 
 set(USE_DIBLIB FALSE)
+set(USE_NEW_CURSORICON FALSE)
 
 # Give WIN32 subsystem its own project.
 PROJECT(WIN32SS)
@@ -103,7 +104,6 @@ list(APPEND SOURCE
     user/ntuser/class.c
     user/ntuser/clipboard.c
     user/ntuser/csr.c
-    user/ntuser/cursoricon.c
     user/ntuser/defwnd.c
     user/ntuser/desktop.c
     user/ntuser/display.c
@@ -188,6 +188,13 @@ else()
         gdi/dib/dib.c
         gdi/eng/copybits.c
         ${GENDIB_FILES})
+endif()
+
+if(USE_NEW_CURSORICON)
+    add_definitions(-DNEW_CURSORICON)
+    list(APPEND SOURCE user/ntuser/cursoricon_new.c)
+else()
+    list(APPEND SOURCE user/ntuser/cursoricon.c)
 endif()
 
 if(ARCH STREQUAL "i386")

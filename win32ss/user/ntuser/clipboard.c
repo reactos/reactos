@@ -211,6 +211,9 @@ IntSynthesizeDib(
     /* Add the clipboard data */
     IntAddFormatedData(pWinStaObj, CF_DIB, hMem, TRUE, TRUE);
 
+    /* Release the extra reference (UserCreateObject added 2 references) */
+    UserDereferenceObject(pClipboardData);
+
 cleanup:
     UserReleaseDC(NULL, hdc, FALSE);
 }
@@ -302,6 +305,9 @@ IntAddSynthesizedFormats(PWINSTATION_OBJECT pWinStaObj)
             *((LCID*)pMemObj->Data) = NtCurrentTeb()->CurrentLocale;
             IntAddFormatedData(pWinStaObj, CF_LOCALE, hMem, TRUE, TRUE);
         }
+
+        /* Release the extra reference (UserCreateObject added 2 references) */
+        UserDereferenceObject(pMemObj);
     }
 
     /* Add CF_TEXT. Note: it is synthesized in user32.dll */
@@ -1098,6 +1104,9 @@ NtUserConvertMemHandle(
         pMemObj = NULL;
     }
     _SEH2_END;
+
+    /* Release the extra reference (UserCreateObject added 2 references) */
+    UserDereferenceObject(pMemObj);
 
     /* If we failed to copy data, remove handle */
     if (!pMemObj)

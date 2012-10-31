@@ -48,7 +48,8 @@ GetUserObjectInformationA(
   LPDWORD lpnLengthNeeded)
 {
   LPWSTR buffer;
-  BOOL ret = TRUE;
+  BOOL ret = FALSE;
+  DWORD LengthNeeded;
 
   TRACE("GetUserObjectInformationA(%x %d %x %d %x)\n", hObj, nIndex,
          pvInfo, nLength, lpnLengthNeeded);
@@ -65,17 +66,16 @@ GetUserObjectInformationA(
   }
 
   /* get unicode string */
-  if (!GetUserObjectInformationW(hObj, nIndex, buffer, nLength*2, lpnLengthNeeded))
-    ret = FALSE;
-  *lpnLengthNeeded /= 2;
-
-  if (ret)
+  if (GetUserObjectInformationW(hObj, nIndex, buffer, nLength*2, lpnLengthNeeded))
   {
     /* convert string */
-    if (WideCharToMultiByte(CP_THREAD_ACP, 0, buffer, -1,
-                            pvInfo, nLength, NULL, NULL) == 0)
+    LengthNeeded = WideCharToMultiByte(CP_THREAD_ACP, 0, buffer, -1,
+                                       pvInfo, nLength, NULL, NULL);
+
+    if (LengthNeeded != 0)
     {
-      ret = FALSE;
+        *lpnLengthNeeded = LengthNeeded;
+        ret = TRUE;
     }
   }
 

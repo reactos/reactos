@@ -516,6 +516,38 @@ UserReferenceObjectByHandle(HANDLE handle, USER_OBJECT_TYPE type)
     return object;
 }
 
+VOID
+FASTCALL
+UserSetObjectOwner(PVOID obj, USER_OBJECT_TYPE type, PVOID owner)
+{
+    PUSER_HANDLE_ENTRY entry = handle_to_entry(gHandleTable, ((PHEAD)obj)->h );
+    PPROCESSINFO ppi, oldppi;
+    
+    /* This must be called with a valid object */
+    ASSERT(entry);
+    
+    /* For now, only supported for CursorIcon object */
+    switch(type)
+    {
+        case otCursorIcon:
+            ppi = (PPROCESSINFO)owner;
+            entry->pi = ppi;
+            oldppi = ((PPROCMARKHEAD)obj)->ppi;
+            ((PPROCMARKHEAD)obj)->ppi = ppi;
+            break;
+        default:
+            ASSERT(FALSE);
+            return;
+    }
+
+    oldppi->UserHandleCount--;
+    ppi->UserHandleCount++;
+#if DBG
+    oldppi->DbgHandleCount[type]--;
+    ppi->DbgHandleCount[type]++;
+#endif
+}
+
 /*
  * NtUserValidateHandleSecure
  *
