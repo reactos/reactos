@@ -26,7 +26,7 @@ IntFreeDesktopHeap(IN PDESKTOP pdesk);
 /* GLOBALS *******************************************************************/
 
 /* Currently active desktop */
-PDESKTOP InputDesktop = NULL;
+PDESKTOP gpdeskInputDesktop = NULL;
 HDESK InputDesktopHandle = NULL;
 HDC ScreenDeviceContext = NULL;
 PTHREADINFO gptiDesktopThread;
@@ -420,7 +420,7 @@ IntValidateDesktopHandle(
 PDESKTOP FASTCALL
 IntGetActiveDesktop(VOID)
 {
-   return InputDesktop;
+   return gpdeskInputDesktop;
 }
 
 /*
@@ -1654,7 +1654,7 @@ NtUserSwitchDesktop(HDESK hdesk)
    InputWindowStation->ActiveDesktop = pdesk;
 
    /* Set the global state. */
-   InputDesktop = pdesk;
+   gpdeskInputDesktop = pdesk;
    InputDesktopHandle = hdesk;
    TRACE("SwitchDesktop InputDesktopHandle 0x%p\n",InputDesktopHandle);
    ObDereferenceObject(pdesk);

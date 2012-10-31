@@ -259,25 +259,6 @@ NtUserCallOneParam(
 			RETURN(Result);
          }
 
-      case ONEPARAM_ROUTINE_GETCURSORPOSITION:
-         {
-             BOOL ret = TRUE;
-
-            _SEH2_TRY
-            {
-               ProbeForWrite((POINT*)Param,sizeof(POINT),1);
-               RtlCopyMemory((POINT*)Param,&gpsi->ptCursor,sizeof(POINT));
-            }
-            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-            {
-                SetLastNtError(_SEH2_GetExceptionCode());
-                ret = FALSE;
-            }
-            _SEH2_END;
-
-            RETURN (ret);
-         }
-
       case ONEPARAM_ROUTINE_ENABLEPROCWNDGHSTING:
          {
             BOOL Enable;
@@ -334,9 +315,10 @@ NtUserCallOneParam(
           BOOL Ret = TRUE;
           PPOINTL pptl;
           PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
-          if (pti->hdesk != InputDesktopHandle) RETURN(FALSE);
+          if (pti->rpdesk != IntGetActiveDesktop()) RETURN(FALSE);
           _SEH2_TRY
           {
+              ProbeForWrite((POINT*)Param,sizeof(POINT),1);
              pptl = (PPOINTL)Param;
              *pptl = gpsi->ptCursor;
           }
