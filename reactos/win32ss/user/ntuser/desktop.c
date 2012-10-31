@@ -27,7 +27,6 @@ IntFreeDesktopHeap(IN PDESKTOP pdesk);
 
 /* Currently active desktop */
 PDESKTOP gpdeskInputDesktop = NULL;
-HDESK InputDesktopHandle = NULL;
 HDC ScreenDeviceContext = NULL;
 PTHREADINFO gptiDesktopThread;
 HCURSOR gDesktopCursor = NULL;
@@ -1464,40 +1463,31 @@ NtUserOpenInputDesktop(
    BOOL fInherit,
    ACCESS_MASK dwDesiredAccess)
 {
-   PDESKTOP pdesk;
    NTSTATUS Status;
    HDESK hdesk = NULL;
+   ULONG HandleAttributes = 0;
 
    UserEnterExclusive();
-   TRACE("Enter NtUserOpenInputDesktop InputDesktopHandle 0x%p\n",InputDesktopHandle);
+   TRACE("Enter NtUserOpenInputDesktop gpdeskInputDesktop 0x%p\n",gpdeskInputDesktop);
 
-   /* Get a pointer to the desktop object */
-   Status = IntValidateDesktopHandle(InputDesktopHandle, UserMode, 0, &pdesk);
-   if (!NT_SUCCESS(Status))
-   {
-      ERR("Validation of input desktop handle (0x%p) failed\n", InputDesktopHandle);
-      goto Exit;
-   }
+   if(fInherit) HandleAttributes = OBJ_INHERIT;
 
    /* Create a new handle to the object */
    Status = ObOpenObjectByPointer(
-               pdesk,
-               0,
+               gpdeskInputDesktop,
+               HandleAttributes,
                NULL,
                dwDesiredAccess,
                ExDesktopObjectType,
                UserMode,
                (PHANDLE)&hdesk);
 
-   ObDereferenceObject(pdesk);
-
    if (!NT_SUCCESS(Status))
    {
        ERR("Failed to open input desktop object\n");
        SetLastNtError(Status);
-       goto Exit;
    }
-Exit:
+
    TRACE("NtUserOpenInputDesktop returning 0x%p\n",hdesk);
    UserLeave();
    return hdesk;
@@ -1655,8 +1645,7 @@ NtUserSwitchDesktop(HDESK hdesk)
 
    /* Set the global state. */
    gpdeskInputDesktop = pdesk;
-   InputDesktopHandle = hdesk;
-   TRACE("SwitchDesktop InputDesktopHandle 0x%p\n",InputDesktopHandle);
+   TRACE("SwitchDesktop gpdeskInputDesktop 0x%p\n",gpdeskInputDesktop);
    ObDereferenceObject(pdesk);
 
    RETURN(TRUE);

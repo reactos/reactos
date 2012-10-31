@@ -70,7 +70,6 @@ typedef struct _DESKTOP
                             DESKTOP_WRITEOBJECTS
 
 extern PDESKTOP InputDesktop;
-extern HDESK InputDesktopHandle;
 extern PCLS DesktopWindowClass;
 extern HDC ScreenDeviceContext;
 extern PTHREADINFO gptiDesktopThread;
