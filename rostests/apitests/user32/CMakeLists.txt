@@ -2,8 +2,10 @@
 list(APPEND SOURCE
     AttachThreadInput.c
     helper.c
+    CreateIconFromResourceEx.c
     DeferWindowPos.c
     DestroyCursorIcon.c
+    DrawIconEx.c
     desktop.c
     GetIconInfo.c
     GetKeyState.c
