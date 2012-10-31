@@ -159,7 +159,48 @@ void Test_SetCursorPos()
 
 }
 
+void Test_DesktopAccess()
+{
+    HDESK hDesk, hDeskInitial;
+    POINT curPoint, initialPoint;
+    BOOL ret;
+
+    hDeskInitial = GetThreadDesktop(GetCurrentThreadId());
+    ok(hDeskInitial != NULL, "Failed to retrieve the initial desktop\n");
+
+    ret = GetCursorPos(&initialPoint);
+    ok(ret == TRUE, "GetCursorPos should succed\n");
+
+    hDesk = CreateDesktopW(L"testDesktop", NULL, NULL, 0, 0x01ff, NULL);
+    ok(hDesk != 0, "Failed to create a new desktop\n");
+    SetThreadDesktop(hDesk);
+    ok(GetThreadDesktop(GetCurrentThreadId()) == hDesk, "SetThreadDesktop had no effect\n");
+
+    SetLastError(0xdeadbeef);
+
+    ret = GetCursorPos(&curPoint);
+    ok(ret == FALSE, "GetCursorPos should fail\n");
+
+    ok(GetLastError() == ERROR_ACCESS_DENIED, "Expected ERROR_ACCESS_DENIED got 0x%lu\n", GetLastError());
+    SetLastError(0xdeadbeef);
+
+    ret = SetCursorPos(2,2);
+    ok(ret == FALSE, "SetCursorPos should fail\n");
+
+    ok(GetLastError() == 0xdeadbeef, "Wrong last error, got 0x%lu\n", GetLastError());
+
+    ret = GetCursorPos(&curPoint);
+    ok(ret == FALSE, "GetCursorPos should fail\n");
+
+    SetThreadDesktop(hDeskInitial);
+
+    ret = GetCursorPos(&curPoint);
+    ok(ret == TRUE, "GetCursorPos should succed\n");
+    ok(curPoint.x ==  initialPoint.x && curPoint.y ==  initialPoint.y, "Mouse position changed\n");
+}
+
 START_TEST(SetCursorPos)
 {
+    Test_DesktopAccess();
     Test_SetCursorPos();
 }
