@@ -1604,8 +1604,8 @@ LRESULT WINAPI DefMDIChildProcW( HWND hwnd, UINT message,
 #ifndef __REACTOS__
     case WM_SETVISIBLE:
 #endif
-        if (ci->hwndChildMaximized) ci->mdiFlags &= ~MDIF_NEEDUPDATE;
-        else MDI_PostUpdate(client, ci, SB_BOTH+1);
+        /*if (ci->hwndChildMaximized) ci->mdiFlags &= ~MDIF_NEEDUPDATE;
+        else*/ MDI_PostUpdate(client, ci, SB_BOTH+1);
         break;
 
     case WM_SIZE:
@@ -1843,7 +1843,6 @@ void WINAPI CalcChildScroll( HWND hwnd, INT scroll )
         }
         HeapFree( GetProcessHeap(), 0, list );
     }
-    MapWindowPoints( 0, hwnd, (POINT *)&childRect, 2 );
     UnionRect( &childRect, &clientRect, &childRect );
 
     /* set common info values */
