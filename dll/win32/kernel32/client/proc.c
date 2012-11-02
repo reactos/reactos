@@ -1,10 +1,9 @@
-/* $Id: proc.c 57086 2012-08-16 15:39:40Z akhaldi $
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/kernel32/proc/proc.c
  * PURPOSE:         Process functions
- * PROGRAMMER:      Ariadne ( ariadne@xs4all.nl)
+ * PROGRAMMERS:     Ariadne (ariadne@xs4all.nl)
  * UPDATE HISTORY:
  *                  Created 01/11/98
  */
@@ -13,7 +12,7 @@
 
 #include <k32.h>
 
-#define NDEBUG
+// #define NDEBUG
 #include <debug.h>
 
 /* GLOBALS *******************************************************************/
@@ -494,25 +493,26 @@ WINAPI
 BasepNotifyCsrOfThread(IN HANDLE ThreadHandle,
                        IN PCLIENT_ID ClientId)
 {
-    CSR_API_MESSAGE CsrRequest;
     NTSTATUS Status;
+    BASE_API_MESSAGE ApiMessage;
+    PBASE_CREATE_THREAD CreateThreadRequest = &ApiMessage.Data.CreateThreadRequest;
 
     DPRINT("BasepNotifyCsrOfThread: Thread: %lx, Handle %lx\n",
             ClientId->UniqueThread, ThreadHandle);
 
     /* Fill out the request */
-    CsrRequest.Data.CreateThreadRequest.ClientId = *ClientId;
-    CsrRequest.Data.CreateThreadRequest.ThreadHandle = ThreadHandle;
+    CreateThreadRequest->ClientId = *ClientId;
+    CreateThreadRequest->ThreadHandle = ThreadHandle;
 
     /* Call CSR */
-    Status = CsrClientCallServer(&CsrRequest,
+    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                                  NULL,
                                  CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepCreateThread),
-                                 sizeof(CSR_API_MESSAGE));
-    if (!NT_SUCCESS(Status) || !NT_SUCCESS(CsrRequest.Status))
+                                 sizeof(BASE_CREATE_THREAD));
+    if (!NT_SUCCESS(Status) || !NT_SUCCESS(ApiMessage.Status))
     {
-        DPRINT1("Failed to tell csrss about new thread: %lx %lx\n", Status, CsrRequest.Status);
-        return CsrRequest.Status;
+        DPRINT1("Failed to tell csrss about new thread: %lx %lx\n", Status, ApiMessage.Status);
+        return ApiMessage.Status;
     }
 
     /* Return Success */
@@ -531,13 +531,15 @@ BasepCreateFirstThread(HANDLE ProcessHandle,
                        BOOLEAN InheritHandles,
                        DWORD dwCreationFlags)
 {
+    NTSTATUS Status;
     OBJECT_ATTRIBUTES LocalObjectAttributes;
     POBJECT_ATTRIBUTES ObjectAttributes;
     CONTEXT Context;
     INITIAL_TEB InitialTeb;
-    NTSTATUS Status;
     HANDLE hThread;
-    CSR_API_MESSAGE CsrRequest;
+    BASE_API_MESSAGE ApiMessage;
+    PBASE_CREATE_PROCESS CreateProcessRequest = &ApiMessage.Data.CreateProcessRequest;
+
     DPRINT("BasepCreateFirstThread. hProcess: %lx\n", ProcessHandle);
 
     /* Create the Thread's Stack */
@@ -573,20 +575,21 @@ BasepCreateFirstThread(HANDLE ProcessHandle,
     }
 
     /* Fill out the request to notify CSRSS */
-    CsrRequest.Data.CreateProcessRequest.ClientId = *ClientId;
-    CsrRequest.Data.CreateProcessRequest.ProcessHandle = ProcessHandle;
-    CsrRequest.Data.CreateProcessRequest.ThreadHandle = hThread;
-    CsrRequest.Data.CreateProcessRequest.CreationFlags = dwCreationFlags;
-    CsrRequest.Data.CreateProcessRequest.bInheritHandles = InheritHandles;
+    CreateProcessRequest->ClientId = *ClientId;
+    CreateProcessRequest->ProcessHandle = ProcessHandle;
+    CreateProcessRequest->ThreadHandle = hThread;
+    CreateProcessRequest->CreationFlags = dwCreationFlags;
+    CreateProcessRequest->bInheritHandles = InheritHandles;
 
     /* Call CSR */
-    Status = CsrClientCallServer(&CsrRequest,
+    DPRINT1("Calling CsrClientCallServer from BasepCreateFirstThread...\n");
+    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                                  NULL,
                                  CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepCreateProcess),
-                                 sizeof(CSR_API_MESSAGE));
-    if (!NT_SUCCESS(Status) || !NT_SUCCESS(CsrRequest.Status))
+                                 sizeof(BASE_CREATE_PROCESS));
+    if (!NT_SUCCESS(Status) || !NT_SUCCESS(ApiMessage.Status))
     {
-        DPRINT1("Failed to tell csrss about new process: %lx %lx\n", Status, CsrRequest.Status);
+        DPRINT1("Failed to tell csrss about new process: %lx %lx\n", Status, ApiMessage.Status);
         return NULL;
     }
 
@@ -1174,24 +1177,25 @@ WINAPI
 GetProcessShutdownParameters(OUT LPDWORD lpdwLevel,
                              OUT LPDWORD lpdwFlags)
 {
-    CSR_API_MESSAGE CsrRequest;
     NTSTATUS Status;
+    BASE_API_MESSAGE ApiMessage;
+    PBASE_GET_PROCESS_SHUTDOWN_PARAMS GetShutdownParametersRequest = &ApiMessage.Data.GetShutdownParametersRequest;
 
     /* Ask CSRSS for shutdown information */
-    Status = CsrClientCallServer(&CsrRequest,
+    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                                  NULL,
                                  CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepGetProcessShutdownParam),
-                                 sizeof(CSR_API_MESSAGE));
-    if (!(NT_SUCCESS(Status)) || !(NT_SUCCESS(CsrRequest.Status)))
+                                 sizeof(BASE_GET_PROCESS_SHUTDOWN_PARAMS));
+    if (!(NT_SUCCESS(Status)) || !(NT_SUCCESS(ApiMessage.Status)))
     {
         /* Return the failure from CSRSS */
-        BaseSetLastNTError(CsrRequest.Status);
+        BaseSetLastNTError(ApiMessage.Status);
         return FALSE;
     }
 
     /* Get the data out of the LCP reply */
-    *lpdwLevel = CsrRequest.Data.GetShutdownParametersRequest.Level;
-    *lpdwFlags = CsrRequest.Data.GetShutdownParametersRequest.Flags;
+    *lpdwLevel = GetShutdownParametersRequest->Level;
+    *lpdwFlags = GetShutdownParametersRequest->Flags;
     return TRUE;
 }
 
@@ -1203,20 +1207,21 @@ WINAPI
 SetProcessShutdownParameters(IN DWORD dwLevel,
                              IN DWORD dwFlags)
 {
-    CSR_API_MESSAGE CsrRequest;
     NTSTATUS Status;
+    BASE_API_MESSAGE ApiMessage;
+    PBASE_SET_PROCESS_SHUTDOWN_PARAMS SetShutdownParametersRequest = &ApiMessage.Data.SetShutdownParametersRequest;
 
     /* Write the data into the CSRSS request and send it */
-    CsrRequest.Data.SetShutdownParametersRequest.Level = dwLevel;
-    CsrRequest.Data.SetShutdownParametersRequest.Flags = dwFlags;
-    Status = CsrClientCallServer(&CsrRequest,
+    SetShutdownParametersRequest->Level = dwLevel;
+    SetShutdownParametersRequest->Flags = dwFlags;
+    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                                  NULL,
                                  CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepSetProcessShutdownParam),
-                                 sizeof(CSR_API_MESSAGE));
-    if (!NT_SUCCESS(Status) || !NT_SUCCESS(CsrRequest.Status))
+                                 sizeof(BASE_SET_PROCESS_SHUTDOWN_PARAMS));
+    if (!NT_SUCCESS(Status) || !NT_SUCCESS(ApiMessage.Status))
     {
         /* Return the failure from CSRSS */
-        BaseSetLastNTError(CsrRequest.Status);
+        BaseSetLastNTError(ApiMessage.Status);
         return FALSE;
     }
 
@@ -1740,7 +1745,9 @@ VOID
 WINAPI
 ExitProcess(IN UINT uExitCode)
 {
-    CSR_API_MESSAGE CsrRequest;
+    BASE_API_MESSAGE ApiMessage;
+    PBASE_EXIT_PROCESS ExitProcessRequest = &ApiMessage.Data.ExitProcessRequest;
+
     ASSERT(!BaseRunningInServerProcess);
 
     _SEH2_TRY
@@ -1755,11 +1762,11 @@ ExitProcess(IN UINT uExitCode)
         LdrShutdownProcess();
 
         /* Notify Base Server of process termination */
-        CsrRequest.Data.TerminateProcessRequest.uExitCode = uExitCode;
-        CsrClientCallServer(&CsrRequest,
+        ExitProcessRequest->uExitCode = uExitCode;
+        CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                             NULL,
                             CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepExitProcess),
-                            sizeof(CSR_API_MESSAGE));
+                            sizeof(BASE_EXIT_PROCESS));
 
         /* Now do it again */
         NtTerminateProcess(NtCurrentProcess(), uExitCode);
