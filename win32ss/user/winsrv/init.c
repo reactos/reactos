@@ -80,105 +80,6 @@ PCHAR UserServerApiNameTable[UserpMaxApiNumber] =
     // NULL
 };
 
-/*
-PCSR_API_ROUTINE Win32CsrApiDefinitions[] =
-{
-    CsrGetHandle,
-    CsrGetHandle,
-    CsrCloseHandle,
-    CsrVerifyHandle,
-    CsrDuplicateHandle,
-    CsrGetInputWaitHandle,
-    CsrFillOutputChar,
-    CsrReadInputEvent,
-    CsrWriteConsoleOutputChar,
-    CsrWriteConsoleOutputAttrib,
-    CsrFillOutputAttrib,
-    CsrSetTextAttrib,
-    CsrWriteConsoleOutput,
-    CsrFlushInputBuffer,
-    CsrReadConsoleOutputChar,
-    CsrReadConsoleOutputAttrib,
-    CsrExitReactos,
-    CsrHardwareStateProperty,
-    CsrCreateDesktop,
-    CsrShowDesktop,
-    CsrHideDesktop,
-    CsrSetLogonNotifyWindow,
-    CsrRegisterLogonProcess,
-    CsrGenerateCtrlEvent,
-};
-
-static CSRSS_API_DEFINITION Win32CsrApiDefinitions[] =
-{
-    CSRSS_DEFINE_API(GET_INPUT_HANDLE,             CsrGetHandle),
-    CSRSS_DEFINE_API(GET_OUTPUT_HANDLE,            CsrGetHandle),
-    CSRSS_DEFINE_API(CLOSE_HANDLE,                 CsrCloseHandle),
-    CSRSS_DEFINE_API(VERIFY_HANDLE,                CsrVerifyHandle),
-    CSRSS_DEFINE_API(DUPLICATE_HANDLE,             CsrDuplicateHandle),
-    CSRSS_DEFINE_API(GET_INPUT_WAIT_HANDLE,        CsrGetInputWaitHandle),
-    CSRSS_DEFINE_API(WRITE_CONSOLE,                CsrWriteConsole),
-    CSRSS_DEFINE_API(READ_CONSOLE,                 CsrReadConsole),
-    CSRSS_DEFINE_API(ALLOC_CONSOLE,                CsrAllocConsole),
-    CSRSS_DEFINE_API(FREE_CONSOLE,                 CsrFreeConsole),
-    CSRSS_DEFINE_API(SCREEN_BUFFER_INFO,           CsrGetScreenBufferInfo),
-    CSRSS_DEFINE_API(SET_CURSOR,                   CsrSetCursor),
-    CSRSS_DEFINE_API(FILL_OUTPUT,                  CsrFillOutputChar),
-    CSRSS_DEFINE_API(READ_INPUT,                   CsrReadInputEvent),
-    CSRSS_DEFINE_API(WRITE_CONSOLE_OUTPUT_CHAR,    CsrWriteConsoleOutputChar),
-    CSRSS_DEFINE_API(WRITE_CONSOLE_OUTPUT_ATTRIB,  CsrWriteConsoleOutputAttrib),
-    CSRSS_DEFINE_API(FILL_OUTPUT_ATTRIB,           CsrFillOutputAttrib),
-    CSRSS_DEFINE_API(GET_CURSOR_INFO,              CsrGetCursorInfo),
-    CSRSS_DEFINE_API(SET_CURSOR_INFO,              CsrSetCursorInfo),
-    CSRSS_DEFINE_API(SET_ATTRIB,                   CsrSetTextAttrib),
-    CSRSS_DEFINE_API(GET_CONSOLE_MODE,             CsrGetConsoleMode),
-    CSRSS_DEFINE_API(SET_CONSOLE_MODE,             CsrSetConsoleMode),
-    CSRSS_DEFINE_API(CREATE_SCREEN_BUFFER,         CsrCreateScreenBuffer),
-    CSRSS_DEFINE_API(SET_SCREEN_BUFFER,            CsrSetScreenBuffer),
-    CSRSS_DEFINE_API(SET_TITLE,                    CsrSetTitle),
-    CSRSS_DEFINE_API(GET_TITLE,                    CsrGetTitle),
-    CSRSS_DEFINE_API(WRITE_CONSOLE_OUTPUT,         CsrWriteConsoleOutput),
-    CSRSS_DEFINE_API(FLUSH_INPUT_BUFFER,           CsrFlushInputBuffer),
-    CSRSS_DEFINE_API(SCROLL_CONSOLE_SCREEN_BUFFER, CsrScrollConsoleScreenBuffer),
-    CSRSS_DEFINE_API(READ_CONSOLE_OUTPUT_CHAR,     CsrReadConsoleOutputChar),
-    CSRSS_DEFINE_API(READ_CONSOLE_OUTPUT_ATTRIB,   CsrReadConsoleOutputAttrib),
-    CSRSS_DEFINE_API(GET_NUM_INPUT_EVENTS,         CsrGetNumberOfConsoleInputEvents),
-    CSRSS_DEFINE_API(EXIT_REACTOS,                 CsrExitReactos),
-    CSRSS_DEFINE_API(PEEK_CONSOLE_INPUT,           CsrPeekConsoleInput),
-    CSRSS_DEFINE_API(READ_CONSOLE_OUTPUT,          CsrReadConsoleOutput),
-    CSRSS_DEFINE_API(WRITE_CONSOLE_INPUT,          CsrWriteConsoleInput),
-    CSRSS_DEFINE_API(SETGET_CONSOLE_HW_STATE,      CsrHardwareStateProperty),
-    CSRSS_DEFINE_API(GET_CONSOLE_WINDOW,           CsrGetConsoleWindow),
-    CSRSS_DEFINE_API(CREATE_DESKTOP,               CsrCreateDesktop),
-    CSRSS_DEFINE_API(SHOW_DESKTOP,                 CsrShowDesktop),
-    CSRSS_DEFINE_API(HIDE_DESKTOP,                 CsrHideDesktop),
-    CSRSS_DEFINE_API(SET_CONSOLE_ICON,             CsrSetConsoleIcon),
-    CSRSS_DEFINE_API(SET_LOGON_NOTIFY_WINDOW,      CsrSetLogonNotifyWindow),
-    CSRSS_DEFINE_API(REGISTER_LOGON_PROCESS,       CsrRegisterLogonProcess),
-    CSRSS_DEFINE_API(GET_CONSOLE_CP,               CsrGetConsoleCodePage),
-    CSRSS_DEFINE_API(SET_CONSOLE_CP,               CsrSetConsoleCodePage),
-    CSRSS_DEFINE_API(GET_CONSOLE_OUTPUT_CP,        CsrGetConsoleOutputCodePage),
-    CSRSS_DEFINE_API(SET_CONSOLE_OUTPUT_CP,        CsrSetConsoleOutputCodePage),
-    CSRSS_DEFINE_API(GET_PROCESS_LIST,             CsrGetProcessList),
-    CSRSS_DEFINE_API(ADD_CONSOLE_ALIAS,      CsrAddConsoleAlias),
-    CSRSS_DEFINE_API(GET_CONSOLE_ALIAS,      CsrGetConsoleAlias),
-    CSRSS_DEFINE_API(GET_ALL_CONSOLE_ALIASES,         CsrGetAllConsoleAliases),
-    CSRSS_DEFINE_API(GET_ALL_CONSOLE_ALIASES_LENGTH,  CsrGetAllConsoleAliasesLength),
-    CSRSS_DEFINE_API(GET_CONSOLE_ALIASES_EXES,        CsrGetConsoleAliasesExes),
-    CSRSS_DEFINE_API(GET_CONSOLE_ALIASES_EXES_LENGTH, CsrGetConsoleAliasesExesLength),
-    CSRSS_DEFINE_API(GENERATE_CTRL_EVENT,          CsrGenerateCtrlEvent),
-    CSRSS_DEFINE_API(SET_SCREEN_BUFFER_SIZE,       CsrSetScreenBufferSize),
-    CSRSS_DEFINE_API(GET_CONSOLE_SELECTION_INFO,   CsrGetConsoleSelectionInfo),
-    CSRSS_DEFINE_API(GET_COMMAND_HISTORY_LENGTH,   CsrGetCommandHistoryLength),
-    CSRSS_DEFINE_API(GET_COMMAND_HISTORY,          CsrGetCommandHistory),
-    CSRSS_DEFINE_API(EXPUNGE_COMMAND_HISTORY,      CsrExpungeCommandHistory),
-    CSRSS_DEFINE_API(SET_HISTORY_NUMBER_COMMANDS,  CsrSetHistoryNumberCommands),
-    CSRSS_DEFINE_API(GET_HISTORY_INFO,             CsrGetHistoryInfo),
-    CSRSS_DEFINE_API(SET_HISTORY_INFO,             CsrSetHistoryInfo),
-    { 0, 0, NULL }
-};
-*/
-
 
 /* FUNCTIONS ******************************************************************/
 
@@ -356,9 +257,9 @@ PrivateCsrssManualGuiCheck(LONG Check)
     NtUserCallOneParam(Check, ONEPARAM_ROUTINE_CSRSS_GUICHECK);
 }
 
+/*** HACK from win32csr... ***/
 static HHOOK hhk = NULL;
 
-/*** HACK from win32csr... ***/
 LRESULT
 CALLBACK
 KeyboardHookProc(int nCode,
@@ -428,7 +329,7 @@ CSR_SERVER_DLL_INIT(UserServerDllInitialization)
     // LoadedServerDll->NewProcessCallback = Win32CsrDuplicateHandleTable;
     LoadedServerDll->HardErrorCallback = Win32CsrHardError;
 
-/*** From win32csr... ***/
+/*** From win32csr... See r54125 ***/
     /* Start the Raw Input Thread and the Desktop Thread */
     for (i = 0; i < 2; ++i)
     {

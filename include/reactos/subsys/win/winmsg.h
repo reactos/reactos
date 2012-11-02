@@ -19,7 +19,7 @@
 
 typedef enum _USERSRV_API_NUMBER
 {
-    UserpExitWindowsEx = USERSRV_SERVERDLL_INDEX,
+    UserpExitWindowsEx = USERSRV_FIRST_API_NUMBER,
     // UserpEndTask,
     // UserpLogon,
     UserpRegisterServicesProcess, // Not present in Win7
@@ -45,12 +45,12 @@ typedef struct
 
 typedef struct
 {
-    HANDLE ProcessId;
+    ULONG_PTR ProcessId;
 } CSRSS_REGISTER_SERVICES_PROCESS, *PCSRSS_REGISTER_SERVICES_PROCESS;
 
 typedef struct
 {
-    HANDLE ProcessId;
+    ULONG_PTR ProcessId;
     BOOL Register;
 } CSRSS_REGISTER_LOGON_PROCESS, *PCSRSS_REGISTER_LOGON_PROCESS;
 

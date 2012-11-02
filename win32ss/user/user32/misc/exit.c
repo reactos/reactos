@@ -67,8 +67,8 @@ BOOL WINAPI
 ExitWindowsEx(UINT uFlags,
               DWORD dwReserved)
 {
-    USER_API_MESSAGE ApiMessage;
     NTSTATUS Status;
+    USER_API_MESSAGE ApiMessage;
 
     ApiMessage.Data.ExitReactosRequest.Flags = uFlags;
     ApiMessage.Data.ExitReactosRequest.Reserved = dwReserved;
@@ -93,10 +93,10 @@ ExitWindowsEx(UINT uFlags,
 BOOL WINAPI
 RegisterServicesProcess(DWORD ServicesProcessId)
 {
-    USER_API_MESSAGE ApiMessage;
     NTSTATUS Status;
+    USER_API_MESSAGE ApiMessage;
 
-    ApiMessage.Data.RegisterServicesProcessRequest.ProcessId = UlongToHandle(ServicesProcessId);
+    ApiMessage.Data.RegisterServicesProcessRequest.ProcessId = ServicesProcessId;
 
     Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                                  NULL,

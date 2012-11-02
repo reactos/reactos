@@ -16,7 +16,7 @@
 
 
 static HWND LogonNotifyWindow = NULL;
-static HANDLE LogonProcess = NULL;
+static ULONG_PTR LogonProcessId = 0;
 
 
 /* FUNCTIONS *****************************************************************/
@@ -36,21 +36,21 @@ CSR_API(SrvRegisterLogonProcess)
 
     if (RegisterLogonProcessRequest->Register)
     {
-        if (0 != LogonProcess)
-        {
+        if (LogonProcessId != 0)
             return STATUS_LOGON_SESSION_EXISTS;
-        }
-        LogonProcess = RegisterLogonProcessRequest->ProcessId;
+
+        LogonProcessId = RegisterLogonProcessRequest->ProcessId;
     }
     else
     {
-        if (ApiMessage->Header.ClientId.UniqueProcess != LogonProcess)
+        if (ApiMessage->Header.ClientId.UniqueProcess != (HANDLE)LogonProcessId)
         {
             DPRINT1("Current logon process 0x%x, can't deregister from process 0x%x\n",
-                    LogonProcess, ApiMessage->Header.ClientId.UniqueProcess);
+                    LogonProcessId, ApiMessage->Header.ClientId.UniqueProcess);
             return STATUS_NOT_LOGON_PROCESS;
         }
-        LogonProcess = 0;
+
+        LogonProcessId = 0;
     }
 
     return STATUS_SUCCESS;
@@ -67,7 +67,7 @@ CSR_API(CsrSetLogonNotifyWindow)
         DPRINT1("Can't get window creator\n");
         return STATUS_INVALID_HANDLE;
     }
-    if (WindowCreator != (DWORD_PTR)LogonProcess)
+    if (WindowCreator != LogonProcessId)
     {
         DPRINT1("Trying to register window not created by winlogon as notify window\n");
         return STATUS_ACCESS_DENIED;
@@ -487,6 +487,7 @@ DtbgIsDesktopVisible(VOID)
 }
 
 /* TODO: Find another way to do it. */
+#if 0
 VOID FASTCALL
 ConioConsoleCtrlEventTimeout(DWORD Event, PCSR_PROCESS ProcessData, DWORD Timeout)
 {
@@ -509,6 +510,7 @@ ConioConsoleCtrlEventTimeout(DWORD Event, PCSR_PROCESS ProcessData, DWORD Timeou
         CloseHandle(Thread);
     }
 }
+#endif
 /************************************************/
 
 static BOOL FASTCALL
@@ -524,12 +526,15 @@ NotifyAndTerminateProcess(PCSR_PROCESS ProcessData,
 
     if (0 == (Flags & EWX_FORCE))
     {
+        // TODO: Find in an other way whether or not the process has a console.
+#if 0
         if (NULL != ProcessData->Console)
         {
             ConioConsoleCtrlEventTimeout(CTRL_LOGOFF_EVENT, ProcessData,
                                          ShutdownSettings->WaitToKillAppTimeout);
         }
         else
+#endif
         {
             Context.ProcessId = (DWORD_PTR) ProcessData->ClientId.UniqueProcess;
             Context.wParam = 0;
@@ -612,7 +617,7 @@ ExitReactosProcessEnum(PCSR_PROCESS ProcessData, PVOID Data)
 
     /* Do not kill winlogon or csrss */
     if ((DWORD_PTR) ProcessData->ClientId.UniqueProcess == Context->CsrssProcess ||
-            ProcessData->ClientId.UniqueProcess == LogonProcess)
+            ProcessData->ClientId.UniqueProcess == LogonProcessId)
     {
         return STATUS_SUCCESS;
     }
@@ -819,7 +824,7 @@ InternalExitReactos(DWORD ProcessId, DWORD ThreadId, UINT Flags)
     TOKEN_USER *UserInfo;
     SHUTDOWN_SETTINGS ShutdownSettings;
 
-    if (ProcessId != (DWORD_PTR) LogonProcess)
+    if (ProcessId != (DWORD_PTR) LogonProcessId)
     {
         DPRINT1("Internal ExitWindowsEx call not from winlogon\n");
         return STATUS_ACCESS_DENIED;

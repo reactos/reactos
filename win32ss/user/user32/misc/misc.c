@@ -42,7 +42,29 @@ BOOL
 WINAPI
 RegisterLogonProcess(DWORD dwProcessId, BOOL bRegister)
 {
-    return NtUserxRegisterLogonProcess(dwProcessId, bRegister);
+    gfLogonProcess = NtUserxRegisterLogonProcess(dwProcessId, bRegister);
+
+    if (gfLogonProcess)
+    {
+        NTSTATUS Status;
+        USER_API_MESSAGE ApiMessage;
+
+        ApiMessage.Data.RegisterLogonProcessRequest.ProcessId = dwProcessId;
+        ApiMessage.Data.RegisterLogonProcessRequest.Register = bRegister;
+
+        Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                                     NULL,
+                                     CSR_CREATE_API_NUMBER(USERSRV_SERVERDLL_INDEX, UserpRegisterLogonProcess),
+                                     sizeof(CSRSS_REGISTER_LOGON_PROCESS));
+        if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = ApiMessage.Status))
+        {
+            SetLastError(RtlNtStatusToDosError(Status));
+            ERR("Failed to register logon process with CSRSS\n");
+            // return FALSE;
+        }
+    }
+
+    return gfLogonProcess;
 }
 
 /*
@@ -52,6 +74,7 @@ BOOL
 WINAPI
 SetLogonNotifyWindow(HWND Wnd, HWINSTA WinSta)
 {
+#if 0
     /* Maybe we should call NtUserSetLogonNotifyWindow and let that one inform CSRSS??? */
     CSR_API_MESSAGE Request;
     NTSTATUS Status;
@@ -69,6 +92,8 @@ SetLogonNotifyWindow(HWND Wnd, HWINSTA WinSta)
     }
 
     return NtUserSetLogonNotifyWindow(Wnd);
+#endif
+    return TRUE;
 }
 
 /*

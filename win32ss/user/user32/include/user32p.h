@@ -23,6 +23,7 @@ extern HINSTANCE User32Instance;
 extern PPROCESSINFO g_ppi;
 extern ULONG_PTR g_ulSharedDelta;
 extern PSERVERINFO gpsi;
+extern BOOLEAN gfLogonProcess;
 extern BOOLEAN gfServerProcess;
 extern PUSER_HANDLE_TABLE gHandleTable;
 extern PUSER_HANDLE_ENTRY gHandleEntries;

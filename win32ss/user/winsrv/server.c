@@ -18,7 +18,7 @@
 /* GLOBALS *******************************************************************/
 
 static BOOLEAN ServicesProcessIdValid = FALSE;
-static ULONG_PTR ServicesProcessId;
+static ULONG_PTR ServicesProcessId = 0;
 
 
 /* FUNCTIONS *****************************************************************/
@@ -34,7 +34,7 @@ CSR_API(SrvRegisterServicesProcess)
     }
     else
     {
-        ServicesProcessId = (ULONG_PTR)RegisterServicesProcessRequest->ProcessId;
+        ServicesProcessId = RegisterServicesProcessRequest->ProcessId;
         ServicesProcessIdValid = TRUE;
         return STATUS_SUCCESS;
     }
