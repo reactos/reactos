@@ -1,10 +1,9 @@
-/* $Id: dllmain.c 56414 2012-04-25 10:17:29Z tfaber $
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/kernel32/misc/dllmain.c
  * PURPOSE:         Initialization
- * PROGRAMMER:      Ariadne ( ariadne@xs4all.nl)
+ * PROGRAMMERS:     Ariadne (ariadne@xs4all.nl)
  *                  Aleksey Bragin (aleksey@reactos.org)
  * UPDATE HISTORY:
  *                  Created 01/11/98
@@ -14,7 +13,7 @@
 
 #include <k32.h>
 
-#define NDEBUG
+// #define NDEBUG
 #include <debug.h>
 
 /* GLOBALS *******************************************************************/
@@ -33,24 +32,18 @@ ULONG SessionId;
 BOOL ConsoleInitialized = FALSE;
 static BOOL DllInitialized = FALSE;
 
-BOOL WINAPI
-DllMain(HANDLE hInst,
-	DWORD dwReason,
-	LPVOID lpReserved);
-
 /* Critical section for various kernel32 data structures */
 RTL_CRITICAL_SECTION BaseDllDirectoryLock;
 RTL_CRITICAL_SECTION ConsoleLock;
 
 extern BOOL WINAPI DefaultConsoleCtrlHandler(DWORD Event);
-extern __declspec(noreturn) VOID CALLBACK ConsoleControlDispatcher(DWORD CodeAndFlag);
+extern DWORD WINAPI ConsoleControlDispatcher(IN LPVOID lpThreadParameter);
 extern PHANDLER_ROUTINE InitialHandler[1];
 extern PHANDLER_ROUTINE* CtrlHandlers;
 extern ULONG NrCtrlHandlers;
 extern ULONG NrAllocatedHandlers;
 extern BOOL FASTCALL NlsInit(VOID);
 extern VOID FASTCALL NlsUninit(VOID);
-BOOLEAN InWindows = FALSE;
 
 #define WIN_OBJ_DIR L"\\Windows"
 #define SESSION_DIR L"\\Sessions"
@@ -61,8 +54,9 @@ BOOL
 WINAPI
 BasepInitConsole(VOID)
 {
-    CSR_API_MESSAGE Request;
     NTSTATUS Status;
+    CONSOLE_API_MESSAGE ApiMessage;
+    PCSRSS_ALLOC_CONSOLE AllocConsoleRequest = &ApiMessage.Data.AllocConsoleRequest;
     BOOLEAN NotConsole = FALSE;
     PRTL_USER_PROCESS_PARAMETERS Parameters = NtCurrentPeb()->ProcessParameters;
     LPCWSTR ExeName;
@@ -70,7 +64,14 @@ BasepInitConsole(VOID)
     WCHAR SessionDir[256];
     ULONG SessionId = NtCurrentPeb()->SessionId;
     BOOLEAN InServer;
-    
+
+    // HACK
+    /*
+    CSR_CONNECTION_INFO CsrConnectionInfo;
+    ULONG ConnectionSize = sizeof(CsrConnectionInfo);
+    */
+    // END HACK
+
     WCHAR lpTest[MAX_PATH];
     GetModuleFileNameW(NULL, lpTest, MAX_PATH);
     DPRINT("BasepInitConsole for : %S\n", lpTest);
@@ -84,14 +85,14 @@ BasepInitConsole(VOID)
     {
         DPRINT("Image is not a console application\n");
         Parameters->ConsoleHandle = NULL;
-        Request.Data.AllocConsoleRequest.ConsoleNeeded = FALSE;
+        AllocConsoleRequest->ConsoleNeeded = FALSE;
     }
     else
     {
         /* Assume one is needed */
         GetStartupInfo(&si);
-        Request.Data.AllocConsoleRequest.ConsoleNeeded = TRUE;
-        Request.Data.AllocConsoleRequest.ShowCmd = si.wShowWindow;
+        AllocConsoleRequest->ConsoleNeeded = TRUE;
+        AllocConsoleRequest->ShowCmd = si.wShowWindow;
 
         /* Handle the special flags given to us by BasepInitializeEnvironment */
         if (Parameters->ConsoleHandle == HANDLE_DETACHED_PROCESS)
@@ -99,7 +100,7 @@ BasepInitConsole(VOID)
             /* No console to create */
             DPRINT("No console to create\n");
             Parameters->ConsoleHandle = NULL;
-            Request.Data.AllocConsoleRequest.ConsoleNeeded = FALSE;
+            AllocConsoleRequest->ConsoleNeeded = FALSE;
         }
         else if (Parameters->ConsoleHandle == HANDLE_CREATE_NEW_CONSOLE)
         {
@@ -112,7 +113,7 @@ BasepInitConsole(VOID)
             /* We'll get the real one soon */
             DPRINT("Creating new invisible console\n");
             Parameters->ConsoleHandle = NULL;
-            Request.Data.AllocConsoleRequest.ShowCmd = SW_HIDE;
+            AllocConsoleRequest->ShowCmd = SW_HIDE;
         }
         else
         {
@@ -137,7 +138,7 @@ BasepInitConsole(VOID)
         SetConsoleInputExeNameW(ExeName + 1);
 
     /* Now use the proper console handle */
-    Request.Data.AllocConsoleRequest.Console = Parameters->ConsoleHandle;
+    AllocConsoleRequest->Console = Parameters->ConsoleHandle;
     
     /* Setup the right Object Directory path */
     if (!SessionId)
@@ -156,11 +157,11 @@ BasepInitConsole(VOID)
     }
 
     /* Connect to the base server */
-    DPRINT("Connecting to CSR...\n");
+    DPRINT("Connecting to CSR in BasepInitConsole...\n");
     Status = CsrClientConnectToServer(SessionDir,
-                                      2,
-                                      NULL,
-                                      NULL,
+                                      CONSRV_SERVERDLL_INDEX,
+                                      /* &CsrConnectionInfo, */ NULL, // TODO: Give it a console connection info
+                                      /* &ConnectionSize, */    NULL, // TODO: Give it a console connection info
                                       &InServer);
     if (!NT_SUCCESS(Status))
     {
@@ -177,12 +178,12 @@ BasepInitConsole(VOID)
      * console message to the Base Server. When we finally have a Console
      * Server, this code should be changed to send connection data instead.
      */
-    Request.Data.AllocConsoleRequest.CtrlDispatcher = ConsoleControlDispatcher;
-    Status = CsrClientCallServer(&Request,
+    AllocConsoleRequest->CtrlDispatcher = ConsoleControlDispatcher;
+    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                                  NULL,
-                                 CSR_CREATE_API_NUMBER(CSR_CONSOLE, ALLOC_CONSOLE),
-                                 sizeof(CSR_API_MESSAGE));
-    if(!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
+                                 CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepAlloc),
+                                 sizeof(CSRSS_ALLOC_CONSOLE));
+    if(!NT_SUCCESS(Status) || !NT_SUCCESS(Status = ApiMessage.Status))
     {
         DPRINT1("CSR Failed to give us a console\n");
         /* We're lying here, so at least the process can load... */
@@ -193,20 +194,20 @@ BasepInitConsole(VOID)
     if (NotConsole) return TRUE;
 
     /* We got the handles, let's set them */
-    if ((Parameters->ConsoleHandle = Request.Data.AllocConsoleRequest.Console))
+    if ((Parameters->ConsoleHandle = AllocConsoleRequest->Console))
     {
         /* If we already had some, don't use the new ones */
         if (!Parameters->StandardInput)
         {
-            Parameters->StandardInput = Request.Data.AllocConsoleRequest.InputHandle;
+            Parameters->StandardInput = AllocConsoleRequest->InputHandle;
         }
         if (!Parameters->StandardOutput)
         {
-            Parameters->StandardOutput = Request.Data.AllocConsoleRequest.OutputHandle;
+            Parameters->StandardOutput = AllocConsoleRequest->OutputHandle;
         }
         if (!Parameters->StandardError)
         {
-            Parameters->StandardError = Request.Data.AllocConsoleRequest.OutputHandle;
+            Parameters->StandardError = AllocConsoleRequest->OutputHandle;
         }
     }
 
@@ -311,9 +312,9 @@ DllMain(HANDLE hDll,
         }
 
         /* Connect to the base server */
-        DPRINT("Connecting to CSR...\n");
+        DPRINT("Connecting to CSR in DllMain...\n");
         Status = CsrClientConnectToServer(SessionDir,
-                                          InWindows ? 1 : 0,
+                                          BASESRV_SERVERDLL_INDEX,
                                           &Dummy,
                                           &DummySize,
                                           &BaseRunningInServerProcess);
@@ -323,10 +324,11 @@ DllMain(HANDLE hDll,
             NtTerminateProcess(NtCurrentProcess(), Status);
             return FALSE;
         }
+        DPRINT("kernel32 DllMain - OK, connection succeeded\n");
 
         /* Get the server data */
         ASSERT(Peb->ReadOnlyStaticServerData);
-        BaseStaticServerData = Peb->ReadOnlyStaticServerData[CSR_CONSOLE];
+        BaseStaticServerData = Peb->ReadOnlyStaticServerData[BASESRV_SERVERDLL_INDEX];
         ASSERT(BaseStaticServerData);
 
         /* Check if we are running a CSR Server */
