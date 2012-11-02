@@ -16,7 +16,7 @@
 #define NDEBUG
 #include <debug.h>
 
-HANDLE DllHandle = NULL;
+HINSTANCE UserSrvDllInstance = NULL;
 // HANDLE WinSrvApiPort = NULL;
 
 /* Memory */
@@ -357,7 +357,7 @@ BOOL WINAPI _UserSoundSentry(VOID)
 
 BOOL
 WINAPI
-DllMain(IN HANDLE hDll,
+DllMain(IN HINSTANCE hInstanceDll,
         IN DWORD dwReason,
         IN LPVOID lpReserved)
 {
@@ -366,7 +366,7 @@ DllMain(IN HANDLE hDll,
 
     if (DLL_PROCESS_ATTACH == dwReason)
     {
-        DllHandle = hDll;
+        UserSrvDllInstance = hInstanceDll;
 
 /*** HACK from win32csr... ***/
 

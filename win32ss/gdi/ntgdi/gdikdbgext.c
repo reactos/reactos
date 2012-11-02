@@ -14,7 +14,6 @@
 
 extern PENTRY gpentHmgr;
 extern PULONG gpaulRefCount;
-extern PEPROCESS gpepCSRSS;
 extern ULONG gulFirstUnused;
 
 

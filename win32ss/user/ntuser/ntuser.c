@@ -20,7 +20,7 @@ ATOM AtomFlashWndState; // Window Flash State atom.
 BOOL gbInitialized;
 HINSTANCE hModClient = NULL;
 BOOL ClientPfnInit = FALSE;
-PEPROCESS gpepCSRSS;
+PEPROCESS gpepCSRSS = NULL;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
@@ -132,8 +132,6 @@ UserInitialize(
 // Load Resources.
 
     NtUserUpdatePerUserSystemParameters(0, TRUE);
-
-    CsrInit();
 
     if (gpsi->hbrGray == NULL)
     {

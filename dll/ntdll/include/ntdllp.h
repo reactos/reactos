@@ -162,7 +162,5 @@ LdrpLoadImportModule(IN PWSTR DllPath OPTIONAL,
 VOID
 NTAPI
 LdrpFinalizeAndDeallocateDataTableEntry(IN PLDR_DATA_TABLE_ENTRY Entry);
-                     
-extern HANDLE WindowsApiPort;
 
 /* EOF */

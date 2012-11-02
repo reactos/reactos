@@ -334,7 +334,7 @@ NtUserCallOneParam(
           BOOL Ret = TRUE;
           PPROCESSINFO ppi;
           PDWORD pdwLayout;
-          if ( PsGetCurrentProcess() == CsrProcess)
+          if ( PsGetCurrentProcess() == gpepCSRSS)
           {
              EngSetLastError(ERROR_INVALID_ACCESS);
              RETURN(FALSE);

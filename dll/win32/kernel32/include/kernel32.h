@@ -155,7 +155,6 @@ typedef struct _BASEP_ACTCTX_BLOCK
 #define BASEP_GET_MODULE_HANDLE_EX_PARAMETER_VALIDATION_SUCCESS  2
 #define BASEP_GET_MODULE_HANDLE_EX_PARAMETER_VALIDATION_CONTINUE 3
 
-
 extern PBASE_STATIC_SERVER_DATA BaseStaticServerData;
 
 typedef
@@ -164,8 +163,6 @@ DWORD
     HANDLE hProcess,
     DWORD dwMilliseconds);
 
-
-extern BOOLEAN InWindows;
 extern WaitForInputIdleType UserWaitForInputIdleRoutine;
 
 /* GLOBAL VARIABLES **********************************************************/

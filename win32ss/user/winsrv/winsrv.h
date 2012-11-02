@@ -36,6 +36,7 @@
 #include "resource.h"
 
 
+extern HINSTANCE UserSrvDllInstance;
 extern HANDLE UserSrvHeap;
 // extern HANDLE BaseSrvSharedHeap;
 // extern PBASE_STATIC_SERVER_DATA BaseStaticServerData;
