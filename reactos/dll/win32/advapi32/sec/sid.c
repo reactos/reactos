@@ -299,67 +299,6 @@ static __inline BOOL set_ntstatus( NTSTATUS status )
     return !status;
 }
 
-/************************************************************
- *                ADVAPI_GetComputerSid
- *
- * Reads the computer SID from the registry.
- */
-BOOL ADVAPI_GetComputerSid(PSID sid)
-{
-    HKEY key;
-    LONG ret;
-    BOOL retval = FALSE;
-    static const WCHAR Account[] = { 'S','E','C','U','R','I','T','Y','\\','S','A','M','\\','D','o','m','a','i','n','s','\\','A','c','c','o','u','n','t',0 };
-    static const WCHAR V[] = { 'V',0 };
-
-    if ((ret = RegOpenKeyExW(HKEY_LOCAL_MACHINE, Account, 0,
-        KEY_READ, &key)) == ERROR_SUCCESS)
-    {
-        DWORD size = 0;
-        ret = RegQueryValueExW(key, V, NULL, NULL, NULL, &size);
-        if (ret == ERROR_MORE_DATA || ret == ERROR_SUCCESS)
-        {
-            BYTE * data = HeapAlloc(GetProcessHeap(), 0, size);
-            if (data)
-            {
-                if ((ret = RegQueryValueExW(key, V, NULL, NULL,
-                     data, &size)) == ERROR_SUCCESS)
-                {
-                    /* the SID is in the last 24 bytes of the binary data */
-                    CopyMemory(sid, &data[size-24], 24);
-                    retval = TRUE;
-                }
-                HeapFree(GetProcessHeap(), 0, data);
-            }
-        }
-        RegCloseKey(key);
-    }
-
-    if(retval == TRUE) return retval;
-
-    /* create a new random SID */
-    if (RegCreateKeyExW(HKEY_LOCAL_MACHINE, Account,
-        0, NULL, 0, KEY_ALL_ACCESS, NULL, &key, NULL) == ERROR_SUCCESS)
-    {
-        PSID new_sid;
-        SID_IDENTIFIER_AUTHORITY identifierAuthority = {SECURITY_NT_AUTHORITY};
-        DWORD id[3];
-
-        if (RtlGenRandom(id, sizeof(id)))
-        {
-            if (AllocateAndInitializeSid(&identifierAuthority, 4, SECURITY_NT_NON_UNIQUE, id[0], id[1], id[2], 0, 0, 0, 0, &new_sid))
-            {
-                if (RegSetValueExW(key, V, 0, REG_BINARY, new_sid, GetLengthSid(new_sid)) == ERROR_SUCCESS)
-                    retval = CopySid(GetLengthSid(new_sid), sid, new_sid);
-
-                FreeSid(new_sid);
-            }
-        }
-        RegCloseKey(key);
-    }
-
-    return retval;
-}
 
 /* Exported functions */
 
