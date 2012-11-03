@@ -48,9 +48,9 @@ protected:
 
 
  /// Implementation of the Explorer desktop window
-struct DesktopWindow : public Window, public IShellBrowserImpl
+struct DesktopWindow : public PreTranslateWindow, public IShellBrowserImpl
 {
-	typedef Window super;
+	typedef PreTranslateWindow super;
 
 	DesktopWindow(HWND hwnd);
 	~DesktopWindow();
