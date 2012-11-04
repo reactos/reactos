@@ -124,7 +124,7 @@ LookupFnIdToiCls(int FnId, int *iCls )
 _Must_inspect_result_
 NTSTATUS
 NTAPI
-CaptureUnicodeStringOrAtom(
+ProbeAndCaptureUnicodeStringOrAtom(
     _Out_ PUNICODE_STRING pustrOut,
     __in_data_source(USER_MODE) _In_ PUNICODE_STRING pustrUnsafe)
 {
@@ -2294,7 +2294,7 @@ NtUserUnregisterClass(
     NTSTATUS Status;
     BOOL Ret;
 
-    Status = CaptureUnicodeStringOrAtom(&SafeClassName, ClassNameOrAtom);
+    Status = ProbeAndCaptureUnicodeStringOrAtom(&SafeClassName, ClassNameOrAtom);
     if (!NT_SUCCESS(Status))
     {
         ERR("Error capturing the class name\n");
@@ -2346,7 +2346,7 @@ NtUserGetClassInfo(
     }
     _SEH2_END;
 
-    Status = CaptureUnicodeStringOrAtom(&SafeClassName, ClassName);
+    Status = ProbeAndCaptureUnicodeStringOrAtom(&SafeClassName, ClassName);
     if (!NT_SUCCESS(Status))
     {
         ERR("Error capturing the class name\n");
@@ -2480,7 +2480,7 @@ NtUserGetWOWClass(
     RTL_ATOM ClassAtom = 0;
     NTSTATUS Status;
 
-    Status = CaptureUnicodeStringOrAtom(&SafeClassName, ClassName);
+    Status = ProbeAndCaptureUnicodeStringOrAtom(&SafeClassName, ClassName);
     if (!NT_SUCCESS(Status))
     {
         ERR("Error capturing the class name\n");

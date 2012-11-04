@@ -248,7 +248,7 @@ NtUserCallOneParam(
             PCURICON_OBJECT CurIcon;
 			DWORD_PTR Result ;
 
-            if (!(CurIcon = IntCreateCurIconHandle()))
+            if (!(CurIcon = IntCreateCurIconHandle((DWORD)Param)))
             {
                EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
                RETURN(0);

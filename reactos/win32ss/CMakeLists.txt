@@ -11,6 +11,10 @@ if(USE_DIBLIB)
     add_subdirectory(gdi/diblib)
 endif()
 
+if(USE_NEW_CURSORICON)
+    add_definitions(-DNEW_CURSORICON)
+endif()
+
 add_subdirectory(gdi/gdi32)
 add_subdirectory(reactx)
 add_subdirectory(user/user32)
@@ -190,7 +194,6 @@ else()
 endif()
 
 if(USE_NEW_CURSORICON)
-    add_definitions(-DNEW_CURSORICON)
     list(APPEND SOURCE user/ntuser/cursoricon_new.c)
 else()
     list(APPEND SOURCE user/ntuser/cursoricon.c)

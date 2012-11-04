@@ -59,4 +59,11 @@ IntCheckProcessDesktopClasses(IN PDESKTOP Desktop,
 
 ULONG_PTR FASTCALL UserGetCPD(PVOID,GETCPD,ULONG_PTR);
 
+_Must_inspect_result_
+NTSTATUS
+NTAPI
+ProbeAndCaptureUnicodeStringOrAtom(
+    _Out_ PUNICODE_STRING pustrOut,
+    __in_data_source(USER_MODE) _In_ PUNICODE_STRING pustrUnsafe);
+
 /* EOF */
