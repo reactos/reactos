@@ -792,7 +792,7 @@ static LONG MDICascade( HWND client, MDICLIENTINFO *ci )
 static void MDITile( HWND client, MDICLIENTINFO *ci, WPARAM wParam )
 {
     HWND *win_array;
-    int i, total;
+    int i, total, rows, columns;
     BOOL has_icons = FALSE;
 
     if (ci->hwndChildMaximized)
@@ -803,7 +803,7 @@ static void MDITile( HWND client, MDICLIENTINFO *ci, WPARAM wParam )
     if (!(win_array = WIN_ListChildren( client ))) return;
 
     /* remove all the windows we don't want */
-    for (i = total = 0; win_array[i]; i++)
+    for (i = total = rows = 0; win_array[i]; i++)
     {
         if (!IsWindowVisible( win_array[i] )) continue;
         if (GetWindow( win_array[i], GW_OWNER )) continue; /* skip owned windows (icon titles) */
@@ -813,6 +813,7 @@ static void MDITile( HWND client, MDICLIENTINFO *ci, WPARAM wParam )
             continue;
         }
         if ((wParam & MDITILE_SKIPDISABLED) && !IsWindowEnabled( win_array[i] )) continue;
+        if(total == (rows * (rows + 2))) rows++; /* total+1 == (rows+1)*(rows+1) */
         win_array[total++] = win_array[i];
     }
     win_array[total] = 0;
@@ -824,11 +825,11 @@ static void MDITile( HWND client, MDICLIENTINFO *ci, WPARAM wParam )
         HWND *pWnd = win_array;
         RECT rect;
         int x, y, xsize, ysize;
-        int rows, columns, r, c, i;
+        int r, c, i;
 
         GetClientRect(client,&rect);
-        rows    = (int) sqrt((double)total);
-        columns = total / rows;
+        columns = total/rows;
+        //while(total < rows*columns) rows++;
 
         if( wParam & MDITILE_HORIZONTAL )  /* version >= 3.1 */
         {
