@@ -400,7 +400,7 @@ static SCRIPT_STRING_ANALYSIS EDIT_UpdateUniscribeData_linedef(EDITSTATE *es, HD
 		tabdef.pTabStops = es->tabs;
 		tabdef.iTabOrigin = 0;
 
-		ScriptStringAnalyse(udc, &es->text[index], line_def->net_length, (1.5*line_def->net_length+16), -1, SSA_LINK|SSA_FALLBACK|SSA_GLYPHS|SSA_TAB, -1, NULL, NULL, NULL, &tabdef, NULL, &line_def->ssa);
+		ScriptStringAnalyse(udc, &es->text[index], line_def->net_length, (3*line_def->net_length/2+16), -1, SSA_LINK|SSA_FALLBACK|SSA_GLYPHS|SSA_TAB, -1, NULL, NULL, NULL, &tabdef, NULL, &line_def->ssa);
 
 		if (es->font)
 			SelectObject(udc, old_font);
