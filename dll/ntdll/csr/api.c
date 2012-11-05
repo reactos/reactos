@@ -50,7 +50,7 @@ CsrSetPriorityClass(HANDLE hProcess,
                                  NULL,
                                  CSR_CREATE_API_NUMBER(CSRSRV_SERVERDLL_INDEX, CsrpSetPriorityClass),
                                  sizeof(CSR_SET_PRIORITY_CLASS));
-    
+
     /* Return what we got, if requested */
     if (*PriorityClass) *PriorityClass = SetPriorityClass->PriorityClass;
 
@@ -68,7 +68,7 @@ CsrIdentifyAlertableThread(VOID)
     NTSTATUS Status;
     CSR_API_MESSAGE ApiMessage;
     PCSR_IDENTIFY_ALTERTABLE_THREAD IdentifyAlertableThread;
-    
+
     /* Set up the data for CSR */
     DbgBreakPoint();
     IdentifyAlertableThread = &ApiMessage.Data.IdentifyAlertableThread;

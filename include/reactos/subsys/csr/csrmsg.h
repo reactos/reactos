@@ -93,8 +93,8 @@ typedef struct _CSR_CAPTURE_BUFFER
     ULONG Size;
     struct _CSR_CAPTURE_BUFFER *PreviousCaptureBuffer;
     ULONG PointerCount;
-    ULONG_PTR BufferEnd;
-    ULONG_PTR PointerArray[1];
+    PVOID BufferEnd;
+    ULONG_PTR PointerOffsetsArray[ANYSIZE_ARRAY];
 } CSR_CAPTURE_BUFFER, *PCSR_CAPTURE_BUFFER;
 
 /* Keep in sync with definition below. */

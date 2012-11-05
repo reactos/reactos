@@ -659,7 +659,6 @@ CsrCreateRemoteThread(IN HANDLE hThread,
  *--*/
 NTSTATUS
 NTAPI
-#if 0
 CsrCreateThread(IN PCSR_PROCESS CsrProcess,
                 IN HANDLE hThread,
                 IN PCLIENT_ID ClientId,
@@ -670,12 +669,13 @@ CsrCreateThread(IN PCSR_PROCESS CsrProcess,
     PCSR_PROCESS CurrentProcess;
     CLIENT_ID CurrentCid;
     KERNEL_USER_TIMES KernelTimes;
+
     DPRINT("CSRSRV: %s called\n", __FUNCTION__);
 
     if (HaveClient)
     {
         /* Get the current thread and CID */
-        CurrentThread = NtCurrentTeb()->CsrClientThread;
+        CurrentThread = CsrGetClientThread();
         CurrentCid = CurrentThread->ClientId;
 
         /* Acquire the Process Lock */
@@ -683,6 +683,8 @@ CsrCreateThread(IN PCSR_PROCESS CsrProcess,
 
         /* Get the current Process and make sure the Thread is valid with this CID */
         CurrentThread = CsrLocateThreadByClientId(&CurrentProcess, &CurrentCid);
+
+        /* Something is wrong if we get an empty thread back */
         if (!CurrentThread)
         {
             DPRINT1("CSRSRV:%s: invalid thread!\n", __FUNCTION__);
@@ -729,66 +731,9 @@ CsrCreateThread(IN PCSR_PROCESS CsrProcess,
 
     /* Release the lock and return */
     CsrReleaseProcessLock();
+
     return STATUS_SUCCESS;
 }
-#else
-CsrCreateThread(IN PCSR_PROCESS CsrProcess,
-                IN HANDLE hThread,
-                IN PCLIENT_ID ClientId)
-{
-    PCSR_THREAD CsrThread;
-    PCSR_PROCESS CurrentProcess;
-    PCSR_THREAD CurrentThread = CsrGetClientThread();
-    CLIENT_ID CurrentCid;
-    KERNEL_USER_TIMES KernelTimes;
-
-    /* Get the current thread and CID */
-    CurrentCid = CurrentThread->ClientId;
-
-    /* Acquire the Process Lock */
-    CsrAcquireProcessLock();
-
-    /* Get the current Process and make sure the Thread is valid with this CID */
-    CurrentThread = CsrLocateThreadByClientId(&CurrentProcess,
-                                              &CurrentCid);
-
-    /* Something is wrong if we get an empty thread back */
-    if (!CurrentThread)
-    {
-        DPRINT1("CSRSRV:%s: invalid thread!\n", __FUNCTION__);
-        CsrReleaseProcessLock();
-        return STATUS_THREAD_IS_TERMINATING;
-    }
-
-    /* Get the Thread Create Time */
-    NtQueryInformationThread(hThread,
-                             ThreadTimes,
-                             (PVOID)&KernelTimes,
-                             sizeof(KernelTimes),
-                             NULL);
-
-    /* Allocate a CSR Thread Structure */
-    if (!(CsrThread = CsrAllocateThread(CsrProcess)))
-    {
-        DPRINT1("CSRSRV:%s: out of memory!\n", __FUNCTION__);
-        CsrReleaseProcessLock();
-        return STATUS_NO_MEMORY;
-    }
-
-    /* Save the data we have */
-    CsrThread->CreateTime = KernelTimes.CreateTime;
-    CsrThread->ClientId = *ClientId;
-    CsrThread->ThreadHandle = hThread;
-    CsrThread->Flags = 0;
-
-    /* Insert the Thread into the Process */
-    CsrInsertThread(CsrProcess, CsrThread);
-
-    /* Release the lock and return */
-    CsrReleaseProcessLock();
-    return STATUS_SUCCESS;
-}
-#endif
 
 /*++
  * @name CsrDereferenceThread

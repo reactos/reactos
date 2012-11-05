@@ -341,7 +341,7 @@ CsrLockedReferenceProcess(IN PCSR_PROCESS CsrProcess)
  * @implemented NT4
  *
  * The CsrInitializeProcessStructure routine sets up support for CSR Processes
- * and CSR Threads.
+ * and CSR Threads by initializing our own CSR Root Process.
  *
  * @param None.
  *
@@ -467,9 +467,9 @@ CsrRemoveProcess(IN PCSR_PROCESS CsrProcess)
  *--*/
 VOID
 NTAPI
-CsrInsertProcess(IN PCSR_PROCESS Parent OPTIONAL,
-                 IN PCSR_PROCESS CurrentProcess OPTIONAL,
-                 IN PCSR_PROCESS CsrProcess)
+CsrInsertProcess(IN PCSR_PROCESS Parent OPTIONAL,   // ParentProcess
+                 IN PCSR_PROCESS CurrentProcess OPTIONAL,   // CallingProcess
+                 IN PCSR_PROCESS CsrProcess)    // Process
 {
     PCSR_SERVER_DLL ServerDll;
     ULONG i;
@@ -488,7 +488,7 @@ CsrInsertProcess(IN PCSR_PROCESS Parent OPTIONAL,
         ServerDll = CsrLoadedServerDll[i];
 
         /* Make sure it's valid and that it has callback */
-        if ((ServerDll) && (ServerDll->NewProcessCallback))
+        if (ServerDll && ServerDll->NewProcessCallback)
         {
             ServerDll->NewProcessCallback(CurrentProcess, CsrProcess);
         }

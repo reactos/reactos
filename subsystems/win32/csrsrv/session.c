@@ -326,9 +326,6 @@ CsrSbCreateSession(IN PSB_API_MSG ApiMessage)
         }
     }
 
-    /* HACK: FIXME: should go in BaseSrv part of CreateCallback done in Insert below */
-    // RtlInitializeCriticalSection(&CsrProcess->HandleTableLock);
-
     /* Insert the Process */
     CsrInsertProcess(NULL, NULL, CsrProcess);
 

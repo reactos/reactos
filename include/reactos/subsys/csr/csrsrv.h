@@ -24,7 +24,7 @@
 /* TYPES **********************************************************************/
 
 // Used in ntdll/csr/connect.c
-#define CSR_CSRSS_SECTION_SIZE    (65536)
+#define CSR_CSRSS_SECTION_SIZE  65536
 
 typedef struct _CSR_NT_SESSION
 {
@@ -33,21 +33,6 @@ typedef struct _CSR_NT_SESSION
     ULONG SessionId;
 } CSR_NT_SESSION, *PCSR_NT_SESSION;
 
-/*** old thingie, remove it later... (put it in winsrv -- console) ***/
-#include <win/conmsg.h>
-typedef struct _CSRSS_CON_PROCESS_DATA
-{
-    HANDLE ConsoleEvent;
-    struct tagCSRSS_CONSOLE *Console;
-    struct tagCSRSS_CONSOLE *ParentConsole;
-    BOOL bInheritHandles;
-    RTL_CRITICAL_SECTION HandleTableLock;
-    ULONG HandleTableSize;
-    struct _CSRSS_HANDLE *HandleTable;
-    PCONTROLDISPATCHER CtrlDispatcher;
-    LIST_ENTRY ConsoleLink;
-} CSRSS_CON_PROCESS_DATA, *PCSRSS_CON_PROCESS_DATA;
-/*********************************************************************/
 typedef struct _CSR_PROCESS
 {
     CLIENT_ID ClientId;
@@ -73,8 +58,7 @@ typedef struct _CSR_PROCESS
     ULONG Reserved;
     ULONG ShutdownLevel;
     ULONG ShutdownFlags;
-    PVOID ServerData[ANYSIZE_ARRAY]; // ServerDllPerProcessData // One structure per CSR server.
-    CSRSS_CON_PROCESS_DATA; //// FIXME: Remove it after we activate the previous member.
+    PVOID ServerData[ANYSIZE_ARRAY];    // One structure per CSR server.
 } CSR_PROCESS, *PCSR_PROCESS;
 
 typedef struct _CSR_THREAD
@@ -181,10 +165,10 @@ NTSTATUS
     OUT PULONG Reply
 );
 
-#define CSR_API(n) NTSTATUS NTAPI n(    \
-    IN OUT PCSR_API_MESSAGE ApiMessage, \
-    OUT PULONG Reply)
-    // IN OUT PCSR_REPLY_STATUS ReplyStatus)
+#define CSR_API(n)                                          \
+    NTSTATUS NTAPI n(IN OUT PCSR_API_MESSAGE ApiMessage,    \
+                     OUT PULONG Reply)
+                     // IN OUT PCSR_REPLY_STATUS ReplyStatus)
 
 typedef
 NTSTATUS
@@ -250,7 +234,8 @@ typedef
 NTSTATUS
 (NTAPI *PCSR_SERVER_DLL_INIT_CALLBACK)(IN PCSR_SERVER_DLL LoadedServerDll);
 
-#define CSR_SERVER_DLL_INIT(n) NTSTATUS NTAPI n(IN PCSR_SERVER_DLL LoadedServerDll)
+#define CSR_SERVER_DLL_INIT(n)  \
+    NTSTATUS NTAPI n(IN PCSR_SERVER_DLL LoadedServerDll)
 
 
 /* PROTOTYPES ****************************************************************/
@@ -306,7 +291,8 @@ NTSTATUS
 NTAPI
 CsrCreateThread(IN PCSR_PROCESS CsrProcess,
                 IN HANDLE hThread,
-                IN PCLIENT_ID ClientId);
+                IN PCLIENT_ID ClientId,
+                IN BOOLEAN HaveClient);
 
 BOOLEAN
 NTAPI
@@ -431,8 +417,8 @@ BOOLEAN
 NTAPI
 CsrValidateMessageBuffer(IN PCSR_API_MESSAGE ApiMessage,
                          IN PVOID *Buffer,
-                         IN ULONG ArgumentSize,
-                         IN ULONG ArgumentCount);
+                         IN ULONG ElementCount,
+                         IN ULONG ElementSize);
 
 BOOLEAN
 NTAPI

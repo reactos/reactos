@@ -41,37 +41,6 @@ extern RTL_CRITICAL_SECTION CsrProcessLock, CsrWaitListsLock;
 #define CSR_SERVER_DLL_MAX  4
 
 
-/***
- *** Old structure. Deprecated.
- ***/
-typedef struct _CSRSS_API_DEFINITION
-{
-    ULONG ApiID;
-    ULONG MinRequestSize;
-    PCSR_API_ROUTINE Handler;
-} CSRSS_API_DEFINITION, *PCSRSS_API_DEFINITION;
-
-#define CSRSS_DEFINE_API(Func, Handler) \
-    { Func, sizeof(CSRSS_##Func), Handler }
-
-
-
-
-typedef struct _CSRSS_LISTEN_DATA
-{
-    HANDLE ApiPortHandle;
-    ULONG ApiDefinitionsCount;
-    PCSRSS_API_DEFINITION *ApiDefinitions;
-} CSRSS_LISTEN_DATA, *PCSRSS_LISTEN_DATA;
-
-
-
-
-/******************************************************************************
- ******************************************************************************
- ******************************************************************************/
-
-
 extern HANDLE hBootstrapOk;
 extern HANDLE CsrApiPort;
 extern HANDLE CsrSmApiPort;
@@ -154,13 +123,6 @@ CsrInsertProcess(IN PCSR_PROCESS Parent OPTIONAL,
                  IN PCSR_PROCESS CurrentProcess OPTIONAL,
                  IN PCSR_PROCESS CsrProcess);
 
-
-#if 0
-NTSTATUS FASTCALL CsrApiRegisterDefinitions(PCSRSS_API_DEFINITION NewDefinitions);
-#endif
-
-VOID FASTCALL CsrApiCallHandler(IN OUT PCSR_API_MESSAGE ApiMessage, OUT PULONG Reply);
-
 NTSTATUS
 NTAPI
 CsrApiRequestThread(IN PVOID Parameter); // HANDLE ServerPort ??
@@ -208,16 +170,6 @@ PCSR_THREAD
 NTAPI
 CsrLocateThreadByClientId(OUT PCSR_PROCESS *Process OPTIONAL,
                           IN PCLIENT_ID ClientId);
-
-// HACK
-VOID
-NTAPI
-CsrProcessRefcountZero(IN PCSR_PROCESS CsrProcess);
-
-// HACK
-VOID
-NTAPI
-CsrThreadRefcountZero(IN PCSR_THREAD CsrThread);
 
 NTSTATUS
 NTAPI

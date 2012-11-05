@@ -25,7 +25,7 @@ PCSR_THREAD CsrSbApiRequestThreadPtr;
 HANDLE CsrSmApiPort = NULL;
 HANDLE hSbApiPort = NULL;
 HANDLE CsrApiPort = NULL;
-ULONG CsrDebug = 0;//0xFFFFFFFF;
+ULONG CsrDebug = 0xFFFFFFFF; // 0;
 ULONG CsrMaxApiRequestThreads;
 ULONG CsrTotalPerProcessDataLength;
 ULONG SessionId;
@@ -564,7 +564,7 @@ CsrCreateSessionObjectDirectory(IN ULONG Session)
  *
  *--*/
 NTSTATUS
-FASTCALL
+NTAPI
 CsrParseServerCommandLine(IN ULONG ArgumentCount,
                           IN PCHAR Arguments[])
 {
@@ -668,7 +668,7 @@ CsrParseServerCommandLine(IN ULONG ArgumentCount,
             /* Load us */
             Status = CsrLoadServerDll("CSRSS" /* "CSRSRV" */, NULL, CSRSRV_SERVERDLL_INDEX);
         }
-        else if (_stricmp(ParameterName, "ServerDLL") == 0)
+        else if (_stricmp(ParameterName, "ServerDll") == 0)
         {
             /* Loop the command line */
             EntryPoint = NULL;
@@ -726,6 +726,84 @@ CsrParseServerCommandLine(IN ULONG ArgumentCount,
 
     /* Return status */
     return Status;
+}
+
+/*++
+ * @name CsrInitCsrRootProcess
+ *
+ * The CsrInitCsrRootProcess routine further initializes the CSR Root Process
+ * created by CsrInitializeProcessStructure, by allocating and initializing
+ * per-process data for each Server DLL.
+ *
+ * @param None.
+ *
+ * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL
+ *         otherwise.
+ *
+ * @remarks None.
+ *
+ *--*/
+NTSTATUS
+NTAPI
+CsrInitCsrRootProcess(VOID)
+{
+    PVOID ProcessData;
+    PCSR_SERVER_DLL ServerDll;
+    ULONG i = 0;
+
+    /* All Server DLLs are now loaded, allocate a heap for the Root Process */
+    ProcessData = RtlAllocateHeap(CsrHeap,
+                                  HEAP_ZERO_MEMORY,
+                                  CsrTotalPerProcessDataLength);
+    if (!ProcessData)
+    {
+        DPRINT1("CSRSRV:%s: RtlAllocateHeap failed (Status=%08lx)\n",
+                __FUNCTION__, STATUS_NO_MEMORY);
+        return STATUS_NO_MEMORY;
+    }
+
+    /*
+     * Our Root Process was never officially initalized, so write the data
+     * for each Server DLL manually.
+     */
+    for (i = 0; i < CSR_SERVER_DLL_MAX; i++)
+    {
+        /* Get the current Server */
+        ServerDll = CsrLoadedServerDll[i];
+
+        /* Is it loaded, and does it have per process data? */
+        if (ServerDll && ServerDll->SizeOfProcessData)
+        {
+            /* It does, give it part of our allocated heap */
+            CsrRootProcess->ServerData[i] = ProcessData;
+
+            /* Move to the next heap position */
+            ProcessData = (PVOID)((ULONG_PTR)ProcessData +
+                                  ServerDll->SizeOfProcessData);
+        }
+        else
+        {
+            /* Nothing for this Server DLL */
+            CsrRootProcess->ServerData[i] = NULL;
+        }
+    }
+
+    /* Now initialize the Root Process manually as well */
+    for (i = 0; i < CSR_SERVER_DLL_MAX; i++)
+    {
+        /* Get the current Server */
+        ServerDll = CsrLoadedServerDll[i];
+
+        /* Is it loaded, and does it a callback for new processes? */
+        if (ServerDll && ServerDll->NewProcessCallback)
+        {
+            /* Call the callback */
+            DPRINT1("Call NewProcessCallback(NULL, 0x%p) called\n", CsrRootProcess);
+            ServerDll->NewProcessCallback(NULL, CsrRootProcess);
+        }
+    }
+
+    return STATUS_SUCCESS;
 }
 
 /*++
@@ -971,7 +1049,7 @@ CsrServerInitialization(IN ULONG ArgumentCount,
         return Status;
     }
 
-    /* Set up Process Support */
+    /* Set up Process Support and allocate the CSR Root Process */
     Status = CsrInitializeProcessStructure();
     if (!NT_SUCCESS(Status))
     {
@@ -985,6 +1063,15 @@ CsrServerInitialization(IN ULONG ArgumentCount,
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("CSRSRV:%s: CsrParseServerCommandLine failed (Status=%08lx)\n",
+                __FUNCTION__, Status);
+        return Status;
+    }
+
+    /* Finish to initialize the CSR Root Process */
+    Status = CsrInitCsrRootProcess();
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("CSRSRV:%s: CsrInitCsrRootProcess failed (Status=%08lx)\n",
                 __FUNCTION__, Status);
         return Status;
     }
@@ -1068,12 +1155,12 @@ CsrPopulateDosDevices(VOID)
 
 BOOL
 NTAPI
-DllMain(IN HANDLE hDll,
+DllMain(IN HINSTANCE hInstanceDll,
         IN DWORD dwReason,
         IN LPVOID lpReserved)
 {
     /* We don't do much */
-    UNREFERENCED_PARAMETER(hDll);
+    UNREFERENCED_PARAMETER(hInstanceDll);
     UNREFERENCED_PARAMETER(dwReason);
     UNREFERENCED_PARAMETER(lpReserved);
 

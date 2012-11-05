@@ -119,6 +119,8 @@ CsrLoadServerDll(IN PCHAR DllString,
     PCSR_SERVER_DLL_INIT_CALLBACK ServerDllInitProcedure;
     ULONG Response;
 
+    DPRINT1("CsrLoadServerDll(%s, 0x%p, %lu)\n", DllString, EntryPoint, ServerId);
+
     /* Check if it's beyond the maximum we support */
     if (ServerId >= CSR_SERVER_DLL_MAX) return STATUS_TOO_MANY_NAMES;
 
@@ -222,14 +224,6 @@ CsrLoadServerDll(IN PCHAR DllString,
                 /* No, save the pointer to its shared section in our list */
                 CsrSrvSharedStaticServerData[ServerDll->ServerId] = ServerDll->SharedSection;
             }
-
-#if 0 /* HACK: ReactOS Specific hax. REMOVE IT. */
-            if (ServerDll->HighestApiSupported == 0xDEADBABE)
-            {
-                // CSRSS_API_DEFINITIONS == Old structure.
-                Status = CsrApiRegisterDefinitions((PVOID)ServerDll->DispatchTable);
-            }
-#endif
         }
         else
         {
@@ -274,12 +268,11 @@ CsrSrvClientConnect(IN OUT PCSR_API_MESSAGE ApiMessage,
                     IN OUT PULONG Reply OPTIONAL)
 {
     NTSTATUS Status;
-    PCSR_CLIENT_CONNECT ClientConnect;
+    PCSR_CLIENT_CONNECT ClientConnect = &ApiMessage->Data.CsrClientConnect;
     PCSR_SERVER_DLL ServerDll;
     PCSR_PROCESS CurrentProcess = CsrGetClientThread()->Process;
 
-    /* Load the Message, set default reply */
-    ClientConnect = &ApiMessage->Data.CsrClientConnect;
+    /* Set default reply */
     *Reply = 0;
 
     /* Validate the ServerID */
@@ -294,9 +287,9 @@ CsrSrvClientConnect(IN OUT PCSR_API_MESSAGE ApiMessage,
 
     /* Validate the Message Buffer */
     if (!(CsrValidateMessageBuffer(ApiMessage,
-                                   ClientConnect->ConnectionInfo,
+                                   &ClientConnect->ConnectionInfo,
                                    ClientConnect->ConnectionInfoSize,
-                                   1)))
+                                   sizeof(BYTE))))
     {
         /* Fail due to buffer overflow or other invalid buffer */
         return STATUS_INVALID_PARAMETER;
@@ -429,8 +422,7 @@ CsrSrvCreateSharedSection(IN PCHAR ParameterValue)
     /* Now allocate space from the heap for the Shared Data */
     CsrSrvSharedStaticServerData = RtlAllocateHeap(CsrSrvSharedSectionHeap,
                                                    0,
-                                                   CSR_SERVER_DLL_MAX *
-                                                   sizeof(PVOID));
+                                                   CSR_SERVER_DLL_MAX * sizeof(PVOID));
     if (!CsrSrvSharedStaticServerData) return STATUS_NO_MEMORY;
 
     /* Write the values to the PEB */

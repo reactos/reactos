@@ -38,27 +38,40 @@ CsrClientCallServer(IN OUT PCSR_API_MESSAGE ApiMessage,
                     IN CSR_API_NUMBER ApiNumber,
                     IN ULONG DataLength);
 
-PVOID
+PCSR_CAPTURE_BUFFER
 NTAPI
 CsrAllocateCaptureBuffer(IN ULONG ArgumentCount,
                          IN ULONG BufferSize);
-
-VOID
-NTAPI
-CsrFreeCaptureBuffer(IN PCSR_CAPTURE_BUFFER CaptureBuffer);
 
 ULONG
 NTAPI
 CsrAllocateMessagePointer(IN OUT PCSR_CAPTURE_BUFFER CaptureBuffer,
                           IN ULONG MessageLength,
-                          OUT PVOID* CaptureData);
+                          OUT PVOID *CapturedData);
 
 VOID
 NTAPI
 CsrCaptureMessageBuffer(IN OUT PCSR_CAPTURE_BUFFER CaptureBuffer,
-                        IN PVOID MessageString,
+                        IN PVOID MessageBuffer OPTIONAL,
+                        IN ULONG MessageLength,
+                        OUT PVOID *CapturedData);
+
+VOID
+NTAPI
+CsrCaptureMessageString(IN OUT PCSR_CAPTURE_BUFFER CaptureBuffer,
+                        IN LPSTR String OPTIONAL,
                         IN ULONG StringLength,
-                        OUT PVOID* CapturedData);
+                        IN ULONG MaximumLength,
+                        OUT PANSI_STRING CapturedString);
+
+VOID
+NTAPI
+CsrFreeCaptureBuffer(IN PCSR_CAPTURE_BUFFER CaptureBuffer);
+
+PLARGE_INTEGER
+NTAPI
+CsrCaptureTimeout(IN ULONG Milliseconds,
+                  OUT PLARGE_INTEGER Timeout);
 
 VOID
 NTAPI
