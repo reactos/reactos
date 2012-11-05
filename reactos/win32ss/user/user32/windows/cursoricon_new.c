@@ -757,6 +757,7 @@ CURSORICON_LoadImageW(
     if(fuLoad & LR_SHARED)
     {
         DWORD size = MAX_PATH;
+        FINDEXISTINGCURICONPARAM param;
         
         TRACE("Checking for an LR_SHARED cursor/icon.\n");
         /* Prepare the resource name string */
@@ -791,7 +792,10 @@ CURSORICON_LoadImageW(
         } while(TRUE);
         
         /* Ask win32k */
-        hCurIcon = NtUserFindExistingCursorIcon(&ustrModule, &ustrRsrc, cxDesired, cyDesired);
+        param.bIcon = bIcon;
+        param.cx = cxDesired;
+        param.cy = cyDesired;
+        hCurIcon = NtUserFindExistingCursorIcon(&ustrModule, &ustrRsrc, &param);
         if(hCurIcon)
         {
             /* Woohoo, got it! */
@@ -1185,7 +1189,7 @@ CURSORICON_CopyImage(
         }
         
         /* Call the relevant function */
-        ret = CURSORICON_LoadImageW(hModule, ustrRsrc.Buffer, cxDesired, cyDesired, bIcon, fuFlags & LR_DEFAULTSIZE);
+        ret = CURSORICON_LoadImageW(hModule, ustrRsrc.Buffer, cxDesired, cyDesired, fuFlags & LR_DEFAULTSIZE, bIcon);
         
         FreeLibrary(hModule);
         

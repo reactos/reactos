@@ -175,13 +175,15 @@ FASTCALL
 IntFindExistingCurIconObject(
     PUNICODE_STRING pustrModule,
     PUNICODE_STRING pustrRsrc,
-    LONG cxDesired,
-    LONG cyDesired)
+    FINDEXISTINGCURICONPARAM* param)
 {
     PCURICON_OBJECT CurIcon;
 
     LIST_FOR_EACH(CurIcon, &gCurIconList, CURICON_OBJECT, ListEntry)
     {
+        /* See if we are looking for an icon or a cursor */
+        if(CurIcon->bIcon != param->bIcon)
+            continue;
         /* See if module names match */
         if(RtlCompareUnicodeString(pustrModule, &CurIcon->ustrModule, TRUE) == 0)
         {
@@ -196,7 +198,7 @@ IntFindExistingCurIconObject(
             else if(RtlCompareUnicodeString(pustrRsrc, &CurIcon->ustrRsrc, TRUE) != 0)
                 continue;
             
-            if ((cxDesired == CurIcon->Size.cx) &&(cyDesired == CurIcon->Size.cy))
+            if ((param->cx == CurIcon->Size.cx) &&(param->cy == CurIcon->Size.cy))
             {
                 if (! ReferenceCurIconByProcess(CurIcon))
                 {
@@ -765,12 +767,12 @@ NTAPI
 NtUserFindExistingCursorIcon(
   _In_  PUNICODE_STRING pustrModule,
   _In_  PUNICODE_STRING pustrRsrc,
-  _In_  LONG cxDesired,
-  _In_  LONG cyDesired)
+  _In_  FINDEXISTINGCURICONPARAM* param)
 {
     PCURICON_OBJECT CurIcon;
     HICON Ret = NULL;
     UNICODE_STRING ustrModuleSafe, ustrRsrcSafe;
+    FINDEXISTINGCURICONPARAM paramSafe;
     NTSTATUS Status;
 
     TRACE("Enter NtUserFindExistingCursorIcon\n");
@@ -782,9 +784,20 @@ NtUserFindExistingCursorIcon(
     Status = ProbeAndCaptureUnicodeString(&ustrModuleSafe, UserMode, pustrModule);
     if(!NT_SUCCESS(Status))
         goto done;
+    
+    _SEH2_TRY
+    {
+        ProbeForRead(param, sizeof(*param), 1);
+        paramSafe = *param;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END
 
     UserEnterExclusive();
-    CurIcon = IntFindExistingCurIconObject(&ustrModuleSafe, &ustrRsrcSafe, cxDesired, cyDesired);
+    CurIcon = IntFindExistingCurIconObject(&ustrModuleSafe, &ustrRsrcSafe, &paramSafe);
     if (CurIcon)
         Ret = CurIcon->Self;
     UserLeave();
