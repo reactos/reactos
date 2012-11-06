@@ -21,10 +21,48 @@ START_TEST(LoadImage)
     if (argc >= 3)
     {
         HANDLE arg;
+        HICON hCopy;
+        HBITMAP hbmp;
+        HDC hdc, hdcScreen;
+        ICONINFO ii;
 
         sscanf (test_argv[2], "%lu", (ULONG_PTR*) &arg);
 
         ok(handle != arg, "Got same handles\n");
+        
+        /* Try copying it */
+        hCopy = CopyIcon(arg);
+        ok(hCopy != NULL, "\n");
+        ok(DestroyIcon(hCopy), "\n");
+        
+        hCopy = CopyImage(arg, IMAGE_CURSOR, 0, 0, 0);
+        ok(hCopy != NULL, "\n");
+        ok(DestroyIcon(hCopy), "\n");
+        
+        hCopy = CopyImage(arg, IMAGE_CURSOR, 0, 0, LR_COPYFROMRESOURCE);
+        ok(hCopy != NULL, "\n");
+        ok(DestroyIcon(hCopy), "\n");
+        
+        /* Try various usual functions */
+        hdcScreen = CreateDCW(L"DISPLAY", NULL, NULL, NULL);
+        ok(hdcScreen != NULL, "\n");
+        hdc = CreateCompatibleDC(hdcScreen);
+        ok(hdc != NULL, "\n");
+        hbmp = CreateCompatibleBitmap(hdcScreen, 64, 64);
+        ok(hbmp != NULL, "\n");
+        hbmp = SelectObject(hdc, hbmp);
+        ok(hbmp != NULL, "\n");
+        
+        ok(DrawIcon(hdc, 0, 0, arg), "\n");
+        hbmp = SelectObject(hdc, hbmp);
+        DeleteObject(hbmp);
+        DeleteDC(hdc);
+        DeleteDC(hdcScreen);
+        
+        ok(GetIconInfo(arg, &ii), "\n");
+        ok(ii.hbmMask != NULL, "\n");
+        DeleteObject(ii.hbmMask);
+        if(ii.hbmColor) DeleteObject(ii.hbmColor);
 
         return;
     }
