@@ -3827,8 +3827,6 @@ SamrOpenAlias(IN SAMPR_HANDLE DomainHandle,
         return Status;
     }
 
-    AliasObject->Special.Alias.RelativeId = AliasId;
-
     *AliasHandle = (SAMPR_HANDLE)AliasObject;
 
     return STATUS_SUCCESS;
