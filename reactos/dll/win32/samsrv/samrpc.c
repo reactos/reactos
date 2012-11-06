@@ -155,6 +155,7 @@ SamrShutdownSamServer(IN SAMPR_HANDLE ServerHandle)
     return STATUS_NOT_IMPLEMENTED;
 }
 
+
 /* Function 5 */
 NTSTATUS
 NTAPI
@@ -263,6 +264,7 @@ SamrLookupDomainInSamServer(IN SAMPR_HANDLE ServerHandle,
 
     return Status;
 }
+
 
 /* Function 6 */
 NTSTATUS
@@ -3825,6 +3827,8 @@ SamrOpenAlias(IN SAMPR_HANDLE DomainHandle,
         return Status;
     }
 
+    AliasObject->Special.Alias.RelativeId = AliasId;
+
     *AliasHandle = (SAMPR_HANDLE)AliasObject;
 
     return STATUS_SUCCESS;
@@ -3868,17 +3872,24 @@ SampQueryAliasGeneral(PSAM_DB_OBJECT AliasObject,
                             L"Members",
                             KEY_READ,
                             &MembersKeyHandle);
-    if (!NT_SUCCESS(Status))
+    if (NT_SUCCESS(Status))
     {
-        TRACE("Status 0x%08lx\n", Status);
-        goto done;
+        /* Retrieve the number of members of the alias */
+        Status = SampRegQueryKeyInfo(MembersKeyHandle,
+                                     NULL,
+                                     &InfoBuffer->General.MemberCount);
+        if (!NT_SUCCESS(Status))
+        {
+            TRACE("Status 0x%08lx\n", Status);
+            goto done;
+        }
     }
-
-    /* Retrieve the number of members of the alias */
-    Status = SampRegQueryKeyInfo(MembersKeyHandle,
-                                 NULL,
-                                 &InfoBuffer->General.MemberCount);
-    if (!NT_SUCCESS(Status))
+    else if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
+    {
+        InfoBuffer->General.MemberCount = 0;
+        Status = STATUS_SUCCESS;
+    }
+    else
     {
         TRACE("Status 0x%08lx\n", Status);
         goto done;
