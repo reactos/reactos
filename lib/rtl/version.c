@@ -4,7 +4,7 @@
  * PURPOSE:         Runtime code
  * FILE:            lib/rtl/version.c
  * PROGRAMERS:      Filip Navara
- *                  Hermes BELUSCA - MAITO
+ *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
 /* INCLUDES *****************************************************************/
@@ -18,9 +18,7 @@
 
 NTSTATUS
 NTAPI
-RtlGetVersion(
-    OUT PRTL_OSVERSIONINFOW lpVersionInformation
-    );
+RtlGetVersion(OUT PRTL_OSVERSIONINFOW lpVersionInformation);
 
 /* FUNCTIONS ****************************************************************/
 
@@ -54,11 +52,9 @@ RtlpVerCompare(ULONG left, ULONG right, UCHAR condition)
 */
 NTSTATUS
 NTAPI
-RtlVerifyVersionInfo(
-    IN PRTL_OSVERSIONINFOEXW VersionInfo,
-    IN ULONG TypeMask,
-    IN ULONGLONG ConditionMask
-    )
+RtlVerifyVersionInfo(IN PRTL_OSVERSIONINFOEXW VersionInfo,
+                     IN ULONG TypeMask,
+                     IN ULONGLONG ConditionMask)
 {
     RTL_OSVERSIONINFOEXW ver;
     NTSTATUS status;

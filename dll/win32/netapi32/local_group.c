@@ -34,7 +34,121 @@
 #include "wine/debug.h"
 #include "wine/unicode.h"
 
+#define NTOS_MODE_USER
+#include <ndk/rtlfuncs.h>
+#include "ntsam.h"
+#include "netapi32.h"
+
 WINE_DEFAULT_DEBUG_CHANNEL(netapi32);
+
+
+typedef struct _ENUM_CONTEXT
+{
+    SAM_HANDLE ServerHandle;
+    SAM_HANDLE BuiltinDomainHandle;
+    SAM_HANDLE AccountDomainHandle;
+
+    SAM_ENUMERATE_HANDLE EnumerationContext;
+    PSAM_RID_ENUMERATION Buffer;
+    ULONG Returned;
+    ULONG Index;
+    BOOLEAN BuiltinDone;
+
+} ENUM_CONTEXT, *PENUM_CONTEXT;
+
+static SID_IDENTIFIER_AUTHORITY NtAuthority = {SECURITY_NT_AUTHORITY};
+
+
+static
+NTSTATUS
+GetAccountDomainSid(PSID *AccountDomainSid)
+{
+    PPOLICY_ACCOUNT_DOMAIN_INFO AccountDomainInfo = NULL;
+    LSA_OBJECT_ATTRIBUTES ObjectAttributes;
+    LSA_HANDLE PolicyHandle = NULL;
+    ULONG Length = 0;
+    NTSTATUS Status;
+
+    memset(&ObjectAttributes, 0, sizeof(LSA_OBJECT_ATTRIBUTES));
+
+    Status = LsaOpenPolicy(NULL,
+                           &ObjectAttributes,
+                           POLICY_VIEW_LOCAL_INFORMATION,
+                           &PolicyHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("LsaOpenPolicy failed (Status %08lx)\n", Status);
+        return Status;
+    }
+
+    Status = LsaQueryInformationPolicy(PolicyHandle,
+                                       PolicyAccountDomainInformation,
+                                       (PVOID *)&AccountDomainInfo);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("LsaQueryInformationPolicy failed (Status %08lx)\n", Status);
+        goto done;
+    }
+
+    Length = RtlLengthSid(AccountDomainInfo->DomainSid);
+
+    *AccountDomainSid = RtlAllocateHeap(RtlGetProcessHeap(), 0, Length);
+    if (*AccountDomainSid == NULL)
+    {
+        ERR("Failed to allocate SID\n");
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
+
+    memcpy(*AccountDomainSid, AccountDomainInfo->DomainSid, Length);
+
+done:
+    if (AccountDomainInfo != NULL)
+        LsaFreeMemory(AccountDomainInfo);
+
+    LsaClose(PolicyHandle);
+
+    return Status;
+}
+
+
+static
+NTSTATUS
+GetBuiltinDomainSid(PSID *BuiltinDomainSid)
+{
+    PSID Sid = NULL;
+    PULONG Ptr;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    *BuiltinDomainSid = NULL;
+
+    Sid = RtlAllocateHeap(RtlGetProcessHeap(),
+                          0,
+                          RtlLengthRequiredSid(1));
+    if (Sid == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    Status = RtlInitializeSid(Sid,
+                              &NtAuthority,
+                              1);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    Ptr = RtlSubAuthoritySid(Sid, 0);
+    *Ptr = SECURITY_BUILTIN_DOMAIN_RID;
+
+    *BuiltinDomainSid = Sid;
+
+done:
+    if (!NT_SUCCESS(Status))
+    {
+        if (Sid != NULL)
+            RtlFreeHeap(RtlGetProcessHeap(), 0, Sid);
+    }
+
+    return Status;
+}
+
 
 /************************************************************
  *                NetLocalGroupAdd  (NETAPI32.@)
@@ -129,11 +243,236 @@ NET_API_STATUS WINAPI NetLocalGroupEnum(
     LPDWORD totalentries,
     PDWORD_PTR resumehandle)
 {
+    PSAM_RID_ENUMERATION CurrentAlias;
+    PENUM_CONTEXT EnumContext = NULL;
+    PSID DomainSid = NULL;
+    ULONG i;
+    SAM_HANDLE AliasHandle = NULL;
+    PALIAS_GENERAL_INFORMATION AliasInfo = NULL;
+
+    NET_API_STATUS ApiStatus = NERR_Success;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+
     FIXME("(%s %d %p %d %p %p %p) stub!\n", debugstr_w(servername),
           level, bufptr, prefmaxlen, entriesread, totalentries, resumehandle);
+
     *entriesread = 0;
     *totalentries = 0;
-    return NERR_Success;
+    *bufptr = NULL;
+
+    if (resumehandle != NULL && *resumehandle != 0)
+    {
+        EnumContext = (PENUM_CONTEXT)resumehandle;
+    }
+    else
+    {
+        ApiStatus = NetApiBufferAllocate(sizeof(ENUM_CONTEXT), (PVOID*)&EnumContext);
+        if (ApiStatus != NERR_Success)
+            goto done;
+
+        EnumContext->EnumerationContext = 0;
+        EnumContext->Buffer = NULL;
+        EnumContext->Returned = 0;
+        EnumContext->Index = 0;
+        EnumContext->BuiltinDone = FALSE;
+
+        Status = SamConnect(NULL,
+                            &EnumContext->ServerHandle,
+                            SAM_SERVER_CONNECT | SAM_SERVER_LOOKUP_DOMAIN,
+                            NULL);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("SamConnect failed (Status %08lx)\n", Status);
+            ApiStatus = NetpNtStatusToApiStatus(Status);
+            goto done;
+        }
+
+        Status = GetAccountDomainSid(&DomainSid);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("GetAccountDomainSid failed (Status %08lx)\n", Status);
+            ApiStatus = NetpNtStatusToApiStatus(Status);
+            goto done;
+        }
+
+        Status = SamOpenDomain(EnumContext->ServerHandle,
+                               DOMAIN_LIST_ACCOUNTS | DOMAIN_LOOKUP,
+                               DomainSid,
+                               &EnumContext->AccountDomainHandle);
+
+        RtlFreeHeap(RtlGetProcessHeap(), 0, DomainSid);
+
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("SamOpenDomain failed (Status %08lx)\n", Status);
+            ApiStatus = NetpNtStatusToApiStatus(Status);
+            goto done;
+        }
+
+        Status = GetBuiltinDomainSid(&DomainSid);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("GetAccountDomainSid failed (Status %08lx)\n", Status);
+            ApiStatus = NetpNtStatusToApiStatus(Status);
+            goto done;
+        }
+
+        Status = SamOpenDomain(EnumContext->ServerHandle,
+                               DOMAIN_LIST_ACCOUNTS | DOMAIN_LOOKUP,
+                               DomainSid,
+                               &EnumContext->BuiltinDomainHandle);
+
+        RtlFreeHeap(RtlGetProcessHeap(), 0, DomainSid);
+
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("SamOpenDomain failed (Status %08lx)\n", Status);
+            ApiStatus = NetpNtStatusToApiStatus(Status);
+            goto done;
+        }
+    }
+
+
+    while (TRUE)
+    {
+
+        if (EnumContext->Index >= EnumContext->Returned)
+        {
+            if (EnumContext->BuiltinDone == TRUE)
+            {
+                ApiStatus = NERR_Success;
+                goto done;
+            }
+
+            TRACE("Calling SamEnumerateAliasesInDomain\n");
+
+            Status = SamEnumerateAliasesInDomain(EnumContext->BuiltinDomainHandle,
+                                                 &EnumContext->EnumerationContext,
+                                                 (PVOID *)&EnumContext->Buffer,
+                                                 prefmaxlen,
+                                                 &EnumContext->Returned);
+
+            TRACE("SamEnumerateAliasesInDomain returned (Status %08lx)\n", Status);
+            if (!NT_SUCCESS(Status))
+            {
+                ERR("SamEnumerateAliasesInDomain failed (Status %08lx)\n", Status);
+                ApiStatus = NetpNtStatusToApiStatus(Status);
+                goto done;
+            }
+
+            if (Status == STATUS_MORE_ENTRIES)
+            {
+                ApiStatus = NERR_BufTooSmall;
+                goto done;
+            }
+            else
+            {
+                EnumContext->BuiltinDone = TRUE;
+            }
+        }
+
+        TRACE("EnumContext: %lu\n", EnumContext);
+        TRACE("EnumContext->Returned: %lu\n", EnumContext->Returned);
+        TRACE("EnumContext->Buffer: %p\n", EnumContext->Buffer);
+
+        /* Get a pointer to the current alias */
+        CurrentAlias = &EnumContext->Buffer[EnumContext->Index];
+
+        TRACE("RID: %lu\n", CurrentAlias->RelativeId);
+
+        Status = SamOpenAlias(EnumContext->BuiltinDomainHandle,
+                              ALIAS_READ_INFORMATION,
+                              CurrentAlias->RelativeId,
+                              &AliasHandle);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("SamOpenAlias failed (Status %08lx)\n", Status);
+            ApiStatus = NetpNtStatusToApiStatus(Status);
+            goto done;
+        }
+
+        Status = SamQueryInformationAlias(AliasHandle,
+                                          AliasGeneralInformation,
+                                          (PVOID *)&AliasInfo);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("SamQueryInformationAlias failed (Status %08lx)\n", Status);
+            ApiStatus = NetpNtStatusToApiStatus(Status);
+            goto done;
+        }
+
+        SamCloseHandle(AliasHandle);
+        AliasHandle = NULL;
+
+        TRACE("Name: %S\n", AliasInfo->Name.Buffer);
+        TRACE("Comment: %S\n", AliasInfo->AdminComment.Buffer);
+
+
+        if (AliasInfo != NULL)
+        {
+            if (AliasInfo->Name.Buffer != NULL)
+                SamFreeMemory(AliasInfo->Name.Buffer);
+
+            if (AliasInfo->AdminComment.Buffer != NULL)
+                SamFreeMemory(AliasInfo->AdminComment.Buffer);
+
+            SamFreeMemory(AliasInfo);
+            AliasInfo = NULL;
+        }
+
+
+        EnumContext->Index++;
+    }
+
+
+done:
+    if (resumehandle == NULL || ApiStatus != ERROR_MORE_DATA)
+    {
+        if (EnumContext != NULL)
+        {
+            if (EnumContext->BuiltinDomainHandle != NULL)
+                SamCloseHandle(EnumContext->BuiltinDomainHandle);
+
+            if (EnumContext->AccountDomainHandle != NULL)
+                SamCloseHandle(EnumContext->AccountDomainHandle);
+
+            if (EnumContext->ServerHandle != NULL)
+                SamCloseHandle(EnumContext->ServerHandle);
+
+            if (EnumContext->Buffer != NULL)
+            {
+                for (i = 0; i < EnumContext->Returned; i++)
+                {
+                    SamFreeMemory(EnumContext->Buffer[i].Name.Buffer);
+                }
+
+                SamFreeMemory(EnumContext->Buffer);
+            }
+
+            NetApiBufferFree(EnumContext);
+            EnumContext = NULL;
+        }
+    }
+
+    if (AliasHandle != NULL)
+        SamCloseHandle(AliasHandle);
+
+    if (AliasInfo != NULL)
+    {
+        if (AliasInfo->Name.Buffer != NULL)
+            SamFreeMemory(AliasInfo->Name.Buffer);
+
+        if (AliasInfo->AdminComment.Buffer != NULL)
+            SamFreeMemory(AliasInfo->AdminComment.Buffer);
+
+        SamFreeMemory(AliasInfo);
+    }
+
+    if (resumehandle != NULL)
+        *resumehandle = (DWORD_PTR)EnumContext;
+
+    return ApiStatus;
 }
 
 /************************************************************

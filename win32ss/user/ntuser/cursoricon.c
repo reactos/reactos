@@ -204,7 +204,7 @@ IntFindExistingCurIconObject(HMODULE hModule,
 }
 
 PCURICON_OBJECT
-IntCreateCurIconHandle()
+IntCreateCurIconHandle(DWORD dwNumber)
 {
     PCURICON_OBJECT CurIcon;
     HANDLE hCurIcon;
@@ -613,8 +613,8 @@ NtUserClipCursor(
 BOOL
 APIENTRY
 NtUserDestroyCursor(
-    HANDLE hCurIcon,
-    DWORD Unknown)
+  _In_  HANDLE hCurIcon,
+  _In_  BOOL bForce)
 {
     PCURICON_OBJECT CurIcon;
     BOOL ret;

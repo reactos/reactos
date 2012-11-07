@@ -22,8 +22,8 @@ typedef struct _CURICON_OBJECT
   LIST_ENTRY ListEntry;
   HANDLE Self;
   LIST_ENTRY ProcessList;
-  HMODULE hModule;
-  HRSRC hRsrc;
+  UNICODE_STRING ustrModule;
+  UNICODE_STRING ustrRsrc;
   SIZE Size;
   BYTE Shadow;
   BOOL bIcon;
@@ -88,7 +88,7 @@ typedef struct _SYSTEM_CURSORINFO
 } SYSTEM_CURSORINFO, *PSYSTEM_CURSORINFO;
 
 BOOL InitCursorImpl(VOID);
-PCURICON_OBJECT IntCreateCurIconHandle(VOID);
+PCURICON_OBJECT IntCreateCurIconHandle(DWORD dwNumber);
 VOID FASTCALL IntCleanupCurIcons(struct _EPROCESS *Process, PPROCESSINFO Win32Process);
 
 BOOL UserDrawIconEx(HDC hDc, INT xLeft, INT yTop, PCURICON_OBJECT pIcon, INT cxWidth,

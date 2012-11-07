@@ -261,7 +261,7 @@
 @ stub NetpNetBiosReset
 @ stub NetpNetBiosSend
 @ stdcall NetpNetBiosStatusToApiStatus(long)
-@ stub NetpNtStatusToApiStatus
+@ stdcall NetpNtStatusToApiStatus(long)
 @ stub NetpOpenConfigData
 @ stub NetpPackString
 @ stub NetpReleasePrivilege

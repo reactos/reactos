@@ -48,14 +48,17 @@ list(APPEND SOURCE
 
 add_library(gdi32 SHARED ${SOURCE})
 
-set_module_type(gdi32 win32dll UNICODE)
+set_module_type(gdi32
+    win32dll
+    ENTRYPOINT DllMain 12
+    UNICODE)
 
 target_link_libraries(gdi32
     win32ksys
     dxguid
     ${PSEH_LIB})
 
-add_importlibs(gdi32 user32 advapi32 msvcrt kernel32 ntdll)
+add_importlibs(gdi32 user32 advapi32 kernel32 ntdll)
 add_pch(gdi32 include/precomp.h)
 add_cd_file(TARGET gdi32 DESTINATION reactos/system32 FOR all)
 

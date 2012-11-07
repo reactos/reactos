@@ -1659,8 +1659,8 @@ NtUserDestroyAcceleratorTable(
 BOOL
 NTAPI
 NtUserDestroyCursor(
-  HANDLE Handle,
-  DWORD Unknown);
+  _In_  HANDLE Handle,
+  _In_  BOOL bForce);
 
 DWORD
 NTAPI
@@ -1817,14 +1817,6 @@ NtUserFillWindow(
   HWND hWndPaint1,
   HDC  hDC,
   HBRUSH hBrush);
-
-HICON
-NTAPI
-NtUserFindExistingCursorIcon(
-  HMODULE hModule,
-  HRSRC hRsrc,
-  LONG cx,
-  LONG cy);
 
 HWND
 NTAPI
@@ -1998,12 +1990,12 @@ NtUserGetGUIThreadInfo(
 BOOL
 NTAPI
 NtUserGetIconInfo(
-   HANDLE hCurIcon,
-   PICONINFO IconInfo,
-   PUNICODE_STRING lpInstName,
-   PUNICODE_STRING lpResName,
-   LPDWORD pbpp,
-   BOOL bInternal);
+   _In_      HANDLE hCurIcon,
+   _Out_opt_ PICONINFO IconInfo,
+   _Out_opt_ PUNICODE_STRING lpInstName,
+   _Out_opt_ PUNICODE_STRING lpResName,
+   _Out_opt_ LPDWORD pbpp,
+   _In_      BOOL bInternal);
 
 BOOL
 NTAPI
@@ -2743,9 +2735,17 @@ BOOL
 NTAPI
 NtUserSetCursorIconData(
   _In_ HCURSOR hCursor,
-  _In_ HINSTANCE hinst,
-  _In_ HRSRC hrsrc,
+  _In_ PUNICODE_STRING pustrModule,
+  _In_ PUNICODE_STRING puSrcName,
   _In_ PICONINFO pii);
+  
+HICON
+NTAPI
+NtUserFindExistingCursorIcon(
+  _In_  PUNICODE_STRING pustrModule,
+  _In_  PUNICODE_STRING pustrRsrc,
+  _In_  LONG cxDesired,
+  _In_  LONG cyDesired);
 #else
 BOOL
 NTAPI
@@ -2756,6 +2756,14 @@ NtUserSetCursorIconData(
   HMODULE hModule,
   HRSRC hRsrc,
   HRSRC hGroupRsrc);
+  
+HICON
+NTAPI
+NtUserFindExistingCursorIcon(
+  HMODULE hModule,
+  HRSRC hRsrc,
+  LONG cx,
+  LONG cy);
 #endif
 
 DWORD

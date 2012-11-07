@@ -57,10 +57,6 @@
 #define FN_PROGRESSA FN_PROGRESS
 #endif
 
-/* sid.c */
-
-BOOL ADVAPI_GetComputerSid(PSID sid);
-
 /* rpc.c */
 
 RPC_STATUS EvtBindRpc(LPCWSTR pszMachine,
