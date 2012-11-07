@@ -310,7 +310,7 @@ TuiResizeBuffer(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER ScreenBuffer, COORD
 }
 
 DWORD WINAPI
-TuiConsoleThread (PVOID Data)
+TuiConsoleThread(PVOID Data)
 {
     PCSRSS_CONSOLE Console = (PCSRSS_CONSOLE) Data;
     HWND NewWindow;
@@ -384,7 +384,7 @@ TuiInitConsole(PCSRSS_CONSOLE Console)
     Console->ActiveBuffer->MaxX = PhysicalConsoleSize.X;
     Console->ActiveBuffer->MaxY = PhysicalConsoleSize.Y;
 
-    ThreadHandle = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE) TuiConsoleThread,
+    ThreadHandle = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)TuiConsoleThread,
                                 Console, 0, NULL);
     if (NULL == ThreadHandle)
     {
