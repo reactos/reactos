@@ -152,21 +152,21 @@ HistoryDeleteBuffer(PHISTORY_BUFFER Hist)
 CSR_API(SrvGetConsoleCommandHistoryLength)
 {
     PCSRSS_GET_COMMAND_HISTORY_LENGTH GetCommandHistoryLength = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetCommandHistoryLength;
-    PCSR_PROCESS ProcessData = CsrGetClientThread()->Process;
+    PCSR_PROCESS Process = CsrGetClientThread()->Process;
     PCSRSS_CONSOLE Console;
     NTSTATUS Status;
     PHISTORY_BUFFER Hist;
     ULONG Length = 0;
     INT i;
 
-    if (!Win32CsrValidateBuffer(ProcessData,
+    if (!Win32CsrValidateBuffer(Process,
                                 GetCommandHistoryLength->ExeName.Buffer,
                                 GetCommandHistoryLength->ExeName.Length, 1))
     {
         return STATUS_ACCESS_VIOLATION;
     }
 
-    Status = ConioConsoleFromProcessData(ProcessData, &Console);
+    Status = ConioConsoleFromProcessData(ConsoleGetPerProcessData(Process), &Console);
     if (NT_SUCCESS(Status))
     {
         Hist = HistoryFindBuffer(Console, &GetCommandHistoryLength->ExeName);
@@ -184,7 +184,7 @@ CSR_API(SrvGetConsoleCommandHistoryLength)
 CSR_API(SrvGetConsoleCommandHistory)
 {
     PCSRSS_GET_COMMAND_HISTORY GetCommandHistory = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetCommandHistory;
-    PCSR_PROCESS ProcessData = CsrGetClientThread()->Process;
+    PCSR_PROCESS Process = CsrGetClientThread()->Process;
     PCSRSS_CONSOLE Console;
     NTSTATUS Status;
     PHISTORY_BUFFER Hist;
@@ -192,15 +192,15 @@ CSR_API(SrvGetConsoleCommandHistory)
     ULONG BufferSize = GetCommandHistory->Length;
     INT i;
 
-    if (!Win32CsrValidateBuffer(ProcessData, Buffer, BufferSize, 1) ||
-        !Win32CsrValidateBuffer(ProcessData,
+    if (!Win32CsrValidateBuffer(Process, Buffer, BufferSize, 1) ||
+        !Win32CsrValidateBuffer(Process,
                                 GetCommandHistory->ExeName.Buffer,
                                 GetCommandHistory->ExeName.Length, 1))
     {
         return STATUS_ACCESS_VIOLATION;
     }
 
-    Status = ConioConsoleFromProcessData(ProcessData, &Console);
+    Status = ConioConsoleFromProcessData(ConsoleGetPerProcessData(Process), &Console);
     if (NT_SUCCESS(Status))
     {
         Hist = HistoryFindBuffer(Console, &GetCommandHistory->ExeName);
@@ -228,19 +228,19 @@ CSR_API(SrvGetConsoleCommandHistory)
 CSR_API(SrvExpungeConsoleCommandHistory)
 {
     PCSRSS_EXPUNGE_COMMAND_HISTORY ExpungeCommandHistory = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.ExpungeCommandHistory;
-    PCSR_PROCESS ProcessData = CsrGetClientThread()->Process;
+    PCSR_PROCESS Process = CsrGetClientThread()->Process;
     PCSRSS_CONSOLE Console;
     PHISTORY_BUFFER Hist;
     NTSTATUS Status;
 
-    if (!Win32CsrValidateBuffer(ProcessData,
+    if (!Win32CsrValidateBuffer(Process,
                                 ExpungeCommandHistory->ExeName.Buffer,
                                 ExpungeCommandHistory->ExeName.Length, 1))
     {
         return STATUS_ACCESS_VIOLATION;
     }
 
-    Status = ConioConsoleFromProcessData(ProcessData, &Console);
+    Status = ConioConsoleFromProcessData(ConsoleGetPerProcessData(Process), &Console);
     if (NT_SUCCESS(Status))
     {
         Hist = HistoryFindBuffer(Console, &ExpungeCommandHistory->ExeName);
@@ -253,21 +253,21 @@ CSR_API(SrvExpungeConsoleCommandHistory)
 CSR_API(SrvSetConsoleNumberOfCommands)
 {
     PCSRSS_SET_HISTORY_NUMBER_COMMANDS SetHistoryNumberCommands = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.SetHistoryNumberCommands;
-    PCSR_PROCESS ProcessData = CsrGetClientThread()->Process;
+    PCSR_PROCESS Process = CsrGetClientThread()->Process;
     PCSRSS_CONSOLE Console;
     PHISTORY_BUFFER Hist;
     NTSTATUS Status;
     WORD MaxEntries = SetHistoryNumberCommands->NumCommands;
     PUNICODE_STRING OldEntryList, NewEntryList;
 
-    if (!Win32CsrValidateBuffer(ProcessData,
+    if (!Win32CsrValidateBuffer(Process,
                                 SetHistoryNumberCommands->ExeName.Buffer,
                                 SetHistoryNumberCommands->ExeName.Length, 1))
     {
         return STATUS_ACCESS_VIOLATION;
     }
 
-    Status = ConioConsoleFromProcessData(ProcessData, &Console);
+    Status = ConioConsoleFromProcessData(ConsoleGetPerProcessData(Process), &Console);
     if (NT_SUCCESS(Status))
     {
         Hist = HistoryFindBuffer(Console, &SetHistoryNumberCommands->ExeName);
@@ -304,7 +304,7 @@ CSR_API(SrvGetConsoleHistory)
 {
     PCSRSS_GET_HISTORY_INFO GetHistoryInfo = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetHistoryInfo;
     PCSRSS_CONSOLE Console;
-    NTSTATUS Status = ConioConsoleFromProcessData(CsrGetClientThread()->Process, &Console);
+    NTSTATUS Status = ConioConsoleFromProcessData(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console);
     if (NT_SUCCESS(Status))
     {
         GetHistoryInfo->HistoryBufferSize      = Console->HistoryBufferSize;
@@ -319,7 +319,7 @@ CSR_API(SrvSetConsoleHistory)
 {
     PCSRSS_SET_HISTORY_INFO SetHistoryInfo = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.SetHistoryInfo;
     PCSRSS_CONSOLE Console;
-    NTSTATUS Status = ConioConsoleFromProcessData(CsrGetClientThread()->Process, &Console);
+    NTSTATUS Status = ConioConsoleFromProcessData(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console);
     if (NT_SUCCESS(Status))
     {
         Console->HistoryBufferSize      = (WORD)SetHistoryInfo->HistoryBufferSize;

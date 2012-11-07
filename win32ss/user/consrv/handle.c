@@ -15,15 +15,6 @@
 #include <debug.h>
 
 
-typedef struct _CSRSS_HANDLE
-{
-    Object_t *Object;
-    DWORD Access;
-    BOOL Inheritable;
-    DWORD ShareMode;
-} CSRSS_HANDLE, *PCSRSS_HANDLE;
-
-
 /* FUNCTIONS *****************************************************************/
 
 static
@@ -80,7 +71,7 @@ Win32CsrCloseHandleEntry(PCSRSS_HANDLE Entry)
 
 NTSTATUS
 FASTCALL
-Win32CsrReleaseObject(PCSR_PROCESS ProcessData,
+Win32CsrReleaseObject(PCONSOLE_PROCESS_DATA ProcessData,
                       HANDLE Handle)
 {
     ULONG_PTR h = (ULONG_PTR)Handle >> 2;
@@ -100,7 +91,7 @@ Win32CsrReleaseObject(PCSR_PROCESS ProcessData,
 
 NTSTATUS
 FASTCALL
-Win32CsrLockObject(PCSR_PROCESS ProcessData,
+Win32CsrLockObject(PCONSOLE_PROCESS_DATA ProcessData,
                    HANDLE Handle,
                    Object_t **Object,
                    DWORD Access,
@@ -108,7 +99,7 @@ Win32CsrLockObject(PCSR_PROCESS ProcessData,
 {
     ULONG_PTR h = (ULONG_PTR)Handle >> 2;
 
-    DPRINT("CsrGetObject, Object: %x, %x, %x\n",
+    DPRINT("Win32CsrLockObject, Object: %x, %x, %x\n",
            Object, Handle, ProcessData ? ProcessData->HandleTableSize : 0);
 
     RtlEnterCriticalSection(&ProcessData->HandleTableLock);
@@ -139,10 +130,87 @@ Win32CsrUnlockObject(Object_t *Object)
         ConioDeleteConsole(&Console->Header);
 }
 
+NTSTATUS
+NTAPI
+ConsoleNewProcess(PCSR_PROCESS SourceProcess,
+                  PCSR_PROCESS TargetProcess)
+{
+    PCONSOLE_PROCESS_DATA SourceProcessData, TargetProcessData;
+    ULONG i;
+
+    DPRINT1("ConsoleNewProcess inside\n");
+    DPRINT1("SourceProcess = 0x%p ; TargetProcess = 0x%p\n", SourceProcess, TargetProcess);
+
+    /* An empty target process is invalid */
+    if (!TargetProcess)
+        return STATUS_INVALID_PARAMETER;
+
+    DPRINT1("ConsoleNewProcess - OK\n");
+
+    TargetProcessData = ConsoleGetPerProcessData(TargetProcess);
+
+    /* Initialize the new (target) process */
+    TargetProcessData->Process = TargetProcess;
+    RtlInitializeCriticalSection(&TargetProcessData->HandleTableLock);
+
+    /* Do nothing if the source process is NULL */
+    if (!SourceProcess)
+        return STATUS_SUCCESS;
+
+    SourceProcessData = ConsoleGetPerProcessData(SourceProcess);
+
+    // TODO: Check if one of the processes is really a CONSOLE.
+    /*
+    if (!(CreateProcessRequest->CreationFlags & (CREATE_NEW_CONSOLE | DETACHED_PROCESS)))
+    {
+        // NewProcess == TargetProcess.
+        NewProcess->ParentConsole = Process->Console;
+        NewProcess->bInheritHandles = CreateProcessRequest->bInheritHandles;
+    }
+    */
+
+    /* Only inherit if the if the flag was set */
+    if (!TargetProcessData->bInheritHandles) return STATUS_SUCCESS;
+
+    if (TargetProcessData->HandleTableSize)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    RtlEnterCriticalSection(&SourceProcessData->HandleTableLock);
+
+    TargetProcessData->HandleTable = RtlAllocateHeap(ConSrvHeap,
+                                                     HEAP_ZERO_MEMORY,
+                                                     SourceProcessData->HandleTableSize
+                                                             * sizeof(CSRSS_HANDLE));
+    if (TargetProcessData->HandleTable == NULL)
+    {
+        RtlLeaveCriticalSection(&SourceProcessData->HandleTableLock);
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    TargetProcessData->HandleTableSize = SourceProcessData->HandleTableSize;
+
+    for (i = 0; i < SourceProcessData->HandleTableSize; i++)
+    {
+        if (SourceProcessData->HandleTable[i].Object != NULL &&
+            SourceProcessData->HandleTable[i].Inheritable)
+        {
+            TargetProcessData->HandleTable[i] = SourceProcessData->HandleTable[i];
+            Win32CsrCreateHandleEntry(&TargetProcessData->HandleTable[i]);
+        }
+    }
+
+    RtlLeaveCriticalSection(&SourceProcessData->HandleTableLock);
+
+    return STATUS_SUCCESS;
+}
+
 VOID
 WINAPI
-Win32CsrReleaseConsole(PCSR_PROCESS ProcessData)
+Win32CsrReleaseConsole(PCSR_PROCESS Process)
 {
+    PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(Process);
     PCSRSS_CONSOLE Console;
     ULONG i;
 
@@ -172,7 +240,7 @@ Win32CsrReleaseConsole(PCSR_PROCESS ProcessData)
 
 NTSTATUS
 FASTCALL
-Win32CsrInsertObject(PCSR_PROCESS ProcessData,
+Win32CsrInsertObject(PCONSOLE_PROCESS_DATA ProcessData,
                      PHANDLE Handle,
                      Object_t *Object,
                      DWORD Access,
@@ -215,112 +283,22 @@ Win32CsrInsertObject(PCSR_PROCESS ProcessData,
     Win32CsrCreateHandleEntry(&ProcessData->HandleTable[i]);
     *Handle = UlongToHandle((i << 2) | 0x3);
     RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
-    return(STATUS_SUCCESS);
+    return STATUS_SUCCESS;
 }
-
-NTSTATUS
-WINAPI
-Win32CsrDuplicateHandleTable(PCSR_PROCESS SourceProcessData,
-                             PCSR_PROCESS TargetProcessData)
-{
-    ULONG i;
-    
-    /* Only inherit if the flag was set */
-    if (!TargetProcessData->bInheritHandles) return STATUS_SUCCESS;
-
-    if (TargetProcessData->HandleTableSize)
-    {
-        return STATUS_INVALID_PARAMETER;
-    }
-
-    RtlEnterCriticalSection(&SourceProcessData->HandleTableLock);
-
-    /* we are called from CreateProcessData, it isn't necessary to lock the target process data */
-
-    TargetProcessData->HandleTable = RtlAllocateHeap(ConSrvHeap,
-                                                     HEAP_ZERO_MEMORY,
-                                                     SourceProcessData->HandleTableSize
-                                                             * sizeof(CSRSS_HANDLE));
-    if (TargetProcessData->HandleTable == NULL)
-    {
-        RtlLeaveCriticalSection(&SourceProcessData->HandleTableLock);
-        return(STATUS_UNSUCCESSFUL);
-    }
-    TargetProcessData->HandleTableSize = SourceProcessData->HandleTableSize;
-    for (i = 0; i < SourceProcessData->HandleTableSize; i++)
-    {
-        if (SourceProcessData->HandleTable[i].Object != NULL &&
-            SourceProcessData->HandleTable[i].Inheritable)
-        {
-            TargetProcessData->HandleTable[i] = SourceProcessData->HandleTable[i];
-            Win32CsrCreateHandleEntry(&TargetProcessData->HandleTable[i]);
-        }
-    }
-    RtlLeaveCriticalSection(&SourceProcessData->HandleTableLock);
-    return(STATUS_SUCCESS);
-}
-
-CSR_API(CsrGetHandle)
-{
-    NTSTATUS Status = STATUS_SUCCESS;
-    PCSRSS_GET_INPUT_HANDLE GetInputHandleRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetInputHandleRequest;
-    PCSR_PROCESS ProcessData = CsrGetClientThread()->Process;
-
-    GetInputHandleRequest->Handle = INVALID_HANDLE_VALUE;
-
-    RtlEnterCriticalSection(&ProcessData->HandleTableLock);
-    if (ProcessData->Console)
-    {
-        DWORD DesiredAccess = GetInputHandleRequest->Access;
-        DWORD ShareMode = GetInputHandleRequest->ShareMode;
-
-        PCSRSS_CONSOLE Console = ProcessData->Console;
-        Object_t *Object;
-
-        EnterCriticalSection(&Console->Lock);
-        if (ApiMessage->ApiNumber == ConsolepGetHandleInformation)
-            Object = &Console->ActiveBuffer->Header;
-        else
-            Object = &Console->Header;
-
-        if (((DesiredAccess & GENERIC_READ)  && Object->ExclusiveRead  != 0) ||
-            ((DesiredAccess & GENERIC_WRITE) && Object->ExclusiveWrite != 0) ||
-            (!(ShareMode & FILE_SHARE_READ)  && Object->AccessRead     != 0) ||
-            (!(ShareMode & FILE_SHARE_WRITE) && Object->AccessWrite    != 0))
-        {
-            DPRINT1("Sharing violation\n");
-            Status = STATUS_SHARING_VIOLATION;
-        }
-        else
-        {
-            Status = Win32CsrInsertObject(ProcessData,
-                                          &GetInputHandleRequest->Handle,
-                                          Object,
-                                          DesiredAccess,
-                                          GetInputHandleRequest->Inheritable,
-                                          ShareMode);
-        }
-        LeaveCriticalSection(&Console->Lock);
-    }
-    RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
-
-    return Status;
-}
-
-// CSR_API(CsrSetHandle) ??
 
 CSR_API(SrvCloseHandle)
 {
     PCSRSS_CLOSE_HANDLE CloseHandleRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.CloseHandleRequest;
 
-    return Win32CsrReleaseObject(CsrGetClientThread()->Process, CloseHandleRequest->Handle);
+    return Win32CsrReleaseObject(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
+                                 CloseHandleRequest->Handle);
 }
 
 CSR_API(SrvVerifyConsoleIoHandle)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     PCSRSS_VERIFY_HANDLE VerifyHandleRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.VerifyHandleRequest;
-    PCSR_PROCESS ProcessData = CsrGetClientThread()->Process;
+    PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);
     ULONG_PTR Index;
 
     Index = (ULONG_PTR)VerifyHandleRequest->Handle >> 2;
@@ -342,7 +320,7 @@ CSR_API(SrvDuplicateHandle)
     PCSRSS_HANDLE Entry;
     DWORD DesiredAccess;
     PCSRSS_DUPLICATE_HANDLE DuplicateHandleRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.DuplicateHandleRequest;
-    PCSR_PROCESS ProcessData = CsrGetClientThread()->Process;
+    PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);
 
     Index = (ULONG_PTR)DuplicateHandleRequest->Handle >> 2;
     RtlEnterCriticalSection(&ProcessData->HandleTableLock);
@@ -372,11 +350,11 @@ CSR_API(SrvDuplicateHandle)
     }
 
     ApiMessage->Status = Win32CsrInsertObject(ProcessData,
-                                           &DuplicateHandleRequest->Handle,
-                                           Entry->Object,
-                                           DesiredAccess,
-                                           DuplicateHandleRequest->Inheritable,
-                                           Entry->ShareMode);
+                                              &DuplicateHandleRequest->Handle,
+                                              Entry->Object,
+                                              DesiredAccess,
+                                              DuplicateHandleRequest->Inheritable,
+                                              Entry->ShareMode);
     if (NT_SUCCESS(ApiMessage->Status)
         && DuplicateHandleRequest->Options & DUPLICATE_CLOSE_SOURCE)
     {
@@ -391,7 +369,9 @@ CSR_API(CsrGetInputWaitHandle)
 {
     PCSRSS_GET_INPUT_WAIT_HANDLE GetConsoleInputWaitHandle = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetConsoleInputWaitHandle;
 
-    GetConsoleInputWaitHandle->InputWaitHandle = CsrGetClientThread()->Process->ConsoleEvent;
+    GetConsoleInputWaitHandle->InputWaitHandle =
+        ConsoleGetPerProcessData(CsrGetClientThread()->Process)->ConsoleEvent;
+
     return STATUS_SUCCESS;
 }
 

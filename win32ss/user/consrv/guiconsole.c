@@ -130,13 +130,12 @@ GuiConsoleAppendMenuItems(HMENU hMenu,
     UINT i = 0;
     WCHAR szMenuString[255];
     HMENU hSubMenu;
-    HINSTANCE hInst = GetModuleHandleW(L"win32csr");
 
     do
     {
         if (Items[i].uID != (UINT)-1)
         {
-            if (LoadStringW(hInst,
+            if (LoadStringW(ConSrvDllInstance,
                             Items[i].uID,
                             szMenuString,
                             sizeof(szMenuString) / sizeof(szMenuString[0])) > 0)
@@ -406,15 +405,16 @@ static VOID
 GuiConsoleWriteUserSettings(PCSRSS_CONSOLE Console, PGUI_CONSOLE_DATA GuiData)
 {
     HKEY hKey;
-    PCSR_PROCESS ProcessData;
+    PCONSOLE_PROCESS_DATA ProcessData;
 
     if (Console->ProcessList.Flink == &Console->ProcessList)
     {
         DPRINT("GuiConsoleWriteUserSettings: No Process!!!\n");
         return;
     }
-    ProcessData = CONTAINING_RECORD(Console->ProcessList.Flink, CSR_PROCESS, ConsoleLink);
-    if (!GuiConsoleOpenUserSettings(GuiData, PtrToUlong(ProcessData->ClientId.UniqueProcess), &hKey, KEY_READ | KEY_WRITE, TRUE))
+
+    ProcessData = CONTAINING_RECORD(Console->ProcessList.Flink, CONSOLE_PROCESS_DATA, ConsoleLink);
+    if (!GuiConsoleOpenUserSettings(GuiData, PtrToUlong(ProcessData->Process->ClientId.UniqueProcess), &hKey, KEY_READ | KEY_WRITE, TRUE))
     {
         return;
     }
@@ -703,7 +703,7 @@ GuiConsoleHandleNcCreate(HWND hWnd, CREATESTRUCTW *Create)
     HFONT OldFont;
     TEXTMETRICW Metrics;
     SIZE CharSize;
-    PCSR_PROCESS ProcessData;
+    PCONSOLE_PROCESS_DATA ProcessData;
     HKEY hKey;
 
     Console->hWindow = hWnd;
@@ -717,8 +717,8 @@ GuiConsoleHandleNcCreate(HWND hWnd, CREATESTRUCTW *Create)
     GuiConsoleUseDefaults(Console, GuiData, Console->ActiveBuffer);
     if (Console->ProcessList.Flink != &Console->ProcessList)
     {
-        ProcessData = CONTAINING_RECORD(Console->ProcessList.Flink, CSR_PROCESS, ConsoleLink);
-        if (GuiConsoleOpenUserSettings(GuiData, PtrToUlong(ProcessData->ClientId.UniqueProcess), &hKey, KEY_READ, FALSE))
+        ProcessData = CONTAINING_RECORD(Console->ProcessList.Flink, CONSOLE_PROCESS_DATA, ConsoleLink);
+        if (GuiConsoleOpenUserSettings(GuiData, PtrToUlong(ProcessData->Process->ClientId.UniqueProcess), &hKey, KEY_READ, FALSE))
         {
             GuiConsoleReadUserSettings(hKey, Console, GuiData, Console->ActiveBuffer);
             RegCloseKey(hKey);
@@ -801,7 +801,7 @@ GuiConsoleHandleNcCreate(HWND hWnd, CREATESTRUCTW *Create)
 
     SetEvent(GuiData->hGuiInitEvent);
 
-    return (BOOL) DefWindowProcW(hWnd, WM_NCCREATE, 0, (LPARAM) Create);
+    return (BOOL)DefWindowProcW(hWnd, WM_NCCREATE, 0, (LPARAM)Create);
 }
 
 static VOID
@@ -1276,7 +1276,7 @@ GuiConsoleHandleClose(HWND hWnd)
     PCSRSS_CONSOLE Console;
     PGUI_CONSOLE_DATA GuiData;
     PLIST_ENTRY current_entry;
-    PCSR_PROCESS current;
+    PCONSOLE_PROCESS_DATA current;
 
     GuiConsoleGetDataPointers(hWnd, &Console, &GuiData);
 
@@ -1285,7 +1285,7 @@ GuiConsoleHandleClose(HWND hWnd)
     current_entry = Console->ProcessList.Flink;
     while (current_entry != &Console->ProcessList)
     {
-        current = CONTAINING_RECORD(current_entry, CSR_PROCESS, ConsoleLink);
+        current = CONTAINING_RECORD(current_entry, CONSOLE_PROCESS_DATA, ConsoleLink);
         current_entry = current_entry->Flink;
 
         /* FIXME: Windows will wait up to 5 seconds for the thread to exit.
@@ -2194,7 +2194,7 @@ GuiInit(VOID)
     wc.lpszClassName = L"Win32CsrCreateNotify";
     wc.lpfnWndProc = GuiConsoleNotifyWndProc;
     wc.style = 0;
-    wc.hInstance = (HINSTANCE) GetModuleHandleW(NULL);
+    wc.hInstance = (HINSTANCE)GetModuleHandleW(NULL);
     wc.hIcon = NULL;
     wc.hCursor = NULL;
     wc.hbrBackground = NULL;
@@ -2212,14 +2212,14 @@ GuiInit(VOID)
     wc.lpszClassName = L"ConsoleWindowClass";
     wc.lpfnWndProc = GuiConsoleWndProc;
     wc.style = 0;
-    wc.hInstance = (HINSTANCE) GetModuleHandleW(NULL);
-    wc.hIcon = LoadIconW(GetModuleHandleW(L"win32csr"), MAKEINTRESOURCEW(1));
+    wc.hInstance = (HINSTANCE)GetModuleHandleW(NULL);
+    wc.hIcon = LoadIconW(ConSrvDllInstance, MAKEINTRESOURCEW(1));
     wc.hCursor = LoadCursorW(NULL, (LPCWSTR) IDC_ARROW);
     wc.hbrBackground = CreateSolidBrush(RGB(0,0,0));
     wc.lpszMenuName = NULL;
     wc.cbClsExtra = 0;
     wc.cbWndExtra = 0;
-    wc.hIconSm = LoadImageW(GetModuleHandleW(L"win32csr"), MAKEINTRESOURCEW(1), IMAGE_ICON,
+    wc.hIconSm = LoadImageW(ConSrvDllInstance, MAKEINTRESOURCEW(1), IMAGE_ICON,
                             GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON),
                             LR_SHARED);
     if (RegisterClassExW(&wc) == 0)
@@ -2255,7 +2255,7 @@ GuiChangeTitle(PCSRSS_CONSOLE Console)
         Title = L"";
     }
 
-    SendMessageW(Console->hWindow, WM_SETTEXT, 0, (LPARAM) Title);
+    SendMessageW(Console->hWindow, WM_SETTEXT, 0, (LPARAM)Title);
 
     if (NULL != Buffer)
     {
@@ -2277,7 +2277,7 @@ GuiChangeIcon(PCSRSS_CONSOLE Console, HICON hWindowIcon)
 static VOID WINAPI
 GuiCleanupConsole(PCSRSS_CONSOLE Console)
 {
-    SendMessageW(NotifyWnd, PM_DESTROY_CONSOLE, 0, (LPARAM) Console);
+    SendMessageW(NotifyWnd, PM_DESTROY_CONSOLE, 0, (LPARAM)Console);
 }
 
 static CSRSS_CONSOLE_VTBL GuiVtbl =
@@ -2362,7 +2362,7 @@ GuiInitConsole(PCSRSS_CONSOLE Console, int ShowCmd)
      */
     GuiData->hGuiInitEvent = CreateEventW(NULL, FALSE, FALSE, NULL);
     /* create console */
-    PostMessageW(NotifyWnd, PM_CREATE_CONSOLE, ShowCmd, (LPARAM) Console);
+    PostMessageW(NotifyWnd, PM_CREATE_CONSOLE, ShowCmd, (LPARAM)Console);
 
     /* wait untill initialization has finished */
     WaitForSingleObject(GuiData->hGuiInitEvent, INFINITE);
