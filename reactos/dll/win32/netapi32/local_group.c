@@ -49,8 +49,10 @@ typedef struct _ENUM_CONTEXT
     SAM_HANDLE AccountDomainHandle;
 
     SAM_ENUMERATE_HANDLE EnumerationContext;
-    PSAM_RID_ENUMERATION EnumBuffer;
-    ULONG EnumReturned;
+    PSAM_RID_ENUMERATION Buffer;
+    ULONG Returned;
+    ULONG Index;
+    BOOLEAN BuiltinDone;
 
 } ENUM_CONTEXT, *PENUM_CONTEXT;
 
@@ -241,9 +243,12 @@ NET_API_STATUS WINAPI NetLocalGroupEnum(
     LPDWORD totalentries,
     PDWORD_PTR resumehandle)
 {
+    PSAM_RID_ENUMERATION CurrentAlias;
     PENUM_CONTEXT EnumContext = NULL;
     PSID DomainSid = NULL;
     ULONG i;
+    SAM_HANDLE AliasHandle = NULL;
+    PALIAS_GENERAL_INFORMATION AliasInfo = NULL;
 
     NET_API_STATUS ApiStatus = NERR_Success;
     NTSTATUS Status = STATUS_SUCCESS;
@@ -267,8 +272,10 @@ NET_API_STATUS WINAPI NetLocalGroupEnum(
             goto done;
 
         EnumContext->EnumerationContext = 0;
-        EnumContext->EnumBuffer = NULL;
-        EnumContext->EnumReturned = 0;
+        EnumContext->Buffer = NULL;
+        EnumContext->Returned = 0;
+        EnumContext->Index = 0;
+        EnumContext->BuiltinDone = FALSE;
 
         Status = SamConnect(NULL,
                             &EnumContext->ServerHandle,
@@ -290,7 +297,7 @@ NET_API_STATUS WINAPI NetLocalGroupEnum(
         }
 
         Status = SamOpenDomain(EnumContext->ServerHandle,
-                               DOMAIN_LIST_ACCOUNTS,
+                               DOMAIN_LIST_ACCOUNTS | DOMAIN_LOOKUP,
                                DomainSid,
                                &EnumContext->AccountDomainHandle);
 
@@ -312,7 +319,7 @@ NET_API_STATUS WINAPI NetLocalGroupEnum(
         }
 
         Status = SamOpenDomain(EnumContext->ServerHandle,
-                               DOMAIN_LIST_ACCOUNTS,
+                               DOMAIN_LIST_ACCOUNTS | DOMAIN_LOOKUP,
                                DomainSid,
                                &EnumContext->BuiltinDomainHandle);
 
@@ -326,40 +333,96 @@ NET_API_STATUS WINAPI NetLocalGroupEnum(
         }
     }
 
+
     while (TRUE)
     {
-        Status = SamEnumerateAliasesInDomain(EnumContext->BuiltinDomainHandle,
-                                             &EnumContext->EnumerationContext,
-                                             (PVOID *)&EnumContext->EnumBuffer,
-                                             prefmaxlen,
-                                             &EnumContext->EnumReturned);
 
-        TRACE("SamEnumerateAliasesInDomain returned (Status %08lx)\n", Status);
+        if (EnumContext->Index >= EnumContext->Returned)
+        {
+            if (EnumContext->BuiltinDone == TRUE)
+            {
+                ApiStatus = NERR_Success;
+                goto done;
+            }
 
+            TRACE("Calling SamEnumerateAliasesInDomain\n");
+
+            Status = SamEnumerateAliasesInDomain(EnumContext->BuiltinDomainHandle,
+                                                 &EnumContext->EnumerationContext,
+                                                 (PVOID *)&EnumContext->Buffer,
+                                                 prefmaxlen,
+                                                 &EnumContext->Returned);
+
+            TRACE("SamEnumerateAliasesInDomain returned (Status %08lx)\n", Status);
+            if (!NT_SUCCESS(Status))
+            {
+                ERR("SamEnumerateAliasesInDomain failed (Status %08lx)\n", Status);
+                ApiStatus = NetpNtStatusToApiStatus(Status);
+                goto done;
+            }
+
+            if (Status == STATUS_MORE_ENTRIES)
+            {
+                ApiStatus = NERR_BufTooSmall;
+                goto done;
+            }
+            else
+            {
+                EnumContext->BuiltinDone = TRUE;
+            }
+        }
+
+        TRACE("EnumContext: %lu\n", EnumContext);
+        TRACE("EnumContext->Returned: %lu\n", EnumContext->Returned);
+        TRACE("EnumContext->Buffer: %p\n", EnumContext->Buffer);
+
+        /* Get a pointer to the current alias */
+        CurrentAlias = &EnumContext->Buffer[EnumContext->Index];
+
+        TRACE("RID: %lu\n", CurrentAlias->RelativeId);
+
+        Status = SamOpenAlias(EnumContext->BuiltinDomainHandle,
+                              ALIAS_READ_INFORMATION,
+                              CurrentAlias->RelativeId,
+                              &AliasHandle);
         if (!NT_SUCCESS(Status))
         {
-            ERR("SamEnumerateAliasesInDomain failed (Status %08lx)\n", Status);
+            ERR("SamOpenAlias failed (Status %08lx)\n", Status);
             ApiStatus = NetpNtStatusToApiStatus(Status);
             goto done;
         }
 
-        TRACE("EnumContext: %lu\n", EnumContext);
-        TRACE("EnumReturned: %lu\n", EnumContext->EnumReturned);
-        TRACE("EnumBuffer: %p\n", EnumContext->EnumBuffer);
-
-        for (i = 0; i < EnumContext->EnumReturned; i++)
+        Status = SamQueryInformationAlias(AliasHandle,
+                                          AliasGeneralInformation,
+                                          (PVOID *)&AliasInfo);
+        if (!NT_SUCCESS(Status))
         {
-            TRACE("RID: %lu\n", EnumContext->EnumBuffer[i].RelativeId);
-            TRACE("Name: %p\n", EnumContext->EnumBuffer[i].Name.Buffer);
-            TRACE("Name: %S\n", EnumContext->EnumBuffer[i].Name.Buffer);
-            if (EnumContext->EnumBuffer[i].Name.Buffer != NULL)
-            {
-                TRACE("Name: %hx\n", EnumContext->EnumBuffer[i].Name.Buffer[0]);
-            }
+            ERR("SamQueryInformationAlias failed (Status %08lx)\n", Status);
+            ApiStatus = NetpNtStatusToApiStatus(Status);
+            goto done;
         }
 
-        if (Status != STATUS_MORE_ENTRIES)
-            break;
+        SamCloseHandle(AliasHandle);
+        AliasHandle = NULL;
+
+        TRACE("Name: %S\n", AliasInfo->Name.Buffer);
+        TRACE("Comment: %S\n", AliasInfo->AdminComment.Buffer);
+
+
+        if (AliasInfo != NULL)
+        {
+            if (AliasInfo->Name.Buffer != NULL)
+                SamFreeMemory(AliasInfo->Name.Buffer);
+
+            if (AliasInfo->AdminComment.Buffer != NULL)
+                SamFreeMemory(AliasInfo->AdminComment.Buffer);
+
+            SamFreeMemory(AliasInfo);
+            AliasInfo = NULL;
+        }
+
+
+        EnumContext->Index++;
     }
 
 
@@ -377,14 +440,14 @@ done:
             if (EnumContext->ServerHandle != NULL)
                 SamCloseHandle(EnumContext->ServerHandle);
 
-            if (EnumContext->EnumBuffer != NULL)
+            if (EnumContext->Buffer != NULL)
             {
-                for (i = 0; i < EnumContext->EnumReturned; i++)
+                for (i = 0; i < EnumContext->Returned; i++)
                 {
-                    SamFreeMemory(EnumContext->EnumBuffer[i].Name.Buffer);
+                    SamFreeMemory(EnumContext->Buffer[i].Name.Buffer);
                 }
 
-                SamFreeMemory(EnumContext->EnumBuffer);
+                SamFreeMemory(EnumContext->Buffer);
             }
 
             NetApiBufferFree(EnumContext);
@@ -392,6 +455,19 @@ done:
         }
     }
 
+    if (AliasHandle != NULL)
+        SamCloseHandle(AliasHandle);
+
+    if (AliasInfo != NULL)
+    {
+        if (AliasInfo->Name.Buffer != NULL)
+            SamFreeMemory(AliasInfo->Name.Buffer);
+
+        if (AliasInfo->AdminComment.Buffer != NULL)
+            SamFreeMemory(AliasInfo->AdminComment.Buffer);
+
+        SamFreeMemory(AliasInfo);
+    }
 
     if (resumehandle != NULL)
         *resumehandle = (DWORD_PTR)EnumContext;
