@@ -506,7 +506,7 @@ BaseInitializeStaticServerData(IN PCSR_SERVER_DLL LoadedServerDll)
     LoadedServerDll->SharedSection = BaseStaticServerData;
 }
 
-
+/*
 VOID WINAPI BaseStaticServerThread(PVOID x)
 {
     // NTSTATUS Status = STATUS_SUCCESS;
@@ -523,11 +523,11 @@ VOID WINAPI BaseStaticServerThread(PVOID x)
     {
         default:
             Reply = Request;
-            /* Status =*/ NtReplyPort(BaseApiPort, Reply);
+            /\* Status =*\/ NtReplyPort(BaseApiPort, Reply);
             break;
     }
 }
-
+*/
 
 CSR_SERVER_DLL_INIT(ServerDllInitialization)
 {
@@ -565,7 +565,7 @@ CSR_SERVER_DLL_INIT(ServerDllInitialization)
 
 BOOL
 NTAPI
-DllMain(IN HANDLE hDll,
+DllMain(IN HINSTANCE hInstanceDll,
         IN DWORD dwReason,
         IN LPVOID lpReserved)
 {
@@ -574,7 +574,7 @@ DllMain(IN HANDLE hDll,
 
     if (DLL_PROCESS_ATTACH == dwReason)
     {
-        DllHandle = hDll;
+        DllHandle = hInstanceDll;
     }
     else if (DLL_PROCESS_DETACH == dwReason)
     {
