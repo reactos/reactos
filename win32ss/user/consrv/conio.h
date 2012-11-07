@@ -136,13 +136,15 @@ typedef struct ConsoleInput_t
 #define ConioResizeBuffer(Console, Buff, Size) (Console)->Vtbl->ResizeBuffer(Console, Buff, Size)
 
 /* console.c */
-NTSTATUS FASTCALL ConioConsoleFromProcessData(PCSR_PROCESS ProcessData, PCSRSS_CONSOLE *Console);
+NTSTATUS FASTCALL ConioConsoleFromProcessData(PCONSOLE_PROCESS_DATA ProcessData,
+                                              PCSRSS_CONSOLE *Console);
 VOID WINAPI ConioDeleteConsole(Object_t *Object);
 VOID WINAPI CsrInitConsoleSupport(VOID);
 VOID FASTCALL ConioPause(PCSRSS_CONSOLE Console, UINT Flags);
 VOID FASTCALL ConioUnpause(PCSRSS_CONSOLE Console, UINT Flags);
-VOID FASTCALL ConioConsoleCtrlEvent(DWORD Event, PCSR_PROCESS ProcessData);
-VOID FASTCALL ConioConsoleCtrlEventTimeout(DWORD Event, PCSR_PROCESS ProcessData,
+VOID FASTCALL ConioConsoleCtrlEvent(DWORD Event, PCONSOLE_PROCESS_DATA ProcessData);
+VOID FASTCALL ConioConsoleCtrlEventTimeout(DWORD Event,
+                                           PCONSOLE_PROCESS_DATA ProcessData,
                                            DWORD Timeout);
 
 /* coninput.c */

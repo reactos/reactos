@@ -11,7 +11,7 @@
 #define NDEBUG
 #include <debug.h>
 
-
+#if 0
 /* Ensure that a captured buffer is safe to access */
 BOOL FASTCALL
 Win32CsrValidateBuffer(PCSR_PROCESS ProcessData, PVOID Buffer,
@@ -37,5 +37,6 @@ Win32CsrValidateBuffer(PCSR_PROCESS ProcessData, PVOID Buffer,
     }
     return TRUE;
 }
+#endif
 
 /* EOF */

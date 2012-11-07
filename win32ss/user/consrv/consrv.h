@@ -21,11 +21,8 @@
 #include <csr/csrsrv.h>
 
 /* CONSOLE Headers */
+#include <win/console.h>
 #include <win/conmsg.h>
-// #include <win/base.h>
-
-//#include "guiconsole.h"
-//#include "tuiconsole.h"
 
 #include "resource.h"
 
@@ -33,9 +30,12 @@
 #include "console.h"
 
 
+extern HINSTANCE ConSrvDllInstance;
 extern HANDLE ConSrvHeap;
 // extern HANDLE BaseSrvSharedHeap;
 // extern PBASE_STATIC_SERVER_DATA BaseStaticServerData;
+
+
 
 typedef struct Object_tt
 {
@@ -47,6 +47,16 @@ typedef struct Object_tt
 } Object_t;
 
 
+typedef struct _CSRSS_HANDLE
+{
+    Object_t *Object;
+    DWORD Access;
+    BOOL Inheritable;
+    DWORD ShareMode;
+} CSRSS_HANDLE, *PCSRSS_HANDLE;
+
+
+
 /* alias.c */
 CSR_API(SrvAddConsoleAlias);
 CSR_API(SrvGetConsoleAlias);
@@ -56,34 +66,31 @@ CSR_API(SrvGetConsoleAliasExes);
 CSR_API(SrvGetConsoleAliasExesLength);
 
 /* coninput.c */
-CSR_API(SrvReadConsole);
-CSR_API(CsrReadInputEvent);
-CSR_API(SrvFlushConsoleInputBuffer);
-CSR_API(SrvGetConsoleNumberOfInputEvents);
 CSR_API(SrvGetConsoleInput);
 CSR_API(SrvWriteConsoleInput);
+CSR_API(SrvReadConsole);
+CSR_API(SrvFlushConsoleInputBuffer);
+CSR_API(SrvGetConsoleNumberOfInputEvents);
 
 /* conoutput.c */
+CSR_API(SrvReadConsoleOutput);
+CSR_API(SrvWriteConsoleOutput);
+CSR_API(SrvReadConsoleOutputString);
+CSR_API(SrvWriteConsoleOutputString);
+CSR_API(SrvFillConsoleOutput);
 CSR_API(SrvWriteConsole);
-CSR_API(SrvGetConsoleScreenBufferInfo);
-CSR_API(SrvSetConsoleCursor);
-CSR_API(CsrWriteConsoleOutputChar);
-CSR_API(CsrFillOutputChar);
-CSR_API(CsrWriteConsoleOutputAttrib);
-CSR_API(CsrFillOutputAttrib);
+CSR_API(SrvSetConsoleCursorPosition);
 CSR_API(SrvGetConsoleCursorInfo);
 CSR_API(SrvSetConsoleCursorInfo);
-CSR_API(CsrSetTextAttrib);
+CSR_API(SrvSetConsoleTextAttribute);
 CSR_API(SrvCreateConsoleScreenBuffer);
+CSR_API(SrvGetConsoleScreenBufferInfo);
 CSR_API(SrvSetConsoleActiveScreenBuffer);
-CSR_API(SrvWriteConsoleOutput);
 CSR_API(SrvScrollConsoleScreenBuffer);
-CSR_API(CsrReadConsoleOutputChar);
-CSR_API(CsrReadConsoleOutputAttrib);
-CSR_API(SrvReadConsoleOutput);
 CSR_API(SrvSetConsoleScreenBufferSize);
 
 /* console.c */
+CSR_API(SrvOpenConsole);
 CSR_API(SrvAllocConsole);
 CSR_API(SrvFreeConsole);
 CSR_API(SrvSetConsoleMode);
@@ -96,36 +103,34 @@ CSR_API(SrvGetConsoleWindow);
 CSR_API(SrvSetConsoleIcon);
 CSR_API(SrvGetConsoleCP);
 CSR_API(SrvSetConsoleCP);
-CSR_API(CsrGetConsoleOutputCodePage);
-CSR_API(CsrSetConsoleOutputCodePage);
 CSR_API(SrvGetConsoleProcessList);
 CSR_API(SrvGenerateConsoleCtrlEvent);
 CSR_API(SrvGetConsoleSelectionInfo);
 
 /* handle.c */
-CSR_API(CsrGetHandle);
 CSR_API(SrvCloseHandle);
 CSR_API(SrvVerifyConsoleIoHandle);
 CSR_API(SrvDuplicateHandle);
 CSR_API(CsrGetInputWaitHandle);
 
-NTSTATUS FASTCALL Win32CsrInsertObject(PCSR_PROCESS ProcessData,
+NTSTATUS NTAPI ConsoleNewProcess(PCSR_PROCESS SourceProcess,
+                                 PCSR_PROCESS TargetProcess);
+VOID NTAPI Win32CsrReleaseConsole(PCSR_PROCESS Process);
+
+NTSTATUS FASTCALL Win32CsrInsertObject(PCONSOLE_PROCESS_DATA ProcessData,
                                        PHANDLE Handle,
                                        Object_t *Object,
                                        DWORD Access,
                                        BOOL Inheritable,
                                        DWORD ShareMode);
-NTSTATUS FASTCALL Win32CsrLockObject(PCSR_PROCESS ProcessData,
+NTSTATUS FASTCALL Win32CsrLockObject(PCONSOLE_PROCESS_DATA ProcessData,
                                      HANDLE Handle,
                                      Object_t **Object,
                                      DWORD Access,
-                                     long Type);
+                                     LONG Type);
 VOID FASTCALL Win32CsrUnlockObject(Object_t *Object);
-NTSTATUS FASTCALL Win32CsrReleaseObject(PCSR_PROCESS ProcessData,
-                                        HANDLE Object);
-VOID WINAPI Win32CsrReleaseConsole(PCSR_PROCESS ProcessData);
-NTSTATUS WINAPI Win32CsrDuplicateHandleTable(PCSR_PROCESS SourceProcessData,
-                                             PCSR_PROCESS TargetProcessData);
+NTSTATUS FASTCALL Win32CsrReleaseObject(PCONSOLE_PROCESS_DATA ProcessData,
+                                        HANDLE Handle);
 
 /* lineinput.c */
 CSR_API(SrvGetConsoleCommandHistoryLength);
@@ -136,10 +141,12 @@ CSR_API(SrvGetConsoleHistory);
 CSR_API(SrvSetConsoleHistory);
 
 /* server.c */
+#if 0
 BOOL FASTCALL Win32CsrValidateBuffer(PCSR_PROCESS ProcessData,
                                      PVOID Buffer,
                                      SIZE_T NumElements,
                                      SIZE_T ElementSize);
+#endif
 
 #endif // __CONSRV_H__
 
