@@ -976,6 +976,43 @@ typedef struct tagSETCLIPBDATA
     BOOL fIncSerialNumber;
 } SETCLIPBDATA, *PSETCLIPBDATA;
 
+// Used with NtUserSetCursorIconData, last parameter.
+typedef struct tagCURSORDATA
+{
+   LPWSTR lpName;
+   LPWSTR lpModName;
+   USHORT rt;
+   USHORT dummy;
+   ULONG CURSORF_flags;
+   SHORT xHotspot;
+   SHORT yHotspot;
+   HBITMAP hbmMask;
+   HBITMAP hbmColor;
+   HBITMAP hbmAlpha;
+   RECT rcBounds;
+   HBITMAP hbmUserAlpha; // Could be in W7U, not in W2k
+   ULONG bpp;
+   ULONG cx;
+   ULONG cy;
+   INT cpcur;
+   INT cicur;
+   struct tagCURSORDATA * aspcur;
+   DWORD * aicur;
+   INT * ajifRate;
+   INT iicur;
+} CURSORDATA, *PCURSORDATA; /* !dso CURSORDATA */
+
+// CURSORF_flags:
+#define CURSORF_FROMRESOURCE 0x0001
+#define CURSORF_GLOBAL       0x0002
+#define CURSORF_LRSHARED     0x0004
+#define CURSORF_ACON         0x0008
+#define CURSORF_WOWCLEANUP   0x0010
+#define CURSORF_ACONFRAME    0x0040
+#define CURSORF_SECRET       0x0080
+#define CURSORF_LINKED       0x0100
+#define CURSORF_CURRENT      0x0200
+
 DWORD
 NTAPI
 NtUserAssociateInputContext(
@@ -2737,15 +2774,21 @@ NtUserSetCursorIconData(
   _In_ HCURSOR hCursor,
   _In_ PUNICODE_STRING pustrModule,
   _In_ PUNICODE_STRING puSrcName,
-  _In_ PICONINFO pii);
+  _In_ PCURSORDATA pCursorData);
+
+typedef struct _tagFINDEXISTINGCURICONPARAM
+{
+    BOOL bIcon;
+    LONG cx;
+    LONG cy;
+} FINDEXISTINGCURICONPARAM;
   
 HICON
 NTAPI
 NtUserFindExistingCursorIcon(
   _In_  PUNICODE_STRING pustrModule,
   _In_  PUNICODE_STRING pustrRsrc,
-  _In_  LONG cxDesired,
-  _In_  LONG cyDesired);
+  _In_  FINDEXISTINGCURICONPARAM* param);
 #else
 BOOL
 NTAPI

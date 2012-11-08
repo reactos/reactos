@@ -380,8 +380,11 @@ SVC_(UserEnumDisplaySettings, 4)
 SVC_(UserEvent, 1)
 SVC_(UserExcludeUpdateRgn, 2)
 SVC_(UserFillWindow, 4)
-// SVC_(UserFindExistingCursorIcon, 3, Wrong, number, of, param, ?)
+#ifdef NEW_CURSORICON
+SVC_(UserFindExistingCursorIcon, 3)
+#else
 SVC_(UserFindExistingCursorIcon, 4)
+#endif
 SVC_(UserFindWindowEx, 5)
 SVC_(UserFlashWindowEx, 1)
 SVC_(UserGetAltTabInfo, 6)
