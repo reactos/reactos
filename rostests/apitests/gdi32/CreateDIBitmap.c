@@ -415,7 +415,7 @@ void Test_CreateDIBitmap_RLE8()
 void
 Test_CreateDIBitmap_CBM_CREATDIB(void)
 {
-    HBITMAP hbmp;
+    HBITMAP hbmp, hbmpOld;
     HDC hdc;
     BITMAPINFO bmi =
         {{sizeof(BITMAPINFOHEADER), 4, 4, 1, 8, BI_RGB, 0, 1, 1, 1, 0}, {{0,0,0,0}}};
@@ -437,6 +437,11 @@ Test_CreateDIBitmap_CBM_CREATDIB(void)
     ok_int(bitmap.bmBitsPixel, 8);
     ok_ptr(bitmap.bmBits, 0);
 
+    hbmpOld = SelectObject(hdc, hbmp);
+    ok(hbmpOld != NULL, "Couldn't select the bitmap.\n");
+    SelectObject(hdc, hbmpOld);
+    DeleteObject(hbmp);
+    DeleteDC(hdc);
 }
 
 START_TEST(CreateDIBitmap)
