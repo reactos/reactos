@@ -53,11 +53,12 @@ Win32CsrHardError(IN PCSR_THREAD ThreadData,
 
 /* shutdown.c */
 CSR_API(SrvExitWindowsEx);
-CSR_API(CsrSetLogonNotifyWindow);
-CSR_API(SrvRegisterLogonProcess);
 // CSR_API(CsrRegisterSystemClasses);
-
 CSR_API(SrvRegisterServicesProcess);
+CSR_API(SrvRegisterLogonProcess);
+
+/// HACK: ReactOS-specific
+CSR_API(RosSetLogonNotifyWindow);
 
 
 /*****************************

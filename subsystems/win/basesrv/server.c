@@ -11,45 +11,14 @@
 #define NDEBUG
 #include <debug.h>
 
-
-// extern NTSTATUS CallProcessCreated(PCSR_PROCESS, PCSR_PROCESS); // TODO: Import it from csrsrv/init.c
-// Remove it and correct csrsrv instead...
-#if 0
-NTSTATUS
-CallProcessCreated(IN PCSR_PROCESS SourceProcessData,
-                   IN PCSR_PROCESS TargetProcessData)
-{
-    NTSTATUS Status = STATUS_SUCCESS;
-    ULONG i;
-    PCSR_SERVER_DLL ServerDll;
-
-    DPRINT("CSR: %s called\n", __FUNCTION__);
-
-    /* Notify the Server DLLs */
-    for (i = 0; i < CSR_SERVER_DLL_MAX; i++)
-    {
-        /* Get the current Server DLL */
-        ServerDll = CsrLoadedServerDll[i];
-
-        /* Make sure it's valid and that it has callback */
-        if ((ServerDll) && (ServerDll->NewProcessCallback))
-        {
-            Status = ServerDll->NewProcessCallback(SourceProcessData, TargetProcessData);
-        }
-    }
-
-    return Status;
-}
-#endif
-
 CSR_API(BaseSrvCreateProcess)
 {
     NTSTATUS Status;
     PBASE_CREATE_PROCESS CreateProcessRequest = &((PBASE_API_MESSAGE)ApiMessage)->Data.CreateProcessRequest;
     HANDLE ProcessHandle, ThreadHandle;
     PCSR_THREAD CsrThread;
-    PCSR_PROCESS Process; // , NewProcess;
-    ULONG /* Flags, */ VdmPower = 0, DebugFlags = 0;
+    PCSR_PROCESS Process;
+    ULONG Flags = 0, VdmPower = 0, DebugFlags = 0;
 
     /* Get the current client thread */
     CsrThread = CsrGetClientThread();
@@ -58,7 +27,7 @@ CSR_API(BaseSrvCreateProcess)
     Process = CsrThread->Process;
 
     /* Extract the flags out of the process handle */
-    // Flags = (ULONG_PTR)CreateProcessRequest->ProcessHandle & 3;
+    Flags = (ULONG_PTR)CreateProcessRequest->ProcessHandle & 3;
     CreateProcessRequest->ProcessHandle = (HANDLE)((ULONG_PTR)CreateProcessRequest->ProcessHandle & ~3);
 
     /* Duplicate the process handle */
@@ -107,7 +76,7 @@ CSR_API(BaseSrvCreateProcess)
         }
     }
 
-    /* Convert some flags. FIXME: More need conversion */
+    /* Flags conversion. FIXME: More need conversion */
     if (CreateProcessRequest->CreationFlags & CREATE_NEW_PROCESS_GROUP)
     {
         DebugFlags |= CsrProcessCreateNewGroup;
@@ -138,20 +107,6 @@ CSR_API(BaseSrvCreateProcess)
     /* FIXME: Should notify user32 */
 
     /* FIXME: VDM vodoo */
-
-    /* ReactOS Compatibility */
-#if 0
-    Status = CsrLockProcessByClientId(CreateProcessRequest->ClientId.UniqueProcess, &NewProcess);
-    ASSERT(Status == STATUS_SUCCESS);
-    if (!(CreateProcessRequest->CreationFlags & (CREATE_NEW_CONSOLE | DETACHED_PROCESS)))
-    {
-        NewProcess->ParentConsole = Process->Console;
-        NewProcess->bInheritHandles = CreateProcessRequest->bInheritHandles;
-    }
-    RtlInitializeCriticalSection(&NewProcess->HandleTableLock);
-    CallProcessCreated(Process, NewProcess);
-    CsrUnlockProcess(NewProcess);
-#endif
 
     /* Return the result of this operation */
     return Status;
@@ -206,7 +161,8 @@ CSR_API(BaseSrvCreateThread)
         /* Call CSRSRV to tell it about the new thread */
         Status = CsrCreateThread(CsrProcess,
                                  ThreadHandle,
-                                 &CreateThreadRequest->ClientId);
+                                 &CreateThreadRequest->ClientId,
+                                 TRUE);
     }
 
     /* Unlock the process and return */
@@ -232,8 +188,8 @@ CSR_API(BaseSrvExitProcess)
     PCSR_THREAD CsrThread = CsrGetClientThread();
     ASSERT(CsrThread != NULL);
 
-    /* Set magic flag so we don't reply this message back */
-    ApiMessage->ApiNumber = 0xBABE;
+    /* Set the special reply value so we don't reply this message back */
+    *Reply = 2;
 
     /* Remove the CSR_THREADs and CSR_PROCESS */
     return CsrDestroyProcess(&CsrThread->ClientId,

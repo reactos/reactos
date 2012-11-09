@@ -74,26 +74,25 @@ BOOL
 WINAPI
 SetLogonNotifyWindow(HWND Wnd, HWINSTA WinSta)
 {
-#if 0
+/// HACK: Windows does not do this !! ReactOS-specific
     /* Maybe we should call NtUserSetLogonNotifyWindow and let that one inform CSRSS??? */
-    CSR_API_MESSAGE Request;
+    USER_API_MESSAGE Request;
     NTSTATUS Status;
 
     Request.Data.SetLogonNotifyWindowRequest.LogonNotifyWindow = Wnd;
 
-    Status = CsrClientCallServer(&Request,
+    Status = CsrClientCallServer((PCSR_API_MESSAGE)&Request,
                                  NULL,
-                                 CSR_CREATE_API_NUMBER(CSR_GUI, SET_LOGON_NOTIFY_WINDOW),
-                                 sizeof(CSR_API_MESSAGE));
+                                 CSR_CREATE_API_NUMBER(USERSRV_SERVERDLL_INDEX, UserpRosSetLogonNotifyWindow),
+                                 sizeof(CSRSS_SET_LOGON_NOTIFY_WINDOW));
     if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
     {
         SetLastError(RtlNtStatusToDosError(Status));
         return FALSE;
     }
+/// END HACK
 
     return NtUserSetLogonNotifyWindow(Wnd);
-#endif
-    return TRUE;
 }
 
 /*

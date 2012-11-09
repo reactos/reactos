@@ -56,7 +56,8 @@ CSR_API(SrvRegisterLogonProcess)
     return STATUS_SUCCESS;
 }
 
-CSR_API(CsrSetLogonNotifyWindow)
+/// HACK: ReactOS-specific
+CSR_API(RosSetLogonNotifyWindow)
 {
     PCSRSS_SET_LOGON_NOTIFY_WINDOW SetLogonNotifyWindowRequest = &((PUSER_API_MESSAGE)ApiMessage)->Data.SetLogonNotifyWindowRequest;
     DWORD WindowCreator;

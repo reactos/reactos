@@ -33,6 +33,9 @@ typedef enum _USERSRV_API_NUMBER
     // UserpConsoleHandleOperation,      // Added in Win7
     // UserpGetSetShutdownBlockReason,   // Added in Vista
 
+    /// HACK: ReactOS-specific
+    UserpRosSetLogonNotifyWindow,
+
     UserpMaxApiNumber
 } USERSRV_API_NUMBER, *PUSERSRV_API_NUMBER;
 
@@ -54,6 +57,7 @@ typedef struct
     BOOL Register;
 } CSRSS_REGISTER_LOGON_PROCESS, *PCSRSS_REGISTER_LOGON_PROCESS;
 
+/// HACK: ReactOS-specific
 typedef struct
 {
     HWND LogonNotifyWindow;
@@ -73,6 +77,8 @@ typedef struct _USER_API_MESSAGE
         CSRSS_EXIT_REACTOS ExitReactosRequest;
         CSRSS_REGISTER_SERVICES_PROCESS RegisterServicesProcessRequest;
         CSRSS_REGISTER_LOGON_PROCESS RegisterLogonProcessRequest;
+
+        /// HACK: ReactOS-specific
         CSRSS_SET_LOGON_NOTIFY_WINDOW SetLogonNotifyWindowRequest;
     } Data;
 } USER_API_MESSAGE, *PUSER_API_MESSAGE;

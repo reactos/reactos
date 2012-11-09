@@ -40,6 +40,9 @@ PCSR_API_ROUTINE UserServerApiDispatchTable[UserpMaxApiNumber] =
     // SrvCancelShutdown,              // Added in Vista
     // SrvConsoleHandleOperation,      // Added in Win7
     // SrvGetSetShutdownBlockReason,   // Added in Vista
+
+    /// HACK: ReactOS-specific
+    RosSetLogonNotifyWindow
 };
 
 BOOLEAN UserServerApiServerValidTable[UserpMaxApiNumber] =
@@ -57,6 +60,9 @@ BOOLEAN UserServerApiServerValidTable[UserpMaxApiNumber] =
     // FALSE,   // SrvCancelShutdown
     // FALSE,   // SrvConsoleHandleOperation
     // FALSE,   // SrvGetSetShutdownBlockReason
+
+    /// HACK: ReactOS-specific
+    FALSE,   // RosSetLogonNotifyWindow
 
     // FALSE
 };
@@ -76,6 +82,9 @@ PCHAR UserServerApiNameTable[UserpMaxApiNumber] =
     // "SrvCancelShutdown",
     // "SrvConsoleHandleOperation",
     // "SrvGetSetShutdownBlockReason",
+
+    /// HACK: ReactOS-specific
+    "RosSetLogonNotifyWindow",
 
     // NULL
 };
