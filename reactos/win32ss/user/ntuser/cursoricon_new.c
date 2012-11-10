@@ -923,7 +923,6 @@ NtUserSetCursorIconData(
     PCURICON_OBJECT CurIcon;
     NTSTATUS Status = STATUS_SUCCESS;
     BOOL Ret = FALSE;
-    CURSORDATA dataSafe;
     
     TRACE("Enter NtUserSetCursorIconData\n");
     
@@ -943,7 +942,15 @@ NtUserSetCursorIconData(
     _SEH2_TRY
     {
         ProbeForRead(pCursorData, sizeof(*pCursorData), 1);
-        RtlCopyMemory(&dataSafe, pCursorData, sizeof(dataSafe));
+        CurIcon->xHotspot = pCursorData->xHotspot;
+        CurIcon->yHotspot = pCursorData->yHotspot;
+        CurIcon->cx = pCursorData->cx;
+        CurIcon->cy = pCursorData->cy;
+        CurIcon->rt = pCursorData->rt;
+        CurIcon->bpp = pCursorData->bpp;
+        CurIcon->hbmMask = pCursorData->hbmMask;
+        CurIcon->hbmColor = pCursorData->hbmColor;
+        CurIcon->hbmAlpha = pCursorData->hbmAlpha;
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -956,41 +963,6 @@ NtUserSetCursorIconData(
         SetLastNtError(Status);
         goto done;
     }
-
-    CurIcon->xHotspot = dataSafe.xHotspot;
-    CurIcon->yHotspot = dataSafe.yHotspot;
-    CurIcon->cx = dataSafe.cx;
-    CurIcon->cy = dataSafe.cy;
-    CurIcon->rt = dataSafe.rt;
-    CurIcon->bpp = dataSafe.bpp;
-    
-    if(!dataSafe.hbmMask)
-    {
-        ERR("NtUserSetCursorIconData was got no hbmMask.\n");
-        EngSetLastError(ERROR_INVALID_PARAMETER);
-        goto done;
-    }
-
-    CurIcon->hbmMask = BITMAP_CopyBitmap(dataSafe.hbmMask);
-    if(!CurIcon->hbmMask)
-        goto done;
-    GreSetObjectOwner(CurIcon->hbmMask, GDI_OBJ_HMGR_PUBLIC);
-
-    if(dataSafe.hbmColor)
-    {
-        CurIcon->hbmColor = BITMAP_CopyBitmap(dataSafe.hbmColor);
-        if(!CurIcon->hbmColor)
-            goto done;
-        GreSetObjectOwner(CurIcon->hbmColor, GDI_OBJ_HMGR_PUBLIC);
-    }
-    
-    if(dataSafe.hbmAlpha)
-    {
-        CurIcon->hbmAlpha = BITMAP_CopyBitmap(dataSafe.hbmAlpha);
-        if(!CurIcon->hbmAlpha)
-            goto done;
-        GreSetObjectOwner(CurIcon->hbmAlpha, GDI_OBJ_HMGR_PUBLIC);
-    }
     
     if(pustrModule)
     {
@@ -1002,30 +974,28 @@ NtUserSetCursorIconData(
         if(!NT_SUCCESS(Status))
             goto done;
     }
+
+
+    if(!CurIcon->hbmMask)
+    {
+        ERR("NtUserSetCursorIconData was got no hbmMask.\n");
+        EngSetLastError(ERROR_INVALID_PARAMETER);
+        goto done;
+    }
+
+    GreSetObjectOwner(CurIcon->hbmMask, GDI_OBJ_HMGR_PUBLIC);
+
+    if(CurIcon->hbmColor)
+        GreSetObjectOwner(CurIcon->hbmColor, GDI_OBJ_HMGR_PUBLIC);
+    
+    if(CurIcon->hbmAlpha)
+        GreSetObjectOwner(CurIcon->hbmAlpha, GDI_OBJ_HMGR_PUBLIC);
     
     Ret = TRUE;
 
 done:
     if(!Ret)
     {
-        if (CurIcon->hbmMask)
-        {
-            GreSetObjectOwner(CurIcon->hbmMask, GDI_OBJ_HMGR_POWNED);
-            GreDeleteObject(CurIcon->hbmMask);
-            CurIcon->hbmMask = NULL;
-        }
-        if (CurIcon->hbmColor)
-        {
-            GreSetObjectOwner(CurIcon->hbmColor, GDI_OBJ_HMGR_POWNED);
-            GreDeleteObject(CurIcon->hbmColor);
-            CurIcon->hbmColor = NULL;
-        }
-        if (CurIcon->hbmAlpha)
-        {
-            GreSetObjectOwner(CurIcon->hbmAlpha, GDI_OBJ_HMGR_POWNED);
-            GreDeleteObject(CurIcon->hbmAlpha);
-            CurIcon->hbmAlpha = NULL;
-        }
         if(!IS_INTRESOURCE(CurIcon->strName.Buffer))
             ExFreePoolWithTag(CurIcon->strName.Buffer, TAG_STRING);
         if(CurIcon->ustrModule.Buffer)

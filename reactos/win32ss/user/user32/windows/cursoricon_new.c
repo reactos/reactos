@@ -906,24 +906,26 @@ CURSORICON_LoadFromFileW(
     
     hCurIcon = NtUserxCreateEmptyCurObject(bIcon ? 0 : 1);
     if(!hCurIcon)
-        goto end_clean;
+        goto end_error;
     
     /* Tell win32k */
     if(!NtUserSetCursorIconData(hCurIcon, NULL, NULL, &cursorData))
     {
         NtUserDestroyCursor(hCurIcon, TRUE);
-        hCurIcon = NULL;
+        goto end_error;
     }
-    
-    /* Clean up */
-end_clean:
-    DeleteObject(cursorData.hbmMask);
-    if(cursorData.hbmColor) DeleteObject(cursorData.hbmColor);
-    if(cursorData.hbmAlpha) DeleteObject(cursorData.hbmAlpha);
     
 end:
     UnmapViewOfFile(bits);
     return hCurIcon;
+    
+        /* Clean up */
+end_error:
+    DeleteObject(cursorData.hbmMask);
+    if(cursorData.hbmColor) DeleteObject(cursorData.hbmColor);
+    if(cursorData.hbmAlpha) DeleteObject(cursorData.hbmAlpha);
+    
+    return NULL;
 }
 
 static
@@ -1078,36 +1080,44 @@ CURSORICON_LoadImageW(
     if(!bStatus)
         goto done;
     
+    /* This is from resource */
+    cursorData.CURSORF_flags = CURSORF_FROMRESOURCE;
+    
     /* Create the handle */
     hCurIcon = NtUserxCreateEmptyCurObject(bIcon ? 0 : 1);
     if(!hCurIcon)
     {
-        DeleteObject(cursorData.hbmMask);
-        if(cursorData.hbmColor) DeleteObject(cursorData.hbmColor);
-        if(cursorData.hbmAlpha) DeleteObject(cursorData.hbmAlpha);
-        goto done;
+        goto end_error;
     }
     
     /* Tell win32k */
     if(fuLoad & LR_SHARED)
+    {
+        cursorData.CURSORF_flags |= CURSORF_LRSHARED;
         bStatus = NtUserSetCursorIconData(hCurIcon, &ustrModule, &ustrRsrc, &cursorData);
+    }
     else
         bStatus = NtUserSetCursorIconData(hCurIcon, NULL, NULL, &cursorData);
     
     if(!bStatus)
     {
         NtUserDestroyCursor(hCurIcon, TRUE);
-        hCurIcon = NULL;
+        goto end_error;
     }
-    
-    DeleteObject(cursorData.hbmMask);
-    if(cursorData.hbmColor) DeleteObject(cursorData.hbmColor);
-    if(cursorData.hbmAlpha) DeleteObject(cursorData.hbmAlpha);
 
 done:
     if(ustrModule.Buffer)
         HeapFree(GetProcessHeap(), 0, ustrModule.Buffer);
     return hCurIcon;
+
+end_error:
+    if(ustrModule.Buffer)
+        HeapFree(GetProcessHeap(), 0, ustrModule.Buffer);
+    DeleteObject(cursorData.hbmMask);
+    if(cursorData.hbmColor) DeleteObject(cursorData.hbmColor);
+    if(cursorData.hbmAlpha) DeleteObject(cursorData.hbmAlpha);
+    
+    return NULL;
 }
 
 static
@@ -1912,21 +1922,24 @@ HICON WINAPI CreateIconFromResourceEx(
     
     hIcon = NtUserxCreateEmptyCurObject(fIcon ? 0 : 1);
     if(!hIcon)
-        return NULL;
+        goto end_error;
     
     if(!NtUserSetCursorIconData(hIcon, NULL, NULL, &cursorData))
     {
         ERR("NtUserSetCursorIconData failed.\n");
         NtUserDestroyCursor(hIcon, TRUE);
-        hIcon = NULL;
+        goto end_error;
     }
     
+    return hIcon;
+    
     /* Clean up */
+end_error:
     DeleteObject(cursorData.hbmMask);
     if(cursorData.hbmColor) DeleteObject(cursorData.hbmColor);
     if(cursorData.hbmAlpha) DeleteObject(cursorData.hbmAlpha);
     
-    return hIcon;
+    return NULL;
 }
 
 HICON WINAPI CreateIconIndirect(
@@ -1944,22 +1957,25 @@ HICON WINAPI CreateIconIndirect(
     
     hiconRet = NtUserxCreateEmptyCurObject(piconinfo->fIcon ? 0 : 1);
     if(!hiconRet)
-        return NULL;
+        goto end_error;
     
     if(!NtUserSetCursorIconData(hiconRet, NULL, NULL, &cursorData))
     {
         NtUserDestroyCursor(hiconRet, FALSE);
-        hiconRet = NULL;
+        goto end_error;
     }
     
+    TRACE("Returning 0x%08x.\n", hiconRet);
+    
+    return hiconRet;
+
+end_error:
     /* Clean up */
     DeleteObject(cursorData.hbmMask);
     if(cursorData.hbmColor) DeleteObject(cursorData.hbmColor);
     if(cursorData.hbmAlpha) DeleteObject(cursorData.hbmAlpha);
     
-    TRACE("Returning 0x%08x.\n", hiconRet);
-    
-    return hiconRet;
+    return NULL;
 }
 
 HCURSOR WINAPI CreateCursor(

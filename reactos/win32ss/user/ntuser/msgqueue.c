@@ -147,12 +147,13 @@ UserSetCursor(
             /* Call GDI to set the new screen cursor */
 #ifdef NEW_CURSORICON
             GreSetPointerShape(hdcScreen,
-                               NewCursor->hbmMask,
-                               NewCursor->hbmColor,
+                               NewCursor->hbmAlpha ? NULL : NewCursor->hbmMask,
+                               NewCursor->hbmAlpha ? NewCursor->hbmAlpha : NewCursor->hbmColor,
                                NewCursor->xHotspot,
                                NewCursor->yHotspot,
                                gpsi->ptCursor.x,
-                               gpsi->ptCursor.y);
+                               gpsi->ptCursor.y,
+                               NewCursor->hbmAlpha ? SPS_ALPHA : 0);
 #else
             GreSetPointerShape(hdcScreen,
                                NewCursor->IconInfo.hbmMask,
@@ -160,7 +161,8 @@ UserSetCursor(
                                NewCursor->IconInfo.xHotspot,
                                NewCursor->IconInfo.yHotspot,
                                gpsi->ptCursor.x,
-                               gpsi->ptCursor.y);
+                               gpsi->ptCursor.y,
+                               0);
 #endif
         }
         else /* Note: OldCursor != NewCursor so we have to hide cursor */
@@ -582,13 +584,16 @@ co_MsqInsertMouseMessage(MSG* Msg, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Hook
                {
                    /* Call GDI to set the new screen cursor */
 #ifdef NEW_CURSORICON
-                   GreSetPointerShape(hdcScreen,
-                                      MessageQueue->CursorObject->hbmMask,
-                                      MessageQueue->CursorObject->hbmColor,
-                                      MessageQueue->CursorObject->xHotspot,
-                                      MessageQueue->CursorObject->yHotspot,
-                                      gpsi->ptCursor.x,
-                                      gpsi->ptCursor.y);
+                    GreSetPointerShape(hdcScreen,
+                                       MessageQueue->CursorObject->hbmAlpha ?
+                                           NULL : MessageQueue->CursorObject->hbmMask,
+                                       MessageQueue->CursorObject->hbmAlpha ?
+                                           MessageQueue->CursorObject->hbmAlpha : MessageQueue->CursorObject->hbmColor,
+                                       MessageQueue->CursorObject->xHotspot,
+                                       MessageQueue->CursorObject->yHotspot,
+                                       gpsi->ptCursor.x,
+                                       gpsi->ptCursor.y,
+                                       MessageQueue->CursorObject->hbmAlpha ? SPS_ALPHA : 0);
 #else
                     GreSetPointerShape(hdcScreen,
                                       MessageQueue->CursorObject->IconInfo.hbmMask,
@@ -596,7 +601,8 @@ co_MsqInsertMouseMessage(MSG* Msg, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Hook
                                       MessageQueue->CursorObject->IconInfo.xHotspot,
                                       MessageQueue->CursorObject->IconInfo.yHotspot,
                                       gpsi->ptCursor.x,
-                                      gpsi->ptCursor.y);
+                                      gpsi->ptCursor.y,
+                                      0);
 #endif
                } else
                    GreMovePointer(hdcScreen, Msg->pt.x, Msg->pt.y);
