@@ -173,6 +173,7 @@ UINT FASTCALL IntGdiSetTextAlign(HDC  hDC, UINT  Mode);
 VOID FASTCALL DCU_SetDcUndeletable(HDC);
 BOOL FASTCALL IntSetDefaultRegion(PDC);
 ULONG TranslateCOLORREF(PDC pdc, COLORREF crColor);
+int FASTCALL GreSetStretchBltMode(HDC hdc, int iStretchMode);
 
 
 
