@@ -246,13 +246,16 @@ NET_API_STATUS WINAPI NetLocalGroupEnum(
     PSAM_RID_ENUMERATION CurrentAlias;
     PENUM_CONTEXT EnumContext = NULL;
     PSID DomainSid = NULL;
+    PLOCALGROUP_INFO_0 LocalInfo0;
+    PLOCALGROUP_INFO_1 LocalInfo1;
+    LPWSTR Ptr;
     ULONG i;
+    ULONG Size;
     SAM_HANDLE AliasHandle = NULL;
     PALIAS_GENERAL_INFORMATION AliasInfo = NULL;
-
+    LPVOID Buffer = NULL;
     NET_API_STATUS ApiStatus = NERR_Success;
     NTSTATUS Status = STATUS_SUCCESS;
-
 
     FIXME("(%s %d %p %d %p %p %p) stub!\n", debugstr_w(servername),
           level, bufptr, prefmaxlen, entriesread, totalentries, resumehandle);
@@ -263,7 +266,7 @@ NET_API_STATUS WINAPI NetLocalGroupEnum(
 
     if (resumehandle != NULL && *resumehandle != 0)
     {
-        EnumContext = (PENUM_CONTEXT)resumehandle;
+        EnumContext = (PENUM_CONTEXT)*resumehandle;
     }
     else
     {
@@ -334,16 +337,18 @@ NET_API_STATUS WINAPI NetLocalGroupEnum(
     }
 
 
-    while (TRUE)
-    {
+//    while (TRUE)
+//    {
+        TRACE("EnumContext->Index: %lu\n", EnumContext->Index);
+        TRACE("EnumContext->Returned: %lu\n", EnumContext->Returned);
 
         if (EnumContext->Index >= EnumContext->Returned)
         {
-            if (EnumContext->BuiltinDone == TRUE)
-            {
-                ApiStatus = NERR_Success;
-                goto done;
-            }
+//            if (EnumContext->BuiltinDone == TRUE)
+//            {
+//                ApiStatus = NERR_Success;
+//                goto done;
+//            }
 
             TRACE("Calling SamEnumerateAliasesInDomain\n");
 
@@ -408,6 +413,62 @@ NET_API_STATUS WINAPI NetLocalGroupEnum(
         TRACE("Name: %S\n", AliasInfo->Name.Buffer);
         TRACE("Comment: %S\n", AliasInfo->AdminComment.Buffer);
 
+        switch (level)
+        {
+            case 0:
+                Size = sizeof(LOCALGROUP_INFO_0) +
+                       AliasInfo->Name.Length + sizeof(WCHAR);
+                break;
+
+            case 1:
+                Size = sizeof(LOCALGROUP_INFO_1) +
+                       AliasInfo->Name.Length + sizeof(WCHAR) +
+                       AliasInfo->AdminComment.Length + sizeof(WCHAR);
+                break;
+
+            default:
+                ApiStatus = ERROR_INVALID_LEVEL;
+                goto done;
+        }
+
+        ApiStatus = NetApiBufferAllocate(Size, &Buffer);
+        if (ApiStatus != NERR_Success)
+            goto done;
+
+        switch (level)
+        {
+            case 0:
+                LocalInfo0 = (PLOCALGROUP_INFO_0)Buffer;
+
+                Ptr = (LPWSTR)LocalInfo0++;
+                LocalInfo0->lgrpi0_name = Ptr;
+
+                memcpy(LocalInfo0->lgrpi0_name,
+                       AliasInfo->Name.Buffer,
+                       AliasInfo->Name.Length);
+                LocalInfo0->lgrpi0_name[AliasInfo->Name.Length / sizeof(WCHAR)] = UNICODE_NULL;
+                break;
+
+            case 1:
+                LocalInfo1 = (PLOCALGROUP_INFO_1)Buffer;
+
+                Ptr = (LPWSTR)((ULONG_PTR)LocalInfo1 + sizeof(LOCALGROUP_INFO_1));
+                LocalInfo1->lgrpi1_name = Ptr;
+
+                memcpy(LocalInfo1->lgrpi1_name,
+                       AliasInfo->Name.Buffer,
+                       AliasInfo->Name.Length);
+                LocalInfo1->lgrpi1_name[AliasInfo->Name.Length / sizeof(WCHAR)] = UNICODE_NULL;
+
+                Ptr = (LPWSTR)((ULONG_PTR)Ptr + AliasInfo->Name.Length + sizeof(WCHAR));
+                LocalInfo1->lgrpi1_comment = Ptr;
+
+                memcpy(LocalInfo1->lgrpi1_comment,
+                       AliasInfo->AdminComment.Buffer,
+                       AliasInfo->AdminComment.Length);
+                LocalInfo1->lgrpi1_comment[AliasInfo->AdminComment.Length / sizeof(WCHAR)] = UNICODE_NULL;
+                break;
+        }
 
         if (AliasInfo != NULL)
         {
@@ -421,12 +482,19 @@ NET_API_STATUS WINAPI NetLocalGroupEnum(
             AliasInfo = NULL;
         }
 
-
         EnumContext->Index++;
-    }
 
+        (*entriesread)++;
+
+//    }
 
 done:
+    if (ApiStatus == NERR_Success && EnumContext->Index < EnumContext->Returned)
+        ApiStatus = ERROR_MORE_DATA;
+
+    if (EnumContext != NULL)
+        *totalentries = EnumContext->Returned;
+
     if (resumehandle == NULL || ApiStatus != ERROR_MORE_DATA)
     {
         if (EnumContext != NULL)
@@ -471,6 +539,10 @@ done:
 
     if (resumehandle != NULL)
         *resumehandle = (DWORD_PTR)EnumContext;
+
+    *bufptr = (LPBYTE)Buffer;
+
+    TRACE ("return %lu\n", ApiStatus);
 
     return ApiStatus;
 }
