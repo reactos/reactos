@@ -1154,6 +1154,12 @@ UserDrawIconEx(
             return FALSE;
         }
 
+        if (!psurfColor)
+        {
+           ERR("Attention HAX FIX API DrawIconEx TEST Line 37: psurfColor is NULL going with Mask!\n");
+           psurfColor = SURFACE_ShareLockSurface(hbmMask);
+        }
+
         psurfOffScreen = SURFACE_AllocSurface(STYPE_BITMAP,
             cxWidth, cyHeight, psurfColor->SurfObj.iBitmapFormat,
             0, 0, NULL);
