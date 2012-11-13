@@ -763,9 +763,11 @@ CsrInitCsrRootProcess(VOID)
     }
 
     /*
-     * Our Root Process was never officially initalized, so write the data
-     * for each Server DLL manually.
+     * Our Root Process was never officially initalized,
+     * so write the data for each Server DLL manually.
      */
+
+    /* Loop every DLL */
     for (i = 0; i < CSR_SERVER_DLL_MAX; i++)
     {
         /* Get the current Server */
