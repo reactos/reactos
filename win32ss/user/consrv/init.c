@@ -459,7 +459,7 @@ CSR_SERVER_DLL_INIT(ConServerDllInitialization)
     LoadedServerDll->DispatchTable = ConsoleServerApiDispatchTable;
     LoadedServerDll->ValidTable = ConsoleServerApiServerValidTable;
     LoadedServerDll->NameTable = ConsoleServerApiNameTable;
-    LoadedServerDll->SizeOfProcessData = 0;
+    LoadedServerDll->SizeOfProcessData = sizeof(CONSOLE_PROCESS_DATA);
     LoadedServerDll->ConnectCallback = NULL;
     LoadedServerDll->DisconnectCallback = Win32CsrReleaseConsole;
     LoadedServerDll->NewProcessCallback = ConsoleNewProcess;
