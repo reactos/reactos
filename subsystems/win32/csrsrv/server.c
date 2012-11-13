@@ -421,7 +421,7 @@ CsrSrvCreateSharedSection(IN PCHAR ParameterValue)
 
     /* Now allocate space from the heap for the Shared Data */
     CsrSrvSharedStaticServerData = RtlAllocateHeap(CsrSrvSharedSectionHeap,
-                                                   0,
+                                                   HEAP_ZERO_MEMORY,
                                                    CSR_SERVER_DLL_MAX * sizeof(PVOID));
     if (!CsrSrvSharedStaticServerData) return STATUS_NO_MEMORY;
 

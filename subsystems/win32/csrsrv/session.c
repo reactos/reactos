@@ -215,10 +215,11 @@ CsrSbCreateSession(IN PSB_API_MSG ApiMessage)
     PSB_CREATE_SESSION_MSG CreateSession = &ApiMessage->CreateSession;
     HANDLE hProcess, hThread;
     PCSR_PROCESS CsrProcess;
+    PCSR_THREAD CsrThread;
+    PCSR_SERVER_DLL ServerDll;
+    PVOID ProcessData;
     NTSTATUS Status;
     KERNEL_USER_TIMES KernelTimes;
-    PCSR_THREAD CsrThread;
-    PVOID ProcessData;
     ULONG i;
 
     /* Save the Process and Thread Handles */
@@ -309,15 +310,18 @@ CsrSbCreateSession(IN PSB_API_MSG ApiMessage)
     /* Loop every DLL */
     for (i = 0; i < CSR_SERVER_DLL_MAX; i++)
     {
+        /* Get the current Server */
+        ServerDll = CsrLoadedServerDll[i];
+
         /* Check if the DLL is loaded and has Process Data */
-        if (CsrLoadedServerDll[i] && CsrLoadedServerDll[i]->SizeOfProcessData)
+        if (ServerDll && ServerDll->SizeOfProcessData)
         {
             /* Write the pointer to the data */
             CsrProcess->ServerData[i] = ProcessData;
 
             /* Move to the next data location */
             ProcessData = (PVOID)((ULONG_PTR)ProcessData +
-                                  CsrLoadedServerDll[i]->SizeOfProcessData);
+                                  ServerDll->SizeOfProcessData);
         }
         else
         {

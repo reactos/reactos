@@ -54,7 +54,7 @@ CallHardError(IN PCSR_THREAD ThreadData,
         ServerDll = CsrLoadedServerDll[i];
 
         /* Make sure it's valid and that it has callback */
-        if ((ServerDll) && (ServerDll->HardErrorCallback))
+        if (ServerDll && ServerDll->HardErrorCallback)
         {
             ServerDll->HardErrorCallback(ThreadData, HardErrorMessage);
         }

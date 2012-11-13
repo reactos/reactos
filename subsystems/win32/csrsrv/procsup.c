@@ -437,7 +437,7 @@ CsrRemoveProcess(IN PCSR_PROCESS CsrProcess)
         ServerDll = CsrLoadedServerDll[i];
 
         /* Check if it's valid and if it has a Disconnect Callback */
-        if ((ServerDll) && (ServerDll->DisconnectCallback))
+        if (ServerDll && ServerDll->DisconnectCallback)
         {
             /* Call it */
             ServerDll->DisconnectCallback(CsrProcess);
@@ -530,6 +530,7 @@ CsrCreateProcess(IN HANDLE hProcess,
     PCSR_THREAD CurrentThread = CsrGetClientThread();
     CLIENT_ID CurrentCid;
     PCSR_PROCESS CurrentProcess;
+    PCSR_SERVER_DLL ServerDll;
     PVOID ProcessData;
     ULONG i;
     PCSR_PROCESS CsrProcess;
@@ -564,8 +565,11 @@ CsrCreateProcess(IN HANDLE hProcess,
     ProcessData = &CurrentProcess->ServerData[CSR_SERVER_DLL_MAX];
     for (i = 0; i < CSR_SERVER_DLL_MAX; i++)
     {
+        /* Get the current Server */
+        ServerDll = CsrLoadedServerDll[i];
+
         /* Check if the DLL is Loaded and has Per Process Data */
-        if ((CsrLoadedServerDll[i]) && (CsrLoadedServerDll[i]->SizeOfProcessData))
+        if (ServerDll && ServerDll->SizeOfProcessData)
         {
             /* Set the pointer */
             CsrProcess->ServerData[i] = ProcessData;
@@ -573,11 +577,11 @@ CsrCreateProcess(IN HANDLE hProcess,
             /* Copy the Data */
             RtlMoveMemory(ProcessData,
                           CurrentProcess->ServerData[i],
-                          CsrLoadedServerDll[i]->SizeOfProcessData);
+                          ServerDll->SizeOfProcessData);
 
             /* Update next data pointer */
             ProcessData = (PVOID)((ULONG_PTR)ProcessData +
-                                  CsrLoadedServerDll[i]->SizeOfProcessData);
+                                  ServerDll->SizeOfProcessData);
         }
         else
         {
@@ -1305,7 +1309,9 @@ CsrShutdownProcesses(IN PLUID CallerLuid,
             {
                 /* Get the current server */
                 ServerDll = CsrLoadedServerDll[i];
-                if ((ServerDll) && (ServerDll->ShutdownProcessCallback))
+
+                /* Check if it's valid and if it has a Shutdown Process Callback */
+                if (ServerDll && ServerDll->ShutdownProcessCallback)
                 {
                     /* Release the lock, make the callback, and acquire it back */
                     CsrReleaseProcessLock();
