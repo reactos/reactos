@@ -409,7 +409,7 @@ PostTimerMessages(PWND Window)
            Msg.wParam  = (WPARAM) pTmr->nID;
            Msg.lParam  = (LPARAM) pTmr->pfn;
 
-           MsqPostMessage(ThreadQueue, &Msg, FALSE, QS_TIMER);
+           MsqPostMessage(ThreadQueue, &Msg, FALSE, QS_TIMER, 0);
            pTmr->flags &= ~TMRF_READY;
            pti->cTimersReady++;
            Hit = TRUE;

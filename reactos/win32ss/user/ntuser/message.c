@@ -1105,7 +1105,7 @@ UserPostThreadMessage( DWORD idThread,
 
         KeQueryTickCount(&LargeTickCount);
         Message.time = MsqCalculateMessageTime(&LargeTickCount);
-        MsqPostMessage(pThread->MessageQueue, &Message, FALSE, QS_POSTMESSAGE);
+        MsqPostMessage(pThread->MessageQueue, &Message, FALSE, QS_POSTMESSAGE, 0);
         ObDereferenceObject( peThread );
         return TRUE;
     }
@@ -1228,7 +1228,7 @@ UserPostMessage( HWND Wnd,
         }
         else
         {
-            MsqPostMessage(Window->head.pti->MessageQueue, &Message, FALSE, QS_POSTMESSAGE);
+            MsqPostMessage(Window->head.pti->MessageQueue, &Message, FALSE, QS_POSTMESSAGE, 0);
         }
     }
     return TRUE;
