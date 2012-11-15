@@ -153,12 +153,10 @@ typedef struct
     DWORD ControlKeyState;
 } CSRSS_READ_CONSOLE, *PCSRSS_READ_CONSOLE;
 
-typedef VOID (CALLBACK *PCONTROLDISPATCHER)(DWORD);
-
 typedef struct
 {
-    PCONTROLDISPATCHER CtrlDispatcher;
-    BOOLEAN ConsoleNeeded;
+    LPTHREAD_START_ROUTINE CtrlDispatcher;
+    BOOL ConsoleNeeded;
     INT ShowCmd;
     HANDLE Console;
     HANDLE InputHandle;
@@ -308,7 +306,7 @@ typedef struct
     HANDLE ConsoleHandle;
     BOOL Unicode;
     SMALL_RECT ScrollRectangle;
-    BOOLEAN UseClipRectangle;
+    BOOL UseClipRectangle;
     SMALL_RECT ClipRectangle;
     COORD DestinationOrigin;
     CHAR_INFO Fill;

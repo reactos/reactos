@@ -15,7 +15,7 @@
 
 #include <k32.h>
 
-// #define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 extern RTL_CRITICAL_SECTION ConsoleLock;
@@ -66,16 +66,16 @@ DefaultConsoleCtrlHandler(DWORD Event)
     return TRUE;
 }
 
-__declspec(noreturn)
-VOID
-CALLBACK
-ConsoleControlDispatcher(DWORD CodeAndFlag)
+DWORD
+WINAPI
+ConsoleControlDispatcher(IN LPVOID lpThreadParameter)
 {
     DWORD nExitCode = 0;
+    DWORD CodeAndFlag = PtrToUlong(lpThreadParameter);
     DWORD nCode = CodeAndFlag & MAXLONG;
     UINT i;
     EXCEPTION_RECORD erException;
-    
+
     DPRINT("Console Dispatcher Active: %lx %lx\n", CodeAndFlag, nCode);
     SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_HIGHEST);
 
@@ -92,7 +92,7 @@ ConsoleControlDispatcher(DWORD CodeAndFlag)
                 erException.ExceptionRecord = NULL;
                 erException.ExceptionAddress = DefaultConsoleCtrlHandler;
                 erException.NumberParameters = 0;
-                
+
                 _SEH2_TRY
                 {
                     RtlRaiseException(&erException);
@@ -100,7 +100,7 @@ ConsoleControlDispatcher(DWORD CodeAndFlag)
                 _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                 {
                     RtlEnterCriticalSection(&ConsoleLock);
-                    
+
                     if ((nCode != CTRL_C_EVENT) ||
                         (NtCurrentPeb()->ProcessParameters->ConsoleFlags != 1))
                     {
@@ -109,14 +109,13 @@ ConsoleControlDispatcher(DWORD CodeAndFlag)
                             if (CtrlHandlers[i - 1](nCode)) break;
                         }
                     }
-                    
+
                     RtlLeaveCriticalSection(&ConsoleLock);
                 }
                 _SEH2_END;
-                
+
                 ExitThread(0);
             }
-            
             break;
         }
 
@@ -124,25 +123,22 @@ ConsoleControlDispatcher(DWORD CodeAndFlag)
         case CTRL_LOGOFF_EVENT:
         case CTRL_SHUTDOWN_EVENT:
             break;
-            
+
         case 3:
-        
             ExitThread(0);
             break;
-        
+
         case 4:
-        
             ExitProcess(CONTROL_C_EXIT);
             break;
 
         default:
-        
             ASSERT(FALSE);
             break;
     }
-    
+
     ASSERT(ConsoleInitialized);
-    
+
     RtlEnterCriticalSection(&ConsoleLock);
     nExitCode = 0;
     if ((nCode != CTRL_C_EVENT) || (NtCurrentPeb()->ProcessParameters->ConsoleFlags != 1))
@@ -172,9 +168,10 @@ ConsoleControlDispatcher(DWORD CodeAndFlag)
             }
         }
     }
-    
+
     RtlLeaveCriticalSection(&ConsoleLock);
     ExitThread(nExitCode);
+    return STATUS_SUCCESS;
 }
 
 
