@@ -177,37 +177,6 @@ ConsoleControlDispatcher(DWORD CodeAndFlag)
     ExitThread(nExitCode);
 }
 
-/* Get the size needed to copy a string to a capture buffer, including alignment */
-static ULONG
-IntStringSize(LPCVOID String,
-              BOOL Unicode)
-{
-    ULONG Size = (Unicode ? wcslen(String) : strlen(String)) * sizeof(WCHAR);
-    return (Size + 3) & -4;
-}
-
-/* Copy a string to a capture buffer */
-static VOID
-IntCaptureMessageString(PCSR_CAPTURE_BUFFER CaptureBuffer,
-                        LPCVOID String,
-                        BOOL Unicode,
-                        PUNICODE_STRING RequestString)
-{
-    ULONG Size;
-    if (Unicode)
-    {
-        Size = wcslen(String) * sizeof(WCHAR);
-        CsrCaptureMessageBuffer(CaptureBuffer, (PVOID)String, Size, (PVOID *)&RequestString->Buffer);
-    }
-    else
-    {
-        Size = strlen(String);
-        CsrAllocateMessagePointer(CaptureBuffer, Size * sizeof(WCHAR), (PVOID *)&RequestString->Buffer);
-        Size = MultiByteToWideChar(CP_ACP, 0, String, Size, RequestString->Buffer, Size * sizeof(WCHAR))
-               * sizeof(WCHAR);
-    }
-    RequestString->Length = RequestString->MaximumLength = Size;
-}
 
 /* FUNCTIONS ******************************************************************/
 

@@ -63,8 +63,8 @@ typedef struct tagCSRSS_CONSOLE
     BOOLEAN LineInsertToggle;             /* replace character over cursor instead of inserting */
     ULONG LineWakeupMask;                 /* bitmap of which control characters will end line input */
     LIST_ENTRY HistoryBuffers;
-    WORD HistoryBufferSize;               /* size for newly created history buffers */
-    WORD NumberOfHistoryBuffers;          /* maximum number of history buffers allowed */
+    UINT HistoryBufferSize;               /* size for newly created history buffers */
+    UINT NumberOfHistoryBuffers;          /* maximum number of history buffers allowed */
     BOOLEAN HistoryNoDup;                 /* remove old duplicate history entries */
     LIST_ENTRY BufferList;                /* List of all screen buffers for this console */
     PCSRSS_SCREEN_BUFFER ActiveBuffer;    /* Pointer to currently active screen buffer */

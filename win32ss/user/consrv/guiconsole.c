@@ -434,8 +434,7 @@ GuiConsoleWriteUserSettings(PCSRSS_CONSOLE Console, PGUI_CONSOLE_DATA GuiData)
     }
     else
     {
-        DWORD Temp = Console->NumberOfHistoryBuffers;
-        RegSetValueExW(hKey, L"NumberOfHistoryBuffers", 0, REG_DWORD, (const BYTE *)&Temp, sizeof(DWORD));
+        RegSetValueExW(hKey, L"NumberOfHistoryBuffers", 0, REG_DWORD, (const BYTE *)&Console->NumberOfHistoryBuffers, sizeof(DWORD));
     }
 
     if (Console->HistoryBufferSize == 50)
@@ -444,8 +443,7 @@ GuiConsoleWriteUserSettings(PCSRSS_CONSOLE Console, PGUI_CONSOLE_DATA GuiData)
     }
     else
     {
-        DWORD Temp = Console->HistoryBufferSize;
-        RegSetValueExW(hKey, L"HistoryBufferSize", 0, REG_DWORD, (const BYTE *)&Temp, sizeof(DWORD));
+        RegSetValueExW(hKey, L"HistoryBufferSize", 0, REG_DWORD, (const BYTE *)&Console->HistoryBufferSize, sizeof(DWORD));
     }
 
     if (GuiData->FullScreen == FALSE)
@@ -457,7 +455,7 @@ GuiConsoleWriteUserSettings(PCSRSS_CONSOLE Console, PGUI_CONSOLE_DATA GuiData)
         RegSetValueExW(hKey, L"FullScreen", 0, REG_DWORD, (const BYTE *)&GuiData->FullScreen, sizeof(DWORD));
     }
 
-    if ( GuiData->QuickEdit == FALSE)
+    if (GuiData->QuickEdit == FALSE)
     {
         RegDeleteKeyW(hKey, L"QuickEdit");
     }

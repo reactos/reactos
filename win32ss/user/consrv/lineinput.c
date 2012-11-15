@@ -17,9 +17,9 @@
 typedef struct tagHISTORY_BUFFER
 {
     LIST_ENTRY ListEntry;
-    WORD Position;
-    WORD MaxEntries;
-    WORD NumEntries;
+    UINT Position;
+    UINT MaxEntries;
+    UINT NumEntries;
     PUNICODE_STRING Entries;
     UNICODE_STRING ExeName;
 } HISTORY_BUFFER, *PHISTORY_BUFFER;
@@ -257,7 +257,7 @@ CSR_API(SrvSetConsoleNumberOfCommands)
     PCSRSS_CONSOLE Console;
     PHISTORY_BUFFER Hist;
     NTSTATUS Status;
-    WORD MaxEntries = SetHistoryNumberCommands->NumCommands;
+    UINT MaxEntries = SetHistoryNumberCommands->NumCommands;
     PUNICODE_STRING OldEntryList, NewEntryList;
 
     if (!Win32CsrValidateBuffer(Process,
@@ -302,14 +302,14 @@ CSR_API(SrvSetConsoleNumberOfCommands)
 
 CSR_API(SrvGetConsoleHistory)
 {
-    PCSRSS_GET_HISTORY_INFO GetHistoryInfo = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetHistoryInfo;
+    PCSRSS_HISTORY_INFO HistoryInfoRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.HistoryInfoRequest;
     PCSRSS_CONSOLE Console;
     NTSTATUS Status = ConioConsoleFromProcessData(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console);
     if (NT_SUCCESS(Status))
     {
-        GetHistoryInfo->HistoryBufferSize      = Console->HistoryBufferSize;
-        GetHistoryInfo->NumberOfHistoryBuffers = Console->NumberOfHistoryBuffers;
-        GetHistoryInfo->dwFlags                = Console->HistoryNoDup;
+        HistoryInfoRequest->HistoryBufferSize      = Console->HistoryBufferSize;
+        HistoryInfoRequest->NumberOfHistoryBuffers = Console->NumberOfHistoryBuffers;
+        HistoryInfoRequest->dwFlags                = Console->HistoryNoDup;
         ConioUnlockConsole(Console);
     }
     return Status;
@@ -317,14 +317,14 @@ CSR_API(SrvGetConsoleHistory)
 
 CSR_API(SrvSetConsoleHistory)
 {
-    PCSRSS_SET_HISTORY_INFO SetHistoryInfo = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.SetHistoryInfo;
+    PCSRSS_HISTORY_INFO HistoryInfoRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.HistoryInfoRequest;
     PCSRSS_CONSOLE Console;
     NTSTATUS Status = ConioConsoleFromProcessData(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console);
     if (NT_SUCCESS(Status))
     {
-        Console->HistoryBufferSize      = (WORD)SetHistoryInfo->HistoryBufferSize;
-        Console->NumberOfHistoryBuffers = (WORD)SetHistoryInfo->NumberOfHistoryBuffers;
-        Console->HistoryNoDup           = SetHistoryInfo->dwFlags & HISTORY_NO_DUP_FLAG;
+        Console->HistoryBufferSize      = HistoryInfoRequest->HistoryBufferSize;
+        Console->NumberOfHistoryBuffers = HistoryInfoRequest->NumberOfHistoryBuffers;
+        Console->HistoryNoDup           = HistoryInfoRequest->dwFlags & HISTORY_NO_DUP_FLAG;
         ConioUnlockConsole(Console);
     }
     return Status;

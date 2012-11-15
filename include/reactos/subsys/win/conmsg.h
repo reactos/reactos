@@ -468,19 +468,19 @@ typedef struct
 typedef struct
 {
     UNICODE_STRING ExeName;
-    DWORD Length;
-} CSRSS_GET_COMMAND_HISTORY_LENGTH, *PCSRSS_GET_COMMAND_HISTORY_LENGTH;
-
-typedef struct
-{
-    UNICODE_STRING ExeName;
     PWCHAR History;
     DWORD Length;
 } CSRSS_GET_COMMAND_HISTORY, *PCSRSS_GET_COMMAND_HISTORY;
 
 typedef struct
 {
-  UNICODE_STRING ExeName;
+    UNICODE_STRING ExeName;
+    DWORD Length;
+} CSRSS_GET_COMMAND_HISTORY_LENGTH, *PCSRSS_GET_COMMAND_HISTORY_LENGTH;
+
+typedef struct
+{
+    UNICODE_STRING ExeName;
 } CSRSS_EXPUNGE_COMMAND_HISTORY, *PCSRSS_EXPUNGE_COMMAND_HISTORY;
 
 typedef struct
@@ -491,11 +491,10 @@ typedef struct
 
 typedef struct
 {
-    DWORD HistoryBufferSize;
-    DWORD NumberOfHistoryBuffers;
+    UINT HistoryBufferSize;
+    UINT NumberOfHistoryBuffers;
     DWORD dwFlags;
-} CSRSS_GET_HISTORY_INFO, *PCSRSS_GET_HISTORY_INFO,
-  CSRSS_SET_HISTORY_INFO, *PCSRSS_SET_HISTORY_INFO;;
+} CSRSS_HISTORY_INFO, *PCSRSS_HISTORY_INFO;
 
 
 
@@ -607,8 +606,7 @@ typedef struct _CONSOLE_API_MESSAGE
         CSRSS_GET_COMMAND_HISTORY_LENGTH GetCommandHistoryLength;
         CSRSS_EXPUNGE_COMMAND_HISTORY ExpungeCommandHistory;
         CSRSS_SET_HISTORY_NUMBER_COMMANDS SetHistoryNumberCommands;
-        CSRSS_GET_HISTORY_INFO GetHistoryInfo;
-        CSRSS_SET_HISTORY_INFO SetHistoryInfo;
+        CSRSS_HISTORY_INFO HistoryInfoRequest;
 
         CSRSS_GENERATE_CTRL_EVENT GenerateCtrlEvent;
         CSRSS_GET_NUM_INPUT_EVENTS GetNumInputEventsRequest;
