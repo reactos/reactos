@@ -298,15 +298,15 @@ CSR_API(SrvAddConsoleAlias)
     DPRINT("SrvAddConsoleAlias entered ApiMessage %p\n", ApiMessage);
 
     if ( !CsrValidateMessageBuffer(ApiMessage,
-                                   &ConsoleAlias->Source,
+                                   (PVOID*)&ConsoleAlias->Source,
                                    ConsoleAlias->SourceLength,
                                    sizeof(BYTE))                    ||
          !CsrValidateMessageBuffer(ApiMessage,
-                                   &ConsoleAlias->Target,
+                                   (PVOID*)&ConsoleAlias->Target,
                                    ConsoleAlias->TargetLength,
                                    sizeof(BYTE))                    ||
          !CsrValidateMessageBuffer(ApiMessage,
-                                   &ConsoleAlias->Exe,
+                                   (PVOID*)&ConsoleAlias->Exe,
                                    ConsoleAlias->ExeLength,
                                    sizeof(BYTE)) )
     {
@@ -383,15 +383,15 @@ CSR_API(SrvGetConsoleAlias)
     DPRINT("SrvGetConsoleAlias entered ApiMessage %p\n", ApiMessage);
 
     if ( !CsrValidateMessageBuffer(ApiMessage,
-                                   &ConsoleAlias->Source,
+                                   (PVOID*)&ConsoleAlias->Source,
                                    ConsoleAlias->SourceLength,
                                    sizeof(BYTE))                    ||
          !CsrValidateMessageBuffer(ApiMessage,
-                                   &ConsoleAlias->Target,
+                                   (PVOID*)&ConsoleAlias->Target,
                                    ConsoleAlias->TargetLength,
                                    sizeof(BYTE))                    ||
          !CsrValidateMessageBuffer(ApiMessage,
-                                   &ConsoleAlias->Exe,
+                                   (PVOID*)&ConsoleAlias->Exe,
                                    ConsoleAlias->ExeLength,
                                    sizeof(BYTE)) )
     {

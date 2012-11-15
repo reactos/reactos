@@ -66,19 +66,19 @@ AddConsoleAliasW(LPCWSTR lpSource,
     CsrCaptureMessageBuffer(CaptureBuffer,
                             (PVOID)lpSource,
                             ConsoleAlias->SourceLength,
-                            &ConsoleAlias->Source);
+                            (PVOID*)&ConsoleAlias->Source);
 
     CsrCaptureMessageBuffer(CaptureBuffer,
                             (PVOID)lpExeName,
                             ConsoleAlias->ExeLength,
-                            &ConsoleAlias->Exe);
+                            (PVOID*)&ConsoleAlias->Exe);
 
     if (lpTarget) /* The target can be optional */
     {
         CsrCaptureMessageBuffer(CaptureBuffer,
                                 (PVOID)lpTarget,
                                 ConsoleAlias->TargetLength,
-                                &ConsoleAlias->Target);
+                                (PVOID*)&ConsoleAlias->Target);
     }
     else
     {
@@ -182,12 +182,12 @@ GetConsoleAliasW(LPWSTR lpSource,
     CsrCaptureMessageBuffer(CaptureBuffer,
                             (PVOID)lpSource,
                             ConsoleAlias->SourceLength,
-                            &ConsoleAlias->Source);
+                            (PVOID*)&ConsoleAlias->Source);
 
     CsrCaptureMessageBuffer(CaptureBuffer,
                             (PVOID)lpExeName,
                             ConsoleAlias->ExeLength,
-                            &ConsoleAlias->Exe);
+                            (PVOID*)&ConsoleAlias->Exe);
 
     /* Allocate space for the target buffer */
     CsrAllocateMessagePointer(CaptureBuffer,
