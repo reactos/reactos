@@ -1,8 +1,8 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            dll/win32/kernel32/client/console/console.c
- * PURPOSE:         Win32 server console functions
+ * FILE:            dll/win32/kernel32/client/console/alias.c
+ * PURPOSE:         Win32 Console Client Alias support functions
  * PROGRAMMERS:     David Welch (welch@cwcom.net) (welch@mcmail.com)
  *                  Christoph von Wittich (christoph_vw@reactos.org)
  *                  Johannes Anderwald (janderwald@reactos.org)
@@ -15,10 +15,11 @@
 #define NDEBUG
 #include <debug.h>
 
+
 /* FUNCTIONS ******************************************************************/
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 WINAPI
@@ -26,54 +27,77 @@ AddConsoleAliasW(LPCWSTR lpSource,
                  LPCWSTR lpTarget,
                  LPCWSTR lpExeName)
 {
-    PCSR_API_MESSAGE Request;
     NTSTATUS Status;
-    ULONG SourceLength;
-    ULONG TargetLength = 0;
-    ULONG ExeLength;
-    ULONG Size;
-    ULONG RequestLength;
-    WCHAR * Ptr;
+    CONSOLE_API_MESSAGE ApiMessage;
+    PCSRSS_CONSOLE_ALIAS ConsoleAlias = &ApiMessage.Data.ConsoleAlias;
+    PCSR_CAPTURE_BUFFER CaptureBuffer;
+    ULONG CapturedStrings;
 
     DPRINT("AddConsoleAliasW enterd with lpSource %S lpTarget %S lpExeName %S\n", lpSource, lpTarget, lpExeName);
 
-    ExeLength = wcslen(lpExeName) + 1;
-    SourceLength = wcslen(lpSource)+ 1;
-    if (lpTarget)
-        TargetLength = wcslen(lpTarget) + 1;
+    /* Determine the needed sizes */
+    ConsoleAlias->SourceLength = (wcslen(lpSource ) + 1) * sizeof(WCHAR);
+    ConsoleAlias->ExeLength    = (wcslen(lpExeName) + 1) * sizeof(WCHAR);
+    CapturedStrings = 2;
 
-    Size = (ExeLength + SourceLength + TargetLength) * sizeof(WCHAR);
-    RequestLength = sizeof(CSR_API_MESSAGE) + Size;
-
-    Request = RtlAllocateHeap(GetProcessHeap(), HEAP_ZERO_MEMORY, RequestLength);
-    Ptr = (WCHAR*)(((ULONG_PTR)Request) + sizeof(CSR_API_MESSAGE));
-
-    wcscpy(Ptr, lpSource);
-    Request->Data.AddConsoleAlias.SourceLength = SourceLength;
-    Ptr = (WCHAR*)(((ULONG_PTR)Request) + sizeof(CSR_API_MESSAGE) + SourceLength * sizeof(WCHAR));
-
-    wcscpy(Ptr, lpExeName);
-    Request->Data.AddConsoleAlias.ExeLength = ExeLength;
-    Ptr = (WCHAR*)(((ULONG_PTR)Request) + sizeof(CSR_API_MESSAGE) + (ExeLength + SourceLength)* sizeof(WCHAR));
-
-    if (lpTarget) /* target can be optional */
-        wcscpy(Ptr, lpTarget);
-
-    Request->Data.AddConsoleAlias.TargetLength = TargetLength;
-
-    Status = CsrClientCallServer(Request,
-                                 NULL,
-                                 CSR_CREATE_API_NUMBER(CSR_CONSOLE, ADD_CONSOLE_ALIAS),
-                                 RequestLength);
-
-    if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request->Status))
+    if (lpTarget) /* The target can be optional */
     {
-        BaseSetLastNTError(Status);
-        RtlFreeHeap(GetProcessHeap(), 0, Request);
+        ConsoleAlias->TargetLength = (wcslen(lpTarget) + 1) * sizeof(WCHAR);
+        CapturedStrings++;
+    }
+    else
+    {
+        ConsoleAlias->TargetLength = 0;
+    }
+
+    /* Allocate a Capture Buffer */
+    CaptureBuffer = CsrAllocateCaptureBuffer(CapturedStrings,
+                                             ConsoleAlias->SourceLength +
+                                             ConsoleAlias->ExeLength    +
+                                             ConsoleAlias->TargetLength);
+    if (CaptureBuffer == NULL)
+    {
+        DPRINT1("CsrAllocateCaptureBuffer failed!\n");
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return FALSE;
     }
 
-    RtlFreeHeap(GetProcessHeap(), 0, Request);
+    /* Capture the strings */
+    CsrCaptureMessageBuffer(CaptureBuffer,
+                            (PVOID)lpSource,
+                            ConsoleAlias->SourceLength,
+                            &ConsoleAlias->Source);
+
+    CsrCaptureMessageBuffer(CaptureBuffer,
+                            (PVOID)lpExeName,
+                            ConsoleAlias->ExeLength,
+                            &ConsoleAlias->Exe);
+
+    if (lpTarget) /* The target can be optional */
+    {
+        CsrCaptureMessageBuffer(CaptureBuffer,
+                                (PVOID)lpTarget,
+                                ConsoleAlias->TargetLength,
+                                &ConsoleAlias->Target);
+    }
+    else
+    {
+        ConsoleAlias->Target = NULL;
+    }
+
+    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                                 CaptureBuffer,
+                                 CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepAddAlias),
+                                 sizeof(CSRSS_CONSOLE_ALIAS));
+
+    CsrFreeCaptureBuffer(CaptureBuffer);
+
+    if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = ApiMessage.Status))
+    {
+        BaseSetLastNTError(Status);
+        return FALSE;
+    }
+
     return TRUE;
 }
 
@@ -93,21 +117,21 @@ AddConsoleAliasA(LPCSTR lpSource,
     BOOL bRetVal;
 
     if (lpSource)
-        BasepAnsiStringToHeapUnicodeString(lpSource, (LPWSTR*) &lpSourceW);
+        BasepAnsiStringToHeapUnicodeString(lpSource, (LPWSTR*)&lpSourceW);
     if (lpTarget)
-        BasepAnsiStringToHeapUnicodeString(lpTarget, (LPWSTR*) &lpTargetW);
+        BasepAnsiStringToHeapUnicodeString(lpTarget, (LPWSTR*)&lpTargetW);
     if (lpExeName)
-        BasepAnsiStringToHeapUnicodeString(lpExeName, (LPWSTR*) &lpExeNameW);
+        BasepAnsiStringToHeapUnicodeString(lpExeName, (LPWSTR*)&lpExeNameW);
 
     bRetVal = AddConsoleAliasW(lpSourceW, lpTargetW, lpExeNameW);
 
     /* Clean up */
     if (lpSourceW)
-        RtlFreeHeap(GetProcessHeap(), 0, (LPWSTR*) lpSourceW);
+        RtlFreeHeap(GetProcessHeap(), 0, (LPWSTR*)lpSourceW);
     if (lpTargetW)
-        RtlFreeHeap(GetProcessHeap(), 0, (LPWSTR*) lpTargetW);
+        RtlFreeHeap(GetProcessHeap(), 0, (LPWSTR*)lpTargetW);
     if (lpExeNameW)
-        RtlFreeHeap(GetProcessHeap(), 0, (LPWSTR*) lpExeNameW);
+        RtlFreeHeap(GetProcessHeap(), 0, (LPWSTR*)lpExeNameW);
 
     return bRetVal;
 }
@@ -123,16 +147,12 @@ GetConsoleAliasW(LPWSTR lpSource,
                  DWORD TargetBufferLength,
                  LPWSTR lpExeName)
 {
-    PCSR_API_MESSAGE Request;
-    PCSR_CAPTURE_BUFFER CaptureBuffer;
     NTSTATUS Status;
-    ULONG Size;
-    ULONG ExeLength;
-    ULONG SourceLength;
-    ULONG RequestLength;
-    WCHAR * Ptr;
+    CONSOLE_API_MESSAGE ApiMessage;
+    PCSRSS_CONSOLE_ALIAS ConsoleAlias = &ApiMessage.Data.ConsoleAlias;
+    PCSR_CAPTURE_BUFFER CaptureBuffer;
 
-    DPRINT("GetConsoleAliasW entered lpSource %S lpExeName %S\n", lpSource, lpExeName);
+    DPRINT("GetConsoleAliasW entered with lpSource %S lpExeName %S\n", lpSource, lpExeName);
 
     if (lpTargetBuffer == NULL)
     {
@@ -140,63 +160,61 @@ GetConsoleAliasW(LPWSTR lpSource,
         return 0;
     }
 
-    ExeLength = wcslen(lpExeName) + 1;
-    SourceLength = wcslen(lpSource) + 1;
+    /* Determine the needed sizes */
+    ConsoleAlias->SourceLength = (wcslen(lpSource ) + 1) * sizeof(WCHAR);
+    ConsoleAlias->ExeLength    = (wcslen(lpExeName) + 1) * sizeof(WCHAR);
 
-    Size = (ExeLength + SourceLength) * sizeof(WCHAR);
+    ConsoleAlias->Target = NULL;
+    ConsoleAlias->TargetLength = TargetBufferLength;
 
-    RequestLength = Size + sizeof(CSR_API_MESSAGE);
-    Request = RtlAllocateHeap(GetProcessHeap(), 0, RequestLength);
-    if (Request == NULL)
-    {
-        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-        return 0;
-    }
-
-    CaptureBuffer = CsrAllocateCaptureBuffer(1, TargetBufferLength);
+    /* Allocate a Capture Buffer */
+    CaptureBuffer = CsrAllocateCaptureBuffer(3, ConsoleAlias->SourceLength +
+                                                ConsoleAlias->ExeLength    +
+                                                ConsoleAlias->TargetLength);
     if (!CaptureBuffer)
     {
         DPRINT1("CsrAllocateCaptureBuffer failed!\n");
-        RtlFreeHeap(GetProcessHeap(), 0, Request);
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return 0;
     }
 
-    Request->Data.GetConsoleAlias.TargetBuffer = NULL;
+    /* Capture the strings */
+    CsrCaptureMessageBuffer(CaptureBuffer,
+                            (PVOID)lpSource,
+                            ConsoleAlias->SourceLength,
+                            &ConsoleAlias->Source);
 
     CsrCaptureMessageBuffer(CaptureBuffer,
-                            NULL,
-                            TargetBufferLength,
-                            (PVOID*)&Request->Data.GetConsoleAlias.TargetBuffer);
+                            (PVOID)lpExeName,
+                            ConsoleAlias->ExeLength,
+                            &ConsoleAlias->Exe);
 
-    Request->Data.GetConsoleAlias.TargetBufferLength = TargetBufferLength;
+    /* Allocate space for the target buffer */
+    CsrAllocateMessagePointer(CaptureBuffer,
+                              ConsoleAlias->TargetLength,
+                              (PVOID*)&ConsoleAlias->Target);
 
-    Ptr = (LPWSTR)((ULONG_PTR)Request + sizeof(CSR_API_MESSAGE));
-    wcscpy(Ptr, lpSource);
-    Ptr += SourceLength;
-    wcscpy(Ptr, lpExeName);
-
-    Request->Data.GetConsoleAlias.ExeLength = ExeLength;
-    Request->Data.GetConsoleAlias.SourceLength = SourceLength;
-
-    Status = CsrClientCallServer(Request,
+    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                                  CaptureBuffer,
-                                 CSR_CREATE_API_NUMBER(CSR_CONSOLE, GET_CONSOLE_ALIAS),
-                                 sizeof(CSR_API_MESSAGE) + Size);
-
-    if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request->Status))
+                                 CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepGetAlias),
+                                 sizeof(CSRSS_CONSOLE_ALIAS));
+    if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = ApiMessage.Status))
     {
-        RtlFreeHeap(GetProcessHeap(), 0, Request);
         CsrFreeCaptureBuffer(CaptureBuffer);
         BaseSetLastNTError(Status);
         return 0;
     }
 
-    wcscpy(lpTargetBuffer, Request->Data.GetConsoleAlias.TargetBuffer);
-    RtlFreeHeap(GetProcessHeap(), 0, Request);
+    /* Copy the returned target string into the user buffer */
+    // wcscpy(lpTargetBuffer, ConsoleAlias->Target);
+    memcpy(lpTargetBuffer,
+           ConsoleAlias->Target,
+           ConsoleAlias->TargetLength);
+
+    /* Release the capture buffer and exits */
     CsrFreeCaptureBuffer(CaptureBuffer);
 
-    return Request->Data.GetConsoleAlias.BytesWritten;
+    return ConsoleAlias->TargetLength;
 }
 
 
@@ -272,15 +290,199 @@ GetConsoleAliasA(LPSTR lpSource,
  */
 DWORD
 WINAPI
+GetConsoleAliasesW(LPWSTR AliasBuffer,
+                   DWORD AliasBufferLength,
+                   LPWSTR ExeName)
+{
+    NTSTATUS Status;
+    CONSOLE_API_MESSAGE ApiMessage;
+    PCSRSS_GET_ALL_CONSOLE_ALIASES GetAllConsoleAliases = &ApiMessage.Data.GetAllConsoleAliases;
+    PCSR_CAPTURE_BUFFER CaptureBuffer;
+
+    DPRINT("GetConsoleAliasesW entered\n");
+
+    /* Determine the needed sizes */
+    GetAllConsoleAliases->ExeLength = GetConsoleAliasesLengthW(ExeName);
+    if (GetAllConsoleAliases->ExeLength == 0 ||
+        GetAllConsoleAliases->ExeLength > AliasBufferLength)
+    {
+        return 0;
+    }
+
+    GetAllConsoleAliases->AliasesBufferLength = AliasBufferLength;
+
+    /* Allocate a Capture Buffer */
+    CaptureBuffer = CsrAllocateCaptureBuffer(2, GetAllConsoleAliases->ExeLength +
+                                                GetAllConsoleAliases->AliasesBufferLength);
+    if (!CaptureBuffer)
+    {
+        DPRINT1("CsrAllocateCaptureBuffer failed!\n");
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return 0;
+    }
+
+    /* Capture the exe name and allocate space for the aliases buffer */
+    CsrCaptureMessageBuffer(CaptureBuffer,
+                            (PVOID)ExeName,
+                            GetAllConsoleAliases->ExeLength,
+                            (PVOID*)&GetAllConsoleAliases->ExeName);
+
+    CsrAllocateMessagePointer(CaptureBuffer,
+                              GetAllConsoleAliases->AliasesBufferLength,
+                              (PVOID*)&GetAllConsoleAliases->AliasesBuffer);
+
+    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                                 CaptureBuffer,
+                                 CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepGetAliases),
+                                 sizeof(CSRSS_GET_ALL_CONSOLE_ALIASES));
+    if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = ApiMessage.Status))
+    {
+        BaseSetLastNTError(Status);
+        return 0;
+    }
+
+    /* Copy the returned aliases string into the user buffer */
+    // wcscpy(AliasBuffer, GetAllConsoleAliases->AliasesBuffer);
+    memcpy(AliasBuffer,
+           GetAllConsoleAliases->AliasesBuffer,
+           GetAllConsoleAliases->AliasesBufferLength);
+
+    /* Release the capture buffer and exits */
+    CsrFreeCaptureBuffer(CaptureBuffer);
+
+    return GetAllConsoleAliases->AliasesBufferLength; // / sizeof(WCHAR); (original code)
+}
+
+
+/*
+ * @implemented
+ */
+DWORD
+WINAPI
+GetConsoleAliasesA(LPSTR AliasBuffer,
+                   DWORD AliasBufferLength,
+                   LPSTR ExeName)
+{
+    DWORD dwRetVal = 0;
+    LPWSTR lpwExeName = NULL;
+    LPWSTR lpwAliasBuffer;
+
+    DPRINT("GetConsoleAliasesA entered\n");
+
+    if (ExeName)
+        BasepAnsiStringToHeapUnicodeString(ExeName, (LPWSTR*)&lpwExeName);
+
+    lpwAliasBuffer = HeapAlloc(GetProcessHeap(), 0, AliasBufferLength * sizeof(WCHAR));
+
+    dwRetVal = GetConsoleAliasesW(lpwAliasBuffer, AliasBufferLength * sizeof(WCHAR), lpwExeName);
+
+    if (lpwExeName)
+        RtlFreeHeap(GetProcessHeap(), 0, (LPWSTR*)lpwExeName);
+
+    if (dwRetVal)
+        dwRetVal = WideCharToMultiByte(CP_ACP, 0, lpwAliasBuffer, dwRetVal /**/ / sizeof(WCHAR) /**/, AliasBuffer, AliasBufferLength, NULL, NULL);
+
+    HeapFree(GetProcessHeap(), 0, lpwAliasBuffer);
+    return dwRetVal;
+}
+
+
+/*
+ * @implemented
+ */
+DWORD
+WINAPI
+GetConsoleAliasesLengthW(LPWSTR lpExeName)
+{
+    NTSTATUS Status;
+    CONSOLE_API_MESSAGE ApiMessage;
+    PCSRSS_GET_ALL_CONSOLE_ALIASES_LENGTH GetAllConsoleAliasesLength = &ApiMessage.Data.GetAllConsoleAliasesLength;
+    PCSR_CAPTURE_BUFFER CaptureBuffer;
+
+    DPRINT("GetConsoleAliasesLengthW entered\n");
+
+    if (lpExeName == NULL)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
+
+    GetAllConsoleAliasesLength->ExeLength = (wcslen(lpExeName) + 1) * sizeof(WCHAR);
+    GetAllConsoleAliasesLength->Length = 0;
+
+    /* Allocate a Capture Buffer */
+    CaptureBuffer = CsrAllocateCaptureBuffer(1, GetAllConsoleAliasesLength->ExeLength);
+    if (!CaptureBuffer)
+    {
+        DPRINT1("CsrAllocateCaptureBuffer failed!\n");
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return 0;
+    }
+
+    /* Capture the exe name */
+    CsrCaptureMessageBuffer(CaptureBuffer,
+                            (PVOID)lpExeName,
+                            GetAllConsoleAliasesLength->ExeLength,
+                            (PVOID)&GetAllConsoleAliasesLength->ExeName);
+
+    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                                 CaptureBuffer,
+                                 CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepGetAliasesLength),
+                                 sizeof(CSRSS_GET_ALL_CONSOLE_ALIASES_LENGTH));
+
+    CsrFreeCaptureBuffer(CaptureBuffer);
+
+    if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = ApiMessage.Status))
+    {
+        BaseSetLastNTError(Status);
+        return 0;
+    }
+
+    return GetAllConsoleAliasesLength->Length;
+}
+
+
+/*
+ * @implemented
+ */
+DWORD
+WINAPI
+GetConsoleAliasesLengthA(LPSTR lpExeName)
+{
+    DWORD dwRetVal = 0;
+    LPWSTR lpExeNameW = NULL;
+
+    if (lpExeName)
+        BasepAnsiStringToHeapUnicodeString(lpExeName, (LPWSTR*)&lpExeNameW);
+
+    dwRetVal = GetConsoleAliasesLengthW(lpExeNameW);
+    if (dwRetVal)
+        dwRetVal /= sizeof(WCHAR);
+
+    /* Clean up */
+    if (lpExeNameW)
+        RtlFreeHeap(GetProcessHeap(), 0, (LPWSTR*)lpExeNameW);
+
+    return dwRetVal;
+}
+
+
+/*
+ * @implemented
+ */
+DWORD
+WINAPI
 GetConsoleAliasExesW(LPWSTR lpExeNameBuffer,
                      DWORD ExeNameBufferLength)
 {
-    CSR_API_MESSAGE Request;
-    PCSR_CAPTURE_BUFFER CaptureBuffer;
     NTSTATUS Status;
+    CONSOLE_API_MESSAGE ApiMessage;
+    PCSRSS_GET_CONSOLE_ALIASES_EXES GetConsoleAliasesExes = &ApiMessage.Data.GetConsoleAliasesExes;
+    PCSR_CAPTURE_BUFFER CaptureBuffer;
 
     DPRINT("GetConsoleAliasExesW entered\n");
 
+    /* Allocate a Capture Buffer */
     CaptureBuffer = CsrAllocateCaptureBuffer(1, ExeNameBufferLength);
     if (!CaptureBuffer)
     {
@@ -289,29 +491,33 @@ GetConsoleAliasExesW(LPWSTR lpExeNameBuffer,
         return 0;
     }
 
+    GetConsoleAliasesExes->Length = ExeNameBufferLength;
+
+    /* Allocate space for the exe name buffer */
     CsrAllocateMessagePointer(CaptureBuffer,
                               ExeNameBufferLength,
-                              (PVOID*)&Request.Data.GetConsoleAliasesExes.ExeNames);
-    Request.Data.GetConsoleAliasesExes.Length = ExeNameBufferLength;
+                              (PVOID*)&GetConsoleAliasesExes->ExeNames);
 
-    Status = CsrClientCallServer(&Request,
+    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                                  CaptureBuffer,
-                                 CSR_CREATE_API_NUMBER(CSR_CONSOLE, GET_CONSOLE_ALIASES_EXES),
-                                 sizeof(CSR_API_MESSAGE));
-
-    if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
+                                 CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepGetAliasExes),
+                                 sizeof(CSRSS_GET_CONSOLE_ALIASES_EXES));
+    if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = ApiMessage.Status))
     {
-        BaseSetLastNTError(Status);
         CsrFreeCaptureBuffer(CaptureBuffer);
+        BaseSetLastNTError(Status);
         return 0;
     }
 
+    /* Copy the returned target string into the user buffer */
     memcpy(lpExeNameBuffer,
-           Request.Data.GetConsoleAliasesExes.ExeNames,
-           Request.Data.GetConsoleAliasesExes.BytesWritten);
+           GetConsoleAliasesExes->ExeNames,
+           GetConsoleAliasesExes->Length);
 
+    /* Release the capture buffer and exits */
     CsrFreeCaptureBuffer(CaptureBuffer);
-    return Request.Data.GetConsoleAliasesExes.BytesWritten;
+
+    return GetConsoleAliasesExes->Length;
 }
 
 
@@ -347,25 +553,26 @@ DWORD
 WINAPI
 GetConsoleAliasExesLengthW(VOID)
 {
-    CSR_API_MESSAGE Request;
     NTSTATUS Status;
+    CONSOLE_API_MESSAGE ApiMessage;
+    PCSRSS_GET_CONSOLE_ALIASES_EXES_LENGTH GetConsoleAliasesExesLength = &ApiMessage.Data.GetConsoleAliasesExesLength;
 
     DPRINT("GetConsoleAliasExesLengthW entered\n");
 
-    Request.Data.GetConsoleAliasesExesLength.Length = 0;
+    GetConsoleAliasesExesLength->Length = 0;
 
-    Status = CsrClientCallServer(&Request,
+    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                                  NULL,
-                                 CSR_CREATE_API_NUMBER(CSR_CONSOLE, GET_CONSOLE_ALIASES_EXES_LENGTH),
-                                 sizeof(CSR_API_MESSAGE));
+                                 CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepGetAliasExesLength),
+                                 sizeof(CSRSS_GET_CONSOLE_ALIASES_EXES_LENGTH));
 
-    if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
+    if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = ApiMessage.Status))
     {
         BaseSetLastNTError(Status);
         return 0;
     }
 
-    return Request.Data.GetConsoleAliasesExesLength.Length;
+    return GetConsoleAliasesExesLength->Length;
 }
 
 
@@ -386,132 +593,6 @@ GetConsoleAliasExesLengthA(VOID)
         dwLength /= sizeof(WCHAR);
 
     return dwLength;
-}
-
-
-/*
- * @implemented
- */
-DWORD
-WINAPI
-GetConsoleAliasesW(LPWSTR AliasBuffer,
-                   DWORD AliasBufferLength,
-                   LPWSTR ExeName)
-{
-    CSR_API_MESSAGE Request;
-    NTSTATUS Status;
-    DWORD dwLength;
-
-    DPRINT("GetConsoleAliasesW entered\n");
-
-    dwLength = GetConsoleAliasesLengthW(ExeName);
-    if (!dwLength || dwLength > AliasBufferLength)
-        return 0;
-
-    Request.Data.GetAllConsoleAlias.AliasBuffer = AliasBuffer;
-    Request.Data.GetAllConsoleAlias.AliasBufferLength = AliasBufferLength;
-    Request.Data.GetAllConsoleAlias.lpExeName = ExeName;
-
-    Status = CsrClientCallServer(&Request,
-                                 NULL,
-                                 CSR_CREATE_API_NUMBER(CSR_CONSOLE, GET_ALL_CONSOLE_ALIASES),
-                                 sizeof(CSR_API_MESSAGE));
-
-    if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
-    {
-        BaseSetLastNTError(Status);
-        return 0;
-    }
-
-    return Request.Data.GetAllConsoleAlias.BytesWritten / sizeof(WCHAR);
-}
-
-
-/*
- * @implemented
- */
-DWORD
-WINAPI
-GetConsoleAliasesA(LPSTR AliasBuffer,
-                   DWORD AliasBufferLength,
-                   LPSTR ExeName)
-{
-    DWORD dwRetVal = 0;
-    LPWSTR lpwExeName = NULL;
-    LPWSTR lpwAliasBuffer;
-
-    DPRINT("GetConsoleAliasesA entered\n");
-
-    if (ExeName)
-        BasepAnsiStringToHeapUnicodeString(ExeName, (LPWSTR*) &lpwExeName);
-
-    lpwAliasBuffer = HeapAlloc(GetProcessHeap(), 0, AliasBufferLength * sizeof(WCHAR));
-
-    dwRetVal = GetConsoleAliasesW(lpwAliasBuffer, AliasBufferLength, lpwExeName);
-
-    if (lpwExeName)
-        RtlFreeHeap(GetProcessHeap(), 0, (LPWSTR*) lpwExeName);
-
-    if (dwRetVal)
-        dwRetVal = WideCharToMultiByte(CP_ACP, 0, lpwAliasBuffer, dwRetVal, AliasBuffer, AliasBufferLength, NULL, NULL);
-
-    HeapFree(GetProcessHeap(), 0, lpwAliasBuffer);
-    return dwRetVal;
-}
-
-
-/*
- * @implemented
- */
-DWORD
-WINAPI
-GetConsoleAliasesLengthW(LPWSTR lpExeName)
-{
-    CSR_API_MESSAGE Request;
-    NTSTATUS Status;
-
-    DPRINT("GetConsoleAliasesLengthW entered\n");
-
-    Request.Data.GetAllConsoleAliasesLength.lpExeName = lpExeName;
-    Request.Data.GetAllConsoleAliasesLength.Length = 0;
-
-    Status = CsrClientCallServer(&Request,
-                                 NULL,
-                                 CSR_CREATE_API_NUMBER(CSR_CONSOLE, GET_ALL_CONSOLE_ALIASES_LENGTH),
-                                 sizeof(CSR_API_MESSAGE));
-
-    if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
-    {
-        BaseSetLastNTError(Status);
-        return 0;
-    }
-
-    return Request.Data.GetAllConsoleAliasesLength.Length;
-}
-
-
-/*
- * @implemented
- */
-DWORD
-WINAPI
-GetConsoleAliasesLengthA(LPSTR lpExeName)
-{
-    DWORD dwRetVal = 0;
-    LPWSTR lpExeNameW = NULL;
-
-    if (lpExeName)
-        BasepAnsiStringToHeapUnicodeString(lpExeName, (LPWSTR*) &lpExeNameW);
-
-    dwRetVal = GetConsoleAliasesLengthW(lpExeNameW);
-    if (dwRetVal)
-        dwRetVal /= sizeof(WCHAR);
-
-    /* Clean up */
-    if (lpExeNameW)
-        RtlFreeHeap(GetProcessHeap(), 0, (LPWSTR*) lpExeNameW);
-
-    return dwRetVal;
 }
 
 /* EOF */

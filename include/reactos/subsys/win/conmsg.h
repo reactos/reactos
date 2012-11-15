@@ -416,39 +416,41 @@ typedef struct
     HICON  WindowIcon;
 } CSRSS_SET_CONSOLE_ICON, *PCSRSS_SET_CONSOLE_ICON;
 
-typedef struct
-{
-    ULONG SourceLength;
-    ULONG ExeLength;
-    ULONG TargetLength;
-} CSRSS_ADD_CONSOLE_ALIAS, *PCSRSS_ADD_CONSOLE_ALIAS;
+
+
+
+
+
+
+
 
 typedef struct
 {
-    ULONG SourceLength;
-    ULONG ExeLength;
-    ULONG BytesWritten;
-    ULONG TargetBufferLength;
-    PVOID TargetBuffer;
-} CSRSS_GET_CONSOLE_ALIAS, *PCSRSS_GET_CONSOLE_ALIAS;
+    ULONG  SourceLength;
+    ULONG  TargetLength; // Also used for storing the number of bytes written.
+    ULONG  ExeLength;
+    LPWSTR Source;
+    LPWSTR Target;
+    LPWSTR Exe;
+} CSRSS_CONSOLE_ALIAS, *PCSRSS_CONSOLE_ALIAS;
 
 typedef struct
 {
-    LPWSTR lpExeName;
-    DWORD BytesWritten;
-    DWORD AliasBufferLength;
-    LPWSTR AliasBuffer;
+    DWORD ExeLength;
+    DWORD AliasesBufferLength;
+    LPWSTR ExeName;
+    LPWSTR AliasesBuffer;
 } CSRSS_GET_ALL_CONSOLE_ALIASES, *PCSRSS_GET_ALL_CONSOLE_ALIASES;
 
 typedef struct
 {
-    LPWSTR lpExeName;
     DWORD Length;
+    DWORD ExeLength;
+    LPWSTR ExeName;
 } CSRSS_GET_ALL_CONSOLE_ALIASES_LENGTH, *PCSRSS_GET_ALL_CONSOLE_ALIASES_LENGTH;
 
 typedef struct
 {
-    DWORD BytesWritten;
     DWORD Length;
     LPWSTR ExeNames;
 } CSRSS_GET_CONSOLE_ALIASES_EXES, *PCSRSS_GET_CONSOLE_ALIASES_EXES;
@@ -458,28 +460,10 @@ typedef struct
     DWORD Length;
 } CSRSS_GET_CONSOLE_ALIASES_EXES_LENGTH, *PCSRSS_GET_CONSOLE_ALIASES_EXES_LENGTH;
 
-typedef struct
-{
-    DWORD Event;
-    DWORD ProcessGroup;
-} CSRSS_GENERATE_CTRL_EVENT, *PCSRSS_GENERATE_CTRL_EVENT;
 
-typedef struct
-{
-    HANDLE ConsoleHandle;
-    DWORD NumInputEvents;
-} CSRSS_GET_NUM_INPUT_EVENTS, *PCSRSS_GET_NUM_INPUT_EVENTS;
 
-typedef struct
-{
-    HANDLE OutputHandle;
-    COORD Size;
-} CSRSS_SET_SCREEN_BUFFER_SIZE, *PCSRSS_SET_SCREEN_BUFFER_SIZE;
 
-typedef struct
-{
-    CONSOLE_SELECTION_INFO Info;
-} CSRSS_GET_CONSOLE_SELECTION_INFO, *PCSRSS_GET_CONSOLE_SELECTION_INFO;
+
 
 typedef struct
 {
@@ -512,6 +496,38 @@ typedef struct
     DWORD dwFlags;
 } CSRSS_GET_HISTORY_INFO, *PCSRSS_GET_HISTORY_INFO,
   CSRSS_SET_HISTORY_INFO, *PCSRSS_SET_HISTORY_INFO;;
+
+
+
+
+
+
+
+
+
+
+typedef struct
+{
+    DWORD Event;
+    DWORD ProcessGroup;
+} CSRSS_GENERATE_CTRL_EVENT, *PCSRSS_GENERATE_CTRL_EVENT;
+
+typedef struct
+{
+    HANDLE ConsoleHandle;
+    DWORD NumInputEvents;
+} CSRSS_GET_NUM_INPUT_EVENTS, *PCSRSS_GET_NUM_INPUT_EVENTS;
+
+typedef struct
+{
+    HANDLE OutputHandle;
+    COORD Size;
+} CSRSS_SET_SCREEN_BUFFER_SIZE, *PCSRSS_SET_SCREEN_BUFFER_SIZE;
+
+typedef struct
+{
+    CONSOLE_SELECTION_INFO Info;
+} CSRSS_GET_CONSOLE_SELECTION_INFO, *PCSRSS_GET_CONSOLE_SELECTION_INFO;
 
 typedef struct
 {
@@ -580,22 +596,24 @@ typedef struct _CONSOLE_API_MESSAGE
         CSRSS_SETGET_CONSOLE_HW_STATE ConsoleHardwareStateRequest;
         CSRSS_GET_CONSOLE_WINDOW GetConsoleWindowRequest;
         CSRSS_SET_CONSOLE_ICON SetConsoleIconRequest;
-        CSRSS_ADD_CONSOLE_ALIAS AddConsoleAlias;
-        CSRSS_GET_CONSOLE_ALIAS GetConsoleAlias;
-        CSRSS_GET_ALL_CONSOLE_ALIASES GetAllConsoleAlias;
+
+        CSRSS_CONSOLE_ALIAS ConsoleAlias;
+        CSRSS_GET_ALL_CONSOLE_ALIASES GetAllConsoleAliases;
         CSRSS_GET_ALL_CONSOLE_ALIASES_LENGTH GetAllConsoleAliasesLength;
         CSRSS_GET_CONSOLE_ALIASES_EXES GetConsoleAliasesExes;
         CSRSS_GET_CONSOLE_ALIASES_EXES_LENGTH GetConsoleAliasesExesLength;
-        CSRSS_GENERATE_CTRL_EVENT GenerateCtrlEvent;
-        CSRSS_GET_NUM_INPUT_EVENTS GetNumInputEventsRequest;
-        CSRSS_SET_SCREEN_BUFFER_SIZE SetScreenBufferSize;
-        CSRSS_GET_CONSOLE_SELECTION_INFO GetConsoleSelectionInfo;
-        CSRSS_GET_COMMAND_HISTORY_LENGTH GetCommandHistoryLength;
+
         CSRSS_GET_COMMAND_HISTORY GetCommandHistory;
+        CSRSS_GET_COMMAND_HISTORY_LENGTH GetCommandHistoryLength;
         CSRSS_EXPUNGE_COMMAND_HISTORY ExpungeCommandHistory;
         CSRSS_SET_HISTORY_NUMBER_COMMANDS SetHistoryNumberCommands;
         CSRSS_GET_HISTORY_INFO GetHistoryInfo;
         CSRSS_SET_HISTORY_INFO SetHistoryInfo;
+
+        CSRSS_GENERATE_CTRL_EVENT GenerateCtrlEvent;
+        CSRSS_GET_NUM_INPUT_EVENTS GetNumInputEventsRequest;
+        CSRSS_SET_SCREEN_BUFFER_SIZE SetScreenBufferSize;
+        CSRSS_GET_CONSOLE_SELECTION_INFO GetConsoleSelectionInfo;
         CSRSS_GET_CONSOLE_CP GetConsoleCodePage;
         CSRSS_SET_CONSOLE_CP SetConsoleCodePage;
         CSRSS_GET_CONSOLE_OUTPUT_CP GetConsoleOutputCodePage;
