@@ -41,6 +41,7 @@ list(APPEND SOURCE
     client/console/alias.c
     client/console/console.c
     client/console/history.c
+    client/console/readwrite.c
     client/file/backup.c
     client/file/cnotify.c
     client/file/copy.c
