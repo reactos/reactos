@@ -1,29 +1,28 @@
-/* $Id: console.c 55081 2012-01-22 22:27:08Z gadamopoulos $
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            dll/win32/kernel32/misc/console.c
+ * FILE:            dll/win32/kernel32/client/console/console.c
  * PURPOSE:         Win32 server console functions
  * PROGRAMMER:      James Tabor
- *            <jimtabor@adsl-64-217-116-74.dsl.hstntx.swbell.net>
+ *                  <jimtabor@adsl-64-217-116-74.dsl.hstntx.swbell.net>
  * UPDATE HISTORY:
  *    199901?? ??    Created
  *    19990204 EA    SetConsoleTitleA
- *      19990306 EA    Stubs
+ *    19990306 EA    Stubs
  */
 
-/* INCLUDES ******************************************************************/
+/* INCLUDES *******************************************************************/
 
 #include <k32.h>
 
-#define NDEBUG
+// #define NDEBUG
 #include <debug.h>
 
 extern RTL_CRITICAL_SECTION ConsoleLock;
 extern BOOL ConsoleInitialized;
 extern BOOL WINAPI IsDebuggerPresent(VOID);
 
-/* GLOBALS *******************************************************************/
+/* GLOBALS ********************************************************************/
 
 PHANDLER_ROUTINE InitialHandler[1];
 PHANDLER_ROUTINE* CtrlHandlers;
@@ -33,7 +32,7 @@ ULONG NrAllocatedHandlers;
 #define INPUTEXENAME_BUFLEN 256
 static WCHAR InputExeName[INPUTEXENAME_BUFLEN];
 
-/* Default Console Control Handler *******************************************/
+/* Default Console Control Handler ********************************************/
 
 BOOL
 WINAPI
