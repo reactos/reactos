@@ -5,7 +5,6 @@
  * PURPOSE:         Win32 server console functions
  * PROGRAMMERS:     Christoph von Wittich (christoph_vw@reactos.org)
  *                  Johannes Anderwald (janderwald@reactos.org)
- *
  */
 
 /* INCLUDES *******************************************************************/
