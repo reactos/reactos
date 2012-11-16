@@ -282,6 +282,8 @@ GetUser32Handle(HANDLE handle)
     INT Index;
     USHORT generation;
 
+    if (!handle) return NULL;
+
     Index = (((UINT_PTR)handle & 0xffff) - FIRST_USER_HANDLE) >> 1;
 
     if (Index < 0 || Index >= gHandleTable->nb_handles)
@@ -435,21 +437,14 @@ PWND
 FASTCALL
 ValidateHwnd(HWND hwnd)
 {
-    PWND Wnd;
     PCLIENTINFO ClientInfo = GetWin32ClientInfo();
     ASSERT(ClientInfo != NULL);
 
     /* See if the window is cached */
-    if (hwnd == ClientInfo->CallbackWnd.hWnd)
+    if (hwnd && hwnd == ClientInfo->CallbackWnd.hWnd)
         return ClientInfo->CallbackWnd.pWnd;
 
-    Wnd = ValidateHandle((HANDLE)hwnd, otWindow);
-    if (Wnd != NULL)
-    {
-        return Wnd;
-    }
-
-    return NULL;
+    return ValidateHandle((HANDLE)hwnd, otWindow);
 }
 
 //
