@@ -571,35 +571,41 @@ typedef struct _CONSOLE_API_MESSAGE
     ULONG Reserved;
     union
     {
-        CSRSS_WRITE_CONSOLE WriteConsoleRequest;
         CSRSS_ALLOC_CONSOLE AllocConsoleRequest;
         CSRSS_FREE_CONSOLE FreeConsoleRequest;
-        CSRSS_SCREEN_BUFFER_INFO ScreenBufferInfoRequest;
-        CSRSS_SET_CURSOR SetCursorRequest;
-        CSRSS_FILL_OUTPUT FillOutputRequest;
-        CSRSS_FILL_OUTPUT_ATTRIB FillOutputAttribRequest;
-        CSRSS_WRITE_CONSOLE_OUTPUT_CHAR WriteConsoleOutputCharRequest;
-        CSRSS_WRITE_CONSOLE_OUTPUT_ATTRIB WriteConsoleOutputAttribRequest;
-        CSRSS_GET_CURSOR_INFO GetCursorInfoRequest;
-        CSRSS_SET_CURSOR_INFO SetCursorInfoRequest;
-        CSRSS_SET_ATTRIB SetAttribRequest;
-        CSRSS_SET_CONSOLE_MODE SetConsoleModeRequest;
-        CSRSS_GET_CONSOLE_MODE GetConsoleModeRequest;
-        CSRSS_CREATE_SCREEN_BUFFER CreateScreenBufferRequest;
-        CSRSS_SET_SCREEN_BUFFER SetScreenBufferRequest;
-        CSRSS_SET_TITLE SetTitleRequest;
-        CSRSS_GET_TITLE GetTitleRequest;
-        CSRSS_WRITE_CONSOLE_OUTPUT WriteConsoleOutputRequest;
-        CSRSS_FLUSH_INPUT_BUFFER FlushInputBufferRequest;
-        CSRSS_SCROLL_CONSOLE_SCREEN_BUFFER ScrollConsoleScreenBufferRequest;
-        CSRSS_WRITE_CONSOLE_INPUT WriteConsoleInputRequest;
+
+        /* Handles */
         CSRSS_GET_INPUT_HANDLE GetInputHandleRequest;
         CSRSS_GET_OUTPUT_HANDLE GetOutputHandleRequest;
         CSRSS_CLOSE_HANDLE CloseHandleRequest;
         CSRSS_VERIFY_HANDLE VerifyHandleRequest;
         CSRSS_DUPLICATE_HANDLE DuplicateHandleRequest;
         CSRSS_GET_INPUT_WAIT_HANDLE GetConsoleInputWaitHandle;
+
+        /* Cursor */
+        CSRSS_SET_CURSOR SetCursorRequest;
+        CSRSS_GET_CURSOR_INFO GetCursorInfoRequest;
+        CSRSS_SET_CURSOR_INFO SetCursorInfoRequest;
+
+        CSRSS_FLUSH_INPUT_BUFFER FlushInputBufferRequest;
+
+        /* Screen buffer */
+        CSRSS_CREATE_SCREEN_BUFFER CreateScreenBufferRequest;
+        CSRSS_SET_SCREEN_BUFFER SetScreenBufferRequest;
+        CSRSS_SCREEN_BUFFER_INFO ScreenBufferInfoRequest;
+        CSRSS_SET_SCREEN_BUFFER_SIZE SetScreenBufferSize;
+        CSRSS_SCROLL_CONSOLE_SCREEN_BUFFER ScrollConsoleScreenBufferRequest;
+
+        CSRSS_GET_CONSOLE_SELECTION_INFO GetConsoleSelectionInfo;
+
+        /* Console mode */
+        CSRSS_SET_CONSOLE_MODE SetConsoleModeRequest;
+        CSRSS_GET_CONSOLE_MODE GetConsoleModeRequest;
         CSRSS_SETGET_CONSOLE_HW_STATE ConsoleHardwareStateRequest;
+
+        /* Console window */
+        CSRSS_SET_TITLE SetTitleRequest;
+        CSRSS_GET_TITLE GetTitleRequest;
         CSRSS_GET_CONSOLE_WINDOW GetConsoleWindowRequest;
         CSRSS_SET_CONSOLE_ICON SetConsoleIconRequest;
 
@@ -608,6 +614,17 @@ typedef struct _CONSOLE_API_MESSAGE
         CSRSS_GET_CONSOLE_INPUT GetConsoleInputRequest;     // SrvGetConsoleInput / PeekConsoleInput & ReadConsoleInput
         CSRSS_READ_CONSOLE_OUTPUT ReadConsoleOutputRequest; // SrvReadConsoleOutput / ReadConsoleOutput
         CSRSS_READ_CONSOLE_OUTPUT_CODE ReadConsoleOutputCodeRequest;    // SrvReadConsoleOutputString / ReadConsoleOutputAttribute & ReadConsoleOutputCharacter
+
+        /* Write */
+        CSRSS_WRITE_CONSOLE WriteConsoleRequest;
+        CSRSS_WRITE_CONSOLE_INPUT WriteConsoleInputRequest;
+        CSRSS_WRITE_CONSOLE_OUTPUT WriteConsoleOutputRequest;
+        CSRSS_WRITE_CONSOLE_OUTPUT_CHAR WriteConsoleOutputCharRequest;
+        CSRSS_WRITE_CONSOLE_OUTPUT_ATTRIB WriteConsoleOutputAttribRequest;
+
+        CSRSS_FILL_OUTPUT FillOutputRequest;
+        CSRSS_FILL_OUTPUT_ATTRIB FillOutputAttribRequest;
+        CSRSS_SET_ATTRIB SetAttribRequest;
 
         /* Aliases */
         CSRSS_CONSOLE_ALIAS ConsoleAlias;
@@ -625,12 +642,13 @@ typedef struct _CONSOLE_API_MESSAGE
 
         CSRSS_GENERATE_CTRL_EVENT GenerateCtrlEvent;
         CSRSS_GET_NUM_INPUT_EVENTS GetNumInputEventsRequest;
-        CSRSS_SET_SCREEN_BUFFER_SIZE SetScreenBufferSize;
-        CSRSS_GET_CONSOLE_SELECTION_INFO GetConsoleSelectionInfo;
+
+        /* CodePage */
         CSRSS_GET_CONSOLE_CP GetConsoleCodePage;
         CSRSS_SET_CONSOLE_CP SetConsoleCodePage;
         CSRSS_GET_CONSOLE_OUTPUT_CP GetConsoleOutputCodePage;
         CSRSS_SET_CONSOLE_OUTPUT_CP SetConsoleOutputCodePage;
+
         CSRSS_GET_PROCESS_LIST GetProcessListRequest;
     } Data;
 } CONSOLE_API_MESSAGE, *PCONSOLE_API_MESSAGE;
