@@ -389,52 +389,53 @@ OpenConsoleW(LPCWSTR wsName,
              BOOL bInheritHandle,
              DWORD dwShareMode)
 {
-    CSR_API_MESSAGE Request;
-    ULONG CsrRequest;
     NTSTATUS Status = STATUS_SUCCESS;
+    CONSOLE_API_MESSAGE ApiMessage;
+    PCSRSS_OPEN_CONSOLE OpenConsoleRequest = &ApiMessage.Data.OpenConsoleRequest;
+    HANDLE_TYPE HandleType;
 
     if (wsName && 0 == _wcsicmp(wsName, L"CONIN$"))
     {
-        CsrRequest = CSR_CREATE_API_NUMBER(CSR_NATIVE, GET_INPUT_HANDLE);
+        HandleType = HANDLE_INPUT;
     }
     else if (wsName && 0 == _wcsicmp(wsName, L"CONOUT$"))
     {
-        CsrRequest = CSR_CREATE_API_NUMBER(CSR_NATIVE, GET_OUTPUT_HANDLE);
+        HandleType = HANDLE_OUTPUT;
     }
     else
     {
         SetLastError(ERROR_INVALID_PARAMETER);
-        return(INVALID_HANDLE_VALUE);
+        return INVALID_HANDLE_VALUE;
     }
 
-    if (dwDesiredAccess & ~(GENERIC_READ|GENERIC_WRITE))
+    if (dwDesiredAccess & ~(GENERIC_READ | GENERIC_WRITE))
     {
         SetLastError(ERROR_INVALID_PARAMETER);
-        return(INVALID_HANDLE_VALUE);
+        return INVALID_HANDLE_VALUE;
     }
 
-    if (dwShareMode & ~(FILE_SHARE_READ|FILE_SHARE_WRITE))
+    if (dwShareMode & ~(FILE_SHARE_READ | FILE_SHARE_WRITE))
     {
         SetLastError(ERROR_INVALID_PARAMETER);
-        return(INVALID_HANDLE_VALUE);
+        return INVALID_HANDLE_VALUE;
     }
 
-    /* Structures for GET_INPUT_HANDLE and GET_OUTPUT_HANDLE requests are identical */
-    Request.Data.GetInputHandleRequest.Access = dwDesiredAccess;
-    Request.Data.GetInputHandleRequest.Inheritable = bInheritHandle;
-    Request.Data.GetInputHandleRequest.ShareMode = dwShareMode;
+    OpenConsoleRequest->HandleType = HandleType;
+    OpenConsoleRequest->Access = dwDesiredAccess;
+    OpenConsoleRequest->Inheritable = bInheritHandle;
+    OpenConsoleRequest->ShareMode = dwShareMode;
 
-    Status = CsrClientCallServer(&Request,
+    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                                  NULL,
-                                 CsrRequest,
-                                 sizeof(CSR_API_MESSAGE));
-    if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
+                                 CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepOpenConsole),
+                                 sizeof(CSRSS_OPEN_CONSOLE));
+    if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = ApiMessage.Status))
     {
         BaseSetLastNTError(Status);
         return INVALID_HANDLE_VALUE;
     }
 
-    return Request.Data.GetInputHandleRequest.Handle;
+    return OpenConsoleRequest->Handle;
 }
 
 

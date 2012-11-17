@@ -17,7 +17,6 @@
 
 /* FUNCTIONS *****************************************************************/
 
-/*** Taken from win32ss/user/win32csr/desktopbg.c ***/
 BOOL FASTCALL
 DtbgIsDesktopVisible(VOID)
 {
@@ -31,10 +30,10 @@ DtbgIsDesktopVisible(VOID)
 
     return VisibleDesktopWindow != NULL;
 }
-/****************************************************/
 
 NTSTATUS FASTCALL
-ConioConsoleFromProcessData(PCSR_PROCESS ProcessData, PCSRSS_CONSOLE *Console)
+ConioConsoleFromProcessData(PCONSOLE_PROCESS_DATA ProcessData,
+                            PCSRSS_CONSOLE *Console)
 {
     PCSRSS_CONSOLE ProcessConsole;
 
@@ -57,30 +56,32 @@ ConioConsoleFromProcessData(PCSR_PROCESS ProcessData, PCSRSS_CONSOLE *Console)
 }
 
 VOID FASTCALL
-ConioConsoleCtrlEventTimeout(DWORD Event, PCSR_PROCESS ProcessData, DWORD Timeout)
+ConioConsoleCtrlEventTimeout(DWORD Event,
+                             PCONSOLE_PROCESS_DATA ProcessData,
+                             DWORD Timeout)
 {
     HANDLE Thread;
 
-    DPRINT("ConioConsoleCtrlEvent Parent ProcessId = %x\n", ProcessData->ClientId.UniqueProcess);
+    DPRINT("ConioConsoleCtrlEvent Parent ProcessId = %x\n", ProcessData->Process->ClientId.UniqueProcess);
 
     if (ProcessData->CtrlDispatcher)
     {
-
-        Thread = CreateRemoteThread(ProcessData->ProcessHandle, NULL, 0,
-                                    (LPTHREAD_START_ROUTINE) ProcessData->CtrlDispatcher,
+        Thread = CreateRemoteThread(ProcessData->Process->ProcessHandle, NULL, 0,
+                                    ProcessData->CtrlDispatcher,
                                     UlongToPtr(Event), 0, NULL);
         if (NULL == Thread)
         {
             DPRINT1("Failed thread creation (Error: 0x%x)\n", GetLastError());
             return;
         }
+
         WaitForSingleObject(Thread, Timeout);
         CloseHandle(Thread);
     }
 }
 
 VOID FASTCALL
-ConioConsoleCtrlEvent(DWORD Event, PCSR_PROCESS ProcessData)
+ConioConsoleCtrlEvent(DWORD Event, PCONSOLE_PROCESS_DATA ProcessData)
 {
     ConioConsoleCtrlEventTimeout(Event, ProcessData, 0);
 }
@@ -93,13 +94,11 @@ CsrInitConsole(PCSRSS_CONSOLE Console, int ShowCmd)
     PCSRSS_SCREEN_BUFFER NewBuffer;
     BOOL GuiMode;
     WCHAR Title[255];
-    HINSTANCE hInst;
 
     Console->Title.MaximumLength = Console->Title.Length = 0;
     Console->Title.Buffer = NULL;
 
-    hInst = GetModuleHandleW(L"win32csr");
-    if (LoadStringW(hInst,IDS_COMMAND_PROMPT,Title,sizeof(Title)/sizeof(Title[0])))
+    if (LoadStringW(ConSrvDllInstance, IDS_COMMAND_PROMPT, Title, sizeof(Title) / sizeof(Title[0])))
     {
         RtlCreateUnicodeString(&Console->Title, Title);
     }
@@ -150,10 +149,10 @@ CsrInitConsole(PCSRSS_CONSOLE Console, int ShowCmd)
     /* make console active, and insert into console list */
     Console->ActiveBuffer = (PCSRSS_SCREEN_BUFFER) NewBuffer;
 
-    if (! GuiMode)
+    if (!GuiMode)
     {
         Status = TuiInitConsole(Console);
-        if (! NT_SUCCESS(Status))
+        if (!NT_SUCCESS(Status))
         {
             DPRINT1("Failed to open text-mode console, switching to gui-mode\n");
             GuiMode = TRUE;
@@ -162,7 +161,7 @@ CsrInitConsole(PCSRSS_CONSOLE Console, int ShowCmd)
     else /* GuiMode */
     {
         Status = GuiInitConsole(Console, ShowCmd);
-        if (! NT_SUCCESS(Status))
+        if (!NT_SUCCESS(Status))
         {
             HeapFree(ConSrvHeap,0, NewBuffer);
             RtlFreeUnicodeString(&Console->Title);
@@ -189,6 +188,64 @@ CsrInitConsole(PCSRSS_CONSOLE Console, int ShowCmd)
     ConioDrawConsole(Console);
 
     return STATUS_SUCCESS;
+}
+
+CSR_API(SrvOpenConsole)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+    PCSRSS_OPEN_CONSOLE OpenConsoleRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.OpenConsoleRequest;
+    PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);
+
+    DPRINT("SrvOpenConsole\n");
+
+    OpenConsoleRequest->Handle = INVALID_HANDLE_VALUE;
+
+    RtlEnterCriticalSection(&ProcessData->HandleTableLock);
+
+    DPRINT1("SrvOpenConsole - Checkpoint 1\n");
+    DPRINT1("ProcessData = 0x%p ; ProcessData->Console = 0x%p\n", ProcessData, ProcessData->Console);
+
+    if (ProcessData->Console)
+    {
+        DWORD DesiredAccess = OpenConsoleRequest->Access;
+        DWORD ShareMode = OpenConsoleRequest->ShareMode;
+
+        PCSRSS_CONSOLE Console = ProcessData->Console;
+        Object_t *Object;
+
+        DPRINT1("SrvOpenConsole - Checkpoint 2\n");
+        EnterCriticalSection(&Console->Lock);
+        DPRINT1("SrvOpenConsole - Checkpoint 3\n");
+
+        if (OpenConsoleRequest->HandleType == HANDLE_OUTPUT)
+            Object = &Console->ActiveBuffer->Header;
+        else // HANDLE_INPUT
+            Object = &Console->Header;
+
+        if (((DesiredAccess & GENERIC_READ)  && Object->ExclusiveRead  != 0) ||
+            ((DesiredAccess & GENERIC_WRITE) && Object->ExclusiveWrite != 0) ||
+            (!(ShareMode & FILE_SHARE_READ)  && Object->AccessRead     != 0) ||
+            (!(ShareMode & FILE_SHARE_WRITE) && Object->AccessWrite    != 0))
+        {
+            DPRINT1("Sharing violation\n");
+            Status = STATUS_SHARING_VIOLATION;
+        }
+        else
+        {
+            Status = Win32CsrInsertObject(ProcessData,
+                                          &OpenConsoleRequest->Handle,
+                                          Object,
+                                          DesiredAccess,
+                                          OpenConsoleRequest->Inheritable,
+                                          ShareMode);
+        }
+
+        LeaveCriticalSection(&Console->Lock);
+    }
+
+    RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
+
+    return Status;
 }
 
 CSR_API(SrvAllocConsole)

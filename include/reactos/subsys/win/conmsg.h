@@ -20,8 +20,8 @@
 // Some names are also deduced from the subsystems/win32/csrss/csrsrv/server.c ones.
 typedef enum _CONSRV_API_NUMBER
 {
-    // ConsolepOpenConsole = CONSRV_FIRST_API_NUMBER,
-    ConsolepGetConsoleInput = CONSRV_FIRST_API_NUMBER,
+    ConsolepOpenConsole = CONSRV_FIRST_API_NUMBER,
+    ConsolepGetConsoleInput,
     ConsolepWriteConsoleInput,
     ConsolepReadConsoleOutput,
     ConsolepWriteConsoleOutput,
@@ -392,14 +392,23 @@ typedef struct
     DWORD Options;
 } CSRSS_DUPLICATE_HANDLE, *PCSRSS_DUPLICATE_HANDLE;
 
+/*
+ * Type of handles.
+ */
+typedef enum _HANDLE_TYPE
+{
+    HANDLE_INPUT    = 0x01,
+    HANDLE_OUTPUT   = 0x02
+} HANDLE_TYPE;
+
 typedef struct
 {
+    HANDLE Handle;
+    HANDLE_TYPE HandleType;
     DWORD Access;
     BOOL Inheritable;
-    HANDLE Handle;
     DWORD ShareMode;
-} CSRSS_GET_INPUT_HANDLE, *PCSRSS_GET_INPUT_HANDLE,
-  CSRSS_GET_OUTPUT_HANDLE, *PCSRSS_GET_OUTPUT_HANDLE;
+} CSRSS_OPEN_CONSOLE, *PCSRSS_OPEN_CONSOLE;
 
 typedef struct
 {
@@ -575,8 +584,7 @@ typedef struct _CONSOLE_API_MESSAGE
         CSRSS_FREE_CONSOLE FreeConsoleRequest;
 
         /* Handles */
-        CSRSS_GET_INPUT_HANDLE GetInputHandleRequest;
-        CSRSS_GET_OUTPUT_HANDLE GetOutputHandleRequest;
+        CSRSS_OPEN_CONSOLE OpenConsoleRequest;
         CSRSS_CLOSE_HANDLE CloseHandleRequest;
         CSRSS_VERIFY_HANDLE VerifyHandleRequest;
         CSRSS_DUPLICATE_HANDLE DuplicateHandleRequest;
