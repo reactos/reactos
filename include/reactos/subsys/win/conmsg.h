@@ -25,7 +25,7 @@ typedef enum _CONSRV_API_NUMBER
     ConsolepWriteConsoleInput,
     ConsolepReadConsoleOutput,
     ConsolepWriteConsoleOutput,
-    // ConsolepReadConsoleOutputString,
+    ConsolepReadConsoleOutputString,
     // ConsolepWriteConsoleOutputString,
     // ConsolepFillConsoleOutput,
     ConsolepGetMode,
@@ -147,7 +147,10 @@ typedef struct
     WORD NrCharactersToRead;
     WORD NrCharactersRead;
     HANDLE EventHandle;
+
     PVOID Buffer;
+    ULONG BufferSize;
+
     UNICODE_STRING ExeName;
     DWORD CtrlWakeupMask;
     DWORD ControlKeyState;
@@ -201,15 +204,6 @@ typedef struct
     COORD Coord;
     WORD Length;
 } CSRSS_FILL_OUTPUT_ATTRIB, *PCSRSS_FILL_OUTPUT_ATTRIB;
-
-typedef struct
-{
-    HANDLE ConsoleHandle;
-    BOOL Unicode;
-    INPUT_RECORD Input;
-    BOOL MoreEvents;
-    HANDLE Event;
-} CSRSS_READ_INPUT, *PCSRSS_READ_INPUT;
 
 typedef struct
 {
@@ -312,34 +306,55 @@ typedef struct
     CHAR_INFO Fill;
 } CSRSS_SCROLL_CONSOLE_SCREEN_BUFFER, *PCSRSS_SCROLL_CONSOLE_SCREEN_BUFFER;
 
+
+/*
+ * An attribute or a character are instances of the same entity, namely
+ * a "code" (what would be called an (ANSI) escape sequence). Therefore
+ * encode them inside the same structure.
+ */
+typedef enum _CODE_TYPE
+{
+    CODE_ASCII      = 0x01,
+    CODE_UNICODE    = 0x02,
+    CODE_ATTRIBUTE  = 0x03
+} CODE_TYPE;
+
+typedef struct
+{
+    HANDLE    ConsoleHandle;
+    CODE_TYPE CodeType;
+
+    DWORD NumCodesToRead;
+    COORD ReadCoord;
+    COORD EndCoord;
+
+    DWORD CodesRead;
+
+    union
+    {
+        PVOID pCode;
+        PCHAR AsciiChar;
+        PWCHAR UnicodeChar;
+        PWORD Attribute;
+    } pCode;    // Either a pointer to a character or to an attribute.
+} CSRSS_READ_CONSOLE_OUTPUT_CODE, *PCSRSS_READ_CONSOLE_OUTPUT_CODE;
+
+
 typedef struct
 {
     HANDLE ConsoleHandle;
     BOOL Unicode;
-    DWORD NumCharsToRead;
-    COORD ReadCoord;
-    COORD EndCoord;
-    DWORD CharsRead;
-    CHAR String[0];
-} CSRSS_READ_CONSOLE_OUTPUT_CHAR, *PCSRSS_READ_CONSOLE_OUTPUT_CHAR;
+    BOOL bRead; // TRUE --> Read ; FALSE --> Peek
 
-typedef struct
-{
-    HANDLE ConsoleHandle;
-    DWORD NumAttrsToRead;
-    COORD ReadCoord;
-    COORD EndCoord;
-    WORD Attribute[0];
-} CSRSS_READ_CONSOLE_OUTPUT_ATTRIB, *PCSRSS_READ_CONSOLE_OUTPUT_ATTRIB;
-
-
-typedef struct
-{
-    HANDLE ConsoleHandle;
-    BOOL Unicode;
     DWORD Length;
     INPUT_RECORD* InputRecord;
-} CSRSS_PEEK_CONSOLE_INPUT, *PCSRSS_PEEK_CONSOLE_INPUT;
+
+    /** For Read **/
+    ULONG InputsRead;
+    // INPUT_RECORD Input;
+    BOOL MoreEvents;
+    HANDLE Event;
+} CSRSS_GET_CONSOLE_INPUT, *PCSRSS_GET_CONSOLE_INPUT;
 
 typedef struct
 {
@@ -557,14 +572,12 @@ typedef struct _CONSOLE_API_MESSAGE
     union
     {
         CSRSS_WRITE_CONSOLE WriteConsoleRequest;
-        CSRSS_READ_CONSOLE ReadConsoleRequest;
         CSRSS_ALLOC_CONSOLE AllocConsoleRequest;
         CSRSS_FREE_CONSOLE FreeConsoleRequest;
         CSRSS_SCREEN_BUFFER_INFO ScreenBufferInfoRequest;
         CSRSS_SET_CURSOR SetCursorRequest;
         CSRSS_FILL_OUTPUT FillOutputRequest;
         CSRSS_FILL_OUTPUT_ATTRIB FillOutputAttribRequest;
-        CSRSS_READ_INPUT ReadInputRequest;
         CSRSS_WRITE_CONSOLE_OUTPUT_CHAR WriteConsoleOutputCharRequest;
         CSRSS_WRITE_CONSOLE_OUTPUT_ATTRIB WriteConsoleOutputAttribRequest;
         CSRSS_GET_CURSOR_INFO GetCursorInfoRequest;
@@ -579,10 +592,6 @@ typedef struct _CONSOLE_API_MESSAGE
         CSRSS_WRITE_CONSOLE_OUTPUT WriteConsoleOutputRequest;
         CSRSS_FLUSH_INPUT_BUFFER FlushInputBufferRequest;
         CSRSS_SCROLL_CONSOLE_SCREEN_BUFFER ScrollConsoleScreenBufferRequest;
-        CSRSS_READ_CONSOLE_OUTPUT_CHAR ReadConsoleOutputCharRequest;
-        CSRSS_READ_CONSOLE_OUTPUT_ATTRIB ReadConsoleOutputAttribRequest;
-        CSRSS_PEEK_CONSOLE_INPUT PeekConsoleInputRequest;
-        CSRSS_READ_CONSOLE_OUTPUT ReadConsoleOutputRequest;
         CSRSS_WRITE_CONSOLE_INPUT WriteConsoleInputRequest;
         CSRSS_GET_INPUT_HANDLE GetInputHandleRequest;
         CSRSS_GET_OUTPUT_HANDLE GetOutputHandleRequest;
@@ -594,12 +603,20 @@ typedef struct _CONSOLE_API_MESSAGE
         CSRSS_GET_CONSOLE_WINDOW GetConsoleWindowRequest;
         CSRSS_SET_CONSOLE_ICON SetConsoleIconRequest;
 
+        /* Read */
+        CSRSS_READ_CONSOLE ReadConsoleRequest;              // SrvReadConsole / ReadConsole
+        CSRSS_GET_CONSOLE_INPUT GetConsoleInputRequest;     // SrvGetConsoleInput / PeekConsoleInput & ReadConsoleInput
+        CSRSS_READ_CONSOLE_OUTPUT ReadConsoleOutputRequest; // SrvReadConsoleOutput / ReadConsoleOutput
+        CSRSS_READ_CONSOLE_OUTPUT_CODE ReadConsoleOutputCodeRequest;    // SrvReadConsoleOutputString / ReadConsoleOutputAttribute & ReadConsoleOutputCharacter
+
+        /* Aliases */
         CSRSS_CONSOLE_ALIAS ConsoleAlias;
         CSRSS_GET_ALL_CONSOLE_ALIASES GetAllConsoleAliases;
         CSRSS_GET_ALL_CONSOLE_ALIASES_LENGTH GetAllConsoleAliasesLength;
         CSRSS_GET_CONSOLE_ALIASES_EXES GetConsoleAliasesExes;
         CSRSS_GET_CONSOLE_ALIASES_EXES_LENGTH GetConsoleAliasesExesLength;
 
+        /* History */
         CSRSS_GET_COMMAND_HISTORY GetCommandHistory;
         CSRSS_GET_COMMAND_HISTORY_LENGTH GetCommandHistoryLength;
         CSRSS_EXPUNGE_COMMAND_HISTORY ExpungeCommandHistory;

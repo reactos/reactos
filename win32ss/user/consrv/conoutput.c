@@ -436,7 +436,7 @@ ConioEffectiveCursorSize(PCSRSS_CONSOLE Console, DWORD Scale)
 CSR_API(SrvReadConsoleOutput)
 {
     PCSRSS_READ_CONSOLE_OUTPUT ReadConsoleOutputRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.ReadConsoleOutputRequest;
-    PCSR_PROCESS ProcessData = CsrGetClientThread()->Process;
+    PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);
     PCHAR_INFO CharInfo;
     PCHAR_INFO CurCharInfo;
     PCSRSS_SCREEN_BUFFER Buff;
@@ -453,26 +453,32 @@ CSR_API(SrvReadConsoleOutput)
 
     DPRINT("SrvReadConsoleOutput\n");
 
-    Status = ConioLockScreenBuffer(ProcessData, ReadConsoleOutputRequest->ConsoleHandle, &Buff, GENERIC_READ);
-    if (! NT_SUCCESS(Status))
-    {
-        return Status;
-    }
-
     CharInfo = ReadConsoleOutputRequest->CharInfo;
     ReadRegion = ReadConsoleOutputRequest->ReadRegion;
     BufferSize = ReadConsoleOutputRequest->BufferSize;
     BufferCoord = ReadConsoleOutputRequest->BufferCoord;
 
-    /* FIXME: Is this correct? */
-    CodePage = ProcessData->Console->OutputCodePage;
-
-    if (!Win32CsrValidateBuffer(ProcessData, CharInfo,
+    if (!CsrValidateMessageBuffer(ApiMessage,
+                                  (PVOID*)&ReadConsoleOutputRequest->CharInfo,
+                                  BufferSize.X * BufferSize.Y,
+                                  sizeof(CHAR_INFO)))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+/*
+    if (!Win32CsrValidateBuffer(ProcessData->Process, CharInfo,
                                 BufferSize.X * BufferSize.Y, sizeof(CHAR_INFO)))
     {
         ConioUnlockScreenBuffer(Buff);
         return STATUS_ACCESS_VIOLATION;
     }
+*/
+
+    Status = ConioLockScreenBuffer(ProcessData, ReadConsoleOutputRequest->ConsoleHandle, &Buff, GENERIC_READ);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* FIXME: Is this correct? */
+    CodePage = ProcessData->Console->OutputCodePage;
 
     SizeY = min(BufferSize.Y - BufferCoord.Y, ConioRectHeight(&ReadRegion));
     SizeX = min(BufferSize.X - BufferCoord.X, ConioRectWidth(&ReadRegion));
@@ -480,7 +486,7 @@ CSR_API(SrvReadConsoleOutput)
     ReadRegion.Right = ReadRegion.Left + SizeX;
 
     ConioInitRect(&ScreenRect, 0, 0, Buff->MaxY, Buff->MaxX);
-    if (! ConioGetIntersection(&ReadRegion, &ScreenRect, &ReadRegion))
+    if (!ConioGetIntersection(&ReadRegion, &ScreenRect, &ReadRegion))
     {
         ConioUnlockScreenBuffer(Buff);
         return STATUS_SUCCESS;
@@ -495,6 +501,7 @@ CSR_API(SrvReadConsoleOutput)
         {
             if (ReadConsoleOutputRequest->Unicode)
             {
+                // ConsoleAnsiCharToUnicodeChar(ProcessData->Console, (PCHAR)Ptr++, &CurCharInfo->Char.UnicodeChar);
                 MultiByteToWideChar(CodePage, 0,
                                     (PCHAR)Ptr++, 1,
                                     &CurCharInfo->Char.UnicodeChar, 1);
@@ -691,45 +698,82 @@ CSR_API(SrvWriteConsoleOutput)
     return STATUS_SUCCESS;
 }
 
-CSR_API(CsrReadConsoleOutputChar)
+CSR_API(SrvReadConsoleOutputString)
 {
     NTSTATUS Status;
-    PCSRSS_READ_CONSOLE_OUTPUT_CHAR ReadConsoleOutputCharRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.ReadConsoleOutputCharRequest;
+    PCSRSS_READ_CONSOLE_OUTPUT_CODE ReadConsoleOutputCodeRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.ReadConsoleOutputCodeRequest;
     PCSRSS_CONSOLE Console;
     PCSRSS_SCREEN_BUFFER Buff;
+    USHORT CodeType;
     DWORD Xpos, Ypos;
-    PCHAR ReadBuffer;
+    PVOID ReadBuffer;
     DWORD i;
-    ULONG CharSize;
-    CHAR Char;
+    ULONG CodeSize;
+    BYTE Code;
 
-    DPRINT("CsrReadConsoleOutputChar\n");
+    DPRINT("SrvReadConsoleOutputString\n");
 
-    ReadBuffer = ReadConsoleOutputCharRequest->String;
+    ReadBuffer = ReadConsoleOutputCodeRequest->pCode.pCode;
 
-    CharSize = (ReadConsoleOutputCharRequest->Unicode ? sizeof(WCHAR) : sizeof(CHAR));
-
-    Status = ConioLockScreenBuffer(CsrGetClientThread()->Process, ReadConsoleOutputCharRequest->ConsoleHandle, &Buff, GENERIC_READ);
-    if (! NT_SUCCESS(Status))
+    CodeType = ReadConsoleOutputCodeRequest->CodeType;
+    switch (CodeType)
     {
-        return Status;
+        case CODE_ASCII:
+            CodeSize = sizeof(CHAR);
+            break;
+
+        case CODE_UNICODE:
+            CodeSize = sizeof(WCHAR);
+            break;
+
+        case CODE_ATTRIBUTE:
+            CodeSize = sizeof(WORD);
+            break;
+
+        default:
+            return STATUS_INVALID_PARAMETER;
     }
+
+    Status = ConioLockScreenBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process), ReadConsoleOutputCodeRequest->ConsoleHandle, &Buff, GENERIC_READ);
+    if (!NT_SUCCESS(Status)) return Status;
+
     Console = Buff->Header.Console;
 
-    Xpos = ReadConsoleOutputCharRequest->ReadCoord.X;
-    Ypos = (ReadConsoleOutputCharRequest->ReadCoord.Y + Buff->VirtualY) % Buff->MaxY;
+    Xpos = ReadConsoleOutputCodeRequest->ReadCoord.X;
+    Ypos = (ReadConsoleOutputCodeRequest->ReadCoord.Y + Buff->VirtualY) % Buff->MaxY;
 
-    for (i = 0; i < ReadConsoleOutputCharRequest->NumCharsToRead; ++i)
+    /*
+     * MSDN (ReadConsoleOutputAttribute and ReadConsoleOutputCharacter) :
+     *
+     * If the number of attributes (resp. characters) to be read from extends
+     * beyond the end of the specified screen buffer row, attributes (resp.
+     * characters) are read from the next row. If the number of attributes
+     * (resp. characters) to be read from extends beyond the end of the console
+     * screen buffer, attributes (resp. characters) up to the end of the console
+     * screen buffer are read.
+     *
+     * TODO: Do NOT loop up to NumCodesToRead, but stop before
+     * if we are going to overflow...
+     */
+    for (i = 0; i < ReadConsoleOutputCodeRequest->NumCodesToRead; ++i)
     {
-        Char = Buff->Buffer[(Xpos * 2) + (Ypos * 2 * Buff->MaxX)];
+        Code = Buff->Buffer[2 * (Xpos + Ypos * Buff->MaxX) + (CodeType == CODE_ATTRIBUTE ? 1 : 0)];
 
-        if(ReadConsoleOutputCharRequest->Unicode)
+        switch (CodeType)
         {
-            ConsoleAnsiCharToUnicodeChar(Console, (WCHAR*)ReadBuffer, &Char);
-            ReadBuffer += sizeof(WCHAR);
+            case CODE_UNICODE:
+                ConsoleAnsiCharToUnicodeChar(Console, (PWCHAR)ReadBuffer, (PCHAR)&Code);
+                break;
+
+            case CODE_ASCII:
+                *(PCHAR)ReadBuffer = (CHAR)Code;
+                break;
+
+            case CODE_ATTRIBUTE:
+                *(PWORD)ReadBuffer = (WORD)Code;
+                break;
         }
-        else
-            *(ReadBuffer++) = Char;
+        ReadBuffer = (PVOID)((ULONG_PTR)ReadBuffer + CodeSize);
 
         Xpos++;
 
@@ -745,78 +789,28 @@ CSR_API(CsrReadConsoleOutputChar)
         }
     }
 
-    *ReadBuffer = 0;
-    ReadConsoleOutputCharRequest->EndCoord.X = Xpos;
-    ReadConsoleOutputCharRequest->EndCoord.Y = (Ypos - Buff->VirtualY + Buff->MaxY) % Buff->MaxY;
+    switch (CodeType)
+    {
+        case CODE_UNICODE:
+            *(PWCHAR)ReadBuffer = 0;
+            break;
+
+        case CODE_ASCII:
+            *(PCHAR)ReadBuffer = 0;
+            break;
+
+        case CODE_ATTRIBUTE:
+            *(PWORD)ReadBuffer = 0;
+            break;
+    }
+
+    ReadConsoleOutputCodeRequest->EndCoord.X = Xpos;
+    ReadConsoleOutputCodeRequest->EndCoord.Y = (Ypos - Buff->VirtualY + Buff->MaxY) % Buff->MaxY;
 
     ConioUnlockScreenBuffer(Buff);
 
-    ReadConsoleOutputCharRequest->CharsRead = (DWORD)((ULONG_PTR)ReadBuffer - (ULONG_PTR)ReadConsoleOutputCharRequest->String) / CharSize;
-    if (ReadConsoleOutputCharRequest->CharsRead * CharSize + CSR_API_MESSAGE_HEADER_SIZE(CSRSS_READ_CONSOLE_OUTPUT_CHAR) > sizeof(CSR_API_MESSAGE))
-    {
-        DPRINT1("Length won't fit in message\n");
-        return STATUS_BUFFER_TOO_SMALL;
-    }
-
-    return STATUS_SUCCESS;
-}
-
-CSR_API(CsrReadConsoleOutputAttrib)
-{
-    NTSTATUS Status;
-    PCSRSS_READ_CONSOLE_OUTPUT_ATTRIB ReadConsoleOutputAttribRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.ReadConsoleOutputAttribRequest;
-    PCSRSS_SCREEN_BUFFER Buff;
-    DWORD Xpos, Ypos;
-    PWORD ReadBuffer;
-    DWORD i;
-    DWORD CurrentLength;
-
-    DPRINT("CsrReadConsoleOutputAttrib\n");
-
-    ReadBuffer = ReadConsoleOutputAttribRequest->Attribute;
-
-    Status = ConioLockScreenBuffer(CsrGetClientThread()->Process, ReadConsoleOutputAttribRequest->ConsoleHandle, &Buff, GENERIC_READ);
-    if (! NT_SUCCESS(Status))
-    {
-        return Status;
-    }
-
-    Xpos = ReadConsoleOutputAttribRequest->ReadCoord.X;
-    Ypos = (ReadConsoleOutputAttribRequest->ReadCoord.Y + Buff->VirtualY) % Buff->MaxY;
-
-    for (i = 0; i < ReadConsoleOutputAttribRequest->NumAttrsToRead; ++i)
-    {
-        *ReadBuffer = Buff->Buffer[(Xpos * 2) + (Ypos * 2 * Buff->MaxX) + 1];
-
-        ReadBuffer++;
-        Xpos++;
-
-        if (Xpos == Buff->MaxX)
-        {
-            Xpos = 0;
-            Ypos++;
-
-            if (Ypos == Buff->MaxY)
-            {
-                Ypos = 0;
-            }
-        }
-    }
-
-    *ReadBuffer = 0;
-
-    ReadConsoleOutputAttribRequest->EndCoord.X = Xpos;
-    ReadConsoleOutputAttribRequest->EndCoord.Y = (Ypos - Buff->VirtualY + Buff->MaxY) % Buff->MaxY;
-
-    ConioUnlockScreenBuffer(Buff);
-
-    CurrentLength = CSR_API_MESSAGE_HEADER_SIZE(CSRSS_READ_CONSOLE_OUTPUT_ATTRIB)
-                    + ReadConsoleOutputAttribRequest->NumAttrsToRead * sizeof(WORD);
-    if (CurrentLength > sizeof(CSR_API_MESSAGE))
-    {
-        DPRINT1("Length won't fit in message\n");
-        return STATUS_BUFFER_TOO_SMALL;
-    }
+    ReadConsoleOutputCodeRequest->CodesRead = (DWORD)((ULONG_PTR)ReadBuffer - (ULONG_PTR)ReadConsoleOutputCodeRequest->pCode.pCode) / CodeSize;
+    // <= ReadConsoleOutputCodeRequest->NumCodesToRead
 
     return STATUS_SUCCESS;
 }

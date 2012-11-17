@@ -211,16 +211,16 @@ ConioProcessKey(MSG *msg, PCSRSS_CONSOLE Console, BOOL TextMode)
     if (NotChar)
         LastVirtualKey = msg->wParam;
 
-    DPRINT  ("csrss: %s %s %s %s %02x %02x '%lc' %04x\n",
-             Down ? "down" : "up  ",
-             (msg->message == WM_CHAR || msg->message == WM_SYSCHAR) ?
-             "char" : "key ",
-             Fake ? "fake" : "real",
-             NotChar ? "notc" : "char",
-             VirtualScanCode,
-             VirtualKeyCode,
-             (UnicodeChar >= L' ') ? UnicodeChar : L'.',
-             ShiftState);
+    DPRINT("CONSRV: %s %s %s %s %02x %02x '%lc' %04x\n",
+           Down ? "down" : "up  ",
+           (msg->message == WM_CHAR || msg->message == WM_SYSCHAR) ?
+           "char" : "key ",
+           Fake ? "fake" : "real",
+           NotChar ? "notc" : "char",
+           VirtualScanCode,
+           VirtualKeyCode,
+           (UnicodeChar >= L' ') ? UnicodeChar : L'.',
+           ShiftState);
 
     if (Fake)
         return;
@@ -232,13 +232,15 @@ ConioProcessKey(MSG *msg, PCSRSS_CONSOLE Console, BOOL TextMode)
              (er.Event.KeyEvent.wVirtualKeyCode == 'C')) &&
             (er.Event.KeyEvent.dwControlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED) || KeyState[VK_CONTROL] & 0x80))
     {
-        PCSR_PROCESS current;
+        PCONSOLE_PROCESS_DATA current;
         PLIST_ENTRY current_entry;
+
         DPRINT1("Console_Api Ctrl-C\n");
+
         current_entry = Console->ProcessList.Flink;
         while (current_entry != &Console->ProcessList)
         {
-            current = CONTAINING_RECORD(current_entry, CSR_PROCESS, ConsoleLink);
+            current = CONTAINING_RECORD(current_entry, CONSOLE_PROCESS_DATA, ConsoleLink);
             current_entry = current_entry->Flink;
             ConioConsoleCtrlEvent((DWORD)CTRL_C_EVENT, current);
         }
@@ -293,69 +295,163 @@ ConioProcessKey(MSG *msg, PCSRSS_CONSOLE Console, BOOL TextMode)
 CSR_API(SrvGetConsoleInput)
 {
     NTSTATUS Status;
-    PCSRSS_PEEK_CONSOLE_INPUT PeekConsoleInputRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.PeekConsoleInputRequest;
-    PCSR_PROCESS ProcessData = CsrGetClientThread()->Process;
+    PCSRSS_GET_CONSOLE_INPUT GetConsoleInputRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetConsoleInputRequest;
+    PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);
     PCSRSS_CONSOLE Console;
+    PLIST_ENTRY CurrentInput;
+    ConsoleInput* Input;
+
     DWORD Length;
-    PLIST_ENTRY CurrentItem;
     PINPUT_RECORD InputRecord;
-    ConsoleInput* Item;
-    UINT NumItems;
 
     DPRINT("SrvGetConsoleInput\n");
 
-    Status = ConioLockConsole(ProcessData, PeekConsoleInputRequest->ConsoleHandle, &Console, GENERIC_READ);
-    if(! NT_SUCCESS(Status))
+    Status = ConioLockConsole(ProcessData, GetConsoleInputRequest->ConsoleHandle, &Console, GENERIC_READ);
+    if(!NT_SUCCESS(Status)) return Status;
+
+    if (!CsrValidateMessageBuffer(ApiMessage,
+                                  (PVOID*)&GetConsoleInputRequest->InputRecord,
+                                  GetConsoleInputRequest->Length,
+                                  sizeof(INPUT_RECORD)))
     {
-        return Status;
+        return STATUS_INVALID_PARAMETER;
     }
 
-    InputRecord = PeekConsoleInputRequest->InputRecord;
-    Length = PeekConsoleInputRequest->Length;
+    InputRecord = GetConsoleInputRequest->InputRecord;
+    Length = GetConsoleInputRequest->Length;
 
-    if (!Win32CsrValidateBuffer(ProcessData, InputRecord, Length, sizeof(INPUT_RECORD)))
+/*
+    if (!Win32CsrValidateBuffer(ProcessData->Process, InputRecord, Length, sizeof(INPUT_RECORD)))
     {
         ConioUnlockConsole(Console);
         return STATUS_ACCESS_VIOLATION;
     }
+*/
 
-    NumItems = 0;
-
-    if (! IsListEmpty(&Console->InputEvents))
+    if (GetConsoleInputRequest->bRead) // Read input.
     {
-        CurrentItem = Console->InputEvents.Flink;
+        GetConsoleInputRequest->Event = ProcessData->ConsoleEvent;
 
-        while (CurrentItem != &Console->InputEvents && NumItems < Length)
+        while (Length > 0)
         {
-            Item = CONTAINING_RECORD(CurrentItem, ConsoleInput, ListEntry);
+            BOOLEAN Done = FALSE;
 
-            ++NumItems;
-            *InputRecord = Item->InputEvent;
+            // GetConsoleInputRequest->Event = ProcessData->ConsoleEvent;
 
-            if (PeekConsoleInputRequest->Unicode == FALSE)
+            /* only get input if there is any */
+            CurrentInput = Console->InputEvents.Flink;
+            while (CurrentInput != &Console->InputEvents)
             {
-                ConioInputEventToAnsi(Console, InputRecord);
+                Input = CONTAINING_RECORD(CurrentInput, ConsoleInput, ListEntry);
+                CurrentInput = CurrentInput->Flink;
+
+                if (Done)
+                {
+                    GetConsoleInputRequest->MoreEvents = TRUE;
+                    break;
+                }
+
+                RemoveEntryList(&Input->ListEntry);
+
+                if (!Done)
+                {
+                    GetConsoleInputRequest->InputsRead++;
+                    *InputRecord = Input->InputEvent;
+                    /* HACK */ Length--;
+
+                    // GetConsoleInputRequest->Input = Input->InputEvent;
+                    if (GetConsoleInputRequest->Unicode == FALSE)
+                    {
+                        // ConioInputEventToAnsi(Console, &GetConsoleInputRequest->Input);
+                        ConioInputEventToAnsi(Console, InputRecord);
+                    }
+
+                    InputRecord++;
+                    Done = TRUE;
+                }
+
+                HeapFree(ConSrvHeap, 0, Input);
             }
 
-            InputRecord++;
-            CurrentItem = CurrentItem->Flink;
+            if (Done)
+                Status = STATUS_SUCCESS;
+            else
+                Status = STATUS_PENDING;
+
+            if (IsListEmpty(&Console->InputEvents))
+            {
+                ResetEvent(Console->ActiveEvent);
+            }
+
+            if (Status == STATUS_PENDING)
+            {
+                if (GetConsoleInputRequest->InputsRead == 0)
+                {
+                    Status = NtWaitForSingleObject(GetConsoleInputRequest->Event, FALSE, 0);
+                    if (!NT_SUCCESS(Status))
+                    {
+                        // BaseSetLastNTError(Status);
+                        break;
+                    }
+                }
+                else
+                {
+                    /* nothing more to read (waiting for more input??), let's just bail */
+                    break;
+                }
+            }
+            else // Status != STATUS_PENDING ; == STATUS_SUCCESS
+            {
+                if (!GetConsoleInputRequest->MoreEvents)
+                {
+                    /* nothing more to read, bail */
+                    break;
+                }
+            }
         }
+    }
+    else // Peek input.
+    {
+        UINT NumInputs = 0;
+
+        if (!IsListEmpty(&Console->InputEvents))
+        {
+            CurrentInput = Console->InputEvents.Flink;
+
+            while (CurrentInput != &Console->InputEvents && NumInputs < Length)
+            {
+                Input = CONTAINING_RECORD(CurrentInput, ConsoleInput, ListEntry);
+
+                ++NumInputs;
+                *InputRecord = Input->InputEvent;
+
+                if (GetConsoleInputRequest->Unicode == FALSE)
+                {
+                    ConioInputEventToAnsi(Console, InputRecord);
+                }
+
+                InputRecord++;
+                CurrentInput = CurrentInput->Flink;
+            }
+        }
+
+        GetConsoleInputRequest->Length = NumInputs;
+
+        Status = STATUS_SUCCESS;
     }
 
     ConioUnlockConsole(Console);
 
-    PeekConsoleInputRequest->Length = NumItems;
-
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 CSR_API(SrvWriteConsoleInput)
 {
+    NTSTATUS Status;
     PCSRSS_WRITE_CONSOLE_INPUT WriteConsoleInputRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.WriteConsoleInputRequest;
     PINPUT_RECORD InputRecord;
-    PCSR_PROCESS ProcessData = CsrGetClientThread()->Process;
+    PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);
     PCSRSS_CONSOLE Console;
-    NTSTATUS Status;
     DWORD Length;
     DWORD i;
 
@@ -370,7 +466,7 @@ CSR_API(SrvWriteConsoleInput)
     InputRecord = WriteConsoleInputRequest->InputRecord;
     Length = WriteConsoleInputRequest->Length;
 
-    if (!Win32CsrValidateBuffer(ProcessData, InputRecord, Length, sizeof(INPUT_RECORD)))
+    if (!Win32CsrValidateBuffer(ProcessData->Process, InputRecord, Length, sizeof(INPUT_RECORD)))
     {
         ConioUnlockConsole(Console);
         return STATUS_ACCESS_VIOLATION;
@@ -398,6 +494,7 @@ CSR_API(SrvWriteConsoleInput)
 
 CSR_API(SrvReadConsole)
 {
+    NTSTATUS Status;
     PCSRSS_READ_CONSOLE ReadConsoleRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.ReadConsoleRequest;
     PLIST_ENTRY CurrentEntry;
     ConsoleInput *Input;
@@ -405,9 +502,8 @@ CSR_API(SrvReadConsole)
     PWCHAR UnicodeBuffer;
     ULONG i = 0;
     ULONG nNumberOfCharsToRead, CharSize;
-    PCSR_PROCESS ProcessData = CsrGetClientThread()->Process;
+    PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);
     PCSRSS_CONSOLE Console;
-    NTSTATUS Status;
 
     DPRINT("SrvReadConsole\n");
 
@@ -415,21 +511,54 @@ CSR_API(SrvReadConsole)
 
     nNumberOfCharsToRead = ReadConsoleRequest->NrCharactersToRead;
 
+    if (!CsrValidateMessageBuffer(ApiMessage,
+                                  (PVOID*)&ReadConsoleRequest->Buffer,
+                                  ReadConsoleRequest->BufferSize,
+                                  sizeof(BYTE)))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
     Buffer = (PCHAR)ReadConsoleRequest->Buffer;
     UnicodeBuffer = (PWCHAR)Buffer;
-    if (!Win32CsrValidateBuffer(ProcessData, Buffer, nNumberOfCharsToRead, CharSize))
-        return STATUS_ACCESS_VIOLATION;
 
-    if (ReadConsoleRequest->NrCharactersRead * sizeof(WCHAR) > nNumberOfCharsToRead * CharSize)
-        return STATUS_INVALID_PARAMETER;
+/*
+    if (!Win32CsrValidateBuffer(ProcessData->Process, Buffer, nNumberOfCharsToRead, CharSize))
+        return STATUS_ACCESS_VIOLATION;
+*/
 
     Status = ConioLockConsole(ProcessData, ReadConsoleRequest->ConsoleHandle,
                               &Console, GENERIC_READ);
-    if (! NT_SUCCESS(Status))
-    {
-        return Status;
-    }
+    if (!NT_SUCCESS(Status)) return Status;
+
+    Status = STATUS_SUCCESS;
     ReadConsoleRequest->EventHandle = ProcessData->ConsoleEvent;
+
+/*** HACK: Enclosing do { ... } while (...) loop coming from kernel32 ***/
+do
+{
+    if (Status == STATUS_PENDING)
+    {
+        Status = NtWaitForSingleObject(ReadConsoleRequest->EventHandle,
+                                       FALSE,
+                                       0);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("Wait for console input failed!\n");
+            break;
+        }
+    }
+/******/
+
+    if (ReadConsoleRequest->NrCharactersRead * sizeof(WCHAR) > nNumberOfCharsToRead * CharSize)
+    {
+        // return STATUS_INVALID_PARAMETER;
+        Status = STATUS_INVALID_PARAMETER;
+        break;
+        // goto done;
+    }
+
+    // ReadConsoleRequest->EventHandle = ProcessData->ConsoleEvent;
 
     Status = STATUS_PENDING; /* we haven't read anything (yet) */
     if (Console->Mode & ENABLE_LINE_INPUT)
@@ -531,68 +660,11 @@ CSR_API(SrvReadConsole)
     }
 done:
     ReadConsoleRequest->NrCharactersRead = i;
-    ConioUnlockConsole(Console);
 
-    return Status;
+/******/
 }
-
-CSR_API(CsrReadInputEvent)
-{
-    PCSRSS_READ_INPUT ReadInputRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.ReadInputRequest;
-    PLIST_ENTRY CurrentEntry;
-    PCSR_PROCESS ProcessData = CsrGetClientThread()->Process;
-    PCSRSS_CONSOLE Console;
-    NTSTATUS Status;
-    BOOLEAN Done = FALSE;
-    ConsoleInput *Input;
-
-    DPRINT("CsrReadInputEvent\n");
-
-    ReadInputRequest->Event = ProcessData->ConsoleEvent;
-
-    Status = ConioLockConsole(ProcessData, ReadInputRequest->ConsoleHandle, &Console, GENERIC_READ);
-    if (! NT_SUCCESS(Status))
-    {
-        return Status;
-    }
-
-    /* only get input if there is any */
-    CurrentEntry = Console->InputEvents.Flink;
-    while (CurrentEntry != &Console->InputEvents)
-    {
-        Input = CONTAINING_RECORD(CurrentEntry, ConsoleInput, ListEntry);
-        CurrentEntry = CurrentEntry->Flink;
-
-        if (Done)
-        {
-            ReadInputRequest->MoreEvents = TRUE;
-            break;
-        }
-
-        RemoveEntryList(&Input->ListEntry);
-
-        if (!Done)
-        {
-            ReadInputRequest->Input = Input->InputEvent;
-            if (ReadInputRequest->Unicode == FALSE)
-            {
-                ConioInputEventToAnsi(Console, &ReadInputRequest->Input);
-            }
-            Done = TRUE;
-        }
-
-        HeapFree(ConSrvHeap, 0, Input);
-    }
-
-    if (Done)
-        Status = STATUS_SUCCESS;
-    else
-        Status = STATUS_PENDING;
-
-    if (IsListEmpty(&Console->InputEvents))
-    {
-        ResetEvent(Console->ActiveEvent);
-    }
+while (Status == STATUS_PENDING);
+/*** HACK: Enclosing do { ... } while (...) loop coming from kernel32 ***/
 
     ConioUnlockConsole(Console);
 
@@ -601,22 +673,19 @@ CSR_API(CsrReadInputEvent)
 
 CSR_API(SrvFlushConsoleInputBuffer)
 {
+    NTSTATUS Status;
     PCSRSS_FLUSH_INPUT_BUFFER FlushInputBufferRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.FlushInputBufferRequest;
     PLIST_ENTRY CurrentEntry;
     PCSRSS_CONSOLE Console;
     ConsoleInput* Input;
-    NTSTATUS Status;
 
     DPRINT("SrvFlushConsoleInputBuffer\n");
 
-    Status = ConioLockConsole(CsrGetClientThread()->Process,
+    Status = ConioLockConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
                               FlushInputBufferRequest->ConsoleInput,
                               &Console,
                               GENERIC_WRITE);
-    if(! NT_SUCCESS(Status))
-    {
-        return Status;
-    }
+    if(!NT_SUCCESS(Status)) return Status;
 
     /* Discard all entries in the input event queue */
     while (!IsListEmpty(&Console->InputEvents))
@@ -638,24 +707,21 @@ CSR_API(SrvGetConsoleNumberOfInputEvents)
     NTSTATUS Status;
     PCSRSS_GET_NUM_INPUT_EVENTS GetNumInputEventsRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetNumInputEventsRequest;
     PCSRSS_CONSOLE Console;
-    PLIST_ENTRY CurrentItem;
+    PLIST_ENTRY CurrentInput;
     DWORD NumEvents;
 
     DPRINT("SrvGetConsoleNumberOfInputEvents\n");
 
-    Status = ConioLockConsole(CsrGetClientThread()->Process, GetNumInputEventsRequest->ConsoleHandle, &Console, GENERIC_READ);
-    if (! NT_SUCCESS(Status))
-    {
-        return Status;
-    }
+    Status = ConioLockConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), GetNumInputEventsRequest->ConsoleHandle, &Console, GENERIC_READ);
+    if (!NT_SUCCESS(Status)) return Status;
 
-    CurrentItem = Console->InputEvents.Flink;
+    CurrentInput = Console->InputEvents.Flink;
     NumEvents = 0;
 
     /* If there are any events ... */
-    while (CurrentItem != &Console->InputEvents)
+    while (CurrentInput != &Console->InputEvents)
     {
-        CurrentItem = CurrentItem->Flink;
+        CurrentInput = CurrentInput->Flink;
         NumEvents++;
     }
 
