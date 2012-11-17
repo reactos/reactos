@@ -6,7 +6,7 @@
  * PROGRAMMERS:
  */
 
-/* INCLUDES ******************************************************************/
+/* INCLUDES *******************************************************************/
 
 #include "consrv.h"
 #include "conio.h"
@@ -15,7 +15,8 @@
 #define NDEBUG
 #include <debug.h>
 
-/* GLOBALS *******************************************************************/
+
+/* GLOBALS ********************************************************************/
 
 #define ConsoleInputUnicodeCharToAnsiChar(Console, dChar, sWChar) \
     WideCharToMultiByte((Console)->CodePage, 0, (sWChar), 1, (dChar), 1, NULL, NULL)
@@ -23,147 +24,8 @@
 #define ConsoleInputAnsiCharToUnicodeChar(Console, dWChar, sChar) \
     MultiByteToWideChar((Console)->CodePage, 0, (sChar), 1, (dWChar), 1)
 
-/* FUNCTIONS *****************************************************************/
 
-CSR_API(SrvReadConsole)
-{
-    PCSRSS_READ_CONSOLE ReadConsoleRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.ReadConsoleRequest;
-    PLIST_ENTRY CurrentEntry;
-    ConsoleInput *Input;
-    PCHAR Buffer;
-    PWCHAR UnicodeBuffer;
-    ULONG i = 0;
-    ULONG nNumberOfCharsToRead, CharSize;
-    PCSR_PROCESS ProcessData = CsrGetClientThread()->Process;
-    PCSRSS_CONSOLE Console;
-    NTSTATUS Status;
-
-    DPRINT("SrvReadConsole\n");
-
-    CharSize = (ReadConsoleRequest->Unicode ? sizeof(WCHAR) : sizeof(CHAR));
-
-    nNumberOfCharsToRead = ReadConsoleRequest->NrCharactersToRead;
-
-    Buffer = (PCHAR)ReadConsoleRequest->Buffer;
-    UnicodeBuffer = (PWCHAR)Buffer;
-    if (!Win32CsrValidateBuffer(ProcessData, Buffer, nNumberOfCharsToRead, CharSize))
-        return STATUS_ACCESS_VIOLATION;
-
-    if (ReadConsoleRequest->NrCharactersRead * sizeof(WCHAR) > nNumberOfCharsToRead * CharSize)
-        return STATUS_INVALID_PARAMETER;
-
-    Status = ConioLockConsole(ProcessData, ReadConsoleRequest->ConsoleHandle,
-                              &Console, GENERIC_READ);
-    if (! NT_SUCCESS(Status))
-    {
-        return Status;
-    }
-    ReadConsoleRequest->EventHandle = ProcessData->ConsoleEvent;
-
-    Status = STATUS_PENDING; /* we haven't read anything (yet) */
-    if (Console->Mode & ENABLE_LINE_INPUT)
-    {
-        if (Console->LineBuffer == NULL)
-        {
-            /* Starting a new line */
-            Console->LineMaxSize = max(256, nNumberOfCharsToRead);
-            Console->LineBuffer = HeapAlloc(ConSrvHeap, 0, Console->LineMaxSize * sizeof(WCHAR));
-            if (Console->LineBuffer == NULL)
-            {
-                Status = STATUS_NO_MEMORY;
-                goto done;
-            }
-            Console->LineComplete = FALSE;
-            Console->LineUpPressed = FALSE;
-            Console->LineInsertToggle = 0;
-            Console->LineWakeupMask = ReadConsoleRequest->CtrlWakeupMask;
-            Console->LineSize = ReadConsoleRequest->NrCharactersRead;
-            Console->LinePos = Console->LineSize;
-            /* pre-filling the buffer is only allowed in the Unicode API,
-             * so we don't need to worry about conversion */
-            memcpy(Console->LineBuffer, Buffer, Console->LineSize * sizeof(WCHAR));
-            if (Console->LineSize == Console->LineMaxSize)
-            {
-                Console->LineComplete = TRUE;
-                Console->LinePos = 0;
-            }
-        }
-
-        /* If we don't have a complete line yet, process the pending input */
-        while (!Console->LineComplete && !IsListEmpty(&Console->InputEvents))
-        {
-            /* remove input event from queue */
-            CurrentEntry = RemoveHeadList(&Console->InputEvents);
-            if (IsListEmpty(&Console->InputEvents))
-            {
-                ResetEvent(Console->ActiveEvent);
-            }
-            Input = CONTAINING_RECORD(CurrentEntry, ConsoleInput, ListEntry);
-
-            /* only pay attention to key down */
-            if (KEY_EVENT == Input->InputEvent.EventType
-                    && Input->InputEvent.Event.KeyEvent.bKeyDown)
-            {
-                LineInputKeyDown(Console, &Input->InputEvent.Event.KeyEvent);
-                ReadConsoleRequest->ControlKeyState = Input->InputEvent.Event.KeyEvent.dwControlKeyState;
-            }
-            HeapFree(ConSrvHeap, 0, Input);
-        }
-
-        /* Check if we have a complete line to read from */
-        if (Console->LineComplete)
-        {
-            while (i < nNumberOfCharsToRead && Console->LinePos != Console->LineSize)
-            {
-                WCHAR Char = Console->LineBuffer[Console->LinePos++];
-                if (ReadConsoleRequest->Unicode)
-                    UnicodeBuffer[i++] = Char;
-                else
-                    ConsoleInputUnicodeCharToAnsiChar(Console, &Buffer[i++], &Char);
-            }
-            if (Console->LinePos == Console->LineSize)
-            {
-                /* Entire line has been read */
-                HeapFree(ConSrvHeap, 0, Console->LineBuffer);
-                Console->LineBuffer = NULL;
-            }
-            Status = STATUS_SUCCESS;
-        }
-    }
-    else
-    {
-        /* Character input */
-        while (i < nNumberOfCharsToRead && !IsListEmpty(&Console->InputEvents))
-        {
-            /* remove input event from queue */
-            CurrentEntry = RemoveHeadList(&Console->InputEvents);
-            if (IsListEmpty(&Console->InputEvents))
-            {
-                ResetEvent(Console->ActiveEvent);
-            }
-            Input = CONTAINING_RECORD(CurrentEntry, ConsoleInput, ListEntry);
-
-            /* only pay attention to valid ascii chars, on key down */
-            if (KEY_EVENT == Input->InputEvent.EventType
-                    && Input->InputEvent.Event.KeyEvent.bKeyDown
-                    && Input->InputEvent.Event.KeyEvent.uChar.UnicodeChar != L'\0')
-            {
-                WCHAR Char = Input->InputEvent.Event.KeyEvent.uChar.UnicodeChar;
-                if (ReadConsoleRequest->Unicode)
-                    UnicodeBuffer[i++] = Char;
-                else
-                    ConsoleInputUnicodeCharToAnsiChar(Console, &Buffer[i++], &Char);
-                Status = STATUS_SUCCESS; /* did read something */
-            }
-            HeapFree(ConSrvHeap, 0, Input);
-        }
-    }
-done:
-    ReadConsoleRequest->NrCharactersRead = i;
-    ConioUnlockConsole(Console);
-
-    return Status;
-}
+/* PRIVATE FUNCTIONS **********************************************************/
 
 static VOID FASTCALL
 ConioInputEventToAnsi(PCSRSS_CONSOLE Console, PINPUT_RECORD InputEvent)
@@ -425,6 +287,255 @@ ConioProcessKey(MSG *msg, PCSRSS_CONSOLE Console, BOOL TextMode)
     ConioProcessChar(Console, &er);
 }
 
+
+/* PUBLIC APIS ****************************************************************/
+
+CSR_API(SrvGetConsoleInput)
+{
+    NTSTATUS Status;
+    PCSRSS_PEEK_CONSOLE_INPUT PeekConsoleInputRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.PeekConsoleInputRequest;
+    PCSR_PROCESS ProcessData = CsrGetClientThread()->Process;
+    PCSRSS_CONSOLE Console;
+    DWORD Length;
+    PLIST_ENTRY CurrentItem;
+    PINPUT_RECORD InputRecord;
+    ConsoleInput* Item;
+    UINT NumItems;
+
+    DPRINT("SrvGetConsoleInput\n");
+
+    Status = ConioLockConsole(ProcessData, PeekConsoleInputRequest->ConsoleHandle, &Console, GENERIC_READ);
+    if(! NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    InputRecord = PeekConsoleInputRequest->InputRecord;
+    Length = PeekConsoleInputRequest->Length;
+
+    if (!Win32CsrValidateBuffer(ProcessData, InputRecord, Length, sizeof(INPUT_RECORD)))
+    {
+        ConioUnlockConsole(Console);
+        return STATUS_ACCESS_VIOLATION;
+    }
+
+    NumItems = 0;
+
+    if (! IsListEmpty(&Console->InputEvents))
+    {
+        CurrentItem = Console->InputEvents.Flink;
+
+        while (CurrentItem != &Console->InputEvents && NumItems < Length)
+        {
+            Item = CONTAINING_RECORD(CurrentItem, ConsoleInput, ListEntry);
+
+            ++NumItems;
+            *InputRecord = Item->InputEvent;
+
+            if (PeekConsoleInputRequest->Unicode == FALSE)
+            {
+                ConioInputEventToAnsi(Console, InputRecord);
+            }
+
+            InputRecord++;
+            CurrentItem = CurrentItem->Flink;
+        }
+    }
+
+    ConioUnlockConsole(Console);
+
+    PeekConsoleInputRequest->Length = NumItems;
+
+    return STATUS_SUCCESS;
+}
+
+CSR_API(SrvWriteConsoleInput)
+{
+    PCSRSS_WRITE_CONSOLE_INPUT WriteConsoleInputRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.WriteConsoleInputRequest;
+    PINPUT_RECORD InputRecord;
+    PCSR_PROCESS ProcessData = CsrGetClientThread()->Process;
+    PCSRSS_CONSOLE Console;
+    NTSTATUS Status;
+    DWORD Length;
+    DWORD i;
+
+    DPRINT("SrvWriteConsoleInput\n");
+
+    Status = ConioLockConsole(ProcessData, WriteConsoleInputRequest->ConsoleHandle, &Console, GENERIC_WRITE);
+    if (! NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    InputRecord = WriteConsoleInputRequest->InputRecord;
+    Length = WriteConsoleInputRequest->Length;
+
+    if (!Win32CsrValidateBuffer(ProcessData, InputRecord, Length, sizeof(INPUT_RECORD)))
+    {
+        ConioUnlockConsole(Console);
+        return STATUS_ACCESS_VIOLATION;
+    }
+
+    for (i = 0; i < Length && NT_SUCCESS(Status); i++)
+    {
+        if (!WriteConsoleInputRequest->Unicode &&
+            InputRecord->EventType == KEY_EVENT)
+        {
+            CHAR AsciiChar = InputRecord->Event.KeyEvent.uChar.AsciiChar;
+            ConsoleInputAnsiCharToUnicodeChar(Console,
+                                              &InputRecord->Event.KeyEvent.uChar.UnicodeChar,
+                                              &AsciiChar);
+        }
+        Status = ConioProcessChar(Console, InputRecord++);
+    }
+
+    ConioUnlockConsole(Console);
+
+    WriteConsoleInputRequest->Length = i;
+
+    return Status;
+}
+
+CSR_API(SrvReadConsole)
+{
+    PCSRSS_READ_CONSOLE ReadConsoleRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.ReadConsoleRequest;
+    PLIST_ENTRY CurrentEntry;
+    ConsoleInput *Input;
+    PCHAR Buffer;
+    PWCHAR UnicodeBuffer;
+    ULONG i = 0;
+    ULONG nNumberOfCharsToRead, CharSize;
+    PCSR_PROCESS ProcessData = CsrGetClientThread()->Process;
+    PCSRSS_CONSOLE Console;
+    NTSTATUS Status;
+
+    DPRINT("SrvReadConsole\n");
+
+    CharSize = (ReadConsoleRequest->Unicode ? sizeof(WCHAR) : sizeof(CHAR));
+
+    nNumberOfCharsToRead = ReadConsoleRequest->NrCharactersToRead;
+
+    Buffer = (PCHAR)ReadConsoleRequest->Buffer;
+    UnicodeBuffer = (PWCHAR)Buffer;
+    if (!Win32CsrValidateBuffer(ProcessData, Buffer, nNumberOfCharsToRead, CharSize))
+        return STATUS_ACCESS_VIOLATION;
+
+    if (ReadConsoleRequest->NrCharactersRead * sizeof(WCHAR) > nNumberOfCharsToRead * CharSize)
+        return STATUS_INVALID_PARAMETER;
+
+    Status = ConioLockConsole(ProcessData, ReadConsoleRequest->ConsoleHandle,
+                              &Console, GENERIC_READ);
+    if (! NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+    ReadConsoleRequest->EventHandle = ProcessData->ConsoleEvent;
+
+    Status = STATUS_PENDING; /* we haven't read anything (yet) */
+    if (Console->Mode & ENABLE_LINE_INPUT)
+    {
+        if (Console->LineBuffer == NULL)
+        {
+            /* Starting a new line */
+            Console->LineMaxSize = max(256, nNumberOfCharsToRead);
+            Console->LineBuffer = HeapAlloc(ConSrvHeap, 0, Console->LineMaxSize * sizeof(WCHAR));
+            if (Console->LineBuffer == NULL)
+            {
+                Status = STATUS_NO_MEMORY;
+                goto done;
+            }
+            Console->LineComplete = FALSE;
+            Console->LineUpPressed = FALSE;
+            Console->LineInsertToggle = 0;
+            Console->LineWakeupMask = ReadConsoleRequest->CtrlWakeupMask;
+            Console->LineSize = ReadConsoleRequest->NrCharactersRead;
+            Console->LinePos = Console->LineSize;
+            /* pre-filling the buffer is only allowed in the Unicode API,
+             * so we don't need to worry about conversion */
+            memcpy(Console->LineBuffer, Buffer, Console->LineSize * sizeof(WCHAR));
+            if (Console->LineSize == Console->LineMaxSize)
+            {
+                Console->LineComplete = TRUE;
+                Console->LinePos = 0;
+            }
+        }
+
+        /* If we don't have a complete line yet, process the pending input */
+        while (!Console->LineComplete && !IsListEmpty(&Console->InputEvents))
+        {
+            /* remove input event from queue */
+            CurrentEntry = RemoveHeadList(&Console->InputEvents);
+            if (IsListEmpty(&Console->InputEvents))
+            {
+                ResetEvent(Console->ActiveEvent);
+            }
+            Input = CONTAINING_RECORD(CurrentEntry, ConsoleInput, ListEntry);
+
+            /* only pay attention to key down */
+            if (KEY_EVENT == Input->InputEvent.EventType
+                    && Input->InputEvent.Event.KeyEvent.bKeyDown)
+            {
+                LineInputKeyDown(Console, &Input->InputEvent.Event.KeyEvent);
+                ReadConsoleRequest->ControlKeyState = Input->InputEvent.Event.KeyEvent.dwControlKeyState;
+            }
+            HeapFree(ConSrvHeap, 0, Input);
+        }
+
+        /* Check if we have a complete line to read from */
+        if (Console->LineComplete)
+        {
+            while (i < nNumberOfCharsToRead && Console->LinePos != Console->LineSize)
+            {
+                WCHAR Char = Console->LineBuffer[Console->LinePos++];
+                if (ReadConsoleRequest->Unicode)
+                    UnicodeBuffer[i++] = Char;
+                else
+                    ConsoleInputUnicodeCharToAnsiChar(Console, &Buffer[i++], &Char);
+            }
+            if (Console->LinePos == Console->LineSize)
+            {
+                /* Entire line has been read */
+                HeapFree(ConSrvHeap, 0, Console->LineBuffer);
+                Console->LineBuffer = NULL;
+            }
+            Status = STATUS_SUCCESS;
+        }
+    }
+    else
+    {
+        /* Character input */
+        while (i < nNumberOfCharsToRead && !IsListEmpty(&Console->InputEvents))
+        {
+            /* remove input event from queue */
+            CurrentEntry = RemoveHeadList(&Console->InputEvents);
+            if (IsListEmpty(&Console->InputEvents))
+            {
+                ResetEvent(Console->ActiveEvent);
+            }
+            Input = CONTAINING_RECORD(CurrentEntry, ConsoleInput, ListEntry);
+
+            /* only pay attention to valid ascii chars, on key down */
+            if (KEY_EVENT == Input->InputEvent.EventType
+                    && Input->InputEvent.Event.KeyEvent.bKeyDown
+                    && Input->InputEvent.Event.KeyEvent.uChar.UnicodeChar != L'\0')
+            {
+                WCHAR Char = Input->InputEvent.Event.KeyEvent.uChar.UnicodeChar;
+                if (ReadConsoleRequest->Unicode)
+                    UnicodeBuffer[i++] = Char;
+                else
+                    ConsoleInputUnicodeCharToAnsiChar(Console, &Buffer[i++], &Char);
+                Status = STATUS_SUCCESS; /* did read something */
+            }
+            HeapFree(ConSrvHeap, 0, Input);
+        }
+    }
+done:
+    ReadConsoleRequest->NrCharactersRead = i;
+    ConioUnlockConsole(Console);
+
+    return Status;
+}
+
 CSR_API(CsrReadInputEvent)
 {
     PCSRSS_READ_INPUT ReadInputRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.ReadInputRequest;
@@ -553,112 +664,6 @@ CSR_API(SrvGetConsoleNumberOfInputEvents)
     GetNumInputEventsRequest->NumInputEvents = NumEvents;
 
     return STATUS_SUCCESS;
-}
-
-CSR_API(SrvGetConsoleInput)
-{
-    NTSTATUS Status;
-    PCSRSS_PEEK_CONSOLE_INPUT PeekConsoleInputRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.PeekConsoleInputRequest;
-    PCSR_PROCESS ProcessData = CsrGetClientThread()->Process;
-    PCSRSS_CONSOLE Console;
-    DWORD Length;
-    PLIST_ENTRY CurrentItem;
-    PINPUT_RECORD InputRecord;
-    ConsoleInput* Item;
-    UINT NumItems;
-
-    DPRINT("SrvGetConsoleInput\n");
-
-    Status = ConioLockConsole(ProcessData, PeekConsoleInputRequest->ConsoleHandle, &Console, GENERIC_READ);
-    if(! NT_SUCCESS(Status))
-    {
-        return Status;
-    }
-
-    InputRecord = PeekConsoleInputRequest->InputRecord;
-    Length = PeekConsoleInputRequest->Length;
-
-    if (!Win32CsrValidateBuffer(ProcessData, InputRecord, Length, sizeof(INPUT_RECORD)))
-    {
-        ConioUnlockConsole(Console);
-        return STATUS_ACCESS_VIOLATION;
-    }
-
-    NumItems = 0;
-
-    if (! IsListEmpty(&Console->InputEvents))
-    {
-        CurrentItem = Console->InputEvents.Flink;
-
-        while (CurrentItem != &Console->InputEvents && NumItems < Length)
-        {
-            Item = CONTAINING_RECORD(CurrentItem, ConsoleInput, ListEntry);
-
-            ++NumItems;
-            *InputRecord = Item->InputEvent;
-
-            if (PeekConsoleInputRequest->Unicode == FALSE)
-            {
-                ConioInputEventToAnsi(Console, InputRecord);
-            }
-
-            InputRecord++;
-            CurrentItem = CurrentItem->Flink;
-        }
-    }
-
-    ConioUnlockConsole(Console);
-
-    PeekConsoleInputRequest->Length = NumItems;
-
-    return STATUS_SUCCESS;
-}
-
-CSR_API(SrvWriteConsoleInput)
-{
-    PCSRSS_WRITE_CONSOLE_INPUT WriteConsoleInputRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.WriteConsoleInputRequest;
-    PINPUT_RECORD InputRecord;
-    PCSR_PROCESS ProcessData = CsrGetClientThread()->Process;
-    PCSRSS_CONSOLE Console;
-    NTSTATUS Status;
-    DWORD Length;
-    DWORD i;
-
-    DPRINT("SrvWriteConsoleInput\n");
-
-    Status = ConioLockConsole(ProcessData, WriteConsoleInputRequest->ConsoleHandle, &Console, GENERIC_WRITE);
-    if (! NT_SUCCESS(Status))
-    {
-        return Status;
-    }
-
-    InputRecord = WriteConsoleInputRequest->InputRecord;
-    Length = WriteConsoleInputRequest->Length;
-
-    if (!Win32CsrValidateBuffer(ProcessData, InputRecord, Length, sizeof(INPUT_RECORD)))
-    {
-        ConioUnlockConsole(Console);
-        return STATUS_ACCESS_VIOLATION;
-    }
-
-    for (i = 0; i < Length && NT_SUCCESS(Status); i++)
-    {
-        if (!WriteConsoleInputRequest->Unicode &&
-            InputRecord->EventType == KEY_EVENT)
-        {
-            CHAR AsciiChar = InputRecord->Event.KeyEvent.uChar.AsciiChar;
-            ConsoleInputAnsiCharToUnicodeChar(Console,
-                                              &InputRecord->Event.KeyEvent.uChar.UnicodeChar,
-                                              &AsciiChar);
-        }
-        Status = ConioProcessChar(Console, InputRecord++);
-    }
-
-    ConioUnlockConsole(Console);
-
-    WriteConsoleInputRequest->Length = i;
-
-    return Status;
 }
 
 /* EOF */
