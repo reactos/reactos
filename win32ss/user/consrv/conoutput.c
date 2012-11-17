@@ -1092,18 +1092,16 @@ CSR_API(CsrFillOutputAttrib)
 CSR_API(SrvGetConsoleCursorInfo)
 {
     NTSTATUS Status;
-    PCSRSS_GET_CURSOR_INFO GetCursorInfoRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetCursorInfoRequest;
+    PCSRSS_CURSOR_INFO CursorInfoRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.CursorInfoRequest;
     PCSRSS_SCREEN_BUFFER Buff;
 
     DPRINT("SrvGetConsoleCursorInfo\n");
 
-    Status = ConioLockScreenBuffer(CsrGetClientThread()->Process, GetCursorInfoRequest->ConsoleHandle, &Buff, GENERIC_READ);
-    if (! NT_SUCCESS(Status))
-    {
-        return Status;
-    }
-    GetCursorInfoRequest->Info.bVisible = Buff->CursorInfo.bVisible;
-    GetCursorInfoRequest->Info.dwSize = Buff->CursorInfo.dwSize;
+    Status = ConioLockScreenBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process), CursorInfoRequest->ConsoleHandle, &Buff, GENERIC_READ);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    CursorInfoRequest->Info.bVisible = Buff->CursorInfo.bVisible;
+    CursorInfoRequest->Info.dwSize = Buff->CursorInfo.dwSize;
     ConioUnlockScreenBuffer(Buff);
 
     return STATUS_SUCCESS;
@@ -1111,24 +1109,22 @@ CSR_API(SrvGetConsoleCursorInfo)
 
 CSR_API(SrvSetConsoleCursorInfo)
 {
-    PCSRSS_SET_CURSOR_INFO SetCursorInfoRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.SetCursorInfoRequest;
+    NTSTATUS Status;
+    PCSRSS_CURSOR_INFO CursorInfoRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.CursorInfoRequest;
     PCSRSS_CONSOLE Console;
     PCSRSS_SCREEN_BUFFER Buff;
     DWORD Size;
     BOOL Visible;
-    NTSTATUS Status;
 
     DPRINT("SrvSetConsoleCursorInfo\n");
 
-    Status = ConioLockScreenBuffer(CsrGetClientThread()->Process, SetCursorInfoRequest->ConsoleHandle, &Buff, GENERIC_WRITE);
-    if (! NT_SUCCESS(Status))
-    {
-        return Status;
-    }
+    Status = ConioLockScreenBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process), CursorInfoRequest->ConsoleHandle, &Buff, GENERIC_WRITE);
+    if (!NT_SUCCESS(Status)) return Status;
+
     Console = Buff->Header.Console;
 
-    Size = SetCursorInfoRequest->Info.dwSize;
-    Visible = SetCursorInfoRequest->Info.bVisible;
+    Size = CursorInfoRequest->Info.dwSize;
+    Visible = CursorInfoRequest->Info.bVisible;
     if (Size < 1)
     {
         Size = 1;
@@ -1138,13 +1134,14 @@ CSR_API(SrvSetConsoleCursorInfo)
         Size = 100;
     }
 
-    if (Size != Buff->CursorInfo.dwSize
-            || (Visible && ! Buff->CursorInfo.bVisible) || (! Visible && Buff->CursorInfo.bVisible))
+    if ( (Size != Buff->CursorInfo.dwSize)          ||
+         (Visible && ! Buff->CursorInfo.bVisible)   ||
+         (! Visible && Buff->CursorInfo.bVisible) )
     {
         Buff->CursorInfo.dwSize = Size;
         Buff->CursorInfo.bVisible = Visible;
 
-        if (! ConioSetCursorInfo(Console, Buff))
+        if (!ConioSetCursorInfo(Console, Buff))
         {
             ConioUnlockScreenBuffer(Buff);
             return STATUS_UNSUCCESSFUL;
@@ -1159,7 +1156,7 @@ CSR_API(SrvSetConsoleCursorInfo)
 CSR_API(SrvSetConsoleCursorPosition)
 {
     NTSTATUS Status;
-    PCSRSS_SET_CURSOR SetCursorRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.SetCursorRequest;
+    PCSRSS_SET_CURSOR_POSITION SetCursorPositionRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.SetCursorPositionRequest;
     PCSRSS_CONSOLE Console;
     PCSRSS_SCREEN_BUFFER Buff;
     LONG OldCursorX, OldCursorY;
@@ -1167,17 +1164,15 @@ CSR_API(SrvSetConsoleCursorPosition)
 
     DPRINT("SrvSetConsoleCursorPosition\n");
 
-    Status = ConioLockScreenBuffer(CsrGetClientThread()->Process, SetCursorRequest->ConsoleHandle, &Buff, GENERIC_WRITE);
-    if (! NT_SUCCESS(Status))
-    {
-        return Status;
-    }
+    Status = ConioLockScreenBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process), SetCursorPositionRequest->ConsoleHandle, &Buff, GENERIC_WRITE);
+    if (!NT_SUCCESS(Status)) return Status;
+
     Console = Buff->Header.Console;
 
-    NewCursorX = SetCursorRequest->Position.X;
-    NewCursorY = SetCursorRequest->Position.Y;
-    if (NewCursorX < 0 || NewCursorX >= Buff->MaxX ||
-            NewCursorY < 0 || NewCursorY >= Buff->MaxY)
+    NewCursorX = SetCursorPositionRequest->Position.X;
+    NewCursorY = SetCursorPositionRequest->Position.Y;
+    if ( NewCursorX < 0 || NewCursorX >= Buff->MaxX ||
+         NewCursorY < 0 || NewCursorY >= Buff->MaxY )
     {
         ConioUnlockScreenBuffer(Buff);
         return STATUS_INVALID_PARAMETER;

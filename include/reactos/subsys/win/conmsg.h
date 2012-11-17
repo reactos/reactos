@@ -42,7 +42,7 @@ typedef enum _CONSRV_API_NUMBER
     ConsolepFlushInputBuffer,
     // ConsolepGetLargestWindowSize,
     ConsolepSetScreenBufferSize,
-    // ConsolepSetCursorPosition,
+    ConsolepSetCursorPosition,
     ConsolepSetCursorInfo,
     // ConsolepSetWindowInfo,
     ConsolepScrollScreenBuffer,
@@ -63,7 +63,7 @@ typedef enum _CONSRV_API_NUMBER
     ConsolepCreateScreenBuffer,
     // ConsolepInvalidateBitMapRect,
     // ConsolepVDMOperation,
-    ConsolepSetCursor,
+    // ConsolepSetCursor,
     // ConsolepShowCursor,
     // ConsolepMenuControl,
     // ConsolepSetPalette,
@@ -181,7 +181,7 @@ typedef struct
 {
     HANDLE ConsoleHandle;
     COORD Position;
-} CSRSS_SET_CURSOR, *PCSRSS_SET_CURSOR;
+} CSRSS_SET_CURSOR_POSITION, *PCSRSS_SET_CURSOR_POSITION;
 
 typedef struct
 {
@@ -229,13 +229,7 @@ typedef struct
 {
     HANDLE ConsoleHandle;
     CONSOLE_CURSOR_INFO Info;
-} CSRSS_GET_CURSOR_INFO, *PCSRSS_GET_CURSOR_INFO;
-
-typedef struct
-{
-    HANDLE ConsoleHandle;
-    CONSOLE_CURSOR_INFO Info;
-} CSRSS_SET_CURSOR_INFO, *PCSRSS_SET_CURSOR_INFO;
+} CSRSS_CURSOR_INFO, *PCSRSS_CURSOR_INFO;
 
 typedef struct
 {
@@ -585,11 +579,8 @@ typedef struct _CONSOLE_API_MESSAGE
         CSRSS_GET_INPUT_WAIT_HANDLE GetConsoleInputWaitHandle;
 
         /* Cursor */
-        CSRSS_SET_CURSOR SetCursorRequest;
-        CSRSS_GET_CURSOR_INFO GetCursorInfoRequest;
-        CSRSS_SET_CURSOR_INFO SetCursorInfoRequest;
-
-        CSRSS_FLUSH_INPUT_BUFFER FlushInputBufferRequest;
+        CSRSS_CURSOR_INFO CursorInfoRequest;
+        CSRSS_SET_CURSOR_POSITION SetCursorPositionRequest;
 
         /* Screen buffer */
         CSRSS_CREATE_SCREEN_BUFFER CreateScreenBufferRequest;
@@ -599,6 +590,7 @@ typedef struct _CONSOLE_API_MESSAGE
         CSRSS_SCROLL_CONSOLE_SCREEN_BUFFER ScrollConsoleScreenBufferRequest;
 
         CSRSS_GET_CONSOLE_SELECTION_INFO GetConsoleSelectionInfo;
+        CSRSS_FLUSH_INPUT_BUFFER FlushInputBufferRequest;
 
         /* Console mode */
         CSRSS_CONSOLE_MODE ConsoleModeRequest;
