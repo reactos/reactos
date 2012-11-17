@@ -413,17 +413,17 @@ typedef struct
 typedef struct
 {
     HANDLE ConsoleHandle;
-    DWORD State;
+    DWORD  State;
 } CSRSS_CONSOLE_HW_STATE, *PCSRSS_CONSOLE_HW_STATE;
 
 typedef struct
 {
-    HWND   WindowHandle;
+    HWND    WindowHandle;
 } CSRSS_GET_CONSOLE_WINDOW, *PCSRSS_GET_CONSOLE_WINDOW;
 
 typedef struct
 {
-    HICON  WindowIcon;
+    HICON   WindowIcon;
 } CSRSS_SET_CONSOLE_ICON, *PCSRSS_SET_CONSOLE_ICON;
 
 
