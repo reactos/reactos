@@ -31,7 +31,7 @@ ShowHeader(VOID)
     DWORD comp_size = MAX_STRING_SIZE;
 
     /* Get the name of the computer for us and change the value of comp_name */
-    GetComputerName(szComputerName, &comp_size);
+    GetComputerNameW(szComputerName, &comp_size);
 
     /* TODO: Remove this section of code when program becomes stable enough for production use. */
     wprintf(L"\n*WARNING*: This program is incomplete and may not work properly.\n");
