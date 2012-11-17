@@ -202,33 +202,34 @@ DuplicateConsoleHandle(HANDLE hConsole,
                        BOOL bInheritHandle,
                        DWORD dwOptions)
 {
-    CSR_API_MESSAGE Request;
     NTSTATUS Status;
+    CONSOLE_API_MESSAGE ApiMessage;
+    PCSRSS_DUPLICATE_HANDLE DuplicateHandleRequest = &ApiMessage.Data.DuplicateHandleRequest;
 
-    if (dwOptions & ~(DUPLICATE_CLOSE_SOURCE | DUPLICATE_SAME_ACCESS)
-        || (!(dwOptions & DUPLICATE_SAME_ACCESS)
-        && dwDesiredAccess & ~(GENERIC_READ | GENERIC_WRITE)))
+    if ( (dwOptions & ~(DUPLICATE_CLOSE_SOURCE | DUPLICATE_SAME_ACCESS)) ||
+         (!(dwOptions & DUPLICATE_SAME_ACCESS) &&
+           (dwDesiredAccess & ~(GENERIC_READ | GENERIC_WRITE))) )
     {
         SetLastError (ERROR_INVALID_PARAMETER);
         return INVALID_HANDLE_VALUE;
     }
 
-    Request.Data.DuplicateHandleRequest.Handle = hConsole;
-    Request.Data.DuplicateHandleRequest.Access = dwDesiredAccess;
-    Request.Data.DuplicateHandleRequest.Inheritable = bInheritHandle;
-    Request.Data.DuplicateHandleRequest.Options = dwOptions;
+    DuplicateHandleRequest->Handle = hConsole;
+    DuplicateHandleRequest->Access = dwDesiredAccess;
+    DuplicateHandleRequest->Inheritable = bInheritHandle;
+    DuplicateHandleRequest->Options = dwOptions;
 
-    Status = CsrClientCallServer(&Request,
+    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                                  NULL,
-                                 CSR_CREATE_API_NUMBER(CSR_NATIVE, DUPLICATE_HANDLE),
-                                 sizeof(CSR_API_MESSAGE));
-    if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status=Request.Status))
+                                 CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepDuplicateHandle),
+                                 sizeof(CSRSS_DUPLICATE_HANDLE));
+    if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = ApiMessage.Status))
     {
         BaseSetLastNTError(Status);
         return INVALID_HANDLE_VALUE;
     }
 
-    return Request.Data.DuplicateHandleRequest.Handle;
+    return DuplicateHandleRequest->Handle;
 }
 
 
@@ -292,23 +293,23 @@ GetConsoleHardwareState(HANDLE hConsole,
                         DWORD Flags,
                         PDWORD State)
 {
-    CSR_API_MESSAGE Request;
     NTSTATUS Status;
+    CONSOLE_API_MESSAGE ApiMessage;
+    PCSRSS_CONSOLE_HW_STATE ConsoleHardwareStateRequest = &ApiMessage.Data.ConsoleHardwareStateRequest;
 
-    Request.Data.ConsoleHardwareStateRequest.ConsoleHandle = hConsole;
-    Request.Data.ConsoleHardwareStateRequest.SetGet = CONSOLE_HARDWARE_STATE_GET;
+    ConsoleHardwareStateRequest->ConsoleHandle = hConsole;
 
-    Status = CsrClientCallServer(&Request,
+    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                                  NULL,
-                                 CSR_CREATE_API_NUMBER(CSR_CONSOLE, SETGET_CONSOLE_HW_STATE),
-                                 sizeof(CSR_API_MESSAGE));
-    if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
+                                 CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepGetHardwareState),
+                                 sizeof(CSRSS_CONSOLE_HW_STATE));
+    if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = ApiMessage.Status))
     {
         BaseSetLastNTError(Status);
         return FALSE;
     }
 
-    *State = Request.Data.ConsoleHardwareStateRequest.State;
+    *State = ConsoleHardwareStateRequest->State;
     return TRUE;
 }
 
@@ -498,18 +499,18 @@ SetConsoleHardwareState(HANDLE hConsole,
                         DWORD Flags,
                         DWORD State)
 {
-    CSR_API_MESSAGE Request;
     NTSTATUS Status;
+    CONSOLE_API_MESSAGE ApiMessage;
+    PCSRSS_CONSOLE_HW_STATE ConsoleHardwareStateRequest = &ApiMessage.Data.ConsoleHardwareStateRequest;
 
-    Request.Data.ConsoleHardwareStateRequest.ConsoleHandle = hConsole;
-    Request.Data.ConsoleHardwareStateRequest.SetGet = CONSOLE_HARDWARE_STATE_SET;
-    Request.Data.ConsoleHardwareStateRequest.State = State;
+    ConsoleHardwareStateRequest->ConsoleHandle = hConsole;
+    ConsoleHardwareStateRequest->State = State;
 
-    Status = CsrClientCallServer(&Request,
+    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                                  NULL,
-                                 CSR_CREATE_API_NUMBER(CSR_CONSOLE, SETGET_CONSOLE_HW_STATE),
-                                 sizeof(CSR_API_MESSAGE));
-    if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
+                                 CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepSetHardwareState),
+                                 sizeof(CSRSS_CONSOLE_HW_STATE));
+    if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = ApiMessage.Status))
     {
         BaseSetLastNTError(Status);
         return FALSE;
@@ -910,22 +911,23 @@ WINAPI
 GetConsoleMode(HANDLE hConsoleHandle,
                LPDWORD lpMode)
 {
-    CSR_API_MESSAGE Request;
     NTSTATUS Status;
+    CONSOLE_API_MESSAGE ApiMessage;
+    PCSRSS_CONSOLE_MODE ConsoleModeRequest = &ApiMessage.Data.ConsoleModeRequest;
 
-    Request.Data.GetConsoleModeRequest.ConsoleHandle = hConsoleHandle;
+    ConsoleModeRequest->ConsoleHandle = hConsoleHandle;
 
-    Status = CsrClientCallServer(&Request,
+    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                                  NULL,
-                                 CSR_CREATE_API_NUMBER(CSR_CONSOLE, GET_CONSOLE_MODE),
-                                 sizeof(CSR_API_MESSAGE));
-    if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
+                                 CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepGetMode),
+                                 sizeof(CSRSS_CONSOLE_MODE));
+    if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = ApiMessage.Status))
     {
         BaseSetLastNTError(Status);
         return FALSE;
     }
 
-    *lpMode = Request.Data.GetConsoleModeRequest.ConsoleMode;
+    *lpMode = ConsoleModeRequest->ConsoleMode;
 
     return TRUE;
 }
@@ -1050,17 +1052,18 @@ WINAPI
 SetConsoleMode(HANDLE hConsoleHandle,
                DWORD dwMode)
 {
-    CSR_API_MESSAGE Request;
     NTSTATUS Status;
+    CONSOLE_API_MESSAGE ApiMessage;
+    PCSRSS_CONSOLE_MODE ConsoleModeRequest = &ApiMessage.Data.ConsoleModeRequest;
 
-    Request.Data.SetConsoleModeRequest.ConsoleHandle = hConsoleHandle;
-    Request.Data.SetConsoleModeRequest.Mode = dwMode;
+    ConsoleModeRequest->ConsoleHandle = hConsoleHandle;
+    ConsoleModeRequest->ConsoleMode = dwMode;
 
-    Status = CsrClientCallServer(&Request,
+    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                                  NULL,
-                                 CSR_CREATE_API_NUMBER(CSR_CONSOLE, SET_CONSOLE_MODE),
-                                 sizeof(CSR_API_MESSAGE));
-    if(!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
+                                 CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepSetMode),
+                                 sizeof(CSRSS_CONSOLE_MODE));
+    if(!NT_SUCCESS(Status) || !NT_SUCCESS(Status = ApiMessage.Status))
     {
         BaseSetLastNTError(Status);
         return FALSE;

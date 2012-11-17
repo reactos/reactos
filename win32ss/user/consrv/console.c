@@ -463,28 +463,26 @@ ConioUnpause(PCSRSS_CONSOLE Console, UINT Flags)
 CSR_API(SrvSetConsoleMode)
 {
     NTSTATUS Status;
-    PCSRSS_SET_CONSOLE_MODE SetConsoleModeRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.SetConsoleModeRequest;
+    PCSRSS_CONSOLE_MODE ConsoleModeRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.ConsoleModeRequest;
     PCSRSS_CONSOLE Console;
     PCSRSS_SCREEN_BUFFER Buff;
 
     DPRINT("SrvSetConsoleMode\n");
 
-    Status = Win32CsrLockObject(CsrGetClientThread()->Process,
-                                SetConsoleModeRequest->ConsoleHandle,
+    Status = Win32CsrLockObject(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
+                                ConsoleModeRequest->ConsoleHandle,
                                 (Object_t **) &Console, GENERIC_WRITE, 0);
-    if (! NT_SUCCESS(Status))
-    {
-        return Status;
-    }
+    if (!NT_SUCCESS(Status)) return Status;
 
     Buff = (PCSRSS_SCREEN_BUFFER)Console;
+
     if (CONIO_CONSOLE_MAGIC == Console->Header.Type)
     {
-        Console->Mode = SetConsoleModeRequest->Mode & CONSOLE_INPUT_MODE_VALID;
+        Console->Mode = ConsoleModeRequest->ConsoleMode & CONSOLE_INPUT_MODE_VALID;
     }
     else if (CONIO_SCREEN_BUFFER_MAGIC == Console->Header.Type)
     {
-        Buff->Mode = SetConsoleModeRequest->Mode & CONSOLE_OUTPUT_MODE_VALID;
+        Buff->Mode = ConsoleModeRequest->ConsoleMode & CONSOLE_OUTPUT_MODE_VALID;
     }
     else
     {
@@ -499,27 +497,27 @@ CSR_API(SrvSetConsoleMode)
 CSR_API(SrvGetConsoleMode)
 {
     NTSTATUS Status;
-    PCSRSS_GET_CONSOLE_MODE GetConsoleModeRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetConsoleModeRequest;
+    PCSRSS_CONSOLE_MODE ConsoleModeRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.ConsoleModeRequest;
     PCSRSS_CONSOLE Console;
     PCSRSS_SCREEN_BUFFER Buff;
 
     DPRINT("SrvGetConsoleMode\n");
 
-    Status = Win32CsrLockObject(CsrGetClientThread()->Process, GetConsoleModeRequest->ConsoleHandle,
+    Status = Win32CsrLockObject(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
+                                ConsoleModeRequest->ConsoleHandle,
                                 (Object_t **) &Console, GENERIC_READ, 0);
-    if (! NT_SUCCESS(Status))
-    {
-        return Status;
-    }
+    if (!NT_SUCCESS(Status)) return Status;
+
     Status = STATUS_SUCCESS;
     Buff = (PCSRSS_SCREEN_BUFFER) Console;
+
     if (CONIO_CONSOLE_MAGIC == Console->Header.Type)
     {
-        GetConsoleModeRequest->ConsoleMode = Console->Mode;
+        ConsoleModeRequest->ConsoleMode = Console->Mode;
     }
     else if (CONIO_SCREEN_BUFFER_MAGIC == Buff->Header.Type)
     {
-        GetConsoleModeRequest->ConsoleMode = Buff->Mode;
+        ConsoleModeRequest->ConsoleMode = Buff->Mode;
     }
     else
     {
@@ -614,18 +612,18 @@ CSR_API(SrvGetConsoleTitle)
 }
 
 /**********************************************************************
- *	HardwareStateProperty
+ *  HardwareStateProperty
  *
- *	DESCRIPTION
- *		Set/Get the value of the HardwareState and switch
- *		between direct video buffer ouput and GDI windowed
- *		output.
- *	ARGUMENTS
- *		Client hands us a CSRSS_CONSOLE_HARDWARE_STATE
- *		object. We use the same object to Request.
- *	NOTE
- *		ConsoleHwState has the correct size to be compatible
- *		with NT's, but values are not.
+ *  DESCRIPTION
+ *      Set/Get the value of the HardwareState and switch
+ *      between direct video buffer ouput and GDI windowed
+ *      output.
+ *  ARGUMENTS
+ *      Client hands us a CSRSS_CONSOLE_HARDWARE_STATE
+ *      object. We use the same object to Request.
+ *  NOTE
+ *      ConsoleHwState has the correct size to be compatible
+ *      with NT's, but values are not.
  */
 static NTSTATUS FASTCALL
 SetConsoleHardwareState(PCSRSS_CONSOLE Console, DWORD ConsoleHwState)
@@ -650,37 +648,23 @@ SetConsoleHardwareState(PCSRSS_CONSOLE Console, DWORD ConsoleHwState)
 
 CSR_API(SrvGetConsoleHardwareState)
 {
-    PCSRSS_SETGET_CONSOLE_HW_STATE ConsoleHardwareStateRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.ConsoleHardwareStateRequest;
-    PCSRSS_CONSOLE Console;
     NTSTATUS Status;
+    PCSRSS_CONSOLE_HW_STATE ConsoleHardwareStateRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.ConsoleHardwareStateRequest;
+    PCSRSS_CONSOLE Console;
 
     DPRINT("SrvGetConsoleHardwareState\n");
 
-    Status = ConioLockConsole(CsrGetClientThread()->Process,
+    Status = ConioLockConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
                               ConsoleHardwareStateRequest->ConsoleHandle,
                               &Console,
                               GENERIC_READ);
-    if (! NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to get console handle in SetConsoleHardwareState\n");
+        DPRINT1("Failed to get console handle in SrvGetConsoleHardwareState\n");
         return Status;
     }
 
-    switch (ConsoleHardwareStateRequest->SetGet)
-    {
-    case CONSOLE_HARDWARE_STATE_GET:
-        ConsoleHardwareStateRequest->State = Console->HardwareState;
-        break;
-
-    case CONSOLE_HARDWARE_STATE_SET:
-        DPRINT("Setting console hardware state.\n");
-        Status = SetConsoleHardwareState(Console, ConsoleHardwareStateRequest->State);
-        break;
-
-    default:
-        Status = STATUS_INVALID_PARAMETER_2; /* Client: (handle, [set_get], mode) */
-        break;
-    }
+    ConsoleHardwareStateRequest->State = Console->HardwareState;
 
     ConioUnlockConsole(Console);
 
@@ -689,37 +673,24 @@ CSR_API(SrvGetConsoleHardwareState)
 
 CSR_API(SrvSetConsoleHardwareState)
 {
-    PCSRSS_SETGET_CONSOLE_HW_STATE ConsoleHardwareStateRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.ConsoleHardwareStateRequest;
-    PCSRSS_CONSOLE Console;
     NTSTATUS Status;
+    PCSRSS_CONSOLE_HW_STATE ConsoleHardwareStateRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.ConsoleHardwareStateRequest;
+    PCSRSS_CONSOLE Console;
 
     DPRINT("SrvSetConsoleHardwareState\n");
 
-    Status = ConioLockConsole(CsrGetClientThread()->Process,
+    Status = ConioLockConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
                               ConsoleHardwareStateRequest->ConsoleHandle,
                               &Console,
                               GENERIC_READ);
-    if (! NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to get console handle in SetConsoleHardwareState\n");
+        DPRINT1("Failed to get console handle in SrvSetConsoleHardwareState\n");
         return Status;
     }
 
-    switch (ConsoleHardwareStateRequest->SetGet)
-    {
-    case CONSOLE_HARDWARE_STATE_GET:
-        ConsoleHardwareStateRequest->State = Console->HardwareState;
-        break;
-
-    case CONSOLE_HARDWARE_STATE_SET:
-        DPRINT("Setting console hardware state.\n");
-        Status = SetConsoleHardwareState(Console, ConsoleHardwareStateRequest->State);
-        break;
-
-    default:
-        Status = STATUS_INVALID_PARAMETER_2; /* Client: (handle, [set_get], mode) */
-        break;
-    }
+    DPRINT("Setting console hardware state.\n");
+    Status = SetConsoleHardwareState(Console, ConsoleHardwareStateRequest->State);
 
     ConioUnlockConsole(Console);
 

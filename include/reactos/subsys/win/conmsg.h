@@ -52,7 +52,7 @@ typedef enum _CONSRV_API_NUMBER
     ConsolepReadConsole,
     ConsolepWriteConsole,
     ConsolepDuplicateHandle,
-    /**/ ConsolepGetHandleInformation /**/,
+    // ConsolepGetHandleInformation,
     // ConsolepSetHandleInformation,
     ConsolepCloseHandle,
     ConsolepVerifyIoHandle,
@@ -246,14 +246,8 @@ typedef struct
 typedef struct
 {
     HANDLE ConsoleHandle;
-    DWORD Mode;
-} CSRSS_SET_CONSOLE_MODE, *PCSRSS_SET_CONSOLE_MODE;
-
-typedef struct
-{
-    HANDLE ConsoleHandle;
     DWORD ConsoleMode;
-} CSRSS_GET_CONSOLE_MODE, *PCSRSS_GET_CONSOLE_MODE;
+} CSRSS_CONSOLE_MODE, *PCSRSS_CONSOLE_MODE;
 
 typedef struct
 {
@@ -415,18 +409,18 @@ typedef struct
     HANDLE InputWaitHandle;
 } CSRSS_GET_INPUT_WAIT_HANDLE, *PCSRSS_GET_INPUT_WAIT_HANDLE;
 
-#define CONSOLE_HARDWARE_STATE_GET 0
-#define CONSOLE_HARDWARE_STATE_SET 1
 
+/*
+ * Console hardware states.
+ */
 #define CONSOLE_HARDWARE_STATE_GDI_MANAGED 0
 #define CONSOLE_HARDWARE_STATE_DIRECT      1
 
 typedef struct
 {
     HANDLE ConsoleHandle;
-    DWORD SetGet; /* 0=get; 1=set */
     DWORD State;
-} CSRSS_SETGET_CONSOLE_HW_STATE, *PCSRSS_SETGET_CONSOLE_HW_STATE;
+} CSRSS_CONSOLE_HW_STATE, *PCSRSS_CONSOLE_HW_STATE;
 
 typedef struct
 {
@@ -607,9 +601,8 @@ typedef struct _CONSOLE_API_MESSAGE
         CSRSS_GET_CONSOLE_SELECTION_INFO GetConsoleSelectionInfo;
 
         /* Console mode */
-        CSRSS_SET_CONSOLE_MODE SetConsoleModeRequest;
-        CSRSS_GET_CONSOLE_MODE GetConsoleModeRequest;
-        CSRSS_SETGET_CONSOLE_HW_STATE ConsoleHardwareStateRequest;
+        CSRSS_CONSOLE_MODE ConsoleModeRequest;
+        CSRSS_CONSOLE_HW_STATE ConsoleHardwareStateRequest;
 
         /* Console window */
         CSRSS_SET_TITLE SetTitleRequest;
