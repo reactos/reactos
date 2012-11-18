@@ -457,20 +457,27 @@ CSR_API(SrvWriteConsoleInput)
 
     DPRINT("SrvWriteConsoleInput\n");
 
-    Status = ConioLockConsole(ProcessData, WriteConsoleInputRequest->ConsoleHandle, &Console, GENERIC_WRITE);
-    if (! NT_SUCCESS(Status))
+    if (!CsrValidateMessageBuffer(ApiMessage,
+                                  (PVOID*)&WriteConsoleInputRequest->InputRecord,
+                                  WriteConsoleInputRequest->Length,
+                                  sizeof(INPUT_RECORD)))
     {
-        return Status;
+        return STATUS_INVALID_PARAMETER;
     }
+
+    Status = ConioLockConsole(ProcessData, WriteConsoleInputRequest->ConsoleHandle, &Console, GENERIC_WRITE);
+    if (!NT_SUCCESS(Status)) return Status;
 
     InputRecord = WriteConsoleInputRequest->InputRecord;
     Length = WriteConsoleInputRequest->Length;
 
+/*
     if (!Win32CsrValidateBuffer(ProcessData->Process, InputRecord, Length, sizeof(INPUT_RECORD)))
     {
         ConioUnlockConsole(Console);
         return STATUS_ACCESS_VIOLATION;
     }
+*/
 
     for (i = 0; i < Length && NT_SUCCESS(Status); i++)
     {
@@ -482,6 +489,7 @@ CSR_API(SrvWriteConsoleInput)
                                               &InputRecord->Event.KeyEvent.uChar.UnicodeChar,
                                               &AsciiChar);
         }
+
         Status = ConioProcessChar(Console, InputRecord++);
     }
 

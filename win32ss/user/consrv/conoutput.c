@@ -453,11 +453,6 @@ CSR_API(SrvReadConsoleOutput)
 
     DPRINT("SrvReadConsoleOutput\n");
 
-    CharInfo = ReadConsoleOutputRequest->CharInfo;
-    ReadRegion = ReadConsoleOutputRequest->ReadRegion;
-    BufferSize = ReadConsoleOutputRequest->BufferSize;
-    BufferCoord = ReadConsoleOutputRequest->BufferCoord;
-
     if (!CsrValidateMessageBuffer(ApiMessage,
                                   (PVOID*)&ReadConsoleOutputRequest->CharInfo,
                                   BufferSize.X * BufferSize.Y,
@@ -465,6 +460,15 @@ CSR_API(SrvReadConsoleOutput)
     {
         return STATUS_INVALID_PARAMETER;
     }
+
+    Status = ConioLockScreenBuffer(ProcessData, ReadConsoleOutputRequest->ConsoleHandle, &Buff, GENERIC_READ);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    CharInfo = ReadConsoleOutputRequest->CharInfo;
+    ReadRegion = ReadConsoleOutputRequest->ReadRegion;
+    BufferSize = ReadConsoleOutputRequest->BufferSize;
+    BufferCoord = ReadConsoleOutputRequest->BufferCoord;
+
 /*
     if (!Win32CsrValidateBuffer(ProcessData->Process, CharInfo,
                                 BufferSize.X * BufferSize.Y, sizeof(CHAR_INFO)))
@@ -473,9 +477,6 @@ CSR_API(SrvReadConsoleOutput)
         return STATUS_ACCESS_VIOLATION;
     }
 */
-
-    Status = ConioLockScreenBuffer(ProcessData, ReadConsoleOutputRequest->ConsoleHandle, &Buff, GENERIC_READ);
-    if (!NT_SUCCESS(Status)) return Status;
 
     /* FIXME: Is this correct? */
     CodePage = ProcessData->Console->OutputCodePage;
@@ -613,8 +614,8 @@ CSR_API(SrvWriteConsole)
 CSR_API(SrvWriteConsoleOutput)
 {
     PCSRSS_WRITE_CONSOLE_OUTPUT WriteConsoleOutputRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.WriteConsoleOutputRequest;
+    PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);
     SHORT i, X, Y, SizeX, SizeY;
-    PCSR_PROCESS ProcessData = CsrGetClientThread()->Process;
     PCSRSS_CONSOLE Console;
     PCSRSS_SCREEN_BUFFER Buff;
     SMALL_RECT ScreenBuffer;
@@ -628,25 +629,35 @@ CSR_API(SrvWriteConsoleOutput)
 
     DPRINT("SrvWriteConsoleOutput\n");
 
+    if (!CsrValidateMessageBuffer(ApiMessage,
+                                  (PVOID*)&WriteConsoleOutputRequest->CharInfo,
+                                  BufferSize.X * BufferSize.Y,
+                                  sizeof(CHAR_INFO)))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
     Status = ConioLockScreenBuffer(ProcessData,
                                    WriteConsoleOutputRequest->ConsoleHandle,
                                    &Buff,
                                    GENERIC_WRITE);
-    if (! NT_SUCCESS(Status))
-    {
-        return Status;
-    }
+    if (!NT_SUCCESS(Status)) return Status;
+
     Console = Buff->Header.Console;
 
     BufferSize = WriteConsoleOutputRequest->BufferSize;
     BufferCoord = WriteConsoleOutputRequest->BufferCoord;
     CharInfo = WriteConsoleOutputRequest->CharInfo;
-    if (!Win32CsrValidateBuffer(ProcessData, CharInfo,
+
+/*
+    if (!Win32CsrValidateBuffer(ProcessData->Process, CharInfo,
                                 BufferSize.X * BufferSize.Y, sizeof(CHAR_INFO)))
     {
         ConioUnlockScreenBuffer(Buff);
         return STATUS_ACCESS_VIOLATION;
     }
+*/
+
     WriteRegion = WriteConsoleOutputRequest->WriteRegion;
 
     SizeY = min(BufferSize.Y - BufferCoord.Y, ConioRectHeight(&WriteRegion));
@@ -656,7 +667,7 @@ CSR_API(SrvWriteConsoleOutput)
 
     /* Make sure WriteRegion is inside the screen buffer */
     ConioInitRect(&ScreenBuffer, 0, 0, Buff->MaxY - 1, Buff->MaxX - 1);
-    if (! ConioGetIntersection(&WriteRegion, &ScreenBuffer, &WriteRegion))
+    if (!ConioGetIntersection(&WriteRegion, &ScreenBuffer, &WriteRegion))
     {
         ConioUnlockScreenBuffer(Buff);
 
