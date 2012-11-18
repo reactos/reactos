@@ -991,45 +991,63 @@ CSR_API(CsrWriteConsoleOutputAttrib)
     return STATUS_SUCCESS;
 }
 
-CSR_API(CsrFillOutputChar)
+CSR_API(SrvFillConsoleOutput)
 {
     NTSTATUS Status;
     PCSRSS_FILL_OUTPUT FillOutputRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.FillOutputRequest;
     PCSRSS_CONSOLE Console;
     PCSRSS_SCREEN_BUFFER Buff;
-    DWORD X, Y, Length, Written = 0;
-    CHAR Char;
+    DWORD X, Y, Length, Start; // , Written = 0;
+    USHORT CodeType;
+    BYTE Code;
     PBYTE Buffer;
     SMALL_RECT UpdateRect;
 
-    DPRINT("CsrFillOutputChar\n");
+    DPRINT("SrvFillConsoleOutput\n");
 
-    Status = ConioLockScreenBuffer(CsrGetClientThread()->Process, FillOutputRequest->ConsoleHandle, &Buff, GENERIC_WRITE);
-    if (! NT_SUCCESS(Status))
-    {
-        return Status;
-    }
+    Status = ConioLockScreenBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process), FillOutputRequest->ConsoleHandle, &Buff, GENERIC_WRITE);
+    if (!NT_SUCCESS(Status)) return Status;
+
     Console = Buff->Header.Console;
 
-    X = FillOutputRequest->Position.X;
-    Y = (FillOutputRequest->Position.Y + Buff->VirtualY) % Buff->MaxY;
-    Buffer = &Buff->Buffer[2 * (Y * Buff->MaxX + X)];
-    if(FillOutputRequest->Unicode)
-        ConsoleUnicodeCharToAnsiChar(Console, &Char, &FillOutputRequest->Char.UnicodeChar);
-    else
-        Char = FillOutputRequest->Char.AsciiChar;
+    CodeType = FillOutputRequest->CodeType;
+
+    X = FillOutputRequest->Coord.X;
+    Y = (FillOutputRequest->Coord.Y + Buff->VirtualY) % Buff->MaxY;
     Length = FillOutputRequest->Length;
+    Start = 2 * (Y * Buff->MaxX + X) + (CodeType == CODE_ATTRIBUTE ? 1 : 0);
+    Buffer = &Buff->Buffer[Start];
+
+    switch (CodeType)
+    {
+        case CODE_ASCII:
+            Code = (BYTE)FillOutputRequest->Code.AsciiChar;
+            break;
+
+        case CODE_UNICODE:
+            ConsoleUnicodeCharToAnsiChar(Console, (PCHAR)&Code, &FillOutputRequest->Code.UnicodeChar);
+            break;
+
+        case CODE_ATTRIBUTE:
+            Code = (BYTE)FillOutputRequest->Code.Attribute;
+            break;
+
+        default:
+            ConioUnlockScreenBuffer(Buff);
+            return STATUS_INVALID_PARAMETER;
+    }
+
     while (Length--)
     {
-        *Buffer = Char;
+        *Buffer = Code;
         Buffer += 2;
-        Written++;
+        // Written++;
         if (++X == Buff->MaxX)
         {
             if (++Y == Buff->MaxY)
             {
                 Y = 0;
-                Buffer = Buff->Buffer;
+                Buffer = Buff->Buffer + (CodeType == CODE_ATTRIBUTE ? 1 : 0);
             }
             X = 0;
         }
@@ -1037,66 +1055,16 @@ CSR_API(CsrFillOutputChar)
 
     if (Buff == Console->ActiveBuffer)
     {
-        ConioComputeUpdateRect(Buff, &UpdateRect, &FillOutputRequest->Position,
+        ConioComputeUpdateRect(Buff, &UpdateRect, &FillOutputRequest->Coord,
                                FillOutputRequest->Length);
         ConioDrawRegion(Console, &UpdateRect);
     }
 
     ConioUnlockScreenBuffer(Buff);
+/*
     Length = FillOutputRequest->Length;
     FillOutputRequest->NrCharactersWritten = Length;
-    return STATUS_SUCCESS;
-}
-
-CSR_API(CsrFillOutputAttrib)
-{
-    PCSRSS_FILL_OUTPUT_ATTRIB FillOutputAttribRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.FillOutputAttribRequest;
-    PCSRSS_SCREEN_BUFFER Buff;
-    PUCHAR Buffer;
-    NTSTATUS Status;
-    int X, Y, Length;
-    UCHAR Attr;
-    SMALL_RECT UpdateRect;
-    PCSRSS_CONSOLE Console;
-
-    DPRINT("CsrFillOutputAttrib\n");
-
-    Status = ConioLockScreenBuffer(CsrGetClientThread()->Process, FillOutputAttribRequest->ConsoleHandle, &Buff, GENERIC_WRITE);
-    if (! NT_SUCCESS(Status))
-    {
-        return Status;
-    }
-    Console = Buff->Header.Console;
-
-    X = FillOutputAttribRequest->Coord.X;
-    Y = (FillOutputAttribRequest->Coord.Y + Buff->VirtualY) % Buff->MaxY;
-    Length = FillOutputAttribRequest->Length;
-    Attr = FillOutputAttribRequest->Attribute;
-    Buffer = &Buff->Buffer[(Y * Buff->MaxX * 2) + (X * 2) + 1];
-    while (Length--)
-    {
-        *Buffer = Attr;
-        Buffer += 2;
-        if (++X == Buff->MaxX)
-        {
-            if (++Y == Buff->MaxY)
-            {
-                Y = 0;
-                Buffer = Buff->Buffer + 1;
-            }
-            X = 0;
-        }
-    }
-
-    if (Buff == Console->ActiveBuffer)
-    {
-        ConioComputeUpdateRect(Buff, &UpdateRect, &FillOutputAttribRequest->Coord,
-                               FillOutputAttribRequest->Length);
-        ConioDrawRegion(Console, &UpdateRect);
-    }
-
-    ConioUnlockScreenBuffer(Buff);
-
+*/
     return STATUS_SUCCESS;
 }
 

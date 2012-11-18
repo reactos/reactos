@@ -328,7 +328,7 @@ IntReadConsoleOutput(HANDLE hConsoleOutput,
 static
 BOOL
 IntReadConsoleOutputCode(HANDLE hConsoleOutput,
-                         USHORT CodeType,
+                         CODE_TYPE CodeType,
                          PVOID pCode,
                          DWORD nLength,
                          COORD dwReadCoord,
@@ -721,42 +721,55 @@ IntWriteConsoleOutputCharacter(HANDLE hConsoleOutput,
 
 static
 BOOL
-IntFillConsoleOutputCharacter(HANDLE hConsoleOutput,
-                              PVOID cCharacter,
-                              DWORD nLength,
-                              COORD dwWriteCoord,
-                              LPDWORD lpNumberOfCharsWritten,
-                              BOOL bUnicode)
+IntFillConsoleOutputCode(HANDLE hConsoleOutput,
+                         CODE_TYPE CodeType,
+                         PVOID pCode,
+                         DWORD nLength,
+                         COORD dwWriteCoord,
+                         LPDWORD lpNumberOfCodesWritten)
 {
-    CSR_API_MESSAGE Request;
     NTSTATUS Status;
+    CONSOLE_API_MESSAGE ApiMessage;
+    PCSRSS_FILL_OUTPUT FillOutputRequest = &ApiMessage.Data.FillOutputRequest;
 
-    Request.Data.FillOutputRequest.ConsoleHandle = hConsoleOutput;
-    Request.Data.FillOutputRequest.Unicode = bUnicode;
+    FillOutputRequest->ConsoleHandle = hConsoleOutput;
+    FillOutputRequest->CodeType = CodeType;
 
-    if(bUnicode)
-        Request.Data.FillOutputRequest.Char.UnicodeChar = *((WCHAR*)cCharacter);
-    else
-        Request.Data.FillOutputRequest.Char.AsciiChar = *((CHAR*)cCharacter);
+    switch (CodeType)
+    {
+        case CODE_ASCII:
+            FillOutputRequest->Code.AsciiChar = *(PCHAR)pCode;
+            break;
 
-    Request.Data.FillOutputRequest.Position = dwWriteCoord;
-    Request.Data.FillOutputRequest.Length = (WORD)nLength;
+        case CODE_UNICODE:
+            FillOutputRequest->Code.UnicodeChar = *(PWCHAR)pCode;
+            break;
 
-    Status = CsrClientCallServer(&Request,
+        case CODE_ATTRIBUTE:
+            FillOutputRequest->Code.Attribute = *(PWORD)pCode;
+            break;
+
+        default:
+            SetLastError(ERROR_INVALID_PARAMETER);
+            return FALSE;
+    }
+
+    FillOutputRequest->Coord = dwWriteCoord;
+    FillOutputRequest->Length = nLength;
+
+    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                                  NULL,
-                                 CSR_CREATE_API_NUMBER(CSR_CONSOLE, FILL_OUTPUT),
-                                 sizeof(CSR_API_MESSAGE));
-
-    if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
+                                 CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepFillConsoleOutput),
+                                 sizeof(CSRSS_FILL_OUTPUT));
+    if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = ApiMessage.Status))
     {
         BaseSetLastNTError(Status);
         return FALSE;
     }
 
-    if(lpNumberOfCharsWritten != NULL)
-    {
-        *lpNumberOfCharsWritten = Request.Data.FillOutputRequest.NrCharactersWritten;
-    }
+    if (lpNumberOfCodesWritten)
+        *lpNumberOfCodesWritten = FillOutputRequest->Length;
+        // *lpNumberOfCharsWritten = Request.Data.FillOutputRequest.NrCharactersWritten;
 
     return TRUE;
 }
@@ -1277,12 +1290,12 @@ FillConsoleOutputCharacterW(HANDLE hConsoleOutput,
                             COORD dwWriteCoord,
                             LPDWORD lpNumberOfCharsWritten)
 {
-    return IntFillConsoleOutputCharacter(hConsoleOutput,
-                                         &cCharacter,
-                                         nLength,
-                                         dwWriteCoord,
-                                         lpNumberOfCharsWritten,
-                                         TRUE);
+    return IntFillConsoleOutputCode(hConsoleOutput,
+                                    CODE_UNICODE,
+                                    &cCharacter,
+                                    nLength,
+                                    dwWriteCoord,
+                                    lpNumberOfCharsWritten);
 }
 
 
@@ -1299,12 +1312,12 @@ FillConsoleOutputCharacterA(HANDLE hConsoleOutput,
                             COORD dwWriteCoord,
                             LPDWORD lpNumberOfCharsWritten)
 {
-    return IntFillConsoleOutputCharacter(hConsoleOutput,
-                                         &cCharacter,
-                                         nLength,
-                                         dwWriteCoord,
-                                         lpNumberOfCharsWritten,
-                                         FALSE);
+    return IntFillConsoleOutputCode(hConsoleOutput,
+                                    CODE_ASCII,
+                                    &cCharacter,
+                                    nLength,
+                                    dwWriteCoord,
+                                    lpNumberOfCharsWritten);
 }
 
 
@@ -1321,28 +1334,12 @@ FillConsoleOutputAttribute(HANDLE hConsoleOutput,
                            COORD dwWriteCoord,
                            LPDWORD lpNumberOfAttrsWritten)
 {
-    CSR_API_MESSAGE Request;
-    NTSTATUS Status;
-
-    Request.Data.FillOutputAttribRequest.ConsoleHandle = hConsoleOutput;
-    Request.Data.FillOutputAttribRequest.Attribute = (CHAR)wAttribute;
-    Request.Data.FillOutputAttribRequest.Coord = dwWriteCoord;
-    Request.Data.FillOutputAttribRequest.Length = (WORD)nLength;
-
-    Status = CsrClientCallServer(&Request,
-                                 NULL,
-                                 CSR_CREATE_API_NUMBER(CSR_CONSOLE, FILL_OUTPUT_ATTRIB),
-                                 sizeof(CSR_API_MESSAGE));
-    if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
-    {
-        BaseSetLastNTError ( Status );
-        return FALSE;
-    }
-
-    if (lpNumberOfAttrsWritten)
-        *lpNumberOfAttrsWritten = nLength;
-
-    return TRUE;
+    return IntFillConsoleOutputCode(hConsoleOutput,
+                                    CODE_ATTRIBUTE,
+                                    &wAttribute,
+                                    nLength,
+                                    dwWriteCoord,
+                                    lpNumberOfAttrsWritten);
 }
 
 /* EOF */

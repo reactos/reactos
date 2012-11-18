@@ -27,7 +27,7 @@ typedef enum _CONSRV_API_NUMBER
     ConsolepWriteConsoleOutput,
     ConsolepReadConsoleOutputString,
     // ConsolepWriteConsoleOutputString,
-    // ConsolepFillConsoleOutput,
+    ConsolepFillConsoleOutput,
     ConsolepGetMode,
     // ConsolepGetNumberOfFonts,
     ConsolepGetNumberOfInputEvents,
@@ -187,28 +187,6 @@ typedef struct
 {
     HANDLE ConsoleHandle;
     BOOL Unicode;
-    union
-    {
-        CHAR AsciiChar;
-        WCHAR UnicodeChar;
-    } Char;
-    COORD Position;
-    WORD Length;
-    ULONG NrCharactersWritten;
-} CSRSS_FILL_OUTPUT, *PCSRSS_FILL_OUTPUT;
-
-typedef struct
-{
-    HANDLE ConsoleHandle;
-    CHAR Attribute;
-    COORD Coord;
-    WORD Length;
-} CSRSS_FILL_OUTPUT_ATTRIB, *PCSRSS_FILL_OUTPUT_ATTRIB;
-
-typedef struct
-{
-    HANDLE ConsoleHandle;
-    BOOL Unicode;
     WORD Length;
     COORD Coord;
     COORD EndCoord;
@@ -303,8 +281,7 @@ typedef enum _CODE_TYPE
 
 typedef struct
 {
-    HANDLE    ConsoleHandle;
-    CODE_TYPE CodeType;
+    HANDLE ConsoleHandle;
 
     DWORD NumCodesToRead;
     COORD ReadCoord;
@@ -312,6 +289,7 @@ typedef struct
 
     DWORD CodesRead;
 
+    CODE_TYPE CodeType;
     union
     {
         PVOID pCode;
@@ -321,6 +299,23 @@ typedef struct
     } pCode;    // Either a pointer to a character or to an attribute.
 } CSRSS_READ_CONSOLE_OUTPUT_CODE, *PCSRSS_READ_CONSOLE_OUTPUT_CODE;
 
+typedef struct
+{
+    HANDLE ConsoleHandle;
+
+    CODE_TYPE CodeType;
+    union
+    {
+        CHAR AsciiChar;
+        WCHAR UnicodeChar;
+        WORD Attribute;
+    } Code; // Either a character or an attribute.
+
+    COORD Coord;
+    ULONG Length;
+
+    ULONG NrCharactersWritten; // FIXME: Only for chars, is it removable ?
+} CSRSS_FILL_OUTPUT, *PCSRSS_FILL_OUTPUT;
 
 typedef struct
 {
@@ -595,7 +590,6 @@ typedef struct _CONSOLE_API_MESSAGE
         CSRSS_WRITE_CONSOLE_OUTPUT_ATTRIB WriteConsoleOutputAttribRequest;
 
         CSRSS_FILL_OUTPUT FillOutputRequest;
-        CSRSS_FILL_OUTPUT_ATTRIB FillOutputAttribRequest;
         CSRSS_SET_ATTRIB SetAttribRequest;
 
         /* Aliases */
