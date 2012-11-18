@@ -126,7 +126,7 @@ typedef enum _CONSRV_API_NUMBER
 typedef struct
 {
     USHORT nMaxIds;
-    PDWORD ProcessId;
+    PDWORD pProcessIds;
     ULONG nProcessIdsTotal;
 } CSRSS_GET_PROCESS_LIST, *PCSRSS_GET_PROCESS_LIST;
 
@@ -260,13 +260,7 @@ typedef struct
 {
     DWORD Length;
     PWCHAR Title;
-} CSRSS_SET_TITLE, *PCSRSS_SET_TITLE;
-
-typedef struct
-{
-    DWORD Length;
-    PWCHAR Title;
-} CSRSS_GET_TITLE, *PCSRSS_GET_TITLE;
+} CSRSS_CONSOLE_TITLE, *PCSRSS_CONSOLE_TITLE;
 
 typedef struct
 {
@@ -540,23 +534,9 @@ typedef struct
 
 typedef struct
 {
+    BOOL InputCP;   // TRUE : Input Code Page ; FALSE : Output Code Page
     UINT CodePage;
-} CSRSS_GET_CONSOLE_CP, *PCSRSS_GET_CONSOLE_CP;
-
-typedef struct
-{
-    UINT CodePage;
-} CSRSS_SET_CONSOLE_CP, *PCSRSS_SET_CONSOLE_CP;
-
-typedef struct
-{
-    UINT CodePage;
-} CSRSS_GET_CONSOLE_OUTPUT_CP, *PCSRSS_GET_CONSOLE_OUTPUT_CP;
-
-typedef struct
-{
-    UINT CodePage;
-} CSRSS_SET_CONSOLE_OUTPUT_CP, *PCSRSS_SET_CONSOLE_OUTPUT_CP;
+} CSRSS_CONSOLE_CP, *PCSRSS_CONSOLE_CP;
 
 typedef struct _CONSOLE_API_MESSAGE
 {
@@ -597,8 +577,7 @@ typedef struct _CONSOLE_API_MESSAGE
         CSRSS_CONSOLE_HW_STATE ConsoleHardwareStateRequest;
 
         /* Console window */
-        CSRSS_SET_TITLE SetTitleRequest;
-        CSRSS_GET_TITLE GetTitleRequest;
+        CSRSS_CONSOLE_TITLE TitleRequest;
         CSRSS_GET_CONSOLE_WINDOW GetConsoleWindowRequest;
         CSRSS_SET_CONSOLE_ICON SetConsoleIconRequest;
 
@@ -636,11 +615,8 @@ typedef struct _CONSOLE_API_MESSAGE
         CSRSS_GENERATE_CTRL_EVENT GenerateCtrlEvent;
         CSRSS_GET_NUM_INPUT_EVENTS GetNumInputEventsRequest;
 
-        /* CodePage */
-        CSRSS_GET_CONSOLE_CP GetConsoleCodePage;
-        CSRSS_SET_CONSOLE_CP SetConsoleCodePage;
-        CSRSS_GET_CONSOLE_OUTPUT_CP GetConsoleOutputCodePage;
-        CSRSS_SET_CONSOLE_OUTPUT_CP SetConsoleOutputCodePage;
+        /* Input and Output Code Pages */
+        CSRSS_CONSOLE_CP ConsoleCPRequest;
 
         CSRSS_GET_PROCESS_LIST GetProcessListRequest;
     } Data;

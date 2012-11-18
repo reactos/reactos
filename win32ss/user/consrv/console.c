@@ -62,7 +62,7 @@ ConioConsoleCtrlEventTimeout(DWORD Event,
 {
     HANDLE Thread;
 
-    DPRINT("ConioConsoleCtrlEvent Parent ProcessId = %x\n", ProcessData->Process->ClientId.UniqueProcess);
+    DPRINT("ConioConsoleCtrlEvent Parent pProcessIds = %x\n", ProcessData->Process->ClientId.UniqueProcess);
 
     if (ProcessData->CtrlDispatcher)
     {
@@ -250,21 +250,24 @@ CSR_API(SrvOpenConsole)
 
 CSR_API(SrvAllocConsole)
 {
-    PCSRSS_ALLOC_CONSOLE AllocConsoleRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.AllocConsoleRequest;
-    PCSR_PROCESS ProcessData = CsrGetClientThread()->Process;
-    PCSRSS_CONSOLE Console;
     NTSTATUS Status = STATUS_SUCCESS;
+    PCSRSS_ALLOC_CONSOLE AllocConsoleRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.AllocConsoleRequest;
+    PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);
+    PCSRSS_CONSOLE Console;
     BOOLEAN NewConsole = FALSE;
 
     DPRINT("SrvAllocConsole\n");
 
     RtlEnterCriticalSection(&ProcessData->HandleTableLock);
+
     if (ProcessData->Console)
     {
         DPRINT1("Process already has a console\n");
         RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
         return STATUS_INVALID_PARAMETER;
     }
+
+    DPRINT1("SrvAllocConsole - Checkpoint 1\n");
 
     /* If we don't need a console, then get out of here */
     if (!AllocConsoleRequest->ConsoleNeeded)
@@ -276,7 +279,7 @@ CSR_API(SrvAllocConsole)
 
     /* If we already have one, then don't create a new one... */
     if (!AllocConsoleRequest->Console ||
-            AllocConsoleRequest->Console != ProcessData->ParentConsole)
+         AllocConsoleRequest->Console != ProcessData->ParentConsole)
     {
         /* Allocate a console structure */
         NewConsole = TRUE;
@@ -287,10 +290,13 @@ CSR_API(SrvAllocConsole)
             RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
             return STATUS_NO_MEMORY;
         }
-        /* initialize list head */
+
+        /* Initialize list head */
         InitializeListHead(&Console->ProcessList);
-        /* insert process data required for GUI initialization */
+
+        /* Insert process data required for GUI initialization */
         InsertHeadList(&Console->ProcessList, &ProcessData->ConsoleLink);
+
         /* Initialize the Console */
         Status = CsrInitConsole(Console, AllocConsoleRequest->ShowCmd);
         if (!NT_SUCCESS(Status))
@@ -329,7 +335,7 @@ CSR_API(SrvAllocConsole)
         {
             DPRINT1("Failed to insert object\n");
             ConioDeleteConsole((Object_t *) Console);
-            ProcessData->Console = 0;
+            ProcessData->Console = NULL;
             RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
             return Status;
         }
@@ -346,22 +352,21 @@ CSR_API(SrvAllocConsole)
             ConioDeleteConsole((Object_t *) Console);
             Win32CsrReleaseObject(ProcessData,
                                   AllocConsoleRequest->InputHandle);
-            ProcessData->Console = 0;
+            ProcessData->Console = NULL;
             RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
             return Status;
         }
     }
 
     /* Duplicate the Event */
-    if (!DuplicateHandle(GetCurrentProcess(),
-                         ProcessData->Console->ActiveEvent,
-                         ProcessData->ProcessHandle,
-                         &ProcessData->ConsoleEvent,
-                         EVENT_ALL_ACCESS,
-                         FALSE,
-                         0))
+    Status = NtDuplicateObject(NtCurrentProcess(),
+                               ProcessData->Console->ActiveEvent,
+                               ProcessData->Process->ProcessHandle,
+                               &ProcessData->ConsoleEvent,
+                               EVENT_ALL_ACCESS, 0, 0);
+    if (!NT_SUCCESS(Status))
     {
-        DPRINT1("DuplicateHandle() failed: %lu\n", GetLastError());
+        DPRINT1("NtDuplicateObject() failed: %lu\n", Status);
         ConioDeleteConsole((Object_t *) Console);
         if (NewConsole || !ProcessData->bInheritHandles)
         {
@@ -370,7 +375,7 @@ CSR_API(SrvAllocConsole)
             Win32CsrReleaseObject(ProcessData,
                                   AllocConsoleRequest->InputHandle);
         }
-        ProcessData->Console = 0;
+        ProcessData->Console = NULL;
         RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
         return Status;
     }
@@ -531,31 +536,41 @@ CSR_API(SrvGetConsoleMode)
 CSR_API(SrvSetConsoleTitle)
 {
     NTSTATUS Status;
-    PCSRSS_SET_TITLE SetTitleRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.SetTitleRequest;
-    PCSR_PROCESS ProcessData = CsrGetClientThread()->Process;
+    PCSRSS_CONSOLE_TITLE TitleRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.TitleRequest;
+    // PCSR_PROCESS Process = CsrGetClientThread()->Process;
     PCSRSS_CONSOLE Console;
     PWCHAR Buffer;
 
     DPRINT("SrvSetConsoleTitle\n");
 
-    if (!Win32CsrValidateBuffer(ProcessData, SetTitleRequest->Title,
-                                SetTitleRequest->Length, 1))
+    if (!CsrValidateMessageBuffer(ApiMessage,
+                                  (PVOID)&TitleRequest->Title,
+                                  TitleRequest->Length,
+                                  sizeof(BYTE)))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+/*
+    if (!Win32CsrValidateBuffer(Process, TitleRequest->Title,
+                                TitleRequest->Length, 1))
     {
         return STATUS_ACCESS_VIOLATION;
     }
+*/
 
-    Status = ConioConsoleFromProcessData(ProcessData, &Console);
+    Status = ConioConsoleFromProcessData(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console);
     if(NT_SUCCESS(Status))
     {
-        Buffer =  RtlAllocateHeap(RtlGetProcessHeap(), 0, SetTitleRequest->Length);
+        Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, TitleRequest->Length);
         if (Buffer)
         {
-            /* copy title to console */
+            /* Copy title to console */
             RtlFreeUnicodeString(&Console->Title);
             Console->Title.Buffer = Buffer;
-            Console->Title.Length = Console->Title.MaximumLength = SetTitleRequest->Length;
-            memcpy(Console->Title.Buffer, SetTitleRequest->Title, Console->Title.Length);
-            if (! ConioChangeTitle(Console))
+            Console->Title.Length = Console->Title.MaximumLength = TitleRequest->Length;
+            memcpy(Console->Title.Buffer, TitleRequest->Title, Console->Title.Length);
+
+            if (!ConioChangeTitle(Console))
             {
                 Status = STATUS_UNSUCCESSFUL;
             }
@@ -568,6 +583,7 @@ CSR_API(SrvSetConsoleTitle)
         {
             Status = STATUS_NO_MEMORY;
         }
+
         ConioUnlockConsole(Console);
     }
 
@@ -577,35 +593,44 @@ CSR_API(SrvSetConsoleTitle)
 CSR_API(SrvGetConsoleTitle)
 {
     NTSTATUS Status;
-    PCSRSS_GET_TITLE GetTitleRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetTitleRequest;
-    PCSR_PROCESS ProcessData = CsrGetClientThread()->Process;
+    PCSRSS_CONSOLE_TITLE TitleRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.TitleRequest;
+    // PCSR_PROCESS Process = CsrGetClientThread()->Process;
     PCSRSS_CONSOLE Console;
     DWORD Length;
 
     DPRINT("SrvGetConsoleTitle\n");
 
-    if (!Win32CsrValidateBuffer(ProcessData, GetTitleRequest->Title,
-                                GetTitleRequest->Length, 1))
+    if (!CsrValidateMessageBuffer(ApiMessage,
+                                  (PVOID)&TitleRequest->Title,
+                                  TitleRequest->Length,
+                                  sizeof(BYTE)))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+/*
+    if (!Win32CsrValidateBuffer(Process, TitleRequest->Title,
+                                TitleRequest->Length, 1))
     {
         return STATUS_ACCESS_VIOLATION;
     }
+*/
 
-    Status = ConioConsoleFromProcessData(ProcessData, &Console);
-    if (! NT_SUCCESS(Status))
+    Status = ConioConsoleFromProcessData(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console);
+    if (!NT_SUCCESS(Status))
     {
         DPRINT1("Can't get console\n");
         return Status;
     }
 
     /* Copy title of the console to the user title buffer */
-    if (GetTitleRequest->Length >= sizeof(WCHAR))
+    if (TitleRequest->Length >= sizeof(WCHAR))
     {
-        Length = min(GetTitleRequest->Length - sizeof(WCHAR), Console->Title.Length);
-        memcpy(GetTitleRequest->Title, Console->Title.Buffer, Length);
-        GetTitleRequest->Title[Length / sizeof(WCHAR)] = L'\0';
+        Length = min(TitleRequest->Length - sizeof(WCHAR), Console->Title.Length);
+        memcpy(TitleRequest->Title, Console->Title.Buffer, Length);
+        TitleRequest->Title[Length / sizeof(WCHAR)] = L'\0';
     }
 
-    GetTitleRequest->Length = Console->Title.Length;
+    TitleRequest->Length = Console->Title.Length;
 
     ConioUnlockConsole(Console);
     return STATUS_SUCCESS;
@@ -699,17 +724,14 @@ CSR_API(SrvSetConsoleHardwareState)
 
 CSR_API(SrvGetConsoleWindow)
 {
+    NTSTATUS Status;
     PCSRSS_GET_CONSOLE_WINDOW GetConsoleWindowRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetConsoleWindowRequest;
     PCSRSS_CONSOLE Console;
-    NTSTATUS Status;
 
     DPRINT("SrvGetConsoleWindow\n");
 
-    Status = ConioConsoleFromProcessData(CsrGetClientThread()->Process, &Console);
-    if (! NT_SUCCESS(Status))
-    {
-        return Status;
-    }
+    Status = ConioConsoleFromProcessData(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console);
+    if (!NT_SUCCESS(Status)) return Status;
 
     GetConsoleWindowRequest->WindowHandle = Console->hWindow;
     ConioUnlockConsole(Console);
@@ -719,20 +741,19 @@ CSR_API(SrvGetConsoleWindow)
 
 CSR_API(SrvSetConsoleIcon)
 {
+    NTSTATUS Status;
     PCSRSS_SET_CONSOLE_ICON SetConsoleIconRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.SetConsoleIconRequest;
     PCSRSS_CONSOLE Console;
-    NTSTATUS Status;
 
     DPRINT("SrvSetConsoleIcon\n");
 
-    Status = ConioConsoleFromProcessData(CsrGetClientThread()->Process, &Console);
-    if (! NT_SUCCESS(Status))
-    {
-        return Status;
-    }
+    Status = ConioConsoleFromProcessData(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console);
+    if (!NT_SUCCESS(Status)) return Status;
 
     Status = (ConioChangeIcon(Console, SetConsoleIconRequest->WindowIcon)
-              ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL);
+                ? STATUS_SUCCESS
+                : STATUS_UNSUCCESSFUL);
+
     ConioUnlockConsole(Console);
 
     return Status;
@@ -740,84 +761,41 @@ CSR_API(SrvSetConsoleIcon)
 
 CSR_API(SrvGetConsoleCP)
 {
-    PCSRSS_GET_CONSOLE_CP GetConsoleCodePage = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetConsoleCodePage;
-    PCSRSS_CONSOLE Console;
     NTSTATUS Status;
-
-    DPRINT("SrvGetConsoleCP\n");
-
-    Status = ConioConsoleFromProcessData(CsrGetClientThread()->Process, &Console);
-    if (! NT_SUCCESS(Status))
-    {
-        return Status;
-    }
-
-    GetConsoleCodePage->CodePage = Console->CodePage;
-    ConioUnlockConsole(Console);
-    return STATUS_SUCCESS;
-}
-
-CSR_API(CsrGetConsoleOutputCodePage) // TODO: Merge this function with the other one.
-{
-    PCSRSS_GET_CONSOLE_OUTPUT_CP GetConsoleOutputCodePage = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetConsoleOutputCodePage;
+    PCSRSS_CONSOLE_CP ConsoleCPRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.ConsoleCPRequest;
     PCSRSS_CONSOLE Console;
-    NTSTATUS Status;
 
-    DPRINT("CsrGetConsoleOutputCodePage\n");
+    DPRINT("SrvGetConsoleCP, getting %s Code Page\n",
+            ConsoleCPRequest->InputCP ? "Input" : "Output");
 
-    Status = ConioConsoleFromProcessData(CsrGetClientThread()->Process, &Console);
-    if (! NT_SUCCESS(Status))
-    {
-        return Status;
-    }
+    Status = ConioConsoleFromProcessData(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console);
+    if (!NT_SUCCESS(Status)) return Status;
 
-    GetConsoleOutputCodePage->CodePage = Console->OutputCodePage;
+    ConsoleCPRequest->CodePage = (ConsoleCPRequest->InputCP ? Console->CodePage
+                                                            : Console->OutputCodePage);
     ConioUnlockConsole(Console);
     return STATUS_SUCCESS;
 }
 
 CSR_API(SrvSetConsoleCP)
 {
-    PCSRSS_SET_CONSOLE_CP SetConsoleCodePage = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.SetConsoleCodePage;
-    PCSRSS_CONSOLE Console;
     NTSTATUS Status;
-
-    DPRINT("SrvSetConsoleCP\n");
-
-    Status = ConioConsoleFromProcessData(CsrGetClientThread()->Process, &Console);
-    if (! NT_SUCCESS(Status))
-    {
-        return Status;
-    }
-
-    if (IsValidCodePage(SetConsoleCodePage->CodePage))
-    {
-        Console->CodePage = SetConsoleCodePage->CodePage;
-        ConioUnlockConsole(Console);
-        return STATUS_SUCCESS;
-    }
-
-    ConioUnlockConsole(Console);
-    return STATUS_INVALID_PARAMETER;
-}
-
-CSR_API(CsrSetConsoleOutputCodePage) // TODO: Merge this function with the other one.
-{
-    PCSRSS_SET_CONSOLE_OUTPUT_CP SetConsoleOutputCodePage = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.SetConsoleOutputCodePage;
+    PCSRSS_CONSOLE_CP ConsoleCPRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.ConsoleCPRequest;
     PCSRSS_CONSOLE Console;
-    NTSTATUS Status;
 
-    DPRINT("CsrSetConsoleOutputCodePage\n");
+    DPRINT("SrvSetConsoleCP, setting %s Code Page\n",
+            ConsoleCPRequest->InputCP ? "Input" : "Output");
 
-    Status = ConioConsoleFromProcessData(CsrGetClientThread()->Process, &Console);
-    if (! NT_SUCCESS(Status))
+    Status = ConioConsoleFromProcessData(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    if (IsValidCodePage(ConsoleCPRequest->CodePage))
     {
-        return Status;
-    }
+        if (ConsoleCPRequest->InputCP)
+            Console->CodePage = ConsoleCPRequest->CodePage;
+        else
+            Console->OutputCodePage = ConsoleCPRequest->CodePage;
 
-    if (IsValidCodePage(SetConsoleOutputCodePage->CodePage))
-    {
-        Console->OutputCodePage = SetConsoleOutputCodePage->CodePage;
         ConioUnlockConsole(Console);
         return STATUS_SUCCESS;
     }
@@ -828,35 +806,43 @@ CSR_API(CsrSetConsoleOutputCodePage) // TODO: Merge this function with the other
 
 CSR_API(SrvGetConsoleProcessList)
 {
+    NTSTATUS Status;
     PCSRSS_GET_PROCESS_LIST GetProcessListRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetProcessListRequest;
     PDWORD Buffer;
-    PCSR_PROCESS ProcessData = CsrGetClientThread()->Process;
+    // PCSR_PROCESS Process = CsrGetClientThread()->Process;
     PCSRSS_CONSOLE Console;
-    PCSR_PROCESS current;
+    PCONSOLE_PROCESS_DATA current;
     PLIST_ENTRY current_entry;
     ULONG nItems = 0;
-    NTSTATUS Status;
 
     DPRINT("SrvGetConsoleProcessList\n");
 
-    Buffer = GetProcessListRequest->ProcessId;
+    if (!CsrValidateMessageBuffer(ApiMessage,
+                                  (PVOID)&GetProcessListRequest->pProcessIds,
+                                  GetProcessListRequest->nMaxIds,
+                                  sizeof(DWORD)))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    Buffer = GetProcessListRequest->pProcessIds;
+
+/*
     if (!Win32CsrValidateBuffer(ProcessData, Buffer, GetProcessListRequest->nMaxIds, sizeof(DWORD)))
         return STATUS_ACCESS_VIOLATION;
+*/
 
-    Status = ConioConsoleFromProcessData(ProcessData, &Console);
-    if (! NT_SUCCESS(Status))
-    {
-        return Status;
-    }
+    Status = ConioConsoleFromProcessData(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console);
+    if (!NT_SUCCESS(Status)) return Status;
 
     for (current_entry = Console->ProcessList.Flink;
          current_entry != &Console->ProcessList;
          current_entry = current_entry->Flink)
     {
-        current = CONTAINING_RECORD(current_entry, CSR_PROCESS, ConsoleLink);
+        current = CONTAINING_RECORD(current_entry, CONSOLE_PROCESS_DATA, ConsoleLink);
         if (++nItems <= GetProcessListRequest->nMaxIds)
         {
-            *Buffer++ = HandleToUlong(current->ClientId.UniqueProcess);
+            *Buffer++ = HandleToUlong(current->Process->ClientId.UniqueProcess);
         }
     }
 
@@ -868,27 +854,24 @@ CSR_API(SrvGetConsoleProcessList)
 
 CSR_API(SrvGenerateConsoleCtrlEvent)
 {
+    NTSTATUS Status;
     PCSRSS_GENERATE_CTRL_EVENT GenerateCtrlEvent = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GenerateCtrlEvent;
     PCSRSS_CONSOLE Console;
-    PCSR_PROCESS current;
+    PCONSOLE_PROCESS_DATA current;
     PLIST_ENTRY current_entry;
     DWORD Group;
-    NTSTATUS Status;
 
-    Status = ConioConsoleFromProcessData(CsrGetClientThread()->Process, &Console);
-    if (! NT_SUCCESS(Status))
-    {
-        return Status;
-    }
+    Status = ConioConsoleFromProcessData(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console);
+    if (!NT_SUCCESS(Status)) return Status;
 
     Group = GenerateCtrlEvent->ProcessGroup;
     Status = STATUS_INVALID_PARAMETER;
-    for (current_entry = Console->ProcessList.Flink;
-            current_entry != &Console->ProcessList;
-            current_entry = current_entry->Flink)
+    for (current_entry  = Console->ProcessList.Flink;
+         current_entry != &Console->ProcessList;
+         current_entry  = current_entry->Flink)
     {
-        current = CONTAINING_RECORD(current_entry, CSR_PROCESS, ConsoleLink);
-        if (Group == 0 || current->ProcessGroupId == Group)
+        current = CONTAINING_RECORD(current_entry, CONSOLE_PROCESS_DATA, ConsoleLink);
+        if (Group == 0 || current->Process->ProcessGroupId == Group)
         {
             ConioConsoleCtrlEvent(GenerateCtrlEvent->Event, current);
             Status = STATUS_SUCCESS;
@@ -906,7 +889,7 @@ CSR_API(SrvGetConsoleSelectionInfo)
     PCSRSS_GET_CONSOLE_SELECTION_INFO GetConsoleSelectionInfo = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetConsoleSelectionInfo;
     PCSRSS_CONSOLE Console;
 
-    Status = ConioConsoleFromProcessData(CsrGetClientThread()->Process, &Console);
+    Status = ConioConsoleFromProcessData(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console);
     if (NT_SUCCESS(Status))
     {
         memset(&GetConsoleSelectionInfo->Info, 0, sizeof(CONSOLE_SELECTION_INFO));
@@ -914,6 +897,7 @@ CSR_API(SrvGetConsoleSelectionInfo)
             GetConsoleSelectionInfo->Info = Console->Selection;
         ConioUnlockConsole(Console);
     }
+
     return Status;
 }
 

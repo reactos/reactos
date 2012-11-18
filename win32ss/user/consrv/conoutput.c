@@ -556,7 +556,7 @@ CSR_API(SrvWriteConsole)
 
     if (Console->UnpauseEvent)
     {
-        Status = NtDuplicateObject(GetCurrentProcess(), Console->UnpauseEvent,
+        Status = NtDuplicateObject(NtCurrentProcess(), Console->UnpauseEvent,
                                    ProcessData->ProcessHandle, &WriteConsoleRequest->UnpauseEvent,
                                    SYNCHRONIZE, 0, 0);
         ConioUnlockScreenBuffer(Buff);
