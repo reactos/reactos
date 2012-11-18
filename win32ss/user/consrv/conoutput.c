@@ -1239,23 +1239,24 @@ CSR_API(CsrSetTextAttrib)
 
 CSR_API(SrvCreateConsoleScreenBuffer)
 {
+    NTSTATUS Status;
     PCSRSS_CREATE_SCREEN_BUFFER CreateScreenBufferRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.CreateScreenBufferRequest;
-    PCSR_PROCESS ProcessData = CsrGetClientThread()->Process;
+    PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);
     PCSRSS_CONSOLE Console;
     PCSRSS_SCREEN_BUFFER Buff;
-    NTSTATUS Status;
 
     DPRINT("SrvCreateConsoleScreenBuffer\n");
 
     RtlEnterCriticalSection(&ProcessData->HandleTableLock);
+
     Status = ConioConsoleFromProcessData(ProcessData, &Console);
-    if (! NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status))
     {
+        RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
         return Status;
     }
 
     Buff = HeapAlloc(ConSrvHeap, HEAP_ZERO_MEMORY, sizeof(CSRSS_SCREEN_BUFFER));
-
     if (Buff != NULL)
     {
         if (Console->ActiveBuffer)
@@ -1298,7 +1299,9 @@ CSR_API(SrvCreateConsoleScreenBuffer)
     }
 
     ConioUnlockConsole(Console);
+
     RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
+
     return Status;
 }
 
