@@ -138,8 +138,80 @@ NTSTATUS WINAPI LsarQuerySecurityObject(
     SECURITY_INFORMATION SecurityInformation,
     PLSAPR_SR_SECURITY_DESCRIPTOR *SecurityDescriptor)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PLSA_DB_OBJECT DbObject = NULL;
+    PSECURITY_DESCRIPTOR RelativeSd = NULL;
+    PLSAPR_SR_SECURITY_DESCRIPTOR SdData = NULL;
+    ACCESS_MASK DesiredAccess = 0;
+    ULONG RelativeSdSize = 0;
+    NTSTATUS Status;
+
+    if (SecurityDescriptor == NULL)
+        return STATUS_INVALID_PARAMETER;
+
+    if ((SecurityInformation & OWNER_SECURITY_INFORMATION) ||
+        (SecurityInformation & GROUP_SECURITY_INFORMATION) ||
+        (SecurityInformation & DACL_SECURITY_INFORMATION))
+        DesiredAccess |= READ_CONTROL;
+
+    if (SecurityInformation & SACL_SECURITY_INFORMATION)
+        DesiredAccess |= ACCESS_SYSTEM_SECURITY;
+
+    /* Validate the ObjectHandle */
+    Status = LsapValidateDbObject(ObjectHandle,
+                                  LsaDbIgnoreObject,
+                                  DesiredAccess,
+                                  &DbObject);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    /* Get the size of the SD */
+    Status = LsapGetObjectAttribute(DbObject,
+                                    L"SecDesc",
+                                    NULL,
+                                    &RelativeSdSize);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    /* Allocate a buffer for the SD */
+    RelativeSd = MIDL_user_allocate(RelativeSdSize);
+    if (RelativeSd == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    /* Get the SD */
+    Status = LsapGetObjectAttribute(DbObject,
+                                    L"SecDesc",
+                                    RelativeSd,
+                                    &RelativeSdSize);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    /*
+     * FIXME: Invalidate the SD information that was not requested.
+     *        (see SecurityInformation)
+     */
+
+    /* Allocate the SD data buffer */
+    SdData = MIDL_user_allocate(sizeof(LSAPR_SR_SECURITY_DESCRIPTOR));
+    if (SdData == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
+
+    /* Fill the SD data buffer and return it to the caller */
+    SdData->Length = RelativeSdSize;
+    SdData->SecurityDescriptor = (PBYTE)RelativeSd;
+
+    *SecurityDescriptor = SdData;
+
+done:
+    if (!NT_SUCCESS(Status))
+    {
+        if (RelativeSd != NULL)
+            MIDL_user_free(RelativeSd);
+    }
+
+    return Status;
 }
 
 
