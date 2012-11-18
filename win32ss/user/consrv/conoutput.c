@@ -1206,26 +1206,24 @@ CSR_API(SrvSetConsoleCursorPosition)
     return STATUS_SUCCESS;
 }
 
-CSR_API(CsrSetTextAttrib)
+CSR_API(SrvSetConsoleTextAttribute)
 {
     NTSTATUS Status;
     PCSRSS_SET_ATTRIB SetAttribRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.SetAttribRequest;
     PCSRSS_CONSOLE Console;
     PCSRSS_SCREEN_BUFFER Buff;
 
-    DPRINT("CsrSetTextAttrib\n");
+    DPRINT("SrvSetConsoleTextAttribute\n");
 
-    Status = ConioLockScreenBuffer(CsrGetClientThread()->Process, SetAttribRequest->ConsoleHandle, &Buff, GENERIC_WRITE);
-    if (! NT_SUCCESS(Status))
-    {
-        return Status;
-    }
+    Status = ConioLockScreenBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process), SetAttribRequest->ConsoleHandle, &Buff, GENERIC_WRITE);
+    if (!NT_SUCCESS(Status)) return Status;
+
     Console = Buff->Header.Console;
 
     Buff->DefaultAttrib = SetAttribRequest->Attrib;
     if (Buff == Console->ActiveBuffer)
     {
-        if (! ConioUpdateScreenInfo(Console, Buff))
+        if (!ConioUpdateScreenInfo(Console, Buff))
         {
             ConioUnlockScreenBuffer(Buff);
             return STATUS_UNSUCCESSFUL;

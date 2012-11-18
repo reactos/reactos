@@ -46,7 +46,7 @@ typedef enum _CONSRV_API_NUMBER
     ConsolepSetCursorInfo,
     // ConsolepSetWindowInfo,
     ConsolepScrollScreenBuffer,
-    // ConsolepSetTextAttribute,
+    ConsolepSetTextAttribute,
     // ConsolepSetFont,
     ConsolepSetIcon,
     ConsolepReadConsole,
