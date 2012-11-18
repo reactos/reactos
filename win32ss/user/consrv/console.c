@@ -62,7 +62,7 @@ ConioConsoleCtrlEventTimeout(DWORD Event,
 {
     HANDLE Thread;
 
-    DPRINT("ConioConsoleCtrlEvent Parent pProcessIds = %x\n", ProcessData->Process->ClientId.UniqueProcess);
+    DPRINT("ConioConsoleCtrlEvent Parent ProcessId = %x\n", ProcessData->Process->ClientId.UniqueProcess);
 
     if (ProcessData->CtrlDispatcher)
     {
