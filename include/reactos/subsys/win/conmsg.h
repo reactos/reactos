@@ -136,8 +136,10 @@ typedef struct
     BOOL Unicode;
     ULONG NrCharactersToWrite;
     ULONG NrCharactersWritten;
-    HANDLE UnpauseEvent;
-    BYTE Buffer[0];
+    // HANDLE UnpauseEvent;
+
+    ULONG BufferSize;
+    PVOID Buffer;
 } CSRSS_WRITE_CONSOLE, *PCSRSS_WRITE_CONSOLE;
 
 typedef struct
@@ -583,7 +585,7 @@ typedef struct _CONSOLE_API_MESSAGE
         CSRSS_READ_CONSOLE_OUTPUT_CODE ReadConsoleOutputCodeRequest;    // SrvReadConsoleOutputString / ReadConsoleOutputAttribute & ReadConsoleOutputCharacter
 
         /* Write */
-        CSRSS_WRITE_CONSOLE WriteConsoleRequest;
+        CSRSS_WRITE_CONSOLE WriteConsoleRequest;            // SrvWriteConsole / WriteConsole
         CSRSS_WRITE_CONSOLE_INPUT WriteConsoleInputRequest;
         CSRSS_WRITE_CONSOLE_OUTPUT WriteConsoleOutputRequest;
         CSRSS_WRITE_CONSOLE_OUTPUT_CHAR WriteConsoleOutputCharRequest;
