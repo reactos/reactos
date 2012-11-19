@@ -26,7 +26,7 @@ typedef enum _CONSRV_API_NUMBER
     ConsolepReadConsoleOutput,
     ConsolepWriteConsoleOutput,
     ConsolepReadConsoleOutputString,
-    // ConsolepWriteConsoleOutputString,
+    ConsolepWriteConsoleOutputString,
     ConsolepFillConsoleOutput,
     ConsolepGetMode,
     // ConsolepGetNumberOfFonts,
@@ -112,13 +112,6 @@ typedef enum _CONSRV_API_NUMBER
 } CONSRV_API_NUMBER, *PCONSRV_API_NUMBER;
 
 
-#define CSR_API_MESSAGE_HEADER_SIZE(Type)       (FIELD_OFFSET(CSR_API_MESSAGE, Data) + sizeof(Type))
-#define CSRSS_MAX_WRITE_CONSOLE                 (LPC_MAX_DATA_LENGTH - CSR_API_MESSAGE_HEADER_SIZE(CSRSS_WRITE_CONSOLE))
-#define CSRSS_MAX_WRITE_CONSOLE_OUTPUT_CHAR     (LPC_MAX_DATA_LENGTH - CSR_API_MESSAGE_HEADER_SIZE(CSRSS_WRITE_CONSOLE_OUTPUT_CHAR))
-#define CSRSS_MAX_WRITE_CONSOLE_OUTPUT_ATTRIB   (LPC_MAX_DATA_LENGTH - CSR_API_MESSAGE_HEADER_SIZE(CSRSS_WRITE_CONSOLE_OUTPUT_ATTRIB))
-#define CSRSS_MAX_READ_CONSOLE_OUTPUT_CHAR      (LPC_MAX_DATA_LENGTH - CSR_API_MESSAGE_HEADER_SIZE(CSRSS_READ_CONSOLE_OUTPUT_CHAR))
-#define CSRSS_MAX_READ_CONSOLE_OUTPUT_ATTRIB    (LPC_MAX_DATA_LENGTH - CSR_API_MESSAGE_HEADER_SIZE(CSRSS_READ_CONSOLE_OUTPUT_ATTRIB))
-
 #define CONSOLE_INPUT_MODE_VALID  (0x0f)
 #define CONSOLE_OUTPUT_MODE_VALID (0x03)
 
@@ -150,12 +143,12 @@ typedef struct
     WORD NrCharactersRead;
     HANDLE EventHandle;
 
-    PVOID Buffer;
-    ULONG BufferSize;
-
     UNICODE_STRING ExeName;
     DWORD CtrlWakeupMask;
     DWORD ControlKeyState;
+
+    ULONG BufferSize;
+    PVOID Buffer;
 } CSRSS_READ_CONSOLE, *PCSRSS_READ_CONSOLE;
 
 typedef struct
@@ -184,26 +177,6 @@ typedef struct
     HANDLE ConsoleHandle;
     COORD Position;
 } CSRSS_SET_CURSOR_POSITION, *PCSRSS_SET_CURSOR_POSITION;
-
-typedef struct
-{
-    HANDLE ConsoleHandle;
-    BOOL Unicode;
-    WORD Length;
-    COORD Coord;
-    COORD EndCoord;
-    ULONG NrCharactersWritten;
-    CHAR String[0];
-} CSRSS_WRITE_CONSOLE_OUTPUT_CHAR, *PCSRSS_WRITE_CONSOLE_OUTPUT_CHAR;
-
-typedef struct
-{
-    HANDLE ConsoleHandle;
-    WORD Length;
-    COORD Coord;
-    COORD EndCoord;
-    WORD Attribute[0];
-} CSRSS_WRITE_CONSOLE_OUTPUT_ATTRIB, *PCSRSS_WRITE_CONSOLE_OUTPUT_ATTRIB;
 
 typedef struct
 {
@@ -300,6 +273,28 @@ typedef struct
         PWORD Attribute;
     } pCode;    // Either a pointer to a character or to an attribute.
 } CSRSS_READ_CONSOLE_OUTPUT_CODE, *PCSRSS_READ_CONSOLE_OUTPUT_CODE;
+
+typedef struct
+{
+    HANDLE ConsoleHandle;
+    USHORT CodeType;
+
+    ULONG BufferSize;
+    WORD Length;
+    COORD Coord;
+    COORD EndCoord;
+
+    ULONG NrCharactersWritten;
+
+    union
+    {
+        // PVOID String;
+        PVOID pCode;
+        PCHAR AsciiChar;
+        PWCHAR UnicodeChar;
+        PWORD Attribute;
+    } pCode;    // Either a pointer to a character or to an attribute.
+} CSRSS_WRITE_CONSOLE_OUTPUT_CODE, *PCSRSS_WRITE_CONSOLE_OUTPUT_CODE;
 
 typedef struct
 {
@@ -588,8 +583,7 @@ typedef struct _CONSOLE_API_MESSAGE
         CSRSS_WRITE_CONSOLE WriteConsoleRequest;            // SrvWriteConsole / WriteConsole
         CSRSS_WRITE_CONSOLE_INPUT WriteConsoleInputRequest;
         CSRSS_WRITE_CONSOLE_OUTPUT WriteConsoleOutputRequest;
-        CSRSS_WRITE_CONSOLE_OUTPUT_CHAR WriteConsoleOutputCharRequest;
-        CSRSS_WRITE_CONSOLE_OUTPUT_ATTRIB WriteConsoleOutputAttribRequest;
+        CSRSS_WRITE_CONSOLE_OUTPUT_CODE WriteConsoleOutputCodeRequest;
 
         CSRSS_FILL_OUTPUT FillOutputRequest;
         CSRSS_SET_ATTRIB SetAttribRequest;

@@ -436,6 +436,7 @@ IntWriteConsole(HANDLE hConsoleOutput,
     ULONG /* SizeBytes, */ CharSize;
     // DWORD Written = 0;
 
+    /* Determine the needed size */
     CharSize = (bUnicode ? sizeof(WCHAR) : sizeof(CHAR));
     WriteConsoleRequest->BufferSize = nNumberOfCharsToWrite * CharSize;
 
@@ -654,75 +655,109 @@ IntWriteConsoleOutput(HANDLE hConsoleOutput,
 
 static
 BOOL
-IntWriteConsoleOutputCharacter(HANDLE hConsoleOutput,
-                               PVOID lpCharacter,
-                               DWORD nLength,
-                               COORD dwWriteCoord,
-                               LPDWORD lpNumberOfCharsWritten,
-                               BOOL bUnicode)
+IntWriteConsoleOutputCode(HANDLE hConsoleOutput,
+                          CODE_TYPE CodeType,
+                          CONST VOID *pCode,
+                          DWORD nLength,
+                          COORD dwWriteCoord,
+                          LPDWORD lpNumberOfCodesWritten)
 {
-    PCSR_API_MESSAGE Request;
-    ULONG CsrRequest;
     NTSTATUS Status;
-    ULONG CharSize, nChars;
-    //ULONG SizeBytes;
-    DWORD Written = 0;
+    CONSOLE_API_MESSAGE ApiMessage;
+    PCSRSS_WRITE_CONSOLE_OUTPUT_CODE WriteConsoleOutputCodeRequest = &ApiMessage.Data.WriteConsoleOutputCodeRequest;
+    PCSR_CAPTURE_BUFFER CaptureBuffer;
+    ULONG CodeSize; //, nChars;
+    // ULONG SizeBytes;
+    // DWORD Written = 0;
 
-    CharSize = (bUnicode ? sizeof(WCHAR) : sizeof(CHAR));
-
-    nChars = min(nLength, CSRSS_MAX_WRITE_CONSOLE_OUTPUT_CHAR / CharSize);
-    //SizeBytes = nChars * CharSize;
-
-    Request = RtlAllocateHeap(RtlGetProcessHeap(), 0,
-                              max(sizeof(CSR_API_MESSAGE),
-                              CSR_API_MESSAGE_HEADER_SIZE(CSRSS_WRITE_CONSOLE_OUTPUT_CHAR)
-                                + min (nChars, CSRSS_MAX_WRITE_CONSOLE_OUTPUT_CHAR / CharSize) * CharSize));
-    if (Request == NULL)
+    /* Determine the needed size */
+/*
+    CodeSize = (bUnicode ? sizeof(WCHAR) : sizeof(CHAR));
+    nChars = min(nLength, CSRSS_MAX_WRITE_CONSOLE_OUTPUT_CHAR / CodeSize);
+    SizeBytes = nChars * CodeSize;
+*/
+    switch (CodeType)
     {
+        case CODE_ASCII:
+            CodeSize = sizeof(CHAR);
+            break;
+
+        case CODE_UNICODE:
+            CodeSize = sizeof(WCHAR);
+            break;
+
+        case CODE_ATTRIBUTE:
+            CodeSize = sizeof(WORD);
+            break;
+
+        default:
+            SetLastError(ERROR_INVALID_PARAMETER);
+            return FALSE;
+    }
+    WriteConsoleOutputCodeRequest->BufferSize = nLength * CodeSize;
+
+    /* Allocate a Capture Buffer */
+    CaptureBuffer = CsrAllocateCaptureBuffer(1, WriteConsoleOutputCodeRequest->BufferSize);
+    if (CaptureBuffer == NULL)
+    {
+        DPRINT1("CsrAllocateCaptureBuffer failed!\n");
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return FALSE;
     }
 
-    CsrRequest = CSR_CREATE_API_NUMBER(CSR_CONSOLE, WRITE_CONSOLE_OUTPUT_CHAR);
-    Request->Data.WriteConsoleOutputCharRequest.Coord = dwWriteCoord;
+/*
+    /\* Allocate space in the Buffer *\/
+    CsrAllocateMessagePointer(CaptureBuffer,
+                              SizeBytes,
+                              (PVOID*)&WriteConsoleOutputCodeRequest->pCode.pCode);
+*/
+    /* Capture the buffer to write */
+    CsrCaptureMessageBuffer(CaptureBuffer,
+                            (PVOID)pCode,
+                            WriteConsoleOutputCodeRequest->BufferSize,
+                            (PVOID*)&WriteConsoleOutputCodeRequest->pCode.pCode);
 
-    while (nLength > 0)
+    /* Start writing */
+    WriteConsoleOutputCodeRequest->ConsoleHandle = hConsoleOutput;
+    WriteConsoleOutputCodeRequest->CodeType = CodeType;
+    WriteConsoleOutputCodeRequest->Coord = dwWriteCoord;
+
+    /**
+     ** TODO: HACK: Surely it has to go into CONSRV !!
+     **/
+    // while (nLength > 0)
     {
-        DWORD BytesWrite;
+        // DWORD BytesWrite;
 
-        Request->Data.WriteConsoleOutputCharRequest.ConsoleHandle = hConsoleOutput;
-        Request->Data.WriteConsoleOutputCharRequest.Unicode = bUnicode;
-        Request->Data.WriteConsoleOutputCharRequest.Length = (WORD)min(nLength, nChars);
-        BytesWrite = Request->Data.WriteConsoleOutputCharRequest.Length * CharSize;
+        WriteConsoleOutputCodeRequest->Length = nLength; // (WORD)min(nLength, nChars);
+        // BytesWrite = WriteConsoleOutputCodeRequest->Length * CodeSize;
 
-        memcpy(Request->Data.WriteConsoleOutputCharRequest.String, lpCharacter, BytesWrite);
+        // memcpy(WriteConsoleOutputCodeRequest->pCode.pCode, pCode, BytesWrite);
 
-        Status = CsrClientCallServer(Request,
-                                     NULL,
-                                     CsrRequest,
-                                     max(sizeof(CSR_API_MESSAGE),
-                                     CSR_API_MESSAGE_HEADER_SIZE(CSRSS_WRITE_CONSOLE_OUTPUT_CHAR) + BytesWrite));
-
-        if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request->Status))
+        Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                                     CaptureBuffer,
+                                     CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepWriteConsoleOutputString),
+                                     sizeof(CSRSS_WRITE_CONSOLE_OUTPUT_CODE));
+        if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = ApiMessage.Status))
         {
-            RtlFreeHeap(RtlGetProcessHeap(), 0, Request);
+            CsrFreeCaptureBuffer(CaptureBuffer);
             BaseSetLastNTError(Status);
             return FALSE;
         }
 
-        nLength -= Request->Data.WriteConsoleOutputCharRequest.NrCharactersWritten;
-        lpCharacter = (PVOID)((ULONG_PTR)lpCharacter + (ULONG_PTR)(Request->Data.WriteConsoleOutputCharRequest.NrCharactersWritten * CharSize));
-        Written += Request->Data.WriteConsoleOutputCharRequest.NrCharactersWritten;
+        // nLength -= WriteConsoleOutputCodeRequest->NrCharactersWritten;
+        // pCode = (PVOID)((ULONG_PTR)pCode + /*(ULONG_PTR)(*/WriteConsoleOutputCodeRequest->NrCharactersWritten * CodeSize/*)*/);
+        // Written += WriteConsoleOutputCodeRequest->NrCharactersWritten;
 
-        Request->Data.WriteConsoleOutputCharRequest.Coord = Request->Data.WriteConsoleOutputCharRequest.EndCoord;
+        WriteConsoleOutputCodeRequest->Coord = WriteConsoleOutputCodeRequest->EndCoord;
     }
 
-    if (lpNumberOfCharsWritten != NULL)
-    {
-        *lpNumberOfCharsWritten = Written;
-    }
+    if (lpNumberOfCodesWritten != NULL)
+        // *lpNumberOfCodesWritten = Written;
+        // *lpNumberOfCodesWritten = WriteConsoleOutputCodeRequest->NrCharactersWritten;
+        *lpNumberOfCodesWritten = WriteConsoleOutputCodeRequest->Length;
 
-    RtlFreeHeap(RtlGetProcessHeap(), 0, Request);
+    CsrFreeCaptureBuffer(CaptureBuffer);
 
     return TRUE;
 }
@@ -778,7 +813,7 @@ IntFillConsoleOutputCode(HANDLE hConsoleOutput,
 
     if (lpNumberOfCodesWritten)
         *lpNumberOfCodesWritten = FillOutputRequest->Length;
-        // *lpNumberOfCharsWritten = Request.Data.FillOutputRequest.NrCharactersWritten;
+        // *lpNumberOfCodesWritten = Request.Data.FillOutputRequest.NrCharactersWritten;
 
     return TRUE;
 }
@@ -1191,12 +1226,12 @@ WriteConsoleOutputCharacterW(HANDLE hConsoleOutput,
                              COORD dwWriteCoord,
                              LPDWORD lpNumberOfCharsWritten)
 {
-    return IntWriteConsoleOutputCharacter(hConsoleOutput,
-                                          (PVOID)lpCharacter,
-                                          nLength,
-                                          dwWriteCoord,
-                                          lpNumberOfCharsWritten,
-                                          TRUE);
+    return IntWriteConsoleOutputCode(hConsoleOutput,
+                                     CODE_UNICODE,
+                                     lpCharacter,
+                                     nLength,
+                                     dwWriteCoord,
+                                     lpNumberOfCharsWritten);
 }
 
 
@@ -1213,12 +1248,12 @@ WriteConsoleOutputCharacterA(HANDLE hConsoleOutput,
                              COORD dwWriteCoord,
                              LPDWORD lpNumberOfCharsWritten)
 {
-    return IntWriteConsoleOutputCharacter(hConsoleOutput,
-                                          (PVOID)lpCharacter,
-                                          nLength,
-                                          dwWriteCoord,
-                                          lpNumberOfCharsWritten,
-                                          FALSE);
+    return IntWriteConsoleOutputCode(hConsoleOutput,
+                                     CODE_ASCII,
+                                     lpCharacter,
+                                     nLength,
+                                     dwWriteCoord,
+                                     lpNumberOfCharsWritten);
 }
 
 
@@ -1235,54 +1270,12 @@ WriteConsoleOutputAttribute(HANDLE hConsoleOutput,
                             COORD dwWriteCoord,
                             LPDWORD lpNumberOfAttrsWritten)
 {
-    PCSR_API_MESSAGE Request;
-    ULONG CsrRequest;
-    NTSTATUS Status;
-    WORD Size;
-
-    Request = RtlAllocateHeap(RtlGetProcessHeap(),
-                              0,
-                              max(sizeof(CSR_API_MESSAGE),
-                              CSR_API_MESSAGE_HEADER_SIZE(CSRSS_WRITE_CONSOLE_OUTPUT_ATTRIB)
-                                + min(nLength, CSRSS_MAX_WRITE_CONSOLE_OUTPUT_ATTRIB / sizeof(WORD)) * sizeof(WORD)));
-    if (Request == NULL)
-    {
-        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-        return FALSE;
-    }
-
-    CsrRequest = CSR_CREATE_API_NUMBER(CSR_CONSOLE, WRITE_CONSOLE_OUTPUT_ATTRIB);
-    Request->Data.WriteConsoleOutputAttribRequest.Coord = dwWriteCoord;
-
-    if (lpNumberOfAttrsWritten)
-        *lpNumberOfAttrsWritten = nLength;
-    while (nLength)
-    {
-        Size = (WORD)min(nLength, CSRSS_MAX_WRITE_CONSOLE_OUTPUT_ATTRIB / sizeof(WORD));
-        Request->Data.WriteConsoleOutputAttribRequest.ConsoleHandle = hConsoleOutput;
-        Request->Data.WriteConsoleOutputAttribRequest.Length = Size;
-        memcpy(Request->Data.WriteConsoleOutputAttribRequest.Attribute, lpAttribute, Size * sizeof(WORD));
-
-        Status = CsrClientCallServer(Request,
-                                     NULL,
-                                     CsrRequest,
-                                     max(sizeof(CSR_API_MESSAGE),
-                                     CSR_API_MESSAGE_HEADER_SIZE(CSRSS_WRITE_CONSOLE_OUTPUT_ATTRIB) + Size * sizeof(WORD)));
-
-        if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request->Status))
-        {
-            RtlFreeHeap(RtlGetProcessHeap(), 0, Request);
-            BaseSetLastNTError (Status);
-            return FALSE;
-        }
-        nLength -= Size;
-        lpAttribute += Size;
-        Request->Data.WriteConsoleOutputAttribRequest.Coord = Request->Data.WriteConsoleOutputAttribRequest.EndCoord;
-    }
-
-    RtlFreeHeap(RtlGetProcessHeap(), 0, Request);
-
-    return TRUE;
+    return IntWriteConsoleOutputCode(hConsoleOutput,
+                                     CODE_ATTRIBUTE,
+                                     lpAttribute,
+                                     nLength,
+                                     dwWriteCoord,
+                                     lpNumberOfAttrsWritten);
 }
 
 
