@@ -227,4 +227,13 @@ LsarpEnumeratePrivileges(DWORD *EnumerationContext,
                          PLSAPR_PRIVILEGE_ENUM_BUFFER EnumerationBuffer,
                          DWORD PreferedMaximumLength);
 
+/* security.c */
+NTSTATUS
+LsapCreatePolicySd(PSECURITY_DESCRIPTOR *PolicySd,
+                   PULONG PolicySdSize);
+
+NTSTATUS
+LsapCreateAccountSd(PSECURITY_DESCRIPTOR *AccountSd,
+                    PULONG AccountSdSize);
+
 /* EOF */

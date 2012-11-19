@@ -513,6 +513,8 @@ NTSTATUS WINAPI LsarCreateAccount(
     PLSA_DB_OBJECT PolicyObject;
     PLSA_DB_OBJECT AccountObject = NULL;
     LPWSTR SidString = NULL;
+    PSECURITY_DESCRIPTOR AccountSd = NULL;
+    ULONG AccountSdSize;
     NTSTATUS Status = STATUS_SUCCESS;
 
     /* Validate the AccountSid */
@@ -539,6 +541,15 @@ NTSTATUS WINAPI LsarCreateAccount(
         goto done;
     }
 
+    /* Create a security descriptor for the account */
+    Status = LsapCreateAccountSd(&AccountSd,
+                                 &AccountSdSize);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("LsapCreateAccountSd returned 0x%08lx\n", Status);
+        return Status;
+    }
+
     /* Create the Account object */
     Status = LsapCreateDbObject(PolicyObject,
                                 L"Accounts",
@@ -557,10 +568,21 @@ NTSTATUS WINAPI LsarCreateAccount(
                                     L"Sid",
                                     (PVOID)AccountSid,
                                     GetLengthSid(AccountSid));
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    /* Set the SecDesc attribute */
+    Status = LsapSetObjectAttribute(AccountObject,
+                                    L"SecDesc",
+                                    AccountSd,
+                                    AccountSdSize);
 
 done:
     if (SidString != NULL)
         LocalFree(SidString);
+
+    if (AccountSd != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, AccountSd);
 
     if (!NT_SUCCESS(Status))
     {
