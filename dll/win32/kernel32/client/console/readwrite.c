@@ -428,68 +428,77 @@ IntWriteConsole(HANDLE hConsoleOutput,
                 LPVOID lpReserved,
                 BOOL bUnicode)
 {
-    PCSR_API_MESSAGE Request;
-    ULONG CsrRequest;
     NTSTATUS Status;
-    USHORT nChars;
-    ULONG SizeBytes, CharSize;
-    DWORD Written = 0;
+    CONSOLE_API_MESSAGE ApiMessage;
+    PCSRSS_WRITE_CONSOLE WriteConsoleRequest = &ApiMessage.Data.WriteConsoleRequest;
+    PCSR_CAPTURE_BUFFER CaptureBuffer;
+    // USHORT nChars;
+    ULONG /* SizeBytes, */ CharSize;
+    // DWORD Written = 0;
 
     CharSize = (bUnicode ? sizeof(WCHAR) : sizeof(CHAR));
-    Request = RtlAllocateHeap(RtlGetProcessHeap(),
-                              0,
-                              max(sizeof(CSR_API_MESSAGE),
-                              CSR_API_MESSAGE_HEADER_SIZE(CSRSS_WRITE_CONSOLE) + min(nNumberOfCharsToWrite,
-                              CSRSS_MAX_WRITE_CONSOLE / CharSize) * CharSize));
-    if (Request == NULL)
+    WriteConsoleRequest->BufferSize = nNumberOfCharsToWrite * CharSize;
+
+    /* Allocate a Capture Buffer */
+    CaptureBuffer = CsrAllocateCaptureBuffer(1, WriteConsoleRequest->BufferSize);
+    if (CaptureBuffer == NULL)
     {
+        DPRINT1("CsrAllocateCaptureBuffer failed!\n");
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return FALSE;
     }
 
-    CsrRequest = CSR_CREATE_API_NUMBER(CSR_CONSOLE, WRITE_CONSOLE);
+    /* Capture the buffer to write */
+    CsrCaptureMessageBuffer(CaptureBuffer,
+                            (PVOID)lpBuffer,
+                            WriteConsoleRequest->BufferSize,
+                            (PVOID*)&WriteConsoleRequest->Buffer);
 
-    while (nNumberOfCharsToWrite > 0)
+    /* Start writing */
+    WriteConsoleRequest->NrCharactersToWrite = nNumberOfCharsToWrite;
+    WriteConsoleRequest->ConsoleHandle = hConsoleOutput;
+    WriteConsoleRequest->Unicode = bUnicode;
+
+    // while (nNumberOfCharsToWrite > 0)
     {
-        Request->Data.WriteConsoleRequest.ConsoleHandle = hConsoleOutput;
-        Request->Data.WriteConsoleRequest.Unicode = bUnicode;
+        //// nChars = (USHORT)min(nNumberOfCharsToWrite, CSRSS_MAX_WRITE_CONSOLE / CharSize);
+        // nChars = nNumberOfCharsToWrite;
+        // WriteConsoleRequest->NrCharactersToWrite = nChars;
 
-        nChars = (USHORT)min(nNumberOfCharsToWrite, CSRSS_MAX_WRITE_CONSOLE / CharSize);
-        Request->Data.WriteConsoleRequest.NrCharactersToWrite = nChars;
+        // SizeBytes = nChars * CharSize;
 
-        SizeBytes = nChars * CharSize;
+        // memcpy(WriteConsoleRequest->Buffer, lpBuffer, SizeBytes);
 
-        memcpy(Request->Data.WriteConsoleRequest.Buffer, lpBuffer, SizeBytes);
-
-        Status = CsrClientCallServer(Request,
-                                     NULL,
-                                     CsrRequest,
-                                     max(sizeof(CSR_API_MESSAGE),
-                                     CSR_API_MESSAGE_HEADER_SIZE(CSRSS_WRITE_CONSOLE) + SizeBytes));
+        Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                                     CaptureBuffer,
+                                     CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepWriteConsole),
+                                     sizeof(CSRSS_WRITE_CONSOLE));
+/** FIXME: Added in 47359 for pausing
 
         if (Status == STATUS_PENDING)
         {
-            WaitForSingleObject(Request->Data.WriteConsoleRequest.UnpauseEvent, INFINITE);
-            CloseHandle(Request->Data.WriteConsoleRequest.UnpauseEvent);
+            WaitForSingleObject(WriteConsoleRequest->UnpauseEvent, INFINITE);
+            CloseHandle(WriteConsoleRequest->UnpauseEvent);
             continue;
         }
-        if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request->Status))
+**/
+        if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = ApiMessage.Status))
         {
-            RtlFreeHeap(RtlGetProcessHeap(), 0, Request);
+            CsrFreeCaptureBuffer(CaptureBuffer);
             BaseSetLastNTError(Status);
             return FALSE;
         }
 
-        nNumberOfCharsToWrite -= nChars;
-        lpBuffer = (PVOID)((ULONG_PTR)lpBuffer + (ULONG_PTR)SizeBytes);
-        Written += Request->Data.WriteConsoleRequest.NrCharactersWritten;
+        // nNumberOfCharsToWrite -= nChars;
+        // lpBuffer = (PVOID)((ULONG_PTR)lpBuffer + (ULONG_PTR)SizeBytes);
+        // Written += WriteConsoleRequest->NrCharactersWritten;
     }
 
     if (lpNumberOfCharsWritten != NULL)
-    {
-        *lpNumberOfCharsWritten = Written;
-    }
-    RtlFreeHeap(RtlGetProcessHeap(), 0, Request);
+        // *lpNumberOfCharsWritten = Written;
+        *lpNumberOfCharsWritten = WriteConsoleRequest->NrCharactersWritten;
+
+    CsrFreeCaptureBuffer(CaptureBuffer);
 
     return TRUE;
 }
