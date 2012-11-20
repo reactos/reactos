@@ -32,9 +32,9 @@ extern ULONG CsrTotalPerProcessDataLength;
 /* PRIVATE FUNCTIONS **********************************************************/
 
 /*++
- * @name CsrpSetToNormalPriority
+ * @name CsrSetToNormalPriority
  *
- * The CsrpSetToNormalPriority routine sets the current NT Process'
+ * The CsrSetToNormalPriority routine sets the current NT Process'
  * priority to the normal priority for CSR Processes.
  *
  * @param None.
@@ -47,7 +47,7 @@ extern ULONG CsrTotalPerProcessDataLength;
  *--*/
 VOID
 NTAPI
-CsrSetToNormalPriority(VOID) // CsrpSetToNormalPriority
+CsrSetToNormalPriority(VOID)
 {
     KPRIORITY BasePriority = (8 + 1) + 4;
 
@@ -59,9 +59,9 @@ CsrSetToNormalPriority(VOID) // CsrpSetToNormalPriority
 }
 
 /*++
- * @name CsrpSetToShutdownPriority
+ * @name CsrSetToShutdownPriority
  *
- * The CsrpSetToShutdownPriority routine sets the current NT Process'
+ * The CsrSetToShutdownPriority routine sets the current NT Process'
  * priority to the boosted priority for CSR Processes doing shutdown.
  * Additonally, it acquires the Shutdown Privilege required for shutdown.
  *
@@ -75,7 +75,7 @@ CsrSetToNormalPriority(VOID) // CsrpSetToNormalPriority
  *--*/
 VOID
 NTAPI
-CsrSetToShutdownPriority(VOID) // CsrpSetToShutdownPriority
+CsrSetToShutdownPriority(VOID)
 {
     KPRIORITY SetBasePriority = (8 + 1) + 6;
     BOOLEAN Old;
@@ -1288,7 +1288,6 @@ CsrShutdownProcesses(IN PLUID CallerLuid,
     }
 
     /* Set shudown Priority */
-    // CsrpSetToShutdownPriority();
     CsrSetToShutdownPriority();
 
     /* Start looping */
@@ -1365,7 +1364,6 @@ CsrShutdownProcesses(IN PLUID CallerLuid,
 
 Quickie:
     /* Return to normal priority */
-    // CsrpSetToNormalPriority();
     CsrSetToNormalPriority();
 
     return Status;

@@ -163,7 +163,7 @@ CsrNotifyWaitBlock(IN PCSR_WAIT_BLOCK WaitBlock,
                 RemoveEntryList(&WaitBlock->UserWaitList);
             }
 
-            /* Dereference teh thread */
+            /* Dereference the thread */
             CsrDereferenceThread(WaitBlock->WaitThread);
 
             /* Free the wait block */

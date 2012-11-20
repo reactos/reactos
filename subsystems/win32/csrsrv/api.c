@@ -24,24 +24,6 @@ extern ULONG CsrMaxApiRequestThreads;
 
 /* FUNCTIONS ******************************************************************/
 
-VOID
-CallHardError(IN PCSR_THREAD ThreadData,
-              IN PHARDERROR_MSG HardErrorMessage);
-
-#if 0
-static
-VOID
-NTAPI
-CsrHandleHardError(IN PCSR_THREAD ThreadData,
-                   IN OUT PHARDERROR_MSG Message)
-{
-    DPRINT1("CSR: received hard error %lx\n", Message->Status);
-
-    /* Call the hard error handler in win32csr */
-    CallHardError(ThreadData, Message);
-}
-#endif
-
 /*++
  * @name CsrCallServerFromServer
  * @implemented NT4
@@ -626,7 +608,7 @@ CsrApiRequestThread(IN PVOID Parameter)
                         if ((ServerDll) && (ServerDll->HardErrorCallback))
                         {
                             /* Call it */
-                            ServerDll->HardErrorCallback(NULL /* CsrThread */, HardErrorMsg);
+                            ServerDll->HardErrorCallback(NULL /* CsrThread == NULL */, HardErrorMsg);
 
                             /* If it's handled, get out of here */
                             if (HardErrorMsg->Response != ResponseNotHandled) break;
@@ -1141,7 +1123,7 @@ CsrConnectToUser(VOID)
                                  &hUser32);
         RtlFreeUnicodeString(&TempName);
 
-        /* If we got teh handle, get the Client Thread Startup Entrypoint */
+        /* If we got the handle, get the Client Thread Startup Entrypoint */
         if (NT_SUCCESS(Status))
         {
             RtlInitAnsiString(&StartupName,"ClientThreadSetup");

@@ -38,29 +38,6 @@ SYSTEM_BASIC_INFORMATION CsrNtSysInfo;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-VOID
-CallHardError(IN PCSR_THREAD ThreadData,
-              IN PHARDERROR_MSG HardErrorMessage)
-{
-    ULONG i;
-    PCSR_SERVER_DLL ServerDll;
-
-    DPRINT("CSR: %s called\n", __FUNCTION__);
-
-    /* Notify the Server DLLs */
-    for (i = 0; i < CSR_SERVER_DLL_MAX; i++)
-    {
-        /* Get the current Server DLL */
-        ServerDll = CsrLoadedServerDll[i];
-
-        /* Make sure it's valid and that it has callback */
-        if (ServerDll && ServerDll->HardErrorCallback)
-        {
-            ServerDll->HardErrorCallback(ThreadData, HardErrorMessage);
-        }
-    }
-}
-
 /* === INIT ROUTINES === */
 
 /*++
