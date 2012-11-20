@@ -331,8 +331,9 @@ CsrClientConnectToServer(IN PWSTR ObjectDirectory,
     PCSR_CLIENT_CONNECT ClientConnect = &ApiMessage.Data.CsrClientConnect;
     PCSR_CAPTURE_BUFFER CaptureBuffer;
 
-    /* Validate the Connection Info */
     DPRINT("CsrClientConnectToServer: %lx %p\n", ServerId, ConnectionInfo);
+
+    /* Validate the Connection Info */
     if (ConnectionInfo && (!ConnectionInfoSize || !*ConnectionInfoSize))
     {
         DPRINT1("Connection info given, but no length\n");
@@ -428,6 +429,14 @@ CsrClientConnectToServer(IN PWSTR ObjectDirectory,
                                      CaptureBuffer,
                                      CSR_CREATE_API_NUMBER(CSRSRV_SERVERDLL_INDEX, CsrpClientConnect),
                                      sizeof(CSR_CLIENT_CONNECT));
+
+        /* Copy the updated connection info data back into the user buffer */
+        RtlMoveMemory(ConnectionInfo,
+                      ClientConnect->ConnectionInfo,
+                      *ConnectionInfoSize);
+
+        /* Free the capture buffer */
+        CsrFreeCaptureBuffer(CaptureBuffer);
     }
     else
     {
@@ -438,6 +447,7 @@ CsrClientConnectToServer(IN PWSTR ObjectDirectory,
     /* Let the caller know if this was server to server */
     DPRINT("Status was: 0x%lx. Are we in server: 0x%x\n", Status, InsideCsrProcess);
     if (ServerToServerCall) *ServerToServerCall = InsideCsrProcess;
+
     return Status;
 }
 
