@@ -236,4 +236,8 @@ NTSTATUS
 LsapCreateAccountSd(PSECURITY_DESCRIPTOR *AccountSd,
                     PULONG AccountSdSize);
 
+NTSTATUS
+LsapCreateSecretSd(PSECURITY_DESCRIPTOR *SecretSd,
+                   PULONG SecretSdSize);
+
 /* EOF */

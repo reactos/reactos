@@ -767,6 +767,8 @@ NTSTATUS WINAPI LsarCreateSecret(
     PLSA_DB_OBJECT PolicyObject;
     PLSA_DB_OBJECT SecretObject = NULL;
     LARGE_INTEGER Time;
+    PSECURITY_DESCRIPTOR SecretSd = NULL;
+    ULONG SecretSdSize;
     NTSTATUS Status = STATUS_SUCCESS;
 
     /* Validate the PolicyHandle */
@@ -786,6 +788,15 @@ NTSTATUS WINAPI LsarCreateSecret(
     {
         ERR("NtQuerySystemTime failed (Status 0x%08lx)\n", Status);
         goto done;
+    }
+
+    /* Create a security descriptor for the secret */
+    Status = LsapCreateSecretSd(&SecretSd,
+                                &SecretSdSize);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("LsapCreateAccountSd returned 0x%08lx\n", Status);
+        return Status;
     }
 
     /* Create the Secret object */
@@ -817,8 +828,22 @@ NTSTATUS WINAPI LsarCreateSecret(
                                     L"OldTime",
                                     (PVOID)&Time,
                                     sizeof(LARGE_INTEGER));
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("LsapSetObjectAttribute (OldTime) failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    /* Set the SecDesc attribute */
+    Status = LsapSetObjectAttribute(SecretObject,
+                                    L"SecDesc",
+                                    SecretSd,
+                                    SecretSdSize);
 
 done:
+    if (SecretSd != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, SecretSd);
+
     if (!NT_SUCCESS(Status))
     {
         if (SecretObject != NULL)
