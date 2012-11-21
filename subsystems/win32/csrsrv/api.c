@@ -142,7 +142,7 @@ CsrApiHandleConnectionRequest(IN PCSR_API_MESSAGE ApiMessage)
     PCSR_CONNECTION_INFO ConnectInfo = &ApiMessage->ConnectionInfo;
     BOOLEAN AllowConnection = FALSE;
     REMOTE_PORT_VIEW RemotePortView;
-    HANDLE hPort;
+    HANDLE ServerPort;
 
     /* Acquire the Process Lock */
     CsrAcquireProcessLock();
@@ -205,7 +205,7 @@ CsrApiHandleConnectionRequest(IN PCSR_API_MESSAGE ApiMessage)
     ConnectInfo->ProcessId = NtCurrentTeb()->ClientId.UniqueProcess;
 
     /* Accept the Connection */
-    Status = NtAcceptConnectPort(&hPort,
+    Status = NtAcceptConnectPort(&ServerPort,
                                  AllowConnection ? UlongToPtr(CsrProcess->SequenceNumber) : 0,
                                  &ApiMessage->Header,
                                  AllowConnection,
@@ -227,13 +227,13 @@ CsrApiHandleConnectionRequest(IN PCSR_API_MESSAGE ApiMessage)
         }
 
         /* Set some Port Data in the Process */
-        CsrProcess->ClientPort = hPort;
+        CsrProcess->ClientPort = ServerPort;
         CsrProcess->ClientViewBase = (ULONG_PTR)RemotePortView.ViewBase;
         CsrProcess->ClientViewBounds = (ULONG_PTR)((ULONG_PTR)RemotePortView.ViewBase +
                                                    (ULONG_PTR)RemotePortView.ViewSize);
 
         /* Complete the connection */
-        Status = NtCompleteConnectPort(hPort);
+        Status = NtCompleteConnectPort(ServerPort);
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("CSRSS: NtCompleteConnectPort - failed.  Status == %X\n", Status);
@@ -247,107 +247,6 @@ CsrApiHandleConnectionRequest(IN PCSR_API_MESSAGE ApiMessage)
     }
 
     /* Return status to caller */
-    return Status;
-}
-
-// TODO: See CsrApiHandleConnectionRequest
-NTSTATUS WINAPI
-CsrpHandleConnectionRequest(PPORT_MESSAGE Request)
-{
-    NTSTATUS Status;
-    HANDLE ServerPort = NULL;//, ServerThread = NULL;
-    PCSR_PROCESS ProcessData = NULL;
-    REMOTE_PORT_VIEW RemotePortView;
-//    CLIENT_ID ClientId;
-    BOOLEAN AllowConnection = FALSE;
-    PCSR_CONNECTION_INFO ConnectInfo;
-    ServerPort = NULL;
-
-    DPRINT1("CSR: %s: Handling: %p\n", __FUNCTION__, Request);
-
-    ConnectInfo = (PCSR_CONNECTION_INFO)(Request + 1);
-
-    /* Save the process ID */
-    RtlZeroMemory(ConnectInfo, sizeof(CSR_CONNECTION_INFO));
-
-    CsrLockProcessByClientId(Request->ClientId.UniqueProcess, &ProcessData);
-    if (!ProcessData)
-    {
-        DPRINT1("CSRSRV: Unknown process: %lx. Will be rejecting connection\n",
-                Request->ClientId.UniqueProcess);
-    }
-
-    if ((ProcessData) && (ProcessData != CsrRootProcess))
-    {
-        /* Attach the Shared Section */
-        Status = CsrSrvAttachSharedSection(ProcessData, ConnectInfo);
-        if (NT_SUCCESS(Status))
-        {
-            DPRINT1("Connection ok\n");
-            AllowConnection = TRUE;
-        }
-        else
-        {
-            DPRINT1("Shared section map failed: %lx\n", Status);
-        }
-    }
-    else if (ProcessData == CsrRootProcess)
-    {
-        AllowConnection = TRUE;
-    }
-
-    /* Release the process */
-    if (ProcessData) CsrUnlockProcess(ProcessData);
-
-    /* Setup the Port View Structure */
-    RemotePortView.Length = sizeof(REMOTE_PORT_VIEW);
-    RemotePortView.ViewSize = 0;
-    RemotePortView.ViewBase = NULL;
-
-    /* Save the Process ID */
-    ConnectInfo->ProcessId = NtCurrentTeb()->ClientId.UniqueProcess;
-
-    Status = NtAcceptConnectPort(&ServerPort,
-                                 AllowConnection ? UlongToPtr(ProcessData->SequenceNumber) : 0,
-                                 Request,
-                                 AllowConnection,
-                                 NULL,
-                                 &RemotePortView);
-    if (!NT_SUCCESS(Status))
-    {
-         DPRINT1("CSRSS: NtAcceptConnectPort - failed.  Status == %X\n", Status);
-    }
-    else if (AllowConnection)
-    {
-        if (CsrDebug & 2)
-        {
-            DPRINT1("CSRSS: ClientId: %lx.%lx has ClientView: Base=%p, Size=%lx\n",
-                    Request->ClientId.UniqueProcess,
-                    Request->ClientId.UniqueThread,
-                    RemotePortView.ViewBase,
-                    RemotePortView.ViewSize);
-        }
-
-        /* Set some Port Data in the Process */
-        ProcessData->ClientPort = ServerPort;
-        ProcessData->ClientViewBase = (ULONG_PTR)RemotePortView.ViewBase;
-        ProcessData->ClientViewBounds = (ULONG_PTR)((ULONG_PTR)RemotePortView.ViewBase +
-                                                    (ULONG_PTR)RemotePortView.ViewSize);
-
-        /* Complete the connection */
-        Status = NtCompleteConnectPort(ServerPort);
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT1("CSRSS: NtCompleteConnectPort - failed.  Status == %X\n", Status);
-        }
-    }
-    else
-    {
-        DPRINT1("CSRSS: Rejecting Connection Request from ClientId: %lx.%lx\n",
-                Request->ClientId.UniqueProcess,
-                Request->ClientId.UniqueThread);
-    }
-
     return Status;
 }
 
