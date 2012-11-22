@@ -462,26 +462,54 @@ NTSTATUS WINAPI LsarSetInformationPolicy(
 
     switch (InformationClass)
     {
-        case PolicyAuditEventsInformation:
+        case PolicyAuditLogInformation:      /* 1 */
             Status = STATUS_NOT_IMPLEMENTED;
             break;
 
-        case PolicyPrimaryDomainInformation:
+        case PolicyAuditEventsInformation:   /* 2 */
+            Status = STATUS_NOT_IMPLEMENTED;
+            break;
+
+        case PolicyPrimaryDomainInformation: /* 3 */
             Status = LsarSetPrimaryDomain(PolicyHandle,
                                           (PLSAPR_POLICY_PRIMARY_DOM_INFO)PolicyInformation);
             break;
 
-        case PolicyAccountDomainInformation:
+        case PolicyAccountDomainInformation: /* 5 */
             Status = LsarSetAccountDomain(PolicyHandle,
                                           (PLSAPR_POLICY_ACCOUNT_DOM_INFO)PolicyInformation);
             break;
 
-        case PolicyDnsDomainInformation:
+        case PolicyLsaServerRoleInformation: /* 6 */
+            Status = STATUS_NOT_IMPLEMENTED;
+            break;
+
+        case PolicyReplicaSourceInformation: /* 7 */
+            Status = STATUS_NOT_IMPLEMENTED;
+            break;
+
+        case PolicyDefaultQuotaInformation:  /* 8 */
+            Status = STATUS_NOT_IMPLEMENTED;
+            break;
+
+        case PolicyModificationInformation:  /* 9 */
+            Status = STATUS_NOT_IMPLEMENTED;
+            break;
+
+        case PolicyAuditFullSetInformation:  /* 10 (0xA) */
+            Status = STATUS_NOT_IMPLEMENTED;
+            break;
+
+        case PolicyDnsDomainInformation:      /* 12 (0xC) */
             Status = LsarSetDnsDomain(PolicyHandle,
                                       (PLSAPR_POLICY_DNS_DOMAIN_INFO)PolicyInformation);
             break;
 
-        case PolicyLsaServerRoleInformation:
+        case PolicyDnsDomainInformationInt:   /* 13 (0xD) */
+            Status = STATUS_NOT_IMPLEMENTED;
+            break;
+
+        case PolicyLocalAccountDomainInformation: /* 14 (0xE) */
             Status = STATUS_NOT_IMPLEMENTED;
             break;
 
