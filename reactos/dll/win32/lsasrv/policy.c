@@ -39,109 +39,6 @@ LsaIOpenPolicyTrusted(OUT LSAPR_HANDLE *PolicyHandle)
 
 
 NTSTATUS
-LsarSetPrimaryDomain(PLSA_DB_OBJECT PolicyObject,
-                     PLSAPR_POLICY_PRIMARY_DOM_INFO Info)
-{
-    PUNICODE_STRING Buffer;
-    ULONG Length = 0;
-    NTSTATUS Status;
-    LPWSTR Ptr;
-
-    TRACE("(%p %p)\n", PolicyObject, Info);
-
-    Length = sizeof(UNICODE_STRING) + Info->Name.MaximumLength;
-    Buffer = RtlAllocateHeap(RtlGetProcessHeap(),
-                             0,
-                             Length);
-    if (Buffer == NULL)
-        return STATUS_INSUFFICIENT_RESOURCES;
-
-    Buffer->Length = Info->Name.Length;
-    Buffer->MaximumLength = Info->Name.MaximumLength;
-    Buffer->Buffer = (LPWSTR)sizeof(UNICODE_STRING);
-    Ptr = (LPWSTR)((ULONG_PTR)Buffer + sizeof(UNICODE_STRING));
-    memcpy(Ptr, Info->Name.Buffer, Info->Name.MaximumLength);
-
-    Status = LsapSetObjectAttribute(PolicyObject,
-                                    L"PolPrDmN",
-                                    Buffer,
-                                    Length);
-
-    RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
-
-    if (!NT_SUCCESS(Status))
-        return Status;
-
-    Length = 0;
-    if (Info->Sid != NULL)
-        Length = RtlLengthSid(Info->Sid);
-
-    Status = LsapSetObjectAttribute(PolicyObject,
-                                    L"PolPrDmS",
-                                    (LPBYTE)Info->Sid,
-                                    Length);
-
-    return Status;
-}
-
-
-NTSTATUS
-LsarSetAccountDomain(PLSA_DB_OBJECT PolicyObject,
-                     PLSAPR_POLICY_ACCOUNT_DOM_INFO Info)
-{
-    PUNICODE_STRING Buffer;
-    ULONG Length = 0;
-    NTSTATUS Status;
-    LPWSTR Ptr;
-
-    TRACE("(%p %p)\n", PolicyObject, Info);
-
-    Length = sizeof(UNICODE_STRING) + Info->DomainName.MaximumLength;
-    Buffer = RtlAllocateHeap(RtlGetProcessHeap(),
-                             0,
-                             Length);
-    if (Buffer == NULL)
-        return STATUS_INSUFFICIENT_RESOURCES;
-
-    Buffer->Length = Info->DomainName.Length;
-    Buffer->MaximumLength = Info->DomainName.MaximumLength;
-    Buffer->Buffer = (LPWSTR)sizeof(UNICODE_STRING);
-    Ptr = (LPWSTR)((ULONG_PTR)Buffer + sizeof(UNICODE_STRING));
-    memcpy(Ptr, Info->DomainName.Buffer, Info->DomainName.MaximumLength);
-
-    Status = LsapSetObjectAttribute(PolicyObject,
-                                    L"PolAcDmN",
-                                    Buffer,
-                                    Length);
-
-    RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
-
-    if (!NT_SUCCESS(Status))
-        return Status;
-
-    Length = 0;
-    if (Info->Sid != NULL)
-        Length = RtlLengthSid(Info->Sid);
-
-    Status = LsapSetObjectAttribute(PolicyObject,
-                                    L"PolAcDmS",
-                                    (LPBYTE)Info->Sid,
-                                    Length);
-
-    return Status;
-}
-
-
-NTSTATUS
-LsarSetDnsDomain(PLSA_DB_OBJECT PolicyObject,
-                 PLSAPR_POLICY_DNS_DOMAIN_INFO Info)
-{
-
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-
-NTSTATUS
 LsarQueryAuditLog(PLSA_DB_OBJECT PolicyObject,
                   PLSAPR_POLICY_INFORMATION *PolicyInformation)
 {
@@ -866,5 +763,109 @@ LsarQueryLocalAccountDomain(PLSA_DB_OBJECT PolicyObject,
     *PolicyInformation = NULL;
     return STATUS_NOT_IMPLEMENTED;
 }
+
+
+NTSTATUS
+LsarSetPrimaryDomain(PLSA_DB_OBJECT PolicyObject,
+                     PLSAPR_POLICY_PRIMARY_DOM_INFO Info)
+{
+    PUNICODE_STRING Buffer;
+    ULONG Length = 0;
+    NTSTATUS Status;
+    LPWSTR Ptr;
+
+    TRACE("(%p %p)\n", PolicyObject, Info);
+
+    Length = sizeof(UNICODE_STRING) + Info->Name.MaximumLength;
+    Buffer = RtlAllocateHeap(RtlGetProcessHeap(),
+                             0,
+                             Length);
+    if (Buffer == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    Buffer->Length = Info->Name.Length;
+    Buffer->MaximumLength = Info->Name.MaximumLength;
+    Buffer->Buffer = (LPWSTR)sizeof(UNICODE_STRING);
+    Ptr = (LPWSTR)((ULONG_PTR)Buffer + sizeof(UNICODE_STRING));
+    memcpy(Ptr, Info->Name.Buffer, Info->Name.MaximumLength);
+
+    Status = LsapSetObjectAttribute(PolicyObject,
+                                    L"PolPrDmN",
+                                    Buffer,
+                                    Length);
+
+    RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
+
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    Length = 0;
+    if (Info->Sid != NULL)
+        Length = RtlLengthSid(Info->Sid);
+
+    Status = LsapSetObjectAttribute(PolicyObject,
+                                    L"PolPrDmS",
+                                    (LPBYTE)Info->Sid,
+                                    Length);
+
+    return Status;
+}
+
+
+NTSTATUS
+LsarSetAccountDomain(PLSA_DB_OBJECT PolicyObject,
+                     PLSAPR_POLICY_ACCOUNT_DOM_INFO Info)
+{
+    PUNICODE_STRING Buffer;
+    ULONG Length = 0;
+    NTSTATUS Status;
+    LPWSTR Ptr;
+
+    TRACE("(%p %p)\n", PolicyObject, Info);
+
+    Length = sizeof(UNICODE_STRING) + Info->DomainName.MaximumLength;
+    Buffer = RtlAllocateHeap(RtlGetProcessHeap(),
+                             0,
+                             Length);
+    if (Buffer == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    Buffer->Length = Info->DomainName.Length;
+    Buffer->MaximumLength = Info->DomainName.MaximumLength;
+    Buffer->Buffer = (LPWSTR)sizeof(UNICODE_STRING);
+    Ptr = (LPWSTR)((ULONG_PTR)Buffer + sizeof(UNICODE_STRING));
+    memcpy(Ptr, Info->DomainName.Buffer, Info->DomainName.MaximumLength);
+
+    Status = LsapSetObjectAttribute(PolicyObject,
+                                    L"PolAcDmN",
+                                    Buffer,
+                                    Length);
+
+    RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
+
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    Length = 0;
+    if (Info->Sid != NULL)
+        Length = RtlLengthSid(Info->Sid);
+
+    Status = LsapSetObjectAttribute(PolicyObject,
+                                    L"PolAcDmS",
+                                    (LPBYTE)Info->Sid,
+                                    Length);
+
+    return Status;
+}
+
+
+NTSTATUS
+LsarSetDnsDomain(PLSA_DB_OBJECT PolicyObject,
+                 PLSAPR_POLICY_DNS_DOMAIN_INFO Info)
+{
+
+    return STATUS_NOT_IMPLEMENTED;
+}
+
 
 /* EOF */
