@@ -173,7 +173,7 @@ InitVideo()
         if (NT_SUCCESS(Status))
         {
             /* Check if VGA mode is requested. */
-            if (wcsstr(awcBuffer, L"/BASEVIDEO") != 0)
+            if (wcsstr(awcBuffer, L"BASEVIDEO") != 0)
             {
                 ERR("VGA mode requested.\n");
                 gbBaseVideo = TRUE;
