@@ -321,20 +321,26 @@ HANDLE
 WINAPI
 GetConsoleInputWaitHandle(VOID)
 {
-    CSR_API_MESSAGE Request;
-    NTSTATUS Status;
+/// HACK !!!!!!!!!!!!!
+    ASSERT(FALSE);
+    return NULL;
 
-    Status = CsrClientCallServer(&Request,
+#if 0
+    NTSTATUS Status;
+    CONSOLE_API_MESSAGE ApiMessage;
+
+    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                                  NULL,
-                                 CSR_CREATE_API_NUMBER(CSR_CONSOLE, GET_INPUT_WAIT_HANDLE),
-                                 sizeof(CSR_API_MESSAGE));
-    if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
+                                 CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, GET_INPUT_WAIT_HANDLE),
+                                 sizeof(CSRSS_GET_INPUT_WAIT_HANDLE));
+    if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = ApiMessage.Status))
     {
         BaseSetLastNTError(Status);
         return 0;
     }
 
-    return Request.Data.GetConsoleInputWaitHandle.InputWaitHandle;
+    return ApiMessage.Data.GetConsoleInputWaitHandle.InputWaitHandle;
+#endif
 }
 
 
