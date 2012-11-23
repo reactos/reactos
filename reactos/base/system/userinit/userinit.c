@@ -114,7 +114,7 @@ BOOL IsConsoleShell(VOID)
         goto cleanup;
     }
 
-    /* Check for CONSOLE in SystemStartOptions */
+    /* Check for CONSOLE switch in SystemStartOptions */
     CurrentOption = SystemStartOptions;
     while (CurrentOption)
     {
