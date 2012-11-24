@@ -202,6 +202,14 @@ LsarQueryLocalAccountDomain(PLSA_DB_OBJECT PolicyObject,
                             PLSAPR_POLICY_INFORMATION *PolicyInformation);
 
 NTSTATUS
+LsarSetAuditLog(PLSA_DB_OBJECT PolicyObject,
+                PPOLICY_AUDIT_LOG_INFO Info);
+
+NTSTATUS
+LsarSetAuditEvents(PLSA_DB_OBJECT PolicyObject,
+                   PLSAPR_POLICY_AUDIT_EVENTS_INFO Info);
+
+NTSTATUS
 LsarSetPrimaryDomain(PLSA_DB_OBJECT PolicyObject,
                      PLSAPR_POLICY_PRIMARY_DOM_INFO Info);
 
@@ -210,8 +218,36 @@ LsarSetAccountDomain(PLSA_DB_OBJECT PolicyObject,
                      PLSAPR_POLICY_ACCOUNT_DOM_INFO Info);
 
 NTSTATUS
+LsarSetServerRole(PLSA_DB_OBJECT PolicyObject,
+                  PPOLICY_LSA_SERVER_ROLE_INFO Info);
+
+NTSTATUS
+LsarSetReplicaSource(PLSA_DB_OBJECT PolicyObject,
+                     PPOLICY_LSA_REPLICA_SRCE_INFO Info);
+
+NTSTATUS
+LsarSetDefaultQuota(PLSA_DB_OBJECT PolicyObject,
+                    PPOLICY_DEFAULT_QUOTA_INFO Info);
+
+NTSTATUS
+LsarSetModification(PLSA_DB_OBJECT PolicyObject,
+                    PPOLICY_MODIFICATION_INFO Info);
+
+NTSTATUS
+LsarSetAuditFull(PLSA_DB_OBJECT PolicyObject,
+                 PPOLICY_AUDIT_FULL_QUERY_INFO Info);
+
+NTSTATUS
 LsarSetDnsDomain(PLSA_DB_OBJECT PolicyObject,
                  PLSAPR_POLICY_DNS_DOMAIN_INFO Info);
+
+NTSTATUS
+LsarSetDnsDomainInt(PLSA_DB_OBJECT PolicyObject,
+                    PLSAPR_POLICY_DNS_DOMAIN_INFO Info);
+
+NTSTATUS
+LsarSetLocalAccountDomain(PLSA_DB_OBJECT PolicyObject,
+                          PLSAPR_POLICY_ACCOUNT_DOM_INFO Info);
 
 /* privileges.c */
 NTSTATUS

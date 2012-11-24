@@ -423,6 +423,16 @@ LsarQueryServerRole(PLSA_DB_OBJECT PolicyObject,
 
 
 NTSTATUS
+LsarQueryReplicaSource(PLSA_DB_OBJECT PolicyObject,
+                       PLSAPR_POLICY_INFORMATION *PolicyInformation)
+{
+    FIXME("\n");
+    *PolicyInformation = NULL;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+
+NTSTATUS
 LsarQueryDefaultQuota(PLSA_DB_OBJECT PolicyObject,
                       PLSAPR_POLICY_INFORMATION *PolicyInformation)
 {
@@ -451,16 +461,6 @@ LsarQueryDefaultQuota(PLSA_DB_OBJECT PolicyObject,
     }
 
     return Status;
-}
-
-
-NTSTATUS
-LsarQueryReplicaSource(PLSA_DB_OBJECT PolicyObject,
-                       PLSAPR_POLICY_INFORMATION *PolicyInformation)
-{
-    FIXME("\n");
-    *PolicyInformation = NULL;
-    return STATUS_NOT_IMPLEMENTED;
 }
 
 
@@ -766,6 +766,28 @@ LsarQueryLocalAccountDomain(PLSA_DB_OBJECT PolicyObject,
 
 
 NTSTATUS
+LsarSetAuditLog(PLSA_DB_OBJECT PolicyObject,
+                PPOLICY_AUDIT_LOG_INFO Info)
+{
+    TRACE("(%p %p)\n", PolicyObject, Info);
+
+    return LsapSetObjectAttribute(PolicyObject,
+                                  L"PolAdtLg",
+                                  Info,
+                                  sizeof(POLICY_AUDIT_LOG_INFO));
+}
+
+
+NTSTATUS
+LsarSetAuditEvents(PLSA_DB_OBJECT PolicyObject,
+                   PLSAPR_POLICY_AUDIT_EVENTS_INFO Info)
+{
+    FIXME("\n");
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+
+NTSTATUS
 LsarSetPrimaryDomain(PLSA_DB_OBJECT PolicyObject,
                      PLSAPR_POLICY_PRIMARY_DOM_INFO Info)
 {
@@ -860,12 +882,78 @@ LsarSetAccountDomain(PLSA_DB_OBJECT PolicyObject,
 
 
 NTSTATUS
-LsarSetDnsDomain(PLSA_DB_OBJECT PolicyObject,
-                 PLSAPR_POLICY_DNS_DOMAIN_INFO Info)
+LsarSetServerRole(PLSA_DB_OBJECT PolicyObject,
+                  PPOLICY_LSA_SERVER_ROLE_INFO Info)
 {
-
+    FIXME("\n");
     return STATUS_NOT_IMPLEMENTED;
 }
 
+
+NTSTATUS
+LsarSetReplicaSource(PLSA_DB_OBJECT PolicyObject,
+                     PPOLICY_LSA_REPLICA_SRCE_INFO Info)
+{
+    FIXME("\n");
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+
+NTSTATUS
+LsarSetDefaultQuota(PLSA_DB_OBJECT PolicyObject,
+                    PPOLICY_DEFAULT_QUOTA_INFO Info)
+{
+    TRACE("(%p %p)\n", PolicyObject, Info);
+
+    return LsapSetObjectAttribute(PolicyObject,
+                                  L"DefQuota",
+                                  Info,
+                                  sizeof(POLICY_DEFAULT_QUOTA_INFO));
+}
+
+
+NTSTATUS
+LsarSetModification(PLSA_DB_OBJECT PolicyObject,
+                    PPOLICY_MODIFICATION_INFO Info)
+{
+    FIXME("\n");
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+
+NTSTATUS
+LsarSetAuditFull(PLSA_DB_OBJECT PolicyObject,
+                 PPOLICY_AUDIT_FULL_QUERY_INFO Info)
+{
+    FIXME("\n");
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+
+NTSTATUS
+LsarSetDnsDomain(PLSA_DB_OBJECT PolicyObject,
+                 PLSAPR_POLICY_DNS_DOMAIN_INFO Info)
+{
+    FIXME("\n");
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+
+NTSTATUS
+LsarSetDnsDomainInt(PLSA_DB_OBJECT PolicyObject,
+                    PLSAPR_POLICY_DNS_DOMAIN_INFO Info)
+{
+    FIXME("\n");
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+
+NTSTATUS
+LsarSetLocalAccountDomain(PLSA_DB_OBJECT PolicyObject,
+                          PLSAPR_POLICY_ACCOUNT_DOM_INFO Info)
+{
+    FIXME("\n");
+    return STATUS_NOT_IMPLEMENTED;
+}
 
 /* EOF */

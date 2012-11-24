@@ -278,7 +278,7 @@ NTSTATUS WINAPI LsarQueryInformationPolicy(
     POLICY_INFORMATION_CLASS InformationClass,
     PLSAPR_POLICY_INFORMATION *PolicyInformation)
 {
-    PLSA_DB_OBJECT DbObject;
+    PLSA_DB_OBJECT PolicyObject;
     ACCESS_MASK DesiredAccess = 0;
     NTSTATUS Status;
 
@@ -322,74 +322,74 @@ NTSTATUS WINAPI LsarQueryInformationPolicy(
     Status = LsapValidateDbObject(PolicyHandle,
                                   LsaDbPolicyObject,
                                   DesiredAccess,
-                                  &DbObject);
+                                  &PolicyObject);
     if (!NT_SUCCESS(Status))
         return Status;
 
     switch (InformationClass)
     {
         case PolicyAuditLogInformation:      /* 1 */
-            Status = LsarQueryAuditLog(PolicyHandle,
+            Status = LsarQueryAuditLog(PolicyObject,
                                        PolicyInformation);
             break;
 
         case PolicyAuditEventsInformation:   /* 2 */
-            Status = LsarQueryAuditEvents(PolicyHandle,
+            Status = LsarQueryAuditEvents(PolicyObject,
                                           PolicyInformation);
             break;
 
         case PolicyPrimaryDomainInformation: /* 3 */
-            Status = LsarQueryPrimaryDomain(PolicyHandle,
+            Status = LsarQueryPrimaryDomain(PolicyObject,
                                             PolicyInformation);
             break;
 
         case PolicyPdAccountInformation:     /* 4 */
-            Status = LsarQueryPdAccount(PolicyHandle,
+            Status = LsarQueryPdAccount(PolicyObject,
                                         PolicyInformation);
             break;
 
         case PolicyAccountDomainInformation: /* 5 */
-            Status = LsarQueryAccountDomain(PolicyHandle,
+            Status = LsarQueryAccountDomain(PolicyObject,
                                             PolicyInformation);
             break;
 
         case PolicyLsaServerRoleInformation: /* 6 */
-            Status = LsarQueryServerRole(PolicyHandle,
+            Status = LsarQueryServerRole(PolicyObject,
                                          PolicyInformation);
             break;
 
         case PolicyReplicaSourceInformation: /* 7 */
-            Status = LsarQueryReplicaSource(PolicyHandle,
+            Status = LsarQueryReplicaSource(PolicyObject,
                                             PolicyInformation);
             break;
 
         case PolicyDefaultQuotaInformation:  /* 8 */
-            Status = LsarQueryDefaultQuota(PolicyHandle,
+            Status = LsarQueryDefaultQuota(PolicyObject,
                                            PolicyInformation);
             break;
 
         case PolicyModificationInformation:  /* 9 */
-            Status = LsarQueryModification(PolicyHandle,
+            Status = LsarQueryModification(PolicyObject,
                                            PolicyInformation);
             break;
 
         case PolicyAuditFullQueryInformation: /* 11 (0xB) */
-            Status = LsarQueryAuditFull(PolicyHandle,
+            Status = LsarQueryAuditFull(PolicyObject,
                                         PolicyInformation);
             break;
 
         case PolicyDnsDomainInformation:      /* 12 (0xC) */
-            Status = LsarQueryDnsDomain(PolicyHandle,
+            Status = LsarQueryDnsDomain(PolicyObject,
                                         PolicyInformation);
             break;
 
         case PolicyDnsDomainInformationInt:   /* 13 (0xD) */
-            Status = LsarQueryDnsDomainInt(PolicyHandle,
+            Status = LsarQueryDnsDomainInt(PolicyObject,
                                            PolicyInformation);
             break;
 
         case PolicyLocalAccountDomainInformation: /* 14 (0xE) */
-            Status = LsarQueryLocalAccountDomain(PolicyHandle,
+            Status = LsarQueryLocalAccountDomain(PolicyObject,
                                                  PolicyInformation);
             break;
 
@@ -408,7 +408,7 @@ NTSTATUS WINAPI LsarSetInformationPolicy(
     POLICY_INFORMATION_CLASS InformationClass,
     PLSAPR_POLICY_INFORMATION PolicyInformation)
 {
-    PLSA_DB_OBJECT DbObject;
+    PLSA_DB_OBJECT PolicyObject;
     ACCESS_MASK DesiredAccess = 0;
     NTSTATUS Status;
 
@@ -456,61 +456,70 @@ NTSTATUS WINAPI LsarSetInformationPolicy(
     Status = LsapValidateDbObject(PolicyHandle,
                                   LsaDbPolicyObject,
                                   DesiredAccess,
-                                  &DbObject);
+                                  &PolicyObject);
     if (!NT_SUCCESS(Status))
         return Status;
 
     switch (InformationClass)
     {
         case PolicyAuditLogInformation:      /* 1 */
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = LsarSetAuditLog(PolicyObject,
+                                     (PPOLICY_AUDIT_LOG_INFO)PolicyInformation);
             break;
 
         case PolicyAuditEventsInformation:   /* 2 */
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = LsarSetAuditEvents(PolicyObject,
+                                        (PLSAPR_POLICY_AUDIT_EVENTS_INFO)PolicyInformation);
             break;
 
         case PolicyPrimaryDomainInformation: /* 3 */
-            Status = LsarSetPrimaryDomain(PolicyHandle,
+            Status = LsarSetPrimaryDomain(PolicyObject,
                                           (PLSAPR_POLICY_PRIMARY_DOM_INFO)PolicyInformation);
             break;
 
         case PolicyAccountDomainInformation: /* 5 */
-            Status = LsarSetAccountDomain(PolicyHandle,
+            Status = LsarSetAccountDomain(PolicyObject,
                                           (PLSAPR_POLICY_ACCOUNT_DOM_INFO)PolicyInformation);
             break;
 
         case PolicyLsaServerRoleInformation: /* 6 */
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = LsarSetServerRole(PolicyObject,
+                                       (PPOLICY_LSA_SERVER_ROLE_INFO)PolicyInformation);
             break;
 
         case PolicyReplicaSourceInformation: /* 7 */
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = LsarSetReplicaSource(PolicyObject,
+                                          (PPOLICY_LSA_REPLICA_SRCE_INFO)PolicyInformation);
             break;
 
         case PolicyDefaultQuotaInformation:  /* 8 */
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = LsarSetDefaultQuota(PolicyObject,
+                                         (PPOLICY_DEFAULT_QUOTA_INFO)PolicyInformation);
             break;
 
         case PolicyModificationInformation:  /* 9 */
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = LsarSetModification(PolicyObject,
+                                         (PPOLICY_MODIFICATION_INFO)PolicyInformation);
             break;
 
         case PolicyAuditFullSetInformation:  /* 10 (0xA) */
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = LsarSetAuditFull(PolicyObject,
+                                      (PPOLICY_AUDIT_FULL_QUERY_INFO)PolicyInformation);
             break;
 
         case PolicyDnsDomainInformation:      /* 12 (0xC) */
-            Status = LsarSetDnsDomain(PolicyHandle,
+            Status = LsarSetDnsDomain(PolicyObject,
                                       (PLSAPR_POLICY_DNS_DOMAIN_INFO)PolicyInformation);
             break;
 
         case PolicyDnsDomainInformationInt:   /* 13 (0xD) */
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = LsarSetDnsDomainInt(PolicyObject,
+                                         (PLSAPR_POLICY_DNS_DOMAIN_INFO)PolicyInformation);
             break;
 
         case PolicyLocalAccountDomainInformation: /* 14 (0xE) */
-            Status = STATUS_NOT_IMPLEMENTED;
+            Status = LsarSetLocalAccountDomain(PolicyObject,
+                                               (PLSAPR_POLICY_ACCOUNT_DOM_INFO)PolicyInformation);
             break;
 
         default:
