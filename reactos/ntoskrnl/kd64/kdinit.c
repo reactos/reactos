@@ -193,7 +193,7 @@ KdInitSystem(IN ULONG BootPhase,
                             /* Check if this is a comma, a space or a tab */
                             if ((*DebugOptionEnd == ',') ||
                                 (*DebugOptionEnd == ' ') ||
-                                (*DebugOptionEnd == '	'))
+                                (*DebugOptionEnd == '\t'))
                             {
                                 /*
                                  * We reached the end of the option or
