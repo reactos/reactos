@@ -105,7 +105,9 @@ static PETHREAD GspEnumThread;
 static FAST_MUTEX GspLock;
 
 extern LIST_ENTRY PsActiveProcessHead;
-KD_PORT_INFORMATION GdbPortInfo = { 2, 115200, 0 }; /* FIXME hardcoded for COM2, 115200 baud */
+
+/* FIXME hardcoded for COM2, 115200 baud */
+KD_PORT_INFORMATION GdbPortInfo = { 2, 115200, 0 };
 
 /* Number of Registers.  */
 #define NUMREGS 16
