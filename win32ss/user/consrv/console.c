@@ -156,7 +156,7 @@ CsrInitConsole(PCSRSS_CONSOLE Console, int ShowCmd)
      */
     if (!GuiMode)
     {
-        DPRINT1("WIN32CSR: Opening text-mode console\n");
+        DPRINT1("CONSRV: Opening text-mode console\n");
         Status = TuiInitConsole(Console);
         if (!NT_SUCCESS(Status))
         {
@@ -175,7 +175,7 @@ CsrInitConsole(PCSRSS_CONSOLE Console, int ShowCmd)
      */
     if (GuiMode)
     {
-        DPRINT1("WIN32CSR: Opening GUI-mode console\n");
+        DPRINT1("CONSRV: Opening GUI-mode console\n");
         Status = GuiInitConsole(Console, ShowCmd);
         if (!NT_SUCCESS(Status))
         {
