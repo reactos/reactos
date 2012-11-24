@@ -18,6 +18,7 @@ list(APPEND SOURCE
     lsasrv.c
     policy.c
     privileges.c
+    registry.c
     security.c
     lsasrv.rc
     ${CMAKE_CURRENT_BINARY_DIR}/lsasrv_stubs.c

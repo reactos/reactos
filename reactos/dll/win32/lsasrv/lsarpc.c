@@ -642,8 +642,203 @@ NTSTATUS WINAPI LsarEnumerateAccounts(
     PLSAPR_ACCOUNT_ENUM_BUFFER EnumerationBuffer,
     DWORD PreferedMaximumLength)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    LSAPR_ACCOUNT_ENUM_BUFFER EnumBuffer = {0, NULL};
+    PLSA_DB_OBJECT PolicyObject = NULL;
+    WCHAR AccountKeyName[64];
+    HANDLE AccountsKeyHandle = NULL;
+    HANDLE AccountKeyHandle;
+    HANDLE SidKeyHandle;
+    ULONG EnumIndex;
+    ULONG EnumCount;
+    ULONG RequiredLength;
+    ULONG DataLength;
+    ULONG i;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    TRACE("(%p %p %p %lu)\n", PolicyHandle, EnumerationContext,
+          EnumerationBuffer, PreferedMaximumLength);
+
+    if (EnumerationContext == NULL ||
+        EnumerationBuffer == NULL)
+        return STATUS_INVALID_PARAMETER;
+
+    EnumerationBuffer->EntriesRead = 0;
+    EnumerationBuffer->Information = NULL;
+
+    /* Validate the PolicyHandle */
+    Status = LsapValidateDbObject(PolicyHandle,
+                                  LsaDbPolicyObject,
+                                  POLICY_VIEW_LOCAL_INFORMATION,
+                                  &PolicyObject);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("LsapValidateDbObject returned 0x%08lx\n", Status);
+        return Status;
+    }
+
+    Status = LsapRegOpenKey(PolicyObject->KeyHandle,
+                            L"Accounts",
+                            KEY_READ,
+                            &AccountsKeyHandle);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    EnumIndex = *EnumerationContext;
+    EnumCount = 0;
+    RequiredLength = 0;
+
+    while (TRUE)
+    {
+        Status = LsapRegEnumerateSubKey(AccountsKeyHandle,
+                                        EnumIndex,
+                                        64 * sizeof(WCHAR),
+                                        AccountKeyName);
+        if (!NT_SUCCESS(Status))
+            break;
+
+        TRACE("EnumIndex: %lu\n", EnumIndex);
+        TRACE("Account key name: %S\n", AccountKeyName);
+
+        Status = LsapRegOpenKey(AccountsKeyHandle,
+                                AccountKeyName,
+                                KEY_READ,
+                                &AccountKeyHandle);
+        TRACE("LsapRegOpenKey returned %08lX\n", Status);
+        if (NT_SUCCESS(Status))
+        {
+            Status = LsapRegOpenKey(AccountKeyHandle,
+                                    L"Sid",
+                                    KEY_READ,
+                                    &SidKeyHandle);
+            TRACE("LsapRegOpenKey returned %08lX\n", Status);
+            if (NT_SUCCESS(Status))
+            {
+                DataLength = 0;
+                Status = LsapRegQueryValue(SidKeyHandle,
+                                           NULL,
+                                           NULL,
+                                           NULL,
+                                           &DataLength);
+                TRACE("LsapRegQueryValue returned %08lX\n", Status);
+                if (NT_SUCCESS(Status))
+                {
+                    TRACE("Data length: %lu\n", DataLength);
+
+                    if ((RequiredLength + DataLength + sizeof(LSAPR_ACCOUNT_INFORMATION)) > PreferedMaximumLength)
+                        break;
+
+                    RequiredLength += (DataLength + sizeof(LSAPR_ACCOUNT_INFORMATION));
+                    EnumCount++;
+                }
+
+                LsapRegCloseKey(SidKeyHandle);
+            }
+
+            LsapRegCloseKey(AccountKeyHandle);
+        }
+
+        EnumIndex++;
+    }
+
+    TRACE("EnumCount: %lu\n", EnumCount);
+    TRACE("RequiredLength: %lu\n", RequiredLength);
+
+    EnumBuffer.EntriesRead = EnumCount;
+    EnumBuffer.Information = midl_user_allocate(EnumCount * sizeof(LSAPR_ACCOUNT_INFORMATION));
+    if (EnumBuffer.Information == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
+
+    EnumIndex = *EnumerationContext;
+    for (i = 0; i < EnumCount; i++, EnumIndex++)
+    {
+        Status = LsapRegEnumerateSubKey(AccountsKeyHandle,
+                                        EnumIndex,
+                                        64 * sizeof(WCHAR),
+                                        AccountKeyName);
+        if (!NT_SUCCESS(Status))
+            break;
+
+        TRACE("EnumIndex: %lu\n", EnumIndex);
+        TRACE("Account key name: %S\n", AccountKeyName);
+
+        Status = LsapRegOpenKey(AccountsKeyHandle,
+                                AccountKeyName,
+                                KEY_READ,
+                                &AccountKeyHandle);
+        TRACE("LsapRegOpenKey returned %08lX\n", Status);
+        if (NT_SUCCESS(Status))
+        {
+            Status = LsapRegOpenKey(AccountKeyHandle,
+                                    L"Sid",
+                                    KEY_READ,
+                                    &SidKeyHandle);
+            TRACE("LsapRegOpenKey returned %08lX\n", Status);
+            if (NT_SUCCESS(Status))
+            {
+                DataLength = 0;
+                Status = LsapRegQueryValue(SidKeyHandle,
+                                           NULL,
+                                           NULL,
+                                           NULL,
+                                           &DataLength);
+                TRACE("LsapRegQueryValue returned %08lX\n", Status);
+                if (NT_SUCCESS(Status))
+                {
+                    EnumBuffer.Information[i].Sid = midl_user_allocate(DataLength);
+                    if (EnumBuffer.Information[i].Sid == NULL)
+                    {
+                        LsapRegCloseKey(AccountKeyHandle);
+                        Status = STATUS_INSUFFICIENT_RESOURCES;
+                        goto done;
+                    }
+
+                    Status = LsapRegQueryValue(SidKeyHandle,
+                                               NULL,
+                                               NULL,
+                                               EnumBuffer.Information[i].Sid,
+                                               &DataLength);
+                    TRACE("SampRegQueryValue returned %08lX\n", Status);
+                }
+
+                LsapRegCloseKey(SidKeyHandle);
+            }
+
+            LsapRegCloseKey(AccountKeyHandle);
+
+            if (!NT_SUCCESS(Status))
+                goto done;
+        }
+    }
+
+    if (NT_SUCCESS(Status))
+    {
+        *EnumerationContext += EnumCount;
+        EnumerationBuffer->EntriesRead = EnumBuffer.EntriesRead;
+        EnumerationBuffer->Information = EnumBuffer.Information;
+    }
+
+done:
+    if (!NT_SUCCESS(Status))
+    {
+        if (EnumBuffer.Information)
+        {
+            for (i = 0; i < EnumBuffer.EntriesRead; i++)
+            {
+                if (EnumBuffer.Information[i].Sid != NULL)
+                    midl_user_free(EnumBuffer.Information[i].Sid);
+            }
+
+            midl_user_free(EnumBuffer.Information);
+        }
+    }
+
+    if (AccountsKeyHandle != NULL)
+        LsapRegCloseKey(AccountsKeyHandle);
+
+    return Status;
 }
 
 

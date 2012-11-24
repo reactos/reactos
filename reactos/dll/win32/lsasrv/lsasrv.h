@@ -263,6 +263,64 @@ LsarpEnumeratePrivileges(DWORD *EnumerationContext,
                          PLSAPR_PRIVILEGE_ENUM_BUFFER EnumerationBuffer,
                          DWORD PreferedMaximumLength);
 
+/* registry.h */
+NTSTATUS
+LsapRegCloseKey(IN HANDLE KeyHandle);
+
+NTSTATUS
+LsapRegCreateKey(IN HANDLE ParentKeyHandle,
+                 IN LPCWSTR KeyName,
+                 IN ACCESS_MASK DesiredAccess,
+                 OUT HANDLE KeyHandle);
+
+NTSTATUS
+LsapRegDeleteKey(IN HANDLE ParentKeyHandle,
+                 IN LPCWSTR KeyName);
+
+NTSTATUS
+LsapRegEnumerateSubKey(IN HANDLE KeyHandle,
+                       IN ULONG Index,
+                       IN ULONG Length,
+                       OUT LPWSTR Buffer);
+
+NTSTATUS
+LsapRegOpenKey(IN HANDLE ParentKeyHandle,
+               IN LPCWSTR KeyName,
+               IN ACCESS_MASK DesiredAccess,
+               OUT HANDLE KeyHandle);
+
+NTSTATUS
+LsapRegQueryKeyInfo(IN HANDLE KeyHandle,
+                    OUT PULONG SubKeyCount,
+                    OUT PULONG ValueCount);
+
+NTSTATUS
+LsapRegDeleteValue(IN HANDLE KeyHandle,
+                   IN LPWSTR ValueName);
+
+NTSTATUS
+LsapRegEnumerateValue(IN HANDLE KeyHandle,
+                      IN ULONG Index,
+                      OUT LPWSTR Name,
+                      IN OUT PULONG NameLength,
+                      OUT PULONG Type OPTIONAL,
+                      OUT PVOID Data OPTIONAL,
+                      IN OUT PULONG DataLength OPTIONAL);
+
+NTSTATUS
+LsapRegQueryValue(IN HANDLE KeyHandle,
+                  IN LPWSTR ValueName,
+                  OUT PULONG Type OPTIONAL,
+                  OUT LPVOID Data OPTIONAL,
+                  IN OUT PULONG DataLength OPTIONAL);
+
+NTSTATUS
+LsapRegSetValue(IN HANDLE KeyHandle,
+                IN LPWSTR ValueName,
+                IN ULONG Type,
+                IN LPVOID Data,
+                IN ULONG DataLength);
+
 /* security.c */
 NTSTATUS
 LsapCreatePolicySd(PSECURITY_DESCRIPTOR *PolicySd,
