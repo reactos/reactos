@@ -327,28 +327,6 @@ StartScmNamedPipeThreadListener(VOID)
 }
 
 
-VOID FASTCALL
-AcquireLoadDriverPrivilege(VOID)
-{
-    HANDLE hToken;
-    TOKEN_PRIVILEGES tkp;
-
-    /* Get a token for this process */
-    if (OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken))
-    {
-        /* Get the LUID for the debug privilege */
-        LookupPrivilegeValue(NULL, SE_LOAD_DRIVER_NAME, &tkp.Privileges[0].Luid);
-
-        /* One privilege to set */
-        tkp.PrivilegeCount = 1;
-        tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-
-        /* Get the debug privilege for this process */
-        AdjustTokenPrivileges(hToken, FALSE, &tkp, 0, (PTOKEN_PRIVILEGES)NULL, 0);
-    }
-}
-
-
 BOOL WINAPI
 ShutdownHandlerRoutine(DWORD dwCtrlType)
 {
@@ -378,7 +356,7 @@ wWinMain(HINSTANCE hInstance,
 {
     HANDLE hScmStartEvent = NULL;
     SC_RPC_LOCK Lock = NULL;
-    BOOL bDeleteCriticalSection = FALSE;
+    BOOL bCanDeleteNamedPipeCriticalSection = FALSE;
     DWORD dwError;
 
     DPRINT("SERVICES: Service Control Manager\n");
@@ -399,6 +377,10 @@ wWinMain(HINSTANCE hInstance,
         DPRINT1("SERVICES: Failed to create shutdown event\n");
         goto done;
     }
+
+    /* Initialize our communication named pipe's critical section */
+    ScmInitNamedPipeCriticalSection();
+    bCanDeleteNamedPipeCriticalSection = TRUE;
 
 //    ScmInitThreadManager();
 
@@ -422,11 +404,19 @@ wWinMain(HINSTANCE hInstance,
     /* Update service database */
     ScmGetBootAndSystemDriverState();
 
-    /* Start the RPC server */
-    ScmStartRpcServer();
-
     /* Register service process with CSRSS */
     RegisterServicesProcess(GetCurrentProcessId());
+
+    /* Acquire the service start lock until autostart services have been started */
+    dwError = ScmAcquireServiceStartLock(TRUE, &Lock);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("SERVICES: failed to acquire the service start lock (Error %lu)\n", dwError);
+        goto done;
+    }
+
+    /* Start the RPC server */
+    ScmStartRpcServer();
 
     DPRINT("SERVICES: Initialized.\n");
 
@@ -438,20 +428,6 @@ wWinMain(HINSTANCE hInstance,
 
     /* Wait for the LSA server */
     ScmWaitForLsa();
-
-    /* Acquire privileges to load drivers */
-    AcquireLoadDriverPrivilege();
-
-    ScmInitNamedPipeCriticalSection();
-    bDeleteCriticalSection = TRUE;
-
-    /* Acquire the service start lock until autostart services have been started */
-    dwError = ScmAcquireServiceStartLock(TRUE, &Lock);
-    if (dwError != ERROR_SUCCESS)
-    {
-        DPRINT1("SERVICES: failed to acquire the service start lock (Error %lu)\n", dwError);
-        goto done;
-    }
 
     /* Start auto-start services */
     ScmAutoStartServices();
@@ -467,7 +443,8 @@ wWinMain(HINSTANCE hInstance,
     WaitForSingleObject(hScmShutdownEvent, INFINITE);
 
 done:
-    if (bDeleteCriticalSection == TRUE)
+    /* Delete our communication named pipe's critical section */
+    if (bCanDeleteNamedPipeCriticalSection == TRUE)
         ScmDeleteNamedPipeCriticalSection();
 
     /* Close the shutdown event */
