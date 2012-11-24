@@ -20,8 +20,8 @@
 /* NOTE: The original code supports Modem Control. We currently do not */
 
 /* FIXMEs:
-	- Make this serial-port specific (NS16550 vs other serial port types)
-	- Get x64 KDCOM, KDBG, FREELDR, and other current code to use this
+    - Make this serial-port specific (NS16550 vs other serial port types)
+    - Get x64 KDCOM, KDBG, FREELDR, and other current code to use this
 */
 
 /* INCLUDES *******************************************************************/
@@ -41,19 +41,19 @@ UCHAR RingIndicator;
 VOID
 NTAPI
 CpInitialize(IN PCPPORT Port,
-			 IN PUCHAR Address,
-			 IN ULONG Rate)
+             IN PUCHAR  Address,
+             IN ULONG   Rate)
 {
-	/* Reset port data */
+    /* Reset port data */
     Port->Address = Address;
     Port->Baud = 0;
 
-	/* Set the baud rate */
+    /* Set the baud rate */
     CpSetBaud(Port, Rate);
 
     /* Enable on DTR and RTS  */
     WRITE_PORT_UCHAR(Address + MODEM_CONTROL_REGISTER,
-					 SERIAL_MCR_DTR | SERIAL_MCR_RTS);
+                     SERIAL_MCR_DTR | SERIAL_MCR_RTS);
 
     /* Disable interrupts */
     WRITE_PORT_UCHAR(Address + INTERRUPT_ENABLE_REGISTER, 0);
@@ -61,10 +61,10 @@ CpInitialize(IN PCPPORT Port,
 
 VOID
 NTAPI
-CpEnableFifo(IN PUCHAR Address,
-    		 IN BOOLEAN Enable)
+CpEnableFifo(IN PUCHAR  Address,
+             IN BOOLEAN Enable)
 {
-	/* Set FIFO */
+    /* Set FIFO */
     WRITE_PORT_UCHAR(Address + FIFO_CONTROL_REGISTER, Enable ? SERIAL_FCR_ENABLE : 0);
 }
 
@@ -72,58 +72,62 @@ BOOLEAN
 NTAPI
 CpDoesPortExist(IN PUCHAR Address)
 {
-    UCHAR Old;
-	/*
-	 * See "Building Hardware and Firmware to Complement Microsoft Windows Headless Operation"
-	 * Out-of-Band Management Port Device Requirements:
-	 * The device must act as a 16550 or 16450 UART.
-	 * Windows Server 2003 will test this device using the following process.
-	 *	1. Save off the current modem status register.
-	 *	2. Place the UART into diagnostic mode (The UART is placed into loopback mode
-	 *	   by writing SERIAL_MCR_LOOP to the modem control register).
-	 *	3. The modem status register is read and the high bits are checked. This means
-	 *	   SERIAL_MSR_CTS, SERIAL_MSR_DSR, SERIAL_MSR_RI and SERIAL_MSR_DCD should
-	 *      all be clear.
-	 *	4. Place the UART in diagnostic mode and turn on OUTPUT (Loopback Mode and
-	 *	    OUTPUT are both turned on by writing (SERIAL_MCR_LOOP | SERIAL_MCR_OUT1)
-	 *		to the modem control register).
-	 *	5. The modem status register is read and the ring indicator is checked.
-	 *	   This means SERIAL_MSR_RI should be set.
-	 *	6. Restore original modem status register.
-	 */
-    Old = READ_PORT_UCHAR(Address + MODEM_CONTROL_REGISTER);
+    /*
+     * See "Building Hardware and Firmware to Complement Microsoft Windows Headless Operation"
+     * Out-of-Band Management Port Device Requirements:
+     * The device must act as a 16550 or 16450 UART.
+     * Windows Server 2003 will test this device using the following process:
+     *     1. Save off the current modem status register.
+     *     2. Place the UART into diagnostic mode (The UART is placed into loopback mode
+     *        by writing SERIAL_MCR_LOOP to the modem control register).
+     *     3. The modem status register is read and the high bits are checked. This means
+     *        SERIAL_MSR_CTS, SERIAL_MSR_DSR, SERIAL_MSR_RI and SERIAL_MSR_DCD should
+     *        all be clear.
+     *     4. Place the UART in diagnostic mode and turn on OUTPUT (Loopback Mode and
+     *         OUTPUT are both turned on by writing (SERIAL_MCR_LOOP | SERIAL_MCR_OUT1)
+     *         to the modem control register).
+     *     5. The modem status register is read and the ring indicator is checked.
+     *        This means SERIAL_MSR_RI should be set.
+     *     6. Restore original modem status register.
+     */
+
+    UCHAR Old = READ_PORT_UCHAR(Address + MODEM_CONTROL_REGISTER);
+
     WRITE_PORT_UCHAR(Address + MODEM_CONTROL_REGISTER, SERIAL_MCR_LOOP);
     WRITE_PORT_UCHAR(Address + MODEM_CONTROL_REGISTER, SERIAL_MCR_LOOP);
+
     if (!(READ_PORT_UCHAR(Address + MODEM_STATUS_REGISTER) &
-		 (SERIAL_MSR_CTS | SERIAL_MSR_DSR | SERIAL_MSR_RI | SERIAL_MSR_DCD)))
-	{
-	    WRITE_PORT_UCHAR(Address + MODEM_CONTROL_REGISTER,
-						 (SERIAL_MCR_OUT1 | SERIAL_MCR_LOOP));
-	    if (READ_PORT_UCHAR(Address + MODEM_STATUS_REGISTER) & SERIAL_MSR_RI)
-		{
-			WRITE_PORT_UCHAR(Address + MODEM_CONTROL_REGISTER, Old);
-			return TRUE;
-	    }
-	}
+         (SERIAL_MSR_CTS | SERIAL_MSR_DSR | SERIAL_MSR_RI | SERIAL_MSR_DCD)))
+    {
+        WRITE_PORT_UCHAR(Address + MODEM_CONTROL_REGISTER,
+                         (SERIAL_MCR_OUT1 | SERIAL_MCR_LOOP));
+        if (READ_PORT_UCHAR(Address + MODEM_STATUS_REGISTER) & SERIAL_MSR_RI)
+        {
+            WRITE_PORT_UCHAR(Address + MODEM_CONTROL_REGISTER, Old);
+            return TRUE;
+        }
+    }
+
     WRITE_PORT_UCHAR(Address + MODEM_CONTROL_REGISTER, Old);
+
     return FALSE;
 }
 
 UCHAR
 NTAPI
 CpReadLsr(IN PCPPORT Port,
-    	  IN UCHAR ExpectedValue)
+          IN UCHAR   ExpectedValue)
 {
-	UCHAR Lsr, Msr;
+    UCHAR Lsr, Msr;
 
-	/* Read the LSR and check if the expected value is present */
+    /* Read the LSR and check if the expected value is present */
     Lsr = READ_PORT_UCHAR(Port->Address + LINE_STATUS_REGISTER);
     if (!(Lsr & ExpectedValue))
-	{
-		/* Check the MSR for ring indicator toggle */
+    {
+        /* Check the MSR for ring indicator toggle */
         Msr = READ_PORT_UCHAR(Port->Address + MODEM_STATUS_REGISTER);
 
-		/* If the indicator reaches 3, we've seen this on/off twice */
+        /* If the indicator reaches 3, we've seen this on/off twice */
         RingIndicator |= (Msr & SERIAL_MSR_RI) ? 1 : 2;
         if (RingIndicator == 3) Port->Flags |= CPPORT_FLAG_MODEM_CONTROL;
     }
@@ -134,13 +138,13 @@ CpReadLsr(IN PCPPORT Port,
 VOID
 NTAPI
 CpSetBaud(IN PCPPORT Port,
-    	  IN ULONG Rate)
+          IN ULONG   Rate)
 {
-	UCHAR Lcr;
-	USHORT Mode;
+    UCHAR Lcr;
+    USHORT Mode;
 
     /* Add DLAB */
-	Lcr = READ_PORT_UCHAR(Port->Address + LINE_CONTROL_REGISTER);
+    Lcr = READ_PORT_UCHAR(Port->Address + LINE_CONTROL_REGISTER);
     WRITE_PORT_UCHAR(Port->Address + LINE_CONTROL_REGISTER, Lcr | SERIAL_LCR_DLAB);
 
     /* Set baud rate */
@@ -150,59 +154,59 @@ CpSetBaud(IN PCPPORT Port,
 
     /* Reset DLAB and set 8 data bits, 1 stop bit, no parity, no break */
     WRITE_PORT_UCHAR(Port->Address + LINE_CONTROL_REGISTER,
-					 SERIAL_8_DATA | SERIAL_1_STOP | SERIAL_NONE_PARITY);
+                     SERIAL_8_DATA | SERIAL_1_STOP | SERIAL_NONE_PARITY);
 
-	/* Save baud rate in port */
+    /* Save baud rate in port */
     Port->Baud = Rate;
 }
 
 USHORT
 NTAPI
 CpGetByte(IN PCPPORT Port,
-	      IN PUCHAR Byte,
-		  IN BOOLEAN Wait,
-		  IN BOOLEAN Poll)
+          IN PUCHAR  Byte,
+          IN BOOLEAN Wait,
+          IN BOOLEAN Poll)
 {
-	UCHAR Lsr;
-	ULONG i;
+    UCHAR Lsr;
+    ULONG i;
 
-	/* Handle early read-before-init */
-	if (!Port->Address) return CP_GET_NODATA;
+    /* Handle early read-before-init */
+    if (!Port->Address) return CP_GET_NODATA;
 
-	/* If "wait" mode enabled, spin many times, otherwise attempt just once */
-	i = Wait ? 204800 : 1;
+    /* If "wait" mode enabled, spin many times, otherwise attempt just once */
+    i = Wait ? 204800 : 1;
     while (i--)
-	{
-		/* Read LSR for data ready */
+    {
+        /* Read LSR for data ready */
         Lsr = CpReadLsr(Port, SERIAL_LSR_DR);
         if ((Lsr & SERIAL_LSR_DR) == SERIAL_LSR_DR)
-		{
-			/* If an error happened, clear the byte and fail */
+        {
+            /* If an error happened, clear the byte and fail */
             if (Lsr & (SERIAL_LSR_FE | SERIAL_LSR_PE))
-			{
+            {
                 *Byte = 0;
                 return CP_GET_ERROR;
             }
 
-			/* If only polling was requested by caller, return now */
+            /* If only polling was requested by caller, return now */
             if (Poll) return CP_GET_SUCCESS;
 
-			/* Otherwise read the byte and return it */
+            /* Otherwise read the byte and return it */
             *Byte = READ_PORT_UCHAR(Port->Address + RECEIVE_BUFFER_REGISTER);
 
-			/* Handle CD if port is in modem control mode */
+            /* Handle CD if port is in modem control mode */
             if (Port->Flags & CPPORT_FLAG_MODEM_CONTROL)
-			{
-				/* Not implemented yet */
-				DPRINT1("CP: CPPORT_FLAG_MODEM_CONTROL unexpected\n");
+            {
+                /* Not implemented yet */
+                DPRINT1("CP: CPPORT_FLAG_MODEM_CONTROL unexpected\n");
             }
 
-			/* Byte was read */
+            /* Byte was read */
             return CP_GET_SUCCESS;
         }
     }
 
-	/* Reset LSR, no data was found */
+    /* Reset LSR, no data was found */
     CpReadLsr(Port, 0);
     return CP_GET_NODATA;
 }
@@ -210,18 +214,20 @@ CpGetByte(IN PCPPORT Port,
 VOID
 NTAPI
 CpPutByte(IN PCPPORT Port,
-    	  IN UCHAR Byte)
+          IN UCHAR   Byte)
 {
-	/* Check if port is in modem control to handle CD */
+    /* Check if port is in modem control to handle CD */
     while (Port->Flags & CPPORT_FLAG_MODEM_CONTROL)
-	{
-		/* Not implemented yet */
-		DPRINT1("CP: CPPORT_FLAG_MODEM_CONTROL unexpected\n");
+    {
+        /* Not implemented yet */
+        DPRINT1("CP: CPPORT_FLAG_MODEM_CONTROL unexpected\n");
     }
 
-	/* Wait for LSR to say we can go ahead */
+    /* Wait for LSR to say we can go ahead */
     while (!(CpReadLsr(Port, SERIAL_LSR_THRE) & SERIAL_LSR_THRE));
 
     /* Send the byte */
     WRITE_PORT_UCHAR(Port->Address + RECEIVE_BUFFER_REGISTER, Byte);
 }
+
+/* EOF */

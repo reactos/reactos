@@ -11,8 +11,8 @@
 #pragma once
 
 /* Note: These definitions are the internal definitions used by Microsoft serial
-   driver (see src/kernel/serial/serial.h in WDK source code). Linux uses its own, as
-   do most other OS.
+   driver (see src/kernel/serial/serial.h in WDK source code). Linux uses its own,
+   as do most other OS.
 */
 
 #if !defined(SERIAL_REGISTER_STRIDE)

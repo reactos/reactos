@@ -14,61 +14,63 @@
 #define CP_GET_NODATA   1
 #define CP_GET_ERROR    2
 
-#define CPPORT_FLAG_MODEM_CONTROL	0x02
+#define CPPORT_FLAG_MODEM_CONTROL   0x02
 typedef struct _CPPORT
 {
-	PUCHAR Address;
-	ULONG Baud;
-	USHORT Flags;
+    PUCHAR Address;
+    ULONG  Baud;
+    USHORT Flags;
 } CPPORT, *PCPPORT;
-	
+
 VOID
 NTAPI
 CpInitialize(
-	IN PCPPORT Port,
-	IN PUCHAR Address,
-	IN ULONG Rate
-	);
+    IN PCPPORT Port,
+    IN PUCHAR  Address,
+    IN ULONG   Rate
+);
 
 VOID
 NTAPI
 CpEnableFifo(
-	IN PUCHAR Address,
-	IN BOOLEAN Enable
-	);
+    IN PUCHAR  Address,
+    IN BOOLEAN Enable
+);
 
 BOOLEAN
 NTAPI
 CpDoesPortExist(
-	IN PUCHAR Address
-	);
-	
+    IN PUCHAR Address
+);
+
 UCHAR
 NTAPI
 CpReadLsr(
-	IN PCPPORT Port,
-	IN UCHAR ExpectedValue
-	);
+    IN PCPPORT Port,
+    IN UCHAR   ExpectedValue
+);
 
 VOID
 NTAPI
 CpSetBaud(
-	IN PCPPORT Port,
-	IN ULONG Rate
-	);
+    IN PCPPORT Port,
+    IN ULONG Rate
+);
 
 USHORT
 NTAPI
 CpGetByte(
-	IN PCPPORT Port,
-	IN PUCHAR Byte,
-	IN BOOLEAN Wait,
-	IN BOOLEAN Poll
-	);
-	
+    IN PCPPORT Port,
+    IN PUCHAR  Byte,
+    IN BOOLEAN Wait,
+    IN BOOLEAN Poll
+);
+
 VOID
 NTAPI
 CpPutByte(
-	IN PCPPORT Port,
-	IN UCHAR Byte
-	);
+    IN PCPPORT Port,
+    IN UCHAR   Byte
+);
+
+/* EOF */
