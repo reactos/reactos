@@ -373,6 +373,7 @@ void set_process_default_desktop( PPROCESSINFO process, struct desktop *desktop,
 /* connect a process to its window station */
 void connect_process_winstation( PPROCESSINFO process )
 {
+#ifdef __WINE_ORIGINAL_CODE
     struct winstation *winstation = NULL;
     struct desktop *desktop = NULL;
     obj_handle_t handle;
@@ -380,21 +381,6 @@ void connect_process_winstation( PPROCESSINFO process )
     PEPROCESS eparent = NULL;
     HANDLE parent_handle;
     NTSTATUS status;
-
-#if 0
-    PRTL_USER_PROCESS_PARAMETERS ProcessParams = (process->peProcess->Peb ? process->peProcess->Peb->ProcessParameters : NULL);
-    PUNICODE_STRING DesktopPath;
-
-      DesktopPath = (ProcessParams ? ((ProcessParams->DesktopInfo.Length > 0) ? &ProcessParams->DesktopInfo : NULL) : NULL);
-      if (DesktopPath)
-      {
-          DPRINT1("DesktopPath %wZ\n", DesktopPath);
-      }
-      /*Status = IntParseDesktopPath(Process,
-                                   DesktopPath,
-                                   &hWinSta,
-                                   &hDesk);*/
-#endif
 
     /* get parent process */
     parent_handle = PsGetProcessInheritedFromUniqueProcessId(process->peProcess);
@@ -436,28 +422,6 @@ void connect_process_winstation( PPROCESSINFO process )
                                    process, 0, 0, DUP_HANDLE_SAME_ACCESS );
     }
 
-#if 1
-    else
-    {
-        // Always assign a "default" desktop if there is no parent desktop
-        WCHAR deskbuf[8];
-        struct unicode_str full_str, desktop_name;
-        WCHAR *full_name;
-
-        desktop_name.str = deskbuf;
-        desktop_name.len = sizeof(deskbuf) - sizeof(WCHAR);
-        wcscpy(deskbuf, L"Default");
-
-        if ((full_name = build_desktop_name( &desktop_name, winstation, &full_str )))
-        {
-            handle = open_object( winstation_namespace, &full_str, &desktop_ops, GENERIC_ALL,
-                                         OBJ_CASE_INSENSITIVE );
-            ExFreePool( full_name );
-            DPRINT("handle %x\n", handle);
-        }
-    }
-#endif
-
     if (handle) set_process_default_desktop( process, desktop, handle );
 
 done:
@@ -465,6 +429,53 @@ done:
     if (winstation) release_object( winstation );
     if (eparent) ObDereferenceObject(eparent);
     clear_error();
+
+#else
+
+    obj_handle_t handle;
+    WCHAR strbuf[64];
+    struct unicode_str objname;
+    struct desktop *desktop = NULL;
+    PRTL_USER_PROCESS_PARAMETERS ProcessParams = (process->peProcess->Peb ? process->peProcess->Peb->ProcessParameters : NULL);
+    PUNICODE_STRING DesktopPath;
+
+    // TODO: Obtain window station and desktop from the process parameters block
+    DesktopPath = (ProcessParams ? ((ProcessParams->DesktopInfo.Length > 0) ? &ProcessParams->DesktopInfo : NULL) : NULL);
+    if (DesktopPath)
+    {
+        DPRINT1("DesktopPath %wZ\n", DesktopPath);
+    }
+    /*Status = IntParseDesktopPath(Process,
+                                   DesktopPath,
+                                   &hWinSta,
+                                   &hDesk);*/
+
+    objname.str = strbuf;
+    wcscpy(strbuf, L"WinSta0");
+    objname.len = wcslen(strbuf) * sizeof(WCHAR);
+
+    // Open default winstation
+    if (winstation_namespace)
+        process->winstation = open_object( winstation_namespace, &objname, &winstation_ops, GENERIC_ALL, OBJ_CASE_INSENSITIVE );
+
+    if (process->winstation)
+    {
+        // Open default desktop
+        wcscat(strbuf, L"\\Default");
+        objname.len = wcslen(strbuf) * sizeof(WCHAR);
+
+        // Get handle
+        handle = open_object( winstation_namespace, &objname, &desktop_ops, GENERIC_ALL, OBJ_CASE_INSENSITIVE );
+
+        // Get object
+        desktop = get_desktop_obj( process, handle, 0 );
+
+        // Set as default for all threads
+        set_process_default_desktop( process, desktop, handle );
+    }
+
+    clear_error();
+#endif
 }
 
 static void close_desktop_timeout( void *private )
