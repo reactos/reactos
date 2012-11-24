@@ -82,11 +82,11 @@ CsrInitConsole(PCSRSS_CONSOLE Console, int ShowCmd)
     hInst = GetModuleHandleW(L"win32csr");
     if (LoadStringW(hInst,IDS_COMMAND_PROMPT,Title,sizeof(Title)/sizeof(Title[0])))
     {
-	RtlCreateUnicodeString(&Console->Title, Title);
+        RtlCreateUnicodeString(&Console->Title, Title);
     }
     else
     {
-	RtlCreateUnicodeString(&Console->Title, L"Command Prompt");
+        RtlCreateUnicodeString(&Console->Title, L"Command Prompt");
     }
 
     Console->ReferenceCount = 0;
@@ -131,31 +131,47 @@ CsrInitConsole(PCSRSS_CONSOLE Console, int ShowCmd)
     /* make console active, and insert into console list */
     Console->ActiveBuffer = (PCSRSS_SCREEN_BUFFER) NewBuffer;
 
-    if (! GuiMode)
+    /*
+     * If we are not in GUI-mode, start the text-mode console. If we fail,
+     * try to start the GUI-mode console (win32k will automatically switch
+     * to graphical mode, therefore no additional code is needed).
+     */
+    if (!GuiMode)
     {
+        DPRINT1("WIN32CSR: Opening text-mode console\n");
         Status = TuiInitConsole(Console);
-        if (! NT_SUCCESS(Status))
+        if (!NT_SUCCESS(Status))
         {
-            DPRINT1("Failed to open text-mode console, switching to gui-mode\n");
+            DPRINT1("Failed to open text-mode console, switching to gui-mode, Status = 0x%08lx\n", Status);
             GuiMode = TRUE;
         }
     }
-    else /* GuiMode */
+
+    /*
+     * Try to open the GUI-mode console. Two cases are possible:
+     * - We are in GUI-mode, therefore GuiMode == TRUE, the previous test-case
+     *   failed and we start GUI-mode console.
+     * - We are in text-mode, therefore GuiMode == FALSE, the previous test-case
+     *   succeeded BUT we failed at starting text-mode console. Then GuiMode
+     *   was switched to TRUE in order to try to open the console in GUI-mode.
+     */
+    if (GuiMode)
     {
+        DPRINT1("WIN32CSR: Opening GUI-mode console\n");
         Status = GuiInitConsole(Console, ShowCmd);
-        if (! NT_SUCCESS(Status))
+        if (!NT_SUCCESS(Status))
         {
             HeapFree(Win32CsrApiHeap,0, NewBuffer);
             RtlFreeUnicodeString(&Console->Title);
             DeleteCriticalSection(&Console->Lock);
             CloseHandle(Console->ActiveEvent);
-            DPRINT1("GuiInitConsole: failed\n");
+            DPRINT1("GuiInitConsole: failed, Status = 0x%08lx\n", Status);
             return Status;
         }
     }
 
     Status = CsrInitConsoleScreenBuffer(Console, NewBuffer);
-    if (! NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status))
     {
         ConioCleanupConsole(Console);
         RtlFreeUnicodeString(&Console->Title);
