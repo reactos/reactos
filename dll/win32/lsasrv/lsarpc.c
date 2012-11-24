@@ -138,8 +138,80 @@ NTSTATUS WINAPI LsarQuerySecurityObject(
     SECURITY_INFORMATION SecurityInformation,
     PLSAPR_SR_SECURITY_DESCRIPTOR *SecurityDescriptor)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PLSA_DB_OBJECT DbObject = NULL;
+    PSECURITY_DESCRIPTOR RelativeSd = NULL;
+    PLSAPR_SR_SECURITY_DESCRIPTOR SdData = NULL;
+    ACCESS_MASK DesiredAccess = 0;
+    ULONG RelativeSdSize = 0;
+    NTSTATUS Status;
+
+    if (SecurityDescriptor == NULL)
+        return STATUS_INVALID_PARAMETER;
+
+    if ((SecurityInformation & OWNER_SECURITY_INFORMATION) ||
+        (SecurityInformation & GROUP_SECURITY_INFORMATION) ||
+        (SecurityInformation & DACL_SECURITY_INFORMATION))
+        DesiredAccess |= READ_CONTROL;
+
+    if (SecurityInformation & SACL_SECURITY_INFORMATION)
+        DesiredAccess |= ACCESS_SYSTEM_SECURITY;
+
+    /* Validate the ObjectHandle */
+    Status = LsapValidateDbObject(ObjectHandle,
+                                  LsaDbIgnoreObject,
+                                  DesiredAccess,
+                                  &DbObject);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    /* Get the size of the SD */
+    Status = LsapGetObjectAttribute(DbObject,
+                                    L"SecDesc",
+                                    NULL,
+                                    &RelativeSdSize);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    /* Allocate a buffer for the SD */
+    RelativeSd = MIDL_user_allocate(RelativeSdSize);
+    if (RelativeSd == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    /* Get the SD */
+    Status = LsapGetObjectAttribute(DbObject,
+                                    L"SecDesc",
+                                    RelativeSd,
+                                    &RelativeSdSize);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    /*
+     * FIXME: Invalidate the SD information that was not requested.
+     *        (see SecurityInformation)
+     */
+
+    /* Allocate the SD data buffer */
+    SdData = MIDL_user_allocate(sizeof(LSAPR_SR_SECURITY_DESCRIPTOR));
+    if (SdData == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
+
+    /* Fill the SD data buffer and return it to the caller */
+    SdData->Length = RelativeSdSize;
+    SdData->SecurityDescriptor = (PBYTE)RelativeSd;
+
+    *SecurityDescriptor = SdData;
+
+done:
+    if (!NT_SUCCESS(Status))
+    {
+        if (RelativeSd != NULL)
+            MIDL_user_free(RelativeSd);
+    }
+
+    return Status;
 }
 
 
@@ -206,7 +278,7 @@ NTSTATUS WINAPI LsarQueryInformationPolicy(
     POLICY_INFORMATION_CLASS InformationClass,
     PLSAPR_POLICY_INFORMATION *PolicyInformation)
 {
-    PLSA_DB_OBJECT DbObject;
+    PLSA_DB_OBJECT PolicyObject;
     ACCESS_MASK DesiredAccess = 0;
     NTSTATUS Status;
 
@@ -250,74 +322,74 @@ NTSTATUS WINAPI LsarQueryInformationPolicy(
     Status = LsapValidateDbObject(PolicyHandle,
                                   LsaDbPolicyObject,
                                   DesiredAccess,
-                                  &DbObject);
+                                  &PolicyObject);
     if (!NT_SUCCESS(Status))
         return Status;
 
     switch (InformationClass)
     {
         case PolicyAuditLogInformation:      /* 1 */
-            Status = LsarQueryAuditLog(PolicyHandle,
+            Status = LsarQueryAuditLog(PolicyObject,
                                        PolicyInformation);
             break;
 
         case PolicyAuditEventsInformation:   /* 2 */
-            Status = LsarQueryAuditEvents(PolicyHandle,
+            Status = LsarQueryAuditEvents(PolicyObject,
                                           PolicyInformation);
             break;
 
         case PolicyPrimaryDomainInformation: /* 3 */
-            Status = LsarQueryPrimaryDomain(PolicyHandle,
+            Status = LsarQueryPrimaryDomain(PolicyObject,
                                             PolicyInformation);
             break;
 
         case PolicyPdAccountInformation:     /* 4 */
-            Status = LsarQueryPdAccount(PolicyHandle,
+            Status = LsarQueryPdAccount(PolicyObject,
                                         PolicyInformation);
             break;
 
         case PolicyAccountDomainInformation: /* 5 */
-            Status = LsarQueryAccountDomain(PolicyHandle,
+            Status = LsarQueryAccountDomain(PolicyObject,
                                             PolicyInformation);
             break;
 
         case PolicyLsaServerRoleInformation: /* 6 */
-            Status = LsarQueryServerRole(PolicyHandle,
+            Status = LsarQueryServerRole(PolicyObject,
                                          PolicyInformation);
             break;
 
         case PolicyReplicaSourceInformation: /* 7 */
-            Status = LsarQueryReplicaSource(PolicyHandle,
+            Status = LsarQueryReplicaSource(PolicyObject,
                                             PolicyInformation);
             break;
 
         case PolicyDefaultQuotaInformation:  /* 8 */
-            Status = LsarQueryDefaultQuota(PolicyHandle,
+            Status = LsarQueryDefaultQuota(PolicyObject,
                                            PolicyInformation);
             break;
 
         case PolicyModificationInformation:  /* 9 */
-            Status = LsarQueryModification(PolicyHandle,
+            Status = LsarQueryModification(PolicyObject,
                                            PolicyInformation);
             break;
 
         case PolicyAuditFullQueryInformation: /* 11 (0xB) */
-            Status = LsarQueryAuditFull(PolicyHandle,
+            Status = LsarQueryAuditFull(PolicyObject,
                                         PolicyInformation);
             break;
 
         case PolicyDnsDomainInformation:      /* 12 (0xC) */
-            Status = LsarQueryDnsDomain(PolicyHandle,
+            Status = LsarQueryDnsDomain(PolicyObject,
                                         PolicyInformation);
             break;
 
         case PolicyDnsDomainInformationInt:   /* 13 (0xD) */
-            Status = LsarQueryDnsDomainInt(PolicyHandle,
+            Status = LsarQueryDnsDomainInt(PolicyObject,
                                            PolicyInformation);
             break;
 
         case PolicyLocalAccountDomainInformation: /* 14 (0xE) */
-            Status = LsarQueryLocalAccountDomain(PolicyHandle,
+            Status = LsarQueryLocalAccountDomain(PolicyObject,
                                                  PolicyInformation);
             break;
 
@@ -336,7 +408,7 @@ NTSTATUS WINAPI LsarSetInformationPolicy(
     POLICY_INFORMATION_CLASS InformationClass,
     PLSAPR_POLICY_INFORMATION PolicyInformation)
 {
-    PLSA_DB_OBJECT DbObject;
+    PLSA_DB_OBJECT PolicyObject;
     ACCESS_MASK DesiredAccess = 0;
     NTSTATUS Status;
 
@@ -384,33 +456,70 @@ NTSTATUS WINAPI LsarSetInformationPolicy(
     Status = LsapValidateDbObject(PolicyHandle,
                                   LsaDbPolicyObject,
                                   DesiredAccess,
-                                  &DbObject);
+                                  &PolicyObject);
     if (!NT_SUCCESS(Status))
         return Status;
 
     switch (InformationClass)
     {
-        case PolicyAuditEventsInformation:
-            Status = STATUS_NOT_IMPLEMENTED;
+        case PolicyAuditLogInformation:      /* 1 */
+            Status = LsarSetAuditLog(PolicyObject,
+                                     (PPOLICY_AUDIT_LOG_INFO)PolicyInformation);
             break;
 
-        case PolicyPrimaryDomainInformation:
-            Status = LsarSetPrimaryDomain(PolicyHandle,
+        case PolicyAuditEventsInformation:   /* 2 */
+            Status = LsarSetAuditEvents(PolicyObject,
+                                        (PLSAPR_POLICY_AUDIT_EVENTS_INFO)PolicyInformation);
+            break;
+
+        case PolicyPrimaryDomainInformation: /* 3 */
+            Status = LsarSetPrimaryDomain(PolicyObject,
                                           (PLSAPR_POLICY_PRIMARY_DOM_INFO)PolicyInformation);
             break;
 
-        case PolicyAccountDomainInformation:
-            Status = LsarSetAccountDomain(PolicyHandle,
+        case PolicyAccountDomainInformation: /* 5 */
+            Status = LsarSetAccountDomain(PolicyObject,
                                           (PLSAPR_POLICY_ACCOUNT_DOM_INFO)PolicyInformation);
             break;
 
-        case PolicyDnsDomainInformation:
-            Status = LsarSetDnsDomain(PolicyHandle,
+        case PolicyLsaServerRoleInformation: /* 6 */
+            Status = LsarSetServerRole(PolicyObject,
+                                       (PPOLICY_LSA_SERVER_ROLE_INFO)PolicyInformation);
+            break;
+
+        case PolicyReplicaSourceInformation: /* 7 */
+            Status = LsarSetReplicaSource(PolicyObject,
+                                          (PPOLICY_LSA_REPLICA_SRCE_INFO)PolicyInformation);
+            break;
+
+        case PolicyDefaultQuotaInformation:  /* 8 */
+            Status = LsarSetDefaultQuota(PolicyObject,
+                                         (PPOLICY_DEFAULT_QUOTA_INFO)PolicyInformation);
+            break;
+
+        case PolicyModificationInformation:  /* 9 */
+            Status = LsarSetModification(PolicyObject,
+                                         (PPOLICY_MODIFICATION_INFO)PolicyInformation);
+            break;
+
+        case PolicyAuditFullSetInformation:  /* 10 (0xA) */
+            Status = LsarSetAuditFull(PolicyObject,
+                                      (PPOLICY_AUDIT_FULL_QUERY_INFO)PolicyInformation);
+            break;
+
+        case PolicyDnsDomainInformation:      /* 12 (0xC) */
+            Status = LsarSetDnsDomain(PolicyObject,
                                       (PLSAPR_POLICY_DNS_DOMAIN_INFO)PolicyInformation);
             break;
 
-        case PolicyLsaServerRoleInformation:
-            Status = STATUS_NOT_IMPLEMENTED;
+        case PolicyDnsDomainInformationInt:   /* 13 (0xD) */
+            Status = LsarSetDnsDomainInt(PolicyObject,
+                                         (PLSAPR_POLICY_DNS_DOMAIN_INFO)PolicyInformation);
+            break;
+
+        case PolicyLocalAccountDomainInformation: /* 14 (0xE) */
+            Status = LsarSetLocalAccountDomain(PolicyObject,
+                                               (PLSAPR_POLICY_ACCOUNT_DOM_INFO)PolicyInformation);
             break;
 
         default:
@@ -441,6 +550,8 @@ NTSTATUS WINAPI LsarCreateAccount(
     PLSA_DB_OBJECT PolicyObject;
     PLSA_DB_OBJECT AccountObject = NULL;
     LPWSTR SidString = NULL;
+    PSECURITY_DESCRIPTOR AccountSd = NULL;
+    ULONG AccountSdSize;
     NTSTATUS Status = STATUS_SUCCESS;
 
     /* Validate the AccountSid */
@@ -467,6 +578,15 @@ NTSTATUS WINAPI LsarCreateAccount(
         goto done;
     }
 
+    /* Create a security descriptor for the account */
+    Status = LsapCreateAccountSd(&AccountSd,
+                                 &AccountSdSize);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("LsapCreateAccountSd returned 0x%08lx\n", Status);
+        return Status;
+    }
+
     /* Create the Account object */
     Status = LsapCreateDbObject(PolicyObject,
                                 L"Accounts",
@@ -485,10 +605,21 @@ NTSTATUS WINAPI LsarCreateAccount(
                                     L"Sid",
                                     (PVOID)AccountSid,
                                     GetLengthSid(AccountSid));
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    /* Set the SecDesc attribute */
+    Status = LsapSetObjectAttribute(AccountObject,
+                                    L"SecDesc",
+                                    AccountSd,
+                                    AccountSdSize);
 
 done:
     if (SidString != NULL)
         LocalFree(SidString);
+
+    if (AccountSd != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, AccountSd);
 
     if (!NT_SUCCESS(Status))
     {
@@ -673,6 +804,8 @@ NTSTATUS WINAPI LsarCreateSecret(
     PLSA_DB_OBJECT PolicyObject;
     PLSA_DB_OBJECT SecretObject = NULL;
     LARGE_INTEGER Time;
+    PSECURITY_DESCRIPTOR SecretSd = NULL;
+    ULONG SecretSdSize;
     NTSTATUS Status = STATUS_SUCCESS;
 
     /* Validate the PolicyHandle */
@@ -692,6 +825,15 @@ NTSTATUS WINAPI LsarCreateSecret(
     {
         ERR("NtQuerySystemTime failed (Status 0x%08lx)\n", Status);
         goto done;
+    }
+
+    /* Create a security descriptor for the secret */
+    Status = LsapCreateSecretSd(&SecretSd,
+                                &SecretSdSize);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("LsapCreateAccountSd returned 0x%08lx\n", Status);
+        return Status;
     }
 
     /* Create the Secret object */
@@ -723,8 +865,22 @@ NTSTATUS WINAPI LsarCreateSecret(
                                     L"OldTime",
                                     (PVOID)&Time,
                                     sizeof(LARGE_INTEGER));
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("LsapSetObjectAttribute (OldTime) failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    /* Set the SecDesc attribute */
+    Status = LsapSetObjectAttribute(SecretObject,
+                                    L"SecDesc",
+                                    SecretSd,
+                                    SecretSdSize);
 
 done:
+    if (SecretSd != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, SecretSd);
+
     if (!NT_SUCCESS(Status))
     {
         if (SecretObject != NULL)

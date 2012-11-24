@@ -108,7 +108,7 @@ ChooseGinaUI(VOID)
 	if (rc != ERROR_SUCCESS)
 		goto cleanup;
 
-	/* Check for CMDCONS in SystemStartOptions */
+	/* Check for CONSOLE switch in SystemStartOptions */
 	CurrentOption = SystemStartOptions;
 	while (CurrentOption)
 	{

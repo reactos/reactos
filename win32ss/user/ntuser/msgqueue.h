@@ -23,6 +23,9 @@ typedef struct _USER_MESSAGE
   LIST_ENTRY ListEntry;
   MSG Msg;
   DWORD QS_Flags;
+  LONG_PTR ExtraInfo;
+  DWORD dwQEvent;
+  PTHREADINFO pti;
 } USER_MESSAGE, *PUSER_MESSAGE;
 
 struct _USER_MESSAGE_QUEUE;
@@ -156,7 +159,7 @@ NTSTATUS FASTCALL co_MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
            UINT uTimeout, BOOL Block, INT HookMessage, ULONG_PTR *uResult);
 PUSER_MESSAGE FASTCALL MsqCreateMessage(LPMSG Msg);
 VOID FASTCALL MsqDestroyMessage(PUSER_MESSAGE Message);
-VOID FASTCALL MsqPostMessage(PUSER_MESSAGE_QUEUE MessageQueue, MSG* Msg, BOOLEAN HardwareMessage, DWORD MessageBits);
+VOID FASTCALL MsqPostMessage(PUSER_MESSAGE_QUEUE, MSG*, BOOLEAN, DWORD, DWORD);
 VOID FASTCALL MsqPostQuitMessage(PUSER_MESSAGE_QUEUE MessageQueue, ULONG ExitCode);
 BOOLEAN APIENTRY
 MsqPeekMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,

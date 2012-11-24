@@ -7,6 +7,14 @@
  *                  Ported to ReactOS by Aleksey Bragin (aleksey@reactos.org)
  */
 
+/*********************************************
+ * This file contains ReactOS changes!!
+ * Don't blindly sync it with Wine code!
+ *
+ * If you break Unicode output on the console again, please update this counter:
+ *   int hours_wasted_on_this = 42;
+ *********************************************/
+
 /*
  * msvcrt.dll file functions
  *
@@ -2505,13 +2513,38 @@ size_t CDECL fwrite(const void *ptr, size_t size, size_t nmemb, FILE* file)
 
 /*********************************************************************
  *		fputwc (MSVCRT.@)
+ * FORKED for ReactOS, don't sync with Wine!
+ * References:
+ *   - http://jira.reactos.org/browse/CORE-6495
+ *   - http://bugs.winehq.org/show_bug.cgi?id=8598
  */
-wint_t CDECL fputwc(wint_t wc, FILE* file)
+wint_t CDECL fputwc(wchar_t c, FILE* stream)
 {
-  wchar_t mwc=wc;
-  if (fwrite( &mwc, sizeof(mwc), 1, file) != 1)
-    return WEOF;
-  return wc;
+    /* If this is a real file stream (and not some temporary one for
+       sprintf-like functions), check whether it is opened in text mode.
+       In this case, we have to perform an implicit conversion to ANSI. */
+    if (!(stream->_flag & _IOSTRG) && get_ioinfo(stream->_file)->wxflag & WX_TEXT)
+    {
+        /* Convert to multibyte in text mode */
+        char mbc[MB_LEN_MAX];
+        int mb_return;
+
+        mb_return = wctomb(mbc, c);
+
+        if(mb_return == -1)
+            return WEOF;
+
+        /* Output all characters */
+        if (fwrite(mbc, mb_return, 1, stream) != 1)
+            return WEOF;
+    }
+    else
+    {
+        if (fwrite(&c, sizeof(c), 1, stream) != 1)
+            return WEOF;
+    }
+
+    return c;
 }
 
 /*********************************************************************

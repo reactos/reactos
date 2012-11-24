@@ -85,9 +85,10 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
 	//CHAR	SystemRoot[] = "\\WINNT\\";
 	//CHAR	ArcBoot[] = "multi(0)disk(0)rdisk(0)partition(1)";
 
-	CHAR	HalPath[] = "\\";
-	CHAR	ArcBoot[256];
-	CHAR	MiscFiles[256];
+	LPSTR LoadOptions, NewLoadOptions;
+	CHAR  HalPath[] = "\\";
+	CHAR  ArcBoot[256];
+	CHAR  MiscFiles[256];
 	ULONG i;
 	ULONG_PTR PathSeparator;
 	PLOADER_PARAMETER_EXTENSION Extension;
@@ -120,9 +121,18 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
 	strncpy(LoaderBlock->NtHalPathName, HalPath, MAX_PATH);
 	LoaderBlock->NtHalPathName = PaToVa(LoaderBlock->NtHalPathName);
 
-	/* Fill load options */
-	LoaderBlock->LoadOptions = WinLdrSystemBlock->LoadOptions;
+	/* Fill LoadOptions and strip the '/' commutator symbol in front of each option */
+	NewLoadOptions = LoadOptions = LoaderBlock->LoadOptions = WinLdrSystemBlock->LoadOptions;
 	strncpy(LoaderBlock->LoadOptions, Options, MAX_OPTIONS_LENGTH);
+
+	do
+	{
+		while (*LoadOptions == '/')
+			++LoadOptions;
+
+		*NewLoadOptions++ = *LoadOptions;
+	} while (*LoadOptions++);
+
 	LoaderBlock->LoadOptions = PaToVa(LoaderBlock->LoadOptions);
 
 	/* Arc devices */
@@ -136,8 +146,8 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
 
 		/* Allocate the ARC structure */
 		ArcDiskSig = HeapAllocate(FrLdrDefaultHeap,
-                                  sizeof(ARC_DISK_SIGNATURE_EX),
-                                 'giSD');
+		                          sizeof(ARC_DISK_SIGNATURE_EX),
+		                          'giSD');
 
 		/* Copy the data over */
 		ArcDiskSig->DiskSignature.Signature = reactos_arc_disk_info[i].Signature;

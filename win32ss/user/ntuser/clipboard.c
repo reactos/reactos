@@ -276,7 +276,7 @@ cleanup:
         UserReleaseDC(NULL, hdc, FALSE);
 
     if (pConvertedBmi)
-        DIB_FreeConvertedBitmapInfo(pConvertedBmi, pBmi);
+        DIB_FreeConvertedBitmapInfo(pConvertedBmi, pBmi, -1);
 }
 
 VOID static NTAPI

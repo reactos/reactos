@@ -359,9 +359,9 @@ CmpSetSystemValues(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                            CmpLoadOptions.Length);
     if (!NT_SUCCESS(Status)) goto Quickie;
 
-    /* Setup value name for system boot device */
+    /* Setup value name for system boot device in ARC format */
     RtlInitUnicodeString(&KeyName, L"SystemBootDevice");
-    RtlCreateUnicodeStringFromAsciiz(&ValueName, LoaderBlock->NtBootPathName);
+    RtlCreateUnicodeStringFromAsciiz(&ValueName, LoaderBlock->ArcBootDeviceName);
     Status = NtSetValueKey(KeyHandle,
                            &KeyName,
                            0,

@@ -147,12 +147,13 @@ UserSetCursor(
             /* Call GDI to set the new screen cursor */
 #ifdef NEW_CURSORICON
             GreSetPointerShape(hdcScreen,
-                               NewCursor->aFrame[0].hbmMask,
-                               NewCursor->aFrame[0].hbmColor,
-                               NewCursor->ptlHotspot.x,
-                               NewCursor->ptlHotspot.y,
+                               NewCursor->hbmAlpha ? NULL : NewCursor->hbmMask,
+                               NewCursor->hbmAlpha ? NewCursor->hbmAlpha : NewCursor->hbmColor,
+                               NewCursor->xHotspot,
+                               NewCursor->yHotspot,
                                gpsi->ptCursor.x,
-                               gpsi->ptCursor.y);
+                               gpsi->ptCursor.y,
+                               NewCursor->hbmAlpha ? SPS_ALPHA : 0);
 #else
             GreSetPointerShape(hdcScreen,
                                NewCursor->IconInfo.hbmMask,
@@ -160,7 +161,8 @@ UserSetCursor(
                                NewCursor->IconInfo.xHotspot,
                                NewCursor->IconInfo.yHotspot,
                                gpsi->ptCursor.x,
-                               gpsi->ptCursor.y);
+                               gpsi->ptCursor.y,
+                               0);
 #endif
         }
         else /* Note: OldCursor != NewCursor so we have to hide cursor */
@@ -582,13 +584,16 @@ co_MsqInsertMouseMessage(MSG* Msg, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Hook
                {
                    /* Call GDI to set the new screen cursor */
 #ifdef NEW_CURSORICON
-                   GreSetPointerShape(hdcScreen,
-                                      MessageQueue->CursorObject->aFrame[0].hbmMask,
-                                      MessageQueue->CursorObject->aFrame[0].hbmColor,
-                                      MessageQueue->CursorObject->ptlHotspot.x,
-                                      MessageQueue->CursorObject->ptlHotspot.y,
-                                      gpsi->ptCursor.x,
-                                      gpsi->ptCursor.y);
+                    GreSetPointerShape(hdcScreen,
+                                       MessageQueue->CursorObject->hbmAlpha ?
+                                           NULL : MessageQueue->CursorObject->hbmMask,
+                                       MessageQueue->CursorObject->hbmAlpha ?
+                                           MessageQueue->CursorObject->hbmAlpha : MessageQueue->CursorObject->hbmColor,
+                                       MessageQueue->CursorObject->xHotspot,
+                                       MessageQueue->CursorObject->yHotspot,
+                                       gpsi->ptCursor.x,
+                                       gpsi->ptCursor.y,
+                                       MessageQueue->CursorObject->hbmAlpha ? SPS_ALPHA : 0);
 #else
                     GreSetPointerShape(hdcScreen,
                                       MessageQueue->CursorObject->IconInfo.hbmMask,
@@ -596,7 +601,8 @@ co_MsqInsertMouseMessage(MSG* Msg, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Hook
                                       MessageQueue->CursorObject->IconInfo.xHotspot,
                                       MessageQueue->CursorObject->IconInfo.yHotspot,
                                       gpsi->ptCursor.x,
-                                      gpsi->ptCursor.y);
+                                      gpsi->ptCursor.y,
+                                      0);
 #endif
                } else
                    GreMovePointer(hdcScreen, Msg->pt.x, Msg->pt.y);
@@ -616,7 +622,7 @@ co_MsqInsertMouseMessage(MSG* Msg, DWORD flags, ULONG_PTR dwExtraInfo, BOOL Hook
        else
        {
            TRACE("Posting mouse message to hwnd=0x%x!\n", UserHMGetHandle(pwnd));
-           MsqPostMessage(MessageQueue, Msg, TRUE, QS_MOUSEBUTTON);
+           MsqPostMessage(MessageQueue, Msg, TRUE, QS_MOUSEBUTTON, 0);
        }
    }
    else if (hdcScreen)
@@ -669,7 +675,7 @@ MsqPostHotKeyMessage(PVOID Thread, HWND hWnd, WPARAM wParam, LPARAM lParam)
    KeQueryTickCount(&LargeTickCount);
    Mesg.time    = MsqCalculateMessageTime(&LargeTickCount);
    Mesg.pt      = gpsi->ptCursor;
-   MsqPostMessage(Window->head.pti->MessageQueue, &Mesg, FALSE, Type);
+   MsqPostMessage(Window->head.pti->MessageQueue, &Mesg, FALSE, Type, 0);
    UserDereferenceObject(Window);
    ObDereferenceObject (Thread);
 
@@ -1246,8 +1252,11 @@ co_MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
 }
 
 VOID FASTCALL
-MsqPostMessage(PUSER_MESSAGE_QUEUE MessageQueue, MSG* Msg, BOOLEAN HardwareMessage,
-               DWORD MessageBits)
+MsqPostMessage(PUSER_MESSAGE_QUEUE MessageQueue,
+               MSG* Msg,
+               BOOLEAN HardwareMessage,
+               DWORD MessageBits,
+               DWORD dwQEvent)
 {
    PUSER_MESSAGE Message;
 
@@ -1256,7 +1265,12 @@ MsqPostMessage(PUSER_MESSAGE_QUEUE MessageQueue, MSG* Msg, BOOLEAN HardwareMessa
       return;
    }
 
-   if(!HardwareMessage)
+   if (dwQEvent)
+   {
+       InsertHeadList(&MessageQueue->PostedMessagesListHead,
+                      &Message->ListEntry);
+   }
+   else if (!HardwareMessage)
    {
        InsertTailList(&MessageQueue->PostedMessagesListHead,
                       &Message->ListEntry);
@@ -1267,7 +1281,9 @@ MsqPostMessage(PUSER_MESSAGE_QUEUE MessageQueue, MSG* Msg, BOOLEAN HardwareMessa
                       &Message->ListEntry);
    }
 
+   Message->dwQEvent = dwQEvent;
    Message->QS_Flags = MessageBits;
+   //Message->pti = pti; Fixed in ATI changes. See CORE-6551
    MsqWakeQueue(MessageQueue, MessageBits, (MessageBits & QS_TIMER ? FALSE : TRUE));
 }
 

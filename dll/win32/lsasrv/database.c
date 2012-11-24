@@ -244,6 +244,8 @@ LsapCreateDatabaseObjects(VOID)
     GUID DnsDomainGuid;
     PLSA_DB_OBJECT PolicyObject = NULL;
     PSID AccountDomainSid = NULL;
+    PSECURITY_DESCRIPTOR PolicySd = NULL;
+    ULONG PolicySdSize = 0;
     ULONG AuditEventsCount;
     ULONG AuditEventsSize;
     ULONG i;
@@ -269,7 +271,7 @@ LsapCreateDatabaseObjects(VOID)
     AuditEventsCount = AuditCategoryAccountLogon - AuditCategorySystem + 1;
     AuditEventsSize = sizeof(LSAP_POLICY_AUDIT_EVENTS_DATA) + AuditEventsCount * sizeof(DWORD);
     AuditEventsInfo = RtlAllocateHeap(RtlGetProcessHeap(),
-                                      0,
+                                      HEAP_ZERO_MEMORY,
                                       AuditEventsSize);
     if (AuditEventsInfo == NULL)
         return STATUS_INSUFFICIENT_RESOURCES;
@@ -288,6 +290,11 @@ LsapCreateDatabaseObjects(VOID)
 
     /* Create a random domain SID */
     Status = LsapCreateRandomDomainSid(&AccountDomainSid);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    Status = LsapCreatePolicySd(&PolicySd,
+                                &PolicySdSize);
     if (!NT_SUCCESS(Status))
         goto done;
 
@@ -369,6 +376,12 @@ LsapCreateDatabaseObjects(VOID)
                            &DnsDomainGuid,
                            sizeof(GUID));
 
+    /* Set the Sceurity Descriptor */
+    LsapSetObjectAttribute(PolicyObject,
+                           L"SecDesc",
+                           PolicySd,
+                           PolicySdSize);
+
 done:
     if (AuditEventsInfo != NULL)
         RtlFreeHeap(RtlGetProcessHeap(), 0, AuditEventsInfo);
@@ -378,6 +391,9 @@ done:
 
     if (AccountDomainSid != NULL)
         RtlFreeSid(AccountDomainSid);
+
+    if (PolicySd != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, PolicySd);
 
     return Status;
 }

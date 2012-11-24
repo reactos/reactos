@@ -9,26 +9,29 @@ typedef struct tagCURICON_PROCESS
 } CURICON_PROCESS, *PCURICON_PROCESS;
 
 #ifdef NEW_CURSORICON
-typedef struct _CURICON_FRAME
-{
-    HBITMAP hbmMask;
-    HBITMAP hbmColor;
-    HBITMAP hbmAlpha;
-} CURICON_FRAME, *PCURICON_FRAME;
-
 typedef struct _CURICON_OBJECT
 {
-  PROCMARKHEAD head;
+   PROCMARKHEAD head;
+   struct _tagCURSOR* pcurNext;
+   UNICODE_STRING strName;
+   USHORT atomModName;
+   USHORT rt;
+   ULONG CURSORF_flags;
+   SHORT xHotspot;
+   SHORT yHotspot;
+   HBITMAP hbmMask;
+   HBITMAP hbmColor;
+   HBITMAP hbmAlpha;
+   RECT rcBounds;
+   HBITMAP hbmUserAlpha;
+   ULONG bpp;
+   ULONG cx;
+   ULONG cy;
+/* ReactOS specific, to be deleted */
   LIST_ENTRY ListEntry;
   HANDLE Self;
   LIST_ENTRY ProcessList;
   UNICODE_STRING ustrModule;
-  UNICODE_STRING ustrRsrc;
-  SIZE Size;
-  BYTE Shadow;
-  BOOL bIcon;
-  POINTL ptlHotspot;
-  CURICON_FRAME aFrame[1];
 } CURICON_OBJECT, *PCURICON_OBJECT;
 
 #else

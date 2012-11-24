@@ -96,6 +96,29 @@ IntGdiSetTextColor(HDC hDC,
     return  crOldColor;
 }
 
+int
+FASTCALL
+GreSetStretchBltMode(HDC hDC, int iStretchMode)
+{
+    PDC pdc;
+    PDC_ATTR pdcattr;
+    INT oSMode = 0;
+
+    pdc = DC_LockDc(hDC);
+    if (pdc)
+    {
+       pdcattr = pdc->pdcattr;
+       oSMode = pdcattr->lStretchBltMode;
+       pdcattr->lStretchBltMode = iStretchMode;
+
+       // Wine returns an error here. We set the default.
+       if ((iStretchMode <= 0) || (iStretchMode > MAXSTRETCHBLTMODE)) iStretchMode = WHITEONBLACK;
+  
+       pdcattr->jStretchBltMode = iStretchMode;
+    }
+    return oSMode;
+}
+
 VOID
 FASTCALL
 DCU_SetDcUndeletable(HDC  hDC)
