@@ -1915,7 +1915,7 @@ NTSTATUS WINAPI LsarLookupPrivilegeValue(
 
     TRACE("Privilege: %wZ\n", Name);
 
-    Status = LsarpLookupPrivilegeValue((PUNICODE_STRING)Name,
+    Status = LsarpLookupPrivilegeValue(Name,
                                        Value);
 
     return Status;
@@ -1944,7 +1944,7 @@ NTSTATUS WINAPI LsarLookupPrivilegeName(
     }
 
     Status = LsarpLookupPrivilegeName(Value,
-                                      (PUNICODE_STRING*)Name);
+                                      Name);
 
     return Status;
 }
@@ -1994,9 +1994,10 @@ NTSTATUS WINAPI LsarEnumerateAccountRights(
     PLSAPR_PRIVILEGE_SET PrivilegeSet = NULL;
     PRPC_UNICODE_STRING RightsBuffer = NULL;
     PRPC_UNICODE_STRING PrivilegeString;
+    ACCESS_MASK SystemAccess;
     ULONG RightsCount;
     ULONG RightsIndex;
-    ULONG PrivIndex;
+    ULONG i;
     NTSTATUS Status;
 
     TRACE("LsarEnumerateAccountRights(%p %p %p)\n",
@@ -2022,13 +2023,23 @@ NTSTATUS WINAPI LsarEnumerateAccountRights(
         goto done;
     }
 
-    /* FIXME: Get account rights */
-
+    /* Get account rights */
+    Status = LsarGetSystemAccessAccount(AccountHandle,
+                                        &SystemAccess);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("LsarGetSystemAccessAccount returned 0x%08lx\n", Status);
+        goto done;
+    }
 
     RightsCount = PrivilegeSet->PrivilegeCount;
 
-    /* FIXME: Count account rights */
-
+    /* Count account rights */
+    for (i = 0; i < sizeof(ACCESS_MASK) * 8; i++)
+    {
+        if (SystemAccess & (1 << i))
+            RightsCount++;
+    }
 
     /* We are done if there are no rights to be enumerated */
     if (RightsCount == 0)
@@ -2049,25 +2060,41 @@ NTSTATUS WINAPI LsarEnumerateAccountRights(
 
     /* Copy the privileges into the buffer */
     RightsIndex = 0;
-    for (PrivIndex = 0; PrivIndex < PrivilegeSet->PrivilegeCount; PrivIndex++)
+    for (i = 0; i < PrivilegeSet->PrivilegeCount; i++)
     {
         PrivilegeString = NULL;
         Status = LsarLookupPrivilegeName(PolicyHandle,
-                                         (PLUID)&PrivilegeSet->Privilege[PrivIndex].Luid,
-                                         (PRPC_UNICODE_STRING *)&PrivilegeString);
+                                         (PLUID)&PrivilegeSet->Privilege[i].Luid,
+                                         &PrivilegeString);
         if (!NT_SUCCESS(Status))
             goto done;
 
-        RightsBuffer[RightsIndex].Length = PrivilegeString->Length;
-        RightsBuffer[RightsIndex].MaximumLength = PrivilegeString->MaximumLength;
-        RightsBuffer[RightsIndex].Buffer = PrivilegeString->Buffer;
+        RightsBuffer[i].Length = PrivilegeString->Length;
+        RightsBuffer[i].MaximumLength = PrivilegeString->MaximumLength;
+        RightsBuffer[i].Buffer = PrivilegeString->Buffer;
 
         MIDL_user_free(PrivilegeString);
         RightsIndex++;
     }
 
-    /* FIXME: Copy account rights into the buffer */
+    /* Copy account rights into the buffer */
+    for (i = 0; i < sizeof(ACCESS_MASK) * 8; i++)
+    {
+        if (SystemAccess & (1 << i))
+        {
+            Status = LsapLookupAccountRightName(1 << i,
+                                                &PrivilegeString);
+            if (!NT_SUCCESS(Status))
+                goto done;
 
+            RightsBuffer[i].Length = PrivilegeString->Length;
+            RightsBuffer[i].MaximumLength = PrivilegeString->MaximumLength;
+            RightsBuffer[i].Buffer = PrivilegeString->Buffer;
+
+            MIDL_user_free(PrivilegeString);
+            RightsIndex++;
+        }
+    }
 
     UserRights->Entries = RightsCount;
     UserRights->UserRights = (PRPC_UNICODE_STRING)RightsBuffer;

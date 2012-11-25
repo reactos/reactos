@@ -252,16 +252,20 @@ LsarSetLocalAccountDomain(PLSA_DB_OBJECT PolicyObject,
 /* privileges.c */
 NTSTATUS
 LsarpLookupPrivilegeName(PLUID Value,
-                         PUNICODE_STRING *Name);
+                         PRPC_UNICODE_STRING *Name);
 
 NTSTATUS
-LsarpLookupPrivilegeValue(PUNICODE_STRING Name,
+LsarpLookupPrivilegeValue(PRPC_UNICODE_STRING Name,
                           PLUID Value);
 
 NTSTATUS
 LsarpEnumeratePrivileges(DWORD *EnumerationContext,
                          PLSAPR_PRIVILEGE_ENUM_BUFFER EnumerationBuffer,
                          DWORD PreferedMaximumLength);
+
+NTSTATUS
+LsapLookupAccountRightName(ULONG RightValue,
+                           PRPC_UNICODE_STRING *Name);
 
 /* registry.h */
 NTSTATUS
