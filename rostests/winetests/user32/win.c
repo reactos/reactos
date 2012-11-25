@@ -50,6 +50,7 @@ static UINT (WINAPI *pGetWindowModuleFileNameA)(HWND,LPSTR,UINT);
 static BOOL (WINAPI *pGetLayeredWindowAttributes)(HWND,COLORREF*,BYTE*,DWORD*);
 static BOOL (WINAPI *pSetLayeredWindowAttributes)(HWND,COLORREF,BYTE,DWORD);
 static BOOL (WINAPI *pUpdateLayeredWindow)(HWND,HDC,POINT*,SIZE*,HDC,POINT*,COLORREF,BLENDFUNCTION*,DWORD);
+static BOOL (WINAPI *pUpdateLayeredWindowIndirect)(HWND,const UPDATELAYEREDWINDOWINFO*);
 static BOOL (WINAPI *pGetMonitorInfoA)(HMONITOR,LPMONITORINFO);
 static HMONITOR (WINAPI *pMonitorFromPoint)(POINT,DWORD);
 static int  (WINAPI *pGetWindowRgnBox)(HWND,LPRECT);
@@ -2636,7 +2637,7 @@ static void test_SetActiveWindow(HWND hwnd)
     SetActiveWindow(0);
     check_wnd_state(0, 0, 0, 0);
 
-    /*trace("testing SetActiveWindow %p\n", hwnd);*/
+    trace("testing SetActiveWindow %p\n", hwnd);
 
     ShowWindow(hwnd, SW_SHOW);
     check_wnd_state(hwnd, hwnd, hwnd, 0);
@@ -2656,11 +2657,11 @@ static void test_SetActiveWindow(HWND hwnd)
 
     SetWindowPos(hwnd,0,0,0,0,0,SWP_NOZORDER|SWP_NOMOVE|SWP_NOSIZE|SWP_NOACTIVATE|SWP_SHOWWINDOW);
     check_wnd_state(hwnd, hwnd, hwnd, 0);
-
+    trace("testing ShowWindow SW_HIDE window %p\n", hwnd);
     ShowWindow(hwnd, SW_HIDE);
     check_wnd_state(0, 0, 0, 0);
 
-    /*trace("testing SetActiveWindow on an invisible window %p\n", hwnd);*/
+    trace("testing SetActiveWindow on an invisible window %p\n", hwnd);
     SetActiveWindow(hwnd);
     check_wnd_state(hwnd, hwnd, hwnd, 0);
     
@@ -6074,6 +6075,47 @@ static void test_layered_window(void)
     ok( !ret, "GetLayeredWindowAttributes should fail on layered but not initialized window\n" );
     ret = pUpdateLayeredWindow( hwnd, 0, NULL, &sz, hdc, &pt, 0, NULL, ULW_OPAQUE );
     ok( ret, "UpdateLayeredWindow should succeed on layered window\n" );
+    ret = pUpdateLayeredWindow( hwnd, 0, NULL, &sz, hdc, &pt, 0, NULL, ULW_OPAQUE | ULW_EX_NORESIZE );
+    ok( !ret, "UpdateLayeredWindow should fail with ex flag\n" );
+    ok( GetLastError() == ERROR_INVALID_PARAMETER, "wrong error %u\n", GetLastError() );
+    if (pUpdateLayeredWindowIndirect)
+    {
+        UPDATELAYEREDWINDOWINFO info;
+        info.cbSize   = sizeof(info);
+        info.hdcDst   = 0;
+        info.pptDst   = NULL;
+        info.psize    = &sz;
+        info.hdcSrc   = hdc;
+        info.pptSrc   = &pt;
+        info.crKey    = 0;
+        info.pblend   = NULL;
+        info.dwFlags  = ULW_OPAQUE | ULW_EX_NORESIZE;
+        info.prcDirty = NULL;
+        ret = pUpdateLayeredWindowIndirect( hwnd, &info );
+        ok( ret, "UpdateLayeredWindowIndirect should succeed on layered window\n" );
+        sz.cx--;
+        ret = pUpdateLayeredWindowIndirect( hwnd, &info );
+        ok( !ret, "UpdateLayeredWindowIndirect should fail\n" );
+        ok( GetLastError() == ERROR_INCORRECT_SIZE || broken(GetLastError() == ERROR_MR_MID_NOT_FOUND),
+            "wrong error %u\n", GetLastError() );
+        info.dwFlags  = ULW_OPAQUE;
+        ret = pUpdateLayeredWindowIndirect( hwnd, &info );
+        ok( ret, "UpdateLayeredWindowIndirect should succeed on layered window\n" );
+        sz.cx++;
+        info.dwFlags  = ULW_OPAQUE | 0xf00;
+        ret = pUpdateLayeredWindowIndirect( hwnd, &info );
+        ok( !ret, "UpdateLayeredWindowIndirect should fail\n" );
+        ok( GetLastError() == ERROR_INVALID_PARAMETER, "wrong error %u\n", GetLastError() );
+        info.cbSize--;
+        info.dwFlags  = ULW_OPAQUE;
+        ret = pUpdateLayeredWindowIndirect( hwnd, &info );
+        ok( !ret, "UpdateLayeredWindowIndirect should fail\n" );
+        ok( GetLastError() == ERROR_INVALID_PARAMETER, "wrong error %u\n", GetLastError() );
+        ret = pUpdateLayeredWindowIndirect( hwnd, NULL );
+        ok( !ret, "UpdateLayeredWindowIndirect should fail\n" );
+        ok( GetLastError() == ERROR_INVALID_PARAMETER, "wrong error %u\n", GetLastError() );
+    }
+
     ret = pSetLayeredWindowAttributes( hwnd, 0x654321, 22, LWA_COLORKEY | LWA_ALPHA );
     ok( ret, "SetLayeredWindowAttributes should succeed on layered window\n" );
     ret = pGetLayeredWindowAttributes( hwnd, &key, &alpha, &flags );
@@ -7062,6 +7104,228 @@ todo_wine
     ok(ret, "UnregisterClass(my_window) failed\n");
 }
 
+static void test_map_points(void)
+{
+    BOOL ret;
+    POINT p;
+    HWND wnd, wnd0, dwnd;
+    INT n;
+    DWORD err;
+    POINT pos = { 100, 200 };
+    int width = 150;
+    int height = 150;
+    RECT window_rect;
+    RECT client_rect;
+
+    /* Create test windows */
+    wnd = CreateWindow("static", "test1", WS_POPUP, pos.x, pos.y, width, height, NULL, NULL, NULL, NULL);
+    ok(wnd != NULL, "Failed %p\n", wnd);
+    wnd0 = CreateWindow("static", "test2", WS_POPUP, 0, 0, width, height, NULL, NULL, NULL, NULL);
+    ok(wnd0 != NULL, "Failed %p\n", wnd);
+    dwnd = CreateWindow("static", "test3", 0, 200, 300, 150, 150, NULL, NULL, NULL, NULL);
+    DestroyWindow(dwnd);
+    ok(dwnd != NULL, "Failed %p\n", dwnd);
+
+    /* Verify window rect and client rect (they should have the same width and height) */
+    GetWindowRect(wnd, &window_rect);
+    ok(window_rect.left == pos.x, "left is %d instead of %d\n", window_rect.left, pos.x);
+    ok(window_rect.top == pos.y, "top is %d instead of %d\n", window_rect.top, pos.y);
+    ok(window_rect.right == pos.x + width, "right is %d instead of %d\n", window_rect.right, pos.x + width);
+    ok(window_rect.bottom == pos.y + height, "bottom is %d instead of %d\n", window_rect.bottom, pos.y + height);
+    GetClientRect(wnd, &client_rect);
+    ok(client_rect.left == 0, "left is %d instead of 0\n", client_rect.left);
+    ok(client_rect.top == 0, "top is %d instead of 0\n", client_rect.top);
+    ok(client_rect.right == width, "right is %d instead of %d\n", client_rect.right, width);
+    ok(client_rect.bottom == height, "bottom is %d instead of %d\n", client_rect.bottom, height);
+
+    /* Test MapWindowPoints */
+
+    /* MapWindowPoints(NULL or wnd, NULL or wnd, NULL, 1); crashes on Windows */
+
+    SetLastError(0xdeadbeef);
+    n = MapWindowPoints(NULL, NULL, NULL, 0);
+    err = GetLastError();
+    ok(n == 0, "Got %d, expected %d\n", n, 0);
+    ok(err == 0xdeadbeef, "Got %x, expected %x\n", err, 0xdeadbeef);
+
+    SetLastError(0xdeadbeef);
+    n = MapWindowPoints(wnd, wnd, NULL, 0);
+    err = GetLastError();
+    ok(n == 0, "Got %d, expected %d\n", n, 0);
+    ok(err == 0xdeadbeef, "Got %x, expected %x\n", err, 0xdeadbeef);
+
+    n = MapWindowPoints(wnd, NULL, NULL, 0);
+    ok(n == MAKELONG(window_rect.left, window_rect.top), "Got %x, expected %x\n",
+       n, MAKELONG(window_rect.left, window_rect.top));
+
+    n = MapWindowPoints(NULL, wnd, NULL, 0);
+    ok(n == MAKELONG(-window_rect.left, -window_rect.top), "Got %x, expected %x\n",
+       n, MAKELONG(-window_rect.left, -window_rect.top));
+
+    SetLastError(0xdeadbeef);
+    p.x = p.y = 100;
+    n = MapWindowPoints(dwnd, NULL, &p, 1);
+    err = GetLastError();
+    ok(n == 0, "Got %d, expected %d\n", n, 0);
+    ok(p.x == 100 && p.y == 100, "Failed got(%d, %d), expected (%d, %d)\n", p.x, p.y, 100, 100);
+    ok(err == ERROR_INVALID_WINDOW_HANDLE, "Got %x, expected %x\n", err, ERROR_INVALID_WINDOW_HANDLE);
+
+    SetLastError(0xdeadbeef);
+    p.x = p.y = 100;
+    n = MapWindowPoints(dwnd, wnd, &p, 1);
+    err = GetLastError();
+    ok(n == 0, "Got %d, expected %d\n", n, 0);
+    ok(p.x == 100 && p.y == 100, "Failed got(%d, %d), expected (%d, %d)\n", p.x, p.y, 100, 100);
+    ok(err == ERROR_INVALID_WINDOW_HANDLE, "Got %x, expected %x\n", err, ERROR_INVALID_WINDOW_HANDLE);
+
+    SetLastError(0xdeadbeef);
+    p.x = p.y = 100;
+    n = MapWindowPoints(NULL, dwnd, &p, 1);
+    err = GetLastError();
+    ok(n == 0, "Got %d, expected %d\n", n, 0);
+    ok(p.x == 100 && p.y == 100, "Failed got(%d, %d), expected (%d, %d)\n", p.x, p.y, 100, 100);
+    ok(err == ERROR_INVALID_WINDOW_HANDLE, "Got %x, expected %x\n", err, ERROR_INVALID_WINDOW_HANDLE);
+
+    SetLastError(0xdeadbeef);
+    p.x = p.y = 100;
+    n = MapWindowPoints(wnd, dwnd, &p, 1);
+    err = GetLastError();
+    ok(n == 0, "Got %d, expected %d\n", n, 0);
+    ok(p.x == 100 && p.y == 100, "Failed got(%d, %d), expected (%d, %d)\n", p.x, p.y, 100, 100);
+    ok(err == ERROR_INVALID_WINDOW_HANDLE, "Got %x, expected %x\n", err, ERROR_INVALID_WINDOW_HANDLE);
+
+    SetLastError(0xdeadbeef);
+    p.x = p.y = 100;
+    n = MapWindowPoints(dwnd, dwnd, &p, 1);
+    err = GetLastError();
+    ok(n == 0, "Got %d, expected %d\n", n, 0);
+    ok(p.x == 100 && p.y == 100, "Failed got(%d, %d), expected (%d, %d)\n", p.x, p.y, 100, 100);
+    ok(err == ERROR_INVALID_WINDOW_HANDLE, "Got %x, expected %x\n", err, ERROR_INVALID_WINDOW_HANDLE);
+
+    SetLastError(0xdeadbeef);
+    p.x = p.y = 100;
+    n = MapWindowPoints(NULL, NULL, &p, 1);
+    err = GetLastError();
+    ok(n == 0, "Got %d, expected %d\n", n, 0);
+    ok(p.x == 100 && p.y == 100, "Failed got(%d, %d), expected (%d, %d)\n", p.x, p.y, 100, 100);
+    ok(err == 0xdeadbeef, "Got %x, expected %x\n", err, 0xdeadbeef);
+
+    SetLastError(0xdeadbeef);
+    p.x = p.y = 100;
+    n = MapWindowPoints(wnd, wnd, &p, 1);
+    err = GetLastError();
+    ok(n == 0, "Got %d, expected %d\n", n, 0);
+    ok(p.x == 100 && p.y == 100, "Failed got(%d, %d), expected (%d, %d)\n", p.x, p.y, 100, 100);
+    ok(err == 0xdeadbeef, "Got %x, expected %x\n", err, 0xdeadbeef);
+
+    p.x = p.y = 100;
+    n = MapWindowPoints(wnd, NULL, &p, 1);
+    ok(n == MAKELONG(window_rect.left, window_rect.top), "Got %x, expected %x\n",
+       n, MAKELONG(window_rect.left, window_rect.top));
+    ok((p.x == (window_rect.left + 100)) && (p.y == (window_rect.top + 100)), "Failed got (%d, %d), expected (%d, %d)\n",
+       p.x, p.y, window_rect.left + 100, window_rect.top + 100);
+
+    p.x = p.y = 100;
+    n = MapWindowPoints(NULL, wnd, &p, 1);
+    ok(n == MAKELONG(-window_rect.left, -window_rect.top), "Got %x, expected %x\n",
+       n, MAKELONG(-window_rect.left, -window_rect.top));
+    ok((p.x == (-window_rect.left + 100)) && (p.y == (-window_rect.top + 100)), "Failed got (%d, %d), expected (%d, %d)\n",
+       p.x, p.y, -window_rect.left + 100, -window_rect.top + 100);
+
+    SetLastError(0xdeadbeef);
+    p.x = p.y = 0;
+    n = MapWindowPoints(wnd0, NULL, &p, 1);
+    err = GetLastError();
+    ok(n == 0, "Got %x,  expected 0\n", n);
+    ok((p.x == 0) && (p.y == 0), "Failed got (%d, %d), expected (0, 0)\n", p.x, p.y);
+    ok(err == 0xdeadbeef, "Got %x, expected %x\n", err, 0xdeadbeef);
+
+    SetLastError(0xdeadbeef);
+    p.x = p.y = 0;
+    n = MapWindowPoints(NULL, wnd0, &p, 1);
+    err = GetLastError();
+    ok(n == 0, "Got %x,  expected 0\n", n);
+    ok((p.x == 0) && (p.y == 0), "Failed got (%d, %d), expected (0, 0)\n", p.x, p.y);
+    ok(err == 0xdeadbeef, "Got %x, expected %x\n", err, 0xdeadbeef);
+
+    /* Test ClientToScreen */
+
+    /* ClientToScreen(wnd, NULL); crashes on Windows */
+
+    SetLastError(0xdeadbeef);
+    ret = ClientToScreen(NULL, NULL);
+    err = GetLastError();
+    ok(!ret, "Should fail\n");
+    ok(err == ERROR_INVALID_WINDOW_HANDLE, "Got %x, expected %x\n", err, ERROR_INVALID_WINDOW_HANDLE);
+
+    SetLastError(0xdeadbeef);
+    p.x = p.y = 100;
+    ret = ClientToScreen(NULL, &p);
+    err = GetLastError();
+    ok(!ret, "Should fail\n");
+    ok(p.x == 100 && p.y == 100, "Failed got(%d, %d), expected (%d, %d)\n", p.x, p.y, 100, 100);
+    ok(err == ERROR_INVALID_WINDOW_HANDLE, "Got %x, expected %x\n", err, ERROR_INVALID_WINDOW_HANDLE);
+
+    SetLastError(0xdeadbeef);
+    p.x = p.y = 100;
+    ret = ClientToScreen(dwnd, &p);
+    err = GetLastError();
+    ok(!ret, "Should fail\n");
+    ok(p.x == 100 && p.y == 100, "Failed got(%d, %d), expected (%d, %d)\n", p.x, p.y, 100, 100);
+    ok(err == ERROR_INVALID_WINDOW_HANDLE, "Got %x, expected %x\n", err, ERROR_INVALID_WINDOW_HANDLE);
+
+    p.x = p.y = 100;
+    ret = ClientToScreen(wnd, &p);
+    ok(ret, "Failed with error %u\n", GetLastError());
+    ok((p.x == (window_rect.left + 100)) && (p.y == (window_rect.top + 100)), "Failed got (%d, %d), expected (%d, %d)\n",
+       p.x, p.y, window_rect.left + 100, window_rect.top + 100);
+
+    p.x = p.y = 0;
+    ret = ClientToScreen(wnd0, &p);
+    ok(ret, "Failed with error %u\n", GetLastError());
+    ok((p.x == 0) && (p.y == 0), "Failed got (%d, %d), expected (0, 0)\n", p.x, p.y);
+
+    /* Test ScreenToClient */
+
+    /* ScreenToClient(wnd, NULL); crashes on Windows */
+
+    SetLastError(0xdeadbeef);
+    ret = ScreenToClient(NULL, NULL);
+    err = GetLastError();
+    ok(!ret, "Should fail\n");
+    ok(err == ERROR_INVALID_WINDOW_HANDLE, "Got %x, expected %x\n", err, ERROR_INVALID_WINDOW_HANDLE);
+
+    SetLastError(0xdeadbeef);
+    p.x = p.y = 100;
+    ret = ScreenToClient(NULL, &p);
+    err = GetLastError();
+    ok(!ret, "Should fail\n");
+    ok(p.x == 100 && p.y == 100, "Failed got(%d, %d), expected (%d, %d)\n", p.x, p.y, 100, 100);
+    ok(err == ERROR_INVALID_WINDOW_HANDLE, "Got %x, expected %x\n", err, ERROR_INVALID_WINDOW_HANDLE);
+
+    SetLastError(0xdeadbeef);
+    p.x = p.y = 100;
+    ret = ScreenToClient(dwnd, &p);
+    err = GetLastError();
+    ok(!ret, "Should fail\n");
+    ok(p.x == 100 && p.y == 100, "Failed got(%d, %d), expected (%d, %d)\n", p.x, p.y, 100, 100);
+    ok(err == ERROR_INVALID_WINDOW_HANDLE, "Got %x, expected %x\n", err, ERROR_INVALID_WINDOW_HANDLE);
+
+    p.x = p.y = 100;
+    ret = ScreenToClient(wnd, &p);
+    ok(ret, "Failed with error %u\n", GetLastError());
+    ok((p.x == (-window_rect.left + 100)) && (p.y == (-window_rect.top + 100)), "Failed got(%d, %d), expected (%d, %d)\n",
+       p.x, p.y, -window_rect.left + 100, -window_rect.top + 100);
+
+    p.x = p.y = 0;
+    ret = ScreenToClient(wnd0, &p);
+    ok(ret, "Failed with error %u\n", GetLastError());
+    ok((p.x == 0) && (p.y == 0), "Failed got (%d, %d), expected (0, 0)\n", p.x, p.y);
+
+    DestroyWindow(wnd);
+    DestroyWindow(wnd0);
+}
+
 START_TEST(win)
 {
     HMODULE user32 = GetModuleHandleA( "user32.dll" );
@@ -7072,6 +7336,7 @@ START_TEST(win)
     pGetLayeredWindowAttributes = (void *)GetProcAddress( user32, "GetLayeredWindowAttributes" );
     pSetLayeredWindowAttributes = (void *)GetProcAddress( user32, "SetLayeredWindowAttributes" );
     pUpdateLayeredWindow = (void *)GetProcAddress( user32, "UpdateLayeredWindow" );
+    pUpdateLayeredWindowIndirect = (void *)GetProcAddress( user32, "UpdateLayeredWindowIndirect" );
     pGetMonitorInfoA = (void *)GetProcAddress( user32,  "GetMonitorInfoA" );
     pMonitorFromPoint = (void *)GetProcAddress( user32,  "MonitorFromPoint" );
     pGetWindowRgnBox = (void *)GetProcAddress( user32, "GetWindowRgnBox" );
@@ -7172,6 +7437,7 @@ START_TEST(win)
        test_shell_window();
     test_handles( hwndMain );
     test_winregion();
+    test_map_points();
 
     /* add the tests above this line */
     if (hhook) UnhookWindowsHookEx(hhook);

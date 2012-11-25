@@ -6795,6 +6795,7 @@ static void test_interthread_messages(void)
     wnd_event.hwnd = CreateWindowExA(0, "TestParentClass", "Test parent", WS_OVERLAPPEDWINDOW | WS_VISIBLE,
                               100, 100, 200, 200, 0, 0, 0, NULL);
     ok (wnd_event.hwnd != 0, "Failed to create parent window\n");
+    flush_events();
     flush_sequence();
     log_all_parent_messages++;
     wnd_event.start_event = CreateEventA( NULL, TRUE, FALSE, NULL );
@@ -11031,11 +11032,6 @@ static void test_ShowWindow(void)
         }
         else
         {
-            if (wp.ptMinPosition.x != sw[i].wp_min.x || wp.ptMinPosition.y != sw[i].wp_min.y)
-            todo_wine
-            ok(wp.ptMinPosition.x == sw[i].wp_min.x && wp.ptMinPosition.y == sw[i].wp_min.y,
-               "expected %d,%d got %d,%d\n", sw[i].wp_min.x, sw[i].wp_min.y, wp.ptMinPosition.x, wp.ptMinPosition.y);
-            else
             ok(wp.ptMinPosition.x == sw[i].wp_min.x && wp.ptMinPosition.y == sw[i].wp_min.y,
                "expected %d,%d got %d,%d\n", sw[i].wp_min.x, sw[i].wp_min.y, wp.ptMinPosition.x, wp.ptMinPosition.y);
         }
@@ -11268,8 +11264,7 @@ static void test_EndDialog(void)
     ok(GetClassInfo(0, "#32770", &cls), "GetClassInfo failed\n");
     cls.lpszClassName = "MyDialogClass";
     cls.hInstance = GetModuleHandle(0);
-    /* need a cast since a dlgproc is used as a wndproc */
-    cls.lpfnWndProc = (WNDPROC)test_dlg_proc;
+    cls.lpfnWndProc = test_dlg_proc;
     if (!RegisterClass(&cls)) assert(0);
 
     flush_sequence();
@@ -13792,6 +13787,27 @@ static const struct message WmSetLayeredStyle2[] = {
     { 0 }
 };
 
+struct layered_window_info
+{
+    HWND   hwnd;
+    HDC    hdc;
+    SIZE   size;
+    HANDLE event;
+    BOOL   ret;
+};
+
+static DWORD CALLBACK update_layered_proc( void *param )
+{
+    struct layered_window_info *info = param;
+    POINT src = { 0, 0 };
+
+    info->ret = pUpdateLayeredWindow( info->hwnd, 0, NULL, &info->size,
+                                      info->hdc, &src, 0, NULL, ULW_OPAQUE );
+    ok( info->ret, "failed\n");
+    SetEvent( info->event );
+    return 0;
+}
+
 static void test_layered_window(void)
 {
     HWND hwnd;
@@ -13801,6 +13817,9 @@ static void test_layered_window(void)
     SIZE size;
     POINT pos, src;
     RECT rect, client;
+    HANDLE thread;
+    DWORD tid;
+    struct layered_window_info info;
 
     if (!pUpdateLayeredWindow)
     {
@@ -13892,6 +13911,26 @@ static void test_layered_window(void)
     GetClientRect( hwnd, &rect );
     ok( (rect.right == 200 && rect.bottom == 250) ||
         broken(rect.right == client.right - 100 && rect.bottom == client.bottom - 50),
+        "wrong client rect %d,%d,%d,%d\n", rect.left, rect.top, rect.right, rect.bottom );
+
+    SetWindowLong( hwnd, GWL_EXSTYLE, GetWindowLong(hwnd, GWL_EXSTYLE) | WS_EX_LAYERED );
+    info.hwnd = hwnd;
+    info.hdc = hdc;
+    info.size.cx = 250;
+    info.size.cy = 300;
+    info.event = CreateEventA( NULL, TRUE, FALSE, NULL );
+    info.ret = FALSE;
+    thread = CreateThread( NULL, 0, update_layered_proc, &info, 0, &tid );
+    ok( WaitForSingleObject( info.event, 1000 ) == 0, "wait failed\n" );
+    ok( info.ret, "UpdateLayeredWindow failed in other thread\n" );
+    WaitForSingleObject( thread, 1000 );
+    CloseHandle( thread );
+    GetWindowRect( hwnd, &rect );
+    ok( rect.left == 200 && rect.top == 200 && rect.right == 450 && rect.bottom == 500,
+        "wrong window rect %d,%d,%d,%d\n", rect.left, rect.top, rect.right, rect.bottom );
+    GetClientRect( hwnd, &rect );
+    ok( (rect.right == 250 && rect.bottom == 300) ||
+        broken(rect.right == client.right - 50 && rect.bottom == client.bottom),
         "wrong client rect %d,%d,%d,%d\n", rect.left, rect.top, rect.right, rect.bottom );
 
     DestroyWindow( hwnd );

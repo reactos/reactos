@@ -170,11 +170,11 @@ static void test_accel1(void)
 
     ac[n].cmd = 0xfff0;
     ac[n].key = 0xffff;
-    ac[n++].fVirt = (SHORT) 0x0000;
+    ac[n++].fVirt = 0x0000;
 
     ac[n].cmd = 0xfff0;
     ac[n].key = 0xffff;
-    ac[n++].fVirt = (SHORT) 0x0001;
+    ac[n++].fVirt = 0x0001;
 
     hAccel = CreateAcceleratorTable( &ac[0], n );
     ok( hAccel != NULL, "create accelerator table\n");
