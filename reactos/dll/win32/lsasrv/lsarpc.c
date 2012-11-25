@@ -1383,8 +1383,30 @@ NTSTATUS WINAPI LsarGetQuotasForAccount(
     LSAPR_HANDLE AccountHandle,
     PQUOTA_LIMITS QuotaLimits)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PLSA_DB_OBJECT AccountObject;
+    ULONG Size;
+    NTSTATUS Status;
+
+    TRACE("(%p %p)\n", AccountHandle, QuotaLimits);
+
+    /* Validate the account handle */
+    Status = LsapValidateDbObject(AccountHandle,
+                                  LsaDbAccountObject,
+                                  ACCOUNT_VIEW,
+                                  &AccountObject);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("Invalid handle (Status %lx)\n", Status);
+        return Status;
+    }
+
+    /* Get the quota attribute */
+    Status = LsapGetObjectAttribute(AccountObject,
+                                    L"DefQuota",
+                                    QuotaLimits,
+                                    &Size);
+
+    return Status;
 }
 
 
@@ -1393,8 +1415,59 @@ NTSTATUS WINAPI LsarSetQuotasForAccount(
     LSAPR_HANDLE AccountHandle,
     PQUOTA_LIMITS QuotaLimits)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PLSA_DB_OBJECT AccountObject;
+    QUOTA_LIMITS InternalQuotaLimits;
+    ULONG Size;
+    NTSTATUS Status;
+
+    TRACE("(%p %p)\n", AccountHandle, QuotaLimits);
+
+    /* Validate the account handle */
+    Status = LsapValidateDbObject(AccountHandle,
+                                  LsaDbAccountObject,
+                                  ACCOUNT_ADJUST_QUOTAS,
+                                  &AccountObject);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("Invalid handle (Status %lx)\n", Status);
+        return Status;
+    }
+
+    /* Get the quota limits attribute */
+    Size = sizeof(QUOTA_LIMITS);
+    Status = LsapGetObjectAttribute(AccountObject,
+                                    L"DefQuota",
+                                    &InternalQuotaLimits,
+                                    &Size);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("LsapGetObjectAttribute() failed (Status 0x%08lx)\n", Status);
+        return Status;
+    }
+
+    /* Update the quota limits */
+    if (QuotaLimits->PagedPoolLimit != 0)
+        InternalQuotaLimits.PagedPoolLimit = QuotaLimits->PagedPoolLimit;
+
+    if (QuotaLimits->NonPagedPoolLimit != 0)
+        InternalQuotaLimits.NonPagedPoolLimit = QuotaLimits->NonPagedPoolLimit;
+
+    if (QuotaLimits->MinimumWorkingSetSize != 0)
+        InternalQuotaLimits.MinimumWorkingSetSize = QuotaLimits->MinimumWorkingSetSize;
+
+    if (QuotaLimits->MaximumWorkingSetSize != 0)
+        InternalQuotaLimits.MaximumWorkingSetSize = QuotaLimits->MaximumWorkingSetSize;
+
+    if (QuotaLimits->PagefileLimit != 0)
+        InternalQuotaLimits.PagefileLimit = QuotaLimits->PagefileLimit;
+
+    /* Set the quota limits attribute */
+    Status = LsapSetObjectAttribute(AccountObject,
+                                    L"DefQuota",
+                                    &InternalQuotaLimits,
+                                    sizeof(QUOTA_LIMITS));
+
+    return Status;
 }
 
 
@@ -1870,7 +1943,8 @@ NTSTATUS WINAPI LsarLookupPrivilegeName(
         return Status;
     }
 
-    Status = LsarpLookupPrivilegeName(Value, (PUNICODE_STRING*)Name);
+    Status = LsarpLookupPrivilegeName(Value,
+                                      (PUNICODE_STRING*)Name);
 
     return Status;
 }
