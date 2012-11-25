@@ -1968,8 +1968,41 @@ NTSTATUS WINAPI LsarLookupPrivilegeDisplayName(
 NTSTATUS WINAPI LsarDeleteObject(
     LSAPR_HANDLE *ObjectHandle)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PLSA_DB_OBJECT DbObject;
+    NTSTATUS Status;
+
+    TRACE("(%p)\n", ObjectHandle);
+
+    if (ObjectHandle == NULL)
+        return STATUS_INVALID_PARAMETER;
+
+    /* Validate the ObjectHandle */
+    Status = LsapValidateDbObject(*ObjectHandle,
+                                  LsaDbIgnoreObject,
+                                  DELETE,
+                                  &DbObject);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("LsapValidateDbObject returned 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* You cannot delete the policy object */
+    if (DbObject->ObjectType == LsaDbPolicyObject)
+        return STATUS_INVALID_PARAMETER;
+
+    /* Delete the database object */
+    Status = LsapDeleteDbObject(DbObject);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("LsapDeleteDbObject returned 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Invalidate the object handle */
+    *ObjectHandle = NULL;
+
+    return STATUS_SUCCESS;
 }
 
 

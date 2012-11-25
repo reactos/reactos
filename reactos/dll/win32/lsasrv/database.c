@@ -796,7 +796,7 @@ LsapOpenDbObject(IN PLSA_DB_OBJECT ParentObject,
 
     NewObject = RtlAllocateHeap(RtlGetProcessHeap(),
                                 0,
-                                sizeof(LSA_DB_OBJECT));
+                                sizeof(LSA_DB_OBJECT) + wcslen(ObjectName) + sizeof(WCHAR));
     if (NewObject == NULL)
     {
         NtClose(ObjectKeyHandle);
@@ -809,6 +809,7 @@ LsapOpenDbObject(IN PLSA_DB_OBJECT ParentObject,
     NewObject->Access = DesiredAccess;
     NewObject->KeyHandle = ObjectKeyHandle;
     NewObject->ParentObject = ParentObject;
+    wcscpy(NewObject->Name, ObjectName);
 
     if (ParentObject != NULL)
         ParentObject->RefCount++;
@@ -880,6 +881,69 @@ LsapCloseDbObject(PLSA_DB_OBJECT DbObject)
 
     if (DbObject->ParentObject != NULL)
         ParentObject = DbObject->ParentObject;
+
+    RtlFreeHeap(RtlGetProcessHeap(), 0, DbObject);
+
+    if (ParentObject != NULL)
+    {
+        ParentObject->RefCount--;
+
+        if (ParentObject->RefCount == 0)
+            Status = LsapCloseDbObject(ParentObject);
+    }
+
+    return Status;
+}
+
+
+NTSTATUS
+LsapDeleteDbObject(IN PLSA_DB_OBJECT DbObject)
+{
+    PLSA_DB_OBJECT ParentObject = NULL;
+    WCHAR KeyName[64];
+    ULONG EnumIndex;
+
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    DbObject->RefCount--;
+
+    if (DbObject->RefCount > 0)
+        return STATUS_SUCCESS;
+
+    if (DbObject->KeyHandle != NULL)
+    {
+        EnumIndex = 0;
+
+        while (TRUE)
+        {
+            Status = LsapRegEnumerateSubKey(DbObject->KeyHandle,
+                                            EnumIndex,
+                                            64 * sizeof(WCHAR),
+                                            KeyName);
+            if (!NT_SUCCESS(Status))
+                break;
+
+            TRACE("EnumIndex: %lu\n", EnumIndex);
+            TRACE("Key name: %S\n", KeyName);
+
+            Status = LsapRegDeleteKey(DbObject->KeyHandle,
+                                      KeyName);
+            if (!NT_SUCCESS(Status))
+                break;
+
+//            EnumIndex++;
+        }
+
+        NtClose(DbObject->KeyHandle);
+    }
+
+    if (DbObject->ParentObject != NULL)
+    {
+        ParentObject = DbObject->ParentObject;
+
+        LsapRegDeleteKey(ParentObject->KeyHandle,
+                         DbObject->Name);
+    }
 
     RtlFreeHeap(RtlGetProcessHeap(), 0, DbObject);
 
