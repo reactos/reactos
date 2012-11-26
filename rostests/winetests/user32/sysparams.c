@@ -126,6 +126,9 @@ static HDC hdc;
 #define SPI_SETSCREENREADER_VALNAME_LEGACY      "Blind Access"
 #define SPI_SETFONTSMOOTHING_REGKEY             "Control Panel\\Desktop"
 #define SPI_SETFONTSMOOTHING_VALNAME            "FontSmoothing"
+#define SPI_SETFONTSMOOTHINGTYPE_VALNAME        "FontSmoothingType"
+#define SPI_SETFONTSMOOTHINGCONTRAST_VALNAME    "FontSmoothingGamma"
+#define SPI_SETFONTSMOOTHINGORIENTATION_VALNAME "FontSmoothingOrientation"
 #define SPI_SETLOWPOWERACTIVE_REGKEY            "Control Panel\\Desktop"
 #define SPI_SETLOWPOWERACTIVE_VALNAME           "LowPowerActive"
 #define SPI_SETPOWEROFFACTIVE_REGKEY            "Control Panel\\Desktop"
@@ -270,13 +273,9 @@ static BOOL test_error_msg ( int rc, const char *name )
 /*
  * Tests the HKEY_CURRENT_USER subkey value.
  * The value should contain string value.
- *
- * Params:
- * lpsSubKey - subkey name
- * lpsRegName - registry entry name
- * lpsTestValue - value to test
  */
-static void _test_reg_key( LPCSTR subKey1, LPCSTR subKey2, LPCSTR valName1, LPCSTR valName2, LPCSTR testValue, BOOL optional )
+static void _test_reg_key( LPCSTR subKey1, LPCSTR subKey2, LPCSTR valName1, LPCSTR valName2,
+                           const void *exp_value, DWORD exp_type, BOOL optional )
 {
     CHAR  value[MAX_PATH];
     DWORD valueLen;
@@ -292,9 +291,20 @@ static void _test_reg_key( LPCSTR subKey1, LPCSTR subKey2, LPCSTR valName1, LPCS
     RegCloseKey( hKey );
     if (rc==ERROR_SUCCESS)
     {
-        ok( !strcmp( testValue, value ),
-            "Wrong value in registry: subKey=%s, valName=%s, testValue=%s, value=%s\n",
-            subKey1, valName1, testValue, value );
+        ok( type == exp_type, "wrong type %u/%u\n", type, exp_type );
+        switch (exp_type)
+        {
+        case REG_DWORD:
+            ok( *(DWORD *)value == *(DWORD *)exp_value,
+                "Wrong value in registry: %s %s %08x/%08x\n",
+                subKey1, valName1, *(DWORD *)value, *(DWORD *)exp_value );
+            break;
+        case REG_SZ:
+            ok( !strcmp( exp_value, value ),
+                "Wrong value in registry: %s %s '%s' instead of '%s'\n",
+                subKey1, valName1, value, (const char *)exp_value );
+            break;
+        }
         found++;
     }
     else if (strict)
@@ -311,9 +321,20 @@ static void _test_reg_key( LPCSTR subKey1, LPCSTR subKey2, LPCSTR valName1, LPCS
         RegCloseKey( hKey );
         if (rc==ERROR_SUCCESS)
         {
-            ok( !strcmp( testValue, value ),
-                "Wrong value in registry: subKey=%s, valName=%s, testValue=%s, value=%s\n",
-                subKey1, valName2, testValue, value );
+            ok( type == exp_type, "wrong type %u/%u\n", type, exp_type );
+            switch (exp_type)
+            {
+            case REG_DWORD:
+                ok( *(DWORD *)value == *(DWORD *)exp_value,
+                    "Wrong value in registry: %s %s %08x/%08x\n",
+                    subKey1, valName1, *(DWORD *)value, *(DWORD *)exp_value );
+                break;
+            case REG_SZ:
+                ok( !strcmp( exp_value, value ),
+                    "Wrong value in registry: %s %s '%s' instead of '%s'\n",
+                    subKey1, valName1, value, (const char *)exp_value );
+                break;
+            }
             found++;
         }
         else if (strict)
@@ -331,9 +352,20 @@ static void _test_reg_key( LPCSTR subKey1, LPCSTR subKey2, LPCSTR valName1, LPCS
         RegCloseKey( hKey );
         if (rc==ERROR_SUCCESS)
         {
-            ok( !strcmp( testValue, value ),
-                "Wrong value in registry: subKey=%s, valName=%s, testValue=%s, value=%s\n",
-                subKey2, valName1, testValue, value );
+            ok( type == exp_type, "wrong type %u/%u\n", type, exp_type );
+            switch (exp_type)
+            {
+            case REG_DWORD:
+                ok( *(DWORD *)value == *(DWORD *)exp_value,
+                    "Wrong value in registry: %s %s %08x/%08x\n",
+                    subKey1, valName1, *(DWORD *)value, *(DWORD *)exp_value );
+                break;
+            case REG_SZ:
+                ok( !strcmp( exp_value, value ),
+                    "Wrong value in registry: %s %s '%s' instead of '%s'\n",
+                    subKey1, valName1, value, (const char *)exp_value );
+                break;
+            }
             found++;
         }
         else if (strict)
@@ -350,9 +382,20 @@ static void _test_reg_key( LPCSTR subKey1, LPCSTR subKey2, LPCSTR valName1, LPCS
             RegCloseKey( hKey );
             if (rc==ERROR_SUCCESS)
             {
-                ok( !strcmp( testValue, value ),
-                    "Wrong value in registry: subKey=%s, valName=%s, testValue=%s, value=%s\n",
-                    subKey2, valName2, testValue, value );
+                ok( type == exp_type, "wrong type %u/%u\n", type, exp_type );
+                switch (exp_type)
+                {
+                case REG_DWORD:
+                    ok( *(DWORD *)value == *(DWORD *)exp_value,
+                        "Wrong value in registry: %s %s %08x/%08x\n",
+                        subKey1, valName1, *(DWORD *)value, *(DWORD *)exp_value );
+                    break;
+                case REG_SZ:
+                    ok( !strcmp( exp_value, value ),
+                        "Wrong value in registry: %s %s '%s' instead of '%s'\n",
+                        subKey1, valName1, value, (const char *)exp_value );
+                    break;
+                }
                 found++;
             }
             else if (strict)
@@ -368,15 +411,17 @@ static void _test_reg_key( LPCSTR subKey1, LPCSTR subKey2, LPCSTR valName1, LPCS
 }
 
 #define test_reg_key( subKey, valName, testValue ) \
-    _test_reg_key( subKey, NULL, valName, NULL, testValue, FALSE )
+    _test_reg_key( subKey, NULL, valName, NULL, testValue, REG_SZ, FALSE )
 #define test_reg_key_optional( subKey, valName, testValue ) \
-    _test_reg_key( subKey, NULL, valName, NULL, testValue, TRUE )
+    _test_reg_key( subKey, NULL, valName, NULL, testValue, REG_SZ, TRUE )
 #define test_reg_key_ex( subKey1, subKey2, valName, testValue ) \
-    _test_reg_key( subKey1, subKey2, valName, NULL, testValue, FALSE )
+    _test_reg_key( subKey1, subKey2, valName, NULL, testValue, REG_SZ, FALSE )
 #define test_reg_key_ex2( subKey1, subKey2, valName1, valName2, testValue ) \
-    _test_reg_key( subKey1, subKey2, valName1, valName2, testValue, FALSE )
+    _test_reg_key( subKey1, subKey2, valName1, valName2, testValue, REG_SZ, FALSE )
 #define test_reg_key_ex2_optional( subKey1, subKey2, valName1, valName2, testValue ) \
-    _test_reg_key( subKey1, subKey2, valName1, valName2, testValue, TRUE )
+    _test_reg_key( subKey1, subKey2, valName1, valName2, testValue, REG_SZ, TRUE )
+#define test_reg_key_dword( subKey, valName, testValue ) \
+    _test_reg_key( subKey, NULL, valName, NULL, testValue, REG_DWORD, FALSE )
 
 /* get a metric from the registry. If the value is negative
  * it is assumed to be in twips and converted to pixels */
@@ -1942,6 +1987,7 @@ static void test_SPI_SETFONTSMOOTHING( void )         /*     75 */
 {
     BOOL rc;
     BOOL old_b;
+    DWORD old_type, old_contrast, old_orient;
     const UINT vals[]={0xffffffff,0,1,2};
     unsigned int i;
 
@@ -1951,6 +1997,9 @@ static void test_SPI_SETFONTSMOOTHING( void )         /*     75 */
     rc=SystemParametersInfoA( SPI_GETFONTSMOOTHING, 0, &old_b, 0 );
     if (!test_error_msg(rc,"SPI_{GET,SET}FONTSMOOTHING"))
         return;
+    SystemParametersInfoA( SPI_GETFONTSMOOTHINGTYPE, 0, &old_type, 0 );
+    SystemParametersInfoA( SPI_GETFONTSMOOTHINGCONTRAST, 0, &old_contrast, 0 );
+    SystemParametersInfoA( SPI_GETFONTSMOOTHINGORIENTATION, 0, &old_orient, 0 );
 
     for (i=0;i<sizeof(vals)/sizeof(*vals);i++)
     {
@@ -1965,12 +2014,54 @@ static void test_SPI_SETFONTSMOOTHING( void )         /*     75 */
                       SPI_SETFONTSMOOTHING_VALNAME,
                       vals[i] ? "2" : "0" );
 
+        rc=SystemParametersInfoA( SPI_SETFONTSMOOTHINGTYPE, 0, UlongToPtr(vals[i]),
+                                  SPIF_UPDATEINIFILE | SPIF_SENDCHANGE );
+        if (!test_error_msg(rc,"SPI_SETFONTSMOOTHINGTYPE")) return;
+        ok(rc!=0,"%d: rc=%d err=%d\n",i,rc,GetLastError());
+        test_change_message( SPI_SETFONTSMOOTHINGTYPE, 0 );
+        test_reg_key_dword( SPI_SETFONTSMOOTHING_REGKEY,
+                            SPI_SETFONTSMOOTHINGTYPE_VALNAME, &vals[i] );
+
+        rc=SystemParametersInfoA( SPI_SETFONTSMOOTHINGCONTRAST, 0, UlongToPtr(vals[i]),
+                                  SPIF_UPDATEINIFILE | SPIF_SENDCHANGE );
+        if (!test_error_msg(rc,"SPI_SETFONTSMOOTHINGCONTRAST")) return;
+        ok(rc!=0,"%d: rc=%d err=%d\n",i,rc,GetLastError());
+        test_change_message( SPI_SETFONTSMOOTHINGCONTRAST, 0 );
+        test_reg_key_dword( SPI_SETFONTSMOOTHING_REGKEY,
+                            SPI_SETFONTSMOOTHINGCONTRAST_VALNAME, &vals[i] );
+
+        rc=SystemParametersInfoA( SPI_SETFONTSMOOTHINGORIENTATION, 0, UlongToPtr(vals[i]),
+                                  SPIF_UPDATEINIFILE | SPIF_SENDCHANGE );
+        if (!test_error_msg(rc,"SPI_SETFONTSMOOTHINGORIENTATION")) return;
+        ok(rc!=0,"%d: rc=%d err=%d\n",i,rc,GetLastError());
+        test_change_message( SPI_SETFONTSMOOTHINGORIENTATION, 0 );
+        test_reg_key_dword( SPI_SETFONTSMOOTHING_REGKEY,
+                            SPI_SETFONTSMOOTHINGORIENTATION_VALNAME, &vals[i] );
+
         rc=SystemParametersInfoA( SPI_GETFONTSMOOTHING, 0, &v, 0 );
         ok(rc!=0,"%d: rc=%d err=%d\n",i,rc,GetLastError());
         eq( v, vals[i] ? 1 : 0, "SPI_GETFONTSMOOTHING", "%d" );
+
+        rc=SystemParametersInfoA( SPI_GETFONTSMOOTHINGTYPE, 0, &v, 0 );
+        ok(rc!=0,"%d: rc=%d err=%d\n",i,rc,GetLastError());
+        ok( v == vals[i], "wrong value %x/%x\n", v, vals[i] );
+
+        rc=SystemParametersInfoA( SPI_GETFONTSMOOTHINGCONTRAST, 0, &v, 0 );
+        ok(rc!=0,"%d: rc=%d err=%d\n",i,rc,GetLastError());
+        ok( v == vals[i], "wrong value %x/%x\n", v, vals[i] );
+
+        rc=SystemParametersInfoA( SPI_GETFONTSMOOTHINGORIENTATION, 0, &v, 0 );
+        ok(rc!=0,"%d: rc=%d err=%d\n",i,rc,GetLastError());
+        ok( v == vals[i], "wrong value %x/%x\n", v, vals[i] );
     }
 
     rc=SystemParametersInfoA( SPI_SETFONTSMOOTHING, old_b, 0, SPIF_UPDATEINIFILE );
+    ok(rc!=0,"***warning*** failed to restore the original value: rc=%d err=%d\n",rc,GetLastError());
+    rc=SystemParametersInfoA( SPI_SETFONTSMOOTHINGTYPE, old_type, 0, SPIF_UPDATEINIFILE );
+    ok(rc!=0,"***warning*** failed to restore the original value: rc=%d err=%d\n",rc,GetLastError());
+    rc=SystemParametersInfoA( SPI_SETFONTSMOOTHINGCONTRAST, old_contrast, 0, SPIF_UPDATEINIFILE );
+    ok(rc!=0,"***warning*** failed to restore the original value: rc=%d err=%d\n",rc,GetLastError());
+    rc=SystemParametersInfoA( SPI_SETFONTSMOOTHINGORIENTATION, old_orient, 0, SPIF_UPDATEINIFILE );
     ok(rc!=0,"***warning*** failed to restore the original value: rc=%d err=%d\n",rc,GetLastError());
 }
 
