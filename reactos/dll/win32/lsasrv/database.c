@@ -796,7 +796,8 @@ LsapOpenDbObject(IN PLSA_DB_OBJECT ParentObject,
 
     NewObject = RtlAllocateHeap(RtlGetProcessHeap(),
                                 0,
-                                sizeof(LSA_DB_OBJECT) + wcslen(ObjectName) + sizeof(WCHAR));
+//                                sizeof(LSA_DB_OBJECT) + wcslen(ObjectName) + sizeof(WCHAR));
+                                sizeof(LSA_DB_OBJECT));
     if (NewObject == NULL)
     {
         NtClose(ObjectKeyHandle);
@@ -809,7 +810,7 @@ LsapOpenDbObject(IN PLSA_DB_OBJECT ParentObject,
     NewObject->Access = DesiredAccess;
     NewObject->KeyHandle = ObjectKeyHandle;
     NewObject->ParentObject = ParentObject;
-    wcscpy(NewObject->Name, ObjectName);
+//    wcscpy(NewObject->Name, ObjectName);
 
     if (ParentObject != NULL)
         ParentObject->RefCount++;
@@ -900,9 +901,10 @@ NTSTATUS
 LsapDeleteDbObject(IN PLSA_DB_OBJECT DbObject)
 {
     PLSA_DB_OBJECT ParentObject = NULL;
+#if 0
     WCHAR KeyName[64];
     ULONG EnumIndex;
-
+#endif
     NTSTATUS Status = STATUS_SUCCESS;
 
     DbObject->RefCount--;
@@ -912,6 +914,7 @@ LsapDeleteDbObject(IN PLSA_DB_OBJECT DbObject)
 
     if (DbObject->KeyHandle != NULL)
     {
+#if 0
         EnumIndex = 0;
 
         while (TRUE)
@@ -933,16 +936,17 @@ LsapDeleteDbObject(IN PLSA_DB_OBJECT DbObject)
 
 //            EnumIndex++;
         }
-
+#endif
         NtClose(DbObject->KeyHandle);
     }
 
     if (DbObject->ParentObject != NULL)
     {
         ParentObject = DbObject->ParentObject;
-
+#if 0
         LsapRegDeleteKey(ParentObject->KeyHandle,
                          DbObject->Name);
+#endif
     }
 
     RtlFreeHeap(RtlGetProcessHeap(), 0, DbObject);
