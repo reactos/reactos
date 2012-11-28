@@ -28,38 +28,8 @@
 
 #if DBG
 
-#define DEFAULT_BAUD_RATE    19200
+#define DEFAULT_BAUD_RATE   19200
 
-#define   SER_RBR(x)   ((x)+0)
-#define   SER_THR(x)   ((x)+0)
-#define   SER_DLL(x)   ((x)+0)
-#define   SER_IER(x)   ((x)+1)
-#define   SER_DLM(x)   ((x)+1)
-#define   SER_IIR(x)   ((x)+2)
-#define   SER_LCR(x)   ((x)+3)
-#define     SR_LCR_CS5 0x00
-#define     SR_LCR_CS6 0x01
-#define     SR_LCR_CS7 0x02
-#define     SR_LCR_CS8 0x03
-#define     SR_LCR_ST1 0x00
-#define     SR_LCR_ST2 0x04
-#define     SR_LCR_PNO 0x00
-#define     SR_LCR_POD 0x08
-#define     SR_LCR_PEV 0x18
-#define     SR_LCR_PMK 0x28
-#define     SR_LCR_PSP 0x38
-#define     SR_LCR_BRK 0x40
-#define     SR_LCR_DLAB 0x80
-#define   SER_MCR(x)   ((x)+4)
-#define     SR_MCR_DTR 0x01
-#define     SR_MCR_RTS 0x02
-#define   SER_LSR(x)   ((x)+5)
-#define     SR_LSR_DR  0x01
-#define     SR_LSR_TBE 0x20
-#define   SER_MSR(x)   ((x)+6)
-#define     SR_MSR_CTS 0x10
-#define     SR_MSR_DSR 0x20
-#define   SER_SCR(x)   ((x)+7)
 
 /* STATIC VARIABLES *********************************************************/
 
