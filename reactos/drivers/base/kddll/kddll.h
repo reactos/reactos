@@ -12,14 +12,15 @@
 
 #define NOEXTAPI
 #include <ntifs.h>
-#define NDEBUG
 #include <halfuncs.h>
-#include <debug.h>
 #include "arc/arc.h"
 #include "windbgkd.h"
 
 #include <wdbgexts.h>
 #include <ioaccess.h> /* port intrinsics */
+
+#define NDEBUG
+#include <debug.h>
 
 long atol(const char *str);
 
