@@ -23,6 +23,6 @@
 
 BOOLEAN Rs232PortInitialize(ULONG ComPort, ULONG BaudRate);
 BOOLEAN Rs232PortGetByte(PUCHAR ByteRecieved);
-BOOLEAN Rs232PortPollByte(PUCHAR ByteRecieved);
+// BOOLEAN Rs232PortPollByte(PUCHAR ByteRecieved);
 VOID Rs232PortPutByte(UCHAR ByteToSend);
-BOOLEAN Rs232PortInUse(ULONG Base);
+BOOLEAN Rs232PortInUse(PUCHAR Base);

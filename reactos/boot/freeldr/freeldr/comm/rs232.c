@@ -22,6 +22,7 @@
 #ifndef _M_ARM
 
 #include <freeldr.h>
+#include <cportlib/cportlib.h>
 
 /* MACROS *******************************************************************/
 
@@ -62,227 +63,105 @@
 
 /* STATIC VARIABLES *********************************************************/
 
-static ULONG Rs232ComPort = 0;
-static ULONG Rs232BaudRate = 0;
-static PUCHAR Rs232PortBase = (PUCHAR)0;
+static ULONG BaseArray[] = {0, 0x3F8, 0x2F8, 0x3E8, 0x2E8};
 
-/* The com port must only be initialized once! */
+/* The COM port must only be initialized once! */
+static CPPORT Rs232ComPort;
 static BOOLEAN PortInitialized = FALSE;
 
-/* STATIC FUNCTIONS *********************************************************/
-
-static BOOLEAN Rs232DoesComPortExist(PUCHAR BaseAddress)
-{
-        BOOLEAN found;
-        UCHAR mcr;
-        UCHAR msr;
-
-        found = FALSE;
-
-        /* save Modem Control Register (MCR) */
-        mcr = READ_PORT_UCHAR (SER_MCR(BaseAddress));
-
-        /* enable loop mode (set Bit 4 of the MCR) */
-        WRITE_PORT_UCHAR (SER_MCR(BaseAddress), 0x10);
-
-        /* clear all modem output bits */
-        WRITE_PORT_UCHAR (SER_MCR(BaseAddress), 0x10);
-
-        /* read the Modem Status Register */
-        msr = READ_PORT_UCHAR (SER_MSR(BaseAddress));
-
-        /*
-         * the upper nibble of the MSR (modem output bits) must be
-         * equal to the lower nibble of the MCR (modem input bits)
-         */
-        if ((msr & 0xF0) == 0x00)
-        {
-                /* set all modem output bits */
-                WRITE_PORT_UCHAR (SER_MCR(BaseAddress), 0x1F);
-
-                /* read the Modem Status Register */
-                msr = READ_PORT_UCHAR (SER_MSR(BaseAddress));
-
-                /*
-                 * the upper nibble of the MSR (modem output bits) must be
-                 * equal to the lower nibble of the MCR (modem input bits)
-                 */
-                if ((msr & 0xF0) == 0xF0)
-                        found = TRUE;
-        }
-
-        /* restore MCR */
-        WRITE_PORT_UCHAR (SER_MCR(BaseAddress), mcr);
-
-        return (found);
-}
 
 /* FUNCTIONS *********************************************************/
 
-BOOLEAN Rs232PortInitialize(ULONG ComPort, ULONG BaudRate)
+BOOLEAN Rs232PortInitialize(IN ULONG ComPort,
+                            IN ULONG BaudRate)
 {
-        ULONG BaseArray[5] = {0, 0x3F8, 0x2F8, 0x3E8, 0x2E8};
-        //char buffer[80];
-        ULONG divisor;
-        UCHAR lcr;
+    NTSTATUS Status;
+    PUCHAR Address;
 
-        if (PortInitialized == FALSE)
+    if (PortInitialized == FALSE)
+    {
+        if (BaudRate == 0)
         {
-                if (BaudRate != 0)
-                {
-                        Rs232BaudRate = BaudRate;
-                }
-                else
-                {
-                        Rs232BaudRate = DEFAULT_BAUD_RATE;
-                }
-
-                if (ComPort == 0)
-                {
-                        if (Rs232DoesComPortExist ((PUCHAR)(ULONG_PTR)BaseArray[2]))
-                        {
-                                Rs232PortBase = (PUCHAR)(ULONG_PTR)BaseArray[2];
-                                Rs232ComPort = 2;
-/*#ifndef NDEBUG
-                                sprintf (buffer,
-                                         "\nSerial port COM%ld found at 0x%lx\n",
-                                         ComPort,
-                                         (ULONG)PortBase);
-                                HalDisplayString (buffer);
-#endif*/ /* NDEBUG */
-                        }
-                        else if (Rs232DoesComPortExist ((PUCHAR)(ULONG_PTR)BaseArray[1]))
-                        {
-                                Rs232PortBase = (PUCHAR)(ULONG_PTR)BaseArray[1];
-                                Rs232ComPort = 1;
-/*#ifndef NDEBUG
-                                sprintf (buffer,
-                                         "\nSerial port COM%ld found at 0x%lx\n",
-                                         ComPort,
-                                         (ULONG)PortBase);
-                                HalDisplayString (buffer);
-#endif*/ /* NDEBUG */
-                        }
-                        else
-                        {
-                                /*sprintf (buffer,
-                                         "\nKernel Debugger: No COM port found!!!\n\n");
-                                HalDisplayString (buffer);*/
-                                return FALSE;
-                        }
-                }
-                else
-                {
-                        if (Rs232DoesComPortExist ((PUCHAR)(ULONG_PTR)BaseArray[ComPort]))
-                        {
-                                Rs232PortBase = (PUCHAR)(ULONG_PTR)BaseArray[ComPort];
-                                Rs232ComPort = ComPort;
-/*#ifndef NDEBUG
-                                sprintf (buffer,
-                                         "\nSerial port COM%ld found at 0x%lx\n",
-                                         ComPort,
-                                         (ULONG)PortBase);
-                                HalDisplayString (buffer);
-#endif*/ /* NDEBUG */
-                        }
-                        else
-                        {
-                                /*sprintf (buffer,
-                                         "\nKernel Debugger: No serial port found!!!\n\n");
-                                HalDisplayString (buffer);*/
-                                return FALSE;
-                        }
-                }
-
-                PortInitialized = TRUE;
+            BaudRate = DEFAULT_BAUD_RATE;
         }
 
-        /*
-         * set baud rate and data format (8N1)
-         */
+        if (ComPort == 0)
+        {
+            if (CpDoesPortExist(UlongToPtr(BaseArray[2])))
+            {
+                Address = UlongToPtr(BaseArray[2]);
+            }
+            else if (CpDoesPortExist(UlongToPtr(BaseArray[1])))
+            {
+                Address = UlongToPtr(BaseArray[1]);
+            }
+            else
+            {
+                return FALSE;
+            }
+        }
+        else if (ComPort <= 4) // 4 == MAX_COM_PORTS
+        {
+            if (CpDoesPortExist(UlongToPtr(BaseArray[ComPort])))
+            {
+                Address = UlongToPtr(BaseArray[ComPort]);
+            }
+            else
+            {
+                return FALSE;
+            }
+        }
+        else
+        {
+            return FALSE;
+        }
 
-        /*  turn on DTR and RTS  */
-        WRITE_PORT_UCHAR (SER_MCR(Rs232PortBase), SR_MCR_DTR | SR_MCR_RTS);
+        Status = CpInitialize(&Rs232ComPort, Address, BaudRate);
+        if (!NT_SUCCESS(Status)) return FALSE;
 
-        /* set DLAB */
-        lcr = READ_PORT_UCHAR (SER_LCR(Rs232PortBase)) | SR_LCR_DLAB;
-        WRITE_PORT_UCHAR (SER_LCR(Rs232PortBase), lcr);
+        PortInitialized = TRUE;
+    }
 
-        /* set baud rate */
-        divisor = 115200 / BaudRate;
-        WRITE_PORT_UCHAR (SER_DLL(Rs232PortBase), divisor & 0xff);
-        WRITE_PORT_UCHAR (SER_DLM(Rs232PortBase), (divisor >> 8) & 0xff);
-
-        /* reset DLAB and set 8N1 format */
-        WRITE_PORT_UCHAR (SER_LCR(Rs232PortBase),
-                          SR_LCR_CS8 | SR_LCR_ST1 | SR_LCR_PNO);
-
-        /* read junk out of the RBR */
-        lcr = READ_PORT_UCHAR (SER_RBR(Rs232PortBase));
-
-        /*
-         * set global info
-         */
-        //KdComPortInUse = (ULONG)PortBase;
-
-        /*
-         * print message to blue screen
-         */
-        /*sprintf (buffer,
-                 "\nKernel Debugger: COM%ld (Port 0x%lx) BaudRate %ld\n\n",
-                 ComPort,
-                 (ULONG)PortBase,
-                 BaudRate);
-
-        HalDisplayString (buffer);*/
-
-        return TRUE;
+    return TRUE;
 }
 
-BOOLEAN Rs232PortGetByte(PUCHAR ByteRecieved)
+BOOLEAN Rs232PortGetByte(PUCHAR ByteReceived)
 {
-	if (PortInitialized == FALSE)
-		return FALSE;
+    if (PortInitialized == FALSE)
+        return FALSE;
 
-	if ((READ_PORT_UCHAR (SER_LSR(Rs232PortBase)) & SR_LSR_DR))
-	{
-		*ByteRecieved = READ_PORT_UCHAR (SER_RBR(Rs232PortBase));
-		return TRUE;
-	}
-
-	return FALSE;
+    return (CpGetByte(&Rs232ComPort, ByteReceived, FALSE, FALSE) == CP_GET_SUCCESS);
 }
 
-BOOLEAN Rs232PortPollByte(PUCHAR ByteRecieved)
+/*
+BOOLEAN Rs232PortPollByte(PUCHAR ByteReceived)
 {
-	if (PortInitialized == FALSE)
-		return FALSE;
+    if (PortInitialized == FALSE)
+        return FALSE;
 
-	while ((READ_PORT_UCHAR (SER_LSR(Rs232PortBase)) & SR_LSR_DR) == 0)
-		;
+    while ((READ_PORT_UCHAR (SER_LSR(Rs232PortBase)) & SR_LSR_DR) == 0)
+        ;
 
-	*ByteRecieved = READ_PORT_UCHAR (SER_RBR(Rs232PortBase));
+    *ByteReceived = READ_PORT_UCHAR (SER_RBR(Rs232PortBase));
 
-	return TRUE;
+    return TRUE;
 }
+*/
 
 VOID Rs232PortPutByte(UCHAR ByteToSend)
 {
-	if (PortInitialized == FALSE)
-		return;
+    if (PortInitialized == FALSE)
+        return;
 
-	while ((READ_PORT_UCHAR (SER_LSR(Rs232PortBase)) & SR_LSR_TBE) == 0)
-		;
-
-	WRITE_PORT_UCHAR (SER_THR(Rs232PortBase), ByteToSend);
+    CpPutByte(&Rs232ComPort, ByteToSend);
 }
 
 #endif /* DBG */
 
-BOOLEAN Rs232PortInUse(ULONG Base)
+BOOLEAN Rs232PortInUse(PUCHAR Base)
 {
 #if DBG
-    return PortInitialized && Rs232PortBase == (PUCHAR)(ULONG_PTR)Base ? TRUE : FALSE;
+    return ( (PortInitialized && (Rs232ComPort.Address == Base)) ? TRUE : FALSE );
 #else
     return FALSE;
 #endif
