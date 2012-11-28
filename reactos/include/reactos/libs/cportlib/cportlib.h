@@ -10,31 +10,45 @@
 
 #include <ntdef.h>
 
+//
+// Return error codes.
+//
 #define CP_GET_SUCCESS  0
 #define CP_GET_NODATA   1
 #define CP_GET_ERROR    2
 
+//
+// COM port flags.
+//
 #define CPPORT_FLAG_MODEM_CONTROL   0x02
+
 typedef struct _CPPORT
 {
     PUCHAR Address;
-    ULONG  Baud;
+    ULONG  BaudRate;
     USHORT Flags;
 } CPPORT, *PCPPORT;
-
-VOID
-NTAPI
-CpInitialize(
-    IN PCPPORT Port,
-    IN PUCHAR  Address,
-    IN ULONG   Rate
-);
 
 VOID
 NTAPI
 CpEnableFifo(
     IN PUCHAR  Address,
     IN BOOLEAN Enable
+);
+
+VOID
+NTAPI
+CpSetBaud(
+    IN PCPPORT Port,
+    IN ULONG   BaudRate
+);
+
+NTSTATUS
+NTAPI
+CpInitialize(
+    IN PCPPORT Port,
+    IN PUCHAR  Address,
+    IN ULONG   BaudRate
 );
 
 BOOLEAN
@@ -50,20 +64,13 @@ CpReadLsr(
     IN UCHAR   ExpectedValue
 );
 
-VOID
-NTAPI
-CpSetBaud(
-    IN PCPPORT Port,
-    IN ULONG Rate
-);
-
 USHORT
 NTAPI
 CpGetByte(
-    IN PCPPORT Port,
-    IN PUCHAR  Byte,
-    IN BOOLEAN Wait,
-    IN BOOLEAN Poll
+    IN  PCPPORT Port,
+    OUT PUCHAR  Byte,
+    IN  BOOLEAN Wait,
+    IN  BOOLEAN Poll
 );
 
 VOID
