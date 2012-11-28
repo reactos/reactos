@@ -143,7 +143,7 @@ BOOLEAN
 WinLdrPortGetByte(IN ULONG PortId,
     			  OUT PUCHAR Data)
 {
-	return CpGetByte(&Port[PortId], Data, TRUE, FALSE) == CP_GET_SUCCESS;
+	return CpGetByte(&Port[PortId], Data, TRUE) == CP_GET_SUCCESS;
 }
 
 BOOLEAN
@@ -151,7 +151,7 @@ WinLdrPortPollOnly(IN ULONG PortId)
 {
     UCHAR Dummy;
 
-    return CpGetByte(&Port[PortId], &Dummy, FALSE, TRUE) == CP_GET_SUCCESS;
+    return CpGetByte(&Port[PortId], &Dummy, FALSE) == CP_GET_SUCCESS;
 }
 
 VOID

@@ -100,7 +100,7 @@ BOOLEAN Rs232PortGetByte(PUCHAR ByteReceived)
     if (PortInitialized == FALSE)
         return FALSE;
 
-    return (CpGetByte(&Rs232ComPort, ByteReceived, FALSE, FALSE) == CP_GET_SUCCESS);
+    return (CpGetByte(&Rs232ComPort, ByteReceived, TRUE) == CP_GET_SUCCESS);
 }
 
 /*
@@ -109,12 +109,7 @@ BOOLEAN Rs232PortPollByte(PUCHAR ByteReceived)
     if (PortInitialized == FALSE)
         return FALSE;
 
-    while ((READ_PORT_UCHAR (SER_LSR(Rs232PortBase)) & SR_LSR_DR) == 0)
-        ;
-
-    *ByteReceived = READ_PORT_UCHAR (SER_RBR(Rs232PortBase));
-
-    return TRUE;
+    return (CpGetByte(&Rs232ComPort, ByteReceived, FALSE) == CP_GET_SUCCESS);
 }
 */
 
