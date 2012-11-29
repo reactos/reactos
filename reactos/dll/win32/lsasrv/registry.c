@@ -60,8 +60,8 @@ LsapRegCreateKey(IN HANDLE ParentKeyHandle,
 
 
 NTSTATUS
-LsapRegDeleteKey(IN HANDLE ParentKeyHandle,
-                 IN LPCWSTR KeyName)
+LsapRegDeleteSubKey(IN HANDLE ParentKeyHandle,
+                    IN LPCWSTR KeyName)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING SubKeyName;
@@ -86,6 +86,13 @@ LsapRegDeleteKey(IN HANDLE ParentKeyHandle,
     NtClose(TargetKey);
 
     return Status;
+}
+
+
+NTSTATUS
+LsapRegDeleteKey(IN HANDLE KeyHandle)
+{
+    return NtDeleteKey(KeyHandle);
 }
 
 

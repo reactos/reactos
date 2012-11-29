@@ -48,7 +48,6 @@ typedef struct _LSA_DB_OBJECT
     ACCESS_MASK Access;
     HANDLE KeyHandle;
     struct _LSA_DB_OBJECT *ParentObject;
-    WCHAR Name[0];
 } LSA_DB_OBJECT, *PLSA_DB_OBJECT;
 
 #define LSAP_DB_SIGNATURE 0x12345678
@@ -282,8 +281,11 @@ LsapRegCreateKey(IN HANDLE ParentKeyHandle,
                  OUT HANDLE KeyHandle);
 
 NTSTATUS
-LsapRegDeleteKey(IN HANDLE ParentKeyHandle,
-                 IN LPCWSTR KeyName);
+LsapRegDeleteSubKey(IN HANDLE ParentKeyHandle,
+                    IN LPCWSTR KeyName);
+
+NTSTATUS
+LsapRegDeleteKey(IN HANDLE KeyHandle);
 
 NTSTATUS
 LsapRegEnumerateSubKey(IN HANDLE KeyHandle,

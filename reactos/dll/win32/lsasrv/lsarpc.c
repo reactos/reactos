@@ -97,8 +97,7 @@ NTSTATUS WINAPI LsarClose(
 NTSTATUS WINAPI LsarDelete(
     LSAPR_HANDLE ObjectHandle)
 {
-    /* Deprecated */
-    return STATUS_NOT_SUPPORTED;
+    return LsarDeleteObject(&ObjectHandle);
 }
 
 
