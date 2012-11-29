@@ -11,14 +11,17 @@
 
 #define NOEXTAPI
 #include <ntifs.h>
-#define NDEBUG
 #include <halfuncs.h>
 #include <stdio.h>
-#include <debug.h>
 #include "arc/arc.h"
 #include "windbgkd.h"
 #include <kddll.h>
 #include <ioaccess.h> /* port intrinsics */
+#include <cportlib/cportlib.h>
+
+#define NDEBUG
+#include <debug.h>
+
 
 typedef struct _KD_PORT_INFORMATION
 {
@@ -54,14 +57,14 @@ KdPortPutByteEx(
 
 #define DEFAULT_BAUD_RATE    19200
 
-#ifdef _M_IX86
-const ULONG BaseArray[5] = {0, 0x3F8, 0x2F8, 0x3E8, 0x2E8};
+#if defined(_M_IX86) || defined(_M_AMD64)
+const ULONG BaseArray[] = {0, 0x3F8, 0x2F8, 0x3E8, 0x2E8};
 #elif defined(_M_PPC)
-const ULONG BaseArray[2] = {0, 0x800003f8};
+const ULONG BaseArray[] = {0, 0x800003F8};
 #elif defined(_M_MIPS)
-const ULONG BaseArray[3] = {0, 0x80006000, 0x80007000};
+const ULONG BaseArray[] = {0, 0x80006000, 0x80007000};
 #elif defined(_M_ARM)
-const ULONG BaseArray[2] = {0, 0xF1012000};
+const ULONG BaseArray[] = {0, 0xF1012000};
 #else
 #error Unknown architecture
 #endif
@@ -122,68 +125,6 @@ static KD_PORT_INFORMATION DefaultPort = { 0, 0, 0 };
 static BOOLEAN PortInitialized = FALSE;
 
 
-/* STATIC FUNCTIONS *********************************************************/
-
-static BOOLEAN
-KdpDoesComPortExist(
-    IN ULONG BaseAddress)
-{
-    BOOLEAN found;
-    UCHAR mcr;
-    UCHAR msr;
-
-    found = FALSE;
-
-    /* save Modem Control Register (MCR) */
-    mcr = READ_PORT_UCHAR(SER_MCR(BaseAddress));
-
-    /* enable loop mode (set Bit 4 of the MCR) */
-    WRITE_PORT_UCHAR(SER_MCR(BaseAddress), SR_MCR_LOOP);
-
-    /* clear all modem output bits */
-    WRITE_PORT_UCHAR(SER_MCR(BaseAddress), SR_MCR_LOOP);
-
-    /* read the Modem Status Register */
-    msr = READ_PORT_UCHAR(SER_MSR(BaseAddress));
-
-    /*
-     * the upper nibble of the MSR (modem output bits) must be
-     * equal to the lower nibble of the MCR (modem input bits)
-     */
-    if ((msr & 0xF0) == 0x00)
-    {
-        /* set all modem output bits */
-        WRITE_PORT_UCHAR(SER_MCR(BaseAddress), SR_MCR_DTR | SR_MCR_RTS | SR_MCR_OUT1 | SR_MCR_OUT2 | SR_MCR_LOOP);
-
-        /* read the Modem Status Register */
-        msr = READ_PORT_UCHAR(SER_MSR(BaseAddress));
-
-        /*
-         * the upper nibble of the MSR (modem output bits) must be
-         * equal to the lower nibble of the MCR (modem input bits)
-         */
-        if ((msr & 0xF0) == 0xF0)
-        {
-            /*
-             * setup a resonable state for the port:
-             * enable fifo and clear recieve/transmit buffers
-             */
-            WRITE_PORT_UCHAR(SER_FCR(BaseAddress),
-                            (SR_FCR_ENABLE_FIFO | SR_FCR_CLEAR_RCVR | SR_FCR_CLEAR_XMIT));
-            WRITE_PORT_UCHAR(SER_FCR(BaseAddress), 0);
-            READ_PORT_UCHAR(SER_RBR(BaseAddress));
-            WRITE_PORT_UCHAR(SER_IER(BaseAddress), 0);
-            found = TRUE;
-        }
-    }
-
-    /* restore MCR */
-    WRITE_PORT_UCHAR(SER_MCR(BaseAddress), mcr);
-
-    return found;
-}
-
-
 /* FUNCTIONS ****************************************************************/
 
 /* HAL.KdPortInitialize */
@@ -203,14 +144,18 @@ KdPortInitialize(
 
         if (PortInformation->ComPort == 0)
         {
+            /*
+             * Start enumerating COM ports from the last one to the first one,
+             * and break when we find a valid port.
+             * If we reach the first element of the list, the invalid COM port,
+             * then it means that no valid port was found.
+             */
             for (i = sizeof(BaseArray) / sizeof(BaseArray[0]) - 1; i > 0; i--)
             {
-                if (KdpDoesComPortExist(BaseArray[i]))
+                if (CpDoesPortExist(UlongToPtr(BaseArray[i])))
                 {
-                    DefaultPort.BaseAddress = BaseArray[i];
-                    DefaultPort.ComPort = i;
-                    PortInformation->BaseAddress = DefaultPort.BaseAddress;
-                    PortInformation->ComPort = DefaultPort.ComPort;
+                    PortInformation->BaseAddress = DefaultPort.BaseAddress = BaseArray[i];
+                    PortInformation->ComPort     = DefaultPort.ComPort     = i;
                     break;
                 }
             }
@@ -237,7 +182,7 @@ KdPortInitialize(
 }
 
 
-/* HAL.KdPortInitializeEx */
+/* HAL.KdPortInitializeEx ; ReactOS-specific */
 BOOLEAN
 NTAPI
 KdPortInitializeEx(
@@ -260,7 +205,7 @@ KdPortInitializeEx(
 
     if (PortInformation->ComPort != 0)
     {
-        if (!KdpDoesComPortExist(BaseArray[PortInformation->ComPort]))
+        if (!CpDoesPortExist(UlongToPtr(BaseArray[PortInformation->ComPort])))
         {
             sprintf(buffer,
                     "\nKernel Debugger: Serial port not found!\n\n");
@@ -335,7 +280,7 @@ KdPortGetByte(
 }
 
 
-/* HAL.KdPortGetByteEx */
+/* HAL.KdPortGetByteEx ; ReactOS-specific */
 BOOLEAN
 NTAPI
 KdPortGetByteEx(
@@ -366,7 +311,7 @@ KdPortPollByte(
 }
 
 
-/* HAL.KdPortPollByteEx */
+/* HAL.KdPortPollByteEx ; ReactOS-specific */
 BOOLEAN
 NTAPI
 KdPortPollByteEx(
@@ -395,7 +340,7 @@ KdPortPutByte(
     KdPortPutByteEx(&DefaultPort, ByteToSend);
 }
 
-/* HAL.KdPortPutByteEx */
+/* HAL.KdPortPutByteEx ; ReactOS-specific */
 VOID
 NTAPI
 KdPortPutByteEx(
