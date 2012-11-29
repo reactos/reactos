@@ -107,7 +107,9 @@ static int NTDRV_CLIPBOARD_QueryAvailableData(LPCLIPBOARDINFO lpcbinfo);
 static BOOL X11DRV_CLIPBOARD_ReadSelectionData(Display *display, LPWINE_CLIPDATA lpData);
 static BOOL X11DRV_CLIPBOARD_ReadProperty(Display *display, Window w, Atom prop,
     unsigned char** data, unsigned long* datasize);
-static BOOL X11DRV_CLIPBOARD_RenderFormat(Display *display, LPWINE_CLIPDATA lpData);
+#endif
+static BOOL NTDRV_CLIPBOARD_RenderFormat(LPWINE_CLIPDATA lpData);
+#if 0
 static HANDLE X11DRV_CLIPBOARD_SerializeMetafile(INT wformat, HANDLE hdata, LPDWORD lpcbytes, BOOL out);
 #endif
 static BOOL NTDRV_CLIPBOARD_SynthesizeData(UINT wFormatID);
@@ -659,11 +661,10 @@ static BOOL NTDRV_CLIPBOARD_UpdateCache(LPCLIPBOARDINFO lpcbinfo)
     return bret;
 }
 
-#if 0
 /**************************************************************************
  *			X11DRV_CLIPBOARD_RenderFormat
  */
-static BOOL X11DRV_CLIPBOARD_RenderFormat(Display *display, LPWINE_CLIPDATA lpData)
+static BOOL NTDRV_CLIPBOARD_RenderFormat(LPWINE_CLIPDATA lpData)
 {
     BOOL bret = TRUE;
 
@@ -671,9 +672,9 @@ static BOOL X11DRV_CLIPBOARD_RenderFormat(Display *display, LPWINE_CLIPDATA lpDa
 
     if (lpData->hData) return bret; /* Already rendered */
 
-    if (lpData->wFlags & CF_FLAG_SYNTHESIZED)
+    /*if (lpData->wFlags & CF_FLAG_SYNTHESIZED)
         bret = X11DRV_CLIPBOARD_RenderSynthesizedFormat(display, lpData);
-    else if (!X11DRV_CLIPBOARD_IsSelectionOwner())
+    else if (!NTDRV_CLIPBOARD_IsSelectionOwner())
     {
         if (!X11DRV_CLIPBOARD_ReadSelectionData(display, lpData))
         {
@@ -682,11 +683,11 @@ static BOOL X11DRV_CLIPBOARD_RenderFormat(Display *display, LPWINE_CLIPDATA lpDa
             bret = FALSE;
         }
     }
-    else
+    else*/
     {
         CLIPBOARDINFO cbInfo;
 
-        if (X11DRV_CLIPBOARD_GetClipboardInfo(&cbInfo) && cbInfo.hWndOwner)
+        if (NTDRV_CLIPBOARD_GetClipboardInfo(&cbInfo) && cbInfo.hWndOwner)
         {
             /* Send a WM_RENDERFORMAT message to notify the owner to render the
              * data requested into the clipboard.
@@ -706,7 +707,7 @@ static BOOL X11DRV_CLIPBOARD_RenderFormat(Display *display, LPWINE_CLIPDATA lpDa
     return bret;
 }
 
-
+#if 0
 /**************************************************************************
  *                      CLIPBOARD_ConvertText
  * Returns number of required/converted characters - not bytes!
@@ -2739,8 +2740,8 @@ HANDLE CDECL RosDrv_GetClipboardData(UINT wFormat)
 
     if ((lpRender = NTDRV_CLIPBOARD_LookupData(wFormat)))
     {
-        //if ( !lpRender->hData )
-        //    NTDRV_CLIPBOARD_RenderFormat(thread_init_display(), lpRender);
+        if ( !lpRender->hData )
+            NTDRV_CLIPBOARD_RenderFormat(lpRender);
 
         TRACE(" returning %p (type %04x)\n", lpRender->hData, lpRender->wFormatID);
         return lpRender->hData;
