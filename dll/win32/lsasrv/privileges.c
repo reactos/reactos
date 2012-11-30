@@ -18,6 +18,12 @@ typedef struct
     LPCWSTR Name;
 } PRIVILEGE_DATA;
 
+typedef struct
+{
+    ULONG Flag;
+    LPCWSTR Name;
+} RIGHT_DATA;
+
 
 /* GLOBALS *****************************************************************/
 
@@ -54,14 +60,28 @@ static const PRIVILEGE_DATA WellKnownPrivileges[] =
     {{SE_CREATE_GLOBAL_PRIVILEGE, 0}, SE_CREATE_GLOBAL_NAME}
 };
 
+static const RIGHT_DATA WellKnownRights[] =
+{
+    {SECURITY_ACCESS_INTERACTIVE_LOGON, SE_INTERACTIVE_LOGON_NAME},
+    {SECURITY_ACCESS_NETWORK_LOGON, SE_NETWORK_LOGON_NAME},
+    {SECURITY_ACCESS_BATCH_LOGON, SE_BATCH_LOGON_NAME},
+    {SECURITY_ACCESS_SERVICE_LOGON, SE_SERVICE_LOGON_NAME},
+    {SECURITY_ACCESS_DENY_INTERACTIVE_LOGON, SE_DENY_INTERACTIVE_LOGON_NAME},
+    {SECURITY_ACCESS_DENY_NETWORK_LOGON, SE_DENY_NETWORK_LOGON_NAME},
+    {SECURITY_ACCESS_DENY_BATCH_LOGON, SE_DENY_BATCH_LOGON_NAME},
+    {SECURITY_ACCESS_DENY_SERVICE_LOGON, SE_DENY_SERVICE_LOGON_NAME},
+    {SECURITY_ACCESS_REMOTE_INTERACTIVE_LOGON, SE_REMOTE_INTERACTIVE_LOGON_NAME},
+    {SECURITY_ACCESS_DENY_REMOTE_INTERACTIVE_LOGON, SE_DENY_REMOTE_INTERACTIVE_LOGON_NAME}
+};
+
 
 /* FUNCTIONS ***************************************************************/
 
 NTSTATUS
 LsarpLookupPrivilegeName(PLUID Value,
-                         PUNICODE_STRING *Name)
+                         PRPC_UNICODE_STRING *Name)
 {
-    PUNICODE_STRING NameBuffer;
+    PRPC_UNICODE_STRING NameBuffer;
     ULONG Priv;
 
     if (Value->HighPart != 0 ||
@@ -76,7 +96,7 @@ LsarpLookupPrivilegeName(PLUID Value,
         if (Value->LowPart == WellKnownPrivileges[Priv].Luid.LowPart &&
             Value->HighPart == WellKnownPrivileges[Priv].Luid.HighPart)
         {
-            NameBuffer = MIDL_user_allocate(sizeof(UNICODE_STRING));
+            NameBuffer = MIDL_user_allocate(sizeof(RPC_UNICODE_STRING));
             if (NameBuffer == NULL)
                 return STATUS_NO_MEMORY;
 
@@ -103,7 +123,7 @@ LsarpLookupPrivilegeName(PLUID Value,
 
 
 NTSTATUS
-LsarpLookupPrivilegeValue(PUNICODE_STRING Name,
+LsarpLookupPrivilegeValue(PRPC_UNICODE_STRING Name,
                           PLUID Value)
 {
     ULONG Priv;
@@ -219,3 +239,42 @@ done:
 
     return Status;
 }
+
+
+NTSTATUS
+LsapLookupAccountRightName(ULONG RightValue,
+                           PRPC_UNICODE_STRING *Name)
+{
+    PRPC_UNICODE_STRING NameBuffer;
+    ULONG i;
+
+    for (i = 0; i < sizeof(WellKnownRights) / sizeof(WellKnownRights[0]); i++)
+    {
+        if (WellKnownRights[i].Flag == RightValue)
+        {
+            NameBuffer = MIDL_user_allocate(sizeof(RPC_UNICODE_STRING));
+            if (NameBuffer == NULL)
+                return STATUS_NO_MEMORY;
+
+            NameBuffer->Length = wcslen(WellKnownRights[i].Name) * sizeof(WCHAR);
+            NameBuffer->MaximumLength = NameBuffer->Length + sizeof(WCHAR);
+
+            NameBuffer->Buffer = MIDL_user_allocate(NameBuffer->MaximumLength);
+            if (NameBuffer == NULL)
+            {
+                MIDL_user_free(NameBuffer);
+                return STATUS_INSUFFICIENT_RESOURCES;
+            }
+
+            wcscpy(NameBuffer->Buffer, WellKnownRights[i].Name);
+
+            *Name = NameBuffer;
+
+            return STATUS_SUCCESS;
+        }
+    }
+
+    return STATUS_NO_SUCH_PRIVILEGE;
+}
+
+/* EOF */

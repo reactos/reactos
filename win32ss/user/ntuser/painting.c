@@ -1088,6 +1088,8 @@ NtUserEndPaint(HWND hWnd, CONST PAINTSTRUCT* pUnsafePs)
       RETURN(FALSE);
    }
 
+   UserRefObjectCo(Window, &Ref); // Here for the exception.
+
    _SEH2_TRY
    {
       ProbeForRead(pUnsafePs, sizeof(*pUnsafePs), 1);
@@ -1102,8 +1104,6 @@ NtUserEndPaint(HWND hWnd, CONST PAINTSTRUCT* pUnsafePs)
    {
       RETURN(FALSE);
    }
-
-   UserRefObjectCo(Window, &Ref);
 
    RETURN(IntEndPaint(Window, &Ps));
 

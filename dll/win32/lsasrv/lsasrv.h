@@ -107,6 +107,9 @@ NTSTATUS
 LsapCloseDbObject(IN PLSA_DB_OBJECT DbObject);
 
 NTSTATUS
+LsapDeleteDbObject(IN PLSA_DB_OBJECT DbObject);
+
+NTSTATUS
 LsapGetObjectAttribute(PLSA_DB_OBJECT DbObject,
                        LPWSTR AttributeName,
                        LPVOID AttributeData,
@@ -252,16 +255,81 @@ LsarSetLocalAccountDomain(PLSA_DB_OBJECT PolicyObject,
 /* privileges.c */
 NTSTATUS
 LsarpLookupPrivilegeName(PLUID Value,
-                         PUNICODE_STRING *Name);
+                         PRPC_UNICODE_STRING *Name);
 
 NTSTATUS
-LsarpLookupPrivilegeValue(PUNICODE_STRING Name,
+LsarpLookupPrivilegeValue(PRPC_UNICODE_STRING Name,
                           PLUID Value);
 
 NTSTATUS
 LsarpEnumeratePrivileges(DWORD *EnumerationContext,
                          PLSAPR_PRIVILEGE_ENUM_BUFFER EnumerationBuffer,
                          DWORD PreferedMaximumLength);
+
+NTSTATUS
+LsapLookupAccountRightName(ULONG RightValue,
+                           PRPC_UNICODE_STRING *Name);
+
+/* registry.h */
+NTSTATUS
+LsapRegCloseKey(IN HANDLE KeyHandle);
+
+NTSTATUS
+LsapRegCreateKey(IN HANDLE ParentKeyHandle,
+                 IN LPCWSTR KeyName,
+                 IN ACCESS_MASK DesiredAccess,
+                 OUT HANDLE KeyHandle);
+
+NTSTATUS
+LsapRegDeleteSubKey(IN HANDLE ParentKeyHandle,
+                    IN LPCWSTR KeyName);
+
+NTSTATUS
+LsapRegDeleteKey(IN HANDLE KeyHandle);
+
+NTSTATUS
+LsapRegEnumerateSubKey(IN HANDLE KeyHandle,
+                       IN ULONG Index,
+                       IN ULONG Length,
+                       OUT LPWSTR Buffer);
+
+NTSTATUS
+LsapRegOpenKey(IN HANDLE ParentKeyHandle,
+               IN LPCWSTR KeyName,
+               IN ACCESS_MASK DesiredAccess,
+               OUT HANDLE KeyHandle);
+
+NTSTATUS
+LsapRegQueryKeyInfo(IN HANDLE KeyHandle,
+                    OUT PULONG SubKeyCount,
+                    OUT PULONG ValueCount);
+
+NTSTATUS
+LsapRegDeleteValue(IN HANDLE KeyHandle,
+                   IN LPWSTR ValueName);
+
+NTSTATUS
+LsapRegEnumerateValue(IN HANDLE KeyHandle,
+                      IN ULONG Index,
+                      OUT LPWSTR Name,
+                      IN OUT PULONG NameLength,
+                      OUT PULONG Type OPTIONAL,
+                      OUT PVOID Data OPTIONAL,
+                      IN OUT PULONG DataLength OPTIONAL);
+
+NTSTATUS
+LsapRegQueryValue(IN HANDLE KeyHandle,
+                  IN LPWSTR ValueName,
+                  OUT PULONG Type OPTIONAL,
+                  OUT LPVOID Data OPTIONAL,
+                  IN OUT PULONG DataLength OPTIONAL);
+
+NTSTATUS
+LsapRegSetValue(IN HANDLE KeyHandle,
+                IN LPWSTR ValueName,
+                IN ULONG Type,
+                IN LPVOID Data,
+                IN ULONG DataLength);
 
 /* security.c */
 NTSTATUS

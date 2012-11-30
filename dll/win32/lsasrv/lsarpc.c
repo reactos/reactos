@@ -97,8 +97,7 @@ NTSTATUS WINAPI LsarClose(
 NTSTATUS WINAPI LsarDelete(
     LSAPR_HANDLE ObjectHandle)
 {
-    /* Deprecated */
-    return STATUS_NOT_SUPPORTED;
+    return LsarDeleteObject(&ObjectHandle);
 }
 
 
@@ -642,8 +641,203 @@ NTSTATUS WINAPI LsarEnumerateAccounts(
     PLSAPR_ACCOUNT_ENUM_BUFFER EnumerationBuffer,
     DWORD PreferedMaximumLength)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    LSAPR_ACCOUNT_ENUM_BUFFER EnumBuffer = {0, NULL};
+    PLSA_DB_OBJECT PolicyObject = NULL;
+    WCHAR AccountKeyName[64];
+    HANDLE AccountsKeyHandle = NULL;
+    HANDLE AccountKeyHandle;
+    HANDLE SidKeyHandle;
+    ULONG EnumIndex;
+    ULONG EnumCount;
+    ULONG RequiredLength;
+    ULONG DataLength;
+    ULONG i;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    TRACE("(%p %p %p %lu)\n", PolicyHandle, EnumerationContext,
+          EnumerationBuffer, PreferedMaximumLength);
+
+    if (EnumerationContext == NULL ||
+        EnumerationBuffer == NULL)
+        return STATUS_INVALID_PARAMETER;
+
+    EnumerationBuffer->EntriesRead = 0;
+    EnumerationBuffer->Information = NULL;
+
+    /* Validate the PolicyHandle */
+    Status = LsapValidateDbObject(PolicyHandle,
+                                  LsaDbPolicyObject,
+                                  POLICY_VIEW_LOCAL_INFORMATION,
+                                  &PolicyObject);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("LsapValidateDbObject returned 0x%08lx\n", Status);
+        return Status;
+    }
+
+    Status = LsapRegOpenKey(PolicyObject->KeyHandle,
+                            L"Accounts",
+                            KEY_READ,
+                            &AccountsKeyHandle);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    EnumIndex = *EnumerationContext;
+    EnumCount = 0;
+    RequiredLength = 0;
+
+    while (TRUE)
+    {
+        Status = LsapRegEnumerateSubKey(AccountsKeyHandle,
+                                        EnumIndex,
+                                        64 * sizeof(WCHAR),
+                                        AccountKeyName);
+        if (!NT_SUCCESS(Status))
+            break;
+
+        TRACE("EnumIndex: %lu\n", EnumIndex);
+        TRACE("Account key name: %S\n", AccountKeyName);
+
+        Status = LsapRegOpenKey(AccountsKeyHandle,
+                                AccountKeyName,
+                                KEY_READ,
+                                &AccountKeyHandle);
+        TRACE("LsapRegOpenKey returned %08lX\n", Status);
+        if (NT_SUCCESS(Status))
+        {
+            Status = LsapRegOpenKey(AccountKeyHandle,
+                                    L"Sid",
+                                    KEY_READ,
+                                    &SidKeyHandle);
+            TRACE("LsapRegOpenKey returned %08lX\n", Status);
+            if (NT_SUCCESS(Status))
+            {
+                DataLength = 0;
+                Status = LsapRegQueryValue(SidKeyHandle,
+                                           NULL,
+                                           NULL,
+                                           NULL,
+                                           &DataLength);
+                TRACE("LsapRegQueryValue returned %08lX\n", Status);
+                if (NT_SUCCESS(Status))
+                {
+                    TRACE("Data length: %lu\n", DataLength);
+
+                    if ((RequiredLength + DataLength + sizeof(LSAPR_ACCOUNT_INFORMATION)) > PreferedMaximumLength)
+                        break;
+
+                    RequiredLength += (DataLength + sizeof(LSAPR_ACCOUNT_INFORMATION));
+                    EnumCount++;
+                }
+
+                LsapRegCloseKey(SidKeyHandle);
+            }
+
+            LsapRegCloseKey(AccountKeyHandle);
+        }
+
+        EnumIndex++;
+    }
+
+    TRACE("EnumCount: %lu\n", EnumCount);
+    TRACE("RequiredLength: %lu\n", RequiredLength);
+
+    EnumBuffer.EntriesRead = EnumCount;
+    EnumBuffer.Information = midl_user_allocate(EnumCount * sizeof(LSAPR_ACCOUNT_INFORMATION));
+    if (EnumBuffer.Information == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
+
+    EnumIndex = *EnumerationContext;
+    for (i = 0; i < EnumCount; i++, EnumIndex++)
+    {
+        Status = LsapRegEnumerateSubKey(AccountsKeyHandle,
+                                        EnumIndex,
+                                        64 * sizeof(WCHAR),
+                                        AccountKeyName);
+        if (!NT_SUCCESS(Status))
+            break;
+
+        TRACE("EnumIndex: %lu\n", EnumIndex);
+        TRACE("Account key name: %S\n", AccountKeyName);
+
+        Status = LsapRegOpenKey(AccountsKeyHandle,
+                                AccountKeyName,
+                                KEY_READ,
+                                &AccountKeyHandle);
+        TRACE("LsapRegOpenKey returned %08lX\n", Status);
+        if (NT_SUCCESS(Status))
+        {
+            Status = LsapRegOpenKey(AccountKeyHandle,
+                                    L"Sid",
+                                    KEY_READ,
+                                    &SidKeyHandle);
+            TRACE("LsapRegOpenKey returned %08lX\n", Status);
+            if (NT_SUCCESS(Status))
+            {
+                DataLength = 0;
+                Status = LsapRegQueryValue(SidKeyHandle,
+                                           NULL,
+                                           NULL,
+                                           NULL,
+                                           &DataLength);
+                TRACE("LsapRegQueryValue returned %08lX\n", Status);
+                if (NT_SUCCESS(Status))
+                {
+                    EnumBuffer.Information[i].Sid = midl_user_allocate(DataLength);
+                    if (EnumBuffer.Information[i].Sid == NULL)
+                    {
+                        LsapRegCloseKey(AccountKeyHandle);
+                        Status = STATUS_INSUFFICIENT_RESOURCES;
+                        goto done;
+                    }
+
+                    Status = LsapRegQueryValue(SidKeyHandle,
+                                               NULL,
+                                               NULL,
+                                               EnumBuffer.Information[i].Sid,
+                                               &DataLength);
+                    TRACE("SampRegQueryValue returned %08lX\n", Status);
+                }
+
+                LsapRegCloseKey(SidKeyHandle);
+            }
+
+            LsapRegCloseKey(AccountKeyHandle);
+
+            if (!NT_SUCCESS(Status))
+                goto done;
+        }
+    }
+
+    if (NT_SUCCESS(Status))
+    {
+        *EnumerationContext += EnumCount;
+        EnumerationBuffer->EntriesRead = EnumBuffer.EntriesRead;
+        EnumerationBuffer->Information = EnumBuffer.Information;
+    }
+
+done:
+    if (!NT_SUCCESS(Status))
+    {
+        if (EnumBuffer.Information)
+        {
+            for (i = 0; i < EnumBuffer.EntriesRead; i++)
+            {
+                if (EnumBuffer.Information[i].Sid != NULL)
+                    midl_user_free(EnumBuffer.Information[i].Sid);
+            }
+
+            midl_user_free(EnumBuffer.Information);
+        }
+    }
+
+    if (AccountsKeyHandle != NULL)
+        LsapRegCloseKey(AccountsKeyHandle);
+
+    return Status;
 }
 
 
@@ -1188,8 +1382,30 @@ NTSTATUS WINAPI LsarGetQuotasForAccount(
     LSAPR_HANDLE AccountHandle,
     PQUOTA_LIMITS QuotaLimits)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PLSA_DB_OBJECT AccountObject;
+    ULONG Size;
+    NTSTATUS Status;
+
+    TRACE("(%p %p)\n", AccountHandle, QuotaLimits);
+
+    /* Validate the account handle */
+    Status = LsapValidateDbObject(AccountHandle,
+                                  LsaDbAccountObject,
+                                  ACCOUNT_VIEW,
+                                  &AccountObject);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("Invalid handle (Status %lx)\n", Status);
+        return Status;
+    }
+
+    /* Get the quota attribute */
+    Status = LsapGetObjectAttribute(AccountObject,
+                                    L"DefQuota",
+                                    QuotaLimits,
+                                    &Size);
+
+    return Status;
 }
 
 
@@ -1198,8 +1414,59 @@ NTSTATUS WINAPI LsarSetQuotasForAccount(
     LSAPR_HANDLE AccountHandle,
     PQUOTA_LIMITS QuotaLimits)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PLSA_DB_OBJECT AccountObject;
+    QUOTA_LIMITS InternalQuotaLimits;
+    ULONG Size;
+    NTSTATUS Status;
+
+    TRACE("(%p %p)\n", AccountHandle, QuotaLimits);
+
+    /* Validate the account handle */
+    Status = LsapValidateDbObject(AccountHandle,
+                                  LsaDbAccountObject,
+                                  ACCOUNT_ADJUST_QUOTAS,
+                                  &AccountObject);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("Invalid handle (Status %lx)\n", Status);
+        return Status;
+    }
+
+    /* Get the quota limits attribute */
+    Size = sizeof(QUOTA_LIMITS);
+    Status = LsapGetObjectAttribute(AccountObject,
+                                    L"DefQuota",
+                                    &InternalQuotaLimits,
+                                    &Size);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("LsapGetObjectAttribute() failed (Status 0x%08lx)\n", Status);
+        return Status;
+    }
+
+    /* Update the quota limits */
+    if (QuotaLimits->PagedPoolLimit != 0)
+        InternalQuotaLimits.PagedPoolLimit = QuotaLimits->PagedPoolLimit;
+
+    if (QuotaLimits->NonPagedPoolLimit != 0)
+        InternalQuotaLimits.NonPagedPoolLimit = QuotaLimits->NonPagedPoolLimit;
+
+    if (QuotaLimits->MinimumWorkingSetSize != 0)
+        InternalQuotaLimits.MinimumWorkingSetSize = QuotaLimits->MinimumWorkingSetSize;
+
+    if (QuotaLimits->MaximumWorkingSetSize != 0)
+        InternalQuotaLimits.MaximumWorkingSetSize = QuotaLimits->MaximumWorkingSetSize;
+
+    if (QuotaLimits->PagefileLimit != 0)
+        InternalQuotaLimits.PagefileLimit = QuotaLimits->PagefileLimit;
+
+    /* Set the quota limits attribute */
+    Status = LsapSetObjectAttribute(AccountObject,
+                                    L"DefQuota",
+                                    &InternalQuotaLimits,
+                                    sizeof(QUOTA_LIMITS));
+
+    return Status;
 }
 
 
@@ -1647,7 +1914,7 @@ NTSTATUS WINAPI LsarLookupPrivilegeValue(
 
     TRACE("Privilege: %wZ\n", Name);
 
-    Status = LsarpLookupPrivilegeValue((PUNICODE_STRING)Name,
+    Status = LsarpLookupPrivilegeValue(Name,
                                        Value);
 
     return Status;
@@ -1675,7 +1942,8 @@ NTSTATUS WINAPI LsarLookupPrivilegeName(
         return Status;
     }
 
-    Status = LsarpLookupPrivilegeName(Value, (PUNICODE_STRING*)Name);
+    Status = LsarpLookupPrivilegeName(Value,
+                                      Name);
 
     return Status;
 }
@@ -1699,8 +1967,41 @@ NTSTATUS WINAPI LsarLookupPrivilegeDisplayName(
 NTSTATUS WINAPI LsarDeleteObject(
     LSAPR_HANDLE *ObjectHandle)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PLSA_DB_OBJECT DbObject;
+    NTSTATUS Status;
+
+    TRACE("(%p)\n", ObjectHandle);
+
+    if (ObjectHandle == NULL)
+        return STATUS_INVALID_PARAMETER;
+
+    /* Validate the ObjectHandle */
+    Status = LsapValidateDbObject(*ObjectHandle,
+                                  LsaDbIgnoreObject,
+                                  DELETE,
+                                  &DbObject);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("LsapValidateDbObject returned 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* You cannot delete the policy object */
+    if (DbObject->ObjectType == LsaDbPolicyObject)
+        return STATUS_INVALID_PARAMETER;
+
+    /* Delete the database object */
+    Status = LsapDeleteDbObject(DbObject);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("LsapDeleteDbObject returned 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Invalidate the object handle */
+    *ObjectHandle = NULL;
+
+    return STATUS_SUCCESS;
 }
 
 
@@ -1725,9 +2026,10 @@ NTSTATUS WINAPI LsarEnumerateAccountRights(
     PLSAPR_PRIVILEGE_SET PrivilegeSet = NULL;
     PRPC_UNICODE_STRING RightsBuffer = NULL;
     PRPC_UNICODE_STRING PrivilegeString;
+    ACCESS_MASK SystemAccess;
     ULONG RightsCount;
     ULONG RightsIndex;
-    ULONG PrivIndex;
+    ULONG i;
     NTSTATUS Status;
 
     TRACE("LsarEnumerateAccountRights(%p %p %p)\n",
@@ -1753,13 +2055,23 @@ NTSTATUS WINAPI LsarEnumerateAccountRights(
         goto done;
     }
 
-    /* FIXME: Get account rights */
-
+    /* Get account rights */
+    Status = LsarGetSystemAccessAccount(AccountHandle,
+                                        &SystemAccess);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("LsarGetSystemAccessAccount returned 0x%08lx\n", Status);
+        goto done;
+    }
 
     RightsCount = PrivilegeSet->PrivilegeCount;
 
-    /* FIXME: Count account rights */
-
+    /* Count account rights */
+    for (i = 0; i < sizeof(ACCESS_MASK) * 8; i++)
+    {
+        if (SystemAccess & (1 << i))
+            RightsCount++;
+    }
 
     /* We are done if there are no rights to be enumerated */
     if (RightsCount == 0)
@@ -1780,25 +2092,41 @@ NTSTATUS WINAPI LsarEnumerateAccountRights(
 
     /* Copy the privileges into the buffer */
     RightsIndex = 0;
-    for (PrivIndex = 0; PrivIndex < PrivilegeSet->PrivilegeCount; PrivIndex++)
+    for (i = 0; i < PrivilegeSet->PrivilegeCount; i++)
     {
         PrivilegeString = NULL;
         Status = LsarLookupPrivilegeName(PolicyHandle,
-                                         (PLUID)&PrivilegeSet->Privilege[PrivIndex].Luid,
-                                         (PRPC_UNICODE_STRING *)&PrivilegeString);
+                                         (PLUID)&PrivilegeSet->Privilege[i].Luid,
+                                         &PrivilegeString);
         if (!NT_SUCCESS(Status))
             goto done;
 
-        RightsBuffer[RightsIndex].Length = PrivilegeString->Length;
-        RightsBuffer[RightsIndex].MaximumLength = PrivilegeString->MaximumLength;
-        RightsBuffer[RightsIndex].Buffer = PrivilegeString->Buffer;
+        RightsBuffer[i].Length = PrivilegeString->Length;
+        RightsBuffer[i].MaximumLength = PrivilegeString->MaximumLength;
+        RightsBuffer[i].Buffer = PrivilegeString->Buffer;
 
         MIDL_user_free(PrivilegeString);
         RightsIndex++;
     }
 
-    /* FIXME: Copy account rights into the buffer */
+    /* Copy account rights into the buffer */
+    for (i = 0; i < sizeof(ACCESS_MASK) * 8; i++)
+    {
+        if (SystemAccess & (1 << i))
+        {
+            Status = LsapLookupAccountRightName(1 << i,
+                                                &PrivilegeString);
+            if (!NT_SUCCESS(Status))
+                goto done;
 
+            RightsBuffer[i].Length = PrivilegeString->Length;
+            RightsBuffer[i].MaximumLength = PrivilegeString->MaximumLength;
+            RightsBuffer[i].Buffer = PrivilegeString->Buffer;
+
+            MIDL_user_free(PrivilegeString);
+            RightsIndex++;
+        }
+    }
 
     UserRights->Entries = RightsCount;
     UserRights->UserRights = (PRPC_UNICODE_STRING)RightsBuffer;

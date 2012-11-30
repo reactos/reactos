@@ -158,10 +158,25 @@ BOOL PerformRegAction(REGEDIT_ACTION action, LPWSTR s, BOOL silent)
                 /* Request import confirmation */
                 if (!silent)
                 {
+                    int choice;
+
                     LoadStringW(hInst, IDS_IMPORT_PROMPT, szText, COUNT_OF(szText));
 
-                    if (InfoMessageBox(NULL, MB_YESNO | MB_ICONWARNING, szTitle, szText, filename) != IDYES)
-                        goto cont;
+                    choice = InfoMessageBox(NULL, MB_YESNOCANCEL | MB_ICONWARNING, szTitle, szText, filename);
+
+                    switch (choice)
+                    {
+                        case IDNO:
+                            goto cont;
+                        case IDCANCEL:
+                            /* The cancel case is useful if the user is importing more than one registry file
+                            at a time, and wants to back out anytime during the import process. This way, the
+                            user doesn't have to resort to ending the regedit process abruptly just to cancel
+                            the operation. */
+                            return TRUE;
+                        default:
+                            break;
+                    }
                 }
 
                 /* Open the file */

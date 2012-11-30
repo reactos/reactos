@@ -213,7 +213,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
     /* Perform application initialization */
     if (!InitInstance(hInstance, nCmdShow))
     {
-        return FALSE;
+        return 0;
     }
     hAccel = LoadAcceleratorsW(hInstance, MAKEINTRESOURCEW(ID_ACCEL));
 

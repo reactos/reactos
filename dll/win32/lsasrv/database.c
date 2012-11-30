@@ -896,6 +896,66 @@ LsapCloseDbObject(PLSA_DB_OBJECT DbObject)
 
 
 NTSTATUS
+LsapDeleteDbObject(IN PLSA_DB_OBJECT DbObject)
+{
+    PLSA_DB_OBJECT ParentObject = NULL;
+    WCHAR KeyName[64];
+    ULONG Index;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    DbObject->RefCount--;
+
+    if (DbObject->RefCount > 0)
+        return STATUS_SUCCESS;
+
+    if (DbObject->KeyHandle != NULL)
+    {
+        Index = 0;
+
+        while (TRUE)
+        {
+            Status = LsapRegEnumerateSubKey(DbObject->KeyHandle,
+                                            Index,
+                                            64 * sizeof(WCHAR),
+                                            KeyName);
+            if (!NT_SUCCESS(Status))
+                break;
+
+            TRACE("Index: %lu\n", Index);
+            TRACE("Key name: %S\n", KeyName);
+
+            Status = LsapRegDeleteSubKey(DbObject->KeyHandle,
+                                         KeyName);
+            if (!NT_SUCCESS(Status))
+                break;
+        }
+
+        if (Status == STATUS_NO_MORE_ENTRIES)
+            Status = STATUS_SUCCESS;
+
+        LsapRegDeleteKey(DbObject->KeyHandle);
+
+        NtClose(DbObject->KeyHandle);
+    }
+
+    if (DbObject->ParentObject != NULL)
+        ParentObject = DbObject->ParentObject;
+
+    RtlFreeHeap(RtlGetProcessHeap(), 0, DbObject);
+
+    if (ParentObject != NULL)
+    {
+        ParentObject->RefCount--;
+
+        if (ParentObject->RefCount == 0)
+            Status = LsapCloseDbObject(ParentObject);
+    }
+
+    return Status;
+}
+
+
+NTSTATUS
 LsapSetObjectAttribute(PLSA_DB_OBJECT DbObject,
                        LPWSTR AttributeName,
                        LPVOID AttributeData,

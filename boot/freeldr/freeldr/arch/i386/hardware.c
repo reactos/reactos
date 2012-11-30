@@ -20,6 +20,7 @@
  */
 
 #include <freeldr.h>
+#include <cportlib/cportlib.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -31,6 +32,10 @@
 #define CLOCK_TICK_RATE (1193182)
 #define LATCH (CLOCK_TICK_RATE / HZ)
 
+
+/* Maximum number of COM and LPT ports */
+#define MAX_COM_PORTS   4
+#define MAX_LPT_PORTS   3
 
 /* No Mouse */
 #define MOUSE_TYPE_NONE			0
@@ -1042,7 +1047,7 @@ DetectSerialPorts(PCONFIGURATION_COMPONENT_DATA BusKey)
   PCM_PARTIAL_RESOURCE_LIST PartialResourceList;
   PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor;
   PCM_SERIAL_DEVICE_DATA SerialDeviceData;
-  ULONG Irq[4] = {4, 3, 4, 3};
+  ULONG Irq[MAX_COM_PORTS] = {4, 3, 4, 3};
   ULONG Base;
   CHAR Buffer[80];
   PUSHORT BasePtr;
@@ -1053,12 +1058,17 @@ DetectSerialPorts(PCONFIGURATION_COMPONENT_DATA BusKey)
 
   TRACE("DetectSerialPorts()\n");
 
-  ControllerNumber = 0;
+  /*
+   * The BIOS data area 0x400 holds the address of the first valid COM port.
+   * Each COM port address is stored in a 2-byte field.
+   * Infos at: http://www.bioscentral.com/misc/bda.htm
+   */
   BasePtr = (PUSHORT)0x400;
-  for (i = 0; i < 2; i++, BasePtr++)
+
+  for (i = 0; i < MAX_COM_PORTS; i++, BasePtr++)
     {
       Base = (ULONG)*BasePtr;
-      if (Base == 0)
+      if (Base == 0 || !CpDoesPortExist((PUCHAR)Base))
         continue;
 
       TRACE("Found COM%u port at 0x%x\n", i + 1, Base);
@@ -1126,7 +1136,7 @@ DetectSerialPorts(PCONFIGURATION_COMPONENT_DATA BusKey)
 
       MmHeapFree(PartialResourceList);
 
-      if (!Rs232PortInUse(Base))
+      if (!Rs232PortInUse(UlongToPtr(Base)))
         {
           /* Detect serial mouse */
           DetectSerialPointerPeripheral(ControllerKey, UlongToPtr(Base));
@@ -1142,20 +1152,25 @@ DetectParallelPorts(PCONFIGURATION_COMPONENT_DATA BusKey)
 {
   PCM_PARTIAL_RESOURCE_LIST PartialResourceList;
   PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor;
-  ULONG Irq[3] = {7, 5, (ULONG)-1};
+  ULONG Irq[MAX_LPT_PORTS] = {7, 5, (ULONG)-1};
   CHAR Buffer[80];
   PCONFIGURATION_COMPONENT_DATA ControllerKey;
   PUSHORT BasePtr;
   ULONG Base;
-  ULONG ControllerNumber;
+  ULONG ControllerNumber = 0;
   ULONG i;
   ULONG Size;
 
   TRACE("DetectParallelPorts() called\n");
 
-  ControllerNumber = 0;
+  /*
+   * The BIOS data area 0x408 holds the address of the first valid LPT port.
+   * Each LPT port address is stored in a 2-byte field.
+   * Infos at: http://www.bioscentral.com/misc/bda.htm
+   */
   BasePtr = (PUSHORT)0x408;
-  for (i = 0; i < 3; i++, BasePtr++)
+
+  for (i = 0; i < MAX_LPT_PORTS; i++, BasePtr++)
     {
       Base = (ULONG)*BasePtr;
       if (Base == 0)
