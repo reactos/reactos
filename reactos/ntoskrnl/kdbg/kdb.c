@@ -1705,7 +1705,7 @@ INIT_FUNCTION
 KdbpGetCommandLineSettings(
     PCHAR p1)
 {
-#define CONST_STR_LEN(x) (sizeof(x)/sizeof(x[0]))
+#define CONST_STR_LEN(x) (sizeof(x)/sizeof(x[0]) - 1)
 
     while (p1 && (p1 = strchr(p1, ' ')))
     {
