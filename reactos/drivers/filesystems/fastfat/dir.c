@@ -427,7 +427,15 @@ DoQuery(PVFAT_IRP_CONTEXT IrpContext)
 #endif
     FileInformationClass = Stack->Parameters.QueryDirectory.FileInformationClass;
 
-    if (pSearchPattern)
+    /* Allocate search pattern in case:
+     * -> We don't have one already in context
+     * -> We have been given an input pattern
+     * -> The pattern length is not null
+     * -> The pattern buffer is not null
+     * Otherwise, we'll fall later and allocate a match all (*) pattern
+     */ 
+    if (pSearchPattern &&
+        pSearchPattern->Length != 0 && pSearchPattern->Buffer != NULL)
     {
         if (!pCcb->SearchPattern.Buffer)
         {
