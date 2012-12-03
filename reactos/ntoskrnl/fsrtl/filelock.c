@@ -925,7 +925,7 @@ FsRtlFastUnlockSingle(IN PFILE_LOCK FileLock,
             Find.Exclusive.FileLock.EndingByte = SharedRange->End;
             SharedEntry = SharedRange->Entry.Flink;
             RemoveEntryList(&SharedRange->Entry);
-            ExFreePool(SharedRange);
+            ExFreePoolWithTag(SharedRange, 'FSRA');
             /* We need to rebuild the list of shared ranges. */
             DPRINT("Removing the lock entry %wZ (%08x%08x:%08x%08x)\n", 
                    &FileObject->FileName, 
@@ -1287,7 +1287,7 @@ FsRtlUninitializeFileLock(IN PFILE_LOCK FileLock)
             SharedRange = CONTAINING_RECORD(SharedEntry, LOCK_SHARED_RANGE, Entry);
             SharedEntry = SharedEntry->Flink;
             RemoveEntryList(SharedEntry);
-            ExFreePool(SharedRange);
+            ExFreePoolWithTag(SharedRange, 'FSRA');
         }
         while ((Entry = RtlGetElementGenericTable(&InternalInfo->RangeTable, 0)) != NULL)
         {
