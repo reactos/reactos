@@ -1508,18 +1508,20 @@ Hid_PnpStart(
         // select configuration
         //
         Status = Hid_SelectConfiguration(DeviceObject);
-        ASSERT(Status == STATUS_SUCCESS);
 
         //
         // done
         //
         DPRINT("[HIDUSB] SelectConfiguration %x\n", Status);
 
-        //
-        // get protocol
-        //
-        Hid_GetProtocol(DeviceObject);
-        return Status;
+        if (NT_SUCCESS(Status))
+        {
+            //
+            // get protocol
+            //
+            Hid_GetProtocol(DeviceObject);
+            return Status;
+        }
     }
 
     //
