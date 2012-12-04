@@ -387,7 +387,6 @@ CUSBDevice::SetDeviceAddress(
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("CUSBDevice::SetDeviceAddress> failed to retrieve configuration %lu\n", Index);
-            ASSERT(FALSE);
             break;
         }
     }
