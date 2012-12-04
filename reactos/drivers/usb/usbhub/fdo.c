@@ -1022,54 +1022,49 @@ CreateDeviceIds(
                                         0,
                                         (PVOID*)&SerialBuffer,
                                         &UsbChildExtension->usInstanceId.Length);
-        if (!NT_SUCCESS(Status))
+        if (NT_SUCCESS(Status))
         {
-            DPRINT1("USBHUB: GetUsbStringDescriptor failed with status %x\n", Status);
+            // construct instance id buffer
+            Index = swprintf(Buffer, L"%04d&%s", HubDeviceExtension->InstanceCount, SerialBuffer) + 1;
+            UsbChildExtension->usInstanceId.Buffer = (LPWSTR)ExAllocatePool(NonPagedPool, Index * sizeof(WCHAR));
+            if (UsbChildExtension->usInstanceId.Buffer == NULL)
+            {
+                DPRINT1("Error: failed to allocate %lu bytes\n", Index * sizeof(WCHAR));
+                return STATUS_INSUFFICIENT_RESOURCES;
+            }
+
+            //
+            // copy instance id
+            //
+            RtlCopyMemory(UsbChildExtension->usInstanceId.Buffer, Buffer, Index * sizeof(WCHAR));
+            UsbChildExtension->usInstanceId.Length = UsbChildExtension->usInstanceId.MaximumLength = Index * sizeof(WCHAR);
+            ExFreePool(SerialBuffer);
+
+            DPRINT("Usb InstanceId %wZ InstanceCount %x\n", &UsbChildExtension->usInstanceId, HubDeviceExtension->InstanceCount);
             return Status;
         }
-
-        // construct instance id buffer
-        Index = swprintf(Buffer, L"%04d&%s", HubDeviceExtension->InstanceCount, SerialBuffer) + 1;
-        UsbChildExtension->usInstanceId.Buffer = (LPWSTR)ExAllocatePool(NonPagedPool, Index * sizeof(WCHAR));
-        if (UsbChildExtension->usInstanceId.Buffer == NULL)
-        {
-            DPRINT1("Error: failed to allocate %lu bytes\n", Index * sizeof(WCHAR));
-            Status = STATUS_INSUFFICIENT_RESOURCES;
-            return Status;
-        }
-
-        //
-        // copy instance id
-        //
-        RtlCopyMemory(UsbChildExtension->usInstanceId.Buffer, Buffer, Index * sizeof(WCHAR));
-        UsbChildExtension->usInstanceId.Length = UsbChildExtension->usInstanceId.MaximumLength = Index * sizeof(WCHAR);
-        ExFreePool(SerialBuffer);
-
-        DPRINT("Usb InstanceId %wZ InstanceCount %x\n", &UsbChildExtension->usInstanceId, HubDeviceExtension->InstanceCount);
     }
-    else
+
+    //
+    // the device did not provide a serial number, or failed to retrieve the serial number
+    // lets create a pseudo instance id
+    //
+    Index = swprintf(Buffer, L"%04d&%04d", HubDeviceExtension->InstanceCount, UsbChildExtension->PortNumber) + 1;
+    UsbChildExtension->usInstanceId.Buffer = (LPWSTR)ExAllocatePool(NonPagedPool, Index * sizeof(WCHAR));
+    if (UsbChildExtension->usInstanceId.Buffer == NULL)
     {
-       //
-       // the device did not provide a serial number, lets create a pseudo instance id
-       //
-       Index = swprintf(Buffer, L"%04d&%04d", HubDeviceExtension->InstanceCount, UsbChildExtension->PortNumber) + 1;
-       UsbChildExtension->usInstanceId.Buffer = (LPWSTR)ExAllocatePool(NonPagedPool, Index * sizeof(WCHAR));
-       if (UsbChildExtension->usInstanceId.Buffer == NULL)
-       {
-           DPRINT1("Error: failed to allocate %lu bytes\n", Index * sizeof(WCHAR));
-           Status = STATUS_INSUFFICIENT_RESOURCES;
-           return Status;
-       }
-
-       //
-       // copy instance id
-       //
-       RtlCopyMemory(UsbChildExtension->usInstanceId.Buffer, Buffer, Index * sizeof(WCHAR));
-       UsbChildExtension->usInstanceId.Length = UsbChildExtension->usInstanceId.MaximumLength = Index * sizeof(WCHAR);
-
-       DPRINT("usDeviceId %wZ\n", &UsbChildExtension->usInstanceId);
+       DPRINT1("Error: failed to allocate %lu bytes\n", Index * sizeof(WCHAR));
+       Status = STATUS_INSUFFICIENT_RESOURCES;
+       return Status;
     }
 
+    //
+    // copy instance id
+    //
+    RtlCopyMemory(UsbChildExtension->usInstanceId.Buffer, Buffer, Index * sizeof(WCHAR));
+    UsbChildExtension->usInstanceId.Length = UsbChildExtension->usInstanceId.MaximumLength = Index * sizeof(WCHAR);
+
+    DPRINT("usDeviceId %wZ\n", &UsbChildExtension->usInstanceId);
     return STATUS_SUCCESS;
 }
 
