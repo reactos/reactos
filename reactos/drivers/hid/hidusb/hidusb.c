@@ -1686,10 +1686,13 @@ HidPnp(
                 Status = Irp->IoStatus.Status;
             }
 
-            //
-            // don't need to safely remove
-            //
-            IoStack->Parameters.DeviceCapabilities.Capabilities->SurpriseRemovalOK = TRUE;
+            if (NT_SUCCESS(Status) && IoStack->Parameters.DeviceCapabilities.Capabilities != NULL)
+            {
+                //
+                // don't need to safely remove
+                //
+                IoStack->Parameters.DeviceCapabilities.Capabilities->SurpriseRemovalOK = TRUE;
+            }
 
             //
             // done
