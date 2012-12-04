@@ -22,7 +22,7 @@
 #include "csrmsg.h"
 
 
-/* STRUCTURES *****************************************************************/
+/* TYPES **********************************************************************/
 
 // Used in ntdll/csr/connect.c
 #define CSR_CSRSS_SECTION_SIZE  65536
