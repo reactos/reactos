@@ -94,6 +94,10 @@ CSR_API(BaseSrvCreateProcess)
     if (Status == STATUS_THREAD_IS_TERMINATING)
     {
         DPRINT1("Thread already dead\n");
+
+        /* Set the special reply value so we don't reply this message back */
+        *ReplyCode = CsrReplyDeadClient;
+
         return Status;
     }
 
@@ -189,7 +193,7 @@ CSR_API(BaseSrvExitProcess)
     ASSERT(CsrThread != NULL);
 
     /* Set the special reply value so we don't reply this message back */
-    *Reply = 2;
+    *ReplyCode = CsrReplyDeadClient;
 
     /* Remove the CSR_THREADs and CSR_PROCESS */
     return CsrDestroyProcess(&CsrThread->ClientId,

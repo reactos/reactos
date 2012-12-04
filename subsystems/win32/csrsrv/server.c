@@ -253,7 +253,7 @@ LoadFailed:
  * @param ApiMessage
  *        Pointer to the CSR API Message for this request.
  *
- * @param Reply
+ * @param ReplyCode
  *        Optional reply to this request.
  *
  * @return STATUS_SUCCESS in case of success, STATUS_INVALID_PARAMETER
@@ -262,10 +262,7 @@ LoadFailed:
  * @remarks None.
  *
  *--*/
-NTSTATUS
-NTAPI
-CsrSrvClientConnect(IN OUT PCSR_API_MESSAGE ApiMessage,
-                    IN OUT PULONG Reply OPTIONAL)
+CSR_API(CsrSrvClientConnect)
 {
     NTSTATUS Status;
     PCSR_CLIENT_CONNECT ClientConnect = &ApiMessage->Data.CsrClientConnect;
@@ -273,7 +270,7 @@ CsrSrvClientConnect(IN OUT PCSR_API_MESSAGE ApiMessage,
     PCSR_PROCESS CurrentProcess = CsrGetClientThread()->Process;
 
     /* Set default reply */
-    *Reply = 0;
+    *ReplyCode = CsrReplyImmediately;
 
     /* Validate the ServerID */
     if (ClientConnect->ServerId >= CSR_SERVER_DLL_MAX)
@@ -498,7 +495,7 @@ CsrSrvAttachSharedSection(IN PCSR_PROCESS CsrProcess OPTIONAL,
  * @param ApiMessage
  *        Pointer to the CSR API Message for this request.
  *
- * @param Reply
+ * @param ReplyCode
  *        Pointer to an optional reply to this request.
  *
  * @return STATUS_SUCCESS.
@@ -506,15 +503,12 @@ CsrSrvAttachSharedSection(IN PCSR_PROCESS CsrProcess OPTIONAL,
  * @remarks None.
  *
  *--*/
-NTSTATUS
-NTAPI
-CsrSrvIdentifyAlertableThread(IN OUT PCSR_API_MESSAGE ApiMessage,
-                              IN OUT PULONG Reply)
+CSR_API(CsrSrvIdentifyAlertableThread)
 {
     PCSR_THREAD CsrThread = CsrGetClientThread();
 
     /* Set the alertable flag */
-    CsrThread->Flags |= CsrThreadAltertable;
+    CsrThread->Flags |= CsrThreadAlertable;
 
     /* Return success */
     return STATUS_SUCCESS;
@@ -529,7 +523,7 @@ CsrSrvIdentifyAlertableThread(IN OUT PCSR_API_MESSAGE ApiMessage,
  * @param ApiMessage
  *        Pointer to the CSR API Message for this request.
  *
- * @param Reply
+ * @param ReplyCode
  *        Pointer to an optional reply to this request.
  *
  * @return STATUS_SUCCESS.
@@ -537,10 +531,7 @@ CsrSrvIdentifyAlertableThread(IN OUT PCSR_API_MESSAGE ApiMessage,
  * @remarks None.
  *
  *--*/
-NTSTATUS
-NTAPI
-CsrSrvSetPriorityClass(IN OUT PCSR_API_MESSAGE ApiMessage,
-                       IN OUT PULONG Reply)
+CSR_API(CsrSrvSetPriorityClass)
 {
     /* Deprecated */
     return STATUS_SUCCESS;
@@ -557,7 +548,7 @@ CsrSrvSetPriorityClass(IN OUT PCSR_API_MESSAGE ApiMessage,
  * @param ApiMessage
  *        Pointer to the CSR API Message for this request.
  *
- * @param Reply
+ * @param ReplyCode
  *        Pointer to an optional reply to this request.
  *
  * @return STATUS_INVALID_PARAMETER.
@@ -566,10 +557,7 @@ CsrSrvSetPriorityClass(IN OUT PCSR_API_MESSAGE ApiMessage,
  *          return success.
  *
  *--*/
-NTSTATUS
-NTAPI
-CsrSrvUnusedFunction(IN OUT PCSR_API_MESSAGE ApiMessage,
-                     IN OUT PULONG Reply)
+CSR_API(CsrSrvUnusedFunction)
 {
     /* Deprecated */
     return STATUS_INVALID_PARAMETER;

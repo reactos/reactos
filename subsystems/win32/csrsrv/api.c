@@ -52,8 +52,7 @@ CsrCallServerFromServer(IN PCSR_API_MESSAGE ReceiveMsg,
     ULONG ServerId;
     PCSR_SERVER_DLL ServerDll;
     ULONG ApiId;
-    ULONG Reply;
-    NTSTATUS Status;
+    CSR_REPLY_CODE ReplyCode = CsrReplyImmediately;
 
     /* Get the Server ID */
     ServerId = CSR_API_NUMBER_TO_SERVER_ID(ReceiveMsg->ApiNumber);
@@ -97,12 +96,8 @@ CsrCallServerFromServer(IN PCSR_API_MESSAGE ReceiveMsg,
     /* Validation complete, start SEH */
     _SEH2_TRY
     {
-        /* Call the API and get the result */
-        /// CsrApiCallHandler(ReplyMsg, /*ProcessData*/ &ReplyCode); ///
-        Status = (ServerDll->DispatchTable[ApiId])(ReceiveMsg, &Reply);
-
-        /* Return the result, no matter what it is */
-        ReplyMsg->Status = Status;
+        /* Call the API, get the reply code and return the result */
+        ReplyMsg->Status = ServerDll->DispatchTable[ApiId](ReceiveMsg, &ReplyCode);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -350,6 +345,7 @@ CsrApiRequestThread(IN PVOID Parameter)
     LARGE_INTEGER TimeOut;
     PCSR_THREAD CurrentThread, CsrThread;
     NTSTATUS Status;
+    CSR_REPLY_CODE ReplyCode;
     PCSR_API_MESSAGE ReplyMsg;
     CSR_API_MESSAGE ReceiveMsg;
     PCSR_PROCESS CsrProcess;
@@ -358,7 +354,7 @@ CsrApiRequestThread(IN PVOID Parameter)
     PCSR_SERVER_DLL ServerDll;
     PCLIENT_DIED_MSG ClientDiedMsg;
     PDBGKM_MSG DebugMessage;
-    ULONG ServerId, ApiId, Reply, MessageType, i;
+    ULONG ServerId, ApiId, MessageType, i;
     HANDLE ReplyPort;
 
     /* Setup LPC loop port and message */
@@ -453,8 +449,9 @@ CsrApiRequestThread(IN PVOID Parameter)
         {
             /* Handle the Connection Request */
             CsrApiHandleConnectionRequest(&ReceiveMsg);
-            ReplyPort = CsrApiPort;
+
             ReplyMsg = NULL;
+            ReplyPort = CsrApiPort;
             continue;
         }
 
@@ -550,8 +547,9 @@ CsrApiRequestThread(IN PVOID Parameter)
                     DPRINT1("CSRSS: %lx is invalid ServerDllIndex (%08x)\n",
                             ServerId, ServerDll);
                     DbgBreakPoint();
-                    ReplyPort = CsrApiPort;
+
                     ReplyMsg = NULL;
+                    ReplyPort = CsrApiPort;
                     continue;
                 }
 
@@ -565,6 +563,7 @@ CsrApiRequestThread(IN PVOID Parameter)
                     DPRINT1("CSRSS: %lx is invalid ApiTableIndex for %Z\n",
                             CSR_API_NUMBER_TO_API_ID(ReceiveMsg.ApiNumber),
                             &ServerDll->Name);
+
                     ReplyPort = CsrApiPort;
                     ReplyMsg = NULL;
                     continue;
@@ -589,10 +588,10 @@ CsrApiRequestThread(IN PVOID Parameter)
                     /* Make sure we have enough threads */
                     CsrpCheckRequestThreads();
 
-                    /* Call the API and get the result */
+                    /* Call the API and get the reply code */
                     ReplyMsg = NULL;
                     ReplyPort = CsrApiPort;
-                    ServerDll->DispatchTable[ApiId](&ReceiveMsg, &Reply);
+                    ServerDll->DispatchTable[ApiId](&ReceiveMsg, &ReplyCode);
 
                     /* Increase the static thread count */
                     _InterlockedIncrement(&CsrpStaticThreadCount);
@@ -644,6 +643,7 @@ CsrApiRequestThread(IN PVOID Parameter)
 
                 /* Release the lock and keep looping */
                 CsrReleaseProcessLock();
+
                 ReplyMsg = NULL;
                 ReplyPort = CsrApiPort;
                 continue;
@@ -807,36 +807,40 @@ CsrApiRequestThread(IN PVOID Parameter)
 
             Teb->CsrClientThread = CsrThread;
 
-            /* Call the API and get the result */
-            Reply = 0;
-            ServerDll->DispatchTable[ApiId](&ReceiveMsg, &Reply);
+            /* Call the API, get the reply code and return the result */
+            ReplyCode = CsrReplyImmediately;
+            ReplyMsg->Status = ServerDll->DispatchTable[ApiId](&ReceiveMsg, &ReplyCode);
 
             /* Increase the static thread count */
             _InterlockedIncrement(&CsrpStaticThreadCount);
 
             Teb->CsrClientThread = CurrentThread;
 
-            if (Reply == 3)
+            if (ReplyCode == CsrReplyAlreadyDone)
             {
-                ReplyMsg = NULL;
                 if (ReceiveMsg.CsrCaptureData)
                 {
                     CsrReleaseCapturedArguments(&ReceiveMsg);
                 }
-                CsrDereferenceThread(CsrThread);
+                ReplyMsg = NULL;
                 ReplyPort = CsrApiPort;
+                CsrDereferenceThread(CsrThread);
             }
-            else if (Reply == 2)
+            else if (ReplyCode == CsrReplyDeadClient)
             {
+                /* Reply to the death message */
                 NtReplyPort(ReplyPort, &ReplyMsg->Header);
-                ReplyPort = CsrApiPort;
+
+                /* Reply back to the API port now */
                 ReplyMsg = NULL;
+                ReplyPort = CsrApiPort;
+
                 CsrDereferenceThread(CsrThread);
             }
-            else if (Reply == 1)
+            else if (ReplyCode == CsrReplyPending)
             {
-                ReplyPort = CsrApiPort;
                 ReplyMsg = NULL;
+                ReplyPort = CsrApiPort;
             }
             else
             {

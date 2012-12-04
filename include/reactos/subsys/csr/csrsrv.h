@@ -21,7 +21,8 @@
 
 #include "csrmsg.h"
 
-/* TYPES **********************************************************************/
+
+/* STRUCTURES *****************************************************************/
 
 // Used in ntdll/csr/connect.c
 #define CSR_CSRSS_SECTION_SIZE  65536
@@ -102,7 +103,7 @@ typedef enum _CSR_PROCESS_FLAGS
 
 typedef enum _CSR_THREAD_FLAGS
 {
-    CsrThreadAltertable     = 0x1,
+    CsrThreadAlertable      = 0x1,
     CsrThreadInTermination  = 0x2,
     CsrThreadTerminated     = 0x4,
     CsrThreadIsServerThread = 0x10
@@ -127,6 +128,16 @@ typedef enum _CSR_DEBUG_FLAGS
     CsrDebugProcessChildren = 2
 } CSR_PROCESS_DEBUG_FLAGS, *PCSR_PROCESS_DEBUG_FLAGS;
 
+typedef enum _CSR_REPLY_CODE
+{
+    CsrReplyImmediately = 0,
+    CsrReplyPending     = 1,
+    CsrReplyDeadClient  = 2,
+    CsrReplyAlreadyDone = 3
+} CSR_REPLY_CODE, *PCSR_REPLY_CODE;
+
+
+/* FUNCTION TYPES AND STRUCTURES **********************************************/
 
 /*
  * Wait block
@@ -162,13 +173,12 @@ typedef
 NTSTATUS
 (NTAPI *PCSR_API_ROUTINE)(
     IN OUT PCSR_API_MESSAGE ApiMessage,
-    OUT PULONG Reply
+    IN OUT PCSR_REPLY_CODE  ReplyCode OPTIONAL
 );
 
 #define CSR_API(n)                                          \
     NTSTATUS NTAPI n(IN OUT PCSR_API_MESSAGE ApiMessage,    \
-                     OUT PULONG Reply)
-                     // IN OUT PCSR_REPLY_STATUS ReplyStatus)
+                     IN OUT PCSR_REPLY_CODE  ReplyCode OPTIONAL)
 
 typedef
 NTSTATUS
@@ -227,8 +237,6 @@ typedef struct _CSR_SERVER_DLL
     ULONG Unknown2[3];
 } CSR_SERVER_DLL, *PCSR_SERVER_DLL;
 
-
-/* FUNCTION TYPES *************************************************************/
 
 typedef
 NTSTATUS
