@@ -1168,6 +1168,13 @@ Hid_SelectConfiguration(
                                                               USB_DEVICE_CLASS_HUMAN_INTERFACE,
                                                              -1,
                                                              -1);
+    if (!InterfaceDescriptor)
+    {
+        //
+        // bogus configuration descriptor
+        //
+        return STATUS_INVALID_PARAMETER;
+    }
 
     //
     // sanity check
@@ -1472,7 +1479,7 @@ Hid_PnpStart(
         //
         // no interface class
         //
-        DPRINT1("[HIDUSB] HID Class found\n");
+        DPRINT1("[HIDUSB] HID Interface descriptor not found\n");
         return STATUS_UNSUCCESSFUL;
     }
 
@@ -1482,11 +1489,6 @@ Hid_PnpStart(
     ASSERT(InterfaceDescriptor->bInterfaceClass == USB_DEVICE_CLASS_HUMAN_INTERFACE);
     ASSERT(InterfaceDescriptor->bDescriptorType == USB_INTERFACE_DESCRIPTOR_TYPE);
     ASSERT(InterfaceDescriptor->bLength == sizeof(USB_INTERFACE_DESCRIPTOR));
-
-    //
-    // now set the device idle
-    //
-    Hid_SetIdle(DeviceObject);
 
     //
     // move to next descriptor
@@ -1512,10 +1514,15 @@ Hid_PnpStart(
         //
         // done
         //
-        DPRINT("[HIDUSB] SelectConfiguration %x\n", Status);
+        DPRINT1("[HIDUSB] SelectConfiguration %x\n", Status);
 
         if (NT_SUCCESS(Status))
         {
+            //
+            // now set the device idle
+            //
+            Hid_SetIdle(DeviceObject);
+
             //
             // get protocol
             //
@@ -1523,18 +1530,18 @@ Hid_PnpStart(
             return Status;
         }
     }
-
-    //
-    // FIXME parse hid descriptor
-    //
-    UNIMPLEMENTED
-    ASSERT(FALSE);
-
-    //
-    // get protocol
-    //
-    Hid_GetProtocol(DeviceObject);
-    return STATUS_SUCCESS;
+    else
+    {
+        //
+        // FIXME parse hid descriptor
+        // select configuration
+        // set idle
+        // and get protocol
+        //
+        UNIMPLEMENTED
+        ASSERT(FALSE);
+    }
+    return Status;
 }
 
 
