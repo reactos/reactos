@@ -156,13 +156,13 @@ BOOLEAN
 
 typedef struct _CSR_WAIT_BLOCK
 {
-    ULONG Size;
+    ULONG Size;                     // Size of the wait block (variable-sized)
     LIST_ENTRY WaitList;
     LIST_ENTRY UserWaitList;
     PVOID WaitContext;
     PCSR_THREAD WaitThread;
     CSR_WAIT_FUNCTION WaitFunction;
-    CSR_API_MESSAGE WaitApiMessage;
+    CSR_API_MESSAGE WaitApiMessage; // Variable-sized CSR API message
 } CSR_WAIT_BLOCK, *PCSR_WAIT_BLOCK;
 
 

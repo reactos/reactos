@@ -73,6 +73,7 @@ CsrInitializeWait(IN CSR_WAIT_FUNCTION WaitFunction,
     /* Initialize it */
     WaitBlock->Size = Size;
     WaitBlock->WaitThread = CsrWaitThread;
+    CsrWaitThread->WaitBlock = WaitBlock;
     WaitBlock->WaitContext = WaitContext;
     WaitBlock->WaitFunction = WaitFunction;
     WaitBlock->UserWaitList.Flink = NULL;
@@ -242,6 +243,7 @@ CsrCreateWait(IN PLIST_ENTRY WaitList,
     if (CsrWaitThread->Flags & CsrThreadTerminated)
     {
         /* Fail the wait */
+        CsrWaitThread->WaitBlock = NULL;
         RtlFreeHeap(CsrHeap, 0, WaitBlock);
         CsrReleaseWaitLock();
         return FALSE;

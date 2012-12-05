@@ -504,7 +504,7 @@ CsrApiRequestThread(IN PVOID Parameter)
                         if ((ServerDll) && (ServerDll->HardErrorCallback))
                         {
                             /* Call it */
-                            ServerDll->HardErrorCallback(NULL /* CsrThread == NULL */, HardErrorMsg);
+                            ServerDll->HardErrorCallback(NULL /* == CsrThread */, HardErrorMsg);
 
                             /* If it's handled, get out of here */
                             if (HardErrorMsg->Response != ResponseNotHandled) break;
@@ -524,6 +524,7 @@ CsrApiRequestThread(IN PVOID Parameter)
                 else
                 {
                     ReplyMsg = &ReceiveMsg;
+                    ReplyPort = CsrApiPort;
                 }
             }
             else if (MessageType == LPC_REQUEST)
@@ -1178,20 +1179,21 @@ CsrCaptureArguments(IN PCSR_THREAD CsrThread,
     BufferDistance = (ULONG_PTR)RemoteCaptureBuffer - (ULONG_PTR)LocalCaptureBuffer;
 
     /*
-     * Convert all the pointer offsets into real pointers, and make
-     * them point to the remote data buffer instead of the local one.
+     * All the pointer offsets correspond to pointers which point
+     * to the remote data buffer instead of the local one.
      */
     for (i = 0 ; i < RemoteCaptureBuffer->PointerCount ; ++i)
     {
         if (RemoteCaptureBuffer->PointerOffsetsArray[i] != 0)
         {
+            /* Temporarily transform the offset into a pointer */
             RemoteCaptureBuffer->PointerOffsetsArray[i] += (ULONG_PTR)ApiMessage;
 
-            /* Validate the bounds of the current pointer */
+            /* Validate the bounds of the current pointed pointer */
             if ((*(PULONG_PTR)RemoteCaptureBuffer->PointerOffsetsArray[i] >= CsrThread->Process->ClientViewBase) &&
                 (*(PULONG_PTR)RemoteCaptureBuffer->PointerOffsetsArray[i] < CsrThread->Process->ClientViewBounds))
             {
-                /* Modify the pointer to take into account its new position */
+                /* Modify the pointed pointer to take into account its new position */
                 *(PULONG_PTR)RemoteCaptureBuffer->PointerOffsetsArray[i] += BufferDistance;
             }
             else
@@ -1201,19 +1203,22 @@ CsrCaptureArguments(IN PCSR_THREAD CsrThread,
                 DbgBreakPoint();
                 ApiMessage->Status = STATUS_INVALID_PARAMETER;
             }
+
+            /* Transform back into an offset */
+            RemoteCaptureBuffer->PointerOffsetsArray[i] -= (ULONG_PTR)ApiMessage;
         }
     }
 
     /* Check if we got success */
     if (ApiMessage->Status != STATUS_SUCCESS)
     {
-        /* Failure. Free the buffer and return*/
+        /* Failure. Free the buffer and return */
         RtlFreeHeap(CsrHeap, 0, RemoteCaptureBuffer);
         return FALSE;
     }
     else
     {
-        /* Success, save the previous buffer */
+        /* Success, save the previous buffer and use the remote capture buffer */
         RemoteCaptureBuffer->PreviousCaptureBuffer = LocalCaptureBuffer;
         ApiMessage->CsrCaptureData = RemoteCaptureBuffer;
     }
@@ -1246,29 +1251,38 @@ CsrReleaseCapturedArguments(IN PCSR_API_MESSAGE ApiMessage)
     SIZE_T BufferDistance;
     ULONG i;
 
-    /* Get the capture buffers */
+    /* Get the remote capture buffer */
     RemoteCaptureBuffer = ApiMessage->CsrCaptureData;
-    LocalCaptureBuffer = RemoteCaptureBuffer->PreviousCaptureBuffer;
 
     /* Do not continue if there is no captured buffer */
     if (!RemoteCaptureBuffer) return;
 
-    /* Free the previous one */
+    /* If there is one, get the corresponding local capture buffer */
+    LocalCaptureBuffer = RemoteCaptureBuffer->PreviousCaptureBuffer;
+
+    /* Free the previous one and use again the local capture buffer */
     RemoteCaptureBuffer->PreviousCaptureBuffer = NULL;
+    ApiMessage->CsrCaptureData = LocalCaptureBuffer;
 
     /* Calculate the difference between our buffer and the client's */
     BufferDistance = (ULONG_PTR)RemoteCaptureBuffer - (ULONG_PTR)LocalCaptureBuffer;
 
     /*
-     * Convert back all the pointers into pointer offsets, and make them
-     * point to the local data buffer instead of the remote one (revert
+     * All the pointer offsets correspond to pointers which point
+     * to the local data buffer instead of the remote one (revert
      * the logic of CsrCaptureArguments).
      */
     for (i = 0 ; i < RemoteCaptureBuffer->PointerCount ; ++i)
     {
         if (RemoteCaptureBuffer->PointerOffsetsArray[i] != 0)
         {
+            /* Temporarily transform the offset into a pointer */
+            RemoteCaptureBuffer->PointerOffsetsArray[i] += (ULONG_PTR)ApiMessage;
+
+            /* Modify the pointed pointer to take into account its new position */
             *(PULONG_PTR)RemoteCaptureBuffer->PointerOffsetsArray[i] -= BufferDistance;
+
+            /* Transform back into an offset */
             RemoteCaptureBuffer->PointerOffsetsArray[i] -= (ULONG_PTR)ApiMessage;
         }
     }
@@ -1313,7 +1327,7 @@ CsrValidateMessageBuffer(IN PCSR_API_MESSAGE ApiMessage,
                          IN ULONG ElementSize)
 {
     PCSR_CAPTURE_BUFFER CaptureBuffer = ApiMessage->CsrCaptureData;
-    // SIZE_T BufferDistance = (ULONG_PTR)Buffer - (ULONG_PTR)ApiMessage;
+    SIZE_T BufferDistance = (ULONG_PTR)Buffer - (ULONG_PTR)ApiMessage;
     ULONG i;
 
     /*
@@ -1353,10 +1367,10 @@ CsrValidateMessageBuffer(IN PCSR_API_MESSAGE ApiMessage,
             for (i = 0 ; i < CaptureBuffer->PointerCount ; ++i)
             {
                 /*
-                 * If the pointer offset is in fact equal to the
-                 * real address of the buffer then it's OK.
+                 * The pointer offset must be equal to the delta between
+                 * the addresses of the buffer and of the API message.
                  */
-                if (CaptureBuffer->PointerOffsetsArray[i] == (ULONG_PTR)Buffer /* BufferDistance + (ULONG_PTR)ApiMessage */)
+                if (CaptureBuffer->PointerOffsetsArray[i] == BufferDistance)
                 {
                     return TRUE;
                 }
