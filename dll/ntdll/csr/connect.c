@@ -51,7 +51,8 @@ CsrClientCallServer(IN OUT PCSR_API_MESSAGE ApiMessage,
                     IN ULONG DataLength)
 {
     NTSTATUS Status;
-    ULONG i;
+    ULONG PointerCount;
+    PULONG_PTR OffsetPointer;
 
     /* Fill out the Port Message Header. */
     ApiMessage->Header.u2.ZeroInit = 0;
@@ -90,13 +91,16 @@ CsrClientCallServer(IN OUT PCSR_API_MESSAGE ApiMessage,
              * a server pointer, and each pointer to these message pointers
              * is converted into an offset.
              */
-            for (i = 0 ; i < CaptureBuffer->PointerCount ; ++i)
+            PointerCount  = CaptureBuffer->PointerCount;
+            OffsetPointer = CaptureBuffer->PointerOffsetsArray;
+            while (PointerCount--)
             {
-                if (CaptureBuffer->PointerOffsetsArray[i] != 0)
+                if (*OffsetPointer != 0)
                 {
-                    *(PULONG_PTR)CaptureBuffer->PointerOffsetsArray[i] += CsrPortMemoryDelta;
-                    CaptureBuffer->PointerOffsetsArray[i] -= (ULONG_PTR)ApiMessage;
+                    *(PULONG_PTR)*OffsetPointer += CsrPortMemoryDelta;
+                    *OffsetPointer -= (ULONG_PTR)ApiMessage;
                 }
+                ++OffsetPointer;
             }
         }
 
@@ -120,13 +124,16 @@ CsrClientCallServer(IN OUT PCSR_API_MESSAGE ApiMessage,
              * pointers, and convert back these message server pointers
              * into client pointers.
              */
-            for (i = 0 ; i < CaptureBuffer->PointerCount ; ++i)
+            PointerCount  = CaptureBuffer->PointerCount;
+            OffsetPointer = CaptureBuffer->PointerOffsetsArray;
+            while (PointerCount--)
             {
-                if (CaptureBuffer->PointerOffsetsArray[i] != 0)
+                if (*OffsetPointer != 0)
                 {
-                    CaptureBuffer->PointerOffsetsArray[i] += (ULONG_PTR)ApiMessage;
-                    *(PULONG_PTR)CaptureBuffer->PointerOffsetsArray[i] -= CsrPortMemoryDelta;
+                    *OffsetPointer += (ULONG_PTR)ApiMessage;
+                    *(PULONG_PTR)*OffsetPointer -= CsrPortMemoryDelta;
                 }
+                ++OffsetPointer;
             }
         }
 

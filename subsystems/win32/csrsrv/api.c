@@ -1125,7 +1125,9 @@ CsrCaptureArguments(IN PCSR_THREAD CsrThread,
     PCSR_CAPTURE_BUFFER LocalCaptureBuffer = NULL, RemoteCaptureBuffer = NULL;
     SIZE_T BufferDistance;
     ULONG Length = 0;
-    ULONG i;
+    ULONG PointerCount;
+    PULONG_PTR OffsetPointer;
+    ULONG_PTR CurrentOffset;
 
     /* Use SEH to make sure this is valid */
     _SEH2_TRY
@@ -1182,19 +1184,23 @@ CsrCaptureArguments(IN PCSR_THREAD CsrThread,
      * All the pointer offsets correspond to pointers which point
      * to the remote data buffer instead of the local one.
      */
-    for (i = 0 ; i < RemoteCaptureBuffer->PointerCount ; ++i)
+    PointerCount  = RemoteCaptureBuffer->PointerCount;
+    OffsetPointer = RemoteCaptureBuffer->PointerOffsetsArray;
+    while (PointerCount--)
     {
-        if (RemoteCaptureBuffer->PointerOffsetsArray[i] != 0)
+        CurrentOffset = *OffsetPointer;
+
+        if (CurrentOffset != 0)
         {
-            /* Temporarily transform the offset into a pointer */
-            RemoteCaptureBuffer->PointerOffsetsArray[i] += (ULONG_PTR)ApiMessage;
+            /* Get the pointer corresponding to the offset */
+            CurrentOffset += (ULONG_PTR)ApiMessage;
 
             /* Validate the bounds of the current pointed pointer */
-            if ((*(PULONG_PTR)RemoteCaptureBuffer->PointerOffsetsArray[i] >= CsrThread->Process->ClientViewBase) &&
-                (*(PULONG_PTR)RemoteCaptureBuffer->PointerOffsetsArray[i] < CsrThread->Process->ClientViewBounds))
+            if ((*(PULONG_PTR)CurrentOffset >= CsrThread->Process->ClientViewBase) &&
+                (*(PULONG_PTR)CurrentOffset < CsrThread->Process->ClientViewBounds))
             {
                 /* Modify the pointed pointer to take into account its new position */
-                *(PULONG_PTR)RemoteCaptureBuffer->PointerOffsetsArray[i] += BufferDistance;
+                *(PULONG_PTR)CurrentOffset += BufferDistance;
             }
             else
             {
@@ -1203,10 +1209,9 @@ CsrCaptureArguments(IN PCSR_THREAD CsrThread,
                 DbgBreakPoint();
                 ApiMessage->Status = STATUS_INVALID_PARAMETER;
             }
-
-            /* Transform back into an offset */
-            RemoteCaptureBuffer->PointerOffsetsArray[i] -= (ULONG_PTR)ApiMessage;
         }
+
+        ++OffsetPointer;
     }
 
     /* Check if we got success */
@@ -1249,7 +1254,9 @@ CsrReleaseCapturedArguments(IN PCSR_API_MESSAGE ApiMessage)
 {
     PCSR_CAPTURE_BUFFER RemoteCaptureBuffer, LocalCaptureBuffer;
     SIZE_T BufferDistance;
-    ULONG i;
+    ULONG PointerCount;
+    PULONG_PTR OffsetPointer;
+    ULONG_PTR CurrentOffset;
 
     /* Get the remote capture buffer */
     RemoteCaptureBuffer = ApiMessage->CsrCaptureData;
@@ -1272,19 +1279,22 @@ CsrReleaseCapturedArguments(IN PCSR_API_MESSAGE ApiMessage)
      * to the local data buffer instead of the remote one (revert
      * the logic of CsrCaptureArguments).
      */
-    for (i = 0 ; i < RemoteCaptureBuffer->PointerCount ; ++i)
+    PointerCount  = RemoteCaptureBuffer->PointerCount;
+    OffsetPointer = RemoteCaptureBuffer->PointerOffsetsArray;
+    while (PointerCount--)
     {
-        if (RemoteCaptureBuffer->PointerOffsetsArray[i] != 0)
+        CurrentOffset = *OffsetPointer;
+
+        if (CurrentOffset != 0)
         {
-            /* Temporarily transform the offset into a pointer */
-            RemoteCaptureBuffer->PointerOffsetsArray[i] += (ULONG_PTR)ApiMessage;
+            /* Get the pointer corresponding to the offset */
+            CurrentOffset += (ULONG_PTR)ApiMessage;
 
             /* Modify the pointed pointer to take into account its new position */
-            *(PULONG_PTR)RemoteCaptureBuffer->PointerOffsetsArray[i] -= BufferDistance;
-
-            /* Transform back into an offset */
-            RemoteCaptureBuffer->PointerOffsetsArray[i] -= (ULONG_PTR)ApiMessage;
+            *(PULONG_PTR)CurrentOffset -= BufferDistance;
         }
+
+        ++OffsetPointer;
     }
 
     /* Copy the data back */
@@ -1328,7 +1338,8 @@ CsrValidateMessageBuffer(IN PCSR_API_MESSAGE ApiMessage,
 {
     PCSR_CAPTURE_BUFFER CaptureBuffer = ApiMessage->CsrCaptureData;
     SIZE_T BufferDistance = (ULONG_PTR)Buffer - (ULONG_PTR)ApiMessage;
-    ULONG i;
+    ULONG PointerCount;
+    PULONG_PTR OffsetPointer;
 
     /*
      * Check whether we have a valid buffer pointer, elements
@@ -1364,16 +1375,20 @@ CsrValidateMessageBuffer(IN PCSR_API_MESSAGE ApiMessage,
         if ((CaptureBuffer->Size - (ULONG_PTR)*Buffer + (ULONG_PTR)CaptureBuffer) >=
             (ElementCount * ElementSize))
         {
-            for (i = 0 ; i < CaptureBuffer->PointerCount ; ++i)
+            /* Perform the validation test */
+            PointerCount  = CaptureBuffer->PointerCount;
+            OffsetPointer = CaptureBuffer->PointerOffsetsArray;
+            while (PointerCount--)
             {
                 /*
                  * The pointer offset must be equal to the delta between
                  * the addresses of the buffer and of the API message.
                  */
-                if (CaptureBuffer->PointerOffsetsArray[i] == BufferDistance)
+                if (*OffsetPointer == BufferDistance)
                 {
                     return TRUE;
                 }
+                ++OffsetPointer;
             }
         }
     }
