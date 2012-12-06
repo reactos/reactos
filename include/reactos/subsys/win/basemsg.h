@@ -203,6 +203,9 @@ typedef struct _BASE_API_MESSAGE
     } Data;
 } BASE_API_MESSAGE, *PBASE_API_MESSAGE;
 
+// Check that a BASE_API_MESSAGE can hold in a CSR_API_MESSAGE.
+CHECK_API_MSG_SIZE(BASE_API_MESSAGE);
+
 #endif // _BASEMSG_H
 
 /* EOF */

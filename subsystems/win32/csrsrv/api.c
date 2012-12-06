@@ -919,13 +919,13 @@ CsrApiPortInitialize(VOID)
                                &CsrApiPortName,
                                0,
                                NULL,
-                               NULL /* FIXME*/);
+                               NULL /* FIXME: Use the Security Descriptor */);
 
     /* Create the Port Object */
     Status = NtCreatePort(&CsrApiPort,
                           &ObjectAttributes,
-                          LPC_MAX_DATA_LENGTH, // HACK: the real value is: sizeof(CSR_CONNECTION_INFO),
-                          LPC_MAX_MESSAGE_LENGTH, // HACK: the real value is: sizeof(CSR_API_MESSAGE),
+                          sizeof(CSR_CONNECTION_INFO),
+                          sizeof(CSR_API_MESSAGE),
                           16 * PAGE_SIZE);
     if (NT_SUCCESS(Status))
     {

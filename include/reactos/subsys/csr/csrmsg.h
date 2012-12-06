@@ -64,6 +64,10 @@ typedef struct _CSR_CONNECTION_INFO
     HANDLE ProcessId;
 } CSR_CONNECTION_INFO, *PCSR_CONNECTION_INFO;
 
+// We must have a size at most equal to the maximum acceptable LPC data size.
+C_ASSERT(sizeof(CSR_CONNECTION_INFO) <= LPC_MAX_DATA_LENGTH);
+
+
 typedef struct _CSR_IDENTIFY_ALTERTABLE_THREAD
 {
     CLIENT_ID Cid;
@@ -97,8 +101,6 @@ typedef struct _CSR_CAPTURE_BUFFER
     ULONG_PTR PointerOffsetsArray[ANYSIZE_ARRAY];
 } CSR_CAPTURE_BUFFER, *PCSR_CAPTURE_BUFFER;
 
-/* Keep in sync with definition below. */
-// #define CSRSS_HEADER_SIZE (sizeof(PORT_MESSAGE) + sizeof(ULONG) + sizeof(NTSTATUS))
 
 typedef struct _CSR_API_MESSAGE
 {
@@ -117,10 +119,37 @@ typedef struct _CSR_API_MESSAGE
                 CSR_CLIENT_CONNECT CsrClientConnect;
                 CSR_SET_PRIORITY_CLASS SetPriorityClass;
                 CSR_IDENTIFY_ALTERTABLE_THREAD IdentifyAlertableThread;
+
+                //
+                // This padding is used to make the CSR_API_MESSAGE structure
+                // large enough to hold full other API_MESSAGE-type structures
+                // used by other servers. These latter structures's sizes must
+                // be checked against the size of CSR_API_MESSAGE by using the
+                // CHECK_API_MSG_SIZE macro defined below.
+                //
+                // This is required because LPC will use this generic structure
+                // for communicating all the different servers' messages, and
+                // thus we avoid possible buffer overflows with this method.
+                // The problems there are, that we have to manually adjust the
+                // size of the padding to hope that all the servers' messaging
+                // structures will hold in it, or, that we have to be careful
+                // to not define too big messaging structures for the servers.
+                //
+                // Finally, the overall message structure size must be at most
+                // equal to the maximum acceptable LPC message size.
+                //
+                ULONG_PTR Padding[35];
             } Data;
         };
     };
 } CSR_API_MESSAGE, *PCSR_API_MESSAGE;
+
+// We must have a size at most equal to the maximum acceptable LPC message size.
+C_ASSERT(sizeof(CSR_API_MESSAGE) <= LPC_MAX_MESSAGE_LENGTH);
+
+// Macro to check that the total size of servers' message structures
+// are at most equal to the size of the CSR_API_MESSAGE structure.
+#define CHECK_API_MSG_SIZE(type) C_ASSERT(sizeof(type) <= sizeof(CSR_API_MESSAGE))
 
 #endif // _CSRMSG_H
 

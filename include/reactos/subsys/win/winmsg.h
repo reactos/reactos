@@ -83,6 +83,9 @@ typedef struct _USER_API_MESSAGE
     } Data;
 } USER_API_MESSAGE, *PUSER_API_MESSAGE;
 
+// Check that a USER_API_MESSAGE can hold in a CSR_API_MESSAGE.
+CHECK_API_MSG_SIZE(USER_API_MESSAGE);
+
 #endif // _WINMSG_H
 
 /* EOF */
