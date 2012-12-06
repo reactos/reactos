@@ -93,7 +93,7 @@ CsrAllocateCaptureBuffer(IN ULONG ArgumentCount,
     /* Validate size */
     if (BufferSize >= MAXLONG) return NULL;
 
-    /* Add the size of the header and for each pointer to the pointers */
+    /* Add the size of the header and for each offset to the pointers */
     BufferSize += FIELD_OFFSET(CSR_CAPTURE_BUFFER, PointerOffsetsArray) + (ArgumentCount * sizeof(ULONG_PTR));
 
     /* Align it to a 4-byte boundary */
@@ -107,7 +107,7 @@ CsrAllocateCaptureBuffer(IN ULONG ArgumentCount,
     CaptureBuffer->Size = BufferSize;
     CaptureBuffer->PointerCount = 0;
 
-    /* Initialize all the pointers */
+    /* Initialize all the offsets */
     RtlZeroMemory(CaptureBuffer->PointerOffsetsArray,
                   ArgumentCount * sizeof(ULONG_PTR));
 
