@@ -357,7 +357,13 @@ HidClassFDO_StartDevice(
     //
     IoSkipCurrentIrpStackLocation(Irp);
     Status = HidClassFDO_DispatchRequestSynchronous(DeviceObject, Irp);
-    ASSERT(Status == STATUS_SUCCESS);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("[HIDCLASS] Failed to start lower device with %x\n", Status);
+        Irp->IoStatus.Status = Status;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return Status;
+    }
 
     //
     // lets get the descriptors
