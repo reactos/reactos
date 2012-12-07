@@ -1842,7 +1842,6 @@ CHubController::HandleVendorDevice(
     NTSTATUS Status = STATUS_NOT_IMPLEMENTED;
     PUSBDEVICE UsbDevice;
     USB_DEFAULT_PIPE_SETUP_PACKET CtrlSetup;
-    PVOID TransferBuffer = NULL;
 
     DPRINT("CHubController::HandleVendorDevice Request %x\n", Urb->UrbControlVendorClassRequest.Request);
 
