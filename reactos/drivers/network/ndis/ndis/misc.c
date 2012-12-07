@@ -273,7 +273,7 @@ NdisOpenFile(
 
   InitializeObjectAttributes ( &ObjectAttributes,
     &FullFileName,
-    OBJ_CASE_INSENSITIVE,
+    OBJ_CASE_INSENSITIVE|OBJ_KERNEL_HANDLE,
     NULL,
     NULL );
 
@@ -285,14 +285,14 @@ NdisOpenFile(
     NULL, // PLARGE_INTEGER AllocationSize
     0, // ULONG FileAttributes
     FILE_SHARE_READ, // ULONG ShareAccess
-    FILE_CREATE, // ULONG CreateDisposition
+    FILE_OPEN, // ULONG CreateDisposition
     FILE_SYNCHRONOUS_IO_NONALERT, // ULONG CreateOptions
     0, // PVOID EaBuffer
     0 ); // ULONG EaLength
   
   if ( !NT_SUCCESS(*Status) )
   {
-    NDIS_DbgPrint(MIN_TRACE, ("ZwCreateFile failed (%x)\n", *Status));
+    NDIS_DbgPrint(MIN_TRACE, ("ZwCreateFile failed (%x) Name %wZ\n", *Status, FileName));
     *Status = NDIS_STATUS_FAILURE;
   }
 
