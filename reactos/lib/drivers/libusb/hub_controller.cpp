@@ -1044,6 +1044,7 @@ CHubController::HandleSelectConfiguration(
 {
     PUSBDEVICE UsbDevice;
     PUSBD_INTERFACE_INFORMATION InterfaceInfo;
+    NTSTATUS Status;
 
     //
     // is the request for the Root Hub
@@ -1110,7 +1111,13 @@ CHubController::HandleSelectConfiguration(
         //
         // select configuration
         //
-        return UsbDevice->SelectConfiguration(Urb->UrbSelectConfiguration.ConfigurationDescriptor, &Urb->UrbSelectConfiguration.Interface, &Urb->UrbSelectConfiguration.ConfigurationHandle);
+        Status = UsbDevice->SelectConfiguration(Urb->UrbSelectConfiguration.ConfigurationDescriptor, &Urb->UrbSelectConfiguration.Interface, &Urb->UrbSelectConfiguration.ConfigurationHandle);
+        if (NT_SUCCESS(Status)) 
+        {
+            // successfully configured device
+            Urb->UrbSelectConfiguration.Hdr.Status = USBD_STATUS_SUCCESS;
+        }
+        return Status;
     }
 }
 
@@ -1843,7 +1850,7 @@ CHubController::HandleVendorDevice(
     PUSBDEVICE UsbDevice;
     USB_DEFAULT_PIPE_SETUP_PACKET CtrlSetup;
 
-    DPRINT("CHubController::HandleVendorDevice Request %x\n", Urb->UrbControlVendorClassRequest.Request);
+    //DPRINT("CHubController::HandleVendorDevice Request %x\n", Urb->UrbControlVendorClassRequest.Request);
 
     //
     // sanity check
@@ -1891,6 +1898,12 @@ CHubController::HandleVendorDevice(
     // issue request
     //
     Status = UsbDevice->SubmitSetupPacket(&CtrlSetup, Urb->UrbControlVendorClassRequest.TransferBufferLength, Urb->UrbControlVendorClassRequest.TransferBuffer);
+    if (NT_SUCCESS(Status))
+    {
+        // success
+        Urb->UrbControlVendorClassRequest.Hdr.Status = USBD_STATUS_SUCCESS;
+        Irp->IoStatus.Information = Urb->UrbControlVendorClassRequest.TransferBufferLength;
+    }
 
     return Status;
 }
