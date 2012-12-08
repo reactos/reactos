@@ -268,6 +268,41 @@ AllocateInterfaceDescriptorsArray(
     return STATUS_SUCCESS;
 }
 
+VOID
+DumpFullConfigurationDescriptor(
+    IN PFDO_DEVICE_EXTENSION FDODeviceExtension,
+    IN PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor)
+{
+    PUSB_COMMON_DESCRIPTOR Descriptor;
+
+    Descriptor = (PUSB_COMMON_DESCRIPTOR)ConfigurationDescriptor;
+
+    DbgPrint("Bogus ConfigurationDescriptor Found\n");
+    DbgPrint("InterfaceCount %x\n", ConfigurationDescriptor->bNumInterfaces);
+
+    do
+    {
+        if (((ULONG_PTR)Descriptor + Descriptor->bLength) <= ((ULONG_PTR)ConfigurationDescriptor + ConfigurationDescriptor->wTotalLength))
+            break;
+
+        DbgPrint("Descriptor Type %x Length %lu Offset %lu\n", Descriptor->bDescriptorType, Descriptor->bLength, ((ULONG_PTR)Descriptor - (ULONG_PTR)ConfigurationDescriptor));
+
+        // check for invalid descriptors
+        if (!Descriptor->bLength) 
+        {
+            DbgPrint("Bogus Descriptor!!!\n");
+            break;
+        }
+
+        // advance to next descriptor
+        Descriptor = (PUSB_COMMON_DESCRIPTOR)((ULONG_PTR)Descriptor + Descriptor->bLength);
+
+    }while(TRUE);
+
+
+}
+
+
 NTSTATUS
 NTAPI
 USBCCGP_ScanConfigurationDescriptor(
@@ -309,7 +344,6 @@ USBCCGP_ScanConfigurationDescriptor(
         // parse configuration descriptor
         //
         InterfaceDescriptor = USBD_ParseConfigurationDescriptorEx(ConfigurationDescriptor, ConfigurationDescriptor, InterfaceIndex, -1, -1, -1, -1);
-        ASSERT(InterfaceDescriptor);
         if (InterfaceDescriptor)
         {
             //
@@ -318,6 +352,17 @@ USBCCGP_ScanConfigurationDescriptor(
             FDODeviceExtension->InterfaceList[FDODeviceExtension->InterfaceListCount].InterfaceDescriptor = InterfaceDescriptor;
             FDODeviceExtension->InterfaceListCount++;
             CurrentPosition = (PVOID)((ULONG_PTR)InterfaceDescriptor + InterfaceDescriptor->bLength);
+        }
+        else
+        {
+            DumpFullConfigurationDescriptor(FDODeviceExtension, ConfigurationDescriptor);
+
+            //
+            // see issue
+            // CORE-6574 Test 3 (USB Web Cam)
+            //
+            if (FDODeviceExtension->DeviceDescriptor && FDODeviceExtension->DeviceDescriptor->idVendor == 0x0458 && FDODeviceExtension->DeviceDescriptor->idProduct == 0x705f)
+                ASSERT(FALSE);
         }
 
         //
