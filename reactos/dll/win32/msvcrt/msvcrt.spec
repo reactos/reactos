@@ -302,7 +302,7 @@
 @ extern _commode
 @ cdecl _control87(long long)
 @ cdecl _controlfp(long long)
-# @ cdecl _controlfp_s(ptr long long)
+@ cdecl _controlfp_s(ptr long long)
 @ cdecl _copysign( double double )
 @ varargs _cprintf(str)
 # stub _cprintf_l
