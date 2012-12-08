@@ -31,6 +31,7 @@ static void test_sscanf( void )
     char c;
     void *ptr;
     float res1= -82.6267f, res2= 27.76f, res11, res12;
+    double double_res;
     static const char pname[]=" St. Petersburg, Florida\n";
     int hour=21,min=59,sec=20;
     int  number,number_so_far;
@@ -98,6 +99,22 @@ static void test_sscanf( void )
     ret = sscanf(buffer,"%f%f",&res11, &res12);
     ok( ret == 2, "expected 2, got %u\n", ret);
     ok( (res11 == res1) && (res12 == res2), "Error reading floats\n");
+
+    /* Check double */
+    ret = sprintf(buffer, "%lf", 32.715);
+    ok(ret == 9, "expected 9, got %u\n", ret);
+    ret = sscanf(buffer, "%lf", &double_res);
+    ok(ret == 1, "expected 1, got %u\n", ret);
+    ok(double_res == 32.715, "Got %lf, expected %lf\n", double_res, 32.715);
+    ret = sscanf(buffer, "%Lf", &double_res);
+    ok(ret == 1, "expected 1, got %u\n", ret);
+    ok(double_res == 32.715, "Got %lf, expected %lf\n", double_res, 32.715);
+
+    strcpy(buffer, "1.1e-30");
+    ret = sscanf(buffer, "%lf", &double_res);
+    ok(ret == 1, "expected 1, got %u\n", ret);
+    ok(double_res >= 1.1e-30-1e-45 && double_res <= 1.1e-30+1e-45,
+            "Got %.18le, expected %.18le\n", double_res, 1.1e-30);
 
     /* check strings */
     ret = sprintf(buffer," %s", pname);

@@ -23,15 +23,13 @@
 #include "winnls.h"
 #include <string.h>
 #include <mbstring.h>
+#include <wchar.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <mbctype.h>
 #include <locale.h>
 #include <errno.h>
 #include <limits.h>
-
-/* ReactOS */
-typedef unsigned int __msvcrt_ulong;
 
 static char *buf_to_string(const unsigned char *bin, int len, int nr)
 {
@@ -74,6 +72,7 @@ static __int64 (__cdecl *p_strtoi64)(const char *, char **, int);
 static unsigned __int64 (__cdecl *p_strtoui64)(const char *, char **, int);
 static int (__cdecl *pwcstombs_s)(size_t*,char*,size_t,const wchar_t*,size_t);
 static int (__cdecl *pmbstowcs_s)(size_t*,wchar_t*,size_t,const char*,size_t);
+static size_t (__cdecl *p_mbsrtowcs)(wchar_t*, const char**, size_t, mbstate_t*);
 static size_t (__cdecl *pwcsrtombs)(char*, const wchar_t**, size_t, int*);
 static errno_t (__cdecl *p_gcvt_s)(char*,size_t,double,int);
 static errno_t (__cdecl *p_itoa_s)(int,char*,size_t,int);
@@ -86,7 +85,10 @@ static int (__cdecl *p_wcslwr_s)(wchar_t*,size_t);
 static errno_t (__cdecl *p_mbsupr_s)(unsigned char *str, size_t numberOfElements);
 static errno_t (__cdecl *p_mbslwr_s)(unsigned char *str, size_t numberOfElements);
 static int (__cdecl *p_wctob)(wint_t);
+static size_t (__cdecl *p_wcrtomb)(char*, wchar_t, mbstate_t*);
 static int (__cdecl *p_tolower)(int);
+static size_t (__cdecl *p_mbrlen)(const char*, size_t, mbstate_t*);
+static size_t (__cdecl *p_mbrtowc)(wchar_t*, const char*, size_t, mbstate_t*);
 
 #define SETNOFAIL(x,y) x = (void*)GetProcAddress(hMsvcrt,y)
 #define SET(x,y) SETNOFAIL(x,y); ok(x != NULL, "Export '%s' not found\n", y)
@@ -306,6 +308,43 @@ static void test_mbcp(void)
     expect_eq(_mbslen(mbstring2), 4, int, "%d");
     expect_eq(_mbslen(mbsonlylead), 0, int, "%d");          /* lead + NUL not counted as character */
     expect_eq(_mbslen(mbstring), 4, int, "%d");             /* lead + invalid trail counted */
+
+    /* mbrlen */
+    if(!setlocale(LC_ALL, ".936") || !p_mbrlen) {
+        win_skip("mbrlen tests\n");
+    }else {
+        mbstate_t state = 0;
+        expect_eq(p_mbrlen((const char*)mbstring, 2, NULL), 2, int, "%d");
+        expect_eq(p_mbrlen((const char*)&mbstring[2], 2, NULL), 2, int, "%d");
+        expect_eq(p_mbrlen((const char*)&mbstring[3], 2, NULL), 1, int, "%d");
+        expect_eq(p_mbrlen((const char*)mbstring, 1, NULL), -2, int, "%d");
+        expect_eq(p_mbrlen((const char*)mbstring, 1, &state), -2, int, "%d");
+        ok(state == mbstring[0], "incorrect state value (%x)\n", state);
+        expect_eq(p_mbrlen((const char*)&mbstring[1], 1, &state), 2, int, "%d");
+    }
+
+    /* mbrtowc */
+    if(!setlocale(LC_ALL, ".936") || !p_mbrtowc) {
+        win_skip("mbrtowc tests\n");
+    }else {
+        mbstate_t state = 0;
+        wchar_t dst;
+        expect_eq(p_mbrtowc(&dst, (const char*)mbstring, 2, NULL), 2, int, "%d");
+        ok(dst == 0x6c28, "dst = %x, expected 0x6c28\n", dst);
+        expect_eq(p_mbrtowc(&dst, (const char*)mbstring+2, 2, NULL), 2, int, "%d");
+        ok(dst == 0x3f, "dst = %x, expected 0x3f\n", dst);
+        expect_eq(p_mbrtowc(&dst, (const char*)mbstring+3, 2, NULL), 1, int, "%d");
+        ok(dst == 0x20, "dst = %x, expected 0x20\n", dst);
+        expect_eq(p_mbrtowc(&dst, (const char*)mbstring, 1, NULL), -2, int, "%d");
+        ok(dst == 0, "dst = %x, expected 0\n", dst);
+        expect_eq(p_mbrtowc(&dst, (const char*)mbstring, 1, &state), -2, int, "%d");
+        ok(dst == 0, "dst = %x, expected 0\n", dst);
+        ok(state == mbstring[0], "incorrect state value (%x)\n", state);
+        expect_eq(p_mbrtowc(&dst, (const char*)mbstring+1, 1, &state), 2, int, "%d");
+        ok(dst == 0x6c28, "dst = %x, expected 0x6c28\n", dst);
+        ok(state == 0, "incorrect state value (%x)\n", state);
+    }
+    setlocale(LC_ALL, "C");
 
     /* _mbccpy/_mbsncpy */
     memset(buf, 0xff, sizeof(buf));
@@ -1545,6 +1584,8 @@ static void test_mbstowcs(void)
     char mOut[6];
     size_t ret;
     int err;
+    const char *pmbstr;
+    mbstate_t state;
 
     wOut[4] = '!'; wOut[5] = '\0';
     mOut[4] = '!'; mOut[5] = '\0';
@@ -1634,6 +1675,38 @@ static void test_mbstowcs(void)
     ok(ret == 4, "wcsrtombs did not return 4\n");
     ok(pwstr == NULL, "pwstr != NULL\n");
     ok(!memcmp(mOut, mSimple, sizeof(mSimple)), "mOut = %s\n", mOut);
+
+    if(!p_mbsrtowcs) {
+        setlocale(LC_ALL, "C");
+        win_skip("mbsrtowcs not available\n");
+        return;
+    }
+
+    pmbstr = mHiragana;
+    ret = p_mbsrtowcs(wOut, &pmbstr, 6, NULL);
+    ok(ret == 2, "mbsrtowcs did not return 2\n");
+    ok(!memcmp(wOut, wHiragana, sizeof(wHiragana)), "wOut = %s\n", wine_dbgstr_w(wOut));
+    ok(!pmbstr, "pmbstr != NULL\n");
+
+    state = mHiragana[0];
+    pmbstr = mHiragana+1;
+    ret = p_mbsrtowcs(wOut, &pmbstr, 6, &state);
+    ok(ret == 2, "mbsrtowcs did not return 2\n");
+    ok(wOut[0] == 0x3042, "wOut[0] = %x\n", wOut[0]);
+    ok(wOut[1] == 0xff61, "wOut[1] = %x\n", wOut[1]);
+    ok(wOut[2] == 0, "wOut[2] = %x\n", wOut[2]);
+    ok(!pmbstr, "pmbstr != NULL\n");
+
+    if (p_set_invalid_parameter_handler)
+        ok(p_set_invalid_parameter_handler(test_invalid_parameter_handler) == NULL,
+                "Invalid parameter handler was already set\n");
+    errno = EBADF;
+    ret = p_mbsrtowcs(wOut, NULL, 6, &state);
+    ok(ret == -1, "mbsrtowcs did not return -1\n");
+    ok(errno == EINVAL, "Expected errno to be EINVAL, got %d\n", errno);
+    if (p_set_invalid_parameter_handler)
+        ok(p_set_invalid_parameter_handler(NULL) == test_invalid_parameter_handler,
+                "Cannot reset invalid parameter handler\n");
 
     setlocale(LC_ALL, "C");
 }
@@ -2229,6 +2302,44 @@ static void test_wctob(void)
     ret = p_wctob(0xe0);
     ok(ret == (int)(char)0xe0, "ret = %x\n", ret);
 }
+static void test_wctomb(void)
+{
+    mbstate_t state;
+    unsigned char dst[10];
+    size_t ret;
+
+    if(!p_wcrtomb || !setlocale(LC_ALL, "Japanese_Japan.932")) {
+        win_skip("wcrtomb tests\n");
+        return;
+    }
+
+    ret = p_wcrtomb(NULL, 0x3042, NULL);
+    ok(ret == 2, "wcrtomb did not return 2\n");
+
+    state = 1;
+    dst[2] = 'a';
+    ret = p_wcrtomb((char*)dst, 0x3042, &state);
+    ok(ret == 2, "wcrtomb did not return 2\n");
+    ok(state == 0, "state != 0\n");
+    ok(dst[0] == 0x82, "dst[0] = %x, expected 0x82\n", dst[0]);
+    ok(dst[1] == 0xa0, "dst[1] = %x, expected 0xa0\n", dst[1]);
+    ok(dst[2] == 'a', "dst[2] != 'a'\n");
+
+    ret = p_wcrtomb((char*)dst, 0x3043, NULL);
+    ok(ret == 2, "wcrtomb did not return 2\n");
+    ok(dst[0] == 0x82, "dst[0] = %x, expected 0x82\n", dst[0]);
+    ok(dst[1] == 0xa1, "dst[1] = %x, expected 0xa1\n", dst[1]);
+
+    ret = p_wcrtomb((char*)dst, 0x20, NULL);
+    ok(ret == 1, "wcrtomb did not return 1\n");
+    ok(dst[0] == 0x20, "dst[0] = %x, expected 0x20\n", dst[0]);
+
+    ret = p_wcrtomb((char*)dst, 0xffff, NULL);
+    ok(ret == -1, "wcrtomb did not return -1\n");
+    ok(dst[0] == 0x3f, "dst[0] = %x, expected 0x20\n", dst[0]);
+
+    setlocale(LC_ALL, "C");
+}
 
 static void test_tolower(void)
 {
@@ -2304,7 +2415,11 @@ START_TEST(string)
     p_mbsupr_s = (void*)GetProcAddress(hMsvcrt, "_mbsupr_s");
     p_mbslwr_s = (void*)GetProcAddress(hMsvcrt, "_mbslwr_s");
     p_wctob = (void*)GetProcAddress(hMsvcrt, "wctob");
+    p_wcrtomb = (void*)GetProcAddress(hMsvcrt, "wcrtomb");
     p_tolower = (void*)GetProcAddress(hMsvcrt, "tolower");
+    p_mbrlen = (void*)GetProcAddress(hMsvcrt, "mbrlen");
+    p_mbrtowc = (void*)GetProcAddress(hMsvcrt, "mbrtowc");
+    p_mbsrtowcs = (void*)GetProcAddress(hMsvcrt, "mbsrtowcs");
 
     /* MSVCRT memcpy behaves like memmove for overlapping moves,
        MFC42 CString::Insert seems to rely on that behaviour */
@@ -2352,5 +2467,6 @@ START_TEST(string)
     test__mbsupr_s();
     test__mbslwr_s();
     test_wctob();
+    test_wctomb();
     test_tolower();
 }

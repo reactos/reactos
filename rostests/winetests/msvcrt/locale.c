@@ -25,6 +25,8 @@
 
 static BOOL (__cdecl *p__crtGetStringTypeW)(DWORD, DWORD, const wchar_t*, int, WORD*);
 static int (__cdecl *pmemcpy_s)(void *, size_t, void*, size_t);
+static int (__cdecl *p___mb_cur_max_func)(void);
+static int *(__cdecl *p__p___mb_cur_max)(void);
 void* __cdecl _Gettnames(void);
 
 static void init(void)
@@ -33,6 +35,8 @@ static void init(void)
 
     p__crtGetStringTypeW = (void*)GetProcAddress(hmod, "__crtGetStringTypeW");
     pmemcpy_s = (void*)GetProcAddress(hmod, "memcpy_s");
+    p___mb_cur_max_func = (void*)GetProcAddress(hmod, "___mb_cur_max_func");
+    p__p___mb_cur_max = (void*)GetProcAddress(hmod, "__p___mb_cur_max");
 }
 
 static void test_setlocale(void)
@@ -738,7 +742,56 @@ static void test__Gettnames(void)
 
     setlocale(LC_ALL, "C");
 }
-#endif /* ROSTESTS_91_IS_FIXED */
+#endif
+
+static void test___mb_cur_max_func(void)
+{
+    int mb_cur_max;
+    CPINFO cp;
+
+    setlocale(LC_ALL, "C");
+    GetCPInfo(CP_ACP, &cp);
+
+    /* for newer Windows */
+    if(!p___mb_cur_max_func)
+        win_skip("Skipping ___mb_cur_max_func tests\n");
+    else {
+        mb_cur_max = p___mb_cur_max_func();
+        ok(mb_cur_max == 1, "mb_cur_max = %d, expected 1\n", mb_cur_max);
+
+        /* some old Windows don't set chinese */
+        if (!setlocale(LC_ALL, "chinese"))
+            win_skip("Skipping test with chinese locale\n");
+        else {
+            mb_cur_max = p___mb_cur_max_func();
+            ok(mb_cur_max == 2, "mb_cur_max = %d, expected 2\n", mb_cur_max);
+            setlocale(LC_ALL, "C");
+        }
+    }
+
+    /* for older Windows */
+    if (!p__p___mb_cur_max)
+        win_skip("Skipping __p___mb_cur_max tests\n");
+    else {
+        mb_cur_max = *p__p___mb_cur_max();
+        if (cp.MaxCharSize != 1) {
+            todo_wine ok(mb_cur_max == cp.MaxCharSize, "mb_cur_max = %d, expected %d\n",
+                    mb_cur_max, cp.MaxCharSize);
+        }
+        else {
+            ok(mb_cur_max == 1, "mb_cur_max = %d, expected 1\n", mb_cur_max);
+        }
+
+        /* some old Windows don't set chinese */
+        if (!setlocale(LC_ALL, "chinese"))
+            win_skip("Skipping test with chinese locale\n");
+        else {
+            mb_cur_max = *p__p___mb_cur_max();
+            ok(mb_cur_max == 2, "mb_cur_max = %d, expected 2\n", mb_cur_max);
+            setlocale(LC_ALL, "C");
+        }
+    }
+}
 
 START_TEST(locale)
 {
@@ -749,4 +802,5 @@ START_TEST(locale)
 #if ROSTESTS_91_IS_FIXED
     test__Gettnames();
 #endif
+    test___mb_cur_max_func();
 }
