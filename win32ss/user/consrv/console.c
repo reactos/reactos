@@ -114,6 +114,7 @@ CsrInitConsole(PCSRSS_CONSOLE Console, int ShowCmd)
     Console->Mode = ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT | ENABLE_PROCESSED_INPUT | ENABLE_MOUSE_INPUT;
     InitializeListHead(&Console->BufferList);
     Console->ActiveBuffer = NULL;
+    InitializeListHead(&Console->ReadWaitQueue);
     InitializeListHead(&Console->InputEvents);
     InitializeListHead(&Console->HistoryBuffers);
     Console->CodePage = GetOEMCP();
@@ -423,6 +424,8 @@ ConioDeleteConsole(Object_t *Object)
     ConsoleInput *Event;
 
     DPRINT("ConioDeleteConsole\n");
+
+    /* TODO: Dereference all the waits in Console->ReadWaitQueue */
 
     /* Drain input event queue */
     while (Console->InputEvents.Flink != &Console->InputEvents)

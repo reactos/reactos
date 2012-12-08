@@ -53,6 +53,9 @@ typedef struct tagCSRSS_CONSOLE
     CRITICAL_SECTION Lock;
     struct tagCSRSS_CONSOLE *Prev, *Next; /* Next and Prev consoles in console wheel */
     HANDLE ActiveEvent;
+
+    LIST_ENTRY ReadWaitQueue;             /* List head for the queue of read wait blocks */
+
     LIST_ENTRY InputEvents;               /* List head for input event queue */
     PWCHAR LineBuffer;                    /* current line being input, in line buffered mode */
     WORD LineMaxSize;                     /* maximum size of line in characters (including CR+LF) */

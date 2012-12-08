@@ -147,7 +147,6 @@ typedef struct
     BOOL Unicode;
     WORD NrCharactersToRead;
     WORD NrCharactersRead;
-    HANDLE EventHandle;
 
     UNICODE_STRING ExeName;
     DWORD CtrlWakeupMask;
@@ -326,14 +325,10 @@ typedef struct
     BOOL Unicode;
     BOOL bRead; // TRUE --> Read ; FALSE --> Peek
 
-    DWORD Length;
-    INPUT_RECORD* InputRecord;
-
-    /** For Read **/
     ULONG InputsRead;
-    // INPUT_RECORD Input;
-    BOOL MoreEvents;
-    HANDLE Event;
+
+    ULONG Length;
+    PINPUT_RECORD InputRecord;
 } CSRSS_GET_CONSOLE_INPUT, *PCSRSS_GET_CONSOLE_INPUT;
 
 typedef struct

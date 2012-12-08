@@ -57,6 +57,7 @@ IntReadConsole(HANDLE hConsoleInput,
                               ReadConsoleRequest->BufferSize,
                               (PVOID*)&ReadConsoleRequest->Buffer);
 
+    /* Set up the data to send to the Console Server */
     ReadConsoleRequest->ConsoleHandle = hConsoleInput;
     ReadConsoleRequest->Unicode = bUnicode;
     ReadConsoleRequest->NrCharactersToRead = (WORD)nNumberOfCharsToRead;
@@ -71,31 +72,42 @@ IntReadConsole(HANDLE hConsoleInput,
         ReadConsoleRequest->CtrlWakeupMask = pInputControl->dwCtrlWakeupMask;
     }
 
+    /* Call the server */
     Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                                  CaptureBuffer,
                                  CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepReadConsole),
                                  sizeof(CSRSS_READ_CONSOLE));
-    if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = ApiMessage.Status))
+
+    /* Check for success */
+    if (NT_SUCCESS(Status) || NT_SUCCESS(Status = ApiMessage.Status))
+    {
+        memcpy(lpBuffer,
+               ReadConsoleRequest->Buffer,
+               ReadConsoleRequest->NrCharactersRead * CharSize);
+
+        if (lpNumberOfCharsRead != NULL)
+            *lpNumberOfCharsRead = ReadConsoleRequest->NrCharactersRead;
+
+        if (pInputControl && pInputControl->nLength == sizeof(CONSOLE_READCONSOLE_CONTROL))
+            pInputControl->dwControlKeyState = ReadConsoleRequest->ControlKeyState;
+    }
+    else
     {
         DPRINT1("CSR returned error in ReadConsole\n");
-        CsrFreeCaptureBuffer(CaptureBuffer);
-        BaseSetLastNTError(Status);
-        return FALSE;
+
+        if (lpNumberOfCharsRead != NULL)
+            *lpNumberOfCharsRead = 0;
+
+        /* Error out */
+        BaseSetLastNTError(Status /* ApiMessage.Status */);
     }
-
-    memcpy(lpBuffer,
-           ReadConsoleRequest->Buffer,
-           ReadConsoleRequest->NrCharactersRead * CharSize);
-
-    if (lpNumberOfCharsRead != NULL)
-        *lpNumberOfCharsRead = ReadConsoleRequest->NrCharactersRead;
-
-    if (pInputControl && pInputControl->nLength == sizeof(CONSOLE_READCONSOLE_CONTROL))
-        pInputControl->dwControlKeyState = ReadConsoleRequest->ControlKeyState;
 
     CsrFreeCaptureBuffer(CaptureBuffer);
 
-    return TRUE;
+    /* Return TRUE or FALSE */
+    // return TRUE;
+    return (ReadConsoleRequest->NrCharactersRead > 0);
+    // return NT_SUCCESS(ApiMessage.Status);
 }
 
 
@@ -142,10 +154,7 @@ IntGetConsoleInput(HANDLE hConsoleInput,
     GetConsoleInputRequest->ConsoleHandle = hConsoleInput;
     GetConsoleInputRequest->Unicode = bUnicode;
     GetConsoleInputRequest->bRead = bRead;
-    if (bRead == TRUE)
-    {
-        GetConsoleInputRequest->InputsRead = 0;
-    }
+    GetConsoleInputRequest->InputsRead = 0;
     GetConsoleInputRequest->Length = nLength;
 
     /* Call the server */
@@ -155,9 +164,30 @@ IntGetConsoleInput(HANDLE hConsoleInput,
                                  sizeof(CSRSS_GET_CONSOLE_INPUT));
     DPRINT("Server returned: %x\n", ApiMessage.Status);
 
-/** For Read only **
-    if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = ApiMessage.Status))
+    /* Check for success */
+    if (NT_SUCCESS(Status) || NT_SUCCESS(Status = ApiMessage.Status))
     {
+        /* Return the number of events read */
+        DPRINT("Events read: %lx\n", GetConsoleInputRequest->InputsRead);
+
+        if (lpNumberOfEventsRead != NULL)
+            *lpNumberOfEventsRead = GetConsoleInputRequest->InputsRead;
+
+        /* Copy into the buffer */
+        DPRINT("Copying to buffer\n");
+        RtlCopyMemory(lpBuffer,
+                      GetConsoleInputRequest->InputRecord,
+                      sizeof(INPUT_RECORD) * GetConsoleInputRequest->InputsRead);
+    }
+    else
+    {
+        if (lpNumberOfEventsRead != NULL)
+            *lpNumberOfEventsRead = 0;
+
+        /* Error out */
+        BaseSetLastNTError(ApiMessage.Status);
+
+/*********
         // BaseSetLastNTError(Status); ????
         if (GetConsoleInputRequest->InputsRead == 0)
         {
@@ -170,75 +200,15 @@ IntGetConsoleInput(HANDLE hConsoleInput,
             /\* FIXME - fail gracefully in case we already read at least one record? *\/
             // break;
         }
+*********/
     }
-**/
 
-    /**
-     ** TODO: !! Simplify the function !!
-     **/
-    if (bRead == TRUE) // ReadConsoleInput call.
-    {
-        /* Check for success */
-        if (NT_SUCCESS(Status) || NT_SUCCESS(Status = ApiMessage.Status))
-        {
-            /* Return the number of events read */
-            DPRINT("Events read: %lx\n", GetConsoleInputRequest->InputsRead/*Length*/);
+    /* Release the capture buffer */
+    CsrFreeCaptureBuffer(CaptureBuffer);
 
-            if (lpNumberOfEventsRead != NULL)
-                *lpNumberOfEventsRead = GetConsoleInputRequest->InputsRead/*Length*/;
-
-            /* Copy into the buffer */
-            DPRINT("Copying to buffer\n");
-            RtlCopyMemory(lpBuffer,
-                          GetConsoleInputRequest->InputRecord,
-                          sizeof(INPUT_RECORD) * GetConsoleInputRequest->InputsRead/*Length*/);
-        }
-        else
-        {
-            if (lpNumberOfEventsRead != NULL)
-                *lpNumberOfEventsRead = 0;
-
-            /* Error out */
-            BaseSetLastNTError(ApiMessage.Status);
-        }
-
-        /* Release the capture buffer */
-        CsrFreeCaptureBuffer(CaptureBuffer);
-
-        return (GetConsoleInputRequest->InputsRead > 0);
-    }
-    else // PeekConsoleInput call.
-    {
-        /* Check for success */
-        if (NT_SUCCESS(Status) || NT_SUCCESS(ApiMessage.Status))
-        {
-            /* Return the number of events read */
-            DPRINT("Events read: %lx\n", GetConsoleInputRequest->Length);
-
-            if (lpNumberOfEventsRead != NULL)
-                *lpNumberOfEventsRead = GetConsoleInputRequest->Length;
-
-            /* Copy into the buffer */
-            DPRINT("Copying to buffer\n");
-            RtlCopyMemory(lpBuffer,
-                          GetConsoleInputRequest->InputRecord,
-                          sizeof(INPUT_RECORD) * GetConsoleInputRequest->Length);
-        }
-        else
-        {
-            if (lpNumberOfEventsRead != NULL)
-                *lpNumberOfEventsRead = 0;
-
-            /* Error out */
-            BaseSetLastNTError(ApiMessage.Status);
-        }
-
-        /* Release the capture buffer */
-        CsrFreeCaptureBuffer(CaptureBuffer);
-
-        /* Return TRUE or FALSE */
-        return NT_SUCCESS(ApiMessage.Status);
-    }
+    /* Return TRUE or FALSE */
+    return (GetConsoleInputRequest->InputsRead > 0);
+    // return NT_SUCCESS(ApiMessage.Status);
 }
 
 
