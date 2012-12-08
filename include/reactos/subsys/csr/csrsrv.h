@@ -133,7 +133,7 @@ typedef enum _CSR_REPLY_CODE
     CsrReplyImmediately = 0,
     CsrReplyPending     = 1,
     CsrReplyDeadClient  = 2,
-    CsrReplyAlreadyDone = 3
+    CsrReplyAlreadySent = 3
 } CSR_REPLY_CODE, *PCSR_REPLY_CODE;
 
 

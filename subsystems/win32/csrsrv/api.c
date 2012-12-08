@@ -817,7 +817,7 @@ CsrApiRequestThread(IN PVOID Parameter)
 
             Teb->CsrClientThread = CurrentThread;
 
-            if (ReplyCode == CsrReplyAlreadyDone)
+            if (ReplyCode == CsrReplyAlreadySent)
             {
                 if (ReceiveMsg.CsrCaptureData)
                 {
