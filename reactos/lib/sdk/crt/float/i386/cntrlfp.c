@@ -125,7 +125,7 @@ int CDECL _controlfp_s(unsigned int *cur, unsigned int newval, unsigned int mask
     if (!MSVCRT_CHECK_PMT( !(newval & mask & ~(_MCW_EM | _MCW_IC | _MCW_RC | _MCW_PC | _MCW_DN))))
     {
         if (cur) *cur = _controlfp( 0, 0 );  /* retrieve it anyway */
-        return MSVCRT_EINVAL;
+        return EINVAL;
     }
     val = _controlfp( newval, mask );
     if (cur) *cur = val;
