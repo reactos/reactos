@@ -29,6 +29,7 @@ LsaIOpenPolicyTrusted(OUT LSAPR_HANDLE *PolicyHandle)
                               L"Policy",
                               LsaDbPolicyObject,
                               POLICY_ALL_ACCESS,
+                              TRUE,
                               &PolicyObject);
 
     if (NT_SUCCESS(Status))

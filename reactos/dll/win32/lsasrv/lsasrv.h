@@ -47,6 +47,7 @@ typedef struct _LSA_DB_OBJECT
     ULONG RefCount;
     ACCESS_MASK Access;
     HANDLE KeyHandle;
+    BOOLEAN Trusted;
     struct _LSA_DB_OBJECT *ParentObject;
 } LSA_DB_OBJECT, *PLSA_DB_OBJECT;
 
@@ -87,6 +88,7 @@ LsapCreateDbObject(IN PLSA_DB_OBJECT ParentObject,
                    IN LPWSTR ObjectName,
                    IN LSA_DB_OBJECT_TYPE HandleType,
                    IN ACCESS_MASK DesiredAccess,
+                   IN BOOLEAN Trusted,
                    OUT PLSA_DB_OBJECT *DbObject);
 
 NTSTATUS
@@ -95,6 +97,7 @@ LsapOpenDbObject(IN PLSA_DB_OBJECT ParentObject,
                  IN LPWSTR ObjectName,
                  IN LSA_DB_OBJECT_TYPE ObjectType,
                  IN ACCESS_MASK DesiredAccess,
+                 IN BOOLEAN Trusted,
                  OUT PLSA_DB_OBJECT *DbObject);
 
 NTSTATUS

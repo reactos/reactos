@@ -304,6 +304,7 @@ LsapCreateDatabaseObjects(VOID)
                               L"Policy",
                               LsaDbPolicyObject,
                               0,
+                              TRUE,
                               &PolicyObject);
     if (!NT_SUCCESS(Status))
         goto done;
@@ -434,6 +435,7 @@ LsapGetDomainInfo(VOID)
                               L"Policy",
                               LsaDbPolicyObject,
                               0,
+                              TRUE,
                               &PolicyObject);
     if (!NT_SUCCESS(Status))
         goto done;
@@ -596,6 +598,7 @@ LsapCreateDbObject(IN PLSA_DB_OBJECT ParentObject,
                    IN LPWSTR ObjectName,
                    IN LSA_DB_OBJECT_TYPE ObjectType,
                    IN ACCESS_MASK DesiredAccess,
+                   IN BOOLEAN Trusted,
                    OUT PLSA_DB_OBJECT *DbObject)
 {
     PLSA_DB_OBJECT NewObject;
@@ -698,6 +701,7 @@ LsapCreateDbObject(IN PLSA_DB_OBJECT ParentObject,
     NewObject->Access = DesiredAccess;
     NewObject->KeyHandle = ObjectKeyHandle;
     NewObject->ParentObject = ParentObject;
+    NewObject->Trusted = Trusted;
 
     if (ParentObject != NULL)
         ParentObject->RefCount++;
@@ -714,6 +718,7 @@ LsapOpenDbObject(IN PLSA_DB_OBJECT ParentObject,
                  IN LPWSTR ObjectName,
                  IN LSA_DB_OBJECT_TYPE ObjectType,
                  IN ACCESS_MASK DesiredAccess,
+                 IN BOOLEAN Trusted,
                  OUT PLSA_DB_OBJECT *DbObject)
 {
     PLSA_DB_OBJECT NewObject;
@@ -809,6 +814,7 @@ LsapOpenDbObject(IN PLSA_DB_OBJECT ParentObject,
     NewObject->Access = DesiredAccess;
     NewObject->KeyHandle = ObjectKeyHandle;
     NewObject->ParentObject = ParentObject;
+    NewObject->Trusted = Trusted;
 
     if (ParentObject != NULL)
         ParentObject->RefCount++;
