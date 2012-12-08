@@ -135,7 +135,6 @@ typedef struct
     BOOL Unicode;
     ULONG NrCharactersToWrite;
     ULONG NrCharactersWritten;
-    // HANDLE UnpauseEvent;
 
     ULONG BufferSize;
     PVOID Buffer;

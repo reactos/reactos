@@ -438,15 +438,6 @@ CSR_API(SrvGetConsoleAlias)
         return STATUS_BUFFER_TOO_SMALL;
     }
 
-/*
-    if (!Win32CsrValidateBuffer(CsrGetClientThread()->Process, lpTarget,
-                                ConsoleAlias->TargetLength, 1))
-    {
-        ConioUnlockConsole(Console);
-        return STATUS_ACCESS_VIOLATION;
-    }
-*/
-
     wcscpy(lpTarget, Entry->lpTarget);
     ConsoleAlias->TargetLength = Length;
     ConioUnlockConsole(Console);
@@ -495,17 +486,6 @@ CSR_API(SrvGetConsoleAliases)
         ConioUnlockConsole(Console);
         return STATUS_BUFFER_OVERFLOW;
     }
-
-/*
-    if (!Win32CsrValidateBuffer(CsrGetClientThread()->Process,
-                                GetAllConsoleAliases->AliasesBuffer,
-                                GetAllConsoleAliases->AliasesBufferLength,
-                                1))
-    {
-        ConioUnlockConsole(Console);
-        return STATUS_ACCESS_VIOLATION;
-    }
-*/
 
     BytesWritten = IntGetAllConsoleAliases(Header,
                                            GetAllConsoleAliases->AliasesBuffer,
@@ -591,17 +571,6 @@ CSR_API(SrvGetConsoleAliasExes)
         ConioUnlockConsole(Console);
         return STATUS_INVALID_PARAMETER;
     }
-
-/*
-    if (!Win32CsrValidateBuffer(CsrGetClientThread()->Process,
-                                GetConsoleAliasesExes->ExeNames,
-                                GetConsoleAliasesExes->Length,
-                                1))
-    {
-        ConioUnlockConsole(Console);
-        return STATUS_ACCESS_VIOLATION;
-    }
-*/
 
     BytesWritten = IntGetConsoleAliasesExes(Console->Aliases,
                                             GetConsoleAliasesExes->ExeNames,

@@ -166,14 +166,6 @@ CSR_API(SrvGetConsoleCommandHistoryLength)
     {
         return STATUS_INVALID_PARAMETER;
     }
-/*
-    if (!Win32CsrValidateBuffer(ProcessData->Process,
-                                GetCommandHistoryLength->ExeName.Buffer,
-                                GetCommandHistoryLength->ExeName.Length, 1))
-    {
-        return STATUS_ACCESS_VIOLATION;
-    }
-*/
 
     Status = ConioConsoleFromProcessData(ProcessData, &Console);
     if (NT_SUCCESS(Status))
@@ -212,15 +204,6 @@ CSR_API(SrvGetConsoleCommandHistory)
     {
         return STATUS_INVALID_PARAMETER;
     }
-/*
-    if (!Win32CsrValidateBuffer(ProcessData->Process, Buffer, BufferSize, 1) ||
-        !Win32CsrValidateBuffer(ProcessData->Process,
-                                GetCommandHistory->ExeName.Buffer,
-                                GetCommandHistory->ExeName.Length, 1))
-    {
-        return STATUS_ACCESS_VIOLATION;
-    }
-*/
 
     Status = ConioConsoleFromProcessData(ProcessData, &Console);
     if (NT_SUCCESS(Status))
@@ -262,14 +245,6 @@ CSR_API(SrvExpungeConsoleCommandHistory)
     {
         return STATUS_INVALID_PARAMETER;
     }
-/*
-    if (!Win32CsrValidateBuffer(ProcessData->Process,
-                                ExpungeCommandHistory->ExeName.Buffer,
-                                ExpungeCommandHistory->ExeName.Length, 1))
-    {
-        return STATUS_ACCESS_VIOLATION;
-    }
-*/
 
     Status = ConioConsoleFromProcessData(ProcessData, &Console);
     if (NT_SUCCESS(Status))
@@ -298,14 +273,6 @@ CSR_API(SrvSetConsoleNumberOfCommands)
     {
         return STATUS_INVALID_PARAMETER;
     }
-/*
-    if (!Win32CsrValidateBuffer(ProcessData->Process,
-                                SetHistoryNumberCommands->ExeName.Buffer,
-                                SetHistoryNumberCommands->ExeName.Length, 1))
-    {
-        return STATUS_ACCESS_VIOLATION;
-    }
-*/
 
     Status = ConioConsoleFromProcessData(ProcessData, &Console);
     if (NT_SUCCESS(Status))

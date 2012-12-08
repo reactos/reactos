@@ -15,7 +15,6 @@ list(APPEND SOURCE
     handle.c
     init.c
     lineinput.c
-    server.c
     tuiconsole.c
     consrv.rc
     ${CMAKE_CURRENT_BINARY_DIR}/consrv.def)

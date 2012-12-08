@@ -52,8 +52,8 @@ typedef struct tagCSRSS_CONSOLE
     LONG ReferenceCount;
     CRITICAL_SECTION Lock;
     struct tagCSRSS_CONSOLE *Prev, *Next; /* Next and Prev consoles in console wheel */
-    HANDLE ActiveEvent;
 
+    HANDLE ActiveEvent;                   /* Event set when an input event is added in its queue */
     LIST_ENTRY ReadWaitQueue;             /* List head for the queue of read wait blocks */
 
     LIST_ENTRY InputEvents;               /* List head for input event queue */
@@ -83,8 +83,10 @@ typedef struct tagCSRSS_CONSOLE
     LIST_ENTRY ProcessList;
     struct tagALIAS_HEADER *Aliases;
     CONSOLE_SELECTION_INFO Selection;
+
     BYTE PauseFlags;
     HANDLE UnpauseEvent;
+    LIST_ENTRY WriteWaitQueue;            /* List head for the queue of write wait blocks */
 } CSRSS_CONSOLE, *PCSRSS_CONSOLE;
 
 typedef struct tagCSRSS_CONSOLE_VTBL

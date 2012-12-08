@@ -140,14 +140,6 @@ CSR_API(SrvSetConsoleNumberOfCommands);
 CSR_API(SrvGetConsoleHistory);
 CSR_API(SrvSetConsoleHistory);
 
-/* server.c */
-#if 0
-BOOL FASTCALL Win32CsrValidateBuffer(PCSR_PROCESS ProcessData,
-                                     PVOID Buffer,
-                                     SIZE_T NumElements,
-                                     SIZE_T ElementSize);
-#endif
-
 #endif // __CONSRV_H__
 
 /* EOF */

@@ -115,6 +115,7 @@ CsrInitConsole(PCSRSS_CONSOLE Console, int ShowCmd)
     InitializeListHead(&Console->BufferList);
     Console->ActiveBuffer = NULL;
     InitializeListHead(&Console->ReadWaitQueue);
+    InitializeListHead(&Console->WriteWaitQueue);
     InitializeListHead(&Console->InputEvents);
     InitializeListHead(&Console->HistoryBuffers);
     Console->CodePage = GetOEMCP();
@@ -426,6 +427,7 @@ ConioDeleteConsole(Object_t *Object)
     DPRINT("ConioDeleteConsole\n");
 
     /* TODO: Dereference all the waits in Console->ReadWaitQueue */
+    /* TODO: Dereference all the waits in Console->WriteWaitQueue */
 
     /* Drain input event queue */
     while (Console->InputEvents.Flink != &Console->InputEvents)
@@ -476,11 +478,18 @@ VOID FASTCALL
 ConioUnpause(PCSRSS_CONSOLE Console, UINT Flags)
 {
     Console->PauseFlags &= ~Flags;
+
+    // if ((Console->PauseFlags & (PAUSED_FROM_KEYBOARD | PAUSED_FROM_SCROLLBAR | PAUSED_FROM_SELECTION)) == 0)
     if (Console->PauseFlags == 0 && Console->UnpauseEvent)
     {
         SetEvent(Console->UnpauseEvent);
         CloseHandle(Console->UnpauseEvent);
         Console->UnpauseEvent = NULL;
+
+        CsrNotifyWait(&Console->WriteWaitQueue,
+                      WaitAll,
+                      NULL,
+                      NULL);
     }
 }
 
@@ -569,13 +578,6 @@ CSR_API(SrvSetConsoleTitle)
     {
         return STATUS_INVALID_PARAMETER;
     }
-/*
-    if (!Win32CsrValidateBuffer(Process, TitleRequest->Title,
-                                TitleRequest->Length, 1))
-    {
-        return STATUS_ACCESS_VIOLATION;
-    }
-*/
 
     Status = ConioConsoleFromProcessData(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console);
     if(NT_SUCCESS(Status))
@@ -626,13 +628,6 @@ CSR_API(SrvGetConsoleTitle)
     {
         return STATUS_INVALID_PARAMETER;
     }
-/*
-    if (!Win32CsrValidateBuffer(Process, TitleRequest->Title,
-                                TitleRequest->Length, 1))
-    {
-        return STATUS_ACCESS_VIOLATION;
-    }
-*/
 
     Status = ConioConsoleFromProcessData(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console);
     if (!NT_SUCCESS(Status))
@@ -845,11 +840,6 @@ CSR_API(SrvGetConsoleProcessList)
     }
 
     Buffer = GetProcessListRequest->pProcessIds;
-
-/*
-    if (!Win32CsrValidateBuffer(ProcessData, Buffer, GetProcessListRequest->nMaxIds, sizeof(DWORD)))
-        return STATUS_ACCESS_VIOLATION;
-*/
 
     Status = ConioConsoleFromProcessData(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console);
     if (!NT_SUCCESS(Status)) return Status;

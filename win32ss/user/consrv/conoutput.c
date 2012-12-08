@@ -131,22 +131,6 @@ ConioWriteConsole(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER Buff,
 
     for (i = 0; i < Length; i++)
     {
-        if (Console->UnpauseEvent)
-        {
-/** FIXME: Added in 47359 for pausing
-            Status = NtDuplicateObject(NtCurrentProcess(),
-                                       Console->UnpauseEvent,
-                                       Process->ProcessHandle,
-                                       &WriteConsoleRequest->UnpauseEvent,
-                                       SYNCHRONIZE, 0, 0);
-            ConioUnlockScreenBuffer(Buff);
-            return (NT_SUCCESS(Status) ? STATUS_PENDING : Status);
-**/
-
-            /* Wait on the console unpause event till it becomes signaled */
-            WaitForSingleObject(Console->UnpauseEvent, INFINITE);
-        }
-
         if (Buff->Mode & ENABLE_PROCESSED_OUTPUT)
         {
             /* --- LF --- */
@@ -446,6 +430,122 @@ ConioEffectiveCursorSize(PCSRSS_CONSOLE Console, DWORD Scale)
     return Size;
 }
 
+static NTSTATUS
+DoWriteConsole(IN PCSR_API_MESSAGE ApiMessage,
+               IN PCSR_THREAD ClientThread,
+               IN BOOL CreateWaitBlock OPTIONAL);
+
+// Wait function CSR_WAIT_FUNCTION
+static BOOLEAN
+WriteConsoleThread(IN PLIST_ENTRY WaitList,
+                   IN PCSR_THREAD WaitThread,
+                   IN PCSR_API_MESSAGE WaitApiMessage,
+                   IN PVOID WaitContext,
+                   IN PVOID WaitArgument1,
+                   IN PVOID WaitArgument2,
+                   IN ULONG WaitFlags)
+{
+    NTSTATUS Status;
+
+    Status = DoWriteConsole(WaitApiMessage,
+                            WaitThread,
+                            FALSE);
+
+    if (Status != STATUS_PENDING)
+    {
+        WaitApiMessage->Status = Status;
+    }
+
+    return (Status == STATUS_PENDING ? FALSE : TRUE);
+}
+
+static NTSTATUS
+DoWriteConsole(IN PCSR_API_MESSAGE ApiMessage,
+               IN PCSR_THREAD ClientThread,
+               IN BOOL CreateWaitBlock OPTIONAL)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+    PCSRSS_WRITE_CONSOLE WriteConsoleRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.WriteConsoleRequest;
+    PCSRSS_CONSOLE Console;
+    PCSRSS_SCREEN_BUFFER Buff;
+    PCHAR Buffer;
+    DWORD Written = 0;
+    ULONG Length;
+
+    Status = ConioLockScreenBuffer(ConsoleGetPerProcessData(ClientThread->Process), WriteConsoleRequest->ConsoleHandle, &Buff, GENERIC_WRITE);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    Console = Buff->Header.Console;
+
+    // if (Console->PauseFlags & (PAUSED_FROM_KEYBOARD | PAUSED_FROM_SCROLLBAR | PAUSED_FROM_SELECTION))
+    if (Console->PauseFlags && Console->UnpauseEvent != NULL)
+    {
+        if (CreateWaitBlock)
+        {
+            if (!CsrCreateWait(&Console->WriteWaitQueue,
+                               WriteConsoleThread,
+                               ClientThread,
+                               ApiMessage,
+                               NULL,
+                               NULL))
+            {
+                ConioUnlockScreenBuffer(Buff);
+                return STATUS_NO_MEMORY;
+            }
+        }
+
+        /* Wait until we un-pause the console */
+        ConioUnlockScreenBuffer(Buff);
+        return STATUS_PENDING;
+    }
+
+    if(WriteConsoleRequest->Unicode)
+    {
+        Length = WideCharToMultiByte(Console->OutputCodePage, 0,
+                                     (PWCHAR)WriteConsoleRequest->Buffer,
+                                     WriteConsoleRequest->NrCharactersToWrite,
+                                     NULL, 0, NULL, NULL);
+        Buffer = RtlAllocateHeap(GetProcessHeap(), 0, Length);
+        if (Buffer)
+        {
+            WideCharToMultiByte(Console->OutputCodePage, 0,
+                                (PWCHAR)WriteConsoleRequest->Buffer,
+                                WriteConsoleRequest->NrCharactersToWrite,
+                                Buffer, Length, NULL, NULL);
+        }
+        else
+        {
+            Status = STATUS_NO_MEMORY;
+        }
+    }
+    else
+    {
+        Buffer = (PCHAR)WriteConsoleRequest->Buffer;
+    }
+
+    if (Buffer)
+    {
+        if (NT_SUCCESS(Status))
+        {
+            Status = ConioWriteConsole(Console, Buff, Buffer,
+                                       WriteConsoleRequest->NrCharactersToWrite, TRUE);
+            if (NT_SUCCESS(Status))
+            {
+                Written = WriteConsoleRequest->NrCharactersToWrite;
+            }
+        }
+        if (WriteConsoleRequest->Unicode)
+        {
+            RtlFreeHeap(GetProcessHeap(), 0, Buffer);
+        }
+    }
+
+    WriteConsoleRequest->NrCharactersWritten = Written;
+
+    ConioUnlockScreenBuffer(Buff);
+    return Status;
+}
+
 
 /* PUBLIC APIS ****************************************************************/
 
@@ -484,15 +584,6 @@ CSR_API(SrvReadConsoleOutput)
 
     Status = ConioLockScreenBuffer(ProcessData, ReadConsoleOutputRequest->ConsoleHandle, &Buff, GENERIC_READ);
     if (!NT_SUCCESS(Status)) return Status;
-
-/*
-    if (!Win32CsrValidateBuffer(ProcessData->Process, CharInfo,
-                                BufferSize.X * BufferSize.Y, sizeof(CHAR_INFO)))
-    {
-        ConioUnlockScreenBuffer(Buff);
-        return STATUS_ACCESS_VIOLATION;
-    }
-*/
 
     /* FIXME: Is this correct? */
     CodePage = ProcessData->Console->OutputCodePage;
@@ -546,13 +637,6 @@ CSR_API(SrvWriteConsole)
 {
     NTSTATUS Status;
     PCSRSS_WRITE_CONSOLE WriteConsoleRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.WriteConsoleRequest;
-    PCHAR Buffer;
-    PCSRSS_SCREEN_BUFFER Buff;
-    // PCSR_PROCESS Process = CsrGetClientThread()->Process;
-    PCSRSS_CONSOLE Console;
-    DWORD Written = 0;
-    ULONG Length;
-    // ULONG CharSize = (WriteConsoleRequest->Unicode ? sizeof(WCHAR) : sizeof(CHAR));
 
     DPRINT("SrvWriteConsole\n");
 
@@ -564,68 +648,12 @@ CSR_API(SrvWriteConsole)
         return STATUS_INVALID_PARAMETER;
     }
 
-    Status = ConioLockScreenBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process), WriteConsoleRequest->ConsoleHandle, &Buff, GENERIC_WRITE);
-    if (!NT_SUCCESS(Status)) return Status;
+    Status = DoWriteConsole(ApiMessage,
+                            CsrGetClientThread(),
+                            TRUE);
 
-    Console = Buff->Header.Console;
-
-/** FIXME: Added in 47359 for pausing
-    if (Console->UnpauseEvent)
-    {
-        Status = NtDuplicateObject(NtCurrentProcess(),
-                                   Console->UnpauseEvent,
-                                   Process->ProcessHandle,
-                                   &WriteConsoleRequest->UnpauseEvent,
-                                   SYNCHRONIZE, 0, 0);
-        ConioUnlockScreenBuffer(Buff);
-        return (NT_SUCCESS(Status) ? STATUS_PENDING : Status);
-    }
-**/
-
-    if(WriteConsoleRequest->Unicode)
-    {
-        Length = WideCharToMultiByte(Console->OutputCodePage, 0,
-                                     (PWCHAR)WriteConsoleRequest->Buffer,
-                                     WriteConsoleRequest->NrCharactersToWrite,
-                                     NULL, 0, NULL, NULL);
-        Buffer = RtlAllocateHeap(GetProcessHeap(), 0, Length);
-        if (Buffer)
-        {
-            WideCharToMultiByte(Console->OutputCodePage, 0,
-                                (PWCHAR)WriteConsoleRequest->Buffer,
-                                WriteConsoleRequest->NrCharactersToWrite,
-                                Buffer, Length, NULL, NULL);
-        }
-        else
-        {
-            Status = STATUS_NO_MEMORY;
-        }
-    }
-    else
-    {
-        Buffer = (PCHAR)WriteConsoleRequest->Buffer;
-    }
-
-    if (Buffer)
-    {
-        if (NT_SUCCESS(Status))
-        {
-            Status = ConioWriteConsole(Console, Buff, Buffer,
-                                       WriteConsoleRequest->NrCharactersToWrite, TRUE);
-            if (NT_SUCCESS(Status))
-            {
-                Written = WriteConsoleRequest->NrCharactersToWrite;
-            }
-        }
-        if (WriteConsoleRequest->Unicode)
-        {
-            RtlFreeHeap(GetProcessHeap(), 0, Buffer);
-        }
-    }
-
-    ConioUnlockScreenBuffer(Buff);
-
-    WriteConsoleRequest->NrCharactersWritten = Written;
+    if (Status == STATUS_PENDING)
+        *ReplyCode = CsrReplyPending;
 
     return Status;
 }
@@ -667,15 +695,6 @@ CSR_API(SrvWriteConsoleOutput)
     if (!NT_SUCCESS(Status)) return Status;
 
     Console = Buff->Header.Console;
-
-/*
-    if (!Win32CsrValidateBuffer(ProcessData->Process, CharInfo,
-                                BufferSize.X * BufferSize.Y, sizeof(CHAR_INFO)))
-    {
-        ConioUnlockScreenBuffer(Buff);
-        return STATUS_ACCESS_VIOLATION;
-    }
-*/
 
     WriteRegion = WriteConsoleOutputRequest->WriteRegion;
 
