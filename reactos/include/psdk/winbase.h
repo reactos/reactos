@@ -908,18 +908,66 @@ typedef struct _WIN32_STREAM_ID {
 } WIN32_STREAM_ID, *LPWIN32_STREAM_ID;
 
 #if (_WIN32_WINNT >= 0x0600)
+
 typedef enum _FILE_ID_TYPE {
-	FileIdType,
-	MaximumFileIdType
+    FileIdType,
+    ObjectIdType,
+    ExtendedFileIdType,
+    MaximumFileIdType
 } FILE_ID_TYPE, *PFILE_ID_TYPE;
 
 typedef struct _FILE_ID_DESCRIPTOR {
-	DWORD dwSize;
-	FILE_ID_TYPE Type;
-	_ANONYMOUS_UNION union {
-		LARGE_INTEGER FileID;
-	} DUMMYUNIONNAME;
+    DWORD        dwSize;
+    FILE_ID_TYPE Type;
+    union {
+        LARGE_INTEGER FileId;
+        GUID          ObjectId;
+    } DUMMYUNIONNAME;
 } FILE_ID_DESCRIPTOR, *LPFILE_ID_DESCRIPTOR;
+
+typedef enum _FILE_INFO_BY_HANDLE_CLASS {
+    FileBasicInfo,
+    FileStandardInfo,
+    FileNameInfo,
+    FileRenameInfo,
+    FileDispositionInfo,
+    FileAllocationInfo,
+    FileEndOfFileInfo,
+    FileStreamInfo,
+    FileCompressionInfo,
+    FileAttributeTagInfo,
+    FileIdBothDirectoryInfo,
+    FileIdBothDirectoryRestartInfo,
+    FileIoPriorityHintInfo,
+    FileRemoteProtocolInfo,
+    FileFullDirectoryInfo,
+    FileFullDirectoryRestartInfo,
+    FileStorageInfo,
+    FileAlignmentInfo,
+    FileIdInfo,
+    FileIdExtdDirectoryInfo,
+    FileIdExtdDirectoryRestartInfo,
+    MaximumFileInfoByHandlesClass
+} FILE_INFO_BY_HANDLE_CLASS, *PFILE_INFO_BY_HANDLE_CLASS;
+
+typedef struct _FILE_ID_BOTH_DIR_INFO {
+    DWORD         NextEntryOffset;
+    DWORD         FileIndex;
+    LARGE_INTEGER CreationTime;
+    LARGE_INTEGER LastAccessTime;
+    LARGE_INTEGER LastWriteTime;
+    LARGE_INTEGER ChangeTime;
+    LARGE_INTEGER EndOfFile;
+    LARGE_INTEGER AllocationSize;
+    DWORD         FileAttributes;
+    DWORD         FileNameLength;
+    DWORD         EaSize;
+    CCHAR         ShortNameLength;
+    WCHAR         ShortName[12];
+    LARGE_INTEGER FileId;
+    WCHAR         FileName[1];
+} FILE_ID_BOTH_DIR_INFO, *PFILE_ID_BOTH_DIR_INFO;
+
 #endif
 
 typedef enum _FINDEX_INFO_LEVELS {
@@ -3566,6 +3614,21 @@ typedef ENUMRESTYPEPROCA ENUMRESTYPEPROC;
 #define WriteProfileString WriteProfileStringA
 #endif
 #endif
+
+/* one-time initialisation API */
+typedef RTL_RUN_ONCE INIT_ONCE;
+typedef PRTL_RUN_ONCE PINIT_ONCE;
+typedef PRTL_RUN_ONCE LPINIT_ONCE;
+
+#define INIT_ONCE_CHECK_ONLY RTL_RUN_ONCE_CHECK_ONLY
+#define INIT_ONCE_ASYNC RTL_RUN_ONCE_ASYNC
+#define INIT_ONCE_INIT_FAILED RTL_RUN_ONCE_INIT_FAILED
+
+typedef BOOL
+(WINAPI *PINIT_ONCE_FN)(
+  _Inout_ PINIT_ONCE InitOnce,
+  _Inout_opt_ PVOID Parameter,
+  _Outptr_opt_result_maybenull_ PVOID *Context);
 
 #ifdef _MSC_VER
 #pragma warning(pop)
