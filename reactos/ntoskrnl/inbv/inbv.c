@@ -61,6 +61,12 @@ typedef struct tagBITMAPINFOHEADER
 } BITMAPINFOHEADER, *PBITMAPINFOHEADER;
 /****************************/
 
+//
+// Needed prototypes
+//
+VOID NTAPI InbvAcquireLock(VOID);
+VOID NTAPI InbvReleaseLock(VOID);
+
 static VOID
 NTAPI
 BootImageFadeIn(VOID)
@@ -74,41 +80,51 @@ BootImageFadeIn(VOID)
 
     Interval.QuadPart = -PALETTE_FADE_TIME;
 
-    /*
-     * Build a bitmap containing the fade in palette. The palette entries
-     * are then processed in a loop and set using VidBitBlt function.
-     */
-    ClrUsed = sizeof(_MainPalette) / sizeof(_MainPalette[0]);
-    RtlZeroMemory(PaletteBitmap, sizeof(BITMAPINFOHEADER));
-    PaletteBitmap->biSize = sizeof(BITMAPINFOHEADER);
-    PaletteBitmap->biBitCount = 4; 
-    PaletteBitmap->biClrUsed = ClrUsed;
-
-    /*
-     * Main animation loop.
-     */
-    for (Iteration = 0; Iteration <= PALETTE_FADE_STEPS; ++Iteration)
+    /* Check if we're installed and we own it */
+    if ((InbvBootDriverInstalled) &&
+        (InbvDisplayState == INBV_DISPLAY_STATE_OWNED))
     {
-        for (Index = 0; Index < ClrUsed; Index++)
+        /* Acquire the lock */
+        InbvAcquireLock();
+
+        /*
+         * Build a bitmap containing the fade in palette. The palette entries
+         * are then processed in a loop and set using VidBitBlt function.
+         */
+        ClrUsed = sizeof(_MainPalette) / sizeof(_MainPalette[0]);
+        RtlZeroMemory(PaletteBitmap, sizeof(BITMAPINFOHEADER));
+        PaletteBitmap->biSize = sizeof(BITMAPINFOHEADER);
+        PaletteBitmap->biBitCount = 4; 
+        PaletteBitmap->biClrUsed = ClrUsed;
+
+        /*
+         * Main animation loop.
+         */
+        for (Iteration = 0; Iteration <= PALETTE_FADE_STEPS; ++Iteration)
         {
-            Palette[Index].rgbRed =
-                _MainPalette[Index].rgbRed * Iteration / PALETTE_FADE_STEPS;
-            Palette[Index].rgbGreen =
-                _MainPalette[Index].rgbGreen * Iteration / PALETTE_FADE_STEPS;
-            Palette[Index].rgbBlue =
-                _MainPalette[Index].rgbBlue * Iteration / PALETTE_FADE_STEPS;
+            for (Index = 0; Index < ClrUsed; Index++)
+            {
+                Palette[Index].rgbRed =
+                    _MainPalette[Index].rgbRed * Iteration / PALETTE_FADE_STEPS;
+                Palette[Index].rgbGreen =
+                    _MainPalette[Index].rgbGreen * Iteration / PALETTE_FADE_STEPS;
+                Palette[Index].rgbBlue =
+                    _MainPalette[Index].rgbBlue * Iteration / PALETTE_FADE_STEPS;
+            }
+
+            VidBitBlt(PaletteBitmapBuffer, 0, 0);
+
+            /* Wait for a bit. */
+            KeDelayExecutionThread(KernelMode, FALSE, &Interval);
         }
 
-        VidBitBlt(PaletteBitmapBuffer, 0, 0);
+        /* Release the lock */
+        InbvReleaseLock();
 
         /* Wait for a bit. */
         KeDelayExecutionThread(KernelMode, FALSE, &Interval);
     }
-
-    /* Wait for a bit. */
-    KeDelayExecutionThread(KernelMode, FALSE, &Interval);
 }
-
 
 /* FUNCTIONS *****************************************************************/
 
