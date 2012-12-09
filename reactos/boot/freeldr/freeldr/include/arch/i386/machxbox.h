@@ -1,4 +1,4 @@
-/* $Id$
+/* $Id: machxbox.h 56270 2012-03-29 08:25:20Z tkreuzer $
  *
  *  FreeLoader
  *
