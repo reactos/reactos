@@ -63,7 +63,7 @@ typedef struct tagBITMAPINFOHEADER
 
 static VOID
 NTAPI
-BootImageFadeProc(VOID)
+BootImageFadeIn(VOID)
 {
     UCHAR PaletteBitmapBuffer[sizeof(BITMAPINFOHEADER) + sizeof(_MainPalette)];
     PBITMAPINFOHEADER PaletteBitmap = (PBITMAPINFOHEADER)PaletteBitmapBuffer;
@@ -668,7 +668,10 @@ DisplayBootBitmap(IN BOOLEAN TextMode)
 
     PVOID Header, Band, Text, Screen;
     ROT_BAR_TYPE TempRotBarSelection = RB_UNSPECIFIED;
-    // UCHAR Buffer[64];
+
+#ifdef CORE_6781_resolved
+    UCHAR Buffer[64];
+#endif
 
     /* Check if the system thread has already been created */
     if (SysThreadCreated)
@@ -776,9 +779,9 @@ DisplayBootBitmap(IN BOOLEAN TextMode)
             InbvSetProgressBarCoordinates(257, 352);
 
             /* Display the boot logo and fade it in */
-            BootImageFadeProc();
+            BootImageFadeIn();
 
-#if 0
+#ifdef CORE_6781_resolved
             /* Check for non-workstation products */
             if (SharedUserData->NtProductType != NtProductWinNt)
             {
@@ -793,8 +796,10 @@ DisplayBootBitmap(IN BOOLEAN TextMode)
 #endif
         }
 
+#ifdef CORE_6781_resolved
         /* Draw the SKU text if it exits */
-//      if (Text) InbvBitBlt(Text, 180, 121);
+        if (Text) InbvBitBlt(Text, 180, 121);
+#endif
 
         /* Draw the progress bar bit */
 //      if (Bar) InbvBitBlt(Bar, 0, 0);
