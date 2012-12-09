@@ -17,7 +17,7 @@
 #include <internal/wine/eh.h>
 
 typedef struct MSVCRT_threadlocaleinfostruct {
-    int refcount;
+    LONG refcount;
     unsigned int lc_codepage;
     unsigned int lc_collate_cp;
     unsigned long lc_handle[6];
@@ -36,14 +36,14 @@ typedef struct MSVCRT_threadlocaleinfostruct {
     struct MSVCRT_lconv *lconv;
     int *ctype1_refcount;
     unsigned short *ctype1;
-    unsigned short *pctype;
+    const unsigned short *pctype;
     unsigned char *pclmap;
     unsigned char *pcumap;
     struct __lc_time_data *lc_time_curr;
 } MSVCRT_threadlocinfo;
 
 typedef struct MSVCRT_threadmbcinfostruct {
-    int refcount;
+    LONG refcount;
     int mbcodepage;
     int ismbcodepage;
     int mblcid;
@@ -130,7 +130,16 @@ extern inline void msvcrt_free_tls_mem(void);
 #define MSVCRT_ENABLE_PER_THREAD_LOCALE 1
 #define MSVCRT_DISABLE_PER_THREAD_LOCALE 2
 
-extern MSVCRT__locale_t MSVCRT_locale;
+void __init_global_locale();
+extern MSVCRT__locale_t global_locale;
+#define MSVCRT_locale __get_MSVCRT_locale()
+extern inline MSVCRT__locale_t __get_MSVCRT_locale()
+{
+    if(!global_locale)
+        __init_global_locale();
+    return global_locale;
+}
+
 MSVCRT_pthreadlocinfo get_locinfo(void);
 void __cdecl MSVCRT__free_locale(MSVCRT__locale_t);
 void free_locinfo(MSVCRT_pthreadlocinfo);

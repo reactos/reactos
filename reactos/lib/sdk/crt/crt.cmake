@@ -61,6 +61,7 @@ list(APPEND CRT_SOURCE
     math/sinf.c
     math/sinh.c
     math/tanh.c
+    mbstring/_setmbcp.c
     mbstring/hanzen.c
     mbstring/ischira.c
     mbstring/iskana.c
@@ -323,7 +324,6 @@ list(APPEND CRT_SOURCE
     time/utime64.c
     time/utime.c
     time/wasctime.c
-    time/wcsftime.c
     time/wctime32.c
     time/wctime64.c
     time/wctime.c

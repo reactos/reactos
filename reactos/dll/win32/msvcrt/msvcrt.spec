@@ -1042,7 +1042,7 @@
 @ cdecl _wcstoi64(wstr ptr long)
 # @ cdecl _wcstoi64_l(wstr ptr long ptr)
 # stub _wcstol_l
-# stub _wcstombs_l
+@ cdecl _wcstombs_l(ptr ptr long ptr)
 # @ cdecl _wcstombs_s_l(ptr ptr long wstr long ptr)
 @ cdecl _wcstoui64(wstr ptr long)
 # @ cdecl _wcstoui64_l(wstr ptr long ptr)

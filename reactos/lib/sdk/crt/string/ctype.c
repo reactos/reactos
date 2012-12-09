@@ -548,23 +548,11 @@ const unsigned short _wctype[] = {
 	0x0100 | _LOWER,		/* 0xfe */
 	0x0100 | _LOWER			/* 0xff */
 };
+
 const unsigned short *_pctype = _ctype + 1;
 const unsigned short *_pwctype = _wctype + 1;
 
 extern const unsigned short wine_wctype_table[];
-
-/*
- * @implemented
- */
-const unsigned short **__p__pctype(void)
-{
-   return &_pctype;
-}
-
-const unsigned short* __cdecl __pctype_func(void)
-{
-   return _pctype;
-}
 
 /*
  * @implemented
