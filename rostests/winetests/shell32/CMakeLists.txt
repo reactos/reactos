@@ -1,9 +1,7 @@
 
 remove_definitions(-DWINVER=0x502 -D_WIN32_IE=0x600 -D_WIN32_WINNT=0x502)
 
-add_definitions(
-    -D__ROS_LONG64__
-    -D_DLL -D__USE_CRTIMP)
+add_definitions(-D__ROS_LONG64__)
 
 list(APPEND SOURCE
     appbar.c
@@ -12,7 +10,7 @@ list(APPEND SOURCE
     brsfolder.c
     ebrowser.c
     generated.c
-    #progman_dde.c FIXME: bug 7233
+    #progman_dde.c FIXME: CORE-6559
     recyclebin.c
     shelldispatch.c
     shelllink.c

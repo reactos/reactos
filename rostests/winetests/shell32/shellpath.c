@@ -30,9 +30,10 @@
 #include "shlguid.h"
 #include "shlobj.h"
 #include "shlwapi.h"
-#include "initguid.h"
 #include "knownfolders.h"
 #include "wine/test.h"
+
+#include "initguid.h"
 
 /* CSIDL_MYDOCUMENTS is now the same as CSIDL_PERSONAL, but what we want
  * here is its original value.
@@ -2494,6 +2495,157 @@ static void test_knownFolders(void)
     CoUninitialize();
 }
 
+
+static void test_DoEnvironmentSubst(void)
+{
+    WCHAR expectedW[MAX_PATH];
+    WCHAR bufferW[MAX_PATH];
+    CHAR  expectedA[MAX_PATH];
+    CHAR  bufferA[MAX_PATH];
+    DWORD res;
+    DWORD res2;
+    DWORD len;
+    INT   i;
+    static const WCHAR does_not_existW[] = {'%','D','O','E','S','_','N','O','T','_','E','X','I','S','T','%',0};
+    static const CHAR  does_not_existA[] = "%DOES_NOT_EXIST%";
+    static const CHAR  *names[] = {
+                            /* interactive apps and services (works on all windows versions) */
+                            "%ALLUSERSPROFILE%", "%APPDATA%", "%LOCALAPPDATA%",
+                            "%NUMBER_OF_PROCESSORS%", "%OS%", "%PROCESSOR_ARCHITECTURE%",
+                            "%PROCESSOR_IDENTIFIER%", "%PROCESSOR_LEVEL%", "%PROCESSOR_REVISION%",
+                            "%ProgramFiles%", "%SystemDrive%",
+                            "%SystemRoot%", "%USERPROFILE%", "%windir%",
+                            /* todo_wine: "%COMPUTERNAME%", "%ProgramData%", "%PUBLIC%", */
+
+                            /* replace more than one var is allowed */
+                            "%HOMEDRIVE%%HOMEPATH%",
+                            "%OS% %windir%"}; /* always the last entry in the table */
+
+    for (i = 0; i < (sizeof(names)/sizeof(LPSTR)); i++)
+    {
+        memset(bufferA, '#', MAX_PATH - 1);
+        bufferA[MAX_PATH - 1] = 0;
+        lstrcpyA(bufferA, names[i]);
+        MultiByteToWideChar(CP_ACP, 0, bufferA, MAX_PATH, bufferW, sizeof(bufferW)/sizeof(WCHAR));
+
+        res2 = ExpandEnvironmentStringsA(names[i], expectedA, MAX_PATH);
+        res = DoEnvironmentSubstA(bufferA, MAX_PATH);
+
+        /* is the space for the terminating 0 included? */
+        if (!i && HIWORD(res) && (LOWORD(res) == (lstrlenA(bufferA))))
+        {
+            win_skip("DoEnvironmentSubstA/W are broken on NT 4\n");
+            return;
+        }
+        ok(HIWORD(res) && (LOWORD(res) == res2),
+            "%d: got %d/%d (expected TRUE/%d)\n", i, HIWORD(res), LOWORD(res), res2);
+        ok(!lstrcmpA(bufferA, expectedA),
+            "%d: got %s (expected %s)\n", i, bufferA, expectedA);
+
+        res2 = ExpandEnvironmentStringsW(bufferW, expectedW, MAX_PATH);
+        res = DoEnvironmentSubstW(bufferW, MAX_PATH);
+        ok(HIWORD(res) && (LOWORD(res) == res2),
+            "%d: got %d/%d (expected TRUE/%d)\n", i, HIWORD(res), LOWORD(res), res2);
+        ok(!lstrcmpW(bufferW, expectedW),
+            "%d: got %s (expected %s)\n", i, wine_dbgstr_w(bufferW), wine_dbgstr_w(expectedW));
+    }
+
+    i--; /* reuse data in the last table entry */
+    len = LOWORD(res); /* needed length */
+
+    /* one character extra is fine */
+    memset(bufferA, '#', MAX_PATH - 1);
+    bufferA[len + 2] = 0;
+    lstrcpyA(bufferA, names[i]);
+    MultiByteToWideChar(CP_ACP, 0, bufferA, MAX_PATH, bufferW, sizeof(bufferW)/sizeof(WCHAR));
+
+    res2 = ExpandEnvironmentStringsA(bufferA, expectedA, MAX_PATH);
+    res = DoEnvironmentSubstA(bufferA, len + 1);
+    ok(HIWORD(res) && (LOWORD(res) == res2),
+        "+1: got %d/%d (expected TRUE/%d)\n", HIWORD(res), LOWORD(res), res2);
+    ok(!lstrcmpA(bufferA, expectedA),
+        "+1: got %s (expected %s)\n", bufferA, expectedA);
+
+    res2 = ExpandEnvironmentStringsW(bufferW, expectedW, MAX_PATH);
+    res = DoEnvironmentSubstW(bufferW, len + 1);
+    ok(HIWORD(res) && (LOWORD(res) == res2),
+        "+1: got %d/%d (expected TRUE/%d)\n", HIWORD(res), LOWORD(res), res2);
+    ok(!lstrcmpW(bufferW, expectedW),
+        "+1: got %s (expected %s)\n", wine_dbgstr_w(bufferW), wine_dbgstr_w(expectedW));
+
+
+    /* minimal buffer length (result string and terminating 0) */
+    memset(bufferA, '#', MAX_PATH - 1);
+    bufferA[len + 2] = 0;
+    lstrcpyA(bufferA, names[i]);
+    MultiByteToWideChar(CP_ACP, 0, bufferA, MAX_PATH, bufferW, sizeof(bufferW)/sizeof(WCHAR));
+
+    /* ANSI version failed without an extra byte, as documented on msdn */
+    res = DoEnvironmentSubstA(bufferA, len);
+    ok(!HIWORD(res) && (LOWORD(res) == len),
+        " 0: got %d/%d  (expected FALSE/%d)\n", HIWORD(res), LOWORD(res), len);
+    ok(!lstrcmpA(bufferA, names[i]),
+        " 0: got %s (expected %s)\n", bufferA, names[i]);
+
+    /* DoEnvironmentSubstW works as expected */
+    res2 = ExpandEnvironmentStringsW(bufferW, expectedW, MAX_PATH);
+    res = DoEnvironmentSubstW(bufferW, len);
+    ok(HIWORD(res) && (LOWORD(res) == res2),
+        " 0: got %d/%d (expected TRUE/%d)\n", HIWORD(res), LOWORD(res), res2);
+    ok(!lstrcmpW(bufferW, expectedW),
+        " 0: got %s (expected %s)\n", wine_dbgstr_w(bufferW), wine_dbgstr_w(expectedW));
+
+
+    /* buffer to small */
+    /* result: FALSE / provided buffer length / the buffer is untouched */
+    memset(bufferA, '#', MAX_PATH - 1);
+    bufferA[len + 2] = 0;
+    lstrcpyA(bufferA, names[i]);
+    MultiByteToWideChar(CP_ACP, 0, bufferA, MAX_PATH, bufferW, sizeof(bufferW)/sizeof(WCHAR));
+
+    res = DoEnvironmentSubstA(bufferA, len - 1);
+    ok(!HIWORD(res) && (LOWORD(res) == (len - 1)),
+        "-1: got %d/%d  (expected FALSE/%d)\n", HIWORD(res), LOWORD(res), len - 1);
+    ok(!lstrcmpA(bufferA, names[i]),
+        "-1: got %s (expected %s)\n", bufferA, names[i]);
+
+    lstrcpyW(expectedW, bufferW);
+    res = DoEnvironmentSubstW(bufferW, len - 1);
+    ok(!HIWORD(res) && (LOWORD(res) == (len - 1)),
+        "-1: got %d/%d  (expected FALSE/%d)\n", HIWORD(res), LOWORD(res), len - 1);
+    ok(!lstrcmpW(bufferW, expectedW),
+        "-1: got %s (expected %s)\n", wine_dbgstr_w(bufferW), wine_dbgstr_w(expectedW));
+
+
+    /* unknown variable */
+    /* result: TRUE / string length including terminating 0 / the buffer is untouched */
+    memset(bufferA, '#', MAX_PATH - 1);
+    bufferA[MAX_PATH - 1] = 0;
+    lstrcpyA(bufferA, does_not_existA);
+    MultiByteToWideChar(CP_ACP, 0, bufferA, MAX_PATH, bufferW, sizeof(bufferW)/sizeof(WCHAR));
+
+    res2 = lstrlenA(does_not_existA) + 1;
+    res = DoEnvironmentSubstA(bufferA, MAX_PATH);
+    ok(HIWORD(res) && (LOWORD(res) == res2),
+            "%d: got %d/%d (expected TRUE/%d)\n", i, HIWORD(res), LOWORD(res), res2);
+    ok(!lstrcmpA(bufferA, does_not_existA),
+        "%d: got %s (expected %s)\n", i, bufferA, does_not_existA);
+
+    res = DoEnvironmentSubstW(bufferW, MAX_PATH);
+    ok(HIWORD(res) && (LOWORD(res) == res2),
+        "%d: got %d/%d (expected TRUE/%d)\n", i, HIWORD(res), LOWORD(res), res2);
+    ok(!lstrcmpW(bufferW, does_not_existW),
+        "%d: got %s (expected %s)\n", i, wine_dbgstr_w(bufferW), wine_dbgstr_w(does_not_existW));
+
+
+    if (0)
+    {
+        /* NULL crashes on windows */
+        res = DoEnvironmentSubstA(NULL, MAX_PATH);
+        res = DoEnvironmentSubstW(NULL, MAX_PATH);
+    }
+}
+
 START_TEST(shellpath)
 {
     if (!init()) return;
@@ -2521,5 +2673,6 @@ START_TEST(shellpath)
         test_NonExistentPath();
         test_SHGetFolderPathEx();
         test_knownFolders();
+        test_DoEnvironmentSubst();
     }
 }

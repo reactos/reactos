@@ -140,7 +140,7 @@ static void test_namespace(void)
                 p = path + lstrlenW(path);
                 while (path < p && *(p - 1) != '\\')
                     p--;
-                ok(!lstrcmpW(title, p), "expected %s, got %s\n",
+                ok(!lstrcmpiW(title, p), "expected %s, got %s\n",
                  wine_dbgstr_w(p), wine_dbgstr_w(title));
             }
             else skip("skipping Folder::get_Title test\n");
@@ -157,7 +157,7 @@ static void test_namespace(void)
                 r = FolderItem_get_Path(item, &item_path);
                 ok(r == S_OK, "FolderItem::get_Path failed: %08x\n", r);
                 if (pSHGetFolderPathW)
-                    ok(!lstrcmpW(item_path, path), "expected %s, got %s\n",
+                    ok(!lstrcmpiW(item_path, path), "expected %s, got %s\n",
                      wine_dbgstr_w(path), wine_dbgstr_w(item_path));
                 SysFreeString(item_path);
                 FolderItem_Release(item);
@@ -360,7 +360,7 @@ static void test_service(void)
     ok(V_BOOL(&v) == VARIANT_FALSE, "got %d\n", V_BOOL(&v));
     SysFreeString(name);
 
-    IShellDispatch_Release(sd);
+    IShellDispatch2_Release(sd);
 }
 
 START_TEST(shelldispatch)

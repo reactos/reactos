@@ -995,7 +995,11 @@ static void test_copy(void)
     shfo.fFlags |= FOF_NOERRORUI;
     set_curr_dir_path(from, "test1.txt\0test2.txt\0");
     set_curr_dir_path(to, "test3.txt\0");
+    shfo.fAnyOperationsAborted = 0xdeadbeef;
     retval = SHFileOperation(&shfo);
+    ok(shfo.fAnyOperationsAborted != 0xdeadbeef ||
+       broken(shfo.fAnyOperationsAborted == 0xdeadbeef), /* NT4 */
+       "Expected TRUE/FALSE fAnyOperationsAborted not 0xdeadbeef\n");
     if (retval == DE_FLDDESTISFILE || /* Vista and W2K8 */
         retval == DE_INVALIDFILES)    /* Win7 */
     {
@@ -1012,8 +1016,11 @@ static void test_copy(void)
     /* try to copy many files to nonexistent directory */
     DeleteFile(to);
     shfo.fFlags &= ~FOF_NOERRORUI;
-    shfo.fAnyOperationsAborted = FALSE;
+    shfo.fAnyOperationsAborted = 0xdeadbeef;
     retval = SHFileOperation(&shfo);
+    ok(!shfo.fAnyOperationsAborted ||
+       broken(shfo.fAnyOperationsAborted == 0xdeadbeef), /* NT4 */
+       "Didn't expect aborted operations\n");
     ok(retval == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", retval);
     ok(DeleteFile("test3.txt\\test1.txt"), "Expected test3.txt\\test1.txt to exist\n");
     ok(DeleteFile("test3.txt\\test2.txt"), "Expected test3.txt\\test1.txt to exist\n");
@@ -1024,11 +1031,16 @@ static void test_copy(void)
     shfo.pFrom = "test1.txt\0test2.txt\0test3.txt\0";
     shfo.pTo = "testdir2\\a.txt\0testdir2\\b.txt\0testdir2\\c.txt\0testdir2\\d.txt\0";
     shfo.fFlags |= FOF_NOERRORUI | FOF_MULTIDESTFILES;
+    shfo.fAnyOperationsAborted = 0xdeadbeef;
     retval = SHFileOperation(&shfo);
+    ok(shfo.fAnyOperationsAborted != 0xdeadbeef ||
+       broken(shfo.fAnyOperationsAborted == 0xdeadbeef), /* NT4 */
+       "Expected TRUE/FALSE fAnyOperationsAborted not 0xdeadbeef\n");
     if (dir_exists("testdir2\\a.txt"))
     {
         /* Vista and W2K8 (broken or new behavior ?) */
         ok(retval == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", retval);
+        ok(!shfo.fAnyOperationsAborted, "Didn't expect aborted operations\n");
         ok(DeleteFile("testdir2\\a.txt\\test1.txt"), "Expected testdir2\\a.txt\\test1.txt to exist\n");
         RemoveDirectory("testdir2\\a.txt");
         ok(DeleteFile("testdir2\\b.txt\\test2.txt"), "Expected testdir2\\b.txt\\test2.txt to exist\n");
@@ -1049,11 +1061,15 @@ static void test_copy(void)
     /* send in FOF_MULTIDESTFILES with too many destination files */
     shfo.pFrom = "test1.txt\0test2.txt\0test3.txt\0";
     shfo.pTo = "e.txt\0f.txt\0";
-    shfo.fAnyOperationsAborted = FALSE;
+    shfo.fAnyOperationsAborted = 0xdeadbeef;
     retval = SHFileOperation(&shfo);
+    ok(shfo.fAnyOperationsAborted != 0xdeadbeef ||
+       broken(shfo.fAnyOperationsAborted == 0xdeadbeef), /* NT4 */
+       "Expected TRUE/FALSE fAnyOperationsAborted not 0xdeadbeef\n");
     if (dir_exists("e.txt"))
     {
         /* Vista and W2K8 (broken or new behavior ?) */
+        ok(!shfo.fAnyOperationsAborted, "Didn't expect aborted operations\n");
         ok(retval == DE_SAMEFILE, "Expected DE_SAMEFILE, got %d\n", retval);
         ok(DeleteFile("e.txt\\test1.txt"), "Expected e.txt\\test1.txt to exist\n");
         RemoveDirectory("e.txt");
@@ -1072,8 +1088,11 @@ static void test_copy(void)
     /* use FOF_MULTIDESTFILES with files and a source directory */
     shfo.pFrom = "test1.txt\0test2.txt\0test4.txt\0";
     shfo.pTo = "testdir2\\a.txt\0testdir2\\b.txt\0testdir2\\c.txt\0";
-    shfo.fAnyOperationsAborted = FALSE;
+    shfo.fAnyOperationsAborted = 0xdeadbeef;
     retval = SHFileOperation(&shfo);
+    ok(!shfo.fAnyOperationsAborted ||
+       broken(shfo.fAnyOperationsAborted == 0xdeadbeef), /* NT4 */
+       "Didn't expect aborted operations\n");
     ok(retval == ERROR_SUCCESS ||
        broken(retval == 0x100a1), /* WinMe */
        "Expected ERROR_SUCCESS, got %d\n", retval);
@@ -1085,13 +1104,17 @@ static void test_copy(void)
     /* try many dest files without FOF_MULTIDESTFILES flag */
     shfo.pFrom = "test1.txt\0test2.txt\0test3.txt\0";
     shfo.pTo = "a.txt\0b.txt\0c.txt\0";
-    shfo.fAnyOperationsAborted = FALSE;
+    shfo.fAnyOperationsAborted = 0xdeadbeef;
     shfo.fFlags &= ~FOF_MULTIDESTFILES;
     retval = SHFileOperation(&shfo);
+    ok(shfo.fAnyOperationsAborted != 0xdeadbeef ||
+       broken(shfo.fAnyOperationsAborted == 0xdeadbeef), /* NT4 */
+       "Expected TRUE/FALSE fAnyOperationsAborted not 0xdeadbeef\n");
     if (dir_exists("a.txt"))
     {
         /* Vista and W2K8 (broken or new behavior ?) */
         ok(retval == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", retval);
+        ok(!shfo.fAnyOperationsAborted, "Didn't expect aborted operations\n");
         ok(DeleteFile("a.txt\\test1.txt"), "Expected a.txt\\test1.txt to exist\n");
         ok(DeleteFile("a.txt\\test2.txt"), "Expected a.txt\\test2.txt to exist\n");
         ok(DeleteFile("a.txt\\test3.txt"), "Expected a.txt\\test3.txt to exist\n");
@@ -1099,7 +1122,11 @@ static void test_copy(void)
     }
     else
     {
+
         expect_retval(ERROR_CANCELLED, DE_OPCANCELLED /* Win9x, NT4 */);
+        ok(shfo.fAnyOperationsAborted ||
+           broken(!shfo.fAnyOperationsAborted), /* NT4 */
+           "Expected aborted operations\n");
         ok(!file_exists("a.txt"), "Expected a.txt to not exist\n");
     }
 
@@ -1157,8 +1184,11 @@ static void test_copy(void)
     init_shfo_tests();
     shfo.pFrom = "test1.txt\0";
     shfo.pTo = "b.txt\0c.txt\0";
-    shfo.fAnyOperationsAborted = FALSE;
+    shfo.fAnyOperationsAborted = 0xdeadbeef;
     retval = SHFileOperation(&shfo);
+    ok(!shfo.fAnyOperationsAborted ||
+       broken(shfo.fAnyOperationsAborted == 0xdeadbeef), /* NT4 */
+       "Didn't expect aborted operations\n");
     if (retval == DE_OPCANCELLED)
     {
         /* NT4 fails and doesn't copy any files */
@@ -1177,11 +1207,13 @@ static void test_copy(void)
     /* copy two file to three others, all fail */
     shfo.pFrom = "test1.txt\0test2.txt\0";
     shfo.pTo = "b.txt\0c.txt\0d.txt\0";
+    shfo.fAnyOperationsAborted = 0xdeadbeef;
     retval = SHFileOperation(&shfo);
     if (dir_exists("b.txt"))
     {
         /* Vista and W2K8 (broken or new behavior ?) */
         ok(retval == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", retval);
+        ok(!shfo.fAnyOperationsAborted, "Didn't expect aborted operations\n");
         ok(DeleteFile("b.txt\\test1.txt"), "Expected b.txt\\test1.txt to exist\n");
         RemoveDirectory("b.txt");
         ok(DeleteFile("c.txt\\test2.txt"), "Expected c.txt\\test2.txt to exist\n");
@@ -1191,7 +1223,7 @@ static void test_copy(void)
     {
         expect_retval(ERROR_CANCELLED, DE_OPCANCELLED /* Win9x, NT4 */);
         ok(shfo.fAnyOperationsAborted ||
-           broken(!shfo.fAnyOperationsAborted), /* NT4 */
+           broken(shfo.fAnyOperationsAborted == 0xdeadbeef), /* NT4 */
            "Expected aborted operations\n");
         ok(!DeleteFile("b.txt"), "Expected b.txt to not exist\n");
     }
@@ -1199,12 +1231,13 @@ static void test_copy(void)
     /* copy one file and one directory to three others */
     shfo.pFrom = "test1.txt\0test4.txt\0";
     shfo.pTo = "b.txt\0c.txt\0d.txt\0";
-    shfo.fAnyOperationsAborted = FALSE;
+    shfo.fAnyOperationsAborted = 0xdeadbeef;
     retval = SHFileOperation(&shfo);
     if (dir_exists("b.txt"))
     {
         /* Vista and W2K8 (broken or new behavior ?) */
         ok(retval == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", retval);
+        ok(!shfo.fAnyOperationsAborted, "Didn't expect aborted operations\n");
         ok(DeleteFile("b.txt\\test1.txt"), "Expected b.txt\\test1.txt to exist\n");
         RemoveDirectory("b.txt");
         ok(RemoveDirectory("c.txt\\test4.txt"), "Expected c.txt\\test4.txt to exist\n");
@@ -1214,7 +1247,7 @@ static void test_copy(void)
     {
         expect_retval(ERROR_CANCELLED, DE_OPCANCELLED /* Win9x, NT4 */);
         ok(shfo.fAnyOperationsAborted ||
-           broken(!shfo.fAnyOperationsAborted), /* NT4 */
+           broken(shfo.fAnyOperationsAborted == 0xdeadbeef), /* NT4 */
            "Expected aborted operations\n");
         ok(!DeleteFile("b.txt"), "Expected b.txt to not exist\n");
         ok(!DeleteFile("c.txt"), "Expected c.txt to not exist\n");
@@ -1383,10 +1416,11 @@ static void test_copy(void)
         shfo.fFlags = FOF_NOCONFIRMATION;
         shfo.pFrom = "test1.txt\0";
         shfo.pTo = "test2.txt\0";
-        shfo.fAnyOperationsAborted = FALSE;
+        shfo.fAnyOperationsAborted = 0xdeadbeef;
         /* without FOF_NOCONFIRMATION the confirmation is Yes/No */
         retval = SHFileOperation(&shfo);
         ok(retval == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", retval);
+        ok(!shfo.fAnyOperationsAborted, "Didn't expect aborted operations\n");
         ok(file_has_content("test2.txt", "test1.txt\n"), "The file was not copied\n");
 
         shfo.pFrom = "test3.txt\0test1.txt\0";

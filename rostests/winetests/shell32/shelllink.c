@@ -16,9 +16,6 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
- * This is a test program for the SHGet{Special}Folder{Path|Location} functions
- * of shell32, that get either a filesystem path or a LPITEMIDLIST (shell
- * namespace) path for a given folder (CSIDL value).
  *
  */
 
@@ -37,15 +34,10 @@
 #  define SLDF_HAS_LOGO3ID 0x00000800 /* not available in the Vista SDK */
 #endif
 
-typedef void (WINAPI *fnILFree)(LPITEMIDLIST);
-typedef BOOL (WINAPI *fnILIsEqual)(LPCITEMIDLIST, LPCITEMIDLIST);
-typedef HRESULT (WINAPI *fnSHILCreateFromPath)(LPCWSTR, LPITEMIDLIST *,DWORD*);
-typedef HRESULT (WINAPI *fnSHDefExtractIconA)(LPCSTR, int, UINT, HICON*, HICON*, UINT);
-
-static fnILFree pILFree;
-static fnILIsEqual pILIsEqual;
-static fnSHILCreateFromPath pSHILCreateFromPath;
-static fnSHDefExtractIconA pSHDefExtractIconA;
+static void (WINAPI *pILFree)(LPITEMIDLIST);
+static BOOL (WINAPI *pILIsEqual)(LPCITEMIDLIST, LPCITEMIDLIST);
+static HRESULT (WINAPI *pSHILCreateFromPath)(LPCWSTR, LPITEMIDLIST *,DWORD*);
+static HRESULT (WINAPI *pSHDefExtractIconA)(LPCSTR, int, UINT, HICON*, HICON*, UINT);
 
 static DWORD (WINAPI *pGetLongPathNameA)(LPCSTR, LPSTR, DWORD);
 static DWORD (WINAPI *pGetShortPathNameA)(LPCSTR, LPSTR, DWORD);
@@ -422,7 +414,7 @@ void create_lnk_(int line, const WCHAR* path, lnk_desc_t* desc, int save_fails)
         lok(r == S_OK, "SetHotkey failed (0x%08x)\n", r);
     }
 
-    r = IShellLinkW_QueryInterface(sl, &IID_IPersistFile, (LPVOID*)&pf);
+    r = IShellLinkA_QueryInterface(sl, &IID_IPersistFile, (void**)&pf);
     lok(r == S_OK, "no IID_IPersistFile (0x%08x)\n", r);
     if (r == S_OK)
     {
@@ -907,7 +899,7 @@ if (0)
 
     LocalFree( dar );
 
-    IUnknown_Release( dl );
+    IShellLinkDataList_Release( dl );
     IShellLinkW_Release( sl );
 }
 
@@ -1005,10 +997,10 @@ START_TEST(shelllink)
     HMODULE hmod = GetModuleHandleA("shell32.dll");
     HMODULE hkernel32 = GetModuleHandleA("kernel32.dll");
 
-    pILFree = (fnILFree) GetProcAddress(hmod, (LPSTR)155);
-    pILIsEqual = (fnILIsEqual) GetProcAddress(hmod, (LPSTR)21);
-    pSHILCreateFromPath = (fnSHILCreateFromPath) GetProcAddress(hmod, (LPSTR)28);
-    pSHDefExtractIconA = (fnSHDefExtractIconA) GetProcAddress(hmod, "SHDefExtractIconA");
+    pILFree = (void *)GetProcAddress(hmod, (LPSTR)155);
+    pILIsEqual = (void *)GetProcAddress(hmod, (LPSTR)21);
+    pSHILCreateFromPath = (void *)GetProcAddress(hmod, (LPSTR)28);
+    pSHDefExtractIconA = (void *)GetProcAddress(hmod, "SHDefExtractIconA");
 
     pGetLongPathNameA = (void *)GetProcAddress(hkernel32, "GetLongPathNameA");
     pGetShortPathNameA = (void *)GetProcAddress(hkernel32, "GetShortPathNameA");

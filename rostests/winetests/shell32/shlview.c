@@ -170,7 +170,7 @@ static HRESULT WINAPI IDataObjectImpl_QueryInterface(IDataObject *iface, REFIID 
 
     if(*ppvObj)
     {
-        IUnknown_AddRef(iface);
+        IDataObject_AddRef(iface);
         return S_OK;
     }
 
@@ -302,7 +302,7 @@ static HRESULT WINAPI IShellBrowserImpl_QueryInterface(IShellBrowser *iface,
 
     if(*ppvObj)
     {
-        IUnknown_AddRef(iface);
+        IShellBrowser_AddRef(iface);
         return S_OK;
     }
 

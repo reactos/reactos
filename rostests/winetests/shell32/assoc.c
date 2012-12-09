@@ -43,19 +43,19 @@ static void test_IQueryAssociations_QueryInterface(void)
         return;
     }
 
-    hr = IUnknown_QueryInterface(qa, &IID_IQueryAssociations, (void**)&qa2);
+    hr = IQueryAssociations_QueryInterface(qa, &IID_IQueryAssociations, (void**)&qa2);
     ok(hr == S_OK, "QueryInterface (IQueryAssociations) returned 0x%x\n", hr);
     if (SUCCEEDED(hr)) {
-        IUnknown_Release(qa2);
+        IQueryAssociations_Release(qa2);
     }
 
-    hr = IUnknown_QueryInterface(qa, &IID_IUnknown, (void**)&unk);
+    hr = IQueryAssociations_QueryInterface(qa, &IID_IUnknown, (void**)&unk);
     ok(hr == S_OK, "QueryInterface (IUnknown) returned 0x%x\n", hr);
     if (SUCCEEDED(hr)) {
         IUnknown_Release(unk);
     }
 
-    hr = IUnknown_QueryInterface(qa, &IID_IUnknown, NULL);
+    hr = IQueryAssociations_QueryInterface(qa, &IID_IUnknown, NULL);
     ok(hr == E_POINTER, "got 0x%x (expected E_POINTER)\n", hr);
 
     IQueryAssociations_Release(qa);
@@ -78,19 +78,20 @@ static void test_IApplicationAssociationRegistration_QueryInterface(void)
         return;
     }
 
-    hr = IUnknown_QueryInterface(appreg, &IID_IApplicationAssociationRegistration, (void**)&appreg2);
+    hr = IApplicationAssociationRegistration_QueryInterface(appreg, &IID_IApplicationAssociationRegistration,
+       (void**)&appreg2);
     ok(hr == S_OK, "QueryInterface (IApplicationAssociationRegistration) returned 0x%x\n", hr);
     if (SUCCEEDED(hr)) {
-        IUnknown_Release(appreg2);
+        IApplicationAssociationRegistration_Release(appreg2);
     }
 
-    hr = IUnknown_QueryInterface(appreg, &IID_IUnknown, (void**)&unk);
+    hr = IApplicationAssociationRegistration_QueryInterface(appreg, &IID_IUnknown, (void**)&unk);
     ok(hr == S_OK, "QueryInterface (IUnknown) returned 0x%x\n", hr);
     if (SUCCEEDED(hr)) {
         IUnknown_Release(unk);
     }
 
-    hr = IUnknown_QueryInterface(appreg, &IID_IUnknown, NULL);
+    hr = IApplicationAssociationRegistration_QueryInterface(appreg, &IID_IUnknown, NULL);
     ok(hr == E_POINTER, "got 0x%x (expected E_POINTER)\n", hr);
 
     IApplicationAssociationRegistration_Release(appreg);

@@ -73,6 +73,18 @@ static BOOL (WINAPI *pIsWow64Process)(HANDLE, PBOOL);
 static UINT (WINAPI *pGetSystemWow64DirectoryW)(LPWSTR, UINT);
 static HRESULT (WINAPI *pSHCreateDefaultContextMenu)(const DEFCONTEXTMENU*,REFIID,void**);
 
+static const char *debugstr_guid(REFIID riid)
+{
+    static char buf[50];
+
+    sprintf(buf, "{%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}",
+            riid->Data1, riid->Data2, riid->Data3, riid->Data4[0],
+            riid->Data4[1], riid->Data4[2], riid->Data4[3], riid->Data4[4],
+            riid->Data4[5], riid->Data4[6], riid->Data4[7]);
+
+    return buf;
+}
+
 static WCHAR *make_wstr(const char *str)
 {
     WCHAR *ret;
@@ -566,7 +578,9 @@ if (0)
                     CLSID id;
                     hr = IPersist_GetClassID(pp, &id);
                     ok(hr == S_OK, "Got 0x%08x\n", hr);
-                    ok(IsEqualIID(&id, &CLSID_ShellDocObjView), "Unexpected classid\n");
+                    /* CLSID_ShellFSFolder on some w2k systems */
+                    ok(IsEqualIID(&id, &CLSID_ShellDocObjView) || broken(IsEqualIID(&id, &CLSID_ShellFSFolder)),
+                        "Unexpected classid %s\n", debugstr_guid(&id));
                     IPersist_Release(pp);
                 }
 
@@ -782,7 +796,7 @@ static void test_GetDisplayName(void)
         broken(hr == S_OK), /* Win9x, W2K */
         "hr = %08x\n", hr);
     if (hr == S_OK) {
-        IShellFolder_Release(psfFile);
+        IUnknown_Release(psfFile);
     }
 
     if (!pSHBindToParent)
