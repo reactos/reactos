@@ -23,8 +23,10 @@
 
 DBG_DEFAULT_CHANNEL(UI);
 
-ULONG	UiScreenWidth;							// Screen Width
-ULONG	UiScreenHeight;							// Screen Height
+BOOLEAN	UiMinimal					= FALSE;				// Tells us if we are using a minimal console-like UI
+
+ULONG	UiScreenWidth;										// Screen Width
+ULONG	UiScreenHeight;										// Screen Height
 
 UCHAR	UiStatusBarFgColor			= COLOR_BLACK;			// Status bar foreground color
 UCHAR	UiStatusBarBgColor			= COLOR_CYAN;			// Status bar background color
@@ -81,13 +83,13 @@ UIVTBL UiVtbl =
 BOOLEAN UiInitialize(BOOLEAN ShowGui)
 {
 	VIDEODISPLAYMODE	UiDisplayMode; // Tells us if we are in text or graphics mode
-	BOOLEAN	UiMinimal = FALSE; // Tells us if we should use a minimal console-like UI
 	ULONG_PTR SectionId;
 	CHAR	DisplayModeText[260];
 	CHAR	SettingText[260];
 	ULONG	Depth;
 
-	if (!ShowGui) {
+	if (!ShowGui)
+	{
 		if (!UiVtbl.Initialize())
 		{
 			MachVideoSetDisplayMode(NULL, FALSE);
@@ -102,7 +104,7 @@ BOOLEAN UiInitialize(BOOLEAN ShowGui)
 	DisplayModeText[0] = '\0';
 	if (IniOpenSection("Display", &SectionId))
 	{
-		if (! IniReadSettingByName(SectionId, "DisplayMode", DisplayModeText, sizeof(DisplayModeText)))
+		if (!IniReadSettingByName(SectionId, "DisplayMode", DisplayModeText, sizeof(DisplayModeText)))
 		{
 			DisplayModeText[0] = '\0';
 		}
@@ -116,7 +118,7 @@ BOOLEAN UiInitialize(BOOLEAN ShowGui)
 	MachVideoGetDisplaySize(&UiScreenWidth, &UiScreenHeight, &Depth);
 
 	if (VideoTextMode == UiDisplayMode)
-		UiVtbl = UiMinimal ? MiniTuiVtbl : TuiVtbl;
+		UiVtbl = (UiMinimal ? MiniTuiVtbl : TuiVtbl);
 	else
 		UiVtbl = GuiVtbl;
 
@@ -222,44 +224,6 @@ BOOLEAN UiInitialize(BOOLEAN ShowGui)
 	UiFadeInBackdrop();
 
 	TRACE("UiInitialize() returning TRUE.\n");
-	return TRUE;
-}
-
-BOOLEAN SetupUiInitialize(VOID)
-{
-	CHAR	DisplayModeText[260];
-	ULONG	Depth;
-	SIZE_T	Length;
-
-
-	DisplayModeText[0] = '\0';
-
-	MachVideoSetDisplayMode(DisplayModeText, TRUE);
-	MachVideoGetDisplaySize(&UiScreenWidth, &UiScreenHeight, &Depth);
-
-	UiVtbl = TuiVtbl;
-	UiVtbl.Initialize();
-
-	// Draw the backdrop and fade it in if special effects are enabled
-	UiVtbl.FillArea(0,
-			0,
-			UiScreenWidth - 1,
-			UiScreenHeight - 2,
-			0,
-			ATTR(UiBackdropFgColor, UiBackdropBgColor));
-
-	UiDrawTime = FALSE;
-	UiStatusBarBgColor = 7;
-
-	Length = strlen("ReactOS " KERNEL_VERSION_STR " Setup");
-	memset(DisplayModeText, 0xcd, Length + 2);
-	DisplayModeText[Length + 2] = '\0';
-
-	UiVtbl.DrawText(4, 1, "ReactOS " KERNEL_VERSION_STR " Setup", ATTR(COLOR_GRAY, UiBackdropBgColor));
-	UiVtbl.DrawText(3, 2, DisplayModeText, ATTR(COLOR_GRAY, UiBackdropBgColor));
-
-	TRACE("UiInitialize() returning TRUE.\n");
-
 	return TRUE;
 }
 
@@ -405,7 +369,7 @@ VOID UiDrawProgressBar(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, ULONG P
 
 VOID UiShowMessageBoxesInSection(PCSTR SectionName)
 {
-	ULONG		Idx;
+	ULONG	Idx;
 	CHAR	SettingName[80];
 	CHAR	SettingValue[80];
 	PCHAR	MessageBoxText;
@@ -455,7 +419,7 @@ VOID UiShowMessageBoxesInSection(PCSTR SectionName)
 
 VOID UiEscapeString(PCHAR String)
 {
-	ULONG		Idx;
+	ULONG	Idx;
 
 	for (Idx=0; Idx<strlen(String); Idx++)
 	{
@@ -479,9 +443,9 @@ VOID UiTruncateStringEllipsis(PCHAR StringText, ULONG MaxChars)
 	}
 }
 
-BOOLEAN UiDisplayMenu(PCSTR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, ULONG* SelectedMenuItem, BOOLEAN CanEscape, UiMenuKeyPressFilterCallback KeyPressFilter)
+BOOLEAN UiDisplayMenu(PCSTR MenuTitle, PCSTR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, ULONG* SelectedMenuItem, BOOLEAN CanEscape, UiMenuKeyPressFilterCallback KeyPressFilter)
 {
-	return UiVtbl.DisplayMenu(MenuItemList, MenuItemCount, DefaultMenuItem, MenuTimeOut, SelectedMenuItem, CanEscape, KeyPressFilter);
+	return UiVtbl.DisplayMenu(MenuTitle, MenuItemList, MenuItemCount, DefaultMenuItem, MenuTimeOut, SelectedMenuItem, CanEscape, KeyPressFilter);
 }
 
 VOID UiFadeInBackdrop(VOID)
@@ -498,4 +462,73 @@ BOOLEAN UiEditBox(PCSTR MessageText, PCHAR EditTextBuffer, ULONG Length)
 {
 	return UiVtbl.EditBox(MessageText, EditTextBuffer, Length);
 }
+
+
+/* SETUP MODE *****************************************************************/
+
+VOID SetupUiDrawBackdrop(VOID)
+{
+	CHAR	Underline[80];
+	SIZE_T	Length;
+
+	// Draw the backdrop and fade it in if special effects are enabled
+	UiVtbl.FillArea(0, 0, UiScreenWidth - 1, UiScreenHeight - 2, 0,
+	                ATTR(UiBackdropFgColor, UiBackdropBgColor));
+
+	Length = min( strlen("ReactOS " KERNEL_VERSION_STR " Setup"),
+	              sizeof(Underline) - 1 );
+	memset(Underline, 0xcd, Length); // Underline title
+	Underline[Length] = '\0';
+
+	UiVtbl.DrawText(4, 1, "ReactOS " KERNEL_VERSION_STR " Setup", ATTR(COLOR_GRAY, UiBackdropBgColor));
+	UiVtbl.DrawText(4, 2, Underline, ATTR(COLOR_GRAY, UiBackdropBgColor));
+
+	// Update the screen buffer
+	VideoCopyOffScreenBufferToVRAM();
+}
+
+BOOLEAN SetupUiInitialize(VOID)
+{
+	if (!UiMinimal)
+	{
+		ULONG Depth;
+
+		// Initialize the video
+		MachVideoSetDisplayMode(NULL, TRUE);
+		MachVideoGetDisplaySize(&UiScreenWidth, &UiScreenHeight, &Depth);
+
+		// Use Text UI with a modified backdrop and set display properties
+		UiVtbl = TuiVtbl;
+		UiVtbl.DrawBackdrop = SetupUiDrawBackdrop;
+
+		UiStatusBarFgColor		= COLOR_BLACK;
+		UiStatusBarBgColor		= COLOR_GRAY;
+		UiBackdropFgColor		= COLOR_WHITE;
+		UiBackdropBgColor		= COLOR_BLUE;
+		UiBackdropFillStyle		= MEDIUM_FILL;
+		UiTitleBoxFgColor		= COLOR_WHITE;
+		UiTitleBoxBgColor		= COLOR_RED;
+		UiMessageBoxFgColor		= COLOR_WHITE;
+		UiMessageBoxBgColor		= COLOR_BLUE;
+		UiMenuFgColor			= COLOR_WHITE;
+		UiMenuBgColor			= COLOR_BLUE;
+		UiTextColor				= COLOR_YELLOW;
+		UiSelectedTextColor		= COLOR_BLACK;
+		UiSelectedTextBgColor	= COLOR_GRAY;
+		UiEditBoxTextColor		= COLOR_WHITE;
+		UiEditBoxBgColor		= COLOR_BLACK;
+		UiUseSpecialEffects		= FALSE;
+		UiDrawTime				= FALSE;
+
+		UiVtbl.Initialize();
+
+		// Draw the backdrop
+		UiDrawBackdrop();
+	}
+
+	TRACE("SetupUiInitialize() returning TRUE.\n");
+
+	return TRUE;
+}
+
 #endif

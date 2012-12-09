@@ -43,7 +43,13 @@ VOID OptionMenuCustomBoot(VOID)
 	ULONG		CustomBootMenuCount = sizeof(CustomBootMenuList) / sizeof(CustomBootMenuList[0]);
 	ULONG		SelectedMenuItem;
 
-	if (!UiDisplayMenu(CustomBootMenuList, CustomBootMenuCount, 0, -1, &SelectedMenuItem, TRUE, NULL))
+	if (!UiDisplayMenu("Please choose a boot method:",
+	                   CustomBootMenuList,
+	                   CustomBootMenuCount,
+	                   0, -1,
+	                   &SelectedMenuItem,
+	                   TRUE,
+	                   NULL))
 	{
 		// The user pressed ESC
 		return;

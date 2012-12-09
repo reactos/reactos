@@ -14,7 +14,8 @@
 /* FUNCTIONS *****************************************************************/
 
 BOOLEAN
-TuiDisplayMenu(PCSTR MenuItemList[],
+TuiDisplayMenu(PCSTR MenuTitle,
+               PCSTR MenuItemList[],
                ULONG MenuItemCount,
                ULONG DefaultMenuItem,
                LONG MenuTimeOut,
@@ -41,6 +42,7 @@ TuiDisplayMenu(PCSTR MenuItemList[],
     //
     // Setup the MENU_INFO structure
     //
+    MenuInformation.MenuTitle = MenuTitle;
     MenuInformation.MenuItemList = MenuItemList;
     MenuInformation.MenuItemCount = MenuItemCount;
     MenuInformation.MenuTimeRemaining = MenuTimeOut;
@@ -203,7 +205,7 @@ TuiDrawMenu(PUI_MENU_INFO MenuInfo)
     //
     // Update the status bar
     //
-    UiVtbl.DrawStatusText("Use \x18\x19 to select, then press ENTER.");
+    UiVtbl.DrawStatusText("Use \x18 and \x19 to select, then press ENTER.");
 
     //
     // Draw the menu box
@@ -213,7 +215,11 @@ TuiDrawMenu(PUI_MENU_INFO MenuInfo)
     //
     // Draw each line of the menu
     //
-    for (i = 0; i < MenuInfo->MenuItemCount; i++) TuiDrawMenuItem(MenuInfo, i);
+    for (i = 0; i < MenuInfo->MenuItemCount; i++)
+    {
+        TuiDrawMenuItem(MenuInfo, i);
+    }
+
     VideoCopyOffScreenBufferToVRAM();
 }
 
@@ -221,8 +227,7 @@ VOID
 NTAPI
 TuiDrawMenuBox(PUI_MENU_INFO MenuInfo)
 {
-    CHAR MenuLineText[80];
-    CHAR TempString[80];
+    CHAR MenuLineText[80], TempString[80];
     ULONG i;
 
     //
@@ -237,7 +242,7 @@ TuiDrawMenuBox(PUI_MENU_INFO MenuInfo)
                   D_VERT,
                   D_HORZ,
                   FALSE,        // Filled
-                  TRUE,        // Shadow
+                  TRUE,         // Shadow
                   ATTR(UiMenuFgColor, UiMenuBgColor));
     }
 
@@ -284,7 +289,7 @@ TuiDrawMenuBox(PUI_MENU_INFO MenuInfo)
             // Display under the menu directly
             //
             UiDrawText(0,
-                       MenuInfo->Bottom + 3,
+                       MenuInfo->Bottom + 4,
                        MenuLineText,
                        ATTR(UiMenuFgColor, UiMenuBgColor));
         }
@@ -313,7 +318,7 @@ TuiDrawMenuBox(PUI_MENU_INFO MenuInfo)
         else
         {
             UiDrawText(0,
-                       MenuInfo->Bottom + 3,
+                       MenuInfo->Bottom + 4,
                        MenuLineText,
                        ATTR(UiMenuFgColor, UiMenuBgColor));
         }

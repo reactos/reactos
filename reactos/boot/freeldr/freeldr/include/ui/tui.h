@@ -60,6 +60,8 @@ VOID	TuiFadeOut(VOID);										// Fades the screen out
 
 struct tagUI_MENU_INFO
 {
+	PCSTR		MenuTitle;
+
 	PCSTR		*MenuItemList;
 	ULONG		MenuItemCount;
 	LONG		MenuTimeRemaining;
@@ -69,7 +71,6 @@ struct tagUI_MENU_INFO
 	ULONG		Top;
 	ULONG		Right;
 	ULONG		Bottom;
-
 };
 
 VOID	NTAPI TuiCalcMenuBoxSize(PUI_MENU_INFO MenuInfo);
@@ -77,7 +78,7 @@ VOID	TuiDrawMenu(PUI_MENU_INFO MenuInfo);
 VOID	NTAPI TuiDrawMenuBox(PUI_MENU_INFO MenuInfo);
 VOID	NTAPI TuiDrawMenuItem(PUI_MENU_INFO MenuInfo, ULONG MenuItemNumber);
 ULONG	NTAPI TuiProcessMenuKeyboardEvent(PUI_MENU_INFO MenuInfo, UiMenuKeyPressFilterCallback KeyPressFilter);
-BOOLEAN TuiDisplayMenu(PCSTR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, ULONG* SelectedMenuItem, BOOLEAN CanEscape, UiMenuKeyPressFilterCallback KeyPressFilter);
+BOOLEAN TuiDisplayMenu(PCSTR MenuTitle, PCSTR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, ULONG* SelectedMenuItem, BOOLEAN CanEscape, UiMenuKeyPressFilterCallback KeyPressFilter);
 
 /* Definitions for corners, depending on HORIZ and VERT */
 #define UL		(0xda)

@@ -35,14 +35,11 @@ UCHAR NoUiTextToFillStyle(PCSTR FillStyleText);
 VOID NoUiFadeInBackdrop(VOID);
 VOID NoUiFadeOut(VOID);
 
-BOOLEAN NoUiDisplayMenu(PCSTR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, ULONG* SelectedMenuItem, BOOLEAN CanEscape, UiMenuKeyPressFilterCallback KeyPressFilter);
-VOID NoUiDrawMenu(PUI_MENU_INFO MenuInfo);
-
 ///////////////////////////////////////////////////////////////////////////////////////
 //
 // Menu Functions
 //
 ///////////////////////////////////////////////////////////////////////////////////////
 
-BOOLEAN NoUiDisplayMenu(PCSTR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, ULONG* SelectedMenuItem, BOOLEAN CanEscape, UiMenuKeyPressFilterCallback KeyPressFilter);
+BOOLEAN NoUiDisplayMenu(PCSTR MenuTitle, PCSTR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, ULONG* SelectedMenuItem, BOOLEAN CanEscape, UiMenuKeyPressFilterCallback KeyPressFilter);
 VOID NoUiDrawMenu(PUI_MENU_INFO MenuInfo);

@@ -19,8 +19,8 @@
 
 #pragma once
 
-extern	ULONG		UiScreenWidth;									// Screen Width
-extern	ULONG		UiScreenHeight;									// Screen Height
+extern	ULONG	UiScreenWidth;									// Screen Width
+extern	ULONG	UiScreenHeight;									// Screen Height
 
 extern	UCHAR	UiStatusBarFgColor;								// Status bar foreground color
 extern	UCHAR	UiStatusBarBgColor;								// Status bar background color
@@ -42,10 +42,10 @@ extern	UCHAR	UiEditBoxBgColor;								// Edit box text background color
 extern	CHAR	UiTitleBoxTitleText[260];						// Title box's title text
 
 extern	BOOLEAN	UiUseSpecialEffects;							// Tells us if we should use fade effects
-extern BOOLEAN UiCenterMenu;
-extern BOOLEAN UiMenuBox;
-extern CHAR UiTimeText[];
-extern BOOLEAN UiDrawTime;
+extern	BOOLEAN	UiCenterMenu;
+extern	BOOLEAN	UiMenuBox;
+extern	CHAR	UiTimeText[];
+extern	BOOLEAN	UiDrawTime;
 
 extern	const CHAR	UiMonthNames[12][15];
 
@@ -55,7 +55,7 @@ extern	const CHAR	UiMonthNames[12][15];
 //
 ///////////////////////////////////////////////////////////////////////////////////////
 BOOLEAN	UiInitialize(BOOLEAN ShowGui);								// Initialize User-Interface
-BOOLEAN	SetupUiInitialize(VOID);						// Initialize User-Interface
+BOOLEAN	SetupUiInitialize(VOID);						// Initialize Setup User-Interface
 VOID	UiUnInitialize(PCSTR BootText);						// Un-initialize User-Interface
 VOID	UiDrawBackdrop(VOID);									// Fills the entire screen with a backdrop
 VOID	UiFillArea(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, CHAR FillChar, UCHAR Attr /* Color Attributes */);	// Fills the area specified with FillChar and Attr
@@ -93,7 +93,7 @@ typedef struct tagUI_MENU_INFO UI_MENU_INFO, *PUI_MENU_INFO;
 
 typedef BOOLEAN (*UiMenuKeyPressFilterCallback)(ULONG KeyPress);
 
-BOOLEAN	UiDisplayMenu(PCSTR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, ULONG* SelectedMenuItem, BOOLEAN CanEscape, UiMenuKeyPressFilterCallback KeyPressFilter);
+BOOLEAN	UiDisplayMenu(PCSTR MenuTitle, PCSTR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, ULONG* SelectedMenuItem, BOOLEAN CanEscape, UiMenuKeyPressFilterCallback KeyPressFilter);
 
 ///////////////////////////////////////////////////////////////////////////////////////
 //
@@ -123,7 +123,7 @@ typedef struct tagUIVTBL
 	VOID (*FadeInBackdrop)(VOID);
 	VOID (*FadeOut)(VOID);
 
-	BOOLEAN (*DisplayMenu)(PCSTR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, ULONG* SelectedMenuItem, BOOLEAN CanEscape, UiMenuKeyPressFilterCallback KeyPressFilter);
+	BOOLEAN (*DisplayMenu)(PCSTR MenuTitle, PCSTR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, ULONG* SelectedMenuItem, BOOLEAN CanEscape, UiMenuKeyPressFilterCallback KeyPressFilter);
 	VOID (*DrawMenu)(PUI_MENU_INFO MenuInfo);
 } UIVTBL, *PUIVTBL;
 

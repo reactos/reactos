@@ -52,11 +52,11 @@ BOOLEAN
 UiInitialize(IN BOOLEAN ShowGui)
 {
 	ULONG Depth;
-    
-    /* Nothing to do */
-    if (!ShowGui) return TRUE;
 
-    /* Set mode and query size */
+	/* Nothing to do */
+	if (!ShowGui) return TRUE;
+
+	/* Set mode and query size */
 	MachVideoSetDisplayMode(NULL, TRUE);
 	MachVideoGetDisplaySize(&UiScreenWidth, &UiScreenHeight, &Depth);
 	return TRUE;
@@ -245,7 +245,7 @@ UiTruncateStringEllipsis(IN PCHAR StringText,
                          IN ULONG MaxChars)
 {
     /* If it's too large, just add some ellipsis past the maximum */
-	if (strlen(StringText) > MaxChars) strcpy(&StringText[MaxChars - 3], "...");
+    if (strlen(StringText) > MaxChars) strcpy(&StringText[MaxChars - 3], "...");
 }
 
 VOID
@@ -273,7 +273,7 @@ UiDrawMenuBox(IN PUI_MENU_INFO MenuInfo)
 
         /* Display under the menu directly */
         UiDrawText(0,
-                   MenuInfo->Bottom + 3,
+                   MenuInfo->Bottom + 4,
                    MenuLineText,
                    ATTR(UiMenuFgColor, UiMenuBgColor));
     }
@@ -288,7 +288,7 @@ UiDrawMenuBox(IN PUI_MENU_INFO MenuInfo)
 
         /* Draw this "empty" string to erase */
         UiDrawText(0,
-                   MenuInfo->Bottom + 3,
+                   MenuInfo->Bottom + 4,
                    MenuLineText,
                    ATTR(UiMenuFgColor, UiMenuBgColor));
     }
@@ -356,14 +356,13 @@ UiDrawMenu(IN PUI_MENU_INFO MenuInfo)
     /* No GUI status bar text, just minimal text. first to tell the user to choose */
     UiDrawText(0,
                MenuInfo->Top - 2,
-               "Please select the operating system to start:",
+               MenuInfo->MenuTitle,
                ATTR(UiMenuFgColor, UiMenuBgColor));
 
     /* Now tell him how to choose */
     UiDrawText(0,
                MenuInfo->Bottom + 1,
-               "Use the up and down arrow keys to move the highlight to "
-               "your choice.",
+               "Use \x18 and \x19 to move the highlight to your choice.",
                ATTR(UiMenuFgColor, UiMenuBgColor));
     UiDrawText(0,
                MenuInfo->Bottom + 2,
@@ -381,7 +380,10 @@ UiDrawMenu(IN PUI_MENU_INFO MenuInfo)
     UiDrawMenuBox(MenuInfo);
 
     /* Draw each line of the menu */
-    for (i = 0; i < MenuInfo->MenuItemCount; i++) UiDrawMenuItem(MenuInfo, i);
+    for (i = 0; i < MenuInfo->MenuItemCount; i++)
+    {
+        UiDrawMenuItem(MenuInfo, i);
+    }
 }
 
 ULONG
@@ -495,7 +497,8 @@ UiCalcMenuBoxSize(IN PUI_MENU_INFO MenuInfo)
 }
 
 BOOLEAN
-UiDisplayMenu(IN PCSTR MenuItemList[],
+UiDisplayMenu(IN PCSTR MenuTitle,
+              IN PCSTR MenuItemList[],
               IN ULONG MenuItemCount,
               IN ULONG DefaultMenuItem,
               IN LONG MenuTimeOut,
@@ -517,6 +520,7 @@ UiDisplayMenu(IN PCSTR MenuItemList[],
     }
 
     /* Setup the MENU_INFO structure */
+    MenuInformation.MenuTitle = MenuTitle;
     MenuInformation.MenuItemList = MenuItemList;
     MenuInformation.MenuItemCount = MenuItemCount;
     MenuInformation.MenuTimeRemaining = MenuTimeOut;

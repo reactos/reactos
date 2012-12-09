@@ -210,8 +210,8 @@ VOID LoadReactOSSetup(VOID)
 
     TRACE("BootOptions: '%s'\n", BootOptions);
 
-    //SetupUiInitialize();
-    UiDrawStatusText("");
+    SetupUiInitialize();
+    UiDrawStatusText("Setup is loading...");
 
     /* Allocate and minimalistic-initialize LPB */
     AllocateAndInitLPB(&LoaderBlock);
@@ -231,7 +231,7 @@ VOID LoadReactOSSetup(VOID)
     /* Get a list of boot drivers */
     SetupLdrScanBootDrivers(&LoaderBlock->BootDriverListHead, InfHandle, BootPath);
 
-
+    /* Load ReactOS */
     LoadAndBootWindowsCommon(_WIN32_WINNT_WS03,
                              LoaderBlock,
                              BootOptions,
