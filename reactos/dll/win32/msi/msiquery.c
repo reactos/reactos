@@ -345,10 +345,9 @@ UINT msi_view_get_row(MSIDATABASE *db, MSIVIEW *view, UINT row, MSIRECORD **rec)
 
         if (type & MSITYPE_STRING)
         {
-            LPCWSTR sval;
-
-            sval = msi_string_lookup_id(db->strings, ival);
-            MSI_RecordSetStringW(*rec, i, sval);
+            int len;
+            const WCHAR *sval = msi_string_lookup( db->strings, ival, &len );
+            msi_record_set_string( *rec, i, sval, len );
         }
         else
         {

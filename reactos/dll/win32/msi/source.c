@@ -763,7 +763,10 @@ UINT msi_set_last_used_source(LPCWSTR product, LPCWSTR usersid,
 
     r = OpenSourceKey(product, &source, MSICODE_PRODUCT, context, FALSE);
     if (r != ERROR_SUCCESS)
+    {
+        msi_free(buffer);
         return r;
+    }
 
     sprintfW(buffer, format, typechar, index, value);
 

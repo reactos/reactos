@@ -1093,7 +1093,7 @@ static UINT iterate_appsearch(MSIRECORD *row, LPVOID param)
     r = ACTION_AppSearchSigName(package, sigName, &sig, &value);
     if (value)
     {
-        r = msi_set_property( package->db, propName, value );
+        r = msi_set_property( package->db, propName, value, -1 );
         if (r == ERROR_SUCCESS && !strcmpW( propName, szSourceDir ))
             msi_reset_folders( package, TRUE );
 
@@ -1153,7 +1153,7 @@ static UINT ITERATE_CCPSearch(MSIRECORD *row, LPVOID param)
     if (value)
     {
         TRACE("Found signature %s\n", debugstr_w(signature));
-        msi_set_property(package->db, success, szOne);
+        msi_set_property( package->db, success, szOne, -1 );
         msi_free(value);
         r = ERROR_NO_MORE_ITEMS;
     }

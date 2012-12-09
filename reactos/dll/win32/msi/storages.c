@@ -312,7 +312,7 @@ static UINT storages_find_row(MSISTORAGESVIEW *sv, MSIRECORD *rec, UINT *row)
     UINT r, i, id, data;
 
     str = MSI_RecordGetString(rec, 1);
-    r = msi_string2idW(sv->db->strings, str, &id);
+    r = msi_string2id(sv->db->strings, str, -1, &id);
     if (r != ERROR_SUCCESS)
         return r;
 

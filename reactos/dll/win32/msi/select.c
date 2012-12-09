@@ -276,8 +276,9 @@ static UINT msi_select_update(struct tagMSIVIEW *view, MSIRECORD *rec, UINT row)
         }
         else if (type & MSITYPE_STRING)
         {
-            str = MSI_RecordGetString(rec, i + 1);
-            r = MSI_RecordSetStringW(mod, col, str);
+            int len;
+            str = msi_record_get_string( rec, i + 1, &len );
+            r = msi_record_set_string( mod, col, str, len );
         }
         else
         {
@@ -430,7 +431,7 @@ UINT SELECT_CreateView( MSIDATABASE *db, MSIVIEW **view, MSIVIEW *table,
 
     count = select_count_columns( columns );
 
-    sv = msi_alloc_zero( sizeof *sv + count*sizeof (UINT) );
+    sv = msi_alloc_zero( FIELD_OFFSET( MSISELECTVIEW, cols[count] ));
     if( !sv )
         return ERROR_FUNCTION_FAILED;
     

@@ -156,6 +156,17 @@ static BOOL string2intW( LPCWSTR str, int *out )
     return TRUE;
 }
 
+WCHAR *msi_strdupW( const WCHAR *value, int len )
+{
+    WCHAR *ret;
+
+    if (!value) return NULL;
+    if (!(ret = msi_alloc( (len + 1) * sizeof(WCHAR) ))) return NULL;
+    memcpy( ret, value, len * sizeof(WCHAR) );
+    ret[len] = 0;
+    return ret;
+}
+
 UINT MSI_RecordCopyField( MSIRECORD *in_rec, UINT in_n,
                           MSIRECORD *out_rec, UINT out_n )
 {
@@ -184,11 +195,12 @@ UINT MSI_RecordCopyField( MSIRECORD *in_rec, UINT in_n,
             out->u.pVal = in->u.pVal;
             break;
         case MSIFIELD_WSTR:
-            str = strdupW( in->u.szwVal );
-            if ( !str )
-                r = ERROR_OUTOFMEMORY;
-            else
+            if ((str = msi_strdupW( in->u.szwVal, in->len )))
+            {
                 out->u.szwVal = str;
+                out->len = in->len;
+            }
+            else r = ERROR_OUTOFMEMORY;
             break;
         case MSIFIELD_STREAM:
             IStream_AddRef( in->u.stream );
@@ -202,7 +214,6 @@ UINT MSI_RecordCopyField( MSIRECORD *in_rec, UINT in_n,
     }
 
     msiobj_unlock( &in_rec->hdr );
-
     return r;
 }
 
@@ -380,7 +391,7 @@ BOOL WINAPI MsiRecordIsNull( MSIHANDLE handle, UINT iField )
 UINT MSI_RecordGetStringA(MSIRECORD *rec, UINT iField,
                LPSTR szValue, LPDWORD pcchValue)
 {
-    UINT len=0, ret;
+    UINT len = 0, ret = ERROR_SUCCESS;
     CHAR buffer[16];
 
     TRACE("%p %d %p %p\n", rec, iField, szValue, pcchValue);
@@ -394,7 +405,6 @@ UINT MSI_RecordGetStringA(MSIRECORD *rec, UINT iField,
         return ERROR_SUCCESS;
     }
 
-    ret = ERROR_SUCCESS;
     switch( rec->fields[iField].type )
     {
     case MSIFIELD_INT:
@@ -404,11 +414,11 @@ UINT MSI_RecordGetStringA(MSIRECORD *rec, UINT iField,
             lstrcpynA(szValue, buffer, *pcchValue);
         break;
     case MSIFIELD_WSTR:
-        len = WideCharToMultiByte( CP_ACP, 0, rec->fields[iField].u.szwVal, -1,
-                             NULL, 0 , NULL, NULL);
+        len = WideCharToMultiByte( CP_ACP, 0, rec->fields[iField].u.szwVal,
+                                   rec->fields[iField].len + 1, NULL, 0 , NULL, NULL );
         if (szValue)
-            WideCharToMultiByte( CP_ACP, 0, rec->fields[iField].u.szwVal, -1,
-                                 szValue, *pcchValue, NULL, NULL);
+            WideCharToMultiByte( CP_ACP, 0, rec->fields[iField].u.szwVal,
+                                 rec->fields[iField].len + 1, szValue, *pcchValue, NULL, NULL );
         if( szValue && *pcchValue && len>*pcchValue )
             szValue[*pcchValue-1] = 0;
         if( len )
@@ -448,23 +458,30 @@ UINT WINAPI MsiRecordGetStringA(MSIHANDLE handle, UINT iField,
     return ret;
 }
 
+const WCHAR *msi_record_get_string( const MSIRECORD *rec, UINT field, int *len )
+{
+    if (field > rec->count)
+        return NULL;
+
+    if (rec->fields[field].type != MSIFIELD_WSTR)
+        return NULL;
+
+    if (len) *len = rec->fields[field].len;
+
+    return rec->fields[field].u.szwVal;
+}
+
 const WCHAR *MSI_RecordGetString( const MSIRECORD *rec, UINT iField )
 {
-    if( iField > rec->count )
-        return NULL;
-
-    if( rec->fields[iField].type != MSIFIELD_WSTR )
-        return NULL;
-
-    return rec->fields[iField].u.szwVal;
+    return msi_record_get_string( rec, iField, NULL );
 }
 
 UINT MSI_RecordGetStringW(MSIRECORD *rec, UINT iField,
                LPWSTR szValue, LPDWORD pcchValue)
 {
-    UINT len=0, ret;
+    static const WCHAR szFormat[] = {'%','d',0};
+    UINT len = 0, ret = ERROR_SUCCESS;
     WCHAR buffer[16];
-    static const WCHAR szFormat[] = { '%','d',0 };
 
     TRACE("%p %d %p %p\n", rec, iField, szValue, pcchValue);
 
@@ -477,7 +494,6 @@ UINT MSI_RecordGetStringW(MSIRECORD *rec, UINT iField,
         return ERROR_SUCCESS;
     }
 
-    ret = ERROR_SUCCESS;
     switch( rec->fields[iField].type )
     {
     case MSIFIELD_INT:
@@ -487,9 +503,9 @@ UINT MSI_RecordGetStringW(MSIRECORD *rec, UINT iField,
             lstrcpynW(szValue, buffer, *pcchValue);
         break;
     case MSIFIELD_WSTR:
-        len = lstrlenW( rec->fields[iField].u.szwVal );
+        len = rec->fields[iField].len;
         if (szValue)
-            lstrcpynW(szValue, rec->fields[iField].u.szwVal, *pcchValue);
+            memcpy( szValue, rec->fields[iField].u.szwVal, min(len + 1, *pcchValue) * sizeof(WCHAR) );
         break;
     case MSIFIELD_NULL:
         if( szValue && *pcchValue > 0 )
@@ -548,7 +564,7 @@ static UINT MSI_RecordDataSize(MSIRECORD *rec, UINT iField)
     case MSIFIELD_INT:
         return sizeof (INT);
     case MSIFIELD_WSTR:
-        return lstrlenW( rec->fields[iField].u.szwVal );
+        return rec->fields[iField].len;
     case MSIFIELD_NULL:
         break;
     case MSIFIELD_STREAM:
@@ -574,72 +590,59 @@ UINT WINAPI MsiRecordDataSize(MSIHANDLE handle, UINT iField)
     return ret;
 }
 
-static UINT MSI_RecordSetStringA( MSIRECORD *rec, UINT iField, LPCSTR szValue )
-{
-    LPWSTR str;
-
-    TRACE("%p %d %s\n", rec, iField, debugstr_a(szValue));
-
-    if( iField > rec->count )
-        return ERROR_INVALID_FIELD;
-
-    MSI_FreeField( &rec->fields[iField] );
-    if( szValue && szValue[0] )
-    {
-        str = strdupAtoW( szValue );
-        rec->fields[iField].type = MSIFIELD_WSTR;
-        rec->fields[iField].u.szwVal = str;
-    }
-    else
-    {
-        rec->fields[iField].type = MSIFIELD_NULL;
-        rec->fields[iField].u.szwVal = NULL;
-    }
-
-    return 0;
-}
-
 UINT WINAPI MsiRecordSetStringA( MSIHANDLE handle, UINT iField, LPCSTR szValue )
 {
+    WCHAR *valueW = NULL;
     MSIRECORD *rec;
     UINT ret;
 
     TRACE("%d %d %s\n", handle, iField, debugstr_a(szValue));
 
+    if (szValue && !(valueW = strdupAtoW( szValue ))) return ERROR_OUTOFMEMORY;
+
     rec = msihandle2msiinfo( handle, MSIHANDLETYPE_RECORD );
     if( !rec )
+    {
+        msi_free( valueW );
         return ERROR_INVALID_HANDLE;
+    }
     msiobj_lock( &rec->hdr );
-    ret = MSI_RecordSetStringA( rec, iField, szValue );
+    ret = MSI_RecordSetStringW( rec, iField, valueW );
     msiobj_unlock( &rec->hdr );
     msiobj_release( &rec->hdr );
+    msi_free( valueW );
     return ret;
+}
+
+UINT msi_record_set_string( MSIRECORD *rec, UINT field, const WCHAR *value, int len )
+{
+    if (field > rec->count)
+        return ERROR_INVALID_FIELD;
+
+    MSI_FreeField( &rec->fields[field] );
+
+    if (value && len < 0) len = strlenW( value );
+
+    if (value && len)
+    {
+        rec->fields[field].type = MSIFIELD_WSTR;
+        rec->fields[field].u.szwVal = msi_strdupW( value, len );
+        rec->fields[field].len = len;
+    }
+    else
+    {
+        rec->fields[field].type = MSIFIELD_NULL;
+        rec->fields[field].u.szwVal = NULL;
+        rec->fields[field].len = 0;
+    }
+    return 0;
 }
 
 UINT MSI_RecordSetStringW( MSIRECORD *rec, UINT iField, LPCWSTR szValue )
 {
-    LPWSTR str;
-
     TRACE("%p %d %s\n", rec, iField, debugstr_w(szValue));
 
-    if( iField > rec->count )
-        return ERROR_INVALID_FIELD;
-
-    MSI_FreeField( &rec->fields[iField] );
-
-    if( szValue && szValue[0] )
-    {
-        str = strdupW( szValue );
-        rec->fields[iField].type = MSIFIELD_WSTR;
-        rec->fields[iField].u.szwVal = str;
-    }
-    else
-    {
-        rec->fields[iField].type = MSIFIELD_NULL;
-        rec->fields[iField].u.szwVal = NULL;
-    }
-
-    return 0;
+    return msi_record_set_string( rec, iField, szValue, -1 );
 }
 
 UINT WINAPI MsiRecordSetStringW( MSIHANDLE handle, UINT iField, LPCWSTR szValue )
@@ -1011,8 +1014,9 @@ BOOL MSI_RecordsAreFieldsEqual(MSIRECORD *a, MSIRECORD *b, UINT field)
             break;
 
         case MSIFIELD_WSTR:
-            if (strcmpW(a->fields[field].u.szwVal, b->fields[field].u.szwVal))
-                return FALSE;
+            if (a->fields[field].len != b->fields[field].len) return FALSE;
+            if (memcmp( a->fields[field].u.szwVal, b->fields[field].u.szwVal,
+                        a->fields[field].len * sizeof(WCHAR) )) return FALSE;
             break;
 
         case MSIFIELD_STREAM:
