@@ -33,7 +33,7 @@ typedef struct MSVCRT_threadmbcinfostruct {
     int ismbcodepage;
     int mblcid;
     unsigned short mbulinfo[6];
-    char mbctype[257];
+    unsigned char mbctype[257];
     char mbcasemap[256];
 } MSVCRT_threadmbcinfo;
 

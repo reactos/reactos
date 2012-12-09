@@ -426,7 +426,15 @@ errno_t _get_osplatform(unsigned int *pValue)
  */
 int *__p___mb_cur_max(void)
 {
-    return &__mb_cur_max;
+    return &get_locinfo()->mb_cur_max;
+}
+
+/*********************************************************************
+ *         ___mb_cur_max_func(MSVCRT.@)
+ */
+int CDECL ___mb_cur_max_func(void)
+{
+  return get_locinfo()->mb_cur_max;
 }
 
 /*
