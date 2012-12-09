@@ -575,4 +575,13 @@ UiDisplayMenu(IN PCSTR MenuTitle,
     return TRUE;
 }
 
+
+/* SETUP MODE *****************************************************************/
+
+BOOLEAN SetupUiInitialize(VOID)
+{
+    /* Nothing to do */
+    return TRUE;
+}
+
 #endif
