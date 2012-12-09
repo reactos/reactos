@@ -287,6 +287,11 @@ static void test_redirection(void)
     ok( !status, "RtlWow64EnableFsRedirectionEx failed status %x\n", status );
     ok( !cur, "RtlWow64EnableFsRedirectionEx got %u\n", cur );
 
+    status = pRtlWow64EnableFsRedirectionEx( TRUE, NULL );
+    ok( status == STATUS_ACCESS_VIOLATION, "RtlWow64EnableFsRedirectionEx failed with status %x\n", status );
+    status = pRtlWow64EnableFsRedirectionEx( TRUE, (void*)1 );
+    ok( status == STATUS_ACCESS_VIOLATION, "RtlWow64EnableFsRedirectionEx failed with status %x\n", status );
+
     status = pRtlWow64EnableFsRedirection( FALSE );
     ok( !status, "RtlWow64EnableFsRedirectionEx failed status %x\n", status );
     status = pRtlWow64EnableFsRedirectionEx( FALSE, &cur );

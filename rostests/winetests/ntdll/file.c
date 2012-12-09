@@ -1107,6 +1107,50 @@ static void test_iocp_fileio(HANDLE h)
     }
 
     CloseHandle( hPipeClt );
+
+    /* test associating a completion port with a handle after an async is queued */
+    hPipeSrv = CreateNamedPipeA( pipe_name, PIPE_ACCESS_INBOUND | FILE_FLAG_OVERLAPPED, PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT, 4, 1024, 1024, 1000, NULL );
+    ok( hPipeSrv != INVALID_HANDLE_VALUE, "Cannot create named pipe\n" );
+    if (hPipeSrv == INVALID_HANDLE_VALUE )
+        return;
+    hPipeClt = CreateFileA( pipe_name, GENERIC_WRITE, 0, NULL, OPEN_EXISTING, FILE_FLAG_NO_BUFFERING | FILE_FLAG_OVERLAPPED, NULL );
+    ok( hPipeClt != INVALID_HANDLE_VALUE, "Cannot connect to pipe\n" );
+    if (hPipeClt != INVALID_HANDLE_VALUE)
+    {
+        OVERLAPPED o = {0,};
+        BYTE send_buf[TEST_BUF_LEN], recv_buf[TEST_BUF_LEN];
+        DWORD read;
+        long count;
+
+        memset( send_buf, 0, TEST_BUF_LEN );
+        memset( recv_buf, 0xde, TEST_BUF_LEN );
+        count = get_pending_msgs(h);
+        ok( !count, "Unexpected msg count: %ld\n", count );
+        ReadFile( hPipeSrv, recv_buf, TEST_BUF_LEN, &read, &o);
+
+        U(iosb).Status = 0xdeadbeef;
+        res = pNtSetInformationFile( hPipeSrv, &iosb, &fci, sizeof(fci), FileCompletionInformation );
+        ok( res == STATUS_SUCCESS, "NtSetInformationFile failed: %x\n", res );
+        ok( U(iosb).Status == STATUS_SUCCESS, "iosb.Status invalid: %x\n", U(iosb).Status );
+        count = get_pending_msgs(h);
+        ok( !count, "Unexpected msg count: %ld\n", count );
+
+        WriteFile( hPipeClt, send_buf, TEST_BUF_LEN, &read, NULL );
+
+        if (get_msg(h))
+        {
+            ok( completionKey == CKEY_SECOND, "Invalid completion key: %lx\n", completionKey );
+            ok( ioSb.Information == 3, "Invalid ioSb.Information: %ld\n", ioSb.Information );
+            ok( U(ioSb).Status == STATUS_SUCCESS, "Invalid ioSb.Status: %x\n", U(ioSb).Status);
+            ok( completionValue == (ULONG_PTR)&o, "Invalid completion value: %lx\n", completionValue );
+            ok( !memcmp( send_buf, recv_buf, TEST_BUF_LEN ), "Receive buffer (%x %x %x) did not match send buffer (%x %x %x)\n", recv_buf[0], recv_buf[1], recv_buf[2], send_buf[0], send_buf[1], send_buf[2] );
+        }
+        count = get_pending_msgs(h);
+        ok( !count, "Unexpected msg count: %ld\n", count );
+    }
+
+    CloseHandle( hPipeSrv );
+    CloseHandle( hPipeClt );
 }
 
 static void test_file_basic_information(void)
