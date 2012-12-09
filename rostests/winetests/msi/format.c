@@ -2530,6 +2530,9 @@ static void test_formatrecord_tables(void)
     r = add_custom_action_entry( hdb, "'EscapeIt3', 51, 'prop', '[abcd\\xefgh]'" );
     ok( r == ERROR_SUCCESS, "cannot add custom action: %d\n", r);
 
+    r = add_custom_action_entry( hdb, "'EmbedNull', 51, 'prop', '[~]np'" );
+    ok( r == ERROR_SUCCESS, "cannot add custom action: %d\n", r);
+
     r = package_from_db( hdb, &hpkg );
     if (r == ERROR_INSTALL_PACKAGE_REJECTED)
     {
@@ -2661,7 +2664,7 @@ static void test_formatrecord_tables(void)
 
     /* custom action 51, escaped text 1 */
     r = MsiDoAction( hpkg, "EscapeIt1" );
-    ok( r == ERROR_SUCCESS, "EscapeIt failed: %d\n", r);
+    ok( r == ERROR_SUCCESS, "EscapeIt1 failed: %d\n", r);
 
     size = MAX_PATH;
     r = MsiGetProperty( hpkg, "prop", buf, &size );
@@ -2670,7 +2673,7 @@ static void test_formatrecord_tables(void)
 
     /* custom action 51, escaped text 2 */
     r = MsiDoAction( hpkg, "EscapeIt2" );
-    ok( r == ERROR_SUCCESS, "EscapeIt failed: %d\n", r);
+    ok( r == ERROR_SUCCESS, "EscapeIt2 failed: %d\n", r);
 
     size = MAX_PATH;
     r = MsiGetProperty( hpkg, "prop", buf, &size );
@@ -2679,12 +2682,32 @@ static void test_formatrecord_tables(void)
 
     /* custom action 51, escaped text 3 */
     r = MsiDoAction( hpkg, "EscapeIt3" );
-    ok( r == ERROR_SUCCESS, "EscapeIt failed: %d\n", r);
+    ok( r == ERROR_SUCCESS, "EscapeIt3 failed: %d\n", r);
 
     size = MAX_PATH;
     r = MsiGetProperty( hpkg, "prop", buf, &size );
     ok( r == ERROR_SUCCESS, "get property failed: %d\n", r);
     ok( !lstrcmp( buf, "" ), "Expected '', got %s\n", buf);
+
+    /* custom action 51, embedded null */
+    r = MsiDoAction( hpkg, "EmbedNull" );
+    ok( r == ERROR_SUCCESS, "EmbedNull failed: %d\n", r);
+
+    size = MAX_PATH;
+    memset( buf, 'a', sizeof(buf) );
+    r = MsiGetProperty( hpkg, "prop", buf, &size );
+    ok( r == ERROR_SUCCESS, "get property failed: %d\n", r);
+    ok( !memcmp( buf, "\0np", sizeof("\0np") ), "wrong value\n");
+    ok( size == sizeof("\0np") - 1, "got %u\n", size );
+
+    r = MsiSetProperty( hpkg, "prop", "[~]np" );
+    ok( r == ERROR_SUCCESS, "cannot set property: %d\n", r);
+
+    size = MAX_PATH;
+    memset( buf, 'a', sizeof(buf) );
+    r = MsiGetProperty( hpkg, "prop", buf, &size );
+    ok( r == ERROR_SUCCESS, "get property failed: %d\n", r);
+    ok( !lstrcmp( buf, "[~]np" ), "Expected '[~]np', got %s\n", buf);
 
     sprintf( expected, "1: %sI am a really long directory\\ ", root);
 

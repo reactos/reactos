@@ -593,6 +593,17 @@ static UINT create_inilocator_table( MSIHANDLE hdb )
             "PRIMARY KEY `Signature_`)" );
 }
 
+static UINT create_custom_action_table( MSIHANDLE hdb )
+{
+    return run_query( hdb,
+            "CREATE TABLE `CustomAction` ("
+            "`Action` CHAR(72) NOT NULL, "
+            "`Type` SHORT NOT NULL, "
+            "`Source` CHAR(75), "
+            "`Target` CHAR(255) "
+            "PRIMARY KEY `Action`)" );
+}
+
 #define make_add_entry(type, qtext) \
     static UINT add##_##type##_##entry( MSIHANDLE hdb, const char *values ) \
     { \
@@ -671,6 +682,10 @@ make_add_entry(inilocator,
                "INSERT INTO `IniLocator` "
                "(`Signature_`, `FileName`, `Section`, `Key`, `Field`, `Type`) "
                "VALUES( %s )")
+
+make_add_entry(custom_action,
+               "INSERT INTO `CustomAction`  "
+               "(`Action`, `Type`, `Source`, `Target`) VALUES( %s )")
 
 static UINT add_reglocator_entry( MSIHANDLE hdb, const char *sig, UINT root, const char *path,
                                   const char *name, UINT type )
@@ -2139,10 +2154,10 @@ static void test_props(void)
     DeleteFile(msifile);
 }
 
-static BOOL find_prop_in_property(MSIHANDLE hdb, LPCSTR prop, LPCSTR val)
+static BOOL find_prop_in_property(MSIHANDLE hdb, LPCSTR prop, LPCSTR val, int len)
 {
     MSIHANDLE hview, hrec;
-    BOOL found;
+    BOOL found = FALSE;
     CHAR buffer[MAX_PATH];
     DWORD sz;
     UINT r;
@@ -2152,7 +2167,8 @@ static BOOL find_prop_in_property(MSIHANDLE hdb, LPCSTR prop, LPCSTR val)
     r = MsiViewExecute(hview, 0);
     ok(r == ERROR_SUCCESS, "MsiViewExecute failed\n");
 
-    found = FALSE;
+    if (len < 0) len = lstrlenA(val);
+
     while (r == ERROR_SUCCESS && !found)
     {
         r = MsiViewFetch(hview, &hrec);
@@ -2164,16 +2180,17 @@ static BOOL find_prop_in_property(MSIHANDLE hdb, LPCSTR prop, LPCSTR val)
         {
             sz = MAX_PATH;
             r = MsiRecordGetString(hrec, 2, buffer, &sz);
-            if (r == ERROR_SUCCESS && !lstrcmpA(buffer, val))
+            if (r == ERROR_SUCCESS && !memcmp(buffer, val, len) && !buffer[len])
+            {
+                ok(sz == len, "wrong size %u\n", sz);
                 found = TRUE;
+            }
         }
 
         MsiCloseHandle(hrec);
     }
-
     MsiViewClose(hview);
     MsiCloseHandle(hview);
-
     return found;
 }
 
@@ -2249,6 +2266,12 @@ static void test_property_table(void)
     r = add_property_entry(hdb, "'prop', 'val'");
     ok(r == ERROR_SUCCESS, "cannot add property: %d\n", r);
 
+    r = create_custom_action_table(hdb);
+    ok(r == ERROR_SUCCESS, "cannot create CustomAction table: %d\n", r);
+
+    r = add_custom_action_entry( hdb, "'EmbedNull', 51, 'prop2', '[~]np'" );
+    ok( r == ERROR_SUCCESS, "cannot add custom action: %d\n", r);
+
     r = package_from_db(hdb, &hpkg);
     ok(r == ERROR_SUCCESS, "failed to create package %u\n", r);
 
@@ -2261,7 +2284,7 @@ static void test_property_table(void)
 
     hdb = MsiGetActiveDatabase(hpkg);
 
-    found = find_prop_in_property(hdb, "prop", "val");
+    found = find_prop_in_property(hdb, "prop", "val", -1);
     ok(found, "prop should be in the _Property table\n");
 
     r = add_property_entry(hdb, "'dantes', 'mercedes'");
@@ -2271,7 +2294,7 @@ static void test_property_table(void)
     r = do_query(hdb, query, &hrec);
     ok(r == ERROR_BAD_QUERY_SYNTAX, "Expected ERROR_BAD_QUERY_SYNTAX, got %d\n", r);
 
-    found = find_prop_in_property(hdb, "dantes", "mercedes");
+    found = find_prop_in_property(hdb, "dantes", "mercedes", -1);
     ok(found == FALSE, "dantes should not be in the _Property table\n");
 
     sz = MAX_PATH;
@@ -2283,8 +2306,21 @@ static void test_property_table(void)
     r = MsiSetProperty(hpkg, "dantes", "mercedes");
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
 
-    found = find_prop_in_property(hdb, "dantes", "mercedes");
+    found = find_prop_in_property(hdb, "dantes", "mercedes", -1);
     ok(found == TRUE, "dantes should be in the _Property table\n");
+
+    r = MsiDoAction( hpkg, "EmbedNull" );
+    ok( r == ERROR_SUCCESS, "EmbedNull failed: %d\n", r);
+
+    sz = MAX_PATH;
+    memset( buffer, 'a', sizeof(buffer) );
+    r = MsiGetProperty( hpkg, "prop2", buffer, &sz );
+    ok( r == ERROR_SUCCESS, "get property failed: %d\n", r);
+    ok( !memcmp( buffer, "\0np", sizeof("\0np") ), "wrong value\n");
+    ok( sz == sizeof("\0np") - 1, "got %u\n", sz );
+
+    found = find_prop_in_property(hdb, "prop2", "\0np", 3);
+    ok(found == TRUE, "prop2 should be in the _Property table\n");
 
     MsiCloseHandle(hdb);
     MsiCloseHandle(hpkg);
@@ -4115,7 +4151,7 @@ static void test_appsearch_reglocator(void)
                          (const BYTE *)path, lstrlenA(path) + 1);
     ok( res == ERROR_SUCCESS, "Expected ERROR_SUCCESS got %d\n", res);
 
-    space = (strchr(CURR_DIR, ' ')) ? TRUE : FALSE;
+    space = strchr(CURR_DIR, ' ') != NULL;
     sprintf(path, "%s\\FileName1 -option", CURR_DIR);
     res = RegSetValueExA(hklm, "value17", 0, REG_SZ,
                          (const BYTE *)path, lstrlenA(path) + 1);

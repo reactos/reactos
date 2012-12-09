@@ -490,7 +490,14 @@ static const char wrv_registry_dat[] =
     "regdata1\t2\tSOFTWARE\\Wine\\msitest\t*\t\taugustus\n"
     "regdata2\t2\tSOFTWARE\\Wine\\msitest\t*\t#%\taugustus\n"
     "regdata3\t2\tSOFTWARE\\Wine\\msitest\t*\t#x\taugustus\n"
-    "regdata4\t2\tSOFTWARE\\Wine\\msitest\\VisualStudio\\10.0\\AD7Metrics\\Exception\\{049EC4CC-30D2-4032-9256-EE18EB41B62B}\\Common Language Runtime Exceptions\\System.Workflow.ComponentModel.Serialization\\System.Workflow.ComponentModel.Serialization.WorkflowMarkupSerializationException\tlong\tkey\taugustus\n";
+    "regdata4\t2\tSOFTWARE\\Wine\\msitest\\VisualStudio\\10.0\\AD7Metrics\\Exception\\{049EC4CC-30D2-4032-9256-EE18EB41B62B}\\Common Language Runtime Exceptions\\System.Workflow.ComponentModel.Serialization\\System.Workflow.ComponentModel.Serialization.WorkflowMarkupSerializationException\tlong\tkey\taugustus\n"
+    "regdata5\t2\tSOFTWARE\\Wine\\msitest\tValue1\t[~]one[~]\taugustus\n"
+    "regdata6\t2\tSOFTWARE\\Wine\\msitest\tValue2\t[~]two\taugustus\n"
+    "regdata7\t2\tSOFTWARE\\Wine\\msitest\tValue3\tone[~]\taugustus\n"
+    "regdata8\t2\tSOFTWARE\\Wine\\msitest\tValue4\tone[~]two\taugustus\n"
+    "regdata9\t2\tSOFTWARE\\Wine\\msitest\tValue5\t[~]one[~]two[~]three\taugustus\n"
+    "regdata10\t2\tSOFTWARE\\Wine\\msitest\tValue6\t[~]\taugustus\n"
+    "regdata11\t2\tSOFTWARE\\Wine\\msitest\tValue7\t[~]two\taugustus\n";
 
 static const char cf_directory_dat[] =
     "Directory\tDirectory_Parent\tDefaultDir\n"
@@ -2610,36 +2617,46 @@ static void check_reg_dword5(HKEY prodkey, LPCSTR name, DWORD expected1, DWORD e
     check_reg_str(prodkey, name, expected, TRUE, __LINE__);
 
 #define CHECK_DEL_REG_STR(prodkey, name, expected) \
-    check_reg_str(prodkey, name, expected, TRUE, __LINE__); \
-    RegDeleteValueA(prodkey, name);
+    do { \
+        check_reg_str(prodkey, name, expected, TRUE, __LINE__); \
+        RegDeleteValueA(prodkey, name); \
+    } while(0)
 
 #define CHECK_REG_ISTR(prodkey, name, expected) \
     check_reg_str(prodkey, name, expected, FALSE, __LINE__);
 
 #define CHECK_DEL_REG_ISTR(prodkey, name, expected) \
-    check_reg_str(prodkey, name, expected, FALSE, __LINE__); \
-    RegDeleteValueA(prodkey, name);
+    do { \
+        check_reg_str(prodkey, name, expected, FALSE, __LINE__); \
+        RegDeleteValueA(prodkey, name); \
+    } while(0)
 
 #define CHECK_REG_DWORD(prodkey, name, expected) \
     check_reg_dword(prodkey, name, expected, __LINE__);
 
 #define CHECK_DEL_REG_DWORD(prodkey, name, expected) \
-    check_reg_dword(prodkey, name, expected, __LINE__); \
-    RegDeleteValueA(prodkey, name);
+    do { \
+        check_reg_dword(prodkey, name, expected, __LINE__); \
+        RegDeleteValueA(prodkey, name); \
+    } while(0)
 
 #define CHECK_REG_DWORD2(prodkey, name, expected1, expected2) \
     check_reg_dword2(prodkey, name, expected1, expected2, __LINE__);
 
 #define CHECK_DEL_REG_DWORD2(prodkey, name, expected1, expected2) \
-    check_reg_dword2(prodkey, name, expected1, expected2, __LINE__); \
-    RegDeleteValueA(prodkey, name);
+    do { \
+        check_reg_dword2(prodkey, name, expected1, expected2, __LINE__); \
+        RegDeleteValueA(prodkey, name); \
+    } while(0)
 
 #define CHECK_REG_DWORD4(prodkey, name, expected1, expected2, expected3, expected4) \
     check_reg_dword4(prodkey, name, expected1, expected2, expected3, expected4, __LINE__);
 
 #define CHECK_DEL_REG_DWORD5(prodkey, name, expected1, expected2, expected3, expected4 ,expected5) \
-    check_reg_dword5(prodkey, name, expected1, expected2, expected3, expected4, expected5, __LINE__); \
-    RegDeleteValueA(prodkey, name);
+    do { \
+        check_reg_dword5(prodkey, name, expected1, expected2, expected3, expected4, expected5, __LINE__); \
+        RegDeleteValueA(prodkey, name); \
+    } while(0)
 
 static void get_date_str(LPSTR date)
 {
@@ -4709,6 +4726,30 @@ static void test_write_registry_values(void)
 
     MsiSetInternalUI(INSTALLUILEVEL_NONE, NULL);
 
+    if (is_64bit)
+        res = RegCreateKeyExA(HKEY_LOCAL_MACHINE, "SOFTWARE\\Wow6432Node\\Wine\\msitest", 0, NULL, 0,
+                              KEY_ALL_ACCESS, NULL, &hkey, NULL);
+    else
+        res = RegCreateKeyExA(HKEY_LOCAL_MACHINE, "SOFTWARE\\Wine\\msitest", 0, NULL, 0, KEY_ALL_ACCESS,
+                              NULL, &hkey, NULL);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+    res = RegSetValueExA(hkey, "Value1", 0, REG_MULTI_SZ, (const BYTE *)"two\0", 5);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    res = RegSetValueExA(hkey, "Value2", 0, REG_MULTI_SZ, (const BYTE *)"one\0", 5);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    res = RegSetValueExA(hkey, "Value3", 0, REG_MULTI_SZ, (const BYTE *)"two\0", 5);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    res = RegSetValueExA(hkey, "Value4", 0, REG_MULTI_SZ, (const BYTE *)"one\0", 5);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    res = RegSetValueExA(hkey, "Value5", 0, REG_MULTI_SZ, (const BYTE *)"one\0two\0", 9);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    res = RegSetValueExA(hkey, "Value6", 0, REG_MULTI_SZ, (const BYTE *)"one\0", 5);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    res = RegSetValueExA(hkey, "Value7", 0, REG_SZ, (const BYTE *)"one", 4);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    RegCloseKey(hkey);
+
     r = MsiInstallProductA(msifile, NULL);
     if (r == ERROR_INSTALL_PACKAGE_REJECTED)
     {
@@ -4740,7 +4781,77 @@ static void test_write_registry_values(void)
     res = action_RegDeleteTreeA(hkey, "VisualStudio", KEY_ALL_ACCESS);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
 
+    size = MAX_PATH;
+    type = 0xdeadbeef;
+    memset(path, 'a', MAX_PATH);
+    res = RegQueryValueExA(hkey, "Value1", NULL, &type, (LPBYTE)path, &size);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(!memcmp(path, "one\0", size), "Wrong multi-sz data\n");
+    ok(size == 5, "Expected 5, got %d\n", size);
+    ok(type == REG_MULTI_SZ, "Expected REG_MULTI_SZ, got %d\n", type);
+
+    size = MAX_PATH;
+    type = 0xdeadbeef;
+    memset(path, 'a', MAX_PATH);
+    res = RegQueryValueExA(hkey, "Value2", NULL, &type, (LPBYTE)path, &size);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(!memcmp(path, "one\0two\0", size), "Wrong multi-sz data\n");
+    ok(size == 9, "Expected 9, got %d\n", size);
+    ok(type == REG_MULTI_SZ, "Expected REG_MULTI_SZ, got %d\n", type);
+
+    size = MAX_PATH;
+    type = 0xdeadbeef;
+    memset(path, 'a', MAX_PATH);
+    res = RegQueryValueExA(hkey, "Value3", NULL, &type, (LPBYTE)path, &size);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(!memcmp(path, "one\0two\0", size), "Wrong multi-sz data\n");
+    ok(size == 9, "Expected 9, got %d\n", size);
+    ok(type == REG_MULTI_SZ, "Expected REG_MULTI_SZ, got %d\n", type);
+
+    size = MAX_PATH;
+    type = 0xdeadbeef;
+    memset(path, 'a', MAX_PATH);
+    res = RegQueryValueExA(hkey, "Value4", NULL, &type, (LPBYTE)path, &size);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(!memcmp(path, "one\0two\0", size), "Wrong multi-sz data\n");
+    ok(size == 9, "Expected 9, got %d\n", size);
+    ok(type == REG_MULTI_SZ, "Expected REG_MULTI_SZ, got %d\n", type);
+
+    size = MAX_PATH;
+    type = 0xdeadbeef;
+    memset(path, 'a', MAX_PATH);
+    res = RegQueryValueExA(hkey, "Value5", NULL, &type, (LPBYTE)path, &size);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(!memcmp(path, "one\0two\0three\0", size), "Wrong multi-sz data\n");
+    ok(size == 15, "Expected 15, got %d\n", size);
+    ok(type == REG_MULTI_SZ, "Expected REG_MULTI_SZ, got %d\n", type);
+
+    size = MAX_PATH;
+    type = 0xdeadbeef;
+    memset(path, 'a', MAX_PATH);
+    res = RegQueryValueExA(hkey, "Value6", NULL, &type, (LPBYTE)path, &size);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(!memcmp(path, "", size), "Wrong multi-sz data\n");
+    ok(size == 1, "Expected 1, got %d\n", size);
+    ok(type == REG_MULTI_SZ, "Expected REG_MULTI_SZ, got %d\n", type);
+
+    size = MAX_PATH;
+    type = 0xdeadbeef;
+    memset(path, 'a', MAX_PATH);
+    res = RegQueryValueExA(hkey, "Value7", NULL, &type, (LPBYTE)path, &size);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    ok(!memcmp(path, "two\0", size), "Wrong multi-sz data\n");
+    ok(size == 5, "Expected 5, got %d\n", size);
+    ok(type == REG_MULTI_SZ, "Expected REG_MULTI_SZ, got %d\n", type);
+
     RegDeleteValueA(hkey, "Value");
+    RegDeleteValueA(hkey, "Value1");
+    RegDeleteValueA(hkey, "Value2");
+    RegDeleteValueA(hkey, "Value3");
+    RegDeleteValueA(hkey, "Value4");
+    RegDeleteValueA(hkey, "Value5");
+    RegDeleteValueA(hkey, "Value6");
+    RegDeleteValueA(hkey, "Value7");
     RegCloseKey(hkey);
     RegDeleteKeyA(HKEY_LOCAL_MACHINE, "SOFTWARE\\Wine\\msitest");
 
