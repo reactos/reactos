@@ -1,5 +1,4 @@
 #include <windows.h>
-#include <initguid.h>
 #include <cplext.h>
 #include <winuser.h>
 #include <tchar.h>

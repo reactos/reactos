@@ -391,6 +391,18 @@ HRESULT WINAPI SHEmptyRecycleBinA(HWND,LPCSTR,DWORD);
 HRESULT WINAPI SHEmptyRecycleBinW(HWND,LPCWSTR,DWORD);
 BOOL WINAPI SHCreateProcessAsUserW(PSHCREATEPROCESSINFOW);
 
+DWORD
+WINAPI
+DoEnvironmentSubstA(
+    _Inout_updates_(cchSrc) LPSTR pszSrc,
+    UINT cchSrc);
+
+DWORD
+WINAPI
+DoEnvironmentSubstW(
+    _Inout_updates_(cchSrc) LPWSTR pszSrc,
+    UINT cchSrc);
+
 #ifdef UNICODE
 #define NOTIFYICONDATA_V1_SIZE NOTIFYICONDATAW_V1_SIZE
 #define NOTIFYICONDATA_V2_SIZE NOTIFYICONDATAW_V2_SIZE
@@ -417,6 +429,7 @@ typedef LPSHNAMEMAPPINGW LPSHNAMEMAPPING;
 #define SHQueryRecycleBin SHQueryRecycleBinW
 #define SHEmptyRecycleBin SHEmptyRecycleBinW
 #define SHGetNewLinkInfo SHGetNewLinkInfoW
+#define DoEnvironmentSubst DoEnvironmentSubstW
 
 #else
 #define NOTIFYICONDATA_V1_SIZE NOTIFYICONDATAA_V1_SIZE
@@ -444,6 +457,7 @@ typedef LPSHNAMEMAPPINGA LPSHNAMEMAPPING;
 #define SHQueryRecycleBin SHQueryRecycleBinA
 #define SHEmptyRecycleBin SHEmptyRecycleBinA
 #define SHGetNewLinkInfo SHGetNewLinkInfoA
+#define DoEnvironmentSubst DoEnvironmentSubstA
 #endif
 
 #if !defined(_WIN64)
