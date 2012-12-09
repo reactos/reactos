@@ -95,7 +95,7 @@ LCID MSVCRT_locale_to_LCID(const char *locale) DECLSPEC_HIDDEN;
 void __init_global_locale();
 extern MSVCRT__locale_t global_locale;
 #define MSVCRT_locale __get_MSVCRT_locale()
-extern inline MSVCRT__locale_t __get_MSVCRT_locale()
+FORCEINLINE MSVCRT__locale_t __get_MSVCRT_locale()
 {
     if(!global_locale)
         __init_global_locale();
