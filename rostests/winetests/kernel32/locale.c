@@ -39,6 +39,11 @@
 #include "winerror.h"
 #include "winnls.h"
 
+static const WCHAR upper_case[] = {'\t','J','U','S','T','!',' ','A',',',' ','T','E','S','T',';',' ','S','T','R','I','N','G',' ','1','/','*','+','-','.','\r','\n',0};
+static const WCHAR lower_case[] = {'\t','j','u','s','t','!',' ','a',',',' ','t','e','s','t',';',' ','s','t','r','i','n','g',' ','1','/','*','+','-','.','\r','\n',0};
+static const WCHAR symbols_stripped[] = {'j','u','s','t','a','t','e','s','t','s','t','r','i','n','g','1',0};
+static const WCHAR fooW[] = {'f','o','o',0};
+
 static inline unsigned int strlenW( const WCHAR *str )
 {
     const WCHAR *s = str;
@@ -74,6 +79,7 @@ static BOOL (WINAPI *pEnumSystemLanguageGroupsA)(LANGUAGEGROUP_ENUMPROC, DWORD, 
 static BOOL (WINAPI *pEnumLanguageGroupLocalesA)(LANGGROUPLOCALE_ENUMPROC, LGRPID, DWORD, LONG_PTR);
 static BOOL (WINAPI *pEnumUILanguagesA)(UILANGUAGE_ENUMPROC, DWORD, LONG_PTR);
 static BOOL (WINAPI *pEnumSystemLocalesEx)(LOCALE_ENUMPROCEX, DWORD, LPARAM, LPVOID);
+static INT (WINAPI *pLCMapStringEx)(LPCWSTR, DWORD, LPCWSTR, INT, LPWSTR, INT, LPNLSVERSIONINFO, LPVOID, LPARAM);
 static LCID (WINAPI *pLocaleNameToLCID)(LPCWSTR, DWORD);
 static INT  (WINAPI *pLCIDToLocaleName)(LCID, LPWSTR, INT, DWORD);
 static INT (WINAPI *pFoldStringA)(DWORD, LPCSTR, INT, LPSTR, INT);
@@ -82,6 +88,9 @@ static BOOL (WINAPI *pIsValidLanguageGroup)(LGRPID, DWORD);
 static INT (WINAPI *pIdnToNameprepUnicode)(DWORD, LPCWSTR, INT, LPWSTR, INT);
 static INT (WINAPI *pIdnToAscii)(DWORD, LPCWSTR, INT, LPWSTR, INT);
 static INT (WINAPI *pIdnToUnicode)(DWORD, LPCWSTR, INT, LPWSTR, INT);
+static INT (WINAPI *pGetLocaleInfoEx)(LPCWSTR, LCTYPE, LPWSTR, INT);
+static BOOL (WINAPI *pIsValidLocaleName)(LPCWSTR);
+static INT (WINAPI *pCompareStringOrdinal)(const WCHAR *, INT, const WCHAR *, INT, BOOL);
 
 static void InitFunctionPointers(void)
 {
@@ -90,6 +99,7 @@ static void InitFunctionPointers(void)
   pEnumLanguageGroupLocalesA = (void*)GetProcAddress(hKernel32, "EnumLanguageGroupLocalesA");
   pLocaleNameToLCID = (void*)GetProcAddress(hKernel32, "LocaleNameToLCID");
   pLCIDToLocaleName = (void*)GetProcAddress(hKernel32, "LCIDToLocaleName");
+  pLCMapStringEx = (void*)GetProcAddress(hKernel32, "LCMapStringEx");
   pFoldStringA = (void*)GetProcAddress(hKernel32, "FoldStringA");
   pFoldStringW = (void*)GetProcAddress(hKernel32, "FoldStringW");
   pIsValidLanguageGroup = (void*)GetProcAddress(hKernel32, "IsValidLanguageGroup");
@@ -98,6 +108,9 @@ static void InitFunctionPointers(void)
   pIdnToNameprepUnicode = (void*)GetProcAddress(hKernel32, "IdnToNameprepUnicode");
   pIdnToAscii = (void*)GetProcAddress(hKernel32, "IdnToAscii");
   pIdnToUnicode = (void*)GetProcAddress(hKernel32, "IdnToUnicode");
+  pGetLocaleInfoEx = (void*)GetProcAddress(hKernel32, "GetLocaleInfoEx");
+  pIsValidLocaleName = (void*)GetProcAddress(hKernel32, "IsValidLocaleName");
+  pCompareStringOrdinal = (void*)GetProcAddress(hKernel32, "CompareStringOrdinal");
 }
 
 #define eq(received, expected, label, type) \
@@ -127,8 +140,13 @@ static void test_GetLocaleInfoA(void)
   LCID lcid = MAKELCID(MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), SORT_DEFAULT);
   char buffer[BUFFER_SIZE];
   char expected[BUFFER_SIZE];
+  DWORD val;
 
   ok(lcid == 0x409, "wrong LCID calculated - %d\n", lcid);
+
+  ret = GetLocaleInfoA(lcid, LOCALE_ILANGUAGE|LOCALE_RETURN_NUMBER, (char*)&val, sizeof(val));
+  ok(ret, "got %d\n", ret);
+  ok(val == lcid, "got 0x%08x\n", val);
 
   /* en and ar use SUBLANG_NEUTRAL, but GetLocaleInfo assume SUBLANG_DEFAULT
      Same is true for zh on pre-Vista, but on Vista and higher GetLocaleInfo
@@ -188,12 +206,57 @@ static void test_GetLocaleInfoA(void)
   ok(!strcmp(buffer, "Monday"), "Expected 'Monday', got '%s'\n", buffer);
 }
 
+struct neutralsublang_name2_t {
+    WCHAR name[3];
+    WCHAR sname[15];
+    LCID lcid;
+    LCID lcid_broken;
+    WCHAR sname_broken[15];
+    int todo;
+};
+
+static const struct neutralsublang_name2_t neutralsublang_names2[] = {
+    { {'a','r',0}, {'a','r','-','S','A',0},
+      MAKELCID(MAKELANGID(LANG_ARABIC, SUBLANG_ARABIC_SAUDI_ARABIA), SORT_DEFAULT) },
+    { {'a','z',0}, {'a','z','-','L','a','t','n','-','A','Z',0},
+      MAKELCID(MAKELANGID(LANG_AZERI, SUBLANG_AZERI_LATIN), SORT_DEFAULT) },
+    { {'d','e',0}, {'d','e','-','D','E',0},
+      MAKELCID(MAKELANGID(LANG_GERMAN, SUBLANG_GERMAN), SORT_DEFAULT) },
+    { {'e','n',0}, {'e','n','-','U','S',0},
+      MAKELCID(MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), SORT_DEFAULT) },
+    { {'e','s',0}, {'e','s','-','E','S',0},
+      MAKELCID(MAKELANGID(LANG_SPANISH, SUBLANG_SPANISH_MODERN), SORT_DEFAULT),
+      MAKELCID(MAKELANGID(LANG_SPANISH, SUBLANG_SPANISH), SORT_DEFAULT) /* vista */,
+      {'e','s','-','E','S','_','t','r','a','d','n','l',0}, 0x1 },
+    { {'g','a',0}, {'g','a','-','I','E',0},
+      MAKELCID(MAKELANGID(LANG_IRISH, SUBLANG_IRISH_IRELAND), SORT_DEFAULT), 0, {0}, 0x3 },
+    { {'i','t',0}, {'i','t','-','I','T',0},
+      MAKELCID(MAKELANGID(LANG_ITALIAN, SUBLANG_ITALIAN), SORT_DEFAULT) },
+    { {'m','s',0}, {'m','s','-','M','Y',0},
+      MAKELCID(MAKELANGID(LANG_MALAY, SUBLANG_MALAY_MALAYSIA), SORT_DEFAULT) },
+    { {'n','l',0}, {'n','l','-','N','L',0},
+      MAKELCID(MAKELANGID(LANG_DUTCH, SUBLANG_DUTCH), SORT_DEFAULT) },
+    { {'p','t',0}, {'p','t','-','B','R',0},
+      MAKELCID(MAKELANGID(LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN), SORT_DEFAULT) },
+    { {'s','r',0}, {'h','r','-','H','R',0},
+      MAKELCID(MAKELANGID(LANG_SERBIAN, SUBLANG_SERBIAN_CROATIA), SORT_DEFAULT) },
+    { {'s','v',0}, {'s','v','-','S','E',0},
+      MAKELCID(MAKELANGID(LANG_SWEDISH, SUBLANG_SWEDISH), SORT_DEFAULT) },
+    { {'u','z',0}, {'u','z','-','L','a','t','n','-','U','Z',0},
+      MAKELCID(MAKELANGID(LANG_UZBEK, SUBLANG_UZBEK_LATIN), SORT_DEFAULT) },
+    { {'z','h',0}, {'z','h','-','C','N',0},
+      MAKELCID(MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED), SORT_DEFAULT), 0, {0}, 0x3 },
+    { {0} }
+};
+
 static void test_GetLocaleInfoW(void)
 {
   LCID lcid_en = MAKELCID(MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), SORT_DEFAULT);
   LCID lcid_ru = MAKELCID(MAKELANGID(LANG_RUSSIAN, SUBLANG_NEUTRAL), SORT_DEFAULT);
+  LCID lcid_en_neut = MAKELCID(MAKELANGID(LANG_ENGLISH, SUBLANG_NEUTRAL), SORT_DEFAULT);
   WCHAR bufferW[80], buffer2W[80];
   CHAR bufferA[80];
+  DWORD val;
   DWORD ret;
   INT i;
 
@@ -202,6 +265,68 @@ static void test_GetLocaleInfoW(void)
       win_skip("GetLocaleInfoW() isn't implemented\n");
       return;
   }
+
+  ret = GetLocaleInfoW(lcid_en, LOCALE_ILANGUAGE|LOCALE_RETURN_NUMBER, (WCHAR*)&val, sizeof(val)/sizeof(WCHAR));
+  ok(ret, "got %d\n", ret);
+  ok(val == lcid_en, "got 0x%08x\n", val);
+
+  ret = GetLocaleInfoW(lcid_en_neut, LOCALE_SNAME, bufferW, COUNTOF(bufferW));
+  if (ret)
+  {
+      static const WCHAR slangW[] = {'E','n','g','l','i','s','h',' ','(','U','n','i','t','e','d',' ',
+                                                                     'S','t','a','t','e','s',')',0};
+      static const WCHAR statesW[] = {'U','n','i','t','e','d',' ','S','t','a','t','e','s',0};
+      static const WCHAR enW[] = {'e','n','-','U','S',0};
+      const struct neutralsublang_name2_t *ptr = neutralsublang_names2;
+
+      ok(!lstrcmpW(bufferW, enW), "got wrong name %s\n", wine_dbgstr_w(bufferW));
+
+      ret = GetLocaleInfoW(lcid_en_neut, LOCALE_SCOUNTRY, bufferW, COUNTOF(bufferW));
+      ok(ret, "got %d\n", ret);
+      ok(!lstrcmpW(statesW, bufferW), "got wrong name %s\n", wine_dbgstr_w(bufferW));
+
+      ret = GetLocaleInfoW(lcid_en_neut, LOCALE_SLANGUAGE, bufferW, COUNTOF(bufferW));
+      ok(ret, "got %d\n", ret);
+      ok(!lstrcmpW(slangW, bufferW), "got wrong name %s\n", wine_dbgstr_w(bufferW));
+
+      while (*ptr->name)
+      {
+          LANGID langid;
+          LCID lcid;
+
+          /* make neutral lcid */
+          langid = MAKELANGID(PRIMARYLANGID(LANGIDFROMLCID(ptr->lcid)), SUBLANG_NEUTRAL);
+          lcid = MAKELCID(langid, SORT_DEFAULT);
+
+          val = 0;
+          GetLocaleInfoW(lcid, LOCALE_ILANGUAGE|LOCALE_RETURN_NUMBER, (WCHAR*)&val, sizeof(val)/sizeof(WCHAR));
+          if (ptr->todo & 0x1)
+          {
+          todo_wine
+              ok(val == ptr->lcid || (val && broken(val == ptr->lcid_broken)), "%s: got wrong lcid 0x%04x, expected 0x%04x\n",
+                  wine_dbgstr_w(ptr->name), val, ptr->lcid);
+          }
+          else
+              ok(val == ptr->lcid || (val && broken(val == ptr->lcid_broken)), "%s: got wrong lcid 0x%04x, expected 0x%04x\n",
+                  wine_dbgstr_w(ptr->name), val, ptr->lcid);
+
+          /* now check LOCALE_SNAME */
+          GetLocaleInfoW(lcid, LOCALE_SNAME, bufferW, COUNTOF(bufferW));
+          if (ptr->todo & 0x2)
+          todo_wine
+              ok(!lstrcmpW(bufferW, ptr->sname) ||
+                 (*ptr->sname_broken && broken(!lstrcmpW(bufferW, ptr->sname_broken))),
+                  "%s: got %s\n", wine_dbgstr_w(ptr->name), wine_dbgstr_w(bufferW));
+          else
+              ok(!lstrcmpW(bufferW, ptr->sname) ||
+                 (*ptr->sname_broken && broken(!lstrcmpW(bufferW, ptr->sname_broken))),
+                  "%s: got %s\n", wine_dbgstr_w(ptr->name), wine_dbgstr_w(bufferW));
+          ptr++;
+      }
+  }
+  else
+      win_skip("English neutral locale not supported\n");
+
   ret = GetLocaleInfoW(lcid_ru, LOCALE_SMONTHNAME1, bufferW, COUNTOF(bufferW));
   if (!ret) {
       win_skip("LANG_RUSSIAN locale data unavailable\n");
@@ -1206,27 +1331,27 @@ static void test_CompareStringA(void)
   }
 
   ret = CompareStringA(lcid, NORM_IGNORECASE, "Salut", -1, "Salute", -1);
-  ok (ret== 1, "(Salut/Salute) Expected 1, got %d\n", ret);
+  ok (ret == CSTR_LESS_THAN, "(Salut/Salute) Expected CSTR_LESS_THAN, got %d\n", ret);
 
   ret = CompareStringA(lcid, NORM_IGNORECASE, "Salut", -1, "SaLuT", -1);
-  ok (ret== 2, "(Salut/SaLuT) Expected 2, got %d\n", ret);
+  ok (ret == CSTR_EQUAL, "(Salut/SaLuT) Expected CSTR_EQUAL, got %d\n", ret);
 
   ret = CompareStringA(lcid, NORM_IGNORECASE, "Salut", -1, "hola", -1);
-  ok (ret== 3, "(Salut/hola) Expected 3, got %d\n", ret);
+  ok (ret == CSTR_GREATER_THAN, "(Salut/hola) Expected CSTR_GREATER_THAN, got %d\n", ret);
 
   ret = CompareStringA(lcid, NORM_IGNORECASE, "haha", -1, "hoho", -1);
-  ok (ret== 1, "(haha/hoho) Expected 1, got %d\n", ret);
+  ok (ret == CSTR_LESS_THAN, "(haha/hoho) Expected CSTR_LESS_THAN, got %d\n", ret);
 
   lcid = MAKELCID(MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), SORT_DEFAULT);
 
   ret = CompareStringA(lcid, NORM_IGNORECASE, "haha", -1, "hoho", -1);
-  ok (ret== 1, "(haha/hoho) Expected 1, got %d\n", ret);
+  ok (ret == CSTR_LESS_THAN, "(haha/hoho) Expected CSTR_LESS_THAN, got %d\n", ret);
 
   ret = CompareStringA(lcid, NORM_IGNORECASE, "haha", -1, "hoho", 0);
-  ok (ret== 3, "(haha/hoho) Expected 3, got %d\n", ret);
+  ok (ret == CSTR_GREATER_THAN, "(haha/hoho) Expected CSTR_GREATER_THAN, got %d\n", ret);
 
     ret = CompareStringA(lcid, NORM_IGNORECASE, "Salut", 5, "saLuT", -1);
-    ok (ret == 2, "(Salut/saLuT) Expected 2, got %d\n", ret);
+    ok (ret == CSTR_EQUAL, "(Salut/saLuT) Expected CSTR_EQUAL, got %d\n", ret);
 
     /* test for CompareStringA flags */
     SetLastError(0xdeadbeef);
@@ -1256,52 +1381,52 @@ static void test_CompareStringA(void)
 
     if (0) { /* this requires collation table patch to make it MS compatible */
     ret = CompareStringA(LOCALE_SYSTEM_DEFAULT, 0, "'o", -1, "-o", -1 );
-    ok(ret == 1, "'o vs -o expected 1, got %d\n", ret);
+    ok(ret == CSTR_LESS_THAN, "'o vs -o expected CSTR_LESS_THAN, got %d\n", ret);
 
     ret = CompareStringA(LOCALE_SYSTEM_DEFAULT, SORT_STRINGSORT, "'o", -1, "-o", -1 );
-    ok(ret == 1, "'o vs -o expected 1, got %d\n", ret);
+    ok(ret == CSTR_LESS_THAN, "'o vs -o expected CSTR_LESS_THAN, got %d\n", ret);
 
     ret = CompareStringA(LOCALE_SYSTEM_DEFAULT, 0, "'", -1, "-", -1 );
-    ok(ret == 1, "' vs - expected 1, got %d\n", ret);
+    ok(ret == CSTR_LESS_THAN, "' vs - expected CSTR_LESS_THAN, got %d\n", ret);
 
     ret = CompareStringA(LOCALE_SYSTEM_DEFAULT, SORT_STRINGSORT, "'", -1, "-", -1 );
-    ok(ret == 1, "' vs - expected 1, got %d\n", ret);
+    ok(ret == CSTR_LESS_THAN, "' vs - expected CSTR_LESS_THAN, got %d\n", ret);
 
     ret = CompareStringA(LOCALE_SYSTEM_DEFAULT, 0, "`o", -1, "/m", -1 );
-    ok(ret == 3, "`o vs /m expected 3, got %d\n", ret);
+    ok(ret == CSTR_GREATER_THAN, "`o vs /m CSTR_GREATER_THAN got %d\n", ret);
 
     ret = CompareStringA(LOCALE_SYSTEM_DEFAULT, 0, "/m", -1, "`o", -1 );
-    ok(ret == 1, "/m vs `o expected 1, got %d\n", ret);
+    ok(ret == CSTR_LESS_THAN, "/m vs `o expected CSTR_LESS_THAN, got %d\n", ret);
 
     ret = CompareStringA(LOCALE_SYSTEM_DEFAULT, SORT_STRINGSORT, "`o", -1, "/m", -1 );
-    ok(ret == 3, "`o vs /m expected 3, got %d\n", ret);
+    ok(ret == CSTR_GREATER_THAN, "`o vs /m CSTR_GREATER_THAN got %d\n", ret);
 
     ret = CompareStringA(LOCALE_SYSTEM_DEFAULT, SORT_STRINGSORT, "/m", -1, "`o", -1 );
-    ok(ret == 1, "/m vs `o expected 1, got %d\n", ret);
+    ok(ret == CSTR_LESS_THAN, "/m vs `o expected CSTR_LESS_THAN, got %d\n", ret);
 
     ret = CompareStringA(LOCALE_SYSTEM_DEFAULT, 0, "`o", -1, "-m", -1 );
-    ok(ret == 1, "`o vs -m expected 1, got %d\n", ret);
+    ok(ret == CSTR_LESS_THAN, "`o vs -m expected CSTR_LESS_THAN, got %d\n", ret);
 
     ret = CompareStringA(LOCALE_SYSTEM_DEFAULT, 0, "-m", -1, "`o", -1 );
-    ok(ret == 3, "-m vs `o expected 3, got %d\n", ret);
+    ok(ret == CSTR_GREATER_THAN, "-m vs `o CSTR_GREATER_THAN got %d\n", ret);
 
     ret = CompareStringA(LOCALE_SYSTEM_DEFAULT, SORT_STRINGSORT, "`o", -1, "-m", -1 );
-    ok(ret == 3, "`o vs -m expected 3, got %d\n", ret);
+    ok(ret == CSTR_GREATER_THAN, "`o vs -m CSTR_GREATER_THAN got %d\n", ret);
 
     ret = CompareStringA(LOCALE_SYSTEM_DEFAULT, SORT_STRINGSORT, "-m", -1, "`o", -1 );
-    ok(ret == 1, "-m vs `o expected 1, got %d\n", ret);
+    ok(ret == CSTR_LESS_THAN, "-m vs `o expected CSTR_LESS_THAN, got %d\n", ret);
     }
 
 
     /* WinXP handles embedded NULLs differently than earlier versions */
     ret = CompareStringA(LOCALE_USER_DEFAULT, 0, "aLuZkUtZ", 8, "aLuZkUtZ\0A", 10);
-    ok(ret == 1 || ret == 2, "aLuZkUtZ vs aLuZkUtZ\\0A expected 1 or 2, got %d\n", ret);
+    ok(ret == CSTR_LESS_THAN || ret == CSTR_EQUAL, "aLuZkUtZ vs aLuZkUtZ\\0A expected CSTR_LESS_THAN or CSTR_EQUAL, got %d\n", ret);
 
     ret = CompareStringA(LOCALE_USER_DEFAULT, 0, "aLu\0ZkUtZ", 8, "aLu\0ZkUtZ\0A", 10);
-    ok(ret == 1 || ret == 2, "aLu\\0ZkUtZ vs aLu\\0ZkUtZ\\0A expected 1 or 2, got %d\n", ret);
+    ok(ret == CSTR_LESS_THAN || ret == CSTR_EQUAL, "aLu\\0ZkUtZ vs aLu\\0ZkUtZ\\0A expected CSTR_LESS_THAN or CSTR_EQUAL, got %d\n", ret);
 
     ret = CompareStringA(lcid, 0, "a\0b", -1, "a", -1);
-    ok(ret == 2, "a vs a expected 2, got %d\n", ret);
+    ok(ret == CSTR_EQUAL, "a vs a expected CSTR_EQUAL, got %d\n", ret);
 
     ret = CompareStringA(lcid, 0, "a\0b", 4, "a", 2);
     ok(ret == CSTR_EQUAL || /* win2k */
@@ -1309,7 +1434,7 @@ static void test_CompareStringA(void)
        "a\\0b vs a expected CSTR_EQUAL or CSTR_GREATER_THAN, got %d\n", ret);
 
     ret = CompareStringA(lcid, 0, "\2", 2, "\1", 2);
-    todo_wine ok(ret != 2, "\\2 vs \\1 expected unequal\n");
+    todo_wine ok(ret != CSTR_EQUAL, "\\2 vs \\1 expected unequal\n");
 
     ret = CompareStringA(lcid, NORM_IGNORECASE | LOCALE_USE_CP_ACP, "#", -1, ".", -1);
     todo_wine ok(ret == CSTR_LESS_THAN, "\"#\" vs \".\" expected CSTR_LESS_THAN, got %d\n", ret);
@@ -1493,168 +1618,253 @@ static void test_LCMapStringA(void)
        "unexpected error code %d\n", GetLastError());
 }
 
-static void test_LCMapStringW(void)
+typedef INT (*lcmapstring_wrapper)(DWORD, LPCWSTR, INT, LPWSTR, INT);
+
+static void test_lcmapstring_unicode(lcmapstring_wrapper func_ptr, const char *func_name)
 {
     int ret, ret2;
     WCHAR buf[256], buf2[256];
     char *p_buf = (char *)buf, *p_buf2 = (char *)buf2;
-    static const WCHAR upper_case[] = {'\t','J','U','S','T','!',' ','A',',',' ','T','E','S','T',';',' ','S','T','R','I','N','G',' ','1','/','*','+','-','.','\r','\n',0};
-    static const WCHAR lower_case[] = {'\t','j','u','s','t','!',' ','a',',',' ','t','e','s','t',';',' ','s','t','r','i','n','g',' ','1','/','*','+','-','.','\r','\n',0};
-    static const WCHAR symbols_stripped[] = {'j','u','s','t','a','t','e','s','t','s','t','r','i','n','g','1',0};
-    static const WCHAR fooW[] = {'f','o','o',0};
 
-    ret = LCMapStringW(LOCALE_USER_DEFAULT, LCMAP_LOWERCASE | LCMAP_UPPERCASE,
+    ret = func_ptr(LCMAP_LOWERCASE | LCMAP_UPPERCASE,
                        upper_case, -1, buf, sizeof(buf)/sizeof(WCHAR));
-    if (GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
-    {
-        win_skip("LCMapStringW is not implemented\n");
-        return;
-    }
     if (broken(ret))
         ok(lstrcmpW(buf, upper_case) == 0, "Expected upper case string\n");
     else
     {
-        ok(!ret, "LCMAP_LOWERCASE and LCMAP_UPPERCASE are mutually exclusive\n");
-        ok(GetLastError() == ERROR_INVALID_FLAGS,
-           "unexpected error code %d\n", GetLastError());
+        ok(!ret, "%s LCMAP_LOWERCASE and LCMAP_UPPERCASE are mutually exclusive\n", func_name);
+        ok(GetLastError() == ERROR_INVALID_FLAGS, "%s unexpected error code %d\n",
+           func_name, GetLastError());
     }
 
-    ret = LCMapStringW(LOCALE_USER_DEFAULT, LCMAP_HIRAGANA | LCMAP_KATAKANA,
+    ret = func_ptr(LCMAP_HIRAGANA | LCMAP_KATAKANA,
                        upper_case, -1, buf, sizeof(buf)/sizeof(WCHAR));
-    ok(!ret, "LCMAP_HIRAGANA and LCMAP_KATAKANA are mutually exclusive\n");
-    ok(GetLastError() == ERROR_INVALID_FLAGS,
-       "unexpected error code %d\n", GetLastError());
+    ok(!ret, "%s LCMAP_HIRAGANA and LCMAP_KATAKANA are mutually exclusive\n", func_name);
+    ok(GetLastError() == ERROR_INVALID_FLAGS, "%s unexpected error code %d\n",
+       func_name, GetLastError());
 
-    ret = LCMapStringW(LOCALE_USER_DEFAULT, LCMAP_HALFWIDTH | LCMAP_FULLWIDTH,
+    ret = func_ptr(LCMAP_HALFWIDTH | LCMAP_FULLWIDTH,
                        upper_case, -1, buf, sizeof(buf)/sizeof(WCHAR));
-    ok(!ret, "LCMAP_HALFWIDTH | LCMAP_FULLWIDTH are mutually exclusive\n");
-    ok(GetLastError() == ERROR_INVALID_FLAGS,
-       "unexpected error code %d\n", GetLastError());
+    ok(!ret, "%s LCMAP_HALFWIDTH | LCMAP_FULLWIDTH are mutually exclusive\n", func_name);
+    ok(GetLastError() == ERROR_INVALID_FLAGS, "%s unexpected error code %d\n",
+       func_name, GetLastError());
 
-    ret = LCMapStringW(LOCALE_USER_DEFAULT, LCMAP_TRADITIONAL_CHINESE | LCMAP_SIMPLIFIED_CHINESE,
+    ret = func_ptr(LCMAP_TRADITIONAL_CHINESE | LCMAP_SIMPLIFIED_CHINESE,
                        upper_case, -1, buf, sizeof(buf)/sizeof(WCHAR));
-    ok(!ret, "LCMAP_TRADITIONAL_CHINESE and LCMAP_SIMPLIFIED_CHINESE are mutually exclusive\n");
-    ok(GetLastError() == ERROR_INVALID_FLAGS,
-       "unexpected error code %d\n", GetLastError());
+    ok(!ret, "%s LCMAP_TRADITIONAL_CHINESE and LCMAP_SIMPLIFIED_CHINESE are mutually exclusive\n",
+       func_name);
+    ok(GetLastError() == ERROR_INVALID_FLAGS, "%s unexpected error code %d\n",
+       func_name, GetLastError());
 
     /* SORT_STRINGSORT must be used exclusively with LCMAP_SORTKEY */
     SetLastError(0xdeadbeef);
-    ret = LCMapStringW(LOCALE_USER_DEFAULT, LCMAP_LOWERCASE | SORT_STRINGSORT,
+    ret = func_ptr(LCMAP_LOWERCASE | SORT_STRINGSORT,
                        upper_case, -1, buf, sizeof(buf)/sizeof(WCHAR));
-    ok(GetLastError() == ERROR_INVALID_FLAGS, "expected ERROR_INVALID_FLAGS, got %d\n", GetLastError());
-    ok(!ret, "SORT_STRINGSORT without LCMAP_SORTKEY must fail\n");
+    ok(GetLastError() == ERROR_INVALID_FLAGS, "%s expected ERROR_INVALID_FLAGS, got %d\n",
+       func_name, GetLastError());
+    ok(!ret, "%s SORT_STRINGSORT without LCMAP_SORTKEY must fail\n", func_name);
 
     /* test LCMAP_LOWERCASE */
-    ret = LCMapStringW(LOCALE_USER_DEFAULT, LCMAP_LOWERCASE,
+    ret = func_ptr(LCMAP_LOWERCASE,
                        upper_case, -1, buf, sizeof(buf)/sizeof(WCHAR));
-    ok(ret == lstrlenW(upper_case) + 1,
-       "ret %d, error %d, expected value %d\n",
+    ok(ret == lstrlenW(upper_case) + 1, "%s ret %d, error %d, expected value %d\n", func_name,
        ret, GetLastError(), lstrlenW(upper_case) + 1);
-    ok(!lstrcmpW(buf, lower_case), "string compare mismatch\n");
+    ok(!lstrcmpW(buf, lower_case), "%s string compare mismatch\n", func_name);
 
     /* test LCMAP_UPPERCASE */
-    ret = LCMapStringW(LOCALE_USER_DEFAULT, LCMAP_UPPERCASE,
+    ret = func_ptr(LCMAP_UPPERCASE,
                        lower_case, -1, buf, sizeof(buf)/sizeof(WCHAR));
-    ok(ret == lstrlenW(lower_case) + 1,
-       "ret %d, error %d, expected value %d\n",
+    ok(ret == lstrlenW(lower_case) + 1, "%s ret %d, error %d, expected value %d\n", func_name,
        ret, GetLastError(), lstrlenW(lower_case) + 1);
-    ok(!lstrcmpW(buf, upper_case), "string compare mismatch\n");
+    ok(!lstrcmpW(buf, upper_case), "%s string compare mismatch\n", func_name);
 
     /* test buffer overflow */
     SetLastError(0xdeadbeef);
-    ret = LCMapStringW(LOCALE_USER_DEFAULT, LCMAP_UPPERCASE,
+    ret = func_ptr(LCMAP_UPPERCASE,
                        lower_case, -1, buf, 4);
     ok(!ret && GetLastError() == ERROR_INSUFFICIENT_BUFFER,
-       "should return 0 and ERROR_INSUFFICIENT_BUFFER, got %d\n", ret);
+       "%s should return 0 and ERROR_INSUFFICIENT_BUFFER, got %d\n", func_name, ret);
 
     /* LCMAP_UPPERCASE or LCMAP_LOWERCASE should accept src == dst */
     lstrcpyW(buf, lower_case);
-    ret = LCMapStringW(LOCALE_USER_DEFAULT, LCMAP_UPPERCASE,
+    ret = func_ptr(LCMAP_UPPERCASE,
                        buf, -1, buf, sizeof(buf)/sizeof(WCHAR));
-    ok(ret == lstrlenW(lower_case) + 1,
-       "ret %d, error %d, expected value %d\n",
+    ok(ret == lstrlenW(lower_case) + 1, "%s ret %d, error %d, expected value %d\n", func_name,
        ret, GetLastError(), lstrlenW(lower_case) + 1);
-    ok(!lstrcmpW(buf, upper_case), "string compare mismatch\n");
+    ok(!lstrcmpW(buf, upper_case), "%s string compare mismatch\n", func_name);
 
     lstrcpyW(buf, upper_case);
-    ret = LCMapStringW(LOCALE_USER_DEFAULT, LCMAP_LOWERCASE,
+    ret = func_ptr(LCMAP_LOWERCASE,
                        buf, -1, buf, sizeof(buf)/sizeof(WCHAR));
-    ok(ret == lstrlenW(upper_case) + 1,
-       "ret %d, error %d, expected value %d\n",
+    ok(ret == lstrlenW(upper_case) + 1, "%s ret %d, error %d, expected value %d\n", func_name,
        ret, GetLastError(), lstrlenW(lower_case) + 1);
-    ok(!lstrcmpW(buf, lower_case), "string compare mismatch\n");
+    ok(!lstrcmpW(buf, lower_case), "%s string compare mismatch\n", func_name);
 
     /* otherwise src == dst should fail */
     SetLastError(0xdeadbeef);
-    ret = LCMapStringW(LOCALE_USER_DEFAULT, LCMAP_SORTKEY | LCMAP_UPPERCASE,
+    ret = func_ptr(LCMAP_SORTKEY | LCMAP_UPPERCASE,
                        buf, 10, buf, sizeof(buf));
     ok(GetLastError() == ERROR_INVALID_FLAGS /* NT */ ||
-       GetLastError() == ERROR_INVALID_PARAMETER /* Win9x */,
-       "unexpected error code %d\n", GetLastError());
-    ok(!ret, "src == dst without LCMAP_UPPERCASE or LCMAP_LOWERCASE must fail\n");
+       GetLastError() == ERROR_INVALID_PARAMETER /* Win7+ */,
+       "%s unexpected error code %d\n", func_name, GetLastError());
+    ok(!ret, "%s src == dst without LCMAP_UPPERCASE or LCMAP_LOWERCASE must fail\n", func_name);
 
     /* test whether '\0' is always appended */
-    ret = LCMapStringW(LOCALE_USER_DEFAULT, LCMAP_SORTKEY,
+    ret = func_ptr(LCMAP_SORTKEY,
                        upper_case, -1, buf, sizeof(buf));
-    ok(ret, "LCMapStringW must succeed\n");
-    ret2 = LCMapStringW(LOCALE_USER_DEFAULT, LCMAP_SORTKEY,
+    ok(ret, "%s func_ptr must succeed\n", func_name);
+    ret2 = func_ptr(LCMAP_SORTKEY,
                        upper_case, lstrlenW(upper_case), buf2, sizeof(buf2));
-    ok(ret, "LCMapStringW must succeed\n");
-    ok(ret == ret2, "lengths of sort keys must be equal\n");
-    ok(!lstrcmpA(p_buf, p_buf2), "sort keys must be equal\n");
+    ok(ret, "%s func_ptr must succeed\n", func_name);
+    ok(ret == ret2, "%s lengths of sort keys must be equal\n", func_name);
+    ok(!lstrcmpA(p_buf, p_buf2), "%s sort keys must be equal\n", func_name);
 
     /* test LCMAP_SORTKEY | NORM_IGNORECASE */
-    ret = LCMapStringW(LOCALE_USER_DEFAULT, LCMAP_SORTKEY | NORM_IGNORECASE,
+    ret = func_ptr(LCMAP_SORTKEY | NORM_IGNORECASE,
                        upper_case, -1, buf, sizeof(buf));
-    ok(ret, "LCMapStringW must succeed\n");
-    ret2 = LCMapStringW(LOCALE_USER_DEFAULT, LCMAP_SORTKEY,
+    ok(ret, "%s func_ptr must succeed\n", func_name);
+    ret2 = func_ptr(LCMAP_SORTKEY,
                        lower_case, -1, buf2, sizeof(buf2));
-    ok(ret2, "LCMapStringW must succeed\n");
-    ok(ret == ret2, "lengths of sort keys must be equal\n");
-    ok(!lstrcmpA(p_buf, p_buf2), "sort keys must be equal\n");
+    ok(ret2, "%s func_ptr must succeed\n", func_name);
+    ok(ret == ret2, "%s lengths of sort keys must be equal\n", func_name);
+    ok(!lstrcmpA(p_buf, p_buf2), "%s sort keys must be equal\n", func_name);
 
     /* Don't test LCMAP_SORTKEY | NORM_IGNORENONSPACE, produces different
        results from plain LCMAP_SORTKEY on Vista */
 
     /* test LCMAP_SORTKEY | NORM_IGNORESYMBOLS */
-    ret = LCMapStringW(LOCALE_USER_DEFAULT, LCMAP_SORTKEY | NORM_IGNORESYMBOLS,
+    ret = func_ptr(LCMAP_SORTKEY | NORM_IGNORESYMBOLS,
                        lower_case, -1, buf, sizeof(buf));
-    ok(ret, "LCMapStringW must succeed\n");
-    ret2 = LCMapStringW(LOCALE_USER_DEFAULT, LCMAP_SORTKEY,
+    ok(ret, "%s func_ptr must succeed\n", func_name);
+    ret2 = func_ptr(LCMAP_SORTKEY,
                        symbols_stripped, -1, buf2, sizeof(buf2));
-    ok(ret2, "LCMapStringW must succeed\n");
-    ok(ret == ret2, "lengths of sort keys must be equal\n");
-    ok(!lstrcmpA(p_buf, p_buf2), "sort keys must be equal\n");
+    ok(ret2, "%s func_ptr must succeed\n", func_name);
+    ok(ret == ret2, "%s lengths of sort keys must be equal\n", func_name);
+    ok(!lstrcmpA(p_buf, p_buf2), "%s sort keys must be equal\n", func_name);
 
     /* test NORM_IGNORENONSPACE */
     lstrcpyW(buf, fooW);
-    ret = LCMapStringW(LOCALE_USER_DEFAULT, NORM_IGNORENONSPACE,
+    ret = func_ptr(NORM_IGNORENONSPACE,
                        lower_case, -1, buf, sizeof(buf)/sizeof(WCHAR));
-    ok(ret == lstrlenW(lower_case) + 1, "LCMapStringW should return %d, ret = %d\n",
-	lstrlenW(lower_case) + 1, ret);
-    ok(!lstrcmpW(buf, lower_case), "string comparison mismatch\n");
+    ok(ret == lstrlenW(lower_case) + 1, "%s func_ptr should return %d, ret = %d\n", func_name,
+    lstrlenW(lower_case) + 1, ret);
+    ok(!lstrcmpW(buf, lower_case), "%s string comparison mismatch\n", func_name);
 
     /* test NORM_IGNORESYMBOLS */
     lstrcpyW(buf, fooW);
-    ret = LCMapStringW(LOCALE_USER_DEFAULT, NORM_IGNORESYMBOLS,
+    ret = func_ptr(NORM_IGNORESYMBOLS,
                        lower_case, -1, buf, sizeof(buf)/sizeof(WCHAR));
-    ok(ret == lstrlenW(symbols_stripped) + 1, "LCMapStringW should return %d, ret = %d\n",
-	lstrlenW(symbols_stripped) + 1, ret);
-    ok(!lstrcmpW(buf, symbols_stripped), "string comparison mismatch\n");
+    ok(ret == lstrlenW(symbols_stripped) + 1, "%s func_ptr should return %d, ret = %d\n", func_name,
+    lstrlenW(symbols_stripped) + 1, ret);
+    ok(!lstrcmpW(buf, symbols_stripped), "%s string comparison mismatch\n", func_name);
 
     /* test srclen = 0 */
     SetLastError(0xdeadbeef);
-    ret = LCMapStringW(LOCALE_USER_DEFAULT, 0, upper_case, 0, buf, sizeof(buf)/sizeof(WCHAR));
-    ok(!ret, "LCMapStringW should fail with srclen = 0\n");
+    ret = func_ptr(0, upper_case, 0, buf, sizeof(buf)/sizeof(WCHAR));
+    ok(!ret, "%s func_ptr should fail with srclen = 0\n", func_name);
     ok(GetLastError() == ERROR_INVALID_PARAMETER,
-       "unexpected error code %d\n", GetLastError());
+       "%s unexpected error code %d\n", func_name, GetLastError());
 }
 
-static void test_LocaleNames(void)
+static INT LCMapStringW_wrapper(DWORD flags, LPCWSTR src, INT srclen, LPWSTR dst, INT dstlen)
+{
+    return LCMapStringW(LOCALE_USER_DEFAULT, flags, src, srclen, dst, dstlen);
+}
+
+static void test_LCMapStringW(void)
+{
+    int ret;
+    WCHAR buf[256];
+
+    trace("testing LCMapStringW\n");
+
+    SetLastError(0xdeadbeef);
+    ret = LCMapStringW((LCID)-1, LCMAP_LOWERCASE, upper_case, -1, buf, sizeof(buf)/sizeof(WCHAR));
+    todo_wine {
+    ok(!ret, "LCMapStringW should fail with bad lcid\n");
+    ok(GetLastError() == ERROR_INVALID_PARAMETER, "unexpected error code %d\n", GetLastError());
+    }
+
+    test_lcmapstring_unicode(LCMapStringW_wrapper, "LCMapStringW:");
+}
+
+static INT LCMapStringEx_wrapper(DWORD flags, LPCWSTR src, INT srclen, LPWSTR dst, INT dstlen)
+{
+    return pLCMapStringEx(LOCALE_NAME_USER_DEFAULT, flags, src, srclen, dst, dstlen, NULL, NULL, 0);
+}
+
+static void test_LCMapStringEx(void)
+{
+    int ret;
+    WCHAR buf[256];
+
+    if (!pLCMapStringEx)
+    {
+        win_skip( "LCMapStringEx not available\n" );
+        return;
+    }
+
+    trace("testing LCMapStringEx\n");
+
+    SetLastError(0xdeadbeef);
+    ret = pLCMapStringEx(fooW, LCMAP_LOWERCASE,
+                         upper_case, -1, buf, sizeof(buf)/sizeof(WCHAR), NULL, NULL, 0);
+    todo_wine {
+    ok(!ret, "LCMapStringEx should fail with bad locale name\n");
+    ok(GetLastError() == ERROR_INVALID_PARAMETER, "unexpected error code %d\n", GetLastError());
+    }
+
+    /* test reserved parameters */
+    ret = pLCMapStringEx(LOCALE_NAME_USER_DEFAULT, LCMAP_LOWERCASE,
+                         upper_case, -1, buf, sizeof(buf)/sizeof(WCHAR), NULL, NULL, 1);
+    ok(ret == lstrlenW(upper_case) + 1, "ret %d, error %d, expected value %d\n",
+       ret, GetLastError(), lstrlenW(upper_case) + 1);
+    ok(!lstrcmpW(buf, lower_case), "string compare mismatch\n");
+
+    ret = pLCMapStringEx(LOCALE_NAME_USER_DEFAULT, LCMAP_LOWERCASE,
+                         upper_case, -1, buf, sizeof(buf)/sizeof(WCHAR), NULL, (void*)1, 0);
+    ok(ret == lstrlenW(upper_case) + 1, "ret %d, error %d, expected value %d\n",
+       ret, GetLastError(), lstrlenW(upper_case) + 1);
+    ok(!lstrcmpW(buf, lower_case), "string compare mismatch\n");
+
+    /* crashes on native */
+    if(0)
+        ret = pLCMapStringEx(LOCALE_NAME_USER_DEFAULT, LCMAP_LOWERCASE,
+                             upper_case, -1, buf, sizeof(buf)/sizeof(WCHAR), (void*)1, NULL, 0);
+
+    test_lcmapstring_unicode(LCMapStringEx_wrapper, "LCMapStringEx:");
+}
+
+struct neutralsublang_name_t {
+    WCHAR name[3];
+    LCID lcid;
+    int todo;
+};
+
+static const struct neutralsublang_name_t neutralsublang_names[] = {
+    { {'a','r',0}, MAKELCID(MAKELANGID(LANG_ARABIC,     SUBLANG_ARABIC_SAUDI_ARABIA), SORT_DEFAULT) },
+    { {'a','z',0}, MAKELCID(MAKELANGID(LANG_AZERI,      SUBLANG_AZERI_LATIN), SORT_DEFAULT) },
+    { {'d','e',0}, MAKELCID(MAKELANGID(LANG_GERMAN,     SUBLANG_GERMAN), SORT_DEFAULT) },
+    { {'e','n',0}, MAKELCID(MAKELANGID(LANG_ENGLISH,    SUBLANG_ENGLISH_US), SORT_DEFAULT) },
+    { {'e','s',0}, MAKELCID(MAKELANGID(LANG_SPANISH,    SUBLANG_SPANISH_MODERN), SORT_DEFAULT), 1 },
+    { {'g','a',0}, MAKELCID(MAKELANGID(LANG_IRISH,      SUBLANG_IRISH_IRELAND), SORT_DEFAULT), 1 },
+    { {'i','t',0}, MAKELCID(MAKELANGID(LANG_ITALIAN,    SUBLANG_ITALIAN), SORT_DEFAULT) },
+    { {'m','s',0}, MAKELCID(MAKELANGID(LANG_MALAY,      SUBLANG_MALAY_MALAYSIA), SORT_DEFAULT) },
+    { {'n','l',0}, MAKELCID(MAKELANGID(LANG_DUTCH,      SUBLANG_DUTCH), SORT_DEFAULT) },
+    { {'p','t',0}, MAKELCID(MAKELANGID(LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN), SORT_DEFAULT) },
+    { {'s','r',0}, MAKELCID(MAKELANGID(LANG_SERBIAN,    SUBLANG_SERBIAN_SERBIA_LATIN), SORT_DEFAULT), 1 },
+    { {'s','v',0}, MAKELCID(MAKELANGID(LANG_SWEDISH,    SUBLANG_SWEDISH), SORT_DEFAULT) },
+    { {'u','z',0}, MAKELCID(MAKELANGID(LANG_UZBEK,      SUBLANG_UZBEK_LATIN), SORT_DEFAULT) },
+    { {'z','h',0}, MAKELCID(MAKELANGID(LANG_CHINESE,    SUBLANG_CHINESE_SIMPLIFIED), SORT_DEFAULT), 1 },
+    { {0} }
+};
+
+static void test_LocaleNameToLCID(void)
 {
     LCID lcid;
     INT ret;
     WCHAR buffer[LOCALE_NAME_MAX_LENGTH];
+    static const WCHAR enW[] = {'e','n',0};
 
     if (!pLocaleNameToLCID)
     {
@@ -1664,27 +1874,65 @@ static void test_LocaleNames(void)
 
     /* special cases */
     buffer[0] = 0;
+    SetLastError(0xdeadbeef);
     lcid = pLocaleNameToLCID(LOCALE_NAME_USER_DEFAULT, 0);
     ok(lcid == GetUserDefaultLCID() || broken(GetLastError() == ERROR_INVALID_PARAMETER /* Vista */),
-       "Expected lcid == %08x, got %08x, error %d\n", lcid, GetUserDefaultLCID(), GetLastError());
+       "Expected lcid == %08x, got %08x, error %d\n", GetUserDefaultLCID(), lcid, GetLastError());
     ret = pLCIDToLocaleName(lcid, buffer, LOCALE_NAME_MAX_LENGTH, 0);
     ok(ret > 0, "Expected ret > 0, got %d, error %d\n", ret, GetLastError());
     trace("%08x, %s\n", lcid, wine_dbgstr_w(buffer));
 
     buffer[0] = 0;
+    SetLastError(0xdeadbeef);
     lcid = pLocaleNameToLCID(LOCALE_NAME_SYSTEM_DEFAULT, 0);
-    todo_wine ok(!lcid && GetLastError() == ERROR_INVALID_PARAMETER,
-                 "Expected lcid != 0, got %08x, error %d\n", lcid, GetLastError());
+    ok(!lcid && GetLastError() == ERROR_INVALID_PARAMETER,
+       "Expected lcid == 0, got %08x, error %d\n", lcid, GetLastError());
     ret = pLCIDToLocaleName(lcid, buffer, LOCALE_NAME_MAX_LENGTH, 0);
     ok(ret > 0, "Expected ret > 0, got %d, error %d\n", ret, GetLastError());
     trace("%08x, %s\n", lcid, wine_dbgstr_w(buffer));
 
     buffer[0] = 0;
+    SetLastError(0xdeadbeef);
     lcid = pLocaleNameToLCID(LOCALE_NAME_INVARIANT, 0);
     todo_wine ok(lcid == 0x7F, "Expected lcid = 0x7F, got %08x, error %d\n", lcid, GetLastError());
     ret = pLCIDToLocaleName(lcid, buffer, LOCALE_NAME_MAX_LENGTH, 0);
     ok(ret > 0, "Expected ret > 0, got %d, error %d\n", ret, GetLastError());
     trace("%08x, %s\n", lcid, wine_dbgstr_w(buffer));
+
+    /* bad name */
+    SetLastError(0xdeadbeef);
+    lcid = pLocaleNameToLCID(fooW, 0);
+    ok(!lcid && GetLastError() == ERROR_INVALID_PARAMETER,
+       "Expected lcid == 0, got got %08x, error %d\n", lcid, GetLastError());
+
+    /* english neutral name */
+    lcid = pLocaleNameToLCID(enW, 0);
+    ok(lcid == MAKELCID(MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), SORT_DEFAULT) ||
+       broken(lcid == 0) /* Vista */, "got 0x%04x\n", lcid);
+    if (lcid)
+    {
+        const struct neutralsublang_name_t *ptr = neutralsublang_names;
+
+        while (*ptr->name)
+        {
+            lcid = pLocaleNameToLCID(ptr->name, 0);
+            if (ptr->todo)
+            todo_wine
+                ok(lcid == ptr->lcid, "%s: got wrong lcid 0x%04x, expected 0x%04x\n",
+                    wine_dbgstr_w(ptr->name), lcid, ptr->lcid);
+            else
+                ok(lcid == ptr->lcid, "%s: got wrong lcid 0x%04x, expected 0x%04x\n",
+                    wine_dbgstr_w(ptr->name), lcid, ptr->lcid);
+
+            *buffer = 0;
+            ret = pLCIDToLocaleName(lcid, buffer, sizeof(buffer)/sizeof(WCHAR), 0);
+            ok(ret > 0, "%s: got %d\n", wine_dbgstr_w(ptr->name), ret);
+            ok(lstrcmpW(ptr->name, buffer), "%s: got wrong locale name %s\n",
+                wine_dbgstr_w(ptr->name), wine_dbgstr_w(buffer));
+
+            ptr++;
+        }
+    }
 }
 
 /* this requires collation table patch to make it MS compatible */
@@ -3140,6 +3388,173 @@ static void test_IdnToUnicode(void)
     }
 }
 
+static void test_GetLocaleInfoEx(void)
+{
+    static const WCHAR enW[] = {'e','n',0};
+    WCHAR bufferW[80];
+    INT ret;
+
+    if (!pGetLocaleInfoEx)
+    {
+        win_skip("GetLocaleInfoEx not supported\n");
+        return;
+    }
+
+    ret = pGetLocaleInfoEx(enW, LOCALE_SNAME, bufferW, sizeof(bufferW)/sizeof(WCHAR));
+    ok(ret || broken(ret == 0) /* Vista */, "got %d\n", ret);
+    if (ret)
+    {
+        static const WCHAR statesW[] = {'U','n','i','t','e','d',' ','S','t','a','t','e','s',0};
+        static const WCHAR dummyW[] = {'d','u','m','m','y',0};
+        static const WCHAR enusW[] = {'e','n','-','U','S',0};
+        static const WCHAR usaW[] = {'U','S','A',0};
+        static const WCHAR enuW[] = {'E','N','U',0};
+        const struct neutralsublang_name_t *ptr = neutralsublang_names;
+        DWORD val;
+
+        ok(ret == lstrlenW(bufferW)+1, "got %d\n", ret);
+        ok(!lstrcmpW(bufferW, enW), "got %s\n", wine_dbgstr_w(bufferW));
+
+        SetLastError(0xdeadbeef);
+        ret = pGetLocaleInfoEx(enW, LOCALE_SNAME, bufferW, 2);
+        ok(!ret && GetLastError() == ERROR_INSUFFICIENT_BUFFER, "got %d, %d\n", ret, GetLastError());
+
+        SetLastError(0xdeadbeef);
+        ret = pGetLocaleInfoEx(enW, LOCALE_SNAME, NULL, 0);
+        ok(ret == 3 && GetLastError() == 0xdeadbeef, "got %d, %d\n", ret, GetLastError());
+
+        ret = pGetLocaleInfoEx(enusW, LOCALE_SNAME, bufferW, sizeof(bufferW)/sizeof(WCHAR));
+        ok(ret == lstrlenW(bufferW)+1, "got %d\n", ret);
+        ok(!lstrcmpW(bufferW, enusW), "got %s\n", wine_dbgstr_w(bufferW));
+
+        ret = pGetLocaleInfoEx(enW, LOCALE_SABBREVCTRYNAME, bufferW, sizeof(bufferW)/sizeof(WCHAR));
+        ok(ret == lstrlenW(bufferW)+1, "got %d\n", ret);
+        ok(!lstrcmpW(bufferW, usaW), "got %s\n", wine_dbgstr_w(bufferW));
+
+        ret = pGetLocaleInfoEx(enW, LOCALE_SABBREVLANGNAME, bufferW, sizeof(bufferW)/sizeof(WCHAR));
+        ok(ret == lstrlenW(bufferW)+1, "got %d\n", ret);
+        ok(!lstrcmpW(bufferW, enuW), "got %s\n", wine_dbgstr_w(bufferW));
+
+        ret = pGetLocaleInfoEx(enW, LOCALE_SCOUNTRY, bufferW, sizeof(bufferW)/sizeof(WCHAR));
+        ok(ret == lstrlenW(bufferW)+1, "got %d\n", ret);
+        ok(!lstrcmpW(bufferW, statesW), "got %s\n", wine_dbgstr_w(bufferW));
+
+        bufferW[0] = 0;
+        SetLastError(0xdeadbeef);
+        ret = pGetLocaleInfoEx(dummyW, LOCALE_SNAME, bufferW, sizeof(bufferW)/sizeof(WCHAR));
+        ok(!ret && GetLastError() == ERROR_INVALID_PARAMETER, "got %d, error %d\n", ret, GetLastError());
+
+        while (*ptr->name)
+        {
+            val = 0;
+            pGetLocaleInfoEx(ptr->name, LOCALE_ILANGUAGE|LOCALE_RETURN_NUMBER, (WCHAR*)&val, sizeof(val)/sizeof(WCHAR));
+            if (ptr->todo)
+            todo_wine
+                ok(val == ptr->lcid, "%s: got wrong lcid 0x%04x, expected 0x%04x\n", wine_dbgstr_w(ptr->name), val, ptr->lcid);
+            else
+                ok(val == ptr->lcid, "%s: got wrong lcid 0x%04x, expected 0x%04x\n", wine_dbgstr_w(ptr->name), val, ptr->lcid);
+            bufferW[0] = 0;
+            ret = pGetLocaleInfoEx(ptr->name, LOCALE_SNAME, bufferW, sizeof(bufferW)/sizeof(WCHAR));
+            ok(ret == lstrlenW(bufferW)+1, "%s: got ret value %d\n", wine_dbgstr_w(ptr->name), ret);
+            ok(!lstrcmpW(bufferW, ptr->name), "%s: got wrong LOCALE_SNAME %s\n", wine_dbgstr_w(ptr->name), wine_dbgstr_w(bufferW));
+            ptr++;
+        }
+    }
+}
+
+static void test_IsValidLocaleName(void)
+{
+    static const WCHAR enusW[] = {'e','n','-','U','S',0};
+    static const WCHAR zzW[] = {'z','z',0};
+    static const WCHAR zzzzW[] = {'z','z','-','Z','Z',0};
+    BOOL ret;
+
+    if (!pIsValidLocaleName)
+    {
+        win_skip("IsValidLocaleName not supported\n");
+        return;
+    }
+
+    ret = pIsValidLocaleName(enusW);
+    ok(ret, "IsValidLocaleName failed\n");
+    ret = pIsValidLocaleName(zzW);
+    ok(!ret, "IsValidLocaleName should have failed\n");
+    ret = pIsValidLocaleName(zzzzW);
+    ok(!ret, "IsValidLocaleName should have failed\n");
+}
+
+static void test_CompareStringOrdinal(void)
+{
+    INT ret;
+    WCHAR test1[] = { 't','e','s','t',0 };
+    WCHAR test2[] = { 'T','e','S','t',0 };
+    WCHAR test3[] = { 't','e','s','t','3',0 };
+    WCHAR null1[] = { 'a',0,'a',0 };
+    WCHAR null2[] = { 'a',0,'b',0 };
+    WCHAR bills1[] = { 'b','i','l','l','\'','s',0 };
+    WCHAR bills2[] = { 'b','i','l','l','s',0 };
+    WCHAR coop1[] = { 'c','o','-','o','p',0 };
+    WCHAR coop2[] = { 'c','o','o','p',0 };
+    WCHAR nonascii1[] = { 0x0102,0 };
+    WCHAR nonascii2[] = { 0x0201,0 };
+
+    if (!pCompareStringOrdinal)
+    {
+        win_skip("CompareStringOrdinal not supported\n");
+        return;
+    }
+
+    /* Check errors */
+    SetLastError(0xdeadbeef);
+    ret = pCompareStringOrdinal(NULL, 0, NULL, 0, FALSE);
+    ok(!ret, "Got %u, expected 0\n", ret);
+    ok(GetLastError() == ERROR_INVALID_PARAMETER, "Got %x, expected %x\n", GetLastError(), ERROR_INVALID_PARAMETER);
+    SetLastError(0xdeadbeef);
+    ret = pCompareStringOrdinal(test1, -1, NULL, 0, FALSE);
+    ok(!ret, "Got %u, expected 0\n", ret);
+    ok(GetLastError() == ERROR_INVALID_PARAMETER, "Got %x, expected %x\n", GetLastError(), ERROR_INVALID_PARAMETER);
+    SetLastError(0xdeadbeef);
+    ret = pCompareStringOrdinal(NULL, 0, test1, -1, FALSE);
+    ok(!ret, "Got %u, expected 0\n", ret);
+    ok(GetLastError() == ERROR_INVALID_PARAMETER, "Got %x, expected %x\n", GetLastError(), ERROR_INVALID_PARAMETER);
+
+    /* Check case */
+    ret = pCompareStringOrdinal(test1, -1, test1, -1, FALSE);
+    ok(ret == CSTR_EQUAL, "Got %u, expected %u\n", ret, CSTR_EQUAL);
+    ret = pCompareStringOrdinal(test1, -1, test2, -1, FALSE);
+    ok(ret == CSTR_GREATER_THAN, "Got %u, expected %u\n", ret, CSTR_GREATER_THAN);
+    ret = pCompareStringOrdinal(test2, -1, test1, -1, FALSE);
+    ok(ret == CSTR_LESS_THAN, "Got %u, expected %u\n", ret, CSTR_LESS_THAN);
+    ret = pCompareStringOrdinal(test1, -1, test2, -1, TRUE);
+    ok(ret == CSTR_EQUAL, "Got %u, expected %u\n", ret, CSTR_EQUAL);
+
+    /* Check different sizes */
+    ret = pCompareStringOrdinal(test1, 3, test2, -1, TRUE);
+    ok(ret == CSTR_LESS_THAN, "Got %u, expected %u\n", ret, CSTR_LESS_THAN);
+    ret = pCompareStringOrdinal(test1, -1, test2, 3, TRUE);
+    ok(ret == CSTR_GREATER_THAN, "Got %u, expected %u\n", ret, CSTR_GREATER_THAN);
+
+    /* Check null character */
+    ret = pCompareStringOrdinal(null1, 3, null2, 3, FALSE);
+    ok(ret == CSTR_LESS_THAN, "Got %u, expected %u\n", ret, CSTR_LESS_THAN);
+    ret = pCompareStringOrdinal(null1, 3, null2, 3, TRUE);
+    ok(ret == CSTR_LESS_THAN, "Got %u, expected %u\n", ret, CSTR_LESS_THAN);
+    ret = pCompareStringOrdinal(test1, 5, test3, 5, FALSE);
+    ok(ret == CSTR_LESS_THAN, "Got %u, expected %u\n", ret, CSTR_LESS_THAN);
+    ret = pCompareStringOrdinal(test1, 4, test1, 5, FALSE);
+    ok(ret == CSTR_LESS_THAN, "Got %u, expected %u\n", ret, CSTR_LESS_THAN);
+
+    /* Check ordinal behaviour */
+    ret = pCompareStringOrdinal(bills1, -1, bills2, -1, FALSE);
+    ok(ret == CSTR_LESS_THAN, "Got %u, expected %u\n", ret, CSTR_LESS_THAN);
+    ret = pCompareStringOrdinal(coop2, -1, coop1, -1, FALSE);
+    ok(ret == CSTR_GREATER_THAN, "Got %u, expected %u\n", ret, CSTR_GREATER_THAN);
+    ret = pCompareStringOrdinal(nonascii1, -1, nonascii2, -1, FALSE);
+    ok(ret == CSTR_LESS_THAN, "Got %u, expected %u\n", ret, CSTR_LESS_THAN);
+    ret = pCompareStringOrdinal(nonascii1, -1, nonascii2, -1, TRUE);
+    ok(ret == CSTR_LESS_THAN, "Got %u, expected %u\n", ret, CSTR_LESS_THAN);
+}
+
 START_TEST(locale)
 {
   InitFunctionPointers();
@@ -3148,6 +3563,7 @@ START_TEST(locale)
   test_EnumDateFormatsA();
   test_GetLocaleInfoA();
   test_GetLocaleInfoW();
+  test_GetLocaleInfoEx();
   test_GetTimeFormatA();
   test_GetDateFormatA();
   test_GetDateFormatW();
@@ -3156,7 +3572,8 @@ START_TEST(locale)
   test_CompareStringA();
   test_LCMapStringA();
   test_LCMapStringW();
-  test_LocaleNames();
+  test_LCMapStringEx();
+  test_LocaleNameToLCID();
   test_FoldStringA();
   test_FoldStringW();
   test_ConvertDefaultLocale();
@@ -3170,6 +3587,8 @@ START_TEST(locale)
   test_IdnToNameprepUnicode();
   test_IdnToAscii();
   test_IdnToUnicode();
+  test_IsValidLocaleName();
+  test_CompareStringOrdinal();
   /* this requires collation table patch to make it MS compatible */
   if (0) test_sorting();
 }

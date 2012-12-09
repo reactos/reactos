@@ -1031,7 +1031,7 @@ static void test_OpenCON(void)
         h = CreateFileW(conW, GENERIC_READ, 0, NULL, accesses[i], 0, NULL);
         /* Windows versions differ here:
          * MSDN states in CreateFile that TRUNCATE_EXISTING requires GENERIC_WRITE
-         * NT, XP, Vista comply, but Win7 doesn't and allows to open CON with TRUNCATE_EXISTING
+         * NT, XP, Vista comply, but Win7 doesn't and allows opening CON with TRUNCATE_EXISTING
          * So don't test when disposition is TRUNCATE_EXISTING
          */
         if (accesses[i] != TRUNCATE_EXISTING)
@@ -1354,12 +1354,12 @@ static void test_WriteConsoleInputA(HANDLE input_handle)
         LPDWORD written;
         DWORD expected_count;
         DWORD last_error;
-        int win7_crash;
+        int win_crash;
     } invalid_table[] =
     {
         {NULL, NULL, 0, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
         {NULL, NULL, 0, &count, 0, ERROR_INVALID_HANDLE},
-        {NULL, NULL, 1, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS},
+        {NULL, NULL, 1, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
         {NULL, NULL, 1, &count, 0xdeadbeef, ERROR_INVALID_ACCESS},
         {NULL, &event, 0, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
         {NULL, &event, 0, &count, 0, ERROR_INVALID_HANDLE},
@@ -1367,14 +1367,14 @@ static void test_WriteConsoleInputA(HANDLE input_handle)
         {NULL, &event, 1, &count, 0, ERROR_INVALID_HANDLE},
         {INVALID_HANDLE_VALUE, NULL, 0, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
         {INVALID_HANDLE_VALUE, NULL, 0, &count, 0, ERROR_INVALID_HANDLE},
-        {INVALID_HANDLE_VALUE, NULL, 1, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS},
+        {INVALID_HANDLE_VALUE, NULL, 1, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
         {INVALID_HANDLE_VALUE, NULL, 1, &count, 0xdeadbeef, ERROR_INVALID_ACCESS},
         {INVALID_HANDLE_VALUE, &event, 0, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
         {INVALID_HANDLE_VALUE, &event, 0, &count, 0, ERROR_INVALID_HANDLE},
         {INVALID_HANDLE_VALUE, &event, 1, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
         {INVALID_HANDLE_VALUE, &event, 1, &count, 0, ERROR_INVALID_HANDLE},
         {input_handle, NULL, 0, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
-        {input_handle, NULL, 1, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS},
+        {input_handle, NULL, 1, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
         {input_handle, NULL, 1, &count, 0xdeadbeef, ERROR_INVALID_ACCESS},
         {input_handle, &event, 0, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
         {input_handle, &event, 1, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
@@ -1406,7 +1406,7 @@ static void test_WriteConsoleInputA(HANDLE input_handle)
 
     for (i = 0; i < sizeof(invalid_table)/sizeof(invalid_table[0]); i++)
     {
-        if (invalid_table[i].win7_crash)
+        if (invalid_table[i].win_crash)
             continue;
 
         SetLastError(0xdeadbeef);
@@ -1597,12 +1597,12 @@ static void test_WriteConsoleInputW(HANDLE input_handle)
         LPDWORD written;
         DWORD expected_count;
         DWORD last_error;
-        int win7_crash;
+        int win_crash;
     } invalid_table[] =
     {
         {NULL, NULL, 0, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
         {NULL, NULL, 0, &count, 0, ERROR_INVALID_HANDLE},
-        {NULL, NULL, 1, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS},
+        {NULL, NULL, 1, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
         {NULL, NULL, 1, &count, 0xdeadbeef, ERROR_INVALID_ACCESS},
         {NULL, &event, 0, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
         {NULL, &event, 0, &count, 0, ERROR_INVALID_HANDLE},
@@ -1610,14 +1610,14 @@ static void test_WriteConsoleInputW(HANDLE input_handle)
         {NULL, &event, 1, &count, 0, ERROR_INVALID_HANDLE},
         {INVALID_HANDLE_VALUE, NULL, 0, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
         {INVALID_HANDLE_VALUE, NULL, 0, &count, 0, ERROR_INVALID_HANDLE},
-        {INVALID_HANDLE_VALUE, NULL, 1, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS},
+        {INVALID_HANDLE_VALUE, NULL, 1, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
         {INVALID_HANDLE_VALUE, NULL, 1, &count, 0xdeadbeef, ERROR_INVALID_ACCESS},
         {INVALID_HANDLE_VALUE, &event, 0, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
         {INVALID_HANDLE_VALUE, &event, 0, &count, 0, ERROR_INVALID_HANDLE},
         {INVALID_HANDLE_VALUE, &event, 1, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
         {INVALID_HANDLE_VALUE, &event, 1, &count, 0, ERROR_INVALID_HANDLE},
         {input_handle, NULL, 0, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
-        {input_handle, NULL, 1, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS},
+        {input_handle, NULL, 1, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
         {input_handle, NULL, 1, &count, 0xdeadbeef, ERROR_INVALID_ACCESS},
         {input_handle, &event, 0, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
         {input_handle, &event, 1, NULL, 0xdeadbeef, ERROR_INVALID_ACCESS, 1},
@@ -1649,7 +1649,7 @@ static void test_WriteConsoleInputW(HANDLE input_handle)
 
     for (i = 0; i < sizeof(invalid_table)/sizeof(invalid_table[0]); i++)
     {
-        if (invalid_table[i].win7_crash)
+        if (invalid_table[i].win_crash)
             continue;
 
         SetLastError(0xdeadbeef);

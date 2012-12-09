@@ -63,7 +63,7 @@ static IMAGE_NT_HEADERS nt_header =
 #elif defined __sparc__
       IMAGE_FILE_MACHINE_SPARC, /* Machine */
 #elif defined __arm__
-      IMAGE_FILE_MACHINE_ARMV7, /* Machine */
+      IMAGE_FILE_MACHINE_ARMNT, /* Machine */
 #else
 # error You must specify the machine type
 #endif

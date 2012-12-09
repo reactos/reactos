@@ -298,18 +298,6 @@ static void     doChild(const char* file, const char* option)
         childPrintf(hFile, "argvA%d=%s\n", i, encodeA(myARGV[i]));
     }
     childPrintf(hFile, "CommandLineA=%s\n", encodeA(GetCommandLineA()));
-
-#if 0
-    int                 argcW;
-    WCHAR**             argvW;
-
-    /* this is part of shell32... and should be tested there */
-    argvW = CommandLineToArgvW(GetCommandLineW(), &argcW);
-    for (i = 0; i < argcW; i++)
-    {
-        childPrintf(hFile, "argvW%d=%s\n", i, encodeW(argvW[i]));
-    }
-#endif
     childPrintf(hFile, "CommandLineW=%s\n\n", encodeW(GetCommandLineW()));
 
     /* output of environment (Ansi) */

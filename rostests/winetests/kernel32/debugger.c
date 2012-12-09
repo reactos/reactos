@@ -287,6 +287,13 @@ static void crash_and_debug(HKEY hkey, const char* argv0, const char* dbgtasks)
     }
 
     ret=RegSetValueExA(hkey, "auto", 0, REG_SZ, (BYTE*)"1", 2);
+    if (ret == ERROR_ACCESS_DENIED)
+    {
+        skip_crash_and_debug = TRUE;
+        skip("No write access to change the debugger\n");
+        return;
+    }
+
     ok(ret == ERROR_SUCCESS, "unable to set AeDebug/auto: ret=%d\n", ret);
 
     get_file_name(dbglog);

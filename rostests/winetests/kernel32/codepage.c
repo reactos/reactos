@@ -189,6 +189,74 @@ static void test_negative_dest_length(void)
 
 }
 
+static void test_other_invalid_parameters(void)
+{
+    char c_string[] = "Hello World";
+    size_t c_string_len = sizeof(c_string);
+    WCHAR w_string[] = {'H','e','l','l','o',' ','W','o','r','l','d',0};
+    size_t w_string_len = sizeof(w_string) / sizeof(WCHAR);
+    BOOL used;
+    INT len;
+
+    /* srclen=0 => ERROR_INVALID_PARAMETER */
+    SetLastError(0xdeadbeef);
+    len = WideCharToMultiByte(CP_ACP, 0, w_string, 0, c_string, c_string_len, NULL, NULL);
+    ok(len == 0 && GetLastError() == ERROR_INVALID_PARAMETER, "len=%d error=%x\n", len, GetLastError());
+
+    SetLastError(0xdeadbeef);
+    len = MultiByteToWideChar(CP_ACP, 0, c_string, 0, w_string, w_string_len);
+    ok(len == 0 && GetLastError() == ERROR_INVALID_PARAMETER, "len=%d error=%x\n", len, GetLastError());
+
+
+    /* dst=NULL but dstlen not 0 => ERROR_INVALID_PARAMETER */
+    SetLastError(0xdeadbeef);
+    len = WideCharToMultiByte(CP_ACP, 0, w_string, w_string_len, NULL, c_string_len, NULL, NULL);
+    ok(len == 0 && GetLastError() == ERROR_INVALID_PARAMETER, "len=%d error=%x\n", len, GetLastError());
+
+    SetLastError(0xdeadbeef);
+    len = MultiByteToWideChar(CP_ACP, 0, c_string, c_string_len, NULL, w_string_len);
+    ok(len == 0 && GetLastError() == ERROR_INVALID_PARAMETER, "len=%d error=%x\n", len, GetLastError());
+
+
+    /* CP_UTF7, CP_UTF8, or CP_SYMBOL and defchar not NULL => ERROR_INVALID_PARAMETER */
+    /* CP_SYMBOL's behavior here is undocumented */
+    SetLastError(0xdeadbeef);
+    len = WideCharToMultiByte(CP_UTF7, 0, w_string, w_string_len, c_string, c_string_len, c_string, NULL);
+    ok(len == 0 && GetLastError() == ERROR_INVALID_PARAMETER, "len=%d error=%x\n", len, GetLastError());
+
+    SetLastError(0xdeadbeef);
+    len = WideCharToMultiByte(CP_UTF8, 0, w_string, w_string_len, c_string, c_string_len, c_string, NULL);
+    ok(len == 0 && GetLastError() == ERROR_INVALID_PARAMETER, "len=%d error=%x\n", len, GetLastError());
+
+    SetLastError(0xdeadbeef);
+    len = WideCharToMultiByte(CP_SYMBOL, 0, w_string, w_string_len, c_string, c_string_len, c_string, NULL);
+    ok(len == 0 && GetLastError() == ERROR_INVALID_PARAMETER, "len=%d error=%x\n", len, GetLastError());
+
+
+    /* CP_UTF7, CP_UTF8, or CP_SYMBOL and used not NULL => ERROR_INVALID_PARAMETER */
+    /* CP_SYMBOL's behavior here is undocumented */
+    SetLastError(0xdeadbeef);
+    len = WideCharToMultiByte(CP_UTF7, 0, w_string, w_string_len, c_string, c_string_len, NULL, &used);
+    ok(len == 0 && GetLastError() == ERROR_INVALID_PARAMETER, "len=%d error=%x\n", len, GetLastError());
+
+    SetLastError(0xdeadbeef);
+    len = WideCharToMultiByte(CP_UTF8, 0, w_string, w_string_len, c_string, c_string_len, NULL, &used);
+    ok(len == 0 && GetLastError() == ERROR_INVALID_PARAMETER, "len=%d error=%x\n", len, GetLastError());
+
+    SetLastError(0xdeadbeef);
+    len = WideCharToMultiByte(CP_SYMBOL, 0, w_string, w_string_len, c_string, c_string_len, NULL, &used);
+    ok(len == 0 && GetLastError() == ERROR_INVALID_PARAMETER, "len=%d error=%x\n", len, GetLastError());
+
+
+    /* CP_UTF7, flags not 0 and used not NULL => ERROR_INVALID_PARAMETER */
+    /* (tests precedence of ERROR_INVALID_PARAMETER over ERROR_INVALID_FLAGS) */
+    /* The same test with CP_SYMBOL instead of CP_UTF7 gives ERROR_INVALID_FLAGS
+       instead except on Windows NT4 */
+    SetLastError(0xdeadbeef);
+    len = WideCharToMultiByte(CP_UTF7, 1, w_string, w_string_len, c_string, c_string_len, NULL, &used);
+    ok(len == 0 && GetLastError() == ERROR_INVALID_PARAMETER, "len=%d error=%x\n", len, GetLastError());
+}
+
 static void test_overlapped_buffers(void)
 {
     static const WCHAR strW[] = {'j','u','s','t',' ','a',' ','t','e','s','t',0};
@@ -402,6 +470,7 @@ START_TEST(codepage)
     test_null_source();
     test_negative_source_length();
     test_negative_dest_length();
+    test_other_invalid_parameters();
     test_overlapped_buffers();
 
     /* WideCharToMultiByte has two code paths, test both here */

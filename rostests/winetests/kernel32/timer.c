@@ -23,27 +23,24 @@
 #include "wine/test.h"
 #include "winbase.h"
 
-typedef HANDLE (WINAPI *fnCreateWaitableTimerA)( SECURITY_ATTRIBUTES*, BOOL, LPSTR );
-typedef BOOL (WINAPI *fnSetWaitableTimer)(HANDLE, LARGE_INTEGER*, LONG, PTIMERAPCROUTINE, LPVOID, BOOL);
-
 
 static void test_timer(void)
 {
+    HANDLE (WINAPI *pCreateWaitableTimerA)( SECURITY_ATTRIBUTES*, BOOL, LPSTR );
+    BOOL (WINAPI *pSetWaitableTimer)(HANDLE, LARGE_INTEGER*, LONG, PTIMERAPCROUTINE, LPVOID, BOOL);
     HMODULE hker = GetModuleHandle("kernel32");
-    fnCreateWaitableTimerA pCreateWaitableTimerA;
-    fnSetWaitableTimer pSetWaitableTimer;
     HANDLE handle;
     BOOL r;
     LARGE_INTEGER due;
 
-    pCreateWaitableTimerA = (fnCreateWaitableTimerA) GetProcAddress( hker, "CreateWaitableTimerA");
+    pCreateWaitableTimerA = (void*)GetProcAddress( hker, "CreateWaitableTimerA");
     if( !pCreateWaitableTimerA )
     {
         win_skip("CreateWaitableTimerA is not available\n");
         return;
     }
 
-    pSetWaitableTimer = (fnSetWaitableTimer) GetProcAddress( hker, "SetWaitableTimer");
+    pSetWaitableTimer = (void*)GetProcAddress( hker, "SetWaitableTimer");
     if( !pSetWaitableTimer )
     {
         win_skip("SetWaitableTimer is not available\n");

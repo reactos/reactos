@@ -476,12 +476,16 @@ static void testGetDllDirectory(void)
         ok(bufferW[0] == 0 || /* XP, 2003 */
            broken(bufferW[0] == 'A'), "i=%d, Buffer overflow\n", i);
 
-        /* no buffer, but too short length */
-        ret = pGetDllDirectoryA(length, NULL);
-        ok(ret == length + 1, "i=%d, Expected %u, got %u\n", i, length + 1, ret);
+        if (0)
+        {
+            /* crashes on win8 */
+            /* no buffer, but too short length */
+            ret = pGetDllDirectoryA(length, NULL);
+            ok(ret == length + 1, "i=%d, Expected %u, got %u\n", i, length + 1, ret);
 
-        ret = pGetDllDirectoryW(length, NULL);
-        ok(ret == length + 1, "i=%d, Expected %u, got %u\n", i, length + 1, ret);
+            ret = pGetDllDirectoryW(length, NULL);
+            ok(ret == length + 1, "i=%d, Expected %u, got %u\n", i, length + 1, ret);
+        }
     }
 
     /* unset whatever we did so following tests won't be affected */

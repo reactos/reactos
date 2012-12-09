@@ -21,7 +21,7 @@
  */
 
 /* ReplaceFile requires Windows 2000 or newer */
-#define _WIN32_WINNT 0x0500
+#define _WIN32_WINNT 0x0600
 
 #include <stdarg.h>
 #include <stdlib.h>
@@ -32,6 +32,7 @@
 #include "windef.h"
 #include "winbase.h"
 #include "winerror.h"
+#include "winnls.h"
 
 static HANDLE (WINAPI *pFindFirstFileExA)(LPCSTR,FINDEX_INFO_LEVELS,LPVOID,FINDEX_SEARCH_OPS,LPVOID,DWORD);
 static BOOL (WINAPI *pReplaceFileA)(LPCSTR, LPCSTR, LPCSTR, DWORD, LPVOID, LPVOID);
@@ -39,6 +40,9 @@ static BOOL (WINAPI *pReplaceFileW)(LPCWSTR, LPCWSTR, LPCWSTR, DWORD, LPVOID, LP
 static UINT (WINAPI *pGetSystemWindowsDirectoryA)(LPSTR, UINT);
 static BOOL (WINAPI *pGetVolumeNameForVolumeMountPointA)(LPCSTR, LPSTR, DWORD);
 static DWORD (WINAPI *pQueueUserAPC)(PAPCFUNC pfnAPC, HANDLE hThread, ULONG_PTR dwData);
+static BOOL (WINAPI *pGetFileInformationByHandleEx)(HANDLE, FILE_INFO_BY_HANDLE_CLASS, LPVOID, DWORD);
+static HANDLE (WINAPI *pOpenFileById)(HANDLE, LPFILE_ID_DESCRIPTOR, DWORD, DWORD, LPSECURITY_ATTRIBUTES, DWORD);
+static BOOL (WINAPI *pSetFileValidData)(HANDLE, LONGLONG);
 
 /* keep filename and filenameW the same */
 static const char filename[] = "testfile.xxx";
@@ -73,6 +77,9 @@ static void InitFunctionPointers(void)
     pGetSystemWindowsDirectoryA=(void*)GetProcAddress(hkernel32, "GetSystemWindowsDirectoryA");
     pGetVolumeNameForVolumeMountPointA = (void *) GetProcAddress(hkernel32, "GetVolumeNameForVolumeMountPointA");
     pQueueUserAPC = (void *) GetProcAddress(hkernel32, "QueueUserAPC");
+    pGetFileInformationByHandleEx = (void *) GetProcAddress(hkernel32, "GetFileInformationByHandleEx");
+    pOpenFileById = (void *) GetProcAddress(hkernel32, "OpenFileById");
+    pSetFileValidData = (void *) GetProcAddress(hkernel32, "SetFileValidData");
 }
 
 static void test__hread( void )
@@ -796,7 +803,7 @@ static void dumpmem(unsigned char *mem, int len)
         p = hex;
         c = txt;
         do {
-            p += sprintf(p, "%02hhx ", mem[x]);
+            p += sprintf(p, "%02x ", mem[x]);
             *c++ = (mem[x] >= 32 && mem[x] <= 127) ? mem[x] : '.';
         } while (++x % 16 && x < len);
         *c = '\0';
@@ -1291,6 +1298,8 @@ static void test_GetTempFileNameA(void)
 static void test_DeleteFileA( void )
 {
     BOOL ret;
+    char temp_path[MAX_PATH], temp_file[MAX_PATH];
+    HANDLE hfile;
 
     ret = DeleteFileA(NULL);
     ok(!ret && (GetLastError() == ERROR_INVALID_PARAMETER ||
@@ -1308,6 +1317,25 @@ static void test_DeleteFileA( void )
                 GetLastError() == ERROR_ACCESS_DENIED ||
                 GetLastError() == ERROR_INVALID_FUNCTION),
        "DeleteFileA(\"nul\") returned ret=%d error=%d\n",ret,GetLastError());
+
+    GetTempPathA(MAX_PATH, temp_path);
+    GetTempFileName(temp_path, "tst", 0, temp_file);
+
+    SetLastError(0xdeadbeef);
+    hfile = CreateFile(temp_file, GENERIC_READ, FILE_SHARE_DELETE | FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, 0);
+    ok(hfile != INVALID_HANDLE_VALUE, "CreateFile error %d\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = DeleteFile(temp_file);
+todo_wine
+    ok(ret, "DeleteFile error %d\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = CloseHandle(hfile);
+    ok(ret, "CloseHandle error %d\n", GetLastError());
+    ret = DeleteFile(temp_file);
+todo_wine
+    ok(!ret, "DeleteFile should fail\n");
 }
 
 static void test_DeleteFileW( void )
@@ -1758,7 +1786,7 @@ static BOOL create_fake_dll( LPCSTR filename )
 #elif defined __sparc__
     nt->FileHeader.Machine = IMAGE_FILE_MACHINE_SPARC;
 #elif defined __arm__
-    nt->FileHeader.Machine = IMAGE_FILE_MACHINE_ARMV7;
+    nt->FileHeader.Machine = IMAGE_FILE_MACHINE_ARMNT;
 #else
 # error You must specify the machine type
 #endif
@@ -3237,6 +3265,314 @@ static void test_CreatFile(void)
     DeleteFile(file_name);
 }
 
+static void test_GetFileInformationByHandleEx(void)
+{
+    int i;
+    char tempPath[MAX_PATH], tempFileName[MAX_PATH], buffer[1024];
+    BOOL ret;
+    DWORD ret2;
+    HANDLE directory;
+    FILE_ID_BOTH_DIR_INFO *bothDirInfo;
+    struct {
+        FILE_INFO_BY_HANDLE_CLASS handleClass;
+        void *ptr;
+        DWORD size;
+        DWORD errorCode;
+    } checks[] = {
+        {0xdeadbeef, NULL, 0, ERROR_INVALID_PARAMETER},
+        {FileIdBothDirectoryInfo, NULL, 0, ERROR_BAD_LENGTH},
+        {FileIdBothDirectoryInfo, NULL, sizeof(buffer), ERROR_NOACCESS},
+        {FileIdBothDirectoryInfo, buffer, 0, ERROR_BAD_LENGTH}};
+
+    if (!pGetFileInformationByHandleEx)
+    {
+        win_skip("GetFileInformationByHandleEx is missing.\n");
+        return;
+    }
+
+    ret2 = GetTempPathA(sizeof(tempPath), tempPath);
+    ok(ret2, "GetFileInformationByHandleEx: GetTempPathA failed, got error %u.\n", GetLastError());
+
+    /* ensure the existence of a file in the temp folder */
+    ret2 = GetTempFileNameA(tempPath, "abc", 0, tempFileName);
+    ok(ret2, "GetFileInformationByHandleEx: GetTempFileNameA failed, got error %u.\n", GetLastError());
+    ok(GetFileAttributesA(tempFileName) != INVALID_FILE_ATTRIBUTES, "GetFileInformationByHandleEx: "
+        "GetFileAttributesA failed to find the temp file, got error %u.\n", GetLastError());
+
+    directory = CreateFileA(tempPath, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+        NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+    ok(directory != INVALID_HANDLE_VALUE, "GetFileInformationByHandleEx: failed to open the temp folder, "
+        "got error %u.\n", GetLastError());
+
+    for (i = 0; i < sizeof(checks) / sizeof(checks[0]); i += 1)
+    {
+        SetLastError(0xdeadbeef);
+        ret = pGetFileInformationByHandleEx(directory, checks[i].handleClass, checks[i].ptr, checks[i].size);
+        ok(!ret && GetLastError() == checks[i].errorCode, "GetFileInformationByHandleEx: expected error %u, "
+           "got %u.\n", checks[i].errorCode, GetLastError());
+    }
+
+    while (TRUE)
+    {
+        memset(buffer, 0xff, sizeof(buffer));
+        ret = pGetFileInformationByHandleEx(directory, FileIdBothDirectoryInfo, buffer, sizeof(buffer));
+        if (!ret && GetLastError() == ERROR_NO_MORE_FILES)
+            break;
+        ok(ret, "GetFileInformationByHandleEx: failed to query for FileIdBothDirectoryInfo, got error %u.\n", GetLastError());
+        if (!ret)
+            break;
+        bothDirInfo = (FILE_ID_BOTH_DIR_INFO *)buffer;
+        while (TRUE)
+        {
+            ok(bothDirInfo->FileAttributes != 0xffffffff, "GetFileInformationByHandleEx: returned invalid file attributes.\n");
+            ok(bothDirInfo->FileId.u.LowPart != 0xffffffff, "GetFileInformationByHandleEx: returned invalid file id.\n");
+            ok(bothDirInfo->FileNameLength != 0xffffffff, "GetFileInformationByHandleEx: returned invalid file name length.\n");
+            if (!bothDirInfo->NextEntryOffset)
+                break;
+            bothDirInfo = (FILE_ID_BOTH_DIR_INFO *)(((char *)bothDirInfo) + bothDirInfo->NextEntryOffset);
+        }
+    }
+
+    CloseHandle(directory);
+    DeleteFile(tempFileName);
+}
+
+static void test_OpenFileById(void)
+{
+    char tempPath[MAX_PATH], tempFileName[MAX_PATH], buffer[256], tickCount[256];
+    WCHAR tempFileNameW[MAX_PATH];
+    BOOL ret, found;
+    DWORD ret2, count, tempFileNameLen;
+    HANDLE directory, handle, tempFile;
+    FILE_ID_BOTH_DIR_INFO *bothDirInfo;
+    FILE_ID_DESCRIPTOR fileIdDescr;
+
+    if (!pGetFileInformationByHandleEx || !pOpenFileById)
+    {
+        win_skip("GetFileInformationByHandleEx or OpenFileById is missing.\n");
+        return;
+    }
+
+    ret2 = GetTempPathA(sizeof(tempPath), tempPath);
+    ok(ret2, "OpenFileById: GetTempPath failed, got error %u.\n", GetLastError());
+
+    /* ensure the existence of a file in the temp folder */
+    ret2 = GetTempFileNameA(tempPath, "abc", 0, tempFileName);
+    ok(ret2, "OpenFileById: GetTempFileNameA failed, got error %u.\n", GetLastError());
+    ok(GetFileAttributesA(tempFileName) != INVALID_FILE_ATTRIBUTES,
+        "OpenFileById: GetFileAttributesA failed to find the temp file, got error %u\n", GetLastError());
+
+    ret2 = MultiByteToWideChar(CP_ACP, 0, tempFileName + strlen(tempPath), -1, tempFileNameW, sizeof(tempFileNameW)/sizeof(tempFileNameW[0]));
+    ok(ret2, "OpenFileById: MultiByteToWideChar failed to convert tempFileName, got error %u.\n", GetLastError());
+    tempFileNameLen = ret2 - 1;
+
+    tempFile = CreateFileA(tempFileName, GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    ok(tempFile != INVALID_HANDLE_VALUE, "OpenFileById: failed to create a temp file, "
+	    "got error %u.\n", GetLastError());
+    ret2 = sprintf(tickCount, "%u", GetTickCount());
+    ret = WriteFile(tempFile, tickCount, ret2, &count, NULL);
+    ok(ret, "OpenFileById: WriteFile failed, got error %u.\n", GetLastError());
+    CloseHandle(tempFile);
+
+    directory = CreateFileA(tempPath, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+        NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+    ok(directory != INVALID_HANDLE_VALUE, "OpenFileById: failed to open the temp folder, "
+        "got error %u.\n", GetLastError());
+
+    /* get info about the temp folder itself */
+    bothDirInfo = (FILE_ID_BOTH_DIR_INFO *)buffer;
+    ret = pGetFileInformationByHandleEx(directory, FileIdBothDirectoryInfo, buffer, sizeof(buffer));
+    ok(ret, "OpenFileById: failed to query for FileIdBothDirectoryInfo, got error %u.\n", GetLastError());
+    ok(bothDirInfo->FileNameLength == sizeof(WCHAR) && bothDirInfo->FileName[0] == '.',
+        "OpenFileById: failed to return the temp folder at the first entry, got error %u.\n", GetLastError());
+
+    /* open the temp folder itself */
+    fileIdDescr.dwSize    = sizeof(fileIdDescr);
+    fileIdDescr.Type      = FileIdType;
+    U(fileIdDescr).FileId = bothDirInfo->FileId;
+    handle = pOpenFileById(directory, &fileIdDescr, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, 0);
+    todo_wine
+    ok(handle != INVALID_HANDLE_VALUE, "OpenFileById: failed to open the temp folder itself, got error %u.\n", GetLastError());
+    CloseHandle(handle);
+
+    /* find the temp file in the temp folder */
+    found = FALSE;
+    while (!found)
+    {
+        ret = pGetFileInformationByHandleEx(directory, FileIdBothDirectoryInfo, buffer, sizeof(buffer));
+        ok(ret, "OpenFileById: failed to query for FileIdBothDirectoryInfo, got error %u.\n", GetLastError());
+        if (!ret)
+            break;
+        bothDirInfo = (FILE_ID_BOTH_DIR_INFO *)buffer;
+        while (TRUE)
+        {
+            if (tempFileNameLen == bothDirInfo->FileNameLength / sizeof(WCHAR) &&
+                memcmp(tempFileNameW, bothDirInfo->FileName, bothDirInfo->FileNameLength) == 0)
+            {
+                found = TRUE;
+                break;
+            }
+            if (!bothDirInfo->NextEntryOffset)
+                break;
+            bothDirInfo = (FILE_ID_BOTH_DIR_INFO *)(((char *)bothDirInfo) + bothDirInfo->NextEntryOffset);
+        }
+    }
+    ok(found, "OpenFileById: failed to find the temp file in the temp folder.\n");
+
+    SetLastError(0xdeadbeef);
+    handle = pOpenFileById(directory, NULL, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, 0);
+    ok(handle == INVALID_HANDLE_VALUE && GetLastError() == ERROR_INVALID_PARAMETER,
+        "OpenFileById: expected ERROR_INVALID_PARAMETER, got error %u.\n", GetLastError());
+
+    fileIdDescr.dwSize    = sizeof(fileIdDescr);
+    fileIdDescr.Type      = FileIdType;
+    U(fileIdDescr).FileId = bothDirInfo->FileId;
+    handle = pOpenFileById(directory, &fileIdDescr, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, 0);
+    ok(handle != INVALID_HANDLE_VALUE, "OpenFileById: failed to open the file, got error %u.\n", GetLastError());
+
+    ret = ReadFile(handle, buffer, sizeof(buffer), &count, NULL);
+    buffer[count] = 0;
+    ok(ret, "OpenFileById: ReadFile failed, got error %u.\n", GetLastError());
+    ok(strcmp(tickCount, buffer) == 0, "OpenFileById: invalid contents of the temp file.\n");
+
+    CloseHandle(handle);
+    CloseHandle(directory);
+    DeleteFile(tempFileName);
+}
+
+static void test_SetFileValidData(void)
+{
+    BOOL ret;
+    HANDLE handle;
+    DWORD error, count;
+    char path[MAX_PATH], filename[MAX_PATH];
+    TOKEN_PRIVILEGES privs;
+    HANDLE token = NULL;
+
+    if (!pSetFileValidData)
+    {
+        win_skip("SetFileValidData is missing\n");
+        return;
+    }
+    GetTempPathA(sizeof(path), path);
+    GetTempFileNameA(path, "tst", 0, filename);
+    handle = CreateFileA(filename, GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
+    WriteFile(handle, "test", sizeof("test") - 1, &count, NULL);
+    CloseHandle(handle);
+
+    SetLastError(0xdeadbeef);
+    ret = pSetFileValidData(INVALID_HANDLE_VALUE, 0);
+    error = GetLastError();
+    ok(!ret, "SetFileValidData succeeded\n");
+    ok(error == ERROR_INVALID_HANDLE, "got %u\n", error);
+
+    SetLastError(0xdeadbeef);
+    ret = pSetFileValidData(INVALID_HANDLE_VALUE, -1);
+    error = GetLastError();
+    ok(!ret, "SetFileValidData succeeded\n");
+    ok(error == ERROR_INVALID_HANDLE, "got %u\n", error);
+
+    /* file opened for reading */
+    handle = CreateFileA(filename, GENERIC_READ, 0, NULL, OPEN_EXISTING, 0, NULL);
+
+    SetLastError(0xdeadbeef);
+    ret = pSetFileValidData(handle, 0);
+    ok(!ret, "SetFileValidData succeeded\n");
+    error = GetLastError();
+    ok(error == ERROR_ACCESS_DENIED, "got %u\n", error);
+
+    SetLastError(0xdeadbeef);
+    ret = pSetFileValidData(handle, -1);
+    error = GetLastError();
+    ok(!ret, "SetFileValidData succeeded\n");
+    ok(error == ERROR_ACCESS_DENIED, "got %u\n", error);
+    CloseHandle(handle);
+
+    handle = CreateFileA(filename, GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
+
+    SetLastError(0xdeadbeef);
+    ret = pSetFileValidData(handle, 0);
+    error = GetLastError();
+    ok(!ret, "SetFileValidData succeeded\n");
+    todo_wine ok(error == ERROR_PRIVILEGE_NOT_HELD, "got %u\n", error);
+    CloseHandle(handle);
+
+    privs.PrivilegeCount = 1;
+    privs.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+
+    if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &token) ||
+        !LookupPrivilegeValue(NULL, SE_MANAGE_VOLUME_NAME, &privs.Privileges[0].Luid) ||
+        !AdjustTokenPrivileges(token, FALSE, &privs, sizeof(privs), NULL, NULL))
+    {
+        win_skip("cannot enable SE_MANAGE_VOLUME_NAME privilege\n");
+        CloseHandle(token);
+        return;
+    }
+    handle = CreateFileA(filename, GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
+
+    SetLastError(0xdeadbeef);
+    ret = pSetFileValidData(handle, 0);
+    error = GetLastError();
+    ok(!ret, "SetFileValidData succeeded\n");
+    ok(error == ERROR_INVALID_PARAMETER, "got %u\n", error);
+
+    SetLastError(0xdeadbeef);
+    ret = pSetFileValidData(handle, -1);
+    error = GetLastError();
+    ok(!ret, "SetFileValidData succeeded\n");
+    ok(error == ERROR_INVALID_PARAMETER, "got %u\n", error);
+
+    SetLastError(0xdeadbeef);
+    ret = pSetFileValidData(handle, 2);
+    error = GetLastError();
+    todo_wine ok(!ret, "SetFileValidData succeeded\n");
+    todo_wine ok(error == ERROR_INVALID_PARAMETER, "got %u\n", error);
+
+    ret = pSetFileValidData(handle, 4);
+    ok(ret, "SetFileValidData failed %u\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = pSetFileValidData(handle, 8);
+    error = GetLastError();
+    ok(!ret, "SetFileValidData succeeded\n");
+    ok(error == ERROR_INVALID_PARAMETER, "got %u\n", error);
+
+    count = SetFilePointer(handle, 1024, NULL, FILE_END);
+    ok(count != INVALID_SET_FILE_POINTER, "SetFilePointer failed %u\n", GetLastError());
+    ret = SetEndOfFile(handle);
+    ok(ret, "SetEndOfFile failed %u\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = pSetFileValidData(handle, 2);
+    error = GetLastError();
+    todo_wine ok(!ret, "SetFileValidData succeeded\n");
+    todo_wine ok(error == ERROR_INVALID_PARAMETER, "got %u\n", error);
+
+    ret = pSetFileValidData(handle, 4);
+    ok(ret, "SetFileValidData failed %u\n", GetLastError());
+
+    ret = pSetFileValidData(handle, 8);
+    ok(ret, "SetFileValidData failed %u\n", GetLastError());
+
+    ret = pSetFileValidData(handle, 4);
+    error = GetLastError();
+    todo_wine ok(!ret, "SetFileValidData succeeded\n");
+    todo_wine ok(error == ERROR_INVALID_PARAMETER, "got %u\n", error);
+
+    ret = pSetFileValidData(handle, 1024);
+    ok(ret, "SetFileValidData failed %u\n", GetLastError());
+
+    ret = pSetFileValidData(handle, 2048);
+    error = GetLastError();
+    ok(!ret, "SetFileValidData succeeded\n");
+    ok(error == ERROR_INVALID_PARAMETER, "got %u\n", error);
+
+    privs.Privileges[0].Attributes = 0;
+    AdjustTokenPrivileges(token, FALSE, &privs, sizeof(privs), NULL, NULL);
+    CloseHandle(token);
+    DeleteFile(filename);
+}
+
 START_TEST(file)
 {
     InitFunctionPointers();
@@ -3276,4 +3612,7 @@ START_TEST(file)
     test_RemoveDirectory();
     test_ReplaceFileA();
     test_ReplaceFileW();
+    test_GetFileInformationByHandleEx();
+    test_OpenFileById();
+    test_SetFileValidData();
 }

@@ -18,29 +18,86 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+/* Needed for PRODUCT_* defines and GetProductInfo() */
+#define _WIN32_WINNT 0x0600
+
 #include <assert.h>
 
 #include "wine/test.h"
 #include "winbase.h"
 
+static BOOL (WINAPI * pGetProductInfo)(DWORD, DWORD, DWORD, DWORD, DWORD *);
 static BOOL (WINAPI * pVerifyVersionInfoA)(LPOSVERSIONINFOEXA, DWORD, DWORDLONG);
 static ULONGLONG (WINAPI * pVerSetConditionMask)(ULONGLONG, DWORD, BYTE);
 
 #define KERNEL32_GET_PROC(func)                                     \
-    p##func = (void *)GetProcAddress(hKernel32, #func);             \
-    if(!p##func) trace("GetProcAddress(hKernel32, '%s') failed\n", #func);
+    p##func = (void *)GetProcAddress(hKernel32, #func);
 
 static void init_function_pointers(void)
 {
     HMODULE hKernel32;
 
-    pVerifyVersionInfoA = NULL;
-    pVerSetConditionMask = NULL;
-
     hKernel32 = GetModuleHandleA("kernel32.dll");
-    assert(hKernel32);
+
+    KERNEL32_GET_PROC(GetProductInfo);
     KERNEL32_GET_PROC(VerifyVersionInfoA);
     KERNEL32_GET_PROC(VerSetConditionMask);
+}
+
+static void test_GetProductInfo(void)
+{
+    DWORD product;
+    DWORD res;
+    DWORD table[] = {9,8,7,6,
+                     7,0,0,0,
+                     6,2,0,0,
+                     6,1,2,0,
+                     6,1,1,0,
+                     6,1,0,2,
+                     6,1,0,0,
+                     6,0,3,0,
+                     6,0,2,0,
+                     6,0,1,5,
+                     6,0,1,0,
+                     6,0,0,0,
+                     5,3,0,0,
+                     5,2,0,0,
+                     5,1,0,0,
+                     5,0,0,0,
+                     0};
+
+    DWORD *entry = table;
+
+    if (!pGetProductInfo)
+    {
+        /* Not present before Vista */
+        win_skip("GetProductInfo() not available\n");
+        return;
+    }
+
+    while (*entry)
+    {
+        /* SetLastError() / GetLastError(): value is untouched */
+        product = 0xdeadbeef;
+        SetLastError(0xdeadbeef);
+        res = pGetProductInfo(entry[0], entry[1], entry[2], entry[3], &product);
+
+        if (entry[0] >= 6)
+            ok(res && (product > PRODUCT_UNDEFINED) && (product <= PRODUCT_PROFESSIONAL_WMC),
+               "got %d and 0x%x (expected TRUE and a valid PRODUCT_* value)\n", res, product);
+        else
+            ok(!res && !product && (GetLastError() == 0xdeadbeef),
+               "got %d and 0x%x with 0x%x (expected FALSE and PRODUCT_UNDEFINED with LastError untouched)\n",
+               res, product, GetLastError());
+
+        entry+= 4;
+    }
+
+    /* NULL pointer is not a problem */
+    SetLastError(0xdeadbeef);
+    res = pGetProductInfo(6, 1, 0, 0, NULL);
+    ok( (!res) && (GetLastError() == 0xdeadbeef),
+        "got %d with 0x%x (expected FALSE with LastError untouched\n", res, GetLastError());
 }
 
 static void test_GetVersionEx(void)
@@ -95,8 +152,6 @@ static void test_GetVersionEx(void)
     ok(ret ||
        broken(ret == 0), /* win95 */
        "Expected GetVersionExA to succeed\n");
-    ok(GetLastError() == 0xdeadbeef,
-        "Expected 0xdeadbeef, got %d\n", GetLastError());
 }
 
 static void test_VerifyVersionInfo(void)
@@ -292,6 +347,7 @@ START_TEST(version)
 {
     init_function_pointers();
 
+    test_GetProductInfo();
     test_GetVersionEx();
     test_VerifyVersionInfo();
 }
