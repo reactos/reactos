@@ -51,6 +51,10 @@ typedef struct _LOCK_SHARED_RANGE
 }
     LOCK_SHARED_RANGE, *PLOCK_SHARED_RANGE;
 
+#define TAG_TABLE 'LTAB'
+#define TAG_RANGE 'FSRA'
+#define TAG_FLOCK 'FLCK'
+
 /* PRIVATE FUNCTIONS *********************************************************/
 
 VOID
@@ -67,7 +71,7 @@ FsRtlCompleteLockIrpReal(IN PCOMPLETE_LOCK_IRP_ROUTINE CompleteRoutine,
 static PVOID NTAPI LockAllocate(PRTL_GENERIC_TABLE Table, CLONG Bytes)
 {
     PVOID Result;
-    Result = ExAllocatePoolWithTag(NonPagedPool, Bytes, 'LTAB');
+    Result = ExAllocatePoolWithTag(NonPagedPool, Bytes, TAG_TABLE);
     DPRINT("LockAllocate(%d) => %p\n", Bytes, Result);
     return Result;
 }
@@ -75,7 +79,7 @@ static PVOID NTAPI LockAllocate(PRTL_GENERIC_TABLE Table, CLONG Bytes)
 static VOID NTAPI LockFree(PRTL_GENERIC_TABLE Table, PVOID Buffer)
 {
     DPRINT("LockFree(%p)\n", Buffer);
-    ExFreePoolWithTag(Buffer, 'LTAB');
+    ExFreePoolWithTag(Buffer, TAG_TABLE);
 }
 
 static RTL_GENERIC_COMPARE_RESULTS NTAPI LockCompare
@@ -379,7 +383,7 @@ FsRtlPrivateLock(IN PFILE_LOCK FileLock,
     /* Initialize the lock, if necessary */
     if (!FileLock->LockInformation)
     {
-        LockInfo = ExAllocatePoolWithTag(NonPagedPool, sizeof(LOCK_INFORMATION), 'FLCK');
+        LockInfo = ExAllocatePoolWithTag(NonPagedPool, sizeof(LOCK_INFORMATION), TAG_FLOCK);
         if (!LockInfo)
         {
             IoStatus->Status = STATUS_NO_MEMORY;
@@ -547,7 +551,7 @@ FsRtlPrivateLock(IN PFILE_LOCK FileLock,
             
             DPRINT("Adding shared lock %wZ\n", &FileObject->FileName);
             NewSharedRange = 
-                ExAllocatePoolWithTag(NonPagedPool, sizeof(*NewSharedRange), 'FSRA');
+                ExAllocatePoolWithTag(NonPagedPool, sizeof(*NewSharedRange), TAG_RANGE);
             if (!NewSharedRange)
             {
                 IoStatus->Status = STATUS_NO_MEMORY;
@@ -619,7 +623,7 @@ FsRtlPrivateLock(IN PFILE_LOCK FileLock,
         if (!ExclusiveLock)
         {
             NewSharedRange = 
-                ExAllocatePoolWithTag(NonPagedPool, sizeof(*NewSharedRange), 'FSRA');
+                ExAllocatePoolWithTag(NonPagedPool, sizeof(*NewSharedRange), TAG_RANGE);
             if (!NewSharedRange)
             {
                 IoStatus->Status = STATUS_NO_MEMORY;
@@ -917,7 +921,7 @@ FsRtlFastUnlockSingle(IN PFILE_LOCK FileLock,
         {
             /* Remove the found range from the shared range lists */
             RemoveEntryList(&SharedRange->Entry);
-            ExFreePoolWithTag(SharedRange, 'FSRA');
+            ExFreePoolWithTag(SharedRange, TAG_RANGE);
             /* We need to rebuild the list of shared ranges. */
             DPRINT("Removing the lock entry %wZ (%08x%08x:%08x%08x)\n", 
                    &FileObject->FileName, 
@@ -1284,7 +1288,7 @@ FsRtlUninitializeFileLock(IN PFILE_LOCK FileLock)
             SharedRange = CONTAINING_RECORD(SharedEntry, LOCK_SHARED_RANGE, Entry);
             SharedEntry = SharedEntry->Flink;
             RemoveEntryList(&SharedRange->Entry);
-            ExFreePoolWithTag(SharedRange, 'FSRA');
+            ExFreePoolWithTag(SharedRange, TAG_RANGE);
         }
         while ((Entry = RtlGetElementGenericTable(&InternalInfo->RangeTable, 0)) != NULL)
         {
@@ -1294,7 +1298,7 @@ FsRtlUninitializeFileLock(IN PFILE_LOCK FileLock)
         {
             FsRtlProcessFileLock(FileLock, Irp, NULL);
         }
-        ExFreePoolWithTag(InternalInfo, 'FLCK');
+        ExFreePoolWithTag(InternalInfo, TAG_FLOCK);
         FileLock->LockInformation = NULL;
     }
 }
