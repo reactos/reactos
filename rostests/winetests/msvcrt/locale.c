@@ -622,7 +622,6 @@ static void test_crtGetStringTypeW(void)
     ok(!ret, "ret == TRUE\n");
 }
 
-#if ROSTESTS_91_IS_FIXED
 static void test__Gettnames(void)
 {
     struct {
@@ -742,7 +741,6 @@ static void test__Gettnames(void)
 
     setlocale(LC_ALL, "C");
 }
-#endif
 
 static void test___mb_cur_max_func(void)
 {
@@ -799,8 +797,6 @@ START_TEST(locale)
 
     test_crtGetStringTypeW();
     test_setlocale();
-#if ROSTESTS_91_IS_FIXED
     test__Gettnames();
-#endif
     test___mb_cur_max_func();
 }
