@@ -355,6 +355,7 @@ USBCCGP_ScanConfigurationDescriptor(
         }
         else
         {
+            DumpConfigurationDescriptor(ConfigurationDescriptor);
             DumpFullConfigurationDescriptor(FDODeviceExtension, ConfigurationDescriptor);
 
             //
@@ -386,15 +387,15 @@ USBCCGP_ScanConfigurationDescriptor(
 VOID
 DumpConfigurationDescriptor(PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor)
 {
-    DPRINT1("Dumping ConfigurationDescriptor %x\n", ConfigurationDescriptor);
-    DPRINT1("bLength %x\n", ConfigurationDescriptor->bLength);
-    DPRINT1("bDescriptorType %x\n", ConfigurationDescriptor->bDescriptorType);
-    DPRINT1("wTotalLength %x\n", ConfigurationDescriptor->wTotalLength);
-    DPRINT1("bNumInterfaces %x\n", ConfigurationDescriptor->bNumInterfaces);
-    DPRINT1("bConfigurationValue %x\n", ConfigurationDescriptor->bConfigurationValue);
-    DPRINT1("iConfiguration %x\n", ConfigurationDescriptor->iConfiguration);
-    DPRINT1("bmAttributes %x\n", ConfigurationDescriptor->bmAttributes);
-    DPRINT1("MaxPower %x\n", ConfigurationDescriptor->MaxPower);
+    DbgPrint("Dumping ConfigurationDescriptor %x\n", ConfigurationDescriptor);
+    DbgPrint("bLength %x\n", ConfigurationDescriptor->bLength);
+    DbgPrint("bDescriptorType %x\n", ConfigurationDescriptor->bDescriptorType);
+    DbgPrint("wTotalLength %x\n", ConfigurationDescriptor->wTotalLength);
+    DbgPrint("bNumInterfaces %x\n", ConfigurationDescriptor->bNumInterfaces);
+    DbgPrint("bConfigurationValue %x\n", ConfigurationDescriptor->bConfigurationValue);
+    DbgPrint("iConfiguration %x\n", ConfigurationDescriptor->iConfiguration);
+    DbgPrint("bmAttributes %x\n", ConfigurationDescriptor->bmAttributes);
+    DbgPrint("MaxPower %x\n", ConfigurationDescriptor->MaxPower);
 }
 
 NTSTATUS

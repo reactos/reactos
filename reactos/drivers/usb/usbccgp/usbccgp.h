@@ -62,6 +62,11 @@ typedef struct
     PFDO_DEVICE_EXTENSION FDODeviceExtension;                // pointer to fdo's pdo list
 }PDO_DEVICE_EXTENSION, *PPDO_DEVICE_EXTENSION;
 
+/* descriptor.c */
+
+VOID
+DumpConfigurationDescriptor(
+    IN PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor);
 
 NTSTATUS
 USBCCGP_GetDescriptors(
