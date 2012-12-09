@@ -1,5 +1,4 @@
-/* $Id: pccons.c 53440 2011-08-25 09:44:21Z tkreuzer $
- *
+/*
  *  FreeLoader
  *
  *  This program is free software; you can redistribute it and/or modify

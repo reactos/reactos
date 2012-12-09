@@ -1,5 +1,4 @@
-/* $Id: xboxhw.c 56270 2012-03-29 08:25:20Z tkreuzer $
- *
+/*
  *  FreeLoader
  *
  *  This program is free software; you can redistribute it and/or modify

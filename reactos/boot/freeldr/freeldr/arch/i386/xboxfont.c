@@ -1,5 +1,4 @@
-/* $Id: xboxfont.c 43790 2009-10-27 10:34:16Z dgorbachev $
- *
+/*
  *  FreeLoader
  *
  *  This program is free software; you can redistribute it and/or modify

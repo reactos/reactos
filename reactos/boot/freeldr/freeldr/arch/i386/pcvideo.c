@@ -1,5 +1,4 @@
-/* $Id: pcvideo.c 56137 2012-03-12 23:00:56Z pschweitzer $
- *
+/*
  *  FreeLoader
  *
  *  This program is free software; you can redistribute it and/or modify

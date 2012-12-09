@@ -1,5 +1,4 @@
-/* $Id: xboxvideo.c 52526 2011-07-03 23:01:39Z rharabien $
- *
+/*
  *  FreeLoader
  *
  *  This program is free software; you can redistribute it and/or modify

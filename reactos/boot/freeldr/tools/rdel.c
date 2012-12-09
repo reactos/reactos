@@ -1,4 +1,4 @@
-/*  $Id: rdel.c 29690 2007-10-19 23:21:45Z dreimer $
+/*
  * COPYRIGHT:             See COPYING in the top level directory
  * PROGRAMMER:            Rex Jolliff (rex@lvcablemodem.com)
  * PURPOSE:               Platform independant delete command

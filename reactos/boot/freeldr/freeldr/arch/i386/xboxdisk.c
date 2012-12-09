@@ -1,5 +1,4 @@
-/* $Id: xboxdisk.c 53542 2011-09-03 10:56:36Z rharabien $
- *
+/*
  *  FreeLoader
  *
  *  This program is free software; you can redistribute it and/or modify

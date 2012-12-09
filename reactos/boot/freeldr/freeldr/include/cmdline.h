@@ -1,5 +1,4 @@
-/* $Id: cmdline.h 45685 2010-02-26 11:43:19Z gedmurphy $
- *
+/*
  *  FreeLdr boot loader
  *  Copyright (C) 2002, 2003 ReactOS Team
  *

@@ -1,4 +1,4 @@
-/*  $Id: rrmdir.c 29690 2007-10-19 23:21:45Z dreimer $
+/*
  * COPYRIGHT:             See COPYING in the top level directory
  * PROGRAMMER:            Rex Jolliff (rex@lvcablemodem.com)
  *                        Casper S. Hornstrup (chorns@users.sourceforge.net)
