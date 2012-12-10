@@ -282,7 +282,7 @@ DumpFullConfigurationDescriptor(
 
     do
     {
-        if (((ULONG_PTR)Descriptor + Descriptor->bLength) <= ((ULONG_PTR)ConfigurationDescriptor + ConfigurationDescriptor->wTotalLength))
+        if (((ULONG_PTR)Descriptor) >= ((ULONG_PTR)ConfigurationDescriptor + ConfigurationDescriptor->wTotalLength))
             break;
 
         DbgPrint("Descriptor Type %x Length %lu Offset %lu\n", Descriptor->bDescriptorType, Descriptor->bLength, ((ULONG_PTR)Descriptor - (ULONG_PTR)ConfigurationDescriptor));
