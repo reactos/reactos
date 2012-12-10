@@ -259,6 +259,12 @@ START_TEST(install)
     if (!init_function_pointers())
         return;
 
+    if (!IsNTAdmin(0, NULL))
+    {
+        skip("Most tests need admin rights\n");
+        return;
+    }
+
     GetCurrentDirectoryA(MAX_PATH, prev_path);
     GetTempPath(MAX_PATH, temp_path);
     SetCurrentDirectoryA(temp_path);

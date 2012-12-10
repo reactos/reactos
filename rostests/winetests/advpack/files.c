@@ -32,6 +32,7 @@
 static HMODULE hAdvPack;
 static HRESULT (WINAPI *pAddDelBackupEntry)(LPCSTR, LPCSTR, LPCSTR, DWORD);
 static HRESULT (WINAPI *pExtractFiles)(LPCSTR, LPCSTR, DWORD, LPCSTR, LPVOID, DWORD);
+static HRESULT (WINAPI *pExtractFilesW)(const WCHAR*,const WCHAR*,DWORD,const WCHAR*,void*,DWORD);
 static HRESULT (WINAPI *pAdvInstallFile)(HWND,LPCSTR,LPCSTR,LPCSTR,LPCSTR,DWORD,DWORD);
 
 static CHAR CURR_DIR[MAX_PATH];
@@ -44,6 +45,7 @@ static void init_function_pointers(void)
     {
         pAddDelBackupEntry = (void *)GetProcAddress(hAdvPack, "AddDelBackupEntry");
         pExtractFiles = (void *)GetProcAddress(hAdvPack, "ExtractFiles");
+        pExtractFilesW = (void *)GetProcAddress(hAdvPack, "ExtractFilesW");
         pAdvInstallFile = (void*)GetProcAddress(hAdvPack, "AdvInstallFile");
     }
 }
@@ -468,13 +470,29 @@ static void test_ExtractFiles(void)
     ok(!DeleteFileA("dest\\a.txt"), "Expected dest\\a.txt to not exist\n");
     ok(!DeleteFileA("dest\\testdir\\c.txt"), "Expected dest\\testdir\\c.txt to not exist\n");
     ok(!RemoveDirectoryA("dest\\testdir"), "Expected dest\\testdir to not exist\n");
+
+    if(pExtractFilesW) {
+        static const WCHAR extract_cabW[] = {'e','x','t','r','a','c','t','.','c','a','b',0};
+        static const WCHAR destW[] = {'d','e','s','t',0};
+        static const WCHAR file_listW[] =
+            {'a','.','t','x','t',':','t','e','s','t','d','i','r','\\','c','.','t','x','t',0};
+
+        hr = pExtractFilesW(extract_cabW, destW, 0, file_listW, NULL, 0);
+        ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+        ok(DeleteFileA("dest\\a.txt"), "Expected dest\\a.txt to exist\n");
+        ok(DeleteFileA("dest\\testdir\\c.txt"), "Expected dest\\testdir\\c.txt to exist\n");
+        ok(RemoveDirectoryA("dest\\testdir"), "Expected dest\\testdir to exist\n");
+        ok(!DeleteFileA("dest\\b.txt"), "Expected dest\\b.txt to not exist\n");
+        ok(!DeleteFileA("dest\\testdir\\d.txt"), "Expected dest\\testdir\\d.txt to not exist\n");
+    }else {
+        win_skip("ExtractFilesW not available\n");
+    }
 }
 
 static void test_AdvInstallFile(void)
 {
     HRESULT hr;
     HMODULE hmod;
-    char CURR_DIR[MAX_PATH];
     char destFolder[MAX_PATH];
 
     hmod = LoadLibrary("setupapi.dll");
@@ -485,8 +503,6 @@ static void test_AdvInstallFile(void)
     }
 
     FreeLibrary(hmod);
-
-    GetCurrentDirectoryA(MAX_PATH, CURR_DIR);
 
     lstrcpyA(destFolder, CURR_DIR);
     lstrcatA(destFolder, "\\");
