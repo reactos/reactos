@@ -346,6 +346,9 @@ static void test_set_value(void)
         /* Crashes on NT4, Windows 2000 and XP SP1 */
         ret = RegSetValueW(hkey_main, NULL, REG_SZ, NULL, 0);
         ok(ret == ERROR_INVALID_PARAMETER, "RegSetValueW should have failed with ERROR_INVALID_PARAMETER instead of %d\n", ret);
+
+        RegSetValueExA(hkey_main, name2A, 0, REG_SZ, (const BYTE *)1, 1);
+        RegSetValueExA(hkey_main, name2A, 0, REG_DWORD, (const BYTE *)1, 1);
     }
 
     ret = RegSetValueW(hkey_main, NULL, REG_SZ, string1W, sizeof(string1W));
@@ -353,7 +356,12 @@ static void test_set_value(void)
     test_hkey_main_Value_A(NULL, string1A, sizeof(string1A));
     test_hkey_main_Value_W(NULL, string1W, sizeof(string1W));
 
-    /* RegSetValueA ignores the size passed in */
+    ret = RegSetValueW(hkey_main, name1W, REG_SZ, string1W, sizeof(string1W));
+    ok(ret == ERROR_SUCCESS, "RegSetValueW failed: %d, GLE=%d\n", ret, GetLastError());
+    test_hkey_main_Value_A(name1A, string1A, sizeof(string1A));
+    test_hkey_main_Value_W(name1W, string1W, sizeof(string1W));
+
+    /* RegSetValueW ignores the size passed in */
     ret = RegSetValueW(hkey_main, NULL, REG_SZ, string1W, 4 * sizeof(string1W[0]));
     ok(ret == ERROR_SUCCESS, "RegSetValueW failed: %d, GLE=%d\n", ret, GetLastError());
     test_hkey_main_Value_A(NULL, string1A, sizeof(string1A));
@@ -390,6 +398,12 @@ static void test_set_value(void)
     ok(ret == ERROR_SUCCESS, "RegSetValueExW failed: %d, GLE=%d\n", ret, GetLastError());
     test_hkey_main_Value_A(name2A, string2A, sizeof(string2A));
     test_hkey_main_Value_W(name2W, string2W, sizeof(string2W));
+
+    /* test RegSetValueExW with data = 1 */
+    ret = RegSetValueExW(hkey_main, name2W, 0, REG_SZ, (const BYTE *)1, 1);
+    ok(ret == ERROR_NOACCESS, "RegSetValueExW should have failed with ERROR_NOACCESS: %d, GLE=%d\n", ret, GetLastError());
+    ret = RegSetValueExW(hkey_main, name2W, 0, REG_DWORD, (const BYTE *)1, 1);
+    ok(ret == ERROR_NOACCESS, "RegSetValueExW should have failed with ERROR_NOACCESS: %d, GLE=%d\n", ret, GetLastError());
 }
 
 static void create_test_entries(void)

@@ -1896,6 +1896,7 @@ static void test_queryconfig2(void)
     DWORD expected, needed;
     BYTE buffer[MAX_PATH];
     LPSERVICE_DESCRIPTIONA pConfig = (LPSERVICE_DESCRIPTIONA)buffer;
+    SERVICE_PRESHUTDOWN_INFO preshutdown_info;
     static const CHAR servicename [] = "Winetest";
     static const CHAR displayname [] = "Winetest dummy service";
     static const CHAR pathname    [] = "we_dont_care.exe";
@@ -2062,6 +2063,33 @@ static void test_queryconfig2(void)
     ret = pQueryServiceConfig2W(svc_handle, SERVICE_CONFIG_DESCRIPTION,buffer, needed,&needed);
     ok(ret, "expected QueryServiceConfig2W to succeed\n");
 
+    SetLastError(0xdeadbeef);
+    ret = pQueryServiceConfig2W(svc_handle, SERVICE_CONFIG_PRESHUTDOWN_INFO,
+            (LPBYTE)&preshutdown_info, sizeof(preshutdown_info), &needed);
+    if(!ret && GetLastError()==ERROR_INVALID_LEVEL)
+    {
+        /* Win2k3 and older */
+        win_skip("SERVICE_CONFIG_PRESHUTDOWN_INFO not supported\n");
+        goto cleanup;
+    }
+    ok(ret, "expected QueryServiceConfig2W to succeed (%d)\n", GetLastError());
+    ok(needed == sizeof(preshutdown_info), "needed = %d\n", needed);
+    ok(preshutdown_info.dwPreshutdownTimeout == 180000, "Default PreshutdownTimeout = %d\n",
+            preshutdown_info.dwPreshutdownTimeout);
+
+    SetLastError(0xdeadbeef);
+    preshutdown_info.dwPreshutdownTimeout = -1;
+    ret = pChangeServiceConfig2A(svc_handle, SERVICE_CONFIG_PRESHUTDOWN_INFO,
+            (LPVOID)&preshutdown_info);
+    ok(ret, "expected ChangeServiceConfig2A to succeed (%d)\n", GetLastError());
+
+    ret = pQueryServiceConfig2W(svc_handle, SERVICE_CONFIG_PRESHUTDOWN_INFO,
+            (LPBYTE)&preshutdown_info, sizeof(preshutdown_info), &needed);
+    ok(ret, "expected QueryServiceConfig2W to succeed (%d)\n", GetLastError());
+    ok(needed == sizeof(preshutdown_info), "needed = %d\n", needed);
+    ok(preshutdown_info.dwPreshutdownTimeout == -1, "New PreshutdownTimeout = %d\n",
+            preshutdown_info.dwPreshutdownTimeout);
+
 cleanup:
     DeleteService(svc_handle);
 
@@ -2178,7 +2206,7 @@ static void test_start_stop(void)
 
     if (!winetest_interactive)
     {
-        skip("reactos bug 6646: Skipping service start timeout tests!\n");
+        skip("ROSTESTS-56: Skipping service start timeout tests!\n");
         goto cleanup;
     }
 

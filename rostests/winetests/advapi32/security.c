@@ -33,7 +33,16 @@
 #include "ntsecapi.h"
 #include "lmcons.h"
 
+#include <winsvc.h>
+
 #include "wine/test.h"
+
+/* PROCESS_ALL_ACCESS in Vista+ PSDKs is incompatible with older Windows versions */
+#define PROCESS_ALL_ACCESS_NT4 (PROCESS_ALL_ACCESS & ~0xf000)
+
+#ifndef EVENT_QUERY_STATE
+#define EVENT_QUERY_STATE 0x0001
+#endif
 
 /* copied from Wine winternl.h - not included in the Windows SDK */
 typedef enum _OBJECT_INFORMATION_CLASS {
@@ -58,7 +67,7 @@ typedef struct _OBJECT_BASIC_INFORMATION {
     LARGE_INTEGER  CreateTime;
 } OBJECT_BASIC_INFORMATION, *POBJECT_BASIC_INFORMATION;
 
-#define expect_eq(expr, value, type, format) { type ret = expr; ok((value) == ret, #expr " expected " format "  got " format "\n", (value), (ret)); }
+#define expect_eq(expr, value, type, format) { type ret_ = expr; ok((value) == ret_, #expr " expected " format "  got " format "\n", (value), (ret_)); }
 
 static BOOL (WINAPI *pAddAccessAllowedAceEx)(PACL, DWORD, DWORD, DWORD, PSID);
 static BOOL (WINAPI *pAddAccessDeniedAceEx)(PACL, DWORD, DWORD, DWORD, PSID);
@@ -94,6 +103,8 @@ static BOOL (WINAPI *pSetFileSecurityA)(LPCSTR, SECURITY_INFORMATION,
 static DWORD (WINAPI *pGetNamedSecurityInfoA)(LPSTR, SE_OBJECT_TYPE, SECURITY_INFORMATION,
                                               PSID*, PSID*, PACL*, PACL*,
                                               PSECURITY_DESCRIPTOR*);
+static DWORD (WINAPI *pSetNamedSecurityInfoA)(LPTSTR, SE_OBJECT_TYPE, SECURITY_INFORMATION,
+                                              PSID, PSID, PACL, PACL);
 static PDWORD (WINAPI *pGetSidSubAuthority)(PSID, DWORD);
 static PUCHAR (WINAPI *pGetSidSubAuthorityCount)(PSID);
 static BOOL (WINAPI *pIsValidSid)(PSID);
@@ -113,14 +124,26 @@ static BOOL (WINAPI *pSetSecurityDescriptorControl)(PSECURITY_DESCRIPTOR, SECURI
                                                     SECURITY_DESCRIPTOR_CONTROL);
 static DWORD (WINAPI *pGetSecurityInfo)(HANDLE, SE_OBJECT_TYPE, SECURITY_INFORMATION,
                                         PSID*, PSID*, PACL*, PACL*, PSECURITY_DESCRIPTOR*);
+static DWORD (WINAPI *pSetSecurityInfo)(HANDLE, SE_OBJECT_TYPE, SECURITY_INFORMATION,
+                                        PSID, PSID, PACL, PACL);
 static NTSTATUS (WINAPI *pNtAccessCheck)(PSECURITY_DESCRIPTOR, HANDLE, ACCESS_MASK, PGENERIC_MAPPING,
                                          PPRIVILEGE_SET, PULONG, PULONG, NTSTATUS*);
 static BOOL (WINAPI *pCreateRestrictedToken)(HANDLE, DWORD, DWORD, PSID_AND_ATTRIBUTES, DWORD,
                                              PLUID_AND_ATTRIBUTES, DWORD, PSID_AND_ATTRIBUTES, PHANDLE);
+static BOOL (WINAPI *pGetAclInformation)(PACL,LPVOID,DWORD,ACL_INFORMATION_CLASS);
+static BOOL (WINAPI *pGetAce)(PACL,DWORD,LPVOID*);
 
 static HMODULE hmod;
 static int     myARGC;
 static char**  myARGV;
+
+struct strsid_entry
+{
+    const char *str;
+    DWORD flags;
+};
+#define STRSID_OK     0
+#define STRSID_OPT    1
 
 struct sidRef
 {
@@ -151,6 +174,7 @@ static void init(void)
     pSetFileSecurityA = (void *)GetProcAddress(hmod, "SetFileSecurityA" );
     pCreateWellKnownSid = (void *)GetProcAddress( hmod, "CreateWellKnownSid" );
     pGetNamedSecurityInfoA = (void *)GetProcAddress(hmod, "GetNamedSecurityInfoA");
+    pSetNamedSecurityInfoA = (void *)GetProcAddress(hmod, "SetNamedSecurityInfoA");
     pGetSidSubAuthority = (void *)GetProcAddress(hmod, "GetSidSubAuthority");
     pGetSidSubAuthorityCount = (void *)GetProcAddress(hmod, "GetSidSubAuthorityCount");
     pIsValidSid = (void *)GetProcAddress(hmod, "IsValidSid");
@@ -159,32 +183,14 @@ static void init(void)
     pSetEntriesInAclA = (void *)GetProcAddress(hmod, "SetEntriesInAclA");
     pSetSecurityDescriptorControl = (void *)GetProcAddress(hmod, "SetSecurityDescriptorControl");
     pGetSecurityInfo = (void *)GetProcAddress(hmod, "GetSecurityInfo");
+    pSetSecurityInfo = (void *)GetProcAddress(hmod, "SetSecurityInfo");
     pCreateRestrictedToken = (void *)GetProcAddress(hmod, "CreateRestrictedToken");
+    pConvertSidToStringSidA = (void *)GetProcAddress(hmod, "ConvertSidToStringSidA");
+    pConvertStringSidToSidA = (void *)GetProcAddress(hmod, "ConvertStringSidToSidA");
+    pGetAclInformation = (void *)GetProcAddress(hmod, "GetAclInformation");
+    pGetAce = (void *)GetProcAddress(hmod, "GetAce");
 
     myARGC = winetest_get_mainargs( &myARGV );
-}
-
-static void test_str_sid(const char *str_sid)
-{
-    PSID psid;
-    char *temp;
-
-    if (pConvertStringSidToSidA(str_sid, &psid))
-    {
-        if (pConvertSidToStringSidA(psid, &temp))
-        {
-            trace(" %s: %s\n", str_sid, temp);
-            LocalFree(temp);
-        }
-        LocalFree(psid);
-    }
-    else
-    {
-        if (GetLastError() != ERROR_INVALID_SID)
-            trace(" %s: couldn't be converted, returned %d\n", str_sid, GetLastError());
-        else
-            trace(" %s: couldn't be converted\n", str_sid);
-    }
 }
 
 static void test_sid(void)
@@ -197,6 +203,18 @@ static void test_sid(void)
      { { {0x00,0x00,0x00,0x00,0x00,0x02} }, "S-1-2-1"         },
      { { {0x00,0x00,0x00,0x00,0x00,0x0c} }, "S-1-12-1"        },
     };
+    struct strsid_entry strsid_table[] = {
+        {"AO", STRSID_OK},  {"RU", STRSID_OK},  {"AN", STRSID_OK},  {"AU", STRSID_OK},
+        {"BA", STRSID_OK},  {"BG", STRSID_OK},  {"BO", STRSID_OK},  {"BU", STRSID_OK},
+        {"CA", STRSID_OPT}, {"CG", STRSID_OK},  {"CO", STRSID_OK},  {"DA", STRSID_OPT},
+        {"DC", STRSID_OPT}, {"DD", STRSID_OPT}, {"DG", STRSID_OPT}, {"DU", STRSID_OPT},
+        {"EA", STRSID_OPT}, {"ED", STRSID_OK},  {"WD", STRSID_OK},  {"PA", STRSID_OPT},
+        {"IU", STRSID_OK},  {"LA", STRSID_OK},  {"LG", STRSID_OK},  {"LS", STRSID_OK},
+        {"SY", STRSID_OK},  {"NU", STRSID_OK},  {"NO", STRSID_OK},  {"NS", STRSID_OK},
+        {"PO", STRSID_OK},  {"PS", STRSID_OK},  {"PU", STRSID_OK},  {"RS", STRSID_OPT},
+        {"RD", STRSID_OK},  {"RE", STRSID_OK},  {"RC", STRSID_OK},  {"SA", STRSID_OPT},
+        {"SO", STRSID_OK},  {"SU", STRSID_OK}};
+
     const char noSubAuthStr[] = "S-1-5";
     unsigned int i;
     PSID psid = NULL;
@@ -204,12 +222,11 @@ static void test_sid(void)
     BOOL r;
     LPSTR str = NULL;
 
-    pConvertSidToStringSidA = (void *)GetProcAddress( hmod, "ConvertSidToStringSidA" );
-    if( !pConvertSidToStringSidA )
+    if( !pConvertSidToStringSidA || !pConvertStringSidToSidA )
+    {
+        win_skip("ConvertSidToStringSidA or ConvertStringSidToSidA not available\n");
         return;
-    pConvertStringSidToSidA = (void *)GetProcAddress( hmod, "ConvertStringSidToSidA" );
-    if( !pConvertStringSidToSidA )
-        return;
+    }
 
     r = pConvertStringSidToSidA( NULL, NULL );
     ok( !r, "expected failure with NULL parameters\n" );
@@ -246,8 +263,6 @@ static void test_sid(void)
 
     for( i = 0; i < sizeof(refs) / sizeof(refs[0]); i++ )
     {
-        PISID pisid;
-
         r = AllocateAndInitializeSid( &refs[i].auth, 1,1,0,0,0,0,0,0,0,
          &psid );
         ok( r, "failed to allocate sid\n" );
@@ -284,45 +299,44 @@ static void test_sid(void)
             LocalFree( psid );
     }
 
-    trace("String SIDs:\n");
-    test_str_sid("AO");
-    test_str_sid("RU");
-    test_str_sid("AN");
-    test_str_sid("AU");
-    test_str_sid("BA");
-    test_str_sid("BG");
-    test_str_sid("BO");
-    test_str_sid("BU");
-    test_str_sid("CA");
-    test_str_sid("CG");
-    test_str_sid("CO");
-    test_str_sid("DA");
-    test_str_sid("DC");
-    test_str_sid("DD");
-    test_str_sid("DG");
-    test_str_sid("DU");
-    test_str_sid("EA");
-    test_str_sid("ED");
-    test_str_sid("WD");
-    test_str_sid("PA");
-    test_str_sid("IU");
-    test_str_sid("LA");
-    test_str_sid("LG");
-    test_str_sid("LS");
-    test_str_sid("SY");
-    test_str_sid("NU");
-    test_str_sid("NO");
-    test_str_sid("NS");
-    test_str_sid("PO");
-    test_str_sid("PS");
-    test_str_sid("PU");
-    test_str_sid("RS");
-    test_str_sid("RD");
-    test_str_sid("RE");
-    test_str_sid("RC");
-    test_str_sid("SA");
-    test_str_sid("SO");
-    test_str_sid("SU");
+    /* string constant format not supported before XP */
+    r = pConvertStringSidToSidA(strsid_table[0].str, &psid);
+    if(!r)
+    {
+        win_skip("String constant format not supported\n");
+        return;
+    }
+    LocalFree(psid);
+
+    for(i = 0; i < sizeof(strsid_table) / sizeof(strsid_table[0]); i++)
+    {
+        char *temp;
+
+        SetLastError(0xdeadbeef);
+        r = pConvertStringSidToSidA(strsid_table[i].str, &psid);
+
+        if (!(strsid_table[i].flags & STRSID_OPT))
+        {
+            ok(r, "%s: got %u\n", strsid_table[i].str, GetLastError());
+        }
+
+        if (r)
+        {
+            if ((winetest_debug > 1) && (pConvertSidToStringSidA(psid, &temp)))
+            {
+                trace(" %s: %s\n", strsid_table[i].str, temp);
+                LocalFree(temp);
+            }
+            LocalFree(psid);
+        }
+        else
+        {
+            if (GetLastError() != ERROR_INVALID_SID)
+                trace(" %s: couldn't be converted, returned %d\n", strsid_table[i].str, GetLastError());
+            else
+                trace(" %s: couldn't be converted\n", strsid_table[i].str);
+        }
+    }
 }
 
 static void test_trustee(void)
@@ -1455,9 +1469,11 @@ static void test_token_attr(void)
     Size = 0;
     ret = GetTokenInformation(Token, TokenGroups, Groups, Size2, &Size);
     ok(Size > 1, "got %d\n", Size);
-    ok(!ret && GetLastError() == ERROR_INSUFFICIENT_BUFFER,
+    ok((!ret && GetLastError() == ERROR_INSUFFICIENT_BUFFER) || broken(ret) /* wow64 */,
         "%d with error %d\n", ret, GetLastError());
-    ok(*((BYTE*)Groups) == 0xcc, "buffer altered\n");
+    if(!ret)
+        ok(*((BYTE*)Groups) == 0xcc, "buffer altered\n");
+
     HeapFree(GetProcessHeap(), 0, Groups);
 
     SetLastError(0xdeadbeef);
@@ -1646,7 +1662,8 @@ static const struct well_known_sid_value
 /* 66 */ {TRUE, "S-1-16-4096"},   {TRUE, "S-1-16-8192"},   {TRUE, "S-1-16-12288"},
 /* 69 */ {TRUE, "S-1-16-16384"},  {TRUE, "S-1-5-33"},      {TRUE, "S-1-3-4"},
 /* 72 */ {FALSE, "S-1-5-21-12-23-34-45-56-571"},  {FALSE, "S-1-5-21-12-23-34-45-56-572"},
-/* 74 */ {TRUE, "S-1-5-22"}, {FALSE, "S-1-5-21-12-23-34-45-56-521"}, {TRUE, "S-1-5-32-573"}
+/* 74 */ {TRUE, "S-1-5-22"}, {FALSE, "S-1-5-21-12-23-34-45-56-521"}, {TRUE, "S-1-5-32-573"},
+/* 77 */ {FALSE, "S-1-5-21-12-23-34-45-56-498"}, {TRUE, "S-1-5-32-574"}, {TRUE, "S-1-16-8448"}
 };
 
 static void test_CreateWellKnownSid(void)
@@ -1711,7 +1728,7 @@ static void test_CreateWellKnownSid(void)
         expect_eq(GetSidLengthRequired(*GetSidSubAuthorityCount(sid_buffer)), cb, DWORD, "%d");
         ok(IsValidSid(sid_buffer), "The sid is not valid\n");
         ok(pConvertSidToStringSidA(sid_buffer, &str), "Couldn't convert SID to string\n");
-        ok(strcmp(str, value->sid_string) == 0, "SID mismatch - expected %s, got %s\n",
+        ok(strcmp(str, value->sid_string) == 0, "%d: SID mismatch - expected %s, got %s\n", i,
             value->sid_string, str);
         LocalFree(str);
 
@@ -2420,15 +2437,15 @@ static void test_granted_access(HANDLE handle, ACCESS_MASK access,
 
 #define CHECK_SET_SECURITY(o,i,e) \
     do{ \
-        BOOL res; \
+        BOOL res_; \
         DWORD err; \
         SetLastError( 0xdeadbeef ); \
-        res = SetKernelObjectSecurity( o, i, SecurityDescriptor ); \
+        res_ = SetKernelObjectSecurity( o, i, SecurityDescriptor ); \
         err = GetLastError(); \
         if (e == ERROR_SUCCESS) \
-            ok(res, "SetKernelObjectSecurity failed with %d\n", err); \
+            ok(res_, "SetKernelObjectSecurity failed with %d\n", err); \
         else \
-            ok(!res && err == e, "SetKernelObjectSecurity should have failed " \
+            ok(!res_ && err == e, "SetKernelObjectSecurity should have failed " \
                "with %s, instead of %d\n", #e, err); \
     }while(0)
 
@@ -2543,7 +2560,7 @@ static void test_process_security(void)
     /* Doesn't matter what ACL say we should get full access for ourselves */
     res = CreateProcessA( NULL, buffer, &psa, NULL, FALSE, 0, NULL, NULL, &startup, &info );
     ok(res, "CreateProcess with err:%d\n", GetLastError());
-    TEST_GRANTED_ACCESS2( info.hProcess, PROCESS_ALL_ACCESS,
+    TEST_GRANTED_ACCESS2( info.hProcess, PROCESS_ALL_ACCESS_NT4,
                           STANDARD_RIGHTS_ALL | SPECIFIC_RIGHTS_ALL );
     winetest_wait_child_process( info.hProcess );
 
@@ -2595,7 +2612,7 @@ static void test_process_security_child(void)
     ret = DuplicateHandle( GetCurrentProcess(), GetCurrentProcess(), GetCurrentProcess(),
                            &handle, 0, TRUE, DUPLICATE_SAME_ACCESS );
     ok(ret, "duplicating handle err:%d\n", GetLastError());
-    TEST_GRANTED_ACCESS2( handle, PROCESS_ALL_ACCESS,
+    TEST_GRANTED_ACCESS2( handle, PROCESS_ALL_ACCESS_NT4,
                           STANDARD_RIGHTS_ALL | SPECIFIC_RIGHTS_ALL );
 
     CloseHandle( handle );
@@ -2604,7 +2621,7 @@ static void test_process_security_child(void)
     ret = DuplicateHandle( GetCurrentProcess(), GetCurrentProcess(), GetCurrentProcess(),
                            &handle, PROCESS_ALL_ACCESS, TRUE, 0 );
     ok(ret, "duplicating handle err:%d\n", GetLastError());
-    TEST_GRANTED_ACCESS2( handle, PROCESS_ALL_ACCESS,
+    TEST_GRANTED_ACCESS2( handle, PROCESS_ALL_ACCESS_NT4,
                           PROCESS_ALL_ACCESS | PROCESS_QUERY_LIMITED_INFORMATION );
     ret = DuplicateHandle( GetCurrentProcess(), handle, GetCurrentProcess(),
                            &handle1, PROCESS_VM_READ, TRUE, 0 );
@@ -2990,40 +3007,67 @@ static void test_SetEntriesInAclA(void)
 
 static void test_GetNamedSecurityInfoA(void)
 {
-    PSECURITY_DESCRIPTOR pSecDesc;
-    DWORD revision;
+    char admin_ptr[sizeof(SID)+sizeof(ULONG)*SID_MAX_SUB_AUTHORITIES], dacl[100], *user;
+    DWORD sid_size = sizeof(admin_ptr), user_size;
+    char invalid_path[] = "/an invalid file path";
+    PSID admin_sid = (PSID) admin_ptr, user_sid;
+    char sd[SECURITY_DESCRIPTOR_MIN_LENGTH];
     SECURITY_DESCRIPTOR_CONTROL control;
-    PSID owner;
-    PSID group;
-    PACL dacl;
+    ACL_SIZE_INFORMATION acl_size;
+    CHAR windows_dir[MAX_PATH];
+    PSECURITY_DESCRIPTOR pSD;
+    ACCESS_ALLOWED_ACE *ace;
+    BOOL bret = TRUE, isNT4;
+    char tmpfile[MAX_PATH];
+    DWORD error, revision;
     BOOL owner_defaulted;
     BOOL group_defaulted;
-    DWORD error;
-    BOOL ret, isNT4;
-    CHAR windows_dir[MAX_PATH];
+    HANDLE token, hTemp;
+    PSID owner, group;
+    PACL pDacl;
 
-    if (!pGetNamedSecurityInfoA)
+    if (!pSetNamedSecurityInfoA || !pGetNamedSecurityInfoA || !pCreateWellKnownSid)
     {
-        win_skip("GetNamedSecurityInfoA is not available\n");
+        win_skip("Required functions are not available\n");
         return;
     }
 
-    ret = GetWindowsDirectoryA(windows_dir, MAX_PATH);
-    ok(ret, "GetWindowsDirectory failed with error %d\n", GetLastError());
+    if (!OpenThreadToken(GetCurrentThread(), TOKEN_READ, TRUE, &token))
+    {
+        if (GetLastError() != ERROR_NO_TOKEN) bret = FALSE;
+        else if (!OpenProcessToken(GetCurrentProcess(), TOKEN_READ, &token)) bret = FALSE;
+    }
+    if (!bret)
+    {
+        win_skip("Failed to get current user token\n");
+        return;
+    }
+    bret = GetTokenInformation(token, TokenUser, NULL, 0, &user_size);
+    ok(!bret && (GetLastError() == ERROR_INSUFFICIENT_BUFFER),
+        "GetTokenInformation(TokenUser) failed with error %d\n", GetLastError());
+    user = HeapAlloc(GetProcessHeap(), 0, user_size);
+    bret = GetTokenInformation(token, TokenUser, user, user_size, &user_size);
+    ok(bret, "GetTokenInformation(TokenUser) failed with error %d\n", GetLastError());
+    CloseHandle( token );
+    user_sid = ((TOKEN_USER *)user)->User.Sid;
+
+    bret = GetWindowsDirectoryA(windows_dir, MAX_PATH);
+    ok(bret, "GetWindowsDirectory failed with error %d\n", GetLastError());
 
     SetLastError(0xdeadbeef);
     error = pGetNamedSecurityInfoA(windows_dir, SE_FILE_OBJECT,
         OWNER_SECURITY_INFORMATION|GROUP_SECURITY_INFORMATION|DACL_SECURITY_INFORMATION,
-        NULL, NULL, NULL, NULL, &pSecDesc);
+        NULL, NULL, NULL, NULL, &pSD);
     if (error != ERROR_SUCCESS && (GetLastError() == ERROR_CALL_NOT_IMPLEMENTED))
     {
         win_skip("GetNamedSecurityInfoA is not implemented\n");
+        HeapFree(GetProcessHeap(), 0, user);
         return;
     }
     ok(!error, "GetNamedSecurityInfo failed with error %d\n", error);
 
-    ret = GetSecurityDescriptorControl(pSecDesc, &control, &revision);
-    ok(ret, "GetSecurityDescriptorControl failed with error %d\n", GetLastError());
+    bret = GetSecurityDescriptorControl(pSD, &control, &revision);
+    ok(bret, "GetSecurityDescriptorControl failed with error %d\n", GetLastError());
     ok((control & (SE_SELF_RELATIVE|SE_DACL_PRESENT)) == (SE_SELF_RELATIVE|SE_DACL_PRESENT) ||
         broken((control & (SE_SELF_RELATIVE|SE_DACL_PRESENT)) == SE_DACL_PRESENT), /* NT4 */
         "control (0x%x) doesn't have (SE_SELF_RELATIVE|SE_DACL_PRESENT) flags set\n", control);
@@ -3031,20 +3075,21 @@ static void test_GetNamedSecurityInfoA(void)
 
     isNT4 = (control & (SE_SELF_RELATIVE|SE_DACL_PRESENT)) == SE_DACL_PRESENT;
 
-    ret = GetSecurityDescriptorOwner(pSecDesc, &owner, &owner_defaulted);
-    ok(ret, "GetSecurityDescriptorOwner failed with error %d\n", GetLastError());
+    bret = GetSecurityDescriptorOwner(pSD, &owner, &owner_defaulted);
+    ok(bret, "GetSecurityDescriptorOwner failed with error %d\n", GetLastError());
     ok(owner != NULL, "owner should not be NULL\n");
 
-    ret = GetSecurityDescriptorGroup(pSecDesc, &group, &group_defaulted);
-    ok(ret, "GetSecurityDescriptorGroup failed with error %d\n", GetLastError());
+    bret = GetSecurityDescriptorGroup(pSD, &group, &group_defaulted);
+    ok(bret, "GetSecurityDescriptorGroup failed with error %d\n", GetLastError());
     ok(group != NULL, "group should not be NULL\n");
-    LocalFree(pSecDesc);
+    LocalFree(pSD);
 
 
     /* NULL descriptor tests */
     if(isNT4)
     {
         win_skip("NT4 does not support GetNamedSecutityInfo with a NULL descriptor\n");
+        HeapFree(GetProcessHeap(), 0, user);
         return;
     }
 
@@ -3053,13 +3098,85 @@ static void test_GetNamedSecurityInfoA(void)
     ok(error==ERROR_INVALID_PARAMETER, "GetNamedSecurityInfo failed with error %d\n", error);
 
     error = pGetNamedSecurityInfoA(windows_dir, SE_FILE_OBJECT,DACL_SECURITY_INFORMATION,
-        NULL, NULL, &dacl, NULL, NULL);
+        NULL, NULL, &pDacl, NULL, NULL);
     ok(!error, "GetNamedSecurityInfo failed with error %d\n", error);
-    ok(dacl != NULL, "dacl should not be NULL\n");
+    ok(pDacl != NULL, "DACL should not be NULL\n");
 
     error = pGetNamedSecurityInfoA(windows_dir, SE_FILE_OBJECT,OWNER_SECURITY_INFORMATION,
-        NULL, NULL, &dacl, NULL, NULL);
+        NULL, NULL, &pDacl, NULL, NULL);
     ok(error==ERROR_INVALID_PARAMETER, "GetNamedSecurityInfo failed with error %d\n", error);
+
+    /* Test behavior of SetNamedSecurityInfo with an invalid path */
+    SetLastError(0xdeadbeef);
+    error = pSetNamedSecurityInfoA(invalid_path, SE_FILE_OBJECT, DACL_SECURITY_INFORMATION, NULL,
+                                   NULL, NULL, NULL);
+    ok(error == ERROR_FILE_NOT_FOUND, "Unexpected error returned: 0x%x\n", error);
+    ok(GetLastError() == 0xdeadbeef, "Expected last error to remain unchanged.\n");
+
+    /* Create security descriptor information and test that it comes back the same */
+    pSD = &sd;
+    pDacl = (PACL)&dacl;
+    InitializeSecurityDescriptor(pSD, SECURITY_DESCRIPTOR_REVISION);
+    pCreateWellKnownSid(WinBuiltinAdministratorsSid, NULL, admin_sid, &sid_size);
+    bret = InitializeAcl(pDacl, sizeof(dacl), ACL_REVISION);
+    ok(bret, "Failed to initialize ACL.\n");
+    bret = pAddAccessAllowedAceEx(pDacl, ACL_REVISION, 0, GENERIC_ALL, user_sid);
+    HeapFree(GetProcessHeap(), 0, user);
+    ok(bret, "Failed to add Current User to ACL.\n");
+    bret = pAddAccessAllowedAceEx(pDacl, ACL_REVISION, 0, GENERIC_ALL, admin_sid);
+    ok(bret, "Failed to add Administrator Group to ACL.\n");
+    bret = SetSecurityDescriptorDacl(pSD, TRUE, pDacl, FALSE);
+    ok(bret, "Failed to add ACL to security desciptor.\n");
+    GetTempFileNameA(".", "foo", 0, tmpfile);
+    hTemp = CreateFileA(tmpfile, GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_EXISTING,
+                        FILE_FLAG_DELETE_ON_CLOSE, NULL);
+    SetLastError(0xdeadbeef);
+    error = pSetNamedSecurityInfoA(tmpfile, SE_FILE_OBJECT, DACL_SECURITY_INFORMATION, NULL,
+                                   NULL, pDacl, NULL);
+    if (error != ERROR_SUCCESS && (GetLastError() == ERROR_CALL_NOT_IMPLEMENTED))
+    {
+        win_skip("SetNamedSecurityInfoA is not implemented\n");
+        CloseHandle(hTemp);
+        return;
+    }
+    ok(!error, "SetNamedSecurityInfoA failed with error %d\n", error);
+    SetLastError(0xdeadbeef);
+    error = pGetNamedSecurityInfoA(tmpfile, SE_FILE_OBJECT, DACL_SECURITY_INFORMATION,
+                                   NULL, NULL, &pDacl, NULL, &pSD);
+    if (error != ERROR_SUCCESS && (GetLastError() == ERROR_CALL_NOT_IMPLEMENTED))
+    {
+        win_skip("GetNamedSecurityInfoA is not implemented\n");
+        return;
+    }
+    ok(!error, "GetNamedSecurityInfo failed with error %d\n", error);
+
+    bret = pGetAclInformation(pDacl, &acl_size, sizeof(acl_size), AclSizeInformation);
+    ok(bret, "GetAclInformation failed\n");
+    if (acl_size.AceCount > 0)
+    {
+        bret = pGetAce(pDacl, 0, (VOID **)&ace);
+        ok(bret, "Failed to get Current User ACE.\n");
+        bret = EqualSid(&ace->SidStart, user_sid);
+        todo_wine ok(bret, "Current User ACE != Current User SID.\n");
+        ok(((ACE_HEADER *)ace)->AceFlags == 0,
+           "Current User ACE has unexpected flags (0x%x != 0x0)\n", ((ACE_HEADER *)ace)->AceFlags);
+        ok(ace->Mask == 0x1f01ff, "Current User ACE has unexpected mask (0x%x != 0x1f01ff)\n",
+                                  ace->Mask);
+    }
+    if (acl_size.AceCount > 1)
+    {
+        bret = pGetAce(pDacl, 1, (VOID **)&ace);
+        ok(bret, "Failed to get Administators Group ACE.\n");
+        bret = EqualSid(&ace->SidStart, admin_sid);
+        todo_wine ok(bret || broken(!bret) /* win2k */,
+                     "Administators Group ACE != Administators Group SID.\n");
+        ok(((ACE_HEADER *)ace)->AceFlags == 0,
+           "Administators Group ACE has unexpected flags (0x%x != 0x0)\n", ((ACE_HEADER *)ace)->AceFlags);
+        ok(ace->Mask == 0x1f01ff || broken(ace->Mask == GENERIC_ALL) /* win2k */,
+           "Administators Group ACE has unexpected mask (0x%x != 0x1f01ff)\n", ace->Mask);
+    }
+    LocalFree(pSD);
+    CloseHandle(hTemp);
 }
 
 static void test_ConvertStringSecurityDescriptor(void)
@@ -3523,20 +3640,42 @@ static void test_acls(void)
 
 static void test_GetSecurityInfo(void)
 {
-    HANDLE obj;
-    PSECURITY_DESCRIPTOR sd;
+    char b[sizeof(TOKEN_USER) + sizeof(SID) + sizeof(DWORD)*SID_MAX_SUB_AUTHORITIES];
+    char admin_ptr[sizeof(SID)+sizeof(ULONG)*SID_MAX_SUB_AUTHORITIES], dacl[100];
+    DWORD sid_size = sizeof(admin_ptr), l = sizeof(b);
+    PSID admin_sid = (PSID) admin_ptr, user_sid;
+    char sd[SECURITY_DESCRIPTOR_MIN_LENGTH];
+    ACL_SIZE_INFORMATION acl_size;
+    PSECURITY_DESCRIPTOR pSD;
+    ACCESS_ALLOWED_ACE *ace;
+    HANDLE token, obj;
     PSID owner, group;
-    PACL dacl;
+    BOOL bret = TRUE;
+    PACL pDacl;
     DWORD ret;
 
-    if (!pGetSecurityInfo)
+    if (!pGetSecurityInfo || !pSetSecurityInfo)
     {
-        win_skip("GetSecurityInfo is not available\n");
+        win_skip("[Get|Set]SecurityInfo is not available\n");
         return;
     }
 
+    if (!OpenThreadToken(GetCurrentThread(), TOKEN_READ, TRUE, &token))
+    {
+        if (GetLastError() != ERROR_NO_TOKEN) bret = FALSE;
+        else if (!OpenProcessToken(GetCurrentProcess(), TOKEN_READ, &token)) bret = FALSE;
+    }
+    if (!bret)
+    {
+        win_skip("Failed to get current user token\n");
+        return;
+    }
+    GetTokenInformation(token, TokenUser, b, l, &l);
+    CloseHandle( token );
+    user_sid = ((TOKEN_USER *)b)->User.Sid;
+
     /* Create something.  Files have lots of associated security info.  */
-    obj = CreateFile(myARGV[0], GENERIC_READ, FILE_SHARE_READ, NULL,
+    obj = CreateFile(myARGV[0], GENERIC_READ|WRITE_DAC, FILE_SHARE_READ, NULL,
                      OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (obj == INVALID_HANDLE_VALUE)
     {
@@ -3546,7 +3685,7 @@ static void test_GetSecurityInfo(void)
 
     ret = pGetSecurityInfo(obj, SE_FILE_OBJECT,
                           OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION | DACL_SECURITY_INFORMATION,
-                          &owner, &group, &dacl, NULL, &sd);
+                          &owner, &group, &pDacl, NULL, &pSD);
     if (ret == ERROR_CALL_NOT_IMPLEMENTED)
     {
         win_skip("GetSecurityInfo is not implemented\n");
@@ -3554,15 +3693,15 @@ static void test_GetSecurityInfo(void)
         return;
     }
     ok(ret == ERROR_SUCCESS, "GetSecurityInfo returned %d\n", ret);
-    ok(sd != NULL, "GetSecurityInfo\n");
+    ok(pSD != NULL, "GetSecurityInfo\n");
     ok(owner != NULL, "GetSecurityInfo\n");
     ok(group != NULL, "GetSecurityInfo\n");
-    if (dacl != NULL)
-        ok(IsValidAcl(dacl), "GetSecurityInfo\n");
+    if (pDacl != NULL)
+        ok(IsValidAcl(pDacl), "GetSecurityInfo\n");
     else
         win_skip("No ACL information returned\n");
 
-    LocalFree(sd);
+    LocalFree(pSD);
 
     if (!pCreateWellKnownSid)
     {
@@ -3575,15 +3714,59 @@ static void test_GetSecurityInfo(void)
        the other stuff, leaving us no way to free it.  */
     ret = pGetSecurityInfo(obj, SE_FILE_OBJECT,
                           OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION | DACL_SECURITY_INFORMATION,
-                          &owner, &group, &dacl, NULL, NULL);
+                          &owner, &group, &pDacl, NULL, NULL);
     ok(ret == ERROR_SUCCESS, "GetSecurityInfo returned %d\n", ret);
     ok(owner != NULL, "GetSecurityInfo\n");
     ok(group != NULL, "GetSecurityInfo\n");
-    if (dacl != NULL)
-        ok(IsValidAcl(dacl), "GetSecurityInfo\n");
+    if (pDacl != NULL)
+        ok(IsValidAcl(pDacl), "GetSecurityInfo\n");
     else
         win_skip("No ACL information returned\n");
 
+    /* Create security descriptor information and test that it comes back the same */
+    pSD = &sd;
+    pDacl = (PACL)&dacl;
+    InitializeSecurityDescriptor(pSD, SECURITY_DESCRIPTOR_REVISION);
+    pCreateWellKnownSid(WinBuiltinAdministratorsSid, NULL, admin_sid, &sid_size);
+    bret = InitializeAcl(pDacl, sizeof(dacl), ACL_REVISION);
+    ok(bret, "Failed to initialize ACL.\n");
+    bret = pAddAccessAllowedAceEx(pDacl, ACL_REVISION, 0, GENERIC_ALL, user_sid);
+    ok(bret, "Failed to add Current User to ACL.\n");
+    bret = pAddAccessAllowedAceEx(pDacl, ACL_REVISION, 0, GENERIC_ALL, admin_sid);
+    ok(bret, "Failed to add Administrator Group to ACL.\n");
+    bret = SetSecurityDescriptorDacl(pSD, TRUE, pDacl, FALSE);
+    ok(bret, "Failed to add ACL to security desciptor.\n");
+    ret = pSetSecurityInfo(obj, SE_FILE_OBJECT, DACL_SECURITY_INFORMATION,
+                          NULL, NULL, pDacl, NULL);
+    ok(ret == ERROR_SUCCESS, "SetSecurityInfo returned %d\n", ret);
+    ret = pGetSecurityInfo(obj, SE_FILE_OBJECT, DACL_SECURITY_INFORMATION,
+                          NULL, NULL, &pDacl, NULL, NULL);
+    ok(ret == ERROR_SUCCESS, "GetSecurityInfo returned %d\n", ret);
+    ok(pDacl && IsValidAcl(pDacl), "GetSecurityInfo returned invalid DACL.\n");
+    bret = pGetAclInformation(pDacl, &acl_size, sizeof(acl_size), AclSizeInformation);
+    ok(bret, "GetAclInformation failed\n");
+    if (acl_size.AceCount > 0)
+    {
+        bret = pGetAce(pDacl, 0, (VOID **)&ace);
+        ok(bret, "Failed to get Current User ACE.\n");
+        bret = EqualSid(&ace->SidStart, user_sid);
+        todo_wine ok(bret, "Current User ACE != Current User SID.\n");
+        ok(((ACE_HEADER *)ace)->AceFlags == 0,
+           "Current User ACE has unexpected flags (0x%x != 0x0)\n", ((ACE_HEADER *)ace)->AceFlags);
+        ok(ace->Mask == 0x1f01ff, "Current User ACE has unexpected mask (0x%x != 0x1f01ff)\n",
+                                    ace->Mask);
+    }
+    if (acl_size.AceCount > 1)
+    {
+        bret = pGetAce(pDacl, 1, (VOID **)&ace);
+        ok(bret, "Failed to get Administators Group ACE.\n");
+        bret = EqualSid(&ace->SidStart, admin_sid);
+        todo_wine ok(bret, "Administators Group ACE != Administators Group SID.\n");
+        ok(((ACE_HEADER *)ace)->AceFlags == 0,
+           "Administators Group ACE has unexpected flags (0x%x != 0x0)\n", ((ACE_HEADER *)ace)->AceFlags);
+        ok(ace->Mask == 0x1f01ff, "Administators Group ACE has unexpected mask (0x%x != 0x1f01ff)\n",
+                                  ace->Mask);
+    }
     CloseHandle(obj);
 }
 
@@ -3981,6 +4164,339 @@ static void test_CreateRestrictedToken(void)
     CloseHandle(process_token);
 }
 
+static void validate_default_security_descriptor(SECURITY_DESCRIPTOR *sd)
+{
+    BOOL ret, present, defaulted;
+    ACL *acl;
+    void *sid;
+
+    ret = IsValidSecurityDescriptor(sd);
+    ok(ret, "security descriptor is not valid\n");
+
+    present = -1;
+    defaulted = -1;
+    acl = (void *)0xdeadbeef;
+    SetLastError(0xdeadbeef);
+    ret = GetSecurityDescriptorDacl(sd, &present, &acl, &defaulted);
+    ok(ret, "GetSecurityDescriptorDacl error %d\n", GetLastError());
+todo_wine
+    ok(present == 1, "acl is not present\n");
+todo_wine
+    ok(acl != (void *)0xdeadbeef && acl != NULL, "acl pointer is not set\n");
+    ok(defaulted == 0, "defaulted is set to TRUE\n");
+
+    defaulted = -1;
+    sid = (void *)0xdeadbeef;
+    SetLastError(0xdeadbeef);
+    ret = GetSecurityDescriptorOwner(sd, &sid, &defaulted);
+    ok(ret, "GetSecurityDescriptorOwner error %d\n", GetLastError());
+todo_wine
+    ok(sid != (void *)0xdeadbeef && sid != NULL, "sid pointer is not set\n");
+    ok(defaulted == 0, "defaulted is set to TRUE\n");
+
+    defaulted = -1;
+    sid = (void *)0xdeadbeef;
+    SetLastError(0xdeadbeef);
+    ret = GetSecurityDescriptorGroup(sd, &sid, &defaulted);
+    ok(ret, "GetSecurityDescriptorGroup error %d\n", GetLastError());
+todo_wine
+    ok(sid != (void *)0xdeadbeef && sid != NULL, "sid pointer is not set\n");
+    ok(defaulted == 0, "defaulted is set to TRUE\n");
+}
+
+static void test_default_handle_security(HANDLE token, HANDLE handle, GENERIC_MAPPING *mapping)
+{
+    DWORD ret, length, needed, granted, priv_set_len;
+    BOOL status;
+    PRIVILEGE_SET priv_set;
+    SECURITY_DESCRIPTOR *sd;
+
+    needed = 0xdeadbeef;
+    SetLastError(0xdeadbeef);
+    ret = GetKernelObjectSecurity(handle, OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION | DACL_SECURITY_INFORMATION,
+                                  NULL, 0, &needed);
+    ok(!ret, "GetKernelObjectSecurity should fail\n");
+    ok(GetLastError() == ERROR_INSUFFICIENT_BUFFER, "expected ERROR_INSUFFICIENT_BUFFER, got %d\n", GetLastError());
+    ok(needed != 0xdeadbeef, "GetKernelObjectSecurity should return required buffer length\n");
+
+    length = needed;
+    sd = HeapAlloc(GetProcessHeap(), 0, length);
+
+    needed = 0xdeadbeef;
+    SetLastError(0xdeadbeef);
+    ret = GetKernelObjectSecurity(handle, OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION | DACL_SECURITY_INFORMATION,
+                                  sd, length, &needed);
+    ok(ret, "GetKernelObjectSecurity error %d\n", GetLastError());
+    ok(needed == length || needed == 0 /* file, pipe */, "GetKernelObjectSecurity should return %u instead of %u\n", length, needed);
+
+    validate_default_security_descriptor(sd);
+
+    priv_set_len = sizeof(priv_set);
+    granted = 0xdeadbeef;
+    status = 0xdeadbeef;
+    SetLastError(0xdeadbeef);
+    ret = AccessCheck(sd, token, MAXIMUM_ALLOWED, mapping, &priv_set, &priv_set_len, &granted, &status);
+todo_wine {
+    ok(ret, "AccessCheck error %d\n", GetLastError());
+    ok(status == 1, "expected 1, got %d\n", status);
+    ok(granted == mapping->GenericAll, "expected all access %#x, got %#x\n", mapping->GenericAll, granted);
+}
+    priv_set_len = sizeof(priv_set);
+    granted = 0xdeadbeef;
+    status = 0xdeadbeef;
+    SetLastError(0xdeadbeef);
+    ret = AccessCheck(sd, token, 0, mapping, &priv_set, &priv_set_len, &granted, &status);
+todo_wine {
+    ok(ret, "AccessCheck error %d\n", GetLastError());
+    ok(status == 0 || broken(status == 1) /* NT4 */, "expected 0, got %d\n", status);
+    ok(granted == 0 || broken(granted == mapping->GenericRead) /* NT4 */, "expected 0, got %#x\n", granted);
+}
+    priv_set_len = sizeof(priv_set);
+    granted = 0xdeadbeef;
+    status = 0xdeadbeef;
+    SetLastError(0xdeadbeef);
+    ret = AccessCheck(sd, token, ACCESS_SYSTEM_SECURITY, mapping, &priv_set, &priv_set_len, &granted, &status);
+todo_wine {
+    ok(ret, "AccessCheck error %d\n", GetLastError());
+    ok(status == 0, "expected 0, got %d\n", status);
+    ok(granted == 0, "expected 0, got %#x\n", granted);
+}
+    priv_set_len = sizeof(priv_set);
+    granted = 0xdeadbeef;
+    status = 0xdeadbeef;
+    SetLastError(0xdeadbeef);
+    ret = AccessCheck(sd, token, mapping->GenericRead, mapping, &priv_set, &priv_set_len, &granted, &status);
+todo_wine {
+    ok(ret, "AccessCheck error %d\n", GetLastError());
+    ok(status == 1, "expected 1, got %d\n", status);
+    ok(granted == mapping->GenericRead, "expected read access %#x, got %#x\n", mapping->GenericRead, granted);
+}
+    priv_set_len = sizeof(priv_set);
+    granted = 0xdeadbeef;
+    status = 0xdeadbeef;
+    SetLastError(0xdeadbeef);
+    ret = AccessCheck(sd, token, mapping->GenericWrite, mapping, &priv_set, &priv_set_len, &granted, &status);
+todo_wine {
+    ok(ret, "AccessCheck error %d\n", GetLastError());
+    ok(status == 1, "expected 1, got %d\n", status);
+    ok(granted == mapping->GenericWrite, "expected write access %#x, got %#x\n", mapping->GenericWrite, granted);
+}
+    priv_set_len = sizeof(priv_set);
+    granted = 0xdeadbeef;
+    status = 0xdeadbeef;
+    SetLastError(0xdeadbeef);
+    ret = AccessCheck(sd, token, mapping->GenericExecute, mapping, &priv_set, &priv_set_len, &granted, &status);
+todo_wine {
+    ok(ret, "AccessCheck error %d\n", GetLastError());
+    ok(status == 1, "expected 1, got %d\n", status);
+    ok(granted == mapping->GenericExecute, "expected execute access %#x, got %#x\n", mapping->GenericExecute, granted);
+}
+    HeapFree(GetProcessHeap(), 0, sd);
+}
+
+static void test_mutex_security(HANDLE token)
+{
+    HANDLE mutex;
+    GENERIC_MAPPING mapping = { STANDARD_RIGHTS_READ | MUTANT_QUERY_STATE | SYNCHRONIZE,
+                                STANDARD_RIGHTS_WRITE | MUTEX_MODIFY_STATE | SYNCHRONIZE,
+                                STANDARD_RIGHTS_EXECUTE | SYNCHRONIZE,
+                                STANDARD_RIGHTS_ALL | MUTEX_ALL_ACCESS };
+
+    SetLastError(0xdeadbeef);
+    mutex = OpenMutex(0, FALSE, "WineTestMutex");
+    ok(!mutex, "mutex should not exist\n");
+    ok(GetLastError() == ERROR_FILE_NOT_FOUND, "wrong error %u\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    mutex = CreateMutex(NULL, FALSE, "WineTestMutex");
+    ok(mutex != 0, "CreateMutex error %d\n", GetLastError());
+
+    test_default_handle_security(token, mutex, &mapping);
+
+    CloseHandle (mutex);
+}
+
+static void test_event_security(HANDLE token)
+{
+    HANDLE event;
+    GENERIC_MAPPING mapping = { STANDARD_RIGHTS_READ | EVENT_QUERY_STATE | SYNCHRONIZE,
+                                STANDARD_RIGHTS_WRITE | EVENT_MODIFY_STATE | SYNCHRONIZE,
+                                STANDARD_RIGHTS_EXECUTE | SYNCHRONIZE,
+                                STANDARD_RIGHTS_ALL | EVENT_ALL_ACCESS };
+
+    SetLastError(0xdeadbeef);
+    event = OpenEvent(0, FALSE, "WineTestEvent");
+    ok(!event, "event should not exist\n");
+    ok(GetLastError() == ERROR_FILE_NOT_FOUND, "wrong error %u\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    event = CreateEvent(NULL, FALSE, FALSE, "WineTestEvent");
+    ok(event != 0, "CreateEvent error %d\n", GetLastError());
+
+    test_default_handle_security(token, event, &mapping);
+
+    CloseHandle(event);
+}
+
+#define WINE_TEST_PIPE "\\\\.\\pipe\\WineTestPipe"
+static void test_named_pipe_security(HANDLE token)
+{
+    HANDLE pipe, file;
+    GENERIC_MAPPING mapping = { FILE_GENERIC_READ,
+                                FILE_GENERIC_WRITE,
+                                FILE_GENERIC_EXECUTE,
+                                STANDARD_RIGHTS_ALL | FILE_ALL_ACCESS };
+
+    SetLastError(0xdeadbeef);
+    pipe = CreateNamedPipe(WINE_TEST_PIPE, PIPE_ACCESS_DUPLEX | FILE_FLAG_FIRST_PIPE_INSTANCE,
+                           PIPE_TYPE_BYTE | PIPE_NOWAIT, PIPE_UNLIMITED_INSTANCES,
+                           0, 0, NMPWAIT_USE_DEFAULT_WAIT, NULL);
+    ok(pipe != INVALID_HANDLE_VALUE, "CreateNamedPipe error %d\n", GetLastError());
+
+    test_default_handle_security(token, pipe, &mapping);
+
+    SetLastError(0xdeadbeef);
+    file = CreateFile(WINE_TEST_PIPE, FILE_ALL_ACCESS, 0, NULL, OPEN_EXISTING, 0, 0);
+    ok(file != INVALID_HANDLE_VALUE, "CreateFile error %d\n", GetLastError());
+    CloseHandle(file);
+
+    CloseHandle(pipe);
+
+    SetLastError(0xdeadbeef);
+    file = CreateFile("\\\\.\\pipe\\", FILE_ALL_ACCESS, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, 0);
+    ok(file != INVALID_HANDLE_VALUE || broken(file == INVALID_HANDLE_VALUE) /* before Vista */, "CreateFile error %d\n", GetLastError());
+    CloseHandle(file);
+}
+
+static BOOL validate_impersonation_token(HANDLE token, DWORD *token_type)
+{
+    DWORD ret, needed;
+    TOKEN_TYPE type;
+    SECURITY_IMPERSONATION_LEVEL sil;
+
+    type = 0xdeadbeef;
+    needed = 0;
+    SetLastError(0xdeadbeef);
+    ret = GetTokenInformation(token, TokenType, &type, sizeof(type), &needed);
+    ok(ret, "GetTokenInformation error %d\n", GetLastError());
+    ok(needed == sizeof(type), "GetTokenInformation should return required buffer length\n");
+    ok(type == TokenPrimary || type == TokenImpersonation, "expected TokenPrimary or TokenImpersonation, got %d\n", type);
+
+    *token_type = type;
+    if (type != TokenImpersonation) return FALSE;
+
+    needed = 0;
+    SetLastError(0xdeadbeef);
+    ret = GetTokenInformation(token, TokenImpersonationLevel, &sil, sizeof(sil), &needed);
+    ok(ret, "GetTokenInformation error %d\n", GetLastError());
+    ok(needed == sizeof(sil), "GetTokenInformation should return required buffer length\n");
+    ok(sil == SecurityImpersonation, "expected SecurityImpersonation, got %d\n", sil);
+
+    needed = 0xdeadbeef;
+    SetLastError(0xdeadbeef);
+    ret = GetTokenInformation(token, TokenDefaultDacl, NULL, 0, &needed);
+    ok(!ret, "GetTokenInformation should fail\n");
+    ok(GetLastError() == ERROR_INSUFFICIENT_BUFFER, "expected ERROR_INSUFFICIENT_BUFFER, got %d\n", GetLastError());
+    ok(needed != 0xdeadbeef, "GetTokenInformation should return required buffer length\n");
+    ok(needed > sizeof(TOKEN_DEFAULT_DACL), "GetTokenInformation returned empty default DACL\n");
+
+    needed = 0xdeadbeef;
+    SetLastError(0xdeadbeef);
+    ret = GetTokenInformation(token, TokenOwner, NULL, 0, &needed);
+    ok(!ret, "GetTokenInformation should fail\n");
+    ok(GetLastError() == ERROR_INSUFFICIENT_BUFFER, "expected ERROR_INSUFFICIENT_BUFFER, got %d\n", GetLastError());
+    ok(needed != 0xdeadbeef, "GetTokenInformation should return required buffer length\n");
+    ok(needed > sizeof(TOKEN_OWNER), "GetTokenInformation returned empty token owner\n");
+
+    needed = 0xdeadbeef;
+    SetLastError(0xdeadbeef);
+    ret = GetTokenInformation(token, TokenPrimaryGroup, NULL, 0, &needed);
+    ok(!ret, "GetTokenInformation should fail\n");
+    ok(GetLastError() == ERROR_INSUFFICIENT_BUFFER, "expected ERROR_INSUFFICIENT_BUFFER, got %d\n", GetLastError());
+    ok(needed != 0xdeadbeef, "GetTokenInformation should return required buffer length\n");
+    ok(needed > sizeof(TOKEN_PRIMARY_GROUP), "GetTokenInformation returned empty token primary group\n");
+
+    return TRUE;
+}
+
+static void test_kernel_objects_security(void)
+{
+    HANDLE token, process_token;
+    DWORD ret, token_type;
+
+    ret = OpenProcessToken(GetCurrentProcess(), TOKEN_DUPLICATE | TOKEN_QUERY, &process_token);
+    ok(ret, "OpenProcessToken error %d\n", GetLastError());
+
+    ret = validate_impersonation_token(process_token, &token_type);
+    ok(token_type == TokenPrimary, "expected TokenPrimary, got %d\n", token_type);
+    ok(!ret, "access token should not be an impersonation token\n");
+
+    ret = DuplicateToken(process_token, SecurityImpersonation, &token);
+    ok(ret, "DuplicateToken error %d\n", GetLastError());
+
+    ret = validate_impersonation_token(token, &token_type);
+    ok(ret, "access token should be a valid impersonation token\n");
+    ok(token_type == TokenImpersonation, "expected TokenImpersonation, got %d\n", token_type);
+
+    test_mutex_security(token);
+    test_event_security(token);
+    test_named_pipe_security(token);
+    /* FIXME: test other kernel object types */
+
+    CloseHandle(process_token);
+    CloseHandle(token);
+}
+
+static void test_TokenIntegrityLevel(void)
+{
+    TOKEN_MANDATORY_LABEL *tml;
+    BYTE buffer[64];        /* using max. 28 byte in win7 x64 */
+    HANDLE token;
+    DWORD size;
+    DWORD res;
+    char *sidname = NULL;
+    static SID medium_level = {SID_REVISION, 1, {SECURITY_MANDATORY_LABEL_AUTHORITY},
+                                                    {SECURITY_MANDATORY_HIGH_RID}};
+    static SID high_level = {SID_REVISION, 1, {SECURITY_MANDATORY_LABEL_AUTHORITY},
+                                                    {SECURITY_MANDATORY_MEDIUM_RID}};
+
+    SetLastError(0xdeadbeef);
+    res = OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token);
+    ok(res, "got %d with %d (expected TRUE)\n", res, GetLastError());
+
+    SetLastError(0xdeadbeef);
+    res = GetTokenInformation(token, TokenIntegrityLevel, buffer, sizeof(buffer), &size);
+
+    /* not supported before Vista */
+    if (!res && ((GetLastError() == ERROR_INVALID_PARAMETER) || GetLastError() == ERROR_INVALID_FUNCTION))
+    {
+        win_skip("TokenIntegrityLevel not supported\n");
+        CloseHandle(token);
+        return;
+    }
+
+    ok(res, "got %u with %u (expected TRUE)\n", res, GetLastError());
+    if (!res)
+    {
+        CloseHandle(token);
+        return;
+    }
+
+    tml = (TOKEN_MANDATORY_LABEL*) buffer;
+    ok(tml->Label.Attributes == (SE_GROUP_INTEGRITY | SE_GROUP_INTEGRITY_ENABLED),
+        "got 0x%x (expected 0x%x)\n", tml->Label.Attributes, (SE_GROUP_INTEGRITY | SE_GROUP_INTEGRITY_ENABLED));
+
+    SetLastError(0xdeadbeef);
+    res = pConvertSidToStringSidA(tml->Label.Sid, &sidname);
+    ok(res, "got %u and %u\n", res, GetLastError());
+
+    ok(EqualSid(tml->Label.Sid, &medium_level) || EqualSid(tml->Label.Sid, &high_level),
+        "got %s (expected 'S-1-16-8192' or 'S-1-16-12288')\n", sidname);
+
+    LocalFree(sidname);
+    CloseHandle(token);
+}
+
 START_TEST(security)
 {
     init();
@@ -3991,6 +4507,7 @@ START_TEST(security)
         test_process_security_child();
         return;
     }
+    test_kernel_objects_security();
     test_sid();
     test_trustee();
     test_luid();
@@ -4017,4 +4534,5 @@ START_TEST(security)
     test_GetUserNameA();
     test_GetUserNameW();
     test_CreateRestrictedToken();
+    test_TokenIntegrityLevel();
 }
