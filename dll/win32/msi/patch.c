@@ -225,7 +225,7 @@ static UINT patch_set_media_source_prop( MSIPACKAGE *package )
     {
         property = MSI_RecordGetString( rec, 1 );
         patch = msi_dup_property( package->db, szPatch );
-        msi_set_property( package->db, property, patch );
+        msi_set_property( package->db, property, patch, -1 );
         msi_free( patch );
         msiobj_release( &rec->hdr );
     }

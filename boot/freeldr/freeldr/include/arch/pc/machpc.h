@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  *  FreeLoader
  *
  *  Copyright (C) 2003  Eric Kohl

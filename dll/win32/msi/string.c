@@ -45,7 +45,8 @@ struct msistring
 {
     USHORT persistent_refcount;
     USHORT nonpersistent_refcount;
-    LPWSTR str;
+    WCHAR *data;
+    int    len;
 };
 
 struct string_table
@@ -112,7 +113,7 @@ VOID msi_destroy_stringtable( string_table *st )
     {
         if( st->strings[i].persistent_refcount ||
             st->strings[i].nonpersistent_refcount )
-            msi_free( st->strings[i].str );
+            msi_free( st->strings[i].data );
     }
     msi_free( st->strings );
     msi_free( st->sorted );
@@ -162,6 +163,19 @@ static int st_find_free_entry( string_table *st )
     return st->freeslot;
 }
 
+static inline int cmp_string( const WCHAR *str1, int len1, const WCHAR *str2, int len2 )
+{
+    if (len1 < len2) return -1;
+    else if (len1 > len2) return 1;
+    while (len1)
+    {
+        if (*str1 == *str2) { str1++; str2++; }
+        else return *str1 - *str2;
+        len1--;
+    }
+    return 0;
+}
+
 static int find_insert_index( const string_table *st, UINT string_id )
 {
     int i, c, low = 0, high = st->sortcount - 1;
@@ -169,8 +183,8 @@ static int find_insert_index( const string_table *st, UINT string_id )
     while (low <= high)
     {
         i = (low + high) / 2;
-        c = strcmpW( st->strings[string_id].str, st->strings[st->sorted[i]].str );
-
+        c = cmp_string( st->strings[string_id].data, st->strings[string_id].len,
+                        st->strings[st->sorted[i]].data, st->strings[st->sorted[i]].len );
         if (c < 0)
             high = i - 1;
         else if (c > 0)
@@ -194,7 +208,8 @@ static void insert_string_sorted( string_table *st, UINT string_id )
     st->sortcount++;
 }
 
-static void set_st_entry( string_table *st, UINT n, LPWSTR str, USHORT refcount, enum StringPersistence persistence )
+static void set_st_entry( string_table *st, UINT n, WCHAR *str, int len, USHORT refcount,
+                          enum StringPersistence persistence )
 {
     if (persistence == StringPersistent)
     {
@@ -207,7 +222,8 @@ static void set_st_entry( string_table *st, UINT n, LPWSTR str, USHORT refcount,
         st->strings[n].nonpersistent_refcount = refcount;
     }
 
-    st->strings[n].str = str;
+    st->strings[n].data = str;
+    st->strings[n].len  = len;
 
     insert_string_sorted( st, n );
 
@@ -237,20 +253,17 @@ static UINT msi_string2idA( const string_table *st, LPCSTR buffer, UINT *id )
         return ERROR_NOT_ENOUGH_MEMORY;
     MultiByteToWideChar( st->codepage, 0, buffer, -1, str, sz );
 
-    r = msi_string2idW( st, str, id );
+    r = msi_string2id( st, str, sz - 1, id );
     msi_free( str );
-
     return r;
 }
 
-static int msi_addstring( string_table *st, UINT n, const CHAR *data, int len, USHORT refcount, enum StringPersistence persistence )
+static int msi_addstring( string_table *st, UINT n, const char *data, UINT len, USHORT refcount, enum StringPersistence persistence )
 {
     LPWSTR str;
     int sz;
 
-    if( !data )
-        return 0;
-    if( !data[0] )
+    if( !data || !len )
         return 0;
     if( n > 0 )
     {
@@ -280,8 +293,6 @@ static int msi_addstring( string_table *st, UINT n, const CHAR *data, int len, U
     }
 
     /* allocate a new string */
-    if( len < 0 )
-        len = strlen(data);
     sz = MultiByteToWideChar( st->codepage, 0, data, len, NULL, 0 );
     str = msi_alloc( (sz+1)*sizeof(WCHAR) );
     if( !str )
@@ -289,8 +300,7 @@ static int msi_addstring( string_table *st, UINT n, const CHAR *data, int len, U
     MultiByteToWideChar( st->codepage, 0, data, len, str, sz );
     str[sz] = 0;
 
-    set_st_entry( st, n, str, refcount, persistence );
-
+    set_st_entry( st, n, str, sz, refcount, persistence );
     return n;
 }
 
@@ -301,10 +311,13 @@ int msi_addstringW( string_table *st, const WCHAR *data, int len, USHORT refcoun
 
     if( !data )
         return 0;
-    if( !data[0] )
+
+    if (len < 0) len = strlenW( data );
+
+    if( !data[0] && !len )
         return 0;
 
-    if( msi_string2idW( st, data, &n ) == ERROR_SUCCESS )
+    if (msi_string2id( st, data, len, &n) == ERROR_SUCCESS )
     {
         if (persistence == StringPersistent)
             st->strings[n].persistent_refcount += refcount;
@@ -318,9 +331,7 @@ int msi_addstringW( string_table *st, const WCHAR *data, int len, USHORT refcoun
         return -1;
 
     /* allocate a new string */
-    if(len<0)
-        len = strlenW(data);
-    TRACE("%s, n = %d len = %d\n", debugstr_w(data), n, len );
+    TRACE( "%s, n = %d len = %d\n", debugstr_wn(data, len), n, len );
 
     str = msi_alloc( (len+1)*sizeof(WCHAR) );
     if( !str )
@@ -328,24 +339,27 @@ int msi_addstringW( string_table *st, const WCHAR *data, int len, USHORT refcoun
     memcpy( str, data, len*sizeof(WCHAR) );
     str[len] = 0;
 
-    set_st_entry( st, n, str, refcount, persistence );
-
+    set_st_entry( st, n, str, len, refcount, persistence );
     return n;
 }
 
 /* find the string identified by an id - return null if there's none */
-const WCHAR *msi_string_lookup_id( const string_table *st, UINT id )
+const WCHAR *msi_string_lookup( const string_table *st, UINT id, int *len )
 {
     if( id == 0 )
+    {
+        if (len) *len = 0;
         return szEmpty;
-
+    }
     if( id >= st->maxcount )
         return NULL;
 
     if( id && !st->strings[id].persistent_refcount && !st->strings[id].nonpersistent_refcount)
         return NULL;
 
-    return st->strings[id].str;
+    if (len) *len = st->strings[id].len;
+
+    return st->strings[id].data;
 }
 
 /*
@@ -361,16 +375,15 @@ const WCHAR *msi_string_lookup_id( const string_table *st, UINT id )
  */
 static UINT msi_id2stringA( const string_table *st, UINT id, LPSTR buffer, UINT *sz )
 {
-    UINT len, lenW;
+    int len, lenW;
     const WCHAR *str;
 
     TRACE("Finding string %d of %d\n", id, st->maxcount);
 
-    str = msi_string_lookup_id( st, id );
+    str = msi_string_lookup( st, id, &lenW );
     if( !str )
         return ERROR_FUNCTION_FAILED;
 
-    lenW = strlenW( str );
     len = WideCharToMultiByte( st->codepage, 0, str, lenW, NULL, 0, NULL, NULL );
     if( *sz < len )
     {
@@ -382,20 +395,22 @@ static UINT msi_id2stringA( const string_table *st, UINT id, LPSTR buffer, UINT 
 }
 
 /*
- *  msi_string2idW
+ *  msi_string2id
  *
  *  [in] st         - pointer to the string table
  *  [in] str        - string to find in the string table
  *  [out] id        - id of the string, if found
  */
-UINT msi_string2idW( const string_table *st, LPCWSTR str, UINT *id )
+UINT msi_string2id( const string_table *st, const WCHAR *str, int len, UINT *id )
 {
     int i, c, low = 0, high = st->sortcount - 1;
+
+    if (len < 0) len = strlenW( str );
 
     while (low <= high)
     {
         i = (low + high) / 2;
-        c = strcmpW( str, st->strings[st->sorted[i]].str );
+        c = cmp_string( str, len, st->strings[st->sorted[i]].data, st->strings[st->sorted[i]].len );
 
         if (c < 0)
             high = i - 1;
@@ -407,7 +422,6 @@ UINT msi_string2idW( const string_table *st, LPCWSTR str, UINT *id )
             return ERROR_SUCCESS;
         }
     }
-
     return ERROR_INVALID_PARAMETER;
 }
 
@@ -415,7 +429,7 @@ static void string_totalsize( const string_table *st, UINT *datasize, UINT *pool
 {
     UINT i, len, holesize;
 
-    if( st->strings[0].str || st->strings[0].persistent_refcount || st->strings[0].nonpersistent_refcount)
+    if( st->strings[0].data || st->strings[0].persistent_refcount || st->strings[0].nonpersistent_refcount)
         ERR("oops. element 0 has a string\n");
 
     *poolsize = 4;
@@ -425,14 +439,14 @@ static void string_totalsize( const string_table *st, UINT *datasize, UINT *pool
     {
         if( !st->strings[i].persistent_refcount )
         {
-            TRACE("[%u] nonpersistent = %s\n", i, debugstr_w(st->strings[i].str));
+            TRACE("[%u] nonpersistent = %s\n", i, debugstr_wn(st->strings[i].data, st->strings[i].len));
             (*poolsize) += 4;
         }
-        else if( st->strings[i].str )
+        else if( st->strings[i].data )
         {
-            TRACE("[%u] = %s\n", i, debugstr_w(st->strings[i].str));
-            len = WideCharToMultiByte( st->codepage, 0,
-                     st->strings[i].str, -1, NULL, 0, NULL, NULL);
+            TRACE("[%u] = %s\n", i, debugstr_wn(st->strings[i].data, st->strings[i].len));
+            len = WideCharToMultiByte( st->codepage, 0, st->strings[i].data, st->strings[i].len + 1,
+                                       NULL, 0, NULL, NULL);
             if( len )
                 len--;
             (*datasize) += len;

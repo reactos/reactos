@@ -191,7 +191,14 @@ VOID RunLoader(VOID)
 		UiDrawBackdrop();
 
 		// Show the operating system list menu
-		if (!UiDisplayMenu(OperatingSystemDisplayNames, OperatingSystemCount, DefaultOperatingSystem, TimeOut, &SelectedOperatingSystem, FALSE, MainBootMenuKeyPressFilter))
+		if (!UiDisplayMenu("Please select the operating system to start:",
+		                   OperatingSystemDisplayNames,
+		                   OperatingSystemCount,
+		                   DefaultOperatingSystem,
+		                   TimeOut,
+		                   &SelectedOperatingSystem,
+		                   FALSE,
+		                   MainBootMenuKeyPressFilter))
 		{
 			UiMessageBox("Press ENTER to reboot.");
 			goto reboot;

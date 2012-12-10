@@ -268,6 +268,41 @@ AllocateInterfaceDescriptorsArray(
     return STATUS_SUCCESS;
 }
 
+VOID
+DumpFullConfigurationDescriptor(
+    IN PFDO_DEVICE_EXTENSION FDODeviceExtension,
+    IN PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor)
+{
+    PUSB_COMMON_DESCRIPTOR Descriptor;
+
+    Descriptor = (PUSB_COMMON_DESCRIPTOR)ConfigurationDescriptor;
+
+    DbgPrint("Bogus ConfigurationDescriptor Found\n");
+    DbgPrint("InterfaceCount %x\n", ConfigurationDescriptor->bNumInterfaces);
+
+    do
+    {
+        if (((ULONG_PTR)Descriptor) >= ((ULONG_PTR)ConfigurationDescriptor + ConfigurationDescriptor->wTotalLength))
+            break;
+
+        DbgPrint("Descriptor Type %x Length %lu Offset %lu\n", Descriptor->bDescriptorType, Descriptor->bLength, ((ULONG_PTR)Descriptor - (ULONG_PTR)ConfigurationDescriptor));
+
+        // check for invalid descriptors
+        if (!Descriptor->bLength) 
+        {
+            DbgPrint("Bogus Descriptor!!!\n");
+            break;
+        }
+
+        // advance to next descriptor
+        Descriptor = (PUSB_COMMON_DESCRIPTOR)((ULONG_PTR)Descriptor + Descriptor->bLength);
+
+    }while(TRUE);
+
+
+}
+
+
 NTSTATUS
 NTAPI
 USBCCGP_ScanConfigurationDescriptor(
@@ -309,7 +344,6 @@ USBCCGP_ScanConfigurationDescriptor(
         // parse configuration descriptor
         //
         InterfaceDescriptor = USBD_ParseConfigurationDescriptorEx(ConfigurationDescriptor, ConfigurationDescriptor, InterfaceIndex, -1, -1, -1, -1);
-        ASSERT(InterfaceDescriptor);
         if (InterfaceDescriptor)
         {
             //
@@ -318,6 +352,18 @@ USBCCGP_ScanConfigurationDescriptor(
             FDODeviceExtension->InterfaceList[FDODeviceExtension->InterfaceListCount].InterfaceDescriptor = InterfaceDescriptor;
             FDODeviceExtension->InterfaceListCount++;
             CurrentPosition = (PVOID)((ULONG_PTR)InterfaceDescriptor + InterfaceDescriptor->bLength);
+        }
+        else
+        {
+            DumpConfigurationDescriptor(ConfigurationDescriptor);
+            DumpFullConfigurationDescriptor(FDODeviceExtension, ConfigurationDescriptor);
+
+            //
+            // see issue
+            // CORE-6574 Test 3 (USB Web Cam)
+            //
+            if (FDODeviceExtension->DeviceDescriptor && FDODeviceExtension->DeviceDescriptor->idVendor == 0x0458 && FDODeviceExtension->DeviceDescriptor->idProduct == 0x705f)
+                ASSERT(FALSE);
         }
 
         //
@@ -341,15 +387,15 @@ USBCCGP_ScanConfigurationDescriptor(
 VOID
 DumpConfigurationDescriptor(PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor)
 {
-    DPRINT1("Dumping ConfigurationDescriptor %x\n", ConfigurationDescriptor);
-    DPRINT1("bLength %x\n", ConfigurationDescriptor->bLength);
-    DPRINT1("bDescriptorType %x\n", ConfigurationDescriptor->bDescriptorType);
-    DPRINT1("wTotalLength %x\n", ConfigurationDescriptor->wTotalLength);
-    DPRINT1("bNumInterfaces %x\n", ConfigurationDescriptor->bNumInterfaces);
-    DPRINT1("bConfigurationValue %x\n", ConfigurationDescriptor->bConfigurationValue);
-    DPRINT1("iConfiguration %x\n", ConfigurationDescriptor->iConfiguration);
-    DPRINT1("bmAttributes %x\n", ConfigurationDescriptor->bmAttributes);
-    DPRINT1("MaxPower %x\n", ConfigurationDescriptor->MaxPower);
+    DbgPrint("Dumping ConfigurationDescriptor %x\n", ConfigurationDescriptor);
+    DbgPrint("bLength %x\n", ConfigurationDescriptor->bLength);
+    DbgPrint("bDescriptorType %x\n", ConfigurationDescriptor->bDescriptorType);
+    DbgPrint("wTotalLength %x\n", ConfigurationDescriptor->wTotalLength);
+    DbgPrint("bNumInterfaces %x\n", ConfigurationDescriptor->bNumInterfaces);
+    DbgPrint("bConfigurationValue %x\n", ConfigurationDescriptor->bConfigurationValue);
+    DbgPrint("iConfiguration %x\n", ConfigurationDescriptor->iConfiguration);
+    DbgPrint("bmAttributes %x\n", ConfigurationDescriptor->bmAttributes);
+    DbgPrint("MaxPower %x\n", ConfigurationDescriptor->MaxPower);
 }
 
 NTSTATUS

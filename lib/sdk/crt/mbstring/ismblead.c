@@ -19,7 +19,7 @@
  */
 int _ismbblead(unsigned int c)
 {
-  return (_mbctype[(c&0xff) + 1] & _M1) != 0;
+  return (get_mbcinfo()->mbctype[(c&0xff) + 1] & _M1) != 0;
 }
 
 /*
@@ -47,7 +47,7 @@ int _ismbslead( const unsigned char *start, const unsigned char *str)
  */
 unsigned char *__p__mbctype(void)
 {
-  return _mbctype;
+  return get_mbcinfo()->mbctype;
 }
 
 

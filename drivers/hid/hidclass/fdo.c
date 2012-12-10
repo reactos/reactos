@@ -350,26 +350,50 @@ HidClassFDO_StartDevice(
     // query capabilities
     //
     Status = HidClassFDO_QueryCapabilities(DeviceObject, &FDODeviceExtension->Capabilities);
-    ASSERT(Status == STATUS_SUCCESS);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("[HIDCLASS] Failed to retrieve capabilities %x\n", Status);
+        Irp->IoStatus.Status = Status;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return Status;
+    }
 
     //
     // lets start the lower device too
     //
     IoSkipCurrentIrpStackLocation(Irp);
     Status = HidClassFDO_DispatchRequestSynchronous(DeviceObject, Irp);
-    ASSERT(Status == STATUS_SUCCESS);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("[HIDCLASS] Failed to start lower device with %x\n", Status);
+        Irp->IoStatus.Status = Status;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return Status;
+    }
 
     //
     // lets get the descriptors
     //
     Status = HidClassFDO_GetDescriptors(DeviceObject);
-    ASSERT(Status == STATUS_SUCCESS);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("[HIDCLASS] Failed to retrieve the descriptors %x\n", Status);
+        Irp->IoStatus.Status = Status;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return Status;
+    }
 
     //
     // now get the the collection description
     //
     Status = HidP_GetCollectionDescription(FDODeviceExtension->ReportDescriptor, FDODeviceExtension->HidDescriptor.DescriptorList[0].wReportLength, NonPagedPool, &FDODeviceExtension->Common.DeviceDescription);
-    ASSERT(Status == STATUS_SUCCESS);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("[HIDCLASS] Failed to retrieve the collection description %x\n", Status);
+        Irp->IoStatus.Status = Status;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return Status;
+    }
 
     //
     // complete request

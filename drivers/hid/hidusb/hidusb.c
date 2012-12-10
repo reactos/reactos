@@ -651,10 +651,15 @@ HidUsb_GetReportDescriptor(
     {
         //
         // failed to get descriptor
+        // try with old hid version
         //
-        DPRINT("[HIDUSB] failed to get report descriptor with %x\n", Status);
-        ASSERT(FALSE);
-        return Status;
+        BufferLength = HidDeviceExtension->HidDescriptor->DescriptorList[0].wReportLength;
+        Status = Hid_GetDescriptor(DeviceObject, URB_FUNCTION_GET_DESCRIPTOR_FROM_ENDPOINT, sizeof(struct _URB_CONTROL_DESCRIPTOR_REQUEST), &Report, &BufferLength, HidDeviceExtension->HidDescriptor->DescriptorList[0].bReportType, 0, 0 /* FIXME*/);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT("[HIDUSB] failed to get report descriptor with %x\n", Status);
+            return Status;
+        }
     }
 
     //
@@ -1168,6 +1173,13 @@ Hid_SelectConfiguration(
                                                               USB_DEVICE_CLASS_HUMAN_INTERFACE,
                                                              -1,
                                                              -1);
+    if (!InterfaceDescriptor)
+    {
+        //
+        // bogus configuration descriptor
+        //
+        return STATUS_INVALID_PARAMETER;
+    }
 
     //
     // sanity check
@@ -1291,7 +1303,7 @@ Hid_SetIdle(
     //
     // print status
     //
-    DPRINT("Status %x\n", Status);
+    DPRINT1("Status %x\n", Status);
     return Status;
 }
 
@@ -1472,7 +1484,7 @@ Hid_PnpStart(
         //
         // no interface class
         //
-        DPRINT1("[HIDUSB] HID Class found\n");
+        DPRINT1("[HIDUSB] HID Interface descriptor not found\n");
         return STATUS_UNSUCCESSFUL;
     }
 
@@ -1482,11 +1494,6 @@ Hid_PnpStart(
     ASSERT(InterfaceDescriptor->bInterfaceClass == USB_DEVICE_CLASS_HUMAN_INTERFACE);
     ASSERT(InterfaceDescriptor->bDescriptorType == USB_INTERFACE_DESCRIPTOR_TYPE);
     ASSERT(InterfaceDescriptor->bLength == sizeof(USB_INTERFACE_DESCRIPTOR));
-
-    //
-    // now set the device idle
-    //
-    Hid_SetIdle(DeviceObject);
 
     //
     // move to next descriptor
@@ -1508,31 +1515,38 @@ Hid_PnpStart(
         // select configuration
         //
         Status = Hid_SelectConfiguration(DeviceObject);
-        ASSERT(Status == STATUS_SUCCESS);
 
         //
         // done
         //
-        DPRINT("[HIDUSB] SelectConfiguration %x\n", Status);
+        DPRINT1("[HIDUSB] SelectConfiguration %x\n", Status);
 
-        //
-        // get protocol
-        //
-        Hid_GetProtocol(DeviceObject);
-        return Status;
+        if (NT_SUCCESS(Status))
+        {
+            //
+            // now set the device idle
+            //
+            Hid_SetIdle(DeviceObject);
+
+            //
+            // get protocol
+            //
+            Hid_GetProtocol(DeviceObject);
+            return Status;
+        }
     }
-
-    //
-    // FIXME parse hid descriptor
-    //
-    UNIMPLEMENTED
-    ASSERT(FALSE);
-
-    //
-    // get protocol
-    //
-    Hid_GetProtocol(DeviceObject);
-    return STATUS_SUCCESS;
+    else
+    {
+        //
+        // FIXME parse hid descriptor
+        // select configuration
+        // set idle
+        // and get protocol
+        //
+        UNIMPLEMENTED
+        ASSERT(FALSE);
+    }
+    return Status;
 }
 
 
@@ -1684,10 +1698,13 @@ HidPnp(
                 Status = Irp->IoStatus.Status;
             }
 
-            //
-            // don't need to safely remove
-            //
-            IoStack->Parameters.DeviceCapabilities.Capabilities->SurpriseRemovalOK = TRUE;
+            if (NT_SUCCESS(Status) && IoStack->Parameters.DeviceCapabilities.Capabilities != NULL)
+            {
+                //
+                // don't need to safely remove
+                //
+                IoStack->Parameters.DeviceCapabilities.Capabilities->SurpriseRemovalOK = TRUE;
+            }
 
             //
             // done

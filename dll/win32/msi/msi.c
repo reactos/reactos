@@ -1101,6 +1101,11 @@ static LPWSTR msi_reg_get_value(HKEY hkey, LPCWSTR name, DWORD *type)
 static UINT MSI_GetProductInfo(LPCWSTR szProduct, LPCWSTR szAttribute,
                                awstring *szValue, LPDWORD pcchValueBuf)
 {
+    static WCHAR empty[] = {0};
+    static const WCHAR sourcelist[] = {'S','o','u','r','c','e','L','i','s','t',0};
+    static const WCHAR display_name[] = {'D','i','s','p','l','a','y','N','a','m','e',0};
+    static const WCHAR display_version[] = {'D','i','s','p','l','a','y','V','e','r','s','i','o','n',0};
+    static const WCHAR assignment[] = {'A','s','s','i','g','n','m','e','n','t',0};
     MSIINSTALLCONTEXT context = MSIINSTALLCONTEXT_USERUNMANAGED;
     UINT r = ERROR_UNKNOWN_PROPERTY;
     HKEY prodkey, userdata, source;
@@ -1110,16 +1115,6 @@ static UINT MSI_GetProductInfo(LPCWSTR szProduct, LPCWSTR szAttribute,
     BOOL badconfig = FALSE;
     LONG res;
     DWORD type = REG_NONE;
-
-    static WCHAR empty[] = {0};
-    static const WCHAR sourcelist[] = {
-        'S','o','u','r','c','e','L','i','s','t',0};
-    static const WCHAR display_name[] = {
-        'D','i','s','p','l','a','y','N','a','m','e',0};
-    static const WCHAR display_version[] = {
-        'D','i','s','p','l','a','y','V','e','r','s','i','o','n',0};
-    static const WCHAR assignment[] = {
-        'A','s','s','i','g','n','m','e','n','t',0};
 
     TRACE("%s %s %p %p\n", debugstr_w(szProduct),
           debugstr_w(szAttribute), szValue, pcchValueBuf);
@@ -1244,6 +1239,8 @@ static UINT MSI_GetProductInfo(LPCWSTR szProduct, LPCWSTR szAttribute,
 
     if (pcchValueBuf)
     {
+        int len = strlenW( val );
+
         /* If szBuffer (szValue->str) is NULL, there's no need to copy the value
          * out.  Also, *pcchValueBuf may be uninitialized in this case, so we
          * can't rely on its value.
@@ -1251,16 +1248,14 @@ static UINT MSI_GetProductInfo(LPCWSTR szProduct, LPCWSTR szAttribute,
         if (szValue->str.a || szValue->str.w)
         {
             DWORD size = *pcchValueBuf;
-            if (strlenW(val) < size)
-                r = msi_strcpy_to_awstring(val, szValue, &size);
+            if (len < size)
+                r = msi_strcpy_to_awstring( val, len, szValue, &size );
             else
-            {
                 r = ERROR_MORE_DATA;
-            }
         }
 
         if (!badconfig)
-            *pcchValueBuf = lstrlenW(val);
+            *pcchValueBuf = len;
     }
 
     if (badconfig)
@@ -2220,7 +2215,10 @@ UINT WINAPI MsiQueryComponentStateW(LPCWSTR szProductCode,
 
         if (!(val = msi_alloc( sz ))) return ERROR_OUTOFMEMORY;
         if ((r = msi_comp_find_prodcode(squished_pc, dwContext, szComponent, val, &sz)))
+        {
+            msi_free(val);
             return r;
+        }
 
         if (lstrlenW(val) > 2 &&
             val[0] >= '0' && val[0] <= '9' && val[1] >= '0' && val[1] <= '9' && val[2] != ':')
@@ -2867,7 +2865,7 @@ static INSTALLSTATE MSI_GetComponentPath(LPCWSTR szProduct, LPCWSTR szComponent,
     if (state == INSTALLSTATE_LOCAL && !*path)
         state = INSTALLSTATE_NOTUSED;
 
-    msi_strcpy_to_awstring(path, lpPathBuf, pcchBuf);
+    msi_strcpy_to_awstring(path, -1, lpPathBuf, pcchBuf);
     msi_free(path);
     return state;
 }
@@ -3521,7 +3519,7 @@ static USERINFOSTATE MSI_GetUserInfo(LPCWSTR szProduct,
             goto done;
         }
 
-        r = msi_strcpy_to_awstring(user, lpUserNameBuf, pcchUserNameBuf);
+        r = msi_strcpy_to_awstring(user, -1, lpUserNameBuf, pcchUserNameBuf);
         if (r == ERROR_MORE_DATA)
         {
             state = USERINFOSTATE_MOREDATA;
@@ -3534,7 +3532,7 @@ static USERINFOSTATE MSI_GetUserInfo(LPCWSTR szProduct,
         orgptr = org;
         if (!orgptr) orgptr = szEmpty;
 
-        r = msi_strcpy_to_awstring(orgptr, lpOrgNameBuf, pcchOrgNameBuf);
+        r = msi_strcpy_to_awstring(orgptr, -1, lpOrgNameBuf, pcchOrgNameBuf);
         if (r == ERROR_MORE_DATA)
         {
             state = USERINFOSTATE_MOREDATA;
@@ -3550,7 +3548,7 @@ static USERINFOSTATE MSI_GetUserInfo(LPCWSTR szProduct,
             goto done;
         }
 
-        r = msi_strcpy_to_awstring(serial, lpSerialBuf, pcchSerialBuf);
+        r = msi_strcpy_to_awstring(serial, -1, lpSerialBuf, pcchSerialBuf);
         if (r == ERROR_MORE_DATA)
             state = USERINFOSTATE_MOREDATA;
     }

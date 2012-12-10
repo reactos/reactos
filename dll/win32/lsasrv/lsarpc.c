@@ -258,6 +258,7 @@ NTSTATUS WINAPI LsarOpenPolicy(
                               L"Policy",
                               LsaDbPolicyObject,
                               DesiredAccess,
+                              FALSE,
                               &PolicyObject);
 
     RtlLeaveCriticalSection(&PolicyHandleTableLock);
@@ -592,6 +593,7 @@ NTSTATUS WINAPI LsarCreateAccount(
                                 SidString,
                                 LsaDbAccountObject,
                                 DesiredAccess,
+                                PolicyObject->Trusted,
                                 &AccountObject);
     if (!NT_SUCCESS(Status))
     {
@@ -1036,6 +1038,7 @@ NTSTATUS WINAPI LsarCreateSecret(
                                 SecretName->Buffer,
                                 LsaDbSecretObject,
                                 DesiredAccess,
+                                PolicyObject->Trusted,
                                 &SecretObject);
     if (!NT_SUCCESS(Status))
     {
@@ -1131,6 +1134,7 @@ NTSTATUS WINAPI LsarOpenAccount(
                               SidString,
                               LsaDbAccountObject,
                               DesiredAccess,
+                              PolicyObject->Trusted,
                               &AccountObject);
     if (!NT_SUCCESS(Status))
     {
@@ -1241,6 +1245,7 @@ NTSTATUS WINAPI LsarAddPrivilegesToAccount(
         return Status;
     }
 
+    /* Get the size of the Privilgs attribute */
     Status = LsapGetObjectAttribute(AccountObject,
                                     L"Privilgs",
                                     NULL,
@@ -1348,7 +1353,7 @@ NTSTATUS WINAPI LsarAddPrivilegesToAccount(
             }
         }
 
-        /* Set the new priivliege set */
+        /* Set the new privilege set */
         Status = LsapSetObjectAttribute(AccountObject,
                                         L"Privilgs",
                                         NewPrivileges,
@@ -1591,6 +1596,7 @@ NTSTATUS WINAPI LsarOpenSecret(
                               SecretName->Buffer,
                               LsaDbSecretObject,
                               DesiredAccess,
+                              PolicyObject->Trusted,
                               &SecretObject);
     if (!NT_SUCCESS(Status))
     {

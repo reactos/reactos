@@ -174,9 +174,12 @@ typedef struct _SERVICE_RPC_REQUIRED_PRIVILEGES_INFO {
     [size_is(cbRequiredPrivileges)] PBYTE pRequiredPrivileges;
 } SERVICE_RPC_REQUIRED_PRIVILEGES_INFO, *LPSERVICE_RPC_REQUIRED_PRIVILEGES_INFO;
 
+cpp_quote("#ifndef _SERVICE_PRESHUTDOWN_INFO_DEFINED_")
+cpp_quote("#define _SERVICE_PRESHUTDOWN_INFO_DEFINED_")
 typedef struct _SERVICE_PRESHUTDOWN_INFO {
     DWORD dwPreshutdownTimeout;
 } SERVICE_PRESHUTDOWN_INFO, *LPSERVICE_PRESHUTDOWN_INFO;
+cpp_quote("#endif")
 
 typedef struct _SC_RPC_CONFIG_INFOA {
     DWORD dwInfoLevel;

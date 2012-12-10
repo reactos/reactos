@@ -57,6 +57,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(msvcrt);
 #include <internal/atexit.h>
 #include <internal/console.h>
 #include <internal/ieee.h>
+#include <internal/locale.h>
 #include <internal/math.h>
 #include <internal/mbstring.h>
 #include <internal/mtdll.h>

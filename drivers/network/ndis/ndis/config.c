@@ -432,7 +432,7 @@ NdisReadConfiguration(
     PMINIPORT_CONFIGURATION_CONTEXT ConfigurationContext = (PMINIPORT_CONFIGURATION_CONTEXT)ConfigurationHandle;
     PVOID Buffer;
 
-    *ParameterValue = NULL;
+    //*ParameterValue = NULL;
     *Status = NDIS_STATUS_FAILURE;
 
     NDIS_DbgPrint(MAX_TRACE,("requested read of %wZ\n", Keyword));

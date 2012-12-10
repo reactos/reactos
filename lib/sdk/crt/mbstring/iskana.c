@@ -17,5 +17,5 @@
  */
 int _ismbbkana(unsigned int c)
 {
-  return (_mbctype[c & 0xff] & _MBKANA);
+  return (get_mbcinfo()->mbctype[c & 0xff] & _MBKANA);
 }

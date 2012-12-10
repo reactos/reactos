@@ -16,5 +16,5 @@
  */
 int _ismbbkalnum( unsigned int c )
 {
-  return (_mbctype[c & 0xff] & _MKMOJI);
+  return (get_mbcinfo()->mbctype[c & 0xff] & _MKMOJI);
 }

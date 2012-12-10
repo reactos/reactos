@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  *  FreeLdr boot loader
  *  Copyright (C) 2002, 2003 ReactOS Team
  *

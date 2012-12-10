@@ -586,7 +586,15 @@ CdfsQueryDirectory(PDEVICE_OBJECT DeviceObject,
         Buffer = Irp->UserBuffer;
     }
 
-    if (SearchPattern != NULL)
+    /* Allocate search pattern in case:
+     * -> We don't have one already in context
+     * -> We have been given an input pattern
+     * -> The pattern length is not null
+     * -> The pattern buffer is not null
+     * Otherwise, we'll fall later and allocate a match all (*) pattern
+     */
+    if (SearchPattern != NULL &&
+        SearchPattern->Length != 0 && SearchPattern->Buffer != NULL)
     {
         if (Ccb->DirectorySearchPattern.Buffer == NULL)
         {

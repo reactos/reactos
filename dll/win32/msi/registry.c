@@ -1557,7 +1557,7 @@ static UINT MSI_EnumComponentQualifiers( LPCWSTR szComponent, DWORD iIndex,
         }
 
         r = ERROR_OUTOFMEMORY;
-        if ((name_sz+1) >= name_max)
+        if (name_sz + 1 >= name_max)
         {
             name_max *= 2;
             msi_free( name );
@@ -1586,8 +1586,8 @@ static UINT MSI_EnumComponentQualifiers( LPCWSTR szComponent, DWORD iIndex,
 
     TRACE("Providing %s and %s\n", debugstr_w(name), debugstr_w(val+ofs));
 
-    r = msi_strcpy_to_awstring( name, lpQualBuf, pcchQual );
-    r2 = msi_strcpy_to_awstring( val+ofs, lpAppBuf, pcchAppBuf );
+    r = msi_strcpy_to_awstring( name, -1, lpQualBuf, pcchQual );
+    r2 = msi_strcpy_to_awstring( val+ofs, -1, lpAppBuf, pcchAppBuf );
 
     if (r2 != ERROR_SUCCESS)
         r = r2;
@@ -1596,7 +1596,6 @@ end:
     msi_free(val);
     msi_free(name);
     RegCloseKey(key);
-
     return r;
 }
 

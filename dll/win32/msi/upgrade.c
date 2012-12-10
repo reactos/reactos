@@ -88,7 +88,7 @@ static void append_productcode(MSIPACKAGE* package, LPCWSTR action_property,
         newprop[0] = 0;
     strcatW(newprop,productid);
 
-    r = msi_set_property( package->db, action_property, newprop );
+    r = msi_set_property( package->db, action_property, newprop, -1 );
     if (r == ERROR_SUCCESS && !strcmpW( action_property, szSourceDir ))
         msi_reset_folders( package, TRUE );
 

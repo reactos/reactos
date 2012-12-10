@@ -220,7 +220,7 @@ FsRtlIsDbcsInExpression(IN PANSI_STRING Expression,
             {
                 if (Name->Buffer[MatchingChars] == '.')
                 {
-                    NamePosition = MatchingChars;
+                    NamePosition = MatchingChars + 1;
                 }
                 MatchingChars++;
             }

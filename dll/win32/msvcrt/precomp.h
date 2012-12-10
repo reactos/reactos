@@ -7,6 +7,7 @@
 #include <mbctype.h>
 #include <internal/wine/msvcrt.h>
 #include <internal/tls.h>
+#include <internal/locale.h>
 #include <windows.h>
 
 #include <internal/wine/msvcrt.h>

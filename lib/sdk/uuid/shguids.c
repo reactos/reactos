@@ -2,6 +2,7 @@
 #include <initguid.h>
 
 #include <shlguid.h>
+#include <devguid.h>
 #include <isguids.h>
 
 //BHID_LinkTargetItem

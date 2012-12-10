@@ -133,7 +133,7 @@
 @ cdecl ___lc_codepage_func()
 # @ cdecl ___lc_collate_cp_func()
 @ cdecl ___lc_handle_func()
-# @ cdecl ___mb_cur_max_func() MSVCRT___mb_cur_max_func
+@ cdecl ___mb_cur_max_func()
 @ cdecl ___setlc_active_func()
 @ cdecl ___unguarded_readlc_active_add_func()
 @ extern __argc
@@ -302,7 +302,7 @@
 @ extern _commode
 @ cdecl _control87(long long)
 @ cdecl _controlfp(long long)
-# @ cdecl _controlfp_s(ptr long long)
+@ cdecl _controlfp_s(ptr long long)
 @ cdecl _copysign( double double )
 @ varargs _cprintf(str)
 # stub _cprintf_l
@@ -492,7 +492,7 @@
 @ cdecl _isatty(long)
 # stub _iscntrl_l
 @ cdecl _isctype(long long)
-# stub _isctype_l
+@ cdecl _isctype_l(long long ptr)
 # stub _isdigit_l
 # stub _isgraph_l
 # stub _isleadbyte_l
@@ -1042,7 +1042,7 @@
 @ cdecl _wcstoi64(wstr ptr long)
 # @ cdecl _wcstoi64_l(wstr ptr long ptr)
 # stub _wcstol_l
-# stub _wcstombs_l
+@ cdecl _wcstombs_l(ptr ptr long ptr)
 # @ cdecl _wcstombs_s_l(ptr ptr long wstr long ptr)
 @ cdecl _wcstoui64(wstr ptr long)
 # @ cdecl _wcstoui64_l(wstr ptr long ptr)

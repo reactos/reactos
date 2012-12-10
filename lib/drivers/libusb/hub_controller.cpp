@@ -740,6 +740,12 @@ CHubController::HandlePnp(
             Status = STATUS_SUCCESS;
             break;
         }
+        case IRP_MN_SURPRISE_REMOVAL:
+        {
+            DPRINT("[USBLIB] HandlePnp IRP_MN_SURPRISE_REMOVAL\n");
+            Status = STATUS_SUCCESS;
+            break;
+        }
         default:
         {
             //
@@ -1038,6 +1044,7 @@ CHubController::HandleSelectConfiguration(
 {
     PUSBDEVICE UsbDevice;
     PUSBD_INTERFACE_INFORMATION InterfaceInfo;
+    NTSTATUS Status;
 
     //
     // is the request for the Root Hub
@@ -1104,7 +1111,13 @@ CHubController::HandleSelectConfiguration(
         //
         // select configuration
         //
-        return UsbDevice->SelectConfiguration(Urb->UrbSelectConfiguration.ConfigurationDescriptor, &Urb->UrbSelectConfiguration.Interface, &Urb->UrbSelectConfiguration.ConfigurationHandle);
+        Status = UsbDevice->SelectConfiguration(Urb->UrbSelectConfiguration.ConfigurationDescriptor, &Urb->UrbSelectConfiguration.Interface, &Urb->UrbSelectConfiguration.ConfigurationHandle);
+        if (NT_SUCCESS(Status)) 
+        {
+            // successfully configured device
+            Urb->UrbSelectConfiguration.Hdr.Status = USBD_STATUS_SUCCESS;
+        }
+        return Status;
     }
 }
 
@@ -1479,7 +1492,10 @@ CHubController::HandleGetDescriptorFromInterface(
     // submit setup packet
     //
     Status = UsbDevice->SubmitSetupPacket(&CtrlSetup, Urb->UrbControlDescriptorRequest.TransferBufferLength, Urb->UrbControlDescriptorRequest.TransferBuffer);
-    ASSERT(Status == STATUS_SUCCESS);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("[USBLIB] HandleGetDescriptorFromInterface failed with %x\n", Status);
+    }
 
     //
     // done
@@ -1499,7 +1515,7 @@ CHubController::HandleGetDescriptor(
     PUSBDEVICE UsbDevice;
     ULONG Length, BufferLength;
 
-    DPRINT("[USBLIB] HandleGetDescriptor\n");
+    DPRINT("[USBLIB] HandleGetDescriptor Type %x\n", Urb->UrbControlDescriptorRequest.DescriptorType);
 
     //
     // check descriptor type
@@ -1520,6 +1536,8 @@ CHubController::HandleGetDescriptor(
                 // copy root hub device descriptor
                 //
                 RtlCopyMemory((PUCHAR)Urb->UrbControlDescriptorRequest.TransferBuffer, &m_DeviceDescriptor, sizeof(USB_DEVICE_DESCRIPTOR));
+                Irp->IoStatus.Information = sizeof(USB_DEVICE_DESCRIPTOR);
+                Urb->UrbControlDescriptorRequest.Hdr.Status = USBD_STATUS_SUCCESS;
                 Status = STATUS_SUCCESS;
             }
             else
@@ -1546,6 +1564,8 @@ CHubController::HandleGetDescriptor(
                 // retrieve device descriptor from device
                 //
                 UsbDevice->GetDeviceDescriptor((PUSB_DEVICE_DESCRIPTOR)Urb->UrbControlDescriptorRequest.TransferBuffer);
+                Irp->IoStatus.Information = sizeof(USB_DEVICE_DESCRIPTOR);
+                Urb->UrbControlDescriptorRequest.Hdr.Status = USBD_STATUS_SUCCESS;
                 Status = STATUS_SUCCESS;
             }
             break;
@@ -1678,7 +1698,9 @@ CHubController::HandleGetDescriptor(
                 //
                 // store result size
                 //
+                Irp->IoStatus.Information = Length;
                 Urb->UrbControlDescriptorRequest.TransferBufferLength = Length;
+                Urb->UrbControlDescriptorRequest.Hdr.Status = USBD_STATUS_SUCCESS;
                 Status = STATUS_SUCCESS;
             }
             break;
@@ -1828,7 +1850,7 @@ CHubController::HandleVendorDevice(
     PUSBDEVICE UsbDevice;
     USB_DEFAULT_PIPE_SETUP_PACKET CtrlSetup;
 
-    DPRINT("CHubController::HandleVendorDevice Request %x\n", Urb->UrbControlVendorClassRequest.Request);
+    //DPRINT("CHubController::HandleVendorDevice Request %x\n", Urb->UrbControlVendorClassRequest.Request);
 
     //
     // sanity check
@@ -1876,7 +1898,12 @@ CHubController::HandleVendorDevice(
     // issue request
     //
     Status = UsbDevice->SubmitSetupPacket(&CtrlSetup, Urb->UrbControlVendorClassRequest.TransferBufferLength, Urb->UrbControlVendorClassRequest.TransferBuffer);
-    PC_ASSERT(NT_SUCCESS(Status));
+    if (NT_SUCCESS(Status))
+    {
+        // success
+        Urb->UrbControlVendorClassRequest.Hdr.Status = USBD_STATUS_SUCCESS;
+        Irp->IoStatus.Information = Urb->UrbControlVendorClassRequest.TransferBufferLength;
+    }
 
     return Status;
 }

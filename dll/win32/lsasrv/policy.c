@@ -29,6 +29,7 @@ LsaIOpenPolicyTrusted(OUT LSAPR_HANDLE *PolicyHandle)
                               L"Policy",
                               LsaDbPolicyObject,
                               POLICY_ALL_ACCESS,
+                              TRUE,
                               &PolicyObject);
 
     if (NT_SUCCESS(Status))
@@ -89,6 +90,7 @@ LsarQueryAuditEvents(PLSA_DB_OBJECT PolicyObject,
     if (!NT_SUCCESS(Status))
         return Status;
 
+    TRACE("Attribute size: %lu\n", AttributeSize);
     if (AttributeSize > 0)
     {
         AuditData = MIDL_user_allocate(AttributeSize);
@@ -101,14 +103,23 @@ LsarQueryAuditEvents(PLSA_DB_OBJECT PolicyObject,
                                         &AttributeSize);
         if (!NT_SUCCESS(Status))
             goto done;
+    }
 
-        p = MIDL_user_allocate(sizeof(LSAPR_POLICY_AUDIT_EVENTS_INFO));
-        if (p == NULL)
-        {
-            Status = STATUS_INSUFFICIENT_RESOURCES;
-            goto done;
-        }
+    p = MIDL_user_allocate(sizeof(LSAPR_POLICY_AUDIT_EVENTS_INFO));
+    if (p == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
 
+    if (AuditData == NULL)
+    {
+        p->AuditingMode = FALSE;
+        p->MaximumAuditEventCount = 0;
+        p->EventAuditingOptions = NULL;
+    }
+    else
+    {
         p->AuditingMode = AuditData->AuditingMode;
         p->MaximumAuditEventCount = AuditData->MaximumAuditEventCount;
 
@@ -127,19 +138,23 @@ LsarQueryAuditEvents(PLSA_DB_OBJECT PolicyObject,
     *PolicyInformation = (PLSAPR_POLICY_INFORMATION)p;
 
 done:
+    TRACE("Status: 0x%lx\n", Status);
+
     if (!NT_SUCCESS(Status))
     {
-        if (p->EventAuditingOptions != NULL)
-            MIDL_user_free(p->EventAuditingOptions);
-
         if (p != NULL)
+        {
+            if (p->EventAuditingOptions != NULL)
+                MIDL_user_free(p->EventAuditingOptions);
+
             MIDL_user_free(p);
+        }
     }
 
     if (AuditData != NULL)
         MIDL_user_free(AuditData);
 
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 
@@ -237,7 +252,7 @@ LsarQueryPrimaryDomain(PLSA_DB_OBJECT PolicyObject,
 Done:
     if (!NT_SUCCESS(Status))
     {
-        if (p)
+        if (p != NULL)
         {
             if (p->Name.Buffer)
                 MIDL_user_free(p->Name.Buffer);
@@ -782,8 +797,37 @@ NTSTATUS
 LsarSetAuditEvents(PLSA_DB_OBJECT PolicyObject,
                    PLSAPR_POLICY_AUDIT_EVENTS_INFO Info)
 {
-    FIXME("\n");
-    return STATUS_NOT_IMPLEMENTED;
+    PLSAP_POLICY_AUDIT_EVENTS_DATA AuditData = NULL;
+    ULONG AttributeSize;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    TRACE("(%p %p)\n", PolicyObject, Info);
+
+    AttributeSize = sizeof(LSAP_POLICY_AUDIT_EVENTS_DATA) +
+                    Info->MaximumAuditEventCount * sizeof(DWORD);
+
+    AuditData = RtlAllocateHeap(RtlGetProcessHeap(),
+                                HEAP_ZERO_MEMORY,
+                                AttributeSize);
+    if (AuditData == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    AuditData->AuditingMode = Info->AuditingMode;
+    AuditData->MaximumAuditEventCount = Info->MaximumAuditEventCount;
+
+    memcpy(&(AuditData->AuditEvents[0]),
+           Info->EventAuditingOptions,
+           Info->MaximumAuditEventCount * sizeof(DWORD));
+
+    Status = LsapSetObjectAttribute(PolicyObject,
+                                    L"PolAdtEv",
+                                    AuditData,
+                                    AttributeSize);
+
+    if (AuditData != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, AuditData);
+
+    return Status;
 }
 
 
@@ -885,8 +929,12 @@ NTSTATUS
 LsarSetServerRole(PLSA_DB_OBJECT PolicyObject,
                   PPOLICY_LSA_SERVER_ROLE_INFO Info)
 {
-    FIXME("\n");
-    return STATUS_NOT_IMPLEMENTED;
+    TRACE("(%p %p)\n", PolicyObject, Info);
+
+    return LsapSetObjectAttribute(PolicyObject,
+                                  L"PolSrvRo",
+                                  Info,
+                                  sizeof(POLICY_LSA_SERVER_ROLE_INFO));
 }
 
 
@@ -916,8 +964,12 @@ NTSTATUS
 LsarSetModification(PLSA_DB_OBJECT PolicyObject,
                     PPOLICY_MODIFICATION_INFO Info)
 {
-    FIXME("\n");
-    return STATUS_NOT_IMPLEMENTED;
+    TRACE("(%p %p)\n", PolicyObject, Info);
+
+    return LsapSetObjectAttribute(PolicyObject,
+                                  L"PolMod",
+                                  Info,
+                                  sizeof(POLICY_MODIFICATION_INFO));
 }
 
 
@@ -925,8 +977,36 @@ NTSTATUS
 LsarSetAuditFull(PLSA_DB_OBJECT PolicyObject,
                  PPOLICY_AUDIT_FULL_QUERY_INFO Info)
 {
-    FIXME("\n");
-    return STATUS_NOT_IMPLEMENTED;
+    PPOLICY_AUDIT_FULL_QUERY_INFO AuditFullInfo = NULL;
+    ULONG AttributeSize;
+    NTSTATUS Status;
+
+    TRACE("(%p %p)\n", PolicyObject, Info);
+
+    AttributeSize = sizeof(POLICY_AUDIT_FULL_QUERY_INFO);
+    AuditFullInfo = MIDL_user_allocate(AttributeSize);
+    if (AuditFullInfo == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    Status = LsapGetObjectAttribute(PolicyObject,
+                                    L"PolAdtFl",
+                                    AuditFullInfo,
+                                    &AttributeSize);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    AuditFullInfo->ShutDownOnFull = Info->ShutDownOnFull;
+
+    Status = LsapSetObjectAttribute(PolicyObject,
+                                    L"PolAdtFl",
+                                    AuditFullInfo,
+                                    AttributeSize);
+
+done:
+    if (AuditFullInfo != NULL)
+        MIDL_user_free(AuditFullInfo);
+
+    return Status;
 }
 
 

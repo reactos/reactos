@@ -387,7 +387,6 @@ CUSBDevice::SetDeviceAddress(
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("CUSBDevice::SetDeviceAddress> failed to retrieve configuration %lu\n", Index);
-            ASSERT(FALSE);
             break;
         }
     }
@@ -1124,6 +1123,7 @@ CUSBDevice::SelectConfiguration(
         if (!NT_SUCCESS(Status))
         {
             // failed
+            DPRINT1("[LIBUSB] Failed to copy interface descriptor Index %lu InterfaceDescriptor %p InterfaceInfo %p\n", ConfigurationIndex, InterfaceDescriptor, InterfaceInfo);
             break;
         }
 
