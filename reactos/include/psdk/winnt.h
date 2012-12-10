@@ -931,13 +931,17 @@ typedef enum {
 #define SE_MANAGE_VOLUME_NAME	TEXT("SeManageVolumePrivilege")
 #define SE_IMPERSONATE_NAME	TEXT("SeImpersonatePrivilege")
 #define SE_CREATE_GLOBAL_NAME	TEXT("SeCreateGlobalPrivilege")
-#define SE_GROUP_MANDATORY 1
-#define SE_GROUP_ENABLED_BY_DEFAULT 2
-#define SE_GROUP_ENABLED 4
-#define SE_GROUP_OWNER 8
-#define SE_GROUP_USE_FOR_DENY_ONLY 16
-#define SE_GROUP_LOGON_ID 3221225472U
-#define SE_GROUP_RESOURCE 536870912
+
+#define SE_GROUP_MANDATORY          0x00000001
+#define SE_GROUP_ENABLED_BY_DEFAULT 0x00000002
+#define SE_GROUP_ENABLED            0x00000004
+#define SE_GROUP_OWNER              0x00000008
+#define SE_GROUP_USE_FOR_DENY_ONLY  0x00000010
+#define SE_GROUP_INTEGRITY          0x00000020
+#define SE_GROUP_INTEGRITY_ENABLED  0x00000040
+#define SE_GROUP_LOGON_ID           0xC0000000
+#define SE_GROUP_RESOURCE           0x20000000
+#define SE_GROUP_VALID_ATTRIBUTES   0xE000007F
 
 /*
  * Product types
@@ -3480,6 +3484,10 @@ typedef enum _TOKEN_ELEVATION_TYPE {
     TokenElevationTypeFull,
     TokenElevationTypeLimited,
 } TOKEN_ELEVATION_TYPE, *PTOKEN_ELEVATION_TYPE;
+
+typedef struct _TOKEN_MANDATORY_LABEL {
+  SID_AND_ATTRIBUTES Label;
+} TOKEN_MANDATORY_LABEL, * PTOKEN_MANDATORY_LABEL;
 
 #include <pshpack4.h>
 typedef struct _TOKEN_STATISTICS {
