@@ -105,6 +105,7 @@ list(APPEND SOURCE
     wia_lh.idl
     wia_xp.idl
     wincodec.idl
+    wincodecsdk.idl
     winsxs.idl
     wtypes.idl
     wuapi.idl

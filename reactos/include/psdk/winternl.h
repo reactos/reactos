@@ -2302,7 +2302,7 @@ BOOLEAN   WINAPI RtlTimeToSecondsSince1970(const LARGE_INTEGER *,LPDWORD);
 BOOLEAN   WINAPI RtlTimeToSecondsSince1980(const LARGE_INTEGER *,LPDWORD);
 BOOL      WINAPI RtlTryEnterCriticalSection(RTL_CRITICAL_SECTION *);
 
-ULONGLONG __cdecl RtlUlonglongByteSwap(ULONGLONG);
+ULONGLONG __fastcall RtlUlonglongByteSwap(ULONGLONG);
 DWORD     WINAPI RtlUnicodeStringToAnsiSize(const UNICODE_STRING*);
 NTSTATUS  WINAPI RtlUnicodeStringToAnsiString(PANSI_STRING,PCUNICODE_STRING,BOOLEAN);
 NTSTATUS  WINAPI RtlUnicodeStringToInteger(const UNICODE_STRING *,ULONG,ULONG *);

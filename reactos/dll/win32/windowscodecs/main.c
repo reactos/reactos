@@ -17,6 +17,7 @@
  */
 
 
+#define COBJMACROS
 #include "config.h"
 
 #include <stdarg.h>
@@ -32,13 +33,13 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(wincodecs);
 
+extern BOOL WINAPI WIC_DllMain(HINSTANCE, DWORD, LPVOID) DECLSPEC_HIDDEN;
+
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
 
     switch (fdwReason)
     {
-        case DLL_WINE_PREATTACH:
-            return FALSE;    /* prefer native version */
         case DLL_PROCESS_ATTACH:
             DisableThreadLibraryCalls(hinstDLL);
             break;
@@ -46,7 +47,12 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
             break;
     }
 
-    return TRUE;
+    return WIC_DllMain(hinstDLL, fdwReason, lpvReserved);
+}
+
+HRESULT WINAPI DllCanUnloadNow(void)
+{
+    return S_FALSE;
 }
 
 HRESULT copy_pixels(UINT bpp, const BYTE *srcbuffer,
@@ -55,17 +61,36 @@ HRESULT copy_pixels(UINT bpp, const BYTE *srcbuffer,
 {
     UINT bytesperrow;
     UINT row_offset; /* number of bits into the source rows where the data starts */
+    WICRect rect;
 
-    if (rc->X < 0 || rc->Y < 0 || rc->X+rc->Width > srcwidth || rc->Y+rc->Height > srcheight)
-        return E_INVALIDARG;
+    if (!rc)
+    {
+        rect.X = 0;
+        rect.Y = 0;
+        rect.Width = srcwidth;
+        rect.Height = srcheight;
+        rc = &rect;
+    }
+    else
+    {
+        if (rc->X < 0 || rc->Y < 0 || rc->X+rc->Width > srcwidth || rc->Y+rc->Height > srcheight)
+            return E_INVALIDARG;
+    }
 
     bytesperrow = ((bpp * rc->Width)+7)/8;
 
     if (dststride < bytesperrow)
         return E_INVALIDARG;
 
-    if ((dststride * rc->Height) > dstbuffersize)
+    if ((dststride * (rc->Height-1)) + ((rc->Width * bpp) + 7)/8 > dstbuffersize)
         return E_INVALIDARG;
+
+    /* if the whole bitmap is copied and the buffer format matches then it's a matter of a single memcpy */
+    if (rc->X == 0 && rc->Y == 0 && rc->Width == srcwidth && rc->Height == srcheight && srcstride == dststride)
+    {
+        memcpy(dstbuffer, srcbuffer, srcstride * srcheight);
+        return S_OK;
+    }
 
     row_offset = rc->X * bpp;
 
@@ -92,4 +117,47 @@ HRESULT copy_pixels(UINT bpp, const BYTE *srcbuffer,
         FIXME("cannot reliably copy bitmap data if bpp < 8\n");
         return E_FAIL;
     }
+}
+
+void reverse_bgr8(UINT bytesperpixel, LPBYTE bits, UINT width, UINT height, INT stride)
+{
+    UINT x, y;
+    BYTE *pixel, temp;
+
+    for (y=0; y<height; y++)
+    {
+        pixel = bits + stride * y;
+
+        for (x=0; x<width; x++)
+        {
+            temp = pixel[2];
+            pixel[2] = pixel[0];
+            pixel[0] = temp;
+            pixel += bytesperpixel;
+        }
+    }
+}
+
+HRESULT get_pixelformat_bpp(const GUID *pixelformat, UINT *bpp)
+{
+    HRESULT hr;
+    IWICComponentInfo *info;
+    IWICPixelFormatInfo *formatinfo;
+
+    hr = CreateComponentInfo(pixelformat, &info);
+    if (SUCCEEDED(hr))
+    {
+        hr = IWICComponentInfo_QueryInterface(info, &IID_IWICPixelFormatInfo, (void**)&formatinfo);
+
+        if (SUCCEEDED(hr))
+        {
+            hr = IWICPixelFormatInfo_GetBitsPerPixel(formatinfo, bpp);
+
+            IWICPixelFormatInfo_Release(formatinfo);
+        }
+
+        IWICComponentInfo_Release(info);
+    }
+
+    return hr;
 }
