@@ -15,7 +15,7 @@ list(APPEND SOURCE
 if(NOT MSVC)
     # FIXME: http://www.cmake.org/Bug/view.php?id=12998
     #allow_warnings(xmllite)
-    set_source_files_properties(reader.c PROPERTIES COMPILE_FLAGS "-Wno-error")
+    set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-Wno-error")
 endif()
 
 add_library(xmllite SHARED ${SOURCE})
