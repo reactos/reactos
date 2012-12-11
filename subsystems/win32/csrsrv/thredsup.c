@@ -201,6 +201,9 @@ CsrLocateThreadByClientId(OUT PCSR_PROCESS *Process OPTIONAL,
         /* Get the thread */
         FoundThread = CONTAINING_RECORD(NextEntry, CSR_THREAD, HashLinks);
 
+        /* Move to the next entry */
+        NextEntry = NextEntry->Flink;
+
         /* Compare the CID */
         // FIXME: if (*(PULONGLONG)&FoundThread->ClientId == *(PULONGLONG)ClientId)
         if (FoundThread->ClientId.UniqueThread == ClientId->UniqueThread)
@@ -212,9 +215,6 @@ CsrLocateThreadByClientId(OUT PCSR_PROCESS *Process OPTIONAL,
 //            DPRINT1("Found: %p %p\n", FoundThread, FoundThread->Process);
             return FoundThread;
         }
-
-        /* Next */
-        NextEntry = NextEntry->Flink;
     }
 
     /* Nothing found */
@@ -267,7 +267,7 @@ CsrLocateThreadInProcess(IN PCSR_PROCESS CsrProcess OPTIONAL,
         /* Check for TID Match */
         if (FoundThread->ClientId.UniqueThread == Cid->UniqueThread) break;
 
-        /* Next entry */
+        /* Move to the next entry */
         NextEntry = NextEntry->Flink;
     }
 
@@ -970,6 +970,9 @@ CsrLockThreadByClientId(IN HANDLE Tid,
         /* Get the Process */
         CurrentThread = CONTAINING_RECORD(NextEntry, CSR_THREAD, HashLinks);
 
+        /* Move to the next entry */
+        NextEntry = NextEntry->Flink;
+
         /* Check for PID Match */
         if ((CurrentThread->ClientId.UniqueThread == Tid) &&
             !(CurrentThread->Flags & CsrThreadTerminated))
@@ -977,9 +980,6 @@ CsrLockThreadByClientId(IN HANDLE Tid,
             /* Get out of here */
             break;
         }
-
-        /* Next entry */
-        NextEntry = NextEntry->Flink;
     }
 
     /* Nothing found if we got back to the list */

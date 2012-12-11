@@ -854,10 +854,13 @@ CsrDestroyProcess(IN PCLIENT_ID Cid,
         /* Get the current thread entry */
         CsrThread = CONTAINING_RECORD(NextEntry, CSR_THREAD, Link);
 
+        /* Move to the next entry */
+        NextEntry = NextEntry->Flink;
+
         /* Make sure the thread isn't already dead */
         if (CsrThread->Flags & CsrThreadTerminated)
         {
-            NextEntry = NextEntry->Flink;
+            /* Go the the next thread */
             continue;
         }
 
@@ -884,7 +887,6 @@ CsrDestroyProcess(IN PCLIENT_ID Cid,
 
         /* Dereference the thread */
         CsrLockedDereferenceThread(CsrThread);
-        NextEntry = CsrProcess->ThreadList.Flink;
     }
 
     /* Release the Process Lock and return success */
@@ -1100,7 +1102,7 @@ CsrLockProcessByClientId(IN HANDLE Pid,
             break;
         }
 
-        /* Next entry */
+        /* Move to the next entry */
         NextEntry = NextEntry->Flink;
     } while (NextEntry != &CsrRootProcess->ListLink);
 
@@ -1279,12 +1281,12 @@ CsrShutdownProcesses(IN PLUID CallerLuid,
         /* Get the Process */
         CsrProcess = CONTAINING_RECORD(NextEntry, CSR_PROCESS, ListLink);
 
-        /* Remove the skip flag, set shutdown flags to 0*/
+        /* Move to the next entry */
+        NextEntry = NextEntry->Flink;
+
+        /* Remove the skip flag, set shutdown flags to 0 */
         CsrProcess->Flags &= ~CsrProcessSkipShutdown;
         CsrProcess->ShutdownFlags = 0;
-
-        /* Move to the next */
-        NextEntry = NextEntry->Flink;
     }
 
     /* Set shudown Priority */
@@ -1394,12 +1396,12 @@ CsrEnumProcesses(IN CSRSS_ENUM_PROCESS_PROC EnumProc,
         /* Get the Process */
         CsrProcess = CONTAINING_RECORD(NextEntry, CSR_PROCESS, ListLink);
 
-        /* Remove the skip flag, set shutdown flags to 0*/
+        /* Move to the next entry */
+        NextEntry = NextEntry->Flink;
+
+        /* Remove the skip flag, set shutdown flags to 0 */
         CsrProcess->Flags &= ~CsrProcessSkipShutdown;
         CsrProcess->ShutdownFlags = 0;
-
-        /* Move to the next */
-        NextEntry = NextEntry->Flink;
     }
     
     /* Set shudown Priority */
