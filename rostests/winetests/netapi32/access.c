@@ -29,8 +29,8 @@
 
 #include "wine/test.h"
 
-WCHAR user_name[UNLEN + 1];
-WCHAR computer_name[MAX_COMPUTERNAME_LENGTH + 1];
+static WCHAR user_name[UNLEN + 1];
+static WCHAR computer_name[MAX_COMPUTERNAME_LENGTH + 1];
 
 static const WCHAR sNonexistentUser[] = {'N','o','n','e','x','i','s','t','e','n','t',' ',
                                 'U','s','e','r',0};
@@ -63,6 +63,8 @@ static NET_API_STATUS (WINAPI *pNetUserGetInfo)(LPCWSTR,LPCWSTR,DWORD,LPBYTE*)=N
 static NET_API_STATUS (WINAPI *pNetUserModalsGet)(LPCWSTR,DWORD,LPBYTE*)=NULL;
 static NET_API_STATUS (WINAPI *pNetUserAdd)(LPCWSTR,DWORD,LPBYTE,LPDWORD)=NULL;
 static NET_API_STATUS (WINAPI *pNetUserDel)(LPCWSTR,LPCWSTR)=NULL;
+static NET_API_STATUS (WINAPI *pNetLocalGroupGetInfo)(LPCWSTR,LPCWSTR,DWORD,LPBYTE*)=NULL;
+static NET_API_STATUS (WINAPI *pNetLocalGroupGetMembers)(LPCWSTR,LPCWSTR,DWORD,LPBYTE*,DWORD,LPDWORD,LPDWORD,PDWORD_PTR)=NULL;
 
 static int init_access_tests(void)
 {
@@ -158,6 +160,7 @@ static void run_usergetinfo_tests(void)
         ok(rc == ERROR_BAD_NETPATH ||
            rc == ERROR_NETWORK_UNREACHABLE ||
            rc == RPC_S_SERVER_UNAVAILABLE ||
+           rc == NERR_WkstaNotStarted || /* workstation service not running */
            rc == RPC_S_INVALID_NET_ADDR, /* Some Win7 */
            "Bad Network Path: rc=%d\n",rc);
     }
@@ -320,6 +323,33 @@ static void run_userhandling_tests(void)
     ok(ret == NERR_UserNotFound, "Deleting a nonexistent user returned 0x%08x\n",ret);
 }
 
+static void run_localgroupgetinfo_tests(void)
+{
+    NET_API_STATUS status;
+    static const WCHAR admins[] = {'A','d','m','i','n','i','s','t','r','a','t','o','r','s',0};
+    PLOCALGROUP_INFO_1 lgi = NULL;
+    PLOCALGROUP_MEMBERS_INFO_3 buffer = NULL;
+    DWORD entries_read = 0, total_entries =0;
+    int i;
+
+    status = pNetLocalGroupGetInfo(NULL, admins, 1, (LPBYTE *)&lgi);
+    ok(status == NERR_Success || broken(status == NERR_GroupNotFound),
+       "NetLocalGroupGetInfo unexpectedly returned %d\n", status);
+    if (status != NERR_Success) return;
+
+    trace("Local groupname:%s\n", wine_dbgstr_w( lgi->lgrpi1_name));
+    trace("Comment: %s\n", wine_dbgstr_w( lgi->lgrpi1_comment));
+
+    pNetApiBufferFree(lgi);
+
+    status = pNetLocalGroupGetMembers(NULL, admins, 3, (LPBYTE *)&buffer, MAX_PREFERRED_LENGTH, &entries_read, &total_entries, NULL);
+    ok(status == NERR_Success, "NetLocalGroupGetMembers unexpectedly returned %d\n", status);
+    ok(entries_read > 0 && total_entries > 0, "Amount of entries is unexpectedly 0\n");
+
+    for(i=0;i<entries_read;i++)
+        trace("domain and name: %s\n", wine_dbgstr_w(buffer[i].lgrmi3_domainandname));
+}
+
 START_TEST(access)
 {
     HMODULE hnetapi32=LoadLibraryA("netapi32.dll");
@@ -331,6 +361,8 @@ START_TEST(access)
     pNetUserModalsGet=(void*)GetProcAddress(hnetapi32,"NetUserModalsGet");
     pNetUserAdd=(void*)GetProcAddress(hnetapi32, "NetUserAdd");
     pNetUserDel=(void*)GetProcAddress(hnetapi32, "NetUserDel");
+    pNetLocalGroupGetInfo=(void*)GetProcAddress(hnetapi32, "NetLocalGroupGetInfo");
+    pNetLocalGroupGetMembers=(void*)GetProcAddress(hnetapi32, "NetLocalGroupGetMembers");
 
     /* These functions were introduced with NT. It's safe to assume that
      * if one is not available, none are.
@@ -346,6 +378,7 @@ START_TEST(access)
         run_usergetinfo_tests();
         run_querydisplayinformation1_tests();
         run_usermodalsget_tests();
+        run_localgroupgetinfo_tests();
     }
 
     FreeLibrary(hnetapi32);
