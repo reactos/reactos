@@ -2,6 +2,7 @@
  * Unit test suite for images
  *
  * Copyright (C) 2007 Google (Evan Stade)
+ * Copyright (C) 2012 Dmitry Timoshkov
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -21,14 +22,16 @@
 #define COBJMACROS
 
 #include <math.h>
+#include <assert.h>
+#include <stdio.h>
 
 #include "initguid.h"
 #include "windows.h"
 #include "gdiplus.h"
 #include "wine/test.h"
 
-#define expect(expected, got) ok((UINT)(got) == (UINT)(expected), "Expected %.8x, got %.8x\n", (UINT)(expected), (UINT)(got))
-#define expectf(expected, got) ok(fabs(expected - got) < 0.0001, "Expected %.2f, got %.2f\n", expected, got)
+#define expect(expected, got) ok((got) == (expected), "Expected %d, got %d\n", (UINT)(expected), (UINT)(got))
+#define expectf(expected, got) ok(fabs((expected) - (got)) < 0.0001, "Expected %f, got %f\n", (expected), (got))
 
 static BOOL color_match(ARGB c1, ARGB c2, BYTE max_diff)
 {
@@ -432,14 +435,14 @@ static void test_SavingImages(void)
     if (stat != Ok) goto cleanup;
 
     stat = GdipSaveImageToFile((GpImage*)bm, filename, &codecs[0].Clsid, 0);
-    expect(stat, Ok);
+    expect(Ok, stat);
 
     GdipDisposeImage((GpImage*)bm);
     bm = 0;
 
     /* re-load and check image stats */
     stat = GdipLoadImageFromFile(filename, (GpImage**)&bm);
-    expect(stat, Ok);
+    expect(Ok, stat);
     if (stat != Ok) goto cleanup;
 
     stat = GdipGetImageDimension((GpImage*)bm, &w, &h);
@@ -1515,6 +1518,7 @@ static void test_resolution(void)
 {
     GpStatus stat;
     GpBitmap *bitmap;
+    GpGraphics *graphics;
     REAL res=-1.0;
     HDC screendc;
     int screenxres, screenyres;
@@ -1558,6 +1562,15 @@ static void test_resolution(void)
     expect(Ok, stat);
     expectf((REAL)screenyres, res);
 
+    stat = GdipGetImageGraphicsContext((GpImage*)bitmap, &graphics);
+    expect(Ok, stat);
+    stat = GdipGetDpiX(graphics, &res);
+    expect(Ok, stat);
+    expectf((REAL)screenxres, res);
+    stat = GdipGetDpiY(graphics, &res);
+    expect(Ok, stat);
+    expectf((REAL)screenyres, res);
+
     /* test changing the resolution */
     stat = GdipBitmapSetResolution(bitmap, screenxres*2.0, screenyres*3.0);
     expect(Ok, stat);
@@ -1569,6 +1582,27 @@ static void test_resolution(void)
     stat = GdipGetImageVerticalResolution((GpImage*)bitmap, &res);
     expect(Ok, stat);
     expectf(screenyres*3.0, res);
+
+    stat = GdipGetDpiX(graphics, &res);
+    expect(Ok, stat);
+    expectf((REAL)screenxres, res);
+    stat = GdipGetDpiY(graphics, &res);
+    expect(Ok, stat);
+    expectf((REAL)screenyres, res);
+
+    stat = GdipDeleteGraphics(graphics);
+    expect(Ok, stat);
+
+    stat = GdipGetImageGraphicsContext((GpImage*)bitmap, &graphics);
+    expect(Ok, stat);
+    stat = GdipGetDpiX(graphics, &res);
+    expect(Ok, stat);
+    expectf(screenxres*2.0, res);
+    stat = GdipGetDpiY(graphics, &res);
+    expect(Ok, stat);
+    expectf(screenyres*3.0, res);
+    stat = GdipDeleteGraphics(graphics);
+    expect(Ok, stat);
 
     stat = GdipDisposeImage((GpImage*)bitmap);
     expect(Ok, stat);
@@ -1786,10 +1820,13 @@ static void test_getsetpixel(void)
        broken(stat == Ok), /* Older gdiplus */
        "Expected InvalidParameter, got %.8x\n", stat);
 
+if (0) /* crashes some gdiplus implementations */
+{
     stat = GdipBitmapSetPixel(bitmap, 1, -1, 0);
     ok(stat == InvalidParameter ||
        broken(stat == Ok), /* Older gdiplus */
        "Expected InvalidParameter, got %.8x\n", stat);
+}
 
     stat = GdipBitmapGetPixel(bitmap, 2, 1, &color);
     expect(InvalidParameter, stat);
@@ -2298,7 +2335,7 @@ static void test_multiframegif(void)
     count = 12345;
     stat = GdipImageGetFrameCount((GpImage*)bmp, &dimension, &count);
     expect(Ok, stat);
-    todo_wine expect(2, count);
+    expect(2, count);
 
     /* SelectActiveFrame overwrites our current data */
     stat = GdipImageSelectActiveFrame((GpImage*)bmp, &dimension, 1);
@@ -2307,7 +2344,7 @@ static void test_multiframegif(void)
     color = 0xdeadbeef;
     GdipBitmapGetPixel(bmp, 0, 0, &color);
     expect(Ok, stat);
-    todo_wine expect(0xff000000, color);
+    expect(0xff000000, color);
 
     stat = GdipImageSelectActiveFrame((GpImage*)bmp, &dimension, 0);
     expect(Ok, stat);
@@ -2338,7 +2375,18 @@ static void test_multiframegif(void)
 
     stat = GdipBitmapGetPixel(bmp, 0, 0, &color);
     expect(Ok, stat);
-    todo_wine expect(0xffffffff, color);
+    expect(0xffffffff, color);
+
+    /* rotate/flip discards the information about other frames */
+    stat = GdipImageRotateFlip((GpImage*)bmp, Rotate90FlipNone);
+    expect(Ok, stat);
+
+    count = 12345;
+    stat = GdipImageGetFrameCount((GpImage*)bmp, &dimension, &count);
+    expect(Ok, stat);
+    expect(1, count);
+
+    expect_rawformat(&ImageFormatMemoryBMP, (GpImage*)bmp, __LINE__, FALSE);
 
     GdipDisposeImage((GpImage*)bmp);
     IStream_Release(stream);
@@ -2656,6 +2704,1409 @@ static void test_dispose(void)
     expect(ObjectBusy, stat);
 }
 
+static LONG obj_refcount(void *obj)
+{
+    IUnknown_AddRef((IUnknown *)obj);
+    return IUnknown_Release((IUnknown *)obj);
+}
+
+static GpImage *load_image(const BYTE *image_data, UINT image_size)
+{
+    IStream *stream;
+    HGLOBAL hmem;
+    BYTE *data;
+    HRESULT hr;
+    GpStatus status;
+    GpImage *image = NULL, *clone;
+    ImageType image_type;
+    LONG refcount, old_refcount;
+
+    hmem = GlobalAlloc(0, image_size);
+    data = GlobalLock(hmem);
+    memcpy(data, image_data, image_size);
+    GlobalUnlock(hmem);
+
+    hr = CreateStreamOnHGlobal(hmem, TRUE, &stream);
+    ok(hr == S_OK, "CreateStreamOnHGlobal error %#x\n", hr);
+    if (hr != S_OK) return NULL;
+
+    refcount = obj_refcount(stream);
+    ok(refcount == 1, "expected stream refcount 1, got %d\n", refcount);
+
+    status = GdipLoadImageFromStream(stream, &image);
+    ok(status == Ok || broken(status == InvalidParameter), /* XP */
+       "GdipLoadImageFromStream error %d\n", status);
+    if (status != Ok)
+    {
+        IStream_Release(stream);
+        return NULL;
+    }
+
+    status = GdipGetImageType(image, &image_type);
+    ok(status == Ok, "GdipGetImageType error %d\n", status);
+
+    refcount = obj_refcount(stream);
+    if (image_type == ImageTypeBitmap)
+        ok(refcount > 1, "expected stream refcount > 1, got %d\n", refcount);
+    else
+        ok(refcount == 1, "expected stream refcount 1, got %d\n", refcount);
+    old_refcount = refcount;
+
+    status = GdipCloneImage(image, &clone);
+    ok(status == Ok, "GdipCloneImage error %d\n", status);
+    refcount = obj_refcount(stream);
+    ok(refcount == old_refcount, "expected stream refcount %d, got %d\n", old_refcount, refcount);
+    status = GdipDisposeImage(clone);
+    ok(status == Ok, "GdipDisposeImage error %d\n", status);
+    refcount = obj_refcount(stream);
+    ok(refcount == old_refcount, "expected stream refcount %d, got %d\n", old_refcount, refcount);
+
+    refcount = IStream_Release(stream);
+    if (image_type == ImageTypeBitmap)
+        ok(refcount >= 1, "expected stream refcount != 0\n");
+    else
+        ok(refcount == 0, "expected stream refcount 0, got %d\n", refcount);
+
+    return image;
+}
+
+static void test_image_properties(void)
+{
+    static const struct test_data
+    {
+        const BYTE *image_data;
+        UINT image_size;
+        ImageType image_type;
+        UINT prop_count;
+        UINT prop_count2; /* if win7 behaves differently */
+        /* 1st property attributes */
+        UINT prop_size;
+        UINT prop_size2; /* if win7 behaves differently */
+        UINT prop_id;
+        UINT prop_id2; /* if win7 behaves differently */
+    }
+    td[] =
+    {
+        { pngimage, sizeof(pngimage), ImageTypeBitmap, 4, ~0, 1, 20, 0x5110, 0x132 },
+        { jpgimage, sizeof(jpgimage), ImageTypeBitmap, 2, ~0, 128, 0, 0x5090, 0x5091 },
+        { tiffimage, sizeof(tiffimage), ImageTypeBitmap, 16, 0, 4, 0, 0xfe, 0 },
+        { bmpimage, sizeof(bmpimage), ImageTypeBitmap, 0, 0, 0, 0, 0, 0 },
+        { wmfimage, sizeof(wmfimage), ImageTypeMetafile, 0, 0, 0, 0, 0, 0 }
+    };
+    GpStatus status;
+    GpImage *image;
+    UINT prop_count, prop_size, i;
+    PROPID prop_id[16] = { 0 };
+    ImageType image_type;
+    union
+    {
+        PropertyItem data;
+        char buf[256];
+    } item;
+
+    for (i = 0; i < sizeof(td)/sizeof(td[0]); i++)
+    {
+        image = load_image(td[i].image_data, td[i].image_size);
+        if (!image)
+        {
+            trace("%u: failed to load image data\n", i);
+            continue;
+        }
+
+        status = GdipGetImageType(image, &image_type);
+        ok(status == Ok, "%u: GdipGetImageType error %d\n", i, status);
+        ok(td[i].image_type == image_type, "%u: expected image_type %d, got %d\n",
+           i, td[i].image_type, image_type);
+
+        status = GdipGetPropertyCount(image, &prop_count);
+        ok(status == Ok, "%u: GdipGetPropertyCount error %d\n", i, status);
+        if (td[i].image_data == pngimage || td[i].image_data == jpgimage)
+        todo_wine
+        ok(td[i].prop_count == prop_count || td[i].prop_count2 == prop_count,
+           " %u: expected property count %u or %u, got %u\n",
+           i, td[i].prop_count, td[i].prop_count2, prop_count);
+        else
+        ok(td[i].prop_count == prop_count || td[i].prop_count2 == prop_count,
+           " %u: expected property count %u or %u, got %u\n",
+           i, td[i].prop_count, td[i].prop_count2, prop_count);
+
+        status = GdipGetPropertyItemSize(NULL, 0, &prop_size);
+        expect(InvalidParameter, status);
+        status = GdipGetPropertyItemSize(image, 0, NULL);
+        expect(InvalidParameter, status);
+        status = GdipGetPropertyItemSize(image, 0, &prop_size);
+        if (image_type == ImageTypeMetafile)
+            expect(NotImplemented, status);
+        else
+            expect(PropertyNotFound, status);
+
+        status = GdipGetPropertyItem(NULL, 0, 0, &item.data);
+        expect(InvalidParameter, status);
+        status = GdipGetPropertyItem(image, 0, 0, NULL);
+        expect(InvalidParameter, status);
+        status = GdipGetPropertyItem(image, 0, 0, &item.data);
+        if (image_type == ImageTypeMetafile)
+            expect(NotImplemented, status);
+        else
+            expect(PropertyNotFound, status);
+
+        /* FIXME: remove once Wine is fixed */
+        if (td[i].prop_count != prop_count)
+        {
+            GdipDisposeImage(image);
+            continue;
+        }
+
+        status = GdipGetPropertyIdList(NULL, prop_count, prop_id);
+        expect(InvalidParameter, status);
+        status = GdipGetPropertyIdList(image, prop_count, NULL);
+        expect(InvalidParameter, status);
+        status = GdipGetPropertyIdList(image, 0, prop_id);
+        if (image_type == ImageTypeMetafile)
+            expect(NotImplemented, status);
+        else if (prop_count == 0)
+            expect(Ok, status);
+        else
+            expect(InvalidParameter, status);
+        status = GdipGetPropertyIdList(image, prop_count - 1, prop_id);
+        if (image_type == ImageTypeMetafile)
+            expect(NotImplemented, status);
+        else
+            expect(InvalidParameter, status);
+        status = GdipGetPropertyIdList(image, prop_count + 1, prop_id);
+        if (image_type == ImageTypeMetafile)
+            expect(NotImplemented, status);
+        else
+            expect(InvalidParameter, status);
+        status = GdipGetPropertyIdList(image, prop_count, prop_id);
+        if (image_type == ImageTypeMetafile)
+            expect(NotImplemented, status);
+        else
+        {
+            expect(Ok, status);
+            if (prop_count != 0)
+                ok(td[i].prop_id == prop_id[0] || td[i].prop_id2 == prop_id[0],
+                   " %u: expected property id %#x or %#x, got %#x\n",
+                   i, td[i].prop_id, td[i].prop_id2, prop_id[0]);
+        }
+
+        if (status == Ok)
+        {
+            status = GdipGetPropertyItemSize(image, prop_id[0], &prop_size);
+            if (prop_count == 0)
+                expect(PropertyNotFound, status);
+            else
+            {
+                expect(Ok, status);
+
+                assert(sizeof(item) >= prop_size);
+                ok(prop_size > sizeof(PropertyItem), "%u: got too small prop_size %u\n",
+                   i, prop_size);
+                ok(td[i].prop_size + sizeof(PropertyItem) == prop_size ||
+                   td[i].prop_size2 + sizeof(PropertyItem) == prop_size,
+                   " %u: expected property size %u or %u, got %u\n",
+                   i, td[i].prop_size, td[i].prop_size2, prop_size);
+
+                status = GdipGetPropertyItem(image, prop_id[0], 0, &item.data);
+                ok(status == InvalidParameter || status == GenericError /* Win7 */,
+                   "%u: expected InvalidParameter, got %d\n", i, status);
+                status = GdipGetPropertyItem(image, prop_id[0], prop_size - 1, &item.data);
+                ok(status == InvalidParameter || status == GenericError /* Win7 */,
+                   "%u: expected InvalidParameter, got %d\n", i, status);
+                status = GdipGetPropertyItem(image, prop_id[0], prop_size + 1, &item.data);
+                ok(status == InvalidParameter || status == GenericError /* Win7 */,
+                   "%u: expected InvalidParameter, got %d\n", i, status);
+                status = GdipGetPropertyItem(image, prop_id[0], prop_size, &item.data);
+                expect(Ok, status);
+                ok(prop_id[0] == item.data.id,
+                   "%u: expected property id %#x, got %#x\n", i, prop_id[0], item.data.id);
+            }
+        }
+
+        GdipDisposeImage(image);
+    }
+}
+
+#define IFD_BYTE      1
+#define IFD_ASCII     2
+#define IFD_SHORT     3
+#define IFD_LONG      4
+#define IFD_RATIONAL  5
+#define IFD_SBYTE     6
+#define IFD_UNDEFINED 7
+#define IFD_SSHORT    8
+#define IFD_SLONG     9
+#define IFD_SRATIONAL 10
+#define IFD_FLOAT     11
+#define IFD_DOUBLE    12
+
+#ifndef PropertyTagTypeSByte
+#define PropertyTagTypeSByte  6
+#define PropertyTagTypeSShort 8
+#define PropertyTagTypeFloat  11
+#define PropertyTagTypeDouble 12
+#endif
+
+static UINT documented_type(UINT type)
+{
+    switch (type)
+    {
+    case PropertyTagTypeSByte: return PropertyTagTypeByte;
+    case PropertyTagTypeSShort: return PropertyTagTypeShort;
+    case PropertyTagTypeFloat: return PropertyTagTypeUndefined;
+    case PropertyTagTypeDouble: return PropertyTagTypeUndefined;
+    default: return type;
+    }
+}
+
+#include "pshpack2.h"
+struct IFD_entry
+{
+    SHORT id;
+    SHORT type;
+    ULONG count;
+    LONG  value;
+};
+
+struct IFD_rational
+{
+    LONG numerator;
+    LONG denominator;
+};
+
+static const struct tiff_data
+{
+    USHORT byte_order;
+    USHORT version;
+    ULONG  dir_offset;
+    USHORT number_of_entries;
+    struct IFD_entry entry[40];
+    ULONG next_IFD;
+    struct IFD_rational xres;
+    DOUBLE double_val;
+    struct IFD_rational srational_val;
+    char string[14];
+    SHORT short_val[4];
+    LONG long_val[2];
+    FLOAT float_val[2];
+    struct IFD_rational rational[3];
+    BYTE pixel_data[4];
+} TIFF_data =
+{
+#ifdef WORDS_BIGENDIAN
+    'M' | 'M' << 8,
+#else
+    'I' | 'I' << 8,
+#endif
+    42,
+    FIELD_OFFSET(struct tiff_data, number_of_entries),
+    31,
+    {
+        { 0xff,  IFD_SHORT, 1, 0 }, /* SUBFILETYPE */
+        { 0x100, IFD_LONG, 1, 1 }, /* IMAGEWIDTH */
+        { 0x101, IFD_LONG, 1, 1 }, /* IMAGELENGTH */
+        { 0x102, IFD_SHORT, 1, 1 }, /* BITSPERSAMPLE */
+        { 0x103, IFD_SHORT, 1, 1 }, /* COMPRESSION: XP doesn't accept IFD_LONG here */
+        { 0x106, IFD_SHORT, 1, 1 }, /* PHOTOMETRIC */
+        { 0x111, IFD_LONG, 1, FIELD_OFFSET(struct tiff_data, pixel_data) }, /* STRIPOFFSETS */
+        { 0x115, IFD_SHORT, 1, 1 }, /* SAMPLESPERPIXEL */
+        { 0x116, IFD_LONG, 1, 1 }, /* ROWSPERSTRIP */
+        { 0x117, IFD_LONG, 1, 1 }, /* STRIPBYTECOUNT */
+        { 0x11a, IFD_RATIONAL, 1, FIELD_OFFSET(struct tiff_data, xres) },
+        { 0x11b, IFD_RATIONAL, 1, FIELD_OFFSET(struct tiff_data, xres) },
+        { 0x128, IFD_SHORT, 1, 2 }, /* RESOLUTIONUNIT */
+        { 0xf001, IFD_BYTE, 1, 0x11223344 },
+        { 0xf002, IFD_BYTE, 4, 0x11223344 },
+        { 0xf003, IFD_SBYTE, 1, 0x11223344 },
+        { 0xf004, IFD_SSHORT, 1, 0x11223344 },
+        { 0xf005, IFD_SSHORT, 2, 0x11223344 },
+        { 0xf006, IFD_SLONG, 1, 0x11223344 },
+        { 0xf007, IFD_FLOAT, 1, 0x11223344 },
+        { 0xf008, IFD_DOUBLE, 1, FIELD_OFFSET(struct tiff_data, double_val) },
+        { 0xf009, IFD_SRATIONAL, 1, FIELD_OFFSET(struct tiff_data, srational_val) },
+        { 0xf00a, IFD_BYTE, 13, FIELD_OFFSET(struct tiff_data, string) },
+        { 0xf00b, IFD_SSHORT, 4, FIELD_OFFSET(struct tiff_data, short_val) },
+        { 0xf00c, IFD_SLONG, 2, FIELD_OFFSET(struct tiff_data, long_val) },
+        { 0xf00e, IFD_ASCII, 13, FIELD_OFFSET(struct tiff_data, string) },
+        { 0xf00f, IFD_ASCII, 4, 'a' | 'b' << 8 | 'c' << 16 | 'd' << 24 },
+        { 0xf010, IFD_UNDEFINED, 13, FIELD_OFFSET(struct tiff_data, string) },
+        { 0xf011, IFD_UNDEFINED, 4, 'a' | 'b' << 8 | 'c' << 16 | 'd' << 24 },
+        /* Some gdiplus versions ignore these fields.
+        { 0xf012, IFD_BYTE, 0, 0x11223344 },
+        { 0xf013, IFD_SHORT, 0, 0x11223344 },
+        { 0xf014, IFD_LONG, 0, 0x11223344 },
+        { 0xf015, IFD_FLOAT, 0, 0x11223344 },*/
+        { 0xf016, IFD_SRATIONAL, 3, FIELD_OFFSET(struct tiff_data, rational) },
+        /* Win7 before SP1 doesn't recognize this field, everybody else does. */
+        { 0xf017, IFD_FLOAT, 2, FIELD_OFFSET(struct tiff_data, float_val) },
+    },
+    0,
+    { 900, 3 },
+    1234567890.0987654321,
+    { 0x1a2b3c4d, 0x5a6b7c8d },
+    "Hello World!",
+    { 0x0101, 0x0202, 0x0303, 0x0404 },
+    { 0x11223344, 0x55667788 },
+    { (FLOAT)1234.5678, (FLOAT)8765.4321 },
+    { { 0x01020304, 0x05060708 }, { 0x10203040, 0x50607080 }, { 0x11223344, 0x55667788 } },
+    { 0x11, 0x22, 0x33, 0 }
+};
+#include "poppack.h"
+
+static void test_tiff_properties(void)
+{
+    static const struct test_data
+    {
+        ULONG type, id, length;
+        const BYTE value[24];
+    } td[31] =
+    {
+        { PropertyTagTypeShort, 0xff, 2, { 0 } },
+        { PropertyTagTypeLong, 0x100, 4, { 1 } },
+        { PropertyTagTypeLong, 0x101, 4, { 1 } },
+        { PropertyTagTypeShort, 0x102, 2, { 1 } },
+        { PropertyTagTypeShort, 0x103, 2, { 1 } },
+        { PropertyTagTypeShort, 0x106, 2, { 1 } },
+        { PropertyTagTypeLong, 0x111, 4, { 0x44,0x02 } },
+        { PropertyTagTypeShort, 0x115, 2, { 1 } },
+        { PropertyTagTypeLong, 0x116, 4, { 1 } },
+        { PropertyTagTypeLong, 0x117, 4, { 1 } },
+        { PropertyTagTypeRational, 0x11a, 8, { 0x84,0x03,0,0,0x03 } },
+        { PropertyTagTypeRational, 0x11b, 8, { 0x84,0x03,0,0,0x03 } },
+        { PropertyTagTypeShort, 0x128, 2, { 2 } },
+        { PropertyTagTypeByte, 0xf001, 1, { 0x44 } },
+        { PropertyTagTypeByte, 0xf002, 4, { 0x44,0x33,0x22,0x11 } },
+        { PropertyTagTypeSByte, 0xf003, 1, { 0x44 } },
+        { PropertyTagTypeSShort, 0xf004, 2, { 0x44,0x33 } },
+        { PropertyTagTypeSShort, 0xf005, 4, { 0x44,0x33,0x22,0x11 } },
+        { PropertyTagTypeSLONG, 0xf006, 4, { 0x44,0x33,0x22,0x11 } },
+        { PropertyTagTypeFloat, 0xf007, 4, { 0x44,0x33,0x22,0x11 } },
+        { PropertyTagTypeDouble, 0xf008, 8, { 0x2c,0x52,0x86,0xb4,0x80,0x65,0xd2,0x41 } },
+        { PropertyTagTypeSRational, 0xf009, 8, { 0x4d, 0x3c, 0x2b, 0x1a, 0x8d, 0x7c, 0x6b, 0x5a } },
+        { PropertyTagTypeByte, 0xf00a, 13, { 'H','e','l','l','o',' ','W','o','r','l','d','!',0 } },
+        { PropertyTagTypeSShort, 0xf00b, 8, { 0x01,0x01,0x02,0x02,0x03,0x03,0x04,0x04 } },
+        { PropertyTagTypeSLONG, 0xf00c, 8, { 0x44,0x33,0x22,0x11,0x88,0x77,0x66,0x55 } },
+        { PropertyTagTypeASCII, 0xf00e, 13, { 'H','e','l','l','o',' ','W','o','r','l','d','!',0 } },
+        { PropertyTagTypeASCII, 0xf00f, 5, { 'a','b','c','d' } },
+        { PropertyTagTypeUndefined, 0xf010, 13, { 'H','e','l','l','o',' ','W','o','r','l','d','!',0 } },
+        { PropertyTagTypeUndefined, 0xf011, 4, { 'a','b','c','d' } },
+        { PropertyTagTypeSRational, 0xf016, 24,
+          { 0x04,0x03,0x02,0x01,0x08,0x07,0x06,0x05,
+            0x40,0x30,0x20,0x10,0x80,0x70,0x60,0x50,
+            0x44,0x33,0x22,0x11,0x88,0x77,0x66,0x55 } },
+        /* Win7 before SP1 doesn't recognize this field, everybody else does. */
+        { PropertyTagTypeFloat, 0xf017, 8, { 0x2b,0x52,0x9a,0x44,0xba,0xf5,0x08,0x46 } },
+    };
+    GpStatus status;
+    GpImage *image;
+    GUID guid;
+    UINT dim_count, frame_count, prop_count, prop_size, i;
+    PROPID *prop_id;
+    PropertyItem *prop_item;
+
+    image = load_image((const BYTE *)&TIFF_data, sizeof(TIFF_data));
+    ok(image != 0, "Failed to load TIFF image data\n");
+    if (!image) return;
+
+    status = GdipImageGetFrameDimensionsCount(image, &dim_count);
+    expect(Ok, status);
+    expect(1, dim_count);
+
+    status = GdipImageGetFrameDimensionsList(image, &guid, 1);
+    expect(Ok, status);
+    expect_guid(&FrameDimensionPage, &guid, __LINE__, FALSE);
+
+    frame_count = 0xdeadbeef;
+    status = GdipImageGetFrameCount(image, &guid, &frame_count);
+    expect(Ok, status);
+    expect(1, frame_count);
+
+    prop_count = 0xdeadbeef;
+    status = GdipGetPropertyCount(image, &prop_count);
+    expect(Ok, status);
+    ok(prop_count == sizeof(td)/sizeof(td[0]) ||
+       broken(prop_count == sizeof(td)/sizeof(td[0]) - 1) /* Win7 SP0 */,
+       "expected property count %u, got %u\n", (UINT)(sizeof(td)/sizeof(td[0])), prop_count);
+
+    prop_id = HeapAlloc(GetProcessHeap(), 0, prop_count * sizeof(*prop_id));
+
+    status = GdipGetPropertyIdList(image, prop_count, prop_id);
+    expect(Ok, status);
+
+    for (i = 0; i < prop_count; i++)
+    {
+        status = GdipGetPropertyItemSize(image, prop_id[i], &prop_size);
+        expect(Ok, status);
+        if (status != Ok) break;
+        ok(prop_size > sizeof(*prop_item), "%u: too small item length %u\n", i, prop_size);
+
+        prop_item = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, prop_size);
+        status = GdipGetPropertyItem(image, prop_id[i], prop_size, prop_item);
+        expect(Ok, status);
+        ok(prop_item->value == prop_item + 1, "expected item->value %p, got %p\n", prop_item + 1, prop_item->value);
+        ok(td[i].type == prop_item->type ||
+           /* Win7 stopped using proper but not documented types, and it
+              looks broken since TypeFloat and TypeDouble now reported as
+              TypeUndefined, and signed types reported as unsigned. */
+           broken(prop_item->type == documented_type(td[i].type)),
+            "%u: expected type %u, got %u\n", i, td[i].type, prop_item->type);
+        ok(td[i].id == prop_item->id, "%u: expected id %#x, got %#x\n", i, td[i].id, prop_item->id);
+        prop_size -= sizeof(*prop_item);
+        ok(prop_item->length == prop_size, "%u: expected length %u, got %u\n", i, prop_size, prop_item->length);
+        ok(td[i].length == prop_item->length, "%u: expected length %u, got %u\n", i, td[i].length, prop_item->length);
+        ok(td[i].length == prop_size, "%u: expected length %u, got %u\n", i, td[i].length, prop_size);
+        if (td[i].length == prop_item->length)
+        {
+            int match = memcmp(td[i].value, prop_item->value, td[i].length) == 0;
+            ok(match || broken(td[i].length <= 4 && !match), "%u: data mismatch\n", i);
+            if (!match)
+            {
+                UINT j;
+                BYTE *data = prop_item->value;
+                printf("id %#x:", prop_item->id);
+                for (j = 0; j < prop_item->length; j++)
+                    printf(" %02x", data[j]);
+                printf("\n");
+            }
+        }
+        HeapFree(GetProcessHeap(), 0, prop_item);
+    }
+
+    HeapFree(GetProcessHeap(), 0, prop_id);
+
+    GdipDisposeImage(image);
+}
+
+static void test_GdipGetAllPropertyItems(void)
+{
+    static const struct test_data
+    {
+        ULONG type, id, length;
+        BYTE value[32];
+    } td[16] =
+    {
+        { PropertyTagTypeLong, 0xfe, 4, { 0 } },
+        { PropertyTagTypeShort, 0x100, 2, { 1 } },
+        { PropertyTagTypeShort, 0x101, 2, { 1 } },
+        { PropertyTagTypeShort, 0x102, 6, { 8,0,8,0,8,0 } },
+        { PropertyTagTypeShort, 0x103, 2, { 1 } },
+        { PropertyTagTypeShort, 0x106, 2, { 2,0 } },
+        { PropertyTagTypeASCII, 0x10d, 27, "/home/meh/Desktop/test.tif" },
+        { PropertyTagTypeLong, 0x111, 4, { 8,0,0,0 } },
+        { PropertyTagTypeShort, 0x112, 2, { 1 } },
+        { PropertyTagTypeShort, 0x115, 2, { 3,0 } },
+        { PropertyTagTypeShort, 0x116, 2, { 0x40,0 } },
+        { PropertyTagTypeLong, 0x117, 4, { 3,0,0,0 } },
+        { PropertyTagTypeRational, 0x11a, 8, { 0,0,0,72,0,0,0,1 } },
+        { PropertyTagTypeRational, 0x11b, 8, { 0,0,0,72,0,0,0,1 } },
+        { PropertyTagTypeShort, 0x11c, 2, { 1 } },
+        { PropertyTagTypeShort, 0x128, 2, { 2 } }
+    };
+    GpStatus status;
+    GpImage *image;
+    GUID guid;
+    UINT dim_count, frame_count, prop_count, prop_size, i;
+    UINT total_size, total_count;
+    PROPID *prop_id;
+    PropertyItem *prop_item;
+    const char *item_data;
+
+    image = load_image(tiffimage, sizeof(tiffimage));
+    ok(image != 0, "Failed to load TIFF image data\n");
+    if (!image) return;
+
+    dim_count = 0xdeadbeef;
+    status = GdipImageGetFrameDimensionsCount(image, &dim_count);
+    expect(Ok, status);
+    expect(1, dim_count);
+
+    status = GdipImageGetFrameDimensionsList(image, &guid, 1);
+    expect(Ok, status);
+    expect_guid(&FrameDimensionPage, &guid, __LINE__, FALSE);
+
+    frame_count = 0xdeadbeef;
+    status = GdipImageGetFrameCount(image, &guid, &frame_count);
+    expect(Ok, status);
+    expect(1, frame_count);
+
+    prop_count = 0xdeadbeef;
+    status = GdipGetPropertyCount(image, &prop_count);
+    expect(Ok, status);
+    ok(prop_count == sizeof(td)/sizeof(td[0]),
+       "expected property count %u, got %u\n", (UINT)(sizeof(td)/sizeof(td[0])), prop_count);
+
+    prop_id = HeapAlloc(GetProcessHeap(), 0, prop_count * sizeof(*prop_id));
+
+    status = GdipGetPropertyIdList(image, prop_count, prop_id);
+    expect(Ok, status);
+
+    prop_size = 0;
+    for (i = 0; i < prop_count; i++)
+    {
+        UINT size;
+        status = GdipGetPropertyItemSize(image, prop_id[i], &size);
+        expect(Ok, status);
+        if (status != Ok) break;
+        ok(size > sizeof(*prop_item), "%u: too small item length %u\n", i, size);
+
+        prop_size += size;
+
+        prop_item = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, size);
+        status = GdipGetPropertyItem(image, prop_id[i], size, prop_item);
+        expect(Ok, status);
+        ok(prop_item->value == prop_item + 1, "expected item->value %p, got %p\n", prop_item + 1, prop_item->value);
+        ok(td[i].type == prop_item->type,
+            "%u: expected type %u, got %u\n", i, td[i].type, prop_item->type);
+        ok(td[i].id == prop_item->id, "%u: expected id %#x, got %#x\n", i, td[i].id, prop_item->id);
+        size -= sizeof(*prop_item);
+        ok(prop_item->length == size, "%u: expected length %u, got %u\n", i, size, prop_item->length);
+        ok(td[i].length == prop_item->length, "%u: expected length %u, got %u\n", i, td[i].length, prop_item->length);
+        if (td[i].length == prop_item->length)
+        {
+            int match = memcmp(td[i].value, prop_item->value, td[i].length) == 0;
+            ok(match, "%u: data mismatch\n", i);
+            if (!match)
+            {
+                UINT j;
+                BYTE *data = prop_item->value;
+                printf("id %#x:", prop_item->id);
+                for (j = 0; j < prop_item->length; j++)
+                    printf(" %02x", data[j]);
+                printf("\n");
+            }
+        }
+        HeapFree(GetProcessHeap(), 0, prop_item);
+    }
+
+    HeapFree(GetProcessHeap(), 0, prop_id);
+
+    status = GdipGetPropertySize(NULL, &total_size, &total_count);
+    expect(InvalidParameter, status);
+    status = GdipGetPropertySize(image, &total_size, NULL);
+    expect(InvalidParameter, status);
+    status = GdipGetPropertySize(image, NULL, &total_count);
+    expect(InvalidParameter, status);
+    status = GdipGetPropertySize(image, NULL, NULL);
+    expect(InvalidParameter, status);
+    total_size = 0xdeadbeef;
+    total_count = 0xdeadbeef;
+    status = GdipGetPropertySize(image, &total_size, &total_count);
+    expect(Ok, status);
+    ok(prop_count == total_count,
+       "expected total property count %u, got %u\n", prop_count, total_count);
+    ok(prop_size == total_size,
+       "expected total property size %u, got %u\n", prop_size, total_size);
+
+    prop_item = HeapAlloc(GetProcessHeap(), 0, prop_size);
+
+    status = GdipGetAllPropertyItems(image, 0, prop_count, prop_item);
+    expect(InvalidParameter, status);
+    status = GdipGetAllPropertyItems(image, prop_size, 1, prop_item);
+    expect(InvalidParameter, status);
+    status = GdipGetAllPropertyItems(image, prop_size, prop_count, NULL);
+    expect(InvalidParameter, status);
+    status = GdipGetAllPropertyItems(image, prop_size, prop_count, NULL);
+    expect(InvalidParameter, status);
+    status = GdipGetAllPropertyItems(image, 0, 0, NULL);
+    expect(InvalidParameter, status);
+    status = GdipGetAllPropertyItems(image, prop_size + 1, prop_count, prop_item);
+    expect(InvalidParameter, status);
+    status = GdipGetAllPropertyItems(image, prop_size, prop_count, prop_item);
+    expect(Ok, status);
+
+    item_data = (const char *)(prop_item + prop_count);
+    for (i = 0; i < prop_count; i++)
+    {
+        ok(prop_item[i].value == item_data, "%u: expected value %p, got %p\n",
+           i, item_data, prop_item[i].value);
+        ok(td[i].type == prop_item[i].type,
+            "%u: expected type %u, got %u\n", i, td[i].type, prop_item[i].type);
+        ok(td[i].id == prop_item[i].id, "%u: expected id %#x, got %#x\n", i, td[i].id, prop_item[i].id);
+        ok(td[i].length == prop_item[i].length, "%u: expected length %u, got %u\n", i, td[i].length, prop_item[i].length);
+        if (td[i].length == prop_item[i].length)
+        {
+            int match = memcmp(td[i].value, prop_item[i].value, td[i].length) == 0;
+            ok(match, "%u: data mismatch\n", i);
+            if (!match)
+            {
+                UINT j;
+                BYTE *data = prop_item[i].value;
+                printf("id %#x:", prop_item[i].id);
+                for (j = 0; j < prop_item[i].length; j++)
+                    printf(" %02x", data[j]);
+                printf("\n");
+            }
+        }
+        item_data += prop_item[i].length;
+    }
+
+    HeapFree(GetProcessHeap(), 0, prop_item);
+
+    GdipDisposeImage(image);
+}
+
+static void test_tiff_palette(void)
+{
+    GpStatus status;
+    GpImage *image;
+    PixelFormat format;
+    INT size;
+    struct
+    {
+        ColorPalette pal;
+        ARGB entry[256];
+    } palette;
+    ARGB *entries = palette.pal.Entries;
+
+    /* 1bpp TIFF without palette */
+    image = load_image((const BYTE *)&TIFF_data, sizeof(TIFF_data));
+    ok(image != 0, "Failed to load TIFF image data\n");
+    if (!image) return;
+
+    status = GdipGetImagePixelFormat(image, &format);
+    expect(Ok, status);
+    ok(format == PixelFormat1bppIndexed, "expected PixelFormat1bppIndexed, got %#x\n", format);
+
+    status = GdipGetImagePaletteSize(image, &size);
+    ok(status == Ok || broken(status == GenericError), /* XP */
+       "GdipGetImagePaletteSize error %d\n", status);
+    if (status == GenericError)
+    {
+        GdipDisposeImage(image);
+        return;
+    }
+    expect(sizeof(ColorPalette) + sizeof(ARGB), size);
+
+    status = GdipGetImagePalette(image, &palette.pal, size);
+    expect(Ok, status);
+    expect(0, palette.pal.Flags);
+    expect(2, palette.pal.Count);
+    if (palette.pal.Count == 2)
+    {
+        ok(entries[0] == 0xff000000, "expected 0xff000000, got %#x\n", entries[0]);
+        ok(entries[1] == 0xffffffff, "expected 0xffffffff, got %#x\n", entries[1]);
+    }
+
+    GdipDisposeImage(image);
+}
+
+static void test_bitmapbits(void)
+{
+    /* 8 x 2 bitmap */
+    static const BYTE pixels_24[48] =
+    {
+        0xff,0xff,0xff, 0,0,0, 0xff,0xff,0xff, 0,0,0,
+        0xff,0xff,0xff, 0,0,0, 0xff,0xff,0xff, 0,0,0,
+        0xff,0xff,0xff, 0,0,0, 0xff,0xff,0xff, 0,0,0,
+        0xff,0xff,0xff, 0,0,0, 0xff,0xff,0xff, 0,0,0
+    };
+    static const BYTE pixels_00[48] =
+    {
+        0,0,0, 0,0,0, 0,0,0, 0,0,0,
+        0,0,0, 0,0,0, 0,0,0, 0,0,0,
+        0,0,0, 0,0,0, 0,0,0, 0,0,0,
+        0,0,0, 0,0,0, 0,0,0, 0,0,0
+    };
+    static const BYTE pixels_24_77[64] =
+    {
+        0xff,0xff,0xff, 0,0,0, 0xff,0xff,0xff, 0,0,0,
+        0xff,0xff,0xff, 0,0,0, 0xff,0xff,0xff, 0,0,0,
+        0x77,0x77,0x77,0x77,0x77,0x77,0x77,0x77,
+        0xff,0xff,0xff, 0,0,0, 0xff,0xff,0xff, 0,0,0,
+        0xff,0xff,0xff, 0,0,0, 0xff,0xff,0xff, 0,0,0,
+        0x77,0x77,0x77,0x77,0x77,0x77,0x77,0x77
+    };
+    static const BYTE pixels_77[64] =
+    {
+        0x77,0x77,0x77,0x77,0x77,0x77,0x77,0x77,
+        0x77,0x77,0x77,0x77,0x77,0x77,0x77,0x77,
+        0x77,0x77,0x77,0x77,0x77,0x77,0x77,0x77,
+        0x77,0x77,0x77,0x77,0x77,0x77,0x77,0x77,
+        0x77,0x77,0x77,0x77,0x77,0x77,0x77,0x77,
+        0x77,0x77,0x77,0x77,0x77,0x77,0x77,0x77,
+        0x77,0x77,0x77,0x77,0x77,0x77,0x77,0x77,
+        0x77,0x77,0x77,0x77,0x77,0x77,0x77,0x77
+    };
+    static const BYTE pixels_8[16] =
+    {
+        0x01,0,0x01,0,0x01,0,0x01,0,
+        0x01,0,0x01,0,0x01,0,0x01,0
+    };
+    static const BYTE pixels_8_77[64] =
+    {
+        0x01,0,0x01,0,0x01,0,0x01,0,
+        0x77,0x77,0x77,0x77,0x77,0x77,0x77,0x77,
+        0x77,0x77,0x77,0x77,0x77,0x77,0x77,0x77,
+        0x77,0x77,0x77,0x77,0x77,0x77,0x77,0x77,
+        0x01,0,0x01,0,0x01,0,0x01,0,
+        0x77,0x77,0x77,0x77,0x77,0x77,0x77,0x77,
+        0x77,0x77,0x77,0x77,0x77,0x77,0x77,0x77,
+        0x77,0x77,0x77,0x77,0x77,0x77,0x77,0x77
+    };
+    static const BYTE pixels_1_77[64] =
+    {
+        0xaa,0x77,0x77,0x77,0x77,0x77,0x77,0x77,
+        0x77,0x77,0x77,0x77,0x77,0x77,0x77,0x77,
+        0x77,0x77,0x77,0x77,0x77,0x77,0x77,0x77,
+        0x77,0x77,0x77,0x77,0x77,0x77,0x77,0x77,
+        0xaa,0x77,0x77,0x77,0x77,0x77,0x77,0x77,
+        0x77,0x77,0x77,0x77,0x77,0x77,0x77,0x77,
+        0x77,0x77,0x77,0x77,0x77,0x77,0x77,0x77,
+        0x77,0x77,0x77,0x77,0x77,0x77,0x77,0x77
+    };
+    static const BYTE pixels_1[8] = {0xaa,0,0,0,0xaa,0,0,0};
+    static const struct test_data
+    {
+        PixelFormat format;
+        UINT bpp;
+        ImageLockMode mode;
+        UINT stride, size;
+        const BYTE *pixels;
+        const BYTE *pixels_unlocked;
+    } td[] =
+    {
+        /* 0 */
+        { PixelFormat24bppRGB, 24, 0xfff0, 24, 48, pixels_24, pixels_00 },
+
+        { PixelFormat24bppRGB, 24, 0, 24, 48, pixels_24, pixels_00 },
+        { PixelFormat24bppRGB, 24, ImageLockModeRead, 24, 48, pixels_24, pixels_00 },
+        { PixelFormat24bppRGB, 24, ImageLockModeWrite, 24, 48, pixels_24, pixels_00 },
+        { PixelFormat24bppRGB, 24, ImageLockModeRead|ImageLockModeWrite, 24, 48, pixels_24, pixels_00 },
+        { PixelFormat24bppRGB, 24, ImageLockModeRead|ImageLockModeUserInputBuf, 32, 64, pixels_24_77, pixels_24 },
+        { PixelFormat24bppRGB, 24, ImageLockModeWrite|ImageLockModeUserInputBuf, 32, 64, pixels_77, pixels_00 },
+        { PixelFormat24bppRGB, 24, ImageLockModeUserInputBuf, 32, 64, pixels_77, pixels_24 },
+        /* 8 */
+        { PixelFormat8bppIndexed, 8, 0, 8, 16, pixels_8, pixels_24 },
+        { PixelFormat8bppIndexed, 8, ImageLockModeRead, 8, 16, pixels_8, pixels_24 },
+        { PixelFormat8bppIndexed, 8, ImageLockModeWrite, 8, 16, pixels_8, pixels_00 },
+        { PixelFormat8bppIndexed, 8, ImageLockModeRead|ImageLockModeWrite, 8, 16, pixels_8, pixels_00 },
+        { PixelFormat8bppIndexed, 8, ImageLockModeRead|ImageLockModeUserInputBuf, 32, 64, pixels_8_77, pixels_24 },
+        { PixelFormat8bppIndexed, 8, ImageLockModeWrite|ImageLockModeUserInputBuf, 32, 64, pixels_77, pixels_00 },
+        { PixelFormat8bppIndexed, 8, ImageLockModeUserInputBuf, 32, 64, pixels_77, pixels_24 },
+        /* 15 */
+        { PixelFormat1bppIndexed, 1, 0, 4, 8, pixels_1, pixels_24 },
+        { PixelFormat1bppIndexed, 1, ImageLockModeRead, 4, 8, pixels_1, pixels_24 },
+        { PixelFormat1bppIndexed, 1, ImageLockModeWrite, 4, 8, pixels_1, pixels_00 },
+        { PixelFormat1bppIndexed, 1, ImageLockModeRead|ImageLockModeWrite, 4, 8, pixels_1, pixels_00 },
+        { PixelFormat1bppIndexed, 1, ImageLockModeRead|ImageLockModeUserInputBuf, 32, 64, pixels_1_77, pixels_24 },
+        { PixelFormat1bppIndexed, 1, ImageLockModeWrite|ImageLockModeUserInputBuf, 32, 64, pixels_77, pixels_00 },
+        { PixelFormat1bppIndexed, 1, ImageLockModeUserInputBuf, 32, 64, pixels_77, pixels_24 },
+    };
+    BYTE buf[64];
+    GpStatus status;
+    GpBitmap *bitmap;
+    UINT i;
+    BitmapData data;
+    struct
+    {
+        ColorPalette pal;
+        ARGB entries[1];
+    } palette;
+    ARGB *entries = palette.pal.Entries;
+
+    for (i = 0; i < sizeof(td)/sizeof(td[0]); i++)
+    {
+        BYTE pixels[sizeof(pixels_24)];
+        memcpy(pixels, pixels_24, sizeof(pixels_24));
+        status = GdipCreateBitmapFromScan0(8, 2, 24, PixelFormat24bppRGB, pixels, &bitmap);
+        expect(Ok, status);
+
+        /* associate known palette with pixel data */
+        palette.pal.Flags = PaletteFlagsGrayScale;
+        palette.pal.Count = 2;
+        entries[0] = 0xff000000;
+        entries[1] = 0xffffffff;
+        status = GdipSetImagePalette((GpImage *)bitmap, &palette.pal);
+        expect(Ok, status);
+
+        memset(&data, 0xfe, sizeof(data));
+        if (td[i].mode & ImageLockModeUserInputBuf)
+        {
+            memset(buf, 0x77, sizeof(buf));
+            data.Scan0 = buf;
+            data.Stride = 32;
+        }
+        status = GdipBitmapLockBits(bitmap, NULL, td[i].mode, td[i].format, &data);
+        ok(status == Ok || broken(status == InvalidParameter) /* XP */, "%u: GdipBitmapLockBits error %d\n", i, status);
+        if (status != Ok)
+        {
+            GdipDisposeImage((GpImage *)bitmap);
+            continue;
+        }
+        ok(data.Width == 8, "%u: expected 8, got %d\n", i, data.Width);
+        ok(data.Height == 2, "%u: expected 2, got %d\n", i, data.Height);
+        ok(td[i].stride == data.Stride, "%u: expected %d, got %d\n", i, td[i].stride, data.Stride);
+        ok(td[i].format == data.PixelFormat, "%u: expected %d, got %d\n", i, td[i].format, data.PixelFormat);
+        ok(td[i].size == data.Height * data.Stride, "%u: expected %d, got %d\n", i, td[i].size, data.Height * data.Stride);
+        if (td[i].mode & ImageLockModeUserInputBuf)
+            ok(data.Scan0 == buf, "%u: got wrong buffer\n", i);
+        if (td[i].size == data.Height * data.Stride)
+        {
+            UINT j, match, width_bytes = (data.Width * td[i].bpp) / 8;
+
+            match = 1;
+            for (j = 0; j < data.Height; j++)
+            {
+                if (memcmp((const BYTE *)data.Scan0 + j * data.Stride, td[i].pixels + j * data.Stride, width_bytes) != 0)
+                {
+                    match = 0;
+                    break;
+                }
+            }
+            if ((td[i].mode & (ImageLockModeRead|ImageLockModeUserInputBuf)) || td[i].format == PixelFormat24bppRGB)
+            {
+                ok(match,
+                   "%u: data should match\n", i);
+                if (!match)
+                {
+                    BYTE *bits = data.Scan0;
+                    printf("%u: data mismatch for format %#x:", i, td[i].format);
+                    for (j = 0; j < td[i].size; j++)
+                        printf(" %02x", bits[j]);
+                    printf("\n");
+                }
+            }
+            else
+                ok(!match, "%u: data shouldn't match\n", i);
+
+            memset(data.Scan0, 0, td[i].size);
+        }
+
+        status = GdipBitmapUnlockBits(bitmap, &data);
+        ok(status == Ok, "%u: GdipBitmapUnlockBits error %d\n", i, status);
+
+        memset(&data, 0xfe, sizeof(data));
+        status = GdipBitmapLockBits(bitmap, NULL, ImageLockModeRead, PixelFormat24bppRGB, &data);
+        ok(status == Ok, "%u: GdipBitmapLockBits error %d\n", i, status);
+        ok(data.Width == 8, "%u: expected 8, got %d\n", i, data.Width);
+        ok(data.Height == 2, "%u: expected 2, got %d\n", i, data.Height);
+        ok(data.Stride == 24, "%u: expected 24, got %d\n", i, data.Stride);
+        ok(data.PixelFormat == PixelFormat24bppRGB, "%u: got wrong pixel format %d\n", i, data.PixelFormat);
+        ok(data.Height * data.Stride == 48, "%u: expected 48, got %d\n", i, data.Height * data.Stride);
+        if (data.Height * data.Stride == 48)
+        {
+            int match = memcmp(data.Scan0, td[i].pixels_unlocked, 48) == 0;
+            ok(match, "%u: data should match\n", i);
+            if (!match)
+            {
+                UINT j;
+                BYTE *bits = data.Scan0;
+                printf("%u: data mismatch for format %#x:", i, td[i].format);
+                for (j = 0; j < 48; j++)
+                    printf(" %02x", bits[j]);
+                printf("\n");
+            }
+        }
+
+        status = GdipBitmapUnlockBits(bitmap, &data);
+        ok(status == Ok, "%u: GdipBitmapUnlockBits error %d\n", i, status);
+
+        status = GdipDisposeImage((GpImage *)bitmap);
+        expect(Ok, status);
+    }
+}
+
+static void test_DrawImage(void)
+{
+    BYTE black_1x1[4] = { 0,0,0,0 };
+    BYTE white_2x2[16] = { 0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,
+                           0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff };
+    BYTE black_2x2[16] = { 0,0,0,0,0,0,0xff,0xff,
+                           0,0,0,0,0,0,0xff,0xff };
+    GpStatus status;
+    union
+    {
+        GpBitmap *bitmap;
+        GpImage *image;
+    } u1, u2;
+    GpGraphics *graphics;
+    int match;
+
+    status = GdipCreateBitmapFromScan0(1, 1, 4, PixelFormat24bppRGB, black_1x1, &u1.bitmap);
+    expect(Ok, status);
+    status = GdipBitmapSetResolution(u1.bitmap, 100.0, 100.0);
+    expect(Ok, status);
+
+    status = GdipCreateBitmapFromScan0(2, 2, 8, PixelFormat24bppRGB, white_2x2, &u2.bitmap);
+    expect(Ok, status);
+    status = GdipBitmapSetResolution(u2.bitmap, 300.0, 300.0);
+    expect(Ok, status);
+    status = GdipGetImageGraphicsContext(u2.image, &graphics);
+    expect(Ok, status);
+    status = GdipSetInterpolationMode(graphics, InterpolationModeNearestNeighbor);
+    expect(Ok, status);
+
+    status = GdipDrawImageI(graphics, u1.image, 0, 0);
+    expect(Ok, status);
+
+    match = memcmp(white_2x2, black_2x2, sizeof(black_2x2)) == 0;
+    ok(match, "data should match\n");
+    if (!match)
+    {
+        UINT i, size = sizeof(white_2x2);
+        BYTE *bits = white_2x2;
+        for (i = 0; i < size; i++)
+            printf(" %02x", bits[i]);
+        printf("\n");
+    }
+
+    status = GdipDeleteGraphics(graphics);
+    expect(Ok, status);
+    status = GdipDisposeImage(u1.image);
+    expect(Ok, status);
+    status = GdipDisposeImage(u2.image);
+    expect(Ok, status);
+}
+
+static void test_GdipDrawImagePointRect(void)
+{
+    BYTE black_1x1[4] = { 0,0,0,0 };
+    BYTE white_2x2[16] = { 0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,
+                           0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff };
+    BYTE black_2x2[16] = { 0,0,0,0,0,0,0xff,0xff,
+                           0,0,0,0,0,0,0xff,0xff };
+    GpStatus status;
+    union
+    {
+        GpBitmap *bitmap;
+        GpImage *image;
+    } u1, u2;
+    GpGraphics *graphics;
+    int match;
+
+    status = GdipCreateBitmapFromScan0(1, 1, 4, PixelFormat24bppRGB, black_1x1, &u1.bitmap);
+    expect(Ok, status);
+    status = GdipBitmapSetResolution(u1.bitmap, 100.0, 100.0);
+    expect(Ok, status);
+
+    status = GdipCreateBitmapFromScan0(2, 2, 8, PixelFormat24bppRGB, white_2x2, &u2.bitmap);
+    expect(Ok, status);
+    status = GdipBitmapSetResolution(u2.bitmap, 300.0, 300.0);
+    expect(Ok, status);
+    status = GdipGetImageGraphicsContext(u2.image, &graphics);
+    expect(Ok, status);
+    status = GdipSetInterpolationMode(graphics, InterpolationModeNearestNeighbor);
+    expect(Ok, status);
+
+    status = GdipDrawImagePointRectI(graphics, u1.image, 0, 0, 0, 0, 1, 1, UnitPixel);
+    expect(Ok, status);
+
+    match = memcmp(white_2x2, black_2x2, sizeof(black_2x2)) == 0;
+    ok(match, "data should match\n");
+    if (!match)
+    {
+        UINT i, size = sizeof(white_2x2);
+        BYTE *bits = white_2x2;
+        for (i = 0; i < size; i++)
+            printf(" %02x", bits[i]);
+        printf("\n");
+    }
+
+    status = GdipDeleteGraphics(graphics);
+    expect(Ok, status);
+    status = GdipDisposeImage(u1.image);
+    expect(Ok, status);
+    status = GdipDisposeImage(u2.image);
+    expect(Ok, status);
+}
+
+static void test_image_format(void)
+{
+    static const PixelFormat fmt[] =
+    {
+        PixelFormat1bppIndexed, PixelFormat4bppIndexed, PixelFormat8bppIndexed,
+        PixelFormat16bppGrayScale, PixelFormat16bppRGB555, PixelFormat16bppRGB565,
+        PixelFormat16bppARGB1555, PixelFormat24bppRGB, PixelFormat32bppRGB,
+        PixelFormat32bppARGB, PixelFormat32bppPARGB, PixelFormat48bppRGB,
+        PixelFormat64bppARGB, PixelFormat64bppPARGB, PixelFormat32bppCMYK
+    };
+    GpStatus status;
+    GpBitmap *bitmap;
+    GpImage *thumb;
+    HBITMAP hbitmap;
+    BITMAP bm;
+    PixelFormat format;
+    BitmapData data;
+    UINT i, ret;
+
+    for (i = 0; i < sizeof(fmt)/sizeof(fmt[0]); i++)
+    {
+        status = GdipCreateBitmapFromScan0(1, 1, 0, fmt[i], NULL, &bitmap);
+        ok(status == Ok || broken(status == InvalidParameter) /* before win7 */,
+           "GdipCreateBitmapFromScan0 error %d\n", status);
+        if (status != Ok) continue;
+
+        status = GdipGetImagePixelFormat((GpImage *)bitmap, &format);
+        expect(Ok, status);
+        expect(fmt[i], format);
+
+        status = GdipCreateHBITMAPFromBitmap(bitmap, &hbitmap, 0);
+        if (fmt[i] == PixelFormat16bppGrayScale || fmt[i] == PixelFormat32bppCMYK)
+            todo_wine expect(InvalidParameter, status);
+        else
+        {
+            expect(Ok, status);
+            ret = GetObject(hbitmap, sizeof(bm), &bm);
+            expect(sizeof(bm), ret);
+            expect(0, bm.bmType);
+            expect(1, bm.bmWidth);
+            expect(1, bm.bmHeight);
+            expect(4, bm.bmWidthBytes);
+            expect(1, bm.bmPlanes);
+            expect(32, bm.bmBitsPixel);
+            DeleteObject(hbitmap);
+        }
+
+        status = GdipGetImageThumbnail((GpImage *)bitmap, 0, 0, &thumb, NULL, NULL);
+        if (fmt[i] == PixelFormat16bppGrayScale || fmt[i] == PixelFormat32bppCMYK)
+            todo_wine
+            ok(status == OutOfMemory || broken(status == InvalidParameter) /* before win7 */,
+               "expected OutOfMemory, got %d\n", status);
+        else
+        {
+            expect(Ok, status);
+            status = GdipGetImagePixelFormat(thumb, &format);
+            expect(Ok, status);
+            ok(format == PixelFormat32bppPARGB || broken(format != PixelFormat32bppPARGB) /* before win7 */,
+               "expected PixelFormat32bppPARGB, got %#x\n", format);
+            status = GdipDisposeImage(thumb);
+            expect(Ok, status);
+        }
+
+        status = GdipBitmapLockBits(bitmap, NULL, ImageLockModeRead, PixelFormat32bppPARGB, &data);
+        if (fmt[i] == PixelFormat16bppGrayScale || fmt[i] == PixelFormat32bppCMYK)
+            todo_wine expect(InvalidParameter, status);
+        else
+        {
+            expect(Ok, status);
+            status = GdipBitmapUnlockBits(bitmap, &data);
+            expect(Ok, status);
+        }
+
+        status = GdipDisposeImage((GpImage *)bitmap);
+        expect(Ok, status);
+    }
+}
+
+static void test_DrawImage_scale(void)
+{
+    static const BYTE back_8x1[24] = { 0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40,
+                                       0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40 };
+    static const BYTE image_080[24] = { 0x40,0x40,0x40,0x80,0x80,0x80,0x40,0x40,0x40,0x40,0x40,0x40,
+                                        0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40 };
+    static const BYTE image_100[24] = { 0x40,0x40,0x40,0x80,0x80,0x80,0x80,0x80,0x80,0x40,0x40,0x40,
+                                        0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40 };
+    static const BYTE image_120[24] = { 0x40,0x40,0x40,0x40,0x40,0x40,0x80,0x80,0x80,0x40,0x40,0x40,
+                                        0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40 };
+    static const BYTE image_150[24] = { 0x40,0x40,0x40,0x40,0x40,0x40,0x80,0x80,0x80,0x80,0x80,0x80,
+                                        0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40 };
+    static const BYTE image_180[24] = { 0x40,0x40,0x40,0x40,0x40,0x40,0x80,0x80,0x80,0x80,0x80,0x80,
+                                        0x80,0x80,0x80,0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40 };
+    static const BYTE image_200[24] = { 0x40,0x40,0x40,0x40,0x40,0x40,0x80,0x80,0x80,0x80,0x80,0x80,
+                                        0x80,0x80,0x80,0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40 };
+    static const BYTE image_250[24] = { 0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x80,0x80,0x80,
+                                        0x80,0x80,0x80,0x80,0x80,0x80,0x80,0x80,0x80,0x40,0x40,0x40 };
+    static const BYTE image_120_half[24] = { 0x40,0x40,0x40,0x80,0x80,0x80,0x80,0x80,0x80,0x80,0x80,0x80,
+                                        0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40 };
+    static const BYTE image_150_half[24] = { 0x40,0x40,0x40,0x80,0x80,0x80,0x80,0x80,0x80,0x80,0x80,0x80,
+                                        0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40 };
+    static const BYTE image_200_half[24] = { 0x40,0x40,0x40,0x40,0x40,0x40,0x80,0x80,0x80,0x80,0x80,0x80,
+                                        0x80,0x80,0x80,0x80,0x80,0x80,0x40,0x40,0x40,0x40,0x40,0x40 };
+    static const BYTE image_250_half[24] = { 0x40,0x40,0x40,0x40,0x40,0x40,0x80,0x80,0x80,0x80,0x80,0x80,
+                                        0x80,0x80,0x80,0x80,0x80,0x80,0x80,0x80,0x80,0x40,0x40,0x40 };
+    static const struct test_data
+    {
+        REAL scale_x;
+        PixelOffsetMode pixel_offset_mode;
+        const BYTE *image;
+        BOOL todo;
+    } td[] =
+    {
+        { 0.8, PixelOffsetModeNone, image_080 }, /* 0 */
+        { 1.0, PixelOffsetModeNone, image_100 },
+        { 1.2, PixelOffsetModeNone, image_120 },
+        { 1.5, PixelOffsetModeNone, image_150 },
+        { 1.8, PixelOffsetModeNone, image_180 },
+        { 2.0, PixelOffsetModeNone, image_200 },
+        { 2.5, PixelOffsetModeNone, image_250 },
+
+        { 0.8, PixelOffsetModeHighSpeed, image_080 }, /* 7 */
+        { 1.0, PixelOffsetModeHighSpeed, image_100 },
+        { 1.2, PixelOffsetModeHighSpeed, image_120 },
+        { 1.5, PixelOffsetModeHighSpeed, image_150 },
+        { 1.8, PixelOffsetModeHighSpeed, image_180 },
+        { 2.0, PixelOffsetModeHighSpeed, image_200 },
+        { 2.5, PixelOffsetModeHighSpeed, image_250 },
+
+        { 0.8, PixelOffsetModeHalf, image_080 }, /* 14 */
+        { 1.0, PixelOffsetModeHalf, image_100 },
+        { 1.2, PixelOffsetModeHalf, image_120_half, TRUE },
+        { 1.5, PixelOffsetModeHalf, image_150_half, TRUE },
+        { 1.8, PixelOffsetModeHalf, image_180 },
+        { 2.0, PixelOffsetModeHalf, image_200_half, TRUE },
+        { 2.5, PixelOffsetModeHalf, image_250_half, TRUE },
+
+        { 0.8, PixelOffsetModeHighQuality, image_080 }, /* 21 */
+        { 1.0, PixelOffsetModeHighQuality, image_100 },
+        { 1.2, PixelOffsetModeHighQuality, image_120_half, TRUE },
+        { 1.5, PixelOffsetModeHighQuality, image_150_half, TRUE },
+        { 1.8, PixelOffsetModeHighQuality, image_180 },
+        { 2.0, PixelOffsetModeHighQuality, image_200_half, TRUE },
+        { 2.5, PixelOffsetModeHighQuality, image_250_half, TRUE },
+    };
+    BYTE src_2x1[6] = { 0x80,0x80,0x80,0x80,0x80,0x80 };
+    BYTE dst_8x1[24];
+    GpStatus status;
+    union
+    {
+        GpBitmap *bitmap;
+        GpImage *image;
+    } u1, u2;
+    GpGraphics *graphics;
+    GpMatrix *matrix;
+    int i, match;
+
+    status = GdipCreateBitmapFromScan0(2, 1, 4, PixelFormat24bppRGB, src_2x1, &u1.bitmap);
+    expect(Ok, status);
+    status = GdipBitmapSetResolution(u1.bitmap, 100.0, 100.0);
+    expect(Ok, status);
+
+    status = GdipCreateBitmapFromScan0(8, 1, 24, PixelFormat24bppRGB, dst_8x1, &u2.bitmap);
+    expect(Ok, status);
+    status = GdipBitmapSetResolution(u2.bitmap, 100.0, 100.0);
+    expect(Ok, status);
+    status = GdipGetImageGraphicsContext(u2.image, &graphics);
+    expect(Ok, status);
+    status = GdipSetInterpolationMode(graphics, InterpolationModeNearestNeighbor);
+    expect(Ok, status);
+
+    for (i = 0; i < sizeof(td)/sizeof(td[0]); i++)
+    {
+        status = GdipSetPixelOffsetMode(graphics, td[i].pixel_offset_mode);
+        expect(Ok, status);
+
+        status = GdipCreateMatrix2(td[i].scale_x, 0.0, 0.0, 1.0, 0.0, 0.0, &matrix);
+        expect(Ok, status);
+        status = GdipSetWorldTransform(graphics, matrix);
+        expect(Ok, status);
+        GdipDeleteMatrix(matrix);
+
+        memcpy(dst_8x1, back_8x1, sizeof(dst_8x1));
+        status = GdipDrawImageI(graphics, u1.image, 1, 0);
+        expect(Ok, status);
+
+        match = memcmp(dst_8x1, td[i].image, sizeof(dst_8x1)) == 0;
+        if (!match && td[i].todo)
+        todo_wine ok(match, "%d: data should match\n", i);
+        else
+        ok(match, "%d: data should match\n", i);
+        if (!match)
+        {
+            UINT i, size = sizeof(dst_8x1);
+            const BYTE *bits = dst_8x1;
+            for (i = 0; i < size; i++)
+                printf(" %02x", bits[i]);
+            printf("\n");
+        }
+    }
+
+    status = GdipDeleteGraphics(graphics);
+    expect(Ok, status);
+    status = GdipDisposeImage(u1.image);
+    expect(Ok, status);
+    status = GdipDisposeImage(u2.image);
+    expect(Ok, status);
+}
+
+static const BYTE animatedgif[] = {
+'G','I','F','8','9','a',0x01,0x00,0x01,0x00,0xA1,0x02,0x00,
+0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09,0x0a,0x0b,0x0c,
+/*0x21,0xFF,0x0B,'A','N','I','M','E','X','T','S','1','.','0',*/
+0x21,0xFF,0x0B,'N','E','T','S','C','A','P','E','2','.','0',
+0x03,0x01,0x05,0x00,0x00,
+0x21,0xFE,0x0C,'H','e','l','l','o',' ','W','o','r','l','d','!',0x00,
+0x21,0x01,0x0D,'a','n','i','m','a','t','i','o','n','.','g','i','f',0x00,
+0x21,0xF9,0x04,0xff,0x0A,0x00,0x08,0x00,
+0x2C,0x00,0x00,0x00,0x00,0x01,0x00,0x01,0x00,0x81,
+0xa1,0xa2,0xa3,0xa4,0xa5,0xa6,0xa7,0xa8,0xa9,0xaa,0xab,0xac,
+0x02,0x02,0x4C,0x01,0x00,
+0x21,0xFE,0x08,'i','m','a','g','e',' ','#','1',0x00,
+0x21,0x01,0x0C,'p','l','a','i','n','t','e','x','t',' ','#','1',0x00,
+0x21,0xF9,0x04,0x00,0x14,0x00,0x01,0x00,
+0x2C,0x00,0x00,0x00,0x00,0x01,0x00,0x01,0x00,0x81,
+0xb1,0xb2,0xb3,0xb4,0xb5,0xb6,0xb7,0xb8,0xb9,0xba,0xbb,0xbc,
+0x02,0x02,0x44,0x01,0x00,
+0x21,0xFE,0x08,'i','m','a','g','e',' ','#','2',0x00,
+0x21,0x01,0x0C,'p','l','a','i','n','t','e','x','t',' ','#','2',0x00,0x3B
+};
+
+static void test_gif_properties(void)
+{
+    static const struct test_data
+    {
+        ULONG type, id, length;
+        const BYTE value[13];
+    } td[] =
+    {
+        { PropertyTagTypeLong, PropertyTagFrameDelay, 8, { 10,0,0,0,20,0,0,0 } },
+        { PropertyTagTypeASCII, PropertyTagExifUserComment, 13, { 'H','e','l','l','o',' ','W','o','r','l','d','!',0 } },
+        { PropertyTagTypeShort, PropertyTagLoopCount, 2, { 5,0 } },
+        { PropertyTagTypeByte, PropertyTagGlobalPalette, 12, { 0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09,0x0a,0x0b,0x0c } },
+        { PropertyTagTypeByte, PropertyTagIndexBackground, 1, { 2 } },
+        { PropertyTagTypeByte, PropertyTagIndexTransparent, 1, { 8 } }
+    };
+    GpStatus status;
+    GpImage *image;
+    GUID guid;
+    UINT dim_count, frame_count, prop_count, prop_size, i;
+    UINT total_size, total_count;
+    PROPID *prop_id;
+    PropertyItem *prop_item;
+    const char *item_data;
+
+    image = load_image(animatedgif, sizeof(animatedgif));
+    if (!image) /* XP fails to load this GIF image */
+    {
+        trace("Failed to load GIF image data\n");
+        return;
+    }
+
+    status = GdipImageGetFrameDimensionsCount(image, &dim_count);
+    expect(Ok, status);
+    expect(1, dim_count);
+
+    status = GdipImageGetFrameDimensionsList(image, &guid, 1);
+    expect(Ok, status);
+    expect_guid(&FrameDimensionTime, &guid, __LINE__, FALSE);
+
+    status = GdipImageGetFrameCount(image, &guid, &frame_count);
+    expect(Ok, status);
+    expect(2, frame_count);
+
+    status = GdipImageSelectActiveFrame(image, &guid, 1);
+    expect(Ok, status);
+
+    status = GdipGetPropertyCount(image, &prop_count);
+    expect(Ok, status);
+    ok(prop_count == sizeof(td)/sizeof(td[0]) || broken(prop_count == 1) /* before win7 */,
+       "expected property count %u, got %u\n", (UINT)(sizeof(td)/sizeof(td[0])), prop_count);
+
+    if (prop_count != sizeof(td)/sizeof(td[0]))
+    {
+        GdipDisposeImage(image);
+        return;
+    }
+
+    prop_id = HeapAlloc(GetProcessHeap(), 0, prop_count * sizeof(*prop_id));
+
+    status = GdipGetPropertyIdList(image, prop_count, prop_id);
+    expect(Ok, status);
+
+    prop_size = 0;
+    for (i = 0; i < prop_count; i++)
+    {
+        UINT size;
+        status = GdipGetPropertyItemSize(image, prop_id[i], &size);
+        expect(Ok, status);
+        if (status != Ok) break;
+        ok(size > sizeof(*prop_item), "%u: too small item length %u\n", i, size);
+
+        prop_size += size;
+
+        prop_item = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, size);
+        status = GdipGetPropertyItem(image, prop_id[i], size, prop_item);
+        expect(Ok, status);
+        ok(prop_item->value == prop_item + 1, "expected item->value %p, got %p\n", prop_item + 1, prop_item->value);
+        ok(td[i].type == prop_item->type,
+            "%u: expected type %u, got %u\n", i, td[i].type, prop_item->type);
+        ok(td[i].id == prop_item->id, "%u: expected id %#x, got %#x\n", i, td[i].id, prop_item->id);
+        size -= sizeof(*prop_item);
+        ok(prop_item->length == size, "%u: expected length %u, got %u\n", i, size, prop_item->length);
+        ok(td[i].length == prop_item->length, "%u: expected length %u, got %u\n", i, td[i].length, prop_item->length);
+        if (td[i].length == prop_item->length)
+        {
+            int match = memcmp(td[i].value, prop_item->value, td[i].length) == 0;
+            ok(match, "%u: data mismatch\n", i);
+            if (!match)
+            {
+                UINT j;
+                BYTE *data = prop_item->value;
+                printf("id %#x:", prop_item->id);
+                for (j = 0; j < prop_item->length; j++)
+                    printf(" %02x", data[j]);
+                printf("\n");
+            }
+        }
+        HeapFree(GetProcessHeap(), 0, prop_item);
+    }
+
+    HeapFree(GetProcessHeap(), 0, prop_id);
+
+    status = GdipGetPropertySize(NULL, &total_size, &total_count);
+    expect(InvalidParameter, status);
+    status = GdipGetPropertySize(image, &total_size, NULL);
+    expect(InvalidParameter, status);
+    status = GdipGetPropertySize(image, NULL, &total_count);
+    expect(InvalidParameter, status);
+    status = GdipGetPropertySize(image, NULL, NULL);
+    expect(InvalidParameter, status);
+    total_size = 0xdeadbeef;
+    total_count = 0xdeadbeef;
+    status = GdipGetPropertySize(image, &total_size, &total_count);
+    expect(Ok, status);
+    ok(prop_count == total_count,
+       "expected total property count %u, got %u\n", prop_count, total_count);
+    ok(prop_size == total_size,
+       "expected total property size %u, got %u\n", prop_size, total_size);
+
+    prop_item = HeapAlloc(GetProcessHeap(), 0, prop_size);
+
+    status = GdipGetAllPropertyItems(image, 0, prop_count, prop_item);
+    expect(InvalidParameter, status);
+    status = GdipGetAllPropertyItems(image, prop_size, 1, prop_item);
+    expect(InvalidParameter, status);
+    status = GdipGetAllPropertyItems(image, prop_size, prop_count, NULL);
+    expect(InvalidParameter, status);
+    status = GdipGetAllPropertyItems(image, prop_size, prop_count, NULL);
+    expect(InvalidParameter, status);
+    status = GdipGetAllPropertyItems(image, 0, 0, NULL);
+    expect(InvalidParameter, status);
+    status = GdipGetAllPropertyItems(image, prop_size + 1, prop_count, prop_item);
+    expect(InvalidParameter, status);
+    status = GdipGetAllPropertyItems(image, prop_size, prop_count, prop_item);
+    expect(Ok, status);
+
+    item_data = (const char *)(prop_item + prop_count);
+    for (i = 0; i < prop_count; i++)
+    {
+        ok(prop_item[i].value == item_data, "%u: expected value %p, got %p\n",
+           i, item_data, prop_item[i].value);
+        ok(td[i].type == prop_item[i].type,
+            "%u: expected type %u, got %u\n", i, td[i].type, prop_item[i].type);
+        ok(td[i].id == prop_item[i].id, "%u: expected id %#x, got %#x\n", i, td[i].id, prop_item[i].id);
+        ok(td[i].length == prop_item[i].length, "%u: expected length %u, got %u\n", i, td[i].length, prop_item[i].length);
+        if (td[i].length == prop_item[i].length)
+        {
+            int match = memcmp(td[i].value, prop_item[i].value, td[i].length) == 0;
+            ok(match, "%u: data mismatch\n", i);
+            if (!match)
+            {
+                UINT j;
+                BYTE *data = prop_item[i].value;
+                printf("id %#x:", prop_item[i].id);
+                for (j = 0; j < prop_item[i].length; j++)
+                    printf(" %02x", data[j]);
+                printf("\n");
+            }
+        }
+        item_data += prop_item[i].length;
+    }
+
+    HeapFree(GetProcessHeap(), 0, prop_item);
+
+    GdipDisposeImage(image);
+}
+
 START_TEST(image)
 {
     struct GdiplusStartupInput gdiplusStartupInput;
@@ -2668,6 +4119,16 @@ START_TEST(image)
 
     GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
 
+    test_DrawImage_scale();
+    test_image_format();
+    test_DrawImage();
+    test_GdipDrawImagePointRect();
+    test_bitmapbits();
+    test_tiff_palette();
+    test_GdipGetAllPropertyItems();
+    test_tiff_properties();
+    test_gif_properties();
+    test_image_properties();
     test_Scan0();
     test_FromGdiDib();
     test_GetImageDimension();

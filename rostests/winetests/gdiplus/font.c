@@ -26,7 +26,9 @@
 #include "wine/test.h"
 
 #define expect(expected, got) ok(got == expected, "Expected %d, got %d\n", expected, got)
-#define expectf(expected, got) ok(fabs(expected - got) < 0.0001, "Expected %f, got %f\n", expected, got)
+#define expect_(expected, got, precision) ok(abs((expected) - (got)) <= (precision), "Expected %d, got %d\n", (expected), (got))
+#define expectf_(expected, got, precision) ok(fabs((expected) - (got)) <= (precision), "Expected %f, got %f\n", (expected), (got))
+#define expectf(expected, got) expectf_((expected), (got), 0.001)
 
 static const WCHAR nonexistent[] = {'T','h','i','s','F','o','n','t','s','h','o','u','l','d','N','o','t','E','x','i','s','t','\0'};
 static const WCHAR MSSansSerif[] = {'M','S',' ','S','a','n','s',' ','S','e','r','i','f','\0'};
@@ -35,6 +37,14 @@ static const WCHAR TimesNewRoman[] = {'T','i','m','e','s',' ','N','e','w',' ','R
 static const WCHAR CourierNew[] = {'C','o','u','r','i','e','r',' ','N','e','w','\0'};
 static const WCHAR Tahoma[] = {'T','a','h','o','m','a',0};
 static const WCHAR LiberationSerif[] = {'L','i','b','e','r','a','t','i','o','n',' ','S','e','r','i','f',0};
+
+static void set_rect_empty(RectF *rc)
+{
+    rc->X = 0.0;
+    rc->Y = 0.0;
+    rc->Width = 0.0;
+    rc->Height = 0.0;
+}
 
 static void test_createfont(void)
 {
@@ -105,12 +115,6 @@ static void test_logfont(void)
 
     memset(&lfa, 0, sizeof(LOGFONTA));
     memset(&lfa2, 0xff, sizeof(LOGFONTA));
-
-    /* empty FaceName */
-    lfa.lfFaceName[0] = 0;
-    stat = GdipCreateFontFromLogfontA(hdc, &lfa, &font);
-    expect(NotTrueTypeFont, stat);
-
     lstrcpyA(lfa.lfFaceName, "Tahoma");
 
     stat = GdipCreateFontFromLogfontA(hdc, &lfa, &font);
@@ -726,6 +730,387 @@ static void test_font_metrics(void)
 }
 #endif // CORE_6660_IS_FIXED
 
+static void test_font_substitution(void)
+{
+    WCHAR ms_shell_dlg[LF_FACESIZE];
+    HDC hdc;
+    HFONT hfont;
+    LOGFONT lf;
+    GpStatus status;
+    GpGraphics *graphics;
+    GpFont *font;
+    GpFontFamily *family;
+    int ret;
+
+    hdc = CreateCompatibleDC(0);
+    status = GdipCreateFromHDC(hdc, &graphics);
+    expect(Ok, status);
+
+    hfont = GetStockObject(DEFAULT_GUI_FONT);
+    ok(hfont != 0, "GetStockObject(DEFAULT_GUI_FONT) failed\n");
+
+    memset(&lf, 0xfe, sizeof(lf));
+    ret = GetObject(hfont, sizeof(lf), &lf);
+    ok(ret == sizeof(lf), "GetObject failed\n");
+    ok(!lstrcmp(lf.lfFaceName, "MS Shell Dlg"), "wrong face name %s\n", lf.lfFaceName);
+    MultiByteToWideChar(CP_ACP, 0, lf.lfFaceName, -1, ms_shell_dlg, LF_FACESIZE);
+
+    status = GdipCreateFontFromLogfontA(hdc, &lf, &font);
+    expect(Ok, status);
+    memset(&lf, 0xfe, sizeof(lf));
+    status = GdipGetLogFontA(font, graphics, &lf);
+    expect(Ok, status);
+    ok(!lstrcmp(lf.lfFaceName, "Microsoft Sans Serif") ||
+       !lstrcmp(lf.lfFaceName, "Tahoma"), "wrong face name %s\n", lf.lfFaceName);
+    GdipDeleteFont(font);
+
+    status = GdipCreateFontFamilyFromName(ms_shell_dlg, NULL, &family);
+    expect(Ok, status);
+    status = GdipCreateFont(family, 12, FontStyleRegular, UnitPoint, &font);
+    expect(Ok, status);
+    memset(&lf, 0xfe, sizeof(lf));
+    status = GdipGetLogFontA(font, graphics, &lf);
+    expect(Ok, status);
+    ok(!lstrcmp(lf.lfFaceName, "Microsoft Sans Serif") ||
+       !lstrcmp(lf.lfFaceName, "Tahoma"), "wrong face name %s\n", lf.lfFaceName);
+    GdipDeleteFont(font);
+    GdipDeleteFontFamily(family);
+
+    status = GdipCreateFontFamilyFromName(nonexistent, NULL, &family);
+    ok(status == FontFamilyNotFound, "expected FontFamilyNotFound, got %d\n", status);
+
+    lstrcpy(lf.lfFaceName, "ThisFontShouldNotExist");
+    status = GdipCreateFontFromLogfontA(hdc, &lf, &font);
+    expect(Ok, status);
+    memset(&lf, 0xfe, sizeof(lf));
+    status = GdipGetLogFontA(font, graphics, &lf);
+    expect(Ok, status);
+    ok(!lstrcmp(lf.lfFaceName, "Arial"), "wrong face name %s\n", lf.lfFaceName);
+    GdipDeleteFont(font);
+
+    /* empty FaceName */
+    lf.lfFaceName[0] = 0;
+    status = GdipCreateFontFromLogfontA(hdc, &lf, &font);
+    expect(Ok, status);
+    memset(&lf, 0xfe, sizeof(lf));
+    status = GdipGetLogFontA(font, graphics, &lf);
+    expect(Ok, status);
+    ok(!lstrcmp(lf.lfFaceName, "Arial"), "wrong face name %s\n", lf.lfFaceName);
+    GdipDeleteFont(font);
+
+    /* zeroing out lfWeight and lfCharSet leads to font creation failure */
+    lf.lfWeight = 0;
+    lf.lfCharSet = 0;
+    lstrcpy(lf.lfFaceName, "ThisFontShouldNotExist");
+    status = GdipCreateFontFromLogfontA(hdc, &lf, &font);
+todo_wine
+    ok(status == NotTrueTypeFont || broken(status == FileNotFound), /* before XP */
+       "expected NotTrueTypeFont, got %d\n", status);
+
+    /* empty FaceName */
+    lf.lfFaceName[0] = 0;
+    status = GdipCreateFontFromLogfontA(hdc, &lf, &font);
+todo_wine
+    ok(status == NotTrueTypeFont || broken(status == FileNotFound), /* before XP */
+       "expected NotTrueTypeFont, got %d\n", status);
+
+    GdipDeleteGraphics(graphics);
+    DeleteDC(hdc);
+}
+
+static void test_font_transform(void)
+{
+    static const WCHAR string[] = { 'A',0 };
+    GpStatus status;
+    HDC hdc;
+    LOGFONT lf;
+    GpFont *font;
+    GpGraphics *graphics;
+    GpMatrix *matrix;
+    GpStringFormat *format, *typographic;
+    PointF pos[1] = { { 0,0 } };
+    REAL height, margin_y;
+    RectF bounds, rect;
+
+    hdc = CreateCompatibleDC(0);
+    status = GdipCreateFromHDC(hdc, &graphics);
+    expect(Ok, status);
+
+    status = GdipSetPageUnit(graphics, UnitPixel);
+    expect(Ok, status);
+
+    status = GdipCreateStringFormat(0, LANG_NEUTRAL, &format);
+    expect(Ok, status);
+    status = GdipStringFormatGetGenericTypographic(&typographic);
+    expect(Ok, status);
+
+    memset(&lf, 0, sizeof(lf));
+    lstrcpy(lf.lfFaceName, "Tahoma");
+    lf.lfHeight = -100;
+    lf.lfWidth = 100;
+    status = GdipCreateFontFromLogfontA(hdc, &lf, &font);
+    expect(Ok, status);
+
+    margin_y = 100.0 / 8.0;
+
+    /* identity matrix */
+    status = GdipCreateMatrix(&matrix);
+    expect(Ok, status);
+    status = GdipSetWorldTransform(graphics, matrix);
+    expect(Ok, status);
+    status = GdipGetLogFontA(font, graphics, &lf);
+    expect(Ok, status);
+    expect(-100, lf.lfHeight);
+    expect(0, lf.lfWidth);
+    expect(0, lf.lfEscapement);
+    expect(0, lf.lfOrientation);
+    status = GdipGetFontHeight(font, graphics, &height);
+    expect(Ok, status);
+    expectf(120.703125, height);
+    set_rect_empty(&rect);
+    set_rect_empty(&bounds);
+    status = GdipMeasureString(graphics, string, -1, font, &rect, format, &bounds, NULL, NULL);
+    expect(Ok, status);
+    expectf(0.0, bounds.X);
+    expectf(0.0, bounds.Y);
+todo_wine
+    expectf(height + margin_y, bounds.Height);
+    set_rect_empty(&rect);
+    set_rect_empty(&bounds);
+    status = GdipMeasureString(graphics, string, -1, font, &rect, typographic, &bounds, NULL, NULL);
+    expect(Ok, status);
+    expectf(0.0, bounds.X);
+    expectf(0.0, bounds.Y);
+todo_wine
+    expectf(height, bounds.Height);
+    set_rect_empty(&bounds);
+    status = GdipMeasureDriverString(graphics, (const UINT16 *)string, -1, font, pos,
+                                     DriverStringOptionsCmapLookup, NULL, &bounds);
+    expect(Ok, status);
+    expectf(0.0, bounds.X);
+todo_wine
+    expectf_(-100.0, bounds.Y, 0.05);
+todo_wine
+    expectf(height, bounds.Height);
+    set_rect_empty(&bounds);
+    status = GdipMeasureDriverString(graphics, (const UINT16 *)string, -1, font, pos,
+                                     DriverStringOptionsCmapLookup, matrix, &bounds);
+    expect(Ok, status);
+    expectf(0.0, bounds.X);
+todo_wine
+    expectf_(-100.0, bounds.Y, 0.05);
+todo_wine
+    expectf(height, bounds.Height);
+
+    /* scale matrix */
+    status = GdipScaleMatrix(matrix, 2.0, 3.0, MatrixOrderAppend);
+    expect(Ok, status);
+    status = GdipSetWorldTransform(graphics, matrix);
+    expect(Ok, status);
+    status = GdipGetLogFontA(font, graphics, &lf);
+    expect(Ok, status);
+    expect(-300, lf.lfHeight);
+    expect(0, lf.lfWidth);
+    expect(0, lf.lfEscapement);
+    expect(0, lf.lfOrientation);
+    status = GdipGetFontHeight(font, graphics, &height);
+    expect(Ok, status);
+    expectf(120.703125, height);
+    set_rect_empty(&rect);
+    set_rect_empty(&bounds);
+    status = GdipMeasureString(graphics, string, -1, font, &rect, format, &bounds, NULL, NULL);
+    expect(Ok, status);
+    expectf(0.0, bounds.X);
+    expectf(0.0, bounds.Y);
+todo_wine
+    expectf(height + margin_y, bounds.Height);
+    set_rect_empty(&rect);
+    set_rect_empty(&bounds);
+    status = GdipMeasureString(graphics, string, -1, font, &rect, typographic, &bounds, NULL, NULL);
+    expect(Ok, status);
+    expectf(0.0, bounds.X);
+    expectf(0.0, bounds.Y);
+todo_wine
+    expectf(height, bounds.Height);
+    set_rect_empty(&bounds);
+    status = GdipMeasureDriverString(graphics, (const UINT16 *)string, -1, font, pos,
+                                     DriverStringOptionsCmapLookup, NULL, &bounds);
+    expect(Ok, status);
+    expectf(0.0, bounds.X);
+todo_wine
+    expectf_(-100.0, bounds.Y, 0.05);
+todo_wine
+    expectf(height, bounds.Height);
+    set_rect_empty(&bounds);
+    status = GdipMeasureDriverString(graphics, (const UINT16 *)string, -1, font, pos,
+                                     DriverStringOptionsCmapLookup, matrix, &bounds);
+    expect(Ok, status);
+    expectf(0.0, bounds.X);
+todo_wine
+    expectf_(-300.0, bounds.Y, 0.15);
+todo_wine
+    expectf(height * 3.0, bounds.Height);
+
+    /* scale + ratate matrix */
+    status = GdipRotateMatrix(matrix, 45.0, MatrixOrderAppend);
+    expect(Ok, status);
+    status = GdipSetWorldTransform(graphics, matrix);
+    expect(Ok, status);
+    status = GdipGetLogFontA(font, graphics, &lf);
+    expect(Ok, status);
+    expect(-300, lf.lfHeight);
+    expect(0, lf.lfWidth);
+    expect_(3151, lf.lfEscapement, 1);
+    expect_(3151, lf.lfOrientation, 1);
+    status = GdipGetFontHeight(font, graphics, &height);
+    expect(Ok, status);
+    expectf(120.703125, height);
+    set_rect_empty(&rect);
+    set_rect_empty(&bounds);
+    status = GdipMeasureString(graphics, string, -1, font, &rect, format, &bounds, NULL, NULL);
+    expect(Ok, status);
+    expectf(0.0, bounds.X);
+    expectf(0.0, bounds.Y);
+todo_wine
+    expectf(height + margin_y, bounds.Height);
+    set_rect_empty(&rect);
+    set_rect_empty(&bounds);
+    status = GdipMeasureString(graphics, string, -1, font, &rect, typographic, &bounds, NULL, NULL);
+    expect(Ok, status);
+    expectf(0.0, bounds.X);
+    expectf(0.0, bounds.Y);
+todo_wine
+    expectf(height, bounds.Height);
+    set_rect_empty(&bounds);
+    status = GdipMeasureDriverString(graphics, (const UINT16 *)string, -1, font, pos,
+                                     DriverStringOptionsCmapLookup, NULL, &bounds);
+    expect(Ok, status);
+    expectf(0.0, bounds.X);
+todo_wine
+    expectf_(-100.0, bounds.Y, 0.05);
+todo_wine
+    expectf(height, bounds.Height);
+    set_rect_empty(&bounds);
+    status = GdipMeasureDriverString(graphics, (const UINT16 *)string, -1, font, pos,
+                                     DriverStringOptionsCmapLookup, matrix, &bounds);
+    expect(Ok, status);
+todo_wine
+    expectf_(-43.814377, bounds.X, 0.05);
+todo_wine
+    expectf_(-212.235611, bounds.Y, 0.05);
+todo_wine
+    expectf_(340.847534, bounds.Height, 0.05);
+
+    /* scale + ratate + shear matrix */
+    status = GdipShearMatrix(matrix, 4.0, 5.0, MatrixOrderAppend);
+    expect(Ok, status);
+    status = GdipSetWorldTransform(graphics, matrix);
+    expect(Ok, status);
+    status = GdipGetLogFontA(font, graphics, &lf);
+    expect(Ok, status);
+todo_wine
+    expect(1032, lf.lfHeight);
+    expect(0, lf.lfWidth);
+    expect_(3099, lf.lfEscapement, 1);
+    expect_(3099, lf.lfOrientation, 1);
+    status = GdipGetFontHeight(font, graphics, &height);
+    expect(Ok, status);
+    expectf(120.703125, height);
+    set_rect_empty(&rect);
+    set_rect_empty(&bounds);
+    status = GdipMeasureString(graphics, string, -1, font, &rect, format, &bounds, NULL, NULL);
+    expect(Ok, status);
+    expectf(0.0, bounds.X);
+    expectf(0.0, bounds.Y);
+todo_wine
+    expectf(height + margin_y, bounds.Height);
+    set_rect_empty(&rect);
+    set_rect_empty(&bounds);
+    status = GdipMeasureString(graphics, string, -1, font, &rect, typographic, &bounds, NULL, NULL);
+    expect(Ok, status);
+    expectf(0.0, bounds.X);
+    expectf(0.0, bounds.Y);
+todo_wine
+    expectf(height, bounds.Height);
+    set_rect_empty(&bounds);
+    status = GdipMeasureDriverString(graphics, (const UINT16 *)string, -1, font, pos,
+                                     DriverStringOptionsCmapLookup, NULL, &bounds);
+    expect(Ok, status);
+    expectf(0.0, bounds.X);
+todo_wine
+    expectf_(-100.0, bounds.Y, 0.05);
+todo_wine
+    expectf(height, bounds.Height);
+    set_rect_empty(&bounds);
+    status = GdipMeasureDriverString(graphics, (const UINT16 *)string, -1, font, pos,
+                                     DriverStringOptionsCmapLookup, matrix, &bounds);
+    expect(Ok, status);
+todo_wine
+    expectf_(-636.706848, bounds.X, 0.05);
+todo_wine
+    expectf_(-175.257523, bounds.Y, 0.05);
+todo_wine
+    expectf_(1532.984985, bounds.Height, 0.05);
+
+    /* scale + ratate + shear + translate matrix */
+    status = GdipTranslateMatrix(matrix, 10.0, 20.0, MatrixOrderAppend);
+    expect(Ok, status);
+    status = GdipSetWorldTransform(graphics, matrix);
+    expect(Ok, status);
+    status = GdipGetLogFontA(font, graphics, &lf);
+    expect(Ok, status);
+todo_wine
+    expect(1032, lf.lfHeight);
+    expect(0, lf.lfWidth);
+    expect_(3099, lf.lfEscapement, 1);
+    expect_(3099, lf.lfOrientation, 1);
+    status = GdipGetFontHeight(font, graphics, &height);
+    expect(Ok, status);
+    expectf(120.703125, height);
+    set_rect_empty(&rect);
+    set_rect_empty(&bounds);
+    status = GdipMeasureString(graphics, string, -1, font, &rect, format, &bounds, NULL, NULL);
+    expect(Ok, status);
+    expectf(0.0, bounds.X);
+    expectf(0.0, bounds.Y);
+todo_wine
+    expectf(height + margin_y, bounds.Height);
+    set_rect_empty(&rect);
+    set_rect_empty(&bounds);
+    status = GdipMeasureString(graphics, string, -1, font, &rect, typographic, &bounds, NULL, NULL);
+    expect(Ok, status);
+    expectf(0.0, bounds.X);
+    expectf(0.0, bounds.Y);
+todo_wine
+    expectf(height, bounds.Height);
+    set_rect_empty(&bounds);
+    status = GdipMeasureDriverString(graphics, (const UINT16 *)string, -1, font, pos,
+                                     DriverStringOptionsCmapLookup, NULL, &bounds);
+    expect(Ok, status);
+    expectf(0.0, bounds.X);
+todo_wine
+    expectf_(-100.0, bounds.Y, 0.05);
+todo_wine
+    expectf(height, bounds.Height);
+    set_rect_empty(&bounds);
+    status = GdipMeasureDriverString(graphics, (const UINT16 *)string, -1, font, pos,
+                                     DriverStringOptionsCmapLookup, matrix, &bounds);
+    expect(Ok, status);
+todo_wine
+    expectf_(-626.706848, bounds.X, 0.05);
+todo_wine
+    expectf_(-155.257523, bounds.Y, 0.05);
+todo_wine
+    expectf_(1532.984985, bounds.Height, 0.05);
+
+    GdipDeleteMatrix(matrix);
+    GdipDeleteFont(font);
+    GdipDeleteGraphics(graphics);
+    GdipDeleteStringFormat(typographic);
+    GdipDeleteStringFormat(format);
+    DeleteDC(hdc);
+}
+
 START_TEST(font)
 {
     struct GdiplusStartupInput gdiplusStartupInput;
@@ -738,6 +1123,8 @@ START_TEST(font)
 
     GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
 
+    test_font_transform();
+    test_font_substitution();
 #if CORE_6660_IS_FIXED
     test_font_metrics();
 #endif

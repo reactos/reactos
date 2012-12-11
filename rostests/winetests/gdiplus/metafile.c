@@ -426,6 +426,21 @@ static void test_getdc(void)
     expect(Ok, stat);
     expect(0, color);
 
+    stat = GdipBitmapSetPixel(bitmap, 15, 15, 0);
+    expect(Ok, stat);
+
+    stat = GdipDrawImagePointsRect(graphics, (GpImage*)metafile, dst_points, 3,
+        0.0, 0.0, 100.0, 100.0, UnitPixel, NULL, NULL, NULL);
+    expect(Ok, stat);
+
+    stat = GdipBitmapGetPixel(bitmap, 15, 15, &color);
+    expect(Ok, stat);
+    expect(0, color);
+
+    stat = GdipBitmapGetPixel(bitmap, 50, 50, &color);
+    expect(Ok, stat);
+    expect(0xff0000ff, color);
+
     stat = GdipDeleteGraphics(graphics);
     expect(Ok, stat);
 
@@ -459,6 +474,7 @@ static void test_emfonly(void)
 {
     GpStatus stat;
     GpMetafile *metafile;
+    GpImage *clone;
     GpGraphics *graphics;
     HDC hdc, metafile_dc;
     HENHMETAFILE hemf;
@@ -529,6 +545,44 @@ static void test_emfonly(void)
     stat = GdipBitmapGetPixel(bitmap, 50, 50, &color);
     expect(Ok, stat);
     expect(0xff0000ff, color);
+
+    stat = GdipBitmapSetPixel(bitmap, 50, 50, 0);
+    expect(Ok, stat);
+
+    stat = GdipDrawImagePointsRect(graphics, (GpImage*)metafile, dst_points, 3,
+        0.0, 0.0, 100.0, 100.0, UnitPixel, NULL, NULL, NULL);
+    expect(Ok, stat);
+
+    stat = GdipBitmapGetPixel(bitmap, 15, 15, &color);
+    expect(Ok, stat);
+    expect(0, color);
+
+    stat = GdipBitmapGetPixel(bitmap, 50, 50, &color);
+    expect(Ok, stat);
+    expect(0xff0000ff, color);
+
+    stat = GdipCloneImage((GpImage*)metafile, &clone);
+    expect(Ok, stat);
+
+    if (stat == Ok)
+    {
+        stat = GdipBitmapSetPixel(bitmap, 50, 50, 0);
+        expect(Ok, stat);
+
+        stat = GdipDrawImagePointsRect(graphics, clone, dst_points, 3,
+            0.0, 0.0, 100.0, 100.0, UnitPixel, NULL, NULL, NULL);
+        expect(Ok, stat);
+
+        stat = GdipBitmapGetPixel(bitmap, 15, 15, &color);
+        expect(Ok, stat);
+        expect(0, color);
+
+        stat = GdipBitmapGetPixel(bitmap, 50, 50, &color);
+        expect(Ok, stat);
+        expect(0xff0000ff, color);
+
+        GdipDisposeImage(clone);
+    }
 
     stat = GdipDeleteGraphics(graphics);
     expect(Ok, stat);
