@@ -50,6 +50,7 @@ GpStatus WINGDIPAPI GdipCreateStringFormat(INT attr, LANGID lang,
     (*format)->digitsub = StringDigitSubstituteUser;
     (*format)->character_ranges = NULL;
     (*format)->range_count = 0;
+    (*format)->generic_typographic = FALSE;
     /* tabstops */
     (*format)->tabcount = 0;
     (*format)->firsttab = 0.0;
@@ -386,6 +387,9 @@ GpStatus WINGDIPAPI GdipStringFormatGetGenericTypographic(GpStringFormat **forma
     (*format)->hkprefix  = HotkeyPrefixNone;
     (*format)->align     = StringAlignmentNear;
     (*format)->vertalign = StringAlignmentNear;
+    (*format)->generic_typographic = TRUE;
+
+    TRACE("%p => %p\n", format, *format);
 
     return Ok;
 }

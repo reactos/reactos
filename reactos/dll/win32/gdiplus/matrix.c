@@ -393,8 +393,8 @@ GpStatus WINGDIPAPI GdipTransformMatrixPointsI(GpMatrix *matrix, GpPoint *pts, I
 
     if(ret == Ok)
         for(i = 0; i < count; i++){
-            pts[i].X = roundr(ptsF[i].X);
-            pts[i].Y = roundr(ptsF[i].Y);
+            pts[i].X = gdip_round(ptsF[i].X);
+            pts[i].Y = gdip_round(ptsF[i].Y);
         }
     GdipFree(ptsF);
 
@@ -474,8 +474,8 @@ GpStatus WINGDIPAPI GdipVectorTransformMatrixPointsI(GpMatrix *matrix, GpPoint *
     /* store back */
     if(ret == Ok)
         for(i = 0; i < count; i++){
-            pts[i].X = roundr(ptsF[i].X);
-            pts[i].Y = roundr(ptsF[i].Y);
+            pts[i].X = gdip_round(ptsF[i].X);
+            pts[i].Y = gdip_round(ptsF[i].Y);
         }
     GdipFree(ptsF);
 
