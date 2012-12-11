@@ -1118,7 +1118,7 @@ CsrLockProcessByClientId(IN HANDLE Pid,
         CsrLockedReferenceProcess(CurrentProcess);
         *CsrProcess = CurrentProcess;
     }
-    
+
     /* Return the result */
     return Status;
 }
