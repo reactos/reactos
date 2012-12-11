@@ -341,29 +341,29 @@ END
 
 IDR_MENU_SCIENTIFIC_1 MENU DISCARDABLE
 BEGIN
-    POPUP "編集"
+    POPUP "編集(&E)"
     BEGIN
-        MENUITEM "コピー\tCtrl+C",              IDM_EDIT_COPY
-        MENUITEM "貼 り付けtCtrl+V",           IDM_EDIT_PASTE
+        MENUITEM "コピー(&C)\tCtrl+C",              IDM_EDIT_COPY
+        MENUITEM "貼り付け(&P)\tCtrl+V",           IDM_EDIT_PASTE
     END
-    POPUP "表 示"
+    POPUP "表示(&V)"
     BEGIN
-        MENUITEM "標準",                        IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "関数電卓",                    IDM_VIEW_SCIENTIFIC, CHECKED
-        MENUITEM "変換",                        IDM_VIEW_CONVERSION
+        MENUITEM "標準(&T)",                    IDM_VIEW_STANDARD, CHECKED
+        MENUITEM "関数電卓(&S)",                IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "変換(&C)",                    IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
-        MENUITEM "16進\tF5",                    IDM_VIEW_HEX, CHECKED
-        MENUITEM "10進\tF6",                    IDM_VIEW_DEC, CHECKED
-        MENUITEM "8進\tF7",                     IDM_VIEW_OCT, CHECKED
-        MENUITEM "2進\tF8",                     IDM_VIEW_BIN, CHECKED
+        MENUITEM "1&6進\tF5",                   IDM_VIEW_HEX, CHECKED
+        MENUITEM "&10進\tF6",                   IDM_VIEW_DEC, CHECKED
+        MENUITEM "&8進\tF7",                    IDM_VIEW_OCT, CHECKED
+        MENUITEM "&2進\tF8",                    IDM_VIEW_BIN, CHECKED
         MENUITEM SEPARATOR
-        MENUITEM "Degrees\tF2",                 IDM_VIEW_DEG, CHECKED
-        MENUITEM "Radians\tF3",                 IDM_VIEW_RAD, CHECKED
-        MENUITEM "Gradians\tF4",                IDM_VIEW_GRAD, CHECKED
+        MENUITEM "&Degrees\tF2",                IDM_VIEW_DEG, CHECKED
+        MENUITEM "&Radians\tF3",                IDM_VIEW_RAD, CHECKED
+        MENUITEM "&Gradians\tF4",               IDM_VIEW_GRAD, CHECKED
         MENUITEM SEPARATOR
-        MENUITEM "桁を区切る",                  IDM_VIEW_GROUP, CHECKED
+        MENUITEM "桁を区切る(&I)",              IDM_VIEW_GROUP, CHECKED
     END
-    POPUP "ヘルプ"
+    POPUP "ヘルプ(&H)"
     BEGIN
         MENUITEM "ヘルプ トピック",             IDM_HELP_HELP
         MENUITEM SEPARATOR
@@ -373,30 +373,30 @@ END
 
 IDR_MENU_SCIENTIFIC_2 MENU DISCARDABLE
 BEGIN
-    POPUP "編集"
+    POPUP "編集(&E)"
     BEGIN
-        MENUITEM "コピー\tCtrl+C",              IDM_EDIT_COPY
-        MENUITEM "貼 り付け\tCtrl+V",           IDM_EDIT_PASTE
+        MENUITEM "コピー(&C)\tCtrl+C",          IDM_EDIT_COPY
+        MENUITEM "貼り付け(&P)\tCtrl+V",        IDM_EDIT_PASTE
     END
-    POPUP "表 示"
+    POPUP "表示(&V)"
     BEGIN
-        MENUITEM "標準",                        IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "関数電卓",                    IDM_VIEW_SCIENTIFIC, CHECKED
-        MENUITEM "変換",                        IDM_VIEW_CONVERSION
+        MENUITEM "標準(&T)",                    IDM_VIEW_STANDARD, CHECKED
+        MENUITEM "関数電卓(&S)",                IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "変換(&C)",                    IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
-        MENUITEM "16進\tF5",                    IDM_VIEW_HEX, CHECKED
-        MENUITEM "10進\tF6",                    IDM_VIEW_DEC, CHECKED
-        MENUITEM "8進\tF7",                     IDM_VIEW_OCT, CHECKED
-        MENUITEM "2進\tF8",                     IDM_VIEW_BIN, CHECKED
+        MENUITEM "1&6進\tF5",                   IDM_VIEW_HEX, CHECKED
+        MENUITEM "&10進\tF6",                   IDM_VIEW_DEC, CHECKED
+        MENUITEM "&8進\tF7",                    IDM_VIEW_OCT, CHECKED
+        MENUITEM "&2進\tF8",                    IDM_VIEW_BIN, CHECKED
         MENUITEM SEPARATOR
-        MENUITEM "Qword\tF12",                  IDM_VIEW_QWORD, CHECKED
-        MENUITEM "Dword\tF2",                   IDM_VIEW_DWORD, CHECKED
-        MENUITEM "Word\tF3",                    IDM_VIEW_WORD, CHECKED
-        MENUITEM "Byte\tF4",                    IDM_VIEW_BYTE, CHECKED
+        MENUITEM "&Qword\tF12",                 IDM_VIEW_QWORD, CHECKED
+        MENUITEM "&Dword\tF2",                  IDM_VIEW_DWORD, CHECKED
+        MENUITEM "&Word\tF3",                   IDM_VIEW_WORD, CHECKED
+        MENUITEM "&Byte\tF4",                   IDM_VIEW_BYTE, CHECKED
         MENUITEM SEPARATOR
-        MENUITEM "桁を区切る",                  IDM_VIEW_GROUP, CHECKED
+        MENUITEM "桁を区切る(&I)",              IDM_VIEW_GROUP, CHECKED
     END
-    POPUP "ヘルプ"
+    POPUP "ヘルプ(&H)"
     BEGIN
         MENUITEM "ヘルプ トピック",             IDM_HELP_HELP
         MENUITEM SEPARATOR
@@ -406,20 +406,20 @@ END
 
 IDR_MENU_STANDARD MENU DISCARDABLE
 BEGIN
-    POPUP "編集"
+    POPUP "編集(&E)"
     BEGIN
-        MENUITEM "コピー\tCtrl+C",              IDM_EDIT_COPY
-        MENUITEM "貼 り付け\tCtrl+V",           IDM_EDIT_PASTE
+        MENUITEM "コピー(&C)\tCtrl+C",          IDM_EDIT_COPY
+        MENUITEM "貼り付け(&P)\tCtrl+V",        IDM_EDIT_PASTE
     END
-    POPUP "表 示"
+    POPUP "表示"
     BEGIN
-        MENUITEM "標準",                        IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "関数電卓",                    IDM_VIEW_SCIENTIFIC, CHECKED
-        MENUITEM "変換",                        IDM_VIEW_CONVERSION
+        MENUITEM "標準(&T)",                    IDM_VIEW_STANDARD, CHECKED
+        MENUITEM "関数電卓(&S)",                IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "変換(&C)",                    IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
-        MENUITEM "桁を区切る",                  IDM_VIEW_GROUP, CHECKED
+        MENUITEM "桁を区切る(&I)",              IDM_VIEW_GROUP, CHECKED
     END
-    POPUP "ヘルプ"
+    POPUP "ヘルプ(&H)"
     BEGIN
         MENUITEM "ヘルプ トピック",             IDM_HELP_HELP
         MENUITEM SEPARATOR
@@ -431,7 +431,7 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_STRING_LICENSE      "ReactOS 電卓はGNU GPLライセンスの元で提供されるフリーソ フトウェアです。\r\n\r\nこちらでGNU GPLライセンスのコピーを得ることができます:\r\nhttp://www.gnu.org/licenses/gpl.html\r\n\r\nこちらでGNU GPLライセンスの翻訳を得ることができます:\r\nhttp://www.gnu.org/licenses/translations.html"
+    IDS_STRING_LICENSE      "ReactOS 電卓はGNU GPLライセンスの元で提供されるフリーソフトウェアです。\r\n\r\nこちらでGNU GPLライセンスのコピーを得ることができます:\r\nhttp://www.gnu.org/licenses/gpl.html\r\n\r\nこちらでGNU GPLライセンスの翻訳を得ることができます:\r\nhttp://www.gnu.org/licenses/translations.html"
     IDS_MATH_ERROR          "エラー"
     IDS_QUICKHELP           "クイックヘルプ"
 END
