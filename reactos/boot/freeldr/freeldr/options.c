@@ -20,7 +20,7 @@
 #include <freeldr.h>
 #include <debug.h>
 
-PCSTR	OptionsMenuList[] =
+PCSTR OptionsMenuList[] =
 {
 	"Safe Mode",
 	"Safe Mode with Networking",
@@ -45,7 +45,7 @@ PCSTR	OptionsMenuList[] =
 #endif
 };
 
-PCSTR FrldrDbgMsg = "Enable freeldr debug channels\n"
+PCSTR FrldrDbgMsg = "Enable FreeLdr debug channels\n"
                     "Acceptable syntax: [level1]#channel1[,[level2]#channel2]\n"
                     "level can be one of: trace,warn,fixme,err\n"
                     "  if the level is ommited all levels\n"
@@ -58,7 +58,7 @@ PCSTR FrldrDbgMsg = "Enable freeldr debug channels\n"
                     "  trace+windows,trace+reactos\n"
                     "  +hwdetect,err-disk\n"
                     "  +peloader\n"
-                    "NOTE: all letters must be lowercase, no spaces allowed\n";
+                    "NOTE: all letters must be lowercase, no spaces allowed.";
 
 enum OptionMenuItems
 {
@@ -85,7 +85,7 @@ enum OptionMenuItems
 #endif
 };
 
-ULONG		OptionsMenuItemCount = sizeof(OptionsMenuList) / sizeof(OptionsMenuList[0]);
+ULONG OptionsMenuItemCount = sizeof(OptionsMenuList) / sizeof(OptionsMenuList[0]);
 
 BOOLEAN SafeMode = FALSE;
 BOOLEAN SafeModeWithNetworking = FALSE;
@@ -98,8 +98,8 @@ BOOLEAN DebuggingMode = FALSE;
 
 VOID DoOptionsMenu(VOID)
 {
-	ULONG		SelectedMenuItem;
-	CHAR DebugChannelString[100];
+	ULONG SelectedMenuItem;
+	CHAR  DebugChannelString[100];
 
 	if (!UiDisplayMenu("Select an option:",
 	                   OptionsMenuList,
@@ -149,7 +149,7 @@ VOID DoOptionsMenu(VOID)
 		break;
 	case FREELDR_DEBUGGING:
 		DebugChannelString[0]=0;
-		if(UiEditBox(FrldrDbgMsg, DebugChannelString, 100))
+		if (UiEditBox(FrldrDbgMsg, DebugChannelString, 100))
 			DbgParseDebugChannels(DebugChannelString);
 		break;
 	//case SEPARATOR2:
