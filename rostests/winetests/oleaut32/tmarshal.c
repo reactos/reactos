@@ -29,19 +29,22 @@
 #include "tmarshal.h"
 #include "tmarshal_dispids.h"
 
+static HRESULT (WINAPI *pVarAdd)(LPVARIANT,LPVARIANT,LPVARIANT);
+
+
 #define ok_ole_success(hr, func) ok(hr == S_OK, #func " failed with error 0x%08lx\n", (unsigned long int)hr)
 
 /* ULL suffix is not portable */
 #define ULL_CONST(dw1, dw2) ((((ULONGLONG)dw1) << 32) | (ULONGLONG)dw2)
 
-const MYSTRUCT MYSTRUCT_BYVAL = {0x12345678, ULL_CONST(0xdeadbeef, 0x98765432)};
-const MYSTRUCT MYSTRUCT_BYPTR = {0x91827364, ULL_CONST(0x88776655, 0x44332211)};
+const MYSTRUCT MYSTRUCT_BYVAL = {0x12345678, ULL_CONST(0xdeadbeef, 0x98765432), {0,1,2,3,4,5,6,7}};
+const MYSTRUCT MYSTRUCT_BYPTR = {0x91827364, ULL_CONST(0x88776655, 0x44332211), {0,1,2,3,4,5,6,7}};
 const MYSTRUCT MYSTRUCT_ARRAY[5] = {
-    {0x1a1b1c1d, ULL_CONST(0x1e1f1011, 0x12131415)},
-    {0x2a2b2c2d, ULL_CONST(0x2e2f2021, 0x22232425)},
-    {0x3a3b3c3d, ULL_CONST(0x3e3f3031, 0x32333435)},
-    {0x4a4b4c4d, ULL_CONST(0x4e4f4041, 0x42434445)},
-    {0x5a5b5c5d, ULL_CONST(0x5e5f5051, 0x52535455)},
+    {0x1a1b1c1d, ULL_CONST(0x1e1f1011, 0x12131415), {0,1,2,3,4,5,6,7}},
+    {0x2a2b2c2d, ULL_CONST(0x2e2f2021, 0x22232425), {0,1,2,3,4,5,6,7}},
+    {0x3a3b3c3d, ULL_CONST(0x3e3f3031, 0x32333435), {0,1,2,3,4,5,6,7}},
+    {0x4a4b4c4d, ULL_CONST(0x4e4f4041, 0x42434445), {0,1,2,3,4,5,6,7}},
+    {0x5a5b5c5d, ULL_CONST(0x5e5f5051, 0x52535455), {0,1,2,3,4,5,6,7}},
 };
 
 
@@ -150,6 +153,35 @@ static void end_host_object(DWORD tid, HANDLE thread)
 
 static ItestDual TestDual, TestDualDisp;
 
+static HRESULT WINAPI TestSecondIface_QueryInterface(ITestSecondIface *iface, REFIID riid, void **ppv)
+{
+    return ItestDual_QueryInterface(&TestDual, riid, ppv);
+}
+
+static ULONG WINAPI TestSecondIface_AddRef(ITestSecondIface *iface)
+{
+    return 2;
+}
+
+static ULONG WINAPI TestSecondIface_Release(ITestSecondIface *iface)
+{
+    return 1;
+}
+
+static HRESULT WINAPI TestSecondIface_test(ITestSecondIface *iface)
+{
+    return 1;
+}
+
+static const ITestSecondIfaceVtbl TestSecondIfaceVtbl = {
+    TestSecondIface_QueryInterface,
+    TestSecondIface_AddRef,
+    TestSecondIface_Release,
+    TestSecondIface_test
+};
+
+static ITestSecondIface TestSecondIface = { &TestSecondIfaceVtbl };
+
 static HRESULT WINAPI TestDual_QueryInterface(ItestDual *iface, REFIID riid, void **ppvObject)
 {
     if (IsEqualIID(riid, &IID_IUnknown) || IsEqualIID(riid, &IID_IDispatch)) {
@@ -157,6 +189,9 @@ static HRESULT WINAPI TestDual_QueryInterface(ItestDual *iface, REFIID riid, voi
         return S_OK;
     }else if(IsEqualGUID(riid, &IID_ItestDual)) {
         *ppvObject = &TestDual;
+        return S_OK;
+    }else if(IsEqualGUID(riid, &IID_ITestSecondIface)) {
+        *ppvObject = &TestSecondIface;
         return S_OK;
     }
 
@@ -216,10 +251,15 @@ static ItestDual TestDualDisp = { &TestDualVtbl };
 
 typedef struct Widget
 {
-    const IWidgetVtbl *lpVtbl;
+    IWidget IWidget_iface;
     LONG refs;
     IUnknown *pDispatchUnknown;
 } Widget;
+
+static inline Widget *impl_from_IWidget(IWidget *iface)
+{
+    return CONTAINING_RECORD(iface, Widget, IWidget_iface);
+}
 
 static HRESULT WINAPI Widget_QueryInterface(
     IWidget *iface,
@@ -242,7 +282,7 @@ static HRESULT WINAPI Widget_QueryInterface(
 static ULONG WINAPI Widget_AddRef(
     IWidget *iface)
 {
-    Widget *This = (Widget *)iface;
+    Widget *This = impl_from_IWidget(iface);
 
     return InterlockedIncrement(&This->refs);
 }
@@ -250,7 +290,7 @@ static ULONG WINAPI Widget_AddRef(
 static ULONG WINAPI Widget_Release(
     IWidget *iface)
 {
-    Widget *This = (Widget *)iface;
+    Widget *This = impl_from_IWidget(iface);
     ULONG refs = InterlockedDecrement(&This->refs);
     if (!refs)
     {
@@ -267,7 +307,7 @@ static HRESULT WINAPI Widget_GetTypeInfoCount(
     IWidget *iface,
     /* [out] */ UINT __RPC_FAR *pctinfo)
 {
-    Widget *This = (Widget *)iface;
+    Widget *This = impl_from_IWidget(iface);
     IDispatch *pDispatch;
     HRESULT hr = IUnknown_QueryInterface(This->pDispatchUnknown, &IID_IDispatch, (void **)&pDispatch);
     if (SUCCEEDED(hr))
@@ -284,7 +324,7 @@ static HRESULT WINAPI Widget_GetTypeInfo(
     /* [in] */ LCID lcid,
     /* [out] */ ITypeInfo __RPC_FAR *__RPC_FAR *ppTInfo)
 {
-    Widget *This = (Widget *)iface;
+    Widget *This = impl_from_IWidget(iface);
     IDispatch *pDispatch;
     HRESULT hr = IUnknown_QueryInterface(This->pDispatchUnknown, &IID_IDispatch, (void **)&pDispatch);
     if (SUCCEEDED(hr))
@@ -303,7 +343,7 @@ static HRESULT WINAPI Widget_GetIDsOfNames(
     /* [in] */ LCID lcid,
     /* [size_is][out] */ DISPID __RPC_FAR *rgDispId)
 {
-    Widget *This = (Widget *)iface;
+    Widget *This = impl_from_IWidget(iface);
     IDispatch *pDispatch;
     HRESULT hr = IUnknown_QueryInterface(This->pDispatchUnknown, &IID_IDispatch, (void **)&pDispatch);
     if (SUCCEEDED(hr))
@@ -325,7 +365,7 @@ static HRESULT WINAPI Widget_Invoke(
     /* [out] */ EXCEPINFO __RPC_FAR *pExcepInfo,
     /* [out] */ UINT __RPC_FAR *puArgErr)
 {
-    Widget *This = (Widget *)iface;
+    Widget *This = impl_from_IWidget(iface);
     IDispatch *pDispatch;
     HRESULT hr = IUnknown_QueryInterface(This->pDispatchUnknown, &IID_IDispatch, (void **)&pDispatch);
     if (SUCCEEDED(hr))
@@ -470,6 +510,46 @@ static HRESULT WINAPI Widget_VariantArrayPtr(
     return S_OK;
 }
 
+static HRESULT WINAPI Widget_VariantCArray(
+    IWidget * iface,
+    ULONG count,
+    VARIANT values[])
+{
+    ULONG i;
+
+    trace("VariantCArray(%u,%p)\n", count, values);
+
+    ok(count == 2, "count is %d\n", count);
+    for (i = 0; i < count; i++)
+        ok(V_VT(&values[i]) == VT_I4, "values[%d] is not VT_I4\n", i);
+
+    if (pVarAdd)
+    {
+        VARIANT inc, res;
+        HRESULT hr;
+
+        V_VT(&inc) = VT_I4;
+        V_I4(&inc) = 1;
+        for (i = 0; i < count; i++) {
+            VariantInit(&res);
+            hr = pVarAdd(&values[i], &inc, &res);
+            if (FAILED(hr)) {
+                ok(0, "VarAdd failed at %u with error 0x%x\n", i, hr);
+                return hr;
+            }
+            hr = VariantCopy(&values[i], &res);
+            if (FAILED(hr)) {
+                ok(0, "VariantCopy failed at %u with error 0x%x\n", i, hr);
+                return hr;
+            }
+        }
+    }
+    else
+        win_skip("VarAdd is not available\n");
+
+    return S_OK;
+}
+
 static HRESULT WINAPI Widget_Variant(
     IWidget __RPC_FAR * iface,
     VARIANT var)
@@ -515,6 +595,17 @@ static HRESULT WINAPI Widget_VarArg(
     return S_OK;
 }
 
+
+static BOOL mystruct_uint_ordered(MYSTRUCT *mystruct)
+{
+    int i;
+    for (i = 0; i < sizeof(mystruct->uarr)/sizeof(mystruct->uarr[0]); i++)
+        if (mystruct->uarr[i] != i)
+            return 0;
+
+    return 1;
+}
+
 static HRESULT WINAPI Widget_StructArgs(
     IWidget * iface,
     MYSTRUCT byval,
@@ -523,14 +614,17 @@ static HRESULT WINAPI Widget_StructArgs(
 {
     int i, diff = 0;
     ok(byval.field1 == MYSTRUCT_BYVAL.field1 &&
-       byval.field2 == MYSTRUCT_BYVAL.field2,
+       byval.field2 == MYSTRUCT_BYVAL.field2 &&
+       mystruct_uint_ordered(&byval),
        "Struct parameter passed by value corrupted\n");
     ok(byptr->field1 == MYSTRUCT_BYPTR.field1 &&
-       byptr->field2 == MYSTRUCT_BYPTR.field2,
+       byptr->field2 == MYSTRUCT_BYPTR.field2 &&
+       mystruct_uint_ordered(byptr),
        "Struct parameter passed by pointer corrupted\n");
     for (i = 0; i < 5; i++)
         if (arr[i].field1 != MYSTRUCT_ARRAY[i].field1 ||
-            arr[i].field2 != MYSTRUCT_ARRAY[i].field2)
+            arr[i].field2 != MYSTRUCT_ARRAY[i].field2 ||
+            ! mystruct_uint_ordered(&arr[i]))
             diff++;
     ok(diff == 0, "Array of structs corrupted\n");
     return S_OK;
@@ -612,6 +706,20 @@ static HRESULT WINAPI Widget_put_prop_req_arg(
     return S_OK;
 }
 
+static HRESULT WINAPI Widget_do_restrict(IWidget* iface, INT *i)
+{
+    trace("restrict\n");
+    *i = DISPID_TM_RESTRICTED;
+    return S_OK;
+}
+
+static HRESULT WINAPI Widget_neg_restrict(IWidget* iface, INT *i)
+{
+    trace("neg_restrict\n");
+    *i = DISPID_TM_NEG_RESTRICTED;
+    return S_OK;
+}
+
 static const struct IWidgetVtbl Widget_VTable =
 {
     Widget_QueryInterface,
@@ -635,6 +743,7 @@ static const struct IWidgetVtbl Widget_VTable =
     Widget_Value,
     Widget_Array,
     Widget_VariantArrayPtr,
+    Widget_VariantCArray,
     Widget_Variant,
     Widget_VarArg,
     Widget_StructArgs,
@@ -647,6 +756,8 @@ static const struct IWidgetVtbl Widget_VTable =
     Widget_ByRefUInt,
     Widget_put_prop_opt_arg,
     Widget_put_prop_req_arg,
+    Widget_do_restrict,
+    Widget_neg_restrict
 };
 
 static HRESULT WINAPI StaticWidget_QueryInterface(IStaticWidget *iface, REFIID riid, void **ppvObject)
@@ -703,8 +814,14 @@ static HRESULT WINAPI StaticWidget_Invoke(IStaticWidget *iface, DISPID dispIdMem
 static HRESULT WINAPI StaticWidget_TestDual(IStaticWidget *iface, ItestDual *p)
 {
     trace("TestDual()\n");
-    todo_wine
     ok(p == &TestDual, "wrong ItestDual\n");
+    return S_OK;
+}
+
+static HRESULT WINAPI StaticWidget_TestSecondIface(IStaticWidget *iface, ITestSecondIface *p)
+{
+    trace("TestSecondIface()\n");
+    ok(p == &TestSecondIface, "wrong ItestSecondIface\n");
     return S_OK;
 }
 
@@ -716,16 +833,22 @@ static const IStaticWidgetVtbl StaticWidgetVtbl = {
     StaticWidget_GetTypeInfo,
     StaticWidget_GetIDsOfNames,
     StaticWidget_Invoke,
-    StaticWidget_TestDual
+    StaticWidget_TestDual,
+    StaticWidget_TestSecondIface
 };
 
 static IStaticWidget StaticWidget = { &StaticWidgetVtbl };
 
 typedef struct KindaEnum
 {
-    const IKindaEnumWidgetVtbl *lpVtbl;
+    IKindaEnumWidget IKindaEnumWidget_iface;
     LONG refs;
 } KindaEnum;
+
+static inline KindaEnum *impl_from_IKindaEnumWidget(IKindaEnumWidget *iface)
+{
+    return CONTAINING_RECORD(iface, KindaEnum, IKindaEnumWidget_iface);
+}
 
 static HRESULT register_current_module_typelib(void)
 {
@@ -777,16 +900,17 @@ static IWidget *Widget_Create(void)
         return NULL;
 
     This = HeapAlloc(GetProcessHeap(), 0, sizeof(*This));
-    This->lpVtbl = &Widget_VTable;
+    This->IWidget_iface.lpVtbl = &Widget_VTable;
     This->refs = 1;
     This->pDispatchUnknown = NULL;
 
-    hr = CreateStdDispatch((IUnknown *)&This->lpVtbl, This, pTypeInfo, &This->pDispatchUnknown);
+    hr = CreateStdDispatch((IUnknown *)&This->IWidget_iface, This, pTypeInfo,
+                           &This->pDispatchUnknown);
     ok_ole_success(hr, CreateStdDispatch);
     ITypeInfo_Release(pTypeInfo);
 
     if (SUCCEEDED(hr))
-        return (IWidget *)&This->lpVtbl;
+        return &This->IWidget_iface;
     else
     {
         HeapFree(GetProcessHeap(), 0, This);
@@ -815,7 +939,7 @@ static HRESULT WINAPI KindaEnum_QueryInterface(
 static ULONG WINAPI KindaEnum_AddRef(
     IKindaEnumWidget *iface)
 {
-    KindaEnum *This = (KindaEnum *)iface;
+    KindaEnum *This = impl_from_IKindaEnumWidget(iface);
 
     return InterlockedIncrement(&This->refs);
 }
@@ -823,7 +947,7 @@ static ULONG WINAPI KindaEnum_AddRef(
 static ULONG WINAPI KindaEnum_Release(
     IKindaEnumWidget *iface)
 {
-    KindaEnum *This = (KindaEnum *)iface;
+    KindaEnum *This = impl_from_IKindaEnumWidget(iface);
     ULONG refs = InterlockedDecrement(&This->refs);
     if (!refs)
     {
@@ -883,9 +1007,9 @@ static IKindaEnumWidget *KindaEnumWidget_Create(void)
 
     This = HeapAlloc(GetProcessHeap(), 0, sizeof(*This));
     if (!This) return NULL;
-    This->lpVtbl = &KindaEnumWidget_VTable;
+    This->IKindaEnumWidget_iface.lpVtbl = &KindaEnumWidget_VTable;
     This->refs = 1;
-    return (IKindaEnumWidget *)This;
+    return &This->IKindaEnumWidget_iface;
 }
 
 static HRESULT WINAPI NonOleAutomation_QueryInterface(INonOleAutomation *iface, REFIID riid, void **ppv)
@@ -989,7 +1113,14 @@ static void test_typelibmarshal(void)
 
     IKindaEnumWidget_Release(pKEW);
 
+    /* call GetTypeInfoCount (direct) */
+    hr = IWidget_GetTypeInfoCount(pWidget, &uval);
+    ok_ole_success(hr, IWidget_GetTypeInfoCount);
+    hr = IWidget_GetTypeInfoCount(pWidget, &uval);
+    ok_ole_success(hr, IWidget_GetTypeInfoCount);
+
     hr = IWidget_QueryInterface(pWidget, &IID_IDispatch, (void **)&pDispatch);
+    ok_ole_success(hr, IWidget_QueryInterface);
 
     /* call put_Name */
     VariantInit(&vararg[0]);
@@ -1026,7 +1157,7 @@ static void test_typelibmarshal(void)
     VariantClear(&varresult);
 
     /* call get_Name (direct) */
-    bstr = NULL;
+    bstr = (void *)0xdeadbeef;
     hr = IWidget_get_Name(pWidget, &bstr);
     ok_ole_success(hr, IWidget_get_Name);
     ok(!lstrcmpW(bstr, szCat), "IWidget_get_Name should have returned string \"Cat\" instead of %s\n", wine_dbgstr_w(bstr));
@@ -1088,6 +1219,7 @@ static void test_typelibmarshal(void)
     ok(V_VT(&varresult) == VT_BSTR, "Return value should be of type BSTR instead of %d\n", V_VT(&varresult));
     ok(!lstrcmpW(V_BSTR(&varresult), szTestTest), "Return value should have been \"TestTest\" instead of %s\n", wine_dbgstr_w(V_BSTR(&varresult)));
     VariantClear(&varresult);
+    SysFreeString(bstr);
 
     /* call SetOleColor with large negative VT_I4 param */
     VariantInit(&vararg[0]);
@@ -1210,6 +1342,18 @@ static void test_typelibmarshal(void)
     hr = IDispatch_Invoke(pDispatch, DISPID_TM_VARIANT, &IID_NULL, LOCALE_NEUTRAL, DISPATCH_METHOD, &dispparams, NULL, NULL, NULL);
     ok_ole_success(hr, IDispatch_Invoke);
     VariantClear(&varresult);
+
+    /* call VariantCArray - test marshaling of variant arrays */
+    V_VT(&vararg[0]) = VT_I4;
+    V_I4(&vararg[0]) = 1;
+    V_VT(&vararg[1]) = VT_I4;
+    V_I4(&vararg[1]) = 2;
+    hr = IWidget_VariantCArray(pWidget, 2, vararg);
+    ok_ole_success(hr, IWidget_VariantCArray);
+    todo_wine
+    ok(V_VT(&vararg[0]) == VT_I4 && V_I4(&vararg[0]) == 2, "vararg[0] = %d[%d]\n", V_VT(&vararg[0]), V_I4(&vararg[0]));
+    todo_wine
+    ok(V_VT(&vararg[1]) == VT_I4 && V_I4(&vararg[1]) == 3, "vararg[1] = %d[%d]\n", V_VT(&vararg[1]), V_I4(&vararg[1]));
 
     /* call VarArg */
     VariantInit(&vararg[3]);
@@ -1436,6 +1580,28 @@ static void test_typelibmarshal(void)
     ok_ole_success(hr, ITypeInfo_Invoke);
     VariantClear(&varresult);
 
+    /* restricted member */
+    dispparams.cNamedArgs = 0;
+    dispparams.rgdispidNamedArgs = NULL;
+    dispparams.cArgs = 0;
+    dispparams.rgvarg = NULL;
+    VariantInit(&varresult);
+    hr = IDispatch_Invoke(pDispatch, DISPID_TM_RESTRICTED, &IID_NULL, 0x40c, DISPATCH_METHOD, &dispparams, &varresult, &excepinfo, NULL);
+    ok( hr == DISP_E_MEMBERNOTFOUND, "got %08x\n", hr );
+    VariantClear(&varresult);
+
+    /* restricted member with -ve memid (not restricted) */
+    dispparams.cNamedArgs = 0;
+    dispparams.rgdispidNamedArgs = NULL;
+    dispparams.cArgs = 0;
+    dispparams.rgvarg = NULL;
+    VariantInit(&varresult);
+    hr = IDispatch_Invoke(pDispatch, DISPID_TM_NEG_RESTRICTED, &IID_NULL, 0x40c, DISPATCH_METHOD, &dispparams, &varresult, &excepinfo, NULL);
+    ok( hr == S_OK, "got %08x\n", hr );
+    ok(V_VT(&varresult) == VT_I4, "got %x\n", V_VT(&varresult));
+    ok(V_I4(&varresult) == DISPID_TM_NEG_RESTRICTED, "got %x\n", V_I4(&varresult));
+    VariantClear(&varresult);
+
     IDispatch_Release(pDispatch);
     IWidget_Release(pWidget);
 
@@ -1498,6 +1664,20 @@ static void test_StaticWidget(void)
     ok(V_VT(&varresult) == VT_EMPTY, "vt %x\n", V_VT(&varresult));
     VariantClear(&varresult);
 
+    /* call TestSecondIface */
+    dispparams.cNamedArgs = 0;
+    dispparams.cArgs = 1;
+    dispparams.rgdispidNamedArgs = NULL;
+    dispparams.rgvarg = vararg;
+    V_VT(vararg) = VT_DISPATCH;
+    V_DISPATCH(vararg) = (IDispatch*)&TestDualDisp;
+    VariantInit(&varresult);
+    hr = ITypeInfo_Invoke(type_info, &StaticWidget, DISPID_TM_TESTSECONDIFACE, DISPATCH_METHOD,
+            &dispparams, &varresult, &excepinfo, NULL);
+    ok_ole_success(hr, IDispatch_Invoke);
+    ok(V_VT(&varresult) == VT_EMPTY, "vt %x\n", V_VT(&varresult));
+    VariantClear(&varresult);
+
     ITypeInfo_Release(type_info);
 }
 
@@ -1527,11 +1707,18 @@ static void test_libattr(void)
 START_TEST(tmarshal)
 {
     HRESULT hr;
+    HANDLE hOleaut32 = GetModuleHandleA("oleaut32.dll");
+    pVarAdd = (void*)GetProcAddress(hOleaut32, "VarAdd");
 
     CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
 
     hr = register_current_module_typelib();
-    ok_ole_success(hr, register_current_module_typelib);
+    if (FAILED(hr))
+    {
+        CoUninitialize();
+        win_skip("Registration of the test typelib failed, skipping tests\n");
+        return;
+    }
 
     test_typelibmarshal();
     test_DispCallFunc();

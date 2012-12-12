@@ -18,6 +18,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define CONST_VTABLE
+
 #include "wine/test.h"
 #include "oleauto.h"
 #include <math.h>
@@ -70,17 +72,18 @@ static HMODULE hOleaut32;
 /* Macros for converting and testing results */
 #define CONVVARS(typ) HRESULT hres; CONV_TYPE out; typ in
 
+#define _EXPECT_NO_OUT(res)     ok(hres == res, "expected " #res ", got hres=0x%08x\n", hres)
+#define EXPECT_OVERFLOW _EXPECT_NO_OUT(DISP_E_OVERFLOW)
+#define EXPECT_MISMATCH _EXPECT_NO_OUT(DISP_E_TYPEMISMATCH)
+#define EXPECT_BADVAR   _EXPECT_NO_OUT(DISP_E_BADVARTYPE)
+#define EXPECT_INVALID  _EXPECT_NO_OUT(E_INVALIDARG)
+#define EXPECT_LT       _EXPECT_NO_OUT(VARCMP_LT)
+#define EXPECT_GT       _EXPECT_NO_OUT(VARCMP_GT)
+#define EXPECT_EQ       _EXPECT_NO_OUT(VARCMP_EQ)
+
 #define _EXPECTRES(res, x, fs) \
-  ok((hres == S_OK && out == (CONV_TYPE)(x)) || ((HRESULT)res != S_OK && hres == (HRESULT)res), \
-     "expected " #x ", got " fs "; hres=0x%08x\n", out, hres)
+  ok(hres == S_OK && out == (CONV_TYPE)(x), "expected " #x ", got " fs "; hres=0x%08x\n", out, hres)
 #define EXPECT(x)       EXPECTRES(S_OK, (x))
-#define EXPECT_OVERFLOW EXPECTRES(DISP_E_OVERFLOW, DISP_E_OVERFLOW)
-#define EXPECT_MISMATCH EXPECTRES(DISP_E_TYPEMISMATCH,DISP_E_TYPEMISMATCH)
-#define EXPECT_BADVAR   EXPECTRES(DISP_E_BADVARTYPE, DISP_E_BADVARTYPE)
-#define EXPECT_INVALID  EXPECTRES(E_INVALIDARG, E_INVALIDARG)
-#define EXPECT_LT       EXPECTRES(VARCMP_LT, VARCMP_LT)
-#define EXPECT_GT       EXPECTRES(VARCMP_GT, VARCMP_GT)
-#define EXPECT_EQ       EXPECTRES(VARCMP_EQ, VARCMP_EQ)
 #define EXPECT_DBL(x)   \
   ok(hres == S_OK && fabs(out-(x))<=1e-14*(x), "expected %16.16g, got %16.16g; hres=0x%08x\n", (x), out, hres)
 
@@ -149,8 +152,8 @@ static HMODULE hOleaut32;
   ok(hres == S_OK && V_VT(&vDst) == typ && (CONV_TYPE)res == in, \
      "hres=0x%X, type=%d (should be %d(" #typ ")), value=%d (should be 1)\n", \
       hres, V_VT(&vDst), typ, (int)res);
-#define BADVAR(typ)   CHANGETYPEEX(typ); out = (CONV_TYPE)hres; EXPECT_BADVAR
-#define MISMATCH(typ) CHANGETYPEEX(typ); out = (CONV_TYPE)hres; EXPECT_MISMATCH
+#define BADVAR(typ)   CHANGETYPEEX(typ); EXPECT_BADVAR
+#define MISMATCH(typ) CHANGETYPEEX(typ); EXPECT_MISMATCH
 
 #define INITIAL_TYPETEST(vt, val, fs) \
   VariantInit(&vSrc); \
@@ -501,6 +504,7 @@ static HRESULT (WINAPI *pVarBstrFromDate)(DATE,LCID,ULONG,BSTR*);
 static HRESULT (WINAPI *pVarBstrFromCy)(CY,LCID,ULONG,BSTR*);
 static HRESULT (WINAPI *pVarBstrFromDec)(DECIMAL*,LCID,ULONG,BSTR*);
 static HRESULT (WINAPI *pVarBstrCmp)(BSTR,BSTR,LCID,ULONG);
+static HRESULT (WINAPI *pVarBstrCat)(BSTR,BSTR,BSTR*);
 
 static INT (WINAPI *pSystemTimeToVariantTime)(LPSYSTEMTIME,double*);
 static void (WINAPI *pClearCustData)(LPCUSTDATA);
@@ -514,7 +518,7 @@ typedef struct tagINTERNAL_BSTR
 
 typedef struct
 {
-  const IDispatchVtbl *lpVtbl;
+  IDispatch IDispatch_iface;
   LONG ref;
   VARTYPE vt;
   BOOL bFailInvoke;
@@ -522,16 +526,25 @@ typedef struct
 
 static DummyDispatch dispatch;
 
+static inline DummyDispatch *impl_from_IDispatch(IDispatch *iface)
+{
+  return CONTAINING_RECORD(iface, DummyDispatch, IDispatch_iface);
+}
+
 static ULONG WINAPI DummyDispatch_AddRef(LPDISPATCH iface)
 {
+  DummyDispatch *This = impl_from_IDispatch(iface);
+
   trace("AddRef(%p)\n", iface);
-  return InterlockedIncrement(&((DummyDispatch*)iface)->ref);
+  return InterlockedIncrement(&This->ref);
 }
 
 static ULONG WINAPI DummyDispatch_Release(LPDISPATCH iface)
 {
+  DummyDispatch *This = impl_from_IDispatch(iface);
+
   trace("Release(%p)\n", iface);
-  return InterlockedDecrement(&((DummyDispatch*)iface)->ref);
+  return InterlockedDecrement(&This->ref);
 }
 
 static HRESULT WINAPI DummyDispatch_QueryInterface(LPDISPATCH iface,
@@ -592,7 +605,7 @@ static const IDispatchVtbl DummyDispatch_VTable =
   DummyDispatch_Invoke
 };
 
-static DummyDispatch dispatch = { &DummyDispatch_VTable, 1, 0, 0 };
+static DummyDispatch dispatch = { { &DummyDispatch_VTable }, 1, 0, 0 };
 
 /*
  * VT_I1/VT_UI1
@@ -836,7 +849,8 @@ static void test_VarI1Copy(void)
 
 static void test_VarI1ChangeTypeEx(void)
 {
-  CONVVARS(CONV_TYPE);
+  HRESULT hres;
+  signed char in;
   VARIANTARG vSrc, vDst;
 
   in = 1;
@@ -1094,11 +1108,11 @@ static void test_VarUI1FromDisp(void)
   VariantInit(&vDst);
 
   V_VT(&vSrc) = VT_DISPATCH;
-  V_DISPATCH(&vSrc) = (IDispatch*)&dispatch;
+  V_DISPATCH(&vSrc) = &dispatch.IDispatch_iface;
   dispatch.vt = VT_UI1;
   dispatch.bFailInvoke = FALSE;
 
-  hres = pVarUI1FromDisp((IDispatch*)&dispatch, in, &out);
+  hres = pVarUI1FromDisp(&dispatch.IDispatch_iface, in, &out);
   trace("0x%08x\n", hres);
 
   hres = VariantChangeTypeEx(&vDst, &vSrc, in, 0, VT_UI1);
@@ -1106,7 +1120,7 @@ static void test_VarUI1FromDisp(void)
 
   dispatch.bFailInvoke = TRUE;
 
-  hres = pVarUI1FromDisp((IDispatch*)&dispatch, in, &out);
+  hres = pVarUI1FromDisp(&dispatch.IDispatch_iface, in, &out);
   trace("0x%08x\n", hres);
 
   hres = VariantChangeTypeEx(&vDst, &vSrc, in, 0, VT_UI1);
@@ -1120,7 +1134,8 @@ static void test_VarUI1Copy(void)
 
 static void test_VarUI1ChangeTypeEx(void)
 {
-  CONVVARS(CONV_TYPE);
+  HRESULT hres;
+  BYTE in;
   VARIANTARG vSrc, vDst;
 
   in = 1;
@@ -1136,8 +1151,6 @@ static void test_VarUI1ChangeTypeEx(void)
 
 #undef CONV_TYPE
 #define CONV_TYPE SHORT
-#undef EXPECTRES
-#define EXPECTRES(res, x) _EXPECTRES(res, x, "%d")
 
 static void test_VarI2FromI1(void)
 {
@@ -1369,7 +1382,8 @@ static void test_VarI2Copy(void)
 
 static void test_VarI2ChangeTypeEx(void)
 {
-  CONVVARS(CONV_TYPE);
+  HRESULT hres;
+  SHORT in;
   VARIANTARG vSrc, vDst;
 
   in = 1;
@@ -1608,7 +1622,8 @@ static void test_VarUI2Copy(void)
 
 static void test_VarUI2ChangeTypeEx(void)
 {
-  CONVVARS(CONV_TYPE);
+  HRESULT hres;
+  USHORT in;
   VARIANTARG vSrc, vDst;
 
   in = 1;
@@ -1627,9 +1642,6 @@ static void test_VarUI2ChangeTypeEx(void)
 
 #undef CONV_TYPE
 #define CONV_TYPE LONG
-#undef EXPECTRES
-#define EXPECTRES(res, x) _EXPECTRES(res, x, "%d")
-
 
 static void test_VarI4FromI1(void)
 {
@@ -1863,7 +1875,8 @@ static void test_VarI4Copy(void)
 
 static void test_VarI4ChangeTypeEx(void)
 {
-  CONVVARS(CONV_TYPE);
+  HRESULT hres;
+  LONG in;
   VARIANTARG vSrc, vDst;
 
   in = 1;
@@ -2097,7 +2110,8 @@ static void test_VarUI4Copy(void)
 
 static void test_VarUI4ChangeTypeEx(void)
 {
-  CONVVARS(CONV_TYPE);
+  HRESULT hres;
+  ULONG in;
   VARIANTARG vSrc, vDst;
 
   in = 1;
@@ -2116,10 +2130,6 @@ static void test_VarUI4ChangeTypeEx(void)
 
 #undef CONV_TYPE
 #define CONV_TYPE LONG64
-#undef EXPECTRES
-#define EXPECTRES(res, x) \
-  ok(hres == S_OK || ((HRESULT)res != S_OK && hres == (HRESULT)res), \
-     "expected hres " #x ", got hres=0x%08x\n", hres)
 
 #define EXPECTI8(x) \
   ok((hres == S_OK && out == (CONV_TYPE)(x)), \
@@ -2374,7 +2384,8 @@ static void test_VarI8Copy(void)
 
 static void test_VarI8ChangeTypeEx(void)
 {
-  CONVVARS(CONV_TYPE);
+  HRESULT hres;
+  LONG64 in;
   VARIANTARG vSrc, vDst;
 
   if (!HAVE_OLEAUT32_I8)
@@ -2524,7 +2535,10 @@ static void test_VarUI8FromBool(void)
   int i;
 
   CHECKPTR(VarUI8FromBool);
-  CONVERTRANGE(VarUI8FromBool, -32768, 32768);
+  for (i = -32768; i < 32768; i++)
+  {
+    CONVERT(VarUI8FromBool, i); EXPECTI8(i);
+  }
 }
 
 static void test_VarUI8FromI8(void)
@@ -2588,10 +2602,13 @@ static void test_VarUI8FromStr(void)
 
   CHECKPTR(VarUI8FromStr);
 
-  CONVERT_STR(VarUI8FromStr,NULL,0);         EXPECT_MISMATCH;
-  CONVERT_STR(VarUI8FromStr,"0",0);          EXPECTI8(0);
-  CONVERT_STR(VarUI8FromStr,"-1",0);         EXPECT_OVERFLOW;
-  CONVERT_STR(VarUI8FromStr,"2147483647",0); EXPECTI8(2147483647);
+  CONVERT_STR(VarUI8FromStr,NULL,0);                    EXPECT_MISMATCH;
+  CONVERT_STR(VarUI8FromStr,"0",0);                     EXPECTI8(0);
+  CONVERT_STR(VarUI8FromStr,"-1",0);                    EXPECT_OVERFLOW;
+  CONVERT_STR(VarUI8FromStr,"2147483647",0);            EXPECTI8(2147483647);
+  CONVERT_STR(VarUI8FromStr,"18446744073709551614",0);  EXPECTI864(0xFFFFFFFF,0xFFFFFFFE);
+  CONVERT_STR(VarUI8FromStr,"18446744073709551615",0);  EXPECTI864(0xFFFFFFFF,0xFFFFFFFF);
+  CONVERT_STR(VarUI8FromStr,"18446744073709551616",0);  EXPECT_OVERFLOW;
 
   CONVERT_STR(VarUI8FromStr,"-1.5",LOCALE_NOUSEROVERRIDE); EXPECT_OVERFLOW;
   CONVERT_STR(VarUI8FromStr,"-0.6",LOCALE_NOUSEROVERRIDE); EXPECT_OVERFLOW;
@@ -2636,7 +2653,8 @@ static void test_VarUI8Copy(void)
 
 static void test_VarUI8ChangeTypeEx(void)
 {
-  CONVVARS(CONV_TYPE);
+  HRESULT hres;
+  ULONG64 in;
   VARIANTARG vSrc, vDst;
 
   if (!HAVE_OLEAUT32_I8)
@@ -2844,7 +2862,8 @@ static void test_VarR4Copy(void)
 static void test_VarR4ChangeTypeEx(void)
 {
 #ifdef HAS_UINT64_TO_FLOAT
-  CONVVARS(CONV_TYPE);
+  HRESULT hres;
+  float in;
   VARIANTARG vSrc, vDst;
 
   in = 1.0f;
@@ -2860,8 +2879,6 @@ static void test_VarR4ChangeTypeEx(void)
 
 #undef CONV_TYPE
 #define CONV_TYPE double
-#undef EXPECTRES
-#define EXPECTRES(res, x) _EXPECTRES(res, x, "%15.15f")
 
 static void test_VarR8FromI1(void)
 {
@@ -3055,7 +3072,8 @@ static void test_VarR8Copy(void)
 static void test_VarR8ChangeTypeEx(void)
 {
 #ifdef HAS_UINT64_TO_FLOAT
-  CONVVARS(CONV_TYPE);
+  HRESULT hres;
+  double in;
   VARIANTARG vSrc, vDst;
 
   in = 1.0;
@@ -3433,6 +3451,8 @@ static void test_VarDateFromStr(void)
   DFS("1 2 1970");        EXPECT_DBL(25570.0);
   DFS("1/2/1970");        EXPECT_DBL(25570.0);
   DFS("1-2-1970");        EXPECT_DBL(25570.0);
+  DFS("13-1-1970");       EXPECT_DBL(25581.0);
+  DFS("1970-1-13");       EXPECT_DBL(25581.0);
   /* Native fails "1999 January 3, 9AM". I consider that a bug in native */
 
   /* test a non-english data string */
@@ -3440,6 +3460,11 @@ static void test_VarDateFromStr(void)
   DFS("02.01.1970 00:00:00"); EXPECT_MISMATCH;
   lcid = MAKELCID(MAKELANGID(LANG_GERMAN,SUBLANG_GERMAN),SORT_DEFAULT);
   DFS("02.01.1970"); EXPECT_DBL(25570.0);
+  DFS("02.13.1970"); EXPECT_DBL(25612.0);
+  DFS("02-13-1970"); EXPECT_DBL(25612.0);
+  DFS("2020-01-11"); EXPECT_DBL(43841.0);
+  DFS("2173-10-14"); EXPECT_DBL(100000.0);
+
   DFS("02.01.1970 00:00:00"); EXPECT_DBL(25570.0);
   lcid = MAKELCID(MAKELANGID(LANG_SPANISH,SUBLANG_SPANISH),SORT_DEFAULT);
   DFS("02.01.1970"); EXPECT_MISMATCH;
@@ -3467,7 +3492,8 @@ static void test_VarDateChangeTypeEx(void)
           '1','/','2','/','7','0','\0' };
   static const WCHAR sz25570Nls[] = {
     '1','/','2','/','1','9','7','0',' ','1','2',':','0','0',':','0','0',' ','A','M','\0' };
-  CONVVARS(CONV_TYPE);
+  HRESULT hres;
+  DATE in;
   VARIANTARG vSrc, vDst;
   LCID lcid;
 
@@ -3507,10 +3533,6 @@ static void test_VarDateChangeTypeEx(void)
 
 #undef CONV_TYPE
 #define CONV_TYPE CY
-#undef EXPECTRES
-#define EXPECTRES(res, x) \
-  ok(hres == S_OK || ((HRESULT)res != S_OK && hres == (HRESULT)res), \
-     "expected hres " #x ", got hres=0x%08x\n", hres)
 
 #define EXPECTCY(x) \
   ok((hres == S_OK && out.int64 == (LONGLONG)(x*CY_MULTIPLIER)), \
@@ -3699,7 +3721,9 @@ static void test_VarCyFromUI8(void)
   CONVERT(VarCyFromUI8, 0); EXPECTCY(0);
   CONVERT(VarCyFromUI8, 1); EXPECTCY(1);
   CONVERT_I8(VarCyFromUI8, 214748, 1566804068); EXPECTCY64(2147483647ul, 4294951488ul);
-  CONVERT_I8(VarCyFromUI8, 214748, 1566804069); EXPECT_OVERFLOW;
+  CONVERT_I8(VarCyFromUI8, 214748, 1566804069); EXPECTCY64(2147483647ul, 4294961488ul);
+  CONVERT_I8(VarCyFromUI8, 214748, 1566804070); EXPECT_OVERFLOW;
+  CONVERT_I8(VarCyFromUI8, 214749, 1566804068); EXPECT_OVERFLOW;
 }
 
 static void test_VarCyFromDec(void)
@@ -3715,7 +3739,9 @@ static void test_VarCyFromDec(void)
   CONVERT_DEC(VarCyFromDec,0,0,0,1);    EXPECTCY(1);
 
   CONVERT_DEC64(VarCyFromDec,0,0,0,214748, 1566804068); EXPECTCY64(2147483647ul, 4294951488ul);
-  CONVERT_DEC64(VarCyFromDec,0,0,0,214748, 1566804069); EXPECT_OVERFLOW;
+  CONVERT_DEC64(VarCyFromDec,0,0,0,214748, 1566804069); EXPECTCY64(2147483647ul, 4294961488ul);
+  CONVERT_DEC64(VarCyFromDec,0,0,0,214748, 1566804070); EXPECT_OVERFLOW;
+  CONVERT_DEC64(VarCyFromDec,0,0,0,214749, 1566804068); EXPECT_OVERFLOW;
 
   CONVERT_DEC(VarCyFromDec,2,0,0,100);     EXPECTCY(1);
   CONVERT_DEC(VarCyFromDec,2,0x80,0,100);  EXPECTCY(-1);
@@ -3872,11 +3898,13 @@ static void test_VarCyMulI8(void)
 }
 
 #define MATHCMP(l, r) left = l; right = r; pVarCyFromR8(left, &cyLeft); pVarCyFromR8(right, &cyRight); \
-  hres = pVarCyCmp(cyLeft, cyRight); out.int64 = hres
+  hres = pVarCyCmp(cyLeft, cyRight)
 
 static void test_VarCyCmp(void)
 {
-  MATHVARS2;
+  HRESULT hres;
+  double left = 0.0, right = 0.0;
+  CY cyLeft, cyRight;
 
   CHECKPTR(VarCyCmp);
   MATHCMP(-1.0, -1.0); EXPECT_EQ;
@@ -3893,11 +3921,13 @@ static void test_VarCyCmp(void)
 }
 
 #define MATHCMPR8(l, r) left = l; right = r; pVarCyFromR8(left, &cyLeft); \
-  hres = pVarCyCmpR8(cyLeft, right); out.int64 = hres
+  hres = pVarCyCmpR8(cyLeft, right);
 
 static void test_VarCyCmpR8(void)
 {
-  MATHVARS1;
+  HRESULT hres;
+  double left = 0.0;
+  CY cyLeft;
   double right;
 
   CHECKPTR(VarCyCmpR8);
@@ -4006,10 +4036,6 @@ static void test_VarCyInt(void)
 
 #undef CONV_TYPE
 #define CONV_TYPE DECIMAL
-#undef EXPECTRES
-#define EXPECTRES(res, x) \
-  ok(hres == S_OK || ((HRESULT)res != S_OK && hres == (HRESULT)res), \
-     "expected hres " #x ", got hres=0x%08x\n", hres)
 
 #define EXPECTDEC(scl, sgn, hi, lo) ok(hres == S_OK && \
   S(U(out)).scale == (BYTE)(scl) && S(U(out)).sign == (BYTE)(sgn) && \
@@ -4534,10 +4560,6 @@ static void test_VarDecCmp(void)
 
 #undef CONV_TYPE
 #define CONV_TYPE VARIANT_BOOL
-#undef _EXPECTRES
-#define _EXPECTRES(res, x, fs) \
-  ok((hres == S_OK && out == (CONV_TYPE)(x)) || ((HRESULT)res != S_OK && hres == (HRESULT)res), \
-     "expected " #x ", got " fs "; hres=0x%08x\n", out, hres)
 #undef EXPECTRES
 #define EXPECTRES(res, x) _EXPECTRES(res, x, "%d")
 #undef CONVERTRANGE
@@ -4794,7 +4816,8 @@ static void test_VarBoolChangeTypeEx(void)
   static const WCHAR szTrue[] = { 'T','r','u','e','\0' };
   static const WCHAR szFalse[] = { 'F','a','l','s','e','\0' };
   static const WCHAR szFaux[] = { 'F','a','u','x','\0' };
-  CONVVARS(CONV_TYPE);
+  HRESULT hres;
+  VARIANT_BOOL in;
   VARIANTARG vSrc, vDst;
   LCID lcid;
 
@@ -4896,23 +4919,30 @@ static void test_VarBstrFromR4(void)
   }
 }
 
-#define BSTR_DATE(dt,str) \
-  bstr = NULL; \
-  hres = pVarBstrFromDate(dt,lcid,LOCALE_NOUSEROVERRIDE,&bstr); \
-  if (bstr) {WideCharToMultiByte(CP_ACP, 0, bstr, -1, buff, sizeof(buff), 0, 0); SysFreeString(bstr);} \
-  else buff[0] = 0; \
-  ok(hres == S_OK && !strcmp(str,buff), "Expected '%s', got '%s', hres = 0x%08x\n", \
-     str, buff, hres)
+static void _BSTR_DATE(DATE dt, const char *str, int line)
+{
+  LCID lcid = MAKELCID(MAKELANGID(LANG_ENGLISH,SUBLANG_ENGLISH_US),SORT_DEFAULT);
+  char buff[256];
+  BSTR bstr = NULL;
+  HRESULT hres;
+
+  hres = pVarBstrFromDate(dt, lcid, LOCALE_NOUSEROVERRIDE, &bstr);
+  if (bstr)
+  {
+    WideCharToMultiByte(CP_ACP, 0, bstr, -1, buff, sizeof(buff), 0, 0);
+    SysFreeString(bstr);
+  }
+  else
+    buff[0] = 0;
+  ok_(__FILE__, line)(hres == S_OK && !strcmp(str, buff),
+      "Expected '%s', got '%s', hres = 0x%08x\n", str, buff, hres);
+}
 
 static void test_VarBstrFromDate(void)
 {
-  char buff[256];
-  LCID lcid;
-  HRESULT hres;
-  BSTR bstr;
+#define BSTR_DATE(dt,str) _BSTR_DATE(dt,str,__LINE__)
 
   CHECKPTR(VarBstrFromDate);
-  lcid = MAKELCID(MAKELANGID(LANG_ENGLISH,SUBLANG_ENGLISH_US),SORT_DEFAULT);
 
   BSTR_DATE(0.0, "12:00:00 AM");
   BSTR_DATE(3.34, "1/2/1900 8:09:36 AM");
@@ -4923,174 +4953,146 @@ static void test_VarBstrFromDate(void)
   BSTR_DATE(1461.5, "12/31/1903 12:00:00 PM");
   todo_wine { BSTR_DATE(-657434.0, "1/1/100"); }
   BSTR_DATE(2958465.0, "12/31/9999");
+
+#undef BSTR_DATE
 }
 
-#define BSTR_CY(l, a, b, e) \
-  S(l).Lo = b; S(l).Hi = a; \
-  hres = pVarBstrFromCy(l, lcid, LOCALE_NOUSEROVERRIDE, &bstr);\
-  ok(hres == S_OK, "got hres 0x%08x\n", hres);\
-  if (hres== S_OK && bstr)\
-  {\
-    ok(lstrcmpW(bstr, e) == 0, "invalid number (got %s)\n", wtoascii(bstr));\
-    SysFreeString(bstr);\
+static void _BSTR_CY(LONG a, LONG b, const char *str, LCID lcid, int line)
+{
+  HRESULT hr;
+  BSTR bstr = NULL;
+  char buff[256];
+  CY l;
+
+  S(l).Lo = b;
+  S(l).Hi = a;
+  hr = pVarBstrFromCy(l, lcid, LOCALE_NOUSEROVERRIDE, &bstr);
+  ok(hr == S_OK, "got hr 0x%08x\n", hr);
+
+  if(bstr)
+  {
+    WideCharToMultiByte(CP_ACP, 0, bstr, -1, buff, sizeof(buff), 0, 0);
+    SysFreeString(bstr);
   }
+  else
+    buff[0] = 0;
+
+  if(hr == S_OK)
+  {
+    ok_(__FILE__, line)(!strcmp(str, buff), "Expected '%s', got '%s'\n", str, buff);
+  }
+}
 
 static void test_VarBstrFromCy(void)
 {
-  LCID lcid;
-  HRESULT hres;
-  BSTR bstr = NULL;
-  CY l;
+#define BSTR_CY(a, b, str, lcid) _BSTR_CY(a, b, str, lcid, __LINE__)
 
-  static const WCHAR szZero[] = {'0', '\0'};
-  static const WCHAR szOne[] = {'1', '\0'};
-  static const WCHAR szOnePointFive[] = {'1','.','5','\0'};
-  static const WCHAR szMinusOnePointFive[] = {'-','1','.','5','\0'};
-  static const WCHAR szBigNum1[] = {'4','2','9','4','9','6','.','7','2','9','5','\0'};    /* (1 << 32) - 1 / 1000 */
-  static const WCHAR szBigNum2[] = {'4','2','9','4','9','6','.','7','2','9','6','\0'};    /* (1 << 32) / 1000 */
-  static const WCHAR szBigNum3[] = {'9','2','2','3','3','7','2','0','3','6','8','5','4','7','7','.','5','8','0','7','\0'};    /* ((1 << 63) - 1)/10000 */
-
-  static const WCHAR szSmallNumber_English[] = {'0','.','0','0','0','9','\0'};
-  static const WCHAR szSmallNumber_Spanish[] = {'0',',','0','0','0','9','\0'};
+  LCID en_us, sp;
 
   CHECKPTR(VarBstrFromCy);
-  lcid = MAKELCID(MAKELANGID(LANG_ENGLISH,SUBLANG_ENGLISH_US),SORT_DEFAULT);
 
-  /* check zero */
-  BSTR_CY(l, 0,0, szZero);
+  en_us = MAKELCID(MAKELANGID(LANG_ENGLISH,SUBLANG_ENGLISH_US),SORT_DEFAULT);
+  sp = MAKELCID(MAKELANGID(LANG_SPANISH, SUBLANG_DEFAULT), SORT_DEFAULT);
 
-  /* check one */
-  BSTR_CY(l, 0, 10000, szOne);
-
-  /* check one point five */
-  BSTR_CY(l, 0, 15000, szOnePointFive);
-
-  /* check minus one point five */
-  BSTR_CY(l, 0xffffffff, ((15000)^0xffffffff)+1, szMinusOnePointFive);
-
-  /* check bignum (1) */
-  BSTR_CY(l, 0, 0xffffffff, szBigNum1);
-
-  /* check bignum (2) */
-  BSTR_CY(l, 1,0, szBigNum2);
-
-  /* check bignum (3) */
-  BSTR_CY(l, 0x7fffffff,0xffffffff, szBigNum3);
-
-  /* check leading zeros and decimal sep. for English locale */
-  BSTR_CY(l, 0,9, szSmallNumber_English);
-
-  lcid = MAKELCID(MAKELANGID(LANG_SPANISH, SUBLANG_DEFAULT), SORT_DEFAULT);
-
-  /* check leading zeros and decimal sep. for Spanish locale */
-  BSTR_CY(l, 0,9, szSmallNumber_Spanish);
-}
+  BSTR_CY(0, 0, "0", en_us);
+  BSTR_CY(0, 10000, "1", en_us);
+  BSTR_CY(0, 15000, "1.5", en_us);
+  BSTR_CY(0xffffffff, ((15000)^0xffffffff)+1, "-1.5", en_us);
+  /* (1 << 32) - 1 / 1000 */
+  BSTR_CY(0, 0xffffffff, "429496.7295", en_us);
+  /* (1 << 32) / 1000 */
+  BSTR_CY(1, 0, "429496.7296", en_us);
+  /* ((1 << 63) - 1)/10000 */
+  BSTR_CY(0x7fffffff, 0xffffffff, "922337203685477.5807", en_us);
+  BSTR_CY(0, 9, "0.0009", en_us);
+  BSTR_CY(0, 9, "0,0009", sp);
 
 #undef BSTR_CY
+}
 
-#define BSTR_DEC(l, a, b, c, d, e) \
-  SETDEC(l, a,b,c,d);\
-  hres = pVarBstrFromDec(&l, lcid, LOCALE_NOUSEROVERRIDE, &bstr);\
-  ok(hres == S_OK, "got hres 0x%08x\n", hres);\
-  if (hres== S_OK && bstr)\
-  {\
-    ok(lstrcmpW(bstr, e) == 0, "invalid number (got %s)\n", wtoascii(bstr));\
-    SysFreeString(bstr);\
-  }
+static void _BSTR_DEC(BYTE scale, BYTE sign, ULONG hi, ULONG mid, ULONGLONG lo, const char *str,
+    LCID lcid, int line)
+{
+  char buff[256];
+  HRESULT hr;
+  BSTR bstr = NULL;
+  DECIMAL dec;
 
-#define BSTR_DEC64(l, a, b, c, x, d, e) \
-  SETDEC64(l, a,b,c,x,d);\
-  hres = pVarBstrFromDec(&l, lcid, LOCALE_NOUSEROVERRIDE, &bstr);\
-  ok(hres == S_OK, "got hres 0x%08x\n", hres);\
-  if (hres== S_OK && bstr)\
-  {\
-    ok(lstrcmpW(bstr, e) == 0, "invalid number (got %s)\n", wtoascii(bstr));\
-    SysFreeString(bstr);\
+  SETDEC64(dec, scale, sign, hi, mid, lo);
+  hr = pVarBstrFromDec(&dec, lcid, LOCALE_NOUSEROVERRIDE, &bstr);
+  ok_(__FILE__, line)(hr == S_OK, "got hr 0x%08x\n", hr);
+
+  if(bstr)
+  {
+    WideCharToMultiByte(CP_ACP, 0, bstr, -1, buff, sizeof(buff), 0, 0);
+    SysFreeString(bstr);
   }
+  else
+    buff[0] = 0;
+
+  if(hr == S_OK)
+  {
+    ok_(__FILE__, line)(!strcmp(str, buff), "Expected '%s', got '%s'\n", str, buff);
+  }
+}
 
 static void test_VarBstrFromDec(void)
 {
-  LCID lcid;
-  HRESULT hres;
-  BSTR bstr = NULL;
-  DECIMAL l;
+#define BSTR_DEC(scale, sign, hi, lo, str, lcid) _BSTR_DEC(scale, sign, hi, 0, lo, str, lcid, __LINE__)
+#define BSTR_DEC64(scale, sign, hi, mid, lo, str, lcid) _BSTR_DEC(scale, sign, hi, mid, lo, str, lcid, __LINE__)
 
-  static const WCHAR szZero[] = {'0', '\0'};
-  static const WCHAR szOne[] = {'1', '\0'};
-  static const WCHAR szOnePointFive[] = {'1','.','5','\0'};
-  static const WCHAR szMinusOnePointFive[] = {'-','1','.','5','\0'};
-  static const WCHAR szBigNum1[] = {'4','2','9','4','9','6','7','2','9','5','\0'};    /* (1 << 32) - 1 */
-  static const WCHAR szBigNum2[] = {'4','2','9','4','9','6','7','2','9','6','\0'};    /* (1 << 32) */
-  static const WCHAR szBigNum3[] = {'1','8','4','4','6','7','4','4','0','7','3','7','0','9','5','5','1','6','1','5','\0'};    /* (1 << 64) - 1 */
-  static const WCHAR szBigNum4[] = {'1','8','4','4','6','7','4','4','0','7','3','7','0','9','5','5','1','6','1','6','\0'};    /* (1 << 64) */
-  static const WCHAR szBigNum5[] = {'7','9','2','2','8','1','6','2','5','1','4','2','6','4','3','3','7','5','9','3','5','4','3','9','5','0','3','3','5','\0'};    /* (1 << 96) - 1 */
-  static const WCHAR szBigScale1[] = {'0','.','0','0','0','0','0','0','0','0','0','1','\0'};    /* 1 * 10^-10 */
-  static const WCHAR szBigScale2[] = {'7','9','2','2','8','1','6','2','5','1','4','2','6','4','3','3','7','5','9','.','3','5','4','3','9','5','0','3','3','5','\0'};    /* ((1 << 96) - 1) * 10^-10 */
-  static const WCHAR szBigScale3[] = {'7','.','9','2','2','8','1','6','2','5','1','4','2','6','4','3','3','7','5','9','3','5','4','3','9','5','0','3','3','5','\0'};    /* ((1 << 96) - 1) * 10^-28 */
-
-  static const WCHAR szSmallNumber_English[] = {'0','.','0','0','0','9','\0'};
-  static const WCHAR szSmallNumber_Spanish[] = {'0',',','0','0','0','9','\0'};
+  LCID en_us, sp;
 
   CHECKPTR(VarBstrFromDec);
-  lcid = MAKELCID(MAKELANGID(LANG_ENGLISH,SUBLANG_ENGLISH_US),SORT_DEFAULT);
 
-  /* check zero */
-  BSTR_DEC(l, 0,0,0,0, szZero);
-  
-  /* check one */
-  BSTR_DEC(l, 0,0,0,1, szOne);
-  BSTR_DEC(l, 1,0,0,10,szOne);
-  BSTR_DEC(l, 2,0,0,100,szOne);
-  BSTR_DEC(l, 3,0,0,1000,szOne);
+  en_us = MAKELCID(MAKELANGID(LANG_ENGLISH,SUBLANG_ENGLISH_US),SORT_DEFAULT);
+  sp = MAKELCID(MAKELANGID(LANG_SPANISH, SUBLANG_DEFAULT), SORT_DEFAULT);
 
-  /* check one point five */
-  BSTR_DEC(l, 1,0,0,15, szOnePointFive);
-  BSTR_DEC(l, 2,0,0,150, szOnePointFive);
-  BSTR_DEC(l, 3,0,0,1500, szOnePointFive);
+  BSTR_DEC(0,0,0,0, "0", en_us);
 
-  /* check minus one point five */
-  BSTR_DEC(l, 1,0x80,0,15, szMinusOnePointFive);
+  BSTR_DEC(0,0,0,1,   "1", en_us);
+  BSTR_DEC(1,0,0,10,  "1", en_us);
+  BSTR_DEC(2,0,0,100, "1", en_us);
+  BSTR_DEC(3,0,0,1000,"1", en_us);
 
-  /* check bignum (1) */
-  BSTR_DEC(l, 0,0,0,0xffffffff, szBigNum1);
+  BSTR_DEC(1,0,0,15,  "1.5", en_us);
+  BSTR_DEC(2,0,0,150, "1.5", en_us);
+  BSTR_DEC(3,0,0,1500,"1.5", en_us);
 
-  /* check bignum (2) */
-  BSTR_DEC64(l, 0,0,0,1,0, szBigNum2);
+  BSTR_DEC(1,0x80,0,15, "-1.5", en_us);
 
-  /* check bignum (3) */
-  BSTR_DEC64(l, 0,0,0,0xffffffff,0xffffffff, szBigNum3);
-
-  /* check bignum (4) */
-  BSTR_DEC(l, 0,0,1,0, szBigNum4);
-
-  /* check bignum (5) */
-  BSTR_DEC64(l, 0,0,0xffffffff,0xffffffff,0xffffffff, szBigNum5);
-
-  /* check bigscale (1) */
-  BSTR_DEC(l, 10,0,0,1, szBigScale1);
-
-  /* check bigscale (2) */
-  BSTR_DEC64(l, 10,0,0xffffffffUL,0xffffffff,0xffffffff, szBigScale2);
-
-  /* check bigscale (3) */
-  BSTR_DEC64(l, 28,0,0xffffffffUL,0xffffffff,0xffffffff, szBigScale3);
+  /* (1 << 32) - 1 */
+  BSTR_DEC(0,0,0,0xffffffff, "4294967295", en_us);
+  /* (1 << 32) */
+  BSTR_DEC64(0,0,0,1,0, "4294967296", en_us);
+  /* (1 << 64) - 1 */
+  BSTR_DEC64(0,0,0,0xffffffff,0xffffffff, "18446744073709551615", en_us);
+  /* (1 << 64) */
+  BSTR_DEC(0,0,1,0, "18446744073709551616", en_us);
+  /* (1 << 96) - 1 */
+  BSTR_DEC64(0,0,0xffffffff,0xffffffff,0xffffffff, "79228162514264337593543950335", en_us);
+  /* 1 * 10^-10 */
+  BSTR_DEC(10,0,0,1, "0.0000000001", en_us);
+  /* ((1 << 96) - 1) * 10^-10 */
+  BSTR_DEC64(10,0,0xffffffffUL,0xffffffff,0xffffffff, "7922816251426433759.3543950335", en_us);
+  /* ((1 << 96) - 1) * 10^-28 */
+  BSTR_DEC64(28,0,0xffffffffUL,0xffffffff,0xffffffff, "7.9228162514264337593543950335", en_us);
 
   /* check leading zeros and decimal sep. for English locale */
-  BSTR_DEC(l, 4,0,0,9, szSmallNumber_English);
-  BSTR_DEC(l, 5,0,0,90, szSmallNumber_English);
-  BSTR_DEC(l, 6,0,0,900, szSmallNumber_English);
-  BSTR_DEC(l, 7,0,0,9000, szSmallNumber_English);
-  
-  lcid = MAKELCID(MAKELANGID(LANG_SPANISH, SUBLANG_DEFAULT), SORT_DEFAULT);
+  BSTR_DEC(4,0,0,9, "0.0009", en_us);
+  BSTR_DEC(5,0,0,90, "0.0009", en_us);
+  BSTR_DEC(6,0,0,900, "0.0009", en_us);
+  BSTR_DEC(7,0,0,9000, "0.0009", en_us);
   
   /* check leading zeros and decimal sep. for Spanish locale */
-  BSTR_DEC(l, 4,0,0,9, szSmallNumber_Spanish);
-  BSTR_DEC(l, 5,0,0,90, szSmallNumber_Spanish);
-  BSTR_DEC(l, 6,0,0,900, szSmallNumber_Spanish);
-  BSTR_DEC(l, 7,0,0,9000, szSmallNumber_Spanish);
-}
+  BSTR_DEC(4,0,0,9, "0,0009", sp);
+  BSTR_DEC(5,0,0,90, "0,0009", sp);
+  BSTR_DEC(6,0,0,900, "0,0009", sp);
+  BSTR_DEC(7,0,0,9000, "0,0009", sp);
+
 #undef BSTR_DEC
 #undef BSTR_DEC64
+}
 
 #define _VARBSTRCMP(left,right,lcid,flags,result) \
         hres = pVarBstrCmp(left,right,lcid,flags); \
@@ -5151,7 +5153,7 @@ static void test_VarBstrCmp(void)
     SysFreeString(bstr);
 
     bstr = SysAllocStringByteLen(sbchr0, sizeof(sbchr0));
-    bstr2 = SysAllocStringByteLen(sbchr0, sizeof(sbchr00));
+    bstr2 = SysAllocStringByteLen(sbchr00, sizeof(sbchr00));
     VARBSTRCMP(bstr,bstrempty,0,VARCMP_GT);
     VARBSTRCMP(bstrempty,bstr,0,VARCMP_LT);
     VARBSTRCMP(bstr2,bstrempty,0,VARCMP_GT);
@@ -5170,7 +5172,7 @@ static void test_VarBstrCmp(void)
     SysFreeString(bstr);
 
     bstr = SysAllocStringByteLen(sbchr0, sizeof(sbchr0));
-    bstr2 = SysAllocStringByteLen(sbchr0, sizeof(sbchr00));
+    bstr2 = SysAllocStringByteLen(sbchr00, sizeof(sbchr00));
     VARBSTRCMP(bstr,bstrempty,0,VARCMP_GT);
     VARBSTRCMP(bstrempty,bstr,0,VARCMP_LT);
     VARBSTRCMP(bstr2,bstrempty,0,VARCMP_GT);
@@ -5492,14 +5494,16 @@ static void test_VarBstrCat(void)
     BSTR str1, str2, res;
     UINT len;
 
+    CHECKPTR(VarBstrCat);
+
 if (0)
 {
     /* Crash */
-    ret = VarBstrCat(NULL, NULL, NULL);
+    pVarBstrCat(NULL, NULL, NULL);
 }
 
     /* Concatenation of two NULL strings works */
-    ret = VarBstrCat(NULL, NULL, &res);
+    ret = pVarBstrCat(NULL, NULL, &res);
     ok(ret == S_OK, "VarBstrCat failed: %08x\n", ret);
     ok(res != NULL, "Expected a string\n");
     ok(SysStringLen(res) == 0, "Expected a 0-length string\n");
@@ -5508,13 +5512,13 @@ if (0)
     str1 = SysAllocString(sz1);
 
     /* Concatenation with one NULL arg */
-    ret = VarBstrCat(NULL, str1, &res);
+    ret = pVarBstrCat(NULL, str1, &res);
     ok(ret == S_OK, "VarBstrCat failed: %08x\n", ret);
     ok(res != NULL, "Expected a string\n");
     ok(SysStringLen(res) == SysStringLen(str1), "Unexpected length\n");
     ok(!memcmp(res, sz1, SysStringLen(str1)), "Unexpected value\n");
     SysFreeString(res);
-    ret = VarBstrCat(str1, NULL, &res);
+    ret = pVarBstrCat(str1, NULL, &res);
     ok(ret == S_OK, "VarBstrCat failed: %08x\n", ret);
     ok(res != NULL, "Expected a string\n");
     ok(SysStringLen(res) == SysStringLen(str1), "Unexpected length\n");
@@ -5523,7 +5527,7 @@ if (0)
 
     /* Concatenation of two zero-terminated strings */
     str2 = SysAllocString(sz2);
-    ret = VarBstrCat(str1, str2, &res);
+    ret = pVarBstrCat(str1, str2, &res);
     ok(ret == S_OK, "VarBstrCat failed: %08x\n", ret);
     ok(res != NULL, "Expected a string\n");
     ok(SysStringLen(res) == sizeof(sz1sz2) / sizeof(WCHAR) - 1,
@@ -5538,7 +5542,7 @@ if (0)
     str1 = SysAllocStringLen(s1, sizeof(s1) / sizeof(WCHAR));
     str2 = SysAllocStringLen(s2, sizeof(s2) / sizeof(WCHAR));
 
-    ret = VarBstrCat(str1, str2, &res);
+    ret = pVarBstrCat(str1, str2, &res);
     ok(ret == S_OK, "VarBstrCat failed: %08x\n", ret);
     ok(res != NULL, "Expected a string\n");
     ok(SysStringLen(res) == sizeof(s1s2) / sizeof(WCHAR),
@@ -5557,7 +5561,7 @@ if (0)
     len = SysStringLen(str2);
     ok(len == (sizeof(str2A)-1)/sizeof(WCHAR), "got length %u\n", len);
 
-    ret = VarBstrCat(str1, str2, &res);
+    ret = pVarBstrCat(str1, str2, &res);
     ok(ret == S_OK, "VarBstrCat failed: %08x\n", ret);
     ok(res != NULL, "Expected a string\n");
     len = (sizeof(str1A) + sizeof(str2A) - 2)/sizeof(WCHAR);
@@ -5576,7 +5580,7 @@ if (0)
     len = SysStringLen(str2);
     ok(len == 0, "got length %u\n", len);
 
-    ret = VarBstrCat(str1, str2, &res);
+    ret = pVarBstrCat(str1, str2, &res);
     ok(ret == S_OK, "VarBstrCat failed: %08x\n", ret);
     ok(res != NULL, "Expected a string\n");
     ok(SysStringLen(res) == 1, "got %d, expected 1\n", SysStringLen(res));
@@ -5593,12 +5597,12 @@ static void test_IUnknownClear(void)
 {
   HRESULT hres;
   VARIANTARG v;
-  DummyDispatch u = { &DummyDispatch_VTable, 1, VT_UI1, FALSE };
-  IUnknown* pu = (IUnknown*)&u;
+  DummyDispatch u = { { &DummyDispatch_VTable }, 1, VT_UI1, FALSE };
+  IUnknown* pu = (IUnknown*)&u.IDispatch_iface;
 
   /* Test that IUnknown_Release is called on by-value */
   V_VT(&v) = VT_UNKNOWN;
-  V_UNKNOWN(&v) = (IUnknown*)&u;
+  V_UNKNOWN(&v) = (IUnknown*)&u.IDispatch_iface;
   hres = VariantClear(&v);
   ok(hres == S_OK && u.ref == 0 && V_VT(&v) == VT_EMPTY,
      "clear unknown: expected 0x%08x, %d, %d, got 0x%08x, %d, %d\n",
@@ -5618,8 +5622,8 @@ static void test_IUnknownCopy(void)
 {
   HRESULT hres;
   VARIANTARG vSrc, vDst;
-  DummyDispatch u = { &DummyDispatch_VTable, 1, VT_UI1, FALSE };
-  IUnknown* pu = (IUnknown*)&u;
+  DummyDispatch u = { { &DummyDispatch_VTable }, 1, VT_UI1, FALSE };
+  IUnknown* pu = (IUnknown*)&u.IDispatch_iface;
 
   /* AddRef is called on by-value copy */
   VariantInit(&vDst);
@@ -5666,8 +5670,8 @@ static void test_IUnknownChangeTypeEx(void)
   VARIANTARG vSrc, vDst;
   LCID lcid;
   VARTYPE vt;
-  DummyDispatch u = { &DummyDispatch_VTable, 1, VT_UI1, FALSE };
-  IUnknown* pu = (IUnknown*)&u;
+  DummyDispatch u = { { &DummyDispatch_VTable }, 1, VT_UI1, FALSE };
+  IUnknown* pu = (IUnknown*)&u.IDispatch_iface;
 
   lcid = MAKELCID(MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), SORT_DEFAULT);
 
@@ -5734,8 +5738,8 @@ static void test_IDispatchClear(void)
 {
   HRESULT hres;
   VARIANTARG v;
-  DummyDispatch d = { &DummyDispatch_VTable, 1, VT_UI1, FALSE };
-  IDispatch* pd = (IDispatch*)&d;
+  DummyDispatch d = { { &DummyDispatch_VTable }, 1, VT_UI1, FALSE };
+  IDispatch* pd = &d.IDispatch_iface;
 
   /* As per IUnknown */
 
@@ -5759,8 +5763,8 @@ static void test_IDispatchCopy(void)
 {
   HRESULT hres;
   VARIANTARG vSrc, vDst;
-  DummyDispatch d = { &DummyDispatch_VTable, 1, VT_UI1, FALSE };
-  IDispatch* pd = (IDispatch*)&d;
+  DummyDispatch d = { { &DummyDispatch_VTable }, 1, VT_UI1, FALSE };
+  IDispatch* pd = &d.IDispatch_iface;
 
   /* As per IUnknown */
 
@@ -5804,8 +5808,8 @@ static void test_IDispatchChangeTypeEx(void)
   HRESULT hres;
   VARIANTARG vSrc, vDst;
   LCID lcid;
-  DummyDispatch d = { &DummyDispatch_VTable, 1, VT_UI1, FALSE };
-  IDispatch* pd = (IDispatch*)&d;
+  DummyDispatch d = { { &DummyDispatch_VTable }, 1, VT_UI1, FALSE };
+  IDispatch* pd = &d.IDispatch_iface;
 
   lcid = MAKELCID(MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), SORT_DEFAULT);
 
@@ -6064,7 +6068,7 @@ static void test_ChangeType_keep_dst(void)
      V_INT(&v2) = 4;
      hres = VariantChangeTypeEx(&v2, &v1, 0, 0, VT_INT);
      ok(hres == DISP_E_TYPEMISMATCH, "VariantChangeTypeEx returns %08x\n", hres);
-     ok(V_VT(&v2) == VT_INT && V_INT(&v2) == 4, "VariantChangeTypeEx changed dst variant\n");     
+     ok(V_VT(&v2) == VT_INT && V_INT(&v2) == 4, "VariantChangeTypeEx changed dst variant\n");
      SysFreeString(bstr);
 }
 
@@ -6072,7 +6076,7 @@ START_TEST(vartype)
 {
   hOleaut32 = GetModuleHandleA("oleaut32.dll");
 
-  trace("LCID's: System=0x%08x, User=0x%08x\n", GetSystemDefaultLCID(),
+  trace("LCIDs: System=0x%08x, User=0x%08x\n", GetSystemDefaultLCID(),
         GetUserDefaultLCID());
 
   test_VarI1FromI2();

@@ -1,14 +1,9 @@
 
-add_definitions(
-    -D__ROS_LONG64__
-    -D_DLL -D__USE_CRTIMP)
-
+add_definitions(-D__ROS_LONG64__)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
-
 add_typelib(test_reg.idl test_tlb.idl tmarshal.idl)
-
 add_idl_Headers(oleaut32_idlheaders test_reg.idl tmarshal.idl)
-generate_idl_iids(tmarshal.idl)
+generate_idl_iids(tmarshal.idl test_reg.idl)
 
 list(APPEND SOURCE
     dispatch.c
@@ -17,15 +12,15 @@ list(APPEND SOURCE
     safearray.c
     testlist.c
     tmarshal.c
-    tmarshal.rc
     typelib.c
     usrmarshal.c
     varformat.c
     vartest.c
     vartype.c
+    ${CMAKE_CURRENT_BINARY_DIR}/test_reg_i.c
     ${CMAKE_CURRENT_BINARY_DIR}/tmarshal_i.c)
 
-add_executable(oleaut32_winetest ${SOURCE})
+add_executable(oleaut32_winetest ${SOURCE} tmarshal.rc)
 target_link_libraries(oleaut32_winetest uuid wine)
 set_module_type(oleaut32_winetest win32cui)
 add_importlibs(oleaut32_winetest oleaut32 ole32 rpcrt4 user32 gdi32 advapi32 msvcrt kernel32 ntdll)
