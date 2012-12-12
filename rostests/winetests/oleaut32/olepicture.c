@@ -2,7 +2,7 @@
  * OLEPICTURE test program
  *
  * Copyright 2005 Marcus Meissner
- * Copyright 2012 Dmitry Timoshkov
+ *
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -25,7 +25,6 @@
 #include <float.h>
 
 #define COBJMACROS
-#define CONST_VTABLE
 #define NONAMELESSUNION
 
 #include "wine/test.h"
@@ -54,7 +53,7 @@
 static HMODULE hOleaut32;
 
 static HRESULT (WINAPI *pOleLoadPicture)(LPSTREAM,LONG,BOOL,REFIID,LPVOID*);
-static HRESULT (WINAPI *pOleLoadPictureEx)(LPSTREAM,LONG,BOOL,REFIID,DWORD,DWORD,DWORD,LPVOID*);
+static HRESULT (WINAPI *pOleCreatePictureIndirect)(PICTDESC*,REFIID,BOOL,LPVOID*);
 
 #define ok_ole_success(hr, func) ok(hr == S_OK, func " failed with error 0x%08x\n", hr)
 
@@ -170,17 +169,17 @@ static const unsigned char enhmetafile[] = {
 };
 
 
-typedef struct NoStatStreamImpl
+struct NoStatStreamImpl
 {
-	IStream			IStream_iface;
+	const IStreamVtbl	*lpVtbl;   
 	LONG			ref;
 
 	HGLOBAL			supportHandle;
 	ULARGE_INTEGER		streamSize;
 	ULARGE_INTEGER		currentPosition;
-} NoStatStreamImpl;
-
-static IStream* NoStatStream_Construct(HGLOBAL hGlobal);
+};
+typedef struct NoStatStreamImpl NoStatStreamImpl;
+static NoStatStreamImpl* NoStatStreamImpl_Construct(HGLOBAL hGlobal);
 
 static void
 test_pic_with_stream(LPSTREAM stream, unsigned int imgsize)
@@ -220,7 +219,7 @@ test_pic_with_stream(LPSTREAM stream, unsigned int imgsize)
         if (handle)
         {
             BITMAP bmp;
-            GetObject(UlongToHandle(handle), sizeof(BITMAP), &bmp);
+            GetObject((HGDIOBJ)handle, sizeof(BITMAP), &bmp);
             todo_wine ok(bmp.bmBits != 0, "not a dib\n");
         }
 
@@ -283,7 +282,7 @@ test_pic(const unsigned char *imgdata, unsigned int imgsize)
 	IStream_Release(stream);
 
 	/* again with Non Statable and Non Seekable stream */
-	stream = NoStatStream_Construct(hglob);
+	stream = (LPSTREAM)NoStatStreamImpl_Construct(hglob);
 	hglob = 0;  /* Non-statable impl always deletes on release */
 	test_pic_with_stream(stream, 0);
 
@@ -314,7 +313,7 @@ test_pic(const unsigned char *imgdata, unsigned int imgsize)
 		IStream_Release(stream);
 
 		/* again with Non Statable and Non Seekable stream */
-		stream = NoStatStream_Construct(hglob);
+		stream = (LPSTREAM)NoStatStreamImpl_Construct(hglob);
 		hglob = 0;  /* Non-statable impl always deletes on release */
 		test_pic_with_stream(stream, 0);
 
@@ -482,26 +481,24 @@ static void test_Invoke(void)
 
 static void test_OleCreatePictureIndirect(void)
 {
-    OLE_HANDLE handle;
     IPicture *pict;
     HRESULT hr;
     short type;
+    OLE_HANDLE handle;
 
-if (0)
-{
-    /* crashes on native */
-    OleCreatePictureIndirect(NULL, &IID_IPicture, TRUE, NULL);
-}
+    if(!pOleCreatePictureIndirect)
+    {
+        win_skip("Skipping OleCreatePictureIndirect tests\n");
+        return;
+    }
 
-    hr = OleCreatePictureIndirect(NULL, &IID_IPicture, TRUE, (void**)&pict);
+    hr = pOleCreatePictureIndirect(NULL, &IID_IPicture, TRUE, (void**)&pict);
     ok(hr == S_OK, "hr %08x\n", hr);
 
-    type = PICTYPE_NONE;
     hr = IPicture_get_Type(pict, &type);
     ok(hr == S_OK, "hr %08x\n", hr);
     ok(type == PICTYPE_UNINITIALIZED, "type %d\n", type);
 
-    handle = 0xdeadbeef;
     hr = IPicture_get_Handle(pict, &handle);
     ok(hr == S_OK, "hr %08x\n", hr);
     ok(handle == 0, "handle %08x\n", handle);
@@ -521,7 +518,7 @@ static void test_apm(void)
     short type;
 
     if(!winetest_interactive) {
-        skip("ROSTESTS-2: oleaut_winetest:olepicture crashes with Page Fault.\n");
+        skip("Bug 5000: oleaut_winetest:olepicture crashes with Page Fault.\n");
         return;
     }
 
@@ -530,7 +527,7 @@ static void test_apm(void)
     memcpy(data, apmdata, sizeof(apmdata));
 
     ole_check(CreateStreamOnHGlobal(hglob, TRUE, &stream));
-    ole_check(pOleLoadPictureEx(stream, sizeof(apmdata), TRUE, &IID_IPicture, 100, 100, 0, (LPVOID *)&pict));
+    ole_check(OleLoadPictureEx(stream, sizeof(apmdata), TRUE, &IID_IPicture, 100, 100, 0, (LPVOID *)&pict));
 
     ole_check(IPicture_get_Handle(pict, &handle));
     ok(handle != 0, "handle is null\n");
@@ -565,7 +562,7 @@ static void test_metafile(void)
 
     ole_check(CreateStreamOnHGlobal(hglob, TRUE, &stream));
     /* Windows does not load simple metafiles */
-    ole_expect(pOleLoadPictureEx(stream, sizeof(metafile), TRUE, &IID_IPicture, 100, 100, 0, (LPVOID *)&pict), E_FAIL);
+    ole_expect(OleLoadPictureEx(stream, sizeof(metafile), TRUE, &IID_IPicture, 100, 100, 0, (LPVOID *)&pict), E_FAIL);
 
     IStream_Release(stream);
 }
@@ -582,7 +579,7 @@ static void test_enhmetafile(void)
     short type;
 
     if(!winetest_interactive) {
-        skip("ROSTESTS-2: oleaut_winetest:olepicture crashes with Page Fault.\n");
+        skip("Bug 5000: oleaut_winetest:olepicture crashes with Page Fault.\n");
         return;
     }
 
@@ -591,7 +588,7 @@ static void test_enhmetafile(void)
     memcpy(data, enhmetafile, sizeof(enhmetafile));
 
     ole_check(CreateStreamOnHGlobal(hglob, TRUE, &stream));
-    ole_check(pOleLoadPictureEx(stream, sizeof(enhmetafile), TRUE, &IID_IPicture, 10, 10, 0, (LPVOID *)&pict));
+    ole_check(OleLoadPictureEx(stream, sizeof(enhmetafile), TRUE, &IID_IPicture, 10, 10, 0, (LPVOID *)&pict));
 
     ole_check(IPicture_get_Handle(pict, &handle));
     ok(handle != 0, "handle is null\n");
@@ -678,9 +675,9 @@ static void test_Render(void)
     IPicture_get_Width(pic, &pWidth);
     IPicture_get_Height(pic, &pHeight);
 
-    SetPixelV(hdc, 0, 0, 0x00223344);
-    SetPixelV(hdc, 5, 5, 0x00223344);
-    SetPixelV(hdc, 10, 10, 0x00223344);
+    SetPixelV(hdc, 0, 0, 0x00F0F0F0);
+    SetPixelV(hdc, 5, 5, 0x00F0F0F0);
+    SetPixelV(hdc, 10, 10, 0x00F0F0F0);
     expected = GetPixel(hdc, 0, 0);
 
     hres = IPicture_Render(pic, hdc, 1, 1, 9, 9, 0, 0, pWidth, -pHeight, NULL);
@@ -803,8 +800,9 @@ static void test_OleLoadPicturePath(void)
     hres = OleLoadPicturePath(emptyW, NULL, 0, 0, NULL, (void **)&pic);
     todo_wine
     ok(hres == INET_E_UNKNOWN_PROTOCOL || /* XP/Vista+ */
-       broken(hres == E_UNEXPECTED) || /* NT4 */
-       broken(hres == E_OUTOFMEMORY), /* Win2k/Win2k3 */
+       hres == E_UNEXPECTED || /* NT4/Win95 */
+       hres == E_FAIL || /* Win95 OSR2 */
+       hres == E_OUTOFMEMORY, /* Win98/Win2k/Win2k3 */
        "Expected OleLoadPicturePath to return INET_E_UNKNOWN_PROTOCOL, got 0x%08x\n", hres);
     ok(pic == NULL,
        "Expected the output interface pointer to be NULL, got %p\n", pic);
@@ -813,8 +811,9 @@ static void test_OleLoadPicturePath(void)
     hres = OleLoadPicturePath(emptyW, NULL, 0, 0, &IID_IPicture, (void **)&pic);
     todo_wine
     ok(hres == INET_E_UNKNOWN_PROTOCOL || /* XP/Vista+ */
-       broken(hres == E_UNEXPECTED) || /* NT4 */
-       broken(hres == E_OUTOFMEMORY), /* Win2k/Win2k3 */
+       hres == E_UNEXPECTED || /* NT4/Win95 */
+       hres == E_FAIL || /* Win95 OSR2 */
+       hres == E_OUTOFMEMORY, /* Win98/Win2k/Win2k3 */
        "Expected OleLoadPicturePath to return INET_E_UNKNOWN_PROTOCOL, got 0x%08x\n", hres);
     ok(pic == NULL,
        "Expected the output interface pointer to be NULL, got %p\n", pic);
@@ -832,7 +831,7 @@ static void test_OleLoadPicturePath(void)
     /* Try a normal DOS path. */
     hres = OleLoadPicturePath(temp_fileW + 8, NULL, 0, 0, &IID_IPicture, (void **)&pic);
     ok(hres == S_OK ||
-       broken(hres == E_UNEXPECTED), /* NT4 */
+       broken(hres == E_UNEXPECTED), /* NT4/Win95 */
        "Expected OleLoadPicturePath to return S_OK, got 0x%08x\n", hres);
     if (pic)
         IPicture_Release(pic);
@@ -840,7 +839,7 @@ static void test_OleLoadPicturePath(void)
     /* Try a DOS path with tacked on "file:". */
     hres = OleLoadPicturePath(temp_fileW, NULL, 0, 0, &IID_IPicture, (void **)&pic);
     ok(hres == S_OK ||
-       broken(hres == E_UNEXPECTED), /* NT4 */
+       broken(hres == E_UNEXPECTED), /* NT4/Win95 */
        "Expected OleLoadPicturePath to return S_OK, got 0x%08x\n", hres);
     if (pic)
         IPicture_Release(pic);
@@ -850,14 +849,14 @@ static void test_OleLoadPicturePath(void)
     /* Try with a nonexistent file. */
     hres = OleLoadPicturePath(temp_fileW + 8, NULL, 0, 0, &IID_IPicture, (void **)&pic);
     ok(hres == INET_E_RESOURCE_NOT_FOUND || /* XP+ */
-       broken(hres == E_UNEXPECTED) || /* NT4 */
-       broken(hres == E_FAIL), /*Win2k */
+       hres == E_UNEXPECTED || /* NT4/Win95 */
+       hres == E_FAIL, /* Win9x/Win2k */
        "Expected OleLoadPicturePath to return INET_E_RESOURCE_NOT_FOUND, got 0x%08x\n", hres);
 
     hres = OleLoadPicturePath(temp_fileW, NULL, 0, 0, &IID_IPicture, (void **)&pic);
     ok(hres == INET_E_RESOURCE_NOT_FOUND || /* XP+ */
-       broken(hres == E_UNEXPECTED) || /* NT4 */
-       broken(hres == E_FAIL), /* Win2k */
+       hres == E_UNEXPECTED || /* NT4/Win95 */
+       hres == E_FAIL, /* Win9x/Win2k */
        "Expected OleLoadPicturePath to return INET_E_RESOURCE_NOT_FOUND, got 0x%08x\n", hres);
 
     file = CreateFileA(temp_file, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
@@ -876,7 +875,7 @@ static void test_OleLoadPicturePath(void)
 
     hres = OleLoadPicturePath(temp_fileW, NULL, 0, 0, &IID_IPicture, (void **)&pic);
     ok(hres == S_OK ||
-       broken(hres == E_UNEXPECTED), /* NT4 */
+       broken(hres == E_UNEXPECTED), /* NT4/Win95 */
        "Expected OleLoadPicturePath to return S_OK, got 0x%08x\n", hres);
     if (pic)
         IPicture_Release(pic);
@@ -886,267 +885,35 @@ static void test_OleLoadPicturePath(void)
     /* Try with a nonexistent file. */
     hres = OleLoadPicturePath(temp_fileW, NULL, 0, 0, &IID_IPicture, (void **)&pic);
     ok(hres == INET_E_RESOURCE_NOT_FOUND || /* XP+ */
-       broken(hres == E_UNEXPECTED) || /* NT4 */
-       broken(hres == E_FAIL), /* Win2k */
+       hres == E_UNEXPECTED || /* NT4/Win95 */
+       hres == E_FAIL, /* Win9x/Win2k */
        "Expected OleLoadPicturePath to return INET_E_RESOURCE_NOT_FOUND, got 0x%08x\n", hres);
-}
-
-static void test_himetric(void)
-{
-    static const BYTE bmp_bits[1024];
-    OLE_XSIZE_HIMETRIC cx;
-    OLE_YSIZE_HIMETRIC cy;
-    IPicture *pic;
-    PICTDESC desc;
-    HBITMAP bmp;
-    HRESULT hr;
-    HICON icon;
-    HDC hdc;
-    INT d;
-
-    desc.cbSizeofstruct = sizeof(desc);
-    desc.picType = PICTYPE_BITMAP;
-    desc.u.bmp.hpal = NULL;
-
-    hdc = CreateCompatibleDC(0);
-
-    bmp = CreateBitmap(1.9 * GetDeviceCaps(hdc, LOGPIXELSX),
-                       1.9 * GetDeviceCaps(hdc, LOGPIXELSY), 1, 1, NULL);
-
-    desc.u.bmp.hbitmap = bmp;
-
-    /* size in himetric units reported rounded up to next integer value */
-    hr = OleCreatePictureIndirect(&desc, &IID_IPicture, FALSE, (void**)&pic);
-    ok(hr == S_OK, "got 0x%08x\n", hr);
-
-    cx = 0;
-    d = MulDiv((INT)(1.9 * GetDeviceCaps(hdc, LOGPIXELSX)), 2540, GetDeviceCaps(hdc, LOGPIXELSX));
-    hr = IPicture_get_Width(pic, &cx);
-    ok(hr == S_OK, "got 0x%08x\n", hr);
-    ok(cx == d, "got %d, expected %d\n", cx, d);
-
-    cy = 0;
-    d = MulDiv((INT)(1.9 * GetDeviceCaps(hdc, LOGPIXELSY)), 2540, GetDeviceCaps(hdc, LOGPIXELSY));
-    hr = IPicture_get_Height(pic, &cy);
-    ok(hr == S_OK, "got 0x%08x\n", hr);
-    ok(cy == d, "got %d, expected %d\n", cy, d);
-
-    DeleteObject(bmp);
-    IPicture_Release(pic);
-
-    /* same thing with icon */
-    icon = CreateIcon(NULL, GetSystemMetrics(SM_CXICON), GetSystemMetrics(SM_CYICON),
-                      1, 1, bmp_bits, bmp_bits);
-    ok(icon != NULL, "failed to create icon\n");
-
-    desc.picType = PICTYPE_ICON;
-    desc.u.icon.hicon = icon;
-
-    hr = OleCreatePictureIndirect(&desc, &IID_IPicture, FALSE, (void**)&pic);
-    ok(hr == S_OK, "got 0x%08x\n", hr);
-
-    cx = 0;
-    d = MulDiv(GetSystemMetrics(SM_CXICON), 2540, GetDeviceCaps(hdc, LOGPIXELSX));
-    hr = IPicture_get_Width(pic, &cx);
-    ok(hr == S_OK, "got 0x%08x\n", hr);
-    ok(cx == d, "got %d, expected %d\n", cx, d);
-
-    cy = 0;
-    d = MulDiv(GetSystemMetrics(SM_CYICON), 2540, GetDeviceCaps(hdc, LOGPIXELSY));
-    hr = IPicture_get_Height(pic, &cy);
-    ok(hr == S_OK, "got 0x%08x\n", hr);
-    ok(cy == d, "got %d, expected %d\n", cy, d);
-
-    IPicture_Release(pic);
-    DestroyIcon(icon);
-
-    DeleteDC(hdc);
-}
-
-static void test_load_save_bmp(void)
-{
-    IPicture *pic;
-    PICTDESC desc;
-    short type;
-    OLE_HANDLE handle;
-    HGLOBAL hmem;
-    DWORD *mem;
-    IPersistStream *src_stream;
-    IStream *dst_stream;
-    HRESULT hr;
-
-    desc.cbSizeofstruct = sizeof(desc);
-    desc.picType = PICTYPE_BITMAP;
-    desc.u.bmp.hpal = 0;
-    desc.u.bmp.hbitmap = CreateBitmap(1, 1, 1, 1, NULL);
-    hr = OleCreatePictureIndirect(&desc, &IID_IPicture, FALSE, (void**)&pic);
-    ok(hr == S_OK, "OleCreatePictureIndirect error %#x\n", hr);
-
-    type = -1;
-    hr = IPicture_get_Type(pic, &type);
-    ok(hr == S_OK,"get_Type error %#8x\n", hr);
-    ok(type == PICTYPE_BITMAP,"expected picture type PICTYPE_BITMAP, got %d\n", type);
-
-    hr = IPicture_get_Handle(pic, &handle);
-    ok(hr == S_OK,"get_Handle error %#8x\n", hr);
-    ok(IntToPtr(handle) == desc.u.bmp.hbitmap, "get_Handle returned wrong handle %#x\n", handle);
-
-    hmem = GlobalAlloc(GMEM_ZEROINIT, 4096);
-    hr = CreateStreamOnHGlobal(hmem, FALSE, &dst_stream);
-    ok(hr == S_OK, "createstreamonhglobal error %#x\n", hr);
-
-    hr = IPicture_QueryInterface(pic, &IID_IPersistStream, (void **)&src_stream);
-    ok(hr == S_OK, "QueryInterface error %#x\n", hr);
-
-    hr = IPersistStream_Save(src_stream, dst_stream, TRUE);
-    ok(hr == S_OK, "Save error %#x\n", hr);
-
-    IPersistStream_Release(src_stream);
-    IStream_Release(dst_stream);
-
-    mem = GlobalLock(hmem);
-    ok(!memcmp(mem, "lt\0\0", 4), "got wrong stream header %04x\n", mem[0]);
-    ok(mem[1] == 66, "expected stream size 66, got %u\n", mem[1]);
-    ok(!memcmp(&mem[2], "BM", 2), "got wrong bmp header %04x\n", mem[2]);
-
-    GlobalUnlock(hmem);
-    GlobalFree(hmem);
-
-    DeleteObject(desc.u.bmp.hbitmap);
-    IPicture_Release(pic);
-}
-
-static void test_load_save_icon(void)
-{
-    IPicture *pic;
-    PICTDESC desc;
-    short type;
-    OLE_HANDLE handle;
-    HGLOBAL hmem;
-    DWORD *mem;
-    IPersistStream *src_stream;
-    IStream *dst_stream;
-    HRESULT hr;
-
-    desc.cbSizeofstruct = sizeof(desc);
-    desc.picType = PICTYPE_ICON;
-    desc.u.icon.hicon = LoadIcon(0, IDI_APPLICATION);
-    hr = OleCreatePictureIndirect(&desc, &IID_IPicture, FALSE, (void**)&pic);
-    ok(hr == S_OK, "OleCreatePictureIndirect error %#x\n", hr);
-
-    type = -1;
-    hr = IPicture_get_Type(pic, &type);
-    ok(hr == S_OK,"get_Type error %#8x\n", hr);
-    ok(type == PICTYPE_ICON,"expected picture type PICTYPE_ICON, got %d\n", type);
-
-    hr = IPicture_get_Handle(pic, &handle);
-    ok(hr == S_OK,"get_Handle error %#8x\n", hr);
-    ok(IntToPtr(handle) == desc.u.icon.hicon, "get_Handle returned wrong handle %#x\n", handle);
-
-    hmem = GlobalAlloc(GMEM_ZEROINIT, 8192);
-    hr = CreateStreamOnHGlobal(hmem, FALSE, &dst_stream);
-    ok(hr == S_OK, "CreateStreamOnHGlobal error %#x\n", hr);
-
-    hr = IPicture_QueryInterface(pic, &IID_IPersistStream, (void **)&src_stream);
-    ok(hr == S_OK, "QueryInterface error %#x\n", hr);
-
-    hr = IPersistStream_Save(src_stream, dst_stream, TRUE);
-    ok(hr == S_OK, "Saveerror %#x\n", hr);
-
-    IPersistStream_Release(src_stream);
-    IStream_Release(dst_stream);
-
-    mem = GlobalLock(hmem);
-    ok(!memcmp(mem, "lt\0\0", 4), "got wrong stream header %04x\n", mem[0]);
-todo_wine
-    ok(mem[1] == 766, "expected stream size 766, got %u\n", mem[1]);
-    ok(mem[2] == 0x00010000, "got wrong icon header %04x\n", mem[2]);
-
-    GlobalUnlock(hmem);
-    GlobalFree(hmem);
-
-    DestroyIcon(desc.u.icon.hicon);
-    IPicture_Release(pic);
-}
-
-static void test_load_save_empty_picture(void)
-{
-    IPicture *pic;
-    PICTDESC desc;
-    short type;
-    OLE_HANDLE handle;
-    HGLOBAL hmem;
-    DWORD *mem;
-    IPersistStream *src_stream;
-    IStream *dst_stream;
-    HRESULT hr;
-
-    memset(&pic, 0, sizeof(pic));
-    desc.cbSizeofstruct = sizeof(desc);
-    desc.picType = PICTYPE_NONE;
-    hr = OleCreatePictureIndirect(&desc, &IID_IPicture, FALSE, (void **)&pic);
-    ok(hr == S_OK, "OleCreatePictureIndirect error %#x\n", hr);
-
-    type = -1;
-    hr = IPicture_get_Type(pic, &type);
-    ok(hr == S_OK,"get_Type error %#8x\n", hr);
-    ok(type == PICTYPE_NONE,"expected picture type PICTYPE_NONE, got %d\n", type);
-
-    handle = (OLE_HANDLE)0xdeadbeef;
-    hr = IPicture_get_Handle(pic, &handle);
-    ok(hr == S_OK,"get_Handle error %#8x\n", hr);
-    ok(!handle, "get_Handle returned wrong handle %#x\n", handle);
-
-    hmem = GlobalAlloc(GMEM_ZEROINIT, 4096);
-    hr = CreateStreamOnHGlobal(hmem, FALSE, &dst_stream);
-    ok(hr == S_OK, "createstreamonhglobal error %#x\n", hr);
-
-    hr = IPicture_QueryInterface(pic, &IID_IPersistStream, (void **)&src_stream);
-    ok(hr == S_OK, "QueryInterface error %#x\n", hr);
-
-    hr = IPersistStream_Save(src_stream, dst_stream, TRUE);
-    ok(hr == S_OK, "Save error %#x\n", hr);
-
-    mem = GlobalLock(hmem);
-    ok(!memcmp(mem, "lt\0\0", 4), "got wrong stream header %04x\n", mem[0]);
-    ok(mem[1] == 0, "expected stream size 0, got %u\n", mem[1]);
-    GlobalUnlock(hmem);
-
-    IPersistStream_Release(src_stream);
-    IStream_Release(dst_stream);
-
-    GlobalFree(hmem);
-    IPicture_Release(pic);
 }
 
 START_TEST(olepicture)
 {
-    hOleaut32 = GetModuleHandleA("oleaut32.dll");
-    pOleLoadPicture = (void*)GetProcAddress(hOleaut32, "OleLoadPicture");
-    pOleLoadPictureEx = (void*)GetProcAddress(hOleaut32, "OleLoadPictureEx");
-    if (!pOleLoadPicture)
-    {
-        win_skip("OleLoadPicture is not available\n");
-        return;
-    }
+	hOleaut32 = GetModuleHandleA("oleaut32.dll");
+	pOleLoadPicture = (void*)GetProcAddress(hOleaut32, "OleLoadPicture");
+	pOleCreatePictureIndirect = (void*)GetProcAddress(hOleaut32, "OleCreatePictureIndirect");
+	if (!pOleLoadPicture)
+	{
+	    win_skip("OleLoadPicture is not available\n");
+	    return;
+	}
 
-    /* Test regular 1x1 pixel images of gif, jpg, bmp type */
-    test_pic(gifimage, sizeof(gifimage));
-    test_pic(jpgimage, sizeof(jpgimage));
-    test_pic(bmpimage, sizeof(bmpimage));
-    test_pic(gif4pixel, sizeof(gif4pixel));
-    /* FIXME: No PNG support in Windows... */
-    if (0) test_pic(pngimage, sizeof(pngimage));
-    test_empty_image();
-    test_empty_image_2();
-    if (pOleLoadPictureEx)
-    {
+	/* Test regular 1x1 pixel images of gif, jpg, bmp type */
+        test_pic(gifimage, sizeof(gifimage));
+	test_pic(jpgimage, sizeof(jpgimage));
+	test_pic(bmpimage, sizeof(bmpimage));
+        test_pic(gif4pixel, sizeof(gif4pixel));
+	/* FIXME: No PNG support in Windows... */
+	if (0) test_pic(pngimage, sizeof(pngimage));
+	test_empty_image();
+	test_empty_image_2();
         test_apm();
         test_metafile();
         test_enhmetafile();
-    }
-    else
-        win_skip("OleLoadPictureEx is not available\n");
+
     test_Invoke();
     test_OleCreatePictureIndirect();
     test_Render();
@@ -1154,20 +921,11 @@ START_TEST(olepicture)
     test_get_Handle();
     test_get_Type();
     test_OleLoadPicturePath();
-    test_himetric();
-    test_load_save_bmp();
-    test_load_save_icon();
-    test_load_save_empty_picture();
 }
 
 
 /* Helper functions only ... */
 
-
-static inline NoStatStreamImpl *impl_from_IStream(IStream *iface)
-{
-  return CONTAINING_RECORD(iface, NoStatStreamImpl, IStream_iface);
-}
 
 static void NoStatStreamImpl_Destroy(NoStatStreamImpl* This)
 {
@@ -1179,7 +937,7 @@ static void NoStatStreamImpl_Destroy(NoStatStreamImpl* This)
 static ULONG WINAPI NoStatStreamImpl_AddRef(
 		IStream* iface)
 {
-  NoStatStreamImpl* const This = impl_from_IStream(iface);
+  NoStatStreamImpl* const This=(NoStatStreamImpl*)iface;
   return InterlockedIncrement(&This->ref);
 }
 
@@ -1188,7 +946,7 @@ static HRESULT WINAPI NoStatStreamImpl_QueryInterface(
 		  REFIID         riid,	      /* [in] */
 		  void**         ppvObject)   /* [iid_is][out] */
 {
-  NoStatStreamImpl* const This = impl_from_IStream(iface);
+  NoStatStreamImpl* const This=(NoStatStreamImpl*)iface;
   if (ppvObject==0) return E_INVALIDARG;
   *ppvObject = 0;
   if (IsEqualIID(&IID_IUnknown, riid))
@@ -1209,7 +967,7 @@ static HRESULT WINAPI NoStatStreamImpl_QueryInterface(
 static ULONG WINAPI NoStatStreamImpl_Release(
 		IStream* iface)
 {
-  NoStatStreamImpl* const This = impl_from_IStream(iface);
+  NoStatStreamImpl* const This=(NoStatStreamImpl*)iface;
   ULONG newRef = InterlockedDecrement(&This->ref);
   if (newRef==0)
     NoStatStreamImpl_Destroy(This);
@@ -1222,7 +980,7 @@ static HRESULT WINAPI NoStatStreamImpl_Read(
 		  ULONG          cb,        /* [in] */
 		  ULONG*         pcbRead)   /* [out] */
 {
-  NoStatStreamImpl* const This = impl_from_IStream(iface);
+  NoStatStreamImpl* const This=(NoStatStreamImpl*)iface;
   void* supportBuffer;
   ULONG bytesReadBuffer;
   ULONG bytesToReadFromBuffer;
@@ -1246,7 +1004,7 @@ static HRESULT WINAPI NoStatStreamImpl_Write(
 		  ULONG          cb,          /* [in] */
 		  ULONG*         pcbWritten)  /* [out] */
 {
-  NoStatStreamImpl* const This = impl_from_IStream(iface);
+  NoStatStreamImpl* const This=(NoStatStreamImpl*)iface;
   void*          supportBuffer;
   ULARGE_INTEGER newSize;
   ULONG          bytesWritten = 0;
@@ -1274,7 +1032,7 @@ static HRESULT WINAPI NoStatStreamImpl_Seek(
 		  DWORD           dwOrigin,         /* [in] */
 		  ULARGE_INTEGER* plibNewPosition) /* [out] */
 {
-  NoStatStreamImpl* const This = impl_from_IStream(iface);
+  NoStatStreamImpl* const This=(NoStatStreamImpl*)iface;
   ULARGE_INTEGER newPosition;
   switch (dwOrigin)
   {
@@ -1303,7 +1061,7 @@ static HRESULT WINAPI NoStatStreamImpl_SetSize(
 				     IStream*      iface,
 				     ULARGE_INTEGER  libNewSize)   /* [in] */
 {
-  NoStatStreamImpl* const This = impl_from_IStream(iface);
+  NoStatStreamImpl* const This=(NoStatStreamImpl*)iface;
   HGLOBAL supportHandle;
   if (libNewSize.u.HighPart != 0)
     return STG_E_INVALIDFUNCTION;
@@ -1416,14 +1174,14 @@ static const IStreamVtbl NoStatStreamImpl_Vtbl;
     In any case the object takes ownership of memory handle and will free it on
     object release.
  */
-static IStream* NoStatStream_Construct(HGLOBAL hGlobal)
+static NoStatStreamImpl* NoStatStreamImpl_Construct(HGLOBAL hGlobal)
 {
   NoStatStreamImpl* newStream;
 
   newStream = HeapAlloc(GetProcessHeap(), 0, sizeof(NoStatStreamImpl));
   if (newStream!=0)
   {
-    newStream->IStream_iface.lpVtbl = &NoStatStreamImpl_Vtbl;
+    newStream->lpVtbl = &NoStatStreamImpl_Vtbl;
     newStream->ref    = 1;
     newStream->supportHandle = hGlobal;
 
@@ -1435,7 +1193,7 @@ static IStream* NoStatStream_Construct(HGLOBAL hGlobal)
     newStream->streamSize.u.HighPart = 0;
     newStream->streamSize.u.LowPart  = GlobalSize(newStream->supportHandle);
   }
-  return &newStream->IStream_iface;
+  return newStream;
 }
 
 
