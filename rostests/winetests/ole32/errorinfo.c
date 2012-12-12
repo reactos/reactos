@@ -47,9 +47,14 @@ static void test_error_info(void)
     static WCHAR wszDescription[] = {'F','a','i','l','e','d',' ','S','p','r','o','c','k','e','t',0};
     static WCHAR wszHelpFile[] = {'s','p','r','o','c','k','e','t','.','h','l','p',0};
     static WCHAR wszSource[] = {'s','p','r','o','c','k','e','t',0};
+    IUnknown *unk;
 
     hr = CreateErrorInfo(&pCreateErrorInfo);
     ok_ole_success(hr, "CreateErrorInfo");
+
+    hr = ICreateErrorInfo_QueryInterface(pCreateErrorInfo, &IID_IUnknown, (void**)&unk);
+    ok_ole_success(hr, "QI");
+    IUnknown_Release(unk);
 
     hr = ICreateErrorInfo_SetDescription(pCreateErrorInfo, NULL);
     ok_ole_success(hr, "ICreateErrorInfo_SetDescription");
@@ -77,6 +82,10 @@ static void test_error_info(void)
 
     hr = ICreateErrorInfo_QueryInterface(pCreateErrorInfo, &IID_IErrorInfo, (void **)&pErrorInfo);
     ok_ole_success(hr, "ICreateErrorInfo_QueryInterface");
+
+    hr = IErrorInfo_QueryInterface(pErrorInfo, &IID_IUnknown, (void**)&unk);
+    ok_ole_success(hr, "QI");
+    IUnknown_Release(unk);
 
     ICreateErrorInfo_Release(pCreateErrorInfo);
 

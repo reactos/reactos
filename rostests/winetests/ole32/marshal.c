@@ -1331,6 +1331,9 @@ static void test_disconnect_stub(void)
     CoDisconnectObject((IUnknown*)&Test_ClassFactory, 0);
 
     ok_no_locks();
+
+    hr = CoDisconnectObject(NULL, 0);
+    ok( hr == E_INVALIDARG, "wrong status %x\n", hr );
 }
 
 /* tests failure case of a same-thread marshal and unmarshal twice */
@@ -1439,7 +1442,7 @@ static DWORD CALLBACK bad_thread_proc(LPVOID p)
     trace("call to proxy's QueryInterface from wrong apartment returned 0x%08x\n", hr);
 
     /* now be really bad and release the proxy from the wrong apartment */
-    IUnknown_Release(cf);
+    IClassFactory_Release(cf);
 
     CoUninitialize();
 
@@ -1472,7 +1475,7 @@ static void test_proxy_used_in_wrong_thread(void)
     ok_more_than_one_lock();
 
     /* do a call that will fail, but result in IRemUnknown being used by the proxy */
-    IClassFactory_QueryInterface(pProxy, &IID_IStream, (LPVOID *)&pStream);
+    IUnknown_QueryInterface(pProxy, &IID_IStream, (LPVOID *)&pStream);
 
     /* create a thread that we can misbehave in */
     thread = CreateThread(NULL, 0, bad_thread_proc, pProxy, 0, &tid2);
@@ -1497,7 +1500,7 @@ static HRESULT WINAPI MessageFilter_QueryInterface(IMessageFilter *iface, REFIID
         IsEqualGUID(riid, &IID_IClassFactory))
     {
         *ppvObj = iface;
-        IClassFactory_AddRef(iface);
+        IMessageFilter_AddRef(iface);
         return S_OK;
     }
 
@@ -2346,7 +2349,7 @@ static HRESULT WINAPI Test_SMI_QueryInterface(
         IsEqualGUID(riid, &IID_IStdMarshalInfo))
     {
         *ppvObj = iface;
-        IClassFactory_AddRef(iface);
+        IStdMarshalInfo_AddRef(iface);
         return S_OK;
     }
 
@@ -2468,10 +2471,10 @@ static void test_client_security(void)
     ok_ole_success(hr, "CoUnmarshalInterface");
     IStream_Release(pStream);
 
-    hr = IUnknown_QueryInterface(pProxy, &IID_IUnknown, (LPVOID*)&pUnknown1);
+    hr = IClassFactory_QueryInterface(pProxy, &IID_IUnknown, (LPVOID*)&pUnknown1);
     ok_ole_success(hr, "IUnknown_QueryInterface IID_IUnknown");
 
-    hr = IUnknown_QueryInterface(pProxy, &IID_IRemUnknown, (LPVOID*)&pProxy2);
+    hr = IClassFactory_QueryInterface(pProxy, &IID_IRemUnknown, (LPVOID*)&pProxy2);
     ok_ole_success(hr, "IUnknown_QueryInterface IID_IStream");
 
     hr = IUnknown_QueryInterface(pProxy2, &IID_IUnknown, (LPVOID*)&pUnknown2);
@@ -2479,10 +2482,10 @@ static void test_client_security(void)
 
     ok(pUnknown1 == pUnknown2, "both proxy's IUnknowns should be the same - %p, %p\n", pUnknown1, pUnknown2);
 
-    hr = IUnknown_QueryInterface(pProxy, &IID_IMarshal, (LPVOID*)&pMarshal);
+    hr = IClassFactory_QueryInterface(pProxy, &IID_IMarshal, (LPVOID*)&pMarshal);
     ok_ole_success(hr, "IUnknown_QueryInterface IID_IMarshal");
 
-    hr = IUnknown_QueryInterface(pProxy, &IID_IClientSecurity, (LPVOID*)&pCliSec);
+    hr = IClassFactory_QueryInterface(pProxy, &IID_IClientSecurity, (LPVOID*)&pCliSec);
     ok_ole_success(hr, "IUnknown_QueryInterface IID_IClientSecurity");
 
     hr = IClientSecurity_QueryBlanket(pCliSec, (IUnknown *)pProxy, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
@@ -2850,8 +2853,10 @@ static void test_globalinterfacetable(void)
 
 static void test_manualresetevent(void)
 {
+    ISynchronizeHandle *sync_handle;
     ISynchronize *psync1, *psync2;
     IUnknown *punk;
+    HANDLE handle;
     LONG ref;
     HRESULT hr;
 
@@ -2884,6 +2889,17 @@ static void test_manualresetevent(void)
     ok(hr == S_OK, "Got 0x%08x\n", hr);
     ok(!!psync2, "Got NULL.\n");
     ok(psync1 != psync2, "psync1 == psync2.\n");
+
+    hr = ISynchronize_QueryInterface(psync2, &IID_ISynchronizeHandle, (void**)&sync_handle);
+    ok(hr == S_OK, "QueryInterface(IID_ISynchronizeHandle) failed: %08x\n", hr);
+
+    handle = NULL;
+    hr = ISynchronizeHandle_GetHandle(sync_handle, &handle);
+    ok(hr == S_OK, "GetHandle failed: %08x\n", hr);
+    ok(handle != NULL && handle != INVALID_HANDLE_VALUE, "handle = %p\n", handle);
+
+    ISynchronizeHandle_Release(sync_handle);
+
     hr = ISynchronize_Wait(psync2, 0, 5);
     ok(hr == RPC_S_CALLPENDING, "Got 0x%08x\n", hr);
 
@@ -2939,7 +2955,7 @@ static HRESULT WINAPI TestChannelHook_QueryInterface(IChannelHook *iface, REFIID
     if (IsEqualIID(riid, &IID_IUnknown) || IsEqualIID(riid, &IID_IChannelHook))
     {
         *ppv = iface;
-        IUnknown_AddRef(iface);
+        IChannelHook_AddRef(iface);
         return S_OK;
     }
 

@@ -56,7 +56,7 @@ static const struct valid_mapping
     { PROP_V1 | PROP_TODO , PROP_V1 | PROP_TODO , PROP_INV, PROP_V1 | PROP_TODO  }, /* VT_UNKNOWN */
     { PROP_V1 , PROP_V1 | PROP_TODO , PROP_INV, PROP_V1 | PROP_TODO  }, /* VT_DECIMAL */
     { PROP_INV, PROP_INV, PROP_INV, PROP_INV }, /* 15 */
-    { PROP_V1 | PROP_TODO , PROP_V1 | PROP_TODO , PROP_V1 | PROP_TODO , PROP_V1 | PROP_TODO  }, /* VT_I1 */
+    { PROP_V1 , PROP_V1 | PROP_TODO , PROP_V1 , PROP_V1 | PROP_TODO  }, /* VT_I1 */
     { PROP_V0 , PROP_V1 | PROP_TODO , PROP_V0 , PROP_V1 | PROP_TODO  }, /* VT_UI1 */
     { PROP_V0 , PROP_V1 | PROP_TODO , PROP_V0 , PROP_V1 | PROP_TODO  }, /* VT_UI2 */
     { PROP_V0 , PROP_V1 | PROP_TODO , PROP_V0 , PROP_V1 | PROP_TODO  }, /* VT_UI4 */
@@ -245,8 +245,267 @@ static void test_copy(void)
     memset(&propvarSrc, 0, sizeof(propvarSrc));
 }
 
+struct _PMemoryAllocator_vtable {
+    void *Allocate; /* virtual void* Allocate(ULONG cbSize); */
+    void *Free; /* virtual void Free(void *pv); */
+};
+
+typedef struct _PMemoryAllocator {
+    struct _PMemoryAllocator_vtable *vt;
+} PMemoryAllocator;
+
+#ifdef __i386__
+#define __thiscall __stdcall
+#else
+#define __thiscall __cdecl
+#endif
+
+static void * __thiscall PMemoryAllocator_Allocate(PMemoryAllocator *_this, ULONG cbSize)
+{
+    return CoTaskMemAlloc(cbSize);
+}
+
+static void __thiscall PMemoryAllocator_Free(PMemoryAllocator *_this, void *pv)
+{
+    CoTaskMemFree(pv);
+}
+
+#ifdef __i386__
+
+#include "pshpack1.h"
+typedef struct
+{
+    BYTE pop_eax;  /* popl  %eax  */
+    BYTE push_ecx; /* pushl %ecx  */
+    BYTE push_eax; /* pushl %eax  */
+    BYTE jmp_func; /* jmp   $func */
+    DWORD func;
+} THISCALL_TO_STDCALL_THUNK;
+#include "poppack.h"
+
+static THISCALL_TO_STDCALL_THUNK *wrapperCodeMem = NULL;
+
+static void fill_thunk(THISCALL_TO_STDCALL_THUNK *thunk, void *fn)
+{
+    thunk->pop_eax = 0x58;
+    thunk->push_ecx = 0x51;
+    thunk->push_eax = 0x50;
+    thunk->jmp_func = 0xe9;
+    thunk->func = (char*)fn - (char*)(&thunk->func + 1);
+}
+
+static void setup_vtable(struct _PMemoryAllocator_vtable *vtable)
+{
+    wrapperCodeMem = VirtualAlloc(NULL, 2 * sizeof(*wrapperCodeMem),
+                                  MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+
+    fill_thunk(&wrapperCodeMem[0], PMemoryAllocator_Allocate);
+    fill_thunk(&wrapperCodeMem[1], PMemoryAllocator_Free);
+
+    vtable->Allocate = &wrapperCodeMem[0];
+    vtable->Free = &wrapperCodeMem[1];
+}
+
+#else
+
+static void setup_vtable(struct _PMemoryAllocator_vtable *vtable)
+{
+    vtable->Allocate = PMemoryAllocator_Allocate;
+    vtable->Free = PMemoryAllocator_Free;
+}
+
+#endif
+
+static const char serialized_empty[] = {
+    0,0, /* VT_EMPTY */
+    0,0, /* padding */
+};
+
+static const char serialized_null[] = {
+    1,0, /* VT_NULL */
+    0,0, /* padding */
+};
+
+static const char serialized_i4[] = {
+    3,0, /* VT_I4 */
+    0,0, /* padding */
+    0xef,0xcd,0xab,0xfe
+};
+
+static const char serialized_bstr_wc[] = {
+    8,0, /* VT_BSTR */
+    0,0, /* padding */
+    10,0,0,0, /* size */
+    't',0,'e',0,
+    's',0,'t',0,
+    0,0,0,0
+};
+
+static const char serialized_bstr_mb[] = {
+    8,0, /* VT_BSTR */
+    0,0, /* padding */
+    5,0,0,0, /* size */
+    't','e','s','t',
+    0,0,0,0
+};
+
+static void test_propertytovariant(void)
+{
+    HANDLE hole32;
+    BOOLEAN (__stdcall *pStgConvertPropertyToVariant)(const SERIALIZEDPROPERTYVALUE*,USHORT,PROPVARIANT*,PMemoryAllocator*);
+    PROPVARIANT propvar;
+    PMemoryAllocator allocator;
+    struct _PMemoryAllocator_vtable vtable;
+    BOOLEAN ret;
+    static const WCHAR test_string[] = {'t','e','s','t',0};
+
+    hole32 = GetModuleHandleA("ole32");
+
+    pStgConvertPropertyToVariant = (void*)GetProcAddress(hole32, "StgConvertPropertyToVariant");
+
+    if (!pStgConvertPropertyToVariant)
+    {
+        win_skip("StgConvertPropertyToVariant not available\n");
+        return;
+    }
+
+    setup_vtable(&vtable);
+    allocator.vt = &vtable;
+
+    ret = pStgConvertPropertyToVariant((SERIALIZEDPROPERTYVALUE*)serialized_empty,
+        CP_WINUNICODE, &propvar, &allocator);
+
+    ok(ret == 0, "StgConvertPropertyToVariant returned %i\n", ret);
+    ok(propvar.vt == VT_EMPTY, "unexpected vt %x\n", propvar.vt);
+
+    ret = pStgConvertPropertyToVariant((SERIALIZEDPROPERTYVALUE*)serialized_null,
+        CP_WINUNICODE, &propvar, &allocator);
+
+    ok(ret == 0, "StgConvertPropertyToVariant returned %i\n", ret);
+    ok(propvar.vt == VT_NULL, "unexpected vt %x\n", propvar.vt);
+
+    ret = pStgConvertPropertyToVariant((SERIALIZEDPROPERTYVALUE*)serialized_i4,
+        CP_WINUNICODE, &propvar, &allocator);
+
+    ok(ret == 0, "StgConvertPropertyToVariant returned %i\n", ret);
+    ok(propvar.vt == VT_I4, "unexpected vt %x\n", propvar.vt);
+    ok(U(propvar).lVal == 0xfeabcdef, "unexpected lVal %x\n", U(propvar).lVal);
+
+    ret = pStgConvertPropertyToVariant((SERIALIZEDPROPERTYVALUE*)serialized_bstr_wc,
+        CP_WINUNICODE, &propvar, &allocator);
+
+    ok(ret == 0, "StgConvertPropertyToVariant returned %i\n", ret);
+    ok(propvar.vt == VT_BSTR, "unexpected vt %x\n", propvar.vt);
+    ok(!lstrcmpW(U(propvar).bstrVal, test_string), "unexpected string value\n");
+    PropVariantClear(&propvar);
+
+    ret = pStgConvertPropertyToVariant((SERIALIZEDPROPERTYVALUE*)serialized_bstr_mb,
+        CP_UTF8, &propvar, &allocator);
+
+    ok(ret == 0, "StgConvertPropertyToVariant returned %i\n", ret);
+    ok(propvar.vt == VT_BSTR, "unexpected vt %x\n", propvar.vt);
+    ok(!lstrcmpW(U(propvar).bstrVal, test_string), "unexpected string value\n");
+    PropVariantClear(&propvar);
+}
+
+static void test_varianttoproperty(void)
+{
+    HANDLE hole32;
+    PROPVARIANT propvar;
+    SERIALIZEDPROPERTYVALUE *propvalue, *own_propvalue;
+    SERIALIZEDPROPERTYVALUE* (__stdcall *pStgConvertVariantToProperty)(
+        const PROPVARIANT*,USHORT,SERIALIZEDPROPERTYVALUE*,ULONG*,PROPID,BOOLEAN,ULONG*);
+    ULONG len;
+    static const WCHAR test_string[] = {'t','e','s','t',0};
+    BSTR test_string_bstr;
+
+    hole32 = GetModuleHandleA("ole32");
+
+    pStgConvertVariantToProperty = (void*)GetProcAddress(hole32, "StgConvertVariantToProperty");
+
+    if (!pStgConvertVariantToProperty)
+    {
+        win_skip("StgConvertVariantToProperty not available\n");
+        return;
+    }
+
+    own_propvalue = HeapAlloc(GetProcessHeap(), 0, sizeof(SERIALIZEDPROPERTYVALUE) + 20);
+
+    PropVariantInit(&propvar);
+
+    propvar.vt = VT_I4;
+    U(propvar).lVal = 0xfeabcdef;
+
+    len = 0xdeadbeef;
+    propvalue = pStgConvertVariantToProperty(&propvar, CP_WINUNICODE, NULL, &len,
+        0, FALSE, 0);
+
+    ok(propvalue == NULL, "got nonnull propvalue\n");
+    todo_wine ok(len == 8, "unexpected length %d\n", len);
+
+    if (len == 0xdeadbeef)
+    {
+        HeapFree(GetProcessHeap(), 0, own_propvalue);
+        return;
+    }
+
+    len = 20;
+    propvalue = pStgConvertVariantToProperty(&propvar, CP_WINUNICODE, own_propvalue, &len,
+        0, FALSE, 0);
+
+    ok(propvalue == own_propvalue, "unexpected propvalue %p\n", propvalue);
+    ok(len == 8, "unexpected length %d\n", len);
+    ok(!memcmp(propvalue, serialized_i4, 8), "got wrong data\n");
+
+    propvar.vt = VT_EMPTY;
+    len = 20;
+    own_propvalue->dwType = 0xdeadbeef;
+    propvalue = pStgConvertVariantToProperty(&propvar, CP_WINUNICODE, own_propvalue, &len,
+        0, FALSE, 0);
+
+    ok(propvalue == own_propvalue, "unexpected propvalue %p\n", propvalue);
+    ok(len == 4 || broken(len == 0) /* before Vista */, "unexpected length %d\n", len);
+    if (len) ok(!memcmp(propvalue, serialized_empty, 4), "got wrong data\n");
+    else ok(propvalue->dwType == 0xdeadbeef, "unexpected type %d\n", propvalue->dwType);
+
+    propvar.vt = VT_NULL;
+    len = 20;
+    propvalue = pStgConvertVariantToProperty(&propvar, CP_WINUNICODE, own_propvalue, &len,
+        0, FALSE, 0);
+
+    ok(propvalue == own_propvalue, "unexpected propvalue %p\n", propvalue);
+    ok(len == 4, "unexpected length %d\n", len);
+    ok(!memcmp(propvalue, serialized_null, 4), "got wrong data\n");
+
+    test_string_bstr = SysAllocString(test_string);
+
+    propvar.vt = VT_BSTR;
+    U(propvar).bstrVal = test_string_bstr;
+    len = 20;
+    propvalue = pStgConvertVariantToProperty(&propvar, CP_WINUNICODE, own_propvalue, &len,
+        0, FALSE, 0);
+
+    ok(propvalue == own_propvalue, "unexpected propvalue %p\n", propvalue);
+    ok(len == 20, "unexpected length %d\n", len);
+    ok(!memcmp(propvalue, serialized_bstr_wc, 20), "got wrong data\n");
+
+    len = 20;
+    propvalue = pStgConvertVariantToProperty(&propvar, CP_UTF8, own_propvalue, &len,
+        0, FALSE, 0);
+
+    ok(propvalue == own_propvalue, "unexpected propvalue %p\n", propvalue);
+    ok(len == 16, "unexpected length %d\n", len);
+    ok(!memcmp(propvalue, serialized_bstr_mb, 16), "got wrong data\n");
+
+    SysFreeString(test_string_bstr);
+
+    HeapFree(GetProcessHeap(), 0, own_propvalue);
+}
+
 START_TEST(propvariant)
 {
     test_validtypes();
     test_copy();
+    test_propertytovariant();
+    test_varianttoproperty();
 }

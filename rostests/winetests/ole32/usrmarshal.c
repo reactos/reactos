@@ -551,7 +551,6 @@ static IStream Test_Stream = { &TestStream_Vtbl };
 ULONG __RPC_USER WdtpInterfacePointer_UserSize(ULONG *, ULONG, ULONG, IUnknown *, REFIID);
 unsigned char * __RPC_USER WdtpInterfacePointer_UserMarshal(ULONG *, ULONG, unsigned char *, IUnknown *, REFIID);
 unsigned char * __RPC_USER WdtpInterfacePointer_UserUnmarshal(ULONG *, unsigned char *, IUnknown **, REFIID);
-void __RPC_USER WdtpInterfacePointer_UserFree(IUnknown *);
 
 static void marshal_WdtpInterfacePointer(DWORD umcb_ctx, DWORD ctx)
 {
@@ -624,7 +623,7 @@ static void marshal_WdtpInterfacePointer(DWORD umcb_ctx, DWORD ctx)
     ok(unk2 != NULL, "IUnknown object didn't unmarshal properly\n");
     HeapFree(GetProcessHeap(), 0, buffer);
     init_user_marshal_cb(&umcb, &stub_msg, &rpc_msg, NULL, 0, MSHCTX_INPROC);
-    WdtpInterfacePointer_UserFree(unk2);
+    IUnknown_Release(unk2);
 }
 
 static void test_marshal_WdtpInterfacePointer(void)

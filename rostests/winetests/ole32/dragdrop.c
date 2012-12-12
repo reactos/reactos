@@ -43,7 +43,7 @@ static HRESULT WINAPI DropTarget_QueryInterface(IDropTarget* iface, REFIID riid,
     if (IsEqualIID(riid, &IID_IUnknown) ||
         IsEqualIID(riid, &IID_IDropTarget))
     {
-        IUnknown_AddRef(iface);
+        IDropTarget_AddRef(iface);
         *ppvObject = iface;
         return S_OK;
     }

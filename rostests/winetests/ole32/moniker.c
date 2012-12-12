@@ -723,7 +723,7 @@ static HRESULT WINAPI ParseDisplayName_QueryInterface(IParseDisplayName *iface, 
         IsEqualIID(riid, &IID_IParseDisplayName))
     {
         *ppv = iface;
-        IUnknown_AddRef(iface);
+        IParseDisplayName_AddRef(iface);
         return S_OK;
     }
     *ppv = NULL;

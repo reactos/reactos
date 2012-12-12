@@ -299,7 +299,7 @@ static HRESULT WINAPI TestStream_QueryInterface(IStream *iface, REFIID riid, voi
         IsEqualIID(riid, &IID_IStream))
     {
         *ppv = iface;
-        IUnknown_AddRef(iface);
+        IStream_AddRef(iface);
         return S_OK;
     }
     *ppv = NULL;
