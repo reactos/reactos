@@ -21,9 +21,7 @@
 #ifndef __WINE_ATLBASE_H__
 #define __WINE_ATLBASE_H__
 
-#define COBJMACROS
-
-#include "atliface.h"
+#include <atliface.h>
 
 typedef HRESULT (WINAPI _ATL_CREATORFUNC)(void* pv, REFIID riid, LPVOID* ppv);
 typedef HRESULT (WINAPI _ATL_CREATORARGFUNC)(void* pv, REFIID riid, LPVOID* ppv, DWORD dw);
@@ -184,5 +182,6 @@ HRESULT WINAPI AtlModuleUnregisterServerEx(_ATL_MODULEW* pM, BOOL bUnRegTypeLib,
 HRESULT WINAPI AtlModuleTerm(_ATL_MODULEW* pM);
 HRESULT WINAPI AtlUnadvise(IUnknown *pUnkCP, const IID * iid, DWORD dw);
 HRESULT WINAPI AtlUnmarshalPtr(IStream *pStream, const IID *iid, IUnknown **ppUnk);
+HRESULT WINAPI AtlCreateRegistrar(IRegistrar**);
 
 #endif /* __WINE_ATLBASE_H__ */

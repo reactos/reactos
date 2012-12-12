@@ -75,7 +75,7 @@ static LRESULT CALLBACK AtlAxWin_wndproc( HWND hWnd, UINT wMsg, WPARAM wParam, L
 }
 
 /***********************************************************************
- *           AtlAxWinInit          [ATL.@]
+ *           AtlAxWinInit          [atl100.@]
  * Initializes the control-hosting code: registering the AtlAxWin,
  * AtlAxWin7 and AtlAxWinLic7 window classes and some messages.
  *
@@ -800,6 +800,7 @@ static HRESULT IOCS_Detach( IOCS *This ) /* remove subclassing */
         IOleObject *control = This->control;
 
         This->control = NULL;
+        IOleObject_Close( control, OLECLOSE_NOSAVE );
         IOleObject_SetClientSite( control, NULL );
         IOleObject_Release( control );
     }
@@ -960,7 +961,7 @@ static HRESULT IOCS_Create( HWND hWnd, IUnknown *pUnkControl, IOCS **ppSite )
 
 
 /***********************************************************************
- *           AtlAxCreateControl           [ATL.@]
+ *           AtlAxCreateControl           [atl100.@]
  */
 HRESULT WINAPI AtlAxCreateControl(LPCOLESTR lpszName, HWND hWnd,
         IStream *pStream, IUnknown **ppUnkContainer)
@@ -970,7 +971,7 @@ HRESULT WINAPI AtlAxCreateControl(LPCOLESTR lpszName, HWND hWnd,
 }
 
 /***********************************************************************
- *           AtlAxCreateControlEx            [ATL.@]
+ *           AtlAxCreateControlEx            [atl100.@]
  *
  * REMARKS
  *   See http://www.codeproject.com/com/cwebpage.asp for some background
@@ -988,7 +989,7 @@ HRESULT WINAPI AtlAxCreateControlEx(LPCOLESTR lpszName, HWND hWnd,
     IUnknown *pContainer;
     enum {IsGUID=0,IsHTML=1,IsURL=2} content;
 
-    TRACE("(%s %p %p %p %p %p %p)\n", debugstr_w(lpszName), hWnd, pStream, 
+    TRACE("(%s %p %p %p %p %p %p)\n", debugstr_w(lpszName), hWnd, pStream,
             ppUnkContainer, ppUnkControl, iidSink, punkSink);
 
     hRes = CLSIDFromString( lpszName, &controlId );
@@ -1002,7 +1003,7 @@ HRESULT WINAPI AtlAxCreateControlEx(LPCOLESTR lpszName, HWND hWnd,
         controlId = CLSID_WebBrowser;
     }
 
-    hRes = CoCreateInstance( &controlId, 0, CLSCTX_ALL, &IID_IOleObject, 
+    hRes = CoCreateInstance( &controlId, 0, CLSCTX_ALL, &IID_IOleObject,
             (void**) &pControl );
     if ( FAILED( hRes ) )
     {
@@ -1024,7 +1025,7 @@ HRESULT WINAPI AtlAxCreateControlEx(LPCOLESTR lpszName, HWND hWnd,
 
     IOleObject_QueryInterface( pControl, &IID_IUnknown, (void**) &pUnkControl );
     IOleObject_Release( pControl );
-     
+
 
     hRes = AtlAxAttachControl( pUnkControl, hWnd, &pContainer );
     if ( FAILED( hRes ) )
@@ -1039,7 +1040,7 @@ HRESULT WINAPI AtlAxCreateControlEx(LPCOLESTR lpszName, HWND hWnd,
             WARN( "Cannot query IWebBrowser2 interface: %08x\n", hRes );
         else {
             VARIANT url;
-            
+
             IWebBrowser2_put_Visible( browser, VARIANT_TRUE ); /* it seems that native does this on URL (but do not on MSHTML:! why? */
 
             V_VT(&url) = VT_BSTR;
@@ -1076,7 +1077,7 @@ HRESULT WINAPI AtlAxCreateControlEx(LPCOLESTR lpszName, HWND hWnd,
 }
 
 /***********************************************************************
- *           AtlAxAttachControl           [ATL.@]
+ *           AtlAxAttachControl           [atl100.@]
  */
 HRESULT WINAPI AtlAxAttachControl(IUnknown* pControl, HWND hWnd, IUnknown** ppUnkContainer)
 {
@@ -1128,7 +1129,7 @@ static LPDLGTEMPLATEW AX_ConvertDialogTemplate(LPCDLGTEMPLATEW src_tmpl)
 #define PUT_WORD(x)  do {WORD w = (x);PUT_BLOCK(&w, 1);} while(0)
 #define PUT_DWORD(x)  do {DWORD w = (x);PUT_BLOCK(&w, 2);} while(0)
     const WORD *tmp, *src = (const WORD *)src_tmpl;
-    WORD *output; 
+    WORD *output;
     DWORD allocated, filled; /* in WORDs */
     BOOL ext;
     WORD signature, dlgver, rescount;
@@ -1138,7 +1139,7 @@ static LPDLGTEMPLATEW AX_ConvertDialogTemplate(LPCDLGTEMPLATEW src_tmpl)
     output = HeapAlloc( GetProcessHeap(), 0, allocated * sizeof(WORD) );
     if (!output)
         return NULL;
-    
+
     /* header */
     tmp = src;
     signature = GET_WORD(src);
@@ -1233,7 +1234,7 @@ static LPDLGTEMPLATEW AX_ConvertDialogTemplate(LPCDLGTEMPLATEW src_tmpl)
 }
 
 /***********************************************************************
- *           AtlAxCreateDialogA           [ATL.@]
+ *           AtlAxCreateDialogA           [atl100.@]
  *
  * Creates a dialog window
  *
@@ -1242,7 +1243,7 @@ static LPDLGTEMPLATEW AX_ConvertDialogTemplate(LPCDLGTEMPLATEW src_tmpl)
  *  name    [I] Dialog box template name
  *  owner   [I] Dialog box parent HWND
  *  dlgProc [I] Dialog box procedure
- *  param   [I] This value will be passed to dlgProc as WM_INITDIALOG's message lParam 
+ *  param   [I] This value will be passed to dlgProc as WM_INITDIALOG's message lParam
  *
  * RETURNS
  *  Window handle of dialog window.
@@ -1268,7 +1269,7 @@ HWND WINAPI AtlAxCreateDialogA(HINSTANCE hInst, LPCSTR name, HWND owner, DLGPROC
 }
 
 /***********************************************************************
- *           AtlAxCreateDialogW           [ATL.@]
+ *           AtlAxCreateDialogW           [atl100.@]
  *
  * See AtlAxCreateDialogA
  *
@@ -1307,7 +1308,7 @@ HWND WINAPI AtlAxCreateDialogW(HINSTANCE hInst, LPCWSTR name, HWND owner, DLGPRO
 }
 
 /***********************************************************************
- *           AtlAxGetHost                 [ATL.@]
+ *           AtlAxGetHost                 [atl100.@]
  *
  */
 HRESULT WINAPI AtlAxGetHost(HWND hWnd, IUnknown **pUnk)
@@ -1329,7 +1330,7 @@ HRESULT WINAPI AtlAxGetHost(HWND hWnd, IUnknown **pUnk)
 }
 
 /***********************************************************************
- *           AtlAxGetControl              [ATL.@]
+ *           AtlAxGetControl              [atl100.@]
  *
  */
 HRESULT WINAPI AtlAxGetControl(HWND hWnd, IUnknown **pUnk)
