@@ -74,9 +74,9 @@ static const char* debugstr_user_flags(ULONG *pFlags)
     }
 
     if (HIWORD(*pFlags) == NDR_LOCAL_DATA_REPRESENTATION)
-        return wine_dbg_sprintf("MAKELONG(NDR_LOCAL_REPRESENTATION, %s)", loword);
+        return wine_dbg_sprintf("MAKELONG(%s, NDR_LOCAL_DATA_REPRESENTATION)", loword);
     else
-        return wine_dbg_sprintf("MAKELONG(0x%04x, %s)", HIWORD(*pFlags), loword);
+        return wine_dbg_sprintf("MAKELONG(%s, 0x%04x)", loword, HIWORD(*pFlags));
 }
 
 /******************************************************************************

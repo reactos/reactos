@@ -96,7 +96,7 @@ static HRESULT WINAPI EnumSTATDATA_QueryInterface(IEnumSTATDATA *iface, REFIID r
     if (IsEqualIID(riid, &IID_IUnknown) ||
         IsEqualIID(riid, &IID_IEnumSTATDATA))
     {
-        IUnknown_AddRef(iface);
+        IEnumSTATDATA_AddRef(iface);
         *ppv = iface;
         return S_OK;
     }

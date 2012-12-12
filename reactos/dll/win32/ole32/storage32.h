@@ -160,25 +160,24 @@ HRESULT FileLockBytesImpl_Construct(HANDLE hFile, DWORD openFlags, LPCWSTR pwcsN
  * Ole Convert support
  */
 
-void OLECONVERT_CreateOleStream(LPSTORAGE pStorage) DECLSPEC_HIDDEN;
+HRESULT STORAGE_CreateOleStream(IStorage*, DWORD) DECLSPEC_HIDDEN;
 HRESULT OLECONVERT_CreateCompObjStream(LPSTORAGE pStorage, LPCSTR strOleTypeName) DECLSPEC_HIDDEN;
 
 
 /****************************************************************************
- * Storage32BaseImpl definitions.
+ * StorageBaseImpl definitions.
  *
  * This structure defines the base information contained in all implementations
- * of IStorage32 contained in this file storage implementation.
+ * of IStorage contained in this file storage implementation.
  *
- * In OOP terms, this is the base class for all the IStorage32 implementations
+ * In OOP terms, this is the base class for all the IStorage implementations
  * contained in this file.
  */
 struct StorageBaseImpl
 {
-  const IStorageVtbl *lpVtbl;    /* Needs to be the first item in the struct
-			    * since we want to cast this in a Storage32 pointer */
-
-  const IPropertySetStorageVtbl *pssVtbl; /* interface for adding a properties stream */
+  IStorage IStorage_iface;
+  IPropertySetStorage IPropertySetStorage_iface; /* interface for adding a properties stream */
+  LONG ref;
 
   /*
    * Stream tracking list
@@ -190,11 +189,6 @@ struct StorageBaseImpl
    * Storage tracking list
    */
   struct list storageHead;
-
-  /*
-   * Reference count of this object
-   */
-  LONG ref;
 
   /*
    * TRUE if this object has been invalidated
@@ -418,24 +412,18 @@ SmallBlockChainStream* Storage32Impl_BigBlocksToSmallBlocks(
 /****************************************************************************
  * StgStreamImpl definitions.
  *
- * This class implements the IStream32 interface and represents a stream
+ * This class implements the IStream interface and represents a stream
  * located inside a storage object.
  */
 struct StgStreamImpl
 {
-  const IStreamVtbl *lpVtbl;  /* Needs to be the first item in the struct
-			 * since we want to cast this to an IStream pointer */
+  IStream IStream_iface;
+  LONG ref;
 
   /*
    * We are an entry in the storage object's stream handler list
    */
-
   struct list StrmListEntry;
-
-  /*
-   * Reference count
-   */
-  LONG		     ref;
 
   /*
    * Storage that is the parent(owner) of the stream
@@ -457,6 +445,11 @@ struct StgStreamImpl
    */
   ULARGE_INTEGER     currentPosition;
 };
+
+static inline StgStreamImpl *impl_from_IStream( IStream *iface )
+{
+    return CONTAINING_RECORD(iface, StgStreamImpl, IStream_iface);
+}
 
 /*
  * Method definition for the StgStreamImpl class.

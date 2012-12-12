@@ -44,15 +44,6 @@ HRESULT WINAPI  OleCreateLinkToFile(LPCOLESTR lpszFileName, REFIID riid,
 }
 
 /******************************************************************************
- *              SetConvertStg        [OLE32.@]
- */
-HRESULT WINAPI SetConvertStg(LPSTORAGE pStg, BOOL fConvert)
-{
-  FIXME("(%p,%x), stub!\n", pStg, fConvert);
-  return E_NOTIMPL;
-}
-
-/******************************************************************************
  *              OleCreateLink        [OLE32.@]
  */
 HRESULT WINAPI OleCreateLink(LPMONIKER pmkLinkSrc, REFIID riid, DWORD renderopt, LPFORMATETC lpFormatEtc,
@@ -80,32 +71,6 @@ HGLOBAL WINAPI OleGetIconOfClass(REFCLSID rclsid, LPOLESTR lpszLabel, BOOL fUseT
 {
   FIXME("(%p,%p,%x), stub!\n", rclsid, lpszLabel, fUseTypeAsLabel);
   return NULL;
-}
-
-
-/******************************************************************************
- *              OleCreateStaticFromData        [OLE32.@]
- */
-HRESULT     WINAPI OleCreateStaticFromData(LPDATAOBJECT pSrcDataObj, REFIID iid,
-                DWORD renderopt, LPFORMATETC pFormatEtc, LPOLECLIENTSITE pClientSite,
-                LPSTORAGE pStg, LPVOID* ppvObj)
-{
-  FIXME("(srcdata=%p, refiid=%s, renderopt=%x, formatetc=%p, client=%p, storage=%p, ppv=%p), stub!\n",
-        pSrcDataObj,debugstr_guid(iid),renderopt,pFormatEtc,pClientSite,pStg,ppvObj );
-  return E_NOTIMPL;
-}
-
-/******************************************************************************
- *              OleCreateLinkFromData        [OLE32.@]
- */
-
-HRESULT WINAPI  OleCreateLinkFromData(LPDATAOBJECT pSrcDataObj, REFIID riid,
-                DWORD renderopt, LPFORMATETC pFormatEtc,
-                LPOLECLIENTSITE pClientSite, LPSTORAGE pStg,
-                LPVOID* ppvObj)
-{
-  FIXME("(not shown), stub!\n");
-  return E_NOTIMPL;
 }
 
 /***********************************************************************

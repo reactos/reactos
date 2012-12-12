@@ -57,7 +57,7 @@ static void StgStreamImpl_Destroy(StgStreamImpl* This)
 
   /*
    * Release the reference we are holding on the parent storage.
-   * IStorage_Release((IStorage*)This->parentStorage);
+   * IStorage_Release(&This->parentStorage->IStorage_iface);
    *
    * No, don't do this. Some apps call IStorage_Release without
    * calling IStream_Release first. If we grab a reference the
@@ -74,9 +74,6 @@ static void StgStreamImpl_Destroy(StgStreamImpl* This)
 
   This->parentStorage = 0;
 
-  /*
-   * Finally, free the memory used-up by the class.
-   */
   HeapFree(GetProcessHeap(), 0, This);
 }
 
@@ -89,41 +86,22 @@ static HRESULT WINAPI StgStreamImpl_QueryInterface(
 		  REFIID         riid,	      /* [in] */
 		  void**         ppvObject)   /* [iid_is][out] */
 {
-  StgStreamImpl* const This=(StgStreamImpl*)iface;
+  StgStreamImpl* This = impl_from_IStream(iface);
 
-  /*
-   * Perform a sanity check on the parameters.
-   */
   if (ppvObject==0)
     return E_INVALIDARG;
 
-  /*
-   * Initialize the return parameter.
-   */
   *ppvObject = 0;
 
-  /*
-   * Compare the riid with the interface IDs implemented by this object.
-   */
   if (IsEqualIID(&IID_IUnknown, riid) ||
-      IsEqualIID(&IID_IPersist, riid) ||
-      IsEqualIID(&IID_IPersistStream, riid) ||
       IsEqualIID(&IID_ISequentialStream, riid) ||
       IsEqualIID(&IID_IStream, riid))
   {
-    *ppvObject = This;
+    *ppvObject = &This->IStream_iface;
   }
-
-  /*
-   * Check that we obtained an interface.
-   */
-  if ((*ppvObject)==0)
+  else
     return E_NOINTERFACE;
 
-  /*
-   * Query Interface always increases the reference count by one when it is
-   * successful
-   */
   IStream_AddRef(iface);
 
   return S_OK;
@@ -136,7 +114,7 @@ static HRESULT WINAPI StgStreamImpl_QueryInterface(
 static ULONG WINAPI StgStreamImpl_AddRef(
 		IStream* iface)
 {
-  StgStreamImpl* const This=(StgStreamImpl*)iface;
+  StgStreamImpl* This = impl_from_IStream(iface);
   return InterlockedIncrement(&This->ref);
 }
 
@@ -147,7 +125,7 @@ static ULONG WINAPI StgStreamImpl_AddRef(
 static ULONG WINAPI StgStreamImpl_Release(
 		IStream* iface)
 {
-  StgStreamImpl* const This=(StgStreamImpl*)iface;
+  StgStreamImpl* This = impl_from_IStream(iface);
 
   ULONG ref;
 
@@ -179,7 +157,7 @@ static HRESULT WINAPI StgStreamImpl_Read(
 		  ULONG          cb,        /* [in] */
 		  ULONG*         pcbRead)   /* [out] */
 {
-  StgStreamImpl* const This=(StgStreamImpl*)iface;
+  StgStreamImpl* This = impl_from_IStream(iface);
 
   ULONG bytesReadBuffer;
   HRESULT res;
@@ -235,7 +213,7 @@ static HRESULT WINAPI StgStreamImpl_Write(
 		  ULONG          cb,          /* [in] */
 		  ULONG*         pcbWritten)  /* [out] */
 {
-  StgStreamImpl* const This=(StgStreamImpl*)iface;
+  StgStreamImpl* This = impl_from_IStream(iface);
 
   ULONG bytesWritten = 0;
   HRESULT res;
@@ -316,7 +294,7 @@ static HRESULT WINAPI StgStreamImpl_Seek(
 		  DWORD           dwOrigin,         /* [in] */
 		  ULARGE_INTEGER* plibNewPosition) /* [out] */
 {
-  StgStreamImpl* const This=(StgStreamImpl*)iface;
+  StgStreamImpl* This = impl_from_IStream(iface);
 
   ULARGE_INTEGER newPosition;
   DirEntry currentEntry;
@@ -389,7 +367,7 @@ static HRESULT WINAPI StgStreamImpl_SetSize(
 				     IStream*      iface,
 				     ULARGE_INTEGER  libNewSize)   /* [in] */
 {
-  StgStreamImpl* const This=(StgStreamImpl*)iface;
+  StgStreamImpl* This = impl_from_IStream(iface);
 
   HRESULT      hr;
 
@@ -441,7 +419,7 @@ static HRESULT WINAPI StgStreamImpl_CopyTo(
 				    ULARGE_INTEGER* pcbRead,      /* [out] */
 				    ULARGE_INTEGER* pcbWritten)   /* [out] */
 {
-  StgStreamImpl* const This=(StgStreamImpl*)iface;
+  StgStreamImpl* This = impl_from_IStream(iface);
   HRESULT        hr = S_OK;
   BYTE           tmpBuffer[128];
   ULONG          bytesRead, bytesWritten, copySize;
@@ -516,7 +494,7 @@ static HRESULT WINAPI StgStreamImpl_Commit(
 		  IStream*      iface,
 		  DWORD           grfCommitFlags)  /* [in] */
 {
-  StgStreamImpl* const This=(StgStreamImpl*)iface;
+  StgStreamImpl* This = impl_from_IStream(iface);
 
   if (!This->parentStorage)
   {
@@ -547,7 +525,7 @@ static HRESULT WINAPI StgStreamImpl_LockRegion(
 					ULARGE_INTEGER cb,          /* [in] */
 					DWORD          dwLockType)  /* [in] */
 {
-  StgStreamImpl* const This=(StgStreamImpl*)iface;
+  StgStreamImpl* This = impl_from_IStream(iface);
 
   if (!This->parentStorage)
   {
@@ -565,7 +543,7 @@ static HRESULT WINAPI StgStreamImpl_UnlockRegion(
 					  ULARGE_INTEGER cb,          /* [in] */
 					  DWORD          dwLockType)  /* [in] */
 {
-  StgStreamImpl* const This=(StgStreamImpl*)iface;
+  StgStreamImpl* This = impl_from_IStream(iface);
 
   if (!This->parentStorage)
   {
@@ -590,7 +568,7 @@ static HRESULT WINAPI StgStreamImpl_Stat(
 		  STATSTG*       pstatstg,     /* [out] */
 		  DWORD          grfStatFlag)  /* [in] */
 {
-  StgStreamImpl* const This=(StgStreamImpl*)iface;
+  StgStreamImpl* This = impl_from_IStream(iface);
 
   DirEntry     currentEntry;
   HRESULT      hr;
@@ -650,7 +628,7 @@ static HRESULT WINAPI StgStreamImpl_Clone(
 				   IStream*     iface,
 				   IStream**    ppstm) /* [out] */
 {
-  StgStreamImpl* const This=(StgStreamImpl*)iface;
+  StgStreamImpl* This = impl_from_IStream(iface);
   HRESULT hres;
   StgStreamImpl* new_stream;
   LARGE_INTEGER seek_pos;
@@ -672,12 +650,12 @@ static HRESULT WINAPI StgStreamImpl_Clone(
   if (!new_stream)
     return STG_E_INSUFFICIENTMEMORY; /* Currently the only reason for new_stream=0 */
 
-  *ppstm = (IStream*) new_stream;
+  *ppstm = &new_stream->IStream_iface;
   IStream_AddRef(*ppstm);
 
   seek_pos.QuadPart = This->currentPosition.QuadPart;
 
-  hres=StgStreamImpl_Seek (*ppstm, seek_pos, STREAM_SEEK_SET, NULL);
+  hres = IStream_Seek(*ppstm, seek_pos, STREAM_SEEK_SET, NULL);
 
   assert (SUCCEEDED(hres));
 
@@ -687,7 +665,7 @@ static HRESULT WINAPI StgStreamImpl_Clone(
 /*
  * Virtual function table for the StgStreamImpl class.
  */
-static const IStreamVtbl StgStreamImpl_Vtbl =
+static const IStreamVtbl StgStreamVtbl =
 {
     StgStreamImpl_QueryInterface,
     StgStreamImpl_AddRef,
@@ -725,12 +703,12 @@ StgStreamImpl* StgStreamImpl_Construct(
 
   newStream = HeapAlloc(GetProcessHeap(), 0, sizeof(StgStreamImpl));
 
-  if (newStream!=0)
+  if (newStream)
   {
     /*
      * Set-up the virtual function table and reference count.
      */
-    newStream->lpVtbl    = &StgStreamImpl_Vtbl;
+    newStream->IStream_iface.lpVtbl = &StgStreamVtbl;
     newStream->ref       = 0;
 
     newStream->parentStorage = parentStorage;
@@ -739,7 +717,7 @@ StgStreamImpl* StgStreamImpl_Construct(
      * We want to nail-down the reference to the storage in case the
      * stream out-lives the storage in the client application.
      *
-     * -- IStorage_AddRef((IStorage*)newStream->parentStorage);
+     * -- IStorage_AddRef(&newStream->parentStorage->IStorage_iface);
      *
      * No, don't do this. Some apps call IStorage_Release without
      * calling IStream_Release first. If we grab a reference the

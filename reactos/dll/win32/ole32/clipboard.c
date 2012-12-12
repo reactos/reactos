@@ -662,8 +662,9 @@ static HRESULT render_embed_source_hack(IDataObject *data, LPFORMATETC fmt)
             ProgIDFromCLSID(&clsID, &strProgID);
 
             WideCharToMultiByte( CP_ACP, 0, strProgID, -1, strOleTypeName, sizeof(strOleTypeName), NULL, NULL );
-            OLECONVERT_CreateOleStream(std.u.pstg);
+            STORAGE_CreateOleStream(std.u.pstg, 0);
             OLECONVERT_CreateCompObjStream(std.u.pstg, strOleTypeName);
+            CoTaskMemFree(strProgID);
         }
     }
 
