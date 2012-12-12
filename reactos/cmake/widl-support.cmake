@@ -82,21 +82,23 @@ function(add_rpc_files __type)
     endforeach()
 endfunction()
 
-function(generate_idl_iids IDL_FILE)
-    get_filename_component(FILE ${IDL_FILE} NAME)
-    if(FILE STREQUAL "${IDL_FILE}")
-        set(IDL_FILE_FULL "${CMAKE_CURRENT_SOURCE_DIR}/${IDL_FILE}")
-    else()
-        set(IDL_FILE_FULL ${IDL_FILE})
-    endif()
-    get_includes(INCLUDES)
-    get_defines(DEFINES)
-    get_filename_component(NAME ${IDL_FILE} NAME_WE)
-    add_custom_command(
-        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_i.c
-        COMMAND native-widl ${INCLUDES} ${DEFINES} ${IDL_FLAGS} -u -o ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_i.c ${IDL_FILE_FULL}
-        DEPENDS ${IDL_FILE_FULL} native-widl)
-    set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${NAME}_i.c PROPERTIES GENERATED TRUE)
+function(generate_idl_iids)
+    foreach(IDL_FILE ${ARGN})
+        get_filename_component(FILE ${IDL_FILE} NAME)
+        if(FILE STREQUAL "${IDL_FILE}")
+            set(IDL_FILE_FULL "${CMAKE_CURRENT_SOURCE_DIR}/${IDL_FILE}")
+        else()
+            set(IDL_FILE_FULL ${IDL_FILE})
+        endif()
+        get_includes(INCLUDES)
+        get_defines(DEFINES)
+        get_filename_component(NAME ${IDL_FILE} NAME_WE)
+        add_custom_command(
+            OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_i.c
+            COMMAND native-widl ${INCLUDES} ${DEFINES} ${IDL_FLAGS} -u -o ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_i.c ${IDL_FILE_FULL}
+            DEPENDS ${IDL_FILE_FULL} native-widl)
+        set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${NAME}_i.c PROPERTIES GENERATED TRUE)
+    endforeach()
 endfunction()
 
 function(add_iid_library TARGET)
