@@ -72,8 +72,12 @@ BOOLEAN RemoveQuotes(PCHAR QuotedString)
 	return TRUE;
 }
 
-VOID LoadAndBootLinux(PCSTR OperatingSystemName, PCSTR Description)
+VOID
+LoadAndBootLinux(IN OperatingSystemItem* OperatingSystem,
+                 IN USHORT OperatingSystemVersion)
 {
+	PCSTR	SectionName = OperatingSystem->SystemPartition;
+	PCSTR	Description = OperatingSystem->LoadIdentifier;
 	PFILE	LinuxKernel = 0;
 	PFILE	LinuxInitrdFile = 0;
 	CHAR	TempString[260];
@@ -93,7 +97,7 @@ VOID LoadAndBootLinux(PCSTR OperatingSystemName, PCSTR Description)
 	UiDrawProgressBarCenter(0, 100, LinuxBootDescription);
 
 	// Parse the .ini file section
-	if (!LinuxParseIniSection(OperatingSystemName))
+	if (!LinuxParseIniSection(SectionName))
 	{
 		goto LinuxBootFailed;
 	}
@@ -235,18 +239,18 @@ LinuxBootFailed:
 	LinuxCommandLineSize = 0;
 }
 
-BOOLEAN LinuxParseIniSection(PCSTR OperatingSystemName)
+BOOLEAN LinuxParseIniSection(PCSTR SectionName)
 {
-	CHAR	SettingName[260];
-	ULONG	SectionId;
+	ULONG_PTR	SectionId;
+	CHAR		SettingName[260];
 
 	// Find all the message box settings and run them
-	UiShowMessageBoxesInSection(OperatingSystemName);
+	UiShowMessageBoxesInSection(SectionName);
 
 	// Try to open the operating system section in the .ini file
-	if (!IniOpenSection(OperatingSystemName, &SectionId))
+	if (!IniOpenSection(SectionName, &SectionId))
 	{
-		sprintf(SettingName, "Section [%s] not found in freeldr.ini.\n", OperatingSystemName);
+		sprintf(SettingName, "Section [%s] not found in freeldr.ini.\n", SectionName);
 		UiMessageBox(SettingName);
 		return FALSE;
 	}

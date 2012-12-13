@@ -80,9 +80,8 @@ extern PLOADER_SYSTEM_BLOCK WinLdrSystemBlock;
 // ReactOS Loading Functions
 //
 ///////////////////////////////////////////////////////////////////////////////////////
-VOID LoadAndBootWindows(PCSTR OperatingSystemName,
-                        PSTR SettingsValue,
-                        USHORT OperatingSystemVersion);
+VOID LoadAndBootWindows(IN OperatingSystemItem* OperatingSystem,
+                        IN USHORT OperatingSystemVersion);
 
 // conversion.c
 PVOID VaToPa(PVOID Va);
@@ -179,7 +178,9 @@ LoadAndBootWindowsCommon(
     LPCSTR BootPath,
     BOOLEAN Setup);
 
-VOID LoadReactOSSetup(VOID);
+VOID
+LoadReactOSSetup(IN OperatingSystemItem* OperatingSystem,
+                 IN USHORT OperatingSystemVersion);
 
 VOID
 WinLdrSetupMachineDependent(PLOADER_PARAMETER_BLOCK LoaderBlock);

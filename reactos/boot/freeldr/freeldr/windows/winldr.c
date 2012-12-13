@@ -456,22 +456,28 @@ LoadModule(
 }
 
 VOID
-LoadAndBootWindows(PCSTR OperatingSystemName,
-                   PSTR SettingsValue,
-                   USHORT OperatingSystemVersion)
+LoadAndBootWindows(IN OperatingSystemItem* OperatingSystem,
+                   IN USHORT OperatingSystemVersion)
 {
+	ULONG_PTR SectionId;
+	PCSTR SectionName = OperatingSystem->SystemPartition;
+	CHAR  SettingsValue[80];
 	BOOLEAN HasSection;
-	char  BootPath[MAX_PATH];
+	CHAR  BootPath[MAX_PATH];
 	CHAR  FileName[MAX_PATH];
 	CHAR  BootOptions[256];
 	PCHAR File;
 	BOOLEAN Status;
-	ULONG_PTR SectionId;
 	PLOADER_PARAMETER_BLOCK LoaderBlock;
+
+	// Get OS setting value
+	SettingsValue[0] = ANSI_NULL;
+	IniOpenSection("Operating Systems", &SectionId);
+	IniReadSettingByName(SectionId, SectionName, SettingsValue, sizeof(SettingsValue));
 
 	// Open the operating system section
 	// specified in the .ini file
-	HasSection = IniOpenSection(OperatingSystemName, &SectionId);
+	HasSection = IniOpenSection(SectionName, &SectionId);
 
 	UiDrawBackdrop();
 	UiDrawProgressBarCenter(1, 100, "Loading NT...");
@@ -480,7 +486,7 @@ LoadAndBootWindows(PCSTR OperatingSystemName,
 	if (!HasSection ||
 	    !IniReadSettingByName(SectionId, "SystemPath", BootPath, sizeof(BootPath)))
 	{
-		strcpy(BootPath, OperatingSystemName);
+		strcpy(BootPath, SectionName);
 	}
 
 	/* Special case for LiveCD */
@@ -499,7 +505,7 @@ LoadAndBootWindows(PCSTR OperatingSystemName,
 	if (!HasSection || !IniReadSettingByName(SectionId, "Options", BootOptions, sizeof(BootOptions)))
 	{
 		/* Get options after the title */
-		const CHAR*p = SettingsValue;
+		PCSTR p = SettingsValue;
 		while (*p == ' ' || *p == '"')
 			p++;
 		while (*p != '\0' && *p != '"')

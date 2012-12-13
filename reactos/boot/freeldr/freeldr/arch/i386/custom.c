@@ -40,8 +40,8 @@ VOID OptionMenuCustomBoot(VOID)
 		"ReactOS",
 		"Linux"
 		};
-	ULONG		CustomBootMenuCount = sizeof(CustomBootMenuList) / sizeof(CustomBootMenuList[0]);
-	ULONG		SelectedMenuItem;
+	ULONG	CustomBootMenuCount = sizeof(CustomBootMenuList) / sizeof(CustomBootMenuList[0]);
+	ULONG	SelectedMenuItem;
 
 	if (!UiDisplayMenu("Please choose a boot method:",
 	                   CustomBootMenuList,
@@ -74,10 +74,11 @@ VOID OptionMenuCustomBoot(VOID)
 
 VOID OptionMenuCustomBootDisk(VOID)
 {
-	CHAR	SectionName[100];
-	CHAR	BootDriveString[20];
-	ULONG	SectionId;
+	ULONG_PTR	SectionId;
+	CHAR		SectionName[100];
+	CHAR		BootDriveString[20];
 	TIMEINFO*	TimeInfo;
+	OperatingSystemItem	OperatingSystem;
 
 	RtlZeroMemory(SectionName, sizeof(SectionName));
 	RtlZeroMemory(BootDriveString, sizeof(BootDriveString));
@@ -111,16 +112,21 @@ VOID OptionMenuCustomBootDisk(VOID)
 
 	UiMessageBox(CustomBootPrompt);
 
-	LoadAndBootDrive(SectionName);
+	OperatingSystem.SystemPartition = SectionName;
+	OperatingSystem.LoadIdentifier  = NULL;
+	OperatingSystem.OsLoadOptions   = NULL;
+
+	LoadAndBootDrive(&OperatingSystem, 0);
 }
 
 VOID OptionMenuCustomBootPartition(VOID)
 {
-	CHAR	SectionName[100];
-	CHAR	BootDriveString[20];
-	CHAR	BootPartitionString[20];
-	ULONG	SectionId;
+	ULONG_PTR	SectionId;
+	CHAR		SectionName[100];
+	CHAR		BootDriveString[20];
+	CHAR		BootPartitionString[20];
 	TIMEINFO*	TimeInfo;
+	OperatingSystemItem	OperatingSystem;
 
 	RtlZeroMemory(SectionName, sizeof(SectionName));
 	RtlZeroMemory(BootDriveString, sizeof(BootDriveString));
@@ -166,17 +172,22 @@ VOID OptionMenuCustomBootPartition(VOID)
 
 	UiMessageBox(CustomBootPrompt);
 
-	LoadAndBootPartition(SectionName);
+	OperatingSystem.SystemPartition = SectionName;
+	OperatingSystem.LoadIdentifier  = NULL;
+	OperatingSystem.OsLoadOptions   = NULL;
+
+	LoadAndBootPartition(&OperatingSystem, 0);
 }
 
 VOID OptionMenuCustomBootBootSectorFile(VOID)
 {
-	CHAR	SectionName[100];
-	CHAR	BootDriveString[20];
-	CHAR	BootPartitionString[20];
-	CHAR	BootSectorFileString[200];
-	ULONG	SectionId;
+	ULONG_PTR	SectionId;
+	CHAR		SectionName[100];
+	CHAR		BootDriveString[20];
+	CHAR		BootPartitionString[20];
+	CHAR		BootSectorFileString[200];
 	TIMEINFO*	TimeInfo;
+	OperatingSystemItem	OperatingSystem;
 
 	RtlZeroMemory(SectionName, sizeof(SectionName));
 	RtlZeroMemory(BootDriveString, sizeof(BootDriveString));
@@ -234,19 +245,24 @@ VOID OptionMenuCustomBootBootSectorFile(VOID)
 
 	UiMessageBox(CustomBootPrompt);
 
-	LoadAndBootBootSector(SectionName);
+	OperatingSystem.SystemPartition = SectionName;
+	OperatingSystem.LoadIdentifier  = NULL;
+	OperatingSystem.OsLoadOptions   = NULL;
+
+	LoadAndBootBootSector(&OperatingSystem, 0);
 }
 
 VOID OptionMenuCustomBootLinux(VOID)
 {
-	CHAR	SectionName[100];
-	CHAR	BootDriveString[20];
-	CHAR	BootPartitionString[20];
-	CHAR	LinuxKernelString[200];
-	CHAR	LinuxInitrdString[200];
-	CHAR	LinuxCommandLineString[200];
-	ULONG	SectionId;
+	ULONG_PTR	SectionId;
+	CHAR		SectionName[100];
+	CHAR		BootDriveString[20];
+	CHAR		BootPartitionString[20];
+	CHAR		LinuxKernelString[200];
+	CHAR		LinuxInitrdString[200];
+	CHAR		LinuxCommandLineString[200];
 	TIMEINFO*	TimeInfo;
+	OperatingSystemItem	OperatingSystem;
 
 	RtlZeroMemory(SectionName, sizeof(SectionName));
 	RtlZeroMemory(BootDriveString, sizeof(BootDriveString));
@@ -331,7 +347,11 @@ VOID OptionMenuCustomBootLinux(VOID)
 
 	UiMessageBox(CustomBootPrompt);
 
-	LoadAndBootLinux(SectionName, "Custom Linux Setup");
+	OperatingSystem.SystemPartition = SectionName;
+	OperatingSystem.LoadIdentifier  = "Custom Linux Setup";
+	OperatingSystem.OsLoadOptions   = NULL;
+
+	LoadAndBootLinux(&OperatingSystem, 0);
 }
 
 VOID OptionMenuReboot(VOID)

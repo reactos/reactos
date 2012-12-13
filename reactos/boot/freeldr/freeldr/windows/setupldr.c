@@ -133,7 +133,9 @@ SetupLdrScanBootDrivers(PLIST_ENTRY BootDriverListHead, HINF InfHandle, LPCSTR S
     } while (InfFindNextLine(&InfContext, &InfContext));
 }
 
-VOID LoadReactOSSetup(VOID)
+VOID
+LoadReactOSSetup(IN OperatingSystemItem* OperatingSystem,
+                 IN USHORT OperatingSystemVersion)
 {
     CHAR FileName[512];
     CHAR BootPath[512];
