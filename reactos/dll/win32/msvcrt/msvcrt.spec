@@ -1266,7 +1266,7 @@
 @ cdecl -i386 longjmp(ptr long)
 @ cdecl malloc(long)
 @ cdecl mblen(ptr long)
-# stub mbrlen
+@ cdecl mbrlen(ptr long ptr)
 # stub mbrtowc
 # stub mbsdup_dbg
 # stub mbsrtowcs

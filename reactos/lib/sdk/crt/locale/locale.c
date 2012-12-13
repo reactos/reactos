@@ -1483,6 +1483,9 @@ void __init_global_locale()
     unsigned i;
     
     LOCK_LOCALE;
+    /* Someone created it before us */
+    if(global_locale)
+        return;
     global_locale = MSVCRT__create_locale(0, "C");
     
     MSVCRT___lc_codepage = MSVCRT_locale->locinfo->lc_codepage;

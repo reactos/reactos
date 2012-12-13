@@ -9,10 +9,8 @@
  *
  */
 
+#include <precomp.h>
 #include <mbstring.h>
-#include <stdlib.h>
-
-int isleadbyte(int byte);
 
 /*
  * @implemented
@@ -40,3 +38,33 @@ int mblen( const char *str, size_t size )
   }
   return 0;
 }
+
+size_t __cdecl mbrlen(const char *str, size_t len, mbstate_t *state)
+{
+    mbstate_t s = (state ? *state : 0);
+    size_t ret;
+
+    if(!len || !str || !*str)
+        return 0;
+
+    if(get_locinfo()->mb_cur_max == 1) {
+        return 1;
+    }else if(!s && isleadbyte((unsigned char)*str)) {
+        if(len == 1) {
+            s = (unsigned char)*str;
+            ret = -2;
+        }else {
+            ret = 2;
+        }
+    }else if(!s) {
+        ret = 1;
+    }else {
+        s = 0;
+        ret = 2;
+    }
+
+    if(state)
+        *state = s;
+    return ret;
+}
+
