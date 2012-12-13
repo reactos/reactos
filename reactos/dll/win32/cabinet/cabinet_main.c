@@ -365,6 +365,7 @@ HRESULT WINAPI Extract(SESSION *dest, LPCSTR szCabName)
 
     if ((end = strrchr(str, '\\')))
     {
+        path = str;
         end++;
         name = HeapAlloc( GetProcessHeap(), 0, strlen(end) + 1 );
         if (!name)
@@ -374,7 +375,6 @@ HRESULT WINAPI Extract(SESSION *dest, LPCSTR szCabName)
         }
         strcpy( name, end );
         *end = 0;
-        path = str;
     }
     else
     {
