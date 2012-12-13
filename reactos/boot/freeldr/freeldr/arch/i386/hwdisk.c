@@ -37,7 +37,7 @@ typedef struct tagDISKCONTEXT
 
 extern ULONG reactos_disk_count;
 extern ARC_DISK_SIGNATURE reactos_arc_disk_info[];
-extern char reactos_arc_strings[32][256];
+extern CHAR reactos_arc_strings[32][256];
 
 static CHAR Hex[] = "0123456789abcdef";
 UCHAR PcBiosDiskCount = 0;

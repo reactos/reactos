@@ -20,9 +20,9 @@
 #include <freeldr.h>
 
 ARC_DISK_SIGNATURE reactos_arc_disk_info[32]; // ARC Disk Information
-unsigned long reactos_disk_count = 0;
-char reactos_arc_hardware_data[HW_MAX_ARC_HEAP_SIZE] = {0};
-char reactos_arc_strings[32][256];
+ULONG reactos_disk_count = 0;
+CHAR reactos_arc_hardware_data[HW_MAX_ARC_HEAP_SIZE] = {0};
+CHAR reactos_arc_strings[32][256];
 
 ULONG	 GetDefaultOperatingSystem(OperatingSystemItem* OperatingSystemList, ULONG	 OperatingSystemCount)
 {

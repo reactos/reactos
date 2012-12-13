@@ -236,5 +236,5 @@ VOID LoadReactOSSetup(VOID)
                              LoaderBlock,
                              BootOptions,
                              BootPath,
-                             1);
+                             TRUE);
 }

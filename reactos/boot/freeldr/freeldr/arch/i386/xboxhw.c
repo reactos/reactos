@@ -28,7 +28,7 @@ static CHAR Hex[] = "0123456789ABCDEF";
 
 extern ULONG reactos_disk_count;
 extern ARC_DISK_SIGNATURE reactos_arc_disk_info[];
-extern char reactos_arc_strings[32][256];
+extern CHAR reactos_arc_strings[32][256];
 
 static PCM_PARTIAL_RESOURCE_LIST
 GetHarddiskConfigurationData(UCHAR DriveNumber, ULONG* pSize)
