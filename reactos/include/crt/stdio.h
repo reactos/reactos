@@ -322,12 +322,14 @@ extern "C" {
 #include <vadefs.h>
 #endif
 
+#if 0 //this is for MSVCRT80 and higher, which we don't use nor implement
 #ifdef _CRT_NON_CONFORMING_SWPRINTFS
 #ifndef __cplusplus
 #define swprintf _swprintf
 #define vswprintf _vswprintf
 #define _swprintf_l __swprintf_l
 #define _vswprintf_l __vswprintf_l
+#endif
 #endif
 #endif
 
