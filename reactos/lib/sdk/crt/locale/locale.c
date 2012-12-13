@@ -31,7 +31,7 @@
 #error _pctype should not be defined
 #endif
 
-unsigned int MSVCRT___lc_codepage = 0;
+unsigned int __lc_codepage = 0;
 int MSVCRT___lc_collate_cp = 0;
 LCID MSVCRT___lc_handle[LC_MAX - LC_MIN + 1] = { 0 };
 int __mb_cur_max = 1;
@@ -622,7 +622,7 @@ LCID* CDECL ___lc_handle_func(void)
  */
 unsigned int CDECL ___lc_codepage_func(void)
 {
-    return MSVCRT___lc_codepage;
+    return __lc_codepage;
 }
 
 /*********************************************************************
@@ -1391,7 +1391,7 @@ char* CDECL setlocale(int category, const char* locale)
     if(locinfo == MSVCRT_locale->locinfo) {
         int i;
 
-        MSVCRT___lc_codepage = locinfo->lc_codepage;
+        __lc_codepage = locinfo->lc_codepage;
         MSVCRT___lc_collate_cp = locinfo->lc_collate_cp;
         __mb_cur_max = locinfo->mb_cur_max;
         _pctype = locinfo->pctype;
@@ -1488,7 +1488,7 @@ void __init_global_locale()
         return;
     global_locale = MSVCRT__create_locale(0, "C");
     
-    MSVCRT___lc_codepage = MSVCRT_locale->locinfo->lc_codepage;
+    __lc_codepage = MSVCRT_locale->locinfo->lc_codepage;
     MSVCRT___lc_collate_cp = MSVCRT_locale->locinfo->lc_collate_cp;
     __mb_cur_max = MSVCRT_locale->locinfo->mb_cur_max;
     for(i=LC_MIN; i<=LC_MAX; i++)

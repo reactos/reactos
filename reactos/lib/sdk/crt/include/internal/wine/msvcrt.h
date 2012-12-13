@@ -25,7 +25,7 @@
 #include "windef.h"
 #include "winbase.h"
 
-extern int __lc_codepage;
+extern unsigned int __lc_codepage;
 extern int __lc_collate_cp;
 extern int __mb_cur_max;
 extern const unsigned short _ctype [257];
