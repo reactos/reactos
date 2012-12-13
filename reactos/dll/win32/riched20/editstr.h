@@ -67,7 +67,6 @@ typedef struct tagME_Style
   HFONT hFont; /* cached font for the style */
   TEXTMETRICW tm; /* cached font metrics for the style */
   int nRefs; /* reference count */
-  int nSequence; /* incremented when cache needs to be rebuilt, ie. every screen redraw */
 } ME_Style;
 
 typedef enum {
@@ -139,7 +138,6 @@ typedef enum {
 
 /* this paragraph was already wrapped and hasn't changed, every change resets that flag */
 #define MEPF_REWRAP   0x01
-#define MEPF_REPAINT  0x02
 /* v4.1 */
 #define MEPF_CELL     0x04 /* The paragraph is nested in a cell */
 #define MEPF_ROWSTART 0x08 /* Hidden empty paragraph at the start of the row */
@@ -186,7 +184,6 @@ typedef struct tagME_Paragraph
   int nFlags;
   POINT pt;
   int nHeight, nWidth;
-  int nLastPaintYPos, nLastPaintHeight;
   int nRows;
   struct tagME_DisplayItem *prev_para, *next_para;
 } ME_Paragraph;
@@ -335,7 +332,6 @@ typedef struct tagME_TextEditor
   int nTotalWidth, nLastTotalWidth;
   int nAvailWidth; /* 0 = wrap to client area, else wrap width in twips */
   int nUDArrowX;
-  int nSequence;
   COLORREF rgbBackColor;
   HBRUSH hbrBackground;
   BOOL bCaretAtEnd;
@@ -385,16 +381,12 @@ typedef struct tagME_Context
 {
   HDC hDC;
   POINT pt;
-  POINT ptRowOffset;
   RECT rcView;
-  HBRUSH hbrMargin;
   SIZE dpi;
   int nAvailWidth;
 
   /* those are valid inside ME_WrapTextParagraph and related */
-  POINT ptFirstRun;
   ME_TextEditor *editor;
-  int nSequence;
 } ME_Context;
 
 typedef struct tagME_WrapContext
