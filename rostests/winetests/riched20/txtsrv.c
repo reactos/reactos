@@ -657,7 +657,7 @@ static BOOL init_texthost(void)
 
 static void free_texthost(void)
 {
-    IUnknown_Release(txtserv);
+    ITextServices_Release(txtserv);
     CoTaskMemFree(dummyTextHost);
 }
 

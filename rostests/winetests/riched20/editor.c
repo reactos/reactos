@@ -2440,10 +2440,9 @@ static void test_EM_SCROLL(void)
        y_before, y_after);
 
     y_before = SendMessage(hwndRichEdit, EM_GETFIRSTVISIBLELINE, 0, 0);
-    SendMessage(hwndRichEdit, EM_SCROLL,
-                SB_LINEDOWN, 0); /* line down beyond bot */
+    r = SendMessage(hwndRichEdit, EM_SCROLL, SB_LINEDOWN, 0); /* line down beyond bot */
     y_after = SendMessage(hwndRichEdit, EM_GETFIRSTVISIBLELINE, 0, 0);
-    
+
     ok(r == 0x00010000,
        "EM_SCROLL line down returned indicating movement (0x%08x)\n", r);
     ok(y_before == y_after,
@@ -5012,6 +5011,8 @@ static void test_EM_STREAMIN(void)
 
   const char * streamText3 = "RichEdit1";
 
+  const char * streamTextUTF8BOM = "\xef\xbb\xbfTestUTF8WithBOM";
+
   const char * streamText4 =
       "This text just needs to be long enough to cause run to be split onto "
       "two separate lines and make sure the null terminating character is "
@@ -5112,6 +5113,20 @@ static void test_EM_STREAMIN(void)
       "EM_STREAMIN: Test 3 set wrong text: Result: %s\n",buffer);
   ok(es.dwError == -16, "EM_STREAMIN: Test 3 set error %d, expected %d\n", es.dwError, -16);
 
+  es.dwCookie = (DWORD_PTR)&streamTextUTF8BOM;
+  es.dwError = 0;
+  es.pfnCallback = test_EM_STREAMIN_esCallback;
+  result = SendMessage(hwndRichEdit, EM_STREAMIN, SF_TEXT, (LPARAM)&es);
+  ok(result == 18, "got %ld, expected %d\n", result, 18);
+
+  result = SendMessage(hwndRichEdit, WM_GETTEXT, 1024, (LPARAM) buffer);
+  ok(result  == 15,
+      "EM_STREAMIN: Test UTF8WithBOM returned %ld, expected 15\n", result);
+  result = strcmp (buffer,"TestUTF8WithBOM");
+  ok(result  == 0,
+      "EM_STREAMIN: Test UTF8WithBOM set wrong text: Result: %s\n",buffer);
+  ok(es.dwError == 0, "EM_STREAMIN: Test UTF8WithBOM set error %d, expected %d\n", es.dwError, 0);
+
   es.dwCookie = (DWORD_PTR)&cookieForStream4;
   es.dwError = 0;
   es.pfnCallback = test_EM_STREAMIN_esCallback2;
@@ -5131,7 +5146,7 @@ static void test_EM_STREAMIN(void)
 
   result = SendMessage(hwndRichEdit, WM_GETTEXT, 1024, (LPARAM) buffer);
   ok (result  == length5,
-      "EM_STREAMIN: Test 4 returned %ld, expected %d\n", result, length5);
+      "EM_STREAMIN: Test 5 returned %ld, expected %d\n", result, length5);
   ok(es.dwError == 0, "EM_STREAMIN: Test 5 set error %d, expected %d\n", es.dwError, 0);
 
   DestroyWindow(hwndRichEdit);
@@ -5158,7 +5173,7 @@ static void test_EM_StreamIn_Undo(void)
   char buffer[1024] = {0};
   const char randomtext[] = "Some text";
 
-  es.pfnCallback = (EDITSTREAMCALLBACK) EditStreamCallback;
+  es.pfnCallback = EditStreamCallback;
 
   /* StreamIn, no SFF_SELECTION */
   es.dwCookie = nCallbackCount;
@@ -5888,7 +5903,6 @@ static void test_undo_coalescing(void)
     result = strcmp(buffer, "one two three");
     ok (result == 0, "expected '%s' but got '%s'\n", "one two three", buffer);
     result = SendMessage(hwnd, EM_UNDO, 0, 0);
-    ok (result == TRUE, "Failed to undo typed characters.\n");
     ok (result == TRUE, "Failed to undo typed characters.\n");
     SendMessageA(hwnd, WM_GETTEXT, sizeof(buffer), (LPARAM)buffer);
     result = strcmp(buffer, "");

@@ -76,7 +76,7 @@ START_TEST(richole)
   ok(res, "SendMessage\n");
   ok(reOle != NULL, "EM_GETOLEINTERFACE\n");
 
-  hres = IUnknown_QueryInterface(reOle, &IID_ITextDocument,
+  hres = IRichEditOle_QueryInterface(reOle, &IID_ITextDocument,
                                  (void **) &txtDoc);
   ok(hres == S_OK, "IRichEditOle_QueryInterface\n");
   ok(txtDoc != NULL, "IRichEditOle_QueryInterface\n");
@@ -104,7 +104,7 @@ START_TEST(richole)
   IUnknown_Release(punk);
 
   ITextDocument_Release(txtDoc);
-  IUnknown_Release(reOle);
+  IRichEditOle_Release(reOle);
   DestroyWindow(w);
 
   /* Methods should return CO_E_RELEASED if the backing document has
