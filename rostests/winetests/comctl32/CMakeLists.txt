@@ -14,11 +14,13 @@ list(APPEND SOURCE
     misc.c
     monthcal.c
     mru.c
+    pager.c
     progress.c
     propsheet.c
     rebar.c
     status.c
     subclass.c
+    syslink.c
     tab.c
     toolbar.c
     tooltips.c

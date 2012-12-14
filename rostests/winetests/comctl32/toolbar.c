@@ -54,6 +54,24 @@ static const struct message ttgetdispinfo_parent_seq[] = {
     { 0 }
 };
 
+#define DEFINE_EXPECT(func) \
+    static BOOL expect_ ## func = FALSE, called_ ## func = FALSE
+
+#define CHECK_EXPECT2(func) \
+    do { \
+        ok(expect_ ##func, "unexpected call " #func "\n"); \
+        called_ ## func = TRUE; \
+    }while(0)
+
+#define CHECK_CALLED(func) \
+    do { \
+        ok(called_ ## func, "expected " #func "\n"); \
+        expect_ ## func = called_ ## func = FALSE; \
+    }while(0)
+
+#define SET_EXPECT(func) \
+    expect_ ## func = TRUE
+
 #define expect(EXPECTED,GOT) ok((GOT)==(EXPECTED), "Expected %d, got %d\n", (EXPECTED), (GOT))
 
 #define check_rect(name, val, exp, ...) ok(val.top == exp.top && val.bottom == exp.bottom && \
@@ -1610,6 +1628,7 @@ static void test_tooltip(void)
         {0,  21, TBSTATE_ENABLED, 0, {0, }, 0, -1},
     };
     NMTTDISPINFOW nmtti;
+    HWND tooltip;
 
     rebuild_toolbar(&hToolbar);
 
@@ -1631,6 +1650,13 @@ static void test_tooltip(void)
     SendMessageA(hToolbar, WM_NOTIFY, 0, (LPARAM)&nmtti);
     g_ResetDispTextPtr = FALSE;
 
+    DestroyWindow(hToolbar);
+
+    /* TBSTYLE_TOOLTIPS */
+    hToolbar = CreateWindowExA(0, TOOLBARCLASSNAME, NULL, WS_CHILD | WS_VISIBLE, 0, 0, 0, 0,
+        hMainWnd, (HMENU)5, GetModuleHandle(NULL), NULL);
+    tooltip = (HWND)SendMessageA(hToolbar, TB_GETTOOLTIPS, 0, 0);
+    ok(tooltip == NULL, "got %p\n", tooltip);
     DestroyWindow(hToolbar);
 }
 
@@ -1658,6 +1684,7 @@ static void test_get_set_style(void)
 
     style = SendMessageA(hToolbar, TB_GETSTYLE, 0, 0);
     style2 = GetWindowLongA(hToolbar, GWL_STYLE);
+todo_wine
     ok(style == style2, "got 0x%08x, expected 0x%08x\n", style, style2);
 
     /* try to alter common window bits */
@@ -1679,6 +1706,208 @@ static void test_get_set_style(void)
     ok(style == style2, "got 0x%08x, expected 0x%08x\n", style, style2);
 
     DestroyWindow(hToolbar);
+}
+
+static HHOOK g_tbhook;
+static HWND g_toolbar;
+
+DEFINE_EXPECT(g_hook_create);
+DEFINE_EXPECT(g_hook_WM_NCCREATE);
+DEFINE_EXPECT(g_hook_WM_CREATE);
+
+static LRESULT WINAPI toolbar_subclass_proc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    WNDPROC oldproc = (WNDPROC)GetWindowLongPtrA(hwnd, GWLP_USERDATA);
+    LRESULT ret;
+    DWORD style;
+
+    if (msg == WM_NCCREATE)
+    {
+        if (g_toolbar == hwnd)
+        {
+            CHECK_EXPECT2(g_hook_WM_NCCREATE);
+            g_toolbar = hwnd;
+            ret = CallWindowProcA(oldproc, hwnd, msg, wParam, lParam);
+
+            /* control is already set up */
+            style = SendMessageA(hwnd, TB_GETSTYLE, 0, 0);
+            ok(style != 0, "got %x\n", style);
+
+            style = GetWindowLongA(hwnd, GWL_STYLE);
+            ok((style & TBSTYLE_TOOLTIPS) == 0, "got 0x%08x\n", style);
+            SetWindowLongA(hwnd, GWL_STYLE, style|TBSTYLE_TOOLTIPS);
+            style = GetWindowLongA(hwnd, GWL_STYLE);
+            ok((style & TBSTYLE_TOOLTIPS) == TBSTYLE_TOOLTIPS, "got 0x%08x\n", style);
+
+            return ret;
+        }
+    }
+    else if (msg == WM_CREATE)
+    {
+        CREATESTRUCTA *cs = (CREATESTRUCTA*)lParam;
+
+        if (g_toolbar == hwnd)
+        {
+            CHECK_EXPECT2(g_hook_WM_CREATE);
+
+            style = GetWindowLongA(hwnd, GWL_STYLE);
+            ok((style & TBSTYLE_TOOLTIPS) == TBSTYLE_TOOLTIPS, "got 0x%08x\n", style);
+
+            /* test if toolbar-specific messages are already working before WM_CREATE */
+            style = SendMessageA(hwnd, TB_GETSTYLE, 0, 0);
+            ok(style != 0, "got %x\n", style);
+            ok((style & TBSTYLE_TOOLTIPS) == TBSTYLE_TOOLTIPS, "got 0x%x\n", style);
+            ok((cs->style & TBSTYLE_TOOLTIPS) == 0, "0x%08x\n", cs->style);
+
+            ret = CallWindowProcA(oldproc, hwnd, msg, wParam, lParam);
+
+            style = GetWindowLongA(hwnd, GWL_STYLE);
+            ok((style & TBSTYLE_TOOLTIPS) == TBSTYLE_TOOLTIPS, "got 0x%08x\n", style);
+
+            /* test if toolbar-specific messages are already working before WM_CREATE */
+            style = SendMessageA(hwnd, TB_GETSTYLE, 0, 0);
+            ok(style != 0, "got %x\n", style);
+            ok((style & TBSTYLE_TOOLTIPS) == TBSTYLE_TOOLTIPS, "got 0x%x\n", style);
+
+            return ret;
+        }
+    }
+
+    return CallWindowProcA(oldproc, hwnd, msg, wParam, lParam);
+}
+
+static LRESULT CALLBACK cbt_hook_proc(int code, WPARAM wParam, LPARAM lParam)
+{
+    if (code == HCBT_CREATEWND)
+    {
+        HWND hwnd = (HWND)wParam;
+
+        if (!g_toolbar)
+        {
+            WNDPROC oldproc;
+
+            CHECK_EXPECT2(g_hook_create);
+            g_toolbar = hwnd;
+            /* subclass */
+            oldproc = (WNDPROC)SetWindowLongPtrA(hwnd, GWLP_WNDPROC, (LONG_PTR)toolbar_subclass_proc);
+            SetWindowLongPtrA(hwnd, GWLP_USERDATA, (LONG_PTR)oldproc);
+        }
+        return 0;
+    }
+
+    return CallNextHookEx(g_tbhook, code, wParam, lParam);
+}
+
+static void test_create(void)
+{
+    HWND hwnd, tooltip;
+    DWORD style;
+
+    g_tbhook = SetWindowsHookA(WH_CBT, cbt_hook_proc);
+
+    SET_EXPECT(g_hook_create);
+    SET_EXPECT(g_hook_WM_NCCREATE);
+    SET_EXPECT(g_hook_WM_CREATE);
+
+    hwnd = CreateWindowExA(0, TOOLBARCLASSNAME, NULL, WS_CHILD | WS_VISIBLE, 0, 0, 0, 0,
+        hMainWnd, (HMENU)5, GetModuleHandle(NULL), NULL);
+
+    CHECK_CALLED(g_hook_create);
+    CHECK_CALLED(g_hook_WM_NCCREATE);
+    CHECK_CALLED(g_hook_WM_CREATE);
+
+    style = GetWindowLongA(hwnd, GWL_STYLE);
+    ok((style & TBSTYLE_TOOLTIPS) == TBSTYLE_TOOLTIPS, "got 0x%08x\n", style);
+
+    tooltip = (HWND)SendMessageA(hwnd, TB_GETTOOLTIPS, 0, 0);
+    ok(tooltip != NULL, "got %p\n", tooltip);
+    ok(GetParent(tooltip) == hMainWnd, "got %p, %p\n", hMainWnd, hwnd);
+
+    DestroyWindow(hwnd);
+    UnhookWindowsHook(WH_CBT, cbt_hook_proc);
+
+    /* TBSTYLE_TRANSPARENT */
+    hwnd = CreateWindowExA(0, TOOLBARCLASSNAME, NULL,
+        WS_CHILD|WS_VISIBLE|WS_CLIPSIBLINGS|TBSTYLE_FLAT|TBSTYLE_TOOLTIPS|TBSTYLE_GROUP,
+        0, 0, 0, 0, hMainWnd, (HMENU)5, GetModuleHandle(NULL), NULL);
+
+    style = GetWindowLongA(hwnd, GWL_STYLE);
+    ok((style & TBSTYLE_TRANSPARENT) == TBSTYLE_TRANSPARENT, "got 0x%08x\n", style);
+
+    style = SendMessageA(hwnd, TB_GETSTYLE, 0, 0);
+    ok((style & TBSTYLE_TRANSPARENT) == TBSTYLE_TRANSPARENT, "got 0x%08x\n", style);
+
+    DestroyWindow(hwnd);
+}
+
+typedef struct {
+    DWORD mask;
+    DWORD style;
+    DWORD style_set;
+} extended_style_t;
+
+static const extended_style_t extended_style_test[] = {
+    {
+      TBSTYLE_EX_DRAWDDARROWS | TBSTYLE_EX_HIDECLIPPEDBUTTONS | TBSTYLE_EX_DOUBLEBUFFER,
+      TBSTYLE_EX_DRAWDDARROWS | TBSTYLE_EX_HIDECLIPPEDBUTTONS | TBSTYLE_EX_DOUBLEBUFFER,
+      TBSTYLE_EX_DRAWDDARROWS | TBSTYLE_EX_HIDECLIPPEDBUTTONS | TBSTYLE_EX_DOUBLEBUFFER
+    },
+    {
+      TBSTYLE_EX_MIXEDBUTTONS, TBSTYLE_EX_MIXEDBUTTONS,
+      TBSTYLE_EX_DRAWDDARROWS | TBSTYLE_EX_HIDECLIPPEDBUTTONS | TBSTYLE_EX_DOUBLEBUFFER | TBSTYLE_EX_MIXEDBUTTONS
+    },
+
+    { 0, TBSTYLE_EX_MIXEDBUTTONS, TBSTYLE_EX_MIXEDBUTTONS },
+    { 0, 0, 0 },
+    { 0, TBSTYLE_EX_DRAWDDARROWS, TBSTYLE_EX_DRAWDDARROWS },
+    { 0, TBSTYLE_EX_HIDECLIPPEDBUTTONS, TBSTYLE_EX_HIDECLIPPEDBUTTONS },
+
+    { 0, 0, 0 },
+    { TBSTYLE_EX_HIDECLIPPEDBUTTONS, TBSTYLE_EX_MIXEDBUTTONS, 0 },
+    { TBSTYLE_EX_MIXEDBUTTONS, TBSTYLE_EX_HIDECLIPPEDBUTTONS, 0 },
+    { TBSTYLE_EX_DOUBLEBUFFER, TBSTYLE_EX_MIXEDBUTTONS, 0 },
+
+    {
+      TBSTYLE_EX_DOUBLEBUFFER | TBSTYLE_EX_MIXEDBUTTONS,
+      TBSTYLE_EX_MIXEDBUTTONS, TBSTYLE_EX_MIXEDBUTTONS
+    },
+    {
+      TBSTYLE_EX_DOUBLEBUFFER | TBSTYLE_EX_MIXEDBUTTONS,
+      TBSTYLE_EX_DOUBLEBUFFER, TBSTYLE_EX_DOUBLEBUFFER
+    }
+};
+
+static void test_TB_GET_SET_EXTENDEDSTYLE(void)
+{
+    DWORD style, oldstyle, oldstyle2;
+    const extended_style_t *ptr;
+    HWND hwnd = NULL;
+    int i;
+
+    rebuild_toolbar(&hwnd);
+
+    SendMessageA(hwnd, TB_SETEXTENDEDSTYLE, TBSTYLE_EX_DOUBLEBUFFER, TBSTYLE_EX_MIXEDBUTTONS);
+    style = SendMessageA(hwnd, TB_GETEXTENDEDSTYLE, 0, 0);
+    if (style == TBSTYLE_EX_MIXEDBUTTONS)
+    {
+        win_skip("Some extended style bits are not supported\n");
+        DestroyWindow(hwnd);
+        return;
+    }
+
+    for (i = 0; i < sizeof(extended_style_test)/sizeof(extended_style_t); i++)
+    {
+        ptr = &extended_style_test[i];
+
+        oldstyle2 = SendMessageA(hwnd, TB_GETEXTENDEDSTYLE, 0, 0);
+
+        oldstyle = SendMessageA(hwnd, TB_SETEXTENDEDSTYLE, ptr->mask, ptr->style);
+        ok(oldstyle == oldstyle2, "%d: got old style 0x%08x, expected 0x%08x\n", i, oldstyle, oldstyle2);
+        style = SendMessageA(hwnd, TB_GETEXTENDEDSTYLE, 0, 0);
+        ok(style == ptr->style_set, "%d: got style 0x%08x, expected 0x%08x\n", i, style, ptr->style_set);
+    }
+
+    DestroyWindow(hwnd);
 }
 
 START_TEST(toolbar)
@@ -1721,6 +1950,8 @@ START_TEST(toolbar)
     test_getstring();
     test_tooltip();
     test_get_set_style();
+    test_create();
+    test_TB_GET_SET_EXTENDEDSTYLE();
 
     PostQuitMessage(0);
     while(GetMessageA(&msg,0,0,0)) {

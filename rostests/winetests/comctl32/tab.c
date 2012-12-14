@@ -47,15 +47,11 @@ static void CheckSize(HWND hwnd, INT width, INT height, const char *msg, int lin
 
     SendMessage(hwnd, TCM_GETITEMRECT, 0, (LPARAM)&r);
     if (width >= 0 && height < 0)
-    {
-        ok_(__FILE__,line) (width == r.right - r.left, "%s: Expected width [%d] got [%d]\n",\
-        msg, width, r.right - r.left);
-    }
+        ok_(__FILE__,line) (width == r.right - r.left, "%s: Expected width [%d] got [%d]\n",
+            msg, width, r.right - r.left);
     else if (height >= 0 && width < 0)
-    {
-        ok_(__FILE__,line) (height == r.bottom - r.top,  "%s: Expected height [%d] got [%d]\n",\
-        msg, height, r.bottom - r.top);
-    }
+        ok_(__FILE__,line) (height == r.bottom - r.top,  "%s: Expected height [%d] got [%d]\n",
+            msg, height, r.bottom - r.top);
     else
         ok_(__FILE__,line) ((width  == r.right  - r.left) && (height == r.bottom - r.top ),
 	    "%s: Expected [%d,%d] got [%d,%d]\n", msg, width, height,
@@ -661,7 +657,6 @@ static void test_tab(INT nMinTabWidth)
     DestroyWindow (hwTab);
 
     ImageList_Destroy(himl);
-    DeleteObject(hFont);
 }
 
 static void test_width(void)
@@ -1428,6 +1423,36 @@ static void test_WM_CONTEXTMENU(void)
     DestroyWindow(hTab);
 }
 
+struct tabcreate_style {
+    DWORD style;
+    DWORD act_style;
+};
+
+static const struct tabcreate_style create_styles[] =
+{
+    { WS_CHILD|TCS_BOTTOM|TCS_VERTICAL, WS_CHILD|WS_CLIPSIBLINGS|TCS_BOTTOM|TCS_VERTICAL|TCS_MULTILINE },
+    { WS_CHILD|TCS_VERTICAL,            WS_CHILD|WS_CLIPSIBLINGS|TCS_VERTICAL|TCS_MULTILINE },
+    { 0 }
+};
+
+static void test_create(void)
+{
+    const struct tabcreate_style *ptr = create_styles;
+    DWORD style;
+    HWND hTab;
+
+    while (ptr->style)
+    {
+        hTab = CreateWindowA(WC_TABCONTROLA, "TestTab", ptr->style,
+            10, 10, 300, 100, parent_wnd, NULL, NULL, 0);
+        style = GetWindowLongA(hTab, GWL_STYLE);
+        ok(style == ptr->act_style, "expected style 0x%08x, got style 0x%08x\n", ptr->act_style, style);
+
+        DestroyWindow(hTab);
+        ptr++;
+    }
+}
+
 START_TEST(tab)
 {
     LOGFONTA logfont;
@@ -1465,6 +1490,7 @@ START_TEST(tab)
     test_TCM_SETITEMEXTRA();
     test_TCS_OWNERDRAWFIXED();
     test_WM_CONTEXTMENU();
+    test_create();
 
     DestroyWindow(parent_wnd);
 }

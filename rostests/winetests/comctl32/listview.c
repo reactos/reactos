@@ -3,7 +3,7 @@
  *
  * Copyright 2006 Mike McCormack for CodeWeavers
  * Copyright 2007 George Gov
- * Copyright 2009-2011 Nikolay Sivov
+ * Copyright 2009-2012 Nikolay Sivov
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -50,11 +50,11 @@ static HWND hwndparent, hwndparentW;
 static BOOL blockEdit;
 /* return nonzero on NM_HOVER */
 static BOOL g_block_hover;
-/* dumps LVN_ITEMCHANGED message data */
-static BOOL g_dump_itemchanged;
+/* notification data for LVN_ITEMCHANGED */
+static NMLISTVIEW g_nmlistview;
 /* format reported to control:
    -1 falls to defproc, anything else returned */
-static INT  notifyFormat;
+static INT notifyFormat;
 /* indicates we're running < 5.80 version */
 static BOOL g_is_below_5;
 /* item data passed to LVN_GETDISPINFOA */
@@ -391,11 +391,9 @@ static LRESULT WINAPI parent_wnd_proc(HWND hwnd, UINT message, WPARAM wParam, LP
               }
               break;
           case LVN_ITEMCHANGED:
-              if (g_dump_itemchanged)
               {
                   NMLISTVIEW *nmlv = (NMLISTVIEW*)lParam;
-                  trace("LVN_ITEMCHANGED: item=%d,new=%x,old=%x,changed=%x\n",
-                         nmlv->iItem, nmlv->uNewState, nmlv->uOldState, nmlv->uChanged);
+                  g_nmlistview = *nmlv;
               }
               break;
           case LVN_GETDISPINFOA:
@@ -2092,7 +2090,6 @@ static void test_multiselect(void)
         { "using VK_HOME", -1, VK_HOME, 1, -1 }
     };
 
-
     hwnd = create_listview_control(LVS_REPORT);
 
     for (i=0;i<items;i++) {
@@ -2238,6 +2235,131 @@ static void test_multiselect(void)
     expect(TRUE, r);
     r = ListView_GetSelectedCount(hwnd);
     expect(0, r);
+
+    /* 1. selection mark is update when new focused item is set */
+    style = GetWindowLongPtrA(hwnd, GWL_STYLE);
+    SetWindowLongPtrA(hwnd, GWL_STYLE, style & ~LVS_SINGLESEL);
+
+    r = SendMessage(hwnd, LVM_SETSELECTIONMARK, 0, -1);
+    expect(-1, r);
+
+    item.stateMask = LVIS_FOCUSED;
+    item.state     = LVIS_FOCUSED;
+    r = SendMessage(hwnd, LVM_SETITEMSTATE, 0, (LPARAM)&item);
+    expect(TRUE, r);
+
+    r = SendMessage(hwnd, LVM_GETSELECTIONMARK, 0, 0);
+    expect(0, r);
+
+    /* it's not updated if already set */
+    item.stateMask = LVIS_FOCUSED;
+    item.state     = LVIS_FOCUSED;
+    r = SendMessage(hwnd, LVM_SETITEMSTATE, 1, (LPARAM)&item);
+    expect(TRUE, r);
+
+    r = SendMessage(hwnd, LVM_GETSELECTIONMARK, 0, 0);
+    expect(0, r);
+
+    r = SendMessage(hwnd, LVM_SETSELECTIONMARK, 0, -1);
+    expect(0, r);
+
+    item.stateMask = LVIS_FOCUSED;
+    item.state     = LVIS_FOCUSED;
+    r = SendMessage(hwnd, LVM_SETITEMSTATE, 1, (LPARAM)&item);
+    expect(TRUE, r);
+
+    r = SendMessage(hwnd, LVM_GETSELECTIONMARK, 0, 0);
+    expect(-1, r);
+
+    /* need to reset focused item first */
+    item.stateMask = LVIS_FOCUSED;
+    item.state     = 0;
+    r = SendMessage(hwnd, LVM_SETITEMSTATE, -1, (LPARAM)&item);
+    expect(TRUE, r);
+
+    item.stateMask = LVIS_FOCUSED;
+    item.state     = LVIS_FOCUSED;
+    r = SendMessage(hwnd, LVM_SETITEMSTATE, 2, (LPARAM)&item);
+    expect(TRUE, r);
+
+    r = SendMessage(hwnd, LVM_GETSELECTIONMARK, 0, 0);
+    expect(2, r);
+
+    item.stateMask = LVIS_FOCUSED;
+    item.state     = 0;
+    r = SendMessage(hwnd, LVM_SETITEMSTATE, -1, (LPARAM)&item);
+    expect(TRUE, r);
+
+    r = SendMessage(hwnd, LVM_GETSELECTIONMARK, 0, 0);
+    expect(2, r);
+
+    /* 2. same tests, with LVM_SETITEM */
+    style = GetWindowLongPtrA(hwnd, GWL_STYLE);
+    SetWindowLongPtrA(hwnd, GWL_STYLE, style & ~LVS_SINGLESEL);
+
+    r = SendMessage(hwnd, LVM_SETSELECTIONMARK, 0, -1);
+    expect(2, r);
+
+    item.stateMask = LVIS_FOCUSED;
+    item.state     = LVIS_FOCUSED;
+    item.mask      = LVIF_STATE;
+    item.iItem = item.iSubItem = 0;
+    r = SendMessage(hwnd, LVM_SETITEMA, 0, (LPARAM)&item);
+    expect(TRUE, r);
+
+    r = SendMessage(hwnd, LVM_GETSELECTIONMARK, 0, 0);
+    expect(0, r);
+
+    /* it's not updated if already set */
+    item.stateMask = LVIS_FOCUSED;
+    item.state     = LVIS_FOCUSED;
+    item.mask      = LVIF_STATE;
+    item.iItem     = 1;
+    item.iSubItem  = 0;
+    r = SendMessage(hwnd, LVM_SETITEMA, 0, (LPARAM)&item);
+    expect(TRUE, r);
+
+    r = SendMessage(hwnd, LVM_GETSELECTIONMARK, 0, 0);
+    expect(0, r);
+
+    r = SendMessage(hwnd, LVM_SETSELECTIONMARK, 0, -1);
+    expect(0, r);
+
+    item.stateMask = LVIS_FOCUSED;
+    item.state     = LVIS_FOCUSED;
+    item.mask      = LVIF_STATE;
+    item.iItem     = 1;
+    item.iSubItem  = 0;
+    r = SendMessage(hwnd, LVM_SETITEMA, 0, (LPARAM)&item);
+    expect(TRUE, r);
+
+    r = SendMessage(hwnd, LVM_GETSELECTIONMARK, 0, 0);
+    expect(-1, r);
+
+    /* need to reset focused item first */
+    item.stateMask = LVIS_FOCUSED;
+    item.state     = 0;
+    r = SendMessage(hwnd, LVM_SETITEMSTATE, -1, (LPARAM)&item);
+    expect(TRUE, r);
+
+    item.stateMask = LVIS_FOCUSED;
+    item.state     = LVIS_FOCUSED;
+    item.mask      = LVIF_STATE;
+    item.iItem     = 2;
+    item.iSubItem  = 0;
+    r = SendMessage(hwnd, LVM_SETITEMA, 0, (LPARAM)&item);
+    expect(TRUE, r);
+
+    r = SendMessage(hwnd, LVM_GETSELECTIONMARK, 0, 0);
+    expect(2, r);
+
+    item.stateMask = LVIS_FOCUSED;
+    item.state     = 0;
+    r = SendMessage(hwnd, LVM_SETITEMSTATE, -1, (LPARAM)&item);
+    expect(TRUE, r);
+
+    r = SendMessage(hwnd, LVM_GETSELECTIONMARK, 0, 0);
+    expect(2, r);
 
     DestroyWindow(hwnd);
 }
@@ -2629,6 +2751,8 @@ static void test_sorting(void)
 
 static void test_ownerdata(void)
 {
+    static char test_str[] = "test";
+
     HWND hwnd;
     LONG_PTR style, ret;
     DWORD res;
@@ -2713,7 +2837,7 @@ static void test_ownerdata(void)
     expect(1, res);
     DestroyWindow(hwnd);
 
-    /* LVM_SETITEM is unsupported on LVS_OWNERDATA */
+    /* LVM_SETITEM and LVM_SETITEMTEXT is unsupported on LVS_OWNERDATA */
     hwnd = create_listview_control(LVS_OWNERDATA | LVS_REPORT);
     ok(hwnd != NULL, "failed to create a listview window\n");
     res = SendMessageA(hwnd, LVM_SETITEMCOUNT, 1, 0);
@@ -2726,6 +2850,10 @@ static void test_ownerdata(void)
     item.stateMask = LVIS_SELECTED;
     item.state     = LVIS_SELECTED;
     res = SendMessageA(hwnd, LVM_SETITEM, 0, (LPARAM)&item);
+    expect(FALSE, res);
+    memset(&item, 0, sizeof(item));
+    item.pszText = test_str;
+    res = SendMessageA(hwnd, LVM_SETITEMTEXT, 0, (LPARAM)&item);
     expect(FALSE, res);
     DestroyWindow(hwnd);
 
@@ -2768,34 +2896,67 @@ static void test_ownerdata(void)
     item.stateMask = LVIS_SELECTED;
     item.state     = LVIS_SELECTED;
 
-    g_dump_itemchanged = TRUE;
+    memset(&g_nmlistview, 0xcc, sizeof(g_nmlistview));
     res = SendMessageA(hwnd, LVM_SETITEMSTATE, -1, (LPARAM)&item);
     expect(TRUE, res);
-    g_dump_itemchanged = FALSE;
+    ok(g_nmlistview.iItem == -1, "got item %d\n", g_nmlistview.iItem);
+    ok(g_nmlistview.iSubItem == 0, "got subitem %d\n", g_nmlistview.iSubItem);
+    ok(g_nmlistview.uNewState == LVIS_SELECTED, "got new state 0x%08x\n", g_nmlistview.uNewState);
+    ok(g_nmlistview.uOldState == 0, "got old state 0x%08x\n", g_nmlistview.uOldState);
+    ok(g_nmlistview.uChanged == LVIF_STATE, "got changed 0x%08x\n", g_nmlistview.uChanged);
+    ok(g_nmlistview.ptAction.x == 0 && g_nmlistview.ptAction.y == 0, "got wrong ptAction value\n");
+    ok(g_nmlistview.lParam == 0, "got wrong lparam\n");
 
     ok_sequence(sequences, PARENT_SEQ_INDEX, ownerdata_setstate_all_parent_seq,
-                "ownerdata select all notification", TRUE);
+                "ownerdata select all notification", FALSE);
 
     /* select all again, note that all items are selected already */
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
     item.stateMask = LVIS_SELECTED;
     item.state     = LVIS_SELECTED;
-    g_dump_itemchanged = TRUE;
+
+    memset(&g_nmlistview, 0xcc, sizeof(g_nmlistview));
     res = SendMessageA(hwnd, LVM_SETITEMSTATE, -1, (LPARAM)&item);
     expect(TRUE, res);
-    g_dump_itemchanged = FALSE;
+    ok(g_nmlistview.iItem == -1, "got item %d\n", g_nmlistview.iItem);
+    ok(g_nmlistview.iSubItem == 0, "got subitem %d\n", g_nmlistview.iSubItem);
+    ok(g_nmlistview.uNewState == LVIS_SELECTED, "got new state 0x%08x\n", g_nmlistview.uNewState);
+    ok(g_nmlistview.uOldState == 0, "got old state 0x%08x\n", g_nmlistview.uOldState);
+    ok(g_nmlistview.uChanged == LVIF_STATE, "got changed 0x%08x\n", g_nmlistview.uChanged);
+    ok(g_nmlistview.ptAction.x == 0 && g_nmlistview.ptAction.y == 0, "got wrong ptAction value\n");
+    ok(g_nmlistview.lParam == 0, "got wrong lparam\n");
+
     ok_sequence(sequences, PARENT_SEQ_INDEX, ownerdata_setstate_all_parent_seq,
-                "ownerdata select all notification", TRUE);
+                "ownerdata select all notification", FALSE);
+
     /* deselect all */
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
     item.stateMask = LVIS_SELECTED;
     item.state     = 0;
-    g_dump_itemchanged = TRUE;
+
+    memset(&g_nmlistview, 0xcc, sizeof(g_nmlistview));
     res = SendMessageA(hwnd, LVM_SETITEMSTATE, -1, (LPARAM)&item);
     expect(TRUE, res);
-    g_dump_itemchanged = FALSE;
+    ok(g_nmlistview.iItem == -1, "got item %d\n", g_nmlistview.iItem);
+    ok(g_nmlistview.iSubItem == 0, "got subitem %d\n", g_nmlistview.iSubItem);
+    ok(g_nmlistview.uNewState == 0, "got new state 0x%08x\n", g_nmlistview.uNewState);
+    ok(g_nmlistview.uOldState == LVIS_SELECTED, "got old state 0x%08x\n", g_nmlistview.uOldState);
+    ok(g_nmlistview.uChanged == LVIF_STATE, "got changed 0x%08x\n", g_nmlistview.uChanged);
+    ok(g_nmlistview.ptAction.x == 0 && g_nmlistview.ptAction.y == 0, "got wrong ptAction value\n");
+    ok(g_nmlistview.lParam == 0, "got wrong lparam\n");
+
     ok_sequence(sequences, PARENT_SEQ_INDEX, ownerdata_deselect_all_parent_seq,
                 "ownerdata deselect all notification", TRUE);
+
+    /* nothing selected, deselect all again */
+    flush_sequences(sequences, NUM_MSG_SEQUENCES);
+    item.stateMask = LVIS_SELECTED;
+    item.state     = 0;
+
+    res = SendMessageA(hwnd, LVM_SETITEMSTATE, -1, (LPARAM)&item);
+    expect(TRUE, res);
+
+    ok_sequence(sequences, PARENT_SEQ_INDEX, empty_seq, "ownerdata deselect all notification", TRUE);
 
     /* select one, then deselect all */
     item.stateMask = LVIS_SELECTED;
@@ -2805,10 +2966,18 @@ static void test_ownerdata(void)
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
     item.stateMask = LVIS_SELECTED;
     item.state     = 0;
-    g_dump_itemchanged = TRUE;
+
+    memset(&g_nmlistview, 0xcc, sizeof(g_nmlistview));
     res = SendMessageA(hwnd, LVM_SETITEMSTATE, -1, (LPARAM)&item);
     expect(TRUE, res);
-    g_dump_itemchanged = FALSE;
+    ok(g_nmlistview.iItem == -1, "got item %d\n", g_nmlistview.iItem);
+    ok(g_nmlistview.iSubItem == 0, "got subitem %d\n", g_nmlistview.iSubItem);
+    ok(g_nmlistview.uNewState == 0, "got new state 0x%08x\n", g_nmlistview.uNewState);
+    ok(g_nmlistview.uOldState == LVIS_SELECTED, "got old state 0x%08x\n", g_nmlistview.uOldState);
+    ok(g_nmlistview.uChanged == LVIF_STATE, "got changed 0x%08x\n", g_nmlistview.uChanged);
+    ok(g_nmlistview.ptAction.x == 0 && g_nmlistview.ptAction.y == 0, "got wrong ptAction value\n");
+    ok(g_nmlistview.lParam == 0, "got wrong lparam\n");
+
     ok_sequence(sequences, PARENT_SEQ_INDEX, ownerdata_deselect_all_parent_seq,
                 "ownerdata select all notification", TRUE);
 
@@ -2824,16 +2993,18 @@ static void test_ownerdata(void)
     item.stateMask = LVIS_FOCUSED;
     res = SendMessageA(hwnd, LVM_GETITEMSTATE, 0, LVIS_FOCUSED);
     expect(0, res);
+
     /* setting all to focused returns failure value */
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
     item.stateMask = LVIS_FOCUSED;
     item.state     = LVIS_FOCUSED;
-    g_dump_itemchanged = TRUE;
+
     res = SendMessageA(hwnd, LVM_SETITEMSTATE, -1, (LPARAM)&item);
     expect(FALSE, res);
-    g_dump_itemchanged = FALSE;
+
     ok_sequence(sequences, PARENT_SEQ_INDEX, empty_seq,
                 "ownerdata focus all notification", FALSE);
+
     /* focus single item, remove all */
     item.stateMask = LVIS_FOCUSED;
     item.state     = LVIS_FOCUSED;
@@ -2842,32 +3013,58 @@ static void test_ownerdata(void)
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
     item.stateMask = LVIS_FOCUSED;
     item.state     = 0;
-    g_dump_itemchanged = TRUE;
+
+    memset(&g_nmlistview, 0xcc, sizeof(g_nmlistview));
     res = SendMessageA(hwnd, LVM_SETITEMSTATE, -1, (LPARAM)&item);
     expect(TRUE, res);
-    g_dump_itemchanged = FALSE;
+    ok(g_nmlistview.iItem == -1, "got item %d\n", g_nmlistview.iItem);
+    ok(g_nmlistview.iSubItem == 0, "got subitem %d\n", g_nmlistview.iSubItem);
+    ok(g_nmlistview.uNewState == 0, "got new state 0x%08x\n", g_nmlistview.uNewState);
+    ok(g_nmlistview.uOldState == LVIS_FOCUSED, "got old state 0x%08x\n", g_nmlistview.uOldState);
+    ok(g_nmlistview.uChanged == LVIF_STATE, "got changed 0x%08x\n", g_nmlistview.uChanged);
+    ok(g_nmlistview.ptAction.x == 0 && g_nmlistview.ptAction.y == 0, "got wrong ptAction value\n");
+    ok(g_nmlistview.lParam == 0, "got wrong lparam\n");
+
     ok_sequence(sequences, PARENT_SEQ_INDEX, ownerdata_defocus_all_parent_seq,
                 "ownerdata remove focus all notification", TRUE);
+
     /* set all cut */
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
     item.stateMask = LVIS_CUT;
     item.state     = LVIS_CUT;
-    g_dump_itemchanged = TRUE;
+
+    memset(&g_nmlistview, 0xcc, sizeof(g_nmlistview));
     res = SendMessageA(hwnd, LVM_SETITEMSTATE, -1, (LPARAM)&item);
     expect(TRUE, res);
-    g_dump_itemchanged = FALSE;
+    ok(g_nmlistview.iItem == -1, "got item %d\n", g_nmlistview.iItem);
+    ok(g_nmlistview.iSubItem == 0, "got subitem %d\n", g_nmlistview.iSubItem);
+    ok(g_nmlistview.uNewState == LVIS_CUT, "got new state 0x%08x\n", g_nmlistview.uNewState);
+    ok(g_nmlistview.uOldState == 0, "got old state 0x%08x\n", g_nmlistview.uOldState);
+    ok(g_nmlistview.uChanged == LVIF_STATE, "got changed 0x%08x\n", g_nmlistview.uChanged);
+    ok(g_nmlistview.ptAction.x == 0 && g_nmlistview.ptAction.y == 0, "got wrong ptAction value\n");
+    ok(g_nmlistview.lParam == 0, "got wrong lparam\n");
+
     ok_sequence(sequences, PARENT_SEQ_INDEX, ownerdata_setstate_all_parent_seq,
-                "ownerdata cut all notification", TRUE);
+                "ownerdata cut all notification", FALSE);
+
     /* all marked cut, try again */
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
     item.stateMask = LVIS_CUT;
     item.state     = LVIS_CUT;
-    g_dump_itemchanged = TRUE;
+
+    memset(&g_nmlistview, 0xcc, sizeof(g_nmlistview));
     res = SendMessageA(hwnd, LVM_SETITEMSTATE, -1, (LPARAM)&item);
     expect(TRUE, res);
-    g_dump_itemchanged = FALSE;
+    ok(g_nmlistview.iItem == -1, "got item %d\n", g_nmlistview.iItem);
+    ok(g_nmlistview.iSubItem == 0, "got subitem %d\n", g_nmlistview.iSubItem);
+    ok(g_nmlistview.uNewState == LVIS_CUT, "got new state 0x%08x\n", g_nmlistview.uNewState);
+    ok(g_nmlistview.uOldState == 0, "got old state 0x%08x\n", g_nmlistview.uOldState);
+    ok(g_nmlistview.uChanged == LVIF_STATE, "got changed 0x%08x\n", g_nmlistview.uChanged);
+    ok(g_nmlistview.ptAction.x == 0 && g_nmlistview.ptAction.y == 0, "got wrong ptAction value\n");
+    ok(g_nmlistview.lParam == 0, "got wrong lparam\n");
+
     ok_sequence(sequences, PARENT_SEQ_INDEX, ownerdata_setstate_all_parent_seq,
-                "ownerdata cut all notification #2", TRUE);
+                "ownerdata cut all notification #2", FALSE);
 
     DestroyWindow(hwnd);
 

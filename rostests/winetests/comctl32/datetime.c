@@ -121,6 +121,18 @@ static const struct message test_dtm_set_and_get_system_time_seq[] = {
     { 0 }
 };
 
+static const struct message test_dtm_set_and_get_systime_with_limits[] = {
+    { DTM_SETRANGE, sent|wparam, GDTR_MIN | GDTR_MAX },
+    { DTM_GETRANGE, sent|wparam, 0 },
+    { DTM_SETSYSTEMTIME, sent|wparam, 0 },
+    { DTM_GETSYSTEMTIME, sent|wparam, 0 },
+    { DTM_SETSYSTEMTIME, sent|wparam, 0 },
+    { DTM_GETSYSTEMTIME, sent|wparam, 0 },
+    { DTM_SETSYSTEMTIME, sent|wparam, 0 },
+    { DTM_GETSYSTEMTIME, sent|wparam, 0 },
+    { 0 }
+};
+
 static LRESULT WINAPI datetime_subclass_proc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     WNDPROC oldproc = (WNDPROC)GetWindowLongPtrA(hwnd, GWLP_USERDATA);
@@ -660,6 +672,55 @@ static void test_dtm_set_and_get_system_time(void)
     expect(4, (LRESULT)getSt.wDayOfWeek);
     st.wDayOfWeek = 4;
     expect_systime(&st, &getSt);
+}
+
+static void test_dtm_set_and_get_systemtime_with_limits(void)
+{
+    LRESULT r;
+    SYSTEMTIME st[2], getSt[2], refSt;
+    HWND hWnd;
+
+    hWnd = create_datetime_control(DTS_SHOWNONE);
+
+    flush_sequences(sequences, NUM_MSG_SEQUENCES);
+
+    /* set range */
+    fill_systime_struct(&st[0], 1980, 1, 3, 23, 14, 34, 37, 465);
+    fill_systime_struct(&st[1], 2007, 3, 2, 31, 23, 59, 59, 999);
+
+    r = SendMessage(hWnd, DTM_SETRANGE, GDTR_MIN | GDTR_MAX, (LPARAM)st);
+    expect(1, r);
+    r = SendMessage(hWnd, DTM_GETRANGE, 0, (LPARAM)getSt);
+    ok(r == (GDTR_MIN | GDTR_MAX), "Expected %x, not %x(GDTR_MIN) or %x(GDTR_MAX), got %lx\n", (GDTR_MIN | GDTR_MAX), GDTR_MIN, GDTR_MAX, r);
+    expect_systime(&st[0], &getSt[0]);
+    expect_systime(&st[1], &getSt[1]);
+
+    /* Initially set a valid time */
+    fill_systime_struct(&refSt, 1999, 9, 4, 9, 19, 9, 9, 999);
+    r = SendMessage(hWnd, DTM_SETSYSTEMTIME, GDT_VALID, (LPARAM)&refSt);
+    expect(1, r);
+    r = SendMessage(hWnd, DTM_GETSYSTEMTIME, 0, (LPARAM)&getSt[0]);
+    ok(r == GDT_VALID, "Expected %d, not %d(GDT_NONE) or %d(GDT_ERROR), got %ld\n", GDT_VALID, GDT_NONE, GDT_ERROR, r);
+    expect_systime(&refSt, &getSt[0]);
+
+    /* Now set an out-of-bounds time */
+    fill_systime_struct(&st[0], 2010, 1, 0, 1, 0, 0, 0, 0);
+
+    r = SendMessage(hWnd, DTM_SETSYSTEMTIME, GDT_VALID, (LPARAM)&st[0]);
+    expect(1, r);
+    r = SendMessage(hWnd, DTM_GETSYSTEMTIME, 0, (LPARAM)&getSt[0]);
+    ok(r == GDT_VALID, "Expected %d, not %d(GDT_NONE) or %d(GDT_ERROR), got %ld\n", GDT_VALID, GDT_NONE, GDT_ERROR, r);
+    expect_systime(&refSt, &getSt[0]);
+
+    fill_systime_struct(&st[0], 1977, 1, 0, 1, 0, 0, 0, 0);
+
+    r = SendMessage(hWnd, DTM_SETSYSTEMTIME, GDT_VALID, (LPARAM)&st[0]);
+    expect(1, r);
+    r = SendMessage(hWnd, DTM_GETSYSTEMTIME, 0, (LPARAM)&getSt[0]);
+    ok(r == GDT_VALID, "Expected %d, not %d(GDT_NONE) or %d(GDT_ERROR), got %ld\n", GDT_VALID, GDT_NONE, GDT_ERROR, r);
+    expect_systime(&refSt, &getSt[0]);
+
+    ok_sequence(sequences, DATETIME_SEQ_INDEX, test_dtm_set_and_get_systime_with_limits, "test_dtm_set_and_get_systime_with_limits", FALSE);
 
     DestroyWindow(hWnd);
 }
@@ -749,6 +810,7 @@ START_TEST(datetime)
     test_dtm_set_and_get_range();
     test_dtm_set_range_swap_min_max();
     test_dtm_set_and_get_system_time();
+    test_dtm_set_and_get_systemtime_with_limits();
     test_wm_set_get_text();
     test_dts_shownone();
 }

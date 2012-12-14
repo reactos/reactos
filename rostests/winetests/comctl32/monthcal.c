@@ -41,6 +41,8 @@
 #define PARENT_SEQ_INDEX    0
 #define MONTHCAL_SEQ_INDEX  1
 
+#define SEL_NOTIFY_TEST_ID  100
+
 static struct msg_sequence *sequences[NUM_MSG_SEQUENCES];
 
 static HWND parent_wnd;
@@ -385,6 +387,7 @@ static void test_monthcal(void)
 
     /* set both limits, then set max < min */
     GetSystemTime(&st[0]);
+    st[0].wDay = 25;
     st[1] = st[0];
     st[1].wYear++;
     ok(SendMessage(hwnd, MCM_SETRANGE, GDTR_MIN|GDTR_MAX, (LPARAM)st), "Failed to set limits\n");
@@ -482,6 +485,39 @@ static LRESULT WINAPI parent_wnd_proc(HWND hwnd, UINT message, WPARAM wParam, LP
 
             nmstate->prgDayState = months;
 
+            return TRUE;
+          }
+          case MCN_SELECT:
+          case MCN_SELCHANGE:
+          {
+            NMSELCHANGE *nmchg = (NMSELCHANGE*)lParam;
+            SYSTEMTIME st[2];
+            BOOL is_multisel = GetWindowLongPtr(nmchg->nmhdr.hwndFrom, GWL_STYLE) &
+                        MCS_MULTISELECT;
+
+            if(GetWindowLongPtr(nmchg->nmhdr.hwndFrom, GWLP_ID) != SEL_NOTIFY_TEST_ID)
+              break;
+            SendMessage(nmchg->nmhdr.hwndFrom, is_multisel ? MCM_GETSELRANGE :
+                        MCM_GETCURSEL, 0, (LPARAM)st);
+
+            expect(st[0].wYear,  nmchg->stSelStart.wYear);
+            expect(st[0].wMonth, nmchg->stSelStart.wMonth);
+            expect(0,            nmchg->stSelStart.wDayOfWeek);
+            expect(st[0].wDay,   nmchg->stSelStart.wDay);
+
+            if(is_multisel)
+            {
+              expect(st[1].wYear,  nmchg->stSelEnd.wYear);
+              expect(st[1].wMonth, nmchg->stSelEnd.wMonth);
+              expect(0,            nmchg->stSelEnd.wDayOfWeek);
+              expect(st[1].wDay,   nmchg->stSelEnd.wDay);
+            }
+            else
+              ok(!(nmchg->stSelEnd.wYear | nmchg->stSelEnd.wMonth |
+                        nmchg->stSelEnd.wDayOfWeek | nmchg->stSelEnd.wDay |
+                        nmchg->stSelEnd.wHour | nmchg->stSelEnd.wMinute |
+                        nmchg->stSelEnd.wSecond | nmchg->stSelEnd.wMilliseconds),
+                        "Non-zero member in stSelEnd\n");
             return TRUE;
           }
           default:
@@ -1918,6 +1954,51 @@ static void test_daystate(void)
     DestroyWindow(hwnd);
 }
 
+static void test_sel_notify(void)
+{
+    typedef struct
+    {
+        DWORD       val;
+        const char* name;
+    } Monthcal_style;
+
+    HWND hwnd;
+    RECT rc;
+    MCHITTESTINFO mchit = {sizeof(MCHITTESTINFO)};
+    SYSTEMTIME st;
+    Monthcal_style styles[] = {
+        {MCS_NOTODAY,                    "MCS_NOTODAY"},
+        {MCS_NOTODAY | MCS_MULTISELECT,  "MCS_NOTODAY | MCS_MULTISELECT"},
+        {MCS_DAYSTATE,                   "MCS_DAYSTATE"},
+        {MCS_DAYSTATE | MCS_MULTISELECT, "MCS_DAYSTATE | MCS_MULTISELECT"}
+    };
+    int i;
+
+    for(i = 0; i < sizeof styles / sizeof styles[0]; i++)
+    {
+        trace("%s\n", styles[i].name);
+        hwnd = create_monthcal_control(styles[i].val);
+        SetWindowLongPtr(hwnd, GWLP_ID, SEL_NOTIFY_TEST_ID);
+        assert(hwnd);
+        SendMessage(hwnd, MCM_GETMINREQRECT, 0, (LPARAM)&rc);
+        MoveWindow(hwnd, 0, 0, rc.right, rc.bottom, FALSE);
+        /* Simulate mouse click on some unselected day to generate
+            MCN_SELECT and MCN_SELCHANGE notifications */
+        mchit.pt.x = rc.right / 2;
+        mchit.pt.y = rc.bottom / 2;
+        SendMessage(hwnd, MCM_HITTEST, 0, (LPARAM)&mchit);
+        SendMessage(hwnd, MCM_GETCURSEL, 0, (LPARAM)&st);
+        while(st.wDay == mchit.st.wDay) /* Ensure that mchit.pt points to unselected day */
+        {
+            mchit.pt.y++;
+            SendMessage(hwnd, MCM_HITTEST, 0, (LPARAM)&mchit);
+        }
+        SendMessage(hwnd, WM_LBUTTONDOWN, 0, MAKELPARAM(mchit.pt.x, mchit.pt.y));
+        SendMessage(hwnd, WM_LBUTTONUP, 0, MAKELPARAM(mchit.pt.x, mchit.pt.y));
+        DestroyWindow(hwnd);
+    }
+}
+
 START_TEST(monthcal)
 {
     BOOL (WINAPI *pInitCommonControlsEx)(const INITCOMMONCONTROLSEX*);
@@ -1961,6 +2042,7 @@ START_TEST(monthcal)
     test_selrange();
     test_killfocus();
     test_daystate();
+    test_sel_notify();
 
     if (!load_v6_module(&ctx_cookie, &hCtx))
     {

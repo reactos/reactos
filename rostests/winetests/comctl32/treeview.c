@@ -33,10 +33,6 @@
 #include "v6util.h"
 #include "msg.h"
 
-// Hack wine! Not in Sdk CommCtrl.h!
-#define TVIS_FOCUSED          0x0001
-//
-
 static const char *TEST_CALLBACK_TEXT = "callback_text";
 
 static TVITEMA g_item_expanding, g_item_expanded;
@@ -205,6 +201,27 @@ static const struct message test_get_set_unicodeformat_seq[] = {
 static const struct message parent_expand_seq[] = {
     { WM_NOTIFY, sent|id, 0, 0, TVN_ITEMEXPANDINGA },
     { WM_NOTIFY, sent|id, 0, 0, TVN_ITEMEXPANDEDA },
+    { 0 }
+};
+
+static const struct message parent_expand_kb_seq[] = {
+    { WM_NOTIFY, sent|id|optional, 0, 0, TVN_KEYDOWN },
+    { WM_NOTIFY, sent|id, 0, 0, TVN_ITEMEXPANDINGA },
+    { WM_NOTIFY, sent|id, 0, 0, TVN_ITEMEXPANDEDA },
+    { WM_CHANGEUISTATE, sent|optional },
+    { 0 }
+};
+
+static const struct message parent_collapse_2nd_kb_seq[] = {
+    { WM_NOTIFY, sent|id|optional, 0, 0, TVN_KEYDOWN },
+    { WM_NOTIFY, sent|id, 0, 0, TVN_ITEMEXPANDINGA },
+    { WM_CHANGEUISTATE, sent|optional },
+    { 0 }
+};
+
+static const struct message parent_expand_empty_kb_seq[] = {
+    { WM_NOTIFY, sent|id|optional, 0, 0, TVN_KEYDOWN },
+    { WM_CHANGEUISTATE, sent|optional },
     { 0 }
 };
 
@@ -736,8 +753,8 @@ static void test_get_set_item(void)
     TVITEMA tviRoot = {0};
     int nBufferSize = 80;
     char szBuffer[80] = {0};
+    HWND hTree, hTree2;
     DWORD ret;
-    HWND hTree;
 
     hTree = create_treeview_control(0);
     fill_tree(hTree);
@@ -781,7 +798,18 @@ static void test_get_set_item(void)
     ok_sequence(sequences, TREEVIEW_SEQ_INDEX, test_get_set_item_seq,
         "test get set item", FALSE);
 
+    /* get item from a different tree */
+    hTree2 = create_treeview_control(0);
+
+    tviRoot.hItem = hRoot;
+    tviRoot.mask = TVIF_STATE;
+    tviRoot.state = 0;
+    ret = SendMessage( hTree2, TVM_GETITEMA, 0, (LPARAM)&tviRoot );
+    expect(TRUE, ret);
+    ok(tviRoot.state == TVIS_FOCUSED, "got state 0x%0x\n", tviRoot.state);
+
     DestroyWindow(hTree);
+    DestroyWindow(hTree2);
 }
 
 static void test_get_set_itemheight(void)
@@ -935,6 +963,10 @@ static void test_get_set_unicodeformat(void)
     hTree = create_treeview_control(0);
     fill_tree(hTree);
 
+    /* Check that an invalid format returned by NF_QUERY defaults to ANSI */
+    bPreviousSetting = (BOOL)SendMessage( hTree, TVM_GETUNICODEFORMAT, 0, 0 );
+    ok(bPreviousSetting == 0, "Format should be ANSI.\n");
+
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
 
     /* Set to Unicode */
@@ -986,10 +1018,17 @@ static LRESULT CALLBACK parent_wnd_proc(HWND hWnd, UINT message, WPARAM wParam, 
     }
 
     switch(message) {
+    case WM_NOTIFYFORMAT:
+    {
+        /* Make NF_QUERY return an invalid format to show that it defaults to ANSI */
+        if (lParam == NF_QUERY) return 0;
+        break;
+    }
+
     case WM_NOTIFY:
     {
         NMHDR *pHdr = (NMHDR *)lParam;
-    
+
         ok(pHdr->code != NM_TOOLTIPSCREATED, "Treeview should not send NM_TOOLTIPSCREATED\n");
         if (pHdr->idFrom == 100)
         {
@@ -1050,8 +1089,6 @@ static LRESULT CALLBACK parent_wnd_proc(HWND hWnd, UINT message, WPARAM wParam, 
                 ok(pTreeView->itemNew.mask ==
                    (TVIF_HANDLE | TVIF_SELECTEDIMAGE | TVIF_IMAGE | TVIF_PARAM | TVIF_STATE),
                    "got wrong mask %x\n", pTreeView->itemNew.mask);
-                ok((pTreeView->itemNew.state & TVIS_EXPANDED) == 0,
-                   "got wrong state %x\n", pTreeView->itemNew.state);
                 ok(pTreeView->itemOld.mask == 0,
                    "got wrong mask %x\n", pTreeView->itemOld.mask);
 
@@ -1361,6 +1398,11 @@ static void test_expandnotify(void)
     ret = SendMessageA(hTree, TVM_SELECTITEM, TVGN_CARET, (LPARAM)hRoot);
     expect(TRUE, ret);
 
+    flush_sequences(sequences, NUM_MSG_SEQUENCES);
+    ret = SendMessageA(hTree, TVM_EXPAND, TVE_COLLAPSE, (LPARAM)hRoot);
+    expect(FALSE, ret);
+    ok_sequence(sequences, PARENT_SEQ_INDEX, empty_seq, "no collapse notifications", FALSE);
+
     g_get_from_expand = TRUE;
     /* expand */
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
@@ -1425,6 +1467,67 @@ static void test_expandnotify(void)
     ret = SendMessageA(hTree, TVM_EXPAND, TVE_TOGGLE, (LPARAM)hRoot);
     expect(TRUE, ret);
     ok_sequence(sequences, PARENT_SEQ_INDEX, empty_seq, "toggle node (collapse)", FALSE);
+
+    DestroyWindow(hTree);
+
+    /* some keyboard events are also translated to expand */
+    hTree = create_treeview_control(0);
+    fill_tree(hTree);
+
+    /* preselect root node here */
+    ret = SendMessageA(hTree, TVM_SELECTITEM, TVGN_CARET, (LPARAM)hRoot);
+    expect(TRUE, ret);
+
+    g_get_from_expand = TRUE;
+    flush_sequences(sequences, NUM_MSG_SEQUENCES);
+    ret = SendMessageA(hTree, WM_KEYDOWN, VK_ADD, 0);
+    expect(FALSE, ret);
+    ok_sequence(sequences, PARENT_SEQ_INDEX, parent_expand_kb_seq, "expand node", FALSE);
+    ok(g_item_expanding.state == TVIS_SELECTED, "got state on TVN_ITEMEXPANDING 0x%08x\n",
+       g_item_expanding.state);
+    ok(g_item_expanded.state == (TVIS_SELECTED|TVIS_EXPANDED), "got state on TVN_ITEMEXPANDED 0x%08x\n",
+       g_item_expanded.state);
+
+    flush_sequences(sequences, NUM_MSG_SEQUENCES);
+    ret = SendMessageA(hTree, WM_KEYDOWN, VK_ADD, 0);
+    expect(FALSE, ret);
+    ok_sequence(sequences, PARENT_SEQ_INDEX, parent_expand_kb_seq, "expand node again", FALSE);
+    ok(g_item_expanding.state == (TVIS_SELECTED|TVIS_EXPANDED|TVIS_EXPANDEDONCE), "got state on TVN_ITEMEXPANDING 0x%08x\n",
+       g_item_expanding.state);
+    ok(g_item_expanded.state == (TVIS_SELECTED|TVIS_EXPANDED|TVIS_EXPANDEDONCE), "got state on TVN_ITEMEXPANDED 0x%08x\n",
+       g_item_expanded.state);
+
+    flush_sequences(sequences, NUM_MSG_SEQUENCES);
+    ret = SendMessageA(hTree, WM_KEYDOWN, VK_SUBTRACT, 0);
+    expect(FALSE, ret);
+    ok_sequence(sequences, PARENT_SEQ_INDEX, parent_expand_kb_seq, "collapse node", FALSE);
+    ok(g_item_expanding.state == (TVIS_SELECTED|TVIS_EXPANDED|TVIS_EXPANDEDONCE), "got state on TVN_ITEMEXPANDING 0x%08x\n",
+       g_item_expanding.state);
+    ok(g_item_expanded.state == (TVIS_SELECTED|TVIS_EXPANDEDONCE), "got state on TVN_ITEMEXPANDED 0x%08x\n",
+       g_item_expanded.state);
+
+    flush_sequences(sequences, NUM_MSG_SEQUENCES);
+    ret = SendMessageA(hTree, WM_KEYDOWN, VK_SUBTRACT, 0);
+    expect(FALSE, ret);
+    ok_sequence(sequences, PARENT_SEQ_INDEX, parent_collapse_2nd_kb_seq, "collapse node again", FALSE);
+    ok(g_item_expanding.state == (TVIS_SELECTED|TVIS_EXPANDEDONCE), "got state on TVN_ITEMEXPANDING 0x%08x\n",
+       g_item_expanding.state);
+    g_get_from_expand = FALSE;
+
+    flush_sequences(sequences, NUM_MSG_SEQUENCES);
+    ret = SendMessageA(hTree, WM_KEYDOWN, VK_ADD, 0);
+    expect(FALSE, ret);
+    ok_sequence(sequences, PARENT_SEQ_INDEX, parent_expand_kb_seq, "expand node", FALSE);
+
+    /* go to child */
+    ret = SendMessageA(hTree, WM_KEYDOWN, VK_RIGHT, 0);
+    expect(FALSE, ret);
+
+    /* try to expand child that doesn't have children itself */
+    flush_sequences(sequences, NUM_MSG_SEQUENCES);
+    ret = SendMessageA(hTree, WM_KEYDOWN, VK_ADD, 0);
+    expect(FALSE, ret);
+    ok_sequence(sequences, PARENT_SEQ_INDEX, parent_expand_empty_kb_seq, "expand node with no children", FALSE);
 
     DestroyWindow(hTree);
 }
@@ -1556,6 +1659,55 @@ static void test_delete_items(void)
     DestroyWindow(hTree);
 }
 
+static void test_cchildren(void)
+{
+    HWND hTree;
+    INT ret;
+    TVITEMA item;
+
+    hTree = create_treeview_control(0);
+    fill_tree(hTree);
+
+    ret = SendMessage(hTree, TVM_DELETEITEM, 0, (LPARAM)hChild);
+    expect(TRUE, ret);
+
+    /* check cChildren - automatic mode */
+    item.hItem = hRoot;
+    item.mask = TVIF_CHILDREN;
+
+    ret = SendMessageA(hTree, TVM_GETITEMA, 0, (LPARAM)&item);
+    expect(TRUE, ret);
+    expect(0, item.cChildren);
+
+    DestroyWindow(hTree);
+
+    /* start over */
+    hTree = create_treeview_control(0);
+    fill_tree(hTree);
+
+    /* turn off automatic mode by setting cChildren explicitly */
+    item.hItem = hRoot;
+    item.mask = TVIF_CHILDREN;
+
+    ret = SendMessageA(hTree, TVM_GETITEMA, 0, (LPARAM)&item);
+    expect(TRUE, ret);
+    expect(1, item.cChildren);
+
+    ret = SendMessageA(hTree, TVM_SETITEMA, 0, (LPARAM)&item);
+    expect(TRUE, ret);
+
+    ret = SendMessage(hTree, TVM_DELETEITEM, 0, (LPARAM)hChild);
+    expect(TRUE, ret);
+
+    /* check cChildren */
+    ret = SendMessageA(hTree, TVM_GETITEMA, 0, (LPARAM)&item);
+    expect(TRUE, ret);
+todo_wine
+    expect(1, item.cChildren);
+
+    DestroyWindow(hTree);
+}
+
 struct _ITEM_DATA
 {
     HTREEITEM  parent; /* for root value of parent field is unidetified */
@@ -1611,9 +1763,9 @@ static void test_htreeitem_layout(void)
 
 static void test_TVS_CHECKBOXES(void)
 {
-    HIMAGELIST himl;
+    HIMAGELIST himl, himl2;
+    HWND hTree, hTree2;
     TVITEMA item;
-    HWND hTree;
     DWORD ret;
 
     hTree = create_treeview_control(0);
@@ -1643,6 +1795,10 @@ static void test_TVS_CHECKBOXES(void)
     himl = (HIMAGELIST)SendMessageA(hTree, TVM_GETIMAGELIST, TVSIL_STATE, 0);
     ok(himl != NULL, "got %p\n", himl);
 
+    himl2 = (HIMAGELIST)SendMessageA(hTree, TVM_GETIMAGELIST, TVSIL_STATE, 0);
+    ok(himl2 != NULL, "got %p\n", himl2);
+    ok(himl2 == himl, "got %p, expected %p\n", himl2, himl);
+
     item.hItem = hRoot;
     item.mask = TVIF_STATE;
     item.state = 0;
@@ -1659,6 +1815,25 @@ static void test_TVS_CHECKBOXES(void)
     expect(TRUE, ret);
     ok(item.state == INDEXTOSTATEIMAGEMASK(1), "got 0x%x\n", item.state);
 
+    /* create another control and check its checkbox list */
+    hTree2 = create_treeview_control(0);
+    fill_tree(hTree2);
+
+    /* set some index for a child */
+    item.hItem = hChild;
+    item.mask = TVIF_STATE;
+    item.state = INDEXTOSTATEIMAGEMASK(4);
+    item.stateMask = TVIS_STATEIMAGEMASK;
+    ret = SendMessageA(hTree2, TVM_SETITEMA, 0, (LPARAM)&item);
+    expect(TRUE, ret);
+
+    /* enabling check boxes set all items to 1 state image index */
+    SetWindowLongA(hTree2, GWL_STYLE, GetWindowLongA(hTree, GWL_STYLE) | TVS_CHECKBOXES);
+    himl2 = (HIMAGELIST)SendMessageA(hTree2, TVM_GETIMAGELIST, TVSIL_STATE, 0);
+    ok(himl2 != NULL, "got %p\n", himl2);
+    ok(himl != himl2, "got %p, expected %p\n", himl2, himl);
+
+    DestroyWindow(hTree2);
     DestroyWindow(hTree);
 
     /* the same, but initially created with TVS_CHECKBOXES */
@@ -1726,6 +1901,47 @@ static void test_TVM_GETNEXTITEM(void)
 
     item = (HTREEITEM)SendMessageA(hTree, TVM_GETNEXTITEM, TVGN_PARENT, (LPARAM)hChild);
     ok(item == hRoot, "got %p, expected %p\n", item, hRoot);
+
+    DestroyWindow(hTree);
+}
+
+static void test_TVM_HITTEST(void)
+{
+    HWND hTree;
+    LRESULT ret;
+    RECT rc;
+    TVHITTESTINFO ht;
+
+    hTree = create_treeview_control(0);
+    fill_tree(hTree);
+
+    *(HTREEITEM*)&rc = hRoot;
+    ret = SendMessage(hTree, TVM_GETITEMRECT, TRUE, (LPARAM)&rc);
+    expect(TRUE, (BOOL)ret);
+
+    ht.pt.x = rc.left-1;
+    ht.pt.y = rc.top;
+
+    ret = SendMessage(hTree, TVM_HITTEST, 0, (LPARAM)&ht);
+    ok((HTREEITEM)ret == hRoot, "got %p, expected %p\n", (HTREEITEM)ret, hRoot);
+    ok(ht.hItem == hRoot, "got %p, expected %p\n", ht.hItem, hRoot);
+    ok(ht.flags == TVHT_ONITEMBUTTON, "got %d, expected %d\n", ht.flags, TVHT_ONITEMBUTTON);
+
+    ret = SendMessageA(hTree, TVM_EXPAND, TVE_EXPAND, (LPARAM)hRoot);
+    expect(TRUE, (BOOL)ret);
+
+    *(HTREEITEM*)&rc = hChild;
+    ret = SendMessage(hTree, TVM_GETITEMRECT, TRUE, (LPARAM)&rc);
+    expect(TRUE, (BOOL)ret);
+
+    ht.pt.x = rc.left-1;
+    ht.pt.y = rc.top;
+
+    ret = SendMessage(hTree, TVM_HITTEST, 0, (LPARAM)&ht);
+    ok((HTREEITEM)ret == hChild, "got %p, expected %p\n", (HTREEITEM)ret, hChild);
+    ok(ht.hItem == hChild, "got %p, expected %p\n", ht.hItem, hChild);
+    /* Wine returns item button here, but this item has no button */
+    todo_wine ok(ht.flags == TVHT_ONITEMINDENT, "got %d, expected %d\n", ht.flags, TVHT_ONITEMINDENT);
 
     DestroyWindow(hTree);
 }
@@ -1798,9 +2014,11 @@ START_TEST(treeview)
     test_TVS_SINGLEEXPAND();
     test_WM_PAINT();
     test_delete_items();
+    test_cchildren();
     test_htreeitem_layout();
     test_TVS_CHECKBOXES();
     test_TVM_GETNEXTITEM();
+    test_TVM_HITTEST();
 
     if (!load_v6_module(&ctx_cookie, &hCtx))
     {

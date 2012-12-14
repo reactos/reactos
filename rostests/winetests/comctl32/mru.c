@@ -45,7 +45,7 @@ typedef struct tagMRUINFOA
     UINT    fFlags;
     HKEY    hKey;
     LPCSTR  lpszSubKey;
-    PROC    lpfnCompare;
+    int (CALLBACK *lpfnCompare)(LPCSTR, LPCSTR);
 } MRUINFOA;
 
 typedef struct tagMRUINFOW
@@ -55,7 +55,7 @@ typedef struct tagMRUINFOW
     UINT    fFlags;
     HKEY    hKey;
     LPCWSTR lpszSubKey;
-    PROC    lpfnCompare;
+    int (CALLBACK *lpfnCompare)(LPCWSTR, LPCWSTR);
 } MRUINFOW;
 
 #define MRU_STRING     0  /* this one's invented */
@@ -221,7 +221,7 @@ static void check_reg_entries(const char *mrulist, const char**items)
     }
 }
 
-static INT CALLBACK cmp_mru_strA(LPCVOID data1, LPCVOID data2)
+static int CALLBACK cmp_mru_strA(LPCSTR data1, LPCSTR data2)
 {
     return lstrcmpiA(data1, data2);
 }
@@ -252,7 +252,7 @@ static void test_MRUListA(void)
     infoA.fFlags = MRU_STRING;
     infoA.hKey = NULL;
     infoA.lpszSubKey = REG_TEST_SUBKEYA;
-    infoA.lpfnCompare = (PROC)cmp_mru_strA;
+    infoA.lpfnCompare = cmp_mru_strA;
 
     SetLastError(0);
     hMRU = pCreateMRUListA(&infoA);
@@ -266,7 +266,7 @@ static void test_MRUListA(void)
     infoA.fFlags = MRU_STRING;
     infoA.hKey = NULL;
     infoA.lpszSubKey = REG_TEST_SUBKEYA;
-    infoA.lpfnCompare = (PROC)cmp_mru_strA;
+    infoA.lpfnCompare = cmp_mru_strA;
 
     SetLastError(0);
     hMRU = pCreateMRUListA(&infoA);
@@ -280,7 +280,7 @@ static void test_MRUListA(void)
     infoA.fFlags = MRU_STRING;
     infoA.hKey = NULL;
     infoA.lpszSubKey = REG_TEST_SUBKEYA;
-    infoA.lpfnCompare = (PROC)cmp_mru_strA;
+    infoA.lpfnCompare = cmp_mru_strA;
 
     SetLastError(0);
     hMRU = pCreateMRUListA(&infoA);
@@ -294,7 +294,7 @@ static void test_MRUListA(void)
     infoA.fFlags = MRU_STRING;
     infoA.hKey = NULL;
     infoA.lpszSubKey = NULL;
-    infoA.lpfnCompare = (PROC)cmp_mru_strA;
+    infoA.lpfnCompare = cmp_mru_strA;
 
     SetLastError(0);
     hMRU = pCreateMRUListA(&infoA);
@@ -312,7 +312,7 @@ static void test_MRUListA(void)
     infoA.fFlags = MRU_STRING;
     infoA.hKey = hKey;
     infoA.lpszSubKey = REG_TEST_SUBKEYA;
-    infoA.lpfnCompare = (PROC)cmp_mru_strA;
+    infoA.lpfnCompare = cmp_mru_strA;
 
     hMRU = pCreateMRUListA(&infoA);
     ok(hMRU && !GetLastError(),
@@ -447,17 +447,7 @@ static void test_MRUListA(void)
 
     /* FreeMRUList(NULL) crashes on Win98 OSR0 */
 }
-/*
-typedef struct tagMRUINFOA
-{
-    DWORD   cbSize;
-    UINT    uMax;
-    UINT    fFlags;
-    HKEY    hKey;
-    LPCSTR  lpszSubKey;
-    PROC    lpfnCompare;
-} MRUINFOA;
-*/
+
 typedef struct {
     MRUINFOA mruA;
     BOOL ret;

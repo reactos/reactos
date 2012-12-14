@@ -267,11 +267,11 @@ static void test_status_control(void)
     /* Divide into parts and set text */
     r = SendMessage(hWndStatus, SB_SETPARTS, 3, (LPARAM)nParts);
     expect(TRUE,r);
-    r = SendMessage(hWndStatus, SB_SETTEXT, 0, (LPARAM)"First");
+    r = SendMessage(hWndStatus, SB_SETTEXT, SBT_POPOUT|0,    (LPARAM)"First");
     expect(TRUE,r);
-    r = SendMessage(hWndStatus, SB_SETTEXT, 1, (LPARAM)"Second");
+    r = SendMessage(hWndStatus, SB_SETTEXT, SBT_OWNERDRAW|1, (LPARAM)"Second");
     expect(TRUE,r);
-    r = SendMessage(hWndStatus, SB_SETTEXT, 2, (LPARAM)"Third");
+    r = SendMessage(hWndStatus, SB_SETTEXT, SBT_NOBORDERS|2, (LPARAM)"Third");
     expect(TRUE,r);
 
     /* Get RECT Information */
@@ -287,13 +287,21 @@ static void test_status_control(void)
     r = SendMessage(hWndStatus, SB_GETRECT, 3, (LPARAM)&rc);
     expect(FALSE,r);
     /* Get text length and text */
+    r = SendMessage(hWndStatus, SB_GETTEXTLENGTH, 0, 0);
+    expect(5,LOWORD(r));
+    expect(SBT_POPOUT,HIWORD(r));
+    r = SendMessageW(hWndStatus, WM_GETTEXTLENGTH, 0, 0);
+    ok(r == 5 || broken(0x02000005 /* NT4 */), "Expected 5, got %d\n", r);
+    r = SendMessage(hWndStatus, SB_GETTEXTLENGTH, 1, 0);
+    expect(0,LOWORD(r));
+    expect(SBT_OWNERDRAW,HIWORD(r));
     r = SendMessage(hWndStatus, SB_GETTEXTLENGTH, 2, 0);
     expect(5,LOWORD(r));
-    expect(0,HIWORD(r));
+    expect(SBT_NOBORDERS,HIWORD(r));
     r = SendMessage(hWndStatus, SB_GETTEXT, 2, (LPARAM) charArray);
     ok(strcmp(charArray,"Third") == 0, "Expected Third, got %s\n", charArray);
     expect(5,LOWORD(r));
-    expect(0,HIWORD(r));
+    expect(SBT_NOBORDERS,HIWORD(r));
 
     /* Get parts and borders */
     r = SendMessage(hWndStatus, SB_GETPARTS, 3, (LPARAM)checkParts);

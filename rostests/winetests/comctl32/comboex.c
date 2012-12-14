@@ -345,6 +345,11 @@ static void test_WM_LBUTTONDOWN(void)
        "Current Selection: expected %d, got %d\n", 4, idx);
     ok(received_end_edit, "Expected to receive a CBEN_ENDEDIT message\n");
 
+    SetFocus( hComboExParentWnd );
+    ok( GetFocus() == hComboExParentWnd, "got %p\n", GetFocus() );
+    SetFocus( hComboEx );
+    ok( GetFocus() == hEdit, "got %p\n", GetFocus() );
+
     DestroyWindow(hComboEx);
 }
 

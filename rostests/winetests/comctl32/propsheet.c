@@ -750,7 +750,7 @@ static void test_messages(void)
 
 static void test_PSM_ADDPAGE(void)
 {
-    HPROPSHEETPAGE hpsp[3];
+    HPROPSHEETPAGE hpsp[5];
     PROPSHEETPAGEA psp;
     PROPSHEETHEADERA psh;
     HWND hdlg, tab;
@@ -770,6 +770,12 @@ static void test_PSM_ADDPAGE(void)
     hpsp[0] = CreatePropertySheetPageA(&psp);
     hpsp[1] = CreatePropertySheetPageA(&psp);
     hpsp[2] = CreatePropertySheetPageA(&psp);
+
+    U(psp).pszTemplate = MAKEINTRESOURCE(IDD_PROP_PAGE_ERROR);
+    hpsp[3] = CreatePropertySheetPageA(&psp);
+
+    psp.dwFlags = PSP_PREMATURE;
+    hpsp[4] = CreatePropertySheetPageA(&psp);
 
     memset(&psh, 0, sizeof(psh));
     psh.dwSize = PROPSHEETHEADERA_V1_SIZE;
@@ -803,6 +809,27 @@ if (0)
 
     ret = SendMessageA(hdlg, PSM_ADDPAGE, 0, (LPARAM)hpsp[2]);
     ok(ret == TRUE, "got %d\n", ret);
+
+    r = SendMessageA(tab, TCM_GETITEMCOUNT, 0, 0);
+    ok(r == 3, "got %d\n", r);
+
+    /* add property sheet page that can't be created */
+    ret = SendMessageA(hdlg, PSM_ADDPAGE, 0, (LPARAM)hpsp[3]);
+    ok(ret == TRUE, "got %d\n", ret);
+
+    r = SendMessageA(tab, TCM_GETITEMCOUNT, 0, 0);
+    ok(r == 4, "got %d\n", r);
+
+    /* select page that can't be created */
+    ret = SendMessageA(hdlg, PSM_SETCURSEL, 3, 0);
+    ok(ret == TRUE, "got %d\n", ret);
+
+    r = SendMessageA(tab, TCM_GETITEMCOUNT, 0, 0);
+    ok(r == 3, "got %d\n", r);
+
+    /* test PSP_PREMATURE flag with incorrect property sheet page */
+    ret = SendMessageA(hdlg, PSM_ADDPAGE, 0, (LPARAM)hpsp[4]);
+    ok(ret == FALSE, "got %d\n", ret);
 
     r = SendMessageA(tab, TCM_GETITEMCOUNT, 0, 0);
     ok(r == 3, "got %d\n", r);

@@ -322,6 +322,11 @@ static void test_gettext(void)
         toolinfoA.lpszText = bufA;
         SendMessageA(hwnd, TTM_GETTEXTA, 0, (LPARAM)&toolinfoA);
         ok(strcmp(toolinfoA.lpszText, "") == 0, "lpszText should be an empty string\n");
+
+        toolinfoA.lpszText = bufA;
+        SendMessageA(hwnd, TTM_GETTOOLINFOA, 0, (LPARAM)&toolinfoA);
+        ok(toolinfoA.lpszText == NULL,
+           "expected NULL, got %p\n", toolinfoA.lpszText);
     }
     else
     {
@@ -355,6 +360,12 @@ static void test_gettext(void)
         SendMessageA(hwnd, TTM_GETTEXTA, 0, (LPARAM)&toolinfoA);
         ok(strcmp(toolinfoA.lpszText, testtipA) == 0, "lpszText should be an empty string\n");
 
+        memset(bufA, 0x1f, sizeof(bufA));
+        toolinfoA.lpszText = bufA;
+        SendMessageA(hwnd, TTM_GETTOOLINFOA, 0, (LPARAM)&toolinfoA);
+        ok(strcmp(toolinfoA.lpszText, testtipA) == 0,
+           "expected %s, got %p\n", testtipA, toolinfoA.lpszText);
+
         length = SendMessage(hwnd, WM_GETTEXTLENGTH, 0, 0);
         ok(length == 0, "Expected 0, got %d\n", length);
     }
@@ -378,6 +389,11 @@ static void test_gettext(void)
         SendMessageA(hwnd, TTM_GETTEXTA, 0, (LPARAM)&toolinfoA);
         ok(strcmp(toolinfoA.lpszText, testcallbackA) == 0,
            "lpszText should be an (%s) string\n", testcallbackA);
+
+        toolinfoA.lpszText = bufA;
+        SendMessageA(hwnd, TTM_GETTOOLINFOA, 0, (LPARAM)&toolinfoA);
+        ok(toolinfoA.lpszText == LPSTR_TEXTCALLBACKA,
+           "expected LPSTR_TEXTCALLBACKA, got %p\n", toolinfoA.lpszText);
     }
 
     DestroyWindow(hwnd);
@@ -620,6 +636,128 @@ static void test_ttm_gettoolinfo(void)
     DestroyWindow(hwnd);
 }
 
+static void test_longtextA(void)
+{
+    static const char longtextA[] =
+        "According to MSDN, TTM_ENUMTOOLS claims that TOOLINFO's lpszText is maximum "
+        "80 chars including null. In fact, the buffer is not null-terminated.";
+    HWND hwnd;
+    TTTOOLINFOA toolinfoA = { 0 };
+    CHAR bufA[256];
+    LRESULT r;
+
+    hwnd = CreateWindowExA(0, TOOLTIPS_CLASSA, NULL, 0,
+                           10, 10, 300, 100,
+                           NULL, NULL, NULL, 0);
+    toolinfoA.cbSize = sizeof(TTTOOLINFOA);
+    toolinfoA.hwnd = NULL;
+    toolinfoA.hinst = GetModuleHandleA(NULL);
+    toolinfoA.uFlags = 0;
+    toolinfoA.uId = 0x1234ABCD;
+    strcpy(bufA, longtextA);
+    toolinfoA.lpszText = bufA;
+    toolinfoA.lParam = 0xdeadbeef;
+    GetClientRect(hwnd, &toolinfoA.rect);
+    r = SendMessageA(hwnd, TTM_ADDTOOLA, 0, (LPARAM)&toolinfoA);
+    if (r)
+    {
+        int textlen;
+        memset(bufA, 0, sizeof(bufA));
+        toolinfoA.hwnd = NULL;
+        toolinfoA.uId = 0xABCD1234;
+        toolinfoA.lpszText = bufA;
+        SendMessageA(hwnd, TTM_ENUMTOOLSA, 0, (LPARAM)&toolinfoA);
+        textlen = lstrlenA(toolinfoA.lpszText);
+        ok(textlen == 80, "lpszText has %d chars\n", textlen);
+        ok(toolinfoA.uId == 0x1234ABCD,
+           "uId should be retrieved, got %p\n", (void*)toolinfoA.uId);
+
+        memset(bufA, 0, sizeof(bufA));
+        toolinfoA.hwnd = NULL;
+        toolinfoA.uId = 0x1234ABCD;
+        toolinfoA.lpszText = bufA;
+        SendMessageA(hwnd, TTM_GETTOOLINFOA, 0, (LPARAM)&toolinfoA);
+        textlen = lstrlenA(toolinfoA.lpszText);
+        ok(textlen == 80, "lpszText has %d chars\n", textlen);
+
+        memset(bufA, 0, sizeof(bufA));
+        toolinfoA.hwnd = NULL;
+        toolinfoA.uId = 0x1234ABCD;
+        toolinfoA.lpszText = bufA;
+        SendMessageA(hwnd, TTM_GETTEXTA, 0, (LPARAM)&toolinfoA);
+        textlen = lstrlenA(toolinfoA.lpszText);
+        ok(textlen == 80, "lpszText has %d chars\n", textlen);
+    }
+
+    DestroyWindow(hwnd);
+}
+
+static void test_longtextW(void)
+{
+    static const char longtextA[] =
+        "According to MSDN, TTM_ENUMTOOLS claims that TOOLINFO's lpszText is maximum "
+        "80 chars including null. Actually, this is not applied for wide version.";
+    HWND hwnd;
+    TTTOOLINFOW toolinfoW = { 0 };
+    WCHAR bufW[256];
+    LRESULT r;
+    int lenW;
+
+    hwnd = CreateWindowExW(0, TOOLTIPS_CLASSW, NULL, 0,
+                           10, 10, 300, 100,
+                           NULL, NULL, NULL, 0);
+    if(!hwnd)
+    {
+        win_skip("CreateWindowExW() not supported. Skipping.\n");
+        return;
+    }
+
+    toolinfoW.cbSize = TTTOOLINFOW_V2_SIZE;
+    toolinfoW.hwnd = NULL;
+    toolinfoW.hinst = GetModuleHandleW(NULL);
+    toolinfoW.uFlags = 0;
+    toolinfoW.uId = 0x1234ABCD;
+    MultiByteToWideChar(CP_ACP, 0, longtextA, -1, bufW, sizeof(bufW)/sizeof(bufW[0]));
+    lenW = lstrlenW(bufW);
+    toolinfoW.lpszText = bufW;
+    toolinfoW.lParam = 0xdeadbeef;
+    GetClientRect(hwnd, &toolinfoW.rect);
+    r = SendMessageW(hwnd, TTM_ADDTOOLW, 0, (LPARAM)&toolinfoW);
+    if (r)
+    {
+        int textlen;
+        memset(bufW, 0, sizeof(bufW));
+        toolinfoW.hwnd = NULL;
+        toolinfoW.uId = 0xABCD1234;
+        toolinfoW.lpszText = bufW;
+        SendMessageW(hwnd, TTM_ENUMTOOLSW, 0, (LPARAM)&toolinfoW);
+        textlen = lstrlenW(toolinfoW.lpszText);
+        ok(textlen == lenW, "lpszText has %d chars\n", textlen);
+        ok(toolinfoW.uId == 0x1234ABCD,
+           "uId should be retrieved, got %p\n", (void*)toolinfoW.uId);
+
+        memset(bufW, 0, sizeof(bufW));
+        toolinfoW.hwnd = NULL;
+        toolinfoW.uId = 0x1234ABCD;
+        toolinfoW.lpszText = bufW;
+        SendMessageW(hwnd, TTM_GETTOOLINFOW, 0, (LPARAM)&toolinfoW);
+        textlen = lstrlenW(toolinfoW.lpszText);
+        ok(textlen == lenW, "lpszText has %d chars\n", textlen);
+
+        memset(bufW, 0, sizeof(bufW));
+        toolinfoW.hwnd = NULL;
+        toolinfoW.uId = 0x1234ABCD;
+        toolinfoW.lpszText = bufW;
+        SendMessageW(hwnd, TTM_GETTEXTW, 0, (LPARAM)&toolinfoW);
+        textlen = lstrlenW(toolinfoW.lpszText);
+        ok(textlen == lenW ||
+           broken(textlen == 0 && toolinfoW.lpszText == NULL), /* nt4, kb186177 */
+           "lpszText has %d chars\n", textlen);
+    }
+
+    DestroyWindow(hwnd);
+}
+
 START_TEST(tooltips)
 {
     InitCommonControls();
@@ -628,4 +766,6 @@ START_TEST(tooltips)
     test_customdraw();
     test_gettext();
     test_ttm_gettoolinfo();
+    test_longtextA();
+    test_longtextW();
 }
