@@ -77,7 +77,7 @@ static BOOL COMCTL32_ChrCmpHelperA(WORD ch1, WORD ch2, DWORD dwFlags)
   else
     str2[1] = '\0';
 
-  return CompareStringA(GetThreadLocale(), dwFlags, str1, -1, str2, -1) - 2;
+  return CompareStringA(GetThreadLocale(), dwFlags, str1, -1, str2, -1) - CSTR_EQUAL;
 }
 
 /*************************************************************************
@@ -117,7 +117,7 @@ static BOOL COMCTL32_ChrCmpIA(WORD ch1, WORD ch2)
  */
 static inline BOOL COMCTL32_ChrCmpIW(WCHAR ch1, WCHAR ch2)
 {
-  return CompareStringW(GetThreadLocale(), NORM_IGNORECASE, &ch1, 1, &ch2, 1) - 2;
+  return CompareStringW(GetThreadLocale(), NORM_IGNORECASE, &ch1, 1, &ch2, 1) - CSTR_EQUAL;
 }
 
 /**************************************************************************
@@ -299,12 +299,8 @@ LPSTR WINAPI StrChrA(LPCSTR lpszStr, WORD ch)
  */
 INT WINAPI StrCmpNIA(LPCSTR lpszStr, LPCSTR lpszComp, INT iLen)
 {
-  INT iRet;
-
   TRACE("(%s,%s,%i)\n", debugstr_a(lpszStr), debugstr_a(lpszComp), iLen);
-
-  iRet = CompareStringA(GetThreadLocale(), NORM_IGNORECASE, lpszStr, iLen, lpszComp, iLen);
-  return iRet == CSTR_LESS_THAN ? -1 : iRet == CSTR_GREATER_THAN ? 1 : 0;
+  return CompareStringA(GetThreadLocale(), NORM_IGNORECASE, lpszStr, iLen, lpszComp, iLen) - CSTR_EQUAL;
 }
 
 /*************************************************************************
@@ -314,12 +310,8 @@ INT WINAPI StrCmpNIA(LPCSTR lpszStr, LPCSTR lpszComp, INT iLen)
  */
 INT WINAPI StrCmpNIW(LPCWSTR lpszStr, LPCWSTR lpszComp, INT iLen)
 {
-  INT iRet;
-
   TRACE("(%s,%s,%i)\n", debugstr_w(lpszStr), debugstr_w(lpszComp), iLen);
-
-  iRet = CompareStringW(GetThreadLocale(), NORM_IGNORECASE, lpszStr, iLen, lpszComp, iLen);
-  return iRet == CSTR_LESS_THAN ? -1 : iRet == CSTR_GREATER_THAN ? 1 : 0;
+  return CompareStringW(GetThreadLocale(), NORM_IGNORECASE, lpszStr, iLen, lpszComp, iLen) - CSTR_EQUAL;
 }
 
 /*************************************************************************
@@ -496,12 +488,8 @@ LPWSTR WINAPI StrChrW(LPCWSTR lpszStr, WCHAR ch)
  */
 INT WINAPI StrCmpNA(LPCSTR lpszStr, LPCSTR lpszComp, INT iLen)
 {
-  INT iRet;
-
   TRACE("(%s,%s,%i)\n", debugstr_a(lpszStr), debugstr_a(lpszComp), iLen);
-
-  iRet = CompareStringA(GetThreadLocale(), 0, lpszStr, iLen, lpszComp, iLen);
-  return iRet == CSTR_LESS_THAN ? -1 : iRet == CSTR_GREATER_THAN ? 1 : 0;
+  return CompareStringA(GetThreadLocale(), 0, lpszStr, iLen, lpszComp, iLen) - CSTR_EQUAL;
 }
 
 /**************************************************************************
@@ -511,12 +499,8 @@ INT WINAPI StrCmpNA(LPCSTR lpszStr, LPCSTR lpszComp, INT iLen)
  */
 INT WINAPI StrCmpNW(LPCWSTR lpszStr, LPCWSTR lpszComp, INT iLen)
 {
-  INT iRet;
-
   TRACE("(%s,%s,%i)\n", debugstr_w(lpszStr), debugstr_w(lpszComp), iLen);
-
-  iRet = CompareStringW(GetThreadLocale(), 0, lpszStr, iLen, lpszComp, iLen);
-  return iRet == CSTR_LESS_THAN ? -1 : iRet == CSTR_GREATER_THAN ? 1 : 0;
+  return CompareStringW(GetThreadLocale(), 0, lpszStr, iLen, lpszComp, iLen) - CSTR_EQUAL;
 }
 
 /**************************************************************************
@@ -877,10 +861,11 @@ BOOL WINAPI IntlStrEqWorkerA(BOOL bCase, LPCSTR lpszStr, LPCSTR lpszComp,
   TRACE("(%d,%s,%s,%d)\n", bCase,
         debugstr_a(lpszStr), debugstr_a(lpszComp), iLen);
 
-  /* FIXME: These flags are undocumented and unknown by our CompareString.
-   *        We need defines for them.
+  /* FIXME: This flag is undocumented and unknown by our CompareString.
+   *        We need a define for it.
    */
-  dwFlags |= bCase ? 0x10000000 : 0x10000001;
+  dwFlags = 0x10000000;
+  if (!bCase) dwFlags |= NORM_IGNORECASE;
 
   iRet = CompareStringA(GetThreadLocale(),
                         dwFlags, lpszStr, iLen, lpszComp, iLen);
@@ -888,7 +873,7 @@ BOOL WINAPI IntlStrEqWorkerA(BOOL bCase, LPCSTR lpszStr, LPCSTR lpszComp,
   if (!iRet)
     iRet = CompareStringA(2048, dwFlags, lpszStr, iLen, lpszComp, iLen);
 
-  return iRet == 2 ? TRUE : FALSE;
+  return iRet == CSTR_EQUAL;
 }
 
 /*************************************************************************
@@ -905,10 +890,11 @@ BOOL WINAPI IntlStrEqWorkerW(BOOL bCase, LPCWSTR lpszStr, LPCWSTR lpszComp,
   TRACE("(%d,%s,%s,%d)\n", bCase,
         debugstr_w(lpszStr),debugstr_w(lpszComp), iLen);
 
-  /* FIXME: These flags are undocumented and unknown by our CompareString.
-   *        We need defines for them.
+  /* FIXME: This flag is undocumented and unknown by our CompareString.
+   *        We need a define for it.
    */
-  dwFlags = bCase ? 0x10000000 : 0x10000001;
+  dwFlags = 0x10000000;
+  if (!bCase) dwFlags |= NORM_IGNORECASE;
 
   iRet = CompareStringW(GetThreadLocale(),
                         dwFlags, lpszStr, iLen, lpszComp, iLen);
@@ -916,5 +902,5 @@ BOOL WINAPI IntlStrEqWorkerW(BOOL bCase, LPCWSTR lpszStr, LPCWSTR lpszComp,
   if (!iRet)
     iRet = CompareStringW(2048, dwFlags, lpszStr, iLen, lpszComp, iLen);
 
-  return iRet == 2 ? TRUE : FALSE;
+  return iRet == CSTR_EQUAL;
 }

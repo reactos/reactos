@@ -2135,8 +2135,10 @@ REBAR_HandleUDDrag (REBAR_INFO *infoPtr, const POINT *ptsmove)
     if(yOff < 0)
     {
         /* Place the band above the current top row */
+        if(iHitBand==0 && (infoPtr->uNumBands==1 || REBAR_GetBand(infoPtr, 1)->fStyle&RBBS_BREAK))
+            return;
         DPA_DeletePtr(infoPtr->bands, iHitBand);
-        hitBand->fStyle &= RBBS_BREAK;
+        hitBand->fStyle &= ~RBBS_BREAK;
         REBAR_GetBand(infoPtr, 0)->fStyle |= RBBS_BREAK;
         infoPtr->iGrabbedBand = DPA_InsertPtr(
             infoPtr->bands, 0, hitBand);
@@ -2144,6 +2146,8 @@ REBAR_HandleUDDrag (REBAR_INFO *infoPtr, const POINT *ptsmove)
     else if(yOff > REBAR_GetBand(infoPtr, infoPtr->uNumBands - 1)->rcBand.bottom)
     {
         /* Place the band below the current bottom row */
+        if(iHitBand == infoPtr->uNumBands-1 && hitBand->fStyle&RBBS_BREAK)
+            return;
         DPA_DeletePtr(infoPtr->bands, iHitBand);
         hitBand->fStyle |= RBBS_BREAK;
         infoPtr->iGrabbedBand = DPA_InsertPtr(

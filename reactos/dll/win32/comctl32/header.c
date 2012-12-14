@@ -727,17 +727,9 @@ static void
 HEADER_DrawTrackLine (const HEADER_INFO *infoPtr, HDC hdc, INT x)
 {
     RECT rect;
-    HPEN hOldPen;
-    INT  oldRop;
 
     GetClientRect (infoPtr->hwndSelf, &rect);
-
-    hOldPen = SelectObject (hdc, GetStockObject (BLACK_PEN));
-    oldRop = SetROP2 (hdc, R2_XORPEN);
-    MoveToEx (hdc, x, rect.top, NULL);
-    LineTo (hdc, x, rect.bottom);
-    SetROP2 (hdc, oldRop);
-    SelectObject (hdc, hOldPen);
+    PatBlt( hdc, x, rect.top, 1, rect.bottom - rect.top, DSTINVERT );
 }
 
 /***
@@ -1240,6 +1232,14 @@ HEADER_SetOrderArray(HEADER_INFO *infoPtr, INT size, const INT *order)
 
     if ((UINT)size != infoPtr->uNumItem)
       return FALSE;
+
+    if (TRACE_ON(header))
+    {
+        TRACE("count=%d, order array={", size);
+        for (i = 0; i < size; i++)
+            TRACE("%d%c", order[i], i != size-1 ? ',' : '}');
+        TRACE("\n");
+    }
 
     for (i=0; i<size; i++)
     {

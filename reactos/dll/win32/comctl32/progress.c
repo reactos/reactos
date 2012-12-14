@@ -745,7 +745,7 @@ void PROGRESS_Register (void)
 
     ZeroMemory (&wndClass, sizeof(wndClass));
     wndClass.style         = CS_GLOBALCLASS | CS_VREDRAW | CS_HREDRAW;
-    wndClass.lpfnWndProc   = (WNDPROC)ProgressWindowProc;
+    wndClass.lpfnWndProc   = ProgressWindowProc;
     wndClass.cbClsExtra    = 0;
     wndClass.cbWndExtra    = sizeof (PROGRESS_INFO *);
     wndClass.hCursor       = LoadCursorW (0, (LPWSTR)IDC_ARROW);

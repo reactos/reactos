@@ -1186,7 +1186,7 @@ ImageList_Draw (HIMAGELIST himl, INT i, HDC hdc, INT x, INT y, UINT fStyle)
 /*************************************************************************
  * ImageList_DrawEx [COMCTL32.@]
  *
- * Draws an image and allows to use extended drawing features.
+ * Draws an image and allows using extended drawing features.
  *
  * PARAMS
  *     himl   [I] handle to image list
@@ -3366,7 +3366,7 @@ static HRESULT WINAPI ImageListImpl_Copy(IImageList *iface, int iDst,
         return E_FAIL;
 
     /* TODO: Add test for IID_ImageList2 too */
-    if (FAILED(IImageList_QueryInterface(punkSrc, &IID_IImageList,
+    if (FAILED(IUnknown_QueryInterface(punkSrc, &IID_IImageList,
             (void **) &src)))
         return E_FAIL;
 
@@ -3390,7 +3390,7 @@ static HRESULT WINAPI ImageListImpl_Merge(IImageList *iface, int i1,
     TRACE("(%p)->(%d %p %d %d %d %s %p)\n", iface, i1, punk2, i2, dx, dy, debugstr_guid(riid), ppv);
 
     /* TODO: Add test for IID_ImageList2 too */
-    if (FAILED(IImageList_QueryInterface(punk2, &IID_IImageList,
+    if (FAILED(IUnknown_QueryInterface(punk2, &IID_IImageList,
             (void **) &iml2)))
         return E_FAIL;
 
@@ -3523,7 +3523,7 @@ static HRESULT WINAPI ImageListImpl_SetDragCursorImage(IImageList *iface,
         return E_FAIL;
 
     /* TODO: Add test for IID_ImageList2 too */
-    if (FAILED(IImageList_QueryInterface(punk, &IID_IImageList,
+    if (FAILED(IUnknown_QueryInterface(punk, &IID_IImageList,
             (void **) &iml2)))
         return E_FAIL;
 

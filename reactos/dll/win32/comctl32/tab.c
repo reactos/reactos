@@ -2879,13 +2879,12 @@ static LRESULT TAB_DeleteItem (TAB_INFO *infoPtr, INT iItem)
 
     if (iItem < 0 || iItem >= infoPtr->uNumItem) return FALSE;
 
+    TAB_InvalidateTabArea(infoPtr);
     item = TAB_GetItem(infoPtr, iItem);
     Free(item->pszText);
     Free(item);
     infoPtr->uNumItem--;
     DPA_DeletePtr(infoPtr->items, iItem);
-
-    TAB_InvalidateTabArea(infoPtr);
 
     if (infoPtr->uNumItem == 0)
     {
@@ -3021,7 +3020,7 @@ static LRESULT TAB_Create (HWND hwnd, LPARAM lParam)
   TEXTMETRICW fontMetrics;
   HDC hdc;
   HFONT hOldFont;
-  DWORD dwStyle;
+  DWORD style;
 
   infoPtr = Alloc (sizeof(TAB_INFO));
 
@@ -3055,11 +3054,13 @@ static LRESULT TAB_Create (HWND hwnd, LPARAM lParam)
   /* The tab control always has the WS_CLIPSIBLINGS style. Even
      if you don't specify it in CreateWindow. This is necessary in
      order for paint to work correctly. This follows windows behaviour. */
-  dwStyle = GetWindowLongW(hwnd, GWL_STYLE);
-  SetWindowLongW(hwnd, GWL_STYLE, dwStyle|WS_CLIPSIBLINGS);
+  style = GetWindowLongW(hwnd, GWL_STYLE);
+  if (style & TCS_VERTICAL) style |= TCS_MULTILINE;
+  style |= WS_CLIPSIBLINGS;
+  SetWindowLongW(hwnd, GWL_STYLE, style);
 
-  infoPtr->dwStyle = dwStyle | WS_CLIPSIBLINGS;
-  infoPtr->exStyle = (dwStyle & TCS_FLATBUTTONS) ? TCS_EX_FLATSEPARATORS : 0;
+  infoPtr->dwStyle = style;
+  infoPtr->exStyle = (style & TCS_FLATBUTTONS) ? TCS_EX_FLATSEPARATORS : 0;
 
   if (infoPtr->dwStyle & TCS_TOOLTIPS) {
     /* Create tooltip control */
