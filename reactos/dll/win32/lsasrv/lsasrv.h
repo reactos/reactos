@@ -124,6 +124,10 @@ LsapSetObjectAttribute(PLSA_DB_OBJECT DbObject,
                        LPVOID AttributeData,
                        ULONG AttributeSize);
 
+NTSTATUS
+LsapDeleteObjectAttribute(PLSA_DB_OBJECT DbObject,
+                          LPWSTR AttributeName);
+
 /* lookup.c */
 NTSTATUS
 LsapInitSids(VOID);

@@ -1074,5 +1074,14 @@ Done:
     return Status;
 }
 
+
+NTSTATUS
+LsapDeleteObjectAttribute(PLSA_DB_OBJECT DbObject,
+                          LPWSTR AttributeName)
+{
+    return LsapRegDeleteSubKey(DbObject->KeyHandle,
+                               AttributeName);
+}
+
 /* EOF */
 
