@@ -30,39 +30,39 @@ END
 /* Information and error messages */
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_USAGE,  "Utilisation : shutdown [/?] [/i | /l | /s | /r | /g | /a | /p | /h | /e] [/f]\n"
-                "              [/m \\\\ordinateur][/t xxx][/d [p|u:]xx:yy [/c ""commentaire""]]\n\n"
-                "    Sans argument ou /?    Afficher l'aide.\n"
-                "    /i      Afficher l'interface utilisateur graphique (GUI). Cette option doit\n"
-                "            être la première.\n"
-                "    /l      Fermer la session sur l'ordinateur local uniquement. Ne peut pas\n"
-                "            être utilisée avec les options /m ou /d.\n"
-                "    /s      Arrêter l'ordinateur.\n"
-                "    /r      Redémarrer l'ordinateur.\n"
-//                "    /g      Redémarrer l'ordinateur et redémarrer toutes les applications\n"
-//                "            enregistrées.\n"
-                "    /a      Annuler un arrêt du système. Ne peut être utilisée que pendant\n"
-                "            la période de délai.\n"
-                "    /p      Arrêter l'ordinateur local sans délai d'expiration ou\n"
-                "            avertissement. Peut être utilisée avec les options /d ou /f.\n"
-                "    /h      Mettre l'ordinateur local en veille prolongée. Utilisable avec\n"
-                "            l'option /f.\n"
-                "    /e      Documenter la raison de l'arrêt inattendu d'un ordinateur.\n"
-                "    /m \\\\ordinateur  Spécifier l'ordinateur cible (adresse UNC/IP).\n"
-                "    /t xxx  Définir la période de délai avant l'arrêt au bout de xxx secondes.\n"
-                "            La plage valide est comprise entre 0 et 315360000 (10 ans),\n"
-                "            30 étant la valeur par défaut.\n"
-                "    /c ""commentaire""  Commentaire sur la raison de l'arrêt ou du redémarrage.\n"
-                "            512 caractères maximum autorisés.\n"
-                "    /f      Force la fermeture des applications en cours d'exécution sans\n"
-                "            prévenir les utilisateurs. Si vous ne spécifiez aucun autre\n"
-                "            paramètre, cette option provoquera aussi une déconnexion.\n"
-                "    /d [p|u:]xx:yy  Fournit la raison de l'arrêt ou du redémarrage.\n"
-                "            p indique que l'arrêt ou le redémarrage est planifié.\n"
-                "            u indique que la raison est définie par l'utilisateur.\n"
-                "            Si ni p ni u ne sont spécifiés, l'arrêt ou le redémarrage ne sont\n"
-                "            planifiés.\n"
-                "            xx est le code de raison majeur (entier positif inférieur à 256).\n"
+    IDS_USAGE,  "Utilisation : shutdown [/?] [/i | /l | /s | /r | /g | /a | /p | /h | /e] [/f]\n"       \
+                "              [/m \\\\ordinateur][/t xxx][/d [p|u:]xx:yy [/c ""commentaire""]]\n\n"    \
+                "    Sans argument ou /?    Afficher l'aide.\n"                                         \
+                "    /i      Afficher l'interface utilisateur graphique (GUI). Cette option doit\n"     \
+                "            être la première.\n"                                                       \
+                "    /l      Fermer la session sur l'ordinateur local uniquement. Ne peut pas\n"        \
+                "            être utilisée avec les options /m ou /d.\n"                                \
+                "    /s      Arrêter l'ordinateur.\n"                                                   \
+                "    /r      Redémarrer l'ordinateur.\n"                                                \
+//                "    /g      Redémarrer l'ordinateur et redémarrer toutes les applications\n"             /
+//                "            enregistrées.\n"                                                             /
+                "    /a      Annuler un arrêt du système. Ne peut être utilisée que pendant\n"          \
+                "            la période de délai.\n"                                                    \
+                "    /p      Arrêter l'ordinateur local sans délai d'expiration ou\n"                   \
+                "            avertissement. Peut être utilisée avec les options /d ou /f.\n"            \
+                "    /h      Mettre l'ordinateur local en veille prolongée. Utilisable avec\n"          \
+                "            l'option /f.\n"                                                            \
+                "    /e      Documenter la raison de l'arrêt inattendu d'un ordinateur.\n"              \
+                "    /m \\\\ordinateur  Spécifier l'ordinateur cible (adresse UNC/IP).\n"               \
+                "    /t xxx  Définir la période de délai avant l'arrêt au bout de xxx secondes.\n"      \
+                "            La plage valide est comprise entre 0 et 315360000 (10 ans),\n"             \
+                "            30 étant la valeur par défaut.\n"                                          \
+                "    /c ""commentaire""  Commentaire sur la raison de l'arrêt ou du redémarrage.\n"     \
+                "            512 caractères maximum autorisés.\n"                                       \
+                "    /f      Force la fermeture des applications en cours d'exécution sans\n"           \
+                "            prévenir les utilisateurs. Si vous ne spécifiez aucun autre\n"             \
+                "            paramètre, cette option provoquera aussi une déconnexion.\n"               \
+                "    /d [p|u:]xx:yy  Fournit la raison de l'arrêt ou du redémarrage.\n"                 \
+                "            p indique que l'arrêt ou le redémarrage est planifié.\n"                   \
+                "            u indique que la raison est définie par l'utilisateur.\n"                  \
+                "            Si ni p ni u ne sont spécifiés, l'arrêt ou le redémarrage ne sont\n"       \
+                "            planifiés.\n"                                                              \
+                "            xx est le code de raison majeur (entier positif inférieur à 256).\n"       \
                 "            yy est le code de raison mineur (entier positif inférieur à 65536).\n"
 
     IDS_ERROR_SHUTDOWN_REBOOT,          "ERREUR : Impossible d'arrêter et de redémarrer en même temps.\n"

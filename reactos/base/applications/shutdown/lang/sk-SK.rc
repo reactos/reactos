@@ -30,35 +30,35 @@ END
 /* Information and error messages */
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_USAGE,  "Usage: shutdown [/?] [/i | /l | /s | /r | /g | /a | /p | /h | /e] [/f]\n"
-                "       [/m \\\\computer][/t xxx][/d [p|u:]xx:yy [/c ""comment""]]\n\n"
-                "    No arguments or /?    Display this help.\n"
-                "    /i      Show the graphical user interface (GUI). This option must be the\n"
-                "            first one.\n"
-                "    /l      Log off on the local system only. Cannot be used with /m or /d.\n"
-                "    /s      Shutdown the computer.\n"
-                "    /r      Restart the computer.\n"
-//                "    /g      Restart the computer and restart all the registered applications.\n"
-                "    /a      Cancel a delayed shutdown. Can only be used during the delay\n"
-                "            period.\n"
-                "    /p      Shutdown the local computer without any timeout or warning. Can be\n"
-                "            used with /d or /f.\n"
-                "    /h      Hibernate the local computer. Usable with /f.\n"
-                "    /e      Document the reason for the unexpected computer shutdown.\n"
-                "    /m \\\\computer  Specify the target computer (UNC/IP address).\n"
-                "    /t xxx  Set the timeout period to xxx seconds before shutting down.\n"
-                "            The valid range starts from 0 to 315360000 (10 years),\n"
-                "            30 being the default value.\n"
-                "    /c ""comment""  Comment on the reason for shutdown or restart.\n"
-                "            512 characters maximum allowed.\n"
-                "    /f      Force running applications to close without warning users. If you\n"
-                "            do not specify any other parameter, this option will also log off.\n"
-                "    /d [p|u:]xx:yy  Give the reason code for the shutdown or the restart.\n"
-                "            p indicates that the shutdown or the restart is planned.\n"
-                "            u indicates that the reason is defined by the user.\n"
-                "            If neither p nor u are specified, the shutdown or the restart are\n"
-                "            not planned.\n"
-                "            xx is the major reason code (positive integer smaller than 256).\n"
+    IDS_USAGE,  "Usage: shutdown [/?] [/i | /l | /s | /r | /g | /a | /p | /h | /e] [/f]\n"          \
+                "       [/m \\\\computer][/t xxx][/d [p|u:]xx:yy [/c ""comment""]]\n\n"             \
+                "    No arguments or /?    Display this help.\n"                                    \
+                "    /i      Show the graphical user interface (GUI). This option must be the\n"    \
+                "            first one.\n"                                                          \
+                "    /l      Log off on the local system only. Cannot be used with /m or /d.\n"     \
+                "    /s      Shutdown the computer.\n"                                              \
+                "    /r      Restart the computer.\n"                                               \
+//                "    /g      Restart the computer and restart all the registered applications.\n"     /
+                "    /a      Cancel a delayed shutdown. Can only be used during the delay\n"        \
+                "            period.\n"                                                             \
+                "    /p      Shutdown the local computer without any timeout or warning. Can be\n"  \
+                "            used with /d or /f.\n"                                                 \
+                "    /h      Hibernate the local computer. Usable with /f.\n"                       \
+                "    /e      Document the reason for the unexpected computer shutdown.\n"           \
+                "    /m \\\\computer  Specify the target computer (UNC/IP address).\n"              \
+                "    /t xxx  Set the timeout period to xxx seconds before shutting down.\n"         \
+                "            The valid range starts from 0 to 315360000 (10 years),\n"              \
+                "            30 being the default value.\n"                                         \
+                "    /c ""comment""  Comment on the reason for shutdown or restart.\n"              \
+                "            512 characters maximum allowed.\n"                                     \
+                "    /f      Force running applications to close without warning users. If you\n"   \
+                "            do not specify any other parameter, this option will also log off.\n"  \
+                "    /d [p|u:]xx:yy  Give the reason code for the shutdown or the restart.\n"       \
+                "            p indicates that the shutdown or the restart is planned.\n"            \
+                "            u indicates that the reason is defined by the user.\n"                 \
+                "            If neither p nor u are specified, the shutdown or the restart are\n"   \
+                "            not planned.\n"                                                        \
+                "            xx is the major reason code (positive integer smaller than 256).\n"    \
                 "            yy is the minor reason code (positive integer smaller than 65536).\n"
 
     IDS_ERROR_SHUTDOWN_REBOOT,          "ERROR: Unable to shutdown and restart at the same time.\n"

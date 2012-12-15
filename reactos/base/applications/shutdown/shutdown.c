@@ -29,7 +29,7 @@ VOID PrintResourceString(INT resID, ...)
 static DWORD
 ParseArguments(struct CommandLineOptions* pOpts, int argc, WCHAR *argv[])
 {
-    UINT index;
+    int index;
 
     if (!pOpts)
         return ERROR_INVALID_PARAMETER;
@@ -56,7 +56,7 @@ ParseArguments(struct CommandLineOptions* pOpts, int argc, WCHAR *argv[])
     {
         if (argv[index][0] == L'-' || argv[index][0] == L'/')
         {
-            switch(towlower(argv[index][1]))
+            switch (towlower(argv[index][1]))
             {
                 case L'?': /* Help */
                     PrintResourceString(IDS_USAGE);
@@ -69,7 +69,7 @@ ParseArguments(struct CommandLineOptions* pOpts, int argc, WCHAR *argv[])
                 case L'c': /* Comment on reason for shutdown */
                     if(CheckCommentLength(argv[index+1]))
                     {
-                        if(index+1 <= argc)
+                        if (index+1 <= argc)
                             pOpts->message = argv[index+1];
                         else
                             return ERROR_INVALID_DATA;
@@ -83,7 +83,7 @@ ParseArguments(struct CommandLineOptions* pOpts, int argc, WCHAR *argv[])
                     break;
 
                 case L'd': /* Reason code [p|u:]xx:yy */
-                    if(index+1 <= argc)
+                    if (index+1 <= argc)
                         pOpts->reason = ParseReasonCode(argv[index+1]);
                     else
                         return ERROR_INVALID_DATA;
@@ -130,7 +130,7 @@ ParseArguments(struct CommandLineOptions* pOpts, int argc, WCHAR *argv[])
 
                 case L't': /* Shutdown delay */
                     pOpts->shutdown_delay = _wtoi(argv[index+1]);
-                    if(pOpts->shutdown_delay > 0) 
+                    if (pOpts->shutdown_delay > 0) 
                         pOpts->force = TRUE;
                     break;
 
