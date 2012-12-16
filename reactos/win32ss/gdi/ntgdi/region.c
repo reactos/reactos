@@ -114,6 +114,7 @@ SOFTWARE.
  */
 
 #include <win32k.h>
+#include <suppress.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -1841,7 +1842,7 @@ REGION_CreateSimpleFrameRgn(
                 return FALSE;
             }
 
-            _PRAGMA_WARNING_SUPPRESS(28199) // rc is initialized
+            _PRAGMA_WARNING_SUPPRESS(__WARNING_MAYBE_UNINIT_VAR) // rc is initialized
             COPY_RECTS(rgn->Buffer, rc, rgn->rdh.nCount);
         }
     }

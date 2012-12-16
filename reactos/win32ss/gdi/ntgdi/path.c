@@ -9,6 +9,7 @@
  */
 
 #include <win32k.h>
+#include <suppress.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -1166,11 +1167,11 @@ PATH_PathToRegion ( PPATH pPath, INT nPolyFillMode, HRGN *pHrgn )
     if((pPath->pFlags[i] & ~PT_CLOSEFIGURE) == PT_MOVETO)
     {
       iStroke++;
-      _PRAGMA_WARNING_SUPPRESS(6386)
+      _PRAGMA_WARNING_SUPPRESS(__WARNING_WRITE_OVERRUN)
       pNumPointsInStroke[iStroke]=0;
     }
 
-    _PRAGMA_WARNING_SUPPRESS(6385)
+    _PRAGMA_WARNING_SUPPRESS(__WARNING_READ_OVERRUN)
     pNumPointsInStroke[iStroke]++;
   }
 
