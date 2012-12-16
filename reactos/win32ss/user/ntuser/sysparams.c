@@ -25,18 +25,16 @@ BOOL g_PaintDesktopVersion = FALSE;
 #define METRIC2REG(met) (-((((met) * 1440)- 0) / dpi))
 
 #define REQ_INTERACTIVE_WINSTA(err) \
-    if (GetW32ProcessInfo()->prpwinsta) \
+    if (GetW32ProcessInfo()->prpwinsta != InputWindowStation) \
     { \
-        if (GetW32ProcessInfo()->prpwinsta != InputWindowStation) \
+        if (GetW32ProcessInfo()->prpwinsta == NULL) \
+        { \
+            ERR("NtUserSystemParametersInfo called without active window station, and it requires an interactive one\n"); \
+        } \
+        else \
         { \
             ERR("NtUserSystemParametersInfo requires interactive window station (current is %wZ)\n", &GetW32ProcessInfo()->prpwinsta->Name); \
-            EngSetLastError(err); \
-            return 0; \
         } \
-    } \
-    else \
-    { \
-        ERR("NtUserSystemParametersInfo called without active window station, and it requires an interactive one.\n"); \
         EngSetLastError(err); \
         return 0; \
     }
