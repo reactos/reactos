@@ -212,7 +212,6 @@ LoadReactOSSetup(IN OperatingSystemItem* OperatingSystem,
 
     TRACE("BootOptions: '%s'\n", BootOptions);
 
-    SetupUiInitialize();
     UiDrawStatusText("Setup is loading...");
 
     /* Allocate and minimalistic-initialize LPB */

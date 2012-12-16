@@ -20,11 +20,8 @@
 
 #include <freeldr.h>
 #include <debug.h>
-#include <reactos/buildno.h>
 
 DBG_DEFAULT_CHANNEL(UI);
-
-BOOLEAN	UiMinimal					= FALSE;				// Tells us if we are using a minimal console-like UI
 
 ULONG	UiScreenWidth;										// Screen Width
 ULONG	UiScreenHeight;										// Screen Height
@@ -84,6 +81,7 @@ UIVTBL UiVtbl =
 BOOLEAN UiInitialize(BOOLEAN ShowGui)
 {
 	VIDEODISPLAYMODE	UiDisplayMode; // Tells us if we are in text or graphics mode
+	BOOLEAN UiMinimal = FALSE; // Tells us if we are using a minimal console-like UI
 	ULONG_PTR SectionId;
 	CHAR	DisplayModeText[260];
 	CHAR	SettingText[260];
@@ -462,74 +460,6 @@ VOID UiFadeOut(VOID)
 BOOLEAN UiEditBox(PCSTR MessageText, PCHAR EditTextBuffer, ULONG Length)
 {
 	return UiVtbl.EditBox(MessageText, EditTextBuffer, Length);
-}
-
-
-/* SETUP MODE *****************************************************************/
-
-VOID SetupUiDrawBackdrop(VOID)
-{
-	CHAR	Underline[80];
-	SIZE_T	Length;
-
-	// Draw the backdrop and fade it in if special effects are enabled
-	UiVtbl.FillArea(0, 0, UiScreenWidth - 1, UiScreenHeight - 2, 0,
-	                ATTR(UiBackdropFgColor, UiBackdropBgColor));
-
-	Length = min( strlen("ReactOS " KERNEL_VERSION_STR " Setup"),
-	              sizeof(Underline) - 1 );
-	memset(Underline, 0xcd, Length); // Underline title
-	Underline[Length] = '\0';
-
-	UiVtbl.DrawText(4, 1, "ReactOS " KERNEL_VERSION_STR " Setup", ATTR(COLOR_GRAY, UiBackdropBgColor));
-	UiVtbl.DrawText(4, 2, Underline, ATTR(COLOR_GRAY, UiBackdropBgColor));
-
-	// Update the screen buffer
-	VideoCopyOffScreenBufferToVRAM();
-}
-
-BOOLEAN SetupUiInitialize(VOID)
-{
-	if (!UiMinimal)
-	{
-		ULONG Depth;
-
-		// Initialize the video
-		MachVideoSetDisplayMode(NULL, TRUE);
-		MachVideoGetDisplaySize(&UiScreenWidth, &UiScreenHeight, &Depth);
-
-		// Use Text UI with a modified backdrop and set display properties
-		UiVtbl = TuiVtbl;
-		UiVtbl.DrawBackdrop = SetupUiDrawBackdrop;
-
-		UiStatusBarFgColor		= COLOR_BLACK;
-		UiStatusBarBgColor		= COLOR_GRAY;
-		UiBackdropFgColor		= COLOR_WHITE;
-		UiBackdropBgColor		= COLOR_BLUE;
-		UiBackdropFillStyle		= MEDIUM_FILL;
-		UiTitleBoxFgColor		= COLOR_WHITE;
-		UiTitleBoxBgColor		= COLOR_RED;
-		UiMessageBoxFgColor		= COLOR_WHITE;
-		UiMessageBoxBgColor		= COLOR_BLUE;
-		UiMenuFgColor			= COLOR_WHITE;
-		UiMenuBgColor			= COLOR_BLUE;
-		UiTextColor				= COLOR_YELLOW;
-		UiSelectedTextColor		= COLOR_BLACK;
-		UiSelectedTextBgColor	= COLOR_GRAY;
-		UiEditBoxTextColor		= COLOR_WHITE;
-		UiEditBoxBgColor		= COLOR_BLACK;
-		UiUseSpecialEffects		= FALSE;
-		UiDrawTime				= FALSE;
-
-		UiVtbl.Initialize();
-
-		// Draw the backdrop
-		UiDrawBackdrop();
-	}
-
-	TRACE("SetupUiInitialize() returning TRUE.\n");
-
-	return TRUE;
 }
 
 #endif

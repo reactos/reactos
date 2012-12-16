@@ -55,7 +55,6 @@ extern	const CHAR	UiMonthNames[12][15];
 //
 ///////////////////////////////////////////////////////////////////////////////////////
 BOOLEAN	UiInitialize(BOOLEAN ShowGui);								// Initialize User-Interface
-BOOLEAN	SetupUiInitialize(VOID);						// Initialize Setup User-Interface
 VOID	UiUnInitialize(PCSTR BootText);						// Un-initialize User-Interface
 VOID	UiDrawBackdrop(VOID);									// Fills the entire screen with a backdrop
 VOID	UiFillArea(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, CHAR FillChar, UCHAR Attr /* Color Attributes */);	// Fills the area specified with FillChar and Attr
