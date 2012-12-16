@@ -31,7 +31,7 @@ extern int __mb_cur_max;
 extern const unsigned short _ctype [257];
 
 void __cdecl _purecall(void);
-void __cdecl _amsg_exit(int errnum);
+__declspec(noreturn) void __cdecl _amsg_exit(int errnum);
 
 extern char **_environ;
 extern wchar_t **_wenviron;

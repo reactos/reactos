@@ -10,6 +10,7 @@
 #include <mbctype.h>
 #include <specstrings.h>
 
+_Success_(return>0)
 _Check_return_
 _CRTIMP
 size_t

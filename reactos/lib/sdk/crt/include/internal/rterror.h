@@ -25,7 +25,7 @@
 #define _RT_STDIOINIT   15  /* not enough space for stdio initialization */
 #define _RT_LOWIOINIT   16  /* not enough space for lowio initialization */
 
-void _amsg_exit (int errnum);
+__declspec(noreturn) void _amsg_exit (int errnum);
 
 /* not in any other header */
 void _dosmaperr(unsigned long oserrcode);

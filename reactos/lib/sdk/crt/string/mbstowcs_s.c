@@ -9,8 +9,9 @@
 #include <precomp.h>
 #include <mbstring.h>
 
-_CRTIMP
+_Success_(return!=EINVAL)
 _Check_return_opt_
+_CRTIMP
 errno_t
 __cdecl
 mbstowcs_s(

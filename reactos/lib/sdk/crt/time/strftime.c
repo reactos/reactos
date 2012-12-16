@@ -2,8 +2,8 @@
  * COPYRIGHT:   LGPL, See LGPL.txt in the top level directory
  * PROJECT:     ReactOS CRT library
  * FILE:        lib/sdk/crt/time/strftime.c
- * PURPOSE:     
- * PROGRAMER:   
+ * PURPOSE:
+ * PROGRAMER:
  */
 #include <precomp.h>
 
@@ -258,7 +258,7 @@ size_t CDECL _Strftime(char *str, size_t max, const char *format,
             else
                 tmp = mstm->tm_wday-1;
 
-            tmp = mstm->tm_yday/7 + (tmp<=mstm->tm_yday%7);
+            tmp = mstm->tm_yday/7 + (tmp <= ((unsigned)mstm->tm_yday%7));
             if(!strftime_int(str, &ret, max, tmp, alternate ? 0 : 2, 0, 53))
                 return 0;
             break;

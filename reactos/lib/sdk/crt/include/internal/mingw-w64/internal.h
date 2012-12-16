@@ -139,7 +139,7 @@ extern char ** __MINGW_IMP_SYMBOL(_wcmdln);
 /*  __CRTIMP extern wchar_t *_wcmdln; */
 #endif
 
-  _CRTIMP void __cdecl _amsg_exit(int);
+  _CRTIMP __declspec(noreturn) void __cdecl _amsg_exit(int);
 
   int __CRTDECL _setargv(void);
   int __CRTDECL __setargv(void);

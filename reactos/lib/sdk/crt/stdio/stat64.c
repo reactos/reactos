@@ -45,7 +45,7 @@ int CDECL _tstat64(const _TCHAR *path, struct __stat64 *buf)
                  Also a letter as first char isn't enough to be classified
 		 as a drive letter
   */
-  if (isalpha(*path)&& (*(path+1)==':'))
+  if (isalpha((unsigned char)*path)&& (*(path+1)==':'))
     buf->st_dev = buf->st_rdev = _totupper(*path) - 'A'; /* drive num */
   else
     buf->st_dev = buf->st_rdev = _getdrive() - 1;

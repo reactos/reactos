@@ -34,7 +34,7 @@ int mblen( const char *str, size_t size )
 {
   if (str && *str && size)
   {
-    return !isleadbyte(*str) ? 1 : (size>1 ? 2 : -1);
+    return !isleadbyte((unsigned char)*str) ? 1 : (size>1 ? 2 : -1);
   }
   return 0;
 }
