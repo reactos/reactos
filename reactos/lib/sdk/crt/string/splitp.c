@@ -32,7 +32,7 @@ void _tsplitpath(const _TCHAR* path, _TCHAR* drive, _TCHAR* dir, _TCHAR* fname, 
     }
 #endif
 
-    //_Analysis_assume_(path != 0);
+    _Analysis_assume_(path != 0);
 
 #if WINVER == 0x600
     /* Skip '\\?\' prefix */
