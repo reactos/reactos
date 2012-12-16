@@ -327,11 +327,11 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA SystemKey,
     USHORT i;
     ULONG Size;
     BOOLEAN Changed;
-    
+
     /* Count the number of visible drives */
     DiskReportError(FALSE);
     DiskCount = 0;
-    
+
     /* There are some really broken BIOSes out there. There are even BIOSes
         * that happily report success when you ask them to read from non-existent
         * harddisks. So, we set the buffer to known contents first, then try to
@@ -357,9 +357,9 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA SystemKey,
     DiskReportError(TRUE);
     TRACE("BIOS reports %d harddisk%s\n",
           (int)DiskCount, (DiskCount == 1) ? "": "s");
-    
+
     //DetectBiosFloppyController(BusKey);
-    
+
     /* Allocate resource descriptor */
     Size = sizeof(CM_PARTIAL_RESOURCE_LIST) +
         sizeof(CM_INT13_DRIVE_PARAMETER) * DiskCount;
@@ -369,7 +369,7 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA SystemKey,
         ERR("Failed to allocate resource descriptor\n");
         return;
     }
-    
+
     /* Initialize resource descriptor */
     memset(PartialResourceList, 0, Size);
     PartialResourceList->Version = 1;
@@ -380,7 +380,7 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA SystemKey,
     PartialResourceList->PartialDescriptors[0].Flags = 0;
     PartialResourceList->PartialDescriptors[0].u.DeviceSpecificData.DataSize =
         sizeof(CM_INT13_DRIVE_PARAMETER) * DiskCount;
-    
+
     /* Get harddisk Int13 geometry data */
     Int13Drives = (PVOID)(((ULONG_PTR)PartialResourceList) + sizeof(CM_PARTIAL_RESOURCE_LIST));
     for (i = 0; i < DiskCount; i++)
@@ -392,7 +392,7 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA SystemKey,
             Int13Drives[i].SectorsPerTrack = (USHORT)Geometry.Sectors;
             Int13Drives[i].MaxHeads = (USHORT)Geometry.Heads - 1;
             Int13Drives[i].NumberDrives = DiskCount;
-            
+
             TRACE(
                       "Disk %x: %u Cylinders  %u Heads  %u Sectors  %u Bytes\n",
                       0x80 + i,
@@ -402,7 +402,7 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA SystemKey,
                       Geometry.BytesPerSector);
         }
     }
-    
+
     FldrCreateComponentKey(BusKey,
                            ControllerClass,
                            DiskController,
@@ -414,14 +414,12 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA SystemKey,
                            Size,
                            &ControllerKey);
     TRACE("Created key: DiskController\\0\n");
-    
+
     MmHeapFree(PartialResourceList);
-    
+
     /* Create and fill subkey for each harddisk */
     for (i = 0; i < DiskCount; i++)
     {
-        PCM_PARTIAL_RESOURCE_LIST PartialResourceList;
-        ULONG Size;
         CHAR Identifier[20];
 
         /* Get disk values */

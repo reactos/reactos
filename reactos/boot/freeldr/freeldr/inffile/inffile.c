@@ -560,7 +560,7 @@ static const CHAR *line_start_state( struct parser *parser, const CHAR *pos )
 	    return p + 1;
 
 	  default:
-	    if (!isspace(*p))
+	    if (!isspace((unsigned char)*p))
 	      {
 		parser->start = p;
 		set_state( parser, KEY_NAME );
@@ -633,7 +633,7 @@ static const CHAR *key_name_state( struct parser *parser, const CHAR *pos )
             set_state( parser, EOL_BACKSLASH );
             return p;
         default:
-            if (!isspace(*p)) token_end = p + 1;
+            if (!isspace((unsigned char)*p)) token_end = p + 1;
             else
             {
                 push_token( parser, p );
@@ -685,7 +685,7 @@ static const CHAR *value_name_state( struct parser *parser, const CHAR *pos )
             set_state( parser, EOL_BACKSLASH );
             return p;
         default:
-            if (!isspace(*p)) token_end = p + 1;
+            if (!isspace((unsigned char)*p)) token_end = p + 1;
             else
             {
                 push_token( parser, p );
@@ -730,7 +730,7 @@ static const CHAR *eol_backslash_state( struct parser *parser, const CHAR *pos )
 	    return p + 1;
 
 	  default:
-	    if (isspace(*p))
+	    if (isspace((unsigned char)*p))
 	      continue;
 	    push_token( parser, p );
 	    pop_state( parser );
@@ -787,7 +787,7 @@ static const CHAR *leading_spaces_state( struct parser *parser, const CHAR *pos 
 	  set_state( parser, EOL_BACKSLASH );
 	  return p;
 	}
-      if (!isspace(*p))
+      if (!isspace((unsigned char)*p))
 	break;
     }
   parser->start = p;
@@ -808,7 +808,7 @@ static const CHAR *trailing_spaces_state( struct parser *parser, const CHAR *pos
 	  set_state( parser, EOL_BACKSLASH );
 	  return p;
 	}
-      if (!isspace(*p))
+      if (!isspace((unsigned char)*p))
 	break;
     }
   pop_state( parser );

@@ -86,7 +86,7 @@ VOID LoadAndBootWindows(IN OperatingSystemItem* OperatingSystem,
 // conversion.c
 PVOID VaToPa(PVOID Va);
 PVOID PaToVa(PVOID Pa);
-VOID List_PaToVa(LIST_ENTRY *ListEntry);
+VOID List_PaToVa(_In_ LIST_ENTRY *ListEntry);
 VOID ConvertConfigToVA(PCONFIGURATION_COMPONENT_DATA Start);
 
 // peloader.c

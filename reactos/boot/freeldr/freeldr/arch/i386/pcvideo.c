@@ -17,6 +17,7 @@
  */
 
 #include <freeldr.h>
+#include <suppress.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -1047,6 +1048,7 @@ PcVideoClearScreen(UCHAR Attr)
        BufPtr < (USHORT *) (VIDEOTEXT_MEM_ADDRESS + VIDEOTEXT_MEM_SIZE);
        BufPtr++)
     {
+      _PRAGMA_WARNING_SUPPRESS(__WARNING_DEREF_NULL_PTR)
       *BufPtr = AttrChar;
     }
 }

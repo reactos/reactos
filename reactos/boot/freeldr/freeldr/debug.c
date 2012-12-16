@@ -275,7 +275,7 @@ DbgAddDebugChannel( CHAR* channel, CHAR* level, CHAR op)
         iLevel = TRACE_LEVEL;
     else
         return FALSE;
-    
+
     if(strcmp(channel, "memory") == 0) iChannel = DPRINT_MEMORY;
     else if(strcmp(channel, "filesystem") == 0) iChannel = DPRINT_FILESYSTEM;
     else if(strcmp(channel, "inifile") == 0) iChannel = DPRINT_INIFILE;
@@ -289,7 +289,7 @@ DbgAddDebugChannel( CHAR* channel, CHAR* level, CHAR op)
     else if(strcmp(channel, "peloader") == 0) iChannel = DPRINT_PELOADER;
     else if(strcmp(channel, "scsiport") == 0) iChannel = DPRINT_SCSIPORT;
     else if(strcmp(channel, "heap") == 0) iChannel = DPRINT_HEAP;
-    else if(strcmp(channel, "all") == 0) 
+    else if(strcmp(channel, "all") == 0)
     {
         int i;
 
@@ -309,7 +309,7 @@ DbgAddDebugChannel( CHAR* channel, CHAR* level, CHAR op)
         DbgChannels[iChannel] |= iLevel;
     else
         DbgChannels[iChannel] &= ~iLevel;
-    
+
     return TRUE;
 }
 
@@ -411,7 +411,7 @@ RtlAssert(IN PVOID FailedAssertion,
 {
    if (Message)
    {
-      DbgPrint("Assertion \'%s\' failed at %s line %d: %s\n",
+      DbgPrint("Assertion \'%s\' failed at %s line %u: %s\n",
                (PCHAR)FailedAssertion,
                (PCHAR)FileName,
                LineNumber,
@@ -419,7 +419,7 @@ RtlAssert(IN PVOID FailedAssertion,
    }
    else
    {
-      DbgPrint("Assertion \'%s\' failed at %s line %d\n",
+      DbgPrint("Assertion \'%s\' failed at %s line %u\n",
                (PCHAR)FailedAssertion,
                (PCHAR)FileName,
                LineNumber);
