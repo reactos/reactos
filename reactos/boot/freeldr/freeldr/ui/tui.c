@@ -134,11 +134,6 @@ VOID TuiDrawBackdrop(VOID)
 			ATTR(UiTitleBoxFgColor, UiTitleBoxBgColor));
 
 	//
-	// Draw status bar
-	//
-	TuiDrawStatusText("Welcome to FreeLoader!");
-
-	//
 	// Update the date & time
 	//
 	TuiUpdateDateTime();
