@@ -164,6 +164,7 @@ int main (int argc, char **argv)
     if (!LoadString(hApp, IDS_CONTINUE, szCont, sizeof(szCont) / sizeof(TCHAR)))
     {
         /* Shouldn't happen, so exit */
+        free(buff);
         return 1;
     }
     szContLength = _tcslen(szCont);
