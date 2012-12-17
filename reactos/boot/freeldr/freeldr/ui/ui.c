@@ -229,7 +229,7 @@ BOOLEAN UiInitialize(BOOLEAN ShowGui)
 VOID UiUnInitialize(PCSTR BootText)
 {
 	UiDrawBackdrop();
-	UiDrawStatusText("Booting...");
+	UiDrawStatusText(BootText);
 	UiInfoBox(BootText);
 
 	UiVtbl.UnInitialize();

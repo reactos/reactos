@@ -359,5 +359,5 @@ VOID OptionMenuReboot(VOID)
 	UiMessageBox("The system will now reboot.");
 
 	DiskStopFloppyMotor();
-	SoftReboot();
+	Reboot();
 }

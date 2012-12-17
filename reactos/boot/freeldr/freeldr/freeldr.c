@@ -40,13 +40,13 @@ VOID BootMain(LPSTR CmdLine)
 	if (!UiInitialize(FALSE))
 	{
 		UiMessageBoxCritical("Unable to initialize UI.\n");
-		return;
+		goto quit;
 	}
 
 	if (!MmInitializeMemoryManager())
 	{
 		UiMessageBoxCritical("Unable to initialize memory manager");
-		return;
+		goto quit;
 	}
 
 #ifdef _M_IX86
@@ -54,6 +54,11 @@ VOID BootMain(LPSTR CmdLine)
 	HalpInitBusHandler();
 #endif
 	RunLoader();
+
+quit:
+	/* If we reach this point, something went wrong before, therefore reboot */
+	DiskStopFloppyMotor();
+	Reboot();
 }
 
 // We need to emulate these, because the original ones don't work in freeldr

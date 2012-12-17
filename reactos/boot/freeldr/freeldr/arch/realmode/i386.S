@@ -142,7 +142,7 @@ pm_entrypoint:
 
 callback_table:
     .word Int386
-    .word SoftReboot
+    .word Reboot
     .word ChainLoadBiosBootSectorCode
     .word PxeCallApi
     .word PnpBiosGetDeviceNodeCount

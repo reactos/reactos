@@ -48,8 +48,8 @@ int TuiPrintf(const char *Format, ...)
 
 BOOLEAN TuiInitialize(VOID)
 {
-	MachVideoClearScreen(ATTR(COLOR_WHITE, COLOR_BLACK));
 	MachVideoHideShowTextCursor(FALSE);
+	MachVideoClearScreen(ATTR(COLOR_GRAY, COLOR_BLACK));
 
 	TextVideoBuffer = VideoAllocateOffScreenBuffer();
 	if (TextVideoBuffer == NULL)
@@ -71,7 +71,7 @@ VOID TuiUnInitialize(VOID)
 		MachVideoSetDisplayMode(NULL, FALSE);
 	}
 
-	//VideoClearScreen();
+	MachVideoClearScreen(ATTR(COLOR_GRAY, COLOR_BLACK));
 	MachVideoHideShowTextCursor(TRUE);
 }
 
