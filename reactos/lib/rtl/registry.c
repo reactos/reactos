@@ -10,8 +10,6 @@
 /* INCLUDES *****************************************************************/
 
 #include <rtl.h>
-#include <suppress.h>
-
 #define NDEBUG
 #include <debug.h>
 
@@ -244,8 +242,7 @@ RtlpCallQueryRegistryRoutine(IN PRTL_QUERY_REGISTRY_TABLE QueryTable,
         {
             /* Prepare defaults */
             Status = STATUS_SUCCESS;
-            _PRAGMA_WARNING_SUPPRESS(__WARNING_SIZEOF_COUNTOF_MISMATCH)
-            ValueEnd = (PWSTR)((ULONG_PTR)Data + Length) - sizeof(UNICODE_NULL);
+            ValueEnd = (PWSTR)((ULONG_PTR)Data + Length - sizeof(UNICODE_NULL));
             p = Data;
 
             /* Loop all strings */
@@ -837,7 +834,7 @@ RtlpNtEnumerateSubKey(IN HANDLE KeyHandle,
                             KeyInfo,
                             BufferLength,
                             &ReturnedLength);
-    if (NT_SUCCESS(Status) && (KeyInfo != NULL))
+    if (NT_SUCCESS(Status))
     {
         /* Check if the name fits */
         if (KeyInfo->NameLength <= SubKeyName->MaximumLength)
