@@ -2761,7 +2761,7 @@ RtlReAllocateHeap(HANDLE HeapPtr,
         if (InUseEntry->Flags & HEAP_ENTRY_VIRTUAL_ALLOC)
         {
             /* Simple in case of a virtual alloc - just an unused size */
-            InUseEntry->Size = (USHORT)(AllocationSize - Size);
+            InUseEntry->Size = (USHORT)((AllocationSize - Size) >> HEAP_ENTRY_SHIFT);
         }
         else if (InUseEntry->Flags & HEAP_ENTRY_EXTRA_PRESENT)
         {

@@ -570,12 +570,6 @@ RtlInvertRangeList(OUT PRTL_RANGE_LIST InvertedRangeList,
     PLIST_ENTRY Entry;
     NTSTATUS Status;
 
-    /* Don't invert an empty range list */
-    if (IsListEmpty(&RangeList->ListHead))
-    {
-        return STATUS_SUCCESS;
-    }
-
     /* Add leading and intermediate ranges */
     Previous = NULL;
     Entry = RangeList->ListHead.Flink;
@@ -616,6 +610,13 @@ RtlInvertRangeList(OUT PRTL_RANGE_LIST InvertedRangeList,
 
         Previous = Current;
         Entry = Entry->Flink;
+    }
+
+    /* Check if the list was empty */
+    if (Previous == NULL)
+    {
+        /* We're done */
+        return STATUS_SUCCESS;
     }
 
     /* Add trailing range */

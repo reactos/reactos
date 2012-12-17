@@ -214,6 +214,8 @@ VerSetConditionMask(IN ULONGLONG dwlConditionMask,
                     IN DWORD dwTypeBitMask,
                     IN BYTE bConditionMask)
 {
+    ULONGLONG ullCondMask;
+
     if (dwTypeBitMask == 0)
         return dwlConditionMask;
 
@@ -222,22 +224,23 @@ VerSetConditionMask(IN ULONGLONG dwlConditionMask,
     if (bConditionMask == 0)
         return dwlConditionMask;
 
+    ullCondMask = bConditionMask;
     if (dwTypeBitMask & VER_PRODUCT_TYPE)
-        dwlConditionMask |= bConditionMask << 7 * VER_NUM_BITS_PER_CONDITION_MASK;
+        dwlConditionMask |= ullCondMask << (7 * VER_NUM_BITS_PER_CONDITION_MASK);
     else if (dwTypeBitMask & VER_SUITENAME)
-        dwlConditionMask |= bConditionMask << 6 * VER_NUM_BITS_PER_CONDITION_MASK;
+        dwlConditionMask |= ullCondMask << (6 * VER_NUM_BITS_PER_CONDITION_MASK);
     else if (dwTypeBitMask & VER_SERVICEPACKMAJOR)
-        dwlConditionMask |= bConditionMask << 5 * VER_NUM_BITS_PER_CONDITION_MASK;
+        dwlConditionMask |= ullCondMask << (5 * VER_NUM_BITS_PER_CONDITION_MASK);
     else if (dwTypeBitMask & VER_SERVICEPACKMINOR)
-        dwlConditionMask |= bConditionMask << 4 * VER_NUM_BITS_PER_CONDITION_MASK;
+        dwlConditionMask |= ullCondMask << (4 * VER_NUM_BITS_PER_CONDITION_MASK);
     else if (dwTypeBitMask & VER_PLATFORMID)
-        dwlConditionMask |= bConditionMask << 3 * VER_NUM_BITS_PER_CONDITION_MASK;
+        dwlConditionMask |= ullCondMask << (3 * VER_NUM_BITS_PER_CONDITION_MASK);
     else if (dwTypeBitMask & VER_BUILDNUMBER)
-        dwlConditionMask |= bConditionMask << 2 * VER_NUM_BITS_PER_CONDITION_MASK;
+        dwlConditionMask |= ullCondMask << (2 * VER_NUM_BITS_PER_CONDITION_MASK);
     else if (dwTypeBitMask & VER_MAJORVERSION)
-        dwlConditionMask |= bConditionMask << 1 * VER_NUM_BITS_PER_CONDITION_MASK;
+        dwlConditionMask |= ullCondMask << (1 * VER_NUM_BITS_PER_CONDITION_MASK);
     else if (dwTypeBitMask & VER_MINORVERSION)
-        dwlConditionMask |= bConditionMask << 0 * VER_NUM_BITS_PER_CONDITION_MASK;
+        dwlConditionMask |= ullCondMask << (0 * VER_NUM_BITS_PER_CONDITION_MASK);
 
     return dwlConditionMask;
 }
