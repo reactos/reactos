@@ -25,7 +25,7 @@ if(NOT MSVC)
     target_link_libraries(services ${PSEH_LIB})
 endif()
 
-set_module_type(services win32cui UNICODE)
+set_module_type(services win32gui UNICODE)
 add_importlibs(services user32 advapi32 rpcrt4 msvcrt kernel32 ntdll)
 add_pch(services services.h ${CMAKE_CURRENT_BINARY_DIR}/svcctl_s.h)
 add_cd_file(TARGET services DESTINATION reactos/system32 FOR all)

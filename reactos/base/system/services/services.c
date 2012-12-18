@@ -8,10 +8,6 @@
  *
  */
 
-/* NOTE:
- * - Services.exe is NOT a native application, it is a GUI app.
- */
-
 /* INCLUDES *****************************************************************/
 
 #include "services.h"
@@ -393,7 +389,7 @@ wWinMain(HINSTANCE hInstance,
         goto done;
     }
 
-    /* Create the service database */
+    /* Create the services database */
     dwError = ScmCreateServiceDatabase();
     if (dwError != ERROR_SUCCESS)
     {
@@ -401,11 +397,15 @@ wWinMain(HINSTANCE hInstance,
         goto done;
     }
 
-    /* Update service database */
+    /* Update the services database */
     ScmGetBootAndSystemDriverState();
 
-    /* Register service process with CSRSS */
-    RegisterServicesProcess(GetCurrentProcessId());
+    /* Register the Service Control Manager process with CSRSS */
+    if (!RegisterServicesProcess(GetCurrentProcessId()))
+    {
+        DPRINT1("SERVICES: Could not register SCM process\n");
+        goto done;
+    }
 
     /* Acquire the service start lock until autostart services have been started */
     dwError = ScmAcquireServiceStartLock(TRUE, &Lock);
