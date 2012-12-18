@@ -60,66 +60,89 @@ RtlAllocateHandle(
     PRTL_HANDLE_TABLE HandleTable,
     PULONG Index)
 {
-    PRTL_HANDLE_TABLE_ENTRY *pp_new, *pph, ph;
+    PRTL_HANDLE_TABLE_ENTRY CurrentEntry, NextEntry;
     NTSTATUS Status;
-    PRTL_HANDLE_TABLE_ENTRY retval;
+    PRTL_HANDLE_TABLE_ENTRY HandleEntry;
     PVOID ArrayPointer;
     SIZE_T ArraySize;
+    ULONG i, NumberOfEntries;
 
-    pp_new = &HandleTable->FreeHandles;
-
+    /* Check if we are out of free handles entries */
     if (HandleTable->FreeHandles == NULL)
     {
-        /* no free handle available */
+        /* Check if we don't have uncomitted handle entries yet */
         if (HandleTable->UnCommittedHandles == NULL)
         {
-            /* allocate handle array */
+            /* Use the maximum number of handle entries */
             ArraySize = HandleTable->SizeOfHandleTableEntry * HandleTable->MaximumNumberOfHandles;
             ArrayPointer = NULL;
 
-            /* FIXME - only reserve handles here! */
-            Status = NtAllocateVirtualMemory(NtCurrentProcess(),
-                                             (PVOID*)&ArrayPointer,
+            /* Reserve memory */
+            Status = ZwAllocateVirtualMemory(NtCurrentProcess(),
+                                             &ArrayPointer,
                                              0,
                                              &ArraySize,
-                                             MEM_RESERVE | MEM_COMMIT,
+                                             MEM_RESERVE,
                                              PAGE_READWRITE);
             if (!NT_SUCCESS(Status))
                 return NULL;
 
-            /* update handle array pointers */
-            HandleTable->FreeHandles = (PRTL_HANDLE_TABLE_ENTRY)ArrayPointer;
-            HandleTable->MaxReservedHandles = (PRTL_HANDLE_TABLE_ENTRY)((ULONG_PTR)ArrayPointer + ArraySize);
-            HandleTable->CommittedHandles = (PRTL_HANDLE_TABLE_ENTRY)ArrayPointer;
+            /* Update handle array pointers */
             HandleTable->UnCommittedHandles = (PRTL_HANDLE_TABLE_ENTRY)ArrayPointer;
+            HandleTable->MaxReservedHandles = (PRTL_HANDLE_TABLE_ENTRY)((ULONG_PTR)ArrayPointer + ArraySize);
         }
 
-        /* FIXME - should check if handles need to be committed */
+        /* Commit one reserved handle entry page */
+        ArraySize = PAGE_SIZE;
+        ArrayPointer = HandleTable->UnCommittedHandles;
+        Status = ZwAllocateVirtualMemory(NtCurrentProcess(),
+                                         &ArrayPointer,
+                                         0,
+                                         &ArraySize,
+                                         MEM_COMMIT,
+                                         PAGE_READWRITE);
+        if (!NT_SUCCESS(Status))
+            return NULL;
 
-        /* build free list in handle array */
-        ph = HandleTable->FreeHandles;
-        pph = pp_new;
-        while (ph < HandleTable->MaxReservedHandles)
+        /* Update handle array pointers */
+        HandleTable->FreeHandles = (PRTL_HANDLE_TABLE_ENTRY)ArrayPointer;
+        HandleTable->CommittedHandles = (PRTL_HANDLE_TABLE_ENTRY)ArrayPointer;
+        HandleTable->UnCommittedHandles = (PRTL_HANDLE_TABLE_ENTRY)((ULONG_PTR)ArrayPointer + ArraySize);
+
+        /* Calculate the number of entries we can store in the array */
+        NumberOfEntries = ArraySize / HandleTable->SizeOfHandleTableEntry;
+
+        /* Loop all entries, except the last one */
+        CurrentEntry = HandleTable->FreeHandles;
+        for (i = 0; i < NumberOfEntries - 1; i++)
         {
-            *pph = ph;
-            pph = &ph->NextFree;
-            ph = (PRTL_HANDLE_TABLE_ENTRY)((ULONG_PTR)ph + HandleTable->SizeOfHandleTableEntry);
+            /* Calculate the address of the next handle entry */
+            NextEntry = (PRTL_HANDLE_TABLE_ENTRY)((ULONG_PTR)CurrentEntry +
+                                                  HandleTable->SizeOfHandleTableEntry);
+
+            /* Link the next entry */
+            CurrentEntry->NextFree = NextEntry;
+
+            /* Continue with the next entry */
+            CurrentEntry = NextEntry;
         }
-        *pph = 0;
+
+        /* CurrentEntry now points to the last entry, terminate the list here */
+        CurrentEntry->NextFree = NULL;
     }
 
     /* remove handle from free list */
-    retval = *pp_new;
-    *pp_new = retval->NextFree;
-    retval->NextFree = NULL;
+    HandleEntry = HandleTable->FreeHandles;
+    HandleTable->FreeHandles = HandleEntry->NextFree;
+    HandleEntry->NextFree = NULL;
 
     if (Index)
     {
-        *Index = ((ULONG)((ULONG_PTR)retval - (ULONG_PTR)HandleTable->CommittedHandles) /
+        *Index = ((ULONG)((ULONG_PTR)HandleEntry - (ULONG_PTR)HandleTable->CommittedHandles) /
                   HandleTable->SizeOfHandleTableEntry);
     }
 
-    return retval;
+    return HandleEntry;
 }
 
 
