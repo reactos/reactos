@@ -72,6 +72,8 @@
 /* INCLUDES *****************************************************************/
 
 #include <hal.h>
+#include <suppress.h>
+
 #define NDEBUG
 #include <debug.h>
 
@@ -552,6 +554,7 @@ HalpDmaInitializeEisaAdapter(IN PADAPTER_OBJECT AdapterObject,
         if (Controller == 1)
         {
             /* Set the Request Data */
+            _PRAGMA_WARNING_SUPPRESS(__WARNING_DEREF_NULL_PTR)
             WRITE_PORT_UCHAR(&((PDMA1_CONTROL)AdapterBaseVa)->Mode, DmaMode.Byte);
 
             /* Unmask DMA Channel */
