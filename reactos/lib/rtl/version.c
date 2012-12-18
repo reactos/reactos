@@ -178,13 +178,13 @@ RtlpVerGetCondition(IN ULONGLONG dwlConditionMask,
     BYTE bConditionMask = 0;
 
     if (dwTypeBitMask & VER_PRODUCT_TYPE)
-        bConditionMask |= dwlConditionMask >> 7 * VER_NUM_BITS_PER_CONDITION_MASK;
+        bConditionMask |= dwlConditionMask >> (7 * VER_NUM_BITS_PER_CONDITION_MASK);
     else if (dwTypeBitMask & VER_SUITENAME)
-        bConditionMask |= dwlConditionMask >> 6 * VER_NUM_BITS_PER_CONDITION_MASK;
+        bConditionMask |= dwlConditionMask >> (6 * VER_NUM_BITS_PER_CONDITION_MASK);
     else if (dwTypeBitMask & VER_PLATFORMID)
-        bConditionMask |= dwlConditionMask >> 3 * VER_NUM_BITS_PER_CONDITION_MASK;
+        bConditionMask |= dwlConditionMask >> (3 * VER_NUM_BITS_PER_CONDITION_MASK);
     else if (dwTypeBitMask & VER_BUILDNUMBER)
-        bConditionMask |= dwlConditionMask >> 2 * VER_NUM_BITS_PER_CONDITION_MASK;
+        bConditionMask |= dwlConditionMask >> (2 * VER_NUM_BITS_PER_CONDITION_MASK);
     /*
      * We choose here the lexicographical order on the 4D space
      * {(Major ; Minor ; SP Major ; SP Minor)} to select the
@@ -192,13 +192,13 @@ RtlpVerGetCondition(IN ULONGLONG dwlConditionMask,
      * Therefore the following 'else if' instructions must be in this order.
      */
     else if (dwTypeBitMask & VER_MAJORVERSION)
-        bConditionMask |= dwlConditionMask >> 1 * VER_NUM_BITS_PER_CONDITION_MASK;
+        bConditionMask |= dwlConditionMask >> (1 * VER_NUM_BITS_PER_CONDITION_MASK);
     else if (dwTypeBitMask & VER_MINORVERSION)
-        bConditionMask |= dwlConditionMask >> 0 * VER_NUM_BITS_PER_CONDITION_MASK;
+        bConditionMask |= dwlConditionMask >> (0 * VER_NUM_BITS_PER_CONDITION_MASK);
     else if (dwTypeBitMask & VER_SERVICEPACKMAJOR)
-        bConditionMask |= dwlConditionMask >> 5 * VER_NUM_BITS_PER_CONDITION_MASK;
+        bConditionMask |= dwlConditionMask >> (5 * VER_NUM_BITS_PER_CONDITION_MASK);
     else if (dwTypeBitMask & VER_SERVICEPACKMINOR)
-        bConditionMask |= dwlConditionMask >> 4 * VER_NUM_BITS_PER_CONDITION_MASK;
+        bConditionMask |= dwlConditionMask >> (4 * VER_NUM_BITS_PER_CONDITION_MASK);
 
     bConditionMask &= VER_CONDITION_MASK;
 
