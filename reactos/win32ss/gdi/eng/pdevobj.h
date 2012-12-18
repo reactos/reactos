@@ -160,22 +160,24 @@ extern PPDEVOBJ gppdevPrimary;
 
 PPDEVOBJ
 NTAPI
-EngpGetPDEV(PUNICODE_STRING pustrDevice);
+EngpGetPDEV(
+    _In_ PUNICODE_STRING pustrDevice);
 
 VOID
 NTAPI
-PDEVOBJ_vRelease(PPDEVOBJ ppdev);
+PDEVOBJ_vRelease(
+    _Inout_ PPDEVOBJ ppdev);
 
 PSURFACE
 NTAPI
 PDEVOBJ_pSurface(
-    PPDEVOBJ ppdev);
+    _In_ PPDEVOBJ ppdev);
 
 VOID
 NTAPI
 PDEVOBJ_vGetDeviceCaps(
-    PPDEVOBJ ppdev,
-    PDEVCAPS pDevCaps);
+    _In_ PPDEVOBJ ppdev,
+    _Out_ PDEVCAPS pDevCaps);
 
 INIT_FUNCTION
 NTSTATUS
@@ -184,6 +186,8 @@ InitPDEVImpl(VOID);
 
 PSIZEL
 FASTCALL
-PDEVOBJ_sizl(PPDEVOBJ, PSIZEL);
+PDEVOBJ_sizl(
+    _In_ PPDEVOBJ ppdev,
+    _In_ PSIZEL psizl);
 
 #endif /* !__WIN32K_PDEVOBJ_H */

@@ -519,7 +519,7 @@ enum __SAL_YesNo {_SAL_notpresent, _SAL_no, _SAL_maybe, _SAL_yes, _SAL_default};
 //#define _Deref_pre_maybenull_
 //#define _Deref_pre_notnull_
 //#define _Deref_pre_null_
-//#define _Deref_pre_opt_bytecap_(size)
+#define _Deref_pre_opt_bytecap_(size)                               _SAL11_Name(_Pre_opt_bytecap_) _Group_([SA_Pre(Null=SA_Maybe,Notref=1)] [SA_Pre(WritableBytes="\n" _SA_SPECSTRIZE(size))])
 //#define _Deref_pre_opt_bytecap_c_(size)
 //#define _Deref_pre_opt_bytecap_x_(size)
 //#define _Deref_pre_opt_bytecount_(size)

@@ -472,7 +472,7 @@ leave:
 PPDEVOBJ
 NTAPI
 EngpGetPDEV(
-    PUNICODE_STRING pustrDeviceName)
+    _In_ PUNICODE_STRING pustrDeviceName)
 {
     UNICODE_STRING ustrCurrent;
     PPDEVOBJ ppdev;
@@ -775,7 +775,7 @@ NtGdiGetDeviceCaps(
     return 0;
 }
 
-
+_Success_(return!=FALSE)
 BOOL
 APIENTRY
 NtGdiGetDeviceCapsAll(

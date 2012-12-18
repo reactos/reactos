@@ -2385,6 +2385,7 @@ NtGdiGetDeviceCaps(
     _In_ HDC hdc,
     _In_ INT i);
 
+_Success_(return!=FALSE)
 W32KAPI
 BOOL
 APIENTRY

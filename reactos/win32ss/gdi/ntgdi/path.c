@@ -2585,7 +2585,7 @@ NtGdiSetMiterLimit(
 {
   DC *pDc;
   gxf_long worker, worker1;
-  NTSTATUS Status = STATUS_SUCCESS;
+  BOOL bResult = TRUE;
 
   if (!(pDc = DC_LockDc(hdc)))
   {
@@ -2601,26 +2601,19 @@ NtGdiSetMiterLimit(
   {
       _SEH2_TRY
       {
-          ProbeForWrite(pdwOut,
-                 sizeof(DWORD),
-                             1);
+          ProbeForWrite(pdwOut, sizeof(DWORD), 1);
           *pdwOut = worker1.l;
       }
       _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
       {
-          Status = _SEH2_GetExceptionCode();
+          SetLastNtError(_SEH2_GetExceptionCode());
+          bResult = FALSE;
       }
        _SEH2_END;
-      if (!NT_SUCCESS(Status))
-      {
-         SetLastNtError(Status);
-         DC_UnlockDc(pDc);
-         return FALSE;
-      }
   }
 
   DC_UnlockDc(pDc);
-  return TRUE;
+  return bResult;
 }
 
 BOOL

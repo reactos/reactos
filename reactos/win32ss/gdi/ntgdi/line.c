@@ -540,7 +540,8 @@ NtGdiPolyDraw(
 /*
  * @implemented
  */
-BOOL _Success_(return != FALSE)
+_Success_(return != FALSE)
+BOOL
 APIENTRY
 NtGdiMoveTo(
     IN HDC hdc,
