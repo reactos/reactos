@@ -1050,6 +1050,8 @@ IntRemoveHook(PHOOK Hook)
           }
           _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
           {
+              /* Do nothing */
+              (void)0;
           }
           _SEH2_END;
        }
@@ -1241,6 +1243,8 @@ co_HOOK_CallHooks( INT HookId,
           }
           _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
           {
+              /* Do nothing */
+              (void)0;
           }
           _SEH2_END;
        }

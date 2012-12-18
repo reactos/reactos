@@ -358,15 +358,20 @@ CanForceFG(PPROCESSINFO ppi)
 */
 
 static BOOL FASTCALL
-co_IntSetForegroundAndFocusWindow(PWND Wnd, BOOL MouseActivate)
+co_IntSetForegroundAndFocusWindow(
+    _In_ PWND Wnd,
+    _In_ BOOL MouseActivate)
 {
-   HWND hWnd = UserHMGetHandle(Wnd);
+   HWND hWnd;
    HWND hWndPrev = NULL;
    PUSER_MESSAGE_QUEUE PrevForegroundQueue;
    PTHREADINFO pti;
    BOOL fgRet = FALSE, Ret = FALSE;
 
    ASSERT_REFS_CO(Wnd);
+   NT_ASSERT(Wnd != NULL);
+
+   hWnd = UserHMGetHandle(Wnd);
 
    TRACE("SetForegroundAndFocusWindow(%x, %s)\n", hWnd, (MouseActivate ? "TRUE" : "FALSE"));
 

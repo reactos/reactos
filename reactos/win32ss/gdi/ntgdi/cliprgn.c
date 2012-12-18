@@ -555,6 +555,11 @@ NEW_CLIPPING_UpdateGCRegion(PDC pDC)
      pDC->prgnRao = IntSysCreateRectpRgn(0,0,0,0);
   }
 
+  if (!pDC->prgnRao)
+  {
+     return ERROR;
+  }
+
   if (pDC->dclevel.prgnMeta && pDC->dclevel.prgnClip)
   {
      IntGdiCombineRgn( pDC->prgnAPI,
@@ -585,7 +590,6 @@ NEW_CLIPPING_UpdateGCRegion(PDC pDC)
                     pDC->prgnAPI,
                     RGN_AND);
 
-  // FIXME: pDC->prgnRao may be NULL
   RtlCopyMemory(&pDC->erclClip,
                 &pDC->prgnRao->rdh.rcBound,
                 sizeof(RECTL));
@@ -599,8 +603,8 @@ NEW_CLIPPING_UpdateGCRegion(PDC pDC)
   // With pDC->co.pClipRgn->Buffer,
   // pDC->co.pClipRgn = pDC->prgnRao ? pDC->prgnRao : pDC->prgnVis;
 
-  co = IntEngCreateClipRegion( ((PROSRGNDATA)pDC->prgnRao)->rdh.nCount,
-                               ((PROSRGNDATA)pDC->prgnRao)->Buffer,
+  co = IntEngCreateClipRegion(pDC->prgnRao->rdh.nCount,
+                              pDC->prgnRao->Buffer,
                                  &pDC->erclClip);
   if (co)
   {

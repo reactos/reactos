@@ -11,7 +11,7 @@ struct _EXLATEOBJ;
 
 _Function_class_(FN_XLATE)
 typedef
-ULONG 
+ULONG
 (FASTCALL *PFN_XLATE)(
     _In_ struct _EXLATEOBJ *pexlo,
     _In_ ULONG iColor);
@@ -83,11 +83,4 @@ VOID
 NTAPI
 EXLATEOBJ_vCleanup(
     _Inout_ PEXLATEOBJ pexlo);
-
-_Always_(_Post_satisfies_(return==iColor))
-ULONG
-FASTCALL
-EXLATEOBJ_iXlateTrivial(
-    _In_ PEXLATEOBJ pexlo,
-    _In_ ULONG iColor);
 

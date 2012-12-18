@@ -141,7 +141,7 @@ typedef struct _SPIVALUES
     ULONG cxWallpaper, cyWallpaper;
     WALLPAPER_MODE WallpaperMode;
     UNICODE_STRING ustrWallpaper;
-    WCHAR awcWallpaper[MAX_PATH];
+    WCHAR awcWallpaper[MAX_PATH + 1];
 
     BOOL bHandHeld;
     BOOL bFastTaskSwitch;

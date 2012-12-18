@@ -359,7 +359,7 @@ FASTCALL
 StartTheTimers(VOID)
 {
   // Need to start gdi syncro timers then start timer with Hang App proc
-  // that calles Idle process so the screen savers will know to run......    
+  // that calles Idle process so the screen savers will know to run......
   IntSetTimer(NULL, 0, 1000, HungAppSysTimerProc, TMRF_RIT);
 // Test Timers
 //  IntSetTimer(NULL, 0, 1000, SystemTimerProc, TMRF_RIT);
@@ -584,9 +584,14 @@ NTAPI
 InitTimerImpl(VOID)
 {
    ULONG BitmapBytes;
-   
+
    /* Allocate FAST_MUTEX from non paged pool */
    Mutex = ExAllocatePoolWithTag(NonPagedPool, sizeof(FAST_MUTEX), TAG_INTERNAL_SYNC);
+   if (!Mutex)
+   {
+       return STATUS_INSUFFICIENT_RESOURCES;
+   }
+
    ExInitializeFastMutex(Mutex);
 
    BitmapBytes = ROUND_UP(NUM_WINDOW_LESS_TIMERS, sizeof(ULONG) * 8) / 8;

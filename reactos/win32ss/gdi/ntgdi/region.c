@@ -3988,51 +3988,59 @@ NtGdiUnionRectWithRgn(
  *
  * If the function fails, the return value is zero."
  */
-DWORD APIENTRY
+_Success_(return!=0)
+ULONG
+APIENTRY
 NtGdiGetRegionData(
-    HRGN hrgn,
-    DWORD count,
-    LPRGNDATA rgndata
-)
+    _In_ HRGN hrgn,
+    _In_ ULONG cjBuffer,
+    _Out_opt_bytecap_(cjBuffer) LPRGNDATA lpRgnData)
 {
-    DWORD size;
-    PROSRGNDATA obj = RGNOBJAPI_Lock(hrgn, NULL);
-    NTSTATUS Status = STATUS_SUCCESS;
+    ULONG cjSize;
+    PREGION prgn;
 
-    if (!obj)
-        return 0;
-
-    size = obj->rdh.nCount * sizeof(RECT);
-    if (count < (size + sizeof(RGNDATAHEADER)) || rgndata == NULL)
+    /* Lock the region */
+    prgn = RGNOBJAPI_Lock(hrgn, NULL);
+    if (!prgn)
     {
-        RGNOBJAPI_Unlock(obj);
-        if (rgndata) /* Buffer is too small, signal it by return 0 */
-            return 0;
-        else         /* User requested buffer size with rgndata NULL */
-            return size + sizeof(RGNDATAHEADER);
-    }
-
-    _SEH2_TRY
-    {
-        ProbeForWrite(rgndata, count, 1);
-        RtlCopyMemory(rgndata, &obj->rdh, sizeof(RGNDATAHEADER));
-        RtlCopyMemory(rgndata->Buffer, obj->Buffer, size);
-    }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        Status = _SEH2_GetExceptionCode();
-    }
-    _SEH2_END;
-
-    if (!NT_SUCCESS(Status))
-    {
-        SetLastNtError(Status);
-        RGNOBJAPI_Unlock(obj);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return 0;
     }
 
-    RGNOBJAPI_Unlock(obj);
-    return size + sizeof(RGNDATAHEADER);
+    /* Calculate the region size */
+    cjSize = prgn->rdh.nCount * sizeof(RECT) + sizeof(RGNDATAHEADER);
+
+    /* Check if region data is requested */
+    if (lpRgnData)
+    {
+        /* Check if the buffer is large enough */
+        if (cjBuffer >= cjSize)
+        {
+            /* Probe the buffer and copy the data */
+            _SEH2_TRY
+            {
+                ProbeForWrite(lpRgnData, cjSize, sizeof(ULONG));
+                RtlCopyMemory(lpRgnData, &prgn->rdh, sizeof(RGNDATAHEADER));
+                RtlCopyMemory(lpRgnData->Buffer, prgn->Buffer, cjSize);
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                EngSetLastError(ERROR_INVALID_PARAMETER);
+                cjSize = 0;
+            }
+            _SEH2_END;
+        }
+        else
+        {
+            /* Buffer is too small */
+            EngSetLastError(ERROR_INVALID_PARAMETER);
+            cjSize = 0;
+        }
+    }
+
+    /* Unlock the region and return the size */
+    RGNOBJAPI_Unlock(prgn);
+    return cjSize;
 }
 
 /* EOF */

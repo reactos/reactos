@@ -249,8 +249,8 @@ IntCreateMenu(PHANDLE Handle, BOOL IsMenuBar)
    PPROCESSINFO CurrentWin32Process;
 
    Menu = (PMENU_OBJECT)UserCreateObject( gHandleTable,
-                                          NULL, 
-                                          NULL, 
+                                          NULL,
+                                          NULL,
                                           Handle,
                                           otMenu,
                                           sizeof(MENU_OBJECT));
@@ -361,8 +361,8 @@ IntCloneMenu(PMENU_OBJECT Source)
       return NULL;
 
    Menu = (PMENU_OBJECT)UserCreateObject( gHandleTable,
-                                          NULL, 
-                                          NULL, 
+                                          NULL,
+                                          NULL,
                                           &hMenu,
                                           otMenu,
                                           sizeof(MENU_OBJECT));
@@ -803,12 +803,17 @@ IntSetMenuItemInfo(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, PROSMENUITEMINF
 }
 
 BOOL FASTCALL
-IntInsertMenuItem(PMENU_OBJECT MenuObject, UINT uItem, BOOL fByPosition,
-                  PROSMENUITEMINFO ItemInfo)
+IntInsertMenuItem(
+    _In_ PMENU_OBJECT MenuObject,
+    UINT uItem,
+    BOOL fByPosition,
+    PROSMENUITEMINFO ItemInfo)
 {
    int pos;
    PMENU_ITEM MenuItem;
    PMENU_OBJECT SubMenu = NULL;
+
+   NT_ASSERT(MenuObject != NULL);
 
    if (MAX_MENU_ITEMS <= MenuObject->MenuInfo.MenuItemCount)
    {

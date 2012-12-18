@@ -1996,6 +1996,7 @@ NtGdiGetDCDword(
     OUT DWORD *Result
 );
 
+_Success_(return!=FALSE)
 W32KAPI
 BOOL
 APIENTRY
@@ -2046,6 +2047,7 @@ NtGdiSetSizeDevice(
     _In_ INT cxVirtualDevice,
     _In_ INT cyVirtualDevice);
 
+_Success_(return !=FALSE)
 W32KAPI
 BOOL
 APIENTRY
@@ -2508,6 +2510,7 @@ NtGdiOffsetRgn(
     _In_ INT cx,
     _In_ INT cy);
 
+_Success_(return!=ERROR)
 W32KAPI
 INT
 APIENTRY
@@ -2523,6 +2526,7 @@ NtGdiRectInRegion(
     IN OUT LPRECT prcl
 );
 
+_Success_(return!=0)
 W32KAPI
 DWORD
 APIENTRY
@@ -2559,13 +2563,14 @@ NtGdiSetSystemPaletteUse(
     _In_ HDC hdc,
     _In_ UINT ui);
 
+_Success_(return!=0)
 W32KAPI
-DWORD
+ULONG
 APIENTRY
 NtGdiGetRegionData(
     _In_ HRGN hrgn,
-    _In_ DWORD nCount,
-    _Out_opt_ LPRGNDATA lpRgnData);
+    _In_ ULONG cjBuffer,
+    _Out_opt_bytecap_(cjBuffer) LPRGNDATA lpRgnData);
 
 W32KAPI
 BOOL

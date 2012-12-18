@@ -116,7 +116,7 @@ typedef struct tagMSGMEMORY
 }
 MSGMEMORY, *PMSGMEMORY;
 
-static MSGMEMORY MsgMemory[] =
+static MSGMEMORY g_MsgMemory[] =
 {
     { WM_CREATE, MMS_SIZE_SPECIAL, MMS_FLAG_READWRITE },
     { WM_DDE_ACK, sizeof(KMDDELPARAM), MMS_FLAG_READ },
@@ -140,8 +140,8 @@ FindMsgMemory(UINT Msg)
     PMSGMEMORY MsgMemoryEntry;
 
     /* See if this message type is present in the table */
-    for (MsgMemoryEntry = MsgMemory;
-    MsgMemoryEntry < MsgMemory + sizeof(MsgMemory) / sizeof(MSGMEMORY);
+    for (MsgMemoryEntry = g_MsgMemory;
+    MsgMemoryEntry < g_MsgMemory + sizeof(g_MsgMemory) / sizeof(MSGMEMORY);
     MsgMemoryEntry++)
     {
         if (Msg == MsgMemoryEntry->Message)
@@ -225,9 +225,9 @@ MsgMemorySize(PMSGMEMORY MsgMemoryEntry, WPARAM wParam, LPARAM lParam)
 
 UINT lParamMemorySize(UINT Msg, WPARAM wParam, LPARAM lParam)
 {
-    PMSGMEMORY MsgMemory = FindMsgMemory(Msg);
-    if(MsgMemory == NULL) return 0;
-    return MsgMemorySize(MsgMemory, wParam, lParam);
+    PMSGMEMORY MsgMemoryEntry = FindMsgMemory(Msg);
+    if(MsgMemoryEntry == NULL) return 0;
+    return MsgMemorySize(MsgMemoryEntry, wParam, lParam);
 }
 
 static NTSTATUS
@@ -388,9 +388,9 @@ UnpackParam(LPARAM lParamPacked, UINT Msg, WPARAM wParam, LPARAM lParam, BOOL No
             return STATUS_INVALID_PARAMETER;
         }
 
-        if (MsgMemory->Flags == MMS_FLAG_READWRITE)
+        if (MsgMemoryEntry->Flags == MMS_FLAG_READWRITE)
         {
-            //RtlCopyMemory((PVOID)lParam, (PVOID)lParamPacked, MsgMemory->Size);
+            //RtlCopyMemory((PVOID)lParam, (PVOID)lParamPacked, MsgMemoryEntry->Size);
         }
         ExFreePool((PVOID) lParamPacked);
         return STATUS_SUCCESS;

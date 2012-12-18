@@ -385,7 +385,7 @@ IntTranslateChar(WORD wVirtKey,
     /* If nothing has been found in layout, check if this is ASCII control character.
        Note: we could add it to layout table, but windows does not have it there */
     if (wVirtKey >= 'A' && wVirtKey <= 'Z' &&
-        IS_KEY_DOWN(pKeyState, VK_CONTROL) &&
+        pKeyState && IS_KEY_DOWN(pKeyState, VK_CONTROL) &&
         !IS_KEY_DOWN(pKeyState, VK_MENU))
     {
         *pwcTranslatedChar = (wVirtKey - 'A') + 1; /* ASCII control character */
@@ -1097,7 +1097,7 @@ IntTranslateKbdMessage(LPMSG lpMsg,
     {
        pti->KeyboardLayout = W32kGetDefaultKeyLayout();
        pti->pClientInfo->hKL = pti->KeyboardLayout ? pti->KeyboardLayout->hkl : NULL;
-       pKbdTbl = pti->KeyboardLayout->spkf->pKbdTbl;
+       pKbdTbl = pti->KeyboardLayout ? pti->KeyboardLayout->spkf->pKbdTbl : NULL;
     }
     else
        pKbdTbl = pti->KeyboardLayout->spkf->pKbdTbl;

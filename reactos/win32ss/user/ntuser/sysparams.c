@@ -617,7 +617,7 @@ SpiSetWallpaper(PVOID pvParam, FLONG fl)
     }
 
     /* Capture UNICODE_STRING */
-    bResult = SpiMemCopy(&ustr, pvParam, sizeof(UNICODE_STRING), fl & SPIF_PROTECT, 0);
+    bResult = SpiMemCopy(&ustr, pvParam, sizeof(ustr), fl & SPIF_PROTECT, 0);
     if (!bResult) return 0;
     if (ustr.Length > MAX_PATH * sizeof(WCHAR))
         return 0;

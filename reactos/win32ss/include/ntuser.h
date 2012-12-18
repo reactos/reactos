@@ -2024,13 +2024,14 @@ NtUserGetGUIThreadInfo(
   DWORD idThread,
   LPGUITHREADINFO lpgui);
 
+_Success_(return!=FALSE)
 BOOL
 NTAPI
 NtUserGetIconInfo(
    _In_      HANDLE hCurIcon,
    _Out_opt_ PICONINFO IconInfo,
-   _Out_opt_ PUNICODE_STRING lpInstName,
-   _Out_opt_ PUNICODE_STRING lpResName,
+   _Inout_opt_ PUNICODE_STRING lpInstName,
+   _Inout_opt_ PUNICODE_STRING lpResName,
    _Out_opt_ LPDWORD pbpp,
    _In_      BOOL bInternal);
 
@@ -2782,7 +2783,7 @@ typedef struct _tagFINDEXISTINGCURICONPARAM
     LONG cx;
     LONG cy;
 } FINDEXISTINGCURICONPARAM;
-  
+
 HICON
 NTAPI
 NtUserFindExistingCursorIcon(
@@ -2799,7 +2800,7 @@ NtUserSetCursorIconData(
   HMODULE hModule,
   HRSRC hRsrc,
   HRSRC hGroupRsrc);
-  
+
 HICON
 NTAPI
 NtUserFindExistingCursorIcon(

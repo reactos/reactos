@@ -64,7 +64,7 @@ BOOL FASTCALL
 IntCleanupMenus(struct _EPROCESS *Process, PPROCESSINFO Win32Process);
 
 BOOL FASTCALL
-IntInsertMenuItem(PMENU_OBJECT MenuObject, UINT uItem, BOOL fByPosition,
+IntInsertMenuItem(_In_ PMENU_OBJECT MenuObject, UINT uItem, BOOL fByPosition,
                   PROSMENUITEMINFO ItemInfo);
 
 PMENU_OBJECT FASTCALL

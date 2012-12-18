@@ -65,7 +65,9 @@ IntDesktopObjectParse(IN PVOID ParseObject,
         /* Get the current desktop */
         Desktop = CONTAINING_RECORD(NextEntry, DESKTOP, ListEntry);
 
+        /// @todo Don't mess around with the object headers!
         /* Get its name */
+        _PRAGMA_WARNING_SUPPRESS(__WARNING_DEREF_NULL_PTR)
         DesktopName = GET_DESKTOP_NAME(Desktop);
         if (DesktopName)
         {
@@ -1262,7 +1264,7 @@ NtUserCreateDesktop(
                dwDesiredAccess,
                (PVOID)&Context,
                (HANDLE*)&hdesk);
-   if (!NT_SUCCESS(Status)) 
+   if (!NT_SUCCESS(Status))
    {
       ERR("ObOpenObjectByName failed to open/create desktop\n");
       SetLastNtError(Status);
@@ -1294,7 +1296,7 @@ NtUserCreateDesktop(
 
    /* Get the desktop window class. The thread desktop does not belong to any desktop
     * so the classes created there (including the desktop class) are allocated in the shared heap
-    * It would cause problems if we used a class that belongs to the caller 
+    * It would cause problems if we used a class that belongs to the caller
     */
    ClassName.Buffer = WC_DESKTOP;
    ClassName.Length = 0;
@@ -1327,7 +1329,7 @@ NtUserCreateDesktop(
    pdesk->DesktopWindow = pWnd->head.h;
    pdesk->pDeskInfo->spwnd = pWnd;
    pWnd->fnid = FNID_DESKTOP;
-   
+
    ClassName.Buffer = MAKEINTATOM(gpsi->atomSysClass[ICLS_HWNDMESSAGE]);
    ClassName.Length = 0;
    pcls = IntGetAndReferenceClass(&ClassName, 0, TRUE);

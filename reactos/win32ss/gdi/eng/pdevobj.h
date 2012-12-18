@@ -161,7 +161,7 @@ extern PPDEVOBJ gppdevPrimary;
 PPDEVOBJ
 NTAPI
 EngpGetPDEV(
-    _In_ PUNICODE_STRING pustrDevice);
+    _In_opt_ PUNICODE_STRING pustrDevice);
 
 VOID
 NTAPI
@@ -188,6 +188,6 @@ PSIZEL
 FASTCALL
 PDEVOBJ_sizl(
     _In_ PPDEVOBJ ppdev,
-    _In_ PSIZEL psizl);
+    _Out_ PSIZEL psizl);
 
 #endif /* !__WIN32K_PDEVOBJ_H */

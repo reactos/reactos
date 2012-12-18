@@ -188,7 +188,7 @@ BOOLEAN FASTCALL MsqInitializeMessageQueue(PTHREADINFO, PUSER_MESSAGE_QUEUE);
 PUSER_MESSAGE_QUEUE FASTCALL MsqCreateMessageQueue(PTHREADINFO);
 VOID FASTCALL MsqDestroyMessageQueue(PTHREADINFO);
 INIT_FUNCTION NTSTATUS NTAPI MsqInitializeImpl(VOID);
-BOOLEAN FASTCALL co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue);
+BOOLEAN FASTCALL co_MsqDispatchOneSentMessage(_In_ PUSER_MESSAGE_QUEUE MessageQueue);
 NTSTATUS FASTCALL
 co_MsqWaitForNewMessages(PUSER_MESSAGE_QUEUE MessageQueue, PWND WndFilter,
                       UINT MsgFilterMin, UINT MsgFilterMax);
