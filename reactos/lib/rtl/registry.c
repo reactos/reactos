@@ -834,7 +834,7 @@ RtlpNtEnumerateSubKey(IN HANDLE KeyHandle,
                             KeyInfo,
                             BufferLength,
                             &ReturnedLength);
-    if (NT_SUCCESS(Status))
+    if (NT_SUCCESS(Status) && (KeyInfo != NULL))
     {
         /* Check if the name fits */
         if (KeyInfo->NameLength <= SubKeyName->MaximumLength)
