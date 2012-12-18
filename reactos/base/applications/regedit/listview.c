@@ -127,9 +127,10 @@ static void AddEntryToList(HWND hwndLV, LPWSTR Name, DWORD dwValType, void* ValB
     linfo = (PLINE_INFO)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(LINE_INFO) + dwCount);
     linfo->dwValType = dwValType;
     linfo->val_len = dwCount;
-    if(dwCount > 0)
+    if (dwCount > 0)
     {
         memcpy(&linfo[1], ValBuf, dwCount);
+        linfo->val = &linfo[1];
     }
     linfo->name = _wcsdup(Name);
 
@@ -373,7 +374,9 @@ static void OnGetDispInfo(NMLVDISPINFO* plvdi)
 
 static int CALLBACK CompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 {
-    LINE_INFO*l, *r;
+    LINE_INFO *l, *r;
+    DWORD dw1, dw2;
+    DWORDLONG qw1, qw2;
     UNREFERENCED_PARAMETER(lParamSort);
 
     l = (LINE_INFO*)lParam1;
@@ -383,12 +386,94 @@ static int CALLBACK CompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSor
         g_columnToSort = 0;
 
     if (g_columnToSort == 1 && l->dwValType != r->dwValType)
-        return g_invertSort ? (int)r->dwValType - (int)l->dwValType : (int)l->dwValType - (int)r->dwValType;
+    {
+        /* Sort by type */
+
+        if (g_invertSort)
+            return ((int)r->dwValType - (int)l->dwValType);
+        else
+            return ((int)l->dwValType - (int)r->dwValType);
+    }
     if (g_columnToSort == 2)
     {
-        /* FIXME: Sort on value */
+        /* Sort by value */
+
+        if (l->dwValType != r->dwValType)
+        {
+            if (g_invertSort)
+                return ((int)r->dwValType - (int)l->dwValType);
+            else
+                return ((int)l->dwValType - (int)r->dwValType);
+        }
+
+        if (r->val == NULL && l->val == NULL)
+            return 0;
+
+        if (g_invertSort)
+        {
+            if (r->val == NULL)
+                return -1;
+            if (l->val == NULL)
+                return 1;
+        }
+        else
+        {
+            if (r->val == NULL)
+                return 1;
+            if (l->val == NULL)
+                return -1;
+        }
+
+        switch(l->dwValType)
+        {
+            case REG_DWORD:
+            {
+                dw1 = *(DWORD*)l->val;
+                dw2 = *(DWORD*)r->val;
+                if (g_invertSort)
+                    // return (dw1 > dw2 ? -1 : 1);
+                    return ((int)dw2 - (int)dw1);
+                else
+                    // return (dw1 > dw2 ? 1 : -1);
+                    return ((int)dw1 - (int)dw2);
+            }
+
+            case REG_QWORD:
+            {
+                qw1 = *(DWORDLONG*)l->val;
+                qw2 = *(DWORDLONG*)r->val;
+                if (g_invertSort)
+                    // return (qw1 > qw2 ? -1 : 1);
+                    return ((int)qw2 - (int)qw1);
+                else
+                    // return (qw1 > qw2 ? 1 : -1);
+                    return ((int)qw1 - (int)qw2);
+            }
+
+            default:
+            {
+                INT nCompare = 0;
+
+                if (g_invertSort)
+                {
+                    nCompare = memcmp(r->val, l->val, min(r->val_len, l->val_len));
+                    if (nCompare == 0)
+                        nCompare = r->val_len - l->val_len;
+                }
+                else
+                {
+                    nCompare = memcmp(l->val, r->val, min(l->val_len, r->val_len));
+                    if (nCompare == 0)
+                        nCompare = l->val_len - r->val_len;
+                }
+
+                return nCompare;
+            }
+        }
     }
-    return g_invertSort ? wcsicmp(r->name, l->name) : wcsicmp(l->name, r->name);
+
+    /* Sort by name */
+    return (g_invertSort ? wcsicmp(r->name, l->name) : wcsicmp(l->name, r->name));
 }
 
 BOOL ListWndNotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam, BOOL *Result)

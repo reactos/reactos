@@ -288,20 +288,21 @@ static BOOL InitOpenFileName(HWND hWnd, OPENFILENAME* pofn)
     return TRUE;
 }
 
+#define LOADHIVE_KEYNAMELENGTH 128
+
 static INT_PTR CALLBACK LoadHive_KeyNameInHookProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     static LPWSTR sKey = NULL;
-    static INT sLength = 0;
     switch(uMsg)
     {
     case WM_INITDIALOG:
         sKey = (LPWSTR)lParam;
-        sLength = 128; /* FIXME: Ugly hack! */
+        break;
     case WM_COMMAND:
         switch(LOWORD(wParam))
         {
         case IDOK:
-            if(GetDlgItemTextW(hWndDlg, IDC_EDIT_KEY, sKey, sLength))
+            if(GetDlgItemTextW(hWndDlg, IDC_EDIT_KEY, sKey, LOADHIVE_KEYNAMELENGTH))
                 return EndDialog(hWndDlg, -1);
             else
                 return EndDialog(hWndDlg, 0);
@@ -348,7 +349,7 @@ static BOOL LoadHive(HWND hWnd)
     OPENFILENAME ofn;
     WCHAR Caption[128];
     LPCWSTR pszKeyPath;
-    WCHAR xPath[128];
+    WCHAR xPath[LOADHIVE_KEYNAMELENGTH];
     HKEY hRootKey;
     WCHAR Filter[1024];
     FILTERPAIR filter;
@@ -369,7 +370,8 @@ static BOOL LoadHive(HWND hWnd)
     /* now load the hive */
     if (GetOpenFileName(&ofn))
     {
-        if(DialogBoxParamW(hInst, MAKEINTRESOURCEW(IDD_LOADHIVE), hWnd, &LoadHive_KeyNameInHookProc, (LPARAM)xPath))
+        if (DialogBoxParamW(hInst, MAKEINTRESOURCEW(IDD_LOADHIVE), hWnd,
+                            &LoadHive_KeyNameInHookProc, (LPARAM)xPath))
         {
             LONG regLoadResult;
 
