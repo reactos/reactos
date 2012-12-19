@@ -3996,7 +3996,7 @@ NtGdiGetRegionData(
     _In_ ULONG cjBuffer,
     _Out_opt_bytecap_(cjBuffer) LPRGNDATA lpRgnData)
 {
-    ULONG cjSize;
+    ULONG cjRects, cjSize;
     PREGION prgn;
 
     /* Lock the region */
@@ -4007,8 +4007,9 @@ NtGdiGetRegionData(
         return 0;
     }
 
-    /* Calculate the region size */
-    cjSize = prgn->rdh.nCount * sizeof(RECT) + sizeof(RGNDATAHEADER);
+    /* Calculate the region sizes */
+    cjRects = prgn->rdh.nCount * sizeof(RECT);
+    cjSize = cjRects + sizeof(RGNDATAHEADER);
 
     /* Check if region data is requested */
     if (lpRgnData)
@@ -4021,7 +4022,7 @@ NtGdiGetRegionData(
             {
                 ProbeForWrite(lpRgnData, cjSize, sizeof(ULONG));
                 RtlCopyMemory(lpRgnData, &prgn->rdh, sizeof(RGNDATAHEADER));
-                RtlCopyMemory(lpRgnData->Buffer, prgn->Buffer, cjSize);
+                RtlCopyMemory(lpRgnData->Buffer, prgn->Buffer, cjRects);
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
