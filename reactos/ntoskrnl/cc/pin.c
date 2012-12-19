@@ -242,6 +242,7 @@ CcUnpinRepinnedBcb (
 {
     PINTERNAL_BCB iBcb = Bcb;
 
+    IoStatus->Status = STATUS_SUCCESS;
     if (--iBcb->RefCount == 0)
     {
         IoStatus->Information = 0;

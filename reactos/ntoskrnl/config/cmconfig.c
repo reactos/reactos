@@ -67,7 +67,12 @@ CmpInitializeRegistryNode(IN PCONFIGURATION_COMPONENT_DATA CurrentEntry,
 
         /* Convert it to Unicode */
         RtlInitEmptyUnicodeString(&KeyName, Buffer, sizeof(Buffer));
-        RtlAnsiStringToUnicodeString(&KeyName, &TempString, FALSE);
+        Status = RtlAnsiStringToUnicodeString(&KeyName, &TempString, FALSE);
+        if (!NT_SUCCESS(Status))
+        {
+            NtClose(KeyHandle);
+            return Status;
+        }
 
         /* Create the key */
         ParentHandle = KeyHandle;
@@ -221,7 +226,7 @@ CmpSetupConfigurationTree(IN PCONFIGURATION_COMPONENT_DATA CurrentEntry,
             {
                 /* EISA */
                 case EisaAdapter:
-                    
+
                     /* Fixup information */
                     Interface = Eisa;
                     Bus = CmpTypeCount[EisaAdapter]++;
@@ -229,7 +234,7 @@ CmpSetupConfigurationTree(IN PCONFIGURATION_COMPONENT_DATA CurrentEntry,
 
                 /* Turbo-channel */
                 case TcAdapter:
-                    
+
                     /* Fixup information */
                     Interface = TurboChannel;
                     Bus = CmpTypeCount[TurboChannel]++;
@@ -237,7 +242,7 @@ CmpSetupConfigurationTree(IN PCONFIGURATION_COMPONENT_DATA CurrentEntry,
 
                 /* ISA, PCI, etc busses */
                 case MultiFunctionAdapter:
-                    
+
                     /* Check if we have an  identifier */
                     if (Component->Identifier)
                     {
@@ -252,7 +257,7 @@ CmpSetupConfigurationTree(IN PCONFIGURATION_COMPONENT_DATA CurrentEntry,
                                 break;
                             }
                         }
-                        
+
                         /* Fix up information */
                         Interface = CmpMultifunctionTypes[i].InterfaceType;
                         Bus = CmpMultifunctionTypes[i].Count++;
@@ -261,7 +266,7 @@ CmpSetupConfigurationTree(IN PCONFIGURATION_COMPONENT_DATA CurrentEntry,
 
                 /* SCSI Bus */
                 case ScsiAdapter:
-                    
+
                     /* Fix up */
                     Interface = Internal;
                     Bus = CmpTypeCount[ScsiAdapter]++;
@@ -274,7 +279,7 @@ CmpSetupConfigurationTree(IN PCONFIGURATION_COMPONENT_DATA CurrentEntry,
                     break;
             }
         }
-        
+
         /* Dump information on the component */
 
         /* Setup the hardware node */
@@ -285,7 +290,7 @@ CmpSetupConfigurationTree(IN PCONFIGURATION_COMPONENT_DATA CurrentEntry,
                                            Bus,
                                            DeviceIndexTable);
         if (!NT_SUCCESS(Status)) return Status;
-        
+
         /* Check for children */
         if (CurrentEntry->Child)
         {
@@ -301,12 +306,12 @@ CmpSetupConfigurationTree(IN PCONFIGURATION_COMPONENT_DATA CurrentEntry,
                 return Status;
             }
         }
-        
+
         /* Get to the next entry */
         NtClose(NewHandle);
         CurrentEntry = CurrentEntry->Sibling;
     }
-    
+
     /* We're done */
     return STATUS_SUCCESS;
 }

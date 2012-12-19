@@ -64,6 +64,7 @@ paging machinery.
 
 extern KSPIN_LOCK MiSectionPageTableLock;
 
+_Function_class_(RTL_GENERIC_ALLOCATE_ROUTINE)
 static
 PVOID
 NTAPI
@@ -75,6 +76,7 @@ MiSectionPageTableAllocate(PRTL_GENERIC_TABLE Table, CLONG Bytes)
     return Result;
 }
 
+_Function_class_(RTL_GENERIC_FREE_ROUTINE)
 static
 VOID
 NTAPI
@@ -84,6 +86,7 @@ MiSectionPageTableFree(PRTL_GENERIC_TABLE Table, PVOID Data)
     ExFreePoolWithTag(Data, 'MmPt');
 }
 
+_Function_class_(RTL_GENERIC_COMPARE_ROUTINE)
 static
 RTL_GENERIC_COMPARE_RESULTS
 NTAPI
@@ -341,7 +344,7 @@ MmGetSectionAssociation(PFN_NUMBER Page,
     {
         Segment = PageTable->Segment;
         Offset->QuadPart = PageTable->FileOffset.QuadPart +
-                           (RawOffset << PAGE_SHIFT);
+                           ((ULONG64)RawOffset << PAGE_SHIFT);
     }
 
     return Segment;

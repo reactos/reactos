@@ -841,8 +841,8 @@ Ki386PerfEnd(VOID)
 {
     extern ULONGLONG BootCyclesEnd, BootCycles;
     BootCyclesEnd = __rdtsc();
-    DbgPrint("Boot took %I64d cycles!\n", BootCyclesEnd - BootCycles);
-    DbgPrint("Interrupts: %d System Calls: %d Context Switches: %d\n",
+    DbgPrint("Boot took %I64u cycles!\n", BootCyclesEnd - BootCycles);
+    DbgPrint("Interrupts: %u System Calls: %u Context Switches: %u\n",
              KeGetCurrentPrcb()->InterruptCount,
              KeGetCurrentPrcb()->KeSystemCalls,
              KeGetContextSwitches(KeGetCurrentPrcb()));
