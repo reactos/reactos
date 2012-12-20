@@ -42,7 +42,7 @@ extern void ResizeWnd(int cx, int cy)
 {
     HDWP hdwp = BeginDeferWindowPos(3);
     RECT rt, rs, rb;
-    const int tHeight = 18;
+    const int tHeight = 22;
     SetRect(&rt, 0, 0, cx, cy);
     cy = 0;
     if (hStatusBar != NULL)
@@ -52,8 +52,8 @@ extern void ResizeWnd(int cx, int cy)
     }
     GetWindowRect(g_pChildWnd->hAddressBtnWnd, &rb);
     cx = g_pChildWnd->nSplitPos + SPLIT_WIDTH/2;
-    DeferWindowPos(hdwp, g_pChildWnd->hAddressBarWnd, 0, rt.left, rt.top, rt.right-rt.left - tHeight-2, tHeight, SWP_NOZORDER|SWP_NOACTIVATE);
-    DeferWindowPos(hdwp, g_pChildWnd->hAddressBtnWnd, 0, rt.right - tHeight, rt.top, tHeight, tHeight, SWP_NOZORDER|SWP_NOACTIVATE);
+    DeferWindowPos(hdwp, g_pChildWnd->hAddressBarWnd, 0, rt.left, rt.top, rt.right-rt.left - 2*tHeight, tHeight, SWP_NOZORDER|SWP_NOACTIVATE);
+    DeferWindowPos(hdwp, g_pChildWnd->hAddressBtnWnd, 0, rt.right - 2*tHeight, rt.top, 2*tHeight, tHeight, SWP_NOZORDER|SWP_NOACTIVATE);
     DeferWindowPos(hdwp, g_pChildWnd->hTreeWnd, 0, rt.left, rt.top + tHeight+2, g_pChildWnd->nSplitPos-SPLIT_WIDTH/2-rt.left, rt.bottom-rt.top-cy, SWP_NOZORDER|SWP_NOACTIVATE);
     DeferWindowPos(hdwp, g_pChildWnd->hListWnd, 0, rt.left+cx, rt.top + tHeight+2, rt.right-cx, rt.bottom-rt.top-cy, SWP_NOZORDER|SWP_NOACTIVATE);
     EndDeferWindowPos(hdwp);
@@ -385,7 +385,7 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         g_pChildWnd->hAddressBarWnd = CreateWindowExW(WS_EX_CLIENTEDGE, L"Edit", NULL, WS_CHILD | WS_VISIBLE | WS_CHILDWINDOW | WS_TABSTOP,
                                                       CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
                                                       hWnd, (HMENU)0, hInst, 0);
-        g_pChildWnd->hAddressBtnWnd = CreateWindowExW(WS_EX_CLIENTEDGE, L"Button", L"»", WS_CHILD | WS_VISIBLE | WS_CHILDWINDOW | WS_TABSTOP | BS_DEFPUSHBUTTON,
+        g_pChildWnd->hAddressBtnWnd = CreateWindowExW(0, L"Button", L"»", WS_CHILD | WS_VISIBLE | WS_CHILDWINDOW | WS_TABSTOP | BS_TEXT | BS_CENTER | BS_VCENTER | BS_FLAT | BS_DEFPUSHBUTTON,
                                                       CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
                                                       hWnd, (HMENU)0, hInst, 0);
         g_pChildWnd->hTreeWnd = CreateTreeView(hWnd, g_pChildWnd->szPath, (HMENU) TREE_WINDOW);
