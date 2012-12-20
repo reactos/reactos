@@ -15,27 +15,27 @@ without having to switch fonts.
 Coverage
 --------
 
-FreeFont covers the following character sets
-
-* ISO 8859 parts 1-15
-* CEN MES-3 European Unicode Subset
-  http://www.evertype.com/standards/iso10646/pdf/cwa13873.pdf
-* IBM/Microsoft code pages 437, 850, 852, 1250, 1252 and more
-* Microsoft/Adobe Windows Glyph List 4 (WGL4)
-  http://www.microsoft.com/typography/otspec/WGL4.htm
-* KOI8-R and KOI8-RU
-* DEC VT100 graphics symbols
-* International Phonetic Alphabet
-* Arabic, Hebrew, Armenian, Georgian, Ethiopian and Thai alphabets,
-  including Arabic presentation forms A/B
-* mathematical symbols, including the whole TeX repertoire of symbols
-* APL symbols
+FreeFont covers the following character ranges
+* Latin, Cyrillic, and Arabic, with supplements for many languages
+* Greek, Hebrew, Armenian, Georgian, Thaana, Syriac
+* Devanagari, Bengali, Gujarati, Gurmukhi, Sinhala, Tamil, Malayalam
+* Thai, Tai Le, Kayah Li, Hanunóo, Buginese
+* Cherokee, Unified Canadian Aboriginal Syllabics
+* Ethiopian, Tifnagh, Vai, Osmanya, Coptic
+* Glagolitic, Gothic, Runic, Ugaritic, Old Persian, Phoenician, Old Italic
+* Braille, International Phonetic Alphabet
+* currency symbols, general punctuation and diacritical marks, dingbats
+* mathematical symbols, including much of the TeX repertoire of symbols
+* technical symbols: APL, OCR, arrows,
+* geometrical shapes, box drawing
+* musical symbols, gaming symbols, miscellaneous symbols
   etc.
+For more detail see <http://www.gnu.org/software/freefont/coverage.html>
 
 Editing
 -------
 
-The free outline font editor, George Williams's FontForge
+The free outline font editor, George Williams' FontForge
 <http://fontforge.sourceforge.net/> is used for editing the fonts.
 
 Design Issues
@@ -44,19 +44,22 @@ Design Issues
 Which font shapes should be made?  Historical style terms like Renaissance
 or Baroque letterforms cannot be applied beyond Latin/Cyrillic/Greek
 scripts to any greater extent than Kufi or Nashki can be applied beyond
-Arabic script; "italic" is really only meaningful for Latin letters. 
+Arabic script; "italic" is strictly meaningful only for Latin letters, 
+although many scripts such as Cyrillic have a history with "cursive" and
+many others with "oblique" faces. 
 
 However, most modern writing systems have typographic formulations for
-contrasting uniform and modulated character stroke widths, and have some
-history with "oblique", faces.  Since the advent of the typewriter, most
-have developed a typographic style with uniform-width characters.
+contrasting uniform and modulated character stroke widths, and since the
+advent of the typewriter, most have developed a typographic style with
+uniform-width characters.
 
 Accordingly, the FreeFont family has one monospaced - FreeMono - and two
 proportional faces (one with uniform stroke - FreeSans - and one with
 modulated stroke - FreeSerif).
 
-To make text from different writing systems look good side-by-side, each
-FreeFont face is meant to contain characters of similar style and weight.
+The point of having characters from different writing systems in one font
+is that mixed text should look good, and so each FreeFont face contains
+characters of similar style and weight.
 
 Licensing
 ---------
@@ -84,25 +87,41 @@ License. If you modify this font, you may extend this exception to your
 version of the font, but you are not obligated to do so.  If you do not
 wish to do so, delete this exception statement from your version.
 
-
 Files and their suffixes
 ------------------------
 
 The files with .sfd (Spline Font Database) are in FontForge's native format. 
-Please use these if you plan to modify the font files.
+They may be used to modify the fonts.
 
-TrueType fonts for immediate consumption are the files with the .ttf
-(TrueType Font) suffix.  These are ready to use in Xwindows based
-systems using FreeType, on Mac OS, and on older Windows systems.
+TrueType fonts are the files with the .ttf (TrueType Font) suffix.  These
+are ready to use in Linux/Unix, on Apple Mac OS, and on Microsoft Windows
+systems.
 
-OpenType fonts (with suffix .otf) are for use in Windows Vista. 
-Note that although they can be installed on Linux, but many applications
-in Linux still don't support them.
+OpenType fonts (with suffix .otf) are preferred for use on Linux/Unix,
+but *not* for recent Microsoft Windows systems.
+See the INSTALL file for more information.
 
+Web Open Font Format files (with suffix .woff) are for use in Web sites.
+See the webfont_guidelines.txt for further information.
+
+Further information
+-------------------
+
+Home page of GNU FreeFont:
+	http://www.gnu.org/software/freefont/
+
+More information is at the main project page of Free UCS scalable fonts:
+	http://savannah.gnu.org/projects/freefont/
+
+To report problems with GNU FreeFont, it is best to obtain a Savannah
+account and post reports using that account on
+	https://savannah.gnu.org/bugs/
+	
+Public discussions about GNU FreeFont may be posted to the mailing list
+	freefont-bugs@gnu.org
 
 --------------------------------------------------------------------------
-Primoz Peterlin, <primoz.peterlin@biofiz.mf.uni-lj.si>
-Steve White <stevan.white@googlemail.com>
+Original author: Primoz Peterlin
+Current administrator: Steve White <stevan.white@googlemail.com>
 
-Free UCS scalable fonts: http://savannah.gnu.org/projects/freefont/
-$Id: README,v 1.7 2009/01/13 08:43:23 Stevan_White Exp $
+$Id: README,v 1.10 2011-06-12 07:14:12 Stevan_White Exp $

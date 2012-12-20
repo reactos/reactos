@@ -167,9 +167,9 @@ particular ISO 10646 blocks.
 	Devanagari				(U+0900-U+097F)
 	Gujarati				(U+0A80-U+0AFF)
 
-* Pravin Satpute <pravin_ind21 AT hotmail.com>, Bageshri Salvi
-  <sbagrshri AT yahoo.co.in>, Rahul Bhalerao <rahul_pb_india AT
-  yahoo.com> and Sandeep Shedmake <surgs2k47 AT yahoo.co.in>
+* Pravin Satpute <pravin.d.s AT gmail.com>, Bageshri Salvi
+  <sbagrshri AT yahoo.co.in>, Rahul Bhalerao <b.rahul.pm AT gmail.com> and
+  Sandeep Shedmake <sandeep.shedmake AT gmail.com>
 
 	Devanagari				(U+0900-U+097F)
 	Gujarati				(U+0A80-U+0AFF)
@@ -210,6 +210,8 @@ particular ISO 10646 blocks.
 * Steve White <stevan_white AT gmail.com>
 	Glagolitic                              (U+2C00-U+2C5F)
 	Coptic                                  (U+2C80-U+2CFF)
+	Arabic					(U+0600-U+06FF) (Mono)
+	Old Italic                              (U+10300-U+1032F)
 
 * Pavel Skrylev is responsible for
 	Cyrillic Extended-A                     (U+2DEO-U+2DFF)
@@ -218,18 +220,23 @@ particular ISO 10646 blocks.
 
 * Mark Williamson
   Made the MPH 2 Damase font, from which 
-	HanunÛo                                 (U+1720-U+173F)
+	Hanun√≥o                                 (U+1720-U+173F)
 	Buginese                                (U+1A00-U+1A1F)
 	Tai Le                                  (U+1950-U+197F)
 	Ugaritic                                (U+10380-U+1039F)
 	Old Persian                             (U+103A0-U+103DF)
 
+* Masoud Pourmoosa
+	Arabic					(U+0600-U+06FF)
 
-* Primoû Peterlin <primoz.peterlin AT biofiz.mf.uni-lj.si>
+* Emmanuel Vallois
+	Python scripts, support
+
+* Primo≈æ Peterlin <primoz.peterlin AT biofiz.mf.uni-lj.si>
   maintained FreeFont for several years, and is thanked for all his work.
 
 Please see the CREDITS file for details on who contributed particular
 subsets of the glyphs in font files.
 
 --------------------------------------------------------------------------
-$Id: AUTHORS,v 1.23 2010/09/11 13:24:11 Stevan_White Exp $
+$Id: AUTHORS,v 1.23 2010-09-11 13:24:11 Stevan_White Exp $

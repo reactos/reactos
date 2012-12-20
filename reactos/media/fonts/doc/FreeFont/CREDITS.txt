@@ -8,7 +8,7 @@ This file lists contributors and contributions to the GNU FreeFont project.
 * URW++ Design & Development GmbH <http://www.urwpp.de/>
 
 URW++ donated a set of 35 core PostScript Type 1 fonts to the
-Ghostscript project <http://www.cs.wisc.edu/~ghost/>, to be available
+Ghostscript project <http://www.ghostscript.com/>, to be available
 under the terms of GNU General Public License (GPL).
 
 	Basic Latin				(U+0041-U+007A)
@@ -56,23 +56,23 @@ Current info: <http://tug.ctan.org/cgi-bin/ctanPackageInformation.py?id=omega>
 
 Valek Filippov added Cyrillic glyphs and composite Latin Extended A to
 the whole set of the abovementioned URW set of 35 PostScript core fonts,
-<ftp://ftp.gnome.ru/fonts/urw/>. The fonts are available under GPL.
+<ftp://ftp.gnome.ru/fonts/>.  The fonts are available under GPL.
+(The Cyrillic range was since replaced by another font.)
 
 	Latin Extended-A                        (U+0100-U+017F)
-	Cyrillic				(U+0400-U+04FF)
 
 
 * Wadalab Kanji Comittee
 
-Between April 1990 and March 1992, Wadalab Kanji Comittee put together
-a series of scalable font files with Japanese scripts, in four forms:
-Sai Micho, Chu Mincho, Cho Kaku and Saimaru. The font files are
-written in custom file format, while tools for conversion into
-Metafont and PostScript Type 1 are also supplied. The Wadalab Kanji
-Comittee has later been dismissed, and the resulting files can be now
-found on the FTP server of the Depertment of Mathematical Engineering
-and Information Physics, Faculty of Engineering, University of Tokyo
-<ftp://ftp.ipl.t.u-tokyo.ac.jp/Font/>.
+Between April 1990 and March 1992, Wadalab Kanji Comittee put together a
+series of scalable font files with Japanese scripts, in four forms:
+Sai Micho, Chu Mincho, Cho Kaku and Saimaru.
+The font files are written in custom file format, while tools for conversion
+into Metafont and PostScript Type 1 are also supplied. The Wadalab Kanji
+Comittee was later dismissed. The resulting files were once found on the FTP
+server of the Department of Mathematical Engineering and Information Physics,
+Faculty of Engineering, University of Tokyo.  Some of these are available at
+<http://www.ctan.org/tex-archive/fonts/wadalab>
 
 	Hiragana				(U+3040-U+309F)
 	Katakana				(U+30A0-U+30FF)
@@ -98,9 +98,9 @@ TX fonts are are distributed under the GNU public license (GPL).
 
 * Angelo Haritsis <ah AT computer.org>
 
-Angelo Haritsis has compiled a set of Greek Type 1 fonts, available on
-<ftp://ftp.hellug.gr/pub/unix/linux/GREEK/fonts/greekXfonts-Type1-1.1.tgz>.
-The glyphs from this source has been used to compose Greek glyphs in
+Angelo Haritsis has compiled a set of Greek Type 1 fonts, once available as
+as a tarball named greekXfonts-Type1-1.1.tgz.
+The glyphs from this source have been used to compose Greek glyphs in
 FreeSans and FreeMono.
 
 Angelo's licence says: "You can enjoy free use of these fonts for
@@ -165,14 +165,13 @@ compatible with Helvetica or Arial. Available on
 2002-01-24, Sam writes: "Arial Armenian font is free for
 non-commercial use, so it is OK to use under GPL license."
 
-	Armenian				(U+0530-U+058F)
+Armenian				(U+0530-U+058F)
 
 
-* Mohamed Ishan <ishan AT mitf.f2s.com>
+* Mohamed Ishan <>
 
-Mohamed Ishan has started a Thaana Unicode Project
-<http://thaana.sourceforge.net/> and among other things created a
-couple of Thaana fonts, available under FDL or BDF license.
+Mohamed Ishan started the Thaana Unicode Project and among other things
+created a couple of Thaana fonts, available under FDL or BDF license.
 
 	Thaana					(U+0780-U+07BF)
 
@@ -180,7 +179,7 @@ couple of Thaana fonts, available under FDL or BDF license.
 * Sushant Kumar Dash <sushant AT writeme.com> (*)
 
 Sushant Dash has created a font in his mother tongue, Oriya. As he
-states on his web page <http://members.tripod.com/~sushantdash/>:
+states on his web page <http://sushantdash.tripod.com/>:
 "Please feel free to foreword this mail to your Oriya friends. No
 copyright law is applied for this font. It is totally free!!! Feel
 free to modify this using any font editing tools. This is designed for
@@ -220,14 +219,13 @@ Available under the GNU General Public License.
 * Frans Velthuis <velthuis AT rc.rug.nl> and Anshuman Pandey
   <apandey AT u.washington.edu>
 
-In 1991, Frans Velthuis from the Groningen University, The
-Netherlands, released a Devanagari font as Metafont source, available
-under the terms of GNU GPL. Later, Anshuman Pandey from the Washington
-University, Seattle, USA, took over the maintenance of font. Fonts can
-be found on CTAN, <ftp://ftp.dante.de/tex-archive/language/devanagari/>. I
-converted the font to Type 1 format using Péter Szabó's TeXtrace
-program <http://www.inf.bme.hu/~pts/textrace/> and removed some
-redundant control points with PfaEdit.
+In 1991, Frans Velthuis from the Groningen University, The Netherlands,
+released a Devanagari font as Metafont source, available under the terms of
+GNU GPL. Later, Anshuman Pandey from the Washington University, Seattle, USA,
+took over the maintenance of font.  ZdenÄ›k Wagner has provided a huge amount
+of expert advice regarding the implementation of the font in FreeSerif.
+Fonts can be found on CTAN,
+<ftp://ftp.dante.de/tex-archive/language/devanagari/>.
 
 	Devanagari				(U+0900-U+097F)
 
@@ -280,7 +278,7 @@ maintain home page on the Ethiopic font project,
 <http://www.informatik.uni-hamburg.de/TGI/mitarbeiter/wimis/kummer/ethiop_eng.html>,
 and can be reached at <ethiop AT informatik.uni-hamburg.de>. The current
 version of fonts is 0.7 (1998), and they are released under GNU GPL. I
-converted the fonts to Type 1 format using Péter Szabó's TeXtrace-A
+converted the fonts to Type 1 format using PÃ©ter SzabÃ³'s TeXtrace-A
 program <http://www.inf.bme.hu/~pts/textrace/> and removed some
 redundant control points with PfaEdit.
 
@@ -313,14 +311,21 @@ Vyacheslav Dikonov made a Braille unicode font that could be merged
 with the UCS fonts to fill the 2800-28FF range completely. (uniform
 scaling is possible to adapt it to any cell size). He also contributed
 a free syriac font, whose glyphs (about half of them) are borrowed
-from the "Carlo Ator" font freely downloadable from
-<http://www.aacf.asso.fr/>. Vyacheslav also filled in a few missing
+from the "Carlo Ator" font by Tim Erickson.
+Vyacheslav also filled in a few missing
 spots in the U+2000-U+27FF area, e.g. the box drawing section, sets of
 subscript and superscript digits and capital Roman numbers.
 
 	Syriac					(U+0700-U+074A)
 	Box Drawing				(U+2500-U+257F)
 	Braille					(U+2800-U+28FF)
+
+* Tim Erickson
+
+Is the author of several Eurasian fonts, including "Carlo Ator".
+He has given his written permission for glyphs from this font to be
+included in FreeFont.
+	Syriac					(U+0700-U+074A)
 
 
 * M.S. Sridhar <mssridhar AT vsnl.com>
@@ -432,9 +437,9 @@ sonalisonania AT yahoo.com, jitendras AT vsnl.com, alka AT ncst.ernet.in.
 website: www.janabhaaratii.org.in.
 
 
-* Pravin Satpute <pravin_ind21 AT hotmail.com>, Bageshri Salvi
-  <sbagrshri AT yahoo.co.in>, Rahul Bhalerao <rahul_pb_india AT
-  yahoo.com> and Sandeep Shedmake <surgs2k47 AT yahoo.co.in>
+* Pravin Satpute <pravin.d.s AT gmail.com>, Bageshri Salvi
+  <sbagrshri AT yahoo.co.in>, Rahul Bhalerao <b.rahul.pm AT
+  gmail.com> and Sandeep Shedmake <sandeep.shedmake AT gmail.com>
 
 	Devanagari				(U+0900-U+097F)
 	Gujarati				(U+0A80-U+0AFF)
@@ -447,9 +452,9 @@ Unicode pan-Indic fonts: "Samyak" and "Samyak Sans". "Samyak" font
 belongs to serif style and is an original work of the team; "Samyak
 Sans" font belongs to sans serif style and is actually a compilation
 of already released Indic fonts (Gargi, Padma, Mukti, Utkal, Akruti
-and ThendralUni). Both fonts are based on Unicode standard. You can
-download the font files (released under GNU/GPL License) from
-http://www.gnowledge.org/Gnoware/localization/font.htm
+and ThendralUni). Both fonts are based on Unicode standard. 
+The fonts are now hosted at Sarovar.org:
+http://sarovar.org/projects/samyak/
 
 
 * Kulbir Singh Thind
@@ -458,7 +463,7 @@ http://www.gnowledge.org/Gnoware/localization/font.htm
 
 Dr. Kulbir Singh Thind designed a set of Gurmukhi Unicode fonts,
 AnmolUni and AnmolUni-Bold, which are available under the terms of GNU
-Generel Public Licens from the Punjabu Computing Resource Center,
+Generel Public License from the Punjabu Computing Resource Center,
 http://guca.sourceforge.net/typography/fonts/anmoluni/.
 
 
@@ -472,9 +477,9 @@ Georgian, Courier New Georgian. His work on Georgian localization can
 be reached at http://www.gia.ge/.
 
 
-* Primož Peterlin <primoz.peterlin AT biofiz.mf.uni-lj.si>
+* PrimoÅ¾ Peterlin <primoz.peterlin AT biofiz.mf.uni-lj.si>
 
-Primož Peterlin filled in missing glyphs here and there (e.g. Latin
+PrimoÅ¾ Peterlin filled in missing glyphs here and there (e.g. Latin
 Extended-B and IPA Extensions ranges in the FreeMono familiy), and
 created the following UCS blocks:
 
@@ -488,7 +493,7 @@ created the following UCS blocks:
 * Mark Williamson
 
 Made the MPH 2 Damase font, from which 
-	Hanunóo                                 (U+1720-U+173F)
+	HanunÃ³o                                 (U+1720-U+173F)
 	Buginese                                (U+1A00-U+1A1F)
 	Tai Le                                  (U+1950-U+197F)
 	Ugaritic                                (U+10380-U+1039F)
@@ -504,6 +509,8 @@ Made the TemporaLCGUni fonts, based on the URW++ fonts, from which at one
 point FreeSerif Cyrillic, and some of the Greek, was drawn.  He also provided
 valuable direction about Cyrillic and Greek typesetting.
 
+	Cyrillic				(U+0400-U+04FF)
+
 * George Douros
 
 The creator of several fonts focusing on ancient scripts and symbols.
@@ -513,7 +520,7 @@ of ancient sources.
 	Aegean:   Phoenecian
 	Analecta: Gothic                        (U+10330-U+1034F)
 	Musical:  Byzantine & Western                  
-	Unicode:  many Miscellaneous Symbols, Miscellaneous Technical,
+	Unicode:  many Miscellaneous Symbols, Miscellaneous Technical, OCR,
 	          supplemental Symbols, and Mathematical Alphanumeric symbols,
 		  Mah Jong, and the outline of the Domino.
 
@@ -559,18 +566,27 @@ were for a while included in FreeFont.
 
 	Sinhala					(U+0D80-U+0DFF)
 
-* Steve White <stevan_white AT googlemail.com>
+* Steve White <stevan.white AT googlemail.com>
 
 Filled in a lot of missing characters, got some font features working,
 left fingerprints almost everywhere, and is responsible for these blocks:
 
+	Runic                                   (U+16A0-U+16F0)
 	Glagolitic                              (U+2C00-U+2C5F)
 	Coptic                                  (U+2C80-U+2CFF)
+	Old Italic                              (U+10300-U+1032F)
+(The design of Runic is based roughly on one originally submitted by 
+Vyacheslav Dikonov)
+
 
 * Pavel Skrylev is responsible for
 	Cyrillic Extended-A                     (U+2DEO-U+2DFF)
   as well as many of the additions to
 	Cyrillic Extended-B                     (U+A640-U+A65F)
+
+
+* Masoud Pourmoosa corrected several letters in Arabic for Persian:
+	Arabic					(U+0600-U+06FF)
 
 Notes:
 
