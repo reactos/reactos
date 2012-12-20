@@ -37,12 +37,17 @@ typedef struct tagLINE_INFO
     size_t val_len;
 } LINE_INFO, *PLINE_INFO;
 
+typedef struct tagSORT_INFO
+{
+    INT  iSortingColumn;
+    BOOL bSortAscending;
+} SORT_INFO, *PSORT_INFO;
+
 /*******************************************************************************
  * Global and Local Variables:
  */
 
-static DWORD g_columnToSort = ~0UL;
-static BOOL  g_invertSort = FALSE;
+static INT g_iSortedColumn = 0;
 
 #define MAX_LIST_COLUMNS (IDS_LIST_COLUMN_LAST - IDS_LIST_COLUMN_FIRST + 1)
 static const int default_column_widths[MAX_LIST_COLUMNS] = { 200, 175, 400 };
@@ -281,14 +286,15 @@ static BOOL InitListViewImageLists(HWND hwndLV)
     /* Create the image list.  */
     if ((himl = ImageList_Create(CX_ICON, CY_ICON,
                                  ILC_MASK, 0, NUM_ICONS)) == NULL)
+    {
         return FALSE;
+    }
 
     hico = LoadIconW(hInst, MAKEINTRESOURCEW(IDI_BIN));
     Image_Bin = ImageList_AddIcon(himl, hico);
 
     hico = LoadIconW(hInst, MAKEINTRESOURCEW(IDI_STRING));
     Image_String = ImageList_AddIcon(himl, hico);
-
 
     /* Fail if not all of the images were added.  */
     if (ImageList_GetImageCount(himl) < NUM_ICONS)
@@ -374,53 +380,48 @@ static void OnGetDispInfo(NMLVDISPINFO* plvdi)
 
 static int CALLBACK CompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 {
+    PSORT_INFO pSortInfo = (PSORT_INFO)lParamSort;
     LINE_INFO *l, *r;
     DWORD dw1, dw2;
     DWORDLONG qw1, qw2;
-    UNREFERENCED_PARAMETER(lParamSort);
 
     l = (LINE_INFO*)lParam1;
     r = (LINE_INFO*)lParam2;
 
-    if (g_columnToSort == ~0UL)
-        g_columnToSort = 0;
-
-    if (g_columnToSort == 1 && l->dwValType != r->dwValType)
+    if (pSortInfo->iSortingColumn == 1 && l->dwValType != r->dwValType)
     {
         /* Sort by type */
-
-        if (g_invertSort)
-            return ((int)r->dwValType - (int)l->dwValType);
-        else
+        if (pSortInfo->bSortAscending)
             return ((int)l->dwValType - (int)r->dwValType);
+        else
+            return ((int)r->dwValType - (int)l->dwValType);
     }
-    if (g_columnToSort == 2)
+    if (pSortInfo->iSortingColumn == 2)
     {
         /* Sort by value */
-
         if (l->dwValType != r->dwValType)
         {
-            if (g_invertSort)
-                return ((int)r->dwValType - (int)l->dwValType);
-            else
+            if (pSortInfo->bSortAscending)
                 return ((int)l->dwValType - (int)r->dwValType);
+            else
+                return ((int)r->dwValType - (int)l->dwValType);
         }
 
-        if (r->val == NULL && l->val == NULL)
+        if (l->val == NULL && r->val == NULL)
             return 0;
 
-        if (g_invertSort)
+        if (pSortInfo->bSortAscending)
         {
-            if (r->val == NULL)
-                return -1;
             if (l->val == NULL)
+                return -1;
+            if (r->val == NULL)
                 return 1;
         }
         else
         {
-            if (r->val == NULL)
-                return 1;
             if (l->val == NULL)
+                return 1;
+            if (r->val == NULL)
                 return -1;
         }
 
@@ -430,41 +431,41 @@ static int CALLBACK CompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSor
             {
                 dw1 = *(DWORD*)l->val;
                 dw2 = *(DWORD*)r->val;
-                if (g_invertSort)
-                    // return (dw1 > dw2 ? -1 : 1);
-                    return ((int)dw2 - (int)dw1);
-                else
+                if (pSortInfo->bSortAscending)
                     // return (dw1 > dw2 ? 1 : -1);
                     return ((int)dw1 - (int)dw2);
+                else
+                    // return (dw1 > dw2 ? -1 : 1);
+                    return ((int)dw2 - (int)dw1);
             }
 
             case REG_QWORD:
             {
                 qw1 = *(DWORDLONG*)l->val;
                 qw2 = *(DWORDLONG*)r->val;
-                if (g_invertSort)
-                    // return (qw1 > qw2 ? -1 : 1);
-                    return ((int)qw2 - (int)qw1);
-                else
+                if (pSortInfo->bSortAscending)
                     // return (qw1 > qw2 ? 1 : -1);
                     return ((int)qw1 - (int)qw2);
+                else
+                    // return (qw1 > qw2 ? -1 : 1);
+                    return ((int)qw2 - (int)qw1);
             }
 
             default:
             {
                 INT nCompare = 0;
 
-                if (g_invertSort)
-                {
-                    nCompare = memcmp(r->val, l->val, min(r->val_len, l->val_len));
-                    if (nCompare == 0)
-                        nCompare = r->val_len - l->val_len;
-                }
-                else
+                if (pSortInfo->bSortAscending)
                 {
                     nCompare = memcmp(l->val, r->val, min(l->val_len, r->val_len));
                     if (nCompare == 0)
                         nCompare = l->val_len - r->val_len;
+                }
+                else
+                {
+                    nCompare = memcmp(r->val, l->val, min(r->val_len, l->val_len));
+                    if (nCompare == 0)
+                        nCompare = r->val_len - l->val_len;
                 }
 
                 return nCompare;
@@ -473,12 +474,77 @@ static int CALLBACK CompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSor
     }
 
     /* Sort by name */
-    return (g_invertSort ? wcsicmp(r->name, l->name) : wcsicmp(l->name, r->name));
+    return (pSortInfo->bSortAscending ? StrCmpLogicalW(l->name, r->name) : StrCmpLogicalW(r->name, l->name));
+}
+
+static BOOL ListView_Sort(HWND hListView, int iSortingColumn, int iSortedColumn)
+{
+    if ( (GetWindowLongPtr(hListView, GWL_STYLE) & ~LVS_NOSORTHEADER) &&
+         (iSortingColumn >= 0) )
+    {
+        BOOL bSortAscending;
+        SORT_INFO SortInfo;
+
+        HWND hHeader = ListView_GetHeader(hListView);
+        HDITEM hColumn = {0};
+
+        /* If we are sorting according to another column, uninitialize the old one */
+        if ( (iSortedColumn >= 0) && (iSortingColumn != iSortedColumn) )
+        {
+            hColumn.mask = HDI_FORMAT;
+            Header_GetItem(hHeader, iSortedColumn, &hColumn);
+            hColumn.fmt &= ~(HDF_SORTUP | HDF_SORTDOWN);
+            Header_SetItem(hHeader, iSortedColumn, &hColumn);
+        }
+
+        /* Get the sorting state of the new column */
+        hColumn.mask = HDI_FORMAT;
+        Header_GetItem(hHeader, iSortingColumn, &hColumn);
+
+        /*
+         * Check whether we are sorting the list because the user clicked
+         * on a column, or because we are refreshing the list:
+         *
+         * iSortedColumn >= 0 - User clicked on a column; holds the
+         *                      old sorting column index.
+         * iSortedColumn  < 0 - List being refreshed.
+         */
+        if (iSortedColumn >= 0)
+        {
+            /* Invert the sorting direction */
+            bSortAscending = ((hColumn.fmt & HDF_SORTUP) == 0);
+        }
+        else
+        {
+            /*
+             * If the sorting state of the column is uninitialized,
+             * initialize it by default to ascending sorting.
+             */
+            if ((hColumn.fmt & (HDF_SORTUP | HDF_SORTDOWN)) == 0)
+                hColumn.fmt |= HDF_SORTUP;
+
+            /* Keep the same sorting direction */
+            bSortAscending = ((hColumn.fmt & HDF_SORTUP) != 0);
+        }
+
+        /* Set the new column sorting state */
+        hColumn.fmt &= ~(bSortAscending ? HDF_SORTDOWN : HDF_SORTUP  );
+        hColumn.fmt |=  (bSortAscending ? HDF_SORTUP   : HDF_SORTDOWN);
+        Header_SetItem(hHeader, iSortingColumn, &hColumn);
+
+        /* Sort the list */
+        SortInfo.iSortingColumn = iSortingColumn;
+        SortInfo.bSortAscending = bSortAscending;
+        return ListView_SortItems(hListView, CompareFunc, (LPARAM)&SortInfo);
+    }
+    else
+        return TRUE;
 }
 
 BOOL ListWndNotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam, BOOL *Result)
 {
     NMLVDISPINFO* Info;
+    int iSortingColumn;
     UNREFERENCED_PARAMETER(wParam);
     *Result = TRUE;
     switch (((LPNMHDR)lParam)->code)
@@ -487,15 +553,9 @@ BOOL ListWndNotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam, BOOL *Result)
         OnGetDispInfo((NMLVDISPINFO*)lParam);
         return TRUE;
     case LVN_COLUMNCLICK:
-        if (g_columnToSort == (DWORD)((LPNMLISTVIEW)lParam)->iSubItem)
-            g_invertSort = !g_invertSort;
-        else
-        {
-            g_columnToSort = ((LPNMLISTVIEW)lParam)->iSubItem;
-            g_invertSort = FALSE;
-        }
-
-        (void)ListView_SortItems(hWnd, CompareFunc, (WPARAM)hWnd);
+        iSortingColumn = ((LPNMLISTVIEW)lParam)->iSubItem;
+        (void)ListView_Sort(hWnd, iSortingColumn, g_iSortedColumn);
+        g_iSortedColumn = iSortingColumn;
         return TRUE;
     case NM_DBLCLK:
     case NM_RETURN:
@@ -568,21 +628,20 @@ BOOL ListWndNotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam, BOOL *Result)
     return FALSE;
 }
 
-
 HWND CreateListView(HWND hwndParent, HMENU id)
 {
     RECT rcClient;
     HWND hwndLV;
 
-    /* Get the dimensions of the parent window's client area, and create the list view control.  */
+    /* Get the dimensions of the parent window's client area, and create the list view control. */
     GetClientRect(hwndParent, &rcClient);
     hwndLV = CreateWindowExW(WS_EX_CLIENTEDGE, WC_LISTVIEW, L"List View",
-                             WS_VISIBLE | WS_CHILD | WS_TABSTOP | LVS_REPORT | LVS_EDITLABELS,
+                             WS_VISIBLE | WS_CHILD | WS_TABSTOP | LVS_REPORT | LVS_EDITLABELS | LVS_SHOWSELALWAYS,
                              0, 0, rcClient.right, rcClient.bottom,
                              hwndParent, id, hInst, NULL);
     if (!hwndLV) return NULL;
 
-    /* Initialize the image list, and add items to the control.  */
+    /* Initialize the image list, and add items to the control. */
     if (!CreateListColumns(hwndLV)) goto fail;
     if (!InitListViewImageLists(hwndLV)) goto fail;
 
@@ -627,7 +686,6 @@ BOOL RefreshListView(HWND hwndLV, HKEY hKey, LPCWSTR keyPath)
     SendMessageW(hwndLV, WM_SETREDRAW, FALSE, 0);
     DestroyListView(hwndLV);
 
-    g_columnToSort = ~0UL;
     (void)ListView_DeleteAllItems(hwndLV);
 
     if(!hKey) return FALSE;
@@ -669,11 +727,12 @@ BOOL RefreshListView(HWND hwndLV, HKEY hKey, LPCWSTR keyPath)
         HeapFree(GetProcessHeap(), 0, ValBuf);
         HeapFree(GetProcessHeap(), 0, ValName);
     }
+    RegCloseKey(hNewKey);
+
     if(!AddedDefault)
     {
         AddEntryToList(hwndLV, L"", REG_SZ, NULL, 0, 0, FALSE);
     }
-    ListView_SortItems(hwndLV, CompareFunc, (WPARAM)hwndLV);
     c = ListView_GetItemCount(hwndLV);
     for(i = 0; i < c; i++)
     {
@@ -682,7 +741,7 @@ BOOL RefreshListView(HWND hwndLV, HKEY hKey, LPCWSTR keyPath)
     ListView_SetItemState(hwndLV, iListViewSelect,
                           LVIS_FOCUSED | LVIS_SELECTED,
                           LVIS_FOCUSED | LVIS_SELECTED);
-    RegCloseKey(hNewKey);
+    (void)ListView_Sort(hwndLV, g_iSortedColumn, -1);
     SendMessageW(hwndLV, WM_SETREDRAW, TRUE, 0);
 
     return TRUE;
