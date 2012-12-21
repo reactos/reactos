@@ -1237,6 +1237,11 @@ GDIOBJ_AllocObjWithHandle(ULONG ObjectType, ULONG cjSize)
     }
 
     pobj = GDIOBJ_AllocateObject(objt, cjSize, fl);
+    if (!pobj)
+    {
+        return NULL;
+    }
+
     if (!GDIOBJ_hInsertObject(pobj, GDI_OBJ_HMGR_POWNED))
     {
         GDIOBJ_vFreeObject(pobj);
