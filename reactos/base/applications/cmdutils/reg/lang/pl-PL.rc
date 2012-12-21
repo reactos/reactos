@@ -4,7 +4,7 @@
  *
  * Copyright 2008 Andrew Riedi
  * Copyright 2008 Mikolaj Zalewski
- * Copyright 2010 £ukasz Wojni≥owicz
+ * Copyright 2010 ≈Åukasz Wojni≈Çowicz
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -27,13 +27,13 @@ LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
-    STRING_USAGE, "Sk≥adnia tego polecenia:\n\nREG [ ADD | DELETE | QUERY ]\nREG polecenie /?\n"
-    STRING_ADD_USAGE, "REG ADD nazwa_klucza [/v nazwa_wartoúci | /ve] [/t typ] [/s separator] [/d dane] [/f]\n"
-    STRING_DELETE_USAGE, "REG DELETE nazwa_klucza [/v nazwa_wartoúci | /ve | /va] [/f]\n"
-    STRING_QUERY_USAGE, "REG QUERY nazwa_klucza [/v nazwa_wartoúci | /ve] [/s]\n"
-    STRING_SUCCESS, "Operacja zakoÒczona pomyúlnie\n"
-    STRING_INVALID_KEY, "B≥πd: Niew≥aúciwa nazwa klucza\n"
-    STRING_INVALID_CMDLINE, "B≥πd: Niew≥aúciwe parametry wiersza poleceÒ\n"
-    STRING_NO_REMOTE, "B≥πd: Nie moøna dodaÊ kluczy do zdalnej maszyny\n"
-    STRING_CANNOT_FIND, "B≥πd: System nie mÛg≥ znaleüÊ podanej wartoúci lub klucza rejestru\n"
+    STRING_USAGE, "Sk≈Çadnia tego polecenia:\n\nREG [ ADD | DELETE | QUERY ]\nREG polecenie /?\n"
+    STRING_ADD_USAGE, "REG ADD nazwa_klucza [/v nazwa_warto≈õci | /ve] [/t typ] [/s separator] [/d dane] [/f]\n"
+    STRING_DELETE_USAGE, "REG DELETE nazwa_klucza [/v nazwa_warto≈õci | /ve | /va] [/f]\n"
+    STRING_QUERY_USAGE, "REG QUERY nazwa_klucza [/v nazwa_warto≈õci | /ve] [/s]\n"
+    STRING_SUCCESS, "Operacja zako≈Ñczona pomy≈õlnie\n"
+    STRING_INVALID_KEY, "B≈ÇƒÖd: Niew≈Ça≈õciwa nazwa klucza\n"
+    STRING_INVALID_CMDLINE, "B≈ÇƒÖd: Niew≈Ça≈õciwe parametry wiersza polece≈Ñ\n"
+    STRING_NO_REMOTE, "B≈ÇƒÖd: Nie mo≈ºna dodaƒá kluczy do zdalnej maszyny\n"
+    STRING_CANNOT_FIND, "B≈ÇƒÖd: System nie m√≥g≈Ç znale≈∫ƒá podanej warto≈õci lub klucza rejestru\n"
 }
