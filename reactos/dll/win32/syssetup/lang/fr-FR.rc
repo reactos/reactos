@@ -92,7 +92,7 @@ CAPTION "Installation de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "La localisation système correspond à la langue souhaitée pour les applications. Elle contrôle la manière dont les nombres, devises et dates sont affichés.", IDC_STATIC, 53, 7, 253, 20
+    LTEXT "La localisation système correspond à la langue souhaitée pour les applications. Elle contrôle la manière dont les nombres, monnaies et dates sont affichés.", IDC_STATIC, 53, 7, 253, 20
     LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
     LTEXT "Pour changer la localisation système, cliquez sur Modifier.",
           IDC_STATIC, 53, 60, 184, 8
