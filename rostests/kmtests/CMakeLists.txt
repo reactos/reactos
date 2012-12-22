@@ -79,7 +79,6 @@ add_target_include_directories(kmtest_printf ${REACTOS_SOURCE_DIR}/lib/sdk/crt/i
 #
 # kmtest.exe loader application
 #
-set_rc_compiler()
 
 list(APPEND KMTEST_SOURCE
     kmtest/kmtest.c
