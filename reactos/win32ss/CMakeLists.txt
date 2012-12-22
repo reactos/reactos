@@ -70,6 +70,7 @@ list(APPEND SOURCE
     gdi/eng/lineto.c
     gdi/eng/ldevobj.c
     gdi/eng/mapping.c
+    gdi/eng/math.c
     gdi/eng/mem.c
     gdi/eng/engmisc.c
     gdi/eng/mouse.c
@@ -87,11 +88,9 @@ list(APPEND SOURCE
     gdi/eng/xlateobj.c
     user/ntuser/main.c
     user/ntuser/misc/file.c
-    user/ntuser/misc/math.c
     user/ntuser/misc/rtlstr.c
     user/ntuser/misc/copy.c
     user/ntuser/misc/registry.c
-    user/ntuser/misc/usrheap.c
     reactx/ntddraw/ddraw.c
     reactx/ntddraw/dd.c
     reactx/ntddraw/ddsurf.c
@@ -135,6 +134,7 @@ list(APPEND SOURCE
     user/ntuser/sysparams.c
     user/ntuser/timer.c
     user/ntuser/useratom.c
+    user/ntuser/usrheap.c
     user/ntuser/vis.c
     user/ntuser/windc.c
     user/ntuser/window.c
