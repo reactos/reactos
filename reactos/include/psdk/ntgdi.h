@@ -95,8 +95,8 @@ NtGdiSetDIBitsToDeviceInternal(
     _In_ INT ySrc,
     _In_ DWORD iStartScan,
     _In_ DWORD cNumScan,
-    IN LPBYTE pInitBits,
-    IN LPBITMAPINFO pbmi,
+    _In_reads_bytes_(cjMaxBits) LPBYTE pInitBits,
+    _In_reads_bytes_(cjMaxInfo) LPBITMAPINFO pbmi,
     _In_ DWORD iUsage,
     _In_ UINT cjMaxBits,
     _In_ UINT cjMaxInfo,
@@ -108,12 +108,12 @@ W32KAPI
 BOOL
 APIENTRY
 NtGdiGetFontResourceInfoInternalW(
-    IN LPWSTR pwszFiles,
+    _In_reads_z_(cwc) LPWSTR pwszFiles,
     _In_ ULONG cwc,
     _In_ ULONG cFiles,
-    _In_ UINT cjIn,
-    OUT LPDWORD pdwBytes,
-    OUT LPVOID pvBuf,
+    _In_ UINT cjBuf,
+    _Out_ LPDWORD pdwBytes,
+    _Out_writes_bytes_(cjBuf) LPVOID pvBuf,
     _In_ DWORD iType
 );
 

@@ -647,7 +647,7 @@ enum __SAL_YesNo {_SAL_notpresent, _SAL_no, _SAL_maybe, _SAL_yes, _SAL_default};
 //#define _In_reads_to_ptr_opt_(ptr)
 //#define _In_reads_to_ptr_opt_z_(ptr)
 //#define _In_reads_to_ptr_z_(ptr)
-//#define _In_reads_z_(size)
+#define _In_reads_z_(size)
 #define _In_z_
 #define _In_z_bytecount_(size)
 //#define _In_z_bytecount_c_(size)
@@ -796,7 +796,7 @@ enum __SAL_YesNo {_SAL_notpresent, _SAL_no, _SAL_maybe, _SAL_yes, _SAL_default};
 //#define _Out_writes_z_(size)
 #define _Out_z_bytecap_(size)
 //#define _Out_z_bytecap_c_(size)
-//#define _Out_z_bytecap_post_bytecount_(cap,count)
+#define _Out_z_bytecap_post_bytecount_(cap,count)                   _SAL11_Name(_Out_z_bytecap_post_bytecount_) _Group_(_Pre_bytecap_(cap) [SA_Post(Valid=SA_Yes)] _Post_z_bytecount_(count))
 //#define _Out_z_bytecap_x_(size)
 //#define _Out_z_bytecapcount_(capcount)
 //#define _Out_z_cap_(size)
@@ -868,7 +868,7 @@ enum __SAL_YesNo {_SAL_notpresent, _SAL_no, _SAL_maybe, _SAL_yes, _SAL_default};
 #define _Post_invalid_                                              _SAL2_Name(_Post_invalid_) _Group_([SA_Post(Deref=1,Valid=SA_No)])
 #define _Post_maybenull_                                            _SAL2_Name(_Post_maybenull_) _Group_([SA_Post(Null=SA_Maybe)])
 //#define _Post_maybez_
-#define _Post_notnull_
+#define _Post_notnull_                                              _SAL2_Name(_Post_notnull_) _Group_([SA_Post(Null=SA_No)])
 //#define _Post_null_
 #define _Post_ptr_invalid_                                          _SAL2_Name(_Post_ptr_invalid_) _Group_([SA_Post(Valid=SA_No)])
 //#define _Post_readable_byte_size_(size)
@@ -878,19 +878,19 @@ enum __SAL_YesNo {_SAL_notpresent, _SAL_no, _SAL_maybe, _SAL_yes, _SAL_default};
 #define _Post_writable_byte_size_(size)
 //#define _Post_writable_size_(size)
 #define _Post_z_                                                    _SAL2_Name(_Post_z_) _Group_([SA_Post(NullTerminated=SA_Yes)] [SA_Post(Valid=SA_Yes)])
-//#define _Post_z_bytecount_(size)
+#define _Post_z_bytecount_(size)                                    _SAL11_Name(_Post_z_bytecount_) _Group_([SA_Post(NullTerminated=SA_Yes,ValidBytes="\n" _SA_SPECSTRIZE(size) )] [SA_Post(Valid=SA_Yes)])
 //#define _Post_z_bytecount_c_(size)
 //#define _Post_z_bytecount_x_(size)
 //#define _Post_z_count_(size)
 //#define _Post_z_count_c_(size)
 //#define _Post_z_count_x_(size)
-//#define _Pre_bytecap_(size)
+#define _Pre_bytecap_(size)                                         _SAL11_Name(_Pre_bytecap_) _Group_([SA_Pre(Null=SA_No,Notref=1)] [SA_Pre(WritableBytes="\n" _SA_SPECSTRIZE(size) )])
 //#define _Pre_bytecap_c_(size)
 //#define _Pre_bytecap_x_(size)
 #define _Pre_bytecount_(size)
 //#define _Pre_bytecount_c_(size)
 //#define _Pre_bytecount_x_(size)
-#define _Pre_cap_(size)                                             _SAL11_Name(_Pre_cap_) _Group_([SA_Pre(Null=SA_No,Notref=1)] [SA_Pre(WritableElements="\n" #size )])
+#define _Pre_cap_(size)                                             _SAL11_Name(_Pre_cap_) _Group_([SA_Pre(Null=SA_No,Notref=1)] [SA_Pre(WritableElements="\n" _SA_SPECSTRIZE(size) )])
 //#define _Pre_cap_c_(size)
 //#define _Pre_cap_c_one_
 //#define _Pre_cap_for_(param)
@@ -1003,7 +1003,7 @@ enum __SAL_YesNo {_SAL_notpresent, _SAL_no, _SAL_maybe, _SAL_yes, _SAL_default};
 //#define _Ret_notnull_
 //#define _Ret_null_
 //#define _Ret_opt_
-#define _Ret_opt_bytecap_(size)
+#define _Ret_opt_bytecap_(size)                                     _SAL11_Name(_Ret_opt_bytecap_) _Group_([SA_Post(Null=SA_Maybe,Notref=1)] [SA_Post(WritableBytes="\n" _SA_SPECSTRIZE(size))])
 //#define _Ret_opt_bytecap_c_(size)
 //#define _Ret_opt_bytecap_x_(size)
 #define _Ret_opt_bytecount_(size)
@@ -1038,7 +1038,7 @@ enum __SAL_YesNo {_SAL_notpresent, _SAL_no, _SAL_maybe, _SAL_yes, _SAL_default};
 //#define _Ret_z_bytecount_(size)
 //#define _Ret_z_cap_(size)
 //#define _Ret_z_count_(size)
-#define _Return_type_success_(expr)
+#define _Return_type_success_(expr)                                 _SAL2_Name(_Return_type_success_) _Group_([SA_Success(Condition=_SA_SPECSTRIZE(expr))])
 //#define _Scanf_format_string_
 //#define _Scanf_s_format_string_
 #define _Struct_size_bytes_(size)

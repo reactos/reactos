@@ -8889,6 +8889,7 @@ CcGetDirtyPages(
 #endif
 
 #if (NTDDI_VERSION >= NTDDI_WINXP)
+_Success_(return!=FALSE)
 NTKERNELAPI
 BOOLEAN
 NTAPI

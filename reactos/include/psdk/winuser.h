@@ -4270,20 +4270,22 @@ DWORD WINAPI DrawMenuBarTemp(HWND,HDC,LPRECT,HMENU,HFONT);
 BOOL WINAPI DrawStateA(_In_ HDC, _In_opt_ HBRUSH, _In_opt_ DRAWSTATEPROC, _In_ LPARAM, _In_ WPARAM, _In_ int, _In_ int, _In_ int, _In_ int, _In_ UINT);
 BOOL WINAPI DrawStateW(_In_ HDC, _In_opt_ HBRUSH, _In_opt_ DRAWSTATEPROC, _In_ LPARAM, _In_ WPARAM, _In_ int, _In_ int, _In_ int, _In_ int, _In_ UINT);
 
+_Success_(return)
 int
 WINAPI
 DrawTextA(
   _In_ HDC hdc,
-  _Inout_updates_opt_(cchText) LPCSTR lpchText,
+  _At_((LPSTR)lpchText, _Inout_updates_opt_(cchText)) LPCSTR lpchText,
   _In_ int cchText,
   _Inout_ LPRECT lprc,
   _In_ UINT format);
 
+_Success_(return)
 int
 WINAPI
 DrawTextW(
   _In_ HDC hdc,
-  _Inout_updates_opt_(cchText) LPCWSTR lpchText,
+  _At_((LPWSTR)lpchText, _Inout_updates_opt_(cchText)) LPCWSTR lpchText,
   _In_ int cchText,
   _Inout_ LPRECT lprc,
   _In_ UINT format);
