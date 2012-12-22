@@ -1,4 +1,3 @@
-set_rc_compiler()
 
 spec2def(d3dx9_24.dll d3dx9_24.spec ADD_IMPORTLIB)
 
@@ -9,14 +8,10 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/d3dx9_24.def)
 
 add_definitions(-D__WINESRC__)
-
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
-
 add_library(d3dx9_24 SHARED ${SOURCE})
 set_module_type(d3dx9_24 win32dll)
-
-target_link_libraries(d3dx9_24
-    wine)
+target_link_libraries(d3dx9_24 wine)
 
 add_importlibs(d3dx9_24
     d3dx9_36
@@ -30,4 +25,3 @@ add_importlibs(d3dx9_24
 
 add_dependencies(d3dx9_24 wineheaders)
 add_cd_file(TARGET d3dx9_24 DESTINATION reactos/system32 FOR all)
-

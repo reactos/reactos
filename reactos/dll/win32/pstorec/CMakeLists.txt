@@ -1,9 +1,6 @@
 
 add_typelib(pstorec_tlb.idl)
-
 add_definitions(-D__WINESRC__)
-
-set_rc_compiler()
 spec2def(pstorec.dll pstorec.spec)
 
 list(APPEND SOURCE
@@ -13,9 +10,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/pstorec.def)
 
 set_source_files_properties(rsrc.rc PROPERTIES OBJECT_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/pstorec_tlb.tlb)
-
 add_library(pstorec SHARED ${SOURCE})
-
 set_module_type(pstorec win32dll)
 target_link_libraries(pstorec uuid wine)
 add_importlibs(pstorec msvcrt kernel32 ntdll)

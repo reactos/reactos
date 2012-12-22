@@ -1,10 +1,6 @@
 
 add_definitions(-D__WINESRC__)
-
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
-
-set_rc_compiler()
-
 spec2def(iccvid.dll iccvid.spec)
 
 list(APPEND SOURCE
@@ -13,7 +9,6 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/iccvid.def)
 
 add_library(iccvid SHARED ${SOURCE})
-
 set_module_type(iccvid win32dll)
 target_link_libraries(iccvid wine)
 add_importlibs(iccvid user32 msvcrt kernel32 ntdll)

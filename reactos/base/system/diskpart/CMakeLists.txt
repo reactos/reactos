@@ -1,4 +1,3 @@
-set_rc_compiler()
 
 add_executable(diskpart
 	active.c
@@ -44,6 +43,6 @@ add_executable(diskpart
 set_module_type(diskpart win32cui UNICODE)
 add_importlibs(diskpart user32 msvcrt kernel32)
 if(MSVC)
-add_importlibs(diskpart ntdll)
+	add_importlibs(diskpart ntdll)
 endif()
-add_cd_file(TARGET diskpart DESTINATION reactos/system32 FOR all) 
+add_cd_file(TARGET diskpart DESTINATION reactos/system32 FOR all)

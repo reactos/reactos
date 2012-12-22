@@ -1,4 +1,4 @@
-set_rc_compiler()
+
 spec2def(rasman.dll rasman.spec)
 
 list(APPEND SOURCE
@@ -8,13 +8,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/rasman.def)
 
 add_library(rasman SHARED ${SOURCE})
-
 set_module_type(rasman win32dll)
-
-target_link_libraries(rasman
-    wine
-    uuid)
-
+target_link_libraries(rasman wine uuid)
 add_importlibs(rasman msvcrt kernel32 ntdll)
-
 add_cd_file(TARGET rasman DESTINATION reactos/system32 FOR all)

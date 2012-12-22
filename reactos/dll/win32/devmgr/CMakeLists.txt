@@ -1,6 +1,4 @@
 
-set_rc_compiler()
-
 spec2def(devmgr.dll devmgr.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
@@ -14,9 +12,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/devmgr.def)
 
 add_library(devmgr SHARED ${SOURCE})
-
 set_module_type(devmgr win32dll UNICODE)
-
 target_link_libraries(devmgr uuid wine)
 
 add_importlibs(devmgr
@@ -29,6 +25,4 @@ add_importlibs(devmgr
     ntdll)
 
 add_pch(devmgr precomp.h)
-
 add_cd_file(TARGET devmgr DESTINATION reactos/system32 FOR all)
-

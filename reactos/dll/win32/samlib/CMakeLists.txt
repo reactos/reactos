@@ -4,12 +4,8 @@ include_directories(
     ${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 add_definitions(-D__WINESRC__)
-
-set_rc_compiler()
 spec2def(samlib.dll samlib.spec ADD_IMPORTLIB)
-
-add_rpc_files(client
-    ${REACTOS_SOURCE_DIR}/include/reactos/idl/sam.idl)
+add_rpc_files(client ${REACTOS_SOURCE_DIR}/include/reactos/idl/sam.idl)
 
 list(APPEND SOURCE
     dllmain.c
@@ -25,4 +21,3 @@ target_link_libraries(samlib wine ${PSEH_LIB})
 add_importlibs(samlib rpcrt4 advapi32 msvcrt kernel32 ntdll)
 add_pch(samlib precomp.h)
 add_cd_file(TARGET samlib DESTINATION reactos/system32 FOR all)
-

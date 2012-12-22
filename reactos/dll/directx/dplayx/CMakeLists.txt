@@ -1,6 +1,4 @@
 
-set_rc_compiler()
-
 spec2def(dplayx.dll dplayx.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
@@ -21,11 +19,7 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 add_library(dplayx SHARED ${SOURCE})
 set_module_type(dplayx win32dll)
-
-target_link_libraries(dplayx
-    wine
-    uuid
-    dxguid)
+target_link_libraries(dplayx wine uuid dxguid)
 
 add_importlibs(dplayx
     advapi32
@@ -37,4 +31,3 @@ add_importlibs(dplayx
     ntdll)
 
 add_cd_file(TARGET dplayx DESTINATION reactos/system32 FOR all)
-

@@ -9,8 +9,6 @@ include_directories(
 
 spec2def(win32csr.dll win32csr.spec)
 
-set_rc_compiler()
-
 list(APPEND SOURCE
     alias.c
     coninput.c
@@ -29,17 +27,10 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/win32csr.def)
 
 add_library(win32csr SHARED ${SOURCE})
-
-target_link_libraries(win32csr
-    win32ksys
-    ${PSEH_LIB})
-
+target_link_libraries(win32csr win32ksys ${PSEH_LIB})
 set_module_type(win32csr win32dll)
-
 add_importlibs(win32csr psapi msvcrt kernel32 ntdll csrsrv)
 add_delay_importlibs(win32csr user32 gdi32 advapi32)
-
 add_pch(win32csr w32csr.h)
-
 add_dependencies(win32csr bugcodes)
 add_cd_file(TARGET win32csr DESTINATION reactos/system32 FOR all)

@@ -1,10 +1,6 @@
 
 add_definitions(-D_KERNEL32_)
-
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/subsys)
-
-set_rc_compiler()
-
 spec2def(kernel32.dll kernel32.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
@@ -80,23 +76,19 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/kernel32.def)
 
 if(ARCH STREQUAL "i386")
-list(APPEND SOURCE
-    client/i386/fiber.S
-    client/i386/thread.S)
+    list(APPEND SOURCE
+        client/i386/fiber.S
+        client/i386/thread.S)
 elseif(ARCH STREQUAL "amd64")
-list(APPEND SOURCE
-    client/amd64/fiber.S
-    client/amd64/thread.S)
-endif(ARCH STREQUAL "i386")
+    list(APPEND SOURCE
+        client/amd64/fiber.S
+        client/amd64/thread.S)
+endif()
 
 add_library(kernel32 SHARED ${SOURCE})
-
 set_module_type(kernel32 win32dll ENTRYPOINT DllMain 12)
-
 target_link_libraries(kernel32 wine chkstk ${PSEH_LIB})
-
 add_importlibs(kernel32 ntdll)
 add_pch(kernel32 k32.h)
 add_dependencies(kernel32 psdk errcodes asm)
 add_cd_file(TARGET kernel32 DESTINATION reactos/system32 FOR all)
-

@@ -1,6 +1,4 @@
 
-set_rc_compiler()
-
 spec2def(input.dll input.spec)
 
 add_library(input SHARED

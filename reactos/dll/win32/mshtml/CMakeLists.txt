@@ -4,11 +4,7 @@ add_definitions(-D_WIN32_WINNT=0x600)
 
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
-
 add_idl_Headers(mshtml_nsiface_header nsiface.idl)
-
-set_rc_compiler()
-
 spec2def(mshtml.dll mshtml.spec)
 
 list(APPEND SOURCE

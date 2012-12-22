@@ -10,9 +10,6 @@ add_definitions(
     -Dwcsnicmp=_wcsnicmp)
 
 add_rpc_files(client ${REACTOS_SOURCE_DIR}/include/reactos/idl/pnp.idl)
-
-set_rc_compiler()
-
 spec2def(setupapi.dll setupapi.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
@@ -55,4 +52,3 @@ add_importlibs(setupapi
 
 add_pch(setupapi setupapi_private.h)
 add_cd_file(TARGET setupapi DESTINATION reactos/system32 FOR all)
-

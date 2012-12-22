@@ -1,12 +1,7 @@
 
-set_rc_compiler()
-
 spec2def(joy.cpl joy.spec)
-
 add_library(joy SHARED joy.c joy.rc ${CMAKE_CURRENT_BINARY_DIR}/joy.def)
-
 set_module_type(joy cpl UNICODE)
-
 target_link_libraries(joy uuid)
 
 add_importlibs(joy

@@ -6,7 +6,6 @@ include_directories(
 #add_definitions(-D_DEBUG)
 
 set_cpp()
-set_rc_compiler()
 
 list(APPEND SOURCE
     id_ata.cpp
@@ -18,9 +17,7 @@ list(APPEND SOURCE
     id_sata.cpp
     ros_glue/ros_glue.cpp)
 
-add_library(uniata SHARED
-    ${SOURCE}
-    idedma.rc)
+add_library(uniata SHARED ${SOURCE} idedma.rc)
 
 # FIXME: http://www.cmake.org/Bug/view.php?id=12998
 if(MSVC)

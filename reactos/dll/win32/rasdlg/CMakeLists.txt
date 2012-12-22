@@ -1,5 +1,4 @@
 
-set_rc_compiler()
 spec2def(rasdlg.dll rasdlg.spec)
 
 list(APPEND SOURCE
@@ -9,13 +8,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/rasdlg.def)
 
 add_library(rasdlg SHARED ${SOURCE})
-
 set_module_type(rasdlg win32dll)
-
-target_link_libraries(rasdlg
-    wine
-    uuid)
-
+target_link_libraries(rasdlg wine uuid)
 add_importlibs(rasdlg msvcrt kernel32 ntdll)
-
 add_cd_file(TARGET rasdlg DESTINATION reactos/system32 FOR all)

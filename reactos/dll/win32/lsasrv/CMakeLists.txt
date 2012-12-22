@@ -5,9 +5,6 @@ include_directories(
     ${REACTOS_SOURCE_DIR}/include/reactos/subsys/lsass)
 
 add_rpc_files(server ${REACTOS_SOURCE_DIR}/include/reactos/idl/lsa.idl)
-
-set_rc_compiler()
-
 spec2def(lsasrv.dll lsasrv.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
@@ -27,10 +24,8 @@ list(APPEND SOURCE
 
 add_library(lsasrv SHARED ${SOURCE})
 set_module_type(lsasrv win32dll ENTRYPOINT 0 UNICODE)
-
 target_link_libraries(lsasrv wine ${PSEH_LIB})
 add_importlibs(lsasrv samsrv rpcrt4 msvcrt kernel32 advapi32 ntdll)
 add_pch(lsasrv lsasrv.h)
 add_dependencies(lsasrv psdk)
 add_cd_file(TARGET lsasrv DESTINATION reactos/system32 FOR all)
-
