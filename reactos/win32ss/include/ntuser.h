@@ -1893,11 +1893,13 @@ NTAPI
 NtUserGetAsyncKeyState(
   INT Key);
 
-DWORD
-NTAPI
+_Success_(return!=0)
+_At_(pustrName->Buffer, _Out_z_bytecap_post_bytecount_(pustrName->MaximumLength, return*2+2))
+ULONG
+APIENTRY
 NtUserGetAtomName(
-    ATOM nAtom,
-    PUNICODE_STRING pBuffer);
+    _In_ ATOM atom,
+    _Inout_ PUNICODE_STRING pustrName);
 
 UINT
 NTAPI
