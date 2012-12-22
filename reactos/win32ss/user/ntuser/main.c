@@ -226,16 +226,16 @@ Win32kProcessCallback(struct _EPROCESS *Process,
         *pppi = ppiCurrent->ppiNext;
 
         TRACE_CH(UserProcess,"Freeing ppi 0x%p\n", ppiCurrent);
-
-        /* Ftee the PROCESSINFO */
-        PsSetProcessWin32Process(Process, NULL);
-        ExFreePoolWithTag(ppiCurrent, USERTAG_PROCESSINFO);
 #if DBG
         if (DBG_IS_CHANNEL_ENABLED(ppiCurrent, DbgChUserObj, WARN_LEVEL))
         {
             DbgUserDumpHandleTable();
         }
 #endif
+
+        /* Free the PROCESSINFO */
+        PsSetProcessWin32Process(Process, NULL);
+        ExFreePoolWithTag(ppiCurrent, USERTAG_PROCESSINFO);
     }
 
     RETURN( STATUS_SUCCESS);
