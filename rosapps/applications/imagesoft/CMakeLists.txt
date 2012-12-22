@@ -1,6 +1,4 @@
 
-set_rc_compiler()
-
 list(APPEND SOURCE
     about.c
     adjust.c
@@ -21,5 +19,4 @@ add_pch(imagesoft precomp.h)
 add_executable(imagesoft ${SOURCE})
 set_module_type(imagesoft win32gui UNICODE)
 add_importlibs(imagesoft gdi32 user32 advapi32 version comctl32 shell32 comdlg32 msvcrt kernel32)
-
 add_cd_file(TARGET imagesoft DESTINATION reactos/system32 FOR all)

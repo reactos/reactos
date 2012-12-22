@@ -1,6 +1,4 @@
 
-set_rc_compiler()
-
 add_library(green SHARED
     createclose.c
     dispatch.c
@@ -13,7 +11,6 @@ add_library(green SHARED
     green.rc)
 
 add_pch(green green.h)
-
 set_module_type(green kernelmodedriver)
 add_importlibs(green ntoskrnl hal)
 add_cd_file(TARGET green DESTINATION reactos/system32/drivers NO_CAB FOR all)
