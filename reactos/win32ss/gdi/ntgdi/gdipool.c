@@ -155,6 +155,8 @@ GdiPoolAllocate(
             /* Yes, remove it from the empty list */
             ple = RemoveHeadList(&pPool->leEmptyList);
             pSection = CONTAINING_RECORD(ple, GDI_POOL_SECTION, leInUseLink);
+            pPool->cEmptySections--;
+            ASSERT(pSection->cAllocCount == 0);
         }
         else
         {
@@ -166,13 +168,11 @@ GdiPoolAllocate(
                 pvAlloc = NULL;
                 goto done;
             }
-
-            /* Insert it into the ready list */
-            InsertHeadList(&pPool->leReadyList, &pSection->leReadyLink);
         }
 
-        /* Insert it into the in-use list */
+        /* Insert it into the in-use and ready list */
         InsertHeadList(&pPool->leInUseList, &pSection->leInUseLink);
+        InsertHeadList(&pPool->leReadyList, &pSection->leReadyLink);
     }
 
     /* Find and set a single bit */
@@ -203,6 +203,7 @@ GdiPoolAllocate(
 
     /* Increase alloc count */
     pSection->cAllocCount++;
+    ASSERT(RtlNumberOfSetBits(&pSection->bitmap) == pSection->cAllocCount);
     DBG_LOGEVENT(&pPool->slhLog, EVENT_ALLOCATE, pvAlloc);
 
     /* Check if section is now busy */
@@ -260,6 +261,7 @@ GdiPoolFree(
 
             /* Decrease allocation count */
             pSection->cAllocCount--;
+            ASSERT(RtlNumberOfSetBits(&pSection->bitmap) == pSection->cAllocCount);
             DBG_LOGEVENT(&pPool->slhLog, EVENT_FREE, pvAlloc);
 
             /* Check if the section got valid now */
@@ -275,7 +277,7 @@ GdiPoolFree(
                 RemoveEntryList(&pSection->leInUseLink);
                 RemoveEntryList(&pSection->leReadyLink);
 
-                if (pPool->cEmptySections > 1)
+                if (pPool->cEmptySections >= 1)
                 {
                     /* Delete the section */
                     GdiPoolDeleteSection(pPool, pSection);
