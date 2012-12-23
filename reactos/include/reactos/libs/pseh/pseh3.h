@@ -290,3 +290,4 @@ void * __cdecl __attribute__((error("Can only be used inside an exception filter
 
 #define _SEH3_LEAVE goto _SEH3$_l_AfterTry
 
+#define _SEH3_VOLATILE volatile
