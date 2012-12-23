@@ -52,7 +52,12 @@ KsLoadResource(
                     RtlMoveMemory(Result, Data, Size);
                     /* store result */
                     *Resource = Result;
-                    *ResourceSize = Size;
+
+                    if (ResourceSize)
+                    {
+                        /* resource size is optional */
+                        *ResourceSize = Size;
+                    }
                 }
                 else
                 {
