@@ -27,7 +27,7 @@ KsLoadResource(
     PIMAGE_RESOURCE_DATA_ENTRY ResourceDataEntry;
     PVOID Data;
     ULONG Size;
-    PVOID Result = NULL;
+    PVOID _SEH2_VOLATILE Result = NULL;
 
     /* set up resource info */
     ResourceInfo.Type = ResourceType;
@@ -131,7 +131,7 @@ KsGetImageNameAndResourceId(
     }
 
     /* allocate image name buffer */
-    ImageName->MaximumLength = sizeof(ImagePath) + ImageLength;
+    ImageName->MaximumLength = (USHORT)(sizeof(ImagePath) + ImageLength);
     ImageName->Buffer = AllocateItem(PagedPool, ImageName->MaximumLength);
 
     /* check for success */
@@ -145,7 +145,11 @@ KsGetImageNameAndResourceId(
     RtlCopyMemory(ImageName->Buffer, ImagePath, sizeof(ImagePath));
 
     /* retrieve image name */
-    Status = KspQueryRegValue(RegKey, L"Image", &ImageName->Buffer[sizeof(ImagePath) / sizeof(WCHAR)], &ImageLength, NULL);
+    Status = KspQueryRegValue(RegKey,
+                              L"Image",
+                              &ImageName->Buffer[sizeof(ImagePath) / sizeof(WCHAR)],
+                              &ImageLength,
+                              NULL);
 
     if (!NT_SUCCESS(Status))
     {
