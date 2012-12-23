@@ -22,7 +22,7 @@
 
 /*
  * TrayClockWnd
- */ 
+ */
 
 static const TCHAR szTrayClockWndClass[] = TEXT("TrayClockWClass");
 static LPCTSTR s_szRegistryKey = _T("Software\\ReactOS\\Features\\Explorer");
@@ -40,46 +40,46 @@ static const struct
 {TRUE, 0, NULL},
 {FALSE, 0, TEXT("dddd")},
 {FALSE, DATE_SHORTDATE, NULL}
-};					 
+};
 
-HRESULT RegGetDWord(HKEY hKey, LPCTSTR szValueName, DWORD * lpdwResult) 
+HRESULT RegGetDWord(HKEY hKey, LPCTSTR szValueName, DWORD * lpdwResult)
 {
-	LONG lResult;
-	DWORD dwDataSize = sizeof(DWORD);
-	DWORD dwType = 0;
+    LONG lResult;
+    DWORD dwDataSize = sizeof(DWORD);
+    DWORD dwType = 0;
 
-	// Check input parameters...
-	if (hKey == NULL || lpdwResult == NULL) return E_INVALIDARG;
+    // Check input parameters...
+    if (hKey == NULL || lpdwResult == NULL) return E_INVALIDARG;
 
-	// Get dword value from the registry...
-	lResult = RegQueryValueEx(hKey, szValueName, 0, &dwType, (LPBYTE) lpdwResult, &dwDataSize );
+    // Get dword value from the registry...
+    lResult = RegQueryValueEx(hKey, szValueName, 0, &dwType, (LPBYTE) lpdwResult, &dwDataSize );
 
-	// Check result and make sure the registry value is a DWORD(REG_DWORD)...
-	if (lResult != ERROR_SUCCESS) return HRESULT_FROM_WIN32(lResult);
-	else if (dwType != REG_DWORD) return DISP_E_TYPEMISMATCH;
+    // Check result and make sure the registry value is a DWORD(REG_DWORD)...
+    if (lResult != ERROR_SUCCESS) return HRESULT_FROM_WIN32(lResult);
+    else if (dwType != REG_DWORD) return DISP_E_TYPEMISMATCH;
 
-	return NOERROR;
+    return NOERROR;
 }
 
 void LoadSettings(void)
 {
-	HKEY hKey = NULL;
-	DWORD dwValue;
+    HKEY hKey = NULL;
+    DWORD dwValue;
 
-	if (RegOpenKey(HKEY_CURRENT_USER, s_szRegistryKey, &hKey) == ERROR_SUCCESS)
-	{
-		 RegGetDWord(hKey,  TEXT("blShowSeconds"), &dwValue);
-		 if (dwValue == 1)
-		 {
-		     blShowSeconds = TRUE;
-		 }
-		 else
-		 {
-		     blShowSeconds = FALSE;
-		 }
+    if (RegOpenKey(HKEY_CURRENT_USER, s_szRegistryKey, &hKey) == ERROR_SUCCESS)
+    {
+        RegGetDWord(hKey, TEXT("blShowSeconds"), &dwValue);
+        if (dwValue == 1)
+        {
+            blShowSeconds = TRUE;
+        }
+        else
+        {
+            blShowSeconds = FALSE;
+        }
 
-		RegCloseKey(hKey);
-	}
+        RegCloseKey(hKey);
+    }
 }
 
 #define CLOCKWND_FORMAT_COUNT (sizeof(ClockWndFormats) / sizeof(ClockWndFormats[0]))
@@ -94,7 +94,7 @@ typedef struct _TRAY_CLOCK_WND_DATA
     HFONT hFont;
     RECT rcText;
     SYSTEMTIME LocalTime;
-	
+
     union
     {
         DWORD dwFlags;
@@ -276,11 +276,11 @@ TrayClockWnd_UpdateWnd(IN OUT PTRAY_CLOCK_WND_DATA This)
 
         if (iRet != 0 && i == 0)
         {
-			if (blShowSeconds == FALSE)
-			{
-				(This->szLines[0][5] = '\0');
-			};
-			
+            if (blShowSeconds == FALSE)
+            {
+                This->szLines[0][5] = '\0';
+            }
+
             /* Set the window text to the time only */
             SetWindowText(This->hWnd,
                           This->szLines[i]);
@@ -344,10 +344,10 @@ TrayClockWnd_CalculateDueTime(IN OUT PTRAY_CLOCK_WND_DATA This)
     /* Calculate the due time */
     GetLocalTime(&This->LocalTime);
     uiDueTime = 1000 - (UINT)This->LocalTime.wMilliseconds;
-	if (blShowSeconds == TRUE)
-		uiDueTime += ( (UINT)This->LocalTime.wSecond) * 100;
-	else
-		uiDueTime += (59 - (UINT)This->LocalTime.wSecond) * 1000;
+    if (blShowSeconds == TRUE)
+        uiDueTime += (UINT)This->LocalTime.wSecond * 100;
+    else
+        uiDueTime += (59 - (UINT)This->LocalTime.wSecond) * 1000;
 
     if (uiDueTime < USER_TIMER_MINIMUM || uiDueTime > USER_TIMER_MAXIMUM)
         uiDueTime = 1000;
@@ -401,7 +401,7 @@ TrayClockWnd_CalibrateTimer(IN OUT PTRAY_CLOCK_WND_DATA This)
 {
     UINT uiDueTime;
     BOOL Ret;
-	int intWait1, intWait2;
+    int intWait1, intWait2;
 
     /* Kill the initialization timer */
     KillTimer(This->hWnd,
@@ -409,26 +409,26 @@ TrayClockWnd_CalibrateTimer(IN OUT PTRAY_CLOCK_WND_DATA This)
     This->IsInitTimerEnabled = FALSE;
 
     uiDueTime = TrayClockWnd_CalculateDueTime(This);
-	
-	if (blShowSeconds == TRUE) 
-	{
-		intWait1 = 1000-200;
-		intWait2 = 1000;
-	}
-	else
-	{
-		intWait1 = 60*1000-200;
-		intWait2 = 60*1000;
-	}
+
+    if (blShowSeconds == TRUE)
+    {
+        intWait1 = 1000 - 200;
+        intWait2 = 1000;
+    }
+    else
+    {
+        intWait1 = 60 * 1000 - 200;
+        intWait2 = 60 * 1000;
+    }
 
     if (uiDueTime > intWait1)
     {
         /* The update of the clock will be up to 200 ms late, but that's
            acceptable. We're going to setup a timer that fires depending
-           intWait2. */   
+           intWait2. */
         Ret = SetTimer(This->hWnd,
                        ID_TRAYCLOCK_TIMER,
-					   intWait2,
+                       intWait2,
                        NULL) != 0;
         This->IsTimerEnabled = Ret;
 
@@ -677,7 +677,7 @@ CreateTrayClockWnd(IN HWND hWndParent,
     PTRAY_CLOCK_WND_DATA TcData;
     DWORD dwStyle;
     HWND hWnd = NULL;
-	LoadSettings();
+    LoadSettings();
 
     TcData = HeapAlloc(hProcessHeap,
                        0,

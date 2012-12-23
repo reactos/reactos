@@ -1729,7 +1729,7 @@ TaskSwitchWnd_HandleTaskItemRightClick(IN OUT PTASK_SWITCH_WND This,
         GetCursorPos(&pt);
         cmd = TrackPopupMenu(hmenu, TPM_LEFTBUTTON|TPM_RIGHTBUTTON|TPM_RETURNCMD, pt.x, pt.y, 0, This->hWndToolbar, NULL);
         if (cmd) {
-            SetForegroundWindow(TaskItem->hWnd);	// reactivate window after the context menu has closed
+            SetForegroundWindow(TaskItem->hWnd);    // reactivate window after the context menu has closed
             PostMessage(TaskItem->hWnd, WM_SYSCOMMAND, cmd, 0);
         }
     }
