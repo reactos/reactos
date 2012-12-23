@@ -278,6 +278,7 @@ typedef struct _CONNECTION_ENDPOINT {
     /* Socket state */
     BOOLEAN SendShutdown;
     BOOLEAN ReceiveShutdown;
+    NTSTATUS ReceiveShutdownStatus;
 
     struct _CONNECTION_ENDPOINT *Next; /* Next connection in address file list */
 } CONNECTION_ENDPOINT, *PCONNECTION_ENDPOINT;

@@ -260,61 +260,53 @@ FlushAllQueues(PCONNECTION_ENDPOINT Connection, NTSTATUS Status)
 VOID
 TCPFinEventHandler(void *arg, const err_t err)
 {
-    PCONNECTION_ENDPOINT Connection = (PCONNECTION_ENDPOINT)arg, LastConnection;
-    const NTSTATUS Status = TCPTranslateError(err);
-    KIRQL OldIrql;
+   PCONNECTION_ENDPOINT Connection = (PCONNECTION_ENDPOINT)arg, LastConnection;
+   const NTSTATUS Status = TCPTranslateError(err);
+   KIRQL OldIrql;
 
-    ASSERT(Connection->AddressFile);
+   ASSERT(Connection->AddressFile);
+   ASSERT(err != ERR_OK);
 
-    /* Check if this was a partial socket closure */
-    if (err == ERR_OK && Connection->SocketContext)
-    {
-        /* Just flush the receive queue and get out of here */
-        FlushReceiveQueue(Connection, STATUS_SUCCESS, TRUE);
-    }
-    else
-    {
-        /* First off all, remove the PCB pointer */
-        Connection->SocketContext = NULL;
+   /* First off all, remove the PCB pointer */
+   Connection->SocketContext = NULL;
 
-        /* Complete all outstanding requests now */
-        FlushAllQueues(Connection, Status);
+   /* Complete all outstanding requests now */
+   FlushAllQueues(Connection, Status);
 
-        LockObject(Connection, &OldIrql);
+   LockObject(Connection, &OldIrql);
 
-        LockObjectAtDpcLevel(Connection->AddressFile);
+   LockObjectAtDpcLevel(Connection->AddressFile);
 
-        /* Unlink this connection from the address file */
-        if (Connection->AddressFile->Connection == Connection)
-        {
-            Connection->AddressFile->Connection = Connection->Next;
-            DereferenceObject(Connection);
-        }
-        else if (Connection->AddressFile->Listener == Connection)
-        {
-            Connection->AddressFile->Listener = NULL;
-            DereferenceObject(Connection);
-        }
-        else
-        {
-            LastConnection = Connection->AddressFile->Connection;
-            while (LastConnection->Next != Connection && LastConnection->Next != NULL)
-                LastConnection = LastConnection->Next;
-            if (LastConnection->Next == Connection)
-            {
-                LastConnection->Next = Connection->Next;
-                DereferenceObject(Connection);
-            }
-        }
+   /* Unlink this connection from the address file */
+   if (Connection->AddressFile->Connection == Connection)
+   {
+       Connection->AddressFile->Connection = Connection->Next;
+       DereferenceObject(Connection);
+   }
+   else if (Connection->AddressFile->Listener == Connection)
+   {
+       Connection->AddressFile->Listener = NULL;
+       DereferenceObject(Connection);
+   }
+   else
+   {
+       LastConnection = Connection->AddressFile->Connection;
+       while (LastConnection->Next != Connection && LastConnection->Next != NULL)
+           LastConnection = LastConnection->Next;
+       if (LastConnection->Next == Connection)
+       {
+           LastConnection->Next = Connection->Next;
+           DereferenceObject(Connection);
+       }
+   }
 
-        UnlockObjectFromDpcLevel(Connection->AddressFile);
+   UnlockObjectFromDpcLevel(Connection->AddressFile);
 
-        /* Remove the address file from this connection */
-        DereferenceObject(Connection->AddressFile);
-        Connection->AddressFile = NULL;
+   /* Remove the address file from this connection */
+   DereferenceObject(Connection->AddressFile);
+   Connection->AddressFile = NULL;
 
-        UnlockObject(Connection, OldIrql);
-    }
+   UnlockObject(Connection, OldIrql);
 }
     
 VOID

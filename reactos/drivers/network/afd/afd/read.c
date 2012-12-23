@@ -52,11 +52,12 @@ static VOID RefillSocketBuffer( PAFD_FCB FCB )
 
 static VOID HandleReceiveComplete( PAFD_FCB FCB, NTSTATUS Status, ULONG_PTR Information )
 {
+    FCB->LastReceiveStatus = Status;
+
     /* We got closed while the receive was in progress */
     if (FCB->TdiReceiveClosed)
     {
-        FCB->Recv.Content = 0;
-        FCB->Recv.BytesUsed = 0;
+        /* The received data is discarded */
     }
     /* Receive successful */
     else if (Status == STATUS_SUCCESS)
@@ -67,30 +68,20 @@ static VOID HandleReceiveComplete( PAFD_FCB FCB, NTSTATUS Status, ULONG_PTR Info
         /* Check for graceful closure */
         if (Information == 0)
         {
+            /* Receive is closed */
             FCB->TdiReceiveClosed = TRUE;
-
-            /* Signal graceful receive shutdown */
-            FCB->PollState |= AFD_EVENT_DISCONNECT;
-            FCB->PollStatus[FD_CLOSE_BIT] = Status;
-
-            PollReeval( FCB->DeviceExt, FCB->FileObject );
         }
-
-        /* Issue another receive IRP to keep the buffer well stocked */
-        RefillSocketBuffer(FCB);
+        else
+        {
+            /* Issue another receive IRP to keep the buffer well stocked */
+            RefillSocketBuffer(FCB);
+        }
     }
     /* Receive failed with no data (unexpected closure) */
     else
     {
-        FCB->Recv.BytesUsed = 0;
-        FCB->Recv.Content = 0;
+        /* Previously received data remains intact */
         FCB->TdiReceiveClosed = TRUE;
-
-        /* Signal complete connection failure immediately */
-        FCB->PollState |= AFD_EVENT_CLOSE;
-        FCB->PollStatus[FD_CLOSE_BIT] = Status;
-
-        PollReeval( FCB->DeviceExt, FCB->FileObject );
     }
 }
 
@@ -168,9 +159,6 @@ static NTSTATUS ReceiveActivity( PAFD_FCB FCB, PIRP Irp ) {
 
     AFD_DbgPrint(MID_TRACE,("%x %x\n", FCB, Irp));
 
-    /* Kick the user that receive would be possible now */
-    /* XXX Not implemented yet */
-
     AFD_DbgPrint(MID_TRACE,("FCB %x Receive data waiting %d\n",
                             FCB, FCB->Recv.Content));
 
@@ -188,7 +176,7 @@ static NTSTATUS ReceiveActivity( PAFD_FCB FCB, PIRP Irp ) {
                                     TotalBytesCopied));
             UnlockBuffers( RecvReq->BufferArray,
                            RecvReq->BufferCount, FALSE );
-            if (FCB->Overread && FCB->PollStatus[FD_CLOSE_BIT] == STATUS_SUCCESS)
+            if (FCB->Overread && FCB->LastReceiveStatus == STATUS_SUCCESS)
             {
                 /* Overread after a graceful disconnect so complete with an error */
                 Status = STATUS_FILE_CLOSED;
@@ -196,7 +184,7 @@ static NTSTATUS ReceiveActivity( PAFD_FCB FCB, PIRP Irp ) {
             else
             {
                 /* Unexpected disconnect by the remote host or initial read after a graceful disconnnect */
-                Status = FCB->PollStatus[FD_CLOSE_BIT];
+                Status = FCB->LastReceiveStatus;
             }
             NextIrp->IoStatus.Status = Status;
             NextIrp->IoStatus.Information = 0;
@@ -258,6 +246,21 @@ static NTSTATUS ReceiveActivity( PAFD_FCB FCB, PIRP Irp ) {
     else
     {
         FCB->PollState &= ~AFD_EVENT_RECEIVE;
+    }
+
+    /* Signal FD_CLOSE if no buffered data remains and the socket can't receive any more */
+    if (CantReadMore(FCB))
+    {
+        if (FCB->LastReceiveStatus == STATUS_SUCCESS)
+        {
+            FCB->PollState |= AFD_EVENT_DISCONNECT;
+        }
+        else
+        {
+            FCB->PollState |= AFD_EVENT_CLOSE;
+        }
+        FCB->PollStatus[FD_CLOSE_BIT] = FCB->LastReceiveStatus;
+        PollReeval(FCB->DeviceExt, FCB->FileObject);
     }
 
     AFD_DbgPrint(MID_TRACE,("RetStatus for irp %x is %x\n", Irp, RetStatus));
