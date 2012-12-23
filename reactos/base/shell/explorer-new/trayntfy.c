@@ -401,7 +401,7 @@ TrayClockWnd_CalibrateTimer(IN OUT PTRAY_CLOCK_WND_DATA This)
 {
     UINT uiDueTime;
     BOOL Ret;
-    int intWait1, intWait2;
+    UINT uiWait1, uiWait2;
 
     /* Kill the initialization timer */
     KillTimer(This->hWnd,
@@ -412,23 +412,23 @@ TrayClockWnd_CalibrateTimer(IN OUT PTRAY_CLOCK_WND_DATA This)
 
     if (blShowSeconds == TRUE)
     {
-        intWait1 = 1000 - 200;
-        intWait2 = 1000;
+        uiWait1 = 1000 - 200;
+        uiWait2 = 1000;
     }
     else
     {
-        intWait1 = 60 * 1000 - 200;
-        intWait2 = 60 * 1000;
+        uiWait1 = 60 * 1000 - 200;
+        uiWait2 = 60 * 1000;
     }
 
-    if (uiDueTime > intWait1)
+    if (uiDueTime > uiWait1)
     {
         /* The update of the clock will be up to 200 ms late, but that's
            acceptable. We're going to setup a timer that fires depending
-           intWait2. */
+           uiWait2. */
         Ret = SetTimer(This->hWnd,
                        ID_TRAYCLOCK_TIMER,
-                       intWait2,
+                       uiWait2,
                        NULL) != 0;
         This->IsTimerEnabled = Ret;
 

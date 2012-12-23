@@ -1883,6 +1883,40 @@ static const ITrayWindowVtbl ITrayWindowImpl_Vtbl =
     ITrayWindowImpl_Lock
 };
 
+static DWORD WINAPI
+RunFileDlgThread(IN OUT PVOID pParam)
+{ 
+    ITrayWindowImpl *This = pParam;
+    HANDLE hShell32;
+    RUNFILEDLG RunFileDlg;
+    HWND hwnd;
+    RECT posRect;
+
+    GetWindowRect(This->hwndStart,&posRect);
+
+    hwnd = CreateWindowEx(0,
+                          WC_STATIC,
+                          NULL,
+                          WS_OVERLAPPED | WS_DISABLED | WS_CLIPSIBLINGS | WS_BORDER | SS_LEFT,
+                          posRect.left,
+                          posRect.top,
+                          posRect.right - posRect.left,
+                          posRect.bottom - posRect.top,
+                          NULL,
+                          NULL,
+                          NULL,
+                          NULL);
+
+    hShell32 = GetModuleHandle(TEXT("SHELL32.DLL"));
+    RunFileDlg = (RUNFILEDLG)GetProcAddress(hShell32, (LPCSTR)61);
+
+    RunFileDlg(hwnd, NULL, NULL, NULL, NULL, RFF_CALCDIRECTORY);
+
+    DestroyWindow(hwnd);
+
+    return 0; 
+}
+
 static LRESULT CALLBACK
 TrayWndProc(IN HWND hwnd,
             IN UINT uMsg,
@@ -1936,12 +1970,13 @@ TrayWndProc(IN HWND hwnd,
                     return HTBORDER;
                 }
 
+                SetLastError(ERROR_SUCCESS);
                 if (GetClientRect(hwnd,
                                   &rcClient) &&
-                    MapWindowPoints(hwnd,
-                                    NULL,
-                                    (LPPOINT)&rcClient,
-                                    2) != 0)
+                    (MapWindowPoints(hwnd,
+                                     NULL,
+                                     (LPPOINT)&rcClient,
+                                     2) != 0 || GetLastError() == ERROR_SUCCESS))
                 {
                     pt.x = (SHORT)LOWORD(lParam);
                     pt.y = (SHORT)HIWORD(lParam);
@@ -2382,13 +2417,13 @@ HandleTrayContextMenu:
 
                         case IDM_RUN:
                         {
-                            HANDLE hShell32;
-                            RUNFILEDLG RunFileDlg;
+                            CloseHandle(CreateThread(NULL,
+                                                     0,
+                                                     RunFileDlgThread,
+                                                     This,
+                                                     0,
+                                                     NULL));
 
-                            hShell32 = GetModuleHandle(TEXT("SHELL32.DLL"));
-                            RunFileDlg = (RUNFILEDLG)GetProcAddress(hShell32, (LPCSTR)61);
-
-                            RunFileDlg(hwnd, NULL, NULL, NULL, NULL, RFF_CALCDIRECTORY);
                             break;
                         }
 
