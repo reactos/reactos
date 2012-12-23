@@ -218,12 +218,11 @@ WlxStartApplication(
 		return FALSE;
 	}
 
-	ZeroMemory(&StartupInfo, sizeof(STARTUPINFOW));
-	ZeroMemory(&ProcessInformation, sizeof(PROCESS_INFORMATION));
-	StartupInfo.cb = sizeof(STARTUPINFOW);
+	ZeroMemory(&StartupInfo, sizeof(StartupInfo));
+	ZeroMemory(&ProcessInformation, sizeof(ProcessInformation));
+	StartupInfo.cb = sizeof(StartupInfo);
 	StartupInfo.lpTitle = pszCmdLine;
-	StartupInfo.dwX = StartupInfo.dwY = StartupInfo.dwXSize = StartupInfo.dwYSize = 0L;
-	StartupInfo.dwFlags = 0;
+	StartupInfo.dwFlags = STARTF_USESHOWWINDOW;
 	StartupInfo.wShowWindow = SW_SHOW;
 	StartupInfo.lpDesktop = pszDesktopName;
 

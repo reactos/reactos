@@ -241,9 +241,11 @@ TryToStartShell(
 
     TRACE("(%s)\n", debugstr_w(Shell));
 
-    ZeroMemory(&si, sizeof(STARTUPINFO));
-    si.cb = sizeof(STARTUPINFO);
-    ZeroMemory(&pi, sizeof(PROCESS_INFORMATION));
+    ZeroMemory(&si, sizeof(si));
+    si.cb = sizeof(si);
+    si.dwFlags = STARTF_USESHOWWINDOW;
+    si.wShowWindow = SW_SHOWNORMAL;
+    ZeroMemory(&pi, sizeof(pi));
 
     ExpandEnvironmentStrings(Shell, ExpandedShell, MAX_PATH);
 

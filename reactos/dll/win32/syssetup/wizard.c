@@ -794,7 +794,7 @@ RunControlPanelApplet(HWND hwnd, PCWSTR pwszCPLParameters)
         PROCESS_INFORMATION ProcessInformation;
         WCHAR CmdLine[MAX_PATH] = L"rundll32.exe shell32.dll,Control_RunDLL ";
 
-        ZeroMemory(&StartupInfo, sizeof(STARTUPINFOW));
+        ZeroMemory(&StartupInfo, sizeof(StartupInfo));
         StartupInfo.cb = sizeof(STARTUPINFOW);
 
         ASSERT(_countof(CmdLine) > wcslen(CmdLine) + wcslen(pwszCPLParameters));

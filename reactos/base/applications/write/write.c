@@ -35,16 +35,20 @@ int CALLBACK wWinMain(HINSTANCE hInstance, HINSTANCE hOldInstance, LPWSTR szCmdP
     PROCESS_INFORMATION info;
 
     if (!GetSystemDirectoryW(path, MAX_PATH - 1 - lstrlenW(SZ_WORDPAD)))
-	goto failed;
+        goto failed;
+
     if (path[lstrlenW(path) - 1] != '\\')
-	lstrcatW(path, SZ_BACKSLASH);
+        lstrcatW(path, SZ_BACKSLASH);
+
     lstrcatW(path, SZ_WORDPAD);
 
-    stinf.cb = sizeof(STARTUPINFOW);
+    ZeroMemory(&stinf, sizeof(stinf));
+    stinf.cb = sizeof(stinf);
     GetStartupInfoW(&stinf);
 
     if (!CreateProcessW(path, GetCommandLineW(), NULL, NULL, FALSE, 0, NULL, NULL, &stinf, &info))
-	goto failed;
+        goto failed;
+
     CloseHandle(info.hProcess);
     CloseHandle(info.hThread);
     return 0;

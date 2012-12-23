@@ -25,6 +25,7 @@ StartApplication(LPVOID lpDlg)
 
         ZeroMemory(&si, sizeof(si));
         si.cb = sizeof(si);
+        si.dwFlags = STARTF_USESHOWWINDOW;
         si.wShowWindow = SW_SHOW;
 
         if (!CreateProcess(NULL, szData, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
@@ -156,6 +157,7 @@ _tWinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPTSTR lpCmdLine, INT nCmdShow)
 
                     ZeroMemory(&si, sizeof(si));
                     si.cb = sizeof(si);
+                    si.dwFlags = STARTF_USESHOWWINDOW;
                     si.wShowWindow = SW_SHOW;
 
                     if (!CreateProcess(NULL, szData, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
