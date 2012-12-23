@@ -413,6 +413,7 @@ static inline __attribute__((always_inline)) __attribute__((returns_twice)) void
 
 __SEH_END_SCOPE_CHAIN;
 
+#define _SEH2_VOLATILE volatile
 
 #else
 #error no PSEH support
