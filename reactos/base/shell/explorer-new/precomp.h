@@ -17,7 +17,9 @@
 #include <tchar.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <uxtheme.h>
 
+#include "tmschema.h"
 #include "resource.h"
 #include "comcsup.h"
 #include "todo.h"
@@ -383,6 +385,11 @@ UnregisterTrayNotifyWndClass(VOID);
 HWND
 CreateTrayNotifyWnd(IN OUT ITrayWindow *TrayWindow,
                     IN BOOL bHideClock);
+
+VOID
+TrayNotify_NotifyMsg(IN HWND hwnd,
+                     IN WPARAM wParam,
+                     IN LPARAM lParam);
 
 /*
  * taskswnd.c
