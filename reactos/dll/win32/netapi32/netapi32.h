@@ -6,5 +6,12 @@ NET_API_STATUS
 WINAPI
 NetpNtStatusToApiStatus(NTSTATUS Status);
 
+/* misc.c */
+
+NTSTATUS
+GetAccountDomainSid(PSID *AccountDomainSid);
+
+NTSTATUS
+GetBuiltinDomainSid(PSID *BuiltinDomainSid);
 
 #endif

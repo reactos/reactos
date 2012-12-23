@@ -35,7 +35,28 @@
 #include "wine/unicode.h"
 #include "wine/list.h"
 
+#define NTOS_MODE_USER
+#include <ndk/rtlfuncs.h>
+#include "ntsam.h"
+#include "netapi32.h"
+
 WINE_DEFAULT_DEBUG_CHANNEL(netapi32);
+
+
+typedef struct _ENUM_CONTEXT
+{
+    SAM_HANDLE ServerHandle;
+    SAM_HANDLE BuiltinDomainHandle;
+    SAM_HANDLE AccountDomainHandle;
+
+    SAM_ENUMERATE_HANDLE EnumerationContext;
+    PSAM_RID_ENUMERATION Buffer;
+    ULONG Returned;
+    ULONG Index;
+    BOOLEAN BuiltinDone;
+
+} ENUM_CONTEXT, *PENUM_CONTEXT;
+
 
 /* NOTE: So far, this is implemented to support tests that require user logins,
  *       but not designed to handle real user databases. Those should probably
@@ -134,7 +155,7 @@ end:
 }
 
 /************************************************************
- *                NetUserAdd (NETAPI32.@)
+ * NetUserAdd (NETAPI32.@)
  */
 NET_API_STATUS
 WINAPI
@@ -257,7 +278,7 @@ NetUserChangePassword(LPCWSTR domainname,
 
 
 /************************************************************
- *                NetUserDel  (NETAPI32.@)
+ * NetUserDel  (NETAPI32.@)
  */
 NET_API_STATUS
 WINAPI
@@ -287,7 +308,7 @@ NetUserDel(LPCWSTR servername,
 
 
 /************************************************************
- *                NetUserEnum  (NETAPI32.@)
+ * NetUserEnum  (NETAPI32.@)
  */
 NET_API_STATUS
 WINAPI
@@ -300,15 +321,466 @@ NetUserEnum(LPCWSTR servername,
             LPDWORD totalentries,
             LPDWORD resume_handle)
 {
-  FIXME("(%s,%d, 0x%d,%p,%d,%p,%p,%p) stub!\n", debugstr_w(servername), level,
-        filter, bufptr, prefmaxlen, entriesread, totalentries, resume_handle);
+    PSAM_RID_ENUMERATION CurrentUser;
+    PENUM_CONTEXT EnumContext = NULL;
+    LPVOID Buffer = NULL;
+    PSID DomainSid = NULL;
+    PUSER_INFO_0 UserInfo0;
+    PUSER_INFO_1 UserInfo1;
+    PUSER_INFO_20 UserInfo20;
 
-  return ERROR_ACCESS_DENIED;
+    LPWSTR Ptr;
+    ULONG i;
+    ULONG Size;
+
+    SAM_HANDLE UserHandle = NULL;
+    PUSER_ACCOUNT_INFORMATION UserInfo = NULL;
+
+    NET_API_STATUS ApiStatus = NERR_Success;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    FIXME("(%s %d 0x%d %p %d %p %p %p) stub!\n", debugstr_w(servername), level,
+          filter, bufptr, prefmaxlen, entriesread, totalentries, resume_handle);
+
+    *entriesread = 0;
+    *totalentries = 0;
+    *bufptr = NULL;
+
+    if (resume_handle != NULL && *resume_handle != 0)
+    {
+        EnumContext = (PENUM_CONTEXT)*resume_handle;
+    }
+    else
+    {
+        ApiStatus = NetApiBufferAllocate(sizeof(ENUM_CONTEXT), (PVOID*)&EnumContext);
+        if (ApiStatus != NERR_Success)
+            goto done;
+
+        EnumContext->EnumerationContext = 0;
+        EnumContext->Buffer = NULL;
+        EnumContext->Returned = 0;
+        EnumContext->Index = 0;
+        EnumContext->BuiltinDone = FALSE;
+
+        Status = SamConnect(NULL,
+                            &EnumContext->ServerHandle,
+                            SAM_SERVER_CONNECT | SAM_SERVER_LOOKUP_DOMAIN,
+                            NULL);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("SamConnect failed (Status %08lx)\n", Status);
+            ApiStatus = NetpNtStatusToApiStatus(Status);
+            goto done;
+        }
+
+        Status = GetAccountDomainSid(&DomainSid);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("GetAccountDomainSid failed (Status %08lx)\n", Status);
+            ApiStatus = NetpNtStatusToApiStatus(Status);
+            goto done;
+        }
+
+        Status = SamOpenDomain(EnumContext->ServerHandle,
+                               DOMAIN_LIST_ACCOUNTS | DOMAIN_LOOKUP,
+                               DomainSid,
+                               &EnumContext->AccountDomainHandle);
+
+        RtlFreeHeap(RtlGetProcessHeap(), 0, DomainSid);
+
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("SamOpenDomain failed (Status %08lx)\n", Status);
+            ApiStatus = NetpNtStatusToApiStatus(Status);
+            goto done;
+        }
+
+        Status = GetBuiltinDomainSid(&DomainSid);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("GetAccountDomainSid failed (Status %08lx)\n", Status);
+            ApiStatus = NetpNtStatusToApiStatus(Status);
+            goto done;
+        }
+
+        Status = SamOpenDomain(EnumContext->ServerHandle,
+                               DOMAIN_LIST_ACCOUNTS | DOMAIN_LOOKUP,
+                               DomainSid,
+                               &EnumContext->BuiltinDomainHandle);
+
+        RtlFreeHeap(RtlGetProcessHeap(), 0, DomainSid);
+
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("SamOpenDomain failed (Status %08lx)\n", Status);
+            ApiStatus = NetpNtStatusToApiStatus(Status);
+            goto done;
+        }
+    }
+
+//    while (TRUE)
+//    {
+        TRACE("EnumContext->Index: %lu\n", EnumContext->Index);
+        TRACE("EnumContext->Returned: %lu\n", EnumContext->Returned);
+
+        if (EnumContext->Index >= EnumContext->Returned)
+        {
+//            if (EnumContext->BuiltinDone == TRUE)
+//            {
+//                ApiStatus = NERR_Success;
+//                goto done;
+//            }
+
+            TRACE("Calling SamEnumerateUsersInDomain\n");
+            Status = SamEnumerateUsersInDomain(EnumContext->AccountDomainHandle, //BuiltinDomainHandle,
+                                               &EnumContext->EnumerationContext,
+                                               0,
+                                               (PVOID *)&EnumContext->Buffer,
+                                               prefmaxlen,
+                                               &EnumContext->Returned);
+
+            TRACE("SamEnumerateUsersInDomain returned (Status %08lx)\n", Status);
+            if (!NT_SUCCESS(Status))
+            {
+                ERR("SamEnumerateUsersInDomain failed (Status %08lx)\n", Status);
+                ApiStatus = NetpNtStatusToApiStatus(Status);
+                goto done;
+            }
+
+            if (Status == STATUS_MORE_ENTRIES)
+            {
+                ApiStatus = NERR_BufTooSmall;
+                goto done;
+            }
+            else
+            {
+                EnumContext->BuiltinDone = TRUE;
+            }
+        }
+
+        TRACE("EnumContext: %lu\n", EnumContext);
+        TRACE("EnumContext->Returned: %lu\n", EnumContext->Returned);
+        TRACE("EnumContext->Buffer: %p\n", EnumContext->Buffer);
+
+        /* Get a pointer to the current user */
+        CurrentUser = &EnumContext->Buffer[EnumContext->Index];
+
+        TRACE("RID: %lu\n", CurrentUser->RelativeId);
+
+        Status = SamOpenUser(EnumContext->AccountDomainHandle, //BuiltinDomainHandle,
+                             USER_READ_GENERAL | USER_READ_PREFERENCES | USER_READ_LOGON | USER_READ_ACCOUNT,
+                             CurrentUser->RelativeId,
+                             &UserHandle);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("SamOpenUser failed (Status %08lx)\n", Status);
+            ApiStatus = NetpNtStatusToApiStatus(Status);
+            goto done;
+        }
+
+        Status = SamQueryInformationUser(UserHandle,
+                                         UserAccountInformation,
+                                         (PVOID *)&UserInfo);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("SamQueryInformationUser failed (Status %08lx)\n", Status);
+            ApiStatus = NetpNtStatusToApiStatus(Status);
+            goto done;
+        }
+
+        SamCloseHandle(UserHandle);
+        UserHandle = NULL;
+
+        switch (level)
+        {
+            case 0:
+                Size = sizeof(USER_INFO_0) +
+                       UserInfo->UserName.Length + sizeof(WCHAR);
+                break;
+
+            case 1:
+                Size = sizeof(USER_INFO_1) +
+                       UserInfo->UserName.Length + sizeof(WCHAR);
+
+                if (UserInfo->HomeDirectory.Length > 0)
+                    Size += UserInfo->HomeDirectory.Length + sizeof(WCHAR);
+
+                if (UserInfo->AdminComment.Length > 0)
+                    Size += UserInfo->AdminComment.Length + sizeof(WCHAR);
+
+                if (UserInfo->ScriptPath.Length > 0)
+                    Size = UserInfo->ScriptPath.Length + sizeof(WCHAR);
+                break;
+
+//            case 2:
+//            case 3:
+//            case 10:
+//            case 11:
+
+            case 20:
+                Size = sizeof(USER_INFO_20) +
+                       UserInfo->UserName.Length + sizeof(WCHAR);
+
+                if (UserInfo->FullName.Length > 0)
+                    Size += UserInfo->FullName.Length + sizeof(WCHAR);
+
+                if (UserInfo->AdminComment.Length > 0)
+                    Size += UserInfo->AdminComment.Length + sizeof(WCHAR);
+                break;
+
+//            case 23:
+
+            default:
+                ApiStatus = ERROR_INVALID_LEVEL;
+                goto done;
+        }
+
+        ApiStatus = NetApiBufferAllocate(Size, &Buffer);
+        if (ApiStatus != NERR_Success)
+            goto done;
+
+        switch (level)
+        {
+            case 0:
+                UserInfo0 = (PUSER_INFO_0)Buffer;
+
+                Ptr = (LPWSTR)((ULONG_PTR)UserInfo0 + sizeof(USER_INFO_0));
+                UserInfo0->usri0_name = Ptr;
+
+                memcpy(UserInfo0->usri0_name,
+                       UserInfo->UserName.Buffer,
+                       UserInfo->UserName.Length);
+                UserInfo0->usri0_name[UserInfo->UserName.Length / sizeof(WCHAR)] = UNICODE_NULL;
+                break;
+
+            case 1:
+                UserInfo1 = (PUSER_INFO_1)Buffer;
+
+                Ptr = (LPWSTR)((ULONG_PTR)UserInfo1 + sizeof(USER_INFO_1));
+
+                UserInfo1->usri1_name = Ptr;
+
+                memcpy(UserInfo1->usri1_name,
+                       UserInfo->UserName.Buffer,
+                       UserInfo->UserName.Length);
+                UserInfo1->usri1_name[UserInfo->UserName.Length / sizeof(WCHAR)] = UNICODE_NULL;
+
+                Ptr = (LPWSTR)((ULONG_PTR)Ptr + UserInfo->UserName.Length + sizeof(WCHAR));
+
+                UserInfo1->usri1_password = NULL;
+
+                UserInfo1->usri1_password_age = 0; /* FIXME */
+
+                UserInfo1->usri1_priv = 0; /* FIXME */
+
+                if (UserInfo->HomeDirectory.Length > 0)
+                {
+                    UserInfo1->usri1_home_dir = Ptr;
+
+                    memcpy(UserInfo1->usri1_home_dir,
+                           UserInfo->HomeDirectory.Buffer,
+                           UserInfo->HomeDirectory.Length);
+                    UserInfo1->usri1_home_dir[UserInfo->HomeDirectory.Length / sizeof(WCHAR)] = UNICODE_NULL;
+
+                    Ptr = (LPWSTR)((ULONG_PTR)Ptr + UserInfo->HomeDirectory.Length + sizeof(WCHAR));
+                }
+
+                if (UserInfo->AdminComment.Length > 0)
+                {
+                    UserInfo1->usri1_comment = Ptr;
+
+                    memcpy(UserInfo1->usri1_comment,
+                           UserInfo->AdminComment.Buffer,
+                           UserInfo->AdminComment.Length);
+                    UserInfo1->usri1_comment[UserInfo->AdminComment.Length / sizeof(WCHAR)] = UNICODE_NULL;
+
+                    Ptr = (LPWSTR)((ULONG_PTR)Ptr + UserInfo->AdminComment.Length + sizeof(WCHAR));
+                }
+
+                UserInfo1->usri1_flags = UserInfo->UserAccountControl;
+
+                if (UserInfo->ScriptPath.Length > 0)
+                {
+                    UserInfo1->usri1_script_path = Ptr;
+
+                    memcpy(UserInfo1->usri1_script_path,
+                           UserInfo->ScriptPath.Buffer,
+                           UserInfo->ScriptPath.Length);
+                    UserInfo1->usri1_script_path[UserInfo->ScriptPath.Length / sizeof(WCHAR)] = UNICODE_NULL;
+                }
+                break;
+
+//            case 2:
+//            case 3:
+//            case 10:
+//            case 11:
+
+            case 20:
+                UserInfo20 = (PUSER_INFO_20)Buffer;
+
+                Ptr = (LPWSTR)((ULONG_PTR)UserInfo20 + sizeof(USER_INFO_20));
+
+                UserInfo20->usri20_name = Ptr;
+
+                memcpy(UserInfo20->usri20_name,
+                       UserInfo->UserName.Buffer,
+                       UserInfo->UserName.Length);
+                UserInfo20->usri20_name[UserInfo->UserName.Length / sizeof(WCHAR)] = UNICODE_NULL;
+
+                Ptr = (LPWSTR)((ULONG_PTR)Ptr + UserInfo->UserName.Length + sizeof(WCHAR));
+
+                if (UserInfo->FullName.Length > 0)
+                {
+                    UserInfo20->usri20_full_name = Ptr;
+
+                    memcpy(UserInfo20->usri20_full_name,
+                           UserInfo->FullName.Buffer,
+                           UserInfo->FullName.Length);
+                    UserInfo20->usri20_full_name[UserInfo->FullName.Length / sizeof(WCHAR)] = UNICODE_NULL;
+
+                    Ptr = (LPWSTR)((ULONG_PTR)Ptr + UserInfo->FullName.Length + sizeof(WCHAR));
+                }
+
+                if (UserInfo->AdminComment.Length > 0)
+                {
+                    UserInfo20->usri20_comment = Ptr;
+
+                    memcpy(UserInfo20->usri20_comment,
+                           UserInfo->AdminComment.Buffer,
+                           UserInfo->AdminComment.Length);
+                    UserInfo20->usri20_comment[UserInfo->AdminComment.Length / sizeof(WCHAR)] = UNICODE_NULL;
+
+                    Ptr = (LPWSTR)((ULONG_PTR)Ptr + UserInfo->AdminComment.Length + sizeof(WCHAR));
+                }
+
+                UserInfo20->usri20_flags = UserInfo->UserAccountControl;
+                UserInfo20->usri20_user_id = CurrentUser->RelativeId;
+                break;
+
+//            case 23:
+        }
+
+        if (UserInfo != NULL)
+        {
+            if (UserInfo->UserName.Buffer != NULL)
+                SamFreeMemory(UserInfo->UserName.Buffer);
+
+            if (UserInfo->FullName.Buffer != NULL)
+                SamFreeMemory(UserInfo->FullName.Buffer);
+
+            if (UserInfo->HomeDirectory.Buffer != NULL)
+                SamFreeMemory(UserInfo->HomeDirectory.Buffer);
+
+            if (UserInfo->HomeDirectoryDrive.Buffer != NULL)
+                SamFreeMemory(UserInfo->HomeDirectoryDrive.Buffer);
+
+            if (UserInfo->ScriptPath.Buffer != NULL)
+                SamFreeMemory(UserInfo->ScriptPath.Buffer);
+
+            if (UserInfo->ProfilePath.Buffer != NULL)
+                SamFreeMemory(UserInfo->ProfilePath.Buffer);
+
+            if (UserInfo->AdminComment.Buffer != NULL)
+                SamFreeMemory(UserInfo->AdminComment.Buffer);
+
+            if (UserInfo->WorkStations.Buffer != NULL)
+                SamFreeMemory(UserInfo->WorkStations.Buffer);
+
+            if (UserInfo->LogonHours.LogonHours != NULL)
+                SamFreeMemory(UserInfo->LogonHours.LogonHours);
+
+            SamFreeMemory(UserInfo);
+            UserInfo = NULL;
+        }
+
+        EnumContext->Index++;
+
+        (*entriesread)++;
+//    }
+
+done:
+    if (ApiStatus == NERR_Success && EnumContext->Index < EnumContext->Returned)
+        ApiStatus = ERROR_MORE_DATA;
+
+    if (EnumContext != NULL)
+        *totalentries = EnumContext->Returned;
+
+    if (resume_handle == NULL || ApiStatus != ERROR_MORE_DATA)
+    {
+        if (EnumContext != NULL)
+        {
+            if (EnumContext->BuiltinDomainHandle != NULL)
+                SamCloseHandle(EnumContext->BuiltinDomainHandle);
+
+            if (EnumContext->AccountDomainHandle != NULL)
+                SamCloseHandle(EnumContext->AccountDomainHandle);
+
+            if (EnumContext->ServerHandle != NULL)
+                SamCloseHandle(EnumContext->ServerHandle);
+
+            if (EnumContext->Buffer != NULL)
+            {
+                for (i = 0; i < EnumContext->Returned; i++)
+                {
+                    SamFreeMemory(EnumContext->Buffer[i].Name.Buffer);
+                }
+
+                SamFreeMemory(EnumContext->Buffer);
+            }
+
+            NetApiBufferFree(EnumContext);
+            EnumContext = NULL;
+        }
+    }
+
+    if (UserHandle != NULL)
+        SamCloseHandle(UserHandle);
+
+    if (UserInfo != NULL)
+    {
+        if (UserInfo->UserName.Buffer != NULL)
+            SamFreeMemory(UserInfo->UserName.Buffer);
+
+        if (UserInfo->FullName.Buffer != NULL)
+            SamFreeMemory(UserInfo->FullName.Buffer);
+
+        if (UserInfo->HomeDirectory.Buffer != NULL)
+            SamFreeMemory(UserInfo->HomeDirectory.Buffer);
+
+        if (UserInfo->HomeDirectoryDrive.Buffer != NULL)
+            SamFreeMemory(UserInfo->HomeDirectoryDrive.Buffer);
+
+        if (UserInfo->ScriptPath.Buffer != NULL)
+            SamFreeMemory(UserInfo->ScriptPath.Buffer);
+
+        if (UserInfo->ProfilePath.Buffer != NULL)
+            SamFreeMemory(UserInfo->ProfilePath.Buffer);
+
+        if (UserInfo->AdminComment.Buffer != NULL)
+            SamFreeMemory(UserInfo->AdminComment.Buffer);
+
+        if (UserInfo->WorkStations.Buffer != NULL)
+            SamFreeMemory(UserInfo->WorkStations.Buffer);
+
+        if (UserInfo->LogonHours.LogonHours != NULL)
+            SamFreeMemory(UserInfo->LogonHours.LogonHours);
+
+        SamFreeMemory(UserInfo);
+    }
+
+    if (resume_handle != NULL)
+        *resume_handle = (DWORD_PTR)EnumContext;
+
+    *bufptr = (LPBYTE)Buffer;
+
+    TRACE("return %lu\n", ApiStatus);
+
+    return ApiStatus;
 }
 
 
 /************************************************************
- *                NetUserGetGroups (NETAPI32.@)
+ * NetUserGetGroups (NETAPI32.@)
  */
 NET_API_STATUS
 WINAPI
@@ -590,7 +1062,6 @@ NetUserSetGroups(LPCWSTR servername,
           debugstr_w(servername), debugstr_w(username), level, buf, num_entries);
     return ERROR_ACCESS_DENIED;
 }
-
 
 
 /******************************************************************************
