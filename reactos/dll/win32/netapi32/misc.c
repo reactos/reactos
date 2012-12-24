@@ -37,7 +37,8 @@ static SID_IDENTIFIER_AUTHORITY NtAuthority = {SECURITY_NT_AUTHORITY};
 /* FUNCTIONS *****************************************************************/
 
 NTSTATUS
-GetAccountDomainSid(PSID *AccountDomainSid)
+GetAccountDomainSid(IN PUNICODE_STRING ServerName,
+                    OUT PSID *AccountDomainSid)
 {
     PPOLICY_ACCOUNT_DOMAIN_INFO AccountDomainInfo = NULL;
     LSA_OBJECT_ATTRIBUTES ObjectAttributes;
@@ -47,7 +48,7 @@ GetAccountDomainSid(PSID *AccountDomainSid)
 
     memset(&ObjectAttributes, 0, sizeof(LSA_OBJECT_ATTRIBUTES));
 
-    Status = LsaOpenPolicy(NULL,
+    Status = LsaOpenPolicy(ServerName,
                            &ObjectAttributes,
                            POLICY_VIEW_LOCAL_INFORMATION,
                            &PolicyHandle);
@@ -89,7 +90,7 @@ done:
 
 
 NTSTATUS
-GetBuiltinDomainSid(PSID *BuiltinDomainSid)
+GetBuiltinDomainSid(OUT PSID *BuiltinDomainSid)
 {
     PSID Sid = NULL;
     PULONG Ptr;

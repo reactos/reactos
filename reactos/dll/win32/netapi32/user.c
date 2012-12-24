@@ -321,6 +321,7 @@ NetUserEnum(LPCWSTR servername,
             LPDWORD totalentries,
             LPDWORD resume_handle)
 {
+    UNICODE_STRING ServerName;
     PSAM_RID_ENUMERATION CurrentUser;
     PENUM_CONTEXT EnumContext = NULL;
     LPVOID Buffer = NULL;
@@ -346,6 +347,9 @@ NetUserEnum(LPCWSTR servername,
     *totalentries = 0;
     *bufptr = NULL;
 
+    if (servername != NULL)
+        RtlInitUnicodeString(&ServerName, servername);
+
     if (resume_handle != NULL && *resume_handle != 0)
     {
         EnumContext = (PENUM_CONTEXT)*resume_handle;
@@ -362,7 +366,7 @@ NetUserEnum(LPCWSTR servername,
         EnumContext->Index = 0;
         EnumContext->BuiltinDone = FALSE;
 
-        Status = SamConnect(NULL,
+        Status = SamConnect((servername != NULL) ? &ServerName : NULL,
                             &EnumContext->ServerHandle,
                             SAM_SERVER_CONNECT | SAM_SERVER_LOOKUP_DOMAIN,
                             NULL);
@@ -373,7 +377,8 @@ NetUserEnum(LPCWSTR servername,
             goto done;
         }
 
-        Status = GetAccountDomainSid(&DomainSid);
+        Status = GetAccountDomainSid((servername != NULL) ? &ServerName : NULL,
+                                     &DomainSid);
         if (!NT_SUCCESS(Status))
         {
             ERR("GetAccountDomainSid failed (Status %08lx)\n", Status);

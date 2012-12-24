@@ -150,6 +150,7 @@ NET_API_STATUS WINAPI NetLocalGroupEnum(
     LPDWORD totalentries,
     PDWORD_PTR resumehandle)
 {
+    UNICODE_STRING ServerName;
     PSAM_RID_ENUMERATION CurrentAlias;
     PENUM_CONTEXT EnumContext = NULL;
     PSID DomainSid = NULL;
@@ -171,6 +172,9 @@ NET_API_STATUS WINAPI NetLocalGroupEnum(
     *totalentries = 0;
     *bufptr = NULL;
 
+    if (servername != NULL)
+        RtlInitUnicodeString(&ServerName, servername);
+
     if (resumehandle != NULL && *resumehandle != 0)
     {
         EnumContext = (PENUM_CONTEXT)*resumehandle;
@@ -187,7 +191,7 @@ NET_API_STATUS WINAPI NetLocalGroupEnum(
         EnumContext->Index = 0;
         EnumContext->BuiltinDone = FALSE;
 
-        Status = SamConnect(NULL,
+        Status = SamConnect((servername != NULL) ? &ServerName : NULL,
                             &EnumContext->ServerHandle,
                             SAM_SERVER_CONNECT | SAM_SERVER_LOOKUP_DOMAIN,
                             NULL);
@@ -198,7 +202,8 @@ NET_API_STATUS WINAPI NetLocalGroupEnum(
             goto done;
         }
 
-        Status = GetAccountDomainSid(&DomainSid);
+        Status = GetAccountDomainSid((servername != NULL) ? &ServerName : NULL,
+                                     &DomainSid);
         if (!NT_SUCCESS(Status))
         {
             ERR("GetAccountDomainSid failed (Status %08lx)\n", Status);

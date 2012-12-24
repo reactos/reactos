@@ -9,9 +9,10 @@ NetpNtStatusToApiStatus(NTSTATUS Status);
 /* misc.c */
 
 NTSTATUS
-GetAccountDomainSid(PSID *AccountDomainSid);
+GetAccountDomainSid(IN PUNICODE_STRING ServerName,
+                    OUT PSID *AccountDomainSid);
 
 NTSTATUS
-GetBuiltinDomainSid(PSID *BuiltinDomainSid);
+GetBuiltinDomainSid(OUT PSID *BuiltinDomainSid);
 
 #endif
