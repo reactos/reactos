@@ -172,7 +172,7 @@ ColumnsDialogWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
         for (i=0; i<COLUMN_NMAX; i++) {
             if (TaskManagerSettings.Columns[i])
-                SendMessageW(GetDlgItem(hDlg, ColumnPresets[i].dwIdcCtrl), BM_SETCHECK, BST_CHECKED, 0);
+                CheckDlgButton(hDlg, ColumnPresets[i].dwIdcCtrl, BST_CHECKED);
         }
         return TRUE;
 
@@ -187,7 +187,7 @@ ColumnsDialogWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         if (LOWORD(wParam) == IDOK)
         {
             for (i=0; i<COLUMN_NMAX; i++)
-                TaskManagerSettings.Columns[i] = (BOOL) SendMessageW(GetDlgItem(hDlg, ColumnPresets[i].dwIdcCtrl), BM_GETCHECK, 0, 0);
+                TaskManagerSettings.Columns[i] = (BOOL)IsDlgButtonChecked(hDlg, ColumnPresets[i].dwIdcCtrl);
 
             EndDialog(hDlg, LOWORD(wParam));
             return TRUE;

@@ -97,7 +97,7 @@ AffinityDialogWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
              * has affinity with
              */
             if (dwProcessAffinityMask & (1 << nCpu))
-                SendMessageW(GetDlgItem(hDlg, dwCpuTable[nCpu]), BM_SETCHECK, BST_CHECKED, 0);
+                CheckDlgButton(hDlg, dwCpuTable[nCpu], BST_CHECKED);
         }
 
         return TRUE;
@@ -123,7 +123,7 @@ AffinityDialogWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                  * First we have to create a mask out of each
                  * checkbox that the user checked.
                  */
-                if (SendMessageW(GetDlgItem(hDlg, dwCpuTable[nCpu]), BM_GETCHECK, 0, 0))
+                if (IsDlgButtonChecked(hDlg, dwCpuTable[nCpu]))
                     dwProcessAffinityMask |= (1 << nCpu);
             }
 
