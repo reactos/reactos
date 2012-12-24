@@ -353,13 +353,13 @@ UiDrawMenu(IN PUI_MENU_INFO MenuInfo)
 {
     ULONG i;
 
-    /* No GUI status bar text, just minimal text. first to tell the user to choose */
+    /* No GUI status bar text, just minimal text. Show the menu header. */
     UiDrawText(0,
                MenuInfo->Top - 2,
-               MenuInfo->MenuTitle,
+               MenuInfo->MenuHeader,
                ATTR(UiMenuFgColor, UiMenuBgColor));
 
-    /* Now tell him how to choose */
+    /* Now tell the user how to choose */
     UiDrawText(0,
                MenuInfo->Bottom + 1,
                "Use \x18 and \x19 to move the highlight to your choice.",
@@ -369,11 +369,10 @@ UiDrawMenu(IN PUI_MENU_INFO MenuInfo)
                "Press ENTER to choose.",
                ATTR(UiMenuFgColor, UiMenuBgColor));
 
-    /* And offer F8 options */
+    /* And show the menu footer */
     UiDrawText(0,
                UiScreenHeight - 4,
-               "For troubleshooting and advanced startup options for "
-               "ReactOS, press F8.",
+               MenuInfo->MenuFooter,
                ATTR(UiMenuFgColor, UiMenuBgColor));
 
     /* Draw the menu box */
@@ -497,7 +496,8 @@ UiCalcMenuBoxSize(IN PUI_MENU_INFO MenuInfo)
 }
 
 BOOLEAN
-UiDisplayMenu(IN PCSTR MenuTitle,
+UiDisplayMenu(IN PCSTR MenuHeader,
+              IN PCSTR MenuFooter,
               IN PCSTR MenuItemList[],
               IN ULONG MenuItemCount,
               IN ULONG DefaultMenuItem,
@@ -520,7 +520,8 @@ UiDisplayMenu(IN PCSTR MenuTitle,
     }
 
     /* Setup the MENU_INFO structure */
-    MenuInformation.MenuTitle = MenuTitle;
+    MenuInformation.MenuHeader = MenuHeader;
+    MenuInformation.MenuFooter = MenuFooter;
     MenuInformation.MenuItemList = MenuItemList;
     MenuInformation.MenuItemCount = MenuItemCount;
     MenuInformation.MenuTimeRemaining = MenuTimeOut;

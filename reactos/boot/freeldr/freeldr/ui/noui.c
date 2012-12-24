@@ -109,7 +109,7 @@ VOID NoUiFadeOut(VOID)
 //
 ///////////////////////////////////////////////////////////////////////////////////////
 
-BOOLEAN NoUiDisplayMenu(PCSTR MenuTitle, PCSTR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, ULONG* SelectedMenuItem, BOOLEAN CanEscape, UiMenuKeyPressFilterCallback KeyPressFilter)
+BOOLEAN NoUiDisplayMenu(PCSTR MenuHeader, PCSTR MenuFooter, PCSTR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, ULONG* SelectedMenuItem, BOOLEAN CanEscape, UiMenuKeyPressFilterCallback KeyPressFilter)
 {
 	*SelectedMenuItem = DefaultMenuItem;
 	return TRUE;

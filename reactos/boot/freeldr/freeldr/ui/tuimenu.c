@@ -14,7 +14,8 @@
 /* FUNCTIONS *****************************************************************/
 
 BOOLEAN
-TuiDisplayMenu(PCSTR MenuTitle,
+TuiDisplayMenu(PCSTR MenuHeader,
+               PCSTR MenuFooter,
                PCSTR MenuItemList[],
                ULONG MenuItemCount,
                ULONG DefaultMenuItem,
@@ -42,7 +43,8 @@ TuiDisplayMenu(PCSTR MenuTitle,
     //
     // Setup the MENU_INFO structure
     //
-    MenuInformation.MenuTitle = MenuTitle;
+    MenuInformation.MenuHeader = MenuHeader;
+    MenuInformation.MenuFooter = MenuFooter;
     MenuInformation.MenuItemList = MenuItemList;
     MenuInformation.MenuItemCount = MenuItemCount;
     MenuInformation.MenuTimeRemaining = MenuTimeOut;

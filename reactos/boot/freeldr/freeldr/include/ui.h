@@ -87,12 +87,25 @@ VOID	UiFadeOut(VOID);										// Fades the screen out
 //
 ///////////////////////////////////////////////////////////////////////////////////////
 
-struct tagUI_MENU_INFO;
-typedef struct tagUI_MENU_INFO UI_MENU_INFO, *PUI_MENU_INFO;
+typedef struct tagUI_MENU_INFO
+{
+	PCSTR		MenuHeader;
+	PCSTR		MenuFooter;
+
+	PCSTR		*MenuItemList;
+	ULONG		MenuItemCount;
+	LONG		MenuTimeRemaining;
+	ULONG		SelectedMenuItem;
+
+	ULONG		Left;
+	ULONG		Top;
+	ULONG		Right;
+	ULONG		Bottom;
+} UI_MENU_INFO, *PUI_MENU_INFO;
 
 typedef BOOLEAN (*UiMenuKeyPressFilterCallback)(ULONG KeyPress);
 
-BOOLEAN	UiDisplayMenu(PCSTR MenuTitle, PCSTR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, ULONG* SelectedMenuItem, BOOLEAN CanEscape, UiMenuKeyPressFilterCallback KeyPressFilter);
+BOOLEAN	UiDisplayMenu(PCSTR MenuHeader, PCSTR MenuFooter, PCSTR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, ULONG* SelectedMenuItem, BOOLEAN CanEscape, UiMenuKeyPressFilterCallback KeyPressFilter);
 
 ///////////////////////////////////////////////////////////////////////////////////////
 //
@@ -122,7 +135,7 @@ typedef struct tagUIVTBL
 	VOID (*FadeInBackdrop)(VOID);
 	VOID (*FadeOut)(VOID);
 
-	BOOLEAN (*DisplayMenu)(PCSTR MenuTitle, PCSTR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, ULONG* SelectedMenuItem, BOOLEAN CanEscape, UiMenuKeyPressFilterCallback KeyPressFilter);
+	BOOLEAN (*DisplayMenu)(PCSTR MenuHeader, PCSTR MenuFooter, PCSTR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, ULONG* SelectedMenuItem, BOOLEAN CanEscape, UiMenuKeyPressFilterCallback KeyPressFilter);
 	VOID (*DrawMenu)(PUI_MENU_INFO MenuInfo);
 } UIVTBL, *PUIVTBL;
 

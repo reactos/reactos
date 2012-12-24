@@ -83,16 +83,15 @@ MiniTuiDrawMenu(PUI_MENU_INFO MenuInfo)
     UiDrawBackdrop();
 
     //
-    // No GUI status bar text, just minimal text. first to tell the user to
-    // choose.
+    // No GUI status bar text, just minimal text. Show the menu header.
     //
     UiVtbl.DrawText(0,
                     MenuInfo->Top - 2,
-                    MenuInfo->MenuTitle,
+                    MenuInfo->MenuHeader,
                     ATTR(UiMenuFgColor, UiMenuBgColor));
 
     //
-    // Now tell him how to choose
+    // Now tell the user how to choose
     //
     UiVtbl.DrawText(0,
                     MenuInfo->Bottom + 1,
@@ -104,12 +103,11 @@ MiniTuiDrawMenu(PUI_MENU_INFO MenuInfo)
                     ATTR(UiMenuFgColor, UiMenuBgColor));
 
     //
-    // And offer F8 options
+    // And show the menu footer
     //
     UiVtbl.DrawText(0,
                     UiScreenHeight - 4,
-                    "For troubleshooting and advanced startup options for "
-                    "ReactOS, press F8.",
+                    MenuInfo->MenuFooter,
                     ATTR(UiMenuFgColor, UiMenuBgColor));
 
     //

@@ -43,7 +43,7 @@ VOID OptionMenuCustomBoot(VOID)
 	ULONG	CustomBootMenuCount = sizeof(CustomBootMenuList) / sizeof(CustomBootMenuList[0]);
 	ULONG	SelectedMenuItem;
 
-	if (!UiDisplayMenu("Please choose a boot method:",
+	if (!UiDisplayMenu("Please choose a boot method:", "",
 	                   CustomBootMenuList,
 	                   CustomBootMenuCount,
 	                   0, -1,

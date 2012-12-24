@@ -101,7 +101,7 @@ VOID DoOptionsMenu(VOID)
 	ULONG SelectedMenuItem;
 	CHAR  DebugChannelString[100];
 
-	if (!UiDisplayMenu("Select an option:",
+	if (!UiDisplayMenu("Select an option:", "",
 	                   OptionsMenuList,
 	                   OptionsMenuItemCount,
 	                   0, -1,

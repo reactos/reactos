@@ -266,12 +266,13 @@ VOID RunLoader(VOID)
 
 	for (;;)
 	{
-
 		// Redraw the backdrop
 		UiDrawBackdrop();
 
 		// Show the operating system list menu
 		if (!UiDisplayMenu("Please select the operating system to start:",
+		                   "For troubleshooting and advanced startup options for "
+		                       "ReactOS, press F8.",
 		                   OperatingSystemDisplayNames,
 		                   OperatingSystemCount,
 		                   DefaultOperatingSystem,
