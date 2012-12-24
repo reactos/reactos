@@ -973,7 +973,7 @@ IntPaintDesktop(HDC hDC)
             }
             else
             {
-                /* Find the upper left corner, can be negtive if the bitmap is bigger then the screen */
+                /* Find the upper left corner, can be negative if the bitmap is bigger then the screen */
                 x = (sz.cx / 2) - (gspv.cxWallpaper / 2);
                 y = (sz.cy / 2) - (gspv.cyWallpaper / 2);
             }
@@ -987,14 +987,14 @@ IntPaintDesktop(HDC hDC)
                 if (x > 0 || y > 0)
                 {
                    /* FIXME: Clip out the bitmap
-                                               can be replaced with "NtGdiPatBlt(hDC, x, y, WinSta->cxWallpaper, WinSta->cyWallpaper, PATCOPY | DSTINVERT);"
-                                               once we support DSTINVERT */
+                      can be replaced with "NtGdiPatBlt(hDC, x, y, WinSta->cxWallpaper, WinSta->cyWallpaper, PATCOPY | DSTINVERT);"
+                      once we support DSTINVERT */
                   PreviousBrush = NtGdiSelectBrush(hDC, DesktopBrush);
                   NtGdiPatBlt(hDC, Rect.left, Rect.top, Rect.right, Rect.bottom, PATCOPY);
                   NtGdiSelectBrush(hDC, PreviousBrush);
                 }
 
-                /*Do not fill the background after it is painted no matter the size of the picture */
+                /* Do not fill the background after it is painted no matter the size of the picture */
                 doPatBlt = FALSE;
 
                 hOldBitmap = NtGdiSelectBitmap(hWallpaperDC, gspv.hbmWallpaper);
@@ -1003,17 +1003,17 @@ IntPaintDesktop(HDC hDC)
                 {
                     if(Rect.right && Rect.bottom)
                         NtGdiStretchBlt(hDC,
-                                    x,
-                                    y,
-                                    sz.cx,
-                                    sz.cy,
-                                    hWallpaperDC,
-                                    0,
-                                    0,
-                                    gspv.cxWallpaper,
-                                    gspv.cyWallpaper,
-                                    SRCCOPY,
-                                    0);
+                                        x,
+                                        y,
+                                        sz.cx,
+                                        sz.cy,
+                                        hWallpaperDC,
+                                        0,
+                                        0,
+                                        gspv.cxWallpaper,
+                                        gspv.cyWallpaper,
+                                        SRCCOPY,
+                                        0);
 
                 }
                 else if (gspv.WallpaperMode == wmTile)
@@ -1073,7 +1073,7 @@ IntPaintDesktop(HDC hDC)
     * Display system version on the desktop background
     */
 
-   if (g_PaintDesktopVersion||UserGetSystemMetrics(SM_CLEANBOOT))
+   if (g_PaintDesktopVersion || UserGetSystemMetrics(SM_CLEANBOOT))
    {
       static WCHAR s_wszVersion[256] = {0};
       RECTL rect;
@@ -1101,24 +1101,26 @@ IntPaintDesktop(HDC hDC)
 
             if(!UserGetSystemMetrics(SM_CLEANBOOT))
             {
-                GreExtTextOutW(hDC, rect.right-16, rect.bottom-48, 0, NULL, s_wszVersion, len, NULL, 0);
+                GreExtTextOutW(hDC, rect.right - 16, rect.bottom - 48, 0, NULL, s_wszVersion, len, NULL, 0);
             }
             else
             {
                 /* Safe Mode */
+
                 /* Version information text in top center */
-                IntGdiSetTextAlign(hDC, TA_CENTER|TA_TOP);
-                GreExtTextOutW(hDC, (rect.right+rect.left)/2, rect.top, 0, NULL, s_wszVersion, len, NULL, 0);
+                IntGdiSetTextAlign(hDC, TA_CENTER | TA_TOP);
+                GreExtTextOutW(hDC, (rect.right + rect.left)/2, rect.top + 3, 0, NULL, s_wszVersion, len, NULL, 0);
+
                 /* Safe Mode text in corners */
                 len = wcslen(s_wszSafeMode);
-                IntGdiSetTextAlign(hDC, TA_RIGHT|TA_TOP);
-                GreExtTextOutW(hDC, rect.right, rect.top, 0, NULL, s_wszSafeMode, len, NULL, 0);
-                IntGdiSetTextAlign(hDC, TA_RIGHT|TA_BASELINE);
-                GreExtTextOutW(hDC, rect.right, rect.bottom, 0, NULL, s_wszSafeMode, len, NULL, 0);
-                IntGdiSetTextAlign(hDC, TA_LEFT|TA_TOP);
-                GreExtTextOutW(hDC, rect.left, rect.top, 0, NULL, s_wszSafeMode, len, NULL, 0);
-                IntGdiSetTextAlign(hDC, TA_LEFT|TA_BASELINE);
-                GreExtTextOutW(hDC, rect.left, rect.bottom, 0, NULL, s_wszSafeMode, len, NULL, 0);
+                IntGdiSetTextAlign(hDC, TA_LEFT | TA_TOP);
+                GreExtTextOutW(hDC, rect.left, rect.top + 3, 0, NULL, s_wszSafeMode, len, NULL, 0);
+                IntGdiSetTextAlign(hDC, TA_RIGHT | TA_TOP);
+                GreExtTextOutW(hDC, rect.right, rect.top + 3, 0, NULL, s_wszSafeMode, len, NULL, 0);
+                IntGdiSetTextAlign(hDC, TA_LEFT | TA_BASELINE);
+                GreExtTextOutW(hDC, rect.left, rect.bottom - 5, 0, NULL, s_wszSafeMode, len, NULL, 0);
+                IntGdiSetTextAlign(hDC, TA_RIGHT | TA_BASELINE);
+                GreExtTextOutW(hDC, rect.right, rect.bottom - 5, 0, NULL, s_wszSafeMode, len, NULL, 0);
             }
 
          IntGdiSetBkMode(hDC, mode_old);
