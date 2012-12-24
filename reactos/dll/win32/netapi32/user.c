@@ -126,45 +126,18 @@ static struct sam_user* NETAPI_FindUser(LPCWSTR UserName)
     return NULL;
 }
 
-static BOOL NETAPI_IsCurrentUser(LPCWSTR username)
-{
-    LPWSTR curr_user = NULL;
-    DWORD dwSize;
-    BOOL ret = FALSE;
-
-    dwSize = LM20_UNLEN+1;
-    curr_user = HeapAlloc(GetProcessHeap(), 0, dwSize * sizeof(WCHAR));
-    if(!curr_user)
-    {
-        ERR("Failed to allocate memory for user name.\n");
-        goto end;
-    }
-    if(!GetUserNameW(curr_user, &dwSize))
-    {
-        ERR("Failed to get current user's user name.\n");
-        goto end;
-    }
-    if (!lstrcmpW(curr_user, username))
-    {
-        ret = TRUE;
-    }
-
-end:
-    HeapFree(GetProcessHeap(), 0, curr_user);
-    return ret;
-}
-
 
 static
 NET_API_STATUS
-BuildInfoBuffer(PUSER_ACCOUNT_INFORMATION UserInfo,
-                DWORD level,
-                ULONG RelativeId,
-                LPVOID *Buffer)
+BuildUserInfoBuffer(PUSER_ACCOUNT_INFORMATION UserInfo,
+                    DWORD level,
+                    ULONG RelativeId,
+                    LPVOID *Buffer)
 {
     LPVOID LocalBuffer = NULL;
     PUSER_INFO_0 UserInfo0;
     PUSER_INFO_1 UserInfo1;
+    PUSER_INFO_10 UserInfo10;
     PUSER_INFO_20 UserInfo20;
     LPWSTR Ptr;
     ULONG Size = 0;
@@ -196,7 +169,20 @@ BuildInfoBuffer(PUSER_ACCOUNT_INFORMATION UserInfo,
 //        case 2:
 //        case 3:
 //        case 4:
-//        case 10:
+
+        case 10:
+            Size = sizeof(USER_INFO_10) +
+                   UserInfo->UserName.Length + sizeof(WCHAR);
+
+            if (UserInfo->AdminComment.Length > 0)
+                Size += UserInfo->AdminComment.Length + sizeof(WCHAR);
+
+            /* FIXME: Add user comment here */
+
+            if (UserInfo->FullName.Length > 0)
+                Size += UserInfo->FullName.Length + sizeof(WCHAR);
+            break;
+
 //        case 11:
 
         case 20:
@@ -220,6 +206,8 @@ BuildInfoBuffer(PUSER_ACCOUNT_INFORMATION UserInfo,
     ApiStatus = NetApiBufferAllocate(Size, &LocalBuffer);
     if (ApiStatus != NERR_Success)
         goto done;
+
+    ZeroMemory(LocalBuffer, Size);
 
     switch (level)
     {
@@ -292,54 +280,95 @@ BuildInfoBuffer(PUSER_ACCOUNT_INFORMATION UserInfo,
                 }
                 break;
 
-//            case 2:
-//            case 3:
-//            case 10:
-//            case 11:
+//        case 2:
+//        case 3:
+//        case 4:
 
-            case 20:
-                UserInfo20 = (PUSER_INFO_20)LocalBuffer;
+        case 10:
+            UserInfo10 = (PUSER_INFO_10)LocalBuffer;
 
-                Ptr = (LPWSTR)((ULONG_PTR)UserInfo20 + sizeof(USER_INFO_20));
+            Ptr = (LPWSTR)((ULONG_PTR)UserInfo10 + sizeof(USER_INFO_10));
 
-                UserInfo20->usri20_name = Ptr;
+            UserInfo10->usri10_name = Ptr;
 
-                memcpy(UserInfo20->usri20_name,
-                       UserInfo->UserName.Buffer,
-                       UserInfo->UserName.Length);
-                UserInfo20->usri20_name[UserInfo->UserName.Length / sizeof(WCHAR)] = UNICODE_NULL;
+            memcpy(UserInfo10->usri10_name,
+                   UserInfo->UserName.Buffer,
+                   UserInfo->UserName.Length);
+            UserInfo10->usri10_name[UserInfo->UserName.Length / sizeof(WCHAR)] = UNICODE_NULL;
 
-                Ptr = (LPWSTR)((ULONG_PTR)Ptr + UserInfo->UserName.Length + sizeof(WCHAR));
+            Ptr = (LPWSTR)((ULONG_PTR)Ptr + UserInfo->UserName.Length + sizeof(WCHAR));
 
-                if (UserInfo->FullName.Length > 0)
-                {
-                    UserInfo20->usri20_full_name = Ptr;
+            if (UserInfo->AdminComment.Length > 0)
+            {
+                UserInfo10->usri10_comment = Ptr;
 
-                    memcpy(UserInfo20->usri20_full_name,
-                           UserInfo->FullName.Buffer,
-                           UserInfo->FullName.Length);
-                    UserInfo20->usri20_full_name[UserInfo->FullName.Length / sizeof(WCHAR)] = UNICODE_NULL;
+                memcpy(UserInfo10->usri10_comment,
+                       UserInfo->AdminComment.Buffer,
+                       UserInfo->AdminComment.Length);
+                UserInfo10->usri10_comment[UserInfo->AdminComment.Length / sizeof(WCHAR)] = UNICODE_NULL;
 
-                    Ptr = (LPWSTR)((ULONG_PTR)Ptr + UserInfo->FullName.Length + sizeof(WCHAR));
-                }
+                Ptr = (LPWSTR)((ULONG_PTR)Ptr + UserInfo->AdminComment.Length + sizeof(WCHAR));
+            }
 
-                if (UserInfo->AdminComment.Length > 0)
-                {
-                    UserInfo20->usri20_comment = Ptr;
+            /* FIXME: Add user comment here */
 
-                    memcpy(UserInfo20->usri20_comment,
-                           UserInfo->AdminComment.Buffer,
-                           UserInfo->AdminComment.Length);
-                    UserInfo20->usri20_comment[UserInfo->AdminComment.Length / sizeof(WCHAR)] = UNICODE_NULL;
+            if (UserInfo->FullName.Length > 0)
+            {
+                UserInfo10->usri10_full_name = Ptr;
 
-                    Ptr = (LPWSTR)((ULONG_PTR)Ptr + UserInfo->AdminComment.Length + sizeof(WCHAR));
-                }
+                memcpy(UserInfo10->usri10_full_name,
+                       UserInfo->FullName.Buffer,
+                       UserInfo->FullName.Length);
+                UserInfo10->usri10_full_name[UserInfo->FullName.Length / sizeof(WCHAR)] = UNICODE_NULL;
+            }
+            break;
 
-                UserInfo20->usri20_flags = UserInfo->UserAccountControl;
-                UserInfo20->usri20_user_id = RelativeId;
-                break;
 
-//            case 23:
+//        case 11:
+
+        case 20:
+            UserInfo20 = (PUSER_INFO_20)LocalBuffer;
+
+            Ptr = (LPWSTR)((ULONG_PTR)UserInfo20 + sizeof(USER_INFO_20));
+
+            UserInfo20->usri20_name = Ptr;
+
+            memcpy(UserInfo20->usri20_name,
+                   UserInfo->UserName.Buffer,
+                   UserInfo->UserName.Length);
+            UserInfo20->usri20_name[UserInfo->UserName.Length / sizeof(WCHAR)] = UNICODE_NULL;
+
+            Ptr = (LPWSTR)((ULONG_PTR)Ptr + UserInfo->UserName.Length + sizeof(WCHAR));
+
+            if (UserInfo->FullName.Length > 0)
+            {
+                UserInfo20->usri20_full_name = Ptr;
+
+                memcpy(UserInfo20->usri20_full_name,
+                       UserInfo->FullName.Buffer,
+                       UserInfo->FullName.Length);
+                UserInfo20->usri20_full_name[UserInfo->FullName.Length / sizeof(WCHAR)] = UNICODE_NULL;
+
+                Ptr = (LPWSTR)((ULONG_PTR)Ptr + UserInfo->FullName.Length + sizeof(WCHAR));
+            }
+
+            if (UserInfo->AdminComment.Length > 0)
+            {
+                UserInfo20->usri20_comment = Ptr;
+
+                memcpy(UserInfo20->usri20_comment,
+                       UserInfo->AdminComment.Buffer,
+                       UserInfo->AdminComment.Length);
+                UserInfo20->usri20_comment[UserInfo->AdminComment.Length / sizeof(WCHAR)] = UNICODE_NULL;
+
+                Ptr = (LPWSTR)((ULONG_PTR)Ptr + UserInfo->AdminComment.Length + sizeof(WCHAR));
+            }
+
+            UserInfo20->usri20_flags = UserInfo->UserAccountControl;
+            UserInfo20->usri20_user_id = RelativeId;
+            break;
+
+//        case 23:
     }
 
 done:
@@ -729,13 +758,13 @@ NetUserEnum(LPCWSTR servername,
         SamCloseHandle(UserHandle);
         UserHandle = NULL;
 
-        ApiStatus = BuildInfoBuffer(UserInfo,
-                                    level,
-                                    CurrentUser->RelativeId,
-                                    &Buffer);
+        ApiStatus = BuildUserInfoBuffer(UserInfo,
+                                        level,
+                                        CurrentUser->RelativeId,
+                                        &Buffer);
         if (ApiStatus != NERR_Success)
         {
-            ERR("BuildInfoBuffer failed (ApiStatus %lu)\n", ApiStatus);
+            ERR("BuildUserInfoBuffer failed (ApiStatus %lu)\n", ApiStatus);
             goto done;
         }
 
@@ -837,172 +866,141 @@ NetUserGetInfo(LPCWSTR servername,
                DWORD level,
                LPBYTE* bufptr)
 {
-    NET_API_STATUS status;
-    TRACE("(%s, %s, %d, %p)\n", debugstr_w(servername), debugstr_w(username),
-          level, bufptr);
-    status = NETAPI_ValidateServername(servername);
-    if (status != NERR_Success)
-        return status;
+    UNICODE_STRING ServerName;
+    UNICODE_STRING UserName;
+    SAM_HANDLE ServerHandle = NULL;
+    SAM_HANDLE AccountDomainHandle = NULL;
+    SAM_HANDLE UserHandle = NULL;
+    PSID DomainSid = NULL;
+    PULONG RelativeIds = NULL;
+    PSID_NAME_USE Use = NULL;
+    PUSER_ACCOUNT_INFORMATION UserInfo = NULL;
+    LPVOID Buffer = NULL;
+    NET_API_STATUS ApiStatus = NERR_Success;
+    NTSTATUS Status = STATUS_SUCCESS;
 
-    if(!NETAPI_IsLocalComputer(servername))
+    TRACE("(%s, %s, %d, %p)\n", debugstr_w(servername),
+          debugstr_w(username), level, bufptr);
+
+    if (servername != NULL)
+        RtlInitUnicodeString(&ServerName, servername);
+
+    RtlInitUnicodeString(&UserName, username);
+
+    /* Connect to the SAM Server */
+    Status = SamConnect((servername != NULL) ? &ServerName : NULL,
+                        &ServerHandle,
+                        SAM_SERVER_CONNECT | SAM_SERVER_LOOKUP_DOMAIN,
+                        NULL);
+    if (!NT_SUCCESS(Status))
     {
-        FIXME("Only implemented for local computer, but remote server"
-              "%s was requested.\n", debugstr_w(servername));
-        return NERR_InvalidComputer;
+        ERR("SamConnect failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
     }
 
-    if(!NETAPI_FindUser(username) && !NETAPI_IsCurrentUser(username))
+    /* Get the Account Domain SID */
+    Status = GetAccountDomainSid((servername != NULL) ? &ServerName : NULL,
+                                 &DomainSid);
+    if (!NT_SUCCESS(Status))
     {
-        TRACE("User %s is unknown.\n", debugstr_w(username));
-        return NERR_UserNotFound;
+        ERR("GetAccountDomainSid failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
     }
 
-    switch (level)
+    /* Open the Account Domain */
+    Status = SamOpenDomain(ServerHandle,
+                           DOMAIN_LIST_ACCOUNTS | DOMAIN_LOOKUP,
+                           DomainSid,
+                           &AccountDomainHandle);
+    if (!NT_SUCCESS(Status))
     {
-    case 0:
-    {
-        PUSER_INFO_0 ui;
-        int name_sz;
-
-        name_sz = lstrlenW(username) + 1;
-
-        /* set up buffer */
-        NetApiBufferAllocate(sizeof(USER_INFO_0) + name_sz * sizeof(WCHAR),
-                             (LPVOID *) bufptr);
-
-        ui = (PUSER_INFO_0) *bufptr;
-        ui->usri0_name = (LPWSTR) (*bufptr + sizeof(USER_INFO_0));
-
-        /* get data */
-        lstrcpyW(ui->usri0_name, username);
-        break;
+        ERR("SamOpenDomain failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
     }
 
-    case 10:
+    /* Get the RID for the given user name */
+    Status = SamLookupNamesInDomain(AccountDomainHandle,
+                                    1,
+                                    &UserName,
+                                    &RelativeIds,
+                                    &Use);
+    if (!NT_SUCCESS(Status))
     {
-        PUSER_INFO_10 ui;
-        PUSER_INFO_0 ui0;
-        NET_API_STATUS status;
-        /* sizes of the field buffers in WCHARS */
-        int name_sz, comment_sz, usr_comment_sz, full_name_sz;
-
-        comment_sz = 1;
-        usr_comment_sz = 1;
-        full_name_sz = 1;
-
-        /* get data */
-        status = NetUserGetInfo(servername, username, 0, (LPBYTE *) &ui0);
-        if (status != NERR_Success)
-        {
-            NetApiBufferFree(ui0);
-            return status;
-        }
-        name_sz = lstrlenW(ui0->usri0_name) + 1;
-
-        /* set up buffer */
-        NetApiBufferAllocate(sizeof(USER_INFO_10) +
-                             (name_sz + comment_sz + usr_comment_sz +
-                              full_name_sz) * sizeof(WCHAR),
-                             (LPVOID *) bufptr);
-        ui = (PUSER_INFO_10) *bufptr;
-        ui->usri10_name = (LPWSTR) (*bufptr + sizeof(USER_INFO_10));
-        ui->usri10_comment = (LPWSTR) (
-            ((PBYTE) ui->usri10_name) + name_sz * sizeof(WCHAR));
-        ui->usri10_usr_comment = (LPWSTR) (
-            ((PBYTE) ui->usri10_comment) + comment_sz * sizeof(WCHAR));
-        ui->usri10_full_name = (LPWSTR) (
-            ((PBYTE) ui->usri10_usr_comment) + usr_comment_sz * sizeof(WCHAR));
-
-        /* set data */
-        lstrcpyW(ui->usri10_name, ui0->usri0_name);
-        NetApiBufferFree(ui0);
-        ui->usri10_comment[0] = 0;
-        ui->usri10_usr_comment[0] = 0;
-        ui->usri10_full_name[0] = 0;
-        break;
+        ERR("SamOpenDomain failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
     }
 
-    case 1:
-      {
-        static const WCHAR homedirW[] = {'H','O','M','E',0};
-        PUSER_INFO_1 ui;
-        PUSER_INFO_0 ui0;
-        NET_API_STATUS status;
-        /* sizes of the field buffers in WCHARS */
-        int name_sz, password_sz, home_dir_sz, comment_sz, script_path_sz;
-
-        password_sz = 1; /* not filled out for security reasons for NetUserGetInfo*/
-        comment_sz = 1;
-        script_path_sz = 1;
-
-       /* get data */
-        status = NetUserGetInfo(servername, username, 0, (LPBYTE *) &ui0);
-        if (status != NERR_Success)
-        {
-            NetApiBufferFree(ui0);
-            return status;
-        }
-        name_sz = lstrlenW(ui0->usri0_name) + 1;
-        home_dir_sz = GetEnvironmentVariableW(homedirW, NULL,0);
-        /* set up buffer */
-        NetApiBufferAllocate(sizeof(USER_INFO_1) +
-                             (name_sz + password_sz + home_dir_sz +
-                              comment_sz + script_path_sz) * sizeof(WCHAR),
-                             (LPVOID *) bufptr);
-
-        ui = (PUSER_INFO_1) *bufptr;
-        ui->usri1_name = (LPWSTR) (ui + 1);
-        ui->usri1_password = ui->usri1_name + name_sz;
-        ui->usri1_home_dir = ui->usri1_password + password_sz;
-        ui->usri1_comment = ui->usri1_home_dir + home_dir_sz;
-        ui->usri1_script_path = ui->usri1_comment + comment_sz;
-        /* set data */
-        lstrcpyW(ui->usri1_name, ui0->usri0_name);
-        NetApiBufferFree(ui0);
-        ui->usri1_password[0] = 0;
-        ui->usri1_password_age = 0;
-        ui->usri1_priv = 0;
-        GetEnvironmentVariableW(homedirW, ui->usri1_home_dir,home_dir_sz);
-        ui->usri1_comment[0] = 0;
-        ui->usri1_flags = 0;
-        ui->usri1_script_path[0] = 0;
-        break;
-      }
-    case 2:
-    case 3:
-    case 4:
-    case 11:
-    case 20:
-    case 23:
-    case 1003:
-    case 1005:
-    case 1006:
-    case 1007:
-    case 1008:
-    case 1009:
-    case 1010:
-    case 1011:
-    case 1012:
-    case 1013:
-    case 1014:
-    case 1017:
-    case 1018:
-    case 1020:
-    case 1023:
-    case 1024:
-    case 1025:
-    case 1051:
-    case 1052:
-    case 1053:
+    /* Check if the account is a user account */
+    if (Use[0] != SidTypeUser)
     {
-        FIXME("Level %d is not implemented\n", level);
-        return NERR_InternalError;
+        ERR("No user found!\n");
+        ApiStatus = NERR_UserNotFound;
+        goto done;
     }
-    default:
-        TRACE("Invalid level %d is specified\n", level);
-        return ERROR_INVALID_LEVEL;
+
+    TRACE("RID: %lu\n", RelativeIds[0]);
+
+    /* Open the user object */
+    Status = SamOpenUser(AccountDomainHandle,
+                         USER_READ_GENERAL | USER_READ_PREFERENCES | USER_READ_LOGON | USER_READ_ACCOUNT,
+                         RelativeIds[0],
+                         &UserHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SamOpenUser failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
     }
-    return NERR_Success;
+
+    Status = SamQueryInformationUser(UserHandle,
+                                     UserAccountInformation,
+                                     (PVOID *)&UserInfo);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SamQueryInformationUser failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    ApiStatus = BuildUserInfoBuffer(UserInfo,
+                                    level,
+                                    RelativeIds[0],
+                                    &Buffer);
+    if (ApiStatus != NERR_Success)
+    {
+        ERR("BuildUserInfoBuffer failed (ApiStatus %08lu)\n", ApiStatus);
+        goto done;
+    }
+
+done:
+    if (UserInfo != NULL)
+        FreeUserInfo(UserInfo);
+
+    if (UserHandle != NULL)
+        SamCloseHandle(UserHandle);
+
+    if (RelativeIds != NULL)
+        SamFreeMemory(RelativeIds);
+
+    if (Use != NULL)
+        SamFreeMemory(Use);
+
+    if (DomainSid != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, DomainSid);
+
+    if (AccountDomainHandle != NULL)
+        SamCloseHandle(AccountDomainHandle);
+
+    if (ServerHandle != NULL)
+        SamCloseHandle(ServerHandle);
+
+    *bufptr = (LPBYTE)Buffer;
+
+    return ApiStatus;
 }
 
 
