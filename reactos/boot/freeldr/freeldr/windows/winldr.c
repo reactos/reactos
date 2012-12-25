@@ -540,7 +540,7 @@ LoadAndBootWindows(IN OperatingSystemItem* OperatingSystem,
 	AllocateAndInitLPB(&LoaderBlock);
 
 #ifdef _M_IX86
-   	/* Setup redirection support */
+	/* Setup redirection support */
 	WinLdrSetupEms(BootOptions);
 #endif
 

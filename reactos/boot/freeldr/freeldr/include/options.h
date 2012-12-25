@@ -20,4 +20,4 @@
 #pragma once
 
 VOID	DoOptionsMenu(VOID);
-VOID    AppendBootTimeOptions(PCHAR BootOptions);
+VOID	AppendBootTimeOptions(PCHAR BootOptions);
