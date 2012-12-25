@@ -909,7 +909,7 @@ PcVideoSetDisplayMode(char *DisplayModeName, BOOLEAN Init)
         }
       else
         {
-          VideoMode = atoi(DisplayModeName);
+          VideoMode = (USHORT)strtoul(DisplayModeName, NULL, 0); // atoi(DisplayModeName);
         }
     }
 
