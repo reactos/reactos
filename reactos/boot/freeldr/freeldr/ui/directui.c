@@ -297,7 +297,7 @@ UiDrawMenuBox(IN PUI_MENU_INFO MenuInfo)
     for (i = 0; i < MenuInfo->MenuItemCount; i++)
     {
         /* Check if it's a separator */
-        if (!(_stricmp(MenuInfo->MenuItemList[i], "SEPARATOR")))
+        if (MenuInfo->MenuItemList[i] == NULL)
         {
             /* Draw the separator line */
             UiDrawText(MenuInfo->Left,
@@ -325,10 +325,11 @@ UiDrawMenuItem(IN PUI_MENU_INFO MenuInfo,
     strcat(MenuLineText, "    ");
 
     /* Now append the text string */
-    strcat(MenuLineText, MenuInfo->MenuItemList[MenuItemNumber]);
+    if (MenuInfo->MenuItemList[MenuItemNumber])
+        strcat(MenuLineText, MenuInfo->MenuItemList[MenuItemNumber]);
 
     /* If it is a separator */
-    if (!(_stricmp(MenuInfo->MenuItemList[MenuItemNumber], "SEPARATOR")))
+    if (MenuInfo->MenuItemList[MenuItemNumber] == NULL)
     {
         /* Make it a separator line and use menu colors */
         memset(MenuLineText, 0, 80);
@@ -436,7 +437,7 @@ UiProcessMenuKeyboardEvent(IN PUI_MENU_INFO MenuInfo,
 
                 /* Skip past any separators */
                 if ((Selected) &&
-                    !(_stricmp(MenuInfo->MenuItemList[Selected], "SEPARATOR")))
+                    (MenuInfo->MenuItemList[Selected] == NULL))
                 {
                     MenuInfo->SelectedMenuItem--;
                 }
@@ -450,7 +451,7 @@ UiProcessMenuKeyboardEvent(IN PUI_MENU_INFO MenuInfo,
 
                 /* Skip past any separators */
                 if ((Selected < Count) &&
-                    !(_stricmp(MenuInfo->MenuItemList[Selected], "SEPARATOR")))
+                    (MenuInfo->MenuItemList[Selected] == NULL))
                 {
                     MenuInfo->SelectedMenuItem++;
                 }
@@ -479,8 +480,11 @@ UiCalcMenuBoxSize(IN PUI_MENU_INFO MenuInfo)
     for (i = 0; i < MenuInfo->MenuItemCount; i++)
     {
         /* Get the string length and make it become the new width if necessary */
-        Length = strlen(MenuInfo->MenuItemList[i]);
-        if (Length > Width) Width = Length;
+        if (MenuInfo->MenuItemList[i])
+        {
+            Length = (ULONG)strlen(MenuInfo->MenuItemList[i]);
+            if (Length > Width) Width = Length;
+        }
     }
 
     /* Allow room for left & right borders, plus 8 spaces on each side */

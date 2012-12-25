@@ -26,7 +26,7 @@ PCSTR OptionsMenuList[] =
 	"Safe Mode with Networking",
 	"Safe Mode with Command Prompt",
 
-	"SEPARATOR",
+	NULL,
 
 	"Enable Boot Logging",
 	"Enable VGA Mode",
@@ -35,7 +35,7 @@ PCSTR OptionsMenuList[] =
 	"Debugging Mode",
 	"FreeLdr debugging",
 
-	"SEPARATOR",
+	NULL,
 
 #ifdef HAS_OPTION_MENU_CUSTOM_BOOT
 	"Custom Boot",

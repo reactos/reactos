@@ -157,8 +157,11 @@ TuiCalcMenuBoxSize(PUI_MENU_INFO MenuInfo)
         //
         // Get the string length and make it become the new width if necessary
         //
-        Length = (ULONG)strlen(MenuInfo->MenuItemList[i]);
-        if (Length > Width) Width = Length;
+        if (MenuInfo->MenuItemList[i])
+        {
+            Length = (ULONG)strlen(MenuInfo->MenuItemList[i]);
+            if (Length > Width) Width = Length;
+        }
     }
 
     //
@@ -334,7 +337,7 @@ TuiDrawMenuBox(PUI_MENU_INFO MenuInfo)
         //
         // Check if it's a separator
         //
-        if (!(_stricmp(MenuInfo->MenuItemList[i], "SEPARATOR")))
+        if (MenuInfo->MenuItemList[i] == NULL)
         {
             //
             // Draw the separator line
@@ -373,7 +376,8 @@ TuiDrawMenuItem(PUI_MENU_INFO MenuInfo,
         // how many spaces will be to the left and right
         //
         SpaceTotal = (MenuInfo->Right - MenuInfo->Left - 2) -
-                     (ULONG)strlen(MenuInfo->MenuItemList[MenuItemNumber]);
+                     (ULONG)(MenuInfo->MenuItemList[MenuItemNumber] ?
+                             strlen(MenuInfo->MenuItemList[MenuItemNumber]) : 0);
         SpaceLeft = (SpaceTotal / 2) + 1;
         SpaceRight = (SpaceTotal - SpaceLeft) + 1;
 
@@ -395,7 +399,8 @@ TuiDrawMenuItem(PUI_MENU_INFO MenuInfo,
     //
     // Now append the text string
     //
-    strcat(MenuLineText, MenuInfo->MenuItemList[MenuItemNumber]);
+    if (MenuInfo->MenuItemList[MenuItemNumber])
+        strcat(MenuLineText, MenuInfo->MenuItemList[MenuItemNumber]);
 
     //
     // Check if using centered menu, and add spaces on the right if so
@@ -405,7 +410,7 @@ TuiDrawMenuItem(PUI_MENU_INFO MenuInfo,
     //
     // If it is a separator
     //
-    if (!(_stricmp(MenuInfo->MenuItemList[MenuItemNumber], "SEPARATOR")))
+    if (MenuInfo->MenuItemList[MenuItemNumber] == NULL)
     {
         //
         // Make it a separator line and use menu colors
@@ -504,7 +509,7 @@ TuiProcessMenuKeyboardEvent(PUI_MENU_INFO MenuInfo,
 
                 // Skip past any separators
                 if ((Selected) &&
-                    !(_stricmp(MenuInfo->MenuItemList[Selected], "SEPARATOR")))
+                    (MenuInfo->MenuItemList[Selected] == NULL))
                 {
                     MenuInfo->SelectedMenuItem--;
                 }
@@ -520,7 +525,7 @@ TuiProcessMenuKeyboardEvent(PUI_MENU_INFO MenuInfo,
 
                 // Skip past any separators
                 if ((Selected < Count) &&
-                    !(_stricmp(MenuInfo->MenuItemList[Selected], "SEPARATOR")))
+                    (MenuInfo->MenuItemList[Selected] == NULL))
                 {
                     MenuInfo->SelectedMenuItem++;
                 }
