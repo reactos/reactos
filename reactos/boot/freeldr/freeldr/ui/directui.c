@@ -560,7 +560,7 @@ UiDisplayMenu(IN PCSTR MenuHeader,
         if (CanEscape && KeyPress == KEY_ESC) return FALSE;
 
         /* Check if there is a countdown */
-        if (MenuInformation.MenuTimeRemaining)
+        if (MenuInformation.MenuTimeRemaining > 0)
         {
             /* Get the updated time, seconds only */
             CurrentClockSecond = ArcGetTime()->Second;
@@ -576,7 +576,7 @@ UiDisplayMenu(IN PCSTR MenuHeader,
                 UiDrawMenuBox(&MenuInformation);
             }
         }
-        else
+        else if (MenuInformation.MenuTimeRemaining == 0)
         {
             /* A time out occurred, exit this loop and return default OS */
             break;

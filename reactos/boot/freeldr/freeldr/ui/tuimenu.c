@@ -93,7 +93,7 @@ TuiDisplayMenu(PCSTR MenuHeader,
         //
         // Check if there is a countdown
         //
-        if (MenuInformation.MenuTimeRemaining)
+        if (MenuInformation.MenuTimeRemaining > 0)
         {
             //
             // Get the updated time, seconds only
@@ -118,7 +118,7 @@ TuiDisplayMenu(PCSTR MenuHeader,
                 VideoCopyOffScreenBufferToVRAM();
             }
         }
-        else
+        else if (MenuInformation.MenuTimeRemaining == 0)
         {
             //
             // A time out occurred, exit this loop and return default OS
