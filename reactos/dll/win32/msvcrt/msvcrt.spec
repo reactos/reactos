@@ -131,7 +131,7 @@
 @ cdecl __RTtypeid(ptr) MSVCRT___RTtypeid
 @ cdecl __STRINGTOLD(ptr ptr str long)
 @ cdecl ___lc_codepage_func()
-# @ cdecl ___lc_collate_cp_func()
+@ cdecl ___lc_collate_cp_func()
 @ cdecl ___lc_handle_func()
 @ cdecl ___mb_cur_max_func()
 @ cdecl ___setlc_active_func()
