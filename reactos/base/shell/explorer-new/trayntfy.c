@@ -688,8 +688,6 @@ UnregisterSysPagerWndClass(VOID)
  */
 
 static const TCHAR szTrayClockWndClass[] = TEXT("TrayClockWClass");
-static LPCTSTR s_szRegistryKey = _T("Software\\ReactOS\\Features\\Explorer");
-BOOL blShowSeconds;
 
 #define ID_TRAYCLOCK_TIMER  0
 #define ID_TRAYCLOCK_TIMER_INIT 1
@@ -722,27 +720,6 @@ HRESULT RegGetDWord(HKEY hKey, LPCTSTR szValueName, DWORD * lpdwResult)
     else if (dwType != REG_DWORD) return DISP_E_TYPEMISMATCH;
 
     return NOERROR;
-}
-
-void LoadSettings(void)
-{
-    HKEY hKey = NULL;
-    DWORD dwValue;
-
-    if (RegOpenKey(HKEY_CURRENT_USER, s_szRegistryKey, &hKey) == ERROR_SUCCESS)
-    {
-        RegGetDWord(hKey, TEXT("blShowSeconds"), &dwValue);
-        if (dwValue == 1)
-        {
-            blShowSeconds = TRUE;
-        }
-        else
-        {
-            blShowSeconds = FALSE;
-        }
-
-        RegCloseKey(hKey);
-    }
 }
 
 #define CLOCKWND_FORMAT_COUNT (sizeof(ClockWndFormats) / sizeof(ClockWndFormats[0]))
@@ -965,7 +942,7 @@ TrayClockWnd_UpdateWnd(IN OUT PTRAY_CLOCK_WND_DATA This)
         if (ClockWndFormats[i].IsTime)
         {
             iRet = GetTimeFormat(LOCALE_USER_DEFAULT,
-                                 ClockWndFormats[i].dwFormatFlags,
+                                 AdvancedSettings.bShowSeconds ? ClockWndFormats[i].dwFormatFlags : TIME_NOSECONDS,
                                  &This->LocalTime,
                                  ClockWndFormats[i].lpFormat,
                                  This->szLines[i],
@@ -983,11 +960,6 @@ TrayClockWnd_UpdateWnd(IN OUT PTRAY_CLOCK_WND_DATA This)
 
         if (iRet != 0 && i == 0)
         {
-            if (blShowSeconds == FALSE)
-            {
-                This->szLines[0][5] = '\0';
-            }
-
             /* Set the window text to the time only */
             SetWindowText(This->hWnd,
                           This->szLines[i]);
@@ -1051,7 +1023,7 @@ TrayClockWnd_CalculateDueTime(IN OUT PTRAY_CLOCK_WND_DATA This)
     /* Calculate the due time */
     GetLocalTime(&This->LocalTime);
     uiDueTime = 1000 - (UINT)This->LocalTime.wMilliseconds;
-    if (blShowSeconds == TRUE)
+    if (AdvancedSettings.bShowSeconds)
         uiDueTime += (UINT)This->LocalTime.wSecond * 100;
     else
         uiDueTime += (59 - (UINT)This->LocalTime.wSecond) * 1000;
@@ -1117,7 +1089,7 @@ TrayClockWnd_CalibrateTimer(IN OUT PTRAY_CLOCK_WND_DATA This)
 
     uiDueTime = TrayClockWnd_CalculateDueTime(This);
 
-    if (blShowSeconds == TRUE)
+    if (AdvancedSettings.bShowSeconds)
     {
         uiWait1 = 1000 - 200;
         uiWait2 = 1000;
@@ -1403,7 +1375,6 @@ CreateTrayClockWnd(IN HWND hWndParent,
     PTRAY_CLOCK_WND_DATA TcData;
     DWORD dwStyle;
     HWND hWnd = NULL;
-    LoadSettings();
 
     TcData = HeapAlloc(hProcessHeap,
                        0,
