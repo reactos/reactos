@@ -18,22 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
-
-#include "ntstatus.h"
-#define WIN32_NO_STATUS
-#include "windef.h"
-#include "winbase.h"
-#include "winerror.h"
-#include "lmcons.h"
-#include "lmaccess.h"
-#include "lmapibuf.h"
-#include "lmerr.h"
-#include "lmuse.h"
-#include "ntsecapi.h"
-#include "wine/debug.h"
-#include "wine/unicode.h"
-#include "wine/list.h"
+#include "netapi32.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(netapi32);
 

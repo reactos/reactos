@@ -18,26 +18,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
-
-#include "ntstatus.h"
-#define WIN32_NO_STATUS
-#include "windef.h"
-#include "winbase.h"
-#include "winerror.h"
-#include "lmcons.h"
-#include "lmaccess.h"
-#include "lmapibuf.h"
-#include "lmerr.h"
-#include "lmuse.h"
-#include "ntsecapi.h"
-#include "wine/debug.h"
-#include "wine/unicode.h"
-#include "wine/list.h"
-
-#define NTOS_MODE_USER
-#include <ndk/rtlfuncs.h>
-#include "ntsam.h"
 #include "netapi32.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(netapi32);
@@ -177,7 +157,7 @@ BuildUserInfoBuffer(PUSER_ACCOUNT_INFORMATION UserInfo,
             if (UserInfo->AdminComment.Length > 0)
                 Size += UserInfo->AdminComment.Length + sizeof(WCHAR);
 
-            /* FIXME: Add user comment here */
+            /* FIXME: usri10_usr_comment */
 
             if (UserInfo->FullName.Length > 0)
                 Size += UserInfo->FullName.Length + sizeof(WCHAR);
@@ -239,9 +219,8 @@ BuildUserInfoBuffer(PUSER_ACCOUNT_INFORMATION UserInfo,
 
                 UserInfo1->usri1_password = NULL;
 
-                UserInfo1->usri1_password_age = 0; /* FIXME */
-
-                UserInfo1->usri1_priv = 0; /* FIXME */
+                /* FIXME: UserInfo1->usri1_password_age */
+                /* FIXME: UserInfo1->usri1_priv */
 
                 if (UserInfo->HomeDirectory.Length > 0)
                 {
@@ -310,7 +289,7 @@ BuildUserInfoBuffer(PUSER_ACCOUNT_INFORMATION UserInfo,
                 Ptr = (LPWSTR)((ULONG_PTR)Ptr + UserInfo->AdminComment.Length + sizeof(WCHAR));
             }
 
-            /* FIXME: Add user comment here */
+            /* FIXME: UserInfo10->usri10_usr_comment */
 
             if (UserInfo->FullName.Length > 0)
             {
@@ -322,7 +301,6 @@ BuildUserInfoBuffer(PUSER_ACCOUNT_INFORMATION UserInfo,
                 UserInfo10->usri10_full_name[UserInfo->FullName.Length / sizeof(WCHAR)] = UNICODE_NULL;
             }
             break;
-
 
 //        case 11:
 
@@ -592,10 +570,7 @@ NetUserEnum(LPCWSTR servername,
     PSAM_RID_ENUMERATION CurrentUser;
     PENUM_CONTEXT EnumContext = NULL;
     LPVOID Buffer = NULL;
-    PSID DomainSid = NULL;
-
     ULONG i;
-
     SAM_HANDLE UserHandle = NULL;
     PUSER_ACCOUNT_INFORMATION UserInfo = NULL;
 
@@ -639,47 +614,23 @@ NetUserEnum(LPCWSTR servername,
             goto done;
         }
 
-        Status = GetAccountDomainSid((servername != NULL) ? &ServerName : NULL,
-                                     &DomainSid);
+        Status = OpenAccountDomain(EnumContext->ServerHandle,
+                                   (servername != NULL) ? &ServerName : NULL,
+                                   DOMAIN_LIST_ACCOUNTS | DOMAIN_LOOKUP,
+                                   &EnumContext->AccountDomainHandle);
         if (!NT_SUCCESS(Status))
         {
-            ERR("GetAccountDomainSid failed (Status %08lx)\n", Status);
+            ERR("OpenAccountDomain failed (Status %08lx)\n", Status);
             ApiStatus = NetpNtStatusToApiStatus(Status);
             goto done;
         }
 
-        Status = SamOpenDomain(EnumContext->ServerHandle,
-                               DOMAIN_LIST_ACCOUNTS | DOMAIN_LOOKUP,
-                               DomainSid,
-                               &EnumContext->AccountDomainHandle);
-
-        RtlFreeHeap(RtlGetProcessHeap(), 0, DomainSid);
-
+        Status = OpenBuiltinDomain(EnumContext->ServerHandle,
+                                   DOMAIN_LIST_ACCOUNTS | DOMAIN_LOOKUP,
+                                   &EnumContext->BuiltinDomainHandle);
         if (!NT_SUCCESS(Status))
         {
-            ERR("SamOpenDomain failed (Status %08lx)\n", Status);
-            ApiStatus = NetpNtStatusToApiStatus(Status);
-            goto done;
-        }
-
-        Status = GetBuiltinDomainSid(&DomainSid);
-        if (!NT_SUCCESS(Status))
-        {
-            ERR("GetAccountDomainSid failed (Status %08lx)\n", Status);
-            ApiStatus = NetpNtStatusToApiStatus(Status);
-            goto done;
-        }
-
-        Status = SamOpenDomain(EnumContext->ServerHandle,
-                               DOMAIN_LIST_ACCOUNTS | DOMAIN_LOOKUP,
-                               DomainSid,
-                               &EnumContext->BuiltinDomainHandle);
-
-        RtlFreeHeap(RtlGetProcessHeap(), 0, DomainSid);
-
-        if (!NT_SUCCESS(Status))
-        {
-            ERR("SamOpenDomain failed (Status %08lx)\n", Status);
+            ERR("OpenBuiltinDomain failed (Status %08lx)\n", Status);
             ApiStatus = NetpNtStatusToApiStatus(Status);
             goto done;
         }
@@ -871,7 +822,6 @@ NetUserGetInfo(LPCWSTR servername,
     SAM_HANDLE ServerHandle = NULL;
     SAM_HANDLE AccountDomainHandle = NULL;
     SAM_HANDLE UserHandle = NULL;
-    PSID DomainSid = NULL;
     PULONG RelativeIds = NULL;
     PSID_NAME_USE Use = NULL;
     PUSER_ACCOUNT_INFORMATION UserInfo = NULL;
@@ -899,24 +849,14 @@ NetUserGetInfo(LPCWSTR servername,
         goto done;
     }
 
-    /* Get the Account Domain SID */
-    Status = GetAccountDomainSid((servername != NULL) ? &ServerName : NULL,
-                                 &DomainSid);
-    if (!NT_SUCCESS(Status))
-    {
-        ERR("GetAccountDomainSid failed (Status %08lx)\n", Status);
-        ApiStatus = NetpNtStatusToApiStatus(Status);
-        goto done;
-    }
-
     /* Open the Account Domain */
-    Status = SamOpenDomain(ServerHandle,
-                           DOMAIN_LIST_ACCOUNTS | DOMAIN_LOOKUP,
-                           DomainSid,
-                           &AccountDomainHandle);
+    Status = OpenAccountDomain(ServerHandle,
+                               (servername != NULL) ? &ServerName : NULL,
+                               DOMAIN_LIST_ACCOUNTS | DOMAIN_LOOKUP,
+                               &AccountDomainHandle);
     if (!NT_SUCCESS(Status))
     {
-        ERR("SamOpenDomain failed (Status %08lx)\n", Status);
+        ERR("OpenAccountDomain failed (Status %08lx)\n", Status);
         ApiStatus = NetpNtStatusToApiStatus(Status);
         goto done;
     }
@@ -988,9 +928,6 @@ done:
 
     if (Use != NULL)
         SamFreeMemory(Use);
-
-    if (DomainSid != NULL)
-        RtlFreeHeap(RtlGetProcessHeap(), 0, DomainSid);
 
     if (AccountDomainHandle != NULL)
         SamCloseHandle(AccountDomainHandle);

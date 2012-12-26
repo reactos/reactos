@@ -9,20 +9,6 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <stdarg.h>
-
-#include "ntstatus.h"
-#define WIN32_NO_STATUS
-#include "windef.h"
-#include "winbase.h"
-#include "winerror.h"
-#include "lmcons.h"
-#include "ntsecapi.h"
-#include "wine/debug.h"
-
-#define NTOS_MODE_USER
-#include <ndk/rtlfuncs.h>
-#include "ntsam.h"
 #include "netapi32.h"
 
 
@@ -120,6 +106,70 @@ done:
     {
         if (Sid != NULL)
             RtlFreeHeap(RtlGetProcessHeap(), 0, Sid);
+    }
+
+    return Status;
+}
+
+
+NTSTATUS
+OpenAccountDomain(IN SAM_HANDLE ServerHandle,
+                  IN PUNICODE_STRING ServerName,
+                  IN ULONG DesiredAccess,
+                  OUT PSAM_HANDLE DomainHandle)
+{
+    PSID DomainSid = NULL;
+    NTSTATUS Status;
+
+    Status = GetAccountDomainSid(ServerName,
+                                 &DomainSid);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("GetAccountDomainSid failed (Status %08lx)\n", Status);
+        return Status;
+    }
+
+    Status = SamOpenDomain(ServerHandle,
+                           DesiredAccess,
+                           DomainSid,
+                           DomainHandle);
+
+    RtlFreeHeap(RtlGetProcessHeap(), 0, DomainSid);
+
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SamOpenDomain failed (Status %08lx)\n", Status);
+    }
+
+    return Status;
+}
+
+
+NTSTATUS
+OpenBuiltinDomain(IN SAM_HANDLE ServerHandle,
+                  IN ULONG DesiredAccess,
+                  OUT PSAM_HANDLE DomainHandle)
+{
+    PSID DomainSid = NULL;
+    NTSTATUS Status;
+
+    Status = GetBuiltinDomainSid(&DomainSid);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("GetBuiltinDomainSid failed (Status %08lx)\n", Status);
+        return Status;
+    }
+
+    Status = SamOpenDomain(ServerHandle,
+                           DesiredAccess,
+                           DomainSid,
+                           DomainHandle);
+
+    RtlFreeHeap(RtlGetProcessHeap(), 0, DomainSid);
+
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SamOpenDomain failed (Status %08lx)\n", Status);
     }
 
     return Status;

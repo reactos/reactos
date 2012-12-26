@@ -18,25 +18,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
-
-#include "ntstatus.h"
-#define WIN32_NO_STATUS
-#include "windef.h"
-#include "winbase.h"
-#include "winerror.h"
-#include "lmcons.h"
-#include "lmaccess.h"
-#include "lmapibuf.h"
-#include "lmerr.h"
-#include "winreg.h"
-#include "ntsecapi.h"
-#include "wine/debug.h"
-#include "wine/unicode.h"
-
-#define NTOS_MODE_USER
-#include <ndk/rtlfuncs.h>
-#include "ntsam.h"
 #include "netapi32.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(netapi32);
@@ -232,7 +213,6 @@ NetLocalGroupAdd(
     SAM_HANDLE ServerHandle = NULL;
     SAM_HANDLE DomainHandle = NULL;
     SAM_HANDLE AliasHandle = NULL;
-    PSID DomainSid = NULL;
     LPWSTR aliasname = NULL;
     LPWSTR aliascomment = NULL;
     ULONG RelativeId;
@@ -277,23 +257,13 @@ NetLocalGroupAdd(
         goto done;
     }
 
-    /* Get the Builtin Domain SID */
-    Status = GetBuiltinDomainSid(&DomainSid);
-    if (!NT_SUCCESS(Status))
-    {
-        ERR("GetBuiltinDomainSid failed (Status %08lx)\n", Status);
-        ApiStatus = NetpNtStatusToApiStatus(Status);
-        goto done;
-    }
-
     /* Open the Builtin Domain */
-    Status = SamOpenDomain(ServerHandle,
-                           DOMAIN_LOOKUP,
-                           DomainSid,
-                           &DomainHandle);
+    Status = OpenBuiltinDomain(ServerHandle,
+                               DOMAIN_LOOKUP,
+                               &DomainHandle);
     if (!NT_SUCCESS(Status))
     {
-        ERR("SamOpenDomain failed (Status %08lx)\n", Status);
+        ERR("OpenBuiltinDomain failed (Status %08lx)\n", Status);
         ApiStatus = NetpNtStatusToApiStatus(Status);
         goto done;
     }
@@ -314,29 +284,15 @@ NetLocalGroupAdd(
 
     ApiStatus = NERR_Success;
 
-    /* Free the Builtin Domain SID */
-    RtlFreeHeap(RtlGetProcessHeap(), 0, DomainSid);
-    DomainSid = NULL;
-
     /* Close the Builtin Domain */
     SamCloseHandle(DomainHandle);
     DomainHandle = NULL;
 
-    /* Get the account domain SID */
-    Status = GetAccountDomainSid((servername != NULL) ? &ServerName : NULL,
-                                 &DomainSid);
-    if (!NT_SUCCESS(Status))
-    {
-        ERR("GetAccountDomainSid failed (Status %08lx)\n", Status);
-        ApiStatus = NetpNtStatusToApiStatus(Status);
-        goto done;
-    }
-
     /* Open the account domain */
-    Status = SamOpenDomain(ServerHandle,
-                           DOMAIN_CREATE_ALIAS | DOMAIN_LOOKUP,
-                           DomainSid,
-                           &DomainHandle);
+    Status = OpenAccountDomain(ServerHandle,
+                               (servername != NULL) ? &ServerName : NULL,
+                               DOMAIN_CREATE_ALIAS | DOMAIN_LOOKUP,
+                               &DomainHandle);
     if (!NT_SUCCESS(Status))
     {
         ERR("SamOpenDomain failed (Status %08lx)\n", Status);
@@ -382,9 +338,6 @@ NetLocalGroupAdd(
 done:
     if (AliasHandle != NULL)
         SamCloseHandle(AliasHandle);
-
-    if (DomainSid != NULL)
-        RtlFreeHeap(RtlGetProcessHeap(), 0, DomainSid);
 
     if (DomainHandle != NULL)
         SamCloseHandle(DomainHandle);
@@ -478,7 +431,6 @@ NET_API_STATUS WINAPI NetLocalGroupEnum(
     UNICODE_STRING ServerName;
     PSAM_RID_ENUMERATION CurrentAlias;
     PENUM_CONTEXT EnumContext = NULL;
-    PSID DomainSid = NULL;
     ULONG i;
     SAM_HANDLE AliasHandle = NULL;
     PALIAS_GENERAL_INFORMATION AliasInfo = NULL;
@@ -523,47 +475,23 @@ NET_API_STATUS WINAPI NetLocalGroupEnum(
             goto done;
         }
 
-        Status = GetAccountDomainSid((servername != NULL) ? &ServerName : NULL,
-                                     &DomainSid);
+        Status = OpenAccountDomain(EnumContext->ServerHandle,
+                                   (servername != NULL) ? &ServerName : NULL,
+                                   DOMAIN_LIST_ACCOUNTS | DOMAIN_LOOKUP,
+                                   &EnumContext->AccountDomainHandle);
         if (!NT_SUCCESS(Status))
         {
-            ERR("GetAccountDomainSid failed (Status %08lx)\n", Status);
+            ERR("OpenAccountDomain failed (Status %08lx)\n", Status);
             ApiStatus = NetpNtStatusToApiStatus(Status);
             goto done;
         }
 
-        Status = SamOpenDomain(EnumContext->ServerHandle,
-                               DOMAIN_LIST_ACCOUNTS | DOMAIN_LOOKUP,
-                               DomainSid,
-                               &EnumContext->AccountDomainHandle);
-
-        RtlFreeHeap(RtlGetProcessHeap(), 0, DomainSid);
-
+        Status = OpenBuiltinDomain(EnumContext->ServerHandle,
+                                   DOMAIN_LIST_ACCOUNTS | DOMAIN_LOOKUP,
+                                   &EnumContext->BuiltinDomainHandle);
         if (!NT_SUCCESS(Status))
         {
-            ERR("SamOpenDomain failed (Status %08lx)\n", Status);
-            ApiStatus = NetpNtStatusToApiStatus(Status);
-            goto done;
-        }
-
-        Status = GetBuiltinDomainSid(&DomainSid);
-        if (!NT_SUCCESS(Status))
-        {
-            ERR("GetAccountDomainSid failed (Status %08lx)\n", Status);
-            ApiStatus = NetpNtStatusToApiStatus(Status);
-            goto done;
-        }
-
-        Status = SamOpenDomain(EnumContext->ServerHandle,
-                               DOMAIN_LIST_ACCOUNTS | DOMAIN_LOOKUP,
-                               DomainSid,
-                               &EnumContext->BuiltinDomainHandle);
-
-        RtlFreeHeap(RtlGetProcessHeap(), 0, DomainSid);
-
-        if (!NT_SUCCESS(Status))
-        {
-            ERR("SamOpenDomain failed (Status %08lx)\n", Status);
+            ERR("OpenBuiltinDomain failed (Status %08lx)\n", Status);
             ApiStatus = NetpNtStatusToApiStatus(Status);
             goto done;
         }
@@ -732,7 +660,6 @@ NetLocalGroupGetInfo(
     SAM_HANDLE ServerHandle = NULL;
     SAM_HANDLE DomainHandle = NULL;
     SAM_HANDLE AliasHandle = NULL;
-    PSID DomainSid = NULL;
     PALIAS_GENERAL_INFORMATION AliasInfo = NULL;
     LPVOID Buffer = NULL;
     NET_API_STATUS ApiStatus = NERR_Success;
@@ -758,23 +685,13 @@ NetLocalGroupGetInfo(
         goto done;
     }
 
-    /* Get the Builtin Domain SID */
-    Status = GetBuiltinDomainSid(&DomainSid);
-    if (!NT_SUCCESS(Status))
-    {
-        ERR("GetBuiltinDomainSid failed (Status %08lx)\n", Status);
-        ApiStatus = NetpNtStatusToApiStatus(Status);
-        goto done;
-    }
-
     /* Open the Builtin Domain */
-    Status = SamOpenDomain(ServerHandle,
-                           DOMAIN_LOOKUP,
-                           DomainSid,
-                           &DomainHandle);
+    Status = OpenBuiltinDomain(ServerHandle,
+                               DOMAIN_LOOKUP,
+                               &DomainHandle);
     if (!NT_SUCCESS(Status))
     {
-        ERR("SamOpenDomain failed (Status %08lx)\n", Status);
+        ERR("OpenBuiltinDomain failed (Status %08lx)\n", Status);
         ApiStatus = NetpNtStatusToApiStatus(Status);
         goto done;
     }
@@ -792,30 +709,17 @@ NetLocalGroupGetInfo(
 
     if (AliasHandle == NULL)
     {
-        if (DomainSid != NULL)
-            RtlFreeHeap(RtlGetProcessHeap(), 0, DomainSid);
-
         if (DomainHandle != NULL)
             SamCloseHandle(DomainHandle);
 
-        /* Get the Account Domain SID */
-        Status = GetAccountDomainSid((servername != NULL) ? &ServerName : NULL,
-                                     &DomainSid);
-        if (!NT_SUCCESS(Status))
-        {
-            ERR("GetAccountDomainSid failed (Status %08lx)\n", Status);
-            ApiStatus = NetpNtStatusToApiStatus(Status);
-            goto done;
-        }
-
         /* Open the Acount Domain */
-        Status = SamOpenDomain(ServerHandle,
-                               DOMAIN_LOOKUP,
-                               DomainSid,
-                               &DomainHandle);
+        Status = OpenAccountDomain(ServerHandle,
+                                   (servername != NULL) ? &ServerName : NULL,
+                                   DOMAIN_LOOKUP,
+                                   &DomainHandle);
         if (!NT_SUCCESS(Status))
         {
-            ERR("SamOpenDomain failed (Status %08lx)\n", Status);
+            ERR("OpenAccountDomain failed (Status %08lx)\n", Status);
             ApiStatus = NetpNtStatusToApiStatus(Status);
             goto done;
         }
@@ -854,9 +758,6 @@ done:
 
     if (AliasHandle != NULL)
         SamCloseHandle(AliasHandle);
-
-    if (DomainSid != NULL)
-        RtlFreeHeap(RtlGetProcessHeap(), 0, DomainSid);
 
     if (DomainHandle != NULL)
         SamCloseHandle(DomainHandle);
