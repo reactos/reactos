@@ -273,6 +273,7 @@ VOID RunLoader(VOID)
 		if (!UiDisplayMenu("Please select the operating system to start:",
 		                   "For troubleshooting and advanced startup options for "
 		                       "ReactOS, press F8.",
+		                   TRUE,
 		                   OperatingSystemDisplayNames,
 		                   OperatingSystemCount,
 		                   DefaultOperatingSystem,

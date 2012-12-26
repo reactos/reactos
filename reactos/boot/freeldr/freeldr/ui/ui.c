@@ -442,9 +442,9 @@ VOID UiTruncateStringEllipsis(PCHAR StringText, ULONG MaxChars)
 	}
 }
 
-BOOLEAN UiDisplayMenu(PCSTR MenuHeader, PCSTR MenuFooter, PCSTR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, ULONG* SelectedMenuItem, BOOLEAN CanEscape, UiMenuKeyPressFilterCallback KeyPressFilter)
+BOOLEAN UiDisplayMenu(PCSTR MenuHeader, PCSTR MenuFooter, BOOLEAN ShowBootOptions, PCSTR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, ULONG* SelectedMenuItem, BOOLEAN CanEscape, UiMenuKeyPressFilterCallback KeyPressFilter)
 {
-	return UiVtbl.DisplayMenu(MenuHeader, MenuFooter, MenuItemList, MenuItemCount, DefaultMenuItem, MenuTimeOut, SelectedMenuItem, CanEscape, KeyPressFilter);
+	return UiVtbl.DisplayMenu(MenuHeader, MenuFooter, ShowBootOptions, MenuItemList, MenuItemCount, DefaultMenuItem, MenuTimeOut, SelectedMenuItem, CanEscape, KeyPressFilter);
 }
 
 VOID UiFadeInBackdrop(VOID)

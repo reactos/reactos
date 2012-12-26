@@ -128,7 +128,7 @@ VOID TuiDrawBackdrop(VOID)
 	//
 	// Draw title text
 	//
-	TuiDrawText( (UiScreenWidth / 2) - ((ULONG)strlen(UiTitleBoxTitleText) / 2),
+	TuiDrawText( (UiScreenWidth - (ULONG)strlen(UiTitleBoxTitleText)) / 2,
 			2,
 			UiTitleBoxTitleText,
 			ATTR(UiTitleBoxFgColor, UiTitleBoxBgColor));

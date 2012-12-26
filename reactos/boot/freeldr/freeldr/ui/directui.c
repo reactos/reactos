@@ -384,6 +384,12 @@ UiDrawMenu(IN PUI_MENU_INFO MenuInfo)
     {
         UiDrawMenuItem(MenuInfo, i);
     }
+
+    /* Display the boot options if needed */
+    if (MenuInfo->ShowBootOptions)
+    {
+        DisplayBootTimeOptions();
+    }
 }
 
 ULONG
@@ -502,6 +508,7 @@ UiCalcMenuBoxSize(IN PUI_MENU_INFO MenuInfo)
 BOOLEAN
 UiDisplayMenu(IN PCSTR MenuHeader,
               IN PCSTR MenuFooter,
+              IN BOOLEAN ShowBootOptions,
               IN PCSTR MenuItemList[],
               IN ULONG MenuItemCount,
               IN ULONG DefaultMenuItem,
@@ -526,6 +533,7 @@ UiDisplayMenu(IN PCSTR MenuHeader,
     /* Setup the MENU_INFO structure */
     MenuInformation.MenuHeader = MenuHeader;
     MenuInformation.MenuFooter = MenuFooter;
+    MenuInformation.ShowBootOptions = ShowBootOptions;
     MenuInformation.MenuItemList = MenuItemList;
     MenuInformation.MenuItemCount = MenuItemCount;
     MenuInformation.MenuTimeRemaining = MenuTimeOut;

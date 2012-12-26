@@ -16,6 +16,7 @@
 BOOLEAN
 TuiDisplayMenu(PCSTR MenuHeader,
                PCSTR MenuFooter,
+               BOOLEAN ShowBootOptions,
                PCSTR MenuItemList[],
                ULONG MenuItemCount,
                ULONG DefaultMenuItem,
@@ -45,6 +46,7 @@ TuiDisplayMenu(PCSTR MenuHeader,
     //
     MenuInformation.MenuHeader = MenuHeader;
     MenuInformation.MenuFooter = MenuFooter;
+    MenuInformation.ShowBootOptions = ShowBootOptions;
     MenuInformation.MenuItemList = MenuItemList;
     MenuInformation.MenuItemCount = MenuItemCount;
     MenuInformation.MenuTimeRemaining = MenuTimeOut;
@@ -223,6 +225,12 @@ TuiDrawMenu(PUI_MENU_INFO MenuInfo)
     for (i = 0; i < MenuInfo->MenuItemCount; i++)
     {
         TuiDrawMenuItem(MenuInfo, i);
+    }
+
+    /* Display the boot options if needed */
+    if (MenuInfo->ShowBootOptions)
+    {
+        DisplayBootTimeOptions();
     }
 
     VideoCopyOffScreenBufferToVRAM();

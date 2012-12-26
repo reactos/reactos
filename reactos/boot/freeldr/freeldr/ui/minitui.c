@@ -123,6 +123,14 @@ MiniTuiDrawMenu(PUI_MENU_INFO MenuInfo)
         TuiDrawMenuItem(MenuInfo, i);
     }
 
+    //
+    // Display the boot options if needed
+    //
+    if (MenuInfo->ShowBootOptions)
+    {
+        DisplayBootTimeOptions();
+    }
+
     VideoCopyOffScreenBufferToVRAM();
 }
 

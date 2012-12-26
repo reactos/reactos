@@ -63,7 +63,7 @@ VOID	TuiDrawMenu(PUI_MENU_INFO MenuInfo);
 VOID	NTAPI TuiDrawMenuBox(PUI_MENU_INFO MenuInfo);
 VOID	NTAPI TuiDrawMenuItem(PUI_MENU_INFO MenuInfo, ULONG MenuItemNumber);
 ULONG	NTAPI TuiProcessMenuKeyboardEvent(PUI_MENU_INFO MenuInfo, UiMenuKeyPressFilterCallback KeyPressFilter);
-BOOLEAN	TuiDisplayMenu(PCSTR MenuHeader, PCSTR MenuFooter, PCSTR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, ULONG* SelectedMenuItem, BOOLEAN CanEscape, UiMenuKeyPressFilterCallback KeyPressFilter);
+BOOLEAN	TuiDisplayMenu(PCSTR MenuHeader, PCSTR MenuFooter, BOOLEAN ShowBootOptions, PCSTR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, ULONG* SelectedMenuItem, BOOLEAN CanEscape, UiMenuKeyPressFilterCallback KeyPressFilter);
 
 /* Definitions for corners, depending on HORIZ and VERT */
 #define UL		(0xda)

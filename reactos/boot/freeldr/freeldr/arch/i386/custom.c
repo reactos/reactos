@@ -44,6 +44,7 @@ VOID OptionMenuCustomBoot(VOID)
 	ULONG	SelectedMenuItem;
 
 	if (!UiDisplayMenu("Please choose a boot method:", "",
+	                   FALSE,
 	                   CustomBootMenuList,
 	                   CustomBootMenuCount,
 	                   0, -1,
