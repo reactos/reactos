@@ -160,19 +160,241 @@ FreeAliasInfo(PALIAS_GENERAL_INFORMATION AliasInfo)
 }
 
 
+static
+NET_API_STATUS
+OpenAliasByName(SAM_HANDLE DomainHandle,
+                PUNICODE_STRING AliasName,
+                ULONG DesiredAccess,
+                PSAM_HANDLE AliasHandle)
+{
+    PULONG RelativeIds = NULL;
+    PSID_NAME_USE Use = NULL;
+    NET_API_STATUS ApiStatus = NERR_Success;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    /* Get the RID for the given user name */
+    Status = SamLookupNamesInDomain(DomainHandle,
+                                    1,
+                                    AliasName,
+                                    &RelativeIds,
+                                    &Use);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SamLookupNamesInDomain failed (Status %08lx)\n", Status);
+        return NetpNtStatusToApiStatus(Status);
+    }
+
+    /* Fail, if it is not an alias account */
+    if (Use[0] != SidTypeAlias)
+    {
+        ERR("Object is not an Alias!\n");
+        ApiStatus = NERR_GroupNotFound;
+        goto done;
+    }
+
+    /* Open the alias account */
+    Status = SamOpenAlias(DomainHandle,
+                          DesiredAccess,
+                          RelativeIds[0],
+                          AliasHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SamOpenDomain failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+done:
+    if (RelativeIds != NULL)
+        SamFreeMemory(RelativeIds);
+
+    if (Use != NULL)
+        SamFreeMemory(Use);
+
+    return ApiStatus;
+}
+
+
 /************************************************************
- *                NetLocalGroupAdd  (NETAPI32.@)
+ * NetLocalGroupAdd  (NETAPI32.@)
  */
-NET_API_STATUS WINAPI NetLocalGroupAdd(
+NET_API_STATUS
+WINAPI
+NetLocalGroupAdd(
     LPCWSTR servername,
     DWORD level,
     LPBYTE buf,
     LPDWORD parm_err)
 {
-    FIXME("(%s %d %p %p) stub!\n", debugstr_w(servername), level, buf,
+    ALIAS_ADM_COMMENT_INFORMATION AdminComment;
+    UNICODE_STRING ServerName;
+    UNICODE_STRING AliasName;
+    SAM_HANDLE ServerHandle = NULL;
+    SAM_HANDLE DomainHandle = NULL;
+    SAM_HANDLE AliasHandle = NULL;
+    PSID DomainSid = NULL;
+    LPWSTR aliasname = NULL;
+    LPWSTR aliascomment = NULL;
+    ULONG RelativeId;
+    NET_API_STATUS ApiStatus = NERR_Success;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    TRACE("(%s %d %p %p) stub!\n", debugstr_w(servername), level, buf,
           parm_err);
-    return NERR_Success;
+
+    /* Initialize the Server name*/
+    if (servername != NULL)
+        RtlInitUnicodeString(&ServerName, servername);
+
+    /* Initialize the Alias name*/
+    switch (level)
+    {
+        case 0:
+            aliasname = ((PLOCALGROUP_INFO_0)buf)->lgrpi0_name;
+            aliascomment = NULL;
+            break;
+
+        case 1:
+            aliasname = ((PLOCALGROUP_INFO_1)buf)->lgrpi1_name;
+            aliascomment = ((PLOCALGROUP_INFO_1)buf)->lgrpi1_comment;
+            break;
+
+        default:
+            return ERROR_INVALID_LEVEL;
+    }
+
+    RtlInitUnicodeString(&AliasName, aliasname);
+
+    /* Connect to the SAM Server */
+    Status = SamConnect((servername != NULL) ? &ServerName : NULL,
+                        &ServerHandle,
+                        SAM_SERVER_CONNECT | SAM_SERVER_LOOKUP_DOMAIN,
+                        NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SamConnect failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    /* Get the Builtin Domain SID */
+    Status = GetBuiltinDomainSid(&DomainSid);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("GetBuiltinDomainSid failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    /* Open the Builtin Domain */
+    Status = SamOpenDomain(ServerHandle,
+                           DOMAIN_LOOKUP,
+                           DomainSid,
+                           &DomainHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SamOpenDomain failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    /* Try to open the Alias Account in the Builtin Domain */
+    ApiStatus = OpenAliasByName(DomainHandle,
+                                &AliasName,
+                                ALIAS_READ_INFORMATION,
+                                &AliasHandle);
+    if (ApiStatus == NERR_Success)
+    {
+        ERR("OpenAliasByName: alias %wZ already exists!\n", &AliasName);
+
+        SamCloseHandle(AliasHandle);
+        ApiStatus = ERROR_ALIAS_EXISTS;
+        goto done;
+    }
+
+    ApiStatus = NERR_Success;
+
+    /* Free the Builtin Domain SID */
+    RtlFreeHeap(RtlGetProcessHeap(), 0, DomainSid);
+    DomainSid = NULL;
+
+    /* Close the Builtin Domain */
+    SamCloseHandle(DomainHandle);
+    DomainHandle = NULL;
+
+    /* Get the account domain SID */
+    Status = GetAccountDomainSid((servername != NULL) ? &ServerName : NULL,
+                                 &DomainSid);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("GetAccountDomainSid failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    /* Open the account domain */
+    Status = SamOpenDomain(ServerHandle,
+                           DOMAIN_CREATE_ALIAS | DOMAIN_LOOKUP,
+                           DomainSid,
+                           &DomainHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SamOpenDomain failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    /* Create the alias */
+    Status = SamCreateAliasInDomain(DomainHandle,
+                                    &AliasName,
+                                    DELETE | ALIAS_WRITE_ACCOUNT,
+                                    &AliasHandle,
+                                    &RelativeId);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SamCreateAliasInDomain failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    TRACE("Created alias \"%wZ\" (RID: %lu)\n", &AliasName, RelativeId);
+
+    /* Set the admin comment */
+    if (level == 1)
+    {
+        RtlInitUnicodeString(&AdminComment.AdminComment, aliascomment);
+
+        Status = SamSetInformationAlias(AliasHandle,
+                                        AliasAdminCommentInformation,
+                                        &AdminComment);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("SamSetInformationAlias failed (Status %08lx)\n", Status);
+            ApiStatus = NetpNtStatusToApiStatus(Status);
+
+            /* Delete the Alias if the Comment could not be set */
+            SamDeleteAlias(AliasHandle);
+
+            goto done;
+        }
+    }
+
+done:
+    if (AliasHandle != NULL)
+        SamCloseHandle(AliasHandle);
+
+    if (DomainSid != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, DomainSid);
+
+    if (DomainHandle != NULL)
+        SamCloseHandle(DomainHandle);
+
+    if (ServerHandle != NULL)
+        SamCloseHandle(ServerHandle);
+
+    return ApiStatus;
 }
+
 
 /************************************************************
  *                NetLocalGroupAddMember  (NETAPI32.@)
@@ -264,7 +486,7 @@ NET_API_STATUS WINAPI NetLocalGroupEnum(
     NET_API_STATUS ApiStatus = NERR_Success;
     NTSTATUS Status = STATUS_SUCCESS;
 
-    FIXME("(%s %d %p %d %p %p %p) stub!\n", debugstr_w(servername),
+    TRACE("(%s %d %p %d %p %p %p) stub!\n", debugstr_w(servername),
           level, bufptr, prefmaxlen, entriesread, totalentries, resumehandle);
 
     *entriesread = 0;
@@ -511,14 +733,12 @@ NetLocalGroupGetInfo(
     SAM_HANDLE DomainHandle = NULL;
     SAM_HANDLE AliasHandle = NULL;
     PSID DomainSid = NULL;
-    PULONG RelativeIds = NULL;
-    PSID_NAME_USE Use = NULL;
     PALIAS_GENERAL_INFORMATION AliasInfo = NULL;
     LPVOID Buffer = NULL;
     NET_API_STATUS ApiStatus = NERR_Success;
     NTSTATUS Status = STATUS_SUCCESS;
 
-    FIXME("(%s %s %d %p) stub!\n", debugstr_w(servername),
+    TRACE("(%s %s %d %p) stub!\n", debugstr_w(servername),
           debugstr_w(groupname), level, bufptr);
 
     if (servername != NULL)
@@ -559,49 +779,24 @@ NetLocalGroupGetInfo(
         goto done;
     }
 
-    /* Get the RID for the given user name */
-    Status = SamLookupNamesInDomain(DomainHandle,
-                                    1,
-                                    &GroupName,
-                                    &RelativeIds,
-                                    &Use);
-    if (!NT_SUCCESS(Status) && Status != STATUS_NONE_MAPPED)
+    /* Open the alias account in the builtin domain */
+    ApiStatus = OpenAliasByName(DomainHandle,
+                                &GroupName,
+                                ALIAS_READ_INFORMATION,
+                                &AliasHandle);
+    if (ApiStatus != NERR_Success)
     {
-        ERR("SamOpenDomain failed (Status %08lx)\n", Status);
-        ApiStatus = NetpNtStatusToApiStatus(Status);
+        ERR("OpenAliasByName failed (ApiStatus %lu)\n", ApiStatus);
         goto done;
-    }
-
-    if (Status == STATUS_SUCCESS)
-    {
-        /* FIXME: Check Use*/
-
-        Status = SamOpenAlias(DomainHandle,
-                              ALIAS_READ_INFORMATION,
-                              RelativeIds[0],
-                              &AliasHandle);
-        if (!NT_SUCCESS(Status))
-        {
-            ERR("SamOpenDomain failed (Status %08lx)\n", Status);
-            ApiStatus = NetpNtStatusToApiStatus(Status);
-            goto done;
-        }
     }
 
     if (AliasHandle == NULL)
     {
-        if (RelativeIds != NULL)
-            SamFreeMemory(RelativeIds);
-
-        if (Use != NULL)
-            SamFreeMemory(Use);
-
         if (DomainSid != NULL)
             RtlFreeHeap(RtlGetProcessHeap(), 0, DomainSid);
 
         if (DomainHandle != NULL)
             SamCloseHandle(DomainHandle);
-
 
         /* Get the Account Domain SID */
         Status = GetAccountDomainSid((servername != NULL) ? &ServerName : NULL,
@@ -625,29 +820,14 @@ NetLocalGroupGetInfo(
             goto done;
         }
 
-        /* Get the RID for the given user name */
-        Status = SamLookupNamesInDomain(DomainHandle,
-                                        1,
-                                        &GroupName,
-                                        &RelativeIds,
-                                        &Use);
-        if (!NT_SUCCESS(Status))
+        /* Open the alias account in the account domain */
+        ApiStatus = OpenAliasByName(DomainHandle,
+                                    &GroupName,
+                                    ALIAS_READ_INFORMATION,
+                                    &AliasHandle);
+        if (ApiStatus != NERR_Success)
         {
-            ERR("SamOpenDomain failed (Status %08lx)\n", Status);
-            ApiStatus = NetpNtStatusToApiStatus(Status);
-            goto done;
-        }
-
-        /* FIXME: Check Use*/
-
-        Status = SamOpenAlias(DomainHandle,
-                              ALIAS_READ_INFORMATION,
-                              RelativeIds[0],
-                              &AliasHandle);
-        if (!NT_SUCCESS(Status))
-        {
-            ERR("SamOpenDomain failed (Status %08lx)\n", Status);
-            ApiStatus = NetpNtStatusToApiStatus(Status);
+            ERR("OpenAliasByName failed (ApiStatus %lu)\n", ApiStatus);
             goto done;
         }
     }
@@ -675,12 +855,6 @@ done:
     if (AliasHandle != NULL)
         SamCloseHandle(AliasHandle);
 
-    if (RelativeIds != NULL)
-        SamFreeMemory(RelativeIds);
-
-    if (Use != NULL)
-        SamFreeMemory(Use);
-
     if (DomainSid != NULL)
         RtlFreeHeap(RtlGetProcessHeap(), 0, DomainSid);
 
@@ -692,7 +866,7 @@ done:
 
     *bufptr = (LPBYTE)Buffer;
 
-    return NERR_Success;
+    return ApiStatus;
 }
 
 
