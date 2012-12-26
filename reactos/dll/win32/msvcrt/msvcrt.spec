@@ -143,8 +143,8 @@
 @ cdecl __crtCompareStringW(long long wstr long wstr long) kernel32.CompareStringW
 @ cdecl __crtGetLocaleInfoW(long long ptr long) kernel32.GetLocaleInfoW
 @ cdecl __crtGetStringTypeW(long long wstr long ptr)
-@ cdecl __crtLCMapStringA(long long str long ptr long long long)
-# stub __crtLCMapStringW
+@ cdecl __crtLCMapStringA(long long str long str long long long)
+@ cdecl __crtLCMapStringW(long long wstr long wstr long long long)
 @ cdecl __daylight() __p__daylight
 @ cdecl __dllonexit(ptr ptr ptr)
 @ cdecl __doserrno()
