@@ -187,7 +187,7 @@ SysPagerWnd_AddButton(IN OUT PSYS_PAGER_WND_DATA This,
     tbBtn.dwData = notifyItem->Index;
 
     tbBtn.iString = (INT_PTR)text;
-    tbBtn.idCommand=notifyItem->Index;
+    tbBtn.idCommand = notifyItem->Index;
 
     if (iconData->uFlags & NIF_MESSAGE)
     {
@@ -237,7 +237,7 @@ SysPagerWnd_RemoveButton(IN OUT PSYS_PAGER_WND_DATA This,
     {
         PNOTIFY_ITEM deleteItem;
         PNOTIFY_ITEM updateItem;
-        deleteItem=*NotifyPointer;
+        deleteItem = *NotifyPointer;
 
 
         SendMessage(This->hWndToolbar,
@@ -245,7 +245,7 @@ SysPagerWnd_RemoveButton(IN OUT PSYS_PAGER_WND_DATA This,
                     deleteItem->Index,
                     0);
 
-        *NotifyPointer=updateItem=deleteItem->next;
+        *NotifyPointer = updateItem = deleteItem->next;
 
         if (!(deleteItem->iconData.dwState & NIS_HIDDEN))
             This->VisibleButtonCount--;
@@ -382,13 +382,10 @@ SysPagerWnd_Create(IN OUT PSYS_PAGER_WND_DATA This)
         SendMessage(This->hWndToolbar, TB_SETIMAGELIST, 0, (LPARAM)This->SysIcons);
 
         BtnSize.cx = BtnSize.cy = 18;
-        //BtnSize.cx = GetSystemMetrics(SM_CXMINIMIZED);
-        //This->ButtonSize.cy = BtnSize.cy = GetSystemMetrics(SM_CYSIZE) + (2 * GetSystemMetrics(SM_CYEDGE));
         SendMessage(This->hWndToolbar,
                     TB_SETBUTTONSIZE,
                     0,
                     MAKELONG(BtnSize.cx, BtnSize.cy));
-        /*SysPagerWnd_AddButton(This);*/
 
         SetWindowSubclass(This->hWndToolbar,
                           SysPagerWnd_ToolbarSubclassedProc,
@@ -427,6 +424,7 @@ SysPagerWnd_NotifyMsg(IN HWND hwnd,
         parentHWND = GetParent(parentHWND);
         GetClientRect(parentHWND, &windowRect);
 
+        /* FIXME: ever heard of "struct"? */
         trayCommand = *(DWORD *) (((BYTE *)cpData->lpData) + 4);
         iconData = (NOTIFYICONDATA *) (((BYTE *)cpData->lpData) + 8);
 
@@ -448,7 +446,7 @@ SysPagerWnd_NotifyMsg(IN HWND hwnd,
                 PPNOTIFY_ITEM NotifyPointer;
                 NotifyPointer = SysPagerWnd_FindPPNotifyItemByIconData(This,
                                                                        iconData);
-                if(!NotifyPointer)
+                if (!NotifyPointer)
                 {
                     SysPagerWnd_AddButton(This, iconData);
                 }
@@ -697,10 +695,10 @@ static const struct
     BOOL IsTime;
     DWORD dwFormatFlags;
     LPCTSTR lpFormat;
-}ClockWndFormats[]= {
-{TRUE, 0, NULL},
-{FALSE, 0, TEXT("dddd")},
-{FALSE, DATE_SHORTDATE, NULL}
+} ClockWndFormats[] = {
+    { TRUE, 0, NULL },
+    { FALSE, 0, TEXT("dddd") },
+    { FALSE, DATE_SHORTDATE, NULL }
 };
 
 HRESULT RegGetDWord(HKEY hKey, LPCTSTR szValueName, DWORD * lpdwResult)
@@ -997,7 +995,7 @@ TrayClockWnd_UpdateWnd(IN OUT PTRAY_CLOCK_WND_DATA This)
 
             nmh.hwndFrom = This->hWnd;
             nmh.idFrom = GetWindowLongPtr(This->hWnd,
-                                          GWL_ID);
+                                          GWLP_ID);
             nmh.code = NTNWM_REALIGN;
 
             SendMessage(This->hWndNotify,
@@ -1491,9 +1489,9 @@ TrayNotifyWnd_UpdateTheme(IN OUT PTRAY_NOTIFY_WND_DATA This)
 
     if (This->TrayTheme)
     {
-        style = GetWindowLongPtr(This->hWnd, GWL_EXSTYLE);
+        style = GetWindowLong(This->hWnd, GWL_EXSTYLE);
         style = style & ~WS_EX_STATICEDGE;
-        SetWindowLongPtr(This->hWnd, GWL_EXSTYLE, style);
+        SetWindowLong(This->hWnd, GWL_EXSTYLE, style);
 
         GetThemeMargins(This->TrayTheme,
                         NULL,
@@ -1505,9 +1503,9 @@ TrayNotifyWnd_UpdateTheme(IN OUT PTRAY_NOTIFY_WND_DATA This)
     }
     else
     {
-        style = GetWindowLongPtr(This->hWnd, GWL_EXSTYLE);
+        style = GetWindowLong(This->hWnd, GWL_EXSTYLE);
         style = style | WS_EX_STATICEDGE;
-        SetWindowLongPtr(This->hWnd, GWL_EXSTYLE, style);
+        SetWindowLong(This->hWnd, GWL_EXSTYLE, style);
 
         This->ContentMargin.cxLeftWidth = 0;
         This->ContentMargin.cxRightWidth = 0;

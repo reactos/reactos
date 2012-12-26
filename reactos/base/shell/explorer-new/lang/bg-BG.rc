@@ -15,7 +15,7 @@ BEGIN
         MENUITEM "&Undo", ID_SHELL_CMD_UNDO_ACTION
         MENUITEM SEPARATOR
         MENUITEM "Задачен управител", ID_SHELL_CMD_OPEN_TASKMGR
-        MENUITEM SEPARATOR	
+        MENUITEM SEPARATOR
         MENUITEM "&Заключване на задачната лента", ID_LOCKTASKBAR
         MENUITEM "С&войства", ID_SHELL_CMD_PROPERTIES
     END

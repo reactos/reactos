@@ -372,11 +372,11 @@ ITrayWindowImpl_GetMinimumWindowSize(IN OUT ITrayWindowImpl *This,
     RECT rcMin = {0};
 
     AdjustWindowRectEx(&rcMin,
-                       GetWindowLongPtr(This->hWnd,
-                                        GWL_STYLE),
+                       GetWindowLong(This->hWnd,
+                                     GWL_STYLE),
                        FALSE,
-                       GetWindowLongPtr(This->hWnd,
-                                        GWL_EXSTYLE));
+                       GetWindowLong(This->hWnd,
+                                     GWL_EXSTYLE));
 
     *pRect = rcMin;
 }
@@ -655,7 +655,7 @@ ITrayWindowImpl_ResizeWorkArea(IN OUT ITrayWindowImpl *This)
     RECT rcTray,rcWorkArea;
 
     /* If monitor has changed then fix the previous monitors work area */
-    if(This->PreviousMonitor!=This->Monitor)
+    if (This->PreviousMonitor != This->Monitor)
     {
         ITrayWindowImpl_GetScreenRect(This,
                                     This->PreviousMonitor,
@@ -671,25 +671,25 @@ ITrayWindowImpl_ResizeWorkArea(IN OUT ITrayWindowImpl *This)
     ITrayWindowImpl_GetScreenRect(This,
                                   This->Monitor,
                                   &rcWorkArea);
-    This->PreviousMonitor=This->Monitor;
+    This->PreviousMonitor = This->Monitor;
 
     /* If AutoHide is false then change the workarea to exclude the area that
        the taskbar covers. */
-    if(!This->AutoHide)
+    if (!This->AutoHide)
     {
-        switch(This->Position)
+        switch (This->Position)
         {
             case ABE_TOP:
-                rcWorkArea.top=rcTray.bottom;
+                rcWorkArea.top = rcTray.bottom;
                 break;
             case ABE_LEFT:
-                rcWorkArea.left=rcTray.right;
+                rcWorkArea.left = rcTray.right;
                 break;
             case ABE_RIGHT:
-                rcWorkArea.right=rcTray.left;
+                rcWorkArea.right = rcTray.left;
                 break;
             case ABE_BOTTOM:
-                rcWorkArea.bottom=rcTray.top;
+                rcWorkArea.bottom = rcTray.top;
                 break;
         }
     }
@@ -1978,7 +1978,7 @@ ITrayWindowImpl_DrawSizer(IN ITrayWindowImpl *This,
 
 static DWORD WINAPI
 RunFileDlgThread(IN OUT PVOID pParam)
-{ 
+{
     ITrayWindowImpl *This = pParam;
     HANDLE hShell32;
     RUNFILEDLG RunFileDlg;
@@ -2007,7 +2007,7 @@ RunFileDlgThread(IN OUT PVOID pParam)
 
     DestroyWindow(hwnd);
 
-    return 0; 
+    return 0;
 }
 
 static LRESULT CALLBACK
@@ -2519,7 +2519,7 @@ HandleTrayContextMenu:
                                                             lParam,
                                                             &Ret)))
                 {
-                    switch(LOWORD(wParam))
+                    switch (LOWORD(wParam))
                     {
                         /* FIXME: Handle these commands as well */
                         case IDM_TASKBARANDSTARTMENU:

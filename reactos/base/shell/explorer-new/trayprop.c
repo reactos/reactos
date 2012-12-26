@@ -142,7 +142,7 @@ TaskbarPageProc(HWND hwndDlg,
             break;
 
         case WM_COMMAND:
-            switch(LOWORD(wParam))
+            switch (LOWORD(wParam))
             {
                 case IDC_TASKBARPROP_LOCK:
                 case IDC_TASKBARPROP_HIDE:
@@ -163,7 +163,7 @@ TaskbarPageProc(HWND hwndDlg,
         {
             LPNMHDR pnmh = (LPNMHDR)lParam;
 
-            switch(pnmh->code)
+            switch (pnmh->code)
             {
                 case PSN_SETACTIVE:
                     break;
@@ -259,7 +259,7 @@ StartMenuPageProc(HWND hwndDlg,
         {
             LPNMHDR pnmh = (LPNMHDR)lParam;
 
-            switch(pnmh->code)
+            switch (pnmh->code)
             {
                 case PSN_SETACTIVE:
                     break;
@@ -294,7 +294,7 @@ NotificationPageProc(HWND hwndDlg,
         {
             LPNMHDR pnmh = (LPNMHDR)lParam;
 
-            switch(pnmh->code)
+            switch (pnmh->code)
             {
                 case PSN_SETACTIVE:
                     break;
@@ -329,7 +329,7 @@ ToolbarsPageProc(HWND hwndDlg,
         {
             LPNMHDR pnmh = (LPNMHDR)lParam;
 
-            switch(pnmh->code)
+            switch (pnmh->code)
             {
                 case PSN_SETACTIVE:
                     break;

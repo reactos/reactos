@@ -431,7 +431,9 @@ TaskSwitchWnd_UpdateTaskItemButton(IN OUT PTASK_SWITCH_WND This,
                                                         TaskItem);
 
     icon = TaskSwitchWnd_GetWndIcon(TaskItem->hWnd);
-    TaskItem->IconIndex = ImageList_ReplaceIcon(This->TaskIcons,TaskItem->IconIndex,icon);
+    TaskItem->IconIndex = ImageList_ReplaceIcon(This->TaskIcons,
+                                                TaskItem->IconIndex,
+                                                icon);
     tbbi.iImage = TaskItem->IconIndex;
 
     if (!SendMessage(This->hWndToolbar,
@@ -452,9 +454,9 @@ TaskSwitchWnd_RemoveIcon(IN OUT PTASK_SWITCH_WND This,
                          IN PTASK_ITEM TaskItem)
 {
     TBBUTTONINFO tbbi;
-    PTASK_ITEM currentTaskItem,LastItem;
+    PTASK_ITEM currentTaskItem, LastItem;
 
-    if (TaskItem->IconIndex==-1)
+    if (TaskItem->IconIndex == -1)
         return;
 
     tbbi.cbSize = sizeof(tbbi);
@@ -1377,8 +1379,8 @@ TaskSwitchWnd_EnumWindowsProc(IN HWND hWnd,
         /* Don't list popup windows and also no tool windows */
         if (GetWindow(hWnd,
                       GW_OWNER) == NULL &&
-            !(GetWindowLongPtr(hWnd,
-                               GWL_EXSTYLE) & WS_EX_TOOLWINDOW))
+            !(GetWindowLong(hWnd,
+                            GWL_EXSTYLE) & WS_EX_TOOLWINDOW))
         {
             TaskSwitchWnd_AddTask(This,
                                   hWnd);
@@ -2126,7 +2128,7 @@ ForwardContextMenuMsg:
 
 #if DUMP_TASKS != 0
             case WM_TIMER:
-                switch(wParam)
+                switch (wParam)
                 {
                     case 1:
                         TaskSwitchWnd_DumpTasks(This);
