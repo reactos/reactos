@@ -69,6 +69,13 @@
 extern "C" {
 #endif
 
+/*** memcopy must be memmove ***/
+__INTRIN_INLINE void* memcpy(void* dest, const void* source, size_t num)
+{
+    return memmove(dest, source, num);
+}
+
+
 /*** Stack frame juggling ***/
 #define _ReturnAddress() (__builtin_return_address(0))
 #define _AddressOfReturnAddress() (&(((void **)(__builtin_frame_address(0)))[1]))
