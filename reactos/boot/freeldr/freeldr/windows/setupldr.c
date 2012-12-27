@@ -193,7 +193,7 @@ LoadReactOSSetup(IN OperatingSystemItem* OperatingSystem,
         return;
     }
 
-    if (!InfGetDataField (&InfContext, 1, &LoadOptions))
+    if (!InfGetDataField(&InfContext, 1, &LoadOptions))
     {
         ERR("Failed to get load options\n");
         return;

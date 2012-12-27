@@ -26,6 +26,8 @@
 
 VOID PcMachInit(const char *CmdLine);
 
+VOID PcBeep(VOID);
+
 VOID PcConsPutChar(int Ch);
 BOOLEAN PcConsKbHit(VOID);
 int PcConsGetCh(VOID);
