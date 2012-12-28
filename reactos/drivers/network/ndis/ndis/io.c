@@ -62,11 +62,16 @@ BOOLEAN NTAPI ServiceRoutine(
   BOOLEAN QueueMiniportHandleInterrupt = FALSE;
   PNDIS_MINIPORT_INTERRUPT NdisInterrupt = ServiceContext;
   PNDIS_MINIPORT_BLOCK NdisMiniportBlock = NdisInterrupt->Miniport;
+  BOOLEAN Initializing;
 
   NDIS_DbgPrint(MAX_TRACE, ("Called. Interrupt (0x%X)\n", NdisInterrupt));
 
-  /* FIXME: This probably isn't the right check for MiniportInitialize, but we need to see what Windows uses here */
-  if ((NdisMiniportBlock->PnPDeviceState != NdisPnPDeviceStarted) || (NdisInterrupt->IsrRequested)) {
+  /* Certain behavior differs if MiniportInitialize is executing when the interrupt is generated */
+  Initializing = (NdisMiniportBlock->PnPDeviceState != NdisPnPDeviceStarted);
+  NDIS_DbgPrint(MAX_TRACE, ("MiniportInitialize executing: %s\n", (Initializing ? "yes" : "no")));
+
+  /* MiniportISR is always called for interrupts during MiniportInitialize */
+  if ((Initializing) || (NdisInterrupt->IsrRequested)) {
       NDIS_DbgPrint(MAX_TRACE, ("Calling MiniportISR\n"));
       (*NdisMiniportBlock->DriverHandle->MiniportCharacteristics.ISRHandler)(
           &InterruptRecognized,
@@ -81,8 +86,8 @@ BOOLEAN NTAPI ServiceRoutine(
        InterruptRecognized = TRUE;
   }
 
-
-  if (QueueMiniportHandleInterrupt)
+  /* MiniportHandleInterrupt is never called for an interrupt during MiniportInitialize */
+  if ((QueueMiniportHandleInterrupt) && (!Initializing))
   {
       NDIS_DbgPrint(MAX_TRACE, ("Queuing DPC.\n"));
       KeInsertQueueDpc(&NdisInterrupt->InterruptDpc, NULL, NULL);
