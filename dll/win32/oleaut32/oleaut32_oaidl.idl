@@ -23,3 +23,9 @@
 cpp_quote("#if 0    /* oleaut32_oaidl.idl hack */")
 #include "oaidl.idl"
 cpp_quote("#endif   /* oleaut32_oaidl.idl hack */")
+
+[
+    threading(both),
+    uuid(b196b286-bab4-101a-b69c-00aa00341d07)
+]
+coclass PSFactoryBuffer { interface IFactoryBuffer; }

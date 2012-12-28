@@ -119,7 +119,7 @@ int		Int386(int ivec, REGS* in, REGS* out);
 
 void	EnableA20(void);
 VOID	ChainLoadBiosBootSectorCode(VOID);	// Implemented in boot.S
-VOID	SoftReboot(VOID);					// Implemented in boot.S
+VOID	Reboot(VOID);					// Implemented in boot.S
 VOID	DetectHardware(VOID);		// Implemented in hardware.c
 
 #endif /* ! __ASM__ */

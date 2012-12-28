@@ -678,7 +678,7 @@ KspDoReparseForIrp(
     Length += wcslen(DeviceEntry->Instance);
 
     /* zero byte and '\\' */
-    Length += 2; 
+    Length += 2;
 
     /* allocate buffer */
     Buffer = AllocateItem(NonPagedPool, Length * sizeof(WCHAR));
@@ -1532,7 +1532,7 @@ KsCreateBusEnumObject(
     }
 
     BusDeviceExtension->ServicePath.Length = 0;
-    BusDeviceExtension->ServicePath.MaximumLength = Length;
+    BusDeviceExtension->ServicePath.MaximumLength = (USHORT)Length;
     BusDeviceExtension->ServicePath.Buffer = AllocateItem(NonPagedPool, Length);
 
     if (!BusDeviceExtension->ServicePath.Buffer)
@@ -2120,7 +2120,7 @@ KsServiceBusEnumPnpRequest(
 /*
     @implemented
 */
-KSDDKAPI 
+KSDDKAPI
 NTSTATUS
 NTAPI
 KsRemoveBusEnumInterface(

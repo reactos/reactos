@@ -41,17 +41,17 @@ SetWindowStyle(IN HWND hWnd,
 
     ASSERT((~dwStyleMask & dwStyle) == 0);
 
-    PrevStyle = GetWindowLongPtr(hWnd,
-                                 GWL_STYLE);
+    PrevStyle = GetWindowLong(hWnd,
+                              GWL_STYLE);
     if (PrevStyle != 0 &&
         (PrevStyle & dwStyleMask) != dwStyle)
     {
         Style = PrevStyle & ~dwStyleMask;
         Style |= dwStyle;
 
-        PrevStyle = SetWindowLongPtr(hWnd,
-                                     GWL_STYLE,
-                                     Style);
+        PrevStyle = SetWindowLong(hWnd,
+                                  GWL_STYLE,
+                                  Style);
     }
 
     return PrevStyle;
@@ -66,17 +66,17 @@ SetWindowExStyle(IN HWND hWnd,
 
     ASSERT((~dwStyleMask & dwStyle) == 0);
 
-    PrevStyle = GetWindowLongPtr(hWnd,
-                                 GWL_EXSTYLE);
+    PrevStyle = GetWindowLong(hWnd,
+                              GWL_EXSTYLE);
     if (PrevStyle != 0 &&
         (PrevStyle & dwStyleMask) != dwStyle)
     {
         Style = PrevStyle & ~dwStyleMask;
         Style |= dwStyle;
 
-        PrevStyle = SetWindowLongPtr(hWnd,
-                                     GWL_EXSTYLE,
-                                     Style);
+        PrevStyle = SetWindowLong(hWnd,
+                                  GWL_EXSTYLE,
+                                  Style);
     }
 
     return PrevStyle;
@@ -291,11 +291,11 @@ GetVersionInfoString(IN TCHAR *szFileName,
     BOOL bRet = FALSE;
     unsigned int i;
 
-    dwLen = GetFileVersionInfoSize(szFileName,&dwHandle);
+    dwLen = GetFileVersionInfoSize(szFileName, &dwHandle);
 
     if (dwLen > 0)
     {
-        lpData = HeapAlloc(hProcessHeap,0,dwLen);
+        lpData = HeapAlloc(hProcessHeap, 0, dwLen);
 
         if (lpData != NULL)
         {
@@ -324,14 +324,15 @@ GetVersionInfoString(IN TCHAR *szFileName,
                             sizeof(szSubBlock) / sizeof(szSubBlock[0]),
                             TEXT("\\StringFileInfo\\%04X%04X\\%s"),
                             lpTranslate[i].wLanguage,
-                            lpTranslate[i].wCodePage,szVersionInfo);
+                            lpTranslate[i].wCodePage,
+                            szVersionInfo);
 
                         if (VerQueryValue(lpData,
                             szSubBlock,
                             (LPVOID *)&lpszLocalBuf,
                             &cbLen) != 0)
                         {
-                            wcsncpy(szBuffer,lpszLocalBuf,cbBufLen);
+                            wcsncpy(szBuffer, lpszLocalBuf, cbBufLen);
 
                             bRet = TRUE;
                             break;
@@ -339,7 +340,7 @@ GetVersionInfoString(IN TCHAR *szFileName,
                     }
                 }
             }
-            HeapFree(hProcessHeap,0,lpData);
+            HeapFree(hProcessHeap, 0, lpData);
             lpData = NULL;
         }
     }

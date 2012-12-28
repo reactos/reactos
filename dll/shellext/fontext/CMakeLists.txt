@@ -1,5 +1,4 @@
 
-set_rc_compiler()
 spec2def(fontext.dll fontext.spec)
 
 add_library(fontext SHARED
@@ -9,7 +8,6 @@ add_library(fontext SHARED
     ${CMAKE_CURRENT_BINARY_DIR}/fontext.def)
 
 set_module_type(fontext win32dll UNICODE)
-
 target_link_libraries(fontext uuid)
 
 add_importlibs(fontext

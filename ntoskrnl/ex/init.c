@@ -1221,7 +1221,7 @@ ExpInitializeExecutive(IN ULONG Cpu,
         /* Add the version format string */
         Status = RtlStringCbPrintfA(RcEnd,
                                     Remaining,
-                                    "v. %u",
+                                    "r%u",
                                     (CmNtCSDVersion & 0xFFFF0000) >> 16);
         if (!NT_SUCCESS(Status))
         {

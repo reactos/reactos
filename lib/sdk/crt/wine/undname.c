@@ -216,8 +216,8 @@ static BOOL str_array_push(struct parsed_symbol* sym, const char* ptr, int len,
         for (i = a->max - 1; i >= 0; i--)
         {
             c = '>';
-            if (i < a->start) c = '-';
-            else if (i >= a->num) c = '}';
+            if ((unsigned)i < a->start) c = '-';
+            else if ((unsigned)i >= a->num) c = '}';
             /* This check is as useless as the unused-but-set gcc warning that we want to silence here */
             if (c != 0) TRACE("%p\t%d%c %s\n", a, i, c, a->elts[i]);
         }
@@ -861,7 +861,7 @@ static BOOL demangle_datatype(struct parsed_symbol* sym, struct datatype_t* ct,
         if (!get_modified_type(ct, sym, pmt_ref, in_args ? dt : 'P', in_args)) goto done;
         break;
     case 'P': /* Pointer */
-        if (isdigit(*sym->current))
+        if (isdigit((unsigned char)*sym->current))
 	{
             /* FIXME: P6 = Function pointer, others who knows.. */
             if (*sym->current++ == '6')

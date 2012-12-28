@@ -209,9 +209,6 @@ function(set_module_type_toolchain MODULE TYPE)
     endif()
 endfunction()
 
-function(set_rc_compiler)
-endfunction()
-
 function(add_delay_importlibs MODULE)
     foreach(LIB ${ARGN})
         target_link_libraries(${MODULE} lib${LIB}_delayed)

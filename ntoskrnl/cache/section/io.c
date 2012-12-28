@@ -71,6 +71,7 @@ This completion function is really required. Paging io completion does almost
 nothing, including freeing the mdls.
 
 */
+_Function_class_(IO_COMPLETION_ROUTINE)
 NTSTATUS
 NTAPI
 MiSimpleReadComplete(PDEVICE_OBJECT DeviceObject,

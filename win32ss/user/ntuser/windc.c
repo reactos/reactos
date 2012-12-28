@@ -852,7 +852,7 @@ DceResetActiveDCEs(PWND Window)
          {
             if (!pDCE->hwndCurrent)
                CurrentWindow = NULL;
-            else 
+            else
                CurrentWindow = UserGetWindowObject(pDCE->hwndCurrent);
             if (NULL == CurrentWindow)
             {

@@ -67,7 +67,8 @@ static inline HRESULT generate_ipid(struct stub_manager *m, IPID *ipid)
 }
 
 /* registers a new interface stub COM object with the stub manager and returns registration record */
-struct ifstub *stub_manager_new_ifstub(struct stub_manager *m, IRpcStubBuffer *sb, IUnknown *iptr, REFIID iid, MSHLFLAGS flags)
+struct ifstub *stub_manager_new_ifstub(struct stub_manager *m, IRpcStubBuffer *sb, IUnknown *iptr, REFIID iid, DWORD dest_context,
+    void *dest_context_data, MSHLFLAGS flags)
 {
     struct ifstub *stub;
     HRESULT hr;
@@ -78,7 +79,7 @@ struct ifstub *stub_manager_new_ifstub(struct stub_manager *m, IRpcStubBuffer *s
     stub = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(struct ifstub));
     if (!stub) return NULL;
 
-    hr = RPC_CreateServerChannel(&stub->chan);
+    hr = RPC_CreateServerChannel(dest_context, dest_context_data, &stub->chan);
     if (hr != S_OK)
     {
         HeapFree(GetProcessHeap(), 0, stub);
@@ -119,7 +120,7 @@ static void stub_manager_delete_ifstub(struct stub_manager *m, struct ifstub *if
 
     RPC_UnregisterInterface(&ifstub->iid);
 
-    if (ifstub->stubbuffer) IUnknown_Release(ifstub->stubbuffer);
+    if (ifstub->stubbuffer) IRpcStubBuffer_Release(ifstub->stubbuffer);
     IUnknown_Release(ifstub->iface);
     IRpcChannelBuffer_Release(ifstub->chan);
 
@@ -666,7 +667,7 @@ static HRESULT WINAPI RemUnknown_RemQueryInterface(IRemUnknown *iface,
     for (i = 0; i < cIids; i++)
     {
         HRESULT hrobj = marshal_object(apt, &(*ppQIResults)[i].std, &iids[i],
-                                       stubmgr->object, MSHLFLAGS_NORMAL);
+                                       stubmgr->object, MSHCTX_DIFFERENTMACHINE, NULL, MSHLFLAGS_NORMAL);
         if (hrobj == S_OK)
             successful_qis++;
         (*ppQIResults)[i].hResult = hrobj;
@@ -775,7 +776,7 @@ HRESULT start_apartment_remote_unknown(void)
         {
             STDOBJREF stdobjref; /* dummy - not used */
             /* register it with the stub manager */
-            hr = marshal_object(apt, &stdobjref, &IID_IRemUnknown, (IUnknown *)pRemUnknown, MSHLFLAGS_NORMAL|MSHLFLAGSP_REMUNKNOWN);
+            hr = marshal_object(apt, &stdobjref, &IID_IRemUnknown, (IUnknown *)pRemUnknown, MSHCTX_DIFFERENTMACHINE, NULL, MSHLFLAGS_NORMAL|MSHLFLAGSP_REMUNKNOWN);
             /* release our reference to the object as the stub manager will manage the life cycle for us */
             IRemUnknown_Release(pRemUnknown);
             if (hr == S_OK)

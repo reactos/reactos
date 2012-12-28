@@ -285,8 +285,8 @@ PcMemGetBiosMemoryMap(PFREELDR_MEMORY_DESCRIPTOR MemoryMap, ULONG MaxMemoryMapSi
         /* Add the descriptor */
         MapCount = AddMemoryDescriptor(PcMemoryMap,
                                        MAX_BIOS_DESCRIPTORS,
-                                       RealBaseAddress / MM_PAGE_SIZE,
-                                       RealSize / MM_PAGE_SIZE,
+                                       (PFN_NUMBER)(RealBaseAddress / MM_PAGE_SIZE),
+                                       (PFN_NUMBER)(RealSize / MM_PAGE_SIZE),
                                        MemoryType);
       }
 

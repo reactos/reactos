@@ -20,4 +20,5 @@
 #pragma once
 
 VOID	DoOptionsMenu(VOID);
-VOID    AppendBootTimeOptions(PCHAR BootOptions);
+VOID	DisplayBootTimeOptions(VOID);
+VOID	AppendBootTimeOptions(PCHAR BootOptions);

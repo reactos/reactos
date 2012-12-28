@@ -2151,7 +2151,7 @@ static void WINAPI DataCache_OnDataChange(IAdviseSink *iface, FORMATETC *fmt, ST
 {
     DataCache *This = impl_from_IAdviseSink(iface);
     TRACE("(%p)->(%s, %p)\n", This, debugstr_formatetc(fmt), med);
-    IOleCache_SetData(&This->IOleCache2_iface, fmt, med, FALSE);
+    IOleCache2_SetData(&This->IOleCache2_iface, fmt, med, FALSE);
 }
 
 static void WINAPI DataCache_OnViewChange(IAdviseSink *iface, DWORD aspect, LONG index)

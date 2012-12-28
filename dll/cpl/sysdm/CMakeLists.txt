@@ -1,6 +1,4 @@
 
-set_rc_compiler()
-
 spec2def(sysdm.cpl sysdm.spec)
 
 list(APPEND SOURCE
@@ -18,7 +16,6 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/sysdm.def)
 
 add_library(sysdm SHARED ${SOURCE})
-
 set_module_type(sysdm cpl UNICODE)
 
 add_importlibs(sysdm

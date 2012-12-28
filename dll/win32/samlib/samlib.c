@@ -723,6 +723,22 @@ SamGetAliasMembership(IN SAM_HANDLE DomainHandle,
 
 NTSTATUS
 NTAPI
+SamGetCompatibilityMode(IN SAM_HANDLE ObjectHandle,
+                        OUT PULONG Mode)
+{
+    TRACE("(%p %p)\n", ObjectHandle, Mode);
+
+    if (Mode == NULL)
+        return STATUS_INVALID_PARAMETER;
+
+    *Mode = SAM_SID_COMPATIBILITY_ALL;
+
+    return STATUS_SUCCESS;
+}
+
+
+NTSTATUS
+NTAPI
 SamGetGroupsForUser(IN SAM_HANDLE UserHandle,
                     OUT PGROUP_MEMBERSHIP *Groups,
                     OUT PULONG MembershipCount)

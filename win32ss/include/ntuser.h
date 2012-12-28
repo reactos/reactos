@@ -1893,11 +1893,13 @@ NTAPI
 NtUserGetAsyncKeyState(
   INT Key);
 
-DWORD
-NTAPI
+_Success_(return!=0)
+_At_(pustrName->Buffer, _Out_z_bytecap_post_bytecount_(pustrName->MaximumLength, return*2+2))
+ULONG
+APIENTRY
 NtUserGetAtomName(
-    ATOM nAtom,
-    PUNICODE_STRING pBuffer);
+    _In_ ATOM atom,
+    _Inout_ PUNICODE_STRING pustrName);
 
 UINT
 NTAPI
@@ -2024,13 +2026,14 @@ NtUserGetGUIThreadInfo(
   DWORD idThread,
   LPGUITHREADINFO lpgui);
 
+_Success_(return!=FALSE)
 BOOL
 NTAPI
 NtUserGetIconInfo(
    _In_      HANDLE hCurIcon,
    _Out_opt_ PICONINFO IconInfo,
-   _Out_opt_ PUNICODE_STRING lpInstName,
-   _Out_opt_ PUNICODE_STRING lpResName,
+   _Inout_opt_ PUNICODE_STRING lpInstName,
+   _Inout_opt_ PUNICODE_STRING lpResName,
    _Out_opt_ LPDWORD pbpp,
    _In_      BOOL bInternal);
 
@@ -2782,7 +2785,7 @@ typedef struct _tagFINDEXISTINGCURICONPARAM
     LONG cx;
     LONG cy;
 } FINDEXISTINGCURICONPARAM;
-  
+
 HICON
 NTAPI
 NtUserFindExistingCursorIcon(
@@ -2799,7 +2802,7 @@ NtUserSetCursorIconData(
   HMODULE hModule,
   HRSRC hRsrc,
   HRSRC hGroupRsrc);
-  
+
 HICON
 NTAPI
 NtUserFindExistingCursorIcon(

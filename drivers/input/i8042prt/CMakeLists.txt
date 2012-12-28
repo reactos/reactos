@@ -1,6 +1,4 @@
 
-set_rc_compiler()
-
 add_library(i8042prt SHARED
     createclose.c
     i8042prt.c

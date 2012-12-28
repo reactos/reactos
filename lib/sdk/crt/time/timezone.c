@@ -219,31 +219,33 @@ _tzset(void)
  */
 int CDECL _get_tzname(size_t *ret, char *buf, size_t bufsize, int index)
 {
-    char *timezone;
+    char *str_timezone;
 
-    switch(index)
+    switch (index)
     {
     case 0:
-        timezone = tz_name;
+        str_timezone = tz_name;
         break;
+
     case 1:
-        timezone = tz_dst_name;
+        str_timezone = tz_dst_name;
         break;
+
     default:
         *_errno() = EINVAL;
         return EINVAL;
     }
 
-    if(!ret || (!buf && bufsize > 0) || (buf && !bufsize))
+    if (!ret || (!buf && (bufsize > 0)) || (buf && !bufsize))
     {
         *_errno() = EINVAL;
         return EINVAL;
     }
 
-    *ret = strlen(timezone)+1;
+    *ret = strlen(str_timezone) + 1;
     if(!buf && !bufsize)
         return 0;
 
-    strcpy(buf, timezone);
+    strncpy(buf, str_timezone, bufsize);
     return 0;
 }

@@ -20,8 +20,8 @@
 
 VOID DIALOG_FileNew(VOID);
 VOID DIALOG_FileOpen(VOID);
-VOID DIALOG_FileSave(VOID);
-VOID DIALOG_FileSaveAs(VOID);
+BOOL DIALOG_FileSave(VOID);
+BOOL DIALOG_FileSaveAs(VOID);
 VOID DIALOG_FilePrint(VOID);
 VOID DIALOG_FilePageSetup(VOID);
 VOID DIALOG_FilePrinterSetup(VOID);
@@ -58,10 +58,10 @@ VOID DIALOG_TimeDate(VOID);
 INT_PTR CALLBACK AboutDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 
 /* utility functions */
-VOID ShowLastError(void);
+VOID ShowLastError(VOID);
 BOOL FileExists(LPCTSTR szFilename);
 BOOL HasFileExtension(LPCTSTR szFilename);
-BOOL DoCloseFile(void);
-void DoOpenFile(LPCTSTR szFileName);
+BOOL DoCloseFile(VOID);
+VOID DoOpenFile(LPCTSTR szFileName);
 VOID DoCreateStatusBar(VOID);
 VOID DoCreateEditWindow(VOID);

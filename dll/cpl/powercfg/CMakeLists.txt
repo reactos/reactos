@@ -1,6 +1,4 @@
 
-set_rc_compiler()
-
 spec2def(powercfg.cpl powercfg.spec)
 
 add_library(powercfg SHARED

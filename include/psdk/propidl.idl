@@ -431,6 +431,10 @@ interface IEnumSTATPROPSETSTG : IUnknown
     [out] IEnumSTATPROPSETSTG **ppenum);
 }
 
+typedef struct SERIALIZEDPROPERTYVALUE {
+    DWORD dwType;
+    BYTE rgb[1];
+} SERIALIZEDPROPERTYVALUE;
 
 cpp_quote("HRESULT WINAPI FreePropVariantArray(ULONG,PROPVARIANT*);")
 cpp_quote("HRESULT WINAPI PropVariantClear(PROPVARIANT*);")

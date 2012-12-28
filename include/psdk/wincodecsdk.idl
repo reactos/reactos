@@ -1,0 +1,321 @@
+/*
+ * Copyright 2011 Vincent Povirk for CodeWeavers
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+import "wtypes.idl";
+import "wincodec.idl";
+
+typedef enum WICPersistOptions {
+    WICPersistOptionsDefault = 0x00000000,
+    WICPersistOptionsLittleEndian = 0x00000000,
+    WICPersistOptionsBigEndian = 0x00000001,
+    WICPersistOptionsStrictFormat = 0x00000002,
+    WICPersistOptionsNoCacheStream = 0x00000004,
+    WICPersistOptionPreferUTF8 = 0x00000008,
+    WICPersistOptionsMask = 0x0000FFFF
+} WICPersistOptions;
+
+typedef enum WICMetadataCreationOptions {
+    WICMetadataCreationDefault = 0x00000000,
+    WICMetadataCreationAllowUnknown = WICMetadataCreationDefault,
+    WICMetadataCreationFailUnknown = 0x00010000,
+    WICMetadataCreationMask = 0xFFFF0000
+} WICMetadataCreationOptions;
+
+cpp_quote("DEFINE_GUID(GUID_MetadataFormatUnknown, 0xa45e592f,0x9078,0x4a7c,0xad,0xb5,0x4e,0xdc,0x4f,0xd6,0x1b,0x1f);")
+cpp_quote("DEFINE_GUID(GUID_MetadataFormatChunktEXt, 0x568d8936,0xc0a9,0x4923,0x90,0x5d,0xdf,0x2b,0x38,0x23,0x8f,0xbc);")
+cpp_quote("DEFINE_GUID(GUID_MetadataFormatChunktIME, 0x6b00ae2d,0xe24b,0x460a,0x98,0xb6,0x87,0x8b,0xd0,0x30,0x72,0xfd);")
+cpp_quote("DEFINE_GUID(GUID_MetadataFormatIfd, 0x537396c6,0x2d8a,0x4bb6,0x9b,0xf8,0x2f,0x0a,0x8e,0x2a,0x3a,0xdf);")
+cpp_quote("DEFINE_GUID(GUID_MetadataFormatExif, 0x1c3c4f9d,0xb84a,0x467d,0x94,0x93,0x36,0xcf,0xbd,0x59,0xea,0x57);")
+cpp_quote("DEFINE_GUID(GUID_MetadataFormatXMP, 0xbb5acc38,0xf216,0x4cec,0xa6,0xc5,0x5f,0x6e,0x73,0x97,0x63,0xa9);")
+cpp_quote("DEFINE_GUID(GUID_MetadataFormatXMPStruct, 0x22383cf1,0xed17,0x4e2e,0xaf,0x17,0xd8,0x5b,0x8f,0x6b,0x30,0xd0);")
+cpp_quote("DEFINE_GUID(GUID_MetadataFormatIMD, 0xbd2bb086,0x4d52,0x48dd,0x96,0x77,0xdb,0x48,0x3e,0x85,0xae,0x8f);")
+cpp_quote("DEFINE_GUID(GUID_MetadataFormatLSD, 0xe256031e,0x6299,0x4929,0xb9,0x8d,0x5a,0xc8,0x84,0xaf,0xba,0x92);")
+cpp_quote("DEFINE_GUID(GUID_MetadataFormatGCE, 0x2a25cad8,0xdeeb,0x4c69,0xa7,0x88,0x0e,0xc2,0x26,0x6d,0xca,0xfd);")
+cpp_quote("DEFINE_GUID(GUID_MetadataFormatAPE, 0x2e043dc2,0xc967,0x4e05,0x87,0x5e,0x61,0x8b,0xf6,0x7e,0x85,0xc3);")
+cpp_quote("DEFINE_GUID(GUID_MetadataFormatGifComment, 0xc4b6e0e0,0xcfb4,0x4ad3,0xab,0x33,0x9a,0xad,0x23,0x55,0xa3,0x4a);")
+
+cpp_quote("DEFINE_GUID(CLSID_WICUnknownMetadataReader, 0x699745c2,0x5066,0x4b82,0xa8,0xe3,0xd4,0x04,0x78,0xdb,0xec,0x8c);")
+cpp_quote("DEFINE_GUID(CLSID_WICUnknownMetadataWriter, 0xa09cca86,0x27ba,0x4f39,0x90,0x53,0x12,0x1f,0xa4,0xdc,0x08,0xfc);")
+cpp_quote("DEFINE_GUID(CLSID_WICPngTextMetadataReader, 0x4b59afcc,0xb8c3,0x408a,0xb6,0x70,0x89,0xe5,0xfa,0xb6,0xfd,0xa7);")
+cpp_quote("DEFINE_GUID(CLSID_WICPngTextMetadataWriter, 0xb5ebafb9,0x253e,0x4a72,0xa7,0x44,0x07,0x62,0xd2,0x68,0x56,0x83);")
+cpp_quote("DEFINE_GUID(CLSID_WICIfdMetadataReader, 0x8f914656,0x9d0a,0x4eb2,0x90,0x19,0x0b,0xf9,0x6d,0x8a,0x9e,0xe6);")
+cpp_quote("DEFINE_GUID(CLSID_WICIfdMetadataWriter, 0xb1ebfc28,0xc9bd,0x47a2,0x8d,0x33,0xb9,0x48,0x76,0x97,0x77,0xa7);")
+cpp_quote("DEFINE_GUID(CLSID_WICExifMetadataReader, 0xd9403860,0x297f,0x4a49,0xbf,0x9b,0x77,0x89,0x81,0x50,0xa4,0x42);")
+cpp_quote("DEFINE_GUID(CLSID_WICExifMetadataWriter, 0xc9a14cda,0xc339,0x460b,0x90,0x78,0xd4,0xde,0xbc,0xfa,0xbe,0x91);")
+cpp_quote("DEFINE_GUID(CLSID_WICXMPStructMetadataReader, 0x01b90d9a,0x8209,0x47f7,0x9c,0x52,0xe1,0x24,0x4b,0xf5,0x0c,0xed);")
+cpp_quote("DEFINE_GUID(CLSID_WICXMPStructMetadataWriter, 0x22c21f93,0x7ddb,0x411c,0x9b,0x17,0xc5,0xb7,0xbd,0x06,0x4a,0xbc);")
+cpp_quote("DEFINE_GUID(CLSID_WICLSDMetadataReader, 0x41070793,0x59e4,0x479a,0xa1,0xf7,0x95,0x4a,0xdc,0x2e,0xf5,0xfc);")
+cpp_quote("DEFINE_GUID(CLSID_WICLSDMetadataWriter, 0x73c037e7,0xe5d9,0x4954,0x87,0x6a,0x6d,0xa8,0x1d,0x6e,0x57,0x68);")
+cpp_quote("DEFINE_GUID(CLSID_WICIMDMetadataReader, 0x7447a267,0x0015,0x42c8,0xa8,0xf1,0xfb,0x3b,0x94,0xc6,0x83,0x61);")
+cpp_quote("DEFINE_GUID(CLSID_WICIMDMetadataWriter, 0x8c89071f,0x452e,0x4e95,0x96,0x82,0x9d,0x10,0x24,0x62,0x71,0x72);")
+cpp_quote("DEFINE_GUID(CLSID_WICGCEMetadataReader, 0xb92e345d,0xf52d,0x41f3,0xb5,0x62,0x08,0x1b,0xc7,0x72,0xe3,0xb9);")
+cpp_quote("DEFINE_GUID(CLSID_WICGCEMetadataWriter, 0xaf95dc76,0x16b2,0x47f4,0xb3,0xea,0x3c,0x31,0x79,0x66,0x93,0xe7);")
+cpp_quote("DEFINE_GUID(CLSID_WICAPEMetadataReader, 0x1767b93a,0xb021,0x44ea,0x92,0x0f,0x86,0x3c,0x11,0xf4,0xf7,0x68);")
+cpp_quote("DEFINE_GUID(CLSID_WICAPEMetadataWriter, 0xbd6edfca,0x2890,0x482f,0xb2,0x33,0x8d,0x73,0x39,0xa1,0xcf,0x8d);")
+cpp_quote("DEFINE_GUID(CLSID_WICGifCommentMetadataReader, 0x32557d3b,0x69dc,0x4f95,0x83,0x6e,0xf5,0x97,0x2b,0x2f,0x61,0x59);")
+cpp_quote("DEFINE_GUID(CLSID_WICGifCommentMetadataWriter, 0xa02797fc,0xc4ae,0x418c,0xaf,0x95,0xe6,0x37,0xc7,0xea,0xd2,0xa1);")
+
+typedef struct WICMetadataPattern {
+    ULARGE_INTEGER Position;
+    ULONG Length;
+    BYTE *Pattern;
+    BYTE *Mask;
+    ULARGE_INTEGER DataOffset;
+} WICMetadataPattern;
+
+typedef struct WICMetadataHeader {
+    ULARGE_INTEGER Position;
+    ULONG Length;
+    BYTE *Header;
+    ULARGE_INTEGER DataOffset;
+} WICMetadataHeader;
+
+[
+    object,
+    uuid(aba958bf-c672-44d1-8d61-ce6df2e682c2)
+]
+interface IWICMetadataHandlerInfo : IWICComponentInfo
+{
+    HRESULT GetMetadataFormat(
+        [out] GUID *pguidMetadataFormat);
+
+    HRESULT GetContainerFormats(
+        [in] UINT cContainerFormats,
+        [in, out, unique, size_is(cContainerFormats)] GUID *pguidContainerFormats,
+        [out] UINT *pcchActual);
+
+    HRESULT GetDeviceManufacturer(
+        [in] UINT cchDeviceManufacturer,
+        [in, out, unique, size_is(cchDeviceManufacturer)] WCHAR *wzDeviceManufacturer,
+        [out] UINT *pcchActual);
+
+    HRESULT GetDeviceModels(
+        [in] UINT cchDeviceModels,
+        [in, out, unique, size_is(cchDeviceModels)] WCHAR *wzDeviceModels,
+        [out] UINT *pcchActual);
+
+    HRESULT DoesRequireFullStream(
+        [out] BOOL *pfRequiresFullStream);
+
+    HRESULT DoesSupportPadding(
+        [out] BOOL *pfSupportsPadding);
+
+    HRESULT DoesRequireFixedSize(
+        [out] BOOL *pfFixedSize);
+}
+
+[
+    object,
+    uuid(9204fe99-d8fc-4fd5-a001-9536b067a899)
+]
+interface IWICMetadataReader : IUnknown
+{
+    HRESULT GetMetadataFormat(
+        [out] GUID *pguidMetadataFormat);
+
+    HRESULT GetMetadataHandlerInfo(
+        [out] IWICMetadataHandlerInfo **ppIHandler);
+
+    HRESULT GetCount(
+        [out] UINT *pcCount);
+
+    HRESULT GetValueByIndex(
+        [in] UINT nIndex,
+        [in, out, unique] PROPVARIANT *pvarSchema,
+        [in, out, unique] PROPVARIANT *pvarId,
+        [in, out, unique] PROPVARIANT *pvarValue);
+
+    HRESULT GetValue(
+        [in] const PROPVARIANT *pvarSchema,
+        [in] const PROPVARIANT *pvarId,
+        [in, out, unique] PROPVARIANT *pvarValue);
+
+    HRESULT GetEnumerator(
+        [out] IWICEnumMetadataItem **ppIEnumMetadata);
+}
+
+[
+    object,
+    uuid(eebf1f5b-07c1-4447-a3ab-22acaf78a804)
+]
+interface IWICMetadataReaderInfo : IWICMetadataHandlerInfo
+{
+    [local]
+    HRESULT GetPatterns(
+        [in] REFGUID guidContainerFormat,
+        [in] UINT cbSize,
+        [out, unique] WICMetadataPattern *pPattern,
+        [out, unique] UINT *pcCount,
+        [out, unique] UINT *pcbActual);
+
+    HRESULT MatchesPattern(
+        [in] REFGUID guidContainerFormat,
+        [in] IStream *pIStream,
+        [out] BOOL *pfMatches);
+
+    HRESULT CreateInstance(
+        [out] IWICMetadataReader **ppIReader);
+}
+
+[
+    object,
+    uuid(f7836e16-3be0-470b-86bb-160d0aecd7de)
+]
+interface IWICMetadataWriter : IWICMetadataReader
+{
+    HRESULT SetValue(
+        [in, unique] const PROPVARIANT *pvarSchema,
+        [in] const PROPVARIANT *pvarId,
+        [in] const PROPVARIANT *pvarValue);
+
+    HRESULT SetValueByIndex(
+        [in] UINT nIndex,
+        [in, unique] const PROPVARIANT *pvarSchema,
+        [in] const PROPVARIANT *pvarId,
+        [in] const PROPVARIANT *pvarValue);
+
+    HRESULT RemoveValue(
+        [in, unique] const PROPVARIANT *pvarSchema,
+        [in] const PROPVARIANT *pvarId);
+
+    HRESULT RemoveValueByIndex(
+        [in] UINT nIndex);
+}
+
+[
+    object,
+    uuid(b22e3fba-3925-4323-b5c1-9ebfc430f236)
+]
+interface IWICMetadataWriterInfo : IWICMetadataHandlerInfo
+{
+    [local]
+    HRESULT GetHeader(
+        [in] REFGUID guidContainerFormat,
+        [in] UINT cbSize,
+        [out, unique] WICMetadataHeader *pHeader,
+        [out, unique] UINT *pcbActual);
+
+    HRESULT CreateInstance(
+        [out] IWICMetadataWriter **ppIWriter);
+}
+
+[
+    object,
+    uuid(feaa2a8d-b3f3-43e4-b25c-d1de990a1ae1)
+]
+interface IWICMetadataBlockReader : IUnknown
+{
+    HRESULT GetContainerFormat(
+        [out] GUID *pguidContainerFormat);
+
+    HRESULT GetCount(
+        [out] UINT *pcCount);
+
+    HRESULT GetReaderByIndex(
+        [in] UINT nIndex,
+        [out] IWICMetadataReader **ppIMetadataReader);
+
+    HRESULT GetEnumerator(
+        [out] IEnumUnknown **ppIEnumMetadata);
+}
+
+[
+    object,
+    uuid(08fb9676-b444-41e8-8dbe-6a53a542bff1)
+]
+interface IWICMetadataBlockWriter : IWICMetadataBlockReader
+{
+    HRESULT InitializeFromBlockReader(
+        [in] IWICMetadataBlockReader *pIMDBlockReader);
+
+    HRESULT GetWriterByIndex(
+        [in] UINT nIndex,
+        [out] IWICMetadataWriter **ppIMetadataWriter);
+
+    HRESULT AddWriter(
+        [in] IWICMetadataWriter *pIMetadataWriter);
+
+    HRESULT SetWriterByIndex(
+        [in] UINT nIndex,
+        [in] IWICMetadataWriter *pIMetadataWriter);
+
+    HRESULT RemoveWriterByIndex(
+        [in] UINT nIndex);
+}
+
+[
+    object,
+    uuid(00675040-6908-45f8-86a3-49c7dfd6d9ad)
+]
+interface IWICPersistStream : IPersistStream
+{
+    HRESULT LoadEx(
+        [in, unique] IStream *pIStream,
+        [in, unique] const GUID *pguidPreferredVendor,
+        [in] DWORD dwPersistOptions);
+
+    HRESULT SaveEx(
+        [in] IStream *pIStream,
+        [in] DWORD dwPersistOptions,
+        [in] BOOL fClearDirty);
+}
+
+[
+    object,
+    uuid(412d0c3a-9650-44fa-af5b-dd2a06c8e8fb)
+]
+interface IWICComponentFactory : IWICImagingFactory
+{
+    HRESULT CreateMetadataReader(
+        [in] REFGUID guidMetadataFormat,
+        [in, unique] const GUID *pguidVendor,
+        [in] DWORD dwOptions,
+        [in] IStream *pIStream,
+        [out] IWICMetadataReader **ppIReader);
+
+    HRESULT CreateMetadataReaderFromContainer(
+        [in] REFGUID guidMetadataFormat,
+        [in, unique] const GUID *pguidVendor,
+        [in] DWORD dwOptions,
+        [in] IStream *pIStream,
+        [out] IWICMetadataReader **ppIReader);
+
+    HRESULT CreateMetadataWriter(
+        [in] REFGUID guidMetadataFormat,
+        [in, unique] const GUID *pguidVendor,
+        [in] DWORD dwMetadataOptions,
+        [out] IWICMetadataWriter **ppIWriter);
+
+    HRESULT CreateMetadataWriterFromReader(
+        [in] IWICMetadataReader *pIReader,
+        [in, unique] const GUID *pguidVendor,
+        [out] IWICMetadataWriter **ppIWriter);
+
+    HRESULT CreateQueryReaderFromBlockReader(
+        [in] IWICMetadataBlockReader *pIBlockReader,
+        [out] IWICMetadataQueryReader **ppIQueryReader);
+
+    HRESULT CreateQueryWriterFromBlockWriter(
+        [in] IWICMetadataBlockWriter *pIBlockWriter,
+        [out] IWICMetadataQueryWriter **ppIQueryWriter);
+
+    HRESULT CreateEncoderPropertyBag(
+        [in, unique, size_is(cCount)] PROPBAG2 *ppropOptions,
+        [in] UINT cCount,
+        [out] IPropertyBag2 **ppIPropertyBag);
+}

@@ -41,7 +41,7 @@ CHARFORMAT2W *ME_ToCF2W(CHARFORMAT2W *to, CHARFORMAT2W *from)
     CopyMemory(to, f, FIELD_OFFSET(CHARFORMATA, szFaceName));
     to->cbSize = sizeof(CHARFORMAT2W);
     if (f->dwMask & CFM_FACE) {
-      MultiByteToWideChar(0, 0, f->szFaceName, -1, to->szFaceName, sizeof(to->szFaceName)/sizeof(WCHAR));
+      MultiByteToWideChar(CP_ACP, 0, f->szFaceName, -1, to->szFaceName, sizeof(to->szFaceName)/sizeof(WCHAR));
     }
     return to;
   }
@@ -61,7 +61,7 @@ CHARFORMAT2W *ME_ToCF2W(CHARFORMAT2W *to, CHARFORMAT2W *from)
     CopyMemory(to, f, FIELD_OFFSET(CHARFORMATA, szFaceName));
     /* convert face name */
     if (f->dwMask & CFM_FACE)
-      MultiByteToWideChar(0, 0, f->szFaceName, -1, to->szFaceName, sizeof(to->szFaceName)/sizeof(WCHAR));
+      MultiByteToWideChar(CP_ACP, 0, f->szFaceName, -1, to->szFaceName, sizeof(to->szFaceName)/sizeof(WCHAR));
     /* copy the rest of the 2A structure to 2W */
     CopyMemory(&to->wWeight, &f->wWeight, sizeof(CHARFORMAT2A)-FIELD_OFFSET(CHARFORMAT2A, wWeight));
     to->cbSize = sizeof(CHARFORMAT2W);
@@ -78,7 +78,7 @@ static CHARFORMAT2W *ME_ToCFAny(CHARFORMAT2W *to, CHARFORMAT2W *from)
   {
     CHARFORMATA *t = (CHARFORMATA *)to;
     CopyMemory(t, from, FIELD_OFFSET(CHARFORMATA, szFaceName));
-    WideCharToMultiByte(0, 0, from->szFaceName, -1, t->szFaceName, sizeof(t->szFaceName), 0, 0);
+    WideCharToMultiByte(CP_ACP, 0, from->szFaceName, -1, t->szFaceName, sizeof(t->szFaceName), NULL, NULL);
     if (from->dwMask & CFM_UNDERLINETYPE)
     {
         switch (from->bUnderlineType)
@@ -123,7 +123,7 @@ static CHARFORMAT2W *ME_ToCFAny(CHARFORMAT2W *to, CHARFORMAT2W *from)
     /* copy the A structure without face name */
     CopyMemory(t, from, FIELD_OFFSET(CHARFORMATA, szFaceName));
     /* convert face name */
-    WideCharToMultiByte(0, 0, from->szFaceName, -1, t->szFaceName, sizeof(t->szFaceName), 0, 0);
+    WideCharToMultiByte(CP_ACP, 0, from->szFaceName, -1, t->szFaceName, sizeof(t->szFaceName), NULL, NULL);
     /* copy the rest of the 2A structure to 2W */
     CopyMemory(&t->wWeight, &from->wWeight, sizeof(CHARFORMAT2W)-FIELD_OFFSET(CHARFORMAT2W,wWeight));
     t->cbSize = sizeof(*t); /* it was overwritten by CopyMemory */
@@ -145,7 +145,6 @@ ME_Style *ME_MakeStyle(CHARFORMAT2W *style)
 
   assert(style->cbSize == sizeof(CHARFORMAT2W));
   s->fmt = *style;
-  s->nSequence = -2;
   s->nRefs = 1;
   s->hFont = NULL;
   memset(&s->tm, 0, sizeof(s->tm));

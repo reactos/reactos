@@ -242,7 +242,7 @@ RtlpCallQueryRegistryRoutine(IN PRTL_QUERY_REGISTRY_TABLE QueryTable,
         {
             /* Prepare defaults */
             Status = STATUS_SUCCESS;
-            ValueEnd = (PWSTR)((ULONG_PTR)Data + Length) - sizeof(UNICODE_NULL);
+            ValueEnd = (PWSTR)((ULONG_PTR)Data + Length - sizeof(UNICODE_NULL));
             p = Data;
 
             /* Loop all strings */
@@ -834,7 +834,7 @@ RtlpNtEnumerateSubKey(IN HANDLE KeyHandle,
                             KeyInfo,
                             BufferLength,
                             &ReturnedLength);
-    if (NT_SUCCESS(Status))
+    if (NT_SUCCESS(Status) && (KeyInfo != NULL))
     {
         /* Check if the name fits */
         if (KeyInfo->NameLength <= SubKeyName->MaximumLength)

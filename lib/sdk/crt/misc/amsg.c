@@ -47,6 +47,6 @@ int _aexit_rtn(int exitcode)
 void _amsg_exit(int errnum)
 {
     fprintf(stderr, "runtime error - %s\n", __rt_err_msg[errnum]);
-    _aexit_rtn(-1);
+    _exit(-1);
 }
 

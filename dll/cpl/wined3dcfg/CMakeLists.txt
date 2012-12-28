@@ -1,6 +1,4 @@
 
-set_rc_compiler()
-
 spec2def(wined3dcfg.cpl wined3dcfg.spec)
 
 add_library(wined3dcfg SHARED

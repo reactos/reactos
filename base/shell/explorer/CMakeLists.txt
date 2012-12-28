@@ -1,8 +1,6 @@
 
 add_subdirectory(notifyhook)
 
-set_rc_compiler()
-
 #NOTE : explorer doesn't follow standard c++, and so doesn't compile with stlport headers
 #I'm not willing to do it if explorer_new is hanging around.
 #jgardou
@@ -53,7 +51,6 @@ list(APPEND SOURCE
     utility/shellbrowserimpl.cpp) #    utility/shelltests.cpp
 
 add_executable(explorer ${SOURCE})
-
 set_subsystem(explorer windows)
 set_entrypoint(explorer wWinMainCRTStartup)
 

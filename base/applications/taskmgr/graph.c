@@ -102,7 +102,7 @@ Graph_WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
         hdc = BeginPaint(hWnd, &ps);
 
-        WindowId = GetWindowLongPtrW(hWnd, GWL_ID);
+        WindowId = GetWindowLongPtrW(hWnd, GWLP_ID);
 
         switch (WindowId)
         {

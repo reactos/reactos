@@ -1,10 +1,6 @@
 
-set_rc_compiler()
-
 spec2def(hdwwiz.cpl hdwwiz.spec)
-
 add_library(hdwwiz SHARED hdwwiz.c hdwwiz.rc ${CMAKE_CURRENT_BINARY_DIR}/hdwwiz.def)
-
 set_module_type(hdwwiz cpl UNICODE)
 
 add_importlibs(hdwwiz

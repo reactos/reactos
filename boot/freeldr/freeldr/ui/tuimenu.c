@@ -14,7 +14,9 @@
 /* FUNCTIONS *****************************************************************/
 
 BOOLEAN
-TuiDisplayMenu(PCSTR MenuTitle,
+TuiDisplayMenu(PCSTR MenuHeader,
+               PCSTR MenuFooter,
+               BOOLEAN ShowBootOptions,
                PCSTR MenuItemList[],
                ULONG MenuItemCount,
                ULONG DefaultMenuItem,
@@ -42,7 +44,9 @@ TuiDisplayMenu(PCSTR MenuTitle,
     //
     // Setup the MENU_INFO structure
     //
-    MenuInformation.MenuTitle = MenuTitle;
+    MenuInformation.MenuHeader = MenuHeader;
+    MenuInformation.MenuFooter = MenuFooter;
+    MenuInformation.ShowBootOptions = ShowBootOptions;
     MenuInformation.MenuItemList = MenuItemList;
     MenuInformation.MenuItemCount = MenuItemCount;
     MenuInformation.MenuTimeRemaining = MenuTimeOut;
@@ -89,7 +93,7 @@ TuiDisplayMenu(PCSTR MenuTitle,
         //
         // Check if there is a countdown
         //
-        if (MenuInformation.MenuTimeRemaining)
+        if (MenuInformation.MenuTimeRemaining > 0)
         {
             //
             // Get the updated time, seconds only
@@ -114,7 +118,7 @@ TuiDisplayMenu(PCSTR MenuTitle,
                 VideoCopyOffScreenBufferToVRAM();
             }
         }
-        else
+        else if (MenuInformation.MenuTimeRemaining == 0)
         {
             //
             // A time out occurred, exit this loop and return default OS
@@ -155,8 +159,11 @@ TuiCalcMenuBoxSize(PUI_MENU_INFO MenuInfo)
         //
         // Get the string length and make it become the new width if necessary
         //
-        Length = (ULONG)strlen(MenuInfo->MenuItemList[i]);
-        if (Length > Width) Width = Length;
+        if (MenuInfo->MenuItemList[i])
+        {
+            Length = (ULONG)strlen(MenuInfo->MenuItemList[i]);
+            if (Length > Width) Width = Length;
+        }
     }
 
     //
@@ -218,6 +225,12 @@ TuiDrawMenu(PUI_MENU_INFO MenuInfo)
     for (i = 0; i < MenuInfo->MenuItemCount; i++)
     {
         TuiDrawMenuItem(MenuInfo, i);
+    }
+
+    /* Display the boot options if needed */
+    if (MenuInfo->ShowBootOptions)
+    {
+        DisplayBootTimeOptions();
     }
 
     VideoCopyOffScreenBufferToVRAM();
@@ -332,7 +345,7 @@ TuiDrawMenuBox(PUI_MENU_INFO MenuInfo)
         //
         // Check if it's a separator
         //
-        if (!(_stricmp(MenuInfo->MenuItemList[i], "SEPARATOR")))
+        if (MenuInfo->MenuItemList[i] == NULL)
         {
             //
             // Draw the separator line
@@ -371,7 +384,8 @@ TuiDrawMenuItem(PUI_MENU_INFO MenuInfo,
         // how many spaces will be to the left and right
         //
         SpaceTotal = (MenuInfo->Right - MenuInfo->Left - 2) -
-                     (ULONG)strlen(MenuInfo->MenuItemList[MenuItemNumber]);
+                     (ULONG)(MenuInfo->MenuItemList[MenuItemNumber] ?
+                             strlen(MenuInfo->MenuItemList[MenuItemNumber]) : 0);
         SpaceLeft = (SpaceTotal / 2) + 1;
         SpaceRight = (SpaceTotal - SpaceLeft) + 1;
 
@@ -393,7 +407,8 @@ TuiDrawMenuItem(PUI_MENU_INFO MenuInfo,
     //
     // Now append the text string
     //
-    strcat(MenuLineText, MenuInfo->MenuItemList[MenuItemNumber]);
+    if (MenuInfo->MenuItemList[MenuItemNumber])
+        strcat(MenuLineText, MenuInfo->MenuItemList[MenuItemNumber]);
 
     //
     // Check if using centered menu, and add spaces on the right if so
@@ -403,7 +418,7 @@ TuiDrawMenuItem(PUI_MENU_INFO MenuInfo,
     //
     // If it is a separator
     //
-    if (!(_stricmp(MenuInfo->MenuItemList[MenuItemNumber], "SEPARATOR")))
+    if (MenuInfo->MenuItemList[MenuItemNumber] == NULL)
     {
         //
         // Make it a separator line and use menu colors
@@ -502,7 +517,7 @@ TuiProcessMenuKeyboardEvent(PUI_MENU_INFO MenuInfo,
 
                 // Skip past any separators
                 if ((Selected) &&
-                    !(_stricmp(MenuInfo->MenuItemList[Selected], "SEPARATOR")))
+                    (MenuInfo->MenuItemList[Selected] == NULL))
                 {
                     MenuInfo->SelectedMenuItem--;
                 }
@@ -518,7 +533,7 @@ TuiProcessMenuKeyboardEvent(PUI_MENU_INFO MenuInfo,
 
                 // Skip past any separators
                 if ((Selected < Count) &&
-                    !(_stricmp(MenuInfo->MenuItemList[Selected], "SEPARATOR")))
+                    (MenuInfo->MenuItemList[Selected] == NULL))
                 {
                     MenuInfo->SelectedMenuItem++;
                 }

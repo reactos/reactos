@@ -119,7 +119,6 @@ HvpCreateHive(
       RegistryHive->Storage[Stable].FreeDisplay[Index] = HCELL_NIL;
       RegistryHive->Storage[Volatile].FreeDisplay[Index] = HCELL_NIL;
    }
-   RtlInitializeBitMap(&RegistryHive->DirtyVector, NULL, 0);
 
    return STATUS_SUCCESS;
 }

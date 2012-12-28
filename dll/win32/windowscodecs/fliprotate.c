@@ -34,7 +34,7 @@
 WINE_DEFAULT_DEBUG_CHANNEL(wincodecs);
 
 typedef struct FlipRotator {
-    const IWICBitmapFlipRotatorVtbl *lpVtbl;
+    IWICBitmapFlipRotator IWICBitmapFlipRotator_iface;
     LONG ref;
     IWICBitmapSource *source;
     int flip_x;
@@ -43,10 +43,15 @@ typedef struct FlipRotator {
     CRITICAL_SECTION lock; /* must be held when initialized */
 } FlipRotator;
 
+static inline FlipRotator *impl_from_IWICBitmapFlipRotator(IWICBitmapFlipRotator *iface)
+{
+    return CONTAINING_RECORD(iface, FlipRotator, IWICBitmapFlipRotator_iface);
+}
+
 static HRESULT WINAPI FlipRotator_QueryInterface(IWICBitmapFlipRotator *iface, REFIID iid,
     void **ppv)
 {
-    FlipRotator *This = (FlipRotator*)iface;
+    FlipRotator *This = impl_from_IWICBitmapFlipRotator(iface);
     TRACE("(%p,%s,%p)\n", iface, debugstr_guid(iid), ppv);
 
     if (!ppv) return E_INVALIDARG;
@@ -55,7 +60,7 @@ static HRESULT WINAPI FlipRotator_QueryInterface(IWICBitmapFlipRotator *iface, R
         IsEqualIID(&IID_IWICBitmapSource, iid) ||
         IsEqualIID(&IID_IWICBitmapFlipRotator, iid))
     {
-        *ppv = This;
+        *ppv = &This->IWICBitmapFlipRotator_iface;
     }
     else
     {
@@ -69,7 +74,7 @@ static HRESULT WINAPI FlipRotator_QueryInterface(IWICBitmapFlipRotator *iface, R
 
 static ULONG WINAPI FlipRotator_AddRef(IWICBitmapFlipRotator *iface)
 {
-    FlipRotator *This = (FlipRotator*)iface;
+    FlipRotator *This = impl_from_IWICBitmapFlipRotator(iface);
     ULONG ref = InterlockedIncrement(&This->ref);
 
     TRACE("(%p) refcount=%u\n", iface, ref);
@@ -79,7 +84,7 @@ static ULONG WINAPI FlipRotator_AddRef(IWICBitmapFlipRotator *iface)
 
 static ULONG WINAPI FlipRotator_Release(IWICBitmapFlipRotator *iface)
 {
-    FlipRotator *This = (FlipRotator*)iface;
+    FlipRotator *This = impl_from_IWICBitmapFlipRotator(iface);
     ULONG ref = InterlockedDecrement(&This->ref);
 
     TRACE("(%p) refcount=%u\n", iface, ref);
@@ -98,7 +103,7 @@ static ULONG WINAPI FlipRotator_Release(IWICBitmapFlipRotator *iface)
 static HRESULT WINAPI FlipRotator_GetSize(IWICBitmapFlipRotator *iface,
     UINT *puiWidth, UINT *puiHeight)
 {
-    FlipRotator *This = (FlipRotator*)iface;
+    FlipRotator *This = impl_from_IWICBitmapFlipRotator(iface);
     TRACE("(%p,%p,%p)\n", iface, puiWidth, puiHeight);
 
     if (!This->source)
@@ -112,34 +117,50 @@ static HRESULT WINAPI FlipRotator_GetSize(IWICBitmapFlipRotator *iface,
 static HRESULT WINAPI FlipRotator_GetPixelFormat(IWICBitmapFlipRotator *iface,
     WICPixelFormatGUID *pPixelFormat)
 {
-    FIXME("(%p,%p): stub\n", iface, pPixelFormat);
+    FlipRotator *This = impl_from_IWICBitmapFlipRotator(iface);
+    TRACE("(%p,%p)\n", iface, pPixelFormat);
 
-    return E_NOTIMPL;
+    if (!This->source)
+        return WINCODEC_ERR_WRONGSTATE;
+    else
+        return IWICBitmapSource_GetPixelFormat(This->source, pPixelFormat);
 }
 
 static HRESULT WINAPI FlipRotator_GetResolution(IWICBitmapFlipRotator *iface,
     double *pDpiX, double *pDpiY)
 {
-    FIXME("(%p,%p,%p): stub\n", iface, pDpiX, pDpiY);
+    FlipRotator *This = impl_from_IWICBitmapFlipRotator(iface);
+    TRACE("(%p,%p,%p)\n", iface, pDpiX, pDpiY);
 
-    return E_NOTIMPL;
+    if (!This->source)
+        return WINCODEC_ERR_WRONGSTATE;
+    else if (This->swap_xy)
+        return IWICBitmapSource_GetResolution(This->source, pDpiY, pDpiX);
+    else
+        return IWICBitmapSource_GetResolution(This->source, pDpiX, pDpiY);
 }
 
 static HRESULT WINAPI FlipRotator_CopyPalette(IWICBitmapFlipRotator *iface,
     IWICPalette *pIPalette)
 {
-    FIXME("(%p,%p): stub\n", iface, pIPalette);
-    return E_NOTIMPL;
+    FlipRotator *This = impl_from_IWICBitmapFlipRotator(iface);
+    TRACE("(%p,%p)\n", iface, pIPalette);
+
+    if (!This->source)
+        return WINCODEC_ERR_WRONGSTATE;
+    else
+        return IWICBitmapSource_CopyPalette(This->source, pIPalette);
 }
 
 static HRESULT WINAPI FlipRotator_CopyPixels(IWICBitmapFlipRotator *iface,
     const WICRect *prc, UINT cbStride, UINT cbBufferSize, BYTE *pbBuffer)
 {
-    FlipRotator *This = (FlipRotator*)iface;
+    FlipRotator *This = impl_from_IWICBitmapFlipRotator(iface);
     HRESULT hr;
     UINT y;
     UINT srcy, srcwidth, srcheight;
     WICRect rc;
+    WICRect rect;
 
     TRACE("(%p,%p,%u,%u,%p)\n", iface, prc, cbStride, cbBufferSize, pbBuffer);
 
@@ -154,6 +175,18 @@ static HRESULT WINAPI FlipRotator_CopyPixels(IWICBitmapFlipRotator *iface,
 
     hr = IWICBitmapSource_GetSize(This->source, &srcwidth, &srcheight);
     if (FAILED(hr)) return hr;
+
+    if (!prc)
+    {
+        UINT width, height;
+        hr = IWICBitmapFlipRotator_GetSize(iface, &width, &height);
+        if (FAILED(hr)) return hr;
+        rect.X = 0;
+        rect.Y = 0;
+        rect.Width = width;
+        rect.Height = height;
+        prc = &rect;
+    }
 
     for (y=prc->Y; y - prc->Y < prc->Height; y++)
     {
@@ -181,7 +214,7 @@ static HRESULT WINAPI FlipRotator_CopyPixels(IWICBitmapFlipRotator *iface,
 static HRESULT WINAPI FlipRotator_Initialize(IWICBitmapFlipRotator *iface,
     IWICBitmapSource *pISource, WICBitmapTransformOptions options)
 {
-    FlipRotator *This = (FlipRotator*)iface;
+    FlipRotator *This = impl_from_IWICBitmapFlipRotator(iface);
     HRESULT hr=S_OK;
 
     TRACE("(%p,%p,%u)\n", iface, pISource, options);
@@ -240,7 +273,7 @@ HRESULT FlipRotator_Create(IWICBitmapFlipRotator **fliprotator)
     This = HeapAlloc(GetProcessHeap(), 0, sizeof(FlipRotator));
     if (!This) return E_OUTOFMEMORY;
 
-    This->lpVtbl = &FlipRotator_Vtbl;
+    This->IWICBitmapFlipRotator_iface.lpVtbl = &FlipRotator_Vtbl;
     This->ref = 1;
     This->source = NULL;
     This->flip_x = 0;
@@ -249,7 +282,7 @@ HRESULT FlipRotator_Create(IWICBitmapFlipRotator **fliprotator)
     InitializeCriticalSection(&This->lock);
     This->lock.DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": FlipRotator.lock");
 
-    *fliprotator = (IWICBitmapFlipRotator*)This;
+    *fliprotator = &This->IWICBitmapFlipRotator_iface;
 
     return S_OK;
 }

@@ -254,9 +254,10 @@ UserLoadKbdLayout(PUNICODE_STRING pwszKLID, HKL hKL)
  */
 static
 VOID
-UnloadKbdFile(PKBDFILE pkf)
+UnloadKbdFile(_In_ PKBDFILE pkf)
 {
     PKBDFILE *ppkfLink = &gpkfList;
+    NT_ASSERT(pkf != NULL);
 
     /* Find previous object */
     while (*ppkfLink)

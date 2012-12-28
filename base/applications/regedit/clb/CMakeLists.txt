@@ -1,8 +1,6 @@
 
 spec2def(clb.dll clb.spec)
 
-set_rc_compiler()
-
 add_library(clb SHARED
     clb.c
     clb.rc

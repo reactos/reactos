@@ -45,7 +45,7 @@ PaToVa(PVOID Pa)
 #endif
 
 VOID
-List_PaToVa(PLIST_ENTRY ListHeadPa)
+List_PaToVa(_In_ PLIST_ENTRY ListHeadPa)
 {
 	PLIST_ENTRY EntryPa, NextPa;
 

@@ -704,7 +704,7 @@ MsqDestroyMessage(PUSER_MESSAGE Message)
 }
 
 BOOLEAN FASTCALL
-co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
+co_MsqDispatchOneSentMessage(_In_ PUSER_MESSAGE_QUEUE MessageQueue)
 {
    PUSER_SENT_MESSAGE SaveMsg, Message;
    PLIST_ENTRY Entry;
@@ -1331,7 +1331,7 @@ FASTCALL
 IntTrackMouseMove(PWND pwndTrack, PDESKTOP pDesk, PMSG msg, USHORT hittest)
 {
 //   PWND pwndTrack = IntChildrenWindowFromPoint(pwndMsg, msg->pt.x, msg->pt.y);
-   hittest = GetNCHitEx(pwndTrack, msg->pt);
+   hittest = (USHORT)GetNCHitEx(pwndTrack, msg->pt); /// @todo WTF is this???
 
    if ( pDesk->spwndTrack != pwndTrack || // Change with tracking window or
         msg->message != WM_MOUSEMOVE   || // Mouse click changes or

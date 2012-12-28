@@ -35,6 +35,7 @@ KTIMER CmpDelayDerefKCBTimer;
 
 /* FUNCTIONS *****************************************************************/
 
+_Function_class_(KDEFERRED_ROUTINE)
 VOID
 NTAPI
 CmpDelayCloseDpcRoutine(IN PKDPC Dpc,
@@ -49,6 +50,7 @@ CmpDelayCloseDpcRoutine(IN PKDPC Dpc,
     ExQueueWorkItem(&CmpDelayCloseWorkItem, DelayedWorkQueue);
 }
 
+_Function_class_(WORKER_THREAD_ROUTINE)
 VOID
 NTAPI
 CmpDelayCloseWorker(IN PVOID Context)
@@ -188,21 +190,22 @@ NTAPI
 INIT_FUNCTION
 CmpInitializeDelayedCloseTable(VOID)
 {
-    
+
     /* Setup the delayed close lock */
     KeInitializeGuardedMutex(&CmpDelayedCloseTableLock);
-    
+
     /* Setup the work item */
     ExInitializeWorkItem(&CmpDelayCloseWorkItem, CmpDelayCloseWorker, NULL);
-    
+
     /* Setup the list head */
     InitializeListHead(&CmpDelayedLRUListHead);
-    
+
     /* Setup the DPC and its timer */
     KeInitializeDpc(&CmpDelayCloseDpc, CmpDelayCloseDpcRoutine, NULL);
     KeInitializeTimer(&CmpDelayCloseTimer);
 }
 
+_Function_class_(KDEFERRED_ROUTINE)
 VOID
 NTAPI
 CmpDelayDerefKCBDpcRoutine(IN PKDPC Dpc,
@@ -217,6 +220,7 @@ CmpDelayDerefKCBDpcRoutine(IN PKDPC Dpc,
     ExQueueWorkItem(&CmpDelayDerefKCBWorkItem, DelayedWorkQueue);
 }
 
+_Function_class_(WORKER_THREAD_ROUTINE)
 VOID
 NTAPI
 CmpDelayDerefKCBWorker(IN PVOID Context)
@@ -236,22 +240,22 @@ CmpDelayDerefKCBWorker(IN PVOID Context)
     {
         /* Grab an entry */
         Entry = (PVOID)RemoveHeadList(&CmpDelayDerefKCBListHead);
-        
+
         /* We can release the lock now */
         KeReleaseGuardedMutex(&CmpDelayDerefKCBLock);
-        
+
         /* Now grab the actual entry */
         Entry = CONTAINING_RECORD(Entry, CM_DELAY_DEREF_KCB_ITEM, ListEntry);
         Entry->ListEntry.Flink = Entry->ListEntry.Blink = NULL;
-        
+
         /* Dereference and free */
         CmpDereferenceKeyControlBlock(Entry->Kcb);
         CmpFreeDelayItem(Entry);
-        
+
         /* Lock the list again */
         KeAcquireGuardedMutex(&CmpDelayDerefKCBLock);
     }
-    
+
     /* We're done */
     CmpDelayDerefKCBWorkItemActive = FALSE;
     KeReleaseGuardedMutex(&CmpDelayDerefKCBLock);
@@ -332,7 +336,7 @@ CmpArmDelayedCloseTimer(VOID)
 {
     LARGE_INTEGER Timeout;
     PAGED_CODE();
-    
+
     /* Set the worker active */
     CmpDelayCloseWorkItemActive = TRUE;
 
@@ -424,36 +428,36 @@ CmpRemoveFromDelayedClose(IN PCM_KEY_CONTROL_BLOCK Kcb)
     PCM_DELAYED_CLOSE_ENTRY Entry;
     ULONG NewRefCount, OldRefCount;
     PAGED_CODE();
-    
+
     /* Sanity checks */
     ASSERT((CmpIsKcbLockedExclusive(Kcb) == TRUE) ||
            (CmpTestRegistryLockExclusive() == TRUE));
     if (Kcb->DelayedCloseIndex == CmpDelayedCloseSize) ASSERT(FALSE);
-    
+
     /* Get the entry and lock the table */
     Entry = Kcb->DelayCloseEntry;
     ASSERT(Entry);
     KeAcquireGuardedMutex(&CmpDelayedCloseTableLock);
-    
+
     /* Remove the entry */
     RemoveEntryList(&Entry->DelayedLRUList);
-    
+
     /* Release the lock */
     KeReleaseGuardedMutex(&CmpDelayedCloseTableLock);
-    
+
     /* Free the entry */
     CmpFreeDelayItem(Entry);
-    
+
     /* Reduce the number of elements */
     InterlockedDecrement((PLONG)&CmpDelayedCloseElements);
-    
+
     /* Sanity check */
     if (!Kcb->InDelayClose) ASSERT(FALSE);
-    
+
     /* Get the previous reference count */
     OldRefCount = *(PLONG)&Kcb->InDelayClose;
     ASSERT(OldRefCount == 1);
-    
+
     /* Write the new one */
     NewRefCount = 0;
     if (InterlockedCompareExchange((PLONG)&Kcb->InDelayClose,
@@ -463,10 +467,10 @@ CmpRemoveFromDelayedClose(IN PCM_KEY_CONTROL_BLOCK Kcb)
         /* Sanity check */
         ASSERT(FALSE);
     }
-    
+
     /* Remove the link to the entry */
     Kcb->DelayCloseEntry = NULL;
-    
+
     /* Set new delay size and remove the delete flag */
     Kcb->DelayedCloseIndex = CmpDelayedCloseSize;
 }

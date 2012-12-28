@@ -102,11 +102,12 @@ the page is present.
 
 NTSTATUS
 NTAPI
-MmNotPresentFaultCachePage(PMMSUPPORT AddressSpace,
-                           MEMORY_AREA* MemoryArea,
-                           PVOID Address,
-                           BOOLEAN Locked,
-                           PMM_REQUIRED_RESOURCES Required)
+MmNotPresentFaultCachePage (
+    _In_ PMMSUPPORT AddressSpace,
+    _In_ MEMORY_AREA* MemoryArea,
+    _In_ PVOID Address,
+    _In_ BOOLEAN Locked,
+    _Inout_ PMM_REQUIRED_RESOURCES Required)
 {
     NTSTATUS Status;
     PVOID PAddress;
@@ -317,11 +318,12 @@ In the ultimate form of this code, CoW is reenabled.
 
 NTSTATUS
 NTAPI
-MiCowCacheSectionPage(PMMSUPPORT AddressSpace,
-                      PMEMORY_AREA MemoryArea,
-                      PVOID Address,
-                      BOOLEAN Locked,
-                      PMM_REQUIRED_RESOURCES Required)
+MiCowCacheSectionPage (
+    _In_ PMMSUPPORT AddressSpace,
+    _In_ PMEMORY_AREA MemoryArea,
+    _In_ PVOID Address,
+    _In_ BOOLEAN Locked,
+    _Inout_ PMM_REQUIRED_RESOURCES Required)
 {
     PMM_SECTION_SEGMENT Segment;
     PFN_NUMBER NewPage, OldPage;
@@ -422,8 +424,8 @@ MiCowCacheSectionPage(PMMSUPPORT AddressSpace,
 
     DPRINT("Allocated page %x\n", NewPage);
 
-   /* Unshare the old page */
-   MmDeleteRmap(OldPage, Process, PAddress);
+    /* Unshare the old page */
+    MmDeleteRmap(OldPage, Process, PAddress);
 
    /* Copy the old page */
     DPRINT("Copying\n");
@@ -474,10 +476,13 @@ by fault handling, making recursive fault handling possible when required.
 
 */
 
+_Function_class_(WORKER_THREAD_ROUTINE)
 VOID
 NTAPI
-MmpFaultWorker(PWORK_QUEUE_WITH_CONTEXT WorkItem)
+MmpFaultWorker(PVOID Parameter)
 {
+    PWORK_QUEUE_WITH_CONTEXT WorkItem = Parameter;
+
     DPRINT("Calling work\n");
     WorkItem->Status = WorkItem->Required->DoAcquisition(WorkItem->AddressSpace,
                                                          WorkItem->MemoryArea,
@@ -622,7 +627,7 @@ MmpSectionAccessFaultInner(KPROCESSOR_MODE Mode,
                 KeInitializeEvent(&Context.Wait, NotificationEvent, FALSE);
 
                 ExInitializeWorkItem(&Context.WorkItem,
-                                     (PWORKER_THREAD_ROUTINE)MmpFaultWorker,
+                                     MmpFaultWorker,
                                      &Context);
 
                 DPRINT("Queue work item\n");

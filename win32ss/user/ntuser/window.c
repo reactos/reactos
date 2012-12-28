@@ -497,6 +497,7 @@ static LRESULT co_UserFreeWindow(PWND Window,
    /* flush the message queue */
    MsqRemoveWindowMessagesFromQueue(Window);
 
+   NT_ASSERT(Window->head.pti);
    IntDereferenceMessageQueue(Window->head.pti->MessageQueue);
 
    /* from now on no messages can be sent to this window anymore */
@@ -1987,7 +1988,7 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
    PWINSTATION_OBJECT WinSta;
    PCLS Class = NULL;
    SIZE Size;
-   POINT MaxPos;
+   POINT MaxSize, MaxPos, MinTrack, MaxTrack;
    CBT_CREATEWNDW * pCbtCreate;
    LRESULT Result;
    USER_REFERENCE_ENTRY ParentRef, Ref;
@@ -2190,8 +2191,6 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
 
    if ((Cs->style & WS_THICKFRAME) || !(Cs->style & (WS_POPUP | WS_CHILD)))
    {
-      POINT MaxSize, MaxPos, MinTrack, MaxTrack;
-
       co_WinPosGetMinMaxInfo(Window, &MaxSize, &MaxPos, &MinTrack, &MaxTrack);
       if (Size.cx > MaxTrack.x) Size.cx = MaxTrack.x;
       if (Size.cy > MaxTrack.y) Size.cy = MaxTrack.y;
@@ -2542,7 +2541,7 @@ BOOLEAN FASTCALL co_UserDestroyWindow(PWND Window)
 
    TRACE("co_UserDestroyWindow \n");
 
-   /* Check for owner thread */  
+   /* Check for owner thread */
    if ( Window->head.pti != PsGetCurrentThreadWin32Thread())
    {
        /* Check if we are destroying the desktop window */
@@ -2627,7 +2626,7 @@ BOOLEAN FASTCALL co_UserDestroyWindow(PWND Window)
     * Check if this window is the Shell's Desktop Window. If so set hShellWindow to NULL
     */
 
-   if ((ti != NULL) & (ti->pDeskInfo != NULL))
+   if ((ti != NULL) && (ti->pDeskInfo != NULL))
    {
       if (ti->pDeskInfo->hShellWindow == hWnd)
       {
@@ -3074,8 +3073,6 @@ PWND FASTCALL UserGetAncestor(PWND Wnd, UINT Type)
 
             for (;;)
             {
-               PWND Parent;
-
                Parent = IntGetParent(WndAncestor);
 
                if (!Parent)

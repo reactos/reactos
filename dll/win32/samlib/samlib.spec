@@ -20,7 +20,7 @@
 @ stdcall SamEnumerateUsersInDomain(ptr ptr long ptr long ptr)
 @ stdcall SamFreeMemory(ptr)
 @ stdcall SamGetAliasMembership(ptr long ptr ptr ptr)
-@ stub SamGetCompatibilityMode
+@ stdcall SamGetCompatibilityMode(ptr ptr)
 @ stub SamGetDisplayEnumerationIndex
 @ stdcall SamGetGroupsForUser(ptr ptr ptr)
 @ stdcall SamGetMembersInAlias(ptr ptr ptr)

@@ -113,7 +113,7 @@ GreSetStretchBltMode(HDC hDC, int iStretchMode)
 
        // Wine returns an error here. We set the default.
        if ((iStretchMode <= 0) || (iStretchMode > MAXSTRETCHBLTMODE)) iStretchMode = WHITEONBLACK;
-  
+
        pdcattr->jStretchBltMode = iStretchMode;
     }
     return oSMode;
@@ -355,7 +355,8 @@ NtGdiGetDCDword(
     return Ret;
 }
 
-BOOL _Success_(return != FALSE)
+_Success_(return != FALSE)
+BOOL
 APIENTRY
 NtGdiGetAndSetDCDword(
     _In_ HDC hdc,

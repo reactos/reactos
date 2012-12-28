@@ -35,14 +35,14 @@ extern LPCWSTR get_root_key_name(HKEY hRootKey)
     if (hRootKey == HKEY_CURRENT_CONFIG) return L"HKEY_CURRENT_CONFIG";
     if (hRootKey == HKEY_DYN_DATA) return L"HKEY_DYN_DATA";
 
-    return L"UKNOWN HKEY, PLEASE REPORT";
+    return L"UNKNOWN HKEY, PLEASE REPORT";
 }
 
 extern void ResizeWnd(int cx, int cy)
 {
     HDWP hdwp = BeginDeferWindowPos(3);
     RECT rt, rs, rb;
-    const int tHeight = 18;
+    const int tHeight = 22;
     SetRect(&rt, 0, 0, cx, cy);
     cy = 0;
     if (hStatusBar != NULL)
@@ -52,8 +52,8 @@ extern void ResizeWnd(int cx, int cy)
     }
     GetWindowRect(g_pChildWnd->hAddressBtnWnd, &rb);
     cx = g_pChildWnd->nSplitPos + SPLIT_WIDTH/2;
-    DeferWindowPos(hdwp, g_pChildWnd->hAddressBarWnd, 0, rt.left, rt.top, rt.right-rt.left - tHeight-2, tHeight, SWP_NOZORDER|SWP_NOACTIVATE);
-    DeferWindowPos(hdwp, g_pChildWnd->hAddressBtnWnd, 0, rt.right - tHeight, rt.top, tHeight, tHeight, SWP_NOZORDER|SWP_NOACTIVATE);
+    DeferWindowPos(hdwp, g_pChildWnd->hAddressBarWnd, 0, rt.left, rt.top, rt.right-rt.left - 2*tHeight, tHeight, SWP_NOZORDER|SWP_NOACTIVATE);
+    DeferWindowPos(hdwp, g_pChildWnd->hAddressBtnWnd, 0, rt.right - 2*tHeight, rt.top, 2*tHeight, tHeight, SWP_NOZORDER|SWP_NOACTIVATE);
     DeferWindowPos(hdwp, g_pChildWnd->hTreeWnd, 0, rt.left, rt.top + tHeight+2, g_pChildWnd->nSplitPos-SPLIT_WIDTH/2-rt.left, rt.bottom-rt.top-cy, SWP_NOZORDER|SWP_NOACTIVATE);
     DeferWindowPos(hdwp, g_pChildWnd->hListWnd, 0, rt.left+cx, rt.top + tHeight+2, rt.right-cx, rt.bottom-rt.top-cy, SWP_NOZORDER|SWP_NOACTIVATE);
     EndDeferWindowPos(hdwp);
@@ -303,6 +303,53 @@ LRESULT CALLBACK AddressBarProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
     return CallWindowProc(oldwndproc, hwnd, uMsg, wParam, lParam);
 }
 
+static VOID
+UpdateAddress(HTREEITEM hItem, HKEY hRootKey, LPCWSTR pszPath)
+{
+    LPCWSTR keyPath, rootName;
+    LPWSTR fullPath;
+
+    if (pszPath == NULL)
+        keyPath = GetItemPath(g_pChildWnd->hTreeWnd, hItem, &hRootKey);
+    else
+        keyPath = pszPath;
+
+    if (keyPath)
+    {
+        RefreshListView(g_pChildWnd->hListWnd, hRootKey, keyPath);
+        rootName = get_root_key_name(hRootKey);
+        fullPath = HeapAlloc(GetProcessHeap(), 0, (wcslen(rootName) + 1 + wcslen(keyPath) + 1) * sizeof(WCHAR));
+        if (fullPath)
+        {
+            /* set (correct) the address bar text */
+            if (keyPath[0] != L'\0')
+                swprintf(fullPath, L"%s\\%s", rootName, keyPath);
+            else
+                fullPath = wcscpy(fullPath, rootName);
+            SendMessageW(hStatusBar, SB_SETTEXTW, 0, (LPARAM)fullPath);
+            SendMessageW(g_pChildWnd->hAddressBarWnd, WM_SETTEXT, 0, (LPARAM)fullPath);
+            HeapFree(GetProcessHeap(), 0, fullPath);
+            /* disable hive manipulation items temporarily (enable only if necessary) */
+            EnableMenuItem(GetSubMenu(hMenuFrame,0), ID_REGISTRY_LOADHIVE, MF_BYCOMMAND | MF_GRAYED);
+            EnableMenuItem(GetSubMenu(hMenuFrame,0), ID_REGISTRY_UNLOADHIVE, MF_BYCOMMAND | MF_GRAYED);
+            /* compare the strings to see if we should enable/disable the "Load Hive" menus accordingly */
+            if (!(wcsicmp(rootName, L"HKEY_LOCAL_MACHINE") &&
+                  wcsicmp(rootName, L"HKEY_USERS")))
+            {
+                /*
+                 * enable the unload menu item if at the root, otherwise
+                 * enable the load menu item if there is no slash in
+                 * keyPath (ie. immediate child selected)
+                 */
+                if(keyPath[0] == L'\0')
+                    EnableMenuItem(GetSubMenu(hMenuFrame,0), ID_REGISTRY_LOADHIVE, MF_BYCOMMAND | MF_ENABLED);
+                else if(!wcschr(keyPath, L'\\'))
+                    EnableMenuItem(GetSubMenu(hMenuFrame,0), ID_REGISTRY_UNLOADHIVE, MF_BYCOMMAND | MF_ENABLED);
+            }
+        }
+    }
+}
+
 /*******************************************************************************
  *
  *  FUNCTION: ChildWndProc(HWND, unsigned, WORD, LONG)
@@ -338,7 +385,7 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         g_pChildWnd->hAddressBarWnd = CreateWindowExW(WS_EX_CLIENTEDGE, L"Edit", NULL, WS_CHILD | WS_VISIBLE | WS_CHILDWINDOW | WS_TABSTOP,
                                                       CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
                                                       hWnd, (HMENU)0, hInst, 0);
-        g_pChildWnd->hAddressBtnWnd = CreateWindowExW(WS_EX_CLIENTEDGE, L"Button", L"»", WS_CHILD | WS_VISIBLE | WS_CHILDWINDOW | WS_TABSTOP | BS_DEFPUSHBUTTON,
+        g_pChildWnd->hAddressBtnWnd = CreateWindowExW(0, L"Button", L"»", WS_CHILD | WS_VISIBLE | WS_CHILDWINDOW | WS_TABSTOP | BS_TEXT | BS_CENTER | BS_VCENTER | BS_FLAT | BS_DEFPUSHBUTTON,
                                                       CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
                                                       hWnd, (HMENU)0, hInst, 0);
         g_pChildWnd->hTreeWnd = CreateTreeView(hWnd, g_pChildWnd->szPath, (HMENU) TREE_WINDOW);
@@ -494,45 +541,8 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
             case TVN_ITEMEXPANDING:
                 return !OnTreeExpanding(g_pChildWnd->hTreeWnd, (NMTREEVIEW*)lParam);
             case TVN_SELCHANGED:
-            {
-                LPCWSTR keyPath, rootName;
-                LPWSTR fullPath;
-                HKEY hRootKey;
-
-                keyPath = GetItemPath(g_pChildWnd->hTreeWnd, ((NMTREEVIEW*)lParam)->itemNew.hItem, &hRootKey);
-                if (keyPath)
-                {
-                    RefreshListView(g_pChildWnd->hListWnd, hRootKey, keyPath);
-                    rootName = get_root_key_name(hRootKey);
-                    fullPath = HeapAlloc(GetProcessHeap(), 0, (wcslen(rootName) + 1 + wcslen(keyPath) + 1) * sizeof(WCHAR));
-                    if (fullPath)
-                    {
-                        /* set (correct) the address bar text */
-                        if(keyPath[0] != L'\0')
-                            swprintf(fullPath, L"%s\\%s", rootName, keyPath);
-                        else
-                            fullPath = wcscpy(fullPath, rootName);
-                        SendMessageW(hStatusBar, SB_SETTEXTW, 0, (LPARAM)fullPath);
-                        SendMessageW(g_pChildWnd->hAddressBarWnd, WM_SETTEXT, 0, (LPARAM)fullPath);
-                        HeapFree(GetProcessHeap(), 0, fullPath);
-                        /* disable hive manipulation items temporarily (enable only if necessary) */
-                        EnableMenuItem(GetSubMenu(hMenuFrame,0), ID_REGISTRY_LOADHIVE, MF_BYCOMMAND | MF_GRAYED);
-                        EnableMenuItem(GetSubMenu(hMenuFrame,0), ID_REGISTRY_UNLOADHIVE, MF_BYCOMMAND | MF_GRAYED);
-                        /* compare the strings to see if we should enable/disable the "Load Hive" menus accordingly */
-                        if (!(wcsicmp(rootName, L"HKEY_LOCAL_MACHINE") &&
-                                wcsicmp(rootName, L"HKEY_USERS")))
-                        {
-                            // enable the unload menu item if at the root
-                            // otherwise enable the load menu item if there is no slash in keyPath (ie. immediate child selected)
-                            if(keyPath[0] == L'\0')
-                                EnableMenuItem(GetSubMenu(hMenuFrame,0), ID_REGISTRY_LOADHIVE, MF_BYCOMMAND | MF_ENABLED);
-                            else if(!wcschr(keyPath, L'\\'))
-                                EnableMenuItem(GetSubMenu(hMenuFrame,0), ID_REGISTRY_UNLOADHIVE, MF_BYCOMMAND | MF_ENABLED);
-                        }
-                    }
-                }
-            }
-            break;
+                UpdateAddress(((NMTREEVIEW*)lParam)->itemNew.hItem, NULL, NULL);
+                break;
             case NM_SETFOCUS:
                 g_pChildWnd->nFocusPanel = 0;
                 break;
@@ -571,6 +581,8 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
                     {
                         if (RenameKey(hRootKey, keyPath, ptvdi->item.pszText) != ERROR_SUCCESS)
                             lResult = FALSE;
+                        else
+                            UpdateAddress(ptvdi->item.hItem, hRootKey, szBuffer);
                     }
                     return lResult;
                 }

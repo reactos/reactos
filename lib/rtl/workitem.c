@@ -175,7 +175,7 @@ RtlpStartWorkerThread(PTHREAD_START_ROUTINE StartRoutine)
     if (NT_SUCCESS(Status))
     {
         NtResumeThread(ThreadHandle, NULL);
-        
+
         /* Poll until the thread got a chance to initialize */
         while (WorkerInitialized == 0)
         {
@@ -724,6 +724,7 @@ RtlpWorkerThreadProc(IN PVOID Parameter)
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
+                (void)0;
             }
             _SEH2_END;
         }

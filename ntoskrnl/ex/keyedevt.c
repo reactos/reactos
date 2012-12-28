@@ -51,6 +51,7 @@ GENERIC_MAPPING ExpKeyedEventMapping =
 
 /* FUNCTIONS *****************************************************************/
 
+_IRQL_requires_max_(APC_LEVEL)
 BOOLEAN
 INIT_FUNCTION
 NTAPI
@@ -116,6 +117,7 @@ ExpInitializeKeyedEvent(
     }
 }
 
+_IRQL_requires_max_(APC_LEVEL)
 NTSTATUS
 NTAPI
 ExpReleaseOrWaitForKeyedEvent(
@@ -203,6 +205,7 @@ ExpReleaseOrWaitForKeyedEvent(
     return STATUS_SUCCESS;
 }
 
+_IRQL_requires_max_(APC_LEVEL)
 NTSTATUS
 NTAPI
 ExpWaitForKeyedEvent(
@@ -219,6 +222,7 @@ ExpWaitForKeyedEvent(
                                          FALSE);
 }
 
+_IRQL_requires_max_(APC_LEVEL)
 NTSTATUS
 NTAPI
 ExpReleaseKeyedEvent(
@@ -235,6 +239,7 @@ ExpReleaseKeyedEvent(
                                          TRUE);
 }
 
+_IRQL_requires_max_(APC_LEVEL)
 NTSTATUS
 NTAPI
 NtCreateKeyedEvent(
@@ -311,6 +316,7 @@ NtCreateKeyedEvent(
     return Status;
 }
 
+_IRQL_requires_max_(APC_LEVEL)
 NTSTATUS
 NTAPI
 NtOpenKeyedEvent(
@@ -359,6 +365,7 @@ NtOpenKeyedEvent(
     return Status;
 }
 
+_IRQL_requires_max_(APC_LEVEL)
 NTSTATUS
 NTAPI
 NtWaitForKeyedEvent(
@@ -401,6 +408,7 @@ NtWaitForKeyedEvent(
     return Status;
 }
 
+_IRQL_requires_max_(APC_LEVEL)
 NTSTATUS
 NTAPI
 NtReleaseKeyedEvent(

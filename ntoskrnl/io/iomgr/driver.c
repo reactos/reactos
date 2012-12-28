@@ -237,10 +237,12 @@ IopDisplayLoadingMessage(PUNICODE_STRING ServiceName)
  *    The input image path isn't freed on error.
  */
 
-NTSTATUS FASTCALL
+NTSTATUS
+FASTCALL
 IopNormalizeImagePath(
-   IN OUT PUNICODE_STRING ImagePath,
-   IN PUNICODE_STRING ServiceName)
+   _Inout_ _When_(return>=0, _At_(ImagePath->Buffer, _Post_notnull_ __drv_allocatesMem(Mem)))
+        PUNICODE_STRING ImagePath,
+   _In_ PUNICODE_STRING ServiceName)
 {
    UNICODE_STRING InputImagePath;
 

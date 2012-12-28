@@ -217,7 +217,7 @@ RtlGUIDFromString(
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
 _At_(DestinationString->Buffer, _Post_equal_to_(SourceString))
-//_At_(DestinationString->Length, _Post_equal_to_(_String_length_(SourceString) * sizeof(WCHAR)))
+_At_(DestinationString->Length, _Post_equal_to_(_String_length_(SourceString) * sizeof(WCHAR)))
 _At_(DestinationString->MaximumLength, _Post_equal_to_(DestinationString->Length + sizeof(WCHAR)))
 NTSYSAPI
 VOID

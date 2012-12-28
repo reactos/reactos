@@ -19,6 +19,12 @@
 
 #pragma once
 
-VOID	LoadAndBootBootSector(PCSTR OperatingSystemName);
-VOID	LoadAndBootPartition(PCSTR OperatingSystemName);
-VOID	LoadAndBootDrive(PCSTR OperatingSystemName);
+VOID
+LoadAndBootBootSector(IN OperatingSystemItem* OperatingSystem,
+                      IN USHORT OperatingSystemVersion);
+VOID
+LoadAndBootPartition(IN OperatingSystemItem* OperatingSystem,
+                     IN USHORT OperatingSystemVersion);
+VOID
+LoadAndBootDrive(IN OperatingSystemItem* OperatingSystem,
+                 IN USHORT OperatingSystemVersion);

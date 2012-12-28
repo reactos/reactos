@@ -1,13 +1,9 @@
 
-add_definitions(-D__WINESRC__)
-
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
+add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
-
-set_rc_compiler()
-
 spec2def(localspl.dll localspl.spec)
 
 list(APPEND SOURCE
@@ -17,12 +13,8 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/localspl_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/localspl.def)
 
-add_library(localspl SHARED
-    ${SOURCE}
-    localspl.rc)
-
+add_library(localspl SHARED ${SOURCE} localspl.rc)
 set_module_type(localspl win32dll)
-
 target_link_libraries(localspl wine)
 
 add_importlibs(localspl
@@ -40,4 +32,3 @@ if(NOT MSVC)
     #allow_warnings(localspl)
     set_source_files_properties(${SOURCE} PROPERTIES COMPILE_FLAGS "-Wno-error")
 endif()
-

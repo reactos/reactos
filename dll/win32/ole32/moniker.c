@@ -192,7 +192,7 @@ static void rot_entry_delete(struct rot_entry *rot_entry)
             if (hr == S_OK)
             {
                 CoReleaseMarshalData(stream);
-                IUnknown_Release(stream);
+                IStream_Release(stream);
             }
         }
         MIDL_user_free(moniker);
@@ -205,7 +205,7 @@ static void rot_entry_delete(struct rot_entry *rot_entry)
         if (hr == S_OK)
         {
             CoReleaseMarshalData(stream);
-            IUnknown_Release(stream);
+            IStream_Release(stream);
         }
     }
     HeapFree(GetProcessHeap(), 0, rot_entry->object);

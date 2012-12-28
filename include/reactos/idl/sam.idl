@@ -447,6 +447,7 @@ typedef struct _SAMPR_ENCRYPTED_USER_PASSWORD_NEW
     unsigned char Buffer[(256 * 2) + 4 + 16];
 } SAMPR_ENCRYPTED_USER_PASSWORD_NEW, *PSAMPR_ENCRYPTED_USER_PASSWORD_NEW;
 
+cpp_quote("#ifndef _NTSAM_")
 typedef struct _USER_PRIMARY_GROUP_INFORMATION
 {
     unsigned long PrimaryGroupId;
@@ -456,6 +457,7 @@ typedef struct _USER_CONTROL_INFORMATION
 {
     unsigned long UserAccountControl;
 } USER_CONTROL_INFORMATION, *PUSER_CONTROL_INFORMATION;
+cpp_quote("#endif")
 
 typedef struct _USER_EXPIRES_INFORMATION
 {

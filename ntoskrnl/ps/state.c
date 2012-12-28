@@ -45,73 +45,78 @@ PsResumeThread(IN PETHREAD Thread,
 
 NTSTATUS
 NTAPI
-PsSuspendThread(IN PETHREAD Thread,
-                OUT PULONG PreviousCount OPTIONAL)
+PsSuspendThread(
+    IN PETHREAD Thread,
+    OUT PULONG PreviousCount OPTIONAL)
 {
     NTSTATUS Status;
     ULONG OldCount = 0;
     PAGED_CODE();
 
-    /* Guard with SEH because KeSuspendThread can raise an exception */
-    _SEH2_TRY
+    /* Assume success */
+    Status = STATUS_SUCCESS;
+
+    /* Check if we're suspending ourselves */
+    if (Thread == PsGetCurrentThread())
     {
-        /* Check if we're suspending ourselves */
-        if (Thread == PsGetCurrentThread())
+        /* Guard with SEH because KeSuspendThread can raise an exception */
+        _SEH2_TRY
         {
             /* Do the suspend */
             OldCount = KeSuspendThread(&Thread->Tcb);
-
-            /* We are done */
-            Status = STATUS_SUCCESS;
         }
-        else
+        _SEH2_EXCEPT(_SEH2_GetExceptionCode() == STATUS_SUSPEND_COUNT_EXCEEDED)
         {
-            /* Acquire rundown */
-            if (ExAcquireRundownProtection(&Thread->RundownProtect))
+            /* Get the exception code */
+            Status = _SEH2_GetExceptionCode();
+        }
+        _SEH2_END;
+    }
+    else
+    {
+        /* Acquire rundown protection */
+        if (ExAcquireRundownProtection(&Thread->RundownProtect))
+        {
+            /* Make sure the thread isn't terminating */
+            if (Thread->Terminated)
             {
-                /* Make sure the thread isn't terminating */
-                if (Thread->Terminated)
-                {
-                    /* Fail */
-                    Status = STATUS_THREAD_IS_TERMINATING;
-                }
-                else
-                {
-                    /* Otherwise, do the suspend */
-                    OldCount = KeSuspendThread(&Thread->Tcb);
-
-                    /* Check if it terminated during the suspend */
-                    if (Thread->Terminated)
-                    {
-                        /* Wake it back up and fail */
-                        KeForceResumeThread(&Thread->Tcb);
-                        Status = STATUS_THREAD_IS_TERMINATING;
-                        OldCount = 0;
-                    }
-                }
-
-                /* Release rundown protection */
-                ExReleaseRundownProtection(&Thread->RundownProtect);
-
-                /* We are done */
-                Status = STATUS_SUCCESS;
+                /* Fail */
+                Status = STATUS_THREAD_IS_TERMINATING;
             }
             else
             {
-                /* Thread is terminating */
-                Status = STATUS_THREAD_IS_TERMINATING;
+                /* Guard with SEH because KeSuspendThread can raise an exception */
+                _SEH2_TRY
+                {
+                    /* Do the suspend */
+                    OldCount = KeSuspendThread(&Thread->Tcb);
+                }
+                _SEH2_EXCEPT(_SEH2_GetExceptionCode() == STATUS_SUSPEND_COUNT_EXCEEDED)
+                {
+                    /* Get the exception code */
+                    Status = _SEH2_GetExceptionCode();
+                }
+                _SEH2_END;
+
+                /* Check if it was terminated during the suspend */
+                if (Thread->Terminated)
+                {
+                    /* Wake it back up and fail */
+                    KeForceResumeThread(&Thread->Tcb);
+                    Status = STATUS_THREAD_IS_TERMINATING;
+                    OldCount = 0;
+                }
             }
+
+            /* Release rundown protection */
+            ExReleaseRundownProtection(&Thread->RundownProtect);
+        }
+        else
+        {
+            /* Thread is terminating */
+            Status = STATUS_THREAD_IS_TERMINATING;
         }
     }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        /* Get the exception code */
-        Status = _SEH2_GetExceptionCode();
-
-        /* Don't fail if we merely couldn't write the handle back */
-        if (Status != STATUS_SUSPEND_COUNT_EXCEEDED) Status = STATUS_SUCCESS;
-    }
-    _SEH2_END;
 
     /* Write back the previous count */
     if (PreviousCount) *PreviousCount = OldCount;

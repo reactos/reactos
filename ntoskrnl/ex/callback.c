@@ -433,7 +433,10 @@ ExCreateCallback(OUT PCALLBACK_OBJECT *CallbackObject,
     }
 
     /* Everything went fine, so return a pointer to the Object */
-    if (NT_SUCCESS(Status)) *CallbackObject = Callback;
+    if (NT_SUCCESS(Status))
+    {
+        *CallbackObject = Callback;
+    }
     return Status;
 }
 

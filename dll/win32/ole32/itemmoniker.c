@@ -952,14 +952,13 @@ HRESULT WINAPI CreateItemMoniker(LPCOLESTR lpszDelim, LPCOLESTR  lpszItem, IMoni
                                           (void**)ppmk);
 }
 
-static HRESULT WINAPI ItemMonikerCF_QueryInterface(LPCLASSFACTORY iface,
-                                                  REFIID riid, LPVOID *ppv)
+static HRESULT WINAPI ItemMonikerCF_QueryInterface(IClassFactory *iface, REFIID riid, void **ppv)
 {
     *ppv = NULL;
     if (IsEqualIID(riid, &IID_IUnknown) || IsEqualIID(riid, &IID_IClassFactory))
     {
         *ppv = iface;
-        IUnknown_AddRef(iface);
+        IClassFactory_AddRef(iface);
         return S_OK;
     }
     return E_NOINTERFACE;

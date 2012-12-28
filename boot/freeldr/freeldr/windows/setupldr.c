@@ -133,7 +133,9 @@ SetupLdrScanBootDrivers(PLIST_ENTRY BootDriverListHead, HINF InfHandle, LPCSTR S
     } while (InfFindNextLine(&InfContext, &InfContext));
 }
 
-VOID LoadReactOSSetup(VOID)
+VOID
+LoadReactOSSetup(IN OperatingSystemItem* OperatingSystem,
+                 IN USHORT OperatingSystemVersion)
 {
     CHAR FileName[512];
     CHAR BootPath[512];
@@ -191,7 +193,7 @@ VOID LoadReactOSSetup(VOID)
         return;
     }
 
-    if (!InfGetDataField (&InfContext, 1, &LoadOptions))
+    if (!InfGetDataField(&InfContext, 1, &LoadOptions))
     {
         ERR("Failed to get load options\n");
         return;
@@ -210,7 +212,6 @@ VOID LoadReactOSSetup(VOID)
 
     TRACE("BootOptions: '%s'\n", BootOptions);
 
-    SetupUiInitialize();
     UiDrawStatusText("Setup is loading...");
 
     /* Allocate and minimalistic-initialize LPB */
@@ -236,5 +237,5 @@ VOID LoadReactOSSetup(VOID)
                              LoaderBlock,
                              BootOptions,
                              BootPath,
-                             1);
+                             TRUE);
 }

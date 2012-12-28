@@ -141,8 +141,7 @@ DECLSPEC_HIDDEN BOOL WINAPI ITextHostImpl_TxSetScrollRange(ITextHost *iface, INT
 DECLSPEC_HIDDEN BOOL WINAPI ITextHostImpl_TxSetScrollPos(ITextHost *iface, INT fnBar, INT nPos, BOOL fRedraw)
 {
     ITextHostImpl *This = impl_from_ITextHost(iface);
-    int pos = SetScrollPos(This->hWnd, fnBar, nPos, fRedraw);
-    return (pos ? TRUE : FALSE);
+    return SetScrollPos(This->hWnd, fnBar, nPos, fRedraw) != 0;
 }
 
 DECLSPEC_HIDDEN void WINAPI ITextHostImpl_TxInvalidateRect(ITextHost *iface, LPCRECT prc, BOOL fMode)

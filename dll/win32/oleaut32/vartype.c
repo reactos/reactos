@@ -1655,7 +1655,7 @@ HRESULT WINAPI VarI4FromBool(VARIANT_BOOL boolIn, LONG *piOut)
 /************************************************************************
  * VarI4FromI1 (OLEAUT32.209)
  *
- * Convert a VT_I4 to a VT_I4.
+ * Convert a VT_I1 to a VT_I4.
  *
  * PARAMS
  *  cIn     [I] Source
@@ -3764,7 +3764,7 @@ HRESULT WINAPI VarCyFromI8(LONG64 llIn, CY* pCyOut)
  */
 HRESULT WINAPI VarCyFromUI8(ULONG64 ullIn, CY* pCyOut)
 {
-    if (ullIn >= (I8_MAX/CY_MULTIPLIER)) return DISP_E_OVERFLOW;
+    if (ullIn > (I8_MAX/CY_MULTIPLIER)) return DISP_E_OVERFLOW;
     pCyOut->int64 = ullIn * CY_MULTIPLIER;
     return S_OK;
 }
@@ -4562,6 +4562,7 @@ HRESULT WINAPI VarDecAdd(const DECIMAL* pDecLeft, const DECIMAL* pDecRight, DECI
     /* Our decimals now have the same scale, we can add them as 96 bit integers */
     ULONG overflow = 0;
     BYTE sign = DECIMAL_POS;
+    int cmp;
 
     /* Correct for the sign of the result */
     if (DEC_SIGN(pDecLeft) && DEC_SIGN(pDecRight))
@@ -4572,7 +4573,7 @@ HRESULT WINAPI VarDecAdd(const DECIMAL* pDecLeft, const DECIMAL* pDecRight, DECI
     }
     else if (DEC_SIGN(pDecLeft) && !DEC_SIGN(pDecRight))
     {
-      int cmp = VARIANT_DecCmp(pDecLeft, pDecRight);
+      cmp = VARIANT_DecCmp(pDecLeft, pDecRight);
 
       /* -x + y : Negative if x > y */
       if (cmp > 0)
@@ -4593,7 +4594,7 @@ VarDecAdd_AsInvertedNegative:
     }
     else if (!DEC_SIGN(pDecLeft) && DEC_SIGN(pDecRight))
     {
-      int cmp = VARIANT_DecCmp(pDecLeft, pDecRight);
+      cmp = VARIANT_DecCmp(pDecLeft, pDecRight);
 
       /* x + -y : Negative if x <= y */
       if (cmp <= 0)
@@ -6407,7 +6408,7 @@ static BSTR VARIANT_BstrReplaceDecimal(const WCHAR * buff, LCID lcid, ULONG dwFl
   {
     WCHAR *p;
     WCHAR numbuff[256];
-    WCHAR empty[1] = {'\0'};
+    WCHAR empty[] = {'\0'};
     NUMBERFMTW minFormat;
 
     minFormat.NumDigits = 0;
@@ -7016,7 +7017,7 @@ HRESULT WINAPI VarBstrCmp(BSTR pbstrLeft, BSTR pbstrRight, LCID lcid, DWORD dwFl
       }
 
       hres = CompareStringW(lcid, dwFlags, pbstrLeft, lenLeft,
-              pbstrRight, lenRight) - 1;
+              pbstrRight, lenRight) - CSTR_LESS_THAN;
       TRACE("%d\n", hres);
       return hres;
     }
@@ -7282,7 +7283,7 @@ VARIANT_MakeDate_Start:
       switch (iDate)
       {
       case 0:  dwTry = dwAllOrders & ~(ORDER_DMY|ORDER_YDM); break;
-      case 1:  dwTry = dwAllOrders & ~(ORDER_MDY|ORDER_YMD|ORDER_MYD); break;
+      case 1:  dwTry = dwAllOrders & ~(ORDER_MDY|ORDER_YDM|ORDER_MYD); break;
       default: dwTry = dwAllOrders & ~(ORDER_DMY|ORDER_YDM); break;
       }
     }

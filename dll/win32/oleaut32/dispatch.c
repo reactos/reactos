@@ -232,11 +232,16 @@ HRESULT WINAPI CreateStdDispatch(
 
 typedef struct
 {
-    const IDispatchVtbl *lpVtbl;
+    IDispatch IDispatch_iface;
     void * pvThis;
     ITypeInfo * pTypeInfo;
     LONG ref;
 } StdDispatch;
+
+static inline StdDispatch *impl_from_IDispatch(IDispatch *iface)
+{
+    return CONTAINING_RECORD(iface, StdDispatch, IDispatch_iface);
+}
 
 /******************************************************************************
  * IDispatch_QueryInterface {OLEAUT32}
@@ -248,7 +253,7 @@ static HRESULT WINAPI StdDispatch_QueryInterface(
   REFIID riid,
   void** ppvObject)
 {
-    StdDispatch *This = (StdDispatch *)iface;
+    StdDispatch *This = impl_from_IDispatch(iface);
     TRACE("(%p)->(%s, %p)\n", iface, debugstr_guid(riid), ppvObject);
 
     if (IsEqualIID(riid, &IID_IDispatch) ||
@@ -268,7 +273,7 @@ static HRESULT WINAPI StdDispatch_QueryInterface(
  */
 static ULONG WINAPI StdDispatch_AddRef(LPDISPATCH iface)
 {
-    StdDispatch *This = (StdDispatch *)iface;
+    StdDispatch *This = impl_from_IDispatch(iface);
     ULONG refCount = InterlockedIncrement(&This->ref);
 
     TRACE("(%p)->(ref before=%u)\n",This, refCount - 1);
@@ -283,7 +288,7 @@ static ULONG WINAPI StdDispatch_AddRef(LPDISPATCH iface)
  */
 static ULONG WINAPI StdDispatch_Release(LPDISPATCH iface)
 {
-    StdDispatch *This = (StdDispatch *)iface;
+    StdDispatch *This = impl_from_IDispatch(iface);
     ULONG refCount = InterlockedDecrement(&This->ref);
 
     TRACE("(%p)->(ref before=%u)\n", This, refCount + 1);
@@ -316,7 +321,7 @@ static ULONG WINAPI StdDispatch_Release(LPDISPATCH iface)
  */
 static HRESULT WINAPI StdDispatch_GetTypeInfoCount(LPDISPATCH iface, UINT * pctinfo)
 {
-    StdDispatch *This = (StdDispatch *)iface;
+    StdDispatch *This = impl_from_IDispatch(iface);
     TRACE("(%p)\n", pctinfo);
 
     *pctinfo = This->pTypeInfo ? 1 : 0;
@@ -343,7 +348,7 @@ static HRESULT WINAPI StdDispatch_GetTypeInfoCount(LPDISPATCH iface, UINT * pcti
  */
 static HRESULT WINAPI StdDispatch_GetTypeInfo(LPDISPATCH iface, UINT iTInfo, LCID lcid, ITypeInfo** ppTInfo)
 {
-    StdDispatch *This = (StdDispatch *)iface;
+    StdDispatch *This = impl_from_IDispatch(iface);
     TRACE("(%d, %x, %p)\n", iTInfo, lcid, ppTInfo);
 
     *ppTInfo = NULL;
@@ -386,7 +391,7 @@ static HRESULT WINAPI StdDispatch_GetTypeInfo(LPDISPATCH iface, UINT iTInfo, LCI
  */
 static HRESULT WINAPI StdDispatch_GetIDsOfNames(LPDISPATCH iface, REFIID riid, LPOLESTR * rgszNames, UINT cNames, LCID lcid, DISPID * rgDispId)
 {
-    StdDispatch *This = (StdDispatch *)iface;
+    StdDispatch *This = impl_from_IDispatch(iface);
     TRACE("(%s, %p, %d, 0x%x, %p)\n", debugstr_guid(riid), rgszNames, cNames, lcid, rgDispId);
 
     if (!IsEqualGUID(riid, &IID_NULL))
@@ -424,7 +429,7 @@ static HRESULT WINAPI StdDispatch_Invoke(LPDISPATCH iface, DISPID dispIdMember, 
                                          WORD wFlags, DISPPARAMS * pDispParams, VARIANT * pVarResult,
                                          EXCEPINFO * pExcepInfo, UINT * puArgErr)
 {
-    StdDispatch *This = (StdDispatch *)iface;
+    StdDispatch *This = impl_from_IDispatch(iface);
     TRACE("(%d, %s, 0x%x, 0x%x, %p, %p, %p, %p)\n", dispIdMember, debugstr_guid(riid), lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
 
     if (!IsEqualGUID(riid, &IID_NULL))
@@ -455,9 +460,9 @@ static IDispatch * StdDispatch_Construct(
 
     pStdDispatch = CoTaskMemAlloc(sizeof(StdDispatch));
     if (!pStdDispatch)
-        return (IDispatch *)pStdDispatch;
+        return &pStdDispatch->IDispatch_iface;
 
-    pStdDispatch->lpVtbl = &StdDispatch_VTable;
+    pStdDispatch->IDispatch_iface.lpVtbl = &StdDispatch_VTable;
     pStdDispatch->pvThis = pvThis;
     pStdDispatch->pTypeInfo = pTypeInfo;
     pStdDispatch->ref = 1;
@@ -466,5 +471,5 @@ static IDispatch * StdDispatch_Construct(
      * being destroyed until we are done with it */
     ITypeInfo_AddRef(pTypeInfo);
 
-    return (IDispatch *)pStdDispatch;
+    return &pStdDispatch->IDispatch_iface;
 }

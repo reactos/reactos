@@ -261,8 +261,8 @@ RunApplication(int nTopic)
       _tcscat(AppName, CurrentDir);
     }
 
-  memset(&StartupInfo, 0, sizeof(STARTUPINFO));
-  StartupInfo.cb = sizeof(STARTUPINFO);
+  ZeroMemory(&StartupInfo, sizeof(StartupInfo));
+  StartupInfo.cb = sizeof(StartupInfo);
   StartupInfo.lpTitle = TEXT("Test");
   StartupInfo.dwFlags = STARTF_USESHOWWINDOW;
   StartupInfo.wShowWindow = SW_SHOWNORMAL;

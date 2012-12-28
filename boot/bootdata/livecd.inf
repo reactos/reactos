@@ -43,11 +43,14 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management","Pagin
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Arial",0x00000000,"Liberation Sans"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Courier",0x00000000,"FreeMono"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Courier New",0x00000000,"FreeMono"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Fixedsys",0x00000000,"Fixedsys Excelsior 3.01"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Helv",0x00000000,"Tahoma"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Helvetica",0x00000000,"Liberation Sans"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Sans Serif",0x00000000,"Tahoma"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Shell Dlg",0x00000000,"Tahoma"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Shell Dlg 2",0x00000000,"Tahoma"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Tahoma",0x00000000,"Tahoma"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Terminal",0x00000000,"DejaVu Sans Mono"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Times New Roman",0x00000000,"Liberation Serif"
 
 ; FIXME: Registration

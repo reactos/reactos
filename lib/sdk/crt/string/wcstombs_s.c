@@ -8,6 +8,7 @@
 
 #include <precomp.h>
 
+_Success_(return!=EINVAL)
 _Check_return_wat_
 _CRTIMP
 errno_t

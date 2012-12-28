@@ -92,7 +92,7 @@ static LPWSTR ConvertToUNICODE(LPSTR pszText, DWORD *pdwSize)
 }
 #endif
 
-VOID ShowLastError(void)
+VOID ShowLastError(VOID)
 {
     DWORD error = GetLastError();
     if (error != NO_ERROR)
@@ -117,22 +117,22 @@ VOID ShowLastError(void)
  */
 static void UpdateWindowCaption(void)
 {
-  TCHAR szCaption[MAX_STRING_LEN] = _T("");
+  TCHAR szCaption[MAX_STRING_LEN];
   TCHAR szNotepad[MAX_STRING_LEN];
 
   LoadString(Globals.hInstance, STRING_NOTEPAD, szNotepad, SIZEOF(szNotepad));
 
-  if (Globals.szFileTitle[0] != '\0')
+  if (Globals.szFileTitle[0] != 0)
   {
-      StringCchCat(szCaption, MAX_STRING_LEN, Globals.szFileTitle);
+      StringCchCopy(szCaption, SIZEOF(szCaption), Globals.szFileTitle);
   }
   else
   {
       LoadString(Globals.hInstance, STRING_UNTITLED, szCaption, SIZEOF(szCaption));
   }
   
-  StringCchCat(szCaption, MAX_STRING_LEN, _T(" - "));
-  StringCchCat(szCaption, MAX_STRING_LEN, szNotepad);
+  StringCchCat(szCaption, SIZEOF(szCaption), _T(" - "));
+  StringCchCat(szCaption, SIZEOF(szCaption), szNotepad);
   SetWindowText(Globals.hMainWnd, szCaption);
 }
 
@@ -187,7 +187,6 @@ BOOL FileExists(LPCTSTR szFilename)
    return (hFile != INVALID_HANDLE_VALUE);
 }
 
-
 BOOL HasFileExtension(LPCTSTR szFilename)
 {
     LPCTSTR s;
@@ -198,9 +197,9 @@ BOOL HasFileExtension(LPCTSTR szFilename)
     return _tcsrchr(szFilename, _T('.')) != NULL;
 }
 
-
-static VOID DoSaveFile(VOID)
+static BOOL DoSaveFile(VOID)
 {
+    BOOL bRet = TRUE;
     HANDLE hFile;
     LPTSTR pTemp;
     DWORD size;
@@ -210,7 +209,7 @@ static VOID DoSaveFile(VOID)
     if(hFile == INVALID_HANDLE_VALUE)
     {
         ShowLastError();
-        return;
+        return FALSE;
     }
 
     size = GetWindowTextLength(Globals.hEdit) + 1;
@@ -219,30 +218,38 @@ static VOID DoSaveFile(VOID)
     {
         CloseHandle(hFile);
         ShowLastError();
-        return;
+        return FALSE;
     }
     size = GetWindowText(Globals.hEdit, pTemp, size);
 
 #ifndef UNICODE
     pTemp = (LPTSTR)ConvertToUNICODE(pTemp, &size);
-    if (!pTemp) {
+    if (!pTemp)
+    {
         /* original "pTemp" already freed */
         CloseHandle(hFile);
         ShowLastError();
-        return;
+        return FALSE;
     }
 #endif
 
     if (size)
     {
         if (!WriteText(hFile, (LPWSTR)pTemp, size, Globals.iEncoding, Globals.iEoln))
+        {
             ShowLastError();
+            bRet = FALSE;
+        }
         else
+        {
             SendMessage(Globals.hEdit, EM_SETMODIFY, FALSE, 0);
+            bRet = TRUE;
+        }
     }
 
     CloseHandle(hFile);
     HeapFree(GetProcessHeap(), 0, pTemp);
+    return bRet;
 }
 
 /**
@@ -250,7 +257,7 @@ static VOID DoSaveFile(VOID)
  *   TRUE  - User agreed to close (both save/don't save)
  *   FALSE - User cancelled close by selecting "Cancel"
  */
-BOOL DoCloseFile(void)
+BOOL DoCloseFile(VOID)
 {
     int nResult;
 
@@ -258,27 +265,31 @@ BOOL DoCloseFile(void)
     {
         /* prompt user to save changes */
         nResult = AlertFileNotSaved(Globals.szFileName);
-        switch (nResult) {
-            case IDYES:     DIALOG_FileSave();
-                            break;
+        switch (nResult)
+        {
+            case IDYES:
+                if(!DIALOG_FileSave())
+                    return FALSE;
+                break;
 
-            case IDNO:      break;
+            case IDNO:
+                break;
 
-            case IDCANCEL:  return(FALSE);
-                            break;
+            case IDCANCEL:
+                return FALSE;
 
-            default:        return(FALSE);
-                            break;
-        } /* switch */
-    } /* if */
+            default:
+                return FALSE;
+        }
+    }
 
     SetFileName(empty_str);
-
     UpdateWindowCaption();
-    return(TRUE);
+
+    return TRUE;
 }
 
-void DoOpenFile(LPCTSTR szFileName)
+VOID DoOpenFile(LPCTSTR szFileName)
 {
     static const TCHAR dotlog[] = _T(".LOG");
     HANDLE hFile;
@@ -384,12 +395,12 @@ VOID DIALOG_FileOpen(VOID)
 }
 
 
-VOID DIALOG_FileSave(VOID)
+BOOL DIALOG_FileSave(VOID)
 {
-    if (Globals.szFileName[0] == '\0')
-        DIALOG_FileSaveAs();
+    if (Globals.szFileName[0] == 0)
+        return DIALOG_FileSaveAs();
     else
-        DoSaveFile();
+        return DoSaveFile();
 }
 
 static UINT_PTR CALLBACK DIALOG_FileSaveAs_Hook(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -448,7 +459,7 @@ static UINT_PTR CALLBACK DIALOG_FileSaveAs_Hook(HWND hDlg, UINT msg, WPARAM wPar
     return 0;
 }
 
-VOID DIALOG_FileSaveAs(VOID)
+BOOL DIALOG_FileSaveAs(VOID)
 {
     OPENFILENAME saveas;
     TCHAR szDir[MAX_PATH];
@@ -475,10 +486,26 @@ VOID DIALOG_FileSaveAs(VOID)
     saveas.lpTemplateName    = MAKEINTRESOURCE(DIALOG_ENCODING);
     saveas.lpfnHook          = DIALOG_FileSaveAs_Hook;
 
-    if (GetSaveFileName(&saveas)) {
+    if (GetSaveFileName(&saveas))
+    {
+        // HACK: Because in ROS, Save-As boxes don't check the validity
+        // of file names and thus, here, szPath can be invalid !! We only
+        // see its validity when we call DoSaveFile()...
         SetFileName(szPath);
-        UpdateWindowCaption();
-        DoSaveFile();
+        if (DoSaveFile())
+        {
+            UpdateWindowCaption();
+            return TRUE;
+        }
+        else
+        {
+            SetFileName(_T(""));
+            return FALSE;
+        }
+    }
+    else
+    {
+        return FALSE;
     }
 }
 

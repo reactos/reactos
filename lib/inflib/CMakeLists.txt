@@ -20,7 +20,10 @@ else()
         infhostput.c
         infhostrtl.c)
 
-    add_definitions(-D__NO_CTYPE_INLINES -DINFLIB_HOST -D_CRT_NON_CONFORMING_SWPRINTFS)
+    add_definitions(-D__NO_CTYPE_INLINES -DINFLIB_HOST)
+    if(MSVC)
+        add_definitions(-D_CRT_NON_CONFORMING_SWPRINTFS)
+    endif()
     add_library(inflibhost ${GLOBAL_FILES} ${SOURCE})
     if(NOT MSVC)
         add_target_compile_flags(inflibhost "-Wpointer-arith -Wwrite-strings")

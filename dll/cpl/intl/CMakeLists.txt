@@ -1,6 +1,4 @@
 
-set_rc_compiler()
-
 spec2def(intl.cpl intl.spec)
 
 add_library(intl SHARED

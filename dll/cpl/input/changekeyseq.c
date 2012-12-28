@@ -1,5 +1,4 @@
 /*
- *
  * PROJECT:         input.dll
  * FILE:            dll/win32/input/changekeyseq.c
  * PURPOSE:         input.dll

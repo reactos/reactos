@@ -59,7 +59,7 @@ static void GraphCtrl_Init(TGraphCtrl* this)
     this->m_nYDecimals = 3;
 
     /*  set some initial values for the scaling until "SetRange" is called.
-     *  these are protected varaibles and must be set with SetRange
+     *  these are protected variables and must be set with SetRange
      *  in order to ensure that m_dRange is updated accordingly
      */
     /*   m_dLowerLimit = -10.0; */
@@ -322,8 +322,8 @@ void GraphCtrl_InvalidateCtrl(TGraphCtrl* this, BOOL bResize)
             (m_rectPlot.bottom+m_rectPlot.top)/2, m_strYUnitsString, wcslen(m_strYUnitsString));
     SelectObject(m_dcGrid, oldFont);
 #endif
-    /*  at this point we are done filling the the grid bitmap,  */
-    /*  no more drawing to this bitmap is needed until the setting are changed */
+    /*  at this point we are done filling the grid bitmap,  */
+    /*  no more drawing to this bitmap is needed until the settings are changed */
 
     /*  if we don't have one yet, set up a memory dc for the plot */
     if (this->m_dcPlot == NULL)
@@ -441,7 +441,7 @@ void GraphCtrl_DrawPoint(TGraphCtrl* this)
         /*  fill the cleanup area with the background */
         FillRect(this->m_dcPlot, &rectCleanUp, this->m_brushBack);
 
-        /*  draw the next line segement */
+        /*  draw the next line segment */
         for (i = 0; i < MAX_PLOTS; i++)
         {
             /*  grab the plotting pen */

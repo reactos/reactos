@@ -1284,7 +1284,7 @@ StatusWindowProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             return STATUSBAR_WMGetText (infoPtr, (INT)wParam, (LPWSTR)lParam);
 
 	case WM_GETTEXTLENGTH:
-	    return STATUSBAR_GetTextLength (infoPtr, 0);
+	    return LOWORD(STATUSBAR_GetTextLength (infoPtr, 0));
 
 	case WM_LBUTTONDBLCLK:
             return STATUSBAR_SendMouseNotify(infoPtr, NM_DBLCLK, msg, wParam, lParam);

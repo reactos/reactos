@@ -109,6 +109,7 @@ FILE *_tpopen (const _TCHAR *cm, const _TCHAR *md) /* program name, pipe mode */
     }
 
     CloseHandle(ProcessInformation.hThread);
+    CloseHandle(ProcessInformation.hProcess);
 
     if ( *md == 'r' )
     {

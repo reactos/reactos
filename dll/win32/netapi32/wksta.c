@@ -592,25 +592,3 @@ NET_API_STATUS NET_API_FUNCTION NetGetJoinInformation(
     return NERR_Success;
 }
 
-/************************************************************
- *                NetUserGetGroups (NETAPI32.@)
- */
-NET_API_STATUS NET_API_FUNCTION NetUserGetGroups(
-        LPCWSTR servername,
-        LPCWSTR username,
-        DWORD level,
-        LPBYTE *bufptr,
-        DWORD prefixmaxlen,
-        LPDWORD entriesread,
-        LPDWORD totalentries)
-{
-    FIXME("%s %s %d %p %d %p %p stub\n", debugstr_w(servername),
-          debugstr_w(username), level, bufptr, prefixmaxlen, entriesread,
-          totalentries);
-
-    *bufptr = NULL;
-    *entriesread = 0;
-    *totalentries = 0;
-
-    return ERROR_INVALID_LEVEL;
-}

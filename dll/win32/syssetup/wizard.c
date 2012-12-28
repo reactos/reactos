@@ -55,10 +55,11 @@ RunVMWInstall(HWND hWnd)
     PROCESS_INFORMATION ProcInfo;
     MSG msg;
     DWORD ret;
-    STARTUPINFOW si = {0};
+    STARTUPINFOW si;
     WCHAR InstallName[] = L"vmwinst.exe";
 
-    si.cb = sizeof(STARTUPINFO);
+    ZeroMemory(&si, sizeof(si));
+    si.cb = sizeof(si);
 
     if(CreateProcessW(NULL, InstallName, NULL, NULL, TRUE, NORMAL_PRIORITY_CLASS,
                       NULL, NULL, &si, &ProcInfo))
@@ -794,8 +795,8 @@ RunControlPanelApplet(HWND hwnd, PCWSTR pwszCPLParameters)
         PROCESS_INFORMATION ProcessInformation;
         WCHAR CmdLine[MAX_PATH] = L"rundll32.exe shell32.dll,Control_RunDLL ";
 
-        ZeroMemory(&StartupInfo, sizeof(STARTUPINFOW));
-        StartupInfo.cb = sizeof(STARTUPINFOW);
+        ZeroMemory(&StartupInfo, sizeof(StartupInfo));
+        StartupInfo.cb = sizeof(StartupInfo);
 
         ASSERT(_countof(CmdLine) > wcslen(CmdLine) + wcslen(pwszCPLParameters));
         wcscat(CmdLine, pwszCPLParameters);

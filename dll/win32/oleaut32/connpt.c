@@ -48,7 +48,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(ole);
  */
 typedef struct ConnectionPointImpl {
 
-  const IConnectionPointVtbl *lpvtbl;
+  IConnectionPoint IConnectionPoint_iface;
 
   /* IUnknown of our main object*/
   IUnknown *Obj;
@@ -74,7 +74,7 @@ static const IConnectionPointVtbl ConnectionPointImpl_VTable;
  */
 typedef struct EnumConnectionsImpl {
 
-  const IEnumConnectionsVtbl *lpvtbl;
+  IEnumConnections IEnumConnections_iface;
 
   LONG ref;
 
@@ -94,6 +94,15 @@ static EnumConnectionsImpl *EnumConnectionsImpl_Construct(IUnknown *pUnk,
 							  DWORD nSinks,
 							  CONNECTDATA *pCD);
 
+static inline ConnectionPointImpl *impl_from_IConnectionPoint(IConnectionPoint *iface)
+{
+  return CONTAINING_RECORD(iface, ConnectionPointImpl, IConnectionPoint_iface);
+}
+
+static inline EnumConnectionsImpl *impl_from_IEnumConnections(IEnumConnections *iface)
+{
+  return CONTAINING_RECORD(iface, EnumConnectionsImpl, IEnumConnections_iface);
+}
 
 /************************************************************************
  * ConnectionPointImpl_Construct
@@ -104,7 +113,7 @@ static ConnectionPointImpl *ConnectionPointImpl_Construct(IUnknown *pUnk,
   ConnectionPointImpl *Obj;
 
   Obj = HeapAlloc(GetProcessHeap(), 0, sizeof(*Obj));
-  Obj->lpvtbl = &ConnectionPointImpl_VTable;
+  Obj->IConnectionPoint_iface.lpVtbl = &ConnectionPointImpl_VTable;
   Obj->Obj = pUnk;
   Obj->ref = 1;
   Obj->iid =  *riid;
@@ -143,7 +152,7 @@ static HRESULT WINAPI ConnectionPointImpl_QueryInterface(
   REFIID  riid,
   void**  ppvObject)
 {
-  ConnectionPointImpl *This = (ConnectionPointImpl *)iface;
+  ConnectionPointImpl *This = impl_from_IConnectionPoint(iface);
   TRACE("(%p)->(%s, %p)\n", This, debugstr_guid(riid), ppvObject);
 
   /*
@@ -178,7 +187,7 @@ static HRESULT WINAPI ConnectionPointImpl_QueryInterface(
    * Query Interface always increases the reference count by one when it is
    * successful
    */
-  ConnectionPointImpl_AddRef((IConnectionPoint*)This);
+  ConnectionPointImpl_AddRef(&This->IConnectionPoint_iface);
 
   return S_OK;
 }
@@ -191,7 +200,7 @@ static HRESULT WINAPI ConnectionPointImpl_QueryInterface(
  */
 static ULONG WINAPI ConnectionPointImpl_AddRef(IConnectionPoint* iface)
 {
-  ConnectionPointImpl *This = (ConnectionPointImpl *)iface;
+  ConnectionPointImpl *This = impl_from_IConnectionPoint(iface);
   ULONG refCount = InterlockedIncrement(&This->ref);
 
   TRACE("(%p)->(ref before=%d)\n", This, refCount - 1);
@@ -207,7 +216,7 @@ static ULONG WINAPI ConnectionPointImpl_AddRef(IConnectionPoint* iface)
 static ULONG WINAPI ConnectionPointImpl_Release(
       IConnectionPoint* iface)
 {
-  ConnectionPointImpl *This = (ConnectionPointImpl *)iface;
+  ConnectionPointImpl *This = impl_from_IConnectionPoint(iface);
   ULONG refCount = InterlockedDecrement(&This->ref);
 
   TRACE("(%p)->(ref before=%d)\n", This, refCount + 1);
@@ -228,7 +237,7 @@ static HRESULT WINAPI ConnectionPointImpl_GetConnectionInterface(
 					       IConnectionPoint *iface,
 					       IID              *piid)
 {
-  ConnectionPointImpl *This = (ConnectionPointImpl *)iface;
+  ConnectionPointImpl *This = impl_from_IConnectionPoint(iface);
   TRACE("(%p)->(%p) returning %s\n", This, piid, debugstr_guid(&(This->iid)));
   *piid = This->iid;
   return S_OK;
@@ -242,7 +251,7 @@ static HRESULT WINAPI ConnectionPointImpl_GetConnectionPointContainer(
 				      IConnectionPoint           *iface,
 				      IConnectionPointContainer  **ppCPC)
 {
-  ConnectionPointImpl *This = (ConnectionPointImpl *)iface;
+  ConnectionPointImpl *This = impl_from_IConnectionPoint(iface);
   TRACE("(%p)->(%p)\n", This, ppCPC);
 
   return IUnknown_QueryInterface(This->Obj,
@@ -259,7 +268,7 @@ static HRESULT WINAPI ConnectionPointImpl_Advise(IConnectionPoint *iface,
 						 DWORD *pdwCookie)
 {
   DWORD i;
-  ConnectionPointImpl *This = (ConnectionPointImpl *)iface;
+  ConnectionPointImpl *This = impl_from_IConnectionPoint(iface);
   IUnknown *lpSink;
   TRACE("(%p)->(%p, %p)\n", This, lpUnk, pdwCookie);
 
@@ -290,7 +299,7 @@ static HRESULT WINAPI ConnectionPointImpl_Advise(IConnectionPoint *iface,
 static HRESULT WINAPI ConnectionPointImpl_Unadvise(IConnectionPoint *iface,
 						   DWORD dwCookie)
 {
-  ConnectionPointImpl *This = (ConnectionPointImpl *)iface;
+  ConnectionPointImpl *This = impl_from_IConnectionPoint(iface);
   TRACE("(%p)->(%d)\n", This, dwCookie);
 
   if(dwCookie == 0 || dwCookie > This->maxSinks) return E_INVALIDARG;
@@ -311,7 +320,7 @@ static HRESULT WINAPI ConnectionPointImpl_EnumConnections(
 						    IConnectionPoint *iface,
 						    LPENUMCONNECTIONS *ppEnum)
 {
-  ConnectionPointImpl *This = (ConnectionPointImpl *)iface;
+  ConnectionPointImpl *This = impl_from_IConnectionPoint(iface);
   CONNECTDATA *pCD;
   DWORD i, nextslot;
   EnumConnectionsImpl *EnumObj;
@@ -339,9 +348,9 @@ static HRESULT WINAPI ConnectionPointImpl_EnumConnections(
   IUnknown_AddRef((IUnknown*)This);
 
   EnumObj = EnumConnectionsImpl_Construct((IUnknown*)This, This->nSinks, pCD);
-  hr = IEnumConnections_QueryInterface((IEnumConnections*)EnumObj,
+  hr = IEnumConnections_QueryInterface(&EnumObj->IEnumConnections_iface,
 				  &IID_IEnumConnections, (LPVOID)ppEnum);
-  IEnumConnections_Release((IEnumConnections*)EnumObj);
+  IEnumConnections_Release(&EnumObj->IEnumConnections_iface);
 
   HeapFree(GetProcessHeap(), 0, pCD);
   return hr;
@@ -373,7 +382,7 @@ static EnumConnectionsImpl *EnumConnectionsImpl_Construct(IUnknown *pUnk,
   EnumConnectionsImpl *Obj = HeapAlloc(GetProcessHeap(), 0, sizeof(*Obj));
   DWORD i;
 
-  Obj->lpvtbl = &EnumConnectionsImpl_VTable;
+  Obj->IEnumConnections_iface.lpVtbl = &EnumConnectionsImpl_VTable;
   Obj->ref = 1;
   Obj->pUnk = pUnk;
   Obj->pCD = HeapAlloc(GetProcessHeap(), 0, nSinks * sizeof(CONNECTDATA));
@@ -460,7 +469,7 @@ static HRESULT WINAPI EnumConnectionsImpl_QueryInterface(
  */
 static ULONG WINAPI EnumConnectionsImpl_AddRef(IEnumConnections* iface)
 {
-  EnumConnectionsImpl *This = (EnumConnectionsImpl *)iface;
+  EnumConnectionsImpl *This = impl_from_IEnumConnections(iface);
   ULONG refCount = InterlockedIncrement(&This->ref);
 
   TRACE("(%p)->(ref before=%d)\n", This, refCount - 1);
@@ -476,7 +485,7 @@ static ULONG WINAPI EnumConnectionsImpl_AddRef(IEnumConnections* iface)
  */
 static ULONG WINAPI EnumConnectionsImpl_Release(IEnumConnections* iface)
 {
-  EnumConnectionsImpl *This = (EnumConnectionsImpl *)iface;
+  EnumConnectionsImpl *This = impl_from_IEnumConnections(iface);
   ULONG refCount = InterlockedDecrement(&This->ref);
 
   TRACE("(%p)->(ref before=%d)\n", This, refCount + 1);
@@ -499,7 +508,7 @@ static HRESULT WINAPI EnumConnectionsImpl_Next(IEnumConnections* iface,
 					       ULONG cConn, LPCONNECTDATA pCD,
 					       ULONG *pEnum)
 {
-  EnumConnectionsImpl *This = (EnumConnectionsImpl *)iface;
+  EnumConnectionsImpl *This = impl_from_IEnumConnections(iface);
   DWORD nRet = 0;
   TRACE("(%p)->(%d, %p, %p)\n", This, cConn, pCD, pEnum);
 
@@ -534,7 +543,7 @@ static HRESULT WINAPI EnumConnectionsImpl_Next(IEnumConnections* iface,
 static HRESULT WINAPI EnumConnectionsImpl_Skip(IEnumConnections* iface,
 					       ULONG cSkip)
 {
-  EnumConnectionsImpl *This = (EnumConnectionsImpl *)iface;
+  EnumConnectionsImpl *This = impl_from_IEnumConnections(iface);
   TRACE("(%p)->(%d)\n", This, cSkip);
 
   if(This->nCur + cSkip >= This->nConns)
@@ -552,7 +561,7 @@ static HRESULT WINAPI EnumConnectionsImpl_Skip(IEnumConnections* iface,
  */
 static HRESULT WINAPI EnumConnectionsImpl_Reset(IEnumConnections* iface)
 {
-  EnumConnectionsImpl *This = (EnumConnectionsImpl *)iface;
+  EnumConnectionsImpl *This = impl_from_IEnumConnections(iface);
   TRACE("(%p)\n", This);
 
   This->nCur = 0;
@@ -568,7 +577,7 @@ static HRESULT WINAPI EnumConnectionsImpl_Reset(IEnumConnections* iface)
 static HRESULT WINAPI EnumConnectionsImpl_Clone(IEnumConnections* iface,
 						LPENUMCONNECTIONS *ppEnum)
 {
-  EnumConnectionsImpl *This = (EnumConnectionsImpl *)iface;
+  EnumConnectionsImpl *This = impl_from_IEnumConnections(iface);
   EnumConnectionsImpl *newObj;
   TRACE("(%p)->(%p)\n", This, ppEnum);
 
@@ -613,8 +622,8 @@ HRESULT CreateConnectionPoint(IUnknown *pUnk, REFIID riid,
   Obj = ConnectionPointImpl_Construct(pUnk, riid);
   if(!Obj) return E_OUTOFMEMORY;
 
-  hr = IConnectionPoint_QueryInterface((IConnectionPoint *)Obj,
+  hr = IConnectionPoint_QueryInterface(&Obj->IConnectionPoint_iface,
 				       &IID_IConnectionPoint, (LPVOID)pCP);
-  IConnectionPoint_Release((IConnectionPoint *)Obj);
+  IConnectionPoint_Release(&Obj->IConnectionPoint_iface);
   return hr;
 }

@@ -30,7 +30,7 @@ size_t _mbstrlen( const char *str )
     /* FIXME: According to the documentation we are supposed to test for
      * multi-byte character validity. Whatever that means
      */
-    str += isleadbyte(*str) ? 2 : 1;
+    str += isleadbyte((unsigned char)*str) ? 2 : 1;
     len++;
   }
   return len;

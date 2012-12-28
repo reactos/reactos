@@ -209,7 +209,7 @@ NtSetDefaultLocale(IN BOOLEAN UserProfile,
     HANDLE KeyHandle;
     ULONG ValueLength;
     WCHAR ValueBuffer[20];
-    HANDLE UserKey = NULL;
+    HANDLE UserKey;
     NTSTATUS Status;
     PAGED_CODE();
 
@@ -231,6 +231,7 @@ NtSetDefaultLocale(IN BOOLEAN UserProfile,
                              L"\\Registry\\Machine\\System\\CurrentControlSet"
                              L"\\Control\\Nls\\Language");
         RtlInitUnicodeString(&ValueName, L"Default");
+        UserKey = NULL;
     }
 
     /* Initailize the object attributes */
@@ -286,7 +287,10 @@ NtSetDefaultLocale(IN BOOLEAN UserProfile,
     }
 
     /* Close the user key */
-    ZwClose(UserKey);
+    if (UserKey)
+    {
+        ObCloseHandle(UserKey, KernelMode);
+    }
 
     /* Check for success */
     if (NT_SUCCESS(Status))

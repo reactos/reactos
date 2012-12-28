@@ -345,7 +345,7 @@ co_IntSetScrollInfo(PWND Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bRedraw)
    UINT new_flags;
    INT action = 0;
    PSBDATA pSBData;
-   DWORD OldPos;
+   DWORD OldPos = 0;
    BOOL bChangeParams = FALSE; /* Don't show/hide scrollbar if params don't change */
 
    ASSERT_REFS_CO(Window);

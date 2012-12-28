@@ -1,12 +1,9 @@
 
-add_definitions(-D__WINESRC__)
-
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
+add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
-
-set_rc_compiler()
 spec2def(hnetcfg.dll hnetcfg.spec)
 
 list(APPEND SOURCE
@@ -21,9 +18,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/hnetcfg.def)
 
 add_library(hnetcfg SHARED ${SOURCE})
-
 set_module_type(hnetcfg win32dll)
-
 target_link_libraries(hnetcfg wine uuid)
 
 add_importlibs(hnetcfg

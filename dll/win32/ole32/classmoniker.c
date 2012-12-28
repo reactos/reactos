@@ -816,14 +816,13 @@ HRESULT ClassMoniker_CreateFromDisplayName(LPBC pbc, LPCOLESTR szDisplayName, LP
     return hr;
 }
 
-static HRESULT WINAPI ClassMonikerCF_QueryInterface(LPCLASSFACTORY iface,
-                                                  REFIID riid, LPVOID *ppv)
+static HRESULT WINAPI ClassMonikerCF_QueryInterface(IClassFactory *iface, REFIID riid, void **ppv)
 {
     *ppv = NULL;
     if (IsEqualIID(riid, &IID_IUnknown) || IsEqualIID(riid, &IID_IClassFactory))
     {
         *ppv = iface;
-        IUnknown_AddRef(iface);
+        IClassFactory_AddRef(iface);
         return S_OK;
     }
     return E_NOINTERFACE;

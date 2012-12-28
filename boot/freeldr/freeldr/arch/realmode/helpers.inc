@@ -92,20 +92,17 @@ writehex_common:
     popfd
     ret
 
-SoftReboot:
-	mov ax, HEX(40)
-	mov ds, ax
-	mov si, HEX(72)
+Reboot:
+	cli
 
-	/* Set the word at location 40:72 to 1234h */
-	mov word ptr [si], HEX(1234)
+	/* Set the word at location 40h:72h to 0 (cold reboot) */
+	mov word ptr ds:[HEX(0472)], HEX(0)
 
-	/* and jump to location FFFF:0 in ROM */
-	ljmp16	HEX(0FFFF), HEX(0000)
+	/* and jump to location F000h:FFF0h in ROM */
+	ljmp16 HEX(0F000), HEX(0FFF0)
 
 
 ChainLoadBiosBootSectorCode:
-
     /* Load segment registers */
     cli
     xor ax, ax
@@ -117,4 +114,4 @@ ChainLoadBiosBootSectorCode:
     mov esp, HEX(7C00)
 
     /* Jump to the bootsector code */
-    ljmp16	HEX(0000), HEX(7C00)
+    ljmp16 HEX(0000), HEX(7C00)

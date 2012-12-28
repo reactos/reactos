@@ -240,7 +240,7 @@ IntDestroyCurIconObject(PCURICON_OBJECT CurIcon, PPROCESSINFO ppi)
     HBITMAP bmpMask, bmpColor;
     BOOLEAN Ret, bListEmpty, bFound = FALSE;
     PCURICON_PROCESS Current = NULL;
-    
+
     /* For handles created without any data (error handling) */
     if(IsListEmpty(&CurIcon->ProcessList))
         goto emptyList;
@@ -256,7 +256,7 @@ IntDestroyCurIconObject(PCURICON_OBJECT CurIcon, PPROCESSINFO ppi)
             break;
         }
     }
-    
+
     if(!bFound)
     {
         /* This object doesn't belong to this process */
@@ -385,6 +385,18 @@ NtUserGetIconInfo(
     {
         ProbeForWrite(IconInfo, sizeof(ICONINFO), 1);
         RtlCopyMemory(IconInfo, &ii, sizeof(ICONINFO));
+
+        /// @todo Implement support for lpInstName
+        if (lpInstName)
+        {
+            RtlInitEmptyUnicodeString(lpInstName, NULL, 0);
+        }
+
+        /// @todo Implement support for lpResName
+        if (lpResName)
+        {
+            RtlInitEmptyUnicodeString(lpResName, NULL, 0);
+        }
 
         if (pbpp)
         {
@@ -1049,7 +1061,7 @@ UserDrawIconEx(
     RECTL rcDest, rcSrc;
     CLIPOBJ* pdcClipObj = NULL;
     EXLATEOBJ exlo;
-    
+
     /* Stupid case */
     if((diFlags & DI_NORMAL) == 0)
     {
@@ -1059,12 +1071,12 @@ UserDrawIconEx(
 
     hbmMask = pIcon->IconInfo.hbmMask;
     hbmColor = pIcon->IconInfo.hbmColor;
-    
+
     if (istepIfAniCur)
         ERR("NtUserDrawIconEx: istepIfAniCur is not supported!\n");
-    
+
     /*
-     * Get our objects. 
+     * Get our objects.
      * Shared locks are enough, we are only reading those bitmaps
      */
     psurfMask = SURFACE_ShareLockSurface(hbmMask);
@@ -1073,7 +1085,7 @@ UserDrawIconEx(
         ERR("Unable to lock the mask surface.\n");
         return FALSE;
     }
-    
+
     /* Color bitmap is not mandatory */
     if(hbmColor == NULL)
     {
@@ -1087,7 +1099,7 @@ UserDrawIconEx(
         SURFACE_ShareUnlockSurface(psurfMask);
         return FALSE;
     }
-    
+
     /* Set source rect */
     RECTL_vSetRect(&rcSrc, 0, 0, pIcon->Size.cx, pIcon->Size.cy);
 
@@ -1119,17 +1131,17 @@ UserDrawIconEx(
     if (!cxWidth)
     {
         if(diFlags & DI_DEFAULTSIZE)
-            cxWidth = pIcon->IconInfo.fIcon ? 
+            cxWidth = pIcon->IconInfo.fIcon ?
                 UserGetSystemMetrics(SM_CXICON) : UserGetSystemMetrics(SM_CXCURSOR);
         else
             cxWidth = pIcon->Size.cx;
     }
-    
+
     /* Fix height parameter, if needed */
     if (!cyHeight)
     {
         if(diFlags & DI_DEFAULTSIZE)
-            cyHeight = pIcon->IconInfo.fIcon ? 
+            cyHeight = pIcon->IconInfo.fIcon ?
                 UserGetSystemMetrics(SM_CYICON) : UserGetSystemMetrics(SM_CYCURSOR);
         else
             cyHeight = pIcon->Size.cy;
@@ -1143,9 +1155,9 @@ UserDrawIconEx(
         /* Yes: Allocate and paint the offscreen surface */
         EBRUSHOBJ eboFill;
         PBRUSH pbrush = BRUSH_ShareLockBrush(hbrFlickerFreeDraw);
-        
+
         TRACE("Performing off-screen rendering.\n");
-        
+
         if(!pbrush)
         {
             ERR("Failed to get brush object.\n");
@@ -1171,11 +1183,11 @@ UserDrawIconEx(
             BRUSH_ShareUnlockBrush(pbrush);
             return FALSE;
         }
-        
+
         /* Paint the brush */
         EBRUSHOBJ_vInit(&eboFill, pbrush, psurfOffScreen, 0x00FFFFFF, 0, NULL);
         RECTL_vSetRect(&rcDest, 0, 0, cxWidth, cyHeight);
-        
+
         Ret = IntEngBitBlt(&psurfOffScreen->SurfObj,
             NULL,
             NULL,
@@ -1191,7 +1203,7 @@ UserDrawIconEx(
         /* Clean up everything */
         EBRUSHOBJ_vCleanup(&eboFill);
         BRUSH_ShareUnlockBrush(pbrush);
-            
+
         if(!Ret)
         {
             ERR("Failed to paint the off-screen surface.\n");
@@ -1200,7 +1212,7 @@ UserDrawIconEx(
             GDIOBJ_vDeleteObject(&psurfOffScreen->BaseObject);
             return FALSE;
         }
-        
+
         /* We now have our destination surface */
         psurfDest = psurfOffScreen;
     }
@@ -1208,7 +1220,7 @@ UserDrawIconEx(
     {
         /* We directly draw to the DC */
         TRACE("Performing on screen rendering.\n");
-        
+
         psurfOffScreen = NULL;
         pdc = DC_LockDc(hDc);
         if(!pdc)
@@ -1222,16 +1234,16 @@ UserDrawIconEx(
         RECTL_vSetRect(&rcDest, xLeft, yTop, xLeft + cxWidth, yTop + cyHeight);
         IntLPtoDP(pdc, (LPPOINT)&rcDest, 2);
         RECTL_vOffsetRect(&rcDest, pdc->ptlDCOrig.x, pdc->ptlDCOrig.y);
-        
+
         /* Prepare the underlying surface */
         DC_vPrepareDCsForBlit(pdc, rcDest, NULL, rcDest);
-        
+
         /* Get the clip object */
         pdcClipObj = pdc->rosdc.CombinedClip;
-        
+
         /* We now have our destination surface and rectangle */
         psurfDest = pdc->dclevel.pSurface;
-        
+
         if(psurfDest == NULL)
         {
             /* Empty DC */
@@ -1281,10 +1293,10 @@ UserDrawIconEx(
 				ptr += 4;
             }
         }
-        
+
         /* Initialize color translation object */
         EXLATEOBJ_vInitialize(&exlo, psurf->ppal, psurfDest->ppal, 0xFFFFFFFF, 0xFFFFFFFF, 0);
-        
+
         /* Now do it */
         Ret = IntEngAlphaBlend(&psurfDest->SurfObj,
                                &psurf->SurfObj,
@@ -1293,9 +1305,9 @@ UserDrawIconEx(
                                &rcDest,
                                &rcSrc,
                                &blendobj);
-        
+
         EXLATEOBJ_vCleanup(&exlo);
-        
+
     CleanupAlpha:
         if(psurf) SURFACE_ShareUnlockSurface(psurf);
         if(hsurfCopy) NtGdiDeleteObjectApp(hsurfCopy);
@@ -1306,9 +1318,9 @@ UserDrawIconEx(
     if (diFlags & DI_MASK)
     {
         DWORD rop4 = (diFlags & DI_IMAGE) ? ROP4_SRCAND : ROP4_SRCCOPY;
-        
+
         EXLATEOBJ_vInitSrcMonoXlate(&exlo, psurfDest->ppal, 0x00FFFFFF, 0);
-        
+
         Ret = IntEngStretchBlt(&psurfDest->SurfObj,
                                &psurfMask->SurfObj,
                                NULL,
@@ -1321,7 +1333,7 @@ UserDrawIconEx(
                                NULL,
                                NULL,
                                rop4);
-        
+
         EXLATEOBJ_vCleanup(&exlo);
 
         if(!Ret)
@@ -1336,9 +1348,9 @@ UserDrawIconEx(
 		if (psurfColor)
         {
             DWORD rop4 = (diFlags & DI_MASK) ? ROP4_SRCINVERT : ROP4_SRCCOPY ;
-            
+
             EXLATEOBJ_vInitialize(&exlo, psurfColor->ppal, psurfDest->ppal, 0x00FFFFFF, 0x00FFFFFF, 0);
-            
+
             Ret = IntEngStretchBlt(&psurfDest->SurfObj,
                                    &psurfColor->SurfObj,
                                    NULL,
@@ -1351,7 +1363,7 @@ UserDrawIconEx(
                                    NULL,
                                    NULL,
                                    rop4);
-        
+
             EXLATEOBJ_vCleanup(&exlo);
 
             if(!Ret)
@@ -1365,9 +1377,9 @@ UserDrawIconEx(
             /* Mask bitmap holds the information in its bottom half */
             DWORD rop4 = (diFlags & DI_MASK) ? ROP4_SRCINVERT : ROP4_SRCCOPY;
             RECTL_vOffsetRect(&rcSrc, 0, pIcon->Size.cy);
-            
+
             EXLATEOBJ_vInitSrcMonoXlate(&exlo, psurfDest->ppal, 0x00FFFFFF, 0);
-        
+
             Ret = IntEngStretchBlt(&psurfDest->SurfObj,
                                    &psurfMask->SurfObj,
                                    NULL,
@@ -1380,7 +1392,7 @@ UserDrawIconEx(
                                    NULL,
                                    NULL,
                                    rop4);
-            
+
             EXLATEOBJ_vCleanup(&exlo);
 
             if(!Ret)
@@ -1407,13 +1419,13 @@ done:
         RECTL_vSetRect(&rcDest, xLeft, yTop, xLeft + cxWidth, yTop + cyHeight);
         IntLPtoDP(pdc, (LPPOINT)&rcDest, 2);
         RECTL_vOffsetRect(&rcDest, pdc->ptlDCOrig.x, pdc->ptlDCOrig.y);
-        
+
         /* Prepare the underlying surface */
         DC_vPrepareDCsForBlit(pdc, rcDest, NULL, rcDest);
-        
+
         /* Get the clip object */
         pdcClipObj = pdc->rosdc.CombinedClip;
-        
+
         /* We now have our destination surface and rectangle */
         psurfDest = pdc->dclevel.pSurface;
         if(!psurfDest)
@@ -1422,10 +1434,10 @@ done:
             DC_UnlockDc(pdc);
             goto Cleanup2;
         }
-        
+
         /* Color translation */
         EXLATEOBJ_vInitialize(&exlo, psurfOffScreen->ppal, psurfDest->ppal, 0x00FFFFFF, 0x00FFFFFF, 0);
-        
+
         /* Blt it! */
         Ret = IntEngBitBlt(&psurfDest->SurfObj,
                            &psurfOffScreen->SurfObj,
@@ -1438,7 +1450,7 @@ done:
                            NULL,
                            NULL,
                            ROP4_SRCCOPY);
-                           
+
         EXLATEOBJ_vCleanup(&exlo);
     }
 Cleanup:
@@ -1447,12 +1459,12 @@ Cleanup:
         DC_vFinishBlit(pdc, NULL);
         DC_UnlockDc(pdc);
     }
-    
+
 Cleanup2:
     /* Delete off screen rendering surface */
     if(psurfOffScreen)
         GDIOBJ_vDeleteObject(&psurfOffScreen->BaseObject);
-    
+
     /* Unlock other surfaces */
     SURFACE_ShareUnlockSurface(psurfMask);
     if(psurfColor) SURFACE_ShareUnlockSurface(psurfColor);

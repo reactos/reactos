@@ -34,6 +34,6 @@ DissectArcPath2(
     OUT ULONG *PathSyntax);
 BOOLEAN DissectArcPath(CHAR *ArcPath, CHAR *BootPath, UCHAR* BootDrive, ULONG* BootPartition);
 VOID ConstructArcPath(PCHAR ArcPath, PCHAR SystemFolder, UCHAR Disk, ULONG Partition);
+#if 0
 UCHAR ConvertArcNameToBiosDriveNumber(PCHAR ArcPath);
-
-void	PcBeep(void);
+#endif

@@ -472,7 +472,7 @@ leave:
 PPDEVOBJ
 NTAPI
 EngpGetPDEV(
-    PUNICODE_STRING pustrDeviceName)
+    _In_opt_ PUNICODE_STRING pustrDeviceName)
 {
     UNICODE_STRING ustrCurrent;
     PPDEVOBJ ppdev;
@@ -481,37 +481,39 @@ EngpGetPDEV(
     /* Acquire PDEV lock */
     EngAcquireSemaphore(ghsemPDEV);
 
-    /* If no device name is given, ... */
-    if (!pustrDeviceName && gppdevPrimary)
+    /* Did the caller pass a device name? */
+    if (pustrDeviceName)
     {
-        /* ... use the primary PDEV */
-        ppdev = gppdevPrimary;
-
-        /* Reference the pdev */
-        InterlockedIncrement(&ppdev->cPdevRefs);
-        goto leave;
-    }
-
-    /* Loop all present PDEVs */
-    for (ppdev = gppdevList; ppdev; ppdev = ppdev->ppdevNext)
-    {
-        /* Get a pointer to the GRAPHICS_DEVICE */
-        pGraphicsDevice = ppdev->pGraphicsDevice;
-
-        /* Compare the name */
-        RtlInitUnicodeString(&ustrCurrent, pGraphicsDevice->szWinDeviceName);
-        if (RtlEqualUnicodeString(pustrDeviceName, &ustrCurrent, FALSE))
+        /* Loop all present PDEVs */
+        for (ppdev = gppdevList; ppdev; ppdev = ppdev->ppdevNext)
         {
-            /* Found! Reference the PDEV */
-            InterlockedIncrement(&ppdev->cPdevRefs);
-            break;
+            /* Get a pointer to the GRAPHICS_DEVICE */
+            pGraphicsDevice = ppdev->pGraphicsDevice;
+
+            /* Compare the name */
+            RtlInitUnicodeString(&ustrCurrent, pGraphicsDevice->szWinDeviceName);
+            if (RtlEqualUnicodeString(pustrDeviceName, &ustrCurrent, FALSE))
+            {
+                /* Found! */
+                break;
+            }
         }
+    }
+    else
+    {
+        /* Otherwise use the primary PDEV */
+        ppdev = gppdevPrimary;
     }
 
     /* Did we find one? */
-    if (!ppdev)
+    if (ppdev)
     {
-        /* No, create a new PDEV */
+        /* Yes, reference the PDEV */
+        InterlockedIncrement(&ppdev->cPdevRefs);
+    }
+    else
+    {
+        /* No, create a new PDEV for the given device */
         ppdev = EngpCreatePDEV(pustrDeviceName, NULL);
         if (ppdev)
         {
@@ -528,7 +530,6 @@ EngpGetPDEV(
         }
     }
 
-leave:
     /* Release PDEV lock */
     EngReleaseSemaphore(ghsemPDEV);
 
@@ -775,7 +776,7 @@ NtGdiGetDeviceCaps(
     return 0;
 }
 
-
+_Success_(return!=FALSE)
 BOOL
 APIENTRY
 NtGdiGetDeviceCapsAll(

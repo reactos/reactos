@@ -263,7 +263,7 @@ typedef struct tagFMT_DATE_HEADER
 #define FMT_DATE_HOUR_0     0x1F /* Hours with leading 0 */
 #define FMT_DATE_HOUR_12    0x20 /* Hours with no leading 0, 12 hour clock */
 #define FMT_DATE_HOUR_12_0  0x21 /* Hours with leading 0, 12 hour clock */
-#define FMT_DATE_TIME_UNK2  0x23
+#define FMT_DATE_TIME_UNK2  0x23 /* same as FMT_DATE_HOUR_0, for "short time" format */
 /* FIXME: probably missing some here */
 #define FMT_DATE_AMPM_SYS1  0x2E /* AM/PM as defined by system settings */
 #define FMT_DATE_AMPM_UPPER 0x2F /* Upper-case AM or PM */
@@ -1660,6 +1660,13 @@ static HRESULT VARIANT_FormatDate(LPVARIANT pVarIn, LPOLESTR lpszFormat,
       pToken += 2;
       break;
 
+    case FMT_GEN_INLINE:
+      pToken += 2;
+      TRACE("copy %s\n", debugstr_a((LPCSTR)pToken));
+      while (*pToken)
+        *pBuff++ = *pToken++;
+      break;
+
     case FMT_DATE_TIME_SEP:
       TRACE("time separator\n");
       localeValue = LOCALE_STIME;
@@ -1725,14 +1732,14 @@ static HRESULT VARIANT_FormatDate(LPVARIANT pVarIn, LPOLESTR lpszFormat,
     case FMT_DATE_DAY_SHORT:
       /* FIXME: VARIANT_CALENDAR HIJRI should cause Hijri output */
       TRACE("short day\n");
-      localeValue = LOCALE_SABBREVDAYNAME1 + udate.st.wMonth - 1;
+      localeValue = LOCALE_SABBREVDAYNAME1 + (udate.st.wDayOfWeek + 6)%7;
       defaultChar = '?';
       break;
 
     case FMT_DATE_DAY_LONG:
       /* FIXME: VARIANT_CALENDAR HIJRI should cause Hijri output */
       TRACE("long day\n");
-      localeValue = LOCALE_SDAYNAME1 + udate.st.wMonth - 1;
+      localeValue = LOCALE_SDAYNAME1 + (udate.st.wDayOfWeek + 6)%7;
       defaultChar = '?';
       break;
 
@@ -1836,6 +1843,7 @@ static HRESULT VARIANT_FormatDate(LPVARIANT pVarIn, LPOLESTR lpszFormat,
       break;
 
     case FMT_DATE_HOUR_0:
+    case FMT_DATE_TIME_UNK2:
       szPrintFmt = szPercentZeroTwo_d;
       dwVal = udate.st.wHour;
       break;
@@ -2482,11 +2490,11 @@ HRESULT WINAPI VarFormatCurrency(LPVARIANT pVarIn, INT nDigits, INT nLeading,
 
     if (nGrouping == -2)
     {
-      WCHAR nGrouping[16];
-      nGrouping[2] = '\0';
-      GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL, nGrouping,
-                     sizeof(nGrouping)/sizeof(WCHAR));
-      numfmt.Grouping = nGrouping[2] == '2' ? 32 : nGrouping[0] - '0';
+      WCHAR grouping[16];
+      grouping[2] = '\0';
+      GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL, grouping,
+                     sizeof(grouping)/sizeof(WCHAR));
+      numfmt.Grouping = grouping[2] == '2' ? 32 : grouping[0] - '0';
     }
     else if (nGrouping == -1)
       numfmt.Grouping = 3; /* 3 = "n,nnn.nn" */

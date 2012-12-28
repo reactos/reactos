@@ -147,8 +147,6 @@ RtlCreateProcessParameters(PRTL_USER_PROCESS_PARAMETERS *ProcessParameters,
    /* make sure the current directory has a trailing backslash */
    if (Param->CurrentDirectory.DosPath.Length > 0)
      {
-	ULONG Length;
-
 	Length = Param->CurrentDirectory.DosPath.Length / sizeof(WCHAR);
 	if (Param->CurrentDirectory.DosPath.Buffer[Length-1] != L'\\')
 	  {

@@ -1,6 +1,4 @@
 
-set_rc_compiler()
-
 spec2def(syssetup.dll syssetup.spec)
 
 list(APPEND SOURCE

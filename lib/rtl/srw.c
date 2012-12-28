@@ -140,19 +140,19 @@ RtlpReleaseWaitBlockLockExclusive(IN OUT PRTL_SRWLOCK SRWLock,
     }
     else
     {
-        PRTLP_SRWLOCK_SHARED_WAKE WakeChain, Next;
+        PRTLP_SRWLOCK_SHARED_WAKE WakeChain, NextWake;
 
         /* If we were the first one to acquire the shared
            lock, we now need to wake all others... */
         WakeChain = FirstWaitBlock->SharedWakeChain;
         do
         {
-            Next = WakeChain->Next;
+            NextWake = WakeChain->Next;
 
             (void)InterlockedOr((PLONG)&WakeChain->Wake,
                                 TRUE);
 
-            WakeChain = Next;
+            WakeChain = NextWake;
         } while (WakeChain != NULL);
     }
 }

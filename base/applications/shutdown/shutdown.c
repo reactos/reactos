@@ -1,230 +1,377 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS shutdown/logoff utility
- * FILE:            base/application/shutdown/shutdown.c
+ * FILE:            base/applications/shutdown/shutdown.c
  * PURPOSE:         Initiate logoff, shutdown or reboot of the system
  */
 
 #include "precomp.h"
 
-// Print information about which commandline arguments the program accepts.
-static void PrintUsage() {
-	LPTSTR lpUsage = NULL;
-	DWORD errLength; // error message length
-	LPTSTR resMsg; // for error message in OEM symbols
-
-	if( AllocAndLoadString( &lpUsage,
-							GetModuleHandle(NULL),
-							IDS_USAGE ) )
-	{
-		errLength = strlen(lpUsage) + 1;
-		resMsg = (LPTSTR)LocalAlloc(LPTR, errLength * sizeof(TCHAR));
-		CharToOemBuff(lpUsage, resMsg, errLength);
-
-		_putts( resMsg );
-
-		LocalFree(lpUsage);
-		LocalFree(resMsg);
-	}
-}
-
-struct CommandLineOptions {
-	BOOL abort; // Not used yet
-	BOOL force;
-	BOOL logoff;
-	BOOL restart;
-	BOOL shutdown;
-};
-
-struct ExitOptions {
-	// This flag is used to distinguish between a user-initiated LOGOFF (which has value 0)
-	// and an underdetermined situation because user didn't give an argument to start Exit.
-	BOOL shouldExit;
-	// flags is the type of shutdown to do - EWX_LOGOFF, EWX_REBOOT, EWX_POWEROFF, etc..
-	UINT flags;
-	// reason is the System Shutdown Reason code. F.instance SHTDN_REASON_MAJOR_OTHER | SHTDN_REASON_MINOR_OTHER | SHTDN_REASON_FLAG_PLANNED.
-	DWORD reason;
-};
-
-// Takes the commandline arguments, and creates a struct which matches the arguments supplied.
-static struct CommandLineOptions ParseArguments(int argc, TCHAR *argv[])
+/*
+ * This takes strings from a resource stringtable
+ * and outputs it to the console.
+ */
+VOID PrintResourceString(INT resID, ...)
 {
-	struct CommandLineOptions opts;
-	int i;
+    WCHAR tmpBuffer[MAX_BUFFER_SIZE];
+    va_list arg_ptr;
 
-	// Reset all flags in struct
-	opts.abort = FALSE;
-	opts.force = FALSE;
-	opts.logoff = FALSE;
-	opts.restart = FALSE;
-	opts.shutdown = FALSE;
-
-	for (i = 1; i < argc; i++)
-	{
-		if (argv[i][0] == '-' || argv[i][0] == '/')
-		{
-			switch(argv[i][1]) {
-				case '?':
-					PrintUsage();
-					exit(0);
-				case 'f':
-				case 'F':
-					opts.force = TRUE;
-					break;
-				case 'l':
-				case 'L':
-					opts.logoff = TRUE;
-					break;
-				case 'r':
-				case 'R':
-					opts.restart = TRUE;
-					break;
-				case 's':
-				case 'S':
-					opts.shutdown = TRUE;
-					break;
-				default:
-					// Unknown arguments will exit program.
-					PrintUsage();
-					exit(0);
-					break;
-			}
-		}
-	}
-
-	return opts;
+    va_start(arg_ptr, resID);
+    LoadStringW(GetModuleHandle(NULL), resID, tmpBuffer, MAX_BUFFER_SIZE);
+    _vcwprintf(tmpBuffer, arg_ptr);
+    va_end(arg_ptr);
 }
 
-// Converts the commandline arguments to flags used to shutdown computer
-static struct ExitOptions ParseCommandLineOptionsToExitOptions(struct CommandLineOptions opts)
+/*
+ * Takes the commandline arguments, and creates a
+ * struct which matches the arguments supplied.
+ */
+static DWORD
+ParseArguments(struct CommandLineOptions* pOpts, int argc, WCHAR *argv[])
 {
-	struct ExitOptions exitOpts;
-	exitOpts.shouldExit = TRUE;
+    int index;
 
-	// Sets ONE of the exit type flags
-	if (opts.logoff)
-		exitOpts.flags = EWX_LOGOFF;
-	else if (opts.restart)
-		exitOpts.flags = EWX_REBOOT;
-	else if(opts.shutdown)
-		exitOpts.flags = EWX_POWEROFF;
-	else
-	{
-		exitOpts.flags = 0;
-		exitOpts.shouldExit = FALSE;
-	}
+    if (!pOpts)
+        return ERROR_INVALID_PARAMETER;
 
-	// Sets additional flags
-	if (opts.force)
-	{
-		exitOpts.flags = exitOpts.flags | EWX_FORCE;
+    /* Reset all flags in struct */
+    pOpts->abort = FALSE;
+    pOpts->force = FALSE;
+    pOpts->logoff = FALSE;
+    pOpts->restart = FALSE;
+    pOpts->shutdown = FALSE;
+    pOpts->document_reason = FALSE;
+    pOpts->hibernate = FALSE;
+    pOpts->shutdown_delay = 30;
+    pOpts->remote_system = NULL;
+    pOpts->reason = ParseReasonCode(NULL); /* NOTE: NEVER use 0 here since it can delay the shutdown. */
+    pOpts->message = NULL;
+    pOpts->show_gui = FALSE;
 
-		// This makes sure that we log off, also if there is only the "-f" option specified.
-		// The Windows shutdown utility does it the same way.
-		exitOpts.shouldExit = TRUE;
-	}
+    /*
+     * Determine which flags the user has specified
+     * to the program so we can use them later.
+     */
+    for (index = 1; index < argc; index++)
+    {
+        if (argv[index][0] == L'-' || argv[index][0] == L'/')
+        {
+            switch (towlower(argv[index][1]))
+            {
+                case L'?': /* Help */
+                    PrintResourceString(IDS_USAGE);
+                    return ERROR_SUCCESS;
 
-	// Reason for shutdown
-	// Hardcoded to "Other (Planned)"
-	exitOpts.reason = SHTDN_REASON_MAJOR_OTHER | SHTDN_REASON_MINOR_OTHER | SHTDN_REASON_FLAG_PLANNED;
+                case L'a': /* Cancel delayed shutdown */
+                    pOpts->abort = TRUE;
+                    break;
 
-	return exitOpts;
+                case L'c': /* Comment on reason for shutdown */
+                    if(CheckCommentLength(argv[index+1]))
+                    {
+                        if (index+1 <= argc)
+                            pOpts->message = argv[index+1];
+                        else
+                            return ERROR_INVALID_DATA;
+                        index++;
+                    }
+                    else
+                    {
+                        PrintResourceString(IDS_ERROR_MAX_COMMENT_LENGTH);
+                        return ERROR_BAD_LENGTH;
+                    }
+                    break;
+
+                case L'd': /* Reason code [p|u:]xx:yy */
+                    if (index+1 <= argc)
+                        pOpts->reason = ParseReasonCode(argv[index+1]);
+                    else
+                        return ERROR_INVALID_DATA;
+                    index++;
+                    break;
+
+                case L'e': /* Documents reason for shutdown */
+                    /* TODO: Determine what this flag does exactly. */
+                    pOpts->document_reason = TRUE;
+                    break;
+
+                case L'f': /* Force shutdown without warning */
+                    pOpts->force = TRUE;
+                    break;
+
+                case L'h': /* Hibernate the local computer */
+                    pOpts->hibernate = TRUE;
+                    break;
+
+                case L'i': /* Shows GUI version of the tool */
+                    pOpts->show_gui = TRUE;
+                    break;
+
+                case L'l': /* Logoff the current user */
+                    pOpts->logoff = TRUE;
+                    break;
+
+                case L'm': /* Target remote systems (UNC name/IP address) */
+                    pOpts->remote_system = argv[index+1];
+                    break;
+
+                case L'p': /* Turn off local computer with no warning/time-out */
+                    pOpts->force = TRUE;
+                    pOpts->shutdown_delay = 0;
+                    break;
+
+                case L'r': /* Restart computer */
+                    pOpts->restart = TRUE;
+                    break;
+
+                case L's': /* Shutdown */
+                    pOpts->shutdown = TRUE;
+                    break;
+
+                case L't': /* Shutdown delay */
+                    pOpts->shutdown_delay = _wtoi(argv[index+1]);
+                    if (pOpts->shutdown_delay > 0) 
+                        pOpts->force = TRUE;
+                    break;
+
+                default:
+                    /* Unknown arguments will exit the program. */
+                    PrintResourceString(IDS_USAGE);
+                    return ERROR_SUCCESS;
+            }
+        }
+    }
+
+    return ERROR_SUCCESS;
 }
 
-// Writes the last error as both text and error code to the console.
-void DisplayLastError()
+static DWORD
+EnablePrivilege(LPCWSTR lpszPrivilegeName, BOOL bEnablePrivilege)
 {
-	int errorCode = GetLastError();
-	LPTSTR lpMsgBuf = NULL;
-	DWORD errLength; // error message length
-	LPTSTR resMsg; // for error message in OEM symbols
+    DWORD  dwRet  = ERROR_SUCCESS;
+    HANDLE hToken = NULL;
 
-	// Display the error message to the user
-	errLength = FormatMessage(
-		FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
-		NULL,
-		errorCode,
-		LANG_USER_DEFAULT,
-		(LPTSTR) &lpMsgBuf,
-		0,
-		NULL) + 1;
+    if (OpenProcessToken(GetCurrentProcess(),
+                         TOKEN_ADJUST_PRIVILEGES,
+                         &hToken))
+    {
+        TOKEN_PRIVILEGES tp;
 
-	resMsg = (LPTSTR)LocalAlloc(LPTR, errLength * sizeof(TCHAR));
-	CharToOemBuff(lpMsgBuf, resMsg, errLength);
+        tp.PrivilegeCount = 1;
+        tp.Privileges[0].Attributes = (bEnablePrivilege ? SE_PRIVILEGE_ENABLED : 0);
 
-	_ftprintf(stderr, resMsg);
-	_ftprintf(stderr, _T("Error code: %d\n"), errorCode);
+        if (LookupPrivilegeValueW(NULL,
+                                  lpszPrivilegeName,
+                                  &tp.Privileges[0].Luid))
+        {
+            if (AdjustTokenPrivileges(hToken, FALSE, &tp, 0, NULL, NULL))
+            {
+                if (GetLastError() == ERROR_NOT_ALL_ASSIGNED)
+                    dwRet = ERROR_NOT_ALL_ASSIGNED;
+            }
+            else
+            {
+                dwRet = GetLastError();
+            }
+        }
+        else
+        {
+            dwRet = GetLastError();
+        }
 
-	LocalFree(lpMsgBuf);
-	LocalFree(resMsg);
+        CloseHandle(hToken);
+    }
+    else
+    {
+        dwRet = GetLastError();
+    }
+
+    /* Display the error description if any */
+    if (dwRet != ERROR_SUCCESS) DisplayError(dwRet);
+
+    return dwRet;
 }
 
-void EnableShutdownPrivileges()
+/* Main entry for program */
+int wmain(int argc, WCHAR *argv[])
 {
-	HANDLE token;
-	TOKEN_PRIVILEGES privs;
+    DWORD error = ERROR_SUCCESS;
+    struct CommandLineOptions opts;
 
-	// Check to see if the choosen action is allowed by the user. Everyone can call LogOff, but only privilieged users can shutdown/restart etc.
-	if (! OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &token))
-	{
-		DisplayLastError();
-		exit(1);
-	}
+    if (argc == 1) /* i.e. no commandline arguments given */
+    {
+        PrintResourceString(IDS_USAGE);
+        return EXIT_SUCCESS;
+    }
 
-	// Get LUID (Locally Unique Identifier) for the privilege we need
-	if (!LookupPrivilegeValue(
-			NULL, // system - NULL is localsystem
-			SE_SHUTDOWN_NAME, // name of the privilege
-			&privs.Privileges[0].Luid) // output
-		)
-	{
-		DisplayLastError();
-		exit(1);
-	}
-	// and give our current process (i.e. shutdown.exe) the privilege to shutdown the machine.
-	privs.PrivilegeCount = 1;
-	privs.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-	if (AdjustTokenPrivileges(
-			token,
-			FALSE,
-			&privs,
-			0,
-			(PTOKEN_PRIVILEGES)NULL, // previous state. Set to NULL, we don't care about previous state.
-			NULL
-			) == 0) // return value 0 means failure
-		{
-			DisplayLastError();
-			exit(1);
-		}
+    error = ParseArguments(&opts, argc, argv);
+    if (error != ERROR_SUCCESS)
+    {
+        DisplayError(error);
+        return EXIT_FAILURE;
+    }
+
+    /* If the user wants to abort a shutdown */
+    if (opts.abort)
+    {
+        /* First, the program has to determine if the shutdown/restart is local
+        or remote. This is done since each one requires separate privileges. */
+        if (opts.remote_system == NULL)
+            EnablePrivilege(SE_SHUTDOWN_NAME, TRUE);
+        else
+            EnablePrivilege(SE_REMOTE_SHUTDOWN_NAME, TRUE);
+
+        /* Abort the delayed system shutdown specified. */
+        if (!AbortSystemShutdownW(opts.remote_system))
+        {
+            PrintResourceString(IDS_ERROR_ABORT);
+            DisplayError(GetLastError());
+            return EXIT_FAILURE;
+        }
+        else
+        {
+            return EXIT_SUCCESS;
+        }
+    }
+
+    /*
+     * If the user wants to hibernate the computer. Assume
+     * that the user wants to wake the computer up from 
+     * hibernation and it should not force it on the system.
+     */
+    if (opts.hibernate)
+    {
+        if (IsPwrHibernateAllowed())
+        {
+            EnablePrivilege(SE_SHUTDOWN_NAME, TRUE);
+            
+            /* The shutdown utility cannot hibernate remote systems */
+            if (opts.remote_system != NULL)
+            {
+                return EXIT_FAILURE;
+            }
+        
+            if (!SetSuspendState(TRUE, FALSE, FALSE))
+            {
+                PrintResourceString(IDS_ERROR_HIBERNATE);
+                DisplayError(GetLastError());
+                return EXIT_FAILURE;
+            }
+            else
+            {
+                PrintResourceString(IDS_ERROR_HIBERNATE_ENABLED);
+                return EXIT_SUCCESS;
+            }
+        }
+        else
+        {
+            return EXIT_FAILURE;
+        }
+    }
+
+    /* Both shutdown and restart flags cannot both be true */
+    if (opts.shutdown && opts.restart)
+    {
+        PrintResourceString(IDS_ERROR_SHUTDOWN_REBOOT);
+        return EXIT_FAILURE;
+    }
+
+    /* Ensure that the timout amount is not too high or a negative number */
+    if ((opts.shutdown_delay < 0) || (opts.shutdown_delay > MAX_TIMEOUT))
+    {
+        PrintResourceString(IDS_ERROR_TIMEOUT, opts.shutdown_delay);
+        return EXIT_FAILURE;
+    }
+
+    /* If the user wants a GUI environment */
+    if (opts.show_gui)
+    {
+        if (ShutdownGuiMain(opts))
+            return EXIT_SUCCESS;
+        else
+            return EXIT_FAILURE;
+    }
+
+    if (opts.logoff && (opts.remote_system == NULL))
+    {
+        /*
+         * NOTE: Sometimes, shutdown and logoff are used together. If the logoff
+         * flag is used by itself, then simply logoff. But if used with shutdown,
+         * then skip logging off of the computer and eventually go to the action
+         * for shutdown.
+         */
+        if (!opts.shutdown && !opts.restart)
+        {
+            EnablePrivilege(SE_SHUTDOWN_NAME, TRUE);
+
+            if (ExitWindowsEx(EWX_LOGOFF, opts.reason))
+            {
+                return EXIT_SUCCESS;
+            }
+            else
+            {
+                PrintResourceString(IDS_ERROR_LOGOFF);
+                DisplayError(GetLastError());
+                return EXIT_FAILURE;
+            }
+        }
+    }
+
+    /*
+     * Since both shutting down the system and restarting calls the exact same
+     * function, all we need to know is if we wanted to restart or shutdown.
+     */
+    if (opts.shutdown || opts.restart)
+    {
+        /*
+         * First, the program has to determine if the shutdown/restart is local
+         * or remote. This is done since each one requires separate privileges.
+         */
+        if (opts.remote_system == NULL)
+        {
+            EnablePrivilege(SE_SHUTDOWN_NAME, TRUE);
+        }
+        else
+        {
+            /* TODO: Remote shutdown is not supported yet */
+            // EnablePrivilege(SE_REMOTE_SHUTDOWN_NAME, TRUE);
+            return EXIT_SUCCESS;
+        }
+
+        /**
+         ** HACK: When InitiateSystemShutdownExW will become really implemented,
+         ** activate this line and delete the other...
+         **
+        if(!InitiateSystemShutdownExW(opts.remote_system,
+                                      opts.message,
+                                      opts.shutdown_delay,
+                                      opts.force,
+                                      opts.restart,
+                                      opts.reason))
+        ***/
+        if (!ExitWindowsEx((opts.shutdown ? EWX_SHUTDOWN : EWX_REBOOT) |
+                           (opts.force ? EWX_FORCE : 0),
+                           opts.reason))
+        {
+            /*
+             * If there is an error, give the proper output depending
+             * on whether the user wanted to shutdown or restart.
+             */
+            if (opts.restart)
+                PrintResourceString(IDS_ERROR_RESTART);
+            else
+                PrintResourceString(IDS_ERROR_SHUTDOWN);
+            
+            DisplayError(GetLastError());
+            return EXIT_FAILURE;
+        }
+        else
+        {
+            return EXIT_SUCCESS;
+        }
+    }
+
+    return EXIT_SUCCESS;
 }
 
- // Main entry for program
-int _tmain(int argc, TCHAR *argv[])
-{
-	struct CommandLineOptions opts;
-	struct ExitOptions exitOpts;
-
-	if (argc == 1) // i.e. no commandline arguments given
-	{
-		PrintUsage();
-		exit(0);
-	}
-
-	opts = ParseArguments(argc, argv);
-	exitOpts = ParseCommandLineOptionsToExitOptions(opts);
-
-	// Perform the shutdown/restart etc. action
-	if (exitOpts.shouldExit)
-	{
-		EnableShutdownPrivileges();
-
-		if (!ExitWindowsEx(exitOpts.flags, exitOpts.reason))
-		{
-			DisplayLastError();
-			exit(1);
-		}
-	}
-	return 0;
-}
-
-// EOF
+/* EOF */

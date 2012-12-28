@@ -1,12 +1,9 @@
 
-add_definitions(-D__WINESRC__)
-
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
+add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
-
-set_rc_compiler()
 spec2def(inetcomm.dll inetcomm.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
@@ -22,9 +19,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/inetcomm.def)
 
 add_library(inetcomm SHARED ${SOURCE})
-
 set_module_type(inetcomm win32dll)
-
 target_link_libraries(inetcomm uuid wine)
 
 add_importlibs(inetcomm
@@ -36,6 +31,5 @@ add_importlibs(inetcomm
     msvcrt
     kernel32
     ntdll)
-
 
 add_cd_file(TARGET inetcomm DESTINATION reactos/system32 FOR all)

@@ -17,12 +17,21 @@
 #include <tchar.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <uxtheme.h>
 
+#include "tmschema.h"
 #include "resource.h"
 #include "comcsup.h"
 #include "todo.h"
 #include "initguid.h"
 #include "undoc.h"
+
+/* Structure to hold non-default options*/
+typedef struct _ADVANCED_SETTINGS {
+    BOOL bShowSeconds;
+} ADVANCED_SETTINGS, *PADVANCED_SETTINGS;
+
+extern ADVANCED_SETTINGS AdvancedSettings;
 
 /* dynamic imports due to lack of support in msvc linker libs */
 typedef INT (APIENTRY *REGSHELLHOOK)(HWND, DWORD);
@@ -383,6 +392,11 @@ UnregisterTrayNotifyWndClass(VOID);
 HWND
 CreateTrayNotifyWnd(IN OUT ITrayWindow *TrayWindow,
                     IN BOOL bHideClock);
+
+VOID
+TrayNotify_NotifyMsg(IN HWND hwnd,
+                     IN WPARAM wParam,
+                     IN LPARAM lParam);
 
 /*
  * taskswnd.c

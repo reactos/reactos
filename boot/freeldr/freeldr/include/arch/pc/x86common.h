@@ -48,7 +48,7 @@
 
 /* Realmode function IDs */
 #define FNID_Int386 0
-#define FNID_SoftReboot 1
+#define FNID_Reboot 1
 #define FNID_ChainLoadBiosBootSectorCode 2
 #define FNID_PxeCallApi 3
 #define FNID_PnpBiosGetDeviceNodeCount 4

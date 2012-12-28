@@ -95,6 +95,7 @@ _SEH3$_GetFilterResult(
     PVOID Filter = Record->ScopeTable->Filter;
     LONG Result;
 
+    /* Check for __finally frames */
     if (Record->ScopeTable->Target == NULL)
     {
         return EXCEPTION_CONTINUE_SEARCH;
@@ -189,7 +190,7 @@ _SEH3$_except_handler(
     asm volatile ("cld\n" : : : "memory");
 
     /* Check if this is an unwind */
-    if (ExceptionRecord->ExceptionFlags & EXCEPTION_UNWIND)
+    if (ExceptionRecord->ExceptionFlags & EXCEPTION_UNWINDING)
     {
         /* Unwind all local frames */
         TargetFrame = EstablisherFrame->Next;

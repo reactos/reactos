@@ -358,7 +358,7 @@ static HRESULT WINAPI FTMarshalCF_QueryInterface(LPCLASSFACTORY iface,
     if (IsEqualIID(riid, &IID_IUnknown) || IsEqualIID(riid, &IID_IClassFactory))
     {
         *ppv = iface;
-        IUnknown_AddRef(iface);
+        IClassFactory_AddRef(iface);
         return S_OK;
     }
     return E_NOINTERFACE;

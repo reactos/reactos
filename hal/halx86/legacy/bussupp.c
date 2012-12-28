@@ -39,13 +39,16 @@ HalpAllocateBusHandler(IN INTERFACE_TYPE InterfaceType,
                           BusSpecificData,
                           NULL,
                           &Bus);
-    if (!Bus) return NULL;
+    if (!Bus)
+    {
+        return NULL;
+    }
 
     /* Check for a valid interface */
     if (InterfaceType != InterfaceTypeUndefined)
     {
         /* Allocate address ranges and zero them out */
-        Bus->BusAddresses = ExAllocatePoolWithTag(NonPagedPool,
+        Bus->BusAddresses = ExAllocatePoolWithTag(NonPagedPoolMustSucceed,
                                                   sizeof(SUPPORTED_RANGES),
                                                   ' laH');
         RtlZeroMemory(Bus->BusAddresses, sizeof(SUPPORTED_RANGES));
@@ -1153,7 +1156,7 @@ HalpAssignSlotResources(IN PUNICODE_STRING RegistryPath,
     PBUS_HANDLER Handler;
     NTSTATUS Status;
     PAGED_CODE();
-    DPRINT1("Slot assignment for %d on bus %d\n", BusType, BusNumber);
+    DPRINT1("Slot assignment for %d on bus %u\n", BusType, BusNumber);
 
     /* Find the handler */
     Handler = HalReferenceHandlerForBus(BusType, BusNumber);
@@ -1263,7 +1266,7 @@ HaliTranslateBusAddress(IN INTERFACE_TYPE InterfaceType,
     Handler = HalReferenceHandlerForBus(InterfaceType, BusNumber);
     if (!(Handler) || !(Handler->TranslateBusAddress))
     {
-        DPRINT1("No translator Interface: %x, Bus: %x, Handler: %x!\n", InterfaceType, BusNumber, Handler);
+        DPRINT1("No translator Interface: %x, Bus: %x, Handler: %p!\n", InterfaceType, BusNumber, Handler);
         return FALSE;
     }
 

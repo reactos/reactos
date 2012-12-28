@@ -1241,7 +1241,8 @@ DetectParallelPorts(PCONFIGURATION_COMPONENT_DATA BusKey)
 }
 
 
-static BOOLEAN
+//static
+BOOLEAN
 DetectKeyboardDevice(VOID)
 {
   UCHAR Status;
@@ -1321,8 +1322,8 @@ DetectKeyboardPeripheral(PCONFIGURATION_COMPONENT_DATA ControllerKey)
   PCONFIGURATION_COMPONENT_DATA PeripheralKey;
   ULONG Size;
 
-  /* HACK: don't call DetectKeyboardDevice() as it fails in Qemu 0.8.2 */
-  if (TRUE || DetectKeyboardDevice())
+  /* HACK: don't call DetectKeyboardDevice() as it fails in Qemu 0.8.2
+  if (DetectKeyboardDevice()) */
   {
     /* Set 'Configuration Data' value */
     Size = sizeof(CM_PARTIAL_RESOURCE_LIST) +

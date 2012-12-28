@@ -9,6 +9,7 @@
  */
 
 #include <win32k.h>
+#include <suppress.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -1166,11 +1167,11 @@ PATH_PathToRegion ( PPATH pPath, INT nPolyFillMode, HRGN *pHrgn )
     if((pPath->pFlags[i] & ~PT_CLOSEFIGURE) == PT_MOVETO)
     {
       iStroke++;
-      _PRAGMA_WARNING_SUPPRESS(6386)
+      _PRAGMA_WARNING_SUPPRESS(__WARNING_WRITE_OVERRUN)
       pNumPointsInStroke[iStroke]=0;
     }
 
-    _PRAGMA_WARNING_SUPPRESS(6385)
+    _PRAGMA_WARNING_SUPPRESS(__WARNING_READ_OVERRUN)
     pNumPointsInStroke[iStroke]++;
   }
 
@@ -2584,7 +2585,7 @@ NtGdiSetMiterLimit(
 {
   DC *pDc;
   gxf_long worker, worker1;
-  NTSTATUS Status = STATUS_SUCCESS;
+  BOOL bResult = TRUE;
 
   if (!(pDc = DC_LockDc(hdc)))
   {
@@ -2600,26 +2601,19 @@ NtGdiSetMiterLimit(
   {
       _SEH2_TRY
       {
-          ProbeForWrite(pdwOut,
-                 sizeof(DWORD),
-                             1);
+          ProbeForWrite(pdwOut, sizeof(DWORD), 1);
           *pdwOut = worker1.l;
       }
       _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
       {
-          Status = _SEH2_GetExceptionCode();
+          SetLastNtError(_SEH2_GetExceptionCode());
+          bResult = FALSE;
       }
        _SEH2_END;
-      if (!NT_SUCCESS(Status))
-      {
-         SetLastNtError(Status);
-         DC_UnlockDc(pDc);
-         return FALSE;
-      }
   }
 
   DC_UnlockDc(pDc);
-  return TRUE;
+  return bResult;
 }
 
 BOOL

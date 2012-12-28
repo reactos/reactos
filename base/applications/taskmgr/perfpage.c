@@ -91,7 +91,6 @@ void AdjustFrameSize(HWND hCntrl, HWND hDlg, int nXDifference, int nYDifference,
     } else {
         cx = rc.left + nXDifference;
         cy = rc.top + nYDifference;
-        sx = sy = 0;
         SetWindowPos(hCntrl, NULL, cx, cy, 0, 0, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOSIZE|SWP_NOZORDER);
     }
     InvalidateRect(hCntrl, NULL, TRUE);
@@ -198,10 +197,10 @@ PerformancePageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         /*
          *  Subclass graph buttons
          */
-        OldGraphWndProc = (WNDPROC)(LONG_PTR) SetWindowLongPtrW(hPerformancePageCpuUsageGraph, GWL_WNDPROC, (LONG_PTR)Graph_WndProc);
-        SetWindowLongPtrW(hPerformancePageMemUsageGraph, GWL_WNDPROC, (LONG_PTR)Graph_WndProc);
-        OldGraphCtrlWndProc = (WNDPROC)(LONG_PTR) SetWindowLongPtrW(hPerformancePageMemUsageHistoryGraph, GWL_WNDPROC, (LONG_PTR)GraphCtrl_WndProc);
-        SetWindowLongPtrW(hPerformancePageCpuUsageHistoryGraph, GWL_WNDPROC, (LONG_PTR)GraphCtrl_WndProc);
+        OldGraphWndProc = (WNDPROC)(LONG_PTR) SetWindowLongPtrW(hPerformancePageCpuUsageGraph, GWLP_WNDPROC, (LONG_PTR)Graph_WndProc);
+        SetWindowLongPtrW(hPerformancePageMemUsageGraph, GWLP_WNDPROC, (LONG_PTR)Graph_WndProc);
+        OldGraphCtrlWndProc = (WNDPROC)(LONG_PTR) SetWindowLongPtrW(hPerformancePageMemUsageHistoryGraph, GWLP_WNDPROC, (LONG_PTR)GraphCtrl_WndProc);
+        SetWindowLongPtrW(hPerformancePageCpuUsageHistoryGraph, GWLP_WNDPROC, (LONG_PTR)GraphCtrl_WndProc);
         return TRUE;
 
     case WM_COMMAND:

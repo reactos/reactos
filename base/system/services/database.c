@@ -1512,13 +1512,9 @@ ScmStartUserModeService(PSERVICE Service,
         return ScmSendStartCommand(Service, argc, argv);
     }
 
+    ZeroMemory(&StartupInfo, sizeof(StartupInfo));
     StartupInfo.cb = sizeof(StartupInfo);
-    StartupInfo.lpReserved = NULL;
-    StartupInfo.lpDesktop = NULL;
-    StartupInfo.lpTitle = NULL;
-    StartupInfo.dwFlags = 0;
-    StartupInfo.cbReserved2 = 0;
-    StartupInfo.lpReserved2 = 0;
+    ZeroMemory(&ProcessInformation, sizeof(ProcessInformation));
 
     Result = CreateProcessW(NULL,
                             Service->lpImage->szImagePath,

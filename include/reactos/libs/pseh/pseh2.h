@@ -35,6 +35,7 @@
 #define _SEH2_AbnormalTermination() (AbnormalTermination())
 #define _SEH2_YIELD(STMT_) STMT_
 #define _SEH2_LEAVE __leave
+#define _SEH2_VOLATILE
 
 #elif defined(_USE_DUMMY_PSEH) || defined (__arm__) || defined(__clang__) || defined(_M_AMD64)
 
@@ -47,6 +48,7 @@
 #define _SEH2_AbnormalTermination()
 #define _SEH2_YIELD(STMT_) STMT_
 #define _SEH2_LEAVE
+#define _SEH2_VOLATILE volatile
 
 #elif defined(_USE_PSEH3)
 
@@ -62,6 +64,7 @@
 #define _SEH2_AbnormalTermination _abnormal_termination
 #define _SEH2_LEAVE _SEH3_LEAVE
 #define _SEH2_YIELD(x) x
+#define _SEH2_VOLATILE volatile
 
 #elif defined(__GNUC__)
 
@@ -410,6 +413,7 @@ static inline __attribute__((always_inline)) __attribute__((returns_twice)) void
 
 __SEH_END_SCOPE_CHAIN;
 
+#define _SEH2_VOLATILE volatile
 
 #else
 #error no PSEH support

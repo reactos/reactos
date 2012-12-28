@@ -118,6 +118,7 @@ void print_help() {
            "...\n"
            "------\n"
            "",
+           DEFAULT_REMOVAL_LOCK_TIMEOUT,
            DEFAULT_REMOVAL_LOCK_TIMEOUT
            );
     exit(0);

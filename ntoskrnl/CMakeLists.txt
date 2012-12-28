@@ -18,11 +18,9 @@ add_definitions(
     -D_IN_KERNEL_
     -DNTDDI_VERSION=0x05020400)
 
-set_rc_compiler()
-
 if(NOT DEFINED NEWCC)
     set(NEWCC FALSE)
-endif(NOT DEFINED NEWCC)
+endif()
 
 if(NEWCC)
     add_definitions(-DNEWCC)
@@ -428,9 +426,9 @@ add_executable(ntoskrnl
     ${CMAKE_CURRENT_BINARY_DIR}/ntoskrnl.def)
 
 if(ARCH STREQUAL "i386")
-  set_entrypoint(ntoskrnl KiSystemStartup 4)
+    set_entrypoint(ntoskrnl KiSystemStartup 4)
 else()
-  set_entrypoint(ntoskrnl KiSystemStartup)
+    set_entrypoint(ntoskrnl KiSystemStartup)
 endif()
 set_subsystem(ntoskrnl native)
 
@@ -457,10 +455,8 @@ target_link_libraries(ntoskrnl
     ioevent)
 
 add_importlibs(ntoskrnl hal kdcom bootvid)
-
 add_pch(ntoskrnl include/ntoskrnl.h)
 add_dependencies(ntoskrnl psdk bugcodes asm)
-
 add_cd_file(TARGET ntoskrnl DESTINATION reactos/system32 NO_CAB FOR all)
 
 if(BUILD_MP)

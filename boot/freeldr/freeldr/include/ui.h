@@ -55,7 +55,6 @@ extern	const CHAR	UiMonthNames[12][15];
 //
 ///////////////////////////////////////////////////////////////////////////////////////
 BOOLEAN	UiInitialize(BOOLEAN ShowGui);								// Initialize User-Interface
-BOOLEAN	SetupUiInitialize(VOID);						// Initialize Setup User-Interface
 VOID	UiUnInitialize(PCSTR BootText);						// Un-initialize User-Interface
 VOID	UiDrawBackdrop(VOID);									// Fills the entire screen with a backdrop
 VOID	UiFillArea(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, CHAR FillChar, UCHAR Attr /* Color Attributes */);	// Fills the area specified with FillChar and Attr
@@ -71,7 +70,7 @@ VOID	UiMessageBoxCritical(PCSTR MessageText);				// Displays a message box on th
 VOID	UiDrawProgressBarCenter(ULONG Position, ULONG Range, PCHAR ProgressText);			// Draws the progress bar showing nPos percent filled
 VOID	UiDrawProgressBar(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, ULONG Position, ULONG Range, PCHAR ProgressText);			// Draws the progress bar showing nPos percent filled
 VOID	UiShowMessageBoxesInSection(PCSTR SectionName);		// Displays all the message boxes in a given section
-VOID	UiEscapeString(PCHAR String);							// Processes a string and changes all occurances of "\n" to '\n'
+VOID	UiEscapeString(PCHAR String);							// Processes a string and changes all occurrences of "\n" to '\n'
 BOOLEAN	UiEditBox(PCSTR MessageText, PCHAR EditTextBuffer, ULONG Length);
 
 UCHAR	UiTextToColor(PCSTR ColorText);						// Converts the text color into it's equivalent color value
@@ -88,12 +87,26 @@ VOID	UiFadeOut(VOID);										// Fades the screen out
 //
 ///////////////////////////////////////////////////////////////////////////////////////
 
-struct tagUI_MENU_INFO;
-typedef struct tagUI_MENU_INFO UI_MENU_INFO, *PUI_MENU_INFO;
+typedef struct tagUI_MENU_INFO
+{
+	PCSTR		MenuHeader;
+	PCSTR		MenuFooter;
+	BOOLEAN		ShowBootOptions;
+
+	PCSTR*		MenuItemList;
+	ULONG		MenuItemCount;
+	LONG		MenuTimeRemaining;
+	ULONG		SelectedMenuItem;
+
+	ULONG		Left;
+	ULONG		Top;
+	ULONG		Right;
+	ULONG		Bottom;
+} UI_MENU_INFO, *PUI_MENU_INFO;
 
 typedef BOOLEAN (*UiMenuKeyPressFilterCallback)(ULONG KeyPress);
 
-BOOLEAN	UiDisplayMenu(PCSTR MenuTitle, PCSTR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, ULONG* SelectedMenuItem, BOOLEAN CanEscape, UiMenuKeyPressFilterCallback KeyPressFilter);
+BOOLEAN	UiDisplayMenu(PCSTR MenuHeader, PCSTR MenuFooter, BOOLEAN ShowBootOptions, PCSTR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, ULONG* SelectedMenuItem, BOOLEAN CanEscape, UiMenuKeyPressFilterCallback KeyPressFilter);
 
 ///////////////////////////////////////////////////////////////////////////////////////
 //
@@ -123,7 +136,7 @@ typedef struct tagUIVTBL
 	VOID (*FadeInBackdrop)(VOID);
 	VOID (*FadeOut)(VOID);
 
-	BOOLEAN (*DisplayMenu)(PCSTR MenuTitle, PCSTR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, ULONG* SelectedMenuItem, BOOLEAN CanEscape, UiMenuKeyPressFilterCallback KeyPressFilter);
+	BOOLEAN (*DisplayMenu)(PCSTR MenuHeader, PCSTR MenuFooter, BOOLEAN ShowBootOptions, PCSTR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, ULONG* SelectedMenuItem, BOOLEAN CanEscape, UiMenuKeyPressFilterCallback KeyPressFilter);
 	VOID (*DrawMenu)(PUI_MENU_INFO MenuInfo);
 } UIVTBL, *PUIVTBL;
 

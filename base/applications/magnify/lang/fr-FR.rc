@@ -54,7 +54,7 @@ FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,193,76,50,14
     ICON            IDI_ICON,IDC_STATIC,7,17,20,20
-    LTEXT           "La loupe a été réalisée pour fournir quelques fonctionnalités aux utilisateurs souffrants de déficiences visuelles. La majorité de ces utilisateurs aura besoin d'un utilitaire d'agrandissement avec plus de fonctionnalités pour une utilisation quotidienne.",IDC_STATIC,36,7,207,33
+    LTEXT           "La loupe a été réalisée pour fournir quelques fonctionnalités aux utilisateurs souffrant de déficiences visuelles. La majorité de ces utilisateurs aura besoin d'un utilitaire d'agrandissement avec plus de fonctionnalités pour une utilisation quotidienne.",IDC_STATIC,36,7,207,33
     CONTROL         "Ne plus montrer ce message",IDC_SHOWWARNINGCHECK, "Button",BS_AUTOCHECKBOX | WS_TABSTOP,43,80,137,10
 END
 

@@ -1,13 +1,9 @@
 
-add_definitions(-D__WINESRC__)
-
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
+add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
-
-set_rc_compiler()
-
 spec2def(avifil32.dll avifil32.spec ADD_IMPORTLIB)
 
 add_library(avifil32 SHARED
@@ -25,7 +21,6 @@ add_library(avifil32 SHARED
     ${CMAKE_CURRENT_BINARY_DIR}/avifil32.def)
 
 set_module_type(avifil32 win32dll)
-
 target_link_libraries(avifil32 uuid wine)
 
 add_importlibs(avifil32
@@ -38,6 +33,5 @@ add_importlibs(avifil32
     advapi32
     kernel32
     ntdll)
-
 
 add_cd_file(TARGET avifil32 DESTINATION reactos/system32 FOR all)

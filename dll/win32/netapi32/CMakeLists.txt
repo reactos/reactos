@@ -9,13 +9,16 @@ list(APPEND SOURCE
     apibuf.c
     browsr.c
     ds.c
+    group.c
     local_group.c
+    misc.c
     nbcmdqueue.c
     nbnamecache.c
     nbt.c
     netapi32.c
     netbios.c
     share.c
+    user.c
     wksta.c
     ${CMAKE_CURRENT_BINARY_DIR}/netapi32_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/netapi32.def)

@@ -125,7 +125,7 @@ _Must_inspect_result_
 NTSTATUS
 NTAPI
 ProbeAndCaptureUnicodeStringOrAtom(
-    _Out_ PUNICODE_STRING pustrOut,
+    _Out_ _When_(return>=0, _At_(pustrOut->Buffer, _Post_ _Notnull_)) PUNICODE_STRING pustrOut,
     __in_data_source(USER_MODE) _In_ PUNICODE_STRING pustrUnsafe)
 {
     NTSTATUS Status = STATUS_SUCCESS;

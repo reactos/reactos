@@ -2,32 +2,42 @@ LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
 IDD_PROPPAGESETTINGS DIALOGEX 0, 0, 254, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "ParamËtres"
+CAPTION "Param√®tres"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "SÈlectionnez les service que vous dÈsirez pour chaque langue de saisie affichÈe dans la liste.\nUtiliser les boutons Ajouter et Supprimer pour modifier la liste.", -1, 9, 6, 238, 25
+    LTEXT "S√©lectionnez les services que vous d√©sirez pour chaque langue de saisie affich√©e dans la liste.\nUtilisez les boutons Ajouter et Supprimer pour modifier la liste.", -1, 9, 6, 238, 25
     CONTROL "TEXT", IDC_KEYLAYOUT_LIST, "SYSLISTVIEW32", WS_BORDER | WS_VSCROLL | WS_TABSTOP | LVS_SORTASCENDING | LVS_REPORT | 0x0000808D, 8, 36, 237, 101
-    PUSHBUTTON "&Set Default", IDC_SET_DEFAULT, 101, 159, 144, 14
-    PUSHBUTTON "Ajouter...", IDC_ADD_BUTTON, 27, 142, 70, 14
+    PUSHBUTTON "Par &d√©faut", IDC_SET_DEFAULT, 101, 159, 144, 14
+    PUSHBUTTON "A&jouter...", IDC_ADD_BUTTON, 27, 142, 70, 14
     PUSHBUTTON "Supp&rimer...", IDC_REMOVE_BUTTON, 101, 142, 70, 14
-    PUSHBUTTON "&PropriÈtÈs...", IDC_PROP_BUTTON, 175, 142, 70, 14
-    GROUPBOX "PrÈfÈrences", -1, 7, 185, 240, 36
-    PUSHBUTTON "ParamËtres des touches...", IDC_KEY_SET_BTN, 14, 198, 110, 14
+    PUSHBUTTON "&Propri√©t√©s...", IDC_PROP_BUTTON, 175, 142, 70, 14
+    GROUPBOX "Pr√©&f√©rences", -1, 7, 185, 240, 36
+    PUSHBUTTON "Para&m√®tres des touches...", IDC_KEY_SET_BTN, 14, 198, 110, 14
+END
+
+IDD_PROPPAGEADVANCEDSETTINGS DIALOGEX 0, 0, 254, 228
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Param√®tres avanc√©s"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Configuration du syst√®me", -1, 7, 7, 240, 70
+    AUTOCHECKBOX "Arr√™ter les services de texte a&vanc√©s", IDC_TURNOFFTEXTSVCS_CB, 14, 20, 130, 12
+    LTEXT "S√©lectionnez cette case √† cocher pour d√©sactiver les services de texte avanc√©s dans tous les programmes.\nCeci n'est pas recommand√© aux utilisateurs d'Asie de l'Est, car cette op√©ration ferme la Barre de langue.", -1, 14, 40, 230, 35
 END
 
 IDD_KEYSETTINGS DIALOGEX 0, 0, 272, 163
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "ParamËtres de touche avancÈs"
+CAPTION "Param√®tres de touche avanc√©s"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Pour dÈsactiver le verouillage majuscule", -1, 7, 7, 258, 26
+    GROUPBOX "Pour d√©sactiver le verouillage majuscule", -1, 7, 7, 258, 26
     AUTORADIOBUTTON "Presser &la touche VERR MAJ", IDC_PRESS_CL_KEY_RB, 14, 17, 120, 11, WS_GROUP
     AUTORADIOBUTTON "Presser la touche MAJ", IDC_PRESS_SHIFT_KEY_RB, 144, 17, 120, 11, NOT WS_TABSTOP
     GROUPBOX "Touches de raccourci pour la saisie des langues", -1, 7, 37, 258, 95
     LTEXT "Action", -1, 14, 47, 60, 9
-    RTEXT "SÈquence de touches", -1, 177, 47, 79, 9
+    RTEXT "S√©quence de touches", -1, 177, 47, 79, 9
     CONTROL "", IDC_KEY_LISTVIEW, "SysListView32", LVS_REPORT | LVS_NOCOLUMNHEADER | LVS_AUTOARRANGE | LVS_SINGLESEL, 14, 57, 244, 52, WS_EX_CLIENTEDGE
-    PUSHBUTTON "&Changer la sÈquence de touches...", IDC_CHANGE_KEY_SEQ_BTN, 152, 113, 106, 14, WS_GROUP
+    PUSHBUTTON "&Changer la s√©quence de touches...", IDC_CHANGE_KEY_SEQ_BTN, 152, 113, 106, 14, WS_GROUP
     DEFPUSHBUTTON "OK", IDOK, 66, 140, 70, 14
     PUSHBUTTON "Annuler", IDCANCEL, 146, 140, 70, 14
 END
@@ -47,7 +57,7 @@ END
 
 IDD_CHANGE_KEY_SEQ DIALOGEX 5, 100, 230, 125
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Changer les sÈquences de touches"
+CAPTION "Changer les s√©quences de touches"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "", -1, 9, 5, 155, 110
@@ -67,7 +77,7 @@ END
 
 IDD_INPUT_LANG_PROP DIALOGEX 20, 20, 227, 75
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "ProprietÈs de la langue de saisie"
+CAPTION "Propriet√©s de la langue de saisie"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Langue de saisie :", -1, 7, 7, 61, 8
@@ -81,83 +91,83 @@ END
 STRINGTABLE
 BEGIN
     IDS_CPLSYSTEMNAME        "Services texte et langue de saisie"
-    IDS_CPLSYSTEMDESCRIPTION "Personnalise les paramËtres pour la langue de saisie de texte."
+    IDS_CPLSYSTEMDESCRIPTION "Personnalise les param√®tres pour la langue de saisie de texte."
     IDS_KEYBOARD             "Clavier"
     IDS_NONE                 "(Aucun)"
     IDS_UNKNOWN              "(Inconnu)"
-    IDS_RESTART              "DÈsirez-vous redÈmarrer votre ordinateur maintenant ?"
+    IDS_RESTART              "D√©sirez-vous red√©marrer votre ordinateur maintenant ?"
     IDS_WHATS_THIS           "Qu'est-ce que c'est ?"
     IDS_LANGUAGE             "Langue"
     IDS_LAYOUT               "Disposition du clavier"
-    IDS_REM_QUESTION         " tes-vous s˚r de vouloir supprimer la disposition sÈlectionnÈe ?"
+    IDS_REM_QUESTION         "√ätes-vous s√ªr de vouloir supprimer la disposition s√©lectionn√©e ?"
     IDS_CONFIRMATION         "Confirmation"
-    IDS_LAYOUT_EXISTS        "Cette disposition existe dÈj‡."
-    IDS_LAYOUT_EXISTS2       "Cette disposition existe dÈj‡ et ne peut Ítre ajoutÈe."
+    IDS_LAYOUT_EXISTS        "Cette disposition existe d√©j√†."
+    IDS_LAYOUT_EXISTS2       "Cette disposition existe d√©j√† et ne peut √™tre ajout√©e."
     IDS_CTRL_SHIFT           "Ctrl+Maj"
     IDS_LEFT_ALT_SHIFT       "Alt Gauche+Maj"
     IDS_SWITCH_BET_INLANG    "Changer les langues de saisie"
 END
 
-/* FIXME : ¿ amÈliorer/complÈter */
+/* FIXME : √Ä am√©liorer/compl√©ter */
 STRINGTABLE
 BEGIN
     IDS_ALBANIAN_LAYOUT,                            "Albanais"
     IDS_ARABIC_101_LAYOUT,                          "Arabe (101)"
     IDS_ARABIC_102_LAYOUT,                          "Arabe (102)"
     IDS_ARABIC_102_AZERTY_LAYOUT,                   "Arabe (102) AZERTY"
-    IDS_ARMENIAN_EASTERN_LAYOUT,                    "ArmÈnien Est"
-    IDS_ARMENIAN_WESTERN_LAYOUT,                    "ArmÈnien Ouest"
+    IDS_ARMENIAN_EASTERN_LAYOUT,                    "Arm√©nien Est"
+    IDS_ARMENIAN_WESTERN_LAYOUT,                    "Arm√©nien Ouest"
     IDS_ASSAMESE_LAYOUT,                            "Assamese"
     IDS_AZERI_CYRILLIC_LAYOUT,                      "Azeri Cyrillic"
     IDS_AZERI_LATIN_LAYOUT,                         "Azeri Latin"
-    IDS_BELARUSIAN_LAYOUT,                          "BiÈlorusse"
+    IDS_BELARUSIAN_LAYOUT,                          "Bi√©lorusse"
     IDS_BELGIAN_COMMA_LAYOUT,                       "Belge (Comma)"
-    IDS_BELGIAN_FRENCH_LAYOUT,                      "Belge FranÁais"
+    IDS_BELGIAN_FRENCH_LAYOUT,                      "Belge Fran√ßais"
     IDS_BELGIAN_LAYOUT,                             "Belge (Point)"
     IDS_BENGALI_LAYOUT,                             "Bengali"
     IDS_BULGARIAN_LAYOUT,                           "Bulgare"
     IDS_BULGARIAN_BDS_LAYOUT,                       "Bulgare BDS 5237-1978"
     IDS_BULGARIAN_LATIN_LAYOUT,                     "Bulgare (Latin)"
-    IDS_BULGARIAN_PHONETIC_BDS_LAYOUT,              "Bulgare PhonÈtique (BDS)"
-    IDS_BULGARIAN_PHONETIC_CLASSIC_LAYOUT,          "Bulgare PhonÈtique (Classic)"
+    IDS_BULGARIAN_PHONETIC_BDS_LAYOUT,              "Bulgare Phon√©tique (BDS)"
+    IDS_BULGARIAN_PHONETIC_CLASSIC_LAYOUT,          "Bulgare Phon√©tique (Classic)"
     IDS_BURMESE_LAYOUT,                             "Burmese"
-    IDS_CANADIAN_FRENCH_LAYOUT,                     "Canadien FranÁais"
-    IDS_CANADIAN_FRENCH_LEGACY_LAYOUT,              "Canadien FranÁais (Legacy)"
+    IDS_CANADIAN_FRENCH_LAYOUT,                     "Canadien Fran√ßais"
+    IDS_CANADIAN_FRENCH_LEGACY_LAYOUT,              "Canadien Fran√ßais (Legacy)"
     IDS_CANADIAN_MULTILINGUAL_STD_LAYOUT,           "Canadien Multilangue Standard"
-    IDS_CANTONESE_PHONETIC_LAYOUT,                  "Cantonais PhonÈtique"
-    IDS_CHINESE_SIMPLIFIED_MSPINYINIME30_LAYOUT,    "Chinois (SimplifiÈ) - Microsoft Pinyin IME 3.0"
-    IDS_CHINESE_SIMPLIFIED_NEIMA_LAYOUT,            "Chinois (SimplifiÈ) - NeiMa"
-    IDS_CHINESE_SIMPLIFIED_QUANPIN_LAYOUT,          "Chinois (SimplifiÈ) - QuanPin"
-    IDS_CHINESE_SIMPLIFIED_SHUANGPIN_LAYOUT,        "Chinois (SimplifiÈ) - ShuangPin"
-    IDS_CHINESE_SIMPLIFIED_USKEYBOARD_LAYOUT,       "Chinois (SimplifiÈ) - Clavier amÈricain"
-    IDS_CHINESE_SIMPLIFIED_ZHENGMA_LAYOUT,          "Chinois (SimplifiÈ) - ZhengMa"
-    IDS_CHINESE_TRADITIONAL_ALPHANUMERIC_LAYOUT,    "Chinois (Traditionnel) - Alpha-numÈrique"
+    IDS_CANTONESE_PHONETIC_LAYOUT,                  "Cantonais Phon√©tique"
+    IDS_CHINESE_SIMPLIFIED_MSPINYINIME30_LAYOUT,    "Chinois (Simplifi√©) - Microsoft Pinyin IME 3.0"
+    IDS_CHINESE_SIMPLIFIED_NEIMA_LAYOUT,            "Chinois (Simplifi√©) - NeiMa"
+    IDS_CHINESE_SIMPLIFIED_QUANPIN_LAYOUT,          "Chinois (Simplifi√©) - QuanPin"
+    IDS_CHINESE_SIMPLIFIED_SHUANGPIN_LAYOUT,        "Chinois (Simplifi√©) - ShuangPin"
+    IDS_CHINESE_SIMPLIFIED_USKEYBOARD_LAYOUT,       "Chinois (Simplifi√©) - Clavier am√©ricain"
+    IDS_CHINESE_SIMPLIFIED_ZHENGMA_LAYOUT,          "Chinois (Simplifi√©) - ZhengMa"
+    IDS_CHINESE_TRADITIONAL_ALPHANUMERIC_LAYOUT,    "Chinois (Traditionnel) - Alpha-num√©rique"
     IDS_CHINESE_TRADITIONAL_ARRAY_LAYOUT,           "Chinois (Traditionnel) - Tableau"
     IDS_CHINESE_TRADITIONAL_BIG5CODE_LAYOUT,        "Chinois (Traditionnel) - Big5 Code"
     IDS_CHINESE_TRADITIONAL_CHANGJIE_LAYOUT,        "Chinois (Traditionnel) - ChangJie"
     IDS_CHINESE_TRADITIONAL_DAYI_LAYOUT,            "Chinois (Traditionnel) - DaYi"
     IDS_CHINESE_TRADITIONAL_NEWCHANGJIE_LAYOUT,     "Chinois (Traditionnel) - New ChangJie"
-    IDS_CHINESE_TRADITIONAL_NEWPHONETIC_LAYOUT,     "Chinois (Traditionnel) - Nouvelle phonÈtique"
-    IDS_CHINESE_TRADITIONAL_PHONETIC_LAYOUT,        "Chinois (Traditionnel) - PhonÈtique"
+    IDS_CHINESE_TRADITIONAL_NEWPHONETIC_LAYOUT,     "Chinois (Traditionnel) - Nouvelle phon√©tique"
+    IDS_CHINESE_TRADITIONAL_PHONETIC_LAYOUT,        "Chinois (Traditionnel) - Phon√©tique"
     IDS_CHINESE_TRADITIONAL_QUICK_LAYOUT,           "Chinois (Traditionnel) - Rapide"
     IDS_CHINESE_TRADITIONAL_UNICODE_LAYOUT,         "Chinois (Traditionnel) - Unicode"
-    IDS_CHINESE_TRADITIONAL_USKEYBOARD_LAYOUT,      "Chinois (Traditionnel) - Clavier amÈricain"
+    IDS_CHINESE_TRADITIONAL_USKEYBOARD_LAYOUT,      "Chinois (Traditionnel) - Clavier am√©ricain"
     IDS_CROATIAN_LAYOUT,                            "Croate"
-    IDS_CZECH_LAYOUT,                               "TchËque"
-    IDS_CZECH_PROGRAMMERS_LAYOUT,                   "TchËque Programmeurs"
-    IDS_CZECH_QWERTY_LAYOUT,                        "TchËque (QWERTY)"
+    IDS_CZECH_LAYOUT,                               "Tch√®que"
+    IDS_CZECH_PROGRAMMERS_LAYOUT,                   "Tch√®que Programmeurs"
+    IDS_CZECH_QWERTY_LAYOUT,                        "Tch√®que (QWERTY)"
     IDS_DANISH_LAYOUT,                              "Danois"
     IDS_DEVANAGARI_INSCRIPT_LAYOUT,                 "Devanagari - INSCRIPT"
-    IDS_DIVEHI_PHONETIC_LAYOUT,                     "Divehi PhonÈtique"
+    IDS_DIVEHI_PHONETIC_LAYOUT,                     "Divehi Phon√©tique"
     IDS_DIVEHI_TYPEWRITER_LAYOUT,                   "Divehi Typewriter"
-    IDS_DUTCH_LAYOUT,                               "NÈÈrlandais"
+    IDS_DUTCH_LAYOUT,                               "N√©√©rlandais"
     IDS_ESTONIAN_LAYOUT,                            "Estonien"
     IDS_FAEROESE_LAYOUT,                            "Faeroese"
     IDS_FARSI_LAYOUT,                               "Farsi"
     IDS_FINNISH_LAYOUT,                             "Finlandais"
-    IDS_FRENCH_LAYOUT,                              "FranÁais"
-    IDS_GAELIC_LAYOUT,                              "GaÈlique"
-    IDS_GEORGIAN_LAYOUT,                            "GÈorgien"
+    IDS_FRENCH_LAYOUT,                              "Fran√ßais"
+    IDS_GAELIC_LAYOUT,                              "Ga√©lique"
+    IDS_GEORGIAN_LAYOUT,                            "G√©orgien"
     IDS_GERMAN_LAYOUT,                              "Allemand"
     IDS_GERMAN_DE_ERGO_LAYOUT,                      "Allemand (de_ergo)"
     IDS_GERMAN_IBM_LAYOUT,                          "Allemand (IBM)"
@@ -171,7 +181,7 @@ BEGIN
     IDS_GREEK_LATIN_LAYOUT,                         "Grec Latin"
     IDS_GREEK_POLYTONIC_LAYOUT,                     "Grec Polytonic"
     IDS_GUJARATI_LAYOUT,                            "Gujarati"
-    IDS_HEBREW_LAYOUT,                              "HÈbreux"
+    IDS_HEBREW_LAYOUT,                              "H√©breux"
     IDS_HINDI_TRADITIONAL_LAYOUT,                   "Hindi Traditionnel"
     IDS_HUNGARIAN_LAYOUT,                           "Hongrois"
     IDS_HUNGARIAN_101_KEY_LAYOUT,                   "Hongrois 101-key"
@@ -180,28 +190,28 @@ BEGIN
     IDS_ITALIAN_LAYOUT,                             "Italien"
     IDS_ITALIAN_142_LAYOUT,                         "Italien (142)"
     IDS_JAPANESE_LAYOUT,                            "Japonais"
-    IDS_JAPANESE_INPUT_SYSTEM_MSIME2002_LAYOUT,     "SystËme de saisie japonais (MS-IME2002)"
+    IDS_JAPANESE_INPUT_SYSTEM_MSIME2002_LAYOUT,     "Syst√®me de saisie japonais (MS-IME2002)"
     IDS_KANNADA_LAYOUT,                             "Kannada"
     IDS_KAZAKH_LAYOUT,                              "Kazakh"
-    IDS_KOREAN_LAYOUT,                              "KorÈen"
-    IDS_KOREAN_INPUT_SYSTEM_MSIME2002_LAYOUT,       "SystËme de saisie korÈen (MS-IME2002)"
+    IDS_KOREAN_LAYOUT,                              "Kor√©en"
+    IDS_KOREAN_INPUT_SYSTEM_MSIME2002_LAYOUT,       "Syst√®me de saisie kor√©en (MS-IME2002)"
     IDS_KYRGYZ_CYRILLIC_LAYOUT,                     "Kyrgyz Cyrillic"
-    IDS_LATIN_AMERICAN_LAYOUT,                      "Latino-AmÈricain"
+    IDS_LATIN_AMERICAN_LAYOUT,                      "Latino-Am√©ricain"
     IDS_LATVIAN_LAYOUT,                             "Letton"
     IDS_LATVIAN_QWERTY_LAYOUT,                      "Letton (QWERTY)"
     IDS_LITHUANIAN_LAYOUT,                          "Lituanien"
     IDS_LITHUANIAN_IBM_LAYOUT,                      "Lituanien IBM"
-    IDS_FYRO_MACEDONIAN_LAYOUT,                     "FYRO MacÈdonien"
+    IDS_FYRO_MACEDONIAN_LAYOUT,                     "FYRO Mac√©donien"
     IDS_MALAYALAM_LAYOUT,                           "Malayalam"
     IDS_MARATHI_LAYOUT,                             "Marathi"
     IDS_MONGOLIAN_CYRILLIC_LAYOUT,                  "Mongole Cyrillic"
-    IDS_NORWEGIAN_LAYOUT,                           "NorvÈgien"
+    IDS_NORWEGIAN_LAYOUT,                           "Norv√©gien"
     IDS_ORIYA_LAYOUT,                               "Oriya"
     IDS_POLISH_214_LAYOUT,                          "Polonais (214)"
     IDS_POLISH_LAYOUT,                              "Polonais (Programmeurs)"
     IDS_PORTUGUESE_LAYOUT,                          "Portugais"
-    IDS_PORTUGUESE_BRAZILIAN_ABNT_LAYOUT,           "Portugais(BrÈsilien ABNT)"
-    IDS_PORTUGUESE_BRAZIL_ABNT2_LAYOUT,             "Portugais (BrÈsilien ABNT2)"
+    IDS_PORTUGUESE_BRAZILIAN_ABNT_LAYOUT,           "Portugais(Br√©silien ABNT)"
+    IDS_PORTUGUESE_BRAZIL_ABNT2_LAYOUT,             "Portugais (Br√©silien ABNT2)"
     IDS_PUNJABI_LAYOUT,                             "Punjabi"
     IDS_ROMANIAN_LAYOUT,                            "Roumain"
     IDS_RUSSIAN_LAYOUT,                             "Russe"
@@ -210,30 +220,30 @@ BEGIN
     IDS_SERBIAN_LATIN_LAYOUT,                       "Serbe (Latin)"
     IDS_SLOVAK_LAYOUT,                              "Slovaque"
     IDS_SLOVAK_QWERTY_LAYOUT,                       "Slovaque (QWERTY)"
-    IDS_SLOVENIAN_LAYOUT,                           "SlovËne"
+    IDS_SLOVENIAN_LAYOUT,                           "Slov√®ne"
     IDS_SPANISH_LAYOUT,                             "Espagnol"
     IDS_SPANISH_VARIANTION_LAYOUT,                  "Varition espagnole"
-    IDS_SWEDISH_LAYOUT,                             "SuÈdois"
-    IDS_SWISS_FRENCH_LAYOUT,                        "Suisse FranÁaise"
+    IDS_SWEDISH_LAYOUT,                             "Su√©dois"
+    IDS_SWISS_FRENCH_LAYOUT,                        "Suisse Fran√ßaise"
     IDS_SWISS_GERMAN_LAYOUT,                        "Suisse Allemande"
     IDS_SYRIAC_LAYOUT,                              "Syrien"
-    IDS_SYRIAC_PHONETIC_LAYOUT,                     "Syrien PhonÈtique"
+    IDS_SYRIAC_PHONETIC_LAYOUT,                     "Syrien Phon√©tique"
     IDS_TAMIL_LAYOUT,                               "Tamil"
     IDS_TATAR_LAYOUT,                               "Tatare"
     IDS_TELUGU_LAYOUT,                              "Telugu"
-    IDS_THAI_KEDMANEE_LAYOUT,                       "ThaÔlandais Kedmanee"
-    IDS_THAI_KEDMANEE_NONSHIFTLOCK_LAYOUT,          "ThaÔlandais Kedmanee (pas de vÈrouillage majuscule)"
-    IDS_THAI_PATTACHOTE_LAYOUT,                     "ThaÔlandais Pattachote"
-    IDS_THAI_PATTACHOTE_NONSHIFTLOCK_LAYOUT,        "ThaÔlandais Pattachote (pas de vÈrouillage majuscule)"
+    IDS_THAI_KEDMANEE_LAYOUT,                       "Tha√Ølandais Kedmanee"
+    IDS_THAI_KEDMANEE_NONSHIFTLOCK_LAYOUT,          "Tha√Ølandais Kedmanee (pas de v√©rouillage majuscule)"
+    IDS_THAI_PATTACHOTE_LAYOUT,                     "Tha√Ølandais Pattachote"
+    IDS_THAI_PATTACHOTE_NONSHIFTLOCK_LAYOUT,        "Tha√Ølandais Pattachote (pas de v√©rouillage majuscule)"
     IDS_TURKISH_F_LAYOUT,                           "Turque F"
     IDS_TURKISH_Q_LAYOUT,                           "Turque Q"
     IDS_UKRAINIAN_LAYOUT,                           "Ukrainien"
-    IDS_UKRAINIAN_STUDENT_LAYOUT,                   "Ukrainien (…tudiants)"
+    IDS_UKRAINIAN_STUDENT_LAYOUT,                   "Ukrainien (√âtudiants)"
     IDS_UNITED_KINGDOM_LAYOUT,                      "Royaume-Uni"
-    IDS_UNITED_STATES_DVIRAK_LAYOUT,                "…tats-Unis-Dvorak"
-    IDS_UNITED_STATES_DVORAK_FOR_LEFT_HAND_LAYOUT,  "…tats-Unis-Dvorak pour la main gauche"
-    IDS_UNITED_STATES_DVORAK_FOR_RIGHT_HAND_LAYOUT, "…tats-Unis-Dvorak pour la main droite"
-    IDS_UNITED_STATES_INTERNATIONAL_LAYOUT,         "…tats-Unis-International"
+    IDS_UNITED_STATES_DVIRAK_LAYOUT,                "√âtats-Unis-Dvorak"
+    IDS_UNITED_STATES_DVORAK_FOR_LEFT_HAND_LAYOUT,  "√âtats-Unis-Dvorak pour la main gauche"
+    IDS_UNITED_STATES_DVORAK_FOR_RIGHT_HAND_LAYOUT, "√âtats-Unis-Dvorak pour la main droite"
+    IDS_UNITED_STATES_INTERNATIONAL_LAYOUT,         "√âtats-Unis-International"
     IDS_URDU_LAYOUT,                                "Urdu"
     IDS_US_LAYOUT,                                  "US"
     IDS_USENG_TABLE_IBM_ARABIC238L_LAYOUT,          "US English Table for IBM Arabic 238_L"

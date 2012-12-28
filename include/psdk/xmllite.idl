@@ -79,28 +79,135 @@ interface IXmlReader : IUnknown
 }
 
 /* IXmlReader state */
-cpp_quote("typedef enum XmlReadState")
-cpp_quote("{")
-cpp_quote("    XmlReadState_Initial     = 0,")
-cpp_quote("    XmlReadState_Interactive = 1,")
-cpp_quote("    XmlReadState_Error       = 2,")
-cpp_quote("    XmlReadState_EndOfFile   = 3,")
-cpp_quote("    XmlReadState_Closed      = 4")
-cpp_quote("} XmlReadState;")
+typedef enum XmlReadState
+{
+    XmlReadState_Initial,
+    XmlReadState_Interactive,
+    XmlReadState_Error,
+    XmlReadState_EndOfFile,
+    XmlReadState_Closed
+} XmlReadState;
+
+/* conformance levels */
+typedef enum XmlConformanceLevel
+{
+    XmlConformanceLevel_Auto,
+    XmlConformanceLevel_Fragment,
+    XmlConformanceLevel_Document,
+    _XmlConformanceLevel_Last = XmlConformanceLevel_Document
+} XmlConformanceLevel;
+
+/* DTD processing mode */
+typedef enum DtdProcessing
+{
+    DtdProcessing_Prohibit,
+    DtdProcessing_Parse,
+    _DtdProcessing_Last = DtdProcessing_Parse
+} DtdProcessing;
 
 /* IXmlReader properties */
-cpp_quote("typedef enum XmlReaderProperty")
-cpp_quote("{")
-cpp_quote("    XmlReaderProperty_MultiLanguage      = 0,")
-cpp_quote("    XmlReaderProperty_ConformanceLevel   = XmlReaderProperty_MultiLanguage + 1,")
-cpp_quote("    XmlReaderProperty_RandomAccess       = XmlReaderProperty_ConformanceLevel + 1,")
-cpp_quote("    XmlReaderProperty_XmlResolver        = XmlReaderProperty_RandomAccess + 1,")
-cpp_quote("    XmlReaderProperty_DtdProcessing      = XmlReaderProperty_XmlResolver + 1,")
-cpp_quote("    XmlReaderProperty_ReadState          = XmlReaderProperty_DtdProcessing + 1,")
-cpp_quote("    XmlReaderProperty_MaxElementDepth    = XmlReaderProperty_ReadState + 1,")
-cpp_quote("    XmlReaderProperty_MaxEntityExpansion = XmlReaderProperty_MaxElementDepth + 1,")
-cpp_quote("    _XmlReaderProperty_Last              = XmlReaderProperty_MaxEntityExpansion")
-cpp_quote("} XmlReaderProperty;")
+typedef enum XmlReaderProperty
+{
+    XmlReaderProperty_MultiLanguage,
+    XmlReaderProperty_ConformanceLevel,
+    XmlReaderProperty_RandomAccess,
+    XmlReaderProperty_XmlResolver,
+    XmlReaderProperty_DtdProcessing,
+    XmlReaderProperty_ReadState,
+    XmlReaderProperty_MaxElementDepth,
+    XmlReaderProperty_MaxEntityExpansion,
+    _XmlReaderProperty_Last = XmlReaderProperty_MaxEntityExpansion
+} XmlReaderProperty;
+
+/* reader error codes */
+typedef enum XmlError
+{
+    MX_E_MX = 0xc00cee00,
+    MX_E_INPUTEND,
+    MX_E_ENCODING,
+    MX_E_ENCODINGSWITCH,
+    MX_E_ENCODINGSIGNATURE,
+    WC_E_WC = 0xc00cee20,
+    WC_E_WHITESPACE,
+    WC_E_SEMICOLON,
+    WC_E_GREATERTHAN,
+    WC_E_QUOTE,
+    WC_E_EQUAL,
+    WC_E_LESSTHAN,
+    WC_E_HEXDIGIT,
+    WC_E_DIGIT,
+    WC_E_LEFTBRACKET,
+    WC_E_LEFTPAREN,
+    WC_E_XMLCHARACTER,
+    WC_E_NAMECHARACTER,
+    WC_E_SYNTAX,
+    WC_E_CDSECT,
+    WC_E_COMMENT,
+    WC_E_CONDSECT,
+    WC_E_DECLATTLIST,
+    WC_E_DECLDOCTYPE,
+    WC_E_DECLELEMENT,
+    WC_E_DECLENTITY,
+    WC_E_DECLNOTATION,
+    WC_E_NDATA,
+    WC_E_PUBLIC,
+    WC_E_SYSTEM,
+    WC_E_NAME,
+    WC_E_ROOTELEMENT,
+    WC_E_ELEMENTMATCH,
+    WC_E_UNIQUEATTRIBUTE,
+    WC_E_TEXTXMLDECL,
+    WC_E_LEADINGXML,
+    WC_E_TEXTDECL,
+    WC_E_XMLDECL,
+    WC_E_ENCNAME,
+    WC_E_PUBLICID,
+    WC_E_PESINTERNALSUBSET,
+    WC_E_PESBETWEENDECLS,
+    WC_E_NORECURSION,
+    WC_E_ENTITYCONTENT,
+    WC_E_UNDECLAREDENTITY,
+    WC_E_PARSEDENTITY,
+    WC_E_NOEXTERNALENTITYREF,
+    WC_E_PI,
+    WC_E_SYSTEMID,
+    WC_E_QUESTIONMARK,
+    WC_E_CDSECTEND,
+    WC_E_MOREDATA,
+    WC_E_DTDPROHIBITED,
+    WC_E_INVALIDXMLSPACE,
+    NC_E_NC = 0xc00cee60,
+    NC_E_QNAMECHARACTER,
+    NC_E_QNAMECOLON,
+    NC_E_NAMECOLON,
+    NC_E_DECLAREDPREFIX,
+    NC_E_UNDECLAREDPREFIX,
+    NC_E_EMPTYURI,
+    NC_E_XMLPREFIXRESERVED,
+    NC_E_XMLNSPREFIXRESERVED,
+    NC_E_XMLURIRESERVED,
+    NC_E_XMLNSURIRESERVED,
+    SC_E_SC = 0xc00cee80,
+    SC_E_MAXELEMENTDEPTH,
+    SC_E_MAXENTITYEXPANSION,
+    WR_E_WR = 0xc00cef00,
+    WR_E_NONWHITESPACE,
+    WR_E_NSPREFIXDECLARED,
+    WR_E_NSPREFIXWITHEMPTYNSURI,
+    WR_E_DUPLICATEATTRIBUTE,
+    WR_E_XMLNSPREFIXDECLARATION,
+    WR_E_XMLPREFIXDECLARATION,
+    WR_E_XMLURIDECLARATION,
+    WR_E_XMLNSURIDECLARATION,
+    WR_E_NAMESPACEUNDECLARED,
+    WR_E_INVALIDXMLSPACE,
+    WR_E_INVALIDACTION,
+    WR_E_INVALIDSURROGATEPAIR,
+    XML_E_INVALID_DECIMAL = 0xc00ce01d,
+    XML_E_INVALID_HEXIDECIMAL,
+    XML_E_INVALID_UNICODE,
+    XML_E_INVALIDENCODING = 0xc00ce06e
+} XmlError;
 
 /* IXmlReader construction */
 cpp_quote("STDAPI CreateXmlReader(REFIID riid, void **ppvObject, IMalloc *pMalloc);")

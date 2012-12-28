@@ -457,7 +457,7 @@ HRESULT WINAPI CoRegisterMallocSpy(LPMALLOCSPY pMallocSpy)
 
         EnterCriticalSection(&IMalloc32_SpyCS);
 
-	if (SUCCEEDED(IUnknown_QueryInterface(pMallocSpy, &IID_IMallocSpy, (LPVOID*)&pSpy))) {
+	if (SUCCEEDED(IMallocSpy_QueryInterface(pMallocSpy, &IID_IMallocSpy, (void**)&pSpy))) {
 	    Malloc32.pSpy = pSpy;
 	    hres = S_OK;
 	}

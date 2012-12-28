@@ -131,7 +131,7 @@
 @ cdecl __RTtypeid(ptr) MSVCRT___RTtypeid
 @ cdecl __STRINGTOLD(ptr ptr str long)
 @ cdecl ___lc_codepage_func()
-# @ cdecl ___lc_collate_cp_func()
+@ cdecl ___lc_collate_cp_func()
 @ cdecl ___lc_handle_func()
 @ cdecl ___mb_cur_max_func()
 @ cdecl ___setlc_active_func()
@@ -143,8 +143,8 @@
 @ cdecl __crtCompareStringW(long long wstr long wstr long) kernel32.CompareStringW
 @ cdecl __crtGetLocaleInfoW(long long ptr long) kernel32.GetLocaleInfoW
 @ cdecl __crtGetStringTypeW(long long wstr long ptr)
-@ cdecl __crtLCMapStringA(long long str long ptr long long long)
-# stub __crtLCMapStringW
+@ cdecl __crtLCMapStringA(long long str long str long long long)
+@ cdecl __crtLCMapStringW(long long wstr long wstr long long long)
 @ cdecl __daylight() __p__daylight
 @ cdecl __dllonexit(ptr ptr ptr)
 @ cdecl __doserrno()
@@ -156,7 +156,7 @@
 @ cdecl __isascii(long)
 @ cdecl __iscsym(long)
 @ cdecl __iscsymf(long)
-@ extern __lc_codepage MSVCRT___lc_codepage
+@ extern __lc_codepage
 # @ stub __lc_collate # not in XP / 7
 @ extern __lc_collate_cp MSVCRT___lc_collate_cp
 @ extern __lc_handle MSVCRT___lc_handle
@@ -1266,7 +1266,7 @@
 @ cdecl -i386 longjmp(ptr long)
 @ cdecl malloc(long)
 @ cdecl mblen(ptr long)
-# stub mbrlen
+@ cdecl mbrlen(ptr long ptr)
 # stub mbrtowc
 # stub mbsdup_dbg
 # stub mbsrtowcs

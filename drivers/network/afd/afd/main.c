@@ -610,6 +610,7 @@ DisconnectComplete(PDEVICE_OBJECT DeviceObject,
         /* Signal complete connection closure immediately */
         FCB->PollState |= AFD_EVENT_ABORT;
         FCB->PollStatus[FD_CLOSE_BIT] = Irp->IoStatus.Status;
+        FCB->LastReceiveStatus = STATUS_FILE_CLOSED;
         PollReeval(FCB->DeviceExt, FCB->FileObject);
     }
 
@@ -708,8 +709,8 @@ AfdDisconnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         /* Mark us as overread to complete future reads with an error */
         FCB->Overread = TRUE;
 
-        /* Set a successful close status to indicate a shutdown on overread */
-        FCB->PollStatus[FD_CLOSE_BIT] = STATUS_SUCCESS;
+        /* Set a successful receive status to indicate a shutdown on overread */
+        FCB->LastReceiveStatus = STATUS_SUCCESS;
 
         /* Clear the receive event */
         FCB->PollState &= ~AFD_EVENT_RECEIVE;

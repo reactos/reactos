@@ -22,7 +22,7 @@
 void sound(int freq);
 void delay(unsigned msec);
 
-void PcBeep(void)
+VOID PcBeep(VOID)
 {
 	sound(700);
 	delay(200);

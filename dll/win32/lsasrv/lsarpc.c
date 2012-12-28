@@ -1377,8 +1377,153 @@ NTSTATUS WINAPI LsarRemovePrivilegesFromAccount(
     BOOL AllPrivileges,
     PLSAPR_PRIVILEGE_SET Privileges)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PLSA_DB_OBJECT AccountObject;
+    PPRIVILEGE_SET CurrentPrivileges = NULL;
+    PPRIVILEGE_SET NewPrivileges = NULL;
+    ULONG PrivilegeSetSize = 0;
+    ULONG PrivilegeCount;
+    ULONG i, j, k;
+    BOOL bFound;
+    NTSTATUS Status;
+
+    TRACE("(%p %u %p)\n", AccountHandle, AllPrivileges, Privileges);
+
+    /* */
+    if ((AllPrivileges == FALSE && Privileges == NULL) ||
+        (AllPrivileges == TRUE && Privileges != NULL))
+            return STATUS_INVALID_PARAMETER;
+
+    /* Validate the AccountHandle */
+    Status = LsapValidateDbObject(AccountHandle,
+                                  LsaDbAccountObject,
+                                  ACCOUNT_ADJUST_PRIVILEGES,
+                                  &AccountObject);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("LsapValidateDbObject returned 0x%08lx\n", Status);
+        return Status;
+    }
+
+    if (AllPrivileges == TRUE)
+    {
+        /* Delete the Privilgs attribute */
+        Status = LsapDeleteObjectAttribute(AccountObject,
+                                           L"Privilgs");
+        if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
+            Status = STATUS_SUCCESS;
+    }
+    else
+    {
+        /* Get the size of the Privilgs attribute */
+        Status = LsapGetObjectAttribute(AccountObject,
+                                        L"Privilgs",
+                                        NULL,
+                                        &PrivilegeSetSize);
+        if (!NT_SUCCESS(Status))
+            goto done;
+
+        /* Succeed, if there is no privilege set to remove privileges from */
+        if (PrivilegeSetSize == 0)
+        {
+            Status = STATUS_SUCCESS;
+            goto done;
+        }
+
+        /* Allocate memory for the stored privilege set */
+        CurrentPrivileges = MIDL_user_allocate(PrivilegeSetSize);
+        if (CurrentPrivileges == NULL)
+            return STATUS_NO_MEMORY;
+
+        /* Get the current privilege set */
+        Status = LsapGetObjectAttribute(AccountObject,
+                                        L"Privilgs",
+                                        CurrentPrivileges,
+                                        &PrivilegeSetSize);
+        if (!NT_SUCCESS(Status))
+        {
+            TRACE("LsapGetObjectAttribute() failed (Status 0x%08lx)\n", Status);
+            goto done;
+        }
+
+        PrivilegeCount = CurrentPrivileges->PrivilegeCount;
+        TRACE("Current privilege count: %lu\n", PrivilegeCount);
+
+        /* Calculate the number of privileges in the new privilege set */
+        for (i = 0; i < CurrentPrivileges->PrivilegeCount; i++)
+        {
+            for (j = 0; j < Privileges->PrivilegeCount; j++)
+            {
+                if (RtlEqualLuid(&(CurrentPrivileges->Privilege[i].Luid),
+                                 &(Privileges->Privilege[j].Luid)))
+                {
+                    if (PrivilegeCount > 0)
+                        PrivilegeCount--;
+                }
+            }
+        }
+        TRACE("New privilege count: %lu\n", PrivilegeCount);
+
+        if (PrivilegeCount == 0)
+        {
+            /* Delete the Privilgs attribute */
+            Status = LsapDeleteObjectAttribute(AccountObject,
+                                               L"Privilgs");
+            if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
+                Status = STATUS_SUCCESS;
+        }
+        else
+        {
+            /* Calculate the size of the new privilege set and allocate it */
+            PrivilegeSetSize = sizeof(PRIVILEGE_SET) +
+                               (PrivilegeCount - 1) * sizeof(LUID_AND_ATTRIBUTES);
+            NewPrivileges = MIDL_user_allocate(PrivilegeSetSize);
+            if (NewPrivileges == NULL)
+            {
+                Status = STATUS_NO_MEMORY;
+                goto done;
+            }
+
+            /* Initialize the new privilege set */
+            NewPrivileges->PrivilegeCount = PrivilegeCount;
+            NewPrivileges->Control = 0;
+
+            /* Copy the privileges which are not to be removed */
+            for (i = 0, k = 0; i < CurrentPrivileges->PrivilegeCount; i++)
+            {
+                bFound = FALSE;
+                for (j = 0; j < Privileges->PrivilegeCount; j++)
+                {
+                    if (RtlEqualLuid(&(CurrentPrivileges->Privilege[i].Luid),
+                                     &(Privileges->Privilege[j].Luid)))
+                        bFound = TRUE;
+                }
+
+                if (bFound == FALSE)
+                {
+                    /* Copy the privilege */
+                    RtlCopyLuidAndAttributesArray(1,
+                                                  &(CurrentPrivileges->Privilege[i]),
+                                                  &(NewPrivileges->Privilege[k]));
+                    k++;
+                }
+            }
+
+            /* Set the new privilege set */
+            Status = LsapSetObjectAttribute(AccountObject,
+                                            L"Privilgs",
+                                            NewPrivileges,
+                                            PrivilegeSetSize);
+        }
+    }
+
+done:
+    if (CurrentPrivileges != NULL)
+        MIDL_user_free(CurrentPrivileges);
+
+    if (NewPrivileges != NULL)
+        MIDL_user_free(NewPrivileges);
+
+    return Status;
 }
 
 
@@ -2247,8 +2392,10 @@ NTSTATUS WINAPI LsarOpenPolicy2(
     ACCESS_MASK DesiredAccess,
     LSAPR_HANDLE *PolicyHandle)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    return LsarOpenPolicy(SystemName,
+                          ObjectAttributes,
+                          DesiredAccess,
+                          PolicyHandle);
 }
 
 
@@ -2784,123 +2931,6 @@ NTSTATUS WINAPI LsarAdtUnregisterSecurityEventSource(
 
 /* Function 81 */
 NTSTATUS WINAPI LsarAdtReportSecurityEvent(
-    handle_t hBinding)
-{
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-
-/* Function 82 */
-NTSTATUS WINAPI CredrFindBestCredential(
-    handle_t hBinding)
-{
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-
-/* Function 83 */
-NTSTATUS WINAPI LsarSetAuditPolicy(
-    handle_t hBinding)
-{
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-
-/* Function 84 */
-NTSTATUS WINAPI LsarQueryAuditPolicy(
-    handle_t hBinding)
-{
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-
-/* Function 85 */
-NTSTATUS WINAPI LsarEnumerateAuditPolicy(
-    handle_t hBinding)
-{
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-
-/* Function 86 */
-NTSTATUS WINAPI LsarEnumerateAuditCategories(
-    handle_t hBinding)
-{
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-
-/* Function 87 */
-NTSTATUS WINAPI LsarEnumerateAuditSubCategories(
-    handle_t hBinding)
-{
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-
-/* Function 88 */
-NTSTATUS WINAPI LsarLookupAuditCategoryName(
-    handle_t hBinding)
-{
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-
-/* Function 89 */
-NTSTATUS WINAPI LsarLookupAuditSubCategoryName(
-    handle_t hBinding)
-{
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-
-/* Function 90 */
-NTSTATUS WINAPI LsarSetAuditSecurity(
-    handle_t hBinding)
-{
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-
-/* Function 91 */
-NTSTATUS WINAPI LsarQueryAuditSecurity(
-    handle_t hBinding)
-{
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-
-/* Function 92 */
-NTSTATUS WINAPI CredReadByTokenHandle(
-    handle_t hBinding)
-{
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-
-/* Function 93 */
-NTSTATUS WINAPI CredrRestoreCredentials(
-    handle_t hBinding)
-{
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-
-/* Function 94 */
-NTSTATUS WINAPI CredrBackupCredentials(
     handle_t hBinding)
 {
     UNIMPLEMENTED;

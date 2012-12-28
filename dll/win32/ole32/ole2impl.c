@@ -102,6 +102,8 @@ static inline void init_fmtetc(FORMATETC *fmt, CLIPFORMAT cf, TYMED tymed)
  */
 static HRESULT get_storage(IDataObject *data, IStorage *stg, UINT *src_cf)
 {
+    static const UINT fmt_id[] = { CF_METAFILEPICT, CF_BITMAP, CF_DIB };
+    UINT i;
     HRESULT hr;
     FORMATETC fmt;
     STGMEDIUM med;
@@ -130,6 +132,17 @@ static HRESULT get_storage(IDataObject *data, IStorage *stg, UINT *src_cf)
     {
         *src_cf = embed_source_clipboard_format;
         return hr;
+    }
+
+    for (i = 0; i < sizeof(fmt_id)/sizeof(fmt_id[0]); i++)
+    {
+        init_fmtetc(&fmt, fmt_id[i], TYMED_ISTORAGE);
+        hr = IDataObject_QueryGetData(data, &fmt);
+        if(SUCCEEDED(hr))
+        {
+            *src_cf = fmt_id[i];
+            return hr;
+        }
     }
 
     /* IPersistStorage */
@@ -196,6 +209,31 @@ HRESULT WINAPI OleCreateFromData(LPDATAOBJECT data, REFIID iid,
                                fmt, NULL, NULL, client_site, stg, obj);
 }
 
+/******************************************************************************
+ *              OleCreateLinkFromData        [OLE32.@]
+ */
+HRESULT WINAPI OleCreateLinkFromData(IDataObject *data, REFIID iid,
+                                     DWORD renderopt, FORMATETC *fmt,
+                                     IOleClientSite *client_site, IStorage *stg,
+                                     void **obj)
+{
+    FIXME("%p,%s,%08x,%p,%p,%p,%p: semi-stub\n",
+          data, debugstr_guid(iid), renderopt, fmt, client_site, stg, obj);
+    return OleCreateFromData(data, iid, renderopt, fmt, client_site, stg, obj);
+}
+
+/******************************************************************************
+ *              OleCreateStaticFromData        [OLE32.@]
+ */
+HRESULT WINAPI OleCreateStaticFromData(IDataObject *data, REFIID iid,
+                                       DWORD renderopt, FORMATETC *fmt,
+                                       IOleClientSite *client_site, IStorage *stg,
+                                       void **obj)
+{
+    FIXME("%p,%s,%08x,%p,%p,%p,%p: semi-stub\n",
+          data, debugstr_guid(iid), renderopt, fmt, client_site, stg, obj);
+    return OleCreateFromData(data, iid, renderopt, fmt, client_site, stg, obj);
+}
 
 /******************************************************************************
  *              OleDuplicateData        [OLE32.@]

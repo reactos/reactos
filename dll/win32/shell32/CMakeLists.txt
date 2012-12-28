@@ -9,7 +9,6 @@ add_definitions(
     -D_WINE)
 
 include_directories(
-    ${REACTOS_SOURCE_DIR}/include/reactos/wine
     ${REACTOS_SOURCE_DIR}/lib/recyclebin
     ${REACTOS_SOURCE_DIR}/lib/atl
     ${REACTOS_SOURCE_DIR})

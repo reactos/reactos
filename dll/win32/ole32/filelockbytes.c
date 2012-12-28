@@ -141,7 +141,7 @@ HRESULT FileLockBytesImpl_Construct(HANDLE hFile, DWORD openFlags, LPCWSTR pwcsN
 static HRESULT WINAPI FileLockBytesImpl_QueryInterface(ILockBytes *iface, REFIID riid,
     void **ppvObject)
 {
-    if (IsEqualIID(riid, &IID_ILockBytes) || IsEqualIID(riid, &IID_ILockBytes))
+    if (IsEqualIID(riid, &IID_IUnknown) || IsEqualIID(riid, &IID_ILockBytes))
         *ppvObject = iface;
     else
     {

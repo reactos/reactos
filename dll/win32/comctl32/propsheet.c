@@ -171,6 +171,7 @@ static BOOL PROPSHEET_SetCurSel(HWND hwndDlg,
 static int PROPSHEET_GetPageIndex(HPROPSHEETPAGE hpage, const PropSheetInfo* psInfo);
 static PADDING_INFO PROPSHEET_GetPaddingInfoWizard(HWND hwndDlg, const PropSheetInfo* psInfo);
 static BOOL PROPSHEET_DoCommand(HWND hwnd, WORD wID);
+static BOOL PROPSHEET_RemovePage(HWND hwndDlg, int index, HPROPSHEETPAGE hpage);
 
 static INT_PTR CALLBACK
 PROPSHEET_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -554,13 +555,12 @@ static BOOL PROPSHEET_CollectPageInfo(LPCPROPSHEETPAGEW lppsp,
 
     if (IS_INTRESOURCE( lppsp->pszTitle ))
     {
-      if (!LoadStringW( lppsp->hInstance, (DWORD_PTR)lppsp->pszTitle,szTitle,sizeof(szTitle)/sizeof(szTitle[0]) ))
-      {
-        pTitle = pszNull;
-	FIXME("Could not load resource #%04x?\n",LOWORD(lppsp->pszTitle));
-      }
-      else
+      if (LoadStringW( lppsp->hInstance, (DWORD_PTR)lppsp->pszTitle, szTitle, sizeof(szTitle)/sizeof(szTitle[0]) ))
         pTitle = szTitle;
+      else if (*p)
+        pTitle = p;
+      else
+        pTitle = pszNull;
     }
     else
       pTitle = lppsp->pszTitle;
@@ -1173,7 +1173,7 @@ static BOOL PROPSHEET_CreateTabControl(HWND hwndParent,
     SendMessageW(hwndTabCtrl, TCM_SETIMAGELIST, 0, (LPARAM)psInfo->hImageList);
   }
 
-  SendMessageW(GetDlgItem(hwndTabCtrl, IDC_TABCONTROL), WM_SETREDRAW, 0, 0);
+  SendMessageW(hwndTabCtrl, WM_SETREDRAW, 0, 0);
   for (i = 0; i < nTabs; i++)
   {
     if ( psInfo->proppage[i].hasIcon )
@@ -1189,7 +1189,7 @@ static BOOL PROPSHEET_CreateTabControl(HWND hwndParent,
     item.pszText = (LPWSTR) psInfo->proppage[i].pszText;
     SendMessageW(hwndTabCtrl, TCM_INSERTITEMW, i, (LPARAM)&item);
   }
-  SendMessageW(GetDlgItem(hwndTabCtrl, IDC_TABCONTROL), WM_SETREDRAW, 1, 0);
+  SendMessageW(hwndTabCtrl, WM_SETREDRAW, 1, 0);
 
   return TRUE;
 }
@@ -1473,6 +1473,9 @@ static BOOL PROPSHEET_CreatePage(HWND hwndParent,
 					(LPARAM)ppshpage);
   /* Free a no more needed copy */
   Free(pTemplateCopy);
+
+  if(!hwndPage)
+      return FALSE;
 
   psInfo->proppage[index].hwndPage = hwndPage;
 
@@ -2025,7 +2028,14 @@ static BOOL PROPSHEET_SetCurSel(HWND hwndDlg,
     psn.lParam       = 0;
 
     if (!psInfo->proppage[index].hwndPage) {
-      PROPSHEET_CreatePage(hwndDlg, index, psInfo, ppshpage);
+      if(!PROPSHEET_CreatePage(hwndDlg, index, psInfo, ppshpage)) {
+        PROPSHEET_RemovePage(hwndDlg, index, NULL);
+        if(index >= psInfo->nPages)
+          index--;
+        if(index < 0)
+            return FALSE;
+        continue;
+      }
     }
 
     /* Resize the property sheet page to the fit in the Tab control
@@ -2273,7 +2283,8 @@ static BOOL PROPSHEET_AddPage(HWND hwndDlg,
   if (ppsp->dwFlags & PSP_PREMATURE)
   {
      /* Create the page but don't show it */
-     PROPSHEET_CreatePage(hwndDlg, psInfo->nPages, psInfo, ppsp);
+     if(!PROPSHEET_CreatePage(hwndDlg, psInfo->nPages, psInfo, ppsp))
+         return FALSE;
   }
 
   /*

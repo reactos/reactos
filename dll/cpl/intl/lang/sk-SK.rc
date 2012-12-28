@@ -1,4 +1,4 @@
-/* TRANSLATOR:  M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
+/* TRANSLATOR:  M√°rio Kaƒçm√°r /Mario Kacmar/ aka Kario (kario@szm.sk)
  * DATE OF TR:  28-04-2008
  * LastChange:  31-05-2010
  */
@@ -10,24 +10,24 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Miestne nastavenia"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "ätandardy a form·ty", -1, 5, 5, 234, 159
-    LTEXT "T·to moûnosù ovplyvÚuje spÙsob, ktor˝m niektorÈ programy form·tuj˙ ËÌsla, meny, d·tumy a Ëas.", -1, 14, 17, 220, 17
-    LTEXT "Vyb&erte poloûku vyhovuj˙cu svojim poûiadavk·m, alebo kliknite na tlaËidlo PrispÙsobiù a vyberte svoj vlastn˝ form·t:", -1, 14, 37, 220, 18
+    GROUPBOX "≈†tandardy a form√°ty", -1, 5, 5, 234, 159
+    LTEXT "T√°to mo≈ænos≈• ovplyv≈àuje sp√¥sob, ktor√Ωm niektor√© programy form√°tuj√∫ ƒç√≠sla, meny, d√°tumy a ƒças.", -1, 14, 17, 220, 17
+    LTEXT "Vyb&erte polo≈æku vyhovuj√∫cu svojim po≈æiadavk√°m, alebo kliknite na tlaƒçidlo Prisp√¥sobi≈• a vyberte svoj vlastn√Ω form√°t:", -1, 14, 37, 220, 18
     COMBOBOX IDC_LANGUAGELIST, 14, 56, 160, 160, CBS_DROPDOWNLIST | CBS_SORT | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    PUSHBUTTON "&PrispÙsobiù...", IDC_SETUP_BUTTON, 178, 56, 52, 13
-    LTEXT "Uk·ûky", -1, 14, 73, 70, 10
-    LTEXT "»Ìslo:", -1, 16, 86, 48, 10
+    PUSHBUTTON "&Prisp√¥sobi≈•...", IDC_SETUP_BUTTON, 178, 56, 52, 13
+    LTEXT "Uk√°≈æky", -1, 14, 73, 70, 10
+    LTEXT "ƒå√≠slo:", -1, 16, 86, 48, 10
     LTEXT "Mena:", -1, 16, 101, 48, 10
-    LTEXT "»as:", -1, 16, 116, 48, 10
-    LTEXT "Kr·tky d·tum:", -1, 16, 131, 48, 10
-    LTEXT "Dlh˝ d·tum:", -1, 16, 146, 48, 10
+    LTEXT "ƒåas:", -1, 16, 116, 48, 10
+    LTEXT "Kr√°tky d√°tum:", -1, 16, 131, 48, 10
+    LTEXT "Dlh√Ω d√°tum:", -1, 16, 146, 48, 10
     EDITTEXT IDC_NUMSAMPLE_EDIT, 89, 86, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
     EDITTEXT IDC_MONEYSAMPLE_EDIT, 89, 101, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
     EDITTEXT IDC_TIMESAMPLE_EDIT, 89, 116, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
     EDITTEXT IDC_SHORTTIMESAMPLE_EDIT, 89, 131, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
     EDITTEXT IDC_FULLTIMESAMPLE_EDIT, 89, 146, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
     GROUPBOX "Umiestnenie", -1, 5, 168, 234, 59
-    LTEXT "&Vyberte svoje aktu·lne umiestnenie, aby v·m rÙzne sluûby mohli poskytovaù miestne inform·cie, naprÌklad spr·vy alebo predpovede poËasia.", -1, 14, 179, 210, 26
+    LTEXT "&Vyberte svoje aktu√°lne umiestnenie, aby v√°m r√¥zne slu≈æby mohli poskytova≈• miestne inform√°cie, napr√≠klad spr√°vy alebo predpovede poƒçasia.", -1, 14, 179, 210, 26
     COMBOBOX IDC_LOCATION_COMBO, 14, 207, 217, 160, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
 END
 
@@ -36,57 +36,57 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Jazyk"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "TextovÈ sluûby a vstupnÈ jazyky", -1, 5, 5, 234, 52
-    LTEXT "Ak chcete zobraziù alebo zmeniù jazyky, v ktor˝ch mÙûete zad·vaù text, alebo spÙsoby zad·vania textu, kliknite na tlaËidlo Podrobnosti", -1, 12, 15, 220, 18
+    GROUPBOX "Textov√© slu≈æby a vstupn√© jazyky", -1, 5, 5, 234, 52
+    LTEXT "Ak chcete zobrazi≈• alebo zmeni≈• jazyky, v ktor√Ωch m√¥≈æete zad√°va≈• text, alebo sp√¥soby zad√°vania textu, kliknite na tlaƒçidlo Podrobnosti", -1, 12, 15, 220, 18
     PUSHBUTTON "&Podrobnosti...", IDC_DETAIL_BUTTON, 177, 34, 54, 14
-    GROUPBOX "Doplnkov· jazykov· podpora", -1, 5, 62, 234, 82
-    LTEXT "V‰Ëöina jazykov sa inötaluje v predvolenom nastavenÌ. Ak chcete nainötalovaù Ôalöie jazyky, zaËiarknite prÌsluönÈ polÌËko.", -1, 12, 72, 220, 18
-    CHECKBOX "I&nötalovaù s˙bory pre zloûitÈ pÌsma a jazyky so smerom pÌsania sprava doæava (vr·tane thajËiny)", IDC_INST_FILES_FOR_RTOL_LANG, 12, 95, 215, 19, BS_MULTILINE
-    CHECKBOX "Inötalovaù s˙&bory pre v˝chodo·zijskÈ jazyky", IDC_INST_FILES_FOR_ASIAN, 12, 114, 180, 22, BS_MULTILINE
+    GROUPBOX "Doplnkov√° jazykov√° podpora", -1, 5, 62, 234, 82
+    LTEXT "V√§ƒç≈°ina jazykov sa in≈°taluje v predvolenom nastaven√≠. Ak chcete nain≈°talova≈• ƒèal≈°ie jazyky, zaƒçiarknite pr√≠slu≈°n√© pol√≠ƒçko.", -1, 12, 72, 220, 18
+    CHECKBOX "I&n≈°talova≈• s√∫bory pre zlo≈æit√© p√≠sma a jazyky so smerom p√≠sania sprava doƒæava (vr√°tane thajƒçiny)", IDC_INST_FILES_FOR_RTOL_LANG, 12, 95, 215, 19, BS_MULTILINE
+    CHECKBOX "In≈°talova≈• s√∫&bory pre v√Ωchodo√°zijsk√© jazyky", IDC_INST_FILES_FOR_ASIAN, 12, 114, 180, 22, BS_MULTILINE
 END
 
 IDD_ADVANCEDPAGE DIALOGEX 0, 0, 246, 230
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "RozöÌrenÈ nastavenia"
+CAPTION "Roz≈°√≠ren√© nastavenia"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Jazyk pre programy bez podpory kÛdovania Unicode", -1, 5, 5, 234, 90
+    GROUPBOX "Jazyk pre programy bez podpory k√≥dovania Unicode", -1, 5, 5, 234, 90
     COMBOBOX IDC_LANGUAGE_COMBO, 14, 75, 217, 160, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
-    LTEXT "Toto systÈmovÈ nastavenie umoûÚuje, aby mohli programy bez podpory kÛdovania Unicode zobrazovaù ponuky a dialÛgovÈ okn· v rodnom jazyku. NeovplyvÚuje programy s kÛdovanÌm Unicode, ale vzùahuje sa na vöetk˝ch pouûÌvateæov tohto poËÌtaËa.", -1, 14, 18, 223, 33
-    LTEXT "Vyberte jazyk zodpovedaj˙ci jazykovej verzii prÌsluön˝ch programov bez podpory kÛdovania &Unicode:", -1, 14, 55, 223, 18
-    GROUPBOX "&Tabuæky na konverziu kÛdov˝ch str·nok", -1, 5, 101, 234, 88
+    LTEXT "Toto syst√©mov√© nastavenie umo≈æ≈àuje, aby mohli programy bez podpory k√≥dovania Unicode zobrazova≈• ponuky a dial√≥gov√© okn√° v rodnom jazyku. Neovplyv≈àuje programy s k√≥dovan√≠m Unicode, ale vz≈•ahuje sa na v≈°etk√Ωch pou≈æ√≠vateƒæov tohto poƒç√≠taƒça.", -1, 14, 18, 223, 33
+    LTEXT "Vyberte jazyk zodpovedaj√∫ci jazykovej verzii pr√≠slu≈°n√Ωch programov bez podpory k√≥dovania &Unicode:", -1, 14, 55, 223, 18
+    GROUPBOX "&Tabuƒæky na konverziu k√≥dov√Ωch str√°nok", -1, 5, 101, 234, 88
     CONTROL "", IDC_CONV_TABLES, "SysListView32", LVS_REPORT | LVS_SORTASCENDING | LVS_NOCOLUMNHEADER | WS_BORDER | WS_TABSTOP, 14, 114, 217, 70
-    GROUPBOX "PredvolenÈ nastavenie pouûÌvateæskÈho konta", -1, 5, 193, 234, 30
-    CHECKBOX "&Vöetky nastavenia pouûiù na aktu·lne pouûÌvateæskÈ konto a na predvolen˝ profil pouûÌvateæa", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 203, 220, 19, BS_MULTILINE
+    GROUPBOX "Predvolen√© nastavenie pou≈æ√≠vateƒæsk√©ho konta", -1, 5, 193, 234, 30
+    CHECKBOX "&V≈°etky nastavenia pou≈æi≈• na aktu√°lne pou≈æ√≠vateƒæsk√© konto a na predvolen√Ω profil pou≈æ√≠vateƒæa", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 203, 220, 19, BS_MULTILINE
 END
 
 IDD_NUMBERSPAGE DIALOGEX 0, 0, 246, 234
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "»Ìsla"
+CAPTION "ƒå√≠sla"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Uk·ûka", -1, 7, 7, 230, 53, WS_CHILD | WS_VISIBLE
-    LTEXT "KladnÈ:", -1, 13, 21, 31, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    GROUPBOX "Uk√°≈æka", -1, 7, 7, 230, 53, WS_CHILD | WS_VISIBLE
+    LTEXT "Kladn√©:", -1, 13, 21, 31, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     EDITTEXT IDC_NUMBERSPOSSAMPLE, 43, 19, 72, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
-    LTEXT "Z·pornÈ:", -1, 120, 21, 31, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Z√°porn√©:", -1, 120, 21, 31, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     EDITTEXT IDC_NUMBERSNEGSAMPLE, 154, 19, 72, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
-    LTEXT "OddeæovaË &desatinn˝ch miest:", -1, 8, 67, 120, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Oddeƒæovaƒç &desatinn√Ωch miest:", -1, 8, 67, 120, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERDSYMBOL, 137, 65, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "PoËet desatinn˝ch &miest:", -1, 8, 83, 120, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Poƒçet desatinn√Ωch &miest:", -1, 8, 83, 120, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERSNDIGDEC, 137, 81, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "O&ddeæovaË skupÌn ËÌslic:", -1, 8, 100, 120, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "O&ddeƒæovaƒç skup√≠n ƒç√≠slic:", -1, 8, 100, 120, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERSDIGITGRSYM, 137, 97, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "&Zoskupovanie ËÌslic:", -1, 8, 117, 120, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "&Zoskupovanie ƒç√≠slic:", -1, 8, 117, 120, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERSDGROUPING, 137, 113, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "Z·por&nÈ znamienko:", -1, 8, 134, 120, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Z√°por&n√© znamienko:", -1, 8, 134, 120, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERSNSIGNSYM, 137, 129, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "&Form·t z·porn˝ch ËÌsel:", -1, 8, 149, 120, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "&Form√°t z√°porn√Ωch ƒç√≠sel:", -1, 8, 149, 120, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERSNNUMFORMAT, 137, 145, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "Zo&brazovanie ˙vodn˝ch n˙l:", -1, 8, 166, 120, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Zo&brazovanie √∫vodn√Ωch n√∫l:", -1, 8, 166, 120, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERSDISPLEADZER, 137, 161, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "OddeæovaË v zozn&amoch:", -1, 8, 181, 120, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Oddeƒæovaƒç v zozn&amoch:", -1, 8, 181, 120, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERSLSEP, 137, 177, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "SystÈm jednotie&k:", -1, 8, 197, 120, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Syst√©m jednotie&k:", -1, 8, 197, 120, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERSMEASSYS, 137, 193, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
 END
 
@@ -96,110 +96,110 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Mena"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Uk·ûka", -1, 7, 7, 230, 33, WS_CHILD | WS_VISIBLE
-    LTEXT "KladnÈ:", -1, 13, 21, 30, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    GROUPBOX "Uk√°≈æka", -1, 7, 7, 230, 33, WS_CHILD | WS_VISIBLE
+    LTEXT "Kladn√©:", -1, 13, 21, 30, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     EDITTEXT IDC_CURRENCYPOSSAMPLE, 43, 19, 72, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
-    LTEXT "Z·pornÈ:", -1, 120, 21, 30, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Z√°porn√©:", -1, 120, 21, 30, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     EDITTEXT IDC_CURRENCYNEGSAMPLE, 154, 19, 72, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
     LTEXT "&Symbol meny:", -1, 10, 51, 121, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_CURRENCYSYMBOL, 134, 49, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "&Form·t kladn˝ch ËÌsel:", -1, 10, 68, 121, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "&Form√°t kladn√Ωch ƒç√≠sel:", -1, 10, 68, 121, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_CURRENCYPOSVALUE, 134, 66, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "Form·t z·po&rn˝ch ËÌsel:", -1, 10, 85, 121, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Form√°t z√°po&rn√Ωch ƒç√≠sel:", -1, 10, 85, 121, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_CURRENCYNEGVALUE, 134, 83, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "Odd&eæovaË desatinn˝ch miest:", -1, 10, 111, 121, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Odd&eƒæovaƒç desatinn√Ωch miest:", -1, 10, 111, 121, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_CURRENCYDECSEP, 134, 109, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "PoËet desatinn˝ch &miest:", -1, 10, 128, 121, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Poƒçet desatinn√Ωch &miest:", -1, 10, 128, 121, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_CURRENCYDECNUM, 134, 126, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "O&ddeæovaË skupÌn ËÌslic:", -1, 10, 156, 121, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "O&ddeƒæovaƒç skup√≠n ƒç√≠slic:", -1, 10, 156, 121, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_CURRENCYGRPSEP, 134, 154, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "&Zoskupovanie ËÌslic:", -1, 10, 173, 121, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "&Zoskupovanie ƒç√≠slic:", -1, 10, 173, 121, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_CURRENCYGRPNUM, 134, 171, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
 END
 
 
 IDD_TIMEPAGE DIALOGEX 0, 0, 246, 234
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "»as"
+CAPTION "ƒåas"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Uk·ûka", -1, 7, 7, 230, 33, WS_CHILD | WS_VISIBLE
-    LTEXT "Uk·ûka Ëasu:", -1, 13, 21, 54, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    GROUPBOX "Uk√°≈æka", -1, 7, 7, 230, 33, WS_CHILD | WS_VISIBLE
+    LTEXT "Uk√°≈æka ƒçasu:", -1, 13, 21, 54, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     EDITTEXT IDC_TIMESAMPLE, 68, 19, 84, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
-    LTEXT "&Form·t Ëasu:", -1, 13, 52, 130, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "&Form√°t ƒçasu:", -1, 13, 52, 130, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_TIMEFORMAT, 149, 50, 84, 100, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    LTEXT "O&ddeæovaË Ëasov˝ch ˙dajov:", -1, 13, 70, 130, 10, WS_VISIBLE | WS_GROUP
+    LTEXT "O&ddeƒæovaƒç ƒçasov√Ωch √∫dajov:", -1, 13, 70, 130, 10, WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_TIMESEPARATOR, 149, 68, 84, 100, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP
     LTEXT "Sy&mbol pre predpoludnie:", -1, 13, 88, 130, 10, WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_TIMEAMSYMBOL, 149, 86, 84, 100, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP
     LTEXT "&Symbol pre popoludnie:", -1, 13, 106, 130, 10, WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_TIMEPMSYMBOL, 149, 104, 84, 100, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP
     GROUPBOX "", -1, 7, 140, 230, 80, WS_VISIBLE
-    LTEXT "Z·pis form·tu Ëasu\n\n\
-h = hodina    m = min˙ta    s = sekunda\n\
+    LTEXT "Z√°pis form√°tu ƒçasu\n\n\
+h = hodina    m = min√∫ta    s = sekunda\n\
 t = symbol predpoludnia alebo popoludnia\n\
-h = 12 hodÌn   H = 24 hodÌn\n\
-hh, mm, ss = s ˙vodnou nulou   h, m, s = bez ˙vodnej nuly",
+h = 12 hod√≠n   H = 24 hod√≠n\n\
+hh, mm, ss = s √∫vodnou nulou   h, m, s = bez √∫vodnej nuly",
         -1, 13, 150, 214, 50, WS_CHILD | WS_VISIBLE | WS_GROUP
 END
 
 
 IDD_DATEPAGE DIALOGEX 0, 0, 246, 234
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "D·tum"
+CAPTION "D√°tum"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Kalend·r", -1, 7, 7, 230, 74
-    LTEXT "Ak s˙ zadanÈ len dve ËÌslice &roka, interpretovaù ich ako rok v rozmedzÌ:", -1, 13, 18, 215, 8
+    GROUPBOX "Kalend√°r", -1, 7, 7, 230, 74
+    LTEXT "Ak s√∫ zadan√© len dve ƒç√≠slice &roka, interpretova≈• ich ako rok v rozmedz√≠:", -1, 13, 18, 215, 8
     EDITTEXT IDC_FIRSTYEAR_EDIT, 13, 30, 36, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_DISABLED
     LTEXT "a", -1, 55, 32, 17, 8
     EDITTEXT IDC_SECONDYEAR_EDIT, 100, 30, 36, 12, ES_LEFT | ES_NUMBER | WS_GROUP
     CONTROL "",IDC_SCR_MAX_YEAR, "msctls_updown32", UDS_NOTHOUSANDS | UDS_WRAP | UDS_SETBUDDYINT | UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_CHILD | WS_VISIBLE, 136, 30, 10, 12
-    LTEXT "&Typ kalend·ra:", -1, 13, 48, 56, 10
+    LTEXT "&Typ kalend√°ra:", -1, 13, 48, 56, 10
     COMBOBOX IDC_CALTYPE_COMBO, 100, 46, 130, 100, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
-    LTEXT "&Moslimsk˝ kalend·r:", -1, 13, 65, 87, 12
+    LTEXT "&Moslimsk√Ω kalend√°r:", -1, 13, 65, 87, 12
     COMBOBOX IDC_HIJCHRON_COMBO, 100, 64, 130, 100, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
-    GROUPBOX "Kr·tky d·tum", -1, 7, 83, 230, 81
-    LTEXT "Uk·ûka kr·tkeho d·tumu:", -1, 13, 95, 87, 10
+    GROUPBOX "Kr√°tky d√°tum", -1, 7, 83, 230, 81
+    LTEXT "Uk√°≈æka kr√°tkeho d√°tumu:", -1, 13, 95, 87, 10
     EDITTEXT IDC_SHRTDATESAMPLE_EDIT, 100, 93, 130, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
-    LTEXT "Uk·ûka sprava doæava:", -1, 13, 111, 87, 14
+    LTEXT "Uk√°≈æka sprava doƒæava:", -1, 13, 111, 87, 14
     EDITTEXT IDC_SHRTDATERTOL_EDIT, 100, 111, 130, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP | WS_DISABLED
-    LTEXT "Form·t &kr·tkeho d·tumu:", -1, 13, 131, 87, 10
+    LTEXT "Form√°t &kr√°tkeho d√°tumu:", -1, 13, 131, 87, 10
     COMBOBOX IDC_SHRTDATEFMT_COMBO, 100, 129, 130, 100, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | WS_VISIBLE
-    LTEXT "O&ddeæovaË d·tumu:", -1, 13, 148, 113, 10
+    LTEXT "O&ddeƒæovaƒç d√°tumu:", -1, 13, 148, 113, 10
     COMBOBOX IDC_SHRTDATESEP_COMBO, 180, 146, 50, 100, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | WS_VISIBLE
-    GROUPBOX "Dlh˝ d·tum", -1, 7, 167, 230, 64
-    LTEXT "Uk·ûka dlhÈho d·tumu:", -1, 13, 179, 87, 10
+    GROUPBOX "Dlh√Ω d√°tum", -1, 7, 167, 230, 64
+    LTEXT "Uk√°≈æka dlh√©ho d√°tumu:", -1, 13, 179, 87, 10
     EDITTEXT IDC_LONGDATESAMPLE_EDIT, 100, 177, 130, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
-    LTEXT "Uk·ûka sprava doæava:", -1, 13, 195, 87, 14
+    LTEXT "Uk√°≈æka sprava doƒæava:", -1, 13, 195, 87, 14
     EDITTEXT IDC_LONGDATERTOL_EDIT, 100, 195, 130, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP | WS_DISABLED
-    LTEXT "Form·t dlhÈho d·tumu:", -1, 13, 215, 87, 10
+    LTEXT "Form√°t dlh√©ho d√°tumu:", -1, 13, 215, 87, 10
     COMBOBOX IDC_LONGDATEFMT_COMBO, 100, 213, 130, 100, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | WS_VISIBLE
 END
 
 
 IDD_SORTPAGE DIALOGEX 0, 0, 246, 234
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "ZoraÔovanie"
+CAPTION "Zoraƒèovanie"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "ZoraÔovanie", -1, 7, 7, 230, 74
-    LTEXT "MetÛdy zoradovania urËuj˙ spÙsob, ak˝m programy zoraÔuj˙ znaky, slov·, s˙bory a prieËinky..", -1, 14, 17, 220, 18
-    LTEXT "&Vyberte metÛdu zoraÔovania, ktor· sa m· pouûÌvaù v tomto jazyku:", -1, 14, 37, 220, 16
+    GROUPBOX "Zoraƒèovanie", -1, 7, 7, 230, 74
+    LTEXT "Met√≥dy zoradovania urƒçuj√∫ sp√¥sob, ak√Ωm programy zoraƒèuj√∫ znaky, slov√°, s√∫bory a prieƒçinky..", -1, 14, 17, 220, 18
+    LTEXT "&Vyberte met√≥du zoraƒèovania, ktor√° sa m√° pou≈æ√≠va≈• v tomto jazyku:", -1, 14, 37, 220, 16
     COMBOBOX IDC_SORTLIST_COMBO, 14, 56, 217, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
 END
 
 
 STRINGTABLE
 BEGIN
-    IDS_CUSTOMIZE_TITLE "PrispÙsobiù miestne nastavenia"
+    IDS_CUSTOMIZE_TITLE "Prisp√¥sobi≈• miestne nastavenia"
     IDS_SPAIN "Spanish (Spain)"
-    IDS_METRIC "Metrick˝"
-    IDS_IMPERIAL "Imperi·lny"
+    IDS_METRIC "Metrick√Ω"
+    IDS_IMPERIAL "Imperi√°lny"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLNAME "Miestne a jazykovÈ nastavenia"
+    IDS_CPLNAME "Miestne a jazykov√© nastavenia"
     IDS_CPLDESCRIPTION "Select languages and format numbers, currencies, times and date."
 END

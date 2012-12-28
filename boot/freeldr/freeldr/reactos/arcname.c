@@ -160,8 +160,6 @@ DissectArcPath2(
     return FALSE;
 }
 
-
-#if 0
 VOID ConstructArcPath(PCHAR ArcPath, PCHAR SystemFolder, UCHAR Disk, ULONG Partition)
 {
 	char	tmp[50];
@@ -198,6 +196,7 @@ VOID ConstructArcPath(PCHAR ArcPath, PCHAR SystemFolder, UCHAR Disk, ULONG Parti
 	}
 }
 
+#if 0
 UCHAR ConvertArcNameToBiosDriveNumber(PCHAR ArcPath)
 {
 	char *	p;

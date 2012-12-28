@@ -260,7 +260,7 @@ RtlQueryProcessDebugInformation(IN ULONG ProcessId,
                 ULONG ReturnSize = 0;
                 ULONG MSize;
 
-                Mp = (PRTL_PROCESS_MODULES)(Buf + Buf->OffsetFree);
+                Mp = (PRTL_PROCESS_MODULES)((PUCHAR)Buf + Buf->OffsetFree);
 
                 /* I like this better than the do & while loop. */
                 Status = LdrQueryProcessModuleInformation(NULL,
@@ -284,7 +284,7 @@ RtlQueryProcessDebugInformation(IN ULONG ProcessId,
                 PRTL_PROCESS_HEAPS Hp;
                 ULONG HSize;
 
-                Hp = (PRTL_PROCESS_HEAPS)(Buf + Buf->OffsetFree);
+                Hp = (PRTL_PROCESS_HEAPS)((PUCHAR)Buf + Buf->OffsetFree);
                 HSize = sizeof(RTL_PROCESS_HEAPS);
                 if (DebugInfoMask & RTL_DEBUG_QUERY_HEAP_TAGS)
                 {
@@ -304,7 +304,7 @@ RtlQueryProcessDebugInformation(IN ULONG ProcessId,
                 PRTL_PROCESS_LOCKS Lp;
                 ULONG LSize;
 
-                Lp = (PRTL_PROCESS_LOCKS)(Buf + Buf->OffsetFree);
+                Lp = (PRTL_PROCESS_LOCKS)((PUCHAR)Buf + Buf->OffsetFree);
                 LSize = sizeof(RTL_PROCESS_LOCKS);
                 Buf->Locks = Lp;
                 Buf->OffsetFree = Buf->OffsetFree + LSize;
@@ -344,7 +344,7 @@ RtlQueryProcessDebugInformation(IN ULONG ProcessId,
                 ULONG ReturnSize = 0;
                 ULONG MSize;
 
-                Mp = (PRTL_PROCESS_MODULES)(Buf + Buf->OffsetFree);
+                Mp = (PRTL_PROCESS_MODULES)((PUCHAR)Buf + Buf->OffsetFree);
 
                 Status = RtlpQueryRemoteProcessModules(hProcess,
                                                        NULL,
@@ -370,7 +370,7 @@ RtlQueryProcessDebugInformation(IN ULONG ProcessId,
                 PRTL_PROCESS_HEAPS Hp;
                 ULONG HSize;
 
-                Hp = (PRTL_PROCESS_HEAPS)(Buf + Buf->OffsetFree);
+                Hp = (PRTL_PROCESS_HEAPS)((PUCHAR)Buf + Buf->OffsetFree);
                 HSize = sizeof(RTL_PROCESS_HEAPS);
                 if (DebugInfoMask & RTL_DEBUG_QUERY_HEAP_TAGS)
                 {
@@ -390,7 +390,7 @@ RtlQueryProcessDebugInformation(IN ULONG ProcessId,
                 PRTL_PROCESS_LOCKS Lp;
                 ULONG LSize;
 
-                Lp = (PRTL_PROCESS_LOCKS)(Buf + Buf->OffsetFree);
+                Lp = (PRTL_PROCESS_LOCKS)((PUCHAR)Buf + Buf->OffsetFree);
                 LSize = sizeof(RTL_PROCESS_LOCKS);
                 Buf->Locks = Lp;
                 Buf->OffsetFree = Buf->OffsetFree + LSize;

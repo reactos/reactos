@@ -154,9 +154,10 @@ MiZeroFillSection(PVOID Address, PLARGE_INTEGER FileOffsetPtr, ULONG Length)
     DPRINT("Pulling zero pages for %08x%08x-%08x%08x\n",
            FileOffset.u.HighPart, FileOffset.u.LowPart,
            End.u.HighPart, End.u.LowPart);
+
     while (FileOffset.QuadPart < End.QuadPart)
     {
-        PVOID Address;
+        PVOID CurrentAddress;
         ULONG_PTR Entry;
 
         if (!NT_SUCCESS(MmRequestPageMemoryConsumer(MC_CACHE, TRUE, &Page)))
@@ -169,14 +170,14 @@ MiZeroFillSection(PVOID Address, PLARGE_INTEGER FileOffsetPtr, ULONG Length)
         if (Entry == 0)
         {
             MmSetPageEntrySectionSegment(Segment, &FileOffset, MAKE_PFN_SSE(Page));
-            Address = ((PCHAR)MemoryArea->StartingAddress) + FileOffset.QuadPart - FirstMapped.QuadPart;
+            CurrentAddress = ((PCHAR)MemoryArea->StartingAddress) + FileOffset.QuadPart - FirstMapped.QuadPart;
 
             OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
             MmReferencePage(Page);
             KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
 
-            MmCreateVirtualMapping(NULL, Address, PAGE_READWRITE, &Page, 1);
-            MmInsertRmap(Page, NULL, Address);
+            MmCreateVirtualMapping(NULL, CurrentAddress, PAGE_READWRITE, &Page, 1);
+            MmInsertRmap(Page, NULL, CurrentAddress);
         }
         else
         {

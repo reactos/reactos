@@ -24,6 +24,12 @@ typedef unsigned int (__cdecl typeof(jpeg_read_scanlines))(struct jpeg_decompres
 typedef int (__cdecl typeof(jpeg_finish_decompress))(struct jpeg_decompress_struct *);
 typedef void (__cdecl typeof(jpeg_destroy_decompress))(struct jpeg_decompress_struct *);
 typedef unsigned char (__cdecl typeof(jpeg_resync_to_restart))(struct jpeg_decompress_struct *, int);
+typedef void (__cdecl typeof(jpeg_CreateCompress))(struct jpeg_compress_struct *, int, __typeof_size);
+typedef void (__cdecl typeof(jpeg_start_compress))(struct jpeg_compress_struct *, unsigned char);
+typedef void (__cdecl typeof(jpeg_destroy_compress))(struct jpeg_compress_struct *);
+typedef void (__cdecl typeof(jpeg_finish_compress))(struct jpeg_decompress_struct *);
+typedef void (__cdecl typeof(jpeg_set_defaults))(struct jpeg_decompress_struct *);
+typedef unsigned int (__cdecl typeof(jpeg_write_scanlines))(struct jpeg_compress_struct *, char **, unsigned int);
 
 typedef void (*png_error_ptr_1)(struct png_struct_def *, const char *);
 typedef void (*png_rw_ptr_1)(struct png_struct_def *, unsigned char *, unsigned int);
@@ -61,6 +67,7 @@ typedef void (__cdecl typeof(png_read_info))(struct png_struct_def *, struct png
 typedef void (__cdecl typeof(png_write_end))(struct png_struct_def *, struct png_info_def *);
 typedef void (__cdecl typeof(png_write_info))(struct png_struct_def *, struct png_info_def *);
 typedef void (__cdecl typeof(png_write_rows))(struct png_struct_def *, unsigned char **row, unsigned int);
+typedef unsigned int (__cdecl typeof(png_get_iCCP))(struct png_struct_def *, struct png_info_def *, char **, int *, char **, unsigned int *);
 
 typedef void *thandle_t_1;
 typedef int (*TIFFReadWriteProc_1)(thandle_t_1, void *, int);
@@ -76,6 +83,13 @@ typedef int (__cdecl typeof(TIFFGetField))(struct tiff *, unsigned int, ...);
 typedef int (__cdecl typeof(TIFFReadDirectory))(struct tiff *);
 typedef int (__cdecl typeof(TIFFReadEncodedStrip))(struct tiff *, unsigned int, void *, int);
 typedef int (__cdecl typeof(TIFFSetDirectory))(struct tiff *, unsigned short);
+typedef unsigned int (__cdecl typeof(TIFFCurrentDirOffset))(struct tiff *);
+typedef int (__cdecl typeof(TIFFIsByteSwapped))(struct tiff *);
+typedef unsigned short (__cdecl typeof(TIFFNumberOfDirectories))(struct tiff *);
+typedef long (__cdecl typeof(TIFFReadEncodedTile))(struct tiff *, unsigned long, void *, long);
+typedef int (__cdecl typeof(TIFFSetField))(struct tiff *, unsigned long, ...);
+typedef int (__cdecl typeof(TIFFWriteDirectory))(struct tiff *);
+typedef int (__cdecl typeof(TIFFWriteScanline))(struct tiff *, void *, unsigned long, unsigned short);
 
 #undef __typeof_intptr
 #undef __typeof_longptr

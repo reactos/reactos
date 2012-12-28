@@ -133,6 +133,7 @@ ExpDeleteTimer(IN PVOID ObjectBody)
     KeFlushQueuedDpcs();
 }
 
+_Function_class_(KDEFERRED_ROUTINE)
 VOID
 NTAPI
 ExpTimerDpcRoutine(IN PKDPC Dpc,
@@ -355,7 +356,8 @@ NtCancelTimer(IN HANDLE TimerHandle,
             }
             _SEH2_EXCEPT(ExSystemExceptionFilter())
             {
-
+                /* Do nothing */
+                (void)0;
             }
             _SEH2_END;
         }
@@ -445,7 +447,8 @@ NtCreateTimer(OUT PHANDLE TimerHandle,
             }
             _SEH2_EXCEPT(ExSystemExceptionFilter())
             {
-
+                /* Do nothing */
+                (void)0;
             }
             _SEH2_END;
         }
@@ -500,7 +503,8 @@ NtOpenTimer(OUT PHANDLE TimerHandle,
         }
         _SEH2_EXCEPT(ExSystemExceptionFilter())
         {
-
+            /* Do nothing */
+            (void)0;
         }
         _SEH2_END;
     }
@@ -629,9 +633,9 @@ NtSetTimer(IN HANDLE TimerHandle,
                                        (PVOID*)&Timer,
                                        NULL);
 
-    /* 
+    /*
      * Tell the user we don't support Wake Timers...
-     * when we have the ability to use/detect the Power Management 
+     * when we have the ability to use/detect the Power Management
      * functionality required to support them, make this check dependent
      * on the actual PM capabilities
      */
@@ -740,7 +744,8 @@ NtSetTimer(IN HANDLE TimerHandle,
             }
             _SEH2_EXCEPT(ExSystemExceptionFilter())
             {
-
+                /* Do nothing */
+                (void)0;
             }
             _SEH2_END;
         }

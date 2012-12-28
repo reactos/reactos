@@ -867,7 +867,7 @@ GreGetDIBitsInternal(
         }
 
         psurfDest = SURFACE_ShareLockSurface(hBmpDest);
-        
+
         RECTL_vSetRect(&rcDest, 0, 0, ScanLines, psurf->SurfObj.sizlBitmap.cx);
 
         srcPoint.x = 0;
@@ -1014,7 +1014,7 @@ NtGdiGetDIBitsInternal(
         _SEH2_TRY
         {
             /* Copy the data back */
-            ProbeForWrite(pbmiUser, cjMaxInfo, 1); 
+            ProbeForWrite(pbmiUser, cjMaxInfo, 1);
             RtlCopyMemory(pbmiUser, pbmi, cjMaxInfo);
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -1646,7 +1646,7 @@ cleanup:
             GreDeleteObject(res);
             res = 0;
         }
-        
+
         if(ppalDIB)
         {
             PALETTE_ShareUnlockPalette(ppalDIB);
@@ -1862,23 +1862,23 @@ DIB_FreeConvertedBitmapInfo(BITMAPINFO* converted, BITMAPINFO* orig, DWORD usage
     BITMAPCOREINFO* pbmci;
     if(converted == orig)
         return;
-    
+
     if(usage == -1)
     {
         /* Caller don't want any conversion */
         ExFreePoolWithTag(converted, TAG_DIB);
         return;
     }
-    
+
     /* Perform inverse conversion */
     pbmci = (BITMAPCOREINFO*)orig;
-    
+
     ASSERT(pbmci->bmciHeader.bcSize == sizeof(BITMAPCOREHEADER));
     pbmci->bmciHeader.bcBitCount = converted->bmiHeader.biBitCount;
     pbmci->bmciHeader.bcWidth = converted->bmiHeader.biWidth;
     pbmci->bmciHeader.bcHeight = converted->bmiHeader.biHeight;
     pbmci->bmciHeader.bcPlanes = converted->bmiHeader.biPlanes;
-    
+
     if(pbmci->bmciHeader.bcBitCount <= 8)
     {
         UINT numColors = converted->bmiHeader.biClrUsed;

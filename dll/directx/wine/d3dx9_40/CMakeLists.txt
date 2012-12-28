@@ -1,4 +1,3 @@
-set_rc_compiler()
 
 spec2def(d3dx9_40.dll d3dx9_40.spec)
 
@@ -8,14 +7,10 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/d3dx9_40.def)
 
 add_definitions(-D__WINESRC__)
-
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
-
 add_library(d3dx9_40 SHARED ${SOURCE})
 set_module_type(d3dx9_40 win32dll)
-
-target_link_libraries(d3dx9_40
-    wine)
+target_link_libraries(d3dx9_40 wine)
 
 add_importlibs(d3dx9_40
     d3dx9_36

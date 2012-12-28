@@ -364,6 +364,9 @@ typedef struct PropertyItem
 
 #define PropertyTagFrameDelay        0x5100
 #define PropertyTagLoopCount         0x5101
+#define PropertyTagGlobalPalette     0x5102
+#define PropertyTagIndexBackground   0x5103
+#define PropertyTagIndexTransparent  0x5104
 
 #define PropertyTagPixelUnit         0x5110
 #define PropertyTagPixelPerUnitX     0x5111
