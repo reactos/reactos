@@ -6,8 +6,8 @@ CAPTION "Regionale innstillinger"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Standarder og format", -1, 5, 5, 234, 162
-    LTEXT "Dette valget påvirker hvordan programmer formater tall, valuta, dato, og tid.", -1, 14, 17, 220, 25
-    LTEXT "Velg en enhet for å tilpasse til egenskaper, eller klikk tilpasning for å velge dine egne formater:", -1, 14, 37, 220, 22
+    LTEXT "Dette valget pÃ¥virker hvordan programmer formater tall, valuta, dato, og tid.", -1, 14, 17, 220, 25
+    LTEXT "Velg en enhet for Ã¥ tilpasse til egenskaper, eller klikk tilpasning for Ã¥ velge dine egne formater:", -1, 14, 37, 220, 22
     COMBOBOX IDC_LANGUAGELIST, 14, 56, 160, 160, CBS_DROPDOWNLIST | CBS_SORT | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     PUSHBUTTON "Tilpasni&ng...", IDC_SETUP_BUTTON, 178, 56, 52, 13
     LTEXT "Utvalg", -1, 14, 73, 70, 10
@@ -22,22 +22,22 @@ BEGIN
     EDITTEXT IDC_SHORTTIMESAMPLE_EDIT, 89, 131, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
     EDITTEXT IDC_FULLTIMESAMPLE_EDIT, 89, 146, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
     GROUPBOX "Geografisk plassering", -1, 5, 172, 234, 55
-    LTEXT "Still din lokalisering så at noen tjenester kan skaffe deg lokal informasjon; som for eksempel, nyheter og vær rapporter.", -1, 14, 184, 210, 24
+    LTEXT "Still din lokalisering sÃ¥ at noen tjenester kan skaffe deg lokal informasjon; som for eksempel, nyheter og vÃ¦r rapporter.", -1, 14, 184, 210, 24
     COMBOBOX IDC_LOCATION_COMBO, 14, 207, 217, 160, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
 END
 
 IDD_LANGUAGESPAGE DIALOGEX 0, 0, 246, 230
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Språk"
+CAPTION "SprÃ¥k"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Teksttjenester og inndataspråk", -1, 5, 5, 234, 52
-    LTEXT "Klikk ""Detaljer...""  for å vise eller endre språkene og metodene du kan bruke for å skrive inn tekst.", -1, 12, 15, 220, 18
+    GROUPBOX "Teksttjenester og inndatasprÃ¥k", -1, 5, 5, 234, 52
+    LTEXT "Klikk ""Detaljer...""  for Ã¥ vise eller endre sprÃ¥kene og metodene du kan bruke for Ã¥ skrive inn tekst.", -1, 12, 15, 220, 18
     PUSHBUTTON "De&taljer...", IDC_DETAIL_BUTTON, 177, 34, 54, 14
-    GROUPBOX "Ytterligere språkstøtte", -1, 5, 62, 234, 82
-    LTEXT "De fleste språk er innstallert som standard. Merk av i de relevante boksene nedenfor hvis du vil innstallere flere språk.", -1, 12, 72, 220, 18
-    CHECKBOX "I&nnstaller filer for for omfattende skript og høyre-mot-venstre språk", IDC_INST_FILES_FOR_RTOL_LANG, 12, 92, 215, 22, BS_MULTILINE
-    CHECKBOX "Inn&staller filer for østasiatiske språk", IDC_INST_FILES_FOR_ASIAN, 12, 114, 180, 22, BS_MULTILINE
+    GROUPBOX "Ytterligere sprÃ¥kstÃ¸tte", -1, 5, 62, 234, 82
+    LTEXT "De fleste sprÃ¥k er innstallert som standard. Merk av i de relevante boksene nedenfor hvis du vil innstallere flere sprÃ¥k.", -1, 12, 72, 220, 18
+    CHECKBOX "I&nnstaller filer for for omfattende skript og hÃ¸yre-mot-venstre sprÃ¥k", IDC_INST_FILES_FOR_RTOL_LANG, 12, 92, 215, 22, BS_MULTILINE
+    CHECKBOX "Inn&staller filer for Ã¸stasiatiske sprÃ¥k", IDC_INST_FILES_FOR_ASIAN, 12, 114, 180, 22, BS_MULTILINE
 END
 
 IDD_ADVANCEDPAGE DIALOGEX 0, 0, 246, 230
@@ -45,14 +45,14 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Avansert"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Språk for ikke-Unicode programmer", -1, 5, 5, 234, 90
+    GROUPBOX "SprÃ¥k for ikke-Unicode programmer", -1, 5, 5, 234, 90
     COMBOBOX IDC_LANGUAGE_COMBO, 14, 75, 217, 160, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
-    LTEXT "Denne systeminnstillingen gjør at programmet som ikke støtter Unicode, viser menyer og dialogbokser på det opprinnlige språket. Det påvirker ikke Unicode-programmer, men det gjelder for alle brukere på denne datamaskinen.", -1, 14, 18, 223, 33
-    LTEXT "Velg et språk som tilsvarer språkversjonen av programmet du vil bruke, som ikke er Unicode-programmer:", -1, 14, 55, 223, 18
+    LTEXT "Denne systeminnstillingen gjÃ¸r at programmet som ikke stÃ¸tter Unicode, viser menyer og dialogbokser pÃ¥ det opprinnlige sprÃ¥ket. Det pÃ¥virker ikke Unicode-programmer, men det gjelder for alle brukere pÃ¥ denne datamaskinen.", -1, 14, 18, 223, 33
+    LTEXT "Velg et sprÃ¥k som tilsvarer sprÃ¥kversjonen av programmet du vil bruke, som ikke er Unicode-programmer:", -1, 14, 55, 223, 18
     GROUPBOX "Konverteringstabeller for tegntabell", -1, 5, 101, 234, 88
     CONTROL "", IDC_CONV_TABLES, "SysListView32", LVS_REPORT | LVS_SORTASCENDING | LVS_NOCOLUMNHEADER | WS_BORDER | WS_TABSTOP, 14, 114, 217, 70
     GROUPBOX "Standard brukerkonto innstilling", -1, 5, 193, 234, 30
-    CHECKBOX "Bruk alle innstillinger på gjeldende brukerkonto og standard brukerprofil", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 200, 220, 22, BS_MULTILINE
+    CHECKBOX "Bruk alle innstillinger pÃ¥ gjeldende brukerkonto og standard brukerprofil", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 200, 220, 22, BS_MULTILINE
 END
 
 IDD_NUMBERSPAGE DIALOGEX 0, 0, 246, 234
@@ -81,7 +81,7 @@ BEGIN
     COMBOBOX IDC_NUMBERSDISPLEADZER, 137, 161, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     LTEXT "&Listeskilletegn:", -1, 8, 181, 96, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERSLSEP, 137, 177, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "&Målesystem:", -1, 8, 197, 96, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "&MÃ¥lesystem:", -1, 8, 197, 96, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERSMEASSYS, 137, 193, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
 END
 
@@ -144,7 +144,7 @@ CAPTION "Dato"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Kalender", -1, 7, 7, 230, 74
-    LTEXT "Når et tosifret årstall er angitt, tolk som et år mellom:", -1, 13, 18, 215, 8
+    LTEXT "NÃ¥r et tosifret Ã¥rstall er angitt, tolk som et Ã¥r mellom:", -1, 13, 18, 215, 8
     EDITTEXT IDC_FIRSTYEAR_EDIT, 13, 30, 36, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_DISABLED
     LTEXT "og", -1, 55, 32, 17, 8
     EDITTEXT IDC_SECONDYEAR_EDIT, 77, 30, 36, 12, ES_LEFT | ES_NUMBER | WS_GROUP
@@ -154,18 +154,18 @@ BEGIN
     LTEXT "Muslim kalender:", -1, 13, 65, 60, 12
     COMBOBOX IDC_HIJCHRON_COMBO, 77, 64, 153, 100, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
     GROUPBOX "Kort datoformat", -1, 7, 83, 230, 81
-    LTEXT "Eksempel på kort dato:", -1, 13, 95, 63, 10
+    LTEXT "Eksempel pÃ¥ kort dato:", -1, 13, 95, 63, 10
     EDITTEXT IDC_SHRTDATESAMPLE_EDIT, 77, 93, 153, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
-    LTEXT "Eksempel - høyre til venstre:", -1, 13, 109, 60, 16
+    LTEXT "Eksempel - hÃ¸yre til venstre:", -1, 13, 109, 60, 16
     EDITTEXT IDC_SHRTDATERTOL_EDIT, 77, 111, 153, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP | WS_DISABLED
     LTEXT "Kort datoformat:", -1, 13, 131, 60, 10
     COMBOBOX IDC_SHRTDATEFMT_COMBO, 77, 129, 153, 100, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | WS_VISIBLE
     LTEXT "Datoskilletegn:", -1, 13, 148, 113, 10
     COMBOBOX IDC_SHRTDATESEP_COMBO, 180, 146, 51, 100, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | WS_VISIBLE
     GROUPBOX "Lang datoformat", -1, 7, 167, 230, 64
-    LTEXT "Eksempel på lang dato:", -1, 13, 179, 61, 10
+    LTEXT "Eksempel pÃ¥ lang dato:", -1, 13, 179, 61, 10
     EDITTEXT IDC_LONGDATESAMPLE_EDIT, 77, 177, 153, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
-    LTEXT "Eksempel - høyre til venstre:", -1, 13, 193, 61, 16
+    LTEXT "Eksempel - hÃ¸yre til venstre:", -1, 13, 193, 61, 16
     EDITTEXT IDC_LONGDATERTOL_EDIT, 77, 195, 153, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP | WS_DISABLED
     LTEXT "Lang datoformat:", -1, 13, 215, 60, 10
     COMBOBOX IDC_LONGDATEFMT_COMBO, 77, 213, 153, 100, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | WS_VISIBLE
@@ -186,7 +186,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CUSTOMIZE_TITLE "Innstillinger for region og språk"
+    IDS_CUSTOMIZE_TITLE "Innstillinger for region og sprÃ¥k"
     IDS_SPAIN "Spanisk (Spain)"
     IDS_METRIC "Metric"
     IDS_IMPERIAL "Imperial"
@@ -195,5 +195,5 @@ END
 STRINGTABLE
 BEGIN
     IDS_CPLNAME "Regionale innstillinger"
-    IDS_CPLDESCRIPTION "Velg språk og nummer format, valuta, tid og dato."
+    IDS_CPLDESCRIPTION "Velg sprÃ¥k og nummer format, valuta, tid og dato."
 END

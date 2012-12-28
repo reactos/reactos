@@ -24,7 +24,7 @@ BEGIN
     EDITTEXT IDC_SHORTTIMESAMPLE_EDIT, 89, 131, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
     EDITTEXT IDC_FULLTIMESAMPLE_EDIT, 89, 146, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
     GROUPBOX "Posizione geografica", -1, 5, 172, 234, 55
-    LTEXT "Per ottenere informazioni locali, come notizie e previsioni meteo, selezionare la localit‡ corrente:", -1, 14, 184, 210, 24
+    LTEXT "Per ottenere informazioni locali, come notizie e previsioni meteo, selezionare la localit√† corrente:", -1, 14, 184, 210, 24
     COMBOBOX IDC_LOCATION_COMBO, 14, 207, 217, 160, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
 END
 
@@ -49,7 +49,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Lingua per programmi non Unicode", -1, 5, 5, 234, 90
     COMBOBOX IDC_LANGUAGE_COMBO, 14, 75, 217, 160, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
-    LTEXT "In base a questa impostazione di sistema Ë possibile visualizzare men˘ e finestre di dialogo di programmi non Unicode nella lingua di origine. I programmi Unicode resteranno invariati, ma l'impostazione verr‡ applicata per tutti gli utenti che utilizzano il computer.", -1, 14, 18, 223, 33
+    LTEXT "In base a questa impostazione di sistema √® possibile visualizzare men√π e finestre di dialogo di programmi non Unicode nella lingua di origine. I programmi Unicode resteranno invariati, ma l'impostazione verr√† applicata per tutti gli utenti che utilizzano il computer.", -1, 14, 18, 223, 33
     LTEXT "Selezionare una lingua per i programmi non Unicode da utilizzare:", -1, 14, 55, 223, 18
     GROUPBOX "Tabella di conversione di tabelle codici", -1, 5, 101, 234, 88
     CONTROL "", IDC_CONV_TABLES, "SysListView32", LVS_REPORT | LVS_SORTASCENDING | LVS_NOCOLUMNHEADER | WS_BORDER | WS_TABSTOP, 14, 114, 217, 70
