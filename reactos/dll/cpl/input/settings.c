@@ -1,5 +1,4 @@
 /*
- *
  * PROJECT:         input.dll
  * FILE:            dll/win32/input/settings.c
  * PURPOSE:         input.dll
@@ -725,7 +724,7 @@ InputLangPropDlgProc(HWND hDlg,
 
 /* Property page dialog callback */
 INT_PTR CALLBACK
-SettingPageProc(HWND hwndDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
+SettingsPageProc(HWND hwndDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 {
     UNREFERENCED_PARAMETER(lParam);
 
@@ -733,7 +732,7 @@ SettingPageProc(HWND hwndDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
     {
         case WM_INITDIALOG:
         {
-        	HIMAGELIST hImgList;
+            HIMAGELIST hImgList;
 
             MainDlgWnd = hwndDlg;
             AddListColumn(hwndDlg);

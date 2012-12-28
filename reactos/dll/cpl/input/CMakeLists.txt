@@ -4,6 +4,7 @@ spec2def(input.dll input.spec)
 add_library(input SHARED
     input.c
     settings.c
+    advsettings.c
     keysettings.c
     add.c
     changekeyseq.c

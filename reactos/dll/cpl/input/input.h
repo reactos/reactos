@@ -35,13 +35,17 @@ InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc);
 
 /* settings.c */
 INT_PTR CALLBACK
-SettingPageProc(HWND hwndDlg,UINT uMsg,WPARAM wParam,LPARAM lParam);
+SettingsPageProc(HWND hwndDlg,UINT uMsg,WPARAM wParam,LPARAM lParam);
 BOOL
 GetLayoutName(LPCTSTR szLCID, LPTSTR szName);
 VOID
 UpdateLayoutsList(VOID);
 BOOL
 IsLayoutExists(LPTSTR szLayoutID, LPTSTR szLangID);
+
+/* advsettings.c */
+INT_PTR CALLBACK
+AdvancedSettingsPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 /* keysettings.c */
 INT_PTR CALLBACK

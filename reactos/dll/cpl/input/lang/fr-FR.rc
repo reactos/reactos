@@ -5,14 +5,24 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Paramètres"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Sélectionnez les service que vous désirez pour chaque langue de saisie affichée dans la liste.\nUtiliser les boutons Ajouter et Supprimer pour modifier la liste.", -1, 9, 6, 238, 25
+    LTEXT "Sélectionnez les services que vous désirez pour chaque langue de saisie affichée dans la liste.\nUtilisez les boutons Ajouter et Supprimer pour modifier la liste.", -1, 9, 6, 238, 25
     CONTROL "TEXT", IDC_KEYLAYOUT_LIST, "SYSLISTVIEW32", WS_BORDER | WS_VSCROLL | WS_TABSTOP | LVS_SORTASCENDING | LVS_REPORT | 0x0000808D, 8, 36, 237, 101
-    PUSHBUTTON "&Set Default", IDC_SET_DEFAULT, 101, 159, 144, 14
-    PUSHBUTTON "Ajouter...", IDC_ADD_BUTTON, 27, 142, 70, 14
+    PUSHBUTTON "Par &défaut", IDC_SET_DEFAULT, 101, 159, 144, 14
+    PUSHBUTTON "A&jouter...", IDC_ADD_BUTTON, 27, 142, 70, 14
     PUSHBUTTON "Supp&rimer...", IDC_REMOVE_BUTTON, 101, 142, 70, 14
     PUSHBUTTON "&Propriétés...", IDC_PROP_BUTTON, 175, 142, 70, 14
-    GROUPBOX "Préférences", -1, 7, 185, 240, 36
-    PUSHBUTTON "Paramètres des touches...", IDC_KEY_SET_BTN, 14, 198, 110, 14
+    GROUPBOX "Pré&férences", -1, 7, 185, 240, 36
+    PUSHBUTTON "Para&mètres des touches...", IDC_KEY_SET_BTN, 14, 198, 110, 14
+END
+
+IDD_PROPPAGEADVANCEDSETTINGS DIALOGEX 0, 0, 254, 228
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Paramètres avancés"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Configuration du système", -1, 7, 7, 240, 70
+    AUTOCHECKBOX "Arrêter les services de texte a&vancés", IDC_TURNOFFTEXTSVCS_CB, 14, 20, 130, 12
+    LTEXT "Sélectionnez cette case à cocher pour désactiver les services de texte avancés dans tous les programmes.\nCeci n'est pas recommandé aux utilisateurs d'Asie de l'Est, car cette opération ferme la Barre de langue.", -1, 14, 40, 230, 35
 END
 
 IDD_KEYSETTINGS DIALOGEX 0, 0, 272, 163
