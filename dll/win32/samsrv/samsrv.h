@@ -46,6 +46,7 @@ typedef struct _SAM_DB_OBJECT
     LPWSTR Name;
     HANDLE KeyHandle;
     HANDLE MembersKeyHandle;  // only used by Aliases and Groups
+    ULONG RelativeId;
     struct _SAM_DB_OBJECT *ParentObject;
 } SAM_DB_OBJECT, *PSAM_DB_OBJECT;
 
@@ -117,6 +118,7 @@ NTSTATUS
 SampCreateDbObject(IN PSAM_DB_OBJECT ParentObject,
                    IN LPWSTR ContainerName,
                    IN LPWSTR ObjectName,
+                   IN ULONG RelativeId,
                    IN SAM_DB_OBJECT_TYPE ObjectType,
                    IN ACCESS_MASK DesiredAccess,
                    OUT PSAM_DB_OBJECT *DbObject);
@@ -125,6 +127,7 @@ NTSTATUS
 SampOpenDbObject(IN PSAM_DB_OBJECT ParentObject,
                  IN LPWSTR ContainerName,
                  IN LPWSTR ObjectName,
+                 IN ULONG RelativeId,
                  IN SAM_DB_OBJECT_TYPE ObjectType,
                  IN ACCESS_MASK DesiredAccess,
                  OUT PSAM_DB_OBJECT *DbObject);

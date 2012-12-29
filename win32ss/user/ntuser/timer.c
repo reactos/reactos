@@ -56,7 +56,7 @@ CreateTimer(VOID)
   HANDLE Handle;
   PTIMER Ret = NULL;
 
-  Ret = UserCreateObject(gHandleTable, NULL, NULL, &Handle, otTimer, sizeof(TIMER));
+  Ret = UserCreateObject(gHandleTable, NULL, NULL, &Handle, TYPE_TIMER, sizeof(TIMER));
   if (Ret)
   {
      Ret->head.h = Handle;
@@ -86,7 +86,7 @@ RemoveTimer(PTIMER pTmr)
         IntUnlockWindowlessTimerBitmap();
      }
      UserDereferenceObject(pTmr);
-     Ret = UserDeleteObject( UserHMGetHandle(pTmr), otTimer);
+     Ret = UserDeleteObject( UserHMGetHandle(pTmr), TYPE_TIMER);
   }
   if (!Ret) ERR("Warning: Unable to delete timer\n");
 

@@ -28,7 +28,7 @@ PACCELERATOR_TABLE FASTCALL UserGetAccelObject(HACCEL hAccel)
         return NULL;
     }
 
-    Accel = UserGetObject(gHandleTable, hAccel, otAccel);
+    Accel = UserGetObject(gHandleTable, hAccel, TYPE_ACCELTABLE);
     if (!Accel)
     {
         EngSetLastError(ERROR_INVALID_ACCEL_HANDLE);
@@ -257,7 +257,7 @@ NtUserCreateAcceleratorTable(
         RETURN( (HACCEL) NULL );
     }
 
-    Accel = UserCreateObject(gHandleTable, NULL, NULL, (PHANDLE)&hAccel, otAccel, sizeof(ACCELERATOR_TABLE));
+    Accel = UserCreateObject(gHandleTable, NULL, NULL, (PHANDLE)&hAccel, TYPE_ACCELTABLE, sizeof(ACCELERATOR_TABLE));
 
     if (Accel == NULL)
     {
@@ -270,7 +270,7 @@ NtUserCreateAcceleratorTable(
     if (Accel->Table == NULL)
     {
         UserDereferenceObject(Accel);
-        UserDeleteObject(hAccel, otAccel);
+        UserDeleteObject(hAccel, TYPE_ACCELTABLE);
         SetLastNtError(STATUS_NO_MEMORY);
         RETURN( (HACCEL) NULL);
     }
@@ -308,7 +308,7 @@ NtUserCreateAcceleratorTable(
     {
         ExFreePoolWithTag(Accel->Table, USERTAG_ACCEL);
         UserDereferenceObject(Accel);
-        UserDeleteObject(hAccel, otAccel);
+        UserDeleteObject(hAccel, TYPE_ACCELTABLE);
         SetLastNtError(Status);
         RETURN( (HACCEL) NULL);
     }
@@ -351,7 +351,7 @@ NtUserDestroyAcceleratorTable(
         Accel->Table = NULL;
     }
 
-    UserDeleteObject(hAccel, otAccel);
+    UserDeleteObject(hAccel, TYPE_ACCELTABLE);
 
     RETURN( TRUE);
 

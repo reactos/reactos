@@ -2,13 +2,13 @@
 
 [Section]
 Name = AbiWord
-Version = 2.9.2
+Version = 2.9.4
 Licence = GPL
 Description = Word processor.
-Size = 9.33MB
+Size = 9.4MB
 Category = 6
 URLSite = http://www.abisource.com/
-URLDownload = http://www.abisource.com/downloads/abiword/2.9.2/Windows/abiword-setup-2.9.2.exe
+URLDownload = http://www.abisource.com/downloads/abiword/2.9.4/Windows/abiword-setup-2.9.4.exe
 CDPath = none
 
 [Section.0407]

@@ -143,12 +143,12 @@ typedef enum _DOMAIN_SERVER_ENABLE_STATE
     DomainServerEnabled = 1,
     DomainServerDisabled
 } DOMAIN_SERVER_ENABLE_STATE, *PDOMAIN_SERVER_ENABLE_STATE;
-cpp_quote("#endif")
 
 typedef struct _DOMAIN_STATE_INFORMATION
 {
     DOMAIN_SERVER_ENABLE_STATE DomainServerState;
 } DOMAIN_STATE_INFORMATION, *PDOMAIN_STATE_INFORMATION;
+cpp_quote("#endif")
 
 cpp_quote("#ifndef _NTSAM_")
 typedef enum _DOMAIN_SERVER_ROLE
@@ -169,6 +169,7 @@ typedef struct _DOMAIN_PASSWORD_INFORMATION
 } DOMAIN_PASSWORD_INFORMATION, *PDOMAIN_PASSWORD_INFORMATION;
 cpp_quote("#endif")
 
+cpp_quote("#ifndef _NTSAM_")
 typedef struct _DOMAIN_LOGOFF_INFORMATION
 {
     OLD_LARGE_INTEGER ForceLogoff;
@@ -178,6 +179,7 @@ typedef struct _DOMAIN_SERVER_ROLE_INFORMATION
 {
     DOMAIN_SERVER_ROLE DomainServerRole;
 } DOMAIN_SERVER_ROLE_INFORMATION, *PDOMAIN_SERVER_ROLE_INFORMATION;
+cpp_quote("#endif")
 
 typedef struct _DOMAIN_MODIFIED_INFORMATION
 {

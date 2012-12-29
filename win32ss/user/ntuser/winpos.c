@@ -2472,7 +2472,7 @@ IntDeferWindowPos( HDWP hdwp,
        return NULL;
     }
 
-    if (!(pDWP = (PSMWP)UserGetObject(gHandleTable, hdwp, otSMWP)))
+    if (!(pDWP = (PSMWP)UserGetObject(gHandleTable, hdwp, TYPE_SETWINDOWPOS)))
     {
        EngSetLastError(ERROR_INVALID_DWP_HANDLE);
        return NULL;
@@ -2543,7 +2543,7 @@ BOOL FASTCALL IntEndDeferWindowPosEx( HDWP hdwp, BOOL sAsync )
 
     TRACE("%p\n", hdwp);
 
-    if (!(pDWP = (PSMWP)UserGetObject(gHandleTable, hdwp, otSMWP)))
+    if (!(pDWP = (PSMWP)UserGetObject(gHandleTable, hdwp, TYPE_SETWINDOWPOS)))
     {
        EngSetLastError(ERROR_INVALID_DWP_HANDLE);
        return FALSE;
@@ -2597,7 +2597,7 @@ BOOL FASTCALL IntEndDeferWindowPosEx( HDWP hdwp, BOOL sAsync )
     }
     ExFreePoolWithTag(pDWP->acvr, USERTAG_SWP);
     UserDereferenceObject(pDWP);
-    UserDeleteObject(hdwp, otSMWP);
+    UserDeleteObject(hdwp, TYPE_SETWINDOWPOS);
     return res;
 }
 

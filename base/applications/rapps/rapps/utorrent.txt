@@ -2,13 +2,13 @@
 
 [Section]
 Name = µTorrent
-Version = 3.2
+Version = 3.2.3
 Licence = Freeware for non-commercial uses
 Description = Small and fast BitTorrent Client.
-Size = 874.87kB
+Size = 946.00kB
 Category = 5
 URLSite = http://www.utorrent.com/
-URLDownload = http://download.utorrent.com/3.2/uTorrent.exe
+URLDownload = http://download.utorrent.com/3.2.3/uTorrent.exe
 CDPath = none
 
 

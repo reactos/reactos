@@ -131,7 +131,7 @@ UserLoadKbdFile(PUNICODE_STRING pwszKLID)
                                  L"Control\\Keyboard Layouts\\";
 
     /* Create keyboard layout file object */
-    pkf = UserCreateObject(gHandleTable, NULL, NULL, NULL, otKBDfile, sizeof(KBDFILE));
+    pkf = UserCreateObject(gHandleTable, NULL, NULL, NULL, TYPE_KBDFILE, sizeof(KBDFILE));
     if (!pkf)
     {
         ERR("Failed to create object!\n");
@@ -187,7 +187,7 @@ cleanup:
     {
         /* We have failed - destroy created object */
         if (pkf)
-            UserDeleteObject(pkf->head.h, otKBDfile);
+            UserDeleteObject(pkf->head.h, TYPE_KBDFILE);
     }
 
     return pRet;
@@ -206,7 +206,7 @@ UserLoadKbdLayout(PUNICODE_STRING pwszKLID, HKL hKL)
     PKL pKl;
 
     /* Create keyboard layout object */
-    pKl = UserCreateObject(gHandleTable, NULL, NULL, NULL, otKBDlayout, sizeof(KL));
+    pKl = UserCreateObject(gHandleTable, NULL, NULL, NULL, TYPE_KBDLAYOUT, sizeof(KL));
     if (!pKl)
     {
         ERR("Failed to create object!\n");
@@ -223,7 +223,7 @@ UserLoadKbdLayout(PUNICODE_STRING pwszKLID, HKL hKL)
     if (!pKl->spkf)
     {
         ERR("UserLoadKbdFile(%wZ) failed!\n", pwszKLID);
-        UserDeleteObject(pKl->head.h, otKBDlayout);
+        UserDeleteObject(pKl->head.h, TYPE_KBDLAYOUT);
         return NULL;
     }
 
@@ -272,7 +272,7 @@ UnloadKbdFile(_In_ PKBDFILE pkf)
         *ppkfLink = pkf->pkfNext;
 
     EngUnloadImage(pkf->hBase);
-    UserDeleteObject(pkf->head.h, otKBDfile);
+    UserDeleteObject(pkf->head.h, TYPE_KBDFILE);
 }
 
 /*
@@ -308,7 +308,7 @@ UserUnloadKbl(PKL pKl)
     pKl->pklPrev->pklNext = pKl->pklNext;
     pKl->pklNext->pklPrev = pKl->pklPrev;
     UnloadKbdFile(pKl->spkf);
-    UserDeleteObject(pKl->head.h, otKBDlayout);
+    UserDeleteObject(pKl->head.h, TYPE_KBDLAYOUT);
     return TRUE;
 }
 

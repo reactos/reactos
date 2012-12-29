@@ -77,7 +77,7 @@ PCURICON_OBJECT FASTCALL UserGetCurIconObject(HCURSOR hCurIcon)
         return NULL;
     }
 
-    CurIcon = (PCURICON_OBJECT)UserReferenceObjectByHandle(hCurIcon, otCursorIcon);
+    CurIcon = (PCURICON_OBJECT)UserReferenceObjectByHandle(hCurIcon, TYPE_CURSOR);
     if (!CurIcon)
     {
         /* We never set ERROR_INVALID_ICON_HANDLE. lets hope noone ever checks for it */
@@ -178,7 +178,7 @@ IntFindExistingCurIconObject(HMODULE hModule,
     LIST_FOR_EACH(CurIcon, &gCurIconList, CURICON_OBJECT, ListEntry)
     {
 
-        // if (NT_SUCCESS(UserReferenceObjectByPointer(Object, otCursorIcon))) // <- huh????
+        // if (NT_SUCCESS(UserReferenceObjectByPointer(Object, TYPE_CURSOR))) // <- huh????
 //      UserReferenceObject(  CurIcon);
 //      {
         if ((CurIcon->hModule == hModule) && (CurIcon->hRsrc == hRsrc))
@@ -209,7 +209,7 @@ IntCreateCurIconHandle(DWORD dwNumber)
     PCURICON_OBJECT CurIcon;
     HANDLE hCurIcon;
 
-    CurIcon = UserCreateObject(gHandleTable, NULL, NULL, &hCurIcon, otCursorIcon, sizeof(CURICON_OBJECT));
+    CurIcon = UserCreateObject(gHandleTable, NULL, NULL, &hCurIcon, TYPE_CURSOR, sizeof(CURICON_OBJECT));
 
     if (!CurIcon)
     {
@@ -223,7 +223,7 @@ IntCreateCurIconHandle(DWORD dwNumber)
     if (! ReferenceCurIconByProcess(CurIcon))
     {
         ERR("Failed to add process\n");
-        UserDeleteObject(hCurIcon, otCursorIcon);
+        UserDeleteObject(hCurIcon, TYPE_CURSOR);
         UserDereferenceObject(CurIcon);
         return NULL;
     }
@@ -273,7 +273,7 @@ IntDestroyCurIconObject(PCURICON_OBJECT CurIcon, PPROCESSINFO ppi)
         {
             /* Set the first process of the list as owner */
             Current = CONTAINING_RECORD(CurIcon->ProcessList.Flink, CURICON_PROCESS, ListEntry);
-            UserSetObjectOwner(CurIcon, otCursorIcon, Current->Process);
+            UserSetObjectOwner(CurIcon, TYPE_CURSOR, Current->Process);
         }
         UserDereferenceObject(CurIcon);
         return TRUE;
@@ -310,7 +310,7 @@ emptyList:
 
     /* We were given a pointer, no need to keep the reference anylonger! */
     UserDereferenceObject(CurIcon);
-    Ret = UserDeleteObject(CurIcon->Self, otCursorIcon);
+    Ret = UserDeleteObject(CurIcon->Self, TYPE_CURSOR);
 
     return Ret;
 }

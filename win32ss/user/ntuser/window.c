@@ -90,7 +90,7 @@ PWND FASTCALL VerifyWnd(PWND pWnd)
 
 PWND FASTCALL ValidateHwndNoErr(HWND hWnd)
 {
-   if (hWnd) return (PWND)UserGetObjectNoErr(gHandleTable, hWnd, otWindow);
+   if (hWnd) return (PWND)UserGetObjectNoErr(gHandleTable, hWnd, TYPE_WINDOW);
    return NULL;
 }
 
@@ -105,7 +105,7 @@ PWND FASTCALL UserGetWindowObject(HWND hWnd)
       return NULL;
    }
 
-   Window = (PWND)UserGetObject(gHandleTable, hWnd, otWindow);
+   Window = (PWND)UserGetObject(gHandleTable, hWnd, TYPE_WINDOW);
    if (!Window || 0 != (Window->state & WNDS_DESTROYED))
    {
       EngSetLastError(ERROR_INVALID_WINDOW_HANDLE);
@@ -555,7 +555,7 @@ static LRESULT co_UserFreeWindow(PWND Window,
    IntUnlinkWindow(Window);
 
    UserReferenceObject(Window);
-   UserDeleteObject(Window->head.h, otWindow);
+   UserDeleteObject(Window->head.h, TYPE_WINDOW);
 
    IntDestroyScrollBars(Window);
 
@@ -662,7 +662,7 @@ IntSetWindowProc(PWND pWnd,
 
    if (IsCallProcHandle(NewWndProc))
    {
-      CallProc = UserGetObject(gHandleTable, NewWndProc, otCallProc);
+      CallProc = UserGetObject(gHandleTable, NewWndProc, TYPE_CALLPROC);
       if (CallProc)
       {  // Reset new WndProc.
          NewWndProc = CallProc->pfnClientPrevious;
@@ -1717,7 +1717,7 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
                                    pdeskCreated ? pdeskCreated : pti->rpdesk,
                                    pti,
                                   (PHANDLE)&hWnd,
-                                   otWindow,
+                                   TYPE_WINDOW,
                                    sizeof(WND) + Class->cbwndExtra);
 
    if (!pWnd)

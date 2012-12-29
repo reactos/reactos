@@ -225,7 +225,7 @@ typedef struct _PROCESSINFO
 
 #if DBG
   BYTE DbgChannelLevel[DbgChCount];
-  DWORD DbgHandleCount[USER_HANDLE_TYPE_COUNT];
+  DWORD DbgHandleCount[TYPE_CTYPES];
 #endif
 } PROCESSINFO;
 

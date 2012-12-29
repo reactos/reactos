@@ -16,7 +16,7 @@ PUSER_HANDLE_TABLE gHandleTable = NULL;
 
 void DbgUserDumpHandleTable()
 {
-    int HandleCounts[USER_HANDLE_TYPE_COUNT];
+    int HandleCounts[TYPE_CTYPES];
     PPROCESSINFO ppiList;
     int i;
     PWCHAR TypeNames[] = {L"Free",L"Window",L"Menu", L"CursorIcon", L"SMWP", L"Hook", L"ClipBoardData", L"CallProc",
@@ -33,7 +33,7 @@ void DbgUserDumpHandleTable()
     {
         ERR("Process %s (%d) handles count: %d\n\t", ppiList->peProcess->ImageFileName, ppiList->peProcess->UniqueProcessId, ppiList->UserHandleCount);
 
-        for (i = 1 ;i < USER_HANDLE_TYPE_COUNT; i++)
+        for (i = 1 ;i < TYPE_CTYPES; i++)
         {
             HandleCounts[i] += ppiList->DbgHandleCount[i];
 
@@ -48,7 +48,7 @@ void DbgUserDumpHandleTable()
 
     /* Print total type counts */
     ERR("Total handles of the running processes: \n\t");
-    for (i = 1 ;i < USER_HANDLE_TYPE_COUNT; i++)
+    for (i = 1 ;i < TYPE_CTYPES; i++)
     {
         DbgPrint("%S: %d, ", TypeNames[i], HandleCounts[i]);
         if (i % 6 == 0)
@@ -62,7 +62,7 @@ void DbgUserDumpHandleTable()
          HandleCounts[gHandleTable->handles[i].type]++;
 
     ERR("Total handles count allocated: \n\t");
-    for (i = 1 ;i < USER_HANDLE_TYPE_COUNT; i++)
+    for (i = 1 ;i < TYPE_CTYPES; i++)
     {
         DbgPrint("%S: %d, ", TypeNames[i], HandleCounts[i]);
         if (i % 6 == 0)
@@ -174,27 +174,27 @@ __inline static void *free_user_entry(PUSER_HANDLE_TABLE ht, PUSER_HANDLE_ENTRY 
 }
 
 static __inline PVOID
-UserHandleOwnerByType(USER_OBJECT_TYPE type)
+UserHandleOwnerByType(HANDLE_TYPE type)
 {
     PVOID pi;
 
     switch (type)
     {
-        case otWindow:
-        case otInputContext:
+        case TYPE_WINDOW:
+        case TYPE_INPUTCONTEXT:
             pi = GetW32ThreadInfo();
             break;
 
-        case otMenu:
-        case otCursorIcon:
-        case otHook:
-        case otCallProc:
-        case otAccel:
-        case otSMWP:
+        case TYPE_MENU:
+        case TYPE_CURSOR:
+        case TYPE_HOOK:
+        case TYPE_CALLPROC:
+        case TYPE_ACCELTABLE:
+        case TYPE_SETWINDOWPOS:
             pi = GetW32ProcessInfo();
             break;
 
-        case otMonitor:
+        case TYPE_MONITOR:
             pi = NULL; /* System */
             break;
 
@@ -207,7 +207,7 @@ UserHandleOwnerByType(USER_OBJECT_TYPE type)
 }
 
 /* allocate a user handle for a given object */
-HANDLE UserAllocHandle(PUSER_HANDLE_TABLE ht, PVOID object, USER_OBJECT_TYPE type )
+HANDLE UserAllocHandle(PUSER_HANDLE_TABLE ht, PVOID object, HANDLE_TYPE type )
 {
    PUSER_HANDLE_ENTRY entry = alloc_user_entry(ht);
    if (!entry)
@@ -226,7 +226,7 @@ HANDLE UserAllocHandle(PUSER_HANDLE_TABLE ht, PVOID object, USER_OBJECT_TYPE typ
 }
 
 /* return a pointer to a user object from its handle without setting an error */
-PVOID UserGetObjectNoErr(PUSER_HANDLE_TABLE ht, HANDLE handle, USER_OBJECT_TYPE type )
+PVOID UserGetObjectNoErr(PUSER_HANDLE_TABLE ht, HANDLE handle, HANDLE_TYPE type )
 {
    PUSER_HANDLE_ENTRY entry;
 
@@ -240,7 +240,7 @@ PVOID UserGetObjectNoErr(PUSER_HANDLE_TABLE ht, HANDLE handle, USER_OBJECT_TYPE 
 }
 
 /* return a pointer to a user object from its handle */
-PVOID UserGetObject(PUSER_HANDLE_TABLE ht, HANDLE handle, USER_OBJECT_TYPE type )
+PVOID UserGetObject(PUSER_HANDLE_TABLE ht, HANDLE handle, HANDLE_TYPE type )
 {
    PUSER_HANDLE_ENTRY entry;
 
@@ -269,7 +269,7 @@ HANDLE get_user_full_handle(PUSER_HANDLE_TABLE ht,  HANDLE handle )
 
 
 /* Same as get_user_object plus set the handle to the full 32-bit value */
-void *get_user_object_handle(PUSER_HANDLE_TABLE ht,  HANDLE* handle, USER_OBJECT_TYPE type )
+void *get_user_object_handle(PUSER_HANDLE_TABLE ht,  HANDLE* handle, HANDLE_TYPE type )
 {
    PUSER_HANDLE_ENTRY entry;
 
@@ -317,7 +317,7 @@ UserCreateObject( PUSER_HANDLE_TABLE ht,
                   PDESKTOP pDesktop,
                   PTHREADINFO pti,
                   HANDLE* h,
-                  USER_OBJECT_TYPE type,
+                  HANDLE_TYPE type,
                   ULONG size)
 {
    HANDLE hi;
@@ -336,11 +336,11 @@ UserCreateObject( PUSER_HANDLE_TABLE ht,
 
    switch (type)
    {
-      case otWindow:
-//      case otMenu:
-      case otHook:
-      case otCallProc:
-      case otInputContext:
+      case TYPE_WINDOW:
+//      case TYPE_MENU:
+      case TYPE_HOOK:
+      case TYPE_CALLPROC:
+      case TYPE_INPUTCONTEXT:
          Object = DesktopHeapAlloc(rpdesk, size);
          dt = TRUE;
          break;
@@ -373,22 +373,22 @@ UserCreateObject( PUSER_HANDLE_TABLE ht,
 
    switch (type)
    {
-        case otWindow:
-        case otHook:
-        case otInputContext:
+        case TYPE_WINDOW:
+        case TYPE_HOOK:
+        case TYPE_INPUTCONTEXT:
             ((PTHRDESKHEAD)Object)->rpdesk = rpdesk;
             ((PTHRDESKHEAD)Object)->pSelf = Object;
-        case otEvent:
+        case TYPE_WINEVENTHOOK:
             ((PTHROBJHEAD)Object)->pti = pti;
             break;
 
-        case otMenu:
-        case otCallProc:
+        case TYPE_MENU:
+        case TYPE_CALLPROC:
             ((PPROCDESKHEAD)Object)->rpdesk = rpdesk;
             ((PPROCDESKHEAD)Object)->pSelf = Object;
             break;
 
-        case otCursorIcon:
+        case TYPE_CURSOR:
             ((PPROCMARKHEAD)Object)->ppi = ppi;
             break;
 
@@ -410,7 +410,7 @@ FASTCALL
 UserDereferenceObject(PVOID object)
 {
   PUSER_HANDLE_ENTRY entry;
-  USER_OBJECT_TYPE type;
+  HANDLE_TYPE type;
 
   ASSERT(((PHEAD)object)->cLockObj >= 1);
 
@@ -435,11 +435,11 @@ UserDereferenceObject(PVOID object)
 
      switch (type)
      {
-        case otWindow:
-//        case otMenu:
-        case otHook:
-        case otCallProc:
-        case otInputContext:
+        case TYPE_WINDOW:
+//        case TYPE_MENU:
+        case TYPE_HOOK:
+        case TYPE_CALLPROC:
+        case TYPE_INPUTCONTEXT:
            return DesktopHeapFree(((PTHRDESKHEAD)object)->rpdesk, object);
 
         default:
@@ -482,7 +482,7 @@ UserObjectInDestroy(HANDLE h)
 
 BOOL
 FASTCALL
-UserDeleteObject(HANDLE h, USER_OBJECT_TYPE type )
+UserDeleteObject(HANDLE h, HANDLE_TYPE type )
 {
    PVOID body = UserGetObject(gHandleTable, h, type);
 
@@ -504,7 +504,7 @@ UserReferenceObject(PVOID obj)
 
 PVOID
 FASTCALL
-UserReferenceObjectByHandle(HANDLE handle, USER_OBJECT_TYPE type)
+UserReferenceObjectByHandle(HANDLE handle, HANDLE_TYPE type)
 {
     PVOID object;
 
@@ -518,7 +518,7 @@ UserReferenceObjectByHandle(HANDLE handle, USER_OBJECT_TYPE type)
 
 VOID
 FASTCALL
-UserSetObjectOwner(PVOID obj, USER_OBJECT_TYPE type, PVOID owner)
+UserSetObjectOwner(PVOID obj, HANDLE_TYPE type, PVOID owner)
 {
     PUSER_HANDLE_ENTRY entry = handle_to_entry(gHandleTable, ((PHEAD)obj)->h );
     PPROCESSINFO ppi, oldppi;
@@ -529,7 +529,7 @@ UserSetObjectOwner(PVOID obj, USER_OBJECT_TYPE type, PVOID owner)
     /* For now, only supported for CursorIcon object */
     switch(type)
     {
-        case otCursorIcon:
+        case TYPE_CURSOR:
             ppi = (PPROCESSINFO)owner;
             entry->pi = ppi;
             oldppi = ((PPROCMARKHEAD)obj)->ppi;
@@ -575,37 +575,37 @@ NtUserValidateHandleSecure(
      }
      switch (uType)
      {
-       case otWindow:
+       case TYPE_WINDOW:
        {
          if (UserGetWindowObject((HWND) handle)) return TRUE;
          return FALSE;
        }
-       case otMenu:
+       case TYPE_MENU:
        {
          if (UserGetMenuObject((HMENU) handle)) return TRUE;
          return FALSE;
        }
-       case otAccel:
+       case TYPE_ACCELTABLE:
        {
          if (UserGetAccelObject((HACCEL) handle)) return TRUE;
          return FALSE;
        }
-       case otCursorIcon:
+       case TYPE_CURSOR:
        {
          if (UserGetCurIconObject((HCURSOR) handle)) return TRUE;
          return FALSE;
        }
-       case otHook:
+       case TYPE_HOOK:
        {
          if (IntGetHookObject((HHOOK) handle)) return TRUE;
          return FALSE;
        }
-       case otMonitor:
+       case TYPE_MONITOR:
        {
          if (UserGetMonitorObject((HMONITOR) handle)) return TRUE;
          return FALSE;
        }
-       case otCallProc:
+       case TYPE_CALLPROC:
        {
          WNDPROC_INFO Proc;
          return UserGetCallProcInfo( handle, &Proc );

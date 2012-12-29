@@ -58,7 +58,7 @@ IntFreeElementData(PCLIP pElement)
         !IS_DATA_SYNTHESIZED(pElement))
     {
         if (pElement->fGlobalHandle)
-            UserDeleteObject(pElement->hData, otClipBoardData);
+            UserDeleteObject(pElement->hData, TYPE_CLIPDATA);
         else if (pElement->fmt == CF_BITMAP || pElement->fmt == CF_PALETTE ||
                  pElement->fmt == CF_DSPBITMAP)
         {
@@ -184,7 +184,7 @@ IntSynthesizeDib(
                                                       NULL,
                                                       NULL,
                                                       &hMem,
-                                                      otClipBoardData,
+                                                      TYPE_CLIPDATA,
                                                       cjDataSize);
     if (!pClipboardData)
     {
@@ -235,7 +235,7 @@ IntSynthesizeBitmap(PWINSTATION_OBJECT pWinStaObj, PCLIP pBmEl)
     if(!pDibEl->fGlobalHandle)
         return;
 
-    pMemObj = (PCLIPBOARDDATA)UserGetObject(gHandleTable, pDibEl->hData, otClipBoardData);
+    pMemObj = (PCLIPBOARDDATA)UserGetObject(gHandleTable, pDibEl->hData, TYPE_CLIPDATA);
     if (!pMemObj)
         return;
 
@@ -297,7 +297,7 @@ IntAddSynthesizedFormats(PWINSTATION_OBJECT pWinStaObj)
         PCLIPBOARDDATA pMemObj;
         HANDLE hMem;
 
-        pMemObj = (PCLIPBOARDDATA)UserCreateObject(gHandleTable, NULL, NULL, &hMem, otClipBoardData,
+        pMemObj = (PCLIPBOARDDATA)UserCreateObject(gHandleTable, NULL, NULL, &hMem, TYPE_CLIPDATA,
                                                    sizeof(CLIPBOARDDATA) + sizeof(LCID));
         if (pMemObj)
         {
@@ -1087,7 +1087,7 @@ NtUserConvertMemHandle(
     UserEnterExclusive();
 
     /* Create Clipboard data object */
-    pMemObj = UserCreateObject(gHandleTable, NULL, NULL, &hMem, otClipBoardData, sizeof(CLIPBOARDDATA) + cbData);
+    pMemObj = UserCreateObject(gHandleTable, NULL, NULL, &hMem, TYPE_CLIPDATA, sizeof(CLIPBOARDDATA) + cbData);
     if (!pMemObj)
         goto cleanup;
 
@@ -1111,7 +1111,7 @@ NtUserConvertMemHandle(
     /* If we failed to copy data, remove handle */
     if (!pMemObj)
     {
-        UserDeleteObject(hMem, otClipBoardData);
+        UserDeleteObject(hMem, TYPE_CLIPDATA);
         hMem = NULL;
     }
 
@@ -1134,7 +1134,7 @@ NtUserCreateLocalMemHandle(
     UserEnterShared();
 
     /* Get Clipboard data object */
-    pMemObj = (PCLIPBOARDDATA)UserGetObject(gHandleTable, hMem, otClipBoardData);
+    pMemObj = (PCLIPBOARDDATA)UserGetObject(gHandleTable, hMem, TYPE_CLIPDATA);
     if (!pMemObj)
     {
         Status = STATUS_INVALID_HANDLE;
