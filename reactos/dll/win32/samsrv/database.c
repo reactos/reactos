@@ -223,7 +223,7 @@ SampCreateDbObject(IN PSAM_DB_OBJECT ParentObject,
     NewObject->Name = RtlAllocateHeap(RtlGetProcessHeap(),
                                       0,
                                       (wcslen(ObjectName) + 1) * sizeof(WCHAR));
-    if (NewObject == NULL)
+    if (NewObject->Name == NULL)
     {
         if (MembersKeyHandle != NULL)
             NtClose(MembersKeyHandle);
@@ -374,7 +374,7 @@ SampOpenDbObject(IN PSAM_DB_OBJECT ParentObject,
     NewObject->Name = RtlAllocateHeap(RtlGetProcessHeap(),
                                       0,
                                       (wcslen(ObjectName) + 1) * sizeof(WCHAR));
-    if (NewObject == NULL)
+    if (NewObject->Name == NULL)
     {
         if (MembersKeyHandle != NULL)
             NtClose(MembersKeyHandle);
