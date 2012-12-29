@@ -97,6 +97,7 @@ NTSTATUS
 SampCreateDbObject(IN PSAM_DB_OBJECT ParentObject,
                    IN LPWSTR ContainerName,
                    IN LPWSTR ObjectName,
+                   IN ULONG RelativeId,
                    IN SAM_DB_OBJECT_TYPE ObjectType,
                    IN ACCESS_MASK DesiredAccess,
                    OUT PSAM_DB_OBJECT *DbObject)
@@ -240,6 +241,7 @@ SampCreateDbObject(IN PSAM_DB_OBJECT ParentObject,
     NewObject->Access = DesiredAccess;
     NewObject->KeyHandle = ObjectKeyHandle;
     NewObject->MembersKeyHandle = MembersKeyHandle;
+    NewObject->RelativeId = RelativeId;
     NewObject->ParentObject = ParentObject;
 
     if (ParentObject != NULL)
@@ -255,6 +257,7 @@ NTSTATUS
 SampOpenDbObject(IN PSAM_DB_OBJECT ParentObject,
                  IN LPWSTR ContainerName,
                  IN LPWSTR ObjectName,
+                 IN ULONG RelativeId,
                  IN SAM_DB_OBJECT_TYPE ObjectType,
                  IN ACCESS_MASK DesiredAccess,
                  OUT PSAM_DB_OBJECT *DbObject)
@@ -390,6 +393,7 @@ SampOpenDbObject(IN PSAM_DB_OBJECT ParentObject,
     NewObject->Access = DesiredAccess;
     NewObject->KeyHandle = ObjectKeyHandle;
     NewObject->MembersKeyHandle = MembersKeyHandle;
+    NewObject->RelativeId = RelativeId;
     NewObject->ParentObject = ParentObject;
 
     if (ParentObject != NULL)
