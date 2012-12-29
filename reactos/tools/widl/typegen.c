@@ -2344,7 +2344,6 @@ static void write_array_element_type(FILE *file, const type_t *type,
         }
     }
     write_member_type(file, type, cont_is_complex, NULL, elem, NULL, tfsoff);
-    return;
 }
 
 static void write_end(FILE *file, unsigned int *tfsoff)

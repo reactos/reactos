@@ -1223,7 +1223,8 @@ static void write_com_interface_end(FILE *header, type_t *iface)
   write_method_macro(header, dispinterface ? type_iface_get_inherit(iface) : iface, iface->name);
   fprintf(header, "#else\n");
   write_inline_wrappers(header, dispinterface ? type_iface_get_inherit(iface) : iface, iface->name);
-  fprintf(header, "#endif\n");  fprintf(header, "#endif\n");
+  fprintf(header, "#endif\n");
+  fprintf(header, "#endif\n");
   fprintf(header, "\n");
   fprintf(header, "#endif\n");
   fprintf(header, "\n");

@@ -620,7 +620,10 @@ enum_list: enum					{ if (!$1->eval)
 	| enum_list ',' enum			{ if (!$3->eval)
                                                   {
                                                     var_t *last = LIST_ENTRY( list_tail($$), var_t, entry );
-                                                    $3->eval = make_exprl(EXPR_NUM, last->eval->cval + 1);
+                                                    enum expr_type type = EXPR_NUM;
+                                                    if (last->eval->type == EXPR_HEXNUM) type = EXPR_HEXNUM;
+                                                    if (last->eval->cval + 1 < 0) type = EXPR_HEXNUM;
+                                                    $3->eval = make_exprl(type, last->eval->cval + 1);
                                                   }
                                                   $$ = append_var( $1, $3 );
 						}
