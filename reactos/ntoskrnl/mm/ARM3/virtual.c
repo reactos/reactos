@@ -3861,8 +3861,9 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
     }
     if ((AllocationType & MEM_RESET) == MEM_RESET)
     {
-        DPRINT1("MEM_RESET not supported\n");
-        Status = STATUS_INVALID_PARAMETER;
+        /// @todo HACK: pretend success
+        DPRINT("MEM_RESET not supported\n");
+        Status = STATUS_SUCCESS;
         goto FailPathNoLock;
     }
     if (Process->VmTopDown == 1)
