@@ -31,16 +31,16 @@ UserAssertLastRef(PVOID obj, const char *file, int line)
 
 extern PUSER_HANDLE_TABLE gHandleTable;
 VOID FASTCALL UserReferenceObject(PVOID obj);
-PVOID FASTCALL UserReferenceObjectByHandle(HANDLE handle, USER_OBJECT_TYPE type);
+PVOID FASTCALL UserReferenceObjectByHandle(HANDLE handle, HANDLE_TYPE type);
 BOOL FASTCALL UserDereferenceObject(PVOID obj);
-PVOID FASTCALL UserCreateObject(PUSER_HANDLE_TABLE ht, struct _DESKTOP* pDesktop, PTHREADINFO pti, HANDLE* h,USER_OBJECT_TYPE type , ULONG size);
-BOOL FASTCALL UserDeleteObject(HANDLE h, USER_OBJECT_TYPE type );
-PVOID UserGetObject(PUSER_HANDLE_TABLE ht, HANDLE handle, USER_OBJECT_TYPE type );
-PVOID UserGetObjectNoErr(PUSER_HANDLE_TABLE, HANDLE, USER_OBJECT_TYPE);
+PVOID FASTCALL UserCreateObject(PUSER_HANDLE_TABLE ht, struct _DESKTOP* pDesktop, PTHREADINFO pti, HANDLE* h,HANDLE_TYPE type , ULONG size);
+BOOL FASTCALL UserDeleteObject(HANDLE h, HANDLE_TYPE type );
+PVOID UserGetObject(PUSER_HANDLE_TABLE ht, HANDLE handle, HANDLE_TYPE type );
+PVOID UserGetObjectNoErr(PUSER_HANDLE_TABLE, HANDLE, HANDLE_TYPE);
 BOOL FASTCALL UserCreateHandleTable(VOID);
 BOOL FASTCALL UserObjectInDestroy(HANDLE);
 void DbgUserDumpHandleTable();
-VOID FASTCALL UserSetObjectOwner(PVOID obj, USER_OBJECT_TYPE type, PVOID owner);
+VOID FASTCALL UserSetObjectOwner(PVOID obj, HANDLE_TYPE type, PVOID owner);
 
 static __inline VOID
 UserRefObjectCo(PVOID obj, PUSER_REFERENCE_ENTRY UserReferenceEntry)

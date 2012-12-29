@@ -303,24 +303,30 @@ GetUser32Handle(HANDLE handle)
 /*
  * Decide whether an object is located on the desktop or shared heap
  */
-static const BOOL g_ObjectHeapTypeShared[otEvent + 1] =
+static const BOOL g_ObjectHeapTypeShared[TYPE_CTYPES] =
 {
-    FALSE, /* otFree (not used) */
-    FALSE, /* otWindow */
-    TRUE,  /* otMenu  FALSE */
-    TRUE,  /* otCursorIcon */
-    TRUE,  /* otSMWP */
-    FALSE, /* otHook */
-    FALSE, /* (not used) */
-    FALSE, /* otCallProc */
-    TRUE,  /* otAccel */
-    FALSE, /* (not used) */
-    FALSE, /* (not used) */
-    FALSE, /* (not used) */
-    TRUE,  /* otMonitor */
-    FALSE, /* (not used) */
-    FALSE, /* (not used) */
-    TRUE   /* otEvent */
+    FALSE, /* TYPE_FREE (not used) */
+    FALSE, /* TYPE_WINDOW */
+    TRUE,  /* TYPE_MENU  FALSE */
+    TRUE,  /* TYPE_CURSOR */
+    TRUE,  /* TYPE_SETWINDOWPOS */
+    FALSE, /* TYPE_HOOK */
+    FALSE, /* TYPE_CLIPDATA */
+    FALSE, /* TYPE_CALLPROC */
+    TRUE,  /* TYPE_ACCELTABLE */
+    FALSE, /* TYPE_DDEACCESS */
+    FALSE, /* TYPE_DDECONV */
+    FALSE, /* TYPE_DDEXACT */
+    TRUE,  /* TYPE_MONITOR */
+    FALSE, /* TYPE_KBDLAYOUT */
+    FALSE, /* TYPE_KBDFILE */
+    TRUE   /* TYPE_WINEVENTHOOK */
+    FALSE, /* TYPE_TIMER */
+    FALSE, /* TYPE_INPUTCONTEXT */
+    FALSE, /* TYPE_HIDDATA */
+    FALSE, /* TYPE_DEVICEINFO */
+    FALSE, /* TYPE_TOUCHINPUTINFO */
+    FALSE, /* TYPE_GESTUREINFOOBJ */
 };
 
 //
@@ -333,7 +339,7 @@ ValidateHandle(HANDLE handle, UINT uType)
   PVOID ret;
   PUSER_HANDLE_ENTRY pEntry;
 
-  ASSERT(uType <= otEvent);
+  ASSERT(uType < TYPE_CTYPES);
 
   pEntry = GetUser32Handle(handle);
 
@@ -348,22 +354,22 @@ ValidateHandle(HANDLE handle, UINT uType)
   {
      switch ( uType )
      {  // Test (with wine too) confirms these results!
-        case otWindow:
+        case TYPE_WINDOW:
           SetLastError(ERROR_INVALID_WINDOW_HANDLE);
           break;
-        case otMenu:
+        case TYPE_MENU:
           SetLastError(ERROR_INVALID_MENU_HANDLE);
           break;
-        case otCursorIcon:
+        case TYPE_CURSOR:
           SetLastError(ERROR_INVALID_CURSOR_HANDLE);
           break;
-        case otSMWP:
+        case TYPE_SETWINDOWPOS:
           SetLastError(ERROR_INVALID_DWP_HANDLE);
           break;
-        case otHook:
+        case TYPE_HOOK:
           SetLastError(ERROR_INVALID_HOOK_HANDLE);
           break;
-        case otAccel:
+        case TYPE_ACCELTABLE:
           SetLastError(ERROR_INVALID_ACCEL_HANDLE);
           break;
         default:
@@ -391,7 +397,7 @@ ValidateHandleNoErr(HANDLE handle, UINT uType)
   PVOID ret;
   PUSER_HANDLE_ENTRY pEntry;
 
-  ASSERT(uType <= otEvent);
+  ASSERT(uType < TYPE_CTYPES);
 
   pEntry = GetUser32Handle(handle);
 
@@ -419,7 +425,7 @@ ValidateCallProc(HANDLE hCallProc)
 {
   PUSER_HANDLE_ENTRY pEntry;
 
-  PCALLPROCDATA CallProc = ValidateHandle(hCallProc, otCallProc);
+  PCALLPROCDATA CallProc = ValidateHandle(hCallProc, TYPE_CALLPROC);
 
   pEntry = GetUser32Handle(hCallProc);
 
@@ -444,7 +450,7 @@ ValidateHwnd(HWND hwnd)
     if (hwnd && hwnd == ClientInfo->CallbackWnd.hWnd)
         return ClientInfo->CallbackWnd.pWnd;
 
-    return ValidateHandle((HANDLE)hwnd, otWindow);
+    return ValidateHandle((HANDLE)hwnd, TYPE_WINDOW);
 }
 
 //
@@ -462,7 +468,7 @@ ValidateHwndNoErr(HWND hwnd)
     if (hwnd == ClientInfo->CallbackWnd.hWnd)
         return ClientInfo->CallbackWnd.pWnd;
 
-    Wnd = ValidateHandleNoErr((HANDLE)hwnd, otWindow);
+    Wnd = ValidateHandleNoErr((HANDLE)hwnd, TYPE_WINDOW);
     if (Wnd != NULL)
     {
         return Wnd;

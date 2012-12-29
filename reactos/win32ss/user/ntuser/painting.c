@@ -1141,7 +1141,7 @@ NtUserFlashWindowEx(IN PFLASHWINFO pfwi)
 
    if (!Ret) goto Exit;
 
-   if (!( pWnd = (PWND)UserGetObject(gHandleTable, finfo.hwnd, otWindow)) ||
+   if (!( pWnd = (PWND)UserGetObject(gHandleTable, finfo.hwnd, TYPE_WINDOW)) ||
         finfo.cbSize != sizeof(FLASHWINFO) ||
         finfo.dwFlags & ~(FLASHW_ALL|FLASHW_TIMER|FLASHW_TIMERNOFG) )
    {

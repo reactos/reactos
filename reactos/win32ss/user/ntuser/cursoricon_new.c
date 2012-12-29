@@ -84,7 +84,7 @@ PCURICON_OBJECT FASTCALL UserGetCurIconObject(HCURSOR hCurIcon)
         return NULL;
     }
 
-    CurIcon = (PCURICON_OBJECT)UserReferenceObjectByHandle(hCurIcon, otCursorIcon);
+    CurIcon = (PCURICON_OBJECT)UserReferenceObjectByHandle(hCurIcon, TYPE_CURSOR);
     if (!CurIcon)
     {
         /* We never set ERROR_INVALID_ICON_HANDLE. lets hope noone ever checks for it */
@@ -229,7 +229,7 @@ IntCreateCurIconHandle(DWORD dwNumber)
     if(dwNumber == 0)
         dwNumber = 1;
 
-    CurIcon = UserCreateObject(gHandleTable, NULL, NULL, &hCurIcon, otCursorIcon, sizeof(CURICON_OBJECT));
+    CurIcon = UserCreateObject(gHandleTable, NULL, NULL, &hCurIcon, TYPE_CURSOR, sizeof(CURICON_OBJECT));
 
     if (!CurIcon)
     {
@@ -244,7 +244,7 @@ IntCreateCurIconHandle(DWORD dwNumber)
     {
         ERR("Failed to add process\n");
         UserDereferenceObject(CurIcon);
-        UserDeleteObject(hCurIcon, otCursorIcon);
+        UserDeleteObject(hCurIcon, TYPE_CURSOR);
         return NULL;
     }
 
@@ -309,7 +309,7 @@ IntDestroyCurIconObject(PCURICON_OBJECT CurIcon, PPROCESSINFO ppi, BOOLEAN bForc
         {
             /* Set the first process of the list as owner */
             Current = CONTAINING_RECORD(CurIcon->ProcessList.Flink, CURICON_PROCESS, ListEntry);
-            UserSetObjectOwner(CurIcon, otCursorIcon, Current->Process);
+            UserSetObjectOwner(CurIcon, TYPE_CURSOR, Current->Process);
         }
         UserDereferenceObject(CurIcon);
         return TRUE;
@@ -350,7 +350,7 @@ emptyList:
 
     /* We were given a pointer, no need to keep the reference anylonger! */
     UserDereferenceObject(CurIcon);
-    Ret = UserDeleteObject(CurIcon->Self, otCursorIcon);
+    Ret = UserDeleteObject(CurIcon->Self, TYPE_CURSOR);
 
     return Ret;
 }

@@ -33,32 +33,33 @@ typedef struct _USER_HANDLE_TABLE
    int allocated_handles;
 } USER_HANDLE_TABLE, * PUSER_HANDLE_TABLE;
 
-typedef enum _USER_OBJECT_TYPE
+typedef enum _HANDLE_TYPE
 {
-  otFree = 0,
-  otWindow,
-  otMenu,
-  otCursorIcon,
-  otSMWP,
-  otHook,
-  otClipBoardData,
-  otCallProc,
-  otAccel,
-  otDDEaccess,
-  otDDEconv,
-  otDDExact,
-  otMonitor,
-  otKBDlayout,
-  otKBDfile,
-  otEvent,
-  otTimer,
-  otInputContext,
-  otHidData,
-  otDeviceInfo,
-  otTouchInput,
-  otGestureInfo,
-  USER_HANDLE_TYPE_COUNT
-} USER_OBJECT_TYPE;
+    TYPE_FREE = 0,
+    TYPE_WINDOW = 1,
+    TYPE_MENU = 2,
+    TYPE_CURSOR = 3,
+    TYPE_SETWINDOWPOS = 4,
+    TYPE_HOOK = 5,
+    TYPE_CLIPDATA = 6,
+    TYPE_CALLPROC = 7,
+    TYPE_ACCELTABLE = 8,
+    TYPE_DDEACCESS = 9,
+    TYPE_DDECONV = 10,
+    TYPE_DDEXACT = 11,
+    TYPE_MONITOR = 12,
+    TYPE_KBDLAYOUT = 13,
+    TYPE_KBDFILE = 14,
+    TYPE_WINEVENTHOOK = 15,
+    TYPE_TIMER = 16,
+    TYPE_INPUTCONTEXT = 17,
+    TYPE_HIDDATA = 18,
+    TYPE_DEVICEINFO = 19,
+    TYPE_TOUCHINPUTINFO = 20,
+    TYPE_GESTUREINFOOBJ = 21,
+    TYPE_CTYPES,
+    TYPE_GENERIC = 255
+} HANDLE_TYPE, *PHANDLE_TYPE;
 
 typedef enum _USERTHREADINFOCLASS
 {

@@ -186,13 +186,13 @@ NtUserCallOneParam(
                                                NULL, 
                                                NULL, 
                                               (PHANDLE)&hDwp,
-                                               otSMWP,
+                                               TYPE_SETWINDOWPOS,
                                                sizeof(SMWP));
              if (!psmwp) RETURN(0);
              psmwp->acvr = ExAllocatePoolWithTag(PagedPool, count * sizeof(CVR), USERTAG_SWP);
              if (!psmwp->acvr)
              {
-                UserDeleteObject(hDwp, otSMWP);
+                UserDeleteObject(hDwp, TYPE_SETWINDOWPOS);
                 RETURN(0);
              }
              RtlZeroMemory(psmwp->acvr, count * sizeof(CVR));

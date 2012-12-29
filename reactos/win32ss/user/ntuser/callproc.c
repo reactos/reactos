@@ -21,7 +21,7 @@ VOID
 DestroyCallProc(IN PDESKTOPINFO Desktop,
                 IN OUT PCALLPROCDATA CallProc)
 {
-    UserDeleteObject(UserHMGetHandle(CallProc), otCallProc);
+    UserDeleteObject(UserHMGetHandle(CallProc), TYPE_CALLPROC);
 }
 
 PCALLPROCDATA
@@ -37,7 +37,7 @@ CreateCallProc(IN PDESKTOP Desktop,
                                              Desktop,
                                              NULL,
                                              &Handle,
-                                             otCallProc,
+                                             TYPE_CALLPROC,
                                              sizeof(CALLPROCDATA));
     if (NewCallProc != NULL)
     {
@@ -60,7 +60,7 @@ UserGetCallProcInfo(IN HANDLE hCallProc,
 
     CallProc = UserGetObject(gHandleTable,
                              hCallProc,
-                             otCallProc);
+                             TYPE_CALLPROC);
     if (CallProc == NULL)
     {
         return FALSE;

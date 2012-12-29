@@ -32,7 +32,7 @@ static
 PMONITOR
 IntCreateMonitorObject()
 {
-    return UserCreateObject(gHandleTable, NULL, NULL, NULL, otMonitor, sizeof(MONITOR));
+    return UserCreateObject(gHandleTable, NULL, NULL, NULL, TYPE_MONITOR, sizeof(MONITOR));
 }
 
 /* IntDestroyMonitorObject
@@ -58,7 +58,7 @@ IntDestroyMonitorObject(IN PMONITOR pMonitor)
 
     /* Destroy monitor object */
     UserDereferenceObject(pMonitor);
-    UserDeleteObject(UserHMGetHandle(pMonitor), otMonitor);
+    UserDeleteObject(UserHMGetHandle(pMonitor), TYPE_MONITOR);
 }
 
 /* UserGetMonitorObject
@@ -81,7 +81,7 @@ UserGetMonitorObject(IN HMONITOR hMonitor)
         return NULL;
     }
 
-    pMonitor = (PMONITOR)UserGetObject(gHandleTable, hMonitor, otMonitor);
+    pMonitor = (PMONITOR)UserGetObject(gHandleTable, hMonitor, TYPE_MONITOR);
     if (!pMonitor)
     {
         EngSetLastError(ERROR_INVALID_MONITOR_HANDLE);

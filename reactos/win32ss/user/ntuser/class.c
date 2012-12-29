@@ -462,7 +462,7 @@ IntSetClassWndProc(IN OUT PCLS Class,
    // Check if CallProc handle and retrieve previous call proc address and set.
    if (IsCallProcHandle(WndProc))
    {
-      pcpd = UserGetObject(gHandleTable, WndProc, otCallProc);
+      pcpd = UserGetObject(gHandleTable, WndProc, TYPE_CALLPROC);
       if (pcpd) chWndProc = pcpd->pfnClientPrevious;
    }
 
