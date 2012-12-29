@@ -469,6 +469,7 @@ done:
     return Status;
 }
 
+
 /* Function 7 */
 NTSTATUS
 NTAPI
@@ -590,6 +591,45 @@ done:
 
 
 static NTSTATUS
+SampGetNumberOfAccounts(PSAM_DB_OBJECT DomainObject,
+                        LPCWSTR AccountType,
+                        PULONG Count)
+{
+    HANDLE AccountKeyHandle = NULL;
+    HANDLE NamesKeyHandle = NULL;
+    NTSTATUS Status;
+
+    *Count = 0;
+
+    Status = SampRegOpenKey(DomainObject->KeyHandle,
+                            AccountType,
+                            KEY_READ,
+                            &AccountKeyHandle);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    Status = SampRegOpenKey(AccountKeyHandle,
+                            L"Names",
+                            KEY_READ,
+                            &NamesKeyHandle);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    Status = SampRegQueryKeyInfo(NamesKeyHandle,
+                                 NULL,
+                                 Count);
+done:
+    if (NamesKeyHandle != NULL)
+        SampRegCloseKey(NamesKeyHandle);
+
+    if (AccountKeyHandle != NULL)
+        SampRegCloseKey(AccountKeyHandle);
+
+    return Status;
+}
+
+
+static NTSTATUS
 SampQueryDomainGeneral(PSAM_DB_OBJECT DomainObject,
                        PSAMPR_DOMAIN_INFO_BUFFER *Buffer)
 {
@@ -651,9 +691,35 @@ SampQueryDomainGeneral(PSAM_DB_OBJECT DomainObject,
         goto done;
     }
 
-    InfoBuffer->General.UserCount = 0;  /* FIXME */
-    InfoBuffer->General.GroupCount = 0; /* FIXME */
-    InfoBuffer->General.AliasCount = 0; /* FIXME */
+    /* Get the number of Users in the Domain */
+    Status = SampGetNumberOfAccounts(DomainObject,
+                                     L"Users",
+                                     &InfoBuffer->General.UserCount);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("Status 0x%08lx\n", Status);
+        goto done;
+    }
+
+    /* Get the number of Groups in the Domain */
+    Status = SampGetNumberOfAccounts(DomainObject,
+                                     L"Groups",
+                                     &InfoBuffer->General.GroupCount);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("Status 0x%08lx\n", Status);
+        goto done;
+    }
+
+    /* Get the number of Aliases in the Domain */
+    Status = SampGetNumberOfAccounts(DomainObject,
+                                     L"Aliases",
+                                     &InfoBuffer->General.AliasCount);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("Status 0x%08lx\n", Status);
+        goto done;
+    }
 
     *Buffer = InfoBuffer;
 
@@ -1036,9 +1102,35 @@ SampQueryDomainGeneral2(PSAM_DB_OBJECT DomainObject,
         goto done;
     }
 
-    InfoBuffer->General2.I1.UserCount = 0;  /* FIXME */
-    InfoBuffer->General2.I1.GroupCount = 0; /* FIXME */
-    InfoBuffer->General2.I1.AliasCount = 0; /* FIXME */
+    /* Get the number of Users in the Domain */
+    Status = SampGetNumberOfAccounts(DomainObject,
+                                     L"Users",
+                                     &InfoBuffer->General2.I1.UserCount);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("Status 0x%08lx\n", Status);
+        goto done;
+    }
+
+    /* Get the number of Groups in the Domain */
+    Status = SampGetNumberOfAccounts(DomainObject,
+                                     L"Groups",
+                                     &InfoBuffer->General2.I1.GroupCount);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("Status 0x%08lx\n", Status);
+        goto done;
+    }
+
+    /* Get the number of Aliases in the Domain */
+    Status = SampGetNumberOfAccounts(DomainObject,
+                                     L"Aliases",
+                                     &InfoBuffer->General2.I1.AliasCount);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("Status 0x%08lx\n", Status);
+        goto done;
+    }
 
     *Buffer = InfoBuffer;
 
@@ -1534,6 +1626,7 @@ SamrSetInformationDomain(IN SAMPR_HANDLE DomainHandle,
 
     return Status;
 }
+
 
 /* Function 10 */
 NTSTATUS
