@@ -45,6 +45,9 @@ typedef struct _SEH3$_REGISTRATION_FRAME
 
 } SEH3$_REGISTRATION_FRAME ,*PSEH3$_REGISTRATION_FRAME;
 
+/* Prevent gcc from inlining functions that use SEH. */
+static inline __attribute__((always_inline)) __attribute__((returns_twice)) void _SEH3$_PreventInlining() {}
+
 extern inline __attribute__((always_inline,gnu_inline))
 void _SEH3$_UnregisterFrame(volatile SEH3$_REGISTRATION_FRAME *RegistrationFrame)
 {
@@ -174,6 +177,7 @@ void * __cdecl __attribute__((error("Can only be used inside an exception filter
 
 
 #define _SEH3_TRY \
+    _SEH3$_PreventInlining(); \
     /* Enter the outer scope */ \
     do { \
         /* Declare local labels */ \
