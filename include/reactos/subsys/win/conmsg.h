@@ -114,7 +114,7 @@ typedef enum _CONSRV_API_NUMBER
 
 typedef struct _CONSOLE_CONNECTION_INFO
 {
-
+    ULONG Dummy;
 } CONSOLE_CONNECTION_INFO, *PCONSOLE_CONNECTION_INFO;
 
 
@@ -369,16 +369,16 @@ typedef struct
 /*
  * Type of handles.
  */
-typedef enum _HANDLE_TYPE
+typedef enum _CONSOLE_HANDLE_TYPE
 {
     HANDLE_INPUT    = 0x01,
     HANDLE_OUTPUT   = 0x02
-} HANDLE_TYPE;
+} CONSOLE_HANDLE_TYPE;
 
 typedef struct
 {
     HANDLE Handle;
-    HANDLE_TYPE HandleType;
+    CONSOLE_HANDLE_TYPE HandleType;
     DWORD Access;
     BOOL Inheritable;
     DWORD ShareMode;

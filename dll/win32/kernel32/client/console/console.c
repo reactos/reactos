@@ -399,7 +399,7 @@ OpenConsoleW(LPCWSTR wsName,
     NTSTATUS Status = STATUS_SUCCESS;
     CONSOLE_API_MESSAGE ApiMessage;
     PCSRSS_OPEN_CONSOLE OpenConsoleRequest = &ApiMessage.Data.OpenConsoleRequest;
-    HANDLE_TYPE HandleType;
+    CONSOLE_HANDLE_TYPE HandleType;
 
     if (wsName && 0 == _wcsicmp(wsName, L"CONIN$"))
     {
