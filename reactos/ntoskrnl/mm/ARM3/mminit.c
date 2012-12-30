@@ -2043,7 +2043,7 @@ MmArmInitSystem(IN ULONG Phase,
         // Define the basic user vs. kernel address space separation
         //
         MmSystemRangeStart = (PVOID)MI_DEFAULT_SYSTEM_RANGE_START;
-        MmUserProbeAddress = (ULONG_PTR)MI_HIGHEST_USER_ADDRESS;
+        MmUserProbeAddress = (ULONG_PTR)MI_USER_PROBE_ADDRESS;
         MmHighestUserAddress = (PVOID)MI_HIGHEST_USER_ADDRESS;
 
         /* Highest PTE and PDE based on the addresses above */
