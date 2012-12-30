@@ -36,7 +36,7 @@ extern HANDLE ConSrvHeap;
 // extern PBASE_STATIC_SERVER_DATA BaseStaticServerData;
 
 
-
+/* Common things to input/output/console objects */
 typedef struct Object_tt
 {
     LONG Type;
@@ -49,12 +49,29 @@ typedef struct Object_tt
 
 typedef struct _CSRSS_HANDLE
 {
-    Object_t *Object;
+    Object_t *Object;   /* The object on which the handle points to */
     DWORD Access;
     BOOL Inheritable;
     DWORD ShareMode;
 } CSRSS_HANDLE, *PCSRSS_HANDLE;
 
+
+#define ConsoleGetPerProcessData(pcsrprocess)   \
+    ((PCONSOLE_PROCESS_DATA)((pcsrprocess)->ServerData[CONSRV_SERVERDLL_INDEX]))
+
+typedef struct _CONSOLE_PROCESS_DATA
+{
+    LIST_ENTRY ConsoleLink;
+    PCSR_PROCESS Process;   // Parent process.
+    HANDLE ConsoleEvent;
+    /* PCSRSS_CONSOLE */ struct tagCSRSS_CONSOLE* Console;
+    /* PCSRSS_CONSOLE */ struct tagCSRSS_CONSOLE* ParentConsole;
+    BOOL bInheritHandles;
+    RTL_CRITICAL_SECTION HandleTableLock;
+    ULONG HandleTableSize;
+    /* PCSRSS_HANDLE */ struct _CSRSS_HANDLE* HandleTable; // Is it a length-varying table or length-fixed ??
+    LPTHREAD_START_ROUTINE CtrlDispatcher;
+} CONSOLE_PROCESS_DATA, *PCONSOLE_PROCESS_DATA;
 
 
 /* alias.c */

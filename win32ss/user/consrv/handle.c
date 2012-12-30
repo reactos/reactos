@@ -2,7 +2,7 @@
  * LICENSE:         GPL - See COPYING in the top level directory
  * PROJECT:         ReactOS Console Server DLL
  * FILE:            win32ss/user/consrv/handle.c
- * PURPOSE:         Handle functions
+ * PURPOSE:         Console IO Handle functions
  * PROGRAMMERS:
  */
 
@@ -15,14 +15,7 @@
 #include <debug.h>
 
 
-/* FUNCTIONS *****************************************************************/
-
-static
-BOOL
-CsrIsConsoleHandle(HANDLE Handle)
-{
-    return ((ULONG_PTR)Handle & 0x10000003) == 0x3;
-}
+/* PRIVATE FUNCTIONS *********************************************************/
 
 static INT
 AdjustHandleCounts(PCSRSS_HANDLE Entry, INT Change)
@@ -69,6 +62,57 @@ Win32CsrCloseHandleEntry(PCSRSS_HANDLE Entry)
     }
 }
 
+
+/* FUNCTIONS *****************************************************************/
+
+NTSTATUS
+FASTCALL
+Win32CsrInsertObject(PCONSOLE_PROCESS_DATA ProcessData,
+                     PHANDLE Handle,
+                     Object_t *Object,
+                     DWORD Access,
+                     BOOL Inheritable,
+                     DWORD ShareMode)
+{
+    ULONG i;
+    PCSRSS_HANDLE Block;
+
+    RtlEnterCriticalSection(&ProcessData->HandleTableLock);
+
+    for (i = 0; i < ProcessData->HandleTableSize; i++)
+    {
+        if (ProcessData->HandleTable[i].Object == NULL)
+        {
+            break;
+        }
+    }
+    if (i >= ProcessData->HandleTableSize)
+    {
+        Block = RtlAllocateHeap(ConSrvHeap,
+                                HEAP_ZERO_MEMORY,
+                                (ProcessData->HandleTableSize + 64) * sizeof(CSRSS_HANDLE));
+        if (Block == NULL)
+        {
+            RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
+            return(STATUS_UNSUCCESSFUL);
+        }
+        RtlCopyMemory(Block,
+                      ProcessData->HandleTable,
+                      ProcessData->HandleTableSize * sizeof(CSRSS_HANDLE));
+        RtlFreeHeap(ConSrvHeap, 0, ProcessData->HandleTable);
+        ProcessData->HandleTable = Block;
+        ProcessData->HandleTableSize += 64;
+    }
+    ProcessData->HandleTable[i].Object      = Object;
+    ProcessData->HandleTable[i].Access      = Access;
+    ProcessData->HandleTable[i].Inheritable = Inheritable;
+    ProcessData->HandleTable[i].ShareMode   = ShareMode;
+    Win32CsrCreateHandleEntry(&ProcessData->HandleTable[i]);
+    *Handle = UlongToHandle((i << 2) | 0x3);
+    RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
+    return STATUS_SUCCESS;
+}
+
 NTSTATUS
 FASTCALL
 Win32CsrReleaseObject(PCONSOLE_PROCESS_DATA ProcessData,
@@ -78,14 +122,17 @@ Win32CsrReleaseObject(PCONSOLE_PROCESS_DATA ProcessData,
     Object_t *Object;
 
     RtlEnterCriticalSection(&ProcessData->HandleTableLock);
-    if (h >= ProcessData->HandleTableSize
-            || (Object = ProcessData->HandleTable[h].Object) == NULL)
+
+    if (h >= ProcessData->HandleTableSize ||
+        (Object = ProcessData->HandleTable[h].Object) == NULL)
     {
         RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
         return STATUS_INVALID_HANDLE;
     }
     Win32CsrCloseHandleEntry(&ProcessData->HandleTable[h]);
+
     RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
+
     return STATUS_SUCCESS;
 }
 
@@ -103,15 +150,18 @@ Win32CsrLockObject(PCONSOLE_PROCESS_DATA ProcessData,
            Object, Handle, ProcessData ? ProcessData->HandleTableSize : 0);
 
     RtlEnterCriticalSection(&ProcessData->HandleTableLock);
-    if (!CsrIsConsoleHandle(Handle) || h >= ProcessData->HandleTableSize
-            || (*Object = ProcessData->HandleTable[h].Object) == NULL
-            || ~ProcessData->HandleTable[h].Access & Access
-            || (Type != 0 && (*Object)->Type != Type))
+
+    if ( !IsConsoleHandle(Handle) ||
+         h >= ProcessData->HandleTableSize  ||
+         (*Object = ProcessData->HandleTable[h].Object) == NULL ||
+         ~ProcessData->HandleTable[h].Access & Access           ||
+         (Type != 0 && (*Object)->Type != Type) )
     {
         DPRINT1("CsrGetObject returning invalid handle (%x)\n", Handle);
         RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
         return STATUS_INVALID_HANDLE;
     }
+
     _InterlockedIncrement(&(*Object)->Console->ReferenceCount);
     RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
 
@@ -129,6 +179,8 @@ Win32CsrUnlockObject(Object_t *Object)
     if (_InterlockedDecrement(&Console->ReferenceCount) == 0)
         ConioDeleteConsole(&Console->Header);
 }
+
+
 
 NTSTATUS
 NTAPI
@@ -238,54 +290,6 @@ Win32CsrReleaseConsole(PCSR_PROCESS Process)
     RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
 }
 
-NTSTATUS
-FASTCALL
-Win32CsrInsertObject(PCONSOLE_PROCESS_DATA ProcessData,
-                     PHANDLE Handle,
-                     Object_t *Object,
-                     DWORD Access,
-                     BOOL Inheritable,
-                     DWORD ShareMode)
-{
-    ULONG i;
-    PCSRSS_HANDLE Block;
-
-    RtlEnterCriticalSection(&ProcessData->HandleTableLock);
-
-    for (i = 0; i < ProcessData->HandleTableSize; i++)
-    {
-        if (ProcessData->HandleTable[i].Object == NULL)
-        {
-            break;
-        }
-    }
-    if (i >= ProcessData->HandleTableSize)
-    {
-        Block = RtlAllocateHeap(ConSrvHeap,
-                                HEAP_ZERO_MEMORY,
-                                (ProcessData->HandleTableSize + 64) * sizeof(CSRSS_HANDLE));
-        if (Block == NULL)
-        {
-            RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
-            return(STATUS_UNSUCCESSFUL);
-        }
-        RtlCopyMemory(Block,
-                      ProcessData->HandleTable,
-                      ProcessData->HandleTableSize * sizeof(CSRSS_HANDLE));
-        RtlFreeHeap(ConSrvHeap, 0, ProcessData->HandleTable);
-        ProcessData->HandleTable = Block;
-        ProcessData->HandleTableSize += 64;
-    }
-    ProcessData->HandleTable[i].Object      = Object;
-    ProcessData->HandleTable[i].Access      = Access;
-    ProcessData->HandleTable[i].Inheritable = Inheritable;
-    ProcessData->HandleTable[i].ShareMode   = ShareMode;
-    Win32CsrCreateHandleEntry(&ProcessData->HandleTable[i]);
-    *Handle = UlongToHandle((i << 2) | 0x3);
-    RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
-    return STATUS_SUCCESS;
-}
-
 CSR_API(SrvCloseHandle)
 {
     PCSRSS_CLOSE_HANDLE CloseHandleRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.CloseHandleRequest;
@@ -299,16 +303,19 @@ CSR_API(SrvVerifyConsoleIoHandle)
     NTSTATUS Status = STATUS_SUCCESS;
     PCSRSS_VERIFY_HANDLE VerifyHandleRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.VerifyHandleRequest;
     PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);
-    ULONG_PTR Index;
+    HANDLE Handle = VerifyHandleRequest->Handle;
+    ULONG_PTR Index = (ULONG_PTR)Handle >> 2;
 
-    Index = (ULONG_PTR)VerifyHandleRequest->Handle >> 2;
     RtlEnterCriticalSection(&ProcessData->HandleTableLock);
-    if (Index >= ProcessData->HandleTableSize ||
+
+    if (!IsConsoleHandle(Handle)    ||
+        Index >= ProcessData->HandleTableSize ||
         ProcessData->HandleTable[Index].Object == NULL)
     {
         DPRINT("CsrVerifyObject failed\n");
         Status = STATUS_INVALID_HANDLE;
     }
+
     RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
 
     return Status;
@@ -316,18 +323,20 @@ CSR_API(SrvVerifyConsoleIoHandle)
 
 CSR_API(SrvDuplicateHandle)
 {
-    ULONG_PTR Index;
     PCSRSS_HANDLE Entry;
     DWORD DesiredAccess;
     PCSRSS_DUPLICATE_HANDLE DuplicateHandleRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.DuplicateHandleRequest;
     PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);
+    HANDLE Handle = DuplicateHandleRequest->Handle;
+    ULONG_PTR Index = (ULONG_PTR)Handle >> 2;
 
-    Index = (ULONG_PTR)DuplicateHandleRequest->Handle >> 2;
     RtlEnterCriticalSection(&ProcessData->HandleTableLock);
-    if (Index >= ProcessData->HandleTableSize
-        || (Entry = &ProcessData->HandleTable[Index])->Object == NULL)
+
+    if ( /** !IsConsoleHandle(Handle)    || **/
+        Index >= ProcessData->HandleTableSize ||
+        (Entry = &ProcessData->HandleTable[Index])->Object == NULL)
     {
-        DPRINT1("Couldn't dup invalid handle %p\n", DuplicateHandleRequest->Handle);
+        DPRINT1("Couldn't duplicate invalid handle %p\n", Handle);
         RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
         return STATUS_INVALID_HANDLE;
     }
@@ -343,20 +352,20 @@ CSR_API(SrvDuplicateHandle)
         if (~Entry->Access & DesiredAccess)
         {
             DPRINT1("Handle %p only has access %X; requested %X\n",
-                DuplicateHandleRequest->Handle, Entry->Access, DesiredAccess);
+                Handle, Entry->Access, DesiredAccess);
             RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
             return STATUS_INVALID_PARAMETER;
         }
     }
 
     ApiMessage->Status = Win32CsrInsertObject(ProcessData,
-                                              &DuplicateHandleRequest->Handle,
+                                              &DuplicateHandleRequest->Handle, // Use the new handle value!
                                               Entry->Object,
                                               DesiredAccess,
                                               DuplicateHandleRequest->Inheritable,
                                               Entry->ShareMode);
-    if (NT_SUCCESS(ApiMessage->Status)
-        && DuplicateHandleRequest->Options & DUPLICATE_CLOSE_SOURCE)
+    if (NT_SUCCESS(ApiMessage->Status) &&
+        DuplicateHandleRequest->Options & DUPLICATE_CLOSE_SOURCE)
     {
         Win32CsrCloseHandleEntry(Entry);
     }

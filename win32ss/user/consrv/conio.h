@@ -51,12 +51,16 @@ typedef struct tagCSRSS_CONSOLE
     Object_t Header;                      /* Object header */
     LONG ReferenceCount;
     CRITICAL_SECTION Lock;
-    struct tagCSRSS_CONSOLE *Prev, *Next; /* Next and Prev consoles in console wheel */
 
+    struct tagCSRSS_CONSOLE *Prev, *Next; /* Next and Prev consoles in console wheel */
+    struct tagCSRSS_CONSOLE_VTBL *Vtbl;   /* Using CUI or GUI consoles */
+
+    LIST_ENTRY ProcessList;
+
+    LIST_ENTRY InputEvents;               /* List head for input event queue */
     HANDLE ActiveEvent;                   /* Event set when an input event is added in its queue */
     LIST_ENTRY ReadWaitQueue;             /* List head for the queue of read wait blocks */
 
-    LIST_ENTRY InputEvents;               /* List head for input event queue */
     PWCHAR LineBuffer;                    /* current line being input, in line buffered mode */
     WORD LineMaxSize;                     /* maximum size of line in characters (including CR+LF) */
     WORD LineSize;                        /* current size of line */
@@ -65,28 +69,30 @@ typedef struct tagCSRSS_CONSOLE
     BOOLEAN LineUpPressed;
     BOOLEAN LineInsertToggle;             /* replace character over cursor instead of inserting */
     ULONG LineWakeupMask;                 /* bitmap of which control characters will end line input */
+
+    struct tagALIAS_HEADER *Aliases;
     LIST_ENTRY HistoryBuffers;
     UINT HistoryBufferSize;               /* size for newly created history buffers */
     UINT NumberOfHistoryBuffers;          /* maximum number of history buffers allowed */
     BOOLEAN HistoryNoDup;                 /* remove old duplicate history entries */
+
     LIST_ENTRY BufferList;                /* List of all screen buffers for this console */
     PCSRSS_SCREEN_BUFFER ActiveBuffer;    /* Pointer to currently active screen buffer */
+    BYTE PauseFlags;
+    HANDLE UnpauseEvent;
+    LIST_ENTRY WriteWaitQueue;            /* List head for the queue of write wait blocks */
+
     WORD Mode;                            /* Console mode flags */
     UNICODE_STRING Title;                 /* Title of console */
     DWORD HardwareState;                  /* _GDI_MANAGED, _DIRECT */
     HWND hWindow;
     COORD Size;
     PVOID PrivateData;
+
     UINT CodePage;
     UINT OutputCodePage;
-    struct tagCSRSS_CONSOLE_VTBL *Vtbl;
-    LIST_ENTRY ProcessList;
-    struct tagALIAS_HEADER *Aliases;
-    CONSOLE_SELECTION_INFO Selection;
 
-    BYTE PauseFlags;
-    HANDLE UnpauseEvent;
-    LIST_ENTRY WriteWaitQueue;            /* List head for the queue of write wait blocks */
+    CONSOLE_SELECTION_INFO Selection;
 } CSRSS_CONSOLE, *PCSRSS_CONSOLE;
 
 typedef struct tagCSRSS_CONSOLE_VTBL

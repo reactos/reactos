@@ -61,9 +61,6 @@
 #define FIELD_OFFSET(type,fld)	((LONG)&(((type *)0)->fld))
 #endif
 
-#define IsConsoleHandle(h) \
-  (((((ULONG_PTR)h) & 0x10000003) == 0x3) ? TRUE : FALSE)
-
 #define HANDLE_DETACHED_PROCESS    (HANDLE)-2
 #define HANDLE_CREATE_NEW_CONSOLE  (HANDLE)-3
 #define HANDLE_CREATE_NO_WINDOW    (HANDLE)-4
@@ -194,12 +191,12 @@ BOOL WINAPI VerifyConsoleIoHandle(HANDLE Handle);
 BOOL WINAPI CloseConsoleHandle(HANDLE Handle);
 
 HANDLE WINAPI
-GetConsoleInputWaitHandle (VOID);
+GetConsoleInputWaitHandle(VOID);
 
-HANDLE WINAPI OpenConsoleW (LPCWSTR wsName,
-			     DWORD  dwDesiredAccess,
-			     BOOL   bInheritHandle,
-			     DWORD  dwShareMode);
+HANDLE WINAPI OpenConsoleW(LPCWSTR wsName,
+                           DWORD   dwDesiredAccess,
+                           BOOL    bInheritHandle,
+                           DWORD   dwShareMode);
 
 BOOL WINAPI SetConsoleInputExeNameW(LPCWSTR lpInputExeName);
 

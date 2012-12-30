@@ -11,23 +11,8 @@
 
 #pragma once
 
-#define ConsoleGetPerProcessData(pcsrprocess)   \
-    ((PCONSOLE_PROCESS_DATA)((pcsrprocess)->ServerData[CONSRV_SERVERDLL_INDEX]))
-
-
-typedef struct _CONSOLE_PROCESS_DATA
-{
-    LIST_ENTRY ConsoleLink;
-    PCSR_PROCESS Process;   // Parent process.
-    HANDLE ConsoleEvent;
-    /* PCSRSS_CONSOLE */ struct tagCSRSS_CONSOLE* Console;
-    /* PCSRSS_CONSOLE */ struct tagCSRSS_CONSOLE* ParentConsole;
-    BOOL bInheritHandles;
-    RTL_CRITICAL_SECTION HandleTableLock;
-    ULONG HandleTableSize;
-    /* PCSRSS_HANDLE */ struct _CSRSS_HANDLE* HandleTable; // Is it a length-varying table or length-fixed ??
-    LPTHREAD_START_ROUTINE CtrlDispatcher;
-} CONSOLE_PROCESS_DATA, *PCONSOLE_PROCESS_DATA;
+#define IsConsoleHandle(h)  \
+    (((ULONG_PTR)(h) & 0x3) == 0x3)
 
 #endif // _CONSOLE_H
 
