@@ -95,18 +95,20 @@ void * __cdecl __attribute__((error("Can only be used inside an exception filter
 
 /* This is an asm wrapper around _SEH3$_RegisterFrame */
 #define _SEH3$_RegisterFrame(_TrylevelFrame, _DataTable, _Target) \
-    asm goto ("call __SEH3$_RegisterFrame\n" \
+    asm goto ("leal %0, %%ecx\n" \
+              "call __SEH3$_RegisterFrame\n" \
               : \
-              : "c" (_TrylevelFrame), "a" (_DataTable) \
-              : "edx", "memory" \
+              : "m" (*(_TrylevelFrame)), "a" (_DataTable) \
+              : "ecx", "edx", "memory" \
               : _Target)
 
 /* This is an asm wrapper around _SEH3$_EnterTryLevel */
 #define _SEH3$_RegisterTryLevel(_TrylevelFrame, _DataTable, _Target) \
-    asm goto ("call __SEH3$_RegisterTryLevel\n" \
+    asm goto ("leal %0, %%ecx\n" \
+              "call __SEH3$_RegisterTryLevel\n" \
               : \
-              : "c" (_TrylevelFrame), "a" (_DataTable) \
-              : "edx", "memory" \
+              : "m" (*(_TrylevelFrame)), "a" (_DataTable) \
+              : "ecx", "edx", "memory" \
               : _Target)
 
 /* On GCC the filter function is a nested function with __fastcall calling
