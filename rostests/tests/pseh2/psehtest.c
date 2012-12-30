@@ -2410,6 +2410,112 @@ DEFINE_TEST(test_bug_4663)
 //}}}
 //}}}
 
+DEFINE_TEST(test_unvolatile)
+{
+    int val = 0;
+
+    _SEH2_TRY
+    {
+        val = return_one();
+        *((char*)0xc0000000) = 0;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        val = val + 3;
+    }
+    _SEH2_END;
+
+    return (val == 4);
+}
+
+DEFINE_TEST(test_unvolatile_2)
+{
+    int val = 0;
+
+    _SEH2_TRY
+    {
+        val = 1;
+        *((char*)0xc0000000) = 0;
+        val = 2;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        val = val + 3;
+    }
+    _SEH2_END;
+
+    return (val == 3) || (val == 4) || (val == 5);
+}
+
+DEFINE_TEST(test_finally_goto)
+{
+    volatile int val = 0;
+
+    _SEH2_TRY
+    {
+        val |= 1;
+        _SEH2_TRY
+        {
+            val |= 2;
+            goto next;
+        }
+        _SEH2_FINALLY
+        {
+            val |= 4;
+            *((char*)0xdeadc0de) = 0;
+            val |= 8;
+        }
+        _SEH2_END;
+
+        val |= 16;
+next:
+        val |= 32;
+        *((char*)0xdeadc0de) = 0;
+        val |= 64;
+    }
+    _SEH2_EXCEPT(1)
+    {
+        val |= 128;
+    }
+    _SEH2_END;
+
+    return (val == (128|4|2|1));
+}
+
+DEFINE_TEST(test_nested_exception)
+{
+    volatile int val = 0;
+
+    _SEH2_TRY
+    {
+        val |= 1;
+        _SEH2_TRY
+        {
+            val |= 2;
+            *((char*)0xdeadc0de) = 0;
+            val |= 4;
+        }
+        _SEH2_EXCEPT(1)
+        {
+            val |= 8;
+            *((char*)0xdeadc0de) = 0;
+            val |= 16;
+        }
+        _SEH2_END;
+
+        val |= 32;
+        *((char*)0xdeadc0de) = 0;
+        val |= 64;
+    }
+    _SEH2_EXCEPT(1)
+    {
+        val |= 128;
+    }
+    _SEH2_END;
+
+    return (val == (1|2|8|128));
+}
+
 static
 LONG WINAPI unhandled_exception(PEXCEPTION_POINTERS ExceptionInfo)
 {
@@ -2446,11 +2552,13 @@ int sanity_check(int ret, struct volatile_context * before, struct volatile_cont
 	return ret;
 }
 
+#ifndef _PSEH3_H_
 static
 int passthrough_handler(struct _EXCEPTION_RECORD * e, void * f, struct _CONTEXT * c, void * d)
 {
 	return ExceptionContinueSearch;
 }
+#endif
 
 static
 DECLSPEC_NOINLINE
@@ -2459,12 +2567,14 @@ int call_test(int (* func)(void))
 	static int ret;
 	static struct volatile_context before, after;
 	static LPTOP_LEVEL_EXCEPTION_FILTER prev_unhandled_exception;
+#ifndef _PSEH3_H_
 	static _SEH2Registration_t * prev_frame;
 	_SEH2Registration_t passthrough_frame;
+#endif
 
 	prev_unhandled_exception = SetUnhandledExceptionFilter(&unhandled_exception);
 
-#if defined(_X86_)
+#if defined(_X86_) && !defined(_PSEH3_H_)
 	prev_frame = (_SEH2Registration_t *)__readfsdword(0);
 	passthrough_frame.SER_Prev = prev_frame;
 	passthrough_frame.SER_Handler = passthrough_handler;
@@ -2500,7 +2610,7 @@ int call_test(int (* func)(void))
 	ret = func();
 #endif
 
-#if defined(_X86_)
+#if defined(_X86_) && !defined(_PSEH3_H_)
 	if((_SEH2Registration_t *)__readfsdword(0) != &passthrough_frame || passthrough_frame.SER_Prev != prev_frame)
 	{
 		trace("exception registration list corrupted\n");
@@ -2638,6 +2748,11 @@ void testsuite_syntax(void)
 
 		USE_TEST(test_bug_4004),
 		USE_TEST(test_bug_4663),
+
+		USE_TEST(test_unvolatile),
+		USE_TEST(test_unvolatile_2),
+		USE_TEST(test_finally_goto),
+		USE_TEST(test_nested_exception),
 	};
 
 	size_t i;
