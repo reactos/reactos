@@ -60,6 +60,7 @@ void Test_SetDCPenColor()
 #endif
 
 	// Delete the DC
+	SelectObject(hDC, hbmpOld);
 	DeleteDC(hDC);
 }
 
