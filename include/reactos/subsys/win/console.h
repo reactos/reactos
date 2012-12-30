@@ -12,7 +12,7 @@
 #pragma once
 
 #define IsConsoleHandle(h)  \
-    (((ULONG_PTR)(h) & 0x3) == 0x3)
+    (((ULONG_PTR)(h) & 0x10000003) == 0x3)
 
 #endif // _CONSOLE_H
 
