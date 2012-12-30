@@ -459,12 +459,12 @@ typedef struct _USER_CONTROL_INFORMATION
 {
     unsigned long UserAccountControl;
 } USER_CONTROL_INFORMATION, *PUSER_CONTROL_INFORMATION;
-cpp_quote("#endif")
 
 typedef struct _USER_EXPIRES_INFORMATION
 {
     OLD_LARGE_INTEGER AccountExpires;
 } USER_EXPIRES_INFORMATION, *PUSER_EXPIRES_INFORMATION;
+cpp_quote("#endif")
 
 typedef struct _SAMPR_LOGON_HOURS
 {
