@@ -906,9 +906,10 @@ MiSessionCommitPageTables(IN PVOID StartVa,
     Index = ((ULONG_PTR)StartVa - (ULONG_PTR)MmSessionBase) >> 22;
     while (StartPde <= EndPde)
     {
+#ifndef _M_AMD64
         /* If we don't already have a page table for it, increment count */
         if (MmSessionSpace->PageTables[Index].u.Long == 0) PageCount++;
-
+#endif
         /* Move to the next one */
         StartPde++;
         Index++;
@@ -924,6 +925,7 @@ MiSessionCommitPageTables(IN PVOID StartVa,
     /* Loop each PDE while holding the working set lock */
 //  MiLockWorkingSet(PsGetCurrentThread(),
 //                   &MmSessionSpace->GlobalVirtualAddress->Vm);
+#ifndef _M_AMD64
     while (StartPde <= EndPde)
     {
         /* Check if we already have a page table */
@@ -966,6 +968,7 @@ MiSessionCommitPageTables(IN PVOID StartVa,
         StartPde++;
         Index++;
     }
+#endif
 
     /* Make sure we didn't do more pages than expected */
     ASSERT(ActualPages <= PageCount);

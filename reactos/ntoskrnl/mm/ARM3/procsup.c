@@ -1580,7 +1580,9 @@ MiReleaseProcessReferenceToSessionDataPage(IN PMM_SESSION_SPACE SessionGlobal)
     DPRINT1("Last process in sessino %d going down!!!\n", SessionId);
 
     /* Free the session page tables */
+#ifndef _M_AMD64
     ExFreePool(SessionGlobal->PageTables);
+#endif
     ASSERT(!MI_IS_PHYSICAL_ADDRESS(SessionGlobal));
 
     /* Capture the data page PFNs */
@@ -1744,8 +1746,9 @@ MiSessionInitializeWorkingSetList(VOID)
 
         /* Add this into the list */
         Index = ((ULONG_PTR)WorkingSetList - (ULONG_PTR)MmSessionBase) >> 22;
+#ifndef _M_AMD64
         MmSessionSpace->PageTables[Index] = TempPte;
-
+#endif
         /* Initialize the page directory page, and now zero the working set list itself */
         MiInitializePfnForOtherProcess(PageFrameIndex,
                                        PointerPde,
@@ -1977,8 +1980,10 @@ MiSessionCreateInternal(OUT PULONG SessionId)
     MmSessionSpace->Color = Color;
     MmSessionSpace->NonPageablePages = MiSessionCreateCharge;
     MmSessionSpace->CommittedPages = MiSessionCreateCharge;
+#ifndef _M_AMD64
     MmSessionSpace->PageTables = PageTables;
     MmSessionSpace->PageTables[PointerPde - MiAddressToPde(MmSessionBase)] = *PointerPde;
+#endif
     InitializeListHead(&MmSessionSpace->ImageList);
     DPRINT1("Session %d is ready to go: 0x%p 0x%p, %lx 0x%p\n",
             *SessionId, MmSessionSpace, SessionGlobal, SessionPageDirIndex, PageTables);
