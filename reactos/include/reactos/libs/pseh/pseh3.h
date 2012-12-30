@@ -165,10 +165,12 @@ void * __cdecl __attribute__((error("Can only be used inside an exception filter
    around into places that are never executed. */
 #define _SEH3$_SCARE_GCC() \
         void *plabel; \
+        _SEH3$_ASM_GOTO("#\n", _SEH3$_l_BeforeTry); \
         _SEH3$_ASM_GOTO("#\n", _SEH3$_l_HandlerTarget); \
+        _SEH3$_ASM_GOTO("#\n", _SEH3$_l_OnException); \
         asm volatile ("#" : "=a"(plabel) : "p"(&&_SEH3$_l_BeforeTry), "p"(&&_SEH3$_l_HandlerTarget), "p"(&&_SEH3$_l_OnException) \
                       : _SEH3$_CLOBBER_ON_EXCEPTION ); \
-        goto *plabel;
+        goto _SEH3$_l_OnException;
 
 
 #define _SEH3_TRY \
