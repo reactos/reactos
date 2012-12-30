@@ -53,6 +53,7 @@ list(APPEND SOURCE
     SetBrushOrgEx.c
     SetDCPenColor.c
     SetDIBits.c
+    SetDIBitsToDevice.c
     SetMapMode.c
     SetPixel.c
     SetSysColors.c
