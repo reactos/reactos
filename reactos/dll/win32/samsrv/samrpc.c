@@ -17,6 +17,46 @@ WINE_DEFAULT_DEBUG_CHANNEL(samsrv);
 
 static SID_IDENTIFIER_AUTHORITY NtSidAuthority = {SECURITY_NT_AUTHORITY};
 
+static GENERIC_MAPPING ServerMapping =
+{
+    SAM_SERVER_READ,
+    SAM_SERVER_WRITE,
+    SAM_SERVER_EXECUTE,
+    SAM_SERVER_ALL_ACCESS
+};
+
+static GENERIC_MAPPING DomainMapping =
+{
+    DOMAIN_READ,
+    DOMAIN_WRITE,
+    DOMAIN_EXECUTE,
+    DOMAIN_ALL_ACCESS
+};
+
+static GENERIC_MAPPING AliasMapping =
+{
+    ALIAS_READ,
+    ALIAS_WRITE,
+    ALIAS_EXECUTE,
+    ALIAS_ALL_ACCESS
+};
+
+static GENERIC_MAPPING GroupMapping =
+{
+    GROUP_READ,
+    GROUP_WRITE,
+    GROUP_EXECUTE,
+    GROUP_ALL_ACCESS
+};
+
+static GENERIC_MAPPING UserMapping =
+{
+    USER_READ,
+    USER_WRITE,
+    USER_EXECUTE,
+    USER_ALL_ACCESS
+};
+
 
 /* FUNCTIONS *****************************************************************/
 
@@ -68,9 +108,11 @@ void __RPC_USER midl_user_free(void __RPC_FAR * ptr)
     HeapFree(GetProcessHeap(), 0, ptr);
 }
 
+
 void __RPC_USER SAMPR_HANDLE_rundown(SAMPR_HANDLE hHandle)
 {
 }
+
 
 /* Function 0 */
 NTSTATUS
@@ -85,6 +127,11 @@ SamrConnect(IN PSAMPR_SERVER_NAME ServerName,
     TRACE("SamrConnect(%p %p %lx)\n",
           ServerName, ServerHandle, DesiredAccess);
 
+    /* Map generic access rights */
+    RtlMapGenericMask(&DesiredAccess,
+                      &ServerMapping);
+
+    /* Open the Server Object */
     Status = SampOpenDbObject(NULL,
                               NULL,
                               L"SAM",
@@ -99,6 +146,7 @@ SamrConnect(IN PSAMPR_SERVER_NAME ServerName,
 
     return Status;
 }
+
 
 /* Function 1 */
 NTSTATUS
@@ -125,6 +173,7 @@ SamrCloseHandle(IN OUT SAMPR_HANDLE *SamHandle)
     return Status;
 }
 
+
 /* Function 2 */
 NTSTATUS
 NTAPI
@@ -136,6 +185,7 @@ SamrSetSecurityObject(IN SAMPR_HANDLE ObjectHandle,
     return STATUS_NOT_IMPLEMENTED;
 }
 
+
 /* Function 3 */
 NTSTATUS
 NTAPI
@@ -146,6 +196,7 @@ SamrQuerySecurityObject(IN SAMPR_HANDLE ObjectHandle,
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
+
 
 /* Function 4 */
 NTSTATUS
@@ -485,6 +536,10 @@ SamrOpenDomain(IN SAMPR_HANDLE ServerHandle,
 
     TRACE("SamrOpenDomain(%p %lx %p %p)\n",
           ServerHandle, DesiredAccess, DomainId, DomainHandle);
+
+    /* Map generic access rights */
+    RtlMapGenericMask(&DesiredAccess,
+                      &DomainMapping);
 
     /* Validate the server handle */
     Status = SampValidateDbObject(ServerHandle,
@@ -1653,6 +1708,10 @@ SamrCreateGroupInDomain(IN SAMPR_HANDLE DomainHandle,
     TRACE("SamrCreateGroupInDomain(%p %p %lx %p %p)\n",
           DomainHandle, Name, DesiredAccess, GroupHandle, RelativeId);
 
+    /* Map generic access rights */
+    RtlMapGenericMask(&DesiredAccess,
+                      &GroupMapping);
+
     /* Validate the domain handle */
     Status = SampValidateDbObject(DomainHandle,
                                   SamDbDomainObject,
@@ -2018,6 +2077,10 @@ SamrCreateUserInDomain(IN SAMPR_HANDLE DomainHandle,
         UserHandle == NULL ||
         RelativeId == NULL)
         return STATUS_INVALID_PARAMETER;
+
+    /* Map generic access rights */
+    RtlMapGenericMask(&DesiredAccess,
+                      &UserMapping);
 
     /* Validate the domain handle */
     Status = SampValidateDbObject(DomainHandle,
@@ -2472,6 +2535,10 @@ SamrCreateAliasInDomain(IN SAMPR_HANDLE DomainHandle,
 
     TRACE("SamrCreateAliasInDomain(%p %p %lx %p %p)\n",
           DomainHandle, AccountName, DesiredAccess, AliasHandle, RelativeId);
+
+    /* Map generic access rights */
+    RtlMapGenericMask(&DesiredAccess,
+                      &AliasMapping);
 
     /* Validate the domain handle */
     Status = SampValidateDbObject(DomainHandle,
@@ -3452,6 +3519,10 @@ SamrOpenGroup(IN SAMPR_HANDLE DomainHandle,
     TRACE("SamrOpenGroup(%p %lx %lx %p)\n",
           DomainHandle, DesiredAccess, GroupId, GroupHandle);
 
+    /* Map generic access rights */
+    RtlMapGenericMask(&DesiredAccess,
+                      &GroupMapping);
+
     /* Validate the domain handle */
     Status = SampValidateDbObject(DomainHandle,
                                   SamDbDomainObject,
@@ -3899,6 +3970,10 @@ SamrOpenAlias(IN SAMPR_HANDLE DomainHandle,
 
     TRACE("SamrOpenAlias(%p %lx %lx %p)\n",
           DomainHandle, DesiredAccess, AliasId, AliasHandle);
+
+    /* Map generic access rights */
+    RtlMapGenericMask(&DesiredAccess,
+                      &AliasMapping);
 
     /* Validate the domain handle */
     Status = SampValidateDbObject(DomainHandle,
@@ -4564,6 +4639,10 @@ SamrOpenUser(IN SAMPR_HANDLE DomainHandle,
 
     TRACE("SamrOpenUser(%p %lx %lx %p)\n",
           DomainHandle, DesiredAccess, UserId, UserHandle);
+
+    /* Map generic access rights */
+    RtlMapGenericMask(&DesiredAccess,
+                      &UserMapping);
 
     /* Validate the domain handle */
     Status = SampValidateDbObject(DomainHandle,
@@ -6100,6 +6179,7 @@ SamrSetInformationUser(IN SAMPR_HANDLE UserHandle,
     return Status;
 }
 
+
 /* Function 38 */
 NTSTATUS
 NTAPI
@@ -6284,6 +6364,10 @@ SamrCreateUser2InDomain(IN SAMPR_HANDLE DomainHandle,
         AccountType != USER_SERVER_TRUST_ACCOUNT &&
         AccountType != USER_TEMP_DUPLICATE_ACCOUNT)
         return STATUS_INVALID_PARAMETER;
+
+    /* Map generic access rights */
+    RtlMapGenericMask(&DesiredAccess,
+                      &UserMapping);
 
     /* Validate the domain handle */
     Status = SampValidateDbObject(DomainHandle,
