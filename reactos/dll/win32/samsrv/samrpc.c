@@ -5982,6 +5982,181 @@ done:
 }
 
 
+static NTSTATUS
+SampSetUserAll(PSAM_DB_OBJECT UserObject,
+               PSAMPR_USER_INFO_BUFFER Buffer)
+{
+    SAM_USER_FIXED_DATA FixedData;
+    ULONG Length = 0;
+    ULONG WhichFields;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    WhichFields = Buffer->All.WhichFields;
+
+    if (WhichFields & USER_ALL_USERNAME)
+    {
+        Status = SampSetObjectAttribute(UserObject,
+                                        L"Name",
+                                        REG_SZ,
+                                        Buffer->All.UserName.Buffer,
+                                        Buffer->All.UserName.MaximumLength);
+        if (!NT_SUCCESS(Status))
+            goto done;
+    }
+
+    if (WhichFields & USER_ALL_FULLNAME)
+    {
+        Status = SampSetObjectAttribute(UserObject,
+                                        L"FullName",
+                                        REG_SZ,
+                                        Buffer->All.FullName.Buffer,
+                                        Buffer->All.FullName.MaximumLength);
+        if (!NT_SUCCESS(Status))
+            goto done;
+    }
+
+    if (WhichFields & USER_ALL_ADMINCOMMENT)
+    {
+        Status = SampSetObjectAttribute(UserObject,
+                                        L"AdminComment",
+                                        REG_SZ,
+                                        Buffer->All.AdminComment.Buffer,
+                                        Buffer->All.AdminComment.MaximumLength);
+        if (!NT_SUCCESS(Status))
+            goto done;
+    }
+
+    if (WhichFields & USER_ALL_USERCOMMENT)
+    {
+        Status = SampSetObjectAttribute(UserObject,
+                                        L"UserComment",
+                                        REG_SZ,
+                                        Buffer->All.UserComment.Buffer,
+                                        Buffer->All.UserComment.MaximumLength);
+        if (!NT_SUCCESS(Status))
+            goto done;
+    }
+
+    if (WhichFields & USER_ALL_HOMEDIRECTORY)
+    {
+        Status = SampSetObjectAttribute(UserObject,
+                                        L"HomeDirectory",
+                                        REG_SZ,
+                                        Buffer->All.HomeDirectory.Buffer,
+                                        Buffer->All.HomeDirectory.MaximumLength);
+        if (!NT_SUCCESS(Status))
+            goto done;
+    }
+
+    if (WhichFields & USER_ALL_HOMEDIRECTORYDRIVE)
+    {
+        Status = SampSetObjectAttribute(UserObject,
+                                        L"HomeDirectoryDrive",
+                                        REG_SZ,
+                                        Buffer->All.HomeDirectoryDrive.Buffer,
+                                        Buffer->All.HomeDirectoryDrive.MaximumLength);
+        if (!NT_SUCCESS(Status))
+            goto done;
+    }
+
+    if (WhichFields & USER_ALL_SCRIPTPATH)
+    {
+        Status = SampSetObjectAttribute(UserObject,
+                                        L"ScriptPath",
+                                        REG_SZ,
+                                        Buffer->All.ScriptPath.Buffer,
+                                        Buffer->All.ScriptPath.MaximumLength);
+        if (!NT_SUCCESS(Status))
+            goto done;
+    }
+
+    if (WhichFields & USER_ALL_PROFILEPATH)
+    {
+        Status = SampSetObjectAttribute(UserObject,
+                                        L"ProfilePath",
+                                        REG_SZ,
+                                        Buffer->All.ProfilePath.Buffer,
+                                        Buffer->All.ProfilePath.MaximumLength);
+        if (!NT_SUCCESS(Status))
+            goto done;
+    }
+
+    if (WhichFields & USER_ALL_WORKSTATIONS)
+    {
+        Status = SampSetObjectAttribute(UserObject,
+                                        L"WorkStations",
+                                        REG_SZ,
+                                        Buffer->All.WorkStations.Buffer,
+                                        Buffer->All.WorkStations.MaximumLength);
+        if (!NT_SUCCESS(Status))
+            goto done;
+    }
+
+    if (WhichFields & USER_ALL_PARAMETERS)
+    {
+        Status = SampSetObjectAttribute(UserObject,
+                                        L"Parameters",
+                                        REG_SZ,
+                                        Buffer->All.Parameters.Buffer,
+                                        Buffer->All.Parameters.MaximumLength);
+    }
+
+    if (WhichFields & (USER_ALL_PRIMARYGROUPID |
+                       USER_ALL_ACCOUNTEXPIRES |
+                       USER_ALL_USERACCOUNTCONTROL |
+                       USER_ALL_COUNTRYCODE |
+                       USER_ALL_CODEPAGE))
+    {
+        Length = sizeof(SAM_USER_FIXED_DATA);
+        Status = SampGetObjectAttribute(UserObject,
+                                        L"F",
+                                        NULL,
+                                        (PVOID)&FixedData,
+                                        &Length);
+        if (!NT_SUCCESS(Status))
+            goto done;
+
+        if (WhichFields & USER_ALL_PRIMARYGROUPID)
+            FixedData.PrimaryGroupId = Buffer->All.PrimaryGroupId;
+
+        if (WhichFields & USER_ALL_ACCOUNTEXPIRES)
+        {
+            FixedData.AccountExpires.LowPart = Buffer->All.AccountExpires.LowPart;
+            FixedData.AccountExpires.HighPart = Buffer->All.AccountExpires.HighPart;
+        }
+
+        if (WhichFields & USER_ALL_USERACCOUNTCONTROL)
+            FixedData.UserAccountControl = Buffer->All.UserAccountControl;
+
+        if (WhichFields & USER_ALL_COUNTRYCODE)
+            FixedData.CountryCode = Buffer->Preferences.CountryCode;
+
+        if (WhichFields & USER_ALL_CODEPAGE)
+            FixedData.CodePage = Buffer->Preferences.CodePage;
+
+        Status = SampSetObjectAttribute(UserObject,
+                                        L"F",
+                                        REG_BINARY,
+                                        &FixedData,
+                                        Length);
+        if (!NT_SUCCESS(Status))
+            goto done;
+    }
+
+/*
+FIXME:
+    USER_ALL_LOGONHOURS
+    USER_ALL_NTPASSWORDPRESENT
+    USER_ALL_LMPASSWORDPRESENT
+    USER_ALL_PASSWORDEXPIRED
+*/
+
+done:
+
+    return Status;
+}
+
+
 /* Function 37 */
 NTSTATUS
 NTAPI
@@ -6010,6 +6185,7 @@ SamrSetInformationUser(IN SAMPR_HANDLE UserHandle,
         case UserWorkStationsInformation:
         case UserControlInformation:
         case UserExpiresInformation:
+        case UserParametersInformation:
             DesiredAccess = USER_WRITE_ACCOUNT;
             break;
 
@@ -6024,6 +6200,10 @@ SamrSetInformationUser(IN SAMPR_HANDLE UserHandle,
 
         case UserSetPasswordInformation:
             DesiredAccess = USER_FORCE_PASSWORD_CHANGE;
+            break;
+
+        case UserAllInformation:
+            DesiredAccess = 0; /* FIXME */
             break;
 
         default:
@@ -6165,8 +6345,20 @@ SamrSetInformationUser(IN SAMPR_HANDLE UserHandle,
             break;
 
 //        case UserInternal1Information:
-//        case UserParametersInformation:
-//        case UserAllInformation:
+
+        case UserParametersInformation:
+            Status = SampSetObjectAttribute(UserObject,
+                                            L"Parameters",
+                                            REG_SZ,
+                                            Buffer->Parameters.Parameters.Buffer,
+                                            Buffer->Parameters.Parameters.MaximumLength);
+            break;
+
+        case UserAllInformation:
+            Status = SampSetUserAll(UserObject,
+                                    Buffer);
+            break;
+
 //        case UserInternal4Information:
 //        case UserInternal5Information:
 //        case UserInternal4InformationNew:
