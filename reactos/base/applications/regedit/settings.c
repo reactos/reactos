@@ -116,49 +116,45 @@ extern void SaveSettings(void)
 
     if (RegCreateKeyW(HKEY_CURRENT_USER, g_szGeneralRegKey, &hKey) == ERROR_SUCCESS)
     {
-        if (RegOpenKeyW(HKEY_CURRENT_USER, g_szGeneralRegKey, &hKey) == ERROR_SUCCESS)
+        RegistryBinaryConfig tConfig;
+        DWORD iBufferSize = sizeof(tConfig);
+        WCHAR szBuffer[MAX_PATH];
+        LPCWSTR keyPath, rootName;
+        HKEY hRootKey;
+
+        /* Save key position */
+        keyPath = GetItemPath(g_pChildWnd->hTreeWnd, 0, &hRootKey);
+        if (keyPath)
         {
-            RegistryBinaryConfig tConfig;
-            DWORD iBufferSize = sizeof(tConfig);
-            WCHAR szBuffer[MAX_PATH];
-            LPCWSTR keyPath, rootName;
-            HKEY hRootKey;
+            rootName = get_root_key_name(hRootKey);
 
-            /* Save key position */
-            keyPath = GetItemPath(g_pChildWnd->hTreeWnd, 0, &hRootKey);
-            if (keyPath)
-            {
-                rootName = get_root_key_name(hRootKey);
+            /* Load "My Computer" string and complete it */
+            LoadStringW(hInst, IDS_MY_COMPUTER, szBuffer, COUNT_OF(szBuffer));
+            wcscat(szBuffer, L"\\"); wcscat(szBuffer, rootName);
+            wcscat(szBuffer, L"\\"); wcscat(szBuffer, keyPath);
 
-                /* Load "My Computer" string and complete it */
-                LoadStringW(hInst, IDS_MY_COMPUTER, szBuffer, COUNT_OF(szBuffer));
-                wcscat(szBuffer, L"\\"); wcscat(szBuffer, rootName);
-                wcscat(szBuffer, L"\\"); wcscat(szBuffer, keyPath);
-
-                RegSetValueExW(hKey, L"LastKey", 0, REG_SZ, (LPBYTE)szBuffer, (DWORD)wcslen(szBuffer) * sizeof(WCHAR));
-            }
-
-            /* Get statusbar settings */
-            tConfig.StatusBarVisible = ((GetMenuState(GetSubMenu(hMenuFrame, ID_VIEW_MENU), ID_VIEW_STATUSBAR, MF_BYCOMMAND) & MF_CHECKED) ? 1 : 0);
-
-            /* Get splitter position */
-            tConfig.TreeViewSize = g_pChildWnd->nSplitPos;
-
-            /* Get list view column width*/
-            tConfig.NameColumnSize = ListView_GetColumnWidth(g_pChildWnd->hListWnd, 0);
-            tConfig.TypeColumnSize = ListView_GetColumnWidth(g_pChildWnd->hListWnd, 1);
-            tConfig.DataColumnSize = ListView_GetColumnWidth(g_pChildWnd->hListWnd, 2);
-
-            /* Get program window settings */
-            tConfig.tPlacement.length = sizeof(WINDOWPLACEMENT);
-            GetWindowPlacement(hFrameWnd , &tConfig.tPlacement);
-
-            /* Save all the data */
-            RegSetValueExW(hKey, L"View", 0, REG_BINARY, (LPBYTE)&tConfig, iBufferSize);
-
-            RegCloseKey(hKey);
+            RegSetValueExW(hKey, L"LastKey", 0, REG_SZ, (LPBYTE)szBuffer, (DWORD)wcslen(szBuffer) * sizeof(WCHAR));
         }
+
+        /* Get statusbar settings */
+        tConfig.StatusBarVisible = ((GetMenuState(GetSubMenu(hMenuFrame, ID_VIEW_MENU), ID_VIEW_STATUSBAR, MF_BYCOMMAND) & MF_CHECKED) ? 1 : 0);
+
+        /* Get splitter position */
+        tConfig.TreeViewSize = g_pChildWnd->nSplitPos;
+
+        /* Get list view column width*/
+        tConfig.NameColumnSize = ListView_GetColumnWidth(g_pChildWnd->hListWnd, 0);
+        tConfig.TypeColumnSize = ListView_GetColumnWidth(g_pChildWnd->hListWnd, 1);
+        tConfig.DataColumnSize = ListView_GetColumnWidth(g_pChildWnd->hListWnd, 2);
+
+        /* Get program window settings */
+        tConfig.tPlacement.length = sizeof(WINDOWPLACEMENT);
+        GetWindowPlacement(hFrameWnd , &tConfig.tPlacement);
+
+        /* Save all the data */
+        RegSetValueExW(hKey, L"View", 0, REG_BINARY, (LPBYTE)&tConfig, iBufferSize);
+
+        RegCloseKey(hKey);
     }
 }
-
 /* EOF */
