@@ -1659,8 +1659,21 @@ NTSTATUS
 NTAPI
 SamShutdownSamServer(IN SAM_HANDLE ServerHandle)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status;
+
+    TRACE("(%p)\n", ServerHandle);
+
+    RpcTryExcept
+    {
+        Status = SamrShutdownSamServer((SAMPR_HANDLE)ServerHandle);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
 }
 
 /* EOF */
