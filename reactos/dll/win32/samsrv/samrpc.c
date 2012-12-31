@@ -6915,6 +6915,7 @@ SamrConnect2(IN PSAMPR_SERVER_NAME ServerName,
     return STATUS_NOT_IMPLEMENTED;
 }
 
+
 /* Function 58 */
 NTSTATUS
 NTAPI
@@ -6922,9 +6923,13 @@ SamrSetInformationUser2(IN SAMPR_HANDLE UserHandle,
                         IN USER_INFORMATION_CLASS UserInformationClass,
                         IN PSAMPR_USER_INFO_BUFFER Buffer)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    TRACE("(%p %lu %p)\n", UserHandle, UserInformationClass, Buffer);
+
+    return SamrSetInformationUser(UserHandle,
+                                  UserInformationClass,
+                                  Buffer);
 }
+
 
 /* Function 59 */
 NTSTATUS
