@@ -19,6 +19,13 @@
 
 #pragma once
 
+extern char __ImageBase;
+#ifdef __GNUC__
+#define FREELDR_SECTION_COUNT 3
+#else
+#define FREELDR_SECTION_COUNT 1
+#endif
+
 typedef struct _FREELDR_MEMORY_DESCRIPTOR
 {
     TYPE_OF_MEMORY MemoryType;

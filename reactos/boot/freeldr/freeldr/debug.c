@@ -427,3 +427,13 @@ RtlAssert(IN PVOID FailedAssertion,
 
    DbgBreakPoint();
 }
+
+char *BugCodeStrings[] =
+{
+    "TEST_BUGCHECK",
+    "MISSING_HARDWARE_REQUIREMENTS",
+    "FREELDR_IMAGE_CORRUPTION",
+};
+
+ULONG_PTR BugCheckInfo[5];
+

@@ -163,6 +163,47 @@ ArcGetMemoryDescriptor(const FREELDR_MEMORY_DESCRIPTOR* Current)
 }
 
 
+BOOLEAN
+MmCheckFreeldrImageFile()
+{
+    PIMAGE_NT_HEADERS NtHeaders;
+    PIMAGE_FILE_HEADER FileHeader;
+    PIMAGE_OPTIONAL_HEADER OptionalHeader;
+
+    /* Get the NT headers */
+    NtHeaders = RtlImageNtHeader(&__ImageBase);
+    if (!NtHeaders)
+    {
+        ERR("Coult not get NtHeaders!\n");
+        return FALSE;
+    }
+
+    /* Check the file header */
+    FileHeader = &NtHeaders->FileHeader;
+    if ((FileHeader->Machine != IMAGE_FILE_MACHINE_NATIVE) ||
+        (FileHeader->NumberOfSections != FREELDR_SECTION_COUNT) ||
+        (FileHeader->PointerToSymbolTable != 0) ||
+        (FileHeader->NumberOfSymbols != 0) ||
+        (FileHeader->NumberOfSymbols != 0) ||
+        (FileHeader->SizeOfOptionalHeader != 0xE0))
+    {
+        return FALSE;
+    }
+
+    /* Check the optional header */
+    OptionalHeader = &NtHeaders->OptionalHeader;
+    if ((OptionalHeader->Magic != IMAGE_NT_OPTIONAL_HDR_MAGIC) ||
+        (OptionalHeader->Subsystem != 1) || // native
+        (OptionalHeader->ImageBase != FREELDR_PE_BASE) ||
+        (OptionalHeader->SizeOfImage > MAX_FREELDR_PE_SIZE) ||
+        (OptionalHeader->SectionAlignment != OptionalHeader->FileAlignment))
+    {
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
 BOOLEAN MmInitializeMemoryManager(VOID)
 {
 #if DBG
@@ -170,6 +211,12 @@ BOOLEAN MmInitializeMemoryManager(VOID)
 #endif
 
 	TRACE("Initializing Memory Manager.\n");
+
+	/* Check the freeldr binary */
+	if (!MmCheckFreeldrImageFile())
+	{
+		FrLdrBugCheck(FREELDR_IMAGE_CORRUPTION);
+	}
 
     BiosMemoryMap = MachVtbl.GetMemoryMap(&BiosMemoryMapEntryCount);
 
