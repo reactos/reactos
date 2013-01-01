@@ -471,7 +471,7 @@ EngBitBlt(
         case DC_TRIVIAL:
             Ret = (*BltRectFunc)(OutputObj,
                                  InputObj,
-                                 psoSrc,
+                                 psoMask,
                                  pxlo,
                                  &OutputRect,
                                  &InputPoint,
@@ -499,7 +499,7 @@ EngBitBlt(
                 Pt.y = InputPoint.y + CombinedRect.top - OutputRect.top;
                 Ret = (*BltRectFunc)(OutputObj,
                                      InputObj,
-                                     psoSrc,
+                                     psoMask,
                                      pxlo,
                                      &CombinedRect,
                                      &Pt,
