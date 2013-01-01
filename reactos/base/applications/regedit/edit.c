@@ -1399,6 +1399,12 @@ static LONG MoveKey(HKEY hDestKey, LPCWSTR lpDestSubKey, HKEY hSrcKey, LPCWSTR l
     if (!lpSrcSubKey)
         return ERROR_INVALID_FUNCTION;
 
+	if (wcscmp(lpDestSubKey, lpSrcSubKey) == 0)
+	{
+        /* destination name equals source name */
+		return ERROR_SUCCESS;
+	}
+
     lResult = CopyKey(hDestKey, lpDestSubKey, hSrcKey, lpSrcSubKey);
     if (lResult == ERROR_SUCCESS)
         SHDeleteKey(hSrcKey, lpSrcSubKey);
