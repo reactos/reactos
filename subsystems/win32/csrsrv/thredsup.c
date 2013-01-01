@@ -205,8 +205,9 @@ CsrLocateThreadByClientId(OUT PCSR_PROCESS *Process OPTIONAL,
         NextEntry = NextEntry->Flink;
 
         /* Compare the CID */
-        // FIXME: if (*(PULONGLONG)&FoundThread->ClientId == *(PULONGLONG)ClientId)
-        if (FoundThread->ClientId.UniqueThread == ClientId->UniqueThread)
+        // if (*(PULONGLONG)&FoundThread->ClientId == *(PULONGLONG)ClientId)
+        if ( FoundThread->ClientId.UniqueProcess == ClientId->UniqueProcess &&
+             FoundThread->ClientId.UniqueThread  == ClientId->UniqueThread )
         {
             /* Match found, return the process */
             *Process = FoundThread->Process;
