@@ -268,8 +268,8 @@ CsrLockedDereferenceProcess(PCSR_PROCESS CsrProcess)
     {
         /* Call the generic cleanup code */
         DPRINT1("Should kill process: %p\n", CsrProcess);
-        CsrProcessRefcountZero(CsrProcess);
         CsrAcquireProcessLock();
+        CsrProcessRefcountZero(CsrProcess);
     }
 }
 
@@ -305,7 +305,7 @@ CsrAllocateProcess(VOID)
     if (CsrProcessSequenceCount < 5) CsrProcessSequenceCount = 5;
 
     /* Increase the reference count */
-    CsrProcess->ReferenceCount++;
+    CsrLockedReferenceProcess(CsrProcess);
 
     /* Initialize the Thread List */
     InitializeListHead(&CsrProcess->ThreadList);
@@ -1300,7 +1300,7 @@ CsrShutdownProcesses(IN PLUID CallerLuid,
         if (!CsrProcess) break;
 
         /* Increase reference to process */
-        CsrProcess->ReferenceCount++;
+        CsrLockedReferenceProcess(CsrProcess);
 
         FirstTry = TRUE;
         while (TRUE)

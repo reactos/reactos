@@ -625,6 +625,9 @@ CsrApiRequestThread(IN PVOID Parameter)
                 ClientDiedMsg = (PCLIENT_DIED_MSG)&ReceiveMsg;
                 if (ClientDiedMsg->CreateTime.QuadPart == CsrThread->CreateTime.QuadPart)
                 {
+                    /* Now we reply to the dying client */
+                    ReplyPort = CsrThread->Process->ClientPort;
+
                     /* Reference the thread */
                     CsrLockedReferenceThread(CsrThread);
 
@@ -773,12 +776,14 @@ CsrApiRequestThread(IN PVOID Parameter)
 
         if (CsrDebug & 2)
         {
-            DPRINT1("[%02x] CSRSS: [%02x,%02x] - %s Api called from %08x\n",
+            DPRINT1("[%02x] CSRSS: [%02x,%02x] - %s Api called from %08x, Process %08x - %08x\n",
                     Teb->ClientId.UniqueThread,
                     ReceiveMsg.Header.ClientId.UniqueProcess,
                     ReceiveMsg.Header.ClientId.UniqueThread,
                     ServerDll->NameTable[ApiId],
-                    CsrThread);
+                    CsrThread,
+                    CsrThread->Process,
+                    CsrProcess);
         }
 
         /* Assume success */

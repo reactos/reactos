@@ -123,11 +123,11 @@ CsrAllocateThread(IN PCSR_PROCESS CsrProcess)
 
     /* Allocate the structure */
     CsrThread = RtlAllocateHeap(CsrHeap, HEAP_ZERO_MEMORY, sizeof(CSR_THREAD));
-    if (!CsrThread) return(NULL);
+    if (!CsrThread) return NULL;
 
     /* Reference the Thread and Process */
-    CsrThread->ReferenceCount++;
-    CsrProcess->ReferenceCount++;
+    CsrLockedReferenceThread(CsrThread);
+    CsrLockedReferenceProcess(CsrProcess);
 
     /* Set the Parent Process */
     CsrThread->Process = CsrProcess;
@@ -465,8 +465,8 @@ CsrLockedDereferenceThread(IN PCSR_THREAD CsrThread)
     if (!LockCount)
     {
         /* Call the generic cleanup code */
-        CsrThreadRefcountZero(CsrThread);
         CsrAcquireProcessLock();
+        CsrThreadRefcountZero(CsrThread);
     }
 }
 
@@ -991,7 +991,7 @@ CsrLockThreadByClientId(IN HANDLE Tid,
     {
         /* Reference the found thread */
         Status = STATUS_SUCCESS;
-        CurrentThread->ReferenceCount++;
+        CsrLockedReferenceThread(CurrentThread);
         *CsrThread = CurrentThread;
     }
     else
