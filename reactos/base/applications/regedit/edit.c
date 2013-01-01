@@ -1344,7 +1344,7 @@ static LONG CopyKey(HKEY hDestKey, LPCWSTR lpDestSubKey, HKEY hSrcKey, LPCWSTR l
     }
 
     /* create the destination subkey */
-    lResult = RegCreateKeyExW(hDestKey, lpDestSubKey, 0, NULL, 0, KEY_WRITE, NULL,
+    lResult = RegCreateKeyExW(hDestKey, lpDestSubKey, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL,
                              &hDestSubKey, &dwDisposition);
     if (lResult)
         goto done;
@@ -1399,11 +1399,11 @@ static LONG MoveKey(HKEY hDestKey, LPCWSTR lpDestSubKey, HKEY hSrcKey, LPCWSTR l
     if (!lpSrcSubKey)
         return ERROR_INVALID_FUNCTION;
 
-	if (wcscmp(lpDestSubKey, lpSrcSubKey) == 0)
-	{
-        /* destination name equals source name */
-		return ERROR_SUCCESS;
-	}
+    if (_wcsicmp(lpDestSubKey, lpSrcSubKey) == 0)
+    {
+        /* Destination name equals source name */
+        return ERROR_SUCCESS;
+    }
 
     lResult = CopyKey(hDestKey, lpDestSubKey, hSrcKey, lpSrcSubKey);
     if (lResult == ERROR_SUCCESS)

@@ -458,17 +458,16 @@ static LONG openKeyW(WCHAR* stdInput)
     if (!parseKeyName(stdInput, &keyClass, &keyPath))
         return ERROR_INVALID_PARAMETER;
 
-    res = RegCreateKeyExW(
-        keyClass,                 /* Class     */
-        keyPath,                  /* Sub Key   */
-        0,                        /* MUST BE 0 */
-        NULL,                     /* object type */
-        REG_OPTION_NON_VOLATILE,  /* option, REG_OPTION_NON_VOLATILE ... */
-        KEY_ALL_ACCESS,           /* access mask, KEY_ALL_ACCESS */
-        NULL,                     /* security attribute */
-        &currentKeyHandle,        /* result */
-        &dwDisp);                 /* disposition, REG_CREATED_NEW_KEY or
-                                                        REG_OPENED_EXISTING_KEY */
+    res = RegCreateKeyExW(keyClass,                 /* Class     */
+                          keyPath,                  /* Sub Key   */
+                          0,                        /* MUST BE 0 */
+                          NULL,                     /* object type */
+                          REG_OPTION_NON_VOLATILE,  /* option, REG_OPTION_NON_VOLATILE ... */
+                          KEY_ALL_ACCESS,           /* access mask, KEY_ALL_ACCESS */
+                          NULL,                     /* security attribute */
+                          &currentKeyHandle,        /* result */
+                          &dwDisp);                 /* disposition, REG_CREATED_NEW_KEY or
+                                                                    REG_OPENED_EXISTING_KEY */
 
     if (res == ERROR_SUCCESS)
         currentKeyName = GetMultiByteString(stdInput);

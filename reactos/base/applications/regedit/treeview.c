@@ -593,7 +593,7 @@ BOOL CreateNewKey(HWND hwndTV, HTREEITEM hItem)
     do
     {
         wsprintf(szNewKey, szNewKeyFormat, iIndex++);
-        nResult = RegCreateKeyExW(hKey, szNewKey, 0, NULL, 0, KEY_WRITE, NULL, &hNewKey, &dwDisposition);
+        nResult = RegCreateKeyExW(hKey, szNewKey, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hNewKey, &dwDisposition);
         if (hNewKey && dwDisposition == REG_OPENED_EXISTING_KEY)
         {
             RegCloseKey(hNewKey);
