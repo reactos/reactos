@@ -236,16 +236,16 @@ static void SuggestKeys(HKEY hRootKey, LPCWSTR pszKeyPath, LPWSTR pszSuggestions
             {
                 /* Sanity check this key; it cannot be empty, nor can it be a
                  * loop back */
-                if ((szBuffer[0] != L'\0') && wcsicmp(szBuffer, pszKeyPath))
+                if ((szBuffer[0] != L'\0') && _wcsicmp(szBuffer, pszKeyPath))
                 {
                     if (RegOpenKeyW(hRootKey, szBuffer, &hOtherKey) == ERROR_SUCCESS)
                     {
-                        wcsncpy(pszSuggestions, L"HKCR\\", (int) iSuggestionsLength);
+                        lstrcpynW(pszSuggestions, L"HKCR\\", (int) iSuggestionsLength);
                         i = wcslen(pszSuggestions);
                         pszSuggestions += i;
                         iSuggestionsLength -= i;
 
-                        wcsncpy(pszSuggestions, szBuffer, (int) iSuggestionsLength);
+                        lstrcpynW(pszSuggestions, szBuffer, (int) iSuggestionsLength);
                         i = MIN(wcslen(pszSuggestions) + 1, iSuggestionsLength);
                         pszSuggestions += i;
                         iSuggestionsLength -= i;
@@ -266,12 +266,12 @@ static void SuggestKeys(HKEY hRootKey, LPCWSTR pszKeyPath, LPWSTR pszSuggestions
             if (QueryStringValue(hSubKey, L"CLSID", NULL, szBuffer,
                                  COUNT_OF(szBuffer)) == ERROR_SUCCESS)
             {
-                wcsncpy(pszSuggestions, L"HKCR\\CLSID\\", (int)iSuggestionsLength);
+                lstrcpynW(pszSuggestions, L"HKCR\\CLSID\\", (int)iSuggestionsLength);
                 i = wcslen(pszSuggestions);
                 pszSuggestions += i;
                 iSuggestionsLength -= i;
 
-                wcsncpy(pszSuggestions, szBuffer, (int)iSuggestionsLength);
+                lstrcpynW(pszSuggestions, szBuffer, (int)iSuggestionsLength);
                 i = MIN(wcslen(pszSuggestions) + 1, iSuggestionsLength);
                 pszSuggestions += i;
                 iSuggestionsLength -= i;
@@ -286,7 +286,7 @@ LRESULT CALLBACK AddressBarProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 {
     WNDPROC oldwndproc;
     static WCHAR s_szNode[256];
-    oldwndproc = (WNDPROC)(LONG_PTR)GetWindowLongPtr(hwnd, GWL_USERDATA);
+    oldwndproc = (WNDPROC)(LONG_PTR)GetWindowLongPtr(hwnd, GWLP_USERDATA);
 
     switch (uMsg)
     {
@@ -300,7 +300,7 @@ LRESULT CALLBACK AddressBarProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
     default:
         break;
     }
-    return CallWindowProc(oldwndproc, hwnd, uMsg, wParam, lParam);
+    return CallWindowProcW(oldwndproc, hwnd, uMsg, wParam, lParam);
 }
 
 static VOID
@@ -333,8 +333,8 @@ UpdateAddress(HTREEITEM hItem, HKEY hRootKey, LPCWSTR pszPath)
             EnableMenuItem(GetSubMenu(hMenuFrame,0), ID_REGISTRY_LOADHIVE, MF_BYCOMMAND | MF_GRAYED);
             EnableMenuItem(GetSubMenu(hMenuFrame,0), ID_REGISTRY_UNLOADHIVE, MF_BYCOMMAND | MF_GRAYED);
             /* compare the strings to see if we should enable/disable the "Load Hive" menus accordingly */
-            if (!(wcsicmp(rootName, L"HKEY_LOCAL_MACHINE") &&
-                  wcsicmp(rootName, L"HKEY_USERS")))
+            if (!(_wcsicmp(rootName, L"HKEY_LOCAL_MACHINE") &&
+                  _wcsicmp(rootName, L"HKEY_USERS")))
             {
                 /*
                  * enable the unload menu item if at the root, otherwise
@@ -406,9 +406,9 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
                          0);
         }
         /* Subclass the AddressBar */
-        oldproc = (WNDPROC)(LONG_PTR)GetWindowLongPtr(g_pChildWnd->hAddressBarWnd, GWL_WNDPROC);
-        SetWindowLongPtr(g_pChildWnd->hAddressBarWnd, GWL_USERDATA, (DWORD_PTR)oldproc);
-        SetWindowLongPtr(g_pChildWnd->hAddressBarWnd, GWL_WNDPROC, (DWORD_PTR)AddressBarProc);
+        oldproc = (WNDPROC)(LONG_PTR)GetWindowLongPtr(g_pChildWnd->hAddressBarWnd, GWLP_WNDPROC);
+        SetWindowLongPtr(g_pChildWnd->hAddressBarWnd, GWLP_USERDATA, (DWORD_PTR)oldproc);
+        SetWindowLongPtr(g_pChildWnd->hAddressBarWnd, GWLP_WNDPROC, (DWORD_PTR)AddressBarProc);
         break;
     }
     case WM_COMMAND:
@@ -660,8 +660,8 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         {
             TVHITTESTINFO hti;
             HMENU hContextMenu;
-            TVITEM item;
-            MENUITEMINFO mii;
+            TVITEMW item;
+            MENUITEMINFOW mii;
             WCHAR resource[256];
             WCHAR buffer[256];
             LPWSTR s;

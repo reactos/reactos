@@ -453,7 +453,7 @@ static BOOL ImportRegistryFile(HWND hWnd)
     {
         /* Look at the extension of the file to determine its type */
         if (ofn.nFileExtension >= 1 &&
-            wcsicmp(ofn.lpstrFile + ofn.nFileExtension, L"reg") == 0) /* REGEDIT4 or Windows Registry Editor Version 5.00 */
+            _wcsicmp(ofn.lpstrFile + ofn.nFileExtension, L"reg") == 0) /* REGEDIT4 or Windows Registry Editor Version 5.00 */
         {
             /* Open the file */
             FILE* fp = _wfopen(ofn.lpstrFile, L"r");
@@ -1249,7 +1249,7 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         if ((LOWORD(wParam) >= ID_FAVORITES_MIN) && (LOWORD(wParam) <= ID_FAVORITES_MAX))
         {
             HMENU hMenu;
-            MENUITEMINFO mii;
+            MENUITEMINFOW mii;
             WCHAR szFavorite[512];
 
             hMenu = GetSubMenu(GetMenu(hWnd), FAVORITES_MENU_POSITION);
