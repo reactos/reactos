@@ -18,6 +18,18 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+/*
+ *  TODO:
+ *    Implement NetUserChangePassword
+ *    Implement NetUserDel
+ *    Implement NetUserGetGroups
+ *    Implement NetUserSetGroups
+ *    Implement NetUserSetInfo
+ *    NetUserGetLocalGroups does not support LG_INCLUDE_INDIRECT yet.
+ *    Add missing information levels.
+ *    ...
+ */
+
 #include "netapi32.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(netapi32);
@@ -104,6 +116,46 @@ static struct sam_user* NETAPI_FindUser(LPCWSTR UserName)
             return user;
     }
     return NULL;
+}
+
+
+static PSID
+CreateSidFromSidAndRid(PSID SrcSid,
+                       ULONG RelativeId)
+{
+    UCHAR RidCount;
+    PSID DstSid;
+    ULONG i;
+    ULONG DstSidSize;
+    PULONG p, q;
+
+    RidCount = *RtlSubAuthorityCountSid(SrcSid);
+    if (RidCount >= 8)
+        return NULL;
+
+    DstSidSize = RtlLengthRequiredSid(RidCount + 1);
+
+    DstSid = RtlAllocateHeap(RtlGetProcessHeap(),
+                             0,
+                             DstSidSize);
+    if (DstSid == NULL)
+        return NULL;
+
+    RtlInitializeSid(DstSid,
+                     RtlIdentifierAuthoritySid(SrcSid),
+                     RidCount + 1);
+
+    for (i = 0; i < (ULONG)RidCount; i++)
+    {
+        p = RtlSubAuthoritySid(SrcSid, i);
+        q = RtlSubAuthoritySid(DstSid, i);
+        *q = *p;
+    }
+
+    q = RtlSubAuthoritySid(DstSid, (ULONG)RidCount);
+    *q = RelativeId;
+
+    return DstSid;
 }
 
 
@@ -544,7 +596,7 @@ NetUserAdd(LPCWSTR servername,
     NET_API_STATUS ApiStatus = NERR_Success;
     NTSTATUS Status = STATUS_SUCCESS;
 
-    FIXME("(%s, %d, %p, %p)\n", debugstr_w(servername), level, bufptr, parm_err);
+    TRACE("(%s, %d, %p, %p)\n", debugstr_w(servername), level, bufptr, parm_err);
 
     /* Check the info level */
     if (level < 1 || level > 4)
@@ -1097,53 +1149,298 @@ NetUserGetLocalGroups(LPCWSTR servername,
                       LPDWORD entriesread,
                       LPDWORD totalentries)
 {
-    NET_API_STATUS status;
-    const WCHAR admins[] = {'A','d','m','i','n','i','s','t','r','a','t','o','r','s',0};
-    LPWSTR currentuser;
-    LOCALGROUP_USERS_INFO_0* info;
-    DWORD size;
+    UNICODE_STRING ServerName;
+    UNICODE_STRING UserName;
+    SAM_HANDLE ServerHandle = NULL;
+    SAM_HANDLE BuiltinDomainHandle = NULL;
+    SAM_HANDLE AccountDomainHandle = NULL;
+    PSID AccountDomainSid = NULL;
+    PSID UserSid = NULL;
+    PULONG RelativeIds = NULL;
+    PSID_NAME_USE Use = NULL;
+    ULONG BuiltinMemberCount = 0;
+    ULONG AccountMemberCount = 0;
+    PULONG BuiltinAliases = NULL;
+    PULONG AccountAliases = NULL;
+    PUNICODE_STRING BuiltinNames = NULL;
+    PUNICODE_STRING AccountNames = NULL;
+    PLOCALGROUP_USERS_INFO_0 Buffer = NULL;
+    ULONG Size;
+    ULONG Count = 0;
+    ULONG Index;
+    ULONG i;
+    LPWSTR StrPtr;
+    NET_API_STATUS ApiStatus = NERR_Success;
+    NTSTATUS Status = STATUS_SUCCESS;
 
-    FIXME("(%s, %s, %d, %08x, %p %d, %p, %p) stub!\n",
+    TRACE("(%s, %s, %d, %08x, %p %d, %p, %p) stub!\n",
           debugstr_w(servername), debugstr_w(username), level, flags, bufptr,
           prefmaxlen, entriesread, totalentries);
 
-    status = NETAPI_ValidateServername(servername);
-    if (status != NERR_Success)
-        return status;
+    if (level != 0)
+        return ERROR_INVALID_LEVEL;
 
-    size = UNLEN + 1;
-    NetApiBufferAllocate(size * sizeof(WCHAR), (LPVOID*)&currentuser);
-    GetUserNameW(currentuser, &size);
+    if (flags & ~LG_INCLUDE_INDIRECT)
+        return ERROR_INVALID_PARAMETER;
 
-    if (lstrcmpiW(username, currentuser) && NETAPI_FindUser(username))
+    if (flags & LG_INCLUDE_INDIRECT)
     {
-        NetApiBufferFree(currentuser);
-        return NERR_UserNotFound;
+        WARN("The flag LG_INCLUDE_INDIRECT is not supported yet!\n");
     }
 
-    NetApiBufferFree(currentuser);
-    *totalentries = 1;
-    size = sizeof(*info) + sizeof(admins);
+    if (servername != NULL)
+        RtlInitUnicodeString(&ServerName, servername);
 
-    if(prefmaxlen < size)
-        status = ERROR_MORE_DATA;
-    else
-        status = NetApiBufferAllocate(size, (LPVOID*)&info);
+    RtlInitUnicodeString(&UserName, username);
 
-    if(status != NERR_Success)
+    /* Connect to the SAM Server */
+    Status = SamConnect((servername != NULL) ? &ServerName : NULL,
+                        &ServerHandle,
+                        SAM_SERVER_CONNECT | SAM_SERVER_LOOKUP_DOMAIN,
+                        NULL);
+    if (!NT_SUCCESS(Status))
     {
-        *bufptr = NULL;
+        ERR("SamConnect failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    /* Open the Builtin Domain */
+    Status = OpenBuiltinDomain(ServerHandle,
+                               DOMAIN_LOOKUP | DOMAIN_GET_ALIAS_MEMBERSHIP,
+                               &BuiltinDomainHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("OpenBuiltinDomain failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    /* Get the Account Domain SID */
+    Status = GetAccountDomainSid((servername != NULL) ? &ServerName : NULL,
+                                 &AccountDomainSid);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("GetAccountDomainSid failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    /* Open the Account Domain */
+    Status = SamOpenDomain(ServerHandle,
+                           DOMAIN_LOOKUP | DOMAIN_GET_ALIAS_MEMBERSHIP,
+                           AccountDomainSid,
+                           &AccountDomainHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("OpenAccountDomain failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    /* Get the RID for the given user name */
+    Status = SamLookupNamesInDomain(AccountDomainHandle,
+                                    1,
+                                    &UserName,
+                                    &RelativeIds,
+                                    &Use);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SamLookupNamesInDomain failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    /* Fail, if it is not a user account */
+    if (Use[0] != SidTypeUser)
+    {
+        ERR("Account is not a User!\n");
+        ApiStatus = NERR_UserNotFound;
+        goto done;
+    }
+
+    /* Build the User SID from the Account Domain SID and the users RID */
+    UserSid = CreateSidFromSidAndRid(AccountDomainSid,
+                                     RelativeIds[0]);
+    if (UserSid == NULL)
+    {
+        ERR("CreateSidFromSidAndRid failed!\n");
+        ApiStatus = ERROR_NOT_ENOUGH_MEMORY;
+        goto done;
+    }
+
+    /* Get alias memberships in the Builtin Domain */
+    Status = SamGetAliasMembership(BuiltinDomainHandle,
+                                   1,
+                                   &UserSid,
+                                   &BuiltinMemberCount,
+                                   &BuiltinAliases);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SamGetAliasMembership failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    if (BuiltinMemberCount > 0)
+    {
+        /* Get the Names of the builtin alias members */
+        Status = SamLookupIdsInDomain(BuiltinDomainHandle,
+                                      BuiltinMemberCount,
+                                      BuiltinAliases,
+                                      &BuiltinNames,
+                                      NULL);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("SamLookupIdsInDomain failed (Status %08lx)\n", Status);
+            ApiStatus = NetpNtStatusToApiStatus(Status);
+            goto done;
+        }
+    }
+
+    /* Get alias memberships in the Account Domain */
+    Status = SamGetAliasMembership(AccountDomainHandle,
+                                   1,
+                                   &UserSid,
+                                   &AccountMemberCount,
+                                   &AccountAliases);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SamGetAliasMembership failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    if (AccountMemberCount > 0)
+    {
+        /* Get the Names of the builtin alias members */
+        Status = SamLookupIdsInDomain(AccountDomainHandle,
+                                      AccountMemberCount,
+                                      AccountAliases,
+                                      &AccountNames,
+                                      NULL);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("SamLookupIdsInDomain failed (Status %08lx)\n", Status);
+            ApiStatus = NetpNtStatusToApiStatus(Status);
+            goto done;
+        }
+    }
+
+    /* Calculate the required buffer size */
+    Size = 0;
+
+    for (i = 0; i < BuiltinMemberCount; i++)
+    {
+        if (BuiltinNames[i].Length > 0)
+        {
+            Size += (sizeof(LOCALGROUP_USERS_INFO_0) + BuiltinNames[i].Length + sizeof(UNICODE_NULL));
+            Count++;
+        }
+    }
+
+    for (i = 0; i < AccountMemberCount; i++)
+    {
+        if (BuiltinNames[i].Length > 0)
+        {
+            Size += (sizeof(LOCALGROUP_USERS_INFO_0) + AccountNames[i].Length + sizeof(UNICODE_NULL));
+            Count++;
+        }
+    }
+
+    if (Size == 0)
+    {
+        ApiStatus = NERR_Success;
+        goto done;
+    }
+
+    /* Allocate buffer */
+    ApiStatus = NetApiBufferAllocate(Size, (LPVOID*)&Buffer);
+    if (ApiStatus != NERR_Success)
+        goto done;
+
+    ZeroMemory(Buffer, Size);
+
+    StrPtr = (LPWSTR)((INT_PTR)Buffer + Count * sizeof(LOCALGROUP_USERS_INFO_0));
+
+    /* Copy data to the allocated buffer */
+    Index = 0;
+    for (i = 0; i < BuiltinMemberCount; i++)
+    {
+        if (BuiltinNames[i].Length > 0)
+        {
+            CopyMemory(StrPtr,
+                       BuiltinNames[i].Buffer,
+                       BuiltinNames[i].Length);
+            Buffer[Index].lgrui0_name = StrPtr;
+
+            StrPtr = (LPWSTR)((INT_PTR)StrPtr + BuiltinNames[i].Length + sizeof(UNICODE_NULL));
+            Index++;
+        }
+    }
+
+    for (i = 0; i < AccountMemberCount; i++)
+    {
+        if (AccountNames[i].Length > 0)
+        {
+            CopyMemory(StrPtr,
+                       AccountNames[i].Buffer,
+                       AccountNames[i].Length);
+            Buffer[Index].lgrui0_name = StrPtr;
+
+            StrPtr = (LPWSTR)((INT_PTR)StrPtr + AccountNames[i].Length + sizeof(UNICODE_NULL));
+            Index++;
+        }
+    }
+
+done:
+    if (AccountNames != NULL)
+        SamFreeMemory(AccountNames);
+
+    if (BuiltinNames != NULL)
+        SamFreeMemory(BuiltinNames);
+
+    if (AccountAliases != NULL)
+        SamFreeMemory(AccountAliases);
+
+    if (BuiltinAliases != NULL)
+        SamFreeMemory(BuiltinAliases);
+
+    if (RelativeIds != NULL)
+        SamFreeMemory(RelativeIds);
+
+    if (Use != NULL)
+        SamFreeMemory(Use);
+
+    if (UserSid != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, UserSid);
+
+    if (AccountDomainSid != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, AccountDomainSid);
+
+    if (AccountDomainHandle != NULL)
+        SamCloseHandle(AccountDomainHandle);
+
+    if (BuiltinDomainHandle != NULL)
+        SamCloseHandle(BuiltinDomainHandle);
+
+    if (ServerHandle != NULL)
+        SamCloseHandle(ServerHandle);
+
+    if (ApiStatus != NERR_Success && ApiStatus != ERROR_MORE_DATA)
+    {
         *entriesread = 0;
-        return status;
+        *totalentries = 0;
+    }
+    else
+    {
+        *entriesread = Count;
+        *totalentries = Count;
     }
 
-    info->lgrui0_name = (LPWSTR)((LPBYTE)info + sizeof(*info));
-    lstrcpyW(info->lgrui0_name, admins);
+    *bufptr = (LPBYTE)Buffer;
 
-    *bufptr = (LPBYTE)info;
-    *entriesread = 1;
-
-    return NERR_Success;
+    return ApiStatus;
 }
 
 
