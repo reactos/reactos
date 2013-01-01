@@ -229,8 +229,9 @@ EngGetProcessHandle(VOID)
 
 VOID
 APIENTRY
-EngGetCurrentCodePage(OUT PUSHORT OemCodePage,
-                      OUT PUSHORT AnsiCodePage)
+EngGetCurrentCodePage(
+    _Out_ PUSHORT OemCodePage,
+    _Out_ PUSHORT AnsiCodePage)
 {
     /* Forward to kernel */
     RtlGetDefaultCodePage(AnsiCodePage, OemCodePage);
@@ -239,8 +240,8 @@ EngGetCurrentCodePage(OUT PUSHORT OemCodePage,
 BOOL
 APIENTRY
 EngQuerySystemAttribute(
-   IN ENG_SYSTEM_ATTRIBUTE CapNum,
-   OUT PDWORD pCapability)
+   _In_ ENG_SYSTEM_ATTRIBUTE CapNum,
+   _Out_ PDWORD pCapability)
 {
     SYSTEM_BASIC_INFORMATION sbi;
     SYSTEM_PROCESSOR_INFORMATION spi;

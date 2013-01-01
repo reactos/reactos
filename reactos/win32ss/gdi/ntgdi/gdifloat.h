@@ -1,5 +1,10 @@
 #pragma once
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:28110) // disable "Drivers must protect floating point hardware state" warning
+#endif
+
 typedef struct tagFLOAT_POINT
 {
    FLOAT x, y;
@@ -99,3 +104,7 @@ static __inline void INTERNAL_LPTODP(DC *dc, LPPOINT point)
     MulDiv((tx), (pdcattr)->szlViewportExt.cx, (pdcattr)->szlWindowExt.cx)
 #define YLSTODS(pdcattr,ty) \
     MulDiv((ty), (pdcattr)->szlViewportExt.cy, (pdcattr)->szlWindowExt.cy)
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
