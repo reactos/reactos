@@ -615,12 +615,13 @@ NtGdiGetRandomRgn(
     INT ret = 0;
     PDC pdc;
     HRGN hrgnSrc = NULL;
+    PREGION prgnSrc = NULL;
     POINTL ptlOrg;
 
     pdc = DC_LockDc(hdc);
     if (!pdc)
     {
-        EngSetLastError(ERROR_INVALID_PARAMETER);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return -1;
     }
 
@@ -628,33 +629,51 @@ NtGdiGetRandomRgn(
     {
         case CLIPRGN:
             hrgnSrc = pdc->rosdc.hClipRgn;
-//            if (pdc->dclevel.prgnClip) hrgnSrc = pdc->dclevel.prgnClip->BaseObject.hHmgr;
+//            if (pdc->dclevel.prgnClip) prgnSrc = pdc->dclevel.prgnClip;
             break;
+
         case METARGN:
-            if (pdc->dclevel.prgnMeta)
-                hrgnSrc = pdc->dclevel.prgnMeta->BaseObject.hHmgr;
+            prgnSrc = pdc->dclevel.prgnMeta;
             break;
+
         case APIRGN:
-            if (pdc->prgnAPI) hrgnSrc = pdc->prgnAPI->BaseObject.hHmgr;
-//            else if (pdc->dclevel.prgnClip) hrgnSrc = pdc->dclevel.prgnClip->BaseObject.hHmgr;
-            else if (pdc->rosdc.hClipRgn) hrgnSrc = pdc->rosdc.hClipRgn;
-            else if (pdc->dclevel.prgnMeta) hrgnSrc = pdc->dclevel.prgnMeta->BaseObject.hHmgr;
-            break;
-        case SYSRGN:
-            if (pdc->prgnVis)
+            if (pdc->prgnAPI)
             {
-                PREGION prgnDest = REGION_LockRgn(hrgnDest);
-                ret = IntGdiCombineRgn(prgnDest, pdc->prgnVis, 0, RGN_COPY) == ERROR ? -1 : 1;
-                REGION_UnlockRgn(prgnDest);
+                prgnSrc = pdc->prgnAPI;
+            }
+//            else if (pdc->dclevel.prgnClip) prgnSrc = pdc->dclevel.prgnClip;
+            else if (pdc->rosdc.hClipRgn)
+            {
+                hrgnSrc = pdc->rosdc.hClipRgn;
+            }
+            else if (pdc->dclevel.prgnMeta)
+            {
+                prgnSrc = pdc->dclevel.prgnMeta;
             }
             break;
+
+        case SYSRGN:
+            prgnSrc = pdc->prgnVis;
+            break;
+
         default:
-            hrgnSrc = NULL;
+            break;
     }
 
     if (hrgnSrc)
     {
         ret = NtGdiCombineRgn(hrgnDest, hrgnSrc, 0, RGN_COPY) == ERROR ? -1 : 1;
+    }
+    else if (prgnSrc)
+    {
+        PREGION prgnDest = REGION_LockRgn(hrgnDest);
+        if (prgnDest)
+        {
+            ret = IntGdiCombineRgn(prgnDest, prgnSrc, 0, RGN_COPY) == ERROR ? -1 : 1;
+            REGION_UnlockRgn(prgnDest);
+        }
+        else
+            ret = -1;
     }
 
     if (iCode == SYSRGN)
