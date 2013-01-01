@@ -2625,7 +2625,7 @@ CreateProcessInternalW(HANDLE hToken,
         while (NULL != (ScanString = wcschr(ScanString, L'^')))
         {
             ScanString++;
-            if (*ScanString == L'\"' || *ScanString == L'^' || *ScanString == L'\"')
+            if (*ScanString == L'\"' || *ScanString == L'^' || *ScanString == L'\\')
             {
                 Escape = TRUE;
                 break;
