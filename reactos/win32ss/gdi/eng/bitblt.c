@@ -469,16 +469,23 @@ EngBitBlt(
     switch (clippingType)
     {
         case DC_TRIVIAL:
-            Ret = (*BltRectFunc)(OutputObj, InputObj, Mask, ColorTranslation,
-                                 &OutputRect, &InputPoint, MaskOrigin, pbo,
-                                 &AdjustedBrushOrigin, Rop4);
+            Ret = (*BltRectFunc)(OutputObj,
+                                 InputObj,
+                                 psoSrc,
+                                 pxlo,
+                                 &OutputRect,
+                                 &InputPoint,
+                                 pptlMask,
+                                 pbo,
+                                 &AdjustedBrushOrigin,
+                                 rop4);
             break;
         case DC_RECT:
             /* Clip the blt to the clip rectangle */
-            ClipRect.left = ClipRegion->rclBounds.left;
-            ClipRect.right = ClipRegion->rclBounds.right;
-            ClipRect.top = ClipRegion->rclBounds.top;
-            ClipRect.bottom = ClipRegion->rclBounds.bottom;
+            ClipRect.left = pco->rclBounds.left;
+            ClipRect.right = pco->rclBounds.right;
+            ClipRect.top = pco->rclBounds.top;
+            ClipRect.bottom = pco->rclBounds.bottom;
             if (RECTL_bIntersectRect(&CombinedRect, &OutputRect, &ClipRect))
             {
 #ifdef _USE_DIBLIB_
@@ -490,9 +497,16 @@ EngBitBlt(
 #endif
                 Pt.x = InputPoint.x + CombinedRect.left - OutputRect.left;
                 Pt.y = InputPoint.y + CombinedRect.top - OutputRect.top;
-                Ret = (*BltRectFunc)(OutputObj, InputObj, Mask, ColorTranslation,
-                                     &CombinedRect, &Pt, MaskOrigin, pbo,
-                                     &AdjustedBrushOrigin, Rop4);
+                Ret = (*BltRectFunc)(OutputObj,
+                                     InputObj,
+                                     psoSrc,
+                                     pxlo,
+                                     &CombinedRect,
+                                     &Pt,
+                                     pptlMask,
+                                     pbo,
+                                     &AdjustedBrushOrigin,
+                                     rop4);
             }
             break;
         case DC_COMPLEX:
