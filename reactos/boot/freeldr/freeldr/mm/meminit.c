@@ -184,7 +184,6 @@ MmCheckFreeldrImageFile()
         (FileHeader->NumberOfSections != FREELDR_SECTION_COUNT) ||
         (FileHeader->PointerToSymbolTable != 0) ||
         (FileHeader->NumberOfSymbols != 0) ||
-        (FileHeader->NumberOfSymbols != 0) ||
         (FileHeader->SizeOfOptionalHeader != 0xE0))
     {
         return FALSE;
