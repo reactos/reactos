@@ -114,7 +114,16 @@ typedef enum _CONSRV_API_NUMBER
 
 typedef struct _CONSOLE_CONNECTION_INFO
 {
-    ULONG Dummy;
+    BOOL ConsoleNeeded; // Used for GUI apps only.
+
+    /* Copied from CSRSS_ALLOC_CONSOLE */
+    INT ShowCmd;
+    HANDLE Console; // ConsoleHandle // In fact, it is a PCSRSS_CONSOLE <-- correct that !!
+    HANDLE InputHandle;
+    HANDLE OutputHandle;
+    HANDLE ErrorHandle;
+    HANDLE InputWaitHandle;
+    LPTHREAD_START_ROUTINE CtrlDispatcher;
 } CONSOLE_CONNECTION_INFO, *PCONSOLE_CONNECTION_INFO;
 
 
@@ -157,12 +166,13 @@ typedef struct
 
 typedef struct
 {
-    LPTHREAD_START_ROUTINE CtrlDispatcher;
-    BOOL ConsoleNeeded;
     INT ShowCmd;
-    HANDLE Console;
+    HANDLE Console; // ConsoleHandle // In fact, it is a PCSRSS_CONSOLE <-- correct that !!
     HANDLE InputHandle;
     HANDLE OutputHandle;
+    HANDLE ErrorHandle;
+    HANDLE InputWaitHandle;
+    LPTHREAD_START_ROUTINE CtrlDispatcher;
 } CSRSS_ALLOC_CONSOLE, *PCSRSS_ALLOC_CONSOLE;
 
 typedef struct

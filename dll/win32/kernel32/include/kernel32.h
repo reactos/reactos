@@ -186,6 +186,8 @@ VOID
 NTAPI
 BaseDllInitializeMemoryManager(VOID);
 
+VOID WINAPI InitConsoleCtrlHandling(VOID);
+
 BOOL WINAPI VerifyConsoleIoHandle(HANDLE Handle);
 
 BOOL WINAPI CloseConsoleHandle(HANDLE Handle);

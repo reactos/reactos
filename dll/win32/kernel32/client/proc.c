@@ -581,6 +581,16 @@ BasepCreateFirstThread(HANDLE ProcessHandle,
     CreateProcessRequest->CreationFlags = dwCreationFlags;
     CreateProcessRequest->bInheritHandles = InheritHandles;
 
+    /*
+     * For GUI applications we turn on the 2nd bit. This also allows
+     * us to know whether or not the application is a GUI or CUI app.
+     */
+    if (IMAGE_SUBSYSTEM_WINDOWS_GUI == SectionImageInfo->SubSystemType)
+    {
+        CreateProcessRequest->ProcessHandle = (HANDLE)
+            ((ULONG_PTR)CreateProcessRequest->ProcessHandle | 2);
+    }
+
     /* Call CSR */
     DPRINT1("Calling CsrClientCallServer from BasepCreateFirstThread...\n");
     Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
@@ -937,18 +947,18 @@ BasePushProcessParameters(IN ULONG ParameterFlags,
         ProcessParameters->StandardError = StartupInfo->hStdError;
     }
 
-    /* Use Special Flags for ConDllInitialize in Kernel32 */
+    /* Use Special Flags for BasepInitConsole in Kernel32 */
     if (CreationFlags & DETACHED_PROCESS)
     {
         ProcessParameters->ConsoleHandle = HANDLE_DETACHED_PROCESS;
     }
-    else if (CreationFlags & CREATE_NO_WINDOW)
-    {
-        ProcessParameters->ConsoleHandle = HANDLE_CREATE_NO_WINDOW;
-    }
     else if (CreationFlags & CREATE_NEW_CONSOLE)
     {
         ProcessParameters->ConsoleHandle = HANDLE_CREATE_NEW_CONSOLE;
+    }
+    else if (CreationFlags & CREATE_NO_WINDOW)
+    {
+        ProcessParameters->ConsoleHandle = HANDLE_CREATE_NO_WINDOW;
     }
     else
     {

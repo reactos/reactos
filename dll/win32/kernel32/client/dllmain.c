@@ -36,12 +36,9 @@ static BOOL DllInitialized = FALSE;
 RTL_CRITICAL_SECTION BaseDllDirectoryLock;
 RTL_CRITICAL_SECTION ConsoleLock;
 
-extern BOOL WINAPI DefaultConsoleCtrlHandler(DWORD Event);
 extern DWORD WINAPI ConsoleControlDispatcher(IN LPVOID lpThreadParameter);
-extern PHANDLER_ROUTINE InitialHandler[1];
-extern PHANDLER_ROUTINE* CtrlHandlers;
-extern ULONG NrCtrlHandlers;
-extern ULONG NrAllocatedHandlers;
+extern HANDLE InputWaitHandle;
+
 extern BOOL FASTCALL NlsInit(VOID);
 extern VOID FASTCALL NlsUninit(VOID);
 
@@ -55,9 +52,6 @@ WINAPI
 BasepInitConsole(VOID)
 {
     NTSTATUS Status;
-    CONSOLE_API_MESSAGE ApiMessage;
-    PCSRSS_ALLOC_CONSOLE AllocConsoleRequest = &ApiMessage.Data.AllocConsoleRequest;
-    BOOLEAN NotConsole = FALSE;
     PRTL_USER_PROCESS_PARAMETERS Parameters = NtCurrentPeb()->ProcessParameters;
     LPCWSTR ExeName;
     STARTUPINFO si;
@@ -65,12 +59,8 @@ BasepInitConsole(VOID)
     ULONG SessionId = NtCurrentPeb()->SessionId;
     BOOLEAN InServer;
 
-    // HACK
-    /*
-    CSR_CONNECTION_INFO CsrConnectionInfo;
-    ULONG ConnectionSize = sizeof(CsrConnectionInfo);
-    */
-    // END HACK
+    CONSOLE_CONNECTION_INFO ConnectInfo;
+    ULONG ConnectInfoSize = sizeof(ConnectInfo);
 
     WCHAR lpTest[MAX_PATH];
     GetModuleFileNameW(NULL, lpTest, MAX_PATH);
@@ -79,28 +69,33 @@ BasepInitConsole(VOID)
            Parameters->ConsoleHandle, Parameters->StandardInput,
            Parameters->StandardOutput, Parameters->StandardError);
 
+    /* Initialize our global console DLL lock */
+    Status = RtlInitializeCriticalSection(&ConsoleLock);
+    if (!NT_SUCCESS(Status)) return FALSE;
+    ConsoleInitialized = TRUE;
+
     /* We have nothing to do if this isn't a console app... */
     if (RtlImageNtHeader(GetModuleHandle(NULL))->OptionalHeader.Subsystem !=
         IMAGE_SUBSYSTEM_WINDOWS_CUI)
     {
         DPRINT("Image is not a console application\n");
         Parameters->ConsoleHandle = NULL;
-        AllocConsoleRequest->ConsoleNeeded = FALSE;
+        ConnectInfo.ConsoleNeeded = FALSE; // ConsoleNeeded is used for knowing whether or not this is a CUI app.
     }
     else
     {
         /* Assume one is needed */
         GetStartupInfo(&si);
-        AllocConsoleRequest->ConsoleNeeded = TRUE;
-        AllocConsoleRequest->ShowCmd = si.wShowWindow;
+        ConnectInfo.ConsoleNeeded = TRUE;
+        ConnectInfo.ShowCmd = si.wShowWindow;
 
-        /* Handle the special flags given to us by BasepInitializeEnvironment */
+        /* Handle the special flags given to us by BasePushProcessParameters */
         if (Parameters->ConsoleHandle == HANDLE_DETACHED_PROCESS)
         {
             /* No console to create */
             DPRINT("No console to create\n");
             Parameters->ConsoleHandle = NULL;
-            AllocConsoleRequest->ConsoleNeeded = FALSE;
+            ConnectInfo.ConsoleNeeded = FALSE;
         }
         else if (Parameters->ConsoleHandle == HANDLE_CREATE_NEW_CONSOLE)
         {
@@ -113,33 +108,29 @@ BasepInitConsole(VOID)
             /* We'll get the real one soon */
             DPRINT("Creating new invisible console\n");
             Parameters->ConsoleHandle = NULL;
-            AllocConsoleRequest->ShowCmd = SW_HIDE;
+            ConnectInfo.ShowCmd = SW_HIDE;
         }
         else
         {
             if (Parameters->ConsoleHandle == INVALID_HANDLE_VALUE)
             {
-                Parameters->ConsoleHandle = 0;
+                Parameters->ConsoleHandle = NULL;
             }
             DPRINT("Using existing console: %x\n", Parameters->ConsoleHandle);
         }
     }
 
+    /* Now use the proper console handle */
+    ConnectInfo.Console = Parameters->ConsoleHandle;
+
     /* Initialize Console Ctrl Handler and input EXE name */
-    ConsoleInitialized = TRUE;
-    RtlInitializeCriticalSection(&ConsoleLock);
-    NrAllocatedHandlers = 1;
-    NrCtrlHandlers = 1;
-    CtrlHandlers = InitialHandler;
-    CtrlHandlers[0] = DefaultConsoleCtrlHandler;
+    InitConsoleCtrlHandling();
+    ConnectInfo.CtrlDispatcher = ConsoleControlDispatcher;
 
     ExeName = wcsrchr(Parameters->ImagePathName.Buffer, L'\\');
     if (ExeName)
         SetConsoleInputExeNameW(ExeName + 1);
 
-    /* Now use the proper console handle */
-    AllocConsoleRequest->Console = Parameters->ConsoleHandle;
-    
     /* Setup the right Object Directory path */
     if (!SessionId)
     {
@@ -156,60 +147,44 @@ BasepInitConsole(VOID)
                  WIN_OBJ_DIR);
     }
 
-    /* Connect to the base server */
-    DPRINT("Connecting to CSR in BasepInitConsole...\n");
+    /* Connect to the Console Server */
+    DPRINT("Connecting to the Console Server in BasepInitConsole...\n");
     Status = CsrClientConnectToServer(SessionDir,
                                       CONSRV_SERVERDLL_INDEX,
-                                      /* &CsrConnectionInfo, */ NULL, // TODO: Give it a console connection info
-                                      /* &ConnectionSize, */    NULL, // TODO: Give it a console connection info
+                                      &ConnectInfo,
+                                      &ConnectInfoSize,
                                       &InServer);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to connect to CSR (Status %lx)\n", Status);
+        DPRINT1("Failed to connect to the Console Server (Status %lx)\n", Status);
         return FALSE;
     }
 
     /* Nothing to do for server-to-server */
     if (InServer) return TRUE;
 
-    /*
-     * Normally, we should be connecting to the Console CSR Server...
-     * but we don't have one yet, so we will instead simply send a create
-     * console message to the Base Server. When we finally have a Console
-     * Server, this code should be changed to send connection data instead.
-     */
-    AllocConsoleRequest->CtrlDispatcher = ConsoleControlDispatcher;
-    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
-                                 NULL,
-                                 CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepAlloc),
-                                 sizeof(CSRSS_ALLOC_CONSOLE));
-    if(!NT_SUCCESS(Status) || !NT_SUCCESS(Status = ApiMessage.Status))
-    {
-        DPRINT1("CSR Failed to give us a console\n");
-        /* We're lying here, so at least the process can load... */
-        return TRUE;
-    }
-
     /* Nothing to do if not a console app */
-    if (NotConsole) return TRUE;
+    if (!ConnectInfo.ConsoleNeeded) return TRUE;
 
     /* We got the handles, let's set them */
-    if ((Parameters->ConsoleHandle = AllocConsoleRequest->Console))
+    if ((Parameters->ConsoleHandle = ConnectInfo.Console))
     {
         /* If we already had some, don't use the new ones */
         if (!Parameters->StandardInput)
         {
-            Parameters->StandardInput = AllocConsoleRequest->InputHandle;
+            Parameters->StandardInput = ConnectInfo.InputHandle;
         }
         if (!Parameters->StandardOutput)
         {
-            Parameters->StandardOutput = AllocConsoleRequest->OutputHandle;
+            Parameters->StandardOutput = ConnectInfo.OutputHandle;
         }
         if (!Parameters->StandardError)
         {
-            Parameters->StandardError = AllocConsoleRequest->OutputHandle;
+            Parameters->StandardError = ConnectInfo.ErrorHandle;
         }
     }
+
+    InputWaitHandle = ConnectInfo.InputWaitHandle;
 
     DPRINT("Console setup: %lx, %lx, %lx, %lx\n",
             Parameters->ConsoleHandle,
@@ -403,9 +378,9 @@ DllMain(HANDLE hDll,
                 if (ConsoleInitialized == TRUE)
                 {
                     ConsoleInitialized = FALSE;
-                    RtlDeleteCriticalSection (&ConsoleLock);
+                    RtlDeleteCriticalSection(&ConsoleLock);
                 }
-                RtlDeleteCriticalSection (&BaseDllDirectoryLock);
+                RtlDeleteCriticalSection(&BaseDllDirectoryLock);
             }
             break;
 

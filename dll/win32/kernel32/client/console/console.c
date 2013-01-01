@@ -29,6 +29,8 @@ PHANDLER_ROUTINE* CtrlHandlers;
 ULONG NrCtrlHandlers;
 ULONG NrAllocatedHandlers;
 
+HANDLE InputWaitHandle = INVALID_HANDLE_VALUE;
+
 #define INPUTEXENAME_BUFLEN 256
 static WCHAR InputExeName[INPUTEXENAME_BUFLEN];
 
@@ -76,7 +78,7 @@ ConsoleControlDispatcher(IN LPVOID lpThreadParameter)
     UINT i;
     EXCEPTION_RECORD erException;
 
-    DPRINT("Console Dispatcher Active: %lx %lx\n", CodeAndFlag, nCode);
+    DPRINT1("Console Dispatcher Active: %lx %lx\n", CodeAndFlag, nCode);
     SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_HIGHEST);
 
     switch(nCode)
@@ -172,6 +174,16 @@ ConsoleControlDispatcher(IN LPVOID lpThreadParameter)
     RtlLeaveCriticalSection(&ConsoleLock);
     ExitThread(nExitCode);
     return STATUS_SUCCESS;
+}
+
+VOID
+WINAPI
+InitConsoleCtrlHandling(VOID)
+{
+    /* Initialize Console Ctrl Handler */
+    NrAllocatedHandlers = NrCtrlHandlers = 1;
+    CtrlHandlers = InitialHandler;
+    CtrlHandlers[0] = DefaultConsoleCtrlHandler;
 }
 
 
@@ -321,10 +333,6 @@ HANDLE
 WINAPI
 GetConsoleInputWaitHandle(VOID)
 {
-/// HACK !!!!!!!!!!!!!
-    ASSERT(FALSE);
-    return NULL;
-
 #if 0
     NTSTATUS Status;
     CONSOLE_API_MESSAGE ApiMessage;
@@ -341,6 +349,8 @@ GetConsoleInputWaitHandle(VOID)
 
     return ApiMessage.Data.GetConsoleInputWaitHandle.InputWaitHandle;
 #endif
+
+    return InputWaitHandle;
 }
 
 
@@ -786,8 +796,9 @@ AllocConsole(VOID)
     NTSTATUS Status;
     CONSOLE_API_MESSAGE ApiMessage;
     PCSRSS_ALLOC_CONSOLE AllocConsoleRequest = &ApiMessage.Data.AllocConsoleRequest;
-    HANDLE hStdError;
     STARTUPINFO si;
+
+    DPRINT1("AllocConsole called !!!!\n");
 
     if (NtCurrentPeb()->ProcessParameters->ConsoleHandle)
     {
@@ -798,9 +809,9 @@ AllocConsole(VOID)
 
     GetStartupInfo(&si);
 
-    AllocConsoleRequest->CtrlDispatcher = ConsoleControlDispatcher;
-    AllocConsoleRequest->ConsoleNeeded = TRUE;
     AllocConsoleRequest->ShowCmd = si.wShowWindow;
+    AllocConsoleRequest->Console = NULL;
+    AllocConsoleRequest->CtrlDispatcher = ConsoleControlDispatcher;
 
     Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                                  NULL,
@@ -814,15 +825,15 @@ AllocConsole(VOID)
 
     NtCurrentPeb()->ProcessParameters->ConsoleHandle = AllocConsoleRequest->Console;
 
-    SetStdHandle(STD_INPUT_HANDLE, AllocConsoleRequest->InputHandle);
+    SetStdHandle(STD_INPUT_HANDLE , AllocConsoleRequest->InputHandle );
     SetStdHandle(STD_OUTPUT_HANDLE, AllocConsoleRequest->OutputHandle);
+    SetStdHandle(STD_ERROR_HANDLE , AllocConsoleRequest->ErrorHandle );
 
-    hStdError = DuplicateConsoleHandle(AllocConsoleRequest->OutputHandle,
-                                       0,
-                                       TRUE,
-                                       DUPLICATE_SAME_ACCESS);
+    /* Initialize Console Ctrl Handler */
+    InitConsoleCtrlHandling();
 
-    SetStdHandle(STD_ERROR_HANDLE, hStdError);
+    InputWaitHandle = AllocConsoleRequest->InputWaitHandle;
+
     return TRUE;
 }
 
@@ -853,6 +864,10 @@ FreeConsole(VOID)
     }
 
     NtCurrentPeb()->ProcessParameters->ConsoleHandle = NULL;
+
+    CloseHandle(InputWaitHandle);
+    InputWaitHandle = INVALID_HANDLE_VALUE;
+
     return TRUE;
 }
 

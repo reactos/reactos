@@ -81,6 +81,11 @@ CSR_API(BaseSrvCreateProcess)
     {
         DebugFlags |= CsrProcessCreateNewGroup;
     }
+    if ((Flags & 2) == 0)
+    {
+        DPRINT1("BaseSrvCreateProcess - Launching a Console process\n");
+        DebugFlags |= CsrProcessIsConsoleApp;
+    }
 
     /* FIXME: SxS Stuff */
 
@@ -129,8 +134,8 @@ CSR_API(BaseSrvCreateThread)
     if (!CurrentThread)
     {
         DPRINT1("Server Thread TID: [%lx.%lx]\n",
-        CreateThreadRequest->ClientId.UniqueProcess,
-        CreateThreadRequest->ClientId.UniqueThread);
+                CreateThreadRequest->ClientId.UniqueProcess,
+                CreateThreadRequest->ClientId.UniqueThread);
         return STATUS_SUCCESS; // server-to-server
     }
 
