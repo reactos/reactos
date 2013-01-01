@@ -623,7 +623,7 @@ SamCloseHandle(IN SAM_HANDLE SamHandle);
 
 NTSTATUS
 NTAPI
-SamConnect(IN OUT PUNICODE_STRING ServerName,
+SamConnect(IN OUT PUNICODE_STRING ServerName OPTIONAL,
            OUT PSAM_HANDLE ServerHandle,
            IN ACCESS_MASK DesiredAccess,
            IN POBJECT_ATTRIBUTES ObjectAttributes);
@@ -755,7 +755,7 @@ SamLookupIdsInDomain(IN SAM_HANDLE DomainHandle,
                      IN ULONG Count,
                      IN PULONG RelativeIds,
                      OUT PUNICODE_STRING *Names,
-                     OUT PSID_NAME_USE *Use);
+                     OUT PSID_NAME_USE *Use OPTIONAL);
 
 NTSTATUS
 NTAPI

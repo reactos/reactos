@@ -212,7 +212,7 @@ SamCloseHandle(IN SAM_HANDLE SamHandle)
 
 NTSTATUS
 NTAPI
-SamConnect(IN OUT PUNICODE_STRING ServerName,
+SamConnect(IN OUT PUNICODE_STRING ServerName OPTIONAL,
            OUT PSAM_HANDLE ServerHandle,
            IN ACCESS_MASK DesiredAccess,
            IN POBJECT_ATTRIBUTES ObjectAttributes)
@@ -682,7 +682,7 @@ SamGetAliasMembership(IN SAM_HANDLE DomainHandle,
     SAMPR_ULONG_ARRAY Membership;
     NTSTATUS Status;
 
-    TRACE("SamAliasMembership(%p %ul %p %p %p)\n",
+    TRACE("SamAliasMembership(%p %lu %p %p %p)\n",
           DomainHandle, PassedCount, Sids, MembershipCount, Aliases);
 
     if (Sids == NULL ||
@@ -905,7 +905,7 @@ SamLookupIdsInDomain(IN SAM_HANDLE DomainHandle,
                      IN ULONG Count,
                      IN PULONG RelativeIds,
                      OUT PUNICODE_STRING *Names,
-                     OUT PSID_NAME_USE *Use)
+                     OUT PSID_NAME_USE *Use OPTIONAL)
 {
     SAMPR_RETURNED_USTRING_ARRAY NamesBuffer = {0, NULL};
     SAMPR_ULONG_ARRAY UseBuffer = {0, NULL};
@@ -916,7 +916,9 @@ SamLookupIdsInDomain(IN SAM_HANDLE DomainHandle,
           DomainHandle, Count, RelativeIds, Names, Use);
 
     *Names = NULL;
-    *Use = NULL;
+
+    if (Use != NULL)
+        *Use = NULL;
 
     RpcTryExcept
     {
@@ -951,13 +953,6 @@ SamLookupIdsInDomain(IN SAM_HANDLE DomainHandle,
             }
         }
 
-        *Use = midl_user_allocate(Count * sizeof(SID_NAME_USE));
-        if (*Use == NULL)
-        {
-            Status = STATUS_INSUFFICIENT_RESOURCES;
-            goto done;
-        }
-
         for (i = 0; i < Count; i++)
         {
             (*Names)[i].Length = NamesBuffer.Element[i].Length;
@@ -968,9 +963,19 @@ SamLookupIdsInDomain(IN SAM_HANDLE DomainHandle,
                           NamesBuffer.Element[i].Length);
         }
 
-        RtlCopyMemory(*Use,
-                      UseBuffer.Element,
-                      Count * sizeof(SID_NAME_USE));
+        if (Use != NULL)
+        {
+            *Use = midl_user_allocate(Count * sizeof(SID_NAME_USE));
+            if (*Use == NULL)
+            {
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+                goto done;
+            }
+
+            RtlCopyMemory(*Use,
+                          UseBuffer.Element,
+                          Count * sizeof(SID_NAME_USE));
+        }
     }
 
 done:
@@ -987,7 +992,7 @@ done:
             midl_user_free(*Names);
         }
 
-        if (*Use != NULL)
+        if (Use != NULL && *Use != NULL)
             midl_user_free(*Use);
     }
 
