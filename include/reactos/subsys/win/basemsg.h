@@ -82,11 +82,6 @@ typedef struct
     PVOID PebAddressNative;
     ULONG PebAddressWow64;
     USHORT ProcessorArchitecture;
-
-    //
-    // ReactOS Data
-    //
-    BOOL bInheritHandles;
 } BASE_CREATE_PROCESS, *PBASE_CREATE_PROCESS;
 
 typedef struct

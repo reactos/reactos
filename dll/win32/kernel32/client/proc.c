@@ -528,7 +528,6 @@ BasepCreateFirstThread(HANDLE ProcessHandle,
                        LPSECURITY_ATTRIBUTES lpThreadAttributes,
                        PSECTION_IMAGE_INFORMATION SectionImageInfo,
                        PCLIENT_ID ClientId,
-                       BOOLEAN InheritHandles,
                        DWORD dwCreationFlags)
 {
     NTSTATUS Status;
@@ -579,7 +578,6 @@ BasepCreateFirstThread(HANDLE ProcessHandle,
     CreateProcessRequest->ProcessHandle = ProcessHandle;
     CreateProcessRequest->ThreadHandle = hThread;
     CreateProcessRequest->CreationFlags = dwCreationFlags;
-    CreateProcessRequest->bInheritHandles = InheritHandles;
 
     /*
      * For GUI applications we turn on the 2nd bit. This also allows
@@ -3251,7 +3249,6 @@ GetAppName:
                                      lpThreadAttributes,
                                      &SectionImageInfo,
                                      &ClientId,
-                                     bInheritHandles,
                                      dwCreationFlags);
 
     if (hThread == NULL)
