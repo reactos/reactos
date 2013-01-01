@@ -584,6 +584,7 @@ GreGetDIBitsInternal(
     DWORD compr, size ;
     USHORT i;
     int bitmap_type;
+    RGBTRIPLE* rgbTriples;
     RGBQUAD* rgbQuads;
     VOID* colorPtr;
 
@@ -593,6 +594,7 @@ GreGetDIBitsInternal(
         return 0;
 
     colorPtr = (LPBYTE)Info + Info->bmiHeader.biSize;
+    rgbTriples = colorPtr;
     rgbQuads = colorPtr;
 
     bitmap_type = DIB_GetBitmapInfo(&Info->bmiHeader,
@@ -641,6 +643,15 @@ GreGetDIBitsInternal(
     switch(bpp)
     {
     case 0: /* Only info */
+        if(pbmci)
+        {
+            pbmci->bmciHeader.bcWidth = (WORD)psurf->SurfObj.sizlBitmap.cx;
+            pbmci->bmciHeader.bcHeight = (WORD)((psurf->SurfObj.fjBitmap & BMF_TOPDOWN) ?
+                                         -psurf->SurfObj.sizlBitmap.cy :
+                                         psurf->SurfObj.sizlBitmap.cy);
+            pbmci->bmciHeader.bcPlanes = 1;
+            pbmci->bmciHeader.bcBitCount = BitsPerFormat(psurf->SurfObj.iBitmapFormat);
+        }
         Info->bmiHeader.biWidth = psurf->SurfObj.sizlBitmap.cx;
         Info->bmiHeader.biHeight = (psurf->SurfObj.fjBitmap & BMF_TOPDOWN) ?
                                    -psurf->SurfObj.sizlBitmap.cy :
@@ -691,6 +702,16 @@ GreGetDIBitsInternal(
             if(Usage == DIB_RGB_COLORS)
             {
                 ULONG colors = min(psurf->ppal->NumColors, 256);
+
+                if(pbmci)
+                {
+                    for(i = 0; i < colors; i++)
+                    {
+                        rgbTriples[i].rgbtRed = psurf->ppal->IndexedColors[i].peRed;
+                        rgbTriples[i].rgbtGreen = psurf->ppal->IndexedColors[i].peGreen;
+                        rgbTriples[i].rgbtBlue = psurf->ppal->IndexedColors[i].peBlue;
+                    }
+                }
                 if(colors != 256) Info->bmiHeader.biClrUsed = colors;
                 for(i = 0; i < colors; i++)
                 {
@@ -703,7 +724,10 @@ GreGetDIBitsInternal(
             else
             {
                 for(i = 0; i < 256; i++)
+                {
+                    if(pbmci) ((WORD*)rgbTriples)[i] = i;
                     ((WORD*)rgbQuads)[i] = i;
+                }
             }
         }
         else
@@ -712,6 +736,7 @@ GreGetDIBitsInternal(
             {
                 for(i = 0; i < 256; i++)
                 {
+                    if(pbmci) ((WORD*)rgbTriples)[i] = i;
                     ((WORD*)rgbQuads)[i] = i;
                 }
             }
@@ -728,6 +753,13 @@ GreGetDIBitsInternal(
                 }
                 for (i = 0; i < pDcPal->NumColors; i++)
                 {
+                    if (pbmci)
+                    {
+                        rgbTriples[i].rgbtRed   = pDcPal->IndexedColors[i].peRed;
+                        rgbTriples[i].rgbtGreen = pDcPal->IndexedColors[i].peGreen;
+                        rgbTriples[i].rgbtBlue  = pDcPal->IndexedColors[i].peBlue;
+                    }
+
                     rgbQuads[i].rgbRed      = pDcPal->IndexedColors[i].peRed;
                     rgbQuads[i].rgbGreen    = pDcPal->IndexedColors[i].peGreen;
                     rgbQuads[i].rgbBlue     = pDcPal->IndexedColors[i].peBlue;
@@ -740,20 +772,55 @@ GreGetDIBitsInternal(
                 switch (bpp)
                 {
                 case 1:
-                    rgbQuads[0].rgbRed = rgbQuads[0].rgbGreen = rgbQuads[0].rgbBlue = 0;
+                    if (pbmci)
+                    {
+                        rgbTriples[0].rgbtRed = rgbTriples[0].rgbtGreen =
+                                                    rgbTriples[0].rgbtBlue = 0;
+                        rgbTriples[1].rgbtRed = rgbTriples[1].rgbtGreen =
+                                                    rgbTriples[1].rgbtBlue = 0xff;
+                    }
+                    rgbQuads[0].rgbRed = rgbQuads[0].rgbGreen =
+                                             rgbQuads[0].rgbBlue = 0;
                     rgbQuads[0].rgbReserved = 0;
-                    rgbQuads[1].rgbRed = rgbQuads[1].rgbGreen = rgbQuads[1].rgbBlue = 0xff;
+                    rgbQuads[1].rgbRed = rgbQuads[1].rgbGreen =
+                                             rgbQuads[1].rgbBlue = 0xff;
                     rgbQuads[1].rgbReserved = 0;
                     break;
 
                 case 4:
+                    if (pbmci)
+                        RtlCopyMemory(rgbTriples, EGAColorsTriples, sizeof(EGAColorsTriples));
                     RtlCopyMemory(rgbQuads, EGAColorsQuads, sizeof(EGAColorsQuads));
+
                     break;
 
                 case 8:
                 {
                     INT r, g, b;
                     RGBQUAD *color;
+                    if (pbmci)
+                    {
+                        RGBTRIPLE *colorTriple;
+
+                        RtlCopyMemory(rgbTriples, DefLogPaletteTriples,
+                                      10 * sizeof(RGBTRIPLE));
+                        RtlCopyMemory(rgbTriples + 246, DefLogPaletteTriples + 10,
+                                      10 * sizeof(RGBTRIPLE));
+                        colorTriple = rgbTriples + 10;
+                        for(r = 0; r <= 5; r++) /* FIXME */
+                        {
+                            for(g = 0; g <= 5; g++)
+                            {
+                                for(b = 0; b <= 5; b++)
+                                {
+                                    colorTriple->rgbtRed =   (r * 0xff) / 5;
+                                    colorTriple->rgbtGreen = (g * 0xff) / 5;
+                                    colorTriple->rgbtBlue =  (b * 0xff) / 5;
+                                    colorTriple++;
+                                }
+                            }
+                        }
+                    }
                     memcpy(rgbQuads, DefLogPaletteQuads,
                            10 * sizeof(RGBQUAD));
                     memcpy(rgbQuads + 246, DefLogPaletteQuads + 10,
@@ -870,6 +937,11 @@ GreGetDIBitsInternal(
 
         RECTL_vSetRect(&rcDest, 0, 0, ScanLines, psurf->SurfObj.sizlBitmap.cx);
 
+        rcDest.left = 0;
+        rcDest.top = 0;
+        rcDest.bottom = ScanLines;
+        rcDest.right = psurf->SurfObj.sizlBitmap.cx;
+
         srcPoint.x = 0;
 
         if(height < 0)
@@ -918,7 +990,7 @@ done:
 
     if(pDC) DC_UnlockDc(pDC);
     if(psurf) SURFACE_ShareUnlockSurface(psurf);
-    if(pbmci) DIB_FreeConvertedBitmapInfo(Info, (BITMAPINFO*)pbmci, Usage);
+    if(pbmci) DIB_FreeConvertedBitmapInfo(Info, (BITMAPINFO*)pbmci);
 
     return ScanLines;
 }
@@ -1857,51 +1929,10 @@ DIB_ConvertBitmapInfo (CONST BITMAPINFO* pbmi, DWORD Usage)
 /* Frees a BITMAPINFO created with DIB_ConvertBitmapInfo */
 VOID
 FASTCALL
-DIB_FreeConvertedBitmapInfo(BITMAPINFO* converted, BITMAPINFO* orig, DWORD usage)
+DIB_FreeConvertedBitmapInfo(BITMAPINFO* converted, BITMAPINFO* orig)
 {
-    BITMAPCOREINFO* pbmci;
-    if(converted == orig)
-        return;
-
-    if(usage == -1)
-    {
-        /* Caller don't want any conversion */
+    if(converted != orig)
         ExFreePoolWithTag(converted, TAG_DIB);
-        return;
-    }
-
-    /* Perform inverse conversion */
-    pbmci = (BITMAPCOREINFO*)orig;
-
-    ASSERT(pbmci->bmciHeader.bcSize == sizeof(BITMAPCOREHEADER));
-    pbmci->bmciHeader.bcBitCount = converted->bmiHeader.biBitCount;
-    pbmci->bmciHeader.bcWidth = converted->bmiHeader.biWidth;
-    pbmci->bmciHeader.bcHeight = converted->bmiHeader.biHeight;
-    pbmci->bmciHeader.bcPlanes = converted->bmiHeader.biPlanes;
-
-    if(pbmci->bmciHeader.bcBitCount <= 8)
-    {
-        UINT numColors = converted->bmiHeader.biClrUsed;
-        if(!numColors) numColors = 1 << pbmci->bmciHeader.bcBitCount;
-        if(usage == DIB_PAL_COLORS)
-        {
-            RtlZeroMemory(pbmci->bmciColors, (1 << pbmci->bmciHeader.bcBitCount) * sizeof(WORD));
-            RtlCopyMemory(pbmci->bmciColors, converted->bmiColors, numColors * sizeof(WORD));
-        }
-        else
-        {
-            UINT i;
-            RtlZeroMemory(pbmci->bmciColors, (1 << pbmci->bmciHeader.bcBitCount) * sizeof(RGBTRIPLE));
-            for(i=0; i<numColors; i++)
-            {
-                pbmci->bmciColors[i].rgbtRed = converted->bmiColors[i].rgbRed;
-                pbmci->bmciColors[i].rgbtGreen = converted->bmiColors[i].rgbGreen;
-                pbmci->bmciColors[i].rgbtBlue = converted->bmiColors[i].rgbBlue;
-            }
-        }
-    }
-    /* Now free it, it's not needed anymore */
-    ExFreePoolWithTag(converted, TAG_DIB);
 }
 
 /* EOF */

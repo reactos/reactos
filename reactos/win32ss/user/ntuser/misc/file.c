@@ -233,7 +233,7 @@ UserLoadImage(PCWSTR pwszName)
                                          0);
 
 		NtGdiDeleteObjectApp(hdc);
-		DIB_FreeConvertedBitmapInfo(pConvertedInfo, pbmi, -1);
+		DIB_FreeConvertedBitmapInfo(pConvertedInfo, pbmi);
     }
 	else
 	{
