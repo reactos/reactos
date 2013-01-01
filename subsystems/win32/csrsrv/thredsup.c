@@ -579,7 +579,7 @@ CsrCreateRemoteThread(IN HANDLE hThread,
     }
 
     /* Lock the Owner Process */
-    Status = CsrLockProcessByClientId(&ClientId->UniqueProcess, &CsrProcess);
+    Status = CsrLockProcessByClientId(ClientId->UniqueProcess, &CsrProcess);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("No known process for %lx\n", ClientId->UniqueProcess);
