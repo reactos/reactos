@@ -2877,6 +2877,7 @@ SamrGetAliasMembership(IN SAMPR_HANDLE DomainHandle,
     ULONG DataLength;
     ULONG i, j;
     NTSTATUS Status;
+    WCHAR NameBuffer[9];
 
     TRACE("SamrGetAliasMembership(%p %p %p)\n",
           DomainHandle, SidArray, Membership);
@@ -2884,7 +2885,7 @@ SamrGetAliasMembership(IN SAMPR_HANDLE DomainHandle,
     /* Validate the domain handle */
     Status = SampValidateDbObject(DomainHandle,
                                   SamDbDomainObject,
-                                  DOMAIN_LOOKUP,
+                                  DOMAIN_GET_ALIAS_MEMBERSHIP,
                                   &DomainObject);
     if (!NT_SUCCESS(Status))
         return Status;
@@ -2902,6 +2903,13 @@ SamrGetAliasMembership(IN SAMPR_HANDLE DomainHandle,
                             KEY_READ,
                             &MembersKeyHandle);
     TRACE("SampRegOpenKey returned %08lX\n", Status);
+
+    if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
+    {
+        Status = STATUS_SUCCESS;
+        goto done;
+    }
+
     if (!NT_SUCCESS(Status))
         goto done;
 
@@ -2926,11 +2934,19 @@ TRACE("Open %S\n", MemberSidString);
                 MaxSidCount += ValueCount;
             }
 
-
             NtClose(MemberKeyHandle);
         }
 
+        if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
+            Status = STATUS_SUCCESS;
+
         LocalFree(MemberSidString);
+    }
+
+    if (MaxSidCount == 0)
+    {
+        Status = STATUS_SUCCESS;
+        goto done;
     }
 
     TRACE("Maximum sid count: %lu\n", MaxSidCount);
@@ -2962,14 +2978,18 @@ TRACE("Open %S\n", MemberSidString);
 
                 for (j = 0; j < ValueCount; j++)
                 {
-                    DataLength = sizeof(ULONG);
+                    DataLength = 9 * sizeof(WCHAR);
                     Status = SampRegEnumerateValue(MemberKeyHandle,
                                                    j,
-                      NULL,
-                      NULL,
-                      NULL,
-                      (PVOID)&RidArray[j],
-                      &DataLength);
+                                                   NameBuffer,
+                                                   &DataLength,
+                                                   NULL,
+                                                   NULL,
+                                                   NULL);
+                    if (NT_SUCCESS(Status))
+                    {
+                        RidArray[j] = wcstoul(NameBuffer, NULL, 16);
+                    }
                 }
             }
 
@@ -2978,7 +2998,6 @@ TRACE("Open %S\n", MemberSidString);
 
         LocalFree(MemberSidString);
     }
-
 
 done:
     if (NT_SUCCESS(Status))
