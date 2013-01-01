@@ -60,7 +60,7 @@ int InfoMessageBox(HWND hWnd, UINT uType, LPCWSTR lpTitle, LPCWSTR lpMessage, ..
     {
         SIZE_T strLen = _vscwprintf(lpMessage, args);
 
-        /* Create a buffer on the heap and zero-out it (LPTR) */
+        /* Create a buffer on the heap and zero it out (LPTR) */
         lpMsgBuf = (LPWSTR)LocalAlloc(LPTR, (strLen + 1) * sizeof(WCHAR));
         if (lpMsgBuf)
         {
