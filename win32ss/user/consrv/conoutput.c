@@ -489,58 +489,60 @@ DoWriteConsole(IN PCSR_API_MESSAGE ApiMessage,
                                NULL,
                                NULL))
             {
+                /* Fail */
                 ConioUnlockScreenBuffer(Buff);
                 return STATUS_NO_MEMORY;
             }
         }
 
         /* Wait until we un-pause the console */
-        ConioUnlockScreenBuffer(Buff);
-        return STATUS_PENDING;
-    }
-
-    if(WriteConsoleRequest->Unicode)
-    {
-        Length = WideCharToMultiByte(Console->OutputCodePage, 0,
-                                     (PWCHAR)WriteConsoleRequest->Buffer,
-                                     WriteConsoleRequest->NrCharactersToWrite,
-                                     NULL, 0, NULL, NULL);
-        Buffer = RtlAllocateHeap(GetProcessHeap(), 0, Length);
-        if (Buffer)
-        {
-            WideCharToMultiByte(Console->OutputCodePage, 0,
-                                (PWCHAR)WriteConsoleRequest->Buffer,
-                                WriteConsoleRequest->NrCharactersToWrite,
-                                Buffer, Length, NULL, NULL);
-        }
-        else
-        {
-            Status = STATUS_NO_MEMORY;
-        }
+        Status = STATUS_PENDING;
     }
     else
     {
-        Buffer = (PCHAR)WriteConsoleRequest->Buffer;
-    }
-
-    if (Buffer)
-    {
-        if (NT_SUCCESS(Status))
+        if(WriteConsoleRequest->Unicode)
         {
-            Status = ConioWriteConsole(Console, Buff, Buffer,
-                                       WriteConsoleRequest->NrCharactersToWrite, TRUE);
-            if (NT_SUCCESS(Status))
+            Length = WideCharToMultiByte(Console->OutputCodePage, 0,
+                                         (PWCHAR)WriteConsoleRequest->Buffer,
+                                         WriteConsoleRequest->NrCharactersToWrite,
+                                         NULL, 0, NULL, NULL);
+            Buffer = RtlAllocateHeap(GetProcessHeap(), 0, Length);
+            if (Buffer)
             {
-                Written = WriteConsoleRequest->NrCharactersToWrite;
+                WideCharToMultiByte(Console->OutputCodePage, 0,
+                                    (PWCHAR)WriteConsoleRequest->Buffer,
+                                    WriteConsoleRequest->NrCharactersToWrite,
+                                    Buffer, Length, NULL, NULL);
+            }
+            else
+            {
+                Status = STATUS_NO_MEMORY;
             }
         }
-        if (WriteConsoleRequest->Unicode)
+        else
         {
-            RtlFreeHeap(GetProcessHeap(), 0, Buffer);
+            Buffer = (PCHAR)WriteConsoleRequest->Buffer;
         }
-    }
 
-    WriteConsoleRequest->NrCharactersWritten = Written;
+        if (Buffer)
+        {
+            if (NT_SUCCESS(Status))
+            {
+                Status = ConioWriteConsole(Console, Buff, Buffer,
+                                           WriteConsoleRequest->NrCharactersToWrite, TRUE);
+                if (NT_SUCCESS(Status))
+                {
+                    Written = WriteConsoleRequest->NrCharactersToWrite;
+                }
+            }
+            if (WriteConsoleRequest->Unicode)
+            {
+                RtlFreeHeap(GetProcessHeap(), 0, Buffer);
+            }
+        }
+
+        WriteConsoleRequest->NrCharactersWritten = Written;
+    }
 
     ConioUnlockScreenBuffer(Buff);
     return Status;

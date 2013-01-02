@@ -10,11 +10,6 @@
 
 #define CSR_DEFAULT_CURSOR_SIZE 25
 
-/* Object type magic numbers */
-
-#define CONIO_CONSOLE_MAGIC         0x00000001
-#define CONIO_SCREEN_BUFFER_MAGIC   0x00000002
-
 /************************************************************************
  * Screen buffer structure represents the win32 screen buffer object.   *
  * Internally, the portion of the buffer being shown CAN loop past the  *
@@ -29,7 +24,7 @@
  * being printed causes another line to scroll down, that the buffer IS *
  * memcpy()'s up, and the bottom of the buffer is still displayed, but  *
  * internally, I just wrap back to the top of the buffer.               *
- ***********************************************************************/
+ ************************************************************************/
 
 typedef struct tagCSRSS_SCREEN_BUFFER
 {
@@ -149,7 +144,7 @@ typedef struct ConsoleInput_t
 /* console.c */
 NTSTATUS FASTCALL ConioConsoleFromProcessData(PCONSOLE_PROCESS_DATA ProcessData,
                                               PCSRSS_CONSOLE *Console);
-VOID WINAPI ConioDeleteConsole(Object_t *Object);
+VOID WINAPI ConioDeleteConsole(PCSRSS_CONSOLE Console);
 VOID WINAPI CsrInitConsoleSupport(VOID);
 VOID FASTCALL ConioPause(PCSRSS_CONSOLE Console, UINT Flags);
 VOID FASTCALL ConioUnpause(PCSRSS_CONSOLE Console, UINT Flags);

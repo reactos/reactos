@@ -12,7 +12,7 @@
 #include "guiconsole.h"
 #include "tuiconsole.h"
 
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 
 /* FUNCTIONS *****************************************************************/
@@ -75,6 +75,7 @@ ConioConsoleCtrlEventTimeout(DWORD Event,
             return;
         }
 
+        DPRINT1("We succeeded at creating ProcessData->CtrlDispatcher remote thread, ProcessId = %x, Process = 0x%p\n", ProcessData->Process->ClientId.UniqueProcess, ProcessData->Process);
         WaitForSingleObject(Thread, Timeout);
         CloseHandle(Thread);
     }
@@ -86,15 +87,29 @@ ConioConsoleCtrlEvent(DWORD Event, PCONSOLE_PROCESS_DATA ProcessData)
     ConioConsoleCtrlEventTimeout(Event, ProcessData, 0);
 }
 
-static NTSTATUS WINAPI
-CsrInitConsole(PCSRSS_CONSOLE Console, int ShowCmd)
+/* static */ NTSTATUS WINAPI
+CsrInitConsole(PCSRSS_CONSOLE* NewConsole, int ShowCmd)
 {
     NTSTATUS Status;
     SECURITY_ATTRIBUTES SecurityAttributes;
+    PCSRSS_CONSOLE Console;
     PCSRSS_SCREEN_BUFFER NewBuffer;
     BOOL GuiMode;
     WCHAR Title[255];
 
+    if (NewConsole == NULL) return STATUS_INVALID_PARAMETER;
+
+    *NewConsole = NULL;
+
+    /* Allocate a console structure */
+    Console = HeapAlloc(ConSrvHeap, HEAP_ZERO_MEMORY, sizeof(CSRSS_CONSOLE));
+    if (NULL == Console)
+    {
+        DPRINT1("Not enough memory for console creation.\n");
+        return STATUS_NO_MEMORY;
+    }
+
+    /* Initialize the console */
     Console->Title.MaximumLength = Console->Title.Length = 0;
     Console->Title.Buffer = NULL;
 
@@ -112,6 +127,7 @@ CsrInitConsole(PCSRSS_CONSOLE Console, int ShowCmd)
     Console->Header.Type = CONIO_CONSOLE_MAGIC;
     Console->Header.Console = Console;
     Console->Mode = ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT | ENABLE_PROCESSED_INPUT | ENABLE_MOUSE_INPUT;
+    InitializeListHead(&Console->ProcessList);
     InitializeListHead(&Console->BufferList);
     Console->ActiveBuffer = NULL;
     InitializeListHead(&Console->ReadWaitQueue);
@@ -129,6 +145,7 @@ CsrInitConsole(PCSRSS_CONSOLE Console, int ShowCmd)
     if (NULL == Console->ActiveEvent)
     {
         RtlFreeUnicodeString(&Console->Title);
+        HeapFree(ConSrvHeap, 0, Console);
         return STATUS_UNSUCCESSFUL;
     }
     Console->PrivateData = NULL;
@@ -143,6 +160,7 @@ CsrInitConsole(PCSRSS_CONSOLE Console, int ShowCmd)
         RtlFreeUnicodeString(&Console->Title);
         DeleteCriticalSection(&Console->Lock);
         CloseHandle(Console->ActiveEvent);
+        HeapFree(ConSrvHeap, 0, Console);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
     /* init screen buffer with defaults */
@@ -186,6 +204,7 @@ CsrInitConsole(PCSRSS_CONSOLE Console, int ShowCmd)
             DeleteCriticalSection(&Console->Lock);
             CloseHandle(Console->ActiveEvent);
             DPRINT1("GuiInitConsole: failed, Status = 0x%08lx\n", Status);
+            HeapFree(ConSrvHeap, 0, Console);
             return Status;
         }
     }
@@ -199,11 +218,14 @@ CsrInitConsole(PCSRSS_CONSOLE Console, int ShowCmd)
         CloseHandle(Console->ActiveEvent);
         HeapFree(ConSrvHeap, 0, NewBuffer);
         DPRINT1("CsrInitConsoleScreenBuffer: failed\n");
+        HeapFree(ConSrvHeap, 0, Console);
         return Status;
     }
 
-    /* copy buffer contents to screen */
+    /* Copy buffer contents to screen */
     ConioDrawConsole(Console);
+
+    *NewConsole = Console;
 
     return STATUS_SUCCESS;
 }
@@ -271,109 +293,116 @@ CSR_API(SrvAllocConsole)
     NTSTATUS Status = STATUS_SUCCESS;
     PCSRSS_ALLOC_CONSOLE AllocConsoleRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.AllocConsoleRequest;
     PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);
-    PCSRSS_CONSOLE Console;
-    BOOLEAN NewConsole = FALSE;
 
     DPRINT("SrvAllocConsole\n");
 
-    RtlEnterCriticalSection(&ProcessData->HandleTableLock);
-
-    if (ProcessData->Console)
+    if (ProcessData->Console != NULL)
     {
         DPRINT1("Process already has a console\n");
-        RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
         return STATUS_INVALID_PARAMETER;
     }
 
+    RtlEnterCriticalSection(&ProcessData->HandleTableLock);
+
     DPRINT1("SrvAllocConsole - Checkpoint 1\n");
 
-    /* If we don't need a console, then get out of here */
-    if (!AllocConsoleRequest->ConsoleNeeded)
+    /* Initialize a new Console */
+    Status = CsrInitConsole(&ProcessData->Console, AllocConsoleRequest->ShowCmd);
+    if (!NT_SUCCESS(Status))
     {
-        DPRINT("No console needed\n");
+        DPRINT1("Console initialization failed\n");
         RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
-        return STATUS_SUCCESS;
+        return Status;
     }
 
-    /* If we already have one, then don't create a new one... */
-    if (!AllocConsoleRequest->Console ||
-         AllocConsoleRequest->Console != ProcessData->ParentConsole)
-    {
-        /* Allocate a console structure */
-        NewConsole = TRUE;
-        Console = HeapAlloc(ConSrvHeap, HEAP_ZERO_MEMORY, sizeof(CSRSS_CONSOLE));
-        if (NULL == Console)
-        {
-            DPRINT1("Not enough memory for console\n");
-            RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
-            return STATUS_NO_MEMORY;
-        }
-
-        /* Initialize list head */
-        InitializeListHead(&Console->ProcessList);
-
-        /* Insert process data required for GUI initialization */
-        InsertHeadList(&Console->ProcessList, &ProcessData->ConsoleLink);
-
-        /* Initialize the Console */
-        Status = CsrInitConsole(Console, AllocConsoleRequest->ShowCmd);
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT1("Console init failed\n");
-            HeapFree(ConSrvHeap, 0, Console);
-            RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
-            return Status;
-        }
-    }
-    else
-    {
-        /* Reuse our current console */
-        Console = AllocConsoleRequest->Console;
-    }
-
-    /* Set the Process Console */
-    ProcessData->Console = Console;
+    /* Insert the process into the processes list of the console */
+    InsertHeadList(&ProcessData->Console->ProcessList, &ProcessData->ConsoleLink);
 
     /* Return it to the caller */
-    AllocConsoleRequest->Console = Console;
+    AllocConsoleRequest->Console = ProcessData->Console;
 
     /* Add a reference count because the process is tied to the console */
-    _InterlockedIncrement(&Console->ReferenceCount);
+    _InterlockedIncrement(&ProcessData->Console->ReferenceCount);
 
-    if (NewConsole || !ProcessData->bInheritHandles)
+#if 0000
+    /*
+     * We've just created a new console. However when ConsoleNewProcess was
+     * called, we didn't know that we wanted to create a new console and
+     * therefore, we by default inherited the handles table from our parent
+     * process. It's only now that we notice that in fact we do not need
+     * them, because we've created a new console and thus we must use it.
+     *
+     * Therefore, free our handles table and recreate a new one.
+     */
+
+    ULONG i;
+
+    /* Close all console handles and free the handle table memory */
+    for (i = 0; i < ProcessData->HandleTableSize; i++)
     {
-        /* Insert the Objects */
-        Status = Win32CsrInsertObject(ProcessData,
-                                      &AllocConsoleRequest->InputHandle,
-                                      &Console->Header,
-                                      GENERIC_READ | GENERIC_WRITE,
-                                      TRUE,
-                                      FILE_SHARE_READ | FILE_SHARE_WRITE);
-        if (! NT_SUCCESS(Status))
-        {
-            DPRINT1("Failed to insert object\n");
-            ConioDeleteConsole((Object_t *) Console);
-            ProcessData->Console = NULL;
-            RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
-            return Status;
-        }
+        Win32CsrCloseHandleEntry(&ProcessData->HandleTable[i]);
+    }
+    ProcessData->HandleTableSize = 0;
+    RtlFreeHeap(ConSrvHeap, 0, ProcessData->HandleTable);
+    ProcessData->HandleTable = NULL;
+#endif
 
-        Status = Win32CsrInsertObject(ProcessData,
-                                      &AllocConsoleRequest->OutputHandle,
-                                      &Console->ActiveBuffer->Header,
-                                      GENERIC_READ | GENERIC_WRITE,
-                                      TRUE,
-                                      FILE_SHARE_READ | FILE_SHARE_WRITE);
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT1("Failed to insert object\n");
-            ConioDeleteConsole((Object_t *) Console);
-            Win32CsrReleaseObject(ProcessData,
-                                  AllocConsoleRequest->InputHandle);
-            ProcessData->Console = NULL;
-            RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
-            return Status;
-        }
+    /*
+     * Create a new handle table - Insert the IO handles
+     */
+
+    /* Insert the Input handle */
+    Status = Win32CsrInsertObject(ProcessData,
+                                  &AllocConsoleRequest->InputHandle,
+                                  &ProcessData->Console->Header,
+                                  GENERIC_READ | GENERIC_WRITE,
+                                  TRUE,
+                                  FILE_SHARE_READ | FILE_SHARE_WRITE);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to insert the input handle\n");
+        ConioDeleteConsole(ProcessData->Console);
+        ProcessData->Console = NULL;
+        RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
+        return Status;
+    }
+
+    /* Insert the Output handle */
+    Status = Win32CsrInsertObject(ProcessData,
+                                  &AllocConsoleRequest->OutputHandle,
+                                  &ProcessData->Console->ActiveBuffer->Header,
+                                  GENERIC_READ | GENERIC_WRITE,
+                                  TRUE,
+                                  FILE_SHARE_READ | FILE_SHARE_WRITE);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to insert the output handle\n");
+        ConioDeleteConsole(ProcessData->Console);
+        Win32CsrReleaseObject(ProcessData,
+                              AllocConsoleRequest->InputHandle);
+        ProcessData->Console = NULL;
+        RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
+        return Status;
+    }
+
+    /* Insert the Error handle */
+    Status = Win32CsrInsertObject(ProcessData,
+                                  &AllocConsoleRequest->ErrorHandle,
+                                  &ProcessData->Console->ActiveBuffer->Header,
+                                  GENERIC_READ | GENERIC_WRITE,
+                                  TRUE,
+                                  FILE_SHARE_READ | FILE_SHARE_WRITE);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to insert the error handle\n");
+        ConioDeleteConsole(ProcessData->Console);
+        Win32CsrReleaseObject(ProcessData,
+                              AllocConsoleRequest->OutputHandle);
+        Win32CsrReleaseObject(ProcessData,
+                              AllocConsoleRequest->InputHandle);
+        ProcessData->Console = NULL;
+        RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
+        return Status;
     }
 
     /* Duplicate the Event */
@@ -385,9 +414,11 @@ CSR_API(SrvAllocConsole)
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtDuplicateObject() failed: %lu\n", Status);
-        ConioDeleteConsole((Object_t *) Console);
-        if (NewConsole || !ProcessData->bInheritHandles)
+        ConioDeleteConsole(ProcessData->Console);
+        // if (NewConsole /* || !ProcessData->bInheritHandles */)
         {
+            Win32CsrReleaseObject(ProcessData,
+                                  AllocConsoleRequest->ErrorHandle);
             Win32CsrReleaseObject(ProcessData,
                                   AllocConsoleRequest->OutputHandle);
             Win32CsrReleaseObject(ProcessData,
@@ -397,16 +428,12 @@ CSR_API(SrvAllocConsole)
         RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
         return Status;
     }
+    /* Input Wait Handle */
+    AllocConsoleRequest->InputWaitHandle = ProcessData->ConsoleEvent;
 
     /* Set the Ctrl Dispatcher */
     ProcessData->CtrlDispatcher = AllocConsoleRequest->CtrlDispatcher;
     DPRINT("CSRSS:CtrlDispatcher address: %x\n", ProcessData->CtrlDispatcher);
-
-    if (!NewConsole)
-    {
-        /* Insert into the list if it has not been added */
-        InsertHeadList(&ProcessData->Console->ProcessList, &ProcessData->ConsoleLink);
-    }
 
     RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
     return STATUS_SUCCESS;
@@ -414,20 +441,17 @@ CSR_API(SrvAllocConsole)
 
 CSR_API(SrvFreeConsole)
 {
+    DPRINT1("SrvFreeConsole\n");
     Win32CsrReleaseConsole(CsrGetClientThread()->Process);
     return STATUS_SUCCESS;
 }
 
 VOID WINAPI
-ConioDeleteConsole(Object_t *Object)
+ConioDeleteConsole(PCSRSS_CONSOLE Console)
 {
-    PCSRSS_CONSOLE Console = (PCSRSS_CONSOLE) Object;
     ConsoleInput *Event;
 
     DPRINT("ConioDeleteConsole\n");
-
-    /* TODO: Dereference all the waits in Console->ReadWaitQueue */
-    /* TODO: Dereference all the waits in Console->WriteWaitQueue */
 
     /* Drain input event queue */
     while (Console->InputEvents.Flink != &Console->InputEvents)

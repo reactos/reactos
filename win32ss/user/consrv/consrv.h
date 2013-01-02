@@ -35,6 +35,9 @@ extern HANDLE ConSrvHeap;
 // extern HANDLE BaseSrvSharedHeap;
 // extern PBASE_STATIC_SERVER_DATA BaseStaticServerData;
 
+/* Object type magic numbers */
+#define CONIO_CONSOLE_MAGIC         0x00000001  // -->  Input-type handles
+#define CONIO_SCREEN_BUFFER_MAGIC   0x00000002  // --> Output-type handles
 
 /* Common things to input/output/console objects */
 typedef struct Object_tt
@@ -62,14 +65,17 @@ typedef struct _CSRSS_HANDLE
 typedef struct _CONSOLE_PROCESS_DATA
 {
     LIST_ENTRY ConsoleLink;
-    PCSR_PROCESS Process;   // Parent process.
+    PCSR_PROCESS Process;   // Process owning this structure.
     HANDLE ConsoleEvent;
     /* PCSRSS_CONSOLE */ struct tagCSRSS_CONSOLE* Console;
     /* PCSRSS_CONSOLE */ struct tagCSRSS_CONSOLE* ParentConsole;
-    BOOL bInheritHandles;
+
+    // BOOL bInheritHandles;
+    BOOL ConsoleApp;    // TRUE if it is a CUI app, FALSE otherwise.
+
     RTL_CRITICAL_SECTION HandleTableLock;
     ULONG HandleTableSize;
-    /* PCSRSS_HANDLE */ struct _CSRSS_HANDLE* HandleTable; // Is it a length-varying table or length-fixed ??
+    PCSRSS_HANDLE HandleTable; // Length-varying table
     LPTHREAD_START_ROUTINE CtrlDispatcher;
 } CONSOLE_PROCESS_DATA, *PCONSOLE_PROCESS_DATA;
 
@@ -128,11 +134,7 @@ CSR_API(SrvGetConsoleSelectionInfo);
 CSR_API(SrvCloseHandle);
 CSR_API(SrvVerifyConsoleIoHandle);
 CSR_API(SrvDuplicateHandle);
-CSR_API(CsrGetInputWaitHandle);
-
-NTSTATUS NTAPI ConsoleNewProcess(PCSR_PROCESS SourceProcess,
-                                 PCSR_PROCESS TargetProcess);
-VOID NTAPI Win32CsrReleaseConsole(PCSR_PROCESS Process);
+/// CSR_API(CsrGetInputWaitHandle);
 
 NTSTATUS FASTCALL Win32CsrInsertObject(PCONSOLE_PROCESS_DATA ProcessData,
                                        PHANDLE Handle,
@@ -148,6 +150,14 @@ NTSTATUS FASTCALL Win32CsrLockObject(PCONSOLE_PROCESS_DATA ProcessData,
 VOID FASTCALL Win32CsrUnlockObject(Object_t *Object);
 NTSTATUS FASTCALL Win32CsrReleaseObject(PCONSOLE_PROCESS_DATA ProcessData,
                                         HANDLE Handle);
+
+NTSTATUS NTAPI ConsoleNewProcess(PCSR_PROCESS SourceProcess,
+                                 PCSR_PROCESS TargetProcess);
+NTSTATUS NTAPI ConsoleConnect(IN PCSR_PROCESS CsrProcess,
+                              IN OUT PVOID ConnectionInfo,
+                              IN OUT PULONG ConnectionInfoLength);
+VOID NTAPI ConsoleDisconnect(PCSR_PROCESS Process);
+VOID NTAPI Win32CsrReleaseConsole(PCSR_PROCESS Process);
 
 /* lineinput.c */
 CSR_API(SrvGetConsoleCommandHistoryLength);
