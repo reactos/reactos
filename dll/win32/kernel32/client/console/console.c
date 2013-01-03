@@ -51,16 +51,16 @@ DefaultConsoleCtrlHandler(DWORD Event)
             DPRINT("Ctrl-Break Event\n");
             break;
 
-        case CTRL_SHUTDOWN_EVENT:
-            DPRINT("Ctrl Shutdown Event\n");
-            break;
-
         case CTRL_CLOSE_EVENT:
             DPRINT("Ctrl Close Event\n");
             break;
 
         case CTRL_LOGOFF_EVENT:
             DPRINT("Ctrl Logoff Event\n");
+            break;
+
+        case CTRL_SHUTDOWN_EVENT:
+            DPRINT("Ctrl Shutdown Event\n");
             break;
     }
 

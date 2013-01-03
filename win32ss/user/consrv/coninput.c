@@ -88,6 +88,16 @@ ConioProcessChar(PCSRSS_CONSOLE Console,
     InsertTailList(&Console->InputEvents, &ConInRec->ListEntry);
 
     SetEvent(Console->ActiveEvent);
+/*
+    if (CsrNotifyWait(&Console->ReadWaitQueue,
+                      WaitAny,
+                      NULL,
+                      NULL))
+    {
+        ASSERT(Console->SatisfiedWaits == NULL);
+        Console->SatisfiedWaits = &Console->ReadWaitQueue;
+    }
+*/
     CsrNotifyWait(&Console->ReadWaitQueue,
                   WaitAny,
                   NULL,
@@ -255,7 +265,7 @@ ConioProcessKey(MSG *msg, PCSRSS_CONSOLE Console, BOOL TextMode)
         {
             current = CONTAINING_RECORD(current_entry, CONSOLE_PROCESS_DATA, ConsoleLink);
             current_entry = current_entry->Flink;
-            ConioConsoleCtrlEvent((DWORD)CTRL_C_EVENT, current);
+            ConioConsoleCtrlEvent(CTRL_C_EVENT, current);
         }
         if (Console->LineBuffer && !Console->LineComplete)
         {
@@ -324,6 +334,7 @@ WaitBeforeReading(IN PGET_INPUT_INFO InputInfo,
                            CapturedInputInfo,
                            NULL))
         {
+            /* Fail */
             HeapFree(ConSrvHeap, 0, CapturedInputInfo);
             return STATUS_NO_MEMORY;
         }
@@ -353,11 +364,46 @@ ReadInputBufferThread(IN PLIST_ENTRY WaitList,
     PCSRSS_GET_CONSOLE_INPUT GetConsoleInputRequest = &((PCONSOLE_API_MESSAGE)WaitApiMessage)->Data.GetConsoleInputRequest;
     PGET_INPUT_INFO InputInfo = (PGET_INPUT_INFO)WaitContext;
 
+    DWORD Flag = (DWORD)WaitArgument1;
+    BOOLEAN InputHandleClosing = (WaitArgument2 == (PVOID)0xdeaddead);
+
+    DPRINT("ReadInputBufferThread - WaitContext = 0x%p, WaitArgument1 = 0x%p, WaitArgument2 = 0x%p, WaitFlags = %lu\n", WaitContext, WaitArgument1, WaitArgument2, WaitFlags);
+
+    /*
+     * If we are signaled by pressing Ctrl-C or Ctrl-Break,
+     * just ignore this event.
+     */
+    if ( (Flag == 1 << CTRL_C_EVENT) ||
+         (Flag == 1 << CTRL_BREAK_EVENT) )
+    {
+        return FALSE;
+    }
+
+    /*
+     * If we are called via CsrNotifyWaitBlock by a call to
+     * CsrDestroyProcess or CsrDestroyThread, just return.
+     */
+    if (WaitFlags & CsrProcessTerminating)
+    {
+        Status = STATUS_THREAD_IS_TERMINATING;
+        goto Quit;
+    }
+
+    /*
+     * If we are about to close an input handle, then just return.
+     */
+    if (InputHandleClosing)
+    {
+        Status = STATUS_ALERTED;
+        goto Quit;
+    }
+
     Status = ReadInputBuffer(InputInfo,
                              GetConsoleInputRequest->bRead,
                              WaitApiMessage,
                              FALSE);
 
+Quit:
     if (Status != STATUS_PENDING)
     {
         WaitApiMessage->Status = Status;
@@ -450,10 +496,38 @@ ReadCharsThread(IN PLIST_ENTRY WaitList,
     NTSTATUS Status;
     PGET_INPUT_INFO InputInfo = (PGET_INPUT_INFO)WaitContext;
 
+    DWORD Flag = (DWORD)WaitArgument1;
+    BOOLEAN InputHandleClosing = (WaitArgument2 == (PVOID)0xdeaddead);
+
+    DPRINT("ReadCharsThread - WaitContext = 0x%p, WaitArgument1 = 0x%p, WaitArgument2 = 0x%p, WaitFlags = %lu\n", WaitContext, WaitArgument1, WaitArgument2, WaitFlags);
+
+    /*
+     * If we are called via CsrNotifyWaitBlock by a call to
+     * CsrDestroyProcess or CsrDestroyThread, just return.
+     */
+    if (WaitFlags & CsrProcessTerminating)
+    {
+        Status = STATUS_THREAD_IS_TERMINATING;
+        goto Quit;
+    }
+
+    /*
+     * If we are signaled by pressing Ctrl-C or Ctrl-Break,
+     * or that we close an input handle, then just return.
+     */
+    if ( (Flag == 1 << CTRL_C_EVENT)     ||
+         (Flag == 1 << CTRL_BREAK_EVENT) ||
+         (InputHandleClosing == TRUE) )
+    {
+        Status = STATUS_ALERTED;
+        goto Quit;
+    }
+
     Status = ReadChars(InputInfo,
                        WaitApiMessage,
                        FALSE);
 
+Quit:
     if (Status != STATUS_PENDING)
     {
         WaitApiMessage->Status = Status;
@@ -479,6 +553,7 @@ ReadChars(IN PGET_INPUT_INFO InputInfo,
 
     /* We haven't read anything (yet) */
 
+    // Cooked-like mode
     if (InputInfo->Console->Mode & ENABLE_LINE_INPUT)
     {
         if (InputInfo->Console->LineBuffer == NULL)
@@ -563,7 +638,7 @@ ReadChars(IN PGET_INPUT_INFO InputInfo,
             WaitForMoreToRead = FALSE;
         }
     }
-    else
+    else // Raw-like mode
     {
         /* Character input */
         while ( ReadConsoleRequest->NrCharactersRead < nNumberOfCharsToRead &&

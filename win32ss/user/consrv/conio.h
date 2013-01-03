@@ -29,16 +29,17 @@
 typedef struct tagCSRSS_SCREEN_BUFFER
 {
     Object_t Header;                 /* Object header */
-    BYTE *Buffer;                    /* pointer to screen buffer */
-    USHORT MaxX, MaxY;               /* size of the entire scrollback buffer */
-    USHORT ShowX, ShowY;             /* beginning offset for the actual display area */
+    LIST_ENTRY ListEntry;            /* Entry in console's list of buffers */
+
+    BYTE *Buffer;                    /* Pointer to screen buffer */
+    USHORT MaxX, MaxY;               /* Size of the entire scrollback buffer */
+    USHORT ShowX, ShowY;             /* Beginning offset for the actual display area */
     ULONG CurrentX;                  /* Current X cursor position */
     ULONG CurrentY;                  /* Current Y cursor position */
-    WORD DefaultAttrib;              /* default char attribute */
-    USHORT VirtualY;                 /* top row of buffer being displayed, reported to callers */
+    WORD DefaultAttrib;              /* Default char attribute */
+    USHORT VirtualY;                 /* Top row of buffer being displayed, reported to callers */
     CONSOLE_CURSOR_INFO CursorInfo;
     USHORT Mode;
-    LIST_ENTRY ListEntry;            /* entry in console's list of buffers */
 } CSRSS_SCREEN_BUFFER, *PCSRSS_SCREEN_BUFFER;
 
 typedef struct tagCSRSS_CONSOLE
@@ -76,6 +77,15 @@ typedef struct tagCSRSS_CONSOLE
     BYTE PauseFlags;
     HANDLE UnpauseEvent;
     LIST_ENTRY WriteWaitQueue;            /* List head for the queue of write wait blocks */
+
+#if 0
+    /* Pointers to lists of wait blocks, when they contain satisfied waits to be freed */
+    PLIST_ENTRY SatisfiedWaits;
+
+    /* Pointers to lists of wait blocks, when they contain satisfied waits to be freed */
+    PLIST_ENTRY ReadSatisfiedWaits;
+    PLIST_ENTRY WriteSatisfiedWaits;
+#endif
 
     WORD Mode;                            /* Console mode flags */
     UNICODE_STRING Title;                 /* Title of console */

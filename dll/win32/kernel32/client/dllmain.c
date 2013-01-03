@@ -13,7 +13,7 @@
 
 #include <k32.h>
 
-// #define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 /* GLOBALS *******************************************************************/
@@ -353,7 +353,7 @@ DllMain(HANDLE hDll,
         /* Initialize Console Support */
         if (!BasepInitConsole())
         {
-            DPRINT1("Failure to set up console\n");
+            DPRINT1("Failed to set up console\n");
             return FALSE;
         }
 

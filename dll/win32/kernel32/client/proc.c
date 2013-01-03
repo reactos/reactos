@@ -12,7 +12,7 @@
 
 #include <k32.h>
 
-// #define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 /* GLOBALS *******************************************************************/
@@ -511,7 +511,7 @@ BasepNotifyCsrOfThread(IN HANDLE ThreadHandle,
                                  sizeof(BASE_CREATE_THREAD));
     if (!NT_SUCCESS(Status) || !NT_SUCCESS(ApiMessage.Status))
     {
-        DPRINT1("Failed to tell csrss about new thread: %lx %lx\n", Status, ApiMessage.Status);
+        DPRINT1("Failed to tell CSRSS about new thread: %lx %lx\n", Status, ApiMessage.Status);
         return ApiMessage.Status;
     }
 
@@ -590,14 +590,13 @@ BasepCreateFirstThread(HANDLE ProcessHandle,
     }
 
     /* Call CSR */
-    DPRINT1("Calling CsrClientCallServer from BasepCreateFirstThread...\n");
     Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                                  NULL,
                                  CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepCreateProcess),
                                  sizeof(BASE_CREATE_PROCESS));
     if (!NT_SUCCESS(Status) || !NT_SUCCESS(ApiMessage.Status))
     {
-        DPRINT1("Failed to tell csrss about new process: %lx %lx\n", Status, ApiMessage.Status);
+        DPRINT1("Failed to tell CSRSS about new process: %lx %lx\n", Status, ApiMessage.Status);
         return NULL;
     }
 
@@ -1201,7 +1200,7 @@ GetProcessShutdownParameters(OUT LPDWORD lpdwLevel,
         return FALSE;
     }
 
-    /* Get the data out of the LCP reply */
+    /* Get the data back */
     *lpdwLevel = GetShutdownParametersRequest->Level;
     *lpdwFlags = GetShutdownParametersRequest->Flags;
     return TRUE;

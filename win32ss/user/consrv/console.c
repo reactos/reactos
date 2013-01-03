@@ -64,6 +64,42 @@ ConioConsoleCtrlEventTimeout(DWORD Event,
 
     DPRINT("ConioConsoleCtrlEvent Parent ProcessId = %x\n", ProcessData->Process->ClientId.UniqueProcess);
 
+    /* Notify all the waits only if we see Ctrl-C or Ctrl-Break */
+    if (Event == CTRL_C_EVENT || Event == CTRL_BREAK_EVENT)
+    {
+        DWORD  Flag = (1 << Event); // Transform an integer value to a power of 2.
+        NTSTATUS Status;
+        PCSRSS_CONSOLE Console;
+        // LIST_ENTRY WaitQueue;
+
+        DPRINT1("ConioConsoleCtrlEvent - Ctrl-C captured\n");
+        Status = ConioConsoleFromProcessData(ProcessData, &Console);
+        if (NT_SUCCESS(Status))
+        {
+            DPRINT1("ConioConsoleCtrlEvent - console captured, try to dereference waits...\n");
+            /*
+             * Wake-up all of the writing waiters, dereference them
+             * and purge them all from the list.
+             */
+            if (CsrNotifyWait(&Console->ReadWaitQueue,
+                              WaitAll,
+                              (PVOID)Flag,
+                              NULL))
+            {
+                DPRINT1("ConioConsoleCtrlEvent - waits dereferenced...\n");
+                // InitializeListHead(&WaitQueue);
+
+                // CsrMoveSatisfiedWait(&WaitQueue, &Console->ReadWaitQueue);
+                if (!IsListEmpty(&Console->ReadWaitQueue /* &WaitQueue */))
+                {
+                    CsrDereferenceWait(&Console->ReadWaitQueue /* &WaitQueue */);
+                }
+            }
+            ConioUnlockConsole(Console); // NOTE_WAITS: <-- Here we have the possibility to free the console waits also.
+        }
+    }
+
+    /* Notify the process of the control event */
     if (ProcessData->CtrlDispatcher)
     {
         Thread = CreateRemoteThread(ProcessData->Process->ProcessHandle, NULL, 0,
@@ -130,6 +166,7 @@ CsrInitConsole(PCSRSS_CONSOLE* NewConsole, int ShowCmd)
     InitializeListHead(&Console->ProcessList);
     InitializeListHead(&Console->BufferList);
     Console->ActiveBuffer = NULL;
+    // Console->SatisfiedWaits = NULL;
     InitializeListHead(&Console->ReadWaitQueue);
     InitializeListHead(&Console->WriteWaitQueue);
     InitializeListHead(&Console->InputEvents);
@@ -453,6 +490,9 @@ ConioDeleteConsole(PCSRSS_CONSOLE Console)
 
     DPRINT("ConioDeleteConsole\n");
 
+    /* TODO: Dereference all the waits in Console->ReadWaitQueue */
+    /* TODO: Dereference all the waits in Console->WriteWaitQueue */
+
     /* Drain input event queue */
     while (Console->InputEvents.Flink != &Console->InputEvents)
     {
@@ -501,6 +541,8 @@ ConioPause(PCSRSS_CONSOLE Console, UINT Flags)
 VOID FASTCALL
 ConioUnpause(PCSRSS_CONSOLE Console, UINT Flags)
 {
+    // LIST_ENTRY WaitQueue;
+
     Console->PauseFlags &= ~Flags;
 
     // if ((Console->PauseFlags & (PAUSED_FROM_KEYBOARD | PAUSED_FROM_SCROLLBAR | PAUSED_FROM_SELECTION)) == 0)
@@ -510,10 +552,23 @@ ConioUnpause(PCSRSS_CONSOLE Console, UINT Flags)
         CloseHandle(Console->UnpauseEvent);
         Console->UnpauseEvent = NULL;
 
-        CsrNotifyWait(&Console->WriteWaitQueue,
-                      WaitAll,
-                      NULL,
-                      NULL);
+        /*
+         * Wake-up all of the writing waiters, dereference them
+         * and purge them all from the list.
+         */
+        if (CsrNotifyWait(&Console->WriteWaitQueue,
+                          WaitAll,
+                          NULL,
+                          NULL))
+        {
+            // InitializeListHead(&WaitQueue);
+
+            // CsrMoveSatisfiedWait(&WaitQueue, &Console->WriteWaitQueue);
+            if (!IsListEmpty(&Console->WriteWaitQueue /* &WaitQueue */))
+            {
+                CsrDereferenceWait(&Console->WriteWaitQueue /* &WaitQueue */);
+            }
+        }
     }
 }
 
