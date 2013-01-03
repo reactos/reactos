@@ -1007,7 +1007,7 @@ CsrGetProcessLuid(IN HANDLE hProcess OPTIONAL,
  * @param CsrThread
  *        Pointer to the CSR Thread to impersonate.
  *
- * @return TRUE if impersionation suceeded, false otherwise.
+ * @return TRUE if impersonation succeeded, false otherwise.
  *
  * @remarks Impersonation can be recursive.
  *

@@ -127,13 +127,13 @@ CsrNotifyWaitBlock(IN PCSR_WAIT_BLOCK WaitBlock,
                    IN BOOLEAN DereferenceThread)
 {
     /* Call the wait function */
-    if ((WaitBlock->WaitFunction)(WaitList,
-                                  WaitBlock->WaitThread,
-                                  &WaitBlock->WaitApiMessage,
-                                  WaitBlock->WaitContext,
-                                  WaitArgument1,
-                                  WaitArgument2,
-                                  WaitFlags))
+    if (WaitBlock->WaitFunction(WaitList,
+                                WaitBlock->WaitThread,
+                                &WaitBlock->WaitApiMessage,
+                                WaitBlock->WaitContext,
+                                WaitArgument1,
+                                WaitArgument2,
+                                WaitFlags))
     {
         /* The wait is done, clear the block */
         WaitBlock->WaitThread->WaitBlock = NULL;
@@ -175,11 +175,11 @@ CsrNotifyWaitBlock(IN PCSR_WAIT_BLOCK WaitBlock,
             /* The wait is complete, but the thread is being kept alive */
             WaitBlock->WaitFunction = NULL;
         }
-    
-        /* The wait suceeded */
+
+        /* The wait succeeded */
         return TRUE;
     }
-    
+
     /* The wait failed */
     return FALSE;
 }
@@ -297,8 +297,8 @@ CsrDereferenceWait(IN PLIST_ENTRY WaitList)
         /* Move to the next entry */
         NextEntry = NextEntry->Flink;
 
-        /* Check if there's no Wait Routine */
-        if (!WaitBlock->WaitFunction)
+        /* Check if there's no Wait Routine (satisfied wait) */
+        if (WaitBlock->WaitFunction == NULL)
         {
             /* Remove it from the Wait List */
             if (WaitBlock->WaitList.Flink)
@@ -366,8 +366,8 @@ CsrMoveSatisfiedWait(IN PLIST_ENTRY NewEntry,
         /* Go to the next entry */
         NextEntry = NextEntry->Flink;
 
-        /* Check if there is a Wait Callback */
-        if (WaitBlock->WaitFunction)
+        /* Check if there's no Wait Routine (satisfied wait) */
+        if (WaitBlock->WaitFunction == NULL)
         {
             /* Remove it from the Wait Block Queue */
             RemoveEntryList(&WaitBlock->WaitList);
@@ -427,8 +427,8 @@ CsrNotifyWait(IN PLIST_ENTRY WaitList,
         /* Go to the next entry */
         NextEntry = NextEntry->Flink;
 
-        /* Check if there is a Wait Callback */
-        if (WaitBlock->WaitFunction)
+        /* Check if there is a Wait Routine */
+        if (WaitBlock->WaitFunction != NULL)
         {
             /* Notify the Waiter */
             NotifySuccess |= CsrNotifyWaitBlock(WaitBlock,

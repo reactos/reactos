@@ -11,7 +11,7 @@
 
 #include "srv.h"
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 /* GLOBALS ********************************************************************/
@@ -1329,7 +1329,7 @@ CsrReleaseCapturedArguments(IN PCSR_API_MESSAGE ApiMessage)
  * @param ElementSize
  *        Size of each element.
  *
- * @return TRUE if validation suceeded, FALSE otherwise.
+ * @return TRUE if validation succeeded, FALSE otherwise.
  *
  * @remarks None.
  *
@@ -1447,7 +1447,7 @@ Win32CsrValidateBuffer(PCSR_PROCESS ProcessData, PVOID Buffer,
  * @param MessageString
  *        Pointer to the buffer containing the string to validate.
  *
- * @return TRUE if validation suceeded, FALSE otherwise.
+ * @return TRUE if validation succeeded, FALSE otherwise.
  *
  * @remarks None.
  *

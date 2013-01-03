@@ -83,7 +83,7 @@ CSR_API(BaseSrvCreateProcess)
     }
     if ((Flags & 2) == 0)
     {
-        DPRINT1("BaseSrvCreateProcess - Launching a Console process\n");
+        /* We are launching a console process */
         DebugFlags |= CsrProcessIsConsoleApp;
     }
 
