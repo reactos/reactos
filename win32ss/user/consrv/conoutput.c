@@ -447,23 +447,10 @@ WriteConsoleThread(IN PLIST_ENTRY WaitList,
 {
     NTSTATUS Status;
 
-    DPRINT("WriteConsoleThread - WaitContext = 0x%p, WaitArgument1 = 0x%p, WaitArgument2 = 0x%p, WaitFlags = %lu\n", WaitContext, WaitArgument1, WaitArgument2, WaitFlags);
-
-    /*
-     * If we are called via CsrNotifyWaitBlock by a call to
-     * CsrDestroyProcess or CsrDestroyThread, just return.
-     */
-    if (WaitFlags & CsrProcessTerminating)
-    {
-        Status = STATUS_THREAD_IS_TERMINATING;
-        goto Quit;
-    }
-
     Status = DoWriteConsole(WaitApiMessage,
                             WaitThread,
                             FALSE);
 
-Quit:
     if (Status != STATUS_PENDING)
     {
         WaitApiMessage->Status = Status;

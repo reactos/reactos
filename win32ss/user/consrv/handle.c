@@ -11,7 +11,7 @@
 #include "consrv.h"
 #include "conio.h"
 
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 
 
@@ -47,32 +47,10 @@ static VOID
 Win32CsrCloseHandleEntry(PCSRSS_HANDLE Entry)
 {
     Object_t *Object = Entry->Object;
-
     if (Object != NULL)
     {
         PCSRSS_CONSOLE Console = Object->Console;
         EnterCriticalSection(&Console->Lock);
-
-        if (Object->Type == CONIO_CONSOLE_MAGIC)
-        {
-            // LIST_ENTRY WaitQueue;
-
-            /*
-             * Wake-up all of the writing waiters if any, dereference them
-             * and purge them all from the list.
-             */
-            CsrNotifyWait(&Console->ReadWaitQueue,
-                              WaitAll,
-                              NULL,
-                              (PVOID)0xdeaddead);
-            // InitializeListHead(&WaitQueue);
-
-            // CsrMoveSatisfiedWait(&WaitQueue, &Console->ReadWaitQueue);
-            if (!IsListEmpty(&Console->ReadWaitQueue /* &WaitQueue */))
-            {
-                CsrDereferenceWait(&Console->ReadWaitQueue /* &WaitQueue */);
-            }
-        }
 
         /* If the last handle to a screen buffer is closed, delete it... */
         if (AdjustHandleCounts(Entry, -1) == 0)
@@ -165,6 +143,8 @@ Win32CsrReleaseObject(PCONSOLE_PROCESS_DATA ProcessData,
         RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
         return STATUS_INVALID_HANDLE;
     }
+
+    DPRINT1("Win32CsrReleaseObject - Process 0x%p, Release 0x%p\n", ProcessData->Process, &ProcessData->HandleTable[h]);
     Win32CsrCloseHandleEntry(&ProcessData->HandleTable[h]);
 
     RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
@@ -209,23 +189,6 @@ VOID FASTCALL
 Win32CsrUnlockConsole(PCSRSS_CONSOLE Console)
 {
     LeaveCriticalSection(&Console->Lock);
-
-#if 0
-    /* If it was the last held lock for the owning thread... */
-    if (&Console->Lock.RecursionCount == 0)
-    {
-        /* ...dereference waiting threads if any */
-        LIST_ENTRY WaitQueue;
-        InitializeListHead(&WaitQueue);
-
-        CsrMoveSatisfiedWait(&WaitQueue, Console->SatisfiedWaits);
-        Console->SatisfiedWaits = NULL;
-        if (!IsListEmpty(&WaitQueue))
-        {
-            CsrDereferenceWait(&WaitQueue);
-        }
-    }
-#endif
 
     /* Decrement reference count */
     if (_InterlockedDecrement(&Console->ReferenceCount) == 0)
