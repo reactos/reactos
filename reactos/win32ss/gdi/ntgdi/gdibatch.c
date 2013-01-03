@@ -127,6 +127,8 @@ GdiFlushUserBatch(PDC dc, PGDIBATCHHDR pHdr)
            /* LFONTOBJ use share and locking. */
            pNewFnt = TEXTOBJ_LockText(pgO->hgdiobj);
 
+           if (dc->dclevel.plfnt) LFONT_ShareUnlockFont(dc->dclevel.plfnt);
+           if (pNewFnt) GDIOBJ_vReferenceObjectByPointer(&pNewFnt->BaseObject);
            dc->dclevel.plfnt = pNewFnt;
            dc->hlfntCur = pgO->hgdiobj;
            pdcattr->hlfntNew = pgO->hgdiobj;

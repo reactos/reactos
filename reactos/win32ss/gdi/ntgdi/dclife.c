@@ -319,7 +319,7 @@ DC_vInitDc(
 	pdc->dcattr.lBreakExtra = 0;
 	pdc->dcattr.cBreak = 0;
     pdc->dcattr.hlfntNew = StockObjects[SYSTEM_FONT];
-//	pdc->dclevel.pFont = LFONT_ShareLockFont(pdc->dcattr.hlfntNew);
+    pdc->dclevel.plfnt = LFONT_ShareLockFont(pdc->dcattr.hlfntNew);
 
     /* Other stuff */
     pdc->hdcNext = NULL;
@@ -367,6 +367,9 @@ DC_Cleanup(PVOID ObjectBody)
     EBRUSHOBJ_vCleanup(&pdc->eboLine);
     EBRUSHOBJ_vCleanup(&pdc->eboText);
     EBRUSHOBJ_vCleanup(&pdc->eboBackground);
+
+    /* Release font */
+    LFONT_ShareUnlockFont(pdc->dclevel.plfnt);
 
     /*  Free regions */
     if (pdc->rosdc.hClipRgn && GreIsHandleValid(pdc->rosdc.hClipRgn))

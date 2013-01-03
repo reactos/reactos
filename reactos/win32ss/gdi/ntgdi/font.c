@@ -426,6 +426,8 @@ GreSelectFont( HDC hDC, HFONT hFont)
        {
           hOrgFont = pdcattr->hlfntNew;
        }
+       if (pdc->dclevel.plfnt) LFONT_ShareUnlockFont(pdc->dclevel.plfnt);
+       if (pNewFnt) GDIOBJ_vReferenceObjectByPointer(&pNewFnt->BaseObject);
        pdc->dclevel.plfnt = pNewFnt;
        pdc->hlfntCur = hFont;
        pdcattr->hlfntNew = hFont;
