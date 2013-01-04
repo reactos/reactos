@@ -12,11 +12,13 @@
 #include "guiconsole.h"
 #include <psapi.h>
 
-/* Public Win32K Headers */
-#include <ntuser.h>
-
 #define NDEBUG
 #include <debug.h>
+
+
+/* GUI Console Window Class name */
+#define GUI_CONSOLE_WINDOW_CLASS L"ConsoleWindowClass"
+
 
 /* Not defined in any header file */
 // extern VOID WINAPI PrivateCsrssManualGuiCheck(LONG Check);
@@ -194,7 +196,7 @@ GuiConsoleCreateSysMenu(PCSRSS_CONSOLE Console)
 static VOID
 GuiConsoleGetDataPointers(HWND hWnd, PCSRSS_CONSOLE *Console, PGUI_CONSOLE_DATA *GuiData)
 {
-    *Console = (PCSRSS_CONSOLE) GetWindowLongPtrW(hWnd, GWL_USERDATA);
+    *Console = (PCSRSS_CONSOLE)GetWindowLongPtrW(hWnd, GWLP_USERDATA);
     *GuiData = (NULL == *Console ? NULL : (*Console)->PrivateData);
 }
 
@@ -693,9 +695,9 @@ GuiConsoleInitScrollbar(PCSRSS_CONSOLE Console, HWND hwnd)
 }
 
 static BOOL
-GuiConsoleHandleNcCreate(HWND hWnd, CREATESTRUCTW *Create)
+GuiConsoleHandleNcCreate(HWND hWnd, LPCREATESTRUCTW Create)
 {
-    PCSRSS_CONSOLE Console = (PCSRSS_CONSOLE) Create->lpCreateParams;
+    PCSRSS_CONSOLE Console = (PCSRSS_CONSOLE)Create->lpCreateParams;
     PGUI_CONSOLE_DATA GuiData = (PGUI_CONSOLE_DATA)Console->PrivateData;
     HDC Dc;
     HFONT OldFont;
@@ -788,7 +790,7 @@ GuiConsoleHandleNcCreate(HWND hWnd, CREATESTRUCTW *Create)
 
     DPRINT("Console %p GuiData %p\n", Console, GuiData);
     Console->PrivateData = GuiData;
-    SetWindowLongPtrW(hWnd, GWL_USERDATA, (DWORD_PTR) Console);
+    SetWindowLongPtrW(hWnd, GWLP_USERDATA, (DWORD_PTR)Console);
 
     SetTimer(hWnd, CONGUI_UPDATE_TIMER, CONGUI_UPDATE_TIME, NULL);
     GuiConsoleCreateSysMenu(Console);
@@ -1512,7 +1514,6 @@ GuiConsoleRightMouseDown(HWND hWnd)
 
 }
 
-
 static VOID
 GuiConsoleShowConsoleProperties(HWND hWnd, BOOL Defaults, PGUI_CONSOLE_DATA GuiData)
 {
@@ -2004,7 +2005,7 @@ GuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     switch(msg)
     {
     case WM_NCCREATE:
-        Result = (LRESULT) GuiConsoleHandleNcCreate(hWnd, (CREATESTRUCTW *) lParam);
+        Result = (LRESULT) GuiConsoleHandleNcCreate(hWnd, (LPCREATESTRUCTW)lParam);
         break;
     case WM_PAINT:
         GuiConsoleHandlePaint(hWnd, (HDC)wParam);
@@ -2074,8 +2075,6 @@ GuiConsoleNotifyWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     PWCHAR Buffer, Title;
     PCSRSS_CONSOLE Console = (PCSRSS_CONSOLE) lParam;
 
-
-
     switch(msg)
     {
     case WM_CREATE:
@@ -2095,7 +2094,7 @@ GuiConsoleNotifyWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             Title = L"";
         }
         NewWindow = CreateWindowExW(WS_EX_CLIENTEDGE,
-                                    L"ConsoleWindowClass",
+                                    GUI_CONSOLE_WINDOW_CLASS,
                                     Title,
                                     WS_OVERLAPPEDWINDOW | WS_HSCROLL | WS_VSCROLL,
                                     CW_USEDEFAULT,
@@ -2104,18 +2103,19 @@ GuiConsoleNotifyWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
                                     CW_USEDEFAULT,
                                     NULL,
                                     NULL,
-                                    (HINSTANCE) GetModuleHandleW(NULL),
-                                    (PVOID) Console);
+                                    (HINSTANCE)GetModuleHandleW(NULL),
+                                    (PVOID)Console);
         if (NULL != Buffer)
         {
             HeapFree(ConSrvHeap, 0, Buffer);
         }
         if (NULL != NewWindow)
         {
+            SetConsoleWndConsoleLeaderCID(Console);
             SetWindowLongW(hWnd, GWL_USERDATA, GetWindowLongW(hWnd, GWL_USERDATA) + 1);
             ShowWindow(NewWindow, (int)wParam);
         }
-        return (LRESULT) NewWindow;
+        return (LRESULT)NewWindow;
     case PM_DESTROY_CONSOLE:
         /* Window creation is done using a PostMessage(), so it's possible that the
          * window that we want to destroy doesn't exist yet. So first empty the message
@@ -2182,6 +2182,7 @@ static BOOL
 GuiInit(VOID)
 {
     WNDCLASSEXW wc;
+    ATOM ConsoleClassAtom;
 
     if (NULL == NotifyWnd)
     {
@@ -2202,12 +2203,12 @@ GuiInit(VOID)
     wc.hIconSm = NULL;
     if (RegisterClassExW(&wc) == 0)
     {
-        DPRINT1("Failed to register notify wndproc\n");
+        DPRINT1("Failed to register GUI notify wndproc\n");
         return FALSE;
     }
 
     wc.cbSize = sizeof(WNDCLASSEXW);
-    wc.lpszClassName = L"ConsoleWindowClass";
+    wc.lpszClassName = GUI_CONSOLE_WINDOW_CLASS;
     wc.lpfnWndProc = GuiConsoleWndProc;
     wc.style = 0;
     wc.hInstance = (HINSTANCE)GetModuleHandleW(NULL);
@@ -2216,14 +2217,20 @@ GuiInit(VOID)
     wc.hbrBackground = CreateSolidBrush(RGB(0,0,0));
     wc.lpszMenuName = NULL;
     wc.cbClsExtra = 0;
-    wc.cbWndExtra = 0;
+    wc.cbWndExtra = GWLP_CONSOLEWND_ALLOC;
     wc.hIconSm = LoadImageW(ConSrvDllInstance, MAKEINTRESOURCEW(1), IMAGE_ICON,
                             GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON),
                             LR_SHARED);
-    if (RegisterClassExW(&wc) == 0)
+
+    ConsoleClassAtom = RegisterClassExW(&wc);
+    if (ConsoleClassAtom == 0)
     {
-        DPRINT1("Failed to register console wndproc\n");
+        DPRINT1("Failed to register GUI console wndproc\n");
         return FALSE;
+    }
+    else
+    {
+        NtUserConsoleControl(GuiConsoleWndClassAtom, &ConsoleClassAtom, sizeof(ATOM));
     }
 
     return TRUE;
@@ -2299,10 +2306,10 @@ GuiInitConsole(PCSRSS_CONSOLE Console, int ShowCmd)
     HANDLE ThreadHandle;
     PGUI_CONSOLE_DATA GuiData;
 
-    if (! ConsInitialized)
+    if (!ConsInitialized)
     {
         ConsInitialized = TRUE;
-        if (! GuiInit())
+        if (!GuiInit())
         {
             ConsInitialized = FALSE;
             return STATUS_UNSUCCESSFUL;
@@ -2310,6 +2317,7 @@ GuiInitConsole(PCSRSS_CONSOLE Console, int ShowCmd)
     }
 
     Console->Vtbl = &GuiVtbl;
+    Console->hWindow = NULL;
     if (NULL == NotifyWnd)
     {
         GraphicsStartupEvent = CreateEventW(NULL, FALSE, FALSE, NULL);
@@ -2321,7 +2329,7 @@ GuiInitConsole(PCSRSS_CONSOLE Console, int ShowCmd)
         ThreadHandle = CreateThread(NULL,
                                     0,
                                     GuiConsoleGuiThread,
-                                    (PVOID) &GraphicsStartupEvent,
+                                    (PVOID)&GraphicsStartupEvent,
                                     0,
                                     NULL);
         if (NULL == ThreadHandle)
@@ -2350,9 +2358,9 @@ GuiInitConsole(PCSRSS_CONSOLE Console, int ShowCmd)
         return STATUS_UNSUCCESSFUL;
     }
 
-    Console->PrivateData = (PVOID) GuiData;
+    Console->PrivateData = (PVOID)GuiData;
     /*
-     * we need to wait untill the GUI has been fully initialized
+     * we need to wait until the GUI has been fully initialized
      * to retrieve custom settings i.e. WindowSize etc..
      * Ideally we could use SendNotifyMessage for this but its not
      * yet implemented.
@@ -2362,7 +2370,7 @@ GuiInitConsole(PCSRSS_CONSOLE Console, int ShowCmd)
     /* create console */
     PostMessageW(NotifyWnd, PM_CREATE_CONSOLE, ShowCmd, (LPARAM)Console);
 
-    /* wait untill initialization has finished */
+    /* wait until initialization has finished */
     WaitForSingleObject(GuiData->hGuiInitEvent, INFINITE);
     DPRINT("received event Console %p GuiData %p X %d Y %d\n", Console, Console->PrivateData, Console->Size.X, Console->Size.Y);
     CloseHandle(GuiData->hGuiInitEvent);

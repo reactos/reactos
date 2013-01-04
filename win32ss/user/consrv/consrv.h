@@ -17,6 +17,9 @@
 #define NTOS_MODE_USER
 #include <ndk/ntndk.h>
 
+/* Public Win32K Headers */
+#include <ntuser.h>
+
 /* CSRSS Header */
 #include <csr/csrsrv.h>
 

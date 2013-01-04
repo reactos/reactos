@@ -50,6 +50,7 @@ typedef struct tagCSRSS_CONSOLE
     struct tagCSRSS_CONSOLE *Prev, *Next; /* Next and Prev consoles in console wheel */
     struct tagCSRSS_CONSOLE_VTBL *Vtbl;   /* Using CUI or GUI consoles */
 
+    CLIENT_ID  ConsoleLeaderCID;          /* Contains the Console Leader Process CID */
     LIST_ENTRY ProcessList;
 
     LIST_ENTRY InputEvents;               /* List head for input event queue */
@@ -89,6 +90,19 @@ typedef struct tagCSRSS_CONSOLE
 
     CONSOLE_SELECTION_INFO Selection;
 } CSRSS_CONSOLE, *PCSRSS_CONSOLE;
+
+/**************************************************************\
+\** Define the Console Leader Process for the console window **/
+#define GWLP_CONSOLEWND_ALLOC  (2 * sizeof(LONG_PTR))
+#define GWLP_CONSOLE_LEADER_PID 0
+#define GWLP_CONSOLE_LEADER_TID 4
+
+#define SetConsoleWndConsoleLeaderCID(Console)  \
+do {    \
+    SetWindowLongPtrW((Console)->hWindow, GWLP_CONSOLE_LEADER_PID, (LONG_PTR)((Console)->ConsoleLeaderCID.UniqueProcess));  \
+    SetWindowLongPtrW((Console)->hWindow, GWLP_CONSOLE_LEADER_TID, (LONG_PTR)((Console)->ConsoleLeaderCID.UniqueThread ));  \
+} while(0)
+/**************************************************************/
 
 typedef struct tagCSRSS_CONSOLE_VTBL
 {
@@ -146,6 +160,7 @@ NTSTATUS FASTCALL ConioConsoleFromProcessData(PCONSOLE_PROCESS_DATA ProcessData,
                                               PCSRSS_CONSOLE *Console);
 VOID WINAPI ConioDeleteConsole(PCSRSS_CONSOLE Console);
 VOID WINAPI CsrInitConsoleSupport(VOID);
+NTSTATUS WINAPI CsrInitConsole(PCSRSS_CONSOLE* NewConsole, int ShowCmd, PCSR_PROCESS ConsoleLeaderProcess);
 VOID FASTCALL ConioPause(PCSRSS_CONSOLE Console, UINT Flags);
 VOID FASTCALL ConioUnpause(PCSRSS_CONSOLE Console, UINT Flags);
 VOID FASTCALL ConioConsoleCtrlEvent(DWORD Event, PCONSOLE_PROCESS_DATA ProcessData);

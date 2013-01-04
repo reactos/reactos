@@ -13,6 +13,11 @@
 #define NDEBUG
 #include <debug.h>
 
+
+/* TUI Console Window Class name */
+#define TUI_CONSOLE_WINDOW_CLASS L"TuiConsoleWindowClass"
+
+
 CRITICAL_SECTION ActiveConsoleLock;
 static COORD PhysicalConsoleSize;
 static HANDLE ConsoleDeviceHandle;
@@ -69,6 +74,7 @@ TuiInit(DWORD OemCP)
     CONSOLE_SCREEN_BUFFER_INFO ScrInfo;
     DWORD BytesReturned;
     WNDCLASSEXW wc;
+    ATOM ConsoleClassAtom;
     USHORT TextAttribute = FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED;
 
     TuiStartService(L"Blue");
@@ -98,8 +104,8 @@ TuiInit(DWORD OemCP)
 
     ActiveConsole = NULL;
     InitializeCriticalSection(&ActiveConsoleLock);
-    if (! DeviceIoControl(ConsoleDeviceHandle, IOCTL_CONSOLE_GET_SCREEN_BUFFER_INFO,
-                          NULL, 0, &ScrInfo, sizeof(ScrInfo), &BytesReturned, NULL))
+    if (!DeviceIoControl(ConsoleDeviceHandle, IOCTL_CONSOLE_GET_SCREEN_BUFFER_INFO,
+                         NULL, 0, &ScrInfo, sizeof(ScrInfo), &BytesReturned, NULL))
     {
         DPRINT1("Failed to get console info\n");
         return FALSE;
@@ -108,13 +114,20 @@ TuiInit(DWORD OemCP)
 
     RtlZeroMemory(&wc, sizeof(WNDCLASSEXW));
     wc.cbSize = sizeof(WNDCLASSEXW);
-    wc.lpszClassName = L"TuiConsoleWindowClass";
+    wc.lpszClassName = TUI_CONSOLE_WINDOW_CLASS;
     wc.lpfnWndProc = TuiConsoleWndProc;
-    wc.hInstance = (HINSTANCE) GetModuleHandleW(NULL);
-    if (RegisterClassExW(&wc) == 0)
+    wc.cbWndExtra = GWLP_CONSOLEWND_ALLOC;
+    wc.hInstance = (HINSTANCE)GetModuleHandleW(NULL);
+
+    ConsoleClassAtom = RegisterClassExW(&wc);
+    if (ConsoleClassAtom == 0)
     {
-        DPRINT1("Failed to register console wndproc\n");
+        DPRINT1("Failed to register TUI console wndproc\n");
         return FALSE;
+    }
+    else
+    {
+        NtUserConsoleControl(TuiConsoleWndClassAtom, &ConsoleClassAtom, sizeof(ATOM));
     }
 
     return TRUE;
@@ -179,8 +192,8 @@ TuiDrawRegion(PCSRSS_CONSOLE Console, SMALL_RECT *Region)
 
     TuiCopyRect((char *) (ConsoleDraw + 1), Buff, Region);
 
-    if (! DeviceIoControl(ConsoleDeviceHandle, IOCTL_CONSOLE_DRAW,
-                          NULL, 0, ConsoleDraw, ConsoleDrawSize, &BytesReturned, NULL))
+    if (!DeviceIoControl(ConsoleDeviceHandle, IOCTL_CONSOLE_DRAW,
+                         NULL, 0, ConsoleDraw, ConsoleDrawSize, &BytesReturned, NULL))
     {
         DPRINT1("Failed to draw console\n");
         HeapFree(ConSrvHeap, 0, ConsoleDraw);
@@ -222,8 +235,8 @@ TuiSetCursorInfo(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER Buff)
     Info.dwSize = ConioEffectiveCursorSize(Console, 100);
     Info.bVisible = Buff->CursorInfo.bVisible;
 
-    if (! DeviceIoControl(ConsoleDeviceHandle, IOCTL_CONSOLE_SET_CURSOR_INFO,
-                          &Info, sizeof(Info), NULL, 0, &BytesReturned, NULL))
+    if (!DeviceIoControl(ConsoleDeviceHandle, IOCTL_CONSOLE_SET_CURSOR_INFO,
+                         &Info, sizeof(Info), NULL, 0, &BytesReturned, NULL))
     {
         DPRINT1( "Failed to set cursor info\n" );
         return FALSE;
@@ -247,9 +260,9 @@ TuiSetScreenInfo(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER Buff, UINT OldCurs
     Info.dwCursorPosition.Y = Buff->CurrentY;
     Info.wAttributes = Buff->DefaultAttrib;
 
-    if (! DeviceIoControl(ConsoleDeviceHandle, IOCTL_CONSOLE_SET_SCREEN_BUFFER_INFO,
-                          &Info, sizeof(CONSOLE_SCREEN_BUFFER_INFO), NULL, 0,
-                          &BytesReturned, NULL))
+    if (!DeviceIoControl(ConsoleDeviceHandle, IOCTL_CONSOLE_SET_SCREEN_BUFFER_INFO,
+                         &Info, sizeof(CONSOLE_SCREEN_BUFFER_INFO), NULL, 0,
+                         &BytesReturned, NULL))
     {
         DPRINT1( "Failed to set cursor position\n" );
         return FALSE;
@@ -316,19 +329,20 @@ TuiConsoleThread(PVOID Data)
     HWND NewWindow;
     MSG msg;
 
-    NewWindow = CreateWindowW(L"TuiConsoleWindowClass",
+    NewWindow = CreateWindowW(TUI_CONSOLE_WINDOW_CLASS,
                               Console->Title.Buffer,
                               0,
                               -32000, -32000, 0, 0,
                               NULL, NULL,
-                              (HINSTANCE) GetModuleHandleW(NULL),
-                              (PVOID) Console);
-    Console->hWindow = NewWindow;
+                              (HINSTANCE)GetModuleHandleW(NULL),
+                              (PVOID)Console);
     if (NULL == NewWindow)
     {
         DPRINT1("CSR: Unable to create console window\n");
         return 1;
     }
+    Console->hWindow = NewWindow;
+    SetConsoleWndConsoleLeaderCID(Console);
 
     SetForegroundWindow(Console->hWindow);
 
@@ -368,10 +382,10 @@ TuiInitConsole(PCSRSS_CONSOLE Console)
 {
     HANDLE ThreadHandle;
 
-    if (! ConsInitialized)
+    if (!ConsInitialized)
     {
         ConsInitialized = TRUE;
-        if (! TuiInit(Console->CodePage))
+        if (!TuiInit(Console->CodePage))
         {
             ConsInitialized = FALSE;
             return STATUS_UNSUCCESSFUL;
@@ -384,8 +398,12 @@ TuiInitConsole(PCSRSS_CONSOLE Console)
     Console->ActiveBuffer->MaxX = PhysicalConsoleSize.X;
     Console->ActiveBuffer->MaxY = PhysicalConsoleSize.Y;
 
-    ThreadHandle = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)TuiConsoleThread,
-                                Console, 0, NULL);
+    ThreadHandle = CreateThread(NULL,
+                                0,
+                                TuiConsoleThread,
+                                (PVOID)Console,
+                                0,
+                                NULL);
     if (NULL == ThreadHandle)
     {
         DPRINT1("CSR: Unable to create console thread\n");
@@ -451,9 +469,9 @@ TuiSwapConsole(int Next)
         pos->X = (PhysicalConsoleSize.X - Title.Length) / 2;
         /* redraw the console to clear off old title */
         ConioDrawConsole(ActiveConsole);
-        if (! DeviceIoControl(ConsoleDeviceHandle, IOCTL_CONSOLE_WRITE_OUTPUT_CHARACTER,
-                              NULL, 0, Buffer, sizeof(COORD) + Title.Length,
-                              &BytesReturned, NULL))
+        if (!DeviceIoControl(ConsoleDeviceHandle, IOCTL_CONSOLE_WRITE_OUTPUT_CHARACTER,
+                             NULL, 0, Buffer, sizeof(COORD) + Title.Length,
+                             &BytesReturned, NULL))
         {
             DPRINT1( "Error writing to console\n" );
         }

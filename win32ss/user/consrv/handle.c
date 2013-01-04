@@ -321,9 +321,6 @@ ConsoleNewProcess(PCSR_PROCESS SourceProcess,
     return STATUS_SUCCESS;
 }
 
-// Temporary ; move it to a header.
-NTSTATUS WINAPI CsrInitConsole(PCSRSS_CONSOLE* NewConsole, int ShowCmd);
-
 NTSTATUS
 NTAPI
 ConsoleConnect(IN PCSR_PROCESS CsrProcess,
@@ -363,13 +360,11 @@ ConsoleConnect(IN PCSR_PROCESS CsrProcess,
     if (!ConnectInfo->Console ||
          ConnectInfo->Console != ProcessData->ParentConsole)
     {
-        // PCSRSS_CONSOLE Console;
-
         DPRINT1("ConsoleConnect - Allocate a new console\n");
 
-        /* Initialize a new Console */
+        /* Initialize a new Console owned by the Console Leader Process */
         NewConsole = TRUE;
-        Status = CsrInitConsole(&ProcessData->Console, ConnectInfo->ShowCmd);
+        Status = CsrInitConsole(&ProcessData->Console, ConnectInfo->ShowCmd, CsrProcess);
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("Console initialization failed\n");

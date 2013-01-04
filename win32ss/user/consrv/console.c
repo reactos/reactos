@@ -87,8 +87,8 @@ ConioConsoleCtrlEvent(DWORD Event, PCONSOLE_PROCESS_DATA ProcessData)
     ConioConsoleCtrlEventTimeout(Event, ProcessData, 0);
 }
 
-/* static */ NTSTATUS WINAPI
-CsrInitConsole(PCSRSS_CONSOLE* NewConsole, int ShowCmd)
+NTSTATUS WINAPI
+CsrInitConsole(PCSRSS_CONSOLE* NewConsole, int ShowCmd, PCSR_PROCESS ConsoleLeaderProcess)
 {
     NTSTATUS Status;
     SECURITY_ATTRIBUTES SecurityAttributes;
@@ -127,6 +127,7 @@ CsrInitConsole(PCSRSS_CONSOLE* NewConsole, int ShowCmd)
     Console->Header.Type = CONIO_CONSOLE_MAGIC;
     Console->Header.Console = Console;
     Console->Mode = ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT | ENABLE_PROCESSED_INPUT | ENABLE_MOUSE_INPUT;
+    Console->ConsoleLeaderCID = ConsoleLeaderProcess->ClientId;
     InitializeListHead(&Console->ProcessList);
     InitializeListHead(&Console->BufferList);
     Console->ActiveBuffer = NULL;
@@ -292,7 +293,8 @@ CSR_API(SrvAllocConsole)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     PCSRSS_ALLOC_CONSOLE AllocConsoleRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.AllocConsoleRequest;
-    PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);
+    PCSR_PROCESS ConsoleLeader = CsrGetClientThread()->Process;
+    PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(ConsoleLeader);
 
     DPRINT("SrvAllocConsole\n");
 
@@ -306,8 +308,8 @@ CSR_API(SrvAllocConsole)
 
     DPRINT1("SrvAllocConsole - Checkpoint 1\n");
 
-    /* Initialize a new Console */
-    Status = CsrInitConsole(&ProcessData->Console, AllocConsoleRequest->ShowCmd);
+    /* Initialize a new Console owned by the Console Leader Process */
+    Status = CsrInitConsole(&ProcessData->Console, AllocConsoleRequest->ShowCmd, ConsoleLeader);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Console initialization failed\n");
