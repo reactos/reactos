@@ -59,7 +59,7 @@ MiSyncCachedRanges(VOID)
     for (i = 0; i < MiLargePageRangeIndex; i++)
     {
         DPRINT1("No support for large pages\n");
-        while (TRUE);
+        ASSERT(FALSE); // while (TRUE);
     }
 }
 

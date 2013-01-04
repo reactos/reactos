@@ -125,7 +125,7 @@ MiFlushTlb(IN PMMPTE PointerPte,
            IN PVOID Address)
 {
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
 }
 
 BOOLEAN
@@ -135,7 +135,7 @@ MmCreateProcessAddressSpace(IN ULONG MinWs,
                             IN PULONG DirectoryTableBase)
 {
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
     return FALSE;
 }
 
@@ -165,7 +165,7 @@ MmDisableVirtualMapping(IN PEPROCESS Process,
                         OUT PPFN_NUMBER Page)
 {
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
 }
 
 VOID
@@ -174,7 +174,7 @@ MmEnableVirtualMapping(IN PEPROCESS Process,
                        IN PVOID Address)
 {
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
 }
 
 NTSTATUS
@@ -186,7 +186,7 @@ MmCreateVirtualMappingUnsafe(IN PEPROCESS Process,
                              IN ULONG PageCount)
 {
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
     return STATUS_SUCCESS;
 }
 
@@ -199,7 +199,7 @@ MmCreateVirtualMapping(IN PEPROCESS Process,
                        IN ULONG PageCount)
 {
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
     return STATUS_SUCCESS;
 }
 
@@ -208,7 +208,7 @@ NTAPI
 MmRawDeleteVirtualMapping(IN PVOID Address)
 {
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
 }
 
 VOID
@@ -220,7 +220,7 @@ MmDeleteVirtualMapping(IN PEPROCESS Process,
                        OUT PPFN_NUMBER Page)
 {
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
 }
 
 VOID
@@ -230,7 +230,7 @@ MmDeletePageFileMapping(IN PEPROCESS Process,
                         IN SWAPENTRY *SwapEntry)
 {
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
 }
 
 NTSTATUS
@@ -240,8 +240,8 @@ MmCreatePageFileMapping(IN PEPROCESS Process,
                         IN SWAPENTRY SwapEntry)
 {
     UNIMPLEMENTED;
-    while (TRUE);
-    return 0;
+    ASSERT(FALSE); // while (TRUE);
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 PFN_NUMBER
@@ -250,7 +250,7 @@ MmGetPfnForProcess(IN PEPROCESS Process,
                    IN PVOID Address)
 {
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
     return 0;
 }
 
@@ -260,8 +260,8 @@ MmIsDirtyPage(IN PEPROCESS Process,
               IN PVOID Address)
 {
     UNIMPLEMENTED;
-    while (TRUE);
-    return 0;
+    ASSERT(FALSE); // while (TRUE);
+    return FALSE;
 }
 
 VOID
@@ -270,7 +270,7 @@ MmSetCleanPage(IN PEPROCESS Process,
                IN PVOID Address)
 {
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
 }
 
 VOID
@@ -279,7 +279,7 @@ MmSetDirtyPage(IN PEPROCESS Process,
                IN PVOID Address)
 {
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
 }
 
 BOOLEAN
@@ -288,7 +288,7 @@ MmIsPagePresent(IN PEPROCESS Process,
                 IN PVOID Address)
 {
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
     return FALSE;
 }
 
@@ -298,7 +298,7 @@ MmIsPageSwapEntry(IN PEPROCESS Process,
                   IN PVOID Address)
 {
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
     return FALSE;
 }
 
@@ -357,7 +357,7 @@ MmGetPhysicalAddress(IN PVOID Address)
     PhysicalAddress.QuadPart = 0;
 
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
 
     return PhysicalAddress;
 }
