@@ -348,6 +348,7 @@ AckPageDlgProc(HWND hwndDlg,
             if (HIWORD(wParam) == BN_CLICKED && IDC_VIEWGPL == LOWORD(wParam))
             {
                 DialogBox(hDllInstance, MAKEINTRESOURCE(IDD_GPL), NULL, GplDlgProc);
+                SetForegroundWindow(GetParent(hwndDlg));
             }
             break;
 

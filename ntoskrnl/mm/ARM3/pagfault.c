@@ -876,7 +876,8 @@ MiDispatchFault(IN BOOLEAN StoreInstruction,
     NTSTATUS Status;
     PMMPTE SuperProtoPte;
     PMMPFN Pfn1, OutPfn = NULL;
-    PFN_NUMBER PageFrameIndex, PteCount, ProcessedPtes;
+    PFN_NUMBER PageFrameIndex;
+    PFN_COUNT PteCount, ProcessedPtes;
     DPRINT("ARM3 Page Fault Dispatcher for address: %p in process: %p\n",
              Address,
              Process);
@@ -1055,7 +1056,7 @@ MiDispatchFault(IN BOOLEAN StoreInstruction,
             if (ProcessedPtes)
             {
                 /* Bump the transition count */
-                InterlockedExchangeAdd(&KeGetCurrentPrcb()->MmTransitionCount, ProcessedPtes);
+                InterlockedExchangeAddSizeT(&KeGetCurrentPrcb()->MmTransitionCount, ProcessedPtes);
                 ProcessedPtes--;
 
                 /* Loop all the processing we did */
@@ -1208,9 +1209,15 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
             if (TrapInformation)
             {
                 PKTRAP_FRAME TrapFrame = TrapInformation;
+#ifdef _M_IX86
                 DbgPrint("MM:***EIP %p, EFL %p\n", TrapFrame->Eip, TrapFrame->EFlags);
                 DbgPrint("MM:***EAX %p, ECX %p EDX %p\n", TrapFrame->Eax, TrapFrame->Ecx, TrapFrame->Edx);
                 DbgPrint("MM:***EBX %p, ESI %p EDI %p\n", TrapFrame->Ebx, TrapFrame->Esi, TrapFrame->Edi);
+#elif defined(_M_AMD64)
+                DbgPrint("MM:***RIP %p, EFL %p\n", TrapFrame->Rip, TrapFrame->EFlags);
+                DbgPrint("MM:***RAX %p, RCX %p RDX %p\n", TrapFrame->Rax, TrapFrame->Rcx, TrapFrame->Rdx);
+                DbgPrint("MM:***RBX %p, RSI %p RDI %p\n", TrapFrame->Rbx, TrapFrame->Rsi, TrapFrame->Rdi);
+#endif
             }
 
             /* Tell the trap handler to fail */

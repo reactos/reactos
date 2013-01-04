@@ -24,7 +24,7 @@ EngGetLastError(VOID)
  */
 VOID
 APIENTRY
-EngSetLastError(IN ULONG iError)
+EngSetLastError(_In_ ULONG iError)
 {
     PTEB pTeb = NtCurrentTeb();
     if (pTeb)

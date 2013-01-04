@@ -26,7 +26,7 @@ HalpcGetCmosData(IN PBUS_HANDLER BusHandler,
                  IN ULONG Length)
 {
     DPRINT1("CMOS GetData\n");
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
     return 0;
 }
 
@@ -40,7 +40,7 @@ HalpcSetCmosData(IN PBUS_HANDLER BusHandler,
                  IN ULONG Length)
 {
     DPRINT1("CMOS SetData\n");
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
     return 0;
 }
 

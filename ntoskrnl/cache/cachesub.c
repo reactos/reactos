@@ -132,7 +132,7 @@ CcGetFlushedValidData(IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
 {
     LARGE_INTEGER Result = {{0}};
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
     return Result;
 }
 

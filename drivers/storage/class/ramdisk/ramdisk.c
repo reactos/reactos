@@ -773,7 +773,7 @@ RamdiskCreateDiskDevice(IN PRAMDISK_BUS_EXTENSION DeviceExtension,
     
 FailCreate:
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
     return STATUS_SUCCESS;
 }
 
@@ -1068,7 +1068,7 @@ RamdiskWorkerThread(IN PDEVICE_OBJECT DeviceObject,
                         
                         DPRINT1("Get drive layout request\n");
                         UNIMPLEMENTED;
-                        while (TRUE);
+                        ASSERT(FALSE); // while (TRUE);
                         break;
                         
                     case IOCTL_DISK_GET_PARTITION_INFO:
@@ -1080,7 +1080,7 @@ RamdiskWorkerThread(IN PDEVICE_OBJECT DeviceObject,
                         
                         DPRINT1("Invalid request\n");
                         UNIMPLEMENTED;
-                        while (TRUE);
+                        ASSERT(FALSE); // while (TRUE);
                         break;
                 }
                 
@@ -1097,7 +1097,7 @@ RamdiskWorkerThread(IN PDEVICE_OBJECT DeviceObject,
                 
                 DPRINT1("Read/Write request\n");
                 UNIMPLEMENTED;
-                while (TRUE);
+                ASSERT(FALSE); // while (TRUE);
                 break;
                 
             //
@@ -1107,7 +1107,7 @@ RamdiskWorkerThread(IN PDEVICE_OBJECT DeviceObject,
 
                 DPRINT1("SCSI request\n");
                 UNIMPLEMENTED;
-                while (TRUE);
+                ASSERT(FALSE); // while (TRUE);
                 break;
                 
             //
@@ -1117,7 +1117,7 @@ RamdiskWorkerThread(IN PDEVICE_OBJECT DeviceObject,
                 
                 DPRINT1("Flush request\n");
                 UNIMPLEMENTED;
-                while (TRUE);
+                ASSERT(FALSE); // while (TRUE);
                 break;
 
             //
@@ -1127,7 +1127,7 @@ RamdiskWorkerThread(IN PDEVICE_OBJECT DeviceObject,
                 
                 DPRINT1("Invalid request: %lx\n", IoStackLocation->MajorFunction);
                 UNIMPLEMENTED;
-                while (TRUE);
+                ASSERT(FALSE); // while (TRUE);
                 break;
         }
         
@@ -1481,8 +1481,7 @@ RamdiskDeviceControl(IN PDEVICE_OBJECT DeviceObject,
                 //
                 // We don't handle anything else yet
                 //
-                ASSERT(FALSE);
-                while (TRUE);
+                ASSERT(FALSE); // while (TRUE);
         }
     }
     else
@@ -1498,7 +1497,7 @@ RamdiskDeviceControl(IN PDEVICE_OBJECT DeviceObject,
             case IOCTL_CDROM_CHECK_VERIFY:
                 
                 UNIMPLEMENTED;
-                while (TRUE);
+                ASSERT(FALSE); // while (TRUE);
                 break;
 
             case IOCTL_STORAGE_GET_MEDIA_TYPES:
@@ -1664,67 +1663,67 @@ RamdiskDeviceControl(IN PDEVICE_OBJECT DeviceObject,
             case IOCTL_DISK_GET_DRIVE_LAYOUT:
                 
                 UNIMPLEMENTED;
-                while (TRUE);
+                ASSERT(FALSE); // while (TRUE);
                 break;
                 
             case IOCTL_DISK_GET_LENGTH_INFO:
                 
                 UNIMPLEMENTED;
-                while (TRUE);
+                ASSERT(FALSE); // while (TRUE);
                 break;
                 
             case IOCTL_DISK_IS_WRITABLE:
                 
                 UNIMPLEMENTED;
-                while (TRUE);
+                ASSERT(FALSE); // while (TRUE);
                 break;
                 
             case IOCTL_SCSI_MINIPORT:
                 
                 UNIMPLEMENTED;
-                while (TRUE);
+                ASSERT(FALSE); // while (TRUE);
                 break;
                 
             case IOCTL_STORAGE_QUERY_PROPERTY:
                 
                 UNIMPLEMENTED;
-                while (TRUE);
+                ASSERT(FALSE); // while (TRUE);
                 break;
                 
             case IOCTL_MOUNTDEV_QUERY_UNIQUE_ID:
                 
                 UNIMPLEMENTED;
-                while (TRUE);
+                ASSERT(FALSE); // while (TRUE);
                 break;
                 
             case IOCTL_MOUNTDEV_QUERY_STABLE_GUID:
                 
                 UNIMPLEMENTED;
-                while (TRUE);
+                ASSERT(FALSE); // while (TRUE);
                 break;
                 
             case IOCTL_VOLUME_GET_VOLUME_DISK_EXTENTS:
                 
                 UNIMPLEMENTED;
-                while (TRUE);
+                ASSERT(FALSE); // while (TRUE);
                 break;
                 
             case IOCTL_VOLUME_SET_GPT_ATTRIBUTES:
                 
                 UNIMPLEMENTED;
-                while (TRUE);
+                ASSERT(FALSE); // while (TRUE);
                 break;
                 
             case IOCTL_VOLUME_GET_GPT_ATTRIBUTES:
                 
                 UNIMPLEMENTED;
-                while (TRUE);
+                ASSERT(FALSE); // while (TRUE);
                 break;
                 
             case IOCTL_VOLUME_OFFLINE:
                 
                 UNIMPLEMENTED;
-                while (TRUE);
+                ASSERT(FALSE); // while (TRUE);
                 break;
                 
             default:
@@ -1793,7 +1792,7 @@ RamdiskQueryDeviceRelations(IN DEVICE_RELATION_TYPE Type,
         // FIXME: TODO
         //
         UNIMPLEMENTED;
-        while (TRUE);
+        ASSERT(FALSE); // while (TRUE);
     }
     
     //
@@ -1980,7 +1979,7 @@ RamdiskDeleteDiskDevice(IN PDEVICE_OBJECT DeviceObject,
                         IN PIRP Irp)
 {
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
     return STATUS_SUCCESS;
 }
 
@@ -2148,37 +2147,37 @@ RamdiskPnp(IN PDEVICE_OBJECT DeviceObject,
         case IRP_MN_START_DEVICE:
             
             DPRINT1("PnP IRP: %lx\n", Minor);
-            while (TRUE);
+            ASSERT(FALSE); // while (TRUE);
             break;
             
         case IRP_MN_QUERY_STOP_DEVICE:
             
             DPRINT1("PnP IRP: %lx\n", Minor);
-            while (TRUE);
+            ASSERT(FALSE); // while (TRUE);
             break;
             
         case IRP_MN_CANCEL_STOP_DEVICE:
             
             DPRINT1("PnP IRP: %lx\n", Minor);
-            while (TRUE);
+            ASSERT(FALSE); // while (TRUE);
             break;
             
         case IRP_MN_STOP_DEVICE:
             
             DPRINT1("PnP IRP: %lx\n", Minor);
-            while (TRUE);
+            ASSERT(FALSE); // while (TRUE);
             break;
             
         case IRP_MN_QUERY_REMOVE_DEVICE:
             
             DPRINT1("PnP IRP: %lx\n", Minor);
-            while (TRUE);
+            ASSERT(FALSE); // while (TRUE);
             break;
             
         case IRP_MN_CANCEL_REMOVE_DEVICE:
             
             DPRINT1("PnP IRP: %lx\n", Minor);
-            while (TRUE);
+            ASSERT(FALSE); // while (TRUE);
             break;
             
         case IRP_MN_REMOVE_DEVICE:
@@ -2213,7 +2212,7 @@ RamdiskPnp(IN PDEVICE_OBJECT DeviceObject,
         case IRP_MN_SURPRISE_REMOVAL:
             
             DPRINT1("PnP IRP: %lx\n", Minor);
-            while (TRUE);
+            ASSERT(FALSE); // while (TRUE);
             break;
             
         case IRP_MN_QUERY_ID:
@@ -2224,7 +2223,7 @@ RamdiskPnp(IN PDEVICE_OBJECT DeviceObject,
             if (DeviceExtension->Type == RamdiskDrive)
             {
                 DPRINT1("PnP IRP: %lx\n", Minor);
-                while (TRUE);
+                ASSERT(FALSE); // while (TRUE);
             }
             break;
             
@@ -2236,14 +2235,14 @@ RamdiskPnp(IN PDEVICE_OBJECT DeviceObject,
             if (DeviceExtension->Type == RamdiskDrive)
             {
                 DPRINT1("PnP IRP: %lx\n", Minor);
-                while (TRUE);
+                ASSERT(FALSE); // while (TRUE);
             }
             break;
             
         case IRP_MN_EJECT:
             
             DPRINT1("PnP IRP: %lx\n", Minor);
-            while (TRUE);
+            ASSERT(FALSE); // while (TRUE);
             break;
             
         case IRP_MN_QUERY_DEVICE_TEXT:
@@ -2254,7 +2253,7 @@ RamdiskPnp(IN PDEVICE_OBJECT DeviceObject,
             if (DeviceExtension->Type == RamdiskDrive)
             {
                 DPRINT1("PnP IRP: %lx\n", Minor);
-                while (TRUE);
+                ASSERT(FALSE); // while (TRUE);
             }
             break;
             
@@ -2278,7 +2277,7 @@ RamdiskPnp(IN PDEVICE_OBJECT DeviceObject,
             if (DeviceExtension->Type == RamdiskDrive)
             {
                 DPRINT1("PnP IRP: %lx\n", Minor);
-                while (TRUE);
+                ASSERT(FALSE); // while (TRUE);
             }
             break;
             

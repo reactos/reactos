@@ -324,7 +324,7 @@ EngLoadImageEx(
     WCHAR acwBuffer[MAX_PATH];
     PLDEVOBJ pldev;
     UNICODE_STRING strDriverName;
-    ULONG cwcLength;
+    SIZE_T cwcLength;
     LPWSTR pwsz;
 
     DPRINT("EngLoadImageEx(%ls, %lu)\n", pwszDriverName, ldevtype);
@@ -442,7 +442,7 @@ leave:
 HANDLE
 APIENTRY
 EngLoadImage(
-    LPWSTR pwszDriverName)
+    _In_ LPWSTR pwszDriverName)
 {
     return (HANDLE)EngLoadImageEx(pwszDriverName, LDEV_IMAGE);
 }
@@ -451,7 +451,7 @@ EngLoadImage(
 VOID
 APIENTRY
 EngUnloadImage(
-    IN HANDLE hModule)
+    _In_ HANDLE hModule)
 {
     PLDEVOBJ pldev = (PLDEVOBJ)hModule;
 
@@ -486,8 +486,8 @@ EngUnloadImage(
 PVOID
 APIENTRY
 EngFindImageProcAddress(
-    IN HANDLE hModule,
-    IN LPSTR  lpProcName)
+    _In_ HANDLE hModule,
+    _In_ LPSTR  lpProcName)
 {
     PLDEVOBJ pldev = (PLDEVOBJ)hModule;
 

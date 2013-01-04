@@ -52,7 +52,8 @@ PciPmeInterfaceConstructor(IN PVOID DeviceExtension,
 
     /* Not yet implemented */
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 /* EOF */

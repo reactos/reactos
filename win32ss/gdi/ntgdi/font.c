@@ -395,48 +395,6 @@ RealizeFontInit(HFONT hFont)
   return pTextObj;
 }
 
-HFONT
-FASTCALL
-GreSelectFont( HDC hDC, HFONT hFont)
-{
-    PDC pdc;
-    PDC_ATTR pdcattr;
-    PTEXTOBJ pOrgFnt, pNewFnt = NULL;
-    HFONT hOrgFont = NULL;
-
-    if (!hDC || !hFont) return NULL;
-
-    pdc = DC_LockDc(hDC);
-    if (!pdc)
-    {
-        return NULL;
-    }
-
-    if (NT_SUCCESS(TextIntRealizeFont((HFONT)hFont,NULL)))
-    {
-       /* LFONTOBJ use share and locking. */
-       pNewFnt = TEXTOBJ_LockText(hFont);
-       pdcattr = pdc->pdcattr;
-       pOrgFnt = pdc->dclevel.plfnt;
-       if (pOrgFnt)
-       {
-          hOrgFont = pOrgFnt->BaseObject.hHmgr;
-       }
-       else
-       {
-          hOrgFont = pdcattr->hlfntNew;
-       }
-       pdc->dclevel.plfnt = pNewFnt;
-       pdc->hlfntCur = hFont;
-       pdcattr->hlfntNew = hFont;
-       pdcattr->ulDirty_ |= DIRTY_CHARSET;
-       pdcattr->ulDirty_ &= ~SLOW_WIDTHS;
-    }
-
-    if (pNewFnt) TEXTOBJ_UnlockText(pNewFnt);
-    DC_UnlockDc(pdc);
-    return hOrgFont;
-}
 
 /** Functions ******************************************************************/
 
@@ -1118,18 +1076,6 @@ NtGdiHfontCreate(
   }
 
   return hNewFont;
-}
-
-/*
- * @implemented
- */
-HFONT
-APIENTRY
-NtGdiSelectFont(
-    IN HDC hDC,
-    IN HFONT hFont)
-{
-    return GreSelectFont(hDC, hFont);
 }
 
 

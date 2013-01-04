@@ -45,6 +45,9 @@ typedef struct _SEH3$_REGISTRATION_FRAME
 
 } SEH3$_REGISTRATION_FRAME ,*PSEH3$_REGISTRATION_FRAME;
 
+/* Prevent gcc from inlining functions that use SEH. */
+static inline __attribute__((always_inline)) __attribute__((returns_twice)) void _SEH3$_PreventInlining() {}
+
 extern inline __attribute__((always_inline,gnu_inline))
 void _SEH3$_UnregisterFrame(volatile SEH3$_REGISTRATION_FRAME *RegistrationFrame)
 {
@@ -92,18 +95,20 @@ void * __cdecl __attribute__((error("Can only be used inside an exception filter
 
 /* This is an asm wrapper around _SEH3$_RegisterFrame */
 #define _SEH3$_RegisterFrame(_TrylevelFrame, _DataTable, _Target) \
-    asm goto ("call __SEH3$_RegisterFrame\n" \
+    asm goto ("leal %0, %%ecx\n" \
+              "call __SEH3$_RegisterFrame\n" \
               : \
-              : "c" (_TrylevelFrame), "a" (_DataTable) \
-              : "edx", "memory" \
+              : "m" (*(_TrylevelFrame)), "a" (_DataTable) \
+              : "ecx", "edx", "memory" \
               : _Target)
 
 /* This is an asm wrapper around _SEH3$_EnterTryLevel */
 #define _SEH3$_RegisterTryLevel(_TrylevelFrame, _DataTable, _Target) \
-    asm goto ("call __SEH3$_RegisterTryLevel\n" \
+    asm goto ("leal %0, %%ecx\n" \
+              "call __SEH3$_RegisterTryLevel\n" \
               : \
-              : "c" (_TrylevelFrame), "a" (_DataTable) \
-              : "edx", "memory" \
+              : "m" (*(_TrylevelFrame)), "a" (_DataTable) \
+              : "ecx", "edx", "memory" \
               : _Target)
 
 /* On GCC the filter function is a nested function with __fastcall calling
@@ -165,13 +170,16 @@ void * __cdecl __attribute__((error("Can only be used inside an exception filter
    around into places that are never executed. */
 #define _SEH3$_SCARE_GCC() \
         void *plabel; \
+        _SEH3$_ASM_GOTO("#\n", _SEH3$_l_BeforeTry); \
         _SEH3$_ASM_GOTO("#\n", _SEH3$_l_HandlerTarget); \
+        _SEH3$_ASM_GOTO("#\n", _SEH3$_l_OnException); \
         asm volatile ("#" : "=a"(plabel) : "p"(&&_SEH3$_l_BeforeTry), "p"(&&_SEH3$_l_HandlerTarget), "p"(&&_SEH3$_l_OnException) \
                       : _SEH3$_CLOBBER_ON_EXCEPTION ); \
-        goto *plabel;
+        goto _SEH3$_l_OnException;
 
 
 #define _SEH3_TRY \
+    _SEH3$_PreventInlining(); \
     /* Enter the outer scope */ \
     do { \
         /* Declare local labels */ \

@@ -94,7 +94,7 @@ PciFdoIrpStartDevice(IN PIRP Irp,
         /* These resources would only be for non-root FDOs, unhandled for now */
         ASSERT(Resources->Count == 1);
         UNIMPLEMENTED;
-        while (TRUE);
+        ASSERT(FALSE); // while (TRUE);
     }
 
     /* Initialize the arbiter for this FDO */
@@ -112,7 +112,7 @@ PciFdoIrpStartDevice(IN PIRP Irp,
         /* Unhandled for now */
         ASSERT(Resources->Count == 1);
         UNIMPLEMENTED;
-        while (TRUE);
+        ASSERT(FALSE); // while (TRUE);
     }
 
     /* Commit the transition to the started state */
@@ -137,7 +137,7 @@ PciFdoIrpRemoveDevice(IN PIRP Irp,
                       IN PPCI_FDO_EXTENSION DeviceExtension)
 {
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -148,7 +148,7 @@ PciFdoIrpCancelRemoveDevice(IN PIRP Irp,
                             IN PPCI_FDO_EXTENSION DeviceExtension)
 {
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -159,7 +159,7 @@ PciFdoIrpStopDevice(IN PIRP Irp,
                     IN PPCI_FDO_EXTENSION DeviceExtension)
 {
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -170,7 +170,7 @@ PciFdoIrpQueryStopDevice(IN PIRP Irp,
                          IN PPCI_FDO_EXTENSION DeviceExtension)
 {
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -181,7 +181,7 @@ PciFdoIrpCancelStopDevice(IN PIRP Irp,
                           IN PPCI_FDO_EXTENSION DeviceExtension)
 {
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -319,7 +319,7 @@ PciFdoIrpDeviceUsageNotification(IN PIRP Irp,
                                  IN PPCI_FDO_EXTENSION DeviceExtension)
 {
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -330,7 +330,7 @@ PciFdoIrpSurpriseRemoval(IN PIRP Irp,
                          IN PPCI_FDO_EXTENSION DeviceExtension)
 {
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -341,7 +341,7 @@ PciFdoIrpQueryLegacyBusInformation(IN PIRP Irp,
                                    IN PPCI_FDO_EXTENSION DeviceExtension)
 {
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -393,7 +393,7 @@ PciGetHotPlugParameters(IN PPCI_FDO_EXTENSION FdoExtension)
 
         /* HotPlug PCI Support not yet implemented */
         UNIMPLEMENTED;
-        while (TRUE);
+        ASSERT(FALSE); // while (TRUE);
     } while (FALSE);
 
     /* Free the buffer and return */
@@ -545,7 +545,7 @@ PciAddDevice(IN PDRIVER_OBJECT DriverObject,
             {
                 /* Root PDO in ReactOS does not assign boot resources */
                 UNIMPLEMENTED;
-//                while (TRUE);
+                ASSERT(FALSE); // while (TRUE);
                 DPRINT1("Encountered during setup\n");
                 Descriptor = NULL;
             }
@@ -554,7 +554,7 @@ PciAddDevice(IN PDRIVER_OBJECT DriverObject,
             {
                 /* Root PDO in ReactOS does not assign boot resources */
                 UNIMPLEMENTED;
-                while (TRUE);
+                ASSERT(FALSE); // while (TRUE);
             }
             else
             {

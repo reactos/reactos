@@ -1175,7 +1175,7 @@ KsDefaultDeviceIoCompletion(
     /* get current irp stack */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
-    if (IoStack->Parameters.DeviceIoControl.IoControlCode != IOCTL_KS_PROPERTY && 
+    if (IoStack->Parameters.DeviceIoControl.IoControlCode != IOCTL_KS_PROPERTY &&
         IoStack->Parameters.DeviceIoControl.IoControlCode != IOCTL_KS_METHOD &&
         IoStack->Parameters.DeviceIoControl.IoControlCode != IOCTL_KS_PROPERTY)
     {
@@ -1744,41 +1744,53 @@ KsCancelRoutine(
 NTSTATUS
 FindMatchingCreateItem(
     PLIST_ENTRY ListHead,
-    ULONG BufferSize,
-    LPWSTR Buffer,
+    PUNICODE_STRING String,
     OUT PCREATE_ITEM_ENTRY *OutCreateItem)
 {
     PLIST_ENTRY Entry;
     PCREATE_ITEM_ENTRY CreateItemEntry;
     UNICODE_STRING RefString;
     LPWSTR pStr;
+    ULONG Count;
 
-    /* get terminator */
-    pStr = wcschr(Buffer, L'\\');
+    /* Copy the input string */
+    RefString = *String;
 
-    /* sanity check */
-    ASSERT(pStr != NULL);
-
-    if (pStr == Buffer)
+    /* Check if the string starts with a backslash */
+    if (String->Buffer[0] == L'\\')
     {
-        // skip slash
-        RtlInitUnicodeString(&RefString, ++pStr);
+        /* Skip backslash */
+        RefString.Buffer++;
+        RefString.Length -= sizeof(WCHAR);
     }
     else
     {
+        /* get terminator */
+        pStr = String->Buffer;
+        Count = String->Length / sizeof(WCHAR);
+        while ((Count > 0) && (*pStr != L'\\'))
+        {
+            pStr++;
+            Count--;
+        }
+
+        /* sanity check */
+        ASSERT(Count != 0);
+
         // request is for pin / node / allocator
-        RefString.Buffer = Buffer;
-        RefString.Length = BufferSize = RefString.MaximumLength = ((ULONG_PTR)pStr - (ULONG_PTR)Buffer);
+        RefString.Length = (USHORT)((PCHAR)pStr - (PCHAR)String->Buffer);
     }
 
     /* point to first entry */
     Entry = ListHead->Flink;
 
     /* loop all device items */
-    while(Entry != ListHead)
+    while (Entry != ListHead)
     {
         /* get create item entry */
-        CreateItemEntry = (PCREATE_ITEM_ENTRY)CONTAINING_RECORD(Entry, CREATE_ITEM_ENTRY, Entry);
+        CreateItemEntry = (PCREATE_ITEM_ENTRY)CONTAINING_RECORD(Entry,
+                                                                CREATE_ITEM_ENTRY,
+                                                                Entry);
 
         ASSERT(CreateItemEntry->CreateItem);
 
@@ -1796,10 +1808,11 @@ FindMatchingCreateItem(
             continue;
         }
 
-        DPRINT("CreateItem %S Length %u Request %wZ %u\n", CreateItemEntry->CreateItem->ObjectClass.Buffer,
-                                                           CreateItemEntry->CreateItem->ObjectClass.Length,
-                                                           &RefString,
-                                                           RefString.Length);
+        DPRINT("CreateItem %S Length %u Request %wZ %u\n",
+               CreateItemEntry->CreateItem->ObjectClass.Buffer,
+               CreateItemEntry->CreateItem->ObjectClass.Length,
+               &RefString,
+               RefString.Length);
 
         if (CreateItemEntry->CreateItem->ObjectClass.Length > RefString.Length)
         {
@@ -1809,7 +1822,9 @@ FindMatchingCreateItem(
         }
 
          /* now check if the object class is the same */
-        if (!RtlCompareUnicodeString(&CreateItemEntry->CreateItem->ObjectClass, &RefString, TRUE))
+        if (!RtlCompareUnicodeString(&CreateItemEntry->CreateItem->ObjectClass,
+                                     &RefString,
+                                     TRUE))
         {
             /* found matching create item */
             *OutCreateItem = CreateItemEntry;
@@ -1865,12 +1880,16 @@ KspCreate(
         ASSERT(ObjectHeader);
 
         /* find a matching a create item */
-        Status = FindMatchingCreateItem(&ObjectHeader->ItemList, IoStack->FileObject->FileName.Length, IoStack->FileObject->FileName.Buffer, &CreateItemEntry);
+        Status = FindMatchingCreateItem(&ObjectHeader->ItemList,
+                                        &IoStack->FileObject->FileName,
+                                        &CreateItemEntry);
     }
     else
     {
         /* request to create a filter */
-        Status = FindMatchingCreateItem(&DeviceHeader->ItemList, IoStack->FileObject->FileName.Length, IoStack->FileObject->FileName.Buffer, &CreateItemEntry);
+        Status = FindMatchingCreateItem(&DeviceHeader->ItemList,
+                                        &IoStack->FileObject->FileName,
+                                        &CreateItemEntry);
     }
 
     if (NT_SUCCESS(Status))

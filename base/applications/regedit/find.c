@@ -77,7 +77,7 @@ static BOOL CompareName(LPCWSTR pszName1, LPCWSTR pszName2)
         if (s_dwFlags & RSF_MATCHCASE)
             return wcscmp(pszName1, pszName2) == 0;
         else
-            return wcsicmp(pszName1, pszName2) == 0;
+            return _wcsicmp(pszName1, pszName2) == 0;
     }
     else
     {
@@ -130,7 +130,7 @@ int compare(const void *x, const void *y)
 {
     const LPCWSTR *a = (const LPCWSTR *)x;
     const LPCWSTR *b = (const LPCWSTR *)y;
-    return wcsicmp(*a, *b);
+    return _wcsicmp(*a, *b);
 }
 
 BOOL RegFindRecurse(
@@ -198,7 +198,7 @@ BOOL RegFindRecurse(
         if (DoEvents())
             goto err;
 
-        if (!fPast && wcsicmp(ppszNames[i], pszValueName) == 0)
+        if (!fPast && _wcsicmp(ppszNames[i], pszValueName) == 0)
         {
             fPast = TRUE;
             continue;
@@ -390,7 +390,7 @@ BOOL RegFindWalk(
         }
         else
         {
-            wcsncpy(szKeyName, pch + 1, MAX_PATH);
+            lstrcpynW(szKeyName, pch + 1, MAX_PATH);
             *pch = 0;
             lResult = RegOpenKeyExW(hBaseKey, szSubKey, 0, KEY_ALL_ACCESS,
                                    &hSubKey);
@@ -434,7 +434,7 @@ BOOL RegFindWalk(
             if (DoEvents())
                 goto err;
 
-            if (!fPast && wcsicmp(ppszNames[i], szKeyName) == 0)
+            if (!fPast && _wcsicmp(ppszNames[i], szKeyName) == 0)
             {
                 fPast = TRUE;
                 continue;
@@ -586,7 +586,7 @@ static void SetFindFlags(DWORD dwFlags)
     DWORD dwDisposition;
     DWORD dwData;
 
-    if (RegCreateKeyExW(HKEY_CURRENT_USER, g_szGeneralRegKey, 0, NULL, 0, KEY_ALL_ACCESS, NULL, &hKey, &dwDisposition) == ERROR_SUCCESS)
+    if (RegCreateKeyExW(HKEY_CURRENT_USER, g_szGeneralRegKey, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &hKey, &dwDisposition) == ERROR_SUCCESS)
     {
         dwData = (dwFlags >> 0) & 0x0000FFFF;
         RegSetValueExW(hKey, s_szFindFlags, 0, REG_DWORD, (const BYTE *) &dwData, sizeof(dwData));

@@ -2,7 +2,7 @@
 
 typedef ULONG HCLIP;
 
-#define ENUM_RECT_LIMIT 50
+#define ENUM_RECT_LIMIT 32
 
 typedef struct _RECT_ENUM
 {

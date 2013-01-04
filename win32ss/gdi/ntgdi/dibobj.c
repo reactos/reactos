@@ -868,7 +868,7 @@ GreGetDIBitsInternal(
 
         psurfDest = SURFACE_ShareLockSurface(hBmpDest);
 
-        RECTL_vSetRect(&rcDest, 0, 0, ScanLines, psurf->SurfObj.sizlBitmap.cx);
+        RECTL_vSetRect(&rcDest, 0, 0, psurf->SurfObj.sizlBitmap.cx, ScanLines);
 
         srcPoint.x = 0;
 

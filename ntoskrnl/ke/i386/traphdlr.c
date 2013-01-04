@@ -663,6 +663,7 @@ KiTrap06Handler(IN PKTRAP_FRAME TrapFrame)
         {
             /* Should only happen in VDM mode */
             UNIMPLEMENTED;
+            ASSERT(FALSE);
             while (TRUE);
         }
         
@@ -735,6 +736,7 @@ KiTrap07Handler(IN PKTRAP_FRAME TrapFrame)
         {
             /* Not implemented */
             UNIMPLEMENTED;
+            ASSERT(FALSE);
             while (TRUE);
         }
     
@@ -921,6 +923,7 @@ KiTrap0DHandler(IN PKTRAP_FRAME TrapFrame)
         {
             /* Should only happen in VDM mode */
             UNIMPLEMENTED;
+            ASSERT(FALSE);
             while (TRUE);
         }
         
@@ -1077,6 +1080,7 @@ KiTrap0DHandler(IN PKTRAP_FRAME TrapFrame)
     {
         /* Not implemented */
         UNIMPLEMENTED;
+        ASSERT(FALSE);
         while (TRUE);
     }
 
@@ -1133,6 +1137,7 @@ KiTrap0DHandler(IN PKTRAP_FRAME TrapFrame)
         {
             /* Otherwise, this is another kind of IRET fault */
             UNIMPLEMENTED;
+            ASSERT(FALSE);
             while (TRUE);
         }
     }
@@ -1191,6 +1196,7 @@ KiTrap0EHandler(IN PKTRAP_FRAME TrapFrame)
         {
             /* The stack is somewhere in between frames, we need to fix it */
             UNIMPLEMENTED;
+            ASSERT(FALSE);
             while (TRUE);
         }
     }
@@ -1256,6 +1262,7 @@ KiTrap0EHandler(IN PKTRAP_FRAME TrapFrame)
     {
         /* Not yet implemented */
         UNIMPLEMENTED;
+        ASSERT(FALSE);
         while (TRUE);
     }
 #endif
@@ -1439,7 +1446,7 @@ FASTCALL
 KiGetTickCountHandler(IN PKTRAP_FRAME TrapFrame)
 {
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
 }
 
 VOID
@@ -1447,7 +1454,7 @@ FASTCALL
 KiCallbackReturnHandler(IN PKTRAP_FRAME TrapFrame)
 {
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
 }
 
 DECLSPEC_NORETURN
@@ -1618,6 +1625,7 @@ KiSystemCall(IN PKTRAP_FRAME TrapFrame,
     {
         /* Access violation */
         UNIMPLEMENTED;
+        ASSERT(FALSE);
         while (TRUE);
     }
     
@@ -1683,6 +1691,7 @@ Kei386EoiHelper(VOID)
 {
     /* We should never see this call happening */
     DPRINT1("Mismatched NT/HAL version");
+    ASSERT(FALSE);
     while (TRUE);
 }
 

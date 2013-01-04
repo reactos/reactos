@@ -230,7 +230,7 @@ LRESULT CALLBACK DwordEditSubclassProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPAR
 {
     WNDPROC oldwndproc;
 
-    oldwndproc = (WNDPROC)(LONG_PTR)GetWindowLongPtr(hwnd, GWL_USERDATA);
+    oldwndproc = (WNDPROC)(LONG_PTR)GetWindowLongPtr(hwnd, GWLP_USERDATA);
 
     switch (uMsg)
     {
@@ -263,7 +263,7 @@ LRESULT CALLBACK DwordEditSubclassProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPAR
         }
     }
 
-    return CallWindowProc(oldwndproc, hwnd, uMsg, wParam, lParam);
+    return CallWindowProcW(oldwndproc, hwnd, uMsg, wParam, lParam);
 }
 
 
@@ -285,9 +285,9 @@ INT_PTR CALLBACK modify_dword_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LP
 
         /* subclass the edit control */
         hwndValue = GetDlgItem(hwndDlg, IDC_VALUE_DATA);
-        oldproc = (WNDPROC)(LONG_PTR)GetWindowLongPtr(hwndValue, GWL_WNDPROC);
-        SetWindowLongPtr(hwndValue, GWL_USERDATA, (DWORD_PTR)oldproc);
-        SetWindowLongPtr(hwndValue, GWL_WNDPROC, (DWORD_PTR)DwordEditSubclassProc);
+        oldproc = (WNDPROC)(LONG_PTR)GetWindowLongPtr(hwndValue, GWLP_WNDPROC);
+        SetWindowLongPtr(hwndValue, GWLP_USERDATA, (DWORD_PTR)oldproc);
+        SetWindowLongPtr(hwndValue, GWLP_WNDPROC, (DWORD_PTR)DwordEditSubclassProc);
 
         if (editValueName && wcscmp(editValueName, L""))
         {
@@ -665,7 +665,7 @@ ParseResources(HWND hwnd)
     HWND hwndLV;
 
     WCHAR buffer[80];
-    LVITEM item;
+    LVITEMW item;
     INT iItem;
 
     pFullDescriptor = &resourceValueData->List[fullResourceIndex];
@@ -866,7 +866,7 @@ OnResourceNotify(HWND hwndDlg, NMHDR *phdr)
                     if (lpnmlv->iItem != -1)
                     {
                         PCM_PARTIAL_RESOURCE_DESCRIPTOR pDescriptor;
-                        LVITEM item;
+                        LVITEMW item;
 
                         item.mask = LVIF_PARAM;
                         item.iItem = lpnmlv->iItem;
@@ -968,7 +968,7 @@ static VOID AddFullResourcesToList(HWND hwnd)
 {
     PCM_FULL_RESOURCE_DESCRIPTOR pFullDescriptor;
     WCHAR buffer[80];
-    LVITEM item;
+    LVITEMW item;
     ULONG i;
     INT iItem;
 
@@ -1344,7 +1344,7 @@ static LONG CopyKey(HKEY hDestKey, LPCWSTR lpDestSubKey, HKEY hSrcKey, LPCWSTR l
     }
 
     /* create the destination subkey */
-    lResult = RegCreateKeyExW(hDestKey, lpDestSubKey, 0, NULL, 0, KEY_WRITE, NULL,
+    lResult = RegCreateKeyExW(hDestKey, lpDestSubKey, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL,
                              &hDestSubKey, &dwDisposition);
     if (lResult)
         goto done;
@@ -1398,6 +1398,12 @@ static LONG MoveKey(HKEY hDestKey, LPCWSTR lpDestSubKey, HKEY hSrcKey, LPCWSTR l
 
     if (!lpSrcSubKey)
         return ERROR_INVALID_FUNCTION;
+
+    if (_wcsicmp(lpDestSubKey, lpSrcSubKey) == 0)
+    {
+        /* Destination name equals source name */
+        return ERROR_SUCCESS;
+    }
 
     lResult = CopyKey(hDestKey, lpDestSubKey, hSrcKey, lpSrcSubKey);
     if (lResult == ERROR_SUCCESS)

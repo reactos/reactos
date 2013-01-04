@@ -148,13 +148,13 @@ PciComputeNewCurrentSettings(IN PPCI_PDO_EXTENSION PdoExtension,
                         /* Not used in the driver yet */
                         case 1:
                             UNIMPLEMENTED;
-                            while (TRUE);
+                            ASSERT(FALSE); // while (TRUE);
                             break;
 
                         /* Not used in the driver yet */
                         case 2:
                             UNIMPLEMENTED;
-                            while (TRUE);
+                            ASSERT(FALSE); // while (TRUE);
                             break;
 
                         /* A drain request */
@@ -541,7 +541,8 @@ PciQueryEjectionRelations(IN PPCI_PDO_EXTENSION PdoExtension,
 {
     /* Not yet implemented */
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 NTSTATUS
@@ -599,7 +600,7 @@ PciQueryRequirements(IN PPCI_PDO_EXTENSION PdoExtension,
         {
             /* Have not tested this on eVb's machine yet */
             UNIMPLEMENTED;
-            while (TRUE);
+            ASSERT(FALSE); // while (TRUE);
         }
 
         /* Check if the requirements are actually the zero list */
@@ -1522,7 +1523,7 @@ PciProcessBus(IN PPCI_FDO_EXTENSION DeviceExtension)
     {
         /* Not really handling this year */
         UNIMPLEMENTED;
-        while (TRUE);
+        ASSERT(FALSE); // while (TRUE);
 
         /* Check for PCI bridges with the ISA bit set, or required */
         if ((PdoExtension) &&
@@ -1532,7 +1533,7 @@ PciProcessBus(IN PPCI_FDO_EXTENSION DeviceExtension)
         {
             /* We'll need to do some legacy support */
             UNIMPLEMENTED;
-            while (TRUE);
+            ASSERT(FALSE); // while (TRUE);
         }
     }
     else
@@ -1547,7 +1548,7 @@ PciProcessBus(IN PPCI_FDO_EXTENSION DeviceExtension)
             {
                 /* Again, some more legacy support we'll have to do */
                 UNIMPLEMENTED;
-                while (TRUE);
+                ASSERT(FALSE); // while (TRUE);
             }
         }
     }
@@ -1557,7 +1558,7 @@ PciProcessBus(IN PPCI_FDO_EXTENSION DeviceExtension)
     {
         /* Not yet supported */
         UNIMPLEMENTED;
-        while (TRUE);
+        ASSERT(FALSE); // while (TRUE);
     }
 }
 
@@ -1606,7 +1607,7 @@ PciScanBus(IN PPCI_FDO_EXTENSION DeviceExtension)
         {
             DPRINT1("PCI: Bus numbers have been changed!  Restoring originals.\n");
             UNIMPLEMENTED;
-            while (TRUE);
+            ASSERT(FALSE); // while (TRUE);
         }
     }
 
@@ -1668,7 +1669,7 @@ PciScanBus(IN PPCI_FDO_EXTENSION DeviceExtension)
             {
                 /* Check if this PCI device is the ACPI Watchdog Device... */
                 UNIMPLEMENTED;
-                while (TRUE);
+                ASSERT(FALSE); // while (TRUE);
             }
 
             /* Check for non-simple devices */
@@ -1734,7 +1735,7 @@ PciScanBus(IN PPCI_FDO_EXTENSION DeviceExtension)
             {
                 /* Rescan scenarios are not yet implemented */
                 UNIMPLEMENTED;
-                while (TRUE);
+                ASSERT(FALSE); // while (TRUE);
             }
 
             /* Bus processing will need to happen */
@@ -2197,7 +2198,7 @@ PciSetResources(IN PPCI_PDO_EXTENSION PdoExtension,
     {
         /* Don't have hotplug devices to test with yet, QEMU 0.14 should */
         UNIMPLEMENTED;
-        while (TRUE);
+        ASSERT(FALSE); // while (TRUE);
     }
 
     /* Locate the correct resource configurator for this type of device */

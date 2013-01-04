@@ -140,7 +140,7 @@ KdpSysReadBusData(IN ULONG BusDataType,
                   OUT PULONG ActualLength)
 {
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -155,7 +155,7 @@ KdpSysWriteBusData(IN ULONG BusDataType,
                    OUT PULONG ActualLength)
 {
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -358,7 +358,7 @@ NTAPI
 KdpSysCheckLowMemory(IN ULONG Flags)
 {
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -367,6 +367,6 @@ NTAPI
 KdpAllowDisable(VOID)
 {
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
     return STATUS_ACCESS_DENIED;
 }

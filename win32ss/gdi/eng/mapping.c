@@ -419,7 +419,8 @@ EngLoadModuleEx(
 
 HANDLE
 APIENTRY
-EngLoadModule(LPWSTR pwsz)
+EngLoadModule(
+    _In_ LPWSTR pwsz)
 {
     /* Forward to EngLoadModuleEx */
     return (HANDLE)EngLoadModuleEx(pwsz, 0, FVF_READONLY | FVF_SYSTEMROOT);
@@ -428,8 +429,8 @@ EngLoadModule(LPWSTR pwsz)
 HANDLE
 APIENTRY
 EngLoadModuleForWrite(
-	IN LPWSTR pwsz,
-	IN ULONG  cjSizeOfModule)
+    _In_ LPWSTR pwsz,
+    _In_ ULONG  cjSizeOfModule)
 {
     /* Forward to EngLoadModuleEx */
     return (HANDLE)EngLoadModuleEx(pwsz, cjSizeOfModule, FVF_SYSTEMROOT);
@@ -438,15 +439,15 @@ EngLoadModuleForWrite(
 PVOID
 APIENTRY
 EngMapModule(
-	IN  HANDLE h,
-	OUT PULONG pulSize)
+    _In_  HANDLE h,
+    _Out_ PULONG pulSize)
 {
     PFILEVIEW pFileView = (PFILEVIEW)h;
     NTSTATUS Status;
 
     pFileView->cjView = 0;
 
-	/* FIXME: Use system space because ARM3 doesn't support executable sections yet */
+    /* FIXME: Use system space because ARM3 doesn't support executable sections yet */
     Status = MmMapViewInSystemSpace(pFileView->pSection,
                                     &pFileView->pvKView,
                                     &pFileView->cjView);
@@ -457,18 +458,19 @@ EngMapModule(
         return NULL;
     }
 
-    *pulSize = pFileView->cjView;
+    *pulSize = (ULONG)pFileView->cjView;
     return pFileView->pvKView;
 }
 
 VOID
 APIENTRY
-EngFreeModule(IN HANDLE h)
+EngFreeModule(
+    _In_ HANDLE h)
 {
     PFILEVIEW pFileView = (PFILEVIEW)h;
     NTSTATUS Status;
 
-	/* FIXME: Use system space because ARM3 doesn't support executable sections yet */
+    /* FIXME: Use system space because ARM3 doesn't support executable sections yet */
     Status = MmUnmapViewInSystemSpace(pFileView->pvKView);
     if (!NT_SUCCESS(Status))
     {
@@ -483,12 +485,14 @@ EngFreeModule(IN HANDLE h)
     EngFreeMem(pFileView);
 }
 
+_Success_(return != 0)
+_When_(cjSize != 0, _At_(return, _Out_writes_bytes_(cjSize)))
 PVOID
 APIENTRY
 EngMapFile(
-    IN LPWSTR pwsz,
-    IN ULONG cjSize,
-    OUT ULONG_PTR *piFile)
+    _In_ LPWSTR pwsz,
+    _In_ ULONG cjSize,
+    _Out_ ULONG_PTR *piFile)
 {
     HANDLE hModule;
     PVOID pvBase;
@@ -517,7 +521,7 @@ EngMapFile(
 BOOL
 APIENTRY
 EngUnmapFile(
-    IN ULONG_PTR iFile)
+    _In_ ULONG_PTR iFile)
 {
     HANDLE hModule = (HANDLE)iFile;
 
@@ -530,9 +534,9 @@ EngUnmapFile(
 BOOL
 APIENTRY
 EngMapFontFileFD(
-	IN  ULONG_PTR iFile,
-	OUT PULONG    *ppjBuf,
-	OUT ULONG     *pcjBuf)
+	_In_ ULONG_PTR iFile,
+	_Outptr_result_bytebuffer_(*pcjBuf) PULONG *ppjBuf,
+	_Out_ ULONG *pcjBuf)
 {
     // www.osr.com/ddk/graphics/gdifncs_0co7.htm
     UNIMPLEMENTED;
@@ -542,7 +546,7 @@ EngMapFontFileFD(
 VOID
 APIENTRY
 EngUnmapFontFileFD(
-    IN ULONG_PTR iFile)
+    _In_ ULONG_PTR iFile)
 {
     // http://www.osr.com/ddk/graphics/gdifncs_6wbr.htm
     UNIMPLEMENTED;
@@ -551,9 +555,9 @@ EngUnmapFontFileFD(
 BOOL
 APIENTRY
 EngMapFontFile(
-	ULONG_PTR iFile,
-	PULONG    *ppjBuf,
-	ULONG     *pcjBuf)
+    _In_ ULONG_PTR iFile,
+    _Outptr_result_bytebuffer_(*pcjBuf) PULONG *ppjBuf,
+    _Out_ ULONG *pcjBuf)
 {
     // www.osr.com/ddk/graphics/gdifncs_3up3.htm
     return EngMapFontFileFD(iFile, ppjBuf, pcjBuf);
@@ -562,7 +566,7 @@ EngMapFontFile(
 VOID
 APIENTRY
 EngUnmapFontFile(
-    IN ULONG_PTR iFile)
+    _In_ ULONG_PTR iFile)
 {
     // www.osr.com/ddk/graphics/gdifncs_09wn.htm
     EngUnmapFontFileFD(iFile);

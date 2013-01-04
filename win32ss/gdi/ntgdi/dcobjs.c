@@ -525,6 +525,85 @@ NtGdiSelectClipPath(
     return success;
 }
 
+HFONT
+NTAPI
+DC_hSelectFont(
+    _In_ PDC pdc,
+    _In_ HFONT hlfntNew)
+{
+    PLFONT plfntNew;
+    HFONT hlfntOld;
+
+    // Legacy crap that will die with font engine rewrite
+    if (!NT_SUCCESS(TextIntRealizeFont(hlfntNew, NULL)))
+    {
+        return NULL;
+    }
+
+    /* Get the current selected font */
+    hlfntOld = pdc->dclevel.plfnt->BaseObject.hHmgr;
+
+    /* Check if a new font should be selected */
+    if (hlfntNew != hlfntOld)
+    {
+        /* Lock the new font */
+        plfntNew = LFONT_ShareLockFont(hlfntNew);
+        if (plfntNew)
+        {
+            /* Success, dereference the old font */
+            LFONT_ShareUnlockFont(pdc->dclevel.plfnt);
+
+            /* Select the new font */
+            pdc->dclevel.plfnt = plfntNew;
+            pdc->pdcattr->hlfntNew = hlfntNew;
+
+            /* Update dirty flags */
+            pdc->pdcattr->ulDirty_ |= DIRTY_CHARSET;
+            pdc->pdcattr->ulDirty_ &= ~SLOW_WIDTHS;
+        }
+        else
+        {
+            /* Failed, restore old, return NULL */
+            pdc->pdcattr->hlfntNew = hlfntOld;
+            hlfntOld = NULL;
+        }
+    }
+
+    return hlfntOld;
+}
+
+HFONT
+APIENTRY
+NtGdiSelectFont(
+    _In_ HDC hdc,
+    _In_ HFONT hfont)
+{
+    HFONT hfontOld;
+    PDC pdc;
+
+    /* Check parameters */
+    if ((hdc == NULL) || (hfont == NULL))
+    {
+        return NULL;
+    }
+
+    /* Lock the DC */
+    pdc = DC_LockDc(hdc);
+    if (!pdc)
+    {
+        return NULL;
+    }
+
+    /* Call the internal function */
+    hfontOld = DC_hSelectFont(pdc, hfont);
+
+    /* Unlock the DC */
+    DC_UnlockDc(pdc);
+
+    /* Return the previously selected font */
+    return hfontOld;
+}
+
 HANDLE
 APIENTRY
 NtGdiGetDCObject(HDC hDC, INT ObjectType)
@@ -615,12 +694,13 @@ NtGdiGetRandomRgn(
     INT ret = 0;
     PDC pdc;
     HRGN hrgnSrc = NULL;
+    PREGION prgnSrc = NULL;
     POINTL ptlOrg;
 
     pdc = DC_LockDc(hdc);
     if (!pdc)
     {
-        EngSetLastError(ERROR_INVALID_PARAMETER);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return -1;
     }
 
@@ -628,33 +708,51 @@ NtGdiGetRandomRgn(
     {
         case CLIPRGN:
             hrgnSrc = pdc->rosdc.hClipRgn;
-//            if (pdc->dclevel.prgnClip) hrgnSrc = pdc->dclevel.prgnClip->BaseObject.hHmgr;
+//            if (pdc->dclevel.prgnClip) prgnSrc = pdc->dclevel.prgnClip;
             break;
+
         case METARGN:
-            if (pdc->dclevel.prgnMeta)
-                hrgnSrc = pdc->dclevel.prgnMeta->BaseObject.hHmgr;
+            prgnSrc = pdc->dclevel.prgnMeta;
             break;
+
         case APIRGN:
-            if (pdc->prgnAPI) hrgnSrc = pdc->prgnAPI->BaseObject.hHmgr;
-//            else if (pdc->dclevel.prgnClip) hrgnSrc = pdc->dclevel.prgnClip->BaseObject.hHmgr;
-            else if (pdc->rosdc.hClipRgn) hrgnSrc = pdc->rosdc.hClipRgn;
-            else if (pdc->dclevel.prgnMeta) hrgnSrc = pdc->dclevel.prgnMeta->BaseObject.hHmgr;
-            break;
-        case SYSRGN:
-            if (pdc->prgnVis)
+            if (pdc->prgnAPI)
             {
-                PREGION prgnDest = REGION_LockRgn(hrgnDest);
-                ret = IntGdiCombineRgn(prgnDest, pdc->prgnVis, 0, RGN_COPY) == ERROR ? -1 : 1;
-                REGION_UnlockRgn(prgnDest);
+                prgnSrc = pdc->prgnAPI;
+            }
+//            else if (pdc->dclevel.prgnClip) prgnSrc = pdc->dclevel.prgnClip;
+            else if (pdc->rosdc.hClipRgn)
+            {
+                hrgnSrc = pdc->rosdc.hClipRgn;
+            }
+            else if (pdc->dclevel.prgnMeta)
+            {
+                prgnSrc = pdc->dclevel.prgnMeta;
             }
             break;
+
+        case SYSRGN:
+            prgnSrc = pdc->prgnVis;
+            break;
+
         default:
-            hrgnSrc = NULL;
+            break;
     }
 
     if (hrgnSrc)
     {
         ret = NtGdiCombineRgn(hrgnDest, hrgnSrc, 0, RGN_COPY) == ERROR ? -1 : 1;
+    }
+    else if (prgnSrc)
+    {
+        PREGION prgnDest = REGION_LockRgn(hrgnDest);
+        if (prgnDest)
+        {
+            ret = IntGdiCombineRgn(prgnDest, prgnSrc, 0, RGN_COPY) == ERROR ? -1 : 1;
+            REGION_UnlockRgn(prgnDest);
+        }
+        else
+            ret = -1;
     }
 
     if (iCode == SYSRGN)

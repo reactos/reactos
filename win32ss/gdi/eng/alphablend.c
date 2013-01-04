@@ -17,13 +17,14 @@
  */
 BOOL
 APIENTRY
-EngAlphaBlend(IN SURFOBJ *psoDest,
-              IN SURFOBJ *psoSource,
-              IN CLIPOBJ *ClipRegion,
-              IN XLATEOBJ *ColorTranslation,
-              IN PRECTL DestRect,
-              IN PRECTL SourceRect,
-              IN BLENDOBJ *BlendObj)
+EngAlphaBlend(
+    _Inout_ SURFOBJ *psoDest,
+    _In_ SURFOBJ *psoSource,
+    _In_opt_ CLIPOBJ *ClipRegion,
+    _In_opt_ XLATEOBJ *ColorTranslation,
+    _In_ RECTL *DestRect,
+    _In_ RECTL *SourceRect,
+    _In_ BLENDOBJ *BlendObj)
 {
     RECTL              InputRect;
     RECTL              OutputRect;

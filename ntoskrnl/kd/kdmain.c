@@ -108,7 +108,8 @@ KdpServiceDispatcher(ULONG Service,
 #endif /* KDBG */
 #endif /* DBG */
         default:
-            HalDisplayString ("Invalid debug service call!\n");
+            DPRINT1("Invalid debug service call!\n");
+            HalDisplayString("Invalid debug service call!\n");
             break;
     }
 

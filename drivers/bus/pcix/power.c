@@ -192,7 +192,8 @@ PciSetPowerManagedDevicePowerState(IN PPCI_PDO_EXTENSION DeviceExtension,
         {
             /* We would normally re-assign resources after powerup */
             UNIMPLEMENTED;
-            while (TRUE);
+            ASSERT(FALSE); // while (TRUE);
+            Status = STATUS_NOT_IMPLEMENTED;
         }
     }
 

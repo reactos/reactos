@@ -241,7 +241,8 @@ CreateRemoteThread(IN HANDLE hProcess,
             DbgPrint("SXS: %s - Failing thread create because "
                      "NtQueryInformationThread() failed with status %08lx\n",
                      __FUNCTION__, Status);
-            while (TRUE);
+            ASSERT(FALSE); // while (TRUE);
+            return NULL;
         }
 
         /* Allocate the Activation Context Stack */
@@ -252,7 +253,8 @@ CreateRemoteThread(IN HANDLE hProcess,
             DbgPrint("SXS: %s - Failing thread create because "
                      "RtlAllocateActivationContextStack() failed with status %08lx\n",
                      __FUNCTION__, Status);
-            while (TRUE);
+            ASSERT(FALSE); // while (TRUE);
+            return NULL;
         }
 
         /* Save it */
@@ -274,7 +276,8 @@ CreateRemoteThread(IN HANDLE hProcess,
             DbgPrint("SXS: %s - Failing thread create because "
                      "RtlQueryInformationActivationContext() failed with status %08lx\n",
                      __FUNCTION__, Status);
-            while (TRUE);
+            ASSERT(FALSE); // while (TRUE);
+            return NULL;
         }
 
         /* Does it need to be activated? */
@@ -291,7 +294,8 @@ CreateRemoteThread(IN HANDLE hProcess,
                 DbgPrint("SXS: %s - Failing thread create because "
                          "RtlActivateActivationContextEx() failed with status %08lx\n",
                          __FUNCTION__, Status);
-                while (TRUE);
+                ASSERT(FALSE); // while (TRUE);
+                return NULL;
             }
         }
     }
@@ -367,7 +371,8 @@ ExitThread(IN DWORD uExitCode)
 
     /* We should never reach this place */
     DPRINT1("It should not happen\n");
-    while (TRUE);
+    ASSERT(FALSE);
+    while (TRUE); // 'noreturn' function.
 }
 
 /*

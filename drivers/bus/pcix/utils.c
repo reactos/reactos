@@ -153,7 +153,7 @@ PciIsDatacenter(VOID)
     {
         /* This scenario shouldn't happen yet, since SetupDD isn't used */
         UNIMPLEMENTED;
-        while (TRUE);
+        ASSERT(FALSE); // while (TRUE);
     }
 
     /* Return if this is Datacenter or not */
@@ -758,7 +758,8 @@ PciIsDeviceOnDebugPath(IN PPCI_PDO_EXTENSION DeviceExtension)
 
     /* eVb has not been able to test such devices yet */
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
+    return FALSE;
 }
 
 NTSTATUS

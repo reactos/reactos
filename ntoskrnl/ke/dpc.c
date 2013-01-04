@@ -780,6 +780,7 @@ KeInsertQueueDpc(IN PKDPC Dpc,
             {
                 /* FIXME: Setup Threaded DPC */
                 DPRINT1("Threaded DPC not supported\n");
+                ASSERT(FALSE);
                 while (TRUE);
             }
         }

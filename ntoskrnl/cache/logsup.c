@@ -24,7 +24,7 @@ CcSetAdditionalCacheAttributes(IN PFILE_OBJECT FileObject,
                                IN BOOLEAN DisableWriteBehind)
 {
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
 }
 
 VOID
@@ -48,7 +48,7 @@ CcGetDirtyPages(IN PVOID LogHandle,
 {
     LARGE_INTEGER Result = {{0}};
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
     return Result;
 }
 
@@ -57,7 +57,7 @@ NTAPI
 CcIsThereDirtyData(IN PVPB Vpb)
 {
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
     return FALSE;
 }
 
@@ -68,7 +68,7 @@ CcGetLsnForFileObject(IN PFILE_OBJECT FileObject,
 {
     LARGE_INTEGER Result = {{0}};
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
     return Result;
 }
 

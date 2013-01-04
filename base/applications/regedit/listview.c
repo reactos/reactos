@@ -56,7 +56,7 @@ static const int column_alignment[MAX_LIST_COLUMNS] = { LVCFMT_LEFT, LVCFMT_LEFT
 LPCWSTR GetValueName(HWND hwndLV, int iStartAt)
 {
     int item;
-    LVITEM LVItem;
+    LVITEMW LVItem;
     PLINE_INFO lineinfo;
 
     /*
@@ -108,7 +108,7 @@ VOID SetValueName(HWND hwndLV, LPCWSTR pszValueName)
 BOOL IsDefaultValue(HWND hwndLV, int i)
 {
     PLINE_INFO lineinfo;
-    LVITEM Item;
+    LVITEMW Item;
 
     Item.mask = LVIF_PARAM;
     Item.iItem = i;
@@ -126,7 +126,7 @@ BOOL IsDefaultValue(HWND hwndLV, int i)
 static void AddEntryToList(HWND hwndLV, LPWSTR Name, DWORD dwValType, void* ValBuf, DWORD dwCount, int Position, BOOL ValExists)
 {
     PLINE_INFO linfo;
-    LVITEM item;
+    LVITEMW item;
     int index;
 
     linfo = (PLINE_INFO)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(LINE_INFO) + dwCount);
@@ -654,7 +654,7 @@ fail:
 void DestroyListView(HWND hwndLV)
 {
     INT count, i;
-    LVITEM item;
+    LVITEMW item;
 
     count = ListView_GetItemCount(hwndLV);
     for (i = 0; i < count; i++)

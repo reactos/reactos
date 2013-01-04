@@ -21,53 +21,57 @@
 
 #include <win32k.h>
 
-/*
- * FIXME: Is there a better algorithm, like FT_MulDiv?
- *
- * @implemented
- */
-INT APIENTRY EngMulDiv(
-	     INT nMultiplicand,
-	     INT nMultiplier,
-	     INT nDivisor)
+INT
+APIENTRY
+EngMulDiv(
+    _In_ INT iMultiplicand,
+    _In_ INT iMultiplier,
+    _In_ INT iDivisor)
 {
-#if SIZEOF_LONG_LONG >= 8
-    long long ret;
+    INT64 i64Multiplied, i64Result;
 
-    if (!nDivisor) return -1;
-
-    /* We want to deal with a positive divisor to simplify the logic. */
-    if (nDivisor < 0)
+    /* Check for divide by zero */
+    if (iDivisor == 0)
     {
-      nMultiplicand = - nMultiplicand;
-      nDivisor = -nDivisor;
+        /* Quick sign check and return "infinite" */
+        return ((iMultiplicand ^ iMultiplier) < 0) ? INT_MIN : INT_MAX;
     }
 
-    /* If the result is positive, we "add" to round. else, we subtract to round. */
-    if ( ( (nMultiplicand <  0) && (nMultiplier <  0) ) ||
-	 ( (nMultiplicand >= 0) && (nMultiplier >= 0) ) )
-      ret = (((long long)nMultiplicand * nMultiplier) + (nDivisor/2)) / nDivisor;
+    /* We want to deal with a positive divisor to simplify the logic. */
+    if (iDivisor < 0)
+    {
+        iMultiplicand = -iMultiplicand;
+        iDivisor = -iDivisor;
+    }
+
+    /* Do the multiplication */
+    i64Multiplied = Int32x32To64(iMultiplicand, iMultiplier);
+
+    /* If the result is positive, we add to round, else we subtract to round. */
+    if (i64Multiplied >= 0)
+    {
+        i64Multiplied += (iDivisor / 2);
+    }
     else
-      ret = (((long long)nMultiplicand * nMultiplier) - (nDivisor/2)) / nDivisor;
-
-    if ((ret > 2147483647) || (ret < -2147483647)) return -1;
-    return ret;
-#else
-    if (!nDivisor) return -1;
-
-    /* We want to deal with a positive divisor to simplify the logic. */
-    if (nDivisor < 0)
     {
-      nMultiplicand = - nMultiplicand;
-      nDivisor = -nDivisor;
+        i64Multiplied -= (iDivisor / 2);
     }
 
-    /* If the result is positive, we "add" to round. else, we subtract to round. */
-    if ( ( (nMultiplicand <  0) && (nMultiplier <  0) ) ||
-	 ( (nMultiplicand >= 0) && (nMultiplier >= 0) ) )
-      return ((nMultiplicand * nMultiplier) + (nDivisor/2)) / nDivisor;
+    /* Now do the divide */
+    i64Result = i64Multiplied / iDivisor;
 
-    return ((nMultiplicand * nMultiplier) - (nDivisor/2)) / nDivisor;
+    /* Check for positive overflow */
+    if (i64Result > INT_MAX)
+    {
+        return INT_MAX;
+    }
 
-#endif
+    /* Check for negative overflow. */
+    if (i64Result < INT_MIN)
+    {
+        return INT_MIN;
+    }
+
+    return (INT)i64Result;
 }
+

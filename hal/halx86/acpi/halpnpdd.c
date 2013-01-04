@@ -814,7 +814,7 @@ HalpDispatchWmi(IN PDEVICE_OBJECT DeviceObject,
                 IN PIRP Irp)
 {
     DPRINT1("HAL: PnP Driver WMI!\n");
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
     return STATUS_SUCCESS;
 }
 

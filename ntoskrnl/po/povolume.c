@@ -300,7 +300,9 @@ PopFlushVolumes(IN BOOLEAN ShuttingDown)
     {
         /* ReactOS only implements this routine for shutdown, which requires it */
         UNIMPLEMENTED;
-        while (TRUE);
+        ASSERT(FALSE); // while (TRUE);
+        KeReleaseGuardedMutex(&PopVolumeLock);
+        return;
     }
 
     /* Check if there were no volumes at all */

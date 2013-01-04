@@ -375,8 +375,8 @@ Mmi386ReleaseMmInfo(IN PEPROCESS Process)
     // FIXME-USER: Need to delete address space
     //
     UNIMPLEMENTED;
-    while (TRUE);
-    return 0;
+    ASSERT(FALSE); // while (TRUE);
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 PULONG
@@ -400,7 +400,7 @@ MmDisableVirtualMapping(IN PEPROCESS Process,
     // TODO
     //
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
 }
 
 VOID
@@ -412,7 +412,7 @@ MmEnableVirtualMapping(IN PEPROCESS Process,
     // TODO
     //
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
 }
 
 NTSTATUS
@@ -659,7 +659,7 @@ MmDeletePageFileMapping(IN PEPROCESS Process,
     // TODO
     //
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
 }
 
 NTSTATUS
@@ -672,8 +672,8 @@ MmCreatePageFileMapping(IN PEPROCESS Process,
     // TODO
     //
     UNIMPLEMENTED;
-    while (TRUE);
-    return 0;
+    ASSERT(FALSE); // while (TRUE);
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 PFN_NUMBER
@@ -704,8 +704,8 @@ MmIsDirtyPage(IN PEPROCESS Process,
     // TODO
     //
     UNIMPLEMENTED;
-    while (TRUE);
-    return 0;
+    ASSERT(FALSE); // while (TRUE);
+    return FALSE;
 }
 
 VOID
@@ -717,7 +717,7 @@ MmSetCleanPage(IN PEPROCESS Process,
     // TODO
     //
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
 }
 
 VOID
@@ -729,7 +729,7 @@ MmSetDirtyPage(IN PEPROCESS Process,
     // TODO
     //
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
 }
 
 BOOLEAN

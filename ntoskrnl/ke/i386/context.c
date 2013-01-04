@@ -36,7 +36,8 @@ KiSwapProcess(IN PKPROCESS NewProcess,
     {
         /* Not handled yet */
         UNIMPLEMENTED;
-        while (TRUE);
+        ASSERT(FALSE); // while (TRUE);
+        return;
     }
     
     /* Update CR3 */

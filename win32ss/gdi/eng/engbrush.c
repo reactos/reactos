@@ -287,7 +287,7 @@ NTAPI
 EBRUSHOBJ_bRealizeBrush(EBRUSHOBJ *pebo, BOOL bCallDriver)
 {
     BOOL bResult;
-    PFN_DrvRealizeBrush pfnRealzizeBrush = NULL;
+    PFN_DrvRealizeBrush pfnRealizeBrush = NULL;
     PSURFACE psurfPattern, psurfMask;
     PPDEVOBJ ppdev;
     EXLATEOBJ exlo;
@@ -303,10 +303,10 @@ EBRUSHOBJ_bRealizeBrush(EBRUSHOBJ *pebo, BOOL bCallDriver)
     if (!ppdev) ppdev = gppdevPrimary;
 
     if (bCallDriver)
-        pfnRealzizeBrush = ppdev->DriverFunctions.RealizeBrush;
+        pfnRealizeBrush = ppdev->DriverFunctions.RealizeBrush;
 
-    if (!pfnRealzizeBrush)
-        pfnRealzizeBrush = EngRealizeBrush;
+    if (!pfnRealizeBrush)
+        pfnRealizeBrush = EngRealizeBrush;
 
     /* Check if this is a hatch brush */
     if (pbr->flAttrs & BR_IS_HATCH)
@@ -351,12 +351,12 @@ EBRUSHOBJ_bRealizeBrush(EBRUSHOBJ *pebo, BOOL bCallDriver)
                           pebo->crCurrentText);
 
     /* Create the realization */
-    bResult = pfnRealzizeBrush(&pebo->BrushObject,
-                               &pebo->psurfTrg->SurfObj,
-                               &psurfPattern->SurfObj,
-                               psurfMask ? &psurfMask->SurfObj : NULL,
-                               &exlo.xlo,
-                               iHatch);
+    bResult = pfnRealizeBrush(&pebo->BrushObject,
+                              &pebo->psurfTrg->SurfObj,
+                              &psurfPattern->SurfObj,
+                              psurfMask ? &psurfMask->SurfObj : NULL,
+                              &exlo.xlo,
+                              iHatch);
 
     /* Cleanup the XLATEOBJ */
     EXLATEOBJ_vCleanup(&exlo);

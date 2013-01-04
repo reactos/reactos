@@ -80,7 +80,7 @@ PciPdoWaitWake(IN PIRP Irp,
                IN PPCI_PDO_EXTENSION DeviceExtension)
 {
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -101,7 +101,7 @@ PciPdoIrpQueryPower(IN PIRP Irp,
                     IN PPCI_PDO_EXTENSION DeviceExtension)
 {
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -219,7 +219,7 @@ PciPdoIrpRemoveDevice(IN PIRP Irp,
                       IN PPCI_PDO_EXTENSION DeviceExtension)
 {
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -230,7 +230,7 @@ PciPdoIrpCancelRemoveDevice(IN PIRP Irp,
                             IN PPCI_PDO_EXTENSION DeviceExtension)
 {
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -241,7 +241,7 @@ PciPdoIrpStopDevice(IN PIRP Irp,
                     IN PPCI_PDO_EXTENSION DeviceExtension)
 {
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -252,7 +252,7 @@ PciPdoIrpQueryStopDevice(IN PIRP Irp,
                          IN PPCI_PDO_EXTENSION DeviceExtension)
 {
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -263,7 +263,7 @@ PciPdoIrpCancelStopDevice(IN PIRP Irp,
                           IN PPCI_PDO_EXTENSION DeviceExtension)
 {
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -274,7 +274,7 @@ PciPdoIrpQueryInterface(IN PIRP Irp,
                         IN PPCI_PDO_EXTENSION DeviceExtension)
 {
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -405,7 +405,7 @@ PciPdoIrpReadConfig(IN PIRP Irp,
                     IN PPCI_PDO_EXTENSION DeviceExtension)
 {
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -416,7 +416,7 @@ PciPdoIrpWriteConfig(IN PIRP Irp,
                      IN PPCI_PDO_EXTENSION DeviceExtension)
 {
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -437,7 +437,7 @@ PciPdoIrpDeviceUsageNotification(IN PIRP Irp,
                                  IN PPCI_PDO_EXTENSION DeviceExtension)
 {
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -448,7 +448,7 @@ PciPdoIrpSurpriseRemoval(IN PIRP Irp,
                          IN PPCI_PDO_EXTENSION DeviceExtension)
 {
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -459,7 +459,7 @@ PciPdoIrpQueryLegacyBusInformation(IN PIRP Irp,
                                    IN PPCI_PDO_EXTENSION DeviceExtension)
 {
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
     return STATUS_NOT_SUPPORTED;
 }
 

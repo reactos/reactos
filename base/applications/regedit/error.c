@@ -40,7 +40,7 @@ int ErrorMessageBox(HWND hWnd, LPCWSTR lpTitle, DWORD dwErrorCode, ...)
 
     va_end(args);
 
-    iRet = MessageBoxW(hWnd, (Status && lpMsgBuf ? lpMsgBuf : L"Error displaying error message.\n"), lpTitle, MB_OK | MB_ICONERROR);
+    iRet = MessageBoxW(hWnd, (Status && lpMsgBuf ? lpMsgBuf : L"Error displaying error message."), lpTitle, MB_OK | MB_ICONERROR);
 
     if (lpMsgBuf) LocalFree(lpMsgBuf);
 
@@ -52,22 +52,25 @@ int InfoMessageBox(HWND hWnd, UINT uType, LPCWSTR lpTitle, LPCWSTR lpMessage, ..
 {
     int iRet = 0;
     LPWSTR lpMsgBuf = NULL;
-    DWORD Status = 0;
 
     va_list args = NULL;
     va_start(args, lpMessage);
 
-    Status = FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_STRING,
-                            lpMessage,
-                            0,
-                            0,
-                            (LPWSTR)&lpMsgBuf,
-                            0,
-                            &args);
+    if (lpMessage)
+    {
+        SIZE_T strLen = _vscwprintf(lpMessage, args);
+
+        /* Create a buffer on the heap and zero it out (LPTR) */
+        lpMsgBuf = (LPWSTR)LocalAlloc(LPTR, (strLen + 1) * sizeof(WCHAR));
+        if (lpMsgBuf)
+        {
+            _vsnwprintf(lpMsgBuf, strLen, lpMessage, args);
+        }
+    }
 
     va_end(args);
 
-    iRet = MessageBoxW(hWnd, (Status && lpMsgBuf ? lpMsgBuf : L"Error displaying error message.\n"), lpTitle, uType);
+    iRet = MessageBoxW(hWnd, (lpMessage && lpMsgBuf ? lpMsgBuf : L"Error displaying info message."), lpTitle, uType);
 
     if (lpMsgBuf) LocalFree(lpMsgBuf);
 

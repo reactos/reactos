@@ -106,7 +106,8 @@ MiLoadImageSection(IN OUT PVOID *SectionPtr,
     {
         /* Fail */
         DPRINT1("Session loading not yet supported!\n");
-        while (TRUE);
+        ASSERT(FALSE); // while (TRUE);
+        return STATUS_NOT_IMPLEMENTED;
     }
 
     /* Not session load, shouldn't have an entry */
@@ -1217,7 +1218,7 @@ CheckDllState:
                     /* We failed, unload the image */
                     MmUnloadSystemImage(DllEntry);
                     DPRINT1("MmCallDllInitialize failed with status 0x%x\n", Status);
-                    while (TRUE);
+                    ASSERT(FALSE); // while (TRUE);
                     Loaded = FALSE;
                 }
             }
@@ -1720,7 +1721,8 @@ MiReloadBootLoadedDrivers(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         {
             /* Shouldn't happen */
             DPRINT1("[Mm0]: Couldn't allocate driver section!\n");
-            while (TRUE);
+            ASSERT(FALSE); // while (TRUE);
+            return;
         }
 
         /* This is the new virtual address for the module */
@@ -1773,7 +1775,8 @@ MiReloadBootLoadedDrivers(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
             {
                 /* This shouldn't happen */
                 DPRINT1("Relocations failed!\n");
-                while (TRUE);
+                ASSERT(FALSE); // while (TRUE);
+                return;
             }
         }
 
@@ -2922,7 +2925,8 @@ LoaderScan:
         {
             /* We don't support session loading yet */
             DPRINT1("Unsupported Session-Load!\n");
-            while (TRUE);
+            ASSERT(FALSE); // while (TRUE);
+            Status = STATUS_NOT_IMPLEMENTED;
         }
 
         /* Do cleanup */
@@ -3023,7 +3027,8 @@ LoaderScan:
         {
             /* We don't support session loading yet */
             DPRINT1("Unsupported Session-Load!\n");
-            while (TRUE);
+            ASSERT(FALSE); // while (TRUE);
+            goto Quickie;
         }
 
         /* Check the loader list again, we should end up in the path below */

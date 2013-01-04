@@ -34,7 +34,7 @@ NTAPI
 Cardbus_SaveCurrentSettings(IN PPCI_CONFIGURATOR_CONTEXT Context)
 {
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
 }
 
 VOID
@@ -42,7 +42,7 @@ NTAPI
 Cardbus_SaveLimits(IN PPCI_CONFIGURATOR_CONTEXT Context)
 {
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
 }
 
 VOID
@@ -50,7 +50,7 @@ NTAPI
 Cardbus_MassageHeaderForLimitsDetermination(IN PPCI_CONFIGURATOR_CONTEXT Context)
 {
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
 }
 
 VOID
@@ -58,7 +58,7 @@ NTAPI
 Cardbus_RestoreCurrent(IN PPCI_CONFIGURATOR_CONTEXT Context)
 {
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
 }
 
 VOID
@@ -68,7 +68,7 @@ Cardbus_GetAdditionalResourceDescriptors(IN PPCI_CONFIGURATOR_CONTEXT Context,
                                          IN PIO_RESOURCE_DESCRIPTOR IoDescriptor)
 {
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
 }
 
 VOID
@@ -77,7 +77,7 @@ Cardbus_ResetDevice(IN PPCI_PDO_EXTENSION PdoExtension,
                     IN PPCI_COMMON_HEADER PciData)
 {
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
 }
 
 VOID
@@ -86,7 +86,7 @@ Cardbus_ChangeResourceSettings(IN PPCI_PDO_EXTENSION PdoExtension,
                                IN PPCI_COMMON_HEADER PciData)
 {
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
 }
 
 NTSTATUS
@@ -109,7 +109,8 @@ pcicbintrf_Constructor(IN PVOID DeviceExtension,
 {
     /* Not yet implemented */
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 /* EOF */

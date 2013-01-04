@@ -66,7 +66,6 @@ ULONG
 FASTCALL
 GdiFlushUserBatch(PDC dc, PGDIBATCHHDR pHdr)
 {
-  BOOL Hit = FALSE;
   ULONG Cmd = 0, Size = 0;
   PDC_ATTR pdcattr = NULL;
 
@@ -82,27 +81,25 @@ GdiFlushUserBatch(PDC dc, PGDIBATCHHDR pHdr)
   }
   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
   {
-     Hit = TRUE;
+     DPRINT1("WARNING! GdiBatch Fault!\n");
+     _SEH2_YIELD(return 0;)
   }
   _SEH2_END;
 
-  if (Hit)
-  {
-     DPRINT1("WARNING! GdiBatch Fault!\n");
-     return 0;
-  }
-
-  // FYI! The thread is approaching the end of sunset.
   switch(Cmd)
   {
-     case GdiBCPatBlt: // Highest pri first!
+     case GdiBCPatBlt:
         break;
+
      case GdiBCPolyPatBlt:
         break;
+
      case GdiBCTextOut:
         break;
+
      case GdiBCExtTextOut:
         break;
+
      case GdiBCSetBrushOrg:
      {
         PGDIBSSETBRHORG pgSBO;
@@ -112,38 +109,31 @@ GdiFlushUserBatch(PDC dc, PGDIBATCHHDR pHdr)
         DC_vSetBrushOrigin(dc, pgSBO->ptlBrushOrigin.x, pgSBO->ptlBrushOrigin.y);
         break;
      }
+
      case GdiBCExtSelClipRgn:
         break;
+
      case GdiBCSelObj:
      {
         PGDIBSOBJECT pgO;
-        PTEXTOBJ pNewFnt = NULL;
 
         if (!dc) break;
         pgO = (PGDIBSOBJECT) pHdr;
 
-        if (NT_SUCCESS(TextIntRealizeFont((HFONT)pgO->hgdiobj,NULL)))
-        {
-           /* LFONTOBJ use share and locking. */
-           pNewFnt = TEXTOBJ_LockText(pgO->hgdiobj);
-
-           dc->dclevel.plfnt = pNewFnt;
-           dc->hlfntCur = pgO->hgdiobj;
-           pdcattr->hlfntNew = pgO->hgdiobj;
-           pdcattr->ulDirty_ |= DIRTY_CHARSET;
-           pdcattr->ulDirty_ &= ~SLOW_WIDTHS;
-        }
-        if (pNewFnt) TEXTOBJ_UnlockText(pNewFnt);
+        DC_hSelectFont(dc, (HFONT)pgO->hgdiobj);
         break;
      }
+
      case GdiBCDelRgn:
         DPRINT("Delete Region Object!\n");
+        /* Fall through */
      case GdiBCDelObj:
      {
         PGDIBSOBJECT pgO = (PGDIBSOBJECT) pHdr;
         GreDeleteObject( pgO->hgdiobj );
         break;
      }
+
      default:
         break;
   }

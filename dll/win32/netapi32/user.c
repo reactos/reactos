@@ -18,6 +18,18 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+/*
+ *  TODO:
+ *    Implement NetUserChangePassword
+ *    Implement NetUserDel
+ *    Implement NetUserGetGroups
+ *    Implement NetUserSetGroups
+ *    Implement NetUserSetInfo
+ *    NetUserGetLocalGroups does not support LG_INCLUDE_INDIRECT yet.
+ *    Add missing information levels.
+ *    ...
+ */
+
 #include "netapi32.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(netapi32);
@@ -31,7 +43,7 @@ typedef struct _ENUM_CONTEXT
 
     SAM_ENUMERATE_HANDLE EnumerationContext;
     PSAM_RID_ENUMERATION Buffer;
-    ULONG Returned;
+    ULONG Count;
     ULONG Index;
     BOOLEAN BuiltinDone;
 
@@ -104,6 +116,46 @@ static struct sam_user* NETAPI_FindUser(LPCWSTR UserName)
             return user;
     }
     return NULL;
+}
+
+
+static PSID
+CreateSidFromSidAndRid(PSID SrcSid,
+                       ULONG RelativeId)
+{
+    UCHAR RidCount;
+    PSID DstSid;
+    ULONG i;
+    ULONG DstSidSize;
+    PULONG p, q;
+
+    RidCount = *RtlSubAuthorityCountSid(SrcSid);
+    if (RidCount >= 8)
+        return NULL;
+
+    DstSidSize = RtlLengthRequiredSid(RidCount + 1);
+
+    DstSid = RtlAllocateHeap(RtlGetProcessHeap(),
+                             0,
+                             DstSidSize);
+    if (DstSid == NULL)
+        return NULL;
+
+    RtlInitializeSid(DstSid,
+                     RtlIdentifierAuthoritySid(SrcSid),
+                     RidCount + 1);
+
+    for (i = 0; i < (ULONG)RidCount; i++)
+    {
+        p = RtlSubAuthoritySid(SrcSid, i);
+        q = RtlSubAuthoritySid(DstSid, i);
+        *q = *p;
+    }
+
+    q = RtlSubAuthoritySid(DstSid, (ULONG)RidCount);
+    *q = RelativeId;
+
+    return DstSid;
 }
 
 
@@ -246,7 +298,7 @@ BuildUserInfoBuffer(PUSER_ACCOUNT_INFORMATION UserInfo,
                     Ptr = (LPWSTR)((ULONG_PTR)Ptr + UserInfo->AdminComment.Length + sizeof(WCHAR));
                 }
 
-                UserInfo1->usri1_flags = UserInfo->UserAccountControl;
+//                UserInfo1->usri1_flags = UserInfo->UserAccountControl;
 
                 if (UserInfo->ScriptPath.Length > 0)
                 {
@@ -342,7 +394,7 @@ BuildUserInfoBuffer(PUSER_ACCOUNT_INFORMATION UserInfo,
                 Ptr = (LPWSTR)((ULONG_PTR)Ptr + UserInfo->AdminComment.Length + sizeof(WCHAR));
             }
 
-            UserInfo20->usri20_flags = UserInfo->UserAccountControl;
+//            UserInfo20->usri20_flags = UserInfo->UserAccountControl;
             UserInfo20->usri20_user_id = RelativeId;
             break;
 
@@ -399,6 +451,131 @@ FreeUserInfo(PUSER_ACCOUNT_INFORMATION UserInfo)
 }
 
 
+static
+NET_API_STATUS
+SetUserInfo(SAM_HANDLE UserHandle,
+            LPBYTE UserInfo,
+            DWORD Level)
+{
+    USER_ALL_INFORMATION UserAllInfo;
+    PUSER_INFO_1 UserInfo1;
+    PUSER_INFO_3 UserInfo3;
+    NET_API_STATUS ApiStatus = NERR_Success;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    ZeroMemory(&UserAllInfo, sizeof(USER_ALL_INFORMATION));
+
+    switch (Level)
+    {
+        case 1:
+            UserInfo1 = (PUSER_INFO_1)UserInfo;
+//            RtlInitUnicodeString(&UserAllInfo.UserName,
+//                                 UserInfo1->usri1_name);
+
+            RtlInitUnicodeString(&UserAllInfo.AdminComment,
+                                 UserInfo1->usri1_comment);
+
+            RtlInitUnicodeString(&UserAllInfo.HomeDirectory,
+                                 UserInfo1->usri1_home_dir);
+
+            RtlInitUnicodeString(&UserAllInfo.ScriptPath,
+                                 UserInfo1->usri1_script_path);
+
+            RtlInitUnicodeString(&UserAllInfo.NtPassword,
+                                 UserInfo1->usri1_password);
+            UserAllInfo.NtPasswordPresent = TRUE;
+
+//          UserInfo1->usri1_flags
+//          UserInfo1->usri1_priv
+
+            UserAllInfo.WhichFields = 
+                USER_ALL_ADMINCOMMENT |
+                USER_ALL_HOMEDIRECTORY |
+                USER_ALL_SCRIPTPATH |
+                USER_ALL_NTPASSWORDPRESENT
+//                USER_ALL_USERACCOUNTCONTROL
+                ;
+            break;
+
+
+        case 3:
+            UserInfo3 = (PUSER_INFO_3)UserInfo;
+
+//  LPWSTR usri3_name;
+
+            RtlInitUnicodeString(&UserAllInfo.NtPassword,
+                                 UserInfo3->usri3_password);
+            UserAllInfo.NtPasswordPresent = TRUE;
+
+//  DWORD  usri3_password_age; // ignored
+//  DWORD  usri3_priv;
+
+            RtlInitUnicodeString(&UserAllInfo.HomeDirectory,
+                                 UserInfo3->usri3_home_dir);
+
+            RtlInitUnicodeString(&UserAllInfo.AdminComment,
+                                 UserInfo3->usri3_comment);
+
+//  DWORD  usri3_flags;
+
+            RtlInitUnicodeString(&UserAllInfo.ScriptPath,
+                                 UserInfo3->usri3_script_path);
+
+//  DWORD  usri3_auth_flags;
+
+            RtlInitUnicodeString(&UserAllInfo.FullName,
+                                 UserInfo3->usri3_full_name);
+
+//  LPWSTR usri3_usr_comment;
+//  LPWSTR usri3_parms;
+//  LPWSTR usri3_workstations;
+//  DWORD  usri3_last_logon;
+//  DWORD  usri3_last_logoff;
+//  DWORD  usri3_acct_expires;
+//  DWORD  usri3_max_storage;
+//  DWORD  usri3_units_per_week;
+//  PBYTE  usri3_logon_hours;
+//  DWORD  usri3_bad_pw_count;
+//  DWORD  usri3_num_logons;
+//  LPWSTR usri3_logon_server;
+//  DWORD  usri3_country_code;
+//  DWORD  usri3_code_page;
+//  DWORD  usri3_user_id;  // ignored
+//  DWORD  usri3_primary_group_id;
+//  LPWSTR usri3_profile;
+//  LPWSTR usri3_home_dir_drive;
+//  DWORD  usri3_password_expired;
+
+            UserAllInfo.WhichFields = 
+                USER_ALL_NTPASSWORDPRESENT |
+                USER_ALL_HOMEDIRECTORY |
+                USER_ALL_ADMINCOMMENT |
+                USER_ALL_SCRIPTPATH |
+                USER_ALL_FULLNAME
+//                USER_ALL_USERACCOUNTCONTROL
+                ;
+            break;
+
+        default:
+            ERR("Unsupported level %lu!\n", Level);
+            return ERROR_INVALID_PARAMETER;
+    }
+
+    Status = SamSetInformationUser(UserHandle,
+                                   UserAllInformation,
+                                   &UserAllInfo);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SamSetInformationUser failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+done:
+    return ApiStatus;
+}
+
+
 /************************************************************
  * NetUserAdd (NETAPI32.@)
  */
@@ -409,72 +586,89 @@ NetUserAdd(LPCWSTR servername,
            LPBYTE bufptr,
            LPDWORD parm_err)
 {
-    NET_API_STATUS status;
-    struct sam_user * su = NULL;
+    UNICODE_STRING ServerName;
+    UNICODE_STRING UserName;
+    SAM_HANDLE ServerHandle = NULL;
+    SAM_HANDLE DomainHandle = NULL;
+    SAM_HANDLE UserHandle = NULL;
+    ULONG GrantedAccess;
+    ULONG RelativeId;
+    NET_API_STATUS ApiStatus = NERR_Success;
+    NTSTATUS Status = STATUS_SUCCESS;
 
-    FIXME("(%s, %d, %p, %p) stub!\n", debugstr_w(servername), level, bufptr, parm_err);
+    TRACE("(%s, %d, %p, %p)\n", debugstr_w(servername), level, bufptr, parm_err);
 
-    if((status = NETAPI_ValidateServername(servername)) != NERR_Success)
-        return status;
+    /* Check the info level */
+    if (level < 1 || level > 4)
+        return ERROR_INVALID_LEVEL;
 
-    switch(level)
+    if (servername != NULL)
+        RtlInitUnicodeString(&ServerName, servername);
+
+    /* Connect to the SAM Server */
+    Status = SamConnect((servername != NULL) ? &ServerName : NULL,
+                        &ServerHandle,
+                        SAM_SERVER_CONNECT | SAM_SERVER_LOOKUP_DOMAIN,
+                        NULL);
+    if (!NT_SUCCESS(Status))
     {
-    /* Level 3 and 4 are identical for the purposes of NetUserAdd */
-    case 4:
-    case 3:
-        FIXME("Level 3 and 4 not implemented.\n");
-        /* Fall through */
-    case 2:
-        FIXME("Level 2 not implemented.\n");
-        /* Fall through */
-    case 1:
-    {
-        PUSER_INFO_1 ui = (PUSER_INFO_1) bufptr;
-        su = HeapAlloc(GetProcessHeap(), 0, sizeof(struct sam_user));
-        if(!su)
-        {
-            status = NERR_InternalError;
-            break;
-        }
-
-        if(lstrlenW(ui->usri1_name) > LM20_UNLEN)
-        {
-            status = NERR_BadUsername;
-            break;
-        }
-
-        /*FIXME: do other checks for a valid username */
-        lstrcpyW(su->user_name, ui->usri1_name);
-
-        if(lstrlenW(ui->usri1_password) > PWLEN)
-        {
-            /* Always return PasswordTooShort on invalid passwords. */
-            status = NERR_PasswordTooShort;
-            break;
-        }
-        lstrcpyW(su->user_password, ui->usri1_password);
-
-        su->sec_since_passwd_change = ui->usri1_password_age;
-        su->user_priv = ui->usri1_priv;
-        su->user_flags = ui->usri1_flags;
-
-        /*FIXME: set the other LPWSTRs to NULL for now */
-        su->home_dir = NULL;
-        su->user_comment = NULL;
-        su->user_logon_script_path = NULL;
-
-        list_add_head(&user_list, &su->entry);
-        return NERR_Success;
-    }
-    default:
-        TRACE("Invalid level %d specified.\n", level);
-        status = ERROR_INVALID_LEVEL;
-        break;
+        ERR("SamConnect failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
     }
 
-    HeapFree(GetProcessHeap(), 0, su);
+    /* Open the Account Domain */
+    Status = OpenAccountDomain(ServerHandle,
+                               (servername != NULL) ? &ServerName : NULL,
+                               DOMAIN_CREATE_USER | DOMAIN_LOOKUP,
+                               &DomainHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("OpenAccountDomain failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
 
-    return status;
+    /* Initialize the user name string */
+    RtlInitUnicodeString(&UserName,
+                         ((PUSER_INFO_1)bufptr)->usri1_name);
+
+    /* Create the user account */
+    Status = SamCreateUser2InDomain(DomainHandle,
+                                    &UserName,
+                                    USER_NORMAL_ACCOUNT,
+                                    USER_ALL_ACCESS | DELETE | WRITE_DAC,
+                                    &UserHandle,
+                                    &GrantedAccess,
+                                    &RelativeId);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SamCreateUser2InDomain failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    /* Set user information */
+    ApiStatus = SetUserInfo(UserHandle,
+                            bufptr,
+                            level);
+    if (ApiStatus != NERR_Success)
+    {
+        ERR("SetUserInfo failed (Status %lu)\n", ApiStatus);
+        goto done;
+    }
+
+done:
+    if (UserHandle != NULL)
+        SamCloseHandle(UserHandle);
+
+    if (DomainHandle != NULL)
+        SamCloseHandle(DomainHandle);
+
+    if (ServerHandle != NULL)
+        SamCloseHandle(ServerHandle);
+
+    return ApiStatus;
 }
 
 
@@ -599,7 +793,7 @@ NetUserEnum(LPCWSTR servername,
 
         EnumContext->EnumerationContext = 0;
         EnumContext->Buffer = NULL;
-        EnumContext->Returned = 0;
+        EnumContext->Count = 0;
         EnumContext->Index = 0;
         EnumContext->BuiltinDone = FALSE;
 
@@ -639,9 +833,9 @@ NetUserEnum(LPCWSTR servername,
 //    while (TRUE)
 //    {
         TRACE("EnumContext->Index: %lu\n", EnumContext->Index);
-        TRACE("EnumContext->Returned: %lu\n", EnumContext->Returned);
+        TRACE("EnumContext->Count: %lu\n", EnumContext->Count);
 
-        if (EnumContext->Index >= EnumContext->Returned)
+        if (EnumContext->Index >= EnumContext->Count)
         {
 //            if (EnumContext->BuiltinDone == TRUE)
 //            {
@@ -655,7 +849,7 @@ NetUserEnum(LPCWSTR servername,
                                                0,
                                                (PVOID *)&EnumContext->Buffer,
                                                prefmaxlen,
-                                               &EnumContext->Returned);
+                                               &EnumContext->Count);
 
             TRACE("SamEnumerateUsersInDomain returned (Status %08lx)\n", Status);
             if (!NT_SUCCESS(Status))
@@ -677,7 +871,7 @@ NetUserEnum(LPCWSTR servername,
         }
 
         TRACE("EnumContext: %lu\n", EnumContext);
-        TRACE("EnumContext->Returned: %lu\n", EnumContext->Returned);
+        TRACE("EnumContext->Count: %lu\n", EnumContext->Count);
         TRACE("EnumContext->Buffer: %p\n", EnumContext->Buffer);
 
         /* Get a pointer to the current user */
@@ -731,11 +925,11 @@ NetUserEnum(LPCWSTR servername,
 //    }
 
 done:
-    if (ApiStatus == NERR_Success && EnumContext->Index < EnumContext->Returned)
+    if (ApiStatus == NERR_Success && EnumContext->Index < EnumContext->Count)
         ApiStatus = ERROR_MORE_DATA;
 
     if (EnumContext != NULL)
-        *totalentries = EnumContext->Returned;
+        *totalentries = EnumContext->Count;
 
     if (resume_handle == NULL || ApiStatus != ERROR_MORE_DATA)
     {
@@ -752,7 +946,7 @@ done:
 
             if (EnumContext->Buffer != NULL)
             {
-                for (i = 0; i < EnumContext->Returned; i++)
+                for (i = 0; i < EnumContext->Count; i++)
                 {
                     SamFreeMemory(EnumContext->Buffer[i].Name.Buffer);
                 }
@@ -955,53 +1149,298 @@ NetUserGetLocalGroups(LPCWSTR servername,
                       LPDWORD entriesread,
                       LPDWORD totalentries)
 {
-    NET_API_STATUS status;
-    const WCHAR admins[] = {'A','d','m','i','n','i','s','t','r','a','t','o','r','s',0};
-    LPWSTR currentuser;
-    LOCALGROUP_USERS_INFO_0* info;
-    DWORD size;
+    UNICODE_STRING ServerName;
+    UNICODE_STRING UserName;
+    SAM_HANDLE ServerHandle = NULL;
+    SAM_HANDLE BuiltinDomainHandle = NULL;
+    SAM_HANDLE AccountDomainHandle = NULL;
+    PSID AccountDomainSid = NULL;
+    PSID UserSid = NULL;
+    PULONG RelativeIds = NULL;
+    PSID_NAME_USE Use = NULL;
+    ULONG BuiltinMemberCount = 0;
+    ULONG AccountMemberCount = 0;
+    PULONG BuiltinAliases = NULL;
+    PULONG AccountAliases = NULL;
+    PUNICODE_STRING BuiltinNames = NULL;
+    PUNICODE_STRING AccountNames = NULL;
+    PLOCALGROUP_USERS_INFO_0 Buffer = NULL;
+    ULONG Size;
+    ULONG Count = 0;
+    ULONG Index;
+    ULONG i;
+    LPWSTR StrPtr;
+    NET_API_STATUS ApiStatus = NERR_Success;
+    NTSTATUS Status = STATUS_SUCCESS;
 
-    FIXME("(%s, %s, %d, %08x, %p %d, %p, %p) stub!\n",
+    TRACE("(%s, %s, %d, %08x, %p %d, %p, %p) stub!\n",
           debugstr_w(servername), debugstr_w(username), level, flags, bufptr,
           prefmaxlen, entriesread, totalentries);
 
-    status = NETAPI_ValidateServername(servername);
-    if (status != NERR_Success)
-        return status;
+    if (level != 0)
+        return ERROR_INVALID_LEVEL;
 
-    size = UNLEN + 1;
-    NetApiBufferAllocate(size * sizeof(WCHAR), (LPVOID*)&currentuser);
-    GetUserNameW(currentuser, &size);
+    if (flags & ~LG_INCLUDE_INDIRECT)
+        return ERROR_INVALID_PARAMETER;
 
-    if (lstrcmpiW(username, currentuser) && NETAPI_FindUser(username))
+    if (flags & LG_INCLUDE_INDIRECT)
     {
-        NetApiBufferFree(currentuser);
-        return NERR_UserNotFound;
+        WARN("The flag LG_INCLUDE_INDIRECT is not supported yet!\n");
     }
 
-    NetApiBufferFree(currentuser);
-    *totalentries = 1;
-    size = sizeof(*info) + sizeof(admins);
+    if (servername != NULL)
+        RtlInitUnicodeString(&ServerName, servername);
 
-    if(prefmaxlen < size)
-        status = ERROR_MORE_DATA;
-    else
-        status = NetApiBufferAllocate(size, (LPVOID*)&info);
+    RtlInitUnicodeString(&UserName, username);
 
-    if(status != NERR_Success)
+    /* Connect to the SAM Server */
+    Status = SamConnect((servername != NULL) ? &ServerName : NULL,
+                        &ServerHandle,
+                        SAM_SERVER_CONNECT | SAM_SERVER_LOOKUP_DOMAIN,
+                        NULL);
+    if (!NT_SUCCESS(Status))
     {
-        *bufptr = NULL;
+        ERR("SamConnect failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    /* Open the Builtin Domain */
+    Status = OpenBuiltinDomain(ServerHandle,
+                               DOMAIN_LOOKUP | DOMAIN_GET_ALIAS_MEMBERSHIP,
+                               &BuiltinDomainHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("OpenBuiltinDomain failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    /* Get the Account Domain SID */
+    Status = GetAccountDomainSid((servername != NULL) ? &ServerName : NULL,
+                                 &AccountDomainSid);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("GetAccountDomainSid failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    /* Open the Account Domain */
+    Status = SamOpenDomain(ServerHandle,
+                           DOMAIN_LOOKUP | DOMAIN_GET_ALIAS_MEMBERSHIP,
+                           AccountDomainSid,
+                           &AccountDomainHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("OpenAccountDomain failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    /* Get the RID for the given user name */
+    Status = SamLookupNamesInDomain(AccountDomainHandle,
+                                    1,
+                                    &UserName,
+                                    &RelativeIds,
+                                    &Use);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SamLookupNamesInDomain failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    /* Fail, if it is not a user account */
+    if (Use[0] != SidTypeUser)
+    {
+        ERR("Account is not a User!\n");
+        ApiStatus = NERR_UserNotFound;
+        goto done;
+    }
+
+    /* Build the User SID from the Account Domain SID and the users RID */
+    UserSid = CreateSidFromSidAndRid(AccountDomainSid,
+                                     RelativeIds[0]);
+    if (UserSid == NULL)
+    {
+        ERR("CreateSidFromSidAndRid failed!\n");
+        ApiStatus = ERROR_NOT_ENOUGH_MEMORY;
+        goto done;
+    }
+
+    /* Get alias memberships in the Builtin Domain */
+    Status = SamGetAliasMembership(BuiltinDomainHandle,
+                                   1,
+                                   &UserSid,
+                                   &BuiltinMemberCount,
+                                   &BuiltinAliases);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SamGetAliasMembership failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    if (BuiltinMemberCount > 0)
+    {
+        /* Get the Names of the builtin alias members */
+        Status = SamLookupIdsInDomain(BuiltinDomainHandle,
+                                      BuiltinMemberCount,
+                                      BuiltinAliases,
+                                      &BuiltinNames,
+                                      NULL);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("SamLookupIdsInDomain failed (Status %08lx)\n", Status);
+            ApiStatus = NetpNtStatusToApiStatus(Status);
+            goto done;
+        }
+    }
+
+    /* Get alias memberships in the Account Domain */
+    Status = SamGetAliasMembership(AccountDomainHandle,
+                                   1,
+                                   &UserSid,
+                                   &AccountMemberCount,
+                                   &AccountAliases);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SamGetAliasMembership failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    if (AccountMemberCount > 0)
+    {
+        /* Get the Names of the builtin alias members */
+        Status = SamLookupIdsInDomain(AccountDomainHandle,
+                                      AccountMemberCount,
+                                      AccountAliases,
+                                      &AccountNames,
+                                      NULL);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("SamLookupIdsInDomain failed (Status %08lx)\n", Status);
+            ApiStatus = NetpNtStatusToApiStatus(Status);
+            goto done;
+        }
+    }
+
+    /* Calculate the required buffer size */
+    Size = 0;
+
+    for (i = 0; i < BuiltinMemberCount; i++)
+    {
+        if (BuiltinNames[i].Length > 0)
+        {
+            Size += (sizeof(LOCALGROUP_USERS_INFO_0) + BuiltinNames[i].Length + sizeof(UNICODE_NULL));
+            Count++;
+        }
+    }
+
+    for (i = 0; i < AccountMemberCount; i++)
+    {
+        if (BuiltinNames[i].Length > 0)
+        {
+            Size += (sizeof(LOCALGROUP_USERS_INFO_0) + AccountNames[i].Length + sizeof(UNICODE_NULL));
+            Count++;
+        }
+    }
+
+    if (Size == 0)
+    {
+        ApiStatus = NERR_Success;
+        goto done;
+    }
+
+    /* Allocate buffer */
+    ApiStatus = NetApiBufferAllocate(Size, (LPVOID*)&Buffer);
+    if (ApiStatus != NERR_Success)
+        goto done;
+
+    ZeroMemory(Buffer, Size);
+
+    StrPtr = (LPWSTR)((INT_PTR)Buffer + Count * sizeof(LOCALGROUP_USERS_INFO_0));
+
+    /* Copy data to the allocated buffer */
+    Index = 0;
+    for (i = 0; i < BuiltinMemberCount; i++)
+    {
+        if (BuiltinNames[i].Length > 0)
+        {
+            CopyMemory(StrPtr,
+                       BuiltinNames[i].Buffer,
+                       BuiltinNames[i].Length);
+            Buffer[Index].lgrui0_name = StrPtr;
+
+            StrPtr = (LPWSTR)((INT_PTR)StrPtr + BuiltinNames[i].Length + sizeof(UNICODE_NULL));
+            Index++;
+        }
+    }
+
+    for (i = 0; i < AccountMemberCount; i++)
+    {
+        if (AccountNames[i].Length > 0)
+        {
+            CopyMemory(StrPtr,
+                       AccountNames[i].Buffer,
+                       AccountNames[i].Length);
+            Buffer[Index].lgrui0_name = StrPtr;
+
+            StrPtr = (LPWSTR)((INT_PTR)StrPtr + AccountNames[i].Length + sizeof(UNICODE_NULL));
+            Index++;
+        }
+    }
+
+done:
+    if (AccountNames != NULL)
+        SamFreeMemory(AccountNames);
+
+    if (BuiltinNames != NULL)
+        SamFreeMemory(BuiltinNames);
+
+    if (AccountAliases != NULL)
+        SamFreeMemory(AccountAliases);
+
+    if (BuiltinAliases != NULL)
+        SamFreeMemory(BuiltinAliases);
+
+    if (RelativeIds != NULL)
+        SamFreeMemory(RelativeIds);
+
+    if (Use != NULL)
+        SamFreeMemory(Use);
+
+    if (UserSid != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, UserSid);
+
+    if (AccountDomainSid != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, AccountDomainSid);
+
+    if (AccountDomainHandle != NULL)
+        SamCloseHandle(AccountDomainHandle);
+
+    if (BuiltinDomainHandle != NULL)
+        SamCloseHandle(BuiltinDomainHandle);
+
+    if (ServerHandle != NULL)
+        SamCloseHandle(ServerHandle);
+
+    if (ApiStatus != NERR_Success && ApiStatus != ERROR_MORE_DATA)
+    {
         *entriesread = 0;
-        return status;
+        *totalentries = 0;
+    }
+    else
+    {
+        *entriesread = Count;
+        *totalentries = Count;
     }
 
-    info->lgrui0_name = (LPWSTR)((LPBYTE)info + sizeof(*info));
-    lstrcpyW(info->lgrui0_name, admins);
+    *bufptr = (LPBYTE)Buffer;
 
-    *bufptr = (LPBYTE)info;
-    *entriesread = 1;
-
-    return NERR_Success;
+    return ApiStatus;
 }
 
 

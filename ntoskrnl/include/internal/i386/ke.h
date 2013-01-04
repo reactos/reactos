@@ -138,8 +138,8 @@ typedef union _KTRAP_EXIT_SKIP_BITS
     {                                               \
         /* Not yet handled */                       \
         UNIMPLEMENTED;                              \
-        while (TRUE);                               \
-        return TRUE;                                \
+        ASSERT(FALSE); /* while (TRUE); */          \
+        return FALSE;                               \
     }
 
 C_ASSERT(NPX_FRAME_LENGTH == sizeof(FX_SAVE_AREA));

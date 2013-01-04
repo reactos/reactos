@@ -679,7 +679,7 @@ PciGetDebugPorts(IN HANDLE DebugKey)
 {
     /* This function is not yet implemented */
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
     return STATUS_SUCCESS;
 }
 
@@ -690,7 +690,7 @@ PciDriverUnload(IN PDRIVER_OBJECT DriverObject)
     /* This function is not yet implemented */
     DPRINT1("PCI: Unload\n");
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
 }
 
 NTSTATUS
