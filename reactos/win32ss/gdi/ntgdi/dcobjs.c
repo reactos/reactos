@@ -525,6 +525,85 @@ NtGdiSelectClipPath(
     return success;
 }
 
+HFONT
+NTAPI
+DC_hSelectFont(
+    _In_ PDC pdc,
+    _In_ HFONT hlfntNew)
+{
+    PLFONT plfntNew;
+    HFONT hlfntOld;
+
+    // Legacy crap that will die with font engine rewrite
+    if (!NT_SUCCESS(TextIntRealizeFont(hlfntNew, NULL)))
+    {
+        return NULL;
+    }
+
+    /* Get the current selected font */
+    hlfntOld = pdc->dclevel.plfnt->BaseObject.hHmgr;
+
+    /* Check if a new font should be selected */
+    if (hlfntNew != hlfntOld)
+    {
+        /* Lock the new font */
+        plfntNew = LFONT_ShareLockFont(hlfntNew);
+        if (plfntNew)
+        {
+            /* Success, dereference the old font */
+            LFONT_ShareUnlockFont(pdc->dclevel.plfnt);
+
+            /* Select the new font */
+            pdc->dclevel.plfnt = plfntNew;
+            pdc->pdcattr->hlfntNew = hlfntNew;
+
+            /* Update dirty flags */
+            pdc->pdcattr->ulDirty_ |= DIRTY_CHARSET;
+            pdc->pdcattr->ulDirty_ &= ~SLOW_WIDTHS;
+        }
+        else
+        {
+            /* Failed, restore old, return NULL */
+            pdc->pdcattr->hlfntNew = hlfntOld;
+            hlfntOld = NULL;
+        }
+    }
+
+    return hlfntOld;
+}
+
+HFONT
+APIENTRY
+NtGdiSelectFont(
+    _In_ HDC hdc,
+    _In_ HFONT hfont)
+{
+    HFONT hfontOld;
+    PDC pdc;
+
+    /* Check parameters */
+    if ((hdc == NULL) || (hfont == NULL))
+    {
+        return NULL;
+    }
+
+    /* Lock the DC */
+    pdc = DC_LockDc(hdc);
+    if (!pdc)
+    {
+        return NULL;
+    }
+
+    /* Call the internal function */
+    hfontOld = DC_hSelectFont(pdc, hfont);
+
+    /* Unlock the DC */
+    DC_UnlockDc(pdc);
+
+    /* Return the previously selected font */
+    return hfontOld;
+}
+
 HANDLE
 APIENTRY
 NtGdiGetDCObject(HDC hDC, INT ObjectType)

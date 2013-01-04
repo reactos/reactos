@@ -85,8 +85,11 @@ FORCEINLINE
 TEXTOBJ_LockText(HFONT hfont)
 {
     PLFONT plfnt = LFONT_ShareLockFont(hfont);
-    KeEnterCriticalRegion();
-    ExAcquirePushLockExclusive(&plfnt->lock);
+    if (plfnt != 0)
+    {
+        KeEnterCriticalRegion();
+        ExAcquirePushLockExclusive(&plfnt->lock);
+    }
     return plfnt;
 }
 
