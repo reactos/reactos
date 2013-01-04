@@ -4308,7 +4308,6 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
             // There's a change in protection, remember this for later, but do
             // not yet handle it.
             //
-            DPRINT1("Protection change to: 0x%lx not implemented\n", Protect);
             ChangeProtection = TRUE;
         }
 
@@ -4319,11 +4318,6 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
     }
 
     //
-    // This path is not yet handled
-    //
-    ASSERT(ChangeProtection == FALSE);
-
-    //
     // Release the working set lock, unlock the address space, and detach from
     // the target process if it was not the current process. Also dereference the
     // target process if this wasn't the case.
@@ -4332,6 +4326,26 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
     Status = STATUS_SUCCESS;
 FailPath:
     MmUnlockAddressSpace(AddressSpace);
+
+    //
+    // Check if we need to update the protection
+    //
+    if (ChangeProtection)
+    {
+        PVOID ProtectBaseAddress = (PVOID)StartingAddress;
+        SIZE_T ProtectSize = PRegionSize;
+        ULONG OldProtection;
+
+        //
+        // Change the protection of the region
+        //
+        MiProtectVirtualMemory(Process,
+                               &ProtectBaseAddress,
+                               &ProtectSize,
+                               Protect,
+                               &OldProtection);
+    }
+
 FailPathNoLock:
     if (Attached) KeUnstackDetachProcess(&ApcState);
     if (ProcessHandle != NtCurrentProcess()) ObDereferenceObject(Process);
