@@ -23,7 +23,7 @@ KdpGetStateChange(IN PDBGKD_MANIPULATE_STATE64 State,
                   IN PCONTEXT Context)
 {
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
 }
 
 VOID
@@ -32,7 +32,7 @@ KdpSetContextState(IN PDBGKD_ANY_WAIT_STATE_CHANGE WaitStateChange,
                    IN PCONTEXT Context)
 {
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
 }
 
 NTSTATUS
@@ -41,7 +41,7 @@ KdpSysReadMsr(IN ULONG Msr,
               OUT PLARGE_INTEGER MsrValue)
 {
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -51,7 +51,7 @@ KdpSysWriteMsr(IN ULONG Msr,
                IN PLARGE_INTEGER MsrValue)
 {
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -66,7 +66,7 @@ KdpSysReadBusData(IN ULONG BusDataType,
                   OUT PULONG ActualLength)
 {
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -81,7 +81,7 @@ KdpSysWriteBusData(IN ULONG BusDataType,
                    OUT PULONG ActualLength)
 {
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -94,7 +94,7 @@ KdpSysReadControlSpace(IN ULONG Processor,
                        OUT PULONG ActualLength)
 {
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -107,7 +107,7 @@ KdpSysWriteControlSpace(IN ULONG Processor,
                         OUT PULONG ActualLength)
 {
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -122,7 +122,7 @@ KdpSysReadIoSpace(IN ULONG InterfaceType,
                   OUT PULONG ActualDataSize)
 {
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -137,7 +137,7 @@ KdpSysWriteIoSpace(IN ULONG InterfaceType,
                    OUT PULONG ActualDataSize)
 {
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -146,7 +146,7 @@ NTAPI
 KdpSysCheckLowMemory(IN ULONG Flags)
 {
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -155,6 +155,6 @@ NTAPI
 KdpAllowDisable(VOID)
 {
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
     return STATUS_ACCESS_DENIED;
 }

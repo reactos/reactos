@@ -266,7 +266,8 @@ IopCompleteRequest(IN PKAPC Apc,
         {
             /* We should never get this yet */
             DPRINT1("Reparse support not yet present!\n");
-            while (TRUE);
+            ASSERT(FALSE); // while (TRUE);
+            return;
         }
     }
 
@@ -1373,7 +1374,7 @@ IofCompleteRequest(IN PIRP Irp,
 #else
             /* Not implemented yet. */
             DPRINT1("Not supported!\n");
-            while (TRUE);
+            ASSERT(FALSE); // while (TRUE);
 #endif
         }
 

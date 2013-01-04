@@ -122,7 +122,7 @@ CcFastCopyRead(IN PFILE_OBJECT FileObject,
                OUT PIO_STATUS_BLOCK IoStatus)
 {
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
 }
 
 BOOLEAN
@@ -209,7 +209,7 @@ CcFastCopyWrite(IN PFILE_OBJECT FileObject,
                 IN PVOID Buffer)
 {
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
 }
 
 BOOLEAN
@@ -220,7 +220,7 @@ CcCanIWrite(IN PFILE_OBJECT FileObject,
             IN UCHAR Retrying)
 {
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
     return FALSE;
 }
 
@@ -234,7 +234,7 @@ CcDeferWrite(IN PFILE_OBJECT FileObject,
              IN BOOLEAN Retrying)
 {
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
 }
 
 /* EOF */

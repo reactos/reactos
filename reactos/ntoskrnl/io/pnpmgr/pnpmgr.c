@@ -3784,7 +3784,7 @@ PiGetDeviceRegistryProperty(IN PDEVICE_OBJECT DeviceObject,
 
 #define PIP_RETURN_DATA(x, y)   {ReturnLength = x; Data = y; Status = STATUS_SUCCESS; break;}
 #define PIP_REGISTRY_DATA(x, y) {ValueName = x; ValueType = y; break;}
-#define PIP_UNIMPLEMENTED()     {UNIMPLEMENTED; ASSERT(FALSE); break;} // while(TRUE);
+#define PIP_UNIMPLEMENTED()     {UNIMPLEMENTED; ASSERT(FALSE); /* while (TRUE); */ break;}
 
 /*
  * @implemented

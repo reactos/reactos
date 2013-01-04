@@ -399,7 +399,7 @@ CcSetDirtyPageThreshold(IN PFILE_OBJECT FileObject,
                         IN ULONG DirtyPageThreshold)
 {
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
 }
 
 /*
