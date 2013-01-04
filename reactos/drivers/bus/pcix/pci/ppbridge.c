@@ -672,7 +672,7 @@ PPBridge_ResetDevice(IN PPCI_PDO_EXTENSION PdoExtension,
                      IN PPCI_COMMON_HEADER PciData)
 {
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
 }
 
 VOID

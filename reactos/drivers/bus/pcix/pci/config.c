@@ -66,7 +66,7 @@ PciReadWriteConfigSpace(IN PPCI_FDO_EXTENSION DeviceExtension,
     {
         /* Currently this driver only supports the legacy HAL interface */
         UNIMPLEMENTED;
-        while (TRUE);
+        ASSERT(FALSE); // while (TRUE);
     }
     else
     {

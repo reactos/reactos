@@ -237,7 +237,8 @@ BasepComputeProcessPath(IN PBASE_SEARCH_PATH_TYPE PathOrder,
                 {
                     /* This means someone added RTL_PERTHREAD_CURDIR */
                     UNIMPLEMENTED;
-                    while (TRUE);
+                    ASSERT(FALSE);
+                    // while (TRUE);
                 }
 
                 /* We do not. Do we have the LDR_ENTRY for the executable? */

@@ -537,7 +537,7 @@ HalpPCIPin2ISALine(IN PBUS_HANDLER BusHandler,
                    IN PPCI_COMMON_CONFIG PciData)
 {
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
 }
 
 VOID
@@ -549,7 +549,7 @@ HalpPCIISALine2Pin(IN PBUS_HANDLER BusHandler,
                    IN PPCI_COMMON_CONFIG PciOldData)
 {
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
 }
 
 NTSTATUS
@@ -643,7 +643,8 @@ HalpRegisterPciDebuggingDeviceInfo(VOID)
     /* FIXME: TODO */
     DPRINT1("You have implemented the KD routines for searching PCI debugger"
             "devices, but you have forgotten to implement this routine\n");
-    while (TRUE);
+    UNIMPLEMENTED;
+    ASSERT(FALSE); // while (TRUE);
 }
 
 static ULONG NTAPI
@@ -678,7 +679,7 @@ HalpAdjustPCIResourceList(IN PBUS_HANDLER BusHandler,
     {
         /* /PCILOCK is not yet supported */
         UNIMPLEMENTED;
-        while (TRUE);
+        ASSERT(FALSE); // while (TRUE);
     }
 #endif
     /* Now create the correct resource list based on the supported bus ranges */

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * PROJECT:         ReactOS Universal Serial Bus Hub Driver
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            drivers/usb/usbhub/fdo.c

@@ -80,7 +80,7 @@ PciVerifierProfileChangeCallback(IN PVOID NotificationStructure,
 {
     /* This function is not yet implemented */
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
     return STATUS_SUCCESS;
 }
 

@@ -262,7 +262,7 @@ Device_GetAdditionalResourceDescriptors(IN PPCI_CONFIGURATOR_CONTEXT Context,
 {
     /* Not yet implemented */
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
 }
 
 VOID
@@ -272,7 +272,7 @@ Device_ResetDevice(IN PPCI_PDO_EXTENSION PdoExtension,
 {
     /* Not yet implemented */
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
 }
 
 VOID
@@ -282,7 +282,7 @@ Device_ChangeResourceSettings(IN PPCI_PDO_EXTENSION PdoExtension,
 {
     /* Not yet implemented */
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE); // while (TRUE);
 }
 
 /* EOF */
