@@ -289,7 +289,7 @@ IntDeleteAllAliases(PALIAS_HEADER RootHeader)
 
 CSR_API(SrvAddConsoleAlias)
 {
-    PCSRSS_CONSOLE_ALIAS ConsoleAlias = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.ConsoleAlias;
+    PCONSOLE_ADDGETALIAS ConsoleAliasRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.ConsoleAliasRequest;
     PCSRSS_CONSOLE Console;
     PALIAS_HEADER Header;
     PALIAS_ENTRY Entry;
@@ -298,24 +298,24 @@ CSR_API(SrvAddConsoleAlias)
     DPRINT("SrvAddConsoleAlias entered ApiMessage %p\n", ApiMessage);
 
     if ( !CsrValidateMessageBuffer(ApiMessage,
-                                   (PVOID*)&ConsoleAlias->Source,
-                                   ConsoleAlias->SourceLength,
+                                   (PVOID*)&ConsoleAliasRequest->Source,
+                                   ConsoleAliasRequest->SourceLength,
                                    sizeof(BYTE))                    ||
          !CsrValidateMessageBuffer(ApiMessage,
-                                   (PVOID*)&ConsoleAlias->Target,
-                                   ConsoleAlias->TargetLength,
+                                   (PVOID*)&ConsoleAliasRequest->Target,
+                                   ConsoleAliasRequest->TargetLength,
                                    sizeof(BYTE))                    ||
          !CsrValidateMessageBuffer(ApiMessage,
-                                   (PVOID*)&ConsoleAlias->Exe,
-                                   ConsoleAlias->ExeLength,
+                                   (PVOID*)&ConsoleAliasRequest->Exe,
+                                   ConsoleAliasRequest->ExeLength,
                                    sizeof(BYTE)) )
     {
         return STATUS_INVALID_PARAMETER;
     }
 
-    lpSource  = ConsoleAlias->Source;
-    lpTarget  = (ConsoleAlias->TargetLength != 0 ? ConsoleAlias->Target : NULL);
-    lpExeName = ConsoleAlias->Exe;
+    lpSource  = ConsoleAliasRequest->Source;
+    lpTarget  = (ConsoleAliasRequest->TargetLength != 0 ? ConsoleAliasRequest->Target : NULL);
+    lpExeName = ConsoleAliasRequest->Exe;
 
     DPRINT("SrvAddConsoleAlias lpSource %p lpExeName %p lpTarget %p\n", lpSource, lpExeName, lpTarget);
 
@@ -373,7 +373,7 @@ CSR_API(SrvAddConsoleAlias)
 
 CSR_API(SrvGetConsoleAlias)
 {
-    PCSRSS_CONSOLE_ALIAS ConsoleAlias = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.ConsoleAlias;
+    PCONSOLE_ADDGETALIAS ConsoleAliasRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.ConsoleAliasRequest;
     PCSRSS_CONSOLE Console;
     PALIAS_HEADER Header;
     PALIAS_ENTRY Entry;
@@ -383,30 +383,30 @@ CSR_API(SrvGetConsoleAlias)
     DPRINT("SrvGetConsoleAlias entered ApiMessage %p\n", ApiMessage);
 
     if ( !CsrValidateMessageBuffer(ApiMessage,
-                                   (PVOID*)&ConsoleAlias->Source,
-                                   ConsoleAlias->SourceLength,
+                                   (PVOID*)&ConsoleAliasRequest->Source,
+                                   ConsoleAliasRequest->SourceLength,
                                    sizeof(BYTE))                    ||
          !CsrValidateMessageBuffer(ApiMessage,
-                                   (PVOID*)&ConsoleAlias->Target,
-                                   ConsoleAlias->TargetLength,
+                                   (PVOID*)&ConsoleAliasRequest->Target,
+                                   ConsoleAliasRequest->TargetLength,
                                    sizeof(BYTE))                    ||
          !CsrValidateMessageBuffer(ApiMessage,
-                                   (PVOID*)&ConsoleAlias->Exe,
-                                   ConsoleAlias->ExeLength,
+                                   (PVOID*)&ConsoleAliasRequest->Exe,
+                                   ConsoleAliasRequest->ExeLength,
                                    sizeof(BYTE)) )
     {
         return STATUS_INVALID_PARAMETER;
     }
 
-    lpSource  = ConsoleAlias->Source;
-    lpTarget  = ConsoleAlias->Target;
-    lpExeName = ConsoleAlias->Exe;
+    lpSource  = ConsoleAliasRequest->Source;
+    lpTarget  = ConsoleAliasRequest->Target;
+    lpExeName = ConsoleAliasRequest->Exe;
 
     DPRINT("SrvGetConsoleAlias lpExeName %p lpSource %p TargetBuffer %p TargetLength %u\n",
-           lpExeName, lpSource, lpTarget, ConsoleAlias->TargetLength);
+           lpExeName, lpSource, lpTarget, ConsoleAliasRequest->TargetLength);
 
-    if (ConsoleAlias->ExeLength == 0 || lpTarget == NULL ||
-            ConsoleAlias->TargetLength == 0 || ConsoleAlias->SourceLength == 0)
+    if (ConsoleAliasRequest->ExeLength == 0 || lpTarget == NULL ||
+            ConsoleAliasRequest->TargetLength == 0 || ConsoleAliasRequest->SourceLength == 0)
     {
         return STATUS_INVALID_PARAMETER;
     }
@@ -432,38 +432,38 @@ CSR_API(SrvGetConsoleAlias)
     }
 
     Length = (wcslen(Entry->lpTarget) + 1) * sizeof(WCHAR);
-    if (Length > ConsoleAlias->TargetLength)
+    if (Length > ConsoleAliasRequest->TargetLength)
     {
         ConioUnlockConsole(Console);
         return STATUS_BUFFER_TOO_SMALL;
     }
 
     wcscpy(lpTarget, Entry->lpTarget);
-    ConsoleAlias->TargetLength = Length;
+    ConsoleAliasRequest->TargetLength = Length;
     ConioUnlockConsole(Console);
     return STATUS_SUCCESS;
 }
 
 CSR_API(SrvGetConsoleAliases)
 {
-    PCSRSS_GET_ALL_CONSOLE_ALIASES GetAllConsoleAliases = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetAllConsoleAliases;
+    PCONSOLE_GETALLALIASES GetAllAliasesRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetAllAliasesRequest;
     PCSRSS_CONSOLE Console;
     ULONG BytesWritten;
     PALIAS_HEADER Header;
 
     if ( !CsrValidateMessageBuffer(ApiMessage,
-                                   (PVOID)&GetAllConsoleAliases->ExeName,
-                                   GetAllConsoleAliases->ExeLength,
+                                   (PVOID)&GetAllAliasesRequest->ExeName,
+                                   GetAllAliasesRequest->ExeLength,
                                    sizeof(BYTE))                    ||
          !CsrValidateMessageBuffer(ApiMessage,
-                                   (PVOID)&GetAllConsoleAliases->AliasesBuffer,
-                                   GetAllConsoleAliases->AliasesBufferLength,
+                                   (PVOID)&GetAllAliasesRequest->AliasesBuffer,
+                                   GetAllAliasesRequest->AliasesBufferLength,
                                    sizeof(BYTE)) )
     {
         return STATUS_INVALID_PARAMETER;
     }
 
-    if (GetAllConsoleAliases->ExeName == NULL)
+    if (GetAllAliasesRequest->ExeName == NULL)
     {
         return STATUS_INVALID_PARAMETER;
     }
@@ -474,44 +474,44 @@ CSR_API(SrvGetConsoleAliases)
         return ApiMessage->Status;
     }
 
-    Header = IntFindAliasHeader(Console->Aliases, GetAllConsoleAliases->ExeName);
+    Header = IntFindAliasHeader(Console->Aliases, GetAllAliasesRequest->ExeName);
     if (!Header)
     {
         ConioUnlockConsole(Console);
         return STATUS_INVALID_PARAMETER;
     }
 
-    if (IntGetAllConsoleAliasesLength(Header) > GetAllConsoleAliases->AliasesBufferLength)
+    if (IntGetAllConsoleAliasesLength(Header) > GetAllAliasesRequest->AliasesBufferLength)
     {
         ConioUnlockConsole(Console);
         return STATUS_BUFFER_OVERFLOW;
     }
 
     BytesWritten = IntGetAllConsoleAliases(Header,
-                                           GetAllConsoleAliases->AliasesBuffer,
-                                           GetAllConsoleAliases->AliasesBufferLength);
+                                           GetAllAliasesRequest->AliasesBuffer,
+                                           GetAllAliasesRequest->AliasesBufferLength);
 
-    GetAllConsoleAliases->AliasesBufferLength = BytesWritten;
+    GetAllAliasesRequest->AliasesBufferLength = BytesWritten;
     ConioUnlockConsole(Console);
     return STATUS_SUCCESS;
 }
 
 CSR_API(SrvGetConsoleAliasesLength)
 {
-    PCSRSS_GET_ALL_CONSOLE_ALIASES_LENGTH GetAllConsoleAliasesLength = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetAllConsoleAliasesLength;
+    PCONSOLE_GETALLALIASESLENGTH GetAllAliasesLengthRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetAllAliasesLengthRequest;
     PCSRSS_CONSOLE Console;
     PALIAS_HEADER Header;
     UINT Length;
 
     if (!CsrValidateMessageBuffer(ApiMessage,
-                                  (PVOID)&GetAllConsoleAliasesLength->ExeName,
-                                  GetAllConsoleAliasesLength->ExeLength,
+                                  (PVOID)&GetAllAliasesLengthRequest->ExeName,
+                                  GetAllAliasesLengthRequest->ExeLength,
                                   sizeof(BYTE)))
     {
         return STATUS_INVALID_PARAMETER;
     }
 
-    if (GetAllConsoleAliasesLength->ExeName == NULL)
+    if (GetAllAliasesLengthRequest->ExeName == NULL)
     {
         return STATUS_INVALID_PARAMETER;
     }
@@ -522,7 +522,7 @@ CSR_API(SrvGetConsoleAliasesLength)
         return ApiMessage->Status;
     }
 
-    Header = IntFindAliasHeader(Console->Aliases, GetAllConsoleAliasesLength->ExeName);
+    Header = IntFindAliasHeader(Console->Aliases, GetAllAliasesLengthRequest->ExeName);
     if (!Header)
     {
         ConioUnlockConsole(Console);
@@ -530,14 +530,14 @@ CSR_API(SrvGetConsoleAliasesLength)
     }
 
     Length = IntGetAllConsoleAliasesLength(Header);
-    GetAllConsoleAliasesLength->Length = Length;
+    GetAllAliasesLengthRequest->Length = Length;
     ConioUnlockConsole(Console);
     return STATUS_SUCCESS;
 }
 
 CSR_API(SrvGetConsoleAliasExes)
 {
-    PCSRSS_GET_CONSOLE_ALIASES_EXES GetConsoleAliasesExes = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetConsoleAliasesExes;
+    PCONSOLE_GETALIASESEXES GetAliasesExesRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetAliasesExesRequest;
     PCSRSS_CONSOLE Console;
     UINT BytesWritten;
     UINT ExesLength;
@@ -545,8 +545,8 @@ CSR_API(SrvGetConsoleAliasExes)
     DPRINT("SrvGetConsoleAliasExes entered\n");
 
     if (!CsrValidateMessageBuffer(ApiMessage,
-                                  (PVOID)&GetConsoleAliasesExes->ExeNames,
-                                  GetConsoleAliasesExes->Length,
+                                  (PVOID)&GetAliasesExesRequest->ExeNames,
+                                  GetAliasesExesRequest->Length,
                                   sizeof(BYTE)))
     {
         return STATUS_INVALID_PARAMETER;
@@ -560,37 +560,37 @@ CSR_API(SrvGetConsoleAliasExes)
 
     ExesLength = IntGetConsoleAliasesExesLength(Console->Aliases);
 
-    if (ExesLength > GetConsoleAliasesExes->Length)
+    if (ExesLength > GetAliasesExesRequest->Length)
     {
         ConioUnlockConsole(Console);
         return STATUS_BUFFER_OVERFLOW;
     }
 
-    if (GetConsoleAliasesExes->ExeNames == NULL)
+    if (GetAliasesExesRequest->ExeNames == NULL)
     {
         ConioUnlockConsole(Console);
         return STATUS_INVALID_PARAMETER;
     }
 
     BytesWritten = IntGetConsoleAliasesExes(Console->Aliases,
-                                            GetConsoleAliasesExes->ExeNames,
-                                            GetConsoleAliasesExes->Length);
+                                            GetAliasesExesRequest->ExeNames,
+                                            GetAliasesExesRequest->Length);
 
-    GetConsoleAliasesExes->Length = BytesWritten;
+    GetAliasesExesRequest->Length = BytesWritten;
     ConioUnlockConsole(Console);
     return STATUS_SUCCESS;
 }
 
 CSR_API(SrvGetConsoleAliasExesLength)
 {
-    PCSRSS_GET_CONSOLE_ALIASES_EXES_LENGTH GetConsoleAliasesExesLength = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetConsoleAliasesExesLength;
+    PCONSOLE_GETALIASESEXESLENGTH GetAliasesExesLengthRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetAliasesExesLengthRequest;
     PCSRSS_CONSOLE Console;
     DPRINT("SrvGetConsoleAliasExesLength entered\n");
 
     ApiMessage->Status = ConioConsoleFromProcessData(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console);
     if (NT_SUCCESS(ApiMessage->Status))
     {
-        GetConsoleAliasesExesLength->Length = IntGetConsoleAliasesExesLength(Console->Aliases);
+        GetAliasesExesLengthRequest->Length = IntGetConsoleAliasesExesLength(Console->Aliases);
         ConioUnlockConsole(Console);
     }
     return ApiMessage->Status;

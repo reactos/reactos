@@ -573,23 +573,23 @@ ConsoleDisconnect(PCSR_PROCESS Process)
 
 CSR_API(SrvCloseHandle)
 {
-    PCSRSS_CLOSE_HANDLE CloseHandleRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.CloseHandleRequest;
+    PCONSOLE_CLOSEHANDLE CloseHandleRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.CloseHandleRequest;
 
     return Win32CsrReleaseObject(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
-                                 CloseHandleRequest->Handle);
+                                 CloseHandleRequest->ConsoleHandle);
 }
 
 CSR_API(SrvVerifyConsoleIoHandle)
 {
     NTSTATUS Status = STATUS_SUCCESS;
-    PCSRSS_VERIFY_HANDLE VerifyHandleRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.VerifyHandleRequest;
+    PCONSOLE_VERIFYHANDLE VerifyHandleRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.VerifyHandleRequest;
     PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);
-    HANDLE Handle = VerifyHandleRequest->Handle;
-    ULONG_PTR Index = (ULONG_PTR)Handle >> 2;
+    HANDLE ConsoleHandle = VerifyHandleRequest->ConsoleHandle;
+    ULONG_PTR Index = (ULONG_PTR)ConsoleHandle >> 2;
 
     RtlEnterCriticalSection(&ProcessData->HandleTableLock);
 
-    if (!IsConsoleHandle(Handle)    ||
+    if (!IsConsoleHandle(ConsoleHandle)    ||
         Index >= ProcessData->HandleTableSize ||
         ProcessData->HandleTable[Index].Object == NULL)
     {
@@ -606,18 +606,18 @@ CSR_API(SrvDuplicateHandle)
 {
     PCSRSS_HANDLE Entry;
     DWORD DesiredAccess;
-    PCSRSS_DUPLICATE_HANDLE DuplicateHandleRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.DuplicateHandleRequest;
+    PCONSOLE_DUPLICATEHANDLE DuplicateHandleRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.DuplicateHandleRequest;
     PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);
-    HANDLE Handle = DuplicateHandleRequest->Handle;
-    ULONG_PTR Index = (ULONG_PTR)Handle >> 2;
+    HANDLE ConsoleHandle = DuplicateHandleRequest->ConsoleHandle;
+    ULONG_PTR Index = (ULONG_PTR)ConsoleHandle >> 2;
 
     RtlEnterCriticalSection(&ProcessData->HandleTableLock);
 
-    if ( /** !IsConsoleHandle(Handle)    || **/
+    if ( /** !IsConsoleHandle(ConsoleHandle)    || **/
         Index >= ProcessData->HandleTableSize ||
         (Entry = &ProcessData->HandleTable[Index])->Object == NULL)
     {
-        DPRINT1("Couldn't duplicate invalid handle %p\n", Handle);
+        DPRINT1("Couldn't duplicate invalid handle %p\n", ConsoleHandle);
         RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
         return STATUS_INVALID_HANDLE;
     }
@@ -633,14 +633,14 @@ CSR_API(SrvDuplicateHandle)
         if (~Entry->Access & DesiredAccess)
         {
             DPRINT1("Handle %p only has access %X; requested %X\n",
-                Handle, Entry->Access, DesiredAccess);
+                ConsoleHandle, Entry->Access, DesiredAccess);
             RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
             return STATUS_INVALID_PARAMETER;
         }
     }
 
     ApiMessage->Status = Win32CsrInsertObject(ProcessData,
-                                              &DuplicateHandleRequest->Handle, // Use the new handle value!
+                                              &DuplicateHandleRequest->ConsoleHandle, // Use the new handle value!
                                               Entry->Object,
                                               DesiredAccess,
                                               DuplicateHandleRequest->Inheritable,

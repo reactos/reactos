@@ -116,7 +116,7 @@ typedef struct _CONSOLE_CONNECTION_INFO
 {
     BOOL ConsoleNeeded; // Used for GUI apps only.
 
-    /* Copied from CSRSS_ALLOC_CONSOLE */
+    /* Copied from CONSOLE_ALLOCCONSOLE */
     INT ShowCmd;
     HANDLE Console; // ConsoleHandle // In fact, it is a PCSRSS_CONSOLE <-- correct that !!
     HANDLE InputHandle;
@@ -136,22 +136,24 @@ typedef struct
     USHORT nMaxIds;
     ULONG  nProcessIdsTotal;
     PDWORD pProcessIds;
-} CSRSS_GET_PROCESS_LIST, *PCSRSS_GET_PROCESS_LIST;
+} CONSOLE_GETPROCESSLIST, *PCONSOLE_GETPROCESSLIST;
 
 typedef struct
 {
-    HANDLE ConsoleHandle;
+    HANDLE OutputHandle;
+
     BOOL Unicode;
     ULONG NrCharactersToWrite;
     ULONG NrCharactersWritten;
 
     ULONG BufferSize;
     PVOID Buffer;
-} CSRSS_WRITE_CONSOLE, *PCSRSS_WRITE_CONSOLE;
+} CONSOLE_WRITECONSOLE, *PCONSOLE_WRITECONSOLE;
 
 typedef struct
 {
-    HANDLE ConsoleHandle;
+    HANDLE InputHandle;
+
     BOOL Unicode;
     WORD NrCharactersToRead;
     WORD NrCharactersRead;
@@ -162,7 +164,7 @@ typedef struct
 
     ULONG BufferSize;
     PVOID Buffer;
-} CSRSS_READ_CONSOLE, *PCSRSS_READ_CONSOLE;
+} CONSOLE_READCONSOLE, *PCONSOLE_READCONSOLE;
 
 typedef struct
 {
@@ -173,87 +175,90 @@ typedef struct
     HANDLE ErrorHandle;
     HANDLE InputWaitHandle;
     LPTHREAD_START_ROUTINE CtrlDispatcher;
-} CSRSS_ALLOC_CONSOLE, *PCSRSS_ALLOC_CONSOLE;
+} CONSOLE_ALLOCCONSOLE, *PCONSOLE_ALLOCCONSOLE;
 
 typedef struct
 {
     ULONG Dummy;
-} CSRSS_FREE_CONSOLE, *PCSRSS_FREE_CONSOLE;
+} CONSOLE_FREECONSOLE, *PCONSOLE_FREECONSOLE;
 
 typedef struct
 {
-    HANDLE ConsoleHandle;
+    HANDLE OutputHandle;
     CONSOLE_SCREEN_BUFFER_INFO Info;
-} CSRSS_SCREEN_BUFFER_INFO, *PCSRSS_SCREEN_BUFFER_INFO;
+} CONSOLE_GETSCREENBUFFERINFO, *PCONSOLE_GETSCREENBUFFERINFO;
 
 typedef struct
 {
-    HANDLE ConsoleHandle;
+    HANDLE OutputHandle;
     COORD Position;
-} CSRSS_SET_CURSOR_POSITION, *PCSRSS_SET_CURSOR_POSITION;
+} CONSOLE_SETCURSORPOSITION, *PCONSOLE_SETCURSORPOSITION;
 
 typedef struct
 {
-    HANDLE ConsoleHandle;
+    HANDLE OutputHandle;
     CONSOLE_CURSOR_INFO Info;
-} CSRSS_CURSOR_INFO, *PCSRSS_CURSOR_INFO;
+} CONSOLE_GETSETCURSORINFO, *PCONSOLE_GETSETCURSORINFO;
 
 typedef struct
 {
-    HANDLE ConsoleHandle;
+    HANDLE OutputHandle;
     WORD Attrib;
-} CSRSS_SET_ATTRIB, *PCSRSS_SET_ATTRIB;
+} CONSOLE_SETTEXTATTRIB, *PCONSOLE_SETTEXTATTRIB;
 
 typedef struct
 {
-    HANDLE ConsoleHandle;
+    HANDLE ConsoleHandle;   /* A valid input or output console handle */
     DWORD ConsoleMode;
-} CSRSS_CONSOLE_MODE, *PCSRSS_CONSOLE_MODE;
+} CONSOLE_GETSETCONSOLEMODE, *PCONSOLE_GETSETCONSOLEMODE;
 
 typedef struct
 {
+    HANDLE OutputHandle;  /* Handle to newly created screen buffer */
+
     DWORD Access;
     DWORD ShareMode;
     BOOL Inheritable;
-    HANDLE OutputHandle;  /* handle to newly created screen buffer */
-} CSRSS_CREATE_SCREEN_BUFFER, *PCSRSS_CREATE_SCREEN_BUFFER;
+} CONSOLE_CREATESCREENBUFFER, *PCONSOLE_CREATESCREENBUFFER;
 
 typedef struct
 {
-    HANDLE OutputHandle;  /* handle to screen buffer to switch to */
-} CSRSS_SET_SCREEN_BUFFER, *PCSRSS_SET_SCREEN_BUFFER;
+    HANDLE OutputHandle;  /* Handle to screen buffer to switch to */
+} CONSOLE_SETACTIVESCREENBUFFER, *PCONSOLE_SETACTIVESCREENBUFFER;
 
 typedef struct
 {
     DWORD Length;
     PWCHAR Title;
-} CSRSS_CONSOLE_TITLE, *PCSRSS_CONSOLE_TITLE;
+} CONSOLE_GETSETCONSOLETITLE, *PCONSOLE_GETSETCONSOLETITLE;
 
 typedef struct
 {
-    HANDLE ConsoleHandle;
+    HANDLE OutputHandle;
+
     BOOL Unicode;
     COORD BufferSize;
     COORD BufferCoord;
     SMALL_RECT WriteRegion;
     CHAR_INFO* CharInfo;
-} CSRSS_WRITE_CONSOLE_OUTPUT, *PCSRSS_WRITE_CONSOLE_OUTPUT;
+} CONSOLE_WRITEOUTPUT, *PCONSOLE_WRITEOUTPUT;
 
 typedef struct
 {
-    HANDLE ConsoleInput;
-} CSRSS_FLUSH_INPUT_BUFFER, *PCSRSS_FLUSH_INPUT_BUFFER;
+    HANDLE InputHandle;
+} CONSOLE_FLUSHINPUTBUFFER, *PCONSOLE_FLUSHINPUTBUFFER;
 
 typedef struct
 {
-    HANDLE ConsoleHandle;
+    HANDLE OutputHandle;
+
     BOOL Unicode;
     SMALL_RECT ScrollRectangle;
     BOOL UseClipRectangle;
     SMALL_RECT ClipRectangle;
     COORD DestinationOrigin;
     CHAR_INFO Fill;
-} CSRSS_SCROLL_CONSOLE_SCREEN_BUFFER, *PCSRSS_SCROLL_CONSOLE_SCREEN_BUFFER;
+} CONSOLE_SCROLLSCREENBUFFER, *PCONSOLE_SCROLLSCREENBUFFER;
 
 
 /*
@@ -270,7 +275,7 @@ typedef enum _CODE_TYPE
 
 typedef struct
 {
-    HANDLE ConsoleHandle;
+    HANDLE OutputHandle;
 
     DWORD NumCodesToRead;
     COORD ReadCoord;
@@ -286,12 +291,11 @@ typedef struct
         PWCHAR UnicodeChar;
         PWORD Attribute;
     } pCode;    // Either a pointer to a character or to an attribute.
-} CSRSS_READ_CONSOLE_OUTPUT_CODE, *PCSRSS_READ_CONSOLE_OUTPUT_CODE;
+} CONSOLE_READOUTPUTCODE, *PCONSOLE_READOUTPUTCODE;
 
 typedef struct
 {
-    HANDLE ConsoleHandle;
-    USHORT CodeType;
+    HANDLE OutputHandle;
 
     ULONG BufferSize;
     WORD Length;
@@ -300,6 +304,7 @@ typedef struct
 
     ULONG NrCharactersWritten;
 
+    USHORT CodeType;
     union
     {
         // PVOID String;
@@ -308,11 +313,11 @@ typedef struct
         PWCHAR UnicodeChar;
         PWORD Attribute;
     } pCode;    // Either a pointer to a character or to an attribute.
-} CSRSS_WRITE_CONSOLE_OUTPUT_CODE, *PCSRSS_WRITE_CONSOLE_OUTPUT_CODE;
+} CONSOLE_WRITEOUTPUTCODE, *PCONSOLE_WRITEOUTPUTCODE;
 
 typedef struct
 {
-    HANDLE ConsoleHandle;
+    HANDLE OutputHandle;
 
     CODE_TYPE CodeType;
     union
@@ -326,11 +331,11 @@ typedef struct
     ULONG Length;
 
     ULONG NrCharactersWritten; // FIXME: Only for chars, is it removable ?
-} CSRSS_FILL_OUTPUT, *PCSRSS_FILL_OUTPUT;
+} CONSOLE_FILLOUTPUTCODE, *PCONSOLE_FILLOUTPUTCODE;
 
 typedef struct
 {
-    HANDLE ConsoleHandle;
+    HANDLE InputHandle;
     BOOL Unicode;
     BOOL bRead; // TRUE --> Read ; FALSE --> Peek
 
@@ -338,43 +343,44 @@ typedef struct
 
     ULONG Length;
     PINPUT_RECORD InputRecord;
-} CSRSS_GET_CONSOLE_INPUT, *PCSRSS_GET_CONSOLE_INPUT;
+} CONSOLE_GETINPUT, *PCONSOLE_GETINPUT;
 
 typedef struct
 {
-    HANDLE ConsoleHandle;
+    HANDLE OutputHandle;
+
     BOOL Unicode;
     COORD BufferSize;
     COORD BufferCoord;
     SMALL_RECT ReadRegion;
     CHAR_INFO* CharInfo;
-} CSRSS_READ_CONSOLE_OUTPUT, *PCSRSS_READ_CONSOLE_OUTPUT;
+} CONSOLE_READOUTPUT, *PCONSOLE_READOUTPUT;
+
+typedef struct
+{
+    HANDLE InputHandle;
+    BOOL Unicode;
+    DWORD Length;
+    INPUT_RECORD* InputRecord;
+} CONSOLE_WRITEINPUT, *PCONSOLE_WRITEINPUT;
 
 typedef struct
 {
     HANDLE ConsoleHandle;
-    BOOL Unicode;
-    DWORD Length;
-    INPUT_RECORD* InputRecord;
-} CSRSS_WRITE_CONSOLE_INPUT, *PCSRSS_WRITE_CONSOLE_INPUT;
+} CONSOLE_CLOSEHANDLE, *PCONSOLE_CLOSEHANDLE;
 
 typedef struct
 {
-    HANDLE Handle;
-} CSRSS_CLOSE_HANDLE, *PCSRSS_CLOSE_HANDLE;
+    HANDLE ConsoleHandle;
+} CONSOLE_VERIFYHANDLE, *PCONSOLE_VERIFYHANDLE;
 
 typedef struct
 {
-    HANDLE Handle;
-} CSRSS_VERIFY_HANDLE, *PCSRSS_VERIFY_HANDLE;
-
-typedef struct
-{
-    HANDLE Handle;
+    HANDLE ConsoleHandle;
     DWORD Access;
     BOOL Inheritable;
     DWORD Options;
-} CSRSS_DUPLICATE_HANDLE, *PCSRSS_DUPLICATE_HANDLE;
+} CONSOLE_DUPLICATEHANDLE, *PCONSOLE_DUPLICATEHANDLE;
 
 /*
  * Type of handles.
@@ -387,17 +393,19 @@ typedef enum _CONSOLE_HANDLE_TYPE
 
 typedef struct
 {
-    HANDLE Handle;
+    HANDLE ConsoleHandle;
     CONSOLE_HANDLE_TYPE HandleType;
     DWORD Access;
     BOOL Inheritable;
     DWORD ShareMode;
-} CSRSS_OPEN_CONSOLE, *PCSRSS_OPEN_CONSOLE;
+} CONSOLE_OPENCONSOLE, *PCONSOLE_OPENCONSOLE;
 
+#if 0
 typedef struct
 {
     HANDLE InputWaitHandle;
 } CSRSS_GET_INPUT_WAIT_HANDLE, *PCSRSS_GET_INPUT_WAIT_HANDLE;
+#endif
 
 
 /*
@@ -408,25 +416,19 @@ typedef struct
 
 typedef struct
 {
-    HANDLE ConsoleHandle;
+    HANDLE OutputHandle;
     DWORD  State;
-} CSRSS_CONSOLE_HW_STATE, *PCSRSS_CONSOLE_HW_STATE;
+} CONSOLE_GETSETHWSTATE, *PCONSOLE_GETSETHWSTATE;
 
 typedef struct
 {
     HWND    WindowHandle;
-} CSRSS_GET_CONSOLE_WINDOW, *PCSRSS_GET_CONSOLE_WINDOW;
+} CONSOLE_GETWINDOW, *PCONSOLE_GETWINDOW;
 
 typedef struct
 {
     HICON   WindowIcon;
-} CSRSS_SET_CONSOLE_ICON, *PCSRSS_SET_CONSOLE_ICON;
-
-
-
-
-
-
+} CONSOLE_SETICON, *PCONSOLE_SETICON;
 
 
 
@@ -438,7 +440,7 @@ typedef struct
     LPWSTR Source;
     LPWSTR Target;
     LPWSTR Exe;
-} CSRSS_CONSOLE_ALIAS, *PCSRSS_CONSOLE_ALIAS;
+} CONSOLE_ADDGETALIAS, *PCONSOLE_ADDGETALIAS;
 
 typedef struct
 {
@@ -446,28 +448,25 @@ typedef struct
     DWORD AliasesBufferLength;
     LPWSTR ExeName;
     LPWSTR AliasesBuffer;
-} CSRSS_GET_ALL_CONSOLE_ALIASES, *PCSRSS_GET_ALL_CONSOLE_ALIASES;
+} CONSOLE_GETALLALIASES, *PCONSOLE_GETALLALIASES;
 
 typedef struct
 {
     DWORD Length;
     DWORD ExeLength;
     LPWSTR ExeName;
-} CSRSS_GET_ALL_CONSOLE_ALIASES_LENGTH, *PCSRSS_GET_ALL_CONSOLE_ALIASES_LENGTH;
+} CONSOLE_GETALLALIASESLENGTH, *PCONSOLE_GETALLALIASESLENGTH;
 
 typedef struct
 {
     DWORD Length;
     LPWSTR ExeNames;
-} CSRSS_GET_CONSOLE_ALIASES_EXES, *PCSRSS_GET_CONSOLE_ALIASES_EXES;
+} CONSOLE_GETALIASESEXES, *PCONSOLE_GETALIASESEXES;
 
 typedef struct
 {
     DWORD Length;
-} CSRSS_GET_CONSOLE_ALIASES_EXES_LENGTH, *PCSRSS_GET_CONSOLE_ALIASES_EXES_LENGTH;
-
-
-
+} CONSOLE_GETALIASESEXESLENGTH, *PCONSOLE_GETALIASESEXESLENGTH;
 
 
 
@@ -476,38 +475,31 @@ typedef struct
     UNICODE_STRING ExeName;
     PWCHAR History;
     DWORD Length;
-} CSRSS_GET_COMMAND_HISTORY, *PCSRSS_GET_COMMAND_HISTORY;
+} CONSOLE_GETCOMMANDHISTORY, *PCONSOLE_GETCOMMANDHISTORY;
 
 typedef struct
 {
     UNICODE_STRING ExeName;
     DWORD Length;
-} CSRSS_GET_COMMAND_HISTORY_LENGTH, *PCSRSS_GET_COMMAND_HISTORY_LENGTH;
+} CONSOLE_GETCOMMANDHISTORYLENGTH, *PCONSOLE_GETCOMMANDHISTORYLENGTH;
 
 typedef struct
 {
     UNICODE_STRING ExeName;
-} CSRSS_EXPUNGE_COMMAND_HISTORY, *PCSRSS_EXPUNGE_COMMAND_HISTORY;
+} CONSOLE_EXPUNGECOMMANDHISTORY, *PCONSOLE_EXPUNGECOMMANDHISTORY;
 
 typedef struct
 {
     UNICODE_STRING ExeName;
     DWORD NumCommands;
-} CSRSS_SET_HISTORY_NUMBER_COMMANDS, *PCSRSS_SET_HISTORY_NUMBER_COMMANDS;
+} CONSOLE_SETHISTORYNUMBERCOMMANDS, *PCONSOLE_SETHISTORYNUMBERCOMMANDS;
 
 typedef struct
 {
     UINT HistoryBufferSize;
     UINT NumberOfHistoryBuffers;
     DWORD dwFlags;
-} CSRSS_HISTORY_INFO, *PCSRSS_HISTORY_INFO;
-
-
-
-
-
-
-
+} CONSOLE_GETSETHISTORYINFO, *PCONSOLE_GETSETHISTORYINFO;
 
 
 
@@ -515,30 +507,30 @@ typedef struct
 {
     DWORD Event;
     DWORD ProcessGroup;
-} CSRSS_GENERATE_CTRL_EVENT, *PCSRSS_GENERATE_CTRL_EVENT;
+} CONSOLE_GENERATECTRLEVENT, *PCONSOLE_GENERATECTRLEVENT;
 
 typedef struct
 {
-    HANDLE ConsoleHandle;
+    HANDLE InputHandle;
     DWORD NumInputEvents;
-} CSRSS_GET_NUM_INPUT_EVENTS, *PCSRSS_GET_NUM_INPUT_EVENTS;
+} CONSOLE_GETNUMINPUTEVENTS, *PCONSOLE_GETNUMINPUTEVENTS;
 
 typedef struct
 {
     HANDLE OutputHandle;
     COORD Size;
-} CSRSS_SET_SCREEN_BUFFER_SIZE, *PCSRSS_SET_SCREEN_BUFFER_SIZE;
+} CONSOLE_SETSCREENBUFFERSIZE, *PCONSOLE_SETSCREENBUFFERSIZE;
 
 typedef struct
 {
     CONSOLE_SELECTION_INFO Info;
-} CSRSS_GET_CONSOLE_SELECTION_INFO, *PCSRSS_GET_CONSOLE_SELECTION_INFO;
+} CONSOLE_GETSELECTIONINFO, *PCONSOLE_GETSELECTIONINFO;
 
 typedef struct
 {
     BOOL InputCP;   // TRUE : Input Code Page ; FALSE : Output Code Page
     UINT CodePage;
-} CSRSS_CONSOLE_CP, *PCSRSS_CONSOLE_CP;
+} CONSOLE_GETSETINPUTOUTPUTCP, *PCONSOLE_GETSETINPUTOUTPUTCP;
 
 typedef struct _CONSOLE_API_MESSAGE
 {
@@ -550,75 +542,77 @@ typedef struct _CONSOLE_API_MESSAGE
     ULONG Reserved;
     union
     {
-        CSRSS_ALLOC_CONSOLE AllocConsoleRequest;
-        CSRSS_FREE_CONSOLE FreeConsoleRequest;
+        CONSOLE_ALLOCCONSOLE AllocConsoleRequest;
+        CONSOLE_FREECONSOLE FreeConsoleRequest;
 
         /* Handles */
-        CSRSS_OPEN_CONSOLE OpenConsoleRequest;
-        CSRSS_CLOSE_HANDLE CloseHandleRequest;
-        CSRSS_VERIFY_HANDLE VerifyHandleRequest;
-        CSRSS_DUPLICATE_HANDLE DuplicateHandleRequest;
+        CONSOLE_OPENCONSOLE OpenConsoleRequest;
+        CONSOLE_CLOSEHANDLE CloseHandleRequest;
+        CONSOLE_VERIFYHANDLE VerifyHandleRequest;
+        CONSOLE_DUPLICATEHANDLE DuplicateHandleRequest;
+#if 0
         CSRSS_GET_INPUT_WAIT_HANDLE GetConsoleInputWaitHandle;
+#endif
 
         /* Cursor */
-        CSRSS_CURSOR_INFO CursorInfoRequest;
-        CSRSS_SET_CURSOR_POSITION SetCursorPositionRequest;
+        CONSOLE_GETSETCURSORINFO CursorInfoRequest;
+        CONSOLE_SETCURSORPOSITION SetCursorPositionRequest;
 
         /* Screen buffer */
-        CSRSS_CREATE_SCREEN_BUFFER CreateScreenBufferRequest;
-        CSRSS_SET_SCREEN_BUFFER SetScreenBufferRequest;
-        CSRSS_SCREEN_BUFFER_INFO ScreenBufferInfoRequest;
-        CSRSS_SET_SCREEN_BUFFER_SIZE SetScreenBufferSize;
-        CSRSS_SCROLL_CONSOLE_SCREEN_BUFFER ScrollConsoleScreenBufferRequest;
+        CONSOLE_CREATESCREENBUFFER CreateScreenBufferRequest;
+        CONSOLE_SETACTIVESCREENBUFFER SetScreenBufferRequest;
+        CONSOLE_GETSCREENBUFFERINFO ScreenBufferInfoRequest;
+        CONSOLE_SETSCREENBUFFERSIZE SetScreenBufferSizeRequest;
+        CONSOLE_SCROLLSCREENBUFFER ScrollScreenBufferRequest;
 
-        CSRSS_GET_CONSOLE_SELECTION_INFO GetConsoleSelectionInfo;
-        CSRSS_FLUSH_INPUT_BUFFER FlushInputBufferRequest;
+        CONSOLE_GETSELECTIONINFO GetSelectionInfoRequest;
+        CONSOLE_FLUSHINPUTBUFFER FlushInputBufferRequest;
 
         /* Console mode */
-        CSRSS_CONSOLE_MODE ConsoleModeRequest;
-        CSRSS_CONSOLE_HW_STATE ConsoleHardwareStateRequest;
+        CONSOLE_GETSETCONSOLEMODE ConsoleModeRequest;
+        CONSOLE_GETSETHWSTATE HardwareStateRequest;
 
         /* Console window */
-        CSRSS_CONSOLE_TITLE TitleRequest;
-        CSRSS_GET_CONSOLE_WINDOW GetConsoleWindowRequest;
-        CSRSS_SET_CONSOLE_ICON SetConsoleIconRequest;
+        CONSOLE_GETSETCONSOLETITLE TitleRequest;
+        CONSOLE_GETWINDOW GetWindowRequest;
+        CONSOLE_SETICON SetIconRequest;
 
         /* Read */
-        CSRSS_READ_CONSOLE ReadConsoleRequest;              // SrvReadConsole / ReadConsole
-        CSRSS_GET_CONSOLE_INPUT GetConsoleInputRequest;     // SrvGetConsoleInput / PeekConsoleInput & ReadConsoleInput
-        CSRSS_READ_CONSOLE_OUTPUT ReadConsoleOutputRequest; // SrvReadConsoleOutput / ReadConsoleOutput
-        CSRSS_READ_CONSOLE_OUTPUT_CODE ReadConsoleOutputCodeRequest;    // SrvReadConsoleOutputString / ReadConsoleOutputAttribute & ReadConsoleOutputCharacter
+        CONSOLE_READCONSOLE ReadConsoleRequest;         // SrvReadConsole / ReadConsole
+        CONSOLE_GETINPUT GetInputRequest;               // SrvGetConsoleInput / PeekConsoleInput & ReadConsoleInput
+        CONSOLE_READOUTPUT ReadOutputRequest;           // SrvReadConsoleOutput / ReadConsoleOutput
+        CONSOLE_READOUTPUTCODE ReadOutputCodeRequest;   // SrvReadConsoleOutputString / ReadConsoleOutputAttribute & ReadConsoleOutputCharacter
 
         /* Write */
-        CSRSS_WRITE_CONSOLE WriteConsoleRequest;            // SrvWriteConsole / WriteConsole
-        CSRSS_WRITE_CONSOLE_INPUT WriteConsoleInputRequest;
-        CSRSS_WRITE_CONSOLE_OUTPUT WriteConsoleOutputRequest;
-        CSRSS_WRITE_CONSOLE_OUTPUT_CODE WriteConsoleOutputCodeRequest;
+        CONSOLE_WRITECONSOLE WriteConsoleRequest;       // SrvWriteConsole / WriteConsole
+        CONSOLE_WRITEINPUT WriteInputRequest;
+        CONSOLE_WRITEOUTPUT WriteOutputRequest;
+        CONSOLE_WRITEOUTPUTCODE WriteOutputCodeRequest;
 
-        CSRSS_FILL_OUTPUT FillOutputRequest;
-        CSRSS_SET_ATTRIB SetAttribRequest;
+        CONSOLE_FILLOUTPUTCODE FillOutputRequest;
+        CONSOLE_SETTEXTATTRIB SetTextAttribRequest;
 
         /* Aliases */
-        CSRSS_CONSOLE_ALIAS ConsoleAlias;
-        CSRSS_GET_ALL_CONSOLE_ALIASES GetAllConsoleAliases;
-        CSRSS_GET_ALL_CONSOLE_ALIASES_LENGTH GetAllConsoleAliasesLength;
-        CSRSS_GET_CONSOLE_ALIASES_EXES GetConsoleAliasesExes;
-        CSRSS_GET_CONSOLE_ALIASES_EXES_LENGTH GetConsoleAliasesExesLength;
+        CONSOLE_ADDGETALIAS ConsoleAliasRequest;
+        CONSOLE_GETALLALIASES GetAllAliasesRequest;
+        CONSOLE_GETALLALIASESLENGTH GetAllAliasesLengthRequest;
+        CONSOLE_GETALIASESEXES GetAliasesExesRequest;
+        CONSOLE_GETALIASESEXESLENGTH GetAliasesExesLengthRequest;
 
         /* History */
-        CSRSS_GET_COMMAND_HISTORY GetCommandHistory;
-        CSRSS_GET_COMMAND_HISTORY_LENGTH GetCommandHistoryLength;
-        CSRSS_EXPUNGE_COMMAND_HISTORY ExpungeCommandHistory;
-        CSRSS_SET_HISTORY_NUMBER_COMMANDS SetHistoryNumberCommands;
-        CSRSS_HISTORY_INFO HistoryInfoRequest;
+        CONSOLE_GETCOMMANDHISTORY GetCommandHistoryRequest;
+        CONSOLE_GETCOMMANDHISTORYLENGTH GetCommandHistoryLengthRequest;
+        CONSOLE_EXPUNGECOMMANDHISTORY ExpungeCommandHistoryRequest;
+        CONSOLE_SETHISTORYNUMBERCOMMANDS SetHistoryNumberCommandsRequest;
+        CONSOLE_GETSETHISTORYINFO HistoryInfoRequest;
 
-        CSRSS_GENERATE_CTRL_EVENT GenerateCtrlEvent;
-        CSRSS_GET_NUM_INPUT_EVENTS GetNumInputEventsRequest;
+        CONSOLE_GENERATECTRLEVENT GenerateCtrlEventRequest;
+        CONSOLE_GETNUMINPUTEVENTS GetNumInputEventsRequest;
 
         /* Input and Output Code Pages */
-        CSRSS_CONSOLE_CP ConsoleCPRequest;
+        CONSOLE_GETSETINPUTOUTPUTCP ConsoleCPRequest;
 
-        CSRSS_GET_PROCESS_LIST GetProcessListRequest;
+        CONSOLE_GETPROCESSLIST GetProcessListRequest;
     } Data;
 } CONSOLE_API_MESSAGE, *PCONSOLE_API_MESSAGE;
 

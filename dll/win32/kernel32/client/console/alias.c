@@ -29,32 +29,32 @@ AddConsoleAliasW(LPCWSTR lpSource,
 {
     NTSTATUS Status;
     CONSOLE_API_MESSAGE ApiMessage;
-    PCSRSS_CONSOLE_ALIAS ConsoleAlias = &ApiMessage.Data.ConsoleAlias;
+    PCONSOLE_ADDGETALIAS ConsoleAliasRequest = &ApiMessage.Data.ConsoleAliasRequest;
     PCSR_CAPTURE_BUFFER CaptureBuffer;
     ULONG CapturedStrings;
 
     DPRINT("AddConsoleAliasW enterd with lpSource %S lpTarget %S lpExeName %S\n", lpSource, lpTarget, lpExeName);
 
     /* Determine the needed sizes */
-    ConsoleAlias->SourceLength = (wcslen(lpSource ) + 1) * sizeof(WCHAR);
-    ConsoleAlias->ExeLength    = (wcslen(lpExeName) + 1) * sizeof(WCHAR);
+    ConsoleAliasRequest->SourceLength = (wcslen(lpSource ) + 1) * sizeof(WCHAR);
+    ConsoleAliasRequest->ExeLength    = (wcslen(lpExeName) + 1) * sizeof(WCHAR);
     CapturedStrings = 2;
 
     if (lpTarget) /* The target can be optional */
     {
-        ConsoleAlias->TargetLength = (wcslen(lpTarget) + 1) * sizeof(WCHAR);
+        ConsoleAliasRequest->TargetLength = (wcslen(lpTarget) + 1) * sizeof(WCHAR);
         CapturedStrings++;
     }
     else
     {
-        ConsoleAlias->TargetLength = 0;
+        ConsoleAliasRequest->TargetLength = 0;
     }
 
     /* Allocate a Capture Buffer */
     CaptureBuffer = CsrAllocateCaptureBuffer(CapturedStrings,
-                                             ConsoleAlias->SourceLength +
-                                             ConsoleAlias->ExeLength    +
-                                             ConsoleAlias->TargetLength);
+                                             ConsoleAliasRequest->SourceLength +
+                                             ConsoleAliasRequest->ExeLength    +
+                                             ConsoleAliasRequest->TargetLength);
     if (CaptureBuffer == NULL)
     {
         DPRINT1("CsrAllocateCaptureBuffer failed!\n");
@@ -65,30 +65,30 @@ AddConsoleAliasW(LPCWSTR lpSource,
     /* Capture the strings */
     CsrCaptureMessageBuffer(CaptureBuffer,
                             (PVOID)lpSource,
-                            ConsoleAlias->SourceLength,
-                            (PVOID*)&ConsoleAlias->Source);
+                            ConsoleAliasRequest->SourceLength,
+                            (PVOID*)&ConsoleAliasRequest->Source);
 
     CsrCaptureMessageBuffer(CaptureBuffer,
                             (PVOID)lpExeName,
-                            ConsoleAlias->ExeLength,
-                            (PVOID*)&ConsoleAlias->Exe);
+                            ConsoleAliasRequest->ExeLength,
+                            (PVOID*)&ConsoleAliasRequest->Exe);
 
     if (lpTarget) /* The target can be optional */
     {
         CsrCaptureMessageBuffer(CaptureBuffer,
                                 (PVOID)lpTarget,
-                                ConsoleAlias->TargetLength,
-                                (PVOID*)&ConsoleAlias->Target);
+                                ConsoleAliasRequest->TargetLength,
+                                (PVOID*)&ConsoleAliasRequest->Target);
     }
     else
     {
-        ConsoleAlias->Target = NULL;
+        ConsoleAliasRequest->Target = NULL;
     }
 
     Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                                  CaptureBuffer,
                                  CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepAddAlias),
-                                 sizeof(CSRSS_CONSOLE_ALIAS));
+                                 sizeof(CONSOLE_ADDGETALIAS));
 
     CsrFreeCaptureBuffer(CaptureBuffer);
 
@@ -149,7 +149,7 @@ GetConsoleAliasW(LPWSTR lpSource,
 {
     NTSTATUS Status;
     CONSOLE_API_MESSAGE ApiMessage;
-    PCSRSS_CONSOLE_ALIAS ConsoleAlias = &ApiMessage.Data.ConsoleAlias;
+    PCONSOLE_ADDGETALIAS ConsoleAliasRequest = &ApiMessage.Data.ConsoleAliasRequest;
     PCSR_CAPTURE_BUFFER CaptureBuffer;
 
     DPRINT("GetConsoleAliasW entered with lpSource %S lpExeName %S\n", lpSource, lpExeName);
@@ -161,16 +161,16 @@ GetConsoleAliasW(LPWSTR lpSource,
     }
 
     /* Determine the needed sizes */
-    ConsoleAlias->SourceLength = (wcslen(lpSource ) + 1) * sizeof(WCHAR);
-    ConsoleAlias->ExeLength    = (wcslen(lpExeName) + 1) * sizeof(WCHAR);
+    ConsoleAliasRequest->SourceLength = (wcslen(lpSource ) + 1) * sizeof(WCHAR);
+    ConsoleAliasRequest->ExeLength    = (wcslen(lpExeName) + 1) * sizeof(WCHAR);
 
-    ConsoleAlias->Target = NULL;
-    ConsoleAlias->TargetLength = TargetBufferLength;
+    ConsoleAliasRequest->Target = NULL;
+    ConsoleAliasRequest->TargetLength = TargetBufferLength;
 
     /* Allocate a Capture Buffer */
-    CaptureBuffer = CsrAllocateCaptureBuffer(3, ConsoleAlias->SourceLength +
-                                                ConsoleAlias->ExeLength    +
-                                                ConsoleAlias->TargetLength);
+    CaptureBuffer = CsrAllocateCaptureBuffer(3, ConsoleAliasRequest->SourceLength +
+                                                ConsoleAliasRequest->ExeLength    +
+                                                ConsoleAliasRequest->TargetLength);
     if (!CaptureBuffer)
     {
         DPRINT1("CsrAllocateCaptureBuffer failed!\n");
@@ -181,23 +181,23 @@ GetConsoleAliasW(LPWSTR lpSource,
     /* Capture the strings */
     CsrCaptureMessageBuffer(CaptureBuffer,
                             (PVOID)lpSource,
-                            ConsoleAlias->SourceLength,
-                            (PVOID*)&ConsoleAlias->Source);
+                            ConsoleAliasRequest->SourceLength,
+                            (PVOID*)&ConsoleAliasRequest->Source);
 
     CsrCaptureMessageBuffer(CaptureBuffer,
                             (PVOID)lpExeName,
-                            ConsoleAlias->ExeLength,
-                            (PVOID*)&ConsoleAlias->Exe);
+                            ConsoleAliasRequest->ExeLength,
+                            (PVOID*)&ConsoleAliasRequest->Exe);
 
     /* Allocate space for the target buffer */
     CsrAllocateMessagePointer(CaptureBuffer,
-                              ConsoleAlias->TargetLength,
-                              (PVOID*)&ConsoleAlias->Target);
+                              ConsoleAliasRequest->TargetLength,
+                              (PVOID*)&ConsoleAliasRequest->Target);
 
     Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                                  CaptureBuffer,
                                  CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepGetAlias),
-                                 sizeof(CSRSS_CONSOLE_ALIAS));
+                                 sizeof(CONSOLE_ADDGETALIAS));
     if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = ApiMessage.Status))
     {
         CsrFreeCaptureBuffer(CaptureBuffer);
@@ -206,15 +206,15 @@ GetConsoleAliasW(LPWSTR lpSource,
     }
 
     /* Copy the returned target string into the user buffer */
-    // wcscpy(lpTargetBuffer, ConsoleAlias->Target);
+    // wcscpy(lpTargetBuffer, ConsoleAliasRequest->Target);
     memcpy(lpTargetBuffer,
-           ConsoleAlias->Target,
-           ConsoleAlias->TargetLength);
+           ConsoleAliasRequest->Target,
+           ConsoleAliasRequest->TargetLength);
 
     /* Release the capture buffer and exits */
     CsrFreeCaptureBuffer(CaptureBuffer);
 
-    return ConsoleAlias->TargetLength;
+    return ConsoleAliasRequest->TargetLength;
 }
 
 
@@ -296,24 +296,24 @@ GetConsoleAliasesW(LPWSTR AliasBuffer,
 {
     NTSTATUS Status;
     CONSOLE_API_MESSAGE ApiMessage;
-    PCSRSS_GET_ALL_CONSOLE_ALIASES GetAllConsoleAliases = &ApiMessage.Data.GetAllConsoleAliases;
+    PCONSOLE_GETALLALIASES GetAllAliasesRequest = &ApiMessage.Data.GetAllAliasesRequest;
     PCSR_CAPTURE_BUFFER CaptureBuffer;
 
     DPRINT("GetConsoleAliasesW entered\n");
 
     /* Determine the needed sizes */
-    GetAllConsoleAliases->ExeLength = GetConsoleAliasesLengthW(ExeName);
-    if (GetAllConsoleAliases->ExeLength == 0 ||
-        GetAllConsoleAliases->ExeLength > AliasBufferLength)
+    GetAllAliasesRequest->ExeLength = GetConsoleAliasesLengthW(ExeName);
+    if (GetAllAliasesRequest->ExeLength == 0 ||
+        GetAllAliasesRequest->ExeLength > AliasBufferLength)
     {
         return 0;
     }
 
-    GetAllConsoleAliases->AliasesBufferLength = AliasBufferLength;
+    GetAllAliasesRequest->AliasesBufferLength = AliasBufferLength;
 
     /* Allocate a Capture Buffer */
-    CaptureBuffer = CsrAllocateCaptureBuffer(2, GetAllConsoleAliases->ExeLength +
-                                                GetAllConsoleAliases->AliasesBufferLength);
+    CaptureBuffer = CsrAllocateCaptureBuffer(2, GetAllAliasesRequest->ExeLength +
+                                                GetAllAliasesRequest->AliasesBufferLength);
     if (!CaptureBuffer)
     {
         DPRINT1("CsrAllocateCaptureBuffer failed!\n");
@@ -324,17 +324,17 @@ GetConsoleAliasesW(LPWSTR AliasBuffer,
     /* Capture the exe name and allocate space for the aliases buffer */
     CsrCaptureMessageBuffer(CaptureBuffer,
                             (PVOID)ExeName,
-                            GetAllConsoleAliases->ExeLength,
-                            (PVOID*)&GetAllConsoleAliases->ExeName);
+                            GetAllAliasesRequest->ExeLength,
+                            (PVOID*)&GetAllAliasesRequest->ExeName);
 
     CsrAllocateMessagePointer(CaptureBuffer,
-                              GetAllConsoleAliases->AliasesBufferLength,
-                              (PVOID*)&GetAllConsoleAliases->AliasesBuffer);
+                              GetAllAliasesRequest->AliasesBufferLength,
+                              (PVOID*)&GetAllAliasesRequest->AliasesBuffer);
 
     Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                                  CaptureBuffer,
                                  CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepGetAliases),
-                                 sizeof(CSRSS_GET_ALL_CONSOLE_ALIASES));
+                                 sizeof(CONSOLE_GETALLALIASES));
     if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = ApiMessage.Status))
     {
         BaseSetLastNTError(Status);
@@ -342,15 +342,15 @@ GetConsoleAliasesW(LPWSTR AliasBuffer,
     }
 
     /* Copy the returned aliases string into the user buffer */
-    // wcscpy(AliasBuffer, GetAllConsoleAliases->AliasesBuffer);
+    // wcscpy(AliasBuffer, GetAllAliasesRequest->AliasesBuffer);
     memcpy(AliasBuffer,
-           GetAllConsoleAliases->AliasesBuffer,
-           GetAllConsoleAliases->AliasesBufferLength);
+           GetAllAliasesRequest->AliasesBuffer,
+           GetAllAliasesRequest->AliasesBufferLength);
 
     /* Release the capture buffer and exits */
     CsrFreeCaptureBuffer(CaptureBuffer);
 
-    return GetAllConsoleAliases->AliasesBufferLength; // / sizeof(WCHAR); (original code)
+    return GetAllAliasesRequest->AliasesBufferLength; // / sizeof(WCHAR); (original code)
 }
 
 
@@ -396,7 +396,7 @@ GetConsoleAliasesLengthW(LPWSTR lpExeName)
 {
     NTSTATUS Status;
     CONSOLE_API_MESSAGE ApiMessage;
-    PCSRSS_GET_ALL_CONSOLE_ALIASES_LENGTH GetAllConsoleAliasesLength = &ApiMessage.Data.GetAllConsoleAliasesLength;
+    PCONSOLE_GETALLALIASESLENGTH GetAllAliasesLengthRequest = &ApiMessage.Data.GetAllAliasesLengthRequest;
     PCSR_CAPTURE_BUFFER CaptureBuffer;
 
     DPRINT("GetConsoleAliasesLengthW entered\n");
@@ -407,11 +407,11 @@ GetConsoleAliasesLengthW(LPWSTR lpExeName)
         return 0;
     }
 
-    GetAllConsoleAliasesLength->ExeLength = (wcslen(lpExeName) + 1) * sizeof(WCHAR);
-    GetAllConsoleAliasesLength->Length = 0;
+    GetAllAliasesLengthRequest->ExeLength = (wcslen(lpExeName) + 1) * sizeof(WCHAR);
+    GetAllAliasesLengthRequest->Length = 0;
 
     /* Allocate a Capture Buffer */
-    CaptureBuffer = CsrAllocateCaptureBuffer(1, GetAllConsoleAliasesLength->ExeLength);
+    CaptureBuffer = CsrAllocateCaptureBuffer(1, GetAllAliasesLengthRequest->ExeLength);
     if (!CaptureBuffer)
     {
         DPRINT1("CsrAllocateCaptureBuffer failed!\n");
@@ -422,13 +422,13 @@ GetConsoleAliasesLengthW(LPWSTR lpExeName)
     /* Capture the exe name */
     CsrCaptureMessageBuffer(CaptureBuffer,
                             (PVOID)lpExeName,
-                            GetAllConsoleAliasesLength->ExeLength,
-                            (PVOID)&GetAllConsoleAliasesLength->ExeName);
+                            GetAllAliasesLengthRequest->ExeLength,
+                            (PVOID)&GetAllAliasesLengthRequest->ExeName);
 
     Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                                  CaptureBuffer,
                                  CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepGetAliasesLength),
-                                 sizeof(CSRSS_GET_ALL_CONSOLE_ALIASES_LENGTH));
+                                 sizeof(CONSOLE_GETALLALIASESLENGTH));
 
     CsrFreeCaptureBuffer(CaptureBuffer);
 
@@ -438,7 +438,7 @@ GetConsoleAliasesLengthW(LPWSTR lpExeName)
         return 0;
     }
 
-    return GetAllConsoleAliasesLength->Length;
+    return GetAllAliasesLengthRequest->Length;
 }
 
 
@@ -477,7 +477,7 @@ GetConsoleAliasExesW(LPWSTR lpExeNameBuffer,
 {
     NTSTATUS Status;
     CONSOLE_API_MESSAGE ApiMessage;
-    PCSRSS_GET_CONSOLE_ALIASES_EXES GetConsoleAliasesExes = &ApiMessage.Data.GetConsoleAliasesExes;
+    PCONSOLE_GETALIASESEXES GetAliasesExesRequest = &ApiMessage.Data.GetAliasesExesRequest;
     PCSR_CAPTURE_BUFFER CaptureBuffer;
 
     DPRINT("GetConsoleAliasExesW entered\n");
@@ -491,17 +491,17 @@ GetConsoleAliasExesW(LPWSTR lpExeNameBuffer,
         return 0;
     }
 
-    GetConsoleAliasesExes->Length = ExeNameBufferLength;
+    GetAliasesExesRequest->Length = ExeNameBufferLength;
 
     /* Allocate space for the exe name buffer */
     CsrAllocateMessagePointer(CaptureBuffer,
                               ExeNameBufferLength,
-                              (PVOID*)&GetConsoleAliasesExes->ExeNames);
+                              (PVOID*)&GetAliasesExesRequest->ExeNames);
 
     Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                                  CaptureBuffer,
                                  CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepGetAliasExes),
-                                 sizeof(CSRSS_GET_CONSOLE_ALIASES_EXES));
+                                 sizeof(CONSOLE_GETALIASESEXES));
     if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = ApiMessage.Status))
     {
         CsrFreeCaptureBuffer(CaptureBuffer);
@@ -511,13 +511,13 @@ GetConsoleAliasExesW(LPWSTR lpExeNameBuffer,
 
     /* Copy the returned target string into the user buffer */
     memcpy(lpExeNameBuffer,
-           GetConsoleAliasesExes->ExeNames,
-           GetConsoleAliasesExes->Length);
+           GetAliasesExesRequest->ExeNames,
+           GetAliasesExesRequest->Length);
 
     /* Release the capture buffer and exits */
     CsrFreeCaptureBuffer(CaptureBuffer);
 
-    return GetConsoleAliasesExes->Length;
+    return GetAliasesExesRequest->Length;
 }
 
 
@@ -555,16 +555,16 @@ GetConsoleAliasExesLengthW(VOID)
 {
     NTSTATUS Status;
     CONSOLE_API_MESSAGE ApiMessage;
-    PCSRSS_GET_CONSOLE_ALIASES_EXES_LENGTH GetConsoleAliasesExesLength = &ApiMessage.Data.GetConsoleAliasesExesLength;
+    PCONSOLE_GETALIASESEXESLENGTH GetAliasesExesLengthRequest = &ApiMessage.Data.GetAliasesExesLengthRequest;
 
     DPRINT("GetConsoleAliasExesLengthW entered\n");
 
-    GetConsoleAliasesExesLength->Length = 0;
+    GetAliasesExesLengthRequest->Length = 0;
 
     Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                                  NULL,
                                  CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepGetAliasExesLength),
-                                 sizeof(CSRSS_GET_CONSOLE_ALIASES_EXES_LENGTH));
+                                 sizeof(CONSOLE_GETALIASESEXESLENGTH));
 
     if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = ApiMessage.Status))
     {
@@ -572,7 +572,7 @@ GetConsoleAliasExesLengthW(VOID)
         return 0;
     }
 
-    return GetConsoleAliasesExesLength->Length;
+    return GetAliasesExesLengthRequest->Length;
 }
 
 

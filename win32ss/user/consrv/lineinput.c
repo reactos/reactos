@@ -151,7 +151,7 @@ HistoryDeleteBuffer(PHISTORY_BUFFER Hist)
 
 CSR_API(SrvGetConsoleCommandHistoryLength)
 {
-    PCSRSS_GET_COMMAND_HISTORY_LENGTH GetCommandHistoryLength = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetCommandHistoryLength;
+    PCONSOLE_GETCOMMANDHISTORYLENGTH GetCommandHistoryLengthRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetCommandHistoryLengthRequest;
     PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);
     PCSRSS_CONSOLE Console;
     NTSTATUS Status;
@@ -160,8 +160,8 @@ CSR_API(SrvGetConsoleCommandHistoryLength)
     INT i;
 
     if (!CsrValidateMessageBuffer(ApiMessage,
-                                  (PVOID*)&GetCommandHistoryLength->ExeName.Buffer,
-                                  GetCommandHistoryLength->ExeName.Length,
+                                  (PVOID*)&GetCommandHistoryLengthRequest->ExeName.Buffer,
+                                  GetCommandHistoryLengthRequest->ExeName.Length,
                                   sizeof(BYTE)))
     {
         return STATUS_INVALID_PARAMETER;
@@ -170,13 +170,13 @@ CSR_API(SrvGetConsoleCommandHistoryLength)
     Status = ConioConsoleFromProcessData(ProcessData, &Console);
     if (NT_SUCCESS(Status))
     {
-        Hist = HistoryFindBuffer(Console, &GetCommandHistoryLength->ExeName);
+        Hist = HistoryFindBuffer(Console, &GetCommandHistoryLengthRequest->ExeName);
         if (Hist)
         {
             for (i = 0; i < Hist->NumEntries; i++)
                 Length += Hist->Entries[i].Length + sizeof(WCHAR);
         }
-        GetCommandHistoryLength->Length = Length;
+        GetCommandHistoryLengthRequest->Length = Length;
         ConioUnlockConsole(Console);
     }
     return Status;
@@ -184,22 +184,22 @@ CSR_API(SrvGetConsoleCommandHistoryLength)
 
 CSR_API(SrvGetConsoleCommandHistory)
 {
-    PCSRSS_GET_COMMAND_HISTORY GetCommandHistory = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetCommandHistory;
+    PCONSOLE_GETCOMMANDHISTORY GetCommandHistoryRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetCommandHistoryRequest;
     PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);
     PCSRSS_CONSOLE Console;
     NTSTATUS Status;
     PHISTORY_BUFFER Hist;
-    PBYTE Buffer = (PBYTE)GetCommandHistory->History;
-    ULONG BufferSize = GetCommandHistory->Length;
+    PBYTE Buffer = (PBYTE)GetCommandHistoryRequest->History;
+    ULONG BufferSize = GetCommandHistoryRequest->Length;
     INT i;
 
     if ( !CsrValidateMessageBuffer(ApiMessage,
-                                   (PVOID*)&GetCommandHistory->History,
-                                   GetCommandHistory->Length,
+                                   (PVOID*)&GetCommandHistoryRequest->History,
+                                   GetCommandHistoryRequest->Length,
                                    sizeof(BYTE))                    ||
          !CsrValidateMessageBuffer(ApiMessage,
-                                   (PVOID*)&GetCommandHistory->ExeName.Buffer,
-                                   GetCommandHistory->ExeName.Length,
+                                   (PVOID*)&GetCommandHistoryRequest->ExeName.Buffer,
+                                   GetCommandHistoryRequest->ExeName.Length,
                                    sizeof(BYTE)) )
     {
         return STATUS_INVALID_PARAMETER;
@@ -208,7 +208,7 @@ CSR_API(SrvGetConsoleCommandHistory)
     Status = ConioConsoleFromProcessData(ProcessData, &Console);
     if (NT_SUCCESS(Status))
     {
-        Hist = HistoryFindBuffer(Console, &GetCommandHistory->ExeName);
+        Hist = HistoryFindBuffer(Console, &GetCommandHistoryRequest->ExeName);
         if (Hist)
         {
             for (i = 0; i < Hist->NumEntries; i++)
@@ -224,7 +224,7 @@ CSR_API(SrvGetConsoleCommandHistory)
                 Buffer += sizeof(WCHAR);
             }
         }
-        GetCommandHistory->Length = Buffer - (PBYTE)GetCommandHistory->History;
+        GetCommandHistoryRequest->Length = Buffer - (PBYTE)GetCommandHistoryRequest->History;
         ConioUnlockConsole(Console);
     }
     return Status;
@@ -232,15 +232,15 @@ CSR_API(SrvGetConsoleCommandHistory)
 
 CSR_API(SrvExpungeConsoleCommandHistory)
 {
-    PCSRSS_EXPUNGE_COMMAND_HISTORY ExpungeCommandHistory = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.ExpungeCommandHistory;
+    PCONSOLE_EXPUNGECOMMANDHISTORY ExpungeCommandHistoryRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.ExpungeCommandHistoryRequest;
     PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);
     PCSRSS_CONSOLE Console;
     PHISTORY_BUFFER Hist;
     NTSTATUS Status;
 
     if (!CsrValidateMessageBuffer(ApiMessage,
-                                  (PVOID*)&ExpungeCommandHistory->ExeName.Buffer,
-                                  ExpungeCommandHistory->ExeName.Length,
+                                  (PVOID*)&ExpungeCommandHistoryRequest->ExeName.Buffer,
+                                  ExpungeCommandHistoryRequest->ExeName.Length,
                                   sizeof(BYTE)))
     {
         return STATUS_INVALID_PARAMETER;
@@ -249,7 +249,7 @@ CSR_API(SrvExpungeConsoleCommandHistory)
     Status = ConioConsoleFromProcessData(ProcessData, &Console);
     if (NT_SUCCESS(Status))
     {
-        Hist = HistoryFindBuffer(Console, &ExpungeCommandHistory->ExeName);
+        Hist = HistoryFindBuffer(Console, &ExpungeCommandHistoryRequest->ExeName);
         HistoryDeleteBuffer(Hist);
         ConioUnlockConsole(Console);
     }
@@ -258,17 +258,17 @@ CSR_API(SrvExpungeConsoleCommandHistory)
 
 CSR_API(SrvSetConsoleNumberOfCommands)
 {
-    PCSRSS_SET_HISTORY_NUMBER_COMMANDS SetHistoryNumberCommands = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.SetHistoryNumberCommands;
+    PCONSOLE_SETHISTORYNUMBERCOMMANDS SetHistoryNumberCommandsRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.SetHistoryNumberCommandsRequest;
     PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);
     PCSRSS_CONSOLE Console;
     PHISTORY_BUFFER Hist;
     NTSTATUS Status;
-    UINT MaxEntries = SetHistoryNumberCommands->NumCommands;
+    UINT MaxEntries = SetHistoryNumberCommandsRequest->NumCommands;
     PUNICODE_STRING OldEntryList, NewEntryList;
 
     if (!CsrValidateMessageBuffer(ApiMessage,
-                                  (PVOID*)&SetHistoryNumberCommands->ExeName.Buffer,
-                                  SetHistoryNumberCommands->ExeName.Length,
+                                  (PVOID*)&SetHistoryNumberCommandsRequest->ExeName.Buffer,
+                                  SetHistoryNumberCommandsRequest->ExeName.Length,
                                   sizeof(BYTE)))
     {
         return STATUS_INVALID_PARAMETER;
@@ -277,7 +277,7 @@ CSR_API(SrvSetConsoleNumberOfCommands)
     Status = ConioConsoleFromProcessData(ProcessData, &Console);
     if (NT_SUCCESS(Status))
     {
-        Hist = HistoryFindBuffer(Console, &SetHistoryNumberCommands->ExeName);
+        Hist = HistoryFindBuffer(Console, &SetHistoryNumberCommandsRequest->ExeName);
         if (Hist)
         {
             OldEntryList = Hist->Entries;
@@ -309,7 +309,7 @@ CSR_API(SrvSetConsoleNumberOfCommands)
 
 CSR_API(SrvGetConsoleHistory)
 {
-    PCSRSS_HISTORY_INFO HistoryInfoRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.HistoryInfoRequest;
+    PCONSOLE_GETSETHISTORYINFO HistoryInfoRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.HistoryInfoRequest;
     PCSRSS_CONSOLE Console;
     NTSTATUS Status = ConioConsoleFromProcessData(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console);
     if (NT_SUCCESS(Status))
@@ -324,7 +324,7 @@ CSR_API(SrvGetConsoleHistory)
 
 CSR_API(SrvSetConsoleHistory)
 {
-    PCSRSS_HISTORY_INFO HistoryInfoRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.HistoryInfoRequest;
+    PCONSOLE_GETSETHISTORYINFO HistoryInfoRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.HistoryInfoRequest;
     PCSRSS_CONSOLE Console;
     NTSTATUS Status = ConioConsoleFromProcessData(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console);
     if (NT_SUCCESS(Status))

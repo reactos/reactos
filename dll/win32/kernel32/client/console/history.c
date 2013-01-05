@@ -55,7 +55,7 @@ IntExpungeConsoleCommandHistory(LPCVOID lpExeName, BOOL bUnicode)
 {
     NTSTATUS Status;
     CONSOLE_API_MESSAGE ApiMessage;
-    PCSRSS_EXPUNGE_COMMAND_HISTORY ExpungeCommandHistory = &ApiMessage.Data.ExpungeCommandHistory;
+    PCONSOLE_EXPUNGECOMMANDHISTORY ExpungeCommandHistoryRequest = &ApiMessage.Data.ExpungeCommandHistoryRequest;
     PCSR_CAPTURE_BUFFER CaptureBuffer;
 
     if (lpExeName == NULL || !(bUnicode ? *(PWCHAR)lpExeName : *(PCHAR)lpExeName))
@@ -73,12 +73,12 @@ IntExpungeConsoleCommandHistory(LPCVOID lpExeName, BOOL bUnicode)
     }
 
     IntCaptureMessageString(CaptureBuffer, lpExeName, bUnicode,
-                            &ExpungeCommandHistory->ExeName);
+                            &ExpungeCommandHistoryRequest->ExeName);
 
     Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                                  CaptureBuffer,
                                  CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepExpungeCommandHistory),
-                                 sizeof(CSRSS_EXPUNGE_COMMAND_HISTORY));
+                                 sizeof(CONSOLE_EXPUNGECOMMANDHISTORY));
 
     CsrFreeCaptureBuffer(CaptureBuffer);
 
@@ -97,7 +97,7 @@ IntGetConsoleCommandHistory(LPVOID lpHistory, DWORD cbHistory, LPCVOID lpExeName
 {
     NTSTATUS Status;
     CONSOLE_API_MESSAGE ApiMessage;
-    PCSRSS_GET_COMMAND_HISTORY GetCommandHistory = &ApiMessage.Data.GetCommandHistory;
+    PCONSOLE_GETCOMMANDHISTORY GetCommandHistoryRequest = &ApiMessage.Data.GetCommandHistoryRequest;
     PCSR_CAPTURE_BUFFER CaptureBuffer;
     DWORD HistoryLength = cbHistory * (bUnicode ? 1 : sizeof(WCHAR));
 
@@ -117,15 +117,15 @@ IntGetConsoleCommandHistory(LPVOID lpHistory, DWORD cbHistory, LPCVOID lpExeName
     }
 
     IntCaptureMessageString(CaptureBuffer, lpExeName, bUnicode,
-                            &GetCommandHistory->ExeName);
-    GetCommandHistory->Length = HistoryLength;
+                            &GetCommandHistoryRequest->ExeName);
+    GetCommandHistoryRequest->Length = HistoryLength;
     CsrAllocateMessagePointer(CaptureBuffer, HistoryLength,
-                              (PVOID*)&GetCommandHistory->History);
+                              (PVOID*)&GetCommandHistoryRequest->History);
 
     Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                                  CaptureBuffer,
                                  CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepGetCommandHistory),
-                                 sizeof(CSRSS_GET_COMMAND_HISTORY));
+                                 sizeof(CONSOLE_GETCOMMANDHISTORY));
     if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = ApiMessage.Status))
     {
         CsrFreeCaptureBuffer(CaptureBuffer);
@@ -136,14 +136,14 @@ IntGetConsoleCommandHistory(LPVOID lpHistory, DWORD cbHistory, LPCVOID lpExeName
     if (bUnicode)
     {
         memcpy(lpHistory,
-               GetCommandHistory->History,
-               GetCommandHistory->Length);
+               GetCommandHistoryRequest->History,
+               GetCommandHistoryRequest->Length);
     }
     else
     {
         WideCharToMultiByte(CP_ACP, 0,
-                            GetCommandHistory->History,
-                            GetCommandHistory->Length / sizeof(WCHAR),
+                            GetCommandHistoryRequest->History,
+                            GetCommandHistoryRequest->Length / sizeof(WCHAR),
                             lpHistory,
                             cbHistory,
                             NULL, NULL);
@@ -151,7 +151,7 @@ IntGetConsoleCommandHistory(LPVOID lpHistory, DWORD cbHistory, LPCVOID lpExeName
 
     CsrFreeCaptureBuffer(CaptureBuffer);
 
-    return GetCommandHistory->Length;
+    return GetCommandHistoryRequest->Length;
 }
 
 
@@ -160,7 +160,7 @@ IntGetConsoleCommandHistoryLength(LPCVOID lpExeName, BOOL bUnicode)
 {
     NTSTATUS Status;
     CONSOLE_API_MESSAGE ApiMessage;
-    PCSRSS_GET_COMMAND_HISTORY_LENGTH GetCommandHistoryLength = &ApiMessage.Data.GetCommandHistoryLength;
+    PCONSOLE_GETCOMMANDHISTORYLENGTH GetCommandHistoryLengthRequest = &ApiMessage.Data.GetCommandHistoryLengthRequest;
     PCSR_CAPTURE_BUFFER CaptureBuffer;
 
     if (lpExeName == NULL || !(bUnicode ? *(PWCHAR)lpExeName : *(PCHAR)lpExeName))
@@ -178,12 +178,12 @@ IntGetConsoleCommandHistoryLength(LPCVOID lpExeName, BOOL bUnicode)
     }
 
     IntCaptureMessageString(CaptureBuffer, lpExeName, bUnicode,
-                            &GetCommandHistoryLength->ExeName);
+                            &GetCommandHistoryLengthRequest->ExeName);
 
     Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                                  CaptureBuffer,
                                  CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepGetCommandHistoryLength),
-                                 sizeof(CSRSS_GET_COMMAND_HISTORY_LENGTH));
+                                 sizeof(CONSOLE_GETCOMMANDHISTORYLENGTH));
 
     CsrFreeCaptureBuffer(CaptureBuffer);
 
@@ -193,7 +193,7 @@ IntGetConsoleCommandHistoryLength(LPCVOID lpExeName, BOOL bUnicode)
         return 0;
     }
 
-    return GetCommandHistoryLength->Length;
+    return GetCommandHistoryLengthRequest->Length;
 }
 
 
@@ -204,7 +204,7 @@ IntSetConsoleNumberOfCommands(DWORD dwNumCommands,
 {
     NTSTATUS Status;
     CONSOLE_API_MESSAGE ApiMessage;
-    PCSRSS_SET_HISTORY_NUMBER_COMMANDS SetHistoryNumberCommands = &ApiMessage.Data.SetHistoryNumberCommands;
+    PCONSOLE_SETHISTORYNUMBERCOMMANDS SetHistoryNumberCommandsRequest = &ApiMessage.Data.SetHistoryNumberCommandsRequest;
     PCSR_CAPTURE_BUFFER CaptureBuffer;
 
     if (lpExeName == NULL || !(bUnicode ? *(PWCHAR)lpExeName : *(PCHAR)lpExeName))
@@ -222,13 +222,13 @@ IntSetConsoleNumberOfCommands(DWORD dwNumCommands,
     }
 
     IntCaptureMessageString(CaptureBuffer, lpExeName, bUnicode,
-                            &SetHistoryNumberCommands->ExeName);
-    SetHistoryNumberCommands->NumCommands = dwNumCommands;
+                            &SetHistoryNumberCommandsRequest->ExeName);
+    SetHistoryNumberCommandsRequest->NumCommands = dwNumCommands;
 
     Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                                  CaptureBuffer,
                                  CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepSetNumberOfCommands),
-                                 sizeof(CSRSS_SET_HISTORY_NUMBER_COMMANDS));
+                                 sizeof(CONSOLE_SETHISTORYNUMBERCOMMANDS));
 
     CsrFreeCaptureBuffer(CaptureBuffer);
 

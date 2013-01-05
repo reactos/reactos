@@ -29,7 +29,7 @@ GetConsoleHistoryInfo(PCONSOLE_HISTORY_INFO lpConsoleHistoryInfo)
 {
     NTSTATUS Status;
     CONSOLE_API_MESSAGE ApiMessage;
-    PCSRSS_HISTORY_INFO HistoryInfoRequest = &ApiMessage.Data.HistoryInfoRequest;
+    PCONSOLE_GETSETHISTORYINFO HistoryInfoRequest = &ApiMessage.Data.HistoryInfoRequest;
 
     if (lpConsoleHistoryInfo->cbSize != sizeof(CONSOLE_HISTORY_INFO))
     {
@@ -40,7 +40,7 @@ GetConsoleHistoryInfo(PCONSOLE_HISTORY_INFO lpConsoleHistoryInfo)
     Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                                  NULL,
                                  CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepGetHistory),
-                                 sizeof(CSRSS_HISTORY_INFO));
+                                 sizeof(CONSOLE_GETSETHISTORYINFO));
     if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = ApiMessage.Status))
     {
         BaseSetLastNTError(Status);
@@ -66,7 +66,7 @@ SetConsoleHistoryInfo(IN PCONSOLE_HISTORY_INFO lpConsoleHistoryInfo)
 {
     NTSTATUS Status;
     CONSOLE_API_MESSAGE ApiMessage;
-    PCSRSS_HISTORY_INFO HistoryInfoRequest = &ApiMessage.Data.HistoryInfoRequest;
+    PCONSOLE_GETSETHISTORYINFO HistoryInfoRequest = &ApiMessage.Data.HistoryInfoRequest;
 
     if (lpConsoleHistoryInfo->cbSize != sizeof(CONSOLE_HISTORY_INFO))
     {
@@ -81,7 +81,7 @@ SetConsoleHistoryInfo(IN PCONSOLE_HISTORY_INFO lpConsoleHistoryInfo)
     Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                                  NULL,
                                  CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepSetHistory),
-                                 sizeof(CSRSS_HISTORY_INFO));
+                                 sizeof(CONSOLE_GETSETHISTORYINFO));
     if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = ApiMessage.Status))
     {
         BaseSetLastNTError(Status);
