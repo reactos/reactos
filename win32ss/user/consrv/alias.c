@@ -18,18 +18,18 @@
 
 /* TYPES **********************************************************************/
 
-typedef struct tagALIAS_ENTRY
+typedef struct _ALIAS_ENTRY
 {
     LPCWSTR lpSource;
     LPCWSTR lpTarget;
-    struct tagALIAS_ENTRY* Next;
+    struct _ALIAS_ENTRY* Next;
 } ALIAS_ENTRY, *PALIAS_ENTRY;
 
-typedef struct tagALIAS_HEADER
+typedef struct _ALIAS_HEADER
 {
     LPCWSTR lpExeName;
     PALIAS_ENTRY Data;
-    struct tagALIAS_HEADER* Next;
+    struct _ALIAS_HEADER* Next;
 } ALIAS_HEADER, *PALIAS_HEADER;
 
 
@@ -290,7 +290,7 @@ IntDeleteAllAliases(PALIAS_HEADER RootHeader)
 CSR_API(SrvAddConsoleAlias)
 {
     PCONSOLE_ADDGETALIAS ConsoleAliasRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.ConsoleAliasRequest;
-    PCSRSS_CONSOLE Console;
+    PCONSOLE Console;
     PALIAS_HEADER Header;
     PALIAS_ENTRY Entry;
     LPWSTR lpSource, lpTarget, lpExeName;
@@ -374,7 +374,7 @@ CSR_API(SrvAddConsoleAlias)
 CSR_API(SrvGetConsoleAlias)
 {
     PCONSOLE_ADDGETALIAS ConsoleAliasRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.ConsoleAliasRequest;
-    PCSRSS_CONSOLE Console;
+    PCONSOLE Console;
     PALIAS_HEADER Header;
     PALIAS_ENTRY Entry;
     UINT Length;
@@ -447,7 +447,7 @@ CSR_API(SrvGetConsoleAlias)
 CSR_API(SrvGetConsoleAliases)
 {
     PCONSOLE_GETALLALIASES GetAllAliasesRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetAllAliasesRequest;
-    PCSRSS_CONSOLE Console;
+    PCONSOLE Console;
     ULONG BytesWritten;
     PALIAS_HEADER Header;
 
@@ -499,7 +499,7 @@ CSR_API(SrvGetConsoleAliases)
 CSR_API(SrvGetConsoleAliasesLength)
 {
     PCONSOLE_GETALLALIASESLENGTH GetAllAliasesLengthRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetAllAliasesLengthRequest;
-    PCSRSS_CONSOLE Console;
+    PCONSOLE Console;
     PALIAS_HEADER Header;
     UINT Length;
 
@@ -538,7 +538,7 @@ CSR_API(SrvGetConsoleAliasesLength)
 CSR_API(SrvGetConsoleAliasExes)
 {
     PCONSOLE_GETALIASESEXES GetAliasesExesRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetAliasesExesRequest;
-    PCSRSS_CONSOLE Console;
+    PCONSOLE Console;
     UINT BytesWritten;
     UINT ExesLength;
 
@@ -584,7 +584,7 @@ CSR_API(SrvGetConsoleAliasExes)
 CSR_API(SrvGetConsoleAliasExesLength)
 {
     PCONSOLE_GETALIASESEXESLENGTH GetAliasesExesLengthRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetAliasesExesLengthRequest;
-    PCSRSS_CONSOLE Console;
+    PCONSOLE Console;
     DPRINT("SrvGetConsoleAliasExesLength entered\n");
 
     ApiMessage->Status = ConioConsoleFromProcessData(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console);

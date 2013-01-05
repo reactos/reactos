@@ -21,7 +21,7 @@
 CRITICAL_SECTION ActiveConsoleLock;
 static COORD PhysicalConsoleSize;
 static HANDLE ConsoleDeviceHandle;
-static PCSRSS_CONSOLE ActiveConsole;
+static PCONSOLE ActiveConsole;
 
 static BOOL ConsInitialized = FALSE;
 
@@ -134,13 +134,13 @@ TuiInit(DWORD OemCP)
 }
 
 static VOID WINAPI
-TuiInitScreenBuffer(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER Buffer)
+TuiInitScreenBuffer(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER Buffer)
 {
     Buffer->DefaultAttrib = FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED;
 }
 
 static void FASTCALL
-TuiCopyRect(char *Dest, PCSRSS_SCREEN_BUFFER Buff, SMALL_RECT *Region)
+TuiCopyRect(char *Dest, PCONSOLE_SCREEN_BUFFER Buff, SMALL_RECT *Region)
 {
     UINT SrcDelta, DestDelta;
     LONG i;
@@ -163,10 +163,10 @@ TuiCopyRect(char *Dest, PCSRSS_SCREEN_BUFFER Buff, SMALL_RECT *Region)
 }
 
 static VOID WINAPI
-TuiDrawRegion(PCSRSS_CONSOLE Console, SMALL_RECT *Region)
+TuiDrawRegion(PCONSOLE Console, SMALL_RECT *Region)
 {
     DWORD BytesReturned;
-    PCSRSS_SCREEN_BUFFER Buff = Console->ActiveBuffer;
+    PCONSOLE_SCREEN_BUFFER Buff = Console->ActiveBuffer;
     PCONSOLE_DRAW ConsoleDraw;
     UINT ConsoleDrawSize;
 
@@ -204,11 +204,11 @@ TuiDrawRegion(PCSRSS_CONSOLE Console, SMALL_RECT *Region)
 }
 
 static VOID WINAPI
-TuiWriteStream(PCSRSS_CONSOLE Console, SMALL_RECT *Region, LONG CursorStartX, LONG CursorStartY,
+TuiWriteStream(PCONSOLE Console, SMALL_RECT *Region, LONG CursorStartX, LONG CursorStartY,
                UINT ScrolledLines, CHAR *Buffer, UINT Length)
 {
     DWORD BytesWritten;
-    PCSRSS_SCREEN_BUFFER Buff = Console->ActiveBuffer;
+    PCONSOLE_SCREEN_BUFFER Buff = Console->ActiveBuffer;
 
     if (ActiveConsole->ActiveBuffer != Buff)
     {
@@ -222,7 +222,7 @@ TuiWriteStream(PCSRSS_CONSOLE Console, SMALL_RECT *Region, LONG CursorStartX, LO
 }
 
 static BOOL WINAPI
-TuiSetCursorInfo(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER Buff)
+TuiSetCursorInfo(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER Buff)
 {
     CONSOLE_CURSOR_INFO Info;
     DWORD BytesReturned;
@@ -246,7 +246,7 @@ TuiSetCursorInfo(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER Buff)
 }
 
 static BOOL WINAPI
-TuiSetScreenInfo(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER Buff, UINT OldCursorX, UINT OldCursorY)
+TuiSetScreenInfo(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER Buff, UINT OldCursorX, UINT OldCursorY)
 {
     CONSOLE_SCREEN_BUFFER_INFO Info;
     DWORD BytesReturned;
@@ -272,19 +272,19 @@ TuiSetScreenInfo(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER Buff, UINT OldCurs
 }
 
 static BOOL WINAPI
-TuiUpdateScreenInfo(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER Buff)
+TuiUpdateScreenInfo(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER Buff)
 {
     return TRUE;
 }
 
 static BOOL WINAPI
-TuiChangeTitle(PCSRSS_CONSOLE Console)
+TuiChangeTitle(PCONSOLE Console)
 {
     return TRUE;
 }
 
 static VOID WINAPI
-TuiCleanupConsole(PCSRSS_CONSOLE Console)
+TuiCleanupConsole(PCONSOLE Console)
 {
     DestroyWindow(Console->hWindow);
 
@@ -310,13 +310,13 @@ TuiCleanupConsole(PCSRSS_CONSOLE Console)
 }
 
 static BOOL WINAPI
-TuiChangeIcon(PCSRSS_CONSOLE Console, HICON hWindowIcon)
+TuiChangeIcon(PCONSOLE Console, HICON hWindowIcon)
 {
   return TRUE;
 }
 
 static NTSTATUS WINAPI
-TuiResizeBuffer(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER ScreenBuffer, COORD Size)
+TuiResizeBuffer(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER ScreenBuffer, COORD Size)
 {
   UNIMPLEMENTED;
   return STATUS_NOT_IMPLEMENTED;
@@ -325,7 +325,7 @@ TuiResizeBuffer(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER ScreenBuffer, COORD
 DWORD WINAPI
 TuiConsoleThread(PVOID Data)
 {
-    PCSRSS_CONSOLE Console = (PCSRSS_CONSOLE) Data;
+    PCONSOLE Console = (PCONSOLE) Data;
     HWND NewWindow;
     MSG msg;
 
@@ -363,7 +363,7 @@ TuiConsoleThread(PVOID Data)
     return 0;
 }
 
-static CSRSS_CONSOLE_VTBL TuiVtbl =
+static CONSOLE_VTBL TuiVtbl =
 {
     TuiInitScreenBuffer,
     TuiWriteStream,
@@ -378,7 +378,7 @@ static CSRSS_CONSOLE_VTBL TuiVtbl =
 };
 
 NTSTATUS FASTCALL
-TuiInitConsole(PCSRSS_CONSOLE Console)
+TuiInitConsole(PCONSOLE Console)
 {
     HANDLE ThreadHandle;
 
@@ -430,7 +430,7 @@ TuiInitConsole(PCSRSS_CONSOLE Console)
     return STATUS_SUCCESS;
 }
 
-PCSRSS_CONSOLE FASTCALL
+PCONSOLE FASTCALL
 TuiGetFocusConsole(VOID)
 {
     return ActiveConsole;
@@ -439,7 +439,7 @@ TuiGetFocusConsole(VOID)
 BOOL FASTCALL
 TuiSwapConsole(int Next)
 {
-    static PCSRSS_CONSOLE SwapConsole = NULL; /* console we are thinking about swapping with */
+    static PCONSOLE SwapConsole = NULL; /* console we are thinking about swapping with */
     DWORD BytesReturned;
     ANSI_STRING Title;
     void * Buffer;

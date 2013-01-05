@@ -26,7 +26,7 @@
  * internally, I just wrap back to the top of the buffer.               *
  ************************************************************************/
 
-typedef struct tagCSRSS_SCREEN_BUFFER
+typedef struct _CONSOLE_SCREEN_BUFFER
 {
     Object_t Header;                 /* Object header */
     BYTE *Buffer;                    /* pointer to screen buffer */
@@ -39,16 +39,16 @@ typedef struct tagCSRSS_SCREEN_BUFFER
     CONSOLE_CURSOR_INFO CursorInfo;
     USHORT Mode;
     LIST_ENTRY ListEntry;            /* entry in console's list of buffers */
-} CSRSS_SCREEN_BUFFER, *PCSRSS_SCREEN_BUFFER;
+} CONSOLE_SCREEN_BUFFER, *PCONSOLE_SCREEN_BUFFER;
 
-typedef struct tagCSRSS_CONSOLE
+typedef struct _CONSOLE
 {
     Object_t Header;                      /* Object header */
     LONG ReferenceCount;
     CRITICAL_SECTION Lock;
 
-    struct tagCSRSS_CONSOLE *Prev, *Next; /* Next and Prev consoles in console wheel */
-    struct tagCSRSS_CONSOLE_VTBL *Vtbl;   /* Using CUI or GUI consoles */
+    struct _CONSOLE *Prev, *Next; /* Next and Prev consoles in console wheel */
+    struct _CONSOLE_VTBL *Vtbl;   /* Using CUI or GUI consoles */
 
     CLIENT_ID  ConsoleLeaderCID;          /* Contains the Console Leader Process CID */
     LIST_ENTRY ProcessList;
@@ -66,14 +66,14 @@ typedef struct tagCSRSS_CONSOLE
     BOOLEAN LineInsertToggle;             /* replace character over cursor instead of inserting */
     ULONG LineWakeupMask;                 /* bitmap of which control characters will end line input */
 
-    struct tagALIAS_HEADER *Aliases;
+    struct _ALIAS_HEADER *Aliases;
     LIST_ENTRY HistoryBuffers;
     UINT HistoryBufferSize;               /* size for newly created history buffers */
     UINT NumberOfHistoryBuffers;          /* maximum number of history buffers allowed */
     BOOLEAN HistoryNoDup;                 /* remove old duplicate history entries */
 
     LIST_ENTRY BufferList;                /* List of all screen buffers for this console */
-    PCSRSS_SCREEN_BUFFER ActiveBuffer;    /* Pointer to currently active screen buffer */
+    PCONSOLE_SCREEN_BUFFER ActiveBuffer;    /* Pointer to currently active screen buffer */
     BYTE PauseFlags;
     HANDLE UnpauseEvent;
     LIST_ENTRY WriteWaitQueue;            /* List head for the queue of write wait blocks */
@@ -89,7 +89,7 @@ typedef struct tagCSRSS_CONSOLE
     UINT OutputCodePage;
 
     CONSOLE_SELECTION_INFO Selection;
-} CSRSS_CONSOLE, *PCSRSS_CONSOLE;
+} CONSOLE, *PCONSOLE;
 
 /**************************************************************\
 \** Define the Console Leader Process for the console window **/
@@ -104,21 +104,21 @@ do {    \
 } while(0)
 /**************************************************************/
 
-typedef struct tagCSRSS_CONSOLE_VTBL
+typedef struct _CONSOLE_VTBL
 {
-    VOID (WINAPI *InitScreenBuffer)(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER ScreenBuffer);
-    VOID (WINAPI *WriteStream)(PCSRSS_CONSOLE Console, SMALL_RECT *Block, LONG CursorStartX, LONG CursorStartY,
+    VOID (WINAPI *InitScreenBuffer)(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER ScreenBuffer);
+    VOID (WINAPI *WriteStream)(PCONSOLE Console, SMALL_RECT *Block, LONG CursorStartX, LONG CursorStartY,
                                UINT ScrolledLines, CHAR *Buffer, UINT Length);
-    VOID (WINAPI *DrawRegion)(PCSRSS_CONSOLE Console, SMALL_RECT *Region);
-    BOOL (WINAPI *SetCursorInfo)(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER ScreenBuffer);
-    BOOL (WINAPI *SetScreenInfo)(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER ScreenBuffer,
+    VOID (WINAPI *DrawRegion)(PCONSOLE Console, SMALL_RECT *Region);
+    BOOL (WINAPI *SetCursorInfo)(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER ScreenBuffer);
+    BOOL (WINAPI *SetScreenInfo)(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER ScreenBuffer,
                                  UINT OldCursorX, UINT OldCursorY);
-    BOOL (WINAPI *UpdateScreenInfo)(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER ScreenBuffer);
-    BOOL (WINAPI *ChangeTitle)(PCSRSS_CONSOLE Console);
-    VOID (WINAPI *CleanupConsole)(PCSRSS_CONSOLE Console);
-    BOOL (WINAPI *ChangeIcon)(PCSRSS_CONSOLE Console, HICON hWindowIcon);
-    NTSTATUS (WINAPI *ResizeBuffer)(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER ScreenBuffer, COORD Size);
-} CSRSS_CONSOLE_VTBL, *PCSRSS_CONSOLE_VTBL;
+    BOOL (WINAPI *UpdateScreenInfo)(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER ScreenBuffer);
+    BOOL (WINAPI *ChangeTitle)(PCONSOLE Console);
+    VOID (WINAPI *CleanupConsole)(PCONSOLE Console);
+    BOOL (WINAPI *ChangeIcon)(PCONSOLE Console, HICON hWindowIcon);
+    NTSTATUS (WINAPI *ResizeBuffer)(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER ScreenBuffer, COORD Size);
+} CONSOLE_VTBL, *PCONSOLE_VTBL;
 
 typedef struct ConsoleInput_t
 {
@@ -157,12 +157,12 @@ typedef struct ConsoleInput_t
 
 /* console.c */
 NTSTATUS FASTCALL ConioConsoleFromProcessData(PCONSOLE_PROCESS_DATA ProcessData,
-                                              PCSRSS_CONSOLE *Console);
-VOID WINAPI ConioDeleteConsole(PCSRSS_CONSOLE Console);
+                                              PCONSOLE *Console);
+VOID WINAPI ConioDeleteConsole(PCONSOLE Console);
 VOID WINAPI CsrInitConsoleSupport(VOID);
-NTSTATUS WINAPI CsrInitConsole(PCSRSS_CONSOLE* NewConsole, int ShowCmd, PCSR_PROCESS ConsoleLeaderProcess);
-VOID FASTCALL ConioPause(PCSRSS_CONSOLE Console, UINT Flags);
-VOID FASTCALL ConioUnpause(PCSRSS_CONSOLE Console, UINT Flags);
+NTSTATUS WINAPI CsrInitConsole(PCONSOLE* NewConsole, int ShowCmd, PCSR_PROCESS ConsoleLeaderProcess);
+VOID FASTCALL ConioPause(PCONSOLE Console, UINT Flags);
+VOID FASTCALL ConioUnpause(PCONSOLE Console, UINT Flags);
 VOID FASTCALL ConioConsoleCtrlEvent(DWORD Event, PCONSOLE_PROCESS_DATA ProcessData);
 VOID FASTCALL ConioConsoleCtrlEventTimeout(DWORD Event,
                                            PCONSOLE_PROCESS_DATA ProcessData,
@@ -173,7 +173,7 @@ VOID FASTCALL ConioConsoleCtrlEventTimeout(DWORD Event,
     Win32CsrLockObject((ProcessData), (Handle), (Object_t **)(Ptr), Access, CONIO_CONSOLE_MAGIC)
 #define ConioUnlockConsole(Console) \
     Win32CsrUnlockObject((Object_t *) Console)
-void WINAPI ConioProcessKey(MSG *msg, PCSRSS_CONSOLE Console, BOOL TextMode);
+void WINAPI ConioProcessKey(MSG *msg, PCONSOLE Console, BOOL TextMode);
 
 /* conoutput.c */
 #define ConioRectHeight(Rect) \
@@ -184,20 +184,20 @@ void WINAPI ConioProcessKey(MSG *msg, PCSRSS_CONSOLE Console, BOOL TextMode);
     Win32CsrLockObject((ProcessData), (Handle), (Object_t **)(Ptr), Access, CONIO_SCREEN_BUFFER_MAGIC)
 #define ConioUnlockScreenBuffer(Buff) \
     Win32CsrUnlockObject((Object_t *) Buff)
-PBYTE FASTCALL ConioCoordToPointer(PCSRSS_SCREEN_BUFFER Buf, ULONG X, ULONG Y);
-VOID FASTCALL ConioDrawConsole(PCSRSS_CONSOLE Console);
-NTSTATUS FASTCALL ConioWriteConsole(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER Buff,
+PBYTE FASTCALL ConioCoordToPointer(PCONSOLE_SCREEN_BUFFER Buf, ULONG X, ULONG Y);
+VOID FASTCALL ConioDrawConsole(PCONSOLE Console);
+NTSTATUS FASTCALL ConioWriteConsole(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER Buff,
                                     CHAR *Buffer, DWORD Length, BOOL Attrib);
-NTSTATUS FASTCALL CsrInitConsoleScreenBuffer(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER Buffer);
-VOID WINAPI ConioDeleteScreenBuffer(PCSRSS_SCREEN_BUFFER Buffer);
-DWORD FASTCALL ConioEffectiveCursorSize(PCSRSS_CONSOLE Console, DWORD Scale);
+NTSTATUS FASTCALL CsrInitConsoleScreenBuffer(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER Buffer);
+VOID WINAPI ConioDeleteScreenBuffer(PCONSOLE_SCREEN_BUFFER Buffer);
+DWORD FASTCALL ConioEffectiveCursorSize(PCONSOLE Console, DWORD Scale);
 
 /* alias.c */
-VOID IntDeleteAllAliases(struct tagALIAS_HEADER *RootHeader);
+VOID IntDeleteAllAliases(struct _ALIAS_HEADER *RootHeader);
 
 /* lineinput.c */
-struct tagHISTORY_BUFFER;
-VOID FASTCALL HistoryDeleteBuffer(struct tagHISTORY_BUFFER *Hist);
-VOID FASTCALL LineInputKeyDown(PCSRSS_CONSOLE Console, KEY_EVENT_RECORD *KeyEvent);
+struct _HISTORY_BUFFER;
+VOID FASTCALL HistoryDeleteBuffer(struct _HISTORY_BUFFER *Hist);
+VOID FASTCALL LineInputKeyDown(PCONSOLE Console, KEY_EVENT_RECORD *KeyEvent);
 
 /* EOF */

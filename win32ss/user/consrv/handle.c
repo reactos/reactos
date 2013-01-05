@@ -18,7 +18,7 @@
 /* PRIVATE FUNCTIONS *********************************************************/
 
 static INT
-AdjustHandleCounts(PCSRSS_HANDLE Entry, INT Change)
+AdjustHandleCounts(PCONSOLE_IO_HANDLE Entry, INT Change)
 {
     Object_t *Object = Entry->Object;
 
@@ -35,7 +35,7 @@ AdjustHandleCounts(PCSRSS_HANDLE Entry, INT Change)
 }
 
 static VOID
-Win32CsrCreateHandleEntry(PCSRSS_HANDLE Entry)
+Win32CsrCreateHandleEntry(PCONSOLE_IO_HANDLE Entry)
 {
     Object_t *Object = Entry->Object;
     EnterCriticalSection(&Object->Console->Lock);
@@ -44,12 +44,12 @@ Win32CsrCreateHandleEntry(PCSRSS_HANDLE Entry)
 }
 
 static VOID
-Win32CsrCloseHandleEntry(PCSRSS_HANDLE Entry)
+Win32CsrCloseHandleEntry(PCONSOLE_IO_HANDLE Entry)
 {
     Object_t *Object = Entry->Object;
     if (Object != NULL)
     {
-        PCSRSS_CONSOLE Console = Object->Console;
+        PCONSOLE Console = Object->Console;
         EnterCriticalSection(&Console->Lock);
 
         /* If the last handle to a screen buffer is closed, delete it... */
@@ -57,7 +57,7 @@ Win32CsrCloseHandleEntry(PCSRSS_HANDLE Entry)
         {
             if (Object->Type == CONIO_SCREEN_BUFFER_MAGIC)
             {
-                PCSRSS_SCREEN_BUFFER Buffer = (PCSRSS_SCREEN_BUFFER)Object;
+                PCONSOLE_SCREEN_BUFFER Buffer = (PCONSOLE_SCREEN_BUFFER)Object;
                 /* ...unless it's the only buffer left. Windows allows deletion
                  * even of the last buffer, but having to deal with a lack of
                  * any active buffer might be error-prone. */
@@ -89,7 +89,7 @@ Win32CsrInsertObject(PCONSOLE_PROCESS_DATA ProcessData,
                      DWORD ShareMode)
 {
     ULONG i;
-    PCSRSS_HANDLE Block;
+    PCONSOLE_IO_HANDLE Block;
 
     RtlEnterCriticalSection(&ProcessData->HandleTableLock);
 
@@ -104,7 +104,7 @@ Win32CsrInsertObject(PCONSOLE_PROCESS_DATA ProcessData,
     {
         Block = RtlAllocateHeap(ConSrvHeap,
                                 HEAP_ZERO_MEMORY,
-                                (ProcessData->HandleTableSize + 64) * sizeof(CSRSS_HANDLE));
+                                (ProcessData->HandleTableSize + 64) * sizeof(CONSOLE_IO_HANDLE));
         if (Block == NULL)
         {
             RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
@@ -112,7 +112,7 @@ Win32CsrInsertObject(PCONSOLE_PROCESS_DATA ProcessData,
         }
         RtlCopyMemory(Block,
                       ProcessData->HandleTable,
-                      ProcessData->HandleTableSize * sizeof(CSRSS_HANDLE));
+                      ProcessData->HandleTableSize * sizeof(CONSOLE_IO_HANDLE));
         RtlFreeHeap(ConSrvHeap, 0, ProcessData->HandleTable);
         ProcessData->HandleTable = Block;
         ProcessData->HandleTableSize += 64;
@@ -186,7 +186,7 @@ Win32CsrLockObject(PCONSOLE_PROCESS_DATA ProcessData,
 }
 
 VOID FASTCALL
-Win32CsrUnlockConsole(PCSRSS_CONSOLE Console)
+Win32CsrUnlockConsole(PCONSOLE Console)
 {
     LeaveCriticalSection(&Console->Lock);
 
@@ -284,7 +284,7 @@ ConsoleNewProcess(PCSR_PROCESS SourceProcess,
         TargetProcessData->HandleTable = RtlAllocateHeap(ConSrvHeap,
                                                          HEAP_ZERO_MEMORY,
                                                          SourceProcessData->HandleTableSize
-                                                                 * sizeof(CSRSS_HANDLE));
+                                                                 * sizeof(CONSOLE_IO_HANDLE));
         if (TargetProcessData->HandleTable == NULL)
         {
             RtlLeaveCriticalSection(&SourceProcessData->HandleTableLock);
@@ -335,7 +335,7 @@ ConsoleConnect(IN PCSR_PROCESS CsrProcess,
     PCONSOLE_CONNECTION_INFO ConnectInfo = (PCONSOLE_CONNECTION_INFO)ConnectionInfo;
     PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrProcess);
     BOOLEAN NewConsole = FALSE;
-    // PCSRSS_CONSOLE Console = NULL;
+    // PCONSOLE Console = NULL;
 
     DPRINT1("ConsoleConnect\n");
 
@@ -511,7 +511,7 @@ WINAPI
 Win32CsrReleaseConsole(PCSR_PROCESS Process)
 {
     PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(Process);
-    PCSRSS_CONSOLE Console;
+    PCONSOLE Console;
     ULONG i;
 
     DPRINT1("Win32CsrReleaseConsole\n");
@@ -604,7 +604,7 @@ CSR_API(SrvVerifyConsoleIoHandle)
 
 CSR_API(SrvDuplicateHandle)
 {
-    PCSRSS_HANDLE Entry;
+    PCONSOLE_IO_HANDLE Entry;
     DWORD DesiredAccess;
     PCONSOLE_DUPLICATEHANDLE DuplicateHandleRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.DuplicateHandleRequest;
     PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);

@@ -28,14 +28,14 @@
 typedef struct _GET_INPUT_INFO
 {
     PCONSOLE_PROCESS_DATA ProcessData;
-    PCSRSS_CONSOLE Console;
+    PCONSOLE Console;
 } GET_INPUT_INFO, *PGET_INPUT_INFO;
 
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
 static VOID FASTCALL
-ConioInputEventToAnsi(PCSRSS_CONSOLE Console, PINPUT_RECORD InputEvent)
+ConioInputEventToAnsi(PCONSOLE Console, PINPUT_RECORD InputEvent)
 {
     if (InputEvent->EventType == KEY_EVENT)
     {
@@ -48,7 +48,7 @@ ConioInputEventToAnsi(PCSRSS_CONSOLE Console, PINPUT_RECORD InputEvent)
 }
 
 static NTSTATUS FASTCALL
-ConioProcessChar(PCSRSS_CONSOLE Console,
+ConioProcessChar(PCONSOLE Console,
                  PINPUT_RECORD InputEvent)
 {
     ConsoleInput *ConInRec;
@@ -127,7 +127,7 @@ ConioGetShiftState(PBYTE KeyState)
 }
 
 VOID WINAPI
-ConioProcessKey(MSG *msg, PCSRSS_CONSOLE Console, BOOL TextMode)
+ConioProcessKey(MSG *msg, PCONSOLE Console, BOOL TextMode)
 {
     static BYTE KeyState[256] = { 0 };
     /* MSDN mentions that you should use the last virtual key code received
@@ -626,7 +626,7 @@ CSR_API(SrvGetConsoleInput)
     NTSTATUS Status;
     PCONSOLE_GETINPUT GetInputRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetInputRequest;
     PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);
-    PCSRSS_CONSOLE Console;
+    PCONSOLE Console;
     GET_INPUT_INFO InputInfo;
 
     DPRINT("SrvGetConsoleInput\n");
@@ -666,7 +666,7 @@ CSR_API(SrvWriteConsoleInput)
     PCONSOLE_WRITEINPUT WriteInputRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.WriteInputRequest;
     PINPUT_RECORD InputRecord;
     PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);
-    PCSRSS_CONSOLE Console;
+    PCONSOLE Console;
     DWORD Length;
     DWORD i;
 
@@ -712,7 +712,7 @@ CSR_API(SrvReadConsole)
     NTSTATUS Status;
     PCONSOLE_READCONSOLE ReadConsoleRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.ReadConsoleRequest;
     PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);
-    PCSRSS_CONSOLE Console;
+    PCONSOLE Console;
     GET_INPUT_INFO InputInfo;
 
     DPRINT("SrvReadConsole\n");
@@ -756,7 +756,7 @@ CSR_API(SrvFlushConsoleInputBuffer)
     NTSTATUS Status;
     PCONSOLE_FLUSHINPUTBUFFER FlushInputBufferRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.FlushInputBufferRequest;
     PLIST_ENTRY CurrentEntry;
-    PCSRSS_CONSOLE Console;
+    PCONSOLE Console;
     ConsoleInput* Input;
 
     DPRINT("SrvFlushConsoleInputBuffer\n");
@@ -786,7 +786,7 @@ CSR_API(SrvGetConsoleNumberOfInputEvents)
 {
     NTSTATUS Status;
     PCONSOLE_GETNUMINPUTEVENTS GetNumInputEventsRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetNumInputEventsRequest;
-    PCSRSS_CONSOLE Console;
+    PCONSOLE Console;
     PLIST_ENTRY CurrentInput;
     DWORD NumEvents;
 

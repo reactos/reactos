@@ -8,8 +8,8 @@
 
 #include "conio.h"
 
-extern NTSTATUS FASTCALL TuiInitConsole(PCSRSS_CONSOLE Console);
-extern PCSRSS_CONSOLE FASTCALL TuiGetFocusConsole(VOID);
+extern NTSTATUS FASTCALL TuiInitConsole(PCONSOLE Console);
+extern PCONSOLE FASTCALL TuiGetFocusConsole(VOID);
 extern BOOL FASTCALL TuiSwapConsole(int Next);
 
 /* EOF */

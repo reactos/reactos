@@ -46,20 +46,20 @@ extern HANDLE ConSrvHeap;
 typedef struct Object_tt
 {
     LONG Type;
-    struct tagCSRSS_CONSOLE *Console;
+    struct _CONSOLE *Console;
     LONG AccessRead, AccessWrite;
     LONG ExclusiveRead, ExclusiveWrite;
     LONG HandleCount;
 } Object_t;
 
 
-typedef struct _CSRSS_HANDLE
+typedef struct _CONSOLE_IO_HANDLE
 {
     Object_t *Object;   /* The object on which the handle points to */
     DWORD Access;
     BOOL Inheritable;
     DWORD ShareMode;
-} CSRSS_HANDLE, *PCSRSS_HANDLE;
+} CONSOLE_IO_HANDLE, *PCONSOLE_IO_HANDLE;
 
 
 #define ConsoleGetPerProcessData(pcsrprocess)   \
@@ -70,15 +70,15 @@ typedef struct _CONSOLE_PROCESS_DATA
     LIST_ENTRY ConsoleLink;
     PCSR_PROCESS Process;   // Process owning this structure.
     HANDLE ConsoleEvent;
-    /* PCSRSS_CONSOLE */ struct tagCSRSS_CONSOLE* Console;
-    /* PCSRSS_CONSOLE */ struct tagCSRSS_CONSOLE* ParentConsole;
+    /* PCONSOLE */ struct _CONSOLE* Console;
+    /* PCONSOLE */ struct _CONSOLE* ParentConsole;
 
     // BOOL bInheritHandles;
     BOOL ConsoleApp;    // TRUE if it is a CUI app, FALSE otherwise.
 
     RTL_CRITICAL_SECTION HandleTableLock;
     ULONG HandleTableSize;
-    PCSRSS_HANDLE HandleTable; // Length-varying table
+    PCONSOLE_IO_HANDLE HandleTable; // Length-varying table
     LPTHREAD_START_ROUTINE CtrlDispatcher;
 } CONSOLE_PROCESS_DATA, *PCONSOLE_PROCESS_DATA;
 

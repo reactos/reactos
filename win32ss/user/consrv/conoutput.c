@@ -38,13 +38,13 @@ do {    \
 /* PRIVATE FUNCTIONS **********************************************************/
 
 PBYTE FASTCALL
-ConioCoordToPointer(PCSRSS_SCREEN_BUFFER Buff, ULONG X, ULONG Y)
+ConioCoordToPointer(PCONSOLE_SCREEN_BUFFER Buff, ULONG X, ULONG Y)
 {
     return &Buff->Buffer[2 * (((Y + Buff->VirtualY) % Buff->MaxY) * Buff->MaxX + X)];
 }
 
 static VOID FASTCALL
-ClearLineBuffer(PCSRSS_SCREEN_BUFFER Buff)
+ClearLineBuffer(PCONSOLE_SCREEN_BUFFER Buff)
 {
     PBYTE Ptr = ConioCoordToPointer(Buff, 0, Buff->CurrentY);
     UINT Pos;
@@ -58,8 +58,8 @@ ClearLineBuffer(PCSRSS_SCREEN_BUFFER Buff)
 }
 
 NTSTATUS FASTCALL
-CsrInitConsoleScreenBuffer(PCSRSS_CONSOLE Console,
-                           PCSRSS_SCREEN_BUFFER Buffer)
+CsrInitConsoleScreenBuffer(PCONSOLE Console,
+                           PCONSOLE_SCREEN_BUFFER Buffer)
 {
     DPRINT("CsrInitConsoleScreenBuffer Size X %d Size Y %d\n", Buffer->MaxX, Buffer->MaxY);
 
@@ -89,7 +89,7 @@ CsrInitConsoleScreenBuffer(PCSRSS_CONSOLE Console,
 }
 
 static VOID FASTCALL
-ConioNextLine(PCSRSS_SCREEN_BUFFER Buff, SMALL_RECT *UpdateRect, UINT *ScrolledLines)
+ConioNextLine(PCONSOLE_SCREEN_BUFFER Buff, SMALL_RECT *UpdateRect, UINT *ScrolledLines)
 {
     /* If we hit bottom, slide the viewable screen */
     if (++Buff->CurrentY == Buff->MaxY)
@@ -112,7 +112,7 @@ ConioNextLine(PCSRSS_SCREEN_BUFFER Buff, SMALL_RECT *UpdateRect, UINT *ScrolledL
 }
 
 NTSTATUS FASTCALL
-ConioWriteConsole(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER Buff,
+ConioWriteConsole(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER Buff,
                   CHAR *Buffer, DWORD Length, BOOL Attrib)
 {
     UINT i;
@@ -303,7 +303,7 @@ __inline BOOLEAN ConioGetUnion(
  * this is done, to avoid overwriting parts of the source before they are moved.
  */
 static VOID FASTCALL
-ConioMoveRegion(PCSRSS_SCREEN_BUFFER ScreenBuffer,
+ConioMoveRegion(PCONSOLE_SCREEN_BUFFER ScreenBuffer,
                 SMALL_RECT *SrcRegion,
                 SMALL_RECT *DstRegion,
                 SMALL_RECT *ClipRegion,
@@ -363,9 +363,9 @@ ConioMoveRegion(PCSRSS_SCREEN_BUFFER ScreenBuffer,
 }
 
 VOID WINAPI
-ConioDeleteScreenBuffer(PCSRSS_SCREEN_BUFFER Buffer)
+ConioDeleteScreenBuffer(PCONSOLE_SCREEN_BUFFER Buffer)
 {
-    PCSRSS_CONSOLE Console = Buffer->Header.Console;
+    PCONSOLE Console = Buffer->Header.Console;
 
     RemoveEntryList(&Buffer->ListEntry);
     if (Buffer == Console->ActiveBuffer)
@@ -374,7 +374,7 @@ ConioDeleteScreenBuffer(PCSRSS_SCREEN_BUFFER Buffer)
         Console->ActiveBuffer = NULL;
         if (!IsListEmpty(&Console->BufferList))
         {
-            Console->ActiveBuffer = CONTAINING_RECORD(Console->BufferList.Flink, CSRSS_SCREEN_BUFFER, ListEntry);
+            Console->ActiveBuffer = CONTAINING_RECORD(Console->BufferList.Flink, CONSOLE_SCREEN_BUFFER, ListEntry);
             ConioDrawConsole(Console);
         }
     }
@@ -384,7 +384,7 @@ ConioDeleteScreenBuffer(PCSRSS_SCREEN_BUFFER Buffer)
 }
 
 VOID FASTCALL
-ConioDrawConsole(PCSRSS_CONSOLE Console)
+ConioDrawConsole(PCONSOLE Console)
 {
     SMALL_RECT Region;
 
@@ -394,7 +394,7 @@ ConioDrawConsole(PCSRSS_CONSOLE Console)
 }
 
 static VOID FASTCALL
-ConioComputeUpdateRect(PCSRSS_SCREEN_BUFFER Buff, SMALL_RECT *UpdateRect, COORD *Start, UINT Length)
+ConioComputeUpdateRect(PCONSOLE_SCREEN_BUFFER Buff, SMALL_RECT *UpdateRect, COORD *Start, UINT Length)
 {
     if (Buff->MaxX <= Start->X + Length)
     {
@@ -421,7 +421,7 @@ ConioComputeUpdateRect(PCSRSS_SCREEN_BUFFER Buff, SMALL_RECT *UpdateRect, COORD 
 }
 
 DWORD FASTCALL
-ConioEffectiveCursorSize(PCSRSS_CONSOLE Console, DWORD Scale)
+ConioEffectiveCursorSize(PCONSOLE Console, DWORD Scale)
 {
     DWORD Size = (Console->ActiveBuffer->CursorInfo.dwSize * Scale + 99) / 100;
     /* If line input in progress, perhaps adjust for insert toggle */
@@ -466,8 +466,8 @@ DoWriteConsole(IN PCSR_API_MESSAGE ApiMessage,
 {
     NTSTATUS Status = STATUS_SUCCESS;
     PCONSOLE_WRITECONSOLE WriteConsoleRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.WriteConsoleRequest;
-    PCSRSS_CONSOLE Console;
-    PCSRSS_SCREEN_BUFFER Buff;
+    PCONSOLE Console;
+    PCONSOLE_SCREEN_BUFFER Buff;
     PCHAR Buffer;
     DWORD Written = 0;
     ULONG Length;
@@ -557,7 +557,7 @@ CSR_API(SrvReadConsoleOutput)
     PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);
     PCHAR_INFO CharInfo;
     PCHAR_INFO CurCharInfo;
-    PCSRSS_SCREEN_BUFFER Buff;
+    PCONSOLE_SCREEN_BUFFER Buff;
     DWORD SizeX, SizeY;
     NTSTATUS Status;
     COORD BufferSize;
@@ -665,8 +665,8 @@ CSR_API(SrvWriteConsoleOutput)
     PCONSOLE_WRITEOUTPUT WriteOutputRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.WriteOutputRequest;
     PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);
     SHORT i, X, Y, SizeX, SizeY;
-    PCSRSS_CONSOLE Console;
-    PCSRSS_SCREEN_BUFFER Buff;
+    PCONSOLE Console;
+    PCONSOLE_SCREEN_BUFFER Buff;
     SMALL_RECT ScreenBuffer;
     CHAR_INFO* CurCharInfo;
     SMALL_RECT WriteRegion;
@@ -753,8 +753,8 @@ CSR_API(SrvReadConsoleOutputString)
 {
     NTSTATUS Status;
     PCONSOLE_READOUTPUTCODE ReadOutputCodeRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.ReadOutputCodeRequest;
-    PCSRSS_CONSOLE Console;
-    PCSRSS_SCREEN_BUFFER Buff;
+    PCONSOLE Console;
+    PCONSOLE_SCREEN_BUFFER Buff;
     USHORT CodeType;
     DWORD Xpos, Ypos;
     PVOID ReadBuffer;
@@ -877,8 +877,8 @@ CSR_API(SrvWriteConsoleOutputString)
 {
     NTSTATUS Status;
     PCONSOLE_WRITEOUTPUTCODE WriteOutputCodeRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.WriteOutputCodeRequest;
-    PCSRSS_CONSOLE Console;
-    PCSRSS_SCREEN_BUFFER Buff;
+    PCONSOLE Console;
+    PCONSOLE_SCREEN_BUFFER Buff;
     USHORT CodeType;
     PBYTE Buffer; // PUCHAR
     PCHAR String, tmpString = NULL;
@@ -1009,8 +1009,8 @@ CSR_API(SrvFillConsoleOutput)
 {
     NTSTATUS Status;
     PCONSOLE_FILLOUTPUTCODE FillOutputRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.FillOutputRequest;
-    PCSRSS_CONSOLE Console;
-    PCSRSS_SCREEN_BUFFER Buff;
+    PCONSOLE Console;
+    PCONSOLE_SCREEN_BUFFER Buff;
     DWORD X, Y, Length; // , Written = 0;
     USHORT CodeType;
     BYTE Code;
@@ -1085,7 +1085,7 @@ CSR_API(SrvGetConsoleCursorInfo)
 {
     NTSTATUS Status;
     PCONSOLE_GETSETCURSORINFO CursorInfoRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.CursorInfoRequest;
-    PCSRSS_SCREEN_BUFFER Buff;
+    PCONSOLE_SCREEN_BUFFER Buff;
 
     DPRINT("SrvGetConsoleCursorInfo\n");
 
@@ -1103,8 +1103,8 @@ CSR_API(SrvSetConsoleCursorInfo)
 {
     NTSTATUS Status;
     PCONSOLE_GETSETCURSORINFO CursorInfoRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.CursorInfoRequest;
-    PCSRSS_CONSOLE Console;
-    PCSRSS_SCREEN_BUFFER Buff;
+    PCONSOLE Console;
+    PCONSOLE_SCREEN_BUFFER Buff;
     DWORD Size;
     BOOL Visible;
 
@@ -1149,8 +1149,8 @@ CSR_API(SrvSetConsoleCursorPosition)
 {
     NTSTATUS Status;
     PCONSOLE_SETCURSORPOSITION SetCursorPositionRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.SetCursorPositionRequest;
-    PCSRSS_CONSOLE Console;
-    PCSRSS_SCREEN_BUFFER Buff;
+    PCONSOLE Console;
+    PCONSOLE_SCREEN_BUFFER Buff;
     LONG OldCursorX, OldCursorY;
     LONG NewCursorX, NewCursorY;
 
@@ -1191,8 +1191,8 @@ CSR_API(SrvSetConsoleTextAttribute)
 {
     NTSTATUS Status;
     PCONSOLE_SETTEXTATTRIB SetTextAttribRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.SetTextAttribRequest;
-    PCSRSS_CONSOLE Console;
-    PCSRSS_SCREEN_BUFFER Buff;
+    PCONSOLE Console;
+    PCONSOLE_SCREEN_BUFFER Buff;
 
     DPRINT("SrvSetConsoleTextAttribute\n");
 
@@ -1221,8 +1221,8 @@ CSR_API(SrvCreateConsoleScreenBuffer)
     NTSTATUS Status;
     PCONSOLE_CREATESCREENBUFFER CreateScreenBufferRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.CreateScreenBufferRequest;
     PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);
-    PCSRSS_CONSOLE Console;
-    PCSRSS_SCREEN_BUFFER Buff;
+    PCONSOLE Console;
+    PCONSOLE_SCREEN_BUFFER Buff;
 
     DPRINT("SrvCreateConsoleScreenBuffer\n");
 
@@ -1235,7 +1235,7 @@ CSR_API(SrvCreateConsoleScreenBuffer)
         return Status;
     }
 
-    Buff = HeapAlloc(ConSrvHeap, HEAP_ZERO_MEMORY, sizeof(CSRSS_SCREEN_BUFFER));
+    Buff = HeapAlloc(ConSrvHeap, HEAP_ZERO_MEMORY, sizeof(CONSOLE_SCREEN_BUFFER));
     if (Buff != NULL)
     {
         if (Console->ActiveBuffer)
@@ -1288,8 +1288,8 @@ CSR_API(SrvGetConsoleScreenBufferInfo)
 {
     NTSTATUS Status;
     PCONSOLE_GETSCREENBUFFERINFO ScreenBufferInfoRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.ScreenBufferInfoRequest;
-    PCSRSS_CONSOLE Console;
-    PCSRSS_SCREEN_BUFFER Buff;
+    PCONSOLE Console;
+    PCONSOLE_SCREEN_BUFFER Buff;
     PCONSOLE_SCREEN_BUFFER_INFO pInfo = &ScreenBufferInfoRequest->Info;
 
     DPRINT("SrvGetConsoleScreenBufferInfo\n");
@@ -1320,8 +1320,8 @@ CSR_API(SrvSetConsoleActiveScreenBuffer)
 {
     NTSTATUS Status;
     PCONSOLE_SETACTIVESCREENBUFFER SetScreenBufferRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.SetScreenBufferRequest;
-    PCSRSS_CONSOLE Console;
-    PCSRSS_SCREEN_BUFFER Buff;
+    PCONSOLE Console;
+    PCONSOLE_SCREEN_BUFFER Buff;
 
     DPRINT("SrvSetConsoleActiveScreenBuffer\n");
 
@@ -1356,8 +1356,8 @@ CSR_API(SrvSetConsoleActiveScreenBuffer)
 CSR_API(SrvScrollConsoleScreenBuffer)
 {
     PCONSOLE_SCROLLSCREENBUFFER ScrollScreenBufferRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.ScrollScreenBufferRequest;
-    PCSRSS_CONSOLE Console;
-    PCSRSS_SCREEN_BUFFER Buff;
+    PCONSOLE Console;
+    PCONSOLE_SCREEN_BUFFER Buff;
     SMALL_RECT ScreenBuffer;
     SMALL_RECT SrcRegion;
     SMALL_RECT DstRegion;
@@ -1449,7 +1449,7 @@ CSR_API(SrvSetConsoleScreenBufferSize)
 {
     NTSTATUS Status;
     PCONSOLE_SETSCREENBUFFERSIZE SetScreenBufferSizeRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.SetScreenBufferSizeRequest;
-    PCSRSS_SCREEN_BUFFER Buff;
+    PCONSOLE_SCREEN_BUFFER Buff;
 
     Status = ConioLockScreenBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process), SetScreenBufferSizeRequest->OutputHandle, &Buff, GENERIC_WRITE);
     if (!NT_SUCCESS(Status)) return Status;

@@ -14,7 +14,7 @@
 #define NDEBUG
 #include <debug.h>
 
-typedef struct tagHISTORY_BUFFER
+typedef struct _HISTORY_BUFFER
 {
     LIST_ENTRY ListEntry;
     UINT Position;
@@ -27,7 +27,7 @@ typedef struct tagHISTORY_BUFFER
 /* FUNCTIONS *****************************************************************/
 
 static PHISTORY_BUFFER
-HistoryCurrentBuffer(PCSRSS_CONSOLE Console)
+HistoryCurrentBuffer(PCONSOLE Console)
 {
     /* TODO: use actual EXE name sent from process that called ReadConsole */
     UNICODE_STRING ExeName = { 14, 14, L"cmd.exe" };
@@ -61,7 +61,7 @@ HistoryCurrentBuffer(PCSRSS_CONSOLE Console)
 }
 
 static VOID
-HistoryAddEntry(PCSRSS_CONSOLE Console)
+HistoryAddEntry(PCONSOLE Console)
 {
     UNICODE_STRING NewEntry;
     PHISTORY_BUFFER Hist;
@@ -113,7 +113,7 @@ HistoryAddEntry(PCSRSS_CONSOLE Console)
 }
 
 static VOID
-HistoryGetCurrentEntry(PCSRSS_CONSOLE Console, PUNICODE_STRING Entry)
+HistoryGetCurrentEntry(PCONSOLE Console, PUNICODE_STRING Entry)
 {
     PHISTORY_BUFFER Hist;
     if (!(Hist = HistoryCurrentBuffer(Console)) || Hist->NumEntries == 0)
@@ -123,7 +123,7 @@ HistoryGetCurrentEntry(PCSRSS_CONSOLE Console, PUNICODE_STRING Entry)
 }
 
 static PHISTORY_BUFFER
-HistoryFindBuffer(PCSRSS_CONSOLE Console, PUNICODE_STRING ExeName)
+HistoryFindBuffer(PCONSOLE Console, PUNICODE_STRING ExeName)
 {
     PLIST_ENTRY Entry = Console->HistoryBuffers.Flink;
     while (Entry != &Console->HistoryBuffers)
@@ -153,7 +153,7 @@ CSR_API(SrvGetConsoleCommandHistoryLength)
 {
     PCONSOLE_GETCOMMANDHISTORYLENGTH GetCommandHistoryLengthRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetCommandHistoryLengthRequest;
     PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);
-    PCSRSS_CONSOLE Console;
+    PCONSOLE Console;
     NTSTATUS Status;
     PHISTORY_BUFFER Hist;
     ULONG Length = 0;
@@ -186,7 +186,7 @@ CSR_API(SrvGetConsoleCommandHistory)
 {
     PCONSOLE_GETCOMMANDHISTORY GetCommandHistoryRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetCommandHistoryRequest;
     PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);
-    PCSRSS_CONSOLE Console;
+    PCONSOLE Console;
     NTSTATUS Status;
     PHISTORY_BUFFER Hist;
     PBYTE Buffer = (PBYTE)GetCommandHistoryRequest->History;
@@ -234,7 +234,7 @@ CSR_API(SrvExpungeConsoleCommandHistory)
 {
     PCONSOLE_EXPUNGECOMMANDHISTORY ExpungeCommandHistoryRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.ExpungeCommandHistoryRequest;
     PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);
-    PCSRSS_CONSOLE Console;
+    PCONSOLE Console;
     PHISTORY_BUFFER Hist;
     NTSTATUS Status;
 
@@ -260,7 +260,7 @@ CSR_API(SrvSetConsoleNumberOfCommands)
 {
     PCONSOLE_SETHISTORYNUMBERCOMMANDS SetHistoryNumberCommandsRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.SetHistoryNumberCommandsRequest;
     PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);
-    PCSRSS_CONSOLE Console;
+    PCONSOLE Console;
     PHISTORY_BUFFER Hist;
     NTSTATUS Status;
     UINT MaxEntries = SetHistoryNumberCommandsRequest->NumCommands;
@@ -310,7 +310,7 @@ CSR_API(SrvSetConsoleNumberOfCommands)
 CSR_API(SrvGetConsoleHistory)
 {
     PCONSOLE_GETSETHISTORYINFO HistoryInfoRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.HistoryInfoRequest;
-    PCSRSS_CONSOLE Console;
+    PCONSOLE Console;
     NTSTATUS Status = ConioConsoleFromProcessData(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console);
     if (NT_SUCCESS(Status))
     {
@@ -325,7 +325,7 @@ CSR_API(SrvGetConsoleHistory)
 CSR_API(SrvSetConsoleHistory)
 {
     PCONSOLE_GETSETHISTORYINFO HistoryInfoRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.HistoryInfoRequest;
-    PCSRSS_CONSOLE Console;
+    PCONSOLE Console;
     NTSTATUS Status = ConioConsoleFromProcessData(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console);
     if (NT_SUCCESS(Status))
     {
@@ -338,11 +338,11 @@ CSR_API(SrvSetConsoleHistory)
 }
 
 static VOID
-LineInputSetPos(PCSRSS_CONSOLE Console, UINT Pos)
+LineInputSetPos(PCONSOLE Console, UINT Pos)
 {
     if (Pos != Console->LinePos && Console->Mode & ENABLE_ECHO_INPUT)
     {
-        PCSRSS_SCREEN_BUFFER Buffer = Console->ActiveBuffer;
+        PCONSOLE_SCREEN_BUFFER Buffer = Console->ActiveBuffer;
         UINT OldCursorX = Buffer->CurrentX;
         UINT OldCursorY = Buffer->CurrentY;
         INT XY = OldCursorY * Buffer->MaxX + OldCursorX;
@@ -362,7 +362,7 @@ LineInputSetPos(PCSRSS_CONSOLE Console, UINT Pos)
 }
 
 static VOID
-LineInputEdit(PCSRSS_CONSOLE Console, UINT NumToDelete, UINT NumToInsert, WCHAR *Insertion)
+LineInputEdit(PCONSOLE Console, UINT NumToDelete, UINT NumToInsert, WCHAR *Insertion)
 {
     UINT Pos = Console->LinePos;
     UINT NewSize = Console->LineSize - NumToDelete + NumToInsert;
@@ -399,7 +399,7 @@ LineInputEdit(PCSRSS_CONSOLE Console, UINT NumToDelete, UINT NumToInsert, WCHAR 
 }
 
 static VOID
-LineInputRecallHistory(PCSRSS_CONSOLE Console, INT Offset)
+LineInputRecallHistory(PCONSOLE Console, INT Offset)
 {
     PHISTORY_BUFFER Hist;
 
@@ -418,7 +418,7 @@ LineInputRecallHistory(PCSRSS_CONSOLE Console, INT Offset)
 }
 
 VOID FASTCALL
-LineInputKeyDown(PCSRSS_CONSOLE Console, KEY_EVENT_RECORD *KeyEvent)
+LineInputKeyDown(PCONSOLE Console, KEY_EVENT_RECORD *KeyEvent)
 {
     UINT Pos = Console->LinePos;
     PHISTORY_BUFFER Hist;
