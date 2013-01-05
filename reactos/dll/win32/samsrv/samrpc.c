@@ -2297,6 +2297,18 @@ SamrCreateUserInDomain(IN SAMPR_HANDLE DomainHandle,
         return Status;
     }
 
+    /* Set the Parameters attribute */
+    Status = SampSetObjectAttribute(UserObject,
+                                    L"Parameters",
+                                    REG_SZ,
+                                    EmptyString.Buffer,
+                                    EmptyString.MaximumLength);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
     /* FIXME: Set default user attributes */
 
     if (NT_SUCCESS(Status))
@@ -5654,6 +5666,47 @@ done:
 }
 
 
+static NTSTATUS
+SampQueryUserParameters(PSAM_DB_OBJECT UserObject,
+                        PSAMPR_USER_INFO_BUFFER *Buffer)
+{
+    PSAMPR_USER_INFO_BUFFER InfoBuffer = NULL;
+    NTSTATUS Status;
+
+    *Buffer = NULL;
+
+    InfoBuffer = midl_user_allocate(sizeof(SAMPR_USER_INFO_BUFFER));
+    if (InfoBuffer == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    /* Get the Parameters string */
+    Status = SampGetObjectAttributeString(UserObject,
+                                          L"Parameters",
+                                          &InfoBuffer->Parameters.Parameters);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("Status 0x%08lx\n", Status);
+        goto done;
+    }
+
+    *Buffer = InfoBuffer;
+
+done:
+    if (!NT_SUCCESS(Status))
+    {
+        if (InfoBuffer != NULL)
+        {
+            if (InfoBuffer->Parameters.Parameters.Buffer != NULL)
+                midl_user_free(InfoBuffer->Parameters.Parameters.Buffer);
+
+            midl_user_free(InfoBuffer);
+        }
+    }
+
+    return Status;
+}
+
+
 /* Function 36 */
 NTSTATUS
 NTAPI
@@ -5689,6 +5742,7 @@ SamrQueryInformationUser(IN SAMPR_HANDLE UserHandle,
 
         case UserControlInformation:
         case UserExpiresInformation:
+        case UserParametersInformation:
             DesiredAccess = USER_READ_ACCOUNT;
             break;
 
@@ -5800,6 +5854,19 @@ SamrQueryInformationUser(IN SAMPR_HANDLE UserHandle,
             Status = SampQueryUserExpires(UserObject,
                                           Buffer);
             break;
+
+//        case UserInternal1Information:
+
+        case UserParametersInformation:
+            Status = SampQueryUserParameters(UserObject,
+                                             Buffer);
+            break;
+
+//        case UserAllInformation:
+//        case UserInternal4Information:
+//        case UserInternal5Information:
+//        case UserInternal4InformationNew:
+//        case UserInternal5InformationNew:
 
         default:
             Status = STATUS_INVALID_INFO_CLASS;

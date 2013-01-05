@@ -318,6 +318,13 @@ SampCreateUserAccount(HKEY hDomainKey,
                       (LPVOID)lpEmptyString,
                       sizeof(WCHAR));
 
+        RegSetValueEx(hAccountKey,
+                      L"Parameters",
+                      0,
+                      REG_SZ,
+                      (LPVOID)lpEmptyString,
+                      sizeof(WCHAR));
+
         RegCloseKey(hAccountKey);
     }
 
