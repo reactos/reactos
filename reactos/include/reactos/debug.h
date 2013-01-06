@@ -52,7 +52,8 @@ RtlAssert(
 );
 
 #ifndef _NTDEF_ /* Guard against redefinition from ntdef.h */
-    typedef _Return_type_success_(return >= 0) LONG NTSTATUS;
+    #define __BCRYPT_H__ /* Hack for NDK - umtypes.h */
+    typedef _Return_type_success_(return >= 0) LONG NTSTATUS, *PNTSTATUS;
 #endif
 __analysis_noreturn
 NTSYSAPI
