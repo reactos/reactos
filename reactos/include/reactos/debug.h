@@ -15,7 +15,7 @@
 #ifndef __INTERNAL_DEBUG
 #define __INTERNAL_DEBUG
 
-/* Define DbgPrint/DbgPrintEx/RtlAssert unless the NDK is used */
+/* Define DbgPrint/DbgPrintEx/RtlAssert/RtlRaiseStatus unless the NDK is used */
 #if !defined(_RTLFUNCS_H) && !defined(_NTDDK_)
 
 /* Make sure we have basic types (some people include us *before* SDK)... */
@@ -51,7 +51,27 @@ RtlAssert(
     PCHAR Message
 );
 
+#ifndef _NTDEF_ /* Guard against redefinition from ntdef.h */
+    typedef _Return_type_success_(return >= 0) LONG NTSTATUS;
+#endif
+__analysis_noreturn
+NTSYSAPI
+VOID
+NTAPI
+RtlRaiseStatus(
+    _In_ NTSTATUS Status
+);
+
 #endif /* !defined(_RTLFUNCS_H) && !defined(_NTDDK_) */
+
+
+/* Fix usage of RtlRaiseStatus */
+#if !defined(_RTLFUNCS_H) && defined(_NTDDK_)
+    #define RaiseStatus ExRaiseStatus
+#else
+    #define RaiseStatus RtlRaiseStatus
+#endif /* !defined(_RTLFUNCS_H) && defined(_NTDDK_) */
+
 
 #ifndef assert
 #ifndef NASSERT
@@ -136,11 +156,7 @@ RtlAssert(
 
 #endif /* not DBG */
 
-/*
- * These macros are designed to display an optional printf-like
- * user-defined message and to break into the debugger.
- * After that they allow to continue the program execution.
- */
+/******************************************************************************/
 /* For internal purposes only */
 #define __ERROR_DBGBREAK(...)   \
 do {                            \
@@ -148,6 +164,18 @@ do {                            \
     DbgBreakPoint();            \
 } while (0)
 
+/* For internal purposes only */
+#define __ERROR_FATAL(Status, ...)  \
+do {                                \
+    DbgPrint("" __VA_ARGS__);       \
+    RaiseStatus((Status));          \
+} while (0)
+
+/*
+ * These macros are designed to display an optional printf-like
+ * user-defined message and to break into the debugger.
+ * After that they allow to continue the program execution.
+ */
 #define ERROR_DBGBREAK(...)         \
 do {                                \
     __NOTICE(ERROR, "\n");          \
@@ -165,19 +193,18 @@ do {                                        \
  * user-defined message and to break into the debugger.
  * After that they halt the execution of the current thread.
  */
-#define ERROR_FATAL(...)                    \
-do {                                        \
-    __NOTICE(UNRECOVERABLE ERROR, "\n");    \
-    __ERROR_DBGBREAK(__VA_ARGS__);          \
-    while (TRUE);                           \
+#define ERROR_FATAL(...)                                    \
+do {                                                        \
+    __NOTICE(UNRECOVERABLE ERROR, "\n");                    \
+    __ERROR_FATAL(STATUS_ASSERTION_FAILURE, __VA_ARGS__);   \
 } while (0)
 
 #define UNIMPLEMENTED_FATAL(...)                            \
 do {                                                        \
     __NOTICE(UNRECOVERABLE ERROR, "is UNIMPLEMENTED!\n");   \
-    __ERROR_DBGBREAK(__VA_ARGS__);                          \
-    while (TRUE);                                           \
+    __ERROR_FATAL(STATUS_NOT_IMPLEMENTED, __VA_ARGS__);     \
 } while (0)
+/******************************************************************************/
 
 #define ASSERT_IRQL_LESS_OR_EQUAL(x) ASSERT(KeGetCurrentIrql()<=(x))
 #define ASSERT_IRQL_EQUAL(x) ASSERT(KeGetCurrentIrql()==(x))
