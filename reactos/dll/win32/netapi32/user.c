@@ -301,73 +301,73 @@ BuildUserInfoBuffer(PUSER_ACCOUNT_INFORMATION UserInfo,
 
     switch (level)
     {
-            case 0:
-                UserInfo0 = (PUSER_INFO_0)LocalBuffer;
+        case 0:
+            UserInfo0 = (PUSER_INFO_0)LocalBuffer;
 
-                Ptr = (LPWSTR)((ULONG_PTR)UserInfo0 + sizeof(USER_INFO_0));
-                UserInfo0->usri0_name = Ptr;
+            Ptr = (LPWSTR)((ULONG_PTR)UserInfo0 + sizeof(USER_INFO_0));
+            UserInfo0->usri0_name = Ptr;
 
-                memcpy(UserInfo0->usri0_name,
-                       UserInfo->UserName.Buffer,
-                       UserInfo->UserName.Length);
-                UserInfo0->usri0_name[UserInfo->UserName.Length / sizeof(WCHAR)] = UNICODE_NULL;
-                break;
+            memcpy(UserInfo0->usri0_name,
+                   UserInfo->UserName.Buffer,
+                   UserInfo->UserName.Length);
+            UserInfo0->usri0_name[UserInfo->UserName.Length / sizeof(WCHAR)] = UNICODE_NULL;
+            break;
 
-            case 1:
-                UserInfo1 = (PUSER_INFO_1)LocalBuffer;
+        case 1:
+            UserInfo1 = (PUSER_INFO_1)LocalBuffer;
 
-                Ptr = (LPWSTR)((ULONG_PTR)UserInfo1 + sizeof(USER_INFO_1));
+            Ptr = (LPWSTR)((ULONG_PTR)UserInfo1 + sizeof(USER_INFO_1));
 
-                UserInfo1->usri1_name = Ptr;
+            UserInfo1->usri1_name = Ptr;
 
-                memcpy(UserInfo1->usri1_name,
-                       UserInfo->UserName.Buffer,
-                       UserInfo->UserName.Length);
-                UserInfo1->usri1_name[UserInfo->UserName.Length / sizeof(WCHAR)] = UNICODE_NULL;
+            memcpy(UserInfo1->usri1_name,
+                   UserInfo->UserName.Buffer,
+                   UserInfo->UserName.Length);
+            UserInfo1->usri1_name[UserInfo->UserName.Length / sizeof(WCHAR)] = UNICODE_NULL;
 
-                Ptr = (LPWSTR)((ULONG_PTR)Ptr + UserInfo->UserName.Length + sizeof(WCHAR));
+            Ptr = (LPWSTR)((ULONG_PTR)Ptr + UserInfo->UserName.Length + sizeof(WCHAR));
 
-                UserInfo1->usri1_password = NULL;
+            UserInfo1->usri1_password = NULL;
 
-                /* FIXME: UserInfo1->usri1_password_age */
-                /* FIXME: UserInfo1->usri1_priv */
+            /* FIXME: UserInfo1->usri1_password_age */
+            /* FIXME: UserInfo1->usri1_priv */
 
-                if (UserInfo->HomeDirectory.Length > 0)
-                {
-                    UserInfo1->usri1_home_dir = Ptr;
+            if (UserInfo->HomeDirectory.Length > 0)
+            {
+                UserInfo1->usri1_home_dir = Ptr;
 
-                    memcpy(UserInfo1->usri1_home_dir,
-                           UserInfo->HomeDirectory.Buffer,
-                           UserInfo->HomeDirectory.Length);
-                    UserInfo1->usri1_home_dir[UserInfo->HomeDirectory.Length / sizeof(WCHAR)] = UNICODE_NULL;
+                memcpy(UserInfo1->usri1_home_dir,
+                       UserInfo->HomeDirectory.Buffer,
+                       UserInfo->HomeDirectory.Length);
+                UserInfo1->usri1_home_dir[UserInfo->HomeDirectory.Length / sizeof(WCHAR)] = UNICODE_NULL;
 
-                    Ptr = (LPWSTR)((ULONG_PTR)Ptr + UserInfo->HomeDirectory.Length + sizeof(WCHAR));
-                }
+                Ptr = (LPWSTR)((ULONG_PTR)Ptr + UserInfo->HomeDirectory.Length + sizeof(WCHAR));
+            }
 
-                if (UserInfo->AdminComment.Length > 0)
-                {
-                    UserInfo1->usri1_comment = Ptr;
+            if (UserInfo->AdminComment.Length > 0)
+            {
+                UserInfo1->usri1_comment = Ptr;
 
-                    memcpy(UserInfo1->usri1_comment,
-                           UserInfo->AdminComment.Buffer,
-                           UserInfo->AdminComment.Length);
-                    UserInfo1->usri1_comment[UserInfo->AdminComment.Length / sizeof(WCHAR)] = UNICODE_NULL;
+                memcpy(UserInfo1->usri1_comment,
+                       UserInfo->AdminComment.Buffer,
+                       UserInfo->AdminComment.Length);
+                UserInfo1->usri1_comment[UserInfo->AdminComment.Length / sizeof(WCHAR)] = UNICODE_NULL;
 
-                    Ptr = (LPWSTR)((ULONG_PTR)Ptr + UserInfo->AdminComment.Length + sizeof(WCHAR));
-                }
+                Ptr = (LPWSTR)((ULONG_PTR)Ptr + UserInfo->AdminComment.Length + sizeof(WCHAR));
+            }
 
-//                UserInfo1->usri1_flags = UserInfo->UserAccountControl;
+//            UserInfo1->usri1_flags = UserInfo->UserAccountControl;
 
-                if (UserInfo->ScriptPath.Length > 0)
-                {
-                    UserInfo1->usri1_script_path = Ptr;
+            if (UserInfo->ScriptPath.Length > 0)
+            {
+                UserInfo1->usri1_script_path = Ptr;
 
-                    memcpy(UserInfo1->usri1_script_path,
-                           UserInfo->ScriptPath.Buffer,
-                           UserInfo->ScriptPath.Length);
-                    UserInfo1->usri1_script_path[UserInfo->ScriptPath.Length / sizeof(WCHAR)] = UNICODE_NULL;
-                }
-                break;
+                memcpy(UserInfo1->usri1_script_path,
+                       UserInfo->ScriptPath.Buffer,
+                       UserInfo->ScriptPath.Length);
+                UserInfo1->usri1_script_path[UserInfo->ScriptPath.Length / sizeof(WCHAR)] = UNICODE_NULL;
+            }
+            break;
 
         case 2:
             UserInfo2 = (PUSER_INFO_2)LocalBuffer;
