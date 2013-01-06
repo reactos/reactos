@@ -411,6 +411,7 @@ _tWinMain(IN HINSTANCE hInstance,
 
     if (Tray != NULL)
     {
+        RegisterHotKey(NULL, IDHK_RUN, MOD_WIN, 'R');
         TrayMessageLoop(Tray);
         ITrayWindow_Release(Tray);
         UnregisterTrayWindowClass();

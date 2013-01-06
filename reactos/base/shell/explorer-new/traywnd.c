@@ -2777,6 +2777,16 @@ TrayMessageLoop(IN OUT ITrayWindow *Tray)
         if (!Ret || Ret == -1)
             break;
 
+        if (Msg.message == WM_HOTKEY)
+        {
+            switch (Msg.wParam)
+            {
+                case IDHK_RUN: /* Win+R */
+                    CloseHandle(CreateThread(NULL, 0, RunFileDlgThread, This, 0, NULL));
+                    break;
+            }
+        }
+
         if (This->StartMenuBand == NULL ||
             IMenuBand_IsMenuMessage(This->StartMenuBand,
                                     &Msg) != S_OK)
