@@ -370,6 +370,7 @@ _tWinMain(IN HINSTANCE hInstance,
 
     hExplorerInstance = hInstance;
     hProcessHeap = GetProcessHeap();
+    LoadAdvancedSettings();
 
     hUser32 = GetModuleHandle(TEXT("USER32.DLL"));
     if (hUser32 != NULL)

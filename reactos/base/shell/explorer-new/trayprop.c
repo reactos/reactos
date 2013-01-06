@@ -30,8 +30,6 @@ typedef struct _PROPSHEET_INFO
     HBITMAP hTaskbarBitmap;
 } PROPSHEET_INFO, *PPROPSHEET_INFO;
 
-ADVANCED_SETTINGS AdvancedSettings = { FALSE };
-
 
 static BOOL
 UpdateTaskbarBitmap(PPROPSHEET_INFO pPropInfo)
@@ -225,6 +223,7 @@ AdvancedSettingsPageProc(HWND hwndDlg,
 
                 case PSN_APPLY:
                     AdvancedSettings.bShowSeconds = IsDlgButtonChecked(hwndDlg, IDC_TASKBARPROP_SECONDS);
+                    SaveSettingDword(szAdvancedSettingsKey, TEXT("ShowSeconds"), AdvancedSettings.bShowSeconds);
                     break;
             }
 

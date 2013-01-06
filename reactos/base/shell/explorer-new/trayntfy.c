@@ -701,25 +701,6 @@ static const struct
     { FALSE, DATE_SHORTDATE, NULL }
 };
 
-HRESULT RegGetDWord(HKEY hKey, LPCTSTR szValueName, DWORD * lpdwResult)
-{
-    LONG lResult;
-    DWORD dwDataSize = sizeof(DWORD);
-    DWORD dwType = 0;
-
-    // Check input parameters...
-    if (hKey == NULL || lpdwResult == NULL) return E_INVALIDARG;
-
-    // Get dword value from the registry...
-    lResult = RegQueryValueEx(hKey, szValueName, 0, &dwType, (LPBYTE) lpdwResult, &dwDataSize );
-
-    // Check result and make sure the registry value is a DWORD(REG_DWORD)...
-    if (lResult != ERROR_SUCCESS) return HRESULT_FROM_WIN32(lResult);
-    else if (dwType != REG_DWORD) return DISP_E_TYPEMISMATCH;
-
-    return NOERROR;
-}
-
 #define CLOCKWND_FORMAT_COUNT (sizeof(ClockWndFormats) / sizeof(ClockWndFormats[0]))
 
 #define TRAY_CLOCK_WND_SPACING_X    0

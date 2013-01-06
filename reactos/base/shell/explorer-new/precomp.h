@@ -26,13 +26,6 @@
 #include "initguid.h"
 #include "undoc.h"
 
-/* Structure to hold non-default options*/
-typedef struct _ADVANCED_SETTINGS {
-    BOOL bShowSeconds;
-} ADVANCED_SETTINGS, *PADVANCED_SETTINGS;
-
-extern ADVANCED_SETTINGS AdvancedSettings;
-
 /* dynamic imports due to lack of support in msvc linker libs */
 typedef INT (APIENTRY *REGSHELLHOOK)(HWND, DWORD);
 #ifdef UNICODE
@@ -240,6 +233,26 @@ TrayProcessMessages(IN OUT ITrayWindow *Tray);
 
 VOID
 TrayMessageLoop(IN OUT ITrayWindow *Tray);
+
+/*
+ * settings.c
+ */
+
+/* Structure to hold non-default options*/
+typedef struct _ADVANCED_SETTINGS {
+    BOOL bShowSeconds;
+} ADVANCED_SETTINGS, *PADVANCED_SETTINGS;
+
+extern ADVANCED_SETTINGS AdvancedSettings;
+extern const TCHAR szAdvancedSettingsKey[];
+
+VOID
+LoadAdvancedSettings(VOID);
+
+BOOL
+SaveSettingDword(IN PCTSTR pszKeyName,
+                 IN PCTSTR pszValueName,
+                 IN DWORD dwValue);
 
 /*
  * trayprop.h
