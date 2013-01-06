@@ -28,7 +28,7 @@ Description = Bardzo dobry CD Ripper/konwerter plików audio.
 
 [Section.0418]
 Description = Program de extragere conținuturi CD audio și de conversie a fișierelor de sunet.
-Size = 3.57Mo
+Size = 3,57 Mo
 
 [Section.0422]
 Description = Чудовий CD Ріппер/Конвертер аудіо файлів.

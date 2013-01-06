@@ -48,7 +48,7 @@ URLDownload = http://releases.mozilla.org/pub/mozilla.org/firefox/releases/17.0.
 
 [Section.0418]
 Description = Cel mai popular și unul dintre cele mai bune navigatoare web gratuite existente.
-Size = 16.1Mo
+Size = 16,1 Mo
 URLSite = http://www.mozilla-europe.org/ro/
 URLDownload = http://releases.mozilla.org/pub/mozilla.org/firefox/releases/17.0.1/win32/ro/Firefox%20Setup%2017.0.1.exe
 

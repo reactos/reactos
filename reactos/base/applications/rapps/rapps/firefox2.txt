@@ -41,7 +41,7 @@ URLSite = http://www.mozilla-europe.org/pl/
 
 [Section.0418]
 Description = Cel mai popular și unul dintre cele mai bune navigatoare web gratuite existente.
-Size = 5.77Mo
+Size = 5,77 Mo
 URLSite = http://www.mozilla-europe.org/ro/
 
 [Section.0419]

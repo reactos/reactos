@@ -31,7 +31,7 @@ Description = Edytor tekstu.
 
 [Section.0418]
 Description = Procesor de text.
-Size = 5.64Mo
+Size = 5,64 Mo
 
 [Section.0422]
 Description = Текстовий процесор.

@@ -34,7 +34,7 @@ Description = Przeglądarka dla bardzo wielu typów obrazów, plików audio oraz
 [Section.0418]
 Licence = Gratuită (pentru uz personal)
 Description = Lector pentru multiple formate de fișiere grafice/audio/video.
-Size = 1.46Mo
+Size = 1,46 Mo
 
 [Section.0422]
 Licence = Freeware (для домашнього використання)

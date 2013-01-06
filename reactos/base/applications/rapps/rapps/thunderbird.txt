@@ -33,6 +33,7 @@ URLSite = http://www.mozilla-europe.org/pl/products/thunderbird/
 
 [Section.0418]
 Description = Cel mai popular și unul dintre cele mai bune clientele gratuite de poștă electronică.
+Size = 9,06 Mo
 URLSite = http://www.mozilla-europe.org/ro/products/thunderbird/
 
 [Section.0419]

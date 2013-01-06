@@ -43,7 +43,7 @@ URLDownload = http://releases.mozilla.org/pub/mozilla.org/thunderbird/releases/1
 
 [Section.0418]
 Description = Cel mai popular și unul dintre cele mai bune clientele gratuite de poștă electronică.
-Size = 18.0Mo
+Size = 18,0 Mo
 URLSite = http://www.mozilla-europe.org/ro/products/thunderbird/
 URLDownload = http://releases.mozilla.org/pub/mozilla.org/thunderbird/releases/17.0/win32/ro/Thunderbird%20Setup%2017.0.exe
 

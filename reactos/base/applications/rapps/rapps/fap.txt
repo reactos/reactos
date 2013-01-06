@@ -28,7 +28,7 @@ Description = Prosty i lekki odtwarzacz audio.
 
 [Section.0418]
 Description = Un lector audio simplu și ușor.
-Size = 1.86Mo
+Size = 1,86 Mo
 
 [Section.0422]
 Description = Простий та маленький програвач аудіо файлів.

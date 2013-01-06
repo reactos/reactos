@@ -35,7 +35,7 @@ Description = Wymagana przez wiele gier (głównie o otwartym źródle). Do jej 
 
 [Section.0418]
 Description = Necesar pentru execuția multor jocuri (open-source). Dezarhivați cu 7-Zip sau cu un utilitar asemănător.
-Size = 136.67ko
+Size = 136,67 ko
 
 [Section.0422]
 Name = Бібліотека Simple Direct Media Layer (SDL)

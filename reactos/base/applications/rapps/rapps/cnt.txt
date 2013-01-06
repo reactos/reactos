@@ -10,3 +10,8 @@ Category = 12
 URLSite = http://http://cnt.lakefolks.com
 URLDownload = http://svn.reactos.org/packages/CNTzip.exe
 CDPath = none
+
+[Section.0418]
+Licence = Gratuită
+Description = Aplicație gratuită pentru simularea unei tastaturi fizice.
+Size = 1,3 Mo

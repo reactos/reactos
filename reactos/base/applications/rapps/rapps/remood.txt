@@ -28,7 +28,7 @@ Description = Źródłowy port Doom. Jego celem jest zapewnienie rozrywki znanej
 
 [Section.0418]
 Description = ReMooD este o portare a codului Doom Legacy. Scopul e de a oferi clasica experiență cu noi funcționalități și o mai bună stabilitate.
-Size = 1.15Mo
+Size = 1,15 Mo
 
 [Section.0422]
 Description = ReMooD э Портом вихідних кодів Doom Legacy. Його метою є додати нові можливості та стабільність до досвіду класичного Legacy.

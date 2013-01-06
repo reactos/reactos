@@ -38,7 +38,7 @@ Description = Biblioteka MFC 4 jest używana przez część aplikacji.
 [Section.0418]
 Licence = Nespecificată
 Description = MFC 4 este necesară unor aplicații. Conține: mfc40.dll, msvcrt40.dll.
-Size = 865.04ko
+Size = 865,04 ko
 
 [Section.0422]
 Name = Переглядач OLE та MFC (Microsoft Foundation Classes) версія 4

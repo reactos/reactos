@@ -31,7 +31,7 @@ Description = Program pozwalający uruchomić stare gry przygodowe (Sam and Max,
 
 [Section.0418]
 Description = Motor de execuție pentru jocuri SCUMM.
-Size = 5.28Mo
+Size = 5,28 Mo
 
 [Section.0422]
 Description = Дозволить грати Sam and Max, Day of the Tentacle та інші класичні ігри в ReactOS.

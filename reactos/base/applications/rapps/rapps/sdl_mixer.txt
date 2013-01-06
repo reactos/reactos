@@ -34,7 +34,7 @@ Description = Biblioteka wymagana przez niektóre gry (zwłaszcza te o otwartym 
 
 [Section.0418]
 Description = Necesar pentru execuția unor jocuri (open-source). Dezarhivați cu 7-Zip sau cu un utilitar asemănător.
-Size = 548.02ko
+Size = 548,02 ko
 
 [Section.0422]
 Description = Необхідний для роботи декотрих відкритих ігор. Вам потрібен 7-Zip або подібна утиліта щоб розпакувати його.

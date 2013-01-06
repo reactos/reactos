@@ -23,7 +23,7 @@ Description = Pakiet Mono .net Framework dla Programistów.
 [Section.0418]
 Licence = Nespecificată
 Description = Platformă .net (open-source).
-Size = 79.47Mo
+Size = 88,6 Mo
 
 [Section.0422]
 Description = Відкритий .net Фреймворк.

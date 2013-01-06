@@ -29,7 +29,7 @@ Description = Szybka i bogata w opcje aplikacja szukająca.
 [Section.0418]
 Licence = Gratuită
 Description = Aplicație rapidă de căutări complexe de text.
-Size = 4.94Mo
+Size = 4,94 Mo
 
 [Section.0422]
 Description = Швидка та потужна програма пошуку.

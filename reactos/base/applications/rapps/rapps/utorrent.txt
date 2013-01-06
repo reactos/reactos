@@ -35,7 +35,7 @@ Description = Mały i szybki klient BitTorrent.
 [Section.0418]
 Licence = Gratuită pentru uz necomercial
 Description = Client BitTorrent, mic și rapid.
-Size = 720.87ko
+Size = 720,87 ko
 
 [Section.0419]
 Licence = Бесплатная для некоммерческого использования

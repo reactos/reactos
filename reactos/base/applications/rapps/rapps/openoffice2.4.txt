@@ -44,7 +44,7 @@ Size = 113.92MB
 
 [Section.0418]
 Description = Suita de aplicații de birotică open-source.
-Size = 113Mo
+Size = 113 Mo
 
 [Section.0422]
 URLSite = http://ua.openoffice.org/

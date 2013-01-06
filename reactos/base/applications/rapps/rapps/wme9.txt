@@ -28,7 +28,7 @@ Licence = Nieznana
 
 [Section.0418]
 Licence = Necunoscută
-Size = 9.46Mo
+Size = 9,46 Mo
 
 [Section.041b]
 Description = Neznáma

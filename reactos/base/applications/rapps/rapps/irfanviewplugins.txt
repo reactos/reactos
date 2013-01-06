@@ -34,7 +34,7 @@ Description = Wtyczki otwierające dodatkowe typy plików w Irfanview.
 [Section.0418]
 Licence = Gratuită (pentru uz personal)
 Description = Extensii adiționale pentru a spori numărul de formate de fișiere recunoscute.
-Size = 8.92Mo
+Size = 8,92 Mo
 
 [Section.0422]
 Licence = Freeware (для домашнього використання)
