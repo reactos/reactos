@@ -160,6 +160,68 @@ CreateSidFromSidAndRid(PSID SrcSid,
 
 
 static
+ULONG
+GetAccountFlags(ULONG AccountControl)
+{
+    ULONG Flags = UF_SCRIPT;
+
+    if (AccountControl & USER_ACCOUNT_DISABLED)
+        Flags |= UF_ACCOUNTDISABLE;
+
+    if (AccountControl & USER_HOME_DIRECTORY_REQUIRED)
+        Flags |= UF_HOMEDIR_REQUIRED;
+
+    if (AccountControl & USER_PASSWORD_NOT_REQUIRED)
+        Flags |= UF_PASSWD_NOTREQD;
+
+//    UF_PASSWD_CANT_CHANGE
+
+    if (AccountControl & USER_ACCOUNT_AUTO_LOCKED)
+        Flags |= UF_LOCKOUT;
+
+    if (AccountControl & USER_DONT_EXPIRE_PASSWORD)
+        Flags |= UF_DONT_EXPIRE_PASSWD;
+
+/*
+    if (AccountControl & USER_ENCRYPTED_TEXT_PASSWORD_ALLOWED)
+        Flags |= UF_ENCRYPTED_TEXT_PASSWORD_ALLOWED;
+
+    if (AccountControl & USER_SMARTCARD_REQUIRED)
+        Flags |= UF_SMARTCARD_REQUIRED;
+
+    if (AccountControl & USER_TRUSTED_FOR_DELEGATION)
+        Flags |= UF_TRUSTED_FOR_DELEGATION;
+
+    if (AccountControl & USER_NOT_DELEGATED)
+        Flags |= UF_NOT_DELEGATED;
+
+    if (AccountControl & USER_USE_DES_KEY_ONLY)
+        Flags |= UF_USE_DES_KEY_ONLY;
+
+    if (AccountControl & USER_DONT_REQUIRE_PREAUTH)
+        Flags |= UF_DONT_REQUIRE_PREAUTH;
+
+    if (AccountControl & USER_PASSWORD_EXPIRED)
+        Flags |= UF_PASSWORD_EXPIRED;
+*/
+
+    /* Set account type flags */
+    if (AccountControl & USER_TEMP_DUPLICATE_ACCOUNT)
+        Flags |= UF_TEMP_DUPLICATE_ACCOUNT;
+    else if (AccountControl & USER_NORMAL_ACCOUNT)
+        Flags |= UF_NORMAL_ACCOUNT;
+    else if (AccountControl & USER_INTERDOMAIN_TRUST_ACCOUNT)
+        Flags |= UF_INTERDOMAIN_TRUST_ACCOUNT;
+    else if (AccountControl & USER_WORKSTATION_TRUST_ACCOUNT)
+        Flags |= UF_WORKSTATION_TRUST_ACCOUNT;
+    else if (AccountControl & USER_SERVER_TRUST_ACCOUNT)
+        Flags |= UF_SERVER_TRUST_ACCOUNT;
+
+    return Flags;
+}
+
+
+static
 NET_API_STATUS
 BuildUserInfoBuffer(PUSER_ACCOUNT_INFORMATION UserInfo,
                     DWORD level,
@@ -173,6 +235,7 @@ BuildUserInfoBuffer(PUSER_ACCOUNT_INFORMATION UserInfo,
     PUSER_INFO_3 UserInfo3;
     PUSER_INFO_10 UserInfo10;
     PUSER_INFO_20 UserInfo20;
+    PUSER_INFO_23 UserInfo23;
     LPWSTR Ptr;
     ULONG Size = 0;
     NET_API_STATUS ApiStatus = NERR_Success;
@@ -286,7 +349,18 @@ BuildUserInfoBuffer(PUSER_ACCOUNT_INFORMATION UserInfo,
                 Size += UserInfo->AdminComment.Length + sizeof(WCHAR);
             break;
 
-//        case 23:
+        case 23:
+            Size = sizeof(USER_INFO_23) +
+                   UserInfo->UserName.Length + sizeof(WCHAR);
+
+            if (UserInfo->FullName.Length > 0)
+                Size += UserInfo->FullName.Length + sizeof(WCHAR);
+
+            if (UserInfo->AdminComment.Length > 0)
+                Size += UserInfo->AdminComment.Length + sizeof(WCHAR);
+
+            /* FIXME: usri23_user_sid */
+            break;
 
         default:
             ApiStatus = ERROR_INVALID_LEVEL;
@@ -356,7 +430,7 @@ BuildUserInfoBuffer(PUSER_ACCOUNT_INFORMATION UserInfo,
                 Ptr = (LPWSTR)((ULONG_PTR)Ptr + UserInfo->AdminComment.Length + sizeof(WCHAR));
             }
 
-//            UserInfo1->usri1_flags = UserInfo->UserAccountControl;
+            UserInfo1->usri1_flags = GetAccountFlags(UserInfo->UserAccountControl);
 
             if (UserInfo->ScriptPath.Length > 0)
             {
@@ -383,7 +457,6 @@ BuildUserInfoBuffer(PUSER_ACCOUNT_INFORMATION UserInfo,
 
             Ptr = (LPWSTR)((ULONG_PTR)Ptr + UserInfo->UserName.Length + sizeof(WCHAR));
 
-            /* FIXME: usri2_password */
             /* FIXME: usri2_password_age */
             /* FIXME: usri2_priv */
 
@@ -411,7 +484,7 @@ BuildUserInfoBuffer(PUSER_ACCOUNT_INFORMATION UserInfo,
                 Ptr = (LPWSTR)((ULONG_PTR)Ptr + UserInfo->AdminComment.Length + sizeof(WCHAR));
             }
 
-            /* FIXME: usri2_flags */
+            UserInfo2->usri2_flags = GetAccountFlags(UserInfo->UserAccountControl);
 
             if (UserInfo->ScriptPath.Length > 0)
             {
@@ -454,14 +527,23 @@ BuildUserInfoBuffer(PUSER_ACCOUNT_INFORMATION UserInfo,
                 Ptr = (LPWSTR)((ULONG_PTR)Ptr + UserInfo->WorkStations.Length + sizeof(WCHAR));
             }
 
-            /* FIXME: usri2_last_logon */
-            /* FIXME: usri2_last_logoff */
-            /* FIXME: usri2_acct_expires */
-            /* FIXME: usri2_max_storage */
+            RtlTimeToSecondsSince1970(&UserInfo->LastLogon,
+                                      &UserInfo2->usri2_last_logon);
+
+            RtlTimeToSecondsSince1970(&UserInfo->LastLogoff,
+                                      &UserInfo2->usri2_last_logoff);
+
+            RtlTimeToSecondsSince1970(&UserInfo->AccountExpires,
+                                      &UserInfo2->usri2_acct_expires);
+
+            UserInfo2->usri2_max_storage = USER_MAXSTORAGE_UNLIMITED;
+
             /* FIXME: usri2_units_per_week */
             /* FIXME: usri2_logon_hours */
-            /* FIXME: usri2_bad_pw_count */
-            /* FIXME: usri2_num_logons */
+
+            UserInfo2->usri2_bad_pw_count = UserInfo->BadPasswordCount;
+            UserInfo2->usri2_num_logons = UserInfo->LogonCount;
+
             /* FIXME: usri2_logon_server */
             /* FIXME: usri2_country_code */
             /* FIXME: usri2_code_page */
@@ -482,7 +564,6 @@ BuildUserInfoBuffer(PUSER_ACCOUNT_INFORMATION UserInfo,
 
             Ptr = (LPWSTR)((ULONG_PTR)Ptr + UserInfo->UserName.Length + sizeof(WCHAR));
 
-            /* FIXME: usri3_password */
             /* FIXME: usri3_password_age */
             /* FIXME: usri3_priv */
 
@@ -510,7 +591,7 @@ BuildUserInfoBuffer(PUSER_ACCOUNT_INFORMATION UserInfo,
                 Ptr = (LPWSTR)((ULONG_PTR)Ptr + UserInfo->AdminComment.Length + sizeof(WCHAR));
             }
 
-            /* FIXME: usri3_flags */
+            UserInfo3->usri3_flags = GetAccountFlags(UserInfo->UserAccountControl);
 
             if (UserInfo->ScriptPath.Length > 0)
             {
@@ -553,14 +634,23 @@ BuildUserInfoBuffer(PUSER_ACCOUNT_INFORMATION UserInfo,
                 Ptr = (LPWSTR)((ULONG_PTR)Ptr + UserInfo->WorkStations.Length + sizeof(WCHAR));
             }
 
-            /* FIXME: usri3_last_logon */
-            /* FIXME: usri3_last_logoff */
-            /* FIXME: usri3_acct_expires */
-            /* FIXME: usri3_max_storage */
+            RtlTimeToSecondsSince1970(&UserInfo->LastLogon,
+                                      &UserInfo3->usri3_last_logon);
+
+            RtlTimeToSecondsSince1970(&UserInfo->LastLogoff,
+                                      &UserInfo3->usri3_last_logoff);
+
+            RtlTimeToSecondsSince1970(&UserInfo->AccountExpires,
+                                      &UserInfo3->usri3_acct_expires);
+
+            UserInfo3->usri3_max_storage = USER_MAXSTORAGE_UNLIMITED;
+
             /* FIXME: usri3_units_per_week */
             /* FIXME: usri3_logon_hours */
-            /* FIXME: usri3_bad_pw_count */
-            /* FIXME: usri3_num_logons */
+
+            UserInfo3->usri3_bad_pw_count = UserInfo->BadPasswordCount;
+            UserInfo3->usri3_num_logons = UserInfo->LogonCount;
+
             /* FIXME: usri3_logon_server */
             /* FIXME: usri3_country_code */
             /* FIXME: usri3_code_page */
@@ -592,7 +682,7 @@ BuildUserInfoBuffer(PUSER_ACCOUNT_INFORMATION UserInfo,
                 Ptr = (LPWSTR)((ULONG_PTR)Ptr + UserInfo->HomeDirectoryDrive.Length + sizeof(WCHAR));
             }
 
-            /* FIXME: usri3_password_expired */
+            UserInfo3->usri3_password_expired = (UserInfo->UserAccountControl & USER_PASSWORD_EXPIRED);
             break;
 
 //        case 4:
@@ -678,11 +768,53 @@ BuildUserInfoBuffer(PUSER_ACCOUNT_INFORMATION UserInfo,
                 Ptr = (LPWSTR)((ULONG_PTR)Ptr + UserInfo->AdminComment.Length + sizeof(WCHAR));
             }
 
-//            UserInfo20->usri20_flags = UserInfo->UserAccountControl;
+            UserInfo20->usri20_flags = GetAccountFlags(UserInfo->UserAccountControl);
+
             UserInfo20->usri20_user_id = RelativeId;
             break;
 
-//        case 23:
+        case 23:
+            UserInfo23 = (PUSER_INFO_23)LocalBuffer;
+
+            Ptr = (LPWSTR)((ULONG_PTR)UserInfo23 + sizeof(USER_INFO_23));
+
+            UserInfo23->usri23_name = Ptr;
+
+            memcpy(UserInfo23->usri23_name,
+                   UserInfo->UserName.Buffer,
+                   UserInfo->UserName.Length);
+            UserInfo23->usri23_name[UserInfo->UserName.Length / sizeof(WCHAR)] = UNICODE_NULL;
+
+            Ptr = (LPWSTR)((ULONG_PTR)Ptr + UserInfo->UserName.Length + sizeof(WCHAR));
+
+            if (UserInfo->FullName.Length > 0)
+            {
+                UserInfo23->usri23_full_name = Ptr;
+
+                memcpy(UserInfo23->usri23_full_name,
+                       UserInfo->FullName.Buffer,
+                       UserInfo->FullName.Length);
+                UserInfo23->usri23_full_name[UserInfo->FullName.Length / sizeof(WCHAR)] = UNICODE_NULL;
+
+                Ptr = (LPWSTR)((ULONG_PTR)Ptr + UserInfo->FullName.Length + sizeof(WCHAR));
+            }
+
+            if (UserInfo->AdminComment.Length > 0)
+            {
+                UserInfo23->usri23_comment = Ptr;
+
+                memcpy(UserInfo23->usri23_comment,
+                       UserInfo->AdminComment.Buffer,
+                       UserInfo->AdminComment.Length);
+                UserInfo23->usri23_comment[UserInfo->AdminComment.Length / sizeof(WCHAR)] = UNICODE_NULL;
+
+                Ptr = (LPWSTR)((ULONG_PTR)Ptr + UserInfo->AdminComment.Length + sizeof(WCHAR));
+            }
+
+            UserInfo23->usri23_flags = GetAccountFlags(UserInfo->UserAccountControl);
+
+            /* FIXME: usri23_user_sid */
+           break;
     }
 
 done:
