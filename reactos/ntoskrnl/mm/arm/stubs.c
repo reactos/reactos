@@ -39,7 +39,7 @@ MiUnmapPageTable(IN PMMPTE PointerPde)
     //
     // FIXME-USER: Shouldn't get here yet
     //
-    ASSERT(FALSE);
+    ERROR_FATAL();
     return FALSE;
 }
 
@@ -399,8 +399,7 @@ MmDisableVirtualMapping(IN PEPROCESS Process,
     //
     // TODO
     //
-    UNIMPLEMENTED;
-    ASSERT(FALSE); // while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
 }
 
 VOID
@@ -411,8 +410,7 @@ MmEnableVirtualMapping(IN PEPROCESS Process,
     //
     // TODO
     //
-    UNIMPLEMENTED;
-    ASSERT(FALSE); // while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
 }
 
 NTSTATUS
@@ -658,8 +656,7 @@ MmDeletePageFileMapping(IN PEPROCESS Process,
     //
     // TODO
     //
-    UNIMPLEMENTED;
-    ASSERT(FALSE); // while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
 }
 
 NTSTATUS
@@ -671,8 +668,7 @@ MmCreatePageFileMapping(IN PEPROCESS Process,
     //
     // TODO
     //
-    UNIMPLEMENTED;
-    ASSERT(FALSE); // while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -703,8 +699,7 @@ MmIsDirtyPage(IN PEPROCESS Process,
     //
     // TODO
     //
-    UNIMPLEMENTED;
-    ASSERT(FALSE); // while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
     return FALSE;
 }
 
@@ -716,8 +711,7 @@ MmSetCleanPage(IN PEPROCESS Process,
     //
     // TODO
     //
-    UNIMPLEMENTED;
-    ASSERT(FALSE); // while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
 }
 
 VOID
@@ -728,8 +722,7 @@ MmSetDirtyPage(IN PEPROCESS Process,
     //
     // TODO
     //
-    UNIMPLEMENTED;
-    ASSERT(FALSE); // while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
 }
 
 BOOLEAN

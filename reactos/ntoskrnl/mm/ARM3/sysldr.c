@@ -105,8 +105,7 @@ MiLoadImageSection(IN OUT PVOID *SectionPtr,
     if (SessionLoad)
     {
         /* Fail */
-        DPRINT1("Session loading not yet supported!\n");
-        ASSERT(FALSE); // while (TRUE);
+        UNIMPLEMENTED_DBGBREAK("Session loading not yet supported!\n");
         return STATUS_NOT_IMPLEMENTED;
     }
 
@@ -1217,8 +1216,7 @@ CheckDllState:
                 {
                     /* We failed, unload the image */
                     MmUnloadSystemImage(DllEntry);
-                    DPRINT1("MmCallDllInitialize failed with status 0x%x\n", Status);
-                    ASSERT(FALSE); // while (TRUE);
+                    ERROR_DBGBREAK("MmCallDllInitialize failed with status 0x%x\n", Status);
                     Loaded = FALSE;
                 }
             }
@@ -1720,8 +1718,7 @@ MiReloadBootLoadedDrivers(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         if (!PointerPte)
         {
             /* Shouldn't happen */
-            DPRINT1("[Mm0]: Couldn't allocate driver section!\n");
-            ASSERT(FALSE); // while (TRUE);
+            ERROR_FATAL("[Mm0]: Couldn't allocate driver section!\n");
             return;
         }
 
@@ -1774,8 +1771,7 @@ MiReloadBootLoadedDrivers(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
             if (!NT_SUCCESS(Status))
             {
                 /* This shouldn't happen */
-                DPRINT1("Relocations failed!\n");
-                ASSERT(FALSE); // while (TRUE);
+                ERROR_FATAL("Relocations failed!\n");
                 return;
             }
         }
@@ -1973,9 +1969,8 @@ MiBuildImportsForBootDrivers(VOID)
                 if (*ImageThunk)
                 {
                     /* Should not be happening */
-                    DPRINT1("Broken IAT entry for %p at %p (%lx)\n",
-                            LdrEntry, ImageThunk, *ImageThunk);
-                    ASSERT(FALSE);
+                    ERROR_FATAL("Broken IAT entry for %p at %p (%lx)\n",
+                                LdrEntry, ImageThunk, *ImageThunk);
                 }
 
                 /* Reset if we hit this */
@@ -2363,8 +2358,7 @@ MiWriteProtectSystemImage(IN PVOID ImageBase)
     else
     {
         /* Not supported */
-        DPRINT1("Session drivers not supported\n");
-        ASSERT(FALSE);
+        UNIMPLEMENTED_DBGBREAK("Session drivers not supported\n");
     }
 
     /* These are the only protection masks we care about */
@@ -2924,8 +2918,7 @@ LoaderScan:
         else
         {
             /* We don't support session loading yet */
-            DPRINT1("Unsupported Session-Load!\n");
-            ASSERT(FALSE); // while (TRUE);
+            UNIMPLEMENTED_DBGBREAK("Unsupported Session-Load!\n");
             Status = STATUS_NOT_IMPLEMENTED;
         }
 
@@ -3026,8 +3019,7 @@ LoaderScan:
         if (Flags)
         {
             /* We don't support session loading yet */
-            DPRINT1("Unsupported Session-Load!\n");
-            ASSERT(FALSE); // while (TRUE);
+            UNIMPLEMENTED_DBGBREAK("Unsupported Session-Load!\n");
             goto Quickie;
         }
 
