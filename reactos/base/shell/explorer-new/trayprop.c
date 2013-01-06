@@ -369,9 +369,9 @@ DisplayTrayProperties(ITrayWindow *Tray)
     PROPSHEETPAGE psp[5];
     TCHAR szCaption[256];
 
-    pPropInfo = (PPROPSHEET_INFO)HeapAlloc(hProcessHeap,
-                                           HEAP_ZERO_MEMORY,
-                                           sizeof(PROPSHEET_INFO));
+    pPropInfo = HeapAlloc(hProcessHeap,
+                          HEAP_ZERO_MEMORY,
+                          sizeof(PROPSHEET_INFO));
     if (!pPropInfo)
     {
         return NULL;

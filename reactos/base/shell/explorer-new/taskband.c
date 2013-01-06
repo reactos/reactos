@@ -506,7 +506,7 @@ ITaskBandImpl_SetSite(IN OUT IObjectWithSite *iface,
         /* Check if the site supports IOleWindow */
         hRet = IUnknown_QueryInterface(pUnkSite,
                                        &IID_IOleWindow,
-                                       (PVOID*)&OleWindow);
+                                       (PVOID *)&OleWindow);
         if (SUCCEEDED(hRet))
         {
             HWND hWndParent = NULL;

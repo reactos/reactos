@@ -311,7 +311,7 @@ GetVersionInfoString(IN TCHAR *szFileName,
                     (LPVOID *)&lpTranslate,
                     &cbTranslate);
 
-                for (i = 0;i < (cbTranslate / sizeof(LANGCODEPAGE));i++)
+                for (i = 0; i < cbTranslate / sizeof(LANGCODEPAGE); i++)
                 {
                     /* If the bottom eight bits of the language id's
                     match, use this version information (since this
@@ -410,7 +410,11 @@ _tWinMain(IN HINSTANCE hInstance,
     }
 
     if (Tray != NULL)
+    {
         TrayMessageLoop(Tray);
+        ITrayWindow_Release(Tray);
+        UnregisterTrayWindowClass();
+    }
 
     if (hShellDesktop != NULL)
         DesktopDestroyShellWindow(hShellDesktop);
