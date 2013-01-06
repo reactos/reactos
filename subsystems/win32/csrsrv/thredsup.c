@@ -188,6 +188,8 @@ CsrLocateThreadByClientId(OUT PCSR_PROCESS *Process OPTIONAL,
     PCSR_THREAD FoundThread;
     // ASSERT(ProcessStructureListLocked());
 
+    if (Process) *Process = NULL;
+
     /* Hash the Thread */
     i = CsrHashThread(ClientId->UniqueThread);
 
@@ -210,7 +212,7 @@ CsrLocateThreadByClientId(OUT PCSR_PROCESS *Process OPTIONAL,
              FoundThread->ClientId.UniqueThread  == ClientId->UniqueThread )
         {
             /* Match found, return the process */
-            *Process = FoundThread->Process;
+            if (Process) *Process = FoundThread->Process;
 
             /* Return thread too */
 //            DPRINT1("Found: %p %p\n", FoundThread, FoundThread->Process);
