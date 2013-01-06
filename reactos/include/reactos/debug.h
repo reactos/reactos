@@ -51,16 +51,18 @@ RtlAssert(
     PCHAR Message
 );
 
-#ifndef _NTDEF_ /* Guard against redefinition from ntdef.h */
-    #define __BCRYPT_H__ /* Hack for NDK - umtypes.h */
-    typedef _Return_type_success_(return >= 0) LONG NTSTATUS, *PNTSTATUS;
-#endif
+/*
+ * This is the definition of NTSTATUS, but renamed
+ * in order not to conflict with other ones.
+ */
+typedef _Return_type_success_(return >= 0) LONG DEBUG_NTSTATUS;
+
 __analysis_noreturn
 NTSYSAPI
 VOID
 NTAPI
 RtlRaiseStatus(
-    _In_ NTSTATUS Status
+    _In_ DEBUG_NTSTATUS Status
 );
 
 #endif /* !defined(_RTLFUNCS_H) && !defined(_NTDDK_) */
