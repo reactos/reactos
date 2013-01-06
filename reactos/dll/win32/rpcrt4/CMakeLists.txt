@@ -35,6 +35,7 @@ remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
 add_definitions(
+    -D__WINESRC__
     -D_RPCRT4_
     -DCOM_NO_WINDOWS_H
     -DMSWMSG)
