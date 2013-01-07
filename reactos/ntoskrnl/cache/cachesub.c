@@ -131,8 +131,7 @@ CcGetFlushedValidData(IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
                       IN BOOLEAN CcInternalCaller)
 {
     LARGE_INTEGER Result = {{0}};
-    UNIMPLEMENTED;
-    ASSERT(FALSE); // while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
     return Result;
 }
 

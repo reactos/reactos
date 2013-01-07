@@ -265,8 +265,7 @@ IopCompleteRequest(IN PKAPC Apc,
             (Irp->IoStatus.Information == IO_REPARSE_TAG_MOUNT_POINT))
         {
             /* We should never get this yet */
-            DPRINT1("Reparse support not yet present!\n");
-            ASSERT(FALSE); // while (TRUE);
+            UNIMPLEMENTED_DBGBREAK("Reparse support not yet present!\n");
             return;
         }
     }
@@ -1373,8 +1372,7 @@ IofCompleteRequest(IN PIRP Irp,
                              PriorityBoost);
 #else
             /* Not implemented yet. */
-            DPRINT1("Not supported!\n");
-            ASSERT(FALSE); // while (TRUE);
+            UNIMPLEMENTED_DBGBREAK("Not supported!\n");
 #endif
         }
 

@@ -374,8 +374,7 @@ Mmi386ReleaseMmInfo(IN PEPROCESS Process)
     //
     // FIXME-USER: Need to delete address space
     //
-    UNIMPLEMENTED;
-    ASSERT(FALSE); // while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
     return STATUS_NOT_IMPLEMENTED;
 }
 
