@@ -238,10 +238,9 @@ CreateRemoteThread(IN HANDLE hProcess,
         if (!NT_SUCCESS(Status))
         {
             /* Fail */
-            DbgPrint("SXS: %s - Failing thread create because "
-                     "NtQueryInformationThread() failed with status %08lx\n",
-                     __FUNCTION__, Status);
-            ASSERT(FALSE); // while (TRUE);
+            ERROR_DBGBREAK("SXS: %s - Failing thread create because "
+                           "NtQueryInformationThread() failed with status %08lx\n",
+                           __FUNCTION__, Status);
             return NULL;
         }
 
@@ -250,10 +249,9 @@ CreateRemoteThread(IN HANDLE hProcess,
         if (!NT_SUCCESS(Status))
         {
             /* Fail */
-            DbgPrint("SXS: %s - Failing thread create because "
-                     "RtlAllocateActivationContextStack() failed with status %08lx\n",
-                     __FUNCTION__, Status);
-            ASSERT(FALSE); // while (TRUE);
+            ERROR_DBGBREAK("SXS: %s - Failing thread create because "
+                           "RtlAllocateActivationContextStack() failed with status %08lx\n",
+                           __FUNCTION__, Status);
             return NULL;
         }
 
@@ -273,10 +271,9 @@ CreateRemoteThread(IN HANDLE hProcess,
         if (!NT_SUCCESS(Status))
         {
             /* Fail */
-            DbgPrint("SXS: %s - Failing thread create because "
-                     "RtlQueryInformationActivationContext() failed with status %08lx\n",
-                     __FUNCTION__, Status);
-            ASSERT(FALSE); // while (TRUE);
+            ERROR_DBGBREAK("SXS: %s - Failing thread create because "
+                           "RtlQueryInformationActivationContext() failed with status %08lx\n",
+                           __FUNCTION__, Status);
             return NULL;
         }
 
@@ -291,10 +288,9 @@ CreateRemoteThread(IN HANDLE hProcess,
             if (!NT_SUCCESS(Status))
             {
                 /* Fail */
-                DbgPrint("SXS: %s - Failing thread create because "
-                         "RtlActivateActivationContextEx() failed with status %08lx\n",
-                         __FUNCTION__, Status);
-                ASSERT(FALSE); // while (TRUE);
+                ERROR_DBGBREAK("SXS: %s - Failing thread create because "
+                               "RtlActivateActivationContextEx() failed with status %08lx\n",
+                               __FUNCTION__, Status);
                 return NULL;
             }
         }
@@ -370,9 +366,8 @@ ExitThread(IN DWORD uExitCode)
     NtTerminateThread(NULL, uExitCode);
 
     /* We should never reach this place */
-    DPRINT1("It should not happen\n");
-    ASSERT(FALSE);
-    while (TRUE); // 'noreturn' function.
+    ERROR_FATAL("It should not happen\n");
+    while (TRUE); /* 'noreturn' function */
 }
 
 /*
