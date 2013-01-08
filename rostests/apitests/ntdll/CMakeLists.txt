@@ -20,10 +20,10 @@ list(APPEND SOURCE
     testlist.c)
 
 if(ARCH STREQUAL "i386")
-    list(APPEND SOURCE i386/ZwContinue.S)
+    add_asm_files(ntdll_apitest_asm i386/ZwContinue.S)
 endif()
 
-add_executable(ntdll_apitest ${SOURCE})
+add_executable(ntdll_apitest ${SOURCE} ${ntdll_apitest_asm})
 target_link_libraries(ntdll_apitest wine ${PSEH_LIB})
 set_module_type(ntdll_apitest win32cui)
 add_importlibs(ntdll_apitest msvcrt advapi32 kernel32 ntdll)
