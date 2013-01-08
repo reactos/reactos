@@ -120,6 +120,7 @@ list(APPEND CRT_SOURCE
     mem/memcmp.c
     mem/memccpy.c
     mem/memicmp.c
+    misc/__crt_MessageBoxA.c
     misc/amsg.c
     misc/assert.c
     misc/environ.c
@@ -224,6 +225,7 @@ list(APPEND CRT_SOURCE
     stdio/wstat.c
     stdio/wstat64.c
     stdlib/_exit.c
+    stdlib/_set_abort_behavior.c
     stdlib/abort.c
     stdlib/atexit.c
     stdlib/ecvt.c
