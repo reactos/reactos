@@ -76,16 +76,17 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/kernel32.def)
 
 if(ARCH STREQUAL "i386")
-    list(APPEND SOURCE
+    list(APPEND ASM_SOURCE
         client/i386/fiber.S
         client/i386/thread.S)
 elseif(ARCH STREQUAL "amd64")
-    list(APPEND SOURCE
+    list(APPEND ASM_SOURCE
         client/amd64/fiber.S
         client/amd64/thread.S)
 endif()
 
-add_library(kernel32 SHARED ${SOURCE})
+add_asm_files(kernel32_asm ${ASM_SOURCE})
+add_library(kernel32 SHARED ${SOURCE} ${kernel32_asm})
 set_module_type(kernel32 win32dll ENTRYPOINT DllMain 12)
 target_link_libraries(kernel32 wine chkstk ${PSEH_LIB})
 add_importlibs(kernel32 ntdll)

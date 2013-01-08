@@ -134,7 +134,7 @@ function(add_cd_file)
 
     #get file if we need to
     if(NOT _CD_FILE)
-        get_target_property(_CD_FILE ${_CD_TARGET} LOCATION)
+        get_target_property(_CD_FILE ${_CD_TARGET} LOCATION_${CMAKE_BUILD_TYPE})
     endif()
 
     #do we add it to all CDs?

@@ -68,7 +68,7 @@ list(APPEND LIBCNTPR_SOURCE
     wstring/wcsstr.c)
 
 if(ARCH STREQUAL "i386")
-    list(APPEND LIBCNTPR_SOURCE
+    list(APPEND LIBCNTPR_ASM_SOURCE
         except/i386/chkstk_asm.s
         except/i386/seh.s
         except/i386/seh_prolog.s
@@ -97,24 +97,23 @@ if(ARCH STREQUAL "i386")
         math/i386/sin_asm.s
         math/i386/sqrt_asm.s
         math/i386/tan_asm.s
+        misc/i386/readcr4.S)
+
+    list(APPEND LIBCNTPR_SOURCE
         math/i386/ci.c
         math/i386/cicos.c
         math/i386/cilog.c
         math/i386/cipow.c
         math/i386/cisin.c
-        math/i386/cisqrt.c
-        misc/i386/readcr4.S)
+        math/i386/cisqrt.c)
     if(NOT MSVC)
         list(APPEND LIBCNTPR_SOURCE except/i386/chkstk_ms.s)
     endif()
 elseif(ARCH STREQUAL "amd64")
-    list(APPEND LIBCNTPR_SOURCE
-        except/amd64/ehandler.c
+    list(APPEND LIBCNTPR_ASM_SOURCE
         except/amd64/chkstk_asm.s
         except/amd64/seh.s
         setjmp/amd64/setjmp.s
-        math/cos.c
-        math/sin.c
         math/amd64/atan.S
         math/amd64/atan2.S
         math/amd64/ceil.S
@@ -129,10 +128,14 @@ elseif(ARCH STREQUAL "amd64")
         math/amd64/pow.S
         math/amd64/sqrt.S
         math/amd64/tan.S)
+    list(APPEND LIBCNTPR_SOURCE
+        except/amd64/ehandler.c
+        math/cos.c
+        math/sin.c)
 endif()
 
 if(ARCH STREQUAL "i386")
-    list(APPEND LIBCNTPR_SOURCE
+    list(APPEND LIBCNTPR_ASM_SOURCE
         mem/i386/memchr_asm.s
         mem/i386/memmove_asm.s
         mem/i386/memset_asm.s
@@ -184,7 +187,10 @@ else()
         string/wcsrchr.c)
 endif()
 
-add_library(libcntpr ${LIBCNTPR_SOURCE})
+set_source_files_properties(${LIBCNTPR_ASM_SOURCE} PROPERTIES COMPILE_DEFINITIONS "NO_RTL_INLINES;_NTSYSTEM_;_NTDLLBUILD_;_LIBCNT_;__CRT__NO_INLINE;CRTDLL")
+add_asm_files(libcntpr_asm ${LIBCNTPR_ASM_SOURCE})
+
+add_library(libcntpr ${LIBCNTPR_SOURCE} ${libcntpr_asm})
 add_target_compile_definitions(libcntpr
     NO_RTL_INLINES
     _NTSYSTEM_

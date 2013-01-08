@@ -26,16 +26,17 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/ntdll.def)
 
 if(ARCH STREQUAL "i386")
-    list(APPEND SOURCE dispatch/i386/dispatch.S)
+    list(APPEND ASM_SOURCE dispatch/i386/dispatch.S)
 elseif(ARCH STREQUAL "amd64")
-    list(APPEND SOURCE dispatch/amd64/dispatch.S)
+    list(APPEND ASM_SOURCE dispatch/amd64/dispatch.S)
 elseif(ARCH STREQUAL "arm")
-    list(APPEND SOURCE dispatch/arm/stubs_asm.s)
+    list(APPEND ASM_SOURCE dispatch/arm/stubs_asm.s)
 else()
     list(APPEND SOURCE dispatch/dispatch.c)
-endif(ARCH STREQUAL "i386")
+endif()
 
-add_library(ntdll SHARED ${SOURCE})
+add_asm_files(ntdll_asm ${ASM_SOURCE})
+add_library(ntdll SHARED ${SOURCE} ${ntdll_asm})
 
 set_module_type(ntdll win32dll ENTRYPOINT 0)
 
