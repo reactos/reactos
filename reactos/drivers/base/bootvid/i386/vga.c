@@ -63,7 +63,7 @@ ULONG lookup[16] =
     0x1111,
 };
 
-ULONG TextColor = 0xF;
+ULONG VidTextColor = 0xF;
 ULONG curr_x = 0;
 ULONG curr_y = 0;
 BOOLEAN CarriageReturn = FALSE;
@@ -689,8 +689,8 @@ VidSetTextColor(ULONG Color)
     ULONG OldColor;
 
     /* Save the old color and set the new one */
-    OldColor = TextColor;
-    TextColor = Color;
+    OldColor = VidTextColor;
+    VidTextColor = Color;
     return OldColor;
 }
 
@@ -824,7 +824,7 @@ VidDisplayString(PUCHAR String)
             }
 
             /* Display this character */
-            DisplayCharacter(*String, curr_x, curr_y, TextColor, 16);
+            DisplayCharacter(*String, curr_x, curr_y, VidTextColor, 16);
             curr_x += 8;
 
             /* Check if we should scroll */
