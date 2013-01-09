@@ -182,7 +182,7 @@ DisplayCharacter(CHAR Character,
         {
             SET_PIXELS(PixelPtr, *FontChar << Shift, TextColor);
             PixelPtr += 80;
-            FontChar++;
+            FontChar += FONT_PTR_DELTA;
         } while (--Height);
     }
 
@@ -206,7 +206,7 @@ DisplayCharacter(CHAR Character,
     {
         SET_PIXELS(PixelPtr, ~*FontChar >> Shift, BackColor);
         PixelPtr += 80;
-        FontChar++;
+        FontChar += FONT_PTR_DELTA;
     } while (--Height);
 
     /* Check if we need to update neighbor bytes */
@@ -225,7 +225,7 @@ DisplayCharacter(CHAR Character,
         {
             SET_PIXELS(PixelPtr, ~*FontChar << Shift, BackColor);
             PixelPtr += 80;
-            FontChar++;
+            FontChar += FONT_PTR_DELTA;
         } while (--Height);
     }
 }
