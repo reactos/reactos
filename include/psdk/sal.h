@@ -941,7 +941,7 @@ enum __SAL_YesNo {_SAL_notpresent, _SAL_no, _SAL_maybe, _SAL_yes, _SAL_default};
 //#define _Pre_readable_byte_size_(size)
 #define _Pre_readable_size_(size)
 //#define _Pre_readonly_
-//#define _Pre_satisfies_(cond)
+#define _Pre_satisfies_(cond)
 //#define _Pre_valid_
 //#define _Pre_valid_bytecap_(size)
 //#define _Pre_valid_bytecap_c_(size)

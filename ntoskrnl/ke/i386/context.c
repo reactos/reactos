@@ -35,8 +35,7 @@ KiSwapProcess(IN PKPROCESS NewProcess,
     if (NewProcess->LdtDescriptor.LimitLow != OldProcess->LdtDescriptor.LimitLow)
     {
         /* Not handled yet */
-        UNIMPLEMENTED;
-        ASSERT(FALSE); // while (TRUE);
+        UNIMPLEMENTED_DBGBREAK();
         return;
     }
     

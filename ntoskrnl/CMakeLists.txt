@@ -109,7 +109,6 @@ list(APPEND SOURCE
     ex/work.c
     ex/xipdisp.c
     ex/zone.c
-    ex/zw.S
     fsrtl/dbcsname.c
     fsrtl/fastio.c
     fsrtl/faulttol.c
@@ -274,15 +273,21 @@ list(APPEND SOURCE
     wmi/wmi.c
     ntoskrnl.rc)
 
+list(APPEND ASM_SOURCE ex/zw.S)
+
 if(ARCH STREQUAL "i386")
-    list(APPEND SOURCE
-        config/i386/cmhardwr.c
+    list(APPEND ASM_SOURCE
         ex/i386/fastinterlck_asm.S
         ex/i386/ioport.S
+        ke/i386/ctxswitch.S
+        ke/i386/trap.s
+        ke/i386/usercall_asm.S
+        rtl/i386/stack.S)
+    list(APPEND SOURCE
+        config/i386/cmhardwr.c
         ke/i386/abios.c
         ke/i386/cpu.c
         ke/i386/context.c
-        ke/i386/ctxswitch.S
         ke/i386/exp.c
         ke/i386/irqobj.c
         ke/i386/kiinit.c
@@ -290,25 +295,24 @@ if(ARCH STREQUAL "i386")
         ke/i386/mtrr.c
         ke/i386/patpge.c
         ke/i386/thrdini.c
-        ke/i386/trap.s
         ke/i386/traphdlr.c
-        ke/i386/usercall_asm.S
         ke/i386/usercall.c
         ke/i386/v86vdm.c
         mm/i386/page.c
         mm/ARM3/i386/init.c
         ps/i386/psctx.c
         ps/i386/psldt.c
-        rtl/i386/stack.S
         vdm/vdmmain.c
         vdm/vdmexec.c)
 elseif(ARCH STREQUAL "amd64")
+    list(APPEND ASM_SOURCE
+        ke/amd64/boot.S
+        ke/amd64/ctxswitch.S
+        ke/amd64/trap.S)
     list(APPEND SOURCE
         config/i386/cmhardwr.c
-        ke/amd64/boot.S
         ke/amd64/context.c
         ke/amd64/cpu.c
-        ke/amd64/ctxswitch.S
         ke/amd64/except.c
         ke/amd64/interrupt.c
         ke/amd64/irql.c
@@ -317,21 +321,21 @@ elseif(ARCH STREQUAL "amd64")
         ke/amd64/spinlock.c
         ke/amd64/stubs.c
         ke/amd64/thrdini.c
-        ke/amd64/trap.S
         mm/amd64/init.c
         mm/amd64/page.c
         ps/amd64/psctx.c)
 elseif(ARCH STREQUAL "arm")
+    list(APPEND ASM_SOURCE
+        ke/arm/boot.s
+        ke/arm/ctxswtch.s
+        ke/arm/stubs_asm.s
+        ke/arm/trap.s)
     list(APPEND SOURCE
         config/arm/cmhardwr.c
-        ke/arm/boot.s
         ke/arm/cpu.c
-        ke/arm/ctxswtch.s
         ke/arm/exp.c
         ke/arm/kiinit.c
-        ke/arm/stubs_asm.s
         ke/arm/thrdini.c
-        ke/arm/trap.s
         ke/arm/trapc.c
         ke/arm/usercall.c
         mm/arm/page.c
@@ -339,9 +343,11 @@ elseif(ARCH STREQUAL "arm")
         ps/arm/psctx.c
         rtl/arm/rtlexcpt.c)
 elseif(ARCH STREQUAL "powerpc")
+    list(APPEND ASM_SOURCE
+        ke/powerpc/main_asm.S
+        ke/powerpc/ctxhelp.S)
     list(APPEND SOURCE
         config/powerpc/cmhardwr.c
-        ke/powerpc/main_asm.S
         ke/powerpc/cpu.c
         ke/powerpc/exp.c
         ke/powerpc/kiinit.c
@@ -350,7 +356,6 @@ elseif(ARCH STREQUAL "powerpc")
         ke/powerpc/systimer.c
         ke/powerpc/thrdini.c
         ke/powerpc/ctxswitch.c
-        ke/powerpc/ctxhelp.S
         mm/powerpc/pfault.c
         mm/powerpc/page.c)
 endif()
@@ -361,18 +366,17 @@ if(NOT _WINKD_)
             kd/i386/kdmemsup.c
             kd/wrappers/gdbstub.c)
         if(KDBG)
-            list(APPEND SOURCE
-                kdbg/i386/i386-dis.c
-                kdbg/i386/kdb_help.S)
+            list(APPEND ASM_SOURCE kdbg/i386/kdb_help.S)
+            list(APPEND SOURCE kdbg/i386/i386-dis.c)
         endif()
     elseif(ARCH STREQUAL "amd64")
         list(APPEND SOURCE
             kd/amd64/kd.c
             kd/amd64/kdmemsup.c)
         if(KDBG)
+            list(APPEND ASM_SOURCE kdbg/amd64/kdb_help.S)
             list(APPEND SOURCE
                 kdbg/amd64/i386-dis.c
-                kdbg/amd64/kdb_help.S
                 kdbg/amd64/kdb.c)
         endif()
     elseif(ARCH STREQUAL "powerpc")
@@ -421,7 +425,10 @@ else() # _WINKD_
 
 endif()
 
+add_asm_files(ntoskrnl_asm ${ASM_SOURCE})
+
 add_executable(ntoskrnl
+    ${ntoskrnl_asm}
     ${SOURCE}
     ${CMAKE_CURRENT_BINARY_DIR}/ntoskrnl.def)
 
@@ -462,7 +469,14 @@ add_cd_file(TARGET ntoskrnl DESTINATION reactos/system32 NO_CAB FOR all)
 if(BUILD_MP)
     spec2def(ntkrnlmp.exe ntoskrnl.spec)
 
+    if(MSVC_IDE AND (CMAKE_VERSION MATCHES "ReactOS"))
+        set_source_files_properties(${ASM_SOURCE} PROPERTIES COMPILE_DEFINITIONS "CONFIG_SMP")
+    endif()
+
+    add_asm_files(ntkrnlmp_asm ${ASM_SOURCE})
+
     add_executable(ntkrnlmp
+        ${ntkrnlmp_asm}
         ${SOURCE}
         ${CMAKE_CURRENT_BINARY_DIR}/ntkrnlmp.def)
 
@@ -492,4 +506,6 @@ if(BUILD_MP)
     add_cd_file(TARGET ntkrnlmp DESTINATION reactos/system32 NO_CAB FOR all)
 endif()
 
-add_library(ntdllsys ntdll.S)
+add_asm_files(ntdllsys_asm ntdll.S)
+add_library(ntdllsys ${ntdllsys_asm})
+set_target_properties(ntdllsys PROPERTIES LINKER_LANGUAGE "C")

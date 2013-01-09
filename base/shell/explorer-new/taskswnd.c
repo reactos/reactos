@@ -852,7 +852,19 @@ TaskSwitchWnd_AllocTaskItem(IN OUT PTASK_SWITCH_WND This)
 
     ASSERT(This->AllocatedTaskItems >= This->TaskItemCount);
 
-    if (This->TaskItemCount != 0)
+    if (This->TaskItemCount == 0)
+    {
+        This->TaskItems = HeapAlloc(hProcessHeap,
+                                    0,
+                                    TASK_ITEM_ARRAY_ALLOC * sizeof(*This->TaskItems));
+        if (This->TaskItems != NULL)
+        {
+            This->AllocatedTaskItems = TASK_ITEM_ARRAY_ALLOC;
+        }
+        else
+            return NULL;
+    }
+    else if (This->TaskItemCount >= This->AllocatedTaskItems)
     {
         PTASK_ITEM NewArray;
         SIZE_T NewArrayLength, ActiveTaskItemIndex;
@@ -873,18 +885,6 @@ TaskSwitchWnd_AllocTaskItem(IN OUT PTASK_SWITCH_WND This)
             }
             This->AllocatedTaskItems = (WORD)NewArrayLength;
             This->TaskItems = NewArray;
-        }
-        else
-            return NULL;
-    }
-    else
-    {
-        This->TaskItems = HeapAlloc(hProcessHeap,
-                                    0,
-                                    TASK_ITEM_ARRAY_ALLOC * sizeof(*This->TaskItems));
-        if (This->TaskItems != NULL)
-        {
-            This->AllocatedTaskItems = TASK_ITEM_ARRAY_ALLOC;
         }
         else
             return NULL;
@@ -2073,9 +2073,9 @@ ForwardContextMenuMsg:
             case WM_NCCREATE:
             {
                 LPCREATESTRUCT CreateStruct = (LPCREATESTRUCT)lParam;
-                This = (PTASK_SWITCH_WND)HeapAlloc(hProcessHeap,
-                                                   0,
-                                                   sizeof(*This));
+                This = HeapAlloc(hProcessHeap,
+                                 0,
+                                 sizeof(*This));
                 if (This == NULL)
                     return FALSE;
 

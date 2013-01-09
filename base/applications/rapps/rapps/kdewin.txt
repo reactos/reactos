@@ -31,7 +31,7 @@ Description = KDE dla Windows.
 
 [Section.0418]
 Description = KDE pentru Windows.
-Size = 2.21Mo
+Size = 2,21 Mo
 
 [Section.0422]
 Description = KDE для Windows.

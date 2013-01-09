@@ -43,23 +43,21 @@ elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
     add_compile_flags("/Ob2 /D NDEBUG")
 endif()
 
-if(${_MACHINE_ARCH_FLAG} MATCHES X86)
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SAFESEH:NO /NODEFAULTLIB /RELEASE")
-    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /SAFESEH:NO /NODEFAULTLIB /RELEASE")
-    set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} /SAFESEH:NO /NODEFAULTLIB /RELEASE")
+if(MSVC_IDE)
+    add_compile_flags("/MP")
 endif()
 
-set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> <FLAGS> <DEFINES> ${I18N_DEFS} /fo<OBJECT> <SOURCE>")
+if(${_MACHINE_ARCH_FLAG} MATCHES X86)
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /MANIFEST:NO /INCREMENTAL:NO /SAFESEH:NO /NODEFAULTLIB /RELEASE")
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /MANIFEST:NO /INCREMENTAL:NO /SAFESEH:NO /NODEFAULTLIB /RELEASE")
+    set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} /MANIFEST:NO /INCREMENTAL:NO /SAFESEH:NO /NODEFAULTLIB /RELEASE")
+endif()
 
-if(MSVC_IDE)
-    # Asm source files are not supported in VS generators yet. As a result, <DEFINES> isn't recognized.
-    # We may temporarily use just the global defines, but this is not a solution as some modules (minihal for example) apply additional definitions to source files, so we get an incorrect build of such targets.
-    get_directory_property(definitions DEFINITIONS)
-    set(CMAKE_ASM_COMPILE_OBJECT
-        "cl /nologo /X /I${REACTOS_SOURCE_DIR}/include/asm /I${REACTOS_BINARY_DIR}/include/asm <FLAGS> ${definitions} /D__ASM__ /D_USE_ML /EP /c <SOURCE> > <OBJECT>.tmp"
-        "<CMAKE_ASM_COMPILER> /nologo /Cp /Fo<OBJECT> /c /Ta <OBJECT>.tmp")
+if(MSVC_IDE AND (CMAKE_VERSION MATCHES "ReactOS"))
+    # for VS builds we'll only have en-US in resource files
+    add_definitions(/DLANGUAGE_EN_US)
 else()
-    # NMake Makefiles
+    set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> <FLAGS> <DEFINES> ${I18N_DEFS} /fo<OBJECT> <SOURCE>")
     set(CMAKE_ASM_COMPILE_OBJECT
         "cl /nologo /X /I${REACTOS_SOURCE_DIR}/include/asm /I${REACTOS_BINARY_DIR}/include/asm <FLAGS> <DEFINES> /D__ASM__ /D_USE_ML /EP /c <SOURCE> > <OBJECT>.tmp"
         "<CMAKE_ASM_COMPILER> /nologo /Cp /Fo<OBJECT> /c /Ta <OBJECT>.tmp")
@@ -102,7 +100,7 @@ function(set_entrypoint _module _entrypoint)
 endfunction()
 
 function(set_subsystem MODULE SUBSYSTEM)
-    add_target_link_flags(${MODULE} "/subsystem:${SUBSYSTEM}")
+    add_target_link_flags(${MODULE} "/SUBSYSTEM:${SUBSYSTEM}")
 endfunction()
 
 function(set_image_base MODULE IMAGE_BASE)
@@ -243,3 +241,32 @@ endfunction()
 
 function(allow_warnings __module)
 endfunction()
+
+macro(add_asm_files _target)
+    if(MSVC_IDE AND (CMAKE_VERSION MATCHES "ReactOS"))
+        get_defines(_directory_defines)
+        get_includes(_directory_includes)
+        get_directory_property(_defines COMPILE_DEFINITIONS)
+        foreach(_source_file ${ARGN})
+            get_filename_component(_source_file_base_name ${_source_file} NAME_WE)
+            set(_preprocessed_asm_file ${CMAKE_CURRENT_BINARY_DIR}/asm/${_source_file_base_name}_${_target}.tmp)
+            set(_object_file ${CMAKE_CURRENT_BINARY_DIR}/asm/${_source_file_base_name}_${_target}.obj)
+            set(_source_file_full_path ${CMAKE_CURRENT_SOURCE_DIR}/${_source_file})
+            get_source_file_property(_defines_semicolon_list ${_source_file_full_path} COMPILE_DEFINITIONS)
+            unset(_source_file_defines)
+            foreach(_define ${_defines_semicolon_list})
+                if(NOT ${_define} STREQUAL "NOTFOUND")
+                    list(APPEND _source_file_defines -D${_define})
+                endif()
+            endforeach()
+            add_custom_command(
+                OUTPUT ${_preprocessed_asm_file} ${_object_file}
+                COMMAND cl /nologo /X /I${REACTOS_SOURCE_DIR}/include/asm /I${REACTOS_BINARY_DIR}/include/asm ${_directory_includes} ${_source_file_defines} ${_directory_defines} /D__ASM__ /D_USE_ML /EP /c ${_source_file_full_path} > ${_preprocessed_asm_file} && ${CMAKE_ASM_COMPILER} /nologo /Cp /Fo${_object_file} /c /Ta ${_preprocessed_asm_file}
+                DEPENDS ${_source_file_full_path})
+            set_source_files_properties(${_object_file} PROPERTIES EXTERNAL_OBJECT 1)
+            list(APPEND ${_target} ${_object_file})
+        endforeach()
+    else()
+        list(APPEND ${_target} ${ARGN})
+    endif()
+endmacro()

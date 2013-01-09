@@ -137,8 +137,7 @@ typedef union _KTRAP_EXIT_SKIP_BITS
                    IN ULONG Flags)                  \
     {                                               \
         /* Not yet handled */                       \
-        UNIMPLEMENTED;                              \
-        ASSERT(FALSE); /* while (TRUE); */          \
+        UNIMPLEMENTED_DBGBREAK();                   \
         return FALSE;                               \
     }
 

@@ -1071,6 +1071,14 @@ NtGdiStretchDIBitsInternal(
         return 0;
     }
 
+    /* Check for info / mem DC without surface */
+    if (!pdc->dclevel.pSurface)
+    {
+        DC_UnlockDc(pdc);
+        // CHECKME
+        return TRUE;
+    }
+
     /* Transform dest size */
     sizel.cx = cxDst;
     sizel.cy = cyDst;
@@ -1099,22 +1107,30 @@ NtGdiStretchDIBitsInternal(
                                               hcmXform);
     }
 
-    pvBits = ExAllocatePoolWithTag(PagedPool, cjMaxBits, 'pmeT');
-    if (!pvBits)
+    if (pjInit && (cjMaxBits > 0))
     {
-        return 0;
-    }
+        pvBits = ExAllocatePoolWithTag(PagedPool, cjMaxBits, 'pmeT');
+        if (!pvBits)
+        {
+            return 0;
+        }
 
-    _SEH2_TRY
-    {
-        ProbeForRead(pjInit, cjMaxBits, 1);
-        RtlCopyMemory(pvBits, pjInit, cjMaxBits);
+        _SEH2_TRY
+        {
+            ProbeForRead(pjInit, cjMaxBits, 1);
+            RtlCopyMemory(pvBits, pjInit, cjMaxBits);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            ExFreePoolWithTag(pvBits, 'pmeT');
+            _SEH2_YIELD(return 0);
+        }
+        _SEH2_END
     }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    else
     {
-        _SEH2_YIELD(return 0);
+        pvBits = NULL;
     }
-    _SEH2_END
 
     /* FIXME: Locking twice is cheesy, coord tranlation in UM will fix it */
     if (!(pdc = DC_LockDc(hdc)))
@@ -1171,13 +1187,6 @@ NtGdiStretchDIBitsInternal(
     DC_vPrepareDCsForBlit(pdc, rcDst, NULL, rcSrc);
 
     psurfDst = pdc->dclevel.pSurface;
-    if (!psurfDst)
-    {
-        DC_vFinishBlit(pdc, NULL);
-        // CHECKME
-        bResult = TRUE;
-        goto cleanup;
-    }
 
     /* Initialize XLATEOBJ */
     EXLATEOBJ_vInitialize(&exlo,
@@ -1209,7 +1218,7 @@ cleanup:
     if (psurfTmp) SURFACE_ShareUnlockSurface(psurfTmp);
     if (hbmTmp) GreDeleteObject(hbmTmp);
     if (pdc) DC_UnlockDc(pdc);
-    ExFreePoolWithTag(pvBits, 'pmeT');
+    if (pvBits) ExFreePoolWithTag(pvBits, 'pmeT');
 
     return bResult;
 }

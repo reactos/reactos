@@ -32,7 +32,7 @@ Description = Najpopularniejszy klient IRC (Internet Relay Chat).
 [Section.0418]
 Licence = Versiune de evaluare
 Description = Cel mai popular client de IRC (Internet Relay Chat).
-Size = 1.67Mo
+Size = 1,67 Mo
 
 [Section.0422]
 Description = Найпопулярніший клієнт IRC (Internet Relay Chat).

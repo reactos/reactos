@@ -221,7 +221,8 @@ SampCreateAliasAccount(HKEY hDomainKey,
 static BOOL
 SampCreateUserAccount(HKEY hDomainKey,
                       LPCWSTR lpAccountName,
-                      ULONG ulRelativeId)
+                      ULONG ulRelativeId,
+                      ULONG UserAccountControl)
 {
     SAM_USER_FIXED_DATA FixedUserData;
     LPWSTR lpEmptyString = L"";
@@ -235,6 +236,7 @@ SampCreateUserAccount(HKEY hDomainKey,
     FixedUserData.Version = 1;
 
     FixedUserData.UserId = ulRelativeId;
+    FixedUserData.UserAccountControl = UserAccountControl;
 
     swprintf(szAccountKeyName, L"Users\\%08lX", ulRelativeId);
 
@@ -313,6 +315,13 @@ SampCreateUserAccount(HKEY hDomainKey,
 
         RegSetValueEx(hAccountKey,
                       L"WorkStations",
+                      0,
+                      REG_SZ,
+                      (LPVOID)lpEmptyString,
+                      sizeof(WCHAR));
+
+        RegSetValueEx(hAccountKey,
+                      L"Parameters",
                       0,
                       REG_SZ,
                       (LPVOID)lpEmptyString,
@@ -666,11 +675,13 @@ SampInitializeSAM(VOID)
     {
         SampCreateUserAccount(hDomainKey,
                               L"Administrator",
-                              DOMAIN_USER_RID_ADMIN);
+                              DOMAIN_USER_RID_ADMIN,
+                              USER_DONT_EXPIRE_PASSWORD | USER_NORMAL_ACCOUNT);
 
         SampCreateUserAccount(hDomainKey,
                               L"Guest",
-                              DOMAIN_USER_RID_GUEST);
+                              DOMAIN_USER_RID_GUEST,
+                              USER_ACCOUNT_DISABLED | USER_DONT_EXPIRE_PASSWORD | USER_NORMAL_ACCOUNT);
 
         RegCloseKey(hDomainKey);
     }

@@ -30,8 +30,6 @@ typedef struct _PROPSHEET_INFO
     HBITMAP hTaskbarBitmap;
 } PROPSHEET_INFO, *PPROPSHEET_INFO;
 
-ADVANCED_SETTINGS AdvancedSettings = { FALSE };
-
 
 static BOOL
 UpdateTaskbarBitmap(PPROPSHEET_INFO pPropInfo)
@@ -225,6 +223,7 @@ AdvancedSettingsPageProc(HWND hwndDlg,
 
                 case PSN_APPLY:
                     AdvancedSettings.bShowSeconds = IsDlgButtonChecked(hwndDlg, IDC_TASKBARPROP_SECONDS);
+                    SaveSettingDword(szAdvancedSettingsKey, TEXT("ShowSeconds"), AdvancedSettings.bShowSeconds);
                     break;
             }
 
@@ -370,9 +369,9 @@ DisplayTrayProperties(ITrayWindow *Tray)
     PROPSHEETPAGE psp[5];
     TCHAR szCaption[256];
 
-    pPropInfo = (PPROPSHEET_INFO)HeapAlloc(hProcessHeap,
-                                           HEAP_ZERO_MEMORY,
-                                           sizeof(PROPSHEET_INFO));
+    pPropInfo = HeapAlloc(hProcessHeap,
+                          HEAP_ZERO_MEMORY,
+                          sizeof(PROPSHEET_INFO));
     if (!pPropInfo)
     {
         return NULL;

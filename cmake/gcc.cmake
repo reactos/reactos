@@ -368,3 +368,8 @@ endfunction()
 function(allow_warnings __module)
     add_target_compile_flags(${__module} "-Wno-error")
 endfunction()
+
+macro(add_asm_files _target)
+    list(APPEND ${_target} ${ARGN})
+endmacro()
+

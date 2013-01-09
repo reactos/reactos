@@ -34,7 +34,7 @@ Description = Biblioteki uruchomieniowe Visual Basic 6.
 [Section.0418]
 Licence = Necunoscută
 Description = Visual Basic 6 Runtime. Conține: advpack.dll, asycfilt.dll, comcat.dll, msvbvm60.dll, oleaut32.dll, olepro32.dll.
-Size = 1.02Mo
+Size = 1,02 Mo
 
 [Section.0422]
 Licence = Невідома

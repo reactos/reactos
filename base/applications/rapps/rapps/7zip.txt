@@ -28,7 +28,7 @@ Description = Gereedschap voor het maken en openen van 7z, zip, tar, rar and and
 
 [Section.0418]
 Description = Utilitar pentru crearea și deschiderea arhivelor 7zip, zip, tar, rar și altele.
-Size = 1.06Mo
+Size = 1,06 Mo
 
 [Section.0422]
 Description = Утиліта для створення та відкриття 7zip, zip, tar, rar та інших архівних файлів.

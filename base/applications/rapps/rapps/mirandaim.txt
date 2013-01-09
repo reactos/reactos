@@ -28,7 +28,7 @@ Description = Otwarty komunikator internetowy, obsługujący wiele różnych pro
 
 [Section.0418]
 Description = Aplicație de mesagerie instant multiprotocol (open-source) - posibil cu limitări în funcționalitate.
-Size = 3.1Mo
+Size = 3,1 Mo
 
 [Section.0422]
 Description = Відкрита мультипротокольна програма миттєвих повідомлень - може не працювати повністю.

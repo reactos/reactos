@@ -239,7 +239,6 @@ SysPagerWnd_RemoveButton(IN OUT PSYS_PAGER_WND_DATA This,
         PNOTIFY_ITEM updateItem;
         deleteItem = *NotifyPointer;
 
-
         SendMessage(This->hWndToolbar,
                     TB_DELETEBUTTON,
                     deleteItem->Index,
@@ -611,16 +610,16 @@ static HWND
 CreateSysPagerWnd(IN HWND hWndParent,
                   IN BOOL bVisible)
 {
-    PSYS_PAGER_WND_DATA TcData;
+    PSYS_PAGER_WND_DATA SpData;
     DWORD dwStyle;
     HWND hWnd = NULL;
 
-    TcData = HeapAlloc(hProcessHeap,
+    SpData = HeapAlloc(hProcessHeap,
                        0,
-                       sizeof(*TcData));
-    if (TcData != NULL)
+                       sizeof(*SpData));
+    if (SpData != NULL)
     {
-        ZeroMemory(TcData, sizeof(*TcData));
+        ZeroMemory(SpData, sizeof(*SpData));
 
         /* Create the window. The tray window is going to move it to the correct
            position and resize it as needed. */
@@ -639,17 +638,19 @@ CreateSysPagerWnd(IN HWND hWndParent,
                               hWndParent,
                               NULL,
                               hExplorerInstance,
-                              TcData);
+                              SpData);
 
-        if (hWnd == NULL)
+        if (hWnd != NULL)
+        {
+            SetWindowTheme(hWnd, L"TrayNotify", NULL);
+        }
+        else
         {
             HeapFree(hProcessHeap,
                      0,
-                     TcData);
+                     SpData);
         }
     }
-
-    SetWindowTheme(hWnd, L"TrayNotify", NULL);
 
     return hWnd;
 
@@ -700,25 +701,6 @@ static const struct
     { FALSE, 0, TEXT("dddd") },
     { FALSE, DATE_SHORTDATE, NULL }
 };
-
-HRESULT RegGetDWord(HKEY hKey, LPCTSTR szValueName, DWORD * lpdwResult)
-{
-    LONG lResult;
-    DWORD dwDataSize = sizeof(DWORD);
-    DWORD dwType = 0;
-
-    // Check input parameters...
-    if (hKey == NULL || lpdwResult == NULL) return E_INVALIDARG;
-
-    // Get dword value from the registry...
-    lResult = RegQueryValueEx(hKey, szValueName, 0, &dwType, (LPBYTE) lpdwResult, &dwDataSize );
-
-    // Check result and make sure the registry value is a DWORD(REG_DWORD)...
-    if (lResult != ERROR_SUCCESS) return HRESULT_FROM_WIN32(lResult);
-    else if (dwType != REG_DWORD) return DISP_E_TYPEMISMATCH;
-
-    return NOERROR;
-}
 
 #define CLOCKWND_FORMAT_COUNT (sizeof(ClockWndFormats) / sizeof(ClockWndFormats[0]))
 
@@ -1400,16 +1382,19 @@ CreateTrayClockWnd(IN HWND hWndParent,
                               hWndParent,
                               NULL,
                               hExplorerInstance,
-                              (LPVOID)TcData);
+                              TcData);
 
-        if (hWnd == NULL)
+        if (hWnd != NULL)
+        {
+            SetWindowTheme(hWnd, L"TrayNotify", NULL);
+        }
+        else
         {
             HeapFree(hProcessHeap,
                      0,
                      TcData);
         }
     }
-    SetWindowTheme(hWnd, L"TrayNotify", NULL);
 
     return hWnd;
 
@@ -1879,7 +1864,7 @@ CreateTrayNotifyWnd(IN OUT ITrayWindow *TrayWindow,
                               hWndTrayWindow,
                               NULL,
                               hExplorerInstance,
-                              (LPVOID)TnData);
+                              TnData);
 
         if (hWnd == NULL)
         {

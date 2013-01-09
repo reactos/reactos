@@ -311,7 +311,7 @@ GetVersionInfoString(IN TCHAR *szFileName,
                     (LPVOID *)&lpTranslate,
                     &cbTranslate);
 
-                for (i = 0;i < (cbTranslate / sizeof(LANGCODEPAGE));i++)
+                for (i = 0; i < cbTranslate / sizeof(LANGCODEPAGE); i++)
                 {
                     /* If the bottom eight bits of the language id's
                     match, use this version information (since this
@@ -370,6 +370,7 @@ _tWinMain(IN HINSTANCE hInstance,
 
     hExplorerInstance = hInstance;
     hProcessHeap = GetProcessHeap();
+    LoadAdvancedSettings();
 
     hUser32 = GetModuleHandle(TEXT("USER32.DLL"));
     if (hUser32 != NULL)
@@ -409,7 +410,12 @@ _tWinMain(IN HINSTANCE hInstance,
     }
 
     if (Tray != NULL)
+    {
+        RegisterHotKey(NULL, IDHK_RUN, MOD_WIN, 'R');
         TrayMessageLoop(Tray);
+        ITrayWindow_Release(Tray);
+        UnregisterTrayWindowClass();
+    }
 
     if (hShellDesktop != NULL)
         DesktopDestroyShellWindow(hShellDesktop);

@@ -21,4 +21,4 @@ Description = L'originale Client BitTorrent
 [Section.0418]
 Licence = Gratuită pentru uz necomercial
 Description = Originalul client BitTorrent.
-Size = 5.4Mo
+Size = 5,4 Mo

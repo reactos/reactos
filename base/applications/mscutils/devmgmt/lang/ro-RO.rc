@@ -22,7 +22,7 @@ BEGIN
     MENUITEM "Resurse după t&ip",             IDC_RESBYTYPE, GRAYED
     MENUITEM "Resurse după c&onexiune",       IDC_RESBYCONN, GRAYED
     MENUITEM SEPARATOR
-    MENUITEM "Show hidden devices",           IDC_SHOWHIDDEN
+    MENUITEM "Afișea&ză dispozitive ascunse", IDC_SHOWHIDDEN
   END
   POPUP "&?"
   BEGIN

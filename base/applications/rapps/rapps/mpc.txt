@@ -25,7 +25,7 @@ Description = Mediaspeler.
 
 [Section.0418]
 Description = Lector multimedia.
-Size = 5.57Mo
+Size = 5,9 Mo
 
 [Section.0419]
 Description = Мультимедийный проигрыватель.

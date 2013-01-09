@@ -29,7 +29,7 @@ Description = Popularna przeglądarka internetowa z wieloma zaawansowanymi funkc
 [Section.0418]
 Licence = Gratuită
 Description = Navigatorul popular Opera cu multe funcționalități avansate incluzând poștă electronică și un client de BitTorrent.
-Size = 7.21Mo
+Size = 7,21 Mo
 
 [Section.0419]
 Description = Популярный браузер со многими дополнительными возможностями, включающий клиентов почты и BitTorrent.

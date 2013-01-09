@@ -63,12 +63,18 @@ ULONG lookup[16] =
     0x1111,
 };
 
-ULONG TextColor = 0xF;
+ULONG VidTextColor = 0xF;
 ULONG curr_x = 0;
 ULONG curr_y = 0;
 BOOLEAN CarriageReturn = FALSE;
 ULONG_PTR VgaRegisterBase = 0;
 ULONG_PTR VgaBase = 0;
+
+#define __outpb(Port, Value) \
+    WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + Port, (UCHAR)Value)
+
+#define __outpw(Port, Value) \
+    WRITE_PORT_USHORT((PUSHORT)(VgaRegisterBase + Port), (USHORT)Value)
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
@@ -79,35 +85,18 @@ ReadWriteMode(UCHAR Mode)
     UCHAR Value;
 
     /* Switch to graphics mode register */
-    WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CE, 5);
+    __outpb(0x3CE, 5);
 
     /* Get the current register value, minus the current mode */
     Value = READ_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CF) & 0xF4;
 
     /* Set the new mode */
-    WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + 0x3CF, Mode | Value);
+    __outpb(0x3CF, Mode | Value);
 }
 
-VOID
-NTAPI
-__outpb(IN ULONG Port,
-        IN ULONG Value)
-{
-    /* Write to the VGA Register */
-    WRITE_PORT_UCHAR((PUCHAR)VgaRegisterBase + Port, (UCHAR)Value);
-}
 
 VOID
-NTAPI
-__outpw(IN ULONG Port,
-        IN ULONG Value)
-{
-    /* Write to the VGA Register */
-    WRITE_PORT_USHORT((PUSHORT)(VgaRegisterBase + Port), (USHORT)Value);
-}
-
-VOID
-NTAPI
+FORCEINLINE
 SetPixel(IN ULONG Left,
          IN ULONG Top,
          IN UCHAR Color)
@@ -116,6 +105,41 @@ SetPixel(IN ULONG Left,
 
     /* Calculate the pixel position. */
     PixelPosition = (PUCHAR)VgaBase + (Left >> 3) + (Top * 80);
+
+    /* Select the bitmask register and write the mask */
+    __outpw(0x3CE, (PixelMask[Left & 7] << 8) | 8);
+
+    /* Read the current pixel value and add our color */
+    WRITE_REGISTER_UCHAR(PixelPosition,
+                         READ_REGISTER_UCHAR(PixelPosition) & Color);
+}
+
+#ifdef CHAR_GEN_UPSIDE_DOWN
+# define GetFontPtr(_Char) &FontData[_Char * BOOTCHAR_HEIGHT] + BOOTCHAR_HEIGHT - 1;
+# define FONT_PTR_DELTA (-1)
+#else
+# define GetFontPtr(_Char) &FontData[_Char * BOOTCHAR_HEIGHT];
+# define FONT_PTR_DELTA (1)
+#endif
+
+#define SET_PIXELS(_PixelPtr, _PixelMask, _TextColor) \
+    /* Select the bitmask register and write the mask */ \
+    __outpw(0x3CE, (_PixelMask << 8) | 8); \
+\
+    /* Set the new color */ \
+    WRITE_REGISTER_UCHAR(_PixelPtr, (UCHAR)_TextColor);\
+
+VOID
+NTAPI
+DisplayCharacter(CHAR Character,
+                 ULONG Left,
+                 ULONG Top,
+                 ULONG TextColor,
+                 ULONG BackColor)
+{
+    PUCHAR FontChar, PixelPtr;
+    ULONG Height;
+    UCHAR Shift;
 
     /* Switch to mode 10 */
     ReadWriteMode(10);
@@ -126,62 +150,84 @@ SetPixel(IN ULONG Left,
     /* Select the color don't care register */
     __outpw(0x3CE, 7);
 
-    /* Select the bitmask register and write the mask */
-    __outpw(0x3CE, (PixelMask[Left & 7] << 8) | 8);
+    /* Calculate shift */
+    Shift = Left & 7;
 
-    /* Read the current pixel value and add our color */
-    WRITE_REGISTER_UCHAR(PixelPosition,
-                         READ_REGISTER_UCHAR(PixelPosition) & Color);
-}
+    /* Get the font and pixel pointer */
+    FontChar = GetFontPtr(Character);
+    PixelPtr = (PUCHAR)VgaBase + (Left >> 3) + (Top * 80);
 
-VOID
-NTAPI
-DisplayCharacter(CHAR Character,
-                 ULONG Left,
-                 ULONG Top,
-                 ULONG TextColor,
-                 ULONG BackTextColor)
-{
-    PUCHAR FontChar;
-    ULONG i, j, XOffset;
-
-    /* Get the font line for this character */
-    FontChar = &FontData[Character * BOOTCHAR_HEIGHT];
-
-    /* Loop each pixel height */
-    i = BOOTCHAR_HEIGHT;
+    /* Loop all pixel rows */
+    Height = BOOTCHAR_HEIGHT;
     do
     {
-        /* Loop each pixel width */
-        j = 128;
-        XOffset = Left;
+        SET_PIXELS(PixelPtr, *FontChar >> Shift, TextColor);
+        PixelPtr += 80;
+        FontChar += FONT_PTR_DELTA;
+    } while (--Height);
+
+    /* Check if we need to update neighbor bytes */
+    if (Shift)
+    {
+        /* Calculate shift for 2nd byte */
+        Shift = 8 - Shift;
+
+        /* Get the font and pixel pointer (2nd byte) */
+        FontChar = GetFontPtr(Character);
+        PixelPtr = (PUCHAR)VgaBase + (Left >> 3) + (Top * 80) + 1;
+
+        /* Loop all pixel rows */
+        Height = BOOTCHAR_HEIGHT;
         do
         {
-            /* Check if we should draw this pixel */
-#ifdef CHAR_GEN_UPSIDE_DOWN
-            if (FontChar[i] & (UCHAR)j)
-#else
-            /* Normal character generator (top of char is first element) */
-            if (FontChar[BOOTCHAR_HEIGHT - i] & (UCHAR)j)
-#endif
-            {
-                /* We do, use the given Text Color */
-                SetPixel(XOffset, Top, (UCHAR)TextColor);
-            }
-            else if (BackTextColor < 16)
-            {
-                /* This is a background pixel. */
-                /* We're drawing it unless it's transparent. */
-                SetPixel(XOffset, Top, (UCHAR)BackTextColor);
-            }
+            SET_PIXELS(PixelPtr, *FontChar << Shift, TextColor);
+            PixelPtr += 80;
+            FontChar += FONT_PTR_DELTA;
+        } while (--Height);
+    }
 
-            /* Increase X Offset */
-            XOffset++;
-        } while (j >>= 1);
+    /* Check if the background color is transparent */
+    if (BackColor >= 16)
+    {
+        /* We are done */
+        return;
+    }
 
-        /* Move to the next Y ordinate */
-        Top++;
-    } while (--i);
+    /* Calculate shift */
+    Shift = Left & 7;
+
+    /* Get the font and pixel pointer */
+    FontChar = GetFontPtr(Character);
+    PixelPtr = (PUCHAR)VgaBase + (Left >> 3) + (Top * 80);
+
+    /* Loop all pixel rows */
+    Height = BOOTCHAR_HEIGHT;
+    do
+    {
+        SET_PIXELS(PixelPtr, ~*FontChar >> Shift, BackColor);
+        PixelPtr += 80;
+        FontChar += FONT_PTR_DELTA;
+    } while (--Height);
+
+    /* Check if we need to update neighbor bytes */
+    if (Shift)
+    {
+        /* Calculate shift for 2nd byte */
+        Shift = 8 - Shift;
+
+        /* Get the font and pixel pointer (2nd byte) */
+        FontChar = GetFontPtr(Character);
+        PixelPtr = (PUCHAR)VgaBase + (Left >> 3) + (Top * 80) + 1;
+
+        /* Loop all pixel rows */
+        Height = BOOTCHAR_HEIGHT;
+        do
+        {
+            SET_PIXELS(PixelPtr, ~*FontChar << Shift, BackColor);
+            PixelPtr += 80;
+            FontChar += FONT_PTR_DELTA;
+        } while (--Height);
+    }
 }
 
 VOID
@@ -280,7 +326,7 @@ VOID
 NTAPI
 VgaScroll(ULONG Scroll)
 {
-    ULONG Top, RowSize, i;
+    ULONG Top, RowSize;
     PUCHAR OldPosition, NewPosition;
 
     /* Clear the 4 planes */
@@ -291,19 +337,27 @@ VgaScroll(ULONG Scroll)
 
     /* Set Mode 1 */
     ReadWriteMode(1);
-    
+
     RowSize = (ScrollRegion[2] - ScrollRegion[0] + 1) / 8;
+
+    /* Calculate the position in memory for the row */
+    OldPosition = (PUCHAR)VgaBase + (ScrollRegion[1] + Scroll) * 80 + ScrollRegion[0] / 8;
+    NewPosition = (PUCHAR)VgaBase + ScrollRegion[1] * 80 + ScrollRegion[0] / 8;
 
     /* Start loop */
     for(Top = ScrollRegion[1]; Top <= ScrollRegion[3]; ++Top)
     {
-        /* Calculate the position in memory for the row */
-        OldPosition = (PUCHAR)VgaBase + (Top + Scroll) * 80 + ScrollRegion[0] / 8;
-        NewPosition = (PUCHAR)VgaBase + Top * 80 + ScrollRegion[0] / 8;
-        
+#if defined(_M_IX86) || defined(_M_AMD64)
+        __movsb(NewPosition, OldPosition, RowSize);
+#else
+        ULONG i;
+
         /* Scroll the row */
         for(i = 0; i < RowSize; ++i)
             WRITE_REGISTER_UCHAR(NewPosition + i, READ_REGISTER_UCHAR(OldPosition + i));
+#endif
+        OldPosition += 80;
+        NewPosition += 80;
     }
 }
 
@@ -341,19 +395,21 @@ PreserveRow(IN ULONG CurrentTop,
 
     /* Set the count and make sure it's above 0 */
     Count = TopDelta * 80;
-    if (Count)
-    {
-        /* Loop every pixel */
-        do
-        {
-            /* Write the data back on the other position */
-            WRITE_REGISTER_UCHAR(Position1, READ_REGISTER_UCHAR(Position2));
 
-            /* Increase both positions */
-            Position2++;
-            Position1++;
-        } while (--Count);
+#if defined(_M_IX86) || defined(_M_AMD64)
+    __movsb(Position1, Position2, Count);
+#else
+    /* Loop every pixel */
+    while (Count--)
+    {
+        /* Write the data back on the other position */
+        WRITE_REGISTER_UCHAR(Position1, READ_REGISTER_UCHAR(Position2));
+
+        /* Increase both positions */
+        Position2++;
+        Position1++;
     }
+#endif
 }
 
 VOID
@@ -389,6 +445,15 @@ BitBlt(IN ULONG Left,
                  Delta);
         return;
     }
+
+    /* Switch to mode 10 */
+    ReadWriteMode(10);
+
+    /* Clear the 4 planes (we're already in unchained mode here) */
+    __outpw(0x3C4, 0xF02);
+
+    /* Select the color don't care register */
+    __outpw(0x3CE, 7);
 
     /* 4bpp blitting */
     dy = Top;
@@ -428,6 +493,15 @@ RleBitBlt(IN ULONG Left,
     ULONG Color, Color2;
     ULONG i, j;
     ULONG Code;
+
+    /* Switch to mode 10 */
+    ReadWriteMode(10);
+
+    /* Clear the 4 planes (we're already in unchained mode here) */
+    __outpw(0x3C4, 0xF02);
+
+    /* Select the color don't care register */
+    __outpw(0x3CE, 7);
 
     /* Set Y height and current X value and start loop */
     YDelta = Top + Height - 1;
@@ -615,8 +689,8 @@ VidSetTextColor(ULONG Color)
     ULONG OldColor;
 
     /* Save the old color and set the new one */
-    OldColor = TextColor;
-    TextColor = Color;
+    OldColor = VidTextColor;
+    VidTextColor = Color;
     return OldColor;
 }
 
@@ -735,7 +809,7 @@ VidDisplayString(PUCHAR String)
         {
             /* Update current X */
             curr_x = ScrollRegion[0];
-            
+
             /* Check if we're being followed by a new line */
             CarriageReturn = TRUE;
         }
@@ -750,7 +824,7 @@ VidDisplayString(PUCHAR String)
             }
 
             /* Display this character */
-            DisplayCharacter(*String, curr_x, curr_y, TextColor, 16);
+            DisplayCharacter(*String, curr_x, curr_y, VidTextColor, 16);
             curr_x += 8;
 
             /* Check if we should scroll */

@@ -80,11 +80,16 @@ list(APPEND FREELDR_COMMON_SOURCE
     windows/wlregistry.c)
 
 if(ARCH STREQUAL "i386")
+    list(APPEND FREELDR_COMMON_ASM_SOURCE
+        arch/i386/entry.S
+        arch/i386/i386pnp.S
+        arch/i386/i386trap.S
+        arch/i386/linux.S
+        arch/i386/mb.S)
     list(APPEND FREELDR_COMMON_SOURCE
         arch/i386/archmach.c
         arch/i386/custom.c
         arch/i386/drivemap.c
-        arch/i386/entry.S
         arch/i386/halstub.c
         arch/i386/hardware.c
         arch/i386/hwacpi.c
@@ -94,13 +99,9 @@ if(ARCH STREQUAL "i386")
         arch/i386/i386bug.c
         arch/i386/i386disk.c
         arch/i386/i386idt.c
-        arch/i386/i386pnp.S
         arch/i386/i386rtl.c
-        arch/i386/i386trap.S
         arch/i386/i386vid.c
-        arch/i386/linux.S
         arch/i386/machpc.c
-        arch/i386/mb.S
         arch/i386/miscboot.c
         arch/i386/ntoskrnl.c
         arch/i386/pccons.c
@@ -121,14 +122,14 @@ if(ARCH STREQUAL "i386")
         windows/headless.c
         disk/scsiport.c)
     if(NOT MSVC)
-        list(APPEND FREELDR_COMMON_SOURCE
-            arch/i386/drvmap.S)
+        list(APPEND FREELDR_COMMON_SOURCE arch/i386/drvmap.S)
     endif()
 elseif(ARCH STREQUAL "amd64")
-    list(APPEND FREELDR_COMMON_SOURCE
+    list(APPEND FREELDR_COMMON_ASM_SOURCE
         arch/amd64/entry.S
         arch/amd64/int386.S
-        arch/amd64/pnpbios.S
+        arch/amd64/pnpbios.S)
+    list(APPEND FREELDR_COMMON_SOURCE
         arch/i386/hardware.c
         arch/i386/hwacpi.c
         arch/i386/hwapm.c
@@ -150,9 +151,10 @@ else()
 endif()
 
 if((NOT MSVC) AND (CMAKE_VERSION VERSION_GREATER 2.8.7))
-    add_library(freeldr_common OBJECT ${FREELDR_COMMON_SOURCE})
+    add_library(freeldr_common OBJECT ${FREELDR_COMMON_SOURCE} ${FREELDR_COMMON_ASM_SOURCE})
 else()
-    add_library(freeldr_common ${FREELDR_COMMON_SOURCE})
+    add_asm_files(freeldr_common_asm ${FREELDR_COMMON_ASM_SOURCE})
+    add_library(freeldr_common ${FREELDR_COMMON_SOURCE} ${freeldr_common_asm})
 endif()
 add_dependencies(freeldr_common bugcodes)
 
@@ -185,8 +187,8 @@ if(NOT MSVC)
     add_target_link_flags(freeldr_pe "-Wl,--strip-all,--exclude-all-symbols,--file-alignment,0x1000,-T,${CMAKE_CURRENT_SOURCE_DIR}/freeldr_i386.lds")
     add_target_link_flags(freeldr_pe_dbg "-Wl,--exclude-all-symbols,--file-alignment,0x1000,-T,${CMAKE_CURRENT_SOURCE_DIR}/freeldr_i386.lds")
 else()
-    add_target_link_flags(freeldr_pe "/ignore:4078 /ignore:4254 /DRIVER /FIXED /ALIGN:0x400 /SECTION:.text,ERW /SECTION:.data,RW /MERGE:.text16=.text /MERGE:.data=.text /MERGE:.rdata=.text /MERGE:.bss=.text /SUBSYSTEM:BOOT_APPLICATION")
-    add_target_link_flags(freeldr_pe_dbg "/ignore:4078 /ignore:4254 /DRIVER /FIXED /ALIGN:0x400 /SECTION:.text,ERW /SECTION:.data,RW /MERGE:.text16=.text /MERGE:.data=.text /MERGE:.rdata=.text /MERGE:.bss=.text /SUBSYSTEM:BOOT_APPLICATION")
+    add_target_link_flags(freeldr_pe "/ignore:4078 /ignore:4254 /DRIVER /FIXED /ALIGN:0x400 /SECTION:.text,ERW /SECTION:.data,RW /MERGE:.text16=.text /MERGE:.data=.text /MERGE:.rdata=.text /MERGE:.bss=.text ")
+    add_target_link_flags(freeldr_pe_dbg "/ignore:4078 /ignore:4254 /DRIVER /FIXED /ALIGN:0x400 /SECTION:.text,ERW /SECTION:.data,RW /MERGE:.text16=.text /MERGE:.data=.text /MERGE:.rdata=.text /MERGE:.bss=.text")
 endif()
 
 set_image_base(freeldr_pe 0x10000)
@@ -202,7 +204,7 @@ if(ARCH STREQUAL "i386")
     target_link_libraries(freeldr_pe_dbg mini_hal)
 endif()
 
-if(MSVC OR NOT CMAKE_VERSION VERSION_GREATER 2.8.7)
+if(MSVC OR (NOT CMAKE_VERSION VERSION_GREATER 2.8.7))
     target_link_libraries(freeldr_pe freeldr_common)
     target_link_libraries(freeldr_pe_dbg freeldr_common)
 endif()
@@ -249,8 +251,8 @@ if(NOT MSVC)
     add_target_link_flags(setupldr_pe "-Wl,--strip-all,--exclude-all-symbols,--file-alignment,0x1000,-T,${CMAKE_CURRENT_SOURCE_DIR}/freeldr_i386.lds")
     add_target_link_flags(setupldr_pe_dbg "-Wl,--exclude-all-symbols,--file-alignment,0x1000,-T,${CMAKE_CURRENT_SOURCE_DIR}/freeldr_i386.lds")
 else()
-    add_target_link_flags(setupldr_pe "/ignore:4078 /ignore:4254 /DRIVER /FIXED /ALIGN:0x400 /SECTION:.text,ERW /SECTION:.data,RW /MERGE:.text16=.text /MERGE:.data=.text /MERGE:.rdata=.text /MERGE:.bss=.text /SUBSYSTEM:BOOT_APPLICATION")
-    add_target_link_flags(setupldr_pe_dbg "/ignore:4078 /ignore:4254 /DRIVER /FIXED /ALIGN:0x400 /SECTION:.text,ERW /SECTION:.data,RW /MERGE:.text16=.text /MERGE:.data=.text /MERGE:.rdata=.text /MERGE:.bss=.text /SUBSYSTEM:BOOT_APPLICATION")
+    add_target_link_flags(setupldr_pe "/ignore:4078 /ignore:4254 /DRIVER /FIXED /ALIGN:0x400 /SECTION:.text,ERW /SECTION:.data,RW /MERGE:.text16=.text /MERGE:.data=.text /MERGE:.rdata=.text /MERGE:.bss=.text")
+    add_target_link_flags(setupldr_pe_dbg "/ignore:4078 /ignore:4254 /DRIVER /FIXED /ALIGN:0x400 /SECTION:.text,ERW /SECTION:.data,RW /MERGE:.text16=.text /MERGE:.data=.text /MERGE:.rdata=.text /MERGE:.bss=.text")
 endif()
 
 add_target_compile_definitions(setupldr_pe FREELDR_REACTOS_SETUP)

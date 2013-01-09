@@ -533,8 +533,16 @@ typedef union _ATAPI_REGISTERS_2 {
 // ATAPI interrupt reasons
 //
 
+// for IDX_ATAPI_IO1_i_InterruptReason
 #define ATAPI_IR_COD 0x01
-#define ATAPI_IR_IO  0x02
+#define ATAPI_IR_COD_Data   0x0
+#define ATAPI_IR_COD_Cmd    0x1
+
+#define ATAPI_IR_IO        0x02
+#define ATAPI_IR_IO_toDev  0x00
+#define ATAPI_IR_IO_toHost 0x02
+
+#define ATAPI_IR_Mask      0x03
 
 //
 // ATA Features

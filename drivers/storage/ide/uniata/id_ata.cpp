@@ -725,16 +725,23 @@ AtapiSoftReset(
         }
     } else {
         AtapiStallExecution(500);
+        GetBaseStatus(chan, statusByte2);
         AtapiWritePort1(chan, IDX_IO1_o_Command, IDE_COMMAND_ATAPI_RESET);
-        AtapiStallExecution(30);
 
-        // Wait for BUSY assertion, in some cases delay may occure
-        while (!(AtapiReadPort1(chan, IDX_IO1_i_Status) & IDE_STATUS_BUSY) &&
-               i--)
-        {
-            AtapiStallExecution(30);
+        // Do not wait for BUSY assertion if it was initially set, jump to
+        // BUSY release wait loop
+        if(!(statusByte2 & IDE_STATUS_BUSY)) {
+            // Wait for BUSY assertion, in some cases delay may occure
+            // 100ms should be enough
+            i = 10*1000;
+            while (!(AtapiReadPort1(chan, IDX_IO1_i_Status) & IDE_STATUS_BUSY) &&
+                   i--)
+            {
+                AtapiStallExecution(10);
+            }
         }
 
+        i = 30 * 1000;
         // ReactOS modification: Already stop looping when we know that the drive has finished resetting.
         // Not all controllers clear the IDE_STATUS_BUSY flag (e.g. not the VMware one), so ensure that
         // the maximum waiting time (30 * i = 0.9 seconds) does not exceed the one of the original
@@ -4492,7 +4499,7 @@ skip_dma_stat_check:
             KdPrint2((PRINT_PREFIX "  OurInterrupt = %d\n", OurInterrupt));
             return OurInterrupt;
         }
-        interruptReason = (AtapiReadPort1(chan, IDX_ATAPI_IO1_i_InterruptReason) & 0x3);
+        interruptReason = (AtapiReadPort1(chan, IDX_ATAPI_IO1_i_InterruptReason) & ATAPI_IR_Mask);
         KdPrint3((PRINT_PREFIX "AtapiCheckInterrupt__: ATAPI int reason %x\n", interruptReason));
         return OurInterrupt;
     }
@@ -4847,7 +4854,7 @@ try_dpc_wait:
         if(deviceExtension->HwFlags & UNIATA_AHCI) {
             KdPrint3((PRINT_PREFIX "  AHCI branch (ATAPI)\n"));
         } else {
-            interruptReason = (AtapiReadPort1(chan, IDX_ATAPI_IO1_i_InterruptReason) & 0x3);
+            interruptReason = (AtapiReadPort1(chan, IDX_ATAPI_IO1_i_InterruptReason) & ATAPI_IR_Mask);
             KdPrint3((PRINT_PREFIX "AtapiInterrupt: iReason %x\n", interruptReason));
         }
 
@@ -5016,7 +5023,7 @@ continue_err:
                 }
             }
         } else {
-            interruptReason = (AtapiReadPort1(chan, IDX_ATAPI_IO1_i_InterruptReason) & 0x3);
+            interruptReason = (AtapiReadPort1(chan, IDX_ATAPI_IO1_i_InterruptReason) & ATAPI_IR_Mask);
             KdPrint3((PRINT_PREFIX "AtapiInterrupt: ATAPI Error, int reason %x\n", interruptReason));
 
             if(DmaTransfer && (chan->lun[DeviceNumber]->TransferMode > ATA_UDMA2) &&
@@ -5086,7 +5093,7 @@ continue_PIO:
         KdPrint2((PRINT_PREFIX "AtapiInterrupt: ATAPI branch\n"));
         // ATAPI branch
 
-        interruptReason = (AtapiReadPort1(chan, IDX_ATAPI_IO1_i_InterruptReason) & 0x3);
+        interruptReason = (AtapiReadPort1(chan, IDX_ATAPI_IO1_i_InterruptReason) & ATAPI_IR_Mask);
         KdPrint3((PRINT_PREFIX "AtapiInterrupt: iReason %x\n", interruptReason));
         if(DmaTransfer) {
             wordsThisInterrupt = DEV_BSIZE/2*512;
@@ -5113,10 +5120,10 @@ continue_PIO:
 
             if (srb->SrbFlags & SRB_FLAGS_DATA_IN) {
 
-                interruptReason =  0x2;
+                interruptReason = ATAPI_IR_IO_toHost;
 
             } else if (srb->SrbFlags & SRB_FLAGS_DATA_OUT) {
-                interruptReason = 0x0;
+                interruptReason = ATAPI_IR_IO_toDev;
 
             } else {
                 status = SRB_STATUS_ERROR;
@@ -5164,13 +5171,13 @@ IntrPrepareResetController:
                     goto ReturnEnableIntr;
 
                 } else {
-                    interruptReason = (srb->SrbFlags & SRB_FLAGS_DATA_IN) ? 0x2 : 0x0;
+                    interruptReason = (srb->SrbFlags & SRB_FLAGS_DATA_IN) ? ATAPI_IR_IO_toHost : ATAPI_IR_IO_toDev;
                 }
 
             } else {
                 // Command complete - verify, write, or the SMART enable/disable.
                 // Also get_media_status
-                interruptReason = 0x3;
+                interruptReason = ATAPI_IR_IO_toHost | ATAPI_IR_COD_Cmd;
             }
         }
     }
@@ -5196,7 +5203,7 @@ IntrPrepareResetController:
         chan->ChannelCtrlFlags &= ~CTRFLAGS_DMA_OPERATION;
         goto CompleteRequest;
     } else
-    if (interruptReason == 0x1 && (statusByte & IDE_STATUS_DRQ)) {
+    if (interruptReason == ATAPI_IR_COD_Cmd && (statusByte & IDE_STATUS_DRQ)) {
         // Write the packet.
         KdPrint3((PRINT_PREFIX "AtapiInterrupt: Writing Atapi packet.\n"));
         // Send CDB to device.
@@ -5212,7 +5219,7 @@ IntrPrepareResetController:
 
         goto ReturnEnableIntr;
 
-    } else if (interruptReason == 0x0 && (statusByte & IDE_STATUS_DRQ)) {
+    } else if (interruptReason == ATAPI_IR_IO_toDev && (statusByte & IDE_STATUS_DRQ)) {
 
         // Write the data.
         if (atapiDev) {
@@ -5319,7 +5326,7 @@ IntrPrepareResetController:
 
         goto ReturnEnableIntr;
 
-    } else if (interruptReason == 0x2 && (statusByte & IDE_STATUS_DRQ)) {
+    } else if (interruptReason == ATAPI_IR_IO_toHost && (statusByte & IDE_STATUS_DRQ)) {
 
 
         if (atapiDev) {
@@ -5515,7 +5522,7 @@ IntrPrepareResetController:
 
         goto ReturnEnableIntr;
 
-    } else if (interruptReason == 0x3  && !(statusByte & IDE_STATUS_DRQ)) {
+    } else if (interruptReason == (ATAPI_IR_IO_toHost | ATAPI_IR_COD_Cmd) && !(statusByte & IDE_STATUS_DRQ)) {
 
         KdPrint2((PRINT_PREFIX "AtapiInterrupt: interruptReason = CompleteRequest\n"));
         // Command complete.
@@ -5663,7 +5670,8 @@ CompleteRequest:
                                                               AtaReq->OriginalSrb);
                     } else {
 
-                        // last request was illegal.  No point trying again
+                        // last request was illegal.  No point trying again.
+                        // Do-nothing call ?
                         AtapiHwInitializeChanger (HwDeviceExtension,
                                                   srb,
                                                   (PMECHANICAL_STATUS_INFORMATION_HEADER) NULL);
@@ -5706,6 +5714,7 @@ CompleteRequest:
 
             if (AtaReq->OriginalSrb) {
                 KdPrint2((PRINT_PREFIX "AtapiInterrupt: call AtapiHwInitializeChanger()\n"));
+                // Do-nothing call ?
                 AtapiHwInitializeChanger (HwDeviceExtension,
                                           srb,
                                           (PMECHANICAL_STATUS_INFORMATION_HEADER) NULL);
@@ -6756,7 +6765,7 @@ AtapiSendCommand(
     //ULONG                ldev = GET_LDEV(Srb);
     ULONG                DeviceNumber = GET_CDEV(Srb);
     ULONG flags;
-    UCHAR statusByte,byteCountLow,byteCountHigh;
+    UCHAR statusByte,statusByte0,byteCountLow,byteCountHigh;
     BOOLEAN use_dma = FALSE;
     BOOLEAN dma_reinited = FALSE;
     BOOLEAN retried = FALSE;
@@ -6901,9 +6910,27 @@ AtapiSendCommand(
             KdPrint2((PRINT_PREFIX "AtapiSendCommand: SRB_STATUS_PENDING (2)\n"));
             return srbStatus;
         } else {
+
+            // failed!  Get the sense key and maybe try again
+            AtaReq->Srb = BuildRequestSenseSrb (  HwDeviceExtension,
+                                                  AtaReq->OriginalSrb);
+
+            srbStatus = AtapiSendCommand(HwDeviceExtension, AtaReq->Srb, CMD_ACTION_ALL);
+
+            KdPrint3((PRINT_PREFIX "AtapiSendCommand: chan->ExpectingInterrupt %d (1)\n", chan->ExpectingInterrupt));
+
+            if (srbStatus == SRB_STATUS_PENDING) {
+                KdPrint2((PRINT_PREFIX "AtapiSendCommand: send orig SRB_STATUS_PENDING (2.1)\n"));
+                return srbStatus;
+            }
+
+            // failed again ? should not get here
+
             AtaReq->Srb = AtaReq->OriginalSrb;
             AtaReq->OriginalSrb = NULL;
+
             KdPrint2((PRINT_PREFIX "AtapiSendCommand: AtapiHwInitializeChanger()\n"));
+            // Do-nothing call ?
             AtapiHwInitializeChanger (HwDeviceExtension, Srb,
                                       (PMECHANICAL_STATUS_INFORMATION_HEADER) NULL);
             // fall out
@@ -7395,6 +7422,8 @@ make_reset:
     if(g_opt_AtapiSendDisableIntr) {
         AtapiDisableInterrupts(deviceExtension, lChannel);
     }
+    // remember status. Later we may check if error appeared after cmd packet 
+    statusByte0 = statusByte;
 
     // Write ATAPI packet command.
     AtapiWritePort1(chan, IDX_IO1_o_Command, IDE_COMMAND_ATAPI_PACKET);
@@ -7442,9 +7471,19 @@ make_reset:
     GetStatus(chan, statusByte);
     KdPrint3((PRINT_PREFIX "AtapiSendCommand: cmd status (%#x)\n", statusByte));
 
+    // When we operate in DMA mode, we should not start transfer when there is an error on entry
+    // Interrupt may never come in such case.
     if(statusByte & IDE_STATUS_ERROR) {
+        UCHAR interruptReason;
+
         GetBaseStatus(chan, statusByte);
         KdPrint3((PRINT_PREFIX "AtapiSendCommand: Error on cmd: (%#x)\n", statusByte));
+
+        interruptReason = (AtapiReadPort1(chan, IDX_ATAPI_IO1_i_InterruptReason) & ATAPI_IR_Mask);
+        KdPrint3((PRINT_PREFIX "AtapiSendCommand: iReason %x\n", interruptReason));
+
+        // TODO:  we should check interruptReason and decide what to do now
+
         // Read the error reg. to clear it and fail this request.
         AtaReq->ReqState = REQ_STATE_TRANSFER_COMPLETE;
         return MapError(deviceExtension, Srb);

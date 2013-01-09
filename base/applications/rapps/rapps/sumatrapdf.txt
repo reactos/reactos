@@ -31,7 +31,7 @@ Description = Sumatra PDF to mały, darmowy, otwarty czytnik PDF.
 
 [Section.0418]
 Description = Lector PDF - ușor, gratuit (open-source), și portabil.
-Size = 4.48Mo
+Size = 4,2 Mo
 URLSite = http://blog.kowalczyk.info/software/sumatrapdf/free-pdf-reader-ro.html
 
 [Section.0813]

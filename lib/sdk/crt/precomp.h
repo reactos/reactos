@@ -60,6 +60,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(msvcrt);
 #include <internal/locale.h>
 #include <internal/math.h>
 #include <internal/mbstring.h>
+#include <internal/misc.h>
 #include <internal/mtdll.h>
 #include <internal/rterror.h>
 #include <internal/safecrt.h>

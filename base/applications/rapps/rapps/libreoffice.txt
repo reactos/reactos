@@ -28,7 +28,7 @@ Description = Otwarty pakiet biurowy.
 
 [Section.0418]
 Description = Fostul OpenOffice. Suita de aplicații de birotică open-source.
-Size = 201.6Mo
+Size = 201,6 Mo
 
 [Section.0422]
 Description = Відкритий офісний пакет.

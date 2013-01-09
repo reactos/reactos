@@ -29,7 +29,7 @@ Description = STEAM - platforma, którą używa obecnie wiele gier.
 [Section.0418]
 Licence = Gratuită
 Description = Platforma de joc STEAM, utilizată de multe jocuri în zilele de astăzi.
-Size = 1.53Mo
+Size = 1,53 Mo
 URLSite = http://store.steampowered.com/?l=romanian
 
 [Section.0422]

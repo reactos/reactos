@@ -41,6 +41,11 @@ URLSite = http://pl.openoffice.org/
 Size = 134.33MB
 URLDownload = http://dfn.dl.sourceforge.net/project/openofficeorg.mirror/localized/pl/3.3.0/OOo_3.3.0_Win_x86_install_pl.exe
 
+[Section.0419]
+Description = Suita de aplicații de birotică open-source.
+Size = 145,0 Mo
+URLSite = http://www.openoffice.org/ro/
+
 [Section.0422]
 Description = Відкритий офісний пакет.
 URLSite = http://ua.openoffice.org/

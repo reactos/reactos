@@ -5,6 +5,7 @@ list(APPEND SOURCE
     desktop.c
     dragdrop.c
     explorer.c
+    settings.c
     startmnu.c
     taskband.c
     taskswnd.c

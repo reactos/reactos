@@ -3,6 +3,7 @@
 #include "arc/arc.h"
 #include "halfuncs.h"
 #include "drivers/bootvid/bootvid.h"
+#include "ioaccess.h"
 
 /* Define if FontData has upside down characters */
 #undef CHAR_GEN_UPSIDE_DOWN

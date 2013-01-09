@@ -2769,23 +2769,30 @@ TrayMessageLoop(IN OUT ITrayWindow *Tray)
 
     while (1)
     {
-        Ret = (GetMessage(&Msg,
-                          NULL,
-                          0,
-                          0) != 0);
+        Ret = GetMessage(&Msg,
+                         NULL,
+                         0,
+                         0);
 
-        if (Ret != -1)
+        if (!Ret || Ret == -1)
+            break;
+
+        if (Msg.message == WM_HOTKEY)
         {
-            if (!Ret)
-                break;
-
-            if (This->StartMenuBand == NULL ||
-                IMenuBand_IsMenuMessage(This->StartMenuBand,
-                                        &Msg) != S_OK)
+            switch (Msg.wParam)
             {
-                TranslateMessage(&Msg);
-                DispatchMessage(&Msg);
+                case IDHK_RUN: /* Win+R */
+                    CloseHandle(CreateThread(NULL, 0, RunFileDlgThread, This, 0, NULL));
+                    break;
             }
+        }
+
+        if (This->StartMenuBand == NULL ||
+            IMenuBand_IsMenuMessage(This->StartMenuBand,
+                                    &Msg) != S_OK)
+        {
+            TranslateMessage(&Msg);
+            DispatchMessage(&Msg);
         }
     }
 }

@@ -16,9 +16,9 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_APP_HEADER, "\nReactOS DiskPart\n"
-    IDS_APP_USAGE, "Disk Partitioning Interpreter.\n\nUsage: DISKPART [/S filename] [/T timeout] [/?]\n\n\
-/S filename\tExecută scriptul din fișierul dat.\n\
-/T timeout\tTimeout in seconds to prevent diskpart usage overlap.\n\
+    IDS_APP_USAGE, "Interpretor pentru partiționare discuri.\n\nUtilizare: DISKPART [/S numefișier] [/T timplimită] [/?]\n\n\
+/S numefișier\tExecută scriptul din fișierul dat.\n\
+/T timplimită\tLimită temporală pentru prevenirea utilizării concurente.\n\
 /?\t\tAfișează acest manual.\n\n"
     IDS_APP_LICENSE, "Licențiere în termenii GNU GPLv2\n"
     IDS_APP_CURR_COMPUTER, "Pe calculatorul: %s\n\n"
@@ -36,7 +36,7 @@ BEGIN
     IDS_DETAIL_INFO_TARGET,          "Țintă"
     IDS_DETAIL_INFO_LUN_ID,          "LUN ID"
     IDS_DETAIL_INFO_LOC_PATH,        "Localizat în"
-    IDS_DETAIL_INFO_CURR_RO_STATE,   "Current Read-only State"
+    IDS_DETAIL_INFO_CURR_RO_STATE,   "Stare curentă doar-citire"
     IDS_DETAIL_INFO_RO,              "Protejat-la-scriere"
     IDS_DETAIL_INFO_BOOT_DSK,        "Disc inițializator"
     IDS_DETAIL_INFO_PAGE_FILE_DSK,   "Disc cu fișier de paginare"
@@ -122,7 +122,7 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_ERROR_MSG_NO_SCRIPT "Eroare la deschiderea fișierului script: %s\n"
-    IDS_ERROR_MSG_BAD_ARG   "De prelucrare de eroare argumente: %s\n"
+    IDS_ERROR_MSG_BAD_ARG   "Eroare la prelucrarea argumentului: %s\n"
 END
 
 

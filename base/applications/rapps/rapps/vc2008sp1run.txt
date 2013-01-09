@@ -34,7 +34,7 @@ Description = Biblioteki uruchomieniowe Visual Studio 2008 SP1.
 [Section.0418]
 Licence = Necunoscută
 Description = Visual Studio 2008 SP1 Runtime. Conține: atl90.dll, mfc90.dll, mfc90u.dll, mfcm90.dll, mfcm90u.dll, msdia90.dll, msvcm90.dll, msvcp90.dll, msvcr90.dll, vcomp90.dll.
-Size = 4.02Mo
+Size = 4,02 Mo
 
 [Section.0422]
 Licence = Невідома

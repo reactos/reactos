@@ -1,7 +1,9 @@
 
 add_typelib(shdocvw_v1.idl)
 
-add_definitions(-D_SHDOCVW_)
+add_definitions(
+    -D__WINESRC__
+    -D_SHDOCVW_)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 spec2def(shdocvw.dll shdocvw.spec ADD_IMPORTLIB)

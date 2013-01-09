@@ -236,9 +236,7 @@ BasepComputeProcessPath(IN PBASE_SEARCH_PATH_TYPE PathOrder,
                 if (NtCurrentTeb()->NtTib.SubSystemTib)
                 {
                     /* This means someone added RTL_PERTHREAD_CURDIR */
-                    UNIMPLEMENTED;
-                    ASSERT(FALSE);
-                    // while (TRUE);
+                    UNIMPLEMENTED_DBGBREAK();
                 }
 
                 /* We do not. Do we have the LDR_ENTRY for the executable? */

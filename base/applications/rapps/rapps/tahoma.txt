@@ -36,7 +36,7 @@ Description = Pakiet Czcionki Tahoma wymagany przez niektóre programy (np. Stea
 [Section.0418]
 Licence = Necunoscută
 Description = Pachetul Tahoma Font, necesar unor aplicații (Steam). Conține: Tahoma.ttf, Tahomabd.ttf.
-Size = 305.12ko
+Size = 305,12 ko
 
 [Section.0422]
 Licence = Невідома

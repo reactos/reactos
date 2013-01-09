@@ -42,10 +42,10 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/oleaut32.def)
 
 if(MSVC)
-    list(APPEND SOURCE msvc.S)
+    add_asm_files(oleaut32_asm msvc.S)
 endif()
 
-add_library(oleaut32 SHARED ${SOURCE})
+add_library(oleaut32 SHARED ${SOURCE} ${oleaut32_asm})
 add_idl_headers(oleaut32_idlheader oleaut32_oaidl.idl)
 add_dependencies(oleaut32 oleaut32_idlheader)
 set_module_type(oleaut32 win32dll)

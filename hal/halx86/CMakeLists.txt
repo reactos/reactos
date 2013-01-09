@@ -26,7 +26,7 @@ if(ARCH STREQUAL "i386")
         generic/portio.c)
 endif()
 
-if(CMAKE_VERSION VERSION_GREATER 2.8.7)
+if(NOT MSVC AND (CMAKE_VERSION VERSION_GREATER 2.8.7))
     add_library(lib_hal_generic OBJECT ${HAL_GENERIC_SOURCE})
 else()
     add_library(lib_hal_generic ${HAL_GENERIC_SOURCE})
@@ -63,7 +63,7 @@ if(ARCH STREQUAL "i386")
         legacy/halpnpdd.c
         legacy/halpcat.c)
 
-    if(CMAKE_VERSION VERSION_GREATER 2.8.7)
+    if(NOT MSVC AND (CMAKE_VERSION VERSION_GREATER 2.8.7))
         add_library(lib_hal_legacy OBJECT ${HAL_LEGACY_SOURCE})
     else()
         add_library(lib_hal_legacy ${HAL_LEGACY_SOURCE})
@@ -71,7 +71,7 @@ if(ARCH STREQUAL "i386")
 
     #add_pch(lib_hal_legacy include/hal.h)
 
-    if(NOT CMAKE_VERSION VERSION_GREATER 2.8.7)
+    if(MSVC OR (NOT CMAKE_VERSION VERSION_GREATER 2.8.7))
         target_link_libraries(lib_hal_legacy lib_hal_generic)
     endif()
 
@@ -83,14 +83,14 @@ list(APPEND HAL_ACPI_SOURCE
     acpi/busemul.c
     legacy/bus/pcibus.c)
 
-if(CMAKE_VERSION VERSION_GREATER 2.8.7)
+if(NOT MSVC AND (CMAKE_VERSION VERSION_GREATER 2.8.7))
     add_library(lib_hal_acpi OBJECT ${HAL_ACPI_SOURCE})
 else()
     add_library(lib_hal_acpi ${HAL_ACPI_SOURCE})
 endif()
 #add_pch(lib_hal_acpi include/hal.h)
 
-if(NOT CMAKE_VERSION VERSION_GREATER 2.8.7)
+if(MSVC OR (NOT CMAKE_VERSION VERSION_GREATER 2.8.7))
     target_link_libraries(lib_hal_acpi lib_hal_generic)
 endif()
 
@@ -98,30 +98,33 @@ list(APPEND HAL_UP_SOURCE
     generic/spinlock.c
     up/processor.c)
 
-if(CMAKE_VERSION VERSION_GREATER 2.8.7)
+if(NOT MSVC AND (CMAKE_VERSION VERSION_GREATER 2.8.7))
     add_library(lib_hal_up OBJECT ${HAL_UP_SOURCE})
 endif()
+
+list(APPEND HAL_APIC_ASM_SOURCE
+    apic/apictrap.S
+    apic/tsccal.S)
 
 list(APPEND HAL_APIC_SOURCE
     apic/apic.c
     apic/apictimer.c
-    apic/apictrap.S
     apic/halinit_apic.c
     apic/rtctimer.c
-    apic/tsc.c
-    apic/tsccal.S)
+    apic/tsc.c)
 
 if(ARCH STREQUAL "i386")
+    list(APPEND HAL_PIC_ASM_SOURCE
+        generic/systimer.S
+        generic/trap.S)
     list(APPEND HAL_PIC_SOURCE
         generic/profil.c
         generic/timer.c
-        generic/systimer.S
-        generic/trap.S
         up/halinit_up.c
         up/pic.c)
 
-    if(CMAKE_VERSION VERSION_GREATER 2.8.7)
-        add_library(lib_hal_pic OBJECT ${HAL_PIC_SOURCE})
+    if(NOT MSVC AND (CMAKE_VERSION VERSION_GREATER 2.8.7))
+        add_library(lib_hal_pic OBJECT ${HAL_PIC_SOURCE} ${HAL_PIC_ASM_SOURCE})
     endif()
 
     list(APPEND MINI_HAL_SOURCE
@@ -153,7 +156,7 @@ if(ARCH STREQUAL "i386")
     spec2def(hal.dll ../hal.spec ADD_IMPORTLIB)
 
     # hal
-    if(CMAKE_VERSION VERSION_GREATER 2.8.7)
+    if(NOT MSVC AND (CMAKE_VERSION VERSION_GREATER 2.8.7))
         add_library(hal SHARED
             $<TARGET_OBJECTS:lib_hal_generic>
             $<TARGET_OBJECTS:lib_hal_legacy>
@@ -163,15 +166,18 @@ if(ARCH STREQUAL "i386")
             up/halup.rc
             ${CMAKE_CURRENT_BINARY_DIR}/hal.def)
     else()
+        add_asm_files(hal_asm
+            ${HAL_PIC_ASM_SOURCE}
+            generic/v86.S)
         add_library(hal SHARED
             ${HAL_UP_SOURCE}
             ${HAL_PIC_SOURCE}
-            generic/v86.S
+            ${hal_asm}
             up/halup.rc
             ${CMAKE_CURRENT_BINARY_DIR}/hal.def)
     endif()
 
-    if(NOT CMAKE_VERSION VERSION_GREATER 2.8.7)
+    if(MSVC OR (NOT CMAKE_VERSION VERSION_GREATER 2.8.7))
         target_link_libraries(hal lib_hal_generic lib_hal_legacy)
     endif()
     target_link_libraries(hal libcntpr)
@@ -188,7 +194,7 @@ if(ARCH STREQUAL "i386")
 
     # hal acpi
     spec2def(halacpi.dll ../hal.spec)
-    if(CMAKE_VERSION VERSION_GREATER 2.8.7)
+    if(NOT MSVC AND (CMAKE_VERSION VERSION_GREATER 2.8.7))
         add_library(halacpi SHARED
             $<TARGET_OBJECTS:lib_hal_generic>
             $<TARGET_OBJECTS:lib_hal_acpi>
@@ -198,15 +204,17 @@ if(ARCH STREQUAL "i386")
             acpi/halacpi.rc
             ${CMAKE_CURRENT_BINARY_DIR}/halacpi.def)
     else()
+        set_source_files_properties(${HAL_PIC_ASM_SOURCE} generic/v86.S PROPERTIES COMPILE_DEFINITIONS "CONFIG_ACPI")
+        add_asm_files(halacpi_asm ${HAL_PIC_ASM_SOURCE} generic/v86.S)
         add_library(halacpi SHARED
             ${HAL_UP_SOURCE}
             ${HAL_PIC_SOURCE}
-            generic/v86.S
+            ${halacpi_asm}
             acpi/halacpi.rc
             ${CMAKE_CURRENT_BINARY_DIR}/halacpi.def)
     endif()
 
-    if(NOT CMAKE_VERSION VERSION_GREATER 2.8.7)
+    if(MSVC OR (NOT CMAKE_VERSION VERSION_GREATER 2.8.7))
         target_link_libraries(halacpi lib_hal_generic lib_hal_acpi)
     endif()
     target_link_libraries(halacpi libcntpr)

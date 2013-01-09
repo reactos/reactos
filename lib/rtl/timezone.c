@@ -46,27 +46,27 @@ RtlQueryTimeZoneInformation(PRTL_TIME_ZONE_INFORMATION TimeZoneInformation)
     QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT;
     QueryTable[0].EntryContext = &TimeZoneInformation->Bias;
 
-    QueryTable[1].Name = L"Standard Name";
+    QueryTable[1].Name = L"StandardName";
     QueryTable[1].Flags = RTL_QUERY_REGISTRY_DIRECT;
     QueryTable[1].EntryContext = &StandardName;
 
-    QueryTable[2].Name = L"Standard Bias";
+    QueryTable[2].Name = L"StandardBias";
     QueryTable[2].Flags = RTL_QUERY_REGISTRY_DIRECT;
     QueryTable[2].EntryContext = &TimeZoneInformation->StandardBias;
 
-    QueryTable[3].Name = L"Standard Start";
+    QueryTable[3].Name = L"StandardStart";
     QueryTable[3].Flags = RTL_QUERY_REGISTRY_DIRECT;
     QueryTable[3].EntryContext = &TimeZoneInformation->StandardDate;
 
-    QueryTable[4].Name = L"Daylight Name";
+    QueryTable[4].Name = L"DaylightName";
     QueryTable[4].Flags = RTL_QUERY_REGISTRY_DIRECT;
     QueryTable[4].EntryContext = &DaylightName;
 
-    QueryTable[5].Name = L"Daylight Bias";
+    QueryTable[5].Name = L"DaylightBias";
     QueryTable[5].Flags = RTL_QUERY_REGISTRY_DIRECT;
     QueryTable[5].EntryContext = &TimeZoneInformation->DaylightBias;
 
-    QueryTable[6].Name = L"Daylight Start";
+    QueryTable[6].Name = L"DaylightStart";
     QueryTable[6].Flags = RTL_QUERY_REGISTRY_DIRECT;
     QueryTable[6].EntryContext = &TimeZoneInformation->DaylightDate;
 
@@ -108,7 +108,7 @@ RtlSetTimeZoneInformation(PRTL_TIME_ZONE_INFORMATION TimeZoneInformation)
     Length = (wcslen(TimeZoneInformation->StandardName) + 1) * sizeof(WCHAR);
     Status = RtlWriteRegistryValue(RTL_REGISTRY_CONTROL,
                                    L"TimeZoneInformation",
-                                   L"Standard Name",
+                                   L"StandardName",
                                    REG_SZ,
                                    TimeZoneInformation->StandardName,
                                    (ULONG)Length);
@@ -119,7 +119,7 @@ RtlSetTimeZoneInformation(PRTL_TIME_ZONE_INFORMATION TimeZoneInformation)
 
     Status = RtlWriteRegistryValue(RTL_REGISTRY_CONTROL,
                                    L"TimeZoneInformation",
-                                   L"Standard Bias",
+                                   L"StandardBias",
                                    REG_DWORD,
                                    &TimeZoneInformation->StandardBias,
                                    sizeof(LONG));
@@ -130,7 +130,7 @@ RtlSetTimeZoneInformation(PRTL_TIME_ZONE_INFORMATION TimeZoneInformation)
 
     Status = RtlWriteRegistryValue(RTL_REGISTRY_CONTROL,
                                    L"TimeZoneInformation",
-                                   L"Standard Start",
+                                   L"StandardStart",
                                    REG_BINARY,
                                    &TimeZoneInformation->StandardDate,
                                    sizeof(SYSTEMTIME));
@@ -142,7 +142,7 @@ RtlSetTimeZoneInformation(PRTL_TIME_ZONE_INFORMATION TimeZoneInformation)
     Length = (wcslen(TimeZoneInformation->DaylightName) + 1) * sizeof(WCHAR);
     Status = RtlWriteRegistryValue(RTL_REGISTRY_CONTROL,
                                    L"TimeZoneInformation",
-                                   L"Daylight Name",
+                                   L"DaylightName",
                                    REG_SZ,
                                    TimeZoneInformation->DaylightName,
                                    (ULONG)Length);
@@ -153,7 +153,7 @@ RtlSetTimeZoneInformation(PRTL_TIME_ZONE_INFORMATION TimeZoneInformation)
 
     Status = RtlWriteRegistryValue(RTL_REGISTRY_CONTROL,
                                    L"TimeZoneInformation",
-                                   L"Daylight Bias",
+                                   L"DaylightBias",
                                    REG_DWORD,
                                    &TimeZoneInformation->DaylightBias,
                                    sizeof(LONG));
@@ -164,7 +164,7 @@ RtlSetTimeZoneInformation(PRTL_TIME_ZONE_INFORMATION TimeZoneInformation)
 
     Status = RtlWriteRegistryValue(RTL_REGISTRY_CONTROL,
                                    L"TimeZoneInformation",
-                                   L"Daylight Start",
+                                   L"DaylightStart",
                                    REG_BINARY,
                                    &TimeZoneInformation->DaylightDate,
                                    sizeof(SYSTEMTIME));

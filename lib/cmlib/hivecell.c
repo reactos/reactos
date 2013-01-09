@@ -548,8 +548,7 @@ HvTrackCellRef(PHV_TRACK_CELL_REF CellRef,
     }
 
     /* FIXME: TODO */
-    DPRINT1("ERROR: Too many references\n");
-    ASSERT(FALSE); // while (TRUE);
+    ASSERTMSG(FALSE, "ERROR: Too many references\n");
     return FALSE;
 }
 

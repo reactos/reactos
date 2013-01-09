@@ -662,9 +662,7 @@ KiTrap06Handler(IN PKTRAP_FRAME TrapFrame)
         if (!VdmDispatchBop(TrapFrame))
         {
             /* Should only happen in VDM mode */
-            UNIMPLEMENTED;
-            ASSERT(FALSE);
-            while (TRUE);
+            UNIMPLEMENTED_FATAL();
         }
         
         /* Bring IRQL back */
@@ -735,9 +733,7 @@ KiTrap07Handler(IN PKTRAP_FRAME TrapFrame)
         if (SaveArea->Cr0NpxState & CR0_EM)
         {
             /* Not implemented */
-            UNIMPLEMENTED;
-            ASSERT(FALSE);
-            while (TRUE);
+            UNIMPLEMENTED_FATAL();
         }
     
         /* Save CR0 and check NPX state */
@@ -922,9 +918,7 @@ KiTrap0DHandler(IN PKTRAP_FRAME TrapFrame)
         if (__builtin_expect(Ki386HandleOpcodeV86(TrapFrame) == 0xFF, 0))
         {
             /* Should only happen in VDM mode */
-            UNIMPLEMENTED;
-            ASSERT(FALSE);
-            while (TRUE);
+            UNIMPLEMENTED_FATAL();
         }
         
         /* Bring IRQL back */
@@ -1079,9 +1073,7 @@ KiTrap0DHandler(IN PKTRAP_FRAME TrapFrame)
         ((PVOID)TrapFrame->Eip < (PVOID)KiTrap0DHandler))
     {
         /* Not implemented */
-        UNIMPLEMENTED;
-        ASSERT(FALSE);
-        while (TRUE);
+        UNIMPLEMENTED_FATAL();
     }
 
     /*
@@ -1136,9 +1128,7 @@ KiTrap0DHandler(IN PKTRAP_FRAME TrapFrame)
         else
         {
             /* Otherwise, this is another kind of IRET fault */
-            UNIMPLEMENTED;
-            ASSERT(FALSE);
-            while (TRUE);
+            UNIMPLEMENTED_FATAL();
         }
     }
      
@@ -1195,9 +1185,7 @@ KiTrap0EHandler(IN PKTRAP_FRAME TrapFrame)
             FIELD_OFFSET(KTRAP_FRAME, EFlags))
         {
             /* The stack is somewhere in between frames, we need to fix it */
-            UNIMPLEMENTED;
-            ASSERT(FALSE);
-            while (TRUE);
+            UNIMPLEMENTED_FATAL();
         }
     }
 
@@ -1261,9 +1249,7 @@ KiTrap0EHandler(IN PKTRAP_FRAME TrapFrame)
         (TrapFrame->Eip == (ULONG_PTR)ReadBatch))
     {
         /* Not yet implemented */
-        UNIMPLEMENTED;
-        ASSERT(FALSE);
-        while (TRUE);
+        UNIMPLEMENTED_FATAL();
     }
 #endif
     /* Check for VDM trap */
@@ -1445,16 +1431,14 @@ VOID
 FASTCALL
 KiGetTickCountHandler(IN PKTRAP_FRAME TrapFrame)
 {
-    UNIMPLEMENTED;
-    ASSERT(FALSE); // while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
 }
 
 VOID
 FASTCALL
 KiCallbackReturnHandler(IN PKTRAP_FRAME TrapFrame)
 {
-    UNIMPLEMENTED;
-    ASSERT(FALSE); // while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
 }
 
 DECLSPEC_NORETURN
@@ -1624,9 +1608,7 @@ KiSystemCall(IN PKTRAP_FRAME TrapFrame,
     if (__builtin_expect((Arguments < (PVOID)MmUserProbeAddress) && !(KiUserTrap(TrapFrame)), 0))
     {
         /* Access violation */
-        UNIMPLEMENTED;
-        ASSERT(FALSE);
-        while (TRUE);
+        UNIMPLEMENTED_FATAL();
     }
     
     /* Call pre-service debug hook */
@@ -1690,9 +1672,7 @@ NTAPI
 Kei386EoiHelper(VOID)
 {
     /* We should never see this call happening */
-    DPRINT1("Mismatched NT/HAL version");
-    ASSERT(FALSE);
-    while (TRUE);
+    ERROR_FATAL("Mismatched NT/HAL version");
 }
 
 /* EOF */

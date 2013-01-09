@@ -62,6 +62,9 @@ static VOID
 IDropTargetImpl_Free(IDropTargetImpl *This)
 {
     IDropTargetHelper_Release(This->DropTargetHelper);
+    HeapFree(hProcessHeap,
+             0,
+             This);
 }
 
 static ULONG STDMETHODCALLTYPE
@@ -127,10 +130,10 @@ CreateDropTarget(IN HWND hwndTarget,
     IDropTargetImpl *This;
     HRESULT hr;
 
-    This = (IDropTargetImpl *)HeapAlloc(hProcessHeap,
-                                        0,
-                                        FIELD_OFFSET(IDropTargetImpl,
-                                                     Formats[nSupportedFormats]));
+    This = HeapAlloc(hProcessHeap,
+                     0,
+                     FIELD_OFFSET(IDropTargetImpl,
+                                  Formats[nSupportedFormats]));
     if (This != NULL)
     {
         ZeroMemory(This,
@@ -159,7 +162,7 @@ CreateDropTarget(IN HWND hwndTarget,
                               NULL,
                               CLSCTX_INPROC_SERVER,
                               &IID_IDropTargetHelper,
-                              (PVOID)&This->DropTargetHelper);
+                              (PVOID *)&This->DropTargetHelper);
 
         if (!SUCCEEDED(hr))
         {

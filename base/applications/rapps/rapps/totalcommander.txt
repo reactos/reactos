@@ -14,6 +14,10 @@ CDPath = none
 [Section.0413]
 Description = Total Commander is een bestandsbeheerder met twee panelen zij aan zij.
 
+[Section.0418]
+Description = Total Commander este un gestionar de fișiere după modelul «două paneluri alăturate».
+Size = 3,2 Mo
+
 [Section.0813]
 Description = Total Commander is een bestandsbeheerder met twee panelen zij aan zij.
 
