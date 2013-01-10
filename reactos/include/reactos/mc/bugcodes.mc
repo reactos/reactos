@@ -814,6 +814,22 @@ Language=English
 PINBALL_FILE_SYSTEM
 .
 
+MessageId=0x5A
+Severity=Success
+Facility=System
+SymbolicName=CRITICAL_SERVICE_FAILED
+Language=English
+CRITICAL_SERVICE_FAILED
+.
+
+MessageId=0x5B
+Severity=Success
+Facility=System
+SymbolicName=SET_ENV_VAR_FAILED
+Language=English
+SET_ENV_VAR_FAILED
+.
+
 MessageId=0x5C
 Severity=Success
 Facility=System
