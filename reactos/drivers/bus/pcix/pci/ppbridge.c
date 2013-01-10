@@ -671,8 +671,7 @@ NTAPI
 PPBridge_ResetDevice(IN PPCI_PDO_EXTENSION PdoExtension,
                      IN PPCI_COMMON_HEADER PciData)
 {
-    UNIMPLEMENTED;
-    ASSERT(FALSE); // while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
 }
 
 VOID

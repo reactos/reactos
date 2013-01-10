@@ -152,8 +152,7 @@ PciIsDatacenter(VOID)
     else
     {
         /* This scenario shouldn't happen yet, since SetupDD isn't used */
-        UNIMPLEMENTED;
-        ASSERT(FALSE); // while (TRUE);
+        UNIMPLEMENTED_FATAL("ReactOS doesn't use SetupDD for its setup device driver install program. Therefore this scenario must not happen!\n");
     }
 
     /* Return if this is Datacenter or not */
@@ -757,8 +756,7 @@ PciIsDeviceOnDebugPath(IN PPCI_PDO_EXTENSION DeviceExtension)
     if (!PciDebugPortsCount) return FALSE;
 
     /* eVb has not been able to test such devices yet */
-    UNIMPLEMENTED;
-    ASSERT(FALSE); // while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
     return FALSE;
 }
 

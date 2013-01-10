@@ -181,8 +181,7 @@ KeTryToAcquireQueuedSpinLockRaiseToSynch(IN KSPIN_LOCK_QUEUE_NUMBER LockNumber,
                                          IN PKIRQL OldIrql)
 {
 #ifdef CONFIG_SMP
-    ASSERT(FALSE); // FIXME: Unused
-    // while (TRUE);
+    ERROR_DBGBREAK("FIXME: Unused\n"); // FIXME: Unused
     return FALSE;
 #endif
 
@@ -206,8 +205,7 @@ KeTryToAcquireQueuedSpinLock(IN KSPIN_LOCK_QUEUE_NUMBER LockNumber,
                              OUT PKIRQL OldIrql)
 {
 #ifdef CONFIG_SMP
-    ASSERT(FALSE); // FIXME: Unused
-    // while (TRUE);
+    ERROR_DBGBREAK("FIXME: Unused\n"); // FIXME: Unused
     return FALSE;
 #endif
 

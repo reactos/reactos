@@ -50,8 +50,7 @@ devpresent_Constructor(IN PVOID DeviceExtension,
     PAGED_CODE();
 
     /* Not yet implemented */
-    UNIMPLEMENTED;
-    ASSERT(FALSE); // while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
     return STATUS_NOT_IMPLEMENTED;
 }
 

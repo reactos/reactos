@@ -53,8 +53,7 @@ routeintrf_Constructor(IN PVOID DeviceExtension,
     if (Version != PCI_INT_ROUTE_INTRF_STANDARD_VER) return STATUS_NOINTERFACE;
 
     /* Not yet implemented */
-    UNIMPLEMENTED;
-    ASSERT(FALSE); // while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
     return STATUS_NOT_IMPLEMENTED;
 }
 

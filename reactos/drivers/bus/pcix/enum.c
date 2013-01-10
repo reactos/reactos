@@ -147,14 +147,12 @@ PciComputeNewCurrentSettings(IN PPCI_PDO_EXTENSION PdoExtension,
                     {
                         /* Not used in the driver yet */
                         case 1:
-                            UNIMPLEMENTED;
-                            ASSERT(FALSE); // while (TRUE);
+                            UNIMPLEMENTED_DBGBREAK();
                             break;
 
                         /* Not used in the driver yet */
                         case 2:
-                            UNIMPLEMENTED;
-                            ASSERT(FALSE); // while (TRUE);
+                            UNIMPLEMENTED_DBGBREAK();
                             break;
 
                         /* A drain request */
@@ -540,8 +538,7 @@ PciQueryEjectionRelations(IN PPCI_PDO_EXTENSION PdoExtension,
                           IN OUT PDEVICE_RELATIONS *pDeviceRelations)
 {
     /* Not yet implemented */
-    UNIMPLEMENTED;
-    ASSERT(FALSE); // while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -599,8 +596,7 @@ PciQueryRequirements(IN PPCI_PDO_EXTENSION PdoExtension,
             (ExIsProcessorFeaturePresent(PF_PAE_ENABLED)))
         {
             /* Have not tested this on eVb's machine yet */
-            UNIMPLEMENTED;
-            ASSERT(FALSE); // while (TRUE);
+            UNIMPLEMENTED_DBGBREAK();
         }
 
         /* Check if the requirements are actually the zero list */
@@ -1522,8 +1518,7 @@ PciProcessBus(IN PPCI_FDO_EXTENSION DeviceExtension)
     if (!PCI_IS_ROOT_FDO(DeviceExtension))
     {
         /* Not really handling this year */
-        UNIMPLEMENTED;
-        ASSERT(FALSE); // while (TRUE);
+        UNIMPLEMENTED_DBGBREAK();
 
         /* Check for PCI bridges with the ISA bit set, or required */
         if ((PdoExtension) &&
@@ -1532,8 +1527,7 @@ PciProcessBus(IN PPCI_FDO_EXTENSION DeviceExtension)
              (PdoExtension->Dependent.type1.IsaBitSet)))
         {
             /* We'll need to do some legacy support */
-            UNIMPLEMENTED;
-            ASSERT(FALSE); // while (TRUE);
+            UNIMPLEMENTED_DBGBREAK();
         }
     }
     else
@@ -1547,8 +1541,7 @@ PciProcessBus(IN PPCI_FDO_EXTENSION DeviceExtension)
             if (PdoExtension->Dependent.type1.VgaBitSet)
             {
                 /* Again, some more legacy support we'll have to do */
-                UNIMPLEMENTED;
-                ASSERT(FALSE); // while (TRUE);
+                UNIMPLEMENTED_DBGBREAK();
             }
         }
     }
@@ -1557,8 +1550,7 @@ PciProcessBus(IN PPCI_FDO_EXTENSION DeviceExtension)
     if (PciAssignBusNumbers)
     {
         /* Not yet supported */
-        UNIMPLEMENTED;
-        ASSERT(FALSE); // while (TRUE);
+        UNIMPLEMENTED_DBGBREAK();
     }
 }
 
@@ -1605,9 +1597,7 @@ PciScanBus(IN PPCI_FDO_EXTENSION DeviceExtension)
                             sizeof(UCHAR));
         if (SecondaryBus != PdoExtension->Dependent.type1.SecondaryBus)
         {
-            DPRINT1("PCI: Bus numbers have been changed!  Restoring originals.\n");
-            UNIMPLEMENTED;
-            ASSERT(FALSE); // while (TRUE);
+            UNIMPLEMENTED_DBGBREAK("PCI: Bus numbers have been changed!  Restoring originals.\n");
         }
     }
 
@@ -1668,8 +1658,7 @@ PciScanBus(IN PPCI_FDO_EXTENSION DeviceExtension)
             if (WdTable)
             {
                 /* Check if this PCI device is the ACPI Watchdog Device... */
-                UNIMPLEMENTED;
-                ASSERT(FALSE); // while (TRUE);
+                UNIMPLEMENTED_DBGBREAK();
             }
 
             /* Check for non-simple devices */
@@ -1734,8 +1723,7 @@ PciScanBus(IN PPCI_FDO_EXTENSION DeviceExtension)
             if (PdoExtension)
             {
                 /* Rescan scenarios are not yet implemented */
-                UNIMPLEMENTED;
-                ASSERT(FALSE); // while (TRUE);
+                UNIMPLEMENTED_DBGBREAK();
             }
 
             /* Bus processing will need to happen */
@@ -2197,8 +2185,7 @@ PciSetResources(IN PPCI_PDO_EXTENSION PdoExtension,
         (FdoExtension->HotPlugParameters.Acquired))
     {
         /* Don't have hotplug devices to test with yet, QEMU 0.14 should */
-        UNIMPLEMENTED;
-        ASSERT(FALSE); // while (TRUE);
+        UNIMPLEMENTED_DBGBREAK();
     }
 
     /* Locate the correct resource configurator for this type of device */

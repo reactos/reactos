@@ -58,8 +58,7 @@ agpintrf_Constructor(IN PVOID DeviceExtension,
     }
 
     /* Not yet implemented */
-    UNIMPLEMENTED;
-    ASSERT(FALSE); // while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
     return STATUS_NOT_IMPLEMENTED;
 }
 
