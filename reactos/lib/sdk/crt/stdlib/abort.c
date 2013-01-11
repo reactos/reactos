@@ -33,7 +33,7 @@ abort (
             (msvcrt_error_mode == _OUT_TO_MSGBOX))
         {
             /* Output a message box */
-            __crt_MessageBoxA(abort_msg, MB_OK);
+            __crt_MessageBoxA(abort_msg, MB_OK | MB_ICONERROR);
         }
         else
         {
