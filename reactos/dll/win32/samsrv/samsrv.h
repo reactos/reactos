@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         Security Account Manager (SAM) Server
+ * PROJECT:         Security Account Manager (LSA) Server
  * FILE:            reactos/dll/win32/samsrv/samsrv.h
  * PURPOSE:         Common header file
  *
@@ -143,16 +143,6 @@ NTSTATUS
 SampCloseDbObject(PSAM_DB_OBJECT DbObject);
 
 NTSTATUS
-SampCheckAccountNameInDomain(IN PSAM_DB_OBJECT DomainObject,
-                             IN LPCWSTR lpAccountName);
-
-NTSTATUS
-SampSetAccountNameInDomain(IN PSAM_DB_OBJECT DomainObject,
-                           IN LPCWSTR lpContainerName,
-                           IN LPCWSTR lpAccountName,
-                           IN ULONG ulRelativeId);
-
-NTSTATUS
 SampSetObjectAttribute(PSAM_DB_OBJECT DbObject,
                        LPWSTR AttributeName,
                        ULONG AttributeType,
@@ -170,6 +160,24 @@ NTSTATUS
 SampGetObjectAttributeString(PSAM_DB_OBJECT DbObject,
                              LPWSTR AttributeName,
                              RPC_UNICODE_STRING *String);
+
+
+/* domain.c */
+
+NTSTATUS
+SampSetAccountNameInDomain(IN PSAM_DB_OBJECT DomainObject,
+                           IN LPCWSTR lpContainerName,
+                           IN LPCWSTR lpAccountName,
+                           IN ULONG ulRelativeId);
+
+NTSTATUS
+SampRemoveAccountNameFromDomain(IN PSAM_DB_OBJECT DomainObject,
+                                IN LPCWSTR lpContainerName,
+                                IN LPCWSTR lpAccountName);
+
+NTSTATUS
+SampCheckAccountNameInDomain(IN PSAM_DB_OBJECT DomainObject,
+                             IN LPCWSTR lpAccountName);
 
 
 /* group.h */
