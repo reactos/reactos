@@ -1079,7 +1079,7 @@ CsrLockProcessByClientId(IN HANDLE Pid,
 {
     PLIST_ENTRY NextEntry;
     PCSR_PROCESS CurrentProcess = NULL;
-    NTSTATUS Status;
+    NTSTATUS Status = STATUS_UNSUCCESSFUL;
 
     /* Acquire the lock */
     CsrAcquireProcessLock();
