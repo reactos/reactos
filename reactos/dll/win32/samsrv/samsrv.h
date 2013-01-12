@@ -261,4 +261,22 @@ VOID SampStartRpcServer(VOID);
 BOOL SampIsSetupRunning(VOID);
 BOOL SampInitializeSAM(VOID);
 
+
+/* user.c */
+
+NTSTATUS
+SampOpenUserObject(IN PSAM_DB_OBJECT DomainObject,
+                   IN ULONG UserId,
+                   IN ACCESS_MASK DesiredAccess,
+                   OUT PSAM_DB_OBJECT *UserObject);
+
+NTSTATUS
+SampAddGroupMembershipToUser(PSAM_DB_OBJECT UserObject,
+                             ULONG GroupId,
+                             ULONG Attributes);
+
+NTSTATUS
+SampRemoveGroupMembershipFromUser(PSAM_DB_OBJECT UserObject,
+                                  ULONG GroupId);
+
 /* EOF */

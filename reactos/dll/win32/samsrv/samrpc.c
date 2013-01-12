@@ -3931,6 +3931,7 @@ SamrAddMemberToGroup(IN SAMPR_HANDLE GroupHandle,
                      IN unsigned long Attributes)
 {
     PSAM_DB_OBJECT GroupObject;
+    PSAM_DB_OBJECT UserObject = NULL;
     NTSTATUS Status;
 
     TRACE("(%p %lu %lx)\n",
@@ -3944,10 +3945,38 @@ SamrAddMemberToGroup(IN SAMPR_HANDLE GroupHandle,
     if (!NT_SUCCESS(Status))
         return Status;
 
-    /* FIXME: Add group membership to the user object */
+    /* Open the user object in the same domain */
+    Status = SampOpenUserObject(GroupObject->ParentObject,
+                                MemberId,
+                                0,
+                                &UserObject);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SampOpenUserObject() failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
 
+    /* Add group membership to the user object */
+    Status = SampAddGroupMembershipToUser(UserObject,
+                                          GroupObject->RelativeId,
+                                          Attributes);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SampAddGroupMembershipToUser() failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    /* Add the member to the group object */
     Status = SampAddMemberToGroup(GroupObject,
                                   MemberId);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SampAddMemberToGroup() failed (Status 0x%08lx)\n", Status);
+    }
+
+done:
+    if (UserObject)
+        SampCloseDbObject(UserObject);
 
     return Status;
 }
@@ -3970,6 +3999,7 @@ SamrRemoveMemberFromGroup(IN SAMPR_HANDLE GroupHandle,
                           IN unsigned long MemberId)
 {
     PSAM_DB_OBJECT GroupObject;
+    PSAM_DB_OBJECT UserObject = NULL;
     NTSTATUS Status;
 
     TRACE("(%p %lu)\n",
@@ -3983,10 +4013,37 @@ SamrRemoveMemberFromGroup(IN SAMPR_HANDLE GroupHandle,
     if (!NT_SUCCESS(Status))
         return Status;
 
-    /* FIXME: Remove group membership from the user object */
+    /* Open the user object in the same domain */
+    Status = SampOpenUserObject(GroupObject->ParentObject,
+                                MemberId,
+                                0,
+                                &UserObject);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SampOpenUserObject() failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
 
+    /* Remove group membership from the user object */
+    Status = SampRemoveGroupMembershipFromUser(UserObject,
+                                               GroupObject->RelativeId);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SampAddGroupMembershipToUser() failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    /* Remove the member from the group object */
     Status = SampRemoveMemberFromGroup(GroupObject,
                                        MemberId);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SampRemoveMemberFromGroup() failed (Status 0x%08lx)\n", Status);
+    }
+
+done:
+    if (UserObject)
+        SampCloseDbObject(UserObject);
 
     return Status;
 }

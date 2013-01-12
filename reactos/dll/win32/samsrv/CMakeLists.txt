@@ -15,6 +15,7 @@ list(APPEND SOURCE
     samrpc.c
     samsrv.c
     setup.c
+    user.c
     samsrv.rc
     ${CMAKE_CURRENT_BINARY_DIR}/samsrv_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/samsrv.def
