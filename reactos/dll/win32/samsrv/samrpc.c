@@ -191,7 +191,7 @@ NTSTATUS
 NTAPI
 SamrQuerySecurityObject(IN SAMPR_HANDLE ObjectHandle,
                         IN SECURITY_INFORMATION SecurityInformation,
-                        OUT PSAMPR_SR_SECURITY_DESCRIPTOR * SecurityDescriptor)
+                        OUT PSAMPR_SR_SECURITY_DESCRIPTOR *SecurityDescriptor)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
@@ -3593,8 +3593,8 @@ SampQueryGroupGeneral(PSAM_DB_OBJECT GroupObject,
                       PSAMPR_GROUP_INFO_BUFFER *Buffer)
 {
     PSAMPR_GROUP_INFO_BUFFER InfoBuffer = NULL;
-    HANDLE MembersKeyHandle = NULL;
     SAM_GROUP_FIXED_DATA FixedData;
+    ULONG MembersLength = 0;
     ULONG Length = 0;
     NTSTATUS Status;
 
@@ -3633,33 +3633,22 @@ SampQueryGroupGeneral(PSAM_DB_OBJECT GroupObject,
 
     InfoBuffer->General.Attributes = FixedData.Attributes;
 
-    /* Open the Members subkey */
-    Status = SampRegOpenKey(GroupObject->KeyHandle,
-                            L"Members",
-                            KEY_READ,
-                            &MembersKeyHandle);
-    if (!NT_SUCCESS(Status))
-    {
-        TRACE("Status 0x%08lx\n", Status);
+    Status = SampGetObjectAttribute(GroupObject,
+                                    L"Members",
+                                    NULL,
+                                    NULL,
+                                    &MembersLength);
+    if (!NT_SUCCESS(Status) && Status != STATUS_OBJECT_NAME_NOT_FOUND)
         goto done;
-    }
 
-    /* Retrieve the number of members of the alias */
-    Status = SampRegQueryKeyInfo(MembersKeyHandle,
-                                 NULL,
-                                 &InfoBuffer->General.MemberCount);
-    if (!NT_SUCCESS(Status))
-    {
-        TRACE("Status 0x%08lx\n", Status);
-        goto done;
-    }
+    if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
+        InfoBuffer->General.MemberCount = 0;
+    else
+        InfoBuffer->General.MemberCount = MembersLength / sizeof(ULONG);
 
     *Buffer = InfoBuffer;
 
 done:
-    if (MembersKeyHandle != NULL)
-        SampRegCloseKey(MembersKeyHandle);
-
     if (!NT_SUCCESS(Status))
     {
         if (InfoBuffer != NULL)
@@ -3941,9 +3930,28 @@ SamrAddMemberToGroup(IN SAMPR_HANDLE GroupHandle,
                      IN unsigned long MemberId,
                      IN unsigned long Attributes)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PSAM_DB_OBJECT GroupObject;
+    NTSTATUS Status;
+
+    TRACE("(%p %lu %lx)\n",
+          GroupHandle, MemberId, Attributes);
+
+    /* Validate the group handle */
+    Status = SampValidateDbObject(GroupHandle,
+                                  SamDbGroupObject,
+                                  GROUP_ADD_MEMBER,
+                                  &GroupObject);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    /* FIXME: Add group membership to the user object */
+
+    Status = SampAddMemberToGroup(GroupObject,
+                                  MemberId);
+
+    return Status;
 }
+
 
 /* Function 21 */
 NTSTATUS
@@ -3954,15 +3962,35 @@ SamrDeleteGroup(IN OUT SAMPR_HANDLE *GroupHandle)
     return STATUS_NOT_IMPLEMENTED;
 }
 
+
 /* Function 24 */
 NTSTATUS
 NTAPI
 SamrRemoveMemberFromGroup(IN SAMPR_HANDLE GroupHandle,
                           IN unsigned long MemberId)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PSAM_DB_OBJECT GroupObject;
+    NTSTATUS Status;
+
+    TRACE("(%p %lu)\n",
+          GroupHandle, MemberId);
+
+    /* Validate the group handle */
+    Status = SampValidateDbObject(GroupHandle,
+                                  SamDbGroupObject,
+                                  GROUP_REMOVE_MEMBER,
+                                  &GroupObject);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    /* FIXME: Remove group membership from the user object */
+
+    Status = SampRemoveMemberFromGroup(GroupObject,
+                                       MemberId);
+
+    return Status;
 }
+
 
 /* Function 25 */
 NTSTATUS

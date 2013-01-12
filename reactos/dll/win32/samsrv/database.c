@@ -555,7 +555,7 @@ done:
 
 NTSTATUS
 SampCheckAccountNameInDomain(IN PSAM_DB_OBJECT DomainObject,
-                             IN LPWSTR lpAccountName)
+                             IN LPCWSTR lpAccountName)
 {
     HANDLE AccountKey;
     HANDLE NamesKey;

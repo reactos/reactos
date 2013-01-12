@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         Security Account Manager (LSA) Server
+ * PROJECT:         Security Account Manager (SAM) Server
  * FILE:            reactos/dll/win32/samsrv/samsrv.h
  * PURPOSE:         Common header file
  *
@@ -109,6 +109,7 @@ typedef struct _SAM_USER_FIXED_DATA
     USHORT OperatorCount;
 } SAM_USER_FIXED_DATA, *PSAM_USER_FIXED_DATA;
 
+
 /* database.c */
 
 NTSTATUS
@@ -143,7 +144,7 @@ SampCloseDbObject(PSAM_DB_OBJECT DbObject);
 
 NTSTATUS
 SampCheckAccountNameInDomain(IN PSAM_DB_OBJECT DomainObject,
-                             IN LPWSTR lpAccountName);
+                             IN LPCWSTR lpAccountName);
 
 NTSTATUS
 SampSetAccountNameInDomain(IN PSAM_DB_OBJECT DomainObject,
@@ -170,7 +171,20 @@ SampGetObjectAttributeString(PSAM_DB_OBJECT DbObject,
                              LPWSTR AttributeName,
                              RPC_UNICODE_STRING *String);
 
+
+/* group.h */
+
+NTSTATUS
+SampAddMemberToGroup(IN PSAM_DB_OBJECT GroupObject,
+                     IN ULONG MemberId);
+
+NTSTATUS
+SampRemoveMemberFromGroup(IN PSAM_DB_OBJECT GroupObject,
+                          IN ULONG MemberId);
+
+
 /* registry.h */
+
 NTSTATUS
 SampRegCloseKey(IN HANDLE KeyHandle);
 
@@ -203,7 +217,7 @@ SampRegQueryKeyInfo(IN HANDLE KeyHandle,
 
 NTSTATUS
 SampRegDeleteValue(IN HANDLE KeyHandle,
-                   IN LPWSTR ValueName);
+                   IN LPCWSTR ValueName);
 
 NTSTATUS
 SampRegEnumerateValue(IN HANDLE KeyHandle,
@@ -216,21 +230,27 @@ SampRegEnumerateValue(IN HANDLE KeyHandle,
 
 NTSTATUS
 SampRegQueryValue(IN HANDLE KeyHandle,
-                  IN LPWSTR ValueName,
+                  IN LPCWSTR ValueName,
                   OUT PULONG Type OPTIONAL,
                   OUT LPVOID Data OPTIONAL,
                   IN OUT PULONG DataLength OPTIONAL);
 
 NTSTATUS
 SampRegSetValue(IN HANDLE KeyHandle,
-                IN LPWSTR ValueName,
+                IN LPCWSTR ValueName,
                 IN ULONG Type,
                 IN LPVOID Data,
                 IN ULONG DataLength);
 
+
 /* samspc.c */
+
 VOID SampStartRpcServer(VOID);
 
+
 /* setup.c */
+
 BOOL SampIsSetupRunning(VOID);
 BOOL SampInitializeSAM(VOID);
+
+/* EOF */
