@@ -6562,15 +6562,100 @@ SamrChangePasswordUser(IN SAMPR_HANDLE UserHandle,
     return STATUS_NOT_IMPLEMENTED;
 }
 
+
 /* Function 39 */
 NTSTATUS
 NTAPI
 SamrGetGroupsForUser(IN SAMPR_HANDLE UserHandle,
                      OUT PSAMPR_GET_GROUPS_BUFFER *Groups)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PSAMPR_GET_GROUPS_BUFFER GroupsBuffer = NULL;
+    PSAM_DB_OBJECT UserObject;
+    ULONG Length = 0;
+    NTSTATUS Status;
+
+    TRACE("SamrGetGroupsForUser(%p %p)\n",
+          UserHandle, Groups);
+
+    /* Validate the domain handle */
+    Status = SampValidateDbObject(UserHandle,
+                                  SamDbUserObject,
+                                  USER_LIST_GROUPS,
+                                  &UserObject);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampValidateDbObject failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Allocate the groups buffer */
+    GroupsBuffer = midl_user_allocate(sizeof(SAMPR_GET_GROUPS_BUFFER));
+    if (GroupsBuffer == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    /*
+     * Get the size of the Groups attribute.
+     * Do not check the status code because in case of an error
+     * Length will be 0. And that is all we need.
+     */
+    SampGetObjectAttribute(UserObject,
+                           L"Groups",
+                           NULL,
+                           NULL,
+                           &Length);
+
+    /* If there is no Groups attribute, return a groups buffer without an array */
+    if (Length == 0)
+    {
+        GroupsBuffer->MembershipCount = 0;
+        GroupsBuffer->Groups = NULL;
+
+        *Groups = GroupsBuffer;
+
+        return STATUS_SUCCESS;
+    }
+
+    /* Allocate a buffer for the Groups attribute */
+    GroupsBuffer->Groups = midl_user_allocate(Length);
+    if (GroupsBuffer->Groups == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
+
+    /* Retrieve the Grous attribute */
+    Status = SampGetObjectAttribute(UserObject,
+                                    L"Groups",
+                                    NULL,
+                                    GroupsBuffer->Groups,
+                                    &Length);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampGetObjectAttribute failed with status 0x%08lx\n", Status);
+        goto done;
+    }
+
+    /* Calculate the membership count */
+    GroupsBuffer->MembershipCount = Length / sizeof(GROUP_MEMBERSHIP);
+
+    /* Return the groups buffer to the caller */
+    *Groups = GroupsBuffer;
+
+done:
+    if (!NT_SUCCESS(Status))
+    {
+        if (GroupsBuffer != NULL)
+        {
+            if (GroupsBuffer->Groups != NULL)
+                midl_user_free(GroupsBuffer->Groups);
+
+            midl_user_free(GroupsBuffer);
+        }
+    }
+
+    return Status;
 }
+
 
 /* Function 40 */
 NTSTATUS
@@ -6772,10 +6857,10 @@ SamrCreateUser2InDomain(IN SAMPR_HANDLE DomainHandle,
 
     /* Store the fixed domain attributes */
     Status = SampSetObjectAttribute(DomainObject,
-                           L"F",
-                           REG_BINARY,
-                           &FixedDomainData,
-                           ulSize);
+                                    L"F",
+                                    REG_BINARY,
+                                    &FixedDomainData,
+                                    ulSize);
     if (!NT_SUCCESS(Status))
     {
         TRACE("failed with status 0x%08lx\n", Status);
