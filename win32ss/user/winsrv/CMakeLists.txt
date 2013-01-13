@@ -17,7 +17,7 @@ add_library(winsrv SHARED ${SOURCE})
 
 target_link_libraries(winsrv win32ksys ${PSEH_LIB}) # win32ksys because of NtUser...()
 
-set_module_type(winsrv win32dll)
+set_module_type(winsrv win32dll UNICODE)
 
 # add_importlibs(winsrv psapi msvcrt kernel32 ntdll csrsrv)
 add_importlibs(winsrv msvcrt kernel32 ntdll csrsrv)
