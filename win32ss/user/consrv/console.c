@@ -301,21 +301,38 @@ CSR_API(SrvAllocConsole)
     if (ProcessData->Console != NULL)
     {
         DPRINT1("Process already has a console\n");
-        return STATUS_INVALID_PARAMETER;
+        return STATUS_ACCESS_DENIED;
     }
 
-    RtlEnterCriticalSection(&ProcessData->HandleTableLock);
-
+/******************************************************************************/
+/** This comes from ConsoleConnect!!                                         **/
     DPRINT1("SrvAllocConsole - Checkpoint 1\n");
+
+#if 0000
+    /*
+     * We are about to create a new console. However when ConsoleNewProcess
+     * was called, we didn't know that we wanted to create a new console and
+     * therefore, we by default inherited the handles table from our parent
+     * process. It's only now that we notice that in fact we do not need
+     * them, because we've created a new console and thus we must use it.
+     *
+     * Therefore, free the console we can have and our handles table,
+     * and recreate a new one later on.
+     */
+    Win32CsrReleaseConsole(ProcessData);
+    // Win32CsrFreeHandlesTable(ProcessData);
+#endif
 
     /* Initialize a new Console owned by the Console Leader Process */
     Status = CsrInitConsole(&ProcessData->Console, AllocConsoleRequest->ShowCmd, ConsoleLeader);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Console initialization failed\n");
-        RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
         return Status;
     }
+
+    /* Add a reference count because the process is tied to the console */
+    _InterlockedIncrement(&ProcessData->Console->ReferenceCount);
 
     /* Insert the process into the processes list of the console */
     InsertHeadList(&ProcessData->Console->ProcessList, &ProcessData->ConsoleLink);
@@ -323,35 +340,12 @@ CSR_API(SrvAllocConsole)
     /* Return it to the caller */
     AllocConsoleRequest->Console = ProcessData->Console;
 
-    /* Add a reference count because the process is tied to the console */
-    _InterlockedIncrement(&ProcessData->Console->ReferenceCount);
-
-#if 0000
-    /*
-     * We've just created a new console. However when ConsoleNewProcess was
-     * called, we didn't know that we wanted to create a new console and
-     * therefore, we by default inherited the handles table from our parent
-     * process. It's only now that we notice that in fact we do not need
-     * them, because we've created a new console and thus we must use it.
-     *
-     * Therefore, free our handles table and recreate a new one.
-     */
-
-    ULONG i;
-
-    /* Close all console handles and free the handle table memory */
-    for (i = 0; i < ProcessData->HandleTableSize; i++)
-    {
-        Win32CsrCloseHandleEntry(&ProcessData->HandleTable[i]);
-    }
-    ProcessData->HandleTableSize = 0;
-    RtlFreeHeap(ConSrvHeap, 0, ProcessData->HandleTable);
-    ProcessData->HandleTable = NULL;
-#endif
 
     /*
      * Create a new handle table - Insert the IO handles
      */
+
+    RtlEnterCriticalSection(&ProcessData->HandleTableLock);
 
     /* Insert the Input handle */
     Status = Win32CsrInsertObject(ProcessData,
@@ -363,9 +357,10 @@ CSR_API(SrvAllocConsole)
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to insert the input handle\n");
-        ConioDeleteConsole(ProcessData->Console);
-        ProcessData->Console = NULL;
         RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
+        Win32CsrReleaseConsole(ProcessData);
+        // ConioDeleteConsole(ProcessData->Console);
+        // ProcessData->Console = NULL;
         return Status;
     }
 
@@ -379,11 +374,12 @@ CSR_API(SrvAllocConsole)
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to insert the output handle\n");
-        ConioDeleteConsole(ProcessData->Console);
-        Win32CsrReleaseObject(ProcessData,
-                              AllocConsoleRequest->InputHandle);
-        ProcessData->Console = NULL;
         RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
+        Win32CsrReleaseConsole(ProcessData);
+        // Win32CsrReleaseObject(ProcessData,
+                              // AllocConsoleRequest->InputHandle);
+        // ConioDeleteConsole(ProcessData->Console);
+        // ProcessData->Console = NULL;
         return Status;
     }
 
@@ -397,15 +393,18 @@ CSR_API(SrvAllocConsole)
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to insert the error handle\n");
-        ConioDeleteConsole(ProcessData->Console);
-        Win32CsrReleaseObject(ProcessData,
-                              AllocConsoleRequest->OutputHandle);
-        Win32CsrReleaseObject(ProcessData,
-                              AllocConsoleRequest->InputHandle);
-        ProcessData->Console = NULL;
         RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
+        Win32CsrReleaseConsole(ProcessData);
+        // Win32CsrReleaseObject(ProcessData,
+                              // AllocConsoleRequest->OutputHandle);
+        // Win32CsrReleaseObject(ProcessData,
+                              // AllocConsoleRequest->InputHandle);
+        // ConioDeleteConsole(ProcessData->Console);
+        // ProcessData->Console = NULL;
         return Status;
     }
+
+    RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
 
     /* Duplicate the Event */
     Status = NtDuplicateObject(NtCurrentProcess(),
@@ -416,18 +415,18 @@ CSR_API(SrvAllocConsole)
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtDuplicateObject() failed: %lu\n", Status);
-        ConioDeleteConsole(ProcessData->Console);
-        // if (NewConsole /* || !ProcessData->bInheritHandles */)
-        {
-            Win32CsrReleaseObject(ProcessData,
-                                  AllocConsoleRequest->ErrorHandle);
-            Win32CsrReleaseObject(ProcessData,
-                                  AllocConsoleRequest->OutputHandle);
-            Win32CsrReleaseObject(ProcessData,
-                                  AllocConsoleRequest->InputHandle);
-        }
-        ProcessData->Console = NULL;
-        RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
+        Win32CsrReleaseConsole(ProcessData);
+        // if (NewConsole)
+        // {
+            // Win32CsrReleaseObject(ProcessData,
+                                  // AllocConsoleRequest->ErrorHandle);
+            // Win32CsrReleaseObject(ProcessData,
+                                  // AllocConsoleRequest->OutputHandle);
+            // Win32CsrReleaseObject(ProcessData,
+                                  // AllocConsoleRequest->InputHandle);
+        // }
+        // ConioDeleteConsole(ProcessData->Console); // FIXME: Just release the console ?
+        // ProcessData->Console = NULL;
         return Status;
     }
     /* Input Wait Handle */
@@ -436,15 +435,149 @@ CSR_API(SrvAllocConsole)
     /* Set the Ctrl Dispatcher */
     ProcessData->CtrlDispatcher = AllocConsoleRequest->CtrlDispatcher;
     DPRINT("CONSRV: CtrlDispatcher address: %x\n", ProcessData->CtrlDispatcher);
+/******************************************************************************/
 
-    RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
     return STATUS_SUCCESS;
+}
+
+CSR_API(SrvAttachConsole)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+    PCONSOLE_ATTACHCONSOLE AttachConsoleRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.AttachConsoleRequest;
+    PCSR_PROCESS SourceProcess = NULL;  // The parent process.
+    PCSR_PROCESS TargetProcess = CsrGetClientThread()->Process; // Ourselves.
+    HANDLE ProcessId = ULongToHandle(AttachConsoleRequest->ProcessId);
+    PCONSOLE_PROCESS_DATA SourceProcessData, TargetProcessData;
+
+    DPRINT("SrvAttachConsole\n");
+
+    TargetProcessData = ConsoleGetPerProcessData(TargetProcess);
+
+    if (TargetProcessData->Console != NULL)
+    {
+        DPRINT1("Process already has a console\n");
+        return STATUS_ACCESS_DENIED;
+    }
+
+    if (ProcessId == ULongToHandle(ATTACH_PARENT_PROCESS))
+    {
+        PROCESS_BASIC_INFORMATION ProcessInfo;
+        ULONG Length = sizeof(ProcessInfo);
+
+        /* Get the real parent's ID */
+
+        Status = NtQueryInformationProcess(TargetProcess->ProcessHandle,
+                                           ProcessBasicInformation,
+                                           &ProcessInfo,
+                                           Length, &Length);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("SrvAttachConsole - Cannot retrieve basic process info, Status = %lu\n", Status);
+            return Status;
+        }
+
+        DPRINT("We, process (ID) %lu;%lu\n", TargetProcess->ClientId.UniqueProcess, TargetProcess->ClientId.UniqueThread);
+        ProcessId = ULongToHandle(ProcessInfo.InheritedFromUniqueProcessId);
+        DPRINT("Parent process ID = %lu\n", ProcessId);
+    }
+
+    /* Lock the target process via its PID */
+    DPRINT1("Lock process Id %lu\n", ProcessId);
+    Status = CsrLockProcessByClientId(ProcessId, &SourceProcess);
+    DPRINT1("Lock process Status %lu\n", Status);
+    if (!NT_SUCCESS(Status)) return Status;
+    DPRINT1("AttachConsole OK\n");
+
+/******************************************************************************/
+/** This comes from ConsoleNewProcess!!                                      **/
+    SourceProcessData = ConsoleGetPerProcessData(SourceProcess);
+
+    /*
+     * Inherit the console from the parent,
+     * if any, otherwise return an error.
+     */
+    DPRINT1("SourceProcessData->Console = 0x%p\n", SourceProcessData->Console);
+    if (SourceProcessData->Console == NULL)
+    {
+        Status = STATUS_INVALID_HANDLE;
+        goto Quit;
+    }
+    TargetProcessData->Console = SourceProcessData->Console;
+
+    DPRINT1("SrvAttachConsole - Copy the handle table (1)\n");
+    Status = Win32CsrInheritHandlesTable(SourceProcessData, TargetProcessData);
+    DPRINT1("SrvAttachConsole - Copy the handle table (2)\n");
+    if (!NT_SUCCESS(Status))
+    {
+        goto Quit;
+    }
+
+/******************************************************************************/
+
+/******************************************************************************/
+/** This comes from ConsoleConnect / SrvAllocConsole!!                       **/
+    /* Add a reference count because the process is tied to the console */
+    _InterlockedIncrement(&TargetProcessData->Console->ReferenceCount);
+
+    /* Insert the process into the processes list of the console */
+    InsertHeadList(&TargetProcessData->Console->ProcessList, &TargetProcessData->ConsoleLink);
+
+    /* Return it to the caller */
+    AttachConsoleRequest->Console = TargetProcessData->Console;
+
+    /** Here, we inherited the console handles from the "source" process,
+     ** so no need to reinitialize the handles table. **/
+
+    DPRINT1("SrvAttachConsole - Checkpoint\n");
+
+    /* Duplicate the Event */
+    Status = NtDuplicateObject(NtCurrentProcess(),
+                               TargetProcessData->Console->ActiveEvent,
+                               TargetProcessData->Process->ProcessHandle,
+                               &TargetProcessData->ConsoleEvent,
+                               EVENT_ALL_ACCESS, 0, 0);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtDuplicateObject() failed: %lu\n", Status);
+        Win32CsrReleaseConsole(TargetProcessData);
+// #if 0
+        // if (NewConsole)
+        // {
+            // Win32CsrReleaseObject(TargetProcessData,
+                                  // AttachConsoleRequest->ErrorHandle);
+            // Win32CsrReleaseObject(TargetProcessData,
+                                  // AttachConsoleRequest->OutputHandle);
+            // Win32CsrReleaseObject(TargetProcessData,
+                                  // AttachConsoleRequest->InputHandle);
+        // }
+// #endif
+        // ConioDeleteConsole(TargetProcessData->Console); // FIXME: Just release the console ?
+        // TargetProcessData->Console = NULL;
+        goto Quit;
+    }
+    /* Input Wait Handle */
+    AttachConsoleRequest->InputWaitHandle = TargetProcessData->ConsoleEvent;
+
+    /* Set the Ctrl Dispatcher */
+    TargetProcessData->CtrlDispatcher = AttachConsoleRequest->CtrlDispatcher;
+    DPRINT("CONSRV: CtrlDispatcher address: %x\n", TargetProcessData->CtrlDispatcher);
+
+    Status = STATUS_SUCCESS;
+/******************************************************************************/
+
+Quit:
+    DPRINT1("SrvAttachConsole - exiting 1\n");
+    /* Unlock the "source" process */
+    CsrUnlockProcess(SourceProcess);
+    DPRINT1("SrvAttachConsole - exiting 2\n");
+
+    return Status;
 }
 
 CSR_API(SrvFreeConsole)
 {
     DPRINT1("SrvFreeConsole\n");
-    Win32CsrReleaseConsole(CsrGetClientThread()->Process);
+    Win32CsrReleaseConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process));
     return STATUS_SUCCESS;
 }
 

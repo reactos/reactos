@@ -81,6 +81,85 @@ Win32CsrCloseHandleEntry(PCONSOLE_IO_HANDLE Entry)
 
 NTSTATUS
 FASTCALL
+Win32CsrInheritHandlesTable(IN PCONSOLE_PROCESS_DATA SourceProcessData,
+                            IN PCONSOLE_PROCESS_DATA TargetProcessData)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+    ULONG i;
+
+    RtlEnterCriticalSection(&SourceProcessData->HandleTableLock);
+
+    /* Inherit a handles table only if there is no already */
+    if (TargetProcessData->HandleTable != NULL /* || TargetProcessData->HandleTableSize != 0 */)
+    {
+        Status = STATUS_UNSUCCESSFUL; /* STATUS_INVALID_PARAMETER */
+        goto Quit;
+    }
+
+    /* Allocate a new handle table for the child process */
+    TargetProcessData->HandleTable = RtlAllocateHeap(ConSrvHeap,
+                                                     HEAP_ZERO_MEMORY,
+                                                     SourceProcessData->HandleTableSize
+                                                             * sizeof(CONSOLE_IO_HANDLE));
+    if (TargetProcessData->HandleTable == NULL)
+    {
+        Status = STATUS_NO_MEMORY;
+        goto Quit;
+    }
+
+    TargetProcessData->HandleTableSize = SourceProcessData->HandleTableSize;
+
+    /*
+     * Parse the parent process' handles table and, for each handle,
+     * do a copy of it and reference it, if the handle is inheritable.
+     */
+    for (i = 0; i < SourceProcessData->HandleTableSize; i++)
+    {
+        if (SourceProcessData->HandleTable[i].Object != NULL &&
+            SourceProcessData->HandleTable[i].Inheritable)
+        {
+            /*
+             * Copy the handle data and increment the reference count of the
+             * pointed object (via the call to Win32CsrCreateHandleEntry).
+             */
+            TargetProcessData->HandleTable[i] = SourceProcessData->HandleTable[i];
+            Win32CsrCreateHandleEntry(&TargetProcessData->HandleTable[i]);
+        }
+    }
+
+Quit:
+    RtlLeaveCriticalSection(&SourceProcessData->HandleTableLock);
+    return Status;
+}
+
+VOID
+FASTCALL
+Win32CsrFreeHandlesTable(PCONSOLE_PROCESS_DATA ProcessData)
+{
+    DPRINT1("Win32CsrFreeHandlesTable\n");
+
+    RtlEnterCriticalSection(&ProcessData->HandleTableLock);
+
+    if (ProcessData->HandleTable != NULL)
+    {
+        ULONG i;
+
+        /* Close all console handles and free the handle table memory */
+        for (i = 0; i < ProcessData->HandleTableSize; i++)
+        {
+            Win32CsrCloseHandleEntry(&ProcessData->HandleTable[i]);
+        }
+        RtlFreeHeap(ConSrvHeap, 0, ProcessData->HandleTable);
+        ProcessData->HandleTable = NULL;
+    }
+
+    ProcessData->HandleTableSize = 0;
+
+    RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
+}
+
+NTSTATUS
+FASTCALL
 Win32CsrInsertObject(PCONSOLE_PROCESS_DATA ProcessData,
                      PHANDLE Handle,
                      Object_t *Object,
@@ -122,7 +201,8 @@ Win32CsrInsertObject(PCONSOLE_PROCESS_DATA ProcessData,
     ProcessData->HandleTable[i].Inheritable = Inheritable;
     ProcessData->HandleTable[i].ShareMode   = ShareMode;
     Win32CsrCreateHandleEntry(&ProcessData->HandleTable[i]);
-    *Handle = UlongToHandle((i << 2) | 0x3);
+    *Handle = ULongToHandle((i << 2) | 0x3);
+
     RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
     return STATUS_SUCCESS;
 }
@@ -202,9 +282,33 @@ Win32CsrUnlockObject(Object_t *Object)
     Win32CsrUnlockConsole(Object->Console);
 }
 
+VOID
+FASTCALL
+Win32CsrReleaseConsole(PCONSOLE_PROCESS_DATA ProcessData)
+{
+    PCONSOLE Console;
+
+    DPRINT1("Win32CsrReleaseConsole\n");
+
+    /* Close all console handles and free the handle table memory */
+    Win32CsrFreeHandlesTable(ProcessData);
+
+    /* Detach process from console */
+    Console = ProcessData->Console;
+    if (Console != NULL)
+    {
+        DPRINT1("Win32CsrReleaseConsole - Console->ReferenceCount = %lu - We are going to decrement it !\n", Console->ReferenceCount);
+        ProcessData->Console = NULL;
+        EnterCriticalSection(&Console->Lock);
+        RemoveEntryList(&ProcessData->ConsoleLink);
+        Win32CsrUnlockConsole(Console);
+        //CloseHandle(ProcessData->ConsoleEvent);
+        //ProcessData->ConsoleEvent = NULL;
+    }
+}
 
 
-/** Remark: this function can be called by SrvAttachConsole (not yet implemented) **/
+
 NTSTATUS
 NTAPI
 ConsoleNewProcess(PCSR_PROCESS SourceProcess,
@@ -223,7 +327,6 @@ ConsoleNewProcess(PCSR_PROCESS SourceProcess,
      **************************************************************************/
 
     PCONSOLE_PROCESS_DATA SourceProcessData, TargetProcessData;
-    ULONG i;
 
     DPRINT1("ConsoleNewProcess inside\n");
     DPRINT1("SourceProcess = 0x%p ; TargetProcess = 0x%p\n", SourceProcess, TargetProcess);
@@ -243,14 +346,13 @@ ConsoleNewProcess(PCSR_PROCESS SourceProcess,
     TargetProcessData->Process = TargetProcess;
     TargetProcessData->ConsoleEvent = NULL;
     TargetProcessData->Console = TargetProcessData->ParentConsole = NULL;
-    // TargetProcessData->bInheritHandles = FALSE;
     TargetProcessData->ConsoleApp = ((TargetProcess->Flags & CsrProcessIsConsoleApp) ? TRUE : FALSE);
 
     // Testing
     TargetProcessData->HandleTableSize = 0;
     TargetProcessData->HandleTable = NULL;
 
-    /* HACK */ RtlZeroMemory(&TargetProcessData->HandleTableLock, sizeof(RTL_CRITICAL_SECTION));
+    /**** HACK !!!! ****/ RtlZeroMemory(&TargetProcessData->HandleTableLock, sizeof(RTL_CRITICAL_SECTION));
     RtlInitializeCriticalSection(&TargetProcessData->HandleTableLock);
 
     /* Do nothing if the source process is NULL */
@@ -267,51 +369,17 @@ ConsoleNewProcess(PCSR_PROCESS SourceProcess,
     if ( SourceProcessData->Console != NULL && /* SourceProcessData->ConsoleApp */
          TargetProcessData->ConsoleApp )
     {
-/*
-        if (TargetProcessData->HandleTableSize)
-        {
-            return STATUS_INVALID_PARAMETER;
-        }
-*/
+        NTSTATUS Status;
 
-        DPRINT1("ConsoleNewProcess - Copy the handle table (1)\n");
+        Status = Win32CsrInheritHandlesTable(SourceProcessData, TargetProcessData);
+        if (!NT_SUCCESS(Status))
+        {
+            return Status;
+        }
+
+        // FIXME: Do it before, or after the handles table inheritance ??
         /* Temporary "inherit" the console from the parent */
         TargetProcessData->ParentConsole = SourceProcessData->Console;
-        RtlEnterCriticalSection(&SourceProcessData->HandleTableLock);
-        DPRINT1("ConsoleNewProcess - Copy the handle table (2)\n");
-
-        /* Allocate a new handle table for the child process */
-        TargetProcessData->HandleTable = RtlAllocateHeap(ConSrvHeap,
-                                                         HEAP_ZERO_MEMORY,
-                                                         SourceProcessData->HandleTableSize
-                                                                 * sizeof(CONSOLE_IO_HANDLE));
-        if (TargetProcessData->HandleTable == NULL)
-        {
-            RtlLeaveCriticalSection(&SourceProcessData->HandleTableLock);
-            return STATUS_UNSUCCESSFUL;
-        }
-
-        TargetProcessData->HandleTableSize = SourceProcessData->HandleTableSize;
-
-        /*
-         * Parse the parent process' handles table and, for each handle,
-         * do a copy of it and reference it, if the handle is inheritable.
-         */
-        for (i = 0; i < SourceProcessData->HandleTableSize; i++)
-        {
-            if (SourceProcessData->HandleTable[i].Object != NULL &&
-                SourceProcessData->HandleTable[i].Inheritable)
-            {
-                /*
-                 * Copy the handle data and increment the reference count of the
-                 * pointed object (via the call to Win32CsrCreateHandleEntry).
-                 */
-                TargetProcessData->HandleTable[i] = SourceProcessData->HandleTable[i];
-                Win32CsrCreateHandleEntry(&TargetProcessData->HandleTable[i]);
-            }
-        }
-
-        RtlLeaveCriticalSection(&SourceProcessData->HandleTableLock);
     }
     else
     {
@@ -335,7 +403,6 @@ ConsoleConnect(IN PCSR_PROCESS CsrProcess,
     PCONSOLE_CONNECTION_INFO ConnectInfo = (PCONSOLE_CONNECTION_INFO)ConnectionInfo;
     PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrProcess);
     BOOLEAN NewConsole = FALSE;
-    // PCONSOLE Console = NULL;
 
     DPRINT1("ConsoleConnect\n");
 
@@ -354,13 +421,23 @@ ConsoleConnect(IN PCSR_PROCESS CsrProcess,
         return STATUS_SUCCESS;
     }
 
-    RtlEnterCriticalSection(&ProcessData->HandleTableLock);
-
     /* If we don't have a console, then create a new one... */
     if (!ConnectInfo->Console ||
          ConnectInfo->Console != ProcessData->ParentConsole)
     {
         DPRINT1("ConsoleConnect - Allocate a new console\n");
+
+        /*
+         * We are about to create a new console. However when ConsoleNewProcess
+         * was called, we didn't know that we wanted to create a new console and
+         * therefore, we by default inherited the handles table from our parent
+         * process. It's only now that we notice that in fact we do not need
+         * them, because we've created a new console and thus we must use it.
+         *
+         * Therefore, free the console we can have and our handles table,
+         * and recreate a new one later on.
+         */
+        Win32CsrReleaseConsole(ProcessData);
 
         /* Initialize a new Console owned by the Console Leader Process */
         NewConsole = TRUE;
@@ -368,7 +445,6 @@ ConsoleConnect(IN PCSR_PROCESS CsrProcess,
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("Console initialization failed\n");
-            RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
             return Status;
         }
     }
@@ -381,41 +457,22 @@ ConsoleConnect(IN PCSR_PROCESS CsrProcess,
         ProcessData->Console = ConnectInfo->Console;
     }
 
+    /* Add a reference count because the process is tied to the console */
+    _InterlockedIncrement(&ProcessData->Console->ReferenceCount);
+
     /* Insert the process into the processes list of the console */
     InsertHeadList(&ProcessData->Console->ProcessList, &ProcessData->ConsoleLink);
 
     /* Return it to the caller */
     ConnectInfo->Console = ProcessData->Console;
 
-    /* Add a reference count because the process is tied to the console */
-    _InterlockedIncrement(&ProcessData->Console->ReferenceCount);
-
-    if (NewConsole /* || !ProcessData->bInheritHandles */)
+    if (NewConsole)
     {
-        /*
-         * We've just created a new console. However when ConsoleNewProcess was
-         * called, we didn't know that we wanted to create a new console and
-         * therefore, we by default inherited the handles table from our parent
-         * process. It's only now that we notice that in fact we do not need
-         * them, because we've created a new console and thus we must use it.
-         *
-         * Therefore, free our handles table and recreate a new one.
-         */
-
-        ULONG i;
-
-        /* Close all console handles and free the handle table memory */
-        for (i = 0; i < ProcessData->HandleTableSize; i++)
-        {
-            Win32CsrCloseHandleEntry(&ProcessData->HandleTable[i]);
-        }
-        ProcessData->HandleTableSize = 0;
-        RtlFreeHeap(ConSrvHeap, 0, ProcessData->HandleTable);
-        ProcessData->HandleTable = NULL;
-
         /*
          * Create a new handle table - Insert the IO handles
          */
+
+        RtlEnterCriticalSection(&ProcessData->HandleTableLock);
 
         /* Insert the Input handle */
         Status = Win32CsrInsertObject(ProcessData,
@@ -427,9 +484,10 @@ ConsoleConnect(IN PCSR_PROCESS CsrProcess,
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("Failed to insert the input handle\n");
-            ConioDeleteConsole(ProcessData->Console);
-            ProcessData->Console = NULL;
             RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
+            Win32CsrReleaseConsole(ProcessData);
+            // ConioDeleteConsole(ProcessData->Console);
+            // ProcessData->Console = NULL;
             return Status;
         }
 
@@ -443,11 +501,12 @@ ConsoleConnect(IN PCSR_PROCESS CsrProcess,
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("Failed to insert the output handle\n");
-            ConioDeleteConsole(ProcessData->Console);
-            Win32CsrReleaseObject(ProcessData,
-                                  ConnectInfo->InputHandle);
-            ProcessData->Console = NULL;
             RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
+            Win32CsrReleaseConsole(ProcessData);
+            // Win32CsrReleaseObject(ProcessData,
+                                  // ConnectInfo->InputHandle);
+            // ConioDeleteConsole(ProcessData->Console);
+            // ProcessData->Console = NULL;
             return Status;
         }
 
@@ -461,15 +520,18 @@ ConsoleConnect(IN PCSR_PROCESS CsrProcess,
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("Failed to insert the error handle\n");
-            ConioDeleteConsole(ProcessData->Console);
-            Win32CsrReleaseObject(ProcessData,
-                                  ConnectInfo->OutputHandle);
-            Win32CsrReleaseObject(ProcessData,
-                                  ConnectInfo->InputHandle);
-            ProcessData->Console = NULL;
             RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
+            Win32CsrReleaseConsole(ProcessData);
+            // Win32CsrReleaseObject(ProcessData,
+                                  // ConnectInfo->OutputHandle);
+            // Win32CsrReleaseObject(ProcessData,
+                                  // ConnectInfo->InputHandle);
+            // ConioDeleteConsole(ProcessData->Console);
+            // ProcessData->Console = NULL;
             return Status;
         }
+
+        RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
     }
 
     /* Duplicate the Event */
@@ -481,18 +543,18 @@ ConsoleConnect(IN PCSR_PROCESS CsrProcess,
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtDuplicateObject() failed: %lu\n", Status);
-        ConioDeleteConsole(ProcessData->Console);
-        if (NewConsole /* || !ProcessData->bInheritHandles */)
-        {
-            Win32CsrReleaseObject(ProcessData,
-                                  ConnectInfo->ErrorHandle);
-            Win32CsrReleaseObject(ProcessData,
-                                  ConnectInfo->OutputHandle);
-            Win32CsrReleaseObject(ProcessData,
-                                  ConnectInfo->InputHandle);
-        }
-        ProcessData->Console = NULL;
-        RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
+        Win32CsrReleaseConsole(ProcessData);
+        // if (NewConsole)
+        // {
+            // Win32CsrReleaseObject(ProcessData,
+                                  // ConnectInfo->ErrorHandle);
+            // Win32CsrReleaseObject(ProcessData,
+                                  // ConnectInfo->OutputHandle);
+            // Win32CsrReleaseObject(ProcessData,
+                                  // ConnectInfo->InputHandle);
+        // }
+        // ConioDeleteConsole(ProcessData->Console); // FIXME: Just release the console ?
+        // ProcessData->Console = NULL;
         return Status;
     }
     /* Input Wait Handle */
@@ -500,47 +562,9 @@ ConsoleConnect(IN PCSR_PROCESS CsrProcess,
 
     /* Set the Ctrl Dispatcher */
     ProcessData->CtrlDispatcher = ConnectInfo->CtrlDispatcher;
-    DPRINT("CSRSS:CtrlDispatcher address: %x\n", ProcessData->CtrlDispatcher);
+    DPRINT("CONSRV: CtrlDispatcher address: %x\n", ProcessData->CtrlDispatcher);
 
-    RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
     return STATUS_SUCCESS;
-}
-
-VOID
-WINAPI
-Win32CsrReleaseConsole(PCSR_PROCESS Process)
-{
-    PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(Process);
-    PCONSOLE Console;
-    ULONG i;
-
-    DPRINT1("Win32CsrReleaseConsole\n");
-
-    RtlEnterCriticalSection(&ProcessData->HandleTableLock);
-
-    /* Close all console handles and free the handle table memory */
-    for (i = 0; i < ProcessData->HandleTableSize; i++)
-    {
-        Win32CsrCloseHandleEntry(&ProcessData->HandleTable[i]);
-    }
-    ProcessData->HandleTableSize = 0;
-    RtlFreeHeap(ConSrvHeap, 0, ProcessData->HandleTable);
-    ProcessData->HandleTable = NULL;
-
-    /* Detach process from console */
-    Console = ProcessData->Console;
-    if (Console != NULL)
-    {
-        DPRINT1("Win32CsrReleaseConsole - Console->ReferenceCount = %lu - We are going to decrement it !\n", Console->ReferenceCount);
-        ProcessData->Console = NULL;
-        EnterCriticalSection(&Console->Lock);
-        RemoveEntryList(&ProcessData->ConsoleLink);
-        Win32CsrUnlockConsole(Console);
-        //CloseHandle(ProcessData->ConsoleEvent);
-        //ProcessData->ConsoleEvent = NULL;
-    }
-
-    RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
 }
 
 VOID
@@ -551,19 +575,14 @@ ConsoleDisconnect(PCSR_PROCESS Process)
 
     /**************************************************************************
      * This function is called whenever a new process (GUI or CUI) is destroyed.
-     *
-     * Only do something if the process is a CUI. <-- modify this behaviour if
-     *                                                we deal with a GUI which
-     *                                                quits and acquired a
-     *                                                console...
      **************************************************************************/
 
     DPRINT1("ConsoleDisconnect called\n");
-    // if (ProcessData->Console != NULL)
-    if (ProcessData->ConsoleApp)
+    if ( ProcessData->Console     != NULL ||
+         ProcessData->HandleTable != NULL )
     {
         DPRINT1("ConsoleDisconnect - calling Win32CsrReleaseConsole\n");
-        Win32CsrReleaseConsole(Process);
+        Win32CsrReleaseConsole(ProcessData);
     }
 
     RtlDeleteCriticalSection(&ProcessData->HandleTableLock);

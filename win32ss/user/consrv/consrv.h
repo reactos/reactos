@@ -73,7 +73,6 @@ typedef struct _CONSOLE_PROCESS_DATA
     /* PCONSOLE */ struct _CONSOLE* Console;
     /* PCONSOLE */ struct _CONSOLE* ParentConsole;
 
-    // BOOL bInheritHandles;
     BOOL ConsoleApp;    // TRUE if it is a CUI app, FALSE otherwise.
 
     RTL_CRITICAL_SECTION HandleTableLock;
@@ -118,6 +117,7 @@ CSR_API(SrvSetConsoleScreenBufferSize);
 /* console.c */
 CSR_API(SrvOpenConsole);
 CSR_API(SrvAllocConsole);
+CSR_API(SrvAttachConsole);
 CSR_API(SrvFreeConsole);
 CSR_API(SrvSetConsoleMode);
 CSR_API(SrvGetConsoleMode);
@@ -139,6 +139,9 @@ CSR_API(SrvVerifyConsoleIoHandle);
 CSR_API(SrvDuplicateHandle);
 /// CSR_API(CsrGetInputWaitHandle);
 
+NTSTATUS FASTCALL Win32CsrInheritHandlesTable(IN PCONSOLE_PROCESS_DATA SourceProcessData,
+                                              IN PCONSOLE_PROCESS_DATA TargetProcessData);
+VOID FASTCALL Win32CsrFreeHandlesTable(PCONSOLE_PROCESS_DATA ProcessData);
 NTSTATUS FASTCALL Win32CsrInsertObject(PCONSOLE_PROCESS_DATA ProcessData,
                                        PHANDLE Handle,
                                        Object_t *Object,
@@ -153,6 +156,7 @@ NTSTATUS FASTCALL Win32CsrLockObject(PCONSOLE_PROCESS_DATA ProcessData,
 VOID FASTCALL Win32CsrUnlockObject(Object_t *Object);
 NTSTATUS FASTCALL Win32CsrReleaseObject(PCONSOLE_PROCESS_DATA ProcessData,
                                         HANDLE Handle);
+VOID FASTCALL Win32CsrReleaseConsole(PCONSOLE_PROCESS_DATA ProcessData);
 
 NTSTATUS NTAPI ConsoleNewProcess(PCSR_PROCESS SourceProcess,
                                  PCSR_PROCESS TargetProcess);
@@ -160,7 +164,6 @@ NTSTATUS NTAPI ConsoleConnect(IN PCSR_PROCESS CsrProcess,
                               IN OUT PVOID ConnectionInfo,
                               IN OUT PULONG ConnectionInfoLength);
 VOID NTAPI ConsoleDisconnect(PCSR_PROCESS Process);
-VOID NTAPI Win32CsrReleaseConsole(PCSR_PROCESS Process);
 
 /* lineinput.c */
 CSR_API(SrvGetConsoleCommandHistoryLength);

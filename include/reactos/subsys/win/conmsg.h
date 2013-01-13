@@ -102,7 +102,7 @@ typedef enum _CONSRV_API_NUMBER
     // ConsolepRegisterConsoleIME,
     // ConsolepUnregisterConsoleIME,
     // ConsolepGetLangId,
-    // ConsolepAttach,
+    ConsolepAttach,
     ConsolepGetSelectionInfo,
     ConsolepGetProcessList,
     ConsolepGetHistory,
@@ -176,6 +176,17 @@ typedef struct
     HANDLE InputWaitHandle;
     LPTHREAD_START_ROUTINE CtrlDispatcher;
 } CONSOLE_ALLOCCONSOLE, *PCONSOLE_ALLOCCONSOLE;
+
+typedef struct
+{
+    DWORD ProcessId; // If ProcessId == ATTACH_PARENT_PROCESS == -1, then attach the current process to its parent process console.
+    HANDLE Console; // ConsoleHandle // In fact, it is a PCSRSS_CONSOLE <-- correct that !!
+    HANDLE InputHandle;
+    HANDLE OutputHandle;
+    HANDLE ErrorHandle;
+    HANDLE InputWaitHandle;
+    LPTHREAD_START_ROUTINE CtrlDispatcher;
+} CONSOLE_ATTACHCONSOLE, *PCONSOLE_ATTACHCONSOLE;
 
 typedef struct
 {
@@ -543,6 +554,7 @@ typedef struct _CONSOLE_API_MESSAGE
     union
     {
         CONSOLE_ALLOCCONSOLE AllocConsoleRequest;
+        CONSOLE_ATTACHCONSOLE AttachConsoleRequest;
         CONSOLE_FREECONSOLE FreeConsoleRequest;
 
         /* Handles */

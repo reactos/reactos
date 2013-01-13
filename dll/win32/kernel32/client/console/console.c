@@ -802,8 +802,8 @@ AllocConsole(VOID)
 
     if (NtCurrentPeb()->ProcessParameters->ConsoleHandle)
     {
-        DPRINT("AllocConsole: Allocate duplicate console to the same Process\n");
-        BaseSetLastNTError (STATUS_OBJECT_NAME_EXISTS);
+        DPRINT1("AllocConsole: Allocate duplicate console to the same Process\n");
+        SetLastError(ERROR_ACCESS_DENIED);
         return FALSE;
     }
 
@@ -824,7 +824,6 @@ AllocConsole(VOID)
     }
 
     NtCurrentPeb()->ProcessParameters->ConsoleHandle = AllocConsoleRequest->Console;
-
     SetStdHandle(STD_INPUT_HANDLE , AllocConsoleRequest->InputHandle );
     SetStdHandle(STD_OUTPUT_HANDLE, AllocConsoleRequest->OutputHandle);
     SetStdHandle(STD_ERROR_HANDLE , AllocConsoleRequest->ErrorHandle );
@@ -1910,13 +1909,50 @@ GetConsoleSelectionInfo(PCONSOLE_SELECTION_INFO lpConsoleSelectionInfo)
 /*--------------------------------------------------------------
  *     AttachConsole
  *
- * @unimplemented
+ * @implemented
+ *
+ * @note Strongly inspired by AllocConsole.
  */
 BOOL
 WINAPI
 AttachConsole(DWORD dwProcessId)
 {
-    DPRINT1("AttachConsole(0x%x) UNIMPLEMENTED!\n", dwProcessId);
+    NTSTATUS Status;
+    CONSOLE_API_MESSAGE ApiMessage;
+    PCONSOLE_ATTACHCONSOLE AttachConsoleRequest = &ApiMessage.Data.AttachConsoleRequest;
+
+    DPRINT1("AttachConsole(%lu)\n", dwProcessId);
+
+    if (NtCurrentPeb()->ProcessParameters->ConsoleHandle)
+    {
+        DPRINT1("AttachConsole: Attaching a console to a process already having one\n");
+        SetLastError(ERROR_ACCESS_DENIED);
+        return FALSE;
+    }
+
+    AttachConsoleRequest->ProcessId = dwProcessId;
+    AttachConsoleRequest->CtrlDispatcher = ConsoleControlDispatcher;
+
+    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                                 NULL,
+                                 CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepAttach),
+                                 sizeof(CONSOLE_ATTACHCONSOLE));
+    if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = ApiMessage.Status))
+    {
+        BaseSetLastNTError(Status);
+        return FALSE;
+    }
+
+    NtCurrentPeb()->ProcessParameters->ConsoleHandle = AttachConsoleRequest->Console;
+    SetStdHandle(STD_INPUT_HANDLE , AttachConsoleRequest->InputHandle );
+    SetStdHandle(STD_OUTPUT_HANDLE, AttachConsoleRequest->OutputHandle);
+    SetStdHandle(STD_ERROR_HANDLE , AttachConsoleRequest->ErrorHandle );
+
+    /* Initialize Console Ctrl Handler */
+    InitConsoleCtrlHandling();
+
+    InputWaitHandle = AttachConsoleRequest->InputWaitHandle;
+
     return TRUE;
 }
 
