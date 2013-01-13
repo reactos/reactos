@@ -401,7 +401,7 @@ _tWinMain(IN HINSTANCE hInstance,
         if (!SetShellReadyEvent(TEXT("msgina: ShellReadyEvent")))
             SetShellReadyEvent(TEXT("Global\\msgina: ShellReadyEvent"));
 
-        startup(0, NULL);
+        ProcessStartupItems();
     }
     else
     {

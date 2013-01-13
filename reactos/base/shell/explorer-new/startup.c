@@ -45,18 +45,6 @@
 
 EXTERN_C HRESULT WINAPI SHCreateSessionKey(REGSAM samDesired, PHKEY phKey);
 
-enum runkeys {
-    RUNKEY_RUN, RUNKEY_RUNONCE, RUNKEY_RUNSERVICES, RUNKEY_RUNSERVICESONCE
-};
-
-const WCHAR runkeys_names[][30]=
-{
-    {'R','u','n',0},
-    {'R','u','n','O','n','c','e',0},
-    {'R','u','n','S','e','r','v','i','c','e','s',0},
-    {'R','u','n','S','e','r','v','i','c','e','s','O','n','c','e',0}
-};
-
 #define INVALID_RUNCMD_RETURN -1
 /**
  * This function runs the specified command in the specified dir.
@@ -245,24 +233,11 @@ end:
     return res == ERROR_SUCCESS ? TRUE : FALSE;
 }
 
- /// structure holding startup flags
-struct op_mask {
-    BOOL w9xonly; /* Perform only operations done on Windows 9x */
-    BOOL ntonly; /* Perform only operations done on Windows NT */
-    BOOL startup; /* Perform the operations that are performed every boot */
-    BOOL preboot; /* Perform file renames typically done before the system starts */
-    BOOL prelogin; /* Perform the operations typically done before the user logs in */
-    BOOL postlogin; /* Operations done after login */
-};
 
-static const struct op_mask
-    SESSION_START   = {FALSE, FALSE, TRUE, TRUE, TRUE, TRUE},
-    SETUP           = {FALSE, FALSE, FALSE, TRUE, TRUE, TRUE};
-#define DEFAULT SESSION_START
-
-int startup(int argc, const char *argv[])
+int
+ProcessStartupItems(VOID)
 {
-    struct op_mask ops; /* Which of the ops do we want to perform? */
+    BOOL bNormalBoot = GetSystemMetrics(SM_CLEANBOOT) == 0; /* Perform the operations that are performed every boot */
     /* First, set the current directory to SystemRoot */
     TCHAR gen_path[MAX_PATH];
     DWORD res;
@@ -305,41 +280,21 @@ int startup(int argc, const char *argv[])
         }
     }
 
-    if (argc > 1)
-    {
-        switch(argv[1][0])
-        {
-        case 'r': /* Restart */
-            ops = SETUP;
-            break;
-        case 's': /* Full start */
-            ops = SESSION_START;
-            break;
-        default:
-            ops = DEFAULT;
-            break;
-        }
-    }
-    else
-        ops = DEFAULT;
-
-    /* do not run certain items in Safe Mode */
-    if (GetSystemMetrics(SM_CLEANBOOT)) ops.startup = FALSE;
-
-    /* Perform the ops by order, stopping if one fails, skipping if necessary */
+    /* Perform the operations by order checking if policy allows it, checking if this is not Safe Mode,
+     * stopping if one fails, skipping if necessary.
+    */
     res = TRUE;
-    if (res && !ops.ntonly && ops.prelogin)
-        res = ProcessRunKeys(HKEY_LOCAL_MACHINE, runkeys_names[RUNKEY_RUNSERVICESONCE], TRUE, FALSE);
-    if (res && !ops.ntonly && ops.prelogin && ops.startup)
-        res = ProcessRunKeys(HKEY_LOCAL_MACHINE, runkeys_names[RUNKEY_RUNSERVICES], FALSE, FALSE);
-    if (res && ops.postlogin)
-        res = ProcessRunKeys(HKEY_LOCAL_MACHINE, runkeys_names[RUNKEY_RUNONCE], TRUE, TRUE);
-    if (res && ops.postlogin && ops.startup)
-        res = ProcessRunKeys(HKEY_LOCAL_MACHINE, runkeys_names[RUNKEY_RUN], FALSE, FALSE);
-    if (res && ops.postlogin && ops.startup)
-        res = ProcessRunKeys(HKEY_CURRENT_USER, runkeys_names[RUNKEY_RUN], FALSE, FALSE);
-    if (res && ops.postlogin && ops.startup)
-        res = ProcessRunKeys(HKEY_CURRENT_USER, runkeys_names[RUNKEY_RUNONCE], TRUE, FALSE);
+    if (res && (SHRestricted(REST_NOLOCALMACHINERUNONCE) == 0))
+        res = ProcessRunKeys(HKEY_LOCAL_MACHINE, L"RunOnce", TRUE, TRUE);
+
+    if (res && bNormalBoot && (SHRestricted(REST_NOLOCALMACHINERUN) == 0))
+        res = ProcessRunKeys(HKEY_LOCAL_MACHINE, L"Run", FALSE, FALSE);
+
+    if (res && bNormalBoot && (SHRestricted(REST_NOCURRENTUSERRUNONCE) == 0))
+        res = ProcessRunKeys(HKEY_CURRENT_USER, L"Run", FALSE, FALSE);
+
+    if (res && bNormalBoot && (SHRestricted(REST_NOCURRENTUSERRUNONCE) == 0))
+        res = ProcessRunKeys(HKEY_CURRENT_USER, L"RunOnce", TRUE, FALSE);
 
     printf("Operation done\n");
 

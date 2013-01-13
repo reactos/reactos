@@ -260,7 +260,8 @@ SaveSettingDword(IN PCTSTR pszKeyName,
  * startup.c
  */
 
-int startup(int argc, const char *argv[]);
+int
+ProcessStartupItems(VOID);
 
 /*
  * trayprop.h
