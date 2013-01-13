@@ -4055,9 +4055,101 @@ NTAPI
 SamrGetMembersInGroup(IN SAMPR_HANDLE GroupHandle,
                       OUT PSAMPR_GET_MEMBERS_BUFFER *Members)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PSAMPR_GET_MEMBERS_BUFFER MembersBuffer = NULL;
+    PSAM_DB_OBJECT GroupObject;
+    ULONG Length = 0;
+    ULONG i;
+    NTSTATUS Status;
+
+    /* Validate the group handle */
+    Status = SampValidateDbObject(GroupHandle,
+                                  SamDbGroupObject,
+                                  GROUP_LIST_MEMBERS,
+                                  &GroupObject);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    MembersBuffer = midl_user_allocate(sizeof(SAMPR_GET_MEMBERS_BUFFER));
+    if (MembersBuffer == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    SampGetObjectAttribute(GroupObject,
+                           L"Members",
+                           NULL,
+                           NULL,
+                           &Length);
+
+    if (Length == 0)
+    {
+        MembersBuffer->MemberCount = 0;
+        MembersBuffer->Members = NULL;
+        MembersBuffer->Attributes = NULL;
+
+        *Members = MembersBuffer;
+
+        return STATUS_SUCCESS;
+    }
+
+    MembersBuffer->Members = midl_user_allocate(Length);
+    if (MembersBuffer->Members == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
+
+    MembersBuffer->Attributes = midl_user_allocate(Length);
+    if (MembersBuffer->Attributes == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
+
+    Status = SampGetObjectAttribute(GroupObject,
+                                    L"Members",
+                                    NULL,
+                                    MembersBuffer->Members,
+                                    &Length);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampGetObjectAttributes() failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    MembersBuffer->MemberCount = Length / sizeof(ULONG);
+
+    for (i = 0; i < MembersBuffer->MemberCount; i++)
+    {
+        Status = SampGetUserGroupAttributes(GroupObject->ParentObject,
+                                            MembersBuffer->Members[i],
+                                            GroupObject->RelativeId,
+                                            &(MembersBuffer->Attributes[i]));
+        if (!NT_SUCCESS(Status))
+        {
+            TRACE("SampGetUserGroupAttributes() failed (Status 0x%08lx)\n", Status);
+            goto done;
+        }
+    }
+
+    *Members = MembersBuffer;
+
+done:
+    if (!NT_SUCCESS(Status))
+    {
+        if (MembersBuffer != NULL)
+        {
+            if (MembersBuffer->Members != NULL)
+                midl_user_free(MembersBuffer->Members);
+
+            if (MembersBuffer->Attributes != NULL)
+                midl_user_free(MembersBuffer->Attributes);
+
+            midl_user_free(MembersBuffer);
+        }
+    }
+
+    return Status;
 }
+
 
 /* Function 26 */
 NTSTATUS

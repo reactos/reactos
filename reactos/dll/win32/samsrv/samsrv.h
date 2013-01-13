@@ -271,12 +271,18 @@ SampOpenUserObject(IN PSAM_DB_OBJECT DomainObject,
                    OUT PSAM_DB_OBJECT *UserObject);
 
 NTSTATUS
-SampAddGroupMembershipToUser(PSAM_DB_OBJECT UserObject,
-                             ULONG GroupId,
-                             ULONG Attributes);
+SampAddGroupMembershipToUser(IN PSAM_DB_OBJECT UserObject,
+                             IN ULONG GroupId,
+                             IN ULONG Attributes);
 
 NTSTATUS
-SampRemoveGroupMembershipFromUser(PSAM_DB_OBJECT UserObject,
-                                  ULONG GroupId);
+SampRemoveGroupMembershipFromUser(IN PSAM_DB_OBJECT UserObject,
+                                  IN ULONG GroupId);
+
+NTSTATUS
+SampGetUserGroupAttributes(IN PSAM_DB_OBJECT DomainObject,
+                           IN ULONG UserId,
+                           IN ULONG GroupId,
+                           OUT PULONG GroupAttributes);
 
 /* EOF */

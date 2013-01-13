@@ -185,4 +185,72 @@ done:
     return Status;
 }
 
+
+NTSTATUS
+SampGetUserGroupAttributes(IN PSAM_DB_OBJECT DomainObject,
+                           IN ULONG UserId,
+                           IN ULONG GroupId,
+                           OUT PULONG GroupAttributes)
+{
+    PSAM_DB_OBJECT UserObject = NULL;
+    PGROUP_MEMBERSHIP GroupsBuffer = NULL;
+    ULONG Length = 0;
+    ULONG i;
+    NTSTATUS Status;
+
+    Status = SampOpenUserObject(DomainObject,
+                                UserId,
+                                0,
+                                &UserObject);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    SampGetObjectAttribute(UserObject,
+                           L"Groups",
+                           NULL,
+                           NULL,
+                           &Length);
+
+    if (Length == 0)
+    {
+        *GroupAttributes = 0;
+        return STATUS_SUCCESS;
+    }
+
+    GroupsBuffer = midl_user_allocate(Length);
+    if (GroupsBuffer == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
+
+    Status = SampGetObjectAttribute(UserObject,
+                                    L"Groups",
+                                    NULL,
+                                    GroupsBuffer,
+                                    &Length);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    for (i = 0; i < (Length / sizeof(GROUP_MEMBERSHIP)); i++)
+    {
+        if (GroupsBuffer[i].RelativeId == GroupId)
+        {
+            *GroupAttributes = GroupsBuffer[i].Attributes;
+            goto done;
+        }
+    }
+
+done:
+    if (GroupsBuffer != NULL)
+        midl_user_free(GroupsBuffer);
+
+    if (UserObject != NULL)
+        SampCloseDbObject(UserObject);
+
+    return Status;
+}
+
 /* EOF */
