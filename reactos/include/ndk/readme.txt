@@ -42,7 +42,7 @@ software.
 You MUST read GPL.TXT or LGPL.TXT after your decision. Violating your chosen license
 voids your usage rights of the NDK and will lead to legal action on the part of the
 author. Using this software with any later version of the GNU GPL or LGPL in no way
-changes your obligations under the versions listed above. You MUST still release the
+changes your obligations under the versions listed above. You MUST still release the 
 NDK and its changes under the terms of the original licenses (either GPLv2 or LGPLv2.1)
 as listed above. This DOES NOT AFFECT the license of a software package released under
 a later version and ONLY serves to clarify that using the NDK with a later version is
@@ -152,36 +152,36 @@ remain anonymous, simply do not include this statement.
 
 3.1 ORGANIZATION
 
-   * The NDK is organized in a main folder (include/ndk) with arch-specific subfolders (ex: include/ndk/i386).
-   * The NDK is structured by NT Subsystem Component (ex: ex, ps, rtl, etc).
+   * The NDK is organized in a main folder (include/ndk) with arch-specific subfolders (ex: include/ndk/i386). 
+   * The NDK is structured by NT Subsystem Component (ex: ex, ps, rtl, etc). 
    * The NDK can either be included on-demand (#include <ndk/xxxxx.h>) or globally (#include <ndk/ntndk.h>).
-     The former is recommended to reduce compile time.
+     The former is recommended to reduce compile time. 
    * The NDK is structured by function and type. Every Subsystem Component has an associated "xxfuncs.h" and
-    "xxtypes.h" header, where "xx" is the Subsystem (ex: iofuncs.h, iotypes.h)
+    "xxtypes.h" header, where "xx" is the Subsystem (ex: iofuncs.h, iotypes.h) 
    * The NDK has a special file called "umtypes.h" which exports to User-Mode or Native-Mode Applications the
      basic NT types which are present in ntdef.h. This file cannot be included since it would conflict with
      winnt.h and/or windef.h. Thus, umtypes.h provides the missing types. This file is automatically included
-     in a User-Mode NDK project.
+     in a User-Mode NDK project. 
    * The NDK also includes a file called "umfuncs.h" which exports to User-Mode or Native-Mode Applications
-     undocumented functions which can only be accessed from ntdll.dll.
+     undocumented functions which can only be accessed from ntdll.dll. 
    * The NDK has another special file called "ifssupp.h", which exports to Kernel-Mode drivers a few types which
      are only documented in the IFS kit, and are part of some native definitions. It will be deprecated next year
-     with the release of the WDK.
+     with the release of the WDK. 
 
-3.2 USING _In_ YOUR PROJECT
+3.2 USING IN YOUR PROJECT
 
-    *  User Mode Application requiring Native Types:
+    *  User Mode Application requiring Native Types: 
 
        #define WIN32_NO_STATUS   /* Tell Windows headers you'll use ntstatus.s from NDK */
        #include "windows.h"      /* Declare Windows Headers like you normally would */
        #include "ntndk.h"        /* Declare the NDK Headers */
 
-    * Native Mode Application:
+    * Native Mode Application: 
 
        #include "windows.h"      /* Declare Windows Headers for basic types. NEEDED UNTIL NDK 1.5 */
        #include "ntndk.h"        /* Declare the NDK Headers */
 
-    * Kernel Mode Driver:
+    * Kernel Mode Driver: 
 
        #include "ntddk.h"       /* Declare DDK Headers like you normally would */
        #include "ntndk.h"       /* Declare the NDK Headers */
