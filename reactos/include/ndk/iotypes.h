@@ -1208,9 +1208,9 @@ typedef struct _EFI_DRIVER_ENTRY
 //
 typedef VOID
 (NTAPI *PIO_APC_ROUTINE)(
-    IN PVOID ApcContext,
-    IN PIO_STATUS_BLOCK IoStatusBlock,
-    IN ULONG Reserved);
+    _In_ PVOID ApcContext,
+    _In_ PIO_STATUS_BLOCK IoStatusBlock,
+    _In_ ULONG Reserved);
 
 //
 // Mailslot IOCTL Codes

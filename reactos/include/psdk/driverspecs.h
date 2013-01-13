@@ -123,6 +123,7 @@
 #define _IRQL_raises_(irql)
 #define _IRQL_requires_(irql)
 #define _IRQL_requires_max_(irql)                       _Pre_ _SA_annotes1(SAL_maxIRQL,irql)
+#define _IRQL_requires_max_defined
 #define _IRQL_requires_min_(irql)
 #define _IRQL_requires_same_
 #define _IRQL_restores_

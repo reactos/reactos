@@ -1900,6 +1900,45 @@ typedef struct _HAL_PLATFORM_INFORMATION {
  *                              Kernel Types                                  *
  ******************************************************************************/
 
+typedef struct _NT_TIB {
+  struct _EXCEPTION_REGISTRATION_RECORD *ExceptionList;
+  PVOID StackBase;
+  PVOID StackLimit;
+  PVOID SubSystemTib;
+  _ANONYMOUS_UNION union {
+    PVOID FiberData;
+    ULONG Version;
+  } DUMMYUNIONNAME;
+  PVOID ArbitraryUserPointer;
+  struct _NT_TIB *Self;
+} NT_TIB, *PNT_TIB;
+
+typedef struct _NT_TIB32 {
+  ULONG ExceptionList;
+  ULONG StackBase;
+  ULONG StackLimit;
+  ULONG SubSystemTib;
+  _ANONYMOUS_UNION union {
+    ULONG FiberData;
+    ULONG Version;
+  } DUMMYUNIONNAME;
+  ULONG ArbitraryUserPointer;
+  ULONG Self;
+} NT_TIB32,*PNT_TIB32;
+
+typedef struct _NT_TIB64 {
+  ULONG64 ExceptionList;
+  ULONG64 StackBase;
+  ULONG64 StackLimit;
+  ULONG64 SubSystemTib;
+  _ANONYMOUS_UNION union {
+    ULONG64 FiberData;
+    ULONG Version;
+  } DUMMYUNIONNAME;
+  ULONG64 ArbitraryUserPointer;
+  ULONG64 Self;
+} NT_TIB64,*PNT_TIB64;
+
 #define NX_SUPPORT_POLICY_ALWAYSOFF 0
 #define NX_SUPPORT_POLICY_ALWAYSON  1
 #define NX_SUPPORT_POLICY_OPTIN     2
@@ -2081,6 +2120,7 @@ extern NTSYSAPI CCHAR KeNumberProcessors;
 #else
 extern PCCHAR KeNumberProcessors;
 #endif
+
 
 
 /******************************************************************************
@@ -2389,45 +2429,6 @@ typedef VOID
 #define PROCESS_LUID_DOSDEVICES_ONLY 0x00000001
 
 #define PROCESS_HANDLE_TRACING_MAX_STACKS 16
-
-typedef struct _NT_TIB {
-  struct _EXCEPTION_REGISTRATION_RECORD *ExceptionList;
-  PVOID StackBase;
-  PVOID StackLimit;
-  PVOID SubSystemTib;
-  _ANONYMOUS_UNION union {
-    PVOID FiberData;
-    ULONG Version;
-  } DUMMYUNIONNAME;
-  PVOID ArbitraryUserPointer;
-  struct _NT_TIB *Self;
-} NT_TIB, *PNT_TIB;
-
-typedef struct _NT_TIB32 {
-  ULONG ExceptionList;
-  ULONG StackBase;
-  ULONG StackLimit;
-  ULONG SubSystemTib;
-  _ANONYMOUS_UNION union {
-    ULONG FiberData;
-    ULONG Version;
-  } DUMMYUNIONNAME;
-  ULONG ArbitraryUserPointer;
-  ULONG Self;
-} NT_TIB32,*PNT_TIB32;
-
-typedef struct _NT_TIB64 {
-  ULONG64 ExceptionList;
-  ULONG64 StackBase;
-  ULONG64 StackLimit;
-  ULONG64 SubSystemTib;
-  _ANONYMOUS_UNION union {
-    ULONG64 FiberData;
-    ULONG Version;
-  } DUMMYUNIONNAME;
-  ULONG64 ArbitraryUserPointer;
-  ULONG64 Self;
-} NT_TIB64,*PNT_TIB64;
 
 typedef enum _PROCESSINFOCLASS {
   ProcessBasicInformation,
@@ -2850,68 +2851,6 @@ typedef struct _RTL_DYNAMIC_HASH_TABLE {
   ULONG NumEnumerators;
   PVOID Directory;
 } RTL_DYNAMIC_HASH_TABLE, *PRTL_DYNAMIC_HASH_TABLE;
-
-typedef struct _OSVERSIONINFOA {
-  ULONG dwOSVersionInfoSize;
-  ULONG dwMajorVersion;
-  ULONG dwMinorVersion;
-  ULONG dwBuildNumber;
-  ULONG dwPlatformId;
-  CHAR szCSDVersion[128];
-} OSVERSIONINFOA, *POSVERSIONINFOA, *LPOSVERSIONINFOA;
-
-typedef struct _OSVERSIONINFOW {
-  ULONG dwOSVersionInfoSize;
-  ULONG dwMajorVersion;
-  ULONG dwMinorVersion;
-  ULONG dwBuildNumber;
-  ULONG dwPlatformId;
-  WCHAR szCSDVersion[128];
-} OSVERSIONINFOW, *POSVERSIONINFOW, *LPOSVERSIONINFOW, RTL_OSVERSIONINFOW, *PRTL_OSVERSIONINFOW;
-
-typedef struct _OSVERSIONINFOEXA {
-  ULONG dwOSVersionInfoSize;
-  ULONG dwMajorVersion;
-  ULONG dwMinorVersion;
-  ULONG dwBuildNumber;
-  ULONG dwPlatformId;
-  CHAR szCSDVersion[128];
-  USHORT wServicePackMajor;
-  USHORT wServicePackMinor;
-  USHORT wSuiteMask;
-  UCHAR wProductType;
-  UCHAR wReserved;
-} OSVERSIONINFOEXA, *POSVERSIONINFOEXA, *LPOSVERSIONINFOEXA;
-
-typedef struct _OSVERSIONINFOEXW {
-  ULONG dwOSVersionInfoSize;
-  ULONG dwMajorVersion;
-  ULONG dwMinorVersion;
-  ULONG dwBuildNumber;
-  ULONG dwPlatformId;
-  WCHAR szCSDVersion[128];
-  USHORT wServicePackMajor;
-  USHORT wServicePackMinor;
-  USHORT wSuiteMask;
-  UCHAR wProductType;
-  UCHAR wReserved;
-} OSVERSIONINFOEXW, *POSVERSIONINFOEXW, *LPOSVERSIONINFOEXW, RTL_OSVERSIONINFOEXW, *PRTL_OSVERSIONINFOEXW;
-
-#ifdef UNICODE
-typedef OSVERSIONINFOEXW OSVERSIONINFOEX;
-typedef POSVERSIONINFOEXW POSVERSIONINFOEX;
-typedef LPOSVERSIONINFOEXW LPOSVERSIONINFOEX;
-typedef OSVERSIONINFOW OSVERSIONINFO;
-typedef POSVERSIONINFOW POSVERSIONINFO;
-typedef LPOSVERSIONINFOW LPOSVERSIONINFO;
-#else
-typedef OSVERSIONINFOEXA OSVERSIONINFOEX;
-typedef POSVERSIONINFOEXA POSVERSIONINFOEX;
-typedef LPOSVERSIONINFOEXA LPOSVERSIONINFOEX;
-typedef OSVERSIONINFOA OSVERSIONINFO;
-typedef POSVERSIONINFOA POSVERSIONINFO;
-typedef LPOSVERSIONINFOA LPOSVERSIONINFO;
-#endif /* UNICODE */
 
 #define HASH_ENTRY_KEY(x)    ((x)->Signature)
 
@@ -5042,20 +4981,6 @@ NTAPI
 RtlVolumeDeviceToDosName(
   _In_ PVOID VolumeDeviceObject,
   _Out_ PUNICODE_STRING DosName);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlGetVersion(
-  IN OUT PRTL_OSVERSIONINFOW lpVersionInformation);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlVerifyVersionInfo(
-  IN PRTL_OSVERSIONINFOEXW VersionInfo,
-  IN ULONG TypeMask,
-  IN ULONGLONG ConditionMask);
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
 _Must_inspect_result_

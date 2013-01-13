@@ -116,7 +116,7 @@ extern "C" {
 #pragma warning(disable:4115) /* Named type definition in parentheses */
 #pragma warning(disable:4201) /* Nameless unions and structs */
 #pragma warning(disable:4214) /* Bit fields of other types than int */
-#pragma warning(disable:4820) /* Padding added, due to alignemnet requirement */
+#pragma warning(disable:4820) /* Padding added, due to alignment requirement */
 
 /* Indicate if #pragma alloc_text() is supported */
 #if defined(_M_IX86) || defined(_M_AMD64) || defined(_M_IA64)

@@ -371,7 +371,7 @@ NTSTATUS
 NTAPI
 NtAllocateVirtualMemory(
   _In_ HANDLE ProcessHandle,
-  _Outptr_result_bytebuffer_(*RegionSize) PVOID *BaseAddress,
+  _Inout_ _At_(*BaseAddress, _Readable_bytes_(*RegionSize) _Writable_bytes_(*RegionSize) _Post_readable_byte_size_(*RegionSize)) PVOID *BaseAddress,
   _In_ ULONG_PTR ZeroBits,
   _Inout_ PSIZE_T RegionSize,
   _In_ ULONG AllocationType,
@@ -1771,19 +1771,20 @@ FsRtlNotifyChangeDirectory (
     IN PIRP         NotifyIrp
 );
 
+#if 1
 NTKERNELAPI
 NTSTATUS
 NTAPI
-ObCreateObject (
-    IN KPROCESSOR_MODE      ObjectAttributesAccessMode OPTIONAL,
-    IN POBJECT_TYPE         ObjectType,
-    IN POBJECT_ATTRIBUTES   ObjectAttributes OPTIONAL,
-    IN KPROCESSOR_MODE      AccessMode,
-    IN OUT PVOID            ParseContext OPTIONAL,
-    IN ULONG                ObjectSize,
-    IN ULONG                PagedPoolCharge OPTIONAL,
-    IN ULONG                NonPagedPoolCharge OPTIONAL,
-    OUT PVOID               *Object
+ObCreateObject(
+    _In_opt_ KPROCESSOR_MODE ObjectAttributesAccessMode,
+    _In_ POBJECT_TYPE ObjectType,
+    _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes,
+    _In_ KPROCESSOR_MODE AccessMode,
+    _Inout_opt_ PVOID ParseContext,
+    _In_ ULONG ObjectSize,
+    _In_opt_ ULONG PagedPoolCharge,
+    _In_opt_ ULONG NonPagedPoolCharge,
+    _Out_ PVOID *Object
 );
 
 NTKERNELAPI
@@ -1851,6 +1852,8 @@ ZwAdjustPrivilegesToken (
 );
 
 #endif /* (VER_PRODUCTBUILD >= 2195) */
+
+#endif
 
 NTSYSAPI
 NTSTATUS
@@ -2000,17 +2003,18 @@ ZwQueryDefaultLocale (
 
 #if (VER_PRODUCTBUILD >= 2195)
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
-ZwQueryDirectoryObject (
-    IN HANDLE       DirectoryHandle,
-    OUT PVOID       Buffer,
-    IN ULONG        Length,
-    IN BOOLEAN      ReturnSingleEntry,
-    IN BOOLEAN      RestartScan,
-    IN OUT PULONG   Context,
-    OUT PULONG      ReturnLength OPTIONAL
+ZwQueryDirectoryObject(
+    _In_ HANDLE DirectoryHandle,
+    _Out_ PVOID Buffer,
+    _In_ ULONG BufferLength,
+    _In_ BOOLEAN ReturnSingleEntry,
+    _In_ BOOLEAN RestartScan,
+    _Inout_ PULONG Context,
+    _Out_opt_ PULONG ReturnLength
 );
 
 #endif /* (VER_PRODUCTBUILD >= 2195) */

@@ -32,16 +32,16 @@ NTKERNELAPI
 NTSTATUS
 NTAPI
 LpcRequestWaitReplyPort(
-    IN PVOID Port,
-    IN PPORT_MESSAGE LpcMessageRequest,
-    OUT PPORT_MESSAGE LpcMessageReply
+    _In_ PVOID Port,
+    _In_ PPORT_MESSAGE LpcMessageRequest,
+    _Out_ PPORT_MESSAGE LpcMessageReply
 );
 
 NTSTATUS
 NTAPI
 LpcRequestPort(
-    IN PVOID Port,
-    IN PPORT_MESSAGE LpcMessage
+    _In_ PVOID Port,
+    _In_ PPORT_MESSAGE LpcMessage
 );
 #endif
 
@@ -52,82 +52,82 @@ NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtAcceptConnectPort(
-    PHANDLE PortHandle,
-    PVOID PortContext OPTIONAL,
-    PPORT_MESSAGE ConnectionRequest,
-    BOOLEAN AcceptConnection,
-    PPORT_VIEW ServerView OPTIONAL,
-    PREMOTE_PORT_VIEW ClientView OPTIONAL
+    _In_ PHANDLE PortHandle,
+    _In_opt_ PVOID PortContext,
+    _In_ PPORT_MESSAGE ConnectionRequest,
+    _In_ BOOLEAN AcceptConnection,
+    _In_opt_ PPORT_VIEW ServerView,
+    _In_opt_ PREMOTE_PORT_VIEW ClientView
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtCompleteConnectPort(
-    HANDLE PortHandle
+    _In_ HANDLE PortHandle
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtConnectPort(
-    PHANDLE PortHandle,
-    PUNICODE_STRING PortName,
-    PSECURITY_QUALITY_OF_SERVICE SecurityQos,
-    PPORT_VIEW ClientView OPTIONAL,
-    PREMOTE_PORT_VIEW ServerView OPTIONAL,
-    PULONG MaxMessageLength OPTIONAL,
-    PVOID ConnectionInformation OPTIONAL,
-    PULONG ConnectionInformationLength OPTIONAL
+    _In_ PHANDLE PortHandle,
+    _In_ PUNICODE_STRING PortName,
+    _In_ PSECURITY_QUALITY_OF_SERVICE SecurityQos,
+    _In_opt_ PPORT_VIEW ClientView,
+    _In_opt_ PREMOTE_PORT_VIEW ServerViewONAL,
+    _In_opt_ PULONG MaxMessageLength,
+    _In_opt_ PVOID ConnectionInformation,
+    _In_opt_ PULONG ConnectionInformationLength
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtCreatePort(
-    PHANDLE PortHandle,
-    POBJECT_ATTRIBUTES ObjectAttributes,
-    ULONG MaxConnectionInfoLength,
-    ULONG MaxMessageLength,
-    ULONG MaxPoolUsage
+    _In_ PHANDLE PortHandle,
+    _In_ POBJECT_ATTRIBUTES ObjectAttributes,
+    _In_ ULONG MaxConnectionInfoLength,
+    _In_ ULONG MaxMessageLength,
+    _In_ ULONG MaxPoolUsage
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtCreateWaitablePort(
-    PHANDLE PortHandle,
-    POBJECT_ATTRIBUTES ObjectAttributes,
-    ULONG MaxConnectInfoLength,
-    ULONG MaxDataLength,
-    ULONG NPMessageQueueSize OPTIONAL
+    _In_ PHANDLE PortHandle,
+    _In_ POBJECT_ATTRIBUTES ObjectAttributes,
+    _In_ ULONG MaxConnectInfoLength,
+    _In_ ULONG MaxDataLength,
+    _In_opt_ ULONG NPMessageQueueSize
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtImpersonateClientOfPort(
-    HANDLE PortHandle,
-    PPORT_MESSAGE ClientMessage
+    _In_ HANDLE PortHandle,
+    _In_ PPORT_MESSAGE ClientMessage
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtListenPort(
-    HANDLE PortHandle,
-    PPORT_MESSAGE ConnectionRequest
+    _In_ HANDLE PortHandle,
+    _In_ PPORT_MESSAGE ConnectionRequest
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQueryInformationPort(
-    HANDLE PortHandle,
-    PORT_INFORMATION_CLASS PortInformationClass,
-    PVOID PortInformation,
-    ULONG PortInformationLength,
-    PULONG ReturnLength
+    _In_ HANDLE PortHandle,
+    _In_ PORT_INFORMATION_CLASS PortInformationClass,
+    _Out_bytecap_(PortInformationLength) PVOID PortInformation,
+    _In_ ULONG PortInformationLength,
+    _Out_ PULONG ReturnLength
 );
 
 NTSTATUS
@@ -140,66 +140,66 @@ NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtReadRequestData(
-    HANDLE PortHandle,
-    PPORT_MESSAGE Message,
-    ULONG Index,
-    PVOID Buffer,
-    ULONG BufferLength,
-    PULONG ReturnLength
+    _In_ HANDLE PortHandle,
+    _In_ PPORT_MESSAGE Message,
+    _In_ ULONG Index,
+    _Out_bytecap_(BufferLength) PVOID Buffer,
+    _In_ ULONG BufferLength,
+    _Out_ PULONG ReturnLength
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtReplyPort(
-    IN HANDLE PortHandle,
-    IN PPORT_MESSAGE LpcReply
+    _In_ HANDLE PortHandle,
+    _In_ PPORT_MESSAGE LpcReply
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtReplyWaitReceivePort(
-    IN HANDLE PortHandle,
-    OUT PVOID *PortContext OPTIONAL,
-    IN PPORT_MESSAGE ReplyMessage OPTIONAL,
-    OUT PPORT_MESSAGE ReceiveMessage
+    _In_ HANDLE PortHandle,
+    _Out_opt_ PVOID *PortContext,
+    _In_opt_ PPORT_MESSAGE ReplyMessage,
+    _Out_ PPORT_MESSAGE ReceiveMessage
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtReplyWaitReceivePortEx(
-    IN HANDLE PortHandle,
-    OUT PVOID *PortContext OPTIONAL,
-    IN PPORT_MESSAGE ReplyMessage OPTIONAL,
-    OUT PPORT_MESSAGE ReceiveMessage,
-    IN PLARGE_INTEGER Timeout OPTIONAL
+    _In_ HANDLE PortHandle,
+    _Out_opt_ PVOID *PortContext,
+    _In_opt_ PPORT_MESSAGE ReplyMessage,
+    _Out_ PPORT_MESSAGE ReceiveMessage,
+    _In_opt_ PLARGE_INTEGER Timeout
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtReplyWaitReplyPort(
-    IN HANDLE PortHandle,
-    OUT PPORT_MESSAGE ReplyMessage
+    _In_ HANDLE PortHandle,
+    _Out_ PPORT_MESSAGE ReplyMessage
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtRequestPort(
-    IN HANDLE PortHandle,
-    IN PPORT_MESSAGE LpcMessage
+    _In_ HANDLE PortHandle,
+    _In_ PPORT_MESSAGE LpcMessage
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtRequestWaitReplyPort(
-    IN HANDLE PortHandle,
-    OUT PPORT_MESSAGE LpcReply,
-    IN PPORT_MESSAGE LpcRequest
+    _In_ HANDLE PortHandle,
+    _Out_ PPORT_MESSAGE LpcReply,
+    _In_ PPORT_MESSAGE LpcRequest
 );
 
 NTSYSCALLAPI
@@ -209,199 +209,199 @@ NtSecureConnectPort(
     PHANDLE PortHandle,
     PUNICODE_STRING PortName,
     PSECURITY_QUALITY_OF_SERVICE SecurityQos,
-    PPORT_VIEW ClientView OPTIONAL,
-    PSID Sid OPTIONAL,
-    PREMOTE_PORT_VIEW ServerView OPTIONAL,
-    PULONG MaxMessageLength OPTIONAL,
-    PVOID ConnectionInformation OPTIONAL,
-    PULONG ConnectionInformationLength OPTIONAL
+    _In_opt_ PPORT_VIEW ClientView,
+    _In_opt_ PSID Sid,
+    _In_opt_ PREMOTE_PORT_VIEW ServerView,
+    _In_opt_ PULONG MaxMessageLength,
+    _In_opt_ PVOID ConnectionInformation,
+    _Out_opt_ PULONG ConnectionInformationLength
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtWriteRequestData(
-    HANDLE PortHandle,
-    PPORT_MESSAGE Message,
-    ULONG Index,
-    PVOID Buffer,
-    ULONG BufferLength,
-    PULONG ReturnLength
+    _In_ HANDLE PortHandle,
+    _In_ PPORT_MESSAGE Message,
+    _In_ ULONG Index,
+    _In_bytecount_(BufferLength) PVOID Buffer,
+    _In_ ULONG BufferLength,
+    _Out_ PULONG ReturnLength
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwAcceptConnectPort(
-    PHANDLE PortHandle,
-    PVOID PortContext OPTIONAL,
-    PPORT_MESSAGE ConnectionRequest,
-    BOOLEAN AcceptConnection,
-    PPORT_VIEW ServerView OPTIONAL,
-    PREMOTE_PORT_VIEW ClientView OPTIONAL
+    _Out_ PHANDLE PortHandle,
+    _In_opt_ PVOID PortContext,
+    _In_ PPORT_MESSAGE ConnectionRequest,
+    _In_ BOOLEAN AcceptConnection,
+    _In_opt_ PPORT_VIEW ServerView,
+    _In_opt_ PREMOTE_PORT_VIEW ClientView
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCompleteConnectPort(
-    HANDLE PortHandle
+    _In_ HANDLE PortHandle
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwConnectPort(
-    PHANDLE PortHandle,
-    PUNICODE_STRING PortName,
-    PSECURITY_QUALITY_OF_SERVICE SecurityQos,
-    PPORT_VIEW ClientView OPTIONAL,
-    PREMOTE_PORT_VIEW ServerView OPTIONAL,
-    PULONG MaxMessageLength OPTIONAL,
-    PVOID ConnectionInformation OPTIONAL,
-    PULONG ConnectionInformationLength OPTIONAL
+    _Out_ PHANDLE PortHandle,
+    _In_ PUNICODE_STRING PortName,
+    _In_ PSECURITY_QUALITY_OF_SERVICE SecurityQos,
+    _In_opt_ PPORT_VIEW ClientView,
+    _In_opt_ PREMOTE_PORT_VIEW ServerView,
+    _In_opt_ PULONG MaxMessageLength,
+    _In_opt_ PVOID ConnectionInformation,
+    _In_opt_ PULONG ConnectionInformationLength
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCreatePort(
-    PHANDLE PortHandle,
-    POBJECT_ATTRIBUTES ObjectAttributes,
-    ULONG MaxConnectionInfoLength,
-    ULONG MaxMessageLength,
-    ULONG MaxPoolUsage
+    _Out_ PHANDLE PortHandle,
+    _In_ POBJECT_ATTRIBUTES ObjectAttributes,
+    _In_ ULONG MaxConnectionInfoLength,
+    _In_ ULONG MaxMessageLength,
+    _In_ ULONG MaxPoolUsage
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCreateWaitablePort(
-    PHANDLE PortHandle,
-    POBJECT_ATTRIBUTES ObjectAttributes,
-    ULONG MaxConnectInfoLength,
-    ULONG MaxDataLength,
-    ULONG NPMessageQueueSize OPTIONAL
+    _Out_ PHANDLE PortHandle,
+    _In_ POBJECT_ATTRIBUTES ObjectAttributes,
+    _In_ ULONG MaxConnectInfoLength,
+    _In_ ULONG MaxDataLength,
+    _In_opt_ ULONG NPMessageQueueSize
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwImpersonateClientOfPort(
-    HANDLE PortHandle,
-    PPORT_MESSAGE ClientMessage
+    _In_ HANDLE PortHandle,
+    _In_ PPORT_MESSAGE ClientMessage
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwListenPort(
-    HANDLE PortHandle,
-    PPORT_MESSAGE ConnectionRequest
+    _In_ HANDLE PortHandle,
+    _In_ PPORT_MESSAGE ConnectionRequest
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryInformationPort(
-    HANDLE PortHandle,
-    PORT_INFORMATION_CLASS PortInformationClass,
-    PVOID PortInformation,
-    ULONG PortInformationLength,
-    PULONG ReturnLength
+    _In_ HANDLE PortHandle,
+    _In_ PORT_INFORMATION_CLASS PortInformationClass,
+    _Out_bytecap_(PortInformationLength) PVOID PortInformation,
+    _In_ ULONG PortInformationLength,
+    _Out_ PULONG ReturnLength
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwReadRequestData(
-    HANDLE PortHandle,
-    PPORT_MESSAGE Message,
-    ULONG Index,
-    PVOID Buffer,
-    ULONG BufferLength,
-    PULONG ReturnLength
+    _In_ HANDLE PortHandle,
+    _In_ PPORT_MESSAGE Message,
+    _In_ ULONG Index,
+    _Out_bytecap_(BufferLength) PVOID Buffer,
+    _In_ ULONG BufferLength,
+    _Out_ PULONG ReturnLength
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwReplyPort(
-    IN HANDLE PortHandle,
-    IN PPORT_MESSAGE LpcReply
+    _In_ HANDLE PortHandle,
+    _In_ PPORT_MESSAGE LpcReply
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwReplyWaitReceivePort(
-    IN HANDLE PortHandle,
-    OUT PVOID *PortContext OPTIONAL,
-    IN PPORT_MESSAGE ReplyMessage OPTIONAL,
-    OUT PPORT_MESSAGE ReceiveMessage
+    _In_ HANDLE PortHandle,
+    _Out_opt_ PVOID *PortContext,
+    _In_opt_ PPORT_MESSAGE ReplyMessage,
+    _Out_ PPORT_MESSAGE ReceiveMessage
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwReplyWaitReceivePortEx(
-    IN HANDLE PortHandle,
-    OUT PVOID *PortContext OPTIONAL,
-    IN PPORT_MESSAGE ReplyMessage OPTIONAL,
-    OUT PPORT_MESSAGE ReceiveMessage,
-    IN PLARGE_INTEGER Timeout OPTIONAL
+    _In_ HANDLE PortHandle,
+    _Out_opt_ PVOID *PortContext,
+    _In_opt_ PPORT_MESSAGE ReplyMessage,
+    _Out_ PPORT_MESSAGE ReceiveMessage,
+    _In_opt_ PLARGE_INTEGER Timeout
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwReplyWaitReplyPort(
-    IN HANDLE PortHandle,
-    OUT PPORT_MESSAGE ReplyMessage
+    _In_ HANDLE PortHandle,
+    _Out_ PPORT_MESSAGE ReplyMessage
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwRequestPort(
-    IN HANDLE PortHandle,
-    IN PPORT_MESSAGE LpcMessage
+    _In_ HANDLE PortHandle,
+    _In_ PPORT_MESSAGE LpcMessage
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwRequestWaitReplyPort(
-    IN HANDLE PortHandle,
-    OUT PPORT_MESSAGE LpcReply,
-    IN PPORT_MESSAGE LpcRequest
+    _In_ HANDLE PortHandle,
+    _Out_ PPORT_MESSAGE LpcReply,
+    _In_ PPORT_MESSAGE LpcRequest
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSecureConnectPort(
-    PHANDLE PortHandle,
-    PUNICODE_STRING PortName,
-    PSECURITY_QUALITY_OF_SERVICE SecurityQos,
-    PPORT_VIEW ClientView OPTIONAL,
-    PSID Sid OPTIONAL,
-    PREMOTE_PORT_VIEW ServerView OPTIONAL,
-    PULONG MaxMessageLength OPTIONAL,
-    PVOID ConnectionInformation OPTIONAL,
-    PULONG ConnectionInformationLength OPTIONAL
+    _Out_ PHANDLE PortHandle,
+    _In_ PUNICODE_STRING PortName,
+    _In_ PSECURITY_QUALITY_OF_SERVICE SecurityQos,
+    _Inout_opt_ PPORT_VIEW ClientView,
+    _In_opt_ PSID Sid,
+    _Inout_opt_ PREMOTE_PORT_VIEW ServerView,
+    _Out_opt_ PULONG MaxMessageLength,
+    _Inout_opt_ PVOID ConnectionInformation,
+    _Inout_opt_ PULONG ConnectionInformationLength
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwWriteRequestData(
-    HANDLE PortHandle,
-    PPORT_MESSAGE Message,
-    ULONG Index,
-    PVOID Buffer,
-    ULONG BufferLength,
-    PULONG ReturnLength
+    _In_ HANDLE PortHandle,
+    _In_ PPORT_MESSAGE Message,
+    _In_ ULONG Index,
+    _In_bytecount_(BufferLength) PVOID Buffer,
+    _In_ ULONG BufferLength,
+    _Out_ PULONG ReturnLength
 );
 
 #endif

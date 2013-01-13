@@ -2366,7 +2366,7 @@ NTSTATUS
 NTAPI
 NtAllocateVirtualMemory(
   _In_ HANDLE ProcessHandle,
-  _Outptr_result_bytebuffer_(*RegionSize) PVOID *BaseAddress,
+  _Inout_ _At_(*BaseAddress, _Readable_bytes_(*RegionSize) _Writable_bytes_(*RegionSize) _Post_readable_byte_size_(*RegionSize)) PVOID *BaseAddress,
   _In_ ULONG_PTR ZeroBits,
   _Inout_ PSIZE_T RegionSize,
   _In_ ULONG AllocationType,
@@ -11303,37 +11303,37 @@ FsRtlNotifyChangeDirectory (
 NTKERNELAPI
 NTSTATUS
 NTAPI
-ObCreateObject (
-    IN KPROCESSOR_MODE      ObjectAttributesAccessMode OPTIONAL,
-    IN POBJECT_TYPE         ObjectType,
-    IN POBJECT_ATTRIBUTES   ObjectAttributes OPTIONAL,
-    IN KPROCESSOR_MODE      AccessMode,
-    IN OUT PVOID            ParseContext OPTIONAL,
-    IN ULONG                ObjectSize,
-    IN ULONG                PagedPoolCharge OPTIONAL,
-    IN ULONG                NonPagedPoolCharge OPTIONAL,
-    OUT PVOID               *Object
+ObCreateObject(
+    _In_opt_ KPROCESSOR_MODE ObjectAttributesAccessMode,
+    _In_ POBJECT_TYPE ObjectType,
+    _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes,
+    _In_ KPROCESSOR_MODE AccessMode,
+    _Inout_opt_ PVOID ParseContext,
+    _In_ ULONG ObjectSize,
+    _In_opt_ ULONG PagedPoolCharge,
+    _In_opt_ ULONG NonPagedPoolCharge,
+    _Out_ PVOID *Object
 );
 
 NTKERNELAPI
 ULONG
 NTAPI
-ObGetObjectPointerCount (
-    IN PVOID Object
+ObGetObjectPointerCount(
+    _In_ PVOID Object
 );
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
-ObReferenceObjectByName (
-    IN PUNICODE_STRING  ObjectName,
-    IN ULONG            Attributes,
-    IN PACCESS_STATE    PassedAccessState OPTIONAL,
-    IN ACCESS_MASK      DesiredAccess OPTIONAL,
-    IN POBJECT_TYPE     ObjectType,
-    IN KPROCESSOR_MODE  AccessMode,
-    IN OUT PVOID        ParseContext OPTIONAL,
-    OUT PVOID           *Object
+ObReferenceObjectByName(
+    _In_ PUNICODE_STRING ObjectName,
+    _In_ ULONG Attributes,
+    _In_opt_ PACCESS_STATE PassedAccessState,
+    _In_opt_ ACCESS_MASK DesiredAccess,
+    _In_ POBJECT_TYPE ObjectType,
+    _In_ KPROCESSOR_MODE AccessMode,
+    _Inout_opt_ PVOID ParseContext,
+    _Out_ PVOID *Object
 );
 
 #define PsDereferenceImpersonationToken(T)  \
@@ -11347,36 +11347,37 @@ ObReferenceObjectByName (
 NTKERNELAPI
 NTSTATUS
 NTAPI
-PsLookupProcessThreadByCid (
-    IN PCLIENT_ID   Cid,
-    OUT PEPROCESS   *Process OPTIONAL,
-    OUT PETHREAD    *Thread
+PsLookupProcessThreadByCid(
+    _In_ PCLIENT_ID Cid,
+    _Out_opt_ PEPROCESS *Process,
+    _Out_ PETHREAD *Thread
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
-RtlSetSaclSecurityDescriptor (
-    IN OUT PSECURITY_DESCRIPTOR SecurityDescriptor,
-    IN BOOLEAN                  SaclPresent,
-    IN PACL                     Sacl,
-    IN BOOLEAN                  SaclDefaulted
+RtlSetSaclSecurityDescriptor(
+    _Inout_ PSECURITY_DESCRIPTOR SecurityDescriptor,
+    _In_ BOOLEAN SaclPresent,
+    _In_ PACL Sacl,
+    _In_ BOOLEAN SaclDefaulted
 );
 
 #define SeEnableAccessToExports() SeExports = *(PSE_EXPORTS *)SeExports;
 
 #if (VER_PRODUCTBUILD >= 2195)
 
+_Must_inspect_result_
 NTSYSAPI
 NTSTATUS
 NTAPI
-ZwAdjustPrivilegesToken (
-    IN HANDLE               TokenHandle,
-    IN BOOLEAN              DisableAllPrivileges,
-    IN PTOKEN_PRIVILEGES    NewState,
-    IN ULONG                BufferLength,
-    OUT PTOKEN_PRIVILEGES   PreviousState OPTIONAL,
-    OUT PULONG              ReturnLength
+ZwAdjustPrivilegesToken(
+    _In_ HANDLE TokenHandle,
+    _In_ BOOLEAN DisableAllPrivileges,
+    _In_opt_ PTOKEN_PRIVILEGES NewState,
+    _In_ ULONG BufferLength,
+    _Out_writes_bytes_to_opt_(BufferLength, *ReturnLength) PTOKEN_PRIVILEGES PreviousState,
+    _Out_ _When_(PreviousState == NULL, _Out_opt_) PULONG ReturnLength
 );
 
 #endif /* (VER_PRODUCTBUILD >= 2195) */
@@ -11384,8 +11385,8 @@ ZwAdjustPrivilegesToken (
 NTSYSAPI
 NTSTATUS
 NTAPI
-ZwAlertThread (
-    IN HANDLE ThreadHandle
+ZwAlertThread(
+    _In_ HANDLE ThreadHandle
 );
 
 NTSYSAPI
@@ -11410,9 +11411,9 @@ ZwAccessCheckAndAuditAlarm (
 NTSYSAPI
 NTSTATUS
 NTAPI
-ZwCancelIoFile (
-    IN HANDLE               FileHandle,
-    OUT PIO_STATUS_BLOCK    IoStatusBlock
+ZwCancelIoFile(
+    _In_ HANDLE FileHandle,
+    _Out_ PIO_STATUS_BLOCK IoStatusBlock
 );
 
 #endif /* (VER_PRODUCTBUILD >= 2195) */
@@ -11420,44 +11421,45 @@ ZwCancelIoFile (
 NTSYSAPI
 NTSTATUS
 NTAPI
-ZwClearEvent (
-    IN HANDLE EventHandle
+ZwClearEvent(
+    _In_ HANDLE EventHandle
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
-ZwCloseObjectAuditAlarm (
-    IN PUNICODE_STRING  SubsystemName,
-    IN PVOID            HandleId,
-    IN BOOLEAN          GenerateOnClose
+ZwCloseObjectAuditAlarm(
+    _In_ PUNICODE_STRING SubsystemName,
+    _In_ PVOID HandleId,
+    _In_ BOOLEAN GenerateOnClose
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
-ZwCreateSymbolicLinkObject (
-    OUT PHANDLE             SymbolicLinkHandle,
-    IN ACCESS_MASK          DesiredAccess,
-    IN POBJECT_ATTRIBUTES   ObjectAttributes,
-    IN PUNICODE_STRING      TargetName
+ZwCreateSymbolicLinkObject(
+    _Out_ PHANDLE SymbolicLinkHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ POBJECT_ATTRIBUTES ObjectAttributes,
+    _In_ PUNICODE_STRING Name
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
-ZwFlushInstructionCache (
-    IN HANDLE   ProcessHandle,
-    IN PVOID    BaseAddress OPTIONAL,
-    IN ULONG    FlushSize
+ZwFlushInstructionCache(
+    _In_ HANDLE ProcessHandle,
+    _In_ PVOID BaseAddress,
+    _In_ ULONG NumberOfBytesToFlush
 );
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwFlushBuffersFile(
-    IN HANDLE FileHandle,
-    OUT PIO_STATUS_BLOCK IoStatusBlock
+    _In_ HANDLE FileHandle,
+    _Out_ PIO_STATUS_BLOCK IoStatusBlock
 );
 
 #if (VER_PRODUCTBUILD >= 2195)
@@ -11465,11 +11467,11 @@ ZwFlushBuffersFile(
 NTSYSAPI
 NTSTATUS
 NTAPI
-ZwInitiatePowerAction (
-    IN POWER_ACTION         SystemAction,
-    IN SYSTEM_POWER_STATE   MinSystemState,
-    IN ULONG                Flags,
-    IN BOOLEAN              Asynchronous
+ZwInitiatePowerAction(
+    _In_ POWER_ACTION SystemAction,
+    _In_ SYSTEM_POWER_STATE MinSystemState,
+    _In_ ULONG Flags,
+    _In_ BOOLEAN Asynchronous
 );
 
 #endif /* (VER_PRODUCTBUILD >= 2195) */
@@ -11482,64 +11484,66 @@ ZwLoadKey (
     IN POBJECT_ATTRIBUTES FileObjectAttributes
 );
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
-ZwOpenProcessToken (
-    IN HANDLE       ProcessHandle,
-    IN ACCESS_MASK  DesiredAccess,
-    OUT PHANDLE     TokenHandle
+ZwOpenProcessToken(
+    _In_ HANDLE ProcessHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _Out_ PHANDLE TokenHandle
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
-ZwOpenThread (
-    OUT PHANDLE             ThreadHandle,
-    IN ACCESS_MASK          DesiredAccess,
-    IN POBJECT_ATTRIBUTES   ObjectAttributes,
-    IN PCLIENT_ID           ClientId
+ZwOpenThread(
+    _Out_ PHANDLE ThreadHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ POBJECT_ATTRIBUTES ObjectAttributes,
+    _In_ PCLIENT_ID ClientId
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
-ZwOpenThreadToken (
-    IN HANDLE       ThreadHandle,
-    IN ACCESS_MASK  DesiredAccess,
-    IN BOOLEAN      OpenAsSelf,
-    OUT PHANDLE     TokenHandle
+ZwOpenThreadToken(
+    _In_ HANDLE ThreadHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ BOOLEAN OpenAsSelf,
+    _Out_ PHANDLE TokenHandle
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
-ZwPulseEvent (
-    IN HANDLE   EventHandle,
-    OUT PLONG   PreviousState OPTIONAL
+ZwPulseEvent(
+    _In_ HANDLE EventHandle,
+    _In_opt_ PLONG PulseCount
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
-ZwQueryDefaultLocale (
-    IN BOOLEAN  ThreadOrSystem,
-    OUT PLCID   Locale
+ZwQueryDefaultLocale(
+    _In_ BOOLEAN UserProfile,
+    _Out_ PLCID DefaultLocaleId
 );
 
 #if (VER_PRODUCTBUILD >= 2195)
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
-ZwQueryDirectoryObject (
-    IN HANDLE       DirectoryHandle,
-    OUT PVOID       Buffer,
-    IN ULONG        Length,
-    IN BOOLEAN      ReturnSingleEntry,
-    IN BOOLEAN      RestartScan,
-    IN OUT PULONG   Context,
-    OUT PULONG      ReturnLength OPTIONAL
+ZwQueryDirectoryObject(
+    _In_ HANDLE DirectoryHandle,
+    _Out_ PVOID Buffer,
+    _In_ ULONG BufferLength,
+    _In_ BOOLEAN ReturnSingleEntry,
+    _In_ BOOLEAN RestartScan,
+    _Inout_ PULONG Context,
+    _Out_opt_ PULONG ReturnLength
 );
 
 #endif /* (VER_PRODUCTBUILD >= 2195) */
@@ -11567,9 +11571,9 @@ ZwReplaceKey (
 NTSYSAPI
 NTSTATUS
 NTAPI
-ZwResetEvent (
-    IN HANDLE   EventHandle,
-    OUT PLONG   PreviousState OPTIONAL
+ZwResetEvent(
+    _In_ HANDLE EventHandle,
+    _Out_opt_ PLONG NumberOfWaitingThreads
 );
 
 #if (VER_PRODUCTBUILD >= 2195)
@@ -11596,9 +11600,9 @@ ZwSaveKey (
 NTSYSAPI
 NTSTATUS
 NTAPI
-ZwSetDefaultLocale (
-    IN BOOLEAN  ThreadOrSystem,
-    IN LCID     Locale
+ZwSetDefaultLocale(
+    _In_ BOOLEAN UserProfile,
+    _In_ LCID DefaultLocaleId
 );
 
 #if (VER_PRODUCTBUILD >= 2195)
@@ -11615,37 +11619,37 @@ ZwSetDefaultUILanguage (
 NTSYSAPI
 NTSTATUS
 NTAPI
-ZwSetInformationProcess (
-    IN HANDLE           ProcessHandle,
-    IN PROCESSINFOCLASS ProcessInformationClass,
-    IN PVOID            ProcessInformation,
-    IN ULONG            ProcessInformationLength
+ZwSetInformationProcess(
+    _In_ HANDLE ProcessHandle,
+    _In_ PROCESSINFOCLASS ProcessInformationClass,
+    _In_ PVOID ProcessInformation,
+    _In_ ULONG ProcessInformationLength
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
-ZwSetSystemTime (
-    IN PLARGE_INTEGER   NewTime,
-    OUT PLARGE_INTEGER  OldTime OPTIONAL
+ZwSetSystemTime(
+    _In_ PLARGE_INTEGER SystemTime,
+    _In_opt_ PLARGE_INTEGER NewSystemTime
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
-ZwUnloadKey (
-    IN POBJECT_ATTRIBUTES KeyObjectAttributes
+ZwUnloadKey(
+    _In_ POBJECT_ATTRIBUTES KeyObjectAttributes
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
-ZwWaitForMultipleObjects (
-    IN ULONG            HandleCount,
-    IN PHANDLE          Handles,
-    IN WAIT_TYPE        WaitType,
-    IN BOOLEAN          Alertable,
-    IN PLARGE_INTEGER   Timeout OPTIONAL
+ZwWaitForMultipleObjects(
+    _In_ ULONG Count,
+    _In_ HANDLE Object[],
+    _In_ WAIT_TYPE WaitType,
+    _In_ BOOLEAN Alertable,
+    _In_ PLARGE_INTEGER Time
 );
 
 NTSYSAPI

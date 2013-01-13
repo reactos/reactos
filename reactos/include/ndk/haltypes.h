@@ -45,54 +45,54 @@ typedef enum _FIRMWARE_REENTRY
 typedef
 PBUS_HANDLER
 (FASTCALL *pHalHandlerForConfigSpace)(
-    IN BUS_DATA_TYPE ConfigSpace,
-    IN ULONG BusNumber
+    _In_ BUS_DATA_TYPE ConfigSpace,
+    _In_ ULONG BusNumber
 );
 
 typedef
 NTSTATUS
 (NTAPI *PINSTALL_BUS_HANDLER)(
-    IN PBUS_HANDLER Bus
+    _In_ PBUS_HANDLER Bus
 );
 
 typedef
 NTSTATUS
 (NTAPI *pHalRegisterBusHandler)(
-    IN INTERFACE_TYPE InterfaceType,
-    IN BUS_DATA_TYPE ConfigSpace,
-    IN ULONG BusNumber,
-    IN INTERFACE_TYPE ParentInterfaceType,
-    IN ULONG ParentBusNumber,
-    IN ULONG ContextSize,
-    IN PINSTALL_BUS_HANDLER InstallCallback,
-    OUT PBUS_HANDLER *BusHandler
+    _In_ INTERFACE_TYPE InterfaceType,
+    _In_ BUS_DATA_TYPE ConfigSpace,
+    _In_ ULONG BusNumber,
+    _In_ INTERFACE_TYPE ParentInterfaceType,
+    _In_ ULONG ParentBusNumber,
+    _In_ ULONG ContextSize,
+    _In_ PINSTALL_BUS_HANDLER InstallCallback,
+    _Out_ PBUS_HANDLER *BusHandler
 );
 
 typedef
 VOID
 (NTAPI *pHalSetWakeEnable)(
-    IN BOOLEAN Enable
+    _In_ BOOLEAN Enable
 );
 
 typedef
 VOID
 (NTAPI *pHalSetWakeAlarm)(
-    IN ULONGLONG AlartTime,
-    IN PTIME_FIELDS TimeFields
+    _In_ ULONGLONG AlartTime,
+    _In_ PTIME_FIELDS TimeFields
 );
 
 typedef
 VOID
 (NTAPI *pHalLocateHiberRanges)(
-    IN PVOID MemoryMap
+    _In_ PVOID MemoryMap
 );
 
 typedef
 NTSTATUS
 (NTAPI *pHalAllocateMapRegisters)(
-    IN PADAPTER_OBJECT AdapterObject,
-    IN ULONG Unknown,
-    IN ULONG Unknown2,
+    _In_ PADAPTER_OBJECT AdapterObject,
+    _In_ ULONG Unknown,
+    _In_ ULONG Unknown2,
     PMAP_REGISTER_ENTRY Registers
 );
 
@@ -102,54 +102,54 @@ NTSTATUS
 typedef
 NTSTATUS
 (NTAPI *PADJUSTRESOURCELIST)(
-    IN PBUS_HANDLER BusHandler,
-    IN PBUS_HANDLER RootHandler,
-    IN OUT PIO_RESOURCE_REQUIREMENTS_LIST *Resources
+    _In_ PBUS_HANDLER BusHandler,
+    _In_ PBUS_HANDLER RootHandler,
+    _Inout_ PIO_RESOURCE_REQUIREMENTS_LIST *Resources
 );
 
 typedef
 NTSTATUS
 (NTAPI *PASSIGNSLOTRESOURCES)(
-    IN PBUS_HANDLER BusHandler,
-    IN PBUS_HANDLER RootHandler,
-    IN PUNICODE_STRING RegistryPath,
-    IN PUNICODE_STRING DriverClassName,
-    IN PDRIVER_OBJECT DriverObject,
-    IN PDEVICE_OBJECT DeviceObject,
-    IN ULONG SlotNumber,
-    IN OUT PCM_RESOURCE_LIST *AllocatedResources
+    _In_ PBUS_HANDLER BusHandler,
+    _In_ PBUS_HANDLER RootHandler,
+    _In_ PUNICODE_STRING RegistryPath,
+    _In_ PUNICODE_STRING DriverClassName,
+    _In_ PDRIVER_OBJECT DriverObject,
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _In_ ULONG SlotNumber,
+    _Inout_ PCM_RESOURCE_LIST *AllocatedResources
 );
 
 typedef
 ULONG
 (NTAPI *PGETSETBUSDATA)(
-    IN PBUS_HANDLER BusHandler,
-    IN PBUS_HANDLER RootHandler,
-    IN ULONG SlotNumber,
-    OUT PVOID Buffer,
-    IN ULONG Offset,
-    IN ULONG Length
+    _In_ PBUS_HANDLER BusHandler,
+    _In_ PBUS_HANDLER RootHandler,
+    _In_ ULONG SlotNumber,
+    _Out_ PVOID Buffer,
+    _In_ ULONG Offset,
+    _In_ ULONG Length
 );
 
 typedef
 ULONG
 (NTAPI *PGETINTERRUPTVECTOR)(
-    IN PBUS_HANDLER BusHandler,
-    IN PBUS_HANDLER RootHandler,
-    IN ULONG BusInterruptLevel,
-    IN ULONG BusInterruptVector,
-    OUT PKIRQL Irql,
-    OUT PKAFFINITY Affinity
+    _In_ PBUS_HANDLER BusHandler,
+    _In_ PBUS_HANDLER RootHandler,
+    _In_ ULONG BusInterruptLevel,
+    _In_ ULONG BusInterruptVector,
+    _Out_ PKIRQL Irql,
+    _Out_ PKAFFINITY Affinity
 );
 
 typedef
 BOOLEAN
 (NTAPI *PTRANSLATEBUSADDRESS)(
-    IN PBUS_HANDLER BusHandler,
-    IN PBUS_HANDLER RootHandler,
-    IN PHYSICAL_ADDRESS BusAddress,
-    IN OUT PULONG AddressSpace,
-    OUT PPHYSICAL_ADDRESS TranslatedAddress
+    _In_ PBUS_HANDLER BusHandler,
+    _In_ PBUS_HANDLER RootHandler,
+    _In_ PHYSICAL_ADDRESS BusAddress,
+    _Inout_ PULONG AddressSpace,
+    _Out_ PPHYSICAL_ADDRESS TranslatedAddress
 );
 
 //
@@ -199,7 +199,7 @@ typedef struct _SUPPORTED_RANGE
     LONGLONG Limit;
 } SUPPORTED_RANGE, *PSUPPORTED_RANGE;
 
-typedef struct _SUPPORTED_RANGES 
+typedef struct _SUPPORTED_RANGES
 {
     USHORT Version;
     BOOLEAN Sorted;

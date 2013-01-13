@@ -229,45 +229,6 @@ typedef VOID
 
 #define PROCESS_HANDLE_TRACING_MAX_STACKS 16
 
-typedef struct _NT_TIB {
-  struct _EXCEPTION_REGISTRATION_RECORD *ExceptionList;
-  PVOID StackBase;
-  PVOID StackLimit;
-  PVOID SubSystemTib;
-  _ANONYMOUS_UNION union {
-    PVOID FiberData;
-    ULONG Version;
-  } DUMMYUNIONNAME;
-  PVOID ArbitraryUserPointer;
-  struct _NT_TIB *Self;
-} NT_TIB, *PNT_TIB;
-
-typedef struct _NT_TIB32 {
-  ULONG ExceptionList;
-  ULONG StackBase;
-  ULONG StackLimit;
-  ULONG SubSystemTib;
-  _ANONYMOUS_UNION union {
-    ULONG FiberData;
-    ULONG Version;
-  } DUMMYUNIONNAME;
-  ULONG ArbitraryUserPointer;
-  ULONG Self;
-} NT_TIB32,*PNT_TIB32;
-
-typedef struct _NT_TIB64 {
-  ULONG64 ExceptionList;
-  ULONG64 StackBase;
-  ULONG64 StackLimit;
-  ULONG64 SubSystemTib;
-  _ANONYMOUS_UNION union {
-    ULONG64 FiberData;
-    ULONG Version;
-  } DUMMYUNIONNAME;
-  ULONG64 ArbitraryUserPointer;
-  ULONG64 Self;
-} NT_TIB64,*PNT_TIB64;
-
 typedef enum _PROCESSINFOCLASS {
   ProcessBasicInformation,
   ProcessQuotaLimits,

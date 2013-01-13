@@ -218,7 +218,7 @@ RtlGUIDFromString(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 _At_(DestinationString->Buffer, _Post_equal_to_(SourceString))
 _At_(DestinationString->Length, _Post_equal_to_(_String_length_(SourceString) * sizeof(WCHAR)))
-_At_(DestinationString->MaximumLength, _Post_equal_to_(DestinationString->Length + sizeof(WCHAR)))
+_At_(DestinationString->MaximumLength, _Post_equal_to_((_String_length_(SourceString)+1) * sizeof(WCHAR)))
 NTSYSAPI
 VOID
 NTAPI
@@ -573,13 +573,15 @@ RtlInitAnsiString(
   _Out_ PANSI_STRING DestinationString,
   _In_opt_z_ __drv_aliasesMem PCSZ SourceString);
 
+_At_(BitMapHeader->SizeOfBitMap, _Post_equal_to_(SizeOfBitMap))
+_At_(BitMapHeader->Buffer, _Post_equal_to_(BitMapBuffer))
 NTSYSAPI
 VOID
 NTAPI
 RtlInitializeBitMap(
   _Out_ PRTL_BITMAP BitMapHeader,
-  _In_ __drv_aliasesMem PULONG BitMapBuffer,
-  _In_ ULONG SizeOfBitMap);
+  _In_opt_ __drv_aliasesMem PULONG BitMapBuffer,
+  _In_opt_ ULONG SizeOfBitMap);
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
 NTSYSAPI
@@ -648,12 +650,12 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 RtlQueryRegistryValues(
-  _In_ ULONG RelativeTo,
-  _In_ PCWSTR Path,
-  _Inout_ _At_(*(*QueryTable).EntryContext, _Post_valid_)
-    PRTL_QUERY_REGISTRY_TABLE QueryTable,
-  _In_opt_ PVOID Context,
-  _In_opt_ PVOID Environment);
+    _In_ ULONG RelativeTo,
+    _In_ PCWSTR Path,
+    _Inout_ _At_(*(*QueryTable).EntryContext, _Pre_unknown_)
+        PRTL_QUERY_REGISTRY_TABLE QueryTable,
+    _In_opt_ PVOID Context,
+    _In_opt_ PVOID Environment);
 
 #define SHORT_SIZE  (sizeof(USHORT))
 #define SHORT_MASK  (SHORT_SIZE - 1)
@@ -905,6 +907,27 @@ _IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
+RtlGetVersion(
+    _Out_
+    _At_(lpVersionInformation->dwOSVersionInfoSize, _Pre_ _Valid_)
+    _When_(lpVersionInformation->dwOSVersionInfoSize == sizeof(RTL_OSVERSIONINFOEXW),
+        _At_((PRTL_OSVERSIONINFOEXW)lpVersionInformation, _Out_))
+        PRTL_OSVERSIONINFOW lpVersionInformation);
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
+_Must_inspect_result_
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlVerifyVersionInfo(
+    _In_ PRTL_OSVERSIONINFOEXW VersionInfo,
+    _In_ ULONG TypeMask,
+    _In_ ULONGLONG ConditionMask);
+
+_IRQL_requires_max_(PASSIVE_LEVEL)
+NTSYSAPI
+NTSTATUS
+NTAPI
 RtlWriteRegistryValue(
   _In_ ULONG RelativeTo,
   _In_ PCWSTR Path,
@@ -1105,20 +1128,6 @@ NTAPI
 RtlVolumeDeviceToDosName(
   _In_ PVOID VolumeDeviceObject,
   _Out_ PUNICODE_STRING DosName);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlGetVersion(
-  IN OUT PRTL_OSVERSIONINFOW lpVersionInformation);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlVerifyVersionInfo(
-  IN PRTL_OSVERSIONINFOEXW VersionInfo,
-  IN ULONG TypeMask,
-  IN ULONGLONG ConditionMask);
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
 _Must_inspect_result_
