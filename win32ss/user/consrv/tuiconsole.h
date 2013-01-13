@@ -10,6 +10,6 @@
 
 extern NTSTATUS FASTCALL TuiInitConsole(PCONSOLE Console);
 extern PCONSOLE FASTCALL TuiGetFocusConsole(VOID);
-extern BOOL FASTCALL TuiSwapConsole(int Next);
+extern BOOL FASTCALL TuiSwapConsole(INT Next);
 
 /* EOF */

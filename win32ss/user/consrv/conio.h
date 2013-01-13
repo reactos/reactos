@@ -107,9 +107,9 @@ do {    \
 typedef struct _CONSOLE_VTBL
 {
     VOID (WINAPI *InitScreenBuffer)(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER ScreenBuffer);
-    VOID (WINAPI *WriteStream)(PCONSOLE Console, SMALL_RECT *Block, LONG CursorStartX, LONG CursorStartY,
+    VOID (WINAPI *WriteStream)(PCONSOLE Console, SMALL_RECT* Block, LONG CursorStartX, LONG CursorStartY,
                                UINT ScrolledLines, CHAR *Buffer, UINT Length);
-    VOID (WINAPI *DrawRegion)(PCONSOLE Console, SMALL_RECT *Region);
+    VOID (WINAPI *DrawRegion)(PCONSOLE Console, SMALL_RECT* Region);
     BOOL (WINAPI *SetCursorInfo)(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER ScreenBuffer);
     BOOL (WINAPI *SetScreenInfo)(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER ScreenBuffer,
                                  UINT OldCursorX, UINT OldCursorY);

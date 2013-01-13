@@ -89,7 +89,7 @@ CsrInitConsoleScreenBuffer(PCONSOLE Console,
 }
 
 static VOID FASTCALL
-ConioNextLine(PCONSOLE_SCREEN_BUFFER Buff, SMALL_RECT *UpdateRect, UINT *ScrolledLines)
+ConioNextLine(PCONSOLE_SCREEN_BUFFER Buff, SMALL_RECT* UpdateRect, UINT *ScrolledLines)
 {
     /* If we hit bottom, slide the viewable screen */
     if (++Buff->CurrentY == Buff->MaxY)
@@ -240,9 +240,9 @@ ConioWriteConsole(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER Buff,
 }
 
 __inline BOOLEAN ConioGetIntersection(
-    SMALL_RECT *Intersection,
-    SMALL_RECT *Rect1,
-    SMALL_RECT *Rect2)
+    SMALL_RECT* Intersection,
+    SMALL_RECT* Rect1,
+    SMALL_RECT* Rect2)
 {
     if (ConioIsRectEmpty(Rect1) ||
             (ConioIsRectEmpty(Rect2)) ||
@@ -266,9 +266,9 @@ __inline BOOLEAN ConioGetIntersection(
 }
 
 __inline BOOLEAN ConioGetUnion(
-    SMALL_RECT *Union,
-    SMALL_RECT *Rect1,
-    SMALL_RECT *Rect2)
+    SMALL_RECT* Union,
+    SMALL_RECT* Rect1,
+    SMALL_RECT* Rect2)
 {
     if (ConioIsRectEmpty(Rect1))
     {
@@ -304,9 +304,9 @@ __inline BOOLEAN ConioGetUnion(
  */
 static VOID FASTCALL
 ConioMoveRegion(PCONSOLE_SCREEN_BUFFER ScreenBuffer,
-                SMALL_RECT *SrcRegion,
-                SMALL_RECT *DstRegion,
-                SMALL_RECT *ClipRegion,
+                SMALL_RECT* SrcRegion,
+                SMALL_RECT* DstRegion,
+                SMALL_RECT* ClipRegion,
                 WORD Fill)
 {
     int Width = ConioRectWidth(SrcRegion);
@@ -394,7 +394,7 @@ ConioDrawConsole(PCONSOLE Console)
 }
 
 static VOID FASTCALL
-ConioComputeUpdateRect(PCONSOLE_SCREEN_BUFFER Buff, SMALL_RECT *UpdateRect, COORD *Start, UINT Length)
+ConioComputeUpdateRect(PCONSOLE_SCREEN_BUFFER Buff, SMALL_RECT* UpdateRect, PCOORD Start, UINT Length)
 {
     if (Buff->MaxX <= Start->X + Length)
     {

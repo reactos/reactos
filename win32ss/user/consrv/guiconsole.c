@@ -15,6 +15,11 @@
 #define NDEBUG
 #include <debug.h>
 
+/*
+// Define wmemset(...)
+#include <wchar.h>
+#define HAVE_WMEMSET
+*/
 
 /* GUI Console Window Class name */
 #define GUI_CONSOLE_WINDOW_CLASS L"ConsoleWindowClass"
@@ -1074,7 +1079,7 @@ GuiConsoleHandleKey(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 }
 
 static VOID WINAPI
-GuiDrawRegion(PCONSOLE Console, SMALL_RECT *Region)
+GuiDrawRegion(PCONSOLE Console, SMALL_RECT* Region)
 {
     RECT RegionRect;
     SmallRectToRect(Console, &RegionRect, Region);
@@ -1089,7 +1094,7 @@ GuiInvalidateCell(PCONSOLE Console, UINT x, UINT y)
 }
 
 static VOID WINAPI
-GuiWriteStream(PCONSOLE Console, SMALL_RECT *Region, LONG CursorStartX, LONG CursorStartY,
+GuiWriteStream(PCONSOLE Console, SMALL_RECT* Region, LONG CursorStartX, LONG CursorStartY,
                UINT ScrolledLines, CHAR *Buffer, UINT Length)
 {
     PGUI_CONSOLE_DATA GuiData = (PGUI_CONSOLE_DATA) Console->PrivateData;
@@ -1519,7 +1524,7 @@ GuiConsoleShowConsoleProperties(HWND hWnd, BOOL Defaults, PGUI_CONSOLE_DATA GuiD
 {
     PCONSOLE Console;
     APPLET_PROC CPLFunc;
-    TCHAR szBuffer[MAX_PATH];
+    WCHAR szBuffer[MAX_PATH];
     ConsoleInfo SharedInfo;
 
     DPRINT("GuiConsoleShowConsoleProperties entered\n");
@@ -1534,9 +1539,9 @@ GuiConsoleShowConsoleProperties(HWND hWnd, BOOL Defaults, PGUI_CONSOLE_DATA GuiD
 
     if (GuiData->ConsoleLibrary == NULL)
     {
-        GetWindowsDirectory(szBuffer,MAX_PATH);
-        _tcscat(szBuffer, _T("\\system32\\console.dll"));
-        GuiData->ConsoleLibrary = LoadLibrary(szBuffer);
+        GetWindowsDirectoryW(szBuffer, MAX_PATH);
+        wcscat(szBuffer, L"\\system32\\console.dll");
+        GuiData->ConsoleLibrary = LoadLibraryW(szBuffer);
 
         if (GuiData->ConsoleLibrary == NULL)
         {
@@ -1545,7 +1550,7 @@ GuiConsoleShowConsoleProperties(HWND hWnd, BOOL Defaults, PGUI_CONSOLE_DATA GuiD
         }
     }
 
-    CPLFunc = (APPLET_PROC) GetProcAddress(GuiData->ConsoleLibrary, _T("CPlApplet"));
+    CPLFunc = (APPLET_PROC)GetProcAddress(GuiData->ConsoleLibrary, "CPlApplet");
     if (!CPLFunc)
     {
         DPRINT("Error: Console.dll misses CPlApplet export\n");
@@ -1755,11 +1760,12 @@ GuiResizeBuffer(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER ScreenBuffer, COORD Siz
     BYTE * OldPtr;
     USHORT CurrentY;
     BYTE * OldBuffer;
-#if HAVE_WMEMSET
+#ifdef HAVE_WMEMSET
     USHORT value = MAKEWORD(' ', ScreenBuffer->DefaultAttrib);
+#else
+    DWORD i;
 #endif
     DWORD diff;
-    DWORD i;
 
     /* Buffer size is not allowed to be smaller than window size */
     if (Size.X < Console->Size.X || Size.Y < Console->Size.Y)
@@ -1792,8 +1798,8 @@ GuiResizeBuffer(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER ScreenBuffer, COORD Siz
 
             diff = Size.X - ScreenBuffer->MaxX;
             /* zero new part of it */
-#if HAVE_WMEMSET
-            wmemset((WCHAR*)&Buffer[Offset], value, diff);
+#ifdef HAVE_WMEMSET
+            wmemset((PWCHAR)&Buffer[Offset], value, diff);
 #else
             for (i = 0; i < diff; i++)
             {
@@ -1807,8 +1813,8 @@ GuiResizeBuffer(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER ScreenBuffer, COORD Siz
     if (Size.Y > ScreenBuffer->MaxY)
     {
         diff = Size.X * (Size.Y - ScreenBuffer->MaxY);
-#if HAVE_WMEMSET
-        wmemset((WCHAR*)&Buffer[Offset], value, diff);
+#ifdef HAVE_WMEMSET
+        wmemset((PWCHAR)&Buffer[Offset], value, diff);
 #else
         for (i = 0; i < diff; i++)
         {

@@ -64,7 +64,7 @@ IntCreateAliasHeader(LPCWSTR lpExeName)
         return Entry;
 
     Entry->lpExeName = (LPCWSTR)(Entry + 1);
-    wcscpy((WCHAR*)Entry->lpExeName, lpExeName);
+    wcscpy((PWCHAR)Entry->lpExeName, lpExeName);
     Entry->Data = NULL;
     Entry->Next = NULL;
     return Entry;

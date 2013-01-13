@@ -25,6 +25,157 @@ static PCONSOLE ActiveConsole;
 
 static BOOL ConsInitialized = FALSE;
 
+/******************************************************************************\
+|** BlueScreen Driver management                                             **|
+\**/
+/* Code taken and adapted from base/system/services/driver.c */
+static DWORD EnablePrivilege(LPCWSTR lpszPrivilegeName, BOOL bEnablePrivilege)
+{
+    DWORD  dwRet  = ERROR_SUCCESS;
+    HANDLE hToken = NULL;
+
+    if (OpenProcessToken(GetCurrentProcess(),
+                         TOKEN_ADJUST_PRIVILEGES,
+                         &hToken))
+    {
+        TOKEN_PRIVILEGES tp;
+
+        tp.PrivilegeCount = 1;
+        tp.Privileges[0].Attributes = (bEnablePrivilege ? SE_PRIVILEGE_ENABLED : 0);
+
+        if (LookupPrivilegeValueW(NULL,
+                                  lpszPrivilegeName,
+                                  &tp.Privileges[0].Luid))
+        {
+            if (AdjustTokenPrivileges(hToken, FALSE, &tp, 0, NULL, NULL))
+            {
+                if (GetLastError() == ERROR_NOT_ALL_ASSIGNED)
+                    dwRet = ERROR_NOT_ALL_ASSIGNED;
+            }
+            else
+            {
+                dwRet = GetLastError();
+            }
+        }
+        else
+        {
+            dwRet = GetLastError();
+        }
+
+        CloseHandle(hToken);
+    }
+    else
+    {
+        dwRet = GetLastError();
+    }
+
+    return dwRet;
+}
+
+static DWORD
+ScmLoadDriver(LPCWSTR lpServiceName)
+{
+    PWSTR pszDriverPath;
+    UNICODE_STRING DriverPath;
+    NTSTATUS Status;
+    DWORD dwError = ERROR_SUCCESS;
+
+    /* Build the driver path */
+    /* 52 = wcslen(L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\") */
+    pszDriverPath = RtlAllocateHeap(ConSrvHeap,
+                              HEAP_ZERO_MEMORY,
+                              (52 + wcslen(lpServiceName) + 1) * sizeof(WCHAR));
+    if (pszDriverPath == NULL)
+        return ERROR_NOT_ENOUGH_MEMORY;
+
+    wcscpy(pszDriverPath,
+           L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\");
+    wcscat(pszDriverPath,
+           lpServiceName);
+
+    RtlInitUnicodeString(&DriverPath,
+                         pszDriverPath);
+
+    DPRINT("  Path: %wZ\n", &DriverPath);
+
+    /* Acquire driver-loading privilege */
+    dwError = EnablePrivilege(SE_LOAD_DRIVER_NAME, TRUE);
+    if (dwError != ERROR_SUCCESS)
+    {
+        /* We encountered a failure, exit properly */
+        DPRINT1("CONSRV: Cannot acquire driver-loading privilege, error = %lu\n", dwError);
+        goto done;
+    }
+
+    Status = NtLoadDriver(&DriverPath);
+
+    /* Release driver-loading privilege */
+    EnablePrivilege(SE_LOAD_DRIVER_NAME, FALSE);
+
+    if (!NT_SUCCESS(Status))
+    {
+        dwError = RtlNtStatusToDosError(Status);
+    }
+
+done:
+    RtlFreeHeap(ConSrvHeap, 0, pszDriverPath);
+
+    return dwError;
+}
+
+#ifdef BLUESCREEN_DRIVER_UNLOADING
+static DWORD
+ScmUnloadDriver(LPCWSTR lpServiceName)
+{
+    PWSTR pszDriverPath;
+    UNICODE_STRING DriverPath;
+    NTSTATUS Status;
+    DWORD dwError = ERROR_SUCCESS;
+
+    /* Build the driver path */
+    /* 52 = wcslen(L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\") */
+    pszDriverPath = RtlAllocateHeap(ConSrvHeap,
+                              HEAP_ZERO_MEMORY,
+                              (52 + wcslen(lpServiceName) + 1) * sizeof(WCHAR));
+    if (pszDriverPath == NULL)
+        return ERROR_NOT_ENOUGH_MEMORY;
+
+    wcscpy(pszDriverPath,
+           L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\");
+    wcscat(pszDriverPath,
+           lpServiceName);
+
+    RtlInitUnicodeString(&DriverPath,
+                         pszDriverPath);
+
+    /* Acquire driver-unloading privilege */
+    dwError = EnablePrivilege(SE_LOAD_DRIVER_NAME, TRUE);
+    if (dwError != ERROR_SUCCESS)
+    {
+        /* We encountered a failure, exit properly */
+        DPRINT1("CONSRV: Cannot acquire driver-unloading privilege, error = %lu\n", dwError);
+        goto done;
+    }
+
+    Status = NtUnloadDriver(&DriverPath);
+
+    /* Release driver-unloading privilege */
+    EnablePrivilege(SE_LOAD_DRIVER_NAME, FALSE);
+
+    if (!NT_SUCCESS(Status))
+    {
+        dwError = RtlNtStatusToDosError(Status);
+    }
+
+done:
+    RtlFreeHeap(ConSrvHeap, 0, pszDriverPath);
+
+    return dwError;
+}
+#endif
+/**\
+\******************************************************************************/
+
 static LRESULT CALLBACK
 TuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
@@ -40,35 +191,6 @@ TuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 }
 
 static BOOL FASTCALL
-TuiStartService(LPCWSTR lpServiceName)
-{
-    SC_HANDLE hSCManager = NULL;
-    SC_HANDLE hService = NULL;
-    BOOL ret = FALSE;
-
-    hSCManager = OpenSCManagerW(NULL, NULL, 0);
-    if (hSCManager == NULL)
-        goto cleanup;
-
-    hService = OpenServiceW(hSCManager, lpServiceName, SERVICE_START);
-    if (hService == NULL)
-        goto cleanup;
-
-    ret = StartServiceW(hService, 0, NULL);
-    if (!ret)
-        goto cleanup;
-
-    ret = TRUE;
-
-cleanup:
-    if (hSCManager != NULL)
-        CloseServiceHandle(hSCManager);
-    if (hService != NULL)
-        CloseServiceHandle(hService);
-    return ret;
-}
-
-static BOOL FASTCALL
 TuiInit(DWORD OemCP)
 {
     CONSOLE_SCREEN_BUFFER_INFO ScrInfo;
@@ -77,7 +199,7 @@ TuiInit(DWORD OemCP)
     ATOM ConsoleClassAtom;
     USHORT TextAttribute = FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED;
 
-    TuiStartService(L"Blue");
+    ScmLoadDriver(L"Blue");
 
     ConsoleDeviceHandle = CreateFileW(L"\\\\.\\BlueScreen", FILE_ALL_ACCESS, 0, NULL,
                                       OPEN_EXISTING, 0, NULL);
@@ -140,7 +262,7 @@ TuiInitScreenBuffer(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER Buffer)
 }
 
 static void FASTCALL
-TuiCopyRect(char *Dest, PCONSOLE_SCREEN_BUFFER Buff, SMALL_RECT *Region)
+TuiCopyRect(char *Dest, PCONSOLE_SCREEN_BUFFER Buff, SMALL_RECT* Region)
 {
     UINT SrcDelta, DestDelta;
     LONG i;
@@ -163,7 +285,7 @@ TuiCopyRect(char *Dest, PCONSOLE_SCREEN_BUFFER Buff, SMALL_RECT *Region)
 }
 
 static VOID WINAPI
-TuiDrawRegion(PCONSOLE Console, SMALL_RECT *Region)
+TuiDrawRegion(PCONSOLE Console, SMALL_RECT* Region)
 {
     DWORD BytesReturned;
     PCONSOLE_SCREEN_BUFFER Buff = Console->ActiveBuffer;
@@ -177,10 +299,10 @@ TuiDrawRegion(PCONSOLE Console, SMALL_RECT *Region)
 
     ConsoleDrawSize = sizeof(CONSOLE_DRAW) +
                       (ConioRectWidth(Region) * ConioRectHeight(Region)) * 2;
-    ConsoleDraw = HeapAlloc(ConSrvHeap, 0, ConsoleDrawSize);
+    ConsoleDraw = RtlAllocateHeap(ConSrvHeap, 0, ConsoleDrawSize);
     if (NULL == ConsoleDraw)
     {
-        DPRINT1("HeapAlloc failed\n");
+        DPRINT1("RtlAllocateHeap failed\n");
         return;
     }
     ConsoleDraw->X = Region->Left;
@@ -196,15 +318,15 @@ TuiDrawRegion(PCONSOLE Console, SMALL_RECT *Region)
                          NULL, 0, ConsoleDraw, ConsoleDrawSize, &BytesReturned, NULL))
     {
         DPRINT1("Failed to draw console\n");
-        HeapFree(ConSrvHeap, 0, ConsoleDraw);
+        RtlFreeHeap(ConSrvHeap, 0, ConsoleDraw);
         return;
     }
 
-    HeapFree(ConSrvHeap, 0, ConsoleDraw);
+    RtlFreeHeap(ConSrvHeap, 0, ConsoleDraw);
 }
 
 static VOID WINAPI
-TuiWriteStream(PCONSOLE Console, SMALL_RECT *Region, LONG CursorStartX, LONG CursorStartY,
+TuiWriteStream(PCONSOLE Console, SMALL_RECT* Region, LONG CursorStartX, LONG CursorStartY,
                UINT ScrolledLines, CHAR *Buffer, UINT Length)
 {
     DWORD BytesWritten;
@@ -437,13 +559,13 @@ TuiGetFocusConsole(VOID)
 }
 
 BOOL FASTCALL
-TuiSwapConsole(int Next)
+TuiSwapConsole(INT Next)
 {
     static PCONSOLE SwapConsole = NULL; /* console we are thinking about swapping with */
     DWORD BytesReturned;
     ANSI_STRING Title;
-    void * Buffer;
-    COORD *pos;
+    PVOID Buffer;
+    PCOORD pos;
 
     if (0 != Next)
     {
@@ -458,10 +580,10 @@ TuiSwapConsole(int Next)
         SwapConsole = (0 < Next ? SwapConsole->Next : SwapConsole->Prev);
         Title.MaximumLength = RtlUnicodeStringToAnsiSize(&SwapConsole->Title);
         Title.Length = 0;
-        Buffer = HeapAlloc(ConSrvHeap,
+        Buffer = RtlAllocateHeap(ConSrvHeap,
                            0,
                            sizeof(COORD) + Title.MaximumLength);
-        pos = (COORD *)Buffer;
+        pos = (PCOORD )Buffer;
         Title.Buffer = (PVOID)((ULONG_PTR)Buffer + sizeof( COORD ));
 
         RtlUnicodeStringToAnsiString(&Title, &SwapConsole->Title, FALSE);
@@ -475,7 +597,7 @@ TuiSwapConsole(int Next)
         {
             DPRINT1( "Error writing to console\n" );
         }
-        HeapFree(ConSrvHeap, 0, Buffer);
+        RtlFreeHeap(ConSrvHeap, 0, Buffer);
         LeaveCriticalSection(&ActiveConsoleLock);
 
         return TRUE;
