@@ -710,7 +710,7 @@ GuiConsoleHandleNcCreate(HWND hWnd, LPCREATESTRUCTW Create)
 
     if (NULL == GuiData)
     {
-        DPRINT1("GuiConsoleNcCreate: HeapAlloc failed\n");
+        DPRINT1("GuiConsoleNcCreate: RtlAllocateHeap failed\n");
         return FALSE;
     }
 
@@ -743,7 +743,7 @@ GuiConsoleHandleNcCreate(HWND hWnd, LPCREATESTRUCTW Create)
     {
         DPRINT1("GuiConsoleNcCreate: CreateFont failed\n");
         DeleteCriticalSection(&GuiData->Lock);
-        HeapFree(ConSrvHeap, 0, GuiData);
+        RtlFreeHeap(ConSrvHeap, 0, GuiData);
         return FALSE;
     }
     Dc = GetDC(hWnd);
@@ -752,7 +752,7 @@ GuiConsoleHandleNcCreate(HWND hWnd, LPCREATESTRUCTW Create)
         DPRINT1("GuiConsoleNcCreate: GetDC failed\n");
         DeleteObject(GuiData->Font);
         DeleteCriticalSection(&GuiData->Lock);
-        HeapFree(ConSrvHeap, 0, GuiData);
+        RtlFreeHeap(ConSrvHeap, 0, GuiData);
         return FALSE;
     }
     OldFont = SelectObject(Dc, GuiData->Font);
@@ -762,7 +762,7 @@ GuiConsoleHandleNcCreate(HWND hWnd, LPCREATESTRUCTW Create)
         ReleaseDC(hWnd, Dc);
         DeleteObject(GuiData->Font);
         DeleteCriticalSection(&GuiData->Lock);
-        HeapFree(ConSrvHeap, 0, GuiData);
+        RtlFreeHeap(ConSrvHeap, 0, GuiData);
         return FALSE;
     }
     if (! GetTextMetricsW(Dc, &Metrics))
@@ -772,7 +772,7 @@ GuiConsoleHandleNcCreate(HWND hWnd, LPCREATESTRUCTW Create)
         ReleaseDC(hWnd, Dc);
         DeleteObject(GuiData->Font);
         DeleteCriticalSection(&GuiData->Lock);
-        HeapFree(ConSrvHeap, 0, GuiData);
+        RtlFreeHeap(ConSrvHeap, 0, GuiData);
         return FALSE;
     }
     GuiData->CharWidth = Metrics.tmMaxCharWidth;
@@ -1312,7 +1312,7 @@ GuiConsoleHandleNcDestroy(HWND hWnd)
     if (GuiData->ConsoleLibrary)
         FreeLibrary(GuiData->ConsoleLibrary);
 
-    HeapFree(ConSrvHeap, 0, GuiData);
+    RtlFreeHeap(ConSrvHeap, 0, GuiData);
 }
 
 static COORD
@@ -1768,7 +1768,7 @@ GuiResizeBuffer(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER ScreenBuffer, COORD Siz
     if (Size.X == ScreenBuffer->MaxX && Size.Y == ScreenBuffer->MaxY)
         return STATUS_SUCCESS;
 
-    Buffer = HeapAlloc(ConSrvHeap, 0, Size.X * Size.Y * 2);
+    Buffer = RtlAllocateHeap(ConSrvHeap, 0, Size.X * Size.Y * 2);
     if (!Buffer)
         return STATUS_NO_MEMORY;
 
@@ -1819,7 +1819,7 @@ GuiResizeBuffer(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER ScreenBuffer, COORD Siz
     }
 
     (void)InterlockedExchangePointer((PVOID volatile  *)&ScreenBuffer->Buffer, Buffer);
-    HeapFree(ConSrvHeap, 0, OldBuffer);
+    RtlFreeHeap(ConSrvHeap, 0, OldBuffer);
     ScreenBuffer->MaxX = Size.X;
     ScreenBuffer->MaxY = Size.Y;
     ScreenBuffer->VirtualY = 0;
@@ -2081,8 +2081,8 @@ GuiConsoleNotifyWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         SetWindowLongW(hWnd, GWL_USERDATA, 0);
         return 0;
     case PM_CREATE_CONSOLE:
-        Buffer = HeapAlloc(ConSrvHeap, 0,
-                           Console->Title.Length + sizeof(WCHAR));
+        Buffer = RtlAllocateHeap(ConSrvHeap, 0,
+                                 Console->Title.Length + sizeof(WCHAR));
         if (NULL != Buffer)
         {
             memcpy(Buffer, Console->Title.Buffer, Console->Title.Length);
@@ -2107,7 +2107,7 @@ GuiConsoleNotifyWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
                                     (PVOID)Console);
         if (NULL != Buffer)
         {
-            HeapFree(ConSrvHeap, 0, Buffer);
+            RtlFreeHeap(ConSrvHeap, 0, Buffer);
         }
         if (NULL != NewWindow)
         {
@@ -2247,8 +2247,8 @@ GuiChangeTitle(PCONSOLE Console)
 {
     PWCHAR Buffer, Title;
 
-    Buffer = HeapAlloc(ConSrvHeap, 0,
-                       Console->Title.Length + sizeof(WCHAR));
+    Buffer = RtlAllocateHeap(ConSrvHeap, 0,
+                             Console->Title.Length + sizeof(WCHAR));
     if (NULL != Buffer)
     {
         memcpy(Buffer, Console->Title.Buffer, Console->Title.Length);
@@ -2264,7 +2264,7 @@ GuiChangeTitle(PCONSOLE Console)
 
     if (NULL != Buffer)
     {
-        HeapFree(ConSrvHeap, 0, Buffer);
+        RtlFreeHeap(ConSrvHeap, 0, Buffer);
     }
 
     return TRUE;
@@ -2350,8 +2350,8 @@ GuiInitConsole(PCONSOLE Console, int ShowCmd)
             return STATUS_UNSUCCESSFUL;
         }
     }
-    GuiData = HeapAlloc(ConSrvHeap, HEAP_ZERO_MEMORY,
-                        sizeof(GUI_CONSOLE_DATA));
+    GuiData = RtlAllocateHeap(ConSrvHeap, HEAP_ZERO_MEMORY,
+                              sizeof(GUI_CONSOLE_DATA));
     if (!GuiData)
     {
         DPRINT1("Win32Csr: Failed to create GUI_CONSOLE_DATA\n");

@@ -69,7 +69,7 @@ CsrInitConsoleScreenBuffer(PCONSOLE Console,
     Buffer->ShowX = 0;
     Buffer->ShowY = 0;
     Buffer->VirtualY = 0;
-    Buffer->Buffer = HeapAlloc(ConSrvHeap, HEAP_ZERO_MEMORY, Buffer->MaxX * Buffer->MaxY * 2);
+    Buffer->Buffer = RtlAllocateHeap(ConSrvHeap, HEAP_ZERO_MEMORY, Buffer->MaxX * Buffer->MaxY * 2);
     if (NULL == Buffer->Buffer)
     {
         return STATUS_INSUFFICIENT_RESOURCES;
@@ -379,8 +379,8 @@ ConioDeleteScreenBuffer(PCONSOLE_SCREEN_BUFFER Buffer)
         }
     }
 
-    HeapFree(ConSrvHeap, 0, Buffer->Buffer);
-    HeapFree(ConSrvHeap, 0, Buffer);
+    RtlFreeHeap(ConSrvHeap, 0, Buffer->Buffer);
+    RtlFreeHeap(ConSrvHeap, 0, Buffer);
 }
 
 VOID FASTCALL
@@ -506,7 +506,7 @@ DoWriteConsole(IN PCSR_API_MESSAGE ApiMessage,
                                          (PWCHAR)WriteConsoleRequest->Buffer,
                                          WriteConsoleRequest->NrCharactersToWrite,
                                          NULL, 0, NULL, NULL);
-            Buffer = RtlAllocateHeap(GetProcessHeap(), 0, Length);
+            Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, Length);
             if (Buffer)
             {
                 WideCharToMultiByte(Console->OutputCodePage, 0,
@@ -537,7 +537,7 @@ DoWriteConsole(IN PCSR_API_MESSAGE ApiMessage,
             }
             if (WriteConsoleRequest->Unicode)
             {
-                RtlFreeHeap(GetProcessHeap(), 0, Buffer);
+                RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
             }
         }
 
@@ -931,7 +931,7 @@ CSR_API(SrvWriteConsoleOutputString)
                                          (PWCHAR)WriteOutputCodeRequest->pCode.UnicodeChar,
                                          WriteOutputCodeRequest->Length,
                                          NULL, 0, NULL, NULL);
-            tmpString = String = RtlAllocateHeap(GetProcessHeap(), 0, Length);
+            tmpString = String = RtlAllocateHeap(RtlGetProcessHeap(), 0, Length);
             if (String)
             {
                 WideCharToMultiByte(Console->OutputCodePage, 0,
@@ -996,7 +996,7 @@ CSR_API(SrvWriteConsoleOutputString)
 
     if (tmpString)
     {
-        RtlFreeHeap(GetProcessHeap(), 0, tmpString);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, tmpString);
     }
 
     ConioUnlockScreenBuffer(Buff);
@@ -1235,7 +1235,7 @@ CSR_API(SrvCreateConsoleScreenBuffer)
         return Status;
     }
 
-    Buff = HeapAlloc(ConSrvHeap, HEAP_ZERO_MEMORY, sizeof(CONSOLE_SCREEN_BUFFER));
+    Buff = RtlAllocateHeap(ConSrvHeap, HEAP_ZERO_MEMORY, sizeof(CONSOLE_SCREEN_BUFFER));
     if (Buff != NULL)
     {
         if (Console->ActiveBuffer)

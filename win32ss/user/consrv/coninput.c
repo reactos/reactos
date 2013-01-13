@@ -312,7 +312,7 @@ WaitBeforeReading(IN PGET_INPUT_INFO InputInfo,
     {
         PGET_INPUT_INFO CapturedInputInfo;
 
-        CapturedInputInfo = HeapAlloc(ConSrvHeap, 0, sizeof(GET_INPUT_INFO));
+        CapturedInputInfo = RtlAllocateHeap(ConSrvHeap, 0, sizeof(GET_INPUT_INFO));
         if (!CapturedInputInfo) return STATUS_NO_MEMORY;
 
         memmove(CapturedInputInfo, InputInfo, sizeof(GET_INPUT_INFO));
@@ -324,7 +324,7 @@ WaitBeforeReading(IN PGET_INPUT_INFO InputInfo,
                            CapturedInputInfo,
                            NULL))
         {
-            HeapFree(ConSrvHeap, 0, CapturedInputInfo);
+            RtlFreeHeap(ConSrvHeap, 0, CapturedInputInfo);
             return STATUS_NO_MEMORY;
         }
     }
@@ -361,7 +361,7 @@ ReadInputBufferThread(IN PLIST_ENTRY WaitList,
     if (Status != STATUS_PENDING)
     {
         WaitApiMessage->Status = Status;
-        HeapFree(ConSrvHeap, 0, InputInfo);
+        RtlFreeHeap(ConSrvHeap, 0, InputInfo);
     }
 
     return (Status == STATUS_PENDING ? FALSE : TRUE);
@@ -418,7 +418,7 @@ ReadInputBuffer(IN PGET_INPUT_INFO InputInfo,
             if (Wait) // TRUE --> Read, we remove inputs from the buffer ; FALSE --> Peek, we keep inputs.
             {
                 RemoveEntryList(&Input->ListEntry);
-                HeapFree(ConSrvHeap, 0, Input);
+                RtlFreeHeap(ConSrvHeap, 0, Input);
             }
         }
 
@@ -457,7 +457,7 @@ ReadCharsThread(IN PLIST_ENTRY WaitList,
     if (Status != STATUS_PENDING)
     {
         WaitApiMessage->Status = Status;
-        HeapFree(ConSrvHeap, 0, InputInfo);
+        RtlFreeHeap(ConSrvHeap, 0, InputInfo);
     }
 
     return (Status == STATUS_PENDING ? FALSE : TRUE);
@@ -485,7 +485,7 @@ ReadChars(IN PGET_INPUT_INFO InputInfo,
         {
             /* Starting a new line */
             InputInfo->Console->LineMaxSize = max(256, nNumberOfCharsToRead);
-            InputInfo->Console->LineBuffer = HeapAlloc(ConSrvHeap, 0, InputInfo->Console->LineMaxSize * sizeof(WCHAR));
+            InputInfo->Console->LineBuffer = RtlAllocateHeap(ConSrvHeap, 0, InputInfo->Console->LineMaxSize * sizeof(WCHAR));
             if (InputInfo->Console->LineBuffer == NULL)
             {
                 return STATUS_NO_MEMORY;
@@ -528,7 +528,7 @@ ReadChars(IN PGET_INPUT_INFO InputInfo,
                 LineInputKeyDown(InputInfo->Console, &Input->InputEvent.Event.KeyEvent);
                 ReadConsoleRequest->ControlKeyState = Input->InputEvent.Event.KeyEvent.dwControlKeyState;
             }
-            HeapFree(ConSrvHeap, 0, Input);
+            RtlFreeHeap(ConSrvHeap, 0, Input);
         }
 
         /* Check if we have a complete line to read from */
@@ -556,7 +556,7 @@ ReadChars(IN PGET_INPUT_INFO InputInfo,
             if (InputInfo->Console->LinePos == InputInfo->Console->LineSize)
             {
                 /* Entire line has been read */
-                HeapFree(ConSrvHeap, 0, InputInfo->Console->LineBuffer);
+                RtlFreeHeap(ConSrvHeap, 0, InputInfo->Console->LineBuffer);
                 InputInfo->Console->LineBuffer = NULL;
             }
 
@@ -600,7 +600,7 @@ ReadChars(IN PGET_INPUT_INFO InputInfo,
                 /* Did read something */
                 WaitForMoreToRead = FALSE;
             }
-            HeapFree(ConSrvHeap, 0, Input);
+            RtlFreeHeap(ConSrvHeap, 0, Input);
         }
     }
 
@@ -773,7 +773,7 @@ CSR_API(SrvFlushConsoleInputBuffer)
         CurrentEntry = RemoveHeadList(&Console->InputEvents);
         Input = CONTAINING_RECORD(CurrentEntry, ConsoleInput, ListEntry);
         /* Destroy the event */
-        HeapFree(ConSrvHeap, 0, Input);
+        RtlFreeHeap(ConSrvHeap, 0, Input);
     }
     ResetEvent(Console->ActiveEvent);
 

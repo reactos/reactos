@@ -102,7 +102,7 @@ CsrInitConsole(PCONSOLE* NewConsole, int ShowCmd, PCSR_PROCESS ConsoleLeaderProc
     *NewConsole = NULL;
 
     /* Allocate a console structure */
-    Console = HeapAlloc(ConSrvHeap, HEAP_ZERO_MEMORY, sizeof(CONSOLE));
+    Console = RtlAllocateHeap(ConSrvHeap, HEAP_ZERO_MEMORY, sizeof(CONSOLE));
     if (NULL == Console)
     {
         DPRINT1("Not enough memory for console creation.\n");
@@ -146,7 +146,7 @@ CsrInitConsole(PCONSOLE* NewConsole, int ShowCmd, PCSR_PROCESS ConsoleLeaderProc
     if (NULL == Console->ActiveEvent)
     {
         RtlFreeUnicodeString(&Console->Title);
-        HeapFree(ConSrvHeap, 0, Console);
+        RtlFreeHeap(ConSrvHeap, 0, Console);
         return STATUS_UNSUCCESSFUL;
     }
     Console->PrivateData = NULL;
@@ -155,13 +155,13 @@ CsrInitConsole(PCONSOLE* NewConsole, int ShowCmd, PCSR_PROCESS ConsoleLeaderProc
     GuiMode = DtbgIsDesktopVisible();
 
     /* allocate console screen buffer */
-    NewBuffer = HeapAlloc(ConSrvHeap, HEAP_ZERO_MEMORY, sizeof(CONSOLE_SCREEN_BUFFER));
+    NewBuffer = RtlAllocateHeap(ConSrvHeap, HEAP_ZERO_MEMORY, sizeof(CONSOLE_SCREEN_BUFFER));
     if (NULL == NewBuffer)
     {
         RtlFreeUnicodeString(&Console->Title);
         DeleteCriticalSection(&Console->Lock);
         CloseHandle(Console->ActiveEvent);
-        HeapFree(ConSrvHeap, 0, Console);
+        RtlFreeHeap(ConSrvHeap, 0, Console);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
     /* init screen buffer with defaults */
@@ -200,12 +200,12 @@ CsrInitConsole(PCONSOLE* NewConsole, int ShowCmd, PCSR_PROCESS ConsoleLeaderProc
         Status = GuiInitConsole(Console, ShowCmd);
         if (!NT_SUCCESS(Status))
         {
-            HeapFree(ConSrvHeap,0, NewBuffer);
+            RtlFreeHeap(ConSrvHeap,0, NewBuffer);
             RtlFreeUnicodeString(&Console->Title);
             DeleteCriticalSection(&Console->Lock);
             CloseHandle(Console->ActiveEvent);
             DPRINT1("GuiInitConsole: failed, Status = 0x%08lx\n", Status);
-            HeapFree(ConSrvHeap, 0, Console);
+            RtlFreeHeap(ConSrvHeap, 0, Console);
             return Status;
         }
     }
@@ -217,9 +217,9 @@ CsrInitConsole(PCONSOLE* NewConsole, int ShowCmd, PCSR_PROCESS ConsoleLeaderProc
         RtlFreeUnicodeString(&Console->Title);
         DeleteCriticalSection(&Console->Lock);
         CloseHandle(Console->ActiveEvent);
-        HeapFree(ConSrvHeap, 0, NewBuffer);
+        RtlFreeHeap(ConSrvHeap, 0, NewBuffer);
         DPRINT1("CsrInitConsoleScreenBuffer: failed\n");
-        HeapFree(ConSrvHeap, 0, Console);
+        RtlFreeHeap(ConSrvHeap, 0, Console);
         return Status;
     }
 
@@ -594,7 +594,7 @@ ConioDeleteConsole(PCONSOLE Console)
         Event = (ConsoleInput *) Console->InputEvents.Flink;
         Console->InputEvents.Flink = Console->InputEvents.Flink->Flink;
         Console->InputEvents.Flink->Flink->Blink = &Console->InputEvents;
-        HeapFree(ConSrvHeap, 0, Event);
+        RtlFreeHeap(ConSrvHeap, 0, Event);
     }
 
     ConioCleanupConsole(Console);
@@ -614,7 +614,7 @@ ConioDeleteConsole(PCONSOLE Console)
     DeleteCriticalSection(&Console->Lock);
     RtlFreeUnicodeString(&Console->Title);
     IntDeleteAllAliases(Console->Aliases);
-    HeapFree(ConSrvHeap, 0, Console);
+    RtlFreeHeap(ConSrvHeap, 0, Console);
 }
 
 VOID WINAPI
