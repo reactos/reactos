@@ -257,6 +257,12 @@ SaveSettingDword(IN PCTSTR pszKeyName,
                  IN DWORD dwValue);
 
 /*
+ * startup.c
+ */
+
+int startup(int argc, const char *argv[]);
+
+/*
  * trayprop.h
  */
 

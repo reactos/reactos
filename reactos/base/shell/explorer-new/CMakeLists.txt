@@ -7,6 +7,7 @@ list(APPEND SOURCE
     explorer.c
     settings.c
     startmnu.c
+    startup.c
     taskband.c
     taskswnd.c
     tbsite.c

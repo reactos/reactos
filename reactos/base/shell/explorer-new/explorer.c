@@ -400,6 +400,8 @@ _tWinMain(IN HINSTANCE hInstance,
         /* WinXP: Notify msgina to hide the welcome screen */
         if (!SetShellReadyEvent(TEXT("msgina: ShellReadyEvent")))
             SetShellReadyEvent(TEXT("Global\\msgina: ShellReadyEvent"));
+
+        startup(0, NULL);
     }
     else
     {
