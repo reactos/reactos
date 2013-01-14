@@ -110,11 +110,13 @@ WCHAR RtlpDphTargetDlls[512];
 
 LIST_ENTRY RtlpDphPageHeapList;
 BOOLEAN RtlpDphPageHeapListInitialized;
-PHEAP_LOCK RtlpDphPageHeapListLock;
+HEAP_LOCK _RtlpDphPageHeapListLock;
+PHEAP_LOCK RtlpDphPageHeapListLock = &_RtlpDphPageHeapListLock;
 ULONG RtlpDphPageHeapListLength;
 UNICODE_STRING RtlpDphTargetDllsUnicode;
 
-PHEAP_LOCK RtlpDphDelayedFreeQueueLock;
+HEAP_LOCK _RtlpDphDelayedFreeQueueLock;
+PHEAP_LOCK RtlpDphDelayedFreeQueueLock = &_RtlpDphDelayedFreeQueueLock;
 LIST_ENTRY RtlpDphDelayedFreeQueue;
 SLIST_HEADER RtlpDphDelayedTemporaryPushList;
 SIZE_T RtlpDphMemoryUsedByDelayedFreeBlocks;
@@ -1485,6 +1487,7 @@ RtlpPageHeapCreate(ULONG Flags,
     /* Initialize the DPH root */
     DphRoot->Signature = DPH_SIGNATURE;
     DphRoot->HeapFlags = Flags;
+    DphRoot->HeapCritSect = (PHEAP_LOCK)((PCHAR)DphRoot + DPH_POOL_SIZE);
     DphRoot->ExtraFlags = RtlpDphGlobalFlags;
 
     ZwQueryPerformanceCounter(&PerfCounter, NULL);
