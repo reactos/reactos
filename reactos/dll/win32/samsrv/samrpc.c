@@ -4158,8 +4158,30 @@ SamrSetMemberAttributesOfGroup(IN SAMPR_HANDLE GroupHandle,
                                IN unsigned long MemberId,
                                IN unsigned long Attributes)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PSAM_DB_OBJECT GroupObject;
+    NTSTATUS Status;
+
+    /* Validate the group handle */
+    Status = SampValidateDbObject(GroupHandle,
+                                  SamDbGroupObject,
+                                  GROUP_ADD_MEMBER,
+                                  &GroupObject);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampValidateDbObject failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    Status = SampSetUserGroupAttributes(GroupObject->ParentObject,
+                                        MemberId,
+                                        GroupObject->RelativeId,
+                                        Attributes);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampSetUserGroupAttributes failed with status 0x%08lx\n", Status);
+    }
+
+    return Status;
 }
 
 

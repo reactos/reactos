@@ -285,4 +285,10 @@ SampGetUserGroupAttributes(IN PSAM_DB_OBJECT DomainObject,
                            IN ULONG GroupId,
                            OUT PULONG GroupAttributes);
 
+NTSTATUS
+SampSetUserGroupAttributes(IN PSAM_DB_OBJECT DomainObject,
+                           IN ULONG UserId,
+                           IN ULONG GroupId,
+                           IN ULONG GroupAttributes);
+
 /* EOF */
