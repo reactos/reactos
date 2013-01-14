@@ -239,7 +239,7 @@ ExpReleaseKeyedEvent(
                                          TRUE);
 }
 
-_IRQL_requires_max_(APC_LEVEL)
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
 NTAPI
 NtCreateKeyedEvent(
@@ -316,7 +316,7 @@ NtCreateKeyedEvent(
     return Status;
 }
 
-_IRQL_requires_max_(APC_LEVEL)
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
 NTAPI
 NtOpenKeyedEvent(
@@ -365,18 +365,35 @@ NtOpenKeyedEvent(
     return Status;
 }
 
-_IRQL_requires_max_(APC_LEVEL)
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
 NTAPI
 NtWaitForKeyedEvent(
-    _In_ HANDLE Handle,
+    _In_opt_ HANDLE Handle,
     _In_ PVOID Key,
     _In_ BOOLEAN Alertable,
-    _In_ PLARGE_INTEGER Timeout)
+    _In_opt_ PLARGE_INTEGER Timeout)
 {
     KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
     PEX_KEYED_EVENT KeyedEvent;
     NTSTATUS Status;
+    LARGE_INTEGER TimeoutCopy;
+
+    /* Check if the caller passed a timeout value and this is from user mode */
+    if ((Timeout != NULL) && (PreviousMode != KernelMode))
+    {
+        _SEH2_TRY
+        {
+            ProbeForRead(Timeout, sizeof(*Timeout), 1);
+            TimeoutCopy = *Timeout;
+            Timeout = &TimeoutCopy;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
+        }
+        _SEH2_END;
+    }
 
     /* Check if the caller provided a handle */
     if (Handle != NULL)
@@ -408,18 +425,35 @@ NtWaitForKeyedEvent(
     return Status;
 }
 
-_IRQL_requires_max_(APC_LEVEL)
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
 NTAPI
 NtReleaseKeyedEvent(
-    _In_ HANDLE Handle,
+    _In_opt_ HANDLE Handle,
     _In_ PVOID Key,
     _In_ BOOLEAN Alertable,
-    _In_ PLARGE_INTEGER Timeout)
+    _In_opt_ PLARGE_INTEGER Timeout)
 {
     KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
     PEX_KEYED_EVENT KeyedEvent;
     NTSTATUS Status;
+    LARGE_INTEGER TimeoutCopy;
+
+    /* Check if the caller passed a timeout value and this is from user mode */
+    if ((Timeout != NULL) && (PreviousMode != KernelMode))
+    {
+        _SEH2_TRY
+        {
+            ProbeForRead(Timeout, sizeof(*Timeout), 1);
+            TimeoutCopy = *Timeout;
+            Timeout = &TimeoutCopy;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
+        }
+        _SEH2_END;
+    }
 
     /* Check if the caller provided a handle */
     if (Handle != NULL)

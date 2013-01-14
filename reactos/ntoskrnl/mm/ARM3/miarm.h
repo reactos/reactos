@@ -713,6 +713,7 @@ extern KGUARDED_MUTEX MmSectionBasedMutex;
 extern PVOID MmHighSectionBase;
 extern SIZE_T MmSystemLockPagesCount;
 extern ULONG_PTR MmSubsectionBase;
+extern LARGE_INTEGER MmCriticalSectionTimeout;
 
 BOOLEAN
 FORCEINLINE
