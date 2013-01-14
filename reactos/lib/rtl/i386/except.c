@@ -74,15 +74,11 @@ RtlDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
     ULONG_PTR StackLow, StackHigh;
     ULONG_PTR RegistrationFrameEnd;
 
-    /* Perform vectored exception handling if we are in user mode */
-    if (RtlpGetMode() != KernelMode)
+    /* Perform vectored exception handling (a dummy in kernel mode) */
+    if (RtlCallVectoredExceptionHandlers(ExceptionRecord, Context))
     {
-        /* Call any registered vectored handlers */
-        if (RtlCallVectoredExceptionHandlers(ExceptionRecord, Context))
-        {
-            /* Exception handled, continue execution */
-            return TRUE;
-        }
+        /* Exception handled, continue execution */
+        return TRUE;
     }
 
     /* Get the current stack limits and registration frame */

@@ -467,4 +467,16 @@ RtlpPageHeapSize(HANDLE HeapPtr,
                  ULONG Flags,
                  PVOID Ptr);
 
+VOID
+NTAPI
+RtlpAddHeapToProcessList(PHEAP Heap);
+
+VOID
+NTAPI
+RtlpRemoveHeapFromProcessList(PHEAP Heap);
+
+VOID
+NTAPI
+RtlInitializeHeapManager(VOID);
+
 #endif

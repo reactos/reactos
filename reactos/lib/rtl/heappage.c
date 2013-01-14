@@ -61,7 +61,7 @@ typedef struct _DPH_HEAP_ROOT
 {
      ULONG Signature;
      ULONG HeapFlags;
-     PRTL_CRITICAL_SECTION HeapCritSect;
+     PHEAP_LOCK HeapCritSect;
      ULONG nRemoteLockAcquired;
 
      PDPH_HEAP_BLOCK pVirtualStorageListHead;
@@ -110,11 +110,11 @@ WCHAR RtlpDphTargetDlls[512];
 
 LIST_ENTRY RtlpDphPageHeapList;
 BOOLEAN RtlpDphPageHeapListInitialized;
-RTL_CRITICAL_SECTION RtlpDphPageHeapListLock;
+PHEAP_LOCK RtlpDphPageHeapListLock;
 ULONG RtlpDphPageHeapListLength;
 UNICODE_STRING RtlpDphTargetDllsUnicode;
 
-RTL_CRITICAL_SECTION RtlpDphDelayedFreeQueueLock;
+PHEAP_LOCK RtlpDphDelayedFreeQueueLock;
 LIST_ENTRY RtlpDphDelayedFreeQueue;
 SLIST_HEADER RtlpDphDelayedTemporaryPushList;
 SIZE_T RtlpDphMemoryUsedByDelayedFreeBlocks;
@@ -234,7 +234,7 @@ RtlpDphEnterCriticalSection(PDPH_HEAP_ROOT DphRoot, ULONG Flags)
     if (Flags & HEAP_NO_SERIALIZE)
     {
         /* More complex scenario */
-        if (!RtlTryEnterCriticalSection(DphRoot->HeapCritSect))
+        if (!RtlEnterHeapLock(DphRoot->HeapCritSect, TRUE))
         {
             if (!DphRoot->nRemoteLockAcquired)
             {
@@ -246,13 +246,13 @@ RtlpDphEnterCriticalSection(PDPH_HEAP_ROOT DphRoot, ULONG Flags)
             }
 
             /* Enter the heap's critical section */
-            RtlEnterCriticalSection(DphRoot->HeapCritSect);
+            RtlEnterHeapLock(DphRoot->HeapCritSect, TRUE);
         }
     }
     else
     {
         /* Just enter the heap's critical section */
-        RtlEnterCriticalSection(DphRoot->HeapCritSect);
+        RtlEnterHeapLock(DphRoot->HeapCritSect, TRUE);
     }
 }
 
@@ -260,7 +260,7 @@ VOID NTAPI
 RtlpDphLeaveCriticalSection(PDPH_HEAP_ROOT DphRoot)
 {
     /* Just leave the heap's critical section */
-    RtlLeaveCriticalSection(DphRoot->HeapCritSect);
+    RtlLeaveHeapLock(DphRoot->HeapCritSect);
 }
 
 
@@ -1161,7 +1161,7 @@ RtlpDphInitializeDelayedFreeQueue()
 {
     NTSTATUS Status;
 
-    Status = RtlInitializeCriticalSection(&RtlpDphDelayedFreeQueueLock);
+    Status = RtlInitializeHeapLock(&RtlpDphDelayedFreeQueueLock);
     if (!NT_SUCCESS(Status))
     {
         // TODO: Log this error!
@@ -1192,7 +1192,7 @@ RtlpDphFreeDelayedBlocksFromHeap(PDPH_HEAP_ROOT DphRoot,
        then it releases the lock and frees the blocks. But let's make it simple for now */
 
     /* Acquire the delayed free queue lock */
-    RtlEnterCriticalSection(&RtlpDphDelayedFreeQueueLock);
+    RtlEnterHeapLock(RtlpDphDelayedFreeQueueLock, TRUE);
 
     /* Traverse the list */
     Current = RtlpDphDelayedFreeQueue.Flink;
@@ -1230,7 +1230,7 @@ RtlpDphFreeDelayedBlocksFromHeap(PDPH_HEAP_ROOT DphRoot,
     }
 
     /* Release the delayed free queue lock */
-    RtlLeaveCriticalSection(&RtlpDphDelayedFreeQueueLock);
+    RtlLeaveHeapLock(RtlpDphDelayedFreeQueueLock);
 }
 
 NTSTATUS NTAPI
@@ -1391,7 +1391,7 @@ RtlpDphProcessStartupInitialization()
 
     /* Initialize the DPH heap list and its critical section */
     InitializeListHead(&RtlpDphPageHeapList);
-    Status = RtlInitializeCriticalSection(&RtlpDphPageHeapListLock);
+    Status = RtlInitializeHeapLock(&RtlpDphPageHeapListLock);
     if (!NT_SUCCESS(Status))
     {
         ASSERT(FALSE);
@@ -1485,13 +1485,12 @@ RtlpPageHeapCreate(ULONG Flags,
     /* Initialize the DPH root */
     DphRoot->Signature = DPH_SIGNATURE;
     DphRoot->HeapFlags = Flags;
-    DphRoot->HeapCritSect = (PRTL_CRITICAL_SECTION)((PCHAR)DphRoot + DPH_POOL_SIZE);
     DphRoot->ExtraFlags = RtlpDphGlobalFlags;
 
     ZwQueryPerformanceCounter(&PerfCounter, NULL);
     DphRoot->Seed = PerfCounter.LowPart;
 
-    RtlInitializeCriticalSection(DphRoot->HeapCritSect);
+    RtlInitializeHeapLock(&DphRoot->HeapCritSect);
     InitializeListHead(&DphRoot->AvailableAllocationHead);
 
     /* Create a normal heap for this paged heap */
@@ -1539,7 +1538,7 @@ RtlpPageHeapCreate(ULONG Flags,
     if (!RtlpDphPageHeapListInitialized) RtlpDphProcessStartupInitialization();
 
     /* Acquire the heap list lock */
-    RtlEnterCriticalSection(&RtlpDphPageHeapListLock);
+    RtlEnterHeapLock(RtlpDphPageHeapListLock, TRUE);
 
     /* Insert this heap to the tail of the global list */
     InsertTailList(&RtlpDphPageHeapList, &DphRoot->NextHeap);
@@ -1548,7 +1547,7 @@ RtlpPageHeapCreate(ULONG Flags,
     RtlpDphPageHeapListLength++;
 
     /* Release the heap list lock */
-    RtlLeaveCriticalSection(&RtlpDphPageHeapListLock);
+    RtlLeaveHeapLock(RtlpDphPageHeapListLock);
 
     if (RtlpDphDebugOptions & DPH_DEBUG_VERBOSE)
     {
@@ -1611,18 +1610,18 @@ RtlpPageHeapDestroy(HANDLE HeapPtr)
     }
 
     /* Acquire the global heap list lock */
-    RtlEnterCriticalSection(&RtlpDphPageHeapListLock);
+    RtlEnterHeapLock(RtlpDphPageHeapListLock, TRUE);
 
     /* Remove the entry and decrement the global counter */
     RemoveEntryList(&DphRoot->NextHeap);
     RtlpDphPageHeapListLength--;
 
     /* Release the global heap list lock */
-    RtlLeaveCriticalSection(&RtlpDphPageHeapListLock);
+    RtlLeaveHeapLock(RtlpDphPageHeapListLock);
 
     /* Leave and delete this heap's critical section */
-    RtlLeaveCriticalSection(DphRoot->HeapCritSect);
-    RtlDeleteCriticalSection(DphRoot->HeapCritSect);
+    RtlLeaveHeapLock(DphRoot->HeapCritSect);
+    RtlDeleteHeapLock(DphRoot->HeapCritSect);
 
     /* Now go through all virtual list nodes and release the VM */
     Node = DphRoot->pVirtualStorageListHead;

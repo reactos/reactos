@@ -30,6 +30,7 @@ list(APPEND SOURCE
     heap.c
     heapdbg.c
     heappage.c
+    heapuser.c
     image.c
     interlck.c
     message.c

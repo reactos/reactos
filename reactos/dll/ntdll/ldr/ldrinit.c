@@ -80,7 +80,7 @@ ULONG LdrpActiveUnloadCount;
 
 VOID RtlpInitializeVectoredExceptionHandling(VOID);
 VOID NTAPI RtlpInitDeferedCriticalSection(VOID);
-VOID RtlInitializeHeapManager(VOID);
+VOID NTAPI RtlInitializeHeapManager(VOID);
 extern BOOLEAN RtlpPageHeapEnabled;
 
 ULONG RtlpDisableHeapLookaside; // TODO: Move to heap.c
