@@ -1932,7 +1932,7 @@ RtlUpcaseUnicodeStringToCountedOemString(
 /*
  * @implemented
  * NOTES
- *  Oem string is allways nullterminated
+ *  OEM string is always nullterminated
  *  It performs a partial copy if oem is too small.
  */
 NTSTATUS

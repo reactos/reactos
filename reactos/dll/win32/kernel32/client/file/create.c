@@ -200,7 +200,7 @@ HANDLE WINAPI CreateFileW (LPCWSTR			lpFileName,
 
    FileAttributes = (dwFlagsAndAttributes & (FILE_ATTRIBUTE_VALID_FLAGS & ~FILE_ATTRIBUTE_DIRECTORY));
 
-   /* handle may allways be waited on and querying attributes are allways allowed */
+   /* handle may always be waited on and querying attributes are always allowed */
    dwDesiredAccess |= SYNCHRONIZE | FILE_READ_ATTRIBUTES;
 
    /* FILE_FLAG_POSIX_SEMANTICS is handled later */
