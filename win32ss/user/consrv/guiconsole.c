@@ -1590,6 +1590,7 @@ GuiConsoleShowConsoleProperties(HWND hWnd, BOOL Defaults, PGUI_CONSOLE_DATA GuiD
     }
 
     CPLFunc(hWnd, CPL_DBLCLK, (LPARAM)&SharedInfo, Defaults);
+    CPLFunc(hWnd, CPL_EXIT  , 0, 0);
 }
 static LRESULT
 GuiConsoleHandleSysMenuCommand(HWND hWnd, WPARAM wParam, LPARAM lParam)

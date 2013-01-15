@@ -62,8 +62,8 @@ typedef struct _CONSOLE_IO_HANDLE
 } CONSOLE_IO_HANDLE, *PCONSOLE_IO_HANDLE;
 
 
-#define ConsoleGetPerProcessData(pcsrprocess)   \
-    ((PCONSOLE_PROCESS_DATA)((pcsrprocess)->ServerData[CONSRV_SERVERDLL_INDEX]))
+#define ConsoleGetPerProcessData(Process)   \
+    ((PCONSOLE_PROCESS_DATA)((Process)->ServerData[CONSRV_SERVERDLL_INDEX]))
 
 typedef struct _CONSOLE_PROCESS_DATA
 {
@@ -78,6 +78,7 @@ typedef struct _CONSOLE_PROCESS_DATA
     RTL_CRITICAL_SECTION HandleTableLock;
     ULONG HandleTableSize;
     PCONSOLE_IO_HANDLE HandleTable; // Length-varying table
+
     LPTHREAD_START_ROUTINE CtrlDispatcher;
 } CONSOLE_PROCESS_DATA, *PCONSOLE_PROCESS_DATA;
 

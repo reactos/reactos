@@ -44,18 +44,20 @@ typedef struct _CONSOLE_SCREEN_BUFFER
 typedef struct _CONSOLE
 {
     Object_t Header;                      /* Object header */
-    LONG ReferenceCount;
+    LONG ReferenceCount;                  /* Is incremented each time a handle to a screen-buffer or the input buffer of this console gets referenced, or the console gets locked */
     CRITICAL_SECTION Lock;
 
-    struct _CONSOLE *Prev, *Next; /* Next and Prev consoles in console wheel */
-    struct _CONSOLE_VTBL *Vtbl;   /* Using CUI or GUI consoles */
+    struct _CONSOLE *Prev, *Next;         /* Next and Prev consoles in console wheel */
+    struct _CONSOLE_VTBL *Vtbl;           /* Using CUI or GUI consoles */
 
-    CLIENT_ID  ConsoleLeaderCID;          /* Contains the Console Leader Process CID */
+    CLIENT_ID  ConsoleLeaderCID;          /* Contains the Console Leader Process CID for this console. TODO: Is it possible to compute it via the contents of the ProcessList list ?? */
     LIST_ENTRY ProcessList;
 
+/**************************** Input buffer and data ***************************/
     LIST_ENTRY InputEvents;               /* List head for input event queue */
     HANDLE ActiveEvent;                   /* Event set when an input event is added in its queue */
     LIST_ENTRY ReadWaitQueue;             /* List head for the queue of read wait blocks */
+    WORD Mode;                            /* Console Input Buffer mode flags */
 
     PWCHAR LineBuffer;                    /* current line being input, in line buffered mode */
     WORD LineMaxSize;                     /* maximum size of line in characters (including CR+LF) */
@@ -66,29 +68,33 @@ typedef struct _CONSOLE
     BOOLEAN LineInsertToggle;             /* replace character over cursor instead of inserting */
     ULONG LineWakeupMask;                 /* bitmap of which control characters will end line input */
 
+    UINT CodePage;
+    UINT OutputCodePage;
+
+    CONSOLE_SELECTION_INFO Selection;
+
+/**************************** Aliases and Histories ***************************/
     struct _ALIAS_HEADER *Aliases;
     LIST_ENTRY HistoryBuffers;
     UINT HistoryBufferSize;               /* size for newly created history buffers */
     UINT NumberOfHistoryBuffers;          /* maximum number of history buffers allowed */
     BOOLEAN HistoryNoDup;                 /* remove old duplicate history entries */
 
+/******************************* Screen buffers *******************************/
     LIST_ENTRY BufferList;                /* List of all screen buffers for this console */
-    PCONSOLE_SCREEN_BUFFER ActiveBuffer;    /* Pointer to currently active screen buffer */
+    PCONSOLE_SCREEN_BUFFER ActiveBuffer;  /* Pointer to currently active screen buffer */
     BYTE PauseFlags;
     HANDLE UnpauseEvent;
     LIST_ENTRY WriteWaitQueue;            /* List head for the queue of write wait blocks */
 
-    WORD Mode;                            /* Console mode flags */
-    UNICODE_STRING Title;                 /* Title of console */
     DWORD HardwareState;                  /* _GDI_MANAGED, _DIRECT */
+
+/****************************** GUI-related data ******************************/
+    UNICODE_STRING Title;                 /* Title of console */
     HWND hWindow;
     COORD Size;
     PVOID PrivateData;
 
-    UINT CodePage;
-    UINT OutputCodePage;
-
-    CONSOLE_SELECTION_INFO Selection;
 } CONSOLE, *PCONSOLE;
 
 /**************************************************************\
