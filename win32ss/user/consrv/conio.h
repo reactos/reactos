@@ -29,16 +29,17 @@
 typedef struct _CONSOLE_SCREEN_BUFFER
 {
     Object_t Header;                 /* Object header */
-    BYTE *Buffer;                    /* pointer to screen buffer */
-    USHORT MaxX, MaxY;               /* size of the entire scrollback buffer */
-    USHORT ShowX, ShowY;             /* beginning offset for the actual display area */
+    LIST_ENTRY ListEntry;            /* Entry in console's list of buffers */
+
+    BYTE *Buffer;                    /* Pointer to screen buffer */
+    USHORT MaxX, MaxY;               /* Size of the entire scrollback buffer */
+    USHORT ShowX, ShowY;             /* Beginning offset for the actual display area */
     ULONG CurrentX;                  /* Current X cursor position */
     ULONG CurrentY;                  /* Current Y cursor position */
-    WORD DefaultAttrib;              /* default char attribute */
-    USHORT VirtualY;                 /* top row of buffer being displayed, reported to callers */
+    WORD DefaultAttrib;              /* Default char attribute */
+    USHORT VirtualY;                 /* Top row of buffer being displayed, reported to callers */
     CONSOLE_CURSOR_INFO CursorInfo;
     USHORT Mode;
-    LIST_ENTRY ListEntry;            /* entry in console's list of buffers */
 } CONSOLE_SCREEN_BUFFER, *PCONSOLE_SCREEN_BUFFER;
 
 typedef struct _CONSOLE
