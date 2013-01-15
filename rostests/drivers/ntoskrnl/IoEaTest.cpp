@@ -179,7 +179,7 @@ int _tmain(int argc, _TCHAR* argv[])
 
          printf("2.) Test : *********************\n");
 
-         /* Here all zero but EaBuffer::EaName is set : will allways end in STATUS_EA_LIST_INCONSISTENT */
+         /* Here all zero but EaBuffer::EaName is set : will always end in STATUS_EA_LIST_INCONSISTENT */
          /* There must a link to EaBuffer::EaName */
          for (i=0;i<TEST_BUFFER_LEN;i++)
          {
