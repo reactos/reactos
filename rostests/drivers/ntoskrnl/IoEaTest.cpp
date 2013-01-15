@@ -318,7 +318,7 @@ int _tmain(int argc, _TCHAR* argv[])
          printf("7.) Test : *********************\n");
 
          /* The same test like 6.) but wrong strlen */
-         /* Here EaBuffer::EaName is set and EaBuffer::EaNameLength is strlen(EaBuffer::EaName) EaBuffer::EaValueLength is strlen(EaBuffer::EaName)+1. EaLength is count: will allways end in STATUS_EA_LIST_INCONSISTENT */
+         /* Here EaBuffer::EaName is set and EaBuffer::EaNameLength is strlen(EaBuffer::EaName) EaBuffer::EaValueLength is strlen(EaBuffer::EaName)+1. EaLength is count: will always end in STATUS_EA_LIST_INCONSISTENT */
          for (i=0;i<TEST_BUFFER_LEN;i++)
          {
             TestEaLength = i;
