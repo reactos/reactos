@@ -106,19 +106,20 @@ typedef enum _VDM_ENTRY_CODE
 
 typedef struct _CODEPAGE_ENTRY
 {
-   LIST_ENTRY Entry;
-   UINT CodePage;
-   HANDLE SectionHandle;
-   PBYTE SectionMapping;
-   CPTABLEINFO CodePageTable;
+    LIST_ENTRY Entry;
+    UINT CodePage;
+    HANDLE SectionHandle;
+    PBYTE SectionMapping;
+    CPTABLEINFO CodePageTable;
 } CODEPAGE_ENTRY, *PCODEPAGE_ENTRY;
 
-typedef struct tagLOADPARMS32 {
-  LPSTR lpEnvAddress;
-  LPSTR lpCmdLine;
-  WORD  wMagicValue;
-  WORD  wCmdShow;
-  DWORD dwReserved;
+typedef struct tagLOADPARMS32
+{
+    LPSTR lpEnvAddress;
+    LPSTR lpCmdLine;
+    WORD  wMagicValue;
+    WORD  wCmdShow;
+    DWORD dwReserved;
 } LOADPARMS32;
 
 typedef enum _BASE_SEARCH_PATH_TYPE
@@ -194,6 +195,10 @@ BOOL WINAPI CloseConsoleHandle(HANDLE Handle);
 
 HANDLE WINAPI
 GetConsoleInputWaitHandle(VOID);
+
+LPCWSTR
+IntCheckForConsoleFileName(IN LPCWSTR pszName,
+                           IN DWORD dwDesiredAccess);
 
 HANDLE WINAPI OpenConsoleW(LPCWSTR wsName,
                            DWORD   dwDesiredAccess,

@@ -24,6 +24,11 @@ extern BOOL WINAPI IsDebuggerPresent(VOID);
 
 /* GLOBALS ********************************************************************/
 
+/* Console reserved "file" names */
+static LPCWSTR BaseConFileName       = CONSOLE_FILE_NAME;
+static LPCWSTR BaseConInputFileName  = CONSOLE_INPUT_FILE_NAME;
+static LPCWSTR BaseConOutputFileName = CONSOLE_OUTPUT_FILE_NAME;
+
 PHANDLER_ROUTINE InitialHandler[1];
 PHANDLER_ROUTINE* CtrlHandlers;
 ULONG NrCtrlHandlers;
@@ -188,6 +193,51 @@ InitConsoleCtrlHandling(VOID)
 
 
 /* FUNCTIONS ******************************************************************/
+
+LPCWSTR
+IntCheckForConsoleFileName(IN LPCWSTR pszName,
+                           IN DWORD dwDesiredAccess)
+{
+    LPCWSTR ConsoleName = pszName;
+    ULONG DeviceNameInfo;
+
+    /*
+     * Check whether we deal with a DOS device, and if so,
+     * strip the path till the file name.
+     * Therefore, things like \\.\CON or C:\some_path\CONIN$
+     * are transformed into CON or CONIN$, for example.
+     */
+    DeviceNameInfo = RtlIsDosDeviceName_U(pszName);
+    if (DeviceNameInfo != 0)
+    {
+        ConsoleName = (LPCWSTR)((ULONG_PTR)ConsoleName + (ULONG_PTR)((DeviceNameInfo >> 16) & 0xFFFF));
+    }
+
+    /* Return a standard console "file" name according to what we passed in parameters */
+    if (_wcsicmp(ConsoleName, BaseConInputFileName) == 0)
+    {
+        return BaseConInputFileName;
+    }
+    else if (_wcsicmp(ConsoleName, BaseConOutputFileName) == 0)
+    {
+        return BaseConOutputFileName;
+    }
+    else if (_wcsicmp(ConsoleName, BaseConFileName) == 0)
+    {
+        if ((dwDesiredAccess & (GENERIC_READ | GENERIC_WRITE)) == GENERIC_READ)
+        {
+            return BaseConInputFileName;
+        }
+        else if ((dwDesiredAccess & (GENERIC_READ | GENERIC_WRITE)) == GENERIC_WRITE)
+        {
+            return BaseConOutputFileName;
+        }
+    }
+
+    /* If we are there, that means that either the file name or the desired access are wrong */
+    return NULL;
+}
+
 
 /*
  * @unimplemented (Undocumented)
@@ -411,11 +461,11 @@ OpenConsoleW(LPCWSTR wsName,
     PCONSOLE_OPENCONSOLE OpenConsoleRequest = &ApiMessage.Data.OpenConsoleRequest;
     CONSOLE_HANDLE_TYPE HandleType;
 
-    if (wsName && 0 == _wcsicmp(wsName, L"CONIN$"))
+    if (wsName && 0 == _wcsicmp(wsName, BaseConInputFileName))
     {
         HandleType = HANDLE_INPUT;
     }
-    else if (wsName && 0 == _wcsicmp(wsName, L"CONOUT$"))
+    else if (wsName && 0 == _wcsicmp(wsName, BaseConOutputFileName))
     {
         HandleType = HANDLE_OUTPUT;
     }
@@ -425,13 +475,8 @@ OpenConsoleW(LPCWSTR wsName,
         return INVALID_HANDLE_VALUE;
     }
 
-    if (dwDesiredAccess & ~(GENERIC_READ | GENERIC_WRITE))
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return INVALID_HANDLE_VALUE;
-    }
-
-    if (dwShareMode & ~(FILE_SHARE_READ | FILE_SHARE_WRITE))
+    if ( (dwDesiredAccess & ~(GENERIC_READ | GENERIC_WRITE)) ||
+         (dwShareMode & ~(FILE_SHARE_READ | FILE_SHARE_WRITE)) )
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return INVALID_HANDLE_VALUE;

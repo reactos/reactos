@@ -14,6 +14,11 @@
 #define IsConsoleHandle(h)  \
     (((ULONG_PTR)(h) & 0x10000003) == 0x3)
 
+/* Console reserved "file" names */
+#define CONSOLE_FILE_NAME           L"CON"
+#define CONSOLE_INPUT_FILE_NAME     L"CONIN$"
+#define CONSOLE_OUTPUT_FILE_NAME    L"CONOUT$"
+
 #endif // _CONSOLE_H
 
 /* EOF */
