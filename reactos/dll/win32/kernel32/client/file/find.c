@@ -116,20 +116,21 @@ CopyDeviceFindData(OUT LPWIN32_FIND_DATAW lpFindFileData,
                    IN LPCWSTR lpFileName,
                    IN ULONG DeviceNameInfo)
 {
-    UNICODE_STRING DeviceName;
+    LPCWSTR DeviceName;
+    SIZE_T Length;
 
     _SEH2_TRY
     {
         /* DeviceNameInfo == { USHORT Offset; USHORT Length } */
-        DeviceName.Length = DeviceName.MaximumLength = (USHORT)(DeviceNameInfo & 0xFFFF);
-        DeviceName.Buffer = (LPWSTR)((ULONG_PTR)lpFileName + ((DeviceNameInfo >> 16) & 0xFFFF));
+        Length     =  (SIZE_T)(DeviceNameInfo & 0xFFFF);
+        DeviceName = (LPCWSTR)((ULONG_PTR)lpFileName + ((DeviceNameInfo >> 16) & 0xFFFF));
 
         /* Return the data */
         RtlZeroMemory(lpFindFileData, sizeof(*lpFindFileData));
         lpFindFileData->dwFileAttributes = FILE_ATTRIBUTE_ARCHIVE;
         RtlCopyMemory(lpFindFileData->cFileName,
-                      DeviceName.Buffer,
-                      DeviceName.Length);
+                      DeviceName,
+                      Length);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
