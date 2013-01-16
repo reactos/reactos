@@ -79,6 +79,82 @@ Win32CsrCloseHandleEntry(PCONSOLE_IO_HANDLE Entry)
 
 /* FUNCTIONS *****************************************************************/
 
+/* static */ NTSTATUS
+FASTCALL
+Win32CsrInitHandlesTable(IN OUT PCONSOLE_PROCESS_DATA ProcessData,
+                         OUT PHANDLE pInputHandle,
+                         OUT PHANDLE pOutputHandle,
+                         OUT PHANDLE pErrorHandle)
+{
+    NTSTATUS Status;
+    HANDLE InputHandle  = INVALID_HANDLE_VALUE,
+           OutputHandle = INVALID_HANDLE_VALUE,
+           ErrorHandle  = INVALID_HANDLE_VALUE;
+
+    /*
+     * Initialize the handles table. Use temporary variables to store
+     * the handles values in such a way that, if we fail, we don't
+     * return to the caller invalid handle values.
+     *
+     * Insert the IO handles.
+     */
+
+    RtlEnterCriticalSection(&ProcessData->HandleTableLock);
+
+    /* Insert the Input handle */
+    Status = Win32CsrInsertObject(ProcessData,
+                                  &InputHandle,
+                                  &ProcessData->Console->Header,
+                                  GENERIC_READ | GENERIC_WRITE,
+                                  TRUE,
+                                  FILE_SHARE_READ | FILE_SHARE_WRITE);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to insert the input handle\n");
+        RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
+        Win32CsrFreeHandlesTable(ProcessData);
+        return Status;
+    }
+
+    /* Insert the Output handle */
+    Status = Win32CsrInsertObject(ProcessData,
+                                  &OutputHandle,
+                                  &ProcessData->Console->ActiveBuffer->Header,
+                                  GENERIC_READ | GENERIC_WRITE,
+                                  TRUE,
+                                  FILE_SHARE_READ | FILE_SHARE_WRITE);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to insert the output handle\n");
+        RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
+        Win32CsrFreeHandlesTable(ProcessData);
+        return Status;
+    }
+
+    /* Insert the Error handle */
+    Status = Win32CsrInsertObject(ProcessData,
+                                  &ErrorHandle,
+                                  &ProcessData->Console->ActiveBuffer->Header,
+                                  GENERIC_READ | GENERIC_WRITE,
+                                  TRUE,
+                                  FILE_SHARE_READ | FILE_SHARE_WRITE);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to insert the error handle\n");
+        RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
+        Win32CsrFreeHandlesTable(ProcessData);
+        return Status;
+    }
+
+    /* Return the newly created handles */
+    *pInputHandle  = InputHandle;
+    *pOutputHandle = OutputHandle;
+    *pErrorHandle  = ErrorHandle;
+
+    RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
+    return STATUS_SUCCESS;
+}
+
 NTSTATUS
 FASTCALL
 Win32CsrInheritHandlesTable(IN PCONSOLE_PROCESS_DATA SourceProcessData,
@@ -282,6 +358,44 @@ Win32CsrUnlockObject(Object_t *Object)
     Win32CsrUnlockConsole(Object->Console);
 }
 
+NTSTATUS
+FASTCALL
+Win32CsrAllocateConsole(PCONSOLE_PROCESS_DATA ProcessData,
+                        PHANDLE pInputHandle,
+                        PHANDLE pOutputHandle,
+                        PHANDLE pErrorHandle,
+                        int ShowCmd,
+                        PCSR_PROCESS CsrProcess)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    /* Initialize a new Console owned by the Console Leader Process */
+    Status = CsrInitConsole(&ProcessData->Console, ShowCmd, CsrProcess);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Console initialization failed\n");
+        return Status;
+    }
+
+    /* Initialize the handles table */
+    Status = Win32CsrInitHandlesTable(ProcessData,
+                                      pInputHandle,
+                                      pOutputHandle,
+                                      pErrorHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to initialize the handles table\n");
+
+        // Win32CsrReleaseConsole(ProcessData);
+        ConioDeleteConsole(ProcessData->Console);
+        ProcessData->Console = NULL;
+
+        return Status;
+    }
+
+    return Status;
+}
+
 VOID
 FASTCALL
 Win32CsrReleaseConsole(PCONSOLE_PROCESS_DATA ProcessData)
@@ -377,7 +491,6 @@ ConsoleNewProcess(PCSR_PROCESS SourceProcess,
             return Status;
         }
 
-        // FIXME: Do it before, or after the handles table inheritance ??
         /* Temporary "inherit" the console from the parent */
         TargetProcessData->ParentConsole = SourceProcessData->Console;
     }
@@ -402,7 +515,6 @@ ConsoleConnect(IN PCSR_PROCESS CsrProcess,
     NTSTATUS Status = STATUS_SUCCESS;
     PCONSOLE_CONNECTION_INFO ConnectInfo = (PCONSOLE_CONNECTION_INFO)ConnectionInfo;
     PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrProcess);
-    BOOLEAN NewConsole = FALSE;
 
     DPRINT1("ConsoleConnect\n");
 
@@ -440,11 +552,15 @@ ConsoleConnect(IN PCSR_PROCESS CsrProcess,
         Win32CsrReleaseConsole(ProcessData);
 
         /* Initialize a new Console owned by the Console Leader Process */
-        NewConsole = TRUE;
-        Status = CsrInitConsole(&ProcessData->Console, ConnectInfo->ShowCmd, CsrProcess);
+        Status = Win32CsrAllocateConsole(ProcessData,
+                                         &ConnectInfo->InputHandle,
+                                         &ConnectInfo->OutputHandle,
+                                         &ConnectInfo->ErrorHandle,
+                                         ConnectInfo->ShowCmd,
+                                         CsrProcess);
         if (!NT_SUCCESS(Status))
         {
-            DPRINT1("Console initialization failed\n");
+            DPRINT1("Console allocation failed\n");
             return Status;
         }
     }
@@ -453,7 +569,6 @@ ConsoleConnect(IN PCSR_PROCESS CsrProcess,
         DPRINT1("ConsoleConnect - Reuse current (parent's) console\n");
 
         /* Reuse our current console */
-        NewConsole = FALSE;
         ProcessData->Console = ConnectInfo->Console;
     }
 
@@ -463,77 +578,7 @@ ConsoleConnect(IN PCSR_PROCESS CsrProcess,
     /* Insert the process into the processes list of the console */
     InsertHeadList(&ProcessData->Console->ProcessList, &ProcessData->ConsoleLink);
 
-    /* Return it to the caller */
-    ConnectInfo->Console = ProcessData->Console;
-
-    if (NewConsole)
-    {
-        /*
-         * Create a new handle table - Insert the IO handles
-         */
-
-        RtlEnterCriticalSection(&ProcessData->HandleTableLock);
-
-        /* Insert the Input handle */
-        Status = Win32CsrInsertObject(ProcessData,
-                                      &ConnectInfo->InputHandle,
-                                      &ProcessData->Console->Header,
-                                      GENERIC_READ | GENERIC_WRITE,
-                                      TRUE,
-                                      FILE_SHARE_READ | FILE_SHARE_WRITE);
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT1("Failed to insert the input handle\n");
-            RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
-            Win32CsrReleaseConsole(ProcessData);
-            // ConioDeleteConsole(ProcessData->Console);
-            // ProcessData->Console = NULL;
-            return Status;
-        }
-
-        /* Insert the Output handle */
-        Status = Win32CsrInsertObject(ProcessData,
-                                      &ConnectInfo->OutputHandle,
-                                      &ProcessData->Console->ActiveBuffer->Header,
-                                      GENERIC_READ | GENERIC_WRITE,
-                                      TRUE,
-                                      FILE_SHARE_READ | FILE_SHARE_WRITE);
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT1("Failed to insert the output handle\n");
-            RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
-            Win32CsrReleaseConsole(ProcessData);
-            // Win32CsrReleaseObject(ProcessData,
-                                  // ConnectInfo->InputHandle);
-            // ConioDeleteConsole(ProcessData->Console);
-            // ProcessData->Console = NULL;
-            return Status;
-        }
-
-        /* Insert the Error handle */
-        Status = Win32CsrInsertObject(ProcessData,
-                                      &ConnectInfo->ErrorHandle,
-                                      &ProcessData->Console->ActiveBuffer->Header,
-                                      GENERIC_READ | GENERIC_WRITE,
-                                      TRUE,
-                                      FILE_SHARE_READ | FILE_SHARE_WRITE);
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT1("Failed to insert the error handle\n");
-            RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
-            Win32CsrReleaseConsole(ProcessData);
-            // Win32CsrReleaseObject(ProcessData,
-                                  // ConnectInfo->OutputHandle);
-            // Win32CsrReleaseObject(ProcessData,
-                                  // ConnectInfo->InputHandle);
-            // ConioDeleteConsole(ProcessData->Console);
-            // ProcessData->Console = NULL;
-            return Status;
-        }
-
-        RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
-    }
-
+    /// TODO: Move this up ?
     /* Duplicate the Event */
     Status = NtDuplicateObject(NtCurrentProcess(),
                                ProcessData->Console->ActiveEvent,
@@ -544,19 +589,12 @@ ConsoleConnect(IN PCSR_PROCESS CsrProcess,
     {
         DPRINT1("NtDuplicateObject() failed: %lu\n", Status);
         Win32CsrReleaseConsole(ProcessData);
-        // if (NewConsole)
-        // {
-            // Win32CsrReleaseObject(ProcessData,
-                                  // ConnectInfo->ErrorHandle);
-            // Win32CsrReleaseObject(ProcessData,
-                                  // ConnectInfo->OutputHandle);
-            // Win32CsrReleaseObject(ProcessData,
-                                  // ConnectInfo->InputHandle);
-        // }
-        // ConioDeleteConsole(ProcessData->Console); // FIXME: Just release the console ?
-        // ProcessData->Console = NULL;
         return Status;
     }
+
+    /* Return it to the caller */
+    ConnectInfo->Console = ProcessData->Console;
+
     /* Input Wait Handle */
     ConnectInfo->InputWaitHandle = ProcessData->ConsoleEvent;
 

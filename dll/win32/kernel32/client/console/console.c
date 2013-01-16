@@ -210,7 +210,7 @@ IntCheckForConsoleFileName(IN LPCWSTR pszName,
     DeviceNameInfo = RtlIsDosDeviceName_U(pszName);
     if (DeviceNameInfo != 0)
     {
-        ConsoleName = (LPCWSTR)((ULONG_PTR)ConsoleName + (ULONG_PTR)((DeviceNameInfo >> 16) & 0xFFFF));
+        ConsoleName = (LPCWSTR)((ULONG_PTR)ConsoleName + ((DeviceNameInfo >> 16) & 0xFFFF));
     }
 
     /* Return a standard console "file" name according to what we passed in parameters */

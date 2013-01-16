@@ -255,7 +255,7 @@ ConioProcessKey(MSG *msg, PCONSOLE Console, BOOL TextMode)
         {
             current = CONTAINING_RECORD(current_entry, CONSOLE_PROCESS_DATA, ConsoleLink);
             current_entry = current_entry->Flink;
-            ConioConsoleCtrlEvent((DWORD)CTRL_C_EVENT, current);
+            ConioConsoleCtrlEvent(CTRL_C_EVENT, current);
         }
         if (Console->LineBuffer && !Console->LineComplete)
         {

@@ -140,6 +140,10 @@ CSR_API(SrvVerifyConsoleIoHandle);
 CSR_API(SrvDuplicateHandle);
 /// CSR_API(CsrGetInputWaitHandle);
 
+NTSTATUS FASTCALL Win32CsrInitHandlesTable(IN OUT PCONSOLE_PROCESS_DATA ProcessData,
+                                           OUT PHANDLE pInputHandle,
+                                           OUT PHANDLE pOutputHandle,
+                                           OUT PHANDLE pErrorHandle);
 NTSTATUS FASTCALL Win32CsrInheritHandlesTable(IN PCONSOLE_PROCESS_DATA SourceProcessData,
                                               IN PCONSOLE_PROCESS_DATA TargetProcessData);
 VOID FASTCALL Win32CsrFreeHandlesTable(PCONSOLE_PROCESS_DATA ProcessData);
@@ -157,6 +161,13 @@ NTSTATUS FASTCALL Win32CsrLockObject(PCONSOLE_PROCESS_DATA ProcessData,
 VOID FASTCALL Win32CsrUnlockObject(Object_t *Object);
 NTSTATUS FASTCALL Win32CsrReleaseObject(PCONSOLE_PROCESS_DATA ProcessData,
                                         HANDLE Handle);
+
+NTSTATUS FASTCALL Win32CsrAllocateConsole(PCONSOLE_PROCESS_DATA ProcessData,
+                                          PHANDLE pInputHandle,
+                                          PHANDLE pOutputHandle,
+                                          PHANDLE pErrorHandle,
+                                          int ShowCmd,
+                                          PCSR_PROCESS CsrProcess);
 VOID FASTCALL Win32CsrReleaseConsole(PCONSOLE_PROCESS_DATA ProcessData);
 
 NTSTATUS NTAPI ConsoleNewProcess(PCSR_PROCESS SourceProcess,
