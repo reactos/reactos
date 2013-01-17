@@ -90,17 +90,14 @@ SampRemoveMemberFromGroup(IN PSAM_DB_OBJECT GroupObject,
     ULONG i;
     NTSTATUS Status;
 
-    Status = SampGetObjectAttribute(GroupObject,
-                                    L"Members",
-                                    NULL,
-                                    NULL,
-                                    &Length);
+    SampGetObjectAttribute(GroupObject,
+                           L"Members",
+                           NULL,
+                           NULL,
+                           &Length);
 
-    if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
+    if (Length == 0)
         return STATUS_MEMBER_NOT_IN_GROUP;
-
-    if (!NT_SUCCESS(Status))
-        return Status;
 
     MembersBuffer = midl_user_allocate(Length);
     if (MembersBuffer == NULL)
@@ -126,12 +123,15 @@ SampRemoveMemberFromGroup(IN PSAM_DB_OBJECT GroupObject,
         {
             Length -= sizeof(ULONG);
             Status = STATUS_SUCCESS;
-            break;
-        }
 
-        if (Status == STATUS_SUCCESS && i < MembersCount - 1)
-        {
-            MembersBuffer[i] = MembersBuffer[i + 1];
+            if (MembersCount - i - 1 > 0)
+            {
+                CopyMemory(&MembersBuffer[i],
+                           &MembersBuffer[i + 1],
+                           (MembersCount - i - 1) * sizeof(ULONG));
+            }
+
+            break;
         }
     }
 
