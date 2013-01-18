@@ -502,7 +502,6 @@ BaseInitializeStaticServerData(IN PCSR_SERVER_DLL LoadedServerDll)
     }
 
     /* Finally, set the pointer */
-    // CsrSrvSharedStaticServerData[CSR_CONSOLE] = BaseStaticServerData;
     LoadedServerDll->SharedSection = BaseStaticServerData;
 }
 
