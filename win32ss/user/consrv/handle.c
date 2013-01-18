@@ -2,7 +2,7 @@
  * LICENSE:         GPL - See COPYING in the top level directory
  * PROJECT:         ReactOS Console Server DLL
  * FILE:            win32ss/user/consrv/handle.c
- * PURPOSE:         Console IO Handle functions
+ * PURPOSE:         Console I/O Handles functions
  * PROGRAMMERS:
  */
 
@@ -64,10 +64,9 @@ Win32CsrCloseHandleEntry(PCONSOLE_IO_HANDLE Entry)
                 if (Buffer->ListEntry.Flink != Buffer->ListEntry.Blink)
                     ConioDeleteScreenBuffer(Buffer);
             }
-            else if (Object->Type == CONIO_CONSOLE_MAGIC)
+            else if (Object->Type == CONIO_INPUT_BUFFER_MAGIC)
             {
-                /* TODO: FIXME: Destroy here the console ?? */
-                // ConioDeleteConsole(Console);
+                DPRINT1("Closing the input buffer\n");
             }
         }
 
@@ -104,7 +103,7 @@ Win32CsrInitHandlesTable(IN OUT PCONSOLE_PROCESS_DATA ProcessData,
     /* Insert the Input handle */
     Status = Win32CsrInsertObject(ProcessData,
                                   &InputHandle,
-                                  &ProcessData->Console->Header,
+                                  &ProcessData->Console->InputBuffer.Header,
                                   GENERIC_READ | GENERIC_WRITE,
                                   TRUE,
                                   FILE_SHARE_READ | FILE_SHARE_WRITE);
@@ -243,6 +242,8 @@ Win32CsrInsertObject(PCONSOLE_PROCESS_DATA ProcessData,
                      BOOL Inheritable,
                      DWORD ShareMode)
 {
+#define IO_HANDLES_INCREMENT    2*3
+
     ULONG i;
     PCONSOLE_IO_HANDLE Block;
 
@@ -259,7 +260,8 @@ Win32CsrInsertObject(PCONSOLE_PROCESS_DATA ProcessData,
     {
         Block = RtlAllocateHeap(ConSrvHeap,
                                 HEAP_ZERO_MEMORY,
-                                (ProcessData->HandleTableSize + 64) * sizeof(CONSOLE_IO_HANDLE));
+                                (ProcessData->HandleTableSize +
+                                    IO_HANDLES_INCREMENT) * sizeof(CONSOLE_IO_HANDLE));
         if (Block == NULL)
         {
             RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
@@ -270,8 +272,9 @@ Win32CsrInsertObject(PCONSOLE_PROCESS_DATA ProcessData,
                       ProcessData->HandleTableSize * sizeof(CONSOLE_IO_HANDLE));
         RtlFreeHeap(ConSrvHeap, 0, ProcessData->HandleTable);
         ProcessData->HandleTable = Block;
-        ProcessData->HandleTableSize += 64;
+        ProcessData->HandleTableSize += IO_HANDLES_INCREMENT;
     }
+
     ProcessData->HandleTable[i].Object      = Object;
     ProcessData->HandleTable[i].Access      = Access;
     ProcessData->HandleTable[i].Inheritable = Inheritable;
@@ -280,6 +283,7 @@ Win32CsrInsertObject(PCONSOLE_PROCESS_DATA ProcessData,
     *Handle = ULongToHandle((i << 2) | 0x3);
 
     RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
+
     return STATUS_SUCCESS;
 }
 
@@ -314,12 +318,12 @@ Win32CsrLockObject(PCONSOLE_PROCESS_DATA ProcessData,
                    HANDLE Handle,
                    Object_t **Object,
                    DWORD Access,
-                   LONG Type)
+                   ULONG Type)
 {
     ULONG_PTR h = (ULONG_PTR)Handle >> 2;
 
-    DPRINT("Win32CsrLockObject, Object: %x, %x, %x\n",
-           Object, Handle, ProcessData ? ProcessData->HandleTableSize : 0);
+    // DPRINT("Win32CsrLockObject, Object: %x, %x, %x\n",
+           // Object, Handle, ProcessData ? ProcessData->HandleTableSize : 0);
 
     RtlEnterCriticalSection(&ProcessData->HandleTableLock);
 
@@ -329,7 +333,7 @@ Win32CsrLockObject(PCONSOLE_PROCESS_DATA ProcessData,
          ~ProcessData->HandleTable[h].Access & Access           ||
          (Type != 0 && (*Object)->Type != Type) )
     {
-        DPRINT1("CsrGetObject returning invalid handle (%x)\n", Handle);
+        DPRINT1("CsrGetObject returning invalid handle (%x) of type %lu with access %lu\n", Handle, Type, Access);
         RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
         return STATUS_INVALID_HANDLE;
     }
@@ -337,7 +341,7 @@ Win32CsrLockObject(PCONSOLE_PROCESS_DATA ProcessData,
     _InterlockedIncrement(&(*Object)->Console->ReferenceCount);
     RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
 
-    EnterCriticalSection(&((*Object)->Console->Lock));
+    EnterCriticalSection(&(*Object)->Console->Lock);
     return STATUS_SUCCESS;
 }
 
@@ -419,6 +423,31 @@ Win32CsrReleaseConsole(PCONSOLE_PROCESS_DATA ProcessData)
         //CloseHandle(ProcessData->ConsoleEvent);
         //ProcessData->ConsoleEvent = NULL;
     }
+}
+
+NTSTATUS
+FASTCALL
+ConioConsoleFromProcessData(PCONSOLE_PROCESS_DATA ProcessData,
+                            PCONSOLE* Console)
+{
+    PCONSOLE ProcessConsole;
+
+    RtlEnterCriticalSection(&ProcessData->HandleTableLock);
+    ProcessConsole = ProcessData->Console;
+
+    if (!ProcessConsole)
+    {
+        *Console = NULL;
+        RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
+        return STATUS_INVALID_HANDLE;
+    }
+
+    InterlockedIncrement(&ProcessConsole->ReferenceCount);
+    RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
+    EnterCriticalSection(&(ProcessConsole->Lock));
+    *Console = ProcessConsole;
+
+    return STATUS_SUCCESS;
 }
 
 
@@ -581,7 +610,7 @@ ConsoleConnect(IN PCSR_PROCESS CsrProcess,
     /// TODO: Move this up ?
     /* Duplicate the Event */
     Status = NtDuplicateObject(NtCurrentProcess(),
-                               ProcessData->Console->ActiveEvent,
+                               ProcessData->Console->InputBuffer.ActiveEvent,
                                ProcessData->Process->ProcessHandle,
                                &ProcessData->ConsoleEvent,
                                EVENT_ALL_ACCESS, 0, 0);

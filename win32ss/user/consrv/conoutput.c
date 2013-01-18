@@ -1228,7 +1228,7 @@ CSR_API(SrvCreateConsoleScreenBuffer)
 
     RtlEnterCriticalSection(&ProcessData->HandleTableLock);
 
-    Status = ConioConsoleFromProcessData(ProcessData, &Console);
+    Status = ConioLockConsole(ProcessData, &Console);
     if (!NT_SUCCESS(Status))
     {
         RtlLeaveCriticalSection(&ProcessData->HandleTableLock);

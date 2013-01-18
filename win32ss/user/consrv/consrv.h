@@ -39,13 +39,13 @@ extern HANDLE ConSrvHeap;
 // extern PBASE_STATIC_SERVER_DATA BaseStaticServerData;
 
 /* Object type magic numbers */
-#define CONIO_CONSOLE_MAGIC         0x00000001  // -->  Input-type handles
+#define CONIO_INPUT_BUFFER_MAGIC    0x00000001  // -->  Input-type handles
 #define CONIO_SCREEN_BUFFER_MAGIC   0x00000002  // --> Output-type handles
 
 /* Common things to input/output/console objects */
 typedef struct Object_tt
 {
-    LONG Type;
+    ULONG Type;
     struct _CONSOLE *Console;
     LONG AccessRead, AccessWrite;
     LONG ExclusiveRead, ExclusiveWrite;
@@ -157,8 +157,9 @@ NTSTATUS FASTCALL Win32CsrLockObject(PCONSOLE_PROCESS_DATA ProcessData,
                                      HANDLE Handle,
                                      Object_t **Object,
                                      DWORD Access,
-                                     LONG Type);
+                                     ULONG Type);
 VOID FASTCALL Win32CsrUnlockObject(Object_t *Object);
+VOID FASTCALL Win32CsrUnlockConsole(struct _CONSOLE* Console);
 NTSTATUS FASTCALL Win32CsrReleaseObject(PCONSOLE_PROCESS_DATA ProcessData,
                                         HANDLE Handle);
 
@@ -169,6 +170,8 @@ NTSTATUS FASTCALL Win32CsrAllocateConsole(PCONSOLE_PROCESS_DATA ProcessData,
                                           int ShowCmd,
                                           PCSR_PROCESS CsrProcess);
 VOID FASTCALL Win32CsrReleaseConsole(PCONSOLE_PROCESS_DATA ProcessData);
+NTSTATUS FASTCALL ConioConsoleFromProcessData(PCONSOLE_PROCESS_DATA ProcessData,
+                                              struct _CONSOLE** Console);
 
 NTSTATUS NTAPI ConsoleNewProcess(PCSR_PROCESS SourceProcess,
                                  PCSR_PROCESS TargetProcess);

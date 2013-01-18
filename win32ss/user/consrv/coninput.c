@@ -60,7 +60,7 @@ ConioProcessChar(PCONSOLE Console,
         if (!(Console->PauseFlags & PAUSED_FROM_KEYBOARD))
         {
             DWORD cks = InputEvent->Event.KeyEvent.dwControlKeyState;
-            if (Console->Mode & ENABLE_LINE_INPUT &&
+            if (Console->InputBuffer.Mode & ENABLE_LINE_INPUT &&
                 (vk == VK_PAUSE || (vk == 'S' &&
                                     (cks & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED)) &&
                                     !(cks & (LEFT_ALT_PRESSED | RIGHT_ALT_PRESSED)))))
@@ -85,10 +85,10 @@ ConioProcessChar(PCONSOLE Console,
     if (ConInRec == NULL)
         return STATUS_INSUFFICIENT_RESOURCES;
     ConInRec->InputEvent = *InputEvent;
-    InsertTailList(&Console->InputEvents, &ConInRec->ListEntry);
+    InsertTailList(&Console->InputBuffer.InputEvents, &ConInRec->ListEntry);
 
-    SetEvent(Console->ActiveEvent);
-    CsrNotifyWait(&Console->ReadWaitQueue,
+    SetEvent(Console->InputBuffer.ActiveEvent);
+    CsrNotifyWait(&Console->InputBuffer.ReadWaitQueue,
                   WaitAny,
                   NULL,
                   NULL);
@@ -239,7 +239,7 @@ ConioProcessKey(MSG *msg, PCONSOLE Console, BOOL TextMode)
         return;
 
     /* process Ctrl-C and Ctrl-Break */
-    if (Console->Mode & ENABLE_PROCESSED_INPUT &&
+    if (Console->InputBuffer.Mode & ENABLE_PROCESSED_INPUT &&
             er.Event.KeyEvent.bKeyDown &&
             ((er.Event.KeyEvent.wVirtualKeyCode == VK_PAUSE) ||
              (er.Event.KeyEvent.wVirtualKeyCode == 'C')) &&
@@ -317,7 +317,7 @@ WaitBeforeReading(IN PGET_INPUT_INFO InputInfo,
 
         memmove(CapturedInputInfo, InputInfo, sizeof(GET_INPUT_INFO));
 
-        if (!CsrCreateWait(&InputInfo->Console->ReadWaitQueue,
+        if (!CsrCreateWait(&InputInfo->Console->InputBuffer.ReadWaitQueue,
                            WaitFunction,
                            CsrGetClientThread(),
                            ApiMessage,
@@ -373,7 +373,7 @@ ReadInputBuffer(IN PGET_INPUT_INFO InputInfo,
                 IN PCSR_API_MESSAGE ApiMessage,
                 IN BOOL CreateWaitBlock OPTIONAL)
 {
-    if (IsListEmpty(&InputInfo->Console->InputEvents))
+    if (IsListEmpty(&InputInfo->Console->InputBuffer.InputEvents))
     {
         if (Wait)
         {
@@ -397,9 +397,9 @@ ReadInputBuffer(IN PGET_INPUT_INFO InputInfo,
         PINPUT_RECORD InputRecord = GetInputRequest->InputRecord;
 
         /* Only get input if there is any */
-        CurrentInput = InputInfo->Console->InputEvents.Flink;
+        CurrentInput = InputInfo->Console->InputBuffer.InputEvents.Flink;
 
-        while ( CurrentInput != &InputInfo->Console->InputEvents &&
+        while ( CurrentInput != &InputInfo->Console->InputBuffer.InputEvents &&
                 GetInputRequest->InputsRead < Length )
         {
             Input = CONTAINING_RECORD(CurrentInput, ConsoleInput, ListEntry);
@@ -422,9 +422,9 @@ ReadInputBuffer(IN PGET_INPUT_INFO InputInfo,
             }
         }
 
-        if (IsListEmpty(&InputInfo->Console->InputEvents))
+        if (IsListEmpty(&InputInfo->Console->InputBuffer.InputEvents))
         {
-            ResetEvent(InputInfo->Console->ActiveEvent);
+            ResetEvent(InputInfo->Console->InputBuffer.ActiveEvent);
         }
 
         /* We read all the inputs available, we return success */
@@ -479,7 +479,7 @@ ReadChars(IN PGET_INPUT_INFO InputInfo,
 
     /* We haven't read anything (yet) */
 
-    if (InputInfo->Console->Mode & ENABLE_LINE_INPUT)
+    if (InputInfo->Console->InputBuffer.Mode & ENABLE_LINE_INPUT)
     {
         if (InputInfo->Console->LineBuffer == NULL)
         {
@@ -511,13 +511,13 @@ ReadChars(IN PGET_INPUT_INFO InputInfo,
 
         /* If we don't have a complete line yet, process the pending input */
         while ( !InputInfo->Console->LineComplete &&
-                !IsListEmpty(&InputInfo->Console->InputEvents) )
+                !IsListEmpty(&InputInfo->Console->InputBuffer.InputEvents) )
         {
             /* Remove input event from queue */
-            CurrentEntry = RemoveHeadList(&InputInfo->Console->InputEvents);
-            if (IsListEmpty(&InputInfo->Console->InputEvents))
+            CurrentEntry = RemoveHeadList(&InputInfo->Console->InputBuffer.InputEvents);
+            if (IsListEmpty(&InputInfo->Console->InputBuffer.InputEvents))
             {
-                ResetEvent(InputInfo->Console->ActiveEvent);
+                ResetEvent(InputInfo->Console->InputBuffer.ActiveEvent);
             }
             Input = CONTAINING_RECORD(CurrentEntry, ConsoleInput, ListEntry);
 
@@ -567,13 +567,13 @@ ReadChars(IN PGET_INPUT_INFO InputInfo,
     {
         /* Character input */
         while ( ReadConsoleRequest->NrCharactersRead < nNumberOfCharsToRead &&
-                !IsListEmpty(&InputInfo->Console->InputEvents) )
+                !IsListEmpty(&InputInfo->Console->InputBuffer.InputEvents) )
         {
             /* Remove input event from queue */
-            CurrentEntry = RemoveHeadList(&InputInfo->Console->InputEvents);
-            if (IsListEmpty(&InputInfo->Console->InputEvents))
+            CurrentEntry = RemoveHeadList(&InputInfo->Console->InputBuffer.InputEvents);
+            if (IsListEmpty(&InputInfo->Console->InputBuffer.InputEvents))
             {
-                ResetEvent(InputInfo->Console->ActiveEvent);
+                ResetEvent(InputInfo->Console->InputBuffer.ActiveEvent);
             }
             Input = CONTAINING_RECORD(CurrentEntry, ConsoleInput, ListEntry);
 
@@ -626,7 +626,7 @@ CSR_API(SrvGetConsoleInput)
     NTSTATUS Status;
     PCONSOLE_GETINPUT GetInputRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetInputRequest;
     PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);
-    PCONSOLE Console;
+    PCONSOLE_INPUT_BUFFER InputBuffer;
     GET_INPUT_INFO InputInfo;
 
     DPRINT("SrvGetConsoleInput\n");
@@ -639,20 +639,20 @@ CSR_API(SrvGetConsoleInput)
         return STATUS_INVALID_PARAMETER;
     }
 
-    Status = ConioLockConsole(ProcessData, GetInputRequest->InputHandle, &Console, GENERIC_READ);
+    Status = ConioLockInputBuffer(ProcessData, GetInputRequest->InputHandle, &InputBuffer, GENERIC_READ);
     if(!NT_SUCCESS(Status)) return Status;
 
     GetInputRequest->InputsRead = 0;
 
     InputInfo.ProcessData = ProcessData; // ConsoleGetPerProcessData(CsrGetClientThread()->Process);
-    InputInfo.Console     = Console;
+    InputInfo.Console     = InputBuffer->Header.Console;
 
     Status = ReadInputBuffer(&InputInfo,
                              GetInputRequest->bRead,
                              ApiMessage,
                              TRUE);
 
-    ConioUnlockConsole(Console);
+    ConioUnlockInputBuffer(InputBuffer);
 
     if (Status == STATUS_PENDING)
         *ReplyCode = CsrReplyPending;
@@ -666,6 +666,7 @@ CSR_API(SrvWriteConsoleInput)
     PCONSOLE_WRITEINPUT WriteInputRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.WriteInputRequest;
     PINPUT_RECORD InputRecord;
     PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);
+    PCONSOLE_INPUT_BUFFER InputBuffer;
     PCONSOLE Console;
     DWORD Length;
     DWORD i;
@@ -680,9 +681,10 @@ CSR_API(SrvWriteConsoleInput)
         return STATUS_INVALID_PARAMETER;
     }
 
-    Status = ConioLockConsole(ProcessData, WriteInputRequest->InputHandle, &Console, GENERIC_WRITE);
+    Status = ConioLockInputBuffer(ProcessData, WriteInputRequest->InputHandle, &InputBuffer, GENERIC_WRITE);
     if (!NT_SUCCESS(Status)) return Status;
 
+    Console = InputBuffer->Header.Console;
     InputRecord = WriteInputRequest->InputRecord;
     Length = WriteInputRequest->Length;
 
@@ -700,7 +702,7 @@ CSR_API(SrvWriteConsoleInput)
         Status = ConioProcessChar(Console, InputRecord++);
     }
 
-    ConioUnlockConsole(Console);
+    ConioUnlockInputBuffer(InputBuffer);
 
     WriteInputRequest->Length = i;
 
@@ -712,7 +714,7 @@ CSR_API(SrvReadConsole)
     NTSTATUS Status;
     PCONSOLE_READCONSOLE ReadConsoleRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.ReadConsoleRequest;
     PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);
-    PCONSOLE Console;
+    PCONSOLE_INPUT_BUFFER InputBuffer;
     GET_INPUT_INFO InputInfo;
 
     DPRINT("SrvReadConsole\n");
@@ -731,19 +733,19 @@ CSR_API(SrvReadConsole)
         return STATUS_INVALID_PARAMETER;
     }
 
-    Status = ConioLockConsole(ProcessData, ReadConsoleRequest->InputHandle, &Console, GENERIC_READ);
+    Status = ConioLockInputBuffer(ProcessData, ReadConsoleRequest->InputHandle, &InputBuffer, GENERIC_READ);
     if (!NT_SUCCESS(Status)) return Status;
 
     ReadConsoleRequest->NrCharactersRead = 0;
 
     InputInfo.ProcessData = ProcessData; // ConsoleGetPerProcessData(CsrGetClientThread()->Process);
-    InputInfo.Console     = Console;
+    InputInfo.Console     = InputBuffer->Header.Console;
 
     Status = ReadChars(&InputInfo,
                        ApiMessage,
                        TRUE);
 
-    ConioUnlockConsole(Console);
+    ConioUnlockInputBuffer(InputBuffer);
 
     if (Status == STATUS_PENDING)
         *ReplyCode = CsrReplyPending;
@@ -756,28 +758,28 @@ CSR_API(SrvFlushConsoleInputBuffer)
     NTSTATUS Status;
     PCONSOLE_FLUSHINPUTBUFFER FlushInputBufferRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.FlushInputBufferRequest;
     PLIST_ENTRY CurrentEntry;
-    PCONSOLE Console;
+    PCONSOLE_INPUT_BUFFER InputBuffer;
     ConsoleInput* Input;
 
     DPRINT("SrvFlushConsoleInputBuffer\n");
 
-    Status = ConioLockConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
+    Status = ConioLockInputBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
                               FlushInputBufferRequest->InputHandle,
-                              &Console,
+                              &InputBuffer,
                               GENERIC_WRITE);
     if(!NT_SUCCESS(Status)) return Status;
 
     /* Discard all entries in the input event queue */
-    while (!IsListEmpty(&Console->InputEvents))
+    while (!IsListEmpty(&InputBuffer->InputEvents))
     {
-        CurrentEntry = RemoveHeadList(&Console->InputEvents);
+        CurrentEntry = RemoveHeadList(&InputBuffer->InputEvents);
         Input = CONTAINING_RECORD(CurrentEntry, ConsoleInput, ListEntry);
         /* Destroy the event */
         RtlFreeHeap(ConSrvHeap, 0, Input);
     }
-    ResetEvent(Console->ActiveEvent);
+    ResetEvent(InputBuffer->ActiveEvent);
 
-    ConioUnlockConsole(Console);
+    ConioUnlockInputBuffer(InputBuffer);
 
     return STATUS_SUCCESS;
 }
@@ -786,26 +788,26 @@ CSR_API(SrvGetConsoleNumberOfInputEvents)
 {
     NTSTATUS Status;
     PCONSOLE_GETNUMINPUTEVENTS GetNumInputEventsRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetNumInputEventsRequest;
-    PCONSOLE Console;
+    PCONSOLE_INPUT_BUFFER InputBuffer;
     PLIST_ENTRY CurrentInput;
     DWORD NumEvents;
 
     DPRINT("SrvGetConsoleNumberOfInputEvents\n");
 
-    Status = ConioLockConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), GetNumInputEventsRequest->InputHandle, &Console, GENERIC_READ);
+    Status = ConioLockInputBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process), GetNumInputEventsRequest->InputHandle, &InputBuffer, GENERIC_READ);
     if (!NT_SUCCESS(Status)) return Status;
 
-    CurrentInput = Console->InputEvents.Flink;
+    CurrentInput = InputBuffer->InputEvents.Flink;
     NumEvents = 0;
 
     /* If there are any events ... */
-    while (CurrentInput != &Console->InputEvents)
+    while (CurrentInput != &InputBuffer->InputEvents)
     {
         CurrentInput = CurrentInput->Flink;
         NumEvents++;
     }
 
-    ConioUnlockConsole(Console);
+    ConioUnlockInputBuffer(InputBuffer);
 
     GetNumInputEventsRequest->NumInputEvents = NumEvents;
 

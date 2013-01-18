@@ -167,7 +167,7 @@ CSR_API(SrvGetConsoleCommandHistoryLength)
         return STATUS_INVALID_PARAMETER;
     }
 
-    Status = ConioConsoleFromProcessData(ProcessData, &Console);
+    Status = ConioLockConsole(ProcessData, &Console);
     if (NT_SUCCESS(Status))
     {
         Hist = HistoryFindBuffer(Console, &GetCommandHistoryLengthRequest->ExeName);
@@ -205,7 +205,7 @@ CSR_API(SrvGetConsoleCommandHistory)
         return STATUS_INVALID_PARAMETER;
     }
 
-    Status = ConioConsoleFromProcessData(ProcessData, &Console);
+    Status = ConioLockConsole(ProcessData, &Console);
     if (NT_SUCCESS(Status))
     {
         Hist = HistoryFindBuffer(Console, &GetCommandHistoryRequest->ExeName);
@@ -246,7 +246,7 @@ CSR_API(SrvExpungeConsoleCommandHistory)
         return STATUS_INVALID_PARAMETER;
     }
 
-    Status = ConioConsoleFromProcessData(ProcessData, &Console);
+    Status = ConioLockConsole(ProcessData, &Console);
     if (NT_SUCCESS(Status))
     {
         Hist = HistoryFindBuffer(Console, &ExpungeCommandHistoryRequest->ExeName);
@@ -274,7 +274,7 @@ CSR_API(SrvSetConsoleNumberOfCommands)
         return STATUS_INVALID_PARAMETER;
     }
 
-    Status = ConioConsoleFromProcessData(ProcessData, &Console);
+    Status = ConioLockConsole(ProcessData, &Console);
     if (NT_SUCCESS(Status))
     {
         Hist = HistoryFindBuffer(Console, &SetHistoryNumberCommandsRequest->ExeName);
@@ -311,7 +311,7 @@ CSR_API(SrvGetConsoleHistory)
 {
     PCONSOLE_GETSETHISTORYINFO HistoryInfoRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.HistoryInfoRequest;
     PCONSOLE Console;
-    NTSTATUS Status = ConioConsoleFromProcessData(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console);
+    NTSTATUS Status = ConioLockConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console);
     if (NT_SUCCESS(Status))
     {
         HistoryInfoRequest->HistoryBufferSize      = Console->HistoryBufferSize;
@@ -326,7 +326,7 @@ CSR_API(SrvSetConsoleHistory)
 {
     PCONSOLE_GETSETHISTORYINFO HistoryInfoRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.HistoryInfoRequest;
     PCONSOLE Console;
-    NTSTATUS Status = ConioConsoleFromProcessData(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console);
+    NTSTATUS Status = ConioLockConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console);
     if (NT_SUCCESS(Status))
     {
         Console->HistoryBufferSize      = HistoryInfoRequest->HistoryBufferSize;
@@ -340,7 +340,7 @@ CSR_API(SrvSetConsoleHistory)
 static VOID
 LineInputSetPos(PCONSOLE Console, UINT Pos)
 {
-    if (Pos != Console->LinePos && Console->Mode & ENABLE_ECHO_INPUT)
+    if (Pos != Console->LinePos && Console->InputBuffer.Mode & ENABLE_ECHO_INPUT)
     {
         PCONSOLE_SCREEN_BUFFER Buffer = Console->ActiveBuffer;
         UINT OldCursorX = Buffer->CurrentX;
@@ -377,7 +377,7 @@ LineInputEdit(PCONSOLE Console, UINT NumToDelete, UINT NumToInsert, WCHAR *Inser
             (Console->LineSize - (Pos + NumToDelete)) * sizeof(WCHAR));
     memcpy(&Console->LineBuffer[Pos], Insertion, NumToInsert * sizeof(WCHAR));
 
-    if (Console->Mode & ENABLE_ECHO_INPUT)
+    if (Console->InputBuffer.Mode & ENABLE_ECHO_INPUT)
     {
         for (i = Pos; i < NewSize; i++)
         {
@@ -559,7 +559,7 @@ LineInputKeyDown(PCONSOLE Console, KEY_EVENT_RECORD *KeyEvent)
         return;
     }
 
-    if (KeyEvent->uChar.UnicodeChar == L'\b' && Console->Mode & ENABLE_PROCESSED_INPUT)
+    if (KeyEvent->uChar.UnicodeChar == L'\b' && Console->InputBuffer.Mode & ENABLE_PROCESSED_INPUT)
     {
         /* backspace handling - if processed input enabled then we handle it here
          * otherwise we treat it like a normal char. */
@@ -577,17 +577,17 @@ LineInputKeyDown(PCONSOLE Console, KEY_EVENT_RECORD *KeyEvent)
 
         LineInputSetPos(Console, Console->LineSize);
         Console->LineBuffer[Console->LineSize++] = L'\r';
-        if (Console->Mode & ENABLE_ECHO_INPUT)
+        if (Console->InputBuffer.Mode & ENABLE_ECHO_INPUT)
             ConioWriteConsole(Console, Console->ActiveBuffer, "\r", 1, TRUE);
 
         /* Add \n if processed input. There should usually be room for it,
          * but an exception to the rule exists: the buffer could have been 
          * pre-filled with LineMaxSize - 1 characters. */
-        if (Console->Mode & ENABLE_PROCESSED_INPUT &&
+        if (Console->InputBuffer.Mode & ENABLE_PROCESSED_INPUT &&
             Console->LineSize < Console->LineMaxSize)
         {
             Console->LineBuffer[Console->LineSize++] = L'\n';
-            if (Console->Mode & ENABLE_ECHO_INPUT)
+            if (Console->InputBuffer.Mode & ENABLE_ECHO_INPUT)
                 ConioWriteConsole(Console, Console->ActiveBuffer, "\n", 1, TRUE);
         }
         Console->LineComplete = TRUE;

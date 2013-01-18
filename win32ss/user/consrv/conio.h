@@ -28,46 +28,58 @@
 
 typedef struct _CONSOLE_SCREEN_BUFFER
 {
-    Object_t Header;                 /* Object header */
-    LIST_ENTRY ListEntry;            /* Entry in console's list of buffers */
+    Object_t Header;                /* Object header */
+    LIST_ENTRY ListEntry;           /* Entry in console's list of buffers */
 
-    BYTE *Buffer;                    /* Pointer to screen buffer */
-    USHORT MaxX, MaxY;               /* Size of the entire scrollback buffer */
-    USHORT ShowX, ShowY;             /* Beginning offset for the actual display area */
-    ULONG CurrentX;                  /* Current X cursor position */
-    ULONG CurrentY;                  /* Current Y cursor position */
-    WORD DefaultAttrib;              /* Default char attribute */
-    USHORT VirtualY;                 /* Top row of buffer being displayed, reported to callers */
+    BYTE *Buffer;                   /* Pointer to screen buffer */
+    USHORT MaxX, MaxY;              /* Size of the entire scrollback buffer */
+    USHORT ShowX, ShowY;            /* Beginning offset for the actual display area */
+    ULONG CurrentX;                 /* Current X cursor position */
+    ULONG CurrentY;                 /* Current Y cursor position */
+    WORD DefaultAttrib;             /* Default char attribute */
+    USHORT VirtualY;                /* Top row of buffer being displayed, reported to callers */
     CONSOLE_CURSOR_INFO CursorInfo;
     USHORT Mode;
 } CONSOLE_SCREEN_BUFFER, *PCONSOLE_SCREEN_BUFFER;
 
+typedef struct _CONSOLE_INPUT_BUFFER
+{
+    Object_t Header;                /* Object header */
+
+    LIST_ENTRY InputEvents;         /* List head for input event queue */
+    HANDLE ActiveEvent;             /* Event set when an input event is added in its queue */
+    LIST_ENTRY ReadWaitQueue;       /* List head for the queue of read wait blocks */
+    WORD Mode;                      /* Console Input Buffer mode flags */
+} CONSOLE_INPUT_BUFFER, *PCONSOLE_INPUT_BUFFER;
+
+typedef struct ConsoleInput_t
+{
+    LIST_ENTRY ListEntry;
+    INPUT_RECORD InputEvent;
+} ConsoleInput;
+
 typedef struct _CONSOLE
 {
-    Object_t Header;                      /* Object header */
-    LONG ReferenceCount;                  /* Is incremented each time a handle to a screen-buffer or the input buffer of this console gets referenced, or the console gets locked */
+    LONG ReferenceCount;                    /* Is incremented each time a handle to a screen-buffer or the input buffer of this console gets referenced, or the console gets locked */
     CRITICAL_SECTION Lock;
 
-    struct _CONSOLE *Prev, *Next;         /* Next and Prev consoles in console wheel */
-    struct _CONSOLE_VTBL *Vtbl;           /* Using CUI or GUI consoles */
+    struct _CONSOLE *Prev, *Next;           /* Next and Prev consoles in console wheel */
+    struct _CONSOLE_VTBL *Vtbl;             /* Using CUI or GUI consoles */
 
-    CLIENT_ID  ConsoleLeaderCID;          /* Contains the Console Leader Process CID for this console. TODO: Is it possible to compute it via the contents of the ProcessList list ?? */
+    CLIENT_ID  ConsoleLeaderCID;            /* Contains the Console Leader Process CID for this console. TODO: Is it possible to compute it via the contents of the ProcessList list ?? */
     LIST_ENTRY ProcessList;
 
 /**************************** Input buffer and data ***************************/
-    LIST_ENTRY InputEvents;               /* List head for input event queue */
-    HANDLE ActiveEvent;                   /* Event set when an input event is added in its queue */
-    LIST_ENTRY ReadWaitQueue;             /* List head for the queue of read wait blocks */
-    WORD Mode;                            /* Console Input Buffer mode flags */
+    CONSOLE_INPUT_BUFFER InputBuffer;       /* Input buffer of the console */
 
-    PWCHAR LineBuffer;                    /* current line being input, in line buffered mode */
-    WORD LineMaxSize;                     /* maximum size of line in characters (including CR+LF) */
-    WORD LineSize;                        /* current size of line */
-    WORD LinePos;                         /* current position within line */
-    BOOLEAN LineComplete;                 /* user pressed enter, ready to send back to client */
+    PWCHAR LineBuffer;                      /* Current line being input, in line buffered mode */
+    WORD LineMaxSize;                       /* Maximum size of line in characters (including CR+LF) */
+    WORD LineSize;                          /* Current size of line */
+    WORD LinePos;                           /* Current position within line */
+    BOOLEAN LineComplete;                   /* User pressed enter, ready to send back to client */
     BOOLEAN LineUpPressed;
-    BOOLEAN LineInsertToggle;             /* replace character over cursor instead of inserting */
-    ULONG LineWakeupMask;                 /* bitmap of which control characters will end line input */
+    BOOLEAN LineInsertToggle;               /* Replace character over cursor instead of inserting */
+    ULONG LineWakeupMask;                   /* Bitmap of which control characters will end line input */
 
     UINT CodePage;
     UINT OutputCodePage;
@@ -77,21 +89,21 @@ typedef struct _CONSOLE
 /**************************** Aliases and Histories ***************************/
     struct _ALIAS_HEADER *Aliases;
     LIST_ENTRY HistoryBuffers;
-    UINT HistoryBufferSize;               /* size for newly created history buffers */
-    UINT NumberOfHistoryBuffers;          /* maximum number of history buffers allowed */
-    BOOLEAN HistoryNoDup;                 /* remove old duplicate history entries */
+    UINT HistoryBufferSize;                 /* Size for newly created history buffers */
+    UINT NumberOfHistoryBuffers;            /* Maximum number of history buffers allowed */
+    BOOLEAN HistoryNoDup;                   /* Remove old duplicate history entries */
 
 /******************************* Screen buffers *******************************/
-    LIST_ENTRY BufferList;                /* List of all screen buffers for this console */
-    PCONSOLE_SCREEN_BUFFER ActiveBuffer;  /* Pointer to currently active screen buffer */
+    LIST_ENTRY BufferList;                  /* List of all screen buffers for this console */
+    PCONSOLE_SCREEN_BUFFER ActiveBuffer;    /* Pointer to currently active screen buffer */
     BYTE PauseFlags;
     HANDLE UnpauseEvent;
-    LIST_ENTRY WriteWaitQueue;            /* List head for the queue of write wait blocks */
+    LIST_ENTRY WriteWaitQueue;              /* List head for the queue of write wait blocks */
 
-    DWORD HardwareState;                  /* _GDI_MANAGED, _DIRECT */
+    DWORD HardwareState;                    /* _GDI_MANAGED, _DIRECT */
 
 /****************************** GUI-related data ******************************/
-    UNICODE_STRING Title;                 /* Title of console */
+    UNICODE_STRING Title;                   /* Title of console */
     HWND hWindow;
     COORD Size;
     PVOID PrivateData;
@@ -127,12 +139,6 @@ typedef struct _CONSOLE_VTBL
     NTSTATUS (WINAPI *ResizeBuffer)(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER ScreenBuffer, COORD Size);
 } CONSOLE_VTBL, *PCONSOLE_VTBL;
 
-typedef struct ConsoleInput_t
-{
-    LIST_ENTRY ListEntry;
-    INPUT_RECORD InputEvent;
-} ConsoleInput;
-
 /* CONSOLE_SELECTION_INFO dwFlags values */
 #define CONSOLE_NO_SELECTION          0x0
 #define CONSOLE_SELECTION_IN_PROGRESS 0x1
@@ -163,8 +169,10 @@ typedef struct ConsoleInput_t
 #define ConioResizeBuffer(Console, Buff, Size) (Console)->Vtbl->ResizeBuffer(Console, Buff, Size)
 
 /* console.c */
-NTSTATUS FASTCALL ConioConsoleFromProcessData(PCONSOLE_PROCESS_DATA ProcessData,
-                                              PCONSOLE *Console);
+#define ConioLockConsole(ProcessData, Console) \
+    ConioConsoleFromProcessData((ProcessData), (Console))
+#define ConioUnlockConsole(Console) \
+    Win32CsrUnlockConsole(Console)
 VOID WINAPI ConioDeleteConsole(PCONSOLE Console);
 VOID WINAPI CsrInitConsoleSupport(VOID);
 NTSTATUS WINAPI CsrInitConsole(PCONSOLE* NewConsole, int ShowCmd, PCSR_PROCESS ConsoleLeaderProcess);
@@ -176,10 +184,10 @@ VOID FASTCALL ConioConsoleCtrlEventTimeout(DWORD Event,
                                            DWORD Timeout);
 
 /* coninput.c */
-#define ConioLockConsole(ProcessData, Handle, Ptr, Access) \
-    Win32CsrLockObject((ProcessData), (Handle), (Object_t **)(Ptr), Access, CONIO_CONSOLE_MAGIC)
-#define ConioUnlockConsole(Console) \
-    Win32CsrUnlockObject((Object_t *) Console)
+#define ConioLockInputBuffer(ProcessData, Handle, Ptr, Access) \
+    Win32CsrLockObject((ProcessData), (Handle), (Object_t **)(Ptr), (Access), CONIO_INPUT_BUFFER_MAGIC)
+#define ConioUnlockInputBuffer(Buff) \
+    Win32CsrUnlockObject(&(Buff)->Header)
 void WINAPI ConioProcessKey(MSG *msg, PCONSOLE Console, BOOL TextMode);
 
 /* conoutput.c */
@@ -188,9 +196,9 @@ void WINAPI ConioProcessKey(MSG *msg, PCONSOLE Console, BOOL TextMode);
 #define ConioRectWidth(Rect) \
     (((Rect)->Left) > ((Rect)->Right) ? 0 : ((Rect)->Right) - ((Rect)->Left) + 1)
 #define ConioLockScreenBuffer(ProcessData, Handle, Ptr, Access) \
-    Win32CsrLockObject((ProcessData), (Handle), (Object_t **)(Ptr), Access, CONIO_SCREEN_BUFFER_MAGIC)
+    Win32CsrLockObject((ProcessData), (Handle), (Object_t **)(Ptr), (Access), CONIO_SCREEN_BUFFER_MAGIC)
 #define ConioUnlockScreenBuffer(Buff) \
-    Win32CsrUnlockObject((Object_t *) Buff)
+    Win32CsrUnlockObject(&(Buff)->Header)
 PBYTE FASTCALL ConioCoordToPointer(PCONSOLE_SCREEN_BUFFER Buf, ULONG X, ULONG Y);
 VOID FASTCALL ConioDrawConsole(PCONSOLE Console);
 NTSTATUS FASTCALL ConioWriteConsole(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER Buff,
