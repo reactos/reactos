@@ -945,58 +945,49 @@ TaskSwitchWnd_CheckActivateTaskItem(IN OUT PTASK_SWITCH_WND This,
     if (TaskItem != NULL)
         TaskGroup = TaskItem->Group;
 
-    if (This->IsGroupingEnabled && TaskGroup != NULL)
+    if (This->IsGroupingEnabled &&
+        TaskGroup != NULL &&
+        TaskGroup->IsCollapsed)
     {
-        if (TaskGroup->IsCollapsed)
+        /* FIXME */
+        return;
+    }
+
+    if (ActiveTaskItem != NULL)
+    {
+        PTASK_GROUP ActiveTaskGroup;
+
+        if (ActiveTaskItem == TaskItem)
+            return;
+
+        ActiveTaskGroup = ActiveTaskItem->Group;
+
+        if (This->IsGroupingEnabled &&
+            ActiveTaskGroup != NULL &&
+            ActiveTaskGroup->IsCollapsed)
         {
+            if (ActiveTaskGroup == TaskGroup)
+                return;
+
             /* FIXME */
         }
         else
-            goto ChangeTaskItemButton;
+        {
+            This->ActiveTaskItem = NULL;
+            if (ActiveTaskItem->Index >= 0)
+            {
+                TaskSwitchWnd_UpdateTaskItemButton(This,
+                                                   ActiveTaskItem);
+            }
+        }
     }
-    else
+
+    This->ActiveTaskItem = TaskItem;
+
+    if (TaskItem != NULL && TaskItem->Index >= 0)
     {
-ChangeTaskItemButton:
-        if (ActiveTaskItem != NULL)
-        {
-            PTASK_GROUP ActiveTaskGroup;
-
-            if (ActiveTaskItem == TaskItem)
-                return;
-
-            ActiveTaskGroup = ActiveTaskItem->Group;
-
-            if (This->IsGroupingEnabled && ActiveTaskGroup != NULL)
-            {
-                if (ActiveTaskGroup->IsCollapsed)
-                {
-                    if (ActiveTaskGroup == TaskGroup)
-                        return;
-
-                    /* FIXME */
-                }
-                else
-                    goto ChangeActiveTaskItemButton;
-            }
-            else
-            {
-ChangeActiveTaskItemButton:
-                This->ActiveTaskItem = NULL;
-                if (ActiveTaskItem->Index >= 0)
-                {
-                    TaskSwitchWnd_UpdateTaskItemButton(This,
-                                                       ActiveTaskItem);
-                }
-            }
-        }
-
-        This->ActiveTaskItem = TaskItem;
-
-        if (TaskItem != NULL && TaskItem->Index >= 0)
-        {
-            TaskSwitchWnd_UpdateTaskItemButton(This,
-                                               TaskItem);
-        }
+        TaskSwitchWnd_UpdateTaskItemButton(This,
+                                           TaskItem);
     }
 }
 
