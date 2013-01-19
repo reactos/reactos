@@ -106,7 +106,7 @@ typedef struct _CONSOLE
     UNICODE_STRING Title;                   /* Title of console */
     HWND hWindow;
     COORD Size;
-    PVOID PrivateData;
+    PVOID GuiData;
 
 } CONSOLE, *PCONSOLE;
 

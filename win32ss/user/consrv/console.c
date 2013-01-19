@@ -128,7 +128,7 @@ CsrInitConsole(PCONSOLE* NewConsole, int ShowCmd, PCSR_PROCESS ConsoleLeaderProc
         RtlFreeHeap(ConSrvHeap, 0, Console);
         return STATUS_UNSUCCESSFUL;
     }
-    Console->PrivateData = NULL;
+    Console->GuiData = NULL;
     InitializeCriticalSection(&Console->Lock);
 
     GuiMode = DtbgIsDesktopVisible();

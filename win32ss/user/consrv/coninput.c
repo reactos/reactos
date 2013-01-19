@@ -206,7 +206,7 @@ ConioProcessKey(MSG *msg, PCONSOLE Console, BOOL TextMode)
         if ((ShiftState & (RIGHT_ALT_PRESSED | LEFT_ALT_PRESSED) || KeyState[VK_MENU] & 0x80) &&
             (VirtualKeyCode == VK_ESCAPE || VirtualKeyCode == VK_TAB || VirtualKeyCode == VK_SPACE))
         {
-           DefWindowProcW( msg->hwnd, msg->message, msg->wParam, msg->lParam);
+           DefWindowProcW(msg->hwnd, msg->message, msg->wParam, msg->lParam);
            return;
         }
     }
@@ -219,7 +219,7 @@ ConioProcessKey(MSG *msg, PCONSOLE Console, BOOL TextMode)
 
     Fake = UnicodeChar &&
             (msg->message != WM_CHAR && msg->message != WM_SYSCHAR &&
-            msg->message != WM_KEYUP && msg->message != WM_SYSKEYUP);
+             msg->message != WM_KEYUP && msg->message != WM_SYSKEYUP);
     NotChar = (msg->message != WM_CHAR && msg->message != WM_SYSCHAR);
     if (NotChar)
         LastVirtualKey = msg->wParam;
@@ -281,7 +281,7 @@ ConioProcessKey(MSG *msg, PCONSOLE Console, BOOL TextMode)
                 {
                     Console->ActiveBuffer->VirtualY = (Console->ActiveBuffer->VirtualY +
                                                        Console->ActiveBuffer->MaxY - 1) %
-                                                      Console->ActiveBuffer->MaxY;
+                                                       Console->ActiveBuffer->MaxY;
                     Console->ActiveBuffer->CurrentY++;
                 }
             }
@@ -291,7 +291,7 @@ ConioProcessKey(MSG *msg, PCONSOLE Console, BOOL TextMode)
                 if (Console->ActiveBuffer->CurrentY != 0)
                 {
                     Console->ActiveBuffer->VirtualY = (Console->ActiveBuffer->VirtualY + 1) %
-                                                      Console->ActiveBuffer->MaxY;
+                                                       Console->ActiveBuffer->MaxY;
                     Console->ActiveBuffer->CurrentY--;
                 }
             }

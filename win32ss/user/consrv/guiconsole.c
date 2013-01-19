@@ -37,7 +37,7 @@ PrivateCsrssManualGuiCheck(LONG Check)
 
 /* GLOBALS *******************************************************************/
 
-typedef struct GUI_CONSOLE_DATA_TAG
+typedef struct _GUI_CONSOLE_DATA
 {
     HFONT Font;
     unsigned CharWidth;
@@ -198,11 +198,10 @@ GuiConsoleCreateSysMenu(PCONSOLE Console)
     }
 }
 
-static VOID
-GuiConsoleGetDataPointers(HWND hWnd, PCONSOLE *Console, PGUI_CONSOLE_DATA *GuiData)
+static PCONSOLE
+GuiGetWindowConsole(HWND hWnd)
 {
-    *Console = (PCONSOLE)GetWindowLongPtrW(hWnd, GWLP_USERDATA);
-    *GuiData = (NULL == *Console ? NULL : (*Console)->PrivateData);
+    return (PCONSOLE)GetWindowLongPtrW(hWnd, GWLP_USERDATA);
 }
 
 static BOOL
@@ -409,8 +408,9 @@ GuiConsoleOpenUserSettings(PGUI_CONSOLE_DATA GuiData, DWORD ProcessId, PHKEY hSu
 }
 
 static VOID
-GuiConsoleWriteUserSettings(PCONSOLE Console, PGUI_CONSOLE_DATA GuiData)
+GuiConsoleWriteUserSettings(PCONSOLE Console)
 {
+    PGUI_CONSOLE_DATA GuiData = Console->GuiData;
     HKEY hKey;
     PCONSOLE_PROCESS_DATA ProcessData;
 
@@ -616,6 +616,7 @@ GuiConsoleReadUserSettings(HKEY hKey, PCONSOLE Console, PGUI_CONSOLE_DATA GuiDat
         }
     }
 }
+
 static VOID
 GuiConsoleUseDefaults(PCONSOLE Console, PGUI_CONSOLE_DATA GuiData, PCONSOLE_SCREEN_BUFFER Buffer)
 {
@@ -657,7 +658,7 @@ FASTCALL
 GuiConsoleInitScrollbar(PCONSOLE Console, HWND hwnd)
 {
     SCROLLINFO sInfo;
-    PGUI_CONSOLE_DATA GuiData = Console->PrivateData;
+    PGUI_CONSOLE_DATA GuiData = Console->GuiData;
 
     DWORD Width = Console->Size.X * GuiData->CharWidth + 2 * (GetSystemMetrics(SM_CXFRAME) + GetSystemMetrics(SM_CXEDGE));
     DWORD Height = Console->Size.Y * GuiData->CharHeight + 2 * (GetSystemMetrics(SM_CYFRAME) + GetSystemMetrics(SM_CYEDGE)) + GetSystemMetrics(SM_CYCAPTION);
@@ -703,7 +704,7 @@ static BOOL
 GuiConsoleHandleNcCreate(HWND hWnd, LPCREATESTRUCTW Create)
 {
     PCONSOLE Console = (PCONSOLE)Create->lpCreateParams;
-    PGUI_CONSOLE_DATA GuiData = (PGUI_CONSOLE_DATA)Console->PrivateData;
+    PGUI_CONSOLE_DATA GuiData = (PGUI_CONSOLE_DATA)Console->GuiData;
     HDC Dc;
     HFONT OldFont;
     TEXTMETRICW Metrics;
@@ -770,7 +771,7 @@ GuiConsoleHandleNcCreate(HWND hWnd, LPCREATESTRUCTW Create)
         RtlFreeHeap(ConSrvHeap, 0, GuiData);
         return FALSE;
     }
-    if (! GetTextMetricsW(Dc, &Metrics))
+    if (!GetTextMetricsW(Dc, &Metrics))
     {
         DPRINT1("GuiConsoleNcCreate: GetTextMetrics failed\n");
         SelectObject(Dc, OldFont);
@@ -794,7 +795,7 @@ GuiConsoleHandleNcCreate(HWND hWnd, LPCREATESTRUCTW Create)
     GuiData->ForceCursorOff = FALSE;
 
     DPRINT("Console %p GuiData %p\n", Console, GuiData);
-    Console->PrivateData = GuiData;
+    Console->GuiData = GuiData;
     SetWindowLongPtrW(hWnd, GWLP_USERDATA, (DWORD_PTR)Console);
 
     SetTimer(hWnd, CONGUI_UPDATE_TIMER, CONGUI_UPDATE_TIME, NULL);
@@ -813,7 +814,7 @@ static VOID
 SmallRectToRect(PCONSOLE Console, PRECT Rect, PSMALL_RECT SmallRect)
 {
     PCONSOLE_SCREEN_BUFFER Buffer = Console->ActiveBuffer;
-    PGUI_CONSOLE_DATA GuiData = Console->PrivateData;
+    PGUI_CONSOLE_DATA GuiData = Console->GuiData;
     Rect->left   = (SmallRect->Left       - Buffer->ShowX) * GuiData->CharWidth;
     Rect->top    = (SmallRect->Top        - Buffer->ShowY) * GuiData->CharHeight;
     Rect->right  = (SmallRect->Right  + 1 - Buffer->ShowX) * GuiData->CharWidth;
@@ -880,7 +881,6 @@ GuiConsoleUpdateSelection(PCONSOLE Console, PCOORD coord)
         ConioUnpause(Console, PAUSED_FROM_SELECTION);
     }
 }
-
 
 static VOID
 GuiConsolePaint(PCONSOLE Console,
@@ -1002,68 +1002,62 @@ GuiConsolePaint(PCONSOLE Console,
 }
 
 static VOID
-GuiConsoleHandlePaint(HWND hWnd, HDC hDCPaint)
+GuiConsoleHandlePaint(PCONSOLE Console,
+                      HWND hWnd,
+                      HDC hDCPaint)
 {
+    PGUI_CONSOLE_DATA GuiData = Console->GuiData;
     HDC hDC;
     PAINTSTRUCT ps;
-    PCONSOLE Console;
-    PGUI_CONSOLE_DATA GuiData;
+
+    if (GuiData == NULL) return;
+    if (Console->ActiveBuffer == NULL) return;
 
     hDC = BeginPaint(hWnd, &ps);
     if (hDC != NULL &&
             ps.rcPaint.left < ps.rcPaint.right &&
             ps.rcPaint.top < ps.rcPaint.bottom)
     {
-        GuiConsoleGetDataPointers(hWnd,
-                                  &Console,
-                                  &GuiData);
-        if (Console != NULL && GuiData != NULL &&
-                Console->ActiveBuffer != NULL)
+        if (Console->ActiveBuffer->Buffer != NULL)
         {
-            if (Console->ActiveBuffer->Buffer != NULL)
+            EnterCriticalSection(&GuiData->Lock);
+
+            GuiConsolePaint(Console,
+                            GuiData,
+                            hDC,
+                            &ps.rcPaint);
+
+            if (Console->Selection.dwFlags & CONSOLE_SELECTION_NOT_EMPTY)
             {
-                EnterCriticalSection(&GuiData->Lock);
+                RECT rc;
+                SmallRectToRect(Console, &rc, &Console->Selection.srSelection);
 
-                GuiConsolePaint(Console,
-                                GuiData,
-                                hDC,
-                                &ps.rcPaint);
-
-                if (Console->Selection.dwFlags & CONSOLE_SELECTION_NOT_EMPTY)
+                /* invert the selection */
+                if (IntersectRect(&rc,
+                                  &ps.rcPaint,
+                                  &rc))
                 {
-                    RECT rc;
-                    SmallRectToRect(Console, &rc, &Console->Selection.srSelection);
-
-                    /* invert the selection */
-                    if (IntersectRect(&rc,
-                                      &ps.rcPaint,
-                                      &rc))
-                    {
-                        PatBlt(hDC,
-                               rc.left,
-                               rc.top,
-                               rc.right - rc.left,
-                               rc.bottom - rc.top,
-                               DSTINVERT);
-                    }
+                    PatBlt(hDC,
+                           rc.left,
+                           rc.top,
+                           rc.right - rc.left,
+                           rc.bottom - rc.top,
+                           DSTINVERT);
                 }
-
-                LeaveCriticalSection(&GuiData->Lock);
             }
-        }
 
+            LeaveCriticalSection(&GuiData->Lock);
+        }
     }
     EndPaint(hWnd, &ps);
 }
 
 static VOID
-GuiConsoleHandleKey(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+GuiConsoleHandleKey(PCONSOLE Console, HWND hWnd,
+                    UINT msg, WPARAM wParam, LPARAM lParam)
 {
-    PCONSOLE Console;
-    PGUI_CONSOLE_DATA GuiData;
     MSG Message;
 
-    GuiConsoleGetDataPointers(hWnd, &Console, &GuiData);
     Message.hwnd = hWnd;
     Message.message = msg;
     Message.wParam = wParam;
@@ -1097,7 +1091,7 @@ static VOID WINAPI
 GuiWriteStream(PCONSOLE Console, SMALL_RECT* Region, LONG CursorStartX, LONG CursorStartY,
                UINT ScrolledLines, CHAR *Buffer, UINT Length)
 {
-    PGUI_CONSOLE_DATA GuiData = (PGUI_CONSOLE_DATA) Console->PrivateData;
+    PGUI_CONSOLE_DATA GuiData = (PGUI_CONSOLE_DATA) Console->GuiData;
     PCONSOLE_SCREEN_BUFFER Buff = Console->ActiveBuffer;
     LONG CursorEndX, CursorEndY;
     RECT ScrollRect;
@@ -1175,7 +1169,7 @@ GuiSetScreenInfo(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER Buff, UINT OldCursorX,
 static BOOL WINAPI
 GuiUpdateScreenInfo(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER Buff)
 {
-    PGUI_CONSOLE_DATA GuiData = (PGUI_CONSOLE_DATA) Console->PrivateData;
+    PGUI_CONSOLE_DATA GuiData = (PGUI_CONSOLE_DATA) Console->GuiData;
 
     if (Console->ActiveBuffer == Buff)
     {
@@ -1187,15 +1181,14 @@ GuiUpdateScreenInfo(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER Buff)
 }
 
 static VOID
-GuiConsoleHandleTimer(HWND hWnd)
+GuiConsoleHandleTimer(PCONSOLE Console, HWND hWnd)
 {
-    PCONSOLE Console;
-    PGUI_CONSOLE_DATA GuiData;
+    PGUI_CONSOLE_DATA GuiData = Console->GuiData;
     PCONSOLE_SCREEN_BUFFER Buff;
 
-    SetTimer(hWnd, CONGUI_UPDATE_TIMER, CURSOR_BLINK_TIME, NULL);
+    if (GuiData == NULL) return;
 
-    GuiConsoleGetDataPointers(hWnd, &Console, &GuiData);
+    SetTimer(hWnd, CONGUI_UPDATE_TIMER, CURSOR_BLINK_TIME, NULL);
 
     Buff = Console->ActiveBuffer;
     GuiInvalidateCell(Console, Buff->CurrentX, Buff->CurrentY);
@@ -1276,14 +1269,10 @@ GuiConsoleHandleTimer(HWND hWnd)
 }
 
 static VOID
-GuiConsoleHandleClose(HWND hWnd)
+GuiConsoleHandleClose(PCONSOLE Console, HWND hWnd)
 {
-    PCONSOLE Console;
-    PGUI_CONSOLE_DATA GuiData;
     PLIST_ENTRY current_entry;
     PCONSOLE_PROCESS_DATA current;
-
-    GuiConsoleGetDataPointers(hWnd, &Console, &GuiData);
 
     EnterCriticalSection(&Console->Lock);
 
@@ -1303,15 +1292,12 @@ GuiConsoleHandleClose(HWND hWnd)
 }
 
 static VOID
-GuiConsoleHandleNcDestroy(HWND hWnd)
+GuiConsoleHandleNcDestroy(PCONSOLE Console, HWND hWnd)
 {
-    PCONSOLE Console;
-    PGUI_CONSOLE_DATA GuiData;
+    PGUI_CONSOLE_DATA GuiData = Console->GuiData;
 
-
-    GuiConsoleGetDataPointers(hWnd, &Console, &GuiData);
     KillTimer(hWnd, 1);
-    Console->PrivateData = NULL;
+    Console->GuiData = NULL;
     DeleteCriticalSection(&GuiData->Lock);
     GetSystemMenu(hWnd, TRUE);
     if (GuiData->ConsoleLibrary)
@@ -1323,9 +1309,10 @@ GuiConsoleHandleNcDestroy(HWND hWnd)
 static COORD
 PointToCoord(PCONSOLE Console, LPARAM lParam)
 {
+    PGUI_CONSOLE_DATA GuiData = Console->GuiData;
     PCONSOLE_SCREEN_BUFFER Buffer = Console->ActiveBuffer;
-    PGUI_CONSOLE_DATA GuiData = Console->PrivateData;
     COORD Coord;
+
     Coord.X = Buffer->ShowX + ((short)LOWORD(lParam) / (int)GuiData->CharWidth);
     Coord.Y = Buffer->ShowY + ((short)HIWORD(lParam) / (int)GuiData->CharHeight);
 
@@ -1334,18 +1321,14 @@ PointToCoord(PCONSOLE Console, LPARAM lParam)
     else if (Coord.X >= Buffer->MaxX) Coord.X = Buffer->MaxX - 1;
     if (Coord.Y < 0)                  Coord.Y = 0;
     else if (Coord.Y >= Buffer->MaxY) Coord.Y = Buffer->MaxY - 1;
+
     return Coord;
 }
 
 static VOID
-GuiConsoleLeftMouseDown(HWND hWnd, LPARAM lParam)
+GuiConsoleLeftMouseDown(PCONSOLE Console, HWND hWnd,
+                        LPARAM lParam)
 {
-    PCONSOLE Console;
-    PGUI_CONSOLE_DATA GuiData;
-
-    GuiConsoleGetDataPointers(hWnd, &Console, &GuiData);
-    if (Console == NULL || GuiData == NULL) return;
-
     Console->Selection.dwSelectionAnchor = PointToCoord(Console, lParam);
 
     SetCapture(hWnd);
@@ -1356,14 +1339,11 @@ GuiConsoleLeftMouseDown(HWND hWnd, LPARAM lParam)
 }
 
 static VOID
-GuiConsoleLeftMouseUp(HWND hWnd, LPARAM lParam)
+GuiConsoleLeftMouseUp(PCONSOLE Console, HWND hWnd,
+                      LPARAM lParam)
 {
-    PCONSOLE Console;
-    PGUI_CONSOLE_DATA GuiData;
     COORD c;
 
-    GuiConsoleGetDataPointers(hWnd, &Console, &GuiData);
-    if (Console == NULL || GuiData == NULL) return;
     if (!(Console->Selection.dwFlags & CONSOLE_MOUSE_DOWN)) return;
 
     c = PointToCoord(Console, lParam);
@@ -1376,16 +1356,13 @@ GuiConsoleLeftMouseUp(HWND hWnd, LPARAM lParam)
 }
 
 static VOID
-GuiConsoleMouseMove(HWND hWnd, WPARAM wParam, LPARAM lParam)
+GuiConsoleMouseMove(PCONSOLE Console, HWND hWnd,
+                    WPARAM wParam, LPARAM lParam)
 {
-    PCONSOLE Console;
-    PGUI_CONSOLE_DATA GuiData;
     COORD c;
 
     if (!(wParam & MK_LBUTTON)) return;
 
-    GuiConsoleGetDataPointers(hWnd, &Console, &GuiData);
-    if (Console == NULL || GuiData == NULL) return;
     if (!(Console->Selection.dwFlags & CONSOLE_MOUSE_DOWN)) return;
 
     c = PointToCoord(Console, lParam); /* TODO: Scroll buffer to bring c into view */
@@ -1497,14 +1474,8 @@ GuiConsolePaste(HWND hWnd, PCONSOLE Console)
 }
 
 static VOID
-GuiConsoleRightMouseDown(HWND hWnd)
+GuiConsoleRightMouseDown(PCONSOLE Console, HWND hWnd)
 {
-    PCONSOLE Console;
-    PGUI_CONSOLE_DATA GuiData;
-
-    GuiConsoleGetDataPointers(hWnd, &Console, &GuiData);
-    if (Console == NULL || GuiData == NULL) return;
-
     if (!(Console->Selection.dwFlags & CONSOLE_SELECTION_NOT_EMPTY))
     {
         GuiConsolePaste(hWnd, Console);
@@ -1516,26 +1487,21 @@ GuiConsoleRightMouseDown(HWND hWnd)
         /* Clear the selection */
         GuiConsoleUpdateSelection(Console, NULL);
     }
-
 }
 
 static VOID
-GuiConsoleShowConsoleProperties(HWND hWnd, BOOL Defaults, PGUI_CONSOLE_DATA GuiData)
+GuiConsoleShowConsoleProperties(PCONSOLE Console,
+                                HWND hWnd,
+                                BOOL Defaults)
 {
-    PCONSOLE Console;
+    PGUI_CONSOLE_DATA GuiData = Console->GuiData;
     APPLET_PROC CPLFunc;
     WCHAR szBuffer[MAX_PATH];
     ConsoleInfo SharedInfo;
 
     DPRINT("GuiConsoleShowConsoleProperties entered\n");
 
-    GuiConsoleGetDataPointers(hWnd, &Console, &GuiData);
-
-    if (GuiData == NULL)
-    {
-        DPRINT("GuiConsoleGetDataPointers failed\n");
-        return;
-    }
+    if (GuiData == NULL) return;
 
     if (GuiData->ConsoleLibrary == NULL)
     {
@@ -1592,68 +1558,67 @@ GuiConsoleShowConsoleProperties(HWND hWnd, BOOL Defaults, PGUI_CONSOLE_DATA GuiD
     CPLFunc(hWnd, CPL_DBLCLK, (LPARAM)&SharedInfo, Defaults);
     CPLFunc(hWnd, CPL_EXIT  , 0, 0);
 }
+
 static LRESULT
-GuiConsoleHandleSysMenuCommand(HWND hWnd, WPARAM wParam, LPARAM lParam)
+GuiConsoleHandleSysMenuCommand(PCONSOLE Console,
+                               HWND hWnd,
+                               WPARAM wParam, LPARAM lParam)
 {
     LRESULT Ret = TRUE;
-    PCONSOLE Console;
-    PGUI_CONSOLE_DATA GuiData;
     COORD bottomRight = { 0, 0 };
 
-    GuiConsoleGetDataPointers(hWnd, &Console, &GuiData);
-
-    switch(wParam)
+    switch (wParam)
     {
-    case ID_SYSTEM_EDIT_MARK:
-        DPRINT1("Marking not handled yet\n");
-        break;
+        case ID_SYSTEM_EDIT_MARK:
+            DPRINT1("Marking not handled yet\n");
+            break;
 
-    case ID_SYSTEM_EDIT_COPY:
-        GuiConsoleCopy(hWnd, Console);
-        break;
+        case ID_SYSTEM_EDIT_COPY:
+            GuiConsoleCopy(hWnd, Console);
+            break;
 
-    case ID_SYSTEM_EDIT_PASTE:
-        GuiConsolePaste(hWnd, Console);
-        break;
+        case ID_SYSTEM_EDIT_PASTE:
+            GuiConsolePaste(hWnd, Console);
+            break;
 
-    case ID_SYSTEM_EDIT_SELECTALL:
-        bottomRight.X = Console->Size.X - 1;
-        bottomRight.Y = Console->Size.Y - 1;
-        GuiConsoleUpdateSelection(Console, &bottomRight);
-        break;
+        case ID_SYSTEM_EDIT_SELECTALL:
+            bottomRight.X = Console->Size.X - 1;
+            bottomRight.Y = Console->Size.Y - 1;
+            GuiConsoleUpdateSelection(Console, &bottomRight);
+            break;
 
-    case ID_SYSTEM_EDIT_SCROLL:
-        DPRINT1("Scrolling is not handled yet\n");
-        break;
+        case ID_SYSTEM_EDIT_SCROLL:
+            DPRINT1("Scrolling is not handled yet\n");
+            break;
 
-    case ID_SYSTEM_EDIT_FIND:
-        DPRINT1("Finding is not handled yet\n");
-        break;
+        case ID_SYSTEM_EDIT_FIND:
+            DPRINT1("Finding is not handled yet\n");
+            break;
 
-    case ID_SYSTEM_DEFAULTS:
-        GuiConsoleShowConsoleProperties(hWnd, TRUE, GuiData);
-        break;
+        case ID_SYSTEM_DEFAULTS:
+            GuiConsoleShowConsoleProperties(Console, hWnd, TRUE);
+            break;
 
-    case ID_SYSTEM_PROPERTIES:
-        GuiConsoleShowConsoleProperties(hWnd, FALSE, GuiData);
-        break;
+        case ID_SYSTEM_PROPERTIES:
+            GuiConsoleShowConsoleProperties(Console, hWnd, FALSE);
+            break;
 
-    default:
-        Ret = DefWindowProcW(hWnd, WM_SYSCOMMAND, wParam, lParam);
-        break;
+        default:
+            Ret = DefWindowProcW(hWnd, WM_SYSCOMMAND, wParam, lParam);
+            break;
     }
     return Ret;
 }
 
 static VOID
-GuiConsoleGetMinMaxInfo(HWND hWnd, PMINMAXINFO minMaxInfo)
+GuiConsoleGetMinMaxInfo(PCONSOLE Console,
+                        HWND hWnd,
+                        PMINMAXINFO minMaxInfo)
 {
-    PCONSOLE Console;
-    PGUI_CONSOLE_DATA GuiData;
+    PGUI_CONSOLE_DATA GuiData = Console->GuiData;
     DWORD windx, windy;
 
-    GuiConsoleGetDataPointers(hWnd, &Console, &GuiData);
-    if((Console == NULL)|| (GuiData == NULL)) return;
+    if (GuiData == NULL) return;
 
     windx = CONGUI_MIN_WIDTH * GuiData->CharWidth + 2 * (GetSystemMetrics(SM_CXFRAME) + GetSystemMetrics(SM_CXEDGE));
     windy = CONGUI_MIN_HEIGHT * GuiData->CharHeight + 2 * (GetSystemMetrics(SM_CYFRAME) + GetSystemMetrics(SM_CYEDGE)) + GetSystemMetrics(SM_CYCAPTION);
@@ -1670,13 +1635,15 @@ GuiConsoleGetMinMaxInfo(HWND hWnd, PMINMAXINFO minMaxInfo)
     minMaxInfo->ptMaxTrackSize.x = windx;
     minMaxInfo->ptMaxTrackSize.y = windy;
 }
+
 static VOID
-GuiConsoleResize(HWND hWnd, WPARAM wParam, LPARAM lParam)
+GuiConsoleResize(PCONSOLE Console,
+                 HWND hWnd,
+                 WPARAM wParam, LPARAM lParam)
 {
-    PCONSOLE Console;
-    PGUI_CONSOLE_DATA GuiData;
-    GuiConsoleGetDataPointers(hWnd, &Console, &GuiData);
-    if((Console == NULL) || (GuiData == NULL)) return;
+    PGUI_CONSOLE_DATA GuiData = Console->GuiData;
+
+    if (GuiData == NULL) return;
 
     if ((GuiData->WindowSizeLock == FALSE) && (wParam == SIZE_RESTORED || wParam == SIZE_MAXIMIZED || wParam == SIZE_MINIMIZED))
     {
@@ -1848,8 +1815,10 @@ GuiResizeBuffer(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER ScreenBuffer, COORD Siz
 }
 
 static VOID
-GuiApplyUserSettings(PCONSOLE Console, PGUI_CONSOLE_DATA GuiData, PConsoleInfo pConInfo)
+GuiApplyUserSettings(PCONSOLE Console,
+                     PConsoleInfo pConInfo)
 {
+    PGUI_CONSOLE_DATA GuiData = Console->GuiData;
     DWORD windx, windy;
     PCONSOLE_SCREEN_BUFFER ActiveBuffer = Console->ActiveBuffer;
     COORD BufSize;
@@ -1896,19 +1865,20 @@ GuiApplyUserSettings(PCONSOLE Console, PGUI_CONSOLE_DATA GuiData, PConsoleInfo p
 
 static
 LRESULT
-GuiConsoleHandleScroll(HWND hwnd, UINT uMsg, WPARAM wParam)
+GuiConsoleHandleScroll(PCONSOLE Console,
+                       HWND hWnd,
+                       UINT uMsg,
+                       WPARAM wParam)
 {
-    PCONSOLE Console;
+    PGUI_CONSOLE_DATA GuiData = Console->GuiData;
     PCONSOLE_SCREEN_BUFFER Buff;
-    PGUI_CONSOLE_DATA GuiData;
     SCROLLINFO sInfo;
     int fnBar;
     int old_pos, Maximum;
     PUSHORT pShowXY;
 
-    GuiConsoleGetDataPointers(hwnd, &Console, &GuiData);
-    if (Console == NULL || GuiData == NULL)
-        return FALSE;
+    if (GuiData == NULL) return FALSE;
+
     Buff = Console->ActiveBuffer;
 
     if (uMsg == WM_HSCROLL)
@@ -1928,50 +1898,50 @@ GuiConsoleHandleScroll(HWND hwnd, UINT uMsg, WPARAM wParam)
     sInfo.cbSize = sizeof(SCROLLINFO);
     sInfo.fMask = SIF_RANGE | SIF_POS | SIF_PAGE | SIF_TRACKPOS;
 
-    if (!GetScrollInfo(hwnd, fnBar, &sInfo))
+    if (!GetScrollInfo(hWnd, fnBar, &sInfo))
     {
         return FALSE;
     }
 
     old_pos = sInfo.nPos;
 
-    switch(LOWORD(wParam))
+    switch (LOWORD(wParam))
     {
-    case SB_LINELEFT:
-        sInfo.nPos -= 1;
-        break;
+        case SB_LINELEFT:
+            sInfo.nPos -= 1;
+            break;
 
-    case SB_LINERIGHT:
-        sInfo.nPos += 1;
-        break;
+        case SB_LINERIGHT:
+            sInfo.nPos += 1;
+            break;
 
-    case SB_PAGELEFT:
-        sInfo.nPos -= sInfo.nPage;
-        break;
+        case SB_PAGELEFT:
+            sInfo.nPos -= sInfo.nPage;
+            break;
 
-    case SB_PAGERIGHT:
-        sInfo.nPos += sInfo.nPage;
-        break;
+        case SB_PAGERIGHT:
+            sInfo.nPos += sInfo.nPage;
+            break;
 
-    case SB_THUMBTRACK:
-        sInfo.nPos = sInfo.nTrackPos;
-        ConioPause(Console, PAUSED_FROM_SCROLLBAR);
-        break;
+        case SB_THUMBTRACK:
+            sInfo.nPos = sInfo.nTrackPos;
+            ConioPause(Console, PAUSED_FROM_SCROLLBAR);
+            break;
 
-    case SB_THUMBPOSITION:
-        ConioUnpause(Console, PAUSED_FROM_SCROLLBAR);
-        break;
+        case SB_THUMBPOSITION:
+            ConioUnpause(Console, PAUSED_FROM_SCROLLBAR);
+            break;
 
-    case SB_TOP:
-        sInfo.nPos = sInfo.nMin;
-        break;
+        case SB_TOP:
+            sInfo.nPos = sInfo.nMin;
+            break;
 
-    case SB_BOTTOM:
-        sInfo.nPos = sInfo.nMax;
-        break;
+        case SB_BOTTOM:
+            sInfo.nPos = sInfo.nMax;
+            break;
 
-    default:
-        break;
+        default:
+            break;
     }
 
     sInfo.nPos = max(sInfo.nPos, 0);
@@ -1983,7 +1953,7 @@ GuiConsoleHandleScroll(HWND hwnd, UINT uMsg, WPARAM wParam)
         USHORT OldY = Buff->ShowY;
         *pShowXY = sInfo.nPos;
 
-        ScrollWindowEx(hwnd,
+        ScrollWindowEx(hWnd,
                        (OldX - Buff->ShowX) * GuiData->CharWidth,
                        (OldY - Buff->ShowY) * GuiData->CharHeight,
                        NULL,
@@ -1993,10 +1963,11 @@ GuiConsoleHandleScroll(HWND hwnd, UINT uMsg, WPARAM wParam)
                        SW_INVALIDATE);
 
         sInfo.fMask = SIF_POS;
-        SetScrollInfo(hwnd, fnBar, &sInfo, TRUE);
+        SetScrollInfo(hWnd, fnBar, &sInfo, TRUE);
 
-        UpdateWindow(hwnd);
+        UpdateWindow(hWnd);
     }
+
     return 0;
 }
 
@@ -2004,70 +1975,96 @@ static LRESULT CALLBACK
 GuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     LRESULT Result = 0;
-    PGUI_CONSOLE_DATA GuiData = NULL;
     PCONSOLE Console = NULL;
 
-    GuiConsoleGetDataPointers(hWnd, &Console, &GuiData);
-
-    switch(msg)
+    /*
+     * If it's the first time we create a window
+     * for the console, just initialize it.
+     */
+    if (msg == WM_NCCREATE)
     {
-    case WM_NCCREATE:
-        Result = (LRESULT) GuiConsoleHandleNcCreate(hWnd, (LPCREATESTRUCTW)lParam);
-        break;
-    case WM_PAINT:
-        GuiConsoleHandlePaint(hWnd, (HDC)wParam);
-        break;
-    case WM_KEYDOWN:
-    case WM_KEYUP:
-    case WM_SYSKEYDOWN:
-    case WM_SYSKEYUP:
-    case WM_CHAR:
-        GuiConsoleHandleKey(hWnd, msg, wParam, lParam);
-        break;
-    case WM_TIMER:
-        GuiConsoleHandleTimer(hWnd);
-        break;
-    case WM_CLOSE:
-        GuiConsoleHandleClose(hWnd);
-        break;
-    case WM_NCDESTROY:
-        GuiConsoleHandleNcDestroy(hWnd);
-        break;
-    case WM_LBUTTONDOWN:
-        GuiConsoleLeftMouseDown(hWnd, lParam);
-        break;
-    case WM_LBUTTONUP:
-        GuiConsoleLeftMouseUp(hWnd, lParam);
-        break;
-    case WM_RBUTTONDOWN:
-        GuiConsoleRightMouseDown(hWnd);
-        break;
-    case WM_MOUSEMOVE:
-        GuiConsoleMouseMove(hWnd, wParam, lParam);
-        break;
-    case WM_SYSCOMMAND:
-        Result = GuiConsoleHandleSysMenuCommand(hWnd, wParam, lParam);
-        break;
-    case WM_HSCROLL:
-    case WM_VSCROLL:
-        Result = GuiConsoleHandleScroll(hWnd, msg, wParam);
-        break;
-    case WM_GETMINMAXINFO:
-        GuiConsoleGetMinMaxInfo(hWnd, (PMINMAXINFO)lParam);
-        break;
-    case WM_SIZE:
-        GuiConsoleResize(hWnd, wParam, lParam);
-        break;
-    case PM_APPLY_CONSOLE_INFO:
-        GuiApplyUserSettings(Console, GuiData, (PConsoleInfo)wParam);
-        if (lParam)
-        {
-            GuiConsoleWriteUserSettings(Console, GuiData);
-        }
-        break;
-    default:
-        Result = DefWindowProcW(hWnd, msg, wParam, lParam);
-        break;
+        return (LRESULT)GuiConsoleHandleNcCreate(hWnd, (LPCREATESTRUCTW)lParam);
+    }
+
+    /*
+     * Now the console window is initialized.
+     * Get the console owned by the window.
+     * If there is no console, just go away.
+     */
+    Console = GuiGetWindowConsole(hWnd);
+    if (Console == NULL) return 0;
+
+    /* We have a console, start message dispatching. */
+    switch (msg)
+    {
+        case WM_PAINT:
+            GuiConsoleHandlePaint(Console, hWnd, (HDC)wParam);
+            break;
+
+        case WM_KEYDOWN:
+        case WM_KEYUP:
+        case WM_SYSKEYDOWN:
+        case WM_SYSKEYUP:
+        case WM_CHAR:
+            GuiConsoleHandleKey(Console, hWnd, msg, wParam, lParam);
+            break;
+
+        case WM_TIMER:
+            GuiConsoleHandleTimer(Console, hWnd);
+            break;
+
+        case WM_CLOSE:
+            GuiConsoleHandleClose(Console, hWnd);
+            break;
+
+        case WM_NCDESTROY:
+            GuiConsoleHandleNcDestroy(Console, hWnd);
+            break;
+
+        case WM_LBUTTONDOWN:
+            GuiConsoleLeftMouseDown(Console, hWnd, lParam);
+            break;
+
+        case WM_LBUTTONUP:
+            GuiConsoleLeftMouseUp(Console, hWnd, lParam);
+            break;
+
+        case WM_RBUTTONDOWN:
+            GuiConsoleRightMouseDown(Console, hWnd);
+            break;
+
+        case WM_MOUSEMOVE:
+            GuiConsoleMouseMove(Console, hWnd, wParam, lParam);
+            break;
+
+        case WM_SYSCOMMAND:
+            Result = GuiConsoleHandleSysMenuCommand(Console, hWnd, wParam, lParam);
+            break;
+
+        case WM_HSCROLL:
+        case WM_VSCROLL:
+            Result = GuiConsoleHandleScroll(Console, hWnd, msg, wParam);
+            break;
+
+        case WM_GETMINMAXINFO:
+            GuiConsoleGetMinMaxInfo(Console, hWnd, (PMINMAXINFO)lParam);
+            break;
+
+        case WM_SIZE:
+            GuiConsoleResize(Console, hWnd, wParam, lParam);
+            break;
+
+        case PM_APPLY_CONSOLE_INFO:
+            GuiApplyUserSettings(Console, (PConsoleInfo)wParam);
+            if (lParam)
+            {
+                GuiConsoleWriteUserSettings(Console);
+            }
+            break;
+
+        default:
+            Result = DefWindowProcW(hWnd, msg, wParam, lParam);
+            break;
     }
 
     return Result;
@@ -2082,71 +2079,71 @@ GuiConsoleNotifyWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     PWCHAR Buffer, Title;
     PCONSOLE Console = (PCONSOLE) lParam;
 
-    switch(msg)
+    switch (msg)
     {
-    case WM_CREATE:
-        SetWindowLongW(hWnd, GWL_USERDATA, 0);
-        return 0;
-    case PM_CREATE_CONSOLE:
-        Buffer = RtlAllocateHeap(ConSrvHeap, 0,
-                                 Console->Title.Length + sizeof(WCHAR));
-        if (NULL != Buffer)
-        {
-            memcpy(Buffer, Console->Title.Buffer, Console->Title.Length);
-            Buffer[Console->Title.Length / sizeof(WCHAR)] = L'\0';
-            Title = Buffer;
-        }
-        else
-        {
-            Title = L"";
-        }
-        NewWindow = CreateWindowExW(WS_EX_CLIENTEDGE,
-                                    GUI_CONSOLE_WINDOW_CLASS,
-                                    Title,
-                                    WS_OVERLAPPEDWINDOW | WS_HSCROLL | WS_VSCROLL,
-                                    CW_USEDEFAULT,
-                                    CW_USEDEFAULT,
-                                    CW_USEDEFAULT,
-                                    CW_USEDEFAULT,
-                                    NULL,
-                                    NULL,
-                                    (HINSTANCE)GetModuleHandleW(NULL),
-                                    (PVOID)Console);
-        if (NULL != Buffer)
-        {
-            RtlFreeHeap(ConSrvHeap, 0, Buffer);
-        }
-        if (NULL != NewWindow)
-        {
-            SetConsoleWndConsoleLeaderCID(Console);
-            SetWindowLongW(hWnd, GWL_USERDATA, GetWindowLongW(hWnd, GWL_USERDATA) + 1);
-            ShowWindow(NewWindow, (int)wParam);
-        }
-        return (LRESULT)NewWindow;
-    case PM_DESTROY_CONSOLE:
-        /* Window creation is done using a PostMessage(), so it's possible that the
-         * window that we want to destroy doesn't exist yet. So first empty the message
-         * queue */
-        while(PeekMessageW(&Msg, NULL, 0, 0, PM_REMOVE))
-        {
-            TranslateMessage(&Msg);
-            DispatchMessageW(&Msg);
-        }
-        DestroyWindow(Console->hWindow);
-        Console->hWindow = NULL;
-        WindowCount = GetWindowLongW(hWnd, GWL_USERDATA);
-        WindowCount--;
-        SetWindowLongW(hWnd, GWL_USERDATA, WindowCount);
-        if (0 == WindowCount)
-        {
-            NotifyWnd = NULL;
-            DestroyWindow(hWnd);
-            PrivateCsrssManualGuiCheck(-1);
-            PostQuitMessage(0);
-        }
-        return 0;
-    default:
-        return DefWindowProcW(hWnd, msg, wParam, lParam);
+        case WM_CREATE:
+            SetWindowLongW(hWnd, GWL_USERDATA, 0);
+            return 0;
+        case PM_CREATE_CONSOLE:
+            Buffer = RtlAllocateHeap(ConSrvHeap, 0,
+                                     Console->Title.Length + sizeof(WCHAR));
+            if (NULL != Buffer)
+            {
+                memcpy(Buffer, Console->Title.Buffer, Console->Title.Length);
+                Buffer[Console->Title.Length / sizeof(WCHAR)] = L'\0';
+                Title = Buffer;
+            }
+            else
+            {
+                Title = L"";
+            }
+            NewWindow = CreateWindowExW(WS_EX_CLIENTEDGE,
+                                        GUI_CONSOLE_WINDOW_CLASS,
+                                        Title,
+                                        WS_OVERLAPPEDWINDOW | WS_HSCROLL | WS_VSCROLL,
+                                        CW_USEDEFAULT,
+                                        CW_USEDEFAULT,
+                                        CW_USEDEFAULT,
+                                        CW_USEDEFAULT,
+                                        NULL,
+                                        NULL,
+                                        (HINSTANCE)GetModuleHandleW(NULL),
+                                        (PVOID)Console);
+            if (NULL != Buffer)
+            {
+                RtlFreeHeap(ConSrvHeap, 0, Buffer);
+            }
+            if (NULL != NewWindow)
+            {
+                SetConsoleWndConsoleLeaderCID(Console);
+                SetWindowLongW(hWnd, GWL_USERDATA, GetWindowLongW(hWnd, GWL_USERDATA) + 1);
+                ShowWindow(NewWindow, (int)wParam);
+            }
+            return (LRESULT)NewWindow;
+        case PM_DESTROY_CONSOLE:
+            /* Window creation is done using a PostMessage(), so it's possible that the
+             * window that we want to destroy doesn't exist yet. So first empty the message
+             * queue */
+            while(PeekMessageW(&Msg, NULL, 0, 0, PM_REMOVE))
+            {
+                TranslateMessage(&Msg);
+                DispatchMessageW(&Msg);
+            }
+            DestroyWindow(Console->hWindow);
+            Console->hWindow = NULL;
+            WindowCount = GetWindowLongW(hWnd, GWL_USERDATA);
+            WindowCount--;
+            SetWindowLongW(hWnd, GWL_USERDATA, WindowCount);
+            if (0 == WindowCount)
+            {
+                NotifyWnd = NULL;
+                DestroyWindow(hWnd);
+                PrivateCsrssManualGuiCheck(-1);
+                PostQuitMessage(0);
+            }
+            return 0;
+        default:
+            return DefWindowProcW(hWnd, msg, wParam, lParam);
     }
 }
 
@@ -2365,7 +2362,7 @@ GuiInitConsole(PCONSOLE Console, int ShowCmd)
         return STATUS_UNSUCCESSFUL;
     }
 
-    Console->PrivateData = (PVOID)GuiData;
+    Console->GuiData = (PVOID)GuiData;
     /*
      * we need to wait until the GUI has been fully initialized
      * to retrieve custom settings i.e. WindowSize etc..
@@ -2379,7 +2376,7 @@ GuiInitConsole(PCONSOLE Console, int ShowCmd)
 
     /* wait until initialization has finished */
     WaitForSingleObject(GuiData->hGuiInitEvent, INFINITE);
-    DPRINT("received event Console %p GuiData %p X %d Y %d\n", Console, Console->PrivateData, Console->Size.X, Console->Size.Y);
+    DPRINT("received event Console %p GuiData %p X %d Y %d\n", Console, Console->GuiData, Console->Size.X, Console->Size.Y);
     CloseHandle(GuiData->hGuiInitEvent);
     GuiData->hGuiInitEvent = NULL;
 
