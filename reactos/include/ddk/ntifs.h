@@ -1441,9 +1441,9 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 RtlCopySid(
-  _In_ ULONG Length,
-  _Out_writes_bytes_(Length) PSID Destination,
-  _In_ PSID Source);
+  _In_ ULONG DestinationSidLength,
+  _Out_writes_bytes_(DestinationSidLength) PSID DestinationSid,
+  _In_ PSID SourceSid);
 
 _IRQL_requires_max_(APC_LEVEL)
 NTSYSAPI
@@ -1605,7 +1605,7 @@ VOID
 NTAPI
 RtlInitCodePageTable(
   _In_ PUSHORT TableBase,
-  _Inout_ PCPTABLEINFO CodePageTable);
+  _Out_ PCPTABLEINFO CodePageTable);
 
 
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
@@ -2117,12 +2117,12 @@ NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtAdjustPrivilegesToken(
-  _In_ HANDLE TokenHandle,
-  _In_ BOOLEAN DisableAllPrivileges,
-  _In_opt_ PTOKEN_PRIVILEGES NewState,
-  _In_ ULONG BufferLength,
-  _Out_writes_bytes_to_opt_(BufferLength, *ReturnLength) PTOKEN_PRIVILEGES PreviousState,
-  _Out_ _When_(PreviousState == NULL, _Out_opt_) PULONG ReturnLength);
+    _In_ HANDLE TokenHandle,
+    _In_ BOOLEAN DisableAllPrivileges,
+    _In_opt_ PTOKEN_PRIVILEGES NewState,
+    _In_ ULONG BufferLength,
+    _Out_writes_bytes_to_opt_(BufferLength, *ReturnLength) PTOKEN_PRIVILEGES PreviousState,
+    _When_(PreviousState != NULL, _Out_) PULONG ReturnLength);
 
 __kernel_entry
 NTSYSCALLAPI
@@ -2357,30 +2357,6 @@ NTSTATUS
 NTAPI
 NtClose(
   _In_ HANDLE Handle);
-
-_Must_inspect_result_
-__drv_allocatesMem(Mem)
-__kernel_entry
-NTSYSCALLAPI
-NTSTATUS
-NTAPI
-NtAllocateVirtualMemory(
-  _In_ HANDLE ProcessHandle,
-  _Inout_ _At_(*BaseAddress, _Readable_bytes_(*RegionSize) _Writable_bytes_(*RegionSize) _Post_readable_byte_size_(*RegionSize)) PVOID *BaseAddress,
-  _In_ ULONG_PTR ZeroBits,
-  _Inout_ PSIZE_T RegionSize,
-  _In_ ULONG AllocationType,
-  _In_ ULONG Protect);
-
-__kernel_entry
-NTSYSCALLAPI
-NTSTATUS
-NTAPI
-NtFreeVirtualMemory(
-  _In_ HANDLE ProcessHandle,
-  _Inout_ __drv_freesMem(Mem) PVOID *BaseAddress,
-  _Inout_ PSIZE_T RegionSize,
-  _In_ ULONG FreeType);
 
 #endif
 
@@ -5005,6 +4981,7 @@ typedef struct _KQUEUE {
 } KQUEUE, *PKQUEUE, *RESTRICTED_POINTER PRKQUEUE;
 
 
+
 /******************************************************************************
  *                              Kernel Functions                              *
  ******************************************************************************/
@@ -6409,6 +6386,32 @@ ULONG
 NTAPI
 MmDoesFileHaveUserWritableReferences(
   _In_ PSECTION_OBJECT_POINTERS SectionPointer);
+
+_Must_inspect_result_
+_At_(*BaseAddress, __drv_allocatesMem(Mem))
+__kernel_entry
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtAllocateVirtualMemory(
+    _In_ HANDLE ProcessHandle,
+    _Inout_ _Outptr_result_buffer_(*RegionSize) PVOID *BaseAddress,
+    _In_ ULONG_PTR ZeroBits,
+    _Inout_ PSIZE_T RegionSize,
+    _In_ ULONG AllocationType,
+    _In_ ULONG Protect);
+
+__kernel_entry
+_IRQL_requires_max_(PASSIVE_LEVEL)
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtFreeVirtualMemory(
+    _In_ HANDLE ProcessHandle,
+    _Inout_ __drv_freesMem(Mem) PVOID *BaseAddress,
+    _Inout_ PSIZE_T RegionSize,
+    _In_ ULONG FreeType);
+
 #endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
 
 
@@ -6484,6 +6487,14 @@ ObOpenObjectByPointerWithTag(
   _In_ KPROCESSOR_MODE AccessMode,
   _In_ ULONG Tag,
   _Out_ PHANDLE Handle);
+
+NTKERNELAPI
+ULONG
+NTAPI
+ObGetObjectPointerCount(
+    _In_ PVOID Object
+);
+
 #endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
 
 /* FSRTL Types */
@@ -9152,29 +9163,29 @@ ZwOpenDirectoryObject(
   _In_ ACCESS_MASK DesiredAccess,
   _In_ POBJECT_ATTRIBUTES ObjectAttributes);
 
-_IRQL_requires_max_(PASSIVE_LEVEL)
-_When_(return==0, __drv_allocatesMem(Region))
+_Must_inspect_result_
+_At_(*BaseAddress, __drv_allocatesMem(Mem))
+__kernel_entry NTSYSCALLAPI
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwAllocateVirtualMemory(
-  _In_ HANDLE ProcessHandle,
-  _Inout_ PVOID *BaseAddress,
-  _In_ ULONG_PTR ZeroBits,
-  _Inout_ PSIZE_T RegionSize,
-  _In_ ULONG AllocationType,
-  _In_ ULONG Protect);
+    _In_ HANDLE ProcessHandle,
+    _Inout_ _Outptr_result_buffer_(*RegionSize) PVOID *BaseAddress,
+    _In_ ULONG_PTR ZeroBits,
+    _Inout_ PSIZE_T RegionSize,
+    _In_ ULONG AllocationType,
+    _In_ ULONG Protect);
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
-_When_(return==0, __drv_freesMem(Region))
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwFreeVirtualMemory(
-  _In_ HANDLE ProcessHandle,
-  _Inout_ PVOID *BaseAddress,
-  _Inout_ PSIZE_T RegionSize,
-  _In_ ULONG FreeType);
+    _In_ HANDLE ProcessHandle,
+    _Inout_ __drv_freesMem(Mem) PVOID *BaseAddress,
+    _Inout_ PSIZE_T RegionSize,
+    _In_ ULONG FreeType);
 
 _When_(Timeout == NULL, _IRQL_requires_max_(APC_LEVEL))
 _When_(Timeout->QuadPart != 0, _IRQL_requires_max_(APC_LEVEL))
@@ -9335,6 +9346,286 @@ ZwSetInformationToken(
   _In_ TOKEN_INFORMATION_CLASS TokenInformationClass,
   _In_reads_bytes_(TokenInformationLength) PVOID TokenInformation,
   _In_ ULONG TokenInformationLength);
+
+#if (VER_PRODUCTBUILD >= 2195)
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwAdjustPrivilegesToken (
+    _In_ HANDLE TokenHandle,
+    _In_ BOOLEAN DisableAllPrivileges,
+    _In_ PTOKEN_PRIVILEGES NewState,
+    _In_ ULONG BufferLength,
+    _Out_opt_ PTOKEN_PRIVILEGES PreviousState,
+    _Out_ PULONG ReturnLength
+);
+#endif /* (VER_PRODUCTBUILD >= 2195) */
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwAlertThread (
+    _In_ HANDLE ThreadHandle
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwAccessCheckAndAuditAlarm (
+    _In_ PUNICODE_STRING SubsystemName,
+    _In_ PVOID HandleId,
+    _In_ PUNICODE_STRING ObjectTypeName,
+    _In_ PUNICODE_STRING ObjectName,
+    _In_ PSECURITY_DESCRIPTOR SecurityDescriptor,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ PGENERIC_MAPPING GenericMapping,
+    _In_ BOOLEAN ObjectCreation,
+    _Out_ PACCESS_MASK GrantedAccess,
+    _Out_ PBOOLEAN AccessStatus,
+    _Out_ PBOOLEAN GenerateOnClose
+);
+
+#if (VER_PRODUCTBUILD >= 2195)
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwCancelIoFile (
+    _In_ HANDLE FileHandle,
+    _Out_ PIO_STATUS_BLOCK IoStatusBlock
+);
+#endif /* (VER_PRODUCTBUILD >= 2195) */
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwClearEvent (
+    _In_ HANDLE EventHandle
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwCloseObjectAuditAlarm (
+    _In_ PUNICODE_STRING SubsystemName,
+    _In_ PVOID HandleId,
+    _In_ BOOLEAN GenerateOnClose
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwCreateSymbolicLinkObject (
+    _Out_ PHANDLE SymbolicLinkHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ POBJECT_ATTRIBUTES ObjectAttributes,
+    _In_ PUNICODE_STRING TargetName
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwFlushInstructionCache (
+    _In_ HANDLE ProcessHandle,
+    _In_opt_ PVOID BaseAddress,
+    _In_ ULONG FlushSize
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwFlushBuffersFile(
+    _In_ HANDLE FileHandle,
+    _Out_ PIO_STATUS_BLOCK IoStatusBlock
+);
+
+#if (VER_PRODUCTBUILD >= 2195)
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwInitiatePowerAction (
+    _In_ POWER_ACTION SystemAction,
+    _In_ SYSTEM_POWER_STATE MinSystemState,
+    _In_ ULONG Flags,
+    _In_ BOOLEAN Asynchronous
+);
+#endif /* (VER_PRODUCTBUILD >= 2195) */
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwLoadKey (
+    _In_ POBJECT_ATTRIBUTES KeyObjectAttributes,
+    _In_ POBJECT_ATTRIBUTES FileObjectAttributes
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwOpenProcessToken (
+    _In_ HANDLE ProcessHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _Out_ PHANDLE TokenHandle
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwOpenThread (
+    _Out_ PHANDLE ThreadHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ POBJECT_ATTRIBUTES ObjectAttributes,
+    _In_ PCLIENT_ID ClientId
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwOpenThreadToken (
+    _In_ HANDLE ThreadHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ BOOLEAN OpenAsSelf,
+    _Out_ PHANDLE TokenHandle
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwPulseEvent (
+    _In_ HANDLE EventHandle,
+    _In_opt_ PLONG PulseCount
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwQueryDefaultLocale (
+    _In_ BOOLEAN UserProfile,
+    _Out_ PLCID DefaultLocaleId
+);
+
+#if (VER_PRODUCTBUILD >= 2195)
+_IRQL_requires_max_(PASSIVE_LEVEL)
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwQueryDirectoryObject(
+    _In_ HANDLE DirectoryHandle,
+    _Out_ PVOID Buffer,
+    _In_ ULONG BufferLength,
+    _In_ BOOLEAN ReturnSingleEntry,
+    _In_ BOOLEAN RestartScan,
+    _Inout_ PULONG Context,
+    _Out_opt_ PULONG ReturnLength
+);
+#endif /* (VER_PRODUCTBUILD >= 2195) */
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwQueryInformationProcess (
+    _In_ HANDLE ProcessHandle,
+    _In_ PROCESSINFOCLASS ProcessInformationClass,
+    _Out_ PVOID ProcessInformation,
+    _In_ ULONG ProcessInformationLength,
+    _Out_opt_ PULONG ReturnLength
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwReplaceKey (
+    _In_ POBJECT_ATTRIBUTES NewFileObjectAttributes,
+    _In_ HANDLE KeyHandle,
+    _In_ POBJECT_ATTRIBUTES OldFileObjectAttributes
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwResetEvent (
+    _In_ HANDLE EventHandle,
+    _Out_opt_ PLONG NumberOfWaitingThreads
+);
+
+#if (VER_PRODUCTBUILD >= 2195)
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwRestoreKey (
+    _In_ HANDLE KeyHandle,
+    _In_ HANDLE FileHandle,
+    _In_ ULONG Flags
+);
+#endif /* (VER_PRODUCTBUILD >= 2195) */
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwSaveKey (
+    _In_ HANDLE KeyHandle,
+    _In_ HANDLE FileHandle
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwSetDefaultLocale (
+    _In_ BOOLEAN UserProfile,
+    _In_ LCID DefaultLocaleId
+);
+
+#if (VER_PRODUCTBUILD >= 2195)
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwSetDefaultUILanguage (
+    _In_ LANGID LanguageId
+);
+#endif /* (VER_PRODUCTBUILD >= 2195) */
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwSetInformationProcess (
+    _In_ HANDLE ProcessHandle,
+    _In_ PROCESSINFOCLASS ProcessInformationClass,
+    _In_ PVOID ProcessInformation,
+    _In_ ULONG ProcessInformationLength
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwSetSystemTime (
+    _In_ PLARGE_INTEGER   NewTime,
+    _Out_opt_ PLARGE_INTEGER OldTime
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwUnloadKey (
+    _In_ POBJECT_ATTRIBUTES KeyObjectAttributes
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwWaitForMultipleObjects (
+    _In_ ULONG HandleCount,
+    _In_ PHANDLE Handles,
+    _In_ WAIT_TYPE WaitType,
+    _In_ BOOLEAN Alertable,
+    _In_opt_ PLARGE_INTEGER Timeout
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwYieldExecution (
+    VOID
+);
+
 #endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
 
 #ifndef __SSPI_H__
@@ -11232,74 +11523,75 @@ NTKERNELAPI
 LARGE_INTEGER
 NTAPI
 CcGetLsnForFileObject (
-    IN PFILE_OBJECT     FileObject,
-    OUT PLARGE_INTEGER  OldestLsn OPTIONAL
+    _In_ PFILE_OBJECT FileObject,
+    _Out_opt_ PLARGE_INTEGER OldestLsn
 );
 
 NTKERNELAPI
 PVOID
 NTAPI
 FsRtlAllocatePool (
-    IN POOL_TYPE    PoolType,
-    IN ULONG        NumberOfBytes
+    _In_ POOL_TYPE PoolType,
+    _In_ ULONG NumberOfBytes
 );
 
 NTKERNELAPI
 PVOID
 NTAPI
 FsRtlAllocatePoolWithQuota (
-    IN POOL_TYPE    PoolType,
-    IN ULONG        NumberOfBytes
+    _In_ POOL_TYPE    PoolType,
+    _In_ ULONG        NumberOfBytes
 );
 
 NTKERNELAPI
 PVOID
 NTAPI
 FsRtlAllocatePoolWithQuotaTag (
-    IN POOL_TYPE    PoolType,
-    IN ULONG        NumberOfBytes,
-    IN ULONG        Tag
+    _In_ POOL_TYPE    PoolType,
+    _In_ ULONG        NumberOfBytes,
+    _In_ ULONG        Tag
 );
 
 NTKERNELAPI
 PVOID
 NTAPI
 FsRtlAllocatePoolWithTag (
-    IN POOL_TYPE    PoolType,
-    IN ULONG        NumberOfBytes,
-    IN ULONG        Tag
+    _In_ POOL_TYPE    PoolType,
+    _In_ ULONG        NumberOfBytes,
+    _In_ ULONG        Tag
 );
 
 NTKERNELAPI
 BOOLEAN
 NTAPI
 FsRtlMdlReadComplete (
-    IN PFILE_OBJECT     FileObject,
-    IN PMDL             MdlChain
+    _In_ PFILE_OBJECT     FileObject,
+    _In_ PMDL             MdlChain
 );
 
 NTKERNELAPI
 BOOLEAN
 NTAPI
 FsRtlMdlWriteComplete (
-    IN PFILE_OBJECT     FileObject,
-    IN PLARGE_INTEGER   FileOffset,
-    IN PMDL             MdlChain
+    _In_ PFILE_OBJECT     FileObject,
+    _In_ PLARGE_INTEGER   FileOffset,
+    _In_ PMDL             MdlChain
 );
 
 NTKERNELAPI
 VOID
 NTAPI
 FsRtlNotifyChangeDirectory (
-    IN PNOTIFY_SYNC NotifySync,
-    IN PVOID        FsContext,
-    IN PSTRING      FullDirectoryName,
-    IN PLIST_ENTRY  NotifyList,
-    IN BOOLEAN      WatchTree,
-    IN ULONG        CompletionFilter,
-    IN PIRP         NotifyIrp
+    _In_ PNOTIFY_SYNC NotifySync,
+    _In_ PVOID        FsContext,
+    _In_ PSTRING      FullDirectoryName,
+    _In_ PLIST_ENTRY  NotifyList,
+    _In_ BOOLEAN      WatchTree,
+    _In_ ULONG        CompletionFilter,
+    _In_ PIRP         NotifyIrp
 );
 
+#if 1
 NTKERNELAPI
 NTSTATUS
 NTAPI
@@ -11316,16 +11608,9 @@ ObCreateObject(
 );
 
 NTKERNELAPI
-ULONG
-NTAPI
-ObGetObjectPointerCount(
-    _In_ PVOID Object
-);
-
-NTKERNELAPI
 NTSTATUS
 NTAPI
-ObReferenceObjectByName(
+ObReferenceObjectByName (
     _In_ PUNICODE_STRING ObjectName,
     _In_ ULONG Attributes,
     _In_opt_ PACCESS_STATE PassedAccessState,
@@ -11347,317 +11632,25 @@ ObReferenceObjectByName(
 NTKERNELAPI
 NTSTATUS
 NTAPI
-PsLookupProcessThreadByCid(
-    _In_ PCLIENT_ID Cid,
-    _Out_opt_ PEPROCESS *Process,
-    _Out_ PETHREAD *Thread
+PsLookupProcessThreadByCid (
+    _In_ PCLIENT_ID   Cid,
+    _Out_opt_ PEPROCESS   *Process,
+    _Out_ PETHREAD    *Thread
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
-RtlSetSaclSecurityDescriptor(
+RtlSetSaclSecurityDescriptor (
     _Inout_ PSECURITY_DESCRIPTOR SecurityDescriptor,
-    _In_ BOOLEAN SaclPresent,
-    _In_ PACL Sacl,
-    _In_ BOOLEAN SaclDefaulted
+    _In_ BOOLEAN                  SaclPresent,
+    _In_ PACL                     Sacl,
+    _In_ BOOLEAN                  SaclDefaulted
 );
 
 #define SeEnableAccessToExports() SeExports = *(PSE_EXPORTS *)SeExports;
 
-#if (VER_PRODUCTBUILD >= 2195)
-
-_Must_inspect_result_
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwAdjustPrivilegesToken(
-    _In_ HANDLE TokenHandle,
-    _In_ BOOLEAN DisableAllPrivileges,
-    _In_opt_ PTOKEN_PRIVILEGES NewState,
-    _In_ ULONG BufferLength,
-    _Out_writes_bytes_to_opt_(BufferLength, *ReturnLength) PTOKEN_PRIVILEGES PreviousState,
-    _Out_ _When_(PreviousState == NULL, _Out_opt_) PULONG ReturnLength
-);
-
-#endif /* (VER_PRODUCTBUILD >= 2195) */
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwAlertThread(
-    _In_ HANDLE ThreadHandle
-);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwAccessCheckAndAuditAlarm (
-    IN PUNICODE_STRING      SubsystemName,
-    IN PVOID                HandleId,
-    IN PUNICODE_STRING      ObjectTypeName,
-    IN PUNICODE_STRING      ObjectName,
-    IN PSECURITY_DESCRIPTOR SecurityDescriptor,
-    IN ACCESS_MASK          DesiredAccess,
-    IN PGENERIC_MAPPING     GenericMapping,
-    IN BOOLEAN              ObjectCreation,
-    OUT PACCESS_MASK        GrantedAccess,
-    OUT PBOOLEAN            AccessStatus,
-    OUT PBOOLEAN            GenerateOnClose
-);
-
-#if (VER_PRODUCTBUILD >= 2195)
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwCancelIoFile(
-    _In_ HANDLE FileHandle,
-    _Out_ PIO_STATUS_BLOCK IoStatusBlock
-);
-
-#endif /* (VER_PRODUCTBUILD >= 2195) */
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwClearEvent(
-    _In_ HANDLE EventHandle
-);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwCloseObjectAuditAlarm(
-    _In_ PUNICODE_STRING SubsystemName,
-    _In_ PVOID HandleId,
-    _In_ BOOLEAN GenerateOnClose
-);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwCreateSymbolicLinkObject(
-    _Out_ PHANDLE SymbolicLinkHandle,
-    _In_ ACCESS_MASK DesiredAccess,
-    _In_ POBJECT_ATTRIBUTES ObjectAttributes,
-    _In_ PUNICODE_STRING Name
-);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwFlushInstructionCache(
-    _In_ HANDLE ProcessHandle,
-    _In_ PVOID BaseAddress,
-    _In_ ULONG NumberOfBytesToFlush
-);
-
-_IRQL_requires_max_(PASSIVE_LEVEL)
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwFlushBuffersFile(
-    _In_ HANDLE FileHandle,
-    _Out_ PIO_STATUS_BLOCK IoStatusBlock
-);
-
-#if (VER_PRODUCTBUILD >= 2195)
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwInitiatePowerAction(
-    _In_ POWER_ACTION SystemAction,
-    _In_ SYSTEM_POWER_STATE MinSystemState,
-    _In_ ULONG Flags,
-    _In_ BOOLEAN Asynchronous
-);
-
-#endif /* (VER_PRODUCTBUILD >= 2195) */
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwLoadKey (
-    IN POBJECT_ATTRIBUTES KeyObjectAttributes,
-    IN POBJECT_ATTRIBUTES FileObjectAttributes
-);
-
-_IRQL_requires_max_(PASSIVE_LEVEL)
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwOpenProcessToken(
-    _In_ HANDLE ProcessHandle,
-    _In_ ACCESS_MASK DesiredAccess,
-    _Out_ PHANDLE TokenHandle
-);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwOpenThread(
-    _Out_ PHANDLE ThreadHandle,
-    _In_ ACCESS_MASK DesiredAccess,
-    _In_ POBJECT_ATTRIBUTES ObjectAttributes,
-    _In_ PCLIENT_ID ClientId
-);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwOpenThreadToken(
-    _In_ HANDLE ThreadHandle,
-    _In_ ACCESS_MASK DesiredAccess,
-    _In_ BOOLEAN OpenAsSelf,
-    _Out_ PHANDLE TokenHandle
-);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwPulseEvent(
-    _In_ HANDLE EventHandle,
-    _In_opt_ PLONG PulseCount
-);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwQueryDefaultLocale(
-    _In_ BOOLEAN UserProfile,
-    _Out_ PLCID DefaultLocaleId
-);
-
-#if (VER_PRODUCTBUILD >= 2195)
-
-_IRQL_requires_max_(PASSIVE_LEVEL)
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwQueryDirectoryObject(
-    _In_ HANDLE DirectoryHandle,
-    _Out_ PVOID Buffer,
-    _In_ ULONG BufferLength,
-    _In_ BOOLEAN ReturnSingleEntry,
-    _In_ BOOLEAN RestartScan,
-    _Inout_ PULONG Context,
-    _Out_opt_ PULONG ReturnLength
-);
-
-#endif /* (VER_PRODUCTBUILD >= 2195) */
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwQueryInformationProcess (
-    IN HANDLE           ProcessHandle,
-    IN PROCESSINFOCLASS ProcessInformationClass,
-    OUT PVOID           ProcessInformation,
-    IN ULONG            ProcessInformationLength,
-    OUT PULONG          ReturnLength OPTIONAL
-);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwReplaceKey (
-    IN POBJECT_ATTRIBUTES   NewFileObjectAttributes,
-    IN HANDLE               KeyHandle,
-    IN POBJECT_ATTRIBUTES   OldFileObjectAttributes
-);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwResetEvent(
-    _In_ HANDLE EventHandle,
-    _Out_opt_ PLONG NumberOfWaitingThreads
-);
-
-#if (VER_PRODUCTBUILD >= 2195)
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwRestoreKey (
-    IN HANDLE   KeyHandle,
-    IN HANDLE   FileHandle,
-    IN ULONG    Flags
-);
-
-#endif /* (VER_PRODUCTBUILD >= 2195) */
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwSaveKey (
-    IN HANDLE KeyHandle,
-    IN HANDLE FileHandle
-);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwSetDefaultLocale(
-    _In_ BOOLEAN UserProfile,
-    _In_ LCID DefaultLocaleId
-);
-
-#if (VER_PRODUCTBUILD >= 2195)
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwSetDefaultUILanguage (
-    IN LANGID LanguageId
-);
-
-#endif /* (VER_PRODUCTBUILD >= 2195) */
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwSetInformationProcess(
-    _In_ HANDLE ProcessHandle,
-    _In_ PROCESSINFOCLASS ProcessInformationClass,
-    _In_ PVOID ProcessInformation,
-    _In_ ULONG ProcessInformationLength
-);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwSetSystemTime(
-    _In_ PLARGE_INTEGER SystemTime,
-    _In_opt_ PLARGE_INTEGER NewSystemTime
-);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwUnloadKey(
-    _In_ POBJECT_ATTRIBUTES KeyObjectAttributes
-);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwWaitForMultipleObjects(
-    _In_ ULONG Count,
-    _In_ HANDLE Object[],
-    _In_ WAIT_TYPE WaitType,
-    _In_ BOOLEAN Alertable,
-    _In_ PLARGE_INTEGER Time
-);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwYieldExecution (
-    VOID
-);
+#endif
 
 #pragma pack(pop)
 

@@ -21,6 +21,14 @@ Author:
 #define _NTDEF_H
 
 //
+// Use dummy macros, if SAL 2 is not available
+//
+#include <sal.h>
+#if (_SAL_VERSION < 20)
+#include <no_sal2.h>
+#endif
+
+//
 // NDK Applications must use Unicode
 //
 #ifndef UNICODE
@@ -129,7 +137,7 @@ typedef LONG KPRIORITY;
 #if !defined(_NTSECAPI_H) && !defined(_SUBAUTH_H) && !defined(_NTSECAPI_)
 
 #ifndef __BCRYPT_H__
-typedef LONG NTSTATUS, *PNTSTATUS;
+typedef _Return_type_success_(return >= 0) long NTSTATUS, *PNTSTATUS;
 #endif
 
 typedef struct _UNICODE_STRING

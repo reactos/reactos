@@ -145,7 +145,7 @@ RtlAssert(
   _In_ PVOID FailedAssertion,
   _In_ PVOID FileName,
   _In_ ULONG LineNumber,
-  _In_opt_ PSTR Message);
+  _In_opt_z_ PSTR Message);
 
 /* VOID
  * RtlCopyMemory(
@@ -1663,9 +1663,9 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 RtlCopySid(
-  _In_ ULONG Length,
-  _Out_writes_bytes_(Length) PSID Destination,
-  _In_ PSID Source);
+  _In_ ULONG DestinationSidLength,
+  _Out_writes_bytes_(DestinationSidLength) PSID DestinationSid,
+  _In_ PSID SourceSid);
 
 _IRQL_requires_max_(APC_LEVEL)
 NTSYSAPI
@@ -1827,7 +1827,7 @@ VOID
 NTAPI
 RtlInitCodePageTable(
   _In_ PUSHORT TableBase,
-  _Inout_ PCPTABLEINFO CodePageTable);
+  _Out_ PCPTABLEINFO CodePageTable);
 
 $endif (_NTIFS_)
 
@@ -3057,59 +3057,56 @@ RtlCheckBit(
 
 #if DBG
 
-#define ASSERT(exp) \
-  (VOID)((!(exp)) ? \
+#define RTL_VERIFY(exp) \
+  ((!(exp)) ? \
     RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, NULL ), FALSE : TRUE)
 
-#define ASSERTMSG(msg, exp) \
-  (VOID)((!(exp)) ? \
+#define RTL_VERIFYMSG(msg, exp) \
+  ((!(exp)) ? \
     RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, (PCHAR)msg ), FALSE : TRUE)
 
-#define RTL_SOFT_ASSERT(exp) \
-  (VOID)((!(exp)) ? \
+#define RTL_SOFT_VERIFY(exp) \
+  ((!(exp)) ? \
     DbgPrint("%s(%d): Soft assertion failed\n   Expression: %s\n", __FILE__, __LINE__, #exp), FALSE : TRUE)
 
-#define RTL_SOFT_ASSERTMSG(msg, exp) \
+#define RTL_SOFT_VERIFYMSG(msg, exp) \
   (VOID)((!(exp)) ? \
     DbgPrint("%s(%d): Soft assertion failed\n   Expression: %s\n   Message: %s\n", __FILE__, __LINE__, #exp, (msg)), FALSE : TRUE)
 
-#define RTL_VERIFY(exp) ASSERT(exp)
-#define RTL_VERIFYMSG(msg, exp) ASSERTMSG(msg, exp)
+#define ASSERT(exp) ((void)RTL_VERIFY(exp))
+#define ASSERTMSG(msg, exp) ((void)RTL_VERIFYMSG(msg, exp))
 
-#define RTL_SOFT_VERIFY(exp) RTL_SOFT_ASSERT(exp)
-#define RTL_SOFT_VERIFYMSG(msg, exp) RTL_SOFT_ASSERTMSG(msg, exp)
+#define RTL_SOFT_ASSERT(exp) ((void)RTL_SOFT_VERIFY(exp))
+#define RTL_SOFT_ASSERTMSG(msg, exp) ((void)RTL_SOFT_VERIFYMSG(msg, exp))
 
 #if defined(_MSC_VER)
+# define __assert_annotationA(msg) __annotation(L"Debug", L"AssertFail", L ## msg)
+# define __assert_annotationW(msg) __annotation(L"Debug", L"AssertFail", msg)
+#else
+# define __assert_annotationA(msg) \
+    DbgPrint("Assertion %s(%d): %s", __FILE__, __LINE__, msg)
+# define __assert_annotationW(msg) \
+    DbgPrint("Assertion %s(%d): %S", __FILE__, __LINE__, msg)
+#endif
 
-#define NT_ASSERT(exp) \
+#define NT_VERIFY(exp) \
    ((!(exp)) ? \
-      (__annotation(L"Debug", L"AssertFail", L#exp), \
+      (__assert_annotationA(#exp), \
        DbgRaiseAssertionFailure(), FALSE) : TRUE)
 
-#define NT_ASSERTMSG(msg, exp) \
+#define NT_VERIFYMSG(msg, exp) \
    ((!(exp)) ? \
-      (__annotation(L"Debug", L"AssertFail", L##msg), \
+      (__assert_annotationA(msg), \
       DbgRaiseAssertionFailure(), FALSE) : TRUE)
 
-#define NT_ASSERTMSGW(msg, exp) \
+#define NT_VERIFYMSGW(msg, exp) \
     ((!(exp)) ? \
-        (__annotation(L"Debug", L"AssertFail", msg), \
+        (__assert_annotationW(msg), \
          DbgRaiseAssertionFailure(), FALSE) : TRUE)
 
-#define NT_VERIFY     NT_ASSERT
-#define NT_VERIFYMSG  NT_ASSERTMSG
-#define NT_VERIFYMSGW NT_ASSERTMSGW
-
-#else
-
-/* GCC doesn't support __annotation (nor PDB) */
-#define NT_ASSERT(exp) \
-   (VOID)((!(exp)) ? (DbgRaiseAssertionFailure(), FALSE) : TRUE)
-
-#define NT_ASSERTMSG NT_ASSERT
-#define NT_ASSERTMSGW NT_ASSERT
-
-#endif
+#define NT_ASSERT(exp) ((void)NT_VERIFY(exp))
+#define NT_ASSERTMSG(msg, exp) ((void)NT_VERIFYMSG(msg, exp))
+#define NT_ASSERTMSGW(msg, exp) ((void)NT_VERIFYMSGW(msg, exp))
 
 #else /* !DBG */
 

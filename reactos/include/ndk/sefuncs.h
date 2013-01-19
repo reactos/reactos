@@ -173,7 +173,7 @@ NtAdjustPrivilegesToken(
     _In_opt_ PTOKEN_PRIVILEGES NewState,
     _In_ ULONG BufferLength,
     _Out_writes_bytes_to_opt_(BufferLength, *ReturnLength) PTOKEN_PRIVILEGES PreviousState,
-    _Out_ _When_(PreviousState == NULL, _Out_opt_) PULONG ReturnLength
+    _When_(PreviousState != NULL, _Out_) PULONG ReturnLength
 );
 
 NTSYSCALLAPI
@@ -368,7 +368,7 @@ ZwAdjustPrivilegesToken(
     _In_opt_ PTOKEN_PRIVILEGES NewState,
     _In_ ULONG BufferLength,
     _Out_writes_bytes_to_opt_(BufferLength, *ReturnLength) PTOKEN_PRIVILEGES PreviousState,
-    _Out_ _When_(PreviousState == NULL, _Out_opt_) PULONG ReturnLength
+    _When_(PreviousState != NULL, _Out_) PULONG ReturnLength
 );
 
 NTSYSAPI
@@ -504,9 +504,9 @@ NTAPI
 ZwQueryInformationToken(
     _In_ HANDLE TokenHandle,
     _In_ TOKEN_INFORMATION_CLASS TokenInformationClass,
-    _Out_writes_bytes_to_opt_(TokenInformationLength,*ReturnLength) PVOID TokenInformation,
-    _In_ ULONG TokenInformationLength,
-    _Out_ PULONG ReturnLength
+    _Out_writes_bytes_to_opt_(Length,*ResultLength) PVOID TokenInformation,
+    _In_ ULONG Length,
+    _Out_ PULONG ResultLength
 );
 
 NTSYSAPI

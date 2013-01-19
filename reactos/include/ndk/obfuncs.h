@@ -369,7 +369,7 @@ NTAPI
 NtWaitForSingleObject(
     _In_ HANDLE Object,
     _In_ BOOLEAN Alertable,
-    _In_ PLARGE_INTEGER Time
+    _In_opt_ PLARGE_INTEGER Time
 );
 
 NTSYSAPI
@@ -502,7 +502,7 @@ ZwSignalAndWaitForSingleObject(
     _In_ HANDLE SignalObject,
     _In_ HANDLE WaitObject,
     _In_ BOOLEAN Alertable,
-    _In_ PLARGE_INTEGER Time
+    _In_opt_ PLARGE_INTEGER Time
 );
 
 NTSYSAPI

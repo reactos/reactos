@@ -156,13 +156,14 @@ NtClearEvent(
     _In_ HANDLE EventHandle
 );
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtCreateEvent(
     _Out_ PHANDLE EventHandle,
     _In_ ACCESS_MASK DesiredAccess,
-    _In_ POBJECT_ATTRIBUTES ObjectAttributes,
+    _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes,
     _In_ EVENT_TYPE EventType,
     _In_ BOOLEAN InitialState
 );
@@ -176,12 +177,13 @@ NtCreateEventPair(
     _In_ POBJECT_ATTRIBUTES ObjectAttributes
 );
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtCreateKeyedEvent(
-    _Out_ PHANDLE KeyedEventHandle,
-    _In_ ACCESS_MASK DesiredAccess,
+    _Out_ PHANDLE OutHandle,
+    _In_ ACCESS_MASK AccessMask,
     _In_ POBJECT_ATTRIBUTES ObjectAttributes,
     _In_ ULONG Flags
 );
@@ -258,12 +260,13 @@ NtOpenEvent(
     _In_ POBJECT_ATTRIBUTES ObjectAttributes
 );
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtOpenKeyedEvent(
-    _Out_ PHANDLE EventHandle,
-    _In_ ACCESS_MASK DesiredAccess,
+    _Out_ PHANDLE OutHandle,
+    _In_ ACCESS_MASK AccessMask,
     _In_ POBJECT_ATTRIBUTES ObjectAttributes
 );
 
@@ -405,7 +408,7 @@ NtQuerySystemInformation(
     _In_ SYSTEM_INFORMATION_CLASS SystemInformationClass,
     _Out_ PVOID SystemInformation,
     _In_ ULONG Length,
-    _Out_ PULONG ResultLength
+    _Out_opt_ PULONG ResultLength
 );
 
 NTSYSCALLAPI
@@ -439,11 +442,12 @@ NtReleaseMutant(
     _In_opt_ PLONG ReleaseCount
 );
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtReleaseKeyedEvent(
-    _In_ HANDLE EventHandle,
+    _In_opt_ HANDLE EventHandle,
     _In_ PVOID Key,
     _In_ BOOLEAN Alertable,
     _In_opt_ PLARGE_INTEGER Timeout
@@ -583,11 +587,12 @@ NtShutdownSystem(
     _In_ SHUTDOWN_ACTION Action
 );
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtWaitForKeyedEvent(
-    _In_ HANDLE EventHandle,
+    _In_opt_ HANDLE EventHandle,
     _In_ PVOID Key,
     _In_ BOOLEAN Alertable,
     _In_opt_ PLARGE_INTEGER Timeout
@@ -858,7 +863,7 @@ ZwQuerySystemInformation(
     _In_ SYSTEM_INFORMATION_CLASS SystemInformationClass,
     _Out_ PVOID SystemInformation,
     _In_ SIZE_T Length,
-    _Out_ PSIZE_T ResultLength
+    _Out_opt_ PSIZE_T ResultLength
 );
 
 NTSYSAPI

@@ -219,6 +219,14 @@ ObOpenObjectByPointerWithTag(
   _In_ KPROCESSOR_MODE AccessMode,
   _In_ ULONG Tag,
   _Out_ PHANDLE Handle);
+
+NTKERNELAPI
+ULONG
+NTAPI
+ObGetObjectPointerCount(
+    _In_ PVOID Object
+);
+
 $endif (_NTIFS_)
 #endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
 

@@ -782,6 +782,32 @@ ULONG
 NTAPI
 MmDoesFileHaveUserWritableReferences(
   _In_ PSECTION_OBJECT_POINTERS SectionPointer);
+
+_Must_inspect_result_
+_At_(*BaseAddress, __drv_allocatesMem(Mem))
+__kernel_entry
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtAllocateVirtualMemory(
+    _In_ HANDLE ProcessHandle,
+    _Inout_ _Outptr_result_buffer_(*RegionSize) PVOID *BaseAddress,
+    _In_ ULONG_PTR ZeroBits,
+    _Inout_ PSIZE_T RegionSize,
+    _In_ ULONG AllocationType,
+    _In_ ULONG Protect);
+
+__kernel_entry
+_IRQL_requires_max_(PASSIVE_LEVEL)
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtFreeVirtualMemory(
+    _In_ HANDLE ProcessHandle,
+    _Inout_ __drv_freesMem(Mem) PVOID *BaseAddress,
+    _Inout_ PSIZE_T RegionSize,
+    _In_ ULONG FreeType);
+
 $endif (_NTIFS_)
 #endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
 

@@ -87,14 +87,14 @@ NtAllocateUserPhysicalPages(
 );
 
 _Must_inspect_result_
-__drv_allocatesMem(Mem)
+_At_(*BaseAddress, __drv_allocatesMem(Mem))
 __kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtAllocateVirtualMemory(
     _In_ HANDLE ProcessHandle,
-    _Inout_ _At_(*BaseAddress, _Readable_bytes_(*RegionSize) _Writable_bytes_(*RegionSize) _Post_readable_byte_size_(*RegionSize)) PVOID *BaseAddress,
+    _Inout_ _Outptr_result_buffer_(*RegionSize) PVOID *BaseAddress,
     _In_ ULONG_PTR ZeroBits,
     _Inout_ PSIZE_T RegionSize,
     _In_ ULONG AllocationType,
@@ -153,6 +153,7 @@ NtFreeUserPhysicalPages(
 );
 
 __kernel_entry
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
@@ -257,7 +258,7 @@ NtQueryVirtualMemory(
     _In_ MEMORY_INFORMATION_CLASS VirtualMemoryInformationClass,
     _Out_ PVOID VirtualMemoryInformation,
     _In_ SIZE_T Length,
-    _Out_ PSIZE_T ResultLength
+    _Out_opt_ PSIZE_T ResultLength
 );
 
 NTSYSCALLAPI
@@ -268,7 +269,7 @@ NtReadVirtualMemory(
     _In_ PVOID BaseAddress,
     _Out_ PVOID Buffer,
     _In_ SIZE_T NumberOfBytesToRead,
-    _Out_ PSIZE_T NumberOfBytesRead
+    _Out_opt_ PSIZE_T NumberOfBytesRead
 );
 
 NTSTATUS
@@ -305,7 +306,7 @@ NtWriteVirtualMemory(
     _In_ PVOID  BaseAddress,
     _In_ PVOID Buffer,
     _In_ SIZE_T NumberOfBytesToWrite,
-    _Out_ PSIZE_T NumberOfBytesWritten
+    _Out_opt_ PSIZE_T NumberOfBytesWritten
 );
 
 NTSYSAPI
@@ -316,12 +317,15 @@ ZwAreMappedFilesTheSame(
     _In_ PVOID File2MappedAsFile
 );
 
+_Must_inspect_result_
+_At_(*BaseAddress, __drv_allocatesMem(Mem))
+__kernel_entry NTSYSCALLAPI
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwAllocateVirtualMemory(
     _In_ HANDLE ProcessHandle,
-    _Inout_ PVOID *BaseAddress,
+    _Inout_ _Outptr_result_buffer_(*RegionSize) PVOID *BaseAddress,
     _In_ ULONG_PTR ZeroBits,
     _Inout_ PSIZE_T RegionSize,
     _In_ ULONG AllocationType,
@@ -361,13 +365,12 @@ ZwExtendSection(
 );
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
-_When_(return==0, __drv_freesMem(Region))
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwFreeVirtualMemory(
     _In_ HANDLE ProcessHandle,
-    _Inout_ PVOID *BaseAddress,
+    _Inout_ __drv_freesMem(Mem) PVOID *BaseAddress,
     _Inout_ PSIZE_T RegionSize,
     _In_ ULONG FreeType
 );
@@ -427,7 +430,7 @@ ZwQuerySection(
     _In_ SECTION_INFORMATION_CLASS SectionInformationClass,
     _Out_ PVOID SectionInformation,
     _In_ SIZE_T Length,
-    _Out_ PSIZE_T ResultLength
+    _Out_opt_ PSIZE_T ResultLength
 );
 
 NTSYSAPI
@@ -439,7 +442,7 @@ ZwQueryVirtualMemory(
     _In_ MEMORY_INFORMATION_CLASS VirtualMemoryInformationClass,
     _Out_ PVOID VirtualMemoryInformation,
     _In_ SIZE_T Length,
-    _Out_ PSIZE_T ResultLength
+    _Out_opt_ PSIZE_T ResultLength
 );
 
 NTSYSAPI
@@ -450,7 +453,7 @@ ZwReadVirtualMemory(
     _In_ PVOID BaseAddress,
     _Out_ PVOID Buffer,
     _In_ SIZE_T NumberOfBytesToRead,
-    _Out_ PSIZE_T NumberOfBytesRead
+    _Out_opt_ PSIZE_T NumberOfBytesRead
 );
 
 NTSYSAPI
@@ -480,7 +483,7 @@ ZwWriteVirtualMemory(
     _In_ PVOID  BaseAddress,
     _In_ PVOID Buffer,
     _In_ SIZE_T NumberOfBytesToWrite,
-    _Out_ PSIZE_T NumberOfBytesWritten
+    _Out_opt_ PSIZE_T NumberOfBytesWritten
 );
 
 #endif

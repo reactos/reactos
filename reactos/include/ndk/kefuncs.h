@@ -56,7 +56,11 @@ VOID
 NTAPI
 KiDeliverApc(
     _In_ KPROCESSOR_MODE PreviousMode,
+#ifdef _M_AMD64
     _In_ PKEXCEPTION_FRAME ExceptionFrame,
+#else
+    _Reserved_ PKEXCEPTION_FRAME ExceptionFrame,
+#endif
     _In_ PKTRAP_FRAME TrapFrame
 );
 
@@ -205,7 +209,11 @@ BOOLEAN
 NTAPI
 KiIpiServiceRoutine(
     _In_ PKTRAP_FRAME TrapFrame,
+#ifdef _M_AMD64
     _In_ PKEXCEPTION_FRAME ExceptionFrame
+#else
+    _Reserved_ PKEXCEPTION_FRAME ExceptionFrame
+#endif
 );
 
 //
@@ -403,8 +411,8 @@ NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQueryPerformanceCounter(
-    _In_ PLARGE_INTEGER Counter,
-    _In_ PLARGE_INTEGER Frequency
+    _Out_ PLARGE_INTEGER Counter,
+    _Out_opt_ PLARGE_INTEGER Frequency
 );
 
 NTSYSCALLAPI
@@ -609,8 +617,8 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryPerformanceCounter(
-    _In_ PLARGE_INTEGER Counter,
-    _In_ PLARGE_INTEGER Frequency
+    _Out_ PLARGE_INTEGER Counter,
+    _Out_opt_ PLARGE_INTEGER Frequency
 );
 
 NTSYSAPI
