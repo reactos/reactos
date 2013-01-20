@@ -434,14 +434,14 @@ TuiCleanupConsole(PCONSOLE Console)
 static BOOL WINAPI
 TuiChangeIcon(PCONSOLE Console, HICON hWindowIcon)
 {
-  return TRUE;
+    return TRUE;
 }
 
 static NTSTATUS WINAPI
 TuiResizeBuffer(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER ScreenBuffer, COORD Size)
 {
-  UNIMPLEMENTED;
-  return STATUS_NOT_IMPLEMENTED;
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 DWORD WINAPI
