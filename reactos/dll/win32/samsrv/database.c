@@ -157,8 +157,7 @@ SampCreateDbObject(IN PSAM_DB_OBJECT ParentObject,
                              0,
                              NULL);
 
-        if ((ObjectType == SamDbAliasObject) ||
-            (ObjectType == SamDbGroupObject))
+        if (ObjectType == SamDbAliasObject)
         {
             /* Open the object key */
             RtlInitUnicodeString(&KeyName,
@@ -244,9 +243,6 @@ SampCreateDbObject(IN PSAM_DB_OBJECT ParentObject,
     NewObject->RelativeId = RelativeId;
     NewObject->ParentObject = ParentObject;
 
-    if (ParentObject != NULL)
-        ParentObject->RefCount++;
-
     *DbObject = NewObject;
 
     return STATUS_SUCCESS;
@@ -313,8 +309,7 @@ SampOpenDbObject(IN PSAM_DB_OBJECT ParentObject,
                            KEY_ALL_ACCESS,
                            &ObjectAttributes);
 
-        if ((ObjectType == SamDbAliasObject) ||
-            (ObjectType == SamDbGroupObject))
+        if (ObjectType == SamDbAliasObject)
         {
             /* Open the object key */
             RtlInitUnicodeString(&KeyName,
@@ -396,9 +391,6 @@ SampOpenDbObject(IN PSAM_DB_OBJECT ParentObject,
     NewObject->RelativeId = RelativeId;
     NewObject->ParentObject = ParentObject;
 
-    if (ParentObject != NULL)
-        ParentObject->RefCount++;
-
     *DbObject = NewObject;
 
     return STATUS_SUCCESS;
@@ -475,13 +467,143 @@ SampCloseDbObject(PSAM_DB_OBJECT DbObject)
 
     RtlFreeHeap(RtlGetProcessHeap(), 0, DbObject);
 
-    if (ParentObject != NULL)
-    {
-        ParentObject->RefCount--;
+    return Status;
+}
 
-        if (ParentObject->RefCount == 0)
-            Status = SampCloseDbObject(ParentObject);
+
+NTSTATUS
+SampDeleteAccountDbObject(PSAM_DB_OBJECT DbObject)
+{
+    LPCWSTR ContainerName;
+    LPWSTR AccountName = NULL;
+    HKEY ContainerKey;
+    HKEY NamesKey;
+    ULONG Length = 0;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    TRACE("(%p)\n", DbObject);
+
+    /* Server and Domain objects cannot be deleted */
+    switch (DbObject->ObjectType)
+    {
+        case SamDbAliasObject:
+            ContainerName = L"Aliases";
+            break;
+
+        case SamDbGroupObject:
+            ContainerName = L"Groups";
+            break;
+
+        case SamDbUserObject:
+            ContainerName = L"Users";
+            break;
+
+        default:
+           return STATUS_INVALID_PARAMETER;
     }
+
+    /* Get the account name */
+    Status = SampGetObjectAttribute(DbObject,
+                                    L"Name",
+                                    NULL,
+                                    NULL,
+                                    &Length);
+    if (Status != STATUS_BUFFER_OVERFLOW)
+    {
+        TRACE("Status 0x%08lx\n", Status);
+        goto done;
+    }
+
+    AccountName = RtlAllocateHeap(RtlGetProcessHeap(),
+                                  HEAP_ZERO_MEMORY,
+                                  Length);
+    if (AccountName == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
+
+    Status = SampGetObjectAttribute(DbObject,
+                                    L"Name",
+                                    NULL,
+                                    (PVOID)AccountName,
+                                    &Length);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampGetObjectAttribute failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    if (DbObject->KeyHandle != NULL)
+        NtClose(DbObject->KeyHandle);
+
+    if (DbObject->ObjectType == SamDbAliasObject)
+    {
+        if (DbObject->MembersKeyHandle != NULL)
+            NtClose(DbObject->MembersKeyHandle);
+
+        SampRegDeleteKey(DbObject->KeyHandle,
+                         L"Members");
+    }
+
+    /* Open the domain container key */
+    Status = SampRegOpenKey(DbObject->ParentObject->KeyHandle,
+                            ContainerName,
+                            DELETE | KEY_SET_VALUE,
+                            &ContainerKey);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampRegOpenKey failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    /* Open the Names key */
+    Status = SampRegOpenKey(ContainerKey,
+                            L"Names",
+                            KEY_SET_VALUE,
+                            &NamesKey);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampRegOpenKey failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    /* Remove the account from the Names key */
+    Status = SampRegDeleteValue(NamesKey,
+                                AccountName);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampRegDeleteValue failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    /* Remove the account key from the container */
+    Status = SampRegDeleteKey(ContainerKey,
+                              DbObject->Name);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampRegDeleteKey failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    /* Release the database object name */
+    if (DbObject->Name != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, DbObject->Name);
+
+    /* Release the database object */
+    RtlFreeHeap(RtlGetProcessHeap(), 0, DbObject);
+
+    Status = STATUS_SUCCESS;
+
+done:
+    if (NamesKey != NULL)
+        SampRegCloseKey(NamesKey);
+
+    if (ContainerKey != NULL)
+        SampRegCloseKey(ContainerKey);
+
+    if (AccountName != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, AccountName);
 
     return Status;
 }

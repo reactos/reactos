@@ -3952,7 +3952,7 @@ SamrAddMemberToGroup(IN SAMPR_HANDLE GroupHandle,
                                 &UserObject);
     if (!NT_SUCCESS(Status))
     {
-        ERR("SampOpenUserObject() failed (Status 0x%08lx)\n", Status);
+        TRACE("SampOpenUserObject() failed (Status 0x%08lx)\n", Status);
         goto done;
     }
 
@@ -3962,7 +3962,7 @@ SamrAddMemberToGroup(IN SAMPR_HANDLE GroupHandle,
                                           Attributes);
     if (!NT_SUCCESS(Status))
     {
-        ERR("SampAddGroupMembershipToUser() failed (Status 0x%08lx)\n", Status);
+        TRACE("SampAddGroupMembershipToUser() failed (Status 0x%08lx)\n", Status);
         goto done;
     }
 
@@ -3971,7 +3971,7 @@ SamrAddMemberToGroup(IN SAMPR_HANDLE GroupHandle,
                                   MemberId);
     if (!NT_SUCCESS(Status))
     {
-        ERR("SampAddMemberToGroup() failed (Status 0x%08lx)\n", Status);
+        TRACE("SampAddMemberToGroup() failed (Status 0x%08lx)\n", Status);
     }
 
 done:
@@ -3987,8 +3987,58 @@ NTSTATUS
 NTAPI
 SamrDeleteGroup(IN OUT SAMPR_HANDLE *GroupHandle)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PSAM_DB_OBJECT GroupObject;
+    ULONG Length = 0;
+    NTSTATUS Status;
+
+    TRACE("(%p)\n", GroupHandle);
+
+    /* Validate the group handle */
+    Status = SampValidateDbObject(*GroupHandle,
+                                  SamDbGroupObject,
+                                  DELETE,
+                                  &GroupObject);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampValidateDbObject() failed (Status 0x%08lx)\n", Status);
+        return Status;
+    }
+
+    /* Fail, if the group is built-in */
+    if (GroupObject->RelativeId < 1000)
+    {
+        TRACE("You can not delete a special account!\n");
+        return STATUS_SPECIAL_ACCOUNT;
+    }
+
+    /* Get the length of the Members attribute */
+    SampGetObjectAttribute(GroupObject,
+                           L"Members",
+                           NULL,
+                           NULL,
+                           &Length);
+
+    /* Fail, if the group has members */
+    if (Length != 0)
+    {
+        TRACE("There are still members in the group!\n");
+        return STATUS_MEMBER_IN_GROUP;
+    }
+
+    /* FIXME: Remove the group from all aliases */
+
+    /* Delete the group from the database */
+    Status = SampDeleteAccountDbObject(GroupObject);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampDeleteAccountDbObject() failed (Status 0x%08lx)\n", Status);
+        return Status;
+    }
+
+    /* Invalidate the handle */
+    *GroupHandle = NULL;
+
+    return STATUS_SUCCESS;
 }
 
 

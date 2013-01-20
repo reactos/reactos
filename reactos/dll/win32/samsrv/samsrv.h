@@ -29,7 +29,6 @@
 typedef enum _SAM_DB_OBJECT_TYPE
 {
     SamDbIgnoreObject,
-    SamDbContainerObject,
     SamDbServerObject,
     SamDbDomainObject,
     SamDbAliasObject,
@@ -45,7 +44,7 @@ typedef struct _SAM_DB_OBJECT
     ACCESS_MASK Access;
     LPWSTR Name;
     HANDLE KeyHandle;
-    HANDLE MembersKeyHandle;  // only used by Aliases and Groups
+    HANDLE MembersKeyHandle;  // only used by Aliases
     ULONG RelativeId;
     struct _SAM_DB_OBJECT *ParentObject;
 } SAM_DB_OBJECT, *PSAM_DB_OBJECT;
@@ -141,6 +140,9 @@ SampValidateDbObject(SAMPR_HANDLE Handle,
 
 NTSTATUS
 SampCloseDbObject(PSAM_DB_OBJECT DbObject);
+
+NTSTATUS
+SampDeleteAccountDbObject(PSAM_DB_OBJECT DbObject);
 
 NTSTATUS
 SampSetObjectAttribute(PSAM_DB_OBJECT DbObject,
