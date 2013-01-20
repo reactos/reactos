@@ -162,11 +162,11 @@ typedef struct _CONSOLE_VTBL
 #define ConioSetScreenInfo(Console, Buff, OldCursorX, OldCursorY) \
           (Console)->Vtbl->SetScreenInfo((Console), (Buff), (OldCursorX), (OldCursorY))
 #define ConioUpdateScreenInfo(Console, Buff) \
-          (Console)->Vtbl->UpdateScreenInfo(Console, Buff)
+          (Console)->Vtbl->UpdateScreenInfo((Console), (Buff))
 #define ConioChangeTitle(Console) (Console)->Vtbl->ChangeTitle(Console)
 #define ConioCleanupConsole(Console) (Console)->Vtbl->CleanupConsole(Console)
-#define ConioChangeIcon(Console, hWindowIcon) (Console)->Vtbl->ChangeIcon(Console, hWindowIcon)
-#define ConioResizeBuffer(Console, Buff, Size) (Console)->Vtbl->ResizeBuffer(Console, Buff, Size)
+#define ConioChangeIcon(Console, hWindowIcon) (Console)->Vtbl->ChangeIcon((Console), (hWindowIcon))
+#define ConioResizeBuffer(Console, Buff, Size) (Console)->Vtbl->ResizeBuffer((Console), (Buff), (Size))
 
 /* console.c */
 #define ConioLockConsole(ProcessData, Console) \

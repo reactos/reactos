@@ -98,6 +98,7 @@ CsrInitConsole(PCONSOLE* NewConsole, int ShowCmd, PCSR_PROCESS ConsoleLeaderProc
         RtlCreateUnicodeString(&Console->Title, L"Command Prompt");
     }
 
+    InitializeCriticalSection(&Console->Lock);
     Console->ReferenceCount = 0;
     Console->LineBuffer = NULL;
     Console->ConsoleLeaderCID = ConsoleLeaderProcess->ClientId;
@@ -116,6 +117,7 @@ CsrInitConsole(PCONSOLE* NewConsole, int ShowCmd, PCSR_PROCESS ConsoleLeaderProc
     InitializeListHead(&Console->HistoryBuffers);
     Console->CodePage = GetOEMCP();
     Console->OutputCodePage = GetOEMCP();
+    Console->GuiData = NULL;
 
     SecurityAttributes.nLength = sizeof(SECURITY_ATTRIBUTES);
     SecurityAttributes.lpSecurityDescriptor = NULL;
@@ -125,11 +127,10 @@ CsrInitConsole(PCONSOLE* NewConsole, int ShowCmd, PCSR_PROCESS ConsoleLeaderProc
     if (NULL == Console->InputBuffer.ActiveEvent)
     {
         RtlFreeUnicodeString(&Console->Title);
+        DeleteCriticalSection(&Console->Lock);
         RtlFreeHeap(ConSrvHeap, 0, Console);
         return STATUS_UNSUCCESSFUL;
     }
-    Console->GuiData = NULL;
-    InitializeCriticalSection(&Console->Lock);
 
     GuiMode = DtbgIsDesktopVisible();
 
