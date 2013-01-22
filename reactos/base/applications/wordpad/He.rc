@@ -20,6 +20,9 @@
 
 #include "wordpad.h"
 
+/* UTF-8 */
+#pragma code_page(65001)
+
 LANGUAGE LANG_HEBREW, SUBLANG_DEFAULT
 
 IDM_MAINMENU MENU
@@ -262,13 +265,4 @@ BEGIN
     STRING_OPEN_ACCESS_DENIED,        "You do not have access to open the file."
     STRING_PRINTING_NOT_IMPLEMENTED,  "Printing not implemented"
     STRING_MAX_TAB_STOPS,             "Cannot add more than 32 tab stops."
-END
-
-LANGUAGE LANG_HEBREW, SUBLANG_DEFAULT
-
-STRINGTABLE
-BEGIN
-    STRING_ALIGN_LEFT,            "שמאל"
-    STRING_ALIGN_RIGHT,           "ימין"
-    STRING_ALIGN_CENTER,          "מרכז"
 END
