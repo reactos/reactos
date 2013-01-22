@@ -37,10 +37,10 @@ AdjustHandleCounts(PCONSOLE_IO_HANDLE Entry, INT Change)
 static VOID
 Win32CsrCreateHandleEntry(PCONSOLE_IO_HANDLE Entry)
 {
-    Object_t *Object = Entry->Object;
-    EnterCriticalSection(&Object->Console->Lock);
+    /// LOCK /// Object_t *Object = Entry->Object;
+    /// LOCK /// EnterCriticalSection(&Object->Console->Lock);
     AdjustHandleCounts(Entry, +1);
-    LeaveCriticalSection(&Object->Console->Lock);
+    /// LOCK /// LeaveCriticalSection(&Object->Console->Lock);
 }
 
 static VOID
@@ -49,8 +49,10 @@ Win32CsrCloseHandleEntry(PCONSOLE_IO_HANDLE Entry)
     Object_t *Object = Entry->Object;
     if (Object != NULL)
     {
-        PCONSOLE Console = Object->Console;
-        EnterCriticalSection(&Console->Lock);
+        /// LOCK /// PCONSOLE Console = Object->Console;
+        /// LOCK /// EnterCriticalSection(&Console->Lock);
+
+        /// TODO: HERE, trigger input waiting threads.
 
         /* If the last handle to a screen buffer is closed, delete it... */
         if (AdjustHandleCounts(Entry, -1) == 0)
@@ -70,7 +72,7 @@ Win32CsrCloseHandleEntry(PCONSOLE_IO_HANDLE Entry)
             }
         }
 
-        LeaveCriticalSection(&Console->Lock);
+        /// LOCK /// LeaveCriticalSection(&Console->Lock);
         Entry->Object = NULL;
     }
 }
@@ -318,6 +320,7 @@ Win32CsrLockObject(PCONSOLE_PROCESS_DATA ProcessData,
                    HANDLE Handle,
                    Object_t **Object,
                    DWORD Access,
+                   BOOL LockConsole,
                    ULONG Type)
 {
     ULONG_PTR h = (ULONG_PTR)Handle >> 2;
@@ -330,7 +333,7 @@ Win32CsrLockObject(PCONSOLE_PROCESS_DATA ProcessData,
     if ( !IsConsoleHandle(Handle) ||
          h >= ProcessData->HandleTableSize  ||
          (*Object = ProcessData->HandleTable[h].Object) == NULL ||
-         ~ProcessData->HandleTable[h].Access & Access           ||
+         (ProcessData->HandleTable[h].Access & Access) == 0     ||
          (Type != 0 && (*Object)->Type != Type) )
     {
         DPRINT1("CsrGetObject returning invalid handle (%x) of type %lu with access %lu\n", Handle, Type, Access);
@@ -341,14 +344,16 @@ Win32CsrLockObject(PCONSOLE_PROCESS_DATA ProcessData,
     _InterlockedIncrement(&(*Object)->Console->ReferenceCount);
     RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
 
-    EnterCriticalSection(&(*Object)->Console->Lock);
+    if (LockConsole) EnterCriticalSection(&(*Object)->Console->Lock);
+
     return STATUS_SUCCESS;
 }
 
 VOID FASTCALL
-Win32CsrUnlockConsole(PCONSOLE Console)
+Win32CsrUnlockConsole(PCONSOLE Console,
+                      BOOL IsConsoleLocked)
 {
-    LeaveCriticalSection(&Console->Lock);
+    if (IsConsoleLocked) LeaveCriticalSection(&Console->Lock);
 
     /* Decrement reference count */
     if (_InterlockedDecrement(&Console->ReferenceCount) == 0)
@@ -357,9 +362,10 @@ Win32CsrUnlockConsole(PCONSOLE Console)
 
 VOID
 FASTCALL
-Win32CsrUnlockObject(Object_t *Object)
+Win32CsrUnlockObject(Object_t *Object,
+                     BOOL IsConsoleLocked)
 {
-    Win32CsrUnlockConsole(Object->Console);
+    Win32CsrUnlockConsole(Object->Console, IsConsoleLocked);
 }
 
 NTSTATUS
@@ -418,8 +424,9 @@ Win32CsrReleaseConsole(PCONSOLE_PROCESS_DATA ProcessData)
         DPRINT1("Win32CsrReleaseConsole - Console->ReferenceCount = %lu - We are going to decrement it !\n", Console->ReferenceCount);
         ProcessData->Console = NULL;
         EnterCriticalSection(&Console->Lock);
+        DPRINT1("Win32CsrReleaseConsole - Locking OK\n");
         RemoveEntryList(&ProcessData->ConsoleLink);
-        Win32CsrUnlockConsole(Console);
+        Win32CsrUnlockConsole(Console, TRUE);
         //CloseHandle(ProcessData->ConsoleEvent);
         //ProcessData->ConsoleEvent = NULL;
     }
@@ -428,7 +435,8 @@ Win32CsrReleaseConsole(PCONSOLE_PROCESS_DATA ProcessData)
 NTSTATUS
 FASTCALL
 ConioConsoleFromProcessData(PCONSOLE_PROCESS_DATA ProcessData,
-                            PCONSOLE* Console)
+                            PCONSOLE* Console,
+                            BOOL LockConsole)
 {
     PCONSOLE ProcessConsole;
 
@@ -444,7 +452,9 @@ ConioConsoleFromProcessData(PCONSOLE_PROCESS_DATA ProcessData,
 
     InterlockedIncrement(&ProcessConsole->ReferenceCount);
     RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
-    EnterCriticalSection(&(ProcessConsole->Lock));
+
+    if (LockConsole) EnterCriticalSection(&ProcessConsole->Lock);
+
     *Console = ProcessConsole;
 
     return STATUS_SUCCESS;
@@ -716,7 +726,7 @@ CSR_API(SrvDuplicateHandle)
     {
         DesiredAccess = DuplicateHandleRequest->Access;
         /* Make sure the source handle has all the desired flags */
-        if (~Entry->Access & DesiredAccess)
+        if ((Entry->Access & DesiredAccess) == 0)
         {
             DPRINT1("Handle %p only has access %X; requested %X\n",
                 ConsoleHandle, Entry->Access, DesiredAccess);

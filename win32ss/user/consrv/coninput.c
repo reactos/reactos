@@ -639,12 +639,12 @@ CSR_API(SrvGetConsoleInput)
         return STATUS_INVALID_PARAMETER;
     }
 
-    Status = ConioLockInputBuffer(ProcessData, GetInputRequest->InputHandle, &InputBuffer, GENERIC_READ);
-    if(!NT_SUCCESS(Status)) return Status;
-
     GetInputRequest->InputsRead = 0;
 
-    InputInfo.ProcessData = ProcessData; // ConsoleGetPerProcessData(CsrGetClientThread()->Process);
+    Status = ConioGetInputBuffer(ProcessData, GetInputRequest->InputHandle, &InputBuffer, GENERIC_READ, TRUE);
+    if(!NT_SUCCESS(Status)) return Status;
+
+    InputInfo.ProcessData = ProcessData;
     InputInfo.Console     = InputBuffer->Header.Console;
 
     Status = ReadInputBuffer(&InputInfo,
@@ -652,7 +652,7 @@ CSR_API(SrvGetConsoleInput)
                              ApiMessage,
                              TRUE);
 
-    ConioUnlockInputBuffer(InputBuffer);
+    ConioReleaseInputBuffer(InputBuffer, TRUE);
 
     if (Status == STATUS_PENDING)
         *ReplyCode = CsrReplyPending;
@@ -681,7 +681,7 @@ CSR_API(SrvWriteConsoleInput)
         return STATUS_INVALID_PARAMETER;
     }
 
-    Status = ConioLockInputBuffer(ProcessData, WriteInputRequest->InputHandle, &InputBuffer, GENERIC_WRITE);
+    Status = ConioGetInputBuffer(ProcessData, WriteInputRequest->InputHandle, &InputBuffer, GENERIC_WRITE, TRUE);
     if (!NT_SUCCESS(Status)) return Status;
 
     Console = InputBuffer->Header.Console;
@@ -702,7 +702,7 @@ CSR_API(SrvWriteConsoleInput)
         Status = ConioProcessChar(Console, InputRecord++);
     }
 
-    ConioUnlockInputBuffer(InputBuffer);
+    ConioReleaseInputBuffer(InputBuffer, TRUE);
 
     WriteInputRequest->Length = i;
 
@@ -733,7 +733,7 @@ CSR_API(SrvReadConsole)
         return STATUS_INVALID_PARAMETER;
     }
 
-    Status = ConioLockInputBuffer(ProcessData, ReadConsoleRequest->InputHandle, &InputBuffer, GENERIC_READ);
+    Status = ConioGetInputBuffer(ProcessData, ReadConsoleRequest->InputHandle, &InputBuffer, GENERIC_READ, TRUE);
     if (!NT_SUCCESS(Status)) return Status;
 
     ReadConsoleRequest->NrCharactersRead = 0;
@@ -745,7 +745,7 @@ CSR_API(SrvReadConsole)
                        ApiMessage,
                        TRUE);
 
-    ConioUnlockInputBuffer(InputBuffer);
+    ConioReleaseInputBuffer(InputBuffer, TRUE);
 
     if (Status == STATUS_PENDING)
         *ReplyCode = CsrReplyPending;
@@ -763,10 +763,11 @@ CSR_API(SrvFlushConsoleInputBuffer)
 
     DPRINT("SrvFlushConsoleInputBuffer\n");
 
-    Status = ConioLockInputBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
-                              FlushInputBufferRequest->InputHandle,
-                              &InputBuffer,
-                              GENERIC_WRITE);
+    Status = ConioGetInputBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
+                                 FlushInputBufferRequest->InputHandle,
+                                 &InputBuffer,
+                                 GENERIC_WRITE,
+                                 TRUE);
     if(!NT_SUCCESS(Status)) return Status;
 
     /* Discard all entries in the input event queue */
@@ -779,7 +780,7 @@ CSR_API(SrvFlushConsoleInputBuffer)
     }
     ResetEvent(InputBuffer->ActiveEvent);
 
-    ConioUnlockInputBuffer(InputBuffer);
+    ConioReleaseInputBuffer(InputBuffer, TRUE);
 
     return STATUS_SUCCESS;
 }
@@ -794,7 +795,7 @@ CSR_API(SrvGetConsoleNumberOfInputEvents)
 
     DPRINT("SrvGetConsoleNumberOfInputEvents\n");
 
-    Status = ConioLockInputBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process), GetNumInputEventsRequest->InputHandle, &InputBuffer, GENERIC_READ);
+    Status = ConioGetInputBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process), GetNumInputEventsRequest->InputHandle, &InputBuffer, GENERIC_READ, TRUE);
     if (!NT_SUCCESS(Status)) return Status;
 
     CurrentInput = InputBuffer->InputEvents.Flink;
@@ -807,7 +808,7 @@ CSR_API(SrvGetConsoleNumberOfInputEvents)
         NumEvents++;
     }
 
-    ConioUnlockInputBuffer(InputBuffer);
+    ConioReleaseInputBuffer(InputBuffer, TRUE);
 
     GetNumInputEventsRequest->NumInputEvents = NumEvents;
 

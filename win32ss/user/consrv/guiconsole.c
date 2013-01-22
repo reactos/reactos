@@ -900,7 +900,7 @@ GuiConsolePaint(PCONSOLE Console,
 
     Buff = Console->ActiveBuffer;
 
-    EnterCriticalSection(&Buff->Header.Console->Lock);
+    /// LOCK /// EnterCriticalSection(&Buff->Header.Console->Lock);
 
     TopLine = rc->top / GuiData->CharHeight + Buff->ShowY;
     BottomLine = (rc->bottom + (GuiData->CharHeight - 1)) / GuiData->CharHeight - 1 + Buff->ShowY;
@@ -995,7 +995,7 @@ GuiConsolePaint(PCONSOLE Console,
         }
     }
 
-    LeaveCriticalSection(&Buff->Header.Console->Lock);
+    /// LOCK /// LeaveCriticalSection(&Buff->Header.Console->Lock);
 
     SelectObject(hDC,
                  OldFont);
@@ -1274,7 +1274,7 @@ GuiConsoleHandleClose(PCONSOLE Console, HWND hWnd)
     PLIST_ENTRY current_entry;
     PCONSOLE_PROCESS_DATA current;
 
-    EnterCriticalSection(&Console->Lock);
+    /// LOCK /// EnterCriticalSection(&Console->Lock);
 
     current_entry = Console->ProcessList.Flink;
     while (current_entry != &Console->ProcessList)
@@ -1288,7 +1288,7 @@ GuiConsoleHandleClose(PCONSOLE Console, HWND hWnd)
         ConioConsoleCtrlEvent(CTRL_CLOSE_EVENT, current);
     }
 
-    LeaveCriticalSection(&Console->Lock);
+    /// LOCK /// LeaveCriticalSection(&Console->Lock);
 }
 
 static VOID
@@ -1792,7 +1792,7 @@ GuiResizeBuffer(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER ScreenBuffer, COORD Siz
 #endif
     }
 
-    (void)InterlockedExchangePointer((PVOID volatile  *)&ScreenBuffer->Buffer, Buffer);
+    (void)InterlockedExchangePointer((PVOID volatile*)&ScreenBuffer->Buffer, Buffer);
     RtlFreeHeap(ConSrvHeap, 0, OldBuffer);
     ScreenBuffer->MaxX = Size.X;
     ScreenBuffer->MaxY = Size.Y;
@@ -1809,7 +1809,7 @@ GuiResizeBuffer(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER ScreenBuffer, COORD Siz
         ScreenBuffer->ShowY = Size.Y - Console->Size.Y;
 
     /* TODO: Should update scrollbar, but can't use anything that
-     * calls SendMessage or it could cause deadlock */
+     * calls SendMessage or it could cause deadlock --> Use PostMessage */
 
     return STATUS_SUCCESS;
 }
@@ -1824,7 +1824,7 @@ GuiApplyUserSettings(PCONSOLE Console,
     COORD BufSize;
     BOOL SizeChanged = FALSE;
 
-    EnterCriticalSection(&Console->Lock);
+    /// LOCK /// EnterCriticalSection(&Console->Lock);
 
     /* apply text / background color */
     GuiData->ScreenText = pConInfo->ScreenText;
@@ -1859,7 +1859,7 @@ GuiApplyUserSettings(PCONSOLE Console,
         GuiData->WindowSizeLock = FALSE;
     }
 
-    LeaveCriticalSection(&Console->Lock);
+    /// LOCK /// LeaveCriticalSection(&Console->Lock);
     InvalidateRect(pConInfo->hConsoleWindow, NULL, TRUE);
 }
 
@@ -1994,9 +1994,20 @@ GuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     Console = GuiGetWindowConsole(hWnd);
     if (Console == NULL) return 0;
 
+    /* Lock the console */
+    EnterCriticalSection(&Console->Lock);
+
     /* We have a console, start message dispatching. */
     switch (msg)
     {
+        case WM_CLOSE:
+            GuiConsoleHandleClose(Console, hWnd);
+            break;
+
+        case WM_NCDESTROY:
+            GuiConsoleHandleNcDestroy(Console, hWnd);
+            break;
+
         case WM_PAINT:
             GuiConsoleHandlePaint(Console, hWnd, (HDC)wParam);
             break;
@@ -2011,14 +2022,6 @@ GuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
         case WM_TIMER:
             GuiConsoleHandleTimer(Console, hWnd);
-            break;
-
-        case WM_CLOSE:
-            GuiConsoleHandleClose(Console, hWnd);
-            break;
-
-        case WM_NCDESTROY:
-            GuiConsoleHandleNcDestroy(Console, hWnd);
             break;
 
         case WM_LBUTTONDOWN:
@@ -2066,6 +2069,9 @@ GuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             Result = DefWindowProcW(hWnd, msg, wParam, lParam);
             break;
     }
+
+    /* Unlock the console */
+    LeaveCriticalSection(&Console->Lock);
 
     return Result;
 }
@@ -2264,7 +2270,7 @@ GuiChangeTitle(PCONSOLE Console)
         Title = L"";
     }
 
-    SendMessageW(Console->hWindow, WM_SETTEXT, 0, (LPARAM)Title);
+    PostMessageW(Console->hWindow, WM_SETTEXT, 0, (LPARAM)Title);
 
     if (NULL != Buffer)
     {
@@ -2277,8 +2283,8 @@ GuiChangeTitle(PCONSOLE Console)
 static BOOL WINAPI
 GuiChangeIcon(PCONSOLE Console, HICON hWindowIcon)
 {
-    SendMessageW(Console->hWindow, WM_SETICON, ICON_BIG, (LPARAM)hWindowIcon);
-    SendMessageW(Console->hWindow, WM_SETICON, ICON_SMALL, (LPARAM)hWindowIcon);
+    PostMessageW(Console->hWindow, WM_SETICON, ICON_BIG, (LPARAM)hWindowIcon);
+    PostMessageW(Console->hWindow, WM_SETICON, ICON_SMALL, (LPARAM)hWindowIcon);
 
     return TRUE;
 }

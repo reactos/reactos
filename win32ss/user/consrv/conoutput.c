@@ -472,7 +472,7 @@ DoWriteConsole(IN PCSR_API_MESSAGE ApiMessage,
     DWORD Written = 0;
     ULONG Length;
 
-    Status = ConioLockScreenBuffer(ConsoleGetPerProcessData(ClientThread->Process), WriteConsoleRequest->OutputHandle, &Buff, GENERIC_WRITE);
+    Status = ConioGetScreenBuffer(ConsoleGetPerProcessData(ClientThread->Process), WriteConsoleRequest->OutputHandle, &Buff, GENERIC_WRITE, FALSE);
     if (!NT_SUCCESS(Status)) return Status;
 
     Console = Buff->Header.Console;
@@ -490,7 +490,7 @@ DoWriteConsole(IN PCSR_API_MESSAGE ApiMessage,
                                NULL))
             {
                 /* Fail */
-                ConioUnlockScreenBuffer(Buff);
+                ConioReleaseScreenBuffer(Buff, FALSE);
                 return STATUS_NO_MEMORY;
             }
         }
@@ -500,7 +500,7 @@ DoWriteConsole(IN PCSR_API_MESSAGE ApiMessage,
     }
     else
     {
-        if(WriteConsoleRequest->Unicode)
+        if (WriteConsoleRequest->Unicode)
         {
             Length = WideCharToMultiByte(Console->OutputCodePage, 0,
                                          (PWCHAR)WriteConsoleRequest->Buffer,
@@ -544,7 +544,7 @@ DoWriteConsole(IN PCSR_API_MESSAGE ApiMessage,
         WriteConsoleRequest->NrCharactersWritten = Written;
     }
 
-    ConioUnlockScreenBuffer(Buff);
+    ConioReleaseScreenBuffer(Buff, FALSE);
     return Status;
 }
 
@@ -584,7 +584,7 @@ CSR_API(SrvReadConsoleOutput)
         return STATUS_INVALID_PARAMETER;
     }
 
-    Status = ConioLockScreenBuffer(ProcessData, ReadOutputRequest->OutputHandle, &Buff, GENERIC_READ);
+    Status = ConioGetScreenBuffer(ProcessData, ReadOutputRequest->OutputHandle, &Buff, GENERIC_READ, TRUE);
     if (!NT_SUCCESS(Status)) return Status;
 
     /* FIXME: Is this correct? */
@@ -598,7 +598,7 @@ CSR_API(SrvReadConsoleOutput)
     ConioInitRect(&ScreenRect, 0, 0, Buff->MaxY, Buff->MaxX);
     if (!ConioGetIntersection(&ReadRegion, &ScreenRect, &ReadRegion))
     {
-        ConioUnlockScreenBuffer(Buff);
+        ConioReleaseScreenBuffer(Buff, TRUE);
         return STATUS_SUCCESS;
     }
 
@@ -625,7 +625,7 @@ CSR_API(SrvReadConsoleOutput)
         }
     }
 
-    ConioUnlockScreenBuffer(Buff);
+    ConioReleaseScreenBuffer(Buff, TRUE);
 
     ReadOutputRequest->ReadRegion.Right = ReadRegion.Left + SizeX - 1;
     ReadOutputRequest->ReadRegion.Bottom = ReadRegion.Top + SizeY - 1;
@@ -690,10 +690,11 @@ CSR_API(SrvWriteConsoleOutput)
         return STATUS_INVALID_PARAMETER;
     }
 
-    Status = ConioLockScreenBuffer(ProcessData,
-                                   WriteOutputRequest->OutputHandle,
-                                   &Buff,
-                                   GENERIC_WRITE);
+    Status = ConioGetScreenBuffer(ProcessData,
+                                  WriteOutputRequest->OutputHandle,
+                                  &Buff,
+                                  GENERIC_WRITE,
+                                  TRUE);
     if (!NT_SUCCESS(Status)) return Status;
 
     Console = Buff->Header.Console;
@@ -709,7 +710,7 @@ CSR_API(SrvWriteConsoleOutput)
     ConioInitRect(&ScreenBuffer, 0, 0, Buff->MaxY - 1, Buff->MaxX - 1);
     if (!ConioGetIntersection(&WriteRegion, &ScreenBuffer, &WriteRegion))
     {
-        ConioUnlockScreenBuffer(Buff);
+        ConioReleaseScreenBuffer(Buff, TRUE);
 
         /* It is okay to have a WriteRegion completely outside the screen buffer.
            No data is written then. */
@@ -739,7 +740,7 @@ CSR_API(SrvWriteConsoleOutput)
 
     ConioDrawRegion(Console, &WriteRegion);
 
-    ConioUnlockScreenBuffer(Buff);
+    ConioReleaseScreenBuffer(Buff, TRUE);
 
     WriteOutputRequest->WriteRegion.Right = WriteRegion.Left + SizeX - 1;
     WriteOutputRequest->WriteRegion.Bottom = WriteRegion.Top + SizeY - 1;
@@ -791,7 +792,7 @@ CSR_API(SrvReadConsoleOutputString)
         return STATUS_INVALID_PARAMETER;
     }
 
-    Status = ConioLockScreenBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process), ReadOutputCodeRequest->OutputHandle, &Buff, GENERIC_READ);
+    Status = ConioGetScreenBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process), ReadOutputCodeRequest->OutputHandle, &Buff, GENERIC_READ, TRUE);
     if (!NT_SUCCESS(Status)) return Status;
 
     Console = Buff->Header.Console;
@@ -865,7 +866,7 @@ CSR_API(SrvReadConsoleOutputString)
     ReadOutputCodeRequest->EndCoord.X = Xpos;
     ReadOutputCodeRequest->EndCoord.Y = (Ypos - Buff->VirtualY + Buff->MaxY) % Buff->MaxY;
 
-    ConioUnlockScreenBuffer(Buff);
+    ConioReleaseScreenBuffer(Buff, TRUE);
 
     ReadOutputCodeRequest->CodesRead = (DWORD)((ULONG_PTR)ReadBuffer - (ULONG_PTR)ReadOutputCodeRequest->pCode.pCode) / CodeSize;
     // <= ReadOutputCodeRequest->NumCodesToRead
@@ -915,10 +916,11 @@ CSR_API(SrvWriteConsoleOutputString)
         return STATUS_INVALID_PARAMETER;
     }
 
-    Status = ConioLockScreenBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
-                                    WriteOutputCodeRequest->OutputHandle,
-                                    &Buff,
-                                    GENERIC_WRITE);
+    Status = ConioGetScreenBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
+                                  WriteOutputCodeRequest->OutputHandle,
+                                  &Buff,
+                                  GENERIC_WRITE,
+                                  TRUE);
     if (!NT_SUCCESS(Status)) return Status;
 
     Console = Buff->Header.Console;
@@ -999,7 +1001,7 @@ CSR_API(SrvWriteConsoleOutputString)
         RtlFreeHeap(RtlGetProcessHeap(), 0, tmpString);
     }
 
-    ConioUnlockScreenBuffer(Buff);
+    ConioReleaseScreenBuffer(Buff, TRUE);
 
     // WriteOutputCodeRequest->NrCharactersWritten = Written;
     return Status;
@@ -1019,7 +1021,7 @@ CSR_API(SrvFillConsoleOutput)
 
     DPRINT("SrvFillConsoleOutput\n");
 
-    Status = ConioLockScreenBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process), FillOutputRequest->OutputHandle, &Buff, GENERIC_WRITE);
+    Status = ConioGetScreenBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process), FillOutputRequest->OutputHandle, &Buff, GENERIC_WRITE, TRUE);
     if (!NT_SUCCESS(Status)) return Status;
 
     Console = Buff->Header.Console;
@@ -1046,7 +1048,7 @@ CSR_API(SrvFillConsoleOutput)
             break;
 
         default:
-            ConioUnlockScreenBuffer(Buff);
+            ConioReleaseScreenBuffer(Buff, TRUE);
             return STATUS_INVALID_PARAMETER;
     }
 
@@ -1073,7 +1075,7 @@ CSR_API(SrvFillConsoleOutput)
         ConioDrawRegion(Console, &UpdateRect);
     }
 
-    ConioUnlockScreenBuffer(Buff);
+    ConioReleaseScreenBuffer(Buff, TRUE);
 /*
     Length = FillOutputRequest->Length;
     FillOutputRequest->NrCharactersWritten = Length;
@@ -1089,12 +1091,12 @@ CSR_API(SrvGetConsoleCursorInfo)
 
     DPRINT("SrvGetConsoleCursorInfo\n");
 
-    Status = ConioLockScreenBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process), CursorInfoRequest->OutputHandle, &Buff, GENERIC_READ);
+    Status = ConioGetScreenBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process), CursorInfoRequest->OutputHandle, &Buff, GENERIC_READ, TRUE);
     if (!NT_SUCCESS(Status)) return Status;
 
     CursorInfoRequest->Info.bVisible = Buff->CursorInfo.bVisible;
     CursorInfoRequest->Info.dwSize = Buff->CursorInfo.dwSize;
-    ConioUnlockScreenBuffer(Buff);
+    ConioReleaseScreenBuffer(Buff, TRUE);
 
     return STATUS_SUCCESS;
 }
@@ -1110,7 +1112,7 @@ CSR_API(SrvSetConsoleCursorInfo)
 
     DPRINT("SrvSetConsoleCursorInfo\n");
 
-    Status = ConioLockScreenBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process), CursorInfoRequest->OutputHandle, &Buff, GENERIC_WRITE);
+    Status = ConioGetScreenBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process), CursorInfoRequest->OutputHandle, &Buff, GENERIC_WRITE, TRUE);
     if (!NT_SUCCESS(Status)) return Status;
 
     Console = Buff->Header.Console;
@@ -1135,12 +1137,12 @@ CSR_API(SrvSetConsoleCursorInfo)
 
         if (!ConioSetCursorInfo(Console, Buff))
         {
-            ConioUnlockScreenBuffer(Buff);
+            ConioReleaseScreenBuffer(Buff, TRUE);
             return STATUS_UNSUCCESSFUL;
         }
     }
 
-    ConioUnlockScreenBuffer(Buff);
+    ConioReleaseScreenBuffer(Buff, TRUE);
 
     return STATUS_SUCCESS;
 }
@@ -1156,7 +1158,7 @@ CSR_API(SrvSetConsoleCursorPosition)
 
     DPRINT("SrvSetConsoleCursorPosition\n");
 
-    Status = ConioLockScreenBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process), SetCursorPositionRequest->OutputHandle, &Buff, GENERIC_WRITE);
+    Status = ConioGetScreenBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process), SetCursorPositionRequest->OutputHandle, &Buff, GENERIC_WRITE, TRUE);
     if (!NT_SUCCESS(Status)) return Status;
 
     Console = Buff->Header.Console;
@@ -1166,7 +1168,7 @@ CSR_API(SrvSetConsoleCursorPosition)
     if ( NewCursorX < 0 || NewCursorX >= Buff->MaxX ||
          NewCursorY < 0 || NewCursorY >= Buff->MaxY )
     {
-        ConioUnlockScreenBuffer(Buff);
+        ConioReleaseScreenBuffer(Buff, TRUE);
         return STATUS_INVALID_PARAMETER;
     }
     OldCursorX = Buff->CurrentX;
@@ -1175,14 +1177,14 @@ CSR_API(SrvSetConsoleCursorPosition)
     Buff->CurrentY = NewCursorY;
     if (Buff == Console->ActiveBuffer)
     {
-        if (! ConioSetScreenInfo(Console, Buff, OldCursorX, OldCursorY))
+        if (!ConioSetScreenInfo(Console, Buff, OldCursorX, OldCursorY))
         {
-            ConioUnlockScreenBuffer(Buff);
+            ConioReleaseScreenBuffer(Buff, TRUE);
             return STATUS_UNSUCCESSFUL;
         }
     }
 
-    ConioUnlockScreenBuffer(Buff);
+    ConioReleaseScreenBuffer(Buff, TRUE);
 
     return STATUS_SUCCESS;
 }
@@ -1196,7 +1198,7 @@ CSR_API(SrvSetConsoleTextAttribute)
 
     DPRINT("SrvSetConsoleTextAttribute\n");
 
-    Status = ConioLockScreenBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process), SetTextAttribRequest->OutputHandle, &Buff, GENERIC_WRITE);
+    Status = ConioGetScreenBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process), SetTextAttribRequest->OutputHandle, &Buff, GENERIC_WRITE, TRUE);
     if (!NT_SUCCESS(Status)) return Status;
 
     Console = Buff->Header.Console;
@@ -1206,12 +1208,12 @@ CSR_API(SrvSetConsoleTextAttribute)
     {
         if (!ConioUpdateScreenInfo(Console, Buff))
         {
-            ConioUnlockScreenBuffer(Buff);
+            ConioReleaseScreenBuffer(Buff, TRUE);
             return STATUS_UNSUCCESSFUL;
         }
     }
 
-    ConioUnlockScreenBuffer(Buff);
+    ConioReleaseScreenBuffer(Buff, TRUE);
 
     return STATUS_SUCCESS;
 }
@@ -1228,7 +1230,7 @@ CSR_API(SrvCreateConsoleScreenBuffer)
 
     RtlEnterCriticalSection(&ProcessData->HandleTableLock);
 
-    Status = ConioLockConsole(ProcessData, &Console);
+    Status = ConioGetConsole(ProcessData, &Console, TRUE);
     if (!NT_SUCCESS(Status))
     {
         RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
@@ -1277,7 +1279,7 @@ CSR_API(SrvCreateConsoleScreenBuffer)
         Status = STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    ConioUnlockConsole(Console);
+    ConioReleaseConsole(Console, TRUE);
 
     RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
 
@@ -1294,7 +1296,7 @@ CSR_API(SrvGetConsoleScreenBufferInfo)
 
     DPRINT("SrvGetConsoleScreenBufferInfo\n");
 
-    Status = ConioLockScreenBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process), ScreenBufferInfoRequest->OutputHandle, &Buff, GENERIC_READ);
+    Status = ConioGetScreenBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process), ScreenBufferInfoRequest->OutputHandle, &Buff, GENERIC_READ, TRUE);
     if (!NT_SUCCESS(Status)) return Status;
 
     Console = Buff->Header.Console;
@@ -1311,7 +1313,7 @@ CSR_API(SrvGetConsoleScreenBufferInfo)
     pInfo->dwMaximumWindowSize.X = Buff->MaxX;
     pInfo->dwMaximumWindowSize.Y = Buff->MaxY;
 
-    ConioUnlockScreenBuffer(Buff);
+    ConioReleaseScreenBuffer(Buff, TRUE);
 
     return STATUS_SUCCESS;
 }
@@ -1325,14 +1327,14 @@ CSR_API(SrvSetConsoleActiveScreenBuffer)
 
     DPRINT("SrvSetConsoleActiveScreenBuffer\n");
 
-    Status = ConioLockScreenBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process), SetScreenBufferRequest->OutputHandle, &Buff, GENERIC_WRITE);
+    Status = ConioGetScreenBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process), SetScreenBufferRequest->OutputHandle, &Buff, GENERIC_WRITE, TRUE);
     if (!NT_SUCCESS(Status)) return Status;
 
     Console = Buff->Header.Console;
 
     if (Buff == Console->ActiveBuffer)
     {
-        ConioUnlockScreenBuffer(Buff);
+        ConioReleaseScreenBuffer(Buff, TRUE);
         return STATUS_SUCCESS;
     }
 
@@ -1348,7 +1350,7 @@ CSR_API(SrvSetConsoleActiveScreenBuffer)
     /* Redraw the console */
     ConioDrawConsole(Console);
 
-    ConioUnlockScreenBuffer(Buff);
+    ConioReleaseScreenBuffer(Buff, TRUE);
 
     return STATUS_SUCCESS;
 }
@@ -1378,7 +1380,7 @@ CSR_API(SrvScrollConsoleScreenBuffer)
     DestinationOrigin = ScrollScreenBufferRequest->DestinationOrigin;
     Fill = ScrollScreenBufferRequest->Fill;
 
-    Status = ConioLockScreenBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process), OutputHandle, &Buff, GENERIC_WRITE);
+    Status = ConioGetScreenBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process), OutputHandle, &Buff, GENERIC_WRITE, TRUE);
     if (!NT_SUCCESS(Status)) return Status;
 
     Console = Buff->Header.Console;
@@ -1387,9 +1389,9 @@ CSR_API(SrvScrollConsoleScreenBuffer)
 
     /* Make sure source rectangle is inside the screen buffer */
     ConioInitRect(&ScreenBuffer, 0, 0, Buff->MaxY - 1, Buff->MaxX - 1);
-    if (! ConioGetIntersection(&SrcRegion, &ScreenBuffer, &ScrollRectangle))
+    if (!ConioGetIntersection(&SrcRegion, &ScreenBuffer, &ScrollRectangle))
     {
-        ConioUnlockScreenBuffer(Buff);
+        ConioReleaseScreenBuffer(Buff, TRUE);
         return STATUS_SUCCESS;
     }
 
@@ -1408,7 +1410,7 @@ CSR_API(SrvScrollConsoleScreenBuffer)
         ClipRectangle = ScrollScreenBufferRequest->ClipRectangle;
         if (!ConioGetIntersection(&ClipRectangle, &ClipRectangle, &ScreenBuffer))
         {
-            ConioUnlockScreenBuffer(Buff);
+            ConioReleaseScreenBuffer(Buff, TRUE);
             return STATUS_SUCCESS;
         }
     }
@@ -1440,7 +1442,7 @@ CSR_API(SrvScrollConsoleScreenBuffer)
         }
     }
 
-    ConioUnlockScreenBuffer(Buff);
+    ConioReleaseScreenBuffer(Buff, TRUE);
 
     return STATUS_SUCCESS;
 }
@@ -1451,11 +1453,11 @@ CSR_API(SrvSetConsoleScreenBufferSize)
     PCONSOLE_SETSCREENBUFFERSIZE SetScreenBufferSizeRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.SetScreenBufferSizeRequest;
     PCONSOLE_SCREEN_BUFFER Buff;
 
-    Status = ConioLockScreenBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process), SetScreenBufferSizeRequest->OutputHandle, &Buff, GENERIC_WRITE);
+    Status = ConioGetScreenBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process), SetScreenBufferSizeRequest->OutputHandle, &Buff, GENERIC_WRITE, TRUE);
     if (!NT_SUCCESS(Status)) return Status;
 
     Status = ConioResizeBuffer(Buff->Header.Console, Buff, SetScreenBufferSizeRequest->Size);
-    ConioUnlockScreenBuffer(Buff);
+    ConioReleaseScreenBuffer(Buff, TRUE);
 
     return Status;
 }

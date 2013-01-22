@@ -581,7 +581,7 @@ CSR_API(SrvSetConsoleMode)
 
     Status = Win32CsrLockObject(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
                                 ConsoleModeRequest->ConsoleHandle,
-                                &Object, GENERIC_WRITE, 0);
+                                &Object, GENERIC_WRITE, TRUE, 0);
     if (!NT_SUCCESS(Status)) return Status;
 
     Status = STATUS_SUCCESS;
@@ -601,7 +601,7 @@ CSR_API(SrvSetConsoleMode)
         Status = STATUS_INVALID_HANDLE;
     }
 
-    Win32CsrUnlockObject(Object);
+    Win32CsrUnlockObject(Object, TRUE);
 
     return Status;
 }
@@ -616,7 +616,7 @@ CSR_API(SrvGetConsoleMode)
 
     Status = Win32CsrLockObject(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
                                 ConsoleModeRequest->ConsoleHandle,
-                                &Object, GENERIC_READ, 0);
+                                &Object, GENERIC_READ, TRUE, 0);
     if (!NT_SUCCESS(Status)) return Status;
 
     Status = STATUS_SUCCESS;
@@ -636,7 +636,7 @@ CSR_API(SrvGetConsoleMode)
         Status = STATUS_INVALID_HANDLE;
     }
 
-    Win32CsrUnlockObject(Object);
+    Win32CsrUnlockObject(Object, TRUE);
 
     return Status;
 }
@@ -659,7 +659,7 @@ CSR_API(SrvSetConsoleTitle)
         return STATUS_INVALID_PARAMETER;
     }
 
-    Status = ConioLockConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console);
+    Status = ConioGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console, TRUE);
     if(NT_SUCCESS(Status))
     {
         Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, TitleRequest->Length);
@@ -685,7 +685,7 @@ CSR_API(SrvSetConsoleTitle)
             Status = STATUS_NO_MEMORY;
         }
 
-        ConioUnlockConsole(Console);
+        ConioReleaseConsole(Console, TRUE);
     }
 
     return Status;
@@ -709,7 +709,7 @@ CSR_API(SrvGetConsoleTitle)
         return STATUS_INVALID_PARAMETER;
     }
 
-    Status = ConioLockConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console);
+    Status = ConioGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console, TRUE);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Can't get console\n");
@@ -726,7 +726,7 @@ CSR_API(SrvGetConsoleTitle)
 
     TitleRequest->Length = Console->Title.Length;
 
-    ConioUnlockConsole(Console);
+    ConioReleaseConsole(Console, TRUE);
     return STATUS_SUCCESS;
 }
 
@@ -774,10 +774,11 @@ CSR_API(SrvGetConsoleHardwareState)
 
     DPRINT("SrvGetConsoleHardwareState\n");
 
-    Status = ConioLockScreenBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
-                              HardwareStateRequest->OutputHandle,
-                              &Buff,
-                              GENERIC_READ);
+    Status = ConioGetScreenBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
+                                  HardwareStateRequest->OutputHandle,
+                                  &Buff,
+                                  GENERIC_READ,
+                                  TRUE);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to get console handle in SrvGetConsoleHardwareState\n");
@@ -787,7 +788,7 @@ CSR_API(SrvGetConsoleHardwareState)
     Console = Buff->Header.Console;
     HardwareStateRequest->State = Console->HardwareState;
 
-    ConioUnlockScreenBuffer(Buff);
+    ConioReleaseScreenBuffer(Buff, TRUE);
 
     return Status;
 }
@@ -801,10 +802,11 @@ CSR_API(SrvSetConsoleHardwareState)
 
     DPRINT("SrvSetConsoleHardwareState\n");
 
-    Status = ConioLockScreenBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
-                              HardwareStateRequest->OutputHandle,
-                              &Buff,
-                              GENERIC_READ);
+    Status = ConioGetScreenBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
+                                  HardwareStateRequest->OutputHandle,
+                                  &Buff,
+                                  GENERIC_READ,
+                                  TRUE);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to get console handle in SrvSetConsoleHardwareState\n");
@@ -815,7 +817,7 @@ CSR_API(SrvSetConsoleHardwareState)
     Console = Buff->Header.Console;
     Status = SetConsoleHardwareState(Console, HardwareStateRequest->State);
 
-    ConioUnlockScreenBuffer(Buff);
+    ConioReleaseScreenBuffer(Buff, TRUE);
 
     return Status;
 }
@@ -828,11 +830,11 @@ CSR_API(SrvGetConsoleWindow)
 
     DPRINT("SrvGetConsoleWindow\n");
 
-    Status = ConioLockConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console);
+    Status = ConioGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console, TRUE);
     if (!NT_SUCCESS(Status)) return Status;
 
     GetWindowRequest->WindowHandle = Console->hWindow;
-    ConioUnlockConsole(Console);
+    ConioReleaseConsole(Console, TRUE);
 
     return STATUS_SUCCESS;
 }
@@ -845,14 +847,14 @@ CSR_API(SrvSetConsoleIcon)
 
     DPRINT("SrvSetConsoleIcon\n");
 
-    Status = ConioLockConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console);
+    Status = ConioGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console, TRUE);
     if (!NT_SUCCESS(Status)) return Status;
 
     Status = (ConioChangeIcon(Console, SetIconRequest->WindowIcon)
                 ? STATUS_SUCCESS
                 : STATUS_UNSUCCESSFUL);
 
-    ConioUnlockConsole(Console);
+    ConioReleaseConsole(Console, TRUE);
 
     return Status;
 }
@@ -866,12 +868,12 @@ CSR_API(SrvGetConsoleCP)
     DPRINT("SrvGetConsoleCP, getting %s Code Page\n",
             ConsoleCPRequest->InputCP ? "Input" : "Output");
 
-    Status = ConioLockConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console);
+    Status = ConioGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console, TRUE);
     if (!NT_SUCCESS(Status)) return Status;
 
     ConsoleCPRequest->CodePage = (ConsoleCPRequest->InputCP ? Console->CodePage
                                                             : Console->OutputCodePage);
-    ConioUnlockConsole(Console);
+    ConioReleaseConsole(Console, TRUE);
     return STATUS_SUCCESS;
 }
 
@@ -884,7 +886,7 @@ CSR_API(SrvSetConsoleCP)
     DPRINT("SrvSetConsoleCP, setting %s Code Page\n",
             ConsoleCPRequest->InputCP ? "Input" : "Output");
 
-    Status = ConioLockConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console);
+    Status = ConioGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console, TRUE);
     if (!NT_SUCCESS(Status)) return Status;
 
     if (IsValidCodePage(ConsoleCPRequest->CodePage))
@@ -894,11 +896,11 @@ CSR_API(SrvSetConsoleCP)
         else
             Console->OutputCodePage = ConsoleCPRequest->CodePage;
 
-        ConioUnlockConsole(Console);
+        ConioReleaseConsole(Console, TRUE);
         return STATUS_SUCCESS;
     }
 
-    ConioUnlockConsole(Console);
+    ConioReleaseConsole(Console, TRUE);
     return STATUS_INVALID_PARAMETER;
 }
 
@@ -925,7 +927,7 @@ CSR_API(SrvGetConsoleProcessList)
 
     Buffer = GetProcessListRequest->pProcessIds;
 
-    Status = ConioLockConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console);
+    Status = ConioGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console, TRUE);
     if (!NT_SUCCESS(Status)) return Status;
 
     for (current_entry = Console->ProcessList.Flink;
@@ -939,7 +941,7 @@ CSR_API(SrvGetConsoleProcessList)
         }
     }
 
-    ConioUnlockConsole(Console);
+    ConioReleaseConsole(Console, TRUE);
 
     GetProcessListRequest->nProcessIdsTotal = nItems;
     return STATUS_SUCCESS;
@@ -954,7 +956,7 @@ CSR_API(SrvGenerateConsoleCtrlEvent)
     PLIST_ENTRY current_entry;
     DWORD Group;
 
-    Status = ConioLockConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console);
+    Status = ConioGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console, TRUE);
     if (!NT_SUCCESS(Status)) return Status;
 
     Group = GenerateCtrlEventRequest->ProcessGroup;
@@ -971,7 +973,7 @@ CSR_API(SrvGenerateConsoleCtrlEvent)
         }
     }
 
-    ConioUnlockConsole(Console);
+    ConioReleaseConsole(Console, TRUE);
 
     return Status;
 }
@@ -982,13 +984,13 @@ CSR_API(SrvGetConsoleSelectionInfo)
     PCONSOLE_GETSELECTIONINFO GetSelectionInfoRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetSelectionInfoRequest;
     PCONSOLE Console;
 
-    Status = ConioLockConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console);
+    Status = ConioGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console, TRUE);
     if (NT_SUCCESS(Status))
     {
         memset(&GetSelectionInfoRequest->Info, 0, sizeof(CONSOLE_SELECTION_INFO));
         if (Console->Selection.dwFlags != 0)
             GetSelectionInfoRequest->Info = Console->Selection;
-        ConioUnlockConsole(Console);
+        ConioReleaseConsole(Console, TRUE);
     }
 
     return Status;

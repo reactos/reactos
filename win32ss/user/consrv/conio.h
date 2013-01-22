@@ -169,10 +169,10 @@ typedef struct _CONSOLE_VTBL
 #define ConioResizeBuffer(Console, Buff, Size) (Console)->Vtbl->ResizeBuffer((Console), (Buff), (Size))
 
 /* console.c */
-#define ConioLockConsole(ProcessData, Console) \
-    ConioConsoleFromProcessData((ProcessData), (Console))
-#define ConioUnlockConsole(Console) \
-    Win32CsrUnlockConsole(Console)
+#define ConioGetConsole(ProcessData, Console, LockConsole) \
+    ConioConsoleFromProcessData((ProcessData), (Console), (LockConsole))
+#define ConioReleaseConsole(Console, ConsoleLocked) \
+    Win32CsrUnlockConsole((Console), (ConsoleLocked))
 VOID WINAPI ConioDeleteConsole(PCONSOLE Console);
 VOID WINAPI CsrInitConsoleSupport(VOID);
 NTSTATUS WINAPI CsrInitConsole(PCONSOLE* NewConsole, int ShowCmd, PCSR_PROCESS ConsoleLeaderProcess);
@@ -184,10 +184,10 @@ VOID FASTCALL ConioConsoleCtrlEventTimeout(DWORD Event,
                                            DWORD Timeout);
 
 /* coninput.c */
-#define ConioLockInputBuffer(ProcessData, Handle, Ptr, Access) \
-    Win32CsrLockObject((ProcessData), (Handle), (Object_t **)(Ptr), (Access), CONIO_INPUT_BUFFER_MAGIC)
-#define ConioUnlockInputBuffer(Buff) \
-    Win32CsrUnlockObject(&(Buff)->Header)
+#define ConioGetInputBuffer(ProcessData, Handle, Ptr, Access, LockConsole) \
+    Win32CsrLockObject((ProcessData), (Handle), (Object_t **)(Ptr), (Access), (LockConsole), CONIO_INPUT_BUFFER_MAGIC)
+#define ConioReleaseInputBuffer(Buff, IsConsoleLocked) \
+    Win32CsrUnlockObject(&(Buff)->Header, (IsConsoleLocked))
 void WINAPI ConioProcessKey(MSG *msg, PCONSOLE Console, BOOL TextMode);
 
 /* conoutput.c */
@@ -195,10 +195,10 @@ void WINAPI ConioProcessKey(MSG *msg, PCONSOLE Console, BOOL TextMode);
     (((Rect)->Top) > ((Rect)->Bottom) ? 0 : ((Rect)->Bottom) - ((Rect)->Top) + 1)
 #define ConioRectWidth(Rect) \
     (((Rect)->Left) > ((Rect)->Right) ? 0 : ((Rect)->Right) - ((Rect)->Left) + 1)
-#define ConioLockScreenBuffer(ProcessData, Handle, Ptr, Access) \
-    Win32CsrLockObject((ProcessData), (Handle), (Object_t **)(Ptr), (Access), CONIO_SCREEN_BUFFER_MAGIC)
-#define ConioUnlockScreenBuffer(Buff) \
-    Win32CsrUnlockObject(&(Buff)->Header)
+#define ConioGetScreenBuffer(ProcessData, Handle, Ptr, Access, LockConsole) \
+    Win32CsrLockObject((ProcessData), (Handle), (Object_t **)(Ptr), (Access), (LockConsole), CONIO_SCREEN_BUFFER_MAGIC)
+#define ConioReleaseScreenBuffer(Buff, IsConsoleLocked) \
+    Win32CsrUnlockObject(&(Buff)->Header, (IsConsoleLocked))
 PBYTE FASTCALL ConioCoordToPointer(PCONSOLE_SCREEN_BUFFER Buf, ULONG X, ULONG Y);
 VOID FASTCALL ConioDrawConsole(PCONSOLE Console);
 NTSTATUS FASTCALL ConioWriteConsole(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER Buff,
