@@ -41,6 +41,9 @@
 #ifdef LANGUAGE_FR_FR
     #include "oleacc_Fr.rc"
 #endif
+#ifdef LANGUAGE_HE_IL
+    #include "oleacc_He.rc"
+#endif
 #ifdef LANGUAGE_HU_HU
     #include "oleacc_Hu.rc"
 #endif

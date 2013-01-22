@@ -41,6 +41,9 @@
 #ifdef LANGUAGE_FR_FR
     #include "crypt32_Fr.rc"
 #endif
+#ifdef LANGUAGE_HE_IL
+    #include "crypt32_He.rc"
+#endif
 #ifdef LANGUAGE_HU_HU
     #include "crypt32_Hu.rc"
 #endif

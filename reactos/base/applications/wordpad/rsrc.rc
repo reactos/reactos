@@ -88,6 +88,9 @@ IDC_ZOOM CURSOR "zoom.cur"
 #ifdef LANGUAGE_FR_FR
     #include "Fr.rc"
 #endif
+#ifdef LANGUAGE_HE_IL
+    #include "He.rc"
+#endif
 #ifdef LANGUAGE_IT_IT
     #include "It.rc"
 #endif

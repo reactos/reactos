@@ -60,6 +60,9 @@
 #ifdef LANGUAGE_FR_FR
     #include "iccvid_Fr.rc"
 #endif
+#ifdef LANGUAGE_HE_IL
+    #include "iccvid_He.rc"
+#endif
 #ifdef LANGUAGE_IT_IT
     #include "iccvid_It.rc"
 #endif

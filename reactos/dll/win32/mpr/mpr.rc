@@ -71,6 +71,9 @@
 #ifdef LANGUAGE_FR_FR
     #include "mpr_Fr.rc"
 #endif
+#ifdef LANGUAGE_HE_IL
+    #include "mpr_He.rc"
+#endif
 #ifdef LANGUAGE_JA_JP
     #include "mpr_Ja.rc"
 #endif

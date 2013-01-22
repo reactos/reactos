@@ -81,6 +81,9 @@
 #ifdef LANGUAGE_FR_FR
     #include "msrle_Fr.rc"
 #endif
+#ifdef LANGUAGE_HE_IL
+    #include "msrle_He.rc"
+#endif
 #ifdef LANGUAGE_JA_JP
     #include "msrle_Ja.rc"
 #endif

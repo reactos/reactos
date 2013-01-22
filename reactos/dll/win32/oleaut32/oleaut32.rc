@@ -81,6 +81,9 @@
 #ifdef LANGUAGE_DE_DE
     #include "oleaut32_De.rc"
 #endif
+#ifdef LANGUAGE_HE_IL
+    #include "oleaut32_He.rc"
+#endif
 #ifdef LANGUAGE_LT_LT
     #include "oleaut32_Lt.rc"
 #endif

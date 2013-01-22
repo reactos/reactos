@@ -50,6 +50,9 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #ifdef LANGUAGE_ES_ES
     #include "avifile_Es.rc"
 #endif
+#ifdef LANGUAGE_HE_IL
+    #include "avifile_He.rc"
+#endif
 #ifdef LANGUAGE_HU_HU
     #include "avifile_Hu.rc"
 #endif

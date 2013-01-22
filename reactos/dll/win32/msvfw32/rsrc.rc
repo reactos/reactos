@@ -61,6 +61,9 @@
 #ifdef LANGUAGE_FR_FR
     #include "msvfw32_Fr.rc"
 #endif
+#ifdef LANGUAGE_HE_IL
+    #include "msvfw32_He.rc"
+#endif
 #ifdef LANGUAGE_IT_IT
     #include "msvfw32_It.rc"
 #endif

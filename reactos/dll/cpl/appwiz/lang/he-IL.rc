@@ -1,0 +1,51 @@
+// Traslated by Baruch Rutman
+LANGUAGE LANG_HEBREW, SUBLANG_DEFAULT
+
+IDD_FIRSTPAGE DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "צור קישור"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+	LTEXT "Text1", -1, 115, 15, 160, 24
+	LTEXT "Text2", -1, 115, 35, 160, 17
+END
+
+IDD_SUBMIT_REPORT DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "צור קישור"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+	LTEXT "Text1",-1,10,0,225,40
+	LTEXT "Text2",-1,10,40,120,20
+	LTEXT "Text3",-1,10,55,120,20
+END
+
+IDD_SHORTCUT_LOCATION DIALOGEX 0, 0, 340, 200
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "צור קיצור דרך"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+  LTEXT "This wizard helps you to create shortcuts to local or\nnetwork programs, files, folders, computers, or Internet\naddresses.", -1, 120, 15, 200, 30
+  LTEXT "הקלד את מיקום הפריט:", -1, 120, 50, 120, 10
+  EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT
+  PUSHBUTTON "סייר...", IDC_SHORTCUT_BROWSE, 272, 65, 55, 15, ES_LEFT
+  LTEXT "לחץ הבא כדי להמשיך.", -1, 120, 97, 162, 10
+END
+
+IDD_SHORTCUT_FINISH DIALOGEX 0, 0, 340, 200
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "בחירת שם לתכנית"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+  LTEXT "הקלד שם עבור קיצור דרך זה:", -1, 120, 15, 150, 10
+  EDITTEXT IDC_SHORTCUT_NAME, 120, 35, 150, 15, ES_LEFT
+  LTEXT "לחץ על סיום כדי ליצור את קיצור הדרך.", -1, 118, 97, 178, 17
+END
+
+STRINGTABLE
+BEGIN
+	IDS_CPLSYSTEMNAME "הוספת/הסרת תכניות"
+	IDS_CPLSYSTEMDESCRIPTION "מגדיר תכניות ויוצר קישורי דרך."
+    IDS_CREATE_SHORTCUT "צור קיצור דרך"
+    IDS_ERROR_NOT_FOUND "הקובץ %s לא נמצא."
+END
