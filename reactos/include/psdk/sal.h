@@ -855,7 +855,7 @@ enum __SAL_YesNo {_SAL_notpresent, _SAL_no, _SAL_maybe, _SAL_yes, _SAL_default};
 //#define _Outref_result_maybenull_
 //#define _Outref_result_nullonfailure_
 #define _Points_to_data_                                            _SAL2_NAME(_Points_to_data_) _Group_([SAL_pre] [SAL_at(p1="*_Curr_")] _Group_([SAL_annotes(Name="SAL_mayBePointer", p1="__no")]) )
-//#define _Post_bytecap_(size)
+#define _Post_bytecap_(size)                                        _SAL11_NAME(_Post_bytecap_) _Group_([SA_Post(WritableBytes="\n" _SA_SPECSTRIZE(size))])
 #define _Post_bytecount_(size)                                      _SAL11_NAME(_Post_bytecount_) _Group_([SA_Post(ValidBytes="\n" _SA_SPECSTRIZE(size))] [SA_Post(Valid=SA_Yes)])
 //#define _Post_bytecount_c_(size)
 //#define _Post_bytecount_x_(size)

@@ -459,7 +459,7 @@ NTAPI
 NtReleaseSemaphore(
     _In_ HANDLE SemaphoreHandle,
     _In_ LONG ReleaseCount,
-    _Out_ PLONG PreviousCount
+    _Out_opt_ PLONG PreviousCount
 );
 
 NTSYSCALLAPI
@@ -903,7 +903,7 @@ NTAPI
 ZwReleaseSemaphore(
     _In_ HANDLE SemaphoreHandle,
     _In_ LONG ReleaseCount,
-    _Out_ PLONG PreviousCount
+    _Out_opt_ PLONG PreviousCount
 );
 
 NTSYSAPI

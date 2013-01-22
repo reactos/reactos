@@ -56,7 +56,7 @@ LdrEnumResources(
     _In_ PLDR_RESOURCE_INFO ResourceInfo,
     _In_ ULONG Level,
     _Inout_ ULONG *ResourceCount,
-    _Out_opt_ PLDR_ENUM_RESOURCE_INFO Resources
+    _Out_writes_to_(*ResourceCount,*ResourceCount) LDR_ENUM_RESOURCE_INFO *Resources
 );
 
 

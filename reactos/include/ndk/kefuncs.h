@@ -437,9 +437,9 @@ NTAPI
 NtQueueApcThread(
     _In_ HANDLE ThreadHandle,
     _In_ PKNORMAL_ROUTINE ApcRoutine,
-    _In_ PVOID NormalContext,
-    _In_ PVOID SystemArgument1,
-    _In_ PVOID SystemArgument2
+    _In_opt_ PVOID NormalContext,
+    _In_opt_ PVOID SystemArgument1,
+    _In_opt_ PVOID SystemArgument2
 );
 
 NTSYSCALLAPI
@@ -643,9 +643,9 @@ NTAPI
 ZwQueueApcThread(
     _In_ HANDLE ThreadHandle,
     _In_ PKNORMAL_ROUTINE ApcRoutine,
-    _In_ PVOID NormalContext,
-    _In_ PVOID SystemArgument1,
-    _In_ PVOID SystemArgument2
+    _In_opt_ PVOID NormalContext,
+    _In_opt_ PVOID SystemArgument1,
+    _In_opt_ PVOID SystemArgument2
 );
 
 NTSYSAPI

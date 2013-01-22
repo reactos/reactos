@@ -41,6 +41,7 @@
 #include <excpt.h>
 #include <ntdef.h>
 #include <ntstatus.h>
+#include <kernelspecs.h>
 #include <ntiologc.h>
 
 #ifndef GUID_DEFINED
@@ -8742,14 +8743,18 @@ RtlGUIDFromString(
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
 _At_(DestinationString->Buffer, _Post_equal_to_(SourceString))
+_When_(SourceString != NULL,
 _At_(DestinationString->Length, _Post_equal_to_(_String_length_(SourceString) * sizeof(WCHAR)))
-_At_(DestinationString->MaximumLength, _Post_equal_to_((_String_length_(SourceString)+1) * sizeof(WCHAR)))
+_At_(DestinationString->MaximumLength, _Post_equal_to_(DestinationString->Length + sizeof(WCHAR))))
+_When_(SourceString == NULL,
+_At_(DestinationString->Length, _Post_equal_to_(0))
+_At_(DestinationString->MaximumLength, _Post_equal_to_(0)))
 NTSYSAPI
 VOID
 NTAPI
 RtlInitUnicodeString(
-  _Out_ PUNICODE_STRING DestinationString,
-  _In_opt_z_ __drv_aliasesMem PCWSTR SourceString);
+    _Out_ PUNICODE_STRING DestinationString,
+    _In_opt_z_ __drv_aliasesMem PCWSTR SourceString);
 
 /* VOID
  * RtlMoveMemory(
@@ -9328,13 +9333,14 @@ RtlSetDaclSecurityDescriptor(
 #define RtlStoreUlongPtr(Address,Value) RtlStoreUlong(Address,Value)
 #endif /* _WIN64 */
 
-_Success_(return != 0)
+_Success_(return!=FALSE)
+_Must_inspect_result_
 NTSYSAPI
 BOOLEAN
 NTAPI
 RtlTimeFieldsToTime(
-  _In_ PTIME_FIELDS TimeFields,
-  _Out_ PLARGE_INTEGER Time);
+    _In_ PTIME_FIELDS TimeFields,
+    _Out_ PLARGE_INTEGER Time);
 
 NTSYSAPI
 VOID
@@ -16669,17 +16675,18 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCreateFile(
-  _Out_ PHANDLE FileHandle,
-  _In_ ACCESS_MASK DesiredAccess,
-  _In_ POBJECT_ATTRIBUTES ObjectAttributes,
-  _Out_ PIO_STATUS_BLOCK IoStatusBlock,
-  _In_opt_ PLARGE_INTEGER AllocationSize,
-  _In_ ULONG FileAttributes,
-  _In_ ULONG ShareAccess,
-  _In_ ULONG CreateDisposition,
-  _In_ ULONG CreateOptions,
-  _In_reads_bytes_opt_(EaLength) PVOID EaBuffer,
-  _In_ ULONG EaLength);
+    _Out_ PHANDLE FileHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ POBJECT_ATTRIBUTES ObjectAttributes,
+    _Out_ PIO_STATUS_BLOCK IoStatusBlock,
+    _In_opt_ PLARGE_INTEGER AllocationSize,
+    _In_ ULONG FileAttributes,
+    _In_ ULONG ShareAccess,
+    _In_ ULONG CreateDisposition,
+    _In_ ULONG CreateOptions,
+    _In_reads_bytes_opt_(EaLength) PVOID EaBuffer,
+    _In_ ULONG EaLength
+);
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
@@ -17310,8 +17317,8 @@ NTSYSCALLAPI
 NTSTATUS
 NTAPI
 ZwRollbackComplete(
-  IN HANDLE EnlistmentHandle,
-  IN PLARGE_INTEGER TmVirtualClock OPTIONAL);
+  _In_ HANDLE EnlistmentHandle,
+  _In_opt_ PLARGE_INTEGER TmVirtualClock);
 
 NTSYSCALLAPI
 NTSTATUS
@@ -17347,29 +17354,29 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 ZwNotifyChangeMultipleKeys(
-  IN HANDLE MasterKeyHandle,
-  IN ULONG Count OPTIONAL,
-  IN OBJECT_ATTRIBUTES SubordinateObjects[] OPTIONAL,
-  IN HANDLE Event OPTIONAL,
-  IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
-  IN PVOID ApcContext OPTIONAL,
-  OUT PIO_STATUS_BLOCK IoStatusBlock,
-  IN ULONG CompletionFilter,
-  IN BOOLEAN WatchTree,
-  OUT PVOID Buffer OPTIONAL,
-  IN ULONG BufferSize,
-  IN BOOLEAN Asynchronous);
+  _In_ HANDLE MasterKeyHandle,
+  _In_opt_ ULONG Count,
+  _In_opt_ OBJECT_ATTRIBUTES SubordinateObjects[],
+  _In_opt_ HANDLE Event,
+  _In_opt_ PIO_APC_ROUTINE ApcRoutine,
+  _In_opt_ PVOID ApcContext,
+  _Out_ PIO_STATUS_BLOCK IoStatusBlock,
+  _In_ ULONG CompletionFilter,
+  _In_ BOOLEAN WatchTree,
+  _Out_opt_ PVOID Buffer,
+  _In_ ULONG BufferSize,
+  _In_ BOOLEAN Asynchronous);
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryMultipleValueKey(
-  IN HANDLE KeyHandle,
-  IN OUT PKEY_VALUE_ENTRY ValueEntries,
-  IN ULONG EntryCount,
-  OUT PVOID ValueBuffer,
-  IN OUT PULONG BufferLength,
-  OUT PULONG RequiredBufferLength OPTIONAL);
+  _In_ HANDLE KeyHandle,
+  _Inout_ PKEY_VALUE_ENTRY ValueEntries,
+  _In_ ULONG EntryCount,
+  _Out_ PVOID ValueBuffer,
+  _Inout_ PULONG BufferLength,
+  _Out_opt_ PULONG RequiredBufferLength);
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI

@@ -217,14 +217,18 @@ RtlGUIDFromString(
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
 _At_(DestinationString->Buffer, _Post_equal_to_(SourceString))
+_When_(SourceString != NULL,
 _At_(DestinationString->Length, _Post_equal_to_(_String_length_(SourceString) * sizeof(WCHAR)))
-_At_(DestinationString->MaximumLength, _Post_equal_to_((_String_length_(SourceString)+1) * sizeof(WCHAR)))
+_At_(DestinationString->MaximumLength, _Post_equal_to_(DestinationString->Length + sizeof(WCHAR))))
+_When_(SourceString == NULL,
+_At_(DestinationString->Length, _Post_equal_to_(0))
+_At_(DestinationString->MaximumLength, _Post_equal_to_(0)))
 NTSYSAPI
 VOID
 NTAPI
 RtlInitUnicodeString(
-  _Out_ PUNICODE_STRING DestinationString,
-  _In_opt_z_ __drv_aliasesMem PCWSTR SourceString);
+    _Out_ PUNICODE_STRING DestinationString,
+    _In_opt_z_ __drv_aliasesMem PCWSTR SourceString);
 
 /* VOID
  * RtlMoveMemory(
@@ -805,13 +809,14 @@ RtlSetDaclSecurityDescriptor(
 #define RtlStoreUlongPtr(Address,Value) RtlStoreUlong(Address,Value)
 #endif /* _WIN64 */
 
-_Success_(return != 0)
+_Success_(return!=FALSE)
+_Must_inspect_result_
 NTSYSAPI
 BOOLEAN
 NTAPI
 RtlTimeFieldsToTime(
-  _In_ PTIME_FIELDS TimeFields,
-  _Out_ PLARGE_INTEGER Time);
+    _In_ PTIME_FIELDS TimeFields,
+    _Out_ PLARGE_INTEGER Time);
 
 NTSYSAPI
 VOID
@@ -1566,12 +1571,13 @@ RtlSecondsSince1980ToTime(
   _Out_ PLARGE_INTEGER Time);
 
 _Success_(return != 0)
+_Must_inspect_result_
 NTSYSAPI
 BOOLEAN
 NTAPI
 RtlTimeToSecondsSince1970(
-  _In_ PLARGE_INTEGER Time,
-  _Out_ PULONG ElapsedSeconds);
+    _In_ PLARGE_INTEGER Time,
+    _Out_ PULONG ElapsedSeconds);
 
 NTSYSAPI
 VOID

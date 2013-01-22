@@ -284,7 +284,7 @@ NTSTATUS
 NTAPI
 NtAlertResumeThread(
     _In_ HANDLE ThreadHandle,
-    _Out_ PULONG SuspendCount
+    _Out_opt_ PULONG SuspendCount
 );
 
 typedef ULONG APPHELPCACHESERVICECLASS;
@@ -488,7 +488,7 @@ NtQueryInformationThread(
     _In_ THREADINFOCLASS ThreadInformationClass,
     _Out_ PVOID ThreadInformation,
     _In_ ULONG ThreadInformationLength,
-    _Out_ PULONG ReturnLength
+    _Out_opt_ PULONG ReturnLength
 );
 
 NTSYSCALLAPI
@@ -503,7 +503,7 @@ NTSTATUS
 NTAPI
 NtResumeThread(
     _In_ HANDLE ThreadHandle,
-    _Out_ PULONG SuspendCount
+    _Out_opt_ PULONG SuspendCount
 );
 
 NTSYSCALLAPI
@@ -588,7 +588,7 @@ NTSTATUS
 NTAPI
 ZwAlertResumeThread(
     _In_ HANDLE ThreadHandle,
-    _Out_ PULONG SuspendCount
+    _Out_opt_ PULONG SuspendCount
 );
 
 NTSYSAPI
@@ -734,7 +734,7 @@ ZwQueryInformationThread(
     _In_ THREADINFOCLASS ThreadInformationClass,
     _Out_ PVOID ThreadInformation,
     _In_ ULONG ThreadInformationLength,
-    _Out_ PULONG ReturnLength
+    _Out_opt_ PULONG ReturnLength
 );
 
 NTSYSAPI
@@ -749,7 +749,7 @@ NTSTATUS
 NTAPI
 ZwResumeThread(
     _In_ HANDLE ThreadHandle,
-    _Out_ PULONG SuspendCount
+    _Out_opt_ PULONG SuspendCount
 );
 
 NTSYSAPI

@@ -1667,7 +1667,7 @@ RtlLargeIntegerToChar(
     _In_ PLARGE_INTEGER Value,
     _In_ ULONG Base,
     _In_ ULONG Length,
-    _Inout_ PCHAR String
+    _Out_ PCHAR String
 );
 
 NTSYSAPI
@@ -2129,8 +2129,12 @@ RtlHashUnicodeString(
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
 _At_(DestinationString->Buffer, _Post_equal_to_(SourceString))
+_When_(SourceString != NULL,
 _At_(DestinationString->Length, _Post_equal_to_(_String_length_(SourceString) * sizeof(WCHAR)))
-_At_(DestinationString->MaximumLength, _Post_equal_to_((_String_length_(SourceString)+1) * sizeof(WCHAR)))
+_At_(DestinationString->MaximumLength, _Post_equal_to_(DestinationString->Length + sizeof(WCHAR))))
+_When_(SourceString == NULL,
+_At_(DestinationString->Length, _Post_equal_to_(0))
+_At_(DestinationString->MaximumLength, _Post_equal_to_(0)))
 NTSYSAPI
 VOID
 NTAPI
@@ -2411,8 +2415,8 @@ RtlCreateUserThread(
     _In_ SIZE_T StackCommit,
     _In_ PTHREAD_START_ROUTINE StartAddress,
     _In_ PVOID Parameter,
-    _Inout_ PHANDLE ThreadHandle,
-    _Inout_ PCLIENT_ID ClientId
+    _Out_opt_ PHANDLE ThreadHandle,
+    _Out_opt_ PCLIENT_ID ClientId
 );
 #endif
 
@@ -2538,7 +2542,7 @@ NTSTATUS
 NTAPI
 RtlDeregisterWaitEx(
     _In_ HANDLE hWaitHandle,
-    _In_ HANDLE hCompletionEvent
+    _In_opt_ HANDLE hCompletionEvent
 );
 
 NTSYSAPI
@@ -2682,7 +2686,7 @@ ULONG
 NTAPI
 RtlGetCurrentDirectory_U(
     _In_ ULONG MaximumLength,
-    _Out_z_bytecap_(MaximumLength) PWSTR Buffer
+    _Out_bytecap_(MaximumLength) PWSTR Buffer
 );
 
 NTSYSAPI
@@ -3176,7 +3180,7 @@ NTSTATUS
 NTAPI
 RtlDeleteTimerQueueEx(
     _In_ HANDLE TimerQueue,
-    _In_ HANDLE CompletionEvent
+    _In_opt_ HANDLE CompletionEvent
 );
 
 NTSYSAPI
@@ -3645,7 +3649,8 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 RtlFormatCurrentUserKeyPath(
-    _Inout_ PUNICODE_STRING KeyPath
+    _Out_ _At_(KeyPath->Buffer, __drv_allocatesMem(Mem) _Post_bytecap_(KeyPath->MaximumLength) _Post_bytecount_(KeyPath->Length))
+        PUNICODE_STRING KeyPath
 );
 
 NTSYSAPI
@@ -3700,7 +3705,7 @@ NTSTATUS
 NTAPI
 RtlpNtEnumerateSubKey(
     _In_ HANDLE KeyHandle,
-    _Out_ PUNICODE_STRING SubKeyName,
+    _Inout_ PUNICODE_STRING SubKeyName,
     _In_ ULONG Index,
     _In_ ULONG Unused
 );
@@ -3974,6 +3979,8 @@ NTAPI
 RtlSetTimeZoneInformation(
     _In_ PRTL_TIME_ZONE_INFORMATION TimeZoneInformation);
 
+_Success_(return!=FALSE)
+_Must_inspect_result_
 NTSYSAPI
 BOOLEAN
 NTAPI
@@ -3982,12 +3989,14 @@ RtlTimeFieldsToTime(
     _Out_ PLARGE_INTEGER Time
 );
 
+_Success_(return != 0)
+_Must_inspect_result_
 NTSYSAPI
 BOOLEAN
 NTAPI
 RtlTimeToSecondsSince1970(
-    PLARGE_INTEGER Time,
-    _Out_ PULONG SecondsSince1970
+    _In_ PLARGE_INTEGER Time,
+    _Out_ PULONG ElapsedSeconds
 );
 
 NTSYSAPI

@@ -1344,12 +1344,13 @@ RtlSecondsSince1980ToTime(
   _Out_ PLARGE_INTEGER Time);
 
 _Success_(return != 0)
+_Must_inspect_result_
 NTSYSAPI
 BOOLEAN
 NTAPI
 RtlTimeToSecondsSince1970(
-  _In_ PLARGE_INTEGER Time,
-  _Out_ PULONG ElapsedSeconds);
+    _In_ PLARGE_INTEGER Time,
+    _Out_ PULONG ElapsedSeconds);
 
 NTSYSAPI
 VOID
@@ -9165,7 +9166,7 @@ ZwOpenDirectoryObject(
 
 _Must_inspect_result_
 _At_(*BaseAddress, __drv_allocatesMem(Mem))
-__kernel_entry NTSYSCALLAPI
+__kernel_entry
 NTSYSAPI
 NTSTATUS
 NTAPI

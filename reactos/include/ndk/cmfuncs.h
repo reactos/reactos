@@ -41,17 +41,18 @@ NtCompressKey(
     _In_ HANDLE Key
 );
 
-NTSYSCALLAPI
+_IRQL_requires_max_(PASSIVE_LEVEL)
+NTSYSAPI
 NTSTATUS
 NTAPI
 NtCreateKey(
     _Out_ PHANDLE KeyHandle,
     _In_ ACCESS_MASK DesiredAccess,
     _In_ POBJECT_ATTRIBUTES ObjectAttributes,
-    _In_ ULONG TitleIndex,
+    _Reserved_ ULONG TitleIndex,
     _In_opt_ PUNICODE_STRING Class,
     _In_ ULONG CreateOptions,
-    _In_opt_ PULONG Disposition
+    _Out_opt_ PULONG Disposition
 );
 
 NTSYSCALLAPI
@@ -81,14 +82,17 @@ NtEnumerateKey(
     _Out_ PULONG ResultLength
 );
 
-NTSYSCALLAPI
+_IRQL_requires_max_(PASSIVE_LEVEL)
+_When_(Length == 0, _Post_satisfies_(return < 0))
+_When_(Length > 0, _Post_satisfies_(return <= 0))
+NTSYSAPI
 NTSTATUS
 NTAPI
 NtEnumerateValueKey(
     _In_ HANDLE KeyHandle,
     _In_ ULONG Index,
     _In_ KEY_VALUE_INFORMATION_CLASS KeyValueInformationClass,
-    _Out_bytecap_(Length) PVOID KeyValueInformation,
+    _Out_writes_bytes_opt_(Length) PVOID KeyValueInformation,
     _In_ ULONG Length,
     _Out_ PULONG ResultLength
 );
@@ -246,14 +250,17 @@ NtQueryOpenSubKeysEx(
     _In_ PULONG RequiredSize
 );
 
-NTSYSCALLAPI
+_IRQL_requires_max_(PASSIVE_LEVEL)
+_When_(Length == 0, _Post_satisfies_(return < 0))
+_When_(Length > 0, _Post_satisfies_(return <= 0))
+NTSYSAPI
 NTSTATUS
 NTAPI
 NtQueryValueKey(
     _In_ HANDLE KeyHandle,
     _In_ PUNICODE_STRING ValueName,
     _In_ KEY_VALUE_INFORMATION_CLASS KeyValueInformationClass,
-    _Out_bytecap_(Length) PVOID KeyValueInformation,
+    _Out_writes_bytes_opt_(Length) PVOID KeyValueInformation,
     _In_ ULONG Length,
     _Out_ PULONG ResultLength
 );
@@ -354,6 +361,7 @@ NtUnloadKeyEx(
 );
 
 #ifdef NTOS_MODE_USER
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
@@ -361,10 +369,10 @@ ZwCreateKey(
     _Out_ PHANDLE KeyHandle,
     _In_ ACCESS_MASK DesiredAccess,
     _In_ POBJECT_ATTRIBUTES ObjectAttributes,
-    _In_ ULONG TitleIndex,
+    _Reserved_ ULONG TitleIndex,
     _In_opt_ PUNICODE_STRING Class,
     _In_ ULONG CreateOptions,
-    _In_opt_ PULONG Disposition
+    _Out_opt_ PULONG Disposition
 );
 
 NTSYSAPI
@@ -394,6 +402,9 @@ ZwEnumerateKey(
     _Out_ PULONG ResultLength
 );
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
+_When_(Length == 0, _Post_satisfies_(return < 0))
+_When_(Length > 0, _Post_satisfies_(return <= 0))
 NTSYSAPI
 NTSTATUS
 NTAPI
@@ -401,7 +412,7 @@ ZwEnumerateValueKey(
     _In_ HANDLE KeyHandle,
     _In_ ULONG Index,
     _In_ KEY_VALUE_INFORMATION_CLASS KeyValueInformationClass,
-    _Out_bytecap_(Length) PVOID KeyValueInformation,
+    _Out_writes_bytes_opt_(Length) PVOID KeyValueInformation,
     _In_ ULONG Length,
     _Out_ PULONG ResultLength
 );
@@ -497,6 +508,9 @@ ZwQueryMultipleValueKey(
     _Out_ PULONG ReturnLength
 );
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
+_When_(Length == 0, _Post_satisfies_(return < 0))
+_When_(Length > 0, _Post_satisfies_(return <= 0))
 NTSYSAPI
 NTSTATUS
 NTAPI
@@ -504,7 +518,7 @@ ZwQueryValueKey(
     _In_ HANDLE KeyHandle,
     _In_ PUNICODE_STRING ValueName,
     _In_ KEY_VALUE_INFORMATION_CLASS KeyValueInformationClass,
-    _Out_bytecap_(Length) PVOID KeyValueInformation,
+    _Out_writes_bytes_opt_(Length) PVOID KeyValueInformation,
     _In_ ULONG Length,
     _Out_ PULONG ResultLength
 );

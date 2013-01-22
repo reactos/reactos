@@ -41,6 +41,7 @@
 #include <excpt.h>
 #include <ntdef.h>
 #include <ntstatus.h>
+#include <kernelspecs.h>
 #include <ntiologc.h>
 
 #ifndef GUID_DEFINED

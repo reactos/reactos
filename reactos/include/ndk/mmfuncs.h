@@ -319,7 +319,7 @@ ZwAreMappedFilesTheSame(
 
 _Must_inspect_result_
 _At_(*BaseAddress, __drv_allocatesMem(Mem))
-__kernel_entry NTSYSCALLAPI
+__kernel_entry
 NTSYSAPI
 NTSTATUS
 NTAPI
