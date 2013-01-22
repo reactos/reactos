@@ -7,13 +7,15 @@ set(OARCH "athlon64" CACHE STRING
  k8 opteron athlon64 athlon-fx")
 
 set (OPTIMIZE "1" CACHE STRING
-"What level of optimisation to use.
-  0 = off
-  1 = Default option, optimize for size (-Os) with some additional options
-  2 = -Os
-  3 = -O1
-  4 = -O2
-  5 = -O3")
+"What level of optimization to use.
+ 0 = off
+ 1 = Default option, optimize for size (-Os) with some additional options
+ 2 = Optimize for size (-Os)
+ 3 = Optimize debugging experience (-Og)
+ 4 = Optimize (-O1)
+ 5 = Optimize even more (-O2)
+ 6 = Optimize yet more (-O3)
+ 7 = Disregard strict standards compliance (-Ofast)")
 
 set(LTCG FALSE CACHE BOOL
 "Whether to build with link-time code generation")
