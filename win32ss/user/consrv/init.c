@@ -448,15 +448,6 @@ CSR_SERVER_DLL_INIT(ConServerDllInitialization)
 
     /* Initialize memory */
     ConSrvHeap = RtlGetProcessHeap();  // Initialize our own heap.
-/*
-    ConSrvHeap = RtlCreateHeap( HEAP_GROWABLE | HEAP_CLASS_5,    // Flags
-                              NULL,             // HeapBase
-                              64 * 1024,        // ReserveSize
-                              4096,             // CommitSize
-                              NULL,             // Lock to use for serialization
-                              NULL              // GrowthThreshold
-                            );
-*/
     // BaseSrvSharedHeap = LoadedServerDll->SharedSection; // Get the CSR shared heap.
     // LoadedServerDll->SharedSection = BaseStaticServerData;
 
