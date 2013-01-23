@@ -93,6 +93,7 @@ typedef struct
     HBITMAP hbmStartMenu;
 
     HWND hWndTrayProperties;
+    HWND hwndRunFileDlgOwner;
 } ITrayWindowImpl;
 
 BOOL LaunchCPanel(HWND hwnd, LPCTSTR applet)
@@ -2000,14 +2001,35 @@ RunFileDlgThread(IN OUT PVOID pParam)
                           NULL,
                           NULL);
 
+    This->hwndRunFileDlgOwner = hwnd;
+
     hShell32 = GetModuleHandle(TEXT("SHELL32.DLL"));
     RunFileDlg = (RUNFILEDLG)GetProcAddress(hShell32, (LPCSTR)61);
 
     RunFileDlg(hwnd, NULL, NULL, NULL, NULL, RFF_CALCDIRECTORY);
 
+    This->hwndRunFileDlgOwner = NULL;
     DestroyWindow(hwnd);
 
     return 0;
+}
+
+static void
+ITrayWindowImpl_ShowRunFileDlg(IN ITrayWindowImpl *This)
+{
+    HWND hRunDlg;
+    if (This->hwndRunFileDlgOwner)
+    {
+        hRunDlg = GetLastActivePopup(This->hwndRunFileDlgOwner);
+        if (hRunDlg != NULL &&
+            hRunDlg != This->hwndRunFileDlgOwner)
+        {
+            SetForegroundWindow(hRunDlg);
+            return;
+        }
+    }
+
+    CloseHandle(CreateThread(NULL, 0, RunFileDlgThread, This, 0, NULL));
 }
 
 static LRESULT CALLBACK
@@ -2529,13 +2551,7 @@ HandleTrayContextMenu:
 
                         case IDM_RUN:
                         {
-                            CloseHandle(CreateThread(NULL,
-                                                     0,
-                                                     RunFileDlgThread,
-                                                     This,
-                                                     0,
-                                                     NULL));
-
+                            ITrayWindowImpl_ShowRunFileDlg(This);
                             break;
                         }
 
@@ -2782,7 +2798,7 @@ TrayMessageLoop(IN OUT ITrayWindow *Tray)
             switch (Msg.wParam)
             {
                 case IDHK_RUN: /* Win+R */
-                    CloseHandle(CreateThread(NULL, 0, RunFileDlgThread, This, 0, NULL));
+                    ITrayWindowImpl_ShowRunFileDlg(This);
                     break;
             }
         }
