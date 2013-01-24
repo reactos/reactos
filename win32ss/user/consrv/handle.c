@@ -52,7 +52,29 @@ Win32CsrCloseHandleEntry(PCONSOLE_IO_HANDLE Entry)
         /// LOCK /// PCONSOLE Console = Object->Console;
         /// LOCK /// EnterCriticalSection(&Console->Lock);
 
-        /// TODO: HERE, trigger input waiting threads.
+        /*
+         * If this is a input handle, notify and dereference
+         * all the waits related to this handle.
+         */
+        if (Object->Type == CONIO_INPUT_BUFFER_MAGIC)
+        {
+            PCONSOLE_INPUT_BUFFER InputBuffer = (PCONSOLE_INPUT_BUFFER)Object;
+
+            /*
+             * Wake up all the writing waiters related to this handle for this
+             * input buffer, if any, then dereference them and purge them all
+             * from the list.
+             * To select them amongst all the waiters for this input buffer,
+             * pass the handle pointer to the waiters, then they will check
+             * whether or not they are related to this handle and if so, they
+             * return.
+             */
+            CsrNotifyWait(&InputBuffer->ReadWaitQueue,
+                          WaitAll,
+                          NULL,
+                          (PVOID)Entry);
+            // TODO: Dereference the notified waits.
+        }
 
         /* If the last handle to a screen buffer is closed, delete it... */
         if (AdjustHandleCounts(Entry, -1) == 0)
@@ -318,33 +340,49 @@ NTSTATUS
 FASTCALL
 Win32CsrLockObject(PCONSOLE_PROCESS_DATA ProcessData,
                    HANDLE Handle,
-                   Object_t **Object,
+                   Object_t** Object,
+                   PCONSOLE_IO_HANDLE* Entry OPTIONAL,
                    DWORD Access,
                    BOOL LockConsole,
                    ULONG Type)
 {
     ULONG_PTR h = (ULONG_PTR)Handle >> 2;
+    PCONSOLE_IO_HANDLE HandleEntry = NULL;
+    Object_t* ObjectEntry = NULL;
+
+    ASSERT(Object);
+    if (Entry) *Entry = NULL;
 
     // DPRINT("Win32CsrLockObject, Object: %x, %x, %x\n",
            // Object, Handle, ProcessData ? ProcessData->HandleTableSize : 0);
 
     RtlEnterCriticalSection(&ProcessData->HandleTableLock);
 
-    if ( !IsConsoleHandle(Handle) ||
-         h >= ProcessData->HandleTableSize  ||
-         (*Object = ProcessData->HandleTable[h].Object) == NULL ||
-         (ProcessData->HandleTable[h].Access & Access) == 0     ||
-         (Type != 0 && (*Object)->Type != Type) )
+    if ( IsConsoleHandle(Handle) &&
+         h < ProcessData->HandleTableSize )
+    {
+        HandleEntry = &ProcessData->HandleTable[h];
+        ObjectEntry = HandleEntry->Object;
+    }
+
+    if ( HandleEntry == NULL ||
+         ObjectEntry == NULL ||
+         (HandleEntry->Access & Access) == 0 ||
+         (Type != 0 && ObjectEntry->Type != Type) )
     {
         DPRINT1("CsrGetObject returning invalid handle (%x) of type %lu with access %lu\n", Handle, Type, Access);
         RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
         return STATUS_INVALID_HANDLE;
     }
 
-    _InterlockedIncrement(&(*Object)->Console->ReferenceCount);
+    _InterlockedIncrement(&ObjectEntry->Console->ReferenceCount);
     RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
 
-    if (LockConsole) EnterCriticalSection(&(*Object)->Console->Lock);
+    if (LockConsole) EnterCriticalSection(&ObjectEntry->Console->Lock);
+
+    /* Return the objects to the caller */
+    *Object = ObjectEntry;
+    if (Entry) *Entry = HandleEntry;
 
     return STATUS_SUCCESS;
 }

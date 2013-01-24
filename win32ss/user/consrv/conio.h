@@ -184,8 +184,12 @@ VOID FASTCALL ConioConsoleCtrlEventTimeout(DWORD Event,
                                            DWORD Timeout);
 
 /* coninput.c */
-#define ConioGetInputBuffer(ProcessData, Handle, Ptr, Access, LockConsole) \
-    Win32CsrLockObject((ProcessData), (Handle), (Object_t **)(Ptr), (Access), (LockConsole), CONIO_INPUT_BUFFER_MAGIC)
+#define ConioGetInputBuffer(ProcessData, Handle, Ptr, Access, LockConsole)  \
+    Win32CsrLockObject((ProcessData), (Handle), (Object_t **)(Ptr), NULL,   \
+                       (Access), (LockConsole), CONIO_INPUT_BUFFER_MAGIC)
+#define ConioGetInputBufferAndHandleEntry(ProcessData, Handle, Ptr, Entry, Access, LockConsole) \
+    Win32CsrLockObject((ProcessData), (Handle), (Object_t **)(Ptr), (Entry),                    \
+                       (Access), (LockConsole), CONIO_INPUT_BUFFER_MAGIC)
 #define ConioReleaseInputBuffer(Buff, IsConsoleLocked) \
     Win32CsrUnlockObject(&(Buff)->Header, (IsConsoleLocked))
 void WINAPI ConioProcessKey(MSG *msg, PCONSOLE Console, BOOL TextMode);
@@ -196,7 +200,11 @@ void WINAPI ConioProcessKey(MSG *msg, PCONSOLE Console, BOOL TextMode);
 #define ConioRectWidth(Rect) \
     (((Rect)->Left) > ((Rect)->Right) ? 0 : ((Rect)->Right) - ((Rect)->Left) + 1)
 #define ConioGetScreenBuffer(ProcessData, Handle, Ptr, Access, LockConsole) \
-    Win32CsrLockObject((ProcessData), (Handle), (Object_t **)(Ptr), (Access), (LockConsole), CONIO_SCREEN_BUFFER_MAGIC)
+    Win32CsrLockObject((ProcessData), (Handle), (Object_t **)(Ptr), NULL,   \
+                       (Access), (LockConsole), CONIO_SCREEN_BUFFER_MAGIC)
+#define ConioGetScreenBufferAndHandleEntry(ProcessData, Handle, Ptr, Entry, Access, LockConsole)    \
+    Win32CsrLockObject((ProcessData), (Handle), (Object_t **)(Ptr), (Entry),                        \
+                       (Access), (LockConsole), CONIO_SCREEN_BUFFER_MAGIC)
 #define ConioReleaseScreenBuffer(Buff, IsConsoleLocked) \
     Win32CsrUnlockObject(&(Buff)->Header, (IsConsoleLocked))
 PBYTE FASTCALL ConioCoordToPointer(PCONSOLE_SCREEN_BUFFER Buf, ULONG X, ULONG Y);

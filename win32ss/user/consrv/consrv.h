@@ -155,7 +155,8 @@ NTSTATUS FASTCALL Win32CsrInsertObject(PCONSOLE_PROCESS_DATA ProcessData,
                                        DWORD ShareMode);
 NTSTATUS FASTCALL Win32CsrLockObject(PCONSOLE_PROCESS_DATA ProcessData,
                                      HANDLE Handle,
-                                     Object_t **Object,
+                                     Object_t** Object,
+                                     PCONSOLE_IO_HANDLE* Entry OPTIONAL,
                                      DWORD Access,
                                      BOOL LockConsole,
                                      ULONG Type);

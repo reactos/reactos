@@ -581,20 +581,20 @@ CSR_API(SrvSetConsoleMode)
 
     Status = Win32CsrLockObject(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
                                 ConsoleModeRequest->ConsoleHandle,
-                                &Object, GENERIC_WRITE, TRUE, 0);
+                                &Object, NULL, GENERIC_WRITE, TRUE, 0);
     if (!NT_SUCCESS(Status)) return Status;
 
     Status = STATUS_SUCCESS;
 
     if (CONIO_INPUT_BUFFER_MAGIC == Object->Type)
     {
-        PCONSOLE Console = (PCONSOLE)Object;
-        Console->InputBuffer.Mode = ConsoleModeRequest->ConsoleMode & CONSOLE_INPUT_MODE_VALID;
+        PCONSOLE_INPUT_BUFFER InputBuffer = (PCONSOLE_INPUT_BUFFER)Object;
+        InputBuffer->Mode = ConsoleModeRequest->ConsoleMode & CONSOLE_INPUT_MODE_VALID;
     }
     else if (CONIO_SCREEN_BUFFER_MAGIC == Object->Type)
     {
-        PCONSOLE_SCREEN_BUFFER Buff = (PCONSOLE_SCREEN_BUFFER)Object;
-        Buff->Mode = ConsoleModeRequest->ConsoleMode & CONSOLE_OUTPUT_MODE_VALID;
+        PCONSOLE_SCREEN_BUFFER Buffer = (PCONSOLE_SCREEN_BUFFER)Object;
+        Buffer->Mode = ConsoleModeRequest->ConsoleMode & CONSOLE_OUTPUT_MODE_VALID;
     }
     else
     {
@@ -616,20 +616,20 @@ CSR_API(SrvGetConsoleMode)
 
     Status = Win32CsrLockObject(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
                                 ConsoleModeRequest->ConsoleHandle,
-                                &Object, GENERIC_READ, TRUE, 0);
+                                &Object, NULL, GENERIC_READ, TRUE, 0);
     if (!NT_SUCCESS(Status)) return Status;
 
     Status = STATUS_SUCCESS;
 
     if (CONIO_INPUT_BUFFER_MAGIC == Object->Type)
     {
-        PCONSOLE Console = (PCONSOLE)Object;
-        ConsoleModeRequest->ConsoleMode = Console->InputBuffer.Mode;
+        PCONSOLE_INPUT_BUFFER InputBuffer = (PCONSOLE_INPUT_BUFFER)Object;
+        ConsoleModeRequest->ConsoleMode = InputBuffer->Mode;
     }
     else if (CONIO_SCREEN_BUFFER_MAGIC == Object->Type)
     {
-        PCONSOLE_SCREEN_BUFFER Buff = (PCONSOLE_SCREEN_BUFFER)Object;
-        ConsoleModeRequest->ConsoleMode = Buff->Mode;
+        PCONSOLE_SCREEN_BUFFER Buffer = (PCONSOLE_SCREEN_BUFFER)Object;
+        ConsoleModeRequest->ConsoleMode = Buffer->Mode;
     }
     else
     {
