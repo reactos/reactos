@@ -302,7 +302,7 @@ PCHAR ConsoleServerApiNameTable[ConsolepMaxApiNumber] =
 
 
 /*
-PCSR_API_ROUTINE Win32CsrApiDefinitions[] =
+PCSR_API_ROUTINE ConSrvApiDefinitions[] =
 {
     CsrGetHandle,
     CsrGetHandle,
@@ -330,7 +330,7 @@ PCSR_API_ROUTINE Win32CsrApiDefinitions[] =
     CsrGenerateCtrlEvent,
 };
 
-static CSRSS_API_DEFINITION Win32CsrApiDefinitions[] =
+static CSRSS_API_DEFINITION ConSrvApiDefinitions[] =
 {
     CSRSS_DEFINE_API(GET_INPUT_HANDLE,             CsrGetHandle),
     CSRSS_DEFINE_API(GET_OUTPUT_HANDLE,            CsrGetHandle),
@@ -451,7 +451,7 @@ CSR_SERVER_DLL_INIT(ConServerDllInitialization)
     // BaseSrvSharedHeap = LoadedServerDll->SharedSection; // Get the CSR shared heap.
     // LoadedServerDll->SharedSection = BaseStaticServerData;
 
-    CsrInitConsoleSupport();
+    ConSrvInitConsoleSupport();
 
     /* Setup the DLL Object */
     LoadedServerDll->ApiBase = CONSRV_FIRST_API_NUMBER;
@@ -460,10 +460,10 @@ CSR_SERVER_DLL_INIT(ConServerDllInitialization)
     LoadedServerDll->ValidTable = ConsoleServerApiServerValidTable;
     LoadedServerDll->NameTable = ConsoleServerApiNameTable;
     LoadedServerDll->SizeOfProcessData = sizeof(CONSOLE_PROCESS_DATA);
-    LoadedServerDll->ConnectCallback = ConsoleConnect;
-    LoadedServerDll->DisconnectCallback = ConsoleDisconnect;
-    LoadedServerDll->NewProcessCallback = ConsoleNewProcess;
-    // LoadedServerDll->HardErrorCallback = Win32CsrHardError;
+    LoadedServerDll->ConnectCallback = ConSrvConnect;
+    LoadedServerDll->DisconnectCallback = ConSrvDisconnect;
+    LoadedServerDll->NewProcessCallback = ConSrvNewProcess;
+    // LoadedServerDll->HardErrorCallback = ConSrvHardError;
 
     /* All done */
     return STATUS_SUCCESS;

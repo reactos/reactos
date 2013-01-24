@@ -256,7 +256,7 @@ ConioProcessKey(MSG *msg, PCONSOLE Console, BOOL TextMode)
         {
             current = CONTAINING_RECORD(current_entry, CONSOLE_PROCESS_DATA, ConsoleLink);
             current_entry = current_entry->Flink;
-            ConioConsoleCtrlEvent(CTRL_C_EVENT, current);
+            ConSrvConsoleCtrlEvent(CTRL_C_EVENT, current);
         }
         if (Console->LineBuffer && !Console->LineComplete)
         {
@@ -360,7 +360,7 @@ ReadInputBufferThread(IN PLIST_ENTRY WaitList,
 
     /*
      * Somebody is closing a handle to this input buffer,
-     * by calling Win32CsrCloseHandleEntry.
+     * by calling ConSrvCloseHandleEntry.
      * See whether we are linked to that handle (ie. we
      * are a waiter for this handle), and if so, return.
      */
@@ -491,7 +491,7 @@ ReadCharsThread(IN PLIST_ENTRY WaitList,
 
     /*
      * Somebody is closing a handle to this input buffer,
-     * by calling Win32CsrCloseHandleEntry.
+     * by calling ConSrvCloseHandleEntry.
      * See whether we are linked to that handle (ie. we
      * are a waiter for this handle), and if so, return.
      */
@@ -715,7 +715,7 @@ CSR_API(SrvReadConsole)
         return STATUS_INVALID_PARAMETER;
     }
 
-    Status = ConioGetInputBufferAndHandleEntry(ProcessData, ReadConsoleRequest->InputHandle, &InputBuffer, &HandleEntry, GENERIC_READ, TRUE);
+    Status = ConSrvGetInputBufferAndHandleEntry(ProcessData, ReadConsoleRequest->InputHandle, &InputBuffer, &HandleEntry, GENERIC_READ, TRUE);
     if (!NT_SUCCESS(Status)) return Status;
 
     ReadConsoleRequest->NrCharactersRead = 0;
@@ -728,7 +728,7 @@ CSR_API(SrvReadConsole)
                        ApiMessage,
                        TRUE);
 
-    ConioReleaseInputBuffer(InputBuffer, TRUE);
+    ConSrvReleaseInputBuffer(InputBuffer, TRUE);
 
     if (Status == STATUS_PENDING)
         *ReplyCode = CsrReplyPending;
@@ -757,7 +757,7 @@ CSR_API(SrvGetConsoleInput)
 
     GetInputRequest->InputsRead = 0;
 
-    Status = ConioGetInputBufferAndHandleEntry(ProcessData, GetInputRequest->InputHandle, &InputBuffer, &HandleEntry, GENERIC_READ, TRUE);
+    Status = ConSrvGetInputBufferAndHandleEntry(ProcessData, GetInputRequest->InputHandle, &InputBuffer, &HandleEntry, GENERIC_READ, TRUE);
     if(!NT_SUCCESS(Status)) return Status;
 
     InputInfo.CallingThread = CsrGetClientThread();
@@ -769,7 +769,7 @@ CSR_API(SrvGetConsoleInput)
                              ApiMessage,
                              TRUE);
 
-    ConioReleaseInputBuffer(InputBuffer, TRUE);
+    ConSrvReleaseInputBuffer(InputBuffer, TRUE);
 
     if (Status == STATUS_PENDING)
         *ReplyCode = CsrReplyPending;
@@ -798,7 +798,7 @@ CSR_API(SrvWriteConsoleInput)
         return STATUS_INVALID_PARAMETER;
     }
 
-    Status = ConioGetInputBuffer(ProcessData, WriteInputRequest->InputHandle, &InputBuffer, GENERIC_WRITE, TRUE);
+    Status = ConSrvGetInputBuffer(ProcessData, WriteInputRequest->InputHandle, &InputBuffer, GENERIC_WRITE, TRUE);
     if (!NT_SUCCESS(Status)) return Status;
 
     Console = InputBuffer->Header.Console;
@@ -819,7 +819,7 @@ CSR_API(SrvWriteConsoleInput)
         Status = ConioProcessChar(Console, InputRecord++);
     }
 
-    ConioReleaseInputBuffer(InputBuffer, TRUE);
+    ConSrvReleaseInputBuffer(InputBuffer, TRUE);
 
     WriteInputRequest->Length = i;
 
@@ -836,7 +836,7 @@ CSR_API(SrvFlushConsoleInputBuffer)
 
     DPRINT("SrvFlushConsoleInputBuffer\n");
 
-    Status = ConioGetInputBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
+    Status = ConSrvGetInputBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
                                  FlushInputBufferRequest->InputHandle,
                                  &InputBuffer,
                                  GENERIC_WRITE,
@@ -853,7 +853,7 @@ CSR_API(SrvFlushConsoleInputBuffer)
     }
     ResetEvent(InputBuffer->ActiveEvent);
 
-    ConioReleaseInputBuffer(InputBuffer, TRUE);
+    ConSrvReleaseInputBuffer(InputBuffer, TRUE);
 
     return STATUS_SUCCESS;
 }
@@ -868,7 +868,7 @@ CSR_API(SrvGetConsoleNumberOfInputEvents)
 
     DPRINT("SrvGetConsoleNumberOfInputEvents\n");
 
-    Status = ConioGetInputBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process), GetNumInputEventsRequest->InputHandle, &InputBuffer, GENERIC_READ, TRUE);
+    Status = ConSrvGetInputBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process), GetNumInputEventsRequest->InputHandle, &InputBuffer, GENERIC_READ, TRUE);
     if (!NT_SUCCESS(Status)) return Status;
 
     CurrentInput = InputBuffer->InputEvents.Flink;
@@ -881,7 +881,7 @@ CSR_API(SrvGetConsoleNumberOfInputEvents)
         NumEvents++;
     }
 
-    ConioReleaseInputBuffer(InputBuffer, TRUE);
+    ConSrvReleaseInputBuffer(InputBuffer, TRUE);
 
     GetNumInputEventsRequest->NumInputEvents = NumEvents;
 

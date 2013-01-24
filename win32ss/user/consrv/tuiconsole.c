@@ -460,7 +460,7 @@ TuiConsoleThread(PVOID Data)
                               (PVOID)Console);
     if (NULL == NewWindow)
     {
-        DPRINT1("CSR: Unable to create console window\n");
+        DPRINT1("CONSRV: Unable to create console window\n");
         return 1;
     }
     Console->hWindow = NewWindow;
@@ -528,7 +528,7 @@ TuiInitConsole(PCONSOLE Console)
                                 NULL);
     if (NULL == ThreadHandle)
     {
-        DPRINT1("CSR: Unable to create console thread\n");
+        DPRINT1("CONSRV: Unable to create console thread\n");
         return STATUS_UNSUCCESSFUL;
     }
     CloseHandle(ThreadHandle);

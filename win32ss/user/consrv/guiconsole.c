@@ -1285,7 +1285,7 @@ GuiConsoleHandleClose(PCONSOLE Console, HWND hWnd)
         /* FIXME: Windows will wait up to 5 seconds for the thread to exit.
          * We shouldn't wait here, though, since the console lock is entered.
          * A copy of the thread list probably needs to be made. */
-        ConioConsoleCtrlEvent(CTRL_CLOSE_EVENT, current);
+        ConSrvConsoleCtrlEvent(CTRL_CLOSE_EVENT, current);
     }
 
     /// LOCK /// LeaveCriticalSection(&Console->Lock);
@@ -2159,7 +2159,7 @@ GuiConsoleGuiThread(PVOID Data)
     MSG msg;
     PHANDLE GraphicsStartupEvent = (PHANDLE) Data;
 
-    NotifyWnd = CreateWindowW(L"Win32CsrCreateNotify",
+    NotifyWnd = CreateWindowW(L"ConSrvCreateNotify",
                               L"",
                               WS_OVERLAPPEDWINDOW,
                               CW_USEDEFAULT,
@@ -2200,7 +2200,7 @@ GuiInit(VOID)
     }
 
     wc.cbSize = sizeof(WNDCLASSEXW);
-    wc.lpszClassName = L"Win32CsrCreateNotify";
+    wc.lpszClassName = L"ConSrvCreateNotify";
     wc.lpfnWndProc = GuiConsoleNotifyWndProc;
     wc.style = 0;
     wc.hInstance = (HINSTANCE)GetModuleHandleW(NULL);
@@ -2345,7 +2345,7 @@ GuiInitConsole(PCONSOLE Console, int ShowCmd)
         if (NULL == ThreadHandle)
         {
             CloseHandle(GraphicsStartupEvent);
-            DPRINT1("Win32Csr: Failed to create graphics console thread. Expect problems\n");
+            DPRINT1("CONSRV: Failed to create graphics console thread. Expect problems\n");
             return STATUS_UNSUCCESSFUL;
         }
         SetThreadPriority(ThreadHandle, THREAD_PRIORITY_HIGHEST);
@@ -2356,7 +2356,7 @@ GuiInitConsole(PCONSOLE Console, int ShowCmd)
 
         if (NULL == NotifyWnd)
         {
-            DPRINT1("Win32Csr: Failed to create notification window.\n");
+            DPRINT1("CONSRV: Failed to create notification window.\n");
             return STATUS_UNSUCCESSFUL;
         }
     }
@@ -2364,7 +2364,7 @@ GuiInitConsole(PCONSOLE Console, int ShowCmd)
                               sizeof(GUI_CONSOLE_DATA));
     if (!GuiData)
     {
-        DPRINT1("Win32Csr: Failed to create GUI_CONSOLE_DATA\n");
+        DPRINT1("CONSRV: Failed to create GUI_CONSOLE_DATA\n");
         return STATUS_UNSUCCESSFUL;
     }
 

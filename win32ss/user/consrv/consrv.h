@@ -140,50 +140,49 @@ CSR_API(SrvVerifyConsoleIoHandle);
 CSR_API(SrvDuplicateHandle);
 /// CSR_API(CsrGetInputWaitHandle);
 
-NTSTATUS FASTCALL Win32CsrInitHandlesTable(IN OUT PCONSOLE_PROCESS_DATA ProcessData,
-                                           OUT PHANDLE pInputHandle,
-                                           OUT PHANDLE pOutputHandle,
-                                           OUT PHANDLE pErrorHandle);
-NTSTATUS FASTCALL Win32CsrInheritHandlesTable(IN PCONSOLE_PROCESS_DATA SourceProcessData,
-                                              IN PCONSOLE_PROCESS_DATA TargetProcessData);
-VOID FASTCALL Win32CsrFreeHandlesTable(PCONSOLE_PROCESS_DATA ProcessData);
-NTSTATUS FASTCALL Win32CsrInsertObject(PCONSOLE_PROCESS_DATA ProcessData,
-                                       PHANDLE Handle,
-                                       Object_t *Object,
-                                       DWORD Access,
-                                       BOOL Inheritable,
-                                       DWORD ShareMode);
-NTSTATUS FASTCALL Win32CsrLockObject(PCONSOLE_PROCESS_DATA ProcessData,
-                                     HANDLE Handle,
-                                     Object_t** Object,
-                                     PCONSOLE_IO_HANDLE* Entry OPTIONAL,
+NTSTATUS FASTCALL ConSrvInitHandlesTable(IN OUT PCONSOLE_PROCESS_DATA ProcessData,
+                                         OUT PHANDLE pInputHandle,
+                                         OUT PHANDLE pOutputHandle,
+                                         OUT PHANDLE pErrorHandle);
+NTSTATUS FASTCALL ConSrvInheritHandlesTable(IN PCONSOLE_PROCESS_DATA SourceProcessData,
+                                            IN PCONSOLE_PROCESS_DATA TargetProcessData);
+VOID FASTCALL ConSrvFreeHandlesTable(PCONSOLE_PROCESS_DATA ProcessData);
+NTSTATUS FASTCALL ConSrvInsertObject(PCONSOLE_PROCESS_DATA ProcessData,
+                                     PHANDLE Handle,
+                                     Object_t *Object,
                                      DWORD Access,
-                                     BOOL LockConsole,
-                                     ULONG Type);
-VOID FASTCALL Win32CsrUnlockObject(Object_t *Object,
+                                     BOOL Inheritable,
+                                     DWORD ShareMode);
+NTSTATUS FASTCALL ConSrvRemoveObject(PCONSOLE_PROCESS_DATA ProcessData,
+                                     HANDLE Handle);
+NTSTATUS FASTCALL ConSrvGetObject(PCONSOLE_PROCESS_DATA ProcessData,
+                                  HANDLE Handle,
+                                  Object_t** Object,
+                                  PCONSOLE_IO_HANDLE* Entry OPTIONAL,
+                                  DWORD Access,
+                                  BOOL LockConsole,
+                                  ULONG Type);
+VOID FASTCALL ConSrvReleaseObject(Object_t *Object,
+                                 BOOL IsConsoleLocked);
+NTSTATUS FASTCALL ConSrvAllocateConsole(PCONSOLE_PROCESS_DATA ProcessData,
+                                        PHANDLE pInputHandle,
+                                        PHANDLE pOutputHandle,
+                                        PHANDLE pErrorHandle,
+                                        int ShowCmd,
+                                        PCSR_PROCESS CsrProcess);
+VOID FASTCALL ConSrvRemoveConsole(PCONSOLE_PROCESS_DATA ProcessData);
+NTSTATUS FASTCALL ConSrvGetConsole(PCONSOLE_PROCESS_DATA ProcessData,
+                                   struct _CONSOLE** Console,
+                                   BOOL LockConsole);
+VOID FASTCALL ConSrvReleaseConsole(struct _CONSOLE* Console,
                                    BOOL IsConsoleLocked);
-VOID FASTCALL Win32CsrUnlockConsole(struct _CONSOLE* Console,
-                                    BOOL IsConsoleLocked);
-NTSTATUS FASTCALL Win32CsrReleaseObject(PCONSOLE_PROCESS_DATA ProcessData,
-                                        HANDLE Handle);
 
-NTSTATUS FASTCALL Win32CsrAllocateConsole(PCONSOLE_PROCESS_DATA ProcessData,
-                                          PHANDLE pInputHandle,
-                                          PHANDLE pOutputHandle,
-                                          PHANDLE pErrorHandle,
-                                          int ShowCmd,
-                                          PCSR_PROCESS CsrProcess);
-VOID FASTCALL Win32CsrReleaseConsole(PCONSOLE_PROCESS_DATA ProcessData);
-NTSTATUS FASTCALL ConioConsoleFromProcessData(PCONSOLE_PROCESS_DATA ProcessData,
-                                              struct _CONSOLE** Console,
-                                              BOOL LockConsole);
-
-NTSTATUS NTAPI ConsoleNewProcess(PCSR_PROCESS SourceProcess,
-                                 PCSR_PROCESS TargetProcess);
-NTSTATUS NTAPI ConsoleConnect(IN PCSR_PROCESS CsrProcess,
-                              IN OUT PVOID ConnectionInfo,
-                              IN OUT PULONG ConnectionInfoLength);
-VOID NTAPI ConsoleDisconnect(PCSR_PROCESS Process);
+NTSTATUS NTAPI ConSrvNewProcess(PCSR_PROCESS SourceProcess,
+                                PCSR_PROCESS TargetProcess);
+NTSTATUS NTAPI ConSrvConnect(IN PCSR_PROCESS CsrProcess,
+                             IN OUT PVOID ConnectionInfo,
+                             IN OUT PULONG ConnectionInfoLength);
+VOID NTAPI ConSrvDisconnect(PCSR_PROCESS Process);
 
 /* lineinput.c */
 CSR_API(SrvGetConsoleCommandHistoryLength);
