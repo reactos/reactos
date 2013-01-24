@@ -9,7 +9,6 @@
 
 #include "sc.h"
 
-
 VOID
 PrintService(LPCTSTR lpServiceName,
              LPSERVICE_STATUS_PROCESS pStatus,

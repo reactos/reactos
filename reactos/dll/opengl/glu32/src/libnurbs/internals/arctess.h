@@ -37,7 +37,7 @@
 #define __gluarctess_h_
 
 #include "defines.h"
-#include "types.h"
+//#include "types.h"
 #include "arc.h"
 
 struct BezierArc;

@@ -43,18 +43,13 @@
  *     role of rpcss.exe in wine.
  */
 
-#include <stdio.h>
-#include <limits.h>
-#include <assert.h>
-
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
 #include "rpcss.h"
-#include "winnt.h"
-#include "irot_s.h"
-#include "epm_s.h"
+#include <irot_s.h>
+#include <epm_s.h>
 
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 

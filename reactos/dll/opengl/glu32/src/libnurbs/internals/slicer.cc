@@ -37,19 +37,19 @@
  *
  */
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <math.h>
-#include "glimports.h"
-#include "mystdio.h"
-#include "myassert.h"
-#include "bufpool.h"
+//#include <stdlib.h>
+//#include <stdio.h>
+//#include <math.h>
+//#include "glimports.h"
+//#include "mystdio.h"
+//#include "myassert.h"
+//#include "bufpool.h"
 #include "slicer.h"
 #include "backend.h"
-#include "arc.h"
-#include "gridtrimvertex.h"
+//#include "arc.h"
+//#include "gridtrimvertex.h"
 #include "simplemath.h"
-#include "trimvertex.h"
+//#include "trimvertex.h"
 #include "varray.h"
 
 #include "polyUtil.h" //for area()

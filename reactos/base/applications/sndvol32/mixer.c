@@ -609,4 +609,3 @@ SndMixerIsDisplayControl(PSND_MIXER Mixer,
 
     return FALSE;
 }
-

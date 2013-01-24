@@ -33,7 +33,7 @@
 #ifndef _MONO_TRIANGULATION_H
 #define _MONO_TRIANGULATION_H
 
-#include "definitions.h"
+//#include "definitions.h"
 #include "primitiveStream.h"
 #include "directedLine.h"
 #include "arc.h"

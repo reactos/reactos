@@ -4,16 +4,18 @@
 
 #include <stdio.h>
 #include <time.h>
+
 #define WIN32_NO_STATUS
-#include <windows.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winsvc.h>
 #include <netevent.h>
 #define NTOS_MODE_USER
 #include <ndk/iofuncs.h>
 #include <ndk/obfuncs.h>
 #include <ndk/rtlfuncs.h>
 #include <services/services.h>
-#include "svcctl_s.h"
-
+#include <svcctl_s.h>
 
 typedef struct _SERVICE_GROUP
 {
@@ -188,4 +190,3 @@ VOID ScmLogError(DWORD dwEventId,
 VOID ScmWaitForLsa(VOID);
 
 /* EOF */
-

@@ -35,7 +35,9 @@
 #include <dlfcn.h>
 #endif
 #if defined(_WIN32)
-#include <windows.h>
+//#include <windows.h>
+#include <windef.h>
+#include <winbase.h>
 #endif
 
 

@@ -26,7 +26,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include "usetup.h"
+#include <usetup.h>
 /* Blue Driver Header */
 #include <blue/ntddblue.h>
 #include "keytrans.h"

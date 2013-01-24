@@ -22,7 +22,7 @@
  *
  */
 
-#include <notepad.h>
+#include "notepad.h"
 
 NOTEPAD_GLOBALS Globals;
 static ATOM aFINDMSGSTRING;

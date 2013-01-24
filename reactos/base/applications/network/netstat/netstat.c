@@ -13,14 +13,18 @@
  * command line parser needs more work
  */
 
-#include <windows.h>
+#define WIN32_NO_STATUS
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#define _INC_WINDOWS
 #include <winsock2.h>
 #include <tchar.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <iphlpapi.h>
-#include "netstat.h"
 
+#include "netstat.h"
 
 enum ProtoType {IP, TCP, UDP, ICMP} Protocol;
 DWORD Interval; /* time to pause between printing output */
@@ -41,7 +45,6 @@ TCHAR TcpState[][32] = {
     _T("TIME_WAIT"),
     _T("DELETE_TCB")
 };
-
 
 /*
  * format message string and display output
@@ -72,7 +75,6 @@ DWORD DoFormatMessage(DWORD ErrorCode)
     else
         return 0;
 }
-
 
 /*
  *
@@ -163,7 +165,6 @@ BOOL ParseCmdline(int argc, char* argv[])
     return EXIT_SUCCESS;
 }
 
-
 /*
  * Simulate Microsofts netstat utility output
  */
@@ -247,9 +248,6 @@ BOOL DisplayOutput()
     }
     return EXIT_SUCCESS;
 }
-
-
-
 
 VOID ShowIpStatistics()
 {
@@ -467,7 +465,6 @@ VOID ShowTcpTable()
     HeapFree(GetProcessHeap(), 0, tcpTable);
 }
 
-
 VOID ShowUdpTable()
 {
     PMIB_UDPTABLE udpTable;
@@ -511,7 +508,6 @@ VOID ShowUdpTable()
     HeapFree(GetProcessHeap(), 0, udpTable);
 }
 
-
 /*
  * Translate port numbers into their text equivalent if there is one
  */
@@ -532,7 +528,6 @@ GetPortName(UINT Port, PCSTR Proto, CHAR Name[], INT NameLen)
         sprintf(Name, "%d", htons((WORD)Port));
     return Name;
 }
-
 
 /*
  * convert addresses into dotted decimal or hostname
@@ -606,8 +601,6 @@ VOID Usage()
     "                Press CTRL+C to stop redisplaying. By default netstat will\n"
     "                print the current information only once.\n"));
 }
-
-
 
 /*
  *

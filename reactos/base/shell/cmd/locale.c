@@ -11,8 +11,7 @@
  *        Unicode safe!
  */
 
-#include <precomp.h>
-
+#include "precomp.h"
 
 TCHAR cDateSeparator;
 TCHAR cTimeSeparator;

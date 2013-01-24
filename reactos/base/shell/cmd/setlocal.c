@@ -7,7 +7,7 @@
  *        started.
 */ 
 
-#include <precomp.h>
+#include "precomp.h"
 
 typedef struct _SETLOCAL {
 	struct _SETLOCAL *Prev;
@@ -127,4 +127,3 @@ INT cmd_endlocal(LPTSTR param)
 	cmd_free(Saved);
 	return 0;
 }
-

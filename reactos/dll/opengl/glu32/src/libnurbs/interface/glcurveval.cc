@@ -40,10 +40,10 @@
 /* Polynomial Evaluator Interface */
 
 #include "gluos.h"
-#include "glimports.h"
+//#include "glimports.h"
 #include "glrenderer.h"
-#include "glcurveval.h"
-#include "nurbsconsts.h"
+//#include "glcurveval.h"
+//#include "nurbsconsts.h"
  
 OpenGLCurveEvaluator::OpenGLCurveEvaluator(void) 
 {

@@ -46,9 +46,9 @@
  */
 
 #include <stdlib.h>
-#include <stdio.h>
+//#include <stdio.h>
 #include "directedLine.h"
-#include "monoPolyPart.h"
+//#include "monoPolyPart.h"
 
 /*a vertex is u_maximal if both of its two neightbors are to the left of this 
  *vertex

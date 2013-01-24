@@ -1,4 +1,4 @@
-
+#pragma once
 
 #define RC_STRING_MAX_SIZE                 4096
 

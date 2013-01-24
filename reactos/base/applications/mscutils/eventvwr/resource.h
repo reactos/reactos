@@ -1,3 +1,5 @@
+#pragma once
+
 #define IDC_MYICON                      2
 #define IDNEXT                          3
 #define IDD_EVENTVWR_DIALOG             102
@@ -66,4 +68,3 @@
 
 #define IDS_NONE                        320
 #define IDS_NOT_AVAILABLE               321
-

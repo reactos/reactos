@@ -16,31 +16,35 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
+#include <config.h>
 
 #include <stdarg.h>
 
 #define COBJMACROS
 #define NONAMELESSUNION
 
-#include "windef.h"
-#include "winbase.h"
-#include "winnls.h"
-#include "winuser.h"
-#include "softpub.h"
-#include "wingdi.h"
-#include "richedit.h"
-#include "ole2.h"
-#include "richole.h"
-#include "commdlg.h"
-#include "commctrl.h"
-#include "cryptuiapi.h"
+#include <windef.h>
+#include <winbase.h>
+//#include "winnls.h"
+#include <winuser.h>
+#include <softpub.h>
+#include <wingdi.h>
+#include <richedit.h>
+#include <ole2.h>
+#include <richole.h>
+#include <commdlg.h>
+#include <commctrl.h>
+#include <cryptuiapi.h>
 #include "cryptuires.h"
-#include "urlmon.h"
-#include "hlink.h"
-#include "winreg.h"
-#include "wine/debug.h"
-#include "wine/unicode.h"
+//#include "urlmon.h"
+#include <hlink.h>
+#include <winreg.h>
+#include <wine/debug.h>
+#include <wine/unicode.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(cryptui);
 

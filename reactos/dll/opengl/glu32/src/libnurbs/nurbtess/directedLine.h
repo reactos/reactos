@@ -33,7 +33,7 @@
 #ifndef _DIRECTEDLINE_H
 #define _DIRECTEDLINE_H
 
-#include "definitions.h"
+//#include "definitions.h"
 #include "sampledLine.h"
 
 enum {INCREASING, DECREASING};

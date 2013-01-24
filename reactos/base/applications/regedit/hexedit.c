@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <regedit.h>
+#include "regedit.h"
 typedef struct
 {
     HWND hWndSelf;
@@ -1551,4 +1551,3 @@ HexEditWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
     return DefWindowProcW(hWnd, uMsg, wParam, lParam);
 }
-

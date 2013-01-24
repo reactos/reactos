@@ -18,8 +18,7 @@
    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
-#include <precomp.h>
-
+#include "precomp.h"
 
 extern uint16 g_mcs_userid;
 extern char g_username[];

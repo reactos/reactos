@@ -11,10 +11,13 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <windows.h>
+#define WIN32_NO_STATUS
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winuser.h>
 #include <stdio.h>
-#include <string.h>
-#include <ctype.h>
+#include <stdlib.h>
 
 #include "resource.h"
 

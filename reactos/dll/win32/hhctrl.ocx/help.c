@@ -21,9 +21,9 @@
 
 #include "hhctrl.h"
 
-#include "wingdi.h"
-#include "commctrl.h"
-#include "wininet.h"
+//#include "wingdi.h"
+//#include "commctrl.h"
+#include <wininet.h>
 
 #include "wine/debug.h"
 

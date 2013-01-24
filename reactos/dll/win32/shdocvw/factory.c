@@ -18,17 +18,17 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <string.h>
+//#include <string.h>
 #include <stdio.h>
 
 #include "shdocvw.h"
-#include "winreg.h"
-#include "advpub.h"
-#include "isguids.h"
+//#include "winreg.h"
+#include <advpub.h>
+//#include "isguids.h"
 
-#include "winver.h"
+//#include "winver.h"
 
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(shdocvw);
 

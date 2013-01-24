@@ -25,13 +25,17 @@
  */
 
 /* C Headers */
-#include <ctype.h>
 #include <stdio.h>
-#include <stddef.h>
+#include <stdlib.h>
 
 /* PSDK/NDK */
 #define WIN32_NO_STATUS
-#include <windows.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winreg.h>
+#include <winuser.h>
+#include <wincon.h>
+
 #define NTOS_MODE_USER
 #include <ndk/cmfuncs.h>
 #include <ndk/exfuncs.h>
@@ -42,12 +46,10 @@
 #include <ndk/obfuncs.h>
 #include <ndk/psfuncs.h>
 #include <ndk/rtlfuncs.h>
-#include <fmifs/fmifs.h>
 
 /* Filesystem headers */
 #include <fslib/ext2lib.h>
 #include <fslib/vfatlib.h>
-#include <fslib/vfatxlib.h>
 
 /* DDK Disk Headers */
 #include <ntddscsi.h>

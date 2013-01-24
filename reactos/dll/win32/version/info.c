@@ -23,18 +23,18 @@
  */
 
 #include <stdarg.h>
-#include <stdlib.h>
-#include <string.h>
+//#include <stdlib.h>
+//#include <string.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "winver.h"
-#include "winuser.h"
-#include "winternl.h"
-#include "lzexpand.h"
-#include "wine/unicode.h"
-#include "winerror.h"
-#include "wine/debug.h"
+#include <windef.h>
+#include <winbase.h>
+#include <winver.h>
+#include <winuser.h>
+#include <winternl.h>
+#include <lzexpand.h>
+#include <wine/unicode.h>
+//#include "winerror.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(ver);
 

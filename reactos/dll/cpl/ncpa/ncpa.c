@@ -7,13 +7,13 @@
  *      07-18-2004  Created
  */
 
-#include <stdlib.h>
-#include <stdio.h>
+#define WIN32_NO_STATUS
 #include <stdarg.h>
-#include <windows.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winuser.h>
 #include <shellapi.h>
 #include <cpl.h>
-
 
 LONG CALLBACK
 DisplayApplet(VOID)

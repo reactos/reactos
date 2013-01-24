@@ -38,7 +38,7 @@
 
 /* simple inline routines */
 
-#include "types.h"
+//#include "types.h"
 
 inline int 
 max( int x, int y ) { return ( x < y ) ? y : x; }

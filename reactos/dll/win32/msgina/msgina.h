@@ -1,7 +1,15 @@
-#include <windows.h>
+#define WIN32_NO_STATUS
+
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <wincon.h>
+#include <winreg.h>
+#include <wingdi.h>
+#include <winsvc.h>
+#include <winuser.h>
 #include <userenv.h>
 #include <winwlx.h>
-
 #include <wine/debug.h>
 
 #include "resource.h"

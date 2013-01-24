@@ -19,10 +19,10 @@
  *
  */
 
-#include "config.h"
-#include "initguid.h"
+#include <config.h>
+#include <initguid.h>
 #include "d3d8_private.h"
-#include "wine/debug.h"
+//#include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d8);
 

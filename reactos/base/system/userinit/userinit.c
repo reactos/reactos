@@ -23,14 +23,23 @@
  * PROGRAMMERS: Thomas Weidenmueller (w3seek@users.sourceforge.net)
  *              Hervé Poussineau (hpoussin@reactos.org)
  */
-#include <windows.h>
-#include <cfgmgr32.h>
+
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winreg.h>
+#include <wingdi.h>
+#include <shellapi.h>
 #include <regstr.h>
 #include <shlobj.h>
 #include <shlwapi.h>
 #include <undocuser.h>
-#include "resource.h"
 #include <wine/debug.h>
+
+#include "resource.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(userinit);
 

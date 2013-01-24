@@ -22,25 +22,27 @@
  * connections. For Wine we just report that we are always connected.
  */
 
-#include "config.h"
+#define WIN32_NO_STATUS
+
+#include <config.h>
 
 #include <stdarg.h>
-#include <stdio.h>
+//#include <stdio.h>
 
 #define COBJMACROS
 
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "ole2.h"
-#include "sensevts.h"
-#include "sensapi.h"
+#include <windef.h>
+#include <winbase.h>
+//#include "wingdi.h"
+//#include "winuser.h"
+//#include "ole2.h"
+//#include "sensevts.h"
+#include <sensapi.h>
 
-#include "uuids.h"
+//#include "uuids.h"
 
-#include "wine/unicode.h"
-#include "wine/debug.h"
+//#include "wine/unicode.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(sensapi);
 

@@ -1,11 +1,14 @@
-#include <windows.h>
+#define WIN32_NO_STATUS
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winnls.h>
+#include <winreg.h>
+#include <winuser.h>
+#include <shellapi.h>
 #include <cpl.h>
-#include <commctrl.h>
 #include <setupapi.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <tchar.h>
-#include <prsht.h>
 #include <malloc.h>
 #include <debug.h>
 

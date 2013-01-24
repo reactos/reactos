@@ -66,7 +66,9 @@
 #endif
 
 #if defined(PIPE_OS_WINDOWS)
-#include <windows.h>
+//#include <windows.h>
+#include <windef.h>
+#include <winbase.h>
 #if defined(MSVC)
 #include <intrin.h>
 #endif

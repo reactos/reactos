@@ -1,4 +1,4 @@
-#include <windows.h>
+#include <windef.h>
 #include <reactos/debug.h>
 
 typedef PVOID PREADERMODEINFO;

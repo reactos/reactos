@@ -38,7 +38,10 @@
 #if defined(PIPE_OS_UNIX)
 #  include <sys/time.h> /* timeval */
 #elif defined(PIPE_SUBSYSTEM_WINDOWS_USER)
-#  include <windows.h>
+//#  include <windows.h>
+#  include <stdarg.h>
+#  include <windef.h>
+#  include <winbase.h>
 #else
 #  error Unsupported OS
 #endif

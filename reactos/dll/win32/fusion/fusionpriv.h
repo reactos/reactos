@@ -21,12 +21,12 @@
 #ifndef __WINE_FUSION_PRIVATE__
 #define __WINE_FUSION_PRIVATE__
 
-#include <stdarg.h>
+//#include <stdarg.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "winver.h"
+//#include "windef.h"
+//#include "winbase.h"
+//#include "winuser.h"
+#include <winver.h>
 
 #include <pshpack1.h>
 

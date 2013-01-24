@@ -3,11 +3,14 @@
 #define _KSDDK_
 
 #define WIN32_NO_STATUS
-#include <windows.h>
-#include <ndk/iofuncs.h>
-#include <ndk/obtypes.h>
-#include <ndk/rtlfuncs.h>
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
 
+#include <ndk/iofuncs.h>
+#include <ndk/rtlfuncs.h>
 
 #include <ks.h>
 

@@ -23,10 +23,13 @@
  * FILE      : subsys/system/hostname/hostname.c
  * PROGRAMMER: Emanuele Aliberti (ea@reactos.com)
  */
-#include <windows.h>
+
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+//#include <string.h>
+
+#include <windef.h>
+#include <winbase.h>
 
 int main (int argc, char ** argv)
 {

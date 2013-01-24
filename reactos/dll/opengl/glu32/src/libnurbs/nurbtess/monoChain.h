@@ -33,7 +33,7 @@
 #ifndef _MONO_CHAIN_H
 #define _MONO_CHAIN_H
 
-#include "directedLine.h"
+//#include "directedLine.h"
 #include "partitionY.h"
 
 class monoChain;

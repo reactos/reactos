@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include <windows.h>
+//#include <windows.h>
 
 #ifndef __BORLANDC__ // Ioannou Dec. 8, 1998
 // We need these for MSVC6 (Sam Robertson Oct. 8, 1998)

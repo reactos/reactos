@@ -25,7 +25,7 @@
  *
  **************************************************************************/
 
-#include <windows.h>
+//#include <windows.h>
 
 #include "pipe/p_format.h"
 #include "pipe/p_screen.h"

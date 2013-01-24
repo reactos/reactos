@@ -33,10 +33,10 @@
 */
 
 #include "gluos.h"
-#include <stdlib.h>
+//#include <stdlib.h>
 #include "geom.h"
-#include "mesh.h"
-#include "tessmono.h"
+//#include "mesh.h"
+//#include "tessmono.h"
 #include <assert.h>
 
 #define AddWinding(eDst,eSrc)	(eDst->winding += eSrc->winding, \

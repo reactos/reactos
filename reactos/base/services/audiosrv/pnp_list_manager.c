@@ -8,7 +8,6 @@
 
 #include "audiosrv.h"
 
-
 /*
     Device descriptor
 */

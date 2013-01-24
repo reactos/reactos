@@ -20,7 +20,7 @@
  */
 
 #define _USE_MATH_DEFINES
-#include <precomp.h>
+#include "precomp.h"
 #include <math.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);

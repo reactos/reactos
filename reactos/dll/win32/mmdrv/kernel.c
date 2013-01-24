@@ -9,7 +9,7 @@
  *                       Jan 14, 2007: Created
  */
 
-#include <mmdrv.h>
+#include "mmdrv.h"
 
 /*
     Devices that we provide access to follow a standard naming convention.

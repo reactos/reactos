@@ -37,8 +37,8 @@
  *
  */
 
-#include <stdio.h>
-#include "glimports.h"
+//#include <stdio.h>
+//#include "glimports.h"
 #include "nurbsconsts.h"
 #include "reader.h"
 #include "trimvertex.h"

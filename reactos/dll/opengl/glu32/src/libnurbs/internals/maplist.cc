@@ -37,11 +37,11 @@
  *
  */
 
-#include "glimports.h"
-#include "mystdio.h"
-#include "myassert.h"
-#include "mymath.h"
-#include "nurbsconsts.h"
+//#include "glimports.h"
+//#include "mystdio.h"
+//#include "myassert.h"
+//#include "mymath.h"
+//#include "nurbsconsts.h"
 #include "maplist.h"
 #include "mapdesc.h"
  

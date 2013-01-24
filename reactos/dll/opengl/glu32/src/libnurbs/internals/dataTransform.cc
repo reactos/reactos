@@ -35,12 +35,12 @@
 /*
 */
 
-#include <stdlib.h>
-#include <stdio.h>
-#include "glimports.h"
-#include "myassert.h"
-#include "nurbsconsts.h"
-#include "trimvertex.h"
+//#include <stdlib.h>
+//#include <stdio.h>
+//#include "glimports.h"
+//#include "myassert.h"
+//#include "nurbsconsts.h"
+//#include "trimvertex.h"
 #include "dataTransform.h"
 
 extern directedLine* arcLoopToDLineLoop(Arc_ptr loop);

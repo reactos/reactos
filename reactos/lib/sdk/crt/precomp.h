@@ -30,7 +30,10 @@
 
 /* PSDK/NDK Headers */
 #define WIN32_NO_STATUS
-#include <windows.h>
+#include <windef.h>
+#include <winbase.h>
+#include <wincon.h>
+#include <winuser.h>
 #include <ndk/rtlfuncs.h>
 
 #if !defined(_MSC_VER)

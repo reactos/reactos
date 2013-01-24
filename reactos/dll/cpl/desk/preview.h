@@ -21,8 +21,6 @@
 #define IDX_APPSPACE         16
 #define IDX_QUICKINFO        20
 
-
-
 #define PVM_GETCYCAPTION     (WM_USER+1)
 #define PVM_SETCYCAPTION     (WM_USER+2)
 

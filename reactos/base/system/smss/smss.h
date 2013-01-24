@@ -14,7 +14,13 @@
 // Native Headers
 //
 #define WIN32_NO_STATUS
-#include <windows.h> // Should just be using ntdef.h I think
+#include <stdio.h>
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winreg.h>
+
+#include <pseh/pseh2.h>
 #define RTL_NUMBER_OF_V1(A) (sizeof(A)/sizeof((A)[0]))
 #define RTL_NUMBER_OF_V2(A) RTL_NUMBER_OF_V1(A)
 #ifdef ENABLE_RTL_NUMBER_OF_V2
@@ -23,12 +29,23 @@
 #define RTL_NUMBER_OF(A) RTL_NUMBER_OF_V1(A)
 #endif
 #define NTOS_MODE_USER
-#include <ndk/ntndk.h>
+#include <ndk/iofuncs.h>
+#include <ndk/obfuncs.h>
+#include <ndk/rtlfuncs.h>
+#include <ndk/cmfuncs.h>
+#include <ndk/exfuncs.h>
+#include <ndk/mmfuncs.h>
+#include <ndk/psfuncs.h>
+#include <ndk/lpcfuncs.h>
+#include <ndk/setypes.h>
+#include <ndk/sefuncs.h>
+#include <ndk/umfuncs.h>
+#include <ndk/kefuncs.h>
 
 //
 // SM Protocol Header
 //
-#include "sm/smmsg.h"
+#include <sm/smmsg.h>
 
 /* DEFINES ********************************************************************/
 

@@ -1,6 +1,9 @@
-#include <windows.h>
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winreg.h>
 #include <winioctl.h>
-#include <stdio.h>
+#include <stdlib.h>
 //#include <ntdddisk.h>
 //#include <ntddscsi.h>
 #include <ntddscsi.h>

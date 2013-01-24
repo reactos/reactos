@@ -28,7 +28,7 @@
 #ifndef STW_PIXELFORMAT_H
 #define STW_PIXELFORMAT_H
 
-#include <windows.h>
+//#include <windows.h>
 
 #ifndef PFD_SUPPORT_COMPOSITION
 #define PFD_SUPPORT_COMPOSITION 0x00008000

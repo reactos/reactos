@@ -30,8 +30,8 @@
 
 #include <stdarg.h>
 
-#include "windef.h"
-#include "winbase.h"
+#include <windef.h>
+#include <winbase.h>
 #include "tomcrypt.h"
 
 /* Known optimal configurations

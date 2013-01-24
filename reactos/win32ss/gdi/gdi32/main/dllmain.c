@@ -7,7 +7,7 @@
  *
  */
 
-#include "precomp.h"
+#include <precomp.h>
 
 extern HGDIOBJ stock_objects[];
 BOOL SetStockObjects = FALSE;

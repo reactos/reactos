@@ -4,7 +4,9 @@
  * No warranty is given; refer to the file DISCLAIMER.PD within this package.
  */
 
-#include <windows.h>
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
 
 extern HINSTANCE __mingw_winmain_hInstance;
 extern LPSTR __mingw_winmain_lpCmdLine;

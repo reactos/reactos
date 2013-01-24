@@ -35,7 +35,7 @@
 #endif
 
 #if defined(WIN32) && !defined(__CYGWIN__)
-#include <windows.h>
+//#include <windows.h>
 #ifndef INVALID_FILE_ATTRIBUTES
 #define INVALID_FILE_ATTRIBUTES ((DWORD)-1)
 #endif

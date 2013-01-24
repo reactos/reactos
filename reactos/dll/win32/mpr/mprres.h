@@ -18,7 +18,7 @@
 #ifndef __WINE_MPRRES_H__
 #define __WINE_MPRRES_H__
 
-#include <windef.h>
+//#include <windef.h>
 #include <winuser.h>
 
 #define IDS_ENTIRENETWORK 1

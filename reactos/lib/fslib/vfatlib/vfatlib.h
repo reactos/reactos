@@ -7,7 +7,11 @@
 #include <stdio.h>
 
 #define WIN32_NO_STATUS
-#include <windows.h>
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+#include <windef.h>
+#include <winbase.h>
+#include <objbase.h>
 #define NTOS_MODE_USER
 #include <ndk/iofuncs.h>
 #include <ndk/kefuncs.h>

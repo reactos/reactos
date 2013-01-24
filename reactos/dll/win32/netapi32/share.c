@@ -15,9 +15,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "wine/debug.h"
-#include "lm.h"
-#include "winerror.h"
+#include <wine/debug.h>
+#include <lm.h>
+//#include "winerror.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(share);
 

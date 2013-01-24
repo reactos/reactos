@@ -29,7 +29,10 @@
 #define STW_ICD_H
 
 
-#include <windows.h>
+//#include <windows.h>
+#include <windef.h>
+#include <wingdi.h>
+#include <winuser.h>
 
 #include "GL/gl.h"
 

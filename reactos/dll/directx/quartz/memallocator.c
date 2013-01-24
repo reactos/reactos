@@ -19,15 +19,15 @@
  */
 
 #include <assert.h>
-#include <limits.h>
-#include <stdarg.h>
+//#include <limits.h>
+//#include <stdarg.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "vfwmsgs.h"
+//#include "windef.h"
+//#include "winbase.h"
+//#include "vfwmsgs.h"
 
 #include "quartz_private.h"
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(quartz);
 

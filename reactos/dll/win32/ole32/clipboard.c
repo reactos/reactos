@@ -58,24 +58,27 @@
  *
  */
 
-#include <assert.h>
-#include <stdarg.h>
-#include <string.h>
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+
+//#include <assert.h>
+//#include <stdarg.h>
+//#include <string.h>
 #include <stdio.h>
 
 #define COBJMACROS
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
 
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "winerror.h"
-#include "winnls.h"
-#include "ole2.h"
-#include "wine/debug.h"
-#include "olestd.h"
+#include <windef.h>
+#include <winbase.h>
+#include <wingdi.h>
+//#include "winuser.h"
+//#include "winerror.h"
+#include <winnls.h>
+#include <ole2.h>
+#include <wine/debug.h>
+//#include "olestd.h"
 
 #include "storage32.h"
 

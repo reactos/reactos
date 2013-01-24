@@ -18,7 +18,9 @@
 #include <stdio.h>
 
 /* PSDK/NDK Headers */
-#include <windows.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winreg.h>
 #include <ndk/cmfuncs.h>
 #include <ndk/obfuncs.h>
 #include <ndk/rtlfuncs.h>
@@ -27,7 +29,7 @@
 #include <fmifs/fmifs.h>
 
 /* VFATLIB Public Header */
-#include <fslib/vfatlib.h>
+//#include <fslib/vfatlib.h>
 
 extern LIST_ENTRY ProviderListHead;
 

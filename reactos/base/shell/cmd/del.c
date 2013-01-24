@@ -45,7 +45,7 @@
 *        Preload some nice strings.
 */
 
-#include <precomp.h>
+#include "precomp.h"
 
 #ifdef INCLUDE_CMD_DEL
 
@@ -549,6 +549,5 @@ INT CommandDelete (LPTSTR param)
 
 	return 0;
 }
-
 
 #endif

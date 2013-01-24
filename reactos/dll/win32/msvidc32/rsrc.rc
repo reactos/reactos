@@ -16,8 +16,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "windef.h"
-#include "msvidc32_private.h"
+//#include "windef.h"
+//#include "msvidc32_private.h"
 
 #ifdef LANGUAGE_DA_DK
     #include "msvidc32_Da.rc"

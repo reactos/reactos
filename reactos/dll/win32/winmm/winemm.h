@@ -21,9 +21,9 @@
 
 #include <stdarg.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "mmddk.h"
+#include <windef.h>
+//#include "winbase.h"
+#include <mmddk.h>
 
 #define WINE_DEFAULT_WINMM_DRIVER     "alsa,oss,coreaudio,esd"
 #define WINE_DEFAULT_WINMM_MAPPER     "msacm32.drv"

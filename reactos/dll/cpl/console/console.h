@@ -1,14 +1,18 @@
 #ifndef CONSOLE_H__
 #define CONSOLE_H__
 
-#include "ntstatus.h"
 #define WIN32_NO_STATUS
-#include <windows.h>
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <wingdi.h>
+#include <winuser.h>
+#include <wincon.h>
 #include <commctrl.h>
 #include <cpl.h>
 #include <tchar.h>
-#include <stdio.h>
 #include <limits.h>
+
 #include "resource.h"
 
 typedef struct
@@ -51,7 +55,6 @@ void PaintConsole(LPDRAWITEMSTRUCT drawItem, PConsoleInfo pConInfo);
 void PaintText(LPDRAWITEMSTRUCT drawItem, PConsoleInfo pConInfo);
 
 #define PM_APPLY_CONSOLE_INFO (WM_APP + 100)
-
 
 // Globals
 extern HINSTANCE hApplet;

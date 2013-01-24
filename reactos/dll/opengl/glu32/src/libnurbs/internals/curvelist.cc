@@ -37,13 +37,13 @@
  *
  */
 
-#include "glimports.h"
-#include "myassert.h"
-#include "mystdio.h"
+//#include "glimports.h"
+//#include "myassert.h"
+//#include "mystdio.h"
 #include "quilt.h"
 #include "curvelist.h"
 #include "curve.h"
-#include "types.h"
+//#include "types.h"
 
 Curvelist::Curvelist( Quilt *quilts, REAL pta, REAL ptb )
 {

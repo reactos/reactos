@@ -18,23 +18,27 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #include <stdarg.h>
-#include <string.h>
+//#include <string.h>
 
 #define COBJMACROS
 
-#include "windef.h"
-#include "winbase.h"
-#include "winnls.h"
-#include "winuser.h"
+#include <windef.h>
+#include <winbase.h>
+#include <winnls.h>
+//#include "winuser.h"
 #define NO_SHLWAPI_REG
 #define NO_SHLWAPI_PATH
 #define NO_SHLWAPI_GDI
 #define NO_SHLWAPI_STREAM
 #define NO_SHLWAPI_USER
-#include "shlwapi.h"
-#include "shlobj.h"
-#include "wine/debug.h"
+#include <shlwapi.h>
+#include <shlobj.h>
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 

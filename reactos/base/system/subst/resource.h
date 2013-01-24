@@ -1,3 +1,5 @@
+#pragma once
+
 #define RC_STRING_MAX_SIZE          2048
 
 /* Strings */

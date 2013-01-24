@@ -9,7 +9,7 @@
  *                       Jan 14, 2007: Created
  */
 
-#include <mmdrv.h>
+#include "mmdrv.h"
 
 /*
     Translates errors to MMRESULT codes.

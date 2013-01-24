@@ -7,7 +7,7 @@
  *
  */
 
-#include <precomp.h>
+#include "precomp.h"
 
 HWND hToolsPage;
 HWND hToolsListCtrl;

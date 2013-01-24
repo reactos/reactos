@@ -37,7 +37,8 @@
 #endif
 
 #if defined(WIN32) || defined(_WIN32)
-#include <windows.h>
+//#include <windows.h>
+#include <winnls.h>
 #endif
 
 #if defined(_WIN32_WCE)

@@ -1,14 +1,20 @@
-#include <windows.h>
+#include <stdio.h>
+#include <assert.h>
+#include <stdlib.h>
+
+#define WIN32_NO_STATUS
+#include <windef.h>
+#include <winbase.h>
+#include <wingdi.h>
+#include <winreg.h>
+#include <winnls.h>
+#include <winuser.h>
 #include <windowsx.h>
 #include <undocuser.h>
 #include <uxtheme.h>
 #include <uxundoc.h>
 #include <vfwmsgs.h>
 #include <tmschema.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <assert.h>
 
 #define TMT_ENUM 200
 

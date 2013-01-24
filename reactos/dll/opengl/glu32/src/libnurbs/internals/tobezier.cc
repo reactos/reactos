@@ -38,9 +38,9 @@
  */
 
 #include "glimports.h"
-#include "myassert.h"
-#include "mystdio.h"
-#include "mystring.h"
+//#include "myassert.h"
+//#include "mystdio.h"
+//#include "mystring.h"
 #include "quilt.h"
 #include "knotvector.h"
 

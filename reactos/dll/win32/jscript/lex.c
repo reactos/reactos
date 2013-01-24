@@ -17,17 +17,17 @@
  */
 
 #include <math.h>
-#include <limits.h>
+//#include <limits.h>
 
 #include "jscript.h"
-#include "activscp.h"
-#include "objsafe.h"
+//#include "activscp.h"
+//#include "objsafe.h"
 #include "engine.h"
 
 #include "parser.tab.h"
 
-#include "wine/debug.h"
-#include "wine/unicode.h"
+#include <wine/debug.h>
+//#include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(jscript);
 

@@ -18,26 +18,28 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
+#include <config.h>
+//#include "wine/port.h"
 
 #include <stdarg.h>
-#include <stdlib.h>
-#include "ntstatus.h"
+//#include <stdlib.h>
+#include <ntstatus.h>
 #define WIN32_NO_STATUS
-#include "windef.h"
-#include "winbase.h"
-#include "winsock2.h"
-#include "nb30.h"
-#include "lmcons.h"
-#include "lmapibuf.h"
-#include "lmerr.h"
-#include "lmwksta.h"
-#include "iphlpapi.h"
-#include "winerror.h"
-#include "ntsecapi.h"
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+#include <windef.h>
+#include <winbase.h>
+//#include "winsock2.h"
+//#include "nb30.h"
+//#include "lmcons.h"
+//#include "lmapibuf.h"
+//#include "lmerr.h"
+//#include "lmwksta.h"
+#include <iphlpapi.h>
+//#include "winerror.h"
+#include <ntsecapi.h>
 #include "netbios.h"
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(netapi32);
 

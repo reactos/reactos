@@ -21,18 +21,20 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define WIN32_NO_STATUS
+
 #include <assert.h>
 #include <stdarg.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "mmddk.h"
-#include "wownt32.h"
-#include "digitalv.h"
-#include "wine/debug.h"
-#include "wine/unicode.h"
+#include <windef.h>
+//#include "winbase.h"
+//#include "wingdi.h"
+#include <winuser.h>
+#include <mmddk.h>
+#include <wownt32.h>
+#include <digitalv.h>
+#include <wine/debug.h>
+#include <wine/unicode.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(mciwave);
 

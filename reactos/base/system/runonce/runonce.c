@@ -7,7 +7,6 @@
 
 #include "runonce.h"
 
-
 static
 DWORD
 WINAPI

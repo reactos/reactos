@@ -4,11 +4,14 @@
 //    Freeware
 //    Copyright J Brown 2001
 //
-#include <windows.h>
+//#include <windows.h>
+
+#define WIN32_NO_STATUS
+#include <windef.h>
 
 #include "cardlib.h"
-#include "cardwindow.h"
-#include "dropzone.h"
+//#include "cardwindow.h"
+//#include "dropzone.h"
 
 bool CardWindow::RegisterDropZone(int id, RECT *rect, pDropZoneProc proc)
 {

@@ -37,13 +37,13 @@
  *
  */
 
-#include <stdio.h>
-#include "glimports.h"
-#include "mystdio.h"
-#include "myassert.h"
+//#include <stdio.h>
+//#include "glimports.h"
+//#include "mystdio.h"
+//#include "myassert.h"
 #include "arc.h"
-#include "bin.h"
-#include "pwlarc.h"
+//#include "bin.h"
+//#include "pwlarc.h"
 #include "simplemath.h"
 
 /* local preprocessor definitions */

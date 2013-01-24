@@ -18,19 +18,19 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
+//#include <stdarg.h>
 
 #include "urlmon_main.h"
 
-#include "winreg.h"
+//#include "winreg.h"
 
 #define NO_SHLWAPI_REG
-#include "shlwapi.h"
-#include "advpub.h"
+//#include "shlwapi.h"
+#include <advpub.h>
 
-#include "wine/debug.h"
+#include <wine/debug.h>
 
-#include "urlmon.h"
+//#include "urlmon.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(urlmon);
 

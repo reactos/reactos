@@ -19,18 +19,22 @@
  *
  */
 
-#include "config.h"
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
+#include <config.h>
 #include <stdarg.h>
 
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
 #define COBJMACROS
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "dwmapi.h"
-#include "wine/debug.h"
+#include <windef.h>
+#include <winbase.h>
+#include <wingdi.h>
+#include <winuser.h>
+#include <dwmapi.h>
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(dwmapi);
 

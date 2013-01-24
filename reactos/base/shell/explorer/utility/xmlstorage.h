@@ -157,8 +157,8 @@ typedef XMLCh XML_Char;
 
 #ifdef _WIN32
 
-#include <windows.h>	// for LPCTSTR
-#include <tchar.h>
+//#include <windows.h>	// for LPCTSTR
+//#include <tchar.h>
 #include <malloc.h>
 
 #ifndef _MSC_VER

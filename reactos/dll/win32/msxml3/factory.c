@@ -19,29 +19,32 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+
 #define COBJMACROS
 
-#include "config.h"
+#include <config.h>
 
-#include <stdarg.h>
+//#include <stdarg.h>
 #ifdef HAVE_LIBXML2
 # include <libxml/parser.h>
-# include <libxml/xmlerror.h>
+//# include <libxml/xmlerror.h>
 #endif
 
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "ole2.h"
-#include "msxml.h"
-#include "msxml2.h"
+#include <windef.h>
+#include <winbase.h>
+//#include "winuser.h"
+#include <ole2.h>
+//#include "msxml.h"
+#include <msxml2.h>
 #include "xmlparser.h"
 
 /* undef the #define in msxml2 so that we can access the v.2 version
    independent CLSID as well as the v.3 one. */
 #undef CLSID_DOMDocument
 
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 #include "msxml_private.h"
 

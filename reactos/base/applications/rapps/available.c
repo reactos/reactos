@@ -8,7 +8,6 @@
 
 #include "rapps.h"
 
-
 BOOL
 ShowAvailableAppInfo(INT Index)
 {

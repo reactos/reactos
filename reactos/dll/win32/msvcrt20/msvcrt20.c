@@ -18,17 +18,19 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define WIN32_NO_STATUS
+
 #include <stdio.h>
 #define _CRT_PRECOMP_H
 #include <internal/tls.h>
-#include <stdlib.h>
-#include <windows.h>
+//#include <stdlib.h>
+//#include <windows.h>
 #include <internal/wine/msvcrt.h>
 #include <internal/locale.h>
-#include <locale.h>
-#include <mbctype.h>
+//#include <locale.h>
+//#include <mbctype.h>
 
-#include "wine/debug.h"
+#include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(msvcrt);
 
 /* EXTERNAL PROTOTYPES ********************************************************/

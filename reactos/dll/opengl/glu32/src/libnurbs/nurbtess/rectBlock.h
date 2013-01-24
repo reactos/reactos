@@ -33,7 +33,7 @@
 #ifndef _RECTBLOCK_H
 #define _RECTBLOCK_H
 
-#include "definitions.h"
+//#include "definitions.h"
 #include "gridWrap.h"
 
 class rectBlock{

@@ -1486,6 +1486,10 @@ void write_header(const statement_list_t *stmts)
   fprintf(header, "#define __REQUIRED_RPCNDR_H_VERSION__ 475\n");
   fprintf(header, "#endif\n\n");
 
+  fprintf(header, "#ifdef __REACTOS__\n");
+  fprintf(header, "#define WIN32_LEAN_AND_MEAN\n");
+  fprintf(header, "#endif\n\n");
+
   fprintf(header, "#include <rpc.h>\n" );
   fprintf(header, "#include <rpcndr.h>\n\n" );
 

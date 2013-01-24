@@ -290,7 +290,7 @@ xmlModulePlatformSymbol(void *handle, const char *name, void **symbol)
 
 #ifdef _WIN32
 
-#include <windows.h>
+//#include <windows.h>
 
 /*
  * xmlModulePlatformOpen:

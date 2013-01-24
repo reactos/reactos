@@ -8,6 +8,13 @@
 #define __WSHTCPIP_H
 
 #define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
+#include <stdarg.h>
+
+#include <windef.h>
+#include <winbase.h>
 #include <wsahelp.h>
 #include <tdiinfo.h>
 #include <tcpioctl.h>

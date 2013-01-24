@@ -8,8 +8,7 @@
 
 #pragma once
 
-#include <windows.h>
-#include <commctrl.h>
+#include <objbase.h>
 
 extern HANDLE Win32CsrApiHeap;
 extern HINSTANCE Win32CsrDllHandle;

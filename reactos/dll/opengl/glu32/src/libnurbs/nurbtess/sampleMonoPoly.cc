@@ -36,8 +36,8 @@
 */
 
 #include "gluos.h"
-#include <stdlib.h>
-#include <stdio.h>
+//#include <stdlib.h>
+//#include <stdio.h>
 #include <math.h>
 
 #ifndef max

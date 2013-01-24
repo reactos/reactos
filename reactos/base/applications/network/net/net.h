@@ -7,15 +7,14 @@
  * PROGRAMMERS:     Magnus Olsen (greatlord@reactos.org) 
  */
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <windows.h>
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
 #include <winsvc.h>
+#include <stdio.h>
 
 VOID help(VOID);
 INT unimplemented(INT argc, WCHAR **argv);
-
 
 INT cmdHelp(INT argc, WCHAR **argv);
 INT cmdStart(INT argc, WCHAR **argv);

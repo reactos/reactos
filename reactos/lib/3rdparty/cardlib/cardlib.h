@@ -85,9 +85,9 @@ typedef int  (CARDLIBPROC *pDropZoneProc)   (int dzid, const CardStack &cards);
 typedef void (CARDLIBPROC *pButtonProc)		(CardButton &pButton);
 
 
-#include "card.h"
+//#include "card.h"
 #include "cardbutton.h"
-#include "cardstack.h"
+//#include "cardstack.h"
 #include "cardregion.h"
 #include "cardcount.h"
 #include "cardwindow.h"

@@ -1,3 +1,5 @@
+#pragma once
+
 /* Dialogs */
 #define IDD_GINALOADFAILED                         400
 #define IDD_SHUTDOWNCOMPUTER                       300

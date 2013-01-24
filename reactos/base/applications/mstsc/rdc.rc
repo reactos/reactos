@@ -1,4 +1,7 @@
-#include <windows.h>
+#include <windef.h>
+#include <winuser.h>
+#include <commctrl.h>
+
 #include "resource.h"
 
 #define REACTOS_STR_FILE_DESCRIPTION  "ReactOS Remote Desktop Client\0"

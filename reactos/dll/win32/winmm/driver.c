@@ -20,23 +20,23 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
+#include <config.h>
+//#include "wine/port.h"
 
-#include <string.h>
+//#include <string.h>
 #include <stdarg.h>
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "winnls.h"
-#include "winreg.h"
-#include "mmddk.h"
+#include <windef.h>
+#include <winbase.h>
+//#include "wingdi.h"
+#include <winuser.h>
+//#include "winnls.h"
+#include <winreg.h>
+//#include "mmddk.h"
 #include "winemm.h"
-#include "wine/debug.h"
-#include "wine/unicode.h"
-#include "excpt.h"
-#include "wine/exception.h"
+#include <wine/debug.h>
+#include <wine/unicode.h>
+//#include "excpt.h"
+#include <wine/exception.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(driver);
 

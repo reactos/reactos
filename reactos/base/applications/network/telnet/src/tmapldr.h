@@ -70,8 +70,8 @@
 
 #pragma once
 
-#include "keytrans.h"
-#include "tcharmap.h"
+//#include "keytrans.h"
+//#include "tcharmap.h"
 
 // AVS
 typedef TArrayAsVector<string> stringArray;

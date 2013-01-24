@@ -78,13 +78,13 @@
 /* Line 189 of yacc.c  */
 #line 21 "xslpattern.y"
 
-#include "config.h"
-#include "wine/port.h"
+#include <config.h>
+#include <wine/port.h>
 
 #ifdef HAVE_LIBXML2
 #include "xslpattern.h"
 #include <libxml/xpathInternals.h>
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(msxml);
 

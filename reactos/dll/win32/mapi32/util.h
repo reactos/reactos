@@ -23,7 +23,7 @@
 #define _MAPI_UTIL_H
 
 #include <mapi.h>
-#include <mapix.h>
+//#include <mapix.h>
 
 extern void load_mapi_providers(void);
 extern void unload_mapi_providers(void);

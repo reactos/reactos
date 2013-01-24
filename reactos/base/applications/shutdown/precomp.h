@@ -2,13 +2,17 @@
 #define __SHUTDOWN_PRECOMP_H
 
 /* INCLUDES ******************************************************************/
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winreg.h>
+#include <winuser.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <ctype.h>
-#include <windows.h>
 #include <tchar.h>
 #include <powrprof.h>
 // #include <reason.h> // Shutdown codes
+
 #include "resource.h"
 
 /* DEFINES *******************************************************************/

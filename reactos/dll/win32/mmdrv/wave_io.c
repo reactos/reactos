@@ -2,7 +2,7 @@
     Don't use this.
 */
 
-#include <mmdrv.h>
+#include "mmdrv.h"
 
 /*
     Complete a partial wave buffer transaction

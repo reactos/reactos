@@ -20,7 +20,7 @@
 
 */
 
-#include <precomp.h>
+#include "precomp.h"
 
 #define APP_CC
 

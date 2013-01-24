@@ -30,7 +30,7 @@
  *        Remove all hardcode string to En.rc
  */
 
-#include <precomp.h>
+#include "precomp.h"
 
 
 /* FOR is a special command, so this function is only used for showing help now */

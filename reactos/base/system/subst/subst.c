@@ -7,13 +7,17 @@
 
 /* INCLUDES *****************************************************************/
 
-#define LEAN_AND_MEAN
-#include <stdio.h>
+#define WIN32_NO_STATUS
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winuser.h>
 #include <stdlib.h>
-#include <windows.h>
 #include <tchar.h>
+
 #define NDEBUG
 #include <debug.h>
+
 #include "resource.h"
 
 /* FUNCTIONS ****************************************************************/

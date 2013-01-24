@@ -18,11 +18,11 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "winerror.h"
-#include "wine/debug.h"
+//#include "winerror.h"
+#include <wine/debug.h>
 
-#include "lobbysp.h"
-#include "dplay_global.h"
+//#include "lobbysp.h"
+//#include "dplay_global.h"
 #include "dpinit.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(dplay);

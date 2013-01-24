@@ -25,7 +25,7 @@
  * 
  **************************************************************************/
 
-#include <windows.h>
+//#include <windows.h>
 
 #define WGL_WGLEXT_PROTOTYPES
 

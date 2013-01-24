@@ -1,12 +1,14 @@
-#include <windows.h>
+#define WIN32_NO_STATUS
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winnls.h>
+#include <winreg.h>
+#include <wingdi.h>
+#include <winuser.h>
 #include <commctrl.h>
 #include <cpl.h>
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdarg.h>
 #include <tchar.h>
-#include <process.h>
 
 #include "resource.h"
 

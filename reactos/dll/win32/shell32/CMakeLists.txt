@@ -5,7 +5,6 @@ add_definitions(-D_WIN32_WINNT=0x600)
 
 add_definitions(
     -D_SHELL32_
-    -DCOM_NO_WINDOWS_H
     -D_WINE)
 
 include_directories(

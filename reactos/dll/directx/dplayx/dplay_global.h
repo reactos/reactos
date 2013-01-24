@@ -19,10 +19,10 @@
 #ifndef __WINE_DPLAY_GLOBAL_INCLUDED
 #define __WINE_DPLAY_GLOBAL_INCLUDED
 
-#include <stdarg.h>
+//#include <stdarg.h>
 
-#include "windef.h"
-#include "winbase.h"
+//#include "windef.h"
+//#include "winbase.h"
 #include "dplaysp.h"
 #include "lobbysp.h"
 #include "dplayx_queue.h"

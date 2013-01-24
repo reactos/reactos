@@ -5,7 +5,7 @@
  * PURPOSE:         Functions to convert between FLOAT and EFLOAT
  * PROGRAMMER:      James Tabor
  */
-#include "precomp.h"
+#include <precomp.h>
 
 /* the following deal with IEEE single-precision numbers */
 #define EXCESS          126L

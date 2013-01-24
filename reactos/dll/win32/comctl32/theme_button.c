@@ -20,15 +20,15 @@
  */
 
 #include <stdarg.h>
-#include <string.h>
-#include <stdlib.h>
+//#include <string.h>
+//#include <stdlib.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "uxtheme.h"
-#include "vssym32.h"
+#include <windef.h>
+#include <winbase.h>
+#include <wingdi.h>
+#include <winuser.h>
+#include <uxtheme.h>
+#include <vssym32.h>
 #include "comctl32.h"
 
 #define BUTTON_TYPE 0x0f /* bit mask for the available button types */

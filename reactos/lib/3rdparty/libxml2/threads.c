@@ -27,7 +27,7 @@
 #ifdef HAVE_PTHREAD_H
 #include <pthread.h>
 #elif defined HAVE_WIN32_THREADS
-#include <windows.h>
+//#include <windows.h>
 #ifndef HAVE_COMPILER_TLS
 #include <process.h>
 #endif

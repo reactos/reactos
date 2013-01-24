@@ -37,9 +37,9 @@
  *
  */
 
-#include "glimports.h"
-#include "myassert.h"
-#include "mystdio.h"
+//#include "glimports.h"
+//#include "myassert.h"
+//#include "mystdio.h"
 #include "uarray.h"
 #include "arc.h"
 

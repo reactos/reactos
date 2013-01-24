@@ -28,7 +28,10 @@
 #ifndef STW_TLS_H
 #define STW_TLS_H
 
-#include <windows.h>
+//#include <windows.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winuser.h>
 
 struct stw_tls_data
 {

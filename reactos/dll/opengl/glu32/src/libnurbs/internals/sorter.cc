@@ -39,7 +39,7 @@
 
 #include "glimports.h"
 #include "sorter.h"
-#include "mystdio.h"
+//#include "mystdio.h"
 
 Sorter::Sorter( int _es )
 {

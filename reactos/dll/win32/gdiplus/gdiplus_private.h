@@ -19,20 +19,24 @@
 #ifndef __WINE_GP_PRIVATE_H_
 #define __WINE_GP_PRIVATE_H_
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #include <math.h>
 #include <stdarg.h>
 
-#include "windef.h"
-#include "wingdi.h"
-#include "winbase.h"
-#include "winuser.h"
+#include <windef.h>
+#include <wingdi.h>
+#include <winbase.h>
+//#include "winuser.h"
 
-#include "objbase.h"
-#include "ocidl.h"
-#include "wincodecsdk.h"
-#include "wine/list.h"
+#include <objbase.h>
+//#include "ocidl.h"
+#include <wincodecsdk.h>
+#include <wine/list.h>
 
-#include "gdiplus.h"
+#include <gdiplus.h>
 
 #define GP_DEFAULT_PENSTYLE (PS_GEOMETRIC | PS_SOLID | PS_ENDCAP_FLAT | PS_JOIN_MITER)
 #define MAX_ARC_PTS (13)

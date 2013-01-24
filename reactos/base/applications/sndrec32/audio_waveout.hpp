@@ -12,7 +12,7 @@
 #define _AUDIOWAVEOUT__H_
 
 
-#include "audio_def.hpp"
+//#include "audio_def.hpp"
 #include "audio_format.hpp"
 
 

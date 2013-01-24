@@ -13,7 +13,14 @@
 
 /* PSDK/NDK Headers */
 #define WIN32_NO_STATUS
-#include <windows.h>
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <wingdi.h>
+#include <winreg.h>
+#include <wincon.h>
+#include <winuser.h>
+#include <winspool.h>
 #include <tlhelp32.h>
 
 /* Redefine NTDDI_VERSION to 2K3 SP1 to get correct NDK definitions */
@@ -39,15 +46,15 @@
 #include <csrss/csrss.h>
 
 /* C Headers */
-#include <ctype.h>
-#include <limits.h>
-#include <stdio.h>
-#include <wchar.h>
+//#include <ctype.h>
+//#include <limits.h>
+//#include <stdio.h>
+//#include <wchar.h>
 
 /* DDK Driver Headers */
 #include <ntddbeep.h>
 #include <mountmgr.h>
-#include <mountdev.h>
+//#include <mountdev.h>
 
 /* Internal Kernel32 Header */
 #include "include/kernel32.h"

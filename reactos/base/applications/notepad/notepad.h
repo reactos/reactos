@@ -4,14 +4,18 @@
 
 #include <assert.h>
 #include <stdio.h>
-#include <windows.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winuser.h>
+#include <winnls.h>
+#include <winreg.h>
+#include <wingdi.h>
+#include <shellapi.h>
 #include <commdlg.h>
 #include <commctrl.h>
 #include <tchar.h>
-#include <richedit.h>
 #include <malloc.h>
 #include <strsafe.h>
 
 #include "main.h"
 #include "dialog.h"
-

@@ -25,6 +25,8 @@
  * PROGRAMMER:      Eric Kohl
  */
 
+#pragma once
+
 #define IDS_PROFILEPATH    1
 #define IDS_APPDATA        2
 #define IDS_DESKTOP        3

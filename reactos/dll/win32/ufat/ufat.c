@@ -7,11 +7,7 @@
  * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
  */
 
-#define WIN32_NO_STATUS
-#include <windows.h>
-#define NTOS_MODE_USER
-#include <ndk/umtypes.h>
-#include <fmifs/fmifs.h>
+#include <windef.h>
 
 INT WINAPI
 DllMain(

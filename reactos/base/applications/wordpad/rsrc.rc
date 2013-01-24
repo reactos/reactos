@@ -17,6 +17,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <windef.h>
+#include <winuser.h>
+
 #include "wordpad.h"
 
 #define REACTOS_STR_FILE_DESCRIPTION  "ReactOS WordPad\0"

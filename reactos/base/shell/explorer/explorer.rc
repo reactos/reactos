@@ -1,5 +1,3 @@
-/* $Id: explorer.rc 17951 2005-09-20 19:51:27Z mf $ */
-
 #include "explorer_intres.rc"
 
 #define REACTOS_STR_FILE_DESCRIPTION    "ReactOS Explorer\0"

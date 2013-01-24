@@ -350,6 +350,8 @@ typedef PNG_CONST png_uint_16p FAR * png_const_uint_16pp;
 
 #if defined(WIN32) || defined(_Windows) || defined(_WINDOWS) || \
     defined(_WIN32) || defined(__WIN32__)
+#  define WIN32_NO_STATUS
+#  define WIN32_LEAN_AND_MEAN
 #  include <windows.h>  /* defines _WINDOWS_ macro */
 #endif
 

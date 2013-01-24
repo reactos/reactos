@@ -38,7 +38,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h> //for fabs()
-#include "glimports.h"
+//#include "glimports.h"
 #include "zlassert.h"
 #include "sampledLine.h"
 

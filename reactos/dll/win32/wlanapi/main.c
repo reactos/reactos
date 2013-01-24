@@ -21,10 +21,14 @@
 
 /* INCLUDES ****************************************************************/
 #define WIN32_NO_STATUS
-#include <windows.h>
-#include "wlansvc_c.h"
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <wlansvc_c.h>
 
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(wlanapi);
 

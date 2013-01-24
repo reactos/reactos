@@ -1,5 +1,3 @@
-#include <windows.h>
-
 #include "resource.h"
 
 #define TB_IMAGE_WIDTH  16

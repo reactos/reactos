@@ -45,7 +45,7 @@
 #include "backend.h"
 #include "quilt.h"
 #include "curvelist.h"
-#include "nurbsconsts.h"
+//#include "nurbsconsts.h"
 
 /*--------------------------------------------------------------------------
  * drawCurves - main curve rendering entry point

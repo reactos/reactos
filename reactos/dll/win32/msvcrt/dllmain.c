@@ -15,7 +15,7 @@
  *
  */
 
-#include <precomp.h>
+#include "precomp.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msvcrt);
 

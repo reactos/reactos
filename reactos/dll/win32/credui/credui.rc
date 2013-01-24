@@ -19,9 +19,9 @@
  */
 
 #include "windef.h"
-#include "winbase.h"
+//#include "winbase.h"
 #include "winuser.h"
-#include "winnls.h"
+//#include "winnls.h"
 #include "credui_resources.h"
 
 /* @makedep: banner.bmp */

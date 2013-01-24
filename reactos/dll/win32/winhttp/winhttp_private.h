@@ -23,10 +23,10 @@
 # error You must include config.h to use this header
 #endif
 
-#include "wine/list.h"
-#include "wine/unicode.h"
+#include <wine/list.h>
+#include <wine/unicode.h>
 
-#include <sys/types.h>
+//#include <sys/types.h>
 #ifdef HAVE_SYS_SOCKET_H
 # include <sys/socket.h>
 #endif
@@ -42,7 +42,7 @@
 # define closesocket close
 # define ioctlsocket ioctl
 #endif
-#include "ole2.h"
+#include <ole2.h>
 
 static const WCHAR getW[]    = {'G','E','T',0};
 static const WCHAR postW[]   = {'P','O','S','T',0};

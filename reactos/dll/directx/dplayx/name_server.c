@@ -19,23 +19,23 @@
 
 /* NOTE: Methods with the NS_ prefix are name server methods */
 
-#include <stdarg.h>
-#include <string.h>
+//#include <stdarg.h>
+//#include <string.h>
 
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
-#include "windef.h"
-#include "winbase.h"
-#include "winnls.h"
-#include "wine/unicode.h"
-#include "wine/debug.h"
-#include "mmsystem.h"
+//#include "windef.h"
+//#include "winbase.h"
+//#include "winnls.h"
+#include <wine/unicode.h>
+#include <wine/debug.h>
+#include <mmsystem.h>
 
-#include "dplayx_global.h"
+//#include "dplayx_global.h"
 #include "name_server.h"
-#include "dplaysp.h"
-#include "dplayx_messages.h"
-#include "dplayx_queue.h"
+//#include "dplaysp.h"
+//#include "dplayx_messages.h"
+//#include "dplayx_queue.h"
 
 /* FIXME: Need to create a crit section, store and use it */
 

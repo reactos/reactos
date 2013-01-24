@@ -9,7 +9,7 @@
  *
  */
 
-#include <timedate.h>
+#include "timedate.h"
 
 typedef struct _TZ_INFO
 {

@@ -4,7 +4,6 @@
  * No warranty is given; refer to the file DISCLAIMER.PD within this package.
  */
 
-#include <windows.h>
 #include <excpt.h>
 #include <string.h>
 #include <stdlib.h>
@@ -12,6 +11,9 @@
 #include <memory.h>
 #include <signal.h>
 #include <stdio.h>
+
+#include <windef.h>
+#include <winbase.h>
 
 #if defined (_WIN64) && defined (__ia64__)
 #error FIXME: Unsupported __ImageBase implementation.

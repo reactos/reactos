@@ -20,22 +20,26 @@
 
 /* Msi top level apis directly related to installs */
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #define COBJMACROS
 
 #include <stdarg.h>
 
 #include "windef.h"
 #include "winbase.h"
-#include "winerror.h"
-#include "wine/debug.h"
-#include "msi.h"
-#include "msidefs.h"
-#include "objbase.h"
-#include "oleauto.h"
+//#include "winerror.h"
+#include <wine/debug.h>
+//#include "msi.h"
+//#include "msidefs.h"
+#include <objbase.h>
+#include <oleauto.h>
 
 #include "msipriv.h"
-#include "msiserver.h"
-#include "wine/unicode.h"
+#include <msiserver.h>
+#include <wine/unicode.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 

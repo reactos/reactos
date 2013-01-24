@@ -100,8 +100,7 @@
  *        Added history possibilities to right key.
  */
 
-#include <precomp.h>
-
+#include "precomp.h"
 
 SHORT maxx;
 SHORT maxy;

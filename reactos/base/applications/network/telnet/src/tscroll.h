@@ -1,6 +1,6 @@
 #pragma once
 
-#include "tconsole.h"
+//#include "tconsole.h"
 #include "tmouse.h"
 
 typedef int(stripfunc)(char *, char *, int);

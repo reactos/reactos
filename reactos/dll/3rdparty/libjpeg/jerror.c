@@ -25,6 +25,8 @@
 #include "jerror.h"
 
 #ifdef USE_WINDOWS_MESSAGEBOX
+#define WIN32_NO_STATUS
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #endif
 

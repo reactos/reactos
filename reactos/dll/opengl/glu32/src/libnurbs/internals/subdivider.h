@@ -41,7 +41,7 @@
 #include "flist.h"
 #include "slicer.h"
 #include "arctess.h"
-#include "trimvertex.h"
+//#include "trimvertex.h"
 #include "trimvertpool.h"
 
 class Arc;

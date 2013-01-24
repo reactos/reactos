@@ -36,7 +36,7 @@
 #ifndef __glumapdesc_h_
 #define __glumapdesc_h_
 
-#include "mystdio.h"
+//#include "mystdio.h"
 #include "types.h"
 #include "defines.h"
 #include "bufpool.h"

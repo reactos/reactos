@@ -1209,4 +1209,3 @@ _tWinMain(HINSTANCE hInstance,
 
     return Ret;
 }
-

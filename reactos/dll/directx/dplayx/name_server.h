@@ -19,14 +19,14 @@
 #ifndef __WINE_DPLAYX_NAMESERVER
 #define __WINE_DPLAYX_NAMESERVER
 
-#include <stdarg.h>
+//#include <stdarg.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "dplay.h"
-#include "dplaysp.h"
+//#include "windef.h"
+//#include "winbase.h"
+//#include "dplay.h"
+//#include "dplaysp.h"
 #include "dplayx_messages.h"
-#include "dplay_global.h"
+//#include "dplay_global.h"
 
 void NS_SetLocalComputerAsNameServer( LPCDPSESSIONDESC2 lpsd, LPVOID lpNSInfo );
 void NS_SetRemoteComputerAsNameServer( LPCDPSESSIONDESC2 lpsd, LPVOID lpNSInfo );

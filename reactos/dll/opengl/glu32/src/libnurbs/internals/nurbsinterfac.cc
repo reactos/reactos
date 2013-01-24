@@ -37,11 +37,11 @@
  *
  */
 
-#include "glimports.h"
-#include "mystdio.h"
-#include "nurbsconsts.h"
+//#include "glimports.h"
+//#include "mystdio.h"
+//#include "nurbsconsts.h"
 #include "nurbstess.h"
-#include "bufpool.h"
+//#include "bufpool.h"
 #include "quilt.h"
 #include "displaylist.h"
 #include "knotvector.h"

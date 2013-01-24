@@ -18,9 +18,9 @@
 
 #include "jscript.h"
 #include "engine.h"
-#include "objsafe.h"
+#include <objsafe.h>
 
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(jscript);
 

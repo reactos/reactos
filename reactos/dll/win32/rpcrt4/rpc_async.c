@@ -19,16 +19,21 @@
  *
  */
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+
 #include <stdarg.h>
 
-#include "rpc.h"
-#include "rpcndr.h"
-#include "rpcasync.h"
+#include <windef.h>
+#include <winbase.h>
+#include <rpc.h>
+#include <rpcndr.h>
+//#include "rpcasync.h"
 
-#include "wine/debug.h"
+#include <wine/debug.h>
 
-#include "rpc_binding.h"
-#include "rpc_message.h"
+//#include "rpc_binding.h"
+//#include "rpc_message.h"
 #include "ndr_stubless.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(rpc);

@@ -12,10 +12,9 @@
 #ifndef MMDRV_IOCTLS
 #define MMDRV_IOCTLS
 
-
 #include <windows.h>
-#include <mmsystem.h>
-#include <mmddk.h>
+//#include <mmsystem.h>
+//#include <mmddk.h>
 #include <winioctl.h>
 
 

@@ -20,25 +20,28 @@
 #ifndef __WINE_DMUSIC_PRIVATE_H
 #define __WINE_DMUSIC_PRIVATE_H
 
-#include <stdarg.h>
+//#include <stdarg.h>
 
 #define COBJMACROS
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
 
-#include "windef.h"
-#include "winbase.h"
-#include "winnt.h"
-#include "wingdi.h"
-#include "winuser.h"
+//#include "windef.h"
+//#include "winbase.h"
+//#include "winnt.h"
+//#include "wingdi.h"
+//#include "winuser.h"
 
-#include "wine/debug.h"
-#include "wine/list.h"
-#include "wine/unicode.h"
-#include "winreg.h"
-#include "objbase.h"
+#include <wine/debug.h>
+#include <wine/list.h>
+#include <wine/unicode.h>
+#include <winreg.h>
+#include <objbase.h>
 
-#include "dmusici.h"
-#include "dmusicf.h"
-#include "dmusics.h"
+#include <dmusici.h>
+#include <dmusicf.h>
+#include <dmusics.h>
 
 /*****************************************************************************
  * Interfaces

@@ -12,7 +12,10 @@
  * and http://win.tue.nl/~aeb/linux/kbd/scancodes-1.html
  */
 
-#include <windows.h>
+#define WIN32_NO_STATUS
+#include <stdarg.h>
+#include <windef.h>
+#include <winuser.h>
 #include <ndk/kbd.h>
 
 #ifdef _M_IA64

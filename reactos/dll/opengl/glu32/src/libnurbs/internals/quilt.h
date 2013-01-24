@@ -36,7 +36,7 @@
 #ifndef __gluquilt_h_
 #define __gluquilt_h_
 
-#include "defines.h"
+//#include "defines.h"
 #include "bufpool.h"
 #include "types.h"
 

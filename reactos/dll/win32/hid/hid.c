@@ -26,7 +26,7 @@
  * UPDATE HISTORY:
  *      07/12/2004  Created
  */
-#include <precomp.h>
+#include "precomp.h"
 
 HINSTANCE hDllInstance;
 

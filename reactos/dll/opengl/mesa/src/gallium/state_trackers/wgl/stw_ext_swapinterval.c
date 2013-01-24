@@ -26,7 +26,10 @@
  * 
  **************************************************************************/
 
-#include <windows.h>
+//#include <windows.h>
+#include <stdarg.h>
+#include <windef.h>
+#include <wingdi.h>
 
 #define WGL_WGLEXT_PROTOTYPES
 

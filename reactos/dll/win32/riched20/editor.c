@@ -225,12 +225,12 @@
  */
 
 #include "editor.h"
-#include "commdlg.h"
-#include "winreg.h"
+#include <commdlg.h>
+//#include "winreg.h"
 #define NO_SHLWAPI_STREAM 
-#include "shlwapi.h"
+//#include "shlwapi.h"
 #include "rtf.h"
-#include "imm.h"
+//#include "imm.h"
 #include "res.h"
 
 #define STACK_SIZE_DEFAULT  100

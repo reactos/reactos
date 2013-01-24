@@ -21,16 +21,16 @@
 #ifndef __WINE_MSI_QUERY_H
 #define __WINE_MSI_QUERY_H
 
-#include <stdarg.h>
+//#include <stdarg.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "objbase.h"
-#include "objidl.h"
-#include "msi.h"
-#include "msiquery.h"
+//#include "windef.h"
+//#include "winbase.h"
+//#include "objbase.h"
+//#include "objidl.h"
+//#include "msi.h"
+//#include "msiquery.h"
 #include "msipriv.h"
-#include "wine/list.h"
+//#include "wine/list.h"
 
 
 #define OP_EQ       1

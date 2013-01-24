@@ -23,12 +23,12 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <string.h>
-#include "wine/debug.h"
+//#include <string.h>
+#include <wine/debug.h>
 #include "shdocvw.h"
-#include "htiframe.h"
-#include "idispids.h"
-#include "mshtmdid.h"
+//#include "htiframe.h"
+#include <idispids.h>
+#include <mshtmdid.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(shdocvw);
 

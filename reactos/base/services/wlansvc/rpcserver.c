@@ -7,10 +7,8 @@
  */
 
 /* INCLUDES ****************************************************************/
-#include <windows.h>
-#include <iphlpapi.h>
 
-#include "wlansvc_s.h"
+#include <wlansvc_s.h>
 
 #define NDEBUG
 #include <debug.h>

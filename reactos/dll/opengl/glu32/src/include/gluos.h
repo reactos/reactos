@@ -33,8 +33,9 @@
 
 #include <stdlib.h>	    /* For _MAX_PATH definition */
 #include <stdio.h>
-#include <malloc.h>
+//#include <malloc.h>
 
+#define WIN32_NO_STATUS
 #define WIN32_LEAN_AND_MEAN
 #define NOGDI
 #define NOIME
@@ -53,7 +54,8 @@
   #define STRICT 1
 #endif
 
-#include <windows.h>
+//#include <windows.h>
+#include <string.h>
 
 /* Disable warnings */
 #if defined(_MSC_VER)

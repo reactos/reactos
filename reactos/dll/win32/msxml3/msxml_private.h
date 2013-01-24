@@ -21,9 +21,9 @@
 #ifndef __MSXML_PRIVATE__
 #define __MSXML_PRIVATE__
 
-#include "dispex.h"
+#include <dispex.h>
 
-#include "wine/unicode.h"
+#include <wine/unicode.h>
 
 #ifndef __WINE_CONFIG_H
 # error You must include config.h to use this header

@@ -34,7 +34,7 @@
 #define _SAMPLECOMP_H
 
 #include "sampleMonoPoly.h"
-#include "rectBlock.h"
+//#include "rectBlock.h"
 
 void sampleConnectedComp(Real* topVertex, Real* botVertex,
 		    vertexArray* leftChain, 

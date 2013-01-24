@@ -5,10 +5,12 @@
  * PROGRAMMERS:     Dmitry Chapyshev (dmitry@reactos.org)
  */
 
-#include <windows.h>
-#include <npapi.h>
+#define WIN32_NO_STATUS
+#include <windef.h>
+#include <winnetwk.h>
+//#include <npapi.h>
 
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(ntlanman);
 

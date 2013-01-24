@@ -36,10 +36,10 @@
 */
 
 #include "gluos.h"
-#include <stdlib.h>
-#include <stdio.h>
+//#include <stdlib.h>
+//#include <stdio.h>
 #include <assert.h>
-#include <GL/gl.h>
+//#include <GL/gl.h>
 #include "bezierEval.h"
 #include "bezierPatchMesh.h"
 

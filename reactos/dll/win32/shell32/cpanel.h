@@ -20,7 +20,7 @@
 #ifndef __WINE_SHELL_CPANEL_H
 #define __WINE_SHELL_CPANEL_H
 
-#include "cpl.h"
+#include <cpl.h>
 
 typedef struct CPlApplet
 {

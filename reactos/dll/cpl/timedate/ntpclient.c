@@ -7,7 +7,7 @@
  *
  */
 
-#include <timedate.h>
+#include "timedate.h"
 
 #define TIMEOUT 4000 /* 4 second timeout */
 

@@ -80,7 +80,6 @@ DoCreate(PCREATE_DATA Data)
     return bRet;
 }
 
-
 static LPTSTR
 GetStringFromDialog(PCREATE_DATA Data,
                     UINT id)
@@ -110,7 +109,6 @@ GetStringFromDialog(PCREATE_DATA Data,
 
     return lpString;
 }
-
 
 static BOOL
 GetDataFromDialog(PCREATE_DATA Data)
@@ -162,7 +160,6 @@ FreeMemory(PCREATE_DATA Data)
              0,
              Data);
 }
-
 
 INT_PTR CALLBACK
 CreateHelpDialogProc(HWND hDlg,
@@ -219,7 +216,6 @@ CreateHelpDialogProc(HWND hDlg,
 
     return FALSE;
 }
-
 
 INT_PTR CALLBACK
 CreateDialogProc(HWND hDlg,

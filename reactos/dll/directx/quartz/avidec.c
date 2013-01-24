@@ -18,25 +18,25 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
+#include <config.h>
 
 #include "quartz_private.h"
 #include "pin.h"
 
-#include "uuids.h"
-#include "amvideo.h"
-#include "windef.h"
-#include "winbase.h"
-#include "dshow.h"
-#include "strmif.h"
-#include "vfwmsgs.h"
-#include "vfw.h"
-#include "dvdmedia.h"
+//#include "uuids.h"
+//#include "amvideo.h"
+//#include "windef.h"
+//#include "winbase.h"
+//#include "dshow.h"
+//#include "strmif.h"
+//#include "vfwmsgs.h"
+#include <vfw.h>
+#include <dvdmedia.h>
 
 #include <assert.h>
 
-#include "wine/unicode.h"
-#include "wine/debug.h"
+//#include <wine/unicode.h>
+#include <wine/debug.h>
 
 #include "transform.h"
 

@@ -6,7 +6,7 @@
  * NOTES:           Misc functions.
  * 
  */
-#include <winsta.h>
+#include "winsta.h"
 
 VOID
 WINSTAAPI LogonIdFromWinStationNameA(PVOID A,

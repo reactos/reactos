@@ -19,19 +19,21 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define WIN32_NO_STATUS
+
 #include <assert.h>
 #include <stdarg.h>
-#include <string.h>
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "winnls.h"
-#include "mmsystem.h"
-#include "mmreg.h"
-#include "msacm.h"
-#include "msacmdrv.h"
-#include "wine/debug.h"
+//#include <string.h>
+#include <windef.h>
+#include <winbase.h>
+#include <wingdi.h>
+#include <winuser.h>
+#include <winnls.h>
+//#include "mmsystem.h"
+//#include "mmreg.h"
+//#include "msacm.h"
+#include <msacmdrv.h>
+#include <wine/debug.h>
 
 /* see http://www.pcisys.net/~melanson/codecs/adpcm.txt for the details */
 

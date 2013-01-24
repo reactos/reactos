@@ -1,8 +1,10 @@
 #ifndef _PRECOMP_H__
 #define _PRECOMP_H__
 
-#include <windows.h>
-#include <sfc.h>
+#define WIN32_NO_STATUS
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
 #include <srrestoreptapi.h>
 
 DWORD WINAPI sfc_8(VOID);

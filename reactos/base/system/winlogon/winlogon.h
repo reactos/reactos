@@ -29,8 +29,9 @@
 #define USE_GETLASTINPUTINFO
 
 #define WIN32_NO_STATUS
-#include <stdio.h>
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <mmsystem.h>
 #include <userenv.h>
 #include <winwlx.h>
 #include <cmfuncs.h>
@@ -38,13 +39,13 @@
 #include <exfuncs.h>
 #include <setypes.h>
 #include <sefuncs.h>
-#include <ntsecapi.h>
-#include <accctrl.h>
 #include <aclapi.h>
 #include <strsafe.h>
 
 #include <reactos/undocuser.h>
 #include <reactos/winlogon.h>
+
+#include <wine/debug.h>
 
 #include "setup.h"
 #include "resource.h"

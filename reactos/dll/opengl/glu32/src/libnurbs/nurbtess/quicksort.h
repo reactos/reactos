@@ -33,8 +33,8 @@
 #ifndef _QUICKSORT_H
 #define _QUICKSORT_H
 
-#include <stdlib.h>
-#include <stdio.h>
+//#include <stdlib.h>
+//#include <stdio.h>
 
 void quicksort(void *v[], int left, int right,
 	       int (*comp) (void *, void *));

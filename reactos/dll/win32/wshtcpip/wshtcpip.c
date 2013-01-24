@@ -7,7 +7,7 @@
  * REVISIONS:
  *   CSH 01/09-2000 Created
  */
-#include <wshtcpip.h>
+#include "wshtcpip.h"
 #define NDEBUG
 #include <debug.h>
 

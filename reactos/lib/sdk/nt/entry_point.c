@@ -11,7 +11,7 @@
 /* PSDK/NDK Headers */
 #define WIN32_NO_STATUS
 #include <stdio.h>
-#include <windows.h>
+//#include <windows.h>
 #define NTOS_MODE_USER
 #include <ndk/psfuncs.h>
 #include <ndk/rtlfuncs.h>

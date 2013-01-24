@@ -25,7 +25,7 @@
  * NOTES:
  */
 
-#include "precomp.h"
+#include <precomp.h>
 #include <debug.h>
 
 // global variables in a dll are process-global

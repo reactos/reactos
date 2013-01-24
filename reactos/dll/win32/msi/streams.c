@@ -18,21 +18,25 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
+//#include <stdarg.h>
 
 #define COBJMACROS
 
-#include "windef.h"
-#include "winbase.h"
-#include "winerror.h"
-#include "msi.h"
-#include "msiquery.h"
-#include "objbase.h"
+//#include "windef.h"
+//#include "winbase.h"
+//#include "winerror.h"
+//#include "msi.h"
+//#include "msiquery.h"
+//#include "objbase.h"
 #include "msipriv.h"
-#include "query.h"
+//#include "query.h"
 
-#include "wine/debug.h"
-#include "wine/unicode.h"
+#include <wine/debug.h>
+//#include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msidb);
 

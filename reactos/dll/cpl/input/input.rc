@@ -1,5 +1,8 @@
+#include <windef.h>
+#include <winuser.h>
+#include <commctrl.h>
+
 #include "resource.h"
-#include <windows.h>
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 

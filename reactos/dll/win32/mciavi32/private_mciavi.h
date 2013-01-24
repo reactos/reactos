@@ -21,16 +21,20 @@
 #ifndef __WINE_PRIVATE_MCIAVI_H
 #define __WINE_PRIVATE_MCIAVI_H
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #include <stdarg.h>
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "mmddk.h"
-#include "digitalv.h"
-#include "vfw.h"
-#include "wownt32.h"
-#include "mciavi.h"
+#include <windef.h>
+//#include "winbase.h"
+#include <wingdi.h>
+//#include "winuser.h"
+#include <mmddk.h>
+#include <digitalv.h>
+#include <vfw.h>
+#include <wownt32.h>
+#include <mciavi.h>
 
 struct MMIOPos {
     DWORD	dwOffset;

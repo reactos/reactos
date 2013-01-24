@@ -19,24 +19,28 @@
  *
  */
 
-#include "config.h"
-#include "wine/port.h"
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
+#include <config.h>
+//#include "wine/port.h"
 
 #include <stdarg.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "winreg.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "richedit.h"
-#include "imm.h"
-#include "shlwapi.h"
-#include "oleidl.h"
-#include "initguid.h"
-#include "textserv.h"
+#include <windef.h>
+#include <winbase.h>
+#include <winreg.h>
+#include <wingdi.h>
+#include <winuser.h>
+#include <richedit.h>
+#include <imm.h>
+#include <shlwapi.h>
+#include <oleidl.h>
+#include <initguid.h>
+#include <textserv.h>
 
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(msftedit);
 

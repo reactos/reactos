@@ -36,10 +36,10 @@
 #ifndef __gluslicer_h_
 #define __gluslicer_h_
 
-#include "trimregion.h"
+//#include "trimregion.h"
 #include "mesher.h"
 #include "coveandtiler.h"
-#include "primitiveStream.h"
+//#include "primitiveStream.h"
 #include "rectBlock.h"
 
 class Backend;

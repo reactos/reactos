@@ -25,7 +25,7 @@
  * UPDATE HISTORY:
  *      09/25/2004  Created
  */
-#include <precomp.h>
+#include "precomp.h"
 
 HINSTANCE hInstance = NULL;
 static LONG dllrefs = 0;

@@ -8,10 +8,9 @@
 
 /* INCLUDES *****************************************************************/
 
-#define WIN32_NO_STATUS
-#include <windows.h>
-
-#include "wine/debug.h"
+#include <windef.h>
+#include <winsvc.h>
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(spoolsv);
 

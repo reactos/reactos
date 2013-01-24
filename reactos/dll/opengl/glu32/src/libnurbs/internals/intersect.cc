@@ -37,14 +37,14 @@
  *
  */
 
-#include "glimports.h"
-#include "myassert.h"
-#include "mystdio.h"
+//#include "glimports.h"
+//#include "myassert.h"
+//#include "mystdio.h"
 #include "subdivider.h"
-#include "arc.h"
-#include "bin.h"
+//#include "arc.h"
+//#include "bin.h"
 #include "backend.h"
-#include "trimvertpool.h"
+//#include "trimvertpool.h"
 
 /*#define NOTDEF*/
 

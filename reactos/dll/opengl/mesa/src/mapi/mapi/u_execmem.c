@@ -87,8 +87,7 @@ init_map(void)
 
 #elif defined(_WIN32)
 
-#include <windows.h>
-
+//#include <windows.h>
 
 /*
  * Avoid Data Execution Prevention.

@@ -37,15 +37,15 @@
  *
  */
 
-#include "glimports.h"
-#include "mystdio.h"
-#include "myassert.h"
+//#include "glimports.h"
+//#include "mystdio.h"
+//#include "myassert.h"
 #include "arc.h"
-#include "arctess.h"
+//#include "arctess.h"
 #include "bezierarc.h"
-#include "bin.h"
+//#include "bin.h"
 #include "mapdesc.h"
-#include "nurbsconsts.h"
+//#include "nurbsconsts.h"
 #include "subdivider.h"
 
 /*-----------------------------------------------------------------------------

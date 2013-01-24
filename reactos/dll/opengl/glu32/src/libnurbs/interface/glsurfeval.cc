@@ -39,12 +39,12 @@
 
 /* Polynomial Evaluator Interface */
 #include "gluos.h"
-#include <stdio.h>
-#include "glimports.h"
+//#include <stdio.h>
+//#include "glimports.h"
 #include "glrenderer.h"
-#include "glsurfeval.h"
-#include "nurbsconsts.h"
-#include "bezierPatchMesh.h"
+//#include "glsurfeval.h"
+//#include "nurbsconsts.h"
+//#include "bezierPatchMesh.h"
 
 
 //extern int surfcount;

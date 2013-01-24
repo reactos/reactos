@@ -137,7 +137,7 @@
  *        Added commands help display to help command (ex. : "help cmd")
  */
 
-#include <precomp.h>
+#include "precomp.h"
 
 #ifdef INCLUDE_CMD_CHDIR
 

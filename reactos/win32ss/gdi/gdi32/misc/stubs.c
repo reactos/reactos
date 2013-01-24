@@ -8,7 +8,7 @@
  *
  */
 
-#include "precomp.h"
+#include <precomp.h>
 #include <debug.h>
 
 #define SIZEOF_DEVMODEA_300 124

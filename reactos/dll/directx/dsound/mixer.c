@@ -25,15 +25,19 @@
 #include <stdarg.h>
 #include <math.h>	/* Insomnia - pow() function */
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #define NONAMELESSSTRUCT
 #define NONAMELESSUNION
-#include "windef.h"
-#include "winbase.h"
-#include "mmsystem.h"
-#include "winternl.h"
-#include "wine/debug.h"
-#include "dsound.h"
-#include "dsdriver.h"
+#include <windef.h>
+#include <winbase.h>
+#include <mmsystem.h>
+#include <winternl.h>
+#include <wine/debug.h>
+#include <dsound.h>
+#include <dsdriver.h>
 #include "dsound_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(dsound);

@@ -17,7 +17,6 @@
 
 #pragma once
 
-#include <windows.h>
 #include "api.h"
 
 typedef NTSTATUS (WINAPI *CSRSS_ENUM_PROCESSES_PROC)(CSRSS_ENUM_PROCESS_PROC EnumProc,

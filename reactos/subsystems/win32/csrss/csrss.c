@@ -10,10 +10,14 @@
 /* INCLUDES *******************************************************************/
 
 #define WIN32_NO_STATUS
-#include <windows.h>
 #define NTOS_MODE_USER
-#include <ndk/ntndk.h>
+
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <wincon.h>
 #include <api.h>
+
 #define NDEBUG
 #include <debug.h>
 

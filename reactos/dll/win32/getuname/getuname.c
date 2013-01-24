@@ -5,7 +5,7 @@
  * PROGRAMMERS:     Dmitry Chapyshev (dmitry@reactos.org)
  */
 
-#include <windows.h>
+#include <windef.h>
 
 int
 WINAPI

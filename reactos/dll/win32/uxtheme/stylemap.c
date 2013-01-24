@@ -19,7 +19,7 @@
  */
 
 #include "uxthemep.h"
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 typedef struct _MSSTYLES_PROPERTY_MAP {
     WORD dwPrimitiveType;

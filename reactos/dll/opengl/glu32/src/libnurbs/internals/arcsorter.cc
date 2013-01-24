@@ -40,8 +40,8 @@
 #ifndef __gluarcsorter_c_
 #define __gluarcsorter_c_
 
-#include "glimports.h"
-#include "arc.h"
+//#include "glimports.h"
+//#include "arc.h"
 #include "arcsorter.h"
 #include "subdivider.h"
 

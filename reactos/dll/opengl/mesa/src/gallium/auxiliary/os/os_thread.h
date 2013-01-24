@@ -125,7 +125,10 @@ typedef pthread_cond_t pipe_condvar;
 
 #elif defined(PIPE_SUBSYSTEM_WINDOWS_USER)
 
-#include <windows.h>
+//#include <windows.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winver.h>
 
 /* pipe_thread
  */

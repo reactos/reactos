@@ -1,29 +1,31 @@
 #ifndef _EXPLORER_PRECOMP__H_
 #define _EXPLORER_PRECOMP__H_
 #define COBJMACROS
-#include <windows.h>
-#include <commctrl.h>
-#include <oleidl.h>
-#include <ole2.h>
+
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winreg.h>
+#include <wingdi.h>
+#include <winnls.h>
+#include <winver.h>
+#include <shellapi.h>
 #include <shlobj.h>
 #include <shlobj_undoc.h>
 #include <shlwapi.h>
-#include <servprov.h>
-#include <shlguid.h>
 #include <shlguid_undoc.h>
-#include <ocidl.h>
-#include <objidl.h>
-#include <docobj.h>
 #include <tchar.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <uxtheme.h>
 
 #include "tmschema.h"
 #include "resource.h"
 #include "comcsup.h"
-#include "todo.h"
-#include "initguid.h"
+//#include "todo.h"
+//#include "initguid.h"
 #include "undoc.h"
 
 /* dynamic imports due to lack of support in msvc linker libs */

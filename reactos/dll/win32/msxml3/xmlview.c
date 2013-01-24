@@ -16,9 +16,12 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
 
-#include <stdarg.h>
+#include <config.h>
+
+//#include <stdarg.h>
 
 #define COBJMACROS
 #define NONAMELESSUNION
@@ -27,16 +30,17 @@
 #include <libxml/parser.h>
 #endif
 
-#include "windef.h"
-#include "winbase.h"
-#include "ole2.h"
-#include "msxml6.h"
-#include "mshtml.h"
-#include "mshtmhst.h"
-#include "perhist.h"
-#include "docobj.h"
+#include <windef.h>
+#include <winbase.h>
+#include <wingdi.h>
+#include <ole2.h>
+#include <msxml6.h>
+#include <mshtml.h>
+#include <mshtmhst.h>
+#include <perhist.h>
+//#include "docobj.h"
 
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 #include "msxml_private.h"
 

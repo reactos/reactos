@@ -16,7 +16,7 @@
  */
 
 
-#include <precomp.h>
+#include "precomp.h"
 
 #if (  defined(INCLUDE_CMD_WINDOW) ||  defined(INCLUDE_CMD_ACTIVATE)  )
 

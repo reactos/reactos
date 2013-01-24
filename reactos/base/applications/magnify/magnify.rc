@@ -1,5 +1,7 @@
+#include <windef.h>
+#include <winuser.h>
 
-#include "magnifier.h"
+#include "resource.h"
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 

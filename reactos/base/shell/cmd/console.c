@@ -17,8 +17,7 @@
  *        Fixed ConPrintfPaging
  */
 
-#include <precomp.h>
-
+#include "precomp.h"
 
 #define OUTPUT_BUFFER_SIZE  4096
 

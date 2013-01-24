@@ -29,7 +29,7 @@
 #define STW_WGL_H_
 
 
-#include <windows.h>
+//#include <windows.h>
 
 #include <GL/gl.h>
 

@@ -21,7 +21,7 @@
 //#include <stdlib.h>
 //#include <string.h>
 //#include "bsops.h"
-#include <precomp.h>
+#include "precomp.h"
 
 /* globals */
 static char * g_bs = 0;
@@ -836,4 +836,3 @@ bs_copy_box(char * dst, int x, int y, int cx, int cy, int line_size)
     }
   }
 }
-

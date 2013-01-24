@@ -34,7 +34,7 @@
 
 #include "gluos.h"
 #include <assert.h>
-#include "mesh.h"
+//#include "mesh.h"
 #include "geom.h"
 
 int __gl_vertLeq( GLUvertex *u, GLUvertex *v )

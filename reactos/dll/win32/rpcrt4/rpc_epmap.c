@@ -20,20 +20,27 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+
 #include <stdarg.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "winerror.h"
+#include <windef.h>
+#include <winbase.h>
+//#include "winerror.h"
 
-#include "rpc.h"
+#include <rpc.h>
 
-#include "wine/debug.h"
-#include "wine/exception.h"
+#include <wine/debug.h>
+#include <wine/exception.h>
 
 #include "rpc_binding.h"
-#include "epm_c.h"
+//#include "epm_c.h"
 #include "epm_towers.h"
+
+#ifdef __REACTOS__
+DEFINE_GUID(GUID_NULL,0,0,0,0,0,0,0,0,0,0,0);
+#endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 

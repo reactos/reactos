@@ -21,14 +21,17 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <string.h>
+#define WIN32_NO_STATUS
+#define WIN32_LEAN_AND_MEAN
+
+//#include <string.h>
 #include <stdarg.h>
 
-#include "windef.h"
-#include "winbase.h"
+#include <windef.h>
+#include <winbase.h>
 #include "handle.h"
 
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(handle);
 

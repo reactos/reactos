@@ -26,20 +26,24 @@
  *      - no thread safety
  */
 
-#include <stdarg.h>
-#include <stdio.h>
-#include <string.h>
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
 
-#include "windef.h"
-#include "winbase.h"
-#include "winreg.h"
-#include "winnls.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "commdlg.h"
-#include "vfw.h"
+#include <stdarg.h>
+//#include <stdio.h>
+//#include <string.h>
+
+#include <windef.h>
+#include <winbase.h>
+#include <winreg.h>
+#include <winnls.h>
+#include <wingdi.h>
+#include <winuser.h>
+#include <commdlg.h>
+#include <vfw.h>
 #include "msvideo_private.h"
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 /* Drivers32 settings */
 #define HKLM_DRIVERS32 "Software\\Microsoft\\Windows NT\\CurrentVersion\\Drivers32"

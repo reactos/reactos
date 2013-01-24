@@ -31,19 +31,22 @@
  *  0x10: SAFEARRAYBOUNDS[0...]
  */
 
-#include "config.h"
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
 
-#include <string.h>
+#include <config.h>
+
+//#include <string.h>
 #include <stdarg.h>
-#include <stdio.h>
+//#include <stdio.h>
 
 #define COBJMACROS
 
-#include "windef.h"
-#include "winerror.h"
-#include "winbase.h"
-#include "variant.h"
-#include "wine/debug.h"
+#include <windef.h>
+//#include "winerror.h"
+#include <winbase.h>
+#include <variant.h>
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(variant);
 

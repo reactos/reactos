@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <regedit.h>
+#include "regedit.h"
 
 
 #define CX_ICON    16

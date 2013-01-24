@@ -7,7 +7,7 @@
  */
 
 #include "precomp.h"
-#include <d3d9.h>
+//#include <d3d9.h>
 
 BOOL D3D9Test(HWND hWnd)
 {

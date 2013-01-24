@@ -29,7 +29,7 @@
 #define STW_EXTGALLIUM_H_
 
 
-#include <windows.h>
+//#include <windows.h>
 
 
 struct pipe_screen;

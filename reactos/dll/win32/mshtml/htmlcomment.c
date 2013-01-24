@@ -17,18 +17,22 @@
  */
 
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #include <stdarg.h>
 
 #define COBJMACROS
 
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "ole2.h"
+#include <windef.h>
+#include <winbase.h>
+//#include "winuser.h"
+#include <ole2.h>
 
 #include "mshtml_private.h"
 
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
 

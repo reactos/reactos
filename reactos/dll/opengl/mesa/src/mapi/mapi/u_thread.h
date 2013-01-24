@@ -48,7 +48,10 @@
 #include <pthread.h> /* POSIX threads headers */
 #endif
 #ifdef _WIN32
-#include <windows.h>
+//#include <windows.h>
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
 #endif
 
 #if defined(PTHREADS) || defined(_WIN32)

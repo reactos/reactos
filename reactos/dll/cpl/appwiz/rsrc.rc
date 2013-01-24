@@ -1,6 +1,3 @@
-#include "resource.h"
-#include <windows.h>
-
 #ifdef LANGUAGE_BG_BG
     #include "lang/bg-BG.rc"
 #endif

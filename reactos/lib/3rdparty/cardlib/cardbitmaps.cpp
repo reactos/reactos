@@ -4,7 +4,15 @@
 //    Freeware
 //    Copyright J Brown 2001
 //
-#include <windows.h>
+
+//#include <windows.h>
+#define WIN32_NO_STATUS
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <wingdi.h>
+#include <winuser.h>
+
 #include "globals.h"
 #include "cardcolor.h"
 

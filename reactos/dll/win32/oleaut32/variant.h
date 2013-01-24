@@ -19,10 +19,10 @@
  */
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
-#include "windef.h"
-#include "winerror.h"
-#include "objbase.h"
-#include "oleauto.h"
+//#include "windef.h"
+//#include "winerror.h"
+#include <objbase.h>
+#include <oleauto.h>
 #include <math.h>
 
 /* Get just the type from a variant pointer */

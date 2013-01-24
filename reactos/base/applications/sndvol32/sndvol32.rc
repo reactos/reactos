@@ -1,6 +1,7 @@
-/* $Id$ */
+#include <windef.h>
+#include <winuser.h>
+#include <commctrl.h>
 
-#include <windows.h>
 #include "resources.h"
 
 #define REACTOS_STR_FILE_DESCRIPTION	"ReactOS Sound Volume Control\0"
@@ -9,4 +10,3 @@
 #include <reactos/version.rc>
 
 #include "rsrc.rc"
-

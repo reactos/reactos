@@ -18,15 +18,15 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <string.h>
-#include "winerror.h"
-#include "wine/debug.h"
+//#include <string.h>
+//#include "winerror.h"
+#include <wine/debug.h>
 
-#include "dpinit.h"
-#include "dplaysp.h"
-#include "dplay_global.h"
+//#include "dpinit.h"
+//#include "dplaysp.h"
+//#include "dplay_global.h"
 #include "name_server.h"
-#include "dplayx_messages.h"
+//#include "dplayx_messages.h"
 
 #include "dplayx_global.h" /* FIXME: For global hack */
 

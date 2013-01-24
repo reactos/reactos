@@ -18,8 +18,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
+#include <stdarg.h>
+#include <windef.h>
+#include <winuser.h>
+#include <wingdi.h>
 
 /***********************************************************************
  *           WinGCreateDC   (WING32.@)

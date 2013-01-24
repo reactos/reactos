@@ -1,9 +1,11 @@
-#include <windows.h>
-#include <windns.h>
+#define WIN32_NO_STATUS
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#define _INC_WINDOWS
 #include <winsock2.h>
 #include <tchar.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <iphlpapi.h>
 
 #define TypeA       "A"

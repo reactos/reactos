@@ -18,8 +18,8 @@
    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
-#include <winsock2.h> /* winsock2.h first */
-#include <precomp.h>
+//#include <winsock2.h> /* winsock2.h first */
+#include "precomp.h"
 
 extern char g_username[];
 extern char g_hostname[];

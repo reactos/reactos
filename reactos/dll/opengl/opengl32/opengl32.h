@@ -28,18 +28,20 @@ extern "C" {
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+//#include <string.h>
 
-#define WIN32_LEAN_AND_MEAN
 #define WIN32_NO_STATUS
-#include <windows.h>
+#include <windef.h>
+#include <winbase.h>
 #include <winreg.h>
+#include <wingdi.h>
+#include <winuser.h>
+#include <winddi.h>
 
 #define NTOS_MODE_USER
-#include <winddi.h>
 #include <ndk/pstypes.h>
 
-#include <GL/gl.h>
+//#include <GL/gl.h>
 #include <GL/glu.h>
 
 /* gl function list */

@@ -20,26 +20,30 @@
 #ifndef HHCTRL_H
 #define HHCTRL_H
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #include <stdarg.h>
 
 #define COBJMACROS
 
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "winnls.h"
-#include "htmlhelp.h"
-#include "ole2.h"
-#include "exdisp.h"
-#include "mshtmhst.h"
-#include "commctrl.h"
+#include <windef.h>
+#include <winbase.h>
+#include <winuser.h>
+#include <winnls.h>
+#include <htmlhelp.h>
+#include <ole2.h>
+#include <exdisp.h>
+#include <mshtmhst.h>
+#include <commctrl.h>
 
 #ifdef INIT_GUID
-#include "initguid.h"
+#include <initguid.h>
 #endif
 
-#include "wine/itss.h"
-#include "wine/unicode.h"
+#include <wine/itss.h>
+#include <wine/unicode.h>
 
 #define WB_GOBACK     0
 #define WB_GOFORWARD  1

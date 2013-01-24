@@ -15,8 +15,7 @@ BOOL StringToColor(LPWORD lpColor, LPTSTR*str)
 is to be called
 other are internal service functions*/
 
-
-#include <precomp.h>
+#include "precomp.h"
 
 #define _B FOREGROUND_BLUE
 #define _G FOREGROUND_GREEN

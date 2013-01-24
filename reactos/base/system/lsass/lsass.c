@@ -25,13 +25,12 @@
  * 		Compiled successfully with egcs 1.1.2
  */
 #define WIN32_NO_STATUS
-#include <windows.h>
 #define NTOS_MODE_USER
+
 #include <ndk/psfuncs.h>
 
 #include <lsass/lsasrv.h>
 #include <samsrv/samsrv.h>
-#include <lsass/lsass.h>
 
 #define NDEBUG
 #include <debug.h>

@@ -1,17 +1,17 @@
 #pragma once
 
-#include <windows.h>
-#include "tnconfig.h"
+//#include <windows.h>
+//#include "tnconfig.h"
 #include "ttelhndl.h"
-#include "tncon.h"
-#include "tnerror.h"
+//#include "tncon.h"
+//#include "tnerror.h"
 #include "tparams.h"
-#include "keytrans.h"
-#include "ansiprsr.h"
-#include "tcharmap.h"
-#include "tnclip.h"
-#include "tmouse.h"
-#include "tmapldr.h"
+//#include "keytrans.h"
+//#include "ansiprsr.h"
+//#include "tcharmap.h"
+//#include "tnclip.h"
+//#include "tmouse.h"
+//#include "tmapldr.h"
 
 class Telnet {
 public:

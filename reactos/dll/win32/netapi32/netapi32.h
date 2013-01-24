@@ -4,28 +4,28 @@
 
 #include <stdarg.h>
 
-#include "ntstatus.h"
+//#include "ntstatus.h"
 #define WIN32_NO_STATUS
-#include "windef.h"
-#include "winbase.h"
-#include "winerror.h"
-#include "lmcons.h"
-#include "lmaccess.h"
-#include "lmapibuf.h"
-#include "lmbrowsr.h"
-#include "lmerr.h"
-#include "lmshare.h"
-#include "lmuse.h"
-#include "ntsecapi.h"
-#include "dsrole.h"
-#include "dsgetdc.h"
-#include "wine/debug.h"
-#include "wine/unicode.h"
-#include "wine/list.h"
+#include <windef.h>
+#include <winbase.h>
+//#include "winerror.h"
+//#include "lmcons.h"
+#include <lmaccess.h>
+#include <lmapibuf.h>
+#include <lmbrowsr.h>
+#include <lmerr.h>
+//#include "lmshare.h"
+//#include "lmuse.h"
+#include <ntsecapi.h>
+#include <dsrole.h>
+#include <dsgetdc.h>
+#include <wine/debug.h>
+//#include "wine/unicode.h"
+#include <wine/list.h>
 
 #define NTOS_MODE_USER
 #include <ndk/rtlfuncs.h>
-#include "ntsam.h"
+#include <ntsam.h>
 
 
 NET_API_STATUS
