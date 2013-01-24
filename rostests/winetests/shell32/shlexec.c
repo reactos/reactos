@@ -43,6 +43,7 @@
 #include "wtypes.h"
 #include "winbase.h"
 #include "windef.h"
+#include "ddeml.h"
 #include "shellapi.h"
 #include "shlwapi.h"
 #include "wine/test.h"

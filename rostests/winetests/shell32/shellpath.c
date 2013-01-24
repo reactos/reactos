@@ -29,6 +29,7 @@
 #include "winbase.h"
 #include "shlguid.h"
 #include "shlobj.h"
+#include "shellapi.h"
 #include "shlwapi.h"
 #include "knownfolders.h"
 #include "wine/test.h"
