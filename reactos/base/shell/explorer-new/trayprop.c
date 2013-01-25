@@ -361,38 +361,26 @@ InitPropSheetPage(PROPSHEETPAGE *psp,
 }
 
 
-HWND
-DisplayTrayProperties(ITrayWindow *Tray)
+VOID
+DisplayTrayProperties(IN HWND hwndOwner)
 {
-    PPROPSHEET_INFO pPropInfo;
+    PROPSHEET_INFO propInfo;
     PROPSHEETHEADER psh;
     PROPSHEETPAGE psp[5];
     TCHAR szCaption[256];
-
-    pPropInfo = HeapAlloc(hProcessHeap,
-                          HEAP_ZERO_MEMORY,
-                          sizeof(PROPSHEET_INFO));
-    if (!pPropInfo)
-    {
-        return NULL;
-    }
 
     if (!LoadString(hExplorerInstance,
                     IDS_TASKBAR_STARTMENU_PROP_CAPTION,
                     szCaption,
                     sizeof(szCaption) / sizeof(szCaption[0])))
     {
-        HeapFree(hProcessHeap,
-                 0,
-                 pPropInfo);
-
-        return NULL;
+        return;
     }
 
     ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
     psh.dwSize = sizeof(PROPSHEETHEADER);
     psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_PROPTITLE;
-    psh.hwndParent = NULL;
+    psh.hwndParent = hwndOwner;
     psh.hInstance = hExplorerInstance;
     psh.hIcon = NULL;
     psh.pszCaption = szCaption;
@@ -400,18 +388,11 @@ DisplayTrayProperties(ITrayWindow *Tray)
     psh.nStartPage = 0;
     psh.ppsp = psp;
 
-    InitPropSheetPage(&psp[0], IDD_TASKBARPROP_TASKBAR, TaskbarPageProc, (LPARAM)pPropInfo);
-    InitPropSheetPage(&psp[1], IDD_TASKBARPROP_STARTMENU, StartMenuPageProc, (LPARAM)pPropInfo);
-    InitPropSheetPage(&psp[2], IDD_TASKBARPROP_NOTIFICATION, NotificationPageProc, (LPARAM)pPropInfo);
-    InitPropSheetPage(&psp[3], IDD_TASKBARPROP_TOOLBARS, ToolbarsPageProc, (LPARAM)pPropInfo);
-    InitPropSheetPage(&psp[4], IDD_TASKBARPROP_ADVANCED, AdvancedSettingsPageProc, (LPARAM)pPropInfo);
+    InitPropSheetPage(&psp[0], IDD_TASKBARPROP_TASKBAR, TaskbarPageProc, (LPARAM)&propInfo);
+    InitPropSheetPage(&psp[1], IDD_TASKBARPROP_STARTMENU, StartMenuPageProc, (LPARAM)&propInfo);
+    InitPropSheetPage(&psp[2], IDD_TASKBARPROP_NOTIFICATION, NotificationPageProc, (LPARAM)&propInfo);
+    InitPropSheetPage(&psp[3], IDD_TASKBARPROP_TOOLBARS, ToolbarsPageProc, (LPARAM)&propInfo);
+    InitPropSheetPage(&psp[4], IDD_TASKBARPROP_ADVANCED, AdvancedSettingsPageProc, (LPARAM)&propInfo);
 
     PropertySheet(&psh);
-
-    HeapFree(hProcessHeap,
-             0,
-             pPropInfo);
-
-    // FIXME: return the HWND
-    return NULL;
 }

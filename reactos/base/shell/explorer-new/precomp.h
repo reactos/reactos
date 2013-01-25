@@ -269,8 +269,8 @@ ProcessStartupItems(VOID);
  * trayprop.h
  */
 
-HWND
-DisplayTrayProperties(ITrayWindow *Tray);
+VOID
+DisplayTrayProperties(IN HWND hwndOwner);
 
 /*
  * desktop.c

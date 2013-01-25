@@ -92,7 +92,7 @@ typedef struct
     IMenuPopup *StartMenuPopup;
     HBITMAP hbmStartMenu;
 
-    HWND hWndTrayProperties;
+    HWND hwndTrayPropertiesOwner;
     HWND hwndRunFileDlgOwner;
 } ITrayWindowImpl;
 
@@ -1750,19 +1750,56 @@ ITrayWIndowImpl_GetCaptionFonts(IN OUT ITrayWindow *iface,
     return This->hCaptionFont;
 }
 
+static DWORD WINAPI
+TrayPropertiesThread(IN OUT PVOID pParam)
+{
+    ITrayWindowImpl *This = pParam;
+    HWND hwnd;
+    RECT posRect;
+
+    GetWindowRect(This->hwndStart, &posRect);
+    hwnd = CreateWindowEx(0,
+                          WC_STATIC,
+                          NULL,
+                          WS_OVERLAPPED | WS_DISABLED | WS_CLIPSIBLINGS | WS_BORDER | SS_LEFT,
+                          posRect.left,
+                          posRect.top,
+                          posRect.right - posRect.left,
+                          posRect.bottom - posRect.top,
+                          NULL,
+                          NULL,
+                          NULL,
+                          NULL);
+
+    This->hwndTrayPropertiesOwner = hwnd;
+
+    DisplayTrayProperties(hwnd);
+
+    This->hwndTrayPropertiesOwner = NULL;
+    DestroyWindow(hwnd);
+
+    return 0;
+}
+
 static HWND STDMETHODCALLTYPE
 ITrayWindowImpl_DisplayProperties(IN OUT ITrayWindow *iface)
 {
     ITrayWindowImpl *This = impl_from_ITrayWindow(iface);
+    HWND hTrayProp;
 
-    if (This->hWndTrayProperties != NULL)
+    if (This->hwndTrayPropertiesOwner)
     {
-        BringWindowToTop(This->hWndTrayProperties);
-        return This->hWndTrayProperties;
+        hTrayProp = GetLastActivePopup(This->hwndTrayPropertiesOwner);
+        if (hTrayProp != NULL &&
+            hTrayProp != This->hwndTrayPropertiesOwner)
+        {
+            SetForegroundWindow(hTrayProp);
+            return NULL;
+        }
     }
 
-    This->hWndTrayProperties = DisplayTrayProperties(ITrayWindow_from_impl(This));
-    return This->hWndTrayProperties;
+    CloseHandle(CreateThread(NULL, 0, TrayPropertiesThread, This, 0, NULL));
+    return NULL;
 }
 
 static VOID
@@ -2015,7 +2052,7 @@ RunFileDlgThread(IN OUT PVOID pParam)
 }
 
 static void
-ITrayWindowImpl_ShowRunFileDlg(IN ITrayWindowImpl *This)
+ITrayWindowImpl_DisplayRunFileDlg(IN ITrayWindowImpl *This)
 {
     HWND hRunDlg;
     if (This->hwndRunFileDlgOwner)
@@ -2551,7 +2588,7 @@ HandleTrayContextMenu:
 
                         case IDM_RUN:
                         {
-                            ITrayWindowImpl_ShowRunFileDlg(This);
+                            ITrayWindowImpl_DisplayRunFileDlg(This);
                             break;
                         }
 
@@ -2798,7 +2835,7 @@ TrayMessageLoop(IN OUT ITrayWindow *Tray)
             switch (Msg.wParam)
             {
                 case IDHK_RUN: /* Win+R */
-                    ITrayWindowImpl_ShowRunFileDlg(This);
+                    ITrayWindowImpl_DisplayRunFileDlg(This);
                     break;
             }
         }
