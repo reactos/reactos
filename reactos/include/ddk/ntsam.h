@@ -187,12 +187,12 @@ extern "C" {
 #define USER_PARTIAL_SECRETS_ACCOUNT                0x00100000
 #define USER_USE_AES_KEYS                           0x00200000
 
-/* Constants uses by LOGON_HOURS.UnitsPerWeek */
+/* Constants used by LOGON_HOURS.UnitsPerWeek */
 #define SAM_DAYS_PER_WEEK        (7)
 #define SAM_HOURS_PER_WEEK       (24 * SAM_DAYS_PER_WEEK)
 #define SAM_MINUTES_PER_WEEK     (60 * SAM_HOURS_PER_WEEK)
 
-/* Flags used in USER_ALL_INFORMATION.WhichField */
+/* Flags used by USER_ALL_INFORMATION.WhichField */
 #define USER_ALL_USERNAME           0x00000001
 #define USER_ALL_FULLNAME           0x00000002
 #define USER_ALL_USERID             0x00000004
@@ -225,6 +225,26 @@ extern "C" {
 #define USER_ALL_OWFPASSWORD        0x20000000
 #define USER_ALL_UNDEFINED_MASK     0xC0000000
 
+/* Values used by USER_PWD_CHANGE_FAILURE_INFORMATION.ExtendedFailureReason */
+#define SAM_PWD_CHANGE_NO_ERROR                     0
+#define SAM_PWD_CHANGE_PASSWORD_TOO_SHORT           1
+#define SAM_PWD_CHANGE_PWD_IN_HISTORY               2
+#define SAM_PWD_CHANGE_USERNAME_IN_PASSWORD         3
+#define SAM_PWD_CHANGE_FULLNAME_IN_PASSWORD         4
+#define SAM_PWD_CHANGE_NOT_COMPLEX                  5
+#define SAM_PWD_CHANGE_MACHINE_PASSWORD_NOT_DEFAULT 6
+#define SAM_PWD_CHANGE_FAILED_BY_FILTER             7
+#define SAM_PWD_CHANGE_PASSWORD_TOO_LONG            8
+#define SAM_PWD_CHANGE_FAILURE_REASON_MAX           8
+
+/* Flags used by DOMAIN_PASSWORD_INFORMATION.PasswordProperties */
+#define DOMAIN_PASSWORD_COMPLEX             0x00000001L
+#define DOMAIN_PASSWORD_NO_ANON_CHANGE      0x00000002L
+#define DOMAIN_PASSWORD_NO_CLEAR_CHANGE     0x00000004L
+#define DOMAIN_LOCKOUT_ADMINS               0x00000008L
+#define DOMAIN_PASSWORD_STORE_CLEARTEXT     0x00000010L
+#define DOMAIN_REFUSE_PASSWORD_CHANGE       0x00000020L
+#define DOMAIN_NO_LM_OWF_CHANGE             0x00000040L
 
 typedef PVOID SAM_HANDLE, *PSAM_HANDLE;
 typedef ULONG SAM_ENUMERATE_HANDLE, *PSAM_ENUMERATE_HANDLE;
@@ -295,6 +315,18 @@ typedef enum _DOMAIN_SERVER_ROLE
     DomainServerRolePrimary
 } DOMAIN_SERVER_ROLE, *PDOMAIN_SERVER_ROLE;
 
+#ifndef _DOMAIN_PASSWORD_INFORMATION_DEFINED
+#define _DOMAIN_PASSWORD_INFORMATION_DEFINED
+typedef struct _DOMAIN_PASSWORD_INFORMATION
+{
+    USHORT MinPasswordLength;
+    USHORT PasswordHistoryLength;
+    ULONG PasswordProperties;
+    LARGE_INTEGER MaxPasswordAge;
+    LARGE_INTEGER MinPasswordAge;
+} DOMAIN_PASSWORD_INFORMATION, *PDOMAIN_PASSWORD_INFORMATION;
+#endif
+
 #include "pshpack4.h"
 typedef struct _DOMAIN_GENERAL_INFORMATION
 {
@@ -337,6 +369,12 @@ typedef struct _DOMAIN_SERVER_ROLE_INFORMATION
     DOMAIN_SERVER_ROLE DomainServerRole;
 } DOMAIN_SERVER_ROLE_INFORMATION, *PDOMAIN_SERVER_ROLE_INFORMATION;
 
+typedef struct _DOMAIN_MODIFIED_INFORMATION
+{
+    LARGE_INTEGER DomainModifiedCount;
+    LARGE_INTEGER CreationTime;
+} DOMAIN_MODIFIED_INFORMATION, *PDOMAIN_MODIFIED_INFORMATION;
+
 typedef struct _DOMAIN_STATE_INFORMATION
 {
     DOMAIN_SERVER_ENABLE_STATE DomainServerState;
@@ -356,6 +394,20 @@ typedef struct _DOMAIN_GENERAL_INFORMATION2
     USHORT LockoutThreshold;
 } DOMAIN_GENERAL_INFORMATION2, *PDOMAIN_GENERAL_INFORMATION2;
 #include "poppack.h"
+
+typedef struct _DOMAIN_LOCKOUT_INFORMATION
+{
+    LARGE_INTEGER LockoutDuration;
+    LARGE_INTEGER LockoutObservationWindow;
+    USHORT LockoutThreshold;
+} DOMAIN_LOCKOUT_INFORMATION, *PDOMAIN_LOCKOUT_INFORMATION;
+
+typedef struct _DOMAIN_MODIFIED_INFORMATION2
+{
+    LARGE_INTEGER DomainModifiedCount;
+    LARGE_INTEGER CreationTime;
+    LARGE_INTEGER ModifiedCountAtLastPromotion;
+} DOMAIN_MODIFIED_INFORMATION2, *PDOMAIN_MODIFIED_INFORMATION2;
 
 typedef enum _GROUP_INFORMATION_CLASS
 {
@@ -594,6 +646,11 @@ typedef struct _USER_ALL_INFORMATION
 } USER_ALL_INFORMATION, *PUSER_ALL_INFORMATION;
 #include "poppack.h"
 
+typedef struct _USER_PWD_CHANGE_FAILURE_INFORMATION
+{
+    ULONG ExtendedFailureReason;
+    UNICODE_STRING FilterModuleName;
+} USER_PWD_CHANGE_FAILURE_INFORMATION, *PUSER_PWD_CHANGE_FAILURE_INFORMATION;
 
 #define SAM_SID_COMPATIBILITY_ALL    0
 #define SAM_SID_COMPATIBILITY_LAX    1
@@ -616,6 +673,28 @@ NTAPI
 SamAddMultipleMembersToAlias(IN SAM_HANDLE AliasHandle,
                              IN PSID *MemberIds,
                              IN ULONG MemberCount);
+
+NTSTATUS
+NTAPI
+SamChangePasswordUser(IN SAM_HANDLE UserHandle,
+                      IN PUNICODE_STRING OldPassword,
+                      IN PUNICODE_STRING NewPassword);
+
+NTSTATUS
+NTAPI
+SamChangePasswordUser2(IN PUNICODE_STRING ServerName,
+                       IN PUNICODE_STRING UserName,
+                       IN PUNICODE_STRING OldPassword,
+                       IN PUNICODE_STRING NewPassword);
+
+NTSTATUS
+NTAPI
+SamChangePasswordUser3(IN PUNICODE_STRING ServerName,
+                       IN PUNICODE_STRING UserName,
+                       IN PUNICODE_STRING OldPassword,
+                       IN PUNICODE_STRING NewPassword,
+                       OUT PDOMAIN_PASSWORD_INFORMATION *EffectivePasswordPolicy,
+                       OUT PUSER_PWD_CHANGE_FAILURE_INFORMATION *PasswordChangeFailureInfo);
 
 NTSTATUS
 NTAPI

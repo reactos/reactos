@@ -136,7 +136,7 @@ SamAddMemberToGroup(IN SAM_HANDLE GroupHandle,
 {
     NTSTATUS Status;
 
-    TRACE("SamAddMemberToGroup(%p %lu %lx)",
+    TRACE("SamAddMemberToGroup(%p %lu %lx)\n",
           GroupHandle, MemberId, Attributes);
 
     RpcTryExcept
@@ -185,6 +185,43 @@ SamAddMultipleMembersToAlias(IN SAM_HANDLE AliasHandle,
     RpcEndExcept;
 
     return Status;
+}
+
+
+NTSTATUS
+NTAPI
+SamChangePasswordUser(IN SAM_HANDLE UserHandle,
+                      IN PUNICODE_STRING OldPassword,
+                      IN PUNICODE_STRING NewPassword)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+
+NTSTATUS
+NTAPI
+SamChangePasswordUser2(IN PUNICODE_STRING ServerName,
+                       IN PUNICODE_STRING UserName,
+                       IN PUNICODE_STRING OldPassword,
+                       IN PUNICODE_STRING NewPassword)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+
+NTSTATUS
+NTAPI
+SamChangePasswordUser3(IN PUNICODE_STRING ServerName,
+                       IN PUNICODE_STRING UserName,
+                       IN PUNICODE_STRING OldPassword,
+                       IN PUNICODE_STRING NewPassword,
+                       OUT PDOMAIN_PASSWORD_INFORMATION *EffectivePasswordPolicy,
+                       OUT PUSER_PWD_CHANGE_FAILURE_INFORMATION *PasswordChangeFailureInfo)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 
