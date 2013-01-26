@@ -490,6 +490,13 @@ VOID NTAPI
 SeSetSecurityAccessMask(IN SECURITY_INFORMATION SecurityInformation,
                         OUT PACCESS_MASK DesiredAccess);
 
+BOOLEAN
+NTAPI
+SeFastTraverseCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+                    IN PACCESS_STATE AccessState,
+                    IN ACCESS_MASK DesiredAccess,
+                    IN KPROCESSOR_MODE AccessMode);
+
 #endif
 
 /* EOF */
