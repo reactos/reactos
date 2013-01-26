@@ -14,6 +14,7 @@
 #include <ndk/iofuncs.h>
 #include <ndk/obfuncs.h>
 #include <ndk/rtlfuncs.h>
+#include <ndk/setypes.h>
 #include <services/services.h>
 #include <svcctl_s.h>
 
