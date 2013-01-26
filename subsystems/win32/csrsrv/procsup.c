@@ -451,11 +451,8 @@ CsrRemoveProcess(IN PCSR_PROCESS CsrProcess)
  * The CsrInsertProcess routine inserts a CSR Process into the Process List
  * and notifies Server DLLs of the creation of a new CSR Process.
  *
- * @param Parent
- *        Optional pointer to the CSR Process creating this CSR Process.
- *
- * @param CurrentProcess
- *        Optional pointer to the current CSR Process.
+ * @param ParentProcess
+ *        Optional pointer to the Parent Process creating this CSR Process.
  *
  * @param CsrProcess
  *        Pointer to the CSR Process which is to be inserted.
@@ -467,16 +464,12 @@ CsrRemoveProcess(IN PCSR_PROCESS CsrProcess)
  *--*/
 VOID
 NTAPI
-CsrInsertProcess(IN PCSR_PROCESS Parent OPTIONAL,   // ParentProcess
-                 IN PCSR_PROCESS CurrentProcess OPTIONAL,   // CallingProcess
-                 IN PCSR_PROCESS CsrProcess)    // Process
+CsrInsertProcess(IN PCSR_PROCESS ParentProcess OPTIONAL,
+                 IN PCSR_PROCESS CsrProcess)
 {
     PCSR_SERVER_DLL ServerDll;
     ULONG i;
     ASSERT(ProcessStructureListLocked());
-
-    /* Set the parent */
-    CsrProcess->Parent = Parent;
 
     /* Insert it into the Root List */
     InsertTailList(&CsrRootProcess->ListLink, &CsrProcess->ListLink);
@@ -490,7 +483,7 @@ CsrInsertProcess(IN PCSR_PROCESS Parent OPTIONAL,   // ParentProcess
         /* Make sure it's valid and that it has callback */
         if (ServerDll && ServerDll->NewProcessCallback)
         {
-            ServerDll->NewProcessCallback(CurrentProcess, CsrProcess);
+            ServerDll->NewProcessCallback(ParentProcess, CsrProcess);
         }
     }
 }
@@ -706,7 +699,7 @@ CsrCreateProcess(IN HANDLE hProcess,
     CsrSetBackgroundPriority(CsrProcess);
 
     /* Insert the Process */
-    CsrInsertProcess(NULL, CurrentProcess, CsrProcess);
+    CsrInsertProcess(CurrentProcess, CsrProcess);
 
     /* Release lock and return */
     CsrReleaseProcessLock();

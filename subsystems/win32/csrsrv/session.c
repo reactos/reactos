@@ -84,7 +84,7 @@ CsrAllocateNtSession(IN ULONG SessionId)
     PCSR_NT_SESSION NtSession;
 
     /* Allocate an NT Session Object */
-    NtSession = RtlAllocateHeap(CsrHeap, 0, sizeof(CSR_NT_SESSION));
+    NtSession = RtlAllocateHeap(CsrHeap, HEAP_ZERO_MEMORY, sizeof(CSR_NT_SESSION));
     if (NtSession)
     {
         /* Setup the Session Object */
@@ -331,7 +331,7 @@ CsrSbCreateSession(IN PSB_API_MSG ApiMessage)
     }
 
     /* Insert the Process */
-    CsrInsertProcess(NULL, NULL, CsrProcess);
+    CsrInsertProcess(NULL, CsrProcess);
 
     /* Activate the Thread */
     ApiMessage->ReturnValue = NtResumeThread(hThread, NULL);

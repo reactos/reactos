@@ -119,8 +119,7 @@ CsrRemoveProcess(IN PCSR_PROCESS CsrProcess);
 
 VOID
 NTAPI
-CsrInsertProcess(IN PCSR_PROCESS Parent OPTIONAL,
-                 IN PCSR_PROCESS CurrentProcess OPTIONAL,
+CsrInsertProcess(IN PCSR_PROCESS ParentProcess OPTIONAL,
                  IN PCSR_PROCESS CsrProcess);
 
 NTSTATUS

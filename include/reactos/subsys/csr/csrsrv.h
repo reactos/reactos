@@ -39,7 +39,6 @@ typedef struct _CSR_PROCESS
     CLIENT_ID ClientId;
     LIST_ENTRY ListLink;
     LIST_ENTRY ThreadList;
-    struct _CSR_PROCESS *Parent;
     PCSR_NT_SESSION NtSession;
     ULONG ExpectedVersion;
     HANDLE ClientPort;

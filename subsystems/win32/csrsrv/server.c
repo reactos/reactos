@@ -43,11 +43,11 @@ PCHAR CsrServerApiNameTable[CsrpMaxApiNumber] =
 };
 
 PCSR_SERVER_DLL CsrLoadedServerDll[CSR_SERVER_DLL_MAX];
-PVOID CsrSrvSharedSectionHeap;
-PVOID CsrSrvSharedSectionBase;
-PVOID *CsrSrvSharedStaticServerData;
-ULONG CsrSrvSharedSectionSize;
-HANDLE CsrSrvSharedSection;
+PVOID CsrSrvSharedSectionHeap = NULL;
+PVOID CsrSrvSharedSectionBase = NULL;
+PVOID *CsrSrvSharedStaticServerData = NULL;
+ULONG CsrSrvSharedSectionSize = 0;
+HANDLE CsrSrvSharedSection = NULL;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 

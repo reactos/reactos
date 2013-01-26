@@ -62,7 +62,7 @@ CsrInitializeWait(IN CSR_WAIT_FUNCTION WaitFunction,
            WaitApiMessage->Header.u1.s1.TotalLength;
 
     /* Allocate the Wait Block */
-    WaitBlock = RtlAllocateHeap(CsrHeap, 0, Size);
+    WaitBlock = RtlAllocateHeap(CsrHeap, HEAP_ZERO_MEMORY, Size);
     if (!WaitBlock)
     {
         /* Fail */

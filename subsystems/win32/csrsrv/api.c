@@ -1171,7 +1171,7 @@ CsrCaptureArguments(IN PCSR_THREAD CsrThread,
     } _SEH2_END;
 
     /* We validated the incoming buffer, now allocate the remote one */
-    RemoteCaptureBuffer = RtlAllocateHeap(CsrHeap, 0, Length);
+    RemoteCaptureBuffer = RtlAllocateHeap(CsrHeap, HEAP_ZERO_MEMORY, Length);
     if (!RemoteCaptureBuffer)
     {
         /* We're out of memory */
