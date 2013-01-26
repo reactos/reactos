@@ -196,6 +196,7 @@ IopParseDevice(IN PVOID ParseObject,
     ACCESS_MASK DesiredAccess, GrantedAccess;
     BOOLEAN AccessGranted, LockHeld = FALSE;
     PPRIVILEGE_SET Privileges = NULL;
+    UNICODE_STRING FileString;
     IOTRACE(IO_FILE_DEBUG, "ParseObject: %p. RemainingName: %wZ\n",
             ParseObject, RemainingName);
 
@@ -309,7 +310,20 @@ IopParseDevice(IN PVOID ParseObject,
                 OpenPacket->Override= TRUE;
             }
 
-            /* FIXME: Do Audit/Alarm for open operation */
+            FileString.Length = 8;
+            FileString.MaximumLength = 8;
+            FileString.Buffer = L"File";
+
+            /* Do Audit/Alarm for open operation */
+            SeOpenObjectAuditAlarm(&FileString,
+                                   OriginalDeviceObject,
+                                   CompleteName,
+                                   OriginalDeviceObject->SecurityDescriptor,
+                                   AccessState,
+                                   FALSE,
+                                   AccessGranted,
+                                   UserMode,
+                                   &AccessState->GenerateOnClose);
         }
         else
         {
