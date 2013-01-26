@@ -7000,9 +7000,21 @@ SamrQueryDisplayInformation2(IN SAMPR_HANDLE DomainHandle,
                              OUT unsigned long *TotalReturned,
                              OUT PSAMPR_DISPLAY_INFO_BUFFER Buffer)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    TRACE("%p %lu %lu %lu %lu %p %p %p\n",
+          DomainHandle, DisplayInformationClass, Index,
+          EntryCount, PreferredMaximumLength, TotalAvailable,
+          TotalReturned, Buffer);
+
+    return SamrQueryDisplayInformation(DomainHandle,
+                                       DisplayInformationClass,
+                                       Index,
+                                       EntryCount,
+                                       PreferredMaximumLength,
+                                       TotalAvailable,
+                                       TotalReturned,
+                                       Buffer);
 }
+
 
 /* Function 49 */
 NTSTATUS
@@ -7012,8 +7024,13 @@ SamrGetDisplayEnumerationIndex2(IN SAMPR_HANDLE DomainHandle,
                                 IN PRPC_UNICODE_STRING Prefix,
                                 OUT unsigned long *Index)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    TRACE("(%p %lu %p %p)\n",
+           DomainHandle, DisplayInformationClass, Prefix, Index);
+
+    return SamrGetDisplayEnumerationIndex(DomainHandle,
+                                          DisplayInformationClass,
+                                          Prefix,
+                                          Index);
 }
 
 
@@ -7302,8 +7319,19 @@ SamrQueryDisplayInformation3(IN SAMPR_HANDLE DomainHandle,
                              OUT unsigned long *TotalReturned,
                              OUT PSAMPR_DISPLAY_INFO_BUFFER Buffer)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    TRACE("%p %lu %lu %lu %lu %p %p %p\n",
+          DomainHandle, DisplayInformationClass, Index,
+          EntryCount, PreferredMaximumLength, TotalAvailable,
+          TotalReturned, Buffer);
+
+    return SamrQueryDisplayInformation(DomainHandle,
+                                       DisplayInformationClass,
+                                       Index,
+                                       EntryCount,
+                                       PreferredMaximumLength,
+                                       TotalAvailable,
+                                       TotalReturned,
+                                       Buffer);
 }
 
 
