@@ -335,8 +335,11 @@ IopParseDevice(IN PVOID ParseObject,
                 /* Check if this is a restricted token */
                 if (!(AccessState->Flags & TOKEN_IS_RESTRICTED))
                 {
-                    /* FIXME: Do the FAST traverse check */
-                    AccessGranted = FALSE;
+                    /* Do the FAST traverse check */
+                    AccessGranted = SeFastTraverseCheck(OriginalDeviceObject->SecurityDescriptor,
+                                                        AccessState,
+                                                        FILE_TRAVERSE,
+                                                        UserMode);
                 }
                 else
                 {
