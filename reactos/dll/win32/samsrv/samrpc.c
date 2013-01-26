@@ -6957,6 +6957,7 @@ SamrRemoveMemberFromForeignDomain(IN SAMPR_HANDLE DomainHandle,
     return STATUS_NOT_IMPLEMENTED;
 }
 
+
 /* Function 46 */
 NTSTATUS
 NTAPI
@@ -6964,9 +6965,13 @@ SamrQueryInformationDomain2(IN SAMPR_HANDLE DomainHandle,
                             IN DOMAIN_INFORMATION_CLASS DomainInformationClass,
                             OUT PSAMPR_DOMAIN_INFO_BUFFER *Buffer)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    TRACE("(%p %lu %p)\n", DomainHandle, DomainInformationClass, Buffer);
+
+    return SamrQueryInformationDomain(DomainHandle,
+                                      DomainInformationClass,
+                                      Buffer);
 }
+
 
 /* Function 47 */
 NTSTATUS
@@ -6975,9 +6980,13 @@ SamrQueryInformationUser2(IN SAMPR_HANDLE UserHandle,
                           IN USER_INFORMATION_CLASS UserInformationClass,
                           OUT PSAMPR_USER_INFO_BUFFER *Buffer)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    TRACE("(%p %lu %p)\n", UserHandle, UserInformationClass, Buffer);
+
+    return SamrQueryInformationUser(UserHandle,
+                                    UserInformationClass,
+                                    Buffer);
 }
+
 
 /* Function 48 */
 NTSTATUS
