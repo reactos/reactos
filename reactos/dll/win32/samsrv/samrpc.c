@@ -4553,8 +4553,41 @@ NTSTATUS
 NTAPI
 SamrDeleteAlias(IN OUT SAMPR_HANDLE *AliasHandle)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PSAM_DB_OBJECT AliasObject;
+    NTSTATUS Status;
+
+    /* Validate the alias handle */
+    Status = SampValidateDbObject(AliasHandle,
+                                  SamDbAliasObject,
+                                  DELETE,
+                                  &AliasObject);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Fail, if the alias is built-in */
+    if (AliasObject->RelativeId < 1000)
+    {
+        TRACE("You can not delete a special account!\n");
+        return STATUS_SPECIAL_ACCOUNT;
+    }
+
+    /* FIXME: Remove all members from the alias */
+
+    /* Delete the alias from the database */
+    Status = SampDeleteAccountDbObject(AliasObject);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampDeleteAccountDbObject() failed (Status 0x%08lx)\n", Status);
+        return Status;
+    }
+
+    /* Invalidate the handle */
+    *AliasHandle = NULL;
+
+    return Status;
 }
 
 
@@ -4963,8 +4996,45 @@ NTSTATUS
 NTAPI
 SamrDeleteUser(IN OUT SAMPR_HANDLE *UserHandle)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PSAM_DB_OBJECT UserObject;
+    NTSTATUS Status;
+
+    TRACE("(%p)\n", UserHandle);
+
+    /* Validate the user handle */
+    Status = SampValidateDbObject(*UserHandle,
+                                  SamDbUserObject,
+                                  DELETE,
+                                  &UserObject);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampValidateDbObject() failed (Status 0x%08lx)\n", Status);
+        return Status;
+    }
+
+    /* Fail, if the user is built-in */
+    if (UserObject->RelativeId < 1000)
+    {
+        TRACE("You can not delete a special account!\n");
+        return STATUS_SPECIAL_ACCOUNT;
+    }
+
+    /* FIXME: Remove the user from all groups */
+
+    /* FIXME: Remove the user from all aliases */
+
+    /* Delete the user from the database */
+    Status = SampDeleteAccountDbObject(UserObject);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampDeleteAccountDbObject() failed (Status 0x%08lx)\n", Status);
+        return Status;
+    }
+
+    /* Invalidate the handle */
+    *UserHandle = NULL;
+
+    return STATUS_SUCCESS;
 }
 
 
