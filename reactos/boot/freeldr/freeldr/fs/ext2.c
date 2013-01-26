@@ -1049,7 +1049,7 @@ ULONG* Ext2ReadBlockPointerList(PEXT2_INODE Inode)
 		if (!Ext2CopyIndirectBlockPointers(BlockList, &CurrentBlockInList, BlockCount, Inode->blocks.indir_block))
 		{
 			MmHeapFree(BlockList);
-			return FALSE;
+			return NULL;
 		}
 	}
 
@@ -1059,7 +1059,7 @@ ULONG* Ext2ReadBlockPointerList(PEXT2_INODE Inode)
 		if (!Ext2CopyDoubleIndirectBlockPointers(BlockList, &CurrentBlockInList, BlockCount, Inode->blocks.double_indir_block))
 		{
 			MmHeapFree(BlockList);
-			return FALSE;
+			return NULL;
 		}
 	}
 
@@ -1069,7 +1069,7 @@ ULONG* Ext2ReadBlockPointerList(PEXT2_INODE Inode)
 		if (!Ext2CopyTripleIndirectBlockPointers(BlockList, &CurrentBlockInList, BlockCount, Inode->blocks.tripple_indir_block))
 		{
 			MmHeapFree(BlockList);
-			return FALSE;
+			return NULL;
 		}
 	}
 
