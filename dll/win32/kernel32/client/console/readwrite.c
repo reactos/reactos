@@ -351,33 +351,26 @@ IntReadConsoleOutputCode(HANDLE hConsoleOutput,
     ReadOutputCodeRequest->CodeType = CodeType;
     ReadOutputCodeRequest->ReadCoord = dwReadCoord;
 
-    // while (nLength > 0)
+    ReadOutputCodeRequest->NumCodesToRead = nLength;
+
+    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                                 CaptureBuffer,
+                                 CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepReadConsoleOutputString),
+                                 sizeof(CONSOLE_READOUTPUTCODE));
+    if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = ApiMessage.Status))
     {
-        ReadOutputCodeRequest->NumCodesToRead = nLength;
-        // SizeBytes = ReadOutputCodeRequest->NumCodesToRead * CodeSize;
-
-        Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
-                                     CaptureBuffer,
-                                     CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepReadConsoleOutputString),
-                                     sizeof(CONSOLE_READOUTPUTCODE));
-        if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = ApiMessage.Status))
-        {
-            BaseSetLastNTError(Status);
-            CsrFreeCaptureBuffer(CaptureBuffer);
-            return FALSE;
-        }
-
-        BytesRead = ReadOutputCodeRequest->CodesRead * CodeSize;
-        memcpy(pCode, ReadOutputCodeRequest->pCode.pCode, BytesRead);
-        // pCode = (PVOID)((ULONG_PTR)pCode + /*(ULONG_PTR)*/BytesRead);
-        // nLength -= ReadOutputCodeRequest->CodesRead;
-        // CodesRead += ReadOutputCodeRequest->CodesRead;
-
-        ReadOutputCodeRequest->ReadCoord = ReadOutputCodeRequest->EndCoord;
+        BaseSetLastNTError(Status);
+        CsrFreeCaptureBuffer(CaptureBuffer);
+        return FALSE;
     }
 
+    BytesRead = ReadOutputCodeRequest->CodesRead * CodeSize;
+    memcpy(pCode, ReadOutputCodeRequest->pCode.pCode, BytesRead);
+
+    ReadOutputCodeRequest->ReadCoord = ReadOutputCodeRequest->EndCoord;
+
     if (lpNumberOfCodesRead != NULL)
-        *lpNumberOfCodesRead = /*CodesRead;*/ ReadOutputCodeRequest->CodesRead;
+        *lpNumberOfCodesRead = ReadOutputCodeRequest->CodesRead;
 
     CsrFreeCaptureBuffer(CaptureBuffer);
 

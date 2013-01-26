@@ -862,20 +862,20 @@ CSR_API(SrvReadConsoleOutputString)
         }
     }
 
-    switch (CodeType)
-    {
-        case CODE_UNICODE:
-            *(PWCHAR)ReadBuffer = 0;
-            break;
+    // switch (CodeType)
+    // {
+        // case CODE_UNICODE:
+            // *(PWCHAR)ReadBuffer = 0;
+            // break;
 
-        case CODE_ASCII:
-            *(PCHAR)ReadBuffer = 0;
-            break;
+        // case CODE_ASCII:
+            // *(PCHAR)ReadBuffer = 0;
+            // break;
 
-        case CODE_ATTRIBUTE:
-            *(PWORD)ReadBuffer = 0;
-            break;
-    }
+        // case CODE_ATTRIBUTE:
+            // *(PWORD)ReadBuffer = 0;
+            // break;
+    // }
 
     ReadOutputCodeRequest->EndCoord.X = Xpos;
     ReadOutputCodeRequest->EndCoord.Y = (Ypos - Buff->VirtualY + Buff->MaxY) % Buff->MaxY;
