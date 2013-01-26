@@ -595,7 +595,7 @@ SmpLoadSubSystemsForMuSession(IN PULONG MuSessionId,
     {
         /* Get each entry and check if it's the internal debug or not */
         RegEntry = CONTAINING_RECORD(NextEntry, SMP_REGISTRY_VALUE, Entry);
-        if (_wcsicmp(RegEntry->Name.Buffer, L"debug") == 0)
+        if (_wcsicmp(RegEntry->Name.Buffer, L"Debug") == 0)
         {
             /* Load the internal debug system */
             Status = SmpExecuteCommand(&RegEntry->Value,
