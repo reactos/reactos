@@ -15,6 +15,7 @@
 //#define NDEBUG
 #include <debug.h>
 
+
 /* FUNCTIONS *****************************************************************/
 
 BOOL FASTCALL
@@ -87,6 +88,10 @@ ConioUnpause(PCONSOLE Console, UINT Flags)
                       WaitAll,
                       NULL,
                       NULL);
+        if (!IsListEmpty(&Console->WriteWaitQueue))
+        {
+            CsrDereferenceWait(&Console->WriteWaitQueue);
+        }
     }
 }
 

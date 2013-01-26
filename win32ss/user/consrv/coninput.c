@@ -93,6 +93,10 @@ ConioProcessChar(PCONSOLE Console,
                   WaitAny,
                   NULL,
                   NULL);
+    if (!IsListEmpty(&Console->InputBuffer.ReadWaitQueue))
+    {
+        CsrDereferenceWait(&Console->InputBuffer.ReadWaitQueue);
+    }
 
     return STATUS_SUCCESS;
 }
@@ -359,18 +363,6 @@ ReadInputBufferThread(IN PLIST_ENTRY WaitList,
     DPRINT1("ReadInputBufferThread - WaitContext = 0x%p, WaitArgument1 = 0x%p, WaitArgument2 = 0x%p, WaitFlags = %lu\n", WaitContext, WaitArgument1, WaitArgument2, WaitFlags);
 
     /*
-     * Somebody is closing a handle to this input buffer,
-     * by calling ConSrvCloseHandleEntry.
-     * See whether we are linked to that handle (ie. we
-     * are a waiter for this handle), and if so, return.
-     */
-    if (InputHandle == InputInfo->HandleEntry)
-    {
-        Status = STATUS_ALERTED;
-        goto Quit;
-    }
-
-    /*
      * If we are notified of the process termination via a call
      * to CsrNotifyWaitBlock triggered by CsrDestroyProcess or
      * CsrDestroyThread, just return.
@@ -378,6 +370,20 @@ ReadInputBufferThread(IN PLIST_ENTRY WaitList,
     if (WaitFlags & CsrProcessTerminating)
     {
         Status = STATUS_THREAD_IS_TERMINATING;
+        goto Quit;
+    }
+
+    /*
+     * Somebody is closing a handle to this input buffer,
+     * by calling ConSrvCloseHandleEntry.
+     * See whether we are linked to that handle (ie. we
+     * are a waiter for this handle), and if so, return.
+     * Otherwise, ignore the call and continue waiting.
+     */
+    if (InputHandle != NULL)
+    {
+        Status = (InputHandle == InputInfo->HandleEntry ? STATUS_ALERTED
+                                                        : STATUS_PENDING);
         goto Quit;
     }
 
@@ -490,18 +496,6 @@ ReadCharsThread(IN PLIST_ENTRY WaitList,
     DPRINT1("ReadCharsThread - WaitContext = 0x%p, WaitArgument1 = 0x%p, WaitArgument2 = 0x%p, WaitFlags = %lu\n", WaitContext, WaitArgument1, WaitArgument2, WaitFlags);
 
     /*
-     * Somebody is closing a handle to this input buffer,
-     * by calling ConSrvCloseHandleEntry.
-     * See whether we are linked to that handle (ie. we
-     * are a waiter for this handle), and if so, return.
-     */
-    if (InputHandle == InputInfo->HandleEntry)
-    {
-        Status = STATUS_ALERTED;
-        goto Quit;
-    }
-
-    /*
      * If we are notified of the process termination via a call
      * to CsrNotifyWaitBlock triggered by CsrDestroyProcess or
      * CsrDestroyThread, just return.
@@ -509,6 +503,20 @@ ReadCharsThread(IN PLIST_ENTRY WaitList,
     if (WaitFlags & CsrProcessTerminating)
     {
         Status = STATUS_THREAD_IS_TERMINATING;
+        goto Quit;
+    }
+
+    /*
+     * Somebody is closing a handle to this input buffer,
+     * by calling ConSrvCloseHandleEntry.
+     * See whether we are linked to that handle (ie. we
+     * are a waiter for this handle), and if so, return.
+     * Otherwise, ignore the call and continue waiting.
+     */
+    if (InputHandle != NULL)
+    {
+        Status = (InputHandle == InputInfo->HandleEntry ? STATUS_ALERTED
+                                                        : STATUS_PENDING);
         goto Quit;
     }
 

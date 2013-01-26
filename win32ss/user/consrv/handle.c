@@ -73,7 +73,11 @@ ConSrvCloseHandleEntry(PCONSOLE_IO_HANDLE Entry)
                           WaitAll,
                           NULL,
                           (PVOID)Entry);
-            // TODO: Dereference the notified waits.
+
+            if (!IsListEmpty(&InputBuffer->ReadWaitQueue))
+            {
+                CsrDereferenceWait(&InputBuffer->ReadWaitQueue);
+            }
         }
 
         /* If the last handle to a screen buffer is closed, delete it... */
@@ -497,8 +501,6 @@ ConSrvReleaseConsole(PCONSOLE Console,
     if (_InterlockedDecrement(&Console->ReferenceCount) == 0)
         ConSrvDeleteConsole(Console);
 }
-
-
 
 NTSTATUS
 NTAPI
