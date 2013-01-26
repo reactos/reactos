@@ -235,8 +235,9 @@ void Desktops::ToggleMinimize()
 	if (minimized.empty()) {
 		EnumWindows(MinimizeDesktopEnumFct, (LPARAM)&minimized);
 	} else {
-		for(list<MinimizeStruct>::const_reverse_iterator it=minimized.rbegin(); 
-															it!=minimized.rend(); ++it) {
+		const list<MinimizeStruct>& cminimized = minimized;
+		for(list<MinimizeStruct>::const_reverse_iterator it=cminimized.rbegin(); 
+															it!=cminimized.rend(); ++it) {
 			ShowWindowAsync(it->first, it->second&WS_MAXIMIZE? SW_MAXIMIZE: SW_RESTORE);
 			Sleep(20);
 		}

@@ -32,7 +32,7 @@
 
 #include "resource.h"
 
-//#include <locale.h>    // for setlocale()
+#include <locale.h>    // for setlocale()
 
 #include <wincon.h>
 

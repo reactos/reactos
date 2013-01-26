@@ -548,11 +548,15 @@ struct tifstream : public std::istream, FileHolder
 #ifdef __GNUC__
 		_buf(_pfile, std::ios::in)
 #else
-		_buf(_pfile)
+		_buf()
 #endif
 	{
 		if (!_pfile)
 			setstate(badbit);
+#ifdef _MSC_VER
+		else
+			_buf.open(fileno(_pfile));
+#endif
 	}
 
 protected:
@@ -570,11 +574,15 @@ struct tofstream : public std::ostream, FileHolder
 #ifdef __GNUC__
 		_buf(_pfile, std::ios::out)
 #else
-		_buf(_pfile)
+		_buf()
 #endif
 	{
 		if (!_pfile)
 			setstate(badbit);
+#ifdef _MSC_VER
+		else
+			_buf.open(fileno(_pfile));
+#endif
 	}
 
 	~tofstream()

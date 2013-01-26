@@ -53,7 +53,7 @@
 //#include <malloc.h>		// for alloca()
 #include <assert.h>
 //#include <stdlib.h>		// for _MAX_DIR, ...
-//#include <stdio.h>		// for sprintf()
+#include <stdio.h>		// for sprintf()
 //#include <time.h>
 
 #ifdef __cplusplus
