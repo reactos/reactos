@@ -516,25 +516,41 @@ extern XS_String DecodeXMLString(const std::string& str);
  /// base class for XMLStorage::tifstream and XMLStorage::tofstream
 struct FileHolder
 {
-	FileHolder(LPCTSTR path, LPCTSTR mode)
+protected:
+	FileHolder()
 	{
-//@@ _MS_VER: temporarily needed for the ReactOS build environment
-#if defined(__STDC_WANT_SECURE_LIB__) && defined(_MS_VER)	// secure CRT functions using VS 2005
-		if (_tfopen_s(&_pfile, path, mode) != 0)
-			_pfile = NULL;
-#else
-		_pfile = _tfopen(path, mode);
-#endif
 	}
 
 	~FileHolder()
 	{
 		if (_pfile)
 			fclose(_pfile);
+		delete _buf;
 	}
 
-protected:
-	FILE*	_pfile;
+	FILE_FILEBUF* init_buf(LPCTSTR path, std::ios_base::openmode mode)
+	{
+		PCTSTR modestr = mode == std::ios::in ? TEXT("rb") : TEXT("wb");
+//@@ _MS_VER: temporarily needed for the ReactOS build environment
+#if defined(__STDC_WANT_SECURE_LIB__) && defined(_MS_VER)	// secure CRT functions using VS 2005
+		if (_tfopen_s(&_pfile, path, modestr) != 0)
+			_pfile = NULL;
+#else
+		_pfile = _tfopen(path, modestr);
+#endif
+
+#ifdef __GNUC__
+		_buf = new FILE_FILEBUF(_pfile, mode);
+#else
+		_buf = new FILE_FILEBUF;
+		if (_pfile)
+			_buf->open(_pfile, mode);
+#endif
+		return _buf;
+	}
+
+	FILE*			_pfile;
+	FILE_FILEBUF*	_buf;
 };
 
  /// input file stream with ANSI/UNICODE file names
@@ -543,24 +559,11 @@ struct tifstream : public std::istream, FileHolder
 	typedef std::istream super;
 
 	tifstream(LPCTSTR path)
-	 :	super(&_buf),
-		FileHolder(path, TEXT("rb")),	// binary mode is important for XMLReader::read_buffer() with MinGW libraries
-#ifdef __GNUC__
-		_buf(_pfile, std::ios::in)
-#else
-		_buf()
-#endif
+	 :	super(init_buf(path, std::ios::in))
 	{
 		if (!_pfile)
 			setstate(badbit);
-#ifdef _MSC_VER
-		else
-			_buf.open(fileno(_pfile));
-#endif
 	}
-
-protected:
-	FILE_FILEBUF _buf;
 };
 
  /// output file stream with ANSI/UNICODE file names
@@ -569,29 +572,16 @@ struct tofstream : public std::ostream, FileHolder
 	typedef std::ostream super;
 
 	tofstream(LPCTSTR path)
-	 :	super(&_buf),
-		FileHolder(path, TEXT("wb")),
-#ifdef __GNUC__
-		_buf(_pfile, std::ios::out)
-#else
-		_buf()
-#endif
+	 :	super(init_buf(path, std::ios::out))
 	{
 		if (!_pfile)
 			setstate(badbit);
-#ifdef _MSC_VER
-		else
-			_buf.open(fileno(_pfile));
-#endif
 	}
 
 	~tofstream()
 	{
 		flush();
 	}
-
-protected:
-	FILE_FILEBUF _buf;
 };
 
 #else // FILE_FILEBUF
