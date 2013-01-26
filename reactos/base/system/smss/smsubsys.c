@@ -515,7 +515,7 @@ SmpLoadSubSystemsForMuSession(IN PULONG MuSessionId,
 {
     NTSTATUS Status = STATUS_SUCCESS, Status2;
     PSMP_REGISTRY_VALUE RegEntry;
-    UNICODE_STRING DestinationString, NtPath;
+    UNICODE_STRING NtPath;
     PLIST_ENTRY NextEntry;
     LARGE_INTEGER Timeout;
     PVOID State;
@@ -539,7 +539,7 @@ SmpLoadSubSystemsForMuSession(IN PULONG MuSessionId,
     {
         /* Get the entry and check if this is the special Win32k entry */
         RegEntry = CONTAINING_RECORD(NextEntry, SMP_REGISTRY_VALUE, Entry);
-        if (!_wcsicmp(RegEntry->Name.Buffer, L"Kmode"))
+        if (_wcsicmp(RegEntry->Name.Buffer, L"Kmode") == 0)
         {
             /* Translate it */
             if (!RtlDosPathNameToNtPathName_U(RegEntry->Value.Buffer,
@@ -571,11 +571,9 @@ SmpLoadSubSystemsForMuSession(IN PULONG MuSessionId,
                     AttachedSessionId = *MuSessionId;
 
                     /* Start Win32k.sys on this session */
-                    RtlInitUnicodeString(&DestinationString,
-                                         L"\\SystemRoot\\System32\\win32k.sys");
                     Status = NtSetSystemInformation(SystemExtendServiceTableInformation,
-                                                    &DestinationString,
-                                                    sizeof(DestinationString));
+                                                    &NtPath,
+                                                    sizeof(NtPath));
                     RtlFreeHeap(RtlGetProcessHeap(), 0, NtPath.Buffer);
                     SmpReleasePrivilege(State);
                     if (!NT_SUCCESS(Status))
@@ -597,21 +595,21 @@ SmpLoadSubSystemsForMuSession(IN PULONG MuSessionId,
     {
         /* Get each entry and check if it's the internal debug or not */
         RegEntry = CONTAINING_RECORD(NextEntry, SMP_REGISTRY_VALUE, Entry);
-        if (_wcsicmp(RegEntry->Name.Buffer, L"debug"))
-        {
-            /* Load the required subsystem */
-            Status = SmpExecuteCommand(&RegEntry->Value,
-                                       *MuSessionId,
-                                       ProcessId,
-                                       SMP_SUBSYSTEM_FLAG);
-        }
-        else
+        if (_wcsicmp(RegEntry->Name.Buffer, L"debug") == 0)
         {
             /* Load the internal debug system */
             Status = SmpExecuteCommand(&RegEntry->Value,
                                        *MuSessionId,
                                        ProcessId,
                                        SMP_DEBUG_FLAG | SMP_SUBSYSTEM_FLAG);
+        }
+        else
+        {
+            /* Load the required subsystem */
+            Status = SmpExecuteCommand(&RegEntry->Value,
+                                       *MuSessionId,
+                                       ProcessId,
+                                       SMP_SUBSYSTEM_FLAG);
         }
         if (!NT_SUCCESS(Status))
         {
