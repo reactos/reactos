@@ -1,4 +1,5 @@
 
+add_subdirectory(comsupp)
 add_subdirectory(crt)
 add_subdirectory(delayimp)
 add_subdirectory(dxguid)
