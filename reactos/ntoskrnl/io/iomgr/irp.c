@@ -630,6 +630,40 @@ IoAllocateIrp(IN CCHAR StackSize,
  */
 PIRP
 NTAPI
+IopAllocateIrpMustSucceed(IN CCHAR StackSize)
+{
+    LONG i;
+    PIRP Irp;
+    LARGE_INTEGER Sleep;
+
+    /* Try to get an IRP */
+    Irp = IoAllocateIrp(StackSize, FALSE);
+    if (Irp)
+        return Irp;
+
+    /* If we fail, start looping till we may get one */
+    i = LONG_MAX;
+    do {
+        i--;
+
+        /* First, sleep for 10ms */
+        Sleep.QuadPart = -10 * 1000 * 10;;
+        KeDelayExecutionThread(KernelMode, FALSE, &Sleep);
+
+        /* Then, retry allocation */
+        Irp = IoAllocateIrp(StackSize, FALSE);
+        if (Irp)
+            return Irp;
+    } while (i > 0);
+
+    return Irp;
+}
+
+/*
+ * @implemented
+ */
+PIRP
+NTAPI
 IoBuildAsynchronousFsdRequest(IN ULONG MajorFunction,
                               IN PDEVICE_OBJECT DeviceObject,
                               IN PVOID Buffer,
