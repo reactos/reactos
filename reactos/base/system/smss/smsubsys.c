@@ -515,7 +515,7 @@ SmpLoadSubSystemsForMuSession(IN PULONG MuSessionId,
 {
     NTSTATUS Status = STATUS_SUCCESS, Status2;
     PSMP_REGISTRY_VALUE RegEntry;
-    UNICODE_STRING NtPath;
+    UNICODE_STRING DestinationString, NtPath;
     PLIST_ENTRY NextEntry;
     LARGE_INTEGER Timeout;
     PVOID State;
@@ -570,10 +570,15 @@ SmpLoadSubSystemsForMuSession(IN PULONG MuSessionId,
                     }
                     AttachedSessionId = *MuSessionId;
 
-                    /* Start Win32k.sys on this session */
+                    /*
+                     * Start Win32k.sys on this session. Use a hardcoded value
+                     * instead of the Kmode one...
+                     */
+                    RtlInitUnicodeString(&DestinationString,
+                                         L"\\SystemRoot\\System32\\win32k.sys");
                     Status = NtSetSystemInformation(SystemExtendServiceTableInformation,
-                                                    &NtPath,
-                                                    sizeof(NtPath));
+                                                    &DestinationString,
+                                                    sizeof(DestinationString));
                     RtlFreeHeap(RtlGetProcessHeap(), 0, NtPath.Buffer);
                     SmpReleasePrivilege(State);
                     if (!NT_SUCCESS(Status))
