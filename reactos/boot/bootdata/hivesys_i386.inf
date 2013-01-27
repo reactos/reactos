@@ -1236,13 +1236,13 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\KnownDlls","wldap32",0x00
 ; Memory Management
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management",,0x00000012
 
-; Subsystems
-HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Debug",0x00020000,""
-HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Kmode",0x00020000,"%SystemRoot%\system32\win32k.sys"
-HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Optional",0x00010000,"Posix"
-HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Posix",0x00020000,"%SystemRoot%\system32\psxss.exe"
-HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Required",0x00010000,"Debug","Windows"
-HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Windows",0x00020000,"%SystemRoot%\system32\csrss.exe ObjectDirectory=\Windows SharedSection=1024,12288,512 Windows=On SubSystemType=Windows ServerDll=basesrv,1 ServerDll=win32csr:Win32CsrInitialization,2 ProfileControl=Off MaxRequestThreads=16"
+; SubSystems
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\SubSystems","Debug",0x00020000,""
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\SubSystems","Kmode",0x00020000,"%SystemRoot%\system32\win32k.sys"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\SubSystems","Optional",0x00010000,"Posix"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\SubSystems","Posix",0x00020000,"%SystemRoot%\system32\psxss.exe"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\SubSystems","Required",0x00010000,"Debug","Windows"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\SubSystems","Windows",0x00020000,"%SystemRoot%\system32\csrss.exe ObjectDirectory=\Windows SharedSection=1024,12288,512 Windows=On SubSystemType=Windows ServerDll=basesrv,1 ServerDll=win32csr:Win32CsrInitialization,2 ProfileControl=Off MaxRequestThreads=16"
 
 ; WOW Support
 HKLM,"SYSTEM\CurrentControlSet\Control\Wow","",0x00000000,""
