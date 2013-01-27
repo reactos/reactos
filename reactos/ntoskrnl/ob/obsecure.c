@@ -301,6 +301,20 @@ ObpCheckTraverseAccess(IN PVOID Object,
         return FALSE;
     }
 
+    /* First try to perform a fast traverse check
+     * If it fails, then the entire access check will
+     * have to be done.
+     */
+    Result = SeFastTraverseCheck(SecurityDescriptor,
+                                 AccessState,
+                                 FILE_WRITE_DATA,
+                                 AccessMode);
+    if (Result)
+    {
+        ObReleaseObjectSecurity(SecurityDescriptor, SdAllocated);
+        return TRUE;
+    }
+
     /* Lock the security context */
     SeLockSubjectContext(&AccessState->SubjectSecurityContext);
 
