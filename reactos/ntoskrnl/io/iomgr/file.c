@@ -2497,6 +2497,7 @@ IoCancelFileOpen(IN PDEVICE_OBJECT DeviceObject,
 {
     PIRP Irp;
     KEVENT Event;
+    KIRQL OldIrql;
     NTSTATUS Status;
     PIO_STACK_LOCATION Stack;
 
@@ -2527,7 +2528,8 @@ IoCancelFileOpen(IN PDEVICE_OBJECT DeviceObject,
     Stack->MajorFunction = IRP_MJ_CLEANUP;
     Stack->FileObject = FileObject;
 
-    // FIXME: Put on top of IRPs list of the thread
+    /* Put on top of IRPs list of the thread */
+    IopQueueIrpToThread(Irp);
 
     /* Call the driver */
     Status = IoCallDriver(DeviceObject, Irp);
@@ -2537,7 +2539,10 @@ IoCancelFileOpen(IN PDEVICE_OBJECT DeviceObject,
                               KernelMode, FALSE, NULL);
     }
 
-    // FIXME: Remove from IRPs list
+    /* Remove from IRPs list */
+    KeRaiseIrql(APC_LEVEL, &OldIrql);
+    IopUnQueueIrpFromThread(Irp);
+    KeLowerIrql(OldIrql);
 
     /* Free the IRP */
     IoFreeIrp(Irp);
