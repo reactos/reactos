@@ -2165,6 +2165,7 @@ SamrCreateUserInDomain(IN SAMPR_HANDLE DomainHandle,
     /* Initialize fixed user data */
     memset(&FixedUserData, 0, sizeof(SAM_USER_FIXED_DATA));
     FixedUserData.Version = 1;
+    FixedUserData.Reserved = 0;
     FixedUserData.LastLogon.QuadPart = 0;
     FixedUserData.LastLogoff.QuadPart = 0;
     FixedUserData.PasswordLastSet.QuadPart = 0;
@@ -2176,6 +2177,12 @@ SamrCreateUserInDomain(IN SAMPR_HANDLE DomainHandle,
     FixedUserData.UserAccountControl = USER_ACCOUNT_DISABLED |
                                        USER_PASSWORD_NOT_REQUIRED |
                                        USER_NORMAL_ACCOUNT;
+    FixedUserData.CountryCode = 0;
+    FixedUserData.CodePage = 0;
+    FixedUserData.BadPasswordCount = 0;
+    FixedUserData.LogonCount = 0;
+    FixedUserData.AdminCount = 0;
+    FixedUserData.OperatorCount = 0;
 
     /* Set fixed user data attribute */
     Status = SampSetObjectAttribute(UserObject,
@@ -2309,7 +2316,58 @@ SamrCreateUserInDomain(IN SAMPR_HANDLE DomainHandle,
         return Status;
     }
 
-    /* FIXME: Set default user attributes */
+    /* FIXME: Set LogonHours attribute*/
+    /* FIXME: Set Groups attribute*/
+
+    /* Set LMPwd attribute*/
+    Status = SampSetObjectAttribute(UserObject,
+                                    L"LMPwd",
+                                    REG_BINARY,
+                                    NULL,
+                                    0);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Set NTPwd attribute*/
+    Status = SampSetObjectAttribute(UserObject,
+                                    L"NTPwd",
+                                    REG_BINARY,
+                                    NULL,
+                                    0);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Set LMPwdHistory attribute*/
+    Status = SampSetObjectAttribute(UserObject,
+                                    L"LMPwdHistory",
+                                    REG_BINARY,
+                                    NULL,
+                                    0);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Set NTPwdHistory attribute*/
+    Status = SampSetObjectAttribute(UserObject,
+                                    L"NTPwdHistory",
+                                    REG_BINARY,
+                                    NULL,
+                                    0);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* FIXME: Set SecDesc attribute*/
 
     if (NT_SUCCESS(Status))
     {
@@ -6811,7 +6869,7 @@ SamrGetGroupsForUser(IN SAMPR_HANDLE UserHandle,
     TRACE("SamrGetGroupsForUser(%p %p)\n",
           UserHandle, Groups);
 
-    /* Validate the domain handle */
+    /* Validate the user handle */
     Status = SampValidateDbObject(UserHandle,
                                   SamDbUserObject,
                                   USER_LIST_GROUPS,
@@ -7158,8 +7216,8 @@ SamrCreateUser2InDomain(IN SAMPR_HANDLE DomainHandle,
     }
 
     /* Initialize fixed user data */
-    memset(&FixedUserData, 0, sizeof(SAM_USER_FIXED_DATA));
     FixedUserData.Version = 1;
+    FixedUserData.Reserved = 0;
     FixedUserData.LastLogon.QuadPart = 0;
     FixedUserData.LastLogoff.QuadPart = 0;
     FixedUserData.PasswordLastSet.QuadPart = 0;
@@ -7171,6 +7229,12 @@ SamrCreateUser2InDomain(IN SAMPR_HANDLE DomainHandle,
     FixedUserData.UserAccountControl = USER_ACCOUNT_DISABLED |
                                        USER_PASSWORD_NOT_REQUIRED |
                                        AccountType;
+    FixedUserData.CountryCode = 0;
+    FixedUserData.CodePage = 0;
+    FixedUserData.BadPasswordCount = 0;
+    FixedUserData.LogonCount = 0;
+    FixedUserData.AdminCount = 0;
+    FixedUserData.OperatorCount = 0;
 
     /* Set fixed user data attribute */
     Status = SampSetObjectAttribute(UserObject,
@@ -7292,7 +7356,70 @@ SamrCreateUser2InDomain(IN SAMPR_HANDLE DomainHandle,
         return Status;
     }
 
-    /* FIXME: Set default user attributes */
+    /* Set the Parameters attribute */
+    Status = SampSetObjectAttribute(UserObject,
+                                    L"Parameters",
+                                    REG_SZ,
+                                    EmptyString.Buffer,
+                                    EmptyString.MaximumLength);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* FIXME: Set LogonHours attribute*/
+    /* FIXME: Set Groups attribute*/
+
+    /* Set LMPwd attribute*/
+    Status = SampSetObjectAttribute(UserObject,
+                                    L"LMPwd",
+                                    REG_BINARY,
+                                    NULL,
+                                    0);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Set NTPwd attribute*/
+    Status = SampSetObjectAttribute(UserObject,
+                                    L"NTPwd",
+                                    REG_BINARY,
+                                    NULL,
+                                    0);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Set LMPwdHistory attribute*/
+    Status = SampSetObjectAttribute(UserObject,
+                                    L"LMPwdHistory",
+                                    REG_BINARY,
+                                    NULL,
+                                    0);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Set NTPwdHistory attribute*/
+    Status = SampSetObjectAttribute(UserObject,
+                                    L"NTPwdHistory",
+                                    REG_BINARY,
+                                    NULL,
+                                    0);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* FIXME: Set SecDesc attribute*/
 
     if (NT_SUCCESS(Status))
     {
