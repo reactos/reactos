@@ -1402,6 +1402,7 @@ char* CDECL setlocale(int category, const char* locale)
     if(category == LC_ALL)
         return construct_lc_all(locinfo);
 
+    _Analysis_assume_(category <= 5);
     return locinfo->lc_category[category].locale;
 }
 
@@ -1481,13 +1482,13 @@ MSVCRT__locale_t global_locale = NULL;
 void __init_global_locale()
 {
     unsigned i;
-    
+
     LOCK_LOCALE;
     /* Someone created it before us */
     if(global_locale)
         return;
     global_locale = MSVCRT__create_locale(0, "C");
-    
+
     __lc_codepage = MSVCRT_locale->locinfo->lc_codepage;
     MSVCRT___lc_collate_cp = MSVCRT_locale->locinfo->lc_collate_cp;
     __mb_cur_max = MSVCRT_locale->locinfo->mb_cur_max;

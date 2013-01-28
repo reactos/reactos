@@ -433,7 +433,7 @@ elseif(ARCH STREQUAL "amd64")
         float/amd64/getsetfpcw.S
         float/amd64/fpreset.S
         float/amd64/logb.S
-        math/amd64/acos.S
+        # math/amd64/acos.S
         math/amd64/acosf.S
         math/amd64/atan.S
         math/amd64/atan2.S
