@@ -6,10 +6,13 @@
  * COPYRIGHT:   Copyright 2012 Cameron Gutman (cameron.gutman@reactos.org)
  */
 
-#include <windows.h>
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winuser.h>
+#include <devioctl.h>
 #include <tchar.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <ntddndis.h>
 #include <nuiouser.h>
 #include <iphlpapi.h>

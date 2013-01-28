@@ -9,9 +9,17 @@
 
 /* Winsock Provider Headers */
 #define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
 #define _WIN32_WINNT 0x502
 #define NTOS_MODE_USER
 #define INCL_WINSOCK_API_TYPEDEFS 1
+
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winreg.h>
+#include <winsvc.h>
 #include <ws2spi.h>
 
 /* NDK Headers */

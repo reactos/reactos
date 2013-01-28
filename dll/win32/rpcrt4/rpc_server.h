@@ -22,7 +22,7 @@
 #define __WINE_RPC_SERVER_H
 
 #include "rpc_binding.h"
-#include "wine/list.h"
+//#include "wine/list.h"
 
 struct protseq_ops;
 

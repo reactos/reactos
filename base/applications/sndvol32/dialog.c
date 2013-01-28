@@ -1,12 +1,11 @@
-/* $Id: misc.c 43790 2009-10-27 10:34:16Z dgorbachev $
- *
+/*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS Sound Volume Control
  * FILE:        subsys/system/sndvol32/dialog.c
  * PROGRAMMERS: Johannes Anderwald
  */
-#include "sndvol32.h"
 
+#include "sndvol32.h"
 
 #define XLEFT (30)
 #define XTOP (20)
@@ -563,4 +562,3 @@ UpdateDialogLineSliderControl(
         }
     }
 }
-

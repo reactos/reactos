@@ -306,7 +306,13 @@
 #define GetModuleHandleA GetModuleHandleA_
 #endif
 #if defined(__MINGW32__)
-#include <windows.h>
+//#include <windows.h>
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
 #endif
 #if defined(_MSC_VER)
 #undef GetModuleHandleA

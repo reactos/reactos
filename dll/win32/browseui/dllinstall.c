@@ -1,4 +1,4 @@
-#include <windows.h>
+#include <windef.h>
 
 HRESULT
 WINAPI
@@ -8,4 +8,3 @@ DllInstall(
 {
     return S_OK;
 }
-

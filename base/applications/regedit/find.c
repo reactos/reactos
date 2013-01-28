@@ -16,8 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-
-#include <regedit.h>
+#include "regedit.h"
 
 #define RSF_WHOLESTRING    0x00000001
 #define RSF_LOOKATKEYS     0x00000002
@@ -823,4 +822,3 @@ void FindDialog(HWND hWnd)
         }
     }
 }
-

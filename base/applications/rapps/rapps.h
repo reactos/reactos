@@ -1,10 +1,18 @@
-#include <windows.h>
-#include <commctrl.h>
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winreg.h>
+#include <wingdi.h>
+#include <winnls.h>
+#include <winuser.h>
 #include <richedit.h>
+#include <shellapi.h>
 #include <shlwapi.h>
 #include <shlobj.h>
-#include <wchar.h>
-#include <urlmon.h>
+#include <stdio.h>
 
 #include <rappsmsg.h>
 

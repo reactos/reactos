@@ -1,14 +1,19 @@
 #ifndef __CHARMAP_PRECOMP_H
 #define __CHARMAP_PRECOMP_H
 
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winuser.h>
+#include <winreg.h>
+#include <wingdi.h>
 #include <windowsx.h>
 #include <tchar.h>
-#include <stdio.h>
+//#include <stdio.h>
 #include <stdlib.h>
 #include <commctrl.h>
 #include <richedit.h>
+
 #include "resource.h"
 
 #define SIZEOF(_v)  (sizeof(_v) / sizeof(*_v))

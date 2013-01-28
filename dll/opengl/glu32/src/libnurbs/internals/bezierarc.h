@@ -36,7 +36,7 @@
 #ifndef __glubezierarc_h
 #define __glubezierarc_h
 
-#include "myassert.h"
+//#include "myassert.h"
 
 class Mapdesc;
 

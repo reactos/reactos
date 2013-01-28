@@ -9,7 +9,7 @@
  *
  */
 
-#include <timedate.h>
+#include "timedate.h"
 
 static WNDPROC pOldWndProc = NULL;
 

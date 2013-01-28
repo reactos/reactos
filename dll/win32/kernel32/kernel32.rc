@@ -4,8 +4,8 @@
 #define REACTOS_STR_ORIGINAL_FILENAME	"kernel32.dll\0"
 #include <reactos/version.rc>
 
-#include "windows.h"
-#include "errcodes.rc"
+//#include "windows.h"
+#include <errcodes.rc>
 
 #include "winnls/locale_rc.rc"
 

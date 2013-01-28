@@ -9,7 +9,6 @@
 
 #include "precomp.h"
 
-
 ENUM_SERVICE_STATUS_PROCESS*
 GetSelectedService(PMAIN_WND_INFO Info)
 {
@@ -25,7 +24,6 @@ GetSelectedService(PMAIN_WND_INFO Info)
     /* return pointer to selected service */
     return (ENUM_SERVICE_STATUS_PROCESS *)lvItem.lParam;
 }
-
 
 LPQUERY_SERVICE_CONFIG
 GetServiceConfig(LPTSTR lpServiceName)
@@ -80,7 +78,6 @@ GetServiceConfig(LPTSTR lpServiceName)
     return lpServiceConfig;
 }
 
-
 BOOL
 SetServiceConfig(LPQUERY_SERVICE_CONFIG pServiceConfig,
                  LPTSTR lpServiceName,
@@ -133,7 +130,6 @@ SetServiceConfig(LPQUERY_SERVICE_CONFIG pServiceConfig,
 
     return bRet;
 }
-
 
 LPTSTR
 GetServiceDescription(LPTSTR lpServiceName)
@@ -210,7 +206,6 @@ cleanup:
     return lpDescription;
 }
 
-
 BOOL
 SetServiceDescription(LPTSTR lpServiceName,
                       LPTSTR lpDescription)
@@ -257,7 +252,6 @@ SetServiceDescription(LPTSTR lpServiceName,
 
     return bRet;
 }
-
 
 BOOL
 GetServiceList(PMAIN_WND_INFO Info,
@@ -334,7 +328,6 @@ GetServiceList(PMAIN_WND_INFO Info,
 
     return bRet;
 }
-
 
 BOOL
 UpdateServiceStatus(ENUM_SERVICE_STATUS_PROCESS* pService)

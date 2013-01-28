@@ -202,7 +202,7 @@ SampRegQueryKeyInfo(IN HANDLE KeyHandle,
 
 NTSTATUS
 SampRegDeleteValue(IN HANDLE KeyHandle,
-                   IN LPWSTR ValueName)
+                   IN LPCWSTR ValueName)
 {
     UNICODE_STRING Name;
 
@@ -322,7 +322,7 @@ done:
 
 NTSTATUS
 SampRegQueryValue(IN HANDLE KeyHandle,
-                  IN LPWSTR ValueName,
+                  IN LPCWSTR ValueName,
                   OUT PULONG Type OPTIONAL,
                   OUT PVOID Data OPTIONAL,
                   IN OUT PULONG DataLength OPTIONAL)
@@ -392,7 +392,7 @@ SampRegQueryValue(IN HANDLE KeyHandle,
 
 NTSTATUS
 SampRegSetValue(HANDLE KeyHandle,
-                LPWSTR ValueName,
+                LPCWSTR ValueName,
                 ULONG Type,
                 LPVOID Data,
                 ULONG DataLength)

@@ -16,16 +16,16 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
+#include <config.h>
+#include <wine/port.h>
 
-#include <math.h>
-#include <limits.h>
+//#include <math.h>
+//#include <limits.h>
 
 #include "jscript.h"
 #include "engine.h"
 
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(jscript);
 

@@ -37,16 +37,16 @@
  *
  */
 
-#include "glimports.h"
-#include "myassert.h"
-#include "mystdio.h"
+//#include "glimports.h"
+//#include "myassert.h"
+//#include "mystdio.h"
 #include "hull.h"
-#include "gridvertex.h"
-#include "gridtrimvertex.h"
-#include "gridline.h"
-#include "trimline.h"
-#include "uarray.h"
-#include "trimregion.h"
+//#include "gridvertex.h"
+//#include "gridtrimvertex.h"
+//#include "gridline.h"
+//#include "trimline.h"
+//#include "uarray.h"
+//#include "trimregion.h"
 
 Hull::Hull( void )
 {}

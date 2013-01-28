@@ -8,7 +8,7 @@
 
 #include "crtdefs.h"
 
-struct exception;
+struct _exception;
 
 #pragma pack(push,_CRT_PACKING)
 

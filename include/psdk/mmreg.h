@@ -22,7 +22,7 @@
 #define __WINE_MMREG_H
 
 #ifndef RC_INVOKED
-#include "pshpack1.h"
+#include <pshpack1.h>
 #endif
 
 
@@ -518,7 +518,7 @@ typedef struct tagEXBMINFOHEADER {
 #endif
 
 #ifndef RC_INVOKED
-#include "poppack.h"
+#include <poppack.h>
 #endif
 
 #endif /* __WINE_MMREG_H */

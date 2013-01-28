@@ -5,13 +5,15 @@
 #error Task-Manager uses NDK functions, so it can only be compiled with Unicode support enabled!
 #endif
 
-#include <ctype.h>
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
 
 #define WIN32_NO_STATUS
-#include <windows.h>
+#define WIN32_LEAN_AND_MEAN
+
+#include <windef.h>
+#include <winbase.h>
 #define NTOS_MODE_USER
 #include <ndk/exfuncs.h>
 #include <aclapi.h>

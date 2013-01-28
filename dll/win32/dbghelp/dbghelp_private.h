@@ -21,19 +21,23 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
-#include "windef.h"
-#include "winbase.h"
-#include "winver.h"
-#include "dbghelp.h"
-#include "objbase.h"
-#include "oaidl.h"
-#include "winnls.h"
-#include "wine/list.h"
-#include "wine/unicode.h"
-#include "wine/rbtree.h"
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
 
-#include "cvconst.h"
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winver.h>
+#include <dbghelp.h>
+#include <objbase.h>
+//#include "oaidl.h"
+//#include "winnls.h"
+#include <wine/list.h>
+#include <wine/unicode.h>
+#include <wine/rbtree.h>
+
+#include <cvconst.h>
 
 /* #define USE_STATS */
 

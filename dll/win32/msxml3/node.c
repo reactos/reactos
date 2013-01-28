@@ -18,15 +18,18 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+
+#include <config.h>
 
 #define COBJMACROS
 
-#include <stdarg.h>
+//#include <stdarg.h>
 
 #ifdef HAVE_LIBXML2
-# include <libxml/parser.h>
-# include <libxml/xmlerror.h>
+//# include <libxml/parser.h>
+//# include <libxml/xmlerror.h>
 # include <libxml/HTMLtree.h>
 # ifdef SONAME_LIBXSLT
 #  ifdef HAVE_LIBXSLT_PATTERN_H
@@ -40,16 +43,16 @@
 # endif
 #endif
 
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "winnls.h"
-#include "ole2.h"
-#include "msxml6.h"
+#include <windef.h>
+#include <winbase.h>
+//#include "winuser.h"
+//#include "winnls.h"
+#include <ole2.h>
+#include <msxml6.h>
 
 #include "msxml_private.h"
 
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(msxml);
 

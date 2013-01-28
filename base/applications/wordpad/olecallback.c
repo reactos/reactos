@@ -20,12 +20,13 @@
 
 #define COBJMACROS
 
+#define WIN32_NO_STATUS
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <richedit.h>
-#include <ole2.h>
 #include <richole.h>
+#include <wine/debug.h>
 
-#include "wine/debug.h"
 #include "wordpad.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(wordpad);

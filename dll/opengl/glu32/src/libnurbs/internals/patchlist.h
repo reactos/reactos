@@ -36,8 +36,8 @@
 #ifndef __glupatchlist_h_
 #define __glupatchlist_h_
 
-#include "types.h"
-#include "defines.h"
+//#include "types.h"
+//#include "defines.h"
 #include "patch.h"
 
 class Quilt;

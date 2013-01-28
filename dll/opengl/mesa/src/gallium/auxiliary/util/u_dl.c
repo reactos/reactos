@@ -34,7 +34,9 @@
 #include <dlfcn.h>
 #endif
 #if defined(PIPE_OS_WINDOWS)
-#include <windows.h>
+//#include <windows.h>
+#include <windef.h>
+#include <winbase.h>
 #endif
 
 #include "u_dl.h"

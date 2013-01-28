@@ -21,24 +21,24 @@
 
 #define COBJMACROS
 
-#include <stdarg.h>
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "wingdi.h"
-#include "winnls.h"
-#include "ole2.h"
-#include "exdisp.h"
-#include "oleidl.h"
+//#include <stdarg.h>
+//#include "windef.h"
+//#include "winbase.h"
+//#include "winuser.h"
+//#include "wingdi.h"
+//#include "winnls.h"
+//#include "ole2.h"
+//#include "exdisp.h"
+//#include "oleidl.h"
 
 #include "shdocvw.h"
-#include "mshtmcid.h"
-#include "shellapi.h"
-#include "winreg.h"
-#include "shlwapi.h"
-#include "intshcut.h"
+#include <mshtmcid.h>
+//#include "shellapi.h"
+//#include "winreg.h"
+#include <shlwapi.h>
+#include <intshcut.h>
 
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(shdocvw);
 

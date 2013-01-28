@@ -158,12 +158,12 @@ typedef enum _DOMAIN_SERVER_ROLE
 } DOMAIN_SERVER_ROLE, *PDOMAIN_SERVER_ROLE;
 cpp_quote("#endif")
 
-cpp_quote("#ifndef _NTSECAPI_H")
+cpp_quote("#if !defined(_NTSECAPI_H) && !defined(_NTSAM_)")
 typedef struct _DOMAIN_PASSWORD_INFORMATION
 {
-    unsigned short MinPasswordLength;
-    unsigned short PasswordHistoryLength;
-    unsigned long PasswordProperties;
+    USHORT MinPasswordLength;
+    USHORT PasswordHistoryLength;
+    ULONG PasswordProperties;
     OLD_LARGE_INTEGER MaxPasswordAge;
     OLD_LARGE_INTEGER MinPasswordAge;
 } DOMAIN_PASSWORD_INFORMATION, *PDOMAIN_PASSWORD_INFORMATION;
@@ -179,7 +179,6 @@ typedef struct _DOMAIN_SERVER_ROLE_INFORMATION
 {
     DOMAIN_SERVER_ROLE DomainServerRole;
 } DOMAIN_SERVER_ROLE_INFORMATION, *PDOMAIN_SERVER_ROLE_INFORMATION;
-cpp_quote("#endif")
 
 typedef struct _DOMAIN_MODIFIED_INFORMATION
 {
@@ -193,6 +192,7 @@ typedef struct _DOMAIN_MODIFIED_INFORMATION2
     OLD_LARGE_INTEGER CreationTime;
     OLD_LARGE_INTEGER ModifiedCountAtLastPromotion;
 } DOMAIN_MODIFIED_INFORMATION2, *PDOMAIN_MODIFIED_INFORMATION2;
+cpp_quote("#endif")
 
 cpp_quote("#include <pshpack4.h>")
 typedef struct _SAMPR_DOMAIN_GENERAL_INFORMATION

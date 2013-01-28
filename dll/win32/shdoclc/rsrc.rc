@@ -16,11 +16,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "windef.h"
-#include "winuser.h"
-#include "mshtmcid.h"
+#include <windef.h>
+//#include "winuser.h"
+#include <mshtmcid.h>
 
-#include "shdoclc.h"
+//#include "shdoclc.h"
 
 #ifdef LANGUAGE_BG_BG
     #include "Bg.rc"

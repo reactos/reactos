@@ -30,9 +30,9 @@
 
 #include "gluos.h"
 #include <GL/glu.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+//#include <stdio.h>
+//#include <stdlib.h>
+//#include <string.h>
 
 static const GLubyte versionString[] = "1.3";
 static const GLubyte extensionString[] =

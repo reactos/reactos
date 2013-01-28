@@ -1,14 +1,21 @@
-#include <windows.h>
-#include <commctrl.h>
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winreg.h>
+#include <wingdi.h>
+#include <winuser.h>
+#include <commdlg.h>
 #include <shlobj.h>
 #include <stdio.h>
+
 #include "uimain.h"
 #include "rdesktop.h"
 #include "bsops.h"
 #include "orders.h"
 #include "resource.h"
-
-//#include <stdio.h>
 
 #ifndef __TODO_MSTSC_H
 #define __TODO_MSTSC_H
@@ -100,6 +107,5 @@ LPWSTR GetStringFromSettings(PRDPSETTINGS pSettings, LPWSTR lpValue);
 BOOL SetIntegerToSettings(PRDPSETTINGS pRdpSettings, LPWSTR lpKey, INT Value);
 BOOL SetStringToSettings(PRDPSETTINGS pRdpSettings, LPWSTR lpKey, LPWSTR lpValue);
 VOID SaveAllSettings(PINFO pInfo);
-
 
 #endif /* __TODO_MSTSC_H */

@@ -28,7 +28,7 @@
 #ifndef STW_CONTEXT_H
 #define STW_CONTEXT_H
 
-#include <windows.h>
+//#include <windows.h>
 
 struct stw_framebuffer;
 struct st_context_iface;

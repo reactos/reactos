@@ -19,7 +19,7 @@
  */
 
 #include "editstr.h"
-#include "wine/unicode.h"
+#include <wine/unicode.h>
 
 struct _RTF_Info;
 

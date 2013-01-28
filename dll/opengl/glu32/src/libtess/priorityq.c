@@ -33,9 +33,9 @@
 */
 
 #include "gluos.h"
-#include <stddef.h>
+//#include <stddef.h>
 #include <assert.h>
-#include <limits.h>		/* LONG_MAX */
+//#include <limits.h>		/* LONG_MAX */
 #include "memalloc.h"
 
 /* Include all the code for the regular heap-based queue here. */

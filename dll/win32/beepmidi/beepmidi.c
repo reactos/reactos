@@ -41,17 +41,18 @@
 #define CONTINUOUS_NOTES
 
 #define WIN32_NO_STATUS
-#include <windows.h>
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
 #define NTOS_MODE_USER
 #include <ndk/iofuncs.h>
 #include <ndk/obfuncs.h>
 #include <ndk/rtlfuncs.h>
-#include <stdio.h>
 #include <ntddbeep.h>
 #include <math.h>
-
 #include <mmddk.h>
-#include <mmsystem.h>
 
 /*#define DPRINT printf*/
 #define DPRINT FakePrintf

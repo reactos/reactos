@@ -6,7 +6,7 @@
  * COPYRIGHT:        Copyright 2007 Andrew Greenwood
  */
 
-#include <windows.h>
+#include <winsvc.h>
 
 #ifndef AUDIOSRV_H
 #define AUDIOSRV_H

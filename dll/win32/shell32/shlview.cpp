@@ -48,7 +48,7 @@ TODO:
 13. Reorder of columns doesn't work - might be bug in comctl32
 */
 
-#include <precomp.h>
+#include "precomp.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 

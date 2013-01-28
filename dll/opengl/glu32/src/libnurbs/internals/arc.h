@@ -36,10 +36,10 @@
 #ifndef __gluarc_h_
 #define __gluarc_h_
 
-#include "myassert.h"
+//#include "myassert.h"
 #include "bufpool.h"
 #include "mystdio.h"
-#include "types.h"
+//#include "types.h"
 #include "pwlarc.h"
 #include "trimvertex.h"
 

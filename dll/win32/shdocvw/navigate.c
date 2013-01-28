@@ -19,15 +19,15 @@
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
 
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 #include "shdocvw.h"
-#include "exdispid.h"
-#include "shellapi.h"
-#include "winreg.h"
-#include "shlwapi.h"
-#include "wininet.h"
-#include "mshtml.h"
+#include <exdispid.h>
+//#include "shellapi.h"
+//#include "winreg.h"
+#include <shlwapi.h>
+#include <wininet.h>
+#include <mshtml.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(shdocvw);
 

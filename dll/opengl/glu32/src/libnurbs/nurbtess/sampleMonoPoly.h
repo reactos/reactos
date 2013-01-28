@@ -34,7 +34,7 @@
 #define _SAMPLEMONOPOLY_H
 
 #include "monoTriangulation.h"
-#include "gridWrap.h"
+//#include "gridWrap.h"
 #include "rectBlock.h"
 
 

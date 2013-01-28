@@ -35,9 +35,9 @@
 /*
 */
 
-#include <stdlib.h>
-#include <stdio.h>
-#include "glimports.h"
+//#include <stdlib.h>
+//#include <stdio.h>
+//#include "glimports.h"
 #include "sampleComp.h"
 #include "sampleCompTop.h"
 #include "sampleCompBot.h"

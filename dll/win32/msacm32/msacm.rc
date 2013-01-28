@@ -73,6 +73,9 @@
 #ifdef LANGUAGE_FR_FR
     #include "msacm_Fr.rc"
 #endif
+#ifdef LANGUAGE_HE_IL
+    #include "msacm_He.rc"
+#endif
 #ifdef LANGUAGE_JA_JP
     #include "msacm_Ja.rc"
 #endif

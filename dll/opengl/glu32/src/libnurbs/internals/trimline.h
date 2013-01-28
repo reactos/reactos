@@ -39,7 +39,7 @@
 class Arc;
 class Backend;
 
-#include "trimvertex.h"
+//#include "trimvertex.h"
 #include "jarcloc.h"
 
 

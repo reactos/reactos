@@ -19,37 +19,40 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+
 #define COBJMACROS
 #define NONAMELESSUNION
 
-#include "config.h"
+#include <config.h>
 
-#include <stdarg.h>
+//#include <stdarg.h>
 #include <assert.h>
 #ifdef HAVE_LIBXML2
 # include <libxml/parser.h>
-# include <libxml/xmlerror.h>
+//# include <libxml/xmlerror.h>
 # include <libxml/xpathInternals.h>
 # include <libxml/xmlsave.h>
 # include <libxml/SAX2.h>
 # include <libxml/parserInternals.h>
 #endif
 
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "winnls.h"
-#include "ole2.h"
-#include "olectl.h"
-#include "msxml6.h"
-#include "wininet.h"
-#include "winreg.h"
-#include "shlwapi.h"
-#include "ocidl.h"
-#include "objsafe.h"
+#include <windef.h>
+#include <winbase.h>
+//#include "winuser.h"
+//#include "winnls.h"
+#include <ole2.h>
+#include <olectl.h>
+#include <msxml6.h>
+//#include "wininet.h"
+//#include "winreg.h"
+//#include "shlwapi.h"
+//#include "ocidl.h"
+#include <objsafe.h>
 
-#include "wine/debug.h"
-#include "wine/list.h"
+#include <wine/debug.h>
+#include <wine/list.h>
 
 #include "msxml_private.h"
 

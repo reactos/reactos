@@ -33,36 +33,36 @@ Author:
 NTSTATUS
 NTAPI
 MmCreateSection(
-    OUT PVOID *SectionObject,
-    IN ACCESS_MASK DesiredAccess,
-    IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
-    IN PLARGE_INTEGER MaximumSize,
-    IN ULONG SectionPageProtection,
-    IN ULONG AllocationAttributes,
-    IN HANDLE FileHandle OPTIONAL,
-    IN PFILE_OBJECT File OPTIONAL
+    _Out_ PVOID *SectionObject,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes,
+    _In_ PLARGE_INTEGER MaximumSize,
+    _In_ ULONG SectionPageProtection,
+    _In_ ULONG AllocationAttributes,
+    _In_opt_ HANDLE FileHandle,
+    _In_opt_ PFILE_OBJECT File
 );
 
 NTSTATUS
 NTAPI
 MmMapViewOfSection(
-    IN PVOID SectionObject,
-    IN PEPROCESS Process,
-    IN OUT PVOID *BaseAddress,
-    IN ULONG_PTR ZeroBits,
-    IN SIZE_T CommitSize,
-    IN OUT PLARGE_INTEGER SectionOffset OPTIONAL,
-    IN OUT PSIZE_T ViewSize,
-    IN SECTION_INHERIT InheritDisposition,
-    IN ULONG AllocationType,
-    IN ULONG Protect
+    _In_ PVOID SectionObject,
+    _In_ PEPROCESS Process,
+    _Inout_ PVOID *BaseAddress,
+    _In_ ULONG_PTR ZeroBits,
+    _In_ SIZE_T CommitSize,
+    _Inout_opt_ PLARGE_INTEGER SectionOffset,
+    _Inout_ PSIZE_T ViewSize,
+    _In_ SECTION_INHERIT InheritDisposition,
+    _In_ ULONG AllocationType,
+    _In_ ULONG Protect
 );
 
 NTSTATUS
 NTAPI
 MmUnmapViewOfSection(
-    struct _EPROCESS* Process,
-    PVOID BaseAddress
+    _In_ struct _EPROCESS* Process,
+    _In_ PVOID BaseAddress
 );
 
 #endif
@@ -74,403 +74,416 @@ NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtAreMappedFilesTheSame(
-    IN PVOID File1MappedAsAnImage,
-    IN PVOID File2MappedAsFile
+    _In_ PVOID File1MappedAsAnImage,
+    _In_ PVOID File2MappedAsFile
 );
 
 NTSTATUS
 NTAPI
 NtAllocateUserPhysicalPages(
-    IN HANDLE ProcessHandle,
-    IN OUT PULONG_PTR NumberOfPages,
-    IN OUT PULONG_PTR UserPfnArray
+    _In_ HANDLE ProcessHandle,
+    _Inout_ PULONG_PTR NumberOfPages,
+    _Inout_ PULONG_PTR UserPfnArray
 );
 
+_Must_inspect_result_
+_At_(*BaseAddress, __drv_allocatesMem(Mem))
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtAllocateVirtualMemory(
-    IN HANDLE ProcessHandle,
-    IN OUT PVOID *BaseAddress,
-    IN ULONG_PTR ZeroBits,
-    IN OUT PSIZE_T RegionSize,
-    IN ULONG AllocationType,
-    IN ULONG Protect
+    _In_ HANDLE ProcessHandle,
+    _Inout_ _Outptr_result_buffer_(*RegionSize) PVOID *BaseAddress,
+    _In_ ULONG_PTR ZeroBits,
+    _Inout_ PSIZE_T RegionSize,
+    _In_ ULONG AllocationType,
+    _In_ ULONG Protect
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtCreatePagingFile(
-    IN PUNICODE_STRING FileName,
-    IN PLARGE_INTEGER InitialSize,
-    IN PLARGE_INTEGER MaxiumSize,
-    IN ULONG Reserved
+    _In_ PUNICODE_STRING FileName,
+    _In_ PLARGE_INTEGER InitialSize,
+    _In_ PLARGE_INTEGER MaxiumSize,
+    _In_ ULONG Reserved
 );
 
+_Must_inspect_result_
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtCreateSection(
-    OUT PHANDLE SectionHandle,
-    IN ACCESS_MASK DesiredAccess,
-    IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
-    IN PLARGE_INTEGER MaximumSize OPTIONAL,
-    IN ULONG SectionPageProtection OPTIONAL,
-    IN ULONG AllocationAttributes,
-    IN HANDLE FileHandle OPTIONAL
+    _Out_ PHANDLE SectionHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes,
+    _In_opt_ PLARGE_INTEGER MaximumSize,
+    _In_ ULONG SectionPageProtection,
+    _In_ ULONG AllocationAttributes,
+    _In_opt_ HANDLE FileHandle
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtExtendSection(
-    IN HANDLE SectionHandle,
-    IN PLARGE_INTEGER NewMaximumSize
+    _In_ HANDLE SectionHandle,
+    _In_ PLARGE_INTEGER NewMaximumSize
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtFlushVirtualMemory(
-    IN HANDLE ProcessHandle,
-    IN OUT PVOID *BaseAddress,
-    IN OUT PSIZE_T RegionSize,
-    OUT PIO_STATUS_BLOCK IoStatus
+    _In_ HANDLE ProcessHandle,
+    _Inout_ PVOID *BaseAddress,
+    _Inout_ PSIZE_T RegionSize,
+    _Out_ PIO_STATUS_BLOCK IoStatus
 );
 
 NTSTATUS
 NTAPI
 NtFreeUserPhysicalPages(
-    IN HANDLE ProcessHandle,
-    IN OUT PULONG_PTR NumberOfPages,
-    IN OUT PULONG_PTR UserPfnArray
+    _In_ HANDLE ProcessHandle,
+    _Inout_ PULONG_PTR NumberOfPages,
+    _Inout_ PULONG_PTR UserPfnArray
 );
 
+__kernel_entry
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtFreeVirtualMemory(
-    IN HANDLE ProcessHandle,
-    IN PVOID *BaseAddress,
-    IN PSIZE_T RegionSize,
-    IN ULONG FreeType
+    _In_ HANDLE ProcessHandle,
+    _Inout_ __drv_freesMem(Mem) PVOID *BaseAddress,
+    _Inout_ PSIZE_T RegionSize,
+    _In_ ULONG FreeType
 );
-
 
 NTSTATUS
 NTAPI
 NtGetWriteWatch(
-    IN HANDLE ProcessHandle,
-    IN ULONG Flags,
-    IN PVOID BaseAddress,
-    IN SIZE_T RegionSize,
-    IN PVOID *UserAddressArray,
-    OUT PULONG_PTR EntriesInUserAddressArray,
-    OUT PULONG Granularity
+    _In_ HANDLE ProcessHandle,
+    _In_ ULONG Flags,
+    _In_ PVOID BaseAddress,
+    _In_ SIZE_T RegionSize,
+    _In_ PVOID *UserAddressArray,
+    _Out_ PULONG_PTR EntriesInUserAddressArray,
+    _Out_ PULONG Granularity
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtLockVirtualMemory(
-    IN HANDLE ProcessHandle,
-    IN OUT PVOID *BaseAddress,
-    IN OUT PSIZE_T NumberOfBytesToLock,
-    IN ULONG MapType
+    _In_ HANDLE ProcessHandle,
+    _Inout_ PVOID *BaseAddress,
+    _Inout_ PSIZE_T NumberOfBytesToLock,
+    _In_ ULONG MapType
 );
 
 NTSTATUS
 NTAPI
 NtMapUserPhysicalPages(
-    IN PVOID VirtualAddresses,
-    IN ULONG_PTR NumberOfPages,
-    IN OUT PULONG_PTR UserPfnArray
+    _In_ PVOID VirtualAddresses,
+    _In_ ULONG_PTR NumberOfPages,
+    _Inout_ PULONG_PTR UserPfnArray
 );
 
 NTSTATUS
 NTAPI
 NtMapUserPhysicalPagesScatter(
-    IN PVOID *VirtualAddresses,
-    IN ULONG_PTR NumberOfPages,
-    IN OUT PULONG_PTR UserPfnArray
+    _In_ PVOID *VirtualAddresses,
+    _In_ ULONG_PTR NumberOfPages,
+    _Inout_ PULONG_PTR UserPfnArray
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtMapViewOfSection(
-    IN HANDLE SectionHandle,
-    IN HANDLE ProcessHandle,
-    IN OUT PVOID *BaseAddress,
-    IN ULONG_PTR ZeroBits,
-    IN SIZE_T CommitSize,
-    IN OUT PLARGE_INTEGER SectionOffset OPTIONAL,
-    IN OUT PSIZE_T ViewSize,
-    IN SECTION_INHERIT InheritDisposition,
-    IN ULONG AllocationType,
-    IN ULONG AccessProtection
+    _In_ HANDLE SectionHandle,
+    _In_ HANDLE ProcessHandle,
+    _Inout_ PVOID *BaseAddress,
+    _In_ ULONG_PTR ZeroBits,
+    _In_ SIZE_T CommitSize,
+    _Inout_opt_ PLARGE_INTEGER SectionOffset,
+    _Inout_ PSIZE_T ViewSize,
+    _In_ SECTION_INHERIT InheritDisposition,
+    _In_ ULONG AllocationType,
+    _In_ ULONG AccessProtection
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtOpenSection(
-    OUT PHANDLE SectionHandle,
-    IN ACCESS_MASK DesiredAccess,
-    IN POBJECT_ATTRIBUTES ObjectAttributes
+    _Out_ PHANDLE SectionHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ POBJECT_ATTRIBUTES ObjectAttributes
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtProtectVirtualMemory(
-    IN HANDLE ProcessHandle,
-    IN PVOID *BaseAddress,
-    IN SIZE_T *NumberOfBytesToProtect,
-    IN ULONG NewAccessProtection,
-    OUT PULONG OldAccessProtection
+    _In_ HANDLE ProcessHandle,
+    _In_ PVOID *BaseAddress,
+    _In_ SIZE_T *NumberOfBytesToProtect,
+    _In_ ULONG NewAccessProtection,
+    _Out_ PULONG OldAccessProtection
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQuerySection(
-    IN HANDLE SectionHandle,
-    IN SECTION_INFORMATION_CLASS SectionInformationClass,
-    OUT PVOID SectionInformation,
-    IN SIZE_T Length,
-    OUT PSIZE_T ResultLength
+    _In_ HANDLE SectionHandle,
+    _In_ SECTION_INFORMATION_CLASS SectionInformationClass,
+    _Out_ PVOID SectionInformation,
+    _In_ SIZE_T Length,
+    _Out_ PSIZE_T ResultLength
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQueryVirtualMemory(
-    IN HANDLE ProcessHandle,
-    IN PVOID Address,
-    IN MEMORY_INFORMATION_CLASS VirtualMemoryInformationClass,
-    OUT PVOID VirtualMemoryInformation,
-    IN SIZE_T Length,
-    OUT PSIZE_T ResultLength
+    _In_ HANDLE ProcessHandle,
+    _In_ PVOID Address,
+    _In_ MEMORY_INFORMATION_CLASS VirtualMemoryInformationClass,
+    _Out_ PVOID VirtualMemoryInformation,
+    _In_ SIZE_T Length,
+    _Out_opt_ PSIZE_T ResultLength
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtReadVirtualMemory(
-    IN HANDLE ProcessHandle,
-    IN PVOID BaseAddress,
-    OUT PVOID Buffer,
-    IN SIZE_T NumberOfBytesToRead,
-    OUT PSIZE_T NumberOfBytesRead
+    _In_ HANDLE ProcessHandle,
+    _In_ PVOID BaseAddress,
+    _Out_ PVOID Buffer,
+    _In_ SIZE_T NumberOfBytesToRead,
+    _Out_opt_ PSIZE_T NumberOfBytesRead
 );
 
 NTSTATUS
 NTAPI
 NtResetWriteWatch(
-    IN HANDLE ProcessHandle,
-    IN PVOID BaseAddress,
-    IN SIZE_T RegionSize
+    _In_ HANDLE ProcessHandle,
+    _In_ PVOID BaseAddress,
+    _In_ SIZE_T RegionSize
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtUnlockVirtualMemory(
-    IN HANDLE ProcessHandle,
-    IN OUT PVOID *BaseAddress,
-    IN OUT PSIZE_T NumberOfBytesToUnlock,
-    IN ULONG MapType
+    _In_ HANDLE ProcessHandle,
+    _Inout_ PVOID *BaseAddress,
+    _Inout_ PSIZE_T NumberOfBytesToUnlock,
+    _In_ ULONG MapType
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtUnmapViewOfSection(
-    IN HANDLE ProcessHandle,
-    IN PVOID BaseAddress
+    _In_ HANDLE ProcessHandle,
+    _In_ PVOID BaseAddress
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtWriteVirtualMemory(
-    IN HANDLE ProcessHandle,
-    IN PVOID  BaseAddress,
-    IN PVOID Buffer,
-    IN SIZE_T NumberOfBytesToWrite,
-    OUT PSIZE_T NumberOfBytesWritten
+    _In_ HANDLE ProcessHandle,
+    _In_ PVOID  BaseAddress,
+    _In_ PVOID Buffer,
+    _In_ SIZE_T NumberOfBytesToWrite,
+    _Out_opt_ PSIZE_T NumberOfBytesWritten
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwAreMappedFilesTheSame(
-    IN PVOID File1MappedAsAnImage,
-    IN PVOID File2MappedAsFile
+    _In_ PVOID File1MappedAsAnImage,
+    _In_ PVOID File2MappedAsFile
 );
 
+_Must_inspect_result_
+_At_(*BaseAddress, __drv_allocatesMem(Mem))
+__kernel_entry
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwAllocateVirtualMemory(
-    IN HANDLE ProcessHandle,
-    IN OUT PVOID *BaseAddress,
-    IN ULONG_PTR ZeroBits,
-    IN OUT PSIZE_T RegionSize,
-    IN ULONG AllocationType,
-    IN ULONG Protect
+    _In_ HANDLE ProcessHandle,
+    _Inout_ _Outptr_result_buffer_(*RegionSize) PVOID *BaseAddress,
+    _In_ ULONG_PTR ZeroBits,
+    _Inout_ PSIZE_T RegionSize,
+    _In_ ULONG AllocationType,
+    _In_ ULONG Protect
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCreatePagingFile(
-    IN PUNICODE_STRING FileName,
-    IN PLARGE_INTEGER InitialSize,
-    IN PLARGE_INTEGER MaxiumSize,
-    IN ULONG Reserved
+    _In_ PUNICODE_STRING FileName,
+    _In_ PLARGE_INTEGER InitialSize,
+    _In_ PLARGE_INTEGER MaxiumSize,
+    _In_ ULONG Reserved
 );
 
+_IRQL_requires_max_(APC_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCreateSection(
-    OUT PHANDLE SectionHandle,
-    IN ACCESS_MASK DesiredAccess,
-    IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
-    IN PLARGE_INTEGER MaximumSize OPTIONAL,
-    IN ULONG SectionPageProtection OPTIONAL,
-    IN ULONG AllocationAttributes,
-    IN HANDLE FileHandle OPTIONAL
+    _Out_ PHANDLE SectionHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes,
+    _In_opt_ PLARGE_INTEGER MaximumSize,
+    _In_ ULONG SectionPageProtection,
+    _In_ ULONG AllocationAttributes,
+    _In_opt_ HANDLE FileHandle
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwExtendSection(
-    IN HANDLE SectionHandle,
-    IN PLARGE_INTEGER NewMaximumSize
+    _In_ HANDLE SectionHandle,
+    _In_ PLARGE_INTEGER NewMaximumSize
 );
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwFreeVirtualMemory(
-    IN HANDLE ProcessHandle,
-    IN PVOID *BaseAddress,
-    IN PSIZE_T RegionSize,
-    IN ULONG FreeType
+    _In_ HANDLE ProcessHandle,
+    _Inout_ __drv_freesMem(Mem) PVOID *BaseAddress,
+    _Inout_ PSIZE_T RegionSize,
+    _In_ ULONG FreeType
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwLockVirtualMemory(
-    IN HANDLE ProcessHandle,
-    IN OUT PVOID *BaseAddress,
-    IN OUT PSIZE_T NumberOfBytesToLock,
-    IN ULONG MapType
+    _In_ HANDLE ProcessHandle,
+    _Inout_ PVOID *BaseAddress,
+    _Inout_ PSIZE_T NumberOfBytesToLock,
+    _In_ ULONG MapType
 );
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwMapViewOfSection(
-    IN HANDLE SectionHandle,
-    IN HANDLE ProcessHandle,
-    IN OUT PVOID *BaseAddress,
-    IN ULONG_PTR ZeroBits,
-    IN SIZE_T CommitSize,
-    IN OUT PLARGE_INTEGER SectionOffset OPTIONAL,
-    IN OUT PSIZE_T ViewSize,
-    IN SECTION_INHERIT InheritDisposition,
-    IN ULONG AllocationType,
-    IN ULONG AccessProtection
+    _In_ HANDLE SectionHandle,
+    _In_ HANDLE ProcessHandle,
+    _Outptr_result_bytebuffer_(*ViewSize) PVOID *BaseAddress,
+    _In_ ULONG_PTR ZeroBits,
+    _In_ SIZE_T CommitSize,
+    _Inout_opt_ PLARGE_INTEGER SectionOffset,
+    _Inout_ PSIZE_T ViewSize,
+    _In_ SECTION_INHERIT InheritDisposition,
+    _In_ ULONG AllocationType,
+    _In_ ULONG Win32Protect
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwOpenSection(
-    OUT PHANDLE SectionHandle,
-    IN ACCESS_MASK DesiredAccess,
-    IN POBJECT_ATTRIBUTES ObjectAttributes
+    _Out_ PHANDLE SectionHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ POBJECT_ATTRIBUTES ObjectAttributes
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwProtectVirtualMemory(
-    IN HANDLE ProcessHandle,
-    IN PVOID *BaseAddress,
-    IN SIZE_T *NumberOfBytesToProtect,
-    IN ULONG NewAccessProtection,
-    OUT PULONG OldAccessProtection
+    _In_ HANDLE ProcessHandle,
+    _In_ PVOID *BaseAddress,
+    _In_ SIZE_T *NumberOfBytesToProtect,
+    _In_ ULONG NewAccessProtection,
+    _Out_ PULONG OldAccessProtection
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQuerySection(
-    IN HANDLE SectionHandle,
-    IN SECTION_INFORMATION_CLASS SectionInformationClass,
-    OUT PVOID SectionInformation,
-    IN SIZE_T Length,
-    OUT PSIZE_T ResultLength
+    _In_ HANDLE SectionHandle,
+    _In_ SECTION_INFORMATION_CLASS SectionInformationClass,
+    _Out_ PVOID SectionInformation,
+    _In_ SIZE_T Length,
+    _Out_opt_ PSIZE_T ResultLength
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryVirtualMemory(
-    IN HANDLE ProcessHandle,
-    IN PVOID Address,
-    IN MEMORY_INFORMATION_CLASS VirtualMemoryInformationClass,
-    OUT PVOID VirtualMemoryInformation,
-    IN SIZE_T Length,
-    OUT PSIZE_T ResultLength
+    _In_ HANDLE ProcessHandle,
+    _In_ PVOID Address,
+    _In_ MEMORY_INFORMATION_CLASS VirtualMemoryInformationClass,
+    _Out_ PVOID VirtualMemoryInformation,
+    _In_ SIZE_T Length,
+    _Out_opt_ PSIZE_T ResultLength
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwReadVirtualMemory(
-    IN HANDLE ProcessHandle,
-    IN PVOID BaseAddress,
-    OUT PVOID Buffer,
-    IN SIZE_T NumberOfBytesToRead,
-    OUT PSIZE_T NumberOfBytesRead
+    _In_ HANDLE ProcessHandle,
+    _In_ PVOID BaseAddress,
+    _Out_ PVOID Buffer,
+    _In_ SIZE_T NumberOfBytesToRead,
+    _Out_opt_ PSIZE_T NumberOfBytesRead
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwUnlockVirtualMemory(
-    IN HANDLE ProcessHandle,
-    IN OUT PVOID *BaseAddress,
-    IN OUT PSIZE_T NumberOfBytesToUnlock,
-    IN ULONG MapType
+    _In_ HANDLE ProcessHandle,
+    _Inout_ PVOID *BaseAddress,
+    _Inout_ PSIZE_T NumberOfBytesToUnlock,
+    _In_ ULONG MapType
 );
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwUnmapViewOfSection(
-    IN HANDLE ProcessHandle,
-    IN PVOID BaseAddress
+    _In_ HANDLE ProcessHandle,
+    _In_opt_ PVOID BaseAddress
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwWriteVirtualMemory(
-    IN HANDLE ProcessHandle,
-    IN PVOID  BaseAddress,
-    IN PVOID Buffer,
-    IN SIZE_T NumberOfBytesToWrite,
-    OUT PSIZE_T NumberOfBytesWritten
+    _In_ HANDLE ProcessHandle,
+    _In_ PVOID  BaseAddress,
+    _In_ PVOID Buffer,
+    _In_ SIZE_T NumberOfBytesToWrite,
+    _Out_opt_ PSIZE_T NumberOfBytesWritten
 );
 
 #endif

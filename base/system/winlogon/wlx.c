@@ -12,8 +12,6 @@
 
 #include "winlogon.h"
 
-#include <wine/debug.h>
-
 WINE_DEFAULT_DEBUG_CHANNEL(winlogon);
 
 #define DESKTOP_ALL (DESKTOP_READOBJECTS | DESKTOP_CREATEWINDOW | \

@@ -35,11 +35,11 @@
 /*
 */
 
-#include <stdlib.h>
-#include <stdio.h>
-#include "gluos.h"
-#include "glimports.h"
-#include "zlassert.h"
+//#include <stdlib.h>
+//#include <stdio.h>
+//#include "gluos.h"
+//#include "glimports.h"
+//#include "zlassert.h"
 
 #include "monoTriangulation.h"
 #include "polyUtil.h" /*for area*/

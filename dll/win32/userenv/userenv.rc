@@ -15,7 +15,8 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <windows.h>
+#include <windef.h>
+
 #include "resources.h"
 
 #define REACTOS_VERSION_DLL

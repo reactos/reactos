@@ -1,3 +1,4 @@
+#pragma once
 
 #define IDS_APPTITLE                    1000
 #define IDS_DEFAULTTOPICTITLE           1001

@@ -1,5 +1,4 @@
-#include <windef.h>
-#include <winuser.h>
+#pragma once
 
 #define MNID_FILE_OPEN          0x101
 #define MNID_FILE_PRINT         0x104

@@ -6,7 +6,7 @@
  * NOTE:            Get, query and enum functions.
  */
 
-#include <winsta.h>
+#include "winsta.h"
 
 VOID
 WINSTAAPI

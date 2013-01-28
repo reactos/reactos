@@ -7,7 +7,7 @@
  *
  */
 
-#include <precomp.h>
+#include "precomp.h"
 
 HWND hGeneralPage;
 HWND hGeneralDialog;

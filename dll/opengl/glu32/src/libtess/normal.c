@@ -33,11 +33,11 @@
 */
 
 #include "gluos.h"
-#include "mesh.h"
+//#include "mesh.h"
 #include "tess.h"
-#include "normal.h"
-#include <math.h>
-#include <assert.h>
+//#include "normal.h"
+//#include <math.h>
+//#include <assert.h>
 
 #ifndef TRUE
 #define TRUE 1

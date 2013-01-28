@@ -29,10 +29,10 @@
  * mask for the destination parameter into account.
  */
 
-#include "config.h"
-#include "wine/port.h"
+#include <config.h>
+#include <wine/port.h>
 
-#include <limits.h>
+//#include <limits.h>
 #include <stdio.h>
 
 #include "wined3d_private.h"

@@ -37,13 +37,13 @@
  *
  */
 
-#include "glimports.h"
-#include "mystdio.h"
-#include "myassert.h"
+//#include "glimports.h"
+//#include "mystdio.h"
+//#include "myassert.h"
 #include "subdivider.h"
-#include "types.h"
-#include "arc.h"
-#include "trimvertex.h"
+//#include "types.h"
+//#include "arc.h"
+//#include "trimvertex.h"
 #include "simplemath.h"
 
 inline int 

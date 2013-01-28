@@ -19,11 +19,11 @@
 #ifndef __WINE_DPINIT_H
 #define __WINE_DPINIT_H
 
-#include <stdarg.h>
+//#include <stdarg.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "wtypes.h"
+//#include "windef.h"
+//#include "winbase.h"
+//#include "wtypes.h"
 #include "dplay_global.h"
 
 extern HRESULT DP_CreateInterface( REFIID riid, LPVOID* ppvObj );

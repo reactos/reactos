@@ -26,22 +26,26 @@
 #include <stdarg.h>
 #endif
 
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "winreg.h"
-#include "winerror.h"
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
+#include <windef.h>
+#include <winbase.h>
+#include <wingdi.h>
+//#include "winuser.h"
+#include <winreg.h>
+//#include "winerror.h"
 
 #define COBJMACROS
 
-#include "ole2.h"
-#include "strmif.h"
-#include "olectl.h"
-#include "uuids.h"
+#include <ole2.h>
+#include <strmif.h>
+//#include "olectl.h"
+#include <uuids.h>
 
 #ifndef RC_INVOKED
-#include "wine/unicode.h"
+#include <wine/unicode.h>
 #endif
 
 /**********************************************************************

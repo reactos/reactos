@@ -10,7 +10,7 @@
 
 #include "smss.h"
 #define NDEBUG
-#include "debug.h"
+#include <debug.h>
 
 /* GLOBALS ********************************************************************/
 
@@ -539,7 +539,7 @@ SmpLoadSubSystemsForMuSession(IN PULONG MuSessionId,
     {
         /* Get the entry and check if this is the special Win32k entry */
         RegEntry = CONTAINING_RECORD(NextEntry, SMP_REGISTRY_VALUE, Entry);
-        if (!_wcsicmp(RegEntry->Name.Buffer, L"Kmode"))
+        if (_wcsicmp(RegEntry->Name.Buffer, L"Kmode") == 0)
         {
             /* Translate it */
             if (!RtlDosPathNameToNtPathName_U(RegEntry->Value.Buffer,
@@ -570,7 +570,10 @@ SmpLoadSubSystemsForMuSession(IN PULONG MuSessionId,
                     }
                     AttachedSessionId = *MuSessionId;
 
-                    /* Start Win32k.sys on this session */
+                    /*
+                     * Start Win32k.sys on this session. Use a hardcoded value
+                     * instead of the Kmode one...
+                     */
                     RtlInitUnicodeString(&DestinationString,
                                          L"\\SystemRoot\\System32\\win32k.sys");
                     Status = NtSetSystemInformation(SystemExtendServiceTableInformation,
@@ -597,21 +600,21 @@ SmpLoadSubSystemsForMuSession(IN PULONG MuSessionId,
     {
         /* Get each entry and check if it's the internal debug or not */
         RegEntry = CONTAINING_RECORD(NextEntry, SMP_REGISTRY_VALUE, Entry);
-        if (_wcsicmp(RegEntry->Name.Buffer, L"debug"))
-        {
-            /* Load the required subsystem */
-            Status = SmpExecuteCommand(&RegEntry->Value,
-                                       *MuSessionId,
-                                       ProcessId,
-                                       SMP_SUBSYSTEM_FLAG);
-        }
-        else
+        if (_wcsicmp(RegEntry->Name.Buffer, L"Debug") == 0)
         {
             /* Load the internal debug system */
             Status = SmpExecuteCommand(&RegEntry->Value,
                                        *MuSessionId,
                                        ProcessId,
                                        SMP_DEBUG_FLAG | SMP_SUBSYSTEM_FLAG);
+        }
+        else
+        {
+            /* Load the required subsystem */
+            Status = SmpExecuteCommand(&RegEntry->Value,
+                                       *MuSessionId,
+                                       ProcessId,
+                                       SMP_SUBSYSTEM_FLAG);
         }
         if (!NT_SUCCESS(Status))
         {

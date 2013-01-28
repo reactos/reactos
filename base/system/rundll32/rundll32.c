@@ -9,8 +9,6 @@
  * PROGRAMMER:      ShadowFlare (blakflare@hotmail.com)
  */
 
-#define WIN32_LEAN_AND_MEAN
-
 // Both UNICODE and _UNICODE must be either defined or undefined
 // because some headers use UNICODE and others use _UNICODE
 #ifdef UNICODE
@@ -23,11 +21,15 @@
 #endif
 #endif
 
-#include <windows.h>
-#include <stdio.h>
-#include <string.h>
-#include <malloc.h>
+#define WIN32_NO_STATUS
+#include <stdarg.h>
+#include <stdlib.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winnls.h>
+#include <winuser.h>
 #include <tchar.h>
+
 #include "resource.h"
 
 typedef int (WINAPI *DllWinMainW)(

@@ -1,4 +1,6 @@
-#include <windows.h>
+#include <windef.h>
+#include <winuser.h>
+
 #include "resource.h"
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
@@ -33,6 +35,9 @@ IDI_SOLITAIRE ICON DISCARDABLE "solitaire.ico"
 #endif
 #ifdef LANGUAGE_FR_FR
     #include "lang/fr-FR.rc"
+#endif
+#ifdef LANGUAGE_HE_IL
+    #include "lang/he-IL.rc"
 #endif
 #ifdef LANGUAGE_HU_HU
     #include "lang/hu-HU.rc"

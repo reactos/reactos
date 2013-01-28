@@ -13,7 +13,9 @@
 #define WIN32_NO_STATUS
 
 #include <stdio.h>
-#include <windows.h>
+
+#include <windef.h>
+#include <winbase.h>
 #include <netevent.h>
 #include <lpctypes.h>
 #include <lpcfuncs.h>
@@ -21,7 +23,7 @@
 #include <obfuncs.h>
 #include <iofuncs.h>
 #include <debug.h>
-#include "eventlogrpc_s.h"
+#include <eventlogrpc_s.h>
 
 typedef struct _IO_ERROR_LPC
 {

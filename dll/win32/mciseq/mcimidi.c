@@ -25,19 +25,21 @@
  *      + better implement non waiting command (without the MCI_WAIT flag).
  */
 
-#include <stdlib.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <string.h>
+#define WIN32_NO_STATUS
 
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "wownt32.h"
-#include "mmddk.h"
-#include "wine/debug.h"
-#include "wine/unicode.h"
+//#include <stdlib.h>
+#include <stdarg.h>
+//#include <stdio.h>
+//#include <string.h>
+
+#include <windef.h>
+//#include "winbase.h"
+//#include "wingdi.h"
+#include <winuser.h>
+#include <wownt32.h>
+#include <mmddk.h>
+#include <wine/debug.h>
+#include <wine/unicode.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(mcimidi);
 

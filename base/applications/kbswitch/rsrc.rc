@@ -1,5 +1,6 @@
 // UTF-8
 #pragma code_page(65001)
+
 #ifdef LANGUAGE_BG_BG
     #include "lang/bg-BG.rc"
 #endif
@@ -17,6 +18,9 @@
 #endif
 #ifdef LANGUAGE_FR_FR
     #include "lang/fr-FR.rc"
+#endif
+#ifdef LANGUAGE_HE_IL
+    #include "lang/he-IL.rc"
 #endif
 #ifdef LANGUAGE_IT_IT
     #include "lang/it-IT.rc"

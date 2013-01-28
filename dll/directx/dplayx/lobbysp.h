@@ -19,11 +19,11 @@
 #ifndef __WINE_LOBBY_SP_H
 #define __WINE_LOBBY_SP_H
 
-#include <stdarg.h>
+//#include <stdarg.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
+//#include "windef.h"
+//#include "winbase.h"
+//#include "winuser.h"
 #include "dplobby.h"
 
 /* GUID for IDPLobbySP {5A4E5A20-2CED-11d0-A889-00A0C905433C} */

@@ -21,17 +21,22 @@
 
 #define NONAMELESSUNION
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #include <stdarg.h>
 #include <windef.h>
 #include <winbase.h>
-#include <winuser.h>
+//#include <winuser.h>
 #include <wininet.h>
 #include <winreg.h>
 #include <shlwapi.h>
-#include <prsht.h>
+//#include <prsht.h>
 
 #include "inetcpl.h"
-#include "wine/debug.h"
+
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(inetcpl);
 

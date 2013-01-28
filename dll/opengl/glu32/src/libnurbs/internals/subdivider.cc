@@ -37,21 +37,21 @@
  *
  */
 
-#include "glimports.h"
-#include "myassert.h"
-#include "mystdio.h"
+//#include "glimports.h"
+//#include "myassert.h"
+//#include "mystdio.h"
 #include "subdivider.h"
-#include "arc.h"
+//#include "arc.h"
 #include "bezierarc.h"
-#include "bin.h"
+//#include "bin.h"
 #include "renderhints.h"
 #include "backend.h"
-#include "mapdesc.h"
+//#include "mapdesc.h"
 #include "quilt.h"
 #include "patchlist.h"
-#include "patch.h"
-#include "nurbsconsts.h"
-#include "trimvertpool.h"
+//#include "patch.h"
+//#include "nurbsconsts.h"
+//#include "trimvertpool.h"
 #include "simplemath.h"
 
 #include "polyUtil.h" //for function area()

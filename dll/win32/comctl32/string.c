@@ -22,23 +22,23 @@
  *
  */
 
-#include "config.h"
-#include "wine/port.h"
+#include <config.h>
+//#include "wine/port.h"
 
-#include <stdarg.h>
-#include <string.h>
-#include <stdlib.h> /* atoi */
+//#include <stdarg.h>
+//#include <string.h>
+//#include <stdlib.h> /* atoi */
 
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "winnls.h"
+//#include "windef.h"
+//#include "winbase.h"
+//#include "winuser.h"
+//#include "winnls.h"
 
 #include "comctl32.h"
 
-#include "wine/unicode.h"
+#include <wine/unicode.h>
 
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(commctrl);
 

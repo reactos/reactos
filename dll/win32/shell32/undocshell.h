@@ -19,14 +19,6 @@
 #ifndef __WINE_UNDOCSHELL_H
 #define __WINE_UNDOCSHELL_H
 
-#include <stdarg.h>
-
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "commctrl.h"
-#include "shlobj.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif /* defined(__cplusplus) */

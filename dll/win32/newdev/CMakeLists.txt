@@ -6,7 +6,7 @@ list(APPEND SOURCE
     newdev.c
     stubs.c
     wizard.c
-    newdev.rc
+    rsrc.rc
     ${CMAKE_CURRENT_BINARY_DIR}/newdev_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/newdev.def)
 

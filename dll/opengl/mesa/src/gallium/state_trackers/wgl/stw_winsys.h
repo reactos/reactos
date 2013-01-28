@@ -28,7 +28,7 @@
 #ifndef STW_WINSYS_H
 #define STW_WINSYS_H
 
-#include <windows.h> /* for HDC */
+//#include <windows.h> /* for HDC */
 
 #include "pipe/p_compiler.h"
 

@@ -35,11 +35,11 @@
 /*
 */
 
-#include <stdlib.h>
-#include <stdio.h>
+//#include <stdlib.h>
+//#include <stdio.h>
 #include <assert.h>
 #include <math.h>
-#include "bezierEval.h"
+//#include "bezierEval.h"
 
 #ifdef __WATCOMC__
 #pragma warning 14  10

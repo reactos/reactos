@@ -18,8 +18,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "windef.h"
-#include "oleacc.h"
+//#include "windef.h"
+//#include "oleacc.h"
 
 #ifdef LANGUAGE_EN_US
     #include "oleacc_En.rc"
@@ -40,6 +40,9 @@
 #endif
 #ifdef LANGUAGE_FR_FR
     #include "oleacc_Fr.rc"
+#endif
+#ifdef LANGUAGE_HE_IL
+    #include "oleacc_He.rc"
 #endif
 #ifdef LANGUAGE_HU_HU
     #include "oleacc_Hu.rc"

@@ -34,10 +34,10 @@
 
 #include "gluos.h"
 #include <assert.h>
-#include <stddef.h>
-#include "mesh.h"
+//#include <stddef.h>
+//#include "mesh.h"
 #include "tess.h"
-#include "render.h"
+//#include "render.h"
 
 #ifndef TRUE
 #define TRUE 1

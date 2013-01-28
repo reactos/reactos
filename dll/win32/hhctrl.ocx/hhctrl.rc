@@ -18,12 +18,13 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winnls.h"
-#include "htmlhelp.h"
-#include "resource.h"
+#define WIN32_NO_STATUS
+#include <windef.h>
+//#include "winbase.h"
+//#include "wingdi.h"
+//#include "winnls.h"
+//#include "htmlhelp.h"
+//#include "resource.h"
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
@@ -75,6 +76,9 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #endif
 #ifdef LANGUAGE_FR_FR
     #include "Fr.rc"
+#endif
+#ifdef LANGUAGE_HE_IL
+    #include "He.rc"
 #endif
 #ifdef LANGUAGE_IT_IT
     #include "It.rc"

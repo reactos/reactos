@@ -32,10 +32,10 @@
 **
 */
 
-#include <stddef.h>
-#include <assert.h>
+//#include <stddef.h>
+//#include <assert.h>
 #include "priorityq-heap.h"
-#include "memalloc.h"
+//#include "memalloc.h"
 
 #define INIT_SIZE	32
 

@@ -79,8 +79,7 @@ PciPdoWaitWake(IN PIRP Irp,
                IN PIO_STACK_LOCATION IoStackLocation,
                IN PPCI_PDO_EXTENSION DeviceExtension)
 {
-    UNIMPLEMENTED;
-    ASSERT(FALSE); // while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -100,8 +99,7 @@ PciPdoIrpQueryPower(IN PIRP Irp,
                     IN PIO_STACK_LOCATION IoStackLocation,
                     IN PPCI_PDO_EXTENSION DeviceExtension)
 {
-    UNIMPLEMENTED;
-    ASSERT(FALSE); // while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -218,8 +216,7 @@ PciPdoIrpRemoveDevice(IN PIRP Irp,
                       IN PIO_STACK_LOCATION IoStackLocation,
                       IN PPCI_PDO_EXTENSION DeviceExtension)
 {
-    UNIMPLEMENTED;
-    ASSERT(FALSE); // while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -229,8 +226,7 @@ PciPdoIrpCancelRemoveDevice(IN PIRP Irp,
                             IN PIO_STACK_LOCATION IoStackLocation,
                             IN PPCI_PDO_EXTENSION DeviceExtension)
 {
-    UNIMPLEMENTED;
-    ASSERT(FALSE); // while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -240,8 +236,7 @@ PciPdoIrpStopDevice(IN PIRP Irp,
                     IN PIO_STACK_LOCATION IoStackLocation,
                     IN PPCI_PDO_EXTENSION DeviceExtension)
 {
-    UNIMPLEMENTED;
-    ASSERT(FALSE); // while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -251,8 +246,7 @@ PciPdoIrpQueryStopDevice(IN PIRP Irp,
                          IN PIO_STACK_LOCATION IoStackLocation,
                          IN PPCI_PDO_EXTENSION DeviceExtension)
 {
-    UNIMPLEMENTED;
-    ASSERT(FALSE); // while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -262,8 +256,7 @@ PciPdoIrpCancelStopDevice(IN PIRP Irp,
                           IN PIO_STACK_LOCATION IoStackLocation,
                           IN PPCI_PDO_EXTENSION DeviceExtension)
 {
-    UNIMPLEMENTED;
-    ASSERT(FALSE); // while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -273,8 +266,7 @@ PciPdoIrpQueryInterface(IN PIRP Irp,
                         IN PIO_STACK_LOCATION IoStackLocation,
                         IN PPCI_PDO_EXTENSION DeviceExtension)
 {
-    UNIMPLEMENTED;
-    ASSERT(FALSE); // while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -404,8 +396,7 @@ PciPdoIrpReadConfig(IN PIRP Irp,
                     IN PIO_STACK_LOCATION IoStackLocation,
                     IN PPCI_PDO_EXTENSION DeviceExtension)
 {
-    UNIMPLEMENTED;
-    ASSERT(FALSE); // while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -415,8 +406,7 @@ PciPdoIrpWriteConfig(IN PIRP Irp,
                      IN PIO_STACK_LOCATION IoStackLocation,
                      IN PPCI_PDO_EXTENSION DeviceExtension)
 {
-    UNIMPLEMENTED;
-    ASSERT(FALSE); // while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -436,8 +426,7 @@ PciPdoIrpDeviceUsageNotification(IN PIRP Irp,
                                  IN PIO_STACK_LOCATION IoStackLocation,
                                  IN PPCI_PDO_EXTENSION DeviceExtension)
 {
-    UNIMPLEMENTED;
-    ASSERT(FALSE); // while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -447,8 +436,7 @@ PciPdoIrpSurpriseRemoval(IN PIRP Irp,
                          IN PIO_STACK_LOCATION IoStackLocation,
                          IN PPCI_PDO_EXTENSION DeviceExtension)
 {
-    UNIMPLEMENTED;
-    ASSERT(FALSE); // while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -458,8 +446,7 @@ PciPdoIrpQueryLegacyBusInformation(IN PIRP Irp,
                                    IN PIO_STACK_LOCATION IoStackLocation,
                                    IN PPCI_PDO_EXTENSION DeviceExtension)
 {
-    UNIMPLEMENTED;
-    ASSERT(FALSE); // while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
     return STATUS_NOT_SUPPORTED;
 }
 

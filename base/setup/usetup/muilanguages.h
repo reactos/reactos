@@ -619,7 +619,7 @@ const MUI_LANGUAGE LanguageList[] =
      {L"00000447", L"0", L"1", L"2", L"Gujarati (India)", L"91", enUSPages, enUSErrorEntries, enUSStrings, UnicodeFonts, guINLayouts },
 #endif
 #ifdef LANGUAGE_HE_IL
-     {L"0000040D", L"1255", L"862", L"10005", L"Hebrew", L"1", enUSPages, enUSErrorEntries, enUSStrings, HebrewFonts, heILLayouts },
+     {L"0000040D", L"1255", L"862", L"10005", L"Hebrew", L"1", heILPages, heILErrorEntries, heILStrings, HebrewFonts, heILLayouts },
 #endif
 #ifdef LANGUAGE_HI_IN
      {L"00000439", L"1252", L"437", L"10000", L"Hindi", L"1", enUSPages, enUSErrorEntries, enUSStrings, UnicodeFonts, hiINLayouts },

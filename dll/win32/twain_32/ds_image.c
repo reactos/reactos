@@ -18,15 +18,15 @@
 
 //#include "config.h"
 
-#include <stdarg.h>
+//#include <stdarg.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "twain.h"
-#include "twain_i.h"
-#include "wine/debug.h"
+//#include "windef.h"
+//#include "winbase.h"
+//#include "wingdi.h"
+//#include "winuser.h"
+#include <twain.h>
+//#include "twain_i.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(twain);
 

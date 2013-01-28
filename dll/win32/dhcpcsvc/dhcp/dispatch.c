@@ -39,7 +39,7 @@
  * Enterprises, see ``http://www.vix.com''.
  */
 
-#include "rosdhcp.h"
+#include <rosdhcp.h>
 
 //#include <sys/ioctl.h>
 

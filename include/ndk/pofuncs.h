@@ -32,45 +32,45 @@ NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtInitiatePowerAction(
-    POWER_ACTION SystemAction,
-    SYSTEM_POWER_STATE MinSystemState,
-    ULONG Flags,
-    BOOLEAN Asynchronous
+    _In_ POWER_ACTION SystemAction,
+    _In_ SYSTEM_POWER_STATE MinSystemState,
+    _In_ ULONG Flags,
+    _In_ BOOLEAN Asynchronous
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtPowerInformation(
-    POWER_INFORMATION_LEVEL PowerInformationLevel,
-    PVOID InputBuffer,
-    ULONG InputBufferLength,
-    PVOID OutputBuffer,
-    ULONG OutputBufferLength
+    _In_ POWER_INFORMATION_LEVEL PowerInformationLevel,
+    _In_bytecount_(InputBufferLength) PVOID InputBuffer,
+    _In_ ULONG InputBufferLength,
+    _Out_bytecap_(OutputBufferLength) PVOID OutputBuffer,
+    _In_ ULONG OutputBufferLength
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetSystemPowerState(
-    IN POWER_ACTION SystemAction,
-    IN SYSTEM_POWER_STATE MinSystemState,
-    IN ULONG Flags
+    _In_ POWER_ACTION SystemAction,
+    _In_ SYSTEM_POWER_STATE MinSystemState,
+    _In_ ULONG Flags
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtGetDevicePowerState(
-    IN HANDLE Device,
-    IN PDEVICE_POWER_STATE PowerState
+    _In_ HANDLE Device,
+    _In_ PDEVICE_POWER_STATE PowerState
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtRequestWakeupLatency(
-    IN LATENCY_TIME latency
+    _In_ LATENCY_TIME latency
 );
 
 NTSYSCALLAPI
@@ -82,61 +82,63 @@ NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetThreadExecutionState(
-    IN EXECUTION_STATE esFlags,
-    OUT EXECUTION_STATE *PreviousFlags
+    _In_ EXECUTION_STATE esFlags,
+    _Out_ EXECUTION_STATE *PreviousFlags
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtInitiatePowerAction(
-    IN POWER_ACTION SystemAction,
-    IN SYSTEM_POWER_STATE MinSystemState,
-    IN ULONG Flags,
-    IN BOOLEAN Asynchronous
+    _In_ POWER_ACTION SystemAction,
+    _In_ SYSTEM_POWER_STATE MinSystemState,
+    _In_ ULONG Flags,
+    _In_ BOOLEAN Asynchronous
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtRequestDeviceWakeup(
-    IN HANDLE Device
+    _In_ HANDLE Device
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtCancelDeviceWakeupRequest(
-    IN HANDLE Device
+    _In_ HANDLE Device
 );
 #endif
-NTSYSCALLAPI
+
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwInitiatePowerAction(
-    IN POWER_ACTION SystemAction,
-    IN SYSTEM_POWER_STATE MinSystemState,
-    IN ULONG Flags,
-    IN BOOLEAN Asynchronous
+    _In_ POWER_ACTION SystemAction,
+    _In_ SYSTEM_POWER_STATE MinSystemState,
+    _In_ ULONG Flags,
+    _In_ BOOLEAN Asynchronous
 );
 
-NTSYSCALLAPI
+_IRQL_requires_max_(PASSIVE_LEVEL)
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwPowerInformation(
-    IN POWER_INFORMATION_LEVEL PowerInformationLevel,
-    IN PVOID InputBuffer OPTIONAL,
-    IN ULONG InputBufferLength,
-    OUT PVOID OutputBuffer OPTIONAL,
-    IN ULONG OutputBufferLength
+    _In_ POWER_INFORMATION_LEVEL InformationLevel,
+    _In_reads_bytes_opt_(InputBufferLength) PVOID InputBuffer,
+    _In_ ULONG InputBufferLength,
+    _Out_writes_bytes_opt_(OutputBufferLength) PVOID OutputBuffer,
+    _In_ ULONG OutputBufferLength
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 ZwSetSystemPowerState(
-    IN POWER_ACTION SystemAction,
-    IN SYSTEM_POWER_STATE MinSystemState,
-    IN ULONG Flags
+    _In_ POWER_ACTION SystemAction,
+    _In_ SYSTEM_POWER_STATE MinSystemState,
+    _In_ ULONG Flags
 );
 #endif

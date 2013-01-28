@@ -21,19 +21,23 @@
  * Add support for MCIWNDF_RECORD.
  */
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #include <stdarg.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "winnls.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "winternl.h"
-#include "vfw.h"
-#include "digitalv.h"
-#include "commctrl.h"
-#include "wine/unicode.h"
-#include "wine/debug.h"
+#include <windef.h>
+#include <winbase.h>
+//#include "winnls.h"
+#include <wingdi.h>
+//#include "winuser.h"
+#include <winternl.h>
+#include <vfw.h>
+#include <digitalv.h>
+#include <commctrl.h>
+#include <wine/unicode.h>
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(mci);
 

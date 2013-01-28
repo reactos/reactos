@@ -18,18 +18,21 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include <assert.h>
-#include <stdarg.h>
-#include <string.h>
+#include <config.h>
+//#include <assert.h>
+//#include <stdarg.h>
+//#include <string.h>
 
 #define COBJMACROS
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
 
-#include "wine/debug.h"
-#include "windef.h"
-#include "winbase.h"
-#include "winerror.h"
-#include "dinput.h"
+#include <wine/debug.h>
+//#include "windef.h"
+#include <winbase.h>
+//#include "winerror.h"
+#include <dinput.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(dinput);
 static LONG dll_count;

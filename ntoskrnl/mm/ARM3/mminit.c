@@ -373,6 +373,9 @@ ULONG MiNumberDescriptors = 0;
 /* Number of free pages in the loader block */
 PFN_NUMBER MiNumberOfFreePages = 0;
 
+/* Timeout value for critical sections (2.5 minutes) */
+ULONG MmCritsectTimeoutSeconds = 150; // NT value: 720 * 60 * 60; (30 days)
+LARGE_INTEGER MmCriticalSectionTimeout;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -2118,6 +2121,9 @@ MmArmInitSystem(IN ULONG Phase,
 
         /* Initialize the user mode image list */
         InitializeListHead(&MmLoadedUserImageList);
+
+        /* Initialize critical section timeout value (relative time is negative) */
+        MmCriticalSectionTimeout.QuadPart = MmCritsectTimeoutSeconds * (-10000000LL);
 
         /* Initialize the paged pool mutex and the section commit mutex */
         KeInitializeGuardedMutex(&MmPagedPoolMutex);

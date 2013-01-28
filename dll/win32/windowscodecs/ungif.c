@@ -47,12 +47,12 @@
  *  3 Sep 90 - Version 1.1 by Gershon Elber (Support for Gif89, Unique names).
  *****************************************************************************/
 
-#include <stdlib.h>
-#include <string.h>
+//#include <stdlib.h>
+//#include <string.h>
 
 #include <stdarg.h>
-#include "windef.h"
-#include "winbase.h"
+#include <windef.h>
+#include <winbase.h>
 
 #include "ungif.h"
 

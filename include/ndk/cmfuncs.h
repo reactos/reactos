@@ -31,539 +31,553 @@ Author:
 NTSTATUS
 NTAPI
 NtCompactKeys(
-    IN ULONG Count,
-    IN PHANDLE KeyArray
+    _In_ ULONG Count,
+    _In_reads_(Count) PHANDLE KeyArray
 );
 
 NTSTATUS
 NTAPI
 NtCompressKey(
-    IN HANDLE Key
+    _In_ HANDLE Key
 );
 
-NTSYSCALLAPI
+_IRQL_requires_max_(PASSIVE_LEVEL)
+NTSYSAPI
 NTSTATUS
 NTAPI
 NtCreateKey(
-    OUT PHANDLE KeyHandle,
-    IN ACCESS_MASK DesiredAccess,
-    IN POBJECT_ATTRIBUTES ObjectAttributes,
-    IN ULONG TitleIndex,
-    IN PUNICODE_STRING Class OPTIONAL,
-    IN ULONG CreateOptions,
-    IN PULONG Disposition OPTIONAL
+    _Out_ PHANDLE KeyHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ POBJECT_ATTRIBUTES ObjectAttributes,
+    _Reserved_ ULONG TitleIndex,
+    _In_opt_ PUNICODE_STRING Class,
+    _In_ ULONG CreateOptions,
+    _Out_opt_ PULONG Disposition
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtDeleteKey(
-    IN HANDLE KeyHandle
+    _In_ HANDLE KeyHandle
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtDeleteValueKey(
-    IN HANDLE KeyHandle,
-    IN PUNICODE_STRING ValueName
+    _In_ HANDLE KeyHandle,
+    _In_ PUNICODE_STRING ValueName
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtEnumerateKey(
-    IN HANDLE KeyHandle,
-    IN ULONG Index,
-    IN KEY_INFORMATION_CLASS KeyInformationClass,
-    OUT PVOID KeyInformation,
-    IN ULONG Length,
-    OUT PULONG ResultLength
+    _In_ HANDLE KeyHandle,
+    _In_ ULONG Index,
+    _In_ KEY_INFORMATION_CLASS KeyInformationClass,
+    _Out_bytecap_(Length) PVOID KeyInformation,
+    _In_ ULONG Length,
+    _Out_ PULONG ResultLength
 );
 
-NTSYSCALLAPI
+_IRQL_requires_max_(PASSIVE_LEVEL)
+_When_(Length == 0, _Post_satisfies_(return < 0))
+_When_(Length > 0, _Post_satisfies_(return <= 0))
+NTSYSAPI
 NTSTATUS
 NTAPI
 NtEnumerateValueKey(
-    IN HANDLE KeyHandle,
-    IN ULONG Index,
-    IN KEY_VALUE_INFORMATION_CLASS KeyValueInformationClass,
-    OUT PVOID KeyValueInformation,
-    IN ULONG Length,
-    OUT PULONG ResultLength
+    _In_ HANDLE KeyHandle,
+    _In_ ULONG Index,
+    _In_ KEY_VALUE_INFORMATION_CLASS KeyValueInformationClass,
+    _Out_writes_bytes_opt_(Length) PVOID KeyValueInformation,
+    _In_ ULONG Length,
+    _Out_ PULONG ResultLength
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtFlushKey(
-    IN HANDLE KeyHandle
+    _In_ HANDLE KeyHandle
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtGetPlugPlayEvent(
-    IN ULONG Reserved1,
-    IN ULONG Reserved2,
-    OUT PPLUGPLAY_EVENT_BLOCK Buffer,
-    IN ULONG BufferSize
+    _In_ ULONG Reserved1,
+    _In_ ULONG Reserved2,
+    _Out_ PPLUGPLAY_EVENT_BLOCK Buffer,
+    _In_ ULONG BufferSize
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtInitializeRegistry(
-    USHORT Flag
+    _In_ USHORT Flag
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtLoadKey(
-    IN POBJECT_ATTRIBUTES KeyObjectAttributes,
-    IN POBJECT_ATTRIBUTES FileObjectAttributes
+    _In_ POBJECT_ATTRIBUTES KeyObjectAttributes,
+    _In_ POBJECT_ATTRIBUTES FileObjectAttributes
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtLoadKey2(
-    IN POBJECT_ATTRIBUTES KeyObjectAttributes,
-    IN POBJECT_ATTRIBUTES FileObjectAttributes,
-    IN ULONG Flags
+    _In_ POBJECT_ATTRIBUTES KeyObjectAttributes,
+    _In_ POBJECT_ATTRIBUTES FileObjectAttributes,
+    _In_ ULONG Flags
 );
 
 NTSTATUS
 NTAPI
 NtLoadKeyEx(
-    IN POBJECT_ATTRIBUTES TargetKey,
-    IN POBJECT_ATTRIBUTES SourceFile,
-    IN ULONG Flags,
-    IN HANDLE TrustClassKey
+    _In_ POBJECT_ATTRIBUTES TargetKey,
+    _In_ POBJECT_ATTRIBUTES SourceFile,
+    _In_ ULONG Flags,
+    _In_ HANDLE TrustClassKey
 );
 
 NTSTATUS
 NTAPI
 NtLockProductActivationKeys(
-    IN PULONG pPrivateVer,
-    IN PULONG pSafeMode
+    _In_ PULONG pPrivateVer,
+    _In_ PULONG pSafeMode
 );
 
 NTSTATUS
 NTAPI
 NtLockRegistryKey(
-    IN HANDLE KeyHandle
+    _In_ HANDLE KeyHandle
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtNotifyChangeKey(
-    IN HANDLE KeyHandle,
-    IN HANDLE Event,
-    IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
-    IN PVOID ApcContext OPTIONAL,
-    OUT PIO_STATUS_BLOCK IoStatusBlock,
-    IN ULONG CompletionFilter,
-    IN BOOLEAN Asynchroneous,
-    OUT PVOID ChangeBuffer,
-    IN ULONG Length,
-    IN BOOLEAN WatchSubtree
+    _In_ HANDLE KeyHandle,
+    _In_ HANDLE Event,
+    _In_opt_ PIO_APC_ROUTINE ApcRoutine,
+    _In_opt_ PVOID ApcContext,
+    _Out_ PIO_STATUS_BLOCK IoStatusBlock,
+    _In_ ULONG CompletionFilter,
+    _In_ BOOLEAN Asynchroneous,
+    _Out_bytecap_(Length) PVOID ChangeBuffer,
+    _In_ ULONG Length,
+    _In_ BOOLEAN WatchSubtree
 );
 
 NTSTATUS
 NTAPI
 NtNotifyChangeMultipleKeys(
-    IN HANDLE MasterKeyHandle,
-    IN ULONG Count,
-    IN POBJECT_ATTRIBUTES SlaveObjects,
-    IN HANDLE Event,
-    IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
-    IN PVOID ApcContext OPTIONAL,
-    OUT PIO_STATUS_BLOCK IoStatusBlock,
-    IN ULONG CompletionFilter,
-    IN BOOLEAN WatchTree,
-    OUT PVOID Buffer,
-    IN ULONG Length,
-    IN BOOLEAN Asynchronous
+    _In_ HANDLE MasterKeyHandle,
+    _In_ ULONG Count,
+    _In_ POBJECT_ATTRIBUTES SlaveObjects,
+    _In_ HANDLE Event,
+    _In_opt_ PIO_APC_ROUTINE ApcRoutine,
+    _In_opt_ PVOID ApcContext,
+    _Out_ PIO_STATUS_BLOCK IoStatusBlock,
+    _In_ ULONG CompletionFilter,
+    _In_ BOOLEAN WatchTree,
+    _Out_bytecap_(Length) PVOID Buffer,
+    _In_ ULONG Length,
+    _In_ BOOLEAN Asynchronous
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtOpenKey(
-    OUT PHANDLE KeyHandle,
-    IN ACCESS_MASK DesiredAccess,
-    IN POBJECT_ATTRIBUTES ObjectAttributes
+    _Out_ PHANDLE KeyHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ POBJECT_ATTRIBUTES ObjectAttributes
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtPlugPlayControl(
-    IN PLUGPLAY_CONTROL_CLASS PlugPlayControlClass,
-    IN OUT PVOID Buffer,
-    IN ULONG BufferSize
+    _In_ PLUGPLAY_CONTROL_CLASS PlugPlayControlClass,
+    _Inout_ PVOID Buffer,
+    _In_ ULONG BufferSize
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQueryKey(
-    IN HANDLE KeyHandle,
-    IN KEY_INFORMATION_CLASS KeyInformationClass,
-    OUT PVOID KeyInformation,
-    IN ULONG Length,
-    OUT PULONG ResultLength
+    _In_ HANDLE KeyHandle,
+    _In_ KEY_INFORMATION_CLASS KeyInformationClass,
+    _Out_bytecap_(Length) PVOID KeyInformation,
+    _In_ ULONG Length,
+    _Out_ PULONG ResultLength
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQueryMultipleValueKey(
-    IN HANDLE KeyHandle,
-    IN OUT PKEY_VALUE_ENTRY ValueList,
-    IN ULONG NumberOfValues,
-    OUT PVOID Buffer,
-    IN OUT PULONG Length,
-    OUT PULONG ReturnLength
+    _In_ HANDLE KeyHandle,
+    _Inout_ PKEY_VALUE_ENTRY ValueList,
+    _In_ ULONG NumberOfValues,
+    _Out_bytecap_(*Length) PVOID Buffer,
+    _Inout_ PULONG Length,
+    _Out_ PULONG ReturnLength
 );
 
 NTSTATUS
 NTAPI
 NtQueryOpenSubKeys(
-    IN POBJECT_ATTRIBUTES TargetKey,
-    OUT PULONG HandleCount
+    _In_ POBJECT_ATTRIBUTES TargetKey,
+    _Out_ PULONG HandleCount
 );
 
 NTSTATUS
 NTAPI
 NtQueryOpenSubKeysEx(
-    IN POBJECT_ATTRIBUTES TargetKey,
-    IN ULONG BufferLength,
-    IN PVOID Buffer,
-    IN PULONG RequiredSize
+    _In_ POBJECT_ATTRIBUTES TargetKey,
+    _In_ ULONG BufferLength,
+    _In_ PVOID Buffer,
+    _In_ PULONG RequiredSize
 );
 
-NTSYSCALLAPI
+_IRQL_requires_max_(PASSIVE_LEVEL)
+_When_(Length == 0, _Post_satisfies_(return < 0))
+_When_(Length > 0, _Post_satisfies_(return <= 0))
+NTSYSAPI
 NTSTATUS
 NTAPI
 NtQueryValueKey(
-    IN HANDLE KeyHandle,
-    IN PUNICODE_STRING ValueName,
-    IN KEY_VALUE_INFORMATION_CLASS KeyValueInformationClass,
-    OUT PVOID KeyValueInformation,
-    IN ULONG Length,
-    OUT PULONG ResultLength
+    _In_ HANDLE KeyHandle,
+    _In_ PUNICODE_STRING ValueName,
+    _In_ KEY_VALUE_INFORMATION_CLASS KeyValueInformationClass,
+    _Out_writes_bytes_opt_(Length) PVOID KeyValueInformation,
+    _In_ ULONG Length,
+    _Out_ PULONG ResultLength
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtRenameKey(
-    IN HANDLE KeyHandle,
-    IN PUNICODE_STRING ReplacementName
+    _In_ HANDLE KeyHandle,
+    _In_ PUNICODE_STRING ReplacementName
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtReplaceKey(
-    IN POBJECT_ATTRIBUTES ObjectAttributes,
-    IN HANDLE Key,
-    IN POBJECT_ATTRIBUTES ReplacedObjectAttributes
+    _In_ POBJECT_ATTRIBUTES ObjectAttributes,
+    _In_ HANDLE Key,
+    _In_ POBJECT_ATTRIBUTES ReplacedObjectAttributes
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtRestoreKey(
-    IN HANDLE KeyHandle,
-    IN HANDLE FileHandle,
-    IN ULONG RestoreFlags
+    _In_ HANDLE KeyHandle,
+    _In_ HANDLE FileHandle,
+    _In_ ULONG RestoreFlags
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSaveKey(
-    IN HANDLE KeyHandle,
-    IN HANDLE FileHandle
+    _In_ HANDLE KeyHandle,
+    _In_ HANDLE FileHandle
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSaveKeyEx(
-    IN HANDLE KeyHandle,
-    IN HANDLE FileHandle,
-    IN ULONG Flags
+    _In_ HANDLE KeyHandle,
+    _In_ HANDLE FileHandle,
+    _In_ ULONG Flags
 );
 
 
 NTSTATUS
 NTAPI
 NtSaveMergedKeys(
-    IN HANDLE HighPrecedenceKeyHandle,
-    IN HANDLE LowPrecedenceKeyHandle,
-    IN HANDLE FileHandle
+    _In_ HANDLE HighPrecedenceKeyHandle,
+    _In_ HANDLE LowPrecedenceKeyHandle,
+    _In_ HANDLE FileHandle
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetInformationKey(
-    IN HANDLE KeyHandle,
-    IN KEY_SET_INFORMATION_CLASS KeyInformationClass,
-    IN PVOID KeyInformation,
-    IN ULONG KeyInformationLength
+    _In_ HANDLE KeyHandle,
+    _In_ KEY_SET_INFORMATION_CLASS KeyInformationClass,
+    _In_ PVOID KeyInformation,
+    _In_ ULONG KeyInformationLength
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetValueKey(
-    IN HANDLE KeyHandle,
-    IN PUNICODE_STRING ValueName,
-    IN ULONG TitleIndex OPTIONAL,
-    IN ULONG Type,
-    IN PVOID Data,
-    IN ULONG DataSize
+    _In_ HANDLE KeyHandle,
+    _In_ PUNICODE_STRING ValueName,
+    _In_opt_ ULONG TitleIndex,
+    _In_ ULONG Type,
+    _In_ PVOID Data,
+    _In_ ULONG DataSize
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtUnloadKey(
-    IN POBJECT_ATTRIBUTES KeyObjectAttributes
+    _In_ POBJECT_ATTRIBUTES KeyObjectAttributes
 );
 
 NTSTATUS
 NTAPI
 NtUnloadKey2(
-    IN POBJECT_ATTRIBUTES TargetKey,
-    IN ULONG Flags
+    _In_ POBJECT_ATTRIBUTES TargetKey,
+    _In_ ULONG Flags
 );
 
 NTSTATUS
 NTAPI
 NtUnloadKeyEx(
-    IN POBJECT_ATTRIBUTES TargetKey,
-    IN HANDLE Event
+    _In_ POBJECT_ATTRIBUTES TargetKey,
+    _In_ HANDLE Event
 );
 
 #ifdef NTOS_MODE_USER
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCreateKey(
-    OUT PHANDLE KeyHandle,
-    IN ACCESS_MASK DesiredAccess,
-    IN POBJECT_ATTRIBUTES ObjectAttributes,
-    IN ULONG TitleIndex,
-    IN PUNICODE_STRING Class OPTIONAL,
-    IN ULONG CreateOptions,
-    IN PULONG Disposition OPTIONAL
+    _Out_ PHANDLE KeyHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ POBJECT_ATTRIBUTES ObjectAttributes,
+    _Reserved_ ULONG TitleIndex,
+    _In_opt_ PUNICODE_STRING Class,
+    _In_ ULONG CreateOptions,
+    _Out_opt_ PULONG Disposition
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwDeleteKey(
-    IN HANDLE KeyHandle
+    _In_ HANDLE KeyHandle
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwDeleteValueKey(
-    IN HANDLE KeyHandle,
-    IN PUNICODE_STRING ValueName
+    _In_ HANDLE KeyHandle,
+    _In_ PUNICODE_STRING ValueName
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwEnumerateKey(
-    IN HANDLE KeyHandle,
-    IN ULONG Index,
-    IN KEY_INFORMATION_CLASS KeyInformationClass,
-    OUT PVOID KeyInformation,
-    IN ULONG Length,
-    OUT PULONG ResultLength
+    _In_ HANDLE KeyHandle,
+    _In_ ULONG Index,
+    _In_ KEY_INFORMATION_CLASS KeyInformationClass,
+    _Out_bytecap_(Length) PVOID KeyInformation,
+    _In_ ULONG Length,
+    _Out_ PULONG ResultLength
 );
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
+_When_(Length == 0, _Post_satisfies_(return < 0))
+_When_(Length > 0, _Post_satisfies_(return <= 0))
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwEnumerateValueKey(
-    IN HANDLE KeyHandle,
-    IN ULONG Index,
-    IN KEY_VALUE_INFORMATION_CLASS KeyValueInformationClass,
-    OUT PVOID KeyValueInformation,
-    IN ULONG Length,
-    OUT PULONG ResultLength
+    _In_ HANDLE KeyHandle,
+    _In_ ULONG Index,
+    _In_ KEY_VALUE_INFORMATION_CLASS KeyValueInformationClass,
+    _Out_writes_bytes_opt_(Length) PVOID KeyValueInformation,
+    _In_ ULONG Length,
+    _Out_ PULONG ResultLength
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwFlushKey(
-    IN HANDLE KeyHandle
+    _In_ HANDLE KeyHandle
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwGetPlugPlayEvent(
-    IN ULONG Reserved1,
-    IN ULONG Reserved2,
-    OUT PPLUGPLAY_EVENT_BLOCK Buffer,
-    IN ULONG BufferSize
+    _In_ ULONG Reserved1,
+    _In_ ULONG Reserved2,
+    _Out_bytecap_(BufferSize) PPLUGPLAY_EVENT_BLOCK Buffer,
+    _In_ ULONG BufferSize
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwLoadKey(
-    IN POBJECT_ATTRIBUTES KeyObjectAttributes,
-    IN POBJECT_ATTRIBUTES FileObjectAttributes
+    _In_ POBJECT_ATTRIBUTES KeyObjectAttributes,
+    _In_ POBJECT_ATTRIBUTES FileObjectAttributes
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwLoadKey2(
-    IN POBJECT_ATTRIBUTES KeyObjectAttributes,
-    IN POBJECT_ATTRIBUTES FileObjectAttributes,
-    IN ULONG Flags
+    _In_ POBJECT_ATTRIBUTES KeyObjectAttributes,
+    _In_ POBJECT_ATTRIBUTES FileObjectAttributes,
+    _In_ ULONG Flags
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwNotifyChangeKey(
-    IN HANDLE KeyHandle,
-    IN HANDLE Event,
-    IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
-    IN PVOID ApcContext OPTIONAL,
-    OUT PIO_STATUS_BLOCK IoStatusBlock,
-    IN ULONG CompletionFilter,
-    IN BOOLEAN Asynchroneous,
-    OUT PVOID ChangeBuffer,
-    IN ULONG Length,
-    IN BOOLEAN WatchSubtree
+    _In_ HANDLE KeyHandle,
+    _In_ HANDLE Event,
+    _In_opt_ PIO_APC_ROUTINE ApcRoutine,
+    _In_opt_ PVOID ApcContext,
+    _Out_ PIO_STATUS_BLOCK IoStatusBlock,
+    _In_ ULONG CompletionFilter,
+    _In_ BOOLEAN Asynchroneous,
+    _Out_bytecap_(Length) PVOID ChangeBuffer,
+    _In_ ULONG Length,
+    _In_ BOOLEAN WatchSubtree
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwOpenKey(
-    OUT PHANDLE KeyHandle,
-    IN ACCESS_MASK DesiredAccess,
-    IN POBJECT_ATTRIBUTES ObjectAttributes
+    _Out_ PHANDLE KeyHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ POBJECT_ATTRIBUTES ObjectAttributes
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwPlugPlayControl(
-    IN PLUGPLAY_CONTROL_CLASS PlugPlayControlClass,
-    IN OUT PVOID Buffer,
-    IN ULONG BufferSize
+    _In_ PLUGPLAY_CONTROL_CLASS PlugPlayControlClass,
+    _Inout_bytecap_(BufferSize) PVOID Buffer,
+    _In_ ULONG BufferSize
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryKey(
-    IN HANDLE KeyHandle,
-    IN KEY_INFORMATION_CLASS KeyInformationClass,
-    OUT PVOID KeyInformation,
-    IN ULONG Length,
-    OUT PULONG ResultLength
+    _In_ HANDLE KeyHandle,
+    _In_ KEY_INFORMATION_CLASS KeyInformationClass,
+    _Out_bytecap_(Length) PVOID KeyInformation,
+    _In_ ULONG Length,
+    _Out_ PULONG ResultLength
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryMultipleValueKey(
-    IN HANDLE KeyHandle,
-    IN OUT PKEY_VALUE_ENTRY ValueList,
-    IN ULONG NumberOfValues,
-    OUT PVOID Buffer,
-    IN OUT PULONG Length,
-    OUT PULONG ReturnLength
+    _In_ HANDLE KeyHandle,
+    _Inout_ PKEY_VALUE_ENTRY ValueList,
+    _In_ ULONG NumberOfValues,
+    _Out_bytecap_(*Length) PVOID Buffer,
+    _Inout_ PULONG Length,
+    _Out_ PULONG ReturnLength
 );
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
+_When_(Length == 0, _Post_satisfies_(return < 0))
+_When_(Length > 0, _Post_satisfies_(return <= 0))
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryValueKey(
-    IN HANDLE KeyHandle,
-    IN PUNICODE_STRING ValueName,
-    IN KEY_VALUE_INFORMATION_CLASS KeyValueInformationClass,
-    OUT PVOID KeyValueInformation,
-    IN ULONG Length,
-    OUT PULONG ResultLength
+    _In_ HANDLE KeyHandle,
+    _In_ PUNICODE_STRING ValueName,
+    _In_ KEY_VALUE_INFORMATION_CLASS KeyValueInformationClass,
+    _Out_writes_bytes_opt_(Length) PVOID KeyValueInformation,
+    _In_ ULONG Length,
+    _Out_ PULONG ResultLength
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwReplaceKey(
-    IN POBJECT_ATTRIBUTES ObjectAttributes,
-    IN HANDLE Key,
-    IN POBJECT_ATTRIBUTES ReplacedObjectAttributes
+    _In_ POBJECT_ATTRIBUTES ObjectAttributes,
+    _In_ HANDLE Key,
+    _In_ POBJECT_ATTRIBUTES ReplacedObjectAttributes
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwRestoreKey(
-    IN HANDLE KeyHandle,
-    IN HANDLE FileHandle,
-    IN ULONG RestoreFlags
+    _In_ HANDLE KeyHandle,
+    _In_ HANDLE FileHandle,
+    _In_ ULONG RestoreFlags
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSaveKey(
-    IN HANDLE KeyHandle,
-    IN HANDLE FileHandle
+    _In_ HANDLE KeyHandle,
+    _In_ HANDLE FileHandle
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSaveKeyEx(
-    IN HANDLE KeyHandle,
-    IN HANDLE FileHandle,
-    IN ULONG Flags
+    _In_ HANDLE KeyHandle,
+    _In_ HANDLE FileHandle,
+    _In_ ULONG Flags
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetInformationKey(
-    IN HANDLE KeyHandle,
-    IN KEY_SET_INFORMATION_CLASS KeyInformationClass,
-    IN PVOID KeyInformation,
-    IN ULONG KeyInformationLength
+    _In_ HANDLE KeyHandle,
+    _In_ KEY_SET_INFORMATION_CLASS KeyInformationClass,
+    _In_bytecount_(KeyInformationLength) PVOID KeyInformation,
+    _In_ ULONG KeyInformationLength
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetValueKey(
-    IN HANDLE KeyHandle,
-    IN PUNICODE_STRING ValueName,
-    IN ULONG TitleIndex OPTIONAL,
-    IN ULONG Type,
-    IN PVOID Data,
-    IN ULONG DataSize
+    _In_ HANDLE KeyHandle,
+    _In_ PUNICODE_STRING ValueName,
+    _In_opt_ ULONG TitleIndex,
+    _In_ ULONG Type,
+    _In_bytecount_(DataSize) PVOID Data,
+    _In_ ULONG DataSize
 );
 #endif
 
@@ -571,14 +585,14 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 ZwInitializeRegistry(
-    USHORT Flag
+    _In_ USHORT Flag
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwUnloadKey(
-    IN POBJECT_ATTRIBUTES KeyObjectAttributes
+    _In_ POBJECT_ATTRIBUTES KeyObjectAttributes
 );
 
 #endif

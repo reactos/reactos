@@ -20,13 +20,9 @@
  *        Move all hardcoded strings to En.rc.
  */
 
-#include <precomp.h>
+#include "precomp.h"
 
 #ifdef INCLUDE_CMD_COLOR
-
-
-
-
 
 VOID SetScreenColor (WORD wColor, BOOL bNoFill)
 {
@@ -57,7 +53,6 @@ VOID SetScreenColor (WORD wColor, BOOL bNoFill)
 		SetConsoleTextAttribute (hConsole, (WORD)(wColor & 0x00FF));
 	}
 }
-
 
 /*
  * color

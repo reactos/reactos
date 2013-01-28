@@ -8,28 +8,31 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #define WIN32_NO_STATUS
-#include <windows.h>
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+#include <windef.h>
+#include <winbase.h>
+#include <winreg.h>
 #define NTOS_MODE_USER
 #include <ndk/cmfuncs.h>
 #include <ndk/kefuncs.h>
 #include <ndk/obfuncs.h>
 #include <ndk/rtlfuncs.h>
-#include <ndk/umtypes.h>
 #include <ddk/ntsam.h>
 #include <ntsecapi.h>
 #include <sddl.h>
 
 #include <samsrv/samsrv.h>
 
-#include "sam_s.h"
+#include <sam_s.h>
 
 #include <wine/debug.h>
 
 typedef enum _SAM_DB_OBJECT_TYPE
 {
     SamDbIgnoreObject,
-    SamDbContainerObject,
     SamDbServerObject,
     SamDbDomainObject,
     SamDbAliasObject,
@@ -45,7 +48,7 @@ typedef struct _SAM_DB_OBJECT
     ACCESS_MASK Access;
     LPWSTR Name;
     HANDLE KeyHandle;
-    HANDLE MembersKeyHandle;  // only used by Aliases and Groups
+    HANDLE MembersKeyHandle;  // only used by Aliases
     ULONG RelativeId;
     struct _SAM_DB_OBJECT *ParentObject;
 } SAM_DB_OBJECT, *PSAM_DB_OBJECT;
@@ -109,6 +112,7 @@ typedef struct _SAM_USER_FIXED_DATA
     USHORT OperatorCount;
 } SAM_USER_FIXED_DATA, *PSAM_USER_FIXED_DATA;
 
+
 /* database.c */
 
 NTSTATUS
@@ -142,14 +146,7 @@ NTSTATUS
 SampCloseDbObject(PSAM_DB_OBJECT DbObject);
 
 NTSTATUS
-SampCheckAccountNameInDomain(IN PSAM_DB_OBJECT DomainObject,
-                             IN LPWSTR lpAccountName);
-
-NTSTATUS
-SampSetAccountNameInDomain(IN PSAM_DB_OBJECT DomainObject,
-                           IN LPCWSTR lpContainerName,
-                           IN LPCWSTR lpAccountName,
-                           IN ULONG ulRelativeId);
+SampDeleteAccountDbObject(PSAM_DB_OBJECT DbObject);
 
 NTSTATUS
 SampSetObjectAttribute(PSAM_DB_OBJECT DbObject,
@@ -170,7 +167,38 @@ SampGetObjectAttributeString(PSAM_DB_OBJECT DbObject,
                              LPWSTR AttributeName,
                              RPC_UNICODE_STRING *String);
 
+
+/* domain.c */
+
+NTSTATUS
+SampSetAccountNameInDomain(IN PSAM_DB_OBJECT DomainObject,
+                           IN LPCWSTR lpContainerName,
+                           IN LPCWSTR lpAccountName,
+                           IN ULONG ulRelativeId);
+
+NTSTATUS
+SampRemoveAccountNameFromDomain(IN PSAM_DB_OBJECT DomainObject,
+                                IN LPCWSTR lpContainerName,
+                                IN LPCWSTR lpAccountName);
+
+NTSTATUS
+SampCheckAccountNameInDomain(IN PSAM_DB_OBJECT DomainObject,
+                             IN LPCWSTR lpAccountName);
+
+
+/* group.h */
+
+NTSTATUS
+SampAddMemberToGroup(IN PSAM_DB_OBJECT GroupObject,
+                     IN ULONG MemberId);
+
+NTSTATUS
+SampRemoveMemberFromGroup(IN PSAM_DB_OBJECT GroupObject,
+                          IN ULONG MemberId);
+
+
 /* registry.h */
+
 NTSTATUS
 SampRegCloseKey(IN HANDLE KeyHandle);
 
@@ -203,7 +231,7 @@ SampRegQueryKeyInfo(IN HANDLE KeyHandle,
 
 NTSTATUS
 SampRegDeleteValue(IN HANDLE KeyHandle,
-                   IN LPWSTR ValueName);
+                   IN LPCWSTR ValueName);
 
 NTSTATUS
 SampRegEnumerateValue(IN HANDLE KeyHandle,
@@ -216,21 +244,57 @@ SampRegEnumerateValue(IN HANDLE KeyHandle,
 
 NTSTATUS
 SampRegQueryValue(IN HANDLE KeyHandle,
-                  IN LPWSTR ValueName,
+                  IN LPCWSTR ValueName,
                   OUT PULONG Type OPTIONAL,
                   OUT LPVOID Data OPTIONAL,
                   IN OUT PULONG DataLength OPTIONAL);
 
 NTSTATUS
 SampRegSetValue(IN HANDLE KeyHandle,
-                IN LPWSTR ValueName,
+                IN LPCWSTR ValueName,
                 IN ULONG Type,
                 IN LPVOID Data,
                 IN ULONG DataLength);
 
+
 /* samspc.c */
+
 VOID SampStartRpcServer(VOID);
 
+
 /* setup.c */
+
 BOOL SampIsSetupRunning(VOID);
 BOOL SampInitializeSAM(VOID);
+
+
+/* user.c */
+
+NTSTATUS
+SampOpenUserObject(IN PSAM_DB_OBJECT DomainObject,
+                   IN ULONG UserId,
+                   IN ACCESS_MASK DesiredAccess,
+                   OUT PSAM_DB_OBJECT *UserObject);
+
+NTSTATUS
+SampAddGroupMembershipToUser(IN PSAM_DB_OBJECT UserObject,
+                             IN ULONG GroupId,
+                             IN ULONG Attributes);
+
+NTSTATUS
+SampRemoveGroupMembershipFromUser(IN PSAM_DB_OBJECT UserObject,
+                                  IN ULONG GroupId);
+
+NTSTATUS
+SampGetUserGroupAttributes(IN PSAM_DB_OBJECT DomainObject,
+                           IN ULONG UserId,
+                           IN ULONG GroupId,
+                           OUT PULONG GroupAttributes);
+
+NTSTATUS
+SampSetUserGroupAttributes(IN PSAM_DB_OBJECT DomainObject,
+                           IN ULONG UserId,
+                           IN ULONG GroupId,
+                           IN ULONG GroupAttributes);
+
+/* EOF */

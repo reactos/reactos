@@ -3,7 +3,7 @@
  *
  */
 
-#include <precomp.h>
+#include "precomp.h"
 
 #define C_OP_LOWEST C_MULTI
 #define C_OP_HIGHEST C_PIPE

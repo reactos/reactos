@@ -35,14 +35,14 @@
 /*
 */
 
-#include <stdlib.h>
-#include <stdio.h>
+//#include <stdlib.h>
+//#include <stdio.h>
 #include <math.h>
-#include "glimports.h"
-#include "zlassert.h"
+//#include "glimports.h"
+//#include "zlassert.h"
 
 #include "quicksort.h"
-#include "directedLine.h"
+//#include "directedLine.h"
 #include "polyDBG.h"
 
 #ifdef __WATCOMC__

@@ -38,7 +38,7 @@
  */
 
 #include "glimports.h"
-#include "mystdio.h"
+//#include "mystdio.h"
 #include "renderhints.h"
 #include "nurbsconsts.h"
 

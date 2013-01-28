@@ -26,7 +26,7 @@
  * UPDATE HISTORY:
  *      07/26/2005  Created
  */
-#include <ntmarta.h>
+#include "ntmarta.h"
 
 #define NDEBUG
 #include <debug.h>

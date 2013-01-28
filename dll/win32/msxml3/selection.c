@@ -20,28 +20,31 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+
 #define COBJMACROS
 
-#include "config.h"
+#include <config.h>
 
-#include <stdarg.h>
+//#include <stdarg.h>
 #ifdef HAVE_LIBXML2
-# include <libxml/parser.h>
-# include <libxml/xmlerror.h>
-# include <libxml/xpath.h>
+//# include <libxml/parser.h>
+//# include <libxml/xmlerror.h>
+//# include <libxml/xpath.h>
 # include <libxml/xpathInternals.h>
 #endif
 
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "ole2.h"
-#include "msxml6.h"
-#include "msxml2did.h"
+#include <windef.h>
+#include <winbase.h>
+//#include "winuser.h"
+#include <ole2.h>
+#include <msxml6.h>
+#include <msxml2did.h>
 
 #include "msxml_private.h"
 
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 /* This file implements the object returned by a XPath query. Note that this is
  * not the IXMLDOMNodeList returned by childNodes - it's implemented in nodelist.c.

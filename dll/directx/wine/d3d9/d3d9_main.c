@@ -21,8 +21,8 @@
  *
  */
 
-#include "config.h"
-#include "initguid.h"
+#include <config.h>
+#include <initguid.h>
 #include "d3d9_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d9);

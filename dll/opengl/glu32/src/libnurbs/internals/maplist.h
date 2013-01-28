@@ -36,8 +36,8 @@
 #ifndef __glumaplist_h_
 #define __glumaplist_h_
 
-#include "types.h"
-#include "defines.h"
+//#include "types.h"
+//#include "defines.h"
 #include "bufpool.h"
 
 class Backend;

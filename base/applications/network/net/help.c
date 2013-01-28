@@ -167,7 +167,6 @@ INT cmdHelp(INT argc, WCHAR **argv)
     return 0;
 }
 
-
 VOID help(VOID)
 {
     puts("NET ACCOUNTS");

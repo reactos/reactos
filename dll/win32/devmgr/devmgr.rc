@@ -1,4 +1,7 @@
-#include <windows.h>
+#include <windef.h>
+#include <winuser.h>
+#include <commctrl.h>
+
 #include "resource.h"
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
@@ -30,6 +33,9 @@ IDI_DEVMGR ICON "resources/devmgr.ico"
 #endif
 #ifdef LANGUAGE_ES_ES
     #include "lang/es-ES.rc"
+#endif
+#ifdef LANGUAGE_HE_IL
+    #include "lang/he-IL.rc"
 #endif
 #ifdef LANGUAGE_FR_FR
     #include "lang/fr-FR.rc"

@@ -14,7 +14,6 @@
 CHAR cHostname[256];            // target hostname
 CHAR cDestIP[18];               // target IP
 
-
 static VOID
 DebugPrint(LPTSTR lpString, ...)
 {
@@ -27,7 +26,6 @@ DebugPrint(LPTSTR lpString, ...)
     UNREFERENCED_PARAMETER(lpString);
 #endif
 }
-
 
 static VOID
 Usage(VOID)
@@ -46,7 +44,6 @@ Usage(VOID)
            "  results. Use -d to force it not to resolve IP's.\n"
            "- For testing purposes, all should work as normal in a Windows environment\n\n"));
 }
-
 
 static BOOL
 ParseCmdline(int argc,
@@ -101,7 +98,6 @@ ParseCmdline(int argc,
     return TRUE;
 }
 
-
 static WORD
 CheckSum(PUSHORT data,
          UINT size)
@@ -122,7 +118,6 @@ CheckSum(PUSHORT data,
 
     return (USHORT)(~dwSum);
 }
-
 
 static VOID
 SetupTimingMethod(PAPPINFO pInfo)
@@ -147,7 +142,6 @@ SetupTimingMethod(PAPPINFO pInfo)
         pInfo->TicksPerUs.QuadPart = 1;
     }
 }
-
 
 static BOOL
 ResolveHostname(PAPPINFO pInfo)
@@ -183,7 +177,6 @@ ResolveHostname(PAPPINFO pInfo)
     return TRUE;
 }
 
-
 static LONGLONG
 GetTime(PAPPINFO pInfo)
 {
@@ -205,7 +198,6 @@ GetTime(PAPPINFO pInfo)
     return (LONGLONG)Time.u.LowPart;
 }
 
-
 static BOOL
 SetTTL(SOCKET sock,
        INT iTTL)
@@ -222,7 +214,6 @@ SetTTL(SOCKET sock,
 
     return TRUE;
 }
-
 
 static BOOL
 CreateSocket(PAPPINFO pInfo)
@@ -250,7 +241,6 @@ CreateSocket(PAPPINFO pInfo)
     return TRUE;
 }
 
-
 static VOID
 PreparePacket(PAPPINFO pInfo,
               USHORT iSeqNum)
@@ -266,7 +256,6 @@ PreparePacket(PAPPINFO pInfo,
     pInfo->SendPacket->icmpheader.checksum  = CheckSum((PUSHORT)&pInfo->SendPacket->icmpheader,
                                                        sizeof(ICMP_HEADER) + PACKET_SIZE);
 }
-
 
 static INT
 SendPacket(PAPPINFO pInfo)
@@ -307,7 +296,6 @@ SendPacket(PAPPINFO pInfo)
 
     return iSockRet;
 }
-
 
 static BOOL
 ReceivePacket(PAPPINFO pInfo)
@@ -369,7 +357,6 @@ ReceivePacket(PAPPINFO pInfo)
     return bRet;
 }
 
-
 static INT
 DecodeResponse(PAPPINFO pInfo)
 {
@@ -410,7 +397,6 @@ DecodeResponse(PAPPINFO pInfo)
     return -3;
 }
 
-
 static BOOL
 AllocateBuffers(PAPPINFO pInfo)
 {
@@ -434,7 +420,6 @@ AllocateBuffers(PAPPINFO pInfo)
 
     return TRUE;
 }
-
 
 static INT
 Driver(PAPPINFO pInfo)
@@ -575,7 +560,6 @@ Driver(PAPPINFO pInfo)
     return ret;
 }
 
-
 static VOID
 Cleanup(PAPPINFO pInfo)
 {
@@ -594,7 +578,6 @@ Cleanup(PAPPINFO pInfo)
                  0,
                  pInfo->RecvPacket);
 }
-
 
 #if defined(_UNICODE) && defined(__GNUC__)
 static
@@ -634,7 +617,6 @@ int _tmain(int argc, LPCTSTR argv[])
 
     return ret;
 }
-
 
 #if defined(_UNICODE) && defined(__GNUC__)
 /* HACK - MINGW HAS NO OFFICIAL SUPPORT FOR wmain()!!! */

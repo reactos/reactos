@@ -18,10 +18,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "winsock2.h"
-#include "winuser.h"
-#include "objbase.h"
-#include "imnxport.h"
+#include <winsock2.h>
+//#include "winuser.h"
+//#include "objbase.h"
+#include <imnxport.h>
 
 typedef struct InternetTransport InternetTransport;
 

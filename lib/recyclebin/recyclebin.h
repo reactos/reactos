@@ -4,7 +4,15 @@
 extern "C" {
 #endif
 
-#include <windows.h>
+#include <stdarg.h>
+
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#include <windef.h>
+#include <winbase.h>
+#include <winnls.h>
+#include <winver.h>
+#include <shellapi.h>
 #include <objbase.h>
 #define ANY_SIZE 1
 

@@ -36,11 +36,11 @@
 */
 
 #include "gluos.h"
-#include <stdlib.h>
-#include <stdio.h>
-#include <GL/gl.h>
+//#include <stdlib.h>
+//#include <stdio.h>
+//#include <GL/gl.h>
 
-#include "glimports.h"
+//#include "glimports.h"
 #include "zlassert.h"
 
 #include "monoChain.h"

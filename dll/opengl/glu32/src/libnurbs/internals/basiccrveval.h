@@ -37,7 +37,7 @@
 #define __glubasiccrveval_h_
 
 #include "types.h"
-#include "displaymode.h"
+//#include "displaymode.h"
 #include "cachingeval.h"
 
 class BasicCurveEvaluator : public CachingEvaluator {

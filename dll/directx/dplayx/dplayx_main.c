@@ -56,12 +56,12 @@
  *    client. Also get rid of offset dependency by making data offset independent
  *    somehow.
  */
-#include <stdarg.h>
+//#include <stdarg.h>
 
-#include "winerror.h"
-#include "windef.h"
-#include "winbase.h"
-#include "wine/debug.h"
+//#include "winerror.h"
+//#include "windef.h"
+//#include "winbase.h"
+#include <wine/debug.h>
 #include "dplayx_global.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(dplay);

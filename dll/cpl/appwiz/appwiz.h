@@ -1,18 +1,16 @@
 #define COBJMACROS
-#include <windows.h>
-#include <commctrl.h>
-#include <cpl.h>
-#include <prsht.h>
-#include <stdlib.h>
-#include <stdio.h>
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
 #include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winreg.h>
+#include <winnls.h>
+#include <shellapi.h>
+#include <cpl.h>
 #include <tchar.h>
-#include <process.h>
-#include <prsht.h>
 #include <shlobj.h>
-#include <objbase.h>
-#include <shobjidl.h>
-#include <shlguid.h>
 
 #include "resource.h"
 

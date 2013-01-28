@@ -23,8 +23,8 @@
  * FILE:        subsys/system/sndvol32/misc.c
  * PROGRAMMERS: Thomas Weidenmueller <w3seek@reactos.com>
  */
-#include "sndvol32.h"
 
+#include "sndvol32.h"
 
 static INT
 LengthOfStrResource(IN HINSTANCE hInst,

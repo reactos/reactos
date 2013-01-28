@@ -36,9 +36,9 @@
 #ifndef __glubin_h_
 #define __glubin_h_
 
-#include "myassert.h"
+//#include "myassert.h"
 #include "arc.h"
-#include "defines.h"
+//#include "defines.h"
 
 class Bin 
 { /* a linked list of jordan arcs */

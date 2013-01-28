@@ -37,14 +37,14 @@
  *
  */
 
-#include <stdio.h>
-#include "glimports.h"
-#include "mystdio.h"
-#include "myassert.h"
-#include "mystring.h"
+//#include <stdio.h>
+//#include "glimports.h"
+//#include "mystdio.h"
+//#include "myassert.h"
+//#include "mystring.h"
 #include "mymath.h"
 #include "backend.h"
-#include "nurbsconsts.h"
+//#include "nurbsconsts.h"
 #include "mapdesc.h"
 
 Mapdesc::Mapdesc( long _type, int _israt, int _ncoords, Backend& b ) 

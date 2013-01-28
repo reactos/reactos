@@ -24,23 +24,26 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+
 #include <stdarg.h>
 
 #define COBJMACROS
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
 
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "objbase.h"
-#include "ole2.h"
-#include "winerror.h"
+#include <windef.h>
+#include <winbase.h>
+//#include "winuser.h"
+//#include "objbase.h"
+#include <ole2.h>
+//#include "winerror.h"
 
 #include "compobj_private.h" 
 
-#include "wine/list.h"
-#include "wine/debug.h"
+//#include "wine/list.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 

@@ -30,15 +30,15 @@
  *   utility but change the resources!
  */
 
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <wingdi.h>
+#include <winuser.h>
 #include <reactos/version.h>
-#include <windows.h>
-#include <string.h>
-#include <stdio.h>
 #include <tchar.h>
 
 #include "resource.h"
-
-
 
 #define LIGHT_BLUE 0x00F7EFD6
 #define DARK_BLUE  0x008C7B6B

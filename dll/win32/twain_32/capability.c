@@ -21,11 +21,11 @@
 
 #include <stdarg.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "twain.h"
+#include <windef.h>
+#include <winbase.h>
+//#include "twain.h"
 #include "twain_i.h"
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(twain);
 

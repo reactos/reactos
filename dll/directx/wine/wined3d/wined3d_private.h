@@ -24,6 +24,10 @@
 #ifndef __WINE_WINED3D_PRIVATE_H
 #define __WINE_WINED3D_PRIVATE_H
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #ifdef USE_WIN32_OPENGL
 #define WINE_GLAPI __stdcall
 #else
@@ -31,25 +35,25 @@
 #endif
 
 #include <stdarg.h>
-#include <math.h>
-#include <limits.h>
+//#include <math.h>
+//#include <limits.h>
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
 #define COBJMACROS
-#include "windef.h"
-#include "winbase.h"
-#include "winreg.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "wine/debug.h"
-#include "wine/unicode.h"
+#include <windef.h>
+//#include "winbase.h"
+#include <winreg.h>
+#include <wingdi.h>
+#include <winuser.h>
+#include <wine/debug.h>
+#include <wine/unicode.h>
 
-#include "objbase.h"
-#include "wine/wined3d.h"
+#include <objbase.h>
+#include <wine/wined3d.h>
 #include "wined3d_gl.h"
-#include "wine/list.h"
-#include "wine/rbtree.h"
-#include "wine/wgl_driver.h"
+#include <wine/list.h>
+#include <wine/rbtree.h>
+#include <wine/wgl_driver.h>
 
 /* Driver quirks */
 #define WINED3D_QUIRK_ARB_VS_OFFSET_LIMIT       0x00000001

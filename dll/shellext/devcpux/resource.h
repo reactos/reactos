@@ -1,3 +1,5 @@
+#pragma once
+
 #define DLG_PROCESSORINFO 201
 
 #define IDC_FEATURES	301

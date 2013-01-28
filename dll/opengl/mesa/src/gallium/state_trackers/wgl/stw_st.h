@@ -28,7 +28,8 @@
 #ifndef STW_ST_H
 #define STW_ST_H
 
-#include <windows.h>
+//#include <windows.h>
+#include <windef.h>
 
 #include "state_tracker/st_api.h"
 

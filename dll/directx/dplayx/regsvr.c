@@ -18,19 +18,23 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #include <stdarg.h>
-#include <string.h>
+//#include <string.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "winreg.h"
-#include "winerror.h"
+#include <windef.h>
+#include <winbase.h>
+//#include "winuser.h"
+#include <winreg.h>
+//#include "winerror.h"
 
-#include "dplay.h"
-#include "dplobby.h"
+//#include "dplay.h"
+#include <dplobby.h>
 
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(dplayx);
 

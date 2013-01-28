@@ -18,12 +18,12 @@
  */
 
 #include "urlmon_main.h"
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 #define NO_SHLWAPI_REG
-#include "shlwapi.h"
+#include <shlwapi.h>
 
-#include "strsafe.h"
+#include <strsafe.h>
 
 #define UINT_MAX 0xffffffff
 #define USHORT_MAX 0xffff

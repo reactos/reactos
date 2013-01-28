@@ -18,25 +18,29 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <string.h>
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
+//#include <string.h>
 #include <stdarg.h>
-#include <stdio.h>
-#include "winerror.h"
-#include "windef.h"
-#include "winbase.h"
-#include "winreg.h"
-#include "wingdi.h"
-#include "winuser.h"
+//#include <stdio.h>
+//#include "winerror.h"
+#include <windef.h>
+#include <winbase.h>
+//#include "winreg.h"
+//#include "wingdi.h"
+//#include "winuser.h"
 
 #define COBJMACROS
 
-#include "ole2.h"
-#include "strmif.h"
-#include "olectl.h"
-#include "unknwn.h"
-#include "objsel.h"
-#include "wine/unicode.h"
-#include "uuids.h"
+#include <ole2.h>
+//#include "strmif.h"
+//#include "olectl.h"
+//#include "unknwn.h"
+#include <objsel.h>
+//#include "wine/unicode.h"
+//#include "uuids.h"
 
 /**********************************************************************
  * Dll lifetime tracking declaration for objsel.dll

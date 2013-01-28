@@ -18,17 +18,17 @@
  */
 
 #include <assert.h>
-#include <stdarg.h>
+//#include <stdarg.h>
 
 #define COBJMACROS
 
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "ole2.h"
+//#include "windef.h"
+//#include "winbase.h"
+//#include "winuser.h"
+//#include "ole2.h"
 
 #include "qedit_private.h"
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(qedit);
 

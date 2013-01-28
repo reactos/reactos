@@ -33,8 +33,8 @@
 #ifndef _POLYDBG_H
 #define _POLYDBG_H
 
-#include "definitions.h"
-#include "directedLine.h"
+//#include "definitions.h"
+//#include "directedLine.h"
 #include "monoTriangulation.h"
 
 Int DBG_edgesIntersectGen(Real A[2], Real B[2], Real C[2], Real D[2]);

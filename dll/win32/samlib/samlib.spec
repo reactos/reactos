@@ -1,9 +1,9 @@
 @ stdcall SamAddMemberToAlias(ptr ptr)
 @ stdcall SamAddMemberToGroup(ptr long long)
 @ stdcall SamAddMultipleMembersToAlias(ptr ptr long)
-@ stub SamChangePasswordUser2
-@ stub SamChangePasswordUser3
-@ stub SamChangePasswordUser
+@ stdcall SamChangePasswordUser2(ptr ptr ptr ptr)
+@ stdcall SamChangePasswordUser3(ptr ptr ptr ptr ptr ptr)
+@ stdcall SamChangePasswordUser(ptr ptr ptr)
 @ stdcall SamCloseHandle(ptr)
 @ stdcall SamConnect(ptr ptr long ptr)
 @ stub SamConnectWithCreds

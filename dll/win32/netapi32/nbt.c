@@ -65,15 +65,19 @@
  * See also other FIXMEs in the code.
  */
 
-#include "config.h"
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
+#include <config.h>
 #include <stdarg.h>
 
-#include "winsock2.h"
-#include "windef.h"
-#include "winbase.h"
-#include "wine/debug.h"
-#include "winreg.h"
-#include "iphlpapi.h"
+#include <windef.h>
+#include <winbase.h>
+#include <winsock2.h>
+#include <wine/debug.h>
+#include <winreg.h>
+#include <iphlpapi.h>
 
 #include "netbios.h"
 #include "nbnamecache.h"

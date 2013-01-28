@@ -20,7 +20,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <notepad.h>
+#include "notepad.h"
 
 static LPCTSTR s_szRegistryKey = _T("Software\\Microsoft\\Notepad");
 

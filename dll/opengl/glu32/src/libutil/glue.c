@@ -28,8 +28,8 @@
  * Silicon Graphics, Inc.
  */
 
-#include <stdlib.h>
-#include "gluint.h"
+//#include <stdlib.h>
+//#include "gluint.h"
 
 static unsigned char *__gluNurbsErrors[] = {
     (unsigned char*) " ",

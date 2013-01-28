@@ -1,5 +1,13 @@
 #pragma once
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winuser.h>
+#include <wingdi.h>
+#include <commdlg.h>
+
 /* Messages for the display class */
 #define FVM_SETTYPEFACE WM_USER
 #define FVM_SETSTRING (WM_USER + 1)

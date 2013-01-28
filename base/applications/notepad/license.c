@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <notepad.h>
+#include "notepad.h"
 
 VOID WineLicense(HWND Wnd)
 {
@@ -36,4 +36,3 @@ VOID WineWarranty(HWND Wnd)
   MessageBoxA(Wnd, License->Warranty, License->WarrantyCaption,
              MB_ICONEXCLAMATION | MB_OK);
 }
-

@@ -1,13 +1,14 @@
 #pragma once
 
-#include <windows.h>
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <objbase.h>
 #include <commctrl.h>
 #include <cpl.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdarg.h>
-#include <tchar.h>
-#include <process.h>
 
 #include "resource.h"
 

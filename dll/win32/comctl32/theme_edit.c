@@ -20,17 +20,17 @@
  */
 
 #include <stdarg.h>
-#include <string.h>
-#include <stdlib.h>
+//#include <string.h>
+//#include <stdlib.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "uxtheme.h"
-#include "vssym32.h"
+#include <windef.h>
+#include <winbase.h>
+#include <wingdi.h>
+#include <winuser.h>
+#include <uxtheme.h>
+#include <vssym32.h>
 #include "comctl32.h"
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 /* Draw themed border */
 static void nc_paint (HTHEME theme, HWND hwnd, HRGN region)

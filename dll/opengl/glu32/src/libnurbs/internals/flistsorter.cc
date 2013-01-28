@@ -37,7 +37,7 @@
  *
  */
 
-#include "glimports.h"
+//#include "glimports.h"
 #include "flistsorter.h"
 
 FlistSorter::FlistSorter( void ) : Sorter( sizeof( REAL ) )

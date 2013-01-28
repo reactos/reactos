@@ -1060,8 +1060,7 @@ profile_items_callback(
     if (SUCCEEDED(hr))
     {
         /* Fill link properties */
-        if (SUCCEEDED(hr))
-            hr = IShellLinkW_SetPath(psl, FullFileName);
+        hr = IShellLinkW_SetPath(psl, FullFileName);
         if (SUCCEEDED(hr))
             hr = IShellLinkW_SetArguments(psl, L"");
         if (SUCCEEDED(hr))

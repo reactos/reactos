@@ -1,4 +1,6 @@
-#include <windows.h>
+#include <windef.h>
+#include <winuser.h>
+
 #include "resource.h"
 
 #define REACTOS_VERSION_DLL
@@ -15,6 +17,7 @@ IDI_703    ICON "res/703.ico"
 
 // UTF-8
 #pragma code_page(65001)
+
 #ifdef LANGUAGE_DE_DE
     #include "lang/de-DE.rc"
 #endif
@@ -23,6 +26,9 @@ IDI_703    ICON "res/703.ico"
 #endif
 #ifdef LANGUAGE_ES_ES
     #include "lang/es-ES.rc"
+#endif
+#ifdef LANGUAGE_HE_IL
+    #include "lang/he-IL.rc"
 #endif
 #ifdef LANGUAGE_NB_NO
     #include "lang/no-NO.rc"

@@ -9,10 +9,13 @@ spec2def(samsrv.dll samsrv.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     database.c
+    domain.c
+    group.c
     registry.c
     samrpc.c
     samsrv.c
     setup.c
+    user.c
     samsrv.rc
     ${CMAKE_CURRENT_BINARY_DIR}/samsrv_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/samsrv.def

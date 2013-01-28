@@ -1,11 +1,13 @@
-#define WIN32_LEAN_AND_MEAN
+#define WIN32_NO_STATUS
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#define _INC_WINDOWS
 #include <winsock2.h>
 #include <tchar.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <ws2tcpip.h>
-#include <string.h>
-#include <time.h>
 
 #define ECHO_REPLY 0
 #define DEST_UNREACHABLE 3

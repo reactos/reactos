@@ -21,6 +21,10 @@
 #ifndef __WINE_RPCSS_H
 #define __WINE_RPCSS_H
 
-#include "windows.h"
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winsvc.h>
+
 
 #endif /* __WINE_RPCSS_H */

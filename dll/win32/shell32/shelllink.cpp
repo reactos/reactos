@@ -33,7 +33,7 @@
  *   in that string is parsed an stored.
  */
 
-#include <precomp.h>
+#include "precomp.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 

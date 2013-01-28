@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ttelhndl.h"
+//#include "ttelhndl.h"
 
 typedef struct {
 	HANDLE hExit;

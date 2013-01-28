@@ -10,7 +10,7 @@
 
 #include "smss.h"
 #define NDEBUG
-#include "debug.h"
+#include <debug.h>
 
 /* GLOBALS ********************************************************************/
 
@@ -109,7 +109,7 @@ SmpCreatePagingFileDescriptor(IN PUNICODE_STRING PageFileToken)
     if (!NT_SUCCESS(Status))
     {
         /* Fail */
-        DPRINT1("SMSS:PFILE: SmpParseCommandLine(%wZ) failed with status %X \n",
+        DPRINT1("SMSS:PFILE: SmpParseCommandLine( %wZ ) failed - Status == %lx\n",
                 PageFileToken, Status);
         return Status;
     }

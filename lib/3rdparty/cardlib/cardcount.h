@@ -1,7 +1,15 @@
 #ifndef _CARDCOUNT_INCLUDED
 #define _CARDCOUNT_INCLUDED
 
-#include <windows.h>
+//#include <windows.h>
+
+#define WIN32_NO_STATUS
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <wingdi.h>
+#include <winuser.h>
+#include <stdlib.h>
 
 #include "cardstack.h"
 

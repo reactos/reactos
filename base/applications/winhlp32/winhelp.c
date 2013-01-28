@@ -24,25 +24,25 @@
 
 #include <assert.h>
 #include <stdio.h>
-#include <string.h>
-#include <stdarg.h>
-#include <stdlib.h>
+//#include <string.h>
+//#include <stdarg.h>
+//#include <stdlib.h>
 
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
 
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "commdlg.h"
+#include <windef.h>
+//#include "winbase.h"
+#include <wingdi.h>
+#include <winuser.h>
+#include <commdlg.h>
 #include "winhelp.h"
-#include "winhelp_res.h"
-#include "shellapi.h"
-#include "richedit.h"
-#include "commctrl.h"
+//#include "winhelp_res.h"
+//#include "shellapi.h"
+#include <richedit.h>
+#include <commctrl.h>
 
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(winhelp);
 

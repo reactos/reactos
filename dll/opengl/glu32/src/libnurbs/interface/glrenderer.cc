@@ -36,7 +36,7 @@
 */
 
 #include "gluos.h"
-#include "glimports.h"
+//#include "glimports.h"
 #include "glrenderer.h"
 
 GLUnurbs::GLUnurbs()

@@ -25,7 +25,7 @@
  *
  **************************************************************************/
 
-#include <windows.h>
+//#include <windows.h>
 
 #include "util/u_debug.h"
 #include "stw_icd.h"

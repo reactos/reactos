@@ -3914,7 +3914,7 @@ NTSYSAPI
 VOID
 NTAPI
 RtlCaptureContext(
-    PCONTEXT ContextRecord
+    _Out_ PCONTEXT ContextRecord
 );
 
 NTSYSAPI
@@ -3928,12 +3928,11 @@ RtlPcToFileHeader(
 NTSYSAPI
 VOID
 NTAPI
-RtlUnwind (
-    IN PVOID TargetFrame OPTIONAL,
-    IN PVOID TargetIp OPTIONAL,
-    IN PEXCEPTION_RECORD ExceptionRecord OPTIONAL,
-    IN PVOID ReturnValue
-    );
+RtlUnwind(
+    _In_opt_ PVOID TargetFrame,
+    _In_opt_ PVOID TargetIp,
+    _In_opt_ PEXCEPTION_RECORD ExceptionRecord,
+    _In_ PVOID ReturnValue);
 
 #define RTL_SRWLOCK_INIT {0}
 

@@ -27,17 +27,17 @@
  * The installer for the Zuma Deluxe Popcap game is good for testing.
  */
 
-#include <stdarg.h>
-#include <stdio.h>
+//#include <stdarg.h>
+//#include <stdio.h>
 
-#include "wine/debug.h"
+#include <wine/debug.h>
 #include "shdocvw.h"
-#include "objidl.h"
-#include "shobjidl.h"
-#include "intshcut.h"
-#include "shellapi.h"
-#include "winreg.h"
-#include "shlwapi.h"
+//#include "objidl.h"
+//#include "shobjidl.h"
+#include <intshcut.h>
+//#include "shellapi.h"
+//#include "winreg.h"
+//#include "shlwapi.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(shdocvw);
 

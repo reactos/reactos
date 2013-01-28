@@ -21,13 +21,17 @@
 #ifndef __WINE_CABINET_H
 #define __WINE_CABINET_H
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #include <stdarg.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "winnt.h"
-#include "fdi.h"
-#include "fci.h"
+#include <windef.h>
+#include <winbase.h>
+#include <winnt.h>
+#include <fdi.h>
+#include <fci.h>
 
 /* from msvcrt/sys/stat.h */
 #define _S_IWRITE 0x0080

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "tkeydef.h"
+//#include "tkeydef.h"
 
 #ifdef __BORLANDC__
 #include <classlib\arrays.h>

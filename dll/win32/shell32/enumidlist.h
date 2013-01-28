@@ -16,8 +16,6 @@
 #ifndef __ENUMIDLIST_H__
 #define __ENUMIDLIST_H__
 
-#include "shlobj.h"
-
 struct ENUMLIST
 {
 	ENUMLIST				*pNext;

@@ -118,7 +118,14 @@ extern "C" {
   _CRTIMP _CRT_INSECURE_DEPRECATE(wcscpy_s) wchar_t *__cdecl wcscpy(wchar_t *_Dest,const wchar_t *_Source);
   _CRTIMP size_t __cdecl wcscspn(const wchar_t *_Str,const wchar_t *_Control);
   _CRTIMP wchar_t *wcsncat(wchar_t *_Dest,const wchar_t *_Source,size_t _Count);
-  _CRTIMP size_t __cdecl wcslen(const wchar_t *_Str);
+
+_Ret_range_(==,_String_length_(_Str))
+_CRTIMP
+size_t
+__cdecl
+wcslen(
+    _In_z_ const wchar_t *_Str);
+
   _CRTIMP _CRT_INSECURE_DEPRECATE(wcsnlen_s) size_t __cdecl wcsnlen(const wchar_t *_Src,size_t _MaxCount);
   _CRTIMP int __cdecl wcsncmp(const wchar_t *_Str1,const wchar_t *_Str2,size_t _MaxCount);
   _CRTIMP _CRT_INSECURE_DEPRECATE(wcsncpy_s) wchar_t *wcsncpy(wchar_t *_Dest,const wchar_t *_Source,size_t _Count);

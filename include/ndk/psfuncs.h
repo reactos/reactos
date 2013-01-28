@@ -52,22 +52,22 @@ NTKERNELAPI
 PVOID
 NTAPI
 PsGetProcessWin32Process(
-    PEPROCESS Process
+    _In_ PEPROCESS Process
 );
 
 NTKERNELAPI
 VOID
 NTAPI
 PsSetProcessWin32Process(
-    PEPROCESS Process,
-    PVOID Win32Process
+    _Inout_ PEPROCESS Process,
+    _In_ PVOID Win32Process
 );
 
 NTKERNELAPI
 VOID
 NTAPI
 PsSetThreadWin32Thread(
-    PETHREAD Thread,
+    _Inout_ PETHREAD Thread,
     PVOID Win32Thread
 );
 
@@ -75,66 +75,66 @@ NTKERNELAPI
 PVOID
 NTAPI
 PsGetThreadWin32Thread(
-    PETHREAD Thread
+    _In_ PETHREAD Thread
 );
 
 NTKERNELAPI
 PVOID
 NTAPI
 PsGetProcessWin32WindowStation(
-    PEPROCESS Process
+    _In_ PEPROCESS Process
 );
 
 NTKERNELAPI
 VOID
 NTAPI
 PsSetProcessWindowStation(
-    PEPROCESS Process,
-    PVOID WindowStation
+    _Inout_ PEPROCESS Process,
+    _In_ PVOID WindowStation
 );
 
 NTKERNELAPI
 PTEB
 NTAPI
 PsGetThreadTeb(
-    IN PETHREAD Thread
+    _In_ PETHREAD Thread
 );
 
 NTKERNELAPI
 HANDLE
 NTAPI
 PsGetThreadId(
-    IN PETHREAD Thread
+    _In_ PETHREAD Thread
 );
 
 NTKERNELAPI
 BOOLEAN
 NTAPI
 PsGetThreadHardErrorsAreDisabled(
-    PETHREAD Thread
+    _In_ PETHREAD Thread
 );
 
 NTKERNELAPI
 VOID
 NTAPI
 PsSetThreadHardErrorsAreDisabled(
-    PETHREAD Thread,
-    IN BOOLEAN Disabled
+    _Inout_ PETHREAD Thread,
+    _In_ BOOLEAN Disabled
 );
 
 NTKERNELAPI
 VOID
 NTAPI
 PsEstablishWin32Callouts(
-    PWIN32_CALLOUTS_FPNS CalloutData
+    _In_ PWIN32_CALLOUTS_FPNS CalloutData
 );
 
 NTKERNELAPI
 VOID
 NTAPI
 PsReturnProcessNonPagedPoolQuota(
-    IN PEPROCESS Process,
-    IN SIZE_T    Amount
+    _In_ PEPROCESS Process,
+    _In_ SIZE_T    Amount
 );
 
 NTKERNELAPI
@@ -151,7 +151,7 @@ NTKERNELAPI
 VOID
 NTAPI
 PsRevertThreadToSelf(
-    IN PETHREAD Thread
+    _Inout_ PETHREAD Thread
 );
 
 //
@@ -161,55 +161,55 @@ NTKERNELAPI
 NTSTATUS
 NTAPI
 PsLookupProcessThreadByCid(
-    IN PCLIENT_ID Cid,
-    OUT PEPROCESS *Process OPTIONAL,
-    OUT PETHREAD *Thread
+    _In_ PCLIENT_ID Cid,
+    _Out_opt_ PEPROCESS *Process,
+    _Out_ PETHREAD *Thread
 );
 
 BOOLEAN
 NTAPI
 PsIsProtectedProcess(
-    IN PEPROCESS Process
+    _In_ PEPROCESS Process
 );
 
 NTKERNELAPI
 BOOLEAN
 NTAPI
 PsIsSystemProcess(
-    IN PEPROCESS Process
+    _In_ PEPROCESS Process
 );
 
 VOID
 NTAPI
 PsSetProcessPriorityByClass(
-    IN PEPROCESS Process,
-    IN PSPROCESSPRIORITYMODE Type
+    _In_ PEPROCESS Process,
+    _In_ PSPROCESSPRIORITYMODE Type
 );
 
 HANDLE
 NTAPI
 PsGetProcessInheritedFromUniqueProcessId(
-    IN PEPROCESS Process
+    _In_ PEPROCESS Process
 );
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 PsGetProcessExitStatus(
-    PEPROCESS Process
+    _In_ PEPROCESS Process
 );
 
 HANDLE
 NTAPI
 PsGetProcessSessionId(
-    IN PEPROCESS Process
+    _In_ PEPROCESS Process
 );
 
 NTKERNELAPI
 BOOLEAN
 NTAPI
 PsGetProcessExitProcessCalled(
-    PEPROCESS Process
+    _In_ PEPROCESS Process
 );
 
 //
@@ -219,59 +219,59 @@ NTKERNELAPI
 VOID
 NTAPI
 PsChargePoolQuota(
-    IN PEPROCESS Process,
-    IN POOL_TYPE PoolType,
-    IN SIZE_T    Amount
+    _In_ PEPROCESS Process,
+    _In_ POOL_TYPE PoolType,
+    _In_ SIZE_T    Amount
 );
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 PsChargeProcessNonPagedPoolQuota(
-    IN PEPROCESS Process,
-    IN SIZE_T    Amount
+    _In_ PEPROCESS Process,
+    _In_ SIZE_T    Amount
 );
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 PsChargeProcessPagedPoolQuota(
-    IN PEPROCESS Process,
-    IN SIZE_T    Amount
+    _In_ PEPROCESS Process,
+    _In_ SIZE_T    Amount
 );
 
 NTKERNELAPI
 NTSTATUS
 NTAPI
 PsChargeProcessPoolQuota(
-    IN PEPROCESS Process,
-    IN POOL_TYPE PoolType,
-    IN SIZE_T    Amount
+    _In_ PEPROCESS Process,
+    _In_ POOL_TYPE PoolType,
+    _In_ SIZE_T    Amount
 );
 
 NTKERNELAPI
 VOID
 NTAPI
 PsReturnPoolQuota(
-    IN PEPROCESS Process,
-    IN POOL_TYPE PoolType,
-    IN SIZE_T    Amount
+    _In_ PEPROCESS Process,
+    _In_ POOL_TYPE PoolType,
+    _In_ SIZE_T    Amount
 );
 
 NTKERNELAPI
 VOID
 NTAPI
 PsReturnProcessNonPagedPoolQuota(
-    IN PEPROCESS Process,
-    IN SIZE_T    Amount
+    _In_ PEPROCESS Process,
+    _In_ SIZE_T    Amount
 );
 
 NTKERNELAPI
 VOID
 NTAPI
 PsReturnProcessPagedPoolQuota(
-    IN PEPROCESS Process,
-    IN SIZE_T    Amount
+    _In_ PEPROCESS Process,
+    _In_ SIZE_T    Amount
 );
 
 #endif
@@ -283,8 +283,8 @@ NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtAlertResumeThread(
-    IN HANDLE ThreadHandle,
-    OUT PULONG SuspendCount
+    _In_ HANDLE ThreadHandle,
+    _Out_opt_ PULONG SuspendCount
 );
 
 typedef ULONG APPHELPCACHESERVICECLASS;
@@ -292,83 +292,83 @@ NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtApphelpCacheControl(
-    IN APPHELPCACHESERVICECLASS Service,
-    IN PVOID ServiceData
+    _In_ APPHELPCACHESERVICECLASS Service,
+    _In_ PVOID ServiceData
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtAlertThread(
-    IN HANDLE ThreadHandle
+    _In_ HANDLE ThreadHandle
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtAssignProcessToJobObject(
-    HANDLE JobHandle,
-    HANDLE ProcessHandle
+    _In_ HANDLE JobHandle,
+    _In_ HANDLE ProcessHandle
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtCreateJobObject(
-    PHANDLE JobHandle,
-    ACCESS_MASK DesiredAccess,
-    POBJECT_ATTRIBUTES ObjectAttributes
+    _Out_ PHANDLE JobHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ POBJECT_ATTRIBUTES ObjectAttributes
 );
 
 NTSTATUS
 NTAPI
 NtCreateJobSet(
-    IN ULONG NumJob,
-    IN PJOB_SET_ARRAY UserJobSet,
-    IN ULONG Flags
+    _In_ ULONG NumJob,
+    _In_ PJOB_SET_ARRAY UserJobSet,
+    _In_ ULONG Flags
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtCreateProcess(
-    OUT PHANDLE ProcessHandle,
-    IN ACCESS_MASK DesiredAccess,
-    IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
-    IN HANDLE ParentProcess,
-    IN BOOLEAN InheritObjectTable,
-    IN HANDLE SectionHandle OPTIONAL,
-    IN HANDLE DebugPort OPTIONAL,
-    IN HANDLE ExceptionPort OPTIONAL
+    _Out_ PHANDLE ProcessHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes,
+    _In_ HANDLE ParentProcess,
+    _In_ BOOLEAN InheritObjectTable,
+    _In_opt_ HANDLE SectionHandle,
+    _In_opt_ HANDLE DebugPort,
+    _In_opt_ HANDLE ExceptionPort
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtCreateProcessEx(
-    OUT PHANDLE ProcessHandle,
-    IN ACCESS_MASK DesiredAccess,
-    IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
-    IN HANDLE ParentProcess,
-    IN ULONG Flags,
-    IN HANDLE SectionHandle OPTIONAL,
-    IN HANDLE DebugPort OPTIONAL,
-    IN HANDLE ExceptionPort OPTIONAL,
-    IN BOOLEAN InJob
+    _Out_ PHANDLE ProcessHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes,
+    _In_ HANDLE ParentProcess,
+    _In_ ULONG Flags,
+    _In_opt_ HANDLE SectionHandle,
+    _In_opt_ HANDLE DebugPort,
+    _In_opt_ HANDLE ExceptionPort,
+    _In_ BOOLEAN InJob
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtCreateThread(
-    OUT PHANDLE ThreadHandle,
-    IN ACCESS_MASK DesiredAccess,
-    IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
-    IN HANDLE ProcessHandle,
-    OUT PCLIENT_ID ClientId,
-    IN PCONTEXT ThreadContext,
-    IN PINITIAL_TEB UserStack,
-    IN BOOLEAN CreateSuspended
+    _Out_ PHANDLE ThreadHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes,
+    _In_ HANDLE ProcessHandle,
+    _Out_ PCLIENT_ID ClientId,
+    _In_ PCONTEXT ThreadContext,
+    _In_ PINITIAL_TEB UserStack,
+    _In_ BOOLEAN CreateSuspended
 );
 
 #ifndef _M_ARM
@@ -390,69 +390,81 @@ NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtImpersonateThread(
-    IN HANDLE ThreadHandle,
-    IN HANDLE ThreadToImpersonate,
-    IN PSECURITY_QUALITY_OF_SERVICE SecurityQualityOfService
+    _In_ HANDLE ThreadHandle,
+    _In_ HANDLE ThreadToImpersonate,
+    _In_ PSECURITY_QUALITY_OF_SERVICE SecurityQualityOfService
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtIsProcessInJob(
-    IN HANDLE ProcessHandle,
-    IN HANDLE JobHandle OPTIONAL
+    _In_ HANDLE ProcessHandle,
+    _In_opt_ HANDLE JobHandle
 );
 
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtOpenProcess(
-    OUT PHANDLE ProcessHandle,
-    IN ACCESS_MASK DesiredAccess,
-    IN POBJECT_ATTRIBUTES ObjectAttributes,
-    IN PCLIENT_ID ClientId
+    _Out_ PHANDLE ProcessHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ POBJECT_ATTRIBUTES ObjectAttributes,
+    _In_opt_ PCLIENT_ID ClientId
+);
+
+_Must_inspect_result_
+__kernel_entry
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtOpenProcessToken(
+    _In_ HANDLE ProcessHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _Out_ PHANDLE TokenHandle
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtOpenThread(
-    OUT PHANDLE ThreadHandle,
-    IN ACCESS_MASK DesiredAccess,
-    IN POBJECT_ATTRIBUTES ObjectAttributes,
-    IN PCLIENT_ID ClientId
+    _Out_ PHANDLE ThreadHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ POBJECT_ATTRIBUTES ObjectAttributes,
+    _In_ PCLIENT_ID ClientId
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtOpenThreadToken(
-    IN HANDLE ThreadHandle,
-    IN ACCESS_MASK DesiredAccess,
-    IN BOOLEAN OpenAsSelf,
-    OUT PHANDLE TokenHandle
+    _In_ HANDLE ThreadHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ BOOLEAN OpenAsSelf,
+    _Out_ PHANDLE TokenHandle
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtOpenThreadTokenEx(
-    IN HANDLE ThreadHandle,
-    IN ACCESS_MASK DesiredAccess,
-    IN BOOLEAN OpenAsSelf,
-    IN ULONG HandleAttributes,
-    OUT PHANDLE TokenHandle
+    _In_ HANDLE ThreadHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ BOOLEAN OpenAsSelf,
+    _In_ ULONG HandleAttributes,
+    _Out_ PHANDLE TokenHandle
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQueryInformationJobObject(
-    HANDLE JobHandle,
-    JOBOBJECTINFOCLASS JobInformationClass,
-    PVOID JobInformation,
-    ULONG JobInformationLength,
-    PULONG ReturnLength
+    _In_ HANDLE JobHandle,
+    _In_ JOBOBJECTINFOCLASS JobInformationClass,
+    _Out_bytecap_(JobInformationLength) PVOID JobInformation,
+    _In_ ULONG JobInformationLength,
+    _Out_ PULONG ReturnLength
 );
 
 #ifndef _NTDDK_
@@ -460,11 +472,11 @@ NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQueryInformationProcess(
-    IN HANDLE ProcessHandle,
-    IN PROCESSINFOCLASS ProcessInformationClass,
-    OUT PVOID ProcessInformation,
-    IN ULONG ProcessInformationLength,
-    OUT PULONG ReturnLength OPTIONAL
+    _In_ HANDLE ProcessHandle,
+    _In_ PROCESSINFOCLASS ProcessInformationClass,
+    _Out_ PVOID ProcessInformation,
+    _In_ ULONG ProcessInformationLength,
+    _Out_opt_ PULONG ReturnLength OPTIONAL
 );
 #endif
 
@@ -472,231 +484,233 @@ NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQueryInformationThread(
-    IN HANDLE ThreadHandle,
-    IN THREADINFOCLASS ThreadInformationClass,
-    OUT PVOID ThreadInformation,
-    IN ULONG ThreadInformationLength,
-    OUT PULONG ReturnLength
+    _In_ HANDLE ThreadHandle,
+    _In_ THREADINFOCLASS ThreadInformationClass,
+    _Out_ PVOID ThreadInformation,
+    _In_ ULONG ThreadInformationLength,
+    _Out_opt_ PULONG ReturnLength
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtRegisterThreadTerminatePort(
-    HANDLE TerminationPort
+    _In_ HANDLE TerminationPort
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtResumeThread(
-    IN HANDLE ThreadHandle,
-    OUT PULONG SuspendCount
+    _In_ HANDLE ThreadHandle,
+    _Out_opt_ PULONG SuspendCount
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtResumeProcess(
-    IN HANDLE ProcessHandle
+    _In_ HANDLE ProcessHandle
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetInformationJobObject(
-    HANDLE JobHandle,
-    JOBOBJECTINFOCLASS JobInformationClass,
-    PVOID JobInformation,
-    ULONG JobInformationLength
+    _In_ HANDLE JobHandle,
+    _In_ JOBOBJECTINFOCLASS JobInformationClass,
+    _In_bytecount_(JobInformationLength) PVOID JobInformation,
+    _In_ ULONG JobInformationLength
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetInformationProcess(
-    IN HANDLE ProcessHandle,
-    IN PROCESSINFOCLASS ProcessInformationClass,
-    IN PVOID ProcessInformation,
-    IN ULONG ProcessInformationLength
+    _In_ HANDLE ProcessHandle,
+    _In_ PROCESSINFOCLASS ProcessInformationClass,
+    _In_ PVOID ProcessInformation,
+    _In_ ULONG ProcessInformationLength
 );
 
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetInformationThread(
-    IN HANDLE ThreadHandle,
-    IN THREADINFOCLASS ThreadInformationClass,
-    IN PVOID ThreadInformation,
-    IN ULONG ThreadInformationLength
+    _In_ HANDLE ThreadHandle,
+    _In_ THREADINFOCLASS ThreadInformationClass,
+    _In_reads_bytes_(ThreadInformationLength) PVOID ThreadInformation,
+    _In_ ULONG ThreadInformationLength
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSuspendProcess(
-    IN HANDLE ProcessHandle
+    _In_ HANDLE ProcessHandle
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSuspendThread(
-    IN HANDLE ThreadHandle,
-    IN PULONG PreviousSuspendCount
+    _In_ HANDLE ThreadHandle,
+    _In_ PULONG PreviousSuspendCount
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtTerminateProcess(
-    IN HANDLE ProcessHandle,
-    IN NTSTATUS ExitStatus
+    _In_ HANDLE ProcessHandle,
+    _In_ NTSTATUS ExitStatus
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtTerminateThread(
-    IN HANDLE ThreadHandle,
-    IN NTSTATUS ExitStatus
+    _In_ HANDLE ThreadHandle,
+    _In_ NTSTATUS ExitStatus
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtTerminateJobObject(
-    HANDLE JobHandle,
-    NTSTATUS ExitStatus
+    _In_ HANDLE JobHandle,
+    _In_ NTSTATUS ExitStatus
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwAlertResumeThread(
-    IN HANDLE ThreadHandle,
-    OUT PULONG SuspendCount
+    _In_ HANDLE ThreadHandle,
+    _Out_opt_ PULONG SuspendCount
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwAlertThread(
-    IN HANDLE ThreadHandle
+    _In_ HANDLE ThreadHandle
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwAssignProcessToJobObject(
-    HANDLE JobHandle,
-    HANDLE ProcessHandle
+    _In_ HANDLE JobHandle,
+    _In_ HANDLE ProcessHandle
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCreateJobObject(
-    PHANDLE JobHandle,
-    ACCESS_MASK DesiredAccess,
-    POBJECT_ATTRIBUTES ObjectAttributes
+    _Out_ PHANDLE JobHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ POBJECT_ATTRIBUTES ObjectAttributes
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCreateProcess(
-    OUT PHANDLE ProcessHandle,
-    IN ACCESS_MASK DesiredAccess,
-    IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
-    IN HANDLE ParentProcess,
-    IN BOOLEAN InheritObjectTable,
-    IN HANDLE SectionHandle OPTIONAL,
-    IN HANDLE DebugPort OPTIONAL,
-    IN HANDLE ExceptionPort OPTIONAL
+    _Out_ PHANDLE ProcessHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes,
+    _In_ HANDLE ParentProcess,
+    _In_ BOOLEAN InheritObjectTable,
+    _In_opt_ HANDLE SectionHandle,
+    _In_opt_ HANDLE DebugPort,
+    _In_opt_ HANDLE ExceptionPort
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCreateThread(
-    OUT PHANDLE ThreadHandle,
-    IN ACCESS_MASK DesiredAccess,
-    IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
-    IN HANDLE ProcessHandle,
-    OUT PCLIENT_ID ClientId,
-    IN PCONTEXT ThreadContext,
-    IN PINITIAL_TEB UserStack,
-    IN BOOLEAN CreateSuspended
+    _Out_ PHANDLE ThreadHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes,
+    _In_ HANDLE ProcessHandle,
+    _Out_ PCLIENT_ID ClientId,
+    _In_ PCONTEXT ThreadContext,
+    _In_ PINITIAL_TEB UserStack,
+    _In_ BOOLEAN CreateSuspended
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwImpersonateThread(
-    IN HANDLE ThreadHandle,
-    IN HANDLE ThreadToImpersonate,
-    IN PSECURITY_QUALITY_OF_SERVICE SecurityQualityOfService
+    _In_ HANDLE ThreadHandle,
+    _In_ HANDLE ThreadToImpersonate,
+    _In_ PSECURITY_QUALITY_OF_SERVICE SecurityQualityOfService
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwIsProcessInJob(
-    IN HANDLE ProcessHandle,
-    IN HANDLE JobHandle OPTIONAL
+    _In_ HANDLE ProcessHandle,
+    _In_opt_ HANDLE JobHandle
 );
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
-ZwOpenProcess(
-    OUT PHANDLE ProcessHandle,
-    IN ACCESS_MASK DesiredAccess,
-    IN POBJECT_ATTRIBUTES ObjectAttributes,
-    IN PCLIENT_ID ClientId
+ZwOpenProcessTokenEx(
+    _In_ HANDLE ProcessHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ ULONG HandleAttributes,
+    _Out_ PHANDLE TokenHandle
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwOpenThread(
-    OUT PHANDLE ThreadHandle,
-    IN ACCESS_MASK DesiredAccess,
-    IN POBJECT_ATTRIBUTES ObjectAttributes,
-    IN PCLIENT_ID ClientId
+    _Out_ PHANDLE ThreadHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ POBJECT_ATTRIBUTES ObjectAttributes,
+    _In_ PCLIENT_ID ClientId
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwOpenThreadToken(
-    IN HANDLE ThreadHandle,
-    IN ACCESS_MASK DesiredAccess,
-    IN BOOLEAN OpenAsSelf,
-    OUT PHANDLE TokenHandle
+    _In_ HANDLE ThreadHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ BOOLEAN OpenAsSelf,
+    _Out_ PHANDLE TokenHandle
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwOpenThreadTokenEx(
-    IN HANDLE ThreadHandle,
-    IN ACCESS_MASK DesiredAccess,
-    IN BOOLEAN OpenAsSelf,
-    IN ULONG HandleAttributes,
-    OUT PHANDLE TokenHandle
+    _In_ HANDLE ThreadHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ BOOLEAN OpenAsSelf,
+    _In_ ULONG HandleAttributes,
+    _Out_ PHANDLE TokenHandle
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryInformationJobObject(
-    HANDLE JobHandle,
-    JOBOBJECTINFOCLASS JobInformationClass,
-    PVOID JobInformation,
-    ULONG JobInformationLength,
-    PULONG ReturnLength
+    _In_ HANDLE JobHandle,
+    _In_ JOBOBJECTINFOCLASS JobInformationClass,
+    _Out_bytecap_(JobInformationLength) PVOID JobInformation,
+    _In_ ULONG JobInformationLength,
+    _Out_ PULONG ReturnLength
 );
 
 #ifndef _NTDDK_
@@ -704,11 +718,11 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryInformationProcess(
-    IN HANDLE ProcessHandle,
-    IN PROCESSINFOCLASS ProcessInformationClass,
-    OUT PVOID ProcessInformation,
-    IN ULONG ProcessInformationLength,
-    OUT PULONG ReturnLength OPTIONAL
+    _In_ HANDLE ProcessHandle,
+    _In_ PROCESSINFOCLASS ProcessInformationClass,
+    _Out_ PVOID ProcessInformation,
+    _In_ ULONG ProcessInformationLength,
+    _Out_opt_ PULONG ReturnLength
 );
 #endif
 
@@ -716,102 +730,104 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryInformationThread(
-    IN HANDLE ThreadHandle,
-    IN THREADINFOCLASS ThreadInformationClass,
-    OUT PVOID ThreadInformation,
-    IN ULONG ThreadInformationLength,
-    OUT PULONG ReturnLength
+    _In_ HANDLE ThreadHandle,
+    _In_ THREADINFOCLASS ThreadInformationClass,
+    _Out_ PVOID ThreadInformation,
+    _In_ ULONG ThreadInformationLength,
+    _Out_opt_ PULONG ReturnLength
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwRegisterThreadTerminatePort(
-    HANDLE TerminationPort
+    _In_ HANDLE TerminationPort
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwResumeThread(
-    IN HANDLE ThreadHandle,
-    OUT PULONG SuspendCount
+    _In_ HANDLE ThreadHandle,
+    _Out_opt_ PULONG SuspendCount
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwResumeProcess(
-    IN HANDLE ProcessHandle
+    _In_ HANDLE ProcessHandle
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetInformationJobObject(
-    HANDLE JobHandle,
-    JOBOBJECTINFOCLASS JobInformationClass,
-    PVOID JobInformation,
-    ULONG JobInformationLength
+    _In_ HANDLE JobHandle,
+    _In_ JOBOBJECTINFOCLASS JobInformationClass,
+    _In_ PVOID JobInformation,
+    _In_ ULONG JobInformationLength
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetInformationProcess(
-    IN HANDLE ProcessHandle,
-    IN PROCESSINFOCLASS ProcessInformationClass,
-    IN PVOID ProcessInformation,
-    IN ULONG ProcessInformationLength
+    _In_ HANDLE ProcessHandle,
+    _In_ PROCESSINFOCLASS ProcessInformationClass,
+    _In_ PVOID ProcessInformation,
+    _In_ ULONG ProcessInformationLength
 );
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetInformationThread(
-    IN HANDLE ThreadHandle,
-    IN THREADINFOCLASS ThreadInformationClass,
-    IN PVOID ThreadInformation,
-    IN ULONG ThreadInformationLength
+    _In_ HANDLE ThreadHandle,
+    _In_ THREADINFOCLASS ThreadInformationClass,
+    _In_reads_bytes_(ThreadInformationLength) PVOID ThreadInformation,
+    _In_ ULONG ThreadInformationLength
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSuspendProcess(
-    IN HANDLE ProcessHandle
+    _In_ HANDLE ProcessHandle
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSuspendThread(
-    IN HANDLE ThreadHandle,
-    IN PULONG PreviousSuspendCount
+    _In_ HANDLE ThreadHandle,
+    _In_ PULONG PreviousSuspendCount
 );
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 NTSTATUS
 NTAPI
-ZwTerminateProcess(
-    IN HANDLE ProcessHandle,
-    IN NTSTATUS ExitStatus
-);
+ZwTerminateProcess (
+    _In_opt_ HANDLE ProcessHandle,
+    _In_ NTSTATUS ExitStatus
+    );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwTerminateThread(
-    IN HANDLE ThreadHandle,
-    IN NTSTATUS ExitStatus
+    _In_ HANDLE ThreadHandle,
+    _In_ NTSTATUS ExitStatus
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwTerminateJobObject(
-    HANDLE JobHandle,
-    NTSTATUS ExitStatus
+    _In_ HANDLE JobHandle,
+    _In_ NTSTATUS ExitStatus
 );
 
 #ifdef __cplusplus

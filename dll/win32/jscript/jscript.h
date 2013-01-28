@@ -16,22 +16,26 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #include <stdarg.h>
 #include <stdio.h>
 
 #define COBJMACROS
 
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "ole2.h"
-#include "dispex.h"
-#include "activscp.h"
+#include <windef.h>
+#include <winbase.h>
+#include <winuser.h>
+#include <ole2.h>
+#include <dispex.h>
+#include <activscp.h>
 
 #include "resource.h"
 
-#include "wine/unicode.h"
-#include "wine/list.h"
+#include <wine/unicode.h>
+#include <wine/list.h>
 
 #define JSCRIPT_ERROR 0x800A0000
 

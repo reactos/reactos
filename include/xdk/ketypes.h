@@ -992,6 +992,45 @@ extern PCCHAR KeNumberProcessors;
 $endif (_WDMDDK_)
 $if (_NTDDK_)
 
+typedef struct _NT_TIB {
+  struct _EXCEPTION_REGISTRATION_RECORD *ExceptionList;
+  PVOID StackBase;
+  PVOID StackLimit;
+  PVOID SubSystemTib;
+  _ANONYMOUS_UNION union {
+    PVOID FiberData;
+    ULONG Version;
+  } DUMMYUNIONNAME;
+  PVOID ArbitraryUserPointer;
+  struct _NT_TIB *Self;
+} NT_TIB, *PNT_TIB;
+
+typedef struct _NT_TIB32 {
+  ULONG ExceptionList;
+  ULONG StackBase;
+  ULONG StackLimit;
+  ULONG SubSystemTib;
+  _ANONYMOUS_UNION union {
+    ULONG FiberData;
+    ULONG Version;
+  } DUMMYUNIONNAME;
+  ULONG ArbitraryUserPointer;
+  ULONG Self;
+} NT_TIB32,*PNT_TIB32;
+
+typedef struct _NT_TIB64 {
+  ULONG64 ExceptionList;
+  ULONG64 StackBase;
+  ULONG64 StackLimit;
+  ULONG64 SubSystemTib;
+  _ANONYMOUS_UNION union {
+    ULONG64 FiberData;
+    ULONG Version;
+  } DUMMYUNIONNAME;
+  ULONG64 ArbitraryUserPointer;
+  ULONG64 Self;
+} NT_TIB64,*PNT_TIB64;
+
 #define NX_SUPPORT_POLICY_ALWAYSOFF 0
 #define NX_SUPPORT_POLICY_ALWAYSON  1
 #define NX_SUPPORT_POLICY_OPTIN     2
@@ -1197,4 +1236,22 @@ typedef struct _KQUEUE {
 } KQUEUE, *PKQUEUE, *RESTRICTED_POINTER PRKQUEUE;
 
 $endif (_NTIFS_)
+
+$if (_WDMDDK_)
+#if defined(_M_IX86)
+$include(x86/ke.h)
+#elif defined(_M_AMD64)
+$include(amd64/ke.h)
+#elif defined(_M_IA64)
+$include(ia64/ke.h)
+#elif defined(_M_PPC)
+$include(ppc/ke.h)
+#elif defined(_M_MIPS)
+$include(mips/ke.h)
+#elif defined(_M_ARM)
+$include(arm/ke.h)
+#else
+#error Unknown Architecture
+#endif
+$endif (_WDMDDK_)
 

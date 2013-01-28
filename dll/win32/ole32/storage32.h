@@ -30,15 +30,18 @@
 #ifndef __STORAGE32_H__
 #define __STORAGE32_H__
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+
 #include <stdarg.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "winnt.h"
-#include "objbase.h"
-#include "winreg.h"
+#include <windef.h>
+#include <winbase.h>
+//#include "winnt.h"
+#include <objbase.h>
+#include <winreg.h>
 #include "winternl.h"
-#include "wine/list.h"
+#include <wine/list.h>
 
 /*
  * Definitions for the file format offsets.

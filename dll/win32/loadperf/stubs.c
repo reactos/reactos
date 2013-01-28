@@ -1,5 +1,4 @@
-
-#include <windows.h>
+#include <windef.h>
 #define NDEBUG
 #include <reactos/debug.h>
 
@@ -82,4 +81,3 @@ UpdatePerfNameFilesW(
     UNIMPLEMENTED;
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
-

@@ -25,7 +25,7 @@
  *      2004/09/04  Created
  */
 
-#include "precomp.h"
+#include <precomp.h>
 
 #define NDEBUG
 #include <debug.h>

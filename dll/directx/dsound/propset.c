@@ -20,21 +20,26 @@
  */
 
 #define COBJMACROS
+
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #include <stdarg.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "mmsystem.h"
-#include "winternl.h"
-#include "winnls.h"
-#include "vfwmsgs.h"
-#include "mmddk.h"
-#include "wine/debug.h"
-#include "dsound.h"
-#include "dsdriver.h"
+#include <windef.h>
+#include <winbase.h>
+//#include "winuser.h"
+//#include "mmsystem.h"
+#include <winternl.h>
+#include <winnls.h>
+#include <vfwmsgs.h>
+#include <mmddk.h>
+#include <wine/debug.h>
+#include <dsound.h>
+#include <dsdriver.h>
 #include "dsound_private.h"
-#include "dsconf.h"
+#include <dsconf.h>
 
 #ifdef NONAMELESSSTRUCT
 # define S(x) (x).s
@@ -43,7 +48,6 @@
 #endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(dsound);
-
 
 /*******************************************************************************
  *              IKsBufferPropertySet

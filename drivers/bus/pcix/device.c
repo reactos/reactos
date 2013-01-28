@@ -261,8 +261,7 @@ Device_GetAdditionalResourceDescriptors(IN PPCI_CONFIGURATOR_CONTEXT Context,
                                         IN PIO_RESOURCE_DESCRIPTOR IoDescriptor)
 {
     /* Not yet implemented */
-    UNIMPLEMENTED;
-    ASSERT(FALSE); // while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
 }
 
 VOID
@@ -271,8 +270,7 @@ Device_ResetDevice(IN PPCI_PDO_EXTENSION PdoExtension,
                    IN PPCI_COMMON_HEADER PciData)
 {
     /* Not yet implemented */
-    UNIMPLEMENTED;
-    ASSERT(FALSE); // while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
 }
 
 VOID
@@ -281,8 +279,7 @@ Device_ChangeResourceSettings(IN PPCI_PDO_EXTENSION PdoExtension,
                               IN PPCI_COMMON_HEADER PciData)
 {
     /* Not yet implemented */
-    UNIMPLEMENTED;
-    ASSERT(FALSE); // while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
 }
 
 /* EOF */

@@ -1,9 +1,4 @@
-#include <windows.h>
-#include "resource.h"
-
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
-
-1   ICON    DISCARDABLE     res/terminal.ico
 
 #ifdef LANGUAGE_BG_BG
     #include "lang/bg-BG.rc"

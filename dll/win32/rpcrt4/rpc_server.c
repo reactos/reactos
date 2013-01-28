@@ -20,29 +20,31 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
+#define _INC_WINDOWS
+
+#include <config.h>
+//#include "wine/port.h"
 
 #include <stdarg.h>
-#include <stdio.h>
-#include <string.h>
+//#include <stdio.h>
+//#include <string.h>
 #include <assert.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "winerror.h"
+#include <windef.h>
+#include <winbase.h>
+//#include "winerror.h"
 
-#include "rpc.h"
-#include "rpcndr.h"
-#include "excpt.h"
+#include <rpc.h>
+//#include "rpcndr.h"
+//#include "excpt.h"
 
-#include "wine/debug.h"
-#include "wine/exception.h"
+#include <wine/debug.h>
+#include <wine/exception.h>
 
 #include "rpc_server.h"
 #include "rpc_assoc.h"
 #include "rpc_message.h"
-#include "rpc_defs.h"
+//#include "rpc_defs.h"
 #include "ncastatus.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(rpc);

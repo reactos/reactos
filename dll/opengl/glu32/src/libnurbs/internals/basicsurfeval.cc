@@ -37,8 +37,8 @@
  *
  */
 
-#include "mystdio.h"
-#include "types.h"
+//#include "mystdio.h"
+//#include "types.h"
 #include "basicsurfeval.h"
 
 #ifdef __WATCOMC__

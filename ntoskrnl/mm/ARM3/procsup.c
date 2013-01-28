@@ -690,9 +690,9 @@ MmCreatePeb(IN PEPROCESS Process,
         /*Peb->HeapSegmentReserve = MmHeapSegmentReserve;
          Peb->HeapSegmentCommit = MmHeapSegmentCommit;
          Peb->HeapDeCommitTotalFreeThreshold = MmHeapDeCommitTotalFreeThreshold;
-         Peb->HeapDeCommitFreeBlockThreshold = MmHeapDeCommitFreeBlockThreshold;
-         Peb->CriticalSectionTimeout = MmCriticalSectionTimeout;
-         Peb->MinimumStackCommit = MmMinimumStackCommitInBytes;
+         Peb->HeapDeCommitFreeBlockThreshold = MmHeapDeCommitFreeBlockThreshold;*/
+        Peb->CriticalSectionTimeout = MmCriticalSectionTimeout;
+        /*Peb->MinimumStackCommit = MmMinimumStackCommitInBytes;
          */
         Peb->MaximumNumberOfHeaps = (PAGE_SIZE - sizeof(PEB)) / sizeof(PVOID);
         Peb->ProcessHeaps = (PVOID*)(Peb + 1);

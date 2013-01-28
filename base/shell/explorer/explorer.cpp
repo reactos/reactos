@@ -34,12 +34,14 @@
 
 #include <locale.h>    // for setlocale()
 
+#include <wincon.h>
+
 #ifndef __WINE__
 #include <io.h>        // for dup2()
 #include <fcntl.h>    // for _O_RDONLY
 #endif
 
-#include "dialogs/settings.h"    // for MdiSdiDlg
+//#include "dialogs/settings.h"    // for MdiSdiDlg
 
 #include "services/shellservices.h"
 

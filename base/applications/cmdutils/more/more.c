@@ -1,5 +1,4 @@
-/* $Id$
- * 
+/*
  * MORE.C - external command.
  *
  * clone from 4nt more command
@@ -10,10 +9,15 @@
  *     use window size instead of buffer size.
  */
 
-#include <windows.h>
+#include <stdio.h>
 #include <malloc.h>
 #include <tchar.h>
-#include <stdio.h>
+
+#include <windef.h>
+#include <winbase.h>
+#include <winuser.h>
+#include <wincon.h>
+
 #include "resource.h"
 
 static TCHAR szCont[128];

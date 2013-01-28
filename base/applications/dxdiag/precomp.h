@@ -6,18 +6,26 @@
 #define D3D_OVERLOADS
 
 #include <stdio.h>
-#include <windows.h>
-#include <limits.h>
+
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winreg.h>
+#include <winsvc.h>
+#include <wingdi.h>
+#include <winnls.h>
+#include <winver.h>
+#include <winuser.h>
 #include <mmsystem.h>
 #include <setupapi.h>
-#include <commctrl.h>
 #include <ddraw.h>
 #include <initguid.h>
 #include <devguid.h>
 #include <mmreg.h>
-#include <wintrust.h>
-#include <softpub.h>
-#include <mscat.h>
+
 #include "resource.h"
 
 typedef struct

@@ -42,6 +42,9 @@ REGINST REGINST jscript.inf
 #ifdef LANGUAGE_FR_FR
     #include "jscript_Fr.rc"
 #endif
+#ifdef LANGUAGE_HE_IL
+    #include "jscript_He.rc"
+#endif
 #ifdef LANGUAGE_HU_HU
     #include "jscript_Hu.rc"
 #endif

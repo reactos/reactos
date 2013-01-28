@@ -42,28 +42,28 @@
  * - size of string in WCHAR or bytes? (#chars for MCI_INFO, #bytes for MCI_SYSINFO)
  */
 
-#include "config.h"
-#include "wine/port.h"
+#include <config.h>
+//#include "wine/port.h"
 
-#include <stdlib.h>
-#include <stdarg.h>
+//#include <stdlib.h>
+//#include <stdarg.h>
 #include <stdio.h>
-#include <string.h>
+//#include <string.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "mmsystem.h"
-#include "winuser.h"
-#include "winnls.h"
-#include "winreg.h"
-#include "wownt32.h"
+#include <windef.h>
+//#include "winbase.h"
+//#include "wingdi.h"
+#include <mmsystem.h>
+#include <winuser.h>
+//#include "winnls.h"
+#include <winreg.h>
+#include <wownt32.h>
 
-#include "digitalv.h"
+#include <digitalv.h>
 #include "winemm.h"
 
-#include "wine/debug.h"
-#include "wine/unicode.h"
+#include <wine/debug.h>
+#include <wine/unicode.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(mci);
 

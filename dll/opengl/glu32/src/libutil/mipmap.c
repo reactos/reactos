@@ -31,10 +31,10 @@
 #include "gluos.h"
 #include <assert.h>
 #include <GL/glu.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <limits.h>		/* UINT_MAX */
+//#include <stdio.h>
+//#include <stdlib.h>
+//#include <string.h>
+//#include <limits.h>		/* UINT_MAX */
 #include <math.h>
 
 typedef union {

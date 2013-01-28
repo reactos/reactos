@@ -35,10 +35,10 @@
 /*
 */
 
-#include <stdlib.h>
-#include <stdio.h>
+//#include <stdlib.h>
+//#include <stdio.h>
 #include <math.h>
-#include "zlassert.h"
+//#include "zlassert.h"
 #include "sampleCompTop.h"
 #include "sampleCompRight.h"
 

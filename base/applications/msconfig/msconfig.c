@@ -6,7 +6,7 @@
  * COPYRIGHT:   Copyright 2005-2006 Christoph von Wittich <Christoph@ApiViewer.de>
  *
  */
-#include <precomp.h>
+#include "precomp.h"
 
 HINSTANCE hInst = 0;
 

@@ -37,17 +37,17 @@
  *
  */
 
-#include "glimports.h"
-#include "myassert.h"
-#include "mysetjmp.h"
-#include "mystdio.h"
-#include "nurbsconsts.h"
+//#include "glimports.h"
+//#include "myassert.h"
+//#include "mysetjmp.h"
+//#include "mystdio.h"
+//#include "nurbsconsts.h"
 #include "nurbstess.h"
-#include "bufpool.h"
+//#include "bufpool.h"
 #include "quilt.h"
 #include "knotvector.h"
 #include "mapdesc.h"
-#include "maplist.h"
+//#include "maplist.h"
 
 void 
 NurbsTessellator::set_domain_distance_u_rate(REAL u_rate)

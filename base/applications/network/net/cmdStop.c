@@ -66,5 +66,3 @@ done:
 
     return nError;
 }
-
-

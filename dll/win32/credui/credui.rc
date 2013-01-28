@@ -19,9 +19,9 @@
  */
 
 #include "windef.h"
-#include "winbase.h"
+//#include "winbase.h"
 #include "winuser.h"
-#include "winnls.h"
+//#include "winnls.h"
 #include "credui_resources.h"
 
 /* @makedep: banner.bmp */
@@ -58,6 +58,9 @@ IDB_BANNER BITMAP banner.bmp
 #endif
 #ifdef LANGUAGE_FR_FR
     #include "credui_Fr.rc"
+#endif
+#ifdef LANGUAGE_HE_IL
+    #include "credui_He.rc"
 #endif
 #ifdef LANGUAGE_HU_HU
     #include "credui_Hu.rc"

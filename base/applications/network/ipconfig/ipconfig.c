@@ -12,12 +12,16 @@
  * allow globbing on adapter names
  */
 
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winuser.h>
+#include <winreg.h>
 #include <stdio.h>
 #include <tchar.h>
 #include <time.h>
 #include <iphlpapi.h>
+
 #include "resource.h"
 
 #define GUID_LEN 40
@@ -821,4 +825,3 @@ int main(int argc, char *argv[])
 
     return 0;
 }
-

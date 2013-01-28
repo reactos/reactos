@@ -173,7 +173,7 @@ public:
 
 	HRESULT STDMETHODCALLTYPE ResourceUnregister(LPCOLESTR resFileName, UINT nID, LPCOLESTR szType)
 	{
-		return ResourceRegisterSz(resFileName, MAKEINTRESOURCEW(nID), szType);
+		return ResourceUnregisterSz(resFileName, MAKEINTRESOURCEW(nID), szType);
 	}
 
 protected:
@@ -505,7 +505,6 @@ private:
 
 		iter = *pstr;
 		hkey = NULL;
-		iter = *pstr;
 		hres = get_word(&iter, buf);
 		if (FAILED(hres))
 			return hres;

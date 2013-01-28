@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <regedit.h>
+#include "regedit.h"
 
 /* Global variables and constants  */
 /* Image_Open, Image_Closed, and Image_Root - integer variables for indexes of the images.  */

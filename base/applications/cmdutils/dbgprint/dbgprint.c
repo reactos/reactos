@@ -8,9 +8,11 @@
  *                  Christoph von Wittich (Christoph_vW@ReactOS.org)
  */
 
-#include <windows.h>
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
 #include <tchar.h>
-#include <debug.h>
+//#include <debug.h>
 #include <stdio.h>
 
 int _tmain(int argc, TCHAR ** argv)

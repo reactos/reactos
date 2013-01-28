@@ -1,8 +1,13 @@
-#include <windows.h>
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winuser.h>
+#include <wincon.h>
 #include <stdio.h>
 #include <wchar.h>
 #include <assert.h>
 #include <locale.h>
+
 #include "doskey.h"
 
 #define MAX_STRING 2000

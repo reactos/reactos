@@ -5,25 +5,19 @@
  * PROGRAMMERS:     Marco Pagliaricci (irc: rendar)
  */
 
-
-
 #pragma once
 
 #include "resource.h"
 #include "audio_api.hpp"
-
-
 
 #define MAX_LOADSTRING 100
 
 #define MAINWINDOW_W 350
 #define MAINWINDOW_H 190
 
-
 #define CONTROLS_CX 10
 
 #define INITIAL_BUFREC_SECONDS 30.0f
-
 
 #define BUTSTART_ID 0
 #define BUTEND_ID 1

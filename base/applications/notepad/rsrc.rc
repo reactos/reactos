@@ -17,12 +17,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "main.h"
-#include "winnls.h"
-#include "commctrl.h"
+#include <windef.h>
+#include <winuser.h>
+
 #include "notepad_res.h"
 
 #define REACTOS_STR_FILE_DESCRIPTION	"ReactOS Editor\0"
@@ -65,6 +62,9 @@ IDI_NPICON ICON "res/notepad.ico"
 #endif
 #ifdef LANGUAGE_FR_FR
     #include "lang/fr-FR.rc"
+#endif
+#ifdef LANGUAGE_HE_IL
+    #include "lang/he-IL.rc"
 #endif
 #ifdef LANGUAGE_HU_HU
     #include "lang/hu-HU.rc"

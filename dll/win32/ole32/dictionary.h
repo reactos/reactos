@@ -23,8 +23,8 @@
 #define __DICTIONARY_H__
 
 #include <stdarg.h>
-#include "windef.h"
-#include "winbase.h"
+#include <windef.h>
+#include <winbase.h>
 
 struct dictionary;
 

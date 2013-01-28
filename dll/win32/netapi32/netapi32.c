@@ -17,15 +17,15 @@
  */
 
 #define WIN32_NO_STATUS
-#include "config.h"
+#include <config.h>
 
-#include "wine/debug.h"
-#include "lm.h"
+#include <wine/debug.h>
+//#include "lm.h"
 #include "netbios.h"
 
 #define NTOS_MODE_USER
 #include <ndk/rtlfuncs.h>
-#include "netapi32.h"
+//#include "netapi32.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(netbios);
 

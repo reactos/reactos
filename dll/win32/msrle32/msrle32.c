@@ -25,10 +25,10 @@
 
 #include "msrle_private.h"
 
-#include "winnls.h"
-#include "winuser.h"
+//#include "winnls.h"
+//#include "winuser.h"
 
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(msrle32);
 

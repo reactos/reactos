@@ -42,7 +42,6 @@ COMMAND cmds[] =
 
 };
 
-
 int wmain(int argc, WCHAR **argv)
 {
     PCOMMAND cmdptr;
@@ -67,28 +66,8 @@ int wmain(int argc, WCHAR **argv)
     return 1;
 }
 
-
 INT unimplemented(INT argc, WCHAR **argv)
 {
     puts("This command is not implemented yet");
     return 1;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -17,19 +17,19 @@
  *
  */
 
-#include <stdarg.h>
-#include <math.h>
+//#include <stdarg.h>
+//#include <math.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "wingdi.h"
+//#include "windef.h"
+//#include "winbase.h"
+//#include "winuser.h"
+//#include "wingdi.h"
 
-#include "objbase.h"
+//#include "objbase.h"
 
-#include "gdiplus.h"
+//#include "gdiplus.h"
 #include "gdiplus_private.h"
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(gdiplus);
 

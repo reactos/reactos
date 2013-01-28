@@ -23,7 +23,7 @@
 #define DS_TIME_RES 2  /* Resolution of multimedia timer */
 #define DS_TIME_DEL 10  /* Delay of multimedia timer callback, and duration of HEL fragment */
 
-#include "wine/list.h"
+#include <wine/list.h>
 
 /* direct sound hardware acceleration levels */
 #define DS_HW_ACCEL_FULL        0	/* default on Windows 98 */

@@ -58,18 +58,18 @@
  *   -gmt
  */
 
-#include "config.h"
+#include <config.h>
 
-#include <stdarg.h>
+//#include <stdarg.h>
 #include <stdio.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "winerror.h"
-#include "fdi.h"
+//#include "windef.h"
+//#include "winbase.h"
+//#include "winerror.h"
+//#include "fdi.h"
 #include "cabinet.h"
 
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(cabinet);
 

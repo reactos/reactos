@@ -26,7 +26,7 @@
  *        Remove all hardcode string to En.rc
  */
 
-#include <precomp.h>
+#include "precomp.h"
 
 BOOL
 OnOffCommand(LPTSTR param, LPBOOL flag, INT message)

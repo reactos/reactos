@@ -78,21 +78,21 @@
  */
 
 #include <assert.h>
-#include <stdarg.h>
+//#include <stdarg.h>
 #include <stdlib.h>
-#include <string.h>
+//#include <string.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "wine/unicode.h"
-#include "winuser.h"
-#include "winnls.h"
-#include "commctrl.h"
+//#include "windef.h"
+//#include "winbase.h"
+//#include "wingdi.h"
+//#include "wine/unicode.h"
+//#include "winuser.h"
+//#include "winnls.h"
+//#include "commctrl.h"
 #include "comctl32.h"
-#include "uxtheme.h"
-#include "vssym32.h"
-#include "wine/debug.h"
+#include <uxtheme.h>
+#include <vssym32.h>
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(rebar);
 

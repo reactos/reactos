@@ -10,7 +10,7 @@
 
 #include "smss.h"
 #define NDEBUG
-#include "debug.h"
+#include <debug.h>
 
 /* GLOBALS ********************************************************************/
 

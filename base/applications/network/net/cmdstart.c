@@ -85,7 +85,6 @@ done:
     return nError;
 }
 
-
 /* Start the service argv[2] */
 static
 INT
@@ -159,7 +158,6 @@ done:
 
     return nError;
 }
-
 
 INT
 cmdStart(INT argc, WCHAR **argv)

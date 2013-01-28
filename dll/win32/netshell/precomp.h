@@ -1,41 +1,28 @@
 #ifndef _PRECOMP_H__
 #define _PRECOMP_H__
 
-#include <stdarg.h>
-#include <stdlib.h>
-#include <string.h>
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #include <stdio.h>
-#include <assert.h>
-#include <ctype.h>
-#include <malloc.h>
-
+#include <windef.h>
+#include <winreg.h>
+#include <winbase.h>
+#include <winnls.h>
 #include <winsock2.h>
-#include <windows.h>
-
-#include <shlguid.h>
 #include <shlwapi.h>
 #include <shlobj.h>
-#include <shldisp.h>
-#include <cpl.h>
-#include <objbase.h>
-#include <ole2.h>
-#include <ocidl.h>
-#include <shobjidl.h>
 #include <shellapi.h>
 #include <olectl.h>
 #include <iphlpapi.h>
-#include <shtypes.h>
 #include <setupapi.h>
-#include <initguid.h>
 #include <devguid.h>
 #include <netcon.h>
-#include <docobj.h>
 #include <netcfgx.h>
 #include <netcfgn.h>
-#include <prsht.h>
+#include <wine/debug.h>
 
-#include "wine/debug.h"
-#include "wine/unicode.h"
 #include "resource.h"
 
 #define NCF_VIRTUAL                     0x1

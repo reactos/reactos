@@ -36,8 +36,8 @@
 #ifndef __glubackend_h_
 #define __glubackend_h_
 
-#include "trimvertex.h"
-#include "gridvertex.h"
+//#include "trimvertex.h"
+//#include "gridvertex.h"
 #include "gridtrimvertex.h"
 
 class BasicCurveEvaluator;

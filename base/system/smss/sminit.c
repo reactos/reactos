@@ -10,7 +10,7 @@
 
 #include "smss.h"
 #define NDEBUG
-#include "debug.h"
+#include <debug.h>
 
 /* GLOBALS ********************************************************************/
 
@@ -463,15 +463,17 @@ SmpConfigureKnownDlls(IN PWSTR ValueName,
                       IN PVOID EntryContext)
 {
     /* Check which value is being set */
-    if (_wcsicmp(ValueName, L"DllDirectory"))
+    if (_wcsicmp(ValueName, L"DllDirectory") == 0)
+    {
+        /* This is the directory, initialize it */
+        DPRINT("KnownDll Path: %S\n", ValueData);
+        return SmpInitializeKnownDllPath(&SmpKnownDllPath, ValueData, ValueLength);
+    }
+    else
     {
         /* Add to the linked list -- this is a file */
         return SmpSaveRegistryValue(EntryContext, ValueName, ValueData, TRUE);
     }
-
-    /* This is the directory, initialize it */
-    DPRINT("KnownDll Path: %S\n", ValueData);
-    return SmpInitializeKnownDllPath(&SmpKnownDllPath, ValueData, ValueLength);
 }
 
 NTSTATUS
@@ -499,7 +501,7 @@ SmpConfigureEnvironment(IN PWSTR ValueName,
     }
 
     /* Check if the path is being set, and wait for the second instantiation */
-    if (!(_wcsicmp(ValueName, L"Path")) && (++SmpCalledConfigEnv == 2))
+    if ((_wcsicmp(ValueName, L"Path") == 0) && (++SmpCalledConfigEnv == 2))
     {
         /* Allocate the path buffer */
         SmpDefaultLibPathBuffer = RtlAllocateHeap(RtlGetProcessHeap(),
@@ -528,12 +530,12 @@ SmpConfigureSubSystems(IN PWSTR ValueName,
     PSMP_REGISTRY_VALUE RegEntry;
     PWCHAR SubsystemName;
 
-    /* Is this a required or optional subsystem */
-    if ((_wcsicmp(ValueName, L"Required")) &&
-        (_wcsicmp(ValueName, L"Optional")))
+    /* Is this a required or optional subsystem? */
+    if ((_wcsicmp(ValueName, L"Required") != 0) &&
+        (_wcsicmp(ValueName, L"Optional") != 0))
     {
         /* It isn't, is this the PSI flag? */
-        if ((_wcsicmp(ValueName, L"PosixSingleInstance")) ||
+        if ((_wcsicmp(ValueName, L"PosixSingleInstance") != 0) ||
             (ValueType != REG_DWORD))
         {
             /* It isn't, must be a subsystem entry, add it to the list */
@@ -567,17 +569,17 @@ SmpConfigureSubSystems(IN PWSTR ValueName,
                 RemoveEntryList(&RegEntry->Entry);
 
                 /* Figure out which list to put it in */
-                if (_wcsicmp(ValueName, L"Required"))
-                {
-                    /* Put it into the optional list */
-                    DPRINT("Optional\n");
-                    InsertTailList(&SmpSubSystemsToDefer, &RegEntry->Entry);
-                }
-                else
+                if (_wcsicmp(ValueName, L"Required") == 0)
                 {
                     /* Put it into the required list */
                     DPRINT("Required\n");
                     InsertTailList(&SmpSubSystemsToLoad, &RegEntry->Entry);
+                }
+                else
+                {
+                    /* Put it into the optional list */
+                    DPRINT("Optional\n");
+                    InsertTailList(&SmpSubSystemsToDefer, &RegEntry->Entry);
                 }
             }
 

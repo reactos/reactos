@@ -142,6 +142,7 @@ ExpReleaseOrWaitForKeyedEvent(
     HashIndex %= NUM_KEY_HASH_BUCKETS;
 
     /* Lock the lists */
+    KeEnterCriticalRegion();
     ExAcquirePushLockExclusive(&KeyedEvent->HashTable[HashIndex].Lock);
 
     /* Get the lists for search and wait, depending on whether
@@ -161,6 +162,10 @@ ExpReleaseOrWaitForKeyedEvent(
     ListEntry = WaitListHead1->Flink;
     while (ListEntry != WaitListHead1)
     {
+        /* Get the waiting thread. Note that this thread cannot be terminated
+           as long as we hold the list lock, since it either needs to wait to
+           be signaled by this thread or, when the wait is aborted due to thread
+           termination, then it first needs to acquire the list lock. */
         Thread = CONTAINING_RECORD(ListEntry, ETHREAD, KeyedWaitChain);
 
         /* Check if this thread is a correct waiter */
@@ -170,11 +175,16 @@ ExpReleaseOrWaitForKeyedEvent(
             /* Remove the thread from the list */
             RemoveEntryList(&Thread->KeyedWaitChain);
 
+            /* Initialize the list entry to show that it was removed */
+            InitializeListHead(&Thread->KeyedWaitChain);
+
             /* Wake the thread */
             KeReleaseSemaphore(&Thread->KeyedWaitSemaphore, 0, 1, FALSE);
+            Thread = NULL;
 
-            /* Unlock the lists */
+            /* Unlock the list. After this it is not safe to access Thread */
             ExReleasePushLockExclusive(&KeyedEvent->HashTable[HashIndex].Lock);
+            KeLeaveCriticalRegion();
 
             return STATUS_SUCCESS;
         }
@@ -192,8 +202,9 @@ ExpReleaseOrWaitForKeyedEvent(
     /* Insert the current thread into the secondary wait list */
     InsertTailList(WaitListHead2, &CurrentThread->KeyedWaitChain);
 
-    /* Unlock the lists */
+    /* Unlock the list */
     ExReleasePushLockExclusive(&KeyedEvent->HashTable[HashIndex].Lock);
+    KeLeaveCriticalRegion();
 
     /* Wait for the keyed wait semaphore */
     Status = KeWaitForSingleObject(&CurrentThread->KeyedWaitSemaphore,
@@ -202,7 +213,26 @@ ExpReleaseOrWaitForKeyedEvent(
                                    Alertable,
                                    Timeout);
 
-    return STATUS_SUCCESS;
+    /* Check if the wait was aborted or timed out */
+    if (Status != STATUS_SUCCESS)
+    {
+        /* Lock the lists to make sure no one else messes with the entry */
+        KeEnterCriticalRegion();
+        ExAcquirePushLockExclusive(&KeyedEvent->HashTable[HashIndex].Lock);
+
+        /* Check if the wait list entry is still in the list */
+        if (CurrentThread->KeyedWaitChain.Flink != &CurrentThread->KeyedWaitChain)
+        {
+            /* Remove the thread from the list */
+            RemoveEntryList(&CurrentThread->KeyedWaitChain);
+        }
+
+        /* Unlock the list */
+        ExReleasePushLockExclusive(&KeyedEvent->HashTable[HashIndex].Lock);
+        KeLeaveCriticalRegion();
+    }
+
+    return Status;
 }
 
 _IRQL_requires_max_(APC_LEVEL)
@@ -239,7 +269,7 @@ ExpReleaseKeyedEvent(
                                          TRUE);
 }
 
-_IRQL_requires_max_(APC_LEVEL)
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
 NTAPI
 NtCreateKeyedEvent(
@@ -274,7 +304,7 @@ NtCreateKeyedEvent(
     /* Check for success */
     if (!NT_SUCCESS(Status)) return Status;
 
-    /* Initalize the keyed event */
+    /* Initialize the keyed event */
     ExpInitializeKeyedEvent(KeyedEvent);
 
     /* Insert it */
@@ -316,7 +346,7 @@ NtCreateKeyedEvent(
     return Status;
 }
 
-_IRQL_requires_max_(APC_LEVEL)
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
 NTAPI
 NtOpenKeyedEvent(
@@ -353,6 +383,9 @@ NtOpenKeyedEvent(
         {
             /* Get the exception code */
             Status = _SEH2_GetExceptionCode();
+
+            /* Cleanup */
+            ObCloseHandle(KeyedEventHandle, PreviousMode);
         }
         _SEH2_END;
     }
@@ -365,18 +398,35 @@ NtOpenKeyedEvent(
     return Status;
 }
 
-_IRQL_requires_max_(APC_LEVEL)
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
 NTAPI
 NtWaitForKeyedEvent(
-    _In_ HANDLE Handle,
+    _In_opt_ HANDLE Handle,
     _In_ PVOID Key,
     _In_ BOOLEAN Alertable,
-    _In_ PLARGE_INTEGER Timeout)
+    _In_opt_ PLARGE_INTEGER Timeout)
 {
     KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
     PEX_KEYED_EVENT KeyedEvent;
     NTSTATUS Status;
+    LARGE_INTEGER TimeoutCopy;
+
+    /* Check if the caller passed a timeout value and this is from user mode */
+    if ((Timeout != NULL) && (PreviousMode != KernelMode))
+    {
+        _SEH2_TRY
+        {
+            ProbeForRead(Timeout, sizeof(*Timeout), 1);
+            TimeoutCopy = *Timeout;
+            Timeout = &TimeoutCopy;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
+        }
+        _SEH2_END;
+    }
 
     /* Check if the caller provided a handle */
     if (Handle != NULL)
@@ -408,18 +458,35 @@ NtWaitForKeyedEvent(
     return Status;
 }
 
-_IRQL_requires_max_(APC_LEVEL)
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
 NTAPI
 NtReleaseKeyedEvent(
-    _In_ HANDLE Handle,
+    _In_opt_ HANDLE Handle,
     _In_ PVOID Key,
     _In_ BOOLEAN Alertable,
-    _In_ PLARGE_INTEGER Timeout)
+    _In_opt_ PLARGE_INTEGER Timeout)
 {
     KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
     PEX_KEYED_EVENT KeyedEvent;
     NTSTATUS Status;
+    LARGE_INTEGER TimeoutCopy;
+
+    /* Check if the caller passed a timeout value and this is from user mode */
+    if ((Timeout != NULL) && (PreviousMode != KernelMode))
+    {
+        _SEH2_TRY
+        {
+            ProbeForRead(Timeout, sizeof(*Timeout), 1);
+            TimeoutCopy = *Timeout;
+            Timeout = &TimeoutCopy;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
+        }
+        _SEH2_END;
+    }
 
     /* Check if the caller provided a handle */
     if (Handle != NULL)

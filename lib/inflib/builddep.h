@@ -58,8 +58,10 @@ BOOLEAN NTAPI RtlIsTextUnicode( PVOID buf, INT len, INT *pf );
 
 #define UNICODE
 #define _UNICODE
+#include <stdarg.h>
 #define WIN32_NO_STATUS
-#include <windows.h>
+#include <windef.h>
+#include <winbase.h>
 #define NTOS_MODE_USER
 #include <ndk/iofuncs.h>
 #include <ndk/obfuncs.h>

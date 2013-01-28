@@ -903,6 +903,12 @@ IopAbortInterruptedIrp(
     IN PIRP Irp
 );
 
+PIRP
+NTAPI
+IopAllocateIrpMustSucceed(
+    IN CCHAR StackSize
+);
+
 //
 // Shutdown routines
 //

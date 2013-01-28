@@ -17,29 +17,29 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "config.h"
-#include "wine/port.h"
+#include <config.h>
+//#include "wine/port.h"
 
-#include <stdarg.h>
-#include <string.h>
+//#include <stdarg.h>
+//#include <string.h>
 
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
-#include "windef.h"
-#include "winerror.h"
-#include "winbase.h"
-#include "winnt.h"
-#include "winreg.h"
-#include "winnls.h"
-#include "wine/unicode.h"
-#include "wine/debug.h"
+#include <windef.h>
+//#include "winerror.h"
+//#include "winbase.h"
+//#include "winnt.h"
+#include <winreg.h>
+//#include "winnls.h"
+#include <wine/unicode.h>
+#include <wine/debug.h>
 
 #include "dpinit.h"
 #include "dplayx_global.h"
 #include "name_server.h"
-#include "dplayx_queue.h"
-#include "dplaysp.h"
-#include "dplay_global.h"
+//#include "dplayx_queue.h"
+//#include "dplaysp.h"
+//#include "dplay_global.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(dplay);
 

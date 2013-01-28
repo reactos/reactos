@@ -24,16 +24,20 @@
 #ifndef __WINE_COMCTL32_H
 #define __WINE_COMCTL32_H
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #ifndef RC_INVOKED
 #include <stdarg.h>
 #endif
 
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "winnls.h"
-#include "commctrl.h"
+#include <windef.h>
+#include <winbase.h>
+#include <wingdi.h>
+#include <winuser.h>
+//#include "winnls.h"
+#include <commctrl.h>
 
 extern HMODULE COMCTL32_hModule DECLSPEC_HIDDEN;
 extern HBRUSH  COMCTL32_hPattern55AABrush DECLSPEC_HIDDEN;

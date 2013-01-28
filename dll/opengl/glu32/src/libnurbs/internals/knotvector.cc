@@ -37,8 +37,8 @@
  *
  */
 
-#include "glimports.h"
-#include "mystdio.h"
+//#include "glimports.h"
+//#include "mystdio.h"
 #include "myassert.h"
 #include "knotvector.h"
 #include "defines.h"

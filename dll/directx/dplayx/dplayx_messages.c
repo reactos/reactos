@@ -20,19 +20,19 @@
  *  o Messaging interface required for both DirectPlay and DirectPlayLobby.
  */
 
-#include <stdarg.h>
-#include <string.h>
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "winerror.h"
+//#include <stdarg.h>
+//#include <string.h>
+//#include "windef.h"
+//#include "winbase.h"
+//#include "wingdi.h"
+//#include "winuser.h"
+//#include "winerror.h"
 
-#include "dplayx_messages.h"
-#include "dplay_global.h"
+//#include "dplayx_messages.h"
+//#include "dplay_global.h"
 #include "dplayx_global.h"
 #include "name_server.h"
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(dplay);
 

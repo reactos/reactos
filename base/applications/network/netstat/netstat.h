@@ -16,7 +16,6 @@ BOOL bDoShowProtoStats = FALSE; // -s
 BOOL bDoDispSeqComp    = FALSE; // -v
 BOOL bLoopOutput       = FALSE; // interval
 
-
 /* Undocumented extended information structures available only on XP and higher */
 typedef struct {
   DWORD dwState;        // state of the connection
@@ -43,7 +42,6 @@ typedef struct {
     MIB_UDPEXROW table;
 } MIB_UDPEXTABLE, *PMIB_UDPEXTABLE;
 
-
 /* function declerations */
 BOOL ParseCmdline(int argc, char* argv[]);
 BOOL DisplayOutput(VOID);
@@ -58,4 +56,3 @@ VOID ShowUdpTable(VOID);
 PCHAR GetPortName(UINT Port, PCSTR Proto, CHAR Name[PORTNAMELEN], INT NameLen);
 PCHAR GetIpHostName(BOOL local, UINT ipaddr, CHAR name[HOSTNAMELEN], int namelen);
 VOID Usage(VOID);
-

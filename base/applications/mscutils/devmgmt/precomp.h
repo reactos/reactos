@@ -1,18 +1,20 @@
 #ifndef __DEVMGMT_PRECOMP_H
 #define __DEVMGMT_PRECOMP_H
 
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winuser.h>
+#include <winreg.h>
+#include <wingdi.h>
 #include <windowsx.h>
-#include <stdio.h>
 #include <tchar.h>
 #include <setupapi.h>
 #include <cfgmgr32.h>
-#include <commctrl.h>
 #include <dll/devmgr/devmgr.h>
 #include <initguid.h>
-#include <cguid.h>
 #include <devguid.h>
+
 #include "resource.h"
 
 #ifdef _MSC_VER

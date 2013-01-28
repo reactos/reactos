@@ -20,18 +20,22 @@
 
 #include <stdarg.h>
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #define NONAMELESSSTRUCT
 #define NONAMELESSUNION
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "winreg.h"
+#include <windef.h>
+#include <winbase.h>
+//#include "winuser.h"
+#include <winreg.h>
 
-#include "mmsystem.h"
-#include "dsound.h"
+#include <mmsystem.h>
+#include <dsound.h>
 
-#include "wine/debug.h"
-#include "wine/unicode.h"
+#include <wine/debug.h>
+#include <wine/unicode.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(dsound);
 

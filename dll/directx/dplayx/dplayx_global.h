@@ -19,12 +19,16 @@
 #ifndef __WINE_DPLAYX_GLOBAL
 #define __WINE_DPLAYX_GLOBAL
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #include <stdarg.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "dplay.h"
+#include <windef.h>
+#include <winbase.h>
+//#include "winuser.h"
+#include <dplay.h>
 
 BOOL DPLAYX_ConstructData(void);
 BOOL DPLAYX_DestructData(void);

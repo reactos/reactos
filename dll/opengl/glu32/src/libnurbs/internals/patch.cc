@@ -37,16 +37,16 @@
  *
  */
 
-#include <stdio.h>
-#include "glimports.h"
-#include "mystdio.h"
-#include "myassert.h"
+//#include <stdio.h>
+//#include "glimports.h"
+//#include "mystdio.h"
+//#include "myassert.h"
 #include "mymath.h"
-#include "mystring.h"
+//#include "mystring.h"
 #include "patch.h"
 #include "mapdesc.h"
 #include "quilt.h"
-#include "nurbsconsts.h"
+//#include "nurbsconsts.h"
 #include "simplemath.h" //for glu_abs function in ::singleStep();
 
 

@@ -36,13 +36,13 @@
 #ifndef __glunurbstess_h_
 #define __glunurbstess_h_
 
-#include "mysetjmp.h"
+//#include "mysetjmp.h"
 #include "subdivider.h"
 #include "renderhints.h"
 #include "backend.h"
 #include "maplist.h"
 #include "reader.h"
-#include "nurbsconsts.h"
+//#include "nurbsconsts.h"
 
 struct Knotvector;
 class Quilt;

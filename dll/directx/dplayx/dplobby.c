@@ -17,21 +17,21 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 #include <stdarg.h>
-#include <string.h>
+//#include <string.h>
 
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
-#include "windef.h"
-#include "winbase.h"
-#include "winerror.h"
-#include "winreg.h"
-#include "winnls.h"
-#include "wine/debug.h"
+#include <windef.h>
+#include <winbase.h>
+//#include "winerror.h"
+#include <winreg.h>
+#include <winnls.h>
+#include <wine/debug.h>
 
 #include "dplayx_global.h"
 #include "dplayx_messages.h"
-#include "dplayx_queue.h"
-#include "dplobby.h"
+//#include "dplayx_queue.h"
+//#include "dplobby.h"
 #include "dpinit.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(dplay);

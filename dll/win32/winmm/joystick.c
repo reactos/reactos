@@ -21,31 +21,31 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
+#include <config.h>
 
 #ifdef HAVE_UNISTD_H
 # include <unistd.h>
 #endif
-#include <stdarg.h>
-#include <stdio.h>
+//#include <stdarg.h>
+//#include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <fcntl.h>
+//#include <string.h>
+//#include <fcntl.h>
 #ifdef HAVE_SYS_IOCTL_H
 #include <sys/ioctl.h>
 #endif
 
 #include "winemm.h"
-#include "windef.h"
-#include "winbase.h"
-#include "mmsystem.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "winnls.h"
+//#include "windef.h"
+//#include "winbase.h"
+//#include "mmsystem.h"
+//#include "wingdi.h"
+#include <winuser.h>
+#include <winnls.h>
 
-#include "mmddk.h"
+//#include "mmddk.h"
 
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(winmm);
 

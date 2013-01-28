@@ -1,8 +1,9 @@
-#include <winsock.h>
-#include "fake.h"
-#include "prototypes.h"
+//#include <winsock.h>
 #include <setjmp.h>
 #include <time.h>
+
+#include "fake.h"
+#include "prototypes.h"
 
 //typedef void (*Sig_t)(int);
 

@@ -28,7 +28,7 @@
 #ifndef STW_FRAMEBUFFER_H
 #define STW_FRAMEBUFFER_H
 
-#include <windows.h>
+//#include <windows.h>
 
 #include "os/os_thread.h"
 

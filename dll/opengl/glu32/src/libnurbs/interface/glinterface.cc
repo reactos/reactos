@@ -36,12 +36,12 @@
 */
 
 #include "gluos.h"
-#include <GL/gl.h>
-#include <GL/glu.h>
-#include <stdio.h>
-#include "glimports.h"
+//#include <GL/gl.h>
+//#include <GL/glu.h>
+//#include <stdio.h>
+//#include "glimports.h"
 #include "glrenderer.h"
-#include "nurbsconsts.h"
+//#include "nurbsconsts.h"
 
 //#define DOWN_LOAD_NURBS
 #ifdef DOWN_LOAD_NURBS

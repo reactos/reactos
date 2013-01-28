@@ -7,7 +7,7 @@
  *                        2011      Gregor Schneider <Gregor.Schneider@reactos.org>
  */
 
-#include <precomp.h>
+#include "precomp.h"
 
 HWND hFreeLdrPage;
 HWND hFreeLdrDialog;

@@ -19,10 +19,10 @@
  *
  */
 
-#include "windef.h"
-#include "winbase.h"
-#include "winver.h"
-#include "localspl_private.h"
+//#include "windef.h"
+//#include "winbase.h"
+//#include "winver.h"
+//#include "localspl_private.h"
 
 #define WINE_FILENAME_STR "localspl.dll"
 #define WINE_FILEDESCRIPTION_STR "Wine Printer spooler component"
@@ -34,7 +34,7 @@
 #define WINE_PRODUCTVERSION      5,1,2600,2180
 #define WINE_PRODUCTVERSION_STR "5.1.2600.2180"
 
-#include "wine/wine_common_ver.rc"
+#include <wine/wine_common_ver.rc>
 
 #ifdef LANGUAGE_DA_DK
     #include "spl_Da.rc"
@@ -70,6 +70,9 @@
 #endif
 #ifdef LANGUAGE_ES_ES
     #include "spl_Es.rc"
+#endif
+#ifdef LANGUAGE_HE_IL
+    #include "spl_He.rc"
 #endif
 #ifdef LANGUAGE_HU_HU
     #include "spl_Hu.rc"

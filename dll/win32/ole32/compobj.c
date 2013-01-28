@@ -36,37 +36,38 @@
  *
  */
 
-#include "config.h"
+#include <config.h>
 
 #include <stdarg.h>
-#include <stdio.h>
-#include <string.h>
+//#include <stdio.h>
+//#include <string.h>
 #include <assert.h>
 
 #define COBJMACROS
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
 
-#include "ntstatus.h"
+#include <ntstatus.h>
 #define WIN32_NO_STATUS
-#include "windef.h"
-#include "winbase.h"
-#include "winerror.h"
-#include "winreg.h"
-#include "winuser.h"
+#define _INC_WINDOWS
+#include <windef.h>
+#include <winbase.h>
+//#include "winerror.h"
+//#include "winreg.h"
+//#include "winuser.h"
 #define USE_COM_CONTEXT_DEF
-#include "objbase.h"
-#include "ole2.h"
-#include "ole2ver.h"
-#include "ctxtcall.h"
-#include "dde.h"
+//#include "objbase.h"
+#include <ole2.h>
+#include <ole2ver.h>
+#include <ctxtcall.h>
+#include <dde.h>
 
-#include "initguid.h"
+#include <initguid.h>
 #include "compobj_private.h"
 #include "moniker.h"
 
-#include "wine/unicode.h"
-#include "wine/debug.h"
+#include <wine/unicode.h>
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 

@@ -42,7 +42,7 @@
 
 #if defined(PIPE_OS_WINDOWS) && defined(PIPE_ARCH_X86)
    
-#include <windows.h>
+//#include <windows.h>
 #include <stddef.h>
 
 #include "dbghelp.h"

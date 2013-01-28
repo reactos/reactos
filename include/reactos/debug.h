@@ -15,7 +15,7 @@
 #ifndef __INTERNAL_DEBUG
 #define __INTERNAL_DEBUG
 
-/* Define DbgPrint/DbgPrintEx/RtlAssert/RtlRaiseStatus unless the NDK is used */
+/* Define DbgPrint/DbgPrintEx/RtlAssert unless the NDK is used */
 #if !defined(_RTLFUNCS_H) && !defined(_NTDDK_)
 
 /* Make sure we have basic types (some people include us *before* SDK)... */
@@ -51,30 +51,7 @@ RtlAssert(
     PCHAR Message
 );
 
-/*
- * This is the definition of NTSTATUS, but renamed
- * in order not to conflict with other ones.
- */
-typedef _Return_type_success_(return >= 0) LONG DEBUG_NTSTATUS;
-
-__analysis_noreturn
-NTSYSAPI
-VOID
-NTAPI
-RtlRaiseStatus(
-    _In_ DEBUG_NTSTATUS Status
-);
-
 #endif /* !defined(_RTLFUNCS_H) && !defined(_NTDDK_) */
-
-
-/* Fix usage of RtlRaiseStatus */
-#if !defined(_RTLFUNCS_H) && defined(_NTDDK_)
-    #define RaiseStatus ExRaiseStatus
-#else
-    #define RaiseStatus RtlRaiseStatus
-#endif /* !defined(_RTLFUNCS_H) && defined(_NTDDK_) */
-
 
 #ifndef assert
 #ifndef NASSERT
@@ -160,6 +137,37 @@ RtlRaiseStatus(
 #endif /* not DBG */
 
 /******************************************************************************/
+/*
+ * Declare a target-dependent process termination procedure.
+ */
+#ifndef _NTDDK_             /* User-Mode */
+    #ifndef NTOS_MODE_USER  /* Should be Win32 */
+        #ifndef _WIN32
+            #error "Unsupported target."
+        #else
+            #define TerminateCurrentProcess(Status) TerminateProcess(GetCurrentProcess(), (Status))
+        #endif
+    #else   /* Native */
+        #ifndef _PSFUNCS_H
+            NTSYSCALLAPI
+            NTSTATUS
+            NTAPI
+            NtTerminateProcess(
+                IN HANDLE ProcessHandle,
+                IN NTSTATUS ExitStatus
+            );
+        #endif
+        #ifndef NtCurrentProcess
+            #define NtCurrentProcess() ((HANDLE)(LONG_PTR)-1)
+        #endif
+        #define TerminateCurrentProcess(Status) NtTerminateProcess(NtCurrentProcess(), (Status))
+    #endif
+#else   /* Kernel-Mode */
+    #include <bugcodes.h>
+    #define TerminateCurrentProcess(Status) KeBugCheckEx(CRITICAL_SERVICE_FAILED, (Status), 0, 0, 0)
+#endif
+
+
 /* For internal purposes only */
 #define __ERROR_DBGBREAK(...)   \
 do {                            \
@@ -168,10 +176,11 @@ do {                            \
 } while (0)
 
 /* For internal purposes only */
-#define __ERROR_FATAL(Status, ...)  \
-do {                                \
-    DbgPrint("" __VA_ARGS__);       \
-    RaiseStatus((Status));          \
+#define __ERROR_FATAL(Status, ...)      \
+do {                                    \
+    DbgPrint("" __VA_ARGS__);           \
+    DbgBreakPoint();                    \
+    TerminateCurrentProcess(Status);    \
 } while (0)
 
 /*

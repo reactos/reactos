@@ -11,7 +11,7 @@
 #define _AUDIO_DEF__H_
 
 
-#include <iostream>
+//#include <iostream>
 
 
 
@@ -48,7 +48,7 @@
 // Platform depend stuff
 //
 
-#include <windows.h>
+//#include <windows.h>
 #include <mmsystem.h> //Windows MultiMedia (WINMM) audio apis
 #include <mmreg.h> //codecs stuff
 #include <msacm.h> //codecs stuff

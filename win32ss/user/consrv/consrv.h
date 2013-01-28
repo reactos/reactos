@@ -12,10 +12,23 @@
 #pragma once
 
 /* PSDK/NDK Headers */
+#include <stdarg.h>
 #define WIN32_NO_STATUS
-#include <windows.h>
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+#include <windef.h>
+#include <winbase.h>
+#include <wingdi.h>
+#include <winnls.h>
+#include <winreg.h>
+#include <wincon.h>
+#include <winuser.h>
 #define NTOS_MODE_USER
-#include <ndk/ntndk.h>
+#include <ndk/iofuncs.h>
+#include <ndk/obfuncs.h>
+#include <ndk/psfuncs.h>
+#include <ndk/setypes.h>
+#include <ndk/rtlfuncs.h>
 
 /* Public Win32K Headers */
 #include <ntuser.h>

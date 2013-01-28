@@ -37,7 +37,7 @@
 #define __glucoveandtiler_h
 
 #include "trimregion.h"
-#include "trimvertex.h"
+//#include "trimvertex.h"
 #include "gridvertex.h"
 
 class Backend;

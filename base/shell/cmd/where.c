@@ -73,7 +73,7 @@
  *
  */
 
-#include <precomp.h>
+#include "precomp.h"
 
 
 /* initial size of environment variable buffer */

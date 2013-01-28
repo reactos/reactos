@@ -45,33 +45,36 @@
  *
  */
 
-#include "config.h"
-#include "wine/port.h"
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
 
-#include <stdlib.h>
-#include <string.h>
-#include <stdarg.h>
+#include <config.h>
+//#include "wine/port.h"
+
+//#include <stdlib.h>
+//#include <string.h>
+//#include <stdarg.h>
 #include <stdio.h>
-#include <ctype.h>
+//#include <ctype.h>
 
 #define COBJMACROS
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
 
-#include "winerror.h"
-#include "windef.h"
-#include "winbase.h"
-#include "winnls.h"
-#include "winreg.h"
-#include "winuser.h"
-#include "lzexpand.h"
+#include <winerror.h>
+#include <windef.h>
+#include <winbase.h>
+//#include "winnls.h"
+#include <winreg.h>
+#include <winuser.h>
+#include <lzexpand.h>
 
-#include "wine/unicode.h"
-#include "objbase.h"
+#include <wine/unicode.h>
+#include <objbase.h>
 #include "typelib.h"
-#include "wine/debug.h"
+#include <wine/debug.h>
 #include "variant.h"
-#include "wine/list.h"
+#include <wine/list.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 WINE_DECLARE_DEBUG_CHANNEL(typelib);

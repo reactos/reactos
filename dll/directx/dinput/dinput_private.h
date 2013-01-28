@@ -19,12 +19,18 @@
 #ifndef __WINE_DLLS_DINPUT_DINPUT_PRIVATE_H
 #define __WINE_DLLS_DINPUT_DINPUT_PRIVATE_H
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #include <stdarg.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "dinput.h"
-#include "wine/list.h"
+#include <windef.h>
+#include <winbase.h>
+#include <winreg.h>
+#include <winnls.h>
+#include <dinput.h>
+#include <wine/list.h>
 
 /* Implementation specification */
 typedef struct IDirectInputImpl IDirectInputImpl;

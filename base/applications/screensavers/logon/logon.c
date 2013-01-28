@@ -18,9 +18,15 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <windows.h>
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <wingdi.h>
+#include <winuser.h>
 #include <scrnsave.h>
+#include <stdlib.h>
 #include <tchar.h>
+
 #include "resource.h"
 
 #define RANDOM( min, max ) ((rand() % (int)(((max)+1) - (min))) + (min))

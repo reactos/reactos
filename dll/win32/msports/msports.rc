@@ -1,4 +1,6 @@
-#include <windows.h>
+#include <windef.h>
+#include <winuser.h>
+
 #include "resource.h"
 
 #define REACTOS_VERSION_DLL
@@ -17,6 +19,9 @@
 #endif
 #ifdef LANGUAGE_DE_DE
     #include "lang/de-DE.rc"
+#endif
+#ifdef LANGUAGE_HE_IL
+    #include "lang/he-IL.rc"
 #endif
 #ifdef LANGUAGE_PL_PL
     #include "lang/pl-PL.rc"

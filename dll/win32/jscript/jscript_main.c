@@ -16,17 +16,17 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "initguid.h"
+#include <initguid.h>
 
 #include "jscript.h"
 
-#include "winreg.h"
-#include "advpub.h"
-#include "activaut.h"
-#include "objsafe.h"
-#include "mshtmhst.h"
+#include <winreg.h>
+#include <advpub.h>
+#include <activaut.h>
+#include <objsafe.h>
+#include <mshtmhst.h>
 
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(jscript);
 

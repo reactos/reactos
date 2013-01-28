@@ -37,13 +37,13 @@
  *
  */
 
-#include <stdio.h>
-#include "glimports.h"
-#include "myassert.h"
-#include "mystdio.h"
+//#include <stdio.h>
+//#include "glimports.h"
+//#include "myassert.h"
+//#include "mystdio.h"
 #include "quilt.h"
 #include "patchlist.h"
-#include "patch.h"
+//#include "patch.h"
 
 Patchlist::Patchlist( Quilt *quilts, REAL *pta, REAL *ptb )
 {

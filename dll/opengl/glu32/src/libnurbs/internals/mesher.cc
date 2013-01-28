@@ -37,15 +37,15 @@
  *
  */
 
-#include "glimports.h"
-#include "myassert.h"
-#include "mystdio.h"
-#include "gridvertex.h"
-#include "gridtrimvertex.h"
-#include "jarcloc.h"
-#include "gridline.h"
-#include "trimline.h"
-#include "uarray.h"
+//#include "glimports.h"
+//#include "myassert.h"
+//#include "mystdio.h"
+//#include "gridvertex.h"
+//#include "gridtrimvertex.h"
+//#include "jarcloc.h"
+//#include "gridline.h"
+//#include "trimline.h"
+//#include "uarray.h"
 #include "backend.h"
 #include "mesher.h"
 

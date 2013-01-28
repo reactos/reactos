@@ -31,7 +31,7 @@
  *        Copy command is now completed.
  */
 
-#include <precomp.h>
+#include "precomp.h"
 
 #ifdef INCLUDE_CMD_COPY
 

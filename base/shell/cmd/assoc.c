@@ -17,7 +17,7 @@
  *   priveleges to perform an operation
  */
 
-#include <precomp.h>
+#include "precomp.h"
 
 #ifdef INCLUDE_CMD_ASSOC
 

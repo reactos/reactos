@@ -1,7 +1,7 @@
 #pragma once
 
-#include "tparser.h"
-#include "tnetwork.h"
+//#include "tparser.h"
+//#include "tnetwork.h"
 
 DWORD WINAPI telProcessNetwork(LPVOID lpParameter);
 

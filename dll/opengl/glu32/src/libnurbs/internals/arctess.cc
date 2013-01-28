@@ -37,14 +37,14 @@
  *
  */
 
-#include "glimports.h"
-#include "mystdio.h"
-#include "myassert.h"
+//#include "glimports.h"
+//#include "mystdio.h"
+//#include "myassert.h"
 #include "arctess.h"
-#include "bufpool.h"
+//#include "bufpool.h"
 #include "simplemath.h"
 #include "bezierarc.h"
-#include "trimvertex.h"
+//#include "trimvertex.h"
 #include "trimvertpool.h"
 
 #define NOELIMINATION

@@ -8,24 +8,22 @@
 
 extern "C++" {
 
-namespace std 
+class bad_alloc : public exception
 {
-  class bad_alloc : public exception 
-  {
-  public:
-    bad_alloc() throw() { }
+public:
+    bad_alloc(const char *name = "bad alloc") throw()
+        : exception(name) { }
 
-    // This declaration is not useless:
-    // http://gcc.gnu.org/onlinedocs/gcc-3.0.2/gcc_6.html#SEC118
-    virtual ~bad_alloc() throw();
+    virtual ~bad_alloc() throw() { }
+};
 
-    // See comment in eh_exception.cc.
-    virtual const char* what() const throw();
-  };
+namespace std
+{
+    using ::bad_alloc;
 
-  struct nothrow_t { };
+    struct nothrow_t { };
 
-  extern const nothrow_t nothrow;
+    extern const nothrow_t nothrow;
 } // namespace std
 
 typedef void (*new_handler)();
@@ -43,7 +41,7 @@ inline void operator delete (void* ptr, void* voidptr2) throw() { }
 void operator delete[] (void* ptr) throw ();
 void operator delete[] (void* ptr, const std::nothrow_t& nothrow_constant) throw();
 inline void operator delete[] (void* ptr, void* voidptr2) throw() { }
-//@}
+
 } // extern "C++"
 
 #endif

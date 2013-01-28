@@ -18,10 +18,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "winnls.h"
+#include <windef.h>
+//#include "winbase.h"
+#include <winuser.h>
+//#include "winnls.h"
 
 #include "resource.h"
 
@@ -123,4 +123,3 @@
 #ifdef LANGUAGE_ZH_CN
     #include "wininet_Zh.rc"
 #endif
-

@@ -36,7 +36,7 @@
 */
 
 #include <stdlib.h>
-#include <stdio.h>
+//#include <stdio.h>
 #include "zlassert.h"
 
 #include "searchTree.h"

@@ -23,21 +23,25 @@
 #ifndef __WINE_D3D9_PRIVATE_H
 #define __WINE_D3D9_PRIVATE_H
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #include <assert.h>
 #include <stdarg.h>
 
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
 #define COBJMACROS
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "wine/debug.h"
-#include "wine/unicode.h"
+#include <windef.h>
+#include <winbase.h>
+#include <wingdi.h>
+//#include "winuser.h"
+#include <wine/debug.h>
+//#include "wine/unicode.h"
 
-#include "d3d9.h"
-#include "wine/wined3d.h"
+#include <d3d9.h>
+#include <wine/wined3d.h>
 
 extern HRESULT vdecl_convert_fvf(DWORD FVF, D3DVERTEXELEMENT9 **ppVertexElements) DECLSPEC_HIDDEN;
 D3DFORMAT d3dformat_from_wined3dformat(enum wined3d_format_id format) DECLSPEC_HIDDEN;

@@ -202,6 +202,27 @@ RtlLeaveHeapLock(IN OUT PHEAP_LOCK Lock)
     return STATUS_SUCCESS;
 }
 
+struct _HEAP;
+
+VOID
+NTAPI
+RtlpAddHeapToProcessList(struct _HEAP *Heap)
+{
+    UNREFERENCED_PARAMETER(Heap);
+}
+
+VOID
+NTAPI
+RtlpRemoveHeapFromProcessList(struct _HEAP *Heap)
+{
+    UNREFERENCED_PARAMETER(Heap);
+}
+
+VOID
+RtlInitializeHeapManager(VOID)
+{
+}
+
 #if DBG
 VOID FASTCALL
 CHECK_PAGED_CODE_RTL(char *file, int line)
@@ -696,5 +717,14 @@ RtlpSafeCopyMemory(
     return STATUS_SUCCESS;
 }
 
+BOOLEAN
+NTAPI
+RtlCallVectoredExceptionHandlers(
+    _In_ PEXCEPTION_RECORD ExceptionRecord,
+    _In_ PCONTEXT Context)
+{
+    /* In the kernel we don't have vectored exception handlers */
+    return FALSE;
+}
 
 /* EOF */

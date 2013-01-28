@@ -37,9 +37,9 @@
  *
  */
 
-#include "glimports.h"
-#include "mystdio.h"
-#include "nurbstess.h"
+//#include "glimports.h"
+//#include "mystdio.h"
+//#include "nurbstess.h"
 #include "displaylist.h"
 
 

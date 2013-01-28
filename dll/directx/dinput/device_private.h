@@ -20,12 +20,12 @@
 #ifndef __WINE_DLLS_DINPUT_DINPUTDEVICE_PRIVATE_H
 #define __WINE_DLLS_DINPUT_DINPUTDEVICE_PRIVATE_H
 
-#include <stdarg.h>
+//#include <stdarg.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "dinput.h"
-#include "wine/list.h"
+//#include "windef.h"
+//#include "winbase.h"
+//#include "dinput.h"
+//#include "wine/list.h"
 #include "dinput_private.h"
 
 typedef struct

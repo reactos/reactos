@@ -1,3 +1,5 @@
+#pragma once
+
 #define IDS_USAGE                       0
 #define IDS_PING_WITH_BYTES             1
 #define IDS_PING_STATISTICS             2
@@ -21,4 +23,3 @@
 #define IDS_REQUEST_TIMEOUT             20
 #define IDS_MS                          21
 #define IDS_1MS                         22
-

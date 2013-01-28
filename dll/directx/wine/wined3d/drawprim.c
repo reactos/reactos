@@ -24,15 +24,15 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
+#include <config.h>
+#include <wine/port.h>
 
 #include "wined3d_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d_draw);
 
-#include <stdio.h>
-#include <math.h>
+//#include <stdio.h>
+//#include <math.h>
 
 /* GL locking is done by the caller */
 static void drawStridedFast(const struct wined3d_gl_info *gl_info, GLenum primitive_type, UINT count, UINT idx_size,

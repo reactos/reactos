@@ -501,15 +501,15 @@ struct _WIN32_PARSEMETHOD_PARAMETERS;
 typedef
 NTSTATUS
 (NTAPI *PKWIN32_PROCESS_CALLOUT)(
-    struct _EPROCESS *Process,
-    BOOLEAN Create
+    _In_ struct _EPROCESS *Process,
+    _In_ BOOLEAN Create
 );
 
 typedef
 NTSTATUS
 (NTAPI *PKWIN32_THREAD_CALLOUT)(
-    struct _ETHREAD *Thread,
-    PSW32THREADCALLOUTTYPE Type
+    _In_ struct _ETHREAD *Thread,
+    _In_ PSW32THREADCALLOUTTYPE Type
 );
 
 typedef
@@ -521,19 +521,19 @@ NTSTATUS
 typedef
 NTSTATUS
 (NTAPI *PKWIN32_POWEREVENT_CALLOUT)(
-    struct _WIN32_POWEREVENT_PARAMETERS *Parameters
+    _In_ struct _WIN32_POWEREVENT_PARAMETERS *Parameters
 );
 
 typedef
 NTSTATUS
 (NTAPI *PKWIN32_POWERSTATE_CALLOUT)(
-    struct _WIN32_POWERSTATE_PARAMETERS *Parameters
+    _In_ struct _WIN32_POWERSTATE_PARAMETERS *Parameters
 );
 
 typedef
 NTSTATUS
 (NTAPI *PKWIN32_JOB_CALLOUT)(
-    struct _WIN32_JOBCALLOUT_PARAMETERS *Parameters
+    _In_ struct _WIN32_JOBCALLOUT_PARAMETERS *Parameters
 );
 
 typedef
@@ -545,39 +545,39 @@ NTSTATUS
 typedef
 NTSTATUS
 (NTAPI *PKWIN32_OPENMETHOD_CALLOUT)(
-    struct _WIN32_OPENMETHOD_PARAMETERS *Parameters
+    _In_ struct _WIN32_OPENMETHOD_PARAMETERS *Parameters
 );
 
 typedef
 NTSTATUS
 (NTAPI *PKWIN32_OKTOCLOSEMETHOD_CALLOUT)(
-    struct _WIN32_OKAYTOCLOSEMETHOD_PARAMETERS *Parameters
+    _In_ struct _WIN32_OKAYTOCLOSEMETHOD_PARAMETERS *Parameters
 );
 
 typedef
 NTSTATUS
 (NTAPI *PKWIN32_CLOSEMETHOD_CALLOUT)(
-    struct _WIN32_CLOSEMETHOD_PARAMETERS *Parameters
+    _In_ struct _WIN32_CLOSEMETHOD_PARAMETERS *Parameters
 );
 
 typedef
 VOID
 (NTAPI *PKWIN32_DELETEMETHOD_CALLOUT)(
-    struct _WIN32_DELETEMETHOD_PARAMETERS *Parameters
+    _In_ struct _WIN32_DELETEMETHOD_PARAMETERS *Parameters
 );
 
 typedef
 NTSTATUS
 (NTAPI *PKWIN32_PARSEMETHOD_CALLOUT)(
-    struct _WIN32_PARSEMETHOD_PARAMETERS *Parameters
+    _In_ struct _WIN32_PARSEMETHOD_PARAMETERS *Parameters
 );
 
 typedef
 NTSTATUS
 (NTAPI *PKWIN32_WIN32DATACOLLECTION_CALLOUT)(
-    struct _EPROCESS *Process,
-    PVOID Callback,
-    PVOID Context
+    _In_ struct _EPROCESS *Process,
+    _In_ PVOID Callback,
+    _In_ PVOID Context
 );
 
 //
@@ -586,7 +586,7 @@ NTSTATUS
 typedef
 VOID
 (NTAPI *PLEGO_NOTIFY_ROUTINE)(
-    IN PKTHREAD Thread
+    _In_ PKTHREAD Thread
 );
 
 #endif
@@ -1392,7 +1392,7 @@ typedef struct _WIN32_PARSEMETHOD_PARAMETERS
     PACCESS_STATE AccessState;
     KPROCESSOR_MODE AccessMode;
     ULONG Attributes;
-    OUT PUNICODE_STRING CompleteName;
+    _Out_ PUNICODE_STRING CompleteName;
     PUNICODE_STRING RemainingName;
     PVOID Context;
     PSECURITY_QUALITY_OF_SERVICE SecurityQos;

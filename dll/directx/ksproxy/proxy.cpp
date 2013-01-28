@@ -208,7 +208,6 @@ protected:
 
 CKsProxy::CKsProxy() : m_Ref(0),
                        m_pGraph(0),
-                       m_ReferenceClock((IReferenceClock*)this),
                        m_FilterState(State_Stopped),
                        m_hDevice(0),
                        m_Plugins(),
@@ -216,6 +215,7 @@ CKsProxy::CKsProxy() : m_Ref(0),
                        m_DevicePath(0),
                        m_hClock(0)
 {
+    m_ReferenceClock = this;
     InitializeCriticalSection(&m_Lock);
 }
 

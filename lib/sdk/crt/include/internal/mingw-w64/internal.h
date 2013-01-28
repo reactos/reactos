@@ -13,8 +13,10 @@
 extern "C" {
 #endif
 
+#include <stdarg.h>
 #include <limits.h>
-#include <windows.h>
+#include <windef.h>
+#include <winbase.h>
 
 #ifdef __REACTOS__
 #include "malloc.h"

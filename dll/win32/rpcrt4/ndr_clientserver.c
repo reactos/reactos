@@ -22,22 +22,25 @@
  *  - check for errors and throw exceptions
  */
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+
 #include <stdarg.h>
 
 #define COBJMACROS
 
-#include "windef.h"
-#include "winbase.h"
-#include "winerror.h"
+#include <windef.h>
+#include <winbase.h>
+//#include "winerror.h"
 
-#include "objbase.h"
+#include <objbase.h>
 
-#include "rpcproxy.h"
+//#include "rpcproxy.h"
 
-#include "wine/debug.h"
+#include <wine/debug.h>
 
-#include "ndr_misc.h"
-#include "rpcndr.h"
+//#include "ndr_misc.h"
+//#include "rpcndr.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(rpc);
 

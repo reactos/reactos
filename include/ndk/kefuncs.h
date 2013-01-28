@@ -33,31 +33,35 @@ Author:
 VOID
 NTAPI
 KeInitializeApc(
-    IN PKAPC Apc,
-    IN PKTHREAD Thread,
-    IN KAPC_ENVIRONMENT TargetEnvironment,
-    IN PKKERNEL_ROUTINE KernelRoutine,
-    IN PKRUNDOWN_ROUTINE RundownRoutine OPTIONAL,
-    IN PKNORMAL_ROUTINE NormalRoutine,
-    IN KPROCESSOR_MODE Mode,
-    IN PVOID Context
+    _In_ PKAPC Apc,
+    _In_ PKTHREAD Thread,
+    _In_ KAPC_ENVIRONMENT TargetEnvironment,
+    _In_ PKKERNEL_ROUTINE KernelRoutine,
+    _In_opt_ PKRUNDOWN_ROUTINE RundownRoutine,
+    _In_ PKNORMAL_ROUTINE NormalRoutine,
+    _In_ KPROCESSOR_MODE Mode,
+    _In_ PVOID Context
 );
 
 BOOLEAN
 NTAPI
 KeInsertQueueApc(
-    IN PKAPC Apc,
-    IN PVOID SystemArgument1,
-    IN PVOID SystemArgument2,
-    IN KPRIORITY PriorityBoost
+    _In_ PKAPC Apc,
+    _In_ PVOID SystemArgument1,
+    _In_ PVOID SystemArgument2,
+    _In_ KPRIORITY PriorityBoost
 );
 
 VOID
 NTAPI
 KiDeliverApc(
-    IN KPROCESSOR_MODE PreviousMode,
-    IN PKEXCEPTION_FRAME ExceptionFrame,
-    IN PKTRAP_FRAME TrapFrame
+    _In_ KPROCESSOR_MODE PreviousMode,
+#ifdef _M_AMD64
+    _In_ PKEXCEPTION_FRAME ExceptionFrame,
+#else
+    _Reserved_ PKEXCEPTION_FRAME ExceptionFrame,
+#endif
+    _In_ PKTRAP_FRAME TrapFrame
 );
 
 //
@@ -66,7 +70,7 @@ KiDeliverApc(
 VOID
 NTAPI
 KeTerminateThread(
-    IN KPRIORITY Increment
+    _In_ KPRIORITY Increment
 );
 
 BOOLEAN
@@ -78,15 +82,15 @@ KeIsAttachedProcess(
 VOID
 NTAPI
 KeSetEventBoostPriority(
-    IN PKEVENT Event,
-    IN PKTHREAD *Thread OPTIONAL
+    _In_ PKEVENT Event,
+    _In_opt_ PKTHREAD *Thread
 );
 
 KAFFINITY
 NTAPI
 KeSetAffinityThread(
-    PKTHREAD Thread,
-    KAFFINITY Affinity
+    _Inout_ PKTHREAD Thread,
+    _In_ KAFFINITY Affinity
 );
 
 PKPROCESS
@@ -98,11 +102,11 @@ KeGetCurrentProcess(
 BOOLEAN
 NTAPI
 KeAddSystemServiceTable(
-    PULONG_PTR Base,
-    PULONG Count OPTIONAL,
-    ULONG Limit,
-    PUCHAR Number,
-    ULONG Index
+    _In_ PULONG_PTR Base,
+    _In_opt_ PULONG Count,
+    _In_ ULONG Limit,
+    _In_ PUCHAR Number,
+    _In_ ULONG Index
 );
 
 //
@@ -111,33 +115,33 @@ KeAddSystemServiceTable(
 VOID
 FASTCALL
 KiAcquireSpinLock(
-    PKSPIN_LOCK SpinLock
+    _Inout_ PKSPIN_LOCK SpinLock
 );
 
 VOID
 FASTCALL
 KiReleaseSpinLock(
-    PKSPIN_LOCK SpinLock
+    _Inout_ PKSPIN_LOCK SpinLock
 );
 
 KIRQL
 FASTCALL
 KeAcquireQueuedSpinLockRaiseToSynch(
-    IN KSPIN_LOCK_QUEUE_NUMBER LockNumber
+    _In_ KSPIN_LOCK_QUEUE_NUMBER LockNumber
 );
 
 BOOLEAN
 FASTCALL
 KeTryToAcquireQueuedSpinLockRaiseToSynch(
-    IN KSPIN_LOCK_QUEUE_NUMBER LockNumber,
-    IN PKIRQL OldIrql
+    _In_ KSPIN_LOCK_QUEUE_NUMBER LockNumber,
+    _In_ PKIRQL OldIrql
 );
 
 VOID
 FASTCALL
 KeAcquireInStackQueuedSpinLockRaiseToSynch(
-    IN PKSPIN_LOCK SpinLock,
-    IN PKLOCK_QUEUE_HANDLE LockHandle
+    _In_ PKSPIN_LOCK SpinLock,
+    _In_ PKLOCK_QUEUE_HANDLE LockHandle
 );
 
 
@@ -147,29 +151,29 @@ KeAcquireInStackQueuedSpinLockRaiseToSynch(
 VOID
 NTAPI
 KeInitializeInterrupt(
-    PKINTERRUPT InterruptObject,
-    PKSERVICE_ROUTINE ServiceRoutine,
-    PVOID ServiceContext,
-    PKSPIN_LOCK SpinLock,
-    ULONG Vector,
-    KIRQL Irql,
-    KIRQL SynchronizeIrql,
-    KINTERRUPT_MODE InterruptMode,
-    BOOLEAN ShareVector,
-    CHAR ProcessorNumber,
-    BOOLEAN FloatingSave
+    _Out_ PKINTERRUPT InterruptObject,
+    _In_ PKSERVICE_ROUTINE ServiceRoutine,
+    _In_ PVOID ServiceContext,
+    _In_ PKSPIN_LOCK SpinLock,
+    _In_ ULONG Vector,
+    _In_ KIRQL Irql,
+    _In_ KIRQL SynchronizeIrql,
+    _In_ KINTERRUPT_MODE InterruptMode,
+    _In_ BOOLEAN ShareVector,
+    _In_ CHAR ProcessorNumber,
+    _In_ BOOLEAN FloatingSave
 );
 
 BOOLEAN
 NTAPI
 KeConnectInterrupt(
-    PKINTERRUPT InterruptObject
+    _Inout_ PKINTERRUPT InterruptObject
 );
 
 BOOLEAN
 NTAPI
 KeDisconnectInterrupt(
-    PKINTERRUPT InterruptObject
+    _Inout_ PKINTERRUPT InterruptObject
 );
 
 VOID
@@ -204,8 +208,12 @@ KeIsExecutingDpc(
 BOOLEAN
 NTAPI
 KiIpiServiceRoutine(
-    IN PKTRAP_FRAME TrapFrame,
-    IN PKEXCEPTION_FRAME ExceptionFrame
+    _In_ PKTRAP_FRAME TrapFrame,
+#ifdef _M_AMD64
+    _In_ PKEXCEPTION_FRAME ExceptionFrame
+#else
+    _Reserved_ PKEXCEPTION_FRAME ExceptionFrame
+#endif
 );
 
 //
@@ -214,20 +222,20 @@ KiIpiServiceRoutine(
 VOID
 NTAPI
 KeGenericCallDpc(
-    IN PKDEFERRED_ROUTINE Routine,
-    IN PVOID Context
+    _In_ PKDEFERRED_ROUTINE Routine,
+    _In_ PVOID Context
 );
 
 VOID
 NTAPI
 KeSignalCallDpcDone(
-    IN PVOID SystemArgument1
+    _In_ PVOID SystemArgument1
 );
 
 BOOLEAN
 NTAPI
 KeSignalCallDpcSynchronize(
-    IN PVOID SystemArgument2
+    _In_ PVOID SystemArgument2
 );
 
 //
@@ -237,20 +245,20 @@ KeSignalCallDpcSynchronize(
 PCONFIGURATION_COMPONENT_DATA
 NTAPI
 KeFindConfigurationNextEntry(
-    IN PCONFIGURATION_COMPONENT_DATA Child,
-    IN CONFIGURATION_CLASS Class,
-    IN CONFIGURATION_TYPE Type,
-    IN PULONG ComponentKey OPTIONAL,
-    IN PCONFIGURATION_COMPONENT_DATA *NextLink
+    _In_ PCONFIGURATION_COMPONENT_DATA Child,
+    _In_ CONFIGURATION_CLASS Class,
+    _In_ CONFIGURATION_TYPE Type,
+    _In_opt_ PULONG ComponentKey,
+    _In_ PCONFIGURATION_COMPONENT_DATA *NextLink
 );
 
 PCONFIGURATION_COMPONENT_DATA
 NTAPI
 KeFindConfigurationEntry(
-    IN PCONFIGURATION_COMPONENT_DATA Child,
-    IN CONFIGURATION_CLASS Class,
-    IN CONFIGURATION_TYPE Type,
-    IN PULONG ComponentKey OPTIONAL
+    _In_ PCONFIGURATION_COMPONENT_DATA Child,
+    _In_ CONFIGURATION_CLASS Class,
+    _In_ CONFIGURATION_TYPE Type,
+    _In_opt_ PULONG ComponentKey
 );
 #endif
 
@@ -260,41 +268,41 @@ KeFindConfigurationEntry(
 VOID
 NTAPI
 KeFlushEntireTb(
-    IN BOOLEAN Invalid,
-    IN BOOLEAN AllProcessors
+    _In_ BOOLEAN Invalid,
+    _In_ BOOLEAN AllProcessors
 );
 
 VOID
 NTAPI
 KeSetDmaIoCoherency(
-    IN ULONG Coherency
+    _In_ ULONG Coherency
 );
 
 VOID
 KeSetGdtSelector(
-    ULONG Entry,
-    ULONG Value1,
-    ULONG Value2
+    _In_ ULONG Entry,
+    _In_ ULONG Value1,
+    _In_ ULONG Value2
 );
 
 VOID
 NTAPI
 KeSetProfileIrql(
-    IN KIRQL ProfileIrql
+    _In_ KIRQL ProfileIrql
 );
 
 VOID
 NTAPI
 KeSetTimeIncrement(
-    IN ULONG MaxIncrement,
-    IN ULONG MinIncrement
+    _In_ ULONG MaxIncrement,
+    _In_ ULONG MinIncrement
 );
 
 NTSTATUS
 NTAPI
 Ke386CallBios(
-    IN ULONG BiosCommand,
-    IN OUT PCONTEXT BiosArguments
+    _In_ ULONG BiosCommand,
+    _Inout_ PCONTEXT BiosArguments
 );
 
 //
@@ -303,17 +311,17 @@ Ke386CallBios(
 NTSTATUS
 NTAPI
 KeUserModeCallback(
-    IN ULONG FunctionID,
-    IN PVOID InputBuffer,
-    IN ULONG InputLength,
-    OUT PVOID *OutputBuffer,
-    OUT PULONG OutputLength
+    _In_ ULONG FunctionID,
+    _In_ PVOID InputBuffer,
+    _In_ ULONG InputLength,
+    _Out_ PVOID *OutputBuffer,
+    _Out_ PULONG OutputLength
 );
 
 NTSTATUS
 NTAPI
 KeRaiseUserException(
-    IN NTSTATUS ExceptionCode
+    _In_ NTSTATUS ExceptionCode
 );
 
 #endif
@@ -325,49 +333,49 @@ NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtContinue(
-    IN PCONTEXT Context,
-    IN BOOLEAN TestAlert
+    _In_ PCONTEXT Context,
+    _In_ BOOLEAN TestAlert
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtCallbackReturn(
-    PVOID Result,
-    ULONG ResultLength,
-    NTSTATUS Status
+    _In_ PVOID Result,
+    _In_ ULONG ResultLength,
+    _In_ NTSTATUS Status
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtCreateProfile(
-    OUT PHANDLE ProfileHandle,
-    IN HANDLE ProcessHandle,
-    IN PVOID ImageBase,
-    IN ULONG ImageSize,
-    IN ULONG Granularity,
-    OUT PVOID Buffer,
-    IN ULONG ProfilingSize,
-    IN KPROFILE_SOURCE Source,
-    IN KAFFINITY ProcessorMask
+    _Out_ PHANDLE ProfileHandle,
+    _In_ HANDLE ProcessHandle,
+    _In_ PVOID ImageBase,
+    _In_ ULONG ImageSize,
+    _In_ ULONG Granularity,
+    _Out_ PVOID Buffer,
+    _In_ ULONG ProfilingSize,
+    _In_ KPROFILE_SOURCE Source,
+    _In_ KAFFINITY ProcessorMask
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtDelayExecution(
-    IN BOOLEAN Alertable,
-    IN LARGE_INTEGER *Interval
+    _In_ BOOLEAN Alertable,
+    _In_ LARGE_INTEGER *Interval
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtFlushInstructionCache(
-    IN HANDLE ProcessHandle,
-    IN PVOID BaseAddress,
-    IN ULONG NumberOfBytesToFlush
+    _In_ HANDLE ProcessHandle,
+    _In_ PVOID BaseAddress,
+    _In_ ULONG NumberOfBytesToFlush
 );
 
 ULONG
@@ -380,8 +388,8 @@ NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtGetContextThread(
-    IN HANDLE ThreadHandle,
-    OUT PCONTEXT Context
+    _In_ HANDLE ThreadHandle,
+    _Out_ PCONTEXT Context
 );
 
 NTSYSCALLAPI
@@ -395,109 +403,109 @@ NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQueryIntervalProfile(
-    IN  KPROFILE_SOURCE ProfileSource,
-    OUT PULONG Interval
+    _In_  KPROFILE_SOURCE ProfileSource,
+    _Out_ PULONG Interval
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQueryPerformanceCounter(
-    IN PLARGE_INTEGER Counter,
-    IN PLARGE_INTEGER Frequency
+    _Out_ PLARGE_INTEGER Counter,
+    _Out_opt_ PLARGE_INTEGER Frequency
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQuerySystemTime(
-    OUT PLARGE_INTEGER CurrentTime
+    _Out_ PLARGE_INTEGER CurrentTime
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQueryTimerResolution(
-    OUT PULONG MinimumResolution,
-    OUT PULONG MaximumResolution,
-    OUT PULONG ActualResolution
+    _Out_ PULONG MinimumResolution,
+    _Out_ PULONG MaximumResolution,
+    _Out_ PULONG ActualResolution
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtQueueApcThread(
-    HANDLE ThreadHandle,
-    PKNORMAL_ROUTINE ApcRoutine,
-    PVOID NormalContext,
-    PVOID SystemArgument1,
-    PVOID SystemArgument2
+    _In_ HANDLE ThreadHandle,
+    _In_ PKNORMAL_ROUTINE ApcRoutine,
+    _In_opt_ PVOID NormalContext,
+    _In_opt_ PVOID SystemArgument1,
+    _In_opt_ PVOID SystemArgument2
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtRaiseException(
-    IN PEXCEPTION_RECORD ExceptionRecord,
-    IN PCONTEXT Context,
-    IN BOOLEAN SearchFrames
+    _In_ PEXCEPTION_RECORD ExceptionRecord,
+    _In_ PCONTEXT Context,
+    _In_ BOOLEAN SearchFrames
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetContextThread(
-    IN HANDLE ThreadHandle,
-    IN PCONTEXT Context
+    _In_ HANDLE ThreadHandle,
+    _In_ PCONTEXT Context
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetIntervalProfile(
-    IN ULONG Interval,
-    IN KPROFILE_SOURCE ClockSource
+    _In_ ULONG Interval,
+    _In_ KPROFILE_SOURCE ClockSource
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetLdtEntries(
-    IN ULONG Selector1,
-    IN LDT_ENTRY LdtEntry1,
-    IN ULONG Selector2,
-    IN LDT_ENTRY LdtEntry2
+    _In_ ULONG Selector1,
+    _In_ LDT_ENTRY LdtEntry1,
+    _In_ ULONG Selector2,
+    _In_ LDT_ENTRY LdtEntry2
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetSystemTime(
-    IN PLARGE_INTEGER SystemTime,
-    IN PLARGE_INTEGER NewSystemTime OPTIONAL
+    _In_ PLARGE_INTEGER SystemTime,
+    _In_opt_ PLARGE_INTEGER NewSystemTime
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetTimerResolution(
-    IN ULONG RequestedResolution,
-    IN BOOLEAN SetOrUnset,
-    OUT PULONG ActualResolution
+    _In_ ULONG RequestedResolution,
+    _In_ BOOLEAN SetOrUnset,
+    _Out_ PULONG ActualResolution
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtStartProfile(
-    IN HANDLE ProfileHandle
+    _In_ HANDLE ProfileHandle
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtStopProfile(
-    IN HANDLE ProfileHandle
+    _In_ HANDLE ProfileHandle
 );
 
 NTSYSCALLAPI
@@ -511,19 +519,19 @@ NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtVdmControl(
-    ULONG ControlCode,
-    PVOID ControlData
+    _In_ ULONG ControlCode,
+    _In_ PVOID ControlData
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtW32Call(
-    IN ULONG RoutineIndex,
-    IN PVOID Argument,
-    IN ULONG ArgumentLength,
-    OUT PVOID* Result OPTIONAL,
-    OUT PULONG ResultLength OPTIONAL
+    _In_ ULONG RoutineIndex,
+    _In_ PVOID Argument,
+    _In_ ULONG ArgumentLength,
+    _Out_opt_ PVOID* Result,
+    _Out_opt_ PULONG ResultLength
 );
 
 NTSYSCALLAPI
@@ -537,57 +545,57 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 ZwContinue(
-    IN PCONTEXT Context,
-    IN BOOLEAN TestAlert
+    _In_ PCONTEXT Context,
+    _In_ BOOLEAN TestAlert
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCallbackReturn(
-    PVOID Result,
-    ULONG ResultLength,
-    NTSTATUS Status
+    _In_ PVOID Result,
+    _In_ ULONG ResultLength,
+    _In_ NTSTATUS Status
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCreateProfile(
-    OUT PHANDLE ProfileHandle,
-    IN HANDLE ProcessHandle,
-    IN PVOID ImageBase,
-    IN ULONG ImageSize,
-    IN ULONG Granularity,
-    OUT PVOID Buffer,
-    IN ULONG ProfilingSize,
-    IN KPROFILE_SOURCE Source,
-    IN KAFFINITY ProcessorMask
+    _Out_ PHANDLE ProfileHandle,
+    _In_ HANDLE ProcessHandle,
+    _In_ PVOID ImageBase,
+    _In_ ULONG ImageSize,
+    _In_ ULONG Granularity,
+    _Out_ PVOID Buffer,
+    _In_ ULONG ProfilingSize,
+    _In_ KPROFILE_SOURCE Source,
+    _In_ KAFFINITY ProcessorMask
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwDelayExecution(
-    IN BOOLEAN Alertable,
-    IN LARGE_INTEGER *Interval
+    _In_ BOOLEAN Alertable,
+    _In_ LARGE_INTEGER *Interval
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwFlushInstructionCache(
-    IN HANDLE ProcessHandle,
-    IN PVOID BaseAddress,
-    IN ULONG NumberOfBytesToFlush
+    _In_ HANDLE ProcessHandle,
+    _In_ PVOID BaseAddress,
+    _In_ ULONG NumberOfBytesToFlush
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwGetContextThread(
-    IN HANDLE ThreadHandle,
-    OUT PCONTEXT Context
+    _In_ HANDLE ThreadHandle,
+    _Out_ PCONTEXT Context
 );
 
 NTSYSAPI
@@ -601,109 +609,109 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryIntervalProfile(
-    IN  KPROFILE_SOURCE ProfileSource,
-    OUT PULONG Interval
+    _In_  KPROFILE_SOURCE ProfileSource,
+    _Out_ PULONG Interval
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryPerformanceCounter(
-    IN PLARGE_INTEGER Counter,
-    IN PLARGE_INTEGER Frequency
+    _Out_ PLARGE_INTEGER Counter,
+    _Out_opt_ PLARGE_INTEGER Frequency
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQuerySystemTime(
-    OUT PLARGE_INTEGER CurrentTime
+    _Out_ PLARGE_INTEGER CurrentTime
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryTimerResolution(
-    OUT PULONG MinimumResolution,
-    OUT PULONG MaximumResolution,
-    OUT PULONG ActualResolution
+    _Out_ PULONG MinimumResolution,
+    _Out_ PULONG MaximumResolution,
+    _Out_ PULONG ActualResolution
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueueApcThread(
-    HANDLE ThreadHandle,
-    PKNORMAL_ROUTINE ApcRoutine,
-    PVOID NormalContext,
-    PVOID SystemArgument1,
-    PVOID SystemArgument2
+    _In_ HANDLE ThreadHandle,
+    _In_ PKNORMAL_ROUTINE ApcRoutine,
+    _In_opt_ PVOID NormalContext,
+    _In_opt_ PVOID SystemArgument1,
+    _In_opt_ PVOID SystemArgument2
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwRaiseException(
-    IN PEXCEPTION_RECORD ExceptionRecord,
-    IN PCONTEXT Context,
-    IN BOOLEAN SearchFrames
+    _In_ PEXCEPTION_RECORD ExceptionRecord,
+    _In_ PCONTEXT Context,
+    _In_ BOOLEAN SearchFrames
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetContextThread(
-    IN HANDLE ThreadHandle,
-    IN PCONTEXT Context
+    _In_ HANDLE ThreadHandle,
+    _In_ PCONTEXT Context
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetIntervalProfile(
-    IN ULONG Interval,
-    IN KPROFILE_SOURCE ClockSource
+    _In_ ULONG Interval,
+    _In_ KPROFILE_SOURCE ClockSource
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetLdtEntries(
-    IN ULONG Selector1,
-    IN LDT_ENTRY LdtEntry1,
-    IN ULONG Selector2,
-    IN LDT_ENTRY LdtEntry2
+    _In_ ULONG Selector1,
+    _In_ LDT_ENTRY LdtEntry1,
+    _In_ ULONG Selector2,
+    _In_ LDT_ENTRY LdtEntry2
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetSystemTime(
-    IN PLARGE_INTEGER SystemTime,
-    IN PLARGE_INTEGER NewSystemTime OPTIONAL
+    _In_ PLARGE_INTEGER SystemTime,
+    _In_opt_ PLARGE_INTEGER NewSystemTime
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetTimerResolution(
-    IN ULONG RequestedResolution,
-    IN BOOLEAN SetOrUnset,
-    OUT PULONG ActualResolution
+    _In_ ULONG RequestedResolution,
+    _In_ BOOLEAN SetOrUnset,
+    _Out_ PULONG ActualResolution
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwStartProfile(
-    IN HANDLE ProfileHandle
+    _In_ HANDLE ProfileHandle
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwStopProfile(
-    IN HANDLE ProfileHandle
+    _In_ HANDLE ProfileHandle
 );
 
 NTSYSAPI
@@ -717,19 +725,19 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 ZwVdmControl(
-    ULONG ControlCode,
-    PVOID ControlData
+    _In_ ULONG ControlCode,
+    _In_ PVOID ControlData
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwW32Call(
-    IN ULONG RoutineIndex,
-    IN PVOID Argument,
-    IN ULONG ArgumentLength,
-    OUT PVOID* Result OPTIONAL,
-    OUT PULONG ResultLength OPTIONAL
+    _In_ ULONG RoutineIndex,
+    _In_ PVOID Argument,
+    _In_ ULONG ArgumentLength,
+    _Out_opt_ PVOID* Result,
+    _Out_opt_ PULONG ResultLength
 );
 
 NTSYSAPI

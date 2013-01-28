@@ -93,8 +93,7 @@ PciFdoIrpStartDevice(IN PIRP Irp,
     {
         /* These resources would only be for non-root FDOs, unhandled for now */
         ASSERT(Resources->Count == 1);
-        UNIMPLEMENTED;
-        ASSERT(FALSE); // while (TRUE);
+        UNIMPLEMENTED_DBGBREAK();
     }
 
     /* Initialize the arbiter for this FDO */
@@ -111,8 +110,7 @@ PciFdoIrpStartDevice(IN PIRP Irp,
     {
         /* Unhandled for now */
         ASSERT(Resources->Count == 1);
-        UNIMPLEMENTED;
-        ASSERT(FALSE); // while (TRUE);
+        UNIMPLEMENTED_DBGBREAK();
     }
 
     /* Commit the transition to the started state */
@@ -136,8 +134,7 @@ PciFdoIrpRemoveDevice(IN PIRP Irp,
                       IN PIO_STACK_LOCATION IoStackLocation,
                       IN PPCI_FDO_EXTENSION DeviceExtension)
 {
-    UNIMPLEMENTED;
-    ASSERT(FALSE); // while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -147,8 +144,7 @@ PciFdoIrpCancelRemoveDevice(IN PIRP Irp,
                             IN PIO_STACK_LOCATION IoStackLocation,
                             IN PPCI_FDO_EXTENSION DeviceExtension)
 {
-    UNIMPLEMENTED;
-    ASSERT(FALSE); // while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -158,8 +154,7 @@ PciFdoIrpStopDevice(IN PIRP Irp,
                     IN PIO_STACK_LOCATION IoStackLocation,
                     IN PPCI_FDO_EXTENSION DeviceExtension)
 {
-    UNIMPLEMENTED;
-    ASSERT(FALSE); // while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -169,8 +164,7 @@ PciFdoIrpQueryStopDevice(IN PIRP Irp,
                          IN PIO_STACK_LOCATION IoStackLocation,
                          IN PPCI_FDO_EXTENSION DeviceExtension)
 {
-    UNIMPLEMENTED;
-    ASSERT(FALSE); // while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -180,8 +174,7 @@ PciFdoIrpCancelStopDevice(IN PIRP Irp,
                           IN PIO_STACK_LOCATION IoStackLocation,
                           IN PPCI_FDO_EXTENSION DeviceExtension)
 {
-    UNIMPLEMENTED;
-    ASSERT(FALSE); // while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -318,8 +311,7 @@ PciFdoIrpDeviceUsageNotification(IN PIRP Irp,
                                  IN PIO_STACK_LOCATION IoStackLocation,
                                  IN PPCI_FDO_EXTENSION DeviceExtension)
 {
-    UNIMPLEMENTED;
-    ASSERT(FALSE); // while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -329,8 +321,7 @@ PciFdoIrpSurpriseRemoval(IN PIRP Irp,
                          IN PIO_STACK_LOCATION IoStackLocation,
                          IN PPCI_FDO_EXTENSION DeviceExtension)
 {
-    UNIMPLEMENTED;
-    ASSERT(FALSE); // while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -340,8 +331,7 @@ PciFdoIrpQueryLegacyBusInformation(IN PIRP Irp,
                                    IN PIO_STACK_LOCATION IoStackLocation,
                                    IN PPCI_FDO_EXTENSION DeviceExtension)
 {
-    UNIMPLEMENTED;
-    ASSERT(FALSE); // while (TRUE);
+    UNIMPLEMENTED_DBGBREAK();
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -392,8 +382,7 @@ PciGetHotPlugParameters(IN PPCI_FDO_EXTENSION FdoExtension)
         if (OutputBuffer->Count != 4) break;
 
         /* HotPlug PCI Support not yet implemented */
-        UNIMPLEMENTED;
-        ASSERT(FALSE); // while (TRUE);
+        UNIMPLEMENTED_DBGBREAK();
     } while (FALSE);
 
     /* Free the buffer and return */
@@ -544,17 +533,14 @@ PciAddDevice(IN PDRIVER_OBJECT DriverObject,
             else
             {
                 /* Root PDO in ReactOS does not assign boot resources */
-                UNIMPLEMENTED;
-                ASSERT(FALSE); // while (TRUE);
-                DPRINT1("Encountered during setup\n");
+                UNIMPLEMENTED_DBGBREAK("Encountered during setup\n");
                 Descriptor = NULL;
             }
 
             if (Descriptor)
             {
                 /* Root PDO in ReactOS does not assign boot resources */
-                UNIMPLEMENTED;
-                ASSERT(FALSE); // while (TRUE);
+                UNIMPLEMENTED_DBGBREAK();
             }
             else
             {

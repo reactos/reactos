@@ -18,9 +18,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "windef.h"
-#include "winbase.h"
-#include "resource.h"
+//#include "windef.h"
+//#include "winbase.h"
+//#include "resource.h"
 
 #ifdef LANGUAGE_BG_BG
     #include "oleaut32_Bg.rc"
@@ -81,6 +81,9 @@
 #ifdef LANGUAGE_DE_DE
     #include "oleaut32_De.rc"
 #endif
+#ifdef LANGUAGE_HE_IL
+    #include "oleaut32_He.rc"
+#endif
 #ifdef LANGUAGE_LT_LT
     #include "oleaut32_Lt.rc"
 #endif
@@ -119,4 +122,4 @@
 #define WINE_FILEVERSION_STR "6.0.6001.18000"
 #define WINE_EXTRAVALUES VALUE "OLESelfRegister",""
 
-#include "wine/wine_common_ver.rc"
+#include <wine/wine_common_ver.rc>

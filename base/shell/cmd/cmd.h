@@ -23,13 +23,15 @@
 
 #pragma once
 
-#include "config.h"
+#include <config.h>
 
-#include <windows.h>
+#include <winnls.h>
+#include <winreg.h>
+#include <winuser.h>
+#include <wincon.h>
 #include <tchar.h>
 
 #include "cmdver.h"
-
 #include "cmddbg.h"
 
 #define BREAK_BATCHFILE 1

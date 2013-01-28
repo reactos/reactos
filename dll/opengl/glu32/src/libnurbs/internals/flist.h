@@ -36,7 +36,7 @@
 #ifndef __gluflist_h_
 #define __gluflist_h_
 
-#include "types.h"
+//#include "types.h"
 #include "flistsorter.h"
 
 class Flist {

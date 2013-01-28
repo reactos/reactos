@@ -36,7 +36,7 @@
 #ifndef __glugridtrimvertex_h_
 #define __glugridtrimvertex_h_
 
-#include "mystdlib.h"
+//#include "mystdlib.h"
 #include "bufpool.h"
 #include "trimvertex.h"
 #include "gridvertex.h"

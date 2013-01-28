@@ -29,14 +29,14 @@
 
 #include <stdarg.h>
 
-#include "wine/list.h"
+#include <wine/list.h>
 
 #include "windef.h"
 #include "winbase.h"
 #include "wtypes.h"
-#include "dcom.h"
+#include <dcom.h>
 #include "winreg.h"
-#include "winternl.h"
+#include <winternl.h>
 
 struct apartment;
 typedef struct apartment APARTMENT;

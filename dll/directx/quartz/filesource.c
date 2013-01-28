@@ -23,14 +23,14 @@
 
 #include "quartz_private.h"
 
-#include "wine/debug.h"
-#include "wine/unicode.h"
+#include <wine/debug.h>
+#include <wine/unicode.h>
 #include "pin.h"
-#include "uuids.h"
-#include "vfwmsgs.h"
-#include "winbase.h"
-#include "winreg.h"
-#include "shlwapi.h"
+//#include "uuids.h"
+//#include "vfwmsgs.h"
+//#include "winbase.h"
+//#include "winreg.h"
+#include <shlwapi.h>
 #include <assert.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(quartz);

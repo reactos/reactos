@@ -16,23 +16,27 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
+#include <config.h>
 
 #include <stdarg.h>
 
 #define COBJMACROS
 
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "winreg.h"
-#include "ole2.h"
-#include "shlguid.h"
-#include "wininet.h"
-#include "shlwapi.h"
+#include <windef.h>
+#include <winbase.h>
+//#include "winuser.h"
+#include <winreg.h>
+#include <ole2.h>
+#include <shlguid.h>
+#include <wininet.h>
+#include <shlwapi.h>
 
-#include "wine/debug.h"
-#include "wine/unicode.h"
+#include <wine/debug.h>
+//#include "wine/unicode.h"
 
 #include "mshtml_private.h"
 

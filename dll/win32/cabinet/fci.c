@@ -30,26 +30,24 @@ There is still some work to be done:
 
 */
 
-
-
-#include "config.h"
+#include <config.h>
 
 #include <assert.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <string.h>
+//#include <stdarg.h>
+//#include <stdio.h>
+//#include <string.h>
 #ifdef HAVE_ZLIB
 # include <zlib.h>
 #endif
 
-#include "windef.h"
-#include "winbase.h"
-#include "winerror.h"
-#include "winternl.h"
-#include "fci.h"
+//#include <windef.h>
+//#include <winbase.h>
+//#include "winerror.h"
+//#include "winternl.h"
+//#include <fci.h>
 #include "cabinet.h"
-#include "wine/list.h"
-#include "wine/debug.h"
+#include <wine/list.h>
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(cabinet);
 

@@ -7,7 +7,11 @@
  *                  Colin Finck <mail@colinfinck.de>
  */
 
-#include <windows.h>
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <wingdi.h>
+#include <winuser.h>
 #include <tchar.h>
 #include <scrnsave.h>
 

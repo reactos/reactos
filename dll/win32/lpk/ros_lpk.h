@@ -8,7 +8,9 @@
 #define WIN32_NO_STATUS
 #define NTOS_MODE_USER
 
-#include <windows.h>
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
 #include <ndk/rtlfuncs.h>
 
 /* FIXME USP10 api that does not have prototype in any include file */

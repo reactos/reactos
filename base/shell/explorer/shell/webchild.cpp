@@ -33,20 +33,7 @@
 #include "webchild.h"
 
 
-#ifdef _MSC_VER
-
-#if _MSC_VER>=1300	// vtMissing for VS.Net
 #include <comutil.h>
-#pragma comment(lib, "comsupp")
-#endif
-
-#else
-
-#ifdef __MINGW32__	// MinGW is lacking vtMissing (as of 07.02.2004)
-static Variant vtMissing;
-#endif
-
-#endif
 
 //#include <mshtml.h>
 

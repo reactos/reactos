@@ -5,12 +5,20 @@
  * PROGRAMMERS:     Dmitry Chapyshev (dmitry@reactos.org)
  */
 
-#include <windows.h>
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
+#include <stdio.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winreg.h>
+#include <winver.h>
+#include <winnls.h>
+#include <wingdi.h>
 #include <winternl.h>
 #include <vfw.h>
-#include <wchar.h>
-
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 #define CAP_DESC_MAX 32
 

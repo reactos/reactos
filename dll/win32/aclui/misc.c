@@ -26,7 +26,7 @@
  * UPDATE HISTORY:
  *      07/01/2005  Created
  */
-#include <precomp.h>
+#include "precomp.h"
 
 #define NDEBUG
 #include <debug.h>

@@ -36,9 +36,9 @@
 #ifndef __gludisplaylist_h_
 #define __gludisplaylist_h_
 
-#include "glimports.h"
-#include "mysetjmp.h"
-#include "mystdio.h"
+//#include "glimports.h"
+//#include "mysetjmp.h"
+//#include "mystdio.h"
 #include "bufpool.h"
 
 class NurbsTessellator;

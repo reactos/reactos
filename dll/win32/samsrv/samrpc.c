@@ -191,7 +191,7 @@ NTSTATUS
 NTAPI
 SamrQuerySecurityObject(IN SAMPR_HANDLE ObjectHandle,
                         IN SECURITY_INFORMATION SecurityInformation,
-                        OUT PSAMPR_SR_SECURITY_DESCRIPTOR * SecurityDescriptor)
+                        OUT PSAMPR_SR_SECURITY_DESCRIPTOR *SecurityDescriptor)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
@@ -3593,8 +3593,8 @@ SampQueryGroupGeneral(PSAM_DB_OBJECT GroupObject,
                       PSAMPR_GROUP_INFO_BUFFER *Buffer)
 {
     PSAMPR_GROUP_INFO_BUFFER InfoBuffer = NULL;
-    HANDLE MembersKeyHandle = NULL;
     SAM_GROUP_FIXED_DATA FixedData;
+    ULONG MembersLength = 0;
     ULONG Length = 0;
     NTSTATUS Status;
 
@@ -3633,33 +3633,22 @@ SampQueryGroupGeneral(PSAM_DB_OBJECT GroupObject,
 
     InfoBuffer->General.Attributes = FixedData.Attributes;
 
-    /* Open the Members subkey */
-    Status = SampRegOpenKey(GroupObject->KeyHandle,
-                            L"Members",
-                            KEY_READ,
-                            &MembersKeyHandle);
-    if (!NT_SUCCESS(Status))
-    {
-        TRACE("Status 0x%08lx\n", Status);
+    Status = SampGetObjectAttribute(GroupObject,
+                                    L"Members",
+                                    NULL,
+                                    NULL,
+                                    &MembersLength);
+    if (!NT_SUCCESS(Status) && Status != STATUS_OBJECT_NAME_NOT_FOUND)
         goto done;
-    }
 
-    /* Retrieve the number of members of the alias */
-    Status = SampRegQueryKeyInfo(MembersKeyHandle,
-                                 NULL,
-                                 &InfoBuffer->General.MemberCount);
-    if (!NT_SUCCESS(Status))
-    {
-        TRACE("Status 0x%08lx\n", Status);
-        goto done;
-    }
+    if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
+        InfoBuffer->General.MemberCount = 0;
+    else
+        InfoBuffer->General.MemberCount = MembersLength / sizeof(ULONG);
 
     *Buffer = InfoBuffer;
 
 done:
-    if (MembersKeyHandle != NULL)
-        SampRegCloseKey(MembersKeyHandle);
-
     if (!NT_SUCCESS(Status))
     {
         if (InfoBuffer != NULL)
@@ -3941,18 +3930,117 @@ SamrAddMemberToGroup(IN SAMPR_HANDLE GroupHandle,
                      IN unsigned long MemberId,
                      IN unsigned long Attributes)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PSAM_DB_OBJECT GroupObject;
+    PSAM_DB_OBJECT UserObject = NULL;
+    NTSTATUS Status;
+
+    TRACE("(%p %lu %lx)\n",
+          GroupHandle, MemberId, Attributes);
+
+    /* Validate the group handle */
+    Status = SampValidateDbObject(GroupHandle,
+                                  SamDbGroupObject,
+                                  GROUP_ADD_MEMBER,
+                                  &GroupObject);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    /* Open the user object in the same domain */
+    Status = SampOpenUserObject(GroupObject->ParentObject,
+                                MemberId,
+                                0,
+                                &UserObject);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampOpenUserObject() failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    /* Add group membership to the user object */
+    Status = SampAddGroupMembershipToUser(UserObject,
+                                          GroupObject->RelativeId,
+                                          Attributes);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampAddGroupMembershipToUser() failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    /* Add the member to the group object */
+    Status = SampAddMemberToGroup(GroupObject,
+                                  MemberId);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampAddMemberToGroup() failed (Status 0x%08lx)\n", Status);
+    }
+
+done:
+    if (UserObject)
+        SampCloseDbObject(UserObject);
+
+    return Status;
 }
+
 
 /* Function 21 */
 NTSTATUS
 NTAPI
 SamrDeleteGroup(IN OUT SAMPR_HANDLE *GroupHandle)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PSAM_DB_OBJECT GroupObject;
+    ULONG Length = 0;
+    NTSTATUS Status;
+
+    TRACE("(%p)\n", GroupHandle);
+
+    /* Validate the group handle */
+    Status = SampValidateDbObject(*GroupHandle,
+                                  SamDbGroupObject,
+                                  DELETE,
+                                  &GroupObject);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampValidateDbObject() failed (Status 0x%08lx)\n", Status);
+        return Status;
+    }
+
+    /* Fail, if the group is built-in */
+    if (GroupObject->RelativeId < 1000)
+    {
+        TRACE("You can not delete a special account!\n");
+        return STATUS_SPECIAL_ACCOUNT;
+    }
+
+    /* Get the length of the Members attribute */
+    SampGetObjectAttribute(GroupObject,
+                           L"Members",
+                           NULL,
+                           NULL,
+                           &Length);
+
+    /* Fail, if the group has members */
+    if (Length != 0)
+    {
+        TRACE("There are still members in the group!\n");
+        return STATUS_MEMBER_IN_GROUP;
+    }
+
+    /* FIXME: Remove the group from all aliases */
+
+    /* Delete the group from the database */
+    Status = SampDeleteAccountDbObject(GroupObject);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampDeleteAccountDbObject() failed (Status 0x%08lx)\n", Status);
+        return Status;
+    }
+
+    /* Invalidate the handle */
+    *GroupHandle = NULL;
+
+    return STATUS_SUCCESS;
 }
+
 
 /* Function 24 */
 NTSTATUS
@@ -3960,9 +4048,56 @@ NTAPI
 SamrRemoveMemberFromGroup(IN SAMPR_HANDLE GroupHandle,
                           IN unsigned long MemberId)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PSAM_DB_OBJECT GroupObject;
+    PSAM_DB_OBJECT UserObject = NULL;
+    NTSTATUS Status;
+
+    TRACE("(%p %lu)\n",
+          GroupHandle, MemberId);
+
+    /* Validate the group handle */
+    Status = SampValidateDbObject(GroupHandle,
+                                  SamDbGroupObject,
+                                  GROUP_REMOVE_MEMBER,
+                                  &GroupObject);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    /* Open the user object in the same domain */
+    Status = SampOpenUserObject(GroupObject->ParentObject,
+                                MemberId,
+                                0,
+                                &UserObject);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SampOpenUserObject() failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    /* Remove group membership from the user object */
+    Status = SampRemoveGroupMembershipFromUser(UserObject,
+                                               GroupObject->RelativeId);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SampAddGroupMembershipToUser() failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    /* Remove the member from the group object */
+    Status = SampRemoveMemberFromGroup(GroupObject,
+                                       MemberId);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SampRemoveMemberFromGroup() failed (Status 0x%08lx)\n", Status);
+    }
+
+done:
+    if (UserObject)
+        SampCloseDbObject(UserObject);
+
+    return Status;
 }
+
 
 /* Function 25 */
 NTSTATUS
@@ -3970,9 +4105,101 @@ NTAPI
 SamrGetMembersInGroup(IN SAMPR_HANDLE GroupHandle,
                       OUT PSAMPR_GET_MEMBERS_BUFFER *Members)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PSAMPR_GET_MEMBERS_BUFFER MembersBuffer = NULL;
+    PSAM_DB_OBJECT GroupObject;
+    ULONG Length = 0;
+    ULONG i;
+    NTSTATUS Status;
+
+    /* Validate the group handle */
+    Status = SampValidateDbObject(GroupHandle,
+                                  SamDbGroupObject,
+                                  GROUP_LIST_MEMBERS,
+                                  &GroupObject);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    MembersBuffer = midl_user_allocate(sizeof(SAMPR_GET_MEMBERS_BUFFER));
+    if (MembersBuffer == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    SampGetObjectAttribute(GroupObject,
+                           L"Members",
+                           NULL,
+                           NULL,
+                           &Length);
+
+    if (Length == 0)
+    {
+        MembersBuffer->MemberCount = 0;
+        MembersBuffer->Members = NULL;
+        MembersBuffer->Attributes = NULL;
+
+        *Members = MembersBuffer;
+
+        return STATUS_SUCCESS;
+    }
+
+    MembersBuffer->Members = midl_user_allocate(Length);
+    if (MembersBuffer->Members == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
+
+    MembersBuffer->Attributes = midl_user_allocate(Length);
+    if (MembersBuffer->Attributes == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
+
+    Status = SampGetObjectAttribute(GroupObject,
+                                    L"Members",
+                                    NULL,
+                                    MembersBuffer->Members,
+                                    &Length);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampGetObjectAttributes() failed (Status 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    MembersBuffer->MemberCount = Length / sizeof(ULONG);
+
+    for (i = 0; i < MembersBuffer->MemberCount; i++)
+    {
+        Status = SampGetUserGroupAttributes(GroupObject->ParentObject,
+                                            MembersBuffer->Members[i],
+                                            GroupObject->RelativeId,
+                                            &(MembersBuffer->Attributes[i]));
+        if (!NT_SUCCESS(Status))
+        {
+            TRACE("SampGetUserGroupAttributes() failed (Status 0x%08lx)\n", Status);
+            goto done;
+        }
+    }
+
+    *Members = MembersBuffer;
+
+done:
+    if (!NT_SUCCESS(Status))
+    {
+        if (MembersBuffer != NULL)
+        {
+            if (MembersBuffer->Members != NULL)
+                midl_user_free(MembersBuffer->Members);
+
+            if (MembersBuffer->Attributes != NULL)
+                midl_user_free(MembersBuffer->Attributes);
+
+            midl_user_free(MembersBuffer);
+        }
+    }
+
+    return Status;
 }
+
 
 /* Function 26 */
 NTSTATUS
@@ -3981,8 +4208,30 @@ SamrSetMemberAttributesOfGroup(IN SAMPR_HANDLE GroupHandle,
                                IN unsigned long MemberId,
                                IN unsigned long Attributes)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PSAM_DB_OBJECT GroupObject;
+    NTSTATUS Status;
+
+    /* Validate the group handle */
+    Status = SampValidateDbObject(GroupHandle,
+                                  SamDbGroupObject,
+                                  GROUP_ADD_MEMBER,
+                                  &GroupObject);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampValidateDbObject failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    Status = SampSetUserGroupAttributes(GroupObject->ParentObject,
+                                        MemberId,
+                                        GroupObject->RelativeId,
+                                        Attributes);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampSetUserGroupAttributes failed with status 0x%08lx\n", Status);
+    }
+
+    return Status;
 }
 
 
@@ -4304,8 +4553,41 @@ NTSTATUS
 NTAPI
 SamrDeleteAlias(IN OUT SAMPR_HANDLE *AliasHandle)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PSAM_DB_OBJECT AliasObject;
+    NTSTATUS Status;
+
+    /* Validate the alias handle */
+    Status = SampValidateDbObject(AliasHandle,
+                                  SamDbAliasObject,
+                                  DELETE,
+                                  &AliasObject);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Fail, if the alias is built-in */
+    if (AliasObject->RelativeId < 1000)
+    {
+        TRACE("You can not delete a special account!\n");
+        return STATUS_SPECIAL_ACCOUNT;
+    }
+
+    /* FIXME: Remove all members from the alias */
+
+    /* Delete the alias from the database */
+    Status = SampDeleteAccountDbObject(AliasObject);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampDeleteAccountDbObject() failed (Status 0x%08lx)\n", Status);
+        return Status;
+    }
+
+    /* Invalidate the handle */
+    *AliasHandle = NULL;
+
+    return Status;
 }
 
 
@@ -4714,8 +4996,45 @@ NTSTATUS
 NTAPI
 SamrDeleteUser(IN OUT SAMPR_HANDLE *UserHandle)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PSAM_DB_OBJECT UserObject;
+    NTSTATUS Status;
+
+    TRACE("(%p)\n", UserHandle);
+
+    /* Validate the user handle */
+    Status = SampValidateDbObject(*UserHandle,
+                                  SamDbUserObject,
+                                  DELETE,
+                                  &UserObject);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampValidateDbObject() failed (Status 0x%08lx)\n", Status);
+        return Status;
+    }
+
+    /* Fail, if the user is built-in */
+    if (UserObject->RelativeId < 1000)
+    {
+        TRACE("You can not delete a special account!\n");
+        return STATUS_SPECIAL_ACCOUNT;
+    }
+
+    /* FIXME: Remove the user from all groups */
+
+    /* FIXME: Remove the user from all aliases */
+
+    /* Delete the user from the database */
+    Status = SampDeleteAccountDbObject(UserObject);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampDeleteAccountDbObject() failed (Status 0x%08lx)\n", Status);
+        return Status;
+    }
+
+    /* Invalidate the handle */
+    *UserHandle = NULL;
+
+    return STATUS_SUCCESS;
 }
 
 
@@ -6477,15 +6796,100 @@ SamrChangePasswordUser(IN SAMPR_HANDLE UserHandle,
     return STATUS_NOT_IMPLEMENTED;
 }
 
+
 /* Function 39 */
 NTSTATUS
 NTAPI
 SamrGetGroupsForUser(IN SAMPR_HANDLE UserHandle,
                      OUT PSAMPR_GET_GROUPS_BUFFER *Groups)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PSAMPR_GET_GROUPS_BUFFER GroupsBuffer = NULL;
+    PSAM_DB_OBJECT UserObject;
+    ULONG Length = 0;
+    NTSTATUS Status;
+
+    TRACE("SamrGetGroupsForUser(%p %p)\n",
+          UserHandle, Groups);
+
+    /* Validate the domain handle */
+    Status = SampValidateDbObject(UserHandle,
+                                  SamDbUserObject,
+                                  USER_LIST_GROUPS,
+                                  &UserObject);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampValidateDbObject failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Allocate the groups buffer */
+    GroupsBuffer = midl_user_allocate(sizeof(SAMPR_GET_GROUPS_BUFFER));
+    if (GroupsBuffer == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    /*
+     * Get the size of the Groups attribute.
+     * Do not check the status code because in case of an error
+     * Length will be 0. And that is all we need.
+     */
+    SampGetObjectAttribute(UserObject,
+                           L"Groups",
+                           NULL,
+                           NULL,
+                           &Length);
+
+    /* If there is no Groups attribute, return a groups buffer without an array */
+    if (Length == 0)
+    {
+        GroupsBuffer->MembershipCount = 0;
+        GroupsBuffer->Groups = NULL;
+
+        *Groups = GroupsBuffer;
+
+        return STATUS_SUCCESS;
+    }
+
+    /* Allocate a buffer for the Groups attribute */
+    GroupsBuffer->Groups = midl_user_allocate(Length);
+    if (GroupsBuffer->Groups == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
+
+    /* Retrieve the Grous attribute */
+    Status = SampGetObjectAttribute(UserObject,
+                                    L"Groups",
+                                    NULL,
+                                    GroupsBuffer->Groups,
+                                    &Length);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampGetObjectAttribute failed with status 0x%08lx\n", Status);
+        goto done;
+    }
+
+    /* Calculate the membership count */
+    GroupsBuffer->MembershipCount = Length / sizeof(GROUP_MEMBERSHIP);
+
+    /* Return the groups buffer to the caller */
+    *Groups = GroupsBuffer;
+
+done:
+    if (!NT_SUCCESS(Status))
+    {
+        if (GroupsBuffer != NULL)
+        {
+            if (GroupsBuffer->Groups != NULL)
+                midl_user_free(GroupsBuffer->Groups);
+
+            midl_user_free(GroupsBuffer);
+        }
+    }
+
+    return Status;
 }
+
 
 /* Function 40 */
 NTSTATUS
@@ -6553,6 +6957,7 @@ SamrRemoveMemberFromForeignDomain(IN SAMPR_HANDLE DomainHandle,
     return STATUS_NOT_IMPLEMENTED;
 }
 
+
 /* Function 46 */
 NTSTATUS
 NTAPI
@@ -6560,9 +6965,13 @@ SamrQueryInformationDomain2(IN SAMPR_HANDLE DomainHandle,
                             IN DOMAIN_INFORMATION_CLASS DomainInformationClass,
                             OUT PSAMPR_DOMAIN_INFO_BUFFER *Buffer)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    TRACE("(%p %lu %p)\n", DomainHandle, DomainInformationClass, Buffer);
+
+    return SamrQueryInformationDomain(DomainHandle,
+                                      DomainInformationClass,
+                                      Buffer);
 }
+
 
 /* Function 47 */
 NTSTATUS
@@ -6571,9 +6980,13 @@ SamrQueryInformationUser2(IN SAMPR_HANDLE UserHandle,
                           IN USER_INFORMATION_CLASS UserInformationClass,
                           OUT PSAMPR_USER_INFO_BUFFER *Buffer)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    TRACE("(%p %lu %p)\n", UserHandle, UserInformationClass, Buffer);
+
+    return SamrQueryInformationUser(UserHandle,
+                                    UserInformationClass,
+                                    Buffer);
 }
+
 
 /* Function 48 */
 NTSTATUS
@@ -6587,9 +7000,21 @@ SamrQueryDisplayInformation2(IN SAMPR_HANDLE DomainHandle,
                              OUT unsigned long *TotalReturned,
                              OUT PSAMPR_DISPLAY_INFO_BUFFER Buffer)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    TRACE("%p %lu %lu %lu %lu %p %p %p\n",
+          DomainHandle, DisplayInformationClass, Index,
+          EntryCount, PreferredMaximumLength, TotalAvailable,
+          TotalReturned, Buffer);
+
+    return SamrQueryDisplayInformation(DomainHandle,
+                                       DisplayInformationClass,
+                                       Index,
+                                       EntryCount,
+                                       PreferredMaximumLength,
+                                       TotalAvailable,
+                                       TotalReturned,
+                                       Buffer);
 }
+
 
 /* Function 49 */
 NTSTATUS
@@ -6599,8 +7024,13 @@ SamrGetDisplayEnumerationIndex2(IN SAMPR_HANDLE DomainHandle,
                                 IN PRPC_UNICODE_STRING Prefix,
                                 OUT unsigned long *Index)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    TRACE("(%p %lu %p %p)\n",
+           DomainHandle, DisplayInformationClass, Prefix, Index);
+
+    return SamrGetDisplayEnumerationIndex(DomainHandle,
+                                          DisplayInformationClass,
+                                          Prefix,
+                                          Index);
 }
 
 
@@ -6687,10 +7117,10 @@ SamrCreateUser2InDomain(IN SAMPR_HANDLE DomainHandle,
 
     /* Store the fixed domain attributes */
     Status = SampSetObjectAttribute(DomainObject,
-                           L"F",
-                           REG_BINARY,
-                           &FixedDomainData,
-                           ulSize);
+                                    L"F",
+                                    REG_BINARY,
+                                    &FixedDomainData,
+                                    ulSize);
     if (!NT_SUCCESS(Status))
     {
         TRACE("failed with status 0x%08lx\n", Status);
@@ -6889,8 +7319,19 @@ SamrQueryDisplayInformation3(IN SAMPR_HANDLE DomainHandle,
                              OUT unsigned long *TotalReturned,
                              OUT PSAMPR_DISPLAY_INFO_BUFFER Buffer)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    TRACE("%p %lu %lu %lu %lu %p %p %p\n",
+          DomainHandle, DisplayInformationClass, Index,
+          EntryCount, PreferredMaximumLength, TotalAvailable,
+          TotalReturned, Buffer);
+
+    return SamrQueryDisplayInformation(DomainHandle,
+                                       DisplayInformationClass,
+                                       Index,
+                                       EntryCount,
+                                       PreferredMaximumLength,
+                                       TotalAvailable,
+                                       TotalReturned,
+                                       Buffer);
 }
 
 

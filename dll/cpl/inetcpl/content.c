@@ -20,6 +20,7 @@
  */
 
 #define NONAMELESSUNION
+#define WIN32_NO_STATUS
 
 #include <stdarg.h>
 #include <windef.h>
@@ -28,7 +29,7 @@
 #include <cryptuiapi.h>
 
 #include "inetcpl.h"
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(inetcpl);
 

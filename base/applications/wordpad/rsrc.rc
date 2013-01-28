@@ -17,6 +17,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <windef.h>
+#include <winuser.h>
+
 #include "wordpad.h"
 
 #define REACTOS_STR_FILE_DESCRIPTION  "ReactOS WordPad\0"
@@ -87,6 +90,9 @@ IDC_ZOOM CURSOR "zoom.cur"
 #endif
 #ifdef LANGUAGE_FR_FR
     #include "Fr.rc"
+#endif
+#ifdef LANGUAGE_HE_IL
+    #include "He.rc"
 #endif
 #ifdef LANGUAGE_IT_IT
     #include "It.rc"

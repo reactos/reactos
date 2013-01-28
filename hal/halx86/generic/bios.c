@@ -217,8 +217,8 @@ HalpTrap0DHandler(IN PKTRAP_FRAME TrapFrame)
     DPRINT1("HAL: Trap0D while not in V86 mode\n");
     KiDumpTrapFrame(TrapFrame);
 
-    ASSERT(FALSE);
-    while (TRUE);
+    ERROR_FATAL();
+    while (TRUE); /* 'noreturn' function */
 }
 
 VOID

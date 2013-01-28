@@ -8,10 +8,11 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <stdio.h>
 #include <tchar.h>
 #define WIN32_NO_STATUS
-#include <windows.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winsvc.h>
 
 /* FUNCTIONS ****************************************************************/
 

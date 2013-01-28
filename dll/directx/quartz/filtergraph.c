@@ -21,25 +21,25 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include <stdarg.h>
+#include <config.h>
+//#include <stdarg.h>
 
 #define COBJMACROS
 
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "winreg.h"
-#include "shlwapi.h"
-#include "dshow.h"
-#include "wine/debug.h"
+//#include "windef.h"
+//#include "winbase.h"
+//#include "winuser.h"
+//#include "winreg.h"
+//#include "dshow.h"
+#include <wine/debug.h>
 #include "quartz_private.h"
-#include "ole2.h"
-#include "olectl.h"
-#include "strmif.h"
-#include "vfwmsgs.h"
-#include "evcode.h"
-#include "wine/unicode.h"
+#include <shlwapi.h>
+//#include "ole2.h"
+//#include "olectl.h"
+//#include "strmif.h"
+//#include "vfwmsgs.h"
+//#include "evcode.h"
+#include <wine/unicode.h>
 
 
 WINE_DEFAULT_DEBUG_CHANNEL(quartz);

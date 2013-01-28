@@ -1,5 +1,8 @@
 #pragma once
 
+#define WIN32_NO_STATUS
+#define WIN32_LEAN_AND_MEAN
+
 #define _FORCENAMELESSUNION
 #define BUILDING_KS
 #define _KSDDK_
@@ -9,22 +12,21 @@
 #include <ks.h>
 #define __STREAMS__
 #include <ksproxy.h>
+#include <devioctl.h>
 #include <stdio.h>
-#include <wchar.h>
-#include <tchar.h>
-#include <uuids.h>
+//#include <wchar.h>
+//#include <tchar.h>
+//#include <uuids.h>
 #include <dvp.h>
 #include <vptype.h>
 #include <vpconfig.h>
 #include <setupapi.h>
-#include <stdio.h>
 #include <vector>
 #include <stack>
 #include <list>
 #include <assert.h>
 #include <ksmedia.h>
 //#include <debug.h>
-
 
 interface DECLSPEC_UUID("877E4351-6FEA-11D0-B863-00AA00A216A1") IKsClock;
 

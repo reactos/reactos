@@ -33,11 +33,11 @@
 #ifndef _GRIDWRAP_H
 #define _GRIDWRAP_H
 
-#include <stdio.h>
-#include "definitions.h"
+//#include <stdio.h>
+//#include "definitions.h"
 
 #include "primitiveStream.h"
-#include "zlassert.h"
+//#include "zlassert.h"
 
 class gridWrap{
   Int n_ulines;

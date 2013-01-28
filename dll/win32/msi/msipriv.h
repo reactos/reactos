@@ -25,17 +25,17 @@
 #include <stdarg.h>
 
 #include "windef.h"
-#include "winbase.h"
+#include <winbase.h>
 #include "fdi.h"
 #include "msi.h"
-#include "msiquery.h"
-#include "msidefs.h"
+#include <msiquery.h>
+#include <msidefs.h>
 #include "objbase.h"
 #include "objidl.h"
-#include "fusion.h"
+#include <fusion.h>
 #include "winnls.h"
 #include "winver.h"
-#include "wine/list.h"
+#include <wine/list.h>
 #include "wine/debug.h"
 
 static const BOOL is_64bit = sizeof(void *) > sizeof(int);

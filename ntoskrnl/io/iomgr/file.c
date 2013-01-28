@@ -196,6 +196,7 @@ IopParseDevice(IN PVOID ParseObject,
     ACCESS_MASK DesiredAccess, GrantedAccess;
     BOOLEAN AccessGranted, LockHeld = FALSE;
     PPRIVILEGE_SET Privileges = NULL;
+    UNICODE_STRING FileString;
     IOTRACE(IO_FILE_DEBUG, "ParseObject: %p. RemainingName: %wZ\n",
             ParseObject, RemainingName);
 
@@ -309,7 +310,20 @@ IopParseDevice(IN PVOID ParseObject,
                 OpenPacket->Override= TRUE;
             }
 
-            /* FIXME: Do Audit/Alarm for open operation */
+            FileString.Length = 8;
+            FileString.MaximumLength = 8;
+            FileString.Buffer = L"File";
+
+            /* Do Audit/Alarm for open operation */
+            SeOpenObjectAuditAlarm(&FileString,
+                                   OriginalDeviceObject,
+                                   CompleteName,
+                                   OriginalDeviceObject->SecurityDescriptor,
+                                   AccessState,
+                                   FALSE,
+                                   AccessGranted,
+                                   UserMode,
+                                   &AccessState->GenerateOnClose);
         }
         else
         {
@@ -321,8 +335,11 @@ IopParseDevice(IN PVOID ParseObject,
                 /* Check if this is a restricted token */
                 if (!(AccessState->Flags & TOKEN_IS_RESTRICTED))
                 {
-                    /* FIXME: Do the FAST traverse check */
-                    AccessGranted = FALSE;
+                    /* Do the FAST traverse check */
+                    AccessGranted = SeFastTraverseCheck(OriginalDeviceObject->SecurityDescriptor,
+                                                        AccessState,
+                                                        FILE_TRAVERSE,
+                                                        UserMode);
                 }
                 else
                 {
@@ -2471,14 +2488,69 @@ IoSetShareAccess(IN ACCESS_MASK DesiredAccess,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 NTAPI
 IoCancelFileOpen(IN PDEVICE_OBJECT DeviceObject,
                  IN PFILE_OBJECT FileObject)
 {
-    UNIMPLEMENTED;
+    PIRP Irp;
+    KEVENT Event;
+    KIRQL OldIrql;
+    NTSTATUS Status;
+    PIO_STACK_LOCATION Stack;
+
+    /* Check if handles were already created for the
+     * open file. If so, that's over.
+     */
+    if (FileObject->Flags & FO_HANDLE_CREATED)
+        KeBugCheckEx(INVALID_CANCEL_OF_FILE_OPEN,
+                     (ULONG_PTR)FileObject,
+                     (ULONG_PTR)DeviceObject, 0, 0);
+
+    /* Reset the events */
+    KeInitializeEvent(&Event, SynchronizationEvent, FALSE);
+    KeClearEvent(&FileObject->Event);
+
+    /* Allocate the IRP we'll use */
+    Irp = IopAllocateIrpMustSucceed(DeviceObject->StackSize);
+    /* Properly set it */
+    Irp->Tail.Overlay.Thread = PsGetCurrentThread();
+    Irp->UserEvent = &Event;
+    Irp->UserIosb = &Irp->IoStatus;
+    Irp->Overlay.AsynchronousParameters.UserApcRoutine = NULL;
+    Irp->Tail.Overlay.OriginalFileObject = FileObject;
+    Irp->RequestorMode = KernelMode;
+    Irp->Flags = IRP_CLOSE_OPERATION | IRP_SYNCHRONOUS_API;
+
+    Stack = IoGetNextIrpStackLocation(Irp);
+    Stack->MajorFunction = IRP_MJ_CLEANUP;
+    Stack->FileObject = FileObject;
+
+    /* Put on top of IRPs list of the thread */
+    IopQueueIrpToThread(Irp);
+
+    /* Call the driver */
+    Status = IoCallDriver(DeviceObject, Irp);
+    if (Status == STATUS_PENDING)
+    {
+        KeWaitForSingleObject(&Event, UserRequest,
+                              KernelMode, FALSE, NULL);
+    }
+
+    /* Remove from IRPs list */
+    KeRaiseIrql(APC_LEVEL, &OldIrql);
+    IopUnQueueIrpFromThread(Irp);
+    KeLowerIrql(OldIrql);
+
+    /* Free the IRP */
+    IoFreeIrp(Irp);
+
+    /* Clear the event */
+    KeClearEvent(&FileObject->Event);
+    /* And finally, mark the open operation as canceled */
+    FileObject->Flags |= FO_FILE_OPEN_CANCELLED;
 }
 
 /*

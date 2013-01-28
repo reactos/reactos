@@ -1,4 +1,6 @@
-#include <windows.h>
+#include <windef.h>
+#include <winuser.h>
+
 #include "resource.h"
 
 #define REACTOS_VERSION_DLL
@@ -18,6 +20,7 @@ IDI_LOCKICON ICON "resources/21.ico"
 #include "lang/es-ES.rc"
 #include "lang/de-DE.rc"
 #include "lang/fr-FR.rc"
+#include "lang/he-IL.rc"
 #include "lang/id-ID.rc"
 #include "lang/it-IT.rc"
 #include "lang/ja-JP.rc"

@@ -10,7 +10,7 @@
 
 #include "smss.h"
 #define NDEBUG
-#include "debug.h"
+#include <debug.h>
 
 /* GLOBALS ********************************************************************/
 
@@ -235,7 +235,7 @@ SmpExecuteCommand(IN PUNICODE_STRING CommandLine,
     if (!NT_SUCCESS(Status))
     {
         /* Fail if we couldn't do that */
-        DPRINT1("SMSS: SmpParseCommand( %wZ ) failed - Status == %lx\n",
+        DPRINT1("SMSS: SmpParseCommandLine( %wZ ) failed - Status == %lx\n",
                 CommandLine, Status);
         return Status;
     }
@@ -312,7 +312,7 @@ SmpExecuteInitialCommand(IN ULONG MuSessionId,
 
     /* Parse the initial command line */
     Status = SmpParseCommandLine(InitialCommand,
-                                 (PULONG)&Flags,
+                                 &Flags,
                                  &ImageFileName,
                                  &ImageFileDirectory,
                                  &Arguments);
@@ -327,7 +327,7 @@ SmpExecuteInitialCommand(IN ULONG MuSessionId,
     /* And fail if any other reason is also true */
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("SMSS: SmpParseCommand( %wZ ) failed - Status == %lx\n",
+        DPRINT1("SMSS: SmpParseCommandLine( %wZ ) failed - Status == %lx\n",
                 InitialCommand, Status);
         return Status;
     }

@@ -22,7 +22,7 @@
  *
  */
 
-#include <precomp.h>
+#include "precomp.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(pidl);
 WINE_DECLARE_DEBUG_CHANNEL(shell);
@@ -1144,7 +1144,7 @@ HRESULT WINAPI SHGetDataFromIDListW(LPSHELLFOLDER psf, LPCITEMIDLIST pidl,
             if (len < (int)sizeof(WIN32_FIND_DATAW))
                 return E_INVALIDARG;
 
-            ZeroMemory(pfd, sizeof (WIN32_FIND_DATAA));
+            ZeroMemory(pfd, sizeof (WIN32_FIND_DATAW));
             _ILGetFileDateTime( pidl, &(pfd->ftLastWriteTime));
             pfd->dwFileAttributes = _ILGetFileAttributes(pidl, NULL, 0);
             pfd->nFileSizeLow = _ILGetFileSize ( pidl, NULL, 0);

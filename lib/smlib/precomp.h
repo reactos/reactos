@@ -10,7 +10,8 @@
 
 /* SDK/DDK/NDK Headers. */
 #define WIN32_NO_STATUS
-#include <windows.h>
+#include <windef.h>
+#include <winreg.h>
 #define NTOS_MODE_USER
 #include <ndk/cmfuncs.h>
 #include <ndk/lpctypes.h>

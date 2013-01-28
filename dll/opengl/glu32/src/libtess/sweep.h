@@ -35,7 +35,7 @@
 #ifndef __sweep_h_
 #define __sweep_h_
 
-#include "mesh.h"
+//#include "mesh.h"
 
 /* __gl_computeInterior( tess ) computes the planar arrangement specified
  * by the given contours, and further subdivides this arrangement
@@ -48,7 +48,7 @@ int __gl_computeInterior( GLUtesselator *tess );
 
 /* The following is here *only* for access by debugging routines */
 
-#include "dict.h"
+//#include "dict.h"
 
 /* For each pair of adjacent edges crossing the sweep line, there is
  * an ActiveRegion to represent the region between them.  The active

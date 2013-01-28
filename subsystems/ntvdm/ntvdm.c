@@ -10,9 +10,15 @@
  */
 
 /* INCLUDES *****************************************************************/
+
+#include <stdarg.h>
 #define WIN32_NO_STATUS
-#include <windows.h>
+#include <windef.h>
+#include <winbase.h>
+#include <wincon.h>
+#include <winuser.h>
 #include <stdio.h>
+
 #include "resource.h"
 
 #define NDEBUG

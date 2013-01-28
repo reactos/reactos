@@ -3,7 +3,8 @@
  * This file is part of the w64 mingw-runtime package.
  * No warranty is given; refer to the file DISCLAIMER.PD within this package.
  */
-#include <windows.h>
+#include <stdarg.h>
+#include <windef.h>
 
 /* Do the UNICODE prototyping of WinMain.  Be aware that in winbase.h WinMain is a macro
    defined to wWinMain.  */

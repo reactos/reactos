@@ -22,21 +22,18 @@
 #define WIN32_LEAN_AND_MEAN
 #define _WIN32_IE 0x0400
 
-#include <stdarg.h>
-#include <stdlib.h>
-#include <ctype.h>
 #include <stdio.h>
 #include <assert.h>
-
-#include <windows.h>
+#include <windef.h>
+#include <winbase.h>
+#include <wingdi.h>
+#include <winuser.h>
 #include <richedit.h>
 #include <commctrl.h>
 #include <commdlg.h>
 #include <shellapi.h>
-#include <math.h>
-#include <errno.h>
+#include <wine/unicode.h>
 
-#include "wine/unicode.h"
 #include "wordpad.h"
 
 #ifdef NONAMELESSUNION

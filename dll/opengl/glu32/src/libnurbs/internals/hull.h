@@ -36,9 +36,9 @@
 #ifndef __gluhull_h_
 #define __gluhull_h_
 
-#include "trimline.h"
+//#include "trimline.h"
 #include "trimregion.h"
-#include "trimvertex.h"
+//#include "trimvertex.h"
 #include "gridtrimvertex.h"
 
 struct Gridline;

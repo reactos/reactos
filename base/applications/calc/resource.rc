@@ -18,7 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <windows.h>
+#include <windef.h>
+#include <winuser.h>
 
 #include "resource.h"
 
@@ -65,6 +66,9 @@ IDB_BITMAP_ROS          BITMAP  DISCARDABLE     "res/ROS_logo.bmp"
 #endif
 #ifdef LANGUAGE_FR_FR
     #include "lang/fr-FR.rc"
+#endif
+#ifdef LANGUAGE_HE_IL
+    #include "lang/he-IL.rc"
 #endif
 #ifdef LANGUAGE_HU_HU
     #include "lang/hu-HU.rc"

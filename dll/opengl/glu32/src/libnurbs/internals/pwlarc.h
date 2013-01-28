@@ -36,7 +36,7 @@
 #ifndef __glupwlarc_h_
 #define __glupwlarc_h_
 
-#include "myassert.h"
+//#include "myassert.h"
 #include "nurbsconsts.h"
 
 class TrimVertex;

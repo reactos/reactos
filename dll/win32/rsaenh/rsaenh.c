@@ -22,22 +22,26 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
-#include "wine/library.h"
-#include "wine/debug.h"
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
 
-#include <stdarg.h>
-#include <stdio.h>
+#include <config.h>
+//#include "wine/port.h"
+#include <wine/library.h>
+#include <wine/debug.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "winreg.h"
-#include "wincrypt.h"
+//#include <stdarg.h>
+//#include <stdio.h>
+
+#include <windef.h>
+//#include "winbase.h"
+#include <winreg.h>
+//#include "wincrypt.h"
 #include "handle.h"
 #include "implglue.h"
-#include "objbase.h"
-#include "rpcproxy.h"
+#include <objbase.h>
+#include <rpcproxy.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(crypt);
 

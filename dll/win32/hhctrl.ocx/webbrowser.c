@@ -20,7 +20,7 @@
 
 #include "hhctrl.h"
 
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(htmlhelp);
 

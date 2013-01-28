@@ -19,13 +19,13 @@
 
 #define NONAMELESSUNION
 
-#include "windef.h"
-#include "winbase.h"
-#include "wintrust.h"
-#include "mssip.h"
-#include "softpub.h"
-#include "winnls.h"
-#include "wine/debug.h"
+#include <windef.h>
+#include <winbase.h>
+#include <wintrust.h>
+#include <mssip.h>
+#include <softpub.h>
+#include <winnls.h>
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(wintrust);
 

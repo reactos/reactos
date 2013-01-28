@@ -35,7 +35,7 @@
 #ifndef __render_h_
 #define __render_h_
 
-#include "mesh.h"
+//#include "mesh.h"
 
 /* __gl_renderMesh( tess, mesh ) takes a mesh and breaks it into triangle
  * fans, strips, and separate triangles.  A substantial effort is made

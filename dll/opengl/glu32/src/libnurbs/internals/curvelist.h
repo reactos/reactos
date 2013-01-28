@@ -36,8 +36,8 @@
 #ifndef __glucurvelist_h_
 #define __glucurvelist_h_
 
-#include "types.h"
-#include "defines.h"
+//#include "types.h"
+//#include "defines.h"
 
 class Mapdesc;
 class Quilt;

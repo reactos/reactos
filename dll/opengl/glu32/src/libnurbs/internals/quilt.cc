@@ -37,9 +37,9 @@
  *
  */
 
-#include "glimports.h"
-#include "mystdio.h"
-#include "myassert.h"
+//#include "glimports.h"
+//#include "mystdio.h"
+//#include "myassert.h"
 #include "quilt.h"
 #include "backend.h"
 #include "mapdesc.h"

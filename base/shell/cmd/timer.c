@@ -7,7 +7,7 @@
  *     started - Paolo Pantaleo <paolopan@freemail.it>
  */
 
-#include <precomp.h>
+#include "precomp.h"
 
 #ifdef INCLUDE_CMD_TIMER
 
@@ -15,10 +15,6 @@
 #define NCS_NOT_SPECIFIED -1
 #define NCS_ON 1
 #define NCS_OFF 0
-
-
-
-
 
 //print timer value
 #define PT(format) PrintElapsedTime(GetTickCount()-cT,format)

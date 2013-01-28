@@ -30,7 +30,7 @@
  *
  */
 
-#include <precomp.h>
+#include "precomp.h"
 
 static INT GenericCmp(INT (*StringCmp)(LPCTSTR, LPCTSTR),
                       LPCTSTR Left, LPCTSTR Right)

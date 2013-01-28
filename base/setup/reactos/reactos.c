@@ -26,11 +26,14 @@
  *              Dmitry Chapyshev (dmitry@reactos.org)
  */
 
-#include <windows.h>
-#include <commctrl.h>
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winreg.h>
+#include <wingdi.h>
+#include <winuser.h>
 #include <tchar.h>
 #include <setupapi.h>
-#include <initguid.h>
 #include <devguid.h>
 #include <wine/unicode.h>
 

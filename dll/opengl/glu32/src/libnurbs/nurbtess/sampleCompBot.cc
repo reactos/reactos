@@ -35,9 +35,9 @@
 /*
 */
 
-#include <stdlib.h>
-#include <stdio.h>
-#include "zlassert.h"
+//#include <stdlib.h>
+//#include <stdio.h>
+//#include "zlassert.h"
 #include "sampleCompBot.h"
 #include "sampleCompRight.h"
 

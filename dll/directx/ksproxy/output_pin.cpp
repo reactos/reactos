@@ -1681,7 +1681,7 @@ COutputPin::Connect(IPin *pReceivePin, const AM_MEDIA_TYPE *pmt)
         if (GetSupportedSets(&pGuid, &NumGuids))
         {
             // load all proxy plugins
-            if (FAILED(LoadProxyPlugins(pGuid, NumGuids)));
+            if (FAILED(LoadProxyPlugins(pGuid, NumGuids)))
             {
 #ifdef KSPROXY_TRACE
                 OutputDebugStringW(L"COutputPin::Connect LoadProxyPlugins failed\n");

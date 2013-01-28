@@ -570,7 +570,12 @@ ExpRemovePoolTracker(IN ULONG Key,
         // We should have only ended up with an empty entry if we've reached
         // the last bucket
         //
-        if (!TableEntry->Key) ASSERT(Hash == TableMask);
+        if (!TableEntry->Key)
+        {
+            DPRINT1("Empty item reached in tracker table. Tag=0x%08lx, NumberOfBytes=%lu, PoolType=%d\n",
+                    Key, (ULONG)NumberOfBytes, PoolType);
+            ASSERT(Hash == TableMask);
+        }
 
         //
         // This path is hit when we don't have an entry, and the current bucket
@@ -2072,6 +2077,15 @@ ExFreePoolWithTag(IN PVOID P,
         }
 
         //
+        // Check block tag
+        //
+        if (TagToFree && TagToFree != Tag)
+        {
+            DPRINT1("Freeing pool - invalid tag specified: %.4s != %.4s\n", (char*)&TagToFree, (char*)&Tag);
+            KeBugCheckEx(BAD_POOL_CALLER, 0x0A, (ULONG_PTR)P, Tag, TagToFree);
+        }
+
+        //
         // We have our tag and our page count, so we can go ahead and remove this
         // tracker now
         //
@@ -2144,13 +2158,6 @@ ExFreePoolWithTag(IN PVOID P,
     if (Tag & PROTECTED_POOL) Tag &= ~PROTECTED_POOL;
 
     //
-    // Stop tracking this allocation
-    //
-    ExpRemovePoolTracker(Tag,
-                         BlockSize * POOL_BLOCK_SIZE,
-                         Entry->PoolType - 1);
-
-    //
     // Check block tag
     //
     if (TagToFree && TagToFree != Tag)
@@ -2158,6 +2165,13 @@ ExFreePoolWithTag(IN PVOID P,
         DPRINT1("Freeing pool - invalid tag specified: %.4s != %.4s\n", (char*)&TagToFree, (char*)&Tag);
         KeBugCheckEx(BAD_POOL_CALLER, 0x0A, (ULONG_PTR)P, Tag, TagToFree);
     }
+
+    //
+    // Track the removal of this allocation
+    //
+    ExpRemovePoolTracker(Tag,
+                         BlockSize * POOL_BLOCK_SIZE,
+                         Entry->PoolType - 1);
 
     //
     // Is this allocation small enough to have come from a lookaside list?

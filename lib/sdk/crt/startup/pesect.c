@@ -4,7 +4,10 @@
  * No warranty is given; refer to the file DISCLAIMER.PD within this package.
  */
 
-#include <windows.h>
+//#include <windows.h>
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
 #include <string.h>
 
 #if defined (_WIN64) && defined (__ia64__)

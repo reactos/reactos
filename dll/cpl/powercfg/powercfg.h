@@ -1,15 +1,17 @@
-#include "ntstatus.h"
+#include <ntstatus.h>
 #define WIN32_NO_STATUS
-#include <windows.h>
-
-#include <commctrl.h>
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winreg.h>
 #include <cpl.h>
-#include <stdio.h>
 #include <tchar.h>
 #include <shlobj.h>
 #include <regstr.h>
+#include <powrprof.h>
 
-#include "powrprof.h"
 #include "resource.h"
 
 typedef struct

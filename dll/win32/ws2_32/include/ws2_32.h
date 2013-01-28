@@ -7,15 +7,19 @@
 #ifndef __WS2_32_H
 #define __WS2_32_H
 
-#include <ctype.h>
 #include <stdlib.h>
 #include <stdio.h>
 
 #define WIN32_NO_STATUS
-#include <winsock2.h>
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winnls.h>
+#include <winuser.h>
 #include <ws2spi.h>
 #include <ws2tcpip.h>
-#include <windows.h>
 #define NTOS_MODE_USER
 #include <ndk/rtlfuncs.h>
 
@@ -25,11 +29,9 @@
 #include <debug.h>
 #include <windns.h> // DNS_A_DATA
 
-#include <w32api.h>
-
 #include "catalog.h"
 #include "handle.h"
-#include "upcall.h"
+//#include "upcall.h"
 
 #define EXPORT WINAPI
 

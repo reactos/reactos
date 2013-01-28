@@ -37,13 +37,13 @@
  *
  */
 
-#include "glimports.h"
-#include "myassert.h"
-#include "mystdio.h"
-#include "mystring.h"
+//#include "glimports.h"
+//#include "myassert.h"
+//#include "mystdio.h"
+//#include "mystring.h"
 #include "trimvertex.h"
 #include "trimvertpool.h"
-#include "bufpool.h"
+//#include "bufpool.h"
 
 /*----------------------------------------------------------------------------
  * TrimVertexPool::TrimVertexPool 

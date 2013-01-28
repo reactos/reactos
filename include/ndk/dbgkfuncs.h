@@ -32,111 +32,111 @@ NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtDebugActiveProcess(
-    IN HANDLE Process,
-    IN HANDLE DebugObject
+    _In_ HANDLE Process,
+    _In_ HANDLE DebugObject
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtCreateDebugObject(
-    OUT PHANDLE DebugHandle,
-    IN ACCESS_MASK DesiredAccess,
-    IN POBJECT_ATTRIBUTES ObjectAttributes,
-    IN ULONG Flags
+    _Out_ PHANDLE DebugHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ POBJECT_ATTRIBUTES ObjectAttributes,
+    _In_ ULONG Flags
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtDebugContinue(
-    IN HANDLE DebugObject,
-    IN PCLIENT_ID AppClientId,
-    IN NTSTATUS ContinueStatus
+    _In_ HANDLE DebugObject,
+    _In_ PCLIENT_ID AppClientId,
+    _In_ NTSTATUS ContinueStatus
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtWaitForDebugEvent(
-    IN HANDLE DebugObject,
-    IN BOOLEAN Alertable,
-    IN PLARGE_INTEGER Timeout OPTIONAL,
-    OUT PDBGUI_WAIT_STATE_CHANGE StateChange
+    _In_ HANDLE DebugObject,
+    _In_ BOOLEAN Alertable,
+    _In_opt_ PLARGE_INTEGER Timeout,
+    _Out_ PDBGUI_WAIT_STATE_CHANGE StateChange
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtRemoveProcessDebug(
-    IN HANDLE Process,
-    IN HANDLE DebugObject
+    _In_ HANDLE Process,
+    _In_ HANDLE DebugObject
 );
 
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtSetInformationDebugObject(
-    IN HANDLE DebugObject,
-    IN DEBUGOBJECTINFOCLASS InformationClass,
-    IN PVOID Information,
-    IN ULONG InformationLength,
-    OUT PULONG ReturnLength OPTIONAL
+    _In_ HANDLE DebugObject,
+    _In_ DEBUGOBJECTINFOCLASS InformationClass,
+    _In_ PVOID Information,
+    _In_ ULONG InformationLength,
+    _Out_opt_ PULONG ReturnLength
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwDebugActiveProcess(
-    IN HANDLE Process,
-    IN HANDLE DebugObject
+    _In_ HANDLE Process,
+    _In_ HANDLE DebugObject
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCreateDebugObject(
-    OUT PHANDLE DebugHandle,
-    IN ACCESS_MASK DesiredAccess,
-    IN POBJECT_ATTRIBUTES ObjectAttributes,
-    IN ULONG Flags
+    _Out_ PHANDLE DebugHandle,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_ POBJECT_ATTRIBUTES ObjectAttributes,
+    _In_ ULONG Flags
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwDebugContinue(
-    IN HANDLE DebugObject,
-    IN PCLIENT_ID AppClientId,
-    IN NTSTATUS ContinueStatus
+    _In_ HANDLE DebugObject,
+    _In_ PCLIENT_ID AppClientId,
+    _In_ NTSTATUS ContinueStatus
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwRemoveProcessDebug(
-    IN HANDLE Process,
-    IN HANDLE DebugObject
+    _In_ HANDLE Process,
+    _In_ HANDLE DebugObject
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwWaitForDebugEvent(
-    IN HANDLE DebugObject,
-    IN BOOLEAN Alertable,
-    IN PLARGE_INTEGER Timeout OPTIONAL,
-    OUT PDBGUI_WAIT_STATE_CHANGE StateChange
+    _In_ HANDLE DebugObject,
+    _In_ BOOLEAN Alertable,
+    _In_opt_ PLARGE_INTEGER Timeout,
+    _Out_ PDBGUI_WAIT_STATE_CHANGE StateChange
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetInformationDebugObject(
-    IN HANDLE DebugObject,
-    IN DEBUGOBJECTINFOCLASS InformationClass,
-    IN PVOID Information,
-    IN ULONG InformationLength,
-    OUT PULONG ReturnLength OPTIONAL
+    _In_ HANDLE DebugObject,
+    _In_ DEBUGOBJECTINFOCLASS InformationClass,
+    _In_ PVOID Information,
+    _In_ ULONG InformationLength,
+    _Out_opt_ PULONG ReturnLength
 );
 #endif

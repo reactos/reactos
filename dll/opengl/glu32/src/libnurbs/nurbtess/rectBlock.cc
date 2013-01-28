@@ -36,9 +36,9 @@
 */
 
 #include "gluos.h"
-#include <stdlib.h>
-#include <stdio.h>
-#include "glimports.h"
+//#include <stdlib.h>
+//#include <stdio.h>
+//#include "glimports.h"
 #include "zlassert.h"
 #include <GL/gl.h>
 

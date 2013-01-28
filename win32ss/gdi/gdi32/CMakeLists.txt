@@ -17,7 +17,7 @@ list(APPEND SOURCE
     main/dllmain.c
     misc/heap.c
     misc/gdientry.c
-    misc/hacks.c
+    #misc/hacks.c
     misc/historic.c
     misc/misc.c
     misc/stubs.c

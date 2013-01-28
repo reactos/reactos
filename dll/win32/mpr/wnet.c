@@ -20,21 +20,23 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
-#include "windef.h"
-#include "winbase.h"
-#include "winnls.h"
-#include "winioctl.h"
-#include "winnetwk.h"
-#include "npapi.h"
-#include "winreg.h"
-#include "winuser.h"
+#define WIN32_NO_STATUS
+
+//#include <stdarg.h>
+#include <windef.h>
+//#include "winbase.h"
+//#include "winnls.h"
+#include <winioctl.h>
+#include <winnetwk.h>
+#include <npapi.h>
+#include <winreg.h>
+//#include "winuser.h"
 #define WINE_MOUNTMGR_EXTENSIONS
-#include "ddk/mountmgr.h"
-#include "wine/debug.h"
-#include "wine/unicode.h"
+#include <ddk/mountmgr.h>
+#include <wine/debug.h>
+#include <wine/unicode.h>
 #include "mprres.h"
-#include "wnetpriv.h"
+//#include "wnetpriv.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(mpr);
 

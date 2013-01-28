@@ -430,10 +430,10 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_IMPORT_PROMPT              "L'ajout d'informations peut involontairement modifier ou supprimer des valeurs et endommager le fonctionnement de composants.\nSi vous n'êtes pas sûr de la source de ces informations dans '%1', ne les ajoutez pas au Registre.\n\nÊtes-vous sûr de vouloir continuer ?"
-  IDS_IMPORT_OK                  "Les clés et valeurs contenues dans '%1' ont été correctement ajoutées au Registre."
-  IDS_IMPORT_ERROR               "Impossible d'importer '%1' à la suite d'une erreur lors de la lecture de ce fichier. Il s'agit d'une erreur disque, ou le fichier est endommagé."
-  IDS_EXPORT_ERROR               "Impossible d'exporter dans le fichier '%1' à la suite d'une erreur lors de sa création ou d'une tentative d'écriture, pouvant être due à une erreur de disque ou de système de fichiers."
+  IDS_IMPORT_PROMPT              "L'ajout d'informations peut involontairement modifier ou supprimer des valeurs et endommager le fonctionnement de composants.\nSi vous n'êtes pas sûr de la source de ces informations dans '%s', ne les ajoutez pas au Registre.\n\nÊtes-vous sûr de vouloir continuer ?"
+  IDS_IMPORT_OK                  "Les clés et valeurs contenues dans '%s' ont été correctement ajoutées au Registre."
+  IDS_IMPORT_ERROR               "Impossible d'importer '%s' à la suite d'une erreur lors de la lecture de ce fichier. Il s'agit d'une erreur disque, ou le fichier est endommagé."
+  IDS_EXPORT_ERROR               "Impossible d'exporter dans le fichier '%s' à la suite d'une erreur lors de sa création ou d'une tentative d'écriture, pouvant être due à une erreur de disque ou de système de fichiers."
 END
 
 STRINGTABLE DISCARDABLE

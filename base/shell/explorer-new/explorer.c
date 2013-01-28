@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <precomp.h>
+#include "precomp.h"
 
 HINSTANCE hExplorerInstance;
 HMODULE hUser32;
@@ -348,6 +348,25 @@ GetVersionInfoString(IN TCHAR *szFileName,
     return bRet;
 }
 
+static VOID
+HideMinimizedWindows(IN BOOL bHide)
+{
+    MINIMIZEDMETRICS mm;
+
+    mm.cbSize = sizeof(mm);
+    if (!SystemParametersInfo(SPI_GETMINIMIZEDMETRICS, sizeof(mm), &mm, 0))
+    {
+        DbgPrint("SystemParametersInfo failed with %lu\n", GetLastError());
+        return;
+    }
+    if (bHide)
+        mm.iArrange |= ARW_HIDE;
+    else
+        mm.iArrange &= ~ARW_HIDE;
+    if (!SystemParametersInfo(SPI_SETMINIMIZEDMETRICS, sizeof(mm), &mm, 0))
+        DbgPrint("SystemParametersInfo failed with %lu\n", GetLastError());
+}
+
 INT WINAPI
 _tWinMain(IN HINSTANCE hInstance,
           IN HINSTANCE hPrevInstance,
@@ -392,6 +411,11 @@ _tWinMain(IN HINSTANCE hInstance,
         if (RegisterTrayWindowClass() && RegisterTaskSwitchWndClass())
         {
             Tray = CreateTrayWindow();
+            /* This not only hides the minimized window captions in the bottom
+               left screen corner, but is also needed in order to receive
+               HSHELL_* notification messages (which are required for taskbar
+               buttons to work right) */
+            HideMinimizedWindows(TRUE);
 
             if (Tray != NULL)
                 hShellDesktop = DesktopCreateWindow(Tray);
@@ -400,6 +424,8 @@ _tWinMain(IN HINSTANCE hInstance,
         /* WinXP: Notify msgina to hide the welcome screen */
         if (!SetShellReadyEvent(TEXT("msgina: ShellReadyEvent")))
             SetShellReadyEvent(TEXT("Global\\msgina: ShellReadyEvent"));
+
+        ProcessStartupItems();
     }
     else
     {
@@ -413,6 +439,7 @@ _tWinMain(IN HINSTANCE hInstance,
     {
         RegisterHotKey(NULL, IDHK_RUN, MOD_WIN, 'R');
         TrayMessageLoop(Tray);
+        HideMinimizedWindows(FALSE);
         ITrayWindow_Release(Tray);
         UnregisterTrayWindowClass();
     }

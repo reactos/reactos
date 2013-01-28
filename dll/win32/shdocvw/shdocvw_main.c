@@ -20,21 +20,21 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
+#include <config.h>
 
-#include <stdarg.h>
-#include <stdio.h>
+//#include <stdarg.h>
+//#include <stdio.h>
 
-#include "wine/unicode.h"
-#include "wine/debug.h"
+//#include "wine/unicode.h"
+#include <wine/debug.h>
 
 #include "shdocvw.h"
 
-#include "winreg.h"
-#include "shlwapi.h"
-#include "wininet.h"
+//#include "winreg.h"
+#include <shlwapi.h>
+#include <wininet.h>
 
-#include "initguid.h"
+//#include "initguid.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(shdocvw);
 

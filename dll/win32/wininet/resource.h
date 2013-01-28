@@ -18,8 +18,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <windef.h>
-#include <winuser.h>
+//#include <windef.h>
+//#include <winuser.h>
 
 #define IDD_INVCERTDLG   0x398
 #define IDD_AUTHDLG      0x399

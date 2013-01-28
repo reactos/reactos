@@ -4,12 +4,15 @@
 //    Freeware
 //    Copyright J Brown 2001
 //
-#include <windows.h>
-#include <tchar.h>
+//#include <windows.h>
+//#include <tchar.h>
+
+#define WIN32_NO_STATUS
+#include <windef.h>
 
 #include "cardlib.h"
-#include "cardwindow.h"
-#include "cardbutton.h"
+//#include "cardwindow.h"
+//#include "cardbutton.h"
 #include "cardcolor.h"
 
 HPALETTE UseNicePalette(HDC, HPALETTE);

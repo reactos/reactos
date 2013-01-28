@@ -30,21 +30,21 @@
  * - Fallout : works great in X and DGA mode
  */
 
-#include "config.h"
-#include <assert.h>
-#include <stdarg.h>
-#include <string.h>
+#include <config.h>
+//#include <assert.h>
+//#include <stdarg.h>
+//#include <string.h>
 
 #define COBJMACROS
 #define NONAMELESSUNION
 
-#include "wine/debug.h"
-#include "wine/unicode.h"
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "winerror.h"
-#include "dinput_private.h"
+#include <wine/debug.h>
+//#include "wine/unicode.h"
+//#include "windef.h"
+//#include "winbase.h"
+//#include "winuser.h"
+//#include "winerror.h"
+//#include "dinput_private.h"
 #include "device_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(dinput);

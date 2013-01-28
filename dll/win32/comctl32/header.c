@@ -27,21 +27,25 @@
  *   - New Windows Vista features
  */
 
-#include <stdarg.h>
-#include <stdlib.h>
-#include <string.h>
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
 
-#include "windef.h"
-#include "winbase.h"
-#include "wine/unicode.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "winnls.h"
-#include "commctrl.h"
+//#include <stdarg.h>
+#include <stdlib.h>
+//#include <string.h>
+
+//#include "windef.h"
+//#include "winbase.h"
+//#include "wine/unicode.h"
+//#include "wingdi.h"
+//#include "winuser.h"
+//#include "winnls.h"
+//#include "commctrl.h"
 #include "comctl32.h"
-#include "vssym32.h"
-#include "uxtheme.h"
-#include "wine/debug.h"
+#include <vssym32.h>
+#include <uxtheme.h>
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(header);
 

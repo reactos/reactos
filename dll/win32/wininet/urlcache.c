@@ -22,41 +22,45 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
+#include <config.h>
+//#include "wine/port.h"
 
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
+
+#include <stdarg.h>
+//#include <stdio.h>
+//#include <stdlib.h>
+//#include <string.h>
+//#include <sys/types.h>
+#ifdef HAVE_SYS_SOCKET_H
+# include <sys/socket.h>
+#endif
+//#include <time.h>
+
+#include <windef.h>
+#include <winbase.h>
+//#include "winuser.h"
+#include <wininet.h>
+#include <winineti.h>
+//#include "winerror.h"
+#include <winreg.h>
+#include <shlwapi.h>
+#include <shlobj.h>
+#include <shellapi.h>
 
 #if defined(__MINGW32__) || defined (_MSC_VER)
 #include <ws2tcpip.h>
 #endif
 
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/types.h>
-#ifdef HAVE_SYS_SOCKET_H
-# include <sys/socket.h>
-#endif
-#include <time.h>
-
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "wininet.h"
-#include "winineti.h"
-#include "winerror.h"
-#include "winreg.h"
-#include "shlwapi.h"
-#include "shlobj.h"
-#include "shellapi.h"
-
 #include "internet.h"
 
-#include "wine/unicode.h"
-#include "wine/debug.h"
+//#include "wine/unicode.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(wininet);
 

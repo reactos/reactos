@@ -583,7 +583,7 @@ CKsAllocator::FreeMediaSamples()
     {
         IMediaSample * Sample = m_FreeList.top();
         m_FreeList.pop();
-        delete Sample;
+        Sample->Release();
     }
 
     m_FreeSamples = false;

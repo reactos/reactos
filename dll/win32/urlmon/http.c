@@ -18,12 +18,12 @@
  */
 
 #include "urlmon_main.h"
-#include "wininet.h"
+//#include "wininet.h"
 
 #define NO_SHLWAPI_REG
-#include "shlwapi.h"
+#include <shlwapi.h>
 
-#include "wine/debug.h"
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(urlmon);
 

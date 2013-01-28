@@ -7,10 +7,8 @@
  * PROGRAMMERS: Ge van Geldorp (ge@gse.nl)
  * REVISIONS:
  */
-#include <winsock2.h>
-#include <windows.h>
-//#include <stdlib.h>
 
+#include <windef.h>
 
 /*
  * @unimplemented

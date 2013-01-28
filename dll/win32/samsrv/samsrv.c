@@ -19,7 +19,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <samsrv.h>
+#include "samsrv.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(samsrv);
 

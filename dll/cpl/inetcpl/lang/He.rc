@@ -4,6 +4,8 @@
  * Copyright 2010 Detlef Riekenberg
  * Copyright 2010 Yaron Shahrabani <sh.yaron@gmail.com>
  *
+ * Updated by Baruch Rutman
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -41,11 +43,11 @@ BEGIN
     PUSHBUTTON  "העמוד ה&נוכחי", IDC_HOME_CURRENT, 58, 36, 80, 14
     PUSHBUTTON  "עמוד &בררת המחדל", IDC_HOME_DEFAULT, 144, 36, 80, 14
     PUSHBUTTON  "עמוד &ריק", IDC_HOME_BLANK, 230, 36, 80, 14
-    GROUPBOX    " Browsing history ", IDC_STATIC, 4, 60, 312, 46
-    LTEXT       "You can delete cached pages, cookies and other data.",
+    GROUPBOX    " היסטורית גלישה ", IDC_STATIC, 4, 60, 312, 46
+    LTEXT       "הינך יכול למחוק את המטמון, עוגיות, היסוריה ועוד ...",
                 IDC_STATIC, 58, 72, 252, 10
-    PUSHBUTTON  "Delete &files...", IDC_HISTORY_DELETE, 144, 86, 80, 14
-    PUSHBUTTON  "&Settings...", IDC_HISTORY_SETTINGS, 230, 86, 80, 14
+    PUSHBUTTON  "מחק קבצים...", IDC_HISTORY_DELETE, 144, 86, 80, 14
+    PUSHBUTTON  "הגדרות...", IDC_HISTORY_SETTINGS, 230, 86, 80, 14
 
 END
 
@@ -61,19 +63,19 @@ BEGIN
     LTEXT       "אישורים משמשים כדי לזהות אותך וגם כדי לזהות רשויות ומפיצים.",
                 IDC_STATIC, 58, 14, 252, 18
     PUSHBUTTON  "אישורים...", IDC_CERT, 146, 34, 80, 14
-    PUSHBUTTON	"מפיצים...", IDC_CERT_PUBLISHER, 230, 34, 80, 14
+    PUSHBUTTON  "מפיצים...", IDC_CERT_PUBLISHER, 230, 34, 80, 14
 
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_CPL_NAME        "Internet Settings"
-    IDS_CPL_INFO        "Configure Wine Internet Browser and related settings"
-    IDS_SEC_SETTINGS    "Security settings for zone: "
-    IDS_SEC_LEVEL0      "Custom"
-    IDS_SEC_LEVEL1      "Very Low"
-    IDS_SEC_LEVEL2      "Low"
-    IDS_SEC_LEVEL3      "Medium"
-    IDS_SEC_LEVEL4      "Increased"
-    IDS_SEC_LEVEL5      "High"
+    IDS_CPL_NAME        "הגדרות אינטרנט"
+    IDS_CPL_INFO        "הגדר את דפדפן האינטרנט של Wine והגדרות קשורות."
+    IDS_SEC_SETTINGS    "הגדרת אבטחה לאזור זה: "
+    IDS_SEC_LEVEL0      "מותאמת"
+    IDS_SEC_LEVEL1      "מאוד נמוכה"
+    IDS_SEC_LEVEL2      "נמוכה"
+    IDS_SEC_LEVEL3      "בינונית"
+    IDS_SEC_LEVEL4      "בינונית -גבוהה"
+    IDS_SEC_LEVEL5      "גבוהה"
 END
