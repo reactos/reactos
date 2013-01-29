@@ -6044,6 +6044,59 @@ done:
 
 
 static NTSTATUS
+SampQueryUserInternal1(PSAM_DB_OBJECT UserObject,
+                      PSAMPR_USER_INFO_BUFFER *Buffer)
+{
+    PSAMPR_USER_INFO_BUFFER InfoBuffer = NULL;
+    ULONG Length = 0;
+    NTSTATUS Status;
+
+    *Buffer = NULL;
+
+    InfoBuffer = midl_user_allocate(sizeof(SAMPR_USER_INFO_BUFFER));
+    if (InfoBuffer == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    /* Get the NT password */
+    Length = sizeof(ENCRYPTED_NT_OWF_PASSWORD);
+    Status = SampGetObjectAttribute(UserObject,
+                                    L"NTPwd",
+                                    NULL,
+                                    (PVOID)&InfoBuffer->Internal1.EncryptedNtOwfPassword,
+                                    &Length);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    InfoBuffer->Internal1.NtPasswordPresent = (Length == sizeof(ENCRYPTED_NT_OWF_PASSWORD));
+
+    /* Get the LM password */
+    Length = sizeof(ENCRYPTED_LM_OWF_PASSWORD);
+    Status = SampGetObjectAttribute(UserObject,
+                                    L"LMPwd",
+                                    NULL,
+                                    (PVOID)&InfoBuffer->Internal1.EncryptedLmOwfPassword,
+                                    &Length);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    InfoBuffer->Internal1.LmPasswordPresent = (Length == sizeof(ENCRYPTED_LM_OWF_PASSWORD));
+
+    InfoBuffer->Internal1.PasswordExpired = FALSE;
+
+done:
+    if (!NT_SUCCESS(Status))
+    {
+        if (InfoBuffer != NULL)
+        {
+            midl_user_free(InfoBuffer);
+        }
+    }
+
+    return Status;
+}
+
+
+static NTSTATUS
 SampQueryUserParameters(PSAM_DB_OBJECT UserObject,
                         PSAMPR_USER_INFO_BUFFER *Buffer)
 {
@@ -6134,6 +6187,10 @@ SamrQueryInformationUser(IN SAMPR_HANDLE UserHandle,
                             USER_READ_PREFERENCES |
                             USER_READ_LOGON |
                             USER_READ_ACCOUNT;
+            break;
+
+        case UserInternal1Information:
+            DesiredAccess = 0;
             break;
 
         default:
@@ -6232,7 +6289,10 @@ SamrQueryInformationUser(IN SAMPR_HANDLE UserHandle,
                                           Buffer);
             break;
 
-//        case UserInternal1Information:
+        case UserInternal1Information:
+            Status = SampQueryUserInternal1(UserObject,
+                                            Buffer);
+            break;
 
         case UserParametersInformation:
             Status = SampQueryUserParameters(UserObject,
@@ -6434,6 +6494,96 @@ SampSetUserExpires(PSAM_DB_OBJECT UserObject,
     FixedData.AccountExpires.LowPart = Buffer->Expires.AccountExpires.LowPart;
     FixedData.AccountExpires.HighPart = Buffer->Expires.AccountExpires.HighPart;
 
+    Status = SampSetObjectAttribute(UserObject,
+                                    L"F",
+                                    REG_BINARY,
+                                    &FixedData,
+                                    Length);
+
+done:
+    return Status;
+}
+
+
+static NTSTATUS
+SampSetUserInternal1(PSAM_DB_OBJECT UserObject,
+                     PSAMPR_USER_INFO_BUFFER Buffer)
+{
+    SAM_USER_FIXED_DATA FixedData;
+    ULONG Length = 0;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    if (Buffer->Internal1.NtPasswordPresent)
+    {
+        /* FIXME: Decrypt NT password */
+
+        Status = SampSetObjectAttribute(UserObject,
+                                        L"NTPwd",
+                                        REG_BINARY,
+                                        &Buffer->Internal1.EncryptedNtOwfPassword,
+                                        sizeof(ENCRYPTED_NT_OWF_PASSWORD));
+        if (!NT_SUCCESS(Status))
+            goto done;
+    }
+    else
+    {
+        Status = SampSetObjectAttribute(UserObject,
+                                        L"NTPwd",
+                                        REG_BINARY,
+                                        NULL,
+                                        0);
+        if (!NT_SUCCESS(Status))
+            goto done;
+    }
+
+    if (Buffer->Internal1.LmPasswordPresent)
+    {
+        /* FIXME: Decrypt LM password */
+
+        Status = SampSetObjectAttribute(UserObject,
+                                        L"LMPwd",
+                                        REG_BINARY,
+                                        &Buffer->Internal1.EncryptedLmOwfPassword,
+                                        sizeof(ENCRYPTED_LM_OWF_PASSWORD));
+        if (!NT_SUCCESS(Status))
+            goto done;
+    }
+    else
+    {
+        Status = SampSetObjectAttribute(UserObject,
+                                        L"LMPwd",
+                                        REG_BINARY,
+                                        NULL,
+                                        0);
+        if (!NT_SUCCESS(Status))
+            goto done;
+    }
+
+    /* Get the fixed user attributes */
+    Length = sizeof(SAM_USER_FIXED_DATA);
+    Status = SampGetObjectAttribute(UserObject,
+                                    L"F",
+                                    NULL,
+                                    (PVOID)&FixedData,
+                                    &Length);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    if (Buffer->Internal1.PasswordExpired)
+    {
+        /* The pasword was last set ages ago */
+        FixedData.PasswordLastSet.LowPart = 0;
+        FixedData.PasswordLastSet.HighPart = 0;
+    }
+    else
+    {
+        /* The pasword was last set right now */
+        Status = NtQuerySystemTime(&FixedData.PasswordLastSet);
+        if (!NT_SUCCESS(Status))
+            goto done;
+    }
+
+    /* Set the fixed user attributes */
     Status = SampSetObjectAttribute(UserObject,
                                     L"F",
                                     REG_BINARY,
@@ -6662,6 +6812,7 @@ SamrSetInformationUser(IN SAMPR_HANDLE UserHandle,
             break;
 
         case UserSetPasswordInformation:
+        case UserInternal1Information:
             DesiredAccess = USER_FORCE_PASSWORD_CHANGE;
             break;
 
@@ -6807,7 +6958,10 @@ SamrSetInformationUser(IN SAMPR_HANDLE UserHandle,
                                         Buffer);
             break;
 
-//        case UserInternal1Information:
+        case UserInternal1Information:
+            Status = SampSetUserInternal1(UserObject,
+                                          Buffer);
+            break;
 
         case UserParametersInformation:
             Status = SampSetObjectAttribute(UserObject,
