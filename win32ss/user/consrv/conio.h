@@ -9,6 +9,16 @@
 #pragma once
 
 #define CSR_DEFAULT_CURSOR_SIZE 25
+#define CURSOR_BLINK_TIME 500
+#define DEFAULT_ATTRIB (FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED)
+
+#ifndef WM_APP
+#define WM_APP 0x8000
+#endif
+#define PM_CREATE_CONSOLE  (WM_APP + 1)
+#define PM_DESTROY_CONSOLE (WM_APP + 2)
+#define PM_CONSOLE_BEEP    (WM_APP + 3)
+
 
 /************************************************************************
  * Screen buffer structure represents the win32 screen buffer object.   *

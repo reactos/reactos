@@ -65,15 +65,6 @@ typedef struct _GUI_CONSOLE_DATA
     POINT OldCursor;
 } GUI_CONSOLE_DATA, *PGUI_CONSOLE_DATA;
 
-#ifndef WM_APP
-#define WM_APP 0x8000
-#endif
-#define PM_CREATE_CONSOLE  (WM_APP + 1)
-#define PM_DESTROY_CONSOLE (WM_APP + 2)
-
-#define CURSOR_BLINK_TIME 500
-#define DEFAULT_ATTRIB (FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED)
-
 static BOOL ConsInitialized = FALSE;
 static HWND NotifyWnd;
 
@@ -2063,6 +2054,11 @@ GuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             {
                 GuiConsoleWriteUserSettings(Console);
             }
+            break;
+
+        case PM_CONSOLE_BEEP:
+            DPRINT1("Beep !!\n");
+            Beep(800, 200);
             break;
 
         default:

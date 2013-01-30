@@ -296,7 +296,7 @@ TuiWriteStream(PCONSOLE Console, SMALL_RECT* Region, LONG CursorStartX, LONG Cur
         return;
     }
 
-    if (! WriteFile(ConsoleDeviceHandle, Buffer, Length, &BytesWritten, NULL))
+    if (!WriteFile(ConsoleDeviceHandle, Buffer, Length, &BytesWritten, NULL))
     {
         DPRINT1("Error writing to BlueScreen\n");
     }

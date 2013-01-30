@@ -17,6 +17,8 @@
 
 /* GLOBALS ********************************************************************/
 
+#define TAB_WIDTH   8
+
 #define ConioInitRect(Rect, top, left, bottom, right) \
 do {    \
     ((Rect)->Top) = top;    \
@@ -131,10 +133,22 @@ ConioWriteConsole(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER Buff,
 
     for (i = 0; i < Length; i++)
     {
+        /*
+         * If we are in processed mode, interpret special characters and
+         * display them correctly. Otherwise, just put them into the buffer.
+         */
         if (Buff->Mode & ENABLE_PROCESSED_OUTPUT)
         {
+            /* --- CR --- */
+            if (Buffer[i] == '\r')
+            {
+                Buff->CurrentX = 0;
+                UpdateRect.Left = min(UpdateRect.Left, (LONG)Buff->CurrentX);
+                UpdateRect.Right = max(UpdateRect.Right, (LONG)Buff->CurrentX);
+                continue;
+            }
             /* --- LF --- */
-            if (Buffer[i] == '\n')
+            else if (Buffer[i] == '\n')
             {
                 Buff->CurrentX = 0;
                 ConioNextLine(Buff, &UpdateRect, &ScrolledLines);
@@ -160,17 +174,9 @@ ConioWriteConsole(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER Buff,
                     Ptr = ConioCoordToPointer(Buff, Buff->CurrentX, Buff->CurrentY);
                     Ptr[0] = ' ';
                     Ptr[1] = Buff->DefaultAttrib;
-                    UpdateRect.Left = min(UpdateRect.Left, (LONG) Buff->CurrentX);
-                    UpdateRect.Right = max(UpdateRect.Right, (LONG) Buff->CurrentX);
+                    UpdateRect.Left = min(UpdateRect.Left, (LONG)Buff->CurrentX);
+                    UpdateRect.Right = max(UpdateRect.Right, (LONG)Buff->CurrentX);
                 }
-                continue;
-            }
-            /* --- CR --- */
-            else if (Buffer[i] == '\r')
-            {
-                Buff->CurrentX = 0;
-                UpdateRect.Left = min(UpdateRect.Left, (LONG) Buff->CurrentX);
-                UpdateRect.Right = max(UpdateRect.Right, (LONG) Buff->CurrentX);
                 continue;
             }
             /* --- TAB --- */
@@ -179,11 +185,8 @@ ConioWriteConsole(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER Buff,
                 UINT EndX;
 
                 UpdateRect.Left = min(UpdateRect.Left, (LONG)Buff->CurrentX);
-                EndX = (Buff->CurrentX + 8) & ~7;
-                if (EndX > Buff->MaxX)
-                {
-                    EndX = Buff->MaxX;
-                }
+                EndX = (Buff->CurrentX + TAB_WIDTH) & ~(TAB_WIDTH - 1);
+                EndX = min(EndX, Buff->MaxX);
                 Ptr = ConioCoordToPointer(Buff, Buff->CurrentX, Buff->CurrentY);
                 while (Buff->CurrentX < EndX)
                 {
@@ -191,7 +194,7 @@ ConioWriteConsole(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER Buff,
                     *Ptr++ = Buff->DefaultAttrib;
                     Buff->CurrentX++;
                 }
-                UpdateRect.Right = max(UpdateRect.Right, (LONG) Buff->CurrentX - 1);
+                UpdateRect.Right = max(UpdateRect.Right, (LONG)Buff->CurrentX - 1);
                 if (Buff->CurrentX == Buff->MaxX)
                 {
                     if (Buff->Mode & ENABLE_WRAP_AT_EOL_OUTPUT)
@@ -206,9 +209,16 @@ ConioWriteConsole(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER Buff,
                 }
                 continue;
             }
+            /* --- BEL ---*/
+            else if (Buffer[i] == '\a')
+            {
+                DPRINT1("Bell\n");
+                SendNotifyMessage(Console->hWindow, PM_CONSOLE_BEEP, 0, 0);
+                continue;
+            }
         }
         UpdateRect.Left = min(UpdateRect.Left, (LONG)Buff->CurrentX);
-        UpdateRect.Right = max(UpdateRect.Right, (LONG) Buff->CurrentX);
+        UpdateRect.Right = max(UpdateRect.Right, (LONG)Buff->CurrentX);
         Ptr = ConioCoordToPointer(Buff, Buff->CurrentX, Buff->CurrentY);
         Ptr[0] = Buffer[i];
         if (Attrib)
