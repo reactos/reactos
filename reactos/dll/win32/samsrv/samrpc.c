@@ -6049,7 +6049,7 @@ SampQueryUserInternal1(PSAM_DB_OBJECT UserObject,
 {
     PSAMPR_USER_INFO_BUFFER InfoBuffer = NULL;
     ULONG Length = 0;
-    NTSTATUS Status;
+    NTSTATUS Status = STATUS_SUCCESS;
 
     *Buffer = NULL;
 
@@ -6058,30 +6058,50 @@ SampQueryUserInternal1(PSAM_DB_OBJECT UserObject,
         return STATUS_INSUFFICIENT_RESOURCES;
 
     /* Get the NT password */
-    Length = sizeof(ENCRYPTED_NT_OWF_PASSWORD);
-    Status = SampGetObjectAttribute(UserObject,
-                                    L"NTPwd",
-                                    NULL,
-                                    (PVOID)&InfoBuffer->Internal1.EncryptedNtOwfPassword,
-                                    &Length);
-    if (!NT_SUCCESS(Status))
-        goto done;
+    Length = 0;
+    SampGetObjectAttribute(UserObject,
+                           L"NTPwd",
+                           NULL,
+                           NULL,
+                           &Length);
+
+    if (Length == sizeof(ENCRYPTED_NT_OWF_PASSWORD))
+    {
+        Status = SampGetObjectAttribute(UserObject,
+                                        L"NTPwd",
+                                        NULL,
+                                        (PVOID)&InfoBuffer->Internal1.EncryptedNtOwfPassword,
+                                        &Length);
+        if (!NT_SUCCESS(Status))
+            goto done;
+    }
 
     InfoBuffer->Internal1.NtPasswordPresent = (Length == sizeof(ENCRYPTED_NT_OWF_PASSWORD));
 
     /* Get the LM password */
-    Length = sizeof(ENCRYPTED_LM_OWF_PASSWORD);
-    Status = SampGetObjectAttribute(UserObject,
-                                    L"LMPwd",
-                                    NULL,
-                                    (PVOID)&InfoBuffer->Internal1.EncryptedLmOwfPassword,
-                                    &Length);
-    if (!NT_SUCCESS(Status))
-        goto done;
+    Length = 0;
+    SampGetObjectAttribute(UserObject,
+                           L"LMPwd",
+                           NULL,
+                           NULL,
+                           &Length);
+
+    if (Length == sizeof(ENCRYPTED_LM_OWF_PASSWORD))
+    {
+        Status = SampGetObjectAttribute(UserObject,
+                                        L"LMPwd",
+                                        NULL,
+                                        (PVOID)&InfoBuffer->Internal1.EncryptedLmOwfPassword,
+                                        &Length);
+        if (!NT_SUCCESS(Status))
+            goto done;
+    }
 
     InfoBuffer->Internal1.LmPasswordPresent = (Length == sizeof(ENCRYPTED_LM_OWF_PASSWORD));
 
     InfoBuffer->Internal1.PasswordExpired = FALSE;
+
+    *Buffer = InfoBuffer;
 
 done:
     if (!NT_SUCCESS(Status))
@@ -7149,15 +7169,88 @@ SamrTestPrivateFunctionsUser(IN SAMPR_HANDLE UserHandle)
     return STATUS_NOT_IMPLEMENTED;
 }
 
+
 /* Function 44 */
 NTSTATUS
 NTAPI
 SamrGetUserDomainPasswordInformation(IN SAMPR_HANDLE UserHandle,
                                      OUT PUSER_DOMAIN_PASSWORD_INFORMATION PasswordInformation)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    SAM_DOMAIN_FIXED_DATA DomainFixedData;
+    SAM_USER_FIXED_DATA UserFixedData;
+    PSAM_DB_OBJECT DomainObject;
+    PSAM_DB_OBJECT UserObject;
+    ULONG Length = 0;
+    NTSTATUS Status;
+
+    TRACE("(%p %p)\n",
+          UserHandle, PasswordInformation);
+
+    /* Validate the user handle */
+    Status = SampValidateDbObject(UserHandle,
+                                  SamDbUserObject,
+                                  0,
+                                  &UserObject);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampValidateDbObject failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Validate the domain object */
+    Status = SampValidateDbObject((SAMPR_HANDLE)UserObject->ParentObject,
+                                  SamDbDomainObject,
+                                  DOMAIN_READ_PASSWORD_PARAMETERS,
+                                  &DomainObject);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampValidateDbObject failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Get fixed user data */
+    Length = sizeof(SAM_USER_FIXED_DATA);
+    Status = SampGetObjectAttribute(UserObject,
+                                    L"F",
+                                    NULL,
+                                    (PVOID)&UserFixedData,
+                                    &Length);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampGetObjectAttribute failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    if ((UserObject->RelativeId == DOMAIN_USER_RID_KRBTGT) ||
+        (UserFixedData.UserAccountControl & (USER_INTERDOMAIN_TRUST_ACCOUNT |
+                                             USER_WORKSTATION_TRUST_ACCOUNT |
+                                             USER_SERVER_TRUST_ACCOUNT)))
+    {
+        PasswordInformation->MinPasswordLength = 0;
+        PasswordInformation->PasswordProperties = 0;
+    }
+    else
+    {
+        /* Get fixed domain data */
+        Length = sizeof(SAM_DOMAIN_FIXED_DATA);
+        Status = SampGetObjectAttribute(DomainObject,
+                                        L"F",
+                                        NULL,
+                                        (PVOID)&DomainFixedData,
+                                        &Length);
+        if (!NT_SUCCESS(Status))
+        {
+            TRACE("SampGetObjectAttribute failed with status 0x%08lx\n", Status);
+            return Status;
+        }
+
+        PasswordInformation->MinPasswordLength = DomainFixedData.MinPasswordLength;
+        PasswordInformation->PasswordProperties = DomainFixedData.PasswordProperties;
+    }
+
+    return STATUS_SUCCESS;
 }
+
 
 /* Function 45 */
 NTSTATUS
