@@ -195,9 +195,9 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList",,0x00000012
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList","ProfilesDirectory",0x00020000,"%SystemDrive%\Documents and Settings"
 
 ; Font substitutes
-; SysFontSubstitutes are also returned by EnumFontFamilies, FontSubstitutes aren't
+; FontSubstitutes are also returned by EnumFontFamilies, FontSubstitutes aren't
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts",,0x00000012
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontSubstitutes",,0x00000012
 
 ; Time zone settings
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones",,0x00000012

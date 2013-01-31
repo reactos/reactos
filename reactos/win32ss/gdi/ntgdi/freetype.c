@@ -1264,7 +1264,7 @@ GetFontFamilyInfoForSubstitutes(LPLOGFONTW LogFont,
     FONT_FAMILY_INFO_CALLBACK_CONTEXT Context;
     NTSTATUS Status;
 
-    /* Enumerate font families found in HKLM\Software\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes
+    /* Enumerate font families found in HKLM\Software\Microsoft\Windows NT\CurrentVersion\FontSubstitutes
        The real work is done in the registry callback function */
     Context.LogFont = LogFont;
     Context.Info = Info;
@@ -1283,7 +1283,7 @@ GetFontFamilyInfoForSubstitutes(LPLOGFONTW LogFont,
     QueryTable[1].Name = NULL;
 
     Status = RtlQueryRegistryValues(RTL_REGISTRY_WINDOWS_NT,
-                                    L"SysFontSubstitutes",
+                                    L"FontSubstitutes",
                                     QueryTable,
                                     &Context,
                                     NULL);
@@ -2660,7 +2660,7 @@ SubstituteFontFamily(PUNICODE_STRING FaceName, UINT Level)
         return;
     }
 
-    if (SubstituteFontFamilyKey(FaceName, L"SysFontSubstitutes") ||
+    if (SubstituteFontFamilyKey(FaceName, L"FontSubstitutes") ||
             SubstituteFontFamilyKey(FaceName, L"FontSubstitutes"))
     {
         SubstituteFontFamily(FaceName, Level + 1);
