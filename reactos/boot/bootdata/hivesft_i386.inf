@@ -231,7 +231,6 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList",,0x00000012
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList","ProfilesDirectory",0x00020000,"%SystemDrive%\Documents and Settings"
 
 ; Font substitutes
-; FontSubstitutes are also returned by EnumFontFamilies, FontSubstitutes aren't
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts",,0x00000012
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontSubstitutes",,0x00000012
 

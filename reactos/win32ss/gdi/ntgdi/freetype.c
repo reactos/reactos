@@ -2660,8 +2660,7 @@ SubstituteFontFamily(PUNICODE_STRING FaceName, UINT Level)
         return;
     }
 
-    if (SubstituteFontFamilyKey(FaceName, L"FontSubstitutes") ||
-            SubstituteFontFamilyKey(FaceName, L"FontSubstitutes"))
+    if (SubstituteFontFamilyKey(FaceName, L"FontSubstitutes"))
     {
         SubstituteFontFamily(FaceName, Level + 1);
     }
