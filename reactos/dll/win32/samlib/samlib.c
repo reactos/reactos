@@ -31,6 +31,10 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(samlib);
 
+NTSTATUS
+WINAPI
+SystemFunction006(LPCSTR password,
+                  LPSTR hash);
 
 NTSTATUS
 WINAPI
@@ -1602,7 +1606,8 @@ SamSetInformationUser(IN SAM_HANDLE UserHandle,
 {
     PSAMPR_USER_SET_PASSWORD_INFORMATION PasswordBuffer;
     SAMPR_USER_INTERNAL1_INFORMATION Internal1Buffer;
-
+    OEM_STRING LmPwdString;
+    CHAR LmPwdBuffer[15];
     NTSTATUS Status;
 
     TRACE("SamSetInformationUser(%p %lu %p)\n",
@@ -1623,6 +1628,25 @@ SamSetInformationUser(IN SAM_HANDLE UserHandle,
 
         Internal1Buffer.NtPasswordPresent = TRUE;
         Internal1Buffer.LmPasswordPresent = FALSE;
+
+        /* Build the LM password */
+        LmPwdString.Length = 15;
+        LmPwdString.MaximumLength = 15;
+        LmPwdString.Buffer = LmPwdBuffer;
+        ZeroMemory(LmPwdString.Buffer, LmPwdString.MaximumLength);
+
+        Status = RtlUpcaseUnicodeStringToOemString(&LmPwdString,
+                                                   (PUNICODE_STRING)&PasswordBuffer->Password,
+                                                   FALSE);
+        if (NT_SUCCESS(Status))
+        {
+            /* Calculate the LM hash value of the password */
+            Status = SystemFunction006(LmPwdString.Buffer,
+                                       (LPSTR)&Internal1Buffer.EncryptedLmOwfPassword);
+            if (NT_SUCCESS(Status))
+                Internal1Buffer.LmPasswordPresent = TRUE;
+        }
+
         Internal1Buffer.PasswordExpired = PasswordBuffer->PasswordExpired;
 
         RpcTryExcept
