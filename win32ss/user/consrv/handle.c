@@ -420,21 +420,91 @@ ConSrvAllocateConsole(PCONSOLE_PROCESS_DATA ProcessData,
 
     /* Initialize the handles table */
     Status = ConSrvInitHandlesTable(ProcessData,
-                                      pInputHandle,
-                                      pOutputHandle,
-                                      pErrorHandle);
+                                    pInputHandle,
+                                    pOutputHandle,
+                                    pErrorHandle);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to initialize the handles table\n");
-
-        // ConSrvRemoveConsole(ProcessData);
         ConSrvDeleteConsole(ProcessData->Console);
         ProcessData->Console = NULL;
-
         return Status;
     }
 
-    return Status;
+    /* Duplicate the Input Event */
+    Status = NtDuplicateObject(NtCurrentProcess(),
+                               ProcessData->Console->InputBuffer.ActiveEvent,
+                               ProcessData->Process->ProcessHandle,
+                               &ProcessData->ConsoleEvent,
+                               EVENT_ALL_ACCESS, 0, 0);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtDuplicateObject() failed: %lu\n", Status);
+        ConSrvFreeHandlesTable(ProcessData);
+        ConSrvDeleteConsole(ProcessData->Console);
+        ProcessData->Console = NULL;
+        return Status;
+    }
+
+    /* Insert the process into the processes list of the console */
+    InsertHeadList(&ProcessData->Console->ProcessList, &ProcessData->ConsoleLink);
+
+    /* Add a reference count because the process is tied to the console */
+    _InterlockedIncrement(&ProcessData->Console->ReferenceCount);
+
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+FASTCALL
+ConSrvInheritConsole(PCONSOLE_PROCESS_DATA ProcessData,
+                     PCONSOLE Console,
+                     BOOL CreateNewHandlesTable,
+                     PHANDLE pInputHandle,
+                     PHANDLE pOutputHandle,
+                     PHANDLE pErrorHandle)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    /* Inherit the console */
+    ProcessData->Console = Console;
+
+    if (CreateNewHandlesTable)
+    {
+        /* Initialize the handles table */
+        Status = ConSrvInitHandlesTable(ProcessData,
+                                        pInputHandle,
+                                        pOutputHandle,
+                                        pErrorHandle);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("Failed to initialize the handles table\n");
+            ProcessData->Console = NULL;
+            return Status;
+        }
+    }
+
+    /* Duplicate the Input Event */
+    Status = NtDuplicateObject(NtCurrentProcess(),
+                               ProcessData->Console->InputBuffer.ActiveEvent,
+                               ProcessData->Process->ProcessHandle,
+                               &ProcessData->ConsoleEvent,
+                               EVENT_ALL_ACCESS, 0, 0);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtDuplicateObject() failed: %lu\n", Status);
+        ConSrvFreeHandlesTable(ProcessData); // NOTE: Always free the handles table.
+        ProcessData->Console = NULL;
+        return Status;
+    }
+
+    /* Insert the process into the processes list of the console */
+    InsertHeadList(&ProcessData->Console->ProcessList, &ProcessData->ConsoleLink);
+
+    /* Add a reference count because the process is tied to the console */
+    _InterlockedIncrement(&ProcessData->Console->ReferenceCount);
+
+    return STATUS_SUCCESS;
 }
 
 VOID
@@ -521,7 +591,7 @@ ConSrvNewProcess(PCSR_PROCESS SourceProcess,
 
     PCONSOLE_PROCESS_DATA SourceProcessData, TargetProcessData;
 
-    DPRINT1("ConSrvNewProcess inside\n");
+    DPRINT1("ConSrvNewProcess\n");
     DPRINT1("SourceProcess = 0x%p ; TargetProcess = 0x%p\n", SourceProcess, TargetProcess);
 
     /* An empty target process is invalid */
@@ -565,17 +635,14 @@ ConSrvNewProcess(PCSR_PROCESS SourceProcess,
         NTSTATUS Status;
 
         Status = ConSrvInheritHandlesTable(SourceProcessData, TargetProcessData);
-        if (!NT_SUCCESS(Status))
-        {
-            return Status;
-        }
+        if (!NT_SUCCESS(Status)) return Status;
 
-        /* Temporary "inherit" the console from the parent */
+        /* Temporary save the parent's console */
         TargetProcessData->ParentConsole = SourceProcessData->Console;
     }
     else
     {
-        DPRINT1("ConSrvNewProcess - We don't launch a Console process : SourceProcessData->Console = 0x%p ; TargetProcess->Flags = %lu\n", SourceProcessData->Console, TargetProcess->Flags);
+        DPRINT1("ConSrvNewProcess - We don't inherit a handle table : SourceProcessData->Console = 0x%p ; TargetProcess->Flags = %lu\n", SourceProcessData->Console, TargetProcess->Flags);
     }
 
     return STATUS_SUCCESS;
@@ -632,11 +699,11 @@ ConSrvConnect(IN PCSR_PROCESS CsrProcess,
 
         /* Initialize a new Console owned by the Console Leader Process */
         Status = ConSrvAllocateConsole(ProcessData,
-                                         &ConnectInfo->InputHandle,
-                                         &ConnectInfo->OutputHandle,
-                                         &ConnectInfo->ErrorHandle,
-                                         ConnectInfo->ShowCmd,
-                                         CsrProcess);
+                                       &ConnectInfo->InputHandle,
+                                       &ConnectInfo->OutputHandle,
+                                       &ConnectInfo->ErrorHandle,
+                                       ConnectInfo->ShowCmd,
+                                       CsrProcess);
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("Console allocation failed\n");
@@ -648,27 +715,17 @@ ConSrvConnect(IN PCSR_PROCESS CsrProcess,
         DPRINT1("ConSrvConnect - Reuse current (parent's) console\n");
 
         /* Reuse our current console */
-        ProcessData->Console = ConnectInfo->Console;
-    }
-
-    /* Add a reference count because the process is tied to the console */
-    _InterlockedIncrement(&ProcessData->Console->ReferenceCount);
-
-    /* Insert the process into the processes list of the console */
-    InsertHeadList(&ProcessData->Console->ProcessList, &ProcessData->ConsoleLink);
-
-    /// TODO: Move this up ?
-    /* Duplicate the Event */
-    Status = NtDuplicateObject(NtCurrentProcess(),
-                               ProcessData->Console->InputBuffer.ActiveEvent,
-                               ProcessData->Process->ProcessHandle,
-                               &ProcessData->ConsoleEvent,
-                               EVENT_ALL_ACCESS, 0, 0);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("NtDuplicateObject() failed: %lu\n", Status);
-        ConSrvRemoveConsole(ProcessData);
-        return Status;
+        Status = ConSrvInheritConsole(ProcessData,
+                                      ConnectInfo->Console,
+                                      FALSE,
+                                      NULL,  // &ConnectInfo->InputHandle,
+                                      NULL,  // &ConnectInfo->OutputHandle,
+                                      NULL); // &ConnectInfo->ErrorHandle);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("Console inheritance failed\n");
+            return Status;
+        }
     }
 
     /* Return it to the caller */
@@ -694,7 +751,8 @@ ConSrvDisconnect(PCSR_PROCESS Process)
      * This function is called whenever a new process (GUI or CUI) is destroyed.
      **************************************************************************/
 
-    DPRINT1("ConSrvDisconnect called\n");
+    DPRINT1("ConSrvDisconnect\n");
+
     if ( ProcessData->Console     != NULL ||
          ProcessData->HandleTable != NULL )
     {

@@ -183,6 +183,12 @@ NTSTATUS FASTCALL ConSrvAllocateConsole(PCONSOLE_PROCESS_DATA ProcessData,
                                         PHANDLE pErrorHandle,
                                         int ShowCmd,
                                         PCSR_PROCESS CsrProcess);
+NTSTATUS FASTCALL ConSrvInheritConsole(PCONSOLE_PROCESS_DATA ProcessData,
+                                       struct _CONSOLE* Console,
+                                       BOOL CreateNewHandlesTable,
+                                       PHANDLE pInputHandle,
+                                       PHANDLE pOutputHandle,
+                                       PHANDLE pErrorHandle);
 VOID FASTCALL ConSrvRemoveConsole(PCONSOLE_PROCESS_DATA ProcessData);
 NTSTATUS FASTCALL ConSrvGetConsole(PCONSOLE_PROCESS_DATA ProcessData,
                                    struct _CONSOLE** Console,

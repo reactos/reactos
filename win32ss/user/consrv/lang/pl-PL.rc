@@ -27,5 +27,5 @@ BEGIN
   IDS_SCROLLUP "Przewiń do góry"
   IDS_SCROLLDOWN "Przewiń na dół"
 
-  IDS_COMMAND_PROMPT "Wiersz polecenia"
+  IDS_CONSOLE_TITLE "ReactOS Console"
 END

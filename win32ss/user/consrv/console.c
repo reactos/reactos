@@ -121,13 +121,13 @@ ConSrvInitConsole(PCONSOLE* NewConsole, int ShowCmd, PCSR_PROCESS ConsoleLeaderP
     Console->Title.MaximumLength = Console->Title.Length = 0;
     Console->Title.Buffer = NULL;
 
-    if (LoadStringW(ConSrvDllInstance, IDS_COMMAND_PROMPT, Title, sizeof(Title) / sizeof(Title[0])))
+    if (LoadStringW(ConSrvDllInstance, IDS_CONSOLE_TITLE, Title, sizeof(Title) / sizeof(Title[0])))
     {
         RtlCreateUnicodeString(&Console->Title, Title);
     }
     else
     {
-        RtlCreateUnicodeString(&Console->Title, L"Command Prompt");
+        RtlCreateUnicodeString(&Console->Title, L"ReactOS Console");
     }
 
     InitializeCriticalSection(&Console->Lock);
@@ -364,10 +364,6 @@ CSR_API(SrvAllocConsole)
         return STATUS_ACCESS_DENIED;
     }
 
-/******************************************************************************/
-/** This comes from ConSrvConnect!!                                         **/
-    DPRINT1("SrvAllocConsole - Checkpoint 1\n");
-
     /*
      * We are about to create a new console. However when ConSrvNewProcess
      * was called, we didn't know that we wanted to create a new console and
@@ -383,33 +379,14 @@ CSR_API(SrvAllocConsole)
 
     /* Initialize a new Console owned by the Console Leader Process */
     Status = ConSrvAllocateConsole(ProcessData,
-                                     &AllocConsoleRequest->InputHandle,
-                                     &AllocConsoleRequest->OutputHandle,
-                                     &AllocConsoleRequest->ErrorHandle,
-                                     AllocConsoleRequest->ShowCmd,
-                                     ConsoleLeader);
+                                   &AllocConsoleRequest->InputHandle,
+                                   &AllocConsoleRequest->OutputHandle,
+                                   &AllocConsoleRequest->ErrorHandle,
+                                   AllocConsoleRequest->ShowCmd,
+                                   ConsoleLeader);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Console allocation failed\n");
-        return Status;
-    }
-
-    /* Add a reference count because the process is tied to the console */
-    _InterlockedIncrement(&ProcessData->Console->ReferenceCount);
-
-    /* Insert the process into the processes list of the console */
-    InsertHeadList(&ProcessData->Console->ProcessList, &ProcessData->ConsoleLink);
-
-    /* Duplicate the Event */
-    Status = NtDuplicateObject(NtCurrentProcess(),
-                               ProcessData->Console->InputBuffer.ActiveEvent,
-                               ProcessData->Process->ProcessHandle,
-                               &ProcessData->ConsoleEvent,
-                               EVENT_ALL_ACCESS, 0, 0);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("NtDuplicateObject() failed: %lu\n", Status);
-        ConSrvRemoveConsole(ProcessData);
         return Status;
     }
 
@@ -422,7 +399,6 @@ CSR_API(SrvAllocConsole)
     /* Set the Ctrl Dispatcher */
     ProcessData->CtrlDispatcher = AllocConsoleRequest->CtrlDispatcher;
     DPRINT("CONSRV: CtrlDispatcher address: %x\n", ProcessData->CtrlDispatcher);
-/******************************************************************************/
 
     return STATUS_SUCCESS;
 }
@@ -446,6 +422,7 @@ CSR_API(SrvAttachConsole)
         return STATUS_ACCESS_DENIED;
     }
 
+    /* Check whether we try to attach to the parent's console */
     if (ProcessId == ULongToHandle(ATTACH_PARENT_PROCESS))
     {
         PROCESS_BASIC_INFORMATION ProcessInfo;
@@ -468,16 +445,19 @@ CSR_API(SrvAttachConsole)
         DPRINT("Parent process ID = %lu\n", ProcessId);
     }
 
-    /* Lock the target process via its PID */
-    DPRINT1("Lock process Id %lu\n", ProcessId);
+    /* Lock the source process via its PID */
     Status = CsrLockProcessByClientId(ProcessId, &SourceProcess);
-    DPRINT1("Lock process Status %lu\n", Status);
+    DPRINT1("Lock process Id %lu - Status %lu\n", ProcessId, Status);
     if (!NT_SUCCESS(Status)) return Status;
-    DPRINT1("AttachConsole OK\n");
 
-/******************************************************************************/
-/** This comes from ConSrvNewProcess!!                                      **/
     SourceProcessData = ConsoleGetPerProcessData(SourceProcess);
+
+    DPRINT1("SourceProcessData->Console = 0x%p\n", SourceProcessData->Console);
+    if (SourceProcessData->Console == NULL)
+    {
+        Status = STATUS_INVALID_HANDLE;
+        goto Quit;
+    }
 
     /*
      * We are about to create a new console. However when ConSrvNewProcess
@@ -496,54 +476,15 @@ CSR_API(SrvAttachConsole)
      * Inherit the console from the parent,
      * if any, otherwise return an error.
      */
-    DPRINT1("SourceProcessData->Console = 0x%p\n", SourceProcessData->Console);
-    if (SourceProcessData->Console == NULL)
-    {
-        Status = STATUS_INVALID_HANDLE;
-        goto Quit;
-    }
-    TargetProcessData->Console = SourceProcessData->Console;
-
-    /// REMARK: This code comes from ConSrvAllocateConsole.
-    /* Initialize the handles table */
-    Status = ConSrvInitHandlesTable(TargetProcessData,
-                                      &AttachConsoleRequest->InputHandle,
-                                      &AttachConsoleRequest->OutputHandle,
-                                      &AttachConsoleRequest->ErrorHandle);
+    Status = ConSrvInheritConsole(TargetProcessData,
+                                  SourceProcessData->Console,
+                                  TRUE,
+                                  &AttachConsoleRequest->InputHandle,
+                                  &AttachConsoleRequest->OutputHandle,
+                                  &AttachConsoleRequest->ErrorHandle);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to initialize the handles table\n");
-
-        // ConSrvRemoveConsole(TargetProcessData);
-        TargetProcessData->Console = NULL;
-        goto Quit;
-    }
-
-/******************************************************************************/
-
-/******************************************************************************/
-/** This comes from ConSrvConnect / SrvAllocConsole!!                       **/
-    /* Add a reference count because the process is tied to the console */
-    _InterlockedIncrement(&TargetProcessData->Console->ReferenceCount);
-
-    /* Insert the process into the processes list of the console */
-    InsertHeadList(&TargetProcessData->Console->ProcessList, &TargetProcessData->ConsoleLink);
-
-    /** Here, we inherited the console handles from the "source" process,
-     ** so no need to reinitialize the handles table. **/
-
-    DPRINT1("SrvAttachConsole - Checkpoint\n");
-
-    /* Duplicate the Event */
-    Status = NtDuplicateObject(NtCurrentProcess(),
-                               TargetProcessData->Console->InputBuffer.ActiveEvent,
-                               TargetProcessData->Process->ProcessHandle,
-                               &TargetProcessData->ConsoleEvent,
-                               EVENT_ALL_ACCESS, 0, 0);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("NtDuplicateObject() failed: %lu\n", Status);
-        ConSrvRemoveConsole(TargetProcessData);
+        DPRINT1("Console inheritance failed\n");
         goto Quit;
     }
 
@@ -558,14 +499,10 @@ CSR_API(SrvAttachConsole)
     DPRINT("CONSRV: CtrlDispatcher address: %x\n", TargetProcessData->CtrlDispatcher);
 
     Status = STATUS_SUCCESS;
-/******************************************************************************/
 
 Quit:
-    DPRINT1("SrvAttachConsole - exiting 1\n");
-    /* Unlock the "source" process */
+    /* Unlock the "source" process and exit */
     CsrUnlockProcess(SourceProcess);
-    DPRINT1("SrvAttachConsole - exiting 2\n");
-
     return Status;
 }
 

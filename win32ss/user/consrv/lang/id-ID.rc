@@ -19,5 +19,5 @@ BEGIN
   IDS_SCROLLUP "Gulung Naik"
   IDS_SCROLLDOWN "Gulung Turun"
 
-  IDS_COMMAND_PROMPT "Command Prompt"
+  IDS_CONSOLE_TITLE "ReactOS Console"
 END

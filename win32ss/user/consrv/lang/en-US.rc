@@ -19,5 +19,5 @@ BEGIN
   IDS_SCROLLUP "Scroll up"
   IDS_SCROLLDOWN "Scroll down"
 
-  IDS_COMMAND_PROMPT "Command Prompt"
+  IDS_CONSOLE_TITLE "ReactOS Console"
 END

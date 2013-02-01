@@ -26,5 +26,5 @@ BEGIN
   IDS_SCROLLUP         "Derulează în sus"
   IDS_SCROLLDOWN       "Derulează în jos"
 
-  IDS_COMMAND_PROMPT   "Linie de comandă"
+  IDS_CONSOLE_TITLE "ReactOS Console"
 END

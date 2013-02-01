@@ -39,5 +39,5 @@ BEGIN
   IDS_SCROLLUP "Yukarı yuvarla"
   IDS_SCROLLDOWN "Aşağı yuvarla"
 
-  IDS_COMMAND_PROMPT "Komut İstemi"
+  IDS_CONSOLE_TITLE "ReactOS Console"
 END
