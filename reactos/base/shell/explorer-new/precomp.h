@@ -170,6 +170,8 @@ GetExplorerRegValueSet(IN HKEY hKey,
  * traywnd.c
  */
 
+#define TWM_OPENSTARTMENU (WM_USER + 260)
+
 typedef HMENU (*PCREATECTXMENU)(IN HWND hWndOwner,
                                 IN PVOID *ppcmContext,
                                 IN PVOID Context  OPTIONAL);
@@ -426,7 +428,7 @@ TrayNotify_NotifyMsg(IN HWND hwnd,
  * taskswnd.c
  */
 
-#define TSWM_ENABLEGROUPING (WM_USER + 1)
+#define TSWM_ENABLEGROUPING     (WM_USER + 1)
 #define TSWM_UPDATETASKBARPOS   (WM_USER + 2)
 
 BOOL

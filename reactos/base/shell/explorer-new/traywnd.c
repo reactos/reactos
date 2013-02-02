@@ -2532,6 +2532,10 @@ HandleTrayContextMenu:
                 DestroyWindow(hwnd);
                 break;
 
+            case TWM_OPENSTARTMENU:
+                SendMessage(This->hWnd, WM_COMMAND, MAKEWPARAM(BN_CLICKED, IDC_STARTBTN), (LPARAM)This->hwndStart);
+                break;
+
             case WM_COMMAND:
                 if ((HWND)lParam == This->hwndStart)
                 {
