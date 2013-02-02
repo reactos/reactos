@@ -5,7 +5,7 @@ BEGIN
     IDS_EDIT            "編集"
     IDS_MARK            "範囲指定"
     IDS_COPY            "コピー\tEnter"
-    IDS_PASTE           "貼\り付け"
+    IDS_PASTE           "貼り付け"
     IDS_SELECTALL       "すべて選択"
     IDS_SCROLL          "スクロール"
     IDS_FIND            "検索..."
