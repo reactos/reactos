@@ -47,17 +47,6 @@
 #define FLG_ADDREG_TYPE_NONE             (0x00020000 | FLG_ADDREG_BINVALUETYPE)
 #define FLG_ADDREG_TYPE_MASK             (0xFFFF0000 | FLG_ADDREG_BINVALUETYPE)
 
-#if defined(_M_IX86) || defined(__i386__)
-static const WCHAR Architecture[] = {'x','8','6',0};
-#elif defined(_M_AMD64) || defined(__x86_64__)
-static const WCHAR Architecture[] = {'a','m','d','6','4'0};
-#elif defined(_M_IA64)
-static const WCHAR Architecture[] = {'i','a','6','4',0};
-#elif defined(_M_ARM)
-static const WCHAR Architecture[] = {'a','r','m',0};
-#elif defined(_M_PPC)
-static const WCHAR Architecture[] = {'p','p','c',0};
-#endif
 
 static const WCHAR HKCR[] = {'H','K','C','R',0};
 static const WCHAR HKCU[] = {'H','K','C','U',0};
@@ -492,7 +481,6 @@ ImportRegistryFile(PCHAR FileName)
 {
 	HINF hInf;
 	ULONG ErrorLine;
-	WCHAR SectionName[40];
 
 	/* Load inf file from install media. */
 	if (InfHostOpenFile(&hInf, FileName, 0, &ErrorLine) != 0)
@@ -506,23 +494,9 @@ ImportRegistryFile(PCHAR FileName)
 		DPRINT1 ("registry_callback() for DelReg failed\n");
 	}
 
-	wcsncpy(SectionName, DelReg, sizeof(SectionName) / sizeof(WCHAR));
-	wcsncat(SectionName, Architecture, sizeof(SectionName) / sizeof(WCHAR));
-	if (!registry_callback (hInf, SectionName, TRUE))
-	{
-		DPRINT1 ("registry_callback() for DelReg.NT* failed\n");
-	}
-
 	if (!registry_callback (hInf, (PWCHAR)AddReg, FALSE))
 	{
 		DPRINT1 ("registry_callback() for AddReg failed\n");
-	}
-
-	wcsncpy(SectionName, AddReg, sizeof(SectionName) / sizeof(WCHAR));
-	wcsncat(SectionName, Architecture, sizeof(SectionName) / sizeof(WCHAR));
-	if (!registry_callback (hInf, SectionName, FALSE))
-	{
-		DPRINT1 ("registry_callback() for AddReg.NT* failed\n");
 	}
 
 	InfHostCloseFile (hInf);
