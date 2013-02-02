@@ -3856,8 +3856,7 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
     if ((AllocationType & MEM_TOP_DOWN) == MEM_TOP_DOWN)
     {
         DPRINT1("MEM_TOP_DOWN not supported\n");
-        Status = STATUS_INVALID_PARAMETER;
-        goto FailPathNoLock;
+        AllocationType &= ~MEM_TOP_DOWN;
     }
     if ((AllocationType & MEM_RESET) == MEM_RESET)
     {
