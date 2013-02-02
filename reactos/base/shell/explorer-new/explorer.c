@@ -332,7 +332,7 @@ GetVersionInfoString(IN TCHAR *szFileName,
                             (LPVOID *)&lpszLocalBuf,
                             &cbLen) != 0)
                         {
-                            wcsncpy(szBuffer, lpszLocalBuf, cbBufLen);
+                            _tcsncpy(szBuffer, lpszLocalBuf, cbBufLen / sizeof(*szBuffer));
 
                             bRet = TRUE;
                             break;

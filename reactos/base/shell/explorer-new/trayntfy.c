@@ -758,7 +758,7 @@ TrayClockWnd_UpdateTheme(IN OUT PTRAY_CLOCK_WND_DATA This)
                      TMT_FONT,
                      &clockFont);
 
-        hFont = CreateFontIndirect(&clockFont);
+        hFont = CreateFontIndirectW(&clockFont);
 
         TrayClockWnd_SetFont(This,
                              hFont,

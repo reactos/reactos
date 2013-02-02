@@ -79,12 +79,12 @@ Win32DbgPrint(const char *filename, int line, const char *lpFormat, ...)
 }
 
 #define ASSERT(cond) \
-    if (!(cond)) { \
+    do if (!(cond)) { \
         Win32DbgPrint(__FILE__, __LINE__, "ASSERTION %s FAILED!\n", #cond); \
-    }
+    } while (0)
 
 #define DbgPrint(fmt, ...) \
-    Win32DbgPrint(__FILE__, __LINE__, fmt, ##__VA_ARGS__);
+    Win32DbgPrint(__FILE__, __LINE__, fmt, ##__VA_ARGS__)
 
 extern HINSTANCE hExplorerInstance;
 extern HMODULE hUser32;

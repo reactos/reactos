@@ -75,12 +75,12 @@ static int runCmd(LPWSTR cmdline, LPCWSTR dir, BOOL wait, BOOL minimized)
 
     if (!CreateProcessW(NULL, szCmdLineExp, NULL, NULL, FALSE, 0, NULL, dir, &si, &info))
     {
-        printf("Failed to run command (%ld)\n", GetLastError());
+        DbgPrint("Failed to run command (%lu)\n", GetLastError());
 
         return INVALID_RUNCMD_RETURN;
     }
 
-    printf("Successfully ran command\n");
+    DbgPrint("Successfully ran command\n");
 
     if (wait)
     {   /* wait for the process to exit */
@@ -114,9 +114,9 @@ static BOOL ProcessRunKeys(HKEY hkRoot, LPCWSTR szKeyName, BOOL bDelete,
     WCHAR *szValue = NULL;
 
     if (hkRoot == HKEY_LOCAL_MACHINE)
-        wprintf(L"processing %s entries under HKLM\n", szKeyName);
+        DbgPrint("processing %ls entries under HKLM\n", szKeyName);
     else
-        wprintf(L"processing %s entries under HKCU\n", szKeyName);
+        DbgPrint("processing %ls entries under HKCU\n", szKeyName);
 
     res = RegOpenKeyExW(hkRoot,
                         L"Software\\Microsoft\\Windows\\CurrentVersion",
@@ -125,8 +125,7 @@ static BOOL ProcessRunKeys(HKEY hkRoot, LPCWSTR szKeyName, BOOL bDelete,
                         &hkWin);
     if (res != ERROR_SUCCESS)
     {
-        printf("RegOpenKey failed on Software\\Microsoft\\Windows\\CurrentVersion (%ld)\n",
-                res);
+        DbgPrint("RegOpenKey failed on Software\\Microsoft\\Windows\\CurrentVersion (%ld)\n", res);
 
         goto end;
     }
@@ -140,12 +139,12 @@ static BOOL ProcessRunKeys(HKEY hkRoot, LPCWSTR szKeyName, BOOL bDelete,
     {
         if (res == ERROR_FILE_NOT_FOUND)
         {
-            printf("Key doesn't exist - nothing to be done\n");
+            DbgPrint("Key doesn't exist - nothing to be done\n");
 
             res = ERROR_SUCCESS;
         }
         else
-            printf("RegOpenKey failed on run key (%ld)\n", res);
+            DbgPrint("RegOpenKeyEx failed on run key (%ld)\n", res);
 
         goto end;
     }
@@ -164,14 +163,14 @@ static BOOL ProcessRunKeys(HKEY hkRoot, LPCWSTR szKeyName, BOOL bDelete,
                            NULL);
     if (res != ERROR_SUCCESS)
     {
-        printf("Couldn't query key info (%ld)\n", res);
+        DbgPrint("Couldn't query key info (%ld)\n", res);
 
         goto end;
     }
 
     if (i == 0)
     {
-        printf("No commands to execute.\n");
+        DbgPrint("No commands to execute.\n");
 
         res = ERROR_SUCCESS;
         goto end;
@@ -182,7 +181,7 @@ static BOOL ProcessRunKeys(HKEY hkRoot, LPCWSTR szKeyName, BOOL bDelete,
                           cbMaxCmdLine);
     if (szCmdLine == NULL)
     {
-        printf("Couldn't allocate memory for the commands to be executed\n");
+        DbgPrint("Couldn't allocate memory for the commands to be executed\n");
 
         res = ERROR_NOT_ENOUGH_MEMORY;
         goto end;
@@ -194,7 +193,7 @@ static BOOL ProcessRunKeys(HKEY hkRoot, LPCWSTR szKeyName, BOOL bDelete,
                         cchMaxValue * sizeof(*szValue));
     if (szValue == NULL)
     {
-        printf("Couldn't allocate memory for the value names\n");
+        DbgPrint("Couldn't allocate memory for the value names\n");
 
         res = ERROR_NOT_ENOUGH_MEMORY;
         goto end;
@@ -217,7 +216,7 @@ static BOOL ProcessRunKeys(HKEY hkRoot, LPCWSTR szKeyName, BOOL bDelete,
                             &cbDataLength);
         if (res != ERROR_SUCCESS)
         {
-            printf("Couldn't read in value %ld - %ld\n", i, res);
+            DbgPrint("Couldn't read in value %lu - %ld\n", i, res);
 
             continue;
         }
@@ -227,12 +226,12 @@ static BOOL ProcessRunKeys(HKEY hkRoot, LPCWSTR szKeyName, BOOL bDelete,
 
         if (bDelete && (res = RegDeleteValueW(hkRun, szValue)) != ERROR_SUCCESS)
         {
-            printf("Couldn't delete value - %ld, %ld. Running command anyways.\n", i, res);
+            DbgPrint("Couldn't delete value - %lu, %ld. Running command anyways.\n", i, res);
         }
 
         if (type != REG_SZ)
         {
-            printf("Incorrect type of value #%ld (%ld)\n", i, type);
+            DbgPrint("Incorrect type of value #%lu (%lu)\n", i, type);
 
             continue;
         }
@@ -240,10 +239,10 @@ static BOOL ProcessRunKeys(HKEY hkRoot, LPCWSTR szKeyName, BOOL bDelete,
         res = runCmd(szCmdLine, NULL, bSynchronous, FALSE);
         if (res == INVALID_RUNCMD_RETURN)
         {
-            printf("Error running cmd #%ld (%ld)\n", i, GetLastError());
+            DbgPrint("Error running cmd #%lu (%lu)\n", i, GetLastError());
         }
 
-        printf("Done processing cmd #%ld\n", i);
+        DbgPrint("Done processing cmd #%lu\n", i);
     }
 
     res = ERROR_SUCCESS;
@@ -257,7 +256,7 @@ end:
     if (hkWin != NULL)
         RegCloseKey(hkWin);
 
-    printf("done\n");
+    DbgPrint("done\n");
 
     return res == ERROR_SUCCESS ? TRUE : FALSE;
 }
@@ -269,24 +268,22 @@ ProcessStartupItems(VOID)
     /* TODO: ProcessRunKeys already checks SM_CLEANBOOT -- items prefixed with * should probably run even in safe mode */
     BOOL bNormalBoot = GetSystemMetrics(SM_CLEANBOOT) == 0; /* Perform the operations that are performed every boot */
     /* First, set the current directory to SystemRoot */
-    TCHAR gen_path[MAX_PATH];
+    WCHAR gen_path[MAX_PATH];
     DWORD res;
     HKEY hSessionKey, hKey;
     HRESULT hr;
 
-    res = GetWindowsDirectory(gen_path, sizeof(gen_path));
-
+    res = GetWindowsDirectoryW(gen_path, sizeof(gen_path) / sizeof(gen_path[0]));
     if (res == 0)
     {
-        printf("Couldn't get the windows directory - error %ld\n",
-            GetLastError());
+        DbgPrint("Couldn't get the windows directory - error %lu\n", GetLastError());
 
         return 100;
     }
 
-    if (!SetCurrentDirectory(gen_path))
+    if (!SetCurrentDirectoryW(gen_path))
     {
-        wprintf(L"Cannot set the dir to %s (%ld)\n", gen_path, GetLastError());
+        DbgPrint("Cannot set the dir to %ls (%lu)\n", gen_path, GetLastError());
 
         return 100;
     }
@@ -297,7 +294,7 @@ ProcessStartupItems(VOID)
         LONG Error;
         DWORD dwDisp;
 
-        Error = RegCreateKeyEx(hSessionKey, L"StartupHasBeenRun", 0, NULL, REG_OPTION_VOLATILE, KEY_WRITE, NULL, &hKey, &dwDisp);
+        Error = RegCreateKeyExW(hSessionKey, L"StartupHasBeenRun", 0, NULL, REG_OPTION_VOLATILE, KEY_WRITE, NULL, &hKey, &dwDisp);
         RegCloseKey(hSessionKey);
         if (Error == ERROR_SUCCESS)
         {
@@ -333,7 +330,7 @@ ProcessStartupItems(VOID)
     if (res && bNormalBoot && (SHRestricted(REST_NOCURRENTUSERRUNONCE) == 0))
         res = ProcessRunKeys(HKEY_CURRENT_USER, L"RunOnce", TRUE, FALSE);
 
-    printf("Operation done\n");
+    DbgPrint("Operation done\n");
 
     return res ? 0 : 101;
 }
