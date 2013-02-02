@@ -107,9 +107,9 @@ static int runCmd(LPWSTR cmdline, LPCWSTR dir, BOOL wait, BOOL minimized)
 static BOOL ProcessRunKeys(HKEY hkRoot, LPCWSTR szKeyName, BOOL bDelete,
         BOOL bSynchronous)
 {
-    HKEY hkWin = NULL, hkRun=NULL;
+    HKEY hkWin = NULL, hkRun = NULL;
     LONG res = ERROR_SUCCESS;
-    DWORD i, nMaxCmdLine = 0, nMaxValue = 0;
+    DWORD i, cbMaxCmdLine = 0, cchMaxValue = 0;
     WCHAR *szCmdLine = NULL;
     WCHAR *szValue = NULL;
 
@@ -118,7 +118,12 @@ static BOOL ProcessRunKeys(HKEY hkRoot, LPCWSTR szKeyName, BOOL bDelete,
     else
         wprintf(L"processing %s entries under HKCU\n", szKeyName);
 
-    if ((res = RegOpenKeyExW(hkRoot, L"Software\\Microsoft\\Windows\\CurrentVersion", 0, KEY_READ, &hkWin)) != ERROR_SUCCESS)
+    res = RegOpenKeyExW(hkRoot,
+                        L"Software\\Microsoft\\Windows\\CurrentVersion",
+                        0,
+                        KEY_READ,
+                        &hkWin);
+    if (res != ERROR_SUCCESS)
     {
         printf("RegOpenKey failed on Software\\Microsoft\\Windows\\CurrentVersion (%ld)\n",
                 res);
@@ -126,8 +131,12 @@ static BOOL ProcessRunKeys(HKEY hkRoot, LPCWSTR szKeyName, BOOL bDelete,
         goto end;
     }
 
-    if ((res = RegOpenKeyExW(hkWin, szKeyName, 0, bDelete?KEY_ALL_ACCESS:KEY_READ, &hkRun))!=
-            ERROR_SUCCESS)
+    res = RegOpenKeyExW(hkWin,
+                        szKeyName,
+                        0,
+                        bDelete ? KEY_ALL_ACCESS : KEY_READ,
+                        &hkRun);
+    if (res != ERROR_SUCCESS)
     {
         if (res == ERROR_FILE_NOT_FOUND)
         {
@@ -141,8 +150,19 @@ static BOOL ProcessRunKeys(HKEY hkRoot, LPCWSTR szKeyName, BOOL bDelete,
         goto end;
     }
 
-    if ((res = RegQueryInfoKeyW(hkRun, NULL, NULL, NULL, NULL, NULL, NULL, &i, &nMaxValue,
-                    &nMaxCmdLine, NULL, NULL)) != ERROR_SUCCESS)
+    res = RegQueryInfoKeyW(hkRun,
+                           NULL,
+                           NULL,
+                           NULL,
+                           NULL,
+                           NULL,
+                           NULL,
+                           &i,
+                           &cchMaxValue,
+                           &cbMaxCmdLine,
+                           NULL,
+                           NULL);
+    if (res != ERROR_SUCCESS)
     {
         printf("Couldn't query key info (%ld)\n", res);
 
@@ -157,7 +177,10 @@ static BOOL ProcessRunKeys(HKEY hkRoot, LPCWSTR szKeyName, BOOL bDelete,
         goto end;
     }
 
-    if ((szCmdLine = malloc(nMaxCmdLine)) == NULL)
+    szCmdLine = HeapAlloc(hProcessHeap,
+                          0,
+                          cbMaxCmdLine);
+    if (szCmdLine == NULL)
     {
         printf("Couldn't allocate memory for the commands to be executed\n");
 
@@ -165,24 +188,34 @@ static BOOL ProcessRunKeys(HKEY hkRoot, LPCWSTR szKeyName, BOOL bDelete,
         goto end;
     }
 
-    if ((szValue = malloc((++nMaxValue)*sizeof(*szValue))) == NULL)
+    ++cchMaxValue;
+    szValue = HeapAlloc(hProcessHeap,
+                        0,
+                        cchMaxValue * sizeof(*szValue));
+    if (szValue == NULL)
     {
         printf("Couldn't allocate memory for the value names\n");
 
-        free(szCmdLine);
         res = ERROR_NOT_ENOUGH_MEMORY;
         goto end;
     }
 
     while (i > 0)
     {
-        DWORD nValLength = nMaxValue, nDataLength = nMaxCmdLine;
+        DWORD cchValLength = cchMaxValue, cbDataLength = cbMaxCmdLine;
         DWORD type;
 
         --i;
 
-        if ((res = RegEnumValueW(hkRun, i, szValue, &nValLength, 0, &type,
-                        (LPBYTE)szCmdLine, &nDataLength)) != ERROR_SUCCESS)
+        res = RegEnumValueW(hkRun,
+                            i,
+                            szValue,
+                            &cchValLength,
+                            0,
+                            &type,
+                            (PBYTE)szCmdLine,
+                            &cbDataLength);
+        if (res != ERROR_SUCCESS)
         {
             printf("Couldn't read in value %ld - %ld\n", i, res);
 
@@ -204,7 +237,8 @@ static BOOL ProcessRunKeys(HKEY hkRoot, LPCWSTR szKeyName, BOOL bDelete,
             continue;
         }
 
-        if ((res = runCmd(szCmdLine, NULL, bSynchronous, FALSE)) == INVALID_RUNCMD_RETURN)
+        res = runCmd(szCmdLine, NULL, bSynchronous, FALSE);
+        if (res == INVALID_RUNCMD_RETURN)
         {
             printf("Error running cmd #%ld (%ld)\n", i, GetLastError());
         }
@@ -212,11 +246,12 @@ static BOOL ProcessRunKeys(HKEY hkRoot, LPCWSTR szKeyName, BOOL bDelete,
         printf("Done processing cmd #%ld\n", i);
     }
 
-    free(szValue);
-    free(szCmdLine);
     res = ERROR_SUCCESS;
-
 end:
+    if (szValue != NULL)
+        HeapFree(hProcessHeap, 0, szValue);
+    if (szCmdLine != NULL)
+        HeapFree(hProcessHeap, 0, szCmdLine);
     if (hkRun != NULL)
         RegCloseKey(hkRun);
     if (hkWin != NULL)

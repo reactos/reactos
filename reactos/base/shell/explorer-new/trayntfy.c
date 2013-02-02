@@ -51,11 +51,12 @@ SysPagerWnd_CreateNotifyItemData(IN OUT PSYS_PAGER_WND_DATA This)
     PNOTIFY_ITEM *findNotifyPointer = &This->NotifyItems;
     PNOTIFY_ITEM notifyItem;
 
-    notifyItem = malloc(sizeof(*notifyItem));
+    notifyItem = HeapAlloc(hProcessHeap,
+                           HEAP_ZERO_MEMORY,
+                           sizeof(*notifyItem));
     if (notifyItem == NULL)
         return NULL;
 
-    ZeroMemory(notifyItem, sizeof(*notifyItem));
     notifyItem->next = NULL;
 
     while (*findNotifyPointer != NULL)
@@ -248,7 +249,9 @@ SysPagerWnd_RemoveButton(IN OUT PSYS_PAGER_WND_DATA This,
 
         if (!(deleteItem->iconData.dwState & NIS_HIDDEN))
             This->VisibleButtonCount--;
-        free(deleteItem);
+        HeapFree(hProcessHeap,
+                 0,
+                 deleteItem);
         This->ButtonCount--;
 
         while (updateItem != NULL)
