@@ -47,6 +47,17 @@
 #define FLG_ADDREG_TYPE_NONE             (0x00020000 | FLG_ADDREG_BINVALUETYPE)
 #define FLG_ADDREG_TYPE_MASK             (0xFFFF0000 | FLG_ADDREG_BINVALUETYPE)
 
+#ifdef _M_IX86
+#define Architecture L"x86"
+#elif defined(_M_AMD64)
+#define Architecture L"amd64"
+#elif defined(_M_IA64)
+#define Architecture L"ia64"
+#elif defined(_M_ARM)
+#define Architecture L"arm"
+#elif defined(_M_PPC)
+#define Architecture L"ppc"
+#endif
 
 static const WCHAR HKCR[] = {'H','K','C','R',0};
 static const WCHAR HKCU[] = {'H','K','C','U',0};
@@ -58,9 +69,6 @@ static const WCHAR HKCRPath[] = {'\\','R','e','g','i','s','t','r','y','\\','M','
 static const WCHAR HKCUPath[] = {'\\','R','e','g','i','s','t','r','y','\\','U','s','e','r','\\','.','D','E','F','A','U','L','T','\\',0};
 static const WCHAR HKLMPath[] = {'\\','R','e','g','i','s','t','r','y','\\','M','a','c','h','i','n','e','\\',0};
 static const WCHAR HKUPath[] = {'\\','R','e','g','i','s','t','r','y','\\','U','s','e','r','\\',0};
-
-static const WCHAR AddReg[] = {'A','d','d','R','e','g',0};
-static const WCHAR DelReg[] = {'D','e','l','R','e','g',0};
 
 /* FUNCTIONS ****************************************************************/
 
@@ -489,14 +497,24 @@ ImportRegistryFile(PCHAR FileName)
 		return FALSE;
 	}
 
-	if (!registry_callback (hInf, (PWCHAR)DelReg, TRUE))
+	if (!registry_callback (hInf, L"DelReg", TRUE))
 	{
 		DPRINT1 ("registry_callback() for DelReg failed\n");
 	}
 
-	if (!registry_callback (hInf, (PWCHAR)AddReg, FALSE))
+	if (!registry_callback (hInf, L"DelReg.NT" Architecture, TRUE))
+	{
+		DPRINT1 ("registry_callback() for DelReg.NT* failed\n");
+	}
+
+	if (!registry_callback (hInf, L"AddReg", FALSE))
 	{
 		DPRINT1 ("registry_callback() for AddReg failed\n");
+	}
+
+	if (!registry_callback (hInf, L"AddReg.NT" Architecture, FALSE))
+	{
+		DPRINT1 ("registry_callback() for AddReg.NT* failed\n");
 	}
 
 	InfHostCloseFile (hInf);
