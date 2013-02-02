@@ -1,4 +1,5 @@
-/* FILE:        subsystems/win32/csrss/win32csr/lang/cs-CZ.rc
+/*
+ * FILE:        win32ss/user/consrv/lang/cs-CZ.rc
  * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
  * UPDATED:     2011-04-09
  */
@@ -7,22 +8,22 @@ LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-  IDS_EDIT "Upravit"
-  IDS_MARK "OznaËit"
-  IDS_COPY "KopÌrovat\tEnter"
-  IDS_PASTE "Vloûit"
-  IDS_SELECTALL "OznaËit vöe"
-  IDS_SCROLL "Posunout"
-  IDS_FIND "NajÌt..."
-  IDS_DEFAULTS "V˝chozÌ"
-  IDS_PROPERTIES "Vlastnosti"
-  IDS_SCROLLHERE "Posunout sem"
-  IDS_SCROLLTOP "Posunout na zaË·tek"
-  IDS_SCROLLBOTTOM "Posunout na konec"
-  IDS_SCROLLPAGE_UP "O str·nku v˝öe"
-  IDS_SCROLLPAGE_DOWN "O str·nku nÌûe"
-  IDS_SCROLLUP "Posunout nahoru"
-  IDS_SCROLLDOWN "Posunout dol˘"
+    IDS_EDIT            "Upravit"
+    IDS_MARK            "Oznaƒçit"
+    IDS_COPY            "Kop√≠rovat\tEnter"
+    IDS_PASTE           "Vlo≈æit"
+    IDS_SELECTALL       "Oznaƒçit v≈°e"
+    IDS_SCROLL          "Posunout"
+    IDS_FIND            "Naj√≠t..."
+    IDS_DEFAULTS        "V√Ωchoz√≠"
+    IDS_PROPERTIES      "Vlastnosti"
+    IDS_SCROLLHERE      "Posunout sem"
+    IDS_SCROLLTOP       "Posunout na zaƒç√°tek"
+    IDS_SCROLLBOTTOM    "Posunout na konec"
+    IDS_SCROLLPAGE_UP   "O str√°nku v√Ω≈°e"
+    IDS_SCROLLPAGE_DOWN "O str√°nku n√≠≈æe"
+    IDS_SCROLLUP        "Posunout nahoru"
+    IDS_SCROLLDOWN      "Posunout dol≈Ø"
 
-  IDS_CONSOLE_TITLE "ReactOS Console"
+    IDS_CONSOLE_TITLE   "ReactOS Console"
 END

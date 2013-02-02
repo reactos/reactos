@@ -10,6 +10,6 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #define REACTOS_STR_ORIGINAL_FILENAME   "consrv.dll"
 #include <reactos/version.rc>
 
-1   ICON    DISCARDABLE "res/terminal.ico"
+IDI_CONSOLE ICON    DISCARDABLE "res/terminal.ico"
 
 #include "rsrc.rc"

@@ -1,6 +1,6 @@
 /*
  * PROJECT:         ReactOS CSRSS subsystem
- * FILE:            subsystems/win32/csrss/win32csr/lang/bg-BG.rc
+ * FILE:            win32ss/user/consrv/lang/bg-BG.rc
  * PURPOSE:         Bulgarian resource file
  */
 
@@ -8,22 +8,22 @@ LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-  IDS_EDIT "Обработка"
-  IDS_MARK "Отбелязване"
-  IDS_COPY "Запомняне\tEnter"
-  IDS_PASTE "Поставяне"
-  IDS_SELECTALL "Избор на всичко"
-  IDS_SCROLL "Прелистване"
-  IDS_FIND "Търсене..."
-  IDS_DEFAULTS "Подразбирани"
-  IDS_PROPERTIES "Свойства"
-  IDS_SCROLLHERE "Прелистване тук"
-  IDS_SCROLLTOP "Прелистване до горе"
-  IDS_SCROLLBOTTOM "Прелистване до долу"
-  IDS_SCROLLPAGE_UP "Горна страница"
-  IDS_SCROLLPAGE_DOWN "Долна страница"
-  IDS_SCROLLUP "Прелистване нагоре"
-  IDS_SCROLLDOWN "Прелистване надолу"
+    IDS_EDIT            "РћР±СЂР°Р±РѕС‚РєР°"
+    IDS_MARK            "РћС‚Р±РµР»СЏР·РІР°РЅРµ"
+    IDS_COPY            "Р—Р°РїРѕРјРЅСЏРЅРµ\tEnter"
+    IDS_PASTE           "РџРѕСЃС‚Р°РІСЏРЅРµ"
+    IDS_SELECTALL       "РР·Р±РѕСЂ РЅР° РІСЃРёС‡РєРѕ"
+    IDS_SCROLL          "РџСЂРµР»РёСЃС‚РІР°РЅРµ"
+    IDS_FIND            "РўСЉСЂСЃРµРЅРµ..."
+    IDS_DEFAULTS        "РџРѕРґСЂР°Р·Р±РёСЂР°РЅРё"
+    IDS_PROPERTIES      "РЎРІРѕР№СЃС‚РІР°"
+    IDS_SCROLLHERE      "РџСЂРµР»РёСЃС‚РІР°РЅРµ С‚СѓРє"
+    IDS_SCROLLTOP       "РџСЂРµР»РёСЃС‚РІР°РЅРµ РґРѕ РіРѕСЂРµ"
+    IDS_SCROLLBOTTOM    "РџСЂРµР»РёСЃС‚РІР°РЅРµ РґРѕ РґРѕР»Сѓ"
+    IDS_SCROLLPAGE_UP   "Р“РѕСЂРЅР° СЃС‚СЂР°РЅРёС†Р°"
+    IDS_SCROLLPAGE_DOWN "Р”РѕР»РЅР° СЃС‚СЂР°РЅРёС†Р°"
+    IDS_SCROLLUP        "РџСЂРµР»РёСЃС‚РІР°РЅРµ РЅР°РіРѕСЂРµ"
+    IDS_SCROLLDOWN      "РџСЂРµР»РёСЃС‚РІР°РЅРµ РЅР°РґРѕР»Сѓ"
 
-  IDS_CONSOLE_TITLE "ReactOS Console"
+    IDS_CONSOLE_TITLE   "ReactOS Console"
 END

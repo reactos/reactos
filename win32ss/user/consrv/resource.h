@@ -37,6 +37,7 @@
 #define IDS_SCROLLUP 309
 #define IDS_SCROLLDOWN 310
 
+#define IDI_CONSOLE       1
 #define IDS_CONSOLE_TITLE 500
 
 /* EOF */
