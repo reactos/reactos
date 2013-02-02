@@ -47,9 +47,9 @@
 #define FLG_ADDREG_TYPE_NONE             (0x00020000 | FLG_ADDREG_BINVALUETYPE)
 #define FLG_ADDREG_TYPE_MASK             (0xFFFF0000 | FLG_ADDREG_BINVALUETYPE)
 
-#ifdef _M_IX86
+#if defined(_M_IX86) || defined(__i386__)
 static const WCHAR Architecture[] = {'x','8','6',0};
-#elif defined(_M_AMD64)
+#elif defined(_M_AMD64) || defined(__x86_64__)
 static const WCHAR Architecture[] = {'a','m','d','6','4'0};
 #elif defined(_M_IA64)
 static const WCHAR Architecture[] = {'i','a','6','4',0};
