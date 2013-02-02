@@ -26,19 +26,16 @@
  * Also, 119941 has some info on grpconv.exe
  * The operations performed are (by order of execution):
  *
- * Startup (before the user logs in)
- * - Services (NT, ?semi-synchronous?, not implemented yet)
- * - HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\RunServicesOnce (9x, asynch)
- * - HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\RunServices (9x, asynch)
- *
  * After log in
- * - HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\RunOnce (all, synch)
- * - HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\Run (all, asynch)
- * - HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Run (all, asynch)
- * - Startup folders (all, ?asynch?, no imp)
- * - HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\RunOnce (all, asynch)
+ * - HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\RunOnceEx (synch, no imp)
+ * - HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\RunOnce (synch)
+ * - HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\Run (asynch)
+ * - HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Run (asynch)
+ * - All users Startup folder "%ALLUSERSPROFILE%\Start Menu\Programs\Startup" (asynch, no imp)
+ * - Current user Startup folder "%USERPROFILE%\Start Menu\Programs\Startup" (asynch, no imp)
+ * - HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\RunOnce (asynch)
  *
- * Somewhere in there is processing the RunOnceEx entries (also no imp)
+ * None is processed in Safe Mode // FIXME: Check RunOnceEx in Safe Mode
  */
 
 #include "precomp.h"
@@ -110,9 +107,6 @@ static int runCmd(LPWSTR cmdline, LPCWSTR dir, BOOL wait, BOOL minimized)
 static BOOL ProcessRunKeys(HKEY hkRoot, LPCWSTR szKeyName, BOOL bDelete,
         BOOL bSynchronous)
 {
-    static const WCHAR WINKEY_NAME[]={'S','o','f','t','w','a','r','e','\\',
-        'M','i','c','r','o','s','o','f','t','\\','W','i','n','d','o','w','s','\\',
-        'C','u','r','r','e','n','t','V','e','r','s','i','o','n',0};
     HKEY hkWin = NULL, hkRun=NULL;
     LONG res = ERROR_SUCCESS;
     DWORD i, nMaxCmdLine = 0, nMaxValue = 0;
@@ -124,7 +118,7 @@ static BOOL ProcessRunKeys(HKEY hkRoot, LPCWSTR szKeyName, BOOL bDelete,
     else
         wprintf(L"processing %s entries under HKCU\n", szKeyName);
 
-    if ((res = RegOpenKeyExW(hkRoot, WINKEY_NAME, 0, KEY_READ, &hkWin)) != ERROR_SUCCESS)
+    if ((res = RegOpenKeyExW(hkRoot, L"Software\\Microsoft\\Windows\\CurrentVersion", 0, KEY_READ, &hkWin)) != ERROR_SUCCESS)
     {
         printf("RegOpenKey failed on Software\\Microsoft\\Windows\\CurrentVersion (%ld)\n",
                 res);
@@ -180,9 +174,9 @@ static BOOL ProcessRunKeys(HKEY hkRoot, LPCWSTR szKeyName, BOOL bDelete,
         goto end;
     }
 
-    while(i > 0)
+    while (i > 0)
     {
-        DWORD nValLength=nMaxValue, nDataLength=nMaxCmdLine;
+        DWORD nValLength = nMaxValue, nDataLength = nMaxCmdLine;
         DWORD type;
 
         --i;
@@ -237,6 +231,7 @@ end:
 int
 ProcessStartupItems(VOID)
 {
+    /* TODO: ProcessRunKeys already checks SM_CLEANBOOT -- items prefixed with * should probably run even in safe mode */
     BOOL bNormalBoot = GetSystemMetrics(SM_CLEANBOOT) == 0; /* Perform the operations that are performed every boot */
     /* First, set the current directory to SystemRoot */
     TCHAR gen_path[MAX_PATH];
@@ -284,6 +279,8 @@ ProcessStartupItems(VOID)
      * stopping if one fails, skipping if necessary.
     */
     res = TRUE;
+    /* TODO: RunOnceEx */
+
     if (res && (SHRestricted(REST_NOLOCALMACHINERUNONCE) == 0))
         res = ProcessRunKeys(HKEY_LOCAL_MACHINE, L"RunOnce", TRUE, TRUE);
 
@@ -293,6 +290,11 @@ ProcessStartupItems(VOID)
     if (res && bNormalBoot && (SHRestricted(REST_NOCURRENTUSERRUNONCE) == 0))
         res = ProcessRunKeys(HKEY_CURRENT_USER, L"Run", FALSE, FALSE);
 
+    /* TODO: All users Startup folder */
+
+    /* TODO: Current user Startup folder */
+
+    /* TODO: HKCU\RunOnce runs even if StartupHasBeenRun exists */
     if (res && bNormalBoot && (SHRestricted(REST_NOCURRENTUSERRUNONCE) == 0))
         res = ProcessRunKeys(HKEY_CURRENT_USER, L"RunOnce", TRUE, FALSE);
 

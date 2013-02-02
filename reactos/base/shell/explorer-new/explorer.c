@@ -401,6 +401,8 @@ _tWinMain(IN HINSTANCE hInstance,
     InitCommonControls();
     OleInitialize(NULL);
 
+    ProcessStartupItems();
+
     if (GetShellWindow() == NULL)
         CreateShellDesktop = TRUE;
 
@@ -424,8 +426,6 @@ _tWinMain(IN HINSTANCE hInstance,
         /* WinXP: Notify msgina to hide the welcome screen */
         if (!SetShellReadyEvent(TEXT("msgina: ShellReadyEvent")))
             SetShellReadyEvent(TEXT("Global\\msgina: ShellReadyEvent"));
-
-        ProcessStartupItems();
     }
     else
     {
