@@ -17,7 +17,7 @@
 size_t strxfrm( char *dest, const char *src, size_t n )
 {
    strncpy(dest, src, n);
-   return (strlen(dest));
+   return strnlen(src, n);
 }
 #else
 size_t strxfrm( char *dest, const char *src, size_t n )
