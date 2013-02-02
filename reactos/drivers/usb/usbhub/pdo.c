@@ -280,7 +280,7 @@ USBHUB_PdoHandleInternalDeviceControl(
                     DPRINT1("URB_FUNCTION_CLASS_INTERFACE\n");
                     break;
                 case URB_FUNCTION_VENDOR_DEVICE:
-                    DPRINT1("URB_FUNCTION_VENDOR_DEVICE\n");
+                    DPRINT("URB_FUNCTION_VENDOR_DEVICE\n");
                     break;
                 default:
                     DPRINT1("IOCTL_INTERNAL_USB_SUBMIT_URB Function %x NOT IMPLEMENTED\n", Urb->UrbHeader.Function);

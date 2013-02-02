@@ -86,6 +86,7 @@ protected:
     ULONG m_PortStatus;
     PUSBQUEUE m_Queue;
     PDMAMEMORYMANAGER m_DmaManager;
+    LPCWSTR m_USBType;
 
     PUSB_CONFIGURATION m_ConfigurationDescriptors;
 };
@@ -119,6 +120,7 @@ CUSBDevice::Initialize(
     m_Parent = Parent;
     m_Port = Port;
     m_PortStatus = PortStatus;
+    m_USBType = m_Device->GetUSBType();
 
     //
     // initialize device lock
@@ -139,7 +141,7 @@ CUSBDevice::Initialize(
         //
         // failed to get usb queue
         //
-        DPRINT1("CUSBDevice::Initialize GetUsbQueue failed with %x\n", Status);
+        DPRINT1("[%S] GetUsbQueue failed with %x\n", m_USBType, Status);
         return Status;
     }
 
@@ -152,7 +154,7 @@ CUSBDevice::Initialize(
         //
         // failed to get dma manager
         //
-        DPRINT1("CUSBDevice::Initialize GetDMA failed with %x\n", Status);
+        DPRINT1("[%S] GetDMA failed with %x\n", m_USBType, Status);
         return Status;
     }
 
@@ -170,7 +172,7 @@ CUSBDevice::Initialize(
         //
         // failed to get device descriptor
         //
-        DPRINT1("CUSBDevice::Initialize Failed to get device descriptor with %x\n", Status);
+        DPRINT1("[%S] Failed to get device descriptor with %x\n", m_USBType, Status);
         return Status;
     }
 
@@ -274,7 +276,7 @@ CUSBDevice::GetType()
         return Usb20Device;
     }
 
-    DPRINT1("CUSBDevice::GetType Unknown bcdUSB Type %x\n", m_DeviceDescriptor.bcdUSB);
+    DPRINT1("[%S] GetType Unknown bcdUSB Type %x\n", m_USBType, m_DeviceDescriptor.bcdUSB);
     //PC_ASSERT(FALSE);
 
     return Usb11Device;
@@ -309,7 +311,7 @@ CUSBDevice::SetDeviceAddress(
     UCHAR OldAddress;
     UCHAR Index;
 
-    DPRINT1("CUSBDevice::SetDeviceAddress> Address %x\n", DeviceAddress);
+    DPRINT1("[%S] SetDeviceAddress> Address %x\n", m_USBType, DeviceAddress);
 
     CtrlSetup = (PUSB_DEFAULT_PIPE_SETUP_PACKET)ExAllocatePoolWithTag(NonPagedPool, sizeof(USB_DEFAULT_PIPE_SETUP_PACKET), TAG_USBLIB);
     if (!CtrlSetup)
@@ -332,7 +334,7 @@ CUSBDevice::SetDeviceAddress(
     if (!NT_SUCCESS(Status))
     {
         // failed to set device address
-        DPRINT1("CUSBDevice::SetDeviceAddress> failed to set device address with %lx Address %x\n", Status, DeviceAddress);
+        DPRINT1("[%S] SetDeviceAddress> failed to set device address with %lx Address %x\n", m_USBType, Status, DeviceAddress);
         return Status;
     }
 
@@ -349,7 +351,7 @@ CUSBDevice::SetDeviceAddress(
     Status = CreateDeviceDescriptor();
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("CUSBDevice::SetDeviceAddress> failed to retrieve device descriptor with device address set Error %lx\n", Status);
+        DPRINT1("[%S] SetDeviceAddress failed to retrieve device descriptor with device address set Error %lx\n", m_USBType, Status);
         // return error status
         return Status;
     }
@@ -360,7 +362,7 @@ CUSBDevice::SetDeviceAddress(
         m_DeviceDescriptor.bNumConfigurations == 0)
     {
         // failed to retrieve device descriptor
-        DPRINT1("CUSBDevice::SetDeviceAddress> device returned bogus device descriptor\n");
+        DPRINT1("[%S] SetDeviceAddress> device returned bogus device descriptor\n", m_USBType);
         DumpDeviceDescriptor(&m_DeviceDescriptor);
 
         // return error status
@@ -386,7 +388,7 @@ CUSBDevice::SetDeviceAddress(
         Status = CreateConfigurationDescriptor(Index);
         if (!NT_SUCCESS(Status))
         {
-            DPRINT1("CUSBDevice::SetDeviceAddress> failed to retrieve configuration %lu\n", Index);
+            DPRINT1("[%S] SetDeviceAddress> failed to retrieve configuration %lu\n", m_USBType, Index);
             break;
         }
     }
@@ -429,7 +431,7 @@ CUSBDevice::CommitIrp(
         //
         // no queue, wtf?
         //
-        DPRINT1("CUSBDevice::CommitIrp> no queue / dma !!!\n");
+        DPRINT1("[%S] CommitIrp> no queue / dma !!!\n", m_USBType);
         return STATUS_UNSUCCESSFUL;
     }
 
@@ -442,7 +444,7 @@ CUSBDevice::CommitIrp(
         //
         // failed to build request
         //
-        DPRINT1("CUSBDevice::CommitIrp> CreateUSBRequest failed with %lx\n", Status);
+        DPRINT1("[%S] CommitIrp> CreateUSBRequest failed with %lx\n", m_USBType, Status);
         return Status;
     }
 
@@ -465,7 +467,7 @@ CUSBDevice::CommitIrp(
         //
         // failed to add request
         //
-        DPRINT1("CUSBDevice::CommitIrp> failed add request to queue with %lx\n", Status);
+        DPRINT1("[%S] failed add request to queue with %lx\n", m_USBType, Status);
         Request->Release();
         return Status;
     }
@@ -518,7 +520,7 @@ CUSBDevice::CommitSetupPacket(
         //
         // no queue, wtf?
         //
-        DPRINT1("CUSBDevice::CommitSetupPacket> no queue!!!\n");
+        DPRINT1("[%S] CommitSetupPacket> no queue!!!\n", m_USBType);
         return STATUS_UNSUCCESSFUL;
     }
 
@@ -531,7 +533,7 @@ CUSBDevice::CommitSetupPacket(
         //
         // failed to build request
         //
-        DPRINT1("CUSBDevice::CommitSetupPacket> CreateUSBRequest failed with %x\n", Status);
+        DPRINT1("[%S] CommitSetupPacket> CreateUSBRequest failed with %x\n", m_USBType, Status);
         return Status;
     }
 
@@ -544,7 +546,7 @@ CUSBDevice::CommitSetupPacket(
         //
         // failed to initialize request
         //
-        DPRINT1("CUSBDevice::CommitSetupPacket> failed to initialize  usb request with %x\n", Status);
+        DPRINT1("[%S] CommitSetupPacket failed to initialize  usb request with %x\n", m_USBType, Status);
         Request->Release();
         return Status;
     }
@@ -558,7 +560,7 @@ CUSBDevice::CommitSetupPacket(
         //
         // failed to add request
         //
-        DPRINT1("CUSBDevice::CommitSetupPacket> failed add request to queue with %x\n", Status);
+        DPRINT1("[%S] CommitSetupPacket> failed add request to queue with %x\n", m_USBType, Status);
         Request->Release();
         return Status;
     }
@@ -759,7 +761,7 @@ CUSBDevice::CreateConfigurationDescriptor(
         //
         // failed to get partial configuration descriptor
         //
-        DPRINT1("[USBLIB] Failed to get partial configuration descriptor Status %x Index %x\n", Status, Index);
+        DPRINT1("[%S] Failed to get partial configuration descriptor Status %x Index %x\n", m_USBType, Status, Index);
         ExFreePoolWithTag(ConfigurationDescriptor, TAG_USBLIB);
         return Status;
     }
@@ -773,7 +775,7 @@ CUSBDevice::CreateConfigurationDescriptor(
         //
         // failed to get full configuration descriptor
         //
-        DPRINT1("[USBLIB] Failed to get full configuration descriptor Status %x Index %x\n", Status, Index);
+        DPRINT1("[%S] Failed to get full configuration descriptor Status %x Index %x\n", m_USBType, Status, Index);
         ExFreePoolWithTag(ConfigurationDescriptor, TAG_USBLIB);
         return Status;
     }
@@ -968,7 +970,7 @@ CUSBDevice::BuildInterfaceDescriptor(
             if (EndpointDescriptor->bLength == 0 || EndpointDescriptor->bDescriptorType == USB_INTERFACE_DESCRIPTOR_TYPE)
             {
                 // bogus configuration descriptor
-                DPRINT1("[USBLIB] Bogus descriptor found in InterfaceNumber %x Alternate %x EndpointIndex %x bLength %x bDescriptorType %x\n", InterfaceDescriptor->bInterfaceNumber, InterfaceDescriptor->bAlternateSetting, PipeIndex,
+                DPRINT1("[%S] Bogus descriptor found in InterfaceNumber %x Alternate %x EndpointIndex %x bLength %x bDescriptorType %x\n", m_USBType, InterfaceDescriptor->bInterfaceNumber, InterfaceDescriptor->bAlternateSetting, PipeIndex,
                        EndpointDescriptor->bLength, EndpointDescriptor->bDescriptorType);
 
                 // failed
@@ -1040,7 +1042,7 @@ CUSBDevice::SelectConfiguration(
 
         if (!Found)
         {
-            DPRINT1("[USBLIB] invalid configuration value %u\n", ConfigurationDescriptor->bConfigurationValue);
+            DPRINT1("[%S] invalid configuration value %u\n", m_USBType, ConfigurationDescriptor->bConfigurationValue);
             return STATUS_INVALID_PARAMETER;
         }
 
@@ -1062,13 +1064,13 @@ CUSBDevice::SelectConfiguration(
     if (!ConfigurationDescriptor)
     {
         // unconfigure request
-        DPRINT1("CUSBDevice::SelectConfiguration Unconfigure Request Status %lx\n", Status);
+        DPRINT1("[%S] SelectConfiguration Unconfigure Request Status %lx\n", m_USBType, Status);
         m_ConfigurationIndex = 0;
         return Status;
     }
 
     // informal debug print
-    DPRINT1("CUSBDevice::SelectConfiguration New Configuration %x Old Configuration %x Result %lx\n", ConfigurationIndex, m_ConfigurationIndex, Status);
+    DPRINT1("[%S] SelectConfiguration New Configuration %x Old Configuration %x Result %lx\n", m_USBType, ConfigurationIndex, m_ConfigurationIndex, Status);
     if (!NT_SUCCESS(Status))
     {
         //
@@ -1123,7 +1125,7 @@ CUSBDevice::SelectConfiguration(
         if (!NT_SUCCESS(Status))
         {
             // failed
-            DPRINT1("[LIBUSB] Failed to copy interface descriptor Index %lu InterfaceDescriptor %p InterfaceInfo %p\n", ConfigurationIndex, InterfaceDescriptor, InterfaceInfo);
+            DPRINT1("[%S] Failed to copy interface descriptor Index %lu InterfaceDescriptor %p InterfaceInfo %p\n", m_USBType, ConfigurationIndex, InterfaceDescriptor, InterfaceInfo);
             break;
         }
 
@@ -1165,7 +1167,7 @@ CUSBDevice::SelectInterface(
     if (!Found)
     {
         // invalid handle passed
-        DPRINT1("[USBLIB] Invalid configuration handle passed %p\n", ConfigurationHandle);
+        DPRINT1("[%S] Invalid configuration handle passed %p\n", m_USBType, ConfigurationHandle);
         return STATUS_INVALID_PARAMETER;
     }
 
@@ -1180,7 +1182,7 @@ CUSBDevice::SelectInterface(
     Status = CommitSetupPacket(&CtrlSetup, NULL, 0, NULL);
 
     // informal debug print
-    DPRINT1("CUSBDevice::SelectInterface AlternateSetting %x InterfaceNumber %x Status %lx\n", InterfaceInfo->AlternateSetting, InterfaceInfo->InterfaceNumber, Status);
+    DPRINT1("[%S] SelectInterface AlternateSetting %x InterfaceNumber %x Status %lx\n", m_USBType, InterfaceInfo->AlternateSetting, InterfaceInfo->InterfaceNumber, Status);
 #if 0
     if (!NT_SUCCESS(Status))
     {
@@ -1216,7 +1218,7 @@ CUSBDevice::SelectInterface(
         InterfaceDescriptor = USBD_ParseConfigurationDescriptor(m_ConfigurationDescriptors[ConfigurationIndex].ConfigurationDescriptor, InterfaceInfo->InterfaceNumber, InterfaceInfo->AlternateSetting);
         if (!InterfaceDescriptor)
         {
-            DPRINT1("[LIBUSB] No such interface Alternate %x InterfaceNumber %x\n", InterfaceInfo->AlternateSetting, InterfaceInfo->InterfaceNumber);
+            DPRINT1("[%S] No such interface Alternate %x InterfaceNumber %x\n", m_USBType, InterfaceInfo->AlternateSetting, InterfaceInfo->InterfaceNumber);
             return STATUS_UNSUCCESSFUL;
         }
 
@@ -1225,7 +1227,7 @@ CUSBDevice::SelectInterface(
         if (!NT_SUCCESS(Status))
         {
             // failed
-            DPRINT1("[LIBUSB] Failed to build interface descriptor Status %x\n", Status);
+            DPRINT1("[%S] Failed to build interface descriptor Status %x\n", m_USBType, Status);
             return Status;
         }
     }
