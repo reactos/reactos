@@ -615,12 +615,10 @@ CreateSysPagerWnd(IN HWND hWndParent,
     HWND hWnd = NULL;
 
     SpData = HeapAlloc(hProcessHeap,
-                       0,
+                       HEAP_ZERO_MEMORY,
                        sizeof(*SpData));
     if (SpData != NULL)
     {
-        ZeroMemory(SpData, sizeof(*SpData));
-
         /* Create the window. The tray window is going to move it to the correct
            position and resize it as needed. */
         dwStyle = WS_CHILD | WS_CLIPSIBLINGS;
@@ -1357,13 +1355,10 @@ CreateTrayClockWnd(IN HWND hWndParent,
     HWND hWnd = NULL;
 
     TcData = HeapAlloc(hProcessHeap,
-                       0,
+                       HEAP_ZERO_MEMORY,
                        sizeof(*TcData));
     if (TcData != NULL)
     {
-        ZeroMemory(TcData,
-                   sizeof(*TcData));
-
         TcData->IsHorizontal = TRUE;
         /* Create the window. The tray window is going to move it to the correct
            position and resize it as needed. */
@@ -1841,13 +1836,10 @@ CreateTrayNotifyWnd(IN OUT ITrayWindow *TrayWindow,
         return NULL;
 
     TnData = HeapAlloc(hProcessHeap,
-                       0,
+                       HEAP_ZERO_MEMORY,
                        sizeof(*TnData));
     if (TnData != NULL)
     {
-        ZeroMemory(TnData,
-                   sizeof(*TnData));
-
         TnData->TrayWindow = TrayWindow;
         TnData->HideClock = bHideClock;
 

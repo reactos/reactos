@@ -709,13 +709,10 @@ TaskSwitchWnd_AddToTaskGroup(IN OUT PTASK_SWITCH_WND This,
 
     /* Allocate a new task group */
     TaskGroup = HeapAlloc(hProcessHeap,
-                          0,
+                          HEAP_ZERO_MEMORY,
                           sizeof(*TaskGroup));
     if (TaskGroup != NULL)
     {
-        ZeroMemory(TaskGroup,
-                   sizeof(*TaskGroup));
-
         TaskGroup->dwTaskCount = 1;
         TaskGroup->dwProcessId = dwProcessId;
         TaskGroup->Index = -1;
@@ -2065,13 +2062,11 @@ ForwardContextMenuMsg:
             {
                 LPCREATESTRUCT CreateStruct = (LPCREATESTRUCT)lParam;
                 This = HeapAlloc(hProcessHeap,
-                                 0,
+                                 HEAP_ZERO_MEMORY,
                                  sizeof(*This));
                 if (This == NULL)
                     return FALSE;
 
-                ZeroMemory(This,
-                           sizeof(*This));
                 This->hWnd = hwnd;
                 This->hWndNotify = CreateStruct->hwndParent;
                 This->Tray = (ITrayWindow*)CreateStruct->lpCreateParams;
