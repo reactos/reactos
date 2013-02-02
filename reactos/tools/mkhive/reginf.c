@@ -48,15 +48,15 @@
 #define FLG_ADDREG_TYPE_MASK             (0xFFFF0000 | FLG_ADDREG_BINVALUETYPE)
 
 #ifdef _M_IX86
-#define Architecture L"x86"
+static const WCHAR Architecture[] = {'x','8','6',0};
 #elif defined(_M_AMD64)
-#define Architecture L"amd64"
+static const WCHAR Architecture[] = {'a','m','d','6','4'0};
 #elif defined(_M_IA64)
-#define Architecture L"ia64"
+static const WCHAR Architecture[] = {'i','a','6','4',0};
 #elif defined(_M_ARM)
-#define Architecture L"arm"
+static const WCHAR Architecture[] = {'a','r','m',0};
 #elif defined(_M_PPC)
-#define Architecture L"ppc"
+static const WCHAR Architecture[] = {'p','p','c',0};
 #endif
 
 static const WCHAR HKCR[] = {'H','K','C','R',0};
@@ -69,6 +69,9 @@ static const WCHAR HKCRPath[] = {'\\','R','e','g','i','s','t','r','y','\\','M','
 static const WCHAR HKCUPath[] = {'\\','R','e','g','i','s','t','r','y','\\','U','s','e','r','\\','.','D','E','F','A','U','L','T','\\',0};
 static const WCHAR HKLMPath[] = {'\\','R','e','g','i','s','t','r','y','\\','M','a','c','h','i','n','e','\\',0};
 static const WCHAR HKUPath[] = {'\\','R','e','g','i','s','t','r','y','\\','U','s','e','r','\\',0};
+
+static const WCHAR AddReg[] = {'A','d','d','R','e','g',0};
+static const WCHAR DelReg[] = {'D','e','l','R','e','g',0};
 
 /* FUNCTIONS ****************************************************************/
 
@@ -489,6 +492,7 @@ ImportRegistryFile(PCHAR FileName)
 {
 	HINF hInf;
 	ULONG ErrorLine;
+	WCHAR SectionName[40];
 
 	/* Load inf file from install media. */
 	if (InfHostOpenFile(&hInf, FileName, 0, &ErrorLine) != 0)
@@ -497,22 +501,26 @@ ImportRegistryFile(PCHAR FileName)
 		return FALSE;
 	}
 
-	if (!registry_callback (hInf, L"DelReg", TRUE))
+	if (!registry_callback (hInf, (PWCHAR)DelReg, TRUE))
 	{
 		DPRINT1 ("registry_callback() for DelReg failed\n");
 	}
 
-	if (!registry_callback (hInf, L"DelReg.NT" Architecture, TRUE))
+	wcsncpy(SectionName, DelReg, sizeof(SectionName) / sizeof(WCHAR));
+	wcsncat(SectionName, Architecture, sizeof(SectionName) / sizeof(WCHAR));
+	if (!registry_callback (hInf, SectionName, TRUE))
 	{
 		DPRINT1 ("registry_callback() for DelReg.NT* failed\n");
 	}
 
-	if (!registry_callback (hInf, L"AddReg", FALSE))
+	if (!registry_callback (hInf, (PWCHAR)AddReg, FALSE))
 	{
 		DPRINT1 ("registry_callback() for AddReg failed\n");
 	}
 
-	if (!registry_callback (hInf, L"AddReg.NT" Architecture, FALSE))
+	wcsncpy(SectionName, AddReg, sizeof(SectionName) / sizeof(WCHAR));
+	wcsncat(SectionName, Architecture, sizeof(SectionName) / sizeof(WCHAR));
+	if (!registry_callback (hInf, SectionName, FALSE))
 	{
 		DPRINT1 ("registry_callback() for AddReg.NT* failed\n");
 	}
