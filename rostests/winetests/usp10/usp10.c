@@ -1804,11 +1804,64 @@ static void test_ScriptGetCMap(HDC hdc, unsigned short pwOutGlyphs[256])
     ok (!psc, "psc is not null after ScriptFreeCache\n");
 }
 
+#define MAX_ENUM_FONTS 4096
+
+struct enum_font_data
+{
+    int total;
+    ENUMLOGFONT elf[MAX_ENUM_FONTS];
+};
+
+static INT CALLBACK enum_bitmap_font_proc(const LOGFONT *lf, const TEXTMETRIC *ntm, DWORD type, LPARAM lParam)
+{
+    struct enum_font_data *efnd = (struct enum_font_data *)lParam;
+
+    if (type & (TRUETYPE_FONTTYPE | DEVICE_FONTTYPE)) return 1;
+
+    if (efnd->total < MAX_ENUM_FONTS)
+    {
+        efnd->elf[efnd->total++] = *(ENUMLOGFONT*)lf;
+    }
+    else
+        trace("enum tests invalid; you have more than %d fonts\n", MAX_ENUM_FONTS);
+
+    return 1;
+}
+
+static INT CALLBACK enum_truetype_proc(const LOGFONT *lf, const TEXTMETRIC *ntm, DWORD type, LPARAM lParam)
+{
+    struct enum_font_data *efnd = (struct enum_font_data *)lParam;
+
+    if (!(type & (TRUETYPE_FONTTYPE | DEVICE_FONTTYPE))) return 1;
+
+    if (efnd->total < MAX_ENUM_FONTS)
+    {
+        efnd->elf[efnd->total++] = *(ENUMLOGFONT*)lf;
+    }
+    else
+        trace("enum tests invalid; you have more than %d fonts\n", MAX_ENUM_FONTS);
+
+    return 1;
+}
+
 static void test_ScriptGetFontProperties(HDC hdc)
 {
     HRESULT         hr;
     SCRIPT_CACHE    psc,old_psc;
     SCRIPT_FONTPROPERTIES sfp;
+    HFONT font, oldfont;
+    LOGFONT lf;
+    struct enum_font_data efnd;
+    TEXTMETRICA tmA;
+    WORD gi[3];
+    WCHAR str[3];
+    DWORD  i, ret;
+    WORD system_lang_id = PRIMARYLANGID(GetSystemDefaultLangID());
+    static const WCHAR invalids[] = {0x0020, 0x200B, 0xF71B};
+    /* U+0020: numeric space
+       U+200B: zero width space
+       U+F71B: unkown, found by black box testing */
+    BOOL is_terminal, is_arial, is_times_new_roman, is_arabic = (system_lang_id == LANG_ARABIC);
 
     /* Some sanity checks for ScriptGetFontProperties */
 
@@ -1866,6 +1919,109 @@ static void test_ScriptGetFontProperties(HDC hdc)
     ok( psc == old_psc, "Expected psc not to be changed, was %p is now %p\n", old_psc, psc);
     ScriptFreeCache(&psc);
     ok( psc == NULL, "Expected psc to be NULL, got %p\n", psc);
+
+    pGetGlyphIndicesW = (void*)GetProcAddress(GetModuleHandleA("gdi32.dll"), "GetGlyphIndicesW");
+    if (!pGetGlyphIndicesW)
+    {
+        win_skip("Skip on WINNT4\n");
+        return;
+    }
+    memset(&lf, 0, sizeof(lf));
+    lf.lfCharSet = DEFAULT_CHARSET;
+    efnd.total = 0;
+    EnumFontFamiliesA(hdc, NULL, enum_bitmap_font_proc, (LPARAM)&efnd);
+
+    for (i = 0; i < efnd.total; i++)
+    {
+        lstrcpyA(lf.lfFaceName, (char *)efnd.elf[i].elfFullName);
+        font = CreateFontIndirect(&lf);
+        oldfont = SelectObject(hdc, font);
+
+        sfp.cBytes = sizeof(SCRIPT_FONTPROPERTIES);
+        psc = NULL;
+        hr = ScriptGetFontProperties(hdc, &psc, &sfp);
+        ok(hr == S_OK, "ScriptGetFontProperties expected S_OK, got %08x\n", hr);
+        if (winetest_interactive)
+        {
+            trace("bitmap font %s\n", lf.lfFaceName);
+            trace("wgBlank %04x\n", sfp.wgBlank);
+            trace("wgDefault %04x\n", sfp.wgDefault);
+            trace("wgInvalid %04x\n", sfp.wgInvalid);
+            trace("wgKashida %04x\n", sfp.wgKashida);
+            trace("iKashidaWidth %d\n", sfp.iKashidaWidth);
+        }
+
+        ret = GetTextMetricsA(hdc, &tmA);
+        ok(ret != 0, "GetTextMetricsA failed!\n");
+
+        is_terminal = !(lstrcmpA(lf.lfFaceName, "Terminal") && lstrcmpA(lf.lfFaceName, "@Terminal"));
+        ok(sfp.wgBlank == tmA.tmBreakChar || broken(is_terminal) || broken(is_arabic), "bitmap font %s wgBlank %04x tmBreakChar %04x\n", lf.lfFaceName, sfp.wgBlank, tmA.tmBreakChar);
+
+        ok(sfp.wgDefault == tmA.tmDefaultChar || broken(is_arabic), "bitmap font %s wgDefault %04x, tmDefaultChar %04x\n", lf.lfFaceName, sfp.wgDefault, tmA.tmDefaultChar);
+
+        ok(sfp.wgInvalid == sfp.wgBlank || broken(is_arabic), "bitmap font %s wgInvalid %02x wgBlank %02x\n", lf.lfFaceName, sfp.wgInvalid, sfp.wgBlank);
+
+        ok(sfp.wgKashida == 0xFFFF || broken(is_arabic), "bitmap font %s wgKashida %02x\n", lf.lfFaceName, sfp.wgKashida);
+
+        ScriptFreeCache(&psc);
+
+        SelectObject(hdc, oldfont);
+        DeleteObject(font);
+    }
+
+    efnd.total = 0;
+    EnumFontFamiliesA(hdc, NULL, enum_truetype_proc, (LPARAM)&efnd);
+
+    for (i = 0; i < efnd.total; i++)
+    {
+        lstrcpyA(lf.lfFaceName, (char *)efnd.elf[i].elfFullName);
+        font = CreateFontIndirect(&lf);
+        oldfont = SelectObject(hdc, font);
+
+        sfp.cBytes = sizeof(SCRIPT_FONTPROPERTIES);
+        psc = NULL;
+        hr = ScriptGetFontProperties(hdc, &psc, &sfp);
+        ok(hr == S_OK, "ScriptGetFontProperties expected S_OK, got %08x\n", hr);
+        if (winetest_interactive)
+        {
+            trace("truetype font %s\n", lf.lfFaceName);
+            trace("wgBlank %04x\n", sfp.wgBlank);
+            trace("wgDefault %04x\n", sfp.wgDefault);
+            trace("wgInvalid %04x\n", sfp.wgInvalid);
+            trace("wgKashida %04x\n", sfp.wgKashida);
+            trace("iKashidaWidth %d\n", sfp.iKashidaWidth);
+        }
+
+        str[0] = 0x0020; /* U+0020: numeric space */
+        ret = pGetGlyphIndicesW(hdc, str, 1, gi, 0);
+        ok(ret != GDI_ERROR, "GetGlyphIndicesW failed!\n");
+        ok(sfp.wgBlank == gi[0], "truetype font %s wgBlank %04x gi[0] %04x\n", lf.lfFaceName, sfp.wgBlank, gi[0]);
+
+        ok(sfp.wgDefault == 0 || broken(is_arabic), "truetype font %s wgDefault %04x\n", lf.lfFaceName, sfp.wgDefault);
+
+        ret = pGetGlyphIndicesW(hdc, invalids, 3, gi, GGI_MARK_NONEXISTING_GLYPHS);
+        ok(ret != GDI_ERROR, "GetGlyphIndicesW failed!\n");
+        if (gi[2] != 0xFFFF) /* index of default non exist char */
+            ok(sfp.wgInvalid == gi[2], "truetype font %s wgInvalid %04x gi[2] %04x\n", lf.lfFaceName, sfp.wgInvalid, gi[2]);
+        else if (gi[1] != 0xFFFF)
+            ok(sfp.wgInvalid == gi[1], "truetype font %s wgInvalid %04x gi[1] %04x\n", lf.lfFaceName, sfp.wgInvalid, gi[1]);
+        else if (gi[0] != 0xFFFF)
+            ok(sfp.wgInvalid == gi[0], "truetype font %s wgInvalid %04x gi[0] %04x\n", lf.lfFaceName, sfp.wgInvalid, gi[0]);
+        else
+            ok(sfp.wgInvalid == 0, "truetype font %s wgInvalid %04x expect 0\n", lf.lfFaceName, sfp.wgInvalid);
+
+        str[0] = 0x0640; /* U+0640: kashida */
+        ret = pGetGlyphIndicesW(hdc, str, 1, gi, GGI_MARK_NONEXISTING_GLYPHS);
+        ok(ret != GDI_ERROR, "GetGlyphIndicesW failed!\n");
+        is_arial = !lstrcmpA(lf.lfFaceName, "Arial");
+        is_times_new_roman= !lstrcmpA(lf.lfFaceName, "Times New Roman");
+        ok(sfp.wgKashida == gi[0] || broken(is_arial || is_times_new_roman) || broken(is_arabic), "truetype font %s wgKashida %04x gi[0] %04x\n", lf.lfFaceName, sfp.wgKashida, gi[0]);
+
+        ScriptFreeCache(&psc);
+
+        SelectObject(hdc, oldfont);
+        DeleteObject(font);
+    }
 }
 
 static void test_ScriptTextOut(HDC hdc)
@@ -2433,7 +2589,7 @@ static void test_ScriptStringXtoCP_CPtoX(HDC hdc)
             else
                 ok(lead < trail, "Trailing values should be after leading for ltr characters(%i)\n",Cp);
 
-            /* move by 1 pixel so that we are not inbetween 2 characters.  That could result in being the lead of a rtl and
+            /* move by 1 pixel so that we are not between 2 characters.  That could result in being the lead of a rtl and
                at the same time the trail of an ltr */
 
             /* inside the leading edge */
