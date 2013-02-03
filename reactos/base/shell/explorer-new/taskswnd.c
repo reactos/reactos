@@ -1462,7 +1462,7 @@ TaskSwitchWnd_Create(IN OUT PTASK_SWITCH_WND This)
                     sizeof(TBBUTTON),
                     0);
 
-        This->TaskIcons = ImageList_Create(16, 16, ILC_COLOR32, 0, 1000);
+        This->TaskIcons = ImageList_Create(16, 16, ILC_COLOR32 | ILC_MASK, 0, 1000);
         SendMessage(This->hWndToolbar, TB_SETIMAGELIST, 0, (LPARAM)This->TaskIcons);
 
         /* Calculate the default button size. Don't save this in This->ButtonSize.cx so that

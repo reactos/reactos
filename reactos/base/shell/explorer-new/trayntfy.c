@@ -380,7 +380,7 @@ SysPagerWnd_Create(IN OUT PSYS_PAGER_WND_DATA This)
                     sizeof(TBBUTTON),
                     0);
 
-        This->SysIcons = ImageList_Create(16, 16, ILC_COLOR32, 0, 1000);
+        This->SysIcons = ImageList_Create(16, 16, ILC_COLOR32 | ILC_MASK, 0, 1000);
         SendMessage(This->hWndToolbar, TB_SETIMAGELIST, 0, (LPARAM)This->SysIcons);
 
         BtnSize.cx = BtnSize.cy = 18;
