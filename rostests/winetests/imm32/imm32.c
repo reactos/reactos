@@ -33,11 +33,16 @@ static BOOL (WINAPI *pImmIsUIMessageA)(HWND,UINT,WPARAM,LPARAM);
 /*
  * msgspy - record and analyse message traces sent to a certain window
  */
+typedef struct _msgs {
+    CWPSTRUCT    msg;
+    BOOL         post;
+} imm_msgs;
+
 static struct _msg_spy {
     HWND         hwnd;
     HHOOK        get_msg_hook;
     HHOOK        call_wnd_proc_hook;
-    CWPSTRUCT    msgs[32];
+    imm_msgs     msgs[32];
     unsigned int i_msg;
 } msg_spy;
 
@@ -46,13 +51,14 @@ static LRESULT CALLBACK get_msg_filter(int nCode, WPARAM wParam, LPARAM lParam)
     if (HC_ACTION == nCode) {
         MSG *msg = (MSG*)lParam;
 
-        if ((msg->hwnd == msg_spy.hwnd) &&
+        if ((msg->hwnd == msg_spy.hwnd || msg_spy.hwnd == NULL) &&
             (msg_spy.i_msg < NUMELEMS(msg_spy.msgs)))
         {
-            msg_spy.msgs[msg_spy.i_msg].hwnd    = msg->hwnd;
-            msg_spy.msgs[msg_spy.i_msg].message = msg->message;
-            msg_spy.msgs[msg_spy.i_msg].wParam  = msg->wParam;
-            msg_spy.msgs[msg_spy.i_msg].lParam  = msg->lParam;
+            msg_spy.msgs[msg_spy.i_msg].msg.hwnd    = msg->hwnd;
+            msg_spy.msgs[msg_spy.i_msg].msg.message = msg->message;
+            msg_spy.msgs[msg_spy.i_msg].msg.wParam  = msg->wParam;
+            msg_spy.msgs[msg_spy.i_msg].msg.lParam  = msg->lParam;
+            msg_spy.msgs[msg_spy.i_msg].post = TRUE;
             msg_spy.i_msg++;
         }
     }
@@ -66,10 +72,11 @@ static LRESULT CALLBACK call_wnd_proc_filter(int nCode, WPARAM wParam,
     if (HC_ACTION == nCode) {
         CWPSTRUCT *cwp = (CWPSTRUCT*)lParam;
 
-        if ((cwp->hwnd == msg_spy.hwnd) &&
+        if (((cwp->hwnd == msg_spy.hwnd || msg_spy.hwnd == NULL)) &&
             (msg_spy.i_msg < NUMELEMS(msg_spy.msgs)))
         {
-            memcpy(&msg_spy.msgs[msg_spy.i_msg], cwp, sizeof(msg_spy.msgs[0]));
+            memcpy(&msg_spy.msgs[msg_spy.i_msg].msg, cwp, sizeof(msg_spy.msgs[0].msg));
+            msg_spy.msgs[msg_spy.i_msg].post = FALSE;
             msg_spy.i_msg++;
         }
     }
@@ -93,7 +100,7 @@ static void msg_spy_flush_msgs(void) {
     msg_spy.i_msg = 0;
 }
 
-static CWPSTRUCT* msg_spy_find_msg(UINT message) {
+static imm_msgs* msg_spy_find_next_msg(UINT message, UINT *start) {
     UINT i;
 
     msg_spy_pump_msg_queue();
@@ -102,11 +109,20 @@ static CWPSTRUCT* msg_spy_find_msg(UINT message) {
         fprintf(stdout, "%s:%d: msg_spy: message buffer overflow!\n",
                 __FILE__, __LINE__);
 
-    for (i = 0; i < msg_spy.i_msg; i++)
-        if (msg_spy.msgs[i].message == message)
+    for (i = *start; i < msg_spy.i_msg; i++)
+        if (msg_spy.msgs[i].msg.message == message)
+        {
+            *start = i+1;
             return &msg_spy.msgs[i];
+        }
 
     return NULL;
+}
+
+static imm_msgs* msg_spy_find_msg(UINT message) {
+    UINT i = 0;
+
+    return msg_spy_find_next_msg(message, &i);
 }
 
 static void msg_spy_init(HWND hwnd) {
@@ -618,6 +634,73 @@ static void test_ImmGetDescription(void)
     UnloadKeyboardLayout(hkl);
 }
 
+static void test_ImmDefaultHwnd(void)
+{
+    HIMC imc1, imc2, imc3;
+    HWND def1, def3;
+    HWND hwnd;
+
+    hwnd = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "Wine imm32.dll test",
+                          WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
+                          240, 120, NULL, NULL, GetModuleHandle(0), NULL);
+
+    ShowWindow(hwnd, SW_SHOWNORMAL);
+
+    imc1 = ImmGetContext(hwnd);
+    if (!imc1)
+    {
+        win_skip("IME support not implemented\n");
+        return;
+    }
+
+    def1 = ImmGetDefaultIMEWnd(hwnd);
+
+    imc2 = ImmCreateContext();
+    ImmSetOpenStatus(imc2, TRUE);
+
+    imc3 = ImmGetContext(hwnd);
+    def3 = ImmGetDefaultIMEWnd(hwnd);
+
+    ok(def3 == def1, "Default IME window should not change\n");
+    ok(imc1 == imc3, "IME context should not change\n");
+    ImmSetOpenStatus(imc2, FALSE);
+
+    ImmReleaseContext(hwnd, imc1);
+    ImmReleaseContext(hwnd, imc3);
+    ImmDestroyContext(imc2);
+    DestroyWindow(hwnd);
+}
+
+static void test_ImmMessages(void)
+{
+    CANDIDATEFORM cf;
+    imm_msgs *msg;
+    HWND defwnd;
+    HIMC imc;
+    UINT idx = 0;
+
+    HWND hwnd = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "Wine imm32.dll test",
+                          WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
+                          240, 120, NULL, NULL, GetModuleHandle(0), NULL);
+
+    ShowWindow(hwnd, SW_SHOWNORMAL);
+    defwnd = ImmGetDefaultIMEWnd(hwnd);
+    imc = ImmGetContext(hwnd);
+
+    ImmSetOpenStatus(imc, TRUE);
+    msg_spy_flush_msgs();
+    SendMessage(defwnd, WM_IME_CONTROL, IMC_GETCANDIDATEPOS, (LPARAM)&cf );
+    do
+    {
+        msg = msg_spy_find_next_msg(WM_IME_CONTROL,&idx);
+        if (msg) ok(!msg->post, "Message should not be posted\n");
+    } while (msg);
+    msg_spy_flush_msgs();
+    ImmSetOpenStatus(imc, FALSE);
+    ImmReleaseContext(hwnd, imc);
+    DestroyWindow(hwnd);
+}
+
 START_TEST(imm32) {
     if (init())
     {
@@ -630,6 +713,12 @@ START_TEST(imm32) {
         test_ImmIsUIMessage();
         test_ImmGetContext();
         test_ImmGetDescription();
+        test_ImmDefaultHwnd();
+        msg_spy_cleanup();
+        /* Reinitialize the hooks to capture all windows */
+        msg_spy_init(NULL);
+        test_ImmMessages();
+        msg_spy_cleanup();
     }
     cleanup();
 }
