@@ -319,4 +319,203 @@ done:
     return Status;
 }
 
+
+NTSTATUS
+SampSetUserPassword(IN PSAM_DB_OBJECT UserObject,
+                    IN PENCRYPTED_NT_OWF_PASSWORD NtPassword,
+                    IN BOOLEAN NtPasswordPresent,
+                    IN PENCRYPTED_LM_OWF_PASSWORD LmPassword,
+                    IN BOOLEAN LmPasswordPresent)
+{
+    PENCRYPTED_NT_OWF_PASSWORD NtHistory = NULL;
+    PENCRYPTED_LM_OWF_PASSWORD LmHistory = NULL;
+    ULONG NtHistoryLength = 0;
+    ULONG LmHistoryLength = 0;
+    ULONG CurrentHistoryLength;
+    ULONG MaxHistoryLength = 3;
+    ULONG Length = 0;
+    NTSTATUS Status;
+
+    /* Get the size of the NT history */
+    SampGetObjectAttribute(UserObject,
+                           L"NTPwdHistory",
+                           NULL,
+                           NULL,
+                           &Length);
+
+    CurrentHistoryLength = Length / sizeof(ENCRYPTED_NT_OWF_PASSWORD);
+    if (CurrentHistoryLength < MaxHistoryLength)
+    {
+        NtHistoryLength = (CurrentHistoryLength + 1) * sizeof(ENCRYPTED_NT_OWF_PASSWORD);
+    }
+    else
+    {
+        NtHistoryLength = MaxHistoryLength * sizeof(ENCRYPTED_NT_OWF_PASSWORD);
+    }
+
+    /* Allocate the history buffer */
+    NtHistory = midl_user_allocate(NtHistoryLength);
+    if (NtHistory == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    if (Length > 0)
+    {
+        /* Get the history */
+        Status = SampGetObjectAttribute(UserObject,
+                                        L"NTPwdHistory",
+                                        NULL,
+                                        NtHistory,
+                                        &Length);
+        if (!NT_SUCCESS(Status))
+            goto done;
+    }
+
+    /* Get the size of the LM history */
+    Length = 0;
+    SampGetObjectAttribute(UserObject,
+                           L"LMPwdHistory",
+                           NULL,
+                           NULL,
+                           &Length);
+
+    CurrentHistoryLength = Length / sizeof(ENCRYPTED_LM_OWF_PASSWORD);
+    if (CurrentHistoryLength < MaxHistoryLength)
+    {
+        LmHistoryLength = (CurrentHistoryLength + 1) * sizeof(ENCRYPTED_LM_OWF_PASSWORD);
+    }
+    else
+    {
+        LmHistoryLength = MaxHistoryLength * sizeof(ENCRYPTED_LM_OWF_PASSWORD);
+    }
+
+    /* Allocate the history buffer */
+    LmHistory = midl_user_allocate(LmHistoryLength);
+    if (LmHistory == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    if (Length > 0)
+    {
+        /* Get the history */
+        Status = SampGetObjectAttribute(UserObject,
+                                        L"LMPwdHistory",
+                                        NULL,
+                                        LmHistory,
+                                        &Length);
+        if (!NT_SUCCESS(Status))
+            goto done;
+    }
+
+    /* Set the new password */
+    if (NtPasswordPresent)
+    {
+        Status = SampSetObjectAttribute(UserObject,
+                                        L"NTPwd",
+                                        REG_BINARY,
+                                        (PVOID)NtPassword,
+                                        sizeof(ENCRYPTED_NT_OWF_PASSWORD));
+        if (!NT_SUCCESS(Status))
+            goto done;
+    }
+    else
+    {
+        Status = SampSetObjectAttribute(UserObject,
+                                        L"NTPwd",
+                                        REG_BINARY,
+                                        NULL,
+                                        0);
+        if (!NT_SUCCESS(Status))
+            goto done;
+    }
+
+    if (LmPasswordPresent)
+    {
+        Status = SampSetObjectAttribute(UserObject,
+                                        L"LMPwd",
+                                        REG_BINARY,
+                                        (PVOID)LmPassword,
+                                        sizeof(ENCRYPTED_LM_OWF_PASSWORD));
+        if (!NT_SUCCESS(Status))
+            goto done;
+    }
+    else
+    {
+        Status = SampSetObjectAttribute(UserObject,
+                                        L"LMPwd",
+                                        REG_BINARY,
+                                        NULL,
+                                        0);
+        if (!NT_SUCCESS(Status))
+            goto done;
+    }
+
+    /* Move the old passwords down by one entry */
+    if (NtHistoryLength > sizeof(ENCRYPTED_NT_OWF_PASSWORD))
+    {
+        MoveMemory(&(NtHistory[1]),
+                   &(NtHistory[0]),
+                   NtHistoryLength - sizeof(ENCRYPTED_NT_OWF_PASSWORD));
+    }
+
+    /* Add the new password on top of the history */
+    if (NtPasswordPresent)
+    {
+        CopyMemory(&(NtHistory[0]),
+                   NtPassword,
+                   sizeof(ENCRYPTED_NT_OWF_PASSWORD));
+    }
+    else
+    {
+        ZeroMemory(&(NtHistory[0]),
+                   sizeof(ENCRYPTED_NT_OWF_PASSWORD));
+    }
+
+    /* Set the history */
+    Status = SampSetObjectAttribute(UserObject,
+                                    L"NTPwdHistory",
+                                    REG_BINARY,
+                                    (PVOID)NtHistory,
+                                    NtHistoryLength);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    /* Move the old passwords down by one entry */
+    if (LmHistoryLength > sizeof(ENCRYPTED_LM_OWF_PASSWORD))
+    {
+        MoveMemory(&(LmHistory[1]),
+                   &(LmHistory[0]),
+                   LmHistoryLength - sizeof(ENCRYPTED_LM_OWF_PASSWORD));
+    }
+
+    /* Add the new password on top of the history */
+    if (LmPasswordPresent)
+    {
+        CopyMemory(&(LmHistory[0]),
+                   LmPassword,
+                   sizeof(ENCRYPTED_LM_OWF_PASSWORD));
+    }
+    else
+    {
+        ZeroMemory(&(LmHistory[0]),
+                   sizeof(ENCRYPTED_LM_OWF_PASSWORD));
+    }
+
+    /* Set the LM password history */
+    Status = SampSetObjectAttribute(UserObject,
+                                    L"LMPwdHistory",
+                                    REG_BINARY,
+                                    (PVOID)LmHistory,
+                                    LmHistoryLength);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+done:
+    if (NtHistory != NULL)
+        midl_user_free(NtHistory);
+
+    if (LmHistory != NULL)
+        midl_user_free(LmHistory);
+
+    return Status;
+}
+
 /* EOF */

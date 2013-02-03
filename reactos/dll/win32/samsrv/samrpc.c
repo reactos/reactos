@@ -6533,51 +6533,16 @@ SampSetUserInternal1(PSAM_DB_OBJECT UserObject,
     ULONG Length = 0;
     NTSTATUS Status = STATUS_SUCCESS;
 
-    if (Buffer->Internal1.NtPasswordPresent)
-    {
-        /* FIXME: Decrypt NT password */
+    /* FIXME: Decrypt NT password */
+    /* FIXME: Decrypt LM password */
 
-        Status = SampSetObjectAttribute(UserObject,
-                                        L"NTPwd",
-                                        REG_BINARY,
-                                        &Buffer->Internal1.EncryptedNtOwfPassword,
-                                        sizeof(ENCRYPTED_NT_OWF_PASSWORD));
-        if (!NT_SUCCESS(Status))
-            goto done;
-    }
-    else
-    {
-        Status = SampSetObjectAttribute(UserObject,
-                                        L"NTPwd",
-                                        REG_BINARY,
-                                        NULL,
-                                        0);
-        if (!NT_SUCCESS(Status))
-            goto done;
-    }
-
-    if (Buffer->Internal1.LmPasswordPresent)
-    {
-        /* FIXME: Decrypt LM password */
-
-        Status = SampSetObjectAttribute(UserObject,
-                                        L"LMPwd",
-                                        REG_BINARY,
-                                        &Buffer->Internal1.EncryptedLmOwfPassword,
-                                        sizeof(ENCRYPTED_LM_OWF_PASSWORD));
-        if (!NT_SUCCESS(Status))
-            goto done;
-    }
-    else
-    {
-        Status = SampSetObjectAttribute(UserObject,
-                                        L"LMPwd",
-                                        REG_BINARY,
-                                        NULL,
-                                        0);
-        if (!NT_SUCCESS(Status))
-            goto done;
-    }
+    Status = SampSetUserPassword(UserObject,
+                                 &Buffer->Internal1.EncryptedNtOwfPassword,
+                                 Buffer->Internal1.NtPasswordPresent,
+                                 &Buffer->Internal1.EncryptedLmOwfPassword,
+                                 Buffer->Internal1.LmPasswordPresent);
+    if (!NT_SUCCESS(Status))
+        goto done;
 
     /* Get the fixed user attributes */
     Length = sizeof(SAM_USER_FIXED_DATA);

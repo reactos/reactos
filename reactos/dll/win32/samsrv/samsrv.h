@@ -297,4 +297,11 @@ SampSetUserGroupAttributes(IN PSAM_DB_OBJECT DomainObject,
                            IN ULONG GroupId,
                            IN ULONG GroupAttributes);
 
+NTSTATUS
+SampSetUserPassword(IN PSAM_DB_OBJECT UserObject,
+                    IN PENCRYPTED_NT_OWF_PASSWORD NtPassword,
+                    IN BOOLEAN NtPasswordPresent,
+                    IN PENCRYPTED_LM_OWF_PASSWORD LmPassword,
+                    IN BOOLEAN LmPasswordPresent);
+
 /* EOF */
