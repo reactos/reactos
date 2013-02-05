@@ -30,9 +30,9 @@ if(NOT MSVC AND (CMAKE_VERSION VERSION_GREATER 2.8.7))
     add_library(lib_hal_generic OBJECT ${HAL_GENERIC_SOURCE})
 else()
     add_library(lib_hal_generic ${HAL_GENERIC_SOURCE})
-    add_dependencies(lib_hal_generic asm)
 endif()
 
+add_dependencies(lib_hal_generic asm)
 add_pch(lib_hal_generic include/hal.h)
 
 if(ARCH STREQUAL "i386")
