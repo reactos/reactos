@@ -6,7 +6,11 @@
  */
 
 #define WIN32_NO_STATUS
-#include <winsock2.h>
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
 #include <ws2tcpip.h>
 #include <wine/test.h>
 #include <pseh/pseh2.h>

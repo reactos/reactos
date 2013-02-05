@@ -1,6 +1,5 @@
 
 #define WIN32_NO_STATUS
-#include <stdio.h>
 #include <wine/test.h>
 #include <ndk/rtlfuncs.h>
 #include <pseh/pseh2.h>

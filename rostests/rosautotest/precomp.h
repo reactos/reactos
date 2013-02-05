@@ -2,15 +2,17 @@
 #include <iostream>
 #include <memory>
 #include <sstream>
-#include <string>
 #include <vector>
 #include <iomanip>
 
 using namespace std;
 
 #define WIN32_NO_STATUS
-#include <windows.h>
-#include <ndk/rtlfuncs.h>
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+#include <windef.h>
+#include <winbase.h>
+#include <winnls.h>
 #include <reason.h>
 #include <shlobj.h>
 #include <wininet.h>

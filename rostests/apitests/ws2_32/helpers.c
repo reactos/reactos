@@ -8,6 +8,7 @@
 
 #include <stdio.h>
 #include <wine/test.h>
+
 #include "ws2_32.h"
 
 int CreateSocket(SOCKET* psck)

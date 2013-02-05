@@ -6,7 +6,8 @@
  */
 
 #include <wine/test.h>
-#include <windows.h>
+#include <winreg.h>
+#include <winsvc.h>
 #include <strsafe.h>
 
 static int MakeService(SC_HANDLE hScm, const wchar_t *serviceName, SC_HANDLE *hService, DWORD *tag)

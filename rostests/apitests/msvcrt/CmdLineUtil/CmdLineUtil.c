@@ -7,8 +7,9 @@
 
 #define WIN32_NO_STATUS
 #include <stdio.h>
-#include <windows.h>
-#include <ndk/ntndk.h>
+#include <windef.h>
+#include <winbase.h>
+#include <ndk/rtlfuncs.h>
 
 #include "CmdLineUtil.h"
 

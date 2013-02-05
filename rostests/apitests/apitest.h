@@ -2,9 +2,11 @@
 #define _APITEST_H
 
 #include <stdlib.h>
-#include <stdarg.h>
 #include <stdio.h>
-#include <windows.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winreg.h>
+#include <shellapi.h>
 
 #define APISTATUS_NORMAL 0
 #define APISTATUS_NOT_FOUND 1

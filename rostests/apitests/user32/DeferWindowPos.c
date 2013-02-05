@@ -5,9 +5,8 @@
  * PROGRAMMERS:     Thomas Faber
  */
 
-#include <stdio.h>
 #include <wine/test.h>
-#include <windows.h>
+#include <winuser.h>
 #include "helper.h"
 #include <undocuser.h>
 

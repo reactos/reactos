@@ -5,9 +5,11 @@
  * PROGRAMMERS:     Timo Kreuzer
  */
 
-#include <stdio.h>
 #include <wine/test.h>
-#include <windows.h>
+#include <wingdi.h>
+#include <winuser.h>
+#include <pseh/pseh2.h>
+
 #include "init.h"
 
 #define CBM_CREATDIB 2

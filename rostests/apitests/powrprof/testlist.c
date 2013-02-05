@@ -1,11 +1,11 @@
 /* Automatically generated file; DO NOT EDIT!! */
 
 /* stdarg.h is needed for Winelib */
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include "windef.h"
-#include "winbase.h"
+//#include <stdarg.h>
+//#include <stdio.h>
+//#include <stdlib.h>
+//#include "windef.h"
+//#include "winbase.h"
 
 struct test
 {
@@ -22,4 +22,4 @@ const struct test winetest_testlist[] =
 };
 
 #define WINETEST_WANT_MAIN
-#include "wine/test.h"
+#include <wine/test.h>

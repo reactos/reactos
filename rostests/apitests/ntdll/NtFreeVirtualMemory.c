@@ -1,7 +1,7 @@
 #define WIN32_NO_STATUS
-#include <stdio.h>
 #include <wine/test.h>
-#include <ndk/ntndk.h>
+#include <ndk/pstypes.h>
+#include <ndk/mmfuncs.h>
 
 static void Test_NtFreeVirtualMemory(void)
 {

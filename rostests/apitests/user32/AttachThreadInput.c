@@ -5,11 +5,10 @@
  * PROGRAMMERS:     Giannis Adamopoulos
  */
 
-#include <windows.h>
-#include <stdio.h>
 #include <wine/test.h>
+#include <wingdi.h>
+#include <winuser.h>
 #include "helper.h"
-#include <undocuser.h>
 
 #define DESKTOP_ALL_ACCESS 0x01ff
 

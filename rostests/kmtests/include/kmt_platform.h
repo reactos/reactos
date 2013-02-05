@@ -12,20 +12,28 @@
 #error include kmt_test.h instead of including kmt_platform.h!
 #endif /* !defined _KMTEST_TEST_H_ */
 
+#include <limits.h>
+#include <malloc.h>
+#include <stdarg.h>
+
 #if defined KMT_KERNEL_MODE || defined KMT_STANDALONE_DRIVER
 #include <ntddk.h>
 #include <ntifs.h>
-#include <ndk/ntndk.h>
+#include <ndk/exfuncs.h>
+#include <ndk/kefuncs.h>
+#include <ndk/obfuncs.h>
+#include <ndk/mmfuncs.h>
 #include <ntstrsafe.h>
 
 #elif defined KMT_USER_MODE
-#define WIN32_LEAN_AND_MEAN
 #define WIN32_NO_STATUS
 #define UNICODE
-#include <windows.h>
-#include <ndk/ntndk.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winsvc.h>
+#include <ndk/rtlfuncs.h>
+#include <ndk/mmfuncs.h>
 #include <strsafe.h>
-#include <winioctl.h>
 
 #ifdef KMT_EMULATE_KERNEL
 #define ok_irql(i)
@@ -48,8 +56,5 @@ typedef ULONG LOGICAL, *PLOGICAL;
 #endif /* defined KMT_USER_MODE */
 
 #include <pseh/pseh2.h>
-#include <limits.h>
-#include <malloc.h>
-#include <stdarg.h>
 
 #endif /* !defined _KMTEST_PLATFORM_H_ */

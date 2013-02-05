@@ -7,7 +7,6 @@
 
 #define WIN32_NO_STATUS
 #define UNICODE
-#include <stdio.h>
 #include <wine/test.h>
 #include <pseh/pseh2.h>
 #include <ndk/ldrfuncs.h>

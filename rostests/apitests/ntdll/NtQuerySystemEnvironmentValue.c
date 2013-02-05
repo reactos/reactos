@@ -6,9 +6,10 @@
  */
 
 #define WIN32_NO_STATUS
-#include <stdio.h>
 #include <wine/test.h>
-#include <ndk/ntndk.h>
+#include <ndk/setypes.h>
+#include <ndk/rtlfuncs.h>
+#include <ndk/exfuncs.h>
 
 // Arbitrary-defined constants
 #define MIN_BUFFER_LENGTH 4L

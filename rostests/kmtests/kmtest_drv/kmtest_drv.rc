@@ -5,7 +5,7 @@
  * PROGRAMMER:      Thomas Faber <thfabba@gmx.de>
  */
 
-#include <windows.h>
+#include <windef.h>
 
 #define REACTOS_FILETYPE                VFT_DRV
 #define REACTOS_FILESUBTYPE             VFT2_DRV_SYSTEM

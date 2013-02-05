@@ -1,6 +1,7 @@
 
 #include <stdio.h>
-#include <windows.h>
+#include <windef.h>
+#include <wingdi.h>
 
 HBITMAP ghbmpDIB32;
 HDC ghdcDIB32;

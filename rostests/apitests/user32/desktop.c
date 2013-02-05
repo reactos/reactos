@@ -7,9 +7,9 @@
 
 #include <stdio.h>
 #include <wine/test.h>
-#include <windows.h>
+#include <wingdi.h>
+#include <winuser.h>
 #include "helper.h"
-#include <undocuser.h>
 
 #define STATUS_DLL_INIT_FAILED                  (0xC0000142)
 #define DESKTOP_ALL_ACCESS 0x01ff

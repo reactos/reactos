@@ -1,7 +1,5 @@
-#include <stdio.h>
 #include <wine/test.h>
-#include <windows.h>
-#include "resource.h"
+#include <winuser.h>
 
 START_TEST(CreateIconFromResourceEx)
 {

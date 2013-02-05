@@ -20,15 +20,7 @@
 	DEALINGS IN THE SOFTWARE.
 */
 
-#include <stddef.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
 #include <pseh/pseh2.h>
-
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
 
 #define STANDALONE
 #include <wine/test.h>

@@ -5,9 +5,9 @@
  * PROGRAMMERS:     Giannis Adamopoulos
  */
 
-#include <stdio.h>
 #include <wine/test.h>
-#include <windows.h>
+#include <wingdi.h>
+#include <winuser.h>
 #include <assert.h>
 
 HHOOK hMouseHookLL, hMouseHook;

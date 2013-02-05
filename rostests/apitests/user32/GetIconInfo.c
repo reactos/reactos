@@ -1,7 +1,7 @@
-
-#include <stdio.h>
 #include <wine/test.h>
-#include <windows.h>
+#include <wingdi.h>
+#include <winuser.h>
+
 #include "resource.h"
 
 // FIXME user32

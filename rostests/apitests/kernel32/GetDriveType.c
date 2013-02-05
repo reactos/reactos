@@ -1,6 +1,4 @@
-#include <stdio.h>
 #include <wine/test.h>
-#include <windows.h>
 
 #define IS_DRIVE_TYPE_VALID(type) ((type) != DRIVE_UNKNOWN && (type) != DRIVE_NO_ROOT_DIR)
 

@@ -6,7 +6,8 @@
  */
 
 #include <wine/test.h>
-#include <windows.h>
+#include <winreg.h>
+#include <winsvc.h>
 #include <strsafe.h>
 
 #define TESTING_SERVICEW     L"Spooler"

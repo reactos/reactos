@@ -8,17 +8,12 @@
  */
 
 #include <stdarg.h>
-#include "ntstatus.h"
+#include <ntstatus.h>
 #define WIN32_NO_STATUS
 #define STANDALONE
-#include "wine/test.h"
-#include "winternl.h"
-#include "windef.h"
-#include "winbase.h"
-#include "winreg.h"
-#include "powrprof.h"
-#include "assert.h"
-#include "winnt.h"
+#include <wine/test.h>
+#include <winreg.h>
+#include <powrprof.h>
 
 /*
    LONG WINAPI RegOpenCurrentUser(REGSAM a,PHKEY b)

@@ -5,9 +5,10 @@
  * PROGRAMMERS:     Timo Kreuzer
  */
 
-#include <stdio.h>
 #include <wine/test.h>
-#include <windows.h>
+#include <wingdi.h>
+#include <winuser.h>
+
 #include "init.h"
 
 void

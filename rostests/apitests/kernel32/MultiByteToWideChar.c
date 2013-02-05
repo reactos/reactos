@@ -5,9 +5,8 @@
  * PROGRAMMER:      Mike "tamlin" Nordell
  */
 
-#include <windows.h>
-#include <stdio.h>
 #include <wine/test.h>
+#include <winnls.h>
 
 
 START_TEST(MultiByteToWideChar)

@@ -5,9 +5,8 @@
  * PROGRAMMERS:     Timo Kreuzer
  */
 
-#include <stdio.h>
 #include <wine/test.h>
-#include <windows.h>
+#include <wingdi.h>
 
 BOOL WINAPI GdiReleaseLocalDC(HDC);
 

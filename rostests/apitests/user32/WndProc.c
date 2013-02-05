@@ -5,9 +5,9 @@
  * PROGRAMMERS:
  */
 
-#include <stdio.h>
 #include <wine/test.h>
-#include <windows.h>
+#include <wingdi.h>
+#include <winuser.h>
 
 /* Used wine Redraw test for proof in principle. */
 

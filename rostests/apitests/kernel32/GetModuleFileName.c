@@ -6,10 +6,13 @@
  */
 
 #define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
 #define UNICODE
 #include <stdio.h>
 #include <wine/test.h>
-#include <windows.h>
+#include <winreg.h>
+#include <winnls.h>
 #include <shlwapi.h>
 
 static

@@ -8,7 +8,6 @@
 #include <stdio.h>
 #include <wine/test.h>
 #include <winternl.h>
-#include <windows.h>
 #include "ws2_32.h"
 
 #define RECV_BUF   4

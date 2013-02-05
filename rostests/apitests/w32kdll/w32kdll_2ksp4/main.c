@@ -1,4 +1,4 @@
-#include <windows.h>
+#include <windef.h>
 
 #ifdef BUILD_DLL
     #define DLL_EXPORT __declspec(dllexport)

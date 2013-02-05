@@ -5,9 +5,8 @@
  * PROGRAMMERS:     Magnus Olsen
  */
 
-#include <stdio.h>
 #include <wine/test.h>
-#include <windows.h>
+#include <wingdi.h>
 #include <winddi.h>
 
 void Test_EngAcquireSemaphore()

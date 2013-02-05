@@ -9,7 +9,7 @@
 #define UNICODE
 #include <stdio.h>
 #include <wine/test.h>
-#include <ndk/ntndk.h>
+#include <ndk/umtypes.h>
 
 #include "./CmdLineUtil/CmdLineUtil.h"
 

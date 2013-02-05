@@ -7,7 +7,6 @@
 #define WIN32_NO_STATUS
 #include <stdio.h>
 #include <wine/test.h>
-#include <windows.h>
 
 START_TEST(lstrcpynW)
 {

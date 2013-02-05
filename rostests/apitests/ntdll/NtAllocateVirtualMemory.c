@@ -6,7 +6,6 @@
  */
 
 #define WIN32_NO_STATUS
-#include <stdio.h>
 #include <wine/test.h>
 #include <ndk/rtlfuncs.h>
 #include <ndk/mmfuncs.h>

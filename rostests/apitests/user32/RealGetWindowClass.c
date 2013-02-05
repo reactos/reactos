@@ -7,7 +7,7 @@
 
 #include <stdio.h>
 #include <wine/test.h>
-#include <windows.h>
+#include <winuser.h>
 
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof(x[0]))
 

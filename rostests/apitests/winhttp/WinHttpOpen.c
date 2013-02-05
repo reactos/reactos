@@ -6,6 +6,11 @@
  */
 
 #define UNICODE
+
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+#include <windef.h>
 #include <winsock2.h>
 #include <wine/test.h>
 #include <winhttp.h>
