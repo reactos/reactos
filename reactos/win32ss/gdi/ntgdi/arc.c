@@ -131,6 +131,12 @@ IntArc( DC *dc,
     AngleEnd   = atan2((RectSEpts.bottom - CenterY), RectSEpts.right - CenterX)*(360.0/(M_PI*2));
     AngleStart = atan2((RectSEpts.top - CenterY), RectSEpts.left - CenterX)*(360.0/(M_PI*2));
 
+    /* Edge Case: Check if the start segments overlaps(is equal) the end segment */
+    if (AngleEnd == AngleStart)
+    {
+        AngleStart = AngleEnd + 360.0; // Arc(), ArcTo(), Pie() and Chord() are counterclockwise APIs.
+    }
+
     SfCx = (LONG)(Rcos(AngleStart) * RadiusX);
     SfCy = (LONG)(Rsin(AngleStart) * RadiusY);
     EfCx = (LONG)(Rcos(AngleEnd) * RadiusX);
