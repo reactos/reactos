@@ -7,7 +7,7 @@ endif()
 if (NOT DEFINED MINGW_TOOLCHAIN_PREFIX)
     if(ARCH STREQUAL "i386")
 
-        if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
+        if(CMAKE_HOST_WIN32)
             set(MINGW_TOOLCHAIN_PREFIX "" CACHE STRING "MinGW Toolchain Prefix")
         else()
             if(NOT $ENV{_ROSBE_VERSION} VERSION_LESS 2.1)
