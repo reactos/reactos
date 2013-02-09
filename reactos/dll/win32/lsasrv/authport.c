@@ -20,16 +20,26 @@ static HANDLE AuthPortHandle = NULL;
 
 /* FUNCTIONS ***************************************************************/
 
+static NTSTATUS
+LsapLookupAuthenticationPackage(PLSA_API_MSG RequestMsg)
+{
+    RequestMsg->LookupAuthenticationPackage.Reply.Package = 0x12345678;
+
+    return STATUS_SUCCESS;
+}
+
+
 NTSTATUS WINAPI
 AuthPortThreadRoutine(PVOID Param)
 {
-    LSASS_REQUEST Request;
-    PPORT_MESSAGE Reply = NULL;
+    PLSA_API_MSG ReplyMsg = NULL;
+    LSA_API_MSG RequestMsg;
     NTSTATUS Status;
 
     HANDLE ConnectionHandle = NULL;
     PVOID Context = NULL;
     BOOLEAN Accept;
+    REMOTE_PORT_VIEW RemotePortView;
 
     TRACE("AuthPortThreadRoutine() called\n");
 
@@ -39,8 +49,8 @@ AuthPortThreadRoutine(PVOID Param)
     {
         Status = NtReplyWaitReceivePort(AuthPortHandle,
                                         0,
-                                        Reply,
-                                        &Request.Header);
+                                        &ReplyMsg->h,
+                                        &RequestMsg.h);
         if (!NT_SUCCESS(Status))
         {
             TRACE("NtReplyWaitReceivePort() failed (Status %lx)\n", Status);
@@ -49,42 +59,62 @@ AuthPortThreadRoutine(PVOID Param)
 
         TRACE("Received message\n");
 
-        if (Request.Header.u2.s2.Type == LPC_CONNECTION_REQUEST)
+        switch (RequestMsg.h.u2.s2.Type)
         {
-            TRACE("Port connection request\n");
+            case LPC_CONNECTION_REQUEST:
+                TRACE("Port connection request\n");
 
-            Accept = TRUE;
-            NtAcceptConnectPort(&ConnectionHandle,
-                                &Context,
-                                &Request.Header,
-                                Accept,
-                                NULL,
-                                NULL);
+                RemotePortView.Length = sizeof(REMOTE_PORT_VIEW);
 
+                Accept = TRUE;
+                Status = NtAcceptConnectPort(&ConnectionHandle,
+                                             &Context,
+                                             &RequestMsg.h,
+                                             Accept,
+                                             NULL,
+                                             &RemotePortView);
+                if (!NT_SUCCESS(Status))
+                {
+                    ERR("NtAcceptConnectPort failed (Status 0x%lx)\n", Status);
+                    return Status;
+                }
 
-            NtCompleteConnectPort(ConnectionHandle);
+                Status = NtCompleteConnectPort(ConnectionHandle);
+                if (!NT_SUCCESS(Status))
+                {
+                    ERR("NtCompleteConnectPort failed (Status 0x%lx)\n", Status);
+                    return Status;
+                }
 
-        }
-        else if (Request.Header.u2.s2.Type == LPC_PORT_CLOSED ||
-                 Request.Header.u2.s2.Type == LPC_CLIENT_DIED)
-        {
-            TRACE("Port closed or client died request\n");
+                ReplyMsg = NULL;
+                break;
 
-//            return STATUS_UNSUCCESSFUL;
-        }
-        else if (Request.Header.u2.s2.Type == LPC_REQUEST)
-        {
-            TRACE("Received request (Type: %lu)\n", Request.Type);
+            case LPC_PORT_CLOSED:
+                TRACE("Port closed\n");
+                ReplyMsg = NULL;
+                break;
 
-        }
-        else if (Request.Header.u2.s2.Type == LPC_DATAGRAM)
-        {
-            TRACE("Received datagram\n");
+            case LPC_CLIENT_DIED:
+                TRACE("Client died\n");
+                ReplyMsg = NULL;
+                break;
 
+            default:
+                TRACE("Received request (ApiNumber: %lu)\n", RequestMsg.ApiNumber);
+
+                if (RequestMsg.ApiNumber == LSASS_REQUEST_LOOKUP_AUTHENTICATION_PACKAGE)
+                {
+                    RequestMsg.Status = LsapLookupAuthenticationPackage(&RequestMsg);
+                }
+                else
+                    RequestMsg.Status = STATUS_SUCCESS;
+
+                ReplyMsg = &RequestMsg;
+                break;
         }
     }
 
-    return Status;
+    return STATUS_SUCCESS;
 }
 
 
@@ -107,9 +137,9 @@ StartAuthenticationPort(VOID)
 
     Status = NtCreatePort(&AuthPortHandle,
                           &ObjectAttributes,
-                          0,
-                          0x100,
-                          0x2000);
+                          sizeof(LSA_CONNECTION_INFO),
+                          sizeof(LSA_API_MSG),
+                          sizeof(LSA_API_MSG) * 32);
     if (!NT_SUCCESS(Status))
     {
         TRACE("NtCreatePort() failed (Status %lx)\n", Status);
