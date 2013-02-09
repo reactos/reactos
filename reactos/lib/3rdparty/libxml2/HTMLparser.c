@@ -5089,13 +5089,13 @@ htmlParseLookupSequence(htmlParserCtxtPtr ctxt, xmlChar first,
  * @stop: Array of chars, which stop the lookup.
  * @stopLen: Length of stop-Array
  *
- * Try to find if any char of the stop-Array is available in the input 
+ * Try to find if any char of the stop-Array is available in the input
  * stream.
  * This function has a side effect of (possibly) incrementing ctxt->checkIndex
  * to avoid rescanning sequences of bytes, it DOES change the state of the
  * parser, do not use liberally.
  *
- * Returns the index to the current parsing point if a stopChar 
+ * Returns the index to the current parsing point if a stopChar
  *      is available, -1 otherwise.
  */
 static int

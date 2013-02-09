@@ -988,7 +988,7 @@ xmlFileOpenW (const char *filename) {
 #if defined(_WIN32) || defined (__DJGPP__) && !defined (__CYGWIN__)
     fd = xmlWrapOpen(path, 1);
 #else
- 	   fd = fopen(path, "wb");
+	   fd = fopen(path, "wb");
 #endif /* WIN32 */
 
 	 if (fd == NULL) xmlIOErr(0, path);
@@ -3192,7 +3192,7 @@ xmlParserInputBufferGrow(xmlParserInputBufferPtr in, int len) {
 	in->rawconsumed += (use - in->raw->use);
     } else {
 	nbchars = len;
-   	in->buffer->use += nbchars;
+	in->buffer->use += nbchars;
 	buffer[nbchars] = 0;
     }
 #ifdef DEBUG_INPUT
@@ -3354,7 +3354,7 @@ xmlEscapeContent(unsigned char* out, int *outlen,
     inend = in + (*inlen);
 
     while ((in < inend) && (out < outend)) {
-   	if (*in == '<') {
+	if (*in == '<') {
 	    if (outend - out < 4) break;
 	    *out++ = '&';
 	    *out++ = 'l';

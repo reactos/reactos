@@ -9,10 +9,10 @@ to help those   - More testing on RelaxNG
    - Finishing up XML
   Schemas
 
-The change log at 
+The change log at
 ChangeLog.html
  describes the recents commits
-to the SVN at 
+to the SVN at
 http://svn.gnome.org/viewvc/libxml2/trunk/
  code base.Here is the list of public releases:
 2.7.6: Oct  6 2009:
@@ -20,7 +20,7 @@ http://svn.gnome.org/viewvc/libxml2/trunk/
      Restore thread support in default configuration (Andrew W. Nosenko),
      URI with no path parsing problem (Daniel Veillard),
      Minor patch for conditional defines in threads.c (Eric Zurcher)
-  
+
 
 
 2.7.5: Sep 24 2009:
@@ -32,17 +32,17 @@ http://svn.gnome.org/viewvc/libxml2/trunk/
     Fix a parsing problem with little data at startup (Daniel Veillard),
     link python module with python library (Frederic Crozat),
     594874 Forgot an fclose in xmllint (Daniel Veillard)
-  
+
    -  Cleanup:
     Adding symbols.xml to EXTRA_DIST (Daniel Veillard)
-  
+
 
 
 2.7.4: Sep 10 2009:
    - Improvements:
     Switch to GIT (GNOME),
     Add symbol versioning to libxml2 shared libs (Daniel Veillard)
-  
+
    - Portability:
     593857 try to work around thread pbm MinGW 4.4 (Daniel Veillard),
     594250 rename ATTRIBUTE_ALLOC_SIZE to avoid clashes (Daniel Veillard),
@@ -63,7 +63,7 @@ http://svn.gnome.org/viewvc/libxml2/trunk/
     Bug 571059 â MSVC doesn't work with the bakefile (Intron),
     fix ATTRIBUTE_PRINTF header clash (Belgabor and Mike Hommey),
     fixes for Borland/CodeGear/Embarcadero compilers (Eric Zurcher)
-  
+
    - Documentation:
     544910 typo: "renciliateNs" (Leonid Evdokimov),
     Add VxWorks to list of OSes (Daniel Veillard),
@@ -72,7 +72,7 @@ http://svn.gnome.org/viewvc/libxml2/trunk/
     Added sponsoring by AOE media for the server (Daniel Veillard),
     updated URLs for GNOME (Vincent Lefevre),
     more warnings about xmlCleanupThreads and xmlCleanupParser (Daniel Veillard)
-  
+
    - Bug fixes:
     594514 memory leaks - duplicate initialization (MOD),
     Wrong block opening in htmlNodeDumpOutputInternal (Daniel Veillard),
@@ -142,7 +142,7 @@ http://svn.gnome.org/viewvc/libxml2/trunk/
     xmlXPathRegisterNs should not allow enpty prefixes (Daniel Veillard),
     add a missing check in xmlAddSibling (Kris Breuker),
     avoid leaks on errors (Jinmei Tatuya)
-  
+
    - Cleanup:
     Chasing dead assignments reported by clang-scan (Daniel Veillard),
     A few more safety cleanup raised by scan (Daniel Veillard),
@@ -158,7 +158,7 @@ http://svn.gnome.org/viewvc/libxml2/trunk/
     hide the nbParse* variables used for debugging (Mike Hommey),
     570806 changed include of config.h (William M. Brack),
     cleanups and error reports when xmlTextWriterVSprintf fails (Jinmei Tatuya)
-  
+
 
 
 2.7.3: Jan 18 2009:
@@ -182,7 +182,7 @@ http://svn.gnome.org/viewvc/libxml2/trunk/
    - Bug fixes: nasty entity bug introduced in 2.7.0, restore old behaviour
         when saving an HTML doc with an xml dump function, HTML UTF-8 parsing
         bug, fix reader custom error handlers (Riccardo Scussat)
-    
+
    - Improvement: xmlSave options for more flexibility to save as
         XML/HTML/XHTML, handle leading BOM in HTML documents
 
@@ -201,7 +201,7 @@ http://svn.gnome.org/viewvc/libxml2/trunk/
    - Portability fixes: Older Win32 platforms (Rob Richards), MSVC
       porting fix (Rob Richards), Mac OS X regression tests (Sven Herzberg),
       non GNUCC builds (Rob Richards), compilation on Haiku (Andreas FÃ¤rber)
-      
+
    - Bug fixes: various realloc problems (Ashwin), potential double-free
       (Ashwin), regexp crash, icrash with invalid whitespace facets (Rob
       Richards), pattern fix when streaming (William Brack), various XML
@@ -268,14 +268,14 @@ http://svn.gnome.org/viewvc/libxml2/trunk/
       parsing if attribute redeclared, avoid crash in hash list scanner if
       deleting elements, column counter bug fix (Christian Schmidt),
       HTML embed element saving fix (Stefan Behnel), avoid -L/usr/lib
-      output from xml2-config (Fred Crozat), avoid an xmllint crash 
+      output from xml2-config (Fred Crozat), avoid an xmllint crash
       (Stefan Kost), don't stop HTML parsing on out of range chars.
-      
+
    - Code cleanup: fix open() call third argument, regexp cut'n paste
       copy error, unused variable in __xmlGlobalInitMutexLock (Hannes Eder),
       some make distcheck realted fixes (John Carr)
    - Improvements: HTTP Header: includes port number (William Brack),
-      testURI --debug option, 
+      testURI --debug option,
 
 
 2.6.30: Aug 23 2007:
@@ -297,7 +297,7 @@ http://svn.gnome.org/viewvc/libxml2/trunk/
       (Wendy Doyle and Mark Rowe), Windows compilation and threading
       improvements (Rob Richards), compilation against old Python versions,
       new GNU tar changes (Ryan Hill)
-   - Documentation: xmlURIUnescapeString comment, 
+   - Documentation: xmlURIUnescapeString comment,
    - Bugfixes: xmlBufferAdd problem (Richard Jones), 'make valgrind'
       flag fix (Richard Jones), regexp interpretation of \,
       htmlCreateDocParserCtxt (Jean-Daniel Dupas), configure.in
@@ -310,11 +310,11 @@ http://svn.gnome.org/viewvc/libxml2/trunk/
       dups in the writer (Rob Richards), xmlCtxtReset bug, UTF-8 encoding
       error handling, recustion on next in catalogs, fix a Relax-NG crash,
       workaround wrong file: URIs, htmlNodeDumpFormatOutput on attributes,
-      invalid character in attribute detection bug, big comments before 
+      invalid character in attribute detection bug, big comments before
       internal subset streaming bug, HTML parsing of attributes with : in
-      the name, IDness of name in HTML (Dagfinn I. MannsÃ¥ker) 
+      the name, IDness of name in HTML (Dagfinn I. MannsÃ¥ker)
    - Improvement: keep URI query parts in raw form (Richard Jones),
-      embed tag support in HTML (Michael Day) 
+      embed tag support in HTML (Michael Day)
 
 
 2.6.28: Apr 17 2007:
@@ -344,21 +344,21 @@ http://svn.gnome.org/viewvc/libxml2/trunk/
 
 
 2.6.27: Oct 25 2006:
-   - Portability fixes: file names on windows (Roland Schwingel, 
-      Emelyanov Alexey), windows compile fixup (Rob Richards), 
+   - Portability fixes: file names on windows (Roland Schwingel,
+      Emelyanov Alexey), windows compile fixup (Rob Richards),
       AIX iconv() is apparently case sensitive
    - improvements: Python XPath types mapping (Nic Ferrier), XPath optimization
       (Kasimier), add xmlXPathCompiledEvalToBoolean (Kasimier), Python node
       equality and comparison (Andreas Pakulat), xmlXPathCollectAndTest
-      improvememt (Kasimier), expose if library was compiled with zlib 
+      improvememt (Kasimier), expose if library was compiled with zlib
       support (Andrew Nosenko), cache for xmlSchemaIDCMatcher structs
       (Kasimier), xmlTextConcat should work with comments and PIs (Rob
       Richards), export htmlNewParserCtxt needed by Michael Day, refactoring
-      of catalog entity loaders (Michael Day), add XPointer support to 
-      python bindings (Ross Reedstrom, Brian West and Stefan Anca), 
+      of catalog entity loaders (Michael Day), add XPointer support to
+      python bindings (Ross Reedstrom, Brian West and Stefan Anca),
       try to sort out most file path to URI conversions and xmlPathToUri,
       add --html --memory case to xmllint
-   - building fix: fix --with-minimum (Felipe Contreras), VMS fix, 
+   - building fix: fix --with-minimum (Felipe Contreras), VMS fix,
       const'ification of HTML parser structures (Matthias Clasen),
       portability fix (Emelyanov Alexey), wget autodetection (Peter
       Breitenlohner),  remove the build path recorded in the python
@@ -366,7 +366,7 @@ http://svn.gnome.org/viewvc/libxml2/trunk/
       (Mikhail Zabaluev), fix --with-minimum --with-sax1 builds, fix
       --with-minimum --with-schemas builds
    - bug fix: xmlGetNodePath fix (Kasimier), xmlDOMWrapAdoptNode and
-      attribute (Kasimier), crash when using the recover mode, 
+      attribute (Kasimier), crash when using the recover mode,
       xmlXPathEvalExpr problem (Kasimier), xmlXPathCompExprAdd bug (Kasimier),
       missing destry in xmlFreeRMutex (Andrew Nosenko), XML Schemas fixes
       (Kasimier), warning on entities processing, XHTML script and style
@@ -375,21 +375,21 @@ http://svn.gnome.org/viewvc/libxml2/trunk/
       allocation bug (Marton Illes), error message end of line (Rob Richards),
       fix attribute serialization in writer (Rob Richards), PHP4 DTD validation
       crasher, parser safety patch (Ben Darnell), _private context propagation
-      when parsing entities (with Michael Day), fix entities behaviour when 
+      when parsing entities (with Michael Day), fix entities behaviour when
       using SAX, URI to file path fix (Mikhail Zabaluev), disapearing validity
       context, arg error in SAX callback (Mike Hommey), fix mixed-content
       autodetect when using --noblanks, fix xmlIOParseDTD error handling,
       fix bug in xmlSplitQName on special Names, fix Relax-NG element content
-      validation bug, fix xmlReconciliateNs bug, fix potential attribute 
+      validation bug, fix xmlReconciliateNs bug, fix potential attribute
       XML parsing bug, fix line/column accounting in XML parser, chunking bug
       in the HTML parser on script, try to detect obviously buggy HTML
-      meta encoding indications, bugs with encoding BOM and xmlSaveDoc, 
+      meta encoding indications, bugs with encoding BOM and xmlSaveDoc,
       HTML entities in attributes parsing, HTML minimized attribute values,
       htmlReadDoc and htmlReadIO were broken, error handling bug in
       xmlXPathEvalExpression (Olaf Walkowiak), fix a problem in
       htmlCtxtUseOptions, xmlNewInputFromFile could leak (Marius Konitzer),
       bug on misformed SSD regexps (Christopher Boumenot)
-      
+
    - documentation: warning about XML_PARSE_COMPACT (Kasimier Buchcik),
       fix xmlXPathCastToString documentation, improve man pages for
       xmllitn and xmlcatalog (Daniel Leidert), fixed comments of a few
@@ -417,7 +417,7 @@ Do not use or package 2.6.25
       HP-UX compiler workaround (Rick Jones), xml2-config bugfix, gcc-4.1
       cleanups, Python detection scheme (Joseph Sacco), UTF-8 file paths on
       Windows (Roland Schwingel).
-      
+
    - Improvements: xmlDOMWrapReconcileNamespaces xmlDOMWrapCloneNode (Kasimier
       Buchcik), XML catalog debugging (Rick Jones), update to Unicode 4.01.
    - Bug fixes: xmlParseChunk() problem in 2.6.23, xmlParseInNodeContext()
@@ -430,10 +430,10 @@ Do not use or package 2.6.25
       xmlSetProp fixes (Rob Richards), HTML IDness (Rob Richards), a large
       number of cleanups and small fixes based on Coverity reports, bug
       in character ranges, Unicode tables const (Aivars Kalvans), schemas
-      fix (Stefan Kost), xmlRelaxNGParse error deallocation, 
+      fix (Stefan Kost), xmlRelaxNGParse error deallocation,
       xmlSchemaAddSchemaDoc error deallocation, error handling on unallowed
       code point, ixmllint --nonet to never reach the net (Gary Coady),
-      line break in writer after end PI (Jason Viers). 
+      line break in writer after end PI (Jason Viers).
    - Documentation: man pages updates and cleanups (Daniel Leidert).
    - New features: Relax NG structure error handlers.
 
@@ -593,7 +593,7 @@ Do not use or package 2.6.25
     serialization time
    - improvements: lot of work on Schemas by Kasimier Buchcik on facets
     checking and also mixed handling.
-   - 
+   -
 
 
 2.6.18: Mar 13 2005:
@@ -1156,7 +1156,7 @@ A bugfixes only release   - Windows Makefiles (William Brack)
     namespaces,
     2 serialization bugs, node info generation problems, a DTD regexp
     generation problem.
-  
+
    - Portability: windows updates and path canonicalization (Igor)
    - A few typo fixes (Kjartan Maraas)
    - Python bindings generator fixes (Stephane Bidoul)
@@ -1318,9 +1318,9 @@ A bugfixes only release   - Windows Makefiles (William Brack)
 
 2.4.21: Apr 29 2002:
 This release is both a bug fix release and also contains the early XML
-Schemas structures at 
+Schemas structures at
 http://www.w3.org/TR/xmlschema-1/
- and datatypes at 
+ and datatypes at
 http://www.w3.org/TR/xmlschema-2/
  code, beware, all
 interfaces are likely to change, there is huge holes, it is clearly a work in
@@ -1816,7 +1816,7 @@ Lots of bugfixes, and added a basic SGML catalog support:   - HTML push bugfix #
         related problems
       output to a given encoding has been added/tested
       lot of various fixes
-    
+
    - added xmlStopParser() to stop parsing
    - improved a lot parsing speed when there is large CDATA blocs
    - includes XPath patches provided by Picdar Technology
@@ -1836,7 +1836,7 @@ Lots of bugfixes, and added a basic SGML catalog support:   - HTML push bugfix #
     #include <libxml/xxx.h>
     instead of
     #include "xxx.h"
-  
+
    - a new URI module for parsing URIs and following strictly RFC 2396
    - the memory allocation routines used by libxml can now be overloaded
     dynamically by using xmlMemSetup()
@@ -1873,7 +1873,7 @@ Lots of bugfixes, and added a basic SGML catalog support:   - HTML push bugfix #
       Validation now correctly handle entities content
       change
         structures to accommodate DOM
-    
+
    - fix I18N support. ISO-Latin-x/UTF-8/UTF-16 (nearly) seems correctly
         handled now
    - Better handling of entities, especially well-formedness checking
@@ -2002,5 +2002,5 @@ Lots of bugfixes, and added a basic SGML catalog support:   - HTML push bugfix #
     implementation
    - Added an HTML parser front-end
 
-Daniel Veillard at 
+Daniel Veillard at
 bugs.html

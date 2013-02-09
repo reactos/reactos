@@ -43,7 +43,7 @@
 /**
  * XMLCDECL:
  *
- * Macro which declares the calling convention for exported functions that 
+ * Macro which declares the calling convention for exported functions that
  * use '...'.
  */
 #define XMLCDECL

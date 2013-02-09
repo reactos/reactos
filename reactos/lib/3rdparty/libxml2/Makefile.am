@@ -6,7 +6,7 @@ SUBDIRS = include . doc example xstc @PYTHON_SUBDIR@
 
 DIST_SUBDIRS = include . doc example python xstc
 
-INCLUDES = -I$(top_builddir)/include -I@srcdir@/include @THREAD_CFLAGS@ @Z_CFLAGS@ 
+INCLUDES = -I$(top_builddir)/include -I@srcdir@/include @THREAD_CFLAGS@ @Z_CFLAGS@
 
 noinst_PROGRAMS=testSchemas testRelax testSAX testHTML testXPath testURI \
                 testThreads testC14N testAutomata testRegexp \
@@ -63,97 +63,97 @@ m4datadir = $(datadir)/aclocal
 m4data_DATA = libxml.m4
 
 runtest_SOURCES=runtest.c
-runtest_LDFLAGS = 
+runtest_LDFLAGS =
 runtest_DEPENDENCIES = $(DEPS)
 runtest_LDADD= @BASE_THREAD_LIBS@ @RDL_LIBS@ $(LDADDS)
 
 testrecurse_SOURCES=testrecurse.c
-testrecurse_LDFLAGS = 
+testrecurse_LDFLAGS =
 testrecurse_DEPENDENCIES = $(DEPS)
 testrecurse_LDADD= @BASE_THREAD_LIBS@ @RDL_LIBS@ $(LDADDS)
 
 testchar_SOURCES=testchar.c
-testchar_LDFLAGS = 
+testchar_LDFLAGS =
 testchar_DEPENDENCIES = $(DEPS)
 testchar_LDADD= @RDL_LIBS@ $(LDADDS)
 
 testdict_SOURCES=testdict.c
-testdict_LDFLAGS = 
+testdict_LDFLAGS =
 testdict_DEPENDENCIES = $(DEPS)
 testdict_LDADD= @RDL_LIBS@ $(LDADDS)
 
 runsuite_SOURCES=runsuite.c
-runsuite_LDFLAGS = 
+runsuite_LDFLAGS =
 runsuite_DEPENDENCIES = $(DEPS)
 runsuite_LDADD= @RDL_LIBS@ $(LDADDS)
 
 xmllint_SOURCES=xmllint.c
-xmllint_LDFLAGS = 
+xmllint_LDFLAGS =
 xmllint_DEPENDENCIES = $(DEPS)
 xmllint_LDADD=  @RDL_LIBS@ $(LDADDS)
 
 testSAX_SOURCES=testSAX.c
-testSAX_LDFLAGS = 
+testSAX_LDFLAGS =
 testSAX_DEPENDENCIES = $(DEPS)
 testSAX_LDADD= $(LDADDS)
 
 testHTML_SOURCES=testHTML.c
-testHTML_LDFLAGS = 
+testHTML_LDFLAGS =
 testHTML_DEPENDENCIES = $(DEPS)
 testHTML_LDADD= $(LDADDS)
 
 xmlcatalog_SOURCES=xmlcatalog.c
-xmlcatalog_LDFLAGS = 
+xmlcatalog_LDFLAGS =
 xmlcatalog_DEPENDENCIES = $(DEPS)
 xmlcatalog_LDADD= @RDL_LIBS@ $(LDADDS)
 
 testXPath_SOURCES=testXPath.c
-testXPath_LDFLAGS = 
+testXPath_LDFLAGS =
 testXPath_DEPENDENCIES = $(DEPS)
 testXPath_LDADD= $(LDADDS)
 
 testC14N_SOURCES=testC14N.c
-testC14N_LDFLAGS = 
+testC14N_LDFLAGS =
 testC14N_DEPENDENCIES = $(DEPS)
 testC14N_LDADD= $(LDADDS)
 
 testThreads_SOURCES=testThreads@THREADS_W32@.c
-testThreads_LDFLAGS = 
+testThreads_LDFLAGS =
 testThreads_DEPENDENCIES = $(DEPS)
 testThreads_LDADD= @BASE_THREAD_LIBS@  $(LDADDS)
 
 testURI_SOURCES=testURI.c
-testURI_LDFLAGS = 
+testURI_LDFLAGS =
 testURI_DEPENDENCIES = $(DEPS)
 testURI_LDADD= $(LDADDS)
 
 testRegexp_SOURCES=testRegexp.c
-testRegexp_LDFLAGS = 
+testRegexp_LDFLAGS =
 testRegexp_DEPENDENCIES = $(DEPS)
 testRegexp_LDADD= $(LDADDS)
 
 testAutomata_SOURCES=testAutomata.c
-testAutomata_LDFLAGS = 
+testAutomata_LDFLAGS =
 testAutomata_DEPENDENCIES = $(DEPS)
 testAutomata_LDADD= $(LDADDS)
 
 testSchemas_SOURCES=testSchemas.c
-testSchemas_LDFLAGS = 
+testSchemas_LDFLAGS =
 testSchemas_DEPENDENCIES = $(DEPS)
 testSchemas_LDADD= $(LDADDS)
 
 testRelax_SOURCES=testRelax.c
-testRelax_LDFLAGS = 
+testRelax_LDFLAGS =
 testRelax_DEPENDENCIES = $(DEPS)
 testRelax_LDADD= $(LDADDS)
 
 testReader_SOURCES=testReader.c
-testReader_LDFLAGS = 
+testReader_LDFLAGS =
 testReader_DEPENDENCIES = $(DEPS)
 testReader_LDADD= $(LDADDS)
 
 testModule_SOURCES=testModule.c
-testModule_LDFLAGS = 
+testModule_LDFLAGS =
 testModule_DEPENDENCIES = $(DEPS)
 testModule_LDADD= $(LDADDS)
 
@@ -173,17 +173,17 @@ testapi.c: $(srcdir)/gentest.py
 	    $(PYTHON) $(srcdir)/gentest.py $(srcdir) ; fi )
 
 testapi_SOURCES=testapi.c
-testapi_LDFLAGS = 
+testapi_LDFLAGS =
 testapi_DEPENDENCIES = $(DEPS)
 testapi_LDADD= $(LDADDS)
 
 runxmlconf_SOURCES=runxmlconf.c
-runxmlconf_LDFLAGS = 
+runxmlconf_LDFLAGS =
 runxmlconf_DEPENDENCIES = $(DEPS)
 runxmlconf_LDADD= $(LDADDS)
 
 #testOOM_SOURCES=testOOM.c testOOMlib.h testOOMlib.c
-#testOOM_LDFLAGS = 
+#testOOM_LDFLAGS =
 #testOOM_DEPENDENCIES = $(DEPS)
 #testOOM_LDADD= $(LDADDS)
 
@@ -1206,13 +1206,13 @@ pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libxml-2.0.pc
 
 #
-# Install the tests program sources as examples 
+# Install the tests program sources as examples
 #
 BASE_DIR=$(datadir)/doc
 DOC_MODULE=libxml2-$(VERSION)
 EXAMPLES_DIR=$(BASE_DIR)/$(DOC_MODULE)/examples
 
-install-data-local: 
+install-data-local:
 	@MKDIR_P@ $(DESTDIR)$(BASE_DIR)/$(DOC_MODULE)
 	-@INSTALL@ -m 0644 $(srcdir)/Copyright $(DESTDIR)$(BASE_DIR)/$(DOC_MODULE)
 	@MKDIR_P@ $(DESTDIR)$(EXAMPLES_DIR)

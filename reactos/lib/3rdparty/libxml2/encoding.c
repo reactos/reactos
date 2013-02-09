@@ -1825,7 +1825,7 @@ xmlIconvWrapper(iconv_t cd, unsigned char *out, int *outlen,
 
 /************************************************************************
  *									*
- *		ICU based generic conversion functions	         	*
+ *		ICU based generic conversion functions		*
  *									*
  ************************************************************************/
 
@@ -2197,7 +2197,7 @@ retry:
 	else if (handler->uconv_out != NULL) {
 	    ret = xmlUconvWrapper(handler->uconv_out, 0,
                               &out->content[out->use],
- 				              &written, NULL, &toconv);
+				              &written, NULL, &toconv);
 	    out->use += written;
 	    out->content[out->use] = 0;
 	}
@@ -2603,7 +2603,7 @@ UTF8ToISO8859x(unsigned char* out, int *outlen,
             c2 = c2 & 0x3F;
 	    d = d & 0x0F;
 	    d = xlattable [48 + c2 + xlattable [48 + c1 +
-	    		xlattable [32 + d] * 64] * 64];
+			xlattable [32 + d] * 64] * 64];
             if (d == 0) {
                 /* not in character set */
                 *outlen = out - outstart;

@@ -10,7 +10,7 @@ BuildRequires: python python-devel zlib-devel pkgconfig
 URL: http://xmlsoft.org/
 
 %description
-This library allows to manipulate XML files. It includes support 
+This library allows to manipulate XML files. It includes support
 to read, modify and write XML and HTML files. There is DTDs support
 this includes parsing and validation even with complex DtDs, either
 at parse time or later once the document has been modified. The output
@@ -29,7 +29,7 @@ Requires: pkgconfig
 
 %description devel
 Libraries, include files, etc you can use to develop XML applications.
-This library allows to manipulate XML files. It includes support 
+This library allows to manipulate XML files. It includes support
 to read, modify and write XML and HTML files. There is DTDs support
 this includes parsing and validation even with complex DtDs, either
 at parse time or later once the document has been modified. The output
@@ -50,7 +50,7 @@ The libxml2-python package contains a module that permits applications
 written in the Python programming language to use the interface
 supplied by the libxml2 library to manipulate XML files.
 
-This library allows to manipulate XML files. It includes support 
+This library allows to manipulate XML files. It includes support
 to read, modify and write XML and HTML files. There is DTDs support
 this includes parsing and validation even with complex DTDs, either
 at parse time or later once the document has been modified.

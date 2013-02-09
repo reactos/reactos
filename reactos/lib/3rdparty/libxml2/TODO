@@ -13,7 +13,7 @@ DOCS:
 =====
 
 - use case of using XInclude to load for example a description.
-  order document + product base -(XSLT)-> quote with XIncludes 
+  order document + product base -(XSLT)-> quote with XIncludes
                                                    |
   HTML output with description of parts <---(XSLT)--
 
@@ -56,7 +56,7 @@ TODO:
 
 - function to rebuild the ID table
 - functions to rebuild the DTD hash tables (after DTD changes).
-   
+
 
 EXTENSIONS:
 ===========
@@ -161,7 +161,7 @@ Done:
 - Added a clean mechanism for overload or added input methods:
   xmlRegisterInputCallbacks()
 - dynamically adapt the alloc entry point to use g_alloc()/g_free()
-  if the programmer wants it: 
+  if the programmer wants it:
     - use xmlMemSetup() to reset the routines used.
 - Check attribute normalization especially xmlGetProp()
 - Validity checking problems for NOTATIONS attributes
@@ -210,7 +210,7 @@ Done:
      the data set small, so will I.
   => the new progressive reading routines call the detection code
      is enabled, tested the ISO->UTF-8 stuff
-- External entities loading: 
+- External entities loading:
    - allow override by client code
    - make sure it is alled for all external entities referenced
   Done, client code should use xmlSetExternalEntityLoader() to set
@@ -222,7 +222,7 @@ Done:
 - push mode parsing i.e. non-blocking state based parser
   done, both for XML and HTML parsers. Use xmlCreatePushParserCtxt()
   and xmlParseChunk() and html counterparts.
-  The tester program now has a --push option to select that parser 
+  The tester program now has a --push option to select that parser
   front-end. Douplicated tests to use both and check results are similar.
 
 - Most of XPath, still see some troubles and occasionnal memleaks.
@@ -232,7 +232,7 @@ Done:
   - the shell interface has been cleanly separated and moved to debugXML.c
 - HTML parser, should be fairly stable now
 - API to search the lang of an attribute
-- Collect IDs at parsing and maintain a table. 
+- Collect IDs at parsing and maintain a table.
    PBM: maintain the table coherency
    PBM: how to detect ID types in absence of DtD !
 - Use it for XPath ID support

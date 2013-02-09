@@ -28,35 +28,35 @@
 
 static xmlEntity xmlEntityLt = {
     NULL, XML_ENTITY_DECL, BAD_CAST "lt",
-    NULL, NULL, NULL, NULL, NULL, NULL, 
+    NULL, NULL, NULL, NULL, NULL, NULL,
     BAD_CAST "<", BAD_CAST "<", 1,
     XML_INTERNAL_PREDEFINED_ENTITY,
     NULL, NULL, NULL, NULL, 0, 1
 };
 static xmlEntity xmlEntityGt = {
     NULL, XML_ENTITY_DECL, BAD_CAST "gt",
-    NULL, NULL, NULL, NULL, NULL, NULL, 
+    NULL, NULL, NULL, NULL, NULL, NULL,
     BAD_CAST ">", BAD_CAST ">", 1,
     XML_INTERNAL_PREDEFINED_ENTITY,
     NULL, NULL, NULL, NULL, 0, 1
 };
 static xmlEntity xmlEntityAmp = {
     NULL, XML_ENTITY_DECL, BAD_CAST "amp",
-    NULL, NULL, NULL, NULL, NULL, NULL, 
+    NULL, NULL, NULL, NULL, NULL, NULL,
     BAD_CAST "&", BAD_CAST "&", 1,
     XML_INTERNAL_PREDEFINED_ENTITY,
     NULL, NULL, NULL, NULL, 0, 1
 };
 static xmlEntity xmlEntityQuot = {
     NULL, XML_ENTITY_DECL, BAD_CAST "quot",
-    NULL, NULL, NULL, NULL, NULL, NULL, 
+    NULL, NULL, NULL, NULL, NULL, NULL,
     BAD_CAST "\"", BAD_CAST "\"", 1,
     XML_INTERNAL_PREDEFINED_ENTITY,
     NULL, NULL, NULL, NULL, 0, 1
 };
 static xmlEntity xmlEntityApos = {
     NULL, XML_ENTITY_DECL, BAD_CAST "apos",
-    NULL, NULL, NULL, NULL, NULL, NULL, 
+    NULL, NULL, NULL, NULL, NULL, NULL,
     BAD_CAST "'", BAD_CAST "'", 1,
     XML_INTERNAL_PREDEFINED_ENTITY,
     NULL, NULL, NULL, NULL, 0, 1
@@ -426,7 +426,7 @@ xmlNewEntity(xmlDocPtr doc, const xmlChar *name, int type,
  *
  * Do an entity lookup in the table.
  * returns the corresponding parameter entity, if found.
- * 
+ *
  * Returns A pointer to the entity structure or NULL if not found.
  */
 static xmlEntityPtr
@@ -441,7 +441,7 @@ xmlGetEntityFromTable(xmlEntitiesTablePtr table, const xmlChar *name) {
  *
  * Do an entity lookup in the internal and external subsets and
  * returns the corresponding parameter entity, if found.
- * 
+ *
  * Returns A pointer to the entity structure or NULL if not found.
  */
 xmlEntityPtr
@@ -472,7 +472,7 @@ xmlGetParameterEntity(xmlDocPtr doc, const xmlChar *name) {
  * Do an entity lookup in the DTD entity hash table and
  * returns the corresponding entity, if found.
  * Note: the first argument is the document node, not the DTD node.
- * 
+ *
  * Returns A pointer to the entity structure or NULL if not found.
  */
 xmlEntityPtr
@@ -496,7 +496,7 @@ xmlGetDtdEntity(xmlDocPtr doc, const xmlChar *name) {
  * Do an entity lookup in the document entity hash table and
  * returns the corresponding entity, otherwise a lookup is done
  * in the predefined entities too.
- * 
+ *
  * Returns A pointer to the entity structure or NULL if not found.
  */
 xmlEntityPtr
@@ -530,7 +530,7 @@ xmlGetDocEntity(xmlDocPtr doc, const xmlChar *name) {
 #define growBufferReentrant() {						\
     buffer_size *= 2;							\
     buffer = (xmlChar *)						\
-    		xmlRealloc(buffer, buffer_size * sizeof(xmlChar));	\
+		xmlRealloc(buffer, buffer_size * sizeof(xmlChar));	\
     if (buffer == NULL) {						\
         xmlEntitiesErrMemory("xmlEncodeEntitiesReentrant: realloc failed");\
 	return(NULL);							\
@@ -820,7 +820,7 @@ xmlFreeEntitiesTable(xmlEntitiesTablePtr table) {
  * @ent:  An entity
  *
  * Build a copy of an entity
- * 
+ *
  * Returns the new xmlEntitiesPtr or NULL in case of error.
  */
 static xmlEntityPtr
@@ -856,7 +856,7 @@ xmlCopyEntity(xmlEntityPtr ent) {
  * @table:  An entity table
  *
  * Build a copy of an entity table.
- * 
+ *
  * Returns the new xmlEntitiesTablePtr or NULL in case of error.
  */
 xmlEntitiesTablePtr
@@ -1005,7 +1005,7 @@ static void
 xmlDumpEntityDeclScan(xmlEntityPtr ent, xmlBufferPtr buf) {
     xmlDumpEntityDecl(buf, ent);
 }
-      
+
 /**
  * xmlDumpEntitiesTable:
  * @buf:  An XML buffer.

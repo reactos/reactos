@@ -393,7 +393,7 @@ xmlconfTestItem(xmlDocPtr doc, xmlNodePtr cur) {
     if (xmlStrEqual(type, BAD_CAST "not-wf")) {
         if (nstest == 0)
 	    xmlconfTestNotWF((char *) id, (char *) filename, options);
-        else 
+        else
 	    xmlconfTestNotNSWF((char *) id, (char *) filename, options);
     } else if (xmlStrEqual(type, BAD_CAST "valid")) {
         options |= XML_PARSE_DTDVALID;

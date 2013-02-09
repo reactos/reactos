@@ -176,7 +176,7 @@ xmlDictAddString(xmlDictPtr dict, const xmlChar *name, int namelen) {
     if (pool == NULL) {
         if (size == 0) size = 1000;
 	else size *= 4; /* exponential growth */
-        if (size < 4 * namelen) 
+        if (size < 4 * namelen)
 	    size = 4 * namelen; /* just in case ! */
 	pool = (xmlDictStringsPtr) xmlMalloc(sizeof(xmlDictStrings) + size);
 	if (pool == NULL)
@@ -828,7 +828,7 @@ xmlDictLookup(xmlDictPtr dict, const xmlChar *name, int len) {
     entry->okey = okey;
 
 
-    if (insert != NULL) 
+    if (insert != NULL)
 	insert->next = entry;
 
     dict->nbElems++;
@@ -1037,7 +1037,7 @@ xmlDictQLookup(xmlDictPtr dict, const xmlChar *prefix, const xmlChar *name) {
     entry->valid = 1;
     entry->okey = okey;
 
-    if (insert != NULL) 
+    if (insert != NULL)
 	insert->next = entry;
 
     dict->nbElems++;

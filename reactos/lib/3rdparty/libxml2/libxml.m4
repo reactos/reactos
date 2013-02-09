@@ -9,7 +9,7 @@
 dnl AM_PATH_XML2([MINIMUM-VERSION, [ACTION-IF-FOUND [, ACTION-IF-NOT-FOUND]]])
 dnl Test for XML, and define XML_CPPFLAGS and XML_LIBS
 dnl
-AC_DEFUN([AM_PATH_XML2],[ 
+AC_DEFUN([AM_PATH_XML2],[
 AC_ARG_WITH(xml-prefix,
             [  --with-xml-prefix=PFX   Prefix where libxml is installed (optional)],
             xml_config_prefix="$withval", xml_config_prefix="")
@@ -64,7 +64,7 @@ dnl
 #include <string.h>
 #include <libxml/xmlversion.h>
 
-int 
+int
 main()
 {
   int xml_major_version, xml_minor_version, xml_micro_version;
@@ -100,9 +100,9 @@ main()
       printf("*** xml2-config (version %d.%d.%d)\n",
          $xml_config_major_version, $xml_config_minor_version, $xml_config_micro_version);
       return 1;
-    } 
+    }
 /* Compare the headers to the library to make sure we match */
-  /* Less than ideal -- doesn't provide us with return value feedback, 
+  /* Less than ideal -- doesn't provide us with return value feedback,
    * only exits if there's a serious mismatch between header and library.
    */
     LIBXML_TEST_VERSION;
@@ -141,7 +141,7 @@ main()
 
   if test "x$no_xml" = x ; then
      AC_MSG_RESULT(yes (version $xml_config_major_version.$xml_config_minor_version.$xml_config_micro_version))
-     ifelse([$2], , :, [$2])     
+     ifelse([$2], , :, [$2])
   else
      AC_MSG_RESULT(no)
      if test "$XML2_CONFIG" = "no" ; then

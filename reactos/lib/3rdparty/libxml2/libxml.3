@@ -4,49 +4,49 @@ libxml \- library used to parse XML files
 .SH DESCRIPTION
 The
 .I  libxml
-library is used to parse XML files. 
-Its internal document repesentation is as close as possible to the 
-.I DOM 
+library is used to parse XML files.
+Its internal document repesentation is as close as possible to the
+.I DOM
 (Document Object Model) interface,
 an API for accessing XML or HTML structured documents.
 .LP
 The
 .I libxml
-library also has a 
+library also has a
 .IR SAX -like
-interface, 
-which is designed to be compatible with 
+interface,
+which is designed to be compatible with
 .IR expat (1).
 NOTE:
-.IR SAX , 
+.IR SAX ,
 the Simple API for XML,
 is a standard interface for event-based XML parsing,
-developed collaboratively by the members of the XML-DEV mailing list, 
+developed collaboratively by the members of the XML-DEV mailing list,
 currently hosted by OASIS.
 The
 .I expat
 library is a XML 1.0 parser written in C,
-which aims to be fully conforming. 
+which aims to be fully conforming.
 It is currently not a validating XML processor.
 .LP
 The
-.I libxml 
-library now includes a nearly complete 
-.I XPath 
-implementation. 
+.I libxml
+library now includes a nearly complete
+.I XPath
+implementation.
 The
 .I XPath
-(XML Path Language) is a language for addressing parts of an 
+(XML Path Language) is a language for addressing parts of an
 XML document,
-designed to be used by both 
-.I XSLT 
-and 
+designed to be used by both
+.I XSLT
+and
 .IR XPointer .
 .LP
 The
-.I libxml 
-library exports Push and Pull type parser interfaces for both XML and 
-.IR html . 
+.I libxml
+library exports Push and Pull type parser interfaces for both XML and
+.IR html .
 .SH FILES
 .TP 2.2i
 .B /depot/lib/libxml_2.0.0/libxml.a

@@ -7683,7 +7683,7 @@ xmlXPathNextDescendantOrSelfElemParent(xmlNodePtr cur,
 #ifdef LIBXML_DOCB_ENABLED
 	    case XML_DOCB_DOCUMENT_NODE:
 #endif
-	    case XML_HTML_DOCUMENT_NODE:	    
+	    case XML_HTML_DOCUMENT_NODE:
 		return(contextNode);
 	    default:
 		return(NULL);
@@ -12430,7 +12430,7 @@ apply_predicates: /* --------------------------------------------------- */
         if ((predOp != NULL) && (seq->nodeNr > 0)) {
 	    /*
 	    * E.g. when we have a "/foo[some expression][n]".
-	    */	    
+	    */
 	    /*
 	    * QUESTION TODO: The old predicate evaluation took into
 	    *  account location-sets.
@@ -12439,7 +12439,7 @@ apply_predicates: /* --------------------------------------------------- */
 	    *  All what I learned now from the evaluation semantics
 	    *  does not indicate that a location-set will be processed
 	    *  here, so this looks OK.
-	    */	    
+	    */
 	    /*
 	    * Iterate over all predicates, starting with the outermost
 	    * predicate.

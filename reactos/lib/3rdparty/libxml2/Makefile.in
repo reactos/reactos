@@ -566,11 +566,11 @@ top_srcdir = @top_srcdir@
 ACLOCAL_AMFLAGS = -I m4
 SUBDIRS = include . doc example xstc @PYTHON_SUBDIR@
 DIST_SUBDIRS = include . doc example python xstc
-INCLUDES = -I$(top_builddir)/include -I@srcdir@/include @THREAD_CFLAGS@ @Z_CFLAGS@ 
+INCLUDES = -I$(top_builddir)/include -I@srcdir@/include @THREAD_CFLAGS@ @Z_CFLAGS@
 bin_SCRIPTS = xml2-config
 lib_LTLIBRARIES = libxml2.la
 libxml2_la_LIBADD = @THREAD_LIBS@ @Z_LIBS@ $(ICONV_LIBS) @M_LIBS@ @WIN32_EXTRA_LIBADD@
-@USE_VERSION_SCRIPT_FALSE@LIBXML2_VERSION_SCRIPT = 
+@USE_VERSION_SCRIPT_FALSE@LIBXML2_VERSION_SCRIPT =
 @USE_VERSION_SCRIPT_TRUE@LIBXML2_VERSION_SCRIPT = $(VERSION_SCRIPT_FLAGS)$(srcdir)/libxml2.syms
 libxml2_la_LDFLAGS = @CYGWIN_EXTRA_LDFLAGS@ @WIN32_EXTRA_LDFLAGS@ \
                      $(LIBXML2_VERSION_SCRIPT) \
@@ -603,96 +603,96 @@ man_MANS = xml2-config.1 libxml.3
 m4datadir = $(datadir)/aclocal
 m4data_DATA = libxml.m4
 runtest_SOURCES = runtest.c
-runtest_LDFLAGS = 
+runtest_LDFLAGS =
 runtest_DEPENDENCIES = $(DEPS)
 runtest_LDADD = @BASE_THREAD_LIBS@ @RDL_LIBS@ $(LDADDS)
 testrecurse_SOURCES = testrecurse.c
-testrecurse_LDFLAGS = 
+testrecurse_LDFLAGS =
 testrecurse_DEPENDENCIES = $(DEPS)
 testrecurse_LDADD = @BASE_THREAD_LIBS@ @RDL_LIBS@ $(LDADDS)
 testchar_SOURCES = testchar.c
-testchar_LDFLAGS = 
+testchar_LDFLAGS =
 testchar_DEPENDENCIES = $(DEPS)
 testchar_LDADD = @RDL_LIBS@ $(LDADDS)
 testdict_SOURCES = testdict.c
-testdict_LDFLAGS = 
+testdict_LDFLAGS =
 testdict_DEPENDENCIES = $(DEPS)
 testdict_LDADD = @RDL_LIBS@ $(LDADDS)
 runsuite_SOURCES = runsuite.c
-runsuite_LDFLAGS = 
+runsuite_LDFLAGS =
 runsuite_DEPENDENCIES = $(DEPS)
 runsuite_LDADD = @RDL_LIBS@ $(LDADDS)
 xmllint_SOURCES = xmllint.c
-xmllint_LDFLAGS = 
+xmllint_LDFLAGS =
 xmllint_DEPENDENCIES = $(DEPS)
 xmllint_LDADD = @RDL_LIBS@ $(LDADDS)
 testSAX_SOURCES = testSAX.c
-testSAX_LDFLAGS = 
+testSAX_LDFLAGS =
 testSAX_DEPENDENCIES = $(DEPS)
 testSAX_LDADD = $(LDADDS)
 testHTML_SOURCES = testHTML.c
-testHTML_LDFLAGS = 
+testHTML_LDFLAGS =
 testHTML_DEPENDENCIES = $(DEPS)
 testHTML_LDADD = $(LDADDS)
 xmlcatalog_SOURCES = xmlcatalog.c
-xmlcatalog_LDFLAGS = 
+xmlcatalog_LDFLAGS =
 xmlcatalog_DEPENDENCIES = $(DEPS)
 xmlcatalog_LDADD = @RDL_LIBS@ $(LDADDS)
 testXPath_SOURCES = testXPath.c
-testXPath_LDFLAGS = 
+testXPath_LDFLAGS =
 testXPath_DEPENDENCIES = $(DEPS)
 testXPath_LDADD = $(LDADDS)
 testC14N_SOURCES = testC14N.c
-testC14N_LDFLAGS = 
+testC14N_LDFLAGS =
 testC14N_DEPENDENCIES = $(DEPS)
 testC14N_LDADD = $(LDADDS)
 testThreads_SOURCES = testThreads@THREADS_W32@.c
-testThreads_LDFLAGS = 
+testThreads_LDFLAGS =
 testThreads_DEPENDENCIES = $(DEPS)
 testThreads_LDADD = @BASE_THREAD_LIBS@  $(LDADDS)
 testURI_SOURCES = testURI.c
-testURI_LDFLAGS = 
+testURI_LDFLAGS =
 testURI_DEPENDENCIES = $(DEPS)
 testURI_LDADD = $(LDADDS)
 testRegexp_SOURCES = testRegexp.c
-testRegexp_LDFLAGS = 
+testRegexp_LDFLAGS =
 testRegexp_DEPENDENCIES = $(DEPS)
 testRegexp_LDADD = $(LDADDS)
 testAutomata_SOURCES = testAutomata.c
-testAutomata_LDFLAGS = 
+testAutomata_LDFLAGS =
 testAutomata_DEPENDENCIES = $(DEPS)
 testAutomata_LDADD = $(LDADDS)
 testSchemas_SOURCES = testSchemas.c
-testSchemas_LDFLAGS = 
+testSchemas_LDFLAGS =
 testSchemas_DEPENDENCIES = $(DEPS)
 testSchemas_LDADD = $(LDADDS)
 testRelax_SOURCES = testRelax.c
-testRelax_LDFLAGS = 
+testRelax_LDFLAGS =
 testRelax_DEPENDENCIES = $(DEPS)
 testRelax_LDADD = $(LDADDS)
 testReader_SOURCES = testReader.c
-testReader_LDFLAGS = 
+testReader_LDFLAGS =
 testReader_DEPENDENCIES = $(DEPS)
 testReader_LDADD = $(LDADDS)
 testModule_SOURCES = testModule.c
-testModule_LDFLAGS = 
+testModule_LDFLAGS =
 testModule_DEPENDENCIES = $(DEPS)
 testModule_LDADD = $(LDADDS)
 noinst_LTLIBRARIES = testdso.la
 testdso_la_SOURCES = testdso.c
 testdso_la_LDFLAGS = -module -no-undefined -avoid-version -rpath $(libdir)
 testapi_SOURCES = testapi.c
-testapi_LDFLAGS = 
+testapi_LDFLAGS =
 testapi_DEPENDENCIES = $(DEPS)
 testapi_LDADD = $(LDADDS)
 runxmlconf_SOURCES = runxmlconf.c
-runxmlconf_LDFLAGS = 
+runxmlconf_LDFLAGS =
 runxmlconf_DEPENDENCIES = $(DEPS)
 runxmlconf_LDADD = $(LDADDS)
 CLEANFILES = xml2Conf.sh *.gcda *.gcno
 confexecdir = $(libdir)
 confexec_DATA = xml2Conf.sh
-CVS_EXTRA_DIST = 
+CVS_EXTRA_DIST =
 EXTRA_DIST = xml2-config.in xml2Conf.sh.in libxml.spec.in libxml2.spec \
              libxml.m4 Copyright check-xml-test-suite.py gentest.py \
 	     check-relaxng-test-suite.py check-relaxng-test-suite2.py \
@@ -710,7 +710,7 @@ pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libxml-2.0.pc
 
 #
-# Install the tests program sources as examples 
+# Install the tests program sources as examples
 #
 BASE_DIR = $(datadir)/doc
 DOC_MODULE = libxml2-$(VERSION)
@@ -826,9 +826,9 @@ clean-noinstLTLIBRARIES:
 	  echo "rm -f \"$${dir}/so_locations\""; \
 	  rm -f "$${dir}/so_locations"; \
 	done
-libxml2.la: $(libxml2_la_OBJECTS) $(libxml2_la_DEPENDENCIES) 
+libxml2.la: $(libxml2_la_OBJECTS) $(libxml2_la_DEPENDENCIES)
 	$(libxml2_la_LINK) -rpath $(libdir) $(libxml2_la_OBJECTS) $(libxml2_la_LIBADD) $(LIBS)
-testdso.la: $(testdso_la_OBJECTS) $(testdso_la_DEPENDENCIES) 
+testdso.la: $(testdso_la_OBJECTS) $(testdso_la_DEPENDENCIES)
 	$(testdso_la_LINK)  $(testdso_la_OBJECTS) $(testdso_la_LIBADD) $(LIBS)
 install-binPROGRAMS: $(bin_PROGRAMS)
 	@$(NORMAL_INSTALL)
@@ -882,67 +882,67 @@ clean-noinstPROGRAMS:
 	list=`for p in $$list; do echo "$$p"; done | sed 's/$(EXEEXT)$$//'`; \
 	echo " rm -f" $$list; \
 	rm -f $$list
-runsuite$(EXEEXT): $(runsuite_OBJECTS) $(runsuite_DEPENDENCIES) 
+runsuite$(EXEEXT): $(runsuite_OBJECTS) $(runsuite_DEPENDENCIES)
 	@rm -f runsuite$(EXEEXT)
 	$(runsuite_LINK) $(runsuite_OBJECTS) $(runsuite_LDADD) $(LIBS)
-runtest$(EXEEXT): $(runtest_OBJECTS) $(runtest_DEPENDENCIES) 
+runtest$(EXEEXT): $(runtest_OBJECTS) $(runtest_DEPENDENCIES)
 	@rm -f runtest$(EXEEXT)
 	$(runtest_LINK) $(runtest_OBJECTS) $(runtest_LDADD) $(LIBS)
-runxmlconf$(EXEEXT): $(runxmlconf_OBJECTS) $(runxmlconf_DEPENDENCIES) 
+runxmlconf$(EXEEXT): $(runxmlconf_OBJECTS) $(runxmlconf_DEPENDENCIES)
 	@rm -f runxmlconf$(EXEEXT)
 	$(runxmlconf_LINK) $(runxmlconf_OBJECTS) $(runxmlconf_LDADD) $(LIBS)
-testAutomata$(EXEEXT): $(testAutomata_OBJECTS) $(testAutomata_DEPENDENCIES) 
+testAutomata$(EXEEXT): $(testAutomata_OBJECTS) $(testAutomata_DEPENDENCIES)
 	@rm -f testAutomata$(EXEEXT)
 	$(testAutomata_LINK) $(testAutomata_OBJECTS) $(testAutomata_LDADD) $(LIBS)
-testC14N$(EXEEXT): $(testC14N_OBJECTS) $(testC14N_DEPENDENCIES) 
+testC14N$(EXEEXT): $(testC14N_OBJECTS) $(testC14N_DEPENDENCIES)
 	@rm -f testC14N$(EXEEXT)
 	$(testC14N_LINK) $(testC14N_OBJECTS) $(testC14N_LDADD) $(LIBS)
-testHTML$(EXEEXT): $(testHTML_OBJECTS) $(testHTML_DEPENDENCIES) 
+testHTML$(EXEEXT): $(testHTML_OBJECTS) $(testHTML_DEPENDENCIES)
 	@rm -f testHTML$(EXEEXT)
 	$(testHTML_LINK) $(testHTML_OBJECTS) $(testHTML_LDADD) $(LIBS)
-testModule$(EXEEXT): $(testModule_OBJECTS) $(testModule_DEPENDENCIES) 
+testModule$(EXEEXT): $(testModule_OBJECTS) $(testModule_DEPENDENCIES)
 	@rm -f testModule$(EXEEXT)
 	$(testModule_LINK) $(testModule_OBJECTS) $(testModule_LDADD) $(LIBS)
-testReader$(EXEEXT): $(testReader_OBJECTS) $(testReader_DEPENDENCIES) 
+testReader$(EXEEXT): $(testReader_OBJECTS) $(testReader_DEPENDENCIES)
 	@rm -f testReader$(EXEEXT)
 	$(testReader_LINK) $(testReader_OBJECTS) $(testReader_LDADD) $(LIBS)
-testRegexp$(EXEEXT): $(testRegexp_OBJECTS) $(testRegexp_DEPENDENCIES) 
+testRegexp$(EXEEXT): $(testRegexp_OBJECTS) $(testRegexp_DEPENDENCIES)
 	@rm -f testRegexp$(EXEEXT)
 	$(testRegexp_LINK) $(testRegexp_OBJECTS) $(testRegexp_LDADD) $(LIBS)
-testRelax$(EXEEXT): $(testRelax_OBJECTS) $(testRelax_DEPENDENCIES) 
+testRelax$(EXEEXT): $(testRelax_OBJECTS) $(testRelax_DEPENDENCIES)
 	@rm -f testRelax$(EXEEXT)
 	$(testRelax_LINK) $(testRelax_OBJECTS) $(testRelax_LDADD) $(LIBS)
-testSAX$(EXEEXT): $(testSAX_OBJECTS) $(testSAX_DEPENDENCIES) 
+testSAX$(EXEEXT): $(testSAX_OBJECTS) $(testSAX_DEPENDENCIES)
 	@rm -f testSAX$(EXEEXT)
 	$(testSAX_LINK) $(testSAX_OBJECTS) $(testSAX_LDADD) $(LIBS)
-testSchemas$(EXEEXT): $(testSchemas_OBJECTS) $(testSchemas_DEPENDENCIES) 
+testSchemas$(EXEEXT): $(testSchemas_OBJECTS) $(testSchemas_DEPENDENCIES)
 	@rm -f testSchemas$(EXEEXT)
 	$(testSchemas_LINK) $(testSchemas_OBJECTS) $(testSchemas_LDADD) $(LIBS)
-testThreads$(EXEEXT): $(testThreads_OBJECTS) $(testThreads_DEPENDENCIES) 
+testThreads$(EXEEXT): $(testThreads_OBJECTS) $(testThreads_DEPENDENCIES)
 	@rm -f testThreads$(EXEEXT)
 	$(testThreads_LINK) $(testThreads_OBJECTS) $(testThreads_LDADD) $(LIBS)
-testURI$(EXEEXT): $(testURI_OBJECTS) $(testURI_DEPENDENCIES) 
+testURI$(EXEEXT): $(testURI_OBJECTS) $(testURI_DEPENDENCIES)
 	@rm -f testURI$(EXEEXT)
 	$(testURI_LINK) $(testURI_OBJECTS) $(testURI_LDADD) $(LIBS)
-testXPath$(EXEEXT): $(testXPath_OBJECTS) $(testXPath_DEPENDENCIES) 
+testXPath$(EXEEXT): $(testXPath_OBJECTS) $(testXPath_DEPENDENCIES)
 	@rm -f testXPath$(EXEEXT)
 	$(testXPath_LINK) $(testXPath_OBJECTS) $(testXPath_LDADD) $(LIBS)
-testapi$(EXEEXT): $(testapi_OBJECTS) $(testapi_DEPENDENCIES) 
+testapi$(EXEEXT): $(testapi_OBJECTS) $(testapi_DEPENDENCIES)
 	@rm -f testapi$(EXEEXT)
 	$(testapi_LINK) $(testapi_OBJECTS) $(testapi_LDADD) $(LIBS)
-testchar$(EXEEXT): $(testchar_OBJECTS) $(testchar_DEPENDENCIES) 
+testchar$(EXEEXT): $(testchar_OBJECTS) $(testchar_DEPENDENCIES)
 	@rm -f testchar$(EXEEXT)
 	$(testchar_LINK) $(testchar_OBJECTS) $(testchar_LDADD) $(LIBS)
-testdict$(EXEEXT): $(testdict_OBJECTS) $(testdict_DEPENDENCIES) 
+testdict$(EXEEXT): $(testdict_OBJECTS) $(testdict_DEPENDENCIES)
 	@rm -f testdict$(EXEEXT)
 	$(testdict_LINK) $(testdict_OBJECTS) $(testdict_LDADD) $(LIBS)
-testrecurse$(EXEEXT): $(testrecurse_OBJECTS) $(testrecurse_DEPENDENCIES) 
+testrecurse$(EXEEXT): $(testrecurse_OBJECTS) $(testrecurse_DEPENDENCIES)
 	@rm -f testrecurse$(EXEEXT)
 	$(testrecurse_LINK) $(testrecurse_OBJECTS) $(testrecurse_LDADD) $(LIBS)
-xmlcatalog$(EXEEXT): $(xmlcatalog_OBJECTS) $(xmlcatalog_DEPENDENCIES) 
+xmlcatalog$(EXEEXT): $(xmlcatalog_OBJECTS) $(xmlcatalog_DEPENDENCIES)
 	@rm -f xmlcatalog$(EXEEXT)
 	$(xmlcatalog_LINK) $(xmlcatalog_OBJECTS) $(xmlcatalog_LDADD) $(LIBS)
-xmllint$(EXEEXT): $(xmllint_OBJECTS) $(xmllint_DEPENDENCIES) 
+xmllint$(EXEEXT): $(xmllint_OBJECTS) $(xmllint_DEPENDENCIES)
 	@rm -f xmllint$(EXEEXT)
 	$(xmllint_LINK) $(xmllint_OBJECTS) $(xmllint_LDADD) $(LIBS)
 install-binSCRIPTS: $(bin_SCRIPTS)
@@ -1707,7 +1707,7 @@ testapi.c: $(srcdir)/gentest.py
 	    $(PYTHON) $(srcdir)/gentest.py $(srcdir) ; fi )
 
 #testOOM_SOURCES=testOOM.c testOOMlib.h testOOMlib.c
-#testOOM_LDFLAGS = 
+#testOOM_LDFLAGS =
 #testOOM_DEPENDENCIES = $(DEPS)
 #testOOM_LDADD= $(LDADDS)
 
@@ -2701,7 +2701,7 @@ xml2Conf.sh: xml2Conf.sh.in Makefile
 	       < $(srcdir)/xml2Conf.sh.in > xml2Conf.tmp \
 	&& mv xml2Conf.tmp xml2Conf.sh
 
-install-data-local: 
+install-data-local:
 	@MKDIR_P@ $(DESTDIR)$(BASE_DIR)/$(DOC_MODULE)
 	-@INSTALL@ -m 0644 $(srcdir)/Copyright $(DESTDIR)$(BASE_DIR)/$(DOC_MODULE)
 	@MKDIR_P@ $(DESTDIR)$(EXAMPLES_DIR)

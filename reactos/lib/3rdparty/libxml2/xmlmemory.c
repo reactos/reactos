@@ -58,7 +58,7 @@ void xmlMallocBreakpoint(void);
 
 /************************************************************************
  *									*
- * 		Macros, variables and associated types			*
+ *		Macros, variables and associated types			*
  *									*
  ************************************************************************/
 

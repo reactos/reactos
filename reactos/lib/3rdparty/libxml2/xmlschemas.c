@@ -107,7 +107,7 @@
 #endif
 
 #define UNBOUNDED (1 << 30)
-#define TODO 								\
+#define TODO								\
     xmlGenericError(xmlGenericErrorContext,				\
 	    "Unimplemented block at %s:%d\n",				\
             __FILE__, __LINE__);
@@ -1043,9 +1043,9 @@ struct _xmlSchemaSubstGroup {
 };
 
 /************************************************************************
- * 									*
- * 			Some predeclarations				*
- * 									*
+ *									*
+ *			Some predeclarations				*
+ *									*
  ************************************************************************/
 
 static int xmlSchemaParseInclude(xmlSchemaParserCtxtPtr ctxt,
@@ -1098,7 +1098,7 @@ xmlSchemaParseAttributeGroupRef(xmlSchemaParserCtxtPtr pctxt,
 
 /************************************************************************
  *									*
- * 			Helper functions			        *
+ *			Helper functions			        *
  *									*
  ************************************************************************/
 
@@ -1836,7 +1836,7 @@ xmlSchemaFormatFacetEnumSet(xmlSchemaAbstractCtxtPtr actxt,
 
 /************************************************************************
  *									*
- * 			Error functions				        *
+ *			Error functions				        *
  *									*
  ************************************************************************/
 
@@ -1974,7 +1974,7 @@ xmlSchemaPErrExt(xmlSchemaParserCtxtPtr ctxt, xmlNodePtr node, int error,
 
 /************************************************************************
  *									*
- * 			Allround error functions			*
+ *			Allround error functions			*
  *									*
  ************************************************************************/
 
@@ -3199,25 +3199,25 @@ xmlSchemaPContentErr(xmlSchemaParserCtxtPtr ctxt,
 }
 
 /************************************************************************
- * 									*
- * 			Streamable error functions                      *
- * 									*
+ *									*
+ *			Streamable error functions                      *
+ *									*
  ************************************************************************/
 
 
 
 
 /************************************************************************
- * 									*
- * 			Validation helper functions			*
- * 									*
+ *									*
+ *			Validation helper functions			*
+ *									*
  ************************************************************************/
 
 
 /************************************************************************
- * 									*
- * 			Allocation functions				*
- * 									*
+ *									*
+ *			Allocation functions				*
+ *									*
  ************************************************************************/
 
 /**
@@ -4135,9 +4135,9 @@ xmlSchemaFree(xmlSchemaPtr schema)
 }
 
 /************************************************************************
- * 									*
- * 			Debug functions					*
- * 									*
+ *									*
+ *			Debug functions					*
+ *									*
  ************************************************************************/
 
 #ifdef LIBXML_OUTPUT_ENABLED
@@ -4587,7 +4587,7 @@ xmlSchemaDebugDumpIDCTable(FILE * output,
 
 /************************************************************************
  *									*
- * 			Utilities					*
+ *			Utilities					*
  *									*
  ************************************************************************/
 
@@ -4692,9 +4692,9 @@ xmlSchemaGetProp(xmlSchemaParserCtxtPtr ctxt, xmlNodePtr node,
 }
 
 /************************************************************************
- * 									*
- * 			Parsing functions				*
- * 									*
+ *									*
+ *			Parsing functions				*
+ *									*
  ************************************************************************/
 
 #define WXS_FIND_GLOBAL_ITEM(slot)			\
@@ -4966,9 +4966,9 @@ xmlSchemaGetNamedComponent(xmlSchemaPtr schema,
 }
 
 /************************************************************************
- * 									*
- * 			Parsing functions				*
- * 									*
+ *									*
+ *			Parsing functions				*
+ *									*
  ************************************************************************/
 
 #define IS_BLANK_NODE(n)						\
@@ -5743,9 +5743,9 @@ xmlSchemaAddElementSubstitutionMember(xmlSchemaParserCtxtPtr pctxt,
 }
 
 /************************************************************************
- * 									*
+ *									*
  *		Utilities for parsing					*
- * 									*
+ *									*
  ************************************************************************/
 
 /**
@@ -5939,7 +5939,7 @@ xmlSchemaPValAttrNodeID(xmlSchemaParserCtxtPtr ctxt, xmlAttrPtr attr)
 		xmlFree((xmlChar *) value);
 		value = strip;
 	    }
-    	    res = xmlAddID(NULL, attr->doc, value, attr);
+	    res = xmlAddID(NULL, attr->doc, value, attr);
 	    if (res == NULL) {
 		ret = XML_SCHEMAP_S4S_ATTR_INVALID_VALUE;
 		xmlSchemaPSimpleTypeErr(ctxt,
@@ -6191,9 +6191,9 @@ xmlGetBooleanProp(xmlSchemaParserCtxtPtr ctxt,
 }
 
 /************************************************************************
- * 									*
+ *									*
  *		Shema extraction from an Infoset			*
- * 									*
+ *									*
  ************************************************************************/
 static xmlSchemaTypePtr xmlSchemaParseSimpleType(xmlSchemaParserCtxtPtr
                                                  ctxt, xmlSchemaPtr schema,
@@ -8227,7 +8227,7 @@ xmlSchemaParseIDCSelectorAndField(xmlSchemaParserCtxtPtr ctxt,
     */
     attr = xmlSchemaGetPropNode(node, "xpath");
     if (attr == NULL) {
-    	xmlSchemaPMissingAttrErr(ctxt,
+	xmlSchemaPMissingAttrErr(ctxt,
 	    XML_SCHEMAP_S4S_ATTR_MISSING,
 	    NULL, node,
 	    "name", NULL);
@@ -12353,15 +12353,15 @@ xmlSchemaParseComplexType(xmlSchemaParserCtxtPtr ctxt, xmlSchemaPtr schema,
 }
 
 /************************************************************************
- * 									*
- * 			Validating using Schemas			*
- * 									*
+ *									*
+ *			Validating using Schemas			*
+ *									*
  ************************************************************************/
 
 /************************************************************************
- * 									*
- * 			Reading/Writing Schemas				*
- * 									*
+ *									*
+ *			Reading/Writing Schemas				*
+ *									*
  ************************************************************************/
 
 #if 0 /* Will be enabled if it is clear what options are needed. */
@@ -20152,7 +20152,7 @@ xmlSchemaResolveAttrUseReferences(xmlSchemaAttributeUsePtr ause,
 	    ref->name, ref->targetNamespace);
         if (ause->attrDecl == NULL) {
 	    xmlSchemaPResCompAttrErr(ctxt,
-	    	XML_SCHEMAP_SRC_RESOLVE,
+		XML_SCHEMAP_SRC_RESOLVE,
 		WXS_BASIC_CAST ause, ause->node,
 		"ref", ref->name, ref->targetNamespace,
 		XML_SCHEMA_TYPE_ATTRIBUTE, NULL);
@@ -21532,16 +21532,16 @@ xmlSchemaGetWhiteSpaceFacetValue(xmlSchemaTypePtr type)
 }
 
 /************************************************************************
- * 									*
- * 			Simple type validation				*
- * 									*
+ *									*
+ *			Simple type validation				*
+ *									*
  ************************************************************************/
 
 
 /************************************************************************
- * 									*
- * 			DOM Validation code				*
- * 									*
+ *									*
+ *			DOM Validation code				*
+ *									*
  ************************************************************************/
 
 /**
@@ -21935,9 +21935,9 @@ xmlSchemaVAddNodeQName(xmlSchemaValidCtxtPtr vctxt,
 }
 
 /************************************************************************
- * 									*
- *  Validation of identity-constraints (IDC)                            *
- * 									*
+ *									*
+ * Validation of identity-constraints (IDC)                            *
+ *									*
  ************************************************************************/
 
 /**
@@ -23865,9 +23865,9 @@ xmlSchemaCheckCVCIDCKeyRef(xmlSchemaValidCtxtPtr vctxt)
 }
 
 /************************************************************************
- * 									*
- * 			XML Reader validation code                      *
- * 									*
+ *									*
+ *			XML Reader validation code                      *
+ *									*
  ************************************************************************/
 
 static xmlSchemaAttrInfoPtr
@@ -24987,9 +24987,9 @@ xmlSchemaValidateElemDecl(xmlSchemaValidCtxtPtr vctxt)
         return (vctxt->err);
     }
     if (actualType == NULL) {
-    	VERROR(XML_SCHEMAV_CVC_TYPE_1, NULL,
-    	    "The type definition is absent");
-    	return (XML_SCHEMAV_CVC_TYPE_1);
+	VERROR(XML_SCHEMAV_CVC_TYPE_1, NULL,
+	    "The type definition is absent");
+	return (XML_SCHEMAV_CVC_TYPE_1);
     }
     if (vctxt->nbAttrInfos != 0) {
 	int ret;
@@ -25079,9 +25079,9 @@ xmlSchemaValidateElemDecl(xmlSchemaValidCtxtPtr vctxt)
     * No actual type definition.
     */
     if (actualType == NULL) {
-    	VERROR(XML_SCHEMAV_CVC_TYPE_1, NULL,
-    	    "The type definition is absent");
-    	return (XML_SCHEMAV_CVC_TYPE_1);
+	VERROR(XML_SCHEMAV_CVC_TYPE_1, NULL,
+	    "The type definition is absent");
+	return (XML_SCHEMAV_CVC_TYPE_1);
     }
     /*
     * Remember the actual type definition.
@@ -26909,15 +26909,15 @@ type_validation:
     if (vctxt->inode->typeDef == NULL) {
 	vctxt->inode->flags |= XML_SCHEMA_NODE_INFO_ERR_BAD_TYPE;
 	ret = XML_SCHEMAV_CVC_TYPE_1;
-    	VERROR(ret, NULL,
-    	    "The type definition is absent");
+	VERROR(ret, NULL,
+	    "The type definition is absent");
 	goto exit;
     }
     if (vctxt->inode->typeDef->flags & XML_SCHEMAS_TYPE_ABSTRACT) {
 	vctxt->inode->flags |= XML_SCHEMA_NODE_INFO_ERR_BAD_TYPE;
 	ret = XML_SCHEMAV_CVC_TYPE_2;
-    	    VERROR(ret, NULL,
-    	    "The type definition is abstract");
+	    VERROR(ret, NULL,
+	    "The type definition is abstract");
 	goto exit;
     }
     /*
@@ -27164,9 +27164,9 @@ internal_error:
 #endif
 
 /************************************************************************
- * 									*
- * 			SAX validation handlers				*
- * 									*
+ *									*
+ *			SAX validation handlers				*
+ *									*
  ************************************************************************/
 
 /*
@@ -27417,9 +27417,9 @@ internal_error:
 }
 
 /************************************************************************
- * 									*
- * 			Validation interfaces				*
- * 									*
+ *									*
+ *			Validation interfaces				*
+ *									*
  ************************************************************************/
 
 /**
@@ -28111,9 +28111,9 @@ xmlSchemaValidateDoc(xmlSchemaValidCtxtPtr ctxt, xmlDocPtr doc)
 
 
 /************************************************************************
- * 									*
- * 		Function and data for SAX streaming API			*
- * 									*
+ *									*
+ *		Function and data for SAX streaming API			*
+ *									*
  ************************************************************************/
 typedef struct _xmlSchemaSplitSAXData xmlSchemaSplitSAXData;
 typedef xmlSchemaSplitSAXData *xmlSchemaSplitSAXDataPtr;

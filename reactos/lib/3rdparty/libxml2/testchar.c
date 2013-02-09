@@ -121,7 +121,7 @@ static void testDocumentRangeByte2(xmlParserCtxtPtr ctxt, char *document,
 	 * We should see no error in remaning cases
 	 */
 	else if ((lastError != 0) || (res == NULL)) {
-	    fprintf(stderr, 
+	    fprintf(stderr,
 		"Failed to parse document for Bytes 0x%02X 0x%02X\n", i, j);
 	}
 	if (res != NULL)
@@ -409,7 +409,7 @@ static void testCharRangeByte3(xmlParserCtxtPtr ctxt, char *data) {
 	 * We should see no error in remaining cases
 	 */
 	else if ((lastError != 0) || (len != 3)) {
-	    fprintf(stderr, 
+	    fprintf(stderr,
 		"Failed to parse char for Bytes 0x%02X 0x%02X 0x%02X\n",
 		    i, j, K);
 	}
@@ -418,7 +418,7 @@ static void testCharRangeByte3(xmlParserCtxtPtr ctxt, char *data) {
 	 * Finally check the value is right
 	 */
 	else if (c != value) {
-	    fprintf(stderr, 
+	    fprintf(stderr,
     "Failed to parse char for Bytes 0x%02X 0x%02X 0x%02X: expect %d got %d\n",
 		i, j, data[2], value, c);
 	}
@@ -489,7 +489,7 @@ static void testCharRangeByte4(xmlParserCtxtPtr ctxt, char *data) {
 	 * There are values in that range that are not allowed in XML-1.0
 	 */
 	else if (((value > 0xD7FF) && (value <0xE000)) ||
-	         ((value > 0xFFFD) && (value <0x10000)) || 
+	         ((value > 0xFFFD) && (value <0x10000)) ||
 		 (value > 0x10FFFF)) {
 	    if (lastError != XML_ERR_INVALID_CHAR)
 		fprintf(stderr,
@@ -501,7 +501,7 @@ static void testCharRangeByte4(xmlParserCtxtPtr ctxt, char *data) {
 	 * We should see no error in remaining cases
 	 */
 	else if ((lastError != 0) || (len != 4)) {
-	    fprintf(stderr, 
+	    fprintf(stderr,
 		"Failed to parse char for Bytes 0x%02X 0x%02X 0x%02X\n",
 		    i, j, K);
 	}
@@ -510,7 +510,7 @@ static void testCharRangeByte4(xmlParserCtxtPtr ctxt, char *data) {
 	 * Finally check the value is right
 	 */
 	else if (c != value) {
-	    fprintf(stderr, 
+	    fprintf(stderr,
     "Failed to parse char for Bytes 0x%02X 0x%02X 0x%02X: expect %d got %d\n",
 		i, j, data[2], value, c);
 	}
