@@ -1,8 +1,8 @@
 
 /* png.c - location for general purpose libpng functions
  *
- * Last changed in libpng 1.5.11 [June 14, 2012]
- * Copyright (c) 1998-2012 Glenn Randers-Pehrson
+ * Last changed in libpng 1.5.14 [January 24, 2013]
+ * Copyright (c) 1998-2013 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
  *
@@ -14,7 +14,7 @@
 #include "pngpriv.h"
 
 /* Generate a compiler error if there is an old png.h in the search path. */
-typedef png_libpng_version_1_5_12 Your_png_h_is_not_version_1_5_12;
+typedef png_libpng_version_1_5_14 Your_png_h_is_not_version_1_5_14;
 
 /* Tells libpng that we have already handled the first "num_bytes" bytes
  * of the PNG file signature.  If the PNG data is embedded into another
@@ -73,12 +73,15 @@ PNG_FUNCTION(voidpf /* PRIVATE */,
 png_zalloc,(voidpf png_ptr, uInt items, uInt size),PNG_ALLOCATED)
 {
    png_voidp ptr;
-   png_structp p=(png_structp)png_ptr;
-   png_uint_32 save_flags=p->flags;
+   png_structp p;
+   png_uint_32 save_flags;
    png_alloc_size_t num_bytes;
 
    if (png_ptr == NULL)
       return (NULL);
+
+   p=(png_structp)png_ptr;
+   save_flags=p->flags;
 
    if (items > PNG_UINT_32_MAX/size)
    {
@@ -655,14 +658,14 @@ png_get_copyright(png_const_structp png_ptr)
 #else
 #  ifdef __STDC__
    return PNG_STRING_NEWLINE \
-     "libpng version 1.5.12 - July 11, 2012" PNG_STRING_NEWLINE \
-     "Copyright (c) 1998-2012 Glenn Randers-Pehrson" PNG_STRING_NEWLINE \
+     "libpng version 1.5.14 - January 24, 2013" PNG_STRING_NEWLINE \
+     "Copyright (c) 1998-2013 Glenn Randers-Pehrson" PNG_STRING_NEWLINE \
      "Copyright (c) 1996-1997 Andreas Dilger" PNG_STRING_NEWLINE \
      "Copyright (c) 1995-1996 Guy Eric Schalnat, Group 42, Inc." \
      PNG_STRING_NEWLINE;
 #  else
-      return "libpng version 1.5.12 - July 11, 2012\
-      Copyright (c) 1998-2012 Glenn Randers-Pehrson\
+      return "libpng version 1.5.14 - January 24, 2013\
+      Copyright (c) 1998-2013 Glenn Randers-Pehrson\
       Copyright (c) 1996-1997 Andreas Dilger\
       Copyright (c) 1995-1996 Guy Eric Schalnat, Group 42, Inc.";
 #  endif
@@ -1458,7 +1461,7 @@ png_check_fp_string(png_const_charp string, png_size_t size)
 }
 #endif /* pCAL or sCAL */
 
-#ifdef PNG_READ_sCAL_SUPPORTED
+#ifdef PNG_sCAL_SUPPORTED
 #  ifdef PNG_FLOATING_POINT_SUPPORTED
 /* Utility used below - a simple accurate power of ten from an integral
  * exponent.
@@ -2044,7 +2047,8 @@ png_muldiv_warn(png_structp png_ptr, png_fixed_point a, png_int_32 times,
 }
 #endif
 
-#ifdef PNG_READ_GAMMA_SUPPORTED /* more fixed point functions for gamma */
+#if (defined PNG_READ_GAMMA_SUPPORTED) || (defined PNG_cHRM_SUPPORTED)
+/* more fixed point functions for gamma and cHRM (xy/XYZ) suport. */
 /* Calculate a reciprocal, return 0 on div-by-zero or overflow. */
 png_fixed_point
 png_reciprocal(png_fixed_point a)
@@ -2064,6 +2068,7 @@ png_reciprocal(png_fixed_point a)
    return 0; /* error/overflow */
 }
 
+#ifdef PNG_READ_GAMMA_SUPPORTED
 /* A local convenience routine. */
 static png_fixed_point
 png_product2(png_fixed_point a, png_fixed_point b)
@@ -2085,6 +2090,7 @@ png_product2(png_fixed_point a, png_fixed_point b)
 
    return 0; /* overflow */
 }
+#endif /* READ_GAMMA */
 
 /* The inverse of the above. */
 png_fixed_point
@@ -2112,7 +2118,7 @@ png_reciprocal2(png_fixed_point a, png_fixed_point b)
 
    return 0; /* overflow */
 }
-#endif /* READ_GAMMA */
+#endif /* READ_GAMMA || cHRM */
 
 #ifdef PNG_CHECK_cHRM_SUPPORTED
 /* Added at libpng version 1.2.34 (Dec 8, 2008) and 1.4.0 (Jan 2,

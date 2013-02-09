@@ -3852,7 +3852,7 @@ Version 1.5.10beta05 [March 10, 2012]
 Version 1.5.10 [March 29, 2012]
   Prevent PNG_EXPAND+PNG_SHIFT doing the shift twice.
   Revised png_set_text_2() to avoid potential memory corruption (fixes
-    CVE-2011-3048).
+    CVE-2011-3048, also known as CVE-2012-3425).
 
 Version 1.5.11beta01 [April 28, 2012]
   Revised scripts/makefile.darwin: use system zlib; remove quotes around
@@ -3895,6 +3895,99 @@ Version 1.5.12 [July 11, 2012]
   Removed scripts/makefile.cegcc from the *.zip and *.7z distributions; it
     depends on configure, which is not included in those archives.
   Changed "a+w" to "u+w" in Makefile.in to fix CVE-2012-3386.
+
+Version 1.5.13beta01 [August 8, 2012]
+  Do not compile PNG_DEPRECATED, PNG_ALLOC and PNG_PRIVATE when __GNUC__ < 3.
+  Removed references to png_zalloc() and png_zfree() from the manual.
+  Revised PNG_FP_EXPORT and PNG_FIXED_EXPORT macros to avoid generating
+    lone semicolons (patch ported from libpng-1.6.0beta11).
+
+Version 1.5.13beta02 [September 10, 2012]
+  Corrected handling of the image array and the row_pointers array in example.c
+  When png_set_filler is used to strip a filler channel during write, the
+    code prior to 1.5 would ignore the case where the output required an
+    alpha channel or when the output was a palettized PNG.  In libpng-1.5 the
+    ignorance was lost and libpng proceeded to strip the channel resulting
+    in a bad (potential memory overwrite) failure later.  This reverts
+    the behavior to the pre-1.5 state but issues a warning. libpng-1.6 is
+    expected to issue an error on the erroneous png_set_filler call.
+  Use png_memset() consistently (pngmem.c contained some bare "memset" calls).
+
+Version 1.5.13rc01 [September 17, 2012]
+  No changes.
+
+Version 1.5.13 [September 27, 2012]
+  No changes.
+
+Version 1.5.14beta01 [October 24, 2012]
+  Added -DZ_SOLO to contrib/pngminim/*/makefile to work with zlib-1.2.7
+  Warn about the incorrect runtime library setting for VS2010 debug DLL builds.
+  Fixed build when using #define PNG_NO_READ_GAMMA in png_do_compose() in
+    pngrtran.c (Domani Hannes).
+
+Version 1.5.14beta02 [omitted]
+
+Version 1.5.14beta03 [December 15, 2012]
+  Added missing "-" in front of DNO_GZIP in contrib/pngminim/*/makefile.
+  Check for png_ptr==NULL earlier in png_zalloc().
+  Ignore, with a warning, out-of-range value of num_trans in png_set_tRNS().
+  Rearranged building of ARM NEON optimizations. The ARM specific code is
+    split out entirely to the arm subdirectory and changes to configure.ac and
+    Makefile.am to add new stuff are reduced.  Now material code changes,
+    although for build test purposes, --enable-arm-neon now builds on non-ARM
+    systems.
+  Rebuilt Makefile.in, configure, etc., with autoconf-2.69 and automake-1.12.5.
+  Fixed cases of unquoted DESTDIR in Makefile.am
+  Fixed a minor bug in types to malloc and major bug in handling compressed
+    iTXt. Compressed iTXt could not be handled.
+
+Version 1.5.14beta04 [December 19, 2012]
+  Cleaned up whitespace in the synopsis portion of the manpage "libpng.3"
+  Disassembled the version number in scripts/options.awk (necessary for
+    building on SunOs).
+
+Version 1.5.14beta05 [December 23, 2012]
+  Fixed Windows build issues, enabled ARM compilation. Various warnings issued
+    by earlier versions of GCC fixed for Cygwin and Min/GW (which both use old
+    GCCs.) ARM support is enabled by default in zlib.props (unsupported by
+    Microsoft) and ARM compilation is made possible by deleting the check for
+    x86. The test programs cannot be run because they are not signed.
+
+Version 1.5.14beta06 [January 1, 2013]
+  Discontinued distributing libpng-1.5.14-1.5.13-diff.txt and similar.
+  Fixed 'make distcheck' on SUN OS - libpng.so was not being removed
+
+Version 1.5.14beta07 [January 6, 2012]
+  Replaced AM_CONFIG_HEADER(config.h) with AC_CONFIG_HEADERS([config.h])
+    in configure.ac
+  De-configured build fixes to make a range of deconfiguration options (such
+    as switching off read or write support) work in more cases.  Also upgraded
+    pngtest and pngvalid to the libpng 1.6 versions (with some modifications)
+    which provide more extensive testing.  Replaced pngtest.png because pngtest
+    writes the ancillary chunks in a different order.
+
+Version 1.5.14beta08 [January 10, 2013]
+  Check validity of "num_unknowns" parameter of png_set_unknown_chunks()
+    (Bug report from yuris).
+
+Version 1.5.14rc01 [January 17, 2013]
+  No changes.
+
+Version 1.5.14rc02 [January 17, 2013]
+  Revised test for validity of "num_unknowns" to eliminate compiler warnings.
+
+Version 1.5.14rc03 [January 18, 2013]
+  Check the validity of the "nentries" parameter of png_set_sPLT() and the
+  "num_text" parameter of png_set_text_2().
+
+Version 1.5.14 [January 24, 2013]
+  Removed an obsolete line from the manual.
+
+  ===========================================================================
+                       NOTICE November 17, 2012:
+     The location of the git repository at SourceForge has changed.
+               Visit http://libpng.sf.net/ for details.
+  ===========================================================================
 
 Send comments/corrections/commendations to png-mng-implement at lists.sf.net
 (subscription required; visit

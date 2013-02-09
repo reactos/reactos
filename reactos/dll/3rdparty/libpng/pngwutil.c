@@ -1,8 +1,8 @@
 
 /* pngwutil.c - utilities to write a PNG file
  *
- * Last changed in libpng 1.5.10 [March 8, 2012]
- * Copyright (c) 1998-2012 Glenn Randers-Pehrson
+ * Last changed in libpng 1.5.14 [January 24, 2013]
+ * Copyright (c) 1998-2013 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
  *
@@ -460,24 +460,21 @@ png_text_compress(png_structp png_ptr,
                old_ptr = comp->output_ptr;
 
                comp->output_ptr = (png_bytepp)png_malloc(png_ptr,
-                   (png_alloc_size_t)
-                   (comp->max_output_ptr * png_sizeof(png_charpp)));
+                   (comp->max_output_ptr * png_sizeof(png_bytep)));
 
                png_memcpy(comp->output_ptr, old_ptr, old_max
-                   * png_sizeof(png_charp));
+                   * png_sizeof(png_bytep));
 
                png_free(png_ptr, old_ptr);
             }
             else
                comp->output_ptr = (png_bytepp)png_malloc(png_ptr,
-                   (png_alloc_size_t)
-                   (comp->max_output_ptr * png_sizeof(png_charp)));
+                   (comp->max_output_ptr * png_sizeof(png_bytep)));
          }
 
          /* Save the data */
          comp->output_ptr[comp->num_output_ptr] =
-             (png_bytep)png_malloc(png_ptr,
-             (png_alloc_size_t)png_ptr->zbuf_size);
+             (png_bytep)png_malloc(png_ptr, png_ptr->zbuf_size);
 
          png_memcpy(comp->output_ptr[comp->num_output_ptr], png_ptr->zbuf,
              png_ptr->zbuf_size);
@@ -1370,7 +1367,8 @@ png_write_tRNS(png_structp png_ptr, png_const_bytep trans_alpha,
       }
 
       /* Write the chunk out as it is */
-      png_write_complete_chunk(png_ptr, png_tRNS, trans_alpha, (png_size_t)num_trans);
+      png_write_complete_chunk(png_ptr, png_tRNS, trans_alpha,
+         (png_size_t)num_trans);
    }
 
    else if (color_type == PNG_COLOR_TYPE_GRAY)
