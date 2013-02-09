@@ -39,7 +39,7 @@
  *			Module interfaces				*
  *									*
  ************************************************************************/
- 
+
 /**
  * xsltEvalXPathPredicate:
  * @ctxt:  the XSLT transformation context
@@ -454,7 +454,7 @@ xsltEvalStaticAttrValueTemplate(xsltStylesheetPtr style, xmlNodePtr inst,
  * Evaluates Attribute Value Templates and copies the attribute over to
  * the result element.
  * This does *not* process attribute sets (xsl:use-attribute-set).
- * 
+ *
  *
  * Returns the generated attribute node.
  */
@@ -467,14 +467,14 @@ xsltAttrTemplateProcess(xsltTransformContextPtr ctxt, xmlNodePtr target,
 
     if ((ctxt == NULL) || (attr == NULL) || (target == NULL))
 	return(NULL);
-    
+
     if (attr->type != XML_ATTRIBUTE_NODE)
 	return(NULL);
 
     /*
     * Skip all XSLT attributes.
     */
-#ifdef XSLT_REFACTORED    
+#ifdef XSLT_REFACTORED
     if (attr->psvi == xsltXSLTAttrMarker)
 	return(NULL);
 #else
@@ -511,7 +511,7 @@ xsltAttrTemplateProcess(xsltTransformContextPtr ctxt, xmlNodePtr target,
 	}
         ret = ret->next;
     }
-    if (ret != NULL) {	
+    if (ret != NULL) {
         /* free the existing value */
 	xmlFreeNodeList(ret->children);
 	ret->children = ret->last = NULL;
@@ -530,7 +530,7 @@ xsltAttrTemplateProcess(xsltTransformContextPtr ctxt, xmlNodePtr target,
 		xsltGetNamespace(ctxt, attr->parent, attr->ns, target),
 		    attr->name, NULL);
 	else
-	    ret = xmlNewNsProp(target, NULL, attr->name, NULL);	
+	    ret = xmlNewNsProp(target, NULL, attr->name, NULL);
     }
     /*
     * Set the value.
@@ -581,11 +581,11 @@ xsltAttrTemplateProcess(xsltTransformContextPtr ctxt, xmlNodePtr target,
     } else {
 	if (attr->ns) {
 	    xsltTransformError(ctxt, NULL, attr->parent,
-	    	"Internal error: Failed to create attribute '{%s}%s'.\n",
+		"Internal error: Failed to create attribute '{%s}%s'.\n",
 		attr->ns->href, attr->name);
 	} else {
 	    xsltTransformError(ctxt, NULL, attr->parent,
-	    	"Internal error: Failed to create attribute '%s'.\n",
+		"Internal error: Failed to create attribute '%s'.\n",
 		attr->name);
 	}
     }
@@ -613,7 +613,7 @@ xsltAttrTemplateProcess(xsltTransformContextPtr ctxt, xmlNodePtr target,
  *         attributes will be disattached.)
  */
 xmlAttrPtr
-xsltAttrListTemplateProcess(xsltTransformContextPtr ctxt, 
+xsltAttrListTemplateProcess(xsltTransformContextPtr ctxt,
 	                    xmlNodePtr target, xmlAttrPtr attrs)
 {
     xmlAttrPtr attr, copy, last;
@@ -626,7 +626,7 @@ xsltAttrListTemplateProcess(xsltTransformContextPtr ctxt,
 	return(NULL);
 
     oldInsert = ctxt->insert;
-    ctxt->insert = target;        
+    ctxt->insert = target;
 
     /*
     * Instantiate LRE-attributes.
@@ -818,7 +818,7 @@ xmlNodePtr *
 xsltTemplateProcess(xsltTransformContextPtr ctxt ATTRIBUTE_UNUSED, xmlNodePtr node) {
     if (node == NULL)
 	return(NULL);
-    
+
     return(0);
 }
 

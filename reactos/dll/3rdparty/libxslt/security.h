@@ -55,43 +55,43 @@ typedef int (*xsltSecurityCheck)	(xsltSecurityPrefsPtr sec,
 /*
  * Module interfaces
  */
-XSLTPUBFUN xsltSecurityPrefsPtr XSLTCALL	
+XSLTPUBFUN xsltSecurityPrefsPtr XSLTCALL
 		    xsltNewSecurityPrefs	(void);
-XSLTPUBFUN void XSLTCALL			
+XSLTPUBFUN void XSLTCALL
 		    xsltFreeSecurityPrefs	(xsltSecurityPrefsPtr sec);
-XSLTPUBFUN int XSLTCALL			
+XSLTPUBFUN int XSLTCALL
 		    xsltSetSecurityPrefs	(xsltSecurityPrefsPtr sec,
 						 xsltSecurityOption option,
 						 xsltSecurityCheck func);
-XSLTPUBFUN xsltSecurityCheck XSLTCALL	
+XSLTPUBFUN xsltSecurityCheck XSLTCALL
 		    xsltGetSecurityPrefs	(xsltSecurityPrefsPtr sec,
 						 xsltSecurityOption option);
 
-XSLTPUBFUN void XSLTCALL			
+XSLTPUBFUN void XSLTCALL
 		    xsltSetDefaultSecurityPrefs	(xsltSecurityPrefsPtr sec);
-XSLTPUBFUN xsltSecurityPrefsPtr XSLTCALL	
+XSLTPUBFUN xsltSecurityPrefsPtr XSLTCALL
 		    xsltGetDefaultSecurityPrefs	(void);
 
-XSLTPUBFUN int XSLTCALL			
+XSLTPUBFUN int XSLTCALL
 		    xsltSetCtxtSecurityPrefs	(xsltSecurityPrefsPtr sec,
 						 xsltTransformContextPtr ctxt);
 
-XSLTPUBFUN int XSLTCALL			
+XSLTPUBFUN int XSLTCALL
 		    xsltSecurityAllow		(xsltSecurityPrefsPtr sec,
 						 xsltTransformContextPtr ctxt,
 						 const char *value);
-XSLTPUBFUN int XSLTCALL	
+XSLTPUBFUN int XSLTCALL
 		    xsltSecurityForbid		(xsltSecurityPrefsPtr sec,
 						 xsltTransformContextPtr ctxt,
 						 const char *value);
 /*
  * internal interfaces
  */
-XSLTPUBFUN int XSLTCALL			
+XSLTPUBFUN int XSLTCALL
 		    xsltCheckWrite		(xsltSecurityPrefsPtr sec,
 						 xsltTransformContextPtr ctxt,
 						 const xmlChar *URL);
-XSLTPUBFUN int XSLTCALL			
+XSLTPUBFUN int XSLTCALL
 		    xsltCheckRead		(xsltSecurityPrefsPtr sec,
 						 xsltTransformContextPtr ctxt,
 						 const xmlChar *URL);

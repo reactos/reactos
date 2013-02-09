@@ -84,41 +84,41 @@ xsltNewLocale(const xmlChar *languageTag) {
     const char *region = NULL;
     char *q = localeName;
     int i, llen;
-    
+
     /* Convert something like "pt-br" to "pt_BR.utf8" */
-    
+
     if (languageTag == NULL)
-    	return(NULL);
-    
+	return(NULL);
+
     for (i=0; i<XSLTMAX_ISO639LANGLEN && ISALPHA(*p); ++i)
 	*q++ = TOLOWER(*p++);
-    
+
     if (i == 0)
-    	return(NULL);
-    
+	return(NULL);
+
     llen = i;
     *q++ = '_';
-    
+
     if (*p) {
-    	if (*p++ != '-')
-    	    return(NULL);
-	
+	if (*p++ != '-')
+	    return(NULL);
+
 	for (i=0; i<XSLTMAX_ISO3166CNTRYLEN && ISALPHA(*p); ++i)
 	    *q++ = TOUPPER(*p++);
-    
-    	if (i == 0 || *p)
-    	    return(NULL);
-    	
+
+	if (i == 0 || *p)
+	    return(NULL);
+
         memcpy(q, ".utf8", 6);
         locale = newlocale(LC_COLLATE_MASK, localeName, NULL);
         if (locale != NULL)
             return(locale);
-        
+
         /* Continue without using country code */
-        
+
         q = localeName + llen + 1;
     }
-    
+
     /* Try locale without territory, e.g. for Esperanto (eo) */
 
     memcpy(q, ".utf8", 6);
@@ -127,20 +127,20 @@ xsltNewLocale(const xmlChar *languageTag) {
         return(locale);
 
     /* Try to find most common country for language */
-    
+
     if (llen != 2)
         return(NULL);
 
     region = (char *)xsltDefaultRegion((xmlChar *)localeName);
     if (region == NULL)
         return(NULL);
-     
+
     q = localeName + llen + 1;
     *q++ = region[0];
     *q++ = region[1];
     memcpy(q, ".utf8", 6);
     locale = newlocale(LC_COLLATE_MASK, localeName, NULL);
-    
+
     return(locale);
 #endif
 
@@ -165,7 +165,7 @@ xsltNewLocale(const xmlChar *languageTag) {
     *q++ = '-';
     if (*p) { /*if country tag is given*/
 	if (*p++ != '-') goto end;
-	
+
 	for (i=0; i<XSLTMAX_ISO3166CNTRYLEN && ISALPHA(*p); ++i)
 	    *q++ = TOUPPER(*p++);
 	if (i == 0 || *p) goto end;
@@ -195,10 +195,10 @@ xsltDefaultRegion(const xmlChar *localeName) {
     xmlChar c;
     /* region should be xmlChar, but gcc warns on all string assignments */
     const char *region = NULL;
-    
+
     c = localeName[1];
     /* This is based on the locales from glibc 2.3.3 */
-    
+
     switch (localeName[0]) {
         case 'a':
             if (c == 'a' || c == 'm') region = "ET";
@@ -359,7 +359,7 @@ xsltStrxfrm(xsltLocale locale, const xmlChar *string)
 #else
     size_t xstrlen, r;
     xsltLocaleChar *xstr;
-    
+
 #ifdef XSLT_LOCALE_XLOCALE
     xstrlen = strxfrm_l(NULL, (const char *)string, 0, locale) + 1;
     xstr = (xsltLocaleChar *) xmlMalloc(xstrlen);

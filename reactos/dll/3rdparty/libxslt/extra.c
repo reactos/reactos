@@ -40,9 +40,9 @@
 #endif
 
 /************************************************************************
- * 									*
- * 		Handling of XSLT debugging				*
- * 									*
+ *									*
+ *		Handling of XSLT debugging				*
+ *									*
  ************************************************************************/
 
 /**
@@ -112,9 +112,9 @@ xsltDebug(xsltTransformContextPtr ctxt, xmlNodePtr node ATTRIBUTE_UNUSED,
 }
 
 /************************************************************************
- * 									*
- * 		Classic extensions as described by M. Kay		*
- * 									*
+ *									*
+ *		Classic extensions as described by M. Kay		*
+ *									*
  ************************************************************************/
 
 /**
@@ -178,14 +178,14 @@ xsltFunctionLocalTime(xmlXPathParserContextPtr ctxt, int nargs) {
     time_t gmt, lmt;
     struct tm gmt_tm;
     struct tm *local_tm;
- 
+
     if (nargs != 1) {
        xsltTransformError(xsltXPathGetTransformContext(ctxt), NULL, NULL,
                       "localTime() : invalid number of args %d\n", nargs);
        ctxt->error = XPATH_INVALID_ARITY;
        return;
     }
- 
+
     obj = valuePop(ctxt);
 
     if (obj->type != XPATH_STRING) {
@@ -195,7 +195,7 @@ xsltFunctionLocalTime(xmlXPathParserContextPtr ctxt, int nargs) {
 	valuePush(ctxt, xmlXPathNewString((const xmlChar *)""));
 	return;
     }
-    
+
     str = (char *) obj->stringval;
 
     /* str = "$Date$" */

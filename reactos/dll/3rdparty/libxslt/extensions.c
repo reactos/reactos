@@ -44,9 +44,9 @@
 #endif
 
 /************************************************************************
- * 									*
- * 			Private Types and Globals			*
- * 									*
+ *									*
+ *			Private Types and Globals			*
+ *									*
  ************************************************************************/
 
 typedef struct _xsltExtDef xsltExtDef;
@@ -89,9 +89,9 @@ static xmlHashTablePtr xsltModuleHash = NULL;
 static xmlMutexPtr xsltExtMutex = NULL;
 
 /************************************************************************
- * 									*
- * 			Type functions 					*
- * 									*
+ *									*
+ *			Type functions					*
+ *									*
  ************************************************************************/
 
 /**
@@ -302,18 +302,18 @@ typedef void (*exsltRegisterFunction) (void);
  * @URI:  the function or element namespace URI
  *
  * Dynamically loads an extension plugin when available.
- * 
- * The plugin name is derived from the URI by removing the 
+ *
+ * The plugin name is derived from the URI by removing the
  * initial protocol designation, e.g. "http://", then converting
  * the characters ".", "-", "/", and "\" into "_", the removing
  * any trailing "/", then concatenating LIBXML_MODULE_EXTENSION.
- * 
- * Plugins are loaded from the directory specified by the 
- * environment variable LIBXSLT_PLUGINS_PATH, or if NULL, 
+ *
+ * Plugins are loaded from the directory specified by the
+ * environment variable LIBXSLT_PLUGINS_PATH, or if NULL,
  * by LIBXSLT_DEFAULT_PLUGINS_PATH() which is determined at
  * compile time.
  *
- * Returns 0 if successful, -1 in case of error. 
+ * Returns 0 if successful, -1 in case of error.
  */
 
 static int
@@ -391,7 +391,7 @@ xsltExtModuleRegisterDynamic(const xmlChar * URI)
 
 #ifdef WITH_XSLT_DEBUG_EXTENSIONS
     xsltGenericDebug(xsltGenericDebugContext,
-                     "Attempting to load plugin: %s for URI: %s\n", 
+                     "Attempting to load plugin: %s for URI: %s\n",
                      module_filename, URI);
 #endif
 
@@ -442,7 +442,7 @@ xsltExtModuleRegisterDynamic(const xmlChar * URI)
 
 #ifdef WITH_XSLT_DEBUG_EXTENSIONS
 	xsltGenericDebug(xsltGenericDebugContext,
-                     "xmlModuleSymbol failed for plugin: %s, regfunc: %s\n", 
+                     "xmlModuleSymbol failed for plugin: %s, regfunc: %s\n",
                      module_filename, regfunc_name);
 #endif
 
@@ -463,9 +463,9 @@ xsltExtModuleRegisterDynamic(const xmlChar * URI ATTRIBUTE_UNUSED)
 #endif
 
 /************************************************************************
- * 									*
- * 		The stylesheet extension prefixes handling		*
- * 									*
+ *									*
+ *		The stylesheet extension prefixes handling		*
+ *									*
  ************************************************************************/
 
 
@@ -487,7 +487,7 @@ xsltFreeExts(xsltStylesheetPtr style)
  * @style: an XSLT stylesheet
  * @prefix: the prefix used (optional)
  * @URI: the URI associated to the extension
- * 
+ *
  * Registers an extension namespace
  * This is called from xslt.c during compile-time.
  * The given prefix is not needed.
@@ -567,9 +567,9 @@ xsltRegisterExtPrefix(xsltStylesheetPtr style,
 }
 
 /************************************************************************
- * 									*
- * 		The extensions modules interfaces			*
- * 									*
+ *									*
+ *		The extensions modules interfaces			*
+ *									*
  ************************************************************************/
 
 /**
@@ -577,7 +577,7 @@ xsltRegisterExtPrefix(xsltStylesheetPtr style,
  * @ctxt: an XSLT transformation context
  * @name: the name of the element
  * @URI: the URI associated to the element
- * @function: the actual implementation which should be called 
+ * @function: the actual implementation which should be called
  *
  * Registers an extension function
  *
@@ -611,7 +611,7 @@ xsltRegisterExtFunction(xsltTransformContextPtr ctxt, const xmlChar * name,
  * @ctxt: an XSLT transformation context
  * @name: the name of the element
  * @URI: the URI associated to the element
- * @function: the actual implementation which should be called 
+ * @function: the actual implementation which should be called
  *
  * Registers an extension element
  *
@@ -666,8 +666,8 @@ xsltStyleInitializeStylesheetModule(xsltStylesheetPtr style,
     xsltExtDataPtr dataContainer;
     void *userData = NULL;
     xsltExtModulePtr module;
-    
-    if ((style == NULL) || (URI == NULL))	
+
+    if ((style == NULL) || (URI == NULL))
 	return(NULL);
 
     if (xsltExtensionsHash == NULL) {
@@ -716,7 +716,7 @@ xsltStyleInitializeStylesheetModule(xsltStylesheetPtr style,
 	* Fire the initialization callback.
 	*/
 	userData = module->styleInitFunc(style, URI);
-    }    
+    }
     /*
     * Store the user-data in the context of the given stylesheet.
     */
@@ -727,7 +727,7 @@ xsltStyleInitializeStylesheetModule(xsltStylesheetPtr style,
     if (xmlHashAddEntry(style->extInfos, URI,
 	(void *) dataContainer) < 0)
     {
-	xsltTransformError(NULL, style, NULL,	    
+	xsltTransformError(NULL, style, NULL,
 	    "Failed to register module '%s'.\n", URI);
 	style->errors++;
 	if (module->styleShutdownFunc)
@@ -762,7 +762,7 @@ xsltStyleGetExtData(xsltStylesheetPtr style, const xmlChar * URI)
 	(xsltExtensionsHash == NULL))
 	return (NULL);
 
-    
+
 #ifdef XSLT_REFACTORED
     /*
     * This is intended for global storage, so only the main
@@ -838,7 +838,7 @@ xsltStyleStylesheetLevelGetExtData(xsltStylesheetPtr style,
 	*/
 	if (dataContainer)
 	    return(dataContainer->extData);
-    }  
+    }
 
     dataContainer =
         xsltStyleInitializeStylesheetModule(style, URI);
@@ -1120,7 +1120,7 @@ xsltShutdownExt(xsltExtDataPtr data, xsltStylesheetPtr style,
     *
     * xmlHashRemoveEntry(style->extInfos, URI,
     *   (xmlHashDeallocator) xsltFreeExtData);
-    */    
+    */
 }
 
 /**
@@ -1156,12 +1156,12 @@ xsltShutdownExts(xsltStylesheetPtr style)
  */
 int
 xsltCheckExtPrefix(xsltStylesheetPtr style, const xmlChar * URI)
-{    
+{
 #ifdef XSLT_REFACTORED
     if ((style == NULL) || (style->compCtxt == NULL) ||
 	(XSLT_CCTXT(style)->inode == NULL) ||
 	(XSLT_CCTXT(style)->inode->extElemNs == NULL))
-        return (0);    
+        return (0);
     /*
     * Lookup the extension namespaces registered
     * at the current node in the stylesheet's tree.
@@ -1175,7 +1175,7 @@ xsltCheckExtPrefix(xsltStylesheetPtr style, const xmlChar * URI)
 		URI))
 	    {
 		return(1);
-	    }	    
+	    }
 	}
     }
 #else
@@ -1950,15 +1950,15 @@ xsltGetExtInfo(xsltStylesheetPtr style, const xmlChar * URI)
 }
 
 /************************************************************************
- * 									*
- * 		Test module http://xmlsoft.org/XSLT/			*
- * 									*
+ *									*
+ *		Test module http://xmlsoft.org/XSLT/			*
+ *									*
  ************************************************************************/
 
 /************************************************************************
- * 									*
- * 		Test of the extension module API			*
- * 									*
+ *									*
+ *		Test of the extension module API			*
+ *									*
  ************************************************************************/
 
 static xmlChar *testData = NULL;

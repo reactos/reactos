@@ -32,31 +32,31 @@ extern "C" {
 XSLTPUBFUN void XSLTCALL
 		xsltNamespaceAlias	(xsltStylesheetPtr style,
 					 xmlNodePtr node);
-XSLTPUBFUN xmlNsPtr XSLTCALL	
+XSLTPUBFUN xmlNsPtr XSLTCALL
 		xsltGetNamespace	(xsltTransformContextPtr ctxt,
 					 xmlNodePtr cur,
 					 xmlNsPtr ns,
 					 xmlNodePtr out);
-XSLTPUBFUN xmlNsPtr XSLTCALL	
+XSLTPUBFUN xmlNsPtr XSLTCALL
 		xsltGetPlainNamespace	(xsltTransformContextPtr ctxt,
 					 xmlNodePtr cur,
 					 xmlNsPtr ns,
 					 xmlNodePtr out);
-XSLTPUBFUN xmlNsPtr XSLTCALL	
+XSLTPUBFUN xmlNsPtr XSLTCALL
 		xsltGetSpecialNamespace	(xsltTransformContextPtr ctxt,
 					 xmlNodePtr cur,
 					 const xmlChar *URI,
 					 const xmlChar *prefix,
 					 xmlNodePtr out);
-XSLTPUBFUN xmlNsPtr XSLTCALL	
+XSLTPUBFUN xmlNsPtr XSLTCALL
 		xsltCopyNamespace	(xsltTransformContextPtr ctxt,
 					 xmlNodePtr elem,
 					 xmlNsPtr ns);
-XSLTPUBFUN xmlNsPtr XSLTCALL	
+XSLTPUBFUN xmlNsPtr XSLTCALL
 		xsltCopyNamespaceList	(xsltTransformContextPtr ctxt,
 					 xmlNodePtr node,
 					 xmlNsPtr cur);
-XSLTPUBFUN void XSLTCALL		
+XSLTPUBFUN void XSLTCALL
 		xsltFreeNamespaceAliasHashes
 					(xsltStylesheetPtr style);
 

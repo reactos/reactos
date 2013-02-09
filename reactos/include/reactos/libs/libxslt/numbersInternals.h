@@ -24,7 +24,7 @@ extern "C" {
  */
 typedef struct _xsltNumberData xsltNumberData;
 typedef xsltNumberData *xsltNumberDataPtr;
-    
+
 struct _xsltNumberData {
     const xmlChar *level;
     const xmlChar *count;
