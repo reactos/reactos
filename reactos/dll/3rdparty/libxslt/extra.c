@@ -243,8 +243,11 @@ xsltFunctionLocalTime(xmlXPathParserContextPtr ctxt, int nargs) {
      * Calling localtime() has the side-effect of setting timezone.
      * After we know the timezone, we can adjust for it
      */
+#if !defined(__FreeBSD__)
     lmt = gmt - timezone;
-
+#else	/* FreeBSD DOESN'T have such side-ffect */
+    lmt = gmt - local_tm->tm_gmtoff;
+#endif
     /*
      * FIXME: it's been too long since I did manual memory management.
      * (I swore never to do it again.) Does this introduce a memory leak?

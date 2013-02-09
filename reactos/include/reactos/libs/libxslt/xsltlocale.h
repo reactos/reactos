@@ -57,5 +57,6 @@ xsltLocale xsltNewLocale(const xmlChar *langName);
 void xsltFreeLocale(xsltLocale locale);
 xsltLocaleChar *xsltStrxfrm(xsltLocale locale, const xmlChar *string);
 int xsltLocaleStrcmp(xsltLocale locale, const xsltLocaleChar *str1, const xsltLocaleChar *str2);
+void xsltFreeLocales(void);
 
 #endif /* __XML_XSLTLOCALE_H__ */

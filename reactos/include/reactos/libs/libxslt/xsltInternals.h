@@ -294,6 +294,11 @@ struct _xsltTemplate {
     int nbCalls;        /* the number of time the template was called */
     unsigned long time; /* the time spent in this template */
     void *params;       /* xsl:param instructions */
+
+    int              templNr;		/* Nb of templates in the stack */
+    int              templMax;		/* Size of the templtes stack */
+    xsltTemplatePtr *templCalledTab;	/* templates called */
+    int             *templCountTab;  /* .. and how often */
 };
 
 /**
@@ -1630,6 +1635,10 @@ struct _xsltStylesheet {
 
     xsltPrincipalStylesheetDataPtr principalData;
 #endif
+    /*
+     * Forwards-compatible processing
+     */
+    int forwards_compatible;
 };
 
 typedef struct _xsltTransformCache xsltTransformCache;
@@ -1775,6 +1784,8 @@ struct _xsltTransformContext {
     xmlDocPtr localRVTBase;
     int keyInitLevel;   /* Needed to catch recursive keys issues */
     int funcLevel;      /* Needed to catch recursive functions issues */
+    int maxTemplateDepth;
+    int maxTemplateVars;
 };
 
 /**
@@ -1898,14 +1909,6 @@ XSLTPUBFUN void XSLTCALL
 XSLTPUBFUN void XSLTCALL
 			xsltReleaseRVT		(xsltTransformContextPtr ctxt,
 						 xmlDocPtr RVT);
-XSLTPUBFUN int XSLTCALL
-			xsltTransStorageAdd	(xsltTransformContextPtr ctxt,
-						 void *id,
-						 void *data);
-XSLTPUBFUN void * XSLTCALL
-			xsltTransStorageRemove	(xsltTransformContextPtr ctxt,
-						 void *id);
-
 /*
  * Extra functions for Attribute Value Templates
  */

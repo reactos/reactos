@@ -293,7 +293,7 @@ xsltParseStylesheetAttributeSet(xsltStylesheetPtr style, xmlNodePtr cur) {
     xmlNodePtr child;
     xsltAttrElemPtr attrItems;
 
-    if ((cur == NULL) || (style == NULL))
+    if ((cur == NULL) || (style == NULL) || (cur->type != XML_ELEMENT_NODE))
 	return;
 
     value = xmlGetNsProp(cur, (const xmlChar *)"name", NULL);
@@ -656,7 +656,8 @@ xsltAttributeInternal(xsltTransformContextPtr ctxt,
     xmlNsPtr ns = NULL;
     xmlAttrPtr attr;
 
-    if ((ctxt == NULL) || (contextNode == NULL) || (inst == NULL))
+    if ((ctxt == NULL) || (contextNode == NULL) || (inst == NULL) ||
+        (inst->type != XML_ELEMENT_NODE) )
         return;
 
     /*
@@ -749,31 +750,19 @@ xsltAttributeInternal(xsltTransformContextPtr ctxt,
 		"valid QName.\n", prop);
 	    /* we fall through to catch any further errors, if possible */
 	}
-	name = xsltSplitQName(ctxt->dict, prop, &prefix);
-	xmlFree(prop);
 
 	/*
-	* Reject a prefix of "xmlns".
+	* Reject a name of "xmlns".
 	*/
-	if ((prefix != NULL) &&
-	    (!xmlStrncasecmp(prefix, (xmlChar *) "xmlns", 5)))
-	{
-#ifdef WITH_XSLT_DEBUG_PARSING
-	    xsltGenericDebug(xsltGenericDebugContext,
-		"xsltAttribute: xmlns prefix forbidden\n");
-#endif
-	    /*
-	    * SPEC XSLT 1.0:
-	    *  "It is an error if the string that results from instantiating
-	    *  the attribute value template is not a QName or is the string
-	    *  xmlns. An XSLT processor may signal the error; if it does not
-	    *  signal the error, it must recover by not adding the attribute
-	    *  to the result tree."
-	    * TODO: Decide which way to go here.
-	    */
+	if (xmlStrEqual(prop, BAD_CAST "xmlns")) {
+            xsltTransformError(ctxt, NULL, inst,
+                "xsl:attribute: The effective name 'xmlns' is not allowed.\n");
+	    xmlFree(prop);
 	    goto error;
 	}
 
+	name = xsltSplitQName(ctxt->dict, prop, &prefix);
+	xmlFree(prop);
     } else {
 	/*
 	* The "name" value was static.
@@ -821,7 +810,19 @@ xsltAttributeInternal(xsltTransformContextPtr ctxt,
 	    if ((tmpNsName != NULL) && (tmpNsName[0] != 0))
 		nsName = xmlDictLookup(ctxt->dict, BAD_CAST tmpNsName, -1);
 	    xmlFree(tmpNsName);
-	};
+	}
+
+        if (xmlStrEqual(nsName, BAD_CAST "http://www.w3.org/2000/xmlns/")) {
+            xsltTransformError(ctxt, NULL, inst,
+                "xsl:attribute: Namespace http://www.w3.org/2000/xmlns/ "
+                "forbidden.\n");
+            goto error;
+        }
+        if (xmlStrEqual(nsName, XML_XML_NAMESPACE)) {
+            prefix = BAD_CAST "xml";
+        } else if (xmlStrEqual(prefix, BAD_CAST "xml")) {
+            prefix = NULL;
+        }
     } else if (prefix != NULL) {
 	/*
 	* SPEC XSLT 1.0:
@@ -896,11 +897,10 @@ xsltAttributeInternal(xsltTransformContextPtr ctxt,
 	* xsl:attribute can produce a scenario where the prefix is NULL,
 	* so generate a prefix.
 	*/
-	if (prefix == NULL) {
+	if ((prefix == NULL) || xmlStrEqual(prefix, BAD_CAST "xmlns")) {
 	    xmlChar *pref = xmlStrdup(BAD_CAST "ns_1");
 
-	    ns = xsltGetSpecialNamespace(ctxt, inst, nsName, BAD_CAST pref,
-		targetElem);
+	    ns = xsltGetSpecialNamespace(ctxt, inst, nsName, pref, targetElem);
 
 	    xmlFree(pref);
 	} else {

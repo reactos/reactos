@@ -26,9 +26,9 @@
 #define LC_COLLATE_MASK (1 << LC_COLLATE)
 #endif
 
-#define ISALPHA(c) ((c & 0xc0) == 0x40 && (unsigned)((c & 0x1f) - 1) < 26)
 #define TOUPPER(c) (c & ~0x20)
 #define TOLOWER(c) (c | 0x20)
+#define ISALPHA(c) ((unsigned)(TOUPPER(c) - 'A') < 26)
 
 /*without terminating null character*/
 #define XSLTMAX_ISO639LANGLEN		8
@@ -67,6 +67,21 @@ static void xsltEnumSupportedLocales(void);
 #endif
 
 /**
+ * xsltFreeLocales:
+ *
+ * Cleanup function for the locale support on shutdown
+ */
+void
+xsltFreeLocales(void) {
+#ifdef XSLT_LOCALE_WINAPI
+    xmlRMutexLock(xsltLocaleMutex);
+    xmlFree(xsltLocaleList);
+    xsltLocaleList = NULL;
+    xmlRMutexUnlock(xsltLocaleMutex);
+#endif
+}
+
+/**
  * xsltNewLocale:
  * @languageTag: RFC 3066 language tag
  *
@@ -97,11 +112,11 @@ xsltNewLocale(const xmlChar *languageTag) {
 	return(NULL);
 
     llen = i;
-    *q++ = '_';
 
     if (*p) {
 	if (*p++ != '-')
 	    return(NULL);
+        *q++ = '_';
 
 	for (i=0; i<XSLTMAX_ISO3166CNTRYLEN && ISALPHA(*p); ++i)
 	    *q++ = TOUPPER(*p++);
@@ -116,7 +131,7 @@ xsltNewLocale(const xmlChar *languageTag) {
 
         /* Continue without using country code */
 
-        q = localeName + llen + 1;
+        q = localeName + llen;
     }
 
     /* Try locale without territory, e.g. for Esperanto (eo) */
@@ -135,7 +150,8 @@ xsltNewLocale(const xmlChar *languageTag) {
     if (region == NULL)
         return(NULL);
 
-    q = localeName + llen + 1;
+    q = localeName + llen;
+    *q++ = '_';
     *q++ = region[0];
     *q++ = region[1];
     memcpy(q, ".utf8", 6);

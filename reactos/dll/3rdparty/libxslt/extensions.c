@@ -2289,6 +2289,7 @@ xsltCleanupGlobals(void)
 
     xmlFreeMutex(xsltExtMutex);
     xsltExtMutex = NULL;
+    xsltFreeLocales();
     xsltUninit();
 }
 

@@ -95,5 +95,9 @@ static int isnan (double d) {
 #define ATTRIBUTE_UNUSED
 #endif
 
+#ifndef __REACTOS__
+#define _WINSOCKAPI_
+#endif
+
 #endif /* __LIBXSLT_WIN32_CONFIG__ */
 

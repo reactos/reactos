@@ -52,8 +52,8 @@ extern "C" {
  * Checks that the element pertains to XSLT namespace.
  */
 #define IS_XSLT_ELEM(n)							\
-    (((n) != NULL) && ((n)->ns != NULL) &&				\
-     (xmlStrEqual((n)->ns->href, XSLT_NAMESPACE)))
+    (((n) != NULL) && ((n)->type == XML_ELEMENT_NODE) &&                \
+     ((n)->ns != NULL) && (xmlStrEqual((n)->ns->href, XSLT_NAMESPACE)))
 
 /**
  * IS_XSLT_NAME:
@@ -242,6 +242,10 @@ XSLTPUBFUN int XSLTCALL
 XSLTPUBFUN xmlXPathCompExprPtr XSLTCALL
 		xsltXPathCompile		(xsltStylesheetPtr style,
 						 const xmlChar *str);
+XSLTPUBFUN xmlXPathCompExprPtr XSLTCALL
+		xsltXPathCompileFlags		(xsltStylesheetPtr style,
+						 const xmlChar *str,
+						 int flags);
 
 /*
  * Profiling.

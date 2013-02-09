@@ -43,7 +43,7 @@ extern "C" {
  *
  * The XSLT specification namespace.
  */
-#define XSLT_NAMESPACE ((xmlChar *) "http://www.w3.org/1999/XSL/Transform")
+#define XSLT_NAMESPACE ((const xmlChar *)"http://www.w3.org/1999/XSL/Transform")
 
 /**
  * XSLT_PARSE_OPTIONS:
@@ -60,6 +60,13 @@ extern "C" {
  * This value is used to detect templates loops.
  */
 XSLTPUBVAR int xsltMaxDepth;
+
+/**
+ *  * xsltMaxVars:
+ *   *
+ *    * This value is used to detect templates loops.
+ *     */
+XSLTPUBVAR int xsltMaxVars;
 
 /**
  * xsltEngineVersion:
@@ -92,7 +99,7 @@ XSLTPUBFUN void XSLTCALL
 /*
  * Global cleanup function.
  */
-XSLTPUBFUN void XSLTCALL	
+XSLTPUBFUN void XSLTCALL
 		xsltCleanupGlobals	(void);
 
 #ifdef __cplusplus

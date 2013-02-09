@@ -675,6 +675,9 @@ xsltStackLookup(xsltTransformContextPtr ctxt, const xmlChar *name,
     return(NULL);
 }
 
+#ifdef XSLT_REFACTORED
+#else
+
 /**
  * xsltCheckStackElem:
  * @ctxt:  xn XSLT transformation context
@@ -709,6 +712,8 @@ xsltCheckStackElem(xsltTransformContextPtr ctxt, const xmlChar *name,
 
     return(1);
 }
+
+#endif /* XSLT_REFACTORED */
 
 /**
  * xsltAddStackElem:
@@ -1045,7 +1050,11 @@ xsltEvalGlobalVariable(xsltStackElemPtr elem, xsltTransformContextPtr ctxt)
 #endif
 
     oldInst = ctxt->inst;
+#ifdef XSLT_REFACTORED
+    comp = (xsltStyleBasicItemVariablePtr) elem->comp;
+#else
     comp = elem->comp;
+#endif
     oldVarName = elem->name;
     elem->name = xsltComputingGlobalVarMarker;
     /*
@@ -1926,7 +1935,7 @@ xsltParseStylesheetCallerParam(xsltTransformContextPtr ctxt, xmlNodePtr inst)
                                the instruction itself. */
     xsltStackElemPtr param = NULL;
 
-    if ((ctxt == NULL) || (inst == NULL))
+    if ((ctxt == NULL) || (inst == NULL) || (inst->type != XML_ELEMENT_NODE))
 	return(NULL);
 
 #ifdef XSLT_REFACTORED
@@ -1985,7 +1994,7 @@ xsltParseGlobalVariable(xsltStylesheetPtr style, xmlNodePtr cur)
     xsltStylePreCompPtr comp;
 #endif
 
-    if ((cur == NULL) || (style == NULL))
+    if ((cur == NULL) || (style == NULL) || (cur->type != XML_ELEMENT_NODE))
 	return;
 
 #ifdef XSLT_REFACTORED
@@ -2047,7 +2056,7 @@ xsltParseGlobalParam(xsltStylesheetPtr style, xmlNodePtr cur) {
     xsltStylePreCompPtr comp;
 #endif
 
-    if ((cur == NULL) || (style == NULL))
+    if ((cur == NULL) || (style == NULL) || (cur->type != XML_ELEMENT_NODE))
 	return;
 
 #ifdef XSLT_REFACTORED
@@ -2110,7 +2119,7 @@ xsltParseStylesheetVariable(xsltTransformContextPtr ctxt, xmlNodePtr inst)
     xsltStylePreCompPtr comp;
 #endif
 
-    if ((inst == NULL) || (ctxt == NULL))
+    if ((inst == NULL) || (ctxt == NULL) || (inst->type != XML_ELEMENT_NODE))
 	return;
 
     comp = inst->psvi;
@@ -2152,7 +2161,7 @@ xsltParseStylesheetParam(xsltTransformContextPtr ctxt, xmlNodePtr cur)
     xsltStylePreCompPtr comp;
 #endif
 
-    if ((cur == NULL) || (ctxt == NULL))
+    if ((cur == NULL) || (ctxt == NULL) || (cur->type != XML_ELEMENT_NODE))
 	return;
 
     comp = cur->psvi;

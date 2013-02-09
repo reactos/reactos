@@ -534,8 +534,8 @@ xsltNumberFormatInsertNumbers(xsltNumberDataPtr data,
 static int
 xsltNumberFormatGetAnyLevel(xsltTransformContextPtr context,
 			    xmlNodePtr node,
-			    const xmlChar *count,
-			    const xmlChar *from,
+			    xsltCompMatchPtr countPat,
+			    xsltCompMatchPtr fromPat,
 			    double *array,
 			    xmlDocPtr doc,
 			    xmlNodePtr elem)
@@ -543,13 +543,6 @@ xsltNumberFormatGetAnyLevel(xsltTransformContextPtr context,
     int amount = 0;
     int cnt = 0;
     xmlNodePtr cur;
-    xsltCompMatchPtr countPat = NULL;
-    xsltCompMatchPtr fromPat = NULL;
-
-    if (count != NULL)
-	countPat = xsltCompilePattern(count, doc, elem, NULL, context);
-    if (from != NULL)
-	fromPat = xsltCompilePattern(from, doc, elem, NULL, context);
 
     /* select the starting node */
     switch (node->type) {
@@ -571,7 +564,7 @@ xsltNumberFormatGetAnyLevel(xsltTransformContextPtr context,
 
     while (cur != NULL) {
 	/* process current node */
-	if (count == NULL) {
+	if (countPat == NULL) {
 	    if ((node->type == cur->type) &&
 		/* FIXME: must use expanded-name instead of local name */
 		xmlStrEqual(node->name, cur->name)) {
@@ -586,7 +579,7 @@ xsltNumberFormatGetAnyLevel(xsltTransformContextPtr context,
 	    if (xsltTestCompMatchList(context, cur, countPat))
 		cnt++;
 	}
-	if ((from != NULL) &&
+	if ((fromPat != NULL) &&
 	    xsltTestCompMatchList(context, cur, fromPat)) {
 	    break; /* while */
 	}
@@ -613,18 +606,14 @@ xsltNumberFormatGetAnyLevel(xsltTransformContextPtr context,
 
     array[amount++] = (double) cnt;
 
-    if (countPat != NULL)
-	xsltFreeCompMatchList(countPat);
-    if (fromPat != NULL)
-	xsltFreeCompMatchList(fromPat);
     return(amount);
 }
 
 static int
 xsltNumberFormatGetMultipleLevel(xsltTransformContextPtr context,
 				 xmlNodePtr node,
-				 const xmlChar *count,
-				 const xmlChar *from,
+				 xsltCompMatchPtr countPat,
+				 xsltCompMatchPtr fromPat,
 				 double *array,
 				 int max,
 				 xmlDocPtr doc,
@@ -635,17 +624,7 @@ xsltNumberFormatGetMultipleLevel(xsltTransformContextPtr context,
     xmlNodePtr ancestor;
     xmlNodePtr preceding;
     xmlXPathParserContextPtr parser;
-    xsltCompMatchPtr countPat;
-    xsltCompMatchPtr fromPat;
 
-    if (count != NULL)
-	countPat = xsltCompilePattern(count, doc, elem, NULL, context);
-    else
-	countPat = NULL;
-    if (from != NULL)
-	fromPat = xsltCompilePattern(from, doc, elem, NULL, context);
-    else
-	fromPat = NULL;
     context->xpathCtxt->node = node;
     parser = xmlXPathNewParserContext(NULL, context->xpathCtxt);
     if (parser) {
@@ -654,11 +633,11 @@ xsltNumberFormatGetMultipleLevel(xsltTransformContextPtr context,
 	     (ancestor != NULL) && (ancestor->type != XML_DOCUMENT_NODE);
 	     ancestor = xmlXPathNextAncestor(parser, ancestor)) {
 
-	    if ((from != NULL) &&
+	    if ((fromPat != NULL) &&
 		xsltTestCompMatchList(context, ancestor, fromPat))
 		break; /* for */
 
-	    if ((count == NULL && node->type == ancestor->type &&
+	    if ((countPat == NULL && node->type == ancestor->type &&
 		xmlStrEqual(node->name, ancestor->name)) ||
 		xsltTestCompMatchList(context, ancestor, countPat)) {
 		/* count(preceding-sibling::*) */
@@ -667,7 +646,7 @@ xsltNumberFormatGetMultipleLevel(xsltTransformContextPtr context,
 		     preceding != NULL;
 		     preceding =
 		        xmlXPathNextPrecedingSibling(parser, preceding)) {
-		    if (count == NULL) {
+		    if (countPat == NULL) {
 			if ((preceding->type == ancestor->type) &&
 			    xmlStrEqual(preceding->name, ancestor->name)){
 			    if ((preceding->ns == ancestor->ns) ||
@@ -690,8 +669,6 @@ xsltNumberFormatGetMultipleLevel(xsltTransformContextPtr context,
 	}
 	xmlXPathFreeParserContext(parser);
     }
-    xsltFreeCompMatchList(countPat);
-    xsltFreeCompMatchList(fromPat);
     return amount;
 }
 
@@ -779,8 +756,8 @@ xsltNumberFormat(xsltTransformContextPtr ctxt,
 	if (xmlStrEqual(data->level, (const xmlChar *) "single")) {
 	    amount = xsltNumberFormatGetMultipleLevel(ctxt,
 						      node,
-						      data->count,
-						      data->from,
+						      data->countPat,
+						      data->fromPat,
 						      &number,
 						      1,
 						      data->doc,
@@ -797,8 +774,8 @@ xsltNumberFormat(xsltTransformContextPtr ctxt,
 	    int max = sizeof(numarray)/sizeof(numarray[0]);
 	    amount = xsltNumberFormatGetMultipleLevel(ctxt,
 						      node,
-						      data->count,
-						      data->from,
+						      data->countPat,
+						      data->fromPat,
 						      numarray,
 						      max,
 						      data->doc,
@@ -813,8 +790,8 @@ xsltNumberFormat(xsltTransformContextPtr ctxt,
 	} else if (xmlStrEqual(data->level, (const xmlChar *) "any")) {
 	    amount = xsltNumberFormatGetAnyLevel(ctxt,
 						 node,
-						 data->count,
-						 data->from,
+						 data->countPat,
+						 data->fromPat,
 						 &number,
 						 data->doc,
 						 data->node);
