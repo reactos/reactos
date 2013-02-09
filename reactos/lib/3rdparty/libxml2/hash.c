@@ -3,7 +3,7 @@
  *
  * Reference: Your favorite introductory book on algorithms
  *
- * Copyright (C) 2000 Bjorn Reese and Daniel Veillard.
+ * Copyright (C) 2000,2012 Bjorn Reese and Daniel Veillard.
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -21,6 +21,22 @@
 #include "libxml.h"
 
 #include <string.h>
+#ifdef HAVE_STDLIB_H
+#include <stdlib.h>
+#endif
+#ifdef HAVE_TIME_H
+#include <time.h>
+#endif
+
+/*
+ * Following http://www.ocert.org/advisories/ocert-2011-003.html
+ * it seems that having hash randomization might be a good idea
+ * when using XML with untrusted data
+ */
+#if defined(HAVE_RAND) && defined(HAVE_SRAND) && defined(HAVE_TIME)
+#define HASH_RANDOMIZATION
+#endif
+
 #include <libxml/parser.h>
 #include <libxml/hash.h>
 #include <libxml/xmlmemory.h>
@@ -53,6 +69,9 @@ struct _xmlHashTable {
     int size;
     int nbElems;
     xmlDictPtr dict;
+#ifdef HASH_RANDOMIZATION
+    int random_seed;
+#endif
 };
 
 /*
@@ -65,6 +84,9 @@ xmlHashComputeKey(xmlHashTablePtr table, const xmlChar *name,
     unsigned long value = 0L;
     char ch;
 
+#ifdef HASH_RANDOMIZATION
+    value = table->random_seed;
+#endif
     if (name != NULL) {
 	value += 30 * (*name);
 	while ((ch = *name++) != 0) {
@@ -92,6 +114,9 @@ xmlHashComputeQKey(xmlHashTablePtr table,
     unsigned long value = 0L;
     char ch;
 
+#ifdef HASH_RANDOMIZATION
+    value = table->random_seed;
+#endif
     if (prefix != NULL)
 	value += 30 * (*prefix);
     else
@@ -156,6 +181,9 @@ xmlHashCreate(int size) {
         table->table = xmlMalloc(size * sizeof(xmlHashEntry));
         if (table->table) {
 	    memset(table->table, 0, size * sizeof(xmlHashEntry));
+#ifdef HASH_RANDOMIZATION
+            table->random_seed = __xmlRandom();
+#endif
 	    return(table);
         }
         xmlFree(table);

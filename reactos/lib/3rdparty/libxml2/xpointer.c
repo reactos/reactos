@@ -134,7 +134,7 @@ xmlNodePtr xmlXPtrAdvanceNode(xmlNodePtr cur, int *level);
 static int
 xmlXPtrGetArity(xmlNodePtr cur) {
     int i;
-    if (cur == NULL)
+    if ((cur == NULL) || (cur->type == XML_NAMESPACE_DECL))
 	return(-1);
     cur = cur->children;
     for (i = 0;cur != NULL;cur = cur->next) {
@@ -157,7 +157,7 @@ xmlXPtrGetArity(xmlNodePtr cur) {
 static int
 xmlXPtrGetIndex(xmlNodePtr cur) {
     int i;
-    if (cur == NULL)
+    if ((cur == NULL) || (cur->type == XML_NAMESPACE_DECL))
 	return(-1);
     for (i = 1;cur != NULL;cur = cur->prev) {
 	if ((cur->type == XML_ELEMENT_NODE) ||
@@ -179,7 +179,7 @@ xmlXPtrGetIndex(xmlNodePtr cur) {
 static xmlNodePtr
 xmlXPtrGetNthChild(xmlNodePtr cur, int no) {
     int i;
-    if (cur == NULL)
+    if ((cur == NULL) || (cur->type == XML_NAMESPACE_DECL))
 	return(cur);
     cur = cur->children;
     for (i = 0;i <= no;cur = cur->next) {
@@ -1007,21 +1007,14 @@ xmlXPtrEvalXPtrPart(xmlXPathParserContextPtr ctxt, xmlChar *name) {
 		NEXT;
 		break;
 	    }
-	    *cur++ = CUR;
 	} else if (CUR == '(') {
 	    level++;
-	    *cur++ = CUR;
 	} else if (CUR == '^') {
-	    NEXT;
-	    if ((CUR == ')') || (CUR == '(') || (CUR == '^')) {
-		*cur++ = CUR;
-	    } else {
-		*cur++ = '^';
-		*cur++ = CUR;
-	    }
-	} else {
-	    *cur++ = CUR;
+            if ((NXT(1) == ')') || (NXT(1) == '(') || (NXT(1) == '^')) {
+                NEXT;
+            }
 	}
+        *cur++ = CUR;
 	NEXT;
     }
     *cur = 0;
@@ -1269,6 +1262,7 @@ xmlXPtrEvalXPointer(xmlXPathParserContextPtr ctxt) {
 	ctxt->valueNr = 0;
 	ctxt->valueMax = 10;
 	ctxt->value = NULL;
+	ctxt->valueFrame = 0;
     }
     SKIP_BLANKS;
     if (CUR == '/') {
@@ -1450,11 +1444,13 @@ xmlXPtrBuildRangeNodeList(xmlXPathObjectPtr range) {
 	return(NULL);
     start = (xmlNodePtr) range->user;
 
-    if (start == NULL)
+    if ((start == NULL) || (start->type == XML_NAMESPACE_DECL))
 	return(NULL);
     end = range->user2;
     if (end == NULL)
 	return(xmlCopyNode(start, 1));
+    if (end->type == XML_NAMESPACE_DECL)
+        return(NULL);
 
     cur = start;
     index1 = range->index;
@@ -2310,7 +2306,7 @@ xmlXPtrRangeToFunction(xmlXPathParserContextPtr ctxt, int nargs) {
 xmlNodePtr
 xmlXPtrAdvanceNode(xmlNodePtr cur, int *level) {
 next:
-    if (cur == NULL)
+    if ((cur == NULL) || (cur->type == XML_NAMESPACE_DECL))
 	return(NULL);
     if (cur->children != NULL) {
         cur = cur->children ;
@@ -2368,7 +2364,7 @@ xmlXPtrAdvanceChar(xmlNodePtr *node, int *indx, int bytes) {
     if ((node == NULL) || (indx == NULL))
 	return(-1);
     cur = *node;
-    if (cur == NULL)
+    if ((cur == NULL) || (cur->type == XML_NAMESPACE_DECL))
 	return(-1);
     pos = *indx;
 
@@ -2459,9 +2455,10 @@ xmlXPtrMatchString(const xmlChar *string, xmlNodePtr start, int startindex,
 
     if (string == NULL)
 	return(-1);
-    if (start == NULL)
+    if ((start == NULL) || (start->type == XML_NAMESPACE_DECL))
 	return(-1);
-    if ((end == NULL) || (endindex == NULL))
+    if ((end == NULL) || (*end == NULL) ||
+        ((*end)->type == XML_NAMESPACE_DECL) || (endindex == NULL))
 	return(-1);
     cur = start;
     if (cur == NULL)
@@ -2544,13 +2541,12 @@ xmlXPtrSearchString(const xmlChar *string, xmlNodePtr *start, int *startindex,
 
     if (string == NULL)
 	return(-1);
-    if ((start == NULL) || (startindex == NULL))
+    if ((start == NULL) || (*start == NULL) ||
+        ((*start)->type == XML_NAMESPACE_DECL) || (startindex == NULL))
 	return(-1);
     if ((end == NULL) || (endindex == NULL))
 	return(-1);
     cur = *start;
-    if (cur == NULL)
-	return(-1);
     pos = *startindex - 1;
     first = string[0];
 
@@ -2624,13 +2620,11 @@ xmlXPtrGetLastChar(xmlNodePtr *node, int *indx) {
     xmlNodePtr cur;
     int pos, len = 0;
 
-    if ((node == NULL) || (indx == NULL))
+    if ((node == NULL) || (*node == NULL) ||
+        ((*node)->type == XML_NAMESPACE_DECL) || (indx == NULL))
 	return(-1);
     cur = *node;
     pos = *indx;
-
-    if (cur == NULL)
-	return(-1);
 
     if ((cur->type == XML_ELEMENT_NODE) ||
 	(cur->type == XML_DOCUMENT_NODE) ||

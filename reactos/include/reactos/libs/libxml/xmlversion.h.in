@@ -379,7 +379,7 @@ XMLPUBFUN void XMLCALL xmlCheckVersion(int version);
  *
  * the string suffix used by dynamic modules (usually shared libraries)
  */
-#define LIBXML_MODULE_EXTENSION "@MODULE_EXTENSION@"
+#define LIBXML_MODULE_EXTENSION "@MODULE_EXTENSION@" 
 #endif
 
 /**
@@ -389,6 +389,15 @@ XMLPUBFUN void XMLCALL xmlCheckVersion(int version);
  */
 #if @WITH_ZLIB@
 #define LIBXML_ZLIB_ENABLED
+#endif
+
+/**
+ * LIBXML_LZMA_ENABLED:
+ *
+ * Whether the Lzma support is compiled in
+ */
+#if @WITH_LZMA@
+#define LIBXML_LZMA_ENABLED
 #endif
 
 #ifdef __GNUC__
@@ -403,7 +412,11 @@ XMLPUBFUN void XMLCALL xmlCheckVersion(int version);
  */
 
 #ifndef ATTRIBUTE_UNUSED
-#define ATTRIBUTE_UNUSED __attribute__((unused))
+# if ((__GNUC__ > 2) || ((__GNUC__ == 2) && (__GNUC_MINOR__ >= 7)))
+#  define ATTRIBUTE_UNUSED __attribute__((unused))
+# else
+#  define ATTRIBUTE_UNUSED
+# endif
 #endif
 
 /**

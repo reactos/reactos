@@ -13,6 +13,7 @@
 #define __XML_TREE_H__
 
 #include <stdio.h>
+#include <limits.h>
 #include <libxml/xmlversion.h>
 #include <libxml/xmlstring.h>
 
@@ -74,13 +75,15 @@ typedef enum {
     XML_BUFFER_ALLOC_DOUBLEIT,	/* double each time one need to grow */
     XML_BUFFER_ALLOC_EXACT,	/* grow only to the minimal size */
     XML_BUFFER_ALLOC_IMMUTABLE, /* immutable buffer */
-    XML_BUFFER_ALLOC_IO		/* special allocation scheme used for I/O */
+    XML_BUFFER_ALLOC_IO,	/* special allocation scheme used for I/O */
+    XML_BUFFER_ALLOC_HYBRID	/* exact up to a threshold, and doubleit thereafter */
 } xmlBufferAllocationScheme;
 
 /**
  * xmlBuffer:
  *
- * A buffer structure.
+ * A buffer structure, this old construct is limited to 2GB and
+ * is being deprecated, use API with xmlBuf instead
  */
 typedef struct _xmlBuffer xmlBuffer;
 typedef xmlBuffer *xmlBufferPtr;
@@ -91,6 +94,41 @@ struct _xmlBuffer {
     xmlBufferAllocationScheme alloc; /* The realloc method */
     xmlChar *contentIO;		/* in IO mode we may have a different base */
 };
+
+/**
+ * xmlBuf:
+ *
+ * A buffer structure, new one, the actual structure internals are not public
+ */
+
+typedef struct _xmlBuf xmlBuf;
+
+/**
+ * xmlBufPtr:
+ *
+ * A pointer to a buffer structure, the actual structure internals are not
+ * public
+ */
+
+typedef xmlBuf *xmlBufPtr;
+
+/*
+ * A few public routines for xmlBuf. As those are expected to be used
+ * mostly internally the bulk of the routines are internal in buf.h
+ */
+XMLPUBFUN xmlChar* XMLCALL       xmlBufContent	(const xmlBufPtr buf);
+XMLPUBFUN xmlChar* XMLCALL       xmlBufEnd      (const xmlBufPtr buf);
+XMLPUBFUN size_t XMLCALL         xmlBufUse      (xmlBufPtr buf);
+XMLPUBFUN size_t XMLCALL         xmlBufShrink	(xmlBufPtr buf, size_t len);
+
+/*
+ * LIBXML2_NEW_BUFFER:
+ *
+ * Macro used to express that the API use the new buffers for
+ * xmlParserInputBuffer and xmlOutputBuffer. The change was
+ * introduced in 2.9.0.
+ */
+#define LIBXML2_NEW_BUFFER
 
 /**
  * XML_XML_NAMESPACE:
@@ -647,7 +685,7 @@ XMLPUBFUN const xmlChar * XMLCALL
 					 int *len);
 
 /*
- * Handling Buffers.
+ * Handling Buffers, the old ones see @xmlBuf for the new ones.
  */
 
 XMLPUBFUN void XMLCALL
@@ -694,6 +732,8 @@ XMLPUBFUN void XMLCALL
 		xmlBufferEmpty		(xmlBufferPtr buf);
 XMLPUBFUN const xmlChar* XMLCALL
 		xmlBufferContent	(const xmlBufferPtr buf);
+XMLPUBFUN xmlChar* XMLCALL
+		xmlBufferDetach         (xmlBufferPtr buf);
 XMLPUBFUN void XMLCALL
 		xmlBufferSetAllocationScheme(xmlBufferPtr buf,
 					 xmlBufferAllocationScheme scheme);
@@ -1026,9 +1066,14 @@ XMLPUBFUN void XMLCALL
 					 int len);
 XMLPUBFUN xmlChar * XMLCALL
 		xmlNodeGetContent	(xmlNodePtr cur);
+
 XMLPUBFUN int XMLCALL
 		xmlNodeBufGetContent	(xmlBufferPtr buffer,
 					 xmlNodePtr cur);
+XMLPUBFUN int XMLCALL
+		xmlBufGetNodeContent	(xmlBufPtr buf,
+					 xmlNodePtr cur);
+
 XMLPUBFUN xmlChar * XMLCALL
 		xmlNodeGetLang		(xmlNodePtr cur);
 XMLPUBFUN int XMLCALL
@@ -1135,6 +1180,12 @@ XMLPUBFUN int XMLCALL
 XMLPUBFUN int XMLCALL
 		xmlSaveFormatFile	(const char *filename,
 					 xmlDocPtr cur,
+					 int format);
+XMLPUBFUN size_t XMLCALL
+		xmlBufNodeDump		(xmlBufPtr buf,
+					 xmlDocPtr doc,
+					 xmlNodePtr cur,
+					 int level,
 					 int format);
 XMLPUBFUN int XMLCALL
 		xmlNodeDump		(xmlBufferPtr buf,

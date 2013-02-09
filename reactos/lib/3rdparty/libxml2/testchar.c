@@ -10,6 +10,8 @@
 #include <libxml/parser.h>
 #include <libxml/parserInternals.h>
 
+#include "buf.h"
+
 int lastError;
 
 static void errorHandler(void *unused, xmlErrorPtr err) {
@@ -558,9 +560,9 @@ static void testCharRanges(void) {
     }
     input->filename = NULL;
     input->buf = buf;
-    input->base = input->buf->buffer->content;
-    input->cur = input->buf->buffer->content;
-    input->end = &input->buf->buffer->content[4];
+    input->cur =
+    input->base = xmlBufContent(input->buf->buffer);
+    input->end = input->base + 4;
     inputPush(ctxt, input);
 
     printf("testing char range: 1");

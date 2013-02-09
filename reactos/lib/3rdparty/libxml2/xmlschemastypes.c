@@ -3569,8 +3569,8 @@ xmlSchemaCompareDurations(xmlSchemaValPtr x, xmlSchemaValPtr y)
 
     /* seconds */
     sec = x->value.dur.sec - y->value.dur.sec;
-    carry = (long)sec / SECS_PER_DAY;
-    sec -= (double)(carry * SECS_PER_DAY);
+    carry = (long)(sec / SECS_PER_DAY);
+    sec -= ((double)carry) * SECS_PER_DAY;
 
     /* days */
     day = x->value.dur.day - y->value.dur.day + carry;
@@ -5122,7 +5122,7 @@ xmlSchemaValidateListSimpleTypeFacet(xmlSchemaFacetPtr facet,
  */
 static int
 xmlSchemaValidateLengthFacetInternal(xmlSchemaFacetPtr facet,
-				     xmlSchemaTypeType valType,
+				     xmlSchemaValType valType,
 				     const xmlChar *value,
 				     xmlSchemaValPtr val,
 				     unsigned long *length,

@@ -129,8 +129,8 @@ struct _xmlParserInputBuffer {
 
     xmlCharEncodingHandlerPtr encoder; /* I18N conversions to UTF-8 */
 
-    xmlBufferPtr buffer;    /* Local buffer encoded in UTF-8 */
-    xmlBufferPtr raw;       /* if encoder != NULL buffer for raw input */
+    xmlBufPtr buffer;    /* Local buffer encoded in UTF-8 */
+    xmlBufPtr raw;       /* if encoder != NULL buffer for raw input */
     int	compressed;	    /* -1=unknown, 0=not compressed, 1=compressed */
     int error;
     unsigned long rawconsumed;/* amount consumed from raw */
@@ -145,8 +145,8 @@ struct _xmlOutputBuffer {
 
     xmlCharEncodingHandlerPtr encoder; /* I18N conversions to UTF-8 */
 
-    xmlBufferPtr buffer;    /* Local buffer encoded in UTF-8 or ISOLatin */
-    xmlBufferPtr conv;      /* if encoder != NULL buffer for output */
+    xmlBufPtr buffer;    /* Local buffer encoded in UTF-8 or ISOLatin */
+    xmlBufPtr conv;      /* if encoder != NULL buffer for output */
     int written;            /* total number of byte written */
     int error;
 };
@@ -245,6 +245,12 @@ XMLPUBFUN xmlOutputBufferPtr XMLCALL
 					 void *ioctx,
 					 xmlCharEncodingHandlerPtr encoder);
 
+/* Couple of APIs to get the output without digging into the buffers */
+XMLPUBFUN const xmlChar * XMLCALL
+        xmlOutputBufferGetContent       (xmlOutputBufferPtr out);
+XMLPUBFUN size_t XMLCALL
+        xmlOutputBufferGetSize          (xmlOutputBufferPtr out);
+
 XMLPUBFUN int XMLCALL
 	xmlOutputBufferWrite		(xmlOutputBufferPtr out,
 					 int len,
@@ -306,24 +312,24 @@ XMLPUBFUN int XMLCALL
  * Default 'file://' protocol callbacks
  */
 XMLPUBFUN int XMLCALL
-	xmlFileMatch 			(const char *filename);
+	xmlFileMatch			(const char *filename);
 XMLPUBFUN void * XMLCALL
-	xmlFileOpen 			(const char *filename);
+	xmlFileOpen			(const char *filename);
 XMLPUBFUN int XMLCALL
-	xmlFileRead 			(void * context,
+	xmlFileRead			(void * context,
 					 char * buffer,
 					 int len);
 XMLPUBFUN int XMLCALL
-	xmlFileClose 			(void * context);
+	xmlFileClose			(void * context);
 
 /**
  * Default 'http://' protocol callbacks
  */
 #ifdef LIBXML_HTTP_ENABLED
 XMLPUBFUN int XMLCALL
-	xmlIOHTTPMatch 			(const char *filename);
+	xmlIOHTTPMatch			(const char *filename);
 XMLPUBFUN void * XMLCALL
-	xmlIOHTTPOpen 			(const char *filename);
+	xmlIOHTTPOpen			(const char *filename);
 #ifdef LIBXML_OUTPUT_ENABLED
 XMLPUBFUN void * XMLCALL
 	xmlIOHTTPOpenW			(const char * post_uri,
@@ -334,7 +340,7 @@ XMLPUBFUN int XMLCALL
 					 char * buffer,
 					 int len);
 XMLPUBFUN int XMLCALL
-	xmlIOHTTPClose 			(void * context);
+	xmlIOHTTPClose			(void * context);
 #endif /* LIBXML_HTTP_ENABLED */
 
 /**
@@ -342,15 +348,15 @@ XMLPUBFUN int XMLCALL
  */
 #ifdef LIBXML_FTP_ENABLED
 XMLPUBFUN int XMLCALL
-	xmlIOFTPMatch 			(const char *filename);
+	xmlIOFTPMatch			(const char *filename);
 XMLPUBFUN void * XMLCALL
-	xmlIOFTPOpen 			(const char *filename);
+	xmlIOFTPOpen			(const char *filename);
 XMLPUBFUN int XMLCALL
 	xmlIOFTPRead			(void * context,
 					 char * buffer,
 					 int len);
 XMLPUBFUN int XMLCALL
-	xmlIOFTPClose 			(void * context);
+	xmlIOFTPClose			(void * context);
 #endif /* LIBXML_FTP_ENABLED */
 
 #ifdef __cplusplus

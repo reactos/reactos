@@ -11,8 +11,12 @@
 
 #include <stdio.h>
 #include <string.h>
+#ifndef STDOUT_FILENO
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#else
+#define STDOUT_FILENO fileno(stdout)
+#endif /* HAVE_UNISTD_H */
 #endif
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
@@ -104,7 +108,9 @@ test_c14n(const char* xml_filename, int with_comments, int mode,
 	    with_comments, &result);
     if(ret >= 0) {
 	if(result != NULL) {
-	    write(1, result, ret);
+	    if (write(STDOUT_FILENO, result, ret) == -1) {
+		fprintf(stderr, "Can't write data\n");
+	    }
 	    xmlFree(result);
 	}
     } else {

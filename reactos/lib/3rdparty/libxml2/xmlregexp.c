@@ -44,6 +44,9 @@
 
 #define MAX_PUSH 10000000
 
+#ifdef ERROR
+#undef ERROR
+#endif
 #define ERROR(str)							\
     ctxt->error = XML_REGEXP_COMPILE_ERROR;				\
     xmlRegexpErrCompile(ctxt, str);
@@ -219,6 +222,7 @@ struct _xmlRegTrans {
 struct _xmlAutomataState {
     xmlRegStateType type;
     xmlRegMarkedType mark;
+    xmlRegMarkedType markd;
     xmlRegMarkedType reached;
     int no;
     int maxTrans;
@@ -2586,6 +2590,8 @@ xmlFARecurseDeterminism(xmlRegParserCtxtPtr ctxt, xmlRegStatePtr state,
 
     if (state == NULL)
 	return(ret);
+    if (state->markd == XML_REGEXP_MARK_VISITED)
+	return(ret);
 
     if (ctxt->flags & AM_AUTOMATA_RNG)
         deep = 0;
@@ -2603,8 +2609,10 @@ xmlFARecurseDeterminism(xmlRegParserCtxtPtr ctxt, xmlRegStatePtr state,
 	if (t1->atom == NULL) {
 	    if (t1->to < 0)
 		continue;
+	    state->markd = XML_REGEXP_MARK_VISITED;
 	    res = xmlFARecurseDeterminism(ctxt, ctxt->states[t1->to],
 		                           to, atom);
+	    state->markd = 0;
 	    if (res == 0) {
 	        ret = 0;
 		/* t1->nd = 1; */
@@ -3199,7 +3207,7 @@ xmlFARegExec(xmlRegexpPtr comp, const xmlChar *content) {
         memset(exec->counts, 0, comp->nbCounters * sizeof(int));
     } else
 	exec->counts = NULL;
-    while ((exec->status == 0) &&
+    while ((exec->status == 0) && (exec->state != NULL) &&
 	   ((exec->inputString[exec->index] != 0) ||
 	    ((exec->state != NULL) &&
 	     (exec->state->type != XML_REGEXP_FINAL_STATE)))) {
@@ -3453,6 +3461,8 @@ error:
 	}
 	xmlFree(exec->rollbacks);
     }
+    if (exec->state == NULL)
+        return(-1);
     if (exec->counts != NULL)
 	xmlFree(exec->counts);
     if (exec->status == 0)
@@ -5370,6 +5380,10 @@ xmlFAParseRegExp(xmlRegParserCtxtPtr ctxt, int top) {
     end = ctxt->state;
     while ((CUR == '|') && (ctxt->error == 0)) {
 	NEXT;
+	if (CUR == 0) {
+	    ERROR("expecting a branch after |")
+	    return;
+	}
 	ctxt->state = start;
 	ctxt->end = NULL;
 	xmlFAParseBranch(ctxt, end);

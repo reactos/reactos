@@ -172,10 +172,12 @@ int main(int argc, char **argv) {
     xmlLoadExtDtdDefaultValue |= XML_DETECT_IDS;
     xmlLoadExtDtdDefaultValue |= XML_COMPLETE_ATTRS;
     xmlSubstituteEntitiesDefaultValue = 1;
+#ifdef LIBXML_SAX1_ENABLED
     if (nocdata != 0) {
 	xmlDefaultSAXHandlerInit();
 	xmlDefaultSAXHandler.cdataBlock = NULL;
     }
+#endif
     if (document == NULL) {
         if (filename == NULL)
 	    document = xmlReadDoc(buffer,NULL,NULL,XML_PARSE_COMPACT);

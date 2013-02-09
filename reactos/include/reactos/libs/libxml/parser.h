@@ -125,9 +125,9 @@ typedef enum {
     XML_PARSER_ENTITY_VALUE,	/* within an entity value in a decl */
     XML_PARSER_ATTRIBUTE_VALUE,	/* within an attribute value */
     XML_PARSER_SYSTEM_LITERAL,	/* within a SYSTEM value */
-    XML_PARSER_EPILOG, 		/* the Misc* after the last end tag */
+    XML_PARSER_EPILOG,		/* the Misc* after the last end tag */
     XML_PARSER_IGNORE,		/* within an IGNORED section */
-    XML_PARSER_PUBLIC_LITERAL 	/* within a PUBLIC value */
+    XML_PARSER_PUBLIC_LITERAL	/* within a PUBLIC value */
 } xmlParserInputState;
 
 /**
@@ -308,6 +308,8 @@ struct _xmlParserCtxt {
     int                nodeInfoNr;    /* Depth of the parsing stack */
     int                nodeInfoMax;   /* Max depth of the parsing stack */
     xmlParserNodeInfo *nodeInfoTab;   /* array of nodeInfos */
+
+    int                input_id;      /* we need to label inputs */
 };
 
 /**
@@ -891,12 +893,12 @@ XMLPUBFUN xmlDocPtr XMLCALL
 XMLPUBFUN xmlDocPtr XMLCALL
 		xmlSAXParseMemory	(xmlSAXHandlerPtr sax,
 					 const char *buffer,
-                                   	 int size,
+					 int size,
 					 int recovery);
 XMLPUBFUN xmlDocPtr XMLCALL
 		xmlSAXParseMemoryWithData (xmlSAXHandlerPtr sax,
 					 const char *buffer,
-                                   	 int size,
+					 int size,
 					 int recovery,
 					 void *data);
 XMLPUBFUN xmlDocPtr XMLCALL
@@ -1105,8 +1107,10 @@ typedef enum {
 				   crash if you try to modify the tree) */
     XML_PARSE_OLD10	= 1<<17,/* parse using XML-1.0 before update 5 */
     XML_PARSE_NOBASEFIX = 1<<18,/* do not fixup XINCLUDE xml:base uris */
-    XML_PARSE_HUGE      = 1<<19, /* relax any hardcoded limit from the parser */
-    XML_PARSE_OLDSAX    = 1<<20 /* parse using SAX2 interface from before 2.7.0 */
+    XML_PARSE_HUGE      = 1<<19,/* relax any hardcoded limit from the parser */
+    XML_PARSE_OLDSAX    = 1<<20,/* parse using SAX2 interface before 2.7.0 */
+    XML_PARSE_IGNORE_ENC= 1<<21,/* ignore internal document encoding hint */
+    XML_PARSE_BIG_LINES = 1<<22 /* Store big lines numbers in text PSVI field */
 } xmlParserOption;
 
 XMLPUBFUN void XMLCALL
@@ -1223,6 +1227,7 @@ typedef enum {
     XML_WITH_DEBUG_RUN = 30,
     XML_WITH_ZLIB = 31,
     XML_WITH_ICU = 32,
+    XML_WITH_LZMA = 33,
     XML_WITH_NONE = 99999 /* just to be sure of allocation size */
 } xmlFeature;
 

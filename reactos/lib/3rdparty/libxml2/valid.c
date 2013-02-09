@@ -5236,7 +5236,7 @@ xmlValidateElementContent(xmlValidCtxtPtr ctxt, xmlNodePtr child,
     xmlElementContentPtr cont;
     const xmlChar *name;
 
-    if (elemDecl == NULL)
+    if ((elemDecl == NULL) || (parent == NULL))
 	return(-1);
     cont = elemDecl->content;
     name = elemDecl->name;
@@ -5517,7 +5517,8 @@ xmlValidateOneCdataElement(xmlValidCtxtPtr ctxt, xmlDocPtr doc,
     int ret = 1;
     xmlNodePtr cur, child;
 
-    if ((ctxt == NULL) || (doc == NULL) || (elem == NULL))
+    if ((ctxt == NULL) || (doc == NULL) || (elem == NULL) ||
+        (elem->type != XML_ELEMENT_NODE))
 	return(0);
 
     child = elem->children;
@@ -6379,7 +6380,8 @@ xmlValidateElement(xmlValidCtxtPtr ctxt, xmlDocPtr doc, xmlNodePtr elem) {
      * they don't really mean anything validation wise.
      */
     if ((elem->type == XML_XINCLUDE_START) ||
-	(elem->type == XML_XINCLUDE_END))
+	(elem->type == XML_XINCLUDE_END) ||
+	(elem->type == XML_NAMESPACE_DECL))
 	return(1);
 
     CHECK_DTD;
@@ -6559,6 +6561,7 @@ xmlValidateCheckRefCallback(xmlListPtr ref_list, xmlValidCtxtPtr ctxt,
 int
 xmlValidateDocumentFinal(xmlValidCtxtPtr ctxt, xmlDocPtr doc) {
     xmlRefTablePtr table;
+    unsigned int save;
 
     if (ctxt == NULL)
         return(0);
@@ -6567,6 +6570,10 @@ xmlValidateDocumentFinal(xmlValidCtxtPtr ctxt, xmlDocPtr doc) {
 		"xmlValidateDocumentFinal: doc == NULL\n", NULL);
 	return(0);
     }
+
+    /* trick to get correct line id report */
+    save = ctxt->finishDtd;
+    ctxt->finishDtd = 0;
 
     /*
      * Check all the NOTATION/NOTATIONS attributes
@@ -6581,6 +6588,8 @@ xmlValidateDocumentFinal(xmlValidCtxtPtr ctxt, xmlDocPtr doc) {
     ctxt->doc = doc;
     ctxt->valid = 1;
     xmlHashScan(table, (xmlHashScanner) xmlValidateCheckRefCallback, ctxt);
+
+    ctxt->finishDtd = save;
     return(ctxt->valid);
 }
 

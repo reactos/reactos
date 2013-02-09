@@ -292,7 +292,10 @@ xmlReportError(xmlErrorPtr err, xmlParserCtxtPtr ctxt, const char *str,
     } else {
         if (file != NULL)
             channel(data, "%s:%d: ", file, line);
-        else if ((line != 0) && (domain == XML_FROM_PARSER))
+        else if ((line != 0) &&
+	         ((domain == XML_FROM_PARSER) || (domain == XML_FROM_SCHEMASV)||
+		  (domain == XML_FROM_SCHEMASP)||(domain == XML_FROM_DTD) ||
+		  (domain == XML_FROM_RELAXNGP)||(domain == XML_FROM_RELAXNGV)))
             channel(data, "Entity: line %d: ", line);
     }
     if (name != NULL) {
@@ -359,6 +362,15 @@ xmlReportError(xmlErrorPtr err, xmlParserCtxtPtr ctxt, const char *str,
             break;
         case XML_FROM_I18N:
             channel(data, "encoding ");
+            break;
+        case XML_FROM_SCHEMATRONV:
+            channel(data, "schematron ");
+            break;
+        case XML_FROM_BUFFER:
+            channel(data, "internal buffer ");
+            break;
+        case XML_FROM_URI:
+            channel(data, "URI ");
             break;
         default:
             break;
@@ -452,6 +464,8 @@ __xmlRaiseError(xmlStructuredErrorFunc schannel,
     xmlErrorPtr to = &xmlLastError;
     xmlNodePtr baseptr = NULL;
 
+    if (code == XML_ERR_OK)
+        return;
     if ((xmlGetWarningsDefaultValue == 0) && (level == XML_ERR_WARNING))
         return;
     if ((domain == XML_FROM_PARSER) || (domain == XML_FROM_HTML) ||
@@ -459,8 +473,11 @@ __xmlRaiseError(xmlStructuredErrorFunc schannel,
 	(domain == XML_FROM_IO) || (domain == XML_FROM_VALID)) {
 	ctxt = (xmlParserCtxtPtr) ctx;
 	if ((schannel == NULL) && (ctxt != NULL) && (ctxt->sax != NULL) &&
-	    (ctxt->sax->initialized == XML_SAX2_MAGIC))
+	    (ctxt->sax->initialized == XML_SAX2_MAGIC) &&
+	    (ctxt->sax->serror != NULL)) {
 	    schannel = ctxt->sax->serror;
+	    data = ctxt->userData;
+	}
     }
     /*
      * Check if structured error handler set
@@ -473,16 +490,6 @@ __xmlRaiseError(xmlStructuredErrorFunc schannel,
 	if (schannel != NULL)
 	    data = xmlStructuredErrorContext;
     }
-    if ((domain == XML_FROM_VALID) &&
-        ((channel == xmlParserValidityError) ||
-	 (channel == xmlParserValidityWarning))) {
-	ctxt = (xmlParserCtxtPtr) ctx;
-	if ((schannel == NULL) && (ctxt != NULL) && (ctxt->sax != NULL) &&
-	    (ctxt->sax->initialized == XML_SAX2_MAGIC))
-	    schannel = ctxt->sax->serror;
-    }
-    if (code == XML_ERR_OK)
-        return;
     /*
      * Formatting the message
      */
@@ -526,6 +533,8 @@ __xmlRaiseError(xmlStructuredErrorFunc schannel,
 
 	if ((node != NULL) && (node->type == XML_ELEMENT_NODE))
 	    line = node->line;
+	if ((line == 0) || (line == 65535))
+	    line = xmlGetLineNo(node);
     }
 
     /*
@@ -589,6 +598,11 @@ __xmlRaiseError(xmlStructuredErrorFunc schannel,
     if (to != &xmlLastError)
         xmlCopyError(to,&xmlLastError);
 
+    if (schannel != NULL) {
+	schannel(data, to);
+	return;
+    }
+
     /*
      * Find the callback channel if channel param is NULL
      */
@@ -600,19 +614,12 @@ __xmlRaiseError(xmlStructuredErrorFunc schannel,
 	    channel = ctxt->sax->error;
 	data = ctxt->userData;
     } else if (channel == NULL) {
-        if ((schannel == NULL) && (xmlStructuredError != NULL)) {
-	    schannel = xmlStructuredError;
-	    data = xmlStructuredErrorContext;
+	channel = xmlGenericError;
+	if (ctxt != NULL) {
+	    data = ctxt;
 	} else {
-	    channel = xmlGenericError;
-	    if (!data) {
-		data = xmlGenericErrorContext;
-	    }
+	    data = xmlGenericErrorContext;
 	}
-    }
-    if (schannel != NULL) {
-        schannel(data, to);
-	return;
     }
     if (channel == NULL)
         return;

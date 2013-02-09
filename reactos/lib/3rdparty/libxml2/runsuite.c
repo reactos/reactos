@@ -6,11 +6,8 @@
  * daniel@veillard.com
  */
 
-#ifdef HAVE_CONFIG_H
 #include "libxml.h"
-#else
 #include <stdio.h>
-#endif
 
 #if !defined(_WIN32) || defined(__CYGWIN__)
 #include <unistd.h>
@@ -38,15 +35,6 @@
 static FILE *logfile = NULL;
 static int verbose = 0;
 
-
-
-#if defined(_WIN32) && !defined(__CYGWIN__)
-
-#define vsnprintf _vsnprintf
-
-#define snprintf _snprintf
-
-#endif
 
 /************************************************************************
  *									*

@@ -22,6 +22,8 @@
 #include <libxml/globals.h>
 #include <libxml/dict.h>
 
+#include "save.h"
+
 /*
  * The XML predefined entities.
  */
@@ -528,20 +530,20 @@ xmlGetDocEntity(xmlDocPtr doc, const xmlChar *name) {
  * Macro used to grow the current buffer.
  */
 #define growBufferReentrant() {						\
-    buffer_size *= 2;							\
-    buffer = (xmlChar *)						\
-		xmlRealloc(buffer, buffer_size * sizeof(xmlChar));	\
-    if (buffer == NULL) {						\
-        xmlEntitiesErrMemory("xmlEncodeEntitiesReentrant: realloc failed");\
-	return(NULL);							\
-    }									\
+    xmlChar *tmp;                                                       \
+    size_t new_size = buffer_size * 2;                                  \
+    if (new_size < buffer_size) goto mem_error;                         \
+    tmp = (xmlChar *) xmlRealloc(buffer, new_size);	                \
+    if (tmp == NULL) goto mem_error;                                    \
+    buffer = tmp;							\
+    buffer_size = new_size;						\
 }
 
-
 /**
- * xmlEncodeEntitiesReentrant:
+ * xmlEncodeEntitiesInternal:
  * @doc:  the document containing the string
  * @input:  A string to convert to XML.
+ * @attr: are we handling an atrbute value
  *
  * Do a global encoding of a string, replacing the predefined entities
  * and non ASCII values with their entities and CharRef counterparts.
@@ -550,12 +552,12 @@ xmlGetDocEntity(xmlDocPtr doc, const xmlChar *name) {
  *
  * Returns A newly allocated string with the substitution done.
  */
-xmlChar *
-xmlEncodeEntitiesReentrant(xmlDocPtr doc, const xmlChar *input) {
+static xmlChar *
+xmlEncodeEntitiesInternal(xmlDocPtr doc, const xmlChar *input, int attr) {
     const xmlChar *cur = input;
     xmlChar *buffer = NULL;
     xmlChar *out = NULL;
-    int buffer_size = 0;
+    size_t buffer_size = 0;
     int html = 0;
 
     if (input == NULL) return(NULL);
@@ -568,14 +570,14 @@ xmlEncodeEntitiesReentrant(xmlDocPtr doc, const xmlChar *input) {
     buffer_size = 1000;
     buffer = (xmlChar *) xmlMalloc(buffer_size * sizeof(xmlChar));
     if (buffer == NULL) {
-        xmlEntitiesErrMemory("xmlEncodeEntitiesReentrant: malloc failed");
+        xmlEntitiesErrMemory("xmlEncodeEntities: malloc failed");
 	return(NULL);
     }
     out = buffer;
 
     while (*cur != '\0') {
-        if (out - buffer > buffer_size - 100) {
-	    int indx = out - buffer;
+        size_t indx = out - buffer;
+        if (indx + 100 > buffer_size) {
 
 	    growBufferReentrant();
 	    out = &buffer[indx];
@@ -585,6 +587,27 @@ xmlEncodeEntitiesReentrant(xmlDocPtr doc, const xmlChar *input) {
 	 * By default one have to encode at least '<', '>', '"' and '&' !
 	 */
 	if (*cur == '<') {
+	    const xmlChar *end;
+
+	    /*
+	     * Special handling of server side include in HTML attributes
+	     */
+	    if (html && attr &&
+	        (cur[1] == '!') && (cur[2] == '-') && (cur[3] == '-') &&
+	        ((end = xmlStrstr(cur, BAD_CAST "-->")) != NULL)) {
+	        while (cur != end) {
+		    *out++ = *cur++;
+		    indx = out - buffer;
+		    if (indx + 100 > buffer_size) {
+			growBufferReentrant();
+			out = &buffer[indx];
+		    }
+		}
+		*out++ = *cur++;
+		*out++ = *cur++;
+		*out++ = *cur++;
+		continue;
+	    }
 	    *out++ = '&';
 	    *out++ = 'l';
 	    *out++ = 't';
@@ -595,6 +618,23 @@ xmlEncodeEntitiesReentrant(xmlDocPtr doc, const xmlChar *input) {
 	    *out++ = 't';
 	    *out++ = ';';
 	} else if (*cur == '&') {
+	    /*
+	     * Special handling of &{...} construct from HTML 4, see
+	     * http://www.w3.org/TR/html401/appendix/notes.html#h-B.7.1
+	     */
+	    if (html && attr && (cur[1] == '{') &&
+	        (strchr((const char *) cur, '}'))) {
+	        while (*cur != '}') {
+		    *out++ = *cur++;
+		    indx = out - buffer;
+		    if (indx + 100 > buffer_size) {
+			growBufferReentrant();
+			out = &buffer[indx];
+		    }
+		}
+		*out++ = *cur++;
+		continue;
+	    }
 	    *out++ = '&';
 	    *out++ = 'a';
 	    *out++ = 'm';
@@ -627,7 +667,7 @@ xmlEncodeEntitiesReentrant(xmlDocPtr doc, const xmlChar *input) {
 
 		if (*cur < 0xC0) {
 		    xmlEntitiesErr(XML_CHECK_NOT_UTF8,
-			    "xmlEncodeEntitiesReentrant : input not UTF-8");
+			    "xmlEncodeEntities: input not UTF-8");
 		    if (doc != NULL)
 			doc->encoding = xmlStrdup(BAD_CAST "ISO-8859-1");
 		    snprintf(buf, sizeof(buf), "&#%d;", *cur);
@@ -660,7 +700,7 @@ xmlEncodeEntitiesReentrant(xmlDocPtr doc, const xmlChar *input) {
 		}
 		if ((l == 1) || (!IS_CHAR(val))) {
 		    xmlEntitiesErr(XML_ERR_INVALID_CHAR,
-			"xmlEncodeEntitiesReentrant : char out of range\n");
+			"xmlEncodeEntities: char out of range\n");
 		    if (doc != NULL)
 			doc->encoding = xmlStrdup(BAD_CAST "ISO-8859-1");
 		    snprintf(buf, sizeof(buf), "&#%d;", *cur);
@@ -692,6 +732,44 @@ xmlEncodeEntitiesReentrant(xmlDocPtr doc, const xmlChar *input) {
     }
     *out = 0;
     return(buffer);
+
+mem_error:
+    xmlEntitiesErrMemory("xmlEncodeEntities: realloc failed");
+    xmlFree(buffer);
+    return(NULL);
+}
+
+/**
+ * xmlEncodeAttributeEntities:
+ * @doc:  the document containing the string
+ * @input:  A string to convert to XML.
+ *
+ * Do a global encoding of a string, replacing the predefined entities
+ * and non ASCII values with their entities and CharRef counterparts for
+ * attribute values.
+ *
+ * Returns A newly allocated string with the substitution done.
+ */
+xmlChar *
+xmlEncodeAttributeEntities(xmlDocPtr doc, const xmlChar *input) {
+    return xmlEncodeEntitiesInternal(doc, input, 1);
+}
+
+/**
+ * xmlEncodeEntitiesReentrant:
+ * @doc:  the document containing the string
+ * @input:  A string to convert to XML.
+ *
+ * Do a global encoding of a string, replacing the predefined entities
+ * and non ASCII values with their entities and CharRef counterparts.
+ * Contrary to xmlEncodeEntities, this routine is reentrant, and result
+ * must be deallocated.
+ *
+ * Returns A newly allocated string with the substitution done.
+ */
+xmlChar *
+xmlEncodeEntitiesReentrant(xmlDocPtr doc, const xmlChar *input) {
+    return xmlEncodeEntitiesInternal(doc, input, 0);
 }
 
 /**
@@ -709,7 +787,7 @@ xmlEncodeSpecialChars(xmlDocPtr doc ATTRIBUTE_UNUSED, const xmlChar *input) {
     const xmlChar *cur = input;
     xmlChar *buffer = NULL;
     xmlChar *out = NULL;
-    int buffer_size = 0;
+    size_t buffer_size = 0;
     if (input == NULL) return(NULL);
 
     /*
@@ -724,8 +802,8 @@ xmlEncodeSpecialChars(xmlDocPtr doc ATTRIBUTE_UNUSED, const xmlChar *input) {
     out = buffer;
 
     while (*cur != '\0') {
-        if (out - buffer > buffer_size - 10) {
-	    int indx = out - buffer;
+        size_t indx = out - buffer;
+        if (indx + 10 > buffer_size) {
 
 	    growBufferReentrant();
 	    out = &buffer[indx];
@@ -774,6 +852,11 @@ xmlEncodeSpecialChars(xmlDocPtr doc ATTRIBUTE_UNUSED, const xmlChar *input) {
     }
     *out = 0;
     return(buffer);
+
+mem_error:
+    xmlEntitiesErrMemory("xmlEncodeSpecialChars: realloc failed");
+    xmlFree(buffer);
+    return(NULL);
 }
 
 /**

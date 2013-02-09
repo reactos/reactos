@@ -26,6 +26,7 @@
 #ifdef LIBXML_XINCLUDE_ENABLED
 #include <libxml/xinclude.h>
 
+#include "buf.h"
 
 #define XINCLUDE_MAX_DEPTH 40
 
@@ -874,8 +875,8 @@ xmlXIncludeCopyNodeList(xmlXIncludeCtxtPtr ctxt, xmlDocPtr target,
 static xmlNodePtr
 xmlXIncludeGetNthChild(xmlNodePtr cur, int no) {
     int i;
-    if (cur == NULL)
-	return(cur);
+    if ((cur == NULL) || (cur->type == XML_NAMESPACE_DECL))
+        return(NULL);
     cur = cur->children;
     for (i = 0;i <= no;cur = cur->next) {
 	if (cur == NULL)
@@ -922,11 +923,13 @@ xmlXIncludeCopyRange(xmlXIncludeCtxtPtr ctxt, xmlDocPtr target,
 	return(NULL);
     start = (xmlNodePtr) range->user;
 
-    if (start == NULL)
+    if ((start == NULL) || (start->type == XML_NAMESPACE_DECL))
 	return(NULL);
     end = range->user2;
     if (end == NULL)
 	return(xmlDocCopyNode(start, target, 1));
+    if (end->type == XML_NAMESPACE_DECL)
+        return(NULL);
 
     cur = start;
     index1 = range->index;
@@ -1796,6 +1799,9 @@ xmlXIncludeLoadTxt(xmlXIncludeCtxtPtr ctxt, const xmlChar *url, int nr) {
     int i;
     xmlChar *encoding = NULL;
     xmlCharEncoding enc = (xmlCharEncoding) 0;
+    xmlParserCtxtPtr pctxt;
+    xmlParserInputPtr inputStream;
+    int xinclude_multibyte_fallback_used = 0;
 
     /*
      * Check the URL and remove any fragment identifier
@@ -1870,43 +1876,65 @@ xmlXIncludeLoadTxt(xmlXIncludeCtxtPtr ctxt, const xmlChar *url, int nr) {
     /*
      * Load it.
      */
-    buf = xmlParserInputBufferCreateFilename((const char *)URL, enc);
-    if (buf == NULL) {
+    pctxt = xmlNewParserCtxt();
+    inputStream = xmlLoadExternalEntity((const char*)URL, NULL, pctxt);
+    if(inputStream == NULL) {
+	xmlFreeParserCtxt(pctxt);
 	xmlFree(URL);
 	return(-1);
     }
+    buf = inputStream->buf;
+    if (buf == NULL) {
+	xmlFreeInputStream (inputStream);
+	xmlFreeParserCtxt(pctxt);
+	xmlFree(URL);
+	return(-1);
+    }
+    if (buf->encoder)
+	xmlCharEncCloseFunc(buf->encoder);
+    buf->encoder = xmlGetCharEncodingHandler(enc);
     node = xmlNewText(NULL);
 
     /*
      * Scan all chars from the resource and add the to the node
      */
+xinclude_multibyte_fallback:
     while (xmlParserInputBufferRead(buf, 128) > 0) {
 	int len;
 	const xmlChar *content;
 
-	content = xmlBufferContent(buf->buffer);
-	len = xmlBufferLength(buf->buffer);
+	content = xmlBufContent(buf->buffer);
+	len = xmlBufLength(buf->buffer);
 	for (i = 0;i < len;) {
 	    int cur;
 	    int l;
 
 	    cur = xmlStringCurrentChar(NULL, &content[i], &l);
 	    if (!IS_CHAR(cur)) {
-		xmlXIncludeErr(ctxt, ctxt->incTab[nr]->ref,
-		               XML_XINCLUDE_INVALID_CHAR,
-			       "%s contains invalid char\n", URL);
-		xmlFreeParserInputBuffer(buf);
-		xmlFree(URL);
-		return(-1);
+		/* Handle splitted multibyte char at buffer boundary */
+		if (((len - i) < 4) && (!xinclude_multibyte_fallback_used)) {
+		    xinclude_multibyte_fallback_used = 1;
+		    xmlBufShrink(buf->buffer, i);
+		    goto xinclude_multibyte_fallback;
+		} else {
+		    xmlXIncludeErr(ctxt, ctxt->incTab[nr]->ref,
+				   XML_XINCLUDE_INVALID_CHAR,
+				   "%s contains invalid char\n", URL);
+		    xmlFreeParserInputBuffer(buf);
+		    xmlFree(URL);
+		    return(-1);
+		}
 	    } else {
+		xinclude_multibyte_fallback_used = 0;
 		xmlNodeAddContentLen(node, &content[i], l);
 	    }
 	    i += l;
 	}
-	xmlBufferShrink(buf->buffer, len);
+	xmlBufShrink(buf->buffer, len);
     }
-    xmlFreeParserInputBuffer(buf);
+    xmlFreeParserCtxt(pctxt);
     xmlXIncludeAddTxt(ctxt, node, URL);
+    xmlFreeInputStream(inputStream);
 
 loaded:
     /*
@@ -1933,7 +1961,8 @@ xmlXIncludeLoadFallback(xmlXIncludeCtxtPtr ctxt, xmlNodePtr fallback, int nr) {
     xmlXIncludeCtxtPtr newctxt;
     int ret = 0;
 
-    if ((fallback == NULL) || (ctxt == NULL))
+    if ((fallback == NULL) || (fallback->type == XML_NAMESPACE_DECL) ||
+        (ctxt == NULL))
 	return(-1);
     if (fallback->children != NULL) {
 	/*
@@ -2159,7 +2188,7 @@ xmlXIncludeIncludeNode(xmlXIncludeCtxtPtr ctxt, int nr) {
     if ((nr < 0) || (nr >= ctxt->incNr))
 	return(-1);
     cur = ctxt->incTab[nr]->ref;
-    if (cur == NULL)
+    if ((cur == NULL) || (cur->type == XML_NAMESPACE_DECL))
 	return(-1);
 
     /*
@@ -2334,7 +2363,7 @@ xmlXIncludeDoProcess(xmlXIncludeCtxtPtr ctxt, xmlDocPtr doc, xmlNodePtr tree) {
     int ret = 0;
     int i, start;
 
-    if ((doc == NULL) || (tree == NULL))
+    if ((doc == NULL) || (tree == NULL) || (tree->type == XML_NAMESPACE_DECL))
 	return(-1);
     if (ctxt == NULL)
 	return(-1);
@@ -2448,7 +2477,8 @@ xmlXIncludeProcessTreeFlagsData(xmlNodePtr tree, int flags, void *data) {
     xmlXIncludeCtxtPtr ctxt;
     int ret = 0;
 
-    if ((tree == NULL) || (tree->doc == NULL))
+    if ((tree == NULL) || (tree->type == XML_NAMESPACE_DECL) ||
+        (tree->doc == NULL))
         return(-1);
 
     ctxt = xmlXIncludeNewContext(tree->doc);
@@ -2533,7 +2563,8 @@ xmlXIncludeProcessTreeFlags(xmlNodePtr tree, int flags) {
     xmlXIncludeCtxtPtr ctxt;
     int ret = 0;
 
-    if ((tree == NULL) || (tree->doc == NULL))
+    if ((tree == NULL) || (tree->type == XML_NAMESPACE_DECL) ||
+        (tree->doc == NULL))
 	return(-1);
     ctxt = xmlXIncludeNewContext(tree->doc);
     if (ctxt == NULL)
@@ -2577,7 +2608,8 @@ int
 xmlXIncludeProcessNode(xmlXIncludeCtxtPtr ctxt, xmlNodePtr node) {
     int ret = 0;
 
-    if ((node == NULL) || (node->doc == NULL) || (ctxt == NULL))
+    if ((node == NULL) || (node->type == XML_NAMESPACE_DECL) ||
+        (node->doc == NULL) || (ctxt == NULL))
 	return(-1);
     ret = xmlXIncludeDoProcess(ctxt, node->doc, node);
     if ((ret >= 0) && (ctxt->nbErrors > 0))

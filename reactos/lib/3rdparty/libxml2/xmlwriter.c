@@ -21,6 +21,10 @@
 
 #include <libxml/xmlwriter.h>
 
+#include "buf.h"
+#include "enc.h"
+#include "save.h"
+
 #define B64LINELEN 72
 #define B64CRLF "\r\n"
 
@@ -548,9 +552,9 @@ xmlTextWriterStartDocument(xmlTextWriterPtr writer, const char *version,
     writer->out->encoder = encoder;
     if (encoder != NULL) {
 	if (writer->out->conv == NULL) {
-	    writer->out->conv = xmlBufferCreateSize(4000);
+	    writer->out->conv = xmlBufCreateSize(4000);
 	}
-        xmlCharEncOutFunc(encoder, writer->out->conv, NULL);
+        xmlCharEncOutput(writer->out, 1);
         if ((writer->doc != NULL) && (writer->doc->encoding == NULL))
             writer->doc->encoding = xmlStrdup((xmlChar *)writer->out->encoder->name);
     } else
@@ -1501,8 +1505,8 @@ xmlTextWriterWriteString(xmlTextWriterPtr writer, const xmlChar * content)
                     break;
                 case XML_TEXTWRITER_ATTRIBUTE:
                     buf = NULL;
-                    xmlAttrSerializeTxtContent(writer->out->buffer, writer->doc,
-                                               NULL, content);
+                    xmlBufAttrSerializeTxtContent(writer->out->buffer,
+                                                  writer->doc, NULL, content);
                     break;
 		default:
 		    break;
@@ -4603,6 +4607,26 @@ xmlTextWriterSetIndentString(xmlTextWriterPtr writer, const xmlChar * str)
         return -1;
     else
         return 0;
+}
+
+/**
+ * xmlTextWriterSetQuoteChar:
+ * @writer:  the xmlTextWriterPtr
+ * @quotechar:  the quote character
+ *
+ * Set the character used for quoting attributes.
+ *
+ * Returns -1 on error or 0 otherwise.
+ */
+int
+xmlTextWriterSetQuoteChar(xmlTextWriterPtr writer, xmlChar quotechar)
+{
+    if ((writer == NULL) || ((quotechar != '\'') && (quotechar != '"')))
+        return -1;
+
+    writer->qchar = quotechar;
+
+    return 0;
 }
 
 /**

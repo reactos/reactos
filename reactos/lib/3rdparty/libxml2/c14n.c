@@ -27,6 +27,8 @@
 #include <libxml/xpathInternals.h>
 #include <libxml/c14n.h>
 
+#include "buf.h"
+
 /************************************************************************
  *									*
  *		Some declaration better left private ATM		*
@@ -2033,9 +2035,9 @@ xmlC14NDocDumpMemory(xmlDocPtr doc, xmlNodeSetPtr nodes,
         return (-1);
     }
 
-    ret = buf->buffer->use;
+    ret = xmlBufUse(buf->buffer);
     if (ret > 0) {
-        *doc_txt_ptr = xmlStrndup(buf->buffer->content, ret);
+        *doc_txt_ptr = xmlStrndup(xmlBufContent(buf->buffer), ret);
     }
     (void) xmlOutputBufferClose(buf);
 

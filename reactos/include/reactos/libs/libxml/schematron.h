@@ -127,7 +127,7 @@ XMLPUBFUN int XMLCALL
 
 XMLPUBFUN xmlSchematronValidCtxtPtr XMLCALL
 	    xmlSchematronNewValidCtxt	(xmlSchematronPtr schema,
-	    				 int options);
+					 int options);
 XMLPUBFUN void XMLCALL
 	    xmlSchematronFreeValidCtxt	(xmlSchematronValidCtxtPtr ctxt);
 XMLPUBFUN int XMLCALL

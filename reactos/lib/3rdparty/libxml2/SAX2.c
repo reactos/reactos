@@ -57,12 +57,29 @@
  */
 static void
 xmlSAX2ErrMemory(xmlParserCtxtPtr ctxt, const char *msg) {
+    xmlStructuredErrorFunc schannel = NULL;
+    const char *str1 = "out of memory\n";
+
     if (ctxt != NULL) {
-	if ((ctxt->sax != NULL) && (ctxt->sax->error != NULL))
-	    ctxt->sax->error(ctxt->userData, "%s: out of memory\n", msg);
+	ctxt->errNo = XML_ERR_NO_MEMORY;
+	if ((ctxt->sax != NULL) && (ctxt->sax->initialized == XML_SAX2_MAGIC))
+	    schannel = ctxt->sax->serror;
+	__xmlRaiseError(schannel,
+			ctxt->vctxt.error, ctxt->vctxt.userData,
+			ctxt, NULL, XML_FROM_PARSER, XML_ERR_NO_MEMORY,
+			XML_ERR_ERROR, NULL, 0, (const char *) str1,
+			NULL, NULL, 0, 0,
+			msg, (const char *) str1, NULL);
 	ctxt->errNo = XML_ERR_NO_MEMORY;
 	ctxt->instate = XML_PARSER_EOF;
 	ctxt->disableSAX = 1;
+    } else {
+	__xmlRaiseError(schannel,
+			NULL, NULL,
+			ctxt, NULL, XML_FROM_PARSER, XML_ERR_NO_MEMORY,
+			XML_ERR_ERROR, NULL, 0, (const char *) str1,
+			NULL, NULL, 0, 0,
+			msg, (const char *) str1, NULL);
     }
 }
 
@@ -1756,7 +1773,6 @@ void
 xmlSAX2EndElement(void *ctx, const xmlChar *name ATTRIBUTE_UNUSED)
 {
     xmlParserCtxtPtr ctxt = (xmlParserCtxtPtr) ctx;
-    xmlParserNodeInfo node_info;
     xmlNodePtr cur;
 
     if (ctx == NULL) return;
@@ -1770,10 +1786,10 @@ xmlSAX2EndElement(void *ctx, const xmlChar *name ATTRIBUTE_UNUSED)
 
     /* Capture end position and add node */
     if (cur != NULL && ctxt->record_info) {
-      node_info.end_pos = ctxt->input->cur - ctxt->input->base;
-      node_info.end_line = ctxt->input->line;
-      node_info.node = cur;
-      xmlParserAddNodeInfo(ctxt, &node_info);
+      ctxt->nodeInfo->end_pos = ctxt->input->cur - ctxt->input->base;
+      ctxt->nodeInfo->end_line = ctxt->input->line;
+      ctxt->nodeInfo->node = cur;
+      xmlParserAddNodeInfo(ctxt, ctxt->nodeInfo);
     }
     ctxt->nodemem = -1;
 
@@ -1801,7 +1817,7 @@ xmlSAX2EndElement(void *ctx, const xmlChar *name ATTRIBUTE_UNUSED)
  * @str:  the input string
  * @len: the string length
  *
- * Remove the entities from an attribute value
+ * Callback for a text node
  *
  * Returns the newly allocated string or NULL if not needed or error
  */
@@ -1834,7 +1850,7 @@ xmlSAX2TextNode(xmlParserCtxtPtr ctxt, const xmlChar *str, int len) {
 
 	if ((len < (int) (2 * sizeof(void *))) &&
 	    (ctxt->options & XML_PARSE_COMPACT)) {
-	    /* store the string in the node overrithing properties and nsDef */
+	    /* store the string in the node overriding properties and nsDef */
 	    xmlChar *tmp = (xmlChar *) &(ret->properties);
 	    memcpy(tmp, str, len);
 	    tmp[len] = 0;
@@ -1866,8 +1882,17 @@ skip:
     } else
 	ret->content = (xmlChar *) intern;
 
-    if (ctxt->input != NULL)
-        ret->line = ctxt->input->line;
+    if (ctxt->linenumbers) {
+	if (ctxt->input != NULL) {
+	    if (ctxt->input->line < 65535)
+		ret->line = (short) ctxt->input->line;
+	    else {
+	        ret->line = 65535;
+		if (ctxt->options & XML_PARSE_BIG_LINES)
+		    ret->psvi = (void *) (long) ctxt->input->line;
+	    }
+	}
+    }
 
     if ((__xmlRegisterCallbacks) && (xmlRegisterNodeDefaultValue))
 	xmlRegisterNodeDefaultValue(ret);
@@ -2163,6 +2188,7 @@ xmlSAX2StartElementNs(void *ctx,
     xmlNodePtr parent;
     xmlNsPtr last = NULL, ns;
     const xmlChar *uri, *pref;
+    xmlChar *lname = NULL;
     int i, j;
 
     if (ctx == NULL) return;
@@ -2182,6 +2208,20 @@ xmlSAX2StartElementNs(void *ctx,
     }
 
     /*
+     * Take care of the rare case of an undefined namespace prefix
+     */
+    if ((prefix != NULL) && (URI == NULL)) {
+        if (ctxt->dictNames) {
+	    const xmlChar *fullname;
+
+	    fullname = xmlDictQLookup(ctxt->dict, prefix, localname);
+	    if (fullname != NULL)
+	        localname = fullname;
+	} else {
+	    lname = xmlBuildQName(localname, prefix, NULL, 0);
+	}
+    }
+    /*
      * allocate the node
      */
     if (ctxt->freeElems != NULL) {
@@ -2194,7 +2234,10 @@ xmlSAX2StartElementNs(void *ctx,
 	if (ctxt->dictNames)
 	    ret->name = localname;
 	else {
-	    ret->name = xmlStrdup(localname);
+	    if (lname == NULL)
+		ret->name = xmlStrdup(localname);
+	    else
+	        ret->name = lname;
 	    if (ret->name == NULL) {
 	        xmlSAX2ErrMemory(ctxt, "xmlSAX2StartElementNs");
 		return;
@@ -2206,8 +2249,11 @@ xmlSAX2StartElementNs(void *ctx,
 	if (ctxt->dictNames)
 	    ret = xmlNewDocNodeEatName(ctxt->myDoc, NULL,
 	                               (xmlChar *) localname, NULL);
-	else
+	else if (lname == NULL)
 	    ret = xmlNewDocNode(ctxt->myDoc, NULL, localname, NULL);
+	else
+	    ret = xmlNewDocNodeEatName(ctxt->myDoc, NULL,
+	                               (xmlChar *) lname, NULL);
 	if (ret == NULL) {
 	    xmlSAX2ErrMemory(ctxt, "xmlSAX2StartElementNs");
 	    return;
@@ -2222,7 +2268,7 @@ xmlSAX2StartElementNs(void *ctx,
 	}
     }
 
-    if ((ctxt->myDoc->children == NULL) || (parent == NULL)) {
+    if (parent == NULL) {
         xmlAddChild((xmlNodePtr) ctxt->myDoc, (xmlNodePtr) ret);
     }
     /*
@@ -2314,8 +2360,33 @@ xmlSAX2StartElementNs(void *ctx,
      */
     if (nb_attributes > 0) {
         for (j = 0,i = 0;i < nb_attributes;i++,j+=5) {
+	    /*
+	     * Handle the rare case of an undefined atribute prefix
+	     */
+	    if ((attributes[j+1] != NULL) && (attributes[j+2] == NULL)) {
+		if (ctxt->dictNames) {
+		    const xmlChar *fullname;
+
+		    fullname = xmlDictQLookup(ctxt->dict, attributes[j+1],
+		                              attributes[j]);
+		    if (fullname != NULL) {
+			xmlSAX2AttributeNs(ctxt, fullname, NULL,
+			                   attributes[j+3], attributes[j+4]);
+		        continue;
+		    }
+		} else {
+		    lname = xmlBuildQName(attributes[j], attributes[j+1],
+		                          NULL, 0);
+		    if (lname != NULL) {
+			xmlSAX2AttributeNs(ctxt, lname, NULL,
+			                   attributes[j+3], attributes[j+4]);
+			xmlFree(lname);
+		        continue;
+		    }
+		}
+	    }
 	    xmlSAX2AttributeNs(ctxt, attributes[j], attributes[j+1],
-	                       attributes[j+3], attributes[j+4]);
+			       attributes[j+3], attributes[j+4]);
 	}
     }
 
@@ -2595,7 +2666,7 @@ xmlSAX2ProcessingInstruction(void *ctx, const xmlChar *target,
 	xmlAddChild((xmlNodePtr) ctxt->myDoc->extSubset, ret);
 	return;
     }
-    if ((ctxt->myDoc->children == NULL) || (parent == NULL)) {
+    if (parent == NULL) {
 #ifdef DEBUG_SAX_TREE
 	    xmlGenericError(xmlGenericErrorContext,
 		    "Setting PI %s as root\n", target);
@@ -2656,7 +2727,7 @@ xmlSAX2Comment(void *ctx, const xmlChar *value)
 	xmlAddChild((xmlNodePtr) ctxt->myDoc->extSubset, ret);
 	return;
     }
-    if ((ctxt->myDoc->children == NULL) || (parent == NULL)) {
+    if (parent == NULL) {
 #ifdef DEBUG_SAX_TREE
 	    xmlGenericError(xmlGenericErrorContext,
 		    "Setting xmlSAX2Comment as root\n");

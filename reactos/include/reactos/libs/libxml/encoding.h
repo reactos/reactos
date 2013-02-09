@@ -175,8 +175,8 @@ XMLPUBFUN xmlCharEncodingHandlerPtr XMLCALL
 	xmlFindCharEncodingHandler	(const char *name);
 XMLPUBFUN xmlCharEncodingHandlerPtr XMLCALL
 	xmlNewCharEncodingHandler	(const char *name,
-                          		 xmlCharEncodingInputFunc input,
-                          		 xmlCharEncodingOutputFunc output);
+					 xmlCharEncodingInputFunc input,
+					 xmlCharEncodingOutputFunc output);
 
 /*
  * Interfaces for encoding names and aliases.

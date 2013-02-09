@@ -307,6 +307,10 @@ typedef trio_longlong_t trio_int64_t;
 #define NAN_LOWER "nan"
 #define NAN_UPPER "NAN"
 
+#if !defined(HAVE_ISASCII) && !defined(isascii)
+#  define isascii(x) ((unsigned int)(x) < 128)
+#endif
+
 /* Various constants */
 enum {
   TYPE_PRINT = 1,

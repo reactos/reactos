@@ -101,7 +101,7 @@ XMLPUBFUN xmlXPathObjectPtr XMLCALL
 						 xmlXPathContextPtr ctx);
 XMLPUBFUN void XMLCALL
 		    xmlXPtrRangeToFunction	(xmlXPathParserContextPtr ctxt,
-       						 int nargs);
+						 int nargs);
 XMLPUBFUN xmlNodePtr XMLCALL
 		    xmlXPtrBuildNodeList	(xmlXPathObjectPtr obj);
 XMLPUBFUN void XMLCALL

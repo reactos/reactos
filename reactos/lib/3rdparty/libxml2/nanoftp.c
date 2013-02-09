@@ -947,7 +947,8 @@ xmlNanoFTPConnect(void *ctx) {
 	((struct sockaddr_in *)&ctxt->ftpAddr)->sin_family = AF_INET;
 	memcpy (&((struct sockaddr_in *)&ctxt->ftpAddr)->sin_addr,
 		hp->h_addr_list[0], hp->h_length);
-	((struct sockaddr_in *)&ctxt->ftpAddr)->sin_port = (u_short)htons ((unsigned short)port);
+	((struct sockaddr_in *)&ctxt->ftpAddr)->sin_port =
+             (unsigned short)htons ((unsigned short)port);
 	ctxt->controlFd = socket (AF_INET, SOCK_STREAM, 0);
 	addrlen = sizeof (struct sockaddr_in);
     }

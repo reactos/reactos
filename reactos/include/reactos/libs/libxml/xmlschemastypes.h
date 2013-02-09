@@ -31,7 +31,7 @@ typedef enum {
 } xmlSchemaWhitespaceValueType;
 
 XMLPUBFUN void XMLCALL
-    		xmlSchemaInitTypes		(void);
+		xmlSchemaInitTypes		(void);
 XMLPUBFUN void XMLCALL
 		xmlSchemaCleanupTypes		(void);
 XMLPUBFUN xmlSchemaTypePtr XMLCALL

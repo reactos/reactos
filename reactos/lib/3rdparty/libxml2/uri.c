@@ -18,6 +18,37 @@
 #include <libxml/globals.h>
 #include <libxml/xmlerror.h>
 
+/**
+ * MAX_URI_LENGTH:
+ *
+ * The definition of the URI regexp in the above RFC has no size limit
+ * In practice they are usually relativey short except for the
+ * data URI scheme as defined in RFC 2397. Even for data URI the usual
+ * maximum size before hitting random practical limits is around 64 KB
+ * and 4KB is usually a maximum admitted limit for proper operations.
+ * The value below is more a security limit than anything else and
+ * really should never be hit by 'normal' operations
+ * Set to 1 MByte in 2012, this is only enforced on output
+ */
+#define MAX_URI_LENGTH 1024 * 1024
+
+static void
+xmlURIErrMemory(const char *extra)
+{
+    if (extra)
+        __xmlRaiseError(NULL, NULL, NULL,
+                        NULL, NULL, XML_FROM_URI,
+                        XML_ERR_NO_MEMORY, XML_ERR_FATAL, NULL, 0,
+                        extra, NULL, NULL, 0, 0,
+                        "Memory allocation failed : %s\n", extra);
+    else
+        __xmlRaiseError(NULL, NULL, NULL,
+                        NULL, NULL, XML_FROM_URI,
+                        XML_ERR_NO_MEMORY, XML_ERR_FATAL, NULL, 0,
+                        NULL, NULL, NULL, 0, 0,
+                        "Memory allocation failed\n");
+}
+
 static void xmlCleanURI(xmlURIPtr uri);
 
 /*
@@ -980,12 +1011,36 @@ xmlCreateURI(void) {
 
     ret = (xmlURIPtr) xmlMalloc(sizeof(xmlURI));
     if (ret == NULL) {
-	xmlGenericError(xmlGenericErrorContext,
-		"xmlCreateURI: out of memory\n");
+        xmlURIErrMemory("creating URI structure\n");
 	return(NULL);
     }
     memset(ret, 0, sizeof(xmlURI));
     return(ret);
+}
+
+/**
+ * xmlSaveUriRealloc:
+ *
+ * Function to handle properly a reallocation when saving an URI
+ * Also imposes some limit on the length of an URI string output
+ */
+static xmlChar *
+xmlSaveUriRealloc(xmlChar *ret, int *max) {
+    xmlChar *temp;
+    int tmp;
+
+    if (*max > MAX_URI_LENGTH) {
+        xmlURIErrMemory("reaching arbitrary MAX_URI_LENGTH limit\n");
+        return(NULL);
+    }
+    tmp = *max * 2;
+    temp = (xmlChar *) xmlRealloc(ret, (tmp + 1));
+    if (temp == NULL) {
+        xmlURIErrMemory("saving URI\n");
+        return(NULL);
+    }
+    *max = tmp;
+    return(temp);
 }
 
 /**
@@ -1010,8 +1065,7 @@ xmlSaveUri(xmlURIPtr uri) {
     max = 80;
     ret = (xmlChar *) xmlMallocAtomic((max + 1) * sizeof(xmlChar));
     if (ret == NULL) {
-	xmlGenericError(xmlGenericErrorContext,
-		"xmlSaveUri: out of memory\n");
+        xmlURIErrMemory("saving URI\n");
 	return(NULL);
     }
     len = 0;
@@ -1020,28 +1074,16 @@ xmlSaveUri(xmlURIPtr uri) {
 	p = uri->scheme;
 	while (*p != 0) {
 	    if (len >= max) {
-		max *= 2;
-		temp = (xmlChar *) xmlRealloc(ret, (max + 1) * sizeof(xmlChar));
-		if (temp == NULL) {
-		    xmlGenericError(xmlGenericErrorContext,
-			    "xmlSaveUri: out of memory\n");
-		    xmlFree(ret);
-		    return(NULL);
-		}
+                temp = xmlSaveUriRealloc(ret, &max);
+                if (temp == NULL) goto mem_error;
 		ret = temp;
 	    }
 	    ret[len++] = *p++;
 	}
 	if (len >= max) {
-	    max *= 2;
-	    temp = (xmlChar *) xmlRealloc(ret, (max + 1) * sizeof(xmlChar));
-	    if (temp == NULL) {
-		xmlGenericError(xmlGenericErrorContext,
-			"xmlSaveUri: out of memory\n");
-		xmlFree(ret);
-		return(NULL);
-	    }
-	    ret = temp;
+            temp = xmlSaveUriRealloc(ret, &max);
+            if (temp == NULL) goto mem_error;
+            ret = temp;
 	}
 	ret[len++] = ':';
     }
@@ -1049,15 +1091,9 @@ xmlSaveUri(xmlURIPtr uri) {
 	p = uri->opaque;
 	while (*p != 0) {
 	    if (len + 3 >= max) {
-		max *= 2;
-		temp = (xmlChar *) xmlRealloc(ret, (max + 1) * sizeof(xmlChar));
-		if (temp == NULL) {
-		    xmlGenericError(xmlGenericErrorContext,
-			    "xmlSaveUri: out of memory\n");
-		    xmlFree(ret);
-		    return(NULL);
-		}
-		ret = temp;
+                temp = xmlSaveUriRealloc(ret, &max);
+                if (temp == NULL) goto mem_error;
+                ret = temp;
 	    }
 	    if (IS_RESERVED(*(p)) || IS_UNRESERVED(*(p)))
 		ret[len++] = *p++;
@@ -1072,15 +1108,9 @@ xmlSaveUri(xmlURIPtr uri) {
     } else {
 	if (uri->server != NULL) {
 	    if (len + 3 >= max) {
-		max *= 2;
-		temp = (xmlChar *) xmlRealloc(ret, (max + 1) * sizeof(xmlChar));
-		if (temp == NULL) {
-		    xmlGenericError(xmlGenericErrorContext,
-			    "xmlSaveUri: out of memory\n");
-                  xmlFree(ret);
-		    return(NULL);
-		}
-		ret = temp;
+                temp = xmlSaveUriRealloc(ret, &max);
+                if (temp == NULL) goto mem_error;
+                ret = temp;
 	    }
 	    ret[len++] = '/';
 	    ret[len++] = '/';
@@ -1088,16 +1118,9 @@ xmlSaveUri(xmlURIPtr uri) {
 		p = uri->user;
 		while (*p != 0) {
 		    if (len + 3 >= max) {
-			max *= 2;
-			temp = (xmlChar *) xmlRealloc(ret,
-				(max + 1) * sizeof(xmlChar));
-			if (temp == NULL) {
-			    xmlGenericError(xmlGenericErrorContext,
-				    "xmlSaveUri: out of memory\n");
-			    xmlFree(ret);
-			    return(NULL);
-			}
-			ret = temp;
+                        temp = xmlSaveUriRealloc(ret, &max);
+                        if (temp == NULL) goto mem_error;
+                        ret = temp;
 		    }
 		    if ((IS_UNRESERVED(*(p))) ||
 			((*(p) == ';')) || ((*(p) == ':')) ||
@@ -1114,78 +1137,43 @@ xmlSaveUri(xmlURIPtr uri) {
 		    }
 		}
 		if (len + 3 >= max) {
-		    max *= 2;
-		    temp = (xmlChar *) xmlRealloc(ret,
-			    (max + 1) * sizeof(xmlChar));
-		    if (temp == NULL) {
-			xmlGenericError(xmlGenericErrorContext,
-				"xmlSaveUri: out of memory\n");
-			xmlFree(ret);
-			return(NULL);
-		    }
-		    ret = temp;
+                    temp = xmlSaveUriRealloc(ret, &max);
+                    if (temp == NULL) goto mem_error;
+                    ret = temp;
 		}
 		ret[len++] = '@';
 	    }
 	    p = uri->server;
 	    while (*p != 0) {
 		if (len >= max) {
-		    max *= 2;
-		    temp = (xmlChar *) xmlRealloc(ret,
-			    (max + 1) * sizeof(xmlChar));
-		    if (temp == NULL) {
-			xmlGenericError(xmlGenericErrorContext,
-				"xmlSaveUri: out of memory\n");
-			xmlFree(ret);
-			return(NULL);
-		    }
-		    ret = temp;
+                    temp = xmlSaveUriRealloc(ret, &max);
+                    if (temp == NULL) goto mem_error;
+                    ret = temp;
 		}
 		ret[len++] = *p++;
 	    }
 	    if (uri->port > 0) {
 		if (len + 10 >= max) {
-		    max *= 2;
-		    temp = (xmlChar *) xmlRealloc(ret,
-			    (max + 1) * sizeof(xmlChar));
-		    if (temp == NULL) {
-			xmlGenericError(xmlGenericErrorContext,
-				"xmlSaveUri: out of memory\n");
-                     xmlFree(ret);
-			return(NULL);
-		    }
-		    ret = temp;
+                    temp = xmlSaveUriRealloc(ret, &max);
+                    if (temp == NULL) goto mem_error;
+                    ret = temp;
 		}
 		len += snprintf((char *) &ret[len], max - len, ":%d", uri->port);
 	    }
 	} else if (uri->authority != NULL) {
 	    if (len + 3 >= max) {
-		max *= 2;
-		temp = (xmlChar *) xmlRealloc(ret,
-			(max + 1) * sizeof(xmlChar));
-		if (temp == NULL) {
-			xmlGenericError(xmlGenericErrorContext,
-				"xmlSaveUri: out of memory\n");
-                     xmlFree(ret);
-			return(NULL);
-		    }
-		    ret = temp;
+                temp = xmlSaveUriRealloc(ret, &max);
+                if (temp == NULL) goto mem_error;
+                ret = temp;
 	    }
 	    ret[len++] = '/';
 	    ret[len++] = '/';
 	    p = uri->authority;
 	    while (*p != 0) {
 		if (len + 3 >= max) {
-		    max *= 2;
-		    temp = (xmlChar *) xmlRealloc(ret,
-			    (max + 1) * sizeof(xmlChar));
-		    if (temp == NULL) {
-			xmlGenericError(xmlGenericErrorContext,
-				"xmlSaveUri: out of memory\n");
-                     xmlFree(ret);
-			return(NULL);
-		    }
-		    ret = temp;
+                    temp = xmlSaveUriRealloc(ret, &max);
+                    if (temp == NULL) goto mem_error;
+                    ret = temp;
 		}
 		if ((IS_UNRESERVED(*(p))) ||
                     ((*(p) == '$')) || ((*(p) == ',')) || ((*(p) == ';')) ||
@@ -1202,16 +1190,9 @@ xmlSaveUri(xmlURIPtr uri) {
 	    }
 	} else if (uri->scheme != NULL) {
 	    if (len + 3 >= max) {
-		max *= 2;
-		temp = (xmlChar *) xmlRealloc(ret,
-			(max + 1) * sizeof(xmlChar));
-		if (temp == NULL) {
-			xmlGenericError(xmlGenericErrorContext,
-				"xmlSaveUri: out of memory\n");
-                     xmlFree(ret);
-			return(NULL);
-		    }
-		    ret = temp;
+                temp = xmlSaveUriRealloc(ret, &max);
+                if (temp == NULL) goto mem_error;
+                ret = temp;
 	    }
 	    ret[len++] = '/';
 	    ret[len++] = '/';
@@ -1229,14 +1210,9 @@ xmlSaveUri(xmlURIPtr uri) {
 		(p[2] == ':') &&
 	        (xmlStrEqual(BAD_CAST uri->scheme, BAD_CAST "file"))) {
 		if (len + 3 >= max) {
-		    max *= 2;
-		    ret = (xmlChar *) xmlRealloc(ret,
-			    (max + 1) * sizeof(xmlChar));
-		    if (ret == NULL) {
-			xmlGenericError(xmlGenericErrorContext,
-				"xmlSaveUri: out of memory\n");
-			return(NULL);
-		    }
+                    temp = xmlSaveUriRealloc(ret, &max);
+                    if (temp == NULL) goto mem_error;
+                    ret = temp;
 		}
 		ret[len++] = *p++;
 		ret[len++] = *p++;
@@ -1244,16 +1220,9 @@ xmlSaveUri(xmlURIPtr uri) {
 	    }
 	    while (*p != 0) {
 		if (len + 3 >= max) {
-		    max *= 2;
-		    temp = (xmlChar *) xmlRealloc(ret,
-			    (max + 1) * sizeof(xmlChar));
-		    if (temp == NULL) {
-			xmlGenericError(xmlGenericErrorContext,
-				"xmlSaveUri: out of memory\n");
-                     xmlFree(ret);
-			return(NULL);
-		    }
-		    ret = temp;
+                    temp = xmlSaveUriRealloc(ret, &max);
+                    if (temp == NULL) goto mem_error;
+                    ret = temp;
 		}
 		if ((IS_UNRESERVED(*(p))) || ((*(p) == '/')) ||
                     ((*(p) == ';')) || ((*(p) == '@')) || ((*(p) == '&')) ||
@@ -1271,61 +1240,33 @@ xmlSaveUri(xmlURIPtr uri) {
 	}
 	if (uri->query_raw != NULL) {
 	    if (len + 1 >= max) {
-		max *= 2;
-		temp = (xmlChar *) xmlRealloc(ret,
-			(max + 1) * sizeof(xmlChar));
-		if (temp == NULL) {
-			xmlGenericError(xmlGenericErrorContext,
-				"xmlSaveUri: out of memory\n");
-                     xmlFree(ret);
-			return(NULL);
-		    }
-		    ret = temp;
+                temp = xmlSaveUriRealloc(ret, &max);
+                if (temp == NULL) goto mem_error;
+                ret = temp;
 	    }
 	    ret[len++] = '?';
 	    p = uri->query_raw;
 	    while (*p != 0) {
 		if (len + 1 >= max) {
-		    max *= 2;
-		    temp = (xmlChar *) xmlRealloc(ret,
-			    (max + 1) * sizeof(xmlChar));
-		    if (temp == NULL) {
-			xmlGenericError(xmlGenericErrorContext,
-				"xmlSaveUri: out of memory\n");
-                     xmlFree(ret);
-			return(NULL);
-		    }
-		    ret = temp;
+                    temp = xmlSaveUriRealloc(ret, &max);
+                    if (temp == NULL) goto mem_error;
+                    ret = temp;
 		}
 		ret[len++] = *p++;
 	    }
 	} else if (uri->query != NULL) {
 	    if (len + 3 >= max) {
-		max *= 2;
-		temp = (xmlChar *) xmlRealloc(ret,
-			(max + 1) * sizeof(xmlChar));
-		if (temp == NULL) {
-			xmlGenericError(xmlGenericErrorContext,
-				"xmlSaveUri: out of memory\n");
-                     xmlFree(ret);
-			return(NULL);
-		    }
-		    ret = temp;
+                temp = xmlSaveUriRealloc(ret, &max);
+                if (temp == NULL) goto mem_error;
+                ret = temp;
 	    }
 	    ret[len++] = '?';
 	    p = uri->query;
 	    while (*p != 0) {
 		if (len + 3 >= max) {
-		    max *= 2;
-		    temp = (xmlChar *) xmlRealloc(ret,
-			    (max + 1) * sizeof(xmlChar));
-		    if (temp == NULL) {
-			xmlGenericError(xmlGenericErrorContext,
-				"xmlSaveUri: out of memory\n");
-                     xmlFree(ret);
-			return(NULL);
-		    }
-		    ret = temp;
+                    temp = xmlSaveUriRealloc(ret, &max);
+                    if (temp == NULL) goto mem_error;
+                    ret = temp;
 		}
 		if ((IS_UNRESERVED(*(p))) || (IS_RESERVED(*(p))))
 		    ret[len++] = *p++;
@@ -1341,31 +1282,17 @@ xmlSaveUri(xmlURIPtr uri) {
     }
     if (uri->fragment != NULL) {
 	if (len + 3 >= max) {
-	    max *= 2;
-	    temp = (xmlChar *) xmlRealloc(ret,
-		    (max + 1) * sizeof(xmlChar));
-	    if (temp == NULL) {
-			xmlGenericError(xmlGenericErrorContext,
-				"xmlSaveUri: out of memory\n");
-                     xmlFree(ret);
-			return(NULL);
-		    }
-		    ret = temp;
+            temp = xmlSaveUriRealloc(ret, &max);
+            if (temp == NULL) goto mem_error;
+            ret = temp;
 	}
 	ret[len++] = '#';
 	p = uri->fragment;
 	while (*p != 0) {
 	    if (len + 3 >= max) {
-		max *= 2;
-		temp = (xmlChar *) xmlRealloc(ret,
-			(max + 1) * sizeof(xmlChar));
-		if (temp == NULL) {
-			xmlGenericError(xmlGenericErrorContext,
-				"xmlSaveUri: out of memory\n");
-                     xmlFree(ret);
-			return(NULL);
-		    }
-		    ret = temp;
+                temp = xmlSaveUriRealloc(ret, &max);
+                if (temp == NULL) goto mem_error;
+                ret = temp;
 	    }
 	    if ((IS_UNRESERVED(*(p))) || (IS_RESERVED(*(p))))
 		ret[len++] = *p++;
@@ -1379,18 +1306,16 @@ xmlSaveUri(xmlURIPtr uri) {
 	}
     }
     if (len >= max) {
-	max *= 2;
-	temp = (xmlChar *) xmlRealloc(ret, (max + 1) * sizeof(xmlChar));
-	if (temp == NULL) {
-			xmlGenericError(xmlGenericErrorContext,
-				"xmlSaveUri: out of memory\n");
-                     xmlFree(ret);
-			return(NULL);
-		    }
-		    ret = temp;
+        temp = xmlSaveUriRealloc(ret, &max);
+        if (temp == NULL) goto mem_error;
+        ret = temp;
     }
     ret[len] = 0;
     return(ret);
+
+mem_error:
+    xmlFree(ret);
+    return(NULL);
 }
 
 /**
@@ -1604,10 +1529,11 @@ xmlNormalizeURIPath(char *path) {
           break;
         }
         /* Valgrind complained, strcpy(cur, segp + 3); */
-	/* string will overlap, do not use strcpy */
-	tmp = cur;
-	segp += 3;
-	while ((*tmp++ = *segp++) != 0);
+        /* string will overlap, do not use strcpy */
+        tmp = cur;
+        segp += 3;
+        while ((*tmp++ = *segp++) != 0)
+          ;
 
         /* If there are no previous segments, then keep going from here.  */
         segp = cur;
@@ -1692,8 +1618,7 @@ xmlURIUnescapeString(const char *str, int len, char *target) {
     if (target == NULL) {
 	ret = (char *) xmlMallocAtomic(len + 1);
 	if (ret == NULL) {
-	    xmlGenericError(xmlGenericErrorContext,
-		    "xmlURIUnescapeString: out of memory\n");
+            xmlURIErrMemory("unescaping URI value\n");
 	    return(NULL);
 	}
     } else
@@ -1743,8 +1668,7 @@ xmlURIEscapeStr(const xmlChar *str, const xmlChar *list) {
     xmlChar *ret, ch;
     xmlChar *temp;
     const xmlChar *in;
-
-    unsigned int len, out;
+    int len, out;
 
     if (str == NULL)
 	return(NULL);
@@ -1756,19 +1680,16 @@ xmlURIEscapeStr(const xmlChar *str, const xmlChar *list) {
     len += 20;
     ret = (xmlChar *) xmlMallocAtomic(len);
     if (ret == NULL) {
-	xmlGenericError(xmlGenericErrorContext,
-		"xmlURIEscapeStr: out of memory\n");
+        xmlURIErrMemory("escaping URI value\n");
 	return(NULL);
     }
     in = (const xmlChar *) str;
     out = 0;
     while(*in != 0) {
 	if (len - out <= 3) {
-	    len += 20;
-	    temp = (xmlChar *) xmlRealloc(ret, len);
+            temp = xmlSaveUriRealloc(ret, &len);
 	    if (temp == NULL) {
-		xmlGenericError(xmlGenericErrorContext,
-			"xmlURIEscapeStr: out of memory\n");
+                xmlURIErrMemory("escaping URI value\n");
 		xmlFree(ret);
 		return(NULL);
 	    }
@@ -1823,10 +1744,9 @@ xmlURIEscape(const xmlChar * str)
     int ret2;
 
 #define NULLCHK(p) if(!p) { \
-                   xmlGenericError(xmlGenericErrorContext, \
-                        "xmlURIEscape: out of memory\n"); \
-                        xmlFreeURI(uri); \
-                        return NULL; } \
+         xmlURIErrMemory("escaping URI value\n"); \
+         xmlFreeURI(uri); \
+         return NULL; } \
 
     if (str == NULL)
         return (NULL);
@@ -2133,8 +2053,7 @@ xmlBuildURI(const xmlChar *URI, const xmlChar *base) {
 	len += strlen(bas->path);
     res->path = (char *) xmlMallocAtomic(len);
     if (res->path == NULL) {
-	xmlGenericError(xmlGenericErrorContext,
-		"xmlBuildURI: out of memory\n");
+        xmlURIErrMemory("resolving URI against base\n");
 	goto done;
     }
     res->path[0] = 0;
@@ -2395,8 +2314,7 @@ xmlBuildRelativeURI (const xmlChar * URI, const xmlChar * base)
      */
     val = (xmlChar *) xmlMalloc (len + 3 * nbslash);
     if (val == NULL) {
-	xmlGenericError(xmlGenericErrorContext,
-		"xmlBuildRelativeURI: out of memory\n");
+        xmlURIErrMemory("building relative URI\n");
 	goto done;
     }
     vptr = val;
@@ -2479,7 +2397,20 @@ xmlCanonicPath(const xmlChar *path)
     if (path == NULL)
 	return(NULL);
 
-    /* sanitize filename starting with // so it can be used as URI */
+#if defined(_WIN32)
+    /*
+     * We must not change the backslashes to slashes if the the path
+     * starts with \\?\
+     * Those paths can be up to 32k characters long.
+     * Was added specifically for OpenOffice, those paths can't be converted
+     * to URIs anyway.
+     */
+    if ((path[0] == '\\') && (path[1] == '\\') && (path[2] == '?') &&
+        (path[3] == '\\') )
+	return xmlStrdup((const xmlChar *) path);
+#endif
+
+	/* sanitize filename starting with // so it can be used as URI */
     if ((path[0] == '/') && (path[1] == '/') && (path[2] != '/'))
         path++;
 
