@@ -35,6 +35,7 @@ StartChild(char **argv)
                                  -1,
                                  Path,
                                  sizeof(Path) / sizeof(WCHAR));
+    ok(Length > 0, "Length = %d\n", Length);
 
     FileName = wcsrchr(Path, '\\');
     Slash = wcsrchr(Path, L'/');
@@ -113,7 +114,7 @@ TestGetModuleFileNameW(VOID)
     ok(Length < sizeof(Buffer) / sizeof(WCHAR), "Length = %lu\n", Length);
     ok(Buffer[Length] == 0, "Buffer not null terminated\n");
     Relative = PathIsRelativeW(Buffer);
-    ok(Relative == FALSE, "GetModuleFileNameA returned relative path: %ls\n", Buffer);
+    ok(Relative == FALSE, "GetModuleFileNameW returned relative path: %ls\n", Buffer);
 }
 
 START_TEST(GetModuleFileName)

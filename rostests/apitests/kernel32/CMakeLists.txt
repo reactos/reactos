@@ -1,12 +1,10 @@
 
-add_definitions(-D_DLL -D__USE_CRTIMP)
-
 list(APPEND SOURCE
     GetCurrentDirectory.c
     GetDriveType.c
     GetModuleFileName.c
     lstrcpynW.c
-	MultiByteToWideChar.c
+    MultiByteToWideChar.c
     SetCurrentDirectory.c
     SetUnhandledExceptionFilter.c
     testlist.c)
