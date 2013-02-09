@@ -258,7 +258,7 @@ class testDefaults:
             defaultParams[key] = txt
         else:
             defaultParams[key] += ' ' + txt
-
+        
     def processNode(self, reader, curClass):
         if reader.Depth() == 2:
             if reader.NodeType() == 1:

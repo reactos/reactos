@@ -138,7 +138,7 @@ skipped_functions = [
 "xmlNamespaceParseNSDef", "xmlNamespaceParseQName",
 "xmlParseNamespace", "xmlParseQuotedString", "xmlParserHandleReference",
 "xmlScanName",
-"xmlDecodeEntities",
+"xmlDecodeEntities", 
 # allocators
 "xmlMemFree",
 # verbosity
@@ -206,21 +206,21 @@ extra_pre_call = {
        "if (fd >= 0) fd = -1;",
 }
 extra_post_call = {
-   "xmlAddChild":
+   "xmlAddChild": 
        "if (ret_val == NULL) { xmlFreeNode(cur) ; cur = NULL ; }",
    "xmlAddEntity":
        "if (ret_val != NULL) { xmlFreeNode(ret_val) ; ret_val = NULL; }",
-   "xmlAddChildList":
+   "xmlAddChildList": 
        "if (ret_val == NULL) { xmlFreeNodeList(cur) ; cur = NULL ; }",
    "xmlAddSibling":
        "if (ret_val == NULL) { xmlFreeNode(elem) ; elem = NULL ; }",
    "xmlAddNextSibling":
        "if (ret_val == NULL) { xmlFreeNode(elem) ; elem = NULL ; }",
-   "xmlAddPrevSibling":
+   "xmlAddPrevSibling": 
        "if (ret_val == NULL) { xmlFreeNode(elem) ; elem = NULL ; }",
-   "xmlDocSetRootElement":
+   "xmlDocSetRootElement": 
        "if (doc == NULL) { xmlFreeNode(root) ; root = NULL ; }",
-   "xmlReplaceNode":
+   "xmlReplaceNode": 
        """if (cur != NULL) {
               xmlUnlinkNode(cur);
               xmlFreeNode(cur) ; cur = NULL ; }
@@ -228,11 +228,11 @@ extra_post_call = {
               xmlUnlinkNode(old);
               xmlFreeNode(old) ; old = NULL ; }
 	  ret_val = NULL;""",
-   "xmlTextMerge":
+   "xmlTextMerge": 
        """if ((first != NULL) && (first->type != XML_TEXT_NODE)) {
               xmlUnlinkNode(second);
               xmlFreeNode(second) ; second = NULL ; }""",
-   "xmlBuildQName":
+   "xmlBuildQName": 
        """if ((ret_val != NULL) && (ret_val != ncname) &&
               (ret_val != prefix) && (ret_val != memory))
               xmlFree(ret_val);
@@ -594,7 +594,7 @@ static void des_%s(int no ATTRIBUTE_UNUSED, %s val ATTRIBUTE_UNUSED, int nr ATTR
 
 #
 # Load the interfaces
-#
+# 
 headers = ctxt.xpathEval("/api/files/file")
 for file in headers:
     name = file.xpathEval('string(@name)')
@@ -618,16 +618,16 @@ for file in headers:
 
     test.write("#include <libxml/%s.h>\n" % name)
     modules.append(name)
-
+        
 #
 # Generate the callers signatures
-#
+# 
 for module in modules:
     test.write("static int test_%s(void);\n" % module);
 
 #
 # Generate the top caller
-#
+# 
 
 test.write("""
 /**
@@ -658,7 +658,7 @@ test.write("""
 
 #
 # How to handle a function
-#
+# 
 nb_tests = 0
 
 def generate_test(module, node):
@@ -698,7 +698,7 @@ def generate_test(module, node):
 	else:
 	    crtype = rtype
 	t_args.append((nam, type, rtype, crtype, info))
-
+    
     try:
 	rets = node.xpathEval("return")
     except:
@@ -745,7 +745,7 @@ test_%s(void) {
     if function_defines.has_key(name):
         test.write("#ifdef %s\n" % (function_defines[name]))
 	define = 1
-
+    
     # Declare the memory usage counter
     no_mem = is_skipped_memcheck(name)
     if no_mem == 0:
@@ -769,7 +769,7 @@ test_%s(void) {
 	#
 	test.write("    for (n_%s = 0;n_%s < gen_nb_%s;n_%s++) {\n" % (
 	           nam, nam, type, nam))
-
+    
     # log the memory usage
     if no_mem == 0:
 	test.write("        mem_base = xmlMemBlocks();\n");
@@ -867,7 +867,7 @@ test_%s(void) {
 }
 
 """)
-
+    
 #
 # Generate all module callers
 #

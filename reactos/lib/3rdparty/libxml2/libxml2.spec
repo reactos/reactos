@@ -1,16 +1,16 @@
 Summary: Library providing XML and HTML support
 Name: libxml2
-Version: 2.7.8
+Version: 2.9.0
 Release: 1
 License: MIT
 Group: Development/Libraries
 Source: ftp://xmlsoft.org/libxml2/libxml2-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
-BuildRequires: python python-devel zlib-devel pkgconfig
+BuildRequires: python python-devel zlib-devel pkgconfig xz-devel
 URL: http://xmlsoft.org/
 
 %description
-This library allows to manipulate XML files. It includes support
+This library allows to manipulate XML files. It includes support 
 to read, modify and write XML and HTML files. There is DTDs support
 this includes parsing and validation even with complex DtDs, either
 at parse time or later once the document has been modified. The output
@@ -25,11 +25,12 @@ Summary: Libraries, includes, etc. to develop XML and HTML applications
 Group: Development/Libraries
 Requires: libxml2 = %{version}-%{release}
 Requires: zlib-devel
+Requires: xz-devel
 Requires: pkgconfig
 
 %description devel
 Libraries, include files, etc you can use to develop XML applications.
-This library allows to manipulate XML files. It includes support
+This library allows to manipulate XML files. It includes support 
 to read, modify and write XML and HTML files. There is DTDs support
 this includes parsing and validation even with complex DtDs, either
 at parse time or later once the document has been modified. The output
@@ -50,7 +51,7 @@ The libxml2-python package contains a module that permits applications
 written in the Python programming language to use the interface
 supplied by the libxml2 library to manipulate XML files.
 
-This library allows to manipulate XML files. It includes support
+This library allows to manipulate XML files. It includes support 
 to read, modify and write XML and HTML files. There is DTDs support
 this includes parsing and validation even with complex DTDs, either
 at parse time or later once the document has been modified.
@@ -127,6 +128,6 @@ rm -fr %{buildroot}
 %doc doc/python.html
 
 %changelog
-* Thu Nov  4 2010 Daniel Veillard <veillard@redhat.com>
-- upstream release 2.7.8 see http://xmlsoft.org/news.html
+* Tue Sep 11 2012 Daniel Veillard <veillard@redhat.com>
+- upstream release 2.9.0 see http://xmlsoft.org/news.html
 

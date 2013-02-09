@@ -4,14 +4,14 @@
     Element Name    Description
      testname       Plain text name of test
      execpath       pathname for test program(s)
-     testprog       program to run for the test
+     testprog       program to run for the test 
      flag           flags for program (may have several)
      file           filename of input file (several, or glob ok)
      exclfile       filename to be excuded (several, or glob ok)
      srcdir         global source directory for input file(s)
      srcsub         subdirectory for input
      resdir         directory for results file(s)
-     ressub         subdirectory for results
+     ressub         subdirectory for results    
      resext         extension for expected result
      reserrext      extension for error result ('None' => no chk)
      extarg         additional argument for command
