@@ -20,6 +20,7 @@
 #include <ndk/lpctypes.h>
 #include <ndk/lpcfuncs.h>
 #include <ndk/obfuncs.h>
+#include <ndk/psfuncs.h>
 #include <ndk/rtlfuncs.h>
 #include <ndk/setypes.h>
 
