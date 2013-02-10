@@ -21,8 +21,39 @@ static HANDLE AuthPortHandle = NULL;
 /* FUNCTIONS ***************************************************************/
 
 static NTSTATUS
+LsapCallAuthenticationPackage(PLSA_API_MSG RequestMsg)
+{
+    TRACE("(%p)\n", RequestMsg);
+
+    return STATUS_SUCCESS;
+}
+
+
+static NTSTATUS
+LsapDeregisterLogonProcess(PLSA_API_MSG RequestMsg)
+{
+    TRACE("(%p)\n", RequestMsg);
+
+    return STATUS_SUCCESS;
+}
+
+
+static NTSTATUS
+LsapLogonUser(PLSA_API_MSG RequestMsg)
+{
+    TRACE("(%p)\n", RequestMsg);
+
+    return STATUS_SUCCESS;
+}
+
+
+static NTSTATUS
 LsapLookupAuthenticationPackage(PLSA_API_MSG RequestMsg)
 {
+    TRACE("(%p)\n", RequestMsg);
+
+    TRACE("PackageName: %s\n", RequestMsg->LookupAuthenticationPackage.Request.PackageName);
+
     RequestMsg->LookupAuthenticationPackage.Reply.Package = 0x12345678;
 
     return STATUS_SUCCESS;
@@ -66,6 +97,11 @@ AuthPortThreadRoutine(PVOID Param)
 
                 RemotePortView.Length = sizeof(REMOTE_PORT_VIEW);
 
+                TRACE("Logon Process Name: %s\n", RequestMsg.ConnectInfo.LogonProcessNameBuffer);
+
+                RequestMsg.ConnectInfo.OperationalMode = 0x43218765;
+                RequestMsg.ConnectInfo.Status = STATUS_SUCCESS;
+
                 Accept = TRUE;
                 Status = NtAcceptConnectPort(&ConnectionHandle,
                                              &Context,
@@ -102,12 +138,28 @@ AuthPortThreadRoutine(PVOID Param)
             default:
                 TRACE("Received request (ApiNumber: %lu)\n", RequestMsg.ApiNumber);
 
-                if (RequestMsg.ApiNumber == LSASS_REQUEST_LOOKUP_AUTHENTICATION_PACKAGE)
+                switch (RequestMsg.ApiNumber)
                 {
-                    RequestMsg.Status = LsapLookupAuthenticationPackage(&RequestMsg);
+                    case LSASS_REQUEST_CALL_AUTHENTICATION_PACKAGE:
+                        RequestMsg.Status = LsapCallAuthenticationPackage(&RequestMsg);
+                        break;
+
+                    case LSASS_REQUEST_DEREGISTER_LOGON_PROCESS:
+                        RequestMsg.Status = LsapDeregisterLogonProcess(&RequestMsg);
+                        break;
+
+                    case LSASS_REQUEST_LOGON_USER:
+                        RequestMsg.Status = LsapLogonUser(&RequestMsg);
+                        break;
+
+                    case LSASS_REQUEST_LOOKUP_AUTHENTICATION_PACKAGE:
+                        RequestMsg.Status = LsapLookupAuthenticationPackage(&RequestMsg);
+                        break;
+
+                    default:
+                        RequestMsg.Status = STATUS_SUCCESS; /* FIXME */
+                        break;
                 }
-                else
-                    RequestMsg.Status = STATUS_SUCCESS;
 
                 ReplyMsg = &RequestMsg;
                 break;

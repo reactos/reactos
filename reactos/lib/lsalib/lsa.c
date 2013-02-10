@@ -87,6 +87,42 @@ LsaCallAuthenticationPackage(HANDLE LsaHandle,
                              PULONG ReturnBufferLength,
                              PNTSTATUS ProtocolStatus)
 {
+    LSA_API_MSG ApiMessage;
+    NTSTATUS Status;
+
+    DPRINT1("LsaCallAuthenticationPackage()\n");
+
+    ApiMessage.ApiNumber = LSASS_REQUEST_CALL_AUTHENTICATION_PACKAGE;
+    ApiMessage.h.u1.s1.DataLength = LSA_PORT_DATA_SIZE(ApiMessage.CallAuthenticationPackage.Request);
+    ApiMessage.h.u1.s1.TotalLength = LSA_PORT_MESSAGE_SIZE;
+    ApiMessage.h.u2.ZeroInit = 0;
+
+    ApiMessage.CallAuthenticationPackage.Request.AuthenticationPackage = AuthenticationPackage;
+    ApiMessage.CallAuthenticationPackage.Request.ProtocolSubmitBuffer = ProtocolSubmitBuffer;
+    ApiMessage.CallAuthenticationPackage.Request.SubmitBufferLength = SubmitBufferLength;
+
+    Status = ZwRequestWaitReplyPort(LsaHandle,
+                                    (PPORT_MESSAGE)&ApiMessage,
+                                    (PPORT_MESSAGE)&ApiMessage);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("ZwRequestWaitReplyPort() failed (Status 0x%08lx)\n", Status);
+        return Status;
+    }
+
+    if (!NT_SUCCESS(ApiMessage.Status))
+    {
+        DPRINT1("ZwRequestWaitReplyPort() failed (ApiMessage.Status 0x%08lx)\n", ApiMessage.Status);
+        return ApiMessage.Status;
+    }
+
+    *ProtocolReturnBuffer = ApiMessage.CallAuthenticationPackage.Reply.ProtocolReturnBuffer;
+    *ReturnBufferLength = ApiMessage.CallAuthenticationPackage.Reply.ReturnBufferLength;
+    *ProtocolStatus = ApiMessage.CallAuthenticationPackage.Reply.ProtocolStatus;
+
+    return Status;
+
+
 #if 0
     PLSASS_REQUEST Request;
     PLSASS_REPLY Reply;
@@ -135,8 +171,6 @@ LsaCallAuthenticationPackage(HANDLE LsaHandle,
 
     return Status;
 #endif
-    return 0;
-
 }
 
 
@@ -216,6 +250,48 @@ LsaLogonUser(HANDLE LsaHandle,
              PQUOTA_LIMITS Quotas,
              PNTSTATUS SubStatus)
 {
+    LSA_API_MSG ApiMessage;
+    NTSTATUS Status;
+
+    ApiMessage.ApiNumber = LSASS_REQUEST_LOGON_USER;
+    ApiMessage.h.u1.s1.DataLength = LSA_PORT_DATA_SIZE(ApiMessage.LogonUser.Request);
+    ApiMessage.h.u1.s1.TotalLength = LSA_PORT_MESSAGE_SIZE;
+    ApiMessage.h.u2.ZeroInit = 0;
+
+    ApiMessage.LogonUser.Request.OriginName = *OriginName;
+    ApiMessage.LogonUser.Request.LogonType = LogonType;
+    ApiMessage.LogonUser.Request.AuthenticationPackage = AuthenticationPackage;
+    ApiMessage.LogonUser.Request.AuthenticationInformation = AuthenticationInformation;
+    ApiMessage.LogonUser.Request.AuthenticationInformationLength = AuthenticationInformationLength;
+    ApiMessage.LogonUser.Request.LocalGroups = LocalGroups;
+    if (LocalGroups != NULL)
+        ApiMessage.LogonUser.Request.LocalGroupsCount = LocalGroups->GroupCount;
+    else
+        ApiMessage.LogonUser.Request.LocalGroups = 0;
+    ApiMessage.LogonUser.Request.SourceContext = *SourceContext;
+
+    Status = ZwRequestWaitReplyPort(LsaHandle,
+                                    (PPORT_MESSAGE)&ApiMessage,
+                                    (PPORT_MESSAGE)&ApiMessage);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    if (!NT_SUCCESS(ApiMessage.Status))
+    {
+        return ApiMessage.Status;
+    }
+
+    *ProfileBuffer = ApiMessage.LogonUser.Reply.ProfileBuffer;
+    *ProfileBufferLength = ApiMessage.LogonUser.Reply.ProfileBufferLength;
+    *LogonId = ApiMessage.LogonUser.Reply.LogonId;
+    *Token = ApiMessage.LogonUser.Reply.Token;
+    *Quotas = ApiMessage.LogonUser.Reply.Quotas;
+    *SubStatus = ApiMessage.LogonUser.Reply.SubStatus;
+
+    return Status;
+
 #if 0
     ULONG RequestLength;
     ULONG CurrentLength;
@@ -300,7 +376,6 @@ LsaLogonUser(HANDLE LsaHandle,
 
     return Status;
 #endif
-    return 0;
 }
 
 
@@ -316,8 +391,6 @@ LsaRegisterLogonProcess(PLSA_STRING LsaLogonProcessName,
     SECURITY_QUALITY_OF_SERVICE SecurityQos;
     LSA_CONNECTION_INFO ConnectInfo;
     ULONG ConnectInfoLength = sizeof(ConnectInfo);
-    LSA_API_MSG ApiMessage;
-    HANDLE PortHandle = NULL;
     NTSTATUS Status;
 
     DPRINT1("LsaRegisterLogonProcess()\n");
@@ -325,8 +398,6 @@ LsaRegisterLogonProcess(PLSA_STRING LsaLogonProcessName,
     /* Check the logon process name length */
     if (LsaLogonProcessName->Length > LSASS_MAX_LOGON_PROCESS_NAME_LENGTH)
         return STATUS_NAME_TOO_LONG;
-
-    *Handle = NULL;
 
     RtlInitUnicodeString(&PortName,
                          L"\\LsaAuthenticationPort");
@@ -342,7 +413,7 @@ LsaRegisterLogonProcess(PLSA_STRING LsaLogonProcessName,
     ConnectInfo.Length = LsaLogonProcessName->Length;
     ConnectInfo.LogonProcessNameBuffer[ConnectInfo.Length] = '\0';
 
-    Status = ZwConnectPort(&PortHandle,
+    Status = ZwConnectPort(Handle,
                            &PortName,
                            &SecurityQos,
                            NULL,
@@ -356,39 +427,15 @@ LsaRegisterLogonProcess(PLSA_STRING LsaLogonProcessName,
         return Status;
     }
 
-    ApiMessage.ApiNumber = LSASS_REQUEST_REGISTER_LOGON_PROCESS;
-    ApiMessage.h.u1.s1.DataLength = LSA_PORT_DATA_SIZE(ApiMessage.RegisterLogonProcess.Request);
-    ApiMessage.h.u1.s1.TotalLength = LSA_PORT_MESSAGE_SIZE;
-    ApiMessage.h.u2.ZeroInit = 0;
+    DPRINT("ConnectInfo.OperationalMode: 0x%08lx\n", ConnectInfo.OperationalMode);
+    *OperationalMode = ConnectInfo.OperationalMode;
 
-    ApiMessage.RegisterLogonProcess.Request.Length = LsaLogonProcessName->Length;
-    memcpy(ApiMessage.RegisterLogonProcess.Request.LogonProcessNameBuffer,
-           LsaLogonProcessName->Buffer,
-           ApiMessage.RegisterLogonProcess.Request.Length);
-
-    Status = ZwRequestWaitReplyPort(PortHandle,
-                                    (PPORT_MESSAGE)&ApiMessage,
-                                    (PPORT_MESSAGE)&ApiMessage);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("ZwRequestWaitReplyPort failed (Status 0x%08lx)\n", Status);
-        NtClose(PortHandle);
-        return Status;
+        DPRINT1("ConnectInfo.Status: 0x%08lx\n", ConnectInfo.Status);
     }
 
-    if (!NT_SUCCESS(ApiMessage.Status))
-    {
-        DPRINT1("ZwRequestWaitReplyPort failed (ApiMessage.Status 0x%08lx)\n", ApiMessage.Status);
-        NtClose(PortHandle);
-        return ApiMessage.Status;
-    }
-
-    *Handle = PortHandle;
-    *OperationalMode = ApiMessage.RegisterLogonProcess.Reply.OperationalMode;
-
-    DPRINT1("LsaRegisterLogonProcess() done (Status 0x%08lx)\n", Status);
-
-    return Status;
+    return ConnectInfo.Status;
 }
 
 
