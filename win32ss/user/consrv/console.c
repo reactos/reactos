@@ -8,9 +8,15 @@
 
 /* INCLUDES ******************************************************************/
 
+#define COBJMACROS
+#define NONAMELESSUNION
+
 #include "consrv.h"
 #include "guiconsole.h"
 #include "tuiconsole.h"
+
+#include <shlwapi.h>
+#include <shlobj.h>
 
 //#define NDEBUG
 #include <debug.h>
@@ -95,15 +101,117 @@ ConioUnpause(PCONSOLE Console, UINT Flags)
     }
 }
 
+static BOOL
+LoadShellLinkInfo(IN OUT PCONSOLE_PROPS ConsoleProps,
+                  OUT LPWSTR IconPath,
+                  IN SIZE_T IconPathLength,
+                  OUT PINT piIcon)
+{
+#define PATH_SEPARATOR L'\\'
+
+    LPWSTR LinkName = NULL;
+    SIZE_T Length = 0;
+
+    if ((ConsoleProps->dwStartupFlags & STARTF_TITLEISLINKNAME) == 0)
+        return FALSE;
+
+    if (IconPath == NULL || piIcon == NULL)
+        return FALSE;
+
+    IconPath[0] = L'\0';
+    *piIcon = 0;
+
+    /* 1- Find the last path separator if any */
+    LinkName = wcsrchr(ConsoleProps->ConsoleTitle, PATH_SEPARATOR);
+    if (LinkName == NULL)
+    {
+        LinkName = ConsoleProps->ConsoleTitle;
+    }
+    else
+    {
+        /* Skip the path separator */
+        ++LinkName;
+    }
+
+    /* 2- Check for the link extension. The name ".lnk" is considered invalid. */
+    Length = wcslen(LinkName);
+    if ( (Length <= 4) || (wcsicmp(LinkName + (Length - 4), L".lnk") != 0) )
+        return FALSE;
+
+    /* 3- It may be a link. Try to retrieve some properties */
+    HRESULT hRes = CoInitialize(NULL);
+    if (SUCCEEDED(hRes))
+    {
+        // Get a pointer to the IShellLink interface.
+        IShellLinkW* pshl = NULL;
+        hRes = CoCreateInstance(&CLSID_ShellLink,
+                                NULL, 
+                                CLSCTX_INPROC_SERVER,
+                                &IID_IShellLinkW,
+                                (LPVOID*)&pshl);
+        if (SUCCEEDED(hRes))
+        {
+            // Get a pointer to the IPersistFile interface.
+            IPersistFile* ppf = NULL;
+            hRes = IPersistFile_QueryInterface(pshl, &IID_IPersistFile, (LPVOID*)&ppf);
+            if (SUCCEEDED(hRes))
+            {
+                // Load the shortcut.
+                hRes = IPersistFile_Load(ppf, ConsoleProps->ConsoleTitle, STGM_READ);
+                if (SUCCEEDED(hRes))
+                {
+                    /*
+                     * Finally we can get the properties !
+                     * Update the old ones if needed.
+                     */
+                    INT ShowCmd = 0;
+                    // WORD HotKey = 0;
+
+                    // Get the name of the shortcut.
+                    Length = min(Length - 4,
+                                 sizeof(ConsoleProps->ConsoleTitle) / sizeof(ConsoleProps->ConsoleTitle[0]));
+                    wcsncpy(ConsoleProps->ConsoleTitle, LinkName, Length);
+                    ConsoleProps->ConsoleTitle[Length] = L'\0';
+
+                    // Get the window showing command.
+                    hRes = IShellLinkW_GetShowCmd(pshl, &ShowCmd);
+                    if (SUCCEEDED(hRes)) ConsoleProps->ShowWindow = (WORD)ShowCmd;
+
+                    // Get the hotkey.
+                    // hRes = pshl->GetHotkey(&ShowCmd);
+                    // if (SUCCEEDED(hRes)) ConsoleProps->HotKey = HotKey;
+
+                    // Get the icon location, if any.
+                    hRes = IShellLinkW_GetIconLocation(pshl, IconPath, IconPathLength, piIcon);
+                    if (!SUCCEEDED(hRes))
+                    {
+                        IconPath[0] = L'\0';
+                    }
+                }
+                IPersistFile_Release(ppf);
+            }
+            IShellLinkW_Release(pshl);
+        }
+    }
+    CoUninitialize();
+
+    return TRUE;
+}
+
 NTSTATUS WINAPI
-ConSrvInitConsole(PCONSOLE* NewConsole, int ShowCmd, PCSR_PROCESS ConsoleLeaderProcess)
+ConSrvInitConsole(OUT PCONSOLE* NewConsole,
+                  IN LPCWSTR AppPath,
+                  IN OUT PCONSOLE_PROPS ConsoleProps,
+                  IN PCSR_PROCESS ConsoleLeaderProcess)
 {
     NTSTATUS Status;
     SECURITY_ATTRIBUTES SecurityAttributes;
     PCONSOLE Console;
     PCONSOLE_SCREEN_BUFFER NewBuffer;
     BOOL GuiMode;
-    WCHAR Title[255];
+    WCHAR Title[128];
+    WCHAR IconPath[MAX_PATH + 1] = L"";
+    INT iIcon = 0;
 
     if (NewConsole == NULL) return STATUS_INVALID_PARAMETER;
 
@@ -117,19 +225,21 @@ ConSrvInitConsole(PCONSOLE* NewConsole, int ShowCmd, PCSR_PROCESS ConsoleLeaderP
         return STATUS_NO_MEMORY;
     }
 
+    /*
+     * Check whether the process creating the console
+     * was launched via a shell-link. 
+     */
+    if (ConsoleProps->dwStartupFlags & STARTF_TITLEISLINKNAME)
+    {
+        LoadShellLinkInfo(ConsoleProps,
+                          IconPath,
+                          MAX_PATH,
+                          &iIcon);
+
+        ConsoleProps->dwStartupFlags &= ~STARTF_TITLEISLINKNAME;
+    }
+
     /* Initialize the console */
-    Console->Title.MaximumLength = Console->Title.Length = 0;
-    Console->Title.Buffer = NULL;
-
-    if (LoadStringW(ConSrvDllInstance, IDS_CONSOLE_TITLE, Title, sizeof(Title) / sizeof(Title[0])))
-    {
-        RtlCreateUnicodeString(&Console->Title, Title);
-    }
-    else
-    {
-        RtlCreateUnicodeString(&Console->Title, L"ReactOS Console");
-    }
-
     InitializeCriticalSection(&Console->Lock);
     Console->ReferenceCount = 0;
     Console->LineBuffer = NULL;
@@ -150,6 +260,7 @@ ConSrvInitConsole(PCONSOLE* NewConsole, int ShowCmd, PCSR_PROCESS ConsoleLeaderP
     Console->CodePage = GetOEMCP();
     Console->OutputCodePage = GetOEMCP();
     Console->GuiData = NULL;
+    Console->hIcon = Console->hIconSm = NULL;
 
     SecurityAttributes.nLength = sizeof(SECURITY_ATTRIBUTES);
     SecurityAttributes.lpSecurityDescriptor = NULL;
@@ -158,35 +269,65 @@ ConSrvInitConsole(PCONSOLE* NewConsole, int ShowCmd, PCSR_PROCESS ConsoleLeaderP
     Console->InputBuffer.ActiveEvent = CreateEventW(&SecurityAttributes, TRUE, FALSE, NULL);
     if (NULL == Console->InputBuffer.ActiveEvent)
     {
-        RtlFreeUnicodeString(&Console->Title);
         DeleteCriticalSection(&Console->Lock);
         RtlFreeHeap(ConSrvHeap, 0, Console);
         return STATUS_UNSUCCESSFUL;
     }
 
-    GuiMode = DtbgIsDesktopVisible();
-
-    /* allocate console screen buffer */
+    /* Allocate console screen buffer */
     NewBuffer = RtlAllocateHeap(ConSrvHeap, HEAP_ZERO_MEMORY, sizeof(CONSOLE_SCREEN_BUFFER));
     if (NULL == NewBuffer)
     {
-        RtlFreeUnicodeString(&Console->Title);
         DeleteCriticalSection(&Console->Lock);
         CloseHandle(Console->InputBuffer.ActiveEvent);
         RtlFreeHeap(ConSrvHeap, 0, Console);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
-    /* init screen buffer with defaults */
+    /* Init screen buffer with defaults */
     NewBuffer->CursorInfo.bVisible = TRUE;
     NewBuffer->CursorInfo.dwSize = CSR_DEFAULT_CURSOR_SIZE;
-    /* make console active, and insert into console list */
-    Console->ActiveBuffer = (PCONSOLE_SCREEN_BUFFER)NewBuffer;
+    /* Make console active, and insert into console list */
+    Console->ActiveBuffer = NewBuffer;
+    /** Finish to initialize the screen buffer **
+     ** Fix problems with MaxX == 0 and MaxY == 0
+     **
+    Status = ConSrvInitConsoleScreenBuffer(Console, NewBuffer);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("ConSrvInitConsoleScreenBuffer: failed\n");
+        RtlFreeHeap(ConSrvHeap, 0, NewBuffer);
+        DeleteCriticalSection(&Console->Lock);
+        CloseHandle(Console->InputBuffer.ActiveEvent);
+        RtlFreeHeap(ConSrvHeap, 0, Console);
+        return Status;
+    }
+    **/
+
+    /* Initialize the console title */
+    Console->Title.MaximumLength = Console->Title.Length = 0;
+    Console->Title.Buffer = NULL;
+    if (ConsoleProps->ConsoleTitle[0] == L'\0')
+    {
+        if (LoadStringW(ConSrvDllInstance, IDS_CONSOLE_TITLE, Title, sizeof(Title) / sizeof(Title[0])))
+        {
+            RtlCreateUnicodeString(&Console->Title, Title);
+        }
+        else
+        {
+            RtlCreateUnicodeString(&Console->Title, L"ReactOS Console");
+        }
+    }
+    else
+    {
+        RtlCreateUnicodeString(&Console->Title, ConsoleProps->ConsoleTitle);
+    }
 
     /*
-     * If we are not in GUI-mode, start the text-mode console. If we fail,
-     * try to start the GUI-mode console (win32k will automatically switch
-     * to graphical mode, therefore no additional code is needed).
+     * If we are not in GUI-mode, start the text-mode console.
+     * If we fail, try to start the GUI-mode console.
      */
+    GuiMode = DtbgIsDesktopVisible();
+
     if (!GuiMode)
     {
         DPRINT1("CONSRV: Opening text-mode console\n");
@@ -204,33 +345,41 @@ ConSrvInitConsole(PCONSOLE* NewConsole, int ShowCmd, PCSR_PROCESS ConsoleLeaderP
      *   failed and we start GUI-mode console.
      * - We are in text-mode, therefore GuiMode == FALSE, the previous test-case
      *   succeeded BUT we failed at starting text-mode console. Then GuiMode
-     *   was switched to TRUE in order to try to open the console in GUI-mode.
+     *   was switched to TRUE in order to try to open the console in GUI-mode
+     *   (win32k will automatically switch to graphical mode, therefore
+     *   no additional code is needed).
      */
     if (GuiMode)
     {
         DPRINT1("CONSRV: Opening GUI-mode console\n");
-        Status = GuiInitConsole(Console, ShowCmd);
+        Status = GuiInitConsole(Console,
+                                AppPath,
+                                ConsoleProps->ShowWindow,
+                                IconPath,
+                                iIcon);
         if (!NT_SUCCESS(Status))
         {
-            RtlFreeHeap(ConSrvHeap,0, NewBuffer);
+            DPRINT1("GuiInitConsole: failed, Status = 0x%08lx\n", Status);
             RtlFreeUnicodeString(&Console->Title);
             DeleteCriticalSection(&Console->Lock);
             CloseHandle(Console->InputBuffer.ActiveEvent);
-            DPRINT1("GuiInitConsole: failed, Status = 0x%08lx\n", Status);
+            RtlFreeHeap(ConSrvHeap, 0, NewBuffer);
+            /// ConioDeleteScreenBuffer(NewBuffer);
             RtlFreeHeap(ConSrvHeap, 0, Console);
             return Status;
         }
     }
 
+    // TODO: Move this call before initializing Tui/Gui console. But before fix freeing Buffer->Buffer !!
     Status = ConSrvInitConsoleScreenBuffer(Console, NewBuffer);
     if (!NT_SUCCESS(Status))
     {
+        DPRINT1("ConSrvInitConsoleScreenBuffer: failed\n");
         ConioCleanupConsole(Console);
         RtlFreeUnicodeString(&Console->Title);
         DeleteCriticalSection(&Console->Lock);
         CloseHandle(Console->InputBuffer.ActiveEvent);
         RtlFreeHeap(ConSrvHeap, 0, NewBuffer);
-        DPRINT1("ConSrvInitConsoleScreenBuffer: failed\n");
         RtlFreeHeap(ConSrvHeap, 0, Console);
         return Status;
     }
@@ -282,6 +431,7 @@ ConSrvDeleteConsole(PCONSOLE Console)
     CloseHandle(Console->InputBuffer.ActiveEvent);
     if (Console->UnpauseEvent) CloseHandle(Console->UnpauseEvent);
     DeleteCriticalSection(&Console->Lock);
+
     RtlFreeUnicodeString(&Console->Title);
     IntDeleteAllAliases(Console->Aliases);
     RtlFreeHeap(ConSrvHeap, 0, Console);
@@ -353,8 +503,8 @@ CSR_API(SrvAllocConsole)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     PCONSOLE_ALLOCCONSOLE AllocConsoleRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.AllocConsoleRequest;
-    PCSR_PROCESS ConsoleLeader = CsrGetClientThread()->Process;
-    PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(ConsoleLeader);
+    PCSR_PROCESS CsrProcess = CsrGetClientThread()->Process;
+    PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrProcess);
 
     DPRINT("SrvAllocConsole\n");
 
@@ -362,6 +512,18 @@ CSR_API(SrvAllocConsole)
     {
         DPRINT1("Process already has a console\n");
         return STATUS_ACCESS_DENIED;
+    }
+
+    if ( !CsrValidateMessageBuffer(ApiMessage,
+                                   (PVOID*)&AllocConsoleRequest->ConsoleProps,
+                                   1,
+                                   sizeof(CONSOLE_PROPS))       ||
+         !CsrValidateMessageBuffer(ApiMessage,
+                                   (PVOID*)&AllocConsoleRequest->AppPath,
+                                   MAX_PATH + 1,
+                                   sizeof(WCHAR)) )
+    {
+        return STATUS_INVALID_PARAMETER;
     }
 
     /*
@@ -379,11 +541,11 @@ CSR_API(SrvAllocConsole)
 
     /* Initialize a new Console owned by the Console Leader Process */
     Status = ConSrvAllocateConsole(ProcessData,
+                                   AllocConsoleRequest->AppPath,
                                    &AllocConsoleRequest->InputHandle,
                                    &AllocConsoleRequest->OutputHandle,
                                    &AllocConsoleRequest->ErrorHandle,
-                                   AllocConsoleRequest->ShowCmd,
-                                   ConsoleLeader);
+                                   AllocConsoleRequest->ConsoleProps);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Console allocation failed\n");
@@ -602,34 +764,37 @@ CSR_API(SrvSetConsoleTitle)
     }
 
     Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console, TRUE);
-    if(NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status))
     {
-        Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, TitleRequest->Length);
-        if (Buffer)
-        {
-            /* Copy title to console */
-            RtlFreeUnicodeString(&Console->Title);
-            Console->Title.Buffer = Buffer;
-            Console->Title.Length = Console->Title.MaximumLength = TitleRequest->Length;
-            memcpy(Console->Title.Buffer, TitleRequest->Title, Console->Title.Length);
-
-            if (!ConioChangeTitle(Console))
-            {
-                Status = STATUS_UNSUCCESSFUL;
-            }
-            else
-            {
-                Status = STATUS_SUCCESS;
-            }
-        }
-        else
-        {
-            Status = STATUS_NO_MEMORY;
-        }
-
-        ConSrvReleaseConsole(Console, TRUE);
+        DPRINT1("Can't get console\n");
+        return Status;
     }
 
+    /* Allocate a new buffer to hold the new title (NULL-terminated) */
+    Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, TitleRequest->Length + sizeof(WCHAR));
+    if (Buffer)
+    {
+        /* Free the old title */
+        RtlFreeUnicodeString(&Console->Title);
+
+        /* Copy title to console */
+        Console->Title.Buffer = Buffer;
+        Console->Title.Length = TitleRequest->Length;
+        Console->Title.MaximumLength = Console->Title.Length + sizeof(WCHAR);
+        RtlCopyMemory(Console->Title.Buffer,
+                      TitleRequest->Title,
+                      Console->Title.Length);
+        Console->Title.Buffer[Console->Title.Length / sizeof(WCHAR)] = L'\0';
+
+        ConioChangeTitle(Console);
+        Status = STATUS_SUCCESS;
+    }
+    else
+    {
+        Status = STATUS_NO_MEMORY;
+    }
+
+    ConSrvReleaseConsole(Console, TRUE);
     return Status;
 }
 

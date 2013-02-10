@@ -465,6 +465,8 @@ CSR_SERVER_DLL_INIT(ConServerDllInitialization)
     LoadedServerDll->NewProcessCallback = ConSrvNewProcess;
     // LoadedServerDll->HardErrorCallback = ConSrvHardError;
 
+    ConSrvDllInstance = LoadedServerDll->ServerHandle;
+
     /* All done */
     return STATUS_SUCCESS;
 }
@@ -477,12 +479,6 @@ DllMain(IN HINSTANCE hInstanceDll,
 {
     UNREFERENCED_PARAMETER(dwReason);
     UNREFERENCED_PARAMETER(lpReserved);
-
-    if (DLL_PROCESS_ATTACH == dwReason)
-    {
-        ConSrvDllInstance = hInstanceDll;
-    }
-
     return TRUE;
 }
 

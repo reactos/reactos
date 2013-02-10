@@ -63,7 +63,7 @@ NTSTATUS FASTCALL
 ConSrvInitConsoleScreenBuffer(PCONSOLE Console,
                            PCONSOLE_SCREEN_BUFFER Buffer)
 {
-    DPRINT("ConSrvInitConsoleScreenBuffer Size X %d Size Y %d\n", Buffer->MaxX, Buffer->MaxY);
+    DPRINT1("ConSrvInitConsoleScreenBuffer Size X %d Size Y %d\n", Buffer->MaxX, Buffer->MaxY);
 
     Buffer->Header.Type = CONIO_SCREEN_BUFFER_MAGIC;
     Buffer->Header.Console = Console;
@@ -74,9 +74,10 @@ ConSrvInitConsoleScreenBuffer(PCONSOLE Console,
     Buffer->Buffer = RtlAllocateHeap(ConSrvHeap, HEAP_ZERO_MEMORY, Buffer->MaxX * Buffer->MaxY * 2);
     if (NULL == Buffer->Buffer)
     {
+        DPRINT1("ConSrvInitConsoleScreenBuffer - D'oh!\n");
         return STATUS_INSUFFICIENT_RESOURCES;
     }
-    ConioInitScreenBuffer(Console, Buffer);
+    Buffer->DefaultAttrib = DEFAULT_ATTRIB;
     /* initialize buffer to be empty with default attributes */
     for (Buffer->CurrentY = 0 ; Buffer->CurrentY < Buffer->MaxY; Buffer->CurrentY++)
     {
@@ -376,6 +377,7 @@ VOID WINAPI
 ConioDeleteScreenBuffer(PCONSOLE_SCREEN_BUFFER Buffer)
 {
     PCONSOLE Console = Buffer->Header.Console;
+    DPRINT1("ConioDeleteScreenBuffer(Buffer = 0x%p, Buffer->Buffer = 0x%p) ; Console = 0x%p\n", Buffer, Buffer->Buffer, Console);
 
     RemoveEntryList(&Buffer->ListEntry);
     if (Buffer == Console->ActiveBuffer)
@@ -384,6 +386,7 @@ ConioDeleteScreenBuffer(PCONSOLE_SCREEN_BUFFER Buffer)
         Console->ActiveBuffer = NULL;
         if (!IsListEmpty(&Console->BufferList))
         {
+            DPRINT1("ConioDeleteScreenBuffer - Bang !!!!!!!!\n");
             Console->ActiveBuffer = CONTAINING_RECORD(Console->BufferList.Flink, CONSOLE_SCREEN_BUFFER, ListEntry);
             ConioDrawConsole(Console);
         }
@@ -423,7 +426,7 @@ ConioComputeUpdateRect(PCONSOLE_SCREEN_BUFFER Buff, SMALL_RECT* UpdateRect, PCOO
         UpdateRect->Right = Start->X + Length - 1;
     }
     UpdateRect->Top = Start->Y;
-    UpdateRect->Bottom = Start->Y+ (Start->X + Length - 1) / Buff->MaxX;
+    UpdateRect->Bottom = Start->Y + (Start->X + Length - 1) / Buff->MaxX;
     if (Buff->MaxY <= UpdateRect->Bottom)
     {
         UpdateRect->Bottom = Buff->MaxY - 1;

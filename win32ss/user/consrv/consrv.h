@@ -178,11 +178,11 @@ NTSTATUS FASTCALL ConSrvGetObject(PCONSOLE_PROCESS_DATA ProcessData,
 VOID FASTCALL ConSrvReleaseObject(Object_t *Object,
                                  BOOL IsConsoleLocked);
 NTSTATUS FASTCALL ConSrvAllocateConsole(PCONSOLE_PROCESS_DATA ProcessData,
+                                        LPCWSTR AppPath,
                                         PHANDLE pInputHandle,
                                         PHANDLE pOutputHandle,
                                         PHANDLE pErrorHandle,
-                                        int ShowCmd,
-                                        PCSR_PROCESS CsrProcess);
+                                        PCONSOLE_PROPS ConsoleProps);
 NTSTATUS FASTCALL ConSrvInheritConsole(PCONSOLE_PROCESS_DATA ProcessData,
                                        struct _CONSOLE* Console,
                                        BOOL CreateNewHandlesTable,

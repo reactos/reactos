@@ -198,7 +198,7 @@ TuiInit(DWORD OemCP)
     wc.lpszClassName = TUI_CONSOLE_WINDOW_CLASS;
     wc.lpfnWndProc = TuiConsoleWndProc;
     wc.cbWndExtra = GWLP_CONSOLEWND_ALLOC;
-    wc.hInstance = (HINSTANCE)GetModuleHandleW(NULL);
+    wc.hInstance = ConSrvDllInstance;
 
     ConsoleClassAtom = RegisterClassExW(&wc);
     if (ConsoleClassAtom == 0)
@@ -212,12 +212,6 @@ TuiInit(DWORD OemCP)
     }
 
     return TRUE;
-}
-
-static VOID WINAPI
-TuiInitScreenBuffer(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER Buffer)
-{
-    Buffer->DefaultAttrib = FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED;
 }
 
 static void FASTCALL
@@ -358,10 +352,9 @@ TuiUpdateScreenInfo(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER Buff)
     return TRUE;
 }
 
-static BOOL WINAPI
+static VOID WINAPI
 TuiChangeTitle(PCONSOLE Console)
 {
-    return TRUE;
 }
 
 static VOID WINAPI
@@ -415,7 +408,7 @@ TuiConsoleThread(PVOID Data)
                               0,
                               -32000, -32000, 0, 0,
                               NULL, NULL,
-                              (HINSTANCE)GetModuleHandleW(NULL),
+                              ConSrvDllInstance,
                               (PVOID)Console);
     if (NULL == NewWindow)
     {
@@ -446,7 +439,6 @@ TuiConsoleThread(PVOID Data)
 
 static CONSOLE_VTBL TuiVtbl =
 {
-    TuiInitScreenBuffer,
     TuiWriteStream,
     TuiDrawRegion,
     TuiSetCursorInfo,

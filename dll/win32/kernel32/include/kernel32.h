@@ -196,6 +196,9 @@ BOOL WINAPI CloseConsoleHandle(HANDLE Handle);
 HANDLE WINAPI
 GetConsoleInputWaitHandle(VOID);
 
+VOID
+InitConsoleProps(IN OUT PCONSOLE_PROPS ConsoleProps);
+
 LPCWSTR
 IntCheckForConsoleFileName(IN LPCWSTR pszName,
                            IN DWORD dwDesiredAccess);

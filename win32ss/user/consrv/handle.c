@@ -73,7 +73,6 @@ ConSrvCloseHandleEntry(PCONSOLE_IO_HANDLE Entry)
                           WaitAll,
                           NULL,
                           (PVOID)Entry);
-
             if (!IsListEmpty(&InputBuffer->ReadWaitQueue))
             {
                 CsrDereferenceWait(&InputBuffer->ReadWaitQueue);
@@ -402,16 +401,16 @@ ConSrvReleaseObject(Object_t *Object,
 NTSTATUS
 FASTCALL
 ConSrvAllocateConsole(PCONSOLE_PROCESS_DATA ProcessData,
+                      LPCWSTR AppPath,
                       PHANDLE pInputHandle,
                       PHANDLE pOutputHandle,
                       PHANDLE pErrorHandle,
-                      int ShowCmd,
-                      PCSR_PROCESS CsrProcess)
+                      PCONSOLE_PROPS ConsoleProps)
 {
     NTSTATUS Status = STATUS_SUCCESS;
 
-    /* Initialize a new Console owned by the Console Leader Process */
-    Status = ConSrvInitConsole(&ProcessData->Console, ShowCmd, CsrProcess);
+    /* Initialize a new Console owned by this process */
+    Status = ConSrvInitConsole(&ProcessData->Console, AppPath, ConsoleProps, ProcessData->Process);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Console initialization failed\n");
@@ -601,7 +600,6 @@ ConSrvNewProcess(PCSR_PROCESS SourceProcess,
     DPRINT1("ConSrvNewProcess - OK\n");
 
     TargetProcessData = ConsoleGetPerProcessData(TargetProcess);
-    DPRINT1("TargetProcessData = 0x%p\n", TargetProcessData);
 
     /**** HACK !!!! ****/ RtlZeroMemory(TargetProcessData, sizeof(*TargetProcessData));
 
@@ -623,7 +621,6 @@ ConSrvNewProcess(PCSR_PROCESS SourceProcess,
         return STATUS_SUCCESS;
 
     SourceProcessData = ConsoleGetPerProcessData(SourceProcess);
-    DPRINT1("SourceProcessData = 0x%p\n", SourceProcessData);
 
     /*
      * If both of the processes (parent and new child) are console applications,
@@ -699,11 +696,11 @@ ConSrvConnect(IN PCSR_PROCESS CsrProcess,
 
         /* Initialize a new Console owned by the Console Leader Process */
         Status = ConSrvAllocateConsole(ProcessData,
+                                       ConnectInfo->AppPath,
                                        &ConnectInfo->InputHandle,
                                        &ConnectInfo->OutputHandle,
                                        &ConnectInfo->ErrorHandle,
-                                       ConnectInfo->ShowCmd,
-                                       CsrProcess);
+                                       &ConnectInfo->ConsoleProps);
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("Console allocation failed\n");

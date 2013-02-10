@@ -112,12 +112,26 @@ typedef enum _CONSRV_API_NUMBER
 } CONSRV_API_NUMBER, *PCONSRV_API_NUMBER;
 
 
+typedef struct _CONSOLE_PROPS
+{
+    DWORD dwStartupFlags;
+    DWORD FillAttribute;
+    COORD ScreenBufferSize;
+    WORD  ShowWindow;
+    POINT ConsoleWindowOrigin;
+    SIZE  ConsoleWindowSize;
+    // UNICODE_STRING ConsoleTitle;
+    WCHAR ConsoleTitle[MAX_PATH + 1];
+} CONSOLE_PROPS, *PCONSOLE_PROPS;
+
 typedef struct _CONSOLE_CONNECTION_INFO
 {
     BOOL ConsoleNeeded; // Used for GUI apps only.
 
-    /* Copied from CONSOLE_ALLOCCONSOLE */
-    INT ShowCmd;
+    /* Adapted from CONSOLE_ALLOCCONSOLE */
+    CONSOLE_PROPS ConsoleProps;
+    WCHAR AppPath[MAX_PATH + 1];
+
     HANDLE Console; // ConsoleHandle // In fact, it is a PCSRSS_CONSOLE <-- correct that !!
     HANDLE InputHandle;
     HANDLE OutputHandle;
@@ -168,7 +182,9 @@ typedef struct
 
 typedef struct
 {
-    INT ShowCmd;
+    PCONSOLE_PROPS ConsoleProps;
+    LPWSTR AppPath;
+
     HANDLE Console; // ConsoleHandle // In fact, it is a PCSRSS_CONSOLE <-- correct that !!
     HANDLE InputHandle;
     HANDLE OutputHandle;

@@ -21,12 +21,12 @@ list(APPEND SOURCE
 
 add_library(consrv SHARED ${SOURCE})
 
-target_link_libraries(consrv win32ksys ${PSEH_LIB}) # win32ksys because of NtUser...()
+target_link_libraries(consrv win32ksys ${PSEH_LIB} uuid) # win32ksys because of NtUser...()
 
 set_module_type(consrv win32dll UNICODE)
 
 add_importlibs(consrv psapi msvcrt kernel32 ntdll csrsrv)
-add_delay_importlibs(consrv user32 gdi32 advapi32)
+add_delay_importlibs(consrv user32 gdi32 advapi32 ole32)
 
 add_dependencies(consrv bugcodes)
 add_cd_file(TARGET consrv DESTINATION reactos/system32 FOR all)

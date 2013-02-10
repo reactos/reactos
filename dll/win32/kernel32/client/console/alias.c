@@ -211,7 +211,7 @@ GetConsoleAliasW(LPWSTR lpSource,
            ConsoleAliasRequest->Target,
            ConsoleAliasRequest->TargetLength);
 
-    /* Release the capture buffer and exits */
+    /* Release the capture buffer and exit */
     CsrFreeCaptureBuffer(CaptureBuffer);
 
     return ConsoleAliasRequest->TargetLength;
@@ -347,7 +347,7 @@ GetConsoleAliasesW(LPWSTR AliasBuffer,
            GetAllAliasesRequest->AliasesBuffer,
            GetAllAliasesRequest->AliasesBufferLength);
 
-    /* Release the capture buffer and exits */
+    /* Release the capture buffer and exit */
     CsrFreeCaptureBuffer(CaptureBuffer);
 
     return GetAllAliasesRequest->AliasesBufferLength; // / sizeof(WCHAR); (original code)
@@ -514,7 +514,7 @@ GetConsoleAliasExesW(LPWSTR lpExeNameBuffer,
            GetAliasesExesRequest->ExeNames,
            GetAliasesExesRequest->Length);
 
-    /* Release the capture buffer and exits */
+    /* Release the capture buffer and exit */
     CsrFreeCaptureBuffer(CaptureBuffer);
 
     return GetAliasesExesRequest->Length;

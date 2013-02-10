@@ -15,9 +15,10 @@
 #ifndef WM_APP
 #define WM_APP 0x8000
 #endif
-#define PM_CREATE_CONSOLE  (WM_APP + 1)
-#define PM_DESTROY_CONSOLE (WM_APP + 2)
-#define PM_CONSOLE_BEEP    (WM_APP + 3)
+#define PM_CREATE_CONSOLE       (WM_APP + 1)
+#define PM_DESTROY_CONSOLE      (WM_APP + 2)
+#define PM_CONSOLE_BEEP         (WM_APP + 3)
+#define PM_CONSOLE_SET_TITLE    (WM_APP + 4)
 
 
 /************************************************************************
@@ -113,8 +114,10 @@ typedef struct _CONSOLE
     BOOLEAN HistoryNoDup;                   /* Remove old duplicate history entries */
 
 /****************************** GUI-related data ******************************/
-    UNICODE_STRING Title;                   /* Title of console */
-    HWND hWindow;
+    UNICODE_STRING Title;                   /* Title of console. It is always NULL-terminated */
+    HWND hWindow;                           /* Handle to the console's window */
+    HICON hIcon;                            /* Handle to its icon (used when freeing) */
+    HICON hIconSm;
     COORD Size;
     PVOID GuiData;
 
@@ -135,7 +138,6 @@ do {    \
 
 typedef struct _CONSOLE_VTBL
 {
-    VOID (WINAPI *InitScreenBuffer)(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER ScreenBuffer);
     VOID (WINAPI *WriteStream)(PCONSOLE Console, SMALL_RECT* Block, LONG CursorStartX, LONG CursorStartY,
                                UINT ScrolledLines, CHAR *Buffer, UINT Length);
     VOID (WINAPI *DrawRegion)(PCONSOLE Console, SMALL_RECT* Region);
@@ -143,7 +145,7 @@ typedef struct _CONSOLE_VTBL
     BOOL (WINAPI *SetScreenInfo)(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER ScreenBuffer,
                                  UINT OldCursorX, UINT OldCursorY);
     BOOL (WINAPI *UpdateScreenInfo)(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER ScreenBuffer);
-    BOOL (WINAPI *ChangeTitle)(PCONSOLE Console);
+    VOID (WINAPI *ChangeTitle)(PCONSOLE Console);
     VOID (WINAPI *CleanupConsole)(PCONSOLE Console);
     BOOL (WINAPI *ChangeIcon)(PCONSOLE Console, HICON hWindowIcon);
     NTSTATUS (WINAPI *ResizeBuffer)(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER ScreenBuffer, COORD Size);
@@ -163,7 +165,6 @@ typedef struct _CONSOLE_VTBL
 #define PAUSED_FROM_SCROLLBAR 0x2
 #define PAUSED_FROM_SELECTION 0x4
 
-#define ConioInitScreenBuffer(Console, Buff) (Console)->Vtbl->InitScreenBuffer((Console), (Buff))
 #define ConioDrawRegion(Console, Region) (Console)->Vtbl->DrawRegion((Console), (Region))
 #define ConioWriteStream(Console, Block, CurStartX, CurStartY, ScrolledLines, Buffer, Length) \
           (Console)->Vtbl->WriteStream((Console), (Block), (CurStartX), (CurStartY), \
@@ -181,7 +182,10 @@ typedef struct _CONSOLE_VTBL
 /* console.c */
 VOID WINAPI ConSrvDeleteConsole(PCONSOLE Console);
 VOID WINAPI ConSrvInitConsoleSupport(VOID);
-NTSTATUS WINAPI ConSrvInitConsole(PCONSOLE* NewConsole, int ShowCmd, PCSR_PROCESS ConsoleLeaderProcess);
+NTSTATUS WINAPI ConSrvInitConsole(OUT PCONSOLE* NewConsole,
+                                  IN LPCWSTR AppPath,
+                                  IN OUT PCONSOLE_PROPS ConsoleProps,
+                                  IN PCSR_PROCESS ConsoleLeaderProcess);
 VOID FASTCALL ConioPause(PCONSOLE Console, UINT Flags);
 VOID FASTCALL ConioUnpause(PCONSOLE Console, UINT Flags);
 VOID FASTCALL ConSrvConsoleCtrlEvent(DWORD Event, PCONSOLE_PROCESS_DATA ProcessData);

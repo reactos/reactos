@@ -5,10 +5,6 @@
  * PURPOSE:         Win32 server console functions
  * PROGRAMMER:      James Tabor
  *                  <jimtabor@adsl-64-217-116-74.dsl.hstntx.swbell.net>
- * UPDATE HISTORY:
- *    199901?? ??    Created
- *    19990204 EA    SetConsoleTitleA
- *    19990306 EA    Stubs
  */
 
 /* INCLUDES *******************************************************************/
@@ -193,6 +189,49 @@ InitConsoleCtrlHandling(VOID)
 
 
 /* FUNCTIONS ******************************************************************/
+
+VOID
+InitConsoleProps(IN OUT PCONSOLE_PROPS ConsoleProps)
+{
+    STARTUPINFOW si;
+
+    GetStartupInfoW(&si);
+
+    ConsoleProps->dwStartupFlags = si.dwFlags;
+    if (si.dwFlags & STARTF_USEFILLATTRIBUTE)
+    {
+        ConsoleProps->FillAttribute = si.dwFillAttribute;
+    }
+    if (si.dwFlags & STARTF_USECOUNTCHARS)
+    {
+        ConsoleProps->ScreenBufferSize.X = (SHORT)(si.dwXCountChars);
+        ConsoleProps->ScreenBufferSize.Y = (SHORT)(si.dwYCountChars);
+    }
+    if (si.dwFlags & STARTF_USESHOWWINDOW)
+    {
+        ConsoleProps->ShowWindow = si.wShowWindow;
+    }
+    if (si.dwFlags & STARTF_USEPOSITION)
+    {
+        ConsoleProps->ConsoleWindowOrigin.x = (LONG)(si.dwX);
+        ConsoleProps->ConsoleWindowOrigin.y = (LONG)(si.dwY);
+    }
+    if (si.dwFlags & STARTF_USESIZE)
+    {
+        ConsoleProps->ConsoleWindowSize.cx = (LONG)(si.dwXSize);
+        ConsoleProps->ConsoleWindowSize.cy = (LONG)(si.dwYSize);
+    }
+
+    if (si.lpTitle)
+    {
+        wcsncpy(ConsoleProps->ConsoleTitle, si.lpTitle, MAX_PATH + 1);
+    }
+    else
+    {
+        ConsoleProps->ConsoleTitle[0] = L'\0';
+    }
+}
+
 
 LPCWSTR
 IntCheckForConsoleFileName(IN LPCWSTR pszName,
@@ -764,9 +803,8 @@ GetStdHandle(DWORD nStdHandle)
  * of the specified device. Otherwise the value is INVALID_HANDLE_VALUE.
  */
 {
-    PRTL_USER_PROCESS_PARAMETERS Ppb;
+    PRTL_USER_PROCESS_PARAMETERS Ppb = NtCurrentPeb()->ProcessParameters;
 
-    Ppb = NtCurrentPeb()->ProcessParameters;
     switch (nStdHandle)
     {
         case STD_INPUT_HANDLE:
@@ -802,11 +840,9 @@ SetStdHandle(DWORD nStdHandle,
  * RETURNS: TRUE if the function succeeds, FALSE otherwise.
  */
 {
-    PRTL_USER_PROCESS_PARAMETERS Ppb;
+    PRTL_USER_PROCESS_PARAMETERS Ppb = NtCurrentPeb()->ProcessParameters;
 
     /* no need to check if hHandle == INVALID_HANDLE_VALUE */
-
-    Ppb = NtCurrentPeb()->ProcessParameters;
 
     switch (nStdHandle)
     {
@@ -823,7 +859,7 @@ SetStdHandle(DWORD nStdHandle,
             return TRUE;
     }
 
-    /* windows for whatever reason sets the last error to ERROR_INVALID_HANDLE here */
+    /* Windows for whatever reason sets the last error to ERROR_INVALID_HANDLE here */
     SetLastError(ERROR_INVALID_HANDLE);
     return FALSE;
 }
@@ -839,36 +875,63 @@ WINAPI
 AllocConsole(VOID)
 {
     NTSTATUS Status;
+    PRTL_USER_PROCESS_PARAMETERS Parameters = NtCurrentPeb()->ProcessParameters;
     CONSOLE_API_MESSAGE ApiMessage;
     PCONSOLE_ALLOCCONSOLE AllocConsoleRequest = &ApiMessage.Data.AllocConsoleRequest;
-    STARTUPINFO si;
+    PCSR_CAPTURE_BUFFER CaptureBuffer;
+    SIZE_T Length = 0;
 
-    DPRINT1("AllocConsole called !!!!\n");
+    DPRINT1("AllocConsole\n");
 
-    if (NtCurrentPeb()->ProcessParameters->ConsoleHandle)
+    if (Parameters->ConsoleHandle)
     {
-        DPRINT1("AllocConsole: Allocate duplicate console to the same Process\n");
+        DPRINT1("AllocConsole: Allocating a console to a process already having one\n");
         SetLastError(ERROR_ACCESS_DENIED);
         return FALSE;
     }
 
-    GetStartupInfo(&si);
+    CaptureBuffer = CsrAllocateCaptureBuffer(2, sizeof(CONSOLE_PROPS) +
+                                                (MAX_PATH + 1) * sizeof(WCHAR));
+    if (CaptureBuffer == NULL)
+    {
+        DPRINT1("CsrAllocateCaptureBuffer failed!\n");
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return FALSE;
+    }
 
-    AllocConsoleRequest->ShowCmd = si.wShowWindow;
+    CsrAllocateMessagePointer(CaptureBuffer,
+                              sizeof(CONSOLE_PROPS),
+                              (PVOID*)&AllocConsoleRequest->ConsoleProps);
+
+    CsrAllocateMessagePointer(CaptureBuffer,
+                              (MAX_PATH + 1) * sizeof(WCHAR),
+                              (PVOID*)&AllocConsoleRequest->AppPath);
+
+/** Copied from BasepInitConsole **********************************************/
+    InitConsoleProps(AllocConsoleRequest->ConsoleProps);
+
+    Length = min(MAX_PATH + 1, Parameters->ImagePathName.Length / sizeof(WCHAR));
+    wcsncpy(AllocConsoleRequest->AppPath, Parameters->ImagePathName.Buffer, Length);
+    AllocConsoleRequest->AppPath[Length] = L'\0';
+/******************************************************************************/
+
     AllocConsoleRequest->Console = NULL;
     AllocConsoleRequest->CtrlDispatcher = ConsoleControlDispatcher;
 
     Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
-                                 NULL,
+                                 CaptureBuffer,
                                  CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepAlloc),
                                  sizeof(CONSOLE_ALLOCCONSOLE));
+
+    CsrFreeCaptureBuffer(CaptureBuffer);
+
     if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = ApiMessage.Status))
     {
         BaseSetLastNTError(Status);
         return FALSE;
     }
 
-    NtCurrentPeb()->ProcessParameters->ConsoleHandle = AllocConsoleRequest->Console;
+    Parameters->ConsoleHandle = AllocConsoleRequest->Console;
     SetStdHandle(STD_INPUT_HANDLE , AllocConsoleRequest->InputHandle );
     SetStdHandle(STD_OUTPUT_HANDLE, AllocConsoleRequest->OutputHandle);
     SetStdHandle(STD_ERROR_HANDLE , AllocConsoleRequest->ErrorHandle );
@@ -1685,16 +1748,20 @@ BOOL
 WINAPI
 SetConsoleTitleA(LPCSTR lpConsoleTitle)
 {
-    ULONG Length = strlen(lpConsoleTitle) + 1;
+    BOOL   Ret;
+    ULONG  Length = strlen(lpConsoleTitle) + 1;
     LPWSTR WideTitle = HeapAlloc(GetProcessHeap(), 0, Length * sizeof(WCHAR));
-    BOOL Ret;
+
     if (!WideTitle)
     {
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return FALSE;
     }
+
     MultiByteToWideChar(CP_ACP, 0, lpConsoleTitle, -1, WideTitle, Length);
+
     Ret = SetConsoleTitleW(WideTitle);
+
     HeapFree(GetProcessHeap(), 0, WideTitle);
     return Ret;
 }
@@ -1963,12 +2030,13 @@ WINAPI
 AttachConsole(DWORD dwProcessId)
 {
     NTSTATUS Status;
+    PRTL_USER_PROCESS_PARAMETERS Parameters = NtCurrentPeb()->ProcessParameters;
     CONSOLE_API_MESSAGE ApiMessage;
     PCONSOLE_ATTACHCONSOLE AttachConsoleRequest = &ApiMessage.Data.AttachConsoleRequest;
 
     DPRINT1("AttachConsole(%lu)\n", dwProcessId);
 
-    if (NtCurrentPeb()->ProcessParameters->ConsoleHandle)
+    if (Parameters->ConsoleHandle)
     {
         DPRINT1("AttachConsole: Attaching a console to a process already having one\n");
         SetLastError(ERROR_ACCESS_DENIED);
@@ -1988,7 +2056,7 @@ AttachConsole(DWORD dwProcessId)
         return FALSE;
     }
 
-    NtCurrentPeb()->ProcessParameters->ConsoleHandle = AttachConsoleRequest->Console;
+    Parameters->ConsoleHandle = AttachConsoleRequest->Console;
     SetStdHandle(STD_INPUT_HANDLE , AttachConsoleRequest->InputHandle );
     SetStdHandle(STD_OUTPUT_HANDLE, AttachConsoleRequest->OutputHandle);
     SetStdHandle(STD_ERROR_HANDLE , AttachConsoleRequest->ErrorHandle );
@@ -2070,9 +2138,9 @@ SetConsoleInputExeNameW(LPCWSTR lpInputExeName)
 {
     int lenName;
 
-    if (!lpInputExeName
-        || (lenName = lstrlenW(lpInputExeName)) == 0
-        || lenName > INPUTEXENAME_BUFLEN - 1)
+    if ( !lpInputExeName                            ||
+        (lenName = lstrlenW(lpInputExeName)) == 0   ||
+         lenName > INPUTEXENAME_BUFLEN - 1 )
     {
         /* Fail if string is empty or too long */
         SetLastError(ERROR_INVALID_PARAMETER);
@@ -2111,12 +2179,11 @@ SetConsoleInputExeNameA(LPCSTR lpInputExeName)
     ANSI_STRING InputExeNameA;
     UNICODE_STRING InputExeNameU;
     NTSTATUS Status;
-    BOOL Ret;
 
     RtlInitAnsiString(&InputExeNameA, lpInputExeName);
 
-    if(InputExeNameA.Length == 0 || 
-       InputExeNameA.Length > INPUTEXENAME_BUFLEN - 1)
+    if ( InputExeNameA.Length == 0 || 
+         InputExeNameA.Length > INPUTEXENAME_BUFLEN - 1 )
     {
         /* Fail if string is empty or too long */
         SetLastError(ERROR_INVALID_PARAMETER);
@@ -2126,18 +2193,15 @@ SetConsoleInputExeNameA(LPCSTR lpInputExeName)
     InputExeNameU.Buffer = Buffer;
     InputExeNameU.MaximumLength = sizeof(Buffer);
     InputExeNameU.Length = 0;
+
     Status = RtlAnsiStringToUnicodeString(&InputExeNameU, &InputExeNameA, FALSE);
-    if(NT_SUCCESS(Status))
-    {
-        Ret = SetConsoleInputExeNameW(InputExeNameU.Buffer);
-    }
-    else
+    if (!NT_SUCCESS(Status))
     {
         BaseSetLastNTError(Status);
-        Ret = FALSE;
+        return FALSE;
     }
 
-    return Ret;
+    return SetConsoleInputExeNameW(InputExeNameU.Buffer);
 }
 
 
@@ -2164,7 +2228,7 @@ GetConsoleInputExeNameW(DWORD nBufferLength, LPWSTR lpBuffer)
         return lenName + 1;
     }
 
-    if(lenName + 1 > nBufferLength)
+    if (lenName + 1 > nBufferLength)
     {
         /* Buffer is not large enough! */
         SetLastError(ERROR_BUFFER_OVERFLOW);
@@ -2219,7 +2283,7 @@ GetConsoleInputExeNameA(DWORD nBufferLength, LPSTR lpBuffer)
     RtlUnicodeStringToAnsiString(&BufferA, &BufferU, FALSE);
 
     /* Error handling */
-    if(nBufferLength <= BufferU.Length / sizeof(WCHAR))
+    if (nBufferLength <= BufferU.Length / sizeof(WCHAR))
     {
         SetLastError(ERROR_BUFFER_OVERFLOW);
         return 2;

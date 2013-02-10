@@ -5,8 +5,6 @@
  * PURPOSE:         Initialization
  * PROGRAMMERS:     Ariadne (ariadne@xs4all.nl)
  *                  Aleksey Bragin (aleksey@reactos.org)
- * UPDATE HISTORY:
- *                  Created 01/11/98
  */
 
 /* INCLUDES ******************************************************************/
@@ -53,8 +51,6 @@ BasepInitConsole(VOID)
 {
     NTSTATUS Status;
     PRTL_USER_PROCESS_PARAMETERS Parameters = NtCurrentPeb()->ProcessParameters;
-    LPCWSTR ExeName;
-    STARTUPINFO si;
     WCHAR SessionDir[256];
     ULONG SessionId = NtCurrentPeb()->SessionId;
     BOOLEAN InServer;
@@ -62,9 +58,7 @@ BasepInitConsole(VOID)
     CONSOLE_CONNECTION_INFO ConnectInfo;
     ULONG ConnectInfoSize = sizeof(ConnectInfo);
 
-    WCHAR lpTest[MAX_PATH];
-    GetModuleFileNameW(NULL, lpTest, MAX_PATH);
-    DPRINT("BasepInitConsole for : %S\n", lpTest);
+    DPRINT("BasepInitConsole for : %wZ\n", &Parameters->ImagePathName);
     DPRINT("Our current console handles are: %lx, %lx, %lx %lx\n",
            Parameters->ConsoleHandle, Parameters->StandardInput,
            Parameters->StandardOutput, Parameters->StandardError);
@@ -74,20 +68,35 @@ BasepInitConsole(VOID)
     if (!NT_SUCCESS(Status)) return FALSE;
     ConsoleInitialized = TRUE;
 
-    /* We have nothing to do if this isn't a console app... */
+    /* Do nothing if this isn't a console app... */
     if (RtlImageNtHeader(GetModuleHandle(NULL))->OptionalHeader.Subsystem !=
         IMAGE_SUBSYSTEM_WINDOWS_CUI)
     {
         DPRINT("Image is not a console application\n");
         Parameters->ConsoleHandle = NULL;
         ConnectInfo.ConsoleNeeded = FALSE; // ConsoleNeeded is used for knowing whether or not this is a CUI app.
+
+        ConnectInfo.ConsoleProps.ConsoleTitle[0] = L'\0';
+        ConnectInfo.AppPath[0] = L'\0';
     }
     else
     {
+        SIZE_T Length = 0;
+        LPCWSTR ExeName;
+
+        InitConsoleProps(&ConnectInfo.ConsoleProps);
+
+        Length = min(sizeof(ConnectInfo.AppPath) / sizeof(ConnectInfo.AppPath[0]),
+                     Parameters->ImagePathName.Length / sizeof(WCHAR));
+        wcsncpy(ConnectInfo.AppPath, Parameters->ImagePathName.Buffer, Length);
+        ConnectInfo.AppPath[Length] = L'\0';
+
+        /* Initialize Input EXE name */
+        ExeName = wcsrchr(Parameters->ImagePathName.Buffer, L'\\');
+        if (ExeName) SetConsoleInputExeNameW(ExeName + 1);
+
         /* Assume one is needed */
-        GetStartupInfo(&si);
         ConnectInfo.ConsoleNeeded = TRUE;
-        ConnectInfo.ShowCmd = si.wShowWindow;
 
         /* Handle the special flags given to us by BasePushProcessParameters */
         if (Parameters->ConsoleHandle == HANDLE_DETACHED_PROCESS)
@@ -108,7 +117,7 @@ BasepInitConsole(VOID)
             /* We'll get the real one soon */
             DPRINT("Creating new invisible console\n");
             Parameters->ConsoleHandle = NULL;
-            ConnectInfo.ShowCmd = SW_HIDE;
+            ConnectInfo.ConsoleProps.ShowWindow = SW_HIDE;
         }
         else
         {
@@ -123,13 +132,9 @@ BasepInitConsole(VOID)
     /* Now use the proper console handle */
     ConnectInfo.Console = Parameters->ConsoleHandle;
 
-    /* Initialize Console Ctrl Handler and input EXE name */
+    /* Initialize Console Ctrl Handler */
     InitConsoleCtrlHandling();
     ConnectInfo.CtrlDispatcher = ConsoleControlDispatcher;
-
-    ExeName = wcsrchr(Parameters->ImagePathName.Buffer, L'\\');
-    if (ExeName)
-        SetConsoleInputExeNameW(ExeName + 1);
 
     /* Setup the right Object Directory path */
     if (!SessionId)

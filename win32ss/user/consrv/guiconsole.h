@@ -13,7 +13,11 @@
 #define CONGUI_UPDATE_TIME    0
 #define CONGUI_UPDATE_TIMER   1
 
-NTSTATUS FASTCALL GuiInitConsole(PCONSOLE Console, BOOL Visible);
+NTSTATUS FASTCALL GuiInitConsole(PCONSOLE Console,
+                                 LPCWSTR AppPath,
+                                 WORD ShowWindow,
+                                 LPCWSTR IconPath,
+                                 INT IconIndex);
 VOID FASTCALL GuiConsoleHandleScrollbarMenu(VOID);
 
 /*EOF*/
