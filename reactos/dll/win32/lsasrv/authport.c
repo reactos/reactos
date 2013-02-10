@@ -14,6 +14,16 @@
 WINE_DEFAULT_DEBUG_CHANNEL(lsasrv);
 
 
+typedef struct _LSAP_LOGON_CONTEXT
+{
+    LIST_ENTRY Entry;
+    HANDLE ClientProcessHandle;
+    HANDLE ConnectionHandle;
+} LSAP_LOGON_CONTEXT, *PLSAP_LOGON_CONTEXT;
+
+
+static LIST_ENTRY LsapLogonContextList;
+
 static HANDLE PortThreadHandle = NULL;
 static HANDLE AuthPortHandle = NULL;
 
@@ -21,36 +31,62 @@ static HANDLE AuthPortHandle = NULL;
 /* FUNCTIONS ***************************************************************/
 
 static NTSTATUS
-LsapCallAuthenticationPackage(PLSA_API_MSG RequestMsg)
+LsapCallAuthenticationPackage(PLSA_API_MSG RequestMsg,
+                              PLSAP_LOGON_CONTEXT LogonContext)
 {
-    TRACE("(%p)\n", RequestMsg);
+    TRACE("(%p %p)\n", RequestMsg, LogonContext);
 
     return STATUS_SUCCESS;
 }
 
 
 static NTSTATUS
-LsapDeregisterLogonProcess(PLSA_API_MSG RequestMsg)
+LsapDeregisterLogonProcess(PLSA_API_MSG RequestMsg,
+                           PLSAP_LOGON_CONTEXT LogonContext)
 {
-    TRACE("(%p)\n", RequestMsg);
+    TRACE("(%p %p)\n", RequestMsg, LogonContext);
+
+    RemoveHeadList(&LogonContext->Entry);
+
+    NtClose(LogonContext->ClientProcessHandle);
+    NtClose(LogonContext->ConnectionHandle);
+
+    RtlFreeHeap(RtlGetProcessHeap(), 0, LogonContext);
 
     return STATUS_SUCCESS;
 }
 
 
 static NTSTATUS
-LsapLogonUser(PLSA_API_MSG RequestMsg)
+LsapLogonUser(PLSA_API_MSG RequestMsg,
+              PLSAP_LOGON_CONTEXT LogonContext)
 {
-    TRACE("(%p)\n", RequestMsg);
+    TRACE("(%p %p)\n", RequestMsg, LogonContext);
+
+    TRACE("LogonType: %lu\n", RequestMsg->LogonUser.Request.LogonType);
+    TRACE("AuthenticationPackage: 0x%08lx\n", RequestMsg->LogonUser.Request.AuthenticationPackage);
+    TRACE("AuthenticationInformation: %p\n", RequestMsg->LogonUser.Request.AuthenticationInformation);
+    TRACE("AuthenticationInformationLength: %lu\n", RequestMsg->LogonUser.Request.AuthenticationInformationLength);
+
+
+
+
+    RequestMsg->LogonUser.Reply.ProfileBuffer = NULL;
+    RequestMsg->LogonUser.Reply.ProfileBufferLength = 0;
+//     LUID LogonId;
+    RequestMsg->LogonUser.Reply.Token = NULL;
+//     QUOTA_LIMITS Quotas;
+    RequestMsg->LogonUser.Reply.SubStatus = STATUS_SUCCESS;
 
     return STATUS_SUCCESS;
 }
 
 
 static NTSTATUS
-LsapLookupAuthenticationPackage(PLSA_API_MSG RequestMsg)
+LsapLookupAuthenticationPackage(PLSA_API_MSG RequestMsg,
+                                PLSAP_LOGON_CONTEXT LogonContext)
 {
-    TRACE("(%p)\n", RequestMsg);
+    TRACE("(%p %p)\n", RequestMsg, LogonContext);
 
     TRACE("PackageName: %s\n", RequestMsg->LookupAuthenticationPackage.Request.PackageName);
 
@@ -60,17 +96,123 @@ LsapLookupAuthenticationPackage(PLSA_API_MSG RequestMsg)
 }
 
 
+static NTSTATUS
+LsapCheckLogonProcess(PLSA_API_MSG RequestMsg,
+                      PLSAP_LOGON_CONTEXT *LogonContext)
+{
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    HANDLE ProcessHandle = NULL;
+    PLSAP_LOGON_CONTEXT Context = NULL;
+    NTSTATUS Status;
+
+    TRACE("(%p)\n", RequestMsg);
+
+    TRACE("Client ID: %p %p\n", RequestMsg->h.ClientId.UniqueProcess, RequestMsg->h.ClientId.UniqueThread);
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               NULL,
+                               0,
+                               NULL,
+                               NULL);
+
+    Status = NtOpenProcess(&ProcessHandle,
+                           PROCESS_VM_READ,
+                           &ObjectAttributes,
+                           &RequestMsg->h.ClientId);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("NtOpenProcess() failed (Status %lx)\n", Status);
+        return Status;
+    }
+
+    /* Allocate the logon context */
+    Context = RtlAllocateHeap(RtlGetProcessHeap(),
+                              HEAP_ZERO_MEMORY,
+                              sizeof(LSAP_LOGON_CONTEXT));
+    if (Context == NULL)
+    {
+        NtClose(ProcessHandle);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    TRACE("New LogonContext: %p\n", Context);
+
+    Context->ClientProcessHandle = ProcessHandle;
+
+    *LogonContext = Context;
+
+    return STATUS_SUCCESS;
+}
+
+
+static NTSTATUS
+LsapHandlePortConnection(PLSA_API_MSG RequestMsg)
+{
+    PLSAP_LOGON_CONTEXT LogonContext = NULL;
+    HANDLE ConnectionHandle = NULL;
+    BOOLEAN Accept;
+    REMOTE_PORT_VIEW RemotePortView;
+    NTSTATUS Status;
+
+    TRACE("(%p)\n", RequestMsg);
+
+    TRACE("Logon Process Name: %s\n", RequestMsg->ConnectInfo.LogonProcessNameBuffer);
+
+    Status = LsapCheckLogonProcess(RequestMsg,
+                                   &LogonContext);
+
+    RequestMsg->ConnectInfo.OperationalMode = 0x43218765;
+
+    RequestMsg->ConnectInfo.Status = Status;
+
+    if (NT_SUCCESS(Status))
+    {
+        Accept = TRUE;
+    }
+    else
+    {
+        Accept = FALSE;
+    }
+
+    RemotePortView.Length = sizeof(REMOTE_PORT_VIEW);
+    Status = NtAcceptConnectPort(&ConnectionHandle,
+                                 (PVOID*)LogonContext,
+                                 &RequestMsg->h,
+                                 Accept,
+                                 NULL,
+                                 &RemotePortView);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("NtAcceptConnectPort failed (Status 0x%lx)\n", Status);
+        return Status;
+    }
+
+    if (Accept == TRUE)
+    {
+        LogonContext->ConnectionHandle = ConnectionHandle;
+
+        InsertHeadList(&LsapLogonContextList,
+                       &LogonContext->Entry);
+
+        Status = NtCompleteConnectPort(ConnectionHandle);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("NtCompleteConnectPort failed (Status 0x%lx)\n", Status);
+            return Status;
+        }
+    }
+
+    return Status;
+}
+
+
 NTSTATUS WINAPI
 AuthPortThreadRoutine(PVOID Param)
 {
+    PLSAP_LOGON_CONTEXT LogonContext;
     PLSA_API_MSG ReplyMsg = NULL;
     LSA_API_MSG RequestMsg;
     NTSTATUS Status;
-
-    HANDLE ConnectionHandle = NULL;
-    PVOID Context = NULL;
-    BOOLEAN Accept;
-    REMOTE_PORT_VIEW RemotePortView;
 
     TRACE("AuthPortThreadRoutine() called\n");
 
@@ -79,7 +221,7 @@ AuthPortThreadRoutine(PVOID Param)
     for (;;)
     {
         Status = NtReplyWaitReceivePort(AuthPortHandle,
-                                        0,
+                                        (PVOID*)&LogonContext,
                                         &ReplyMsg->h,
                                         &RequestMsg.h);
         if (!NT_SUCCESS(Status))
@@ -94,34 +236,7 @@ AuthPortThreadRoutine(PVOID Param)
         {
             case LPC_CONNECTION_REQUEST:
                 TRACE("Port connection request\n");
-
-                RemotePortView.Length = sizeof(REMOTE_PORT_VIEW);
-
-                TRACE("Logon Process Name: %s\n", RequestMsg.ConnectInfo.LogonProcessNameBuffer);
-
-                RequestMsg.ConnectInfo.OperationalMode = 0x43218765;
-                RequestMsg.ConnectInfo.Status = STATUS_SUCCESS;
-
-                Accept = TRUE;
-                Status = NtAcceptConnectPort(&ConnectionHandle,
-                                             &Context,
-                                             &RequestMsg.h,
-                                             Accept,
-                                             NULL,
-                                             &RemotePortView);
-                if (!NT_SUCCESS(Status))
-                {
-                    ERR("NtAcceptConnectPort failed (Status 0x%lx)\n", Status);
-                    return Status;
-                }
-
-                Status = NtCompleteConnectPort(ConnectionHandle);
-                if (!NT_SUCCESS(Status))
-                {
-                    ERR("NtCompleteConnectPort failed (Status 0x%lx)\n", Status);
-                    return Status;
-                }
-
+                Status = LsapHandlePortConnection(&RequestMsg);
                 ReplyMsg = NULL;
                 break;
 
@@ -141,27 +256,42 @@ AuthPortThreadRoutine(PVOID Param)
                 switch (RequestMsg.ApiNumber)
                 {
                     case LSASS_REQUEST_CALL_AUTHENTICATION_PACKAGE:
-                        RequestMsg.Status = LsapCallAuthenticationPackage(&RequestMsg);
+                        RequestMsg.Status = LsapCallAuthenticationPackage(&RequestMsg,
+                                                                          LogonContext);
+                        ReplyMsg = &RequestMsg;
                         break;
 
                     case LSASS_REQUEST_DEREGISTER_LOGON_PROCESS:
-                        RequestMsg.Status = LsapDeregisterLogonProcess(&RequestMsg);
+
+                        ReplyMsg = &RequestMsg;
+                        RequestMsg.Status = STATUS_SUCCESS;
+                        Status = NtReplyPort(AuthPortHandle,
+                                             &ReplyMsg->h);
+
+                        LsapDeregisterLogonProcess(&RequestMsg,
+                                                   LogonContext);
+
+                        ReplyMsg = NULL;
                         break;
 
                     case LSASS_REQUEST_LOGON_USER:
-                        RequestMsg.Status = LsapLogonUser(&RequestMsg);
+                        RequestMsg.Status = LsapLogonUser(&RequestMsg,
+                                                          LogonContext);
+                        ReplyMsg = &RequestMsg;
                         break;
 
                     case LSASS_REQUEST_LOOKUP_AUTHENTICATION_PACKAGE:
-                        RequestMsg.Status = LsapLookupAuthenticationPackage(&RequestMsg);
+                        RequestMsg.Status = LsapLookupAuthenticationPackage(&RequestMsg,
+                                                                            LogonContext);
+                        ReplyMsg = &RequestMsg;
                         break;
 
                     default:
                         RequestMsg.Status = STATUS_SUCCESS; /* FIXME */
+                        ReplyMsg = &RequestMsg;
                         break;
                 }
 
-                ReplyMsg = &RequestMsg;
                 break;
         }
     }
@@ -177,6 +307,9 @@ StartAuthenticationPort(VOID)
     UNICODE_STRING PortName;
     DWORD ThreadId;
     NTSTATUS Status;
+
+    /* Initialize the logon context list */
+    InitializeListHead(&LsapLogonContextList);
 
     RtlInitUnicodeString(&PortName,
                          L"\\LsaAuthenticationPort");
