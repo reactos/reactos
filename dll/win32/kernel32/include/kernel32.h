@@ -61,10 +61,6 @@
 #define FIELD_OFFSET(type,fld)	((LONG)&(((type *)0)->fld))
 #endif
 
-#define HANDLE_DETACHED_PROCESS    (HANDLE)-2
-#define HANDLE_CREATE_NEW_CONSOLE  (HANDLE)-3
-#define HANDLE_CREATE_NO_WINDOW    (HANDLE)-4
-
 //
 // This stuff maybe should go in a vdm.h?
 //
@@ -187,32 +183,7 @@ VOID
 NTAPI
 BaseDllInitializeMemoryManager(VOID);
 
-VOID WINAPI InitConsoleCtrlHandling(VOID);
-
-BOOL WINAPI VerifyConsoleIoHandle(HANDLE Handle);
-
-BOOL WINAPI CloseConsoleHandle(HANDLE Handle);
-
-HANDLE WINAPI
-GetConsoleInputWaitHandle(VOID);
-
-VOID
-InitConsoleProps(IN OUT PCONSOLE_PROPS ConsoleProps);
-
-LPCWSTR
-IntCheckForConsoleFileName(IN LPCWSTR pszName,
-                           IN DWORD dwDesiredAccess);
-
-HANDLE WINAPI OpenConsoleW(LPCWSTR wsName,
-                           DWORD   dwDesiredAccess,
-                           BOOL    bInheritHandle,
-                           DWORD   dwShareMode);
-
-BOOL WINAPI SetConsoleInputExeNameW(LPCWSTR lpInputExeName);
-
 PTEB GetTeb(VOID);
-
-HANDLE FASTCALL TranslateStdHandle(HANDLE hHandle);
 
 PWCHAR FilenameA2W(LPCSTR NameA, BOOL alloc);
 DWORD FilenameW2A_N(LPSTR dest, INT destlen, LPCWSTR src, INT srclen);
@@ -430,13 +401,6 @@ BaseSetLastNTError(IN NTSTATUS Status);
 
 /* FIXME */
 WCHAR WINAPI RtlAnsiCharToUnicodeChar(LPSTR *);
-
-HANDLE
-WINAPI
-DuplicateConsoleHandle(HANDLE hConsole,
-                       DWORD dwDesiredAccess,
-                       BOOL	bInheritHandle,
-                       DWORD dwOptions);
 
 VOID
 NTAPI

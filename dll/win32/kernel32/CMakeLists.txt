@@ -37,6 +37,7 @@ list(APPEND SOURCE
     client/console/alias.c
     client/console/console.c
     client/console/history.c
+    client/console/init.c
     client/console/readwrite.c
     client/console/vista.c
     client/file/backup.c

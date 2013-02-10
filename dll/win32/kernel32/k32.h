@@ -70,4 +70,7 @@
 /* Base Macros */
 #include "include/base_x.h"
 
+/* Console API Client Definitions */
+#include "include/console.h"
+
 #endif

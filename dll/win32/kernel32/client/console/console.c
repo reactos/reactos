@@ -14,11 +14,12 @@
 #define NDEBUG
 #include <debug.h>
 
+
+/* GLOBALS ********************************************************************/
+
 extern RTL_CRITICAL_SECTION ConsoleLock;
 extern BOOL ConsoleInitialized;
 extern BOOL WINAPI IsDebuggerPresent(VOID);
-
-/* GLOBALS ********************************************************************/
 
 /* Console reserved "file" names */
 static LPCWSTR BaseConFileName       = CONSOLE_FILE_NAME;
@@ -34,6 +35,7 @@ HANDLE InputWaitHandle = INVALID_HANDLE_VALUE;
 
 #define INPUTEXENAME_BUFLEN 256
 static WCHAR InputExeName[INPUTEXENAME_BUFLEN];
+
 
 /* Default Console Control Handler ********************************************/
 
@@ -189,49 +191,6 @@ InitConsoleCtrlHandling(VOID)
 
 
 /* FUNCTIONS ******************************************************************/
-
-VOID
-InitConsoleProps(IN OUT PCONSOLE_PROPS ConsoleProps)
-{
-    STARTUPINFOW si;
-
-    GetStartupInfoW(&si);
-
-    ConsoleProps->dwStartupFlags = si.dwFlags;
-    if (si.dwFlags & STARTF_USEFILLATTRIBUTE)
-    {
-        ConsoleProps->FillAttribute = si.dwFillAttribute;
-    }
-    if (si.dwFlags & STARTF_USECOUNTCHARS)
-    {
-        ConsoleProps->ScreenBufferSize.X = (SHORT)(si.dwXCountChars);
-        ConsoleProps->ScreenBufferSize.Y = (SHORT)(si.dwYCountChars);
-    }
-    if (si.dwFlags & STARTF_USESHOWWINDOW)
-    {
-        ConsoleProps->ShowWindow = si.wShowWindow;
-    }
-    if (si.dwFlags & STARTF_USEPOSITION)
-    {
-        ConsoleProps->ConsoleWindowOrigin.x = (LONG)(si.dwX);
-        ConsoleProps->ConsoleWindowOrigin.y = (LONG)(si.dwY);
-    }
-    if (si.dwFlags & STARTF_USESIZE)
-    {
-        ConsoleProps->ConsoleWindowSize.cx = (LONG)(si.dwXSize);
-        ConsoleProps->ConsoleWindowSize.cy = (LONG)(si.dwYSize);
-    }
-
-    if (si.lpTitle)
-    {
-        wcsncpy(ConsoleProps->ConsoleTitle, si.lpTitle, MAX_PATH + 1);
-    }
-    else
-    {
-        ConsoleProps->ConsoleTitle[0] = L'\0';
-    }
-}
-
 
 LPCWSTR
 IntCheckForConsoleFileName(IN LPCWSTR pszName,
