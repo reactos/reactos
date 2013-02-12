@@ -235,7 +235,7 @@ InfpCacheAddSection (PINFCACHE Cache,
 		     PCHAR Name)
 {
   PINFCACHESECTION Section = NULL;
-  ULONG Size;
+  SIZE_T Size;
 
   if (Cache == NULL || Name == NULL)
     {
@@ -335,7 +335,7 @@ InfpAddFieldToLine (PINFCACHELINE Line,
 		    PCHAR Data)
 {
   PINFCACHEFIELD Field;
-  ULONG Size;
+  SIZE_T Size;
 
   Size = sizeof(INFCACHEFIELD) + strlen(Data);
   Field = (PINFCACHEFIELD)MmHeapAlloc (Size);
@@ -438,7 +438,7 @@ static int push_token( struct parser *parser, const CHAR *pos )
   if (len > MAX_FIELD_LEN - parser->token_len)
     len = MAX_FIELD_LEN - parser->token_len;
 
-  parser->token_len += len;
+  parser->token_len += (ULONG)len;
   for ( ; len > 0; len--, dst++, src++)
     *dst = *src ? (CHAR)*src : L' ';
   *dst = 0;
@@ -1314,7 +1314,7 @@ InfGetMultiSzField (PINFCONTEXT Context,
   PINFCACHEFIELD CacheField;
   PINFCACHEFIELD FieldPtr;
   ULONG Index;
-  ULONG Size;
+  SIZE_T Size;
   PCHAR Ptr;
 
   if (Context == NULL || Context->Line == NULL || FieldIndex == 0)
@@ -1346,7 +1346,7 @@ InfGetMultiSzField (PINFCONTEXT Context,
   Size++;
 
   if (RequiredSize != NULL)
-    *RequiredSize = Size;
+    *RequiredSize = (ULONG)Size;
 
   if (ReturnBuffer != NULL)
     {
@@ -1383,7 +1383,7 @@ InfGetStringField (PINFCONTEXT Context,
   PINFCACHEFIELD CacheField;
   ULONG Index;
   PCHAR Ptr;
-  ULONG Size;
+  SIZE_T Size;
 
   if (Context == NULL || Context->Line == NULL || FieldIndex == 0)
     {
@@ -1415,7 +1415,7 @@ InfGetStringField (PINFCONTEXT Context,
   Size = strlen (Ptr) + 1;
 
   if (RequiredSize != NULL)
-    *RequiredSize = Size;
+    *RequiredSize = (ULONG)Size;
 
   if (ReturnBuffer != NULL)
     {
