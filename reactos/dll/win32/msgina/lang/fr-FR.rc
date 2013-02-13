@@ -1,4 +1,4 @@
-LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
+﻿LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
 IDD_STATUSWINDOW_DLG DIALOGEX 0,0,275,80
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
@@ -67,5 +67,5 @@ BEGIN
     IDS_ASKFORUSER "Utilisateur: "
     IDS_ASKFORPASSWORD "Mot de passe: "
     IDS_FORCELOGOFF "Cela déconnectera l'utilisateur en cours et perdra les données non sauvées.  Continuer?"
-    IDS_LOCKMMSG "Only %s or an Administrator can unlock this computer."
+    IDS_LOCKMSG "Only %s or an Administrator can unlock this computer."
 END

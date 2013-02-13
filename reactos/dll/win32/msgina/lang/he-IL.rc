@@ -67,5 +67,5 @@ BEGIN
     IDS_ASKFORUSER "שם משתמש: "
     IDS_ASKFORPASSWORD "סיסמה: "
     IDS_FORCELOGOFF "זה יגרום להתנתקות המשתמש הנוכחי ולאבד את כל המידע שאינו נשמר. להמשיך?"
-    IDS_LOCKMMSG "Only %s or an Administrator can unlock this computer."
+    IDS_LOCKMSG "Only %s or an Administrator can unlock this computer."
 END

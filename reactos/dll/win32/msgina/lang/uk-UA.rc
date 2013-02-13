@@ -75,5 +75,5 @@ BEGIN
     IDS_ASKFORUSER "Користувач: "
     IDS_ASKFORPASSWORD "Пароль: "
     IDS_FORCELOGOFF "Це завершить сеанс поточного користувача і всі незбережені дані будуть загублені. Продовжити?"
-    IDS_LOCKMMSG "Only %s or an Administrator can unlock this computer."
+    IDS_LOCKMSG "Only %s or an Administrator can unlock this computer."
 END

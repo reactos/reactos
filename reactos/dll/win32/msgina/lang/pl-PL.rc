@@ -75,5 +75,5 @@ BEGIN
     IDS_ASKFORUSER "Nazwa użytkownika: "
     IDS_ASKFORPASSWORD "Hasło: "
     IDS_FORCELOGOFF "To wyloguje aktualnego użytkownika i straci on wszystkie niezapisane dane. Kontynuować?"
-    IDS_LOCKMMSG "Only %s or an Administrator can unlock this computer."
+    IDS_LOCKMSG "Only %s or an Administrator can unlock this computer."
 END

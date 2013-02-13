@@ -67,5 +67,5 @@ BEGIN
     IDS_ASKFORUSER          "ユーザー名: "
     IDS_ASKFORPASSWORD      "パスワード: "
     IDS_FORCELOGOFF         "現在のユーザーをログアウトします。保存されていないデータはすべて失われます。 続行しますか?"
-    IDS_LOCKMMSG "Only %s or an Administrator can unlock this computer."
+    IDS_LOCKMSG "Only %s or an Administrator can unlock this computer."
 END

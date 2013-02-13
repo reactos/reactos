@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Spanish Language resource file
  * Javier Remacha 2007-12-06
  */
@@ -72,5 +72,5 @@ BEGIN
     IDS_ASKFORUSER "Usuario: "
     IDS_ASKFORPASSWORD "Contraseña: "
     IDS_FORCELOGOFF "Esto cerrará al usuario actual y perderá todos los datos no guardados.  ¿Desea Continuar?"
-    IDS_LOCKMMSG "Only %s or an Administrator can unlock this computer."
+    IDS_LOCKMSG "Only %s or an Administrator can unlock this computer."
 END

@@ -1,4 +1,4 @@
-/*
+﻿/*
  * PROJECT:         ReactOS Console Configuration DLL
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            dll/win32/msgina/lang/it-IT.rc
@@ -75,5 +75,5 @@ BEGIN
     IDS_ASKFORUSER "Nome utente: "
     IDS_ASKFORPASSWORD "Password: "
     IDS_FORCELOGOFF "Verrà terminata la sessione dell'utente attuale e tutti i dati non salvati verranno persi.  Volete procedere?"
-    IDS_LOCKMMSG "Only %s or an Administrator can unlock this computer."
+    IDS_LOCKMSG "Only %s or an Administrator can unlock this computer."
 END

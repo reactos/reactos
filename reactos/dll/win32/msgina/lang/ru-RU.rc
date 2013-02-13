@@ -69,5 +69,5 @@ BEGIN
     IDS_ASKFORUSER "Имя пользователя: "
     IDS_ASKFORPASSWORD "Пароль: "
     IDS_FORCELOGOFF "При регистрации нового пользователя все несохраненные данные будут утеряны. Продолжить?"
-    IDS_LOCKMMSG "Only %s or an Administrator can unlock this computer."
+    IDS_LOCKMSG "Only %s or an Administrator can unlock this computer."
 END

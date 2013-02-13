@@ -67,5 +67,5 @@ BEGIN
     IDS_ASKFORUSER "Nama Pengguna: "
     IDS_ASKFORPASSWORD "Kata sandi: "
     IDS_FORCELOGOFF "Ini akan mengeluarkan pengguna saat ini dan kehilangan data yang belum disimpan.  Lanjutkan?"
-    IDS_LOCKMMSG "Only %s or an Administrator can unlock this computer."
+    IDS_LOCKMSG "Only %s or an Administrator can unlock this computer."
 END

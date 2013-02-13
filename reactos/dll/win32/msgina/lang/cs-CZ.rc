@@ -1,4 +1,4 @@
-/* FILE:        dll/win32/msgina/lang/cs-CZ.rc
+﻿/* FILE:        dll/win32/msgina/lang/cs-CZ.rc
  * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
  * UPDATED:     2008-06-24
  */
@@ -72,5 +72,5 @@ BEGIN
     IDS_ASKFORUSER "Uživatelské jméno: "
     IDS_ASKFORPASSWORD "Heslo: "
     IDS_FORCELOGOFF "Současný uživatel bude odhlášen a všechna jeho neuložená data ztracena. Pokračovat?"
-    IDS_LOCKMMSG "Only %s or an Administrator can unlock this computer."
+    IDS_LOCKMSG "Only %s or an Administrator can unlock this computer."
 END

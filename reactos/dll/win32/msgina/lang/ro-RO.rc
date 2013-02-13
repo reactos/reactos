@@ -1,4 +1,4 @@
-//2011.12.10 - Fulea Ștefan: minor changes (corrections)
+﻿//2011.12.10 - Fulea Ștefan: minor changes (corrections)
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 IDD_STATUSWINDOW_DLG DIALOGEX 0,0,275,80
@@ -68,5 +68,5 @@ BEGIN
     IDS_ASKFORUSER          "Nume utilizator: "
     IDS_ASKFORPASSWORD      "Parolă: "
     IDS_FORCELOGOFF         "Această acțiune va deautentifica utilizatorului curent cu posibile pierderi ale datelor nepăstrate. Continuați?"
-    IDS_LOCKMMSG "Only %s or an Administrator can unlock this computer."
+    IDS_LOCKMSG "Only %s or an Administrator can unlock this computer."
 END
