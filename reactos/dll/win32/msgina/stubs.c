@@ -43,19 +43,6 @@ ShellShutdownDialog(
 /*
  * @unimplemented
  */
-VOID WINAPI
-WlxDisplayLockedNotice(
-	PVOID pWlxContext)
-{
-  UNREFERENCED_PARAMETER(pWlxContext);
-
-  UNIMPLEMENTED;
-}
-
-
-/*
- * @unimplemented
- */
 BOOL WINAPI
 WlxIsLockOk(
 	PVOID pWlxContext)

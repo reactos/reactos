@@ -681,6 +681,22 @@ WlxWkstaLockedSAS(
 	return pGinaUI->LockedSAS(pgContext);
 }
 
+
+/*
+ * @implemented
+ */
+VOID
+WINAPI
+WlxDisplayLockedNotice(PVOID pWlxContext)
+{
+    PGINA_CONTEXT pgContext = (PGINA_CONTEXT)pWlxContext;
+
+    TRACE("WlxDisplayLockedNotice()\n");
+
+    pGinaUI->DisplayLockedNotice(pgContext);
+}
+
+
 /*
  * @implemented
  */

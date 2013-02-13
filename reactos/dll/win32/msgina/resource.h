@@ -15,6 +15,7 @@
 #define IDC_LOCK                        1006
 #define IDC_ROSLOGO                     1007
 #define IDC_TASKMGR                     1008
+#define IDC_LOCKMSG                     1009
 
 #define IDI_ROSLOGO                     20000
 
@@ -26,5 +27,6 @@
 #define IDS_ASKFORUSER                  40003
 #define IDS_ASKFORPASSWORD              40004
 #define IDS_FORCELOGOFF                 40005
+#define IDS_LOCKMSG                     40006
 
 /* EOF */

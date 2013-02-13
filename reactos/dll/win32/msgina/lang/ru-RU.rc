@@ -1,4 +1,4 @@
-//Russian language file. (Dmitry Chapyshev, 2007.06.17)
+﻿//Russian language file. (Dmitry Chapyshev, 2007.06.17)
 
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
@@ -49,6 +49,18 @@ BEGIN
     PUSHBUTTON      "Отмена", IDCANCEL, 198, 95, 70, 14
 END
 
+IDD_LOCKED_DLG DIALOGEX 0,0,275,121
+STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
+CAPTION "Computer Locked"
+FONT 8,"MS Shell Dlg",400,0,1
+BEGIN
+    CONTROL         IDI_ROSLOGO,IDC_ROSLOGO,"Static",SS_BITMAP,0,0,275,54
+    ICON            IDI_LOCKICON,-1,7,59,20,20
+    LTEXT           "This computer is in use and has been locked.",IDC_STATIC,37,61,231,8
+    LTEXT           "Message",IDC_LOCKMSG,37,75,231,26
+    LTEXT           "Press Ctrl-Alt-Del to unlock this computer.",IDC_STATIC,37,106,231,8
+END
+
 STRINGTABLE
 BEGIN
     IDS_LOGGEDOUTSAS "Добро пожаловать!"
@@ -57,4 +69,5 @@ BEGIN
     IDS_ASKFORUSER "Имя пользователя: "
     IDS_ASKFORPASSWORD "Пароль: "
     IDS_FORCELOGOFF "При регистрации нового пользователя все несохраненные данные будут утеряны. Продолжить?"
+    IDS_LOCKMMSG "Only %s or an Administrator can unlock this computer."
 END

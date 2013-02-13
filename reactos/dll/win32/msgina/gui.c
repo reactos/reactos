@@ -413,6 +413,68 @@ GUILockedSAS(
 	return WLX_SAS_ACTION_UNLOCK_WKSTA;
 }
 
+
+static INT_PTR CALLBACK
+LockedWindowProc(
+	IN HWND hwndDlg,
+	IN UINT uMsg,
+	IN WPARAM wParam,
+	IN LPARAM lParam)
+{
+	PGINA_CONTEXT pgContext;
+
+	pgContext = (PGINA_CONTEXT)GetWindowLongPtr(hwndDlg, GWL_USERDATA);
+
+	switch (uMsg)
+	{
+		case WM_INITDIALOG:
+		{
+			pgContext = (PGINA_CONTEXT)lParam;
+			SetWindowLongPtr(hwndDlg, GWL_USERDATA, (DWORD_PTR)pgContext);
+
+			pgContext->hBitmap = LoadImage(hDllInstance, MAKEINTRESOURCE(IDI_ROSLOGO), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
+			return TRUE;
+		}
+		case WM_PAINT:
+		{
+			PAINTSTRUCT ps;
+			HDC hdc;
+			if (pgContext->hBitmap)
+			{
+				hdc = BeginPaint(hwndDlg, &ps);
+				DrawStateW(hdc, NULL, NULL, (LPARAM)pgContext->hBitmap, (WPARAM)0, 0, 0, 0, 0, DST_BITMAP);
+				EndPaint(hwndDlg, &ps);
+			}
+			return TRUE;
+		}
+		case WM_DESTROY:
+		{
+			DeleteObject(pgContext->hBitmap);
+			return TRUE;
+		}
+	}
+
+	return FALSE;
+}
+
+
+static VOID
+GUIDisplayLockedNotice(
+	IN OUT PGINA_CONTEXT pgContext)
+{
+	int result;
+
+	TRACE("GUIdisplayLockedNotice()\n");
+
+	result = pgContext->pWlxFuncs->WlxDialogBoxParam(
+		pgContext->hWlx,
+		pgContext->hDllInstance,
+		MAKEINTRESOURCEW(IDD_LOCKED_DLG),
+		GetDesktopWindow(),
+		LockedWindowProc,
+		(LPARAM)pgContext);
+}
+
 GINA_UI GinaGraphicalUI = {
 	GUIInitialize,
 	GUIDisplayStatusMessage,
@@ -421,4 +483,5 @@ GINA_UI GinaGraphicalUI = {
 	GUILoggedOnSAS,
 	GUILoggedOutSAS,
 	GUILockedSAS,
+	GUIDisplayLockedNotice,
 };
