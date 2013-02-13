@@ -67,5 +67,5 @@ BEGIN
     IDS_ASKFORUSER "Потребителско име: "
     IDS_ASKFORPASSWORD "Парола: "
     IDS_FORCELOGOFF "Така текущият потребител ще излезе и ще изгуби всички несъхранени данни. Да продължа ли?"
-    IDS_LOCKMMSG "Only %s or an Administrator can unlock this computer."
+    IDS_LOCKMSG "Only %s or an Administrator can unlock this computer."
 END
