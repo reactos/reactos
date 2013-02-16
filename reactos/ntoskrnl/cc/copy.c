@@ -337,16 +337,16 @@ CcCopyRead (
     PCACHE_SEGMENT current;
 
     DPRINT("CcCopyRead(FileObject 0x%p, FileOffset %I64x, "
-           "Length %d, Wait %d, Buffer 0x%p, IoStatus 0x%p)\n",
+           "Length %lu, Wait %u, Buffer 0x%p, IoStatus 0x%p)\n",
            FileObject, FileOffset->QuadPart, Length, Wait,
            Buffer, IoStatus);
 
     Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
     ReadOffset = (ULONG)FileOffset->QuadPart;
 
-    DPRINT("AllocationSize %d, FileSize %d\n",
-           (ULONG)Bcb->AllocationSize.QuadPart,
-           (ULONG)Bcb->FileSize.QuadPart);
+    DPRINT("AllocationSize %I64d, FileSize %I64d\n",
+           Bcb->AllocationSize.QuadPart,
+           Bcb->FileSize.QuadPart);
 
     /*
      * Check for the nowait case that all the cache segments that would
@@ -456,7 +456,7 @@ CcCopyWrite (
     BOOLEAN Valid;
 
     DPRINT("CcCopyWrite(FileObject 0x%p, FileOffset %I64x, "
-           "Length %d, Wait %d, Buffer 0x%p)\n",
+           "Length %lu, Wait %u, Buffer 0x%p)\n",
            FileObject, FileOffset->QuadPart, Length, Wait, Buffer);
 
     Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
@@ -626,7 +626,7 @@ CcZeroData (
     KEVENT Event;
 
     DPRINT("CcZeroData(FileObject 0x%p, StartOffset %I64x, EndOffset %I64x, "
-           "Wait %d)\n", FileObject, StartOffset->QuadPart, EndOffset->QuadPart,
+           "Wait %u)\n", FileObject, StartOffset->QuadPart, EndOffset->QuadPart,
            Wait);
 
     Length = EndOffset->u.LowPart - StartOffset->u.LowPart;

@@ -40,7 +40,7 @@ CcMapData (
     PINTERNAL_BCB iBcb;
     ULONG ROffset;
 
-    DPRINT("CcMapData(FileObject 0x%p, FileOffset %I64x, Length %d, Flags %d,"
+    DPRINT("CcMapData(FileObject 0x%p, FileOffset %I64x, Length %lu, Flags 0x%lx,"
            " pBcb 0x%p, pBuffer 0x%p)\n", FileObject, FileOffset->QuadPart,
            Length, Flags, pBcb, pBuffer);
 

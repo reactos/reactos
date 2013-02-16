@@ -76,7 +76,7 @@ static void CcRosCacheSegmentIncRefCount_ ( PCACHE_SEGMENT cs, const char* file,
     ++cs->ReferenceCount;
     if ( cs->Bcb->Trace )
     {
-        DbgPrint("(%s:%i) CacheSegment %p ++RefCount=%d, Dirty %d, PageOut %d\n",
+        DbgPrint("(%s:%i) CacheSegment %p ++RefCount=%lu, Dirty %u, PageOut %lu\n",
                  file, line, cs, cs->ReferenceCount, cs->Dirty, cs->PageOut );
     }
 }
@@ -85,7 +85,7 @@ static void CcRosCacheSegmentDecRefCount_ ( PCACHE_SEGMENT cs, const char* file,
     --cs->ReferenceCount;
     if ( cs->Bcb->Trace )
     {
-        DbgPrint("(%s:%i) CacheSegment %p --RefCount=%d, Dirty %d, PageOut %d\n",
+        DbgPrint("(%s:%i) CacheSegment %p --RefCount=%lu, Dirty %u, PageOut %lu\n",
                  file, line, cs, cs->ReferenceCount, cs->Dirty, cs->PageOut );
     }
 }
@@ -131,7 +131,7 @@ CcRosTraceCacheMap (
             current = CONTAINING_RECORD(current_entry, CACHE_SEGMENT, BcbSegmentListEntry);
             current_entry = current_entry->Flink;
 
-            DPRINT1("  CacheSegment 0x%p enabled, RefCount %d, Dirty %d, PageOut %d\n",
+            DPRINT1("  CacheSegment 0x%p enabled, RefCount %lu, Dirty %u, PageOut %lu\n",
                     current, current->ReferenceCount, current->Dirty, current->PageOut );
         }
         KeReleaseSpinLock(&Bcb->BcbLock, oldirql);
@@ -188,7 +188,7 @@ CcRosFlushDirtyPages (
     NTSTATUS Status;
     LARGE_INTEGER ZeroTimeout;
 
-    DPRINT("CcRosFlushDirtyPages(Target %d)\n", Target);
+    DPRINT("CcRosFlushDirtyPages(Target %lu)\n", Target);
 
     (*Count) = 0;
     ZeroTimeout.QuadPart = 0;
@@ -300,7 +300,7 @@ CcRosTrimCache (
     ULONG i;
     BOOLEAN FlushedPages = FALSE;
 
-    DPRINT("CcRosTrimCache(Target %d)\n", Target);
+    DPRINT("CcRosTrimCache(Target %lu)\n", Target);
 
     InitializeListHead(&FreeList);
 
@@ -381,7 +381,7 @@ retry:
         if (PagesFreed != 0)
         {
             /* Try again after flushing dirty pages */
-            DPRINT("Flushed %d dirty cache pages to disk\n", PagesFreed);
+            DPRINT("Flushed %lu dirty cache pages to disk\n", PagesFreed);
             goto retry;
         }
     }
@@ -394,7 +394,7 @@ retry:
         CcRosInternalFreeCacheSegment(current);
     }
 
-    DPRINT("Evicted %d cache pages\n", (*NrFreed));
+    DPRINT("Evicted %lu cache pages\n", (*NrFreed));
 
     return(STATUS_SUCCESS);
 }
@@ -413,7 +413,7 @@ CcRosReleaseCacheSegment (
 
     ASSERT(Bcb);
 
-    DPRINT("CcReleaseCacheSegment(Bcb 0x%p, CacheSeg 0x%p, Valid %d)\n",
+    DPRINT("CcReleaseCacheSegment(Bcb 0x%p, CacheSeg 0x%p, Valid %u)\n",
            Bcb, CacheSeg, Valid);
 
     KeAcquireGuardedMutex(&ViewLock);
@@ -464,7 +464,7 @@ CcRosLookupCacheSegment (
 
     ASSERT(Bcb);
 
-    DPRINT("CcRosLookupCacheSegment(Bcb -x%p, FileOffset %d)\n", Bcb, FileOffset);
+    DPRINT("CcRosLookupCacheSegment(Bcb -x%p, FileOffset %lu)\n", Bcb, FileOffset);
 
     KeAcquireGuardedMutex(&ViewLock);
     KeAcquireSpinLock(&Bcb->BcbLock, &oldIrql);
@@ -507,7 +507,7 @@ CcRosMarkDirtyCacheSegment (
 
     ASSERT(Bcb);
 
-    DPRINT("CcRosMarkDirtyCacheSegment(Bcb 0x%p, FileOffset %d)\n", Bcb, FileOffset);
+    DPRINT("CcRosMarkDirtyCacheSegment(Bcb 0x%p, FileOffset %lu)\n", Bcb, FileOffset);
 
     CacheSeg = CcRosLookupCacheSegment(Bcb, FileOffset);
     if (CacheSeg == NULL)
@@ -554,7 +554,7 @@ CcRosUnmapCacheSegment (
 
     ASSERT(Bcb);
 
-    DPRINT("CcRosUnmapCacheSegment(Bcb 0x%p, FileOffset %d, NowDirty %d)\n",
+    DPRINT("CcRosUnmapCacheSegment(Bcb 0x%p, FileOffset %lu, NowDirty %u)\n",
            Bcb, FileOffset, NowDirty);
 
     CacheSeg = CcRosLookupCacheSegment(Bcb, FileOffset);
@@ -1045,7 +1045,7 @@ CcFlushCache (
     NTSTATUS Status;
     KIRQL oldIrql;
 
-    DPRINT("CcFlushCache(SectionObjectPointers 0x%p, FileOffset 0x%p, Length %d, IoStatus 0x%p)\n",
+    DPRINT("CcFlushCache(SectionObjectPointers 0x%p, FileOffset 0x%p, Length %lu, IoStatus 0x%p)\n",
            SectionObjectPointers, FileOffset, Length, IoStatus);
 
     if (SectionObjectPointers && SectionObjectPointers->SharedCacheMap)
@@ -1333,7 +1333,7 @@ CcRosInitializeFileCache (
     PBCB Bcb;
 
     Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
-    DPRINT("CcRosInitializeFileCache(FileObject 0x%p, Bcb 0x%p, CacheSegmentSize %d)\n",
+    DPRINT("CcRosInitializeFileCache(FileObject 0x%p, Bcb 0x%p, CacheSegmentSize %lu)\n",
            FileObject, Bcb, CacheSegmentSize);
 
     KeAcquireGuardedMutex(&ViewLock);

@@ -136,10 +136,10 @@ CcSetFileSizes (
 
     DPRINT("CcSetFileSizes(FileObject 0x%p, FileSizes 0x%p)\n",
            FileObject, FileSizes);
-    DPRINT("AllocationSize %d, FileSize %d, ValidDataLength %d\n",
-           (ULONG)FileSizes->AllocationSize.QuadPart,
-           (ULONG)FileSizes->FileSize.QuadPart,
-           (ULONG)FileSizes->ValidDataLength.QuadPart);
+    DPRINT("AllocationSize %I64d, FileSize %I64d, ValidDataLength %I64d\n",
+           FileSizes->AllocationSize.QuadPart,
+           FileSizes->FileSize.QuadPart,
+           FileSizes->ValidDataLength.QuadPart);
 
     Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
 
