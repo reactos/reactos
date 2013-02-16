@@ -88,7 +88,7 @@ Display_DrawText(HDC hDC, DISPLAYDATA* pData, int nYPos)
 	GetTextMetrics(hDC, &tm);
 
 	swprintf(szCaption, L"%s%s", pData->szTypeFaceName, pData->szFormat);
-	TextOutW(hDC, 0, y, szCaption, wcslen(szCaption));
+	TextOutW(hDC, 0, y, szCaption, (INT)wcslen(szCaption));
 	y += tm.tmHeight + SPACING1;
 
 	/* Draw a seperation Line */
@@ -103,15 +103,15 @@ Display_DrawText(HDC hDC, DISPLAYDATA* pData, int nYPos)
 	SelectObject(hDC, pData->hCharSetFont);
 	GetTextMetrics(hDC, &tm);
 	swprintf(szCaption, L"abcdefghijklmnopqrstuvwxyz");
-	TextOutW(hDC, 0, y, szCaption, wcslen(szCaption));
+	TextOutW(hDC, 0, y, szCaption, (INT)wcslen(szCaption));
 	y += tm.tmHeight + 1;
 
 	swprintf(szCaption, L"ABCDEFGHIJKLMNOPQRSTUVWXYZ");
-	TextOutW(hDC, 0, y, szCaption, wcslen(szCaption));
+	TextOutW(hDC, 0, y, szCaption, (INT)wcslen(szCaption));
 	y += tm.tmHeight + 1;
 
 	swprintf(szCaption, L"0123456789.:,;(\"~!@#$%^&*')");
-	TextOutW(hDC, 0, y, szCaption, wcslen(szCaption));
+	TextOutW(hDC, 0, y, szCaption, (INT)wcslen(szCaption));
 	y += tm.tmHeight + 1;
 
 	/* Draw a seperation Line */
@@ -124,12 +124,12 @@ Display_DrawText(HDC hDC, DISPLAYDATA* pData, int nYPos)
 	for (i = 0; i < MAX_SIZES; i++)
 	{
 		SelectObject(hDC, pData->hFonts[i]);
-		TextOutW(hDC, 20, y, pData->szString, wcslen(pData->szString));
+		TextOutW(hDC, 20, y, pData->szString, (INT)wcslen(pData->szString));
 		GetTextMetrics(hDC, &tm);
 		y += tm.tmHeight + 1;
 		SelectObject(hDC, pData->hSizeFont);
 		swprintf(szSize, L"%d", pData->nSizes[i]);
-		TextOutW(hDC, 0, y - 13 - tm.tmDescent, szSize, wcslen(szSize));
+		TextOutW(hDC, 0, y - 13 - tm.tmDescent, szSize, (INT)wcslen(szSize));
 	}
 	SelectObject(hDC, hOldFont);
 
@@ -157,7 +157,7 @@ EnumFontFamProcW(
 	}
 	return TRUE;
 }
- 
+
 static LRESULT
 Display_SetTypeFace(HWND hwnd, PEXTLOGFONTW pExtLogFont)
 {
@@ -418,7 +418,7 @@ Display_OnPrint(HWND hwnd)
 	TEXTMETRIC tm;
 	int copies, yPos;
 	DISPLAYDATA* pData;
-	
+
 	pData = malloc(sizeof(DISPLAYDATA));
 	ZeroMemory(pData, sizeof(DISPLAYDATA));
 
