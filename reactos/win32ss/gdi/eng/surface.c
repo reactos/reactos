@@ -339,11 +339,11 @@ EngCreateDeviceBitmap(
     /* Set the device handle */
     psurf->SurfObj.dhsurf = dhsurf;
 
-    /* Get the handle for the bitmap */
-    hbmp = (HBITMAP)psurf->SurfObj.hsurf;
-
     /* Set public ownership */
     GDIOBJ_vSetObjectOwner(&psurf->BaseObject, GDI_OBJ_HMGR_PUBLIC);
+
+    /* Get the handle for the bitmap */
+    hbmp = (HBITMAP)psurf->SurfObj.hsurf;
 
     /* Unlock the surface and return */
     SURFACE_UnlockSurface(psurf);
@@ -377,11 +377,11 @@ EngCreateDeviceSurface(
     /* Set the device handle */
     psurf->SurfObj.dhsurf = dhsurf;
 
-    /* Get the handle for the surface */
-    hsurf = psurf->SurfObj.hsurf;
-
     /* Set public ownership */
     GDIOBJ_vSetObjectOwner(&psurf->BaseObject, GDI_OBJ_HMGR_PUBLIC);
+
+    /* Get the handle for the surface */
+    hsurf = psurf->SurfObj.hsurf;
 
     /* Unlock the surface and return */
     SURFACE_UnlockSurface(psurf);
