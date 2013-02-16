@@ -238,6 +238,9 @@ RtlIsNameLegalDOS8Dot3(IN PCUNICODE_STRING UnicodeName,
     char Buffer[12];
     OEM_STRING OemString;
     BOOLEAN GotSpace = FALSE;
+    NTSTATUS Status;
+
+    if (SpacesFound) *SpacesFound = FALSE;
 
     if (!AnsiName)
     {
@@ -246,7 +249,9 @@ RtlIsNameLegalDOS8Dot3(IN PCUNICODE_STRING UnicodeName,
         OemString.Buffer = Buffer;
         AnsiName = &OemString;
     }
-    if (RtlUpcaseUnicodeStringToCountedOemString( AnsiName, UnicodeName, FALSE ) != STATUS_SUCCESS)
+
+    Status = RtlUpcaseUnicodeStringToCountedOemString(AnsiName, UnicodeName, FALSE);
+    if (!NT_SUCCESS(Status))
         return FALSE;
 
     if ((AnsiName->Length > 12) || (AnsiName->Buffer == NULL)) return FALSE;
@@ -255,7 +260,6 @@ RtlIsNameLegalDOS8Dot3(IN PCUNICODE_STRING UnicodeName,
     if (AnsiName->Buffer[0] == '.')
     {
         if (AnsiName->Length != 1 && (AnsiName->Length != 2 || AnsiName->Buffer[1] != '.')) return FALSE;
-        if (SpacesFound) *SpacesFound = FALSE;
         return TRUE;
     }
 

@@ -387,7 +387,7 @@ static void free_entity_array(struct entity_array *array)
             RtlFreeHeap(RtlGetProcessHeap(), 0, entity->u.clrsurrogate.clsid);
             break;
         default:
-            DPRINT1("Unknown entity kind %d\n", entity->kind);
+            DPRINT1("Unknown entity kind %u\n", entity->kind);
         }
     }
     RtlFreeHeap( RtlGetProcessHeap(), 0, array->base );
@@ -788,7 +788,7 @@ static BOOL parse_expect_no_attr(xmlbuf_t* xmlbuf, BOOL* end)
     {
         attr_nameU = xmlstr2unicode(&attr_name);
         attr_valueU = xmlstr2unicode(&attr_name);
-        DPRINT1( "unexpected attr %S=%S\n", &attr_nameU,
+        DPRINT1( "unexpected attr %wZ=%wZ\n", &attr_nameU,
              &attr_valueU);
     }
     return !error;
@@ -2275,7 +2275,8 @@ NTSTATUS WINAPI RtlCreateActivationContext( HANDLE *handle,  void *ptr )
         if (pActCtx->dwFlags & ACTCTX_FLAG_HMODULE_VALID) module = pActCtx->hModule;
         else module = NtCurrentTeb()->ProcessEnvironmentBlock->ImageBaseAddress;
 
-        if ((status = get_module_filename( module, &dir, 0 ))) goto error;
+        status = get_module_filename(module, &dir, 0);
+        if (!NT_SUCCESS(status)) goto error;
         if ((p = strrchrW( dir.Buffer, '\\' ))) p[1] = 0;
         actctx->appdir.info = dir.Buffer;
     }
@@ -2289,7 +2290,7 @@ NTSTATUS WINAPI RtlCreateActivationContext( HANDLE *handle,  void *ptr )
             goto error;
         }
         status = open_nt_file( &file, &nameW );
-        if (status)
+        if (!NT_SUCCESS(status))
         {
             RtlFreeUnicodeString( &nameW );
             goto error;
@@ -2334,10 +2335,11 @@ NTSTATUS WINAPI RtlCreateActivationContext( HANDLE *handle,  void *ptr )
     if (file) NtClose( file );
     RtlFreeUnicodeString( &nameW );
 
-    if (status == STATUS_SUCCESS) status = parse_depend_manifests(&acl);
+    if (NT_SUCCESS(status)) status = parse_depend_manifests(&acl);
     free_depend_manifests( &acl );
 
-    if (status == STATUS_SUCCESS) *handle = actctx;
+    if (NT_SUCCESS(status))
+        *handle = actctx;
     else actctx_release( actctx );
     return status;
 
@@ -2498,7 +2500,7 @@ RtlQueryInformationActivationContext( ULONG flags, HANDLE handle, PVOID subinst,
     ACTIVATION_CONTEXT *actctx;
     NTSTATUS status;
 
-    DPRINT("%08x %p %p %u %p %ld %p\n", flags, handle,
+    DPRINT("%08x %p %p %u %p %Iu %p\n", flags, handle,
           subinst, class, buffer, bufsize, retlen);
 
     if (retlen) *retlen = 0;

@@ -584,14 +584,17 @@ RtlInitUnicodeString(
     IN PCWSTR SourceString)
 {
     SIZE_T Size;
-    CONST SIZE_T MaxSize = (MAXUSHORT & ~1) - sizeof(WCHAR); // an even number
+    CONST SIZE_T MaxSize = (MAXUSHORT & ~1) - sizeof(UNICODE_NULL); // an even number
 
     if (SourceString)
     {
         Size = wcslen(SourceString) * sizeof(WCHAR);
-        if (Size > MaxSize) Size = MaxSize;
+        __analysis_assume(Size <= MaxSize);
+
+        if (Size > MaxSize)
+            Size = MaxSize;
         DestinationString->Length = (USHORT)Size;
-        DestinationString->MaximumLength = (USHORT)Size + sizeof(WCHAR);
+        DestinationString->MaximumLength = (USHORT)Size + sizeof(UNICODE_NULL);
     }
     else
     {

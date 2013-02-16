@@ -216,16 +216,17 @@ LdrFindResource_U(PVOID BaseAddress,
 
     _SEH2_TRY
     {
-	if (ResourceInfo)
+        if (ResourceInfo)
         {
-            DPRINT( "module %p type %ws name %ws lang %04lx level %ld\n",
+            DPRINT( "module %p type %ws name %ws lang %04lx level %lu\n",
                      BaseAddress, (LPCWSTR)ResourceInfo->Type,
                      Level > 1 ? (LPCWSTR)ResourceInfo->Name : L"",
                      Level > 2 ? ResourceInfo->Language : 0, Level );
         }
 
         status = find_entry( BaseAddress, ResourceInfo, Level, &res, FALSE );
-        if (status == STATUS_SUCCESS) *ResourceDataEntry = res;
+        if (NT_SUCCESS(status))
+            *ResourceDataEntry = res;
     }
     _SEH2_EXCEPT(page_fault(_SEH2_GetExceptionCode()))
     {
@@ -263,16 +264,17 @@ LdrFindResourceDirectory_U(IN PVOID BaseAddress,
 
     _SEH2_TRY
     {
-	if (info)
+        if (info)
         {
-            DPRINT( "module %p type %ws name %ws lang %04lx level %ld\n",
+            DPRINT( "module %p type %ws name %ws lang %04lx level %lu\n",
                      BaseAddress, (LPCWSTR)info->Type,
                      level > 1 ? (LPCWSTR)info->Name : L"",
                      level > 2 ? info->Language : 0, level );
         }
 
         status = find_entry( BaseAddress, info, level, &res, TRUE );
-        if (status == STATUS_SUCCESS) *addr = res;
+        if (NT_SUCCESS(status))
+            *addr = res;
     }
     _SEH2_EXCEPT(page_fault(_SEH2_GetExceptionCode()))
     {
@@ -346,7 +348,7 @@ LdrEnumResources(
     _In_ PLDR_RESOURCE_INFO ResourceInfo,
     _In_ ULONG Level,
     _Inout_ ULONG *ResourceCount,
-    _Out_opt_ LDR_ENUM_RESOURCE_INFO *Resources)
+    _Out_writes_to_(*ResourceCount,*ResourceCount) LDR_ENUM_RESOURCE_INFO *Resources)
 {
     PUCHAR ResourceData;
     NTSTATUS Status;

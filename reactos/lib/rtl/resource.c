@@ -310,7 +310,7 @@ VOID
 NTAPI
 RtlDumpResource(PRTL_RESOURCE Resource)
 {
-    DbgPrint("RtlDumpResource(%p):\n\tactive count = %i\n\twaiting readers = %i\n\twaiting writers = %i\n",
+    DbgPrint("RtlDumpResource(%p):\n\tactive count = %d\n\twaiting readers = %u\n\twaiting writers = %u\n",
              Resource,
              Resource->NumberActive,
              Resource->SharedWaiters,
@@ -318,7 +318,7 @@ RtlDumpResource(PRTL_RESOURCE Resource)
 
     if (Resource->NumberActive != 0)
     {
-        DbgPrint("\towner thread = %08x\n",
+        DbgPrint("\towner thread = %p\n",
                  Resource->OwningThread);
     }
 }

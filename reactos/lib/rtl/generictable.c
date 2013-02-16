@@ -345,6 +345,7 @@ RtlEnumerateGenericTable(IN PRTL_GENERIC_TABLE Table,
         } while(RtlLeftChild(FoundNode));
 
         /* Splay it */
+        _Analysis_assume_(FoundNode != NULL);
         Table->TableRoot = RtlSplay(FoundNode);
     }
     else

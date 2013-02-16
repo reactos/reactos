@@ -57,7 +57,7 @@ RtlpConvertToAutoInheritSecurityObject(IN PSECURITY_DESCRIPTOR ParentDescriptor,
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
-                                        
+
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 /*
@@ -288,7 +288,7 @@ RtlNewSecurityGrantedAccess(IN ACCESS_MASK DesiredAccess,
     BOOLEAN Granted, CallerToken;
     TOKEN_STATISTICS TokenStats;
     ULONG Size;
-    DPRINT1("RtlNewSecurityGrantedAccess(%p)\n", DesiredAccess);
+    DPRINT1("RtlNewSecurityGrantedAccess(%lx)\n", DesiredAccess);
 
     /* Has the caller passed a token? */
     if (!Token)
