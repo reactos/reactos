@@ -416,6 +416,7 @@ DoLoginTasks(
 	TOKEN_STATISTICS Stats;
 	PWLX_PROFILE_V2_0 pProfile = NULL;
 	DWORD cbStats, cbSize;
+	DWORD dwLength;
 	BOOL bResult;
 
 	if (!LogonUserW(UserName, Domain, Password,
@@ -425,6 +426,18 @@ DoLoginTasks(
 	{
 		WARN("LogonUserW() failed\n");
 		goto cleanup;
+	}
+
+	/* Store user and domain in the context */
+	wcscpy(pgContext->UserName, UserName);
+	if (Domain == NULL || wcslen(Domain) == 0)
+	{
+		dwLength = 256;
+		GetComputerNameW(pgContext->Domain, &dwLength);
+	}
+	else
+	{
+		wcscpy(pgContext->Domain, Domain);
 	}
 
 	/* Get profile path */
@@ -456,13 +469,15 @@ DoLoginTasks(
 	pProfile->dwType = WLX_PROFILE_TYPE_V2_0;
 	pProfile->pszProfile = ProfilePath;
 
-	lpEnvironment = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, 32 * sizeof(WCHAR));
+	lpEnvironment = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
+	                          (wcslen(pgContext->Domain)+ 14) * sizeof(WCHAR));
 	if (!lpEnvironment)
 	{
 		WARN("HeapAlloc() failed\n");
 		goto cleanup;
 	}
-	wcscpy(lpEnvironment, L"LOGONSERVER=\\\\Test");
+
+	wsprintfW(lpEnvironment, L"LOGONSERVER=\\\\%s", pgContext->Domain);
 
 	pProfile->pszEnvironment = lpEnvironment;
 

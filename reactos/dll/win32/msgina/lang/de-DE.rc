@@ -54,7 +54,7 @@ FONT 8,"MS Shell Dlg",400,0,1
 BEGIN
     CONTROL         IDI_ROSLOGO,IDC_ROSLOGO,"Static",SS_BITMAP,0,0,275,54
     ICON            IDI_LOCKICON,-1,7,59,20,20
-    LTEXT           "Dieser Computer wird verwndet und ist gesperrt.",IDC_STATIC,37,61,231,8
+    LTEXT           "Dieser Computer wird verwendet und ist gesperrt.",IDC_STATIC,37,61,231,8
     LTEXT           "Message",IDC_LOCKMSG,37,75,231,26
     LTEXT           "Drücken Sie Strg+Alt+Entf um den Computer zu entsperren.",IDC_STATIC,37,106,231,8
 END

@@ -29,6 +29,8 @@ typedef struct
 	DWORD AutoLogonState;
 
 	/* Informations to be filled during logon */
+	WCHAR UserName[256];
+	WCHAR Domain[256];
 	HANDLE UserToken;
 	PLUID pAuthenticationId;
 	PDWORD pdwOptions;

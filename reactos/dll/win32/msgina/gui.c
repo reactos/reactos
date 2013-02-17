@@ -414,6 +414,24 @@ GUILockedSAS(
 }
 
 
+static VOID
+OnInitLockedDlg(HWND hwnd,
+                PGINA_CONTEXT pgContext,
+                UINT id)
+{
+    WCHAR Buffer1[256];
+    WCHAR Buffer2[256];
+    WCHAR Buffer3[512];
+
+    LoadStringW(pgContext->hDllInstance, IDS_LOCKMSG, Buffer1, 256);
+
+    wsprintfW(Buffer2, L"%s\\%s", pgContext->Domain, pgContext->UserName);
+    wsprintfW(Buffer3, Buffer1, Buffer2);
+
+    SetWindowTextW(GetDlgItem(hwnd, id), Buffer3);
+}
+
+
 static INT_PTR CALLBACK
 LockedWindowProc(
 	IN HWND hwndDlg,
@@ -433,6 +451,7 @@ LockedWindowProc(
 			SetWindowLongPtr(hwndDlg, GWL_USERDATA, (DWORD_PTR)pgContext);
 
 			pgContext->hBitmap = LoadImage(hDllInstance, MAKEINTRESOURCE(IDI_ROSLOGO), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
+			OnInitLockedDlg(hwndDlg, pgContext, IDC_LOCKMSG);
 			return TRUE;
 		}
 		case WM_PAINT:
@@ -462,11 +481,9 @@ static VOID
 GUIDisplayLockedNotice(
 	IN OUT PGINA_CONTEXT pgContext)
 {
-	int result;
-
 	TRACE("GUIdisplayLockedNotice()\n");
 
-	result = pgContext->pWlxFuncs->WlxDialogBoxParam(
+	pgContext->pWlxFuncs->WlxDialogBoxParam(
 		pgContext->hWlx,
 		pgContext->hDllInstance,
 		MAKEINTRESOURCEW(IDD_LOCKED_DLG),
