@@ -562,6 +562,7 @@ WlanPrintCurrentStatus(HANDLE hAdapter)
 BOOL
 WlanConnect(HANDLE hAdapter)
 {
+    CHAR SsidBuffer[NDIS_802_11_LENGTH_SSID + 1];
     BOOL bSuccess;
     DWORD dwBytesReturned, SetOidSize;
     PNDISUIO_SET_OID SetOid;
@@ -706,8 +707,9 @@ WlanConnect(HANDLE hAdapter)
     SetOid->Oid = OID_802_11_SSID;
     Ssid = (PNDIS_802_11_SSID)SetOid->Data;
 
-    RtlCopyMemory(Ssid->Ssid, sSsid, wcslen(sSsid));
-    Ssid->SsidLength = wcslen(sSsid);
+    snprintf(SsidBuffer, sizeof(SsidBuffer), "%S", sSsid);
+    RtlCopyMemory(Ssid->Ssid, SsidBuffer, strlen(SsidBuffer));
+    Ssid->SsidLength = strlen(SsidBuffer);
 
     bSuccess = DeviceIoControl(hAdapter,
                                IOCTL_NDISUIO_SET_OID_VALUE,
