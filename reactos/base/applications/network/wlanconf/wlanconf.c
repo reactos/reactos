@@ -936,7 +936,7 @@ BOOL ParseCmdline(int argc, char *argv[])
     return TRUE;
 }
 
-int main(int argc, char *argv[])
+int _tmain(int argc, char *argv[])
 {
     HANDLE hAdapter;
     IP_ADAPTER_INDEX_MAP IpInfo;
