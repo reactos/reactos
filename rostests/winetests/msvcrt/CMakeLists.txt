@@ -1,7 +1,8 @@
 
 add_definitions(
     -D__ROS_LONG64__
-    -D_CRT_NONSTDC_NO_DEPRECATE)
+    -D_CRT_NONSTDC_NO_DEPRECATE
+    -D__msvcrt_ulong=ULONG)
 
 list(APPEND SOURCE
     cpp.c
