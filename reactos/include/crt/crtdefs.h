@@ -343,14 +343,6 @@ extern "C" {
 #endif
 #endif
 
-/* For wine code... */
-#if !defined(_MSVCRT_LONG_DEFINED) && defined(__ROS_LONG64__)
-#define _MSVCRT_LONG_DEFINED
-/* we need 32-bit longs even on 64-bit */
-typedef int __msvcrt_long;
-typedef unsigned int __msvcrt_ulong;
-#endif
-
 #ifndef _TIME_T_DEFINED
 #define _TIME_T_DEFINED
 #ifdef _USE_32BIT_TIME_T
@@ -360,16 +352,8 @@ typedef unsigned int __msvcrt_ulong;
 #endif
 #endif
 
-  typedef struct threadmbcinfostruct {
-    int refcount;
-    int mbcodepage;
-    int ismbcodepage;
-    int mblcid;
-    unsigned short mbulinfo[6];
-    char mbctype[257];
-    char mbcasemap[256];
-} threadmbcinfo, *pthreadmbcinfo;
-
+struct threadmbcinfostruct;
+typedef struct threadmbcinfostruct *pthreadmbcinfo;
 
 #ifndef _TAGLC_ID_DEFINED
 #define _TAGLC_ID_DEFINED
