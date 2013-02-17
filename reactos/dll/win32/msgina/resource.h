@@ -6,6 +6,7 @@
 #define IDD_LOGGEDON_DLG                102
 #define IDD_LOGGEDOUT_DLG               103
 #define IDD_LOCKED_DLG                  104
+#define IDD_UNLOCK_DLG                  105
 
 #define IDC_LOGOFF                      1001
 #define IDC_USERNAME                    1002
