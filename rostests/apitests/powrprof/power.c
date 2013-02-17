@@ -999,11 +999,6 @@ BOOLEAN compare(POWER_POLICY pp, POWER_POLICY pp_compare)
 		printf("mach.pad1[1] failed %i != %i\n",pp.mach.pad1[1],pp_compare.mach.pad1[1]);
 		ret = FALSE;
 	}
-	if (pp.mach.pad1[2] != pp_compare.mach.pad1[2])
-	{
-		printf("mach.pad1[2] failed %i != %i\n",pp.mach.pad1[2],pp_compare.mach.pad1[2]);
-		ret = FALSE;
-	}
 	if (pp.mach.Revision != pp_compare.mach.Revision)
 	{
 		printf("mach.Revision failed %i != %i\n",pp.mach.Revision,pp_compare.mach.Revision);
