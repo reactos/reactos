@@ -197,8 +197,7 @@ VOID RunLoader(VOID)
 	ULONG		SelectedOperatingSystem;
 	ULONG	i;
 
-	// FIXME: if possible, only detect and register ARC devices...
-	if (!MachHwDetect())
+	if (!MachInitializeBootDevices())
 	{
 		UiMessageBoxCritical("Error when detecting hardware");
 		return;

@@ -269,7 +269,7 @@ GetHarddiskInformation(
 }
 
 
-VOID
+BOOLEAN
 HwInitializeBiosDisks(VOID)
 {
     UCHAR DiskCount, DriveNumber;
@@ -331,7 +331,7 @@ HwInitializeBiosDisks(VOID)
         if (!MachDiskReadLogicalSectors(FrldrBootDrive, 16ULL, 1, (PVOID)DISKREADBUFFER))
         {
           ERR("Reading MBR failed\n");
-          return;
+          return FALSE;
         }
 
         Buffer = (ULONG*)DISKREADBUFFER;
@@ -352,4 +352,5 @@ HwInitializeBiosDisks(VOID)
     }
 
     PcBiosDiskCount = DiskCount;
+    return DiskCount != 0;
 }

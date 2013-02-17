@@ -95,7 +95,7 @@ PCHAR
 GetHarddiskIdentifier(
     UCHAR DriveNumber);
 
-VOID
+BOOLEAN
 HwInitializeBiosDisks(VOID);
 
 /* FUNCTIONS ****************************************************************/
@@ -1721,6 +1721,11 @@ DetectIsaBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
   /* FIXME: Detect more ISA devices */
 }
 
+BOOLEAN
+PcInitializeBootDevices(VOID)
+{
+    return HwInitializeBiosDisks();
+}
 
 PCONFIGURATION_COMPONENT_DATA
 PcHwDetect(VOID)
@@ -1729,8 +1734,6 @@ PcHwDetect(VOID)
   ULONG BusNumber = 0;
 
   TRACE("DetectHardware()\n");
-
-  HwInitializeBiosDisks();
 
   /* Create the 'System' key */
   SystemKey = DetectSystem();

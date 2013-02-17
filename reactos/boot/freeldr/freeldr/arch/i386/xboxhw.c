@@ -509,6 +509,13 @@ XboxHwDetect(VOID)
   return SystemKey;
 }
 
+BOOLEAN
+XboxInitializeBootDevices(VOID)
+{
+    // Emulate old behavior
+    return XboxHwDetect() != NULL;
+}
+
 VOID XboxHwIdle(VOID)
 {
     /* UNIMPLEMENTED */

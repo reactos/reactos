@@ -51,6 +51,7 @@ XboxMachInit(const char *CmdLine)
   MachVtbl.DiskGetDriveGeometry = XboxDiskGetDriveGeometry;
   MachVtbl.DiskGetCacheableBlockCount = XboxDiskGetCacheableBlockCount;
   MachVtbl.GetTime = XboxGetTime;
+  MachVtbl.InitializeBootDevices = XboxInitializeBootDevices;
   MachVtbl.HwDetect = XboxHwDetect;
   MachVtbl.HwIdle = XboxHwIdle;
 
