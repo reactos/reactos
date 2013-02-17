@@ -470,7 +470,7 @@ DoLoginTasks(
 	pProfile->pszProfile = ProfilePath;
 
 	lpEnvironment = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
-	                          (wcslen(pgContext->Domain)+ 14) * sizeof(WCHAR));
+	                          (wcslen(pgContext->Domain)+ 14 + 1) * sizeof(WCHAR));
 	if (!lpEnvironment)
 	{
 		WARN("HeapAlloc() failed\n");
