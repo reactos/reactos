@@ -190,7 +190,7 @@ BOOLEAN IniAddSection(PCSTR SectionName, ULONG_PTR* SectionId)
 	RtlZeroMemory(Section, sizeof(INI_SECTION));
 
 	// Allocate the section name buffer
-	Section->SectionName = MmHeapAlloc(strlen(SectionName));
+	Section->SectionName = MmHeapAlloc(strlen(SectionName) + sizeof(CHAR));
 	if (!Section->SectionName)
 	{
 		MmHeapFree(Section);

@@ -149,6 +149,32 @@ HeapDestroy(
                              LoaderFirmwareTemporary);
 }
 
+#ifdef FREELDR_HEAP_VERIFIER
+VOID
+HeapVerify(
+    PVOID HeapHandle)
+{
+    PHEAP Heap = HeapHandle;
+    PHEAP_BLOCK Block;
+
+    /* Loop all heap chunks */
+    for (Block = &Heap->Blocks;
+         Block->Size != 0;
+         Block = Block + 1 + Block->Size)
+    {
+        /* Continue, if its not free */
+        if (Block->Tag != 0)
+        {
+            /* Verify size and redzones */
+            ASSERT(*REDZONE_SIZE(Block) <= Block->Size * sizeof(HEAP_BLOCK));
+            ASSERT(*REDZONE_LOW(Block) == REDZONE_MARK);
+            ASSERT(*REDZONE_HI(Block) == REDZONE_MARK);
+            continue;
+        }
+    }
+}
+#endif /* FREELDR_HEAP_VERIFIER */
+
 VOID
 HeapRelease(
     PVOID HeapHandle)
@@ -296,6 +322,9 @@ HeapAllocate(
     ULONGLONG Time = __rdtsc();
 
 #ifdef FREELDR_HEAP_VERIFIER
+    /* Verify the heap */
+    HeapVerify(HeapHandle);
+
     /* Add space for a size field and 2 redzones */
     ByteSize += REDZONE_ALLOCATION;
 #endif
@@ -407,6 +436,11 @@ HeapFree(
     ULONGLONG Time = __rdtsc();
     TRACE("HeapFree(%p, %p)\n", HeapHandle, Pointer);
     ASSERT(Tag != 'dnE#');
+
+#ifdef FREELDR_HEAP_VERIFIER
+    /* Verify the heap */
+    HeapVerify(HeapHandle);
+#endif
 
     /* Check if the block is really inside this heap */
     if ((Pointer < (PVOID)(Heap + 1)) ||
