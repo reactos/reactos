@@ -41,18 +41,21 @@ BEGIN
     PUSHBUTTON      "Завершення роботи...",IDC_SHUTDOWN,148, 122, 86, 14
 END
 
-IDD_LOGGEDON_DLG DIALOGEX 0, 0, 275, 116
+IDD_LOGGEDON_DLG DIALOGEX 0, 0, 275, 175
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
 CAPTION "Безпека"
 FONT 8,"MS Shell Dlg",400,0,1
 BEGIN
     CONTROL         IDI_ROSLOGO,IDC_ROSLOGO,"Static",SS_BITMAP,0,0,275,54
-    LTEXT           "Що Ви хочете зробити?",IDC_STATIC, 86, 60, 87, 8
-    PUSHBUTTON      "Блокування",IDC_LOCK, 6, 76, 70, 14
-    PUSHBUTTON      "Вихід із системи...",IDC_LOGOFF, 80, 76, 80, 14
-    PUSHBUTTON      "Завершення роботи...",IDC_SHUTDOWN, 165, 76, 86, 14
-    PUSHBUTTON      "Диспетчер завдань",IDC_TASKMGR, 80, 95, 80, 14
-    PUSHBUTTON      "Скасувати",IDCANCEL, 165, 95, 86, 14
+    GROUPBOX        "Logon Information",IDC_STATIC,7,61,261,52
+    LTEXT           "<Message>",IDC_LOGONMSG,15,73,245,18
+    LTEXT           "<Logon date>",IDC_LOGONDATE,15,94,245,8
+    CTEXT           "Що Ви хочете зробити?",IDC_STATIC,10,119,255,8
+    PUSHBUTTON      "Блокування",IDC_LOCK, 6,135, 70, 14
+    PUSHBUTTON      "Вихід із системи...",IDC_LOGOFF, 80,135, 80, 14
+    PUSHBUTTON      "Завершення роботи...",IDC_SHUTDOWN, 165,135, 86, 14
+    PUSHBUTTON      "Диспетчер завдань",IDC_TASKMGR, 80,154, 80, 14
+    PUSHBUTTON      "Скасувати",IDCANCEL, 165,154, 86, 14
 END
 
 IDD_LOCKED_DLG DIALOGEX 0,0,275,121
@@ -93,4 +96,5 @@ BEGIN
     IDS_ASKFORPASSWORD "Пароль: "
     IDS_FORCELOGOFF "Це завершить сеанс поточного користувача і всі незбережені дані будуть загублені. Продовжити?"
     IDS_LOCKMSG "Only %s or an Administrator can unlock this computer."
+    IDS_LOGONDATE "Logon date: %s %s"
 END

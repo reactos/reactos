@@ -33,18 +33,21 @@ BEGIN
     PUSHBUTTON      "כיבוי",IDC_SHUTDOWN,179,122,50,14
 END
 
-IDD_LOGGEDON_DLG DIALOGEX 0,0,275,116
+IDD_LOGGEDON_DLG DIALOGEX 0,0,275,175
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
 CAPTION "אבטחה"
 FONT 8,"MS Shell Dlg",400,0,1
 BEGIN
     CONTROL         IDI_ROSLOGO,IDC_ROSLOGO,"Static",SS_BITMAP,0,0,275,54
-    LTEXT           "מה ברצונך לעשות?",IDC_STATIC,86,60,87,8
-    PUSHBUTTON      "לנעול את המחשב",IDC_LOCK,10,76,70,14
-    PUSHBUTTON      "להתנתק",IDC_LOGOFF,90,76,70,14
-    PUSHBUTTON      "לכבות",IDC_SHUTDOWN,170,76,70,14
-    PUSHBUTTON      "מנהל המשימות",IDC_TASKMGR,90,95,70,14
-    PUSHBUTTON      "ביטול",IDCANCEL,170,95,70,14
+    GROUPBOX        "Logon Information",IDC_STATIC,7,61,261,52
+    LTEXT           "<Message>",IDC_LOGONMSG,15,73,245,18
+    LTEXT           "<Logon date>",IDC_LOGONDATE,15,94,245,8
+    CTEXT           "מה ברצונך לעשות?",IDC_STATIC,10,119,255,8
+    PUSHBUTTON      "לנעול את המחשב",IDC_LOCK,10,135,70,14
+    PUSHBUTTON      "להתנתק",IDC_LOGOFF,90,135,70,14
+    PUSHBUTTON      "לכבות",IDC_SHUTDOWN,170,135,70,14
+    PUSHBUTTON      "מנהל המשימות",IDC_TASKMGR,90,154,70,14
+    PUSHBUTTON      "ביטול",IDCANCEL,170,154,70,14
 END
 
 IDD_LOCKED_DLG DIALOGEX 0,0,275,121
@@ -85,4 +88,5 @@ BEGIN
     IDS_ASKFORPASSWORD "סיסמה: "
     IDS_FORCELOGOFF "זה יגרום להתנתקות המשתמש הנוכחי ולאבד את כל המידע שאינו נשמר. להמשיך?"
     IDS_LOCKMSG "Only %s or an Administrator can unlock this computer."
+    IDS_LOGONDATE "Logon date: %s %s"
 END

@@ -35,18 +35,21 @@ BEGIN
     PUSHBUTTON      "Выключение", IDC_SHUTDOWN, 171, 122, 58, 14
 END
 
-IDD_LOGGEDON_DLG DIALOGEX 0, 0, 275, 116
+IDD_LOGGEDON_DLG DIALOGEX 0, 0, 275, 175
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
 CAPTION "Безопасность"
 FONT 8,"MS Shell Dlg",400,0,1
 BEGIN
     CONTROL         IDI_ROSLOGO,IDC_ROSLOGO,"Static",SS_BITMAP,0,0,275,54
-    LTEXT           "Выберите необходимое действие:", IDC_STATIC, 7, 60, 123, 8
-    PUSHBUTTON      "Заблокировать", IDC_LOCK, 7, 76, 86, 14
-    PUSHBUTTON      "Завершение сеанса", IDC_LOGOFF, 102, 76, 86, 14
-    PUSHBUTTON      "Выключение",IDC_SHUTDOWN, 198, 76, 70, 14
-    PUSHBUTTON      "Диспетчер задач",IDC_TASKMGR, 102, 95, 86, 14
-    PUSHBUTTON      "Отмена", IDCANCEL, 198, 95, 70, 14
+    GROUPBOX        "Logon Information",IDC_STATIC,7,61,261,52
+    LTEXT           "<Message>",IDC_LOGONMSG,15,73,245,18
+    LTEXT           "<Logon date>",IDC_LOGONDATE,15,94,245,8
+    CTEXT           "Выберите необходимое действие:", IDC_STATIC,10,119,255,8
+    PUSHBUTTON      "Заблокировать", IDC_LOCK, 7,135, 86, 14
+    PUSHBUTTON      "Завершение сеанса", IDC_LOGOFF, 102,135, 86, 14
+    PUSHBUTTON      "Выключение",IDC_SHUTDOWN, 198,135, 70, 14
+    PUSHBUTTON      "Диспетчер задач",IDC_TASKMGR, 102,154, 86, 14
+    PUSHBUTTON      "Отмена", IDCANCEL, 198,154, 70, 14
 END
 
 IDD_LOCKED_DLG DIALOGEX 0,0,275,121
@@ -87,4 +90,5 @@ BEGIN
     IDS_ASKFORPASSWORD "Пароль: "
     IDS_FORCELOGOFF "При регистрации нового пользователя все несохраненные данные будут утеряны. Продолжить?"
     IDS_LOCKMSG "Only %s or an Administrator can unlock this computer."
+    IDS_LOGONDATE "Logon date: %s %s"
 END

@@ -33,18 +33,21 @@ BEGIN
     PUSHBUTTON      "Изключване",IDC_SHUTDOWN,179,122,50,14
 END
 
-IDD_LOGGEDON_DLG DIALOGEX 0,0,275,116
+IDD_LOGGEDON_DLG DIALOGEX 0,0,275,175
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
 CAPTION "Сигурност"
 FONT 8,"MS Shell Dlg",400,0,1
 BEGIN
     CONTROL         IDI_ROSLOGO,IDC_ROSLOGO,"Static",SS_BITMAP,0,0,275,54
-    LTEXT           "Какво желаете?",IDC_STATIC,86,60,87,8
-    PUSHBUTTON      "Заключване на компютъра",IDC_LOCK,25,95,99,14
-    PUSHBUTTON      "Изход",IDC_LOGOFF,90,76,75,14
-    PUSHBUTTON      "Изключване",IDC_SHUTDOWN,170,76,75,14
-    PUSHBUTTON      "Задачен управител",IDC_TASKMGR,10,76,75,14
-    PUSHBUTTON      "Отказ",IDCANCEL,130,95,99,14
+    GROUPBOX        "Logon Information",IDC_STATIC,7,61,261,52
+    LTEXT           "<Message>",IDC_LOGONMSG,15,73,245,18
+    LTEXT           "<Logon date>",IDC_LOGONDATE,15,94,245,8
+    CTEXT           "Какво желаете?",IDC_STATIC,10,119,255,8
+    PUSHBUTTON      "Заключване на компютъра",IDC_LOCK,25,154,99,14
+    PUSHBUTTON      "Изход",IDC_LOGOFF,90,135,75,14
+    PUSHBUTTON      "Изключване",IDC_SHUTDOWN,170,135,75,14
+    PUSHBUTTON      "Задачен управител",IDC_TASKMGR,10,135,75,14
+    PUSHBUTTON      "Отказ",IDCANCEL,130,154,99,14
 END
 
 IDD_LOCKED_DLG DIALOGEX 0,0,275,121
@@ -85,4 +88,5 @@ BEGIN
     IDS_ASKFORPASSWORD "Парола: "
     IDS_FORCELOGOFF "Така текущият потребител ще излезе и ще изгуби всички несъхранени данни. Да продължа ли?"
     IDS_LOCKMSG "Only %s or an Administrator can unlock this computer."
-END
+    IDS_LOGONDATE "Logon date: %s %s"
+    END

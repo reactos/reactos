@@ -428,6 +428,9 @@ DoLoginTasks(
 		goto cleanup;
 	}
 
+	/* Store the logon time in the context */
+	GetLocalTime(&pgContext->LogonTime);
+
 	/* Store user and domain in the context */
 	wcscpy(pgContext->UserName, UserName);
 	if (Domain == NULL || wcslen(Domain) == 0)

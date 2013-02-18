@@ -217,6 +217,35 @@ GetTextboxText(
 	return TRUE;
 }
 
+static VOID
+OnInitSecurityDlg(HWND hwnd,
+                  PGINA_CONTEXT pgContext)
+{
+    WCHAR Buffer1[256];
+    WCHAR Buffer2[256];
+    WCHAR Buffer3[256];
+    WCHAR Buffer4[512];
+
+    LoadStringW(pgContext->hDllInstance, IDS_LOGONMSG, Buffer1, 256);
+
+    wsprintfW(Buffer2, L"%s\\%s", pgContext->Domain, pgContext->UserName);
+    wsprintfW(Buffer4, Buffer1, Buffer2);
+
+    SetDlgItemTextW(hwnd, IDC_LOGONMSG, Buffer4);
+
+    LoadStringW(pgContext->hDllInstance, IDS_LOGONDATE, Buffer1, 256);
+
+    GetDateFormatW(LOCALE_USER_DEFAULT, DATE_SHORTDATE,
+                   (SYSTEMTIME*)&pgContext->LogonTime, NULL, Buffer2, 256);
+
+    GetTimeFormatW(LOCALE_USER_DEFAULT, 0,
+                   (SYSTEMTIME*)&pgContext->LogonTime, NULL, Buffer3, 256);
+
+    wsprintfW(Buffer4, Buffer1, Buffer2, Buffer3);
+
+    SetDlgItemTextW(hwnd, IDC_LOGONDATE, Buffer4);
+}
+
 static INT_PTR CALLBACK
 LoggedOnWindowProc(
 	IN HWND hwndDlg,
@@ -224,10 +253,15 @@ LoggedOnWindowProc(
 	IN WPARAM wParam,
 	IN LPARAM lParam)
 {
-	UNREFERENCED_PARAMETER(lParam);
-
 	switch (uMsg)
 	{
+		case WM_INITDIALOG:
+		{
+			OnInitSecurityDlg(hwndDlg, (PGINA_CONTEXT)lParam);
+			SetFocus(GetDlgItem(hwndDlg, IDNO));
+			return TRUE;
+		}
+
 		case WM_COMMAND:
 		{
 			switch (LOWORD(wParam))
@@ -249,11 +283,6 @@ LoggedOnWindowProc(
 					return TRUE;
 			}
 			break;
-		}
-		case WM_INITDIALOG:
-		{
-			SetFocus(GetDlgItem(hwndDlg, IDNO));
-			return TRUE;
 		}
 		case WM_CLOSE:
 		{
@@ -416,8 +445,7 @@ GUILockedSAS(
 
 static VOID
 OnInitLockedDlg(HWND hwnd,
-                PGINA_CONTEXT pgContext,
-                UINT id)
+                PGINA_CONTEXT pgContext)
 {
     WCHAR Buffer1[256];
     WCHAR Buffer2[256];
@@ -428,7 +456,7 @@ OnInitLockedDlg(HWND hwnd,
     wsprintfW(Buffer2, L"%s\\%s", pgContext->Domain, pgContext->UserName);
     wsprintfW(Buffer3, Buffer1, Buffer2);
 
-    SetWindowTextW(GetDlgItem(hwnd, id), Buffer3);
+    SetDlgItemTextW(hwnd, IDC_LOCKMSG, Buffer3);
 }
 
 
@@ -451,7 +479,7 @@ LockedWindowProc(
 			SetWindowLongPtr(hwndDlg, GWL_USERDATA, (DWORD_PTR)pgContext);
 
 			pgContext->hBitmap = LoadImage(hDllInstance, MAKEINTRESOURCE(IDI_ROSLOGO), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
-			OnInitLockedDlg(hwndDlg, pgContext, IDC_LOCKMSG);
+			OnInitLockedDlg(hwndDlg, pgContext);
 			return TRUE;
 		}
 		case WM_PAINT:

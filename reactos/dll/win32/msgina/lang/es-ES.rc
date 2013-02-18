@@ -38,18 +38,21 @@ BEGIN
     PUSHBUTTON      "Cerrar",IDC_SHUTDOWN,179,122,50,14
 END
 
-IDD_LOGGEDON_DLG DIALOGEX 0, 0, 275, 116
+IDD_LOGGEDON_DLG DIALOGEX 0, 0, 275, 175
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
 CAPTION "Seguridad"
 FONT 8,"MS Shell Dlg",400,0,1
 BEGIN
     CONTROL         IDI_ROSLOGO,IDC_ROSLOGO,"Static",SS_BITMAP,0,0,275,54
-    LTEXT           "¿Qué quieres hacer?",IDC_STATIC, 94, 60, 87, 8
-    PUSHBUTTON      "Bloquear computadora",IDC_LOCK, 4, 76, 83, 14
-    PUSHBUTTON      "Salir",IDC_LOGOFF, 92, 76, 88, 14
-    PUSHBUTTON      "Cerrar",IDC_SHUTDOWN, 186, 76, 70, 14
-    PUSHBUTTON      "Administrador de tareas",IDC_TASKMGR, 92, 95, 88, 14
-    PUSHBUTTON      "Cancelar",IDCANCEL, 186, 95, 70, 14
+    GROUPBOX        "Logon Information",IDC_STATIC,7,61,261,52
+    LTEXT           "<Message>",IDC_LOGONMSG,15,73,245,18
+    LTEXT           "<Logon date>",IDC_LOGONDATE,15,94,245,8
+    CTEXT           "¿Qué quieres hacer?",IDC_STATIC,10,119,255,8
+    PUSHBUTTON      "Bloquear computadora",IDC_LOCK, 4,135, 83, 14
+    PUSHBUTTON      "Salir",IDC_LOGOFF, 92,135, 88, 14
+    PUSHBUTTON      "Cerrar",IDC_SHUTDOWN, 186,135, 70, 14
+    PUSHBUTTON      "Administrador de tareas",IDC_TASKMGR, 92,154, 88, 14
+    PUSHBUTTON      "Cancelar",IDCANCEL, 186,154, 70, 14
 END
 
 IDD_LOCKED_DLG DIALOGEX 0,0,275,121
@@ -90,4 +93,5 @@ BEGIN
     IDS_ASKFORPASSWORD "Contraseña: "
     IDS_FORCELOGOFF "Esto cerrará al usuario actual y perderá todos los datos no guardados.  ¿Desea Continuar?"
     IDS_LOCKMSG "Only %s or an Administrator can unlock this computer."
+    IDS_LOGONDATE "Logon date: %s %s"
 END

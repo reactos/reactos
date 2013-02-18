@@ -33,18 +33,21 @@ BEGIN
     PUSHBUTTON      "Éteindre",IDC_SHUTDOWN,179,122,50,14
 END
 
-IDD_LOGGEDON_DLG DIALOGEX 0, 0, 275, 116
+IDD_LOGGEDON_DLG DIALOGEX 0, 0, 275, 175
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
 CAPTION "Sécurité"
 FONT 8,"MS Shell Dlg",400,0,1
 BEGIN
     CONTROL         IDI_ROSLOGO,IDC_ROSLOGO,"Static",SS_BITMAP,0,0,275,54
-    LTEXT           "Que voulez-vous faire ?",IDC_STATIC, 94, 60, 87, 8
-    PUSHBUTTON      "Verrouiller l'ordinateur",IDC_LOCK, 4, 76, 82, 14
-    PUSHBUTTON      "Déconnecter",IDC_LOGOFF, 93, 76, 85, 14
-    PUSHBUTTON      "Éteindre",IDC_SHUTDOWN, 184, 76, 70, 14
-    PUSHBUTTON      "Gestionnaire de tâches",IDC_TASKMGR, 93, 95, 85, 14
-    PUSHBUTTON      "Annuler",IDCANCEL, 184, 95, 70, 14
+    GROUPBOX        "Logon Information",IDC_STATIC,7,61,261,52
+    LTEXT           "<Message>",IDC_LOGONMSG,15,73,245,18
+    LTEXT           "<Logon date>",IDC_LOGONDATE,15,94,245,8
+    CTEXT           "Que voulez-vous faire ?",IDC_STATIC,10,119,255,8
+    PUSHBUTTON      "Verrouiller l'ordinateur",IDC_LOCK, 4,135, 82, 14
+    PUSHBUTTON      "Déconnecter",IDC_LOGOFF, 93,135, 85, 14
+    PUSHBUTTON      "Éteindre",IDC_SHUTDOWN, 184,135, 70, 14
+    PUSHBUTTON      "Gestionnaire de tâches",IDC_TASKMGR, 93,154, 85, 14
+    PUSHBUTTON      "Annuler",IDCANCEL, 184,154, 70, 14
 END
 
 IDD_LOCKED_DLG DIALOGEX 0,0,275,121
@@ -85,4 +88,5 @@ BEGIN
     IDS_ASKFORPASSWORD "Mot de passe : "
     IDS_FORCELOGOFF "Cela déconnectera l'utilisateur en cours et perdra les données non sauvées. Continuer ?"
     IDS_LOCKMSG "Seulement %s ou bien un Administrateur peut déverrouiller cet ordinateur."
+    IDS_LOGONDATE "Logon date: %s %s"
 END

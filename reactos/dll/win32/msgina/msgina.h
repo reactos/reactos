@@ -6,6 +6,7 @@
 #include <wincon.h>
 #include <winreg.h>
 #include <wingdi.h>
+#include <winnls.h>
 #include <winsvc.h>
 #include <winuser.h>
 #include <userenv.h>
@@ -31,6 +32,7 @@ typedef struct
 	/* Informations to be filled during logon */
 	WCHAR UserName[256];
 	WCHAR Domain[256];
+	SYSTEMTIME LogonTime;
 	HANDLE UserToken;
 	PLUID pAuthenticationId;
 	PDWORD pdwOptions;
