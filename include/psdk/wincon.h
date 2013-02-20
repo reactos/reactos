@@ -14,26 +14,45 @@ extern "C" {
 #pragma warning(disable:4820)
 #endif
 
-#define FOREGROUND_BLUE	1
-#define FOREGROUND_GREEN	2
-#define FOREGROUND_RED	4
-#define FOREGROUND_INTENSITY	8
-#define BACKGROUND_BLUE	16
-#define BACKGROUND_GREEN	32
-#define BACKGROUND_RED	64
-#define BACKGROUND_INTENSITY	128
-#define CTRL_C_EVENT 0
-#define CTRL_BREAK_EVENT 1
-#define CTRL_CLOSE_EVENT 2
-#define CTRL_LOGOFF_EVENT 5
+/*
+ * Color attributes for text and screen background
+ */
+#define FOREGROUND_BLUE         0x0001
+#define FOREGROUND_GREEN        0x0002
+#define FOREGROUND_RED          0x0004
+#define FOREGROUND_INTENSITY    0x0008
+#define BACKGROUND_BLUE         0x0010
+#define BACKGROUND_GREEN        0x0020
+#define BACKGROUND_RED          0x0040
+#define BACKGROUND_INTENSITY    0x0080
+
+/*
+ * Control handler codes
+ */
+#define CTRL_C_EVENT        0
+#define CTRL_BREAK_EVENT    1
+#define CTRL_CLOSE_EVENT    2
+#define CTRL_LOGOFF_EVENT   5
 #define CTRL_SHUTDOWN_EVENT 6
-#define ENABLE_LINE_INPUT 2
-#define ENABLE_ECHO_INPUT 4
-#define ENABLE_PROCESSED_INPUT 1
-#define ENABLE_WINDOW_INPUT 8
-#define ENABLE_MOUSE_INPUT 16
-#define ENABLE_PROCESSED_OUTPUT 1
-#define ENABLE_WRAP_AT_EOL_OUTPUT 2
+
+/*
+ * Input mode flags
+ */
+#define ENABLE_PROCESSED_INPUT      0x0001
+#define ENABLE_LINE_INPUT           0x0002
+#define ENABLE_ECHO_INPUT           0x0004
+#define ENABLE_WINDOW_INPUT         0x0008
+#define ENABLE_MOUSE_INPUT          0x0010
+#define ENABLE_INSERT_MODE          0x0020
+#define ENABLE_QUICK_EDIT_MODE      0x0040
+#define ENABLE_EXTENDED_FLAGS       0x0080
+
+/*
+ * Output mode flags
+ */
+#define ENABLE_PROCESSED_OUTPUT     0x0001
+#define ENABLE_WRAP_AT_EOL_OUTPUT   0x0002
+
 #define KEY_EVENT 1
 #define MOUSE_EVENT 2
 #define WINDOW_BUFFER_SIZE_EVENT 4
@@ -172,10 +191,12 @@ typedef struct _CONSOLE_FONT_INFOEX {
 #endif
 #endif
 
-BOOL WINAPI AllocConsole(void);
+BOOL WINAPI AllocConsole(VOID);
+
 #if (_WIN32_WINNT >= 0x0501)
 #define ATTACH_PARENT_PROCESS (DWORD)-1
 BOOL WINAPI AttachConsole(_In_ DWORD);
+
 BOOL WINAPI AddConsoleAliasA(_In_ LPCSTR, _In_ LPCSTR, _In_ LPCSTR);
 BOOL WINAPI AddConsoleAliasW(_In_ LPCWSTR, _In_ LPCWSTR, _In_ LPCWSTR);
 
@@ -209,20 +230,36 @@ GetConsoleAliasesW(
   _In_ DWORD AliasBufferLength,
   _In_ LPWSTR ExeName);
 
-DWORD WINAPI GetConsoleAliasesLengthA(_In_ LPSTR);
-DWORD WINAPI GetConsoleAliasesLengthW(_In_ LPWSTR);
+DWORD WINAPI GetConsoleAliasesLengthA(_In_ LPSTR ExeName);
+DWORD WINAPI GetConsoleAliasesLengthW(_In_ LPWSTR ExeName);
+
+DWORD
+WINAPI
+GetConsoleAliasExesA(
+  _Out_writes_(ExeNameBufferLength) LPSTR ExeNameBuffer,
+  _In_ DWORD ExeNameBufferLength);
+
+DWORD
+WINAPI
+GetConsoleAliasExesW(
+  _Out_writes_(ExeNameBufferLength) LPWSTR ExeNameBuffer,
+  _In_ DWORD ExeNameBufferLength);
+
+DWORD WINAPI GetConsoleAliasExesLengthA(VOID);
+DWORD WINAPI GetConsoleAliasExesLengthW(VOID);
 #endif
+
 HANDLE WINAPI CreateConsoleScreenBuffer(_In_ DWORD, _In_ DWORD, _In_opt_ CONST SECURITY_ATTRIBUTES*, _In_ DWORD, _Reserved_ LPVOID);
 BOOL WINAPI FillConsoleOutputAttribute(_In_ HANDLE, _In_ WORD, _In_ DWORD, _In_ COORD, _Out_ PDWORD);
 BOOL WINAPI FillConsoleOutputCharacterA(_In_ HANDLE, _In_ CHAR, _In_ DWORD, _In_ COORD, _Out_ PDWORD);
 BOOL WINAPI FillConsoleOutputCharacterW(_In_ HANDLE, _In_ WCHAR, _In_ DWORD, _In_ COORD, _Out_ PDWORD);
 BOOL WINAPI FlushConsoleInputBuffer(_In_ HANDLE);
-BOOL WINAPI FreeConsole(void);
+BOOL WINAPI FreeConsole(VOID);
 BOOL WINAPI GenerateConsoleCtrlEvent(_In_ DWORD, _In_ DWORD);
-UINT WINAPI GetConsoleCP(void);
+UINT WINAPI GetConsoleCP(VOID);
 BOOL WINAPI GetConsoleCursorInfo(_In_ HANDLE, _Out_ PCONSOLE_CURSOR_INFO);
 BOOL WINAPI GetConsoleMode(HANDLE,PDWORD);
-UINT WINAPI GetConsoleOutputCP(void);
+UINT WINAPI GetConsoleOutputCP(VOID);
 BOOL WINAPI GetConsoleScreenBufferInfo(_In_ HANDLE, _Out_ PCONSOLE_SCREEN_BUFFER_INFO);
 
 DWORD
@@ -238,7 +275,7 @@ GetConsoleTitleW(
   _In_ DWORD nSize);
 
 #if (_WIN32_WINNT >= 0x0500)
-HWND WINAPI GetConsoleWindow(void);
+HWND WINAPI GetConsoleWindow(VOID);
 WINBASEAPI BOOL APIENTRY GetConsoleDisplayMode(_Out_ LPDWORD lpModeFlags);
 BOOL APIENTRY SetConsoleDisplayMode(_In_ HANDLE hConsoleOutput, _In_ DWORD dwFlags, _Out_opt_ PCOORD lpNewScreenBufferDimensions);
 #endif
@@ -389,11 +426,12 @@ WriteConsoleOutputCharacterW(
 #define CONSOLE_WINDOWED_MODE 2
 
 #ifdef UNICODE
-#define FillConsoleOutputCharacter FillConsoleOutputCharacterW
 #define AddConsoleAlias AddConsoleAliasW
 #define GetConsoleAlias GetConsoleAliasW
 #define GetConsoleAliases GetConsoleAliasesW
 #define GetConsoleAliasesLength GetConsoleAliasesLengthW
+#define GetConsoleAliasExes GetConsoleAliasExesW
+#define GetConsoleAliasExesLength GetConsoleAliasExesLengthW
 #define GetConsoleTitle GetConsoleTitleW
 #define PeekConsoleInput PeekConsoleInputW
 #define ReadConsole ReadConsoleW
@@ -405,13 +443,15 @@ WriteConsoleOutputCharacterW(
 #define WriteConsole WriteConsoleW
 #define WriteConsoleInput WriteConsoleInputW
 #define WriteConsoleOutput WriteConsoleOutputW
+#define FillConsoleOutputCharacter FillConsoleOutputCharacterW
 #define WriteConsoleOutputCharacter WriteConsoleOutputCharacterW
 #else
 #define AddConsoleAlias AddConsoleAliasA
-#define FillConsoleOutputCharacter FillConsoleOutputCharacterA
 #define GetConsoleAlias GetConsoleAliasA
 #define GetConsoleAliases GetConsoleAliasesA
 #define GetConsoleAliasesLength GetConsoleAliasesLengthA
+#define GetConsoleAliasExes GetConsoleAliasExesA
+#define GetConsoleAliasExesLength GetConsoleAliasExesLengthA
 #define GetConsoleTitle GetConsoleTitleA
 #define PeekConsoleInput PeekConsoleInputA
 #define ReadConsole ReadConsoleA
@@ -423,6 +463,7 @@ WriteConsoleOutputCharacterW(
 #define WriteConsole WriteConsoleA
 #define WriteConsoleInput WriteConsoleInputA
 #define WriteConsoleOutput WriteConsoleOutputA
+#define FillConsoleOutputCharacter FillConsoleOutputCharacterA
 #define WriteConsoleOutputCharacter WriteConsoleOutputCharacterA
 #endif
 
