@@ -307,15 +307,6 @@ NtUserInitTask(
    return 0;
 }
 
-BOOL
-APIENTRY
-NtUserLockWorkStation(VOID)
-{
-   STUB
-
-   return 0;
-}
-
 DWORD
 APIENTRY
 NtUserMNDragLeave(VOID)

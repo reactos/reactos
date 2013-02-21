@@ -1174,6 +1174,11 @@ SASWindowProc(
                     inScrn = FALSE;
                     break;
                 }
+                case LN_LOCK_WORKSTATION:
+                {
+                    DoGenericAction(Session, WLX_SAS_ACTION_LOCK_WKSTA);
+                    break;
+                }
                 default:
                 {
                     ERR("WM_LOGONNOTIFY case %d is unimplemented\n", wParam);

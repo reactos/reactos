@@ -1320,4 +1320,27 @@ NtUserSetLogonNotifyWindow(HWND hWnd)
     return TRUE;
 }
 
+BOOL
+APIENTRY
+NtUserLockWorkStation(VOID)
+{
+    BOOL ret;
+    PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
+
+    UserEnterExclusive();
+
+    if (pti->rpdesk == IntGetActiveDesktop())
+    {
+        ret = UserPostMessage(hwndSAS, WM_LOGONNOTIFY, LN_LOCK_WORKSTATION, 0);
+    }
+    else
+    {
+        ret = FALSE;
+    }
+
+    UserLeave();
+
+   return ret;
+}
+
 /* EOF */
