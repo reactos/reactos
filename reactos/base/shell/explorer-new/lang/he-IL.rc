@@ -104,7 +104,7 @@ BEGIN
     AUTOCHECKBOX    "החבא סמלים לא פעילים", IDC_TASKBARPROP_HIDEICONS, 13,70,125,10, WS_DISABLED
     PUSHBUTTON      "התאם אישית...", IDC_TASKBARPROP_ICONCUST, 188,70,50,14, WS_DISABLED
     GROUPBOX        "סמלי המערכת", IDC_STATIC, 6,97,240,84, WS_DISABLED
-    LTEXT           "Select which system icons to always show.", IDC_STATIC, 13,112,223,16, WS_DISABLED
+    LTEXT           "בחר אילו סמלי מערכת כל הזמן יהיו נראים.", IDC_STATIC, 13,112,223,16, WS_DISABLED
     AUTOCHECKBOX    "שעון", IDC_TASKBARPROP_CLOCK, 13,126,200,10, WS_DISABLED
     AUTOCHECKBOX    "בקרת עוצמה", IDC_TASKBARPROP_VOLUME, 13,139,200,10, WS_DISABLED
     AUTOCHECKBOX    "רשת", IDC_TASKBARPROP_NETWORK, 13,152,200,10, WS_DISABLED
@@ -117,7 +117,7 @@ STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPT
 CAPTION "סרגלי כלים"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    LTEXT           "Select which toolbars to add to the taskbar.", IDC_STATIC, 7,7,223,12, WS_DISABLED
+    LTEXT           "בחר אילו סרגלי כלים להוסיף לשורת המשימות.", IDC_STATIC, 7,7,223,12, WS_DISABLED
     CONTROL         "", IDC_TASKBARPROP_DESKBANDLIST, "SysTreeView32",WS_BORDER | WS_TABSTOP | WS_DISABLED, 7,20,236,160, WS_EX_CLIENTEDGE
 END
 
@@ -143,5 +143,5 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_TASKBAR_STARTMENU_PROP_CAPTION "Taskbar and Start Menu"
+    IDS_TASKBAR_STARTMENU_PROP_CAPTION "שורת המשימות ושולחן העבודה"
 END

@@ -1,11 +1,10 @@
-/* 
- *
+/*
  * PROJECT:         ReactOS Console Configuration DLL
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            dll/cpl/console/lang/he-IL.rc
  * PURPOSE:         Hebrew resource file
  * PROGRAMMERS:     Johannes Anderwald (johannes.anderwald@student.tugraz.at)
- * TRANSLATORS:		Baruch Rutman (peterooch@gmail.com)
+ * TRANSLATORS:     Baruch Rutman (peterooch@gmail.com)
  */
 
 #include <commctrl.h>
@@ -47,7 +46,7 @@ BEGIN
 	CONTROL "", IDC_STATIC_FONT_WINDOW_PREVIEW, "Static", SS_OWNERDRAW | SS_SUNKEN, 10, 20, 163, 74
 	LISTBOX IDC_LBOX_FONTS, 181, 20, 55, 80, LBS_DISABLENOSCROLL | WS_VSCROLL
 	LTEXT "גופן:", -1, 10, 105, 33, 10
-	CHECKBOX "גופנים מודגשים", IDC_CHECK_BOLD_FONTS, 56, 105, 60, 10
+	CHECKBOX "גופנים מודגשים", IDC_CHECK_BOLD_FONTS, 41, 105, 33, 10
 	LISTBOX IDC_LBOX_TYPE, 10, 120, 110, 40, LBS_DISABLENOSCROLL | WS_VSCROLL
 	GROUPBOX "", IDC_GROUPBOX_FONT_NAME, 6, 156, 241, 50
 	CONTROL "", IDC_STATIC_SELECT_FONT_PREVIEW, "Static", SS_OWNERDRAW | SS_SUNKEN, 16, 165, 95, 35
@@ -134,7 +133,7 @@ STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "החלת מאפיינים"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	CONTROL "החל מאפיינים לחון הנוכחי בלבד", IDC_RADIO_APPLY_CURRENT, "Button", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 12, 12, 207, 10
+	CONTROL "החל מאפיינים לחלון הנוכחי בלבד", IDC_RADIO_APPLY_CURRENT, "Button", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 12, 12, 207, 10
 	CONTROL "שמור שינויים לחלונות עם אותה כותרת", IDC_RADIO_APPLY_ALL, "Button", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 12, 31, 207, 10
 	PUSHBUTTON "אישור", IDOK, 58, 58, 50, 14, WS_VISIBLE
 	PUSHBUTTON "ביטול", IDCANCEL, 114, 58, 50, 14, WS_VISIBLE
@@ -146,5 +145,5 @@ BEGIN
 	IDS_CPLDESCRIPTION "Configures console properties."
 	IDS_APPLY_SHORTCUT_ALL "Modify &shortcut that started this window"
 	IDS_SCREEN_TEXT "C:\\ReactOS> dir\nSYSTEM          <DIR>     10-01-99     5:00\nSYSTEM32      <DIR>     10-01-99     5:00"
-	IDS_RASTERFONTS "Raster Fonts"
+	IDS_RASTERFONTS "גופני מפת סיביות"
 END

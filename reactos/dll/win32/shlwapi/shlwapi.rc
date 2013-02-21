@@ -70,6 +70,9 @@
 #ifdef LANGUAGE_FR_FR
     #include "shlwapi_Fr.rc"
 #endif
+#ifdef LANGUAGE_HE_IL
+    #include "shlwapi_He.rc"
+#endif
 #ifdef LANGUAGE_HU_HU
     #include "shlwapi_Hu.rc"
 #endif

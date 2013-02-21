@@ -50,10 +50,10 @@ END
 
 IDD_PROGRESSBOX DIALOGEX 0, 0, 230, 40
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER
-CAPTION "חכה.."
+CAPTION "נא להמתין..."
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-	CTEXT           "טוען יומני אירועים. נא לחכות...",IDC_STATIC,0,15,230,8,SS_NOPREFIX
+	CTEXT           "טוען יומני אירועים, נא להמתין...",IDC_STATIC,0,15,230,8,SS_NOPREFIX
 END
 
 IDD_EVENTDETAILDIALOG DIALOGEX 0, 0, 276, 282

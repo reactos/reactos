@@ -148,29 +148,29 @@ BEGIN
 END
 
 IDD_DLG_DEPEND_STOP DIALOGEX 6,6,240,148
-CAPTION "Stop Other Services"
+CAPTION "עצירת שירותים אחרים"
 FONT 8, "MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | DS_MODALFRAME
 BEGIN
   ICON IDI_WARNING, IDC_STATIC, 10, 8, 24, 22
   LTEXT "", IDC_STOP_DEPENDS, 40, 8, 170, 25
   LISTBOX IDC_STOP_DEPENDS_LB, 15, 40, 210, 70, WS_CHILD | WS_VISIBLE | WS_EX_STATICEDGE | LBS_NOSEL
-  LTEXT "Do you want to stop these services?",IDC_STATIC, 15, 110, 150, 10
-  DEFPUSHBUTTON "Yes", IDOK, 60, 129, 54, 14
-  PUSHBUTTON "No", IDCANCEL, 120, 129, 54, 14
+  LTEXT "האם ברצונך לעצור את השירותים הבאים?",IDC_STATIC, 15, 110, 150, 10
+  DEFPUSHBUTTON "כן", IDOK, 60, 129, 54, 14
+  PUSHBUTTON "לא", IDCANCEL, 120, 129, 54, 14
 END
 
 IDD_DLG_HELP_OPTIONS DIALOGEX 6,6,200,150
-CAPTION "Options"
+CAPTION "אפשרויות"
 FONT 8, "MS Shell Dlg",0,0
 STYLE 0x10CF0000
 BEGIN
   LTEXT "", IDC_CREATE_HELP, 6, 5, 200, 150
-  PUSHBUTTON "Ok", IDOK, 75, 130, 44, 13
+  PUSHBUTTON "אישור", IDOK, 75, 130, 44, 13
 END
 
 IDD_DLG_PROGRESS DIALOGEX 6,6,255,89
-CAPTION "Service Control"
+CAPTION "בקרת שירות"
 FONT 8, "MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | WS_VISIBLE | DS_MODALFRAME
 EXSTYLE WS_EX_TOOLWINDOW
@@ -178,48 +178,48 @@ BEGIN
   CONTROL "", IDC_SERVCON_PROGRESS, "msctls_progress32", 0x50000000, 8, 46, 238, 13
   LTEXT "", IDC_SERVCON_INFO, 8, 5, 236, 11
   LTEXT "", IDC_SERVCON_NAME, 8, 25, 66, 11
-  PUSHBUTTON "&Close", IDOK, 100, 70, 54, 13
+  PUSHBUTTON "סגור", IDOK, 100, 70, 54, 13
 END
 
 
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_FIRSTCOLUMN "Name"
-  IDS_SECONDCOLUMN "Description"
-  IDS_THIRDCOLUMN "Status"
-  IDS_FOURTHCOLUMN "Startup Type"
-  IDS_FITHCOLUMN "Log On As"
+  IDS_FIRSTCOLUMN "שם"
+  IDS_SECONDCOLUMN "תיאור"
+  IDS_THIRDCOLUMN "מצב"
+  IDS_FOURTHCOLUMN "סוג הפעלה"
+  IDS_FITHCOLUMN "התחבר כ"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_SERVICES_STARTED "Started"
-  IDS_SERVICES_STOPPED "Stopped"
-  IDS_SERVICES_AUTO "Automatic"
-  IDS_SERVICES_MAN "Manual"
-  IDS_SERVICES_DIS "Disabled"
+  IDS_SERVICES_STARTED "הופעל"
+  IDS_SERVICES_STOPPED "נעצר"
+  IDS_SERVICES_AUTO "אוטומטי"
+  IDS_SERVICES_MAN "ידני"
+  IDS_SERVICES_DIS "הופסק"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_NUM_SERVICES "Num Services: %d"
-  IDS_STOP_DEPENDS "When %s stops, these other services will also stop"
-  IDS_NO_DEPENDS "<No Dependencies>"
+  IDS_NUM_SERVICES "מספר השירותים: %d"
+  IDS_STOP_DEPENDS "מתי ש %s יעצור, השירותים הללו גם יעצרו."
+  IDS_NO_DEPENDS "<אין יחסי תלות>"
   IDS_LICENSE "This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_TOOLTIP_PROP "Properties"
-  IDS_TOOLTIP_REFRESH "Refresh"
-  IDS_TOOLTIP_EXPORT "Export list"
-  IDS_TOOLTIP_CREATE "Create a new service"
-  IDS_TOOLTIP_DELETE "Deletes an existing service"
-  IDS_TOOLTIP_START "Start service"
-  IDS_TOOLTIP_STOP "Stop service"
-  IDS_TOOLTIP_PAUSE "Pause service"
-  IDS_TOOLTIP_RESTART "Restart service"
+  IDS_TOOLTIP_PROP "מאפיינים"
+  IDS_TOOLTIP_REFRESH "רענון"
+  IDS_TOOLTIP_EXPORT "יצא רשימה"
+  IDS_TOOLTIP_CREATE "יצירת שירות חדש"
+  IDS_TOOLTIP_DELETE "מחיקת שירות קיים"
+  IDS_TOOLTIP_START "הפעל שירות"
+  IDS_TOOLTIP_STOP "עצור שירות"
+  IDS_TOOLTIP_PAUSE "השעה שירות"
+  IDS_TOOLTIP_RESTART "אתחול שירות"
 END
 
 STRINGTABLE DISCARDABLE
@@ -228,8 +228,8 @@ BEGIN
   IDS_PROGRESS_INFO_STOP   "ReactOS is attempting to stop the following service"
   IDS_PROGRESS_INFO_PAUSE  "ReactOS is attempting to pause the following service"
   IDS_PROGRESS_INFO_RESUME "ReactOS is attempting to resume the following service"
-  IDS_CREATE_SUCCESS "Service Created Succesfully"
-  IDS_DELETE_SUCCESS "Service Deleted Succesfully"
+  IDS_CREATE_SUCCESS "השירות נוצר בהצלחה"
+  IDS_DELETE_SUCCESS "השירות נמחק בהצלחה"
   IDS_CREATE_REQ "Fields marked with an\nasterix are mandatory"
   IDS_DELETE_STOP "You must manually stop the service before deleting!"
 END
@@ -264,8 +264,8 @@ BEGIN
   IDS_HINT_DETAILS      " Display information about each item in a window."
   IDS_HINT_CUST         " Customizes the view."
 
-  IDS_HINT_HELP         " Display help window."
-  IDS_HINT_ABOUT        " About ReactOS Service Manager."
+  IDS_HINT_HELP         " מציג חלון עזרה."
+  IDS_HINT_ABOUT        " אודות מנהל השירותים של ReactOS"
 
   IDS_HINT_SYS_RESTORE  " Restores this window to normal size."
   IDS_HINT_SYS_MOVE     " Moves this window."
@@ -278,5 +278,5 @@ END
 /* Application title */
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_APPNAME "ReactOS Service Manager"
+  IDS_APPNAME "מנהל השירותים של ReactOS"
 END

@@ -17,7 +17,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "The Logon User Interface DLL %s failed to load.", IDC_GINALOADFAILED, 39, 16, 156, 24
     LTEXT "Contact your system administrator to replace the DLL, or restore the original DLL.", IDC_GINALOADFAILEDCONTACT, 39, 53, 151, 25
-    DEFPUSHBUTTON "הפעל מחדש", 1, 80, 91, 68, 14
+    DEFPUSHBUTTON "הפעל מחדש", 1, 59, 32, 49, 14
 END
 
 STRINGTABLE

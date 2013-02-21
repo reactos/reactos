@@ -12,37 +12,37 @@ static MUI_ENTRY heILLanguagePageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " „š—š ",
+        " ReactOS " KERNEL_VERSION_STR " š—š„ ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "‡‰˜š ™”„",
+        "„”™ š˜‰‡",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         10,
-        "\x07  Please choose the language used for the installation process.",
+        "\x07  „—š„„ ŠŒ„ „ ™š™š™ „”™„ š€ „™— ˜‡ €.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "   €‡˜ ‹Š „—™ ENTER.",
+        "   .ENTER ™—„ Š‹ ˜‡€",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "\x07  This Language will be the default language for the final system.",
+        "\x07  .š‰”…‘„ š‹˜’ Œƒ‡„ š˜‰˜ š”™ „‰„š …†„ „”™„",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = „™Š  F3 = ˆŒ",
+        "Œˆ = F3  Š™„ = ENTER",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -58,55 +58,55 @@ static MUI_ENTRY heILWelcomePageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " „š—š ",
+        " ReactOS " KERNEL_VERSION_STR " „—š„ ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "˜…Š „€ Œš‹‰š „„š—„ ™Œ ReactOS",
+        "ReactOS Œ™ „—š„„ š‰‹šŒ €„ Š…˜",
         TEXT_STYLE_HIGHLIGHT
     },
     {
         6,
         11,
-        "This part of the setup copies the ReactOS Operating System to your",
+        "„Œ’”„„ š‹˜’ š€ š€ —‰š’ „—š„„ Œ™ „†„ —Œ‡„",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "computer and prepares the second part of the setup.",
+        "„—š„„ Œ™ ‰™„ —Œ‡Œ …‹š… Š™‡Œ.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
-        "\x07  „—™ ENTER ‹ƒ‰ Œ„š—‰ €š ReactOS",
+        "\x07  ReactOS š€ ‰—š„Œ ‰ƒ‹ ENTER ™—„",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         17,
-        "\x07  Press R to repair or update ReactOS.",
+        "\x07  .ReactOS š€ ‹ƒ’Œ …€ —šŒ ‰ƒ‹ R ™—„",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Press L to view the ReactOS Licensing Terms and Conditions.",
+        "\x07  .ReactOS Œ™ …™‰˜„ ‰€š… ‰‚™… š€ š…€˜Œ ‰ƒ‹ L ™—„",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Press F3 to quit without installing ReactOS.",
+        "\x07  .ReactOS š€ ‰—š„Œ ‰Œ ŒˆŒ ‰ƒ‹ F3 ™—„",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         23,
-        "For more information on ReactOS, please visit:",
+        ": ˜— € ,ReactOS ‰‚Œ ’ƒ‰ ƒ…’Œ",
         TEXT_STYLE_NORMAL
     },
     {
@@ -118,7 +118,7 @@ static MUI_ENTRY heILWelcomePageEntries[] =
     {
         0,
         0,
-        "ENTER = „™Š  R = š—  L = ˜™‰…  F3 = ˆŒ",
+        "Œˆ = F3  …‰™˜ = L  —š = R  Š™„ = ENTER",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -134,43 +134,43 @@ static MUI_ENTRY heILIntroPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " ReactOS " KERNEL_VERSION_STR " „—š„ ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "ReactOS Setup is in an early development phase. It does not yet",
+        "š‹…š €Œ ‰‰ƒ’ €‰„ .‰ƒ—… ‡…š‰” Œ™ š€– ReactOS š—š„",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "support all the functions of a fully usable setup application.",
+        ".„€Œ š…‰™…‰™ ’ „—š„ …™‰‰ Œ™ š…‰…˜™”€„ Œ‹",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "The following limitations apply:",
+        ":š…™…‰ š…€„„ š…Œ‚„„",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "- Setup can not handle more than one primary partition per disk.",
+        ".—‘‰ƒŒ š‡€ š‰™€˜ „–‰‡ ˜š…‰ ’ —…‘’Œ „Œ…‹‰ €Œ „—š„„ -",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
-        "- Setup can not delete a primary partition from a disk",
+        "—‘‰ƒ š‰™€˜ „–‰‡ —…‡Œ „Œ…‹‰ €Œ „—š„„ -",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         15,
-        "  as long as extended partitions exist on this disk.",
+        ".—‘‰ƒ„ Œ’ š…‡˜… š…–‰‡ š…€– ƒ…’ Œ‹ ",
         TEXT_STYLE_NORMAL
     },
     {

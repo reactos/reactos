@@ -33,7 +33,7 @@ BEGIN
         MENUITEM "העתק\tCtrl+C", IDM_EDITCOPY
         MENUITEM "הדבק\tCtrl+V", IDM_EDITPASTE
         MENUITEM "מחק בחירה\tDel", IDM_EDITDELETESELECTION
-        MENUITEM "Invert selection", IDM_EDITINVERTSELECTION
+        MENUITEM "הפוך בחירה", IDM_EDITINVERTSELECTION
         MENUITEM "בחר הכל\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
         MENUITEM "העתק ל...", IDM_EDITCOPYTO
@@ -44,10 +44,10 @@ BEGIN
     BEGIN
         MENUITEM "ערכת כלים\tCtrl+T", IDM_VIEWTOOLBOX, CHECKED
         MENUITEM "ערכת צבעים\tCtrl+L", IDM_VIEWCOLORPALETTE, CHECKED
-        MENUITEM "Status bar", IDM_VIEWSTATUSBAR, CHECKED
-        MENUITEM "Text Toolbar", IDM_FORMATICONBAR, CHECKED, GRAYED
+        MENUITEM "שורת מצב", IDM_VIEWSTATUSBAR, CHECKED
+        MENUITEM "סרגל טקסט", IDM_FORMATICONBAR, CHECKED, GRAYED
         MENUITEM SEPARATOR
-        POPUP "Zoom"
+        POPUP "הגדלה"
         BEGIN
             POPUP "הגדרת משתמש"
             BEGIN
@@ -61,7 +61,7 @@ BEGIN
             END
             MENUITEM SEPARATOR
             MENUITEM "הראה רשת\tCtrl+G", IDM_VIEWSHOWGRID
-            MENUITEM "Show miniature", IDM_VIEWSHOWMINIATURE
+            MENUITEM "הראה ממוזער", IDM_VIEWSHOWMINIATURE
         END
         MENUITEM "מסך מלא\tCtrl+F", IDM_VIEWFULLSCREEN
     END
@@ -72,14 +72,14 @@ BEGIN
         MENUITEM "שנה גודל...\tCtrl+W", IDM_IMAGECHANGESIZE
         MENUITEM "חתוך", IDM_IMAGECROP
         MENUITEM "הפוך צבעים\tCtrl+I", IDM_IMAGEINVERTCOLORS
-        MENUITEM "Attributes...\tCtrl+E", IDM_IMAGEATTRIBUTES
+        MENUITEM "תכונות...\tCtrl+E", IDM_IMAGEATTRIBUTES
         MENUITEM "מחק תמונה\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
         MENUITEM "צביעה אטומה", IDM_IMAGEDRAWOPAQUE
     END
 
     POPUP "&צבעים"
     BEGIN
-        MENUITEM "Edit palette...", IDM_COLORSEDITPALETTE
+        MENUITEM "עריכת ערכה...", IDM_COLORSEDITPALETTE
     END
 
     POPUP "&?"
@@ -119,8 +119,8 @@ FONT 8, "MS Shell Dlg"
 CAPTION "סובב והפוך את התמונה"
 BEGIN
     GROUPBOX "סובב או הפוך", IDD_MIRRORROTATEGROUP, 6, 6, 112, 86
-    AUTORADIOBUTTON "Mirror horizontally", IDD_MIRRORROTATERB1, 12, 18, 100, 10, WS_GROUP
-    AUTORADIOBUTTON "Mirror vertically", IDD_MIRRORROTATERB2, 12, 30, 100, 10
+    AUTORADIOBUTTON "מראה אופקית", IDD_MIRRORROTATERB1, 12, 18, 100, 10, WS_GROUP
+    AUTORADIOBUTTON "מראה אנכית", IDD_MIRRORROTATERB2, 12, 30, 100, 10
     AUTORADIOBUTTON "סובב בזווית", IDD_MIRRORROTATERB3, 12, 42, 100, 10
     AUTORADIOBUTTON "90°", IDD_MIRRORROTATERB4, 42, 54, 50, 10, WS_GROUP | WS_DISABLED
     AUTORADIOBUTTON "180°", IDD_MIRRORROTATERB5, 42, 66, 50, 10, WS_DISABLED
@@ -146,7 +146,7 @@ BEGIN
     LTEXT "לא זמין", IDD_ATTRIBUTESTEXT8, 60, 25, 90, 10
     GROUPBOX "יחידות מדידה", IDD_ATTRIBUTESGROUP1, 6, 57, 158, 27
     AUTORADIOBUTTON "אינצ'ים", IDD_ATTRIBUTESRB1, 12, 69, 45, 10, WS_GROUP
-    AUTORADIOBUTTON "סנטימטרים", IDD_ATTRIBUTESRB2, 62, 69, 45, 10
+    AUTORADIOBUTTON "סנטימטרים", IDD_ATTRIBUTESRB2, 55, 69, 51, 10
     AUTORADIOBUTTON "פיקסלים", IDD_ATTRIBUTESRB3, 112, 69, 45, 10
     GROUPBOX "צבעים", IDD_ATTRIBUTESGROUP2, 6, 88, 158, 27
     AUTORADIOBUTTON "שחור ולבן", IDD_ATTRIBUTESRB4, 12, 100, 70, 10, WS_GROUP
@@ -182,12 +182,12 @@ BEGIN
     IDS_INFOTEXT, "Paint for ReactOS is available under the GNU Lesser General Public License (LGPL) version 3 (see www.gnu.org)"
     IDS_SAVEPROMPTTEXT, "האם ברצונך לשמור את השינויים של %s?"
     IDS_DEFAULTFILENAME, "ללא שם.bmp"
-    IDS_MINIATURETITLE, "Miniature"
+    IDS_MINIATURETITLE, "ממוזער"
     IDS_TOOLTIP1, "בחירה חופשית"
-    IDS_TOOLTIP2, "Selection"
+    IDS_TOOLTIP2, "בחירה"
     IDS_TOOLTIP3, "מחק"
     IDS_TOOLTIP4, "מלא עם צבע"
-    IDS_TOOLTIP5, "Select color"
+    IDS_TOOLTIP5, "בחירת צבע"
     IDS_TOOLTIP6, "זכוכית מגדלת"
     IDS_TOOLTIP7, "עפרון"
     IDS_TOOLTIP8, "מברשת"
@@ -201,6 +201,6 @@ BEGIN
     IDS_TOOLTIP16, "מרובע עם קודקודים מרובעים"
     IDS_OPENFILTER, "קבצי מפת סיביות (*.bmp;*.dib)\1*.bmp;*.dib\1All files (*.*)\1*.*\1"
     IDS_SAVEFILTER, "קבצי מפת סיביות של 24 סיביות (*.bmp;*.dib)\1*.bmp;*.dib\1"
-    IDS_FILESIZE, "%d bytes"
+    IDS_FILESIZE, "%d בתים"
     IDS_PRINTRES, "%d x %d פיקסלים למטר"
 END
