@@ -125,6 +125,7 @@ if(ARCH STREQUAL "i386")
 
     if(NOT MSVC AND (CMAKE_VERSION VERSION_GREATER 2.8.7))
         add_library(lib_hal_pic OBJECT ${HAL_PIC_SOURCE} ${HAL_PIC_ASM_SOURCE})
+        add_dependencies(lib_hal_pic asm)
     endif()
 
     list(APPEND MINI_HAL_SOURCE
@@ -183,7 +184,7 @@ if(ARCH STREQUAL "i386")
     target_link_libraries(hal libcntpr)
     add_importlibs(hal ntoskrnl)
     #add_pch(hal include/hal.h)
-    add_dependencies(hal psdk bugcodes)
+    add_dependencies(hal psdk bugcodes asm)
     set_entrypoint(hal HalInitSystem 8)
     set_subsystem(hal native)
     set_image_base(hal 0x00010000)
