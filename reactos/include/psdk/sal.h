@@ -35,7 +35,7 @@
 #endif // ]
 
 /* Check for deprecated use of declspecs for sal */
-#if _USE_DECLSPECS_FOR_SAL // [
+#if defined(_USE_DECLSPECS_FOR_SAL) && _USE_DECLSPECS_FOR_SAL // [
 #pragma message("declspecs for sal are deprecated.")
 #ifdef _PREFAST_ // [
 #error Support for _USE_DECLSPECS_FOR_SAL is dropped
