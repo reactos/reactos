@@ -758,16 +758,14 @@ ScreenSaverPageProc(HWND hwndDlg,
 
                 case PSN_SETACTIVE:
                 {
-                    /* Activate screen saver support */
-                    SystemParametersInfoW(SPI_SETSCREENSAVEACTIVE, TRUE, 0, SPIF_SENDCHANGE);
+                    /* Enable screensaver preview support */
                     SetScreenSaverPreviewBox(hwndDlg, pData);
                     break;
                 }
 
                 case PSN_KILLACTIVE:
                 {
-                    /* Disable screensaver support */
-                    SystemParametersInfoW(SPI_SETSCREENSAVEACTIVE, FALSE, 0, SPIF_SENDCHANGE);
+                    /* Kill running preview screensaver */
                     if (pData->PrevWindowPi.hProcess)
                     {
                         TerminateProcess(pData->PrevWindowPi.hProcess, 0);
