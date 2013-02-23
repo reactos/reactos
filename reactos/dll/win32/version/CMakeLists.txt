@@ -16,7 +16,7 @@ add_library(version SHARED ${SOURCE})
 set_module_type(version win32dll)
 
 target_link_libraries(version wine)
-add_importlibs(version kernel32 ntdll)
+add_importlibs(version msvcrt kernel32 ntdll)
 add_dependencies(version psdk)
 add_cd_file(TARGET version DESTINATION reactos/system32 FOR all)
 

@@ -16,12 +16,14 @@ target_link_libraries(dplay
     wine)
 
 add_importlibs(dplay
+    msvcrt
     user32
     advapi32
     ole32
     winmm
     dinput
     dplayx
+    kernel32
     ntdll)
 
 add_dependencies(dplay psdk)

@@ -31,6 +31,7 @@ target_link_libraries(dmusic
     wine)
 
 add_importlibs(dmusic
+    msvcrt
     user32
     advapi32
     ole32

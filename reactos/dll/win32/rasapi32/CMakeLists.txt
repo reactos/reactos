@@ -12,6 +12,6 @@ list(APPEND SOURCE
 add_library(rasapi32 SHARED ${SOURCE})
 set_module_type(rasapi32 win32dll)
 target_link_libraries(rasapi32 wine)
-add_importlibs(rasapi32 kernel32 ntdll)
+add_importlibs(rasapi32 msvcrt kernel32 ntdll)
 add_dependencies(rasapi32 psdk)
 add_cd_file(TARGET rasapi32 DESTINATION reactos/system32 FOR all)

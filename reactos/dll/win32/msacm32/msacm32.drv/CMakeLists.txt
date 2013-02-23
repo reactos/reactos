@@ -13,6 +13,6 @@ set_target_properties(msacm32.drv PROPERTIES SUFFIX "")
 
 target_link_libraries(msacm32.drv wine)
 
-add_importlibs(msacm32.drv msacm32 user32 winmm advapi32 kernel32 ntdll)
+add_importlibs(msacm32.drv msvcrt msacm32 user32 winmm advapi32 kernel32 ntdll)
 add_dependencies(msacm32.drv psdk)
 add_cd_file(TARGET msacm32.drv DESTINATION reactos/system32 FOR all)

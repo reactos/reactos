@@ -21,6 +21,7 @@ target_link_libraries(dinput8
     wine)
 
 add_importlibs(dinput8
+    msvcrt
     user32
     advapi32
     ole32

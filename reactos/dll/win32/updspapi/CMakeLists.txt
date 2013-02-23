@@ -14,7 +14,7 @@ set_module_type(updspapi win32dll)
 
 target_link_libraries(updspapi wine)
 
-add_importlibs(updspapi setupapi kernel32 ntdll)
+add_importlibs(updspapi msvcrt setupapi kernel32 ntdll)
 add_dependencies(updspapi psdk)
 
 add_cd_file(TARGET updspapi DESTINATION reactos/system32 FOR all)

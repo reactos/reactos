@@ -16,6 +16,7 @@ set_module_type(olepro32 win32dll)
 target_link_libraries(olepro32 wine)
 
 add_importlibs(olepro32
+    msvcrt
     oleaut32
     kernel32
     ntdll)

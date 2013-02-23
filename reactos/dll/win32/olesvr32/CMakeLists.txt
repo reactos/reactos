@@ -15,6 +15,6 @@ set_module_type(olesvr32 win32dll)
 
 target_link_libraries(olesvr32 wine)
 
-add_importlibs(olesvr32 kernel32 ntdll)
+add_importlibs(olesvr32 msvcrt kernel32 ntdll)
 add_dependencies(olesvr32 psdk)
 add_cd_file(TARGET olesvr32 DESTINATION reactos/system32 FOR all)
