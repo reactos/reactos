@@ -10,6 +10,6 @@ add_library(winfax SHARED ${SOURCE})
 
 set_module_type(winfax win32dll)
 
-add_importlibs(winfax kernel32 ntdll)
+add_importlibs(winfax msvcrt kernel32 ntdll)
 add_dependencies(winfax psdk)
 add_cd_file(TARGET winfax DESTINATION reactos/system32 FOR all)
