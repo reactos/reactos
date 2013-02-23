@@ -1,6 +1,4 @@
 
-add_definitions(-DUNICODE -D_UNICODE)
-
 spec2def(midimap.dll midimap.spec)
 
 add_library(midimap SHARED
@@ -8,7 +6,7 @@ add_library(midimap SHARED
     midimap.rc
     ${CMAKE_CURRENT_BINARY_DIR}/midimap.def)
 
-set_module_type(midimap win32dll ENTRYPOINT 0 )
+set_module_type(midimap win32dll UNICODE)
 
 target_link_libraries(midimap uuid wine)
 

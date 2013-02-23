@@ -12,7 +12,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/sxs.def)
 
 add_library(sxs SHARED ${SOURCE})
-set_module_type(sxs win32dll ENTRYPOINT 0 )
+set_module_type(sxs win32dll)
 target_link_libraries(sxs wine)
 add_importlibs(sxs oleaut32 ole32 kernel32 ntdll)
 add_dependencies(sxs psdk)

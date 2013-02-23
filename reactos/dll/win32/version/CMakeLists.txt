@@ -13,7 +13,7 @@ list(APPEND SOURCE
 
 add_library(version SHARED ${SOURCE})
 
-set_module_type(version win32dll ENTRYPOINT 0 )
+set_module_type(version win32dll)
 
 target_link_libraries(version wine)
 add_importlibs(version kernel32 ntdll)

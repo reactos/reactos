@@ -13,7 +13,7 @@ add_library(winemp3.acm SHARED
     mpegl3.c
     ${CMAKE_CURRENT_BINARY_DIR}/winemp3.def)
 
-set_module_type(winemp3.acm win32dll ENTRYPOINT 0 )
+set_module_type(winemp3.acm win32dll)
 set_target_properties(winemp3.acm PROPERTIES SUFFIX "")
 target_link_libraries(winemp3.acm wine libmpg123 oldnames)
 

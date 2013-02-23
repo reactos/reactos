@@ -11,7 +11,7 @@ list(APPEND SOURCE
 
 add_library(olepro32 SHARED ${SOURCE})
 
-set_module_type(olepro32 win32dll ENTRYPOINT 0 )
+set_module_type(olepro32 win32dll)
 
 target_link_libraries(olepro32 wine)
 

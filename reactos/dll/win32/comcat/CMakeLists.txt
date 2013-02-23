@@ -15,7 +15,7 @@ list(APPEND SOURCE
 
 add_library(comcat SHARED ${SOURCE})
 
-set_module_type(comcat win32dll ENTRYPOINT 0 )
+set_module_type(comcat win32dll)
 
 target_link_libraries(comcat uuid wine)
 

@@ -13,7 +13,7 @@ list(APPEND SOURCE
 
 add_library(mciwave SHARED ${SOURCE})
 
-set_module_type(mciwave win32dll ENTRYPOINT 0)
+set_module_type(mciwave win32dll)
 
 target_link_libraries(mciwave wine)
 add_importlibs(mciwave user32 winmm msvcrt kernel32 ntdll)
