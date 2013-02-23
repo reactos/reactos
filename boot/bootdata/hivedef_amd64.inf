@@ -3,38 +3,6 @@ Signature="$ReactOS$"
 
 [AddReg]
 
-HKCU,"Console","CursorSize",0x00010003,25
-HKCU,"Console","FaceName",0x00000002,""
-HKCU,"Console","FontFamily",0x00010003,0
-HKCU,"Console","FontSize",0x00010003,0
-HKCU,"Console","FontWeight",0x00010003,0
-HKCU,"Console","FullScreen",0x00010003,0
-HKCU,"Console","HistoryBufferSize",0x00010003,50
-HKCU,"Console","InsertMode",0x00010003,1
-HKCU,"Console","LoadConIme",0x00010003,1
-HKCU,"Console","NumberOfHistoryBuffers",0x00010003,4
-HKCU,"Console","PopupColors",0x00010003,245
-HKCU,"Console","QuickEdit",0x00010003,0
-HKCU,"Console","ScreenBufferSize",0x00010003,19660880
-HKCU,"Console","ScreenColors",0x00010003,7
-HKCU,"Console","WindowSize",0x00010003,1638480
-HKCU,"Console","ColorTable00",0x00010003,0
-HKCU,"Console","ColorTable01",0x00010003,8388608
-HKCU,"Console","ColorTable02",0x00010003,32768
-HKCU,"Console","ColorTable03",0x00010003,8421376
-HKCU,"Console","ColorTable04",0x00010003,128
-HKCU,"Console","ColorTable05",0x00010003,8388736
-HKCU,"Console","ColorTable06",0x00010003,32896
-HKCU,"Console","ColorTable07",0x00010003,12632256
-HKCU,"Console","ColorTable08",0x00010003,8421504
-HKCU,"Console","ColorTable09",0x00010003,16711680
-HKCU,"Console","ColorTable10",0x00010003,65280
-HKCU,"Console","ColorTable11",0x00010003,16776960
-HKCU,"Console","ColorTable12",0x00010003,255
-HKCU,"Console","ColorTable13",0x00010003,16711935
-HKCU,"Console","ColorTable14",0x00010003,65535
-HKCU,"Console","ColorTable15",0x00010003,16777215
-
 HKCU,"Control Panel",,0x00000012
 
 ; Accessibility
