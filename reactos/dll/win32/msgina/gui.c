@@ -59,23 +59,35 @@ StatusMessageWindowProc(
 static DWORD WINAPI
 StartupWindowThread(LPVOID lpParam)
 {
-	HDESK OldDesk;
+	HDESK hDesk;
 	PDISPLAYSTATUSMSG msg = (PDISPLAYSTATUSMSG)lpParam;
 
-	OldDesk = GetThreadDesktop(GetCurrentThreadId());
-
-	if(!SetThreadDesktop(msg->hDesktop))
+	/* When SetThreadDesktop is called the system closes the desktop handle when needed
+	   so we have to create a new handle because this handle may still be in use by winlogon  */
+	if (!DuplicateHandle (	GetCurrentProcess(), 
+							msg->hDesktop, 
+							GetCurrentProcess(), 
+							&hDesk, 
+							0, 
+							FALSE, 
+							DUPLICATE_SAME_ACCESS))
 	{
 		HeapFree(GetProcessHeap(), 0, lpParam);
 		return FALSE;
 	}
+
+	if(!SetThreadDesktop(hDesk))
+	{
+		HeapFree(GetProcessHeap(), 0, lpParam);
+		return FALSE;
+	}
+
 	DialogBoxParam(
 		hDllInstance,
 		MAKEINTRESOURCE(IDD_STATUSWINDOW_DLG),
 		GetDesktopWindow(),
 		StatusMessageWindowProc,
 		(LPARAM)lpParam);
-	SetThreadDesktop(OldDesk);
 
 	HeapFree(GetProcessHeap(), 0, lpParam);
 	return TRUE;
