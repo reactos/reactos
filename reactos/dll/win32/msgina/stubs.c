@@ -86,23 +86,6 @@ WlxShutdown(
  * @unimplemented
  */
 BOOL WINAPI
-WlxScreenSaverNotify(
-	PVOID pWlxContext,
-	BOOL  *pSecure)
-{
-  UNREFERENCED_PARAMETER(pWlxContext);
-  UNREFERENCED_PARAMETER(pSecure);
-
-  //HKLM\Software\Policies\Microsoft\Windows\Control Panel\Desktop : ScreenSaverIsSecure
-  UNIMPLEMENTED;
-  return TRUE;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL WINAPI
 WlxGetStatusMessage(
 	PVOID pWlxContext,
 	DWORD *pdwOptions,

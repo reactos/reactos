@@ -189,6 +189,67 @@ WlxInitialize(
 /*
  * @implemented
  */
+BOOL
+WINAPI
+WlxScreenSaverNotify(
+    PVOID pWlxContext,
+    BOOL  *pSecure)
+{
+#if 0
+    WCHAR szBuffer[2];
+    HKEY hKey;
+    DWORD bufferSize = sizeof(szBuffer);
+    DWORD varType = REG_SZ;
+    LONG rc;
+
+    TRACE("(%p %p)\n", pWlxContext, pSecure);
+
+    *pSecure = TRUE;
+
+    /*
+     * Policy setting:
+     *    HKLM\Software\Policies\Microsoft\Windows\Control Panel\Desktop : ScreenSaverIsSecure
+     * User setting:
+     *    HKCU\Control Panel\Desktop : ScreenSaverIsSecure
+     */
+
+    rc = RegOpenKeyExW(HKEY_CURRENT_USER,
+                       L"Control Panel\\Desktop",
+                       0,
+                       KEY_QUERY_VALUE,
+                       &hKey);
+    TRACE("RegOpenKeyExW: %ld\n", rc);
+    if (rc == ERROR_SUCCESS)
+    {
+        rc = RegQueryValueExW(hKey,
+                              L"ScreenSaverIsSecure",
+                              NULL,
+                              &varType,
+                              (LPBYTE)szBuffer,
+                              &bufferSize);
+
+        TRACE("RegQueryValueExW: %ld\n", rc);
+
+        if (rc == ERROR_SUCCESS)
+        {
+            TRACE("szBuffer: \"%S\"\n", szBuffer);
+            *pSecure = _wtoi(szBuffer);
+        }
+
+        RegCloseKey(hKey);
+    }
+
+    TRACE("*pSecure: %ld\n", *pSecure);
+#endif
+
+    *pSecure = FALSE;
+
+    return TRUE;
+}
+
+/*
+ * @implemented
+ */
 BOOL WINAPI
 WlxStartApplication(
 	PVOID pWlxContext,
