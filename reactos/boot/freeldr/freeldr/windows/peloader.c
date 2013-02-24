@@ -30,7 +30,8 @@ WinLdrpBindImportName(IN OUT PLIST_ENTRY ModuleListHead,
                       IN PIMAGE_THUNK_DATA ThunkData,
                       IN PIMAGE_EXPORT_DIRECTORY ExportDirectory,
                       IN ULONG ExportSize,
-                      IN BOOLEAN ProcessForwards);
+                      IN BOOLEAN ProcessForwards,
+                      IN PCSTR DirectoryPath);
 
 static BOOLEAN
 WinLdrpLoadAndScanReferencedDll(PLIST_ENTRY ModuleListHead,
@@ -42,7 +43,8 @@ static BOOLEAN
 WinLdrpScanImportAddressTable(IN OUT PLIST_ENTRY ModuleListHead,
                               IN PVOID DllBase,
                               IN PVOID ImageBase,
-                              IN PIMAGE_THUNK_DATA ThunkData);
+                              IN PIMAGE_THUNK_DATA ThunkData,
+                              IN PCSTR DirectoryPath);
 
 
 
@@ -57,8 +59,7 @@ WinLdrCheckForLoadedDll(IN OUT PLIST_ENTRY ModuleListHead,
 	PLDR_DATA_TABLE_ENTRY DataTableEntry;
 	LIST_ENTRY *ModuleEntry;
 
-	TRACE("WinLdrCheckForLoadedDll: DllName %s, LoadedEntry: %X\n",
-		DllName, LoadedEntry);
+	TRACE("WinLdrCheckForLoadedDll: DllName %s\n", DllName);
 
 	/* Just go through each entry in the LoadOrderList and compare loaded module's
 	   name with a given name */
@@ -70,9 +71,9 @@ WinLdrCheckForLoadedDll(IN OUT PLIST_ENTRY ModuleListHead,
 			LDR_DATA_TABLE_ENTRY,
 			InLoadOrderLinks);
 
-		TRACE("WinLdrCheckForLoadedDll: DTE %p, EP %p, base %p name '%ws'\n",
+		TRACE("WinLdrCheckForLoadedDll: DTE %p, EP %p, base %p name '%.*ws'\n",
 			DataTableEntry, DataTableEntry->EntryPoint, DataTableEntry->DllBase,
-			VaToPa(DataTableEntry->BaseDllName.Buffer));
+			DataTableEntry->BaseDllName.Length / 2, VaToPa(DataTableEntry->BaseDllName.Buffer));
 
 		/* Compare names */
 		if (WinLdrpCompareDllName(DllName, &DataTableEntry->BaseDllName))
@@ -152,7 +153,8 @@ WinLdrScanImportDescriptorTable(IN OUT PLIST_ENTRY ModuleListHead,
 			ModuleListHead,
 			DataTableEntry->DllBase,
 			ScanDTE->DllBase,
-			(PIMAGE_THUNK_DATA)RVA(ScanDTE->DllBase, ImportTable->FirstThunk));
+			(PIMAGE_THUNK_DATA)RVA(ScanDTE->DllBase, ImportTable->FirstThunk),
+			DirectoryPath);
 
 		if (!Status)
 		{
@@ -241,8 +243,10 @@ WinLdrAllocateDataTableEntry(IN OUT PLIST_ENTRY ModuleListHead,
 
 	/* Insert this DTE to a list in the LPB */
 	InsertTailList(ModuleListHead, &DataTableEntry->InLoadOrderLinks);
-	TRACE("Inserting DTE %p, name='%S' DllBase=%p \n", DataTableEntry,
-          DataTableEntry->BaseDllName.Buffer, DataTableEntry->DllBase);
+	TRACE("Inserting DTE %p, name='%.*S' DllBase=%p \n", DataTableEntry,
+          DataTableEntry->BaseDllName.Length / 2,
+          VaToPa(DataTableEntry->BaseDllName.Buffer),
+          DataTableEntry->DllBase);
 
 	/* Save pointer to a newly allocated and initialized entry */
 	*NewEntry = DataTableEntry;
@@ -293,7 +297,6 @@ WinLdrLoadImage(IN PCHAR FileName,
 
 	/* Now read the MZ header to get the offset to the PE Header */
 	NtHeaders = RtlImageNtHeader(HeadersBuffer);
-
 	if (!NtHeaders)
 	{
 		//Print(L"Error - no NT header found in %s\n", FileName);
@@ -501,7 +504,8 @@ WinLdrpBindImportName(IN OUT PLIST_ENTRY ModuleListHead,
                       IN PIMAGE_THUNK_DATA ThunkData,
                       IN PIMAGE_EXPORT_DIRECTORY ExportDirectory,
                       IN ULONG ExportSize,
-                      IN BOOLEAN ProcessForwards)
+                      IN BOOLEAN ProcessForwards,
+                      IN PCSTR DirectoryPath)
 {
 	ULONG Ordinal;
 	PULONG NameTable, FunctionTable;
@@ -509,7 +513,7 @@ WinLdrpBindImportName(IN OUT PLIST_ENTRY ModuleListHead,
 	LONG High, Low, Middle, Result;
 	ULONG Hint;
     PIMAGE_IMPORT_BY_NAME ImportData;
-    PCHAR ExportName;
+    PCHAR ExportName, ForwarderName;
 
 	//TRACE("WinLdrpBindImportName(): DllBase 0x%X, ImageBase 0x%X, ThunkData 0x%X, ExportDirectory 0x%X, ExportSize %d, ProcessForwards 0x%X\n",
 	//	DllBase, ImageBase, ThunkData, ExportDirectory, ExportSize, ProcessForwards);
@@ -646,28 +650,44 @@ WinLdrpBindImportName(IN OUT PLIST_ENTRY ModuleListHead,
 	/* Save a pointer to the function */
 	ThunkData->u1.Function = (ULONG_PTR)RVA(DllBase, FunctionTable[Ordinal]);
 
-	/* Is it a forwarder? (function pointer isn't within the export directory) */
-	if (((ULONG_PTR)VaToPa((PVOID)ThunkData->u1.Function) > (ULONG_PTR)ExportDirectory) &&
-		((ULONG_PTR)VaToPa((PVOID)ThunkData->u1.Function) < ((ULONG_PTR)ExportDirectory + ExportSize)))
+	/* Is it a forwarder? (function pointer is within the export directory) */
+	ForwarderName = (PCHAR)VaToPa((PVOID)ThunkData->u1.Function);
+	if (((ULONG_PTR)ForwarderName > (ULONG_PTR)ExportDirectory) &&
+		((ULONG_PTR)ForwarderName < ((ULONG_PTR)ExportDirectory + ExportSize)))
 	{
 		PLDR_DATA_TABLE_ENTRY DataTableEntry;
 		CHAR ForwardDllName[255];
 		PIMAGE_EXPORT_DIRECTORY RefExportDirectory;
 		ULONG RefExportSize;
+		NTSTATUS Status;
+		TRACE("WinLdrpBindImportName(): ForwarderName %s\n", ForwarderName);
 
 		/* Save the name of the forward dll */
-		RtlCopyMemory(ForwardDllName, (PCHAR)VaToPa((PVOID)ThunkData->u1.Function), sizeof(ForwardDllName));
+		RtlCopyMemory(ForwardDllName, ForwarderName, sizeof(ForwardDllName));
 
-		/* Strip out its extension */
-		*strchr(ForwardDllName,'.') = '\0';
+		/* Strip out the symbol name */
+		*strrchr(ForwardDllName,'.') = '\0';
 
-		TRACE("WinLdrpBindImportName(): ForwardDllName %s\n", ForwardDllName);
+		/* Check if the target image is already loaded */
 		if (!WinLdrCheckForLoadedDll(ModuleListHead, ForwardDllName, &DataTableEntry))
 		{
-			/* We can't continue if DLL couldn't be loaded, so bomb out with an error */
-			//Print(L"Error loading DLL!\n");
-			ERR("Error loading DLL!\n");
-			return FALSE;
+			/* Check if the forward dll name has an extension */
+			if (strchr(ForwardDllName, '.') == NULL)
+			{
+				/* Name does not have an extension, append '.dll' */
+				strcat(ForwardDllName, ".dll");
+			}
+
+			/* Now let's try to load it! */
+			Status = WinLdrpLoadAndScanReferencedDll(ModuleListHead,
+				DirectoryPath,
+				ForwardDllName,
+				&DataTableEntry);
+			if (!Status)
+			{
+				ERR("WinLdrpLoadAndScanReferencedDll() failed to load forwarder dll.\n");
+				return Status;
+			}
 		}
 
 		/* Get pointer to the export directory of loaded DLL */
@@ -687,7 +707,7 @@ WinLdrpBindImportName(IN OUT PLIST_ENTRY ModuleListHead,
 			BOOLEAN Status;
 
 			/* Get pointer to the import name */
-			ImportName = strchr((PCHAR)VaToPa((PVOID)ThunkData->u1.Function), '.') + 1;
+			ImportName = strrchr(ForwarderName, '.') + 1;
 
 			/* Create a IMAGE_IMPORT_BY_NAME structure, pointing to the local Buffer */
 			ImportByName = (PIMAGE_IMPORT_BY_NAME)Buffer;
@@ -709,7 +729,8 @@ WinLdrpBindImportName(IN OUT PLIST_ENTRY ModuleListHead,
 				&RefThunkData,
 				RefExportDirectory,
 				RefExportSize,
-				TRUE);
+				TRUE,
+				DirectoryPath);
 
 			/* Fill out the ThunkData with data from RefThunkData */
 			ThunkData->u1 = RefThunkData.u1;
@@ -747,7 +768,6 @@ WinLdrpLoadAndScanReferencedDll(PLIST_ENTRY ModuleListHead,
 
 	/* Load the image */
 	Status = WinLdrLoadImage(FullDllName, LoaderBootDriver, &BasePA);
-
 	if (!Status)
 	{
 		ERR("WinLdrLoadImage() failed\n");
@@ -760,7 +780,6 @@ WinLdrpLoadAndScanReferencedDll(PLIST_ENTRY ModuleListHead,
 		FullDllName,
 		BasePA,
 		DataTableEntry);
-
 	if (!Status)
 	{
 		ERR("WinLdrAllocateDataTableEntry() failed with Status=0x%X\n", Status);
@@ -771,7 +790,6 @@ WinLdrpLoadAndScanReferencedDll(PLIST_ENTRY ModuleListHead,
 	TRACE("WinLdrScanImportDescriptorTable() calling ourselves for %S\n",
 		VaToPa((*DataTableEntry)->BaseDllName.Buffer));
 	Status = WinLdrScanImportDescriptorTable(ModuleListHead, DirectoryPath, *DataTableEntry);
-
 	if (!Status)
 	{
 		ERR("WinLdrScanImportDescriptorTable() failed with Status=0x%X\n", Status);
@@ -785,7 +803,8 @@ static BOOLEAN
 WinLdrpScanImportAddressTable(IN OUT PLIST_ENTRY ModuleListHead,
                               IN PVOID DllBase,
                               IN PVOID ImageBase,
-                              IN PIMAGE_THUNK_DATA ThunkData)
+                              IN PIMAGE_THUNK_DATA ThunkData,
+                              IN PCSTR DirectoryPath)
 {
 	PIMAGE_EXPORT_DIRECTORY ExportDirectory = NULL;
 	BOOLEAN Status;
@@ -829,7 +848,8 @@ WinLdrpScanImportAddressTable(IN OUT PLIST_ENTRY ModuleListHead,
 			ThunkData,
 			ExportDirectory,
 			ExportSize,
-			FALSE);
+			FALSE,
+			DirectoryPath);
 
 		/* Move to the next entry */
 		ThunkData++;
