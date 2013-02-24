@@ -514,6 +514,7 @@ WinLdrpBindImportName(IN OUT PLIST_ENTRY ModuleListHead,
 	ULONG Hint;
     PIMAGE_IMPORT_BY_NAME ImportData;
     PCHAR ExportName, ForwarderName;
+    BOOLEAN Status;
 
 	//TRACE("WinLdrpBindImportName(): DllBase 0x%X, ImageBase 0x%X, ThunkData 0x%X, ExportDirectory 0x%X, ExportSize %d, ProcessForwards 0x%X\n",
 	//	DllBase, ImageBase, ThunkData, ExportDirectory, ExportSize, ProcessForwards);
@@ -659,7 +660,6 @@ WinLdrpBindImportName(IN OUT PLIST_ENTRY ModuleListHead,
 		CHAR ForwardDllName[255];
 		PIMAGE_EXPORT_DIRECTORY RefExportDirectory;
 		ULONG RefExportSize;
-		NTSTATUS Status;
 		TRACE("WinLdrpBindImportName(): ForwarderName %s\n", ForwarderName);
 
 		/* Save the name of the forward dll */
@@ -704,7 +704,6 @@ WinLdrpBindImportName(IN OUT PLIST_ENTRY ModuleListHead,
 			IMAGE_THUNK_DATA RefThunkData;
 			PIMAGE_IMPORT_BY_NAME ImportByName;
 			PCHAR ImportName;
-			BOOLEAN Status;
 
 			/* Get pointer to the import name */
 			ImportName = strrchr(ForwarderName, '.') + 1;
