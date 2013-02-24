@@ -67,7 +67,7 @@ StartupWindowThread(LPVOID lpParam)
 	if (!DuplicateHandle (	GetCurrentProcess(), 
 							msg->hDesktop, 
 							GetCurrentProcess(), 
-							&hDesk, 
+							(HANDLE*)&hDesk, 
 							0, 
 							FALSE, 
 							DUPLICATE_SAME_ACCESS))
