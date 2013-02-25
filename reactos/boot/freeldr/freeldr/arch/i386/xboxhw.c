@@ -429,8 +429,6 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA SystemKey,
                            &ControllerKey);
     TRACE("Created key: DiskController\\0\n");
 
-    MmHeapFree(PartialResourceList);
-
     /* Create and fill subkey for each harddisk */
     for (i = 0; i < DiskCount; i++)
     {
@@ -451,9 +449,6 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA SystemKey,
                                PartialResourceList,
                                Size,
                                &DiskKey);
-
-        if (PartialResourceList)
-            MmHeapFree(PartialResourceList);
     }
 }
 
@@ -496,8 +491,6 @@ DetectIsaBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
 
     /* Increment bus number */
     (*BusNumber)++;
-
-    MmHeapFree(PartialResourceList);
 
     /* Detect ISA/BIOS devices */
     DetectBiosDisks(SystemKey, BusKey);

@@ -158,8 +158,6 @@ DetectPciIrqRoutingTable(PCONFIGURATION_COMPONENT_DATA BusKey)
                                PartialResourceList,
                                Size,
                                &TableKey);
-
-        MmHeapFree(PartialResourceList);
     }
 }
 
@@ -204,8 +202,6 @@ DetectPciBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
 
         /* Increment bus number */
         (*BusNumber)++;
-
-        MmHeapFree(PartialResourceList);
 
         DetectPciIrqRoutingTable(BiosKey);
 
@@ -267,8 +263,6 @@ DetectPciBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
                                    PartialResourceList,
                                    Size,
                                    &BusKey);
-
-            MmHeapFree(PartialResourceList);
 
             /* Increment bus number */
             (*BusNumber)++;

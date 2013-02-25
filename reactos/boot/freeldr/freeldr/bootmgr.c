@@ -21,7 +21,6 @@
 
 ARC_DISK_SIGNATURE reactos_arc_disk_info[32]; // ARC Disk Information
 ULONG reactos_disk_count = 0;
-CHAR reactos_arc_hardware_data[HW_MAX_ARC_HEAP_SIZE] = {0};
 CHAR reactos_arc_strings[32][256];
 
 typedef

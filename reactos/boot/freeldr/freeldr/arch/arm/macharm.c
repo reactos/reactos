@@ -31,7 +31,6 @@ ULONG SecondLevelIcacheFillSize;
 
 ARC_DISK_SIGNATURE reactos_arc_disk_info;
 ULONG reactos_disk_count;
-CHAR reactos_arc_hardware_data[256];
 
 ULONG SizeBits[] =
 {

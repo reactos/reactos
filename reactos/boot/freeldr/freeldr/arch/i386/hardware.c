@@ -355,8 +355,6 @@ DetectPnpBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
                            &BusKey);
 
     (*BusNumber)++;
-
-    MmHeapFree(PartialResourceList);
 }
 
 
@@ -545,8 +543,6 @@ DetectBiosFloppyPeripheral(PCONFIGURATION_COMPONENT_DATA ControllerKey)
                                PartialResourceList,
                                Size,
                                &PeripheralKey);
-
-        MmHeapFree(PartialResourceList);
     }
 }
 
@@ -619,8 +615,6 @@ DetectBiosFloppyController(PCONFIGURATION_COMPONENT_DATA BusKey)
                            &ControllerKey);
     TRACE("Created key: DiskController\\0\n");
 
-    MmHeapFree(PartialResourceList);
-
     if (FloppyCount) DetectBiosFloppyPeripheral(ControllerKey);
 }
 
@@ -691,8 +685,6 @@ DetectSystem(VOID)
                            Size,
                            &SystemKey);
 
-    MmHeapFree(PartialResourceList);
-
     return SystemKey;
 }
 
@@ -739,7 +731,6 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA BusKey)
                                Size,
                                &DiskKey);
     }
-
 }
 
 static
@@ -917,12 +908,12 @@ VOID
 DetectSerialPointerPeripheral(PCONFIGURATION_COMPONENT_DATA ControllerKey,
                               PUCHAR Base)
 {
-    CM_PARTIAL_RESOURCE_LIST PartialResourceList;
+    PCM_PARTIAL_RESOURCE_LIST PartialResourceList;
     char Buffer[256];
     CHAR Identifier[256];
     PCONFIGURATION_COMPONENT_DATA PeripheralKey;
     ULONG MouseType;
-    ULONG Length;
+    ULONG Size, Length;
     ULONG i;
     ULONG j;
     ULONG k;
@@ -1043,10 +1034,13 @@ DetectSerialPointerPeripheral(PCONFIGURATION_COMPONENT_DATA ControllerKey,
         }
 
         /* Set 'Configuration Data' value */
-        memset(&PartialResourceList, 0, sizeof(CM_PARTIAL_RESOURCE_LIST));
-        PartialResourceList.Version = 1;
-        PartialResourceList.Revision = 1;
-        PartialResourceList.Count = 0;
+        Size = sizeof(CM_PARTIAL_RESOURCE_LIST) -
+               sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
+        PartialResourceList = MmHeapAlloc(Size);
+        memset(PartialResourceList, 0, Size);
+        PartialResourceList->Version = 1;
+        PartialResourceList->Revision = 1;
+        PartialResourceList->Count = 0;
 
         /* Create 'PointerPeripheral' key */
         FldrCreateComponentKey(ControllerKey,
@@ -1056,9 +1050,8 @@ DetectSerialPointerPeripheral(PCONFIGURATION_COMPONENT_DATA ControllerKey,
                                0x0,
                                0xFFFFFFFF,
                                Identifier,
-                               &PartialResourceList,
-                               sizeof(CM_PARTIAL_RESOURCE_LIST) -
-                               sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR),
+                               PartialResourceList,
+                               Size,
                                &PeripheralKey);
 
         TRACE("Created key: PointerPeripheral\\0\n");
@@ -1160,8 +1153,6 @@ DetectSerialPorts(PCONFIGURATION_COMPONENT_DATA BusKey)
                                Size,
                                &ControllerKey);
 
-        MmHeapFree(PartialResourceList);
-
         if (!Rs232PortInUse(UlongToPtr(Base)))
         {
             /* Detect serial mouse */
@@ -1257,8 +1248,6 @@ DetectParallelPorts(PCONFIGURATION_COMPONENT_DATA BusKey)
                                PartialResourceList,
                                Size,
                                &ControllerKey);
-
-        MmHeapFree(PartialResourceList);
 
         ControllerNumber++;
     }
@@ -1390,8 +1379,6 @@ DetectKeyboardPeripheral(PCONFIGURATION_COMPONENT_DATA ControllerKey)
                                Size,
                                &PeripheralKey);
         TRACE("Created key: KeyboardPeripheral\\0\n");
-
-        MmHeapFree(PartialResourceList);
     }
 }
 
@@ -1460,8 +1447,6 @@ DetectKeyboardController(PCONFIGURATION_COMPONENT_DATA BusKey)
                            Size,
                            &ControllerKey);
     TRACE("Created key: KeyboardController\\0\n");
-
-    MmHeapFree(PartialResourceList);
 
     DetectKeyboardPeripheral(ControllerKey);
 }
@@ -1582,28 +1567,30 @@ static
 VOID
 DetectPS2Mouse(PCONFIGURATION_COMPONENT_DATA BusKey)
 {
-    CM_PARTIAL_RESOURCE_LIST PartialResourceList;
+    PCM_PARTIAL_RESOURCE_LIST PartialResourceList;
     PCONFIGURATION_COMPONENT_DATA ControllerKey;
     PCONFIGURATION_COMPONENT_DATA PeripheralKey;
+    ULONG Size;
 
     if (DetectPS2AuxPort())
     {
         TRACE("Detected PS2 port\n");
 
-        memset(&PartialResourceList, 0, sizeof(CM_PARTIAL_RESOURCE_LIST));
+        PartialResourceList = MmHeapAlloc(sizeof(CM_PARTIAL_RESOURCE_LIST));
+        memset(PartialResourceList, 0, sizeof(CM_PARTIAL_RESOURCE_LIST));
 
         /* Initialize resource descriptor */
-        PartialResourceList.Version = 1;
-        PartialResourceList.Revision = 1;
-        PartialResourceList.Count = 1;
+        PartialResourceList->Version = 1;
+        PartialResourceList->Revision = 1;
+        PartialResourceList->Count = 1;
 
         /* Set Interrupt */
-        PartialResourceList.PartialDescriptors[0].Type = CmResourceTypeInterrupt;
-        PartialResourceList.PartialDescriptors[0].ShareDisposition = CmResourceShareUndetermined;
-        PartialResourceList.PartialDescriptors[0].Flags = CM_RESOURCE_INTERRUPT_LATCHED;
-        PartialResourceList.PartialDescriptors[0].u.Interrupt.Level = 12;
-        PartialResourceList.PartialDescriptors[0].u.Interrupt.Vector = 12;
-        PartialResourceList.PartialDescriptors[0].u.Interrupt.Affinity = 0xFFFFFFFF;
+        PartialResourceList->PartialDescriptors[0].Type = CmResourceTypeInterrupt;
+        PartialResourceList->PartialDescriptors[0].ShareDisposition = CmResourceShareUndetermined;
+        PartialResourceList->PartialDescriptors[0].Flags = CM_RESOURCE_INTERRUPT_LATCHED;
+        PartialResourceList->PartialDescriptors[0].u.Interrupt.Level = 12;
+        PartialResourceList->PartialDescriptors[0].u.Interrupt.Vector = 12;
+        PartialResourceList->PartialDescriptors[0].u.Interrupt.Affinity = 0xFFFFFFFF;
 
         /* Create controller key */
         FldrCreateComponentKey(BusKey,
@@ -1613,7 +1600,7 @@ DetectPS2Mouse(PCONFIGURATION_COMPONENT_DATA BusKey)
                                0x0,
                                0xFFFFFFFF,
                                NULL,
-                               &PartialResourceList,
+                               PartialResourceList,
                                sizeof(CM_PARTIAL_RESOURCE_LIST),
                                &ControllerKey);
         TRACE("Created key: PointerController\\0\n");
@@ -1623,10 +1610,13 @@ DetectPS2Mouse(PCONFIGURATION_COMPONENT_DATA BusKey)
             TRACE("Detected PS2 mouse\n");
 
             /* Initialize resource descriptor */
-            memset(&PartialResourceList, 0, sizeof(CM_PARTIAL_RESOURCE_LIST));
-            PartialResourceList.Version = 1;
-            PartialResourceList.Revision = 1;
-            PartialResourceList.Count = 0;
+            Size = sizeof(CM_PARTIAL_RESOURCE_LIST) -
+                   sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
+            PartialResourceList = MmHeapAlloc(Size);
+            memset(PartialResourceList, 0, Size);
+            PartialResourceList->Version = 1;
+            PartialResourceList->Revision = 1;
+            PartialResourceList->Count = 0;
 
             /* Create peripheral key */
             FldrCreateComponentKey(ControllerKey,
@@ -1636,9 +1626,8 @@ DetectPS2Mouse(PCONFIGURATION_COMPONENT_DATA BusKey)
                                    0x0,
                                    0xFFFFFFFF,
                                    "MICROSOFT PS2 MOUSE",
-                                   &PartialResourceList,
-                                   sizeof(CM_PARTIAL_RESOURCE_LIST) -
-                                   sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR),
+                                   PartialResourceList,
+                                   Size,
                                    &PeripheralKey);
             TRACE("Created key: PointerPeripheral\\0\n");
         }
@@ -1730,8 +1719,6 @@ DetectIsaBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
                            PartialResourceList,
                            Size,
                            &BusKey);
-
-    MmHeapFree(PartialResourceList);
 
     /* Detect ISA/BIOS devices */
     DetectBiosDisks(BusKey);
