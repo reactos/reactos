@@ -104,7 +104,7 @@ BOOLEAN
 ArmInitializeBootDevices(VOID)
 {
     /* Emulate old behavior */
-    return ArmHwDetect != NULL;
+    return (ArmHwDetect() != NULL);
 }
 
 PCONFIGURATION_COMPONENT_DATA
