@@ -600,6 +600,7 @@ enum __SAL_YesNo {_SAL_notpresent, _SAL_no, _SAL_maybe, _SAL_yes, _SAL_default};
 //#define _Deref2_pre_readonly_
 #define _Field_range_(min,max)                                      _SAL2_NAME(_Field_range_) _Group_(_SA_annotes2(SAL_range,min,max))
 #define _Field_size_(size)                                          _SAL2_NAME(_Field_size_) _Group_(_Notnull_ _Writable_elements_(size))
+#define _Field_size_opt_(size)                                      _SAL2_NAME(_Field_size_opt_) _Group_(_Maybenull_ _Writable_elements_(size))
 #define _Field_size_bytes_(size)                                    _SAL2_NAME(_Field_size_bytes_) _Group_(_Notnull_ _Writable_bytes_(size))
 //#define _Field_size_bytes_full_(size)
 //#define _Field_size_bytes_full_opt_(size)
@@ -608,7 +609,6 @@ enum __SAL_YesNo {_SAL_notpresent, _SAL_no, _SAL_maybe, _SAL_yes, _SAL_default};
 #define _Field_size_bytes_part_opt_(size, count)                    _SAL2_NAME(_Field_size_bytes_part_opt_) _Group_(_Maybenull_ _Writable_bytes_(size) _Readable_bytes_(count))
 //#define _Field_size_full_(size)
 //#define _Field_size_full_opt_(size)
-//#define _Field_size_opt_(size)
 //#define _Field_size_part_(size, count)
 //#define _Field_size_part_opt_(size, count)
 //#define _Field_z_
