@@ -1294,8 +1294,6 @@ NtUserCreateDesktop(
        RETURN(NULL);
    }
 
-   if (!ptiCurrent->rpdesk) IntSetThreadDesktop(hdesk,FALSE);
-
    /* Get the desktop window class. The thread desktop does not belong to any desktop
     * so the classes created there (including the desktop class) are allocated in the shared heap
     * It would cause problems if we used a class that belongs to the caller
