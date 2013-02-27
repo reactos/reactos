@@ -21,17 +21,17 @@
 #include <stdarg.h>
 #include <stdlib.h>
 
-#include <windef.h>
-#include <winbase.h>
-#include <wingdi.h>
-//#include "winuser.h"
-//#include "winnls.h"
-#include <usp10.h>
-#include <winternl.h>
+#include "windef.h"
+#include "winbase.h"
+#include "wingdi.h"
+#include "winuser.h"
+#include "winnls.h"
+#include "usp10.h"
+#include "winternl.h"
 
 #include "usp10_internal.h"
 
-#include <wine/debug.h>
+#include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(uniscribe);
 
@@ -76,8 +76,6 @@ typedef struct {
 } CMAP_SegmentedCoverage;
 
 /* These are all structures needed for the GDEF table */
-#define GDEF_TAG MS_MAKE_TAG('G', 'D', 'E', 'F')
-
 enum {BaseGlyph=1, LigatureGlyph, MarkGlyph, ComponentGlyph};
 
 typedef struct {
@@ -93,19 +91,19 @@ typedef struct {
     WORD StartGlyph;
     WORD GlyphCount;
     WORD ClassValueArray[1];
-} GDEF_ClassDefFormat1;
+} OT_ClassDefFormat1;
 
 typedef struct {
     WORD Start;
     WORD End;
     WORD Class;
-} GDEF_ClassRangeRecord;
+} OT_ClassRangeRecord;
 
 typedef struct {
     WORD ClassFormat;
     WORD ClassRangeCount;
-    GDEF_ClassRangeRecord ClassRangeRecord[1];
-} GDEF_ClassDefFormat2;
+    OT_ClassRangeRecord ClassRangeRecord[1];
+} OT_ClassDefFormat2;
 
 /* These are all structures needed for the GSUB table */
 
@@ -352,6 +350,18 @@ typedef struct {
 } GPOS_PairPosFormat1;
 
 typedef struct {
+    WORD PosFormat;
+    WORD Coverage;
+    WORD ValueFormat1;
+    WORD ValueFormat2;
+    WORD ClassDef1;
+    WORD ClassDef2;
+    WORD Class1Count;
+    WORD Class2Count;
+    WORD Class1Record[1];
+} GPOS_PairPosFormat2;
+
+typedef struct {
     WORD SecondGlyph;
     WORD Value1[1];
     WORD Value2[1];
@@ -361,6 +371,18 @@ typedef struct {
     WORD PairValueCount;
     GPOS_PairValueRecord PairValueRecord[1];
 } GPOS_PairSet;
+
+typedef struct {
+    WORD EntryAnchor;
+    WORD ExitAnchor;
+} GPOS_EntryExitRecord;
+
+typedef struct {
+    WORD PosFormat;
+    WORD Coverage;
+    WORD EntryExitCount;
+    GPOS_EntryExitRecord EntryExitRecord[1];
+} GPOS_CursivePosFormat1;
 
 typedef struct {
     WORD PosFormat;
@@ -389,6 +411,29 @@ typedef struct {
     WORD MarkCount;
     GPOS_MarkRecord MarkRecord[1];
 } GPOS_MarkArray;
+
+typedef struct {
+    WORD PosFormat;
+    WORD MarkCoverage;
+    WORD LigatureCoverage;
+    WORD ClassCount;
+    WORD MarkArray;
+    WORD LigatureArray;
+} GPOS_MarkLigPosFormat1;
+
+typedef struct {
+    WORD LigatureCount;
+    WORD LigatureAttach[1];
+} GPOS_LigatureArray;
+
+typedef struct {
+    WORD LigatureAnchor[1];
+} GPOS_ComponentRecord;
+
+typedef struct {
+    WORD ComponentCount;
+    GPOS_ComponentRecord ComponentRecord[1];
+} GPOS_LigatureAttach;
 
 typedef struct {
     WORD PosFormat;
@@ -525,20 +570,13 @@ DWORD OpenType_CMAP_GetGlyphIndex(HDC hdc, ScriptCache *psc, DWORD utf32c, LPWOR
  * GDEF
  **********/
 
-static WORD GDEF_get_glyph_class(const GDEF_Header *header, WORD glyph)
+static WORD OT_get_glyph_class(const void *table, WORD glyph)
 {
-    int offset;
     WORD class = 0;
-    const GDEF_ClassDefFormat1 *cf1;
+    const OT_ClassDefFormat1 *cf1 = table;
 
-    if (!header)
-        return 0;
+    if (!table) return 0;
 
-    offset = GET_BE_WORD(header->GlyphClassDef);
-    if (!offset)
-        return 0;
-
-    cf1 = (GDEF_ClassDefFormat1*)(((BYTE*)header)+offset);
     if (GET_BE_WORD(cf1->ClassFormat) == 1)
     {
         if (glyph >= GET_BE_WORD(cf1->StartGlyph))
@@ -550,7 +588,7 @@ static WORD GDEF_get_glyph_class(const GDEF_Header *header, WORD glyph)
     }
     else if (GET_BE_WORD(cf1->ClassFormat) == 2)
     {
-        const GDEF_ClassDefFormat2 *cf2 = (GDEF_ClassDefFormat2*)cf1;
+        const OT_ClassDefFormat2 *cf2 = table;
         int i, top;
         top = GET_BE_WORD(cf2->ClassRangeCount);
         for (i = 0; i < top; i++)
@@ -569,25 +607,18 @@ static WORD GDEF_get_glyph_class(const GDEF_Header *header, WORD glyph)
     return class;
 }
 
-static VOID *load_gdef_table(HDC hdc)
-{
-    VOID* GDEF_Table = NULL;
-    int length = GetFontData(hdc, GDEF_TAG , 0, NULL, 0);
-    if (length != GDI_ERROR)
-    {
-        GDEF_Table = HeapAlloc(GetProcessHeap(),0,length);
-        GetFontData(hdc, GDEF_TAG , 0, GDEF_Table, length);
-        TRACE("Loaded GDEF table of %i bytes\n",length);
-    }
-    return GDEF_Table;
-}
-
-void OpenType_GDEF_UpdateGlyphProps(HDC hdc, ScriptCache *psc, const WORD *pwGlyphs, const WORD cGlyphs, WORD* pwLogClust, const WORD cChars, SCRIPT_GLYPHPROP *pGlyphProp)
+void OpenType_GDEF_UpdateGlyphProps(ScriptCache *psc, const WORD *pwGlyphs, const WORD cGlyphs, WORD* pwLogClust, const WORD cChars, SCRIPT_GLYPHPROP *pGlyphProp)
 {
     int i;
+    void *glyph_class_table = NULL;
 
-    if (!psc->GDEF_Table)
-        psc->GDEF_Table = load_gdef_table(hdc);
+    if (psc->GDEF_Table)
+    {
+        const GDEF_Header *header = psc->GDEF_Table;
+        WORD offset = GET_BE_WORD( header->GlyphClassDef );
+        if (offset)
+            glyph_class_table = (BYTE *)psc->GDEF_Table + offset;
+    }
 
     for (i = 0; i < cGlyphs; i++)
     {
@@ -602,7 +633,7 @@ void OpenType_GDEF_UpdateGlyphProps(HDC hdc, ScriptCache *psc, const WORD *pwGly
                 char_count++;
         }
 
-        class = GDEF_get_glyph_class(psc->GDEF_Table, pwGlyphs[i]);
+        class = OT_get_glyph_class( glyph_class_table, pwGlyphs[i] );
 
         switch (class)
         {
@@ -1023,7 +1054,8 @@ INT OpenType_apply_GSUB_lookup(LPCVOID table, INT lookup_index, WORD *glyphs, IN
 /**********
  * GPOS
  **********/
-static INT GPOS_apply_lookup(LPOUTLINETEXTMETRICW lpotm, LPLOGFONTW lplogfont, INT* piAdvance, const OT_LookupList* lookup, INT lookup_index, const WORD *glyphs, INT glyph_index, INT write_dir, INT glyph_count, GOFFSET *pGoffset);
+static INT GPOS_apply_lookup(ScriptCache *psc, LPOUTLINETEXTMETRICW lpotm, LPLOGFONTW lplogfont, const SCRIPT_ANALYSIS *analysis, INT* piAdvance,
+                             const OT_LookupList* lookup, INT lookup_index, const WORD *glyphs, INT glyph_index, INT glyph_count, GOFFSET *pGoffset);
 
 static INT GPOS_get_device_table_value(const OT_DeviceTable *DeviceTable, WORD ppem)
 {
@@ -1110,14 +1142,14 @@ static void GPOS_convert_design_units_to_device(LPOUTLINETEXTMETRICW lpotm, LPLO
 static INT GPOS_get_value_record(WORD ValueFormat, const WORD data[], GPOS_ValueRecord *record)
 {
     INT offset = 0;
-    if (ValueFormat & 0x0001) record->XPlacement = GET_BE_WORD(data[offset++]);
-    if (ValueFormat & 0x0002) record->YPlacement = GET_BE_WORD(data[offset++]);
-    if (ValueFormat & 0x0004) record->XAdvance = GET_BE_WORD(data[offset++]);
-    if (ValueFormat & 0x0008) record->YAdvance = GET_BE_WORD(data[offset++]);
-    if (ValueFormat & 0x0010) record->XPlaDevice = GET_BE_WORD(data[offset++]);
-    if (ValueFormat & 0x0020) record->YPlaDevice = GET_BE_WORD(data[offset++]);
-    if (ValueFormat & 0x0040) record->XAdvDevice = GET_BE_WORD(data[offset++]);
-    if (ValueFormat & 0x0080) record->YAdvDevice = GET_BE_WORD(data[offset++]);
+    if (ValueFormat & 0x0001) { if (data) record->XPlacement = GET_BE_WORD(data[offset]); offset++; }
+    if (ValueFormat & 0x0002) { if (data) record->YPlacement = GET_BE_WORD(data[offset]); offset++; }
+    if (ValueFormat & 0x0004) { if (data) record->XAdvance   = GET_BE_WORD(data[offset]); offset++; }
+    if (ValueFormat & 0x0008) { if (data) record->YAdvance   = GET_BE_WORD(data[offset]); offset++; }
+    if (ValueFormat & 0x0010) { if (data) record->XPlaDevice = GET_BE_WORD(data[offset]); offset++; }
+    if (ValueFormat & 0x0020) { if (data) record->YPlaDevice = GET_BE_WORD(data[offset]); offset++; }
+    if (ValueFormat & 0x0040) { if (data) record->XAdvDevice = GET_BE_WORD(data[offset]); offset++; }
+    if (ValueFormat & 0x0080) { if (data) record->YAdvDevice = GET_BE_WORD(data[offset]); offset++; }
     return offset;
 }
 
@@ -1134,7 +1166,8 @@ static VOID GPOS_get_value_record_offsets(const BYTE* head, GPOS_ValueRecord *Va
     if (ValueFormat & 0xFF00) FIXME("Unhandled Value Format %x\n",ValueFormat&0xFF00);
 }
 
-static VOID GPOS_apply_SingleAdjustment(const OT_LookupTable *look, const WORD *glyphs, INT glyph_index, INT write_dir, INT glyph_count, INT ppem, LPPOINT ptAdjust, LPPOINT ptAdvance)
+static VOID GPOS_apply_SingleAdjustment(const OT_LookupTable *look, const SCRIPT_ANALYSIS *analysis, const WORD *glyphs, INT glyph_index,
+                                        INT glyph_count, INT ppem, LPPOINT ptAdjust, LPPOINT ptAdvance)
 {
     int j;
 
@@ -1184,9 +1217,37 @@ static VOID GPOS_apply_SingleAdjustment(const OT_LookupTable *look, const WORD *
     }
 }
 
-static INT GPOS_apply_PairAdjustment(const OT_LookupTable *look, const WORD *glyphs, INT glyph_index, INT write_dir, INT glyph_count, INT ppem, LPPOINT ptAdjust, LPPOINT ptAdvance)
+static void apply_pair_value( const void *pos_table, WORD val_fmt1, WORD val_fmt2, const WORD *pair,
+                              INT ppem, POINT *adjust, POINT *advance )
+{
+    GPOS_ValueRecord val_rec1 = {0,0,0,0,0,0,0,0};
+    GPOS_ValueRecord val_rec2 = {0,0,0,0,0,0,0,0};
+    INT size;
+
+    size = GPOS_get_value_record( val_fmt1, pair, &val_rec1 );
+    GPOS_get_value_record( val_fmt2, pair + size, &val_rec2 );
+
+    if (val_fmt1)
+    {
+        GPOS_get_value_record_offsets( pos_table, &val_rec1, val_fmt1, ppem, adjust, advance );
+        TRACE( "Glyph 1 resulting cumulative offset is %i,%i design units\n", adjust[0].x, adjust[0].y );
+        TRACE( "Glyph 1 resulting cumulative advance is %i,%i design units\n", advance[0].x, advance[0].y );
+    }
+    if (val_fmt2)
+    {
+        GPOS_get_value_record_offsets( pos_table, &val_rec2, val_fmt2, ppem, adjust + 1, advance + 1 );
+        TRACE( "Glyph 2 resulting cumulative offset is %i,%i design units\n", adjust[1].x, adjust[1].y );
+        TRACE( "Glyph 2 resulting cumulative advance is %i,%i design units\n", advance[1].x, advance[1].y );
+    }
+}
+
+static INT GPOS_apply_PairAdjustment(const OT_LookupTable *look, const SCRIPT_ANALYSIS *analysis, const WORD *glyphs, INT glyph_index,
+                                     INT glyph_count, INT ppem, LPPOINT ptAdjust, LPPOINT ptAdvance)
 {
     int j;
+    int write_dir = (analysis->fRTL && !analysis->fLogicalOrder) ? -1 : 1;
+
+    if (glyph_index + write_dir < 0 || glyph_index + write_dir >= glyph_count) return glyph_index + 1;
 
     TRACE("Pair Adjustment Positioning Subtable\n");
 
@@ -1198,6 +1259,10 @@ static INT GPOS_apply_PairAdjustment(const OT_LookupTable *look, const WORD *gly
         if (GET_BE_WORD(ppf1->PosFormat) == 1)
         {
             int index;
+            WORD ValueFormat1 = GET_BE_WORD(ppf1->ValueFormat1);
+            WORD ValueFormat2 = GET_BE_WORD(ppf1->ValueFormat2);
+            INT val_fmt1_size = GPOS_get_value_record( ValueFormat1, NULL, NULL );
+            INT val_fmt2_size = GPOS_get_value_record( ValueFormat2, NULL, NULL );
             offset = GET_BE_WORD(ppf1->Coverage);
             index = GSUB_is_glyph_covered((const BYTE*)ppf1+offset, glyphs[glyph_index]);
             if (index != -1 && index < GET_BE_WORD(ppf1->PairSetCount))
@@ -1205,40 +1270,54 @@ static INT GPOS_apply_PairAdjustment(const OT_LookupTable *look, const WORD *gly
                 int k;
                 int pair_count;
                 const GPOS_PairSet *ps;
+                const GPOS_PairValueRecord *pair_val_rec;
                 offset = GET_BE_WORD(ppf1->PairSetOffset[index]);
                 ps = (const GPOS_PairSet*)((const BYTE*)ppf1+offset);
                 pair_count = GET_BE_WORD(ps->PairValueCount);
+                pair_val_rec = ps->PairValueRecord;
                 for (k = 0; k < pair_count; k++)
                 {
-                    WORD second_glyph = GET_BE_WORD(ps->PairValueRecord[k].SecondGlyph);
+                    WORD second_glyph = GET_BE_WORD(pair_val_rec->SecondGlyph);
                     if (glyphs[glyph_index+write_dir] == second_glyph)
                     {
                         int next = 1;
-                        GPOS_ValueRecord ValueRecord1 = {0,0,0,0,0,0,0,0};
-                        GPOS_ValueRecord ValueRecord2 = {0,0,0,0,0,0,0,0};
-                        WORD ValueFormat1 = GET_BE_WORD(ppf1->ValueFormat1);
-                        WORD ValueFormat2 = GET_BE_WORD(ppf1->ValueFormat2);
-
                         TRACE("Format 1: Found Pair %x,%x\n",glyphs[glyph_index],glyphs[glyph_index+write_dir]);
-
-                        offset = GPOS_get_value_record(ValueFormat1, ps->PairValueRecord[k].Value1, &ValueRecord1);
-                        GPOS_get_value_record(ValueFormat2, (WORD*)((const BYTE*)(ps->PairValueRecord[k].Value2)+offset), &ValueRecord2);
-                        if (ValueFormat1)
-                        {
-                            GPOS_get_value_record_offsets((const BYTE*)ppf1, &ValueRecord1,  ValueFormat1, ppem, &ptAdjust[0], &ptAdvance[0]);
-                            TRACE("Glyph 1 resulting cumulative offset is %i,%i design units\n",ptAdjust[0].x,ptAdjust[0].y);
-                            TRACE("Glyph 1 resulting cumulative advance is %i,%i design units\n",ptAdvance[0].x,ptAdvance[0].y);
-                        }
-                        if (ValueFormat2)
-                        {
-                            GPOS_get_value_record_offsets((const BYTE*)ppf1, &ValueRecord2,  ValueFormat2, ppem, &ptAdjust[1], &ptAdvance[1]);
-                            TRACE("Glyph 2 resulting cumulative offset is %i,%i design units\n",ptAdjust[1].x,ptAdjust[1].y);
-                            TRACE("Glyph 2 resulting cumulative advance is %i,%i design units\n",ptAdvance[1].x,ptAdvance[1].y);
-                            next++;
-                        }
-                        if (next)
-                            return glyph_index + next;
+                        apply_pair_value( ppf1, ValueFormat1, ValueFormat2, pair_val_rec->Value1, ppem, ptAdjust, ptAdvance );
+                        if (ValueFormat2) next++;
+                        return glyph_index + next;
                     }
+                    pair_val_rec = (const GPOS_PairValueRecord *)(pair_val_rec->Value1 + val_fmt1_size + val_fmt2_size);
+                }
+            }
+        }
+        else if (GET_BE_WORD(ppf1->PosFormat) == 2)
+        {
+            const GPOS_PairPosFormat2 *ppf2 = (const GPOS_PairPosFormat2*)((const BYTE*)look + offset);
+            int index;
+            WORD ValueFormat1 = GET_BE_WORD( ppf2->ValueFormat1 );
+            WORD ValueFormat2 = GET_BE_WORD( ppf2->ValueFormat2 );
+            INT val_fmt1_size = GPOS_get_value_record( ValueFormat1, NULL, NULL );
+            INT val_fmt2_size = GPOS_get_value_record( ValueFormat2, NULL, NULL );
+            WORD class1_count = GET_BE_WORD( ppf2->Class1Count );
+            WORD class2_count = GET_BE_WORD( ppf2->Class2Count );
+
+            offset = GET_BE_WORD( ppf2->Coverage );
+            index = GSUB_is_glyph_covered( (const BYTE*)ppf2 + offset, glyphs[glyph_index] );
+            if (index != -1)
+            {
+                WORD class1, class2;
+                class1 = OT_get_glyph_class( (const BYTE *)ppf2 + GET_BE_WORD(ppf2->ClassDef1), glyphs[glyph_index] );
+                class2 = OT_get_glyph_class( (const BYTE *)ppf2 + GET_BE_WORD(ppf2->ClassDef2), glyphs[glyph_index + write_dir] );
+                if (class1 < class1_count && class2 < class2_count)
+                {
+                    const WORD *pair_val = ppf2->Class1Record + (class1 * class2_count + class2) * (val_fmt1_size + val_fmt2_size);
+                    int next = 1;
+
+                    TRACE( "Format 2: Found Pair %x,%x\n", glyphs[glyph_index], glyphs[glyph_index + write_dir] );
+
+                    apply_pair_value( ppf2, ValueFormat1, ValueFormat2, pair_val, ppem, ptAdjust, ptAdvance );
+                    if (ValueFormat2) next++;
+                    return glyph_index + next;
                 }
             }
         }
@@ -1248,9 +1327,63 @@ static INT GPOS_apply_PairAdjustment(const OT_LookupTable *look, const WORD *gly
     return glyph_index+1;
 }
 
-static VOID GPOS_apply_MarkToBase(const OT_LookupTable *look, const WORD *glyphs, INT glyph_index, INT write_dir, INT glyph_count, INT ppem, LPPOINT pt)
+static VOID GPOS_apply_CursiveAttachment(const OT_LookupTable *look, const SCRIPT_ANALYSIS *analysis, const WORD *glyphs, INT glyph_index,
+                                     INT glyph_count, INT ppem, LPPOINT pt)
 {
     int j;
+    int write_dir = (analysis->fRTL && !analysis->fLogicalOrder) ? -1 : 1;
+
+    if (glyph_index + write_dir < 0 || glyph_index + write_dir >= glyph_count) return;
+
+    TRACE("Cursive Attachment Positioning Subtable\n");
+
+    for (j = 0; j < GET_BE_WORD(look->SubTableCount); j++)
+    {
+        const GPOS_CursivePosFormat1 *cpf1;
+        WORD offset = GET_BE_WORD(look->SubTable[j]);
+        cpf1 = (const GPOS_CursivePosFormat1*)((const BYTE*)look+offset);
+        if (GET_BE_WORD(cpf1->PosFormat) == 1)
+        {
+            int index_exit, index_entry;
+            offset = GET_BE_WORD( cpf1->Coverage );
+            index_exit = GSUB_is_glyph_covered((const BYTE*)cpf1+offset, glyphs[glyph_index]);
+            if (index_exit != -1 && cpf1->EntryExitRecord[index_exit].ExitAnchor!= 0)
+            {
+                index_entry = GSUB_is_glyph_covered((const BYTE*)cpf1+offset, glyphs[glyph_index+write_dir]);
+                if (index_entry != -1 && cpf1->EntryExitRecord[index_entry].EntryAnchor != 0)
+                {
+                    POINT exit_pt, entry_pt;
+                    offset = GET_BE_WORD(cpf1->EntryExitRecord[index_exit].ExitAnchor);
+                    GPOS_get_anchor_values((const BYTE*)cpf1 + offset, &exit_pt, ppem);
+                    offset = GET_BE_WORD(cpf1->EntryExitRecord[index_entry].EntryAnchor);
+                    GPOS_get_anchor_values((const BYTE*)cpf1 + offset, &entry_pt, ppem);
+                    TRACE("Found linkage %x[%i,%i] %x[%i,%i]\n",glyphs[glyph_index], exit_pt.x,exit_pt.y, glyphs[glyph_index+write_dir], entry_pt.x, entry_pt.y);
+                    pt->x = entry_pt.x - exit_pt.x;
+                    pt->y = entry_pt.y - exit_pt.y;
+                    return;
+                }
+            }
+        }
+        else
+            FIXME("Cursive Attachment Positioning: Format %i Unhandled\n",GET_BE_WORD(cpf1->PosFormat));
+    }
+    return;
+}
+
+static int GPOS_apply_MarkToBase(ScriptCache *psc, const OT_LookupTable *look, const SCRIPT_ANALYSIS *analysis, const WORD *glyphs, INT glyph_index, INT glyph_count, INT ppem, LPPOINT pt)
+{
+    int j;
+    int write_dir = (analysis->fRTL && !analysis->fLogicalOrder) ? -1 : 1;
+    void *glyph_class_table = NULL;
+    int rc = -1;
+
+    if (psc->GDEF_Table)
+    {
+        const GDEF_Header *header = psc->GDEF_Table;
+        WORD offset = GET_BE_WORD( header->GlyphClassDef );
+        if (offset)
+            glyph_class_table = (BYTE *)psc->GDEF_Table + offset;
+    }
 
     TRACE("MarkToBase Attachment Positioning Subtable\n");
 
@@ -1268,8 +1401,16 @@ static VOID GPOS_apply_MarkToBase(const OT_LookupTable *look, const WORD *glyphs
             if (mark_index != -1)
             {
                 int base_index;
+                int base_glyph = glyph_index - write_dir;
+
+                if (glyph_class_table)
+                {
+                    while (OT_get_glyph_class(glyph_class_table, glyphs[base_glyph]) == MarkGlyph && base_glyph > 0 && base_glyph < glyph_count)
+                        base_glyph -= write_dir;
+                }
+
                 offset = GET_BE_WORD(mbpf1->BaseCoverage);
-                base_index = GSUB_is_glyph_covered((const BYTE*)mbpf1+offset, glyphs[glyph_index - write_dir]);
+                base_index = GSUB_is_glyph_covered((const BYTE*)mbpf1+offset, glyphs[base_glyph]);
                 if (base_index != -1)
                 {
                     const GPOS_MarkArray *ma;
@@ -1281,13 +1422,13 @@ static VOID GPOS_apply_MarkToBase(const OT_LookupTable *look, const WORD *glyphs
                     int baserecord_size;
                     POINT base_pt;
                     POINT mark_pt;
-                    TRACE("Mark %x(%i) and base %x(%i)\n",glyphs[glyph_index], mark_index, glyphs[glyph_index - write_dir], base_index);
+                    TRACE("Mark %x(%i) and base %x(%i)\n",glyphs[glyph_index], mark_index, glyphs[base_glyph], base_index);
                     offset = GET_BE_WORD(mbpf1->MarkArray);
                     ma = (const GPOS_MarkArray*)((const BYTE*)mbpf1 + offset);
                     if (mark_index > GET_BE_WORD(ma->MarkCount))
                     {
                         ERR("Mark index exeeded mark count\n");
-                        return;
+                        return -1;
                     }
                     mr = &ma->MarkRecord[mark_index];
                     mark_class = GET_BE_WORD(mr->Class);
@@ -1305,17 +1446,115 @@ static VOID GPOS_apply_MarkToBase(const OT_LookupTable *look, const WORD *glyphs
                     pt->x += base_pt.x - mark_pt.x;
                     pt->y += base_pt.y - mark_pt.y;
                     TRACE("Resulting cumulative offset is %i,%i design units\n",pt->x,pt->y);
+                    rc = base_glyph;
                 }
             }
         }
         else
             FIXME("Unhandled Mark To Base Format %i\n",GET_BE_WORD(mbpf1->PosFormat));
     }
+    return rc;
 }
 
-static VOID GPOS_apply_MarkToMark(const OT_LookupTable *look, const WORD *glyphs, INT glyph_index, INT write_dir, INT glyph_count, INT ppem, LPPOINT pt)
+static VOID GPOS_apply_MarkToLigature(const OT_LookupTable *look, const SCRIPT_ANALYSIS *analysis, const WORD *glyphs, INT glyph_index,
+                                      INT glyph_count, INT ppem, LPPOINT pt)
 {
     int j;
+    int write_dir = (analysis->fRTL && !analysis->fLogicalOrder) ? -1 : 1;
+
+    TRACE("MarkToLigature Attachment Positioning Subtable\n");
+
+    for (j = 0; j < GET_BE_WORD(look->SubTableCount); j++)
+    {
+        int offset;
+        const GPOS_MarkLigPosFormat1 *mlpf1;
+        offset = GET_BE_WORD(look->SubTable[j]);
+        mlpf1 = (const GPOS_MarkLigPosFormat1*)((const BYTE*)look+offset);
+        if (GET_BE_WORD(mlpf1->PosFormat) == 1)
+        {
+            int offset = GET_BE_WORD(mlpf1->MarkCoverage);
+            int mark_index;
+            mark_index = GSUB_is_glyph_covered((const BYTE*)mlpf1+offset, glyphs[glyph_index]);
+            if (mark_index != -1)
+            {
+                int ligature_index;
+                offset = GET_BE_WORD(mlpf1->LigatureCoverage);
+                ligature_index = GSUB_is_glyph_covered((const BYTE*)mlpf1+offset, glyphs[glyph_index - write_dir]);
+                if (ligature_index != -1)
+                {
+                    const GPOS_MarkArray *ma;
+                    const GPOS_MarkRecord *mr;
+
+                    const GPOS_LigatureArray *la;
+                    const GPOS_LigatureAttach *lt;
+                    int mark_class;
+                    int class_count = GET_BE_WORD(mlpf1->ClassCount);
+                    int component_count;
+                    int component_size;
+                    int i;
+                    POINT ligature_pt;
+                    POINT mark_pt;
+
+                    TRACE("Mark %x(%i) and ligature %x(%i)\n",glyphs[glyph_index], mark_index, glyphs[glyph_index - write_dir], ligature_index);
+                    offset = GET_BE_WORD(mlpf1->MarkArray);
+                    ma = (const GPOS_MarkArray*)((const BYTE*)mlpf1 + offset);
+                    if (mark_index > GET_BE_WORD(ma->MarkCount))
+                    {
+                        ERR("Mark index exeeded mark count\n");
+                        return;
+                    }
+                    mr = &ma->MarkRecord[mark_index];
+                    mark_class = GET_BE_WORD(mr->Class);
+                    TRACE("Mark Class %i total classes %i\n",mark_class,class_count);
+                    offset = GET_BE_WORD(mlpf1->LigatureArray);
+                    la = (const GPOS_LigatureArray*)((const BYTE*)mlpf1 + offset);
+                    if (ligature_index > GET_BE_WORD(la->LigatureCount))
+                    {
+                        ERR("Ligature index exeeded ligature count\n");
+                        return;
+                    }
+                    offset = GET_BE_WORD(la->LigatureAttach[ligature_index]);
+                    lt = (const GPOS_LigatureAttach*)((const BYTE*)la + offset);
+
+                    component_count = GET_BE_WORD(lt->ComponentCount);
+                    component_size = class_count * sizeof(WORD);
+                    offset = 0;
+                    for (i = 0; i < component_count && !offset; i++)
+                    {
+                        int k;
+                        const GPOS_ComponentRecord *cr = (const GPOS_ComponentRecord*)((const BYTE*)lt->ComponentRecord + (component_size * i));
+                        for (k = 0; k < class_count && !offset; k++)
+                            offset = GET_BE_WORD(cr->LigatureAnchor[k]);
+                        cr = (const GPOS_ComponentRecord*)((const BYTE*)cr + component_size);
+                    }
+                    if (!offset)
+                    {
+                        ERR("Failed to find avalible ligature connection point\n");
+                        return;
+                    }
+
+                    GPOS_get_anchor_values((const BYTE*)lt + offset, &ligature_pt, ppem);
+                    offset = GET_BE_WORD(mr->MarkAnchor);
+                    GPOS_get_anchor_values((const BYTE*)ma + offset, &mark_pt, ppem);
+                    TRACE("Offset on ligature is %i,%i design units\n",ligature_pt.x,ligature_pt.y);
+                    TRACE("Offset on mark is %i,%i design units\n",mark_pt.x, mark_pt.y);
+                    pt->x += ligature_pt.x - mark_pt.x;
+                    pt->y += ligature_pt.y - mark_pt.y;
+                    TRACE("Resulting cumulative offset is %i,%i design units\n",pt->x,pt->y);
+                }
+            }
+        }
+        else
+            FIXME("Unhandled Mark To Ligature Format %i\n",GET_BE_WORD(mlpf1->PosFormat));
+    }
+}
+
+static BOOL GPOS_apply_MarkToMark(const OT_LookupTable *look, const SCRIPT_ANALYSIS *analysis, const WORD *glyphs, INT glyph_index,
+                                  INT glyph_count, INT ppem, LPPOINT pt)
+{
+    int j;
+    BOOL rc = FALSE;
+    int write_dir = (analysis->fRTL && !analysis->fLogicalOrder) ? -1 : 1;
 
     TRACE("MarkToMark Attachment Positioning Subtable\n");
 
@@ -1352,7 +1591,7 @@ static VOID GPOS_apply_MarkToMark(const OT_LookupTable *look, const WORD *glyphs
                     if (mark_index > GET_BE_WORD(ma->MarkCount))
                     {
                         ERR("Mark index exeeded mark count\n");
-                        return;
+                        return FALSE;
                     }
                     mr = &ma->MarkRecord[mark_index];
                     mark_class = GET_BE_WORD(mr->Class);
@@ -1370,17 +1609,22 @@ static VOID GPOS_apply_MarkToMark(const OT_LookupTable *look, const WORD *glyphs
                     pt->x += mark2_pt.x - mark_pt.x;
                     pt->y += mark2_pt.y - mark_pt.y;
                     TRACE("Resulting cumulative offset is %i,%i design units\n",pt->x,pt->y);
+                    rc = TRUE;
                 }
             }
         }
         else
             FIXME("Unhandled Mark To Mark Format %i\n",GET_BE_WORD(mmpf1->PosFormat));
     }
+    return rc;
 }
 
-static INT GPOS_apply_ChainContextPos(LPOUTLINETEXTMETRICW lpotm, LPLOGFONTW lplogfont, INT* piAdvance, const OT_LookupList *lookup, const OT_LookupTable *look, const WORD *glyphs, INT glyph_index, INT write_dir, INT glyph_count, INT ppem, GOFFSET *pGoffset)
+static INT GPOS_apply_ChainContextPos(ScriptCache *psc, LPOUTLINETEXTMETRICW lpotm, LPLOGFONTW lplogfont, const SCRIPT_ANALYSIS *analysis, INT* piAdvance,
+                                      const OT_LookupList *lookup, const OT_LookupTable *look, const WORD *glyphs, INT glyph_index,
+                                      INT glyph_count, INT ppem, GOFFSET *pGoffset)
 {
     int j;
+    int write_dir = (analysis->fRTL && !analysis->fLogicalOrder) ? -1 : 1;
 
     TRACE("Chaining Contextual Positioning Subtable\n");
 
@@ -1462,7 +1706,7 @@ static INT GPOS_apply_ChainContextPos(LPOUTLINETEXTMETRICW lpotm, LPLOGFONTW lpl
                     int SequenceIndex = GET_BE_WORD(ccpf3_4->PosLookupRecord[k].SequenceIndex) * write_dir;
 
                     TRACE("Position: %i -> %i %i\n",k, SequenceIndex, lookupIndex);
-                    GPOS_apply_lookup(lpotm, lplogfont, piAdvance, lookup, lookupIndex, glyphs, glyph_index + SequenceIndex, write_dir, glyph_count, pGoffset);
+                    GPOS_apply_lookup(psc, lpotm, lplogfont, analysis, piAdvance, lookup, lookupIndex, glyphs, glyph_index + SequenceIndex, glyph_count, pGoffset);
                 }
                 return glyph_index + indexGlyphs + GET_BE_WORD(ccpf3_3->LookaheadGlyphCount);
             }
@@ -1474,7 +1718,7 @@ static INT GPOS_apply_ChainContextPos(LPOUTLINETEXTMETRICW lpotm, LPLOGFONTW lpl
     return glyph_index + 1;
 }
 
-static INT GPOS_apply_lookup(LPOUTLINETEXTMETRICW lpotm, LPLOGFONTW lplogfont, INT* piAdvance, const OT_LookupList* lookup, INT lookup_index, const WORD *glyphs, INT glyph_index, INT write_dir, INT glyph_count, GOFFSET *pGoffset)
+static INT GPOS_apply_lookup(ScriptCache *psc, LPOUTLINETEXTMETRICW lpotm, LPLOGFONTW lplogfont, const SCRIPT_ANALYSIS *analysis, INT* piAdvance, const OT_LookupList* lookup, INT lookup_index, const WORD *glyphs, INT glyph_index, INT glyph_count, GOFFSET *pGoffset)
 {
     int offset;
     const OT_LookupTable *look;
@@ -1490,7 +1734,7 @@ static INT GPOS_apply_lookup(LPOUTLINETEXTMETRICW lpotm, LPLOGFONTW lplogfont, I
             double devX, devY;
             POINT adjust = {0,0};
             POINT advance = {0,0};
-            GPOS_apply_SingleAdjustment(look, glyphs, glyph_index, write_dir, glyph_count, ppem, &adjust, &advance);
+            GPOS_apply_SingleAdjustment(look, analysis, glyphs, glyph_index, glyph_count, ppem, &adjust, &advance);
             if (adjust.x || adjust.y)
             {
                 GPOS_convert_design_units_to_device(lpotm, lplogfont, adjust.x, adjust.y, &devX, &devY);
@@ -1512,11 +1756,14 @@ static INT GPOS_apply_lookup(LPOUTLINETEXTMETRICW lpotm, LPLOGFONTW lplogfont, I
             POINT adjust[2]= {{0,0},{0,0}};
             double devX, devY;
             int index;
-            index = GPOS_apply_PairAdjustment(look, glyphs, glyph_index, write_dir, glyph_count, ppem, adjust, advance);
+            int write_dir = (analysis->fRTL && !analysis->fLogicalOrder) ? -1 : 1;
+            int offset_sign = (analysis->fRTL && analysis->fLogicalOrder) ? -1 : 1;
+
+            index = GPOS_apply_PairAdjustment(look, analysis, glyphs, glyph_index, glyph_count, ppem, adjust, advance);
             if (adjust[0].x || adjust[0].y)
             {
                 GPOS_convert_design_units_to_device(lpotm, lplogfont, adjust[0].x, adjust[0].y, &devX, &devY);
-                pGoffset[glyph_index].du += round(devX);
+                pGoffset[glyph_index].du += round(devX) * offset_sign;
                 pGoffset[glyph_index].dv += round(devY);
             }
             if (advance[0].x || advance[0].y)
@@ -1527,7 +1774,7 @@ static INT GPOS_apply_lookup(LPOUTLINETEXTMETRICW lpotm, LPLOGFONTW lplogfont, I
             if (adjust[1].x || adjust[1].y)
             {
                 GPOS_convert_design_units_to_device(lpotm, lplogfont, adjust[1].x, adjust[1].y, &devX, &devY);
-                pGoffset[glyph_index + write_dir].du += round(devX);
+                pGoffset[glyph_index + write_dir].du += round(devX) * offset_sign;
                 pGoffset[glyph_index + write_dir].dv += round(devY);
             }
             if (advance[1].x || advance[1].y)
@@ -1537,16 +1784,49 @@ static INT GPOS_apply_lookup(LPOUTLINETEXTMETRICW lpotm, LPLOGFONTW lplogfont, I
             }
             return index;
         }
+        case 3:
+        {
+            POINT desU = {0,0};
+            double devX, devY;
+            int write_dir = (analysis->fRTL && !analysis->fLogicalOrder) ? -1 : 1;
+
+            GPOS_apply_CursiveAttachment(look, analysis, glyphs, glyph_index, glyph_count, ppem, &desU);
+            if (desU.x || desU.y)
+            {
+                GPOS_convert_design_units_to_device(lpotm, lplogfont, desU.x, desU.y, &devX, &devY);
+                /* Windows does not appear to apply X offsets here */
+                pGoffset[glyph_index].dv = round(devY) + pGoffset[glyph_index+write_dir].dv;
+            }
+            break;
+        }
         case 4:
         {
             double devX, devY;
             POINT desU = {0,0};
-            GPOS_apply_MarkToBase(look, glyphs, glyph_index, write_dir, glyph_count, ppem, &desU);
+            int base_index = GPOS_apply_MarkToBase(psc, look, analysis, glyphs, glyph_index, glyph_count, ppem, &desU);
+            if (base_index != -1)
+            {
+                GPOS_convert_design_units_to_device(lpotm, lplogfont, desU.x, desU.y, &devX, &devY);
+                if (!analysis->fRTL) pGoffset[glyph_index].du = round(devX) - piAdvance[base_index];
+                else
+                {
+                    if (analysis->fLogicalOrder) devX *= -1;
+                    pGoffset[glyph_index].du = round(devX);
+                }
+                pGoffset[glyph_index].dv = round(devY);
+            }
+            break;
+        }
+        case 5:
+        {
+            double devX, devY;
+            POINT desU = {0,0};
+            GPOS_apply_MarkToLigature(look, analysis, glyphs, glyph_index, glyph_count, ppem, &desU);
             if (desU.x || desU.y)
             {
                 GPOS_convert_design_units_to_device(lpotm, lplogfont, desU.x, desU.y, &devX, &devY);
-                pGoffset[glyph_index].du += (round(devX) - piAdvance[glyph_index-1]);
-                pGoffset[glyph_index].dv += round(devY);
+                pGoffset[glyph_index].du = (round(devX) - piAdvance[glyph_index-1]);
+                pGoffset[glyph_index].dv = round(devY);
             }
             break;
         }
@@ -1554,18 +1834,19 @@ static INT GPOS_apply_lookup(LPOUTLINETEXTMETRICW lpotm, LPLOGFONTW lplogfont, I
         {
             double devX, devY;
             POINT desU = {0,0};
-            GPOS_apply_MarkToMark(look, glyphs, glyph_index, write_dir, glyph_count, ppem, &desU);
-            if (desU.x || desU.y)
+            int write_dir = (analysis->fRTL && !analysis->fLogicalOrder) ? -1 : 1;
+            if (GPOS_apply_MarkToMark(look, analysis, glyphs, glyph_index, glyph_count, ppem, &desU))
             {
                 GPOS_convert_design_units_to_device(lpotm, lplogfont, desU.x, desU.y, &devX, &devY);
-                pGoffset[glyph_index].du += round(devX) + pGoffset[glyph_index-1].du;
-                pGoffset[glyph_index].dv += round(devY) + pGoffset[glyph_index-1].dv;
+                if (analysis->fRTL && analysis->fLogicalOrder) devX *= -1;
+                pGoffset[glyph_index].du = round(devX) + pGoffset[glyph_index - write_dir].du;
+                pGoffset[glyph_index].dv = round(devY) + pGoffset[glyph_index - write_dir].dv;
             }
             break;
         }
         case 8:
         {
-            return GPOS_apply_ChainContextPos(lpotm, lplogfont, piAdvance, lookup, look, glyphs, glyph_index, write_dir, glyph_count, ppem, pGoffset);
+            return GPOS_apply_ChainContextPos(psc, lpotm, lplogfont, analysis, piAdvance, lookup, look, glyphs, glyph_index, glyph_count, ppem, pGoffset);
         }
         default:
             FIXME("We do not handle SubType %i\n",GET_BE_WORD(look->LookupType));
@@ -1573,12 +1854,12 @@ static INT GPOS_apply_lookup(LPOUTLINETEXTMETRICW lpotm, LPLOGFONTW lplogfont, I
     return glyph_index+1;
 }
 
-INT OpenType_apply_GPOS_lookup(LPOUTLINETEXTMETRICW lpotm, LPLOGFONTW lplogfont, INT* piAdvance, LPCVOID table, INT lookup_index, const WORD *glyphs, INT glyph_index, INT write_dir, INT glyph_count, GOFFSET *pGoffset)
+INT OpenType_apply_GPOS_lookup(ScriptCache *psc, LPOUTLINETEXTMETRICW lpotm, LPLOGFONTW lplogfont, const SCRIPT_ANALYSIS *analysis, INT* piAdvance, INT lookup_index, const WORD *glyphs, INT glyph_index, INT glyph_count, GOFFSET *pGoffset)
 {
-    const GPOS_Header *header = (const GPOS_Header *)table;
+    const GPOS_Header *header = (const GPOS_Header *)psc->GPOS_Table;
     const OT_LookupList *lookup = (const OT_LookupList*)((const BYTE*)header + GET_BE_WORD(header->LookupList));
 
-    return GPOS_apply_lookup(lpotm, lplogfont, piAdvance, lookup, lookup_index, glyphs, glyph_index, write_dir, glyph_count, pGoffset);
+    return GPOS_apply_lookup(psc, lpotm, lplogfont, analysis, piAdvance, lookup, lookup_index, glyphs, glyph_index, glyph_count, pGoffset);
 }
 
 static void GSUB_initialize_script_cache(ScriptCache *psc)
@@ -1616,6 +1897,9 @@ static void GPOS_expand_script_cache(ScriptCache *psc)
 
     script = (const OT_ScriptList*)((const BYTE*)header + GET_BE_WORD(header->ScriptList));
     count = GET_BE_WORD(script->ScriptCount);
+
+    if (!count)
+        return;
 
     if (!psc->script_count)
     {
@@ -1660,10 +1944,11 @@ static void GPOS_expand_script_cache(ScriptCache *psc)
 
 static void _initialize_script_cache(ScriptCache *psc)
 {
-    if (!psc->script_count)
+    if (!psc->scripts_initialized)
     {
         GSUB_initialize_script_cache(psc);
         GPOS_expand_script_cache(psc);
+        psc->scripts_initialized = TRUE;
     }
 }
 
@@ -1748,6 +2033,10 @@ static void GPOS_expand_language_cache(LoadedScript *script)
     count = GET_BE_WORD(table->LangSysCount);
 
     TRACE("Deflang %p, LangCount %i\n",script->default_language.gpos_table, count);
+
+    if (!count)
+        return;
+
     if (!script->language_count)
     {
         int i;
@@ -1791,10 +2080,11 @@ static void GPOS_expand_language_cache(LoadedScript *script)
 
 static void _initialize_language_cache(LoadedScript *script)
 {
-    if (!script->language_count)
+    if (!script->languages_initialized)
     {
         GSUB_initialize_language_cache(script);
         GPOS_expand_language_cache(script);
+        script->languages_initialized = TRUE;
     }
 }
 
@@ -1893,6 +2183,7 @@ static void GSUB_initialize_feature_cache(LPCVOID table, LoadedLanguage *languag
                 language->features[i].lookups = HeapAlloc(GetProcessHeap(),0,sizeof(WORD) * language->features[i].lookup_count);
                 for (j = 0; j < language->features[i].lookup_count; j++)
                     language->features[i].lookups[j] = GET_BE_WORD(feature->LookupListIndex[j]);
+                language->features[i].tableType = FEATURE_GSUB_TABLE;
             }
         }
     }
@@ -1912,6 +2203,10 @@ static void GPOS_expand_feature_cache(LPCVOID table, LoadedLanguage *language)
     feature_list = (const OT_FeatureList*)((const BYTE*)header + GET_BE_WORD(header->FeatureList));
 
     TRACE("%i features\n",count);
+
+    if (!count)
+        return;
+
     if (!language->feature_count)
     {
         language->feature_count = count;
@@ -1933,10 +2228,11 @@ static void GPOS_expand_feature_cache(LPCVOID table, LoadedLanguage *language)
                 language->features[i].lookups = HeapAlloc(GetProcessHeap(),0,sizeof(WORD) * language->features[i].lookup_count);
                 for (j = 0; j < language->features[i].lookup_count; j++)
                     language->features[i].lookups[j] = GET_BE_WORD(feature->LookupListIndex[j]);
+                language->features[i].tableType = FEATURE_GPOS_TABLE;
             }
         }
     }
-    else if (count)
+    else
     {
         language->features = HeapReAlloc(GetProcessHeap(),0,language->features, sizeof(LoadedFeature)*(language->feature_count + count));
 
@@ -1954,6 +2250,7 @@ static void GPOS_expand_feature_cache(LPCVOID table, LoadedLanguage *language)
             language->features[idx].lookups = HeapAlloc(GetProcessHeap(),0,sizeof(WORD) * language->features[idx].lookup_count);
             for (j = 0; j < language->features[idx].lookup_count; j++)
                 language->features[idx].lookups[j] = GET_BE_WORD(feature->LookupListIndex[j]);
+            language->features[idx].tableType = FEATURE_GPOS_TABLE;
         }
         language->feature_count += count;
     }
@@ -1961,14 +2258,15 @@ static void GPOS_expand_feature_cache(LPCVOID table, LoadedLanguage *language)
 
 static void _initialize_feature_cache(ScriptCache *psc, LoadedLanguage *language)
 {
-    if (!language->feature_count)
+    if (!language->features_initialized)
     {
         GSUB_initialize_feature_cache(psc->GSUB_Table, language);
         GPOS_expand_feature_cache(psc->GPOS_Table, language);
+        language->features_initialized = TRUE;
     }
 }
 
-HRESULT OpenType_GetFontFeatureTags(ScriptCache *psc, OPENTYPE_TAG script_tag, OPENTYPE_TAG language_tag, BOOL filtered, OPENTYPE_TAG searchingFor, int cMaxTags, OPENTYPE_TAG *pFeatureTags, int *pcTags, LoadedFeature** feature)
+HRESULT OpenType_GetFontFeatureTags(ScriptCache *psc, OPENTYPE_TAG script_tag, OPENTYPE_TAG language_tag, BOOL filtered, OPENTYPE_TAG searchingFor, char tableType, int cMaxTags, OPENTYPE_TAG *pFeatureTags, int *pcTags, LoadedFeature** feature)
 {
     int i;
     HRESULT rc = S_OK;
@@ -2019,7 +2317,15 @@ HRESULT OpenType_GetFontFeatureTags(ScriptCache *psc, OPENTYPE_TAG script_tag, O
 
     _initialize_feature_cache(psc, language);
 
-    *pcTags = language->feature_count;
+    if (tableType)
+    {
+        *pcTags = 0;
+        for (i = 0; i < language->feature_count; i++)
+            if (language->features[i].tableType == tableType)
+                *pcTags = (*pcTags)+1;
+    }
+    else
+        *pcTags = language->feature_count;
 
     if (!searchingFor && cMaxTags < *pcTags)
         rc = E_OUTOFMEMORY;
@@ -2029,11 +2335,15 @@ HRESULT OpenType_GetFontFeatureTags(ScriptCache *psc, OPENTYPE_TAG script_tag, O
     for (i = 0; i < language->feature_count; i++)
     {
         if (i < cMaxTags)
-            pFeatureTags[i] = language->features[i].tag;
+        {
+            if (!tableType || language->features[i].tableType == tableType)
+                pFeatureTags[i] = language->features[i].tag;
+        }
 
         if (searchingFor)
         {
-            if (searchingFor == language->features[i].tag)
+            if ((searchingFor == language->features[i].tag) &&
+                (!tableType || language->features[i].tableType == tableType))
             {
                 pFeatureTags[0] = language->features[i].tag;
                 *pcTags = 1;

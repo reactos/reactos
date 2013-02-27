@@ -41,16 +41,16 @@
  * has been modified.
  */
 
-#include <config.h>
+#include "config.h"
 
-//#include <stdarg.h>
-#include <windef.h>
-//#include "winbase.h"
-#include <wingdi.h>
-//#include "winnls.h"
-#include <usp10.h>
-#include <wine/unicode.h>
-#include <wine/debug.h>
+#include <stdarg.h>
+#include "windef.h"
+#include "winbase.h"
+#include "wingdi.h"
+#include "winnls.h"
+#include "usp10.h"
+#include "wine/unicode.h"
+#include "wine/debug.h"
 
 #include "usp10_internal.h"
 
@@ -872,11 +872,13 @@ int BIDI_ReorderL2vLevel(int level, int *pIndexs, const BYTE* plevel, int cch, B
         reverse(pIndexs, ich);
     }
 
-    if (newlevel > 1)
+    if (newlevel >= 0)
     {
         ich = 0;
         for (; ich < cch; ich++)
-            if (plevel[ich] > level)
+            if (plevel[ich] < level)
+                break;
+            else if (plevel[ich] > level)
                 ich += BIDI_ReorderL2vLevel(level + 1, pIndexs + ich, plevel + ich,
                 cch - ich, fReverse) - 1;
     }
