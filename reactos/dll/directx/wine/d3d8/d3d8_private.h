@@ -23,18 +23,22 @@
 #ifndef __WINE_D3D8_PRIVATE_H
 #define __WINE_D3D8_PRIVATE_H
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #include <assert.h>
 #include <stdarg.h>
 
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
 #define COBJMACROS
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "wine/debug.h"
-#include "d3d8.h"
-#include "wine/wined3d.h"
+#include <windef.h>
+#include <winbase.h>
+#include <wingdi.h>
+#include <wine/debug.h>
+#include <d3d8.h>
+#include <wine/wined3d.h>
 
 /* CreateVertexShader can return > 0xFFFF */
 #define VS_HIGHESTFIXEDFXF 0xF0000000

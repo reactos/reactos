@@ -22,12 +22,12 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
+#include <config.h>
+#include <wine/port.h>
 
-#include <math.h>
+//#include <math.h>
 #include <stdio.h>
-#include <string.h>
+//#include <string.h>
 
 #include "wined3d_private.h"
 

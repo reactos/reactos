@@ -20,18 +20,18 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
+#include <config.h>
 
-#include <stdarg.h>
+//#include <stdarg.h>
 
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "wine/debug.h"
-#include "wine/unicode.h"
+//#include "windef.h"
+//#include "winbase.h"
+//#include "wingdi.h"
+//#include "winuser.h"
+//#include "wine/debug.h"
+//#include "wine/unicode.h"
 
 #include "d3d8_private.h"
 

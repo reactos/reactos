@@ -27,8 +27,8 @@
  *
  */
 
-#include "config.h"
-#include "wine/port.h"
+#include <config.h>
+#include <wine/port.h>
 
 #include "ddraw_private.h"
 
