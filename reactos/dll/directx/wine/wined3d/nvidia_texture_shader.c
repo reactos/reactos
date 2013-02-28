@@ -19,17 +19,17 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
-#include <config.h>
-#include <wine/port.h>
+#include "config.h"
+#include "wine/port.h"
 
-//#include <math.h>
-//#include <stdio.h>
+#include <math.h>
+#include <stdio.h>
 
 #include "wined3d_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d);
 
-/* GL locking for state handlers is done by the caller. */
+/* Context activation for state handlers is done by the caller. */
 
 static void nvts_activate_dimensions(const struct wined3d_state *state, DWORD stage, struct wined3d_context *context)
 {
@@ -446,22 +446,25 @@ void set_tex_op_nvrc(const struct wined3d_gl_info *gl_info, const struct wined3d
 
         case WINED3D_TOP_BUMPENVMAP_LUMINANCE:
         case WINED3D_TOP_BUMPENVMAP:
-            if (gl_info->supported[NV_TEXTURE_SHADER])
+            if (!gl_info->supported[NV_TEXTURE_SHADER])
             {
-                /* The bump map stage itself isn't exciting, just read the texture. But tell the next stage to
-                 * perform bump mapping and source from the current stage. Pretty much a SELECTARG2.
-                 * ARG2 is passed through unmodified(apps will most likely use D3DTA_CURRENT for arg2, arg1
-                 * (which will most likely be D3DTA_TEXTURE) is available as a texture shader input for the next stage
-                 */
-                GL_EXTCALL(glCombinerInputNV(target, portion, GL_VARIABLE_A_NV,
-                           tex_op_args.input[1], tex_op_args.mapping[1], tex_op_args.component_usage[1]));
-                GL_EXTCALL(glCombinerInputNV(target, portion, GL_VARIABLE_B_NV,
-                           GL_ZERO, GL_UNSIGNED_INVERT_NV, portion));
-                /* Always pass through to CURRENT, ignore temp arg */
-                GL_EXTCALL(glCombinerOutputNV(target, portion, GL_SPARE0_NV, GL_DISCARD_NV,
-                           GL_DISCARD_NV, GL_NONE, GL_NONE, GL_FALSE, GL_FALSE, GL_FALSE));
+                WARN("BUMPENVMAP requires GL_NV_texture_shader in this codepath\n");
                 break;
             }
+
+            /* The bump map stage itself isn't exciting, just read the texture. But tell the next stage to
+             * perform bump mapping and source from the current stage. Pretty much a SELECTARG2.
+             * ARG2 is passed through unmodified(apps will most likely use D3DTA_CURRENT for arg2, arg1
+             * (which will most likely be D3DTA_TEXTURE) is available as a texture shader input for the
+             * next stage */
+            GL_EXTCALL(glCombinerInputNV(target, portion, GL_VARIABLE_A_NV,
+                        tex_op_args.input[1], tex_op_args.mapping[1], tex_op_args.component_usage[1]));
+            GL_EXTCALL(glCombinerInputNV(target, portion, GL_VARIABLE_B_NV,
+                        GL_ZERO, GL_UNSIGNED_INVERT_NV, portion));
+            /* Always pass through to CURRENT, ignore temp arg */
+            GL_EXTCALL(glCombinerOutputNV(target, portion, GL_SPARE0_NV, GL_DISCARD_NV,
+                        GL_DISCARD_NV, GL_NONE, GL_NONE, GL_FALSE, GL_FALSE, GL_FALSE));
+            break;
 
         default:
             FIXME("Unhandled texture op: stage %d, is_alpha %d, op %s (%#x), arg1 %#x, arg2 %#x, arg3 %#x, texture_idx %d.\n",
@@ -649,7 +652,7 @@ static void nvrc_enable(const struct wined3d_gl_info *gl_info, BOOL enable)
     }
 }
 
-/* Context activation and GL locking are done by the caller. */
+/* Context activation is done by the caller. */
 static void nvts_enable(const struct wined3d_gl_info *gl_info, BOOL enable)
 {
     nvrc_enable(gl_info, enable);
@@ -667,6 +670,7 @@ static void nvts_enable(const struct wined3d_gl_info *gl_info, BOOL enable)
 
 static void nvrc_fragment_get_caps(const struct wined3d_gl_info *gl_info, struct fragment_caps *caps)
 {
+    caps->wined3d_caps = 0;
     caps->PrimitiveMiscCaps = WINED3DPMISCCAPS_TSSARGTEMP;
 
     /* The caps below can be supported but aren't handled yet in utils.c
@@ -720,7 +724,11 @@ static void nvrc_fragment_get_caps(const struct wined3d_gl_info *gl_info, struct
     caps->MaxSimultaneousTextures = gl_info->limits.textures;
 }
 
-static HRESULT nvrc_fragment_alloc(struct wined3d_device *device) { return WINED3D_OK; }
+static void *nvrc_fragment_alloc(const struct wined3d_shader_backend_ops *shader_backend, void *shader_priv)
+{
+    return shader_priv;
+}
+
 /* Context activation is done by the caller. */
 static void nvrc_fragment_free(struct wined3d_device *device) {}
 
@@ -891,7 +899,6 @@ const struct fragment_pipeline nvts_fragment_pipeline = {
     nvrc_fragment_free,
     nvts_color_fixup_supported,
     nvrc_fragmentstate_template,
-    FALSE /* we cannot disable projected textures. The vertex pipe has to do it */
 };
 
 const struct fragment_pipeline nvrc_fragment_pipeline = {
@@ -901,5 +908,4 @@ const struct fragment_pipeline nvrc_fragment_pipeline = {
     nvrc_fragment_free,
     nvts_color_fixup_supported,
     nvrc_fragmentstate_template,
-    FALSE /* we cannot disable projected textures. The vertex pipe has to do it */
 };

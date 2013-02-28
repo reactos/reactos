@@ -24,20 +24,20 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <config.h>
-//#include "wine/port.h"
+#include "config.h"
+#include "wine/port.h"
 
 #define DDRAW_INIT_GUID
 #include "ddraw_private.h"
-#include <rpcproxy.h>
+#include "rpcproxy.h"
 
-#include <wine/exception.h>
-//#include "winreg.h"
+#include "wine/exception.h"
+#include "winreg.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(ddraw);
 
 /* The configured default surface */
-enum wined3d_surface_type DefaultSurfaceType = WINED3D_SURFACE_TYPE_OPENGL;
+enum ddraw_surface_type DefaultSurfaceType = DDRAW_SURFACE_TYPE_OPENGL;
 
 static struct list global_ddraw_list = LIST_INIT(global_ddraw_list);
 
@@ -45,6 +45,22 @@ static HINSTANCE instance;
 
 /* value of ForceRefreshRate */
 DWORD force_refresh_rate = 0;
+
+/* Structure for converting DirectDrawEnumerateA to DirectDrawEnumerateExA */
+struct callback_info
+{
+    LPDDENUMCALLBACKA callback;
+    void *context;
+};
+
+/* Enumeration callback for converting DirectDrawEnumerateA to DirectDrawEnumerateExA */
+static HRESULT CALLBACK enum_callback(GUID *guid, char *description, char *driver_name,
+                                      void *context, HMONITOR monitor)
+{
+    const struct callback_info *info = context;
+
+    return info->callback(guid, description, driver_name, info->context);
+}
 
 /* Handle table functions */
 BOOL ddraw_handle_table_init(struct ddraw_handle_table *t, UINT initial_size)
@@ -254,25 +270,21 @@ DDRAW_Create(const GUID *guid,
  * Arguments, return values: See DDRAW_Create
  *
  ***********************************************************************/
-HRESULT WINAPI DECLSPEC_HOTPATCH
-DirectDrawCreate(GUID *GUID,
-                 LPDIRECTDRAW *DD,
-                 IUnknown *UnkOuter)
+HRESULT WINAPI DECLSPEC_HOTPATCH DirectDrawCreate(GUID *driver_guid, IDirectDraw **ddraw, IUnknown *outer)
 {
     HRESULT hr;
 
-    TRACE("driver_guid %s, ddraw %p, outer_unknown %p.\n",
-            debugstr_guid(GUID), DD, UnkOuter);
+    TRACE("driver_guid %s, ddraw %p, outer %p.\n",
+            debugstr_guid(driver_guid), ddraw, outer);
 
     wined3d_mutex_lock();
-    hr = DDRAW_Create(GUID, (void **) DD, UnkOuter, &IID_IDirectDraw);
+    hr = DDRAW_Create(driver_guid, (void **)ddraw, outer, &IID_IDirectDraw);
     wined3d_mutex_unlock();
 
     if (SUCCEEDED(hr))
     {
-        hr = IDirectDraw_Initialize(*DD, GUID);
-        if (FAILED(hr))
-            IDirectDraw_Release(*DD);
+        if (FAILED(hr = IDirectDraw_Initialize(*ddraw, driver_guid)))
+            IDirectDraw_Release(*ddraw);
     }
 
     return hr;
@@ -336,27 +348,15 @@ DirectDrawCreateEx(GUID *guid,
  *
  *
  ***********************************************************************/
-HRESULT WINAPI DirectDrawEnumerateA(LPDDENUMCALLBACKA Callback, void *Context)
+HRESULT WINAPI DirectDrawEnumerateA(LPDDENUMCALLBACKA callback, void *context)
 {
-    TRACE("callback %p, context %p.\n", Callback, Context);
+    struct callback_info info;
 
-    TRACE(" Enumerating default DirectDraw HAL interface\n");
-    /* We only have one driver */
-    __TRY
-    {
-        static CHAR driver_desc[] = "DirectDraw HAL",
-        driver_name[] = "display";
+    TRACE("callback %p, context %p.\n", callback, context);
 
-        Callback(NULL, driver_desc, driver_name, Context);
-    }
-    __EXCEPT_PAGE_FAULT
-    {
-        return DDERR_INVALIDPARAMS;
-    }
-    __ENDTRY
-
-    TRACE(" End of enumeration\n");
-    return DD_OK;
+    info.callback = callback;
+    info.context = context;
+    return DirectDrawEnumerateExA(enum_callback, &info, 0x0);
 }
 
 /***********************************************************************
@@ -368,35 +368,79 @@ HRESULT WINAPI DirectDrawEnumerateA(LPDDENUMCALLBACKA Callback, void *Context)
  * The Flag member is not supported right now.
  *
  ***********************************************************************/
-HRESULT WINAPI DirectDrawEnumerateExA(LPDDENUMCALLBACKEXA Callback, void *Context, DWORD Flags)
+HRESULT WINAPI DirectDrawEnumerateExA(LPDDENUMCALLBACKEXA callback, void *context, DWORD flags)
 {
-    TRACE("callback %p, context %p, flags %#x.\n", Callback, Context, Flags);
+    struct wined3d *wined3d;
+    DWORD wined3d_flags;
 
-    if (Flags & ~(DDENUM_ATTACHEDSECONDARYDEVICES |
+    TRACE("callback %p, context %p, flags %#x.\n", callback, context, flags);
+
+    if (flags & ~(DDENUM_ATTACHEDSECONDARYDEVICES |
                   DDENUM_DETACHEDSECONDARYDEVICES |
                   DDENUM_NONDISPLAYDEVICES))
         return DDERR_INVALIDPARAMS;
 
-    if (Flags)
-        FIXME("flags 0x%08x not handled\n", Flags);
+    if (flags)
+        FIXME("flags 0x%08x not handled\n", flags);
 
-    TRACE("Enumerating default DirectDraw HAL interface\n");
+    wined3d_flags = WINED3D_LEGACY_DEPTH_BIAS;
+    if (DefaultSurfaceType != DDRAW_SURFACE_TYPE_OPENGL)
+        wined3d_flags |= WINED3D_NO3D;
 
-    /* We only have one driver by now */
+    TRACE("Enumerating ddraw interfaces\n");
+    if (!(wined3d = wined3d_create(7, wined3d_flags)))
+    {
+        if ((wined3d_flags & WINED3D_NO3D) || !(wined3d = wined3d_create(7, wined3d_flags | WINED3D_NO3D)))
+        {
+            WARN("Failed to create a wined3d object.\n");
+            return E_FAIL;
+        }
+
+        WARN("Created a wined3d object without 3D support.\n");
+        DefaultSurfaceType = DDRAW_SURFACE_TYPE_GDI;
+    }
+
     __TRY
     {
+        /* QuickTime expects the description "DirectDraw HAL" */
         static CHAR driver_desc[] = "DirectDraw HAL",
         driver_name[] = "display";
+        struct wined3d_adapter_identifier adapter_id;
+        HRESULT hr = S_OK;
+        UINT adapter = 0;
+        BOOL cont_enum;
 
-        /* QuickTime expects the description "DirectDraw HAL" */
-        Callback(NULL, driver_desc, driver_name, Context, 0);
+        /* The Battle.net System Checker expects both a NULL device and a GUID-based device */
+        TRACE("Default interface: DirectDraw HAL\n");
+        cont_enum = callback(NULL, driver_desc, driver_name, context, 0);
+        for (adapter = 0; SUCCEEDED(hr) && cont_enum; adapter++)
+        {
+            char DriverName[512] = "";
+
+            /* The Battle.net System Checker expects the GetAdapterIdentifier DeviceName to match the
+             * Driver Name, so obtain the DeviceName and GUID from D3D. */
+            memset(&adapter_id, 0x0, sizeof(adapter_id));
+            adapter_id.device_name = DriverName;
+            adapter_id.device_name_size = sizeof(DriverName);
+            wined3d_mutex_lock();
+            hr = wined3d_get_adapter_identifier(wined3d, adapter, 0x0, &adapter_id);
+            wined3d_mutex_unlock();
+            if (SUCCEEDED(hr))
+            {
+                TRACE("Interface %d: %s\n", adapter, wine_dbgstr_guid(&adapter_id.device_identifier));
+                cont_enum = callback(&adapter_id.device_identifier, driver_desc,
+                                     adapter_id.device_name, context, 0);
+            }
+        }
     }
     __EXCEPT_PAGE_FAULT
     {
+        wined3d_decref(wined3d);
         return DDERR_INVALIDPARAMS;
     }
     __ENDTRY;
 
+    wined3d_decref(wined3d);
     TRACE("End of enumeration\n");
     return DD_OK;
 }
@@ -866,12 +910,12 @@ DllMain(HINSTANCE hInstDLL,
                 if (!strcmp(buffer,"gdi"))
                 {
                     TRACE("Defaulting to GDI surfaces\n");
-                    DefaultSurfaceType = WINED3D_SURFACE_TYPE_GDI;
+                    DefaultSurfaceType = DDRAW_SURFACE_TYPE_GDI;
                 }
                 else if (!strcmp(buffer,"opengl"))
                 {
                     TRACE("Defaulting to opengl surfaces\n");
-                    DefaultSurfaceType = WINED3D_SURFACE_TYPE_OPENGL;
+                    DefaultSurfaceType = DDRAW_SURFACE_TYPE_OPENGL;
                 }
                 else
                 {

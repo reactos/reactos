@@ -17,7 +17,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <config.h>
+#include "config.h"
 #include "d3d8_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d8);
@@ -61,10 +61,7 @@ static HRESULT d3d8_vertexshader_create_vertexdeclaration(struct d3d8_device *de
 
     object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*object));
     if (!object)
-    {
-        ERR("Memory allocation failed.\n");
         return E_OUTOFMEMORY;
-    }
 
     hr = d3d8_vertex_declaration_init(object, device, declaration, shader_handle);
     if (FAILED(hr))

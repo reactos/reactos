@@ -20,8 +20,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <config.h>
-#include <wine/port.h>
+#include "config.h"
+#include "wine/port.h"
 #include "wined3d_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d_texture);
@@ -77,9 +77,7 @@ static HRESULT wined3d_texture_init(struct wined3d_texture *texture, const struc
 /* A GL context is provided by the caller */
 static void gltexture_delete(const struct wined3d_gl_info *gl_info, struct gl_texture *tex)
 {
-    ENTER_GL();
     gl_info->gl_ops.gl.p_glDeleteTextures(1, &tex->name);
-    LEAVE_GL();
     tex->name = 0;
 }
 
@@ -153,7 +151,6 @@ static HRESULT wined3d_texture_bind(struct wined3d_texture *texture,
     gl_tex = wined3d_texture_get_gl_texture(texture, context->gl_info, srgb);
     target = texture->target;
 
-    ENTER_GL();
     /* Generate a texture name if we don't already have one. */
     if (!gl_tex->name)
     {
@@ -233,11 +230,10 @@ static HRESULT wined3d_texture_bind(struct wined3d_texture *texture,
         hr = WINED3DERR_INVALIDCALL;
     }
 
-    LEAVE_GL();
     return hr;
 }
 
-/* GL locking is done by the caller */
+/* Context activation is done by the caller. */
 static void apply_wrap(const struct wined3d_gl_info *gl_info, GLenum target,
         enum wined3d_texture_address d3d_wrap, GLenum param, BOOL cond_np2)
 {
@@ -261,7 +257,7 @@ static void apply_wrap(const struct wined3d_gl_info *gl_info, GLenum target,
     checkGLcall("glTexParameteri(target, param, gl_wrap)");
 }
 
-/* GL locking is done by the caller (state handler) */
+/* Context activation is done by the caller (state handler). */
 void wined3d_texture_apply_state_changes(struct wined3d_texture *texture,
         const DWORD sampler_states[WINED3D_HIGHEST_SAMPLER_STATE + 1],
         const struct wined3d_gl_info *gl_info)
@@ -628,7 +624,6 @@ static HRESULT texture2d_bind(struct wined3d_texture *texture,
         {
             GLenum target = texture->target;
 
-            ENTER_GL();
             gl_info->gl_ops.gl.p_glTexParameteri(target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
             checkGLcall("glTexParameteri(target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE)");
             gl_info->gl_ops.gl.p_glTexParameteri(target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -637,7 +632,6 @@ static HRESULT texture2d_bind(struct wined3d_texture *texture,
             checkGLcall("glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_NEAREST)");
             gl_info->gl_ops.gl.p_glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
             checkGLcall("glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_NEAREST)");
-            LEAVE_GL();
             gl_tex->states[WINED3DTEXSTA_ADDRESSU] = WINED3D_TADDRESS_CLAMP;
             gl_tex->states[WINED3DTEXSTA_ADDRESSV] = WINED3D_TADDRESS_CLAMP;
             gl_tex->states[WINED3DTEXSTA_MAGFILTER] = WINED3D_TEXF_POINT;
@@ -720,7 +714,7 @@ static void texture2d_sub_resource_cleanup(struct wined3d_resource *sub_resource
      * surface doesn't try and release it. */
     surface_set_texture_name(surface, 0, TRUE);
     surface_set_texture_name(surface, 0, FALSE);
-    surface_set_texture_target(surface, 0);
+    surface_set_texture_target(surface, 0, 0);
     surface_set_container(surface, WINED3D_CONTAINER_NONE, NULL);
     wined3d_surface_decref(surface);
 }
@@ -859,8 +853,8 @@ static HRESULT cubetexture_init(struct wined3d_texture *texture, UINT edge_lengt
             UINT idx = j * texture->level_count + i;
             struct wined3d_surface *surface;
 
-            if (FAILED(hr = device->device_parent->ops->create_texture_surface(device->device_parent, parent,
-                    tmp_w, tmp_w, format_id, usage, pool, i /* Level */, j, &surface)))
+            if (FAILED(hr = device->device_parent->ops->create_texture_surface(device->device_parent,
+                    parent, tmp_w, tmp_w, format_id, usage, pool, idx, &surface)))
             {
                 FIXME("(%p) Failed to create surface, hr %#x.\n", texture, hr);
                 wined3d_texture_cleanup(texture);
@@ -868,7 +862,7 @@ static HRESULT cubetexture_init(struct wined3d_texture *texture, UINT edge_lengt
             }
 
             surface_set_container(surface, WINED3D_CONTAINER_TEXTURE, texture);
-            surface_set_texture_target(surface, cube_targets[j]);
+            surface_set_texture_target(surface, cube_targets[j], i);
             texture->sub_resources[idx] = &surface->resource;
             TRACE("Created surface level %u @ %p.\n", i, surface);
         }
@@ -1014,8 +1008,8 @@ static HRESULT texture_init(struct wined3d_texture *texture, UINT width, UINT he
         struct wined3d_surface *surface;
 
         /* Use the callback to create the texture surface. */
-        if (FAILED(hr = device->device_parent->ops->create_texture_surface(device->device_parent, parent,
-                tmp_w, tmp_h, format->id, usage, pool, i, 0, &surface)))
+        if (FAILED(hr = device->device_parent->ops->create_texture_surface(device->device_parent,
+                parent, tmp_w, tmp_h, format->id, usage, pool, i, &surface)))
         {
             FIXME("Failed to create surface %p, hr %#x\n", texture, hr);
             wined3d_texture_cleanup(texture);
@@ -1023,7 +1017,7 @@ static HRESULT texture_init(struct wined3d_texture *texture, UINT width, UINT he
         }
 
         surface_set_container(surface, WINED3D_CONTAINER_TEXTURE, texture);
-        surface_set_texture_target(surface, texture->target);
+        surface_set_texture_target(surface, texture->target, i);
         texture->sub_resources[i] = &surface->resource;
         TRACE("Created surface level %u @ %p.\n", i, surface);
         /* Calculate the next mipmap level. */
@@ -1257,7 +1251,6 @@ HRESULT CDECL wined3d_texture_create_2d(struct wined3d_device *device, UINT widt
     object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*object));
     if (!object)
     {
-        ERR("Out of memory.\n");
         *texture = NULL;
         return WINED3DERR_OUTOFVIDEOMEMORY;
     }
@@ -1293,7 +1286,6 @@ HRESULT CDECL wined3d_texture_create_3d(struct wined3d_device *device, UINT widt
     object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*object));
     if (!object)
     {
-        ERR("Out of memory\n");
         *texture = NULL;
         return WINED3DERR_OUTOFVIDEOMEMORY;
     }
@@ -1329,7 +1321,6 @@ HRESULT CDECL wined3d_texture_create_cube(struct wined3d_device *device, UINT ed
     object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*object));
     if (!object)
     {
-        ERR("Out of memory\n");
         *texture = NULL;
         return WINED3DERR_OUTOFVIDEOMEMORY;
     }

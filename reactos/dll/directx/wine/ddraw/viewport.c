@@ -19,8 +19,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <config.h>
-//#include "wine/port.h"
+#include "config.h"
+#include "wine/port.h"
 
 #include "ddraw_private.h"
 
@@ -41,13 +41,11 @@ static void update_clip_space(struct d3d_device *device,
         offset->x, offset->y, offset->z, 1.0f,
     };
     D3DMATRIX projection;
-    HRESULT hr;
 
     multiply_matrix(&projection, &clip_space, &device->legacy_projection);
-    hr = wined3d_device_set_transform(device->wined3d_device,
+    wined3d_device_set_transform(device->wined3d_device,
             WINED3D_TS_PROJECTION, (struct wined3d_matrix *)&projection);
-    if (SUCCEEDED(hr))
-        device->legacy_clipspace = clip_space;
+    device->legacy_clipspace = clip_space;
 }
 
 /*****************************************************************************
@@ -344,10 +342,10 @@ static HRESULT WINAPI d3d_viewport_SetViewport(IDirect3DViewport3 *iface, D3DVIE
     This->viewports.vp1.dvMinZ = 0.0;
     This->viewports.vp1.dvMaxZ = 1.0;
 
-    if (This->active_device) {
+    if (This->active_device)
+    {
         IDirect3DDevice3 *d3d_device3 = &This->active_device->IDirect3DDevice3_iface;
-        IDirect3DDevice3_GetCurrentViewport(d3d_device3, &current_viewport);
-        if (current_viewport)
+        if (SUCCEEDED(IDirect3DDevice3_GetCurrentViewport(d3d_device3, &current_viewport)))
         {
             if (current_viewport == iface) viewport_activate(This, FALSE);
             IDirect3DViewport3_Release(current_viewport);
@@ -672,6 +670,12 @@ static HRESULT WINAPI d3d_viewport_Clear(IDirect3DViewport3 *iface,
 
     TRACE("iface %p, rect_count %u, rects %p, flags %#x.\n", iface, rect_count, rects, flags);
 
+    if (!rects || !rect_count)
+    {
+        WARN("rect_count = %u, rects = %p, ignoring clear\n", rect_count, rects);
+        return D3D_OK;
+    }
+
     if (This->active_device == NULL) {
         ERR(" Trying to clear a viewport not attached to a device !\n");
         return D3DERR_VIEWPORTHASNODEVICE;
@@ -701,8 +705,7 @@ static HRESULT WINAPI d3d_viewport_Clear(IDirect3DViewport3 *iface,
     hr = IDirect3DDevice7_Clear(&This->active_device->IDirect3DDevice7_iface, rect_count, rects,
             flags & (D3DCLEAR_ZBUFFER | D3DCLEAR_TARGET), color, 1.0, 0x00000000);
 
-    IDirect3DDevice3_GetCurrentViewport(d3d_device3, &current_viewport);
-    if (current_viewport)
+    if (SUCCEEDED(IDirect3DDevice3_GetCurrentViewport(d3d_device3, &current_viewport)))
     {
         struct d3d_viewport *vp = impl_from_IDirect3DViewport3(current_viewport);
         viewport_activate(vp, TRUE);
@@ -975,10 +978,10 @@ static HRESULT WINAPI d3d_viewport_SetViewport2(IDirect3DViewport3 *iface, D3DVI
     memset(&(This->viewports.vp2), 0, sizeof(This->viewports.vp2));
     memcpy(&(This->viewports.vp2), lpData, lpData->dwSize);
 
-    if (This->active_device) {
+    if (This->active_device)
+    {
         IDirect3DDevice3 *d3d_device3 = &This->active_device->IDirect3DDevice3_iface;
-        IDirect3DDevice3_GetCurrentViewport(d3d_device3, &current_viewport);
-        if (current_viewport)
+        if (SUCCEEDED(IDirect3DDevice3_GetCurrentViewport(d3d_device3, &current_viewport)))
         {
             if (current_viewport == iface) viewport_activate(This, FALSE);
             IDirect3DViewport3_Release(current_viewport);
@@ -1062,6 +1065,12 @@ static HRESULT WINAPI d3d_viewport_Clear2(IDirect3DViewport3 *iface, DWORD rect_
     TRACE("iface %p, rect_count %u, rects %p, flags %#x, color 0x%08x, depth %.8e, stencil %u.\n",
             iface, rect_count, rects, flags, color, depth, stencil);
 
+    if (!rects || !rect_count)
+    {
+        WARN("rect_count = %u, rects = %p, ignoring clear\n", rect_count, rects);
+        return D3D_OK;
+    }
+
     wined3d_mutex_lock();
 
     if (!viewport->active_device)
@@ -1077,8 +1086,7 @@ static HRESULT WINAPI d3d_viewport_Clear2(IDirect3DViewport3 *iface, DWORD rect_
 
     hr = IDirect3DDevice7_Clear(&viewport->active_device->IDirect3DDevice7_iface,
             rect_count, rects, flags, color, depth, stencil);
-    IDirect3DDevice3_GetCurrentViewport(d3d_device3, &current_viewport);
-    if (current_viewport)
+    if (SUCCEEDED(IDirect3DDevice3_GetCurrentViewport(d3d_device3, &current_viewport)))
     {
         struct d3d_viewport *vp = impl_from_IDirect3DViewport3(current_viewport);
         viewport_activate(vp, TRUE);

@@ -19,8 +19,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <config.h>
-//#include "wine/port.h"
+#include "config.h"
+#include "wine/port.h"
 
 #include "ddraw_private.h"
 
@@ -66,21 +66,21 @@ static HRESULT WINAPI d3d_vertex_buffer7_QueryInterface(IDirect3DVertexBuffer7 *
 
     if ( IsEqualGUID( &IID_IUnknown,  riid ) )
     {
-        IUnknown_AddRef(iface);
+        IDirect3DVertexBuffer7_AddRef(iface);
         *obj = iface;
         TRACE("  Creating IUnknown interface at %p.\n", *obj);
         return S_OK;
     }
     if ( IsEqualGUID( &IID_IDirect3DVertexBuffer, riid ) )
     {
-        IUnknown_AddRef(iface);
+        IDirect3DVertexBuffer7_AddRef(iface);
         *obj = &buffer->IDirect3DVertexBuffer_iface;
         TRACE("  Creating IDirect3DVertexBuffer interface %p\n", *obj);
         return S_OK;
     }
     if ( IsEqualGUID( &IID_IDirect3DVertexBuffer7, riid ) )
     {
-        IUnknown_AddRef(iface);
+        IDirect3DVertexBuffer7_AddRef(iface);
         *obj = iface;
         TRACE("  Creating IDirect3DVertexBuffer7 interface %p\n", *obj);
         return S_OK;
@@ -185,6 +185,27 @@ static ULONG WINAPI d3d_vertex_buffer1_Release(IDirect3DVertexBuffer *iface)
  * IDirect3DVertexBuffer Methods
  *****************************************************************************/
 
+static HRESULT d3d_vertex_buffer_create_wined3d_buffer(struct d3d_vertex_buffer *buffer, BOOL dynamic,
+        struct wined3d_buffer **wined3d_buffer)
+{
+    DWORD usage = WINED3DUSAGE_STATICDECL;
+    enum wined3d_pool pool;
+
+    if (buffer->Caps & D3DVBCAPS_SYSTEMMEMORY)
+        pool = WINED3D_POOL_SYSTEM_MEM;
+    else
+        pool = WINED3D_POOL_DEFAULT;
+
+    if (buffer->Caps & D3DVBCAPS_WRITEONLY)
+        usage |= WINED3DUSAGE_WRITEONLY;
+    if (dynamic)
+        usage |= WINED3DUSAGE_DYNAMIC;
+
+    return wined3d_buffer_create_vb(buffer->ddraw->wined3d_device,
+        buffer->size, usage, pool, buffer, &ddraw_null_wined3d_parent_ops,
+        wined3d_buffer);
+}
+
 /*****************************************************************************
  * IDirect3DVertexBuffer7::Lock
  *
@@ -224,8 +245,28 @@ static HRESULT WINAPI d3d_vertex_buffer7_Lock(IDirect3DVertexBuffer7 *iface,
         wined3d_flags |= WINED3D_MAP_READONLY;
     if (flags & DDLOCK_NOOVERWRITE)
         wined3d_flags |= WINED3D_MAP_NOOVERWRITE;
-    if (flags & DDLOCK_DISCARDCONTENTS)
+    if (flags & DDLOCK_DISCARDCONTENTS && buffer->read_since_last_map)
+    {
         wined3d_flags |= WINED3D_MAP_DISCARD;
+
+        if (!buffer->dynamic)
+        {
+            struct wined3d_buffer *new_buffer;
+            wined3d_mutex_lock();
+            hr = d3d_vertex_buffer_create_wined3d_buffer(buffer, TRUE, &new_buffer);
+            if (SUCCEEDED(hr))
+            {
+                buffer->dynamic = TRUE;
+                wined3d_buffer_decref(buffer->wineD3DVertexBuffer);
+                buffer->wineD3DVertexBuffer = new_buffer;
+            }
+            else
+            {
+                WARN("Failed to create a dynamic buffer\n");
+            }
+            wined3d_mutex_unlock();
+        }
+    }
 
     wined3d_mutex_lock();
     if (data_size)
@@ -237,6 +278,10 @@ static HRESULT WINAPI d3d_vertex_buffer7_Lock(IDirect3DVertexBuffer7 *iface,
     }
 
     hr = wined3d_buffer_map(buffer->wineD3DVertexBuffer, 0, 0, (BYTE **)data, wined3d_flags);
+
+    if (SUCCEEDED(hr))
+        buffer->read_since_last_map = FALSE;
+
     wined3d_mutex_unlock();
 
     return hr;
@@ -339,7 +384,7 @@ static HRESULT WINAPI d3d_vertex_buffer7_ProcessVertices(IDirect3DVertexBuffer7 
      * the vertex ops
      */
     doClip = !!(vertex_op & D3DVOP_CLIP);
-    wined3d_device_get_render_state(device_impl->wined3d_device, WINED3D_RS_CLIPPING, (DWORD *)&oldClip);
+    oldClip = wined3d_device_get_render_state(device_impl->wined3d_device, WINED3D_RS_CLIPPING);
     if (doClip != oldClip)
         wined3d_device_set_render_state(device_impl->wined3d_device, WINED3D_RS_CLIPPING, doClip);
 
@@ -534,7 +579,6 @@ HRESULT d3d_vertex_buffer_create(struct d3d_vertex_buffer **vertex_buf,
         struct ddraw *ddraw, D3DVERTEXBUFFERDESC *desc)
 {
     struct d3d_vertex_buffer *buffer;
-    DWORD usage;
     HRESULT hr = D3D_OK;
 
     TRACE("Vertex buffer description:\n");
@@ -554,16 +598,11 @@ HRESULT d3d_vertex_buffer_create(struct d3d_vertex_buffer **vertex_buf,
     buffer->ddraw = ddraw;
     buffer->Caps = desc->dwCaps;
     buffer->fvf = desc->dwFVF;
-
-    usage = desc->dwCaps & D3DVBCAPS_WRITEONLY ? WINED3DUSAGE_WRITEONLY : 0;
-    usage |= WINED3DUSAGE_STATICDECL;
+    buffer->size = get_flexible_vertex_size(desc->dwFVF) * desc->dwNumVertices;
 
     wined3d_mutex_lock();
 
-    hr = wined3d_buffer_create_vb(ddraw->wined3d_device,
-            get_flexible_vertex_size(desc->dwFVF) * desc->dwNumVertices,
-            usage, desc->dwCaps & D3DVBCAPS_SYSTEMMEMORY ? WINED3D_POOL_SYSTEM_MEM : WINED3D_POOL_DEFAULT,
-            buffer, &ddraw_null_wined3d_parent_ops, &buffer->wineD3DVertexBuffer);
+    hr = d3d_vertex_buffer_create_wined3d_buffer(buffer, FALSE, &buffer->wineD3DVertexBuffer);
     if (FAILED(hr))
     {
         WARN("Failed to create wined3d vertex buffer, hr %#x.\n", hr);

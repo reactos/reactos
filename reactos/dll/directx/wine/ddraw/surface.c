@@ -21,8 +21,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <config.h>
-//#include "wine/port.h"
+#include "config.h"
+#include "wine/port.h"
 
 #include "ddraw_private.h"
 
@@ -311,18 +311,20 @@ static HRESULT WINAPI d3d_texture1_QueryInterface(IDirect3DTexture *iface, REFII
     return ddraw_surface7_QueryInterface(&surface->IDirectDrawSurface7_iface, riid, object);
 }
 
-static void ddraw_surface_add_iface(struct ddraw_surface *This)
+static void ddraw_surface_add_iface(struct ddraw_surface *surface)
 {
-    ULONG iface_count = InterlockedIncrement(&This->iface_count);
-    TRACE("%p increasing iface count to %u.\n", This, iface_count);
+    ULONG iface_count = InterlockedIncrement(&surface->iface_count);
+    TRACE("%p increasing iface count to %u.\n", surface, iface_count);
 
     if (iface_count == 1)
     {
+        if (surface->ifaceToRelease)
+            IUnknown_AddRef(surface->ifaceToRelease);
         wined3d_mutex_lock();
-        if (This->wined3d_surface)
-            wined3d_surface_incref(This->wined3d_surface);
-        if (This->wined3d_texture)
-            wined3d_texture_incref(This->wined3d_texture);
+        if (surface->wined3d_surface)
+            wined3d_surface_incref(surface->wined3d_surface);
+        if (surface->wined3d_texture)
+            wined3d_texture_incref(surface->wined3d_texture);
         wined3d_mutex_unlock();
     }
 }
@@ -447,7 +449,6 @@ static ULONG WINAPI d3d_texture1_AddRef(IDirect3DTexture *iface)
 static void ddraw_surface_cleanup(struct ddraw_surface *surface)
 {
     struct ddraw_surface *surf;
-    IUnknown *ifaceToRelease;
     UINT i;
 
     TRACE("surface %p.\n", surface);
@@ -472,7 +473,6 @@ static void ddraw_surface_cleanup(struct ddraw_surface *surface)
 
     if (surface->device1)
         IUnknown_Release(&surface->device1->IUnknown_inner);
-    ifaceToRelease = surface->ifaceToRelease;
 
     if (surface->iface_count > 1)
     {
@@ -485,10 +485,6 @@ static void ddraw_surface_cleanup(struct ddraw_surface *surface)
 
     if (surface->wined3d_surface)
         wined3d_surface_decref(surface->wined3d_surface);
-
-    /* Reduce the ddraw refcount */
-    if (ifaceToRelease)
-        IUnknown_Release(ifaceToRelease);
 }
 
 ULONG ddraw_surface_release_iface(struct ddraw_surface *This)
@@ -498,6 +494,8 @@ ULONG ddraw_surface_release_iface(struct ddraw_surface *This)
 
     if (iface_count == 0)
     {
+        IUnknown *release_iface = This->ifaceToRelease;
+
         /* Complex attached surfaces are destroyed implicitly when the root is released */
         wined3d_mutex_lock();
         if(!This->is_complex_root)
@@ -511,6 +509,9 @@ ULONG ddraw_surface_release_iface(struct ddraw_surface *This)
         else
             ddraw_surface_cleanup(This);
         wined3d_mutex_unlock();
+
+        if (release_iface)
+            IUnknown_Release(release_iface);
     }
 
     return iface_count;
@@ -4711,11 +4712,8 @@ static HRESULT WINAPI ddraw_surface7_SetPalette(IDirectDrawSurface7 *iface, IDir
 
     /* Update the wined3d frontbuffer if this is the frontbuffer. */
     if ((This->surface_desc.ddsCaps.dwCaps & DDSCAPS_FRONTBUFFER) && This->ddraw->wined3d_frontbuffer)
-    {
-        hr = wined3d_surface_set_palette(This->ddraw->wined3d_frontbuffer, palette_impl ? palette_impl->wineD3DPalette : NULL);
-        if (FAILED(hr))
-            ERR("Failed to set frontbuffer palette, hr %#x.\n", hr);
-    }
+        wined3d_surface_set_palette(This->ddraw->wined3d_frontbuffer,
+                palette_impl ? palette_impl->wineD3DPalette : NULL);
 
     /* If this is a front buffer, also update the back buffers
      * TODO: How do things work for palettized cube textures?
@@ -5440,13 +5438,13 @@ struct ddraw_surface *unsafe_impl_from_IDirectDrawSurface7(IDirectDrawSurface7 *
     if (!iface) return NULL;
     if (iface->lpVtbl != &ddraw_surface7_vtbl)
     {
-        HRESULT hr = IUnknown_QueryInterface(iface, &IID_IDirectDrawSurface7, (void **)&iface);
+        HRESULT hr = IDirectDrawSurface7_QueryInterface(iface, &IID_IDirectDrawSurface7, (void **)&iface);
         if (FAILED(hr))
         {
             WARN("Object %p doesn't expose interface IDirectDrawSurface7.\n", iface);
             return NULL;
         }
-        IUnknown_Release(iface);
+        IDirectDrawSurface7_Release(iface);
     }
     return CONTAINING_RECORD(iface, struct ddraw_surface, IDirectDrawSurface7_iface);
 }
@@ -5456,13 +5454,13 @@ struct ddraw_surface *unsafe_impl_from_IDirectDrawSurface4(IDirectDrawSurface4 *
     if (!iface) return NULL;
     if (iface->lpVtbl != &ddraw_surface4_vtbl)
     {
-        HRESULT hr = IUnknown_QueryInterface(iface, &IID_IDirectDrawSurface4, (void **)&iface);
+        HRESULT hr = IDirectDrawSurface4_QueryInterface(iface, &IID_IDirectDrawSurface4, (void **)&iface);
         if (FAILED(hr))
         {
             WARN("Object %p doesn't expose interface IDirectDrawSurface4.\n", iface);
             return NULL;
         }
-        IUnknown_Release(iface);
+        IDirectDrawSurface4_Release(iface);
     }
     return CONTAINING_RECORD(iface, struct ddraw_surface, IDirectDrawSurface4_iface);
 }
@@ -5472,13 +5470,13 @@ static struct ddraw_surface *unsafe_impl_from_IDirectDrawSurface3(IDirectDrawSur
     if (!iface) return NULL;
     if (iface->lpVtbl != &ddraw_surface3_vtbl)
     {
-        HRESULT hr = IUnknown_QueryInterface(iface, &IID_IDirectDrawSurface3, (void **)&iface);
+        HRESULT hr = IDirectDrawSurface3_QueryInterface(iface, &IID_IDirectDrawSurface3, (void **)&iface);
         if (FAILED(hr))
         {
             WARN("Object %p doesn't expose interface IDirectDrawSurface3.\n", iface);
             return NULL;
         }
-        IUnknown_Release(iface);
+        IDirectDrawSurface3_Release(iface);
     }
     return CONTAINING_RECORD(iface, struct ddraw_surface, IDirectDrawSurface3_iface);
 }
@@ -5488,13 +5486,13 @@ static struct ddraw_surface *unsafe_impl_from_IDirectDrawSurface2(IDirectDrawSur
     if (!iface) return NULL;
     if (iface->lpVtbl != &ddraw_surface2_vtbl)
     {
-        HRESULT hr = IUnknown_QueryInterface(iface, &IID_IDirectDrawSurface2, (void **)&iface);
+        HRESULT hr = IDirectDrawSurface2_QueryInterface(iface, &IID_IDirectDrawSurface2, (void **)&iface);
         if (FAILED(hr))
         {
             WARN("Object %p doesn't expose interface IDirectDrawSurface2.\n", iface);
             return NULL;
         }
-        IUnknown_Release(iface);
+        IDirectDrawSurface2_Release(iface);
     }
     return CONTAINING_RECORD(iface, struct ddraw_surface, IDirectDrawSurface2_iface);
 }
@@ -5504,13 +5502,13 @@ struct ddraw_surface *unsafe_impl_from_IDirectDrawSurface(IDirectDrawSurface *if
     if (!iface) return NULL;
     if (iface->lpVtbl != &ddraw_surface1_vtbl)
     {
-        HRESULT hr = IUnknown_QueryInterface(iface, &IID_IDirectDrawSurface, (void **)&iface);
+        HRESULT hr = IDirectDrawSurface_QueryInterface(iface, &IID_IDirectDrawSurface, (void **)&iface);
         if (FAILED(hr))
         {
             WARN("Object %p doesn't expose interface IDirectDrawSurface.\n", iface);
             return NULL;
         }
-        IUnknown_Release(iface);
+        IDirectDrawSurface_Release(iface);
     }
     return CONTAINING_RECORD(iface, struct ddraw_surface, IDirectDrawSurface_iface);
 }
@@ -5594,6 +5592,7 @@ HRESULT ddraw_surface_create_texture(struct ddraw_surface *surface)
     struct wined3d_resource *resource;
     enum wined3d_format_id format;
     UINT layers, levels, i, j;
+    DDSURFACEDESC2 *mip_desc;
     enum wined3d_pool pool;
     HRESULT hr;
 
@@ -5640,6 +5639,41 @@ HRESULT ddraw_surface_create_texture(struct ddraw_surface *surface)
             if (mip == surface)
                 continue;
 
+            mip_desc = &mip->surface_desc;
+
+            if (j)
+                mip_desc->ddsCaps.dwCaps2 |= DDSCAPS2_MIPMAPSUBLEVEL;
+            else
+                mip_desc->ddsCaps.dwCaps2 &= ~DDSCAPS2_MIPMAPSUBLEVEL;
+
+            if (mip_desc->ddsCaps.dwCaps2 & DDSCAPS2_CUBEMAP)
+            {
+                mip_desc->ddsCaps.dwCaps2 &= ~DDSCAPS2_CUBEMAP_ALLFACES;
+
+                switch (i)
+                {
+                    case WINED3D_CUBEMAP_FACE_POSITIVE_X:
+                        mip_desc->ddsCaps.dwCaps2 |= DDSCAPS2_CUBEMAP_POSITIVEX;
+                        break;
+                    case WINED3D_CUBEMAP_FACE_NEGATIVE_X:
+                        mip_desc->ddsCaps.dwCaps2 |= DDSCAPS2_CUBEMAP_NEGATIVEX;
+                        break;
+                    case WINED3D_CUBEMAP_FACE_POSITIVE_Y:
+                        mip_desc->ddsCaps.dwCaps2 |= DDSCAPS2_CUBEMAP_POSITIVEY;
+                        break;
+                    case WINED3D_CUBEMAP_FACE_NEGATIVE_Y:
+                        mip_desc->ddsCaps.dwCaps2 |= DDSCAPS2_CUBEMAP_NEGATIVEY;
+                        break;
+                    case WINED3D_CUBEMAP_FACE_POSITIVE_Z:
+                        mip_desc->ddsCaps.dwCaps2 |= DDSCAPS2_CUBEMAP_POSITIVEZ;
+                        break;
+                    case WINED3D_CUBEMAP_FACE_NEGATIVE_Z:
+                        mip_desc->ddsCaps.dwCaps2 |= DDSCAPS2_CUBEMAP_NEGATIVEZ;
+                        break;
+                }
+
+            }
+
             *attach = mip;
             attach = &mip->complex_array[0];
         }
@@ -5648,8 +5682,7 @@ HRESULT ddraw_surface_create_texture(struct ddraw_surface *surface)
     return DD_OK;
 }
 
-HRESULT ddraw_surface_init(struct ddraw_surface *surface, struct ddraw *ddraw,
-        DDSURFACEDESC2 *desc, UINT mip_level, UINT version)
+HRESULT ddraw_surface_init(struct ddraw_surface *surface, struct ddraw *ddraw, DDSURFACEDESC2 *desc, UINT version)
 {
     enum wined3d_pool pool = WINED3D_POOL_DEFAULT;
     DWORD flags = WINED3D_SURFACE_MAPPABLE;
@@ -5751,10 +5784,9 @@ HRESULT ddraw_surface_init(struct ddraw_surface *surface, struct ddraw *ddraw,
 
     surface->first_attached = surface;
 
-    hr = wined3d_surface_create(ddraw->wined3d_device, desc->dwWidth, desc->dwHeight, format, mip_level,
-            usage, pool, WINED3D_MULTISAMPLE_NONE, 0, DefaultSurfaceType, flags,
-            surface, &ddraw_surface_wined3d_parent_ops, &surface->wined3d_surface);
-    if (FAILED(hr))
+    if (FAILED(hr = wined3d_surface_create(ddraw->wined3d_device, desc->dwWidth, desc->dwHeight, format,
+            usage, pool, WINED3D_MULTISAMPLE_NONE, 0, flags, surface,
+            &ddraw_surface_wined3d_parent_ops, &surface->wined3d_surface)))
     {
         WARN("Failed to create wined3d surface, hr %#x.\n", hr);
         return hr;

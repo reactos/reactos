@@ -20,8 +20,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <config.h>
-//#include "wine/port.h"
+#include "config.h"
+#include "wine/port.h"
 
 #include "ddraw_private.h"
 
@@ -71,8 +71,9 @@ HRESULT d3d_execute_buffer_execute(struct d3d_execute_buffer *buffer,
     if (TRACE_ON(ddraw))
         _dump_executedata(&(buffer->data));
 
-    while (1) {
-        LPD3DINSTRUCTION current = (LPD3DINSTRUCTION) instr;
+    for (;;)
+    {
+        D3DINSTRUCTION *current = (D3DINSTRUCTION *)instr;
 	BYTE size;
 	WORD count;
 	
@@ -92,7 +93,7 @@ HRESULT d3d_execute_buffer_execute(struct d3d_execute_buffer *buffer,
 	    } break;
 
 	    case D3DOP_TRIANGLE: {
-	        int i;
+                DWORD i;
                 D3DTLVERTEX *tl_vx = buffer->vertex_data;
 		TRACE("TRIANGLE         (%d)\n", count);
 
@@ -103,8 +104,9 @@ HRESULT d3d_execute_buffer_execute(struct d3d_execute_buffer *buffer,
                     buffer->indices = HeapAlloc(GetProcessHeap(), 0, sizeof(*buffer->indices) * buffer->nb_indices);
                 }
 
-		for (i = 0; i < count; i++) {
-                    LPD3DTRIANGLE ci = (LPD3DTRIANGLE) instr;
+                for (i = 0; i < count; ++i)
+                {
+                    D3DTRIANGLE *ci = (D3DTRIANGLE *)instr;
 		    TRACE("  v1: %d  v2: %d  v3: %d\n",ci->u1.v1, ci->u2.v2, ci->u3.v3);
 		    TRACE("  Flags : ");
                     if (TRACE_ON(ddraw))
@@ -133,7 +135,8 @@ HRESULT d3d_execute_buffer_execute(struct d3d_execute_buffer *buffer,
                     instr += size;
                 }
                 IDirect3DDevice7_DrawIndexedPrimitive(&device->IDirect3DDevice7_iface,
-                        D3DPT_TRIANGLELIST, D3DFVF_TLVERTEX, tl_vx, 0, buffer->indices, count * 3, 0);
+                        D3DPT_TRIANGLELIST, D3DFVF_TLVERTEX, tl_vx, buffer->nb_vertices,
+                        buffer->indices, count * 3, 0);
 	    } break;
 
 	    case D3DOP_MATRIXLOAD:
@@ -142,7 +145,7 @@ HRESULT d3d_execute_buffer_execute(struct d3d_execute_buffer *buffer,
 	        break;
 
 	    case D3DOP_MATRIXMULTIPLY: {
-	        int i;
+                DWORD  i;
 		TRACE("MATRIXMULTIPLY   (%d)\n", count);
 		
                 for (i = 0; i < count; ++i)
@@ -170,7 +173,7 @@ HRESULT d3d_execute_buffer_execute(struct d3d_execute_buffer *buffer,
 	    } break;
 
 	    case D3DOP_STATETRANSFORM: {
-	        int i;
+                DWORD i;
 		TRACE("STATETRANSFORM   (%d)\n", count);
 		
                 for (i = 0; i < count; ++i)
@@ -200,11 +203,12 @@ HRESULT d3d_execute_buffer_execute(struct d3d_execute_buffer *buffer,
 	    } break;
 
 	    case D3DOP_STATELIGHT: {
-		int i;
+                DWORD i;
 		TRACE("STATELIGHT       (%d)\n", count);
 
-		for (i = 0; i < count; i++) {
-		    LPD3DSTATE ci = (LPD3DSTATE) instr;
+                for (i = 0; i < count; ++i)
+                {
+                    D3DSTATE *ci = (D3DSTATE *)instr;
 
 		    TRACE("(%08x,%08x)\n", ci->u1.dlstLightStateType, ci->u2.dwArg[0]);
 
@@ -266,12 +270,13 @@ HRESULT d3d_execute_buffer_execute(struct d3d_execute_buffer *buffer,
 	    } break;
 
 	    case D3DOP_STATERENDER: {
-	        int i;
+                DWORD i;
                 IDirect3DDevice2 *d3d_device2 = &device->IDirect3DDevice2_iface;
 		TRACE("STATERENDER      (%d)\n", count);
 
-		for (i = 0; i < count; i++) {
-		    LPD3DSTATE ci = (LPD3DSTATE) instr;
+                for (i = 0; i < count; ++i)
+                {
+                    D3DSTATE *ci = (D3DSTATE *)instr;
 
                     IDirect3DDevice2_SetRenderState(d3d_device2, ci->u1.drstRenderStateType, ci->u2.dwArg[0]);
 
@@ -284,7 +289,7 @@ HRESULT d3d_execute_buffer_execute(struct d3d_execute_buffer *buffer,
                 /* TODO: Share code with IDirect3DVertexBuffer::ProcessVertices and / or
                  * IWineD3DDevice::ProcessVertices
                  */
-                int i;
+                DWORD i;
                 D3DMATRIX view_mat, world_mat, proj_mat;
                 TRACE("PROCESSVERTICES  (%d)\n", count);
 
@@ -297,8 +302,9 @@ HRESULT d3d_execute_buffer_execute(struct d3d_execute_buffer *buffer,
                 wined3d_device_get_transform(device->wined3d_device,
                         WINED3D_TS_WORLD_MATRIX(0), (struct wined3d_matrix *)&world_mat);
 
-		for (i = 0; i < count; i++) {
-		    LPD3DPROCESSVERTICES ci = (LPD3DPROCESSVERTICES) instr;
+                for (i = 0; i < count; ++i)
+                {
+                    D3DPROCESSVERTICES *ci = (D3DPROCESSVERTICES *)instr;
 
                     TRACE("  Start : %d Dest : %d Count : %d\n",
 			  ci->wStart, ci->wDest, ci->dwCount);
@@ -465,11 +471,12 @@ HRESULT d3d_execute_buffer_execute(struct d3d_execute_buffer *buffer,
 	    } break;
 
 	    case D3DOP_BRANCHFORWARD: {
-	        int i;
+                DWORD i;
 		TRACE("BRANCHFORWARD    (%d)\n", count);
 
-		for (i = 0; i < count; i++) {
-		    LPD3DBRANCH ci = (LPD3DBRANCH) instr;
+                for (i = 0; i < count; ++i)
+                {
+                    D3DBRANCH *ci = (D3DBRANCH *)instr;
 
                     if ((buffer->data.dsStatus.dwStatus & ci->dwMask) == ci->dwValue)
                     {
@@ -502,16 +509,14 @@ HRESULT d3d_execute_buffer_execute(struct d3d_execute_buffer *buffer,
 	    } break;
 
 	    case D3DOP_SETSTATUS: {
-	        int i;
+                DWORD i;
 		TRACE("SETSTATUS        (%d)\n", count);
 
-		for (i = 0; i < count; i++) {
-		    LPD3DSTATUS ci = (LPD3DSTATUS) instr;
-
-                    buffer->data.dsStatus = *ci;
-
-		    instr += size;
-		}
+                for (i = 0; i < count; ++i)
+                {
+                    buffer->data.dsStatus = *(D3DSTATUS *)instr;
+                    instr += size;
+                }
 	    } break;
 
 	    default:
@@ -711,6 +716,7 @@ static HRESULT WINAPI d3d_execute_buffer_SetExecuteData(IDirect3DExecuteBuffer *
     /* Prepares the transformed vertex buffer */
     HeapFree(GetProcessHeap(), 0, buffer->vertex_data);
     buffer->vertex_data = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, nbvert * sizeof(D3DTLVERTEX));
+    buffer->nb_vertices = nbvert;
 
     if (TRACE_ON(ddraw))
         _dump_executedata(data);

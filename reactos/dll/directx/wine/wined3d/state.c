@@ -25,10 +25,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <config.h>
-#include <wine/port.h>
+#include "config.h"
+#include "wine/port.h"
 
-//#include <stdio.h>
+#include <stdio.h>
 #ifdef HAVE_FLOAT_H
 # include <float.h>
 #endif
@@ -38,7 +38,7 @@
 WINE_DEFAULT_DEBUG_CHANNEL(d3d);
 WINE_DECLARE_DEBUG_CHANNEL(d3d_shader);
 
-/* GL locking for state handlers is done by the caller. */
+/* Context activation for state handler is done by the caller. */
 
 static void state_undefined(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
 {
@@ -599,15 +599,7 @@ static void state_alpha(struct wined3d_context *context, const struct wined3d_st
 
 static void shaderconstant(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
 {
-    const struct wined3d_device *device = context->swapchain->device;
-
-    /* Vertex and pixel shader states will call a shader upload, don't do
-     * anything as long one of them has an update pending. */
-    if (isStateDirty(context, STATE_VDECL)
-            || isStateDirty(context, STATE_PIXELSHADER))
-       return;
-
-    device->shader_backend->shader_load_constants(context, use_ps(state), use_vs(state));
+    context->load_constants = 1;
 }
 
 static void state_clipping(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
@@ -640,12 +632,8 @@ static void state_clipping(struct wined3d_context *context, const struct wined3d
 
         /* glEnable(GL_CLIP_PLANEx) doesn't apply to vertex shaders. The enabled / disabled planes are
          * hardcoded into the shader. Update the shader to update the enabled clipplanes */
-        if (!isStateDirty(context, context->state_table[STATE_VSHADER].representative))
-        {
-            device->shader_backend->shader_select(context, use_ps(state), TRUE);
-            if (!isStateDirty(context, STATE_VERTEXSHADERCONSTANT))
-                shaderconstant(context, state, STATE_VERTEXSHADERCONSTANT);
-        }
+        context->select_shader = 1;
+        context->load_constants = 1;
     }
 
     /* TODO: Keep track of previously enabled clipplanes to avoid unnecessary resetting
@@ -2640,6 +2628,8 @@ static void set_tex_op(const struct wined3d_gl_info *gl_info, const struct wined
             case WINED3D_TOP_BUMPENVMAP:
             case WINED3D_TOP_BUMPENVMAP_LUMINANCE:
                 FIXME("Implement bump environment mapping in GL_NV_texture_env_combine4 path\n");
+                Handled = FALSE;
+                break;
 
             default:
                 Handled = FALSE;
@@ -3102,6 +3092,9 @@ static void set_tex_op(const struct wined3d_gl_info *gl_info, const struct wined
                  */
                 FIXME("Implement bump mapping with GL_NV_texture_shader in non register combiner path\n");
             }
+            Handled = FALSE;
+            break;
+
         default:
             Handled = FALSE;
     }
@@ -3348,7 +3341,7 @@ static void transform_texture(struct wined3d_context *context, const struct wine
             device->strided_streams.use_map & (1 << (WINED3D_FFP_TEXCOORD0 + coordIdx))
             ? device->strided_streams.elements[WINED3D_FFP_TEXCOORD0 + coordIdx].format->id
             : WINED3DFMT_UNKNOWN,
-            device->frag_pipe->ffp_proj_control);
+            device->shader_backend->shader_has_ffp_proj_control(device->shader_priv));
 
     /* The sampler applying function calls us if this changes */
     if ((context->lastWasPow2Texture & (1 << texUnit)) && state->textures[texUnit])
@@ -3618,14 +3611,9 @@ static void tex_bumpenvlscale(struct wined3d_context *context, const struct wine
     DWORD stage = (state_id - STATE_TEXTURESTAGE(0, 0)) / (WINED3D_HIGHEST_TEXTURE_STATE + 1);
     const struct wined3d_shader *ps = state->pixel_shader;
 
+    /* The pixel shader has to know the luminance scale. Do a constants update. */
     if (ps && stage && (ps->reg_maps.luminanceparams & (1 << stage)))
-    {
-        /* The pixel shader has to know the luminance scale. Do a constants
-         * update if it isn't scheduled anyway. */
-        if (!isStateDirty(context, STATE_PIXELSHADERCONSTANT)
-                && !isStateDirty(context, STATE_PIXELSHADER))
-            shaderconstant(context, state, STATE_PIXELSHADERCONSTANT);
-    }
+        context->load_constants = 1;
 }
 
 static void sampler_texmatrix(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
@@ -3738,12 +3726,9 @@ static void sampler(struct wined3d_context *context, const struct wined3d_state 
 
 void apply_pixelshader(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
 {
-    const struct wined3d_device *device = context->swapchain->device;
-    BOOL use_vshader = use_vs(state);
-    BOOL use_pshader = use_ps(state);
     unsigned int i;
 
-    if (use_pshader)
+    if (use_ps(state))
     {
         if (!context->last_was_pshader)
         {
@@ -3776,13 +3761,13 @@ void apply_pixelshader(struct wined3d_context *context, const struct wined3d_sta
         context->last_was_pshader = FALSE;
     }
 
-    if (!isStateDirty(context, context->state_table[STATE_VSHADER].representative))
-    {
-        device->shader_backend->shader_select(context, use_pshader, use_vshader);
+    context->select_shader = 1;
+    context->load_constants = 1;
+}
 
-        if (!isStateDirty(context, STATE_VERTEXSHADERCONSTANT) && (use_vshader || use_pshader))
-            shaderconstant(context, state, STATE_VERTEXSHADERCONSTANT);
-    }
+static void state_geometry_shader(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
+{
+    context->select_shader = 1;
 }
 
 static void shader_bumpenvmat(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
@@ -3790,14 +3775,9 @@ static void shader_bumpenvmat(struct wined3d_context *context, const struct wine
     DWORD stage = (state_id - STATE_TEXTURESTAGE(0, 0)) / (WINED3D_HIGHEST_TEXTURE_STATE + 1);
     const struct wined3d_shader *ps = state->pixel_shader;
 
+    /* The pixel shader has to know the bump env matrix. Do a constants update. */
     if (ps && stage && (ps->reg_maps.bumpmat & (1 << stage)))
-    {
-        /* The pixel shader has to know the bump env matrix. Do a constants
-         * update if it isn't scheduled anyway. */
-        if (!isStateDirty(context, STATE_PIXELSHADERCONSTANT)
-                && !isStateDirty(context, STATE_PIXELSHADER))
-            shaderconstant(context, state, STATE_PIXELSHADERCONSTANT);
-    }
+        context->load_constants = 1;
 }
 
 static void transform_world(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
@@ -4121,6 +4101,8 @@ static inline void unload_numbered_array(struct wined3d_context *context, int i)
 
     GL_EXTCALL(glDisableVertexAttribArrayARB(i));
     checkGLcall("glDisableVertexAttribArrayARB(reg)");
+    if (gl_info->supported[ARB_INSTANCED_ARRAYS])
+        GL_EXTCALL(glVertexAttribDivisorARB(i, 0));
 
     context->numbered_array_mask &= ~(1 << i);
 }
@@ -4146,7 +4128,7 @@ static void load_numbered_arrays(struct wined3d_context *context,
     int i;
 
     /* Default to no instancing */
-    device->instancedDraw = FALSE;
+    device->instance_count = 0;
 
     for (i = 0; i < MAX_ATTRIBS; i++)
     {
@@ -4163,12 +4145,25 @@ static void load_numbered_arrays(struct wined3d_context *context,
 
         stream = &state->streams[stream_info->elements[i].stream_idx];
 
-        /* Do not load instance data. It will be specified using glTexCoord by drawprim */
         if (stream->flags & WINED3DSTREAMSOURCE_INSTANCEDATA)
         {
-            if (context->numbered_array_mask & (1 << i)) unload_numbered_array(context, i);
-            device->instancedDraw = TRUE;
-            continue;
+            if (!device->instance_count)
+                device->instance_count = state->streams[0].frequency ? state->streams[0].frequency : 1;
+
+            if (!gl_info->supported[ARB_INSTANCED_ARRAYS])
+            {
+                /* Unload instanced arrays, they will be loaded using
+                 * immediate mode instead. */
+                if (context->numbered_array_mask & (1 << i))
+                    unload_numbered_array(context, i);
+                continue;
+            }
+
+            GL_EXTCALL(glVertexAttribDivisorARB(i, 1));
+        }
+        else if (gl_info->supported[ARB_INSTANCED_ARRAYS])
+        {
+            GL_EXTCALL(glVertexAttribDivisorARB(i, 0));
         }
 
         TRACE_(d3d_shader)("Loading array %u [VBO=%u]\n", i, stream_info->elements[i].data.buffer_object);
@@ -4310,7 +4305,7 @@ static void load_vertex_data(const struct wined3d_context *context,
     TRACE("Using fast vertex array code\n");
 
     /* This is fixed function pipeline only, and the fixed function pipeline doesn't do instancing */
-    device->instancedDraw = FALSE;
+    device->instance_count = 0;
 
     /* Blend Data ---------------------------------------------- */
     if ((si->use_map & (1 << WINED3D_FFP_BLENDWEIGHT))
@@ -4580,7 +4575,6 @@ static void vertexdeclaration(struct wined3d_context *context, const struct wine
     const struct wined3d_device *device = context->swapchain->device;
     const struct wined3d_gl_info *gl_info = context->gl_info;
     BOOL useVertexShaderFunction = use_vs(state);
-    BOOL usePixelShaderFunction = use_ps(state);
     BOOL updateFog = FALSE;
     BOOL transformed;
     BOOL wasrhw = context->last_was_rhw;
@@ -4684,18 +4678,9 @@ static void vertexdeclaration(struct wined3d_context *context, const struct wine
         }
     }
 
-    /* Vertex and pixel shaders are applied together, so let the last dirty
-     * state do the application. */
-    if (!isStateDirty(context, STATE_PIXELSHADER))
-    {
-        device->shader_backend->shader_select(context, usePixelShaderFunction, useVertexShaderFunction);
-
-        if (!isStateDirty(context, STATE_VERTEXSHADERCONSTANT)
-                && (useVertexShaderFunction || usePixelShaderFunction))
-            shaderconstant(context, state, STATE_VERTEXSHADERCONSTANT);
-    }
-
     context->last_was_vshader = useVertexShaderFunction;
+    context->select_shader = 1;
+    context->load_constants = 1;
 
     if (updateFog)
         context_apply_state(context, state, STATE_RENDER(WINED3D_RS_FOGVERTEXMODE));
@@ -4753,8 +4738,7 @@ static void viewport_vertexpart(struct wined3d_context *context, const struct wi
     if (!isStateDirty(context, STATE_RENDER(WINED3D_RS_POINTSCALEENABLE)))
         state_pscale(context, state, STATE_RENDER(WINED3D_RS_POINTSCALEENABLE));
     /* Update the position fixup. */
-    if (!isStateDirty(context, STATE_VERTEXSHADERCONSTANT))
-        shaderconstant(context, state, STATE_VERTEXSHADERCONSTANT);
+    context->load_constants = 1;
 }
 
 static void light(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
@@ -4913,7 +4897,7 @@ static void indexbuffer(struct wined3d_context *context, const struct wined3d_st
     const struct wined3d_stream_info *stream_info = &context->swapchain->device->strided_streams;
     const struct wined3d_gl_info *gl_info = context->gl_info;
 
-    if (state->user_stream || !state->index_buffer || !stream_info->all_vbo)
+    if (!state->index_buffer || !stream_info->all_vbo)
     {
         GL_EXTCALL(glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0));
     }
@@ -4961,6 +4945,20 @@ static void psorigin(struct wined3d_context *context, const struct wined3d_state
         GL_EXTCALL(glPointParameteriNV(GL_POINT_SPRITE_COORD_ORIGIN, origin));
         checkGLcall("glPointParameteriNV(GL_POINT_SPRITE_COORD_ORIGIN, ...)");
     }
+}
+
+void state_srgbwrite(struct wined3d_context *context, const struct wined3d_state *state, DWORD state_id)
+{
+    const struct wined3d_gl_info *gl_info = context->gl_info;
+    const struct wined3d_surface *rt = state->fb->render_targets[0];
+
+    TRACE("context %p, state %p, state_id %#x.\n", context, state, state_id);
+
+    if (state->render_states[WINED3D_RS_SRGBWRITEENABLE]
+            && rt->resource.format->flags & WINED3DFMT_FLAG_SRGB_WRITE)
+        gl_info->gl_ops.gl.p_glEnable(GL_FRAMEBUFFER_SRGB);
+    else
+        gl_info->gl_ops.gl.p_glDisable(GL_FRAMEBUFFER_SRGB);
 }
 
 const struct StateEntryTemplate misc_state_template[] = {
@@ -5156,6 +5154,7 @@ const struct StateEntryTemplate misc_state_template[] = {
     { STATE_BASEVERTEXINDEX,                              { STATE_STREAMSRC,                                    NULL,               }, WINED3D_GL_EXT_NONE             },
     { STATE_FRAMEBUFFER,                                  { STATE_FRAMEBUFFER,                                  context_state_fb    }, WINED3D_GL_EXT_NONE             },
     { STATE_PIXELSHADER,                                  { STATE_PIXELSHADER,                                  context_state_drawbuf},WINED3D_GL_EXT_NONE             },
+    { STATE_GEOMETRY_SHADER,                              { STATE_GEOMETRY_SHADER,                              state_geometry_shader}, WINED3D_GL_EXT_NONE             },
     {0 /* Terminate */,                                   { 0,                                                  0                   }, WINED3D_GL_EXT_NONE             },
 };
 
@@ -5658,11 +5657,12 @@ static const struct StateEntryTemplate ffp_fragmentstate_template[] = {
     {0 /* Terminate */,                                   { 0,                                                  0                   }, WINED3D_GL_EXT_NONE             },
 };
 
-/* Context activation and GL locking are done by the caller. */
+/* Context activation is done by the caller. */
 static void ffp_enable(const struct wined3d_gl_info *gl_info, BOOL enable) {}
 
 static void ffp_fragment_get_caps(const struct wined3d_gl_info *gl_info, struct fragment_caps *caps)
 {
+    caps->wined3d_caps = 0;
     caps->PrimitiveMiscCaps = 0;
     caps->TextureOpCaps = WINED3DTEXOPCAPS_ADD
             | WINED3DTEXOPCAPS_ADDSIGNED
@@ -5701,7 +5701,11 @@ static void ffp_fragment_get_caps(const struct wined3d_gl_info *gl_info, struct 
     caps->MaxSimultaneousTextures = gl_info->limits.textures;
 }
 
-static HRESULT ffp_fragment_alloc(struct wined3d_device *device) { return WINED3D_OK; }
+static void *ffp_fragment_alloc(const struct wined3d_shader_backend_ops *shader_backend, void *shader_priv)
+{
+    return shader_priv;
+}
+
 static void ffp_fragment_free(struct wined3d_device *device) {}
 static BOOL ffp_color_fixup_supported(struct color_fixup_desc fixup)
 {
@@ -5729,7 +5733,35 @@ const struct fragment_pipeline ffp_fragment_pipeline = {
     ffp_fragment_free,
     ffp_color_fixup_supported,
     ffp_fragmentstate_template,
-    FALSE /* we cannot disable projected textures. The vertex pipe has to do it */
+};
+
+static void fp_none_enable(const struct wined3d_gl_info *gl_info, BOOL enable) {}
+
+static void fp_none_get_caps(const struct wined3d_gl_info *gl_info, struct fragment_caps *caps)
+{
+    memset(caps, 0, sizeof(*caps));
+}
+
+static void *fp_none_alloc(const struct wined3d_shader_backend_ops *shader_backend, void *shader_priv)
+{
+    return shader_priv;
+}
+
+static void fp_none_free(struct wined3d_device *device) {}
+
+static BOOL fp_none_color_fixup_supported(struct color_fixup_desc fixup)
+{
+    return is_identity_fixup(fixup);
+}
+
+const struct fragment_pipeline none_fragment_pipe =
+{
+    fp_none_enable,
+    fp_none_get_caps,
+    fp_none_alloc,
+    fp_none_free,
+    fp_none_color_fixup_supported,
+    NULL,
 };
 
 static unsigned int num_handlers(const APPLYSTATEFUNC *funcs)
@@ -5812,6 +5844,7 @@ static void validate_state_table(struct StateEntry *state_table)
         STATE_VERTEXSHADERCONSTANT,
         STATE_PIXELSHADERCONSTANT,
         STATE_VSHADER,
+        STATE_GEOMETRY_SHADER,
         STATE_PIXELSHADER,
         STATE_VIEWPORT,
         STATE_SCISSORRECT,

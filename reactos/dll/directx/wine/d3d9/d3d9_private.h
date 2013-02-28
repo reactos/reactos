@@ -23,25 +23,21 @@
 #ifndef __WINE_D3D9_PRIVATE_H
 #define __WINE_D3D9_PRIVATE_H
 
-#define WIN32_NO_STATUS
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
 #include <assert.h>
 #include <stdarg.h>
 
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
 #define COBJMACROS
-#include <windef.h>
-#include <winbase.h>
-#include <wingdi.h>
-//#include "winuser.h"
-#include <wine/debug.h>
-//#include "wine/unicode.h"
+#include "windef.h"
+#include "winbase.h"
+#include "wingdi.h"
+#include "winuser.h"
+#include "wine/debug.h"
+#include "wine/unicode.h"
 
-#include <d3d9.h>
-#include <wine/wined3d.h>
+#include "d3d9.h"
+#include "wine/wined3d.h"
 
 extern HRESULT vdecl_convert_fvf(DWORD FVF, D3DVERTEXELEMENT9 **ppVertexElements) DECLSPEC_HIDDEN;
 D3DFORMAT d3dformat_from_wined3dformat(enum wined3d_format_id format) DECLSPEC_HIDDEN;
@@ -154,6 +150,13 @@ struct d3d9_device
     struct fvf_declaration *fvf_decls;
     UINT fvf_decl_count, fvf_decl_size;
 
+    struct wined3d_buffer *vertex_buffer;
+    UINT vertex_buffer_size;
+    UINT vertex_buffer_pos;
+    struct wined3d_buffer *index_buffer;
+    UINT index_buffer_size;
+    UINT index_buffer_pos;
+
     BOOL in_destruction;
     BOOL not_reset;
     BOOL in_scene;
@@ -197,9 +200,9 @@ struct d3d9_surface
     BOOL getdc_supported;
 };
 
-HRESULT surface_init(struct d3d9_surface *surface, struct d3d9_device *device,
-        UINT width, UINT height, D3DFORMAT format, BOOL lockable, BOOL discard, UINT level,
-        DWORD usage, D3DPOOL pool, D3DMULTISAMPLE_TYPE multisample_type, DWORD multisample_quality) DECLSPEC_HIDDEN;
+HRESULT surface_init(struct d3d9_surface *surface, struct d3d9_device *device, UINT width, UINT height,
+        D3DFORMAT format, BOOL lockable, BOOL discard, DWORD usage, D3DPOOL pool,
+        D3DMULTISAMPLE_TYPE multisample_type, DWORD multisample_quality) DECLSPEC_HIDDEN;
 struct d3d9_surface *unsafe_impl_from_IDirect3DSurface9(IDirect3DSurface9 *iface) DECLSPEC_HIDDEN;
 
 struct d3d9_vertexbuffer

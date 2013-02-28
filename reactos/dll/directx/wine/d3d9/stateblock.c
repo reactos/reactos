@@ -20,7 +20,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <config.h>
+#include "config.h"
 #include "d3d9_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d9);
@@ -95,29 +95,27 @@ static HRESULT WINAPI d3d9_stateblock_GetDevice(IDirect3DStateBlock9 *iface, IDi
 static HRESULT WINAPI d3d9_stateblock_Capture(IDirect3DStateBlock9 *iface)
 {
     struct d3d9_stateblock *stateblock = impl_from_IDirect3DStateBlock9(iface);
-    HRESULT hr;
 
     TRACE("iface %p.\n", iface);
 
     wined3d_mutex_lock();
-    hr = wined3d_stateblock_capture(stateblock->wined3d_stateblock);
+    wined3d_stateblock_capture(stateblock->wined3d_stateblock);
     wined3d_mutex_unlock();
 
-    return hr;
+    return D3D_OK;
 }
 
 static HRESULT WINAPI d3d9_stateblock_Apply(IDirect3DStateBlock9 *iface)
 {
     struct d3d9_stateblock *stateblock = impl_from_IDirect3DStateBlock9(iface);
-    HRESULT hr;
 
     TRACE("iface %p.\n", iface);
 
     wined3d_mutex_lock();
-    hr = wined3d_stateblock_apply(stateblock->wined3d_stateblock);
+    wined3d_stateblock_apply(stateblock->wined3d_stateblock);
     wined3d_mutex_unlock();
 
-    return hr;
+    return D3D_OK;
 }
 
 

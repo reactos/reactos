@@ -19,29 +19,32 @@
 #ifndef __WINE_DLLS_DDRAW_DDRAW_PRIVATE_H
 #define __WINE_DLLS_DDRAW_DDRAW_PRIVATE_H
 
-#define _INC_WINDOWS
-#define COM_NO_WINDOWS_H
-
 #include <assert.h>
 #define COBJMACROS
 #define NONAMELESSSTRUCT
 #define NONAMELESSUNION
-#include <wine/debug.h>
+#include "wine/debug.h"
 
-#include <winbase.h>
-#include <wingdi.h>
-#include <winreg.h>
-#include <winuser.h>
+#include "winbase.h"
+#include "wingdi.h"
+#include "winuser.h"
 
-#include <d3d.h>
-//#include "ddraw.h"
+#include "d3d.h"
+#include "ddraw.h"
 #ifdef DDRAW_INIT_GUID
-#include <initguid.h>
+#include "initguid.h"
 #endif
-#include <wine/list.h>
-#include <wine/wined3d.h>
+#include "wine/list.h"
+#include "wine/wined3d.h"
+
+enum ddraw_surface_type
+{
+    DDRAW_SURFACE_TYPE_OPENGL,
+    DDRAW_SURFACE_TYPE_GDI,
+};
 
 extern const struct wined3d_parent_ops ddraw_null_wined3d_parent_ops DECLSPEC_HIDDEN;
+extern enum ddraw_surface_type DefaultSurfaceType DECLSPEC_HIDDEN;
 extern DWORD force_refresh_rate DECLSPEC_HIDDEN;
 
 /*****************************************************************************
@@ -72,7 +75,8 @@ struct ddraw
 
     struct wined3d *wined3d;
     struct wined3d_device *wined3d_device;
-    BOOL                    d3d_initialized;
+    BOOL d3d_initialized;
+    BOOL restore_mode;
 
     struct ddraw_surface *primary;
     RECT primary_lock;
@@ -82,9 +86,6 @@ struct ddraw
 
     /* DirectDraw things, which are not handled by WineD3D */
     DWORD                   cooperative_level;
-
-    DWORD                   orig_width, orig_height;
-    DWORD                   orig_bpp;
 
     /* D3D things */
     HWND                    d3d_window;
@@ -124,13 +125,6 @@ static inline void ddraw_set_swapchain_window(struct ddraw *ddraw, HWND window)
 void DDRAW_Convert_DDSCAPS_1_To_2(const DDSCAPS *pIn, DDSCAPS2 *pOut) DECLSPEC_HIDDEN;
 void DDRAW_Convert_DDDEVICEIDENTIFIER_2_To_1(const DDDEVICEIDENTIFIER2 *pIn, DDDEVICEIDENTIFIER *pOut) DECLSPEC_HIDDEN;
 struct wined3d_vertex_declaration *ddraw_find_decl(struct ddraw *ddraw, DWORD fvf) DECLSPEC_HIDDEN;
-
-/* The default surface type */
-extern enum wined3d_surface_type DefaultSurfaceType DECLSPEC_HIDDEN;
-
-/*****************************************************************************
- * IDirectDrawSurface implementation structure
- *****************************************************************************/
 
 struct ddraw_surface
 {
@@ -191,7 +185,7 @@ struct ddraw_surface
 
 HRESULT ddraw_surface_create_texture(struct ddraw_surface *surface) DECLSPEC_HIDDEN;
 HRESULT ddraw_surface_init(struct ddraw_surface *surface, struct ddraw *ddraw,
-        DDSURFACEDESC2 *desc, UINT mip_level, UINT version) DECLSPEC_HIDDEN;
+        DDSURFACEDESC2 *desc, UINT version) DECLSPEC_HIDDEN;
 ULONG ddraw_surface_release_iface(struct ddraw_surface *This) DECLSPEC_HIDDEN;
 
 static inline struct ddraw_surface *impl_from_IDirect3DTexture(IDirect3DTexture *iface)
@@ -281,8 +275,15 @@ struct d3d_device
     IUnknown *outer_unknown;
     struct wined3d_device *wined3d_device;
     struct ddraw *ddraw;
-    struct wined3d_buffer *indexbuffer;
     struct ddraw_surface *target;
+
+    struct wined3d_buffer *index_buffer;
+    UINT index_buffer_size;
+    UINT index_buffer_pos;
+
+    struct wined3d_buffer *vertex_buffer;
+    UINT vertex_buffer_size;
+    UINT vertex_buffer_pos;
 
     /* Viewport management */
     struct list viewport_list;
@@ -303,7 +304,7 @@ struct d3d_device
     DWORD vertex_type;
     DWORD render_flags;
     DWORD nb_vertices;
-    LPBYTE vertex_buffer;
+    LPBYTE sysmem_vertex_buffer;
     DWORD vertex_size;
     DWORD buffer_size;
 
@@ -498,7 +499,8 @@ struct d3d_execute_buffer
     /* This buffer will store the transformed vertices */
     void                 *vertex_data;
     WORD                 *indices;
-    int                  nb_indices;
+    unsigned int         nb_indices;
+    unsigned int         nb_vertices;
 
     /* This flags is set to TRUE if we allocated ourselves the
      * data buffer
@@ -531,6 +533,10 @@ struct d3d_vertex_buffer
     /*** Storage for D3D7 specific things ***/
     DWORD                Caps;
     DWORD                fvf;
+    DWORD                size;
+    BOOL                 dynamic;
+
+    BOOL                 read_since_last_map;
 };
 
 HRESULT d3d_vertex_buffer_create(struct d3d_vertex_buffer **buffer, struct ddraw *ddraw,
@@ -559,9 +565,7 @@ void DDRAW_dump_cooperativelevel(DWORD cooplevel) DECLSPEC_HIDDEN;
 void DDSD_to_DDSD2(const DDSURFACEDESC *in, DDSURFACEDESC2 *out) DECLSPEC_HIDDEN;
 void DDSD2_to_DDSD(const DDSURFACEDESC2 *in, DDSURFACEDESC *out) DECLSPEC_HIDDEN;
 
-/* This only needs to be here as long the processvertices functionality of
- * IDirect3DExecuteBuffer isn't in WineD3D */
-void multiply_matrix(LPD3DMATRIX dest, const D3DMATRIX *src1, const D3DMATRIX *src2) DECLSPEC_HIDDEN;
+void multiply_matrix(D3DMATRIX *dst, const D3DMATRIX *src1, const D3DMATRIX *src2) DECLSPEC_HIDDEN;
 
 /* Used for generic dumping */
 struct flag_info

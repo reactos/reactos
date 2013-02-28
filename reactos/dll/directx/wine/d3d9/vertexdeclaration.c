@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <config.h>
+#include "config.h"
 #include "d3d9_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d9);
@@ -419,10 +419,7 @@ HRESULT d3d9_vertex_declaration_create(struct d3d9_device *device,
 
     object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*object));
     if (!object)
-    {
-        ERR("Failed to allocate vertex declaration memory.\n");
         return E_OUTOFMEMORY;
-    }
 
     hr = vertexdeclaration_init(object, device, elements);
     if (FAILED(hr))

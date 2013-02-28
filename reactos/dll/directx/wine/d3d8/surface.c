@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <config.h>
+#include "config.h"
 #include "d3d8_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d8);
@@ -36,7 +36,7 @@ static HRESULT WINAPI d3d8_surface_QueryInterface(IDirect3DSurface8 *iface, REFI
             || IsEqualGUID(riid, &IID_IDirect3DResource8)
             || IsEqualGUID(riid, &IID_IUnknown))
     {
-        IUnknown_AddRef(iface);
+        IDirect3DSurface8_AddRef(iface);
         *out = iface;
         return S_OK;
     }
@@ -69,7 +69,7 @@ static ULONG WINAPI d3d8_surface_AddRef(IDirect3DSurface8 *iface)
         if (ref == 1)
         {
             if (surface->parent_device)
-                IUnknown_AddRef(surface->parent_device);
+                IDirect3DDevice8_AddRef(surface->parent_device);
             wined3d_mutex_lock();
             wined3d_surface_incref(surface->wined3d_surface);
             wined3d_mutex_unlock();
@@ -325,9 +325,9 @@ static const struct wined3d_parent_ops d3d8_surface_wined3d_parent_ops =
     surface_wined3d_object_destroyed,
 };
 
-HRESULT surface_init(struct d3d8_surface *surface, struct d3d8_device *device,
-        UINT width, UINT height, D3DFORMAT format, BOOL lockable, BOOL discard, UINT level,
-        DWORD usage, D3DPOOL pool, D3DMULTISAMPLE_TYPE multisample_type, DWORD multisample_quality)
+HRESULT surface_init(struct d3d8_surface *surface, struct d3d8_device *device, UINT width, UINT height,
+        D3DFORMAT format, BOOL lockable, BOOL discard, DWORD usage, D3DPOOL pool,
+        D3DMULTISAMPLE_TYPE multisample_type, DWORD multisample_quality)
 {
     DWORD flags = 0;
     HRESULT hr;
@@ -349,8 +349,8 @@ HRESULT surface_init(struct d3d8_surface *surface, struct d3d8_device *device,
 
     wined3d_mutex_lock();
     hr = wined3d_surface_create(device->wined3d_device, width, height, wined3dformat_from_d3dformat(format),
-            level, usage & WINED3DUSAGE_MASK, (enum wined3d_pool)pool, multisample_type, multisample_quality,
-            WINED3D_SURFACE_TYPE_OPENGL, flags, surface, &d3d8_surface_wined3d_parent_ops, &surface->wined3d_surface);
+            usage & WINED3DUSAGE_MASK, (enum wined3d_pool)pool, multisample_type, multisample_quality,
+            flags, surface, &d3d8_surface_wined3d_parent_ops, &surface->wined3d_surface);
     wined3d_mutex_unlock();
     if (FAILED(hr))
     {
@@ -359,7 +359,7 @@ HRESULT surface_init(struct d3d8_surface *surface, struct d3d8_device *device,
     }
 
     surface->parent_device = &device->IDirect3DDevice8_iface;
-    IUnknown_AddRef(surface->parent_device);
+    IDirect3DDevice8_AddRef(surface->parent_device);
 
     return D3D_OK;
 }

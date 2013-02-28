@@ -19,8 +19,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <config.h>
-#include <wine/port.h>
+#include "config.h"
+#include "wine/port.h"
 #include "wined3d_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d_surface);
@@ -88,12 +88,10 @@ void volume_load(const struct wined3d_volume *volume, struct wined3d_context *co
 
     volume_bind_and_dirtify(volume, context);
 
-    ENTER_GL();
     GL_EXTCALL(glTexImage3DEXT(GL_TEXTURE_3D, level, format->glInternal,
             volume->resource.width, volume->resource.height, volume->resource.depth,
             0, format->glFormat, format->glType, volume->resource.allocatedMemory));
     checkGLcall("glTexImage3D");
-    LEAVE_GL();
 
     /* When adding code releasing volume->resource.allocatedMemory to save
      * data keep in mind that GL_UNPACK_CLIENT_STORAGE_APPLE is enabled by
@@ -314,7 +312,6 @@ HRESULT CDECL wined3d_volume_create(struct wined3d_device *device, UINT width, U
     object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*object));
     if (!object)
     {
-        ERR("Out of memory\n");
         *volume = NULL;
         return WINED3DERR_OUTOFVIDEOMEMORY;
     }

@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <config.h>
+#include "config.h"
 #include "d3d8_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d8);
@@ -35,7 +35,7 @@ static HRESULT WINAPI d3d8_swapchain_QueryInterface(IDirect3DSwapChain8 *iface, 
     if (IsEqualGUID(riid, &IID_IDirect3DSwapChain8)
             || IsEqualGUID(riid, &IID_IUnknown))
     {
-        IUnknown_AddRef(iface);
+        IDirect3DSwapChain8_AddRef(iface);
         *out = iface;
         return S_OK;
     }
@@ -110,20 +110,22 @@ static HRESULT WINAPI d3d8_swapchain_GetBackBuffer(IDirect3DSwapChain8 *iface,
     struct d3d8_swapchain *swapchain = impl_from_IDirect3DSwapChain8(iface);
     struct wined3d_surface *wined3d_surface = NULL;
     struct d3d8_surface *surface_impl;
-    HRESULT hr;
+    HRESULT hr = D3D_OK;
 
     TRACE("iface %p, backbuffer_idx %u, backbuffer_type %#x, backbuffer %p.\n",
             iface, backbuffer_idx, backbuffer_type, backbuffer);
 
     wined3d_mutex_lock();
-    hr = wined3d_swapchain_get_back_buffer(swapchain->wined3d_swapchain,
-            backbuffer_idx, (enum wined3d_backbuffer_type)backbuffer_type, &wined3d_surface);
-    if (SUCCEEDED(hr) && wined3d_surface)
+    if ((wined3d_surface = wined3d_swapchain_get_back_buffer(swapchain->wined3d_swapchain,
+            backbuffer_idx, (enum wined3d_backbuffer_type)backbuffer_type)))
     {
         surface_impl = wined3d_surface_get_parent(wined3d_surface);
         *backbuffer = &surface_impl->IDirect3DSurface8_iface;
         IDirect3DSurface8_AddRef(*backbuffer);
-        wined3d_surface_decref(wined3d_surface);
+    }
+    else
+    {
+        hr = D3DERR_INVALIDCALL;
     }
     wined3d_mutex_unlock();
 
@@ -158,9 +160,8 @@ static HRESULT swapchain_init(struct d3d8_swapchain *swapchain, struct d3d8_devi
     swapchain->IDirect3DSwapChain8_iface.lpVtbl = &d3d8_swapchain_vtbl;
 
     wined3d_mutex_lock();
-    hr = wined3d_swapchain_create(device->wined3d_device, desc,
-            WINED3D_SURFACE_TYPE_OPENGL, swapchain, &d3d8_swapchain_wined3d_parent_ops,
-            &swapchain->wined3d_swapchain);
+    hr = wined3d_swapchain_create(device->wined3d_device, desc, swapchain,
+            &d3d8_swapchain_wined3d_parent_ops, &swapchain->wined3d_swapchain);
     wined3d_mutex_unlock();
 
     if (FAILED(hr))
@@ -182,10 +183,7 @@ HRESULT d3d8_swapchain_create(struct d3d8_device *device, struct wined3d_swapcha
     HRESULT hr;
 
     if (!(object = HeapAlloc(GetProcessHeap(),  HEAP_ZERO_MEMORY, sizeof(*object))))
-    {
-        ERR("Failed to allocate swapchain memory.\n");
         return E_OUTOFMEMORY;
-    }
 
     if (FAILED(hr = swapchain_init(object, device, desc)))
     {

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <config.h>
+#include "config.h"
 #include "d3d9_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d9);
@@ -264,7 +264,7 @@ static HRESULT WINAPI d3d9_CheckDeviceFormat(IDirect3D9Ex *iface, UINT adapter, 
 
     wined3d_mutex_lock();
     hr = wined3d_check_device_format(d3d9->wined3d, adapter, device_type, wined3dformat_from_d3dformat(adapter_format),
-            usage, wined3d_rtype, wined3dformat_from_d3dformat(format), WINED3D_SURFACE_TYPE_OPENGL);
+            usage, wined3d_rtype, wined3dformat_from_d3dformat(format));
     wined3d_mutex_unlock();
 
     return hr;
@@ -456,10 +456,7 @@ static HRESULT WINAPI DECLSPEC_HOTPATCH d3d9_CreateDevice(IDirect3D9Ex *iface, U
 
     object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*object));
     if (!object)
-    {
-        ERR("Failed to allocate device memory.\n");
         return E_OUTOFMEMORY;
-    }
 
     hr = device_init(object, d3d9, d3d9->wined3d, adapter, device_type, focus_window, flags, parameters, NULL);
     if (FAILED(hr))
@@ -567,10 +564,7 @@ static HRESULT WINAPI DECLSPEC_HOTPATCH d3d9_CreateDeviceEx(IDirect3D9Ex *iface,
 
     object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*object));
     if (!object)
-    {
-        ERR("Failed to allocate device memory.\n");
         return E_OUTOFMEMORY;
-    }
 
     hr = device_init(object, d3d9, d3d9->wined3d, adapter, device_type, focus_window, flags, parameters, mode);
     if (FAILED(hr))

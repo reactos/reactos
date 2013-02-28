@@ -22,8 +22,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <config.h>
-#include <wine/port.h>
+#include "config.h"
+#include "wine/port.h"
 #include "wined3d_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d);
@@ -471,6 +471,7 @@ void stateblock_unbind_resources(struct wined3d_stateblock *stateblock)
 {
     struct wined3d_state *state = &stateblock->state;
     struct wined3d_vertex_declaration *decl;
+    struct wined3d_sampler *sampler;
     struct wined3d_texture *texture;
     struct wined3d_buffer *buffer;
     struct wined3d_shader *shader;
@@ -488,6 +489,15 @@ void stateblock_unbind_resources(struct wined3d_stateblock *stateblock)
         {
             state->textures[i] = NULL;
             wined3d_texture_decref(texture);
+        }
+    }
+
+    for (i = 0; i < MAX_STREAM_OUT; ++i)
+    {
+        if ((buffer = state->stream_output[i].buffer))
+        {
+            state->stream_output[i].buffer = NULL;
+            wined3d_buffer_decref(buffer);
         }
     }
 
@@ -512,10 +522,70 @@ void stateblock_unbind_resources(struct wined3d_stateblock *stateblock)
         wined3d_shader_decref(shader);
     }
 
+    for (i = 0; i < MAX_CONSTANT_BUFFERS; ++i)
+    {
+        if ((buffer = state->vs_cb[i]))
+        {
+            state->vs_cb[i] = NULL;
+            wined3d_buffer_decref(buffer);
+        }
+    }
+
+    for (i = 0; i < MAX_SAMPLER_OBJECTS; ++i)
+    {
+        if ((sampler = state->vs_sampler[i]))
+        {
+            state->vs_sampler[i] = NULL;
+            wined3d_sampler_decref(sampler);
+        }
+    }
+
+    if ((shader = state->geometry_shader))
+    {
+        state->geometry_shader = NULL;
+        wined3d_shader_decref(shader);
+    }
+
+    for (i = 0; i < MAX_CONSTANT_BUFFERS; ++i)
+    {
+        if ((buffer = state->gs_cb[i]))
+        {
+            state->gs_cb[i] = NULL;
+            wined3d_buffer_decref(buffer);
+        }
+    }
+
+    for (i = 0; i < MAX_SAMPLER_OBJECTS; ++i)
+    {
+        if ((sampler = state->gs_sampler[i]))
+        {
+            state->gs_sampler[i] = NULL;
+            wined3d_sampler_decref(sampler);
+        }
+    }
+
     if ((shader = state->pixel_shader))
     {
         state->pixel_shader = NULL;
         wined3d_shader_decref(shader);
+    }
+
+    for (i = 0; i < MAX_SAMPLER_OBJECTS; ++i)
+    {
+        if ((sampler = state->ps_sampler[i]))
+        {
+            state->ps_sampler[i] = NULL;
+            wined3d_sampler_decref(sampler);
+        }
+    }
+
+    for (i = 0; i < MAX_CONSTANT_BUFFERS; ++i)
+    {
+        if ((buffer = state->ps_cb[i]))
+        {
+            state->ps_cb[i] = NULL;
+            wined3d_buffer_decref(buffer);
+        }
     }
 }
 
@@ -611,7 +681,7 @@ static void wined3d_state_record_lights(struct wined3d_state *dst_state, const s
     }
 }
 
-HRESULT CDECL wined3d_stateblock_capture(struct wined3d_stateblock *stateblock)
+void CDECL wined3d_stateblock_capture(struct wined3d_stateblock *stateblock)
 {
     const struct wined3d_state *src_state = &stateblock->device->stateBlock->state;
     unsigned int i;
@@ -897,8 +967,6 @@ HRESULT CDECL wined3d_stateblock_capture(struct wined3d_stateblock *stateblock)
     wined3d_state_record_lights(&stateblock->state, src_state);
 
     TRACE("Capture done.\n");
-
-    return WINED3D_OK;
 }
 
 static void apply_lights(struct wined3d_device *device, const struct wined3d_state *state)
@@ -919,7 +987,7 @@ static void apply_lights(struct wined3d_device *device, const struct wined3d_sta
     }
 }
 
-HRESULT CDECL wined3d_stateblock_apply(const struct wined3d_stateblock *stateblock)
+void CDECL wined3d_stateblock_apply(const struct wined3d_stateblock *stateblock)
 {
     struct wined3d_device *device = stateblock->device;
     unsigned int i;
@@ -1074,8 +1142,6 @@ HRESULT CDECL wined3d_stateblock_apply(const struct wined3d_stateblock *stateblo
     }
 
     TRACE("Applied stateblock %p.\n", stateblock);
-
-    return WINED3D_OK;
 }
 
 void stateblock_init_default_state(struct wined3d_stateblock *stateblock)
@@ -1095,7 +1161,6 @@ void stateblock_init_default_state(struct wined3d_stateblock *stateblock)
     unsigned int i;
     struct wined3d_swapchain *swapchain;
     struct wined3d_surface *backbuffer;
-    HRESULT hr;
 
     TRACE("stateblock %p.\n", stateblock);
 
@@ -1103,11 +1168,11 @@ void stateblock_init_default_state(struct wined3d_stateblock *stateblock)
     memset(stateblock->changed.vertexShaderConstantsF, 0, device->d3d_vshader_constantF * sizeof(BOOL));
 
     /* Set some of the defaults for lights, transforms etc */
-    memcpy(&state->transforms[WINED3D_TS_PROJECTION], &identity, sizeof(identity));
-    memcpy(&state->transforms[WINED3D_TS_VIEW], &identity, sizeof(identity));
+    state->transforms[WINED3D_TS_PROJECTION] = identity;
+    state->transforms[WINED3D_TS_VIEW] = identity;
     for (i = 0; i < 256; ++i)
     {
-        memcpy(&state->transforms[WINED3D_TS_WORLD_MATRIX(i)], &identity, sizeof(identity));
+        state->transforms[WINED3D_TS_WORLD_MATRIX(i)] = identity;
     }
 
     state->fb = &device->fb;
@@ -1248,7 +1313,7 @@ void stateblock_init_default_state(struct wined3d_stateblock *stateblock)
     for (i = 0; i < MAX_TEXTURES; ++i)
     {
         TRACE("Setting up default texture states for texture Stage %u.\n", i);
-        memcpy(&state->transforms[WINED3D_TS_TEXTURE0 + i], &identity, sizeof(identity));
+        state->transforms[WINED3D_TS_TEXTURE0 + i] = identity;
         state->texture_states[i][WINED3D_TSS_COLOR_OP] = i ? WINED3D_TOP_DISABLE : WINED3D_TOP_MODULATE;
         state->texture_states[i][WINED3D_TSS_COLOR_ARG1] = WINED3DTA_TEXTURE;
         state->texture_states[i][WINED3D_TSS_COLOR_ARG2] = WINED3DTA_CURRENT;
@@ -1296,16 +1361,13 @@ void stateblock_init_default_state(struct wined3d_stateblock *stateblock)
     }
 
     /* check the return values, because the GetBackBuffer call isn't valid for ddraw */
-    hr = wined3d_device_get_swapchain(device, 0, &swapchain);
-    if (SUCCEEDED(hr) && swapchain)
+    if ((swapchain = wined3d_device_get_swapchain(device, 0)))
     {
-        hr = wined3d_swapchain_get_back_buffer(swapchain, 0, WINED3D_BACKBUFFER_TYPE_MONO, &backbuffer);
-        if (SUCCEEDED(hr) && backbuffer)
+        if ((backbuffer = wined3d_swapchain_get_back_buffer(swapchain, 0, WINED3D_BACKBUFFER_TYPE_MONO)))
         {
             struct wined3d_resource_desc desc;
 
             wined3d_resource_get_desc(&backbuffer->resource, &desc);
-            wined3d_surface_decref(backbuffer);
 
             /* Set the default scissor rect values */
             state->scissor_rect.left = 0;
@@ -1321,8 +1383,6 @@ void stateblock_init_default_state(struct wined3d_stateblock *stateblock)
         state->viewport.height = swapchain->desc.backbuffer_height;
         state->viewport.min_z = 0.0f;
         state->viewport.max_z = 1.0f;
-
-        wined3d_swapchain_decref(swapchain);
     }
 
     TRACE("Done.\n");
@@ -1391,10 +1451,7 @@ HRESULT CDECL wined3d_stateblock_create(struct wined3d_device *device,
 
     object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*object));
     if (!object)
-    {
-        ERR("Failed to allocate stateblock memory.\n");
         return E_OUTOFMEMORY;
-    }
 
     hr = stateblock_init(object, device, type);
     if (FAILED(hr))
