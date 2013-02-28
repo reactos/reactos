@@ -41,16 +41,16 @@
  * has been modified.
  */
 
-#include "config.h"
+#include <config.h>
 
-#include <stdarg.h>
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winnls.h"
-#include "usp10.h"
-#include "wine/unicode.h"
-#include "wine/debug.h"
+//#include <stdarg.h>
+#include <windef.h>
+//#include "winbase.h"
+#include <wingdi.h>
+//#include "winnls.h"
+#include <usp10.h>
+#include <wine/unicode.h>
+#include <wine/debug.h>
 
 #include "usp10_internal.h"
 

@@ -25,20 +25,20 @@
  */
 
 #include <stdarg.h>
-#include <stdlib.h>
+//#include <stdlib.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "winnls.h"
-#include "winreg.h"
-#include "usp10.h"
+#include <windef.h>
+//#include "winbase.h"
+#include <wingdi.h>
+#include <winuser.h>
+//#include "winnls.h"
+#include <winreg.h>
+#include <usp10.h>
 
 #include "usp10_internal.h"
 
-#include "wine/debug.h"
-#include "wine/unicode.h"
+#include <wine/debug.h>
+#include <wine/unicode.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(uniscribe);
 
