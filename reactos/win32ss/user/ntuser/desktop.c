@@ -647,7 +647,19 @@ DesktopWindowProc(PWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam, LRESULT *lRe
           {
                UserDereferenceObject(pcurOld);
           }
+          return TRUE;
       }
+
+      case WM_WINDOWPOSCHANGING:
+      {
+          PWINDOWPOS pWindowPos = (PWINDOWPOS)lParam;
+          if((pWindowPos->flags & SWP_SHOWWINDOW) != 0)
+          {
+              HDESK hdesk = IntGetDesktopObjectHandle(gpdeskInputDesktop);
+              IntSetThreadDesktop(hdesk, FALSE);
+          }
+      }
+
    }
    return TRUE; /* We are done. Do not do any callbacks to user mode */
 }
@@ -737,20 +749,20 @@ UserRedrawDesktop()
 
 
 NTSTATUS FASTCALL
-co_IntShowDesktop(PDESKTOP Desktop, ULONG Width, ULONG Height)
+co_IntShowDesktop(PDESKTOP Desktop, ULONG Width, ULONG Height, BOOL bRedraw)
 {
-   PWND Window;
+   PWND pwnd = Desktop->pDeskInfo->spwnd;
+   UINT flags = SWP_NOACTIVATE|SWP_NOZORDER|SWP_SHOWWINDOW;
+   ASSERT(pwnd);
 
-   Window = IntGetWindowObject(Desktop->DesktopWindow);
+   if(!bRedraw)
+       flags |= SWP_NOREDRAW;
 
-   if (!Window)
-   {
-      ERR("No Desktop window.\n");
-      return STATUS_UNSUCCESSFUL;
-   }
-   co_WinPosSetWindowPos(Window, NULL, 0, 0, Width, Height, SWP_NOACTIVATE|SWP_NOZORDER|SWP_SHOWWINDOW);
+   co_WinPosSetWindowPos(pwnd, NULL, 0, 0, Width, Height, flags);
 
-   co_UserRedrawWindow( Window, NULL, 0, RDW_UPDATENOW | RDW_ALLCHILDREN);
+   if(bRedraw)
+       co_UserRedrawWindow( pwnd, NULL, 0, RDW_UPDATENOW | RDW_ALLCHILDREN | RDW_INVALIDATE );
+
    return STATUS_SUCCESS;
 }
 
@@ -1607,6 +1619,7 @@ NtUserSwitchDesktop(HDESK hdesk)
 {
    PDESKTOP pdesk;
    NTSTATUS Status;
+   BOOL bRedrawDesktop;
    DECLARE_RETURN(BOOL);
 
    UserEnterExclusive();
@@ -1617,6 +1630,12 @@ NtUserSwitchDesktop(HDESK hdesk)
    {
       ERR("Validation of desktop handle (0x%p) failed\n", hdesk);
       RETURN(FALSE);
+   }
+
+   if(pdesk == gpdeskInputDesktop)
+   {
+       WARN("NtUserSwitchDesktop called for active desktop\n");
+       RETURN(TRUE);
    }
 
    /*
@@ -1642,11 +1661,29 @@ NtUserSwitchDesktop(HDESK hdesk)
              desktop such as Winlogon or Screen-Saver */
    /* FIXME: Connect to input device */
 
+   TRACE("Switching from desktop 0x%p to 0x%p\n", gpdeskInputDesktop, pdesk);
+
+   bRedrawDesktop = FALSE;
+
+   /* The first time SwitchDesktop is called, gpdeskInputDesktop is NULL */
+   if(gpdeskInputDesktop != NULL)
+   {
+       if((gpdeskInputDesktop->pDeskInfo->spwnd->style & WS_VISIBLE) == WS_VISIBLE)
+           bRedrawDesktop = TRUE;
+
+       /* Hide the previous desktop window */
+       IntHideDesktop(gpdeskInputDesktop);
+   }
+
    /* Set the active desktop in the desktop's window station. */
    InputWindowStation->ActiveDesktop = pdesk;
 
    /* Set the global state. */
    gpdeskInputDesktop = pdesk;
+
+   /* Show the new desktop window */
+   co_IntShowDesktop(pdesk, UserGetSystemMetrics(SM_CXSCREEN), UserGetSystemMetrics(SM_CYSCREEN), bRedrawDesktop);
+
    TRACE("SwitchDesktop gpdeskInputDesktop 0x%p\n",gpdeskInputDesktop);
    ObDereferenceObject(pdesk);
 

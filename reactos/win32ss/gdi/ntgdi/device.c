@@ -57,7 +57,7 @@ IntCreatePrimarySurface(VOID)
           DPRINT1("No DESKTOP Window!!!!!\n");
        }
     }
-    co_IntShowDesktop(rpDesk, SurfSize.cx, SurfSize.cy);
+    co_IntShowDesktop(rpDesk, SurfSize.cx, SurfSize.cy, TRUE);
 
     // Init Primary Displays Device Capabilities.
     PDEVOBJ_vGetDeviceCaps(gppdevPrimary, &GdiHandleTable->DevCaps);
