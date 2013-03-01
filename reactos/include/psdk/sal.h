@@ -699,7 +699,7 @@ enum __SAL_YesNo {_SAL_notpresent, _SAL_no, _SAL_maybe, _SAL_yes, _SAL_default};
 #define _Inout_updates_bytes_(size)                                 _SAL2_NAME(_Inout_updates_bytes_) _Group_(_Pre_bytecap_(size) [SA_Pre(Valid=SA_Yes)] [SA_Post(Valid=SA_Yes)] )
 //#define _Inout_updates_bytes_all_(size)
 //#define _Inout_updates_bytes_all_opt_(size)
-//#define _Inout_updates_bytes_opt_(size)
+#define _Inout_updates_bytes_opt_(size)                             _SAL2_NAME(_Inout_updates_bytes_opt_) _Group_(_Pre_opt_bytecap_(size) [SA_Pre(Valid=SA_Yes)] [SA_Post(Valid=SA_Yes)])
 #define _Inout_updates_bytes_to_(size,count)                        _SAL2_NAME(_Inout_updates_bytes_to_) _Group_(_Out_writes_bytes_to_(size,count) [SA_Pre(Valid=SA_Yes)] [SA_Pre(ValidBytes="\n" _SA_SPECSTRIZE(count))] )
 #define _Inout_updates_bytes_to_opt_(size,count)                    _SAL2_NAME(_Inout_updates_bytes_to_opt_) _Group_(_Out_writes_bytes_to_opt_(size,count) [SA_Pre(Valid=SA_Yes)] [SA_Pre(ValidBytes="\n" _SA_SPECSTRIZE(count))] )
 #define _Inout_updates_opt_(size)                                   _SAL2_NAME(_Inout_updates_opt_) _Group_(_Pre_opt_cap_(size) [SA_Pre(Valid=SA_Yes)] [SA_Post(Valid=SA_Yes)])
@@ -833,9 +833,9 @@ enum __SAL_YesNo {_SAL_notpresent, _SAL_no, _SAL_maybe, _SAL_yes, _SAL_default};
 //#define _Outptr_result_bytebuffer_all_(size)
 //#define _Outptr_result_bytebuffer_all_maybenull_(size)
 //#define _Outptr_result_bytebuffer_maybenull_(size)
-//#define _Outptr_result_bytebuffer_to_(size, count)
+#define _Outptr_result_bytebuffer_to_(size, count)                  _SAL2_NAME(_Outptr_result_bytebuffer_to_) _Group_([SA_Pre(Null=SA_No,Notref=1)] [SA_Pre(WritableElementsConst=1,Notref=1)] [SA_Post(Valid=SA_Yes)] [SA_Post(Deref=1,Null=SA_No,Notref=1,WritableBytes="\n" _SA_SPECSTRIZE(size), ValidBytes="\n" _SA_SPECSTRIZE(count))])
 //#define _Outptr_result_bytebuffer_to_maybenull_(size, count)
-//#define _Outptr_result_maybenull_
+#define _Outptr_result_maybenull_                                   _SAL2_NAME(_Outptr_result_maybenull_) _Group_([SA_Pre(Null=SA_No,Notref=1)] [SA_Pre(WritableElementsConst=1,Notref=1)] [SA_Post(Valid=SA_Yes)] [SA_Post(Deref=1,Null=SA_Maybe,Notref=1,ValidElements="\n""1")] )
 //#define _Outptr_result_maybenull_z_
 #define _Outptr_result_nullonfailure_                               _SAL2_NAME(_Outptr_result_nullonfailure_) _Group_(_Outptr_ [SAL_context(p1="SAL_failed")] _Group_([SAL_post] _Deref_post_null_) )
 //#define _Outptr_result_z_
