@@ -23,6 +23,7 @@
 #include <objbase.h>
 #include <ndk/rtlfuncs.h>
 #include <wingdi.h>
+#define _ENGINE_EXPORT_
 #include <winddi.h>
 #include <d3dnthal.h>
 #include <prntfont.h>
