@@ -960,7 +960,7 @@ enum __SAL_YesNo {_SAL_notpresent, _SAL_no, _SAL_maybe, _SAL_yes, _SAL_default};
 //#define _Pre_z_cap_(size)
 //#define _Pre_z_cap_c_(size)
 //#define _Pre_z_cap_x_(size)
-#define _Prepost_bytecount_(size)                                   _SAL11_NAME(_Deref_prepost_bytecount_) _Group_(_Deref_pre_bytecount_(size) _Deref_post_bytecount_(size))
+#define _Prepost_bytecount_(size)                                   _SAL11_NAME(_Prepost_bytecount_) _Group_(_Pre_bytecount_(size) _Post_bytecount_(size))
 //#define _Prepost_bytecount_c_(size)
 //#define _Prepost_bytecount_x_(size)
 //#define _Prepost_count_(size)
