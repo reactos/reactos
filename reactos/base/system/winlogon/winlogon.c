@@ -412,7 +412,7 @@ WinMain(
 	//DisplayStatusMessage(Session, Session->WinlogonDesktop, IDS_APPLYINGCOMPUTERSETTINGS);
 
 	/* Display logged out screen */
-	WLSession->LogonStatus = WKSTA_IS_LOGGED_OFF;
+	WLSession->LogonState = STATE_LOGGED_OFF;
 	RemoveStatusMessage(WLSession);
 
 	/* Check for pending setup */

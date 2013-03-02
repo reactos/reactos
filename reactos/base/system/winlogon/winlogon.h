@@ -119,11 +119,87 @@ typedef struct _GINAINSTANCE
 	BOOL UseCtrlAltDelete;
 } GINAINSTANCE, *PGINAINSTANCE;
 
-/* FIXME: put in an enum */
-/* See http://msdn.microsoft.com/library/default.asp?url=/library/en-us/secauthn/security/winlogon_states.asp */
-#define WKSTA_IS_LOGGED_OFF 0
-#define WKSTA_IS_LOGGED_ON  1
-#define WKSTA_IS_LOCKED     2
+
+/*
+ * The picture Microfoft is trying to paint here
+ *  (http://msdn.microsoft.com/en-us/library/windows/desktop/aa380547%28v=vs.85%29.aspx)
+ * about the Winlogon states is a little too simple.
+ *
+ * The real picture should look more like this:
+ * 
+ * STATE_INIT
+ *    Initial state. Required for session initialization. After intialization,
+ *    the state will automatically change to STATE_LOGGED_OFF.
+ *
+ * STATE_LOGGED_OFF
+ *    User is logged of. Winlogon shows the "Press Ctrl-Alt-Del for logon"
+ *    dialog. The state changes to STATE_LOGGED_OFF_SAS when the user presses
+ *    "Ctrl-Alt-Del". If DisableCAD is true, the state will automatically
+ *    change to STATE_LOGGED_OFF_SAS without showing the dialog.
+ *
+ * STATE_LOGGED_OFF_SAS
+ *    State shows the logon dialog. Entering the right credentials an pressing
+ *    "OK" changes the state to STATE_LOGGED_ON. Pressing "Cancel" or a Timeout
+ *    changes the state back to STATE_LOGGED_OFF.
+ *
+ * STATE_LOGGED_ON
+ *    User is logged on. Winlogon does not show any dialog. Pressing
+ *    "Ctrl-Alt-Del" changes the state to STATE_LOGGED_ON_SAS and user
+ *    inactivity changes the state to STATE_SCREENSAVER.
+ *
+ * STATE_LOGGED_ON_SAS
+ *    Winlogon shows the security dialog. Pressing "Cancel" or "Task Manager"
+ *    or a Timeout change the state back to STATE_LOGGED_ON. Pressing "Change
+ *    Password" does not change the state, because the security dialog is still
+ *    visible behind the change password dialog. Pressing "Log off" changes the
+ *    state to STATE_LOGGING_OFF. Pressing "Lock Computer" changes the state to
+ *    STATE_LOCKED. Pressing "Shutdown" changes the state to
+ *    STATE_SUUTTING_DOWN.
+ *
+ * STATE_SCREENSAVER
+ *    Winlogon runs the screen saver. Upon user activity, the screensaver
+ *    terminates and the state changes back to STATE_LOGGED_ON if the secure
+ *    screen saver option is off. Otherwise, the state changes to STATE_LOCKED.
+ *
+ * STATE_LOGGING_OFF
+ *    Winlogon shows the logoff dialog. Pressing "Cancel" or a timeout changes
+ *    the state back to STATE_LOGGED_ON_SAS. Pressing "OK" logs off the user
+ *    and changes the state to STATE_LOGGED_OFF.
+ *
+ * STATE_LOCKED
+ *    Winlogon shows the locked message dialog. When the user presses "Ctrl-
+ *    Alt-Del" the state changes to STATE_LOCKED_SAS. If DisableCAD is true,
+ *    the state will automatically change to STATE_LOCKED_SAS without showing
+ *    the dialog.
+ *
+ * STATE_LOCKED_SAS
+ *    Winlogon shows the unlock dialog. Presing "Cancel" or a timeout will
+ *    change the state back to STATE_LOCKED. Entering the right credentials and
+ *    pressing "OK" unlocks the computer and changes the state to
+ *    STATE_LOGGED_ON.
+ *
+ * STATE_SHUTTING_DOWN
+ *    Winlogon shows the shutdown dialog. Presing "Cancel" or a timeout will
+ *    change the state back to STATE_LOGGED_ON_SAS. Pressing "OK" will change
+ *    the state to STATE_SHUT_DOWN.
+ *
+ * STATE_SHUT_DOWN
+ *    Terminates winlogon and initiates shut-down.
+ */
+typedef enum _LOGON_STATE
+{
+    STATE_INIT,            // not user yet
+    STATE_LOGGED_OFF,
+    STATE_LOGGED_OFF_SAS,  // not user yet
+    STATE_LOGGED_ON,
+    STATE_LOGGED_ON_SAS,   // not user yet
+    STATE_SCREENSAVER,     // not user yet
+    STATE_LOCKED,
+    STATE_LOCKED_SAS,      // not user yet
+    STATE_LOGGING_OFF,     // not user yet
+    STATE_SHUTTING_DOWN,   // not user yet
+    STATE_SHUT_DOWN        // not user yet
+} LOGON_STATE, *PLOGON_STATE;
 
 #define LockWorkstation(Session)
 #define UnlockWorkstation(Session)
@@ -143,7 +219,7 @@ typedef struct _WLSESSION
   LUID LogonId;
   HANDLE UserToken;
   HANDLE hProfileInfo;
-  DWORD LogonStatus;
+  LOGON_STATE LogonState;
   DWORD DialogTimeout; /* Timeout for dialog boxes, in seconds */
 
   /* Screen-saver informations */

@@ -700,7 +700,7 @@ HandleLogoff(
 	UnloadUserProfile(Session->UserToken, Session->hProfileInfo);
 	CloseHandle(Session->UserToken);
 	UpdatePerUserSystemParameters(0, FALSE);
-	Session->LogonStatus = WKSTA_IS_LOGGED_OFF;
+	Session->LogonState = STATE_LOGGED_OFF;
 	Session->UserToken = NULL;
 	return STATUS_SUCCESS;
 }
@@ -828,7 +828,7 @@ DoGenericAction(
 			if (HandleLogon(Session))
 			{
 				SwitchDesktop(Session->ApplicationDesktop);
-				Session->LogonStatus = WKSTA_IS_LOGGED_ON;
+				Session->LogonState = STATE_LOGGED_ON;
 			}
 			else
 				Session->Gina.Functions.WlxDisplaySASNotice(Session->Gina.Context);
@@ -839,7 +839,7 @@ DoGenericAction(
 			if (Session->Gina.Functions.WlxIsLockOk(Session->Gina.Context))
 			{
 				SwitchDesktop(WLSession->WinlogonDesktop);
-				Session->LogonStatus = WKSTA_IS_LOCKED;
+				Session->LogonState = STATE_LOCKED;
 				Session->Gina.Functions.WlxDisplayLockedNotice(Session->Gina.Context);
 			}
 			break;
@@ -847,7 +847,7 @@ DoGenericAction(
 		case WLX_SAS_ACTION_SHUTDOWN: /* 0x05 */
 		case WLX_SAS_ACTION_SHUTDOWN_POWER_OFF: /* 0x0a */
 		case WLX_SAS_ACTION_SHUTDOWN_REBOOT: /* 0x0b */
-			if (Session->LogonStatus != WKSTA_IS_LOGGED_OFF)
+			if (Session->LogonState != STATE_LOGGED_OFF)
 			{
 				if (!Session->Gina.Functions.WlxIsLogoffOk(Session->Gina.Context))
 					break;
@@ -880,7 +880,7 @@ DoGenericAction(
 			break;
 		case WLX_SAS_ACTION_UNLOCK_WKSTA: /* 0x08 */
 			SwitchDesktop(WLSession->ApplicationDesktop);
-			Session->LogonStatus = WKSTA_IS_LOGGED_ON;
+			Session->LogonState = STATE_LOGGED_ON;
 			break;
 		default:
 			WARN("Unknown SAS action 0x%lx\n", wlxAction);
@@ -894,9 +894,9 @@ DispatchSAS(
 {
 	DWORD wlxAction = WLX_SAS_ACTION_NONE;
 
-	if (Session->LogonStatus == WKSTA_IS_LOGGED_ON)
+	if (Session->LogonState == STATE_LOGGED_ON)
 		wlxAction = (DWORD)Session->Gina.Functions.WlxLoggedOnSAS(Session->Gina.Context, dwSasType, NULL);
-	else if (Session->LogonStatus == WKSTA_IS_LOCKED)
+	else if (Session->LogonState == STATE_LOCKED)
 		wlxAction = (DWORD)Session->Gina.Functions.WlxWkstaLockedSAS(Session->Gina.Context, dwSasType);
 	else
 	{
