@@ -100,4 +100,42 @@
 #define PHOTOSHOP_SUPPORT
 #define IPTC_SUPPORT
 
+/* Signed 16-bit type */
+#define TIFF_INT16_T signed short
+
+/* Signed 32-bit type */
+#define TIFF_INT32_T int
+
+/* Signed 64-bit type */
+#ifndef TIFF_INT64_T
+#define TIFF_INT64_T signed long long
+#endif
+
+/* Signed 8-bit type */
+#define TIFF_INT8_T signed char
+
+/* Unsigned 16-bit type */
+#define TIFF_UINT16_T unsigned short
+
+/* Unsigned 32-bit type */
+#define TIFF_UINT32_T unsigned int
+
+/* Unsigned 64-bit type */
+#ifndef TIFF_UINT64_T
+#define TIFF_UINT64_T unsigned long long
+#endif
+
+/* Unsigned 8-bit type */
+#define TIFF_UINT8_T unsigned char
+
+/* Signed 8-bit type */
+#define TIFF_INT8_T signed char
+
+/* Signed size type */
+#if defined(_WIN64)
+#define TIFF_SSIZE_T signed long long int
+#else
+#define TIFF_SSIZE_T signed long int
+#endif
+
 #endif /* _TIFFCONF_ */
