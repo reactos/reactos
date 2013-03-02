@@ -2,7 +2,7 @@
  * jcparam.c
  *
  * Copyright (C) 1991-1998, Thomas G. Lane.
- * Modified 2003-2008 by Guido Vollbeding.
+ * Modified 2003-2012 by Guido Vollbeding.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -150,7 +150,7 @@ jpeg_set_quality (j_compress_ptr cinfo, int quality, boolean force_baseline)
 /* Set or change the 'quality' (quantization) setting, using default tables.
  * This is the standard quality-adjusting entry point for typical user
  * interfaces; only those who want detailed control over quantization tables
- * would use the preceding three routines directly.
+ * would use the preceding routines directly.
  */
 {
   /* Convert user 0-100 rating to percentage scaling */
@@ -367,6 +367,9 @@ jpeg_set_defaults (j_compress_ptr cinfo)
   cinfo->X_density = 1;		/* Pixel aspect ratio is square by default */
   cinfo->Y_density = 1;
 
+  /* No color transform */
+  cinfo->color_transform = JCT_NONE;
+
   /* Choose JPEG colorspace based on input space, set defaults accordingly */
 
   jpeg_default_colorspace(cinfo);
@@ -448,7 +451,9 @@ jpeg_set_colorspace (j_compress_ptr cinfo, J_COLOR_SPACE colorspace)
     cinfo->write_Adobe_marker = TRUE; /* write Adobe marker to flag RGB */
     cinfo->num_components = 3;
     SET_COMP(0, 0x52 /* 'R' */, 1,1, 0, 0,0);
-    SET_COMP(1, 0x47 /* 'G' */, 1,1, 0, 0,0);
+    SET_COMP(1, 0x47 /* 'G' */, 1,1, 0,
+		cinfo->color_transform == JCT_SUBTRACT_GREEN ? 1 : 0,
+		cinfo->color_transform == JCT_SUBTRACT_GREEN ? 1 : 0);
     SET_COMP(2, 0x42 /* 'B' */, 1,1, 0, 0,0);
     break;
   case JCS_YCbCr:

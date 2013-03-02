@@ -1,7 +1,7 @@
 /*
  * transupp.h
  *
- * Copyright (C) 1997-2009, Thomas G. Lane, Guido Vollbeding.
+ * Copyright (C) 1997-2011, Thomas G. Lane, Guido Vollbeding.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -57,6 +57,7 @@
  * corner up and/or left to make it so, simultaneously increasing the region
  * dimensions to keep the lower right crop corner unchanged.  (Thus, the
  * output image covers at least the requested region, but may cover more.)
+ * The adjustment of the region dimensions may be optionally disabled.
  *
  * We also provide a lossless-resize option, which is kind of a lossless-crop
  * operation in the DCT coefficient block domain - it discards higher-order
@@ -106,13 +107,15 @@ typedef enum {
 
 /*
  * Codes for crop parameters, which can individually be unspecified,
- * positive, or negative.  (Negative width or height makes no sense, though.)
+ * positive or negative for xoffset or yoffset,
+ * positive or forced for width or height.
  */
 
 typedef enum {
-	JCROP_UNSET,
-	JCROP_POS,
-	JCROP_NEG
+        JCROP_UNSET,
+        JCROP_POS,
+        JCROP_NEG,
+        JCROP_FORCE
 } JCROP_CODE;
 
 /*
@@ -133,9 +136,9 @@ typedef struct {
    * These can be filled in by jtransform_parse_crop_spec().
    */
   JDIMENSION crop_width;	/* Width of selected region */
-  JCROP_CODE crop_width_set;
+  JCROP_CODE crop_width_set;	/* (forced disables adjustment) */
   JDIMENSION crop_height;	/* Height of selected region */
-  JCROP_CODE crop_height_set;
+  JCROP_CODE crop_height_set;	/* (forced disables adjustment) */
   JDIMENSION crop_xoffset;	/* X offset of selected region */
   JCROP_CODE crop_xoffset_set;	/* (negative measures from right edge) */
   JDIMENSION crop_yoffset;	/* Y offset of selected region */

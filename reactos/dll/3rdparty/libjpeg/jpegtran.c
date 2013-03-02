@@ -1,7 +1,7 @@
 /*
  * jpegtran.c
  *
- * Copyright (C) 1995-2010, Thomas G. Lane, Guido Vollbeding.
+ * Copyright (C) 1995-2012, Thomas G. Lane, Guido Vollbeding.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -78,14 +78,14 @@ usage (void)
   fprintf(stderr, "  -trim          Drop non-transformable edge blocks\n");
 #endif
   fprintf(stderr, "Switches for advanced users:\n");
+#ifdef C_ARITH_CODING_SUPPORTED
+  fprintf(stderr, "  -arithmetic    Use arithmetic coding\n");
+#endif
   fprintf(stderr, "  -restart N     Set restart interval in rows, or in blocks with B\n");
   fprintf(stderr, "  -maxmemory N   Maximum memory to use (in kbytes)\n");
   fprintf(stderr, "  -outfile name  Specify name for output file\n");
   fprintf(stderr, "  -verbose  or  -debug   Emit debug output\n");
   fprintf(stderr, "Switches for wizards:\n");
-#ifdef C_ARITH_CODING_SUPPORTED
-  fprintf(stderr, "  -arithmetic    Use arithmetic coding\n");
-#endif
 #ifdef C_MULTISCAN_FILES_SUPPORTED
   fprintf(stderr, "  -scans file    Create multi-scan JPEG per script file\n");
 #endif
@@ -467,7 +467,7 @@ main (int argc, char **argv)
 
   /* Adjust default decompression parameters */
   if (scaleoption != NULL)
-    if (sscanf(scaleoption, "%d/%d",
+    if (sscanf(scaleoption, "%u/%u",
 	&srcinfo.scale_num, &srcinfo.scale_denom) < 1)
       usage();
 

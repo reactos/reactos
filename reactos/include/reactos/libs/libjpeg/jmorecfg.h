@@ -2,7 +2,7 @@
  * jmorecfg.h
  *
  * Copyright (C) 1991-1997, Thomas G. Lane.
- * Modified 1997-2009 by Guido Vollbeding.
+ * Modified 1997-2012 by Guido Vollbeding.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -187,63 +187,14 @@ typedef unsigned int JDIMENSION;
  * or code profilers that require it.
  */
 
-#ifdef _WIN32
-#  if defined(ALL_STATIC)
-#    if defined(JPEG_DLL)
-#      undef JPEG_DLL
-#    endif
-#    if !defined(JPEG_STATIC)
-#      define JPEG_STATIC
-#    endif
-#  endif
-#  if defined(JPEG_DLL)
-#    if defined(JPEG_STATIC)
-#      undef JPEG_STATIC
-#    endif
-#  endif
-#  if defined(JPEG_DLL)
-/* building a DLL */
-#    define JPEG_IMPEXP __declspec(dllexport)
-#  elif defined(JPEG_STATIC)
-/* building or linking to a static library */
-#    define JPEG_IMPEXP
-#  else
-/* linking to the DLL */
-#    define JPEG_IMPEXP __declspec(dllimport)
-#  endif
-#  if !defined(JPEG_API)
-#    define JPEG_API __cdecl
-#  endif
-/* The only remaining magic that is necessary for cygwin */
-#elif defined(__CYGWIN__)
-#  if !defined(JPEG_IMPEXP)
-#    define JPEG_IMPEXP
-#  endif
-#  if !defined(JPEG_API)
-#    define JPEG_API __cdecl
-#  endif
-#endif
-
-/* Ensure our magic doesn't hurt other platforms */
-#if !defined(JPEG_IMPEXP)
-#  define JPEG_IMPEXP
-#endif
-#if !defined(JPEG_API)
-#  define JPEG_API
-#endif
-
 /* a function called through method pointers: */
 #define METHODDEF(type)		static type
 /* a function used only in its module: */
 #define LOCAL(type)		static type
 /* a function referenced thru EXTERNs: */
-#define GLOBAL(type)		type JPEG_API
+#define GLOBAL(type)		type
 /* a reference to a GLOBAL function: */
-#ifndef EXTERN
-# define EXTERN(type)          extern JPEG_IMPEXP type JPEG_API
-/* a reference to a "GLOBAL" function exported by sourcefiles of utility progs */
-#endif /* EXTERN */
-#define EXTERN_1(type)   extern type JPEG_API
+#define EXTERN(type)		extern type
 
 
 /* This macro is used to declare a "method", that is, a function pointer.
@@ -256,6 +207,26 @@ typedef unsigned int JDIMENSION;
 #define JMETHOD(type,methodname,arglist)  type (*methodname) arglist
 #else
 #define JMETHOD(type,methodname,arglist)  type (*methodname) ()
+#endif
+
+
+/* The noreturn type identifier is used to declare functions
+ * which cannot return.
+ * Compilers can thus create more optimized code and perform
+ * better checks for warnings and errors.
+ * Static analyzer tools can make improved inferences about
+ * execution paths and are prevented from giving false alerts.
+ *
+ * Unfortunately, the proposed specifications of corresponding
+ * extensions in the Dec 2011 ISO C standard revision (C11),
+ * GCC, MSVC, etc. are not viable.
+ * Thus we introduce a user defined type to declare noreturn
+ * functions at least for clarity.  A proper compiler would
+ * have a suitable noreturn type to match in place of void.
+ */
+
+#ifndef HAVE_NORETURN_T
+typedef void noreturn_t;
 #endif
 
 
@@ -281,14 +252,15 @@ typedef unsigned int JDIMENSION;
  * Defining HAVE_BOOLEAN before including jpeglib.h should make it work.
  */
 
-#ifndef HAVE_BOOLEAN
-typedef int boolean;
-#endif
+#ifdef HAVE_BOOLEAN
 #ifndef FALSE			/* in case these macros already exist */
 #define FALSE	0		/* values of boolean */
 #endif
 #ifndef TRUE
 #define TRUE	1
+#endif
+#else
+typedef enum { FALSE = 0, TRUE = 1 } boolean;
 #endif
 
 
@@ -361,9 +333,7 @@ typedef int boolean;
  * the offsets will also change the order in which colormap data is organized.
  * RESTRICTIONS:
  * 1. The sample applications cjpeg,djpeg do NOT support modified RGB formats.
- * 2. These macros only affect RGB<=>YCbCr color conversion, so they are not
- *    useful if you are using JPEG color spaces other than YCbCr or grayscale.
- * 3. The color quantizer modules will not behave desirably if RGB_PIXELSIZE
+ * 2. The color quantizer modules will not behave desirably if RGB_PIXELSIZE
  *    is not 3 (they don't understand about dummy color components!).  So you
  *    can't use color quantization if you change that value.
  */

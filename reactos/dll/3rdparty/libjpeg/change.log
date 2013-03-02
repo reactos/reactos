@@ -1,6 +1,62 @@
 CHANGE LOG for Independent JPEG Group's JPEG software
 
 
+Version 9  13-Jan-2013
+----------------------
+
+Add cjpeg -rgb1 option to create an RGB JPEG file, and insert
+a simple reversible color transform into the processing which
+significantly improves the compression.
+The recommended command for lossless coding of RGB images is now
+cjpeg -rgb1 -block 1 -arithmetic.
+As said, this option improves the compression significantly, but
+the files are not compatible with JPEG decoders prior to IJG v9
+due to the included color transform.
+The used color transform and marker signaling is compatible with
+other JPEG standards (e.g., JPEG-LS part 2).
+
+Remove the automatic de-ANSI-fication support (Automake 1.12).
+Thank also to Nitin A Kamble for suggestion.
+
+Add remark for jpeg_mem_dest() in jdatadst.c.
+Thank to Elie-Gregoire Khoury for the hint.
+
+Support files with invalid component identifiers (created
+by Adobe PDF).  Thank to Robin Watts for the suggestion.
+
+Adapt full buffer case in jcmainct.c for use with scaled DCT.
+Thank to Sergii Biloshytskyi for the suggestion.
+
+Add type identifier for declaration of noreturn functions.
+Thank to Brett L. Moore for the suggestion.
+
+Correct argument type in format string, avoid compiler warnings.
+Thank to Vincent Torri for hint.
+
+Add missing #include directives in configuration checks, avoid
+configuration errors.  Thank to John Spencer for the hint.
+
+
+Version 8d  15-Jan-2012
+-----------------------
+
+Add cjpeg -rgb option to create RGB JPEG files.
+Using this switch suppresses the conversion from RGB
+colorspace input to the default YCbCr JPEG colorspace.
+This feature allows true lossless JPEG coding of RGB color images.
+The recommended command for this purpose is currently
+cjpeg -rgb -block 1 -arithmetic.
+SmartScale capable decoder (introduced with IJG JPEG 8) required.
+Thank to Michael Koch for the initial suggestion.
+
+Add option to disable the region adjustment in the transupp crop code.
+Thank to Jeffrey Friedl for the suggestion.
+
+Thank to Richard Jones and Edd Dawson for various minor corrections.
+
+Thank to Akim Demaille for configure.ac cleanup.
+
+
 Version 8c  16-Jan-2011
 -----------------------
 

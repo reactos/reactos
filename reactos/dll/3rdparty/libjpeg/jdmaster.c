@@ -2,7 +2,7 @@
  * jdmaster.c
  *
  * Copyright (C) 1991-1997, Thomas G. Lane.
- * Modified 2002-2009 by Guido Vollbeding.
+ * Modified 2002-2011 by Guido Vollbeding.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -158,10 +158,8 @@ jpeg_calc_output_dimensions (j_decompress_ptr cinfo)
     cinfo->out_color_components = 1;
     break;
   case JCS_RGB:
-#if RGB_PIXELSIZE != 3
     cinfo->out_color_components = RGB_PIXELSIZE;
     break;
-#endif /* else share code with YCbCr */
   case JCS_YCbCr:
     cinfo->out_color_components = 3;
     break;

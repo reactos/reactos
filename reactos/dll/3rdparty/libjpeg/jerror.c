@@ -2,6 +2,7 @@
  * jerror.c
  *
  * Copyright (C) 1991-1998, Thomas G. Lane.
+ * Modified 2012 by Guido Vollbeding.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -25,8 +26,6 @@
 #include "jerror.h"
 
 #ifdef USE_WINDOWS_MESSAGEBOX
-#define WIN32_NO_STATUS
-#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #endif
 
@@ -68,7 +67,7 @@ const char * const jpeg_std_message_table[] = {
  * or jpeg_destroy) at some point.
  */
 
-METHODDEF(void)
+METHODDEF(noreturn_t)
 error_exit (j_common_ptr cinfo)
 {
   /* Always display the message */

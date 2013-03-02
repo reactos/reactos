@@ -2,7 +2,7 @@
  * jutils.c
  *
  * Copyright (C) 1991-1996, Thomas G. Lane.
- * Modified 2009 by Guido Vollbeding.
+ * Modified 2009-2011 by Guido Vollbeding.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -148,13 +148,27 @@ jround_up (long a, long b)
  * is not all that great, because these routines aren't very heavily used.)
  */
 
-#ifndef NEED_FAR_POINTERS	/* normal case, same as regular macros */
+#ifndef NEED_FAR_POINTERS	/* normal case, same as regular macro */
 #define FMEMCOPY(dest,src,size)	MEMCOPY(dest,src,size)
-#define FMEMZERO(target,size)	MEMZERO(target,size)
 #else				/* 80x86 case, define if we can */
 #ifdef USE_FMEM
 #define FMEMCOPY(dest,src,size)	_fmemcpy((void FAR *)(dest), (const void FAR *)(src), (size_t)(size))
-#define FMEMZERO(target,size)	_fmemset((void FAR *)(target), 0, (size_t)(size))
+#else
+/* This function is for use by the FMEMZERO macro defined in jpegint.h.
+ * Do not call this function directly, use the FMEMZERO macro instead.
+ */
+GLOBAL(void)
+jzero_far (void FAR * target, size_t bytestozero)
+/* Zero out a chunk of FAR memory. */
+/* This might be sample-array data, block-array data, or alloc_large data. */
+{
+  register char FAR * ptr = (char FAR *) target;
+  register size_t count;
+
+  for (count = bytestozero; count > 0; count--) {
+    *ptr++ = 0;
+  }
+}
 #endif
 #endif
 
@@ -208,24 +222,6 @@ jcopy_block_row (JBLOCKROW input_row, JBLOCKROW output_row,
   outptr = (JCOEFPTR) output_row;
   for (count = (long) num_blocks * DCTSIZE2; count > 0; count--) {
     *outptr++ = *inptr++;
-  }
-#endif
-}
-
-
-GLOBAL(void)
-jzero_far (void FAR * target, size_t bytestozero)
-/* Zero out a chunk of FAR memory. */
-/* This might be sample-array data, block-array data, or alloc_large data. */
-{
-#ifdef FMEMZERO
-  FMEMZERO(target, bytestozero);
-#else
-  register char FAR * ptr = (char FAR *) target;
-  register size_t count;
-
-  for (count = bytestozero; count > 0; count--) {
-    *ptr++ = 0;
   }
 #endif
 }
