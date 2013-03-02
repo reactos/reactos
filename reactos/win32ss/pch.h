@@ -86,6 +86,7 @@ typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
 
 /* Undocumented user definitions */
 #include <undocuser.h>
+#include <winlogon.h>
 
 /* Freetype headers */
 #include <ft2build.h>

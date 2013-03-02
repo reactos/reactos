@@ -21,15 +21,7 @@ CSR_API(CsrHideDesktop)
 BOOL
 FASTCALL DtbgIsDesktopVisible(VOID)
 {
-    HWND VisibleDesktopWindow = GetDesktopWindow(); // DESKTOPWNDPROC
-
-    if (VisibleDesktopWindow != NULL &&
-            !IsWindowVisible(VisibleDesktopWindow))
-    {
-        VisibleDesktopWindow = NULL;
-    }
-
-    return VisibleDesktopWindow != NULL;
+    return !((BOOL)NtUserCallNoParam(NOPARAM_ROUTINE_ISCONSOLEMODE));
 }
 
 /* EOF */

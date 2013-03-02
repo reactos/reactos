@@ -129,6 +129,10 @@ NtUserCallNoParam(DWORD Routine)
          RETURN(0);
       }
 
+      /* this is a Reactos only case and is needed for gui-on-demand */
+      case NOPARAM_ROUTINE_ISCONSOLEMODE:
+          RETURN( ScreenDeviceContext == NULL );
+
       default:
          ERR("Calling invalid routine number 0x%x in NtUserCallNoParam\n", Routine);
          EngSetLastError(ERROR_INVALID_PARAMETER);
@@ -473,6 +477,13 @@ NtUserCallTwoParam(
 
       case TWOPARAM_ROUTINE_UNHOOKWINDOWSHOOK:
          RETURN( IntUnhookWindowsHook((int)Param1, (HOOKPROC)Param2));
+      case TWOPARAM_ROUTINE_EXITREACTOS:
+          if(hwndSAS == NULL)
+          {
+              ASSERT(hwndSAS);
+              RETURN(STATUS_NOT_FOUND);
+          }
+         RETURN( co_IntSendMessage (hwndSAS, PM_WINLOGON_EXITWINDOWS, (WPARAM) Param1, (LPARAM)Param2));
    }
    ERR("Calling invalid routine number 0x%x in NtUserCallTwoParam(), Param1=0x%x Parm2=0x%x\n",
            Routine, Param1, Param2);

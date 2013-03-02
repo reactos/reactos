@@ -13,7 +13,6 @@
 #include "resource.h"
 #include <debug.h>
 
-static HWND LogonNotifyWindow = NULL;
 static HANDLE LogonProcess = NULL;
 
 CSR_API(CsrRegisterLogonProcess)
@@ -42,22 +41,6 @@ CSR_API(CsrRegisterLogonProcess)
 
 CSR_API(CsrSetLogonNotifyWindow)
 {
-    DWORD WindowCreator;
-
-    if (0 == GetWindowThreadProcessId(Request->Data.SetLogonNotifyWindowRequest.LogonNotifyWindow,
-                                      &WindowCreator))
-    {
-        DPRINT1("Can't get window creator\n");
-        return STATUS_INVALID_HANDLE;
-    }
-    if (WindowCreator != (DWORD_PTR)LogonProcess)
-    {
-        DPRINT1("Trying to register window not created by winlogon as notify window\n");
-        return STATUS_ACCESS_DENIED;
-    }
-
-    LogonNotifyWindow = Request->Data.SetLogonNotifyWindowRequest.LogonNotifyWindow;
-
     return STATUS_SUCCESS;
 }
 
@@ -888,16 +871,9 @@ UserExitReactos(DWORD UserProcessId, UINT Flags)
 {
     NTSTATUS Status;
 
-    if (NULL == LogonNotifyWindow)
-    {
-        DPRINT1("No LogonNotifyWindow registered\n");
-        return STATUS_NOT_FOUND;
-    }
-
     /* FIXME Inside 2000 says we should impersonate the caller here */
-    Status = SendMessageW(LogonNotifyWindow, PM_WINLOGON_EXITWINDOWS,
-                          (WPARAM) UserProcessId,
-                          (LPARAM) Flags);
+    Status = NtUserCallTwoParam (UserProcessId, Flags, TWOPARAM_ROUTINE_EXITREACTOS);
+
     /* If the message isn't handled, the return value is 0, so 0 doesn't indicate
        success. Success is indicated by a 1 return value, if anything besides 0
        or 1 it's a NTSTATUS value */
