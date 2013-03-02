@@ -763,7 +763,7 @@ enum __SAL_YesNo {_SAL_notpresent, _SAL_no, _SAL_maybe, _SAL_yes, _SAL_default};
 //#define _Out_opt_capcount_(capcount)
 //#define _Out_opt_capcount_x_(capcount)
 //#define _Out_opt_ptrdiff_cap_(size)
-//#define _Out_opt_z_bytecap_(size)
+#define _Out_opt_z_bytecap_(size)                                   _SAL11_NAME(_Out_opt_z_bytecap_) _Group_(_Pre_opt_bytecap_(size) [SA_Post(Valid=SA_Yes)] _Post_z_)
 //#define _Out_opt_z_bytecap_c_(size)
 //#define _Out_opt_z_bytecap_post_bytecount_(cap,count)
 //#define _Out_opt_z_bytecap_x_(size)

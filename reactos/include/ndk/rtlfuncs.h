@@ -2316,9 +2316,9 @@ NTAPI
 RtlQueryAtomInAtomTable(
     _In_ PRTL_ATOM_TABLE AtomTable,
     _In_ RTL_ATOM Atom,
-    _Inout_opt_ PULONG RefCount,
-    _Inout_opt_ PULONG PinCount,
-    _Inout_opt_ PWSTR AtomName,
+    _Out_opt_ PULONG RefCount,
+    _Out_opt_ PULONG PinCount,
+    _Out_opt_z_bytecap_(*NameLength) PWSTR AtomName,
     _Inout_opt_ PULONG NameLength
 );
 
