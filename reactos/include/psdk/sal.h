@@ -445,7 +445,7 @@ enum __SAL_YesNo {_SAL_notpresent, _SAL_no, _SAL_maybe, _SAL_yes, _SAL_default};
 //#define _Deref_out_opt_
 //#define _Deref_out_opt_z_
 #define _Deref_out_range_(lb,ub)                                    _SAL2_NAME(_Deref_out_range_) _Group_(_Post_ [SAL_notref] [SAL_deref] [SAL_annotes(Name="SAL_range", p1=_SA_SPECSTRIZE(lb), p2=_SA_SPECSTRIZE(ub))])
-//#define _Deref_out_z_
+#define _Deref_out_z_                                               _SAL11_NAME(_Deref_out_z_) _Group_(_Out_ _Deref_post_z_)
 //#define _Deref_out_z_bytecap_c_(size)
 //#define _Deref_out_z_cap_c_(size)
 #define _Deref_post_bytecap_(size)                                  _SAL11_NAME(_Deref_post_bytecap_) _Group_([SA_Post(Deref=1,Null=SA_No,Notref=1)] [SA_Post(Deref=1,WritableBytes="\n" _SA_SPECSTRIZE(size))])
@@ -496,7 +496,7 @@ enum __SAL_YesNo {_SAL_notpresent, _SAL_no, _SAL_maybe, _SAL_yes, _SAL_default};
 //#define _Deref_post_valid_cap_(size)
 //#define _Deref_post_valid_cap_c_(size)
 //#define _Deref_post_valid_cap_x_(size)
-//#define _Deref_post_z_
+#define _Deref_post_z_                                              _SAL11_NAME(_Deref_post_z_) _Group_([SA_Post(Deref=1,Null=SA_No,Notref=1)] [SA_Post(Deref=1,NullTerminated=SA_Yes)] [SA_Post(Valid=SA_Yes)])
 //#define _Deref_post_z_bytecap_(size)
 //#define _Deref_post_z_bytecap_c_(size)
 //#define _Deref_post_z_bytecap_x_(size)
@@ -786,7 +786,7 @@ enum __SAL_YesNo {_SAL_notpresent, _SAL_no, _SAL_maybe, _SAL_yes, _SAL_default};
 #define _Out_writes_bytes_to_(size,count)                           _SAL2_NAME(_Out_writes_bytes_to_) _Group_(_Pre_bytecap_(size) [SA_Post(Valid=SA_Yes)] _Post_bytecount_(count))
 #define _Out_writes_bytes_to_opt_(size,count)                       _SAL2_NAME(_Out_writes_bytes_to_opt_) _Group_(_Pre_opt_bytecap_(size) [SA_Post(Valid=SA_Yes)] _Post_bytecount_(count) )
 #define _Out_writes_opt_(size)                                      _SAL2_NAME(_Out_writes_opt_) _Group_(_Pre_opt_cap_(size) [SA_Post(Valid=SA_Yes)])
-//#define _Out_writes_opt_z_(size)
+#define _Out_writes_opt_z_(size)                                    _SAL2_NAME(_Out_writes_opt_z_) _Group_(_Pre_opt_cap_(size) [SA_Post(Valid=SA_Yes)] _Post_z_)
 #define _Out_writes_to_(size,count)                                 _SAL2_NAME(_Out_writes_to_) _Group_(_Pre_cap_(size) [SA_Post(Valid=SA_Yes)] _Post_count_(count))
 #define _Out_writes_to_opt_(size,count)                             _SAL2_NAME(_Out_writes_to_opt_) _Group_(_Pre_opt_cap_(size) [SA_Post(Valid=SA_Yes)] _Post_count_(count))
 //#define _Out_writes_to_ptr_(ptr)
@@ -903,7 +903,7 @@ enum __SAL_YesNo {_SAL_notpresent, _SAL_no, _SAL_maybe, _SAL_yes, _SAL_default};
 //#define _Pre_equal_to_(expr)
 //#define _Pre_invalid_
 #define _Pre_maybenull_                                             _SAL2_NAME(_Pre_maybenull_) _Group_([SA_Pre(Null=SA_Maybe,Notref=1)])
-//#define _Pre_notnull_
+#define _Pre_notnull_                                               _SAL2_NAME(_Pre_notnull_) _Group_([SA_Pre(Null=SA_No,Notref=1)])
 //#define _Pre_null_
 #define _Pre_opt_bytecap_(size)                                     _SAL11_NAME(_Pre_opt_bytecap_) _Group_([SA_Pre(Null=SA_Maybe,Notref=1)] [SA_Pre(WritableBytes="\n" _SA_SPECSTRIZE(size))] )
 //#define _Pre_opt_bytecap_c_(size)
@@ -1001,7 +1001,7 @@ enum __SAL_YesNo {_SAL_notpresent, _SAL_no, _SAL_maybe, _SAL_yes, _SAL_default};
 //#define _Ret_count_x_(size)
 #define _Ret_maybenull_                                             _SAL2_NAME(_Ret_maybenull_) _Group_([SA_Post(Null=SA_Maybe)])
 //#define _Ret_maybenull_z_
-//#define _Ret_notnull_
+#define _Ret_notnull_                                               _SAL2_NAME(_Ret_notnull_) _Group_([SA_Post(Null=SA_No)])
 //#define _Ret_null_
 //#define _Ret_opt_
 #define _Ret_opt_bytecap_(size)                                     _SAL11_NAME(_Ret_opt_bytecap_) _Group_([SA_Post(Null=SA_Maybe,Notref=1)] [SA_Post(WritableBytes="\n" _SA_SPECSTRIZE(size))])
