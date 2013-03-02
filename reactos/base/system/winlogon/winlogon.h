@@ -121,8 +121,8 @@ typedef struct _GINAINSTANCE
 
 
 /*
- * The picture Microfoft is trying to paint here
- *  (http://msdn.microsoft.com/en-us/library/windows/desktop/aa380547%28v=vs.85%29.aspx)
+ * The picture Microsoft is trying to paint here
+ * (http://msdn.microsoft.com/en-us/library/windows/desktop/aa380547%28v=vs.85%29.aspx)
  * about the Winlogon states is a little too simple.
  *
  * The real picture should look more like this:
@@ -132,14 +132,14 @@ typedef struct _GINAINSTANCE
  *    the state will automatically change to STATE_LOGGED_OFF.
  *
  * STATE_LOGGED_OFF
- *    User is logged of. Winlogon shows the "Press Ctrl-Alt-Del for logon"
+ *    User is logged off. Winlogon shows the "Press Ctrl-Alt-Del for logon"
  *    dialog. The state changes to STATE_LOGGED_OFF_SAS when the user presses
  *    "Ctrl-Alt-Del". If DisableCAD is true, the state will automatically
  *    change to STATE_LOGGED_OFF_SAS without showing the dialog.
  *
  * STATE_LOGGED_OFF_SAS
- *    State shows the logon dialog. Entering the right credentials an pressing
- *    "OK" changes the state to STATE_LOGGED_ON. Pressing "Cancel" or a Timeout
+ *    State shows the logon dialog. Entering the right credentials and pressing
+ *    "OK" changes the state to STATE_LOGGED_ON. Pressing "Cancel" or a timeout
  *    changes the state back to STATE_LOGGED_OFF.
  *
  * STATE_LOGGED_ON
@@ -149,12 +149,12 @@ typedef struct _GINAINSTANCE
  *
  * STATE_LOGGED_ON_SAS
  *    Winlogon shows the security dialog. Pressing "Cancel" or "Task Manager"
- *    or a Timeout change the state back to STATE_LOGGED_ON. Pressing "Change
+ *    or a timeout change the state back to STATE_LOGGED_ON. Pressing "Change
  *    Password" does not change the state, because the security dialog is still
  *    visible behind the change password dialog. Pressing "Log off" changes the
  *    state to STATE_LOGGING_OFF. Pressing "Lock Computer" changes the state to
  *    STATE_LOCKED. Pressing "Shutdown" changes the state to
- *    STATE_SUUTTING_DOWN.
+ *    STATE_SHUTTING_DOWN.
  *
  * STATE_SCREENSAVER
  *    Winlogon runs the screen saver. Upon user activity, the screensaver
@@ -184,7 +184,7 @@ typedef struct _GINAINSTANCE
  *    the state to STATE_SHUT_DOWN.
  *
  * STATE_SHUT_DOWN
- *    Terminates winlogon and initiates shut-down.
+ *    Terminates Winlogon and initiates shut-down.
  */
 typedef enum _LOGON_STATE
 {
