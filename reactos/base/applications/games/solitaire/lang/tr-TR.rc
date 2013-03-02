@@ -1,35 +1,36 @@
 /*
  * PROJECT:     Solitaire
  * LICENSE:     Freeware, permission to use under Public Domain
- * FILE:        base/applications/games/solitaire/lang/en-US.rc
- * PURPOSE:     English Language File for Solitaire
+ * FILE:        base/applications/games/solitaire/lang/tr-TR.rc
+ * PURPOSE:     Turkish Language File for Solitaire
  * PROGRAMMERS: Daniel "EmuandCo" Reimer (reimer.daniel@freenet.de)
+ * TRANSLATOR:  Erdem ERSOY (eersoy93)
  */
 
-LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 
 /* Dialogs */
 
 IDD_OPTIONS DIALOGEX DISCARDABLE 0, 0, 186, 118
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
-CAPTION "Options"
+CAPTION "Ayarlar"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX        "Cards", -1, 7, 7, 90, 40
-    AUTORADIOBUTTON "Draw &One", IDC_OPT_DRAWONE, 14, 19, 70, 10, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "Draw &Three", IDC_OPT_DRAWTHREE, 14, 32, 70, 10
+    GROUPBOX        "Kağıtlar", -1, 7, 7, 90, 40
+    AUTORADIOBUTTON "&Tekli çekme", IDC_OPT_DRAWONE, 14, 19, 70, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "&Üçlü çekme", IDC_OPT_DRAWTHREE, 14, 32, 70, 10
 
-    AUTOCHECKBOX    "&Show Time", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP | WS_DISABLED
-    AUTOCHECKBOX    "S&tatus bar", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP
+    AUTOCHECKBOX    "&Zamanı göster", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP | WS_DISABLED
+    AUTOCHECKBOX    "&Durum çubuğu", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP
 
-    DEFPUSHBUTTON   "OK", IDOK, 35, 97, 50, 14
-    PUSHBUTTON      "Cancel", IDCANCEL, 101, 97, 50, 14
+    DEFPUSHBUTTON   "Tamam", IDOK, 35, 97, 50, 14
+    PUSHBUTTON      "Vazgeç", IDCANCEL, 101, 97, 50, 14
 END
 
 
 IDD_CARDBACK DIALOGEX 6, 6, 186, 104
-CAPTION "Select Card Back"
+CAPTION "Deste Seç"
 FONT 8, "MS Shell Dlg"
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
 BEGIN
@@ -45,8 +46,8 @@ BEGIN
     CONTROL       "", IDC_CARDBACK10, "Static", SS_NOTIFY, 94, 46, 26, 32
     CONTROL       "", IDC_CARDBACK11, "Static", SS_NOTIFY, 124, 46, 26, 32
     CONTROL       "", IDC_CARDBACK12, "Static", SS_NOTIFY, 154, 46, 26, 32
-    DEFPUSHBUTTON "OK", IDOK, 66, 84, 54, 13
-    PUSHBUTTON    "Cancel", IDCANCEL, 126, 84, 54, 13
+    DEFPUSHBUTTON "Tamam", IDOK, 66, 84, 54, 13
+    PUSHBUTTON    "Vazgeç", IDCANCEL, 126, 84, 54, 13
 END
 
 
@@ -55,10 +56,10 @@ END
 STRINGTABLE
 BEGIN
     IDS_SOL_NAME    "Solitaire"
-    IDS_SOL_ABOUT   "Solitaire by J Brown\n\nCardLib version 1.0."
-    IDS_SOL_QUIT    "Quit the current game?"
-    IDS_SOL_WIN     "Congratulations, you win!"
-    IDS_SOL_DEAL    "Deal again?"
+    IDS_SOL_ABOUT   "Solitaire, J Brown tarafından yapılmıştır.\n\nCardLib sürümü: 1.0"
+    IDS_SOL_QUIT    "Bu oyundan çıkmak ister misiniz?"
+    IDS_SOL_WIN     "Tebrikler, kazandınız!"
+    IDS_SOL_DEAL    "Tekrar dağıtılsın mı?"
 END
 
 
@@ -66,19 +67,19 @@ END
 
 IDR_MENU1 MENU DISCARDABLE
 BEGIN
-    POPUP "&Game"
+    POPUP "&Oyun"
     BEGIN
-        MENUITEM "&Deal\tF2",                   IDM_GAME_NEW
+        MENUITEM "&Dağıt\tF2",                  IDM_GAME_NEW
         MENUITEM SEPARATOR
-        MENUITEM "De&ck...",                    IDM_GAME_DECK
-        MENUITEM "&Options...",                 IDM_GAME_OPTIONS
+        MENUITEM "D&esteler",                   IDM_GAME_DECK
+        MENUITEM "&Ayarlar",                    IDM_GAME_OPTIONS
         MENUITEM SEPARATOR
-        MENUITEM "&Exit",                       IDM_GAME_EXIT
+        MENUITEM "&Çıkış",                      IDM_GAME_EXIT
     END
-    POPUP "&Help"
+    POPUP "&Yardım"
     BEGIN
-        MENUITEM "&Contents\tF1",               IDM_HELP_CONTENTS
-        MENUITEM "&About",                      IDM_HELP_ABOUT
+        MENUITEM "&İçerik\tF1",                 IDM_HELP_CONTENTS
+        MENUITEM "&Hakkında",                   IDM_HELP_ABOUT
     END
 END
 
