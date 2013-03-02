@@ -79,44 +79,44 @@ typedef BOOL (WINAPI * PFWLXREMOVESTATUSMESSAGE) (PVOID);
 
 typedef struct _GINAFUNCTIONS
 {
-	/* Functions always available for a valid GINA */
-	PFWLXNEGOTIATE            WlxNegotiate; /* optional */
-	PFWLXINITIALIZE           WlxInitialize;
+    /* Functions always available for a valid GINA */
+    PFWLXNEGOTIATE            WlxNegotiate; /* optional */
+    PFWLXINITIALIZE           WlxInitialize;
 
-	/* Functions available if WlxVersion >= WLX_VERSION_1_0 (MS Windows 3.5.0) */
-	PFWLXDISPLAYSASNOTICE     WlxDisplaySASNotice;
-	PFWLXLOGGEDOUTSAS         WlxLoggedOutSAS;
-	PFWLXACTIVATEUSERSHELL    WlxActivateUserShell;
-	PFWLXLOGGEDONSAS          WlxLoggedOnSAS;
-	PFWLXDISPLAYLOCKEDNOTICE  WlxDisplayLockedNotice;
-	PFWLXWKSTALOCKEDSAS       WlxWkstaLockedSAS;
-	PFWLXISLOCKOK             WlxIsLockOk;
-	PFWLXISLOGOFFOK           WlxIsLogoffOk;
-	PFWLXLOGOFF               WlxLogoff;
-	PFWLXSHUTDOWN             WlxShutdown;
+    /* Functions available if WlxVersion >= WLX_VERSION_1_0 (MS Windows 3.5.0) */
+    PFWLXDISPLAYSASNOTICE     WlxDisplaySASNotice;
+    PFWLXLOGGEDOUTSAS         WlxLoggedOutSAS;
+    PFWLXACTIVATEUSERSHELL    WlxActivateUserShell;
+    PFWLXLOGGEDONSAS          WlxLoggedOnSAS;
+    PFWLXDISPLAYLOCKEDNOTICE  WlxDisplayLockedNotice;
+    PFWLXWKSTALOCKEDSAS       WlxWkstaLockedSAS;
+    PFWLXISLOCKOK             WlxIsLockOk;
+    PFWLXISLOGOFFOK           WlxIsLogoffOk;
+    PFWLXLOGOFF               WlxLogoff;
+    PFWLXSHUTDOWN             WlxShutdown;
 
-	/* Functions available if WlxVersion >= WLX_VERSION_1_1 (MS Windows 3.5.1) */
-	PFWLXSCREENSAVERNOTIFY    WlxScreenSaverNotify; /* optional */
-	PFWLXSTARTAPPLICATION     WlxStartApplication; /* optional */
+    /* Functions available if WlxVersion >= WLX_VERSION_1_1 (MS Windows 3.5.1) */
+    PFWLXSCREENSAVERNOTIFY    WlxScreenSaverNotify; /* optional */
+    PFWLXSTARTAPPLICATION     WlxStartApplication; /* optional */
 
-	/* Functions available if WlxVersion >= WLX_VERSION_1_2 (MS Windows NT 4.0) */
+    /* Functions available if WlxVersion >= WLX_VERSION_1_2 (MS Windows NT 4.0) */
 
-	/* Functions available if WlxVersion >= WLX_VERSION_1_3 (MS Windows 2000) */
-	PFWLXNETWORKPROVIDERLOAD  WlxNetworkProviderLoad; /* not called ATM */
-	PFWLXDISPLAYSTATUSMESSAGE WlxDisplayStatusMessage;
-	PFWLXGETSTATUSMESSAGE     WlxGetStatusMessage; /* doesn't need to be called */
-	PFWLXREMOVESTATUSMESSAGE  WlxRemoveStatusMessage;
+    /* Functions available if WlxVersion >= WLX_VERSION_1_3 (MS Windows 2000) */
+    PFWLXNETWORKPROVIDERLOAD  WlxNetworkProviderLoad; /* not called ATM */
+    PFWLXDISPLAYSTATUSMESSAGE WlxDisplayStatusMessage;
+    PFWLXGETSTATUSMESSAGE     WlxGetStatusMessage; /* doesn't need to be called */
+    PFWLXREMOVESTATUSMESSAGE  WlxRemoveStatusMessage;
 
-	/* Functions available if WlxVersion >= WLX_VERSION_1_4 (MS Windows XP) */
+    /* Functions available if WlxVersion >= WLX_VERSION_1_4 (MS Windows XP) */
 } GINAFUNCTIONS, *PGINAFUNCTIONS;
 
 typedef struct _GINAINSTANCE
 {
-	HMODULE hDllInstance;
-	GINAFUNCTIONS Functions;
-	PVOID Context;
-	DWORD Version;
-	BOOL UseCtrlAltDelete;
+    HMODULE hDllInstance;
+    GINAFUNCTIONS Functions;
+    PVOID Context;
+    DWORD Version;
+    BOOL UseCtrlAltDelete;
 } GINAINSTANCE, *PGINAINSTANCE;
 
 
@@ -206,39 +206,39 @@ typedef enum _LOGON_STATE
 
 typedef struct _WLSESSION
 {
-  GINAINSTANCE Gina;
-  DWORD SASAction;
-  BOOL SuppressStatus;
-  BOOL TaskManHotkey;
-  HWND SASWindow;
-  HWINSTA InteractiveWindowStation;
-  LPWSTR InteractiveWindowStationName;
-  HDESK ApplicationDesktop;
-  HDESK WinlogonDesktop;
-  HDESK ScreenSaverDesktop;
-  LUID LogonId;
-  HANDLE UserToken;
-  HANDLE hProfileInfo;
-  LOGON_STATE LogonState;
-  DWORD DialogTimeout; /* Timeout for dialog boxes, in seconds */
+    GINAINSTANCE Gina;
+    DWORD SASAction;
+    BOOL SuppressStatus;
+    BOOL TaskManHotkey;
+    HWND SASWindow;
+    HWINSTA InteractiveWindowStation;
+    LPWSTR InteractiveWindowStationName;
+    HDESK ApplicationDesktop;
+    HDESK WinlogonDesktop;
+    HDESK ScreenSaverDesktop;
+    LUID LogonId;
+    HANDLE UserToken;
+    HANDLE hProfileInfo;
+    LOGON_STATE LogonState;
+    DWORD DialogTimeout; /* Timeout for dialog boxes, in seconds */
 
-  /* Screen-saver informations */
+    /* Screen-saver informations */
 #ifndef USE_GETLASTINPUTINFO
-  HHOOK KeyboardHook;
-  HHOOK MouseHook;
+    HHOOK KeyboardHook;
+    HHOOK MouseHook;
 #endif
-  HANDLE hEndOfScreenSaverThread;
-  HANDLE hScreenSaverParametersChanged;
-  HANDLE hUserActivity;
-  HANDLE hEndOfScreenSaver;
+    HANDLE hEndOfScreenSaverThread;
+    HANDLE hScreenSaverParametersChanged;
+    HANDLE hUserActivity;
+    HANDLE hEndOfScreenSaver;
 #ifndef USE_GETLASTINPUTINFO
-  DWORD LastActivity;
+    DWORD LastActivity;
 #endif
 
-  /* Logon informations */
-  DWORD Options;
-  WLX_MPR_NOTIFY_INFO MprNotifyInfo;
-  WLX_PROFILE_V2_0 *Profile;
+    /* Logon informations */
+    DWORD Options;
+    WLX_MPR_NOTIFY_INFO MprNotifyInfo;
+    WLX_PROFILE_V2_0 *Profile;
 } WLSESSION, *PWLSESSION;
 
 extern HINSTANCE hAppInstance;
@@ -262,52 +262,43 @@ CreateUserEnvironment(IN PWLSESSION Session);
 
 /* sas.c */
 BOOL
-SetDefaultLanguage(
-	IN BOOL UserProfile);
+SetDefaultLanguage(IN BOOL UserProfile);
 
 BOOL
-InitializeSAS(
-	IN OUT PWLSESSION Session);
+InitializeSAS(IN OUT PWLSESSION Session);
 
 /* screensaver.c */
 BOOL
-InitializeScreenSaver(
-	IN OUT PWLSESSION Session);
+InitializeScreenSaver(IN OUT PWLSESSION Session);
 
 VOID
-StartScreenSaver(
-	IN PWLSESSION Session);
+StartScreenSaver(IN PWLSESSION Session);
 
 /* winlogon.c */
 
 BOOL
-PlaySoundRoutine(
-	IN LPCWSTR FileName,
-	IN UINT Logon,
-	IN UINT Flags);
+PlaySoundRoutine(IN LPCWSTR FileName,
+                 IN UINT Logon,
+                 IN UINT Flags);
 
 BOOL
-DisplayStatusMessage(
-	IN PWLSESSION Session,
-	IN HDESK hDesktop,
-	IN UINT ResourceId);
+DisplayStatusMessage(IN PWLSESSION Session,
+                     IN HDESK hDesktop,
+                     IN UINT ResourceId);
 
 BOOL
-RemoveStatusMessage(
-	IN PWLSESSION Session);
+RemoveStatusMessage(IN PWLSESSION Session);
 
 /* wlx.c */
 BOOL
-GinaInit(
-	IN OUT PWLSESSION Session);
+GinaInit(IN OUT PWLSESSION Session);
+
 BOOL
-CreateWindowStationAndDesktops(
-	IN OUT PWLSESSION Session);
+CreateWindowStationAndDesktops(IN OUT PWLSESSION Session);
 
 NTSTATUS
-HandleShutdown(
-	IN OUT PWLSESSION Session,
-	IN DWORD wlxAction);
+HandleShutdown(IN OUT PWLSESSION Session,
+               IN DWORD wlxAction);
 
 VOID WINAPI WlxUseCtrlAltDel(HANDLE hWlx);
 VOID WINAPI WlxSetContextPointer(HANDLE hWlx, PVOID pWlxContext);
