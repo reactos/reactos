@@ -1595,20 +1595,6 @@ LsaQueryTrustedDomainInfoByName(IN LSA_HANDLE PolicyHandle,
 
 
 /*
- * @unimplemented
- */
-NTSTATUS
-WINAPI
-LsaRegisterPolicyChangeNotification(IN POLICY_NOTIFICATION_INFORMATION_CLASS InformationClass,
-                                    IN HANDLE NotificationEventHandle)
-{
-    FIXME("LsaRegisterPolicyChangeNotification(%d %p) stub\n",
-          InformationClass, NotificationEventHandle);
-    return STATUS_UNSUCCESSFUL;
-}
-
-
-/*
  * @implemented
  */
 NTSTATUS
@@ -2024,20 +2010,6 @@ LsaStorePrivateData(IN LSA_HANDLE PolicyHandle,
     FIXME("LsaStorePrivateData(%p %p %p) stub\n",
           PolicyHandle, KeyName, PrivateData);
     return STATUS_OBJECT_NAME_NOT_FOUND;
-}
-
-
-/*
- * @unimplemented
- */
-NTSTATUS
-WINAPI
-LsaUnregisterPolicyChangeNotification(IN POLICY_NOTIFICATION_INFORMATION_CLASS InformationClass,
-                                      IN HANDLE NotificationEventHandle)
-{
-    FIXME("(%d %p) stub\n",
-          InformationClass, NotificationEventHandle);
-    return STATUS_SUCCESS;
 }
 
 /* EOF */
