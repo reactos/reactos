@@ -745,7 +745,6 @@ ConSrvConnect(IN PCSR_PROCESS CsrProcess,
 
     /* Set the Property Dialog Handler */
     ProcessData->PropDispatcher = ConnectInfo->PropDispatcher;
-    DPRINT("CONSRV: PropDispatcher address: %x\n", ProcessData->PropDispatcher);
 
     /* Set the Ctrl Dispatcher */
     ProcessData->CtrlDispatcher = ConnectInfo->CtrlDispatcher;

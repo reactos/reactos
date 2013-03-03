@@ -66,8 +66,6 @@ ConSrvCreateScreenBuffer(IN OUT PCONSOLE Console,
                          IN USHORT ScreenAttrib,
                          IN USHORT PopupAttrib)
 {
-    DPRINT("ConSrvCreateScreenBuffer\n");
-
     if (Console == NULL || Buffer == NULL)
         return STATUS_INVALID_PARAMETER;
 

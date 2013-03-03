@@ -1800,7 +1800,6 @@ GuiConsoleNotifyWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
                                         (PVOID)Console);
             if (NULL != NewWindow)
             {
-                DPRINT1("CreateWindowExW succeeded\n");
                 SetConsoleWndConsoleLeaderCID(Console);
                 SetWindowLongW(hWnd, GWL_USERDATA, GetWindowLongW(hWnd, GWL_USERDATA) + 1);
 
@@ -1818,7 +1817,6 @@ GuiConsoleNotifyWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
                     SendMessageW(Console->hWindow, WM_SETICON, ICON_SMALL, (LPARAM)Console->hIconSm);
                 }
 
-                DPRINT1("Show window\n");
                 ShowWindow(NewWindow, (int)wParam);
             }
             return (LRESULT)NewWindow;
@@ -2132,7 +2130,6 @@ GuiInitConsole(PCONSOLE Console,
     if (IconPath)
     {
         HICON hIcon = NULL, hIconSm = NULL;
-        DPRINT1("Extracting icons\n");
         PrivateExtractIconExW(IconPath,
                               IconIndex,
                               &hIcon,

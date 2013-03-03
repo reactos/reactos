@@ -521,7 +521,6 @@ CSR_API(SrvOpenConsole)
 
     RtlEnterCriticalSection(&ProcessData->HandleTableLock);
 
-    DPRINT1("SrvOpenConsole - Checkpoint 1\n");
     DPRINT1("ProcessData = 0x%p ; ProcessData->Console = 0x%p\n", ProcessData, ProcessData->Console);
 
     if (ProcessData->Console)
@@ -532,9 +531,9 @@ CSR_API(SrvOpenConsole)
         PCONSOLE Console = ProcessData->Console;
         Object_t *Object;
 
-        DPRINT1("SrvOpenConsole - Checkpoint 2\n");
+        DPRINT1("SrvOpenConsole - Checkpoint 1\n");
         EnterCriticalSection(&Console->Lock);
-        DPRINT1("SrvOpenConsole - Checkpoint 3\n");
+        DPRINT1("SrvOpenConsole - Checkpoint 2\n");
 
         if (OpenConsoleRequest->HandleType == HANDLE_OUTPUT)
         {
@@ -632,7 +631,6 @@ CSR_API(SrvAllocConsole)
 
     /* Set the Property Dialog Handler */
     ProcessData->PropDispatcher = AllocConsoleRequest->PropDispatcher;
-    DPRINT("CONSRV: PropDispatcher address: %x\n", ProcessData->PropDispatcher);
 
     /* Set the Ctrl Dispatcher */
     ProcessData->CtrlDispatcher = AllocConsoleRequest->CtrlDispatcher;
@@ -734,7 +732,6 @@ CSR_API(SrvAttachConsole)
 
     /* Set the Property Dialog Handler */
     TargetProcessData->PropDispatcher = AttachConsoleRequest->PropDispatcher;
-    DPRINT("CONSRV: PropDispatcher address: %x\n", TargetProcessData->PropDispatcher);
 
     /* Set the Ctrl Dispatcher */
     TargetProcessData->CtrlDispatcher = AttachConsoleRequest->CtrlDispatcher;

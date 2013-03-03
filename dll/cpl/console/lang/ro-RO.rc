@@ -144,6 +144,5 @@ BEGIN
 	IDS_CPLNAME             "Linie de comandă"
 	IDS_CPLDESCRIPTION      "Configurarea proprietăților pentru programe linie de comandă."
 	IDS_APPLY_SHORTCUT_ALL  "Modifică &scurtătura care a pornit aplicația"
-	IDS_SCREEN_TEXT         "C:\\ReactOS> dir\nSYSTEM          <DIR>     10-01-99     5:00\nSYSTEM32      <DIR>     10-01-99     5:00"
 	IDS_RASTERFONTS         "Fonturi rastre"
 END

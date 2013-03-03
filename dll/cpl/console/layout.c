@@ -8,31 +8,15 @@
 
 #include "console.h"
 
-// TODO: Use ReactOS output
-const TCHAR szPreviewText[] = \
+const TCHAR szPreviewText[] =
     _T("C:\\ReactOS> dir                       \n") \
-    _T("SYSTEM       <DIR>     10-01-99   5:00a\n") \
-    _T("SYSTEM32     <DIR>     10-01-99   5:00a\n") \
-    _T("README   TXT     26926 10-01-99   5:00a\n") \
-    _T("WINDOWS  BMP     46080 10-01-99   5:00a\n") \
-    _T("NOTEPAD  EXE    337232 10-01-99   5:00a\n") \
-    _T("CLOCK    AVI     39594 10-01-99   5:00p\n") \
-    _T("WIN      INI      7005 10-01-99   5:00a\n");
-/*
-const TCHAR szPreviewText[] = \
-    _T("C:\\ReactOS> dir                       \n") \
-    _T("02-18-13  05:00a  <DIR>    system      \n") \
-    _T("02-18-13  05:00a  <DIR>    system32    \n") \
-    _T("02-18-13  05:00a     26926 readme.txt  \n") \
-    _T("02-18-13  05:00a   3321856 explorer.exe\n") \
-    _T("02-18-13  05:00a       256 setuplog.   \n") \
-    _T("02-18-13  05:00a     18736 vgafonts.cab\n") \
-    _T("02-18-13  05:00a       256 win.ini     \n") \
-    _T("README   TXT     26926 10-01-99   5:00a\n") \
-    _T("CLOCK    AVI     39594 10-01-99   5:00p\n") \
-    _T("WIN      INI      7005 10-01-99   5:00a\n");
-*/
-// IDS_SCREEN_TEXT "C:\\ReactOS> dir\nSYSTEM          <DIR>     10-01-99     5:00\nSYSTEM32      <DIR>     10-01-99     5:00"
+    _T("SYSTEM       <DIR>      03-03-13  5:00a\n") \
+    _T("SYSTEM32     <DIR>      03-03-13  5:00a\n") \
+    _T("readme   txt       1739 03-03-13  5:00a\n") \
+    _T("explorer exe    3329536 03-03-13  5:00a\n") \
+    _T("vgafonts cab      18736 03-03-13  5:00a\n") \
+    _T("setuplog txt        313 03-03-13  5:00a\n") \
+    _T("win      ini       7005 03-03-13  5:00a\n");
 
 
 VOID

@@ -86,5 +86,4 @@
 #define IDC_STATIC_COLOR16              627
 
 // String IDs
-#define IDS_SCREEN_TEXT                 700
-#define IDS_RASTERFONTS                 701
+#define IDS_RASTERFONTS                 700

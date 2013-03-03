@@ -142,8 +142,6 @@ ConSrvOpenUserSettings(DWORD ProcessId,
      *     i.e. %SystemRoot%_<some_path>_<some_app.exe>
      */
 
-    DPRINT1("ConSrvOpenUserSettings entered\n");
-
     /* Open the registry key where we saved the console properties */
     if (!OpenUserRegistryPathPerProcessId(ProcessId, &hKey, samDesired))
     {
@@ -209,7 +207,7 @@ ConSrvReadUserSettings(IN OUT PCONSOLE_INFO ConsoleInfo,
                                 &hKey, KEY_READ,
                                 FALSE))
     {
-        DPRINT1("ConSrvOpenUserSettings failed\n");
+        DPRINT("ConSrvOpenUserSettings failed\n");
         return FALSE;
     }
 
@@ -426,8 +424,6 @@ VOID
 ConSrvGetDefaultSettings(IN OUT PCONSOLE_INFO ConsoleInfo,
                          IN DWORD ProcessId)
 {
-    DPRINT1("ConSrvGetDefaultSettings(0x%p)\n", ConsoleInfo);
-
     if (ConsoleInfo == NULL) return;
 
 /// HKCU,"Console","LoadConIme",0x00010003,1
