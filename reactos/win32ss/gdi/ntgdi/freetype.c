@@ -59,6 +59,7 @@ typedef struct _FONT_CACHE_ENTRY
     FT_Face Face;
     FT_BitmapGlyph BitmapGlyph;
     int Height;
+    MATRIX mxWorldToDevice;
 } FONT_CACHE_ENTRY, *PFONT_CACHE_ENTRY;
 static LIST_ENTRY FontCacheListHead;
 static UINT FontCacheNumEntries;
@@ -161,14 +162,10 @@ InitFontSupport(VOID)
 VOID
 FtSetCoordinateTransform(
     FT_Face face,
-    PDC pdc)
+    PMATRIX pmx)
 {
     FT_Matrix ftmatrix;
-    PMATRIX pmx;
     FLOATOBJ efTemp;
-
-    /* Get the DC's world-to-device transformation matrix */
-    pmx = DC_pmxWorldToDevice(pdc);
 
     /* Create a freetype matrix, by converting to 16.16 fixpoint format */
     efTemp = pmx->efM11;
@@ -1343,12 +1340,24 @@ ftGdiGetRasterizerCaps(LPRASTERIZER_STATUS lprs)
     return FALSE;
 }
 
+static
+BOOL
+SameScaleMatrix(
+    PMATRIX pmx1,
+    PMATRIX pmx2)
+{
+    return (FLOATOBJ_Equal(&pmx1->efM11, &pmx2->efM11) &&
+            FLOATOBJ_Equal(&pmx1->efM12, &pmx2->efM12) &&
+            FLOATOBJ_Equal(&pmx1->efM21, &pmx2->efM21) &&
+            FLOATOBJ_Equal(&pmx1->efM22, &pmx2->efM22));
+}
 
 FT_BitmapGlyph APIENTRY
 ftGdiGlyphCacheGet(
     FT_Face Face,
     INT GlyphIndex,
-    INT Height)
+    INT Height,
+    PMATRIX pmx)
 {
     PLIST_ENTRY CurrentEntry;
     PFONT_CACHE_ENTRY FontEntry;
@@ -1357,9 +1366,10 @@ ftGdiGlyphCacheGet(
     while (CurrentEntry != &FontCacheListHead)
     {
         FontEntry = (PFONT_CACHE_ENTRY)CurrentEntry;
-        if (FontEntry->Face == Face &&
-                FontEntry->GlyphIndex == GlyphIndex &&
-                FontEntry->Height == Height)
+        if ((FontEntry->Face == Face) &&
+            (FontEntry->GlyphIndex == GlyphIndex) &&
+            (FontEntry->Height == Height) &&
+            (SameScaleMatrix(&FontEntry->mxWorldToDevice, pmx)))
             break;
         CurrentEntry = CurrentEntry->Flink;
     }
@@ -1379,6 +1389,7 @@ ftGdiGlyphCacheSet(
     FT_Face Face,
     INT GlyphIndex,
     INT Height,
+    PMATRIX pmx,
     FT_GlyphSlot GlyphSlot,
     FT_Render_Mode RenderMode)
 {
@@ -1428,6 +1439,7 @@ ftGdiGlyphCacheSet(
     NewEntry->Face = Face;
     NewEntry->BitmapGlyph = BitmapGlyph;
     NewEntry->Height = Height;
+    NewEntry->mxWorldToDevice = *pmx;
 
     InsertHeadList(&FontCacheListHead, &NewEntry->ListEntry);
     if (FontCacheNumEntries++ > MAX_FONT_CACHE)
@@ -1585,7 +1597,7 @@ ftGdiGetGlyphOutline(
     /* FIXME: Should set character height if neg */
 //                     (TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight == 0 ?
 //                      dc->ppdev->devinfo.lfDefaultFont.lfHeight : abs(TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight)));
-//    FtSetCoordinateTransform(face, dc);
+//    FtSetCoordinateTransform(face, DC_pmxWorldToDevice(dc));
 
     TEXTOBJ_UnlockText(TextObj);
 
@@ -2132,6 +2144,7 @@ TextIntGetTextExtentPoint(PDC dc,
     BOOL use_kerning;
     FT_Render_Mode RenderMode;
     BOOLEAN Render;
+    PMATRIX pmxWorldToDevice;
 
     FontGDI = ObjToGDI(TextObj->Font, FONT);
 
@@ -2186,7 +2199,9 @@ TextIntGetTextExtentPoint(PDC dc,
         DPRINT1("Error in setting pixel sizes: %u\n", error);
     }
 
-    FtSetCoordinateTransform(face, dc);
+    /* Get the DC's world-to-device transformation matrix */
+    pmxWorldToDevice = DC_pmxWorldToDevice(dc);
+    FtSetCoordinateTransform(face, pmxWorldToDevice);
 
     use_kerning = FT_HAS_KERNING(face);
     previous = 0;
@@ -2199,7 +2214,8 @@ TextIntGetTextExtentPoint(PDC dc,
             glyph_index = FT_Get_Char_Index(face, *String);
 
         if (!(realglyph = ftGdiGlyphCacheGet(face, glyph_index,
-                                             TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight)))
+                                             TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight,
+                                             pmxWorldToDevice)))
         {
             error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
             if (error)
@@ -2209,8 +2225,12 @@ TextIntGetTextExtentPoint(PDC dc,
             }
 
             glyph = face->glyph;
-            realglyph = ftGdiGlyphCacheSet(face, glyph_index,
-                                           TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight, glyph, RenderMode);
+            realglyph = ftGdiGlyphCacheSet(face,
+                                           glyph_index,
+                                           TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight,
+                                           pmxWorldToDevice,
+                                           glyph,
+                                           RenderMode);
             if (!realglyph)
             {
                 DPRINT1("Failed to render glyph! [index: %u]\n", glyph_index);
@@ -2470,7 +2490,7 @@ ftGdiGetTextMetricsW(
                                    /* FIXME: Should set character height if neg */
                                    (TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight == 0 ?
                                    dc->ppdev->devinfo.lfDefaultFont.lfHeight : abs(TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight)));
-        FtSetCoordinateTransform(Face, dc);
+        FtSetCoordinateTransform(Face, DC_pmxWorldToDevice(dc));
         IntUnLockFreeType;
         if (0 != Error)
         {
@@ -3119,6 +3139,24 @@ NtGdiGetFontFamilyInfo(HDC Dc,
     return Count;
 }
 
+LONG
+FORCEINLINE
+ScaleLong(LONG lValue, PFLOATOBJ pef)
+{
+    FLOATOBJ efTemp;
+
+    /* Check if we have scaling different from 1 */
+    if (!FLOATOBJ_Equal(pef, (PFLOATOBJ)&gef1))
+    {
+        /* Need to multiply */
+        FLOATOBJ_SetLong(&efTemp, lValue);
+        FLOATOBJ_Mul(&efTemp, pef);
+        lValue = FLOATOBJ_GetLong(&efTemp);
+    }
+
+    return lValue;
+}
+
 BOOL
 APIENTRY
 GreExtTextOutW(
@@ -3165,6 +3203,8 @@ GreExtTextOutW(
     POINT Start;
     BOOL DoBreak = FALSE;
     USHORT DxShift;
+    PMATRIX pmxWorldToDevice;
+    LONG fixAscender, fixDescender;
 
     // TODO: Write test-cases to exactly match real Windows in different
     // bad parameters (e.g. does Windows check the DC or the RECT first?).
@@ -3328,18 +3368,22 @@ GreExtTextOutW(
         goto fail;
     }
 
-    FtSetCoordinateTransform(face, dc);
+    pmxWorldToDevice = DC_pmxWorldToDevice(dc);
+    FtSetCoordinateTransform(face, pmxWorldToDevice);
 
     /*
      * Process the vertical alignment and determine the yoff.
      */
 
+    fixAscender = ScaleLong(face->size->metrics.ascender, &pmxWorldToDevice->efM22);
+    fixDescender = ScaleLong(face->size->metrics.descender, &pmxWorldToDevice->efM22);
+
     if (pdcattr->lTextAlign & TA_BASELINE)
         yoff = 0;
     else if (pdcattr->lTextAlign & TA_BOTTOM)
-        yoff = -face->size->metrics.descender >> 6;
+        yoff = -fixDescender >> 6;
     else /* TA_TOP */
-        yoff = face->size->metrics.ascender >> 6;
+        yoff = fixAscender >> 6;
 
     use_kerning = FT_HAS_KERNING(face);
     previous = 0;
@@ -3377,7 +3421,8 @@ GreExtTextOutW(
                 glyph_index = FT_Get_Char_Index(face, *TempText);
 
             if (!(realglyph = ftGdiGlyphCacheGet(face, glyph_index,
-                                                 TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight)))
+                                                 TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight,
+                                                 pmxWorldToDevice)))
             {
                 error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
                 if (error)
@@ -3386,8 +3431,12 @@ GreExtTextOutW(
                 }
 
                 glyph = face->glyph;
-                realglyph = ftGdiGlyphCacheSet(face, glyph_index,
-                                               TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight, glyph, RenderMode);
+                realglyph = ftGdiGlyphCacheSet(face,
+                                               glyph_index,
+                                               TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight,
+                                               pmxWorldToDevice,
+                                               glyph,
+                                               RenderMode);
                 if (!realglyph)
                 {
                     DPRINT1("Failed to render glyph! [index: %u]\n", glyph_index);
@@ -3453,7 +3502,8 @@ GreExtTextOutW(
             glyph_index = FT_Get_Char_Index(face, *String);
 
         if (!(realglyph = ftGdiGlyphCacheGet(face, glyph_index,
-                                             TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight)))
+                                             TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight,
+                                             pmxWorldToDevice)))
         {
             error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
             if (error)
@@ -3466,6 +3516,7 @@ GreExtTextOutW(
             realglyph = ftGdiGlyphCacheSet(face,
                                            glyph_index,
                                            TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight,
+                                           pmxWorldToDevice,
                                            glyph,
                                            RenderMode);
             if (!realglyph)
@@ -3491,8 +3542,8 @@ GreExtTextOutW(
         {
             DestRect.left = BackgroundLeft;
             DestRect.right = (TextLeft + (realglyph->root.advance.x >> 10) + 32) >> 6;
-            DestRect.top = TextTop + yoff - ((face->size->metrics.ascender + 32) >> 6);
-            DestRect.bottom = TextTop + yoff + ((32 - face->size->metrics.descender) >> 6);
+            DestRect.top = TextTop + yoff - ((fixAscender + 32) >> 6);
+            DestRect.bottom = TextTop + yoff + ((32 - fixDescender) >> 6);
             MouseSafetyOnDrawStart(dc->ppdev, DestRect.left, DestRect.top, DestRect.right, DestRect.bottom);
             IntEngBitBlt(
                 &psurf->SurfObj,
@@ -3777,6 +3828,7 @@ NtGdiGetCharABCWidthsW(
     UINT i, glyph_index, BufferSize;
     HFONT hFont = 0;
     NTSTATUS Status = STATUS_SUCCESS;
+    PMATRIX pmxWorldToDevice;
 
     if (pwch)
     {
@@ -3823,6 +3875,9 @@ NtGdiGetCharABCWidthsW(
     pdcattr = dc->pdcattr;
     hFont = pdcattr->hlfntNew;
     TextObj = RealizeFontInit(hFont);
+
+    /* Get the DC's world-to-device transformation matrix */
+    pmxWorldToDevice = DC_pmxWorldToDevice(dc);
     DC_UnlockDc(dc);
 
     if (TextObj == NULL)
@@ -3866,7 +3921,7 @@ NtGdiGetCharABCWidthsW(
                        /* FIXME: Should set character height if neg */
                        (TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight == 0 ?
                        dc->ppdev->devinfo.lfDefaultFont.lfHeight : abs(TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight)));
-    FtSetCoordinateTransform(face, dc);
+    FtSetCoordinateTransform(face, pmxWorldToDevice);
 
     for (i = FirstChar; i < FirstChar+Count; i++)
     {
@@ -3951,6 +4006,7 @@ NtGdiGetCharWidthW(
     FT_CharMap charmap, found = NULL;
     UINT i, glyph_index, BufferSize;
     HFONT hFont = 0;
+    PMATRIX pmxWorldToDevice;
 
     if (pwc)
     {
@@ -3991,6 +4047,8 @@ NtGdiGetCharWidthW(
     pdcattr = dc->pdcattr;
     hFont = pdcattr->hlfntNew;
     TextObj = RealizeFontInit(hFont);
+    /* Get the DC's world-to-device transformation matrix */
+    pmxWorldToDevice = DC_pmxWorldToDevice(dc);
     DC_UnlockDc(dc);
 
     if (TextObj == NULL)
@@ -4034,7 +4092,7 @@ NtGdiGetCharWidthW(
                        /* FIXME: Should set character height if neg */
                        (TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight == 0 ?
                        dc->ppdev->devinfo.lfDefaultFont.lfHeight : abs(TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight)));
-    FtSetCoordinateTransform(face, dc);
+    FtSetCoordinateTransform(face, pmxWorldToDevice);
 
     for (i = FirstChar; i < FirstChar+Count; i++)
     {
