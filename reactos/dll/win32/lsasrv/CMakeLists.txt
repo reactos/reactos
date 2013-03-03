@@ -8,6 +8,7 @@ add_rpc_files(server ${REACTOS_SOURCE_DIR}/include/reactos/idl/lsa.idl)
 spec2def(lsasrv.dll lsasrv.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
+    authpackage.c
     authport.c
     database.c
     lookup.c

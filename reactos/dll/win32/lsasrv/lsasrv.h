@@ -19,10 +19,12 @@
 #include <ndk/kefuncs.h>
 #include <ndk/lpctypes.h>
 #include <ndk/lpcfuncs.h>
+#include <ndk/mmfuncs.h>
 #include <ndk/obfuncs.h>
 #include <ndk/psfuncs.h>
 #include <ndk/rtlfuncs.h>
 #include <ndk/setypes.h>
+#include <ndk/umfuncs.h>
 
 #include <ntsam.h>
 #include <ntlsa.h>
@@ -79,6 +81,9 @@ extern UNICODE_STRING BuiltinDomainName;
 extern PSID AccountDomainSid;
 extern UNICODE_STRING AccountDomainName;
 
+/* authpackage.c */
+NTSTATUS
+LsapInitAuthPackages(VOID);
 
 /* authport.c */
 NTSTATUS
