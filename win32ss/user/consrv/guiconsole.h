@@ -2,7 +2,7 @@
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Console Server DLL
  * FILE:            win32ss/user/consrv/guiconsole.h
- * PURPOSE:         Interface to gui-mode consoles
+ * PURPOSE:         Interface to GUI-mode consoles
  * PROGRAMMERS:
  */
 
@@ -15,7 +15,7 @@
 
 NTSTATUS FASTCALL GuiInitConsole(PCONSOLE Console,
                                  LPCWSTR AppPath,
-                                 WORD ShowWindow,
+                                 PCONSOLE_INFO ConsoleInfo,
                                  LPCWSTR IconPath,
                                  INT IconIndex);
 VOID FASTCALL GuiConsoleHandleScrollbarMenu(VOID);

@@ -1,7 +1,7 @@
 /*
  * LICENSE:         GPL - See COPYING in the top level directory
  * PROJECT:         ReactOS Console Server DLL
- * FILE:            win32ss/user/consrv/tuiconsole.c
+ * FILE:            win32ss/user/consrv/lineinput.c
  * PURPOSE:         Console line input functions
  * PROGRAMMERS:     Jeffrey Morlan
  */
@@ -343,18 +343,18 @@ LineInputSetPos(PCONSOLE Console, UINT Pos)
     if (Pos != Console->LinePos && Console->InputBuffer.Mode & ENABLE_ECHO_INPUT)
     {
         PCONSOLE_SCREEN_BUFFER Buffer = Console->ActiveBuffer;
-        UINT OldCursorX = Buffer->CurrentX;
-        UINT OldCursorY = Buffer->CurrentY;
-        INT XY = OldCursorY * Buffer->MaxX + OldCursorX;
+        UINT OldCursorX = Buffer->CursorPosition.X;
+        UINT OldCursorY = Buffer->CursorPosition.Y;
+        INT XY = OldCursorY * Buffer->ScreenBufferSize.X + OldCursorX;
 
         XY += (Pos - Console->LinePos);
         if (XY < 0)
             XY = 0;
-        else if (XY >= Buffer->MaxY * Buffer->MaxX)
-            XY = Buffer->MaxY * Buffer->MaxX - 1;
+        else if (XY >= Buffer->ScreenBufferSize.Y * Buffer->ScreenBufferSize.X)
+            XY = Buffer->ScreenBufferSize.Y * Buffer->ScreenBufferSize.X - 1;
 
-        Buffer->CurrentX = XY % Buffer->MaxX;
-        Buffer->CurrentY = XY / Buffer->MaxX;
+        Buffer->CursorPosition.X = XY % Buffer->ScreenBufferSize.X;
+        Buffer->CursorPosition.Y = XY / Buffer->ScreenBufferSize.X;
         ConioSetScreenInfo(Console, Buffer, OldCursorX, OldCursorY);
     }
 

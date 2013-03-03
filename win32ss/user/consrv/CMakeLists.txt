@@ -1,8 +1,7 @@
 
 include_directories(
     ${REACTOS_SOURCE_DIR}/include/reactos/subsys
-    ${REACTOS_SOURCE_DIR}/win32ss/include
-    ${REACTOS_SOURCE_DIR}/dll/cpl/console)
+    ${REACTOS_SOURCE_DIR}/win32ss/include)
 
 spec2def(consrv.dll consrv.spec)
 
@@ -15,6 +14,7 @@ list(APPEND SOURCE
     handle.c
     init.c
     lineinput.c
+    settings.c
     tuiconsole.c
     consrv.rc
     ${CMAKE_CURRENT_BINARY_DIR}/consrv.def)

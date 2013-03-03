@@ -10,7 +10,6 @@
 
 #include "consrv.h"
 #include "conio.h"
-#include "tuiconsole.h"
 
 #define NDEBUG
 #include <debug.h>
@@ -132,7 +131,7 @@ ConioGetShiftState(PBYTE KeyState)
 }
 
 VOID WINAPI
-ConioProcessKey(MSG *msg, PCONSOLE Console, BOOL TextMode)
+ConioProcessKey(PCONSOLE Console, MSG* msg)
 {
     static BYTE KeyState[256] = { 0 };
     /* MSDN mentions that you should use the last virtual key code received
@@ -148,6 +147,12 @@ ConioProcessKey(MSG *msg, PCONSOLE Console, BOOL TextMode)
     INPUT_RECORD er;
     BOOLEAN Fake;          // synthesized, not a real event
     BOOLEAN NotChar;       // message should not be used to return a character
+
+    if (NULL == Console)
+    {
+        DPRINT1("No Active Console!\n");
+        return;
+    }
 
     RepeatCount = 1;
     VirtualScanCode = (msg->lParam >> 16) & 0xff;
@@ -186,39 +191,13 @@ ConioProcessKey(MSG *msg, PCONSOLE Console, BOOL TextMode)
     er.Event.KeyEvent.wVirtualKeyCode = VirtualKeyCode;
     er.Event.KeyEvent.wVirtualScanCode = VirtualScanCode;
 
-    if (TextMode)
+    if (ConioProcessKeyCallback(Console,
+                                msg,
+                                KeyState[VK_MENU],
+                                ShiftState,
+                                VirtualKeyCode,
+                                Down))
     {
-        if (0 != (ShiftState & (RIGHT_ALT_PRESSED | LEFT_ALT_PRESSED))
-                && VK_TAB == VirtualKeyCode)
-        {
-            if (Down)
-            {
-                TuiSwapConsole(ShiftState & SHIFT_PRESSED ? -1 : 1);
-            }
-
-            return;
-        }
-        else if (VK_MENU == VirtualKeyCode && ! Down)
-        {
-            if (TuiSwapConsole(0))
-            {
-                return;
-            }
-        }
-    }
-    else
-    {
-        if ((ShiftState & (RIGHT_ALT_PRESSED | LEFT_ALT_PRESSED) || KeyState[VK_MENU] & 0x80) &&
-            (VirtualKeyCode == VK_ESCAPE || VirtualKeyCode == VK_TAB || VirtualKeyCode == VK_SPACE))
-        {
-           DefWindowProcW(msg->hwnd, msg->message, msg->wParam, msg->lParam);
-           return;
-        }
-    }
-
-    if (NULL == Console)
-    {
-        DPRINT1("No Active Console!\n");
         return;
     }
 
@@ -226,8 +205,7 @@ ConioProcessKey(MSG *msg, PCONSOLE Console, BOOL TextMode)
             (msg->message != WM_CHAR && msg->message != WM_SYSCHAR &&
              msg->message != WM_KEYUP && msg->message != WM_SYSKEYUP);
     NotChar = (msg->message != WM_CHAR && msg->message != WM_SYSCHAR);
-    if (NotChar)
-        LastVirtualKey = msg->wParam;
+    if (NotChar) LastVirtualKey = msg->wParam;
 
     DPRINT("CONSRV: %s %s %s %s %02x %02x '%lc' %04x\n",
            Down ? "down" : "up  ",
@@ -240,8 +218,7 @@ ConioProcessKey(MSG *msg, PCONSOLE Console, BOOL TextMode)
            (UnicodeChar >= L' ') ? UnicodeChar : L'.',
            ShiftState);
 
-    if (Fake)
-        return;
+    if (Fake) return;
 
     /* process Ctrl-C and Ctrl-Break */
     if (Console->InputBuffer.Mode & ENABLE_PROCESSED_INPUT &&
@@ -282,22 +259,22 @@ ConioProcessKey(MSG *msg, PCONSOLE Console, BOOL TextMode)
             if (VK_UP == er.Event.KeyEvent.wVirtualKeyCode)
             {
                 /* only scroll up if there is room to scroll up into */
-                if (Console->ActiveBuffer->CurrentY != Console->ActiveBuffer->MaxY - 1)
+                if (Console->ActiveBuffer->CursorPosition.Y != Console->ActiveBuffer->ScreenBufferSize.Y - 1)
                 {
                     Console->ActiveBuffer->VirtualY = (Console->ActiveBuffer->VirtualY +
-                                                       Console->ActiveBuffer->MaxY - 1) %
-                                                       Console->ActiveBuffer->MaxY;
-                    Console->ActiveBuffer->CurrentY++;
+                                                       Console->ActiveBuffer->ScreenBufferSize.Y - 1) %
+                                                       Console->ActiveBuffer->ScreenBufferSize.Y;
+                    Console->ActiveBuffer->CursorPosition.Y++;
                 }
             }
             else
             {
                 /* only scroll down if there is room to scroll down into */
-                if (Console->ActiveBuffer->CurrentY != 0)
+                if (Console->ActiveBuffer->CursorPosition.Y != 0)
                 {
                     Console->ActiveBuffer->VirtualY = (Console->ActiveBuffer->VirtualY + 1) %
-                                                       Console->ActiveBuffer->MaxY;
-                    Console->ActiveBuffer->CurrentY--;
+                                                       Console->ActiveBuffer->ScreenBufferSize.Y;
+                    Console->ActiveBuffer->CursorPosition.Y--;
                 }
             }
             ConioDrawConsole(Console);

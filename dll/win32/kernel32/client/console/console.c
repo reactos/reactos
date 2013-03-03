@@ -849,7 +849,7 @@ AllocConsole(VOID)
         return FALSE;
     }
 
-    CaptureBuffer = CsrAllocateCaptureBuffer(2, sizeof(CONSOLE_PROPS) +
+    CaptureBuffer = CsrAllocateCaptureBuffer(2, sizeof(CONSOLE_START_INFO) +
                                                 (MAX_PATH + 1) * sizeof(WCHAR));
     if (CaptureBuffer == NULL)
     {
@@ -859,23 +859,24 @@ AllocConsole(VOID)
     }
 
     CsrAllocateMessagePointer(CaptureBuffer,
-                              sizeof(CONSOLE_PROPS),
-                              (PVOID*)&AllocConsoleRequest->ConsoleProps);
+                              sizeof(CONSOLE_START_INFO),
+                              (PVOID*)&AllocConsoleRequest->ConsoleStartInfo);
 
     CsrAllocateMessagePointer(CaptureBuffer,
                               (MAX_PATH + 1) * sizeof(WCHAR),
                               (PVOID*)&AllocConsoleRequest->AppPath);
 
 /** Copied from BasepInitConsole **********************************************/
-    InitConsoleProps(AllocConsoleRequest->ConsoleProps);
+    InitConsoleInfo(AllocConsoleRequest->ConsoleStartInfo);
 
-    Length = min(MAX_PATH + 1, Parameters->ImagePathName.Length / sizeof(WCHAR));
+    Length = min(MAX_PATH, Parameters->ImagePathName.Length / sizeof(WCHAR));
     wcsncpy(AllocConsoleRequest->AppPath, Parameters->ImagePathName.Buffer, Length);
     AllocConsoleRequest->AppPath[Length] = L'\0';
 /******************************************************************************/
 
     AllocConsoleRequest->Console = NULL;
     AllocConsoleRequest->CtrlDispatcher = ConsoleControlDispatcher;
+    AllocConsoleRequest->PropDispatcher = PropDialogHandler;
 
     Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                                  CaptureBuffer,
@@ -2004,6 +2005,7 @@ AttachConsole(DWORD dwProcessId)
 
     AttachConsoleRequest->ProcessId = dwProcessId;
     AttachConsoleRequest->CtrlDispatcher = ConsoleControlDispatcher;
+    AttachConsoleRequest->PropDispatcher = PropDialogHandler;
 
     Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                                  NULL,

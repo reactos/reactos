@@ -10,7 +10,11 @@
 
 #define CSR_DEFAULT_CURSOR_SIZE 25
 #define CURSOR_BLINK_TIME 500
-#define DEFAULT_ATTRIB (FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED)
+
+/* Default attributes */
+#define DEFAULT_SCREEN_ATTRIB   (FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED)
+#define DEFAULT_POPUP_ATTRIB    (FOREGROUND_BLUE | FOREGROUND_RED | \
+                                 BACKGROUND_BLUE | BACKGROUND_GREEN | BACKGROUND_RED | BACKGROUND_INTENSITY)
 
 #ifndef WM_APP
 #define WM_APP 0x8000
@@ -42,14 +46,21 @@ typedef struct _CONSOLE_SCREEN_BUFFER
     Object_t Header;                /* Object header */
     LIST_ENTRY ListEntry;           /* Entry in console's list of buffers */
 
-    BYTE *Buffer;                   /* Pointer to screen buffer */
-    USHORT MaxX, MaxY;              /* Size of the entire scrollback buffer */
+    BYTE *Buffer; /* CHAR_INFO */   /* Pointer to screen buffer */
+
+    COORD ScreenBufferSize;         /* Size of this screen buffer */
+    COORD CursorPosition;           /* Current cursor position */
+
     USHORT ShowX, ShowY;            /* Beginning offset for the actual display area */
-    ULONG CurrentX;                 /* Current X cursor position */
-    ULONG CurrentY;                 /* Current Y cursor position */
-    WORD DefaultAttrib;             /* Default char attribute */
     USHORT VirtualY;                /* Top row of buffer being displayed, reported to callers */
-    CONSOLE_CURSOR_INFO CursorInfo;
+
+    BOOLEAN CursorBlinkOn;
+    BOOLEAN ForceCursorOff;
+    ULONG   CursorSize;
+    CONSOLE_CURSOR_INFO CursorInfo; // FIXME: Keep this member or not ??
+
+    WORD ScreenDefaultAttrib;       /* Default screen char attribute */
+    WORD PopupDefaultAttrib;        /* Default popup char attribute */
     USHORT Mode;
 } CONSOLE_SCREEN_BUFFER, *PCONSOLE_SCREEN_BUFFER;
 
@@ -57,10 +68,12 @@ typedef struct _CONSOLE_INPUT_BUFFER
 {
     Object_t Header;                /* Object header */
 
+    ULONG InputBufferSize;          /* Size of this input buffer */
     LIST_ENTRY InputEvents;         /* List head for input event queue */
     HANDLE ActiveEvent;             /* Event set when an input event is added in its queue */
     LIST_ENTRY ReadWaitQueue;       /* List head for the queue of read wait blocks */
-    WORD Mode;                      /* Console Input Buffer mode flags */
+
+    USHORT Mode;                    /* Console Input Buffer mode flags */
 } CONSOLE_INPUT_BUFFER, *PCONSOLE_INPUT_BUFFER;
 
 typedef struct ConsoleInput_t
@@ -92,6 +105,8 @@ typedef struct _CONSOLE
     BOOLEAN LineInsertToggle;               /* Replace character over cursor instead of inserting */
     ULONG LineWakeupMask;                   /* Bitmap of which control characters will end line input */
 
+    BOOLEAN QuickEdit;
+    BOOLEAN InsertMode;
     UINT CodePage;
     UINT OutputCodePage;
 
@@ -105,21 +120,27 @@ typedef struct _CONSOLE
     LIST_ENTRY WriteWaitQueue;              /* List head for the queue of write wait blocks */
 
     DWORD HardwareState;                    /* _GDI_MANAGED, _DIRECT */
+/* BOOLEAN */ ULONG FullScreen; // Give the type of console: GUI (windowed) or TUI (fullscreen)
 
 /**************************** Aliases and Histories ***************************/
     struct _ALIAS_HEADER *Aliases;
     LIST_ENTRY HistoryBuffers;
-    UINT HistoryBufferSize;                 /* Size for newly created history buffers */
-    UINT NumberOfHistoryBuffers;            /* Maximum number of history buffers allowed */
+    ULONG HistoryBufferSize;                /* Size for newly created history buffers */
+    ULONG NumberOfHistoryBuffers;           /* Maximum number of history buffers allowed */
     BOOLEAN HistoryNoDup;                   /* Remove old duplicate history entries */
 
-/****************************** GUI-related data ******************************/
+/******************************* Common UI data *******************************/
+    UNICODE_STRING OriginalTitle;           /* Original title of console, the one when the console leader is launched. It is always NULL-terminated */
     UNICODE_STRING Title;                   /* Title of console. It is always NULL-terminated */
+
+    COORD Size;                             /* Size of the console (different of the size of the screen buffer */
+    COLORREF Colors[16];                    /* Colour palette */
+
+/****************************** GUI-related data ******************************/
     HWND hWindow;                           /* Handle to the console's window */
     HICON hIcon;                            /* Handle to its icon (used when freeing) */
     HICON hIconSm;
-    COORD Size;
-    PVOID GuiData;
+    PVOID GuiData; /* PGUI_CONSOLE_DATA */
 
 } CONSOLE, *PCONSOLE;
 
@@ -149,6 +170,7 @@ typedef struct _CONSOLE_VTBL
     VOID (WINAPI *CleanupConsole)(PCONSOLE Console);
     BOOL (WINAPI *ChangeIcon)(PCONSOLE Console, HICON hWindowIcon);
     NTSTATUS (WINAPI *ResizeBuffer)(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER ScreenBuffer, COORD Size);
+    BOOL (WINAPI *ProcessKeyCallback)(PCONSOLE Console, MSG* msg, BYTE KeyStateMenu, DWORD ShiftState, UINT VirtualKeyCode, BOOL Down);
 } CONSOLE_VTBL, *PCONSOLE_VTBL;
 
 /* CONSOLE_SELECTION_INFO dwFlags values */
@@ -178,13 +200,14 @@ typedef struct _CONSOLE_VTBL
 #define ConioCleanupConsole(Console) (Console)->Vtbl->CleanupConsole(Console)
 #define ConioChangeIcon(Console, hWindowIcon) (Console)->Vtbl->ChangeIcon((Console), (hWindowIcon))
 #define ConioResizeBuffer(Console, Buff, Size) (Console)->Vtbl->ResizeBuffer((Console), (Buff), (Size))
+#define ConioProcessKeyCallback(Console, Msg, KeyStateMenu, ShiftState, VirtualKeyCode, Down) (Console)->Vtbl->ProcessKeyCallback((Console), (Msg), (KeyStateMenu), (ShiftState), (VirtualKeyCode), (Down))
 
 /* console.c */
 VOID WINAPI ConSrvDeleteConsole(PCONSOLE Console);
 VOID WINAPI ConSrvInitConsoleSupport(VOID);
 NTSTATUS WINAPI ConSrvInitConsole(OUT PCONSOLE* NewConsole,
                                   IN LPCWSTR AppPath,
-                                  IN OUT PCONSOLE_PROPS ConsoleProps,
+                                  IN OUT PCONSOLE_START_INFO ConsoleStartInfo,
                                   IN PCSR_PROCESS ConsoleLeaderProcess);
 VOID FASTCALL ConioPause(PCONSOLE Console, UINT Flags);
 VOID FASTCALL ConioUnpause(PCONSOLE Console, UINT Flags);
@@ -202,7 +225,7 @@ VOID FASTCALL ConSrvConsoleCtrlEventTimeout(DWORD Event,
                     (Access), (LockConsole), CONIO_INPUT_BUFFER_MAGIC)
 #define ConSrvReleaseInputBuffer(Buff, IsConsoleLocked) \
     ConSrvReleaseObject(&(Buff)->Header, (IsConsoleLocked))
-void WINAPI ConioProcessKey(MSG *msg, PCONSOLE Console, BOOL TextMode);
+VOID WINAPI ConioProcessKey(PCONSOLE Console, MSG* msg);
 
 /* conoutput.c */
 #define ConioRectHeight(Rect) \
@@ -221,7 +244,11 @@ PBYTE FASTCALL ConioCoordToPointer(PCONSOLE_SCREEN_BUFFER Buf, ULONG X, ULONG Y)
 VOID FASTCALL ConioDrawConsole(PCONSOLE Console);
 NTSTATUS FASTCALL ConioWriteConsole(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER Buff,
                                     CHAR *Buffer, DWORD Length, BOOL Attrib);
-NTSTATUS FASTCALL ConSrvInitConsoleScreenBuffer(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER Buffer);
+NTSTATUS FASTCALL ConSrvCreateScreenBuffer(IN OUT PCONSOLE Console,
+                                           OUT PCONSOLE_SCREEN_BUFFER* Buffer,
+                                           IN COORD ScreenBufferSize,
+                                           IN USHORT ScreenAttrib,
+                                           IN USHORT PopupAttrib);
 VOID WINAPI ConioDeleteScreenBuffer(PCONSOLE_SCREEN_BUFFER Buffer);
 DWORD FASTCALL ConioEffectiveCursorSize(PCONSOLE Console, DWORD Scale);
 

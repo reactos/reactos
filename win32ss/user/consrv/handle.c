@@ -129,11 +129,11 @@ ConSrvInitHandlesTable(IN OUT PCONSOLE_PROCESS_DATA ProcessData,
 
     /* Insert the Input handle */
     Status = ConSrvInsertObject(ProcessData,
-                                  &InputHandle,
-                                  &ProcessData->Console->InputBuffer.Header,
-                                  GENERIC_READ | GENERIC_WRITE,
-                                  TRUE,
-                                  FILE_SHARE_READ | FILE_SHARE_WRITE);
+                                &InputHandle,
+                                &ProcessData->Console->InputBuffer.Header,
+                                GENERIC_READ | GENERIC_WRITE,
+                                TRUE,
+                                FILE_SHARE_READ | FILE_SHARE_WRITE);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to insert the input handle\n");
@@ -144,11 +144,11 @@ ConSrvInitHandlesTable(IN OUT PCONSOLE_PROCESS_DATA ProcessData,
 
     /* Insert the Output handle */
     Status = ConSrvInsertObject(ProcessData,
-                                  &OutputHandle,
-                                  &ProcessData->Console->ActiveBuffer->Header,
-                                  GENERIC_READ | GENERIC_WRITE,
-                                  TRUE,
-                                  FILE_SHARE_READ | FILE_SHARE_WRITE);
+                                &OutputHandle,
+                                &ProcessData->Console->ActiveBuffer->Header,
+                                GENERIC_READ | GENERIC_WRITE,
+                                TRUE,
+                                FILE_SHARE_READ | FILE_SHARE_WRITE);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to insert the output handle\n");
@@ -159,11 +159,11 @@ ConSrvInitHandlesTable(IN OUT PCONSOLE_PROCESS_DATA ProcessData,
 
     /* Insert the Error handle */
     Status = ConSrvInsertObject(ProcessData,
-                                  &ErrorHandle,
-                                  &ProcessData->Console->ActiveBuffer->Header,
-                                  GENERIC_READ | GENERIC_WRITE,
-                                  TRUE,
-                                  FILE_SHARE_READ | FILE_SHARE_WRITE);
+                                &ErrorHandle,
+                                &ProcessData->Console->ActiveBuffer->Header,
+                                GENERIC_READ | GENERIC_WRITE,
+                                TRUE,
+                                FILE_SHARE_READ | FILE_SHARE_WRITE);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to insert the error handle\n");
@@ -405,12 +405,12 @@ ConSrvAllocateConsole(PCONSOLE_PROCESS_DATA ProcessData,
                       PHANDLE pInputHandle,
                       PHANDLE pOutputHandle,
                       PHANDLE pErrorHandle,
-                      PCONSOLE_PROPS ConsoleProps)
+                      PCONSOLE_START_INFO ConsoleStartInfo)
 {
     NTSTATUS Status = STATUS_SUCCESS;
 
     /* Initialize a new Console owned by this process */
-    Status = ConSrvInitConsole(&ProcessData->Console, AppPath, ConsoleProps, ProcessData->Process);
+    Status = ConSrvInitConsole(&ProcessData->Console, AppPath, ConsoleStartInfo, ProcessData->Process);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Console initialization failed\n");
@@ -511,6 +511,7 @@ FASTCALL
 ConSrvRemoveConsole(PCONSOLE_PROCESS_DATA ProcessData)
 {
     PCONSOLE Console;
+    PCONSOLE_PROCESS_DATA NewProcessData;
 
     DPRINT1("ConSrvRemoveConsole\n");
 
@@ -523,9 +524,21 @@ ConSrvRemoveConsole(PCONSOLE_PROCESS_DATA ProcessData)
     {
         DPRINT1("ConSrvRemoveConsole - Console->ReferenceCount = %lu - We are going to decrement it !\n", Console->ReferenceCount);
         ProcessData->Console = NULL;
+
         EnterCriticalSection(&Console->Lock);
         DPRINT1("ConSrvRemoveConsole - Locking OK\n");
+
+        /* Remove ourselves from the console's list of processes */
         RemoveEntryList(&ProcessData->ConsoleLink);
+
+        /* Update the console leader process */
+        NewProcessData = CONTAINING_RECORD(Console->ProcessList.Blink,
+                                           CONSOLE_PROCESS_DATA,
+                                           ConsoleLink);
+        Console->ConsoleLeaderCID = NewProcessData->Process->ClientId;
+        SetConsoleWndConsoleLeaderCID(Console);
+
+        /* Release the console */
         ConSrvReleaseConsole(Console, TRUE);
         //CloseHandle(ProcessData->ConsoleEvent);
         //ProcessData->ConsoleEvent = NULL;
@@ -613,7 +626,6 @@ ConSrvNewProcess(PCSR_PROCESS SourceProcess,
     TargetProcessData->HandleTableSize = 0;
     TargetProcessData->HandleTable = NULL;
 
-    /**** HACK !!!! ****/ RtlZeroMemory(&TargetProcessData->HandleTableLock, sizeof(RTL_CRITICAL_SECTION));
     RtlInitializeCriticalSection(&TargetProcessData->HandleTableLock);
 
     /* Do nothing if the source process is NULL */
@@ -700,7 +712,7 @@ ConSrvConnect(IN PCSR_PROCESS CsrProcess,
                                        &ConnectInfo->InputHandle,
                                        &ConnectInfo->OutputHandle,
                                        &ConnectInfo->ErrorHandle,
-                                       &ConnectInfo->ConsoleProps);
+                                       &ConnectInfo->ConsoleStartInfo);
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("Console allocation failed\n");
@@ -730,6 +742,10 @@ ConSrvConnect(IN PCSR_PROCESS CsrProcess,
 
     /* Input Wait Handle */
     ConnectInfo->InputWaitHandle = ProcessData->ConsoleEvent;
+
+    /* Set the Property Dialog Handler */
+    ProcessData->PropDispatcher = ConnectInfo->PropDispatcher;
+    DPRINT("CONSRV: PropDispatcher address: %x\n", ProcessData->PropDispatcher);
 
     /* Set the Ctrl Dispatcher */
     ProcessData->CtrlDispatcher = ConnectInfo->CtrlDispatcher;
@@ -831,11 +847,11 @@ CSR_API(SrvDuplicateHandle)
     }
 
     ApiMessage->Status = ConSrvInsertObject(ProcessData,
-                                              &DuplicateHandleRequest->ConsoleHandle, // Use the new handle value!
-                                              Entry->Object,
-                                              DesiredAccess,
-                                              DuplicateHandleRequest->Inheritable,
-                                              Entry->ShareMode);
+                                            &DuplicateHandleRequest->ConsoleHandle, // Use the new handle value!
+                                            Entry->Object,
+                                            DesiredAccess,
+                                            DuplicateHandleRequest->Inheritable,
+                                            Entry->ShareMode);
     if (NT_SUCCESS(ApiMessage->Status) &&
         DuplicateHandleRequest->Options & DUPLICATE_CLOSE_SOURCE)
     {

@@ -1,4 +1,5 @@
 
+include_directories(${REACTOS_SOURCE_DIR}/win32ss/user/consrv)
 
 spec2def(console.dll console.spec)
 

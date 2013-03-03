@@ -26,6 +26,12 @@ BasepUninitConsole(VOID);
 VOID WINAPI
 InitConsoleCtrlHandling(VOID);
 
+DWORD WINAPI
+ConsoleControlDispatcher(IN LPVOID lpThreadParameter);
+
+DWORD WINAPI
+PropDialogHandler(IN LPVOID lpThreadParameter);
+
 HANDLE WINAPI
 DuplicateConsoleHandle(HANDLE hConsole,
                        DWORD  dwDesiredAccess,
@@ -45,7 +51,7 @@ HANDLE FASTCALL
 TranslateStdHandle(HANDLE hHandle);
 
 VOID
-InitConsoleProps(IN OUT PCONSOLE_PROPS ConsoleProps);
+InitConsoleInfo(IN OUT PCONSOLE_START_INFO ConsoleStartInfo);
 
 LPCWSTR
 IntCheckForConsoleFileName(IN LPCWSTR pszName,

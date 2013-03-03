@@ -10,6 +10,9 @@
 
 #include <k32.h>
 
+// For Control Panel Applet
+#include <cpl.h>
+
 #define NDEBUG
 #include <debug.h>
 
@@ -19,8 +22,10 @@
 RTL_CRITICAL_SECTION ConsoleLock;
 BOOL ConsoleInitialized = FALSE;
 
-extern DWORD WINAPI ConsoleControlDispatcher(IN LPVOID lpThreadParameter);
 extern HANDLE InputWaitHandle;
+
+static HMODULE ConsoleLibrary = NULL;
+static BOOL AlreadyDisplayingProps = FALSE;
 
 #define WIN_OBJ_DIR L"\\Windows"
 #define SESSION_DIR L"\\Sessions"
@@ -28,45 +33,122 @@ extern HANDLE InputWaitHandle;
 
 /* FUNCTIONS ******************************************************************/
 
+DWORD
+WINAPI
+PropDialogHandler(IN LPVOID lpThreadParameter)
+{
+    // NOTE: lpThreadParameter corresponds to the client shared section handle.
+
+    APPLET_PROC CPLFunc;
+
+    /*
+     * Do not launch more than once the console property dialog applet,
+     * or (albeit less probable), if we are not initialized.
+     */
+    if (!ConsoleInitialized || AlreadyDisplayingProps)
+    {
+        /* Close the associated client shared section handle if needed */
+        if (lpThreadParameter)
+        {
+            CloseHandle((HANDLE)lpThreadParameter);
+        }
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    AlreadyDisplayingProps = TRUE;
+
+    /* Load the Control Applet if needed */
+    if (ConsoleLibrary == NULL)
+    {
+        WCHAR szBuffer[MAX_PATH];
+
+        GetWindowsDirectoryW(szBuffer, MAX_PATH);
+        wcscat(szBuffer, L"\\system32\\console.dll");
+        ConsoleLibrary = LoadLibraryW(szBuffer);
+
+        if (ConsoleLibrary == NULL)
+        {
+            DPRINT1("Failed to load console.dll");
+            AlreadyDisplayingProps = FALSE;
+            return STATUS_UNSUCCESSFUL;
+        }
+    }
+
+    /* Load its main function */
+    CPLFunc = (APPLET_PROC)GetProcAddress(ConsoleLibrary, "CPlApplet");
+    if (CPLFunc == NULL)
+    {
+        DPRINT("Error: Console.dll misses CPlApplet export\n");
+        AlreadyDisplayingProps = FALSE;
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    if (CPLFunc(NULL, CPL_INIT, 0, 0) == FALSE)
+    {
+        DPRINT("Error: failed to initialize console.dll\n");
+        AlreadyDisplayingProps = FALSE;
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    if (CPLFunc(NULL, CPL_GETCOUNT, 0, 0) != 1)
+    {
+        DPRINT("Error: console.dll returned unexpected CPL count\n");
+        AlreadyDisplayingProps = FALSE;
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    CPLFunc(NULL, CPL_DBLCLK, (LPARAM)lpThreadParameter, 0);
+    CPLFunc(NULL, CPL_EXIT  , 0, 0);
+
+    AlreadyDisplayingProps = FALSE;
+    return STATUS_SUCCESS;
+}
+
+
 VOID
-InitConsoleProps(IN OUT PCONSOLE_PROPS ConsoleProps)
+InitConsoleInfo(IN OUT PCONSOLE_START_INFO ConsoleStartInfo)
 {
     STARTUPINFOW si;
 
     GetStartupInfoW(&si);
 
-    ConsoleProps->dwStartupFlags = si.dwFlags;
+    ConsoleStartInfo->dwStartupFlags = si.dwFlags;
     if (si.dwFlags & STARTF_USEFILLATTRIBUTE)
     {
-        ConsoleProps->FillAttribute = si.dwFillAttribute;
+        ConsoleStartInfo->FillAttribute = si.dwFillAttribute;
     }
     if (si.dwFlags & STARTF_USECOUNTCHARS)
     {
-        ConsoleProps->ScreenBufferSize.X = (SHORT)(si.dwXCountChars);
-        ConsoleProps->ScreenBufferSize.Y = (SHORT)(si.dwYCountChars);
+        ConsoleStartInfo->ScreenBufferSize.X = (SHORT)(si.dwXCountChars);
+        ConsoleStartInfo->ScreenBufferSize.Y = (SHORT)(si.dwYCountChars);
     }
     if (si.dwFlags & STARTF_USESHOWWINDOW)
     {
-        ConsoleProps->ShowWindow = si.wShowWindow;
+        ConsoleStartInfo->ShowWindow = si.wShowWindow;
     }
     if (si.dwFlags & STARTF_USEPOSITION)
     {
-        ConsoleProps->ConsoleWindowOrigin.x = (LONG)(si.dwX);
-        ConsoleProps->ConsoleWindowOrigin.y = (LONG)(si.dwY);
+        ConsoleStartInfo->ConsoleWindowOrigin.x = (LONG)(si.dwX);
+        ConsoleStartInfo->ConsoleWindowOrigin.y = (LONG)(si.dwY);
     }
     if (si.dwFlags & STARTF_USESIZE)
     {
-        ConsoleProps->ConsoleWindowSize.cx = (LONG)(si.dwXSize);
-        ConsoleProps->ConsoleWindowSize.cy = (LONG)(si.dwYSize);
+        ConsoleStartInfo->ConsoleWindowSize.cx = (LONG)(si.dwXSize);
+        ConsoleStartInfo->ConsoleWindowSize.cy = (LONG)(si.dwYSize);
     }
+    /*
+    if (si.dwFlags & STARTF_RUNFULLSCREEN)
+    {
+    }
+    */
 
     if (si.lpTitle)
     {
-        wcsncpy(ConsoleProps->ConsoleTitle, si.lpTitle, MAX_PATH + 1);
+        wcsncpy(ConsoleStartInfo->ConsoleTitle, si.lpTitle, MAX_PATH + 1);
     }
     else
     {
-        ConsoleProps->ConsoleTitle[0] = L'\0';
+        ConsoleStartInfo->ConsoleTitle[0] = L'\0';
     }
 }
 
@@ -102,7 +184,7 @@ BasepInitConsole(VOID)
         Parameters->ConsoleHandle = NULL;
         ConnectInfo.ConsoleNeeded = FALSE; // ConsoleNeeded is used for knowing whether or not this is a CUI app.
 
-        ConnectInfo.ConsoleProps.ConsoleTitle[0] = L'\0';
+        ConnectInfo.ConsoleStartInfo.ConsoleTitle[0] = L'\0';
         ConnectInfo.AppPath[0] = L'\0';
     }
     else
@@ -110,9 +192,9 @@ BasepInitConsole(VOID)
         SIZE_T Length = 0;
         LPCWSTR ExeName;
 
-        InitConsoleProps(&ConnectInfo.ConsoleProps);
+        InitConsoleInfo(&ConnectInfo.ConsoleStartInfo);
 
-        Length = min(sizeof(ConnectInfo.AppPath) / sizeof(ConnectInfo.AppPath[0]),
+        Length = min(sizeof(ConnectInfo.AppPath) / sizeof(ConnectInfo.AppPath[0]) - 1,
                      Parameters->ImagePathName.Length / sizeof(WCHAR));
         wcsncpy(ConnectInfo.AppPath, Parameters->ImagePathName.Buffer, Length);
         ConnectInfo.AppPath[Length] = L'\0';
@@ -143,7 +225,7 @@ BasepInitConsole(VOID)
             /* We'll get the real one soon */
             DPRINT("Creating new invisible console\n");
             Parameters->ConsoleHandle = NULL;
-            ConnectInfo.ConsoleProps.ShowWindow = SW_HIDE;
+            ConnectInfo.ConsoleStartInfo.ShowWindow = SW_HIDE;
         }
         else
         {
@@ -158,9 +240,12 @@ BasepInitConsole(VOID)
     /* Now use the proper console handle */
     ConnectInfo.Console = Parameters->ConsoleHandle;
 
-    /* Initialize Console Ctrl Handler */
+    /* Initialize the Console Ctrl Handler */
     InitConsoleCtrlHandling();
     ConnectInfo.CtrlDispatcher = ConsoleControlDispatcher;
+
+    /* Initialize the Property Dialog Handler */
+    ConnectInfo.PropDispatcher = PropDialogHandler;
 
     /* Setup the right Object Directory path */
     if (!SessionId)
@@ -233,6 +318,8 @@ BasepUninitConsole(VOID)
     /* Delete our critical section if we were initialized */
     if (ConsoleInitialized == TRUE)
     {
+        if (ConsoleLibrary) FreeLibrary(ConsoleLibrary);
+
         ConsoleInitialized = FALSE;
         RtlDeleteCriticalSection(&ConsoleLock);
     }

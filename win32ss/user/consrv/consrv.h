@@ -25,6 +25,7 @@
 #include <winuser.h>
 #define NTOS_MODE_USER
 #include <ndk/iofuncs.h>
+#include <ndk/mmfuncs.h>
 #include <ndk/obfuncs.h>
 #include <ndk/psfuncs.h>
 #include <ndk/setypes.h>
@@ -41,9 +42,6 @@
 #include <win/conmsg.h>
 
 #include "resource.h"
-
-/* Shared header with console.dll */
-#include "console.h"
 
 
 extern HINSTANCE ConSrvDllInstance;
@@ -93,6 +91,7 @@ typedef struct _CONSOLE_PROCESS_DATA
     PCONSOLE_IO_HANDLE HandleTable; // Length-varying table
 
     LPTHREAD_START_ROUTINE CtrlDispatcher;
+    LPTHREAD_START_ROUTINE PropDispatcher; // We hold the property dialog handler there, till all the GUI thingie moves out from CSRSS.
 } CONSOLE_PROCESS_DATA, *PCONSOLE_PROCESS_DATA;
 
 
@@ -182,7 +181,7 @@ NTSTATUS FASTCALL ConSrvAllocateConsole(PCONSOLE_PROCESS_DATA ProcessData,
                                         PHANDLE pInputHandle,
                                         PHANDLE pOutputHandle,
                                         PHANDLE pErrorHandle,
-                                        PCONSOLE_PROPS ConsoleProps);
+                                        PCONSOLE_START_INFO ConsoleStartInfo);
 NTSTATUS FASTCALL ConSrvInheritConsole(PCONSOLE_PROCESS_DATA ProcessData,
                                        struct _CONSOLE* Console,
                                        BOOL CreateNewHandlesTable,

@@ -112,7 +112,7 @@ typedef enum _CONSRV_API_NUMBER
 } CONSRV_API_NUMBER, *PCONSRV_API_NUMBER;
 
 
-typedef struct _CONSOLE_PROPS
+typedef struct _CONSOLE_START_INFO
 {
     DWORD dwStartupFlags;
     DWORD FillAttribute;
@@ -122,14 +122,14 @@ typedef struct _CONSOLE_PROPS
     SIZE  ConsoleWindowSize;
     // UNICODE_STRING ConsoleTitle;
     WCHAR ConsoleTitle[MAX_PATH + 1];
-} CONSOLE_PROPS, *PCONSOLE_PROPS;
+} CONSOLE_START_INFO, *PCONSOLE_START_INFO;
 
 typedef struct _CONSOLE_CONNECTION_INFO
 {
     BOOL ConsoleNeeded; // Used for GUI apps only.
 
     /* Adapted from CONSOLE_ALLOCCONSOLE */
-    CONSOLE_PROPS ConsoleProps;
+    CONSOLE_START_INFO ConsoleStartInfo;
     WCHAR AppPath[MAX_PATH + 1];
 
     HANDLE Console; // ConsoleHandle // In fact, it is a PCSRSS_CONSOLE <-- correct that !!
@@ -138,11 +138,8 @@ typedef struct _CONSOLE_CONNECTION_INFO
     HANDLE ErrorHandle;
     HANDLE InputWaitHandle;
     LPTHREAD_START_ROUTINE CtrlDispatcher;
+    LPTHREAD_START_ROUTINE PropDispatcher;
 } CONSOLE_CONNECTION_INFO, *PCONSOLE_CONNECTION_INFO;
-
-
-#define CONSOLE_INPUT_MODE_VALID    0x0f
-#define CONSOLE_OUTPUT_MODE_VALID   0x03
 
 
 typedef struct
@@ -182,8 +179,8 @@ typedef struct
 
 typedef struct
 {
-    PCONSOLE_PROPS ConsoleProps;
-    LPWSTR AppPath;
+    PCONSOLE_START_INFO ConsoleStartInfo;
+    LPWSTR AppPath; // Length: MAX_PATH + 1
 
     HANDLE Console; // ConsoleHandle // In fact, it is a PCSRSS_CONSOLE <-- correct that !!
     HANDLE InputHandle;
@@ -191,6 +188,7 @@ typedef struct
     HANDLE ErrorHandle;
     HANDLE InputWaitHandle;
     LPTHREAD_START_ROUTINE CtrlDispatcher;
+    LPTHREAD_START_ROUTINE PropDispatcher;
 } CONSOLE_ALLOCCONSOLE, *PCONSOLE_ALLOCCONSOLE;
 
 typedef struct
@@ -202,6 +200,7 @@ typedef struct
     HANDLE ErrorHandle;
     HANDLE InputWaitHandle;
     LPTHREAD_START_ROUTINE CtrlDispatcher;
+    LPTHREAD_START_ROUTINE PropDispatcher;
 } CONSOLE_ATTACHCONSOLE, *PCONSOLE_ATTACHCONSOLE;
 
 typedef struct

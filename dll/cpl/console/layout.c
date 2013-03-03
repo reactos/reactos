@@ -8,8 +8,36 @@
 
 #include "console.h"
 
+// TODO: Use ReactOS output
+const TCHAR szPreviewText[] = \
+    _T("C:\\ReactOS> dir                       \n") \
+    _T("SYSTEM       <DIR>     10-01-99   5:00a\n") \
+    _T("SYSTEM32     <DIR>     10-01-99   5:00a\n") \
+    _T("README   TXT     26926 10-01-99   5:00a\n") \
+    _T("WINDOWS  BMP     46080 10-01-99   5:00a\n") \
+    _T("NOTEPAD  EXE    337232 10-01-99   5:00a\n") \
+    _T("CLOCK    AVI     39594 10-01-99   5:00p\n") \
+    _T("WIN      INI      7005 10-01-99   5:00a\n");
+/*
+const TCHAR szPreviewText[] = \
+    _T("C:\\ReactOS> dir                       \n") \
+    _T("02-18-13  05:00a  <DIR>    system      \n") \
+    _T("02-18-13  05:00a  <DIR>    system32    \n") \
+    _T("02-18-13  05:00a     26926 readme.txt  \n") \
+    _T("02-18-13  05:00a   3321856 explorer.exe\n") \
+    _T("02-18-13  05:00a       256 setuplog.   \n") \
+    _T("02-18-13  05:00a     18736 vgafonts.cab\n") \
+    _T("02-18-13  05:00a       256 win.ini     \n") \
+    _T("README   TXT     26926 10-01-99   5:00a\n") \
+    _T("CLOCK    AVI     39594 10-01-99   5:00p\n") \
+    _T("WIN      INI      7005 10-01-99   5:00a\n");
+*/
+// IDS_SCREEN_TEXT "C:\\ReactOS> dir\nSYSTEM          <DIR>     10-01-99     5:00\nSYSTEM32      <DIR>     10-01-99     5:00"
 
-void PaintConsole(LPDRAWITEMSTRUCT drawItem, PConsoleInfo pConInfo)
+
+VOID
+PaintConsole(LPDRAWITEMSTRUCT drawItem,
+             PCONSOLE_PROPS pConInfo)
 {
 	HBRUSH hBrush;
 	RECT cRect, fRect;
@@ -22,7 +50,8 @@ void PaintConsole(LPDRAWITEMSTRUCT drawItem, PConsoleInfo pConInfo)
 	sizex = drawItem->rcItem.right - drawItem->rcItem.left;
 	sizey = drawItem->rcItem.bottom - drawItem->rcItem.top;
 
-	if (pConInfo->WindowPosition == UINT_MAX)
+	if ( pConInfo->ci.u.GuiInfo.WindowOrigin.x == MAXDWORD &&
+         pConInfo->ci.u.GuiInfo.WindowOrigin.y == MAXDWORD )
 	{
 		startx = sizex / 3;
 		starty = sizey / 3;
@@ -69,33 +98,30 @@ void PaintConsole(LPDRAWITEMSTRUCT drawItem, PConsoleInfo pConInfo)
 	FillRect(drawItem->hDC, &fRect, GetSysColorBrush(COLOR_SCROLLBAR));
 
 	/* Draw console background */
-	hBrush = CreateSolidBrush(pConInfo->ScreenBackground);
+	hBrush = CreateSolidBrush(pConInfo->ci.Colors[BkgdAttribFromAttrib(pConInfo->ci.ScreenAttrib)]);
 	SetRect(&fRect, startx + 3, starty + 6, cRect.right - 6, cRect.bottom - 3);
 	FillRect(drawItem->hDC, &fRect, hBrush);
 	DeleteObject((HGDIOBJ)hBrush);
 }
 
-void PaintText(LPDRAWITEMSTRUCT drawItem, PConsoleInfo pConInfo)
+VOID PaintText(LPDRAWITEMSTRUCT drawItem,
+               PCONSOLE_PROPS pConInfo)
 {
 	COLORREF pbkColor, ptColor;
 	COLORREF nbkColor, ntColor;
 	HBRUSH hBrush = NULL;
-	TCHAR szText[1024];
-
-	ZeroMemory(szText, sizeof(szText));
-	LoadString(hApplet, IDS_SCREEN_TEXT, szText, sizeof(szText) / sizeof(TCHAR));
 
 	if (drawItem->CtlID == IDC_STATIC_SCREEN_COLOR)
 	{
-		nbkColor = pConInfo->ScreenBackground;
+		nbkColor = pConInfo->ci.Colors[BkgdAttribFromAttrib(pConInfo->ci.ScreenAttrib)];
 		hBrush = CreateSolidBrush(nbkColor);
-		ntColor = pConInfo->ScreenText;
+		ntColor = pConInfo->ci.Colors[TextAttribFromAttrib(pConInfo->ci.ScreenAttrib)];
 	}
 	else if (drawItem->CtlID == IDC_STATIC_POPUP_COLOR)
 	{
-		nbkColor = pConInfo->PopupBackground;
+		nbkColor = pConInfo->ci.Colors[BkgdAttribFromAttrib(pConInfo->ci.PopupAttrib)];
 		hBrush = CreateSolidBrush(nbkColor);
-		ntColor = pConInfo->PopupText;
+		ntColor = pConInfo->ci.Colors[TextAttribFromAttrib(pConInfo->ci.PopupAttrib)];
 	}
 
 	if (!hBrush)
@@ -104,15 +130,10 @@ void PaintText(LPDRAWITEMSTRUCT drawItem, PConsoleInfo pConInfo)
 	}
 
 	FillRect(drawItem->hDC, &drawItem->rcItem, hBrush);
-	if (ntColor == nbkColor)
-	{
-		/* Text has same color -> invisible */
-		return;
-	}
 
 	ptColor = SetTextColor(drawItem->hDC, ntColor);
 	pbkColor = SetBkColor(drawItem->hDC, nbkColor);
-	DrawText(drawItem->hDC, szText, _tcslen(szText), &drawItem->rcItem, 0);
+	DrawText(drawItem->hDC, szPreviewText, _tcslen(szPreviewText), &drawItem->rcItem, 0);
 	SetTextColor(drawItem->hDC, ptColor);
 	SetBkColor(drawItem->hDC, pbkColor);
 	DeleteObject((HGDIOBJ)hBrush);
@@ -121,36 +142,36 @@ void PaintText(LPDRAWITEMSTRUCT drawItem, PConsoleInfo pConInfo)
 
 INT_PTR
 CALLBACK
-LayoutProc(
-  HWND hwndDlg,
-  UINT uMsg,
-  WPARAM wParam,
-  LPARAM lParam
-)
+LayoutProc(HWND hwndDlg,
+           UINT uMsg,
+           WPARAM wParam,
+           LPARAM lParam)
 {
 	LPNMUPDOWN lpnmud;
 	LPPSHNOTIFY lppsn;
-	PConsoleInfo pConInfo = (PConsoleInfo)GetWindowLongPtr(hwndDlg, DWLP_USER);
+	PCONSOLE_PROPS pConInfo = (PCONSOLE_PROPS)GetWindowLongPtr(hwndDlg, DWLP_USER);
 
 	UNREFERENCED_PARAMETER(hwndDlg);
 	UNREFERENCED_PARAMETER(wParam);
 
-	switch(uMsg)
+	switch (uMsg)
 	{
 		case WM_INITDIALOG:
 		{
 			DWORD xres, yres;
 			HDC hDC;
-			pConInfo = (PConsoleInfo) ((LPPROPSHEETPAGE)lParam)->lParam;
+			pConInfo = (PCONSOLE_PROPS)((LPPROPSHEETPAGE)lParam)->lParam;
 			SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pConInfo);
-			SetDlgItemInt(hwndDlg, IDC_EDIT_SCREEN_BUFFER_HEIGHT, HIWORD(pConInfo->ScreenBuffer), FALSE);
-			SetDlgItemInt(hwndDlg, IDC_EDIT_SCREEN_BUFFER_WIDTH, LOWORD(pConInfo->ScreenBuffer), FALSE);
-			SetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_SIZE_HEIGHT, HIWORD(pConInfo->WindowSize), FALSE);
-			SetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_SIZE_WIDTH, LOWORD(pConInfo->WindowSize), FALSE);
+
 			SendMessage(GetDlgItem(hwndDlg, IDC_UPDOWN_SCREEN_BUFFER_HEIGHT), UDM_SETRANGE, 0, (LPARAM)MAKELONG(9999, 1));
 			SendMessage(GetDlgItem(hwndDlg, IDC_UPDOWN_SCREEN_BUFFER_WIDTH), UDM_SETRANGE, 0, (LPARAM)MAKELONG(9999, 1));
 			SendMessage(GetDlgItem(hwndDlg, IDC_UPDOWN_WINDOW_SIZE_HEIGHT), UDM_SETRANGE, 0, (LPARAM)MAKELONG(9999, 1));
 			SendMessage(GetDlgItem(hwndDlg, IDC_UPDOWN_WINDOW_SIZE_WIDTH), UDM_SETRANGE, 0, (LPARAM)MAKELONG(9999, 1));
+
+			SetDlgItemInt(hwndDlg, IDC_EDIT_SCREEN_BUFFER_HEIGHT, pConInfo->ci.ScreenBufferSize.Y, FALSE);
+			SetDlgItemInt(hwndDlg, IDC_EDIT_SCREEN_BUFFER_WIDTH, pConInfo->ci.ScreenBufferSize.X, FALSE);
+			SetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_SIZE_HEIGHT, pConInfo->ci.ConsoleSize.Y, FALSE);
+			SetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_SIZE_WIDTH, pConInfo->ci.ConsoleSize.X, FALSE);
 
 			hDC = GetDC(NULL);
 			xres = GetDeviceCaps(hDC, HORZRES);
@@ -158,10 +179,11 @@ LayoutProc(
 			SendMessage(GetDlgItem(hwndDlg, IDC_UPDOWN_WINDOW_POS_LEFT), UDM_SETRANGE, 0, (LPARAM)MAKELONG(xres, 0));
 			SendMessage(GetDlgItem(hwndDlg, IDC_UPDOWN_WINDOW_POS_TOP), UDM_SETRANGE, 0, (LPARAM)MAKELONG(yres, 0));
 
-			if (pConInfo->WindowPosition != MAXDWORD)
+			if ( pConInfo->ci.u.GuiInfo.WindowOrigin.x != MAXDWORD &&
+                 pConInfo->ci.u.GuiInfo.WindowOrigin.y != MAXDWORD )
 			{
-				SetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_POS_LEFT, LOWORD(pConInfo->WindowPosition), FALSE);
-				SetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_POS_TOP, HIWORD(pConInfo->WindowPosition), FALSE);
+				SetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_POS_LEFT, pConInfo->ci.u.GuiInfo.WindowOrigin.x, FALSE);
+				SetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_POS_TOP, pConInfo->ci.u.GuiInfo.WindowOrigin.y, FALSE);
 			}
 			else
 			{
@@ -281,16 +303,16 @@ LayoutProc(
 					}
 				}
 
-				pConInfo->ScreenBuffer = MAKELONG(swidth, sheight);
-				pConInfo->WindowSize = MAKELONG(wwidth, wheight);
-				pConInfo->WindowPosition = MAKELONG(left, top);
+				pConInfo->ci.ScreenBufferSize = (COORD){swidth, sheight};
+				pConInfo->ci.ConsoleSize = (COORD){wwidth, wheight};
+				pConInfo->ci.u.GuiInfo.WindowOrigin = (POINT){left, top};
 				PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
 			}
 			break;
 		}
 		case WM_COMMAND:
 		{
-			switch(LOWORD(wParam))
+			switch (LOWORD(wParam))
 			{
 				case IDC_EDIT_SCREEN_BUFFER_WIDTH:
 				case IDC_EDIT_SCREEN_BUFFER_HEIGHT:
@@ -328,11 +350,9 @@ LayoutProc(
 							wheight = sheight;
 						}
 
-
-						pConInfo->ScreenBuffer = MAKELONG(swidth, sheight);
-						pConInfo->WindowSize = MAKELONG(wwidth, wheight);
-						pConInfo->WindowPosition = MAKELONG(left, top);
-
+                        pConInfo->ci.ScreenBufferSize = (COORD){swidth, sheight};
+                        pConInfo->ci.ConsoleSize = (COORD){wwidth, wheight};
+                        pConInfo->ci.u.GuiInfo.WindowOrigin = (POINT){left, top};
 						PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
 					}
 					break;
@@ -347,7 +367,7 @@ LayoutProc(
 
 						left = GetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_POS_LEFT, NULL, FALSE);
 						top = GetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_POS_TOP, NULL, FALSE);
-						pConInfo->WindowPosition = MAKELONG(left, top);
+						pConInfo->ci.u.GuiInfo.WindowOrigin = (POINT){left, top};
 						SendMessage((HWND)lParam, BM_SETCHECK, (WPARAM)BST_UNCHECKED, 0);
 						EnableWindow(GetDlgItem(hwndDlg, IDC_EDIT_WINDOW_POS_LEFT), TRUE);
 						EnableWindow(GetDlgItem(hwndDlg, IDC_EDIT_WINDOW_POS_TOP), TRUE);
@@ -356,7 +376,7 @@ LayoutProc(
 					}
 					else if (res == BST_UNCHECKED)
 					{
-						pConInfo->WindowPosition = UINT_MAX;
+                        pConInfo->ci.u.GuiInfo.WindowOrigin = (POINT){UINT_MAX, UINT_MAX};
 						SendMessage((HWND)lParam, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
 						EnableWindow(GetDlgItem(hwndDlg, IDC_EDIT_WINDOW_POS_LEFT), FALSE);
 						EnableWindow(GetDlgItem(hwndDlg, IDC_EDIT_WINDOW_POS_TOP), FALSE);
