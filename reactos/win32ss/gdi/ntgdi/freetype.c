@@ -158,6 +158,39 @@ InitFontSupport(VOID)
     return TRUE;
 }
 
+VOID
+FtSetCoordinateTransform(
+    FT_Face face,
+    PDC pdc)
+{
+    FT_Matrix ftmatrix;
+    PMATRIX pmx;
+    FLOATOBJ efTemp;
+
+    /* Get the DC's world-to-device transformation matrix */
+    pmx = DC_pmxWorldToDevice(pdc);
+
+    /* Create a freetype matrix, by converting to 16.16 fixpoint format */
+    efTemp = pmx->efM11;
+    FLOATOBJ_MulLong(&efTemp, 0x00010000);
+    ftmatrix.xx = FLOATOBJ_GetLong(&efTemp);
+
+    efTemp = pmx->efM12;
+    FLOATOBJ_MulLong(&efTemp, 0x00010000);
+    ftmatrix.xy = FLOATOBJ_GetLong(&efTemp);
+
+    efTemp = pmx->efM21;
+    FLOATOBJ_MulLong(&efTemp, 0x00010000);
+    ftmatrix.yx = FLOATOBJ_GetLong(&efTemp);
+
+    efTemp = pmx->efM22;
+    FLOATOBJ_MulLong(&efTemp, 0x00010000);
+    ftmatrix.yy = FLOATOBJ_GetLong(&efTemp);
+
+    /* Set the transformation matrix */
+    FT_Set_Transform(face, &ftmatrix, 0);
+}
+
 /*
  * IntLoadSystemFonts
  *
@@ -1552,6 +1585,7 @@ ftGdiGetGlyphOutline(
     /* FIXME: Should set character height if neg */
 //                     (TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight == 0 ?
 //                      dc->ppdev->devinfo.lfDefaultFont.lfHeight : abs(TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight)));
+//    FtSetCoordinateTransform(face, dc);
 
     TEXTOBJ_UnlockText(TextObj);
 
@@ -2152,6 +2186,8 @@ TextIntGetTextExtentPoint(PDC dc,
         DPRINT1("Error in setting pixel sizes: %u\n", error);
     }
 
+    FtSetCoordinateTransform(face, dc);
+
     use_kerning = FT_HAS_KERNING(face);
     previous = 0;
 
@@ -2434,6 +2470,7 @@ ftGdiGetTextMetricsW(
                                    /* FIXME: Should set character height if neg */
                                    (TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight == 0 ?
                                    dc->ppdev->devinfo.lfDefaultFont.lfHeight : abs(TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight)));
+        FtSetCoordinateTransform(Face, dc);
         IntUnLockFreeType;
         if (0 != Error)
         {
@@ -3291,6 +3328,8 @@ GreExtTextOutW(
         goto fail;
     }
 
+    FtSetCoordinateTransform(face, dc);
+
     /*
      * Process the vertical alignment and determine the yoff.
      */
@@ -3827,6 +3866,7 @@ NtGdiGetCharABCWidthsW(
                        /* FIXME: Should set character height if neg */
                        (TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight == 0 ?
                        dc->ppdev->devinfo.lfDefaultFont.lfHeight : abs(TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight)));
+    FtSetCoordinateTransform(face, dc);
 
     for (i = FirstChar; i < FirstChar+Count; i++)
     {
@@ -3994,6 +4034,7 @@ NtGdiGetCharWidthW(
                        /* FIXME: Should set character height if neg */
                        (TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight == 0 ?
                        dc->ppdev->devinfo.lfDefaultFont.lfHeight : abs(TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight)));
+    FtSetCoordinateTransform(face, dc);
 
     for (i = FirstChar; i < FirstChar+Count; i++)
     {

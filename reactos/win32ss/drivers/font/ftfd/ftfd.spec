@@ -26,3 +26,4 @@
  @ cdecl FT_Set_Pixel_Sizes()
  @ cdecl FT_Vector_Transform()
  @ cdecl FT_Vector_Unit()
+ @ cdecl FT_Set_Transform()
