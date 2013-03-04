@@ -475,7 +475,7 @@ enum __SAL_YesNo {_SAL_notpresent, _SAL_no, _SAL_maybe, _SAL_yes, _SAL_default};
 //#define _Deref_post_opt_count_(size)
 //#define _Deref_post_opt_count_c_(size)
 //#define _Deref_post_opt_count_x_(size)
-//#define _Deref_post_opt_valid_
+#define _Deref_post_opt_valid_                                      _SAL11_NAME(_Deref_post_opt_valid_) _Group_([SA_Post(Deref=1,Null=SA_Maybe,Notref=1)] [SA_Post(Valid=SA_Yes)])
 //#define _Deref_post_opt_valid_bytecap_(size)
 //#define _Deref_post_opt_valid_bytecap_c_(size)
 //#define _Deref_post_opt_valid_bytecap_x_(size)
@@ -531,7 +531,7 @@ enum __SAL_YesNo {_SAL_notpresent, _SAL_no, _SAL_maybe, _SAL_yes, _SAL_default};
 //#define _Deref_pre_opt_count_(size)
 //#define _Deref_pre_opt_count_c_(size)
 //#define _Deref_pre_opt_count_x_(size)
-//#define _Deref_pre_opt_valid_
+#define _Deref_pre_opt_valid_                                       _SAL11_NAME(_Deref_pre_opt_valid_) _Group_([SA_Pre(Deref=1,Null=SA_Maybe,Notref=1)] [SA_Pre(Valid=SA_Yes)])
 //#define _Deref_pre_opt_valid_bytecap_(size)
 //#define _Deref_pre_opt_valid_bytecap_c_(size)
 //#define _Deref_pre_opt_valid_bytecap_x_(size)
@@ -554,7 +554,7 @@ enum __SAL_YesNo {_SAL_notpresent, _SAL_no, _SAL_maybe, _SAL_yes, _SAL_default};
 //#define _Deref_pre_valid_cap_c_(size)
 //#define _Deref_pre_valid_cap_x_(size)
 //#define _Deref_pre_writeonly_
-//#define _Deref_pre_z_
+#define _Deref_pre_z_                                               _SAL11_NAME(_Deref_pre_z_) _Group_([SA_Pre(Deref=1,Null=SA_No,Notref=1)] [SA_Pre(Deref=1,NullTerminated=SA_Yes)] [SA_Pre(Valid=SA_Yes)])
 //#define _Deref_pre_z_bytecap_(size)
 //#define _Deref_pre_z_bytecap_c_(size)
 //#define _Deref_pre_z_bytecap_x_(size)
@@ -577,7 +577,7 @@ enum __SAL_YesNo {_SAL_notpresent, _SAL_no, _SAL_maybe, _SAL_yes, _SAL_default};
 //#define _Deref_prepost_opt_cap_x_(size)
 //#define _Deref_prepost_opt_count_(size)
 //#define _Deref_prepost_opt_count_x_(size)
-//#define _Deref_prepost_opt_valid_
+#define _Deref_prepost_opt_valid_                                   _SAL11_NAME(_Deref_prepost_opt_valid_) _Group_(_Deref_pre_opt_valid_ _Deref_post_opt_valid_)
 //#define _Deref_prepost_opt_valid_bytecap_(size)
 //#define _Deref_prepost_opt_valid_bytecap_x_(size)
 //#define _Deref_prepost_opt_valid_cap_(size)
@@ -590,7 +590,7 @@ enum __SAL_YesNo {_SAL_notpresent, _SAL_no, _SAL_maybe, _SAL_yes, _SAL_default};
 //#define _Deref_prepost_valid_bytecap_x_(size)
 //#define _Deref_prepost_valid_cap_(size)
 //#define _Deref_prepost_valid_cap_x_(size)
-//#define _Deref_prepost_z_
+#define _Deref_prepost_z_                                           _SAL11_NAME(_Deref_prepost_z_) _Group_(_Deref_pre_z_ _Deref_post_z_)
 //#define _Deref_prepost_z_bytecap_(size)
 //#define _Deref_prepost_z_cap_(size)
 //#define _Deref_ret_bound_
@@ -777,8 +777,8 @@ enum __SAL_YesNo {_SAL_notpresent, _SAL_no, _SAL_maybe, _SAL_yes, _SAL_default};
 //#define _Out_ptrdiff_cap_(size)
 #define _Out_range_(lb,ub)                                          _SAL2_NAME(_Out_range_) _Group_(_Post_ _SA_annotes2(SAL_range, lb, ub))
 #define _Out_writes_(size)                                          _SAL2_NAME(_Out_writes_) _Group_(_Pre_cap_(size) [SA_Post(Valid=SA_Yes)])
-//#define _Out_writes_all_(size)
-//#define _Out_writes_all_opt_(size)
+#define _Out_writes_all_(size)                                      _SAL2_NAME(_Out_writes_all_) _Group_(_Out_writes_to_(_Old_(size), _Old_(size)))
+#define _Out_writes_all_opt_(size)                                  _SAL2_NAME(_Out_writes_all_opt_) _Group_(_Out_writes_to_opt_(_Old_(size), _Old_(size)))
 #define _Out_writes_bytes_(size)                                    _SAL2_NAME(_Out_writes_bytes_) _Group_(_Pre_bytecap_(size) [SA_Post(Valid=SA_Yes)])
 #define _Out_writes_bytes_all_(size)                                _SAL2_NAME(_Out_writes_bytes_all_) _Group_(_Out_writes_bytes_to_(_Old_(size), _Old_(size)))
 #define _Out_writes_bytes_all_opt_(size)                            _SAL2_NAME(_Out_writes_bytes_all_opt_) _Group_(_Out_writes_bytes_to_opt_(_Old_(size), _Old_(size)))
