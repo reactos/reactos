@@ -61,6 +61,9 @@ static NTSTATUS
 LsapLogonUser(PLSA_API_MSG RequestMsg,
               PLSAP_LOGON_CONTEXT LogonContext)
 {
+    PVOID LocalAuthInfo = NULL;
+    NTSTATUS Status = STATUS_SUCCESS;
+
     TRACE("(%p %p)\n", RequestMsg, LogonContext);
 
     TRACE("LogonType: %lu\n", RequestMsg->LogonUser.Request.LogonType);
@@ -68,6 +71,48 @@ LsapLogonUser(PLSA_API_MSG RequestMsg,
     TRACE("AuthenticationInformation: %p\n", RequestMsg->LogonUser.Request.AuthenticationInformation);
     TRACE("AuthenticationInformationLength: %lu\n", RequestMsg->LogonUser.Request.AuthenticationInformationLength);
 
+    LocalAuthInfo = RtlAllocateHeap(RtlGetProcessHeap(),
+                                    HEAP_ZERO_MEMORY,
+                                    RequestMsg->LogonUser.Request.AuthenticationInformationLength);
+    if (LocalAuthInfo == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
+
+    /* Read the authentication info from the callers adress space */
+    Status = NtReadVirtualMemory(LogonContext->ClientProcessHandle,
+                                 RequestMsg->LogonUser.Request.AuthenticationInformation,
+                                 LocalAuthInfo,
+                                 RequestMsg->LogonUser.Request.AuthenticationInformationLength,
+                                 NULL);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    if (RequestMsg->LogonUser.Request.LogonType == Interactive ||
+        RequestMsg->LogonUser.Request.LogonType == Batch ||
+        RequestMsg->LogonUser.Request.LogonType == Service)
+    {
+        PMSV1_0_INTERACTIVE_LOGON LogonInfo;
+        ULONG_PTR PtrOffset;
+
+        LogonInfo = (PMSV1_0_INTERACTIVE_LOGON)LocalAuthInfo;
+
+        /* Fix-up pointers in the authentication info */
+        PtrOffset = (ULONG_PTR)LocalAuthInfo - (ULONG_PTR)RequestMsg->LogonUser.Request.AuthenticationInformation;
+
+        LogonInfo->LogonDomainName.Buffer = (PWSTR)((ULONG_PTR)LogonInfo->LogonDomainName.Buffer + PtrOffset);
+        LogonInfo->UserName.Buffer = (PWSTR)((ULONG_PTR)LogonInfo->UserName.Buffer + PtrOffset);
+        LogonInfo->Password.Buffer = (PWSTR)((ULONG_PTR)LogonInfo->Password.Buffer + PtrOffset);
+
+        TRACE("Domain: %S\n", LogonInfo->LogonDomainName.Buffer);
+        TRACE("User: %S\n", LogonInfo->UserName.Buffer);
+        TRACE("Password: %S\n", LogonInfo->Password.Buffer);
+    }
+    else
+    {
+        FIXME("LogonType %lu is not supported yet!\n", RequestMsg->LogonUser.Request.LogonType);
+    }
 
 
 
@@ -78,7 +123,11 @@ LsapLogonUser(PLSA_API_MSG RequestMsg,
 //     QUOTA_LIMITS Quotas;
     RequestMsg->LogonUser.Reply.SubStatus = STATUS_SUCCESS;
 
-    return STATUS_SUCCESS;
+done:
+    if (LocalAuthInfo != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, LocalAuthInfo);
+
+    return Status;
 }
 
 
@@ -86,13 +135,25 @@ static NTSTATUS
 LsapLookupAuthenticationPackage(PLSA_API_MSG RequestMsg,
                                 PLSAP_LOGON_CONTEXT LogonContext)
 {
-    TRACE("(%p %p)\n", RequestMsg, LogonContext);
+    STRING PackageName;
+    ULONG PackageId;
+    NTSTATUS Status;
 
+    TRACE("(%p %p)\n", RequestMsg, LogonContext);
     TRACE("PackageName: %s\n", RequestMsg->LookupAuthenticationPackage.Request.PackageName);
 
-    RequestMsg->LookupAuthenticationPackage.Reply.Package = 0x12345678;
+    PackageName.Length = RequestMsg->LookupAuthenticationPackage.Request.PackageNameLength;
+    PackageName.MaximumLength = LSASS_MAX_PACKAGE_NAME_LENGTH + 1;
+    PackageName.Buffer = RequestMsg->LookupAuthenticationPackage.Request.PackageName;
 
-    return STATUS_SUCCESS;
+    Status = LsapLookupAuthenticationPackageByName(&PackageName,
+                                                   &PackageId);
+    if (NT_SUCCESS(Status))
+    {
+        RequestMsg->LookupAuthenticationPackage.Reply.Package = PackageId;
+    }
+
+    return Status;
 }
 
 

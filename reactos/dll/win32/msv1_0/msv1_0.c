@@ -13,6 +13,11 @@
 WINE_DEFAULT_DEBUG_CHANNEL(msv1_0);
 
 
+/* GLOBALS *****************************************************************/
+
+LSA_DISPATCH_TABLE DispatchTable;
+
+
 /* FUNCTIONS ***************************************************************/
 
 /*
@@ -80,10 +85,35 @@ LsaApInitializePackage(IN ULONG AuthenticationPackageId,
                        IN PLSA_STRING Confidentiality OPTIONAL,
                        OUT PLSA_STRING *AuthenticationPackageName)
 {
+    PANSI_STRING NameString;
+    PCHAR NameBuffer;
+
     TRACE("(%lu %p %p %p %p)\n",
           AuthenticationPackageId, LsaDispatchTable, Database,
           Confidentiality, AuthenticationPackageName);
 
+    /* Get the dispatch table entries */
+    DispatchTable.AllocateLsaHeap = LsaDispatchTable->AllocateLsaHeap;
+    DispatchTable.FreeLsaHeap = LsaDispatchTable->FreeLsaHeap;
+
+
+    /* Return the package name */
+    NameString = DispatchTable.AllocateLsaHeap(sizeof(LSA_STRING));
+    if (NameString == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    NameBuffer = DispatchTable.AllocateLsaHeap(sizeof(MSV1_0_PACKAGE_NAME));
+    if (NameBuffer == NULL)
+    {
+        DispatchTable.FreeLsaHeap(NameString);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    strcpy(NameBuffer, MSV1_0_PACKAGE_NAME);
+
+    RtlInitAnsiString(NameString, NameBuffer);
+
+    *AuthenticationPackageName = (PLSA_STRING)NameString;
 
     return STATUS_SUCCESS;
 }

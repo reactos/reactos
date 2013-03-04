@@ -85,6 +85,10 @@ extern UNICODE_STRING AccountDomainName;
 NTSTATUS
 LsapInitAuthPackages(VOID);
 
+NTSTATUS
+LsapLookupAuthenticationPackageByName(IN PSTRING PackageName,
+                                      OUT PULONG PackageId);
+
 /* authport.c */
 NTSTATUS
 StartAuthenticationPort(VOID);
