@@ -609,7 +609,7 @@ enum __SAL_YesNo {_SAL_notpresent, _SAL_no, _SAL_maybe, _SAL_yes, _SAL_default};
 #define _Field_size_bytes_part_opt_(size, count)                    _SAL2_NAME(_Field_size_bytes_part_opt_) _Group_(_Maybenull_ _Writable_bytes_(size) _Readable_bytes_(count))
 //#define _Field_size_full_(size)
 //#define _Field_size_full_opt_(size)
-//#define _Field_size_part_(size, count)
+#define _Field_size_part_(size,count)                               _SAL2_NAME(_Field_size_part_) _Group_(_Notnull_ _Writable_elements_(size) _Readable_elements_(count))
 //#define _Field_size_part_opt_(size, count)
 //#define _Field_z_
 #define _Function_class_(x)                                         _SA_annotes1(SAL_functionClassNew, _SA_SPECSTRIZE(x))
