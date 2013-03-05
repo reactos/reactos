@@ -539,7 +539,7 @@ NtGdiGetTextMetricsW(
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                 SetLastNtError(_SEH2_GetExceptionCode());
-                return FALSE;
+                _SEH2_YIELD(return FALSE);
             }
             _SEH2_END
 
