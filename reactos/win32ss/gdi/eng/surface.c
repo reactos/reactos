@@ -279,7 +279,7 @@ EngCreateBitmap(
     _In_ LONG lWidth,
     _In_ ULONG iFormat,
     _In_ ULONG fl,
-    _In_ PVOID pvBits)
+    _In_opt_ PVOID pvBits)
 {
     PSURFACE psurf;
     HBITMAP hbmp;
@@ -479,7 +479,7 @@ EngModifySurface(
 BOOL
 APIENTRY
 EngDeleteSurface(
-    _In_ HSURF hsurf)
+    _In_ _Post_ptr_invalid_ HSURF hsurf)
 {
     PSURFACE psurf;
 
@@ -537,7 +537,7 @@ NtGdiEngUnlockSurface(IN SURFOBJ *pso)
 VOID
 APIENTRY
 EngUnlockSurface(
-    _In_ SURFOBJ *pso)
+    _In_ _Post_ptr_invalid_ SURFOBJ *pso)
 {
     if (pso != NULL)
     {

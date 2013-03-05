@@ -1169,6 +1169,7 @@ APIENTRY
 NtGdiGetColorSpaceforBitmap(
     _In_ HBITMAP hsurf);
 
+_Success_(return != FALSE)
 W32KAPI
 BOOL
 APIENTRY
@@ -2253,6 +2254,7 @@ NtGdiGetTextExtent(
     _Out_ LPSIZE psize,
     _In_ UINT flOpts);
 
+_Success_(return != FALSE)
 W32KAPI
 BOOL
 APIENTRY
@@ -2372,6 +2374,7 @@ NtGdiMoveTo(
     _In_ INT y,
     _Out_opt_ LPPOINT pptOut);
 
+_Success_(return != 0)
 W32KAPI
 INT
 APIENTRY

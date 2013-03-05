@@ -312,6 +312,12 @@ NtGdiExtCreatePen(
 
     if (dwStyleCount > 0)
     {
+        if (pUnsafeStyle == NULL)
+        {
+            EngSetLastError(ERROR_INVALID_PARAMETER);
+            return 0;
+        }
+
         pSafeStyle = ExAllocatePoolWithTag(NonPagedPool,
                                            dwStyleCount * sizeof(DWORD),
                                            GDITAG_PENSTYLE);

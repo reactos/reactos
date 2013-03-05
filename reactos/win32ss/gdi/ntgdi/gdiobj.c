@@ -1066,11 +1066,10 @@ INT
 APIENTRY
 NtGdiExtGetObjectW(
     IN HANDLE hobj,
-    IN INT cbCount,
+    IN INT cjBufferSize,
     OUT LPVOID lpBuffer)
 {
-    INT iRetCount = 0;
-    INT cbCopyCount;
+    UINT iResult, cjMaxSize;
     union
     {
         BITMAP bitmap;
@@ -1083,33 +1082,33 @@ NtGdiExtGetObjectW(
     } object;
 
     /* Normalize to the largest supported object size */
-    cbCount = min((UINT)cbCount, sizeof(object));
+    cjMaxSize = min((UINT)cjBufferSize, sizeof(object));
 
     /* Now do the actual call */
-    iRetCount = GreGetObject(hobj, cbCount, lpBuffer ? &object : NULL);
-    cbCopyCount = min((UINT)cbCount, (UINT)iRetCount);
+    iResult = GreGetObject(hobj, cjMaxSize, lpBuffer ? &object : NULL);
 
-    /* Make sure we have a buffer and a copy size */
-    if ((cbCopyCount) && (lpBuffer))
+    /* Check if we have a buffer and data */
+    if ((lpBuffer != NULL) && (iResult != 0))
     {
         /* Enter SEH for buffer transfer */
         _SEH2_TRY
         {
             /* Probe the buffer and copy it */
-            ProbeForWrite(lpBuffer, cbCopyCount, sizeof(WORD));
-            RtlCopyMemory(lpBuffer, &object, cbCopyCount);
+            cjMaxSize = min(cjMaxSize, iResult);
+            ProbeForWrite(lpBuffer, cjMaxSize, sizeof(WORD));
+            RtlCopyMemory(lpBuffer, &object, cjMaxSize);
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Clear the return value.
              * Do *NOT* set last error here! */
-            iRetCount = 0;
+            iResult = 0;
         }
         _SEH2_END;
     }
 
     /* Return the count */
-    return iRetCount;
+    return iResult;
 }
 
 W32KAPI

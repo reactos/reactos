@@ -382,7 +382,7 @@ co_IntLoadSysMenuTemplate()
    UserLeaveCo();
 
    Status = KeUserModeCallback(USER32_CALLBACK_LOADSYSMENUTEMPLATE,
-                               NULL,
+                               &ResultPointer,
                                0,
                                &ResultPointer,
                                &ResultLength);

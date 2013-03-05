@@ -305,10 +305,10 @@ EngBitBlt(
     _In_opt_ CLIPOBJ *pco,
     _In_opt_ XLATEOBJ *pxlo,
     _In_ RECTL *prclTrg,
-    _When_(psoSrc, _In_) POINTL *pptlSrc,
-    _When_(psoMask, _In_) POINTL *pptlMask,
+    _In_opt_ POINTL *pptlSrc,
+    _In_opt_ POINTL *pptlMask,
     _In_opt_ BRUSHOBJ *pbo,
-    _When_(pbo, _In_) POINTL *pptlBrush,
+    _In_opt_ POINTL *pptlBrush,
     _In_ ROP4 rop4)
 {
     BYTE               clippingType;

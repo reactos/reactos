@@ -11,7 +11,7 @@
 #define NDEBUG
 #include <debug.h>
 
-_Always_(_Post_satisfies_(return==iColor))
+_Post_satisfies_(return==iColor)
 _Function_class_(FN_XLATE)
 ULONG
 FASTCALL
@@ -38,7 +38,7 @@ static const BYTE gajXlate6to8[64] =
 
 /** iXlate functions **********************************************************/
 
-_Always_(_Post_satisfies_(return==iColor))
+_Post_satisfies_(return==iColor)
 _Function_class_(FN_XLATE)
 ULONG
 FASTCALL
