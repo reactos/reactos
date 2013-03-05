@@ -2023,7 +2023,7 @@ co_WinPosShowWindow(PWND Wnd, INT Cmd)
 {
    BOOLEAN WasVisible;
    UINT Swp = 0, EventMsg = 0;
-   RECTL NewPos;
+   RECTL NewPos = {0, 0, 0, 0};
    BOOLEAN ShowFlag;
    LONG style;
    PWND Parent;
