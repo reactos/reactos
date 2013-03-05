@@ -529,7 +529,7 @@ static int check_for_punctuation(int c, const char *name)
   return c;
 }
 
-#if _WIN32
+#if defined(_WIN32) && !defined(strcasecmp)
 #define strcasecmp stricmp
 #endif//_WIN32
 
