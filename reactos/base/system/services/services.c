@@ -173,7 +173,7 @@ ScmNamedPipeThread(LPVOID Context)
 
     hPipe = (HANDLE)Context;
 
-    DPRINT("ScmNamedPipeThread(%lu) - Accepting SCM commands through named pipe\n", hPipe);
+    DPRINT("ScmNamedPipeThread(%p) - Accepting SCM commands through named pipe\n", hPipe);
 
     for (;;)
     {
@@ -201,13 +201,13 @@ ScmNamedPipeThread(LPVOID Context)
         }
     }
 
-    DPRINT("ScmNamedPipeThread(%lu) - Disconnecting named pipe connection\n", hPipe);
+    DPRINT("ScmNamedPipeThread(%p) - Disconnecting named pipe connection\n", hPipe);
 
     FlushFileBuffers(hPipe);
     DisconnectNamedPipe(hPipe);
     CloseHandle(hPipe);
 
-    DPRINT("ScmNamedPipeThread(%lu) - Done.\n", hPipe);
+    DPRINT("ScmNamedPipeThread(%p) - Done.\n", hPipe);
 
     return ERROR_SUCCESS;
 }
@@ -237,7 +237,7 @@ ScmCreateNamedPipe(VOID)
         return FALSE;
     }
 
-    DPRINT("CreateNamedPipe() - calling ConnectNamedPipe(%x)\n", hPipe);
+    DPRINT("CreateNamedPipe() - calling ConnectNamedPipe(%p)\n", hPipe);
     bConnected = ConnectNamedPipe(hPipe,
                                   NULL) ? TRUE : (GetLastError() == ERROR_PIPE_CONNECTED);
     DPRINT("CreateNamedPipe() - ConnectNamedPipe() returned %d\n", bConnected);

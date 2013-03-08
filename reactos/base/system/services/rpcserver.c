@@ -2764,7 +2764,7 @@ DWORD RQueryServiceConfigW(
         lpStr += (wcslen(lpStr) + 1);
 
         /* Append the group name */
-        if (lpService->lpGroup != NULL)
+        if ((lpService->lpGroup != NULL) && (lpService->lpGroup->lpGroupName != NULL))
         {
             wcscpy(lpStr, lpService->lpGroup->lpGroupName);
         }
@@ -3733,6 +3733,11 @@ DWORD REnumServicesStatusA(
 
     DPRINT("REnumServicesStatusA() called\n");
 
+    if (pcbBytesNeeded == NULL || lpServicesReturned == NULL)
+    {
+        return ERROR_INVALID_ADDRESS;
+    }
+
     if ((dwBufSize > 0) && (lpBuffer))
     {
         lpStatusPtrW = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwBufSize);
@@ -4496,6 +4501,11 @@ DWORD REnumServiceGroupW(
     {
         DPRINT1("Invalid service manager handle!\n");
         return ERROR_INVALID_HANDLE;
+    }
+
+    if (pcbBytesNeeded == NULL || lpServicesReturned == NULL)
+    {
+        return ERROR_INVALID_ADDRESS;
     }
 
     *pcbBytesNeeded = 0;
@@ -5750,6 +5760,11 @@ DWORD REnumServicesStatusExA(
 
     DPRINT("REnumServicesStatusExA() called\n");
 
+    if (pcbBytesNeeded == NULL || lpServicesReturned == NULL)
+    {
+        return ERROR_INVALID_ADDRESS;
+    }
+
     if (pszGroupName)
     {
         pszGroupNameW = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (strlen(pszGroupName) + 1) * sizeof(WCHAR));
@@ -5893,6 +5908,11 @@ DWORD REnumServicesStatusExW(
     {
         DPRINT1("Invalid service manager handle!\n");
         return ERROR_INVALID_HANDLE;
+    }
+
+    if (pcbBytesNeeded == NULL || lpServicesReturned == NULL)
+    {
+        return ERROR_INVALID_ADDRESS;
     }
 
     *pcbBytesNeeded = 0;
