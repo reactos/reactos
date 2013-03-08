@@ -55,7 +55,7 @@ ScmLogError(DWORD dwEventId,
                                 L"Service Control Manager");
     if (hLog == NULL)
     {
-        DPRINT1("ScmLogEvent: RegisterEventSourceW failed %d\n", GetLastError());
+        DPRINT1("ScmLogEvent: RegisterEventSourceW failed %lu\n", GetLastError());
         return;
     }
 
@@ -69,7 +69,7 @@ ScmLogError(DWORD dwEventId,
                       lpStrings,
                       NULL))
     {
-        DPRINT1("ScmLogEvent: ReportEventW failed %d\n", GetLastError());
+        DPRINT1("ScmLogEvent: ReportEventW failed %lu\n", GetLastError());
     }
 
     DeregisterEventSource(hLog);
@@ -233,7 +233,7 @@ ScmCreateNamedPipe(VOID)
               NULL);
     if (hPipe == INVALID_HANDLE_VALUE)
     {
-        DPRINT("CreateNamedPipe() failed (%d)\n", GetLastError());
+        DPRINT("CreateNamedPipe() failed (%lu)\n", GetLastError());
         return FALSE;
     }
 
@@ -253,7 +253,7 @@ ScmCreateNamedPipe(VOID)
                                &dwThreadId);
         if (!hThread)
         {
-            DPRINT("Could not create thread (%d)\n", GetLastError());
+            DPRINT("Could not create thread (%lu)\n", GetLastError());
             DisconnectNamedPipe(hPipe);
             CloseHandle(hPipe);
             DPRINT("CreateNamedPipe() - returning FALSE\n");

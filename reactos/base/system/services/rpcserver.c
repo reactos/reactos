@@ -1619,7 +1619,7 @@ DWORD RSetServiceStatus(
     WCHAR szErrorBuffer[32];
 
     DPRINT("RSetServiceStatus() called\n");
-    DPRINT("hServiceStatus = %p\n", hServiceStatus);
+    DPRINT("hServiceStatus = %lu\n", hServiceStatus);
     DPRINT("dwServiceType = %lu\n", lpServiceStatus->dwServiceType);
     DPRINT("dwCurrentState = %lu\n", lpServiceStatus->dwCurrentState);
     DPRINT("dwControlsAccepted = %lu\n", lpServiceStatus->dwControlsAccepted);
