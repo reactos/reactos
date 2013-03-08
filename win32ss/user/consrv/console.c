@@ -14,7 +14,10 @@
 #include "consrv.h"
 #include "settings.h"
 #include "guiconsole.h"
-#include "tuiconsole.h"
+
+#ifdef TUI_CONSOLE
+    #include "tuiconsole.h"
+#endif
 
 #include <shlwapi.h>
 #include <shlobj.h>
@@ -324,7 +327,6 @@ ConSrvInitConsole(OUT PCONSOLE* NewConsole,
      */
     InitializeCriticalSection(&Console->Lock);
     Console->ReferenceCount = 0;
-    Console->ConsoleLeaderCID = ConsoleLeaderProcess->ClientId;
     InitializeListHead(&Console->ProcessList);
     memcpy(Console->Colors, ConsoleInfo.Colors, sizeof(ConsoleInfo.Colors));
     Console->Size = ConsoleInfo.ConsoleSize;
@@ -385,10 +387,6 @@ ConSrvInitConsole(OUT PCONSOLE* NewConsole,
     Console->NumberOfHistoryBuffers = ConsoleInfo.NumberOfHistoryBuffers;
     Console->HistoryNoDup = ConsoleInfo.HistoryNoDup;
 
-    /* Finish initialization */
-    Console->GuiData = NULL;
-    Console->hIcon = Console->hIconSm = NULL;
-
     /* Initialize the console title */
     RtlCreateUnicodeString(&Console->OriginalTitle, ConsoleStartInfo->ConsoleTitle);
     if (ConsoleStartInfo->ConsoleTitle[0] == L'\0')
@@ -408,35 +406,41 @@ ConSrvInitConsole(OUT PCONSOLE* NewConsole,
     }
 
     /*
-     * If we are not in GUI-mode, start the text-mode console.
-     * If we fail, try to start the GUI-mode console.
+     * If we are not in GUI-mode, start the text-mode terminal emulator.
+     * If we fail, try to start the GUI-mode terminal emulator.
      */
+#ifdef TUI_CONSOLE
     GuiMode = DtbgIsDesktopVisible();
+#else
+    GuiMode = TRUE;
+#endif
 
+#ifdef TUI_CONSOLE
     if (!GuiMode)
     {
-        DPRINT1("CONSRV: Opening text-mode console\n");
+        DPRINT1("CONSRV: Opening text-mode terminal emulator\n");
         Status = TuiInitConsole(Console, &ConsoleInfo);
         if (!NT_SUCCESS(Status))
         {
-            DPRINT1("Failed to open text-mode console, switching to gui-mode, Status = 0x%08lx\n", Status);
+            DPRINT1("Failed to open text-mode terminal emulator, switching to gui-mode, Status = 0x%08lx\n", Status);
             GuiMode = TRUE;
         }
     }
+#endif
 
     /*
-     * Try to open the GUI-mode console. Two cases are possible:
+     * Try to open the GUI-mode terminal emulator. Two cases are possible:
      * - We are in GUI-mode, therefore GuiMode == TRUE, the previous test-case
-     *   failed and we start GUI-mode console.
+     *   failed and we start GUI-mode terminal emulator.
      * - We are in text-mode, therefore GuiMode == FALSE, the previous test-case
-     *   succeeded BUT we failed at starting text-mode console. Then GuiMode
-     *   was switched to TRUE in order to try to open the console in GUI-mode
-     *   (win32k will automatically switch to graphical mode, therefore
-     *   no additional code is needed).
+     *   succeeded BUT we failed at starting text-mode terminal emulator.
+     *   Then GuiMode was switched to TRUE in order to try to open the GUI-mode
+     *   terminal emulator (win32k will automatically switch to graphical mode,
+     *   therefore no additional code is needed).
      */
     if (GuiMode)
     {
-        DPRINT1("CONSRV: Opening GUI-mode console\n");
+        DPRINT1("CONSRV: Opening GUI-mode terminal emulator\n");
         Status = GuiInitConsole(Console,
                                 AppPath,
                                 &ConsoleInfo,
@@ -1023,7 +1027,7 @@ CSR_API(SrvGetConsoleWindow)
     Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console, TRUE);
     if (!NT_SUCCESS(Status)) return Status;
 
-    GetWindowRequest->WindowHandle = Console->hWindow;
+    GetWindowRequest->WindowHandle = Console->TermIFace.Vtbl->GetConsoleWindowHandle(Console);
     ConSrvReleaseConsole(Console, TRUE);
 
     return STATUS_SUCCESS;

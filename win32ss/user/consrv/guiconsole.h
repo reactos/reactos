@@ -2,7 +2,7 @@
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Console Server DLL
  * FILE:            win32ss/user/consrv/guiconsole.h
- * PURPOSE:         Interface to GUI-mode consoles
+ * PURPOSE:         GUI terminal emulator
  * PROGRAMMERS:
  */
 

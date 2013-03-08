@@ -16,14 +16,6 @@
 #define DEFAULT_POPUP_ATTRIB    (FOREGROUND_BLUE | FOREGROUND_RED | \
                                  BACKGROUND_BLUE | BACKGROUND_GREEN | BACKGROUND_RED | BACKGROUND_INTENSITY)
 
-#ifndef WM_APP
-#define WM_APP 0x8000
-#endif
-#define PM_CREATE_CONSOLE       (WM_APP + 1)
-#define PM_DESTROY_CONSOLE      (WM_APP + 2)
-#define PM_CONSOLE_BEEP         (WM_APP + 3)
-#define PM_CONSOLE_SET_TITLE    (WM_APP + 4)
-
 
 /************************************************************************
  * Screen buffer structure represents the win32 screen buffer object.   *
@@ -82,16 +74,81 @@ typedef struct ConsoleInput_t
     INPUT_RECORD InputEvent;
 } ConsoleInput;
 
+typedef struct _TERMINAL_VTBL
+{
+    /*
+     * Internal interface (functions called by the console server only)
+     */
+    VOID (WINAPI *CleanupConsole)(struct _CONSOLE* Console);
+    VOID (WINAPI *WriteStream)(struct _CONSOLE* Console,
+                               SMALL_RECT* Block,
+                               LONG CursorStartX,
+                               LONG CursorStartY,
+                               UINT ScrolledLines,
+                               CHAR *Buffer,
+                               UINT Length);
+    VOID (WINAPI *DrawRegion)(struct _CONSOLE* Console,
+                              SMALL_RECT* Region);
+    BOOL (WINAPI *SetCursorInfo)(struct _CONSOLE* Console,
+                                 PCONSOLE_SCREEN_BUFFER ScreenBuffer);
+    BOOL (WINAPI *SetScreenInfo)(struct _CONSOLE* Console,
+                                 PCONSOLE_SCREEN_BUFFER ScreenBuffer,
+                                 UINT OldCursorX,
+                                 UINT OldCursorY);
+    BOOL (WINAPI *UpdateScreenInfo)(struct _CONSOLE* Console,
+                                    PCONSOLE_SCREEN_BUFFER ScreenBuffer);
+    NTSTATUS (WINAPI *ResizeBuffer)(struct _CONSOLE* Console,
+                                    PCONSOLE_SCREEN_BUFFER ScreenBuffer,
+                                    COORD Size);
+    BOOL (WINAPI *ProcessKeyCallback)(struct _CONSOLE* Console,
+                                      MSG* msg,
+                                      BYTE KeyStateMenu,
+                                      DWORD ShiftState,
+                                      UINT VirtualKeyCode,
+                                      BOOL Down);
+
+    /*
+     * External interface (functions corresponding to the Console API)
+     */
+    VOID (WINAPI *ChangeTitle)(struct _CONSOLE* Console);
+    BOOL (WINAPI *ChangeIcon)(struct _CONSOLE* Console,
+                              HICON hWindowIcon);
+    HWND (WINAPI *GetConsoleWindowHandle)(struct _CONSOLE* Console);
+
+} TERMINAL_VTBL, *PTERMINAL_VTBL;
+
+#define ConioDrawRegion(Console, Region) (Console)->TermIFace.Vtbl->DrawRegion((Console), (Region))
+#define ConioWriteStream(Console, Block, CurStartX, CurStartY, ScrolledLines, Buffer, Length) \
+          (Console)->TermIFace.Vtbl->WriteStream((Console), (Block), (CurStartX), (CurStartY), \
+                                                 (ScrolledLines), (Buffer), (Length))
+#define ConioSetCursorInfo(Console, Buff) (Console)->TermIFace.Vtbl->SetCursorInfo((Console), (Buff))
+#define ConioSetScreenInfo(Console, Buff, OldCursorX, OldCursorY) \
+          (Console)->TermIFace.Vtbl->SetScreenInfo((Console), (Buff), (OldCursorX), (OldCursorY))
+#define ConioUpdateScreenInfo(Console, Buff) \
+          (Console)->TermIFace.Vtbl->UpdateScreenInfo((Console), (Buff))
+#define ConioChangeTitle(Console) (Console)->TermIFace.Vtbl->ChangeTitle(Console)
+#define ConioCleanupConsole(Console) (Console)->TermIFace.Vtbl->CleanupConsole(Console)
+#define ConioChangeIcon(Console, hWindowIcon) (Console)->TermIFace.Vtbl->ChangeIcon((Console), (hWindowIcon))
+#define ConioResizeBuffer(Console, Buff, Size) (Console)->TermIFace.Vtbl->ResizeBuffer((Console), (Buff), (Size))
+#define ConioProcessKeyCallback(Console, Msg, KeyStateMenu, ShiftState, VirtualKeyCode, Down) \
+          (Console)->TermIFace.Vtbl->ProcessKeyCallback((Console), (Msg), (KeyStateMenu), (ShiftState), (VirtualKeyCode), (Down))
+
+typedef struct _TERMINAL_IFACE
+{
+    PTERMINAL_VTBL Vtbl;    /* Virtual table */
+    PVOID Data;             /* Private data  */
+    PVOID OldData;          /* Reserved      */
+} TERMINAL_IFACE, *PTERMINAL_IFACE;
+
 typedef struct _CONSOLE
 {
     LONG ReferenceCount;                    /* Is incremented each time a handle to a screen-buffer or the input buffer of this console gets referenced, or the console gets locked */
     CRITICAL_SECTION Lock;
 
     struct _CONSOLE *Prev, *Next;           /* Next and Prev consoles in console wheel */
-    struct _CONSOLE_VTBL *Vtbl;             /* Using CUI or GUI consoles */
+    LIST_ENTRY ProcessList;                 /* List of processes owning the console. The first one is the so-called "Console Leader Process" */
 
-    CLIENT_ID  ConsoleLeaderCID;            /* Contains the Console Leader Process CID for this console. TODO: Is it possible to compute it via the contents of the ProcessList list ?? */
-    LIST_ENTRY ProcessList;
+    TERMINAL_IFACE TermIFace;               /* Terminal-specific interface */
 
 /**************************** Input buffer and data ***************************/
     CONSOLE_INPUT_BUFFER InputBuffer;       /* Input buffer of the console */
@@ -129,18 +186,12 @@ typedef struct _CONSOLE
     ULONG NumberOfHistoryBuffers;           /* Maximum number of history buffers allowed */
     BOOLEAN HistoryNoDup;                   /* Remove old duplicate history entries */
 
-/******************************* Common UI data *******************************/
-    UNICODE_STRING OriginalTitle;           /* Original title of console, the one when the console leader is launched. It is always NULL-terminated */
-    UNICODE_STRING Title;                   /* Title of console. It is always NULL-terminated */
+/****************************** Other properties ******************************/
+    UNICODE_STRING OriginalTitle;           /* Original title of console, the one when the console leader is launched. Always NULL-terminated */
+    UNICODE_STRING Title;                   /* Title of console. Always NULL-terminated */
 
     COORD Size;                             /* Size of the console (different of the size of the screen buffer */
     COLORREF Colors[16];                    /* Colour palette */
-
-/****************************** GUI-related data ******************************/
-    HWND hWindow;                           /* Handle to the console's window */
-    HICON hIcon;                            /* Handle to its icon (used when freeing) */
-    HICON hIconSm;
-    PVOID GuiData; /* PGUI_CONSOLE_DATA */
 
 } CONSOLE, *PCONSOLE;
 
@@ -150,28 +201,18 @@ typedef struct _CONSOLE
 #define GWLP_CONSOLE_LEADER_PID 0
 #define GWLP_CONSOLE_LEADER_TID 4
 
-#define SetConsoleWndConsoleLeaderCID(Console)  \
-do {    \
-    SetWindowLongPtrW((Console)->hWindow, GWLP_CONSOLE_LEADER_PID, (LONG_PTR)((Console)->ConsoleLeaderCID.UniqueProcess));  \
-    SetWindowLongPtrW((Console)->hWindow, GWLP_CONSOLE_LEADER_TID, (LONG_PTR)((Console)->ConsoleLeaderCID.UniqueThread ));  \
+#define SetConsoleWndConsoleLeaderCID(GuiData)  \
+do {                                            \
+    PCONSOLE_PROCESS_DATA ProcessData;          \
+    CLIENT_ID ConsoleLeaderCID;                 \
+    ProcessData = CONTAINING_RECORD((GuiData)->Console->ProcessList.Blink,  \
+                                    CONSOLE_PROCESS_DATA,                   \
+                                    ConsoleLink);                           \
+    ConsoleLeaderCID = ProcessData->Process->ClientId;                      \
+    SetWindowLongPtrW((GuiData)->hWindow, GWLP_CONSOLE_LEADER_PID, (LONG_PTR)(ConsoleLeaderCID.UniqueProcess));  \
+    SetWindowLongPtrW((GuiData)->hWindow, GWLP_CONSOLE_LEADER_TID, (LONG_PTR)(ConsoleLeaderCID.UniqueThread ));  \
 } while(0)
 /**************************************************************/
-
-typedef struct _CONSOLE_VTBL
-{
-    VOID (WINAPI *WriteStream)(PCONSOLE Console, SMALL_RECT* Block, LONG CursorStartX, LONG CursorStartY,
-                               UINT ScrolledLines, CHAR *Buffer, UINT Length);
-    VOID (WINAPI *DrawRegion)(PCONSOLE Console, SMALL_RECT* Region);
-    BOOL (WINAPI *SetCursorInfo)(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER ScreenBuffer);
-    BOOL (WINAPI *SetScreenInfo)(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER ScreenBuffer,
-                                 UINT OldCursorX, UINT OldCursorY);
-    BOOL (WINAPI *UpdateScreenInfo)(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER ScreenBuffer);
-    VOID (WINAPI *ChangeTitle)(PCONSOLE Console);
-    VOID (WINAPI *CleanupConsole)(PCONSOLE Console);
-    BOOL (WINAPI *ChangeIcon)(PCONSOLE Console, HICON hWindowIcon);
-    NTSTATUS (WINAPI *ResizeBuffer)(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER ScreenBuffer, COORD Size);
-    BOOL (WINAPI *ProcessKeyCallback)(PCONSOLE Console, MSG* msg, BYTE KeyStateMenu, DWORD ShiftState, UINT VirtualKeyCode, BOOL Down);
-} CONSOLE_VTBL, *PCONSOLE_VTBL;
 
 /* CONSOLE_SELECTION_INFO dwFlags values */
 #define CONSOLE_NO_SELECTION          0x0
@@ -179,6 +220,7 @@ typedef struct _CONSOLE_VTBL
 #define CONSOLE_SELECTION_NOT_EMPTY   0x2
 #define CONSOLE_MOUSE_SELECTION       0x4
 #define CONSOLE_MOUSE_DOWN            0x8
+
 /* HistoryFlags values */
 #define HISTORY_NO_DUP_FLAG           0x1
 
@@ -186,21 +228,6 @@ typedef struct _CONSOLE_VTBL
 #define PAUSED_FROM_KEYBOARD  0x1
 #define PAUSED_FROM_SCROLLBAR 0x2
 #define PAUSED_FROM_SELECTION 0x4
-
-#define ConioDrawRegion(Console, Region) (Console)->Vtbl->DrawRegion((Console), (Region))
-#define ConioWriteStream(Console, Block, CurStartX, CurStartY, ScrolledLines, Buffer, Length) \
-          (Console)->Vtbl->WriteStream((Console), (Block), (CurStartX), (CurStartY), \
-                                       (ScrolledLines), (Buffer), (Length))
-#define ConioSetCursorInfo(Console, Buff) (Console)->Vtbl->SetCursorInfo((Console), (Buff))
-#define ConioSetScreenInfo(Console, Buff, OldCursorX, OldCursorY) \
-          (Console)->Vtbl->SetScreenInfo((Console), (Buff), (OldCursorX), (OldCursorY))
-#define ConioUpdateScreenInfo(Console, Buff) \
-          (Console)->Vtbl->UpdateScreenInfo((Console), (Buff))
-#define ConioChangeTitle(Console) (Console)->Vtbl->ChangeTitle(Console)
-#define ConioCleanupConsole(Console) (Console)->Vtbl->CleanupConsole(Console)
-#define ConioChangeIcon(Console, hWindowIcon) (Console)->Vtbl->ChangeIcon((Console), (hWindowIcon))
-#define ConioResizeBuffer(Console, Buff, Size) (Console)->Vtbl->ResizeBuffer((Console), (Buff), (Size))
-#define ConioProcessKeyCallback(Console, Msg, KeyStateMenu, ShiftState, VirtualKeyCode, Down) (Console)->Vtbl->ProcessKeyCallback((Console), (Msg), (KeyStateMenu), (ShiftState), (VirtualKeyCode), (Down))
 
 /* console.c */
 VOID WINAPI ConSrvDeleteConsole(PCONSOLE Console);

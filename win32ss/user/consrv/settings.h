@@ -8,6 +8,9 @@
  * NOTE: Adapted from existing code.
  */
 
+#ifndef WM_APP
+    #define WM_APP 0x8000
+#endif
 #define PM_APPLY_CONSOLE_INFO (WM_APP + 100)
 
 /* STRUCTURES *****************************************************************/
@@ -54,6 +57,7 @@ typedef struct _CONSOLE_INFO
 
     WCHAR ConsoleTitle[MAX_PATH + 1];
 
+    // PVOID TerminalInfo;      /* Terminal-specific parameters */
     union
     {
         GUI_CONSOLE_INFO GuiInfo;

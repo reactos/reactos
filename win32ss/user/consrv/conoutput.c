@@ -231,8 +231,9 @@ ConioWriteConsole(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER Buff,
             /* --- BEL ---*/
             else if (Buffer[i] == '\a')
             {
+                // FIXME: This MUST BE moved to the terminal emulator!!
                 DPRINT1("Bell\n");
-                SendNotifyMessage(Console->hWindow, PM_CONSOLE_BEEP, 0, 0);
+                // SendNotifyMessage(Console->hWindow, PM_CONSOLE_BEEP, 0, 0);
                 continue;
             }
         }

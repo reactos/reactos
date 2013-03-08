@@ -2,7 +2,7 @@
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Console Server DLL
  * FILE:            win32ss/user/consrv/tuiconsole.h
- * PURPOSE:         Interface to text-mode consoles
+ * PURPOSE:         TUI terminal emulator
  * PROGRAMMERS:
  */
 

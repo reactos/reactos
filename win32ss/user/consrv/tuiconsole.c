@@ -2,9 +2,11 @@
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Console Server DLL
  * FILE:            win32ss/user/consrv/tuiconsole.c
- * PURPOSE:         Interface to text-mode consoles
+ * PURPOSE:         TUI terminal emulator
  * PROGRAMMERS:
  */
+
+#ifdef TUI_CONSOLE
 
 #include "consrv.h"
 #include "settings.h"
@@ -15,9 +17,21 @@
 #include <debug.h>
 
 
+/* GLOBALS ********************************************************************/
+
 /* TUI Console Window Class name */
 #define TUI_CONSOLE_WINDOW_CLASS L"TuiConsoleWindowClass"
 
+typedef struct _TUI_CONSOLE_DATA
+{
+    CRITICAL_SECTION Lock;
+    // HANDLE hTuiInitEvent;
+
+    HWND hWindow;
+
+    PCONSOLE Console;
+    // TUI_CONSOLE_INFO TuiInfo;
+} TUI_CONSOLE_DATA, *PTUI_CONSOLE_DATA;
 
 CRITICAL_SECTION ActiveConsoleLock;
 static COORD PhysicalConsoleSize;
@@ -164,7 +178,7 @@ TuiSwapConsole(INT Next)
         /* alt-tab, swap consoles */
         /* move SwapConsole to next console, and print its title */
         EnterCriticalSection(&ActiveConsoleLock);
-        if (! SwapConsole)
+        if (!SwapConsole)
         {
             SwapConsole = ActiveConsole;
         }
@@ -480,6 +494,12 @@ TuiChangeIcon(PCONSOLE Console, HICON hWindowIcon)
     return TRUE;
 }
 
+static HWND WINAPI
+TuiGetConsoleWindowHandle(PCONSOLE Console)
+{
+    return Console->hWindow;
+}
+
 static NTSTATUS WINAPI
 TuiResizeBuffer(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER ScreenBuffer, COORD Size)
 {
@@ -507,7 +527,6 @@ TuiConsoleThread(PVOID Data)
         return 1;
     }
     Console->hWindow = NewWindow;
-    SetConsoleWndConsoleLeaderCID(Console);
 
     SetForegroundWindow(Console->hWindow);
 
@@ -528,16 +547,17 @@ TuiConsoleThread(PVOID Data)
     return 0;
 }
 
-static CONSOLE_VTBL TuiVtbl =
+static TERMINAL_VTBL TuiVtbl =
 {
+    TuiCleanupConsole,
     TuiWriteStream,
     TuiDrawRegion,
     TuiSetCursorInfo,
     TuiSetScreenInfo,
     TuiUpdateScreenInfo,
     TuiChangeTitle,
-    TuiCleanupConsole,
     TuiChangeIcon,
+    TuiGetConsoleWindowHandle,
     TuiResizeBuffer,
     TuiProcessKeyCallback
 };
@@ -558,7 +578,7 @@ TuiInitConsole(PCONSOLE Console,
         }
     }
 
-    Console->Vtbl = &TuiVtbl;
+    Console->TermIFace.Vtbl = &TuiVtbl;
     Console->hWindow = NULL;
     Console->Size = PhysicalConsoleSize;
     Console->ActiveBuffer->ScreenBufferSize = PhysicalConsoleSize;
@@ -600,5 +620,7 @@ TuiGetFocusConsole(VOID)
 {
     return ActiveConsole;
 }
+
+#endif
 
 /* EOF */

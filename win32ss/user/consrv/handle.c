@@ -373,7 +373,7 @@ ConSrvGetObject(PCONSOLE_PROCESS_DATA ProcessData,
          (HandleEntry->Access & Access) == 0 ||
          (Type != 0 && ObjectEntry->Type != Type) )
     {
-        DPRINT1("CsrGetObject returning invalid handle (%x) of type %lu with access %lu\n", Handle, Type, Access);
+        DPRINT1("ConSrvGetObject returning invalid handle (%x) of type %lu with access %lu\n", Handle, Type, Access);
         RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
         return STATUS_INVALID_HANDLE;
     }
@@ -511,7 +511,6 @@ FASTCALL
 ConSrvRemoveConsole(PCONSOLE_PROCESS_DATA ProcessData)
 {
     PCONSOLE Console;
-    PCONSOLE_PROCESS_DATA NewProcessData;
 
     DPRINT1("ConSrvRemoveConsole\n");
 
@@ -532,11 +531,7 @@ ConSrvRemoveConsole(PCONSOLE_PROCESS_DATA ProcessData)
         RemoveEntryList(&ProcessData->ConsoleLink);
 
         /* Update the console leader process */
-        NewProcessData = CONTAINING_RECORD(Console->ProcessList.Blink,
-                                           CONSOLE_PROCESS_DATA,
-                                           ConsoleLink);
-        Console->ConsoleLeaderCID = NewProcessData->Process->ClientId;
-        SetConsoleWndConsoleLeaderCID(Console);
+        // SetConsoleWndConsoleLeaderCID(Console);
 
         /* Release the console */
         ConSrvReleaseConsole(Console, TRUE);
@@ -799,7 +794,7 @@ CSR_API(SrvVerifyConsoleIoHandle)
         Index >= ProcessData->HandleTableSize ||
         ProcessData->HandleTable[Index].Object == NULL)
     {
-        DPRINT("CsrVerifyObject failed\n");
+        DPRINT("SrvVerifyConsoleIoHandle failed\n");
         Status = STATUS_INVALID_HANDLE;
     }
 
