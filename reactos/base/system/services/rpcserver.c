@@ -2896,9 +2896,10 @@ DWORD RStartServiceW(
     PSERVICE_HANDLE hSvc;
     PSERVICE lpService = NULL;
     SC_RPC_LOCK Lock = NULL;
-    DWORD i;
 
 #ifndef NDEBUG
+    DWORD i;
+
     DPRINT("RStartServiceW(%p %lu %p) called\n", hService, argc, argv);
     DPRINT("  argc: %lu\n", argc);
     if (argv != NULL)
