@@ -2655,7 +2655,6 @@ DWORD RQueryServiceConfigW(
     LPWSTR lpDependencies = NULL;
     DWORD dwDependenciesLength = 0;
     DWORD dwRequiredSize;
-    LPQUERY_SERVICE_CONFIGW lpConfig = NULL;
     WCHAR lpEmptyString[] = {0,0};
     LPWSTR lpStr;
 
@@ -2718,7 +2717,7 @@ DWORD RQueryServiceConfigW(
     else
         dwRequiredSize += 2 * sizeof(WCHAR);
 
-    if (lpService->lpGroup != NULL)
+    if ((lpService->lpGroup != NULL) && (lpService->lpGroup->lpGroupName != NULL))
         dwRequiredSize += (DWORD)((wcslen(lpService->lpGroup->lpGroupName) + 1) * sizeof(WCHAR));
     else
         dwRequiredSize += 2 * sizeof(WCHAR);
@@ -2744,13 +2743,12 @@ DWORD RQueryServiceConfigW(
     }
     else
     {
-        lpConfig = (LPQUERY_SERVICE_CONFIGW)lpServiceConfig;
-        lpConfig->dwServiceType = lpService->Status.dwServiceType;
-        lpConfig->dwStartType = lpService->dwStartType;
-        lpConfig->dwErrorControl = lpService->dwErrorControl;
-        lpConfig->dwTagId = lpService->dwTag;
+        lpServiceConfig->dwServiceType = lpService->Status.dwServiceType;
+        lpServiceConfig->dwStartType = lpService->dwStartType;
+        lpServiceConfig->dwErrorControl = lpService->dwErrorControl;
+        lpServiceConfig->dwTagId = lpService->dwTag;
 
-        lpStr = (LPWSTR)(lpConfig + 1);
+        lpStr = (LPWSTR)(lpServiceConfig + 1);
 
         /* Append the image path */
         if (lpImagePath != NULL)
@@ -2762,7 +2760,7 @@ DWORD RQueryServiceConfigW(
             wcscpy(lpStr, lpEmptyString);
         }
 
-        lpConfig->lpBinaryPathName = (LPWSTR)((ULONG_PTR)lpStr - (ULONG_PTR)lpConfig);
+        lpServiceConfig->lpBinaryPathName = (LPWSTR)((ULONG_PTR)lpStr - (ULONG_PTR)lpServiceConfig);
         lpStr += (wcslen(lpStr) + 1);
 
         /* Append the group name */
@@ -2775,7 +2773,7 @@ DWORD RQueryServiceConfigW(
             wcscpy(lpStr, lpEmptyString);
         }
 
-        lpConfig->lpLoadOrderGroup = (LPWSTR)((ULONG_PTR)lpStr - (ULONG_PTR)lpConfig);
+        lpServiceConfig->lpLoadOrderGroup = (LPWSTR)((ULONG_PTR)lpStr - (ULONG_PTR)lpServiceConfig);
         lpStr += (wcslen(lpStr) + 1);
 
         /* Append Dependencies */
@@ -2790,7 +2788,7 @@ DWORD RQueryServiceConfigW(
             wcscpy(lpStr, lpEmptyString);
         }
 
-        lpConfig->lpDependencies = (LPWSTR)((ULONG_PTR)lpStr - (ULONG_PTR)lpConfig);
+        lpServiceConfig->lpDependencies = (LPWSTR)((ULONG_PTR)lpStr - (ULONG_PTR)lpServiceConfig);
         if (lpDependencies != NULL)
             lpStr += dwDependenciesLength;
         else
@@ -2806,7 +2804,7 @@ DWORD RQueryServiceConfigW(
             wcscpy(lpStr, lpEmptyString);
         }
 
-        lpConfig->lpServiceStartName = (LPWSTR)((ULONG_PTR)lpStr - (ULONG_PTR)lpConfig);
+        lpServiceConfig->lpServiceStartName = (LPWSTR)((ULONG_PTR)lpStr - (ULONG_PTR)lpServiceConfig);
         lpStr += (wcslen(lpStr) + 1);
 
         /* Append the display name */
@@ -2819,7 +2817,7 @@ DWORD RQueryServiceConfigW(
             wcscpy(lpStr, lpEmptyString);
         }
 
-        lpConfig->lpDisplayName = (LPWSTR)((ULONG_PTR)lpStr - (ULONG_PTR)lpConfig);
+        lpServiceConfig->lpDisplayName = (LPWSTR)((ULONG_PTR)lpStr - (ULONG_PTR)lpServiceConfig);
     }
 
     if (pcbBytesNeeded != NULL)
@@ -2900,15 +2898,17 @@ DWORD RStartServiceW(
     SC_RPC_LOCK Lock = NULL;
     DWORD i;
 
+#ifndef NDEBUG
     DPRINT("RStartServiceW(%p %lu %p) called\n", hService, argc, argv);
     DPRINT("  argc: %lu\n", argc);
     if (argv != NULL)
     {
         for (i = 0; i < argc; i++)
         {
-            DPRINT("  argv[%lu]: %S\n", i, argv[i]);
+            DPRINT("  argv[%lu]: %S\n", i, argv[i].StringPtr);
         }
     }
+#endif
 
     if (ScmShutdown)
         return ERROR_SHUTDOWN_IN_PROGRESS;
@@ -3892,7 +3892,6 @@ DWORD RQueryServiceConfigA(
     LPWSTR lpDependencies = NULL;
     DWORD dwDependenciesLength = 0;
     DWORD dwRequiredSize;
-    LPQUERY_SERVICE_CONFIGA lpConfig = NULL;
     CHAR lpEmptyString[]={0,0};
     LPSTR lpStr;
 
@@ -3982,11 +3981,10 @@ DWORD RQueryServiceConfigA(
     }
     else
     {
-        lpConfig = (LPQUERY_SERVICE_CONFIGA)lpServiceConfig;
-        lpConfig->dwServiceType = lpService->Status.dwServiceType;
-        lpConfig->dwStartType = lpService->dwStartType;
-        lpConfig->dwErrorControl = lpService->dwErrorControl;
-        lpConfig->dwTagId = lpService->dwTag;
+        lpServiceConfig->dwServiceType = lpService->Status.dwServiceType;
+        lpServiceConfig->dwStartType = lpService->dwStartType;
+        lpServiceConfig->dwErrorControl = lpService->dwErrorControl;
+        lpServiceConfig->dwTagId = lpService->dwTag;
 
         lpStr = (LPSTR)(lpServiceConfig + 1);
 
@@ -4009,7 +4007,7 @@ DWORD RQueryServiceConfigA(
             strcpy(lpStr, lpEmptyString);
         }
 
-        lpConfig->lpBinaryPathName = (LPSTR)((ULONG_PTR)lpStr - (ULONG_PTR)lpConfig);
+        lpServiceConfig->lpBinaryPathName = (LPSTR)((ULONG_PTR)lpStr - (ULONG_PTR)lpServiceConfig);
         lpStr += (strlen((LPSTR)lpStr) + 1);
 
         if (lpService->lpGroup && lpService->lpGroup->lpGroupName)
@@ -4028,7 +4026,7 @@ DWORD RQueryServiceConfigA(
             strcpy(lpStr, lpEmptyString);
         }
 
-        lpConfig->lpLoadOrderGroup = (LPSTR)((ULONG_PTR)lpStr - (ULONG_PTR)lpConfig);
+        lpServiceConfig->lpLoadOrderGroup = (LPSTR)((ULONG_PTR)lpStr - (ULONG_PTR)lpServiceConfig);
         lpStr += (strlen(lpStr) + 1);
 
         /* Append Dependencies */
@@ -4048,7 +4046,7 @@ DWORD RQueryServiceConfigA(
             strcpy(lpStr, lpEmptyString);
         }
 
-        lpConfig->lpDependencies = (LPSTR)((ULONG_PTR)lpStr - (ULONG_PTR)lpConfig);
+        lpServiceConfig->lpDependencies = (LPSTR)((ULONG_PTR)lpStr - (ULONG_PTR)lpServiceConfig);
         if (lpDependencies)
             lpStr += dwDependenciesLength;
         else
@@ -4070,7 +4068,7 @@ DWORD RQueryServiceConfigA(
             strcpy(lpStr, lpEmptyString);
         }
 
-        lpConfig->lpServiceStartName = (LPSTR)((ULONG_PTR)lpStr - (ULONG_PTR)lpConfig);
+        lpServiceConfig->lpServiceStartName = (LPSTR)((ULONG_PTR)lpStr - (ULONG_PTR)lpServiceConfig);
         lpStr += (strlen(lpStr) + 1);
 
         if (lpService->lpDisplayName)
@@ -4089,7 +4087,7 @@ DWORD RQueryServiceConfigA(
             strcpy(lpStr, lpEmptyString);
         }
 
-        lpConfig->lpDisplayName = (LPSTR)((ULONG_PTR)lpStr - (ULONG_PTR)lpConfig);
+        lpServiceConfig->lpDisplayName = (LPSTR)((ULONG_PTR)lpStr - (ULONG_PTR)lpServiceConfig);
     }
 
     if (pcbBytesNeeded != NULL)
