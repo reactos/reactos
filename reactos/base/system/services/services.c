@@ -153,7 +153,7 @@ ScmNamedPipeHandleRequest(PVOID Request,
                           PVOID Reply,
                           LPDWORD ReplySize)
 {
-    DbgPrint("SCM READ: %s\n", Request);
+    DbgPrint("SCM READ: %p\n", Request);
 
     *ReplySize = 0;
     return FALSE;
@@ -173,7 +173,7 @@ ScmNamedPipeThread(LPVOID Context)
 
     hPipe = (HANDLE)Context;
 
-    DPRINT("ScmNamedPipeThread(%x) - Accepting SCM commands through named pipe\n", hPipe);
+    DPRINT("ScmNamedPipeThread(%lu) - Accepting SCM commands through named pipe\n", hPipe);
 
     for (;;)
     {
@@ -201,13 +201,13 @@ ScmNamedPipeThread(LPVOID Context)
         }
     }
 
-    DPRINT("ScmNamedPipeThread(%x) - Disconnecting named pipe connection\n", hPipe);
+    DPRINT("ScmNamedPipeThread(%lu) - Disconnecting named pipe connection\n", hPipe);
 
     FlushFileBuffers(hPipe);
     DisconnectNamedPipe(hPipe);
     CloseHandle(hPipe);
 
-    DPRINT("ScmNamedPipeThread(%x) - Done.\n", hPipe);
+    DPRINT("ScmNamedPipeThread(%lu) - Done.\n", hPipe);
 
     return ERROR_SUCCESS;
 }
@@ -278,7 +278,7 @@ DWORD WINAPI
 ScmNamedPipeListenerThread(LPVOID Context)
 {
 //    HANDLE hPipe;
-    DPRINT("ScmNamedPipeListenerThread(%x) - aka SCM.\n", Context);
+    DPRINT("ScmNamedPipeListenerThread(%p) - aka SCM.\n", Context);
 
 //    hPipe = (HANDLE)Context;
     for (;;)
@@ -294,7 +294,7 @@ ScmNamedPipeListenerThread(LPVOID Context)
         DPRINT("\nSCM: named pipe session created.\n");
         Sleep(10);
     }
-    DPRINT("\n\nWARNING: ScmNamedPipeListenerThread(%x) - Aborted.\n\n", Context);
+    DPRINT("\n\nWARNING: ScmNamedPipeListenerThread(%p) - Aborted.\n\n", Context);
     return ERROR_SUCCESS;
 }
 
