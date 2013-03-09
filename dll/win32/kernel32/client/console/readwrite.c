@@ -264,7 +264,7 @@ IntReadConsoleOutput(HANDLE hConsoleOutput,
                         sizeof(CONSOLE_READOUTPUT));
     DPRINT("Server returned: %x\n", ApiMessage.Status);
 
-    /* Check for success*/
+    /* Check for success */
     if (NT_SUCCESS(ApiMessage.Status))
     {
         /* Copy into the buffer */
@@ -305,6 +305,7 @@ IntReadConsoleOutputCode(HANDLE hConsoleOutput,
                          LPDWORD lpNumberOfCodesRead)
 {
     NTSTATUS Status;
+    BOOL bRet = TRUE;
     CONSOLE_API_MESSAGE ApiMessage;
     PCONSOLE_READOUTPUTCODE ReadOutputCodeRequest = &ApiMessage.Data.ReadOutputCodeRequest;
     PCSR_CAPTURE_BUFFER CaptureBuffer;
@@ -353,28 +354,38 @@ IntReadConsoleOutputCode(HANDLE hConsoleOutput,
 
     ReadOutputCodeRequest->NumCodesToRead = nLength;
 
+    /* Call the server */
     Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                                  CaptureBuffer,
                                  CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepReadConsoleOutputString),
                                  sizeof(CONSOLE_READOUTPUTCODE));
-    if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = ApiMessage.Status))
+
+    /* Check for success */
+    if (NT_SUCCESS(Status) || NT_SUCCESS(Status = ApiMessage.Status))
     {
-        BaseSetLastNTError(Status);
-        CsrFreeCaptureBuffer(CaptureBuffer);
-        return FALSE;
+        BytesRead = ReadOutputCodeRequest->CodesRead * CodeSize;
+        memcpy(pCode, ReadOutputCodeRequest->pCode.pCode, BytesRead);
+
+        // ReadOutputCodeRequest->ReadCoord = ReadOutputCodeRequest->EndCoord;
+
+        if (lpNumberOfCodesRead != NULL)
+            *lpNumberOfCodesRead = ReadOutputCodeRequest->CodesRead;
+
+        bRet = TRUE;
     }
+    else
+    {
+        if (lpNumberOfCodesRead != NULL)
+            *lpNumberOfCodesRead = 0;
 
-    BytesRead = ReadOutputCodeRequest->CodesRead * CodeSize;
-    memcpy(pCode, ReadOutputCodeRequest->pCode.pCode, BytesRead);
-
-    ReadOutputCodeRequest->ReadCoord = ReadOutputCodeRequest->EndCoord;
-
-    if (lpNumberOfCodesRead != NULL)
-        *lpNumberOfCodesRead = ReadOutputCodeRequest->CodesRead;
+        /* Error out */
+        BaseSetLastNTError(Status /* ApiMessage.Status */);
+        bRet = FALSE;
+    }
 
     CsrFreeCaptureBuffer(CaptureBuffer);
 
-    return TRUE;
+    return bRet;
 }
 
 
@@ -392,6 +403,7 @@ IntWriteConsole(HANDLE hConsoleOutput,
                 BOOL bUnicode)
 {
     NTSTATUS Status;
+    BOOL bRet = TRUE;
     CONSOLE_API_MESSAGE ApiMessage;
     PCONSOLE_WRITECONSOLE WriteConsoleRequest = &ApiMessage.Data.WriteConsoleRequest;
     PCSR_CAPTURE_BUFFER CaptureBuffer;
@@ -423,48 +435,56 @@ IntWriteConsole(HANDLE hConsoleOutput,
     WriteConsoleRequest->OutputHandle = hConsoleOutput;
     WriteConsoleRequest->Unicode = bUnicode;
 
-    // while (nNumberOfCharsToWrite > 0)
-    {
-        //// nChars = (USHORT)min(nNumberOfCharsToWrite, CSRSS_MAX_WRITE_CONSOLE / CharSize);
-        // nChars = nNumberOfCharsToWrite;
-        // WriteConsoleRequest->NrCharactersToWrite = nChars;
+    // while (nNumberOfCharsToWrite > 0) {
+    //// nChars = (USHORT)min(nNumberOfCharsToWrite, CSRSS_MAX_WRITE_CONSOLE / CharSize);
+    // nChars = nNumberOfCharsToWrite;
+    // WriteConsoleRequest->NrCharactersToWrite = nChars;
 
-        // SizeBytes = nChars * CharSize;
+    // SizeBytes = nChars * CharSize;
 
-        // memcpy(WriteConsoleRequest->Buffer, lpBuffer, SizeBytes);
+    // memcpy(WriteConsoleRequest->Buffer, lpBuffer, SizeBytes);
 
-        Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
-                                     CaptureBuffer,
-                                     CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepWriteConsole),
-                                     sizeof(CONSOLE_WRITECONSOLE));
+    /* Call the server */
+    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                                 CaptureBuffer,
+                                 CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepWriteConsole),
+                                 sizeof(CONSOLE_WRITECONSOLE));
 /** FIXME: Added in 47359 for pausing
 
-        if (Status == STATUS_PENDING)
-        {
-            WaitForSingleObject(WriteConsoleRequest->UnpauseEvent, INFINITE);
-            CloseHandle(WriteConsoleRequest->UnpauseEvent);
-            continue;
-        }
+    if (Status == STATUS_PENDING)
+    {
+        WaitForSingleObject(WriteConsoleRequest->UnpauseEvent, INFINITE);
+        CloseHandle(WriteConsoleRequest->UnpauseEvent);
+        continue;
+    }
 **/
-        if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = ApiMessage.Status))
-        {
-            CsrFreeCaptureBuffer(CaptureBuffer);
-            BaseSetLastNTError(Status);
-            return FALSE;
-        }
-
+    /* Check for success */
+    if (NT_SUCCESS(Status) || NT_SUCCESS(Status = ApiMessage.Status))
+    {
         // nNumberOfCharsToWrite -= nChars;
         // lpBuffer = (PVOID)((ULONG_PTR)lpBuffer + (ULONG_PTR)SizeBytes);
         // Written += WriteConsoleRequest->NrCharactersWritten;
-    }
+        // }
 
-    if (lpNumberOfCharsWritten != NULL)
-        // *lpNumberOfCharsWritten = Written;
-        *lpNumberOfCharsWritten = WriteConsoleRequest->NrCharactersWritten;
+        if (lpNumberOfCharsWritten != NULL)
+            // *lpNumberOfCharsWritten = Written;
+            *lpNumberOfCharsWritten = WriteConsoleRequest->NrCharactersWritten;
+
+        bRet = TRUE;
+    }
+    else
+    {
+        if (lpNumberOfCharsWritten != NULL)
+            *lpNumberOfCharsWritten = 0;
+
+        /* Error out */
+        BaseSetLastNTError(Status /* ApiMessage.Status */);
+        bRet = FALSE;
+    }
 
     CsrFreeCaptureBuffer(CaptureBuffer);
 
-    return TRUE;
+    return bRet;
 }
 
 
@@ -518,7 +538,7 @@ IntWriteConsoleInput(HANDLE hConsoleInput,
                         sizeof(CONSOLE_WRITEINPUT));
     DPRINT("Server returned: %x\n", ApiMessage.Status);
 
-    /* Check for success*/
+    /* Check for success */
     if (NT_SUCCESS(ApiMessage.Status))
     {
         /* Return the number of events read */
@@ -597,7 +617,7 @@ IntWriteConsoleOutput(HANDLE hConsoleOutput,
                         sizeof(CONSOLE_WRITEOUTPUT));
     DPRINT("Server returned: %x\n", ApiMessage.Status);
 
-    /* Check for success*/
+    /* Check for success */
     if (!NT_SUCCESS(ApiMessage.Status))
     {
         /* Error out */
@@ -626,6 +646,7 @@ IntWriteConsoleOutputCode(HANDLE hConsoleOutput,
                           LPDWORD lpNumberOfCodesWritten)
 {
     NTSTATUS Status;
+    BOOL bRet = TRUE;
     CONSOLE_API_MESSAGE ApiMessage;
     PCONSOLE_WRITEOUTPUTCODE WriteOutputCodeRequest = &ApiMessage.Data.WriteOutputCodeRequest;
     PCSR_CAPTURE_BUFFER CaptureBuffer;
@@ -685,44 +706,46 @@ IntWriteConsoleOutputCode(HANDLE hConsoleOutput,
     WriteOutputCodeRequest->CodeType = CodeType;
     WriteOutputCodeRequest->Coord = dwWriteCoord;
 
-    /**
-     ** TODO: HACK: Surely it has to go into CONSRV !!
-     **/
-    // while (nLength > 0)
+    WriteOutputCodeRequest->Length = nLength; // (WORD)min(nLength, nChars);
+    // BytesWrite = WriteOutputCodeRequest->Length * CodeSize;
+
+    // memcpy(WriteOutputCodeRequest->pCode.pCode, pCode, BytesWrite);
+
+    /* Call the server */
+    Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                                 CaptureBuffer,
+                                 CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepWriteConsoleOutputString),
+                                 sizeof(CONSOLE_WRITEOUTPUTCODE));
+
+    /* Check for success */
+    if (NT_SUCCESS(Status) || NT_SUCCESS(Status = ApiMessage.Status))
     {
-        // DWORD BytesWrite;
-
-        WriteOutputCodeRequest->Length = nLength; // (WORD)min(nLength, nChars);
-        // BytesWrite = WriteOutputCodeRequest->Length * CodeSize;
-
-        // memcpy(WriteOutputCodeRequest->pCode.pCode, pCode, BytesWrite);
-
-        Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
-                                     CaptureBuffer,
-                                     CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepWriteConsoleOutputString),
-                                     sizeof(CONSOLE_WRITEOUTPUTCODE));
-        if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = ApiMessage.Status))
-        {
-            CsrFreeCaptureBuffer(CaptureBuffer);
-            BaseSetLastNTError(Status);
-            return FALSE;
-        }
-
         // nLength -= WriteOutputCodeRequest->NrCharactersWritten;
         // pCode = (PVOID)((ULONG_PTR)pCode + /*(ULONG_PTR)(*/WriteOutputCodeRequest->NrCharactersWritten * CodeSize/*)*/);
         // Written += WriteOutputCodeRequest->NrCharactersWritten;
 
-        WriteOutputCodeRequest->Coord = WriteOutputCodeRequest->EndCoord;
-    }
+        // WriteOutputCodeRequest->Coord = WriteOutputCodeRequest->EndCoord;
 
-    if (lpNumberOfCodesWritten != NULL)
-        // *lpNumberOfCodesWritten = Written;
-        // *lpNumberOfCodesWritten = WriteOutputCodeRequest->NrCharactersWritten;
-        *lpNumberOfCodesWritten = WriteOutputCodeRequest->Length;
+        if (lpNumberOfCodesWritten != NULL)
+            // *lpNumberOfCodesWritten = Written;
+            // *lpNumberOfCodesWritten = WriteOutputCodeRequest->NrCharactersWritten;
+            *lpNumberOfCodesWritten = WriteOutputCodeRequest->Length;
+
+        bRet = TRUE;
+    }
+    else
+    {
+        if (lpNumberOfCodesWritten != NULL)
+            *lpNumberOfCodesWritten = 0;
+
+        /* Error out */
+        BaseSetLastNTError(Status /* ApiMessage.Status */);
+        bRet = FALSE;
+    }
 
     CsrFreeCaptureBuffer(CaptureBuffer);
 
-    return TRUE;
+    return bRet;
 }
 
 
@@ -761,24 +784,33 @@ IntFillConsoleOutputCode(HANDLE hConsoleOutput,
             return FALSE;
     }
 
+    /* Set up the data to send to the Console Server */
     FillOutputRequest->Coord = dwWriteCoord;
     FillOutputRequest->Length = nLength;
 
+    /* Call the server */
     Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                                  NULL,
                                  CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepFillConsoleOutput),
                                  sizeof(CONSOLE_FILLOUTPUTCODE));
-    if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = ApiMessage.Status))
+
+    /* Check for success */
+    if (NT_SUCCESS(ApiMessage.Status))
     {
+        if (lpNumberOfCodesWritten != NULL)
+            *lpNumberOfCodesWritten = FillOutputRequest->Length;
+            // *lpNumberOfCodesWritten = Request.Data.FillOutputRequest.NrCharactersWritten;
+
+        return TRUE;
+    }
+    else
+    {
+        if (lpNumberOfCodesWritten != NULL)
+            *lpNumberOfCodesWritten = 0;
+
         BaseSetLastNTError(Status);
         return FALSE;
     }
-
-    if (lpNumberOfCodesWritten)
-        *lpNumberOfCodesWritten = FillOutputRequest->Length;
-        // *lpNumberOfCodesWritten = Request.Data.FillOutputRequest.NrCharactersWritten;
-
-    return TRUE;
 }
 
 

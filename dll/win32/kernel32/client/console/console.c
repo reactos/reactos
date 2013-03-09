@@ -776,7 +776,7 @@ GetStdHandle(DWORD nStdHandle)
             return Ppb->StandardError;
     }
 
-    SetLastError(ERROR_INVALID_PARAMETER);
+    SetLastError(ERROR_INVALID_HANDLE);
     return INVALID_HANDLE_VALUE;
 }
 
@@ -1050,14 +1050,10 @@ GetNumberOfConsoleInputEvents(HANDLE hConsoleInput,
 {
     NTSTATUS Status;
     CONSOLE_API_MESSAGE ApiMessage;
+    PCONSOLE_GETNUMINPUTEVENTS GetNumInputEventsRequest = &ApiMessage.Data.GetNumInputEventsRequest;
 
-    if (lpNumberOfEvents == NULL)
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return FALSE;
-    }
-
-    ApiMessage.Data.GetNumInputEventsRequest.InputHandle = hConsoleInput;
+    GetNumInputEventsRequest->InputHandle = hConsoleInput;
+    GetNumInputEventsRequest->NumInputEvents = 0;
 
     Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                                  NULL,
@@ -1069,7 +1065,13 @@ GetNumberOfConsoleInputEvents(HANDLE hConsoleInput,
         return FALSE;
     }
 
-    *lpNumberOfEvents = ApiMessage.Data.GetNumInputEventsRequest.NumInputEvents;
+    if (lpNumberOfEvents == NULL)
+    {
+        SetLastError(ERROR_INVALID_ACCESS);
+        return FALSE;
+    }
+
+    *lpNumberOfEvents = GetNumInputEventsRequest->NumInputEvents;
 
     return TRUE;
 }

@@ -446,7 +446,7 @@ ConSrvGetDefaultSettings(IN OUT PCONSOLE_INFO ConsoleInfo,
 
     ConsoleInfo->CursorBlinkOn;
     ConsoleInfo->ForceCursorOff;
-    ConsoleInfo->CursorSize = CSR_DEFAULT_CURSOR_SIZE; // 0; #define SMALL_SIZE 25 // large enough to be one pixel on a six pixel font
+    ConsoleInfo->CursorSize = CSR_DEFAULT_CURSOR_SIZE; // #define SMALL_SIZE 25
 
     ConsoleInfo->ScreenAttrib = DEFAULT_SCREEN_ATTRIB;
     ConsoleInfo->PopupAttrib  = DEFAULT_POPUP_ATTRIB;
@@ -472,13 +472,6 @@ ConSrvGetDefaultSettings(IN OUT PCONSOLE_INFO ConsoleInfo,
     ConsoleInfo->u.GuiInfo.ShowWindow   = SW_SHOWNORMAL;
     ConsoleInfo->u.GuiInfo.AutoPosition = TRUE;
     ConsoleInfo->u.GuiInfo.WindowOrigin = (POINT){0, 0};
-
-    // if (Console->ActiveBuffer)
-    // {
-        // Console->ActiveBuffer->ScreenBufferSize.X = 80;
-        // Console->ActiveBuffer->ScreenBufferSize.Y = 300;
-        // Console->ActiveBuffer->CursorInfo.bVisible = TRUE;
-    // }
 
     /*
      * 2. Overwrite them with the ones stored in HKCU\Console.

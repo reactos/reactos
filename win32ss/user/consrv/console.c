@@ -365,7 +365,9 @@ ConSrvInitConsole(OUT PCONSOLE* NewConsole,
                                       &NewBuffer,
                                       ConsoleInfo.ScreenBufferSize,
                                       ConsoleInfo.ScreenAttrib,
-                                      ConsoleInfo.PopupAttrib);
+                                      ConsoleInfo.PopupAttrib,
+                                      TRUE,
+                                      ConsoleInfo.CursorSize);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("ConSrvCreateScreenBuffer: failed, Status = 0x%08lx\n", Status);

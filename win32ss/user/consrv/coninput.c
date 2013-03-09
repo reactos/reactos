@@ -857,7 +857,7 @@ CSR_API(SrvGetConsoleNumberOfInputEvents)
     if (!NT_SUCCESS(Status)) return Status;
 
     CurrentInput = InputBuffer->InputEvents.Flink;
-    NumEvents = 0;
+    /* GetNumInputEventsRequest->NumInputEvents = */ NumEvents = 0;
 
     /* If there are any events ... */
     while (CurrentInput != &InputBuffer->InputEvents)

@@ -64,7 +64,9 @@ ConSrvCreateScreenBuffer(IN OUT PCONSOLE Console,
                          OUT PCONSOLE_SCREEN_BUFFER* Buffer,
                          IN COORD ScreenBufferSize,
                          IN USHORT ScreenAttrib,
-                         IN USHORT PopupAttrib)
+                         IN USHORT PopupAttrib,
+                         IN BOOLEAN IsCursorVisible,
+                         IN ULONG CursorSize)
 {
     if (Console == NULL || Buffer == NULL)
         return STATUS_INVALID_PARAMETER;
@@ -91,9 +93,8 @@ ConSrvCreateScreenBuffer(IN OUT PCONSOLE Console,
     (*Buffer)->ShowY = 0;
     (*Buffer)->VirtualY = 0;
 
-    // FIXME: !!
-    (*Buffer)->CursorInfo.bVisible = TRUE;
-    // (*Buffer)->CursorInfo.dwSize = ConsoleInfo->CursorSize;
+    (*Buffer)->CursorInfo.bVisible = (IsCursorVisible && (CursorSize > 0));
+    (*Buffer)->CursorInfo.dwSize   = min(max(CursorSize, 1), 100);
 
     (*Buffer)->ScreenDefaultAttrib = ScreenAttrib;
     (*Buffer)->PopupDefaultAttrib  = PopupAttrib;
@@ -1035,8 +1036,8 @@ CSR_API(SrvWriteConsoleOutputString)
             ConioDrawRegion(Console, &UpdateRect);
         }
 
-        WriteOutputCodeRequest->EndCoord.X = X;
-        WriteOutputCodeRequest->EndCoord.Y = (Y + Buff->ScreenBufferSize.Y - Buff->VirtualY) % Buff->ScreenBufferSize.Y;
+        // WriteOutputCodeRequest->EndCoord.X = X;
+        // WriteOutputCodeRequest->EndCoord.Y = (Y + Buff->ScreenBufferSize.Y - Buff->VirtualY) % Buff->ScreenBufferSize.Y;
     }
 
     if (tmpString)
@@ -1269,9 +1270,11 @@ CSR_API(SrvCreateConsoleScreenBuffer)
     PCONSOLE Console;
     PCONSOLE_SCREEN_BUFFER Buff;
 
-    COORD ScreenBufferSize = (COORD){80, 25};
-    USHORT ScreenAttrib = DEFAULT_SCREEN_ATTRIB;
-    USHORT PopupAttrib  = DEFAULT_POPUP_ATTRIB;
+    COORD   ScreenBufferSize = (COORD){80, 25};
+    USHORT  ScreenAttrib     = DEFAULT_SCREEN_ATTRIB;
+    USHORT  PopupAttrib      = DEFAULT_POPUP_ATTRIB;
+    BOOLEAN IsCursorVisible  = TRUE;
+    ULONG   CursorSize       = CSR_DEFAULT_CURSOR_SIZE;
 
     DPRINT("SrvCreateConsoleScreenBuffer\n");
 
@@ -1292,20 +1295,18 @@ CSR_API(SrvCreateConsoleScreenBuffer)
 
         ScreenAttrib = Console->ActiveBuffer->ScreenDefaultAttrib;
         PopupAttrib  = Console->ActiveBuffer->PopupDefaultAttrib;
-        // Buff->CursorInfo.bVisible = Console->ActiveBuffer->CursorInfo.bVisible;
-        // Buff->CursorInfo.dwSize = Console->ActiveBuffer->CursorInfo.dwSize;
+
+        IsCursorVisible = Console->ActiveBuffer->CursorInfo.bVisible;
+        CursorSize      = Console->ActiveBuffer->CursorInfo.dwSize;
     }
-    // else
-    // {
-        // Buff->CursorInfo.bVisible = TRUE;
-        // Buff->CursorInfo.dwSize = CSR_DEFAULT_CURSOR_SIZE;
-    // }
 
     Status = ConSrvCreateScreenBuffer(Console,
                                       &Buff,
                                       ScreenBufferSize,
                                       ScreenAttrib,
-                                      PopupAttrib);
+                                      PopupAttrib,
+                                      IsCursorVisible,
+                                      CursorSize);
     if (NT_SUCCESS(Status))
     {
         Status = ConSrvInsertObject(ProcessData,

@@ -275,7 +275,9 @@ NTSTATUS FASTCALL ConSrvCreateScreenBuffer(IN OUT PCONSOLE Console,
                                            OUT PCONSOLE_SCREEN_BUFFER* Buffer,
                                            IN COORD ScreenBufferSize,
                                            IN USHORT ScreenAttrib,
-                                           IN USHORT PopupAttrib);
+                                           IN USHORT PopupAttrib,
+                                           IN BOOLEAN IsCursorVisible,
+                                           IN ULONG CursorSize);
 VOID WINAPI ConioDeleteScreenBuffer(PCONSOLE_SCREEN_BUFFER Buffer);
 DWORD FASTCALL ConioEffectiveCursorSize(PCONSOLE Console, DWORD Scale);
 

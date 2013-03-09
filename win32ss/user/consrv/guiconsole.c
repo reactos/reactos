@@ -464,7 +464,8 @@ GuiApplyUserSettings(PGUI_CONSOLE_DATA GuiData,
     memcpy(Console->Colors, pConInfo->ci.Colors, sizeof(s_Colors)); // FIXME: Possible buffer overflow if s_colors is bigger than pConInfo->Colors.
 
     /* Apply cursor size */
-    ActiveBuffer->CursorInfo.dwSize = min(max(pConInfo->ci.CursorSize, 1), 100);
+    ActiveBuffer->CursorInfo.bVisible = (pConInfo->ci.CursorSize > 0);
+    ActiveBuffer->CursorInfo.dwSize   = min(max(pConInfo->ci.CursorSize, 1), 100);
 
     if (pConInfo->ci.ConsoleSize.X != Console->Size.X ||
         pConInfo->ci.ConsoleSize.Y != Console->Size.Y)
