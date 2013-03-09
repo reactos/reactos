@@ -148,7 +148,6 @@ CSR_API(SrvGetConsoleSelectionInfo);
 CSR_API(SrvCloseHandle);
 CSR_API(SrvVerifyConsoleIoHandle);
 CSR_API(SrvDuplicateHandle);
-/// CSR_API(CsrGetInputWaitHandle);
 
 NTSTATUS FASTCALL ConSrvInitHandlesTable(IN OUT PCONSOLE_PROCESS_DATA ProcessData,
                                          OUT PHANDLE pInputHandle,

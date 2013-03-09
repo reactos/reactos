@@ -856,16 +856,4 @@ CSR_API(SrvDuplicateHandle)
     return ApiMessage->Status;
 }
 
-/**
-CSR_API(CsrGetInputWaitHandle)
-{
-    PCSRSS_GET_INPUT_WAIT_HANDLE GetConsoleInputWaitHandle = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetConsoleInputWaitHandle;
-
-    GetConsoleInputWaitHandle->InputWaitHandle =
-        ConsoleGetPerProcessData(CsrGetClientThread()->Process)->ConsoleEvent;
-
-    return STATUS_SUCCESS;
-}
-**/
-
 /* EOF */

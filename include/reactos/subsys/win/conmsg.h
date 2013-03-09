@@ -425,13 +425,6 @@ typedef struct
     DWORD ShareMode;
 } CONSOLE_OPENCONSOLE, *PCONSOLE_OPENCONSOLE;
 
-#if 0
-typedef struct
-{
-    HANDLE InputWaitHandle;
-} CSRSS_GET_INPUT_WAIT_HANDLE, *PCSRSS_GET_INPUT_WAIT_HANDLE;
-#endif
-
 
 /*
  * Console hardware states.
@@ -576,9 +569,6 @@ typedef struct _CONSOLE_API_MESSAGE
         CONSOLE_CLOSEHANDLE CloseHandleRequest;
         CONSOLE_VERIFYHANDLE VerifyHandleRequest;
         CONSOLE_DUPLICATEHANDLE DuplicateHandleRequest;
-#if 0
-        CSRSS_GET_INPUT_WAIT_HANDLE GetConsoleInputWaitHandle;
-#endif
 
         /* Cursor */
         CONSOLE_GETSETCURSORINFO CursorInfoRequest;

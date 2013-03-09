@@ -99,7 +99,7 @@ CSR_API(BaseSrvDefineDosDevice)
     DWORD dwFlags;
     PWSTR lpBuffer;
 
-    DPRINT("CsrDefineDosDevice entered, Flags:%d, DeviceName:%wZ, TargetName:%wZ\n",
+    DPRINT("BaseSrvDefineDosDevice entered, Flags:%d, DeviceName:%wZ, TargetName:%wZ\n",
            DefineDosDeviceRequest->dwFlags,
            &DefineDosDeviceRequest->DeviceName,
            &DefineDosDeviceRequest->TargetName);
@@ -549,7 +549,7 @@ CSR_API(BaseSrvDefineDosDevice)
     }
     _SEH2_END
 
-    DPRINT("CsrDefineDosDevice Exit, Statux: 0x%x\n", Status);
+    DPRINT("BaseSrvDefineDosDevice exit, Status: 0x%x\n", Status);
     return Status;
 }
 

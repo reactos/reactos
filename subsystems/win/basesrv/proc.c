@@ -17,11 +17,11 @@
 
 CSR_API(BaseSrvGetTempFile)
 {
-    static UINT CsrGetTempFileUnique = 0;
+    static UINT BaseGetTempFileUnique = 0;
     PBASE_GET_TEMP_FILE GetTempFile = &((PBASE_API_MESSAGE)ApiMessage)->Data.GetTempFile;
 
     /* Return 16-bits ID */
-    GetTempFile->UniqueID = (++CsrGetTempFileUnique & 0xFFFF);
+    GetTempFile->UniqueID = (++BaseGetTempFileUnique & 0xFFFF);
 
     DPRINT("Returning: %u\n", GetTempFile->UniqueID);
 
