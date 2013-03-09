@@ -501,12 +501,6 @@ IntWriteConsoleInput(HANDLE hConsoleInput,
     PCSR_CAPTURE_BUFFER CaptureBuffer;
     DWORD Size;
 
-    if (lpBuffer == NULL)
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return FALSE;
-    }
-
     Size = nLength * sizeof(INPUT_RECORD);
 
     DPRINT("IntWriteConsoleInput: %lx %p\n", Size, lpNumberOfEventsWritten);
@@ -583,6 +577,13 @@ IntWriteConsoleOutput(HANDLE hConsoleOutput,
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
+    /*
+    if (lpWriteRegion == NULL)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+    */
 
     Size = dwBufferSize.Y * dwBufferSize.X * sizeof(CHAR_INFO);
 
