@@ -69,6 +69,12 @@ typedef struct _LSAP_POLICY_AUDIT_EVENTS_DATA
     DWORD AuditEvents[0];
 } LSAP_POLICY_AUDIT_EVENTS_DATA, *PLSAP_POLICY_AUDIT_EVENTS_DATA;
 
+typedef struct _LSAP_LOGON_CONTEXT
+{
+    LIST_ENTRY Entry;
+    HANDLE ClientProcessHandle;
+    HANDLE ConnectionHandle;
+} LSAP_LOGON_CONTEXT, *PLSAP_LOGON_CONTEXT;
 
 extern SID_IDENTIFIER_AUTHORITY NullSidAuthority;
 extern SID_IDENTIFIER_AUTHORITY WorldSidAuthority;
@@ -86,8 +92,16 @@ NTSTATUS
 LsapInitAuthPackages(VOID);
 
 NTSTATUS
-LsapLookupAuthenticationPackageByName(IN PSTRING PackageName,
-                                      OUT PULONG PackageId);
+LsapLookupAuthenticationPackage(PLSA_API_MSG RequestMsg,
+                                PLSAP_LOGON_CONTEXT LogonContext);
+
+NTSTATUS
+LsapCallAuthenticationPackage(PLSA_API_MSG RequestMsg,
+                              PLSAP_LOGON_CONTEXT LogonContext);
+
+NTSTATUS
+LsapLogonUser(PLSA_API_MSG RequestMsg,
+              PLSAP_LOGON_CONTEXT LogonContext);
 
 /* authport.c */
 NTSTATUS

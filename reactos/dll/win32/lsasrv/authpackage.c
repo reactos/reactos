@@ -12,9 +12,18 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(lsasrv);
 
+typedef enum _LSA_TOKEN_INFORMATION_TYPE
+{
+    LsaTokenInformationNull,
+    LsaTokenInformationV1
+} LSA_TOKEN_INFORMATION_TYPE, *PLSA_TOKEN_INFORMATION_TYPE;
+
+typedef PVOID PLSA_CLIENT_REQUEST;
 
 typedef PVOID (NTAPI *PLSA_ALLOCATE_LSA_HEAP)(ULONG);
 typedef VOID (NTAPI *PLSA_FREE_LSA_HEAP)(PVOID);
+typedef NTSTATUS (NTAPI *PLSA_ALLOCATE_CLIENT_BUFFER)(PLSA_CLIENT_REQUEST, ULONG, PVOID*);
+typedef NTSTATUS (NTAPI *PLSA_FREE_CLIENT_BUFFER)(PLSA_CLIENT_REQUEST, PVOID);
 
 typedef struct LSA_DISPATCH_TABLE
 {
@@ -25,8 +34,8 @@ typedef struct LSA_DISPATCH_TABLE
     PVOID /*PLSA_DELETE_CREDENTIAL */ DeleteCredential;
     PLSA_ALLOCATE_LSA_HEAP AllocateLsaHeap;
     PLSA_FREE_LSA_HEAP FreeLsaHeap;
-    PVOID /*PLSA_ALLOCATE_CLIENT_BUFFER */ AllocateClientBuffer;
-    PVOID /*PLSA_FREE_CLIENT_BUFFER */ FreeClientBuffer;
+    PLSA_ALLOCATE_CLIENT_BUFFER AllocateClientBuffer;
+    PLSA_FREE_CLIENT_BUFFER FreeClientBuffer;
     PVOID /*PLSA_COPY_TO_CLIENT_BUFFER */ CopyToClientBuffer;
     PVOID /*PLSA_COPY_FROM_CLIENT_BUFFER */ CopyFromClientBuffer;
 } LSA_DISPATCH_TABLE, *PLSA_DISPATCH_TABLE;
@@ -34,23 +43,25 @@ typedef struct LSA_DISPATCH_TABLE
 
 typedef NTSTATUS (NTAPI *PLSA_AP_INITIALIZE_PACKAGE)(ULONG, PLSA_DISPATCH_TABLE,
  PLSA_STRING, PLSA_STRING, PLSA_STRING *);
-typedef NTSTATUS (NTAPI *PLSA_AP_CALL_PACKAGE)(PUNICODE_STRING, PVOID, ULONG,
- PVOID *, PULONG, PNTSTATUS);
-typedef NTSTATUS (NTAPI *PLSA_AP_CALL_PACKAGE_PASSTHROUGH)(PUNICODE_STRING,
+typedef NTSTATUS (NTAPI *PLSA_AP_CALL_PACKAGE_INTERNAL)(PLSA_CLIENT_REQUEST, PVOID, PVOID,
+ ULONG, PVOID *, PULONG, PNTSTATUS);
+typedef NTSTATUS (NTAPI *PLSA_AP_CALL_PACKAGE_PASSTHROUGH)(PLSA_CLIENT_REQUEST,
  PVOID, PVOID, ULONG, PVOID *, PULONG, PNTSTATUS);
-typedef NTSTATUS (NTAPI *PLSA_AP_CALL_PACKAGE_UNTRUSTED)(PVOID/*PLSA_CLIENT_REQUEST*/,
+typedef NTSTATUS (NTAPI *PLSA_AP_CALL_PACKAGE_UNTRUSTED)(PLSA_CLIENT_REQUEST,
  PVOID, PVOID, ULONG, PVOID *, PULONG, PNTSTATUS);
 typedef VOID (NTAPI *PLSA_AP_LOGON_TERMINATED)(PLUID);
-typedef NTSTATUS (NTAPI *PLSA_AP_LOGON_USER_EX2)(PVOID /*PLSA_CLIENT_REQUEST*/,
+typedef NTSTATUS (NTAPI *PLSA_AP_LOGON_USER_EX2)(PLSA_CLIENT_REQUEST,
  SECURITY_LOGON_TYPE, PVOID, PVOID, ULONG, PVOID *, PULONG, PLUID, PNTSTATUS,
- PVOID /*PLSA_TOKEN_INFORMATION_TYPE*/, PVOID *, PUNICODE_STRING *, PUNICODE_STRING *,
+ PLSA_TOKEN_INFORMATION_TYPE, PVOID *, PUNICODE_STRING *, PUNICODE_STRING *,
  PUNICODE_STRING *, PVOID /*PSECPKG_PRIMARY_CRED*/, PVOID /*PSECPKG_SUPPLEMENTAL_CRED_ARRAY **/);
-typedef NTSTATUS (NTAPI *PLSA_AP_LOGON_USER_EX)(PVOID /*PLSA_CLIENT_REQUEST*/,
+typedef NTSTATUS (NTAPI *PLSA_AP_LOGON_USER_EX)(PLSA_CLIENT_REQUEST,
  SECURITY_LOGON_TYPE, PVOID, PVOID, ULONG, PVOID *, PULONG, PLUID, PNTSTATUS,
- PVOID /*PLSA_TOKEN_INFORMATION_TYPE*/, PVOID *, PUNICODE_STRING *, PUNICODE_STRING *,
+ PLSA_TOKEN_INFORMATION_TYPE, PVOID *, PUNICODE_STRING *, PUNICODE_STRING *,
  PUNICODE_STRING *);
-typedef NTSTATUS (NTAPI *PLSA_AP_LOGON_USER)(LPWSTR, LPWSTR, LPWSTR, LPWSTR,
- DWORD, DWORD, PHANDLE);
+
+typedef NTSTATUS (NTAPI *PLSA_AP_LOGON_USER_INTERNAL)(PLSA_CLIENT_REQUEST, SECURITY_LOGON_TYPE,
+ PVOID, PVOID, ULONG, PVOID *, PULONG, PLUID, PNTSTATUS, PLSA_TOKEN_INFORMATION_TYPE,
+ PVOID *, PUNICODE_STRING *, PUNICODE_STRING *);
 
 typedef struct _AUTH_PACKAGE
 {
@@ -60,20 +71,22 @@ typedef struct _AUTH_PACKAGE
     PVOID ModuleHandle;
 
     PLSA_AP_INITIALIZE_PACKAGE LsaApInitializePackage;
-    PLSA_AP_CALL_PACKAGE LsaApCallPackage;
+    PLSA_AP_CALL_PACKAGE_INTERNAL LsaApCallPackage;
     PLSA_AP_CALL_PACKAGE_PASSTHROUGH LsaApCallPackagePassthrough;
     PLSA_AP_CALL_PACKAGE_UNTRUSTED LsaApCallPackageUntrusted;
     PLSA_AP_LOGON_TERMINATED LsaApLogonTerminated;
     PLSA_AP_LOGON_USER_EX2 LsaApLogonUserEx2;
     PLSA_AP_LOGON_USER_EX LsaApLogonUserEx;
-    PLSA_AP_LOGON_USER LsaApLogonUser;
+    PLSA_AP_LOGON_USER_INTERNAL LsaApLogonUser;
 } AUTH_PACKAGE, *PAUTH_PACKAGE;
+
 
 /* GLOBALS *****************************************************************/
 
 static LIST_ENTRY PackageListHead;
 static ULONG PackageId;
 static LSA_DISPATCH_TABLE DispatchTable;
+
 
 /* FUNCTIONS ***************************************************************/
 
@@ -243,19 +256,71 @@ done:
 
 
 static
+PAUTH_PACKAGE
+LsapGetAuthenticationPackage(IN ULONG PackageId)
+{
+    PLIST_ENTRY ListEntry;
+    PAUTH_PACKAGE Package;
+
+    ListEntry = PackageListHead.Flink;
+    while (ListEntry != &PackageListHead)
+    {
+        Package = CONTAINING_RECORD(ListEntry, AUTH_PACKAGE, Entry);
+
+        if (Package->Id == PackageId)
+        {
+            return Package;
+        }
+
+        ListEntry = ListEntry->Flink;
+    }
+
+    return NULL;
+}
+
+
+static
 PVOID
 NTAPI
-LsapAllocateHeap(ULONG Size)
+LsapAllocateHeap(IN ULONG Length)
 {
-    return RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, Size);
+    return RtlAllocateHeap(RtlGetProcessHeap(),
+                           HEAP_ZERO_MEMORY,
+                           Length);
 }
+
 
 static
 VOID
 NTAPI
-LsapFreeHeap(PVOID Ptr)
+LsapFreeHeap(IN PVOID Base)
 {
-    RtlFreeHeap(RtlGetProcessHeap(), 0, Ptr);
+    RtlFreeHeap(RtlGetProcessHeap(),
+                0,
+                Base);
+}
+
+
+static
+NTSTATUS
+NTAPI
+LsapAllocateClientBuffer(IN PLSA_CLIENT_REQUEST ClientRequest,
+                         IN ULONG LengthRequired,
+                         OUT PVOID *ClientBaseAddress)
+{
+    FIXME("() stub\n");
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+
+static
+NTSTATUS
+NTAPI
+LsapFreeClientBuffer(IN PLSA_CLIENT_REQUEST ClientRequest,
+                     IN PVOID ClientBaseAddress)
+{
+    FIXME("() stub\n");
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 
@@ -279,8 +344,8 @@ LsapInitAuthPackages(VOID)
     DispatchTable.DeleteCredential = NULL;
     DispatchTable.AllocateLsaHeap = &LsapAllocateHeap;
     DispatchTable.FreeLsaHeap = &LsapFreeHeap;
-    DispatchTable.AllocateClientBuffer = NULL;
-    DispatchTable.FreeClientBuffer = NULL;
+    DispatchTable.AllocateClientBuffer = &LsapAllocateClientBuffer;
+    DispatchTable.FreeClientBuffer = &LsapFreeClientBuffer;
     DispatchTable.CopyToClientBuffer = NULL;
     DispatchTable.CopyFromClientBuffer = NULL;
 
@@ -297,21 +362,30 @@ LsapInitAuthPackages(VOID)
 
 
 NTSTATUS
-LsapLookupAuthenticationPackageByName(IN PSTRING PackageName,
-                                      OUT PULONG PackageId)
+LsapLookupAuthenticationPackage(PLSA_API_MSG RequestMsg,
+                                PLSAP_LOGON_CONTEXT LogonContext)
 {
     PLIST_ENTRY ListEntry;
     PAUTH_PACKAGE Package;
+    ULONG PackageNameLength;
+    PCHAR PackageName;
+
+    TRACE("(%p %p)\n", RequestMsg, LogonContext);
+
+    PackageNameLength = RequestMsg->LookupAuthenticationPackage.Request.PackageNameLength;
+    PackageName = RequestMsg->LookupAuthenticationPackage.Request.PackageName;
+
+    TRACE("PackageName: %s\n", PackageName);
 
     ListEntry = PackageListHead.Flink;
     while (ListEntry != &PackageListHead)
     {
         Package = CONTAINING_RECORD(ListEntry, AUTH_PACKAGE, Entry);
 
-        if ((PackageName->Length == Package->Name->Length) &&
-            (_strnicmp(PackageName->Buffer, Package->Name->Buffer, Package->Name->Length) == 0))
+        if ((PackageNameLength == Package->Name->Length) &&
+            (_strnicmp(PackageName, Package->Name->Buffer, Package->Name->Length) == 0))
         {
-            *PackageId = Package->Id;
+            RequestMsg->LookupAuthenticationPackage.Reply.Package = Package->Id;
             return STATUS_SUCCESS;
         }
 
@@ -319,6 +393,145 @@ LsapLookupAuthenticationPackageByName(IN PSTRING PackageName,
     }
 
     return STATUS_NO_SUCH_PACKAGE;
+}
+
+
+NTSTATUS
+LsapCallAuthenticationPackage(PLSA_API_MSG RequestMsg,
+                              PLSAP_LOGON_CONTEXT LogonContext)
+{
+    PAUTH_PACKAGE Package;
+    ULONG PackageId;
+
+    NTSTATUS Status;
+
+    TRACE("(%p %p)\n", RequestMsg, LogonContext);
+
+    PackageId = RequestMsg->CallAuthenticationPackage.Request.AuthenticationPackage;
+
+    Package = LsapGetAuthenticationPackage(PackageId);
+    if (Package == NULL)
+    {
+        TRACE("LsapGetAuthenticationPackage() failed to find a package\n");
+        return STATUS_NO_SUCH_PACKAGE;
+    }
+
+    Status = Package->LsaApCallPackage(NULL, /* FIXME: PLSA_CLIENT_REQUEST ClientRequest */
+                                       RequestMsg->CallAuthenticationPackage.Request.ProtocolSubmitBuffer,
+                                       NULL, /* FIXME: PVOID ClientBufferBase */
+                                       RequestMsg->CallAuthenticationPackage.Request.SubmitBufferLength,
+                                       &RequestMsg->CallAuthenticationPackage.Reply.ProtocolReturnBuffer,
+                                       &RequestMsg->CallAuthenticationPackage.Reply.ReturnBufferLength,
+                                       &RequestMsg->CallAuthenticationPackage.Reply.ProtocolStatus);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("Package->LsaApCallPackage() failed (Status 0x%08lx)\n", Status);
+    }
+
+    return Status;
+}
+
+
+NTSTATUS
+LsapLogonUser(PLSA_API_MSG RequestMsg,
+              PLSAP_LOGON_CONTEXT LogonContext)
+{
+    PAUTH_PACKAGE Package;
+    ULONG PackageId;
+    NTSTATUS Status;
+
+    LSA_TOKEN_INFORMATION_TYPE TokenInformationType;
+    PVOID TokenInformation = NULL;
+    PUNICODE_STRING AccountName = NULL;
+    PUNICODE_STRING AuthenticatingAuthority = NULL;
+    PUNICODE_STRING MachineName = NULL;
+
+    TRACE("(%p %p)\n", RequestMsg, LogonContext);
+
+    PackageId = RequestMsg->LogonUser.Request.AuthenticationPackage;
+
+    Package = LsapGetAuthenticationPackage(PackageId);
+    if (Package == NULL)
+    {
+        TRACE("LsapGetAuthenticationPackage() failed to find a package\n");
+        return STATUS_NO_SUCH_PACKAGE;
+    }
+
+    if (Package->LsaApLogonUserEx2 != NULL)
+    {
+        Status = Package->LsaApLogonUserEx2(NULL,  /* FIXME: PLSA_CLIENT_REQUEST ClientRequest */
+                                            RequestMsg->LogonUser.Request.LogonType,
+                                            RequestMsg->LogonUser.Request.AuthenticationInformation,
+                                            NULL,  /* FIXME: PVOID ClientBufferBase*/
+                                            RequestMsg->LogonUser.Request.AuthenticationInformationLength,
+                                            &RequestMsg->LogonUser.Reply.ProfileBuffer,
+                                            &RequestMsg->LogonUser.Reply.ProfileBufferLength,
+                                            &RequestMsg->LogonUser.Reply.LogonId,
+                                            &RequestMsg->LogonUser.Reply.SubStatus,
+                                            &TokenInformationType,
+                                            &TokenInformation,
+                                            &AccountName,
+                                            &AuthenticatingAuthority,
+                                            &MachineName,
+                                            NULL,  /* FIXME: PSECPKG_PRIMARY_CRED PrimaryCredentials */
+                                            NULL); /* FIXME: PSECPKG_SUPPLEMENTAL_CRED_ARRAY *SupplementalCredentials */
+    }
+    else if (Package->LsaApLogonUserEx != NULL)
+    {
+        Status = Package->LsaApLogonUserEx(NULL,  /* FIXME: PLSA_CLIENT_REQUEST ClientRequest */
+                                           RequestMsg->LogonUser.Request.LogonType,
+                                           RequestMsg->LogonUser.Request.AuthenticationInformation,
+                                           NULL,  /* FIXME: PVOID ClientBufferBase*/
+                                           RequestMsg->LogonUser.Request.AuthenticationInformationLength,
+                                           &RequestMsg->LogonUser.Reply.ProfileBuffer,
+                                           &RequestMsg->LogonUser.Reply.ProfileBufferLength,
+                                           &RequestMsg->LogonUser.Reply.LogonId,
+                                           &RequestMsg->LogonUser.Reply.SubStatus,
+                                           &TokenInformationType,
+                                           &TokenInformation,
+                                           &AccountName,
+                                           &AuthenticatingAuthority,
+                                           &MachineName);
+    }
+    else
+    {
+        Status = Package->LsaApLogonUser(NULL,  /* FIXME: PLSA_CLIENT_REQUEST ClientRequest */
+                                         RequestMsg->LogonUser.Request.LogonType,
+                                         RequestMsg->LogonUser.Request.AuthenticationInformation,
+                                         NULL,  /* FIXME:  PVOID ClientBufferBase*/
+                                         RequestMsg->LogonUser.Request.AuthenticationInformationLength,
+                                         &RequestMsg->LogonUser.Reply.ProfileBuffer,
+                                         &RequestMsg->LogonUser.Reply.ProfileBufferLength,
+                                         &RequestMsg->LogonUser.Reply.LogonId,
+                                         &RequestMsg->LogonUser.Reply.SubStatus,
+                                         &TokenInformationType,
+                                         &TokenInformation,
+                                         &AccountName,
+                                         &AuthenticatingAuthority);
+    }
+
+
+    if (TokenInformation != NULL)
+    {
+
+    }
+
+    if (AuthenticatingAuthority != NULL)
+    {
+
+    }
+
+    if (AccountName != NULL)
+    {
+
+    }
+
+    if (MachineName != NULL)
+    {
+
+    }
+
+    return Status;
 }
 
 /* EOF */
