@@ -40,7 +40,7 @@
 #include <sm/smmsg.h>
 
 /* Internal CSRSS Header */
-#include "include/api.h"
+#include "api.h"
 
 /* Defines */
 #define SM_REG_KEY \

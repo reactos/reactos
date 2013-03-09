@@ -840,8 +840,6 @@ AllocConsole(VOID)
     PCSR_CAPTURE_BUFFER CaptureBuffer;
     SIZE_T Length = 0;
 
-    DPRINT1("AllocConsole\n");
-
     if (Parameters->ConsoleHandle)
     {
         DPRINT1("AllocConsole: Allocating a console to a process already having one\n");
@@ -1572,8 +1570,7 @@ IntGetConsoleTitle(LPVOID lpConsoleTitle, DWORD nSize, BOOL bUnicode)
     PCONSOLE_GETSETCONSOLETITLE TitleRequest = &ApiMessage.Data.TitleRequest;
     PCSR_CAPTURE_BUFFER CaptureBuffer;
 
-    if (nSize == 0)
-        return 0;
+    if (nSize == 0) return 0;
 
     TitleRequest->Length = nSize * (bUnicode ? 1 : sizeof(WCHAR));
     CaptureBuffer = CsrAllocateCaptureBuffer(1, TitleRequest->Length);
@@ -1995,8 +1992,6 @@ AttachConsole(DWORD dwProcessId)
     PRTL_USER_PROCESS_PARAMETERS Parameters = NtCurrentPeb()->ProcessParameters;
     CONSOLE_API_MESSAGE ApiMessage;
     PCONSOLE_ATTACHCONSOLE AttachConsoleRequest = &ApiMessage.Data.AttachConsoleRequest;
-
-    DPRINT1("AttachConsole(%lu)\n", dwProcessId);
 
     if (Parameters->ConsoleHandle)
     {

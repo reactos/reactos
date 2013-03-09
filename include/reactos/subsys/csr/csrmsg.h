@@ -112,7 +112,7 @@ typedef struct _CSR_API_MESSAGE
         {
             PCSR_CAPTURE_BUFFER CsrCaptureData;
             CSR_API_NUMBER ApiNumber;
-            ULONG Status; // ReturnValue; // NTSTATUS Status
+            NTSTATUS Status; // ReturnValue;
             ULONG Reserved;
             union
             {

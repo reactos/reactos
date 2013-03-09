@@ -6,7 +6,7 @@
  * PROGRAMMERS:
  */
 
-/* INCLUDES ******************************************************************/
+/* INCLUDES *******************************************************************/
 
 #include "winsrv.h"
 #include <sddl.h>
@@ -14,70 +14,7 @@
 #define NDEBUG
 #include <debug.h>
 
-
-static HWND LogonNotifyWindow = NULL;
-static ULONG_PTR LogonProcessId = 0;
-
-
-/* FUNCTIONS *****************************************************************/
-
-/*
-NTSTATUS FASTCALL
-Win32CsrEnumProcesses(CSRSS_ENUM_PROCESS_PROC EnumProc,
-                      PVOID Context)
-{
-    return CsrEnumProcesses(EnumProc, Context);
-}
-*/
-
-CSR_API(SrvRegisterLogonProcess)
-{
-    PCSRSS_REGISTER_LOGON_PROCESS RegisterLogonProcessRequest = &((PUSER_API_MESSAGE)ApiMessage)->Data.RegisterLogonProcessRequest;
-
-    if (RegisterLogonProcessRequest->Register)
-    {
-        if (LogonProcessId != 0)
-            return STATUS_LOGON_SESSION_EXISTS;
-
-        LogonProcessId = RegisterLogonProcessRequest->ProcessId;
-    }
-    else
-    {
-        if (ApiMessage->Header.ClientId.UniqueProcess != (HANDLE)LogonProcessId)
-        {
-            DPRINT1("Current logon process 0x%x, can't deregister from process 0x%x\n",
-                    LogonProcessId, ApiMessage->Header.ClientId.UniqueProcess);
-            return STATUS_NOT_LOGON_PROCESS;
-        }
-
-        LogonProcessId = 0;
-    }
-
-    return STATUS_SUCCESS;
-}
-
-/// HACK: ReactOS-specific
-CSR_API(RosSetLogonNotifyWindow)
-{
-    PCSRSS_SET_LOGON_NOTIFY_WINDOW SetLogonNotifyWindowRequest = &((PUSER_API_MESSAGE)ApiMessage)->Data.SetLogonNotifyWindowRequest;
-    DWORD WindowCreator;
-
-    if (0 == GetWindowThreadProcessId(SetLogonNotifyWindowRequest->LogonNotifyWindow,
-                                      &WindowCreator))
-    {
-        DPRINT1("Can't get window creator\n");
-        return STATUS_INVALID_HANDLE;
-    }
-    if (WindowCreator != LogonProcessId)
-    {
-        DPRINT1("Trying to register window not created by winlogon as notify window\n");
-        return STATUS_ACCESS_DENIED;
-    }
-
-    LogonNotifyWindow = SetLogonNotifyWindowRequest->LogonNotifyWindow;
-
-    return STATUS_SUCCESS;
-}
+/* GLOBALS ********************************************************************/
 
 typedef struct tagSHUTDOWN_SETTINGS
 {
@@ -114,6 +51,38 @@ typedef struct tagNOTIFY_CONTEXT
 #define QUERY_RESULT_ERROR    3
 #define QUERY_RESULT_FORCE    4
 
+typedef void (WINAPI *INITCOMMONCONTROLS_PROC)(void);
+
+typedef struct tagMESSAGE_CONTEXT
+{
+    HWND Wnd;
+    UINT Msg;
+    WPARAM wParam;
+    LPARAM lParam;
+    DWORD Timeout;
+} MESSAGE_CONTEXT, *PMESSAGE_CONTEXT;
+
+typedef struct tagPROCESS_ENUM_CONTEXT
+{
+    UINT ProcessCount;
+    PCSR_PROCESS *ProcessData;
+    TOKEN_ORIGIN TokenOrigin;
+    DWORD ShellProcess;
+    DWORD CsrssProcess;
+} PROCESS_ENUM_CONTEXT, *PPROCESS_ENUM_CONTEXT;
+
+
+/* FUNCTIONS ******************************************************************/
+
+/*
+NTSTATUS FASTCALL
+Win32CsrEnumProcesses(CSRSS_ENUM_PROCESS_PROC EnumProc,
+                      PVOID Context)
+{
+    return CsrEnumProcesses(EnumProc, Context);
+}
+*/
+
 static void FASTCALL
 UpdateProgressBar(HWND ProgressBar, PNOTIFY_CONTEXT NotifyContext)
 {
@@ -147,14 +116,14 @@ EndNowDlgProc(HWND Dlg, UINT Msg, WPARAM wParam, LPARAM lParam)
         TitleLength = SendMessageW(NotifyContext->WndClient, WM_GETTEXTLENGTH,
                                    0, 0) +
                       GetWindowTextLengthW(Dlg);
-        Title = HeapAlloc(UserSrvHeap, 0, (TitleLength + 1) * sizeof(WCHAR));
+        Title = HeapAlloc(UserServerHeap, 0, (TitleLength + 1) * sizeof(WCHAR));
         if (NULL != Title)
         {
             Len = GetWindowTextW(Dlg, Title, TitleLength + 1);
             SendMessageW(NotifyContext->WndClient, WM_GETTEXT,
                          TitleLength + 1 - Len, (LPARAM) (Title + Len));
             SetWindowTextW(Dlg, Title);
-            HeapFree(UserSrvHeap, 0, Title);
+            HeapFree(UserServerHeap, 0, Title);
         }
         ProgressBar = GetDlgItem(Dlg, IDC_PROGRESS);
         SendMessageW(ProgressBar, PBM_SETRANGE32, 0,
@@ -206,8 +175,6 @@ EndNowDlgProc(HWND Dlg, UINT Msg, WPARAM wParam, LPARAM lParam)
     return Result;
 }
 
-typedef void (WINAPI *INITCOMMONCONTROLS_PROC)(void);
-
 static void
 CallInitCommonControls()
 {
@@ -215,21 +182,13 @@ CallInitCommonControls()
     HMODULE Lib;
     INITCOMMONCONTROLS_PROC InitProc;
 
-    if (Initialized)
-    {
-        return;
-    }
+    if (Initialized) return;
 
     Lib = LoadLibraryW(L"COMCTL32.DLL");
-    if (NULL == Lib)
-    {
-        return;
-    }
+    if (NULL == Lib) return;
+
     InitProc = (INITCOMMONCONTROLS_PROC) GetProcAddress(Lib, "InitCommonControls");
-    if (NULL == InitProc)
-    {
-        return;
-    }
+    if (NULL == InitProc) return;
 
     (*InitProc)();
 
@@ -245,7 +204,7 @@ EndNowThreadProc(LPVOID Parameter)
     SetThreadDesktop(NotifyContext->Desktop);
     SwitchDesktop(NotifyContext->Desktop);
     CallInitCommonControls();
-    NotifyContext->Dlg = CreateDialogParam(UserSrvDllInstance,
+    NotifyContext->Dlg = CreateDialogParam(UserServerDllInstance,
                                            MAKEINTRESOURCE(IDD_END_NOW), NULL,
                                            EndNowDlgProc, (LPARAM) NotifyContext);
     if (NULL == NotifyContext->Dlg)
@@ -265,15 +224,6 @@ EndNowThreadProc(LPVOID Parameter)
 
     return Msg.wParam;
 }
-
-typedef struct tagMESSAGE_CONTEXT
-{
-    HWND Wnd;
-    UINT Msg;
-    WPARAM wParam;
-    LPARAM lParam;
-    DWORD Timeout;
-} MESSAGE_CONTEXT, *PMESSAGE_CONTEXT;
 
 static DWORD WINAPI
 SendQueryEndSession(LPVOID Parameter)
@@ -487,7 +437,7 @@ DtbgIsDesktopVisible(VOID)
     return VisibleDesktopWindow != NULL;
 }
 
-/* TODO: Find another way to do it. */
+/* TODO: Find an other way to do it. */
 #if 0
 VOID FASTCALL
 ConioConsoleCtrlEventTimeout(DWORD Event, PCSR_PROCESS ProcessData, DWORD Timeout)
@@ -527,7 +477,7 @@ NotifyAndTerminateProcess(PCSR_PROCESS ProcessData,
 
     if (0 == (Flags & EWX_FORCE))
     {
-        // TODO: Find in an other way whether or not the process has a console.
+        // TODO: Find an other way whether or not the process has a console.
 #if 0
         if (NULL != ProcessData->Console)
         {
@@ -596,15 +546,6 @@ NotifyAndTerminateProcess(PCSR_PROCESS ProcessData,
     return TRUE;
 }
 
-typedef struct tagPROCESS_ENUM_CONTEXT
-{
-    UINT ProcessCount;
-    PCSR_PROCESS *ProcessData;
-    TOKEN_ORIGIN TokenOrigin;
-    DWORD ShellProcess;
-    DWORD CsrssProcess;
-} PROCESS_ENUM_CONTEXT, *PPROCESS_ENUM_CONTEXT;
-
 #if 0
 static NTSTATUS WINAPI
 ExitReactosProcessEnum(PCSR_PROCESS ProcessData, PVOID Data)
@@ -661,7 +602,7 @@ ExitReactosProcessEnum(PCSR_PROCESS ProcessData, PVOID Data)
         {
             ProcessData->ShutdownLevel = 0;
         }
-        NewData = HeapAlloc(UserSrvHeap, 0, (Context->ProcessCount + 1)
+        NewData = HeapAlloc(UserServerHeap, 0, (Context->ProcessCount + 1)
                             * sizeof(PCSR_PROCESS));
         if (NULL == NewData)
         {
@@ -671,7 +612,7 @@ ExitReactosProcessEnum(PCSR_PROCESS ProcessData, PVOID Data)
         {
             memcpy(NewData, Context->ProcessData,
                    Context->ProcessCount * sizeof(PCSR_PROCESS));
-            HeapFree(UserSrvHeap, 0, Context->ProcessData);
+            HeapFree(UserServerHeap, 0, Context->ProcessData);
         }
         Context->ProcessData = NewData;
         Context->ProcessData[Context->ProcessCount] = ProcessData;
@@ -709,7 +650,7 @@ ProcessDataCompare(const void *Elem1, const void *Elem2)
 }
 
 static DWORD FASTCALL
-GetShutdownSetting(HKEY DesktopKey, LPCWSTR ValueName, DWORD DefaultValue)
+GetShutdownSettings(HKEY DesktopKey, LPCWSTR ValueName, DWORD DefaultValue)
 {
     BYTE ValueBuffer[16];
     LONG ErrCode;
@@ -723,7 +664,7 @@ GetShutdownSetting(HKEY DesktopKey, LPCWSTR ValueName, DWORD DefaultValue)
                                &ValueSize);
     if (ERROR_SUCCESS != ErrCode)
     {
-        DPRINT("GetShutdownSetting for %S failed with error code %ld\n",
+        DPRINT("GetShutdownSettings for %S failed with error code %ld\n",
                ValueName, ErrCode);
         return DefaultValue;
     }
@@ -775,7 +716,7 @@ LoadShutdownSettings(PSID Sid, PSHUTDOWN_SETTINGS ShutdownSettings)
     }
     else
     {
-        KeyName = HeapAlloc(UserSrvHeap, 0,
+        KeyName = HeapAlloc(UserServerHeap, 0,
                             (wcslen(StringSid) + wcslen(Subkey) + 1) *
                             sizeof(WCHAR));
         if (NULL == KeyName)
@@ -791,7 +732,7 @@ LoadShutdownSettings(PSID Sid, PSHUTDOWN_SETTINGS ShutdownSettings)
     ErrCode = RegOpenKeyExW(HKEY_USERS, KeyName, 0, KEY_QUERY_VALUE, &DesktopKey);
     if (KeyName != InitialKeyName)
     {
-        HeapFree(UserSrvHeap, 0, KeyName);
+        HeapFree(UserServerHeap, 0, KeyName);
     }
     if (ERROR_SUCCESS != ErrCode)
     {
@@ -799,12 +740,12 @@ LoadShutdownSettings(PSID Sid, PSHUTDOWN_SETTINGS ShutdownSettings)
         return;
     }
 
-    ShutdownSettings->AutoEndTasks = (BOOL) GetShutdownSetting(DesktopKey, L"AutoEndTasks",
+    ShutdownSettings->AutoEndTasks = (BOOL) GetShutdownSettings(DesktopKey, L"AutoEndTasks",
                                      (DWORD) DEFAULT_AUTO_END_TASKS);
-    ShutdownSettings->HungAppTimeout = GetShutdownSetting(DesktopKey,
+    ShutdownSettings->HungAppTimeout = GetShutdownSettings(DesktopKey,
                                        L"HungAppTimeout",
                                        DEFAULT_HUNG_APP_TIMEOUT);
-    ShutdownSettings->WaitToKillAppTimeout = GetShutdownSetting(DesktopKey,
+    ShutdownSettings->WaitToKillAppTimeout = GetShutdownSettings(DesktopKey,
             L"WaitToKillAppTimeout",
             DEFAULT_WAIT_TO_KILL_APP_TIMEOUT);
 
@@ -862,7 +803,7 @@ InternalExitReactos(DWORD ProcessId, DWORD ThreadId, UINT Flags)
     {
         if (sizeof(FixedUserInfo) < ReturnLength)
         {
-            UserInfo = HeapAlloc(UserSrvHeap, 0, ReturnLength);
+            UserInfo = HeapAlloc(UserServerHeap, 0, ReturnLength);
             if (NULL == UserInfo)
             {
                 DPRINT1("Unable to allocate %u bytes for user info\n",
@@ -875,7 +816,7 @@ InternalExitReactos(DWORD ProcessId, DWORD ThreadId, UINT Flags)
             {
                 DPRINT1("GetTokenInformation failed with error %d\n",
                         GetLastError());
-                HeapFree(UserSrvHeap, 0, UserInfo);
+                HeapFree(UserServerHeap, 0, UserInfo);
                 CloseHandle(CallerToken);
                 return STATUS_UNSUCCESSFUL;
             }
@@ -895,7 +836,7 @@ InternalExitReactos(DWORD ProcessId, DWORD ThreadId, UINT Flags)
     LoadShutdownSettings(UserInfo->User.Sid, &ShutdownSettings);
     if (UserInfo != (TOKEN_USER *) FixedUserInfo)
     {
-        HeapFree(UserSrvHeap, 0, UserInfo);
+        HeapFree(UserServerHeap, 0, UserInfo);
     }
     Context.CsrssProcess = GetCurrentProcessId();
     ShellWnd = GetShellWindow();
@@ -917,7 +858,7 @@ InternalExitReactos(DWORD ProcessId, DWORD ThreadId, UINT Flags)
                 Status);
         if (NULL != Context.ProcessData)
         {
-            HeapFree(UserSrvHeap, 0, Context.ProcessData);
+            HeapFree(UserServerHeap, 0, Context.ProcessData);
         }
         return Status;
     }
@@ -942,7 +883,7 @@ InternalExitReactos(DWORD ProcessId, DWORD ThreadId, UINT Flags)
     /* Cleanup */
     if (NULL != Context.ProcessData)
     {
-        HeapFree(UserSrvHeap, 0, Context.ProcessData);
+        HeapFree(UserServerHeap, 0, Context.ProcessData);
     }
 
     return Status;
@@ -977,6 +918,9 @@ UserExitReactos(DWORD UserProcessId, UINT Flags)
 
     return Status;
 }
+
+
+/* PUBLIC SERVER APIS *********************************************************/
 
 CSR_API(SrvExitWindowsEx)
 {

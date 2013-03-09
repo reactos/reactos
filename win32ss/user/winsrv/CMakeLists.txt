@@ -8,7 +8,7 @@ spec2def(winsrv.dll winsrv.spec)
 list(APPEND SOURCE
     harderror.c
     init.c
-    server.c
+    register.c
     shutdown.c
     winsrv.rc
     ${CMAKE_CURRENT_BINARY_DIR}/winsrv.def)

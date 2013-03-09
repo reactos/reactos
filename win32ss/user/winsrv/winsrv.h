@@ -30,19 +30,17 @@
 #include <ndk/psfuncs.h>
 #include <ndk/rtlfuncs.h>
 
+/* PSEH for SEH Support */
+#include <pseh/pseh2.h>
+
 /* External Winlogon Header */
 #include <winlogon.h>
 
 /* CSRSS Header */
 #include <csr/csrsrv.h>
 
-/* PSEH for SEH Support */
-#include <pseh/pseh2.h>
-
 /* USER Headers */
 #include <win/winmsg.h>
-// #include <win/base.h>
-// #include <win/windows.h>
 
 /* Public Win32 Headers */
 #include <commctrl.h>
@@ -50,46 +48,27 @@
 #include "resource.h"
 
 
-extern HINSTANCE UserSrvDllInstance;
-extern HANDLE UserSrvHeap;
-// extern HANDLE BaseSrvSharedHeap;
-// extern PBASE_STATIC_SERVER_DATA BaseStaticServerData;
+extern HINSTANCE UserServerDllInstance;
+extern HANDLE UserServerHeap;
+
+extern HWND LogonNotifyWindow;
+extern ULONG_PTR LogonProcessId;
 
 /* init.c */
 BOOL WINAPI _UserSoundSentry(VOID);
 
 /* harderror.c */
-VOID
-WINAPI
-Win32CsrHardError(IN PCSR_THREAD ThreadData,
-                  IN PHARDERROR_MSG Message);
+VOID WINAPI UserServerHardError(IN PCSR_THREAD ThreadData,
+                                IN PHARDERROR_MSG Message);
 
-
-/* shutdown.c */
-CSR_API(SrvExitWindowsEx);
-// CSR_API(CsrRegisterSystemClasses);
+/* register.c */
 CSR_API(SrvRegisterServicesProcess);
 CSR_API(SrvRegisterLogonProcess);
-
 /// HACK: ReactOS-specific
 CSR_API(RosSetLogonNotifyWindow);
 
-
-/*****************************
-
-/\*
-typedef VOID (WINAPI *CSR_CLEANUP_OBJECT_PROC)(Object_t *Object);
-
-typedef struct tagCSRSS_OBJECT_DEFINITION
-{
-  LONG Type;
-  CSR_CLEANUP_OBJECT_PROC CsrCleanupObjectProc;
-} CSRSS_OBJECT_DEFINITION, *PCSRSS_OBJECT_DEFINITION;
-*\/
-
-
-
-*****************************/
+/* shutdown.c */
+CSR_API(SrvExitWindowsEx);
 
 #endif // __WINSRV_H__
 

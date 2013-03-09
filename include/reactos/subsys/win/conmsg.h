@@ -15,9 +15,8 @@
 #define CONSRV_SERVERDLL_INDEX      2
 #define CONSRV_FIRST_API_NUMBER     512
 
-// Windows 2k3 tables, adapted from http://j00ru.vexillium.org/csrss_list/api_list.html#Windows_2k3
-// plus a little bit of Windows 7. It is for testing purposes. After that I will add stubs.
-// Some names are also deduced from the subsystems/win32/csrss/csrsrv/server.c ones.
+// Windows Server 2003 table from http://j00ru.vexillium.org/csrss_list/api_list.html#Windows_2k3
+// plus a little bit of Windows 7.
 typedef enum _CONSRV_API_NUMBER
 {
     ConsolepOpenConsole = CONSRV_FIRST_API_NUMBER,
@@ -564,7 +563,7 @@ typedef struct _CONSOLE_API_MESSAGE
 
     PCSR_CAPTURE_BUFFER CsrCaptureData;
     CSR_API_NUMBER ApiNumber;
-    ULONG Status; // ReturnValue; // NTSTATUS Status
+    NTSTATUS Status; // ReturnValue;
     ULONG Reserved;
     union
     {

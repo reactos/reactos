@@ -186,21 +186,6 @@ IntGetConsoleInput(HANDLE hConsoleInput,
 
         /* Error out */
         BaseSetLastNTError(ApiMessage.Status);
-
-/*********
-        // BaseSetLastNTError(Status); ????
-        if (GetInputRequest->InputsRead == 0)
-        {
-            /\* we couldn't read a single record, fail *\/
-            BaseSetLastNTError(Status);
-            return FALSE;
-        }
-        else
-        {
-            /\* FIXME - fail gracefully in case we already read at least one record? *\/
-            // break;
-        }
-*********/
     }
 
     /* Release the capture buffer */
@@ -310,7 +295,7 @@ IntReadConsoleOutputCode(HANDLE hConsoleOutput,
     PCONSOLE_READOUTPUTCODE ReadOutputCodeRequest = &ApiMessage.Data.ReadOutputCodeRequest;
     PCSR_CAPTURE_BUFFER CaptureBuffer;
     ULONG SizeBytes, CodeSize;
-    DWORD /*CodesRead = 0,*/ BytesRead;
+    DWORD CodesRead;
 
     /* Determine the needed size */
     switch (CodeType)
@@ -363,13 +348,13 @@ IntReadConsoleOutputCode(HANDLE hConsoleOutput,
     /* Check for success */
     if (NT_SUCCESS(Status) || NT_SUCCESS(Status = ApiMessage.Status))
     {
-        BytesRead = ReadOutputCodeRequest->CodesRead * CodeSize;
-        memcpy(pCode, ReadOutputCodeRequest->pCode.pCode, BytesRead);
+        CodesRead = ReadOutputCodeRequest->CodesRead;
+        memcpy(pCode, ReadOutputCodeRequest->pCode.pCode, CodesRead * CodeSize);
 
         // ReadOutputCodeRequest->ReadCoord = ReadOutputCodeRequest->EndCoord;
 
         if (lpNumberOfCodesRead != NULL)
-            *lpNumberOfCodesRead = ReadOutputCodeRequest->CodesRead;
+            *lpNumberOfCodesRead = CodesRead;
 
         bRet = TRUE;
     }
@@ -407,9 +392,7 @@ IntWriteConsole(HANDLE hConsoleOutput,
     CONSOLE_API_MESSAGE ApiMessage;
     PCONSOLE_WRITECONSOLE WriteConsoleRequest = &ApiMessage.Data.WriteConsoleRequest;
     PCSR_CAPTURE_BUFFER CaptureBuffer;
-    // USHORT nChars;
-    ULONG /* SizeBytes, */ CharSize;
-    // DWORD Written = 0;
+    ULONG CharSize;
 
     /* Determine the needed size */
     CharSize = (bUnicode ? sizeof(WCHAR) : sizeof(CHAR));
@@ -435,39 +418,16 @@ IntWriteConsole(HANDLE hConsoleOutput,
     WriteConsoleRequest->OutputHandle = hConsoleOutput;
     WriteConsoleRequest->Unicode = bUnicode;
 
-    // while (nNumberOfCharsToWrite > 0) {
-    //// nChars = (USHORT)min(nNumberOfCharsToWrite, CSRSS_MAX_WRITE_CONSOLE / CharSize);
-    // nChars = nNumberOfCharsToWrite;
-    // WriteConsoleRequest->NrCharactersToWrite = nChars;
-
-    // SizeBytes = nChars * CharSize;
-
-    // memcpy(WriteConsoleRequest->Buffer, lpBuffer, SizeBytes);
-
     /* Call the server */
     Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
                                  CaptureBuffer,
                                  CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepWriteConsole),
                                  sizeof(CONSOLE_WRITECONSOLE));
-/** FIXME: Added in 47359 for pausing
 
-    if (Status == STATUS_PENDING)
-    {
-        WaitForSingleObject(WriteConsoleRequest->UnpauseEvent, INFINITE);
-        CloseHandle(WriteConsoleRequest->UnpauseEvent);
-        continue;
-    }
-**/
     /* Check for success */
     if (NT_SUCCESS(Status) || NT_SUCCESS(Status = ApiMessage.Status))
     {
-        // nNumberOfCharsToWrite -= nChars;
-        // lpBuffer = (PVOID)((ULONG_PTR)lpBuffer + (ULONG_PTR)SizeBytes);
-        // Written += WriteConsoleRequest->NrCharactersWritten;
-        // }
-
         if (lpNumberOfCharsWritten != NULL)
-            // *lpNumberOfCharsWritten = Written;
             *lpNumberOfCharsWritten = WriteConsoleRequest->NrCharactersWritten;
 
         bRet = TRUE;
@@ -651,16 +611,9 @@ IntWriteConsoleOutputCode(HANDLE hConsoleOutput,
     CONSOLE_API_MESSAGE ApiMessage;
     PCONSOLE_WRITEOUTPUTCODE WriteOutputCodeRequest = &ApiMessage.Data.WriteOutputCodeRequest;
     PCSR_CAPTURE_BUFFER CaptureBuffer;
-    ULONG CodeSize; //, nChars;
-    // ULONG SizeBytes;
-    // DWORD Written = 0;
+    ULONG CodeSize;
 
     /* Determine the needed size */
-/*
-    CodeSize = (bUnicode ? sizeof(WCHAR) : sizeof(CHAR));
-    nChars = min(nLength, CSRSS_MAX_WRITE_CONSOLE_OUTPUT_CHAR / CodeSize);
-    SizeBytes = nChars * CodeSize;
-*/
     switch (CodeType)
     {
         case CODE_ASCII:
@@ -690,12 +643,6 @@ IntWriteConsoleOutputCode(HANDLE hConsoleOutput,
         return FALSE;
     }
 
-/*
-    /\* Allocate space in the Buffer *\/
-    CsrAllocateMessagePointer(CaptureBuffer,
-                              SizeBytes,
-                              (PVOID*)&WriteOutputCodeRequest->pCode.pCode);
-*/
     /* Capture the buffer to write */
     CsrCaptureMessageBuffer(CaptureBuffer,
                             (PVOID)pCode,
@@ -707,10 +654,7 @@ IntWriteConsoleOutputCode(HANDLE hConsoleOutput,
     WriteOutputCodeRequest->CodeType = CodeType;
     WriteOutputCodeRequest->Coord = dwWriteCoord;
 
-    WriteOutputCodeRequest->Length = nLength; // (WORD)min(nLength, nChars);
-    // BytesWrite = WriteOutputCodeRequest->Length * CodeSize;
-
-    // memcpy(WriteOutputCodeRequest->pCode.pCode, pCode, BytesWrite);
+    WriteOutputCodeRequest->Length = nLength;
 
     /* Call the server */
     Status = CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
@@ -721,14 +665,9 @@ IntWriteConsoleOutputCode(HANDLE hConsoleOutput,
     /* Check for success */
     if (NT_SUCCESS(Status) || NT_SUCCESS(Status = ApiMessage.Status))
     {
-        // nLength -= WriteOutputCodeRequest->NrCharactersWritten;
-        // pCode = (PVOID)((ULONG_PTR)pCode + /*(ULONG_PTR)(*/WriteOutputCodeRequest->NrCharactersWritten * CodeSize/*)*/);
-        // Written += WriteOutputCodeRequest->NrCharactersWritten;
-
         // WriteOutputCodeRequest->Coord = WriteOutputCodeRequest->EndCoord;
 
         if (lpNumberOfCodesWritten != NULL)
-            // *lpNumberOfCodesWritten = Written;
             // *lpNumberOfCodesWritten = WriteOutputCodeRequest->NrCharactersWritten;
             *lpNumberOfCodesWritten = WriteOutputCodeRequest->Length;
 

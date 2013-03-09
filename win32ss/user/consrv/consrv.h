@@ -46,8 +46,6 @@
 
 extern HINSTANCE ConSrvDllInstance;
 extern HANDLE ConSrvHeap;
-// extern HANDLE BaseSrvSharedHeap;
-// extern PBASE_STATIC_SERVER_DATA BaseStaticServerData;
 
 /* Object type magic numbers */
 #define CONIO_INPUT_BUFFER_MAGIC    0x00000001  // -->  Input-type handles

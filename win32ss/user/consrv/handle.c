@@ -749,7 +749,7 @@ ConSrvConnect(IN PCSR_PROCESS CsrProcess,
 }
 
 VOID
-WINAPI
+NTAPI
 ConSrvDisconnect(PCSR_PROCESS Process)
 {
     PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(Process);

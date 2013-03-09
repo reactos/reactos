@@ -29,16 +29,22 @@ extern HANDLE BaseSrvHeap;
 extern HANDLE BaseSrvSharedHeap;
 extern PBASE_STATIC_SERVER_DATA BaseStaticServerData;
 
+/* dosdev.c */
+VOID BaseInitDefineDosDevice(VOID);
 VOID BaseCleanupDefineDosDevice(VOID);
 
+CSR_API(BaseSrvDefineDosDevice);
+
+/* proc.c */
+CSR_API(BaseSrvGetTempFile);
 CSR_API(BaseSrvCreateProcess);
 CSR_API(BaseSrvCreateThread);
-CSR_API(BaseSrvGetTempFile);
 CSR_API(BaseSrvExitProcess);
 CSR_API(BaseSrvGetProcessShutdownParam);
 CSR_API(BaseSrvSetProcessShutdownParam);
+
+/* sndsntry.c */
 CSR_API(BaseSrvSoundSentryNotification);
-CSR_API(BaseSrvDefineDosDevice);
 
 #endif // __BASESRV_H__
 

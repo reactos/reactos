@@ -7,6 +7,8 @@
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
+/* INCLUDES *******************************************************************/
+
 #include "winsrv.h"
 
 /* Public Win32K Headers */
@@ -16,15 +18,14 @@
 #define NDEBUG
 #include <debug.h>
 
-HINSTANCE UserSrvDllInstance = NULL;
-// HANDLE WinSrvApiPort = NULL;
+/* GLOBALS ********************************************************************/
+
+HINSTANCE UserServerDllInstance = NULL;
 
 /* Memory */
-HANDLE UserSrvHeap = NULL;          // Our own heap.
-// HANDLE BaseSrvSharedHeap = NULL;    // Shared heap with CSR. (CsrSrvSharedSectionHeap)
-// PBASE_STATIC_SERVER_DATA BaseStaticServerData = NULL;   // Data that we can share amongst processes. Initialized inside BaseSrvSharedHeap.
+HANDLE UserServerHeap = NULL;   // Our own heap.
 
-
+// Windows Server 2003 table from http://j00ru.vexillium.org/csrss_list/api_list.html#Windows_2k3
 PCSR_API_ROUTINE UserServerApiDispatchTable[UserpMaxApiNumber] =
 {
     SrvExitWindowsEx,
@@ -42,7 +43,7 @@ PCSR_API_ROUTINE UserServerApiDispatchTable[UserpMaxApiNumber] =
     // SrvGetSetShutdownBlockReason,   // Added in Vista
 
     /// HACK: ReactOS-specific
-    RosSetLogonNotifyWindow
+    RosSetLogonNotifyWindow,
 };
 
 BOOLEAN UserServerApiServerValidTable[UserpMaxApiNumber] =
@@ -63,8 +64,6 @@ BOOLEAN UserServerApiServerValidTable[UserpMaxApiNumber] =
 
     /// HACK: ReactOS-specific
     FALSE,   // RosSetLogonNotifyWindow
-
-    // FALSE
 };
 
 PCHAR UserServerApiNameTable[UserpMaxApiNumber] =
@@ -85,35 +84,17 @@ PCHAR UserServerApiNameTable[UserpMaxApiNumber] =
 
     /// HACK: ReactOS-specific
     "RosSetLogonNotifyWindow",
-
-    // NULL
 };
 
 
 /* FUNCTIONS ******************************************************************/
 
-/*
-VOID WINAPI UserStaticServerThread(PVOID x)
+// PUSER_SOUND_SENTRY. Used in basesrv.dll
+BOOL WINAPI _UserSoundSentry(VOID)
 {
-    // NTSTATUS Status = STATUS_SUCCESS;
-    PPORT_MESSAGE Request = (PPORT_MESSAGE)x;
-    PPORT_MESSAGE Reply = NULL;
-    ULONG MessageType = 0;
-
-    DPRINT("WINSRV: %s(%08lx) called\n", __FUNCTION__, x);
-
-    MessageType = Request->u2.s2.Type;
-    DPRINT("WINSRV: %s(%08lx) received a message (Type=%d)\n",
-           __FUNCTION__, x, MessageType);
-    switch (MessageType)
-    {
-        default:
-            Reply = Request;
-            /\* Status = *\/ NtReplyPort(WinSrvApiPort, Reply);
-            break;
-    }
+    // TODO: Do something.
+    return TRUE;
 }
-*/
 
 ULONG
 InitializeVideoAddressSpace(VOID)
@@ -290,26 +271,6 @@ CreateSystemThreads(PVOID pParam)
 
 CSR_SERVER_DLL_INIT(UserServerDllInitialization)
 {
-/*
-    NTSTATUS Status = STATUS_SUCCESS;
-
-    DPRINT("WINSRV: %s called\n", __FUNCTION__);
-
-    // Get the listening port from csrsrv.dll
-    WinSrvApiPort = CsrQueryApiPort ();
-    if (NULL == WinSrvApiPort)
-    {
-        return STATUS_UNSUCCESSFUL;
-    }
-    // Register our message dispatcher
-    Status = CsrAddStaticServerThread (UserStaticServerThread);
-    if (NT_SUCCESS(Status))
-    {
-        //TODO: perform the real user server internal initialization here
-    }
-    return Status;
-*/
-
 /*** From win32csr... ***/
     HANDLE ServerThread;
     CLIENT_ID ClientId;
@@ -317,11 +278,10 @@ CSR_SERVER_DLL_INIT(UserServerDllInitialization)
     UINT i;
 /*** END - From win32csr... ***/
 
-    /* Initialize memory */
-    UserSrvHeap = RtlGetProcessHeap();  // Initialize our own heap.
-    // BaseSrvSharedHeap = LoadedServerDll->SharedSection; // Get the CSR shared heap.
-    // LoadedServerDll->SharedSection = BaseStaticServerData;
+    /* Initialize the memory */
+    UserServerHeap = RtlGetProcessHeap();
 
+    /* Initialize the video */
     CsrpInitVideo();
     NtUserInitialize(0, NULL, NULL);
     PrivateCsrssManualGuiCheck(0);
@@ -334,9 +294,11 @@ CSR_SERVER_DLL_INIT(UserServerDllInitialization)
     LoadedServerDll->NameTable = UserServerApiNameTable;
     LoadedServerDll->SizeOfProcessData = 0;
     LoadedServerDll->ConnectCallback = NULL;
-    // LoadedServerDll->DisconnectCallback = Win32CsrReleaseConsole;
-    // LoadedServerDll->NewProcessCallback = Win32CsrDuplicateHandleTable;
-    LoadedServerDll->HardErrorCallback = Win32CsrHardError;
+    LoadedServerDll->DisconnectCallback = NULL;
+    LoadedServerDll->HardErrorCallback = UserServerHardError;
+    LoadedServerDll->ShutdownProcessCallback = NULL;
+
+    UserServerDllInstance = LoadedServerDll->ServerHandle;
 
 /*** From win32csr... See r54125 ***/
     /* Start the Raw Input Thread and the Desktop Thread */
@@ -357,28 +319,20 @@ CSR_SERVER_DLL_INIT(UserServerDllInitialization)
     return STATUS_SUCCESS;
 }
 
-// PUSER_SOUND_SENTRY. Used in basesrv.dll
-BOOL WINAPI _UserSoundSentry(VOID)
-{
-    // Do something.
-    return TRUE;
-}
-
 BOOL
 WINAPI
 DllMain(IN HINSTANCE hInstanceDll,
         IN DWORD dwReason,
         IN LPVOID lpReserved)
 {
+    UNREFERENCED_PARAMETER(hInstanceDll);
     UNREFERENCED_PARAMETER(dwReason);
     UNREFERENCED_PARAMETER(lpReserved);
 
     if (DLL_PROCESS_ATTACH == dwReason)
     {
-        UserSrvDllInstance = hInstanceDll;
-
+        DPRINT1("WINSRV - HACK: Use keyboard hook hack\n");
 /*** HACK from win32csr... ***/
-
 //
 // HACK HACK HACK ReactOS to BOOT! Initialization BUG ALERT! See bug 5655.
 //

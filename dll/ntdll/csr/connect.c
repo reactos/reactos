@@ -173,10 +173,10 @@ NTSTATUS
 NTAPI
 CsrpConnectToServer(IN PWSTR ObjectDirectory)
 {
+    NTSTATUS Status;
     ULONG PortNameLength;
     UNICODE_STRING PortName;
     LARGE_INTEGER CsrSectionViewSize;
-    NTSTATUS Status;
     HANDLE CsrSectionHandle;
     PORT_VIEW LpcWrite;
     REMOTE_PORT_VIEW LpcRead;

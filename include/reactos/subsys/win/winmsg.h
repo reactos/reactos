@@ -15,8 +15,7 @@
 #define USERSRV_SERVERDLL_INDEX     3
 #define USERSRV_FIRST_API_NUMBER    1024
 
-// CSR_SERVER_DLL_INIT(UserServerDllInitialization);
-
+// Windows Server 2003 table from http://j00ru.vexillium.org/csrss_list/api_list.html#Windows_2k3
 typedef enum _USERSRV_API_NUMBER
 {
     UserpExitWindowsEx = USERSRV_FIRST_API_NUMBER,
@@ -70,7 +69,7 @@ typedef struct _USER_API_MESSAGE
 
     PCSR_CAPTURE_BUFFER CsrCaptureData;
     CSR_API_NUMBER ApiNumber;
-    ULONG Status; // ReturnValue; // NTSTATUS Status
+    NTSTATUS Status; // ReturnValue;
     ULONG Reserved;
     union
     {

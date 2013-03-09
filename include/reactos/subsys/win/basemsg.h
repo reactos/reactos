@@ -15,8 +15,7 @@
 #define BASESRV_SERVERDLL_INDEX     1
 #define BASESRV_FIRST_API_NUMBER    0
 
-// Windows NT 4 table, adapted from http://j00ru.vexillium.org/csrss_list/api_list.html#Windows_NT
-// It is for testing purposes. After that I will update it to 2k3 version and add stubs.
+// Windows Server 2003 table from http://j00ru.vexillium.org/csrss_list/api_list.html#Windows_2k3
 typedef enum _BASESRV_API_NUMBER
 {
     BasepCreateProcess = BASESRV_FIRST_API_NUMBER,
@@ -35,8 +34,7 @@ typedef enum _BASESRV_API_NUMBER
     BasepGetProcessShutdownParam,
     // BasepNlsSetUserInfo,
     // BasepNlsSetMultipleUserInfo,
-    // BasepNlsCreateSortSection,
-    // BasepNlsPreserveSection,
+    // BasepNlsCreateSection,
     // BasepSetVDMCurDirs,
     // BasepGetVDMCurDirs,
     // BasepBatNotification,
@@ -44,6 +42,12 @@ typedef enum _BASESRV_API_NUMBER
     BasepSoundSentryNotification,
     // BasepRefreshIniFileMapping,
     BasepDefineDosDevice,
+    // BasepSetTermsrvAppInstallMode,
+    // BasepNlsUpdateCacheCount,
+    // BasepSetTermsrvClientTimeZone,
+    // BasepSxsCreateActivationContext,
+    // BasepRegisterThread,
+    // BasepNlsGetUserInfo,
 
     BasepMaxApiNumber
 } BASESRV_API_NUMBER, *PBASESRV_API_NUMBER;
@@ -180,7 +184,7 @@ typedef struct _BASE_API_MESSAGE
 
     PCSR_CAPTURE_BUFFER CsrCaptureData;
     CSR_API_NUMBER ApiNumber;
-    ULONG Status; // ReturnValue; // NTSTATUS Status
+    NTSTATUS Status; // ReturnValue;
     ULONG Reserved;
     union
     {

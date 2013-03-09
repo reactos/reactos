@@ -263,7 +263,7 @@ CsrCaptureTimeout(IN ULONG Milliseconds,
     if (Milliseconds == -1) return NULL;
 
     /* Convert to relative ticks */
-    Timeout->QuadPart = Int32x32To64(Milliseconds, -100000);
+    Timeout->QuadPart = Int32x32To64(Milliseconds, -10000);
     return Timeout;
 }
 

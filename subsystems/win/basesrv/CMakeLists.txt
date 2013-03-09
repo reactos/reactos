@@ -4,8 +4,10 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/subsys)
 spec2def(basesrv.dll basesrv.spec)
 
 list(APPEND SOURCE
+    dosdev.c
     init.c
-    server.c
+    proc.c
+    sndsntry.c
     basesrv.rc
     ${CMAKE_CURRENT_BINARY_DIR}/basesrv.def)
 

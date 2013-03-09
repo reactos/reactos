@@ -6,25 +6,23 @@
  * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */
 
+/* INCLUDES *******************************************************************/
+
 #include "basesrv.h"
 
 #define NDEBUG
 #include <debug.h>
 
-HANDLE DllHandle = NULL;
-HANDLE BaseApiPort = NULL;
+/* GLOBALS ********************************************************************/
+
+HANDLE BaseSrvDllInstance = NULL;
 
 /* Memory */
 HANDLE BaseSrvHeap = NULL;          // Our own heap.
 HANDLE BaseSrvSharedHeap = NULL;    // Shared heap with CSR. (CsrSrvSharedSectionHeap)
 PBASE_STATIC_SERVER_DATA BaseStaticServerData = NULL;   // Data that we can share amongst processes. Initialized inside BaseSrvSharedHeap.
 
-extern LIST_ENTRY DosDeviceHistory;
-extern RTL_CRITICAL_SECTION BaseDefineDosDeviceCritSec;
-
-// Windows NT 4 tables, adapted from http://j00ru.vexillium.org/csrss_list/api_list.html#Windows_NT
-// It is for testing purposes. After that I will update it to 2k3 version and add stubs.
-// Some names are also deduced from the subsystems/win32/csrss/csrsrv/server.c ones.
+// Windows Server 2003 table from http://j00ru.vexillium.org/csrss_list/api_list.html#Windows_2k3
 PCSR_API_ROUTINE BaseServerApiDispatchTable[BasepMaxApiNumber] =
 {
     BaseSrvCreateProcess,
@@ -43,45 +41,54 @@ PCSR_API_ROUTINE BaseServerApiDispatchTable[BasepMaxApiNumber] =
     BaseSrvGetProcessShutdownParam,
     // BaseSrvNlsSetUserInfo,
     // BaseSrvNlsSetMultipleUserInfo,
-    // BaseSrvNlsCreateSortSection,
-    // BaseSrvNlsPreserveSection,
+    // BaseSrvNlsCreateSection,
     // BaseSrvSetVDMCurDirs,
     // BaseSrvGetVDMCurDirs,
     // BaseSrvBatNotification,
     // BaseSrvRegisterWowExec,
     BaseSrvSoundSentryNotification,
     // BaseSrvRefreshIniFileMapping,
-    BaseSrvDefineDosDevice
+    BaseSrvDefineDosDevice,
+    // BaseSrvSetTermsrvAppInstallMode,
+    // BaseSrvNlsUpdateCacheCount,
+    // BaseSrvSetTermsrvClientTimeZone,
+    // BaseSrvSxsCreateActivationContext,
+    // BaseSrvRegisterThread,
+    // BaseSrvNlsGetUserInfo,
 };
 
 BOOLEAN BaseServerApiServerValidTable[BasepMaxApiNumber] =
 {
-    TRUE,    // SrvCreateProcess,
-    TRUE,    // SrvCreateThread,
-    TRUE,    // SrvGetTempFile,
-    FALSE,   // SrvExitProcess,
-    // FALSE,   // SrvDebugProcess,
-    // TRUE,    // SrvCheckVDM,
-    // TRUE,    // SrvUpdateVDMEntry
-    // TRUE,    // SrvGetNextVDMCommand
-    // TRUE,    // SrvExitVDM
-    // TRUE,    // SrvIsFirstVDM
-    // TRUE,    // SrvGetVDMExitCode
-    // TRUE,    // SrvSetReenterCount
-    TRUE,    // SrvSetProcessShutdownParam
-    TRUE,    // SrvGetProcessShutdownParam
-    // TRUE,    // SrvNlsSetUserInfo
-    // TRUE,    // SrvNlsSetMultipleUserInfo
-    // TRUE,    // SrvNlsCreateSortSection
-    // TRUE,    // SrvNlsPreserveSection
-    // TRUE,    // SrvSetVDMCurDirs
-    // TRUE,    // SrvGetVDMCurDirs
-    // TRUE,    // SrvBatNotification
-    // TRUE,    // SrvRegisterWowExec
-    TRUE,    // SrvSoundSentryNotification
-    // TRUE,    // SrvRefreshIniFileMapping
-    TRUE,    // SrvDefineDosDevice
-    // FALSE
+    TRUE,   // BaseSrvCreateProcess
+    TRUE,   // BaseSrvCreateThread
+    TRUE,   // BaseSrvGetTempFile
+    FALSE,  // BaseSrvExitProcess
+    // FALSE,  // BaseSrvDebugProcess
+    // TRUE,   // BaseSrvCheckVDM
+    // TRUE,   // BaseSrvUpdateVDMEntry
+    // TRUE,   // BaseSrvGetNextVDMCommand
+    // TRUE,   // BaseSrvExitVDM
+    // TRUE,   // BaseSrvIsFirstVDM
+    // TRUE,   // BaseSrvGetVDMExitCode
+    // TRUE,   // BaseSrvSetReenterCount
+    TRUE,   // BaseSrvSetProcessShutdownParam
+    TRUE,   // BaseSrvGetProcessShutdownParam
+    // TRUE,   // BaseSrvNlsSetUserInfo
+    // TRUE,   // BaseSrvNlsSetMultipleUserInfo
+    // TRUE,   // BaseSrvNlsCreateSection
+    // TRUE,   // BaseSrvSetVDMCurDirs
+    // TRUE,   // BaseSrvGetVDMCurDirs
+    // TRUE,   // BaseSrvBatNotification
+    // TRUE,   // BaseSrvRegisterWowExec
+    TRUE,   // BaseSrvSoundSentryNotification
+    // TRUE,   // BaseSrvRefreshIniFileMapping
+    TRUE,   // BaseSrvDefineDosDevice
+    // FALSE,  // BaseSrvSetTermsrvAppInstallMode
+    // FALSE,  // BaseSrvNlsUpdateCacheCount
+    // FALSE,  // BaseSrvSetTermsrvClientTimeZone
+    // FALSE,  // BaseSrvSxsCreateActivationContext
+    // FALSE,  // BaseSrvRegisterThread
+    // FALSE,  // BaseSrvNlsGetUserInfo
 };
 
 PCHAR BaseServerApiNameTable[BasepMaxApiNumber] =
@@ -102,16 +109,20 @@ PCHAR BaseServerApiNameTable[BasepMaxApiNumber] =
     "BaseGetProcessShutdownParam",
     // "BaseNlsSetUserInfo",
     // "BaseNlsSetMultipleUserInfo",
-    // "BaseNlsCreateSortSection",
-    // "BaseNlsPreserveSection",
+    // "BaseNlsCreateSection",
     // "BaseSetVDMCurDirs",
     // "BaseGetVDMCurDirs",
     // "BaseBatNotification",
     // "BaseRegisterWowExec",
     "BaseSoundSentryNotification",
-    // "BaseSrvRefreshIniFileMapping"
+    // "BaseRefreshIniFileMapping",
     "BaseDefineDosDevice",
-    // NULL
+    // "BaseSetTermsrvAppInstallMode",
+    // "BaseNlsUpdateCacheCount",
+    // "BaseSetTermsrvClientTimeZone",
+    // "BaseSxsCreateActivationContext",
+    // "BaseRegisterThread",
+    // "BaseNlsGetUserInfo",
 };
 
 
@@ -269,8 +280,8 @@ BaseInitializeStaticServerData(IN PCSR_SERVER_DLL LoadedServerDll)
         {0}
     };
 
-    /* Initialize memory */
-    BaseSrvHeap = RtlGetProcessHeap();  // Initialize our own heap.
+    /* Initialize the memory */
+    BaseSrvHeap = RtlGetProcessHeap();                  // Initialize our own heap.
     BaseSrvSharedHeap = LoadedServerDll->SharedSection; // Get the CSR shared heap.
 
     /* Get the session ID */
@@ -505,45 +516,8 @@ BaseInitializeStaticServerData(IN PCSR_SERVER_DLL LoadedServerDll)
     LoadedServerDll->SharedSection = BaseStaticServerData;
 }
 
-/*
-VOID WINAPI BaseStaticServerThread(PVOID x)
-{
-    // NTSTATUS Status = STATUS_SUCCESS;
-    PPORT_MESSAGE Request = (PPORT_MESSAGE)x;
-    PPORT_MESSAGE Reply = NULL;
-    ULONG MessageType = 0;
-
-    DPRINT("BASESRV: %s called\n", __FUNCTION__);
-
-    MessageType = Request->u2.s2.Type;
-    DPRINT("BASESRV: %s received a message (Type=%d)\n",
-           __FUNCTION__, MessageType);
-    switch (MessageType)
-    {
-        default:
-            Reply = Request;
-            /\* Status =*\/ NtReplyPort(BaseApiPort, Reply);
-            break;
-    }
-}
-*/
-
 CSR_SERVER_DLL_INIT(ServerDllInitialization)
 {
-    // NTSTATUS Status = STATUS_SUCCESS;
-
-/*
-    DPRINT("BASSRV: %s(%ld,...) called\n", __FUNCTION__, ArgumentCount);
-
-    BaseApiPort = CsrQueryApiPort ();
-    Status = CsrAddStaticServerThread(BaseStaticServerThread);
-    if (NT_SUCCESS(Status))
-    {
-        //TODO initialize the BASE server
-    }
-    return STATUS_SUCCESS;
-*/
-
     /* Setup the DLL Object */
     LoadedServerDll->ApiBase = BASESRV_FIRST_API_NUMBER; // ApiNumberBase
     LoadedServerDll->HighestApiSupported = BasepMaxApiNumber; // MaxApiNumber
@@ -553,10 +527,14 @@ CSR_SERVER_DLL_INIT(ServerDllInitialization)
     LoadedServerDll->SizeOfProcessData = 0;
     LoadedServerDll->ConnectCallback = NULL;
     LoadedServerDll->DisconnectCallback = NULL;
+    LoadedServerDll->ShutdownProcessCallback = NULL;
+
+    BaseSrvDllInstance = LoadedServerDll->ServerHandle;
+
     BaseInitializeStaticServerData(LoadedServerDll);
 
-    RtlInitializeCriticalSection(&BaseDefineDosDeviceCritSec);
-    InitializeListHead(&DosDeviceHistory);
+    /* Initialize DOS devices management */
+    BaseInitDefineDosDevice();
 
     /* All done */
     return STATUS_SUCCESS;
@@ -568,14 +546,11 @@ DllMain(IN HINSTANCE hInstanceDll,
         IN DWORD dwReason,
         IN LPVOID lpReserved)
 {
+    UNREFERENCED_PARAMETER(hInstanceDll);
     UNREFERENCED_PARAMETER(dwReason);
     UNREFERENCED_PARAMETER(lpReserved);
 
-    if (DLL_PROCESS_ATTACH == dwReason)
-    {
-        DllHandle = hInstanceDll;
-    }
-    else if (DLL_PROCESS_DETACH == dwReason)
+    if (DLL_PROCESS_DETACH == dwReason)
     {
         BaseCleanupDefineDosDevice();
     }

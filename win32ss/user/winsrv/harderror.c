@@ -7,7 +7,7 @@
  *                  Timo Kreuzer (timo.kreuzer@reactos.org)
  */
 
-/* INCLUDES ******************************************************************/
+/* INCLUDES *******************************************************************/
 
 #include "winsrv.h"
 
@@ -19,7 +19,7 @@
 #define IDTRYAGAIN 10
 #define IDCONTINUE 11
 
-/* FUNCTIONS *****************************************************************/
+/* FUNCTIONS ******************************************************************/
 
 static
 NTSTATUS
@@ -493,15 +493,15 @@ CsrpMessageBox(
     /* Return response value */
     switch (MessageBoxResponse)
     {
-    case IDOK:       return ResponseOk;
-    case IDCANCEL:   return ResponseCancel;
-    case IDYES:      return ResponseYes;
-    case IDNO:       return ResponseNo;
-    case IDABORT:    return ResponseAbort;
-    case IDIGNORE:   return ResponseIgnore;
-    case IDRETRY:    return ResponseRetry;
-    case IDTRYAGAIN: return ResponseTryAgain;
-    case IDCONTINUE: return ResponseContinue;
+        case IDOK:       return ResponseOk;
+        case IDCANCEL:   return ResponseCancel;
+        case IDYES:      return ResponseYes;
+        case IDNO:       return ResponseNo;
+        case IDABORT:    return ResponseAbort;
+        case IDIGNORE:   return ResponseIgnore;
+        case IDRETRY:    return ResponseRetry;
+        case IDTRYAGAIN: return ResponseTryAgain;
+        case IDCONTINUE: return ResponseContinue;
     }
 
     return ResponseNotHandled;
@@ -509,7 +509,7 @@ CsrpMessageBox(
 
 VOID
 WINAPI
-Win32CsrHardError(
+UserServerHardError(
     IN PCSR_THREAD ThreadData,
     IN PHARDERROR_MSG Message)
 {
@@ -583,3 +583,4 @@ Win32CsrHardError(
     return;
 }
 
+/* EOF */

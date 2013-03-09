@@ -1,8 +1,8 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            subsys/csrss/include/api.h
- * PURPOSE:         CSRSS API interface
+ * FILE:            subsystems/win32/csrsrv/api.h
+ * PURPOSE:         CSRSS Internal API
  */
 
 #pragma once
