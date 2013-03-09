@@ -24,6 +24,10 @@ typedef PVOID (NTAPI *PLSA_ALLOCATE_LSA_HEAP)(ULONG);
 typedef VOID (NTAPI *PLSA_FREE_LSA_HEAP)(PVOID);
 typedef NTSTATUS (NTAPI *PLSA_ALLOCATE_CLIENT_BUFFER)(PLSA_CLIENT_REQUEST, ULONG, PVOID*);
 typedef NTSTATUS (NTAPI *PLSA_FREE_CLIENT_BUFFER)(PLSA_CLIENT_REQUEST, PVOID);
+typedef NTSTATUS (NTAPI *PLSA_COPY_TO_CLIENT_BUFFER)(PLSA_CLIENT_REQUEST, ULONG,
+ PVOID, PVOID);
+typedef NTSTATUS (NTAPI *PLSA_COPY_FROM_CLIENT_BUFFER)(PLSA_CLIENT_REQUEST,
+ ULONG, PVOID, PVOID);
 
 typedef struct LSA_DISPATCH_TABLE
 {
@@ -36,8 +40,8 @@ typedef struct LSA_DISPATCH_TABLE
     PLSA_FREE_LSA_HEAP FreeLsaHeap;
     PLSA_ALLOCATE_CLIENT_BUFFER AllocateClientBuffer;
     PLSA_FREE_CLIENT_BUFFER FreeClientBuffer;
-    PVOID /*PLSA_COPY_TO_CLIENT_BUFFER */ CopyToClientBuffer;
-    PVOID /*PLSA_COPY_FROM_CLIENT_BUFFER */ CopyFromClientBuffer;
+    PLSA_COPY_TO_CLIENT_BUFFER CopyToClientBuffer;
+    PLSA_COPY_FROM_CLIENT_BUFFER CopyFromClientBuffer;
 } LSA_DISPATCH_TABLE, *PLSA_DISPATCH_TABLE;
 
 
@@ -308,8 +312,20 @@ LsapAllocateClientBuffer(IN PLSA_CLIENT_REQUEST ClientRequest,
                          IN ULONG LengthRequired,
                          OUT PVOID *ClientBaseAddress)
 {
-    FIXME("() stub\n");
-    return STATUS_NOT_IMPLEMENTED;
+    PLSAP_LOGON_CONTEXT LogonContext;
+    ULONG Length;
+
+    *ClientBaseAddress = NULL;
+
+    LogonContext = (PLSAP_LOGON_CONTEXT)ClientRequest;
+
+    Length = LengthRequired;
+    return NtAllocateVirtualMemory(LogonContext->ClientProcessHandle,
+                                   ClientBaseAddress,
+                                   0,
+                                   &Length,
+                                   MEM_COMMIT,
+                                   PAGE_READWRITE);
 }
 
 
@@ -319,8 +335,59 @@ NTAPI
 LsapFreeClientBuffer(IN PLSA_CLIENT_REQUEST ClientRequest,
                      IN PVOID ClientBaseAddress)
 {
-    FIXME("() stub\n");
-    return STATUS_NOT_IMPLEMENTED;
+    PLSAP_LOGON_CONTEXT LogonContext;
+    ULONG Length;
+
+    if (ClientBaseAddress == NULL)
+        return STATUS_SUCCESS;
+
+    LogonContext = (PLSAP_LOGON_CONTEXT)ClientRequest;
+
+    Length = 0;
+    return NtFreeVirtualMemory(LogonContext->ClientProcessHandle,
+                               &ClientBaseAddress,
+                               &Length,
+                               MEM_RELEASE);
+}
+
+
+static
+NTSTATUS
+NTAPI
+LsapCopyToClientBuffer(IN PLSA_CLIENT_REQUEST ClientRequest,
+                       IN ULONG Length,
+                       IN PVOID ClientBaseAddress,
+                       IN PVOID BufferToCopy)
+{
+    PLSAP_LOGON_CONTEXT LogonContext;
+
+    LogonContext = (PLSAP_LOGON_CONTEXT)ClientRequest;
+
+    return NtWriteVirtualMemory(LogonContext->ClientProcessHandle,
+                                ClientBaseAddress,
+                                BufferToCopy,
+                                Length,
+                                NULL);
+}
+
+
+static
+NTSTATUS
+NTAPI
+LsapCopyFromClientBuffer(IN PLSA_CLIENT_REQUEST ClientRequest,
+                         IN ULONG Length,
+                         IN PVOID BufferToCopy,
+                         IN PVOID ClientBaseAddress)
+{
+    PLSAP_LOGON_CONTEXT LogonContext;
+
+    LogonContext = (PLSAP_LOGON_CONTEXT)ClientRequest;
+
+    return NtReadVirtualMemory(LogonContext->ClientProcessHandle,
+                               ClientBaseAddress,
+                               BufferToCopy,
+                               Length,
+                               NULL);
 }
 
 
@@ -346,8 +413,8 @@ LsapInitAuthPackages(VOID)
     DispatchTable.FreeLsaHeap = &LsapFreeHeap;
     DispatchTable.AllocateClientBuffer = &LsapAllocateClientBuffer;
     DispatchTable.FreeClientBuffer = &LsapFreeClientBuffer;
-    DispatchTable.CopyToClientBuffer = NULL;
-    DispatchTable.CopyFromClientBuffer = NULL;
+    DispatchTable.CopyToClientBuffer = &LsapCopyToClientBuffer;
+    DispatchTable.CopyFromClientBuffer = &LsapCopyFromClientBuffer;
 
     /* Add registered authentication packages */
     Status = RtlQueryRegistryValues(RTL_REGISTRY_CONTROL,
@@ -401,14 +468,15 @@ LsapCallAuthenticationPackage(PLSA_API_MSG RequestMsg,
                               PLSAP_LOGON_CONTEXT LogonContext)
 {
     PAUTH_PACKAGE Package;
+    PVOID LocalBuffer = NULL;
     ULONG PackageId;
-
     NTSTATUS Status;
 
     TRACE("(%p %p)\n", RequestMsg, LogonContext);
 
     PackageId = RequestMsg->CallAuthenticationPackage.Request.AuthenticationPackage;
 
+    /* Get the right authentication package */
     Package = LsapGetAuthenticationPackage(PackageId);
     if (Package == NULL)
     {
@@ -416,9 +484,32 @@ LsapCallAuthenticationPackage(PLSA_API_MSG RequestMsg,
         return STATUS_NO_SUCH_PACKAGE;
     }
 
-    Status = Package->LsaApCallPackage(NULL, /* FIXME: PLSA_CLIENT_REQUEST ClientRequest */
+    if (RequestMsg->CallAuthenticationPackage.Request.SubmitBufferLength > 0)
+    {
+        LocalBuffer = RtlAllocateHeap(RtlGetProcessHeap(),
+                                      HEAP_ZERO_MEMORY,
+                                      RequestMsg->CallAuthenticationPackage.Request.SubmitBufferLength);
+        if (LocalBuffer == NULL)
+        {
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+
+        Status = NtReadVirtualMemory(LogonContext->ClientProcessHandle,
+                                     RequestMsg->CallAuthenticationPackage.Request.ProtocolSubmitBuffer,
+                                     LocalBuffer,
+                                     RequestMsg->CallAuthenticationPackage.Request.SubmitBufferLength,
+                                     NULL);
+        if (!NT_SUCCESS(Status))
+        {
+            TRACE("NtReadVirtualMemory() failed (Status 0x%08lx)\n", Status);
+            RtlFreeHeap(RtlGetProcessHeap(), 0, LocalBuffer);
+            return Status;
+        }
+    }
+
+    Status = Package->LsaApCallPackage((PLSA_CLIENT_REQUEST)LogonContext,
+                                       LocalBuffer,
                                        RequestMsg->CallAuthenticationPackage.Request.ProtocolSubmitBuffer,
-                                       NULL, /* FIXME: PVOID ClientBufferBase */
                                        RequestMsg->CallAuthenticationPackage.Request.SubmitBufferLength,
                                        &RequestMsg->CallAuthenticationPackage.Reply.ProtocolReturnBuffer,
                                        &RequestMsg->CallAuthenticationPackage.Reply.ReturnBufferLength,
@@ -427,6 +518,9 @@ LsapCallAuthenticationPackage(PLSA_API_MSG RequestMsg,
     {
         TRACE("Package->LsaApCallPackage() failed (Status 0x%08lx)\n", Status);
     }
+
+    if (LocalBuffer != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, LocalBuffer);
 
     return Status;
 }
@@ -446,10 +540,13 @@ LsapLogonUser(PLSA_API_MSG RequestMsg,
     PUNICODE_STRING AuthenticatingAuthority = NULL;
     PUNICODE_STRING MachineName = NULL;
 
+    PVOID LocalAuthInfo = NULL;
+
     TRACE("(%p %p)\n", RequestMsg, LogonContext);
 
     PackageId = RequestMsg->LogonUser.Request.AuthenticationPackage;
 
+    /* Get the right authentication package */
     Package = LsapGetAuthenticationPackage(PackageId);
     if (Package == NULL)
     {
@@ -457,12 +554,38 @@ LsapLogonUser(PLSA_API_MSG RequestMsg,
         return STATUS_NO_SUCH_PACKAGE;
     }
 
+    if (RequestMsg->LogonUser.Request.AuthenticationInformationLength > 0)
+    {
+        /* Allocat the local authentication info buffer */
+        LocalAuthInfo = RtlAllocateHeap(RtlGetProcessHeap(),
+                                        HEAP_ZERO_MEMORY,
+                                        RequestMsg->LogonUser.Request.AuthenticationInformationLength);
+        if (LocalAuthInfo == NULL)
+        {
+            TRACE("RtlAllocateHeap() failed\n");
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+
+        /* Read the authentication info from the callers adress space */
+        Status = NtReadVirtualMemory(LogonContext->ClientProcessHandle,
+                                     RequestMsg->LogonUser.Request.AuthenticationInformation,
+                                     LocalAuthInfo,
+                                     RequestMsg->LogonUser.Request.AuthenticationInformationLength,
+                                     NULL);
+        if (!NT_SUCCESS(Status))
+        {
+            TRACE("NtReadVirtualMemory() failed (Status 0x%08lx)\n", Status);
+            RtlFreeHeap(RtlGetProcessHeap(), 0, LocalAuthInfo);
+            return Status;
+        }
+    }
+
     if (Package->LsaApLogonUserEx2 != NULL)
     {
-        Status = Package->LsaApLogonUserEx2(NULL,  /* FIXME: PLSA_CLIENT_REQUEST ClientRequest */
+        Status = Package->LsaApLogonUserEx2((PLSA_CLIENT_REQUEST)LogonContext,
                                             RequestMsg->LogonUser.Request.LogonType,
+                                            LocalAuthInfo,
                                             RequestMsg->LogonUser.Request.AuthenticationInformation,
-                                            NULL,  /* FIXME: PVOID ClientBufferBase*/
                                             RequestMsg->LogonUser.Request.AuthenticationInformationLength,
                                             &RequestMsg->LogonUser.Reply.ProfileBuffer,
                                             &RequestMsg->LogonUser.Reply.ProfileBufferLength,
@@ -478,10 +601,10 @@ LsapLogonUser(PLSA_API_MSG RequestMsg,
     }
     else if (Package->LsaApLogonUserEx != NULL)
     {
-        Status = Package->LsaApLogonUserEx(NULL,  /* FIXME: PLSA_CLIENT_REQUEST ClientRequest */
+        Status = Package->LsaApLogonUserEx((PLSA_CLIENT_REQUEST)LogonContext,
                                            RequestMsg->LogonUser.Request.LogonType,
+                                           LocalAuthInfo,
                                            RequestMsg->LogonUser.Request.AuthenticationInformation,
-                                           NULL,  /* FIXME: PVOID ClientBufferBase*/
                                            RequestMsg->LogonUser.Request.AuthenticationInformationLength,
                                            &RequestMsg->LogonUser.Reply.ProfileBuffer,
                                            &RequestMsg->LogonUser.Reply.ProfileBufferLength,
@@ -495,10 +618,10 @@ LsapLogonUser(PLSA_API_MSG RequestMsg,
     }
     else
     {
-        Status = Package->LsaApLogonUser(NULL,  /* FIXME: PLSA_CLIENT_REQUEST ClientRequest */
+        Status = Package->LsaApLogonUser((PLSA_CLIENT_REQUEST)LogonContext,
                                          RequestMsg->LogonUser.Request.LogonType,
+                                         LocalAuthInfo,
                                          RequestMsg->LogonUser.Request.AuthenticationInformation,
-                                         NULL,  /* FIXME:  PVOID ClientBufferBase*/
                                          RequestMsg->LogonUser.Request.AuthenticationInformationLength,
                                          &RequestMsg->LogonUser.Reply.ProfileBuffer,
                                          &RequestMsg->LogonUser.Reply.ProfileBufferLength,
@@ -510,6 +633,9 @@ LsapLogonUser(PLSA_API_MSG RequestMsg,
                                          &AuthenticatingAuthority);
     }
 
+    /* Free the local authentication info buffer */
+    if (LocalAuthInfo != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, LocalAuthInfo);
 
     if (TokenInformation != NULL)
     {
