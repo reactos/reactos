@@ -51,7 +51,6 @@
 extern HINSTANCE UserServerDllInstance;
 extern HANDLE UserServerHeap;
 
-extern HWND LogonNotifyWindow;
 extern ULONG_PTR LogonProcessId;
 
 /* init.c */
@@ -64,8 +63,6 @@ VOID WINAPI UserServerHardError(IN PCSR_THREAD ThreadData,
 /* register.c */
 CSR_API(SrvRegisterServicesProcess);
 CSR_API(SrvRegisterLogonProcess);
-/// HACK: ReactOS-specific
-CSR_API(RosSetLogonNotifyWindow);
 
 /* shutdown.c */
 CSR_API(SrvExitWindowsEx);

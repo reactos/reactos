@@ -19,7 +19,6 @@
 static BOOLEAN ServicesProcessIdValid = FALSE;
 static ULONG_PTR ServicesProcessId = 0;
 
-HWND LogonNotifyWindow = NULL;
 ULONG_PTR LogonProcessId = 0;
 
 /* PUBLIC SERVER APIS *********************************************************/
@@ -46,29 +45,6 @@ CSR_API(SrvRegisterLogonProcess)
 
         LogonProcessId = 0;
     }
-
-    return STATUS_SUCCESS;
-}
-
-/// HACK: ReactOS-specific
-CSR_API(RosSetLogonNotifyWindow)
-{
-    PCSRSS_SET_LOGON_NOTIFY_WINDOW SetLogonNotifyWindowRequest = &((PUSER_API_MESSAGE)ApiMessage)->Data.SetLogonNotifyWindowRequest;
-    DWORD WindowCreator;
-
-    if (0 == GetWindowThreadProcessId(SetLogonNotifyWindowRequest->LogonNotifyWindow,
-                                      &WindowCreator))
-    {
-        DPRINT1("Can't get window creator\n");
-        return STATUS_INVALID_HANDLE;
-    }
-    if (WindowCreator != LogonProcessId)
-    {
-        DPRINT1("Trying to register window not created by winlogon as notify window\n");
-        return STATUS_ACCESS_DENIED;
-    }
-
-    LogonNotifyWindow = SetLogonNotifyWindowRequest->LogonNotifyWindow;
 
     return STATUS_SUCCESS;
 }

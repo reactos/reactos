@@ -426,15 +426,7 @@ NotifyTopLevelWindows(PNOTIFY_CONTEXT Context)
 BOOL FASTCALL
 DtbgIsDesktopVisible(VOID)
 {
-    HWND VisibleDesktopWindow = GetDesktopWindow(); // DESKTOPWNDPROC
-
-    if (VisibleDesktopWindow != NULL &&
-            !IsWindowVisible(VisibleDesktopWindow))
-    {
-        VisibleDesktopWindow = NULL;
-    }
-
-    return VisibleDesktopWindow != NULL;
+    return !((BOOL)NtUserCallNoParam(NOPARAM_ROUTINE_ISCONSOLEMODE));
 }
 
 /* TODO: Find an other way to do it. */
@@ -894,16 +886,9 @@ UserExitReactos(DWORD UserProcessId, UINT Flags)
 {
     NTSTATUS Status;
 
-    if (NULL == LogonNotifyWindow)
-    {
-        DPRINT1("No LogonNotifyWindow registered\n");
-        return STATUS_NOT_FOUND;
-    }
-
     /* FIXME Inside 2000 says we should impersonate the caller here */
-    Status = SendMessageW(LogonNotifyWindow, PM_WINLOGON_EXITWINDOWS,
-                          (WPARAM) UserProcessId,
-                          (LPARAM) Flags);
+    Status = NtUserCallTwoParam(UserProcessId, Flags, TWOPARAM_ROUTINE_EXITREACTOS);
+
     /* If the message isn't handled, the return value is 0, so 0 doesn't indicate
        success. Success is indicated by a 1 return value, if anything besides 0
        or 1 it's a NTSTATUS value */
