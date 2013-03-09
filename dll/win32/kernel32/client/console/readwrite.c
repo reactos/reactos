@@ -79,7 +79,7 @@ IntReadConsole(HANDLE hConsoleInput,
                                  sizeof(CONSOLE_READCONSOLE));
 
     /* Check for success */
-    if (NT_SUCCESS(Status) || NT_SUCCESS(Status = ApiMessage.Status))
+    if (NT_SUCCESS(Status))
     {
         memcpy(lpBuffer,
                ReadConsoleRequest->Buffer,
@@ -99,7 +99,7 @@ IntReadConsole(HANDLE hConsoleInput,
             *lpNumberOfCharsRead = 0;
 
         /* Error out */
-        BaseSetLastNTError(Status /* ApiMessage.Status */);
+        BaseSetLastNTError(Status);
     }
 
     CsrFreeCaptureBuffer(CaptureBuffer);
@@ -107,7 +107,7 @@ IntReadConsole(HANDLE hConsoleInput,
     /* Return TRUE or FALSE */
     // return TRUE;
     return (ReadConsoleRequest->NrCharactersRead > 0);
-    // return NT_SUCCESS(ApiMessage.Status);
+    // return NT_SUCCESS(Status);
 }
 
 
@@ -162,10 +162,10 @@ IntGetConsoleInput(HANDLE hConsoleInput,
                                  CaptureBuffer,
                                  CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepGetConsoleInput),
                                  sizeof(CONSOLE_GETINPUT));
-    DPRINT("Server returned: %x\n", ApiMessage.Status);
+    DPRINT("Server returned: %x\n", Status);
 
     /* Check for success */
-    if (NT_SUCCESS(Status) || NT_SUCCESS(Status = ApiMessage.Status))
+    if (NT_SUCCESS(Status))
     {
         /* Return the number of events read */
         DPRINT("Events read: %lx\n", GetInputRequest->InputsRead);
@@ -185,7 +185,7 @@ IntGetConsoleInput(HANDLE hConsoleInput,
             *lpNumberOfEventsRead = 0;
 
         /* Error out */
-        BaseSetLastNTError(ApiMessage.Status);
+        BaseSetLastNTError(Status);
     }
 
     /* Release the capture buffer */
@@ -193,7 +193,7 @@ IntGetConsoleInput(HANDLE hConsoleInput,
 
     /* Return TRUE or FALSE */
     return (GetInputRequest->InputsRead > 0);
-    // return NT_SUCCESS(ApiMessage.Status);
+    // return NT_SUCCESS(Status);
 }
 
 
@@ -346,7 +346,7 @@ IntReadConsoleOutputCode(HANDLE hConsoleOutput,
                                  sizeof(CONSOLE_READOUTPUTCODE));
 
     /* Check for success */
-    if (NT_SUCCESS(Status) || NT_SUCCESS(Status = ApiMessage.Status))
+    if (NT_SUCCESS(Status))
     {
         CodesRead = ReadOutputCodeRequest->CodesRead;
         memcpy(pCode, ReadOutputCodeRequest->pCode.pCode, CodesRead * CodeSize);
@@ -364,7 +364,7 @@ IntReadConsoleOutputCode(HANDLE hConsoleOutput,
             *lpNumberOfCodesRead = 0;
 
         /* Error out */
-        BaseSetLastNTError(Status /* ApiMessage.Status */);
+        BaseSetLastNTError(Status);
         bRet = FALSE;
     }
 
@@ -425,7 +425,7 @@ IntWriteConsole(HANDLE hConsoleOutput,
                                  sizeof(CONSOLE_WRITECONSOLE));
 
     /* Check for success */
-    if (NT_SUCCESS(Status) || NT_SUCCESS(Status = ApiMessage.Status))
+    if (NT_SUCCESS(Status))
     {
         if (lpNumberOfCharsWritten != NULL)
             *lpNumberOfCharsWritten = WriteConsoleRequest->NrCharactersWritten;
@@ -438,7 +438,7 @@ IntWriteConsole(HANDLE hConsoleOutput,
             *lpNumberOfCharsWritten = 0;
 
         /* Error out */
-        BaseSetLastNTError(Status /* ApiMessage.Status */);
+        BaseSetLastNTError(Status);
         bRet = FALSE;
     }
 
@@ -663,7 +663,7 @@ IntWriteConsoleOutputCode(HANDLE hConsoleOutput,
                                  sizeof(CONSOLE_WRITEOUTPUTCODE));
 
     /* Check for success */
-    if (NT_SUCCESS(Status) || NT_SUCCESS(Status = ApiMessage.Status))
+    if (NT_SUCCESS(Status))
     {
         // WriteOutputCodeRequest->Coord = WriteOutputCodeRequest->EndCoord;
 
@@ -679,7 +679,7 @@ IntWriteConsoleOutputCode(HANDLE hConsoleOutput,
             *lpNumberOfCodesWritten = 0;
 
         /* Error out */
-        BaseSetLastNTError(Status /* ApiMessage.Status */);
+        BaseSetLastNTError(Status);
         bRet = FALSE;
     }
 
@@ -735,7 +735,7 @@ IntFillConsoleOutputCode(HANDLE hConsoleOutput,
                                  sizeof(CONSOLE_FILLOUTPUTCODE));
 
     /* Check for success */
-    if (NT_SUCCESS(ApiMessage.Status))
+    if (NT_SUCCESS(Status))
     {
         if (lpNumberOfCodesWritten != NULL)
             *lpNumberOfCodesWritten = FillOutputRequest->Length;

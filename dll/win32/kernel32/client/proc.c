@@ -509,10 +509,10 @@ BasepNotifyCsrOfThread(IN HANDLE ThreadHandle,
                                  NULL,
                                  CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepCreateThread),
                                  sizeof(BASE_CREATE_THREAD));
-    if (!NT_SUCCESS(Status) || !NT_SUCCESS(ApiMessage.Status))
+    if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to tell CSRSS about new thread: %lx %lx\n", Status, ApiMessage.Status);
-        return ApiMessage.Status;
+        DPRINT1("Failed to tell CSRSS about new thread: %lx\n", Status);
+        return Status;
     }
 
     /* Return Success */
@@ -594,9 +594,9 @@ BasepCreateFirstThread(HANDLE ProcessHandle,
                                  NULL,
                                  CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepCreateProcess),
                                  sizeof(BASE_CREATE_PROCESS));
-    if (!NT_SUCCESS(Status) || !NT_SUCCESS(ApiMessage.Status))
+    if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to tell CSRSS about new process: %lx %lx\n", Status, ApiMessage.Status);
+        DPRINT1("Failed to tell CSRSS about new process: %lx\n", Status);
         return NULL;
     }
 
@@ -1193,10 +1193,10 @@ GetProcessShutdownParameters(OUT LPDWORD lpdwLevel,
                                  NULL,
                                  CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepGetProcessShutdownParam),
                                  sizeof(BASE_GET_PROCESS_SHUTDOWN_PARAMS));
-    if (!(NT_SUCCESS(Status)) || !(NT_SUCCESS(ApiMessage.Status)))
+    if (!NT_SUCCESS(Status))
     {
         /* Return the failure from CSRSS */
-        BaseSetLastNTError(ApiMessage.Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 
@@ -1225,10 +1225,10 @@ SetProcessShutdownParameters(IN DWORD dwLevel,
                                  NULL,
                                  CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepSetProcessShutdownParam),
                                  sizeof(BASE_SET_PROCESS_SHUTDOWN_PARAMS));
-    if (!NT_SUCCESS(Status) || !NT_SUCCESS(ApiMessage.Status))
+    if (!NT_SUCCESS(Status))
     {
         /* Return the failure from CSRSS */
-        BaseSetLastNTError(ApiMessage.Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 

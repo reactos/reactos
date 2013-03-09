@@ -41,7 +41,7 @@ GetConsoleHistoryInfo(PCONSOLE_HISTORY_INFO lpConsoleHistoryInfo)
                                  NULL,
                                  CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepGetHistory),
                                  sizeof(CONSOLE_GETSETHISTORYINFO));
-    if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = ApiMessage.Status))
+    if (!NT_SUCCESS(Status))
     {
         BaseSetLastNTError(Status);
         return FALSE;
@@ -82,7 +82,7 @@ SetConsoleHistoryInfo(IN PCONSOLE_HISTORY_INFO lpConsoleHistoryInfo)
                                  NULL,
                                  CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepSetHistory),
                                  sizeof(CONSOLE_GETSETHISTORYINFO));
-    if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = ApiMessage.Status))
+    if (!NT_SUCCESS(Status))
     {
         BaseSetLastNTError(Status);
         return FALSE;

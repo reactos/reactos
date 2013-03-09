@@ -188,10 +188,9 @@ DefineDosDeviceW(
                                      sizeof(BASE_DEFINE_DOS_DEVICE));
         CsrFreeCaptureBuffer(CaptureBuffer);
 
-        if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = ApiMessage.Status))
+        if (!NT_SUCCESS(Status))
         {
-            WARN("CsrClientCallServer() failed (Status %lx)\n",
-                Status);
+            WARN("CsrClientCallServer() failed (Status %lx)\n", Status);
             BaseSetLastNTError(Status);
             Result = FALSE;
         }

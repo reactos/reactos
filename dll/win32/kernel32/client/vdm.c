@@ -138,10 +138,10 @@ BaseUpdateVDMEntry(IN ULONG UpdateIndex,
                                  NULL,
                                  CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepUpdateVDMEntry),
                                  sizeof(BASE_UPDATE_VDM_ENTRY));
-    if (!(NT_SUCCESS(Status)) || !(NT_SUCCESS(ApiMessage.Status)))
+    if (!NT_SUCCESS(Status))
     {
         /* Handle failure */
-        BaseSetLastNTError(ApiMessage.Status);
+        BaseSetLastNTError(Status);
         return FALSE;
     }
 

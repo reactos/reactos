@@ -82,7 +82,7 @@ IntExpungeConsoleCommandHistory(LPCVOID lpExeName, BOOL bUnicode)
 
     CsrFreeCaptureBuffer(CaptureBuffer);
 
-    if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = ApiMessage.Status))
+    if (!NT_SUCCESS(Status))
     {
         BaseSetLastNTError(Status);
         return FALSE;
@@ -126,7 +126,7 @@ IntGetConsoleCommandHistory(LPVOID lpHistory, DWORD cbHistory, LPCVOID lpExeName
                                  CaptureBuffer,
                                  CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepGetCommandHistory),
                                  sizeof(CONSOLE_GETCOMMANDHISTORY));
-    if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = ApiMessage.Status))
+    if (!NT_SUCCESS(Status))
     {
         CsrFreeCaptureBuffer(CaptureBuffer);
         BaseSetLastNTError(Status);
@@ -187,7 +187,7 @@ IntGetConsoleCommandHistoryLength(LPCVOID lpExeName, BOOL bUnicode)
 
     CsrFreeCaptureBuffer(CaptureBuffer);
 
-    if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = ApiMessage.Status))
+    if (!NT_SUCCESS(Status))
     {
         BaseSetLastNTError(Status);
         return 0;
@@ -232,7 +232,7 @@ IntSetConsoleNumberOfCommands(DWORD dwNumCommands,
 
     CsrFreeCaptureBuffer(CaptureBuffer);
 
-    if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = ApiMessage.Status))
+    if (!NT_SUCCESS(Status))
     {
         BaseSetLastNTError(Status);
         return FALSE;

@@ -56,10 +56,10 @@ RegisterLogonProcess(DWORD dwProcessId, BOOL bRegister)
                                      NULL,
                                      CSR_CREATE_API_NUMBER(USERSRV_SERVERDLL_INDEX, UserpRegisterLogonProcess),
                                      sizeof(CSRSS_REGISTER_LOGON_PROCESS));
-        if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = ApiMessage.Status))
+        if (!NT_SUCCESS(Status))
         {
-            SetLastError(RtlNtStatusToDosError(Status));
             ERR("Failed to register logon process with CSRSS\n");
+            SetLastError(RtlNtStatusToDosError(Status));
             // return FALSE;
         }
     }

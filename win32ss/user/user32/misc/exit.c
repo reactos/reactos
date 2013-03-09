@@ -77,7 +77,7 @@ ExitWindowsEx(UINT uFlags,
                                  NULL,
                                  CSR_CREATE_API_NUMBER(USERSRV_SERVERDLL_INDEX, UserpExitWindowsEx),
                                  sizeof(CSRSS_EXIT_REACTOS));
-    if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = ApiMessage.Status))
+    if (!NT_SUCCESS(Status))
     {
         SetLastError(RtlNtStatusToDosError(Status));
         return FALSE;
@@ -102,7 +102,7 @@ RegisterServicesProcess(DWORD ServicesProcessId)
                                  NULL,
                                  CSR_CREATE_API_NUMBER(USERSRV_SERVERDLL_INDEX, UserpRegisterServicesProcess),
                                  sizeof(CSRSS_REGISTER_SERVICES_PROCESS));
-    if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = ApiMessage.Status))
+    if (!NT_SUCCESS(Status))
     {
         SetLastError(RtlNtStatusToDosError(Status));
         return FALSE;

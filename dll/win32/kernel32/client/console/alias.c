@@ -92,7 +92,7 @@ AddConsoleAliasW(LPCWSTR lpSource,
 
     CsrFreeCaptureBuffer(CaptureBuffer);
 
-    if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = ApiMessage.Status))
+    if (!NT_SUCCESS(Status))
     {
         BaseSetLastNTError(Status);
         return FALSE;
@@ -198,7 +198,7 @@ GetConsoleAliasW(LPWSTR lpSource,
                                  CaptureBuffer,
                                  CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepGetAlias),
                                  sizeof(CONSOLE_ADDGETALIAS));
-    if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = ApiMessage.Status))
+    if (!NT_SUCCESS(Status))
     {
         CsrFreeCaptureBuffer(CaptureBuffer);
         BaseSetLastNTError(Status);
@@ -335,7 +335,7 @@ GetConsoleAliasesW(LPWSTR AliasBuffer,
                                  CaptureBuffer,
                                  CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepGetAliases),
                                  sizeof(CONSOLE_GETALLALIASES));
-    if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = ApiMessage.Status))
+    if (!NT_SUCCESS(Status))
     {
         BaseSetLastNTError(Status);
         return 0;
@@ -432,7 +432,7 @@ GetConsoleAliasesLengthW(LPWSTR lpExeName)
 
     CsrFreeCaptureBuffer(CaptureBuffer);
 
-    if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = ApiMessage.Status))
+    if (!NT_SUCCESS(Status))
     {
         BaseSetLastNTError(Status);
         return 0;
@@ -502,7 +502,7 @@ GetConsoleAliasExesW(LPWSTR lpExeNameBuffer,
                                  CaptureBuffer,
                                  CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepGetAliasExes),
                                  sizeof(CONSOLE_GETALIASESEXES));
-    if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = ApiMessage.Status))
+    if (!NT_SUCCESS(Status))
     {
         CsrFreeCaptureBuffer(CaptureBuffer);
         BaseSetLastNTError(Status);
@@ -566,7 +566,7 @@ GetConsoleAliasExesLengthW(VOID)
                                  CSR_CREATE_API_NUMBER(CONSRV_SERVERDLL_INDEX, ConsolepGetAliasExesLength),
                                  sizeof(CONSOLE_GETALIASESEXESLENGTH));
 
-    if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = ApiMessage.Status))
+    if (!NT_SUCCESS(Status))
     {
         BaseSetLastNTError(Status);
         return 0;
