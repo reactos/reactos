@@ -279,6 +279,23 @@ KiRundownThread(IN PKTHREAD Thread)
 #endif
 }
 
+FORCEINLINE
+VOID
+Ke386SetGdtEntryBase(PKGDTENTRY GdtEntry, PVOID BaseAddress)
+{
+    GdtEntry->BaseLow = (USHORT)((ULONG_PTR)BaseAddress & 0xFFFF);
+    GdtEntry->HighWord.Bytes.BaseMid = (UCHAR)((ULONG_PTR)BaseAddress >> 16);
+    GdtEntry->HighWord.Bytes.BaseHi = (UCHAR)((ULONG_PTR)BaseAddress >> 24);
+}
+
+FORCEINLINE
+VOID
+KiSetTebBase(PKPCR Pcr, PVOID TebAddress)
+{
+    Pcr->NtTib.Self = TebAddress;
+    Ke386SetGdtEntryBase(&Pcr->GDT[KGDT_R3_TEB / sizeof(KGDTENTRY)], TebAddress);
+}
+
 VOID
 FASTCALL
 Ki386InitializeTss(
