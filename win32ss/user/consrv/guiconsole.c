@@ -205,7 +205,9 @@ static VOID WINAPI
 GuiDrawRegion(PCONSOLE Console, SMALL_RECT* Region);
 static NTSTATUS WINAPI
 GuiResizeBuffer(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER ScreenBuffer, COORD Size);
-VOID FASTCALL
+static VOID
+GuiConsoleMoveWindow(PGUI_CONSOLE_DATA GuiData);
+static VOID
 GuiConsoleResizeWindow(PGUI_CONSOLE_DATA GuiData);
 
 
@@ -482,8 +484,10 @@ GuiApplyUserSettings(PGUI_CONSOLE_DATA GuiData,
             SizeChanged = TRUE;
     }
 
+    /* Move the window to the user's values */
     GuiData->GuiInfo.AutoPosition = pConInfo->ci.u.GuiInfo.AutoPosition;
     GuiData->GuiInfo.WindowOrigin = pConInfo->ci.u.GuiInfo.WindowOrigin;
+    GuiConsoleMoveWindow(GuiData);
 
     if (SizeChanged)
     {
@@ -516,8 +520,23 @@ GuiGetGuiData(HWND hWnd)
     return ( ((GuiData == NULL) || (GuiData->hWindow == hWnd && GuiData->Console != NULL)) ? GuiData : NULL );
 }
 
-VOID
-FASTCALL
+static VOID
+GuiConsoleMoveWindow(PGUI_CONSOLE_DATA GuiData)
+{
+    /* Move the window if needed (not positioned by the system) */
+    if (!GuiData->GuiInfo.AutoPosition)
+    {
+        SetWindowPos(GuiData->hWindow,
+                     NULL,
+                     GuiData->GuiInfo.WindowOrigin.x,
+                     GuiData->GuiInfo.WindowOrigin.y,
+                     0,
+                     0,
+                     SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE);
+    }
+}
+
+static VOID
 GuiConsoleResizeWindow(PGUI_CONSOLE_DATA GuiData)
 {
     PCONSOLE Console = GuiData->Console;
@@ -560,13 +579,8 @@ GuiConsoleResizeWindow(PGUI_CONSOLE_DATA GuiData)
         ShowScrollBar(GuiData->hWindow, SB_HORZ, FALSE);
     }
 
-    /* Resize and reposition the window  */
-    SetWindowPos(GuiData->hWindow,
-                 NULL,
-                 (GuiData->GuiInfo.AutoPosition ? 0 : GuiData->GuiInfo.WindowOrigin.x),
-                 (GuiData->GuiInfo.AutoPosition ? 0 : GuiData->GuiInfo.WindowOrigin.y),
-                 Width,
-                 Height,
+    /* Resize the window  */
+    SetWindowPos(GuiData->hWindow, NULL, 0, 0, Width, Height,
                  SWP_NOZORDER | SWP_NOMOVE | SWP_NOACTIVATE);
 }
 
@@ -662,7 +676,8 @@ GuiConsoleHandleNcCreate(HWND hWnd, LPCREATESTRUCTW Create)
     SetTimer(GuiData->hWindow, CONGUI_UPDATE_TIMER, CONGUI_UPDATE_TIME, NULL);
     GuiConsoleCreateSysMenu(GuiData->hWindow);
 
-    /* Resize the window to the user's values */
+    /* Move and resize the window to the user's values */
+    GuiConsoleMoveWindow(GuiData);
     GuiData->WindowSizeLock = TRUE;
     GuiConsoleResizeWindow(GuiData);
     GuiData->WindowSizeLock = FALSE;
