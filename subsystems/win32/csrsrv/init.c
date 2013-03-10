@@ -560,7 +560,7 @@ CsrParseServerCommandLine(IN ULONG ArgumentCount,
                 Status);
 
         /* It's not fatal if the session ID isn't zero */
-        if (SessionId) return Status;
+        if (SessionId != 0) return Status;
         ASSERT(NT_SUCCESS(Status));
     }
 
@@ -578,7 +578,7 @@ CsrParseServerCommandLine(IN ULONG ArgumentCount,
         if (_stricmp(ParameterName, "ObjectDirectory") == 0)
         {
             /* Check if a session ID is specified */
-            if (SessionId)
+            if (SessionId != 0)
             {
                 DPRINT1("Sessions not yet implemented\n");
                 ASSERT(SessionId);
