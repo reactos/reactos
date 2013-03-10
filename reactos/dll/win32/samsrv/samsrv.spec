@@ -1,7 +1,22 @@
 @ stub SamIAccountRestrictions
+@ stub SamIAddDSNameToAlias
+@ stub SamIAddDSNameToGroup
+@ stub SamIAmIGC
+@ stub SamIChangePasswordForeignUser
+@ stub SamIChangePasswordForeignUser2
 @ stub SamIConnect
 @ stub SamICreateAccountByRid
+@ stub SamIDemote
+@ stub SamIDemoteUndo
+@ stub SamIDoFSMORoleChange
+@ stub SamIDsCreateObjectInDomain
+@ stub SamIDsSetObjectInformation
 @ stub SamIEnumerateAccountRids
+@ stub SamIEnumerateInterdomainTrustAccountsForUpgrade
+@ stub SamIFloatingSingleMasterOpEx
+@ stub SamIFreeSidAndAttributesList
+@ stub SamIFreeSidArray
+@ stub SamIFreeVoid
 @ stub SamIFree_SAMPR_ALIAS_INFO_BUFFER
 @ stub SamIFree_SAMPR_DISPLAY_INFO_BUFFER
 @ stub SamIFree_SAMPR_DOMAIN_INFO_BUFFER
@@ -14,15 +29,83 @@
 @ stub SamIFree_SAMPR_SR_SECURITY_DESCRIPTOR
 @ stdcall SamIFree_SAMPR_ULONG_ARRAY(ptr)
 @ stub SamIFree_SAMPR_USER_INFO_BUFFER
+@ stub SamIFree_UserInternal6Information
+@ stub SamIGCLookupNames
+@ stub SamIGCLookupSids
+@ stub SamIGetAliasMembership
+@ stub SamIGetBootKeyInformation
+@ stub SamIGetDefaultAdministratorName
+@ stub SamIGetFixedAttributes
+@ stub SamIGetinterdomainTrustAccountPasswordsForUpgrade
 @ stub SamIGetPrivateData
+@ stub SamIGetResourceGroupmembershipsTransitive
 @ stub SamIGetSerialNumberDomain
+@ stub SamIGetuserLogonInformation
+@ stub SamIGetuserLogonInformation2
+@ stub SamIGetuserLogonInformationEx
+@ stub SamIImpersonateNullSession
+@ stub SamIIncrementPerformanceCounter
 @ stdcall SamIInitialize()
+@ stub SamIIsDownlevelDcUpgrade
+@ stub SamIIsExtendedSidMode
+@ stub SamIIsRebootAfterPromotion
+@ stub SamIIsSetupInProgress
+@ stub SamILoadDownlevelDatabase
+@ stub SamILoopbackConnect
+@ stub SamIMixedDomain
+@ stub SamIMixedDomain2
+@ stub SamINT4UpgradeInProgress
+@ stub SamINetLogonPing
 @ stub SamINotifyDelta
+@ stub SamINotifyRoleChange
+@ stub SamINotifyServerDelta
+@ stub SamIOpenAccount
+@ stub SamIOpenUserByAlternateId
+@ stub SamIPromote
+@ stub SamIPromoteUndo
+@ stub SamIQueryServerRole
+@ stub SamIQueryServerRole2
+@ stub SamIRemoveDSNameFromAlias
+@ stub SamIRemoveDSNameFromGroup
+@ stub SamIRelaceDownlevelDatabase
+@ stub SamIResetBadPwdCountOnPdc
+@ stub SamIRetrievePrimaryCredentials
+@ stub SamIRevertNullSession
+@ stub SamISameSite
 @ stub SamISetAuditingInformation
+@ stub SamISetMixedDomainFlag
+@ stub SamISetPasswordForeignUser
+@ stub SamISetPasswordForeignUser2
+@ stub SamISetPasswordInfoOnPdc
 @ stub SamISetPrivateData
 @ stub SamISetSerialNumberDomain
+@ stub SamIStorePrimaryCredentials
+@ stub SamIUPNFromUserHandle
+@ stub SamIUnLoadDownlevelDatabase
+@ stub SamIUpdateLogonStatistics
+@ stub SampAbortSingleLoopbackTask
+@ stub SampAccountControlToFlags
+@ stub SampAcquireSamLockExclusive
+@ stub SampAcquireWriteLock
+@ stub SampCommitBufferedWrites
+@ stub SampConvertNt4SdToNt5Sd
+@ stub SampDsChangePasswordUser
+@ stub SampFlagsToAccountControl
+@ stub SampGetDefaultSecurityDescriptorForClass
+@ stub SampGetSerialNumberDomain2
 @ stdcall SampInitializeRegistry()
+@ stub SampInitializeSdConversion
+@ stub SampInvalidateDomainCache
+@ stub SampInvalidateRidRange
+@ stub SampNetLogonNotificationRequired
+@ stub SampNotifyReplicatedInChange
+@ stub SampProcessSingleLoopbackTask
+@ stub SampReleaseSamLockExclusive
+@ stub SampReleaseWriteLock
 @ stub SampRtlConvertUlongToUnicodeString
+@ stub SampSetSerialNumberDomain2
+@ stub SampUsingDsData
+@ stub SampWriteGroupType
 @ stdcall SamrAddMemberToAlias(ptr ptr)
 @ stdcall SamrAddMemberToGroup(ptr long long)
 @ stdcall SamrAddMultipleMembersToAlias(ptr ptr)
@@ -31,6 +114,7 @@
 @ stdcall SamrConnect(ptr ptr long)
 @ stdcall SamrCreateAliasInDomain(ptr ptr long ptr ptr)
 @ stdcall SamrCreateGroupInDomain(ptr ptr long ptr ptr)
+@ stdcall SamrCreateUser2InDomain(ptr ptr long long ptr ptr ptr)
 @ stdcall SamrCreateUserInDomain(ptr ptr long ptr ptr)
 @ stdcall SamrDeleteAlias(ptr)
 @ stdcall SamrDeleteGroup(ptr)
@@ -61,6 +145,7 @@
 @ stdcall SamrRemoveMemberFromForeignDomain(ptr ptr)
 @ stdcall SamrRemoveMemberFromGroup(ptr long)
 @ stdcall SamrRemoveMultipleMembersFromAlias(ptr ptr)
+@ stdcall SamrRidToSid(ptr long ptr)
 @ stdcall SamrSetInformationAlias(ptr long ptr)
 @ stdcall SamrSetInformationDomain(ptr long ptr)
 @ stdcall SamrSetInformationGroup(ptr long ptr)
@@ -70,4 +155,5 @@
 @ stdcall SamrShutdownSamServer(ptr)
 @ stdcall SamrTestPrivateFunctionsDomain(ptr)
 @ stdcall SamrTestPrivateFunctionsUser(ptr)
+@ stdcall SamrUnicodeChangePasswordUser2(ptr ptr ptr ptr ptr long ptr ptr)
 ; EOF
