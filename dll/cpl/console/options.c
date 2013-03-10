@@ -76,7 +76,7 @@ OptionsProc(HWND hwndDlg,
             {
                 case IDC_RADIO_SMALL_CURSOR:
                 {
-                    pConInfo->ci.CursorSize = 0;
+                    pConInfo->ci.CursorSize = 25;
                     PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     break;
                 }
@@ -172,7 +172,7 @@ UpdateDialogElements(HWND hwndDlg, PCONSOLE_PROPS pConInfo)
     TCHAR szBuffer[MAX_PATH];
 
     /* Update cursor size */
-    if (pConInfo->ci.CursorSize == 0)
+    if (pConInfo->ci.CursorSize <= 25)
     {
         /* Small cursor */
         hDlgCtrl = GetDlgItem(hwndDlg, IDC_RADIO_SMALL_CURSOR);
@@ -183,7 +183,7 @@ UpdateDialogElements(HWND hwndDlg, PCONSOLE_PROPS pConInfo)
         hDlgCtrl = GetDlgItem(hwndDlg, IDC_RADIO_LARGE_CURSOR);
         SendMessage(hDlgCtrl, BM_SETCHECK, (WPARAM)BST_UNCHECKED, 0);
     }
-    else if (pConInfo->ci.CursorSize == 50)
+    else if (pConInfo->ci.CursorSize <= 50)
     {
         hDlgCtrl = GetDlgItem(hwndDlg, IDC_RADIO_MEDIUM_CURSOR);
         SendMessage(hDlgCtrl, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
@@ -193,7 +193,7 @@ UpdateDialogElements(HWND hwndDlg, PCONSOLE_PROPS pConInfo)
         hDlgCtrl = GetDlgItem(hwndDlg, IDC_RADIO_LARGE_CURSOR);
         SendMessage(hDlgCtrl, BM_SETCHECK, (WPARAM)BST_UNCHECKED, 0);
     }
-    else if (pConInfo->ci.CursorSize == 100)
+    else /* if (pConInfo->ci.CursorSize <= 100) */
     {
         hDlgCtrl = GetDlgItem(hwndDlg, IDC_RADIO_LARGE_CURSOR);
         SendMessage(hDlgCtrl, BM_SETCHECK, (WPARAM)BST_CHECKED, 0);

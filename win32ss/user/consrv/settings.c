@@ -289,10 +289,7 @@ ConSrvReadUserSettings(IN OUT PCONSOLE_INFO ConsoleInfo,
         }
         else if (!wcscmp(szValueName, L"CursorSize"))
         {
-            if ( (Value == 0) || (Value == 50) || (Value == 100) )
-            {
-                ConsoleInfo->CursorSize = Value;
-            }
+            ConsoleInfo->CursorSize = min(max(Value, 0), 100);
         }
         else if (!wcscmp(szValueName, L"ScreenColors"))
         {

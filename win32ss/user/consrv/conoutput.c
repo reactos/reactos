@@ -93,8 +93,8 @@ ConSrvCreateScreenBuffer(IN OUT PCONSOLE Console,
     (*Buffer)->ShowY = 0;
     (*Buffer)->VirtualY = 0;
 
-    (*Buffer)->CursorInfo.bVisible = (IsCursorVisible && (CursorSize > 0));
-    (*Buffer)->CursorInfo.dwSize   = min(max(CursorSize, 1), 100);
+    (*Buffer)->CursorInfo.bVisible = (IsCursorVisible && (CursorSize != 0));
+    (*Buffer)->CursorInfo.dwSize   = min(max(CursorSize, 0), 100);
 
     (*Buffer)->ScreenDefaultAttrib = ScreenAttrib;
     (*Buffer)->PopupDefaultAttrib  = PopupAttrib;

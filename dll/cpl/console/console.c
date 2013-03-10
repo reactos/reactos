@@ -52,6 +52,8 @@ const COLORREF s_Colors[16] =
 #define DEFAULT_SCREEN_ATTRIB   (FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED)
 #define DEFAULT_POPUP_ATTRIB    (FOREGROUND_BLUE | FOREGROUND_RED | \
                                  BACKGROUND_BLUE | BACKGROUND_GREEN | BACKGROUND_RED | BACKGROUND_INTENSITY)
+/* Cursor size */
+#define CSR_DEFAULT_CURSOR_SIZE 25
 
 static VOID
 InitPropSheetPage(PROPSHEETPAGE *psp,
@@ -84,12 +86,12 @@ InitConsoleDefaults(PCONSOLE_PROPS pConInfo)
     pConInfo->ci.FullScreen = FALSE;
     pConInfo->ci.QuickEdit = FALSE;
     pConInfo->ci.InsertMode = TRUE;
-    pConInfo->ci.InputBufferSize;
+    // pConInfo->ci.InputBufferSize;
     pConInfo->ci.ScreenBufferSize = (COORD){80, 300};
     pConInfo->ci.ConsoleSize = (COORD){80, 25};
     pConInfo->ci.CursorBlinkOn = TRUE;
     pConInfo->ci.ForceCursorOff = FALSE;
-    pConInfo->ci.CursorSize = 0;
+    pConInfo->ci.CursorSize = CSR_DEFAULT_CURSOR_SIZE;
     pConInfo->ci.ScreenAttrib = DEFAULT_SCREEN_ATTRIB;
     pConInfo->ci.PopupAttrib  = DEFAULT_POPUP_ATTRIB;
     pConInfo->ci.CodePage = 0;
