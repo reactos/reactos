@@ -293,8 +293,7 @@ LsapCreateDatabaseObjects(VOID)
     if (!NT_SUCCESS(Status))
         goto done;
 
-    Status = LsapCreatePolicySd(&PolicySd,
-                                &PolicySdSize);
+    Status = LsapCreatePolicySd(&PolicySd, &PolicySdSize);
     if (!NT_SUCCESS(Status))
         goto done;
 
@@ -356,7 +355,7 @@ LsapCreateDatabaseObjects(VOID)
     /* Set the audit events attribute */
     LsapSetObjectAttribute(PolicyObject,
                            L"PolAdtEv",
-                           &AuditEventsInfo,
+                           AuditEventsInfo,
                            AuditEventsSize);
 
     /* Set the DNS Domain Name attribute */
@@ -990,7 +989,8 @@ LsapSetObjectAttribute(PLSA_DB_OBJECT DbObject,
                          NULL);
     if (!NT_SUCCESS(Status))
     {
-
+        ERR("NtCreateKey failed for '%S' with status 0x%lx\n", 
+            AttributeName, Status);
         return Status;
     }
 
@@ -1000,6 +1000,12 @@ LsapSetObjectAttribute(PLSA_DB_OBJECT DbObject,
                                AttributeSize);
 
     NtClose(AttributeKey);
+
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("RtlpNtSetValueKey failed for '%S' with status 0x%lx\n", 
+            AttributeName, Status);
+    }
 
     return Status;
 }
