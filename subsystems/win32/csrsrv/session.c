@@ -18,23 +18,20 @@
 RTL_CRITICAL_SECTION CsrNtSessionLock;
 LIST_ENTRY CsrNtSessionList;
 
-// Does it exist a enumeration associated with it ?
-PSB_API_ROUTINE CsrServerSbApiDispatch[5] =
+PSB_API_ROUTINE CsrServerSbApiDispatch[SbpMaxApiNumber - SbpCreateSession] =
 {
     CsrSbCreateSession,
     CsrSbTerminateSession,
     CsrSbForeignSessionComplete,
-    CsrSbCreateProcess,
-    NULL
+    CsrSbCreateProcess
 };
 
-PCHAR CsrServerSbApiName[5] =
+PCHAR CsrServerSbApiName[SbpMaxApiNumber - SbpCreateSession] =
 {
     "SbCreateSession",
     "SbTerminateSession",
     "SbForeignSessionComplete",
-    "SbCreateProcess",
-    "Unknown Csr Sb Api Number"
+    "SbCreateProcess"
 };
 
 /* PRIVATE FUNCTIONS **********************************************************/
@@ -55,8 +52,6 @@ NTSTATUS
 NTAPI
 CsrInitializeNtSessionList(VOID)
 {
-    DPRINT("CSRSRV: %s called\n", __FUNCTION__);
-
     /* Initialize the Session List */
     InitializeListHead(&CsrNtSessionList);
 
@@ -170,7 +165,7 @@ CsrDereferenceNtSession(IN PCSR_NT_SESSION Session,
     ASSERT(Session->ReferenceCount != 0);
 
     /* Dereference the Session Object */
-    if (!(--Session->ReferenceCount))
+    if ((--Session->ReferenceCount) == 0)
     {
         /* Remove it from the list */
         RemoveEntryList(&Session->SessionLink);
@@ -537,8 +532,8 @@ CsrSbApiRequestThread(IN PVOID Parameter)
         }
 
         /*
-         * It's an API Message, check if it's within limits. If it's not, the
-         * NT Behaviour is to set this to the Maximum API.
+         * It's an API Message, check if it's within limits. If it's not,
+         * the NT Behaviour is to set this to the Maximum API.
          */
         if (ReceiveMsg.ApiNumber > SbpMaxApiNumber)
         {
@@ -555,6 +550,9 @@ CsrSbApiRequestThread(IN PVOID Parameter)
             /* Call the API */
             if (!CsrServerSbApiDispatch[ReceiveMsg.ApiNumber](&ReceiveMsg))
             {
+                DPRINT1("CSRSS: %s Session Api called and failed\n",
+                        CsrServerSbApiName[ReceiveMsg.ApiNumber]);
+
                 /* It failed, so return nothing */
                 ReplyMsg = NULL;
             }

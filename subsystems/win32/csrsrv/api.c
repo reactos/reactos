@@ -269,7 +269,7 @@ CsrpCheckRequestThreads(VOID)
     NTSTATUS Status;
 
     /* Decrease the count, and see if we're out */
-    if (!(_InterlockedDecrement(&CsrpStaticThreadCount)))
+    if (_InterlockedDecrement(&CsrpStaticThreadCount) == 0)
     {
         /* Check if we've still got space for a Dynamic Thread */
         if (CsrpDynamicThreadTotal < CsrMaxApiRequestThreads)
@@ -879,8 +879,7 @@ CsrApiRequestThread(IN PVOID Parameter)
  *
  * @param None
  *
- * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL
- *         otherwise.
+ * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL otherwise.
  *
  * @remarks None.
  *
@@ -1010,7 +1009,7 @@ PCSR_THREAD
 NTAPI
 CsrConnectToUser(VOID)
 {
-#if 0 // This code is OK, however it is ClientThreadSetup which sucks.
+#if 0 // FIXME: This code is OK, however it is ClientThreadSetup which sucks.
     NTSTATUS Status;
     ANSI_STRING DllName;
     UNICODE_STRING TempName;
@@ -1074,7 +1073,9 @@ CsrConnectToUser(VOID)
     PCSR_THREAD CsrThread;
 
     /* Save pointer to this thread in TEB */
+    CsrAcquireProcessLock();
     CsrThread = CsrLocateThreadInProcess(NULL, &Teb->ClientId);
+    CsrReleaseProcessLock();
     if (CsrThread) Teb->CsrClientThread = CsrThread;
 
     /* Return it */
@@ -1099,7 +1100,6 @@ HANDLE
 NTAPI
 CsrQueryApiPort(VOID)
 {
-    DPRINT("CSRSRV: %s called\n", __FUNCTION__);
     return CsrApiPort;
 }
 
@@ -1309,7 +1309,6 @@ CsrReleaseCapturedArguments(IN PCSR_API_MESSAGE ApiMessage)
     RtlFreeHeap(CsrHeap, 0, RemoteCaptureBuffer);
 }
 
-
 /*++
  * @name CsrValidateMessageBuffer
  * @implemented NT5.1
@@ -1403,36 +1402,6 @@ CsrValidateMessageBuffer(IN PCSR_API_MESSAGE ApiMessage,
     DbgBreakPoint();
     return FALSE;
 }
-
-/*** This is what we have in consrv/server.c ***
-
-/\* Ensure that a captured buffer is safe to access *\/
-BOOL FASTCALL
-Win32CsrValidateBuffer(PCSR_PROCESS ProcessData, PVOID Buffer,
-                       SIZE_T NumElements, SIZE_T ElementSize)
-{
-    /\* Check that the following conditions are true:
-     * 1. The start of the buffer is somewhere within the process's
-     *    shared memory section view.
-     * 2. The remaining space in the view is at least as large as the buffer.
-     *    (NB: Please don't try to "optimize" this by using multiplication
-     *    instead of division; remember that 2147483648 * 2 = 0.)
-     * 3. The buffer is DWORD-aligned.
-     *\/
-    ULONG_PTR Offset = (BYTE *)Buffer - (BYTE *)ProcessData->ClientViewBase;
-    if (Offset >= ProcessData->ClientViewBounds
-            || NumElements > (ProcessData->ClientViewBounds - Offset) / ElementSize
-            || (Offset & (sizeof(DWORD) - 1)) != 0)
-    {
-        DPRINT1("Invalid buffer %p(%u*%u); section view is %p(%u)\n",
-                Buffer, NumElements, ElementSize,
-                ProcessData->ClientViewBase, ProcessData->ClientViewBounds);
-        return FALSE;
-    }
-    return TRUE;
-}
-
-***********************************************/
 
 /*++
  * @name CsrValidateMessageString

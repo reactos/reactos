@@ -48,8 +48,7 @@ SYSTEM_BASIC_INFORMATION CsrNtSysInfo;
  *
  * @param None.
  *
- * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL
- *         otherwise.
+ * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL otherwise.
  *
  * @remarks None.
  *
@@ -163,8 +162,7 @@ Quickie:
  * @param ObjectDirectory
  *        Handle fo the Object Directory to protect.
  *
- * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL
- *         otherwise.
+ * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL otherwise.
  *
  * @remarks None.
  *
@@ -186,8 +184,7 @@ CsrSetDirectorySecurity(IN HANDLE ObjectDirectory)
  * @param DosDevicesSd
  *        Pointer to the Security Descriptor to return.
  *
- * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL
- *         otherwise.
+ * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL otherwise.
  *
  * @remarks Depending on the DOS Devices Protection Mode (set in the registry),
  *          regular users may or may not have full access to the directory.
@@ -403,8 +400,7 @@ FreeDosDevicesProtection(IN PSECURITY_DESCRIPTOR DosDevicesSd)
  * @param Session
  *        Session ID for which to create the directories.
  *
- * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL
- *         otherwise.
+ * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL otherwise.
  *
  * @remarks None.
  *
@@ -534,8 +530,7 @@ CsrCreateSessionObjectDirectory(IN ULONG Session)
  * @param Arguments
  *        Array of arguments.
  *
- * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL
- *         otherwise.
+ * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL otherwise.
  *
  * @remarks None.
  *
@@ -714,8 +709,7 @@ CsrParseServerCommandLine(IN ULONG ArgumentCount,
  *
  * @param None.
  *
- * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL
- *         otherwise.
+ * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL otherwise.
  *
  * @remarks None.
  *
@@ -777,7 +771,6 @@ CsrInitCsrRootProcess(VOID)
         if (ServerDll && ServerDll->NewProcessCallback)
         {
             /* Call the callback */
-            DPRINT1("Call NewProcessCallback(NULL, 0x%p) called\n", CsrRootProcess);
             ServerDll->NewProcessCallback(NULL, CsrRootProcess);
         }
     }
@@ -794,8 +787,7 @@ CsrInitCsrRootProcess(VOID)
  * @param LocalSystemSd
  *        Pointer to a pointer to the security descriptor to create.
  *
- * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL
- *         otherwise.
+ * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL otherwise.
  *
  * @remarks None.
  *
@@ -871,8 +863,7 @@ CsrCreateLocalSystemSD(OUT PSECURITY_DESCRIPTOR *LocalSystemSd)
  *
  * @param None
  *
- * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL
- *         otherwise.
+ * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL otherwise.
  *
  * @remarks None.
  *
@@ -960,7 +951,7 @@ CsrSbApiPortInitialize(VOID)
  * @implemented NT4
  *
  * The CsrServerInitialization routine is the native (not Server) entrypoint
- * of this Server DLL. It serves as the entrypoint for csrss.
+ * of this Server DLL. It serves as the entrypoint for CSRSS.
  *
  * @param ArgumentCount
  *        Number of arguments on the command line.
@@ -968,8 +959,7 @@ CsrSbApiPortInitialize(VOID)
  * @param Arguments
  *        Array of arguments from the command line.
  *
- * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL
- *         otherwise.
+ * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL otherwise.
  *
  * @remarks None.
  *
@@ -980,7 +970,6 @@ CsrServerInitialization(IN ULONG ArgumentCount,
                         IN PCHAR Arguments[])
 {
     NTSTATUS Status = STATUS_SUCCESS;
-    DPRINT("CSRSRV: %s called\n", __FUNCTION__);
 
     /* Create the Init Event */
     Status = NtCreateEvent(&CsrInitializationEvent,

@@ -107,7 +107,7 @@ typedef struct _CSR_API_MESSAGE
     PORT_MESSAGE Header;
     union
     {
-        CSR_CONNECTION_INFO ConnectionInfo; // Uniquely used in csrss/csrsrv for internal signaling (opening a new connection).
+        CSR_CONNECTION_INFO ConnectionInfo; // Uniquely used in CSRSRV for internal signaling (opening a new connection).
         struct
         {
             PCSR_CAPTURE_BUFFER CsrCaptureData;

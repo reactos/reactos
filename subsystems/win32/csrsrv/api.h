@@ -64,7 +64,6 @@ extern UNICODE_STRING CsrApiPortName;
 extern RTL_CRITICAL_SECTION CsrProcessLock;
 extern RTL_CRITICAL_SECTION CsrWaitListsLock;
 extern HANDLE CsrObjectDirectory;
-extern PSB_API_ROUTINE CsrServerSbApiDispatch[5];
 /****************************************************/
 
 
@@ -75,24 +74,19 @@ CSR_API(CsrSrvIdentifyAlertableThread);
 CSR_API(CsrSrvSetPriorityClass);
 
 
-/***
-
-BOOLEAN
-NTAPI
-CsrCaptureArguments(
-    IN PCSR_THREAD CsrThread,
-    IN PCSR_API_MESSAGE ApiMessage
-);
-
-VOID
-NTAPI
-CsrReleaseCapturedArguments(IN PCSR_API_MESSAGE ApiMessage);
-
 NTSTATUS
 NTAPI
 CsrServerDllInitialization(IN PCSR_SERVER_DLL LoadedServerDll);
 
-***/
+
+BOOLEAN
+NTAPI
+CsrCaptureArguments(IN PCSR_THREAD CsrThread,
+                    IN PCSR_API_MESSAGE ApiMessage);
+
+VOID
+NTAPI
+CsrReleaseCapturedArguments(IN PCSR_API_MESSAGE ApiMessage);
 
 NTSTATUS
 NTAPI
@@ -115,16 +109,16 @@ CsrDeallocateProcess(IN PCSR_PROCESS CsrProcess);
 
 VOID
 NTAPI
-CsrRemoveProcess(IN PCSR_PROCESS CsrProcess);
-
-VOID
-NTAPI
 CsrInsertProcess(IN PCSR_PROCESS ParentProcess OPTIONAL,
                  IN PCSR_PROCESS CsrProcess);
 
+VOID
+NTAPI
+CsrRemoveProcess(IN PCSR_PROCESS CsrProcess);
+
 NTSTATUS
 NTAPI
-CsrApiRequestThread(IN PVOID Parameter); // HANDLE ServerPort ??
+CsrApiRequestThread(IN PVOID Parameter);
 
 VOID
 NTAPI

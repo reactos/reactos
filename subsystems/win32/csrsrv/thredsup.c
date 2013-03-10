@@ -14,8 +14,7 @@
 #define NDEBUG
 #include <debug.h>
 
-#define CsrHashThread(t) \
-    (HandleToUlong(t)&(256 - 1))
+#define CsrHashThread(t) (HandleToUlong(t)&(256 - 1))
 
 /* GLOBALS ********************************************************************/
 
@@ -215,7 +214,6 @@ CsrLocateThreadByClientId(OUT PCSR_PROCESS *Process OPTIONAL,
             if (Process) *Process = FoundThread->Process;
 
             /* Return thread too */
-//            DPRINT1("Found: %p %p\n", FoundThread, FoundThread->Process);
             return FoundThread;
         }
     }
@@ -257,7 +255,6 @@ CsrLocateThreadInProcess(IN PCSR_PROCESS CsrProcess OPTIONAL,
     if (!CsrProcess) CsrProcess = CsrRootProcess;
 
     /* Save the List pointers */
-//    DPRINT1("Searching in: %p %d\n", CsrProcess, CsrProcess->ThreadCount);
     ListHead = &CsrProcess->ThreadList;
     NextEntry = ListHead->Flink;
 
@@ -275,7 +272,6 @@ CsrLocateThreadInProcess(IN PCSR_PROCESS CsrProcess OPTIONAL,
     }
 
     /* Return what we found */
-//    DPRINT1("Found: %p\n", FoundThread);
     return FoundThread;
 }
 
@@ -312,7 +308,6 @@ CsrInsertThread(IN PCSR_PROCESS Process,
 
     /* Hash the Thread */
     i = CsrHashThread(Thread->ClientId.UniqueThread);
-//    DPRINT1("TID %lx HASH: %lx\n", Thread->ClientId.UniqueThread, i);
 
     /* Insert it there too */
     InsertHeadList(&CsrThreadHashTable[i], &Thread->HashLinks);
@@ -377,10 +372,10 @@ CsrRemoveThread(IN PCSR_THREAD CsrThread)
     if (CsrThread->HashLinks.Flink) RemoveEntryList(&CsrThread->HashLinks);
 
     /* Check if this is the last Thread */
-    if (!CsrThread->Process->ThreadCount)
+    if (CsrThread->Process->ThreadCount == 0)
     {
         /* Check if it's not already been marked for deletion */
-        if (!(CsrThread->Process->Flags & CsrProcessLastThreadTerminated))
+        if ((CsrThread->Process->Flags & CsrProcessLastThreadTerminated) == 0)
         {
             /* Let everyone know this process is about to lose the thread */
             CsrThread->Process->Flags |= CsrProcessLastThreadTerminated;
@@ -464,7 +459,7 @@ CsrLockedDereferenceThread(IN PCSR_THREAD CsrThread)
     /* Decrease reference count */
     LockCount = --CsrThread->ReferenceCount;
     ASSERT(LockCount >= 0);
-    if (!LockCount)
+    if (LockCount == 0)
     {
         /* Call the generic cleanup code */
         CsrAcquireProcessLock();
@@ -551,8 +546,7 @@ CsrAddStaticServerThread(IN HANDLE hThread,
  *        Pointer to the Client ID structure of the NT Thread to associate
  *        with this CSR Thread.
  *
- * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL
- *         otherwise.
+ * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL otherwise.
  *
  * @remarks None.
  *
@@ -567,7 +561,6 @@ CsrCreateRemoteThread(IN HANDLE hThread,
     PCSR_THREAD CsrThread;
     PCSR_PROCESS CsrProcess;
     KERNEL_USER_TIMES KernelTimes;
-    DPRINT("CSRSRV: %s called\n", __FUNCTION__);
 
     /* Get the Thread Create Time */
     Status = NtQueryInformationThread(hThread,
@@ -602,7 +595,7 @@ CsrCreateRemoteThread(IN HANDLE hThread,
     CsrThread = CsrAllocateThread(CsrProcess);
     if (!CsrThread)
     {
-        DPRINT1("CSRSRV:%s: out of memory!\n", __FUNCTION__);
+        DPRINT1("CSRSRV: %s: out of memory!\n", __FUNCTION__);
         CsrUnlockProcess(CsrProcess);
         return STATUS_NO_MEMORY;
     }
@@ -654,8 +647,7 @@ CsrCreateRemoteThread(IN HANDLE hThread,
  *        Pointer to the Client ID structure of the NT Thread to associate
  *        with this CSR Thread.
  *
- * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL
- *         otherwise.
+ * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL otherwise.
  *
  * @remarks None.
  *
@@ -673,8 +665,6 @@ CsrCreateThread(IN PCSR_PROCESS CsrProcess,
     CLIENT_ID CurrentCid;
     KERNEL_USER_TIMES KernelTimes;
 
-    DPRINT("CSRSRV: %s called\n", __FUNCTION__);
-
     if (HaveClient)
     {
         /* Get the current thread and CID */
@@ -690,7 +680,7 @@ CsrCreateThread(IN PCSR_PROCESS CsrProcess,
         /* Something is wrong if we get an empty thread back */
         if (!CurrentThread)
         {
-            DPRINT1("CSRSRV:%s: invalid thread!\n", __FUNCTION__);
+            DPRINT1("CSRSRV: %s: invalid thread!\n", __FUNCTION__);
             CsrReleaseProcessLock();
             return STATUS_THREAD_IS_TERMINATING;
         }
@@ -717,7 +707,7 @@ CsrCreateThread(IN PCSR_PROCESS CsrProcess,
     CsrThread = CsrAllocateThread(CsrProcess);
     if (!CsrThread)
     {
-        DPRINT1("CSRSRV:%s: out of memory!\n", __FUNCTION__);
+        DPRINT1("CSRSRV: %s: out of memory!\n", __FUNCTION__);
         CsrReleaseProcessLock();
         return STATUS_NO_MEMORY;
     }
@@ -762,7 +752,7 @@ CsrDereferenceThread(IN PCSR_THREAD CsrThread)
 
     /* Decrease reference count */
     ASSERT(CsrThread->ReferenceCount > 0);
-    if (!(--CsrThread->ReferenceCount))
+    if ((--CsrThread->ReferenceCount) == 0)
     {
         /* Call the generic cleanup code */
         CsrThreadRefcountZero(CsrThread);
@@ -807,7 +797,7 @@ CsrDestroyThread(IN PCLIENT_ID Cid)
                                           &ClientId);
 
     /* Make sure we got one back, and that it's not already gone */
-    if (!CsrThread || CsrThread->Flags & CsrThreadTerminated)
+    if (!CsrThread || (CsrThread->Flags & CsrThreadTerminated))
     {
         /* Release the lock and return failure */
         CsrReleaseProcessLock();
@@ -856,8 +846,7 @@ CsrDestroyThread(IN PCLIENT_ID Cid)
  * @param Flags
  *        Initial CSR Thread Flags to set to the CSR Thread.
  *
- * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL
- *         otherwise.
+ * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL otherwise.
  *
  * @remarks This routine is similar to CsrAddStaticServerThread, but it
  *          also creates an NT Thread instead of expecting one to already
@@ -937,8 +926,7 @@ CsrExecServerThread(IN PVOID ThreadHandler,
  *        Optional pointer to a CSR Thread pointer which will hold the
  *        CSR Thread corresponding to the given Thread ID.
  *
- * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL
- *         otherwise.
+ * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL otherwise.
  *
  * @remarks Locking a CSR Thread is defined as acquiring an extra
  *          reference to it and returning with the Process Lock held.
@@ -975,7 +963,7 @@ CsrLockThreadByClientId(IN HANDLE Tid,
 
         /* Check for PID Match */
         if ((CurrentThread->ClientId.UniqueThread == Tid) &&
-            !(CurrentThread->Flags & CsrThreadTerminated))
+            (CurrentThread->Flags & CsrThreadTerminated) == 0)
         {
             /* Get out of here */
             break;

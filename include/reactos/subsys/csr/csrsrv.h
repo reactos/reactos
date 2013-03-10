@@ -247,19 +247,6 @@ NTSTATUS
 
 /* PROTOTYPES ****************************************************************/
 
-///////////
-BOOLEAN
-NTAPI
-CsrCaptureArguments(IN PCSR_THREAD CsrThread,
-                    IN PCSR_API_MESSAGE ApiMessage);
-
-VOID
-NTAPI
-CsrReleaseCapturedArguments(IN PCSR_API_MESSAGE ApiMessage);
-//////////
-
-
-
 NTSTATUS
 NTAPI
 CsrServerInitialization(IN ULONG ArgumentCount,

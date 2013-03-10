@@ -23,7 +23,7 @@ HANDLE ConSrvHeap = NULL;   // Our own heap.
 
 // Windows Server 2003 table from http://j00ru.vexillium.org/csrss_list/api_list.html#Windows_2k3
 // plus a little bit of Windows 7.
-PCSR_API_ROUTINE ConsoleServerApiDispatchTable[ConsolepMaxApiNumber] =
+PCSR_API_ROUTINE ConsoleServerApiDispatchTable[ConsolepMaxApiNumber - CONSRV_FIRST_API_NUMBER] =
 {
     SrvOpenConsole,
     SrvGetConsoleInput,
@@ -114,7 +114,7 @@ PCSR_API_ROUTINE ConsoleServerApiDispatchTable[ConsolepMaxApiNumber] =
     SrvSetConsoleHistory,
 };
 
-BOOLEAN ConsoleServerApiServerValidTable[ConsolepMaxApiNumber] =
+BOOLEAN ConsoleServerApiServerValidTable[ConsolepMaxApiNumber - CONSRV_FIRST_API_NUMBER] =
 {
     FALSE,   // SrvOpenConsole,
     FALSE,   // SrvGetConsoleInput,
@@ -205,7 +205,7 @@ BOOLEAN ConsoleServerApiServerValidTable[ConsolepMaxApiNumber] =
     FALSE,   // SrvSetConsoleHistory
 };
 
-PCHAR ConsoleServerApiNameTable[ConsolepMaxApiNumber] =
+PCHAR ConsoleServerApiNameTable[ConsolepMaxApiNumber - CONSRV_FIRST_API_NUMBER] =
 {
     "OpenConsole",
     "GetConsoleInput",

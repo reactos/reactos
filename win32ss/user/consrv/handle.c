@@ -666,7 +666,6 @@ ConSrvConnect(IN PCSR_PROCESS CsrProcess,
     /* If we don't need a console, then get out of here */
     if (!ConnectInfo->ConsoleNeeded || !ProcessData->ConsoleApp) // In fact, it is for GUI apps.
     {
-        DPRINT("ConSrvConnect - No console needed\n");
         return STATUS_SUCCESS;
     }
 

@@ -55,8 +55,8 @@ HANDLE CsrSrvSharedSection = NULL;
  * @name CsrServerDllInitialization
  * @implemented NT4
  *
- * The CsrServerDllInitialization is the initialization routine for
- * the this Server DLL.
+ * The CsrServerDllInitialization is the initialization routine
+ * for this Server DLL.
  *
  * @param LoadedServerDll
  *        Pointer to the CSR Server DLL structure representing this Server DLL.
@@ -86,18 +86,17 @@ CSR_SERVER_DLL_INIT(CsrServerDllInitialization)
  * @name CsrLoadServerDll
  * @implemented NT4
  *
- * The CsrLoadServerDll routine loads a CSR Server DLL and calls its entrypoint
+ * The CsrLoadServerDll routine loads a CSR Server DLL and calls its entrypoint.
  *
  * @param DllString
  *        Pointer to the CSR Server DLL to load and call.
  *
  * @param EntryPoint
- *        Pointer to the name of the server's initialization function. If
- *        this parameter is NULL, the default ServerDllInitialize will be
- *        assumed.
+ *        Pointer to the name of the server's initialization function.
+ *        If this parameter is NULL, the default ServerDllInitialize
+ *        will be assumed.
  *
- * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL
- *         otherwise.
+ * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL otherwise.
  *
  * @remarks None.
  *
@@ -118,8 +117,6 @@ CsrLoadServerDll(IN PCHAR DllString,
     STRING EntryPointString;
     PCSR_SERVER_DLL_INIT_CALLBACK ServerDllInitProcedure;
     ULONG Response;
-
-    DPRINT1("CsrLoadServerDll(%s, 0x%p, %lu)\n", DllString, EntryPoint, ServerId);
 
     /* Check if it's beyond the maximum we support */
     if (ServerId >= CSR_SERVER_DLL_MAX) return STATUS_TOO_MANY_NAMES;
@@ -225,15 +222,10 @@ CsrLoadServerDll(IN PCHAR DllString,
                 CsrSrvSharedStaticServerData[ServerDll->ServerId] = ServerDll->SharedSection;
             }
         }
-        else
-        {
-            /* Use shared failure code */
-            goto LoadFailed;
-        }
     }
-    else
+
+    if (!NT_SUCCESS(Status))
     {
-LoadFailed:
         /* Server Init failed, unload it */
         if (hServerDll) LdrUnloadDll(hServerDll);
 
@@ -316,15 +308,14 @@ CSR_API(CsrSrvClientConnect)
 /*++
  * @name CsrSrvCreateSharedSection
  *
- * The CsrSrvCreateSharedSection creates the Shared Section that all CSR Server
- * DLLs and Clients can use to share data.
+ * The CsrSrvCreateSharedSection creates the Shared Section that all
+ * CSR Server DLLs and Clients can use to share data.
  *
  * @param ParameterValue
  *        Specially formatted string from our registry command-line which
  *        specifies various arguments for the shared section.
  *
- * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL
- *         otherwise.
+ * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL otherwise.
  *
  * @remarks None.
  *
@@ -445,8 +436,7 @@ CsrSrvCreateSharedSection(IN PCHAR ParameterValue)
  *        Pointer to the CSR Connection Info structure for the incoming
  *        connection.
  *
- * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL
- *         otherwise.
+ * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL otherwise.
  *
  * @remarks None.
  *
@@ -463,7 +453,6 @@ CsrSrvAttachSharedSection(IN PCSR_PROCESS CsrProcess OPTIONAL,
     if (CsrProcess)
     {
         /* Map the section into this process */
-        DPRINT("CSR Process Handle: %p. CSR Process: %p\n", CsrProcess->ProcessHandle, CsrProcess);
         Status = NtMapViewOfSection(CsrSrvSharedSection,
                                     CsrProcess->ProcessHandle,
                                     &CsrSrvSharedSectionBase,
@@ -553,8 +542,8 @@ CSR_API(CsrSrvSetPriorityClass)
  *
  * @return STATUS_INVALID_PARAMETER.
  *
- * @remarks CsrSrvSetPriorityClass does not use this stub because it must
- *          return success.
+ * @remarks CsrSrvSetPriorityClass does not use this stub because
+ *          it must return success.
  *
  *--*/
 CSR_API(CsrSrvUnusedFunction)
@@ -621,12 +610,12 @@ CsrUnhandledExceptionFilter(IN PEXCEPTION_POINTERS ExceptionInfo)
                                       NULL);
 
     /* Check if this is Session 0, and the Debugger is Enabled */
-    if ((NtCurrentPeb()->SessionId) && (NT_SUCCESS(Status)) &&
+    if ((NtCurrentPeb()->SessionId != 0) && (NT_SUCCESS(Status)) &&
         (DebuggerInfo.KernelDebuggerEnabled))
     {
         /* Call the Unhandled Exception Filter */
-        if ((Result = RtlUnhandledExceptionFilter(ExceptionInfo)) !=
-            EXCEPTION_CONTINUE_EXECUTION)
+        Result = RtlUnhandledExceptionFilter(ExceptionInfo);
+        if (Result != EXCEPTION_CONTINUE_EXECUTION)
         {
             /* We're going to raise an error. Get Shutdown Privilege first */
             Status = RtlAdjustPrivilege(SE_SHUTDOWN_PRIVILEGE,

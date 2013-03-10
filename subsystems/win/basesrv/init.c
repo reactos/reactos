@@ -23,7 +23,7 @@ HANDLE BaseSrvSharedHeap = NULL;    // Shared heap with CSR. (CsrSrvSharedSectio
 PBASE_STATIC_SERVER_DATA BaseStaticServerData = NULL;   // Data that we can share amongst processes. Initialized inside BaseSrvSharedHeap.
 
 // Windows Server 2003 table from http://j00ru.vexillium.org/csrss_list/api_list.html#Windows_2k3
-PCSR_API_ROUTINE BaseServerApiDispatchTable[BasepMaxApiNumber] =
+PCSR_API_ROUTINE BaseServerApiDispatchTable[BasepMaxApiNumber - BASESRV_FIRST_API_NUMBER] =
 {
     BaseSrvCreateProcess,
     BaseSrvCreateThread,
@@ -57,7 +57,7 @@ PCSR_API_ROUTINE BaseServerApiDispatchTable[BasepMaxApiNumber] =
     // BaseSrvNlsGetUserInfo,
 };
 
-BOOLEAN BaseServerApiServerValidTable[BasepMaxApiNumber] =
+BOOLEAN BaseServerApiServerValidTable[BasepMaxApiNumber - BASESRV_FIRST_API_NUMBER] =
 {
     TRUE,   // BaseSrvCreateProcess
     TRUE,   // BaseSrvCreateThread
@@ -91,7 +91,7 @@ BOOLEAN BaseServerApiServerValidTable[BasepMaxApiNumber] =
     // FALSE,  // BaseSrvNlsGetUserInfo
 };
 
-PCHAR BaseServerApiNameTable[BasepMaxApiNumber] =
+PCHAR BaseServerApiNameTable[BasepMaxApiNumber - BASESRV_FIRST_API_NUMBER] =
 {
     "BaseCreateProcess",
     "BaseCreateThread",

@@ -41,7 +41,7 @@ extern ULONG CsrTotalPerProcessDataLength;
  *
  * @return None.
  *
- * @remarks The "Normal" Priority corresponds to the Normal Forground
+ * @remarks The "Normal" Priority corresponds to the Normal Foreground
  *          Priority (9) plus a boost of 4.
  *
  *--*/
@@ -69,7 +69,7 @@ CsrSetToNormalPriority(VOID)
  *
  * @return None.
  *
- * @remarks The "Shutdown" Priority corresponds to the Normal Forground
+ * @remarks The "Shutdown" Priority corresponds to the Normal Foreground
  *          Priority (9) plus a boost of 6.
  *
  *--*/
@@ -264,7 +264,7 @@ CsrLockedDereferenceProcess(PCSR_PROCESS CsrProcess)
     /* Decrease reference count */
     LockCount = --CsrProcess->ReferenceCount;
     ASSERT(LockCount >= 0);
-    if (!LockCount)
+    if (LockCount == 0)
     {
         /* Call the generic cleanup code */
         DPRINT1("Should kill process: %p\n", CsrProcess);
@@ -345,8 +345,7 @@ CsrLockedReferenceProcess(IN PCSR_PROCESS CsrProcess)
  *
  * @param None.
  *
- * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL
- *         otherwise.
+ * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL otherwise.
  *
  * @remarks None.
  *
@@ -495,18 +494,25 @@ CsrInsertProcess(IN PCSR_PROCESS ParentProcess OPTIONAL,
  * @name CsrCreateProcess
  * @implemented NT4
  *
- * Do nothing for 500ms.
+ * The CsrCreateProcess routine creates a CSR Process object for an NT Process.
  *
- * @param ArgumentCount
- *        Description of the parameter. Wrapped to more lines on ~70th
- *        column.
+ * @param hProcess
+ *        Handle to an existing NT Process to which to associate this
+ *        CSR Process.
  *
- * @param Arguments
- *        Description of the parameter. Wrapped to more lines on ~70th
- *        column.
+ * @param hThread
+ *        Handle to an existing NT Thread to which to create its
+ *        corresponding CSR Thread for this CSR Process.
  *
- * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL
- *         otherwise.
+ * @param ClientId
+ *        Pointer to the Client ID structure of the NT Process to associate
+ *        with this CSR Process.
+ *
+ * @param NtSession
+ * @param Flags
+ * @param DebugCid
+ *
+ * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL otherwise.
  *
  * @remarks None.
  *
@@ -597,7 +603,7 @@ CsrCreateProcess(IN HANDLE hProcess,
     }
 
     /* Check if CreateProcess got CREATE_NEW_PROCESS_GROUP */
-    if (!(Flags & CsrProcessCreateNewGroup))
+    if ((Flags & CsrProcessCreateNewGroup) == 0)
     {
         /* Create new data */
         CsrProcess->ProcessGroupId = HandleToUlong(ClientId->UniqueProcess);
@@ -781,7 +787,7 @@ CsrDereferenceProcess(IN PCSR_PROCESS CsrProcess)
     /* Decrease reference count */
     LockCount = --CsrProcess->ReferenceCount;
     ASSERT(LockCount >= 0);
-    if (!LockCount)
+    if (LockCount == 0)
     {
         /* Call the generic cleanup code */
         CsrProcessRefcountZero(CsrProcess);
@@ -891,16 +897,15 @@ CsrDestroyProcess(IN PCLIENT_ID Cid,
  * @name CsrGetProcessLuid
  * @implemented NT4
  *
- * Do nothing for 500ms.
+ * The CsrGetProcessLuid routine gets the LUID of the given process.
  *
  * @param hProcess
  *        Optional handle to the process whose LUID should be returned.
  *
  * @param Luid
- *        Pointer to a LUID Pointer which will receive the CSR Process' LUID
+ *        Pointer to a LUID Pointer which will receive the CSR Process' LUID.
  *
- * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL
- *         otherwise.
+ * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL otherwise.
  *
  * @remarks If hProcess is not supplied, then the current thread's token will
  *          be used. If that too is missing, then the current process' token
@@ -1000,7 +1005,7 @@ CsrGetProcessLuid(IN HANDLE hProcess OPTIONAL,
  * @param CsrThread
  *        Pointer to the CSR Thread to impersonate.
  *
- * @return TRUE if impersonation succeeded, false otherwise.
+ * @return TRUE if impersonation succeeded, FALSE otherwise.
  *
  * @remarks Impersonation can be recursive.
  *
@@ -1030,10 +1035,8 @@ CsrImpersonateClient(IN PCSR_THREAD CsrThread)
     if (!NT_SUCCESS(Status))
     {
         /* Failure */
-/*
         DPRINT1("CSRSS: Can't impersonate client thread - Status = %lx\n", Status);
-        if (Status != STATUS_BAD_IMPERSONATION_LEVEL) DbgBreakPoint();
-*/
+        // if (Status != STATUS_BAD_IMPERSONATION_LEVEL) DbgBreakPoint();
         return FALSE;
     }
 
@@ -1058,8 +1061,7 @@ CsrImpersonateClient(IN PCSR_THREAD CsrThread)
  *        Optional pointer to a CSR Process pointer which will hold the
  *        CSR Process corresponding to the given Process ID.
  *
- * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL
- *         otherwise.
+ * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL otherwise.
  *
  * @remarks Locking a CSR Process is defined as acquiring an extra
  *          reference to it and returning with the Process Lock held.
@@ -1124,7 +1126,7 @@ CsrLockProcessByClientId(IN HANDLE Pid,
  *
  * @param None.
  *
- * @return TRUE if the reversion was succesful, false otherwise.
+ * @return TRUE if the reversion was succesful, FALSE otherwise.
  *
  * @remarks Impersonation can be recursive; as such, the impersonation token
  *          will only be deleted once the CSR Thread's impersonaton count
@@ -1145,11 +1147,11 @@ CsrRevertToSelf(VOID)
         /* Make sure impersonation is on */
         if (!CurrentThread->ImpersonationCount)
         {
-            // DPRINT1("CSRSS: CsrRevertToSelf called while not impersonating\n");
+            DPRINT1("CSRSS: CsrRevertToSelf called while not impersonating\n");
             // DbgBreakPoint();
             return FALSE;
         }
-        else if (--CurrentThread->ImpersonationCount > 0)
+        else if ((--CurrentThread->ImpersonationCount) > 0)
         {
             /* Success; impersonation count decreased but still not zero */
             return TRUE;
@@ -1242,8 +1244,7 @@ CsrSetForegroundPriority(IN PCSR_PROCESS CsrProcess)
  * @param Flags
  *        Flags to send to the shutdown notification routine.
  *
- * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL
- *         otherwise.
+ * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL otherwise.
  *
  * @remarks None.
  *
