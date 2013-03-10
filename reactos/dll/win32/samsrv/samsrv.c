@@ -66,6 +66,20 @@ SampInitializeRegistry(VOID)
 
 VOID
 NTAPI
+SamIFree_SAMPR_PSID_ARRAY(PSAMPR_PSID_ARRAY Ptr)
+{
+    if (Ptr != NULL)
+    {
+        if (Ptr->Sids !=0)
+        {
+            MIDL_user_free(Ptr->Sids);
+        }
+    }
+}
+
+
+VOID
+NTAPI
 SamIFree_SAMPR_RETURNED_USTRING_ARRAY(PSAMPR_RETURNED_USTRING_ARRAY Ptr)
 {
     ULONG i;
