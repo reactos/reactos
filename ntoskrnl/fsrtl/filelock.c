@@ -858,7 +858,10 @@ FsRtlFastUnlockSingle(IN PFILE_LOCK FileLock,
     Find.Exclusive.FileLock.StartingByte = *FileOffset;
     Find.Exclusive.FileLock.EndingByte.QuadPart = 
         FileOffset->QuadPart + Length->QuadPart;
-    ASSERT(InternalInfo);
+    if (!InternalInfo) {
+        DPRINT("File not previously locked (ever)\n");
+        return STATUS_RANGE_NOT_LOCKED;
+    }
     Entry = RtlLookupElementGenericTable(&InternalInfo->RangeTable, &Find);
     if (!Entry) {
         DPRINT("Range not locked %wZ\n", &FileObject->FileName);

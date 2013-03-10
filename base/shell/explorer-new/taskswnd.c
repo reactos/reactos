@@ -709,13 +709,10 @@ TaskSwitchWnd_AddToTaskGroup(IN OUT PTASK_SWITCH_WND This,
 
     /* Allocate a new task group */
     TaskGroup = HeapAlloc(hProcessHeap,
-                          0,
+                          HEAP_ZERO_MEMORY,
                           sizeof(*TaskGroup));
     if (TaskGroup != NULL)
     {
-        ZeroMemory(TaskGroup,
-                   sizeof(*TaskGroup));
-
         TaskGroup->dwTaskCount = 1;
         TaskGroup->dwProcessId = dwProcessId;
         TaskGroup->Index = -1;
@@ -1465,7 +1462,7 @@ TaskSwitchWnd_Create(IN OUT PTASK_SWITCH_WND This)
                     sizeof(TBBUTTON),
                     0);
 
-        This->TaskIcons = ImageList_Create(16, 16, ILC_COLOR32, 0, 1000);
+        This->TaskIcons = ImageList_Create(16, 16, ILC_COLOR32 | ILC_MASK, 0, 1000);
         SendMessage(This->hWndToolbar, TB_SETIMAGELIST, 0, (LPARAM)This->TaskIcons);
 
         /* Calculate the default button size. Don't save this in This->ButtonSize.cx so that
@@ -2065,13 +2062,11 @@ ForwardContextMenuMsg:
             {
                 LPCREATESTRUCT CreateStruct = (LPCREATESTRUCT)lParam;
                 This = HeapAlloc(hProcessHeap,
-                                 0,
+                                 HEAP_ZERO_MEMORY,
                                  sizeof(*This));
                 if (This == NULL)
                     return FALSE;
 
-                ZeroMemory(This,
-                           sizeof(*This));
                 This->hWnd = hwnd;
                 This->hWndNotify = CreateStruct->hwndParent;
                 This->Tray = (ITrayWindow*)CreateStruct->lpCreateParams;

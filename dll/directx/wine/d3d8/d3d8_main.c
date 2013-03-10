@@ -42,10 +42,7 @@ IDirect3D8 * WINAPI DECLSPEC_HOTPATCH Direct3DCreate8(UINT sdk_version)
     TRACE("sdk_version %#x.\n", sdk_version);
 
     if (!(object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*object))))
-    {
-        ERR("Failed to allocate d3d8 object memory.\n");
         return NULL;
-    }
 
     if (!d3d8_init(object))
     {

@@ -59,23 +59,35 @@ StatusMessageWindowProc(
 static DWORD WINAPI
 StartupWindowThread(LPVOID lpParam)
 {
-	HDESK OldDesk;
+	HDESK hDesk;
 	PDISPLAYSTATUSMSG msg = (PDISPLAYSTATUSMSG)lpParam;
 
-	OldDesk = GetThreadDesktop(GetCurrentThreadId());
-
-	if(!SetThreadDesktop(msg->hDesktop))
+	/* When SetThreadDesktop is called the system closes the desktop handle when needed
+	   so we have to create a new handle because this handle may still be in use by winlogon  */
+	if (!DuplicateHandle (	GetCurrentProcess(), 
+							msg->hDesktop, 
+							GetCurrentProcess(), 
+							(HANDLE*)&hDesk, 
+							0, 
+							FALSE, 
+							DUPLICATE_SAME_ACCESS))
 	{
 		HeapFree(GetProcessHeap(), 0, lpParam);
 		return FALSE;
 	}
+
+	if(!SetThreadDesktop(hDesk))
+	{
+		HeapFree(GetProcessHeap(), 0, lpParam);
+		return FALSE;
+	}
+
 	DialogBoxParam(
 		hDllInstance,
 		MAKEINTRESOURCE(IDD_STATUSWINDOW_DLG),
 		GetDesktopWindow(),
 		StatusMessageWindowProc,
 		(LPARAM)lpParam);
-	SetThreadDesktop(OldDesk);
 
 	HeapFree(GetProcessHeap(), 0, lpParam);
 	return TRUE;
@@ -217,6 +229,35 @@ GetTextboxText(
 	return TRUE;
 }
 
+static VOID
+OnInitSecurityDlg(HWND hwnd,
+                  PGINA_CONTEXT pgContext)
+{
+    WCHAR Buffer1[256];
+    WCHAR Buffer2[256];
+    WCHAR Buffer3[256];
+    WCHAR Buffer4[512];
+
+    LoadStringW(pgContext->hDllInstance, IDS_LOGONMSG, Buffer1, 256);
+
+    wsprintfW(Buffer2, L"%s\\%s", pgContext->Domain, pgContext->UserName);
+    wsprintfW(Buffer4, Buffer1, Buffer2);
+
+    SetDlgItemTextW(hwnd, IDC_LOGONMSG, Buffer4);
+
+    LoadStringW(pgContext->hDllInstance, IDS_LOGONDATE, Buffer1, 256);
+
+    GetDateFormatW(LOCALE_USER_DEFAULT, DATE_SHORTDATE,
+                   (SYSTEMTIME*)&pgContext->LogonTime, NULL, Buffer2, 256);
+
+    GetTimeFormatW(LOCALE_USER_DEFAULT, 0,
+                   (SYSTEMTIME*)&pgContext->LogonTime, NULL, Buffer3, 256);
+
+    wsprintfW(Buffer4, Buffer1, Buffer2, Buffer3);
+
+    SetDlgItemTextW(hwnd, IDC_LOGONDATE, Buffer4);
+}
+
 static INT_PTR CALLBACK
 LoggedOnWindowProc(
 	IN HWND hwndDlg,
@@ -224,10 +265,15 @@ LoggedOnWindowProc(
 	IN WPARAM wParam,
 	IN LPARAM lParam)
 {
-	UNREFERENCED_PARAMETER(lParam);
-
 	switch (uMsg)
 	{
+		case WM_INITDIALOG:
+		{
+			OnInitSecurityDlg(hwndDlg, (PGINA_CONTEXT)lParam);
+			SetFocus(GetDlgItem(hwndDlg, IDNO));
+			return TRUE;
+		}
+
 		case WM_COMMAND:
 		{
 			switch (LOWORD(wParam))
@@ -249,11 +295,6 @@ LoggedOnWindowProc(
 					return TRUE;
 			}
 			break;
-		}
-		case WM_INITDIALOG:
-		{
-			SetFocus(GetDlgItem(hwndDlg, IDNO));
-			return TRUE;
 		}
 		case WM_CLOSE:
 		{
@@ -413,6 +454,84 @@ GUILockedSAS(
 	return WLX_SAS_ACTION_UNLOCK_WKSTA;
 }
 
+
+static VOID
+OnInitLockedDlg(HWND hwnd,
+                PGINA_CONTEXT pgContext)
+{
+    WCHAR Buffer1[256];
+    WCHAR Buffer2[256];
+    WCHAR Buffer3[512];
+
+    LoadStringW(pgContext->hDllInstance, IDS_LOCKMSG, Buffer1, 256);
+
+    wsprintfW(Buffer2, L"%s\\%s", pgContext->Domain, pgContext->UserName);
+    wsprintfW(Buffer3, Buffer1, Buffer2);
+
+    SetDlgItemTextW(hwnd, IDC_LOCKMSG, Buffer3);
+}
+
+
+static INT_PTR CALLBACK
+LockedWindowProc(
+	IN HWND hwndDlg,
+	IN UINT uMsg,
+	IN WPARAM wParam,
+	IN LPARAM lParam)
+{
+	PGINA_CONTEXT pgContext;
+
+	pgContext = (PGINA_CONTEXT)GetWindowLongPtr(hwndDlg, GWL_USERDATA);
+
+	switch (uMsg)
+	{
+		case WM_INITDIALOG:
+		{
+			pgContext = (PGINA_CONTEXT)lParam;
+			SetWindowLongPtr(hwndDlg, GWL_USERDATA, (DWORD_PTR)pgContext);
+
+			pgContext->hBitmap = LoadImage(hDllInstance, MAKEINTRESOURCE(IDI_ROSLOGO), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
+			OnInitLockedDlg(hwndDlg, pgContext);
+			return TRUE;
+		}
+		case WM_PAINT:
+		{
+			PAINTSTRUCT ps;
+			HDC hdc;
+			if (pgContext->hBitmap)
+			{
+				hdc = BeginPaint(hwndDlg, &ps);
+				DrawStateW(hdc, NULL, NULL, (LPARAM)pgContext->hBitmap, (WPARAM)0, 0, 0, 0, 0, DST_BITMAP);
+				EndPaint(hwndDlg, &ps);
+			}
+			return TRUE;
+		}
+		case WM_DESTROY:
+		{
+			DeleteObject(pgContext->hBitmap);
+			return TRUE;
+		}
+	}
+
+	return FALSE;
+}
+
+
+static VOID
+GUIDisplayLockedNotice(
+	IN OUT PGINA_CONTEXT pgContext)
+{
+	TRACE("GUIdisplayLockedNotice()\n");
+
+	pgContext->pWlxFuncs->WlxDialogBoxParam(
+		pgContext->hWlx,
+		pgContext->hDllInstance,
+		MAKEINTRESOURCEW(IDD_LOCKED_DLG),
+		GetDesktopWindow(),
+		LockedWindowProc,
+		(LPARAM)pgContext);
+}
+
 GINA_UI GinaGraphicalUI = {
 	GUIInitialize,
 	GUIDisplayStatusMessage,
@@ -421,4 +540,5 @@ GINA_UI GinaGraphicalUI = {
 	GUILoggedOnSAS,
 	GUILoggedOutSAS,
 	GUILockedSAS,
+	GUIDisplayLockedNotice,
 };

@@ -35,7 +35,7 @@ static HRESULT WINAPI d3d8_volume_QueryInterface(IDirect3DVolume8 *iface, REFIID
     if (IsEqualGUID(riid, &IID_IDirect3DVolume8)
             || IsEqualGUID(riid, &IID_IUnknown))
     {
-        IUnknown_AddRef(iface);
+        IDirect3DVolume8_AddRef(iface);
         *out = iface;
         return S_OK;
     }

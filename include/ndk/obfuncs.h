@@ -105,7 +105,7 @@ ObOpenObjectByName(
     _In_ POBJECT_ATTRIBUTES ObjectAttributes,
     _In_ POBJECT_TYPE ObjectType,
     _In_ KPROCESSOR_MODE AccessMode,
-    _In_ PACCESS_STATE PassedAccessState,
+    _In_opt_ PACCESS_STATE PassedAccessState,
     _In_ ACCESS_MASK DesiredAccess,
     _Inout_ PVOID ParseContext,
     _Out_ PHANDLE Handle

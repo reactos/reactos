@@ -145,6 +145,14 @@ CUSBHardwareDevice::QueryInterface(
     return STATUS_UNSUCCESSFUL;
 }
 
+LPCWSTR
+STDMETHODCALLTYPE
+CUSBHardwareDevice::GetUSBType()
+{
+    return L"USBUHCI";
+}
+
+
 NTSTATUS
 CUSBHardwareDevice::Initialize(
     PDRIVER_OBJECT DriverObject,

@@ -629,13 +629,11 @@ ITaskBandImpl_Construct(IN OUT ITrayWindow *Tray)
     ITaskBandImpl *This;
 
     This = HeapAlloc(hProcessHeap,
-                     0,
+                     HEAP_ZERO_MEMORY,
                      sizeof(*This));
     if (This == NULL)
         return NULL;
 
-    ZeroMemory(This,
-               sizeof(*This));
     This->lpVtbl = &ITaskBandImpl_Vtbl;
     This->lpDeskBandVtbl = &IDeskBandImpl_Vtbl;
     This->lpObjectWithSiteVtbl = &IObjectWithSiteImpl_Vtbl;

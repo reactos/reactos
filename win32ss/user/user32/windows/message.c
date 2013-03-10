@@ -721,7 +721,7 @@ MsgiAnsiToUnicodeReply(LPMSG UnicodeMsg, LPMSG AnsiMsg, LRESULT *Result)
             !WideCharToMultiByte(CP_ACP, 0, Buffer, -1, AnsiBuffer, Size, NULL, NULL))
         {
             AnsiBuffer[Size - 1] = 0;
-        }        
+        }
         break;
       }
     case CB_GETLBTEXT:
@@ -736,7 +736,7 @@ MsgiAnsiToUnicodeReply(LPMSG UnicodeMsg, LPMSG AnsiMsg, LRESULT *Result)
             !WideCharToMultiByte(CP_ACP, 0, Buffer, -1, AnsiBuffer, Size, NULL, NULL))
         {
             AnsiBuffer[Size - 1] = 0;
-        }        
+        }
         break;
       }
     }
@@ -759,18 +759,21 @@ MsgiUnicodeToAnsiMessage(HWND hwnd, LPMSG AnsiMsg, LPMSG UnicodeMsg)
       case WM_CREATE:
       case WM_NCCREATE:
         {
-          MDICREATESTRUCTA mdi_cs;
+          MDICREATESTRUCTA *pmdi_cs;
           CREATESTRUCTA* CsA;
           CREATESTRUCTW* CsW;
           NTSTATUS Status;
 
           CsW = (CREATESTRUCTW*)(UnicodeMsg->lParam);
-          CsA = RtlAllocateHeap(GetProcessHeap(), 0, sizeof(CREATESTRUCTA));
+          CsA = RtlAllocateHeap(GetProcessHeap(), 0, sizeof(CREATESTRUCTA) + sizeof(MDICREATESTRUCTA));
           if (NULL == CsA)
             {
               return FALSE;
             }
           memcpy(CsA, CsW, sizeof(CREATESTRUCTW));
+
+          /* pmdi_cs starts right after CsA */
+          pmdi_cs = (MDICREATESTRUCTA*)(CsA + 1);
 
           RtlInitUnicodeString(&UnicodeString, CsW->lpszName);
           Status = RtlUnicodeStringToAnsiString(&AnsiString, &UnicodeString, TRUE);
@@ -796,10 +799,10 @@ MsgiUnicodeToAnsiMessage(HWND hwnd, LPMSG AnsiMsg, LPMSG UnicodeMsg)
 
           if (GetWindowLongW(hwnd, GWL_EXSTYLE) & WS_EX_MDICHILD)
           {
-             mdi_cs = *(MDICREATESTRUCTA *)CsW->lpCreateParams;
-             mdi_cs.szTitle = CsA->lpszName; 
-             mdi_cs.szClass = CsA->lpszClass;
-             CsA->lpCreateParams = &mdi_cs;
+             *pmdi_cs = *(MDICREATESTRUCTA *)CsW->lpCreateParams;
+             pmdi_cs->szTitle = CsA->lpszName;
+             pmdi_cs->szClass = CsA->lpszClass;
+             CsA->lpCreateParams = pmdi_cs;
           }
 
           AnsiMsg->lParam = (LPARAM)CsA;
@@ -1043,7 +1046,7 @@ MsgiUnicodeToAnsiReply(LPMSG AnsiMsg, LPMSG UnicodeMsg, LRESULT *Result)
             ! MultiByteToWideChar(CP_ACP, 0, Buffer, -1, UBuffer, Size))
         {
             UBuffer[Size - 1] = L'\0';
-        }        
+        }
         break;
       }
     case CB_GETLBTEXT:
@@ -1058,7 +1061,7 @@ MsgiUnicodeToAnsiReply(LPMSG AnsiMsg, LPMSG UnicodeMsg, LRESULT *Result)
             ! MultiByteToWideChar(CP_ACP, 0, Buffer, -1, UBuffer, Size))
         {
             UBuffer[Size - 1] = L'\0';
-        }        
+        }
         break;
       }
     }
@@ -1179,12 +1182,12 @@ DesktopWndProcA( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
   }
 
   Result = DesktopWndProcW(hwnd, message, UcMsg.wParam, UcMsg.lParam);
- 
+
   MsgiAnsiToUnicodeCleanup(&UcMsg, &AnsiMsg);
 
   return Result;
  }
- 
+
 /*
  * @implemented
  */
@@ -1317,7 +1320,7 @@ IntCallWindowProcW(BOOL IsAnsiProc,
      else
         MsgOverride = IsMsgOverride( Msg, &guah.DlgProcArray);
   }
-  
+
   if (IsAnsiProc)
   {
       UnicodeMsg.hwnd = hWnd;
@@ -1585,8 +1588,8 @@ IntCallMessageProc(IN PWND Wnd, IN HWND hWnd, IN UINT Msg, IN WPARAM wParam, IN 
     WNDPROC WndProc;
     BOOL IsAnsi;
     PCLS Class;
-    
-    Class = DesktopPtrToUser(Wnd->pcls); 
+
+    Class = DesktopPtrToUser(Wnd->pcls);
     WndProc = NULL;
 
     if ( Wnd->head.pti != GetW32ThreadInfo())
@@ -2084,7 +2087,7 @@ PostMessageA(
 
   /* No drop files or current Process, just post message. */
   if ( (Msg != WM_DROPFILES) ||
-       ( NtUserQueryWindow( hWnd, QUERY_WINDOW_UNIQUE_PROCESS_ID) == 
+       ( NtUserQueryWindow( hWnd, QUERY_WINDOW_UNIQUE_PROCESS_ID) ==
                   PtrToUint(NtCurrentTeb()->ClientId.UniqueProcess) ) )
   {
     return NtUserPostMessage(hWnd, Msg, wParam, lParam);
@@ -2129,7 +2132,7 @@ PostMessageW(
 
   /* No drop files or current Process, just post message. */
   if ( (Msg != WM_DROPFILES) ||
-       ( NtUserQueryWindow( hWnd, QUERY_WINDOW_UNIQUE_PROCESS_ID) == 
+       ( NtUserQueryWindow( hWnd, QUERY_WINDOW_UNIQUE_PROCESS_ID) ==
                   PtrToUint(NtCurrentTeb()->ClientId.UniqueProcess) ) )
   {
     return NtUserPostMessage(hWnd, Msg, wParam, lParam);
@@ -2245,13 +2248,13 @@ SendMessageW(HWND Wnd,
   }
 
   Result = NtUserMessageCall( Wnd,
-                              KMMsg.message, 
+                              KMMsg.message,
                               KMMsg.wParam,
                               KMMsg.lParam,
                              (ULONG_PTR)&Result,
                               FNID_SENDMESSAGE,
                               FALSE);
-  
+
   MsgiUMToKMCleanup(&UMMsg, &KMMsg);
 
   return Result;
@@ -2291,7 +2294,7 @@ SendMessageA(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 
                    * Window belongs to calling thread
                    * The calling thread is not being hooked for CallWndProc
-                   * Not calling a server side proc: 
+                   * Not calling a server side proc:
                      Desktop, Switch, ScrollBar, Menu, IconTitle, or hWndMessage
            */
 
@@ -2316,7 +2319,7 @@ SendMessageA(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
   }
 
   Result = NtUserMessageCall( Wnd,
-                              KMMsg.message, 
+                              KMMsg.message,
                               KMMsg.wParam,
                               KMMsg.lParam,
                              (ULONG_PTR)&Result,
@@ -2403,7 +2406,7 @@ SendMessageCallbackW(
   CallBackInfo.Context = dwData;
 
   return NtUserMessageCall(hWnd,
-                            Msg, 
+                            Msg,
                          wParam,
                          lParam,
        (ULONG_PTR)&CallBackInfo,
@@ -2436,7 +2439,7 @@ SendMessageTimeoutA(
      SetLastError( ERROR_INVALID_PARAMETER );
      return 0;
   }
-  
+
   if (lpdwResult) *lpdwResult = 0;
 
   //// This is due to message system bug.
@@ -2513,7 +2516,7 @@ SendMessageTimeoutW(
      SetLastError( ERROR_INVALID_PARAMETER );
      return 0;
   }
-  
+
   if (lpdwResult) *lpdwResult = 0;
 
   //// This is due to message system bug.
@@ -2539,7 +2542,7 @@ SendMessageTimeoutW(
   dsm.uTimeout = uTimeout;
 
   Result = NtUserMessageCall( hWnd,
-                              Msg, 
+                              Msg,
                               wParam,
                               lParam,
                              (ULONG_PTR)&dsm,
@@ -2658,7 +2661,7 @@ BOOL WINAPI
 TranslateMessage(CONST MSG *lpMsg)
 {
   BOOL Ret = FALSE;
-  
+
 // Ref: msdn ImmGetVirtualKey:
 // http://msdn.microsoft.com/en-us/library/aa912145.aspx
 /*
@@ -2752,7 +2755,7 @@ BOOL WINAPI GetInputState(VOID)
 
    if ((!pcti) || (pcti->fsChangeBits & (QS_KEY|QS_MOUSEBUTTON)))
       return (BOOL)NtUserGetThreadState(THREADSTATE_GETINPUTSTATE);
-            
+
    return FALSE;
 }
 
@@ -3103,7 +3106,7 @@ IntBroadcastSystemMessage(
                                    | BSF_POSTMESSAGE | BSF_FORCEIFHUNG | BSF_NOTIMEOUTIFNOTHUNG
                                    | BSF_ALLOWSFW | BSF_SENDNOTIFYMESSAGE | BSF_RETURNHDESK | BSF_LUID );
 
-    if ((dwflags & ~all_flags) || 
+    if ((dwflags & ~all_flags) ||
         (!pBSMInfo && (dwflags & (BSF_RETURNHDESK|BSF_LUID))) )
     {
         SetLastError(ERROR_INVALID_PARAMETER);
@@ -3117,7 +3120,7 @@ IntBroadcastSystemMessage(
     }
 
     if (dwflags & BSF_FORCEIFHUNG) dwflags |= BSF_NOHANG;
-    
+
     if (dwflags & BSF_QUERY) dwflags &= ~BSF_SENDNOTIFYMESSAGE|BSF_POSTMESSAGE;
 
     if (!lpdwRecipients)

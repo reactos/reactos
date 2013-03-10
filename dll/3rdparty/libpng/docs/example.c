@@ -799,12 +799,16 @@ void write_png(char *file_name /* , ... other image information ... */)
     * use the first method if you aren't handling interlacing yourself.
     */
    png_uint_32 k, height, width;
-   png_byte image[height][width*bytes_per_pixel];
+
+   /* In this example, "image" is a one-dimensional array of bytes */
+   png_byte image[height*width*bytes_per_pixel];
+
    png_bytep row_pointers[height];
 
    if (height > PNG_UINT_32_MAX/png_sizeof(png_bytep))
      png_error (png_ptr, "Image is too tall to process in memory");
 
+   /* Set up pointers into your "image" byte array */
    for (k = 0; k < height; k++)
      row_pointers[k] = image + k*width*bytes_per_pixel;
 

@@ -72,6 +72,9 @@
 #ifdef LANGUAGE_FR_FR
     #include "oledlg_Fr.rc"
 #endif
+#ifdef LANGUAGE_HE_IL
+    #include "oledlg_He.rc"
+#endif
 #ifdef LANGUAGE_HU_HU
     #include "oledlg_Hu.rc"
 #endif

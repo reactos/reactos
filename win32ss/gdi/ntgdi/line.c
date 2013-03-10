@@ -420,7 +420,8 @@ NtGdiPolyDraw(
 {
     PDC dc;
     PDC_ATTR pdcattr;
-    POINT *line_pts = NULL, *line_pts_old, *bzr_pts = NULL, bzr[4];
+    POINT bzr[4];
+    volatile PPOINT line_pts, line_pts_old, bzr_pts;
     INT num_pts, num_bzr_pts, space, space_old, size;
     ULONG i;
     BOOL result = FALSE;
@@ -440,6 +441,10 @@ NtGdiPolyDraw(
        DC_UnlockDc(dc);
        return TRUE;
     }
+
+    line_pts = NULL;
+    line_pts_old = NULL;
+    bzr_pts = NULL;
 
     _SEH2_TRY
     {
@@ -475,6 +480,12 @@ NtGdiPolyDraw(
 
         space = cCount + 300;
         line_pts = ExAllocatePoolWithTag(PagedPool, space * sizeof(POINT), TAG_SHAPE);
+        if (line_pts == NULL)
+        {
+            result = FALSE;
+            _SEH2_LEAVE;
+        }
+
         num_pts = 1;
 
         line_pts[0].x = pdcattr->ptlCurrent.x;
@@ -510,10 +521,12 @@ NtGdiPolyDraw(
                       if (!line_pts) _SEH2_LEAVE;
                       RtlCopyMemory(line_pts, line_pts_old, space_old * sizeof(POINT));
                       ExFreePoolWithTag(line_pts_old, TAG_SHAPE);
+                      line_pts_old = NULL;
                    }
                    RtlCopyMemory( &line_pts[num_pts], &bzr_pts[1], (num_bzr_pts - 1) * sizeof(POINT) );
                    num_pts += num_bzr_pts - 1;
                    ExFreePoolWithTag(bzr_pts, TAG_BEZIER);
+                   bzr_pts = NULL;
                }
                i += 2;
                break;
@@ -523,7 +536,6 @@ NtGdiPolyDraw(
 
         if (num_pts >= 2) IntGdiPolyline( dc, line_pts, num_pts );
         IntGdiMoveToEx( dc, line_pts[num_pts - 1].x, line_pts[num_pts - 1].y, NULL, TRUE );
-        ExFreePoolWithTag(line_pts, TAG_SHAPE);
         result = TRUE;
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -531,6 +543,21 @@ NtGdiPolyDraw(
         SetLastNtError(_SEH2_GetExceptionCode());
     }
     _SEH2_END;
+
+    if (line_pts != NULL)
+    {
+        ExFreePoolWithTag(line_pts, TAG_SHAPE);
+    }
+
+    if ((line_pts_old != NULL) && (line_pts_old != line_pts))
+    {
+        ExFreePoolWithTag(line_pts_old, TAG_SHAPE);
+    }
+
+    if (bzr_pts != NULL)
+    {
+        ExFreePoolWithTag(bzr_pts, TAG_BEZIER);
+    }
 
     DC_UnlockDc(dc);
 

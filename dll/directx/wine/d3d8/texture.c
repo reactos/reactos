@@ -45,7 +45,7 @@ static HRESULT WINAPI d3d8_texture_2d_QueryInterface(IDirect3DTexture8 *iface, R
             || IsEqualGUID(riid, &IID_IDirect3DResource8)
             || IsEqualGUID(riid, &IID_IUnknown))
     {
-        IUnknown_AddRef(iface);
+        IDirect3DTexture8_AddRef(iface);
         *out = iface;
         return S_OK;
     }
@@ -413,7 +413,7 @@ static HRESULT WINAPI d3d8_texture_cube_QueryInterface(IDirect3DCubeTexture8 *if
             || IsEqualGUID(riid, &IID_IDirect3DResource8)
             || IsEqualGUID(riid, &IID_IUnknown))
     {
-        IUnknown_AddRef(iface);
+        IDirect3DCubeTexture8_AddRef(iface);
         *out = iface;
         return S_OK;
     }
@@ -433,7 +433,7 @@ static ULONG WINAPI d3d8_texture_cube_AddRef(IDirect3DCubeTexture8 *iface)
 
     if (ref == 1)
     {
-        IUnknown_AddRef(texture->parent_device);
+        IDirect3DDevice8_AddRef(texture->parent_device);
         wined3d_mutex_lock();
         wined3d_texture_incref(texture->wined3d_texture);
         wined3d_mutex_unlock();
@@ -806,7 +806,7 @@ static HRESULT WINAPI d3d8_texture_3d_QueryInterface(IDirect3DVolumeTexture8 *if
             || IsEqualGUID(riid, &IID_IDirect3DResource8)
             || IsEqualGUID(riid, &IID_IUnknown))
     {
-        IUnknown_AddRef(iface);
+        IDirect3DVolumeTexture8_AddRef(iface);
         *out = iface;
         return S_OK;
     }

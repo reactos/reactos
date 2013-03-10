@@ -247,6 +247,12 @@ TUILockedSAS(
 	return WLX_SAS_ACTION_UNLOCK_WKSTA;
 }
 
+static VOID
+TUIDisplayLockedNotice(
+	IN OUT PGINA_CONTEXT pgContext)
+{
+}
+
 GINA_UI GinaTextUI = {
 	TUIInitialize,
 	TUIDisplayStatusMessage,
@@ -255,4 +261,5 @@ GINA_UI GinaTextUI = {
 	TUILoggedOnSAS,
 	TUILoggedOutSAS,
 	TUILockedSAS,
+	TUIDisplayLockedNotice,
 };

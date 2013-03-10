@@ -94,7 +94,7 @@ BootImageFadeIn(VOID)
         ClrUsed = sizeof(_MainPalette) / sizeof(_MainPalette[0]);
         RtlZeroMemory(PaletteBitmap, sizeof(BITMAPINFOHEADER));
         PaletteBitmap->biSize = sizeof(BITMAPINFOHEADER);
-        PaletteBitmap->biBitCount = 4; 
+        PaletteBitmap->biBitCount = 4;
         PaletteBitmap->biClrUsed = ClrUsed;
 
         /*
@@ -104,12 +104,12 @@ BootImageFadeIn(VOID)
         {
             for (Index = 0; Index < ClrUsed; Index++)
             {
-                Palette[Index].rgbRed =
-                    _MainPalette[Index].rgbRed * Iteration / PALETTE_FADE_STEPS;
-                Palette[Index].rgbGreen =
-                    _MainPalette[Index].rgbGreen * Iteration / PALETTE_FADE_STEPS;
-                Palette[Index].rgbBlue =
-                    _MainPalette[Index].rgbBlue * Iteration / PALETTE_FADE_STEPS;
+                Palette[Index].rgbRed = (UCHAR)
+                    (_MainPalette[Index].rgbRed * Iteration / PALETTE_FADE_STEPS);
+                Palette[Index].rgbGreen = (UCHAR)
+                    (_MainPalette[Index].rgbGreen * Iteration / PALETTE_FADE_STEPS);
+                Palette[Index].rgbBlue = (UCHAR)
+                    (_MainPalette[Index].rgbBlue * Iteration / PALETTE_FADE_STEPS);
             }
 
             VidBitBlt(PaletteBitmapBuffer, 0, 0);
@@ -221,7 +221,7 @@ InbvDriverInitialize(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     {
         /* Now reset the display, but only if there's a custom boot logo */
         VidResetDisplay(CustomLogo);
-        
+
         /* Find bitmap resources in the kernel */
         ResourceCount = min(IDB_CLUSTER_SERVER, Count);
         for (i = 1; i <= Count; i++)
@@ -709,7 +709,7 @@ DisplayBootBitmap(IN BOOLEAN TextMode)
             InbvSetTextColor(15);
             InbvSolidColorFill(0, 0, 639, 479, 7);
             InbvSolidColorFill(0, 421, 639, 479, 1);
-            
+
             /* Get resources */
             Header = InbvGetResourceAddress(IDB_LOGO_HEADER);
             Band = InbvGetResourceAddress(IDB_LOGO_BAND);
@@ -768,7 +768,7 @@ DisplayBootBitmap(IN BOOLEAN TextMode)
                 /* Normal edition */
                 Text = InbvGetResourceAddress(IDB_SERVER_LOGO);
             }
-            
+
             /* Server product, display appropriate status bar color */
             InbvGetResourceAddress(IDB_BAR_SERVER);
         }
@@ -805,7 +805,7 @@ DisplayBootBitmap(IN BOOLEAN TextMode)
                 InbvScreenToBufferBlt(Buffer, 413, 237, 7, 7, 8);
                 InbvSolidColorFill(418, 230, 454, 256, 0);
                 InbvBufferToScreenBlt(Buffer, 413, 237, 7, 7, 8);
-                
+
                 /* In setup mode, you haven't selected a SKU yet */
                 if (ExpInTextModeSetup) Text = NULL;
             }
@@ -851,7 +851,7 @@ DisplayFilter(PCHAR *String)
     {
         /* Remove the filter */
         InbvInstallDisplayStringFilter(NULL);
-        
+
         DotHack = FALSE;
 
         /* Draw text screen */

@@ -1,10 +1,10 @@
 #! /bin/sh
 # depcomp - compile a program generating dependencies as side-effects
 
-scriptversion=2009-04-28.21; # UTC
+scriptversion=2011-12-04.11; # UTC
 
-# Copyright (C) 1999, 2000, 2003, 2004, 2005, 2006, 2007, 2009 Free
-# Software Foundation, Inc.
+# Copyright (C) 1999, 2000, 2003, 2004, 2005, 2006, 2007, 2009, 2010,
+# 2011 Free Software Foundation, Inc.
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -44,7 +44,7 @@ Environment variables:
   object      Object file output by `PROGRAMS ARGS'.
   DEPDIR      directory where to store dependencies.
   depfile     Dependency file to output.
-  tmpdepfile  Temporary file to use when outputing dependencies.
+  tmpdepfile  Temporary file to use when outputting dependencies.
   libtool     Whether libtool is used (yes/no).
 
 Report bugs to <bug-automake@gnu.org>.
@@ -90,8 +90,16 @@ if test "$depmode" = msvcmsys; then
    # This is just like msvisualcpp but w/o cygpath translation.
    # Just convert the backslash-escaped backslashes to single forward
    # slashes to satisfy depend.m4
-   cygpath_u="sed s,\\\\\\\\,/,g"
+   cygpath_u='sed s,\\\\,/,g'
    depmode=msvisualcpp
+fi
+
+if test "$depmode" = msvc7msys; then
+   # This is just like msvc7 but w/o cygpath translation.
+   # Just convert the backslash-escaped backslashes to single forward
+   # slashes to satisfy depend.m4
+   cygpath_u='sed s,\\\\,/,g'
+   depmode=msvc7
 fi
 
 case "$depmode" in
@@ -158,10 +166,12 @@ gcc)
 ' < "$tmpdepfile" |
 ## Some versions of gcc put a space before the `:'.  On the theory
 ## that the space means something, we add a space to the output as
-## well.
+## well.  hp depmode also adds that space, but also prefixes the VPATH
+## to the object.  Take care to not repeat it in the output.
 ## Some versions of the HPUX 10.20 sed can't process this invocation
 ## correctly.  Breaking it into two sed invocations is a workaround.
-    sed -e 's/^\\$//' -e '/^$/d' -e '/:$/d' | sed -e 's/$/ :/' >> "$depfile"
+    sed -e 's/^\\$//' -e '/^$/d' -e "s|.*$object$||" -e '/:$/d' \
+      | sed -e 's/$/ :/' >> "$depfile"
   rm -f "$tmpdepfile"
   ;;
 
@@ -405,6 +415,52 @@ tru64)
    rm -f "$tmpdepfile"
    ;;
 
+msvc7)
+  if test "$libtool" = yes; then
+    showIncludes=-Wc,-showIncludes
+  else
+    showIncludes=-showIncludes
+  fi
+  "$@" $showIncludes > "$tmpdepfile"
+  stat=$?
+  grep -v '^Note: including file: ' "$tmpdepfile"
+  if test "$stat" = 0; then :
+  else
+    rm -f "$tmpdepfile"
+    exit $stat
+  fi
+  rm -f "$depfile"
+  echo "$object : \\" > "$depfile"
+  # The first sed program below extracts the file names and escapes
+  # backslashes for cygpath.  The second sed program outputs the file
+  # name when reading, but also accumulates all include files in the
+  # hold buffer in order to output them again at the end.  This only
+  # works with sed implementations that can handle large buffers.
+  sed < "$tmpdepfile" -n '
+/^Note: including file:  *\(.*\)/ {
+  s//\1/
+  s/\\/\\\\/g
+  p
+}' | $cygpath_u | sort -u | sed -n '
+s/ /\\ /g
+s/\(.*\)/	\1 \\/p
+s/.\(.*\) \\/\1:/
+H
+$ {
+  s/.*/	/
+  G
+  p
+}' >> "$depfile"
+  rm -f "$tmpdepfile"
+  ;;
+
+msvc7msys)
+  # This case exists only to let depend.m4 do its work.  It works by
+  # looking at the text of this script.  This case will never be run,
+  # since it is checked for above.
+  exit 1
+  ;;
+
 #nosideeffect)
   # This comment above is used by automake to tell side-effect
   # dependency tracking mechanisms from slower ones.
@@ -503,7 +559,9 @@ makedepend)
   touch "$tmpdepfile"
   ${MAKEDEPEND-makedepend} -o"$obj_suffix" -f"$tmpdepfile" "$@"
   rm -f "$depfile"
-  cat < "$tmpdepfile" > "$depfile"
+  # makedepend may prepend the VPATH from the source file name to the object.
+  # No need to regex-escape $object, excess matching of '.' is harmless.
+  sed "s|^.*\($object *:\)|\1|" "$tmpdepfile" > "$depfile"
   sed '1,2d' "$tmpdepfile" | tr ' ' '
 ' | \
 ## Some versions of the HPUX 10.20 sed can't process this invocation

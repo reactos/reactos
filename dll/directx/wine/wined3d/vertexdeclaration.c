@@ -252,10 +252,7 @@ HRESULT CDECL wined3d_vertex_declaration_create(struct wined3d_device *device,
 
     object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*object));
     if(!object)
-    {
-        ERR("Failed to allocate vertex declaration memory.\n");
         return E_OUTOFMEMORY;
-    }
 
     hr = vertexdeclaration_init(object, device, elements, element_count, parent, parent_ops);
     if (FAILED(hr))

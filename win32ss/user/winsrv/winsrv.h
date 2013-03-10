@@ -30,6 +30,9 @@
 #include <ndk/psfuncs.h>
 #include <ndk/rtlfuncs.h>
 
+/* Public Win32K Headers */
+#include <ntuser.h>
+
 /* PSEH for SEH Support */
 #include <pseh/pseh2.h>
 

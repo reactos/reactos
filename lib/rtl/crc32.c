@@ -91,7 +91,7 @@ RtlComputeCrc32(IN ULONG Initial,
 {
   ULONG CrcValue = ~Initial;
 
-  DPRINT("(%d,%p,%d)\n", Initial, Data, Length);
+  DPRINT("(%u,%p,%u)\n", Initial, Data, Length);
 
   while (Length > 0)
   {

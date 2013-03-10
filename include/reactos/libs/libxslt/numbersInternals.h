@@ -17,6 +17,8 @@
 extern "C" {
 #endif
 
+struct _xsltCompMatch;
+
 /**
  * xsltNumberData:
  *
@@ -24,7 +26,7 @@ extern "C" {
  */
 typedef struct _xsltNumberData xsltNumberData;
 typedef xsltNumberData *xsltNumberDataPtr;
-    
+
 struct _xsltNumberData {
     const xmlChar *level;
     const xmlChar *count;
@@ -37,6 +39,8 @@ struct _xsltNumberData {
     int groupingCharacterLen;
     xmlDocPtr doc;
     xmlNodePtr node;
+    struct _xsltCompMatch *countPat;
+    struct _xsltCompMatch *fromPat;
 
     /*
      * accelerators

@@ -131,14 +131,11 @@ CreateDropTarget(IN HWND hwndTarget,
     HRESULT hr;
 
     This = HeapAlloc(hProcessHeap,
-                     0,
+                     HEAP_ZERO_MEMORY,
                      FIELD_OFFSET(IDropTargetImpl,
                                   Formats[nSupportedFormats]));
     if (This != NULL)
     {
-        ZeroMemory(This,
-                   sizeof(*This));
-
         This->lpVtbl = &IDropTargetImpl_Vtbl;
         This->Ref = 1;
         This->hwndTarget = hwndTarget;

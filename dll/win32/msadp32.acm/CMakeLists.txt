@@ -10,7 +10,7 @@ list(APPEND SOURCE
 
 add_library(msadp32.acm SHARED ${SOURCE})
 
-set_module_type(msadp32.acm win32dll ENTRYPOINT 0 )
+set_module_type(msadp32.acm win32dll)
 set_target_properties(msadp32.acm PROPERTIES SUFFIX "")
 target_link_libraries(msadp32.acm wine)
 add_importlibs(msadp32.acm winmm user32 msvcrt kernel32 ntdll)

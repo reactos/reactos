@@ -28,10 +28,9 @@ ULONG SecondLevelDcacheSize;
 ULONG SecondLevelDcacheFillSize;
 ULONG SecondLevelIcacheSize;
 ULONG SecondLevelIcacheFillSize;
-  
+
 ARC_DISK_SIGNATURE reactos_arc_disk_info;
 ULONG reactos_disk_count;
-CHAR reactos_arc_hardware_data[256];
 
 ULONG SizeBits[] =
 {
@@ -66,11 +65,11 @@ ArmInit(IN PARM_BOARD_CONFIGURATION_BLOCK BootContext)
 {
     /* Remember the pointer */
     ArmBoardBlock = BootContext;
-    
+
     /* Let's make sure we understand the LLB */
     ASSERT(ArmBoardBlock->MajorVersion == ARM_BOARD_CONFIGURATION_MAJOR_VERSION);
     ASSERT(ArmBoardBlock->MinorVersion == ARM_BOARD_CONFIGURATION_MINOR_VERSION);
-    
+
     /* This should probably go away once we support more boards */
     ASSERT((ArmBoardBlock->BoardType == MACH_TYPE_FEROCEON) ||
            (ArmBoardBlock->BoardType == MACH_TYPE_VERSATILE_PB) ||
@@ -92,33 +91,40 @@ ArmDiskGetBootPath(OUT PCHAR BootPath,
                    IN unsigned Size)
 {
     PCCH Path = "ramdisk(0)";
-    
+
     /* Make sure enough space exists */
     if (Size < sizeof(Path)) return FALSE;
-    
+
     /* On ARM platforms, the loader is always in RAM */
     strcpy(BootPath, Path);
     return TRUE;
+}
+
+BOOLEAN
+ArmInitializeBootDevices(VOID)
+{
+    /* Emulate old behavior */
+    return (ArmHwDetect() != NULL);
 }
 
 PCONFIGURATION_COMPONENT_DATA
 ArmHwDetect(VOID)
 {
     ARM_CACHE_REGISTER CacheReg;
-    
+
     /* Create the root node */
     if (ArmHwDetectRan++) return RootNode;
     FldrCreateSystemKey(&RootNode);
-    
+
     /*
      * TODO:
      * There's no such thing as "PnP" on embedded hardware.
      * The boot loader will send us a device tree, similar to ACPI
      * or OpenFirmware device trees, and we will convert it to ARC.
      */
-    
+
     /* Get cache information */
-    CacheReg = KeArmCacheRegisterGet();   
+    CacheReg = KeArmCacheRegisterGet();
     FirstLevelDcacheSize = SizeBits[CacheReg.DSize];
     FirstLevelDcacheFillSize = LenBits[CacheReg.DLength];
     FirstLevelDcacheFillSize <<= 2;
@@ -129,16 +135,16 @@ ArmHwDetect(VOID)
     SecondLevelDcacheFillSize =
     SecondLevelIcacheSize =
     SecondLevelIcacheFillSize = 0;
-    
+
     /* Register RAMDISK Device */
     RamDiskInitialize();
-    
+
     /* Fill out the ARC disk block */
     reactos_arc_disk_info.Signature = 0xBADAB00F;
     reactos_arc_disk_info.CheckSum = 0xDEADBABE;
     reactos_arc_disk_info.ArcName = "ramdisk(0)";
     reactos_disk_count = 1;
-    
+
     /* Return the root node */
     return RootNode;
 }
@@ -182,7 +188,7 @@ MachInit(IN PCCH CommandLine)
     MachVtbl.VideoGetDisplaySize = ArmBoardBlock->VideoGetDisplaySize;
     MachVtbl.VideoPutChar = ArmBoardBlock->VideoPutChar;
     MachVtbl.GetTime = ArmBoardBlock->GetTime;
-    
+
     /* Setup board-specific ARM routines */
     switch (ArmBoardBlock->BoardType)
     {
@@ -194,33 +200,34 @@ MachInit(IN PCCH CommandLine)
 
         /* Check for TI OMAP3 ZOOM-II MDK */
         case MACH_TYPE_OMAP_ZOOM2:
-            
+
             /* Setup the disk and file system buffers */
             gDiskReadBuffer = 0x81094000;
             gFileSysBuffer = 0x81094000;
             break;
-            
+
         /* Check for ARM Versatile PB boards */
         case MACH_TYPE_VERSATILE_PB:
-            
+
             /* Setup the disk and file system buffers */
             gDiskReadBuffer = 0x00090000;
             gFileSysBuffer = 0x00090000;
             break;
-            
+
         /* Check for TI OMAP3 Beagleboard */
         case MACH_TYPE_OMAP3_BEAGLE:
             TuiPrintf("Not implemented\n");
             while (TRUE);
             break;
-            
+
         default:
             ASSERT(FALSE);
     }
-    
+
     /* Setup generic ARM routines for all boards */
     MachVtbl.PrepareForReactOS = ArmPrepareForReactOS;
     MachVtbl.GetMemoryMap = ArmMemGetMemoryMap;
+    MachVtbl.InitializeBootDevices = ArmInitializeBootDevices;
     MachVtbl.HwDetect = ArmHwDetect;
     MachVtbl.DiskGetBootPath = ArmDiskGetBootPath;
     MachVtbl.HwIdle = ArmHwIdle;

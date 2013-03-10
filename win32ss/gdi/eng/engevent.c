@@ -15,10 +15,12 @@
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
+_Must_inspect_result_
+_Success_(return != FALSE)
 BOOL
 APIENTRY
 EngCreateEvent(
-    _Deref_out_opt_ PEVENT* Event)
+    _Outptr_ PEVENT *ppEvent)
 {
     BOOLEAN Result = TRUE;
     PENG_EVENT EngEvent;
@@ -39,7 +41,7 @@ EngCreateEvent(
                           FALSE);
 
         /* Pass pointer to our structure to the caller */
-        *Event = EngEvent;
+        *ppEvent = EngEvent;
         DPRINT("EngCreateEvent() created %p\n", EngEvent);
     }
     else

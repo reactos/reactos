@@ -1620,13 +1620,11 @@ ITrayWindowImpl_Construct(VOID)
     ITrayWindowImpl *This;
 
     This = HeapAlloc(hProcessHeap,
-                     0,
+                     HEAP_ZERO_MEMORY,
                      sizeof(*This));
     if (This == NULL)
         return NULL;
 
-    ZeroMemory(This,
-               sizeof(*This));
     This->lpVtbl = &ITrayWindowImpl_Vtbl;
     This->lpVtblShellDesktopTray = &IShellDesktopTrayImpl_Vtbl;
     This->Ref = 1;
@@ -2530,6 +2528,10 @@ HandleTrayContextMenu:
 
             case WM_APP_TRAYDESTROY:
                 DestroyWindow(hwnd);
+                break;
+
+            case TWM_OPENSTARTMENU:
+                SendMessage(This->hWnd, WM_COMMAND, MAKEWPARAM(BN_CLICKED, IDC_STARTBTN), (LPARAM)This->hwndStart);
                 break;
 
             case WM_COMMAND:

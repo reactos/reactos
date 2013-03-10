@@ -433,6 +433,7 @@ RtlpSysVolTakeOwnership(IN PUNICODE_STRING DirectoryPath,
     HANDLE hToken = NULL;
     HANDLE hDirectory = NULL;
     NTSTATUS Status;
+    ULONG ReturnLength;
 
     Status = ZwOpenProcessToken(NtCurrentProcess(),
                                 TOKEN_QUERY | TOKEN_ADJUST_PRIVILEGES,
@@ -452,7 +453,7 @@ RtlpSysVolTakeOwnership(IN PUNICODE_STRING DirectoryPath,
                                      &TokenPrivileges,
                                      sizeof(TokenPrivileges),
                                      &TokenPrivileges,
-                                     NULL);
+                                     &ReturnLength);
     if (!NT_SUCCESS(Status))
     {
         goto Cleanup;
@@ -757,7 +758,7 @@ RtlGetSetBootStatusData(IN HANDLE FileHandle,
     LARGE_INTEGER ByteOffset;
     NTSTATUS Status;
 
-    DPRINT("RtlGetSetBootStatusData (%p %u %u %p %lu %p)\n",
+    DPRINT("RtlGetSetBootStatusData (%p %u %d %p %lu %p)\n",
            FileHandle, WriteMode, DataClass, Buffer, BufferSize, ReturnLength);
 
     if (DataClass >= RtlBsdItemMax)

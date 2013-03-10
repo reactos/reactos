@@ -30,8 +30,8 @@ IDR_LINKMENU MENU
 BEGIN
 	POPUP "popup"
 	BEGIN
-		MENUITEM "פתיחת קישור בדפדפן", ID_OPEN_LINK
-		MENUITEM "העתקת קישור", ID_COPY_LINK
+		MENUITEM "פתיחת הקישור בדפדפן", ID_OPEN_LINK
+		MENUITEM "העתקת הקישור", ID_COPY_LINK
 	END
 END
 
@@ -56,8 +56,8 @@ FONT 8, "MS Shell Dlg"
 BEGIN
 	GROUPBOX "כללי", -1, 4, 2, 240, 61
 	AUTOCHECKBOX "שמור מיקום חלון", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
-	AUTOCHECKBOX "&Update the list of accessible programs at start", IDC_UPDATE_AVLIST, 15, 29, 222, 12
-	AUTOCHECKBOX "&Log of installation and removal of programs", IDC_LOG_ENABLED, 15, 46, 219, 12
+	AUTOCHECKBOX "עדכן את רשימת התוכניות האפשרויות בהפעלה", IDC_UPDATE_AVLIST, 15, 29, 222, 12
+	AUTOCHECKBOX "תעד התקנה והסרה של תכניות", IDC_LOG_ENABLED, 15, 46, 219, 12
 
 	GROUPBOX "הורדה", -1, 4, 65, 240, 51
 	LTEXT "תיקיית הורדות:", -1, 16, 75, 100, 9
@@ -156,7 +156,7 @@ BEGIN
 	IDS_CAT_AUDIO "צלילים"
 	IDS_CAT_DEVEL "פיתוח"
 	IDS_CAT_DRIVERS "מנהלי התקנים"
-	IDS_CAT_EDU "Edutainment"
+	IDS_CAT_EDU "בידור"
 	IDS_CAT_ENGINEER "הנדסה"
 	IDS_CAT_FINANCE "כלכלי"
 	IDS_CAT_GAMES "משחקים וכיף"
@@ -178,7 +178,7 @@ BEGIN
 	IDS_UNINSTALL "הסרה"
 	IDS_MODIFY "שינוי"
 	IDS_APPS_COUNT "ספירת יישומים: %d"
-	IDS_WELCOME_TITLE "Welcome to ReactOS Applications Manager!\n\n"
+	IDS_WELCOME_TITLE "ברוכים הבאים למנהל היישומים של ReactOS!\n\n"
 	IDS_WELCOME_TEXT "Choose a category on the left, then choose an application to install or uninstall.\nReactOS Web Site: "
 	IDS_WELCOME_URL "http://www.reactos.org"
 	IDS_INSTALLED "מותקן"

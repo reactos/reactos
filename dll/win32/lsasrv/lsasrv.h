@@ -19,9 +19,12 @@
 #include <ndk/kefuncs.h>
 #include <ndk/lpctypes.h>
 #include <ndk/lpcfuncs.h>
+#include <ndk/mmfuncs.h>
 #include <ndk/obfuncs.h>
+#include <ndk/psfuncs.h>
 #include <ndk/rtlfuncs.h>
 #include <ndk/setypes.h>
+#include <ndk/umfuncs.h>
 
 #include <ntsam.h>
 #include <ntlsa.h>
@@ -66,6 +69,12 @@ typedef struct _LSAP_POLICY_AUDIT_EVENTS_DATA
     DWORD AuditEvents[0];
 } LSAP_POLICY_AUDIT_EVENTS_DATA, *PLSAP_POLICY_AUDIT_EVENTS_DATA;
 
+typedef struct _LSAP_LOGON_CONTEXT
+{
+    LIST_ENTRY Entry;
+    HANDLE ClientProcessHandle;
+    HANDLE ConnectionHandle;
+} LSAP_LOGON_CONTEXT, *PLSAP_LOGON_CONTEXT;
 
 extern SID_IDENTIFIER_AUTHORITY NullSidAuthority;
 extern SID_IDENTIFIER_AUTHORITY WorldSidAuthority;
@@ -78,6 +87,21 @@ extern UNICODE_STRING BuiltinDomainName;
 extern PSID AccountDomainSid;
 extern UNICODE_STRING AccountDomainName;
 
+/* authpackage.c */
+NTSTATUS
+LsapInitAuthPackages(VOID);
+
+NTSTATUS
+LsapLookupAuthenticationPackage(PLSA_API_MSG RequestMsg,
+                                PLSAP_LOGON_CONTEXT LogonContext);
+
+NTSTATUS
+LsapCallAuthenticationPackage(PLSA_API_MSG RequestMsg,
+                              PLSAP_LOGON_CONTEXT LogonContext);
+
+NTSTATUS
+LsapLogonUser(PLSA_API_MSG RequestMsg,
+              PLSAP_LOGON_CONTEXT LogonContext);
 
 /* authport.c */
 NTSTATUS

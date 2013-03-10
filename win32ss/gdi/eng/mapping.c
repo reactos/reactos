@@ -393,7 +393,7 @@ EngLoadModuleEx(
     Status = MmCreateSection(&pFileView->pSection,
                              SECTION_ALL_ACCESS,
                              NULL,
-                             cjSizeOfModule ? &liSize : NULL,
+                             &liSize,
                              fl & FVF_READONLY ? PAGE_EXECUTE_READ : PAGE_EXECUTE_READWRITE,
                              SEC_COMMIT,
                              hFile,

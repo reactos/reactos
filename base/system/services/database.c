@@ -36,10 +36,10 @@ LIST_ENTRY ImageListHead;
 LIST_ENTRY ServiceListHead;
 
 static RTL_RESOURCE DatabaseLock;
-static DWORD dwResumeCount = 1;
+static DWORD ResumeCount = 1;
 
 static CRITICAL_SECTION ControlServiceCriticalSection;
-static DWORD dwPipeTimeout = 30000; /* 30 Seconds */
+static DWORD PipeTimeout = 30000; /* 30 Seconds */
 
 
 /* FUNCTIONS *****************************************************************/
@@ -110,7 +110,7 @@ ScmCreateNewControlPipe(PSERVICE_IMAGE pServiceImage)
                                                    100,
                                                    8000,
                                                    4,
-                                                   dwPipeTimeout,
+                                                   PipeTimeout,
                                                    NULL);
     DPRINT("CreateNamedPipeW(%S) done\n", szControlPipeName);
     if (pServiceImage->hControlPipe == INVALID_HANDLE_VALUE)
@@ -380,7 +380,7 @@ ScmCreateNewServiceRecord(LPCWSTR lpServiceName,
     lpService->lpDisplayName = lpService->lpServiceName;
 
     /* Set the resume count */
-    lpService->dwResumeCount = dwResumeCount++;
+    lpService->dwResumeCount = ResumeCount++;
 
     /* Append service record */
     InsertTailList(&ServiceListHead,
@@ -941,7 +941,7 @@ ScmControlService(PSERVICE Service,
             DPRINT1("dwError: ERROR_IO_PENDING\n");
 
             dwError = WaitForSingleObject(Service->lpImage->hControlPipe,
-                                          dwPipeTimeout);
+                                          PipeTimeout);
             DPRINT1("WaitForSingleObject() returned %lu\n", dwError);
 
             if (dwError == WAIT_TIMEOUT)
@@ -995,7 +995,7 @@ ScmControlService(PSERVICE Service,
             DPRINT1("dwError: ERROR_IO_PENDING\n");
 
             dwError = WaitForSingleObject(Service->lpImage->hControlPipe,
-                                          dwPipeTimeout);
+                                          PipeTimeout);
             DPRINT1("WaitForSingleObject() returned %lu\n", dwError);
 
             if (dwError == WAIT_TIMEOUT)
@@ -1192,7 +1192,7 @@ ScmSendStartCommand(PSERVICE Service,
             DPRINT1("dwError: ERROR_IO_PENDING\n");
 
             dwError = WaitForSingleObject(Service->lpImage->hControlPipe,
-                                          dwPipeTimeout);
+                                          PipeTimeout);
             DPRINT1("WaitForSingleObject() returned %lu\n", dwError);
 
             if (dwError == WAIT_TIMEOUT)
@@ -1246,7 +1246,7 @@ ScmSendStartCommand(PSERVICE Service,
             DPRINT1("dwError: ERROR_IO_PENDING\n");
 
             dwError = WaitForSingleObject(Service->lpImage->hControlPipe,
-                                          dwPipeTimeout);
+                                          PipeTimeout);
             DPRINT1("WaitForSingleObject() returned %lu\n", dwError);
 
             if (dwError == WAIT_TIMEOUT)
@@ -1354,7 +1354,7 @@ ScmWaitForServiceConnect(PSERVICE Service)
             DPRINT("dwError: ERROR_IO_PENDING\n");
 
             dwError = WaitForSingleObject(Service->lpImage->hControlPipe,
-                                          dwPipeTimeout);
+                                          PipeTimeout);
             DPRINT("WaitForSingleObject() returned %lu\n", dwError);
 
             if (dwError == WAIT_TIMEOUT)
@@ -1411,7 +1411,7 @@ ScmWaitForServiceConnect(PSERVICE Service)
             DPRINT("dwError: ERROR_IO_PENDING\n");
 
             dwError = WaitForSingleObject(Service->lpImage->hControlPipe,
-                                          dwPipeTimeout);
+                                          PipeTimeout);
             if (dwError == WAIT_TIMEOUT)
             {
                 DPRINT("WaitForSingleObject() returned WAIT_TIMEOUT\n");
@@ -1927,7 +1927,7 @@ ScmInitNamedPipeCriticalSection(VOID)
                          L"ServicesPipeTimeout",
                          0,
                          NULL,
-                         (LPBYTE)&dwPipeTimeout,
+                         (LPBYTE)&PipeTimeout,
                          &dwKeySize);
 
        RegCloseKey(hKey);

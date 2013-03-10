@@ -23,7 +23,7 @@ add_library(dmusic SHARED
     version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/dmusic.def)
 
-set_module_type(dmusic win32dll UNICODE ENTRYPOINT 0)
+set_module_type(dmusic win32dll UNICODE)
 
 target_link_libraries(dmusic
     dxguid
@@ -31,6 +31,7 @@ target_link_libraries(dmusic
     wine)
 
 add_importlibs(dmusic
+    msvcrt
     user32
     advapi32
     ole32

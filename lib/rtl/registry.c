@@ -409,12 +409,15 @@ RtlpCallQueryRegistryRoutine(IN PRTL_QUERY_REGISTRY_TABLE QueryTable,
     return (Status == STATUS_BUFFER_TOO_SMALL) ? STATUS_SUCCESS : Status;
 }
 
+_Success_(return!=NULL || BufferSize==0)
+_When_(BufferSize!=NULL,__drv_allocatesMem(Mem))
 PVOID
 NTAPI
-RtlpAllocDeallocQueryBuffer(IN OUT PSIZE_T BufferSize,
-                            IN PVOID OldBuffer,
-                            IN SIZE_T OldBufferSize,
-                            OUT PNTSTATUS Status)
+RtlpAllocDeallocQueryBuffer(
+    _In_opt_ PSIZE_T BufferSize,
+    _In_opt_ __drv_freesMem(Mem) PVOID OldBuffer,
+    _In_ SIZE_T OldBufferSize,
+    _Out_opt_ _On_failure_(_Post_satisfies_(*Status < 0)) PNTSTATUS Status)
 {
     PVOID Buffer = NULL;
 

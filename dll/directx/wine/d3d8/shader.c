@@ -61,10 +61,7 @@ static HRESULT d3d8_vertexshader_create_vertexdeclaration(struct d3d8_device *de
 
     object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*object));
     if (!object)
-    {
-        ERR("Memory allocation failed.\n");
         return E_OUTOFMEMORY;
-    }
 
     hr = d3d8_vertex_declaration_init(object, device, declaration, shader_handle);
     if (FAILED(hr))

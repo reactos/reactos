@@ -162,6 +162,14 @@ struct d3d8_device
     struct FvfToDecl       *decls;
     UINT                    numConvertedDecls, declArraySize;
 
+    /* User data draws */
+    struct wined3d_buffer *vertex_buffer;
+    UINT                   vertex_buffer_size;
+    UINT                   vertex_buffer_pos;
+    struct wined3d_buffer *index_buffer;
+    UINT                   index_buffer_size;
+    UINT                   index_buffer_pos;
+
     /* Avoids recursion with nested ReleaseRef to 0 */
     BOOL                    inDestruction;
     BOOL lost;
@@ -207,9 +215,9 @@ struct d3d8_surface
     IUnknown                    *forwardReference;
 };
 
-HRESULT surface_init(struct d3d8_surface *surface, struct d3d8_device *device,
-        UINT width, UINT height, D3DFORMAT format, BOOL lockable, BOOL discard, UINT level,
-        DWORD usage, D3DPOOL pool, D3DMULTISAMPLE_TYPE multisample_type, DWORD multisample_quality) DECLSPEC_HIDDEN;
+HRESULT surface_init(struct d3d8_surface *surface, struct d3d8_device *device, UINT width, UINT height,
+        D3DFORMAT format, BOOL lockable, BOOL discard, DWORD usage, D3DPOOL pool,
+        D3DMULTISAMPLE_TYPE multisample_type, DWORD multisample_quality) DECLSPEC_HIDDEN;
 struct d3d8_surface *unsafe_impl_from_IDirect3DSurface8(IDirect3DSurface8 *iface) DECLSPEC_HIDDEN;
 
 struct d3d8_vertexbuffer

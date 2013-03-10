@@ -34,7 +34,7 @@ static HRESULT WINAPI d3d8_vertexbuffer_QueryInterface(IDirect3DVertexBuffer8 *i
             || IsEqualGUID(riid, &IID_IDirect3DResource8)
             || IsEqualGUID(riid, &IID_IUnknown))
     {
-        IUnknown_AddRef(iface);
+        IDirect3DVertexBuffer8_AddRef(iface);
         *object = iface;
         return S_OK;
     }
@@ -302,7 +302,7 @@ HRESULT vertexbuffer_init(struct d3d8_vertexbuffer *buffer, struct d3d8_device *
     }
 
     buffer->parent_device = &device->IDirect3DDevice8_iface;
-    IUnknown_AddRef(buffer->parent_device);
+    IDirect3DDevice8_AddRef(buffer->parent_device);
 
     return D3D_OK;
 }
@@ -329,7 +329,7 @@ static HRESULT WINAPI d3d8_indexbuffer_QueryInterface(IDirect3DIndexBuffer8 *ifa
             || IsEqualGUID(riid, &IID_IDirect3DResource8)
             || IsEqualGUID(riid, &IID_IUnknown))
     {
-        IUnknown_AddRef(iface);
+        IDirect3DIndexBuffer8_AddRef(iface);
         *object = iface;
         return S_OK;
     }
@@ -596,7 +596,7 @@ HRESULT indexbuffer_init(struct d3d8_indexbuffer *buffer, struct d3d8_device *de
     }
 
     buffer->parent_device = &device->IDirect3DDevice8_iface;
-    IUnknown_AddRef(buffer->parent_device);
+    IDirect3DDevice8_AddRef(buffer->parent_device);
 
     return D3D_OK;
 }

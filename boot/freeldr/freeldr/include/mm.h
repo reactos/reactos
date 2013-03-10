@@ -133,6 +133,10 @@ HeapRelease(
     PVOID HeapHandle);
 
 VOID
+HeapVerify(
+    PVOID HeapHandle);
+
+VOID
 HeapCleanupAll(VOID);
 
 PVOID

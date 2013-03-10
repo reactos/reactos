@@ -106,13 +106,13 @@ LTEXT    "כותרת תחתונה:",  0x142,   10, 24, 40, 15
 EDITTEXT              0x143,   60, 22,110, 12, WS_BORDER | WS_TABSTOP
 
 GROUPBOX "שוליים:", 0x144,   10, 43,160, 45
-LTEXT    "שמאליים:",    0x145,   20, 55, 30, 10, WS_CHILD
+LTEXT    "שמאליים:",    0x145,   14, 55, 35, 10, WS_CHILD
 EDITTEXT /*STRING_PAGESETUP_LEFTVALUE,*/   0x147,   50, 55, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
 LTEXT    "עליונים:",     0x148,   20, 73, 30, 10, WS_CHILD
 EDITTEXT /*STRING_PAGESETUP_TOPVALUE,*/    0x14A,   50, 73, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
 LTEXT    "ימניים:",   0x14B,  100, 55, 30, 10, WS_CHILD
 EDITTEXT /*STRING_PAGESETUP_RIGHTVALUE,*/  0x14D,  130, 55, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
-LTEXT    "תחתונים:",  0x14E,  100, 73, 30, 10, WS_CHILD
+LTEXT    "תחתונים:",  0x14E,  97, 73, 33, 10, WS_CHILD
 EDITTEXT /*STRING_PAGESETUP_BOTTOMVALUE,*/ 0x150,  130, 73, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
 
 DEFPUSHBUTTON "אישור",     IDOK,     180,  3, 40, 15, WS_TABSTOP
@@ -139,7 +139,7 @@ FONT 8, "MS Shell Dlg"
 CAPTION "מעבר אל שורה"
 BEGIN
 EDITTEXT        ID_LINENUMBER,54,10,106,12,WS_CHILD | WS_BORDER | WS_TABSTOP
-LTEXT           "מספר שורה:",0x155,5,12,41,12,WS_CHILD | WS_TABSTOP | ES_NUMBER
+LTEXT           "מספר שורה:",0x155,3,12,43,11,WS_CHILD | WS_TABSTOP | ES_NUMBER
 DEFPUSHBUTTON   "אישור", IDOK, 75, 30, 40, 15, WS_CHILD | WS_TABSTOP
 PUSHBUTTON      "ביטול", IDCANCEL, 120, 30, 40, 15, WS_CHILD | WS_TABSTOP
 END
@@ -196,7 +196,7 @@ STRING_OUT_OF_MEMORY,                           "Not enough memory to complete t
 task. \nClose one or more applications to increase the amount of \nfree memory."
 STRING_CANNOTFIND                               "לא יכול למצוא את '%s'"
 STRING_ANSI,                                    "ANSI"
-STRING_UNICODE,                                 "Unicode"
+STRING_UNICODE,                                 "יוניקוד"
 STRING_UNICODE_BE,                              "Unicode (big endian)"
 STRING_UTF8,                                    "UTF-8"
 STRING_CRLF,                                    "חלונות"

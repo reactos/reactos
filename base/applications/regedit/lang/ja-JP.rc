@@ -55,7 +55,7 @@ BEGIN
 
         MENUITEM SEPARATOR
             MENUITEM "ハイブの読み込み...",     ID_REGISTRY_LOADHIVE, GRAYED
-            MENUITEM "ハイブのアンロード...",     ID_REGISTRY_UNLOADHIVE, GRAYED
+            MENUITEM "ハイブのアンロード...",   ID_REGISTRY_UNLOADHIVE, GRAYED
             MENUITEM SEPARATOR
         MENUITEM "ネットワーク レジストリへの接続(&C)...",
                                                 ID_REGISTRY_CONNECTNETWORKREGISTRY
@@ -80,7 +80,7 @@ BEGIN
             MENUITEM "バイナリ値(&B)",          ID_EDIT_NEW_BINARYVALUE
             MENUITEM "DWORD 値(&D)",            ID_EDIT_NEW_DWORDVALUE
                 MENUITEM "複数行文字列値(&M)",  ID_EDIT_NEW_MULTISTRINGVALUE
-                MENUITEM "展開可能 な文字列値(&E)", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+                MENUITEM "展開可能な文字列値(&E)", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
         MENUITEM SEPARATOR
         MENUITEM "アクセス許可(&P)...",         ID_EDIT_PERMISSIONS
@@ -93,7 +93,7 @@ BEGIN
         MENUITEM "検索(&F)\tCtrl+F",            ID_EDIT_FIND
         MENUITEM "次を検索(&X)\tF3",            ID_EDIT_FINDNEXT
     END
-    POPUP "表 示(&V)"
+    POPUP "表示(&V)"
     BEGIN
         MENUITEM "ステータス バー(&B)",         ID_VIEW_STATUSBAR
         MENUITEM SEPARATOR
@@ -134,7 +134,7 @@ BEGIN
             MENUITEM "バイナリ値(&B)",          ID_EDIT_NEW_BINARYVALUE
             MENUITEM "DWORD 値(&D)",            ID_EDIT_NEW_DWORDVALUE
             MENUITEM "複数行文字列値(&M)",      ID_EDIT_NEW_MULTISTRINGVALUE
-            MENUITEM "展開可能 な文字列値(&E)", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+            MENUITEM "展開可能な文字列値(&E)",  ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
   END
   POPUP ""
@@ -148,7 +148,7 @@ BEGIN
             MENUITEM "バイナリ値(&B)",          ID_EDIT_NEW_BINARYVALUE
             MENUITEM "DWORD 値(&D)",            ID_EDIT_NEW_DWORDVALUE
             MENUITEM "複数行文字列値(&M)",      ID_EDIT_NEW_MULTISTRINGVALUE
-            MENUITEM "展開可能 な文字列値(&E)", ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+            MENUITEM "展開可能な文字列値(&E)",  ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
         MENUITEM "検索(&F)",                    ID_EDIT_FIND
         MENUITEM SEPARATOR
@@ -240,12 +240,12 @@ END
 IDD_EDIT_RESOURCE_LIST DIALOGEX 32, 24, 170, 120
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP |
       WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Resource List"
-FONT 8, "MS Shell Dlg"
+CAPTION "リソース リスト"
+FONT 9, "MS UI Gothic"
 {
     CONTROL "", IDC_RESOURCE_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 10, 10, 150, 75
     DEFPUSHBUTTON "OK", IDOK, 27, 100, 50, 14
-    PUSHBUTTON "Show...", IDC_SHOW_RESOURCE, 93, 100, 50, 14, WS_DISABLED
+    PUSHBUTTON "表示(S)...", IDC_SHOW_RESOURCE, 93, 100, 50, 14, WS_DISABLED
 }
 
 
@@ -307,7 +307,7 @@ BEGIN
     ID_EDIT_MENU            "値やキーを編集するコマンドです。"
     ID_VIEW_MENU            "レジストリ ウィンドウをカスタマイズするコマンドです。"
     ID_FAVOURITES_MENU      "頻繁に使用されるキーにアクセスするコマンドです。"
-    ID_HELP_MENU            "ヘルプとレジストリ エディタのバージョン情報を表 示するコマンドです。"
+    ID_HELP_MENU            "ヘルプとレジストリ エディタのバージョン情報を表示するコマンドです。"
     ID_EDIT_NEW_MENU        "新しいキーや値を作成するコマンドです。"
 END
 
@@ -317,21 +317,21 @@ BEGIN
     ID_EDIT_NEW_KEY         "新しいキーを追加します。"
     ID_EDIT_NEW_STRINGVALUE "新しい文字列値を追加します。"
     ID_EDIT_NEW_BINARYVALUE "新しいバイナリ値を追加します。"
-    ID_EDIT_NEW_DWORDVALUE  "新しい複数行文字列値を追加します。"
+    ID_EDIT_NEW_DWORDVALUE  "新しい DWORD 値を追加します。"
     ID_REGISTRY_IMPORTREGISTRYFILE "テキスト ファイルをレジストリにインポートします。"
     ID_REGISTRY_EXPORTREGISTRYFILE
                             "レジストリの一部または全体をテキスト ファイルにエクスポートします。"
     ID_REGISTRY_LOADHIVE
-                            "Loads a hive file into the registry"
+                            "ハイブ ファイルをレジストリに読み込みます。"
     ID_REGISTRY_UNLOADHIVE
-                            "Unloads a hive from the registry"
+                            "レジストリからハイブをアンロードします。"
     ID_REGISTRY_CONNECTNETWORKREGISTRY
                             "リモート コンピュータのレジストリに接続します。"
     ID_REGISTRY_DISCONNECTNETWORKREGISTRY
                             "リモート コンピュータのレジストリを切断します。"
     ID_REGISTRY_PRINT       "レジストリの一部または全体を印刷します。"
 /*    ID_HELP_HELPTOPICS      "レジストリ エディタのヘルプを開きます。" */
-    ID_HELP_ABOUT           "プログラムの情報、バージョン番号および著作権を表 示します。"
+    ID_HELP_ABOUT           "プログラムの情報、バージョン番号および著作権を表示します。"
 END
 
 STRINGTABLE DISCARDABLE
@@ -339,8 +339,8 @@ BEGIN
     ID_REGISTRY_EXIT        "レジストリ エディタを終了します。"
     ID_FAVOURITES_ADDTOFAVOURITES "お気に入りの一覧にキーを追加します。"
     ID_FAVOURITES_REMOVEFAVOURITE "お気に入りの一覧からキーを削除します。"
-    ID_VIEW_STATUSBAR       "ステータス バーの表 示/非表 示を切り替えます。"
-    ID_VIEW_SPLIT           "2 つのパネルの境界の位置を変更します。"
+    ID_VIEW_STATUSBAR       "ステータス バーの表示/非表示を切り替えます。"
+    ID_VIEW_SPLIT           "2つのパネルの境界の位置を変更します。"
     ID_VIEW_REFRESH         "ウィンドウの内容を最新の情報に更新します。"
     ID_EDIT_DELETE          "選択範囲を削除します。"
     ID_EDIT_RENAME          "名前を変更します。"
@@ -369,7 +369,7 @@ BEGIN
     IDS_ERR_RENVAL_CAPTION  "値の名前を変更するときにエラーが発生しました。"
     IDS_ERR_RENVAL_TOEMPTY  "%s の名前を変更できません。指定された値の名前には文字が含まれていません。別の名前でやり直してください。"
     IDS_QUERY_IMPORT_HIVE_CAPTION "Confirm Key Restoration"
-    IDS_QUERY_IMPORT_HIVE_MSG     "A key will be restored on top of the currently selected key.\nAll values and subkeys of this key will be deleted.\nDo you want to continue the operation?"
+    IDS_QUERY_IMPORT_HIVE_MSG     "現在選択中のキーの最上部にキーが格納されます。\nこのキーのすべての値とサブキーが削除されます。\nこの処理を続行しますか?"
     IDS_NEW_KEY             "新しいキー #%d"
     IDS_NEW_VALUE           "新しい値 #%d"
 END
@@ -383,8 +383,8 @@ BEGIN
     IDS_MY_COMPUTER         "マイ コンピュータ"
     IDS_IMPORT_REG_FILE     "レジストリ ファイルのインポート"
     IDS_EXPORT_REG_FILE     "レジストリ ファイルのエクスポート"
-    IDS_LOAD_HIVE           "Load Hive"
-    IDS_UNLOAD_HIVE         "Unload Hive"
+    IDS_LOAD_HIVE           "ハイブを読み込む"
+    IDS_UNLOAD_HIVE         "ハイブをアンロードする"
     IDS_INVALID_DWORD       "(無効な DWORD 値)"
 END
 
@@ -434,10 +434,10 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_IMPORT_PROMPT              "Adding information can unintentionally change or delete values and cause components to stop working correctly.\nIf you do not trust the source of this information in '%s', do not add it to registry.\n\nAre you sure you want to continue?"
-  IDS_IMPORT_OK                  "The keys and values contained in '%s' have been successfully added to the registry."
-  IDS_IMPORT_ERROR               "Cannot import '%s': Error opening the file. There may be a disk, file system error or file may not exist."
-  IDS_EXPORT_ERROR               "Cannot export '%s': Error creating or writing to the file. There may be a disk or file system error."
+  IDS_IMPORT_PROMPT              "情報を追加することは、意図せずに値を変更または削除し、コンポーネントの正しい動作の停止を引き起こすかも知れません。\nもし '%1' の情報の入手元を信頼していないのなら、レジストリに追加しないで下さい。\n\n続行しますか?"
+  IDS_IMPORT_OK                  "'%1' に含まれるキーと値は、正しくレジストリに追加されました。"
+  IDS_IMPORT_ERROR               "'%1' をインポートできません: ファイルを開くときにエラーが発生しました。ディスクかファイル システムのエラー、もしくはファイルが存在していないのかも知れません。"
+  IDS_EXPORT_ERROR               "'%1' をエクスポートできません: ファイルを作成または書き込むときにエラーが発生しました。ディスクかファイル システムのエラーかも知れません。"
 END
 
 STRINGTABLE DISCARDABLE
@@ -506,20 +506,20 @@ STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_B
 FONT 9, "MS UI Gothic"
 BEGIN
    GROUPBOX "エクスポート範囲",IDC_STATIC,2,0,366,48
-   CONTROL "すべて(&A)",IDC_EXPORT_ALL,"Button",BS_AUTORADIOBUTTON,10,10, 29,11
-   CONTROL "選択された部分(&E)",IDC_EXPORT_BRANCH,"Button",BS_AUTORADIOBUTTON,10,22, 100,11
+   CONTROL "すべて(&A)",IDC_EXPORT_ALL,"Button",BS_AUTORADIOBUTTON,10,10,100,11
+   CONTROL "選択された部分(&E)",IDC_EXPORT_BRANCH,"Button",BS_AUTORADIOBUTTON,10,22,100,11
    EDITTEXT IDC_EXPORT_BRANCH_TEXT,30,34,335,12
 END
 
 IDD_LOADHIVE DIALOGEX DISCARDABLE 0, 0, 193, 34
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Load Hive"
-FONT 8, "Ms Shell Dlg"
+CAPTION "ハイブを読み込む"
+FONT 9, "MS UI Gothic"
 {
-    LTEXT           "&Key:", IDC_STATIC, 4, 4, 15, 8, SS_LEFT
-    EDITTEXT        IDC_EDIT_KEY, 23, 2, 167, 13
+    LTEXT           "キー(&K):", IDC_STATIC, 4, 4, 25, 8, SS_LEFT
+    EDITTEXT        IDC_EDIT_KEY, 33, 2, 157, 13
     DEFPUSHBUTTON   "OK", IDOK, 140, 17, 50, 14
-    PUSHBUTTON      "Cancel", IDCANCEL, 89, 17, 50, 14
+    PUSHBUTTON      "キャンセル", IDCANCEL, 89, 17, 50, 14
 }
 
 IDD_ADDFAVORITES DIALOGEX DISCARDABLE  0, 0, 186, 46
@@ -553,8 +553,8 @@ BEGIN
     DEFPUSHBUTTON   "次を検索(&F)",IDOK,197,7,50,14
     PUSHBUTTON      "キャンセル",IDCANCEL,197,24,50,14
     GROUPBOX        "検索対象",IDC_STATIC,7,25,63,51
-    LTEXT           "検索する値(&N):",IDC_STATIC,7,8,37,10
-    EDITTEXT        IDC_FINDWHAT,47,7,142,13,ES_AUTOHSCROLL
+    LTEXT           "検索する値(&N):",IDC_STATIC,7,8,50,10
+    EDITTEXT        IDC_FINDWHAT,57,7,135,13,ES_AUTOHSCROLL
     CONTROL         "キー(&K)",IDC_LOOKAT_KEYS,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,14,36,35,8
     CONTROL         "値(&V)",IDC_LOOKAT_VALUES,"Button",BS_AUTOCHECKBOX |
@@ -597,7 +597,7 @@ END
  *STRINGTABLE DISCARDABLE
  *BEGIN
  *    ID_HELP_HELPTOPICS      "レジストリ エディタのヘルプを開きます。"
- *    ID_HELP_ABOUT           "プログラムの情報、バージョン番号および著作権を表\示します。"
+ *    ID_HELP_ABOUT           "プログラムの情報、バージョン番号および著作権を表示します。"
  *END
  */
 

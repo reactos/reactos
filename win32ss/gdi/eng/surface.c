@@ -279,7 +279,7 @@ EngCreateBitmap(
     _In_ LONG lWidth,
     _In_ ULONG iFormat,
     _In_ ULONG fl,
-    _In_ PVOID pvBits)
+    _In_opt_ PVOID pvBits)
 {
     PSURFACE psurf;
     HBITMAP hbmp;
@@ -339,11 +339,11 @@ EngCreateDeviceBitmap(
     /* Set the device handle */
     psurf->SurfObj.dhsurf = dhsurf;
 
-    /* Get the handle for the bitmap */
-    hbmp = (HBITMAP)psurf->SurfObj.hsurf;
-
     /* Set public ownership */
     GDIOBJ_vSetObjectOwner(&psurf->BaseObject, GDI_OBJ_HMGR_PUBLIC);
+
+    /* Get the handle for the bitmap */
+    hbmp = (HBITMAP)psurf->SurfObj.hsurf;
 
     /* Unlock the surface and return */
     SURFACE_UnlockSurface(psurf);
@@ -377,11 +377,11 @@ EngCreateDeviceSurface(
     /* Set the device handle */
     psurf->SurfObj.dhsurf = dhsurf;
 
-    /* Get the handle for the surface */
-    hsurf = psurf->SurfObj.hsurf;
-
     /* Set public ownership */
     GDIOBJ_vSetObjectOwner(&psurf->BaseObject, GDI_OBJ_HMGR_PUBLIC);
+
+    /* Get the handle for the surface */
+    hsurf = psurf->SurfObj.hsurf;
 
     /* Unlock the surface and return */
     SURFACE_UnlockSurface(psurf);
@@ -479,7 +479,7 @@ EngModifySurface(
 BOOL
 APIENTRY
 EngDeleteSurface(
-    _In_ HSURF hsurf)
+    _In_ _Post_ptr_invalid_ HSURF hsurf)
 {
     PSURFACE psurf;
 
@@ -537,7 +537,7 @@ NtGdiEngUnlockSurface(IN SURFOBJ *pso)
 VOID
 APIENTRY
 EngUnlockSurface(
-    _In_ SURFOBJ *pso)
+    _In_ _Post_ptr_invalid_ SURFOBJ *pso)
 {
     if (pso != NULL)
     {

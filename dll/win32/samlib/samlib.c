@@ -31,6 +31,16 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(samlib);
 
+NTSTATUS
+WINAPI
+SystemFunction006(LPCSTR password,
+                  LPSTR hash);
+
+NTSTATUS
+WINAPI
+SystemFunction007(PUNICODE_STRING string,
+                  LPBYTE hash);
+
 /* GLOBALS *******************************************************************/
 
 
@@ -1594,10 +1604,69 @@ SamSetInformationUser(IN SAM_HANDLE UserHandle,
                       IN USER_INFORMATION_CLASS UserInformationClass,
                       IN PVOID Buffer)
 {
+    PSAMPR_USER_SET_PASSWORD_INFORMATION PasswordBuffer;
+    SAMPR_USER_INTERNAL1_INFORMATION Internal1Buffer;
+    OEM_STRING LmPwdString;
+    CHAR LmPwdBuffer[15];
     NTSTATUS Status;
 
     TRACE("SamSetInformationUser(%p %lu %p)\n",
           UserHandle, UserInformationClass, Buffer);
+
+    if (UserInformationClass == UserSetPasswordInformation)
+    {
+        PasswordBuffer = (PSAMPR_USER_SET_PASSWORD_INFORMATION)Buffer;
+
+        /* Calculate the NT hash value of the passord */
+        Status = SystemFunction007((PUNICODE_STRING)&PasswordBuffer->Password,
+                                   (LPBYTE)&Internal1Buffer.EncryptedNtOwfPassword);
+        if (!NT_SUCCESS(Status))
+        {
+            TRACE("SystemFunction007 failed (Status 0x%08lx)\n", Status);
+            return Status;
+        }
+
+        Internal1Buffer.NtPasswordPresent = TRUE;
+        Internal1Buffer.LmPasswordPresent = FALSE;
+
+        /* Build the LM password */
+        LmPwdString.Length = 15;
+        LmPwdString.MaximumLength = 15;
+        LmPwdString.Buffer = LmPwdBuffer;
+        ZeroMemory(LmPwdString.Buffer, LmPwdString.MaximumLength);
+
+        Status = RtlUpcaseUnicodeStringToOemString(&LmPwdString,
+                                                   (PUNICODE_STRING)&PasswordBuffer->Password,
+                                                   FALSE);
+        if (NT_SUCCESS(Status))
+        {
+            /* Calculate the LM hash value of the password */
+            Status = SystemFunction006(LmPwdString.Buffer,
+                                       (LPSTR)&Internal1Buffer.EncryptedLmOwfPassword);
+            if (NT_SUCCESS(Status))
+                Internal1Buffer.LmPasswordPresent = TRUE;
+        }
+
+        Internal1Buffer.PasswordExpired = PasswordBuffer->PasswordExpired;
+
+        RpcTryExcept
+        {
+            Status = SamrSetInformationUser((SAMPR_HANDLE)UserHandle,
+                                            UserInternal1Information,
+                                            (PVOID)&Internal1Buffer);
+        }
+        RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+        {
+            Status = I_RpcMapWin32Status(RpcExceptionCode());
+        }
+        RpcEndExcept;
+
+        if (!NT_SUCCESS(Status))
+        {
+            TRACE("SamrSetInformation() failed (Status 0x%08lx)\n", Status);
+            return Status;
+        }
+    }
 
     RpcTryExcept
     {

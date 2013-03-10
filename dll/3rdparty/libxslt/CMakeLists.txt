@@ -1,5 +1,6 @@
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}
+                    ${REACTOS_SOURCE_DIR}/include/reactos/libs/libxslt)
 
 add_definitions(
     -DHAVE_CONFIG_H

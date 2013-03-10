@@ -161,32 +161,32 @@ END
 
 IDR_PREVIEW_MENU MENU
 BEGIN
-    MENUITEM "Normal",           ID_MENU_NORMAL
-    MENUITEM "Disabled",         ID_MENU_DISABLED
-    MENUITEM "Selected",         ID_MENU_SELECTED
+    MENUITEM "רגיל",           ID_MENU_NORMAL
+    MENUITEM "מופסק",         ID_MENU_DISABLED
+    MENUITEM "נבחר",         ID_MENU_SELECTED
 END
 
 IDM_MONITOR_MENU MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Attached",   ID_MENU_ATTACHED
-        MENUITEM "&Primary",    ID_MENU_PRIMARY
+        MENUITEM "מחובר",   ID_MENU_ATTACHED
+        MENUITEM "ראשי",    ID_MENU_PRIMARY
         MENUITEM SEPARATOR
-        MENUITEM "&Identify",   ID_MENU_IDENTIFY
-        MENUITEM "P&roperties", ID_MENU_PROPERTIES
+        MENUITEM "זהה",   ID_MENU_IDENTIFY
+        MENUITEM "מאפיינים", ID_MENU_PROPERTIES
     END
 END
 
 STRINGTABLE  DISCARDABLE
 BEGIN
-    IDS_SLIDEEFFECT "Slide effect"
-    IDS_FADEEFFECT  "Fade effect"
+    IDS_SLIDEEFFECT "אפקט גלילה"
+    IDS_FADEEFFECT  "אפקט עמעום"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_STANDARDEFFECT  "Standard"
+    IDS_STANDARDEFFECT  "רגיל"
     IDS_CLEARTYPEEFFECT "ClearType"
 END
 
@@ -211,9 +211,9 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_COLOR_4BIT "16 צבעים"
     IDS_COLOR_8BIT "256 צבעים"
-    IDS_COLOR_16BIT "רמת צבעים גבוהה (16 Bit)"
-    IDS_COLOR_24BIT "צבע אמיתי (24 Bit)"
-    IDS_COLOR_32BIT "צבע אמיתי (32 Bit)"
+    IDS_COLOR_16BIT "רמת צבעים גבוהה (16 סיביות)"
+    IDS_COLOR_24BIT "צבע אמיתי (24 סיביות)"
+    IDS_COLOR_32BIT "צבע אמיתי (32 סיביות)"
     IDS_PIXEL "%lux%lu פיקסל"
 END
 

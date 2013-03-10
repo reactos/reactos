@@ -79,12 +79,12 @@ Win32DbgPrint(const char *filename, int line, const char *lpFormat, ...)
 }
 
 #define ASSERT(cond) \
-    if (!(cond)) { \
+    do if (!(cond)) { \
         Win32DbgPrint(__FILE__, __LINE__, "ASSERTION %s FAILED!\n", #cond); \
-    }
+    } while (0)
 
 #define DbgPrint(fmt, ...) \
-    Win32DbgPrint(__FILE__, __LINE__, fmt, ##__VA_ARGS__);
+    Win32DbgPrint(__FILE__, __LINE__, fmt, ##__VA_ARGS__)
 
 extern HINSTANCE hExplorerInstance;
 extern HMODULE hUser32;
@@ -169,6 +169,8 @@ GetExplorerRegValueSet(IN HKEY hKey,
 /*
  * traywnd.c
  */
+
+#define TWM_OPENSTARTMENU (WM_USER + 260)
 
 typedef HMENU (*PCREATECTXMENU)(IN HWND hWndOwner,
                                 IN PVOID *ppcmContext,
@@ -426,7 +428,7 @@ TrayNotify_NotifyMsg(IN HWND hwnd,
  * taskswnd.c
  */
 
-#define TSWM_ENABLEGROUPING (WM_USER + 1)
+#define TSWM_ENABLEGROUPING     (WM_USER + 1)
 #define TSWM_UPDATETASKBARPOS   (WM_USER + 2)
 
 BOOL

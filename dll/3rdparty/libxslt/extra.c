@@ -40,9 +40,9 @@
 #endif
 
 /************************************************************************
- * 									*
- * 		Handling of XSLT debugging				*
- * 									*
+ *									*
+ *		Handling of XSLT debugging				*
+ *									*
  ************************************************************************/
 
 /**
@@ -112,9 +112,9 @@ xsltDebug(xsltTransformContextPtr ctxt, xmlNodePtr node ATTRIBUTE_UNUSED,
 }
 
 /************************************************************************
- * 									*
- * 		Classic extensions as described by M. Kay		*
- * 									*
+ *									*
+ *		Classic extensions as described by M. Kay		*
+ *									*
  ************************************************************************/
 
 /**
@@ -178,14 +178,14 @@ xsltFunctionLocalTime(xmlXPathParserContextPtr ctxt, int nargs) {
     time_t gmt, lmt;
     struct tm gmt_tm;
     struct tm *local_tm;
- 
+
     if (nargs != 1) {
        xsltTransformError(xsltXPathGetTransformContext(ctxt), NULL, NULL,
                       "localTime() : invalid number of args %d\n", nargs);
        ctxt->error = XPATH_INVALID_ARITY;
        return;
     }
- 
+
     obj = valuePop(ctxt);
 
     if (obj->type != XPATH_STRING) {
@@ -195,7 +195,7 @@ xsltFunctionLocalTime(xmlXPathParserContextPtr ctxt, int nargs) {
 	valuePush(ctxt, xmlXPathNewString((const xmlChar *)""));
 	return;
     }
-    
+
     str = (char *) obj->stringval;
 
     /* str = "$Date$" */
@@ -243,8 +243,11 @@ xsltFunctionLocalTime(xmlXPathParserContextPtr ctxt, int nargs) {
      * Calling localtime() has the side-effect of setting timezone.
      * After we know the timezone, we can adjust for it
      */
+#if !defined(__FreeBSD__)
     lmt = gmt - timezone;
-
+#else	/* FreeBSD DOESN'T have such side-ffect */
+    lmt = gmt - local_tm->tm_gmtoff;
+#endif
     /*
      * FIXME: it's been too long since I did manual memory management.
      * (I swore never to do it again.) Does this introduce a memory leak?

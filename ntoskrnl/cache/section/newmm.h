@@ -36,12 +36,12 @@
 #define SEC_CACHE                           (0x20000000)
 
 #define MiWaitForPageEvent(Process,Address) do {                         \
-    DPRINT("MiWaitForPageEvent %x:%x #\n", Process, Address);            \
+    DPRINT("MiWaitForPageEvent %p:%Ix #\n", Process, Address);            \
     KeWaitForSingleObject(&MmWaitPageEvent, 0, KernelMode, FALSE, NULL); \
 } while(0)
 
 #define MiSetPageEvent(Process,Address) do {              \
-    DPRINT("MiSetPageEvent %x:%x #\n",Process, Address);  \
+    DPRINT("MiSetPageEvent %p:%p #\n",Process, (PVOID)(Address));  \
     KeSetEvent(&MmWaitPageEvent, IO_NO_INCREMENT, FALSE); \
 } while(0)
 

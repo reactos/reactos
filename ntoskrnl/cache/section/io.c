@@ -135,7 +135,7 @@ MiSimpleRead(PFILE_OBJECT FileObject,
 
     ASSERT(DeviceObject);
 
-    DPRINT("PAGING READ: FileObject %p <%wZ> Offset %08x%08x Length %d\n",
+    DPRINT("PAGING READ: FileObject %p <%wZ> Offset %08x%08x Length %ul\n",
            FileObject,
            &FileObject->FileName,
            FileOffset->HighPart,
@@ -222,10 +222,10 @@ _MiSimpleWrite(PFILE_OBJECT FileObject,
     DeviceObject = MmGetDeviceObjectForFile(FileObject);
     ASSERT(DeviceObject);
 
-    DPRINT("PAGING WRITE: FileObject %x <%wZ> Offset %x Length %d (%s:%d)\n",
+    DPRINT("PAGING WRITE: FileObject %p <%wZ> Offset 0x%I64x Length %lu (%s:%d)\n",
            FileObject,
            &FileObject->FileName,
-           FileOffset->LowPart,
+           FileOffset->QuadPart,
            Length,
            File,
            Line);

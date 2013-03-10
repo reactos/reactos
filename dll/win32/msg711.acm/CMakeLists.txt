@@ -10,7 +10,7 @@ list(APPEND SOURCE
 
 add_library(msg711.acm SHARED ${SOURCE})
 
-set_module_type(msg711.acm win32dll ENTRYPOINT 0 )
+set_module_type(msg711.acm win32dll)
 set_target_properties(msg711.acm PROPERTIES SUFFIX "")
 target_link_libraries(msg711.acm wine)
 add_importlibs(msg711.acm winmm user32 msvcrt kernel32 ntdll)

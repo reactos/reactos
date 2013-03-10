@@ -75,7 +75,7 @@ static HRESULT WINAPI d3d_material3_QueryInterface(IDirect3DMaterial3 *iface, RE
 
     if (IsEqualGUID(&IID_IUnknown, riid))
     {
-        IUnknown_AddRef(iface);
+        IDirect3DMaterial3_AddRef(iface);
         *obp = iface;
         TRACE("  Creating IUnknown interface at %p.\n", *obp);
         return S_OK;

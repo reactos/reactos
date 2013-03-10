@@ -342,7 +342,7 @@ BEGIN
     ID_EDIT_RENAME          "Renomme la sélection"
     ID_EDIT_COPYKEYNAME     "Copie le nom de la clé sélectionnée vers le presse-papier"
     ID_EDIT_FIND            "Recherche du texte dans une clé, une valeur ou des données"
-    ID_EDIT_FINDNEXT        "Recherche l'occurence suivante du texte de la dernière recherche"
+    ID_EDIT_FINDNEXT        "Recherche l'occurrence suivante du texte de la dernière recherche"
 END
 
 STRINGTABLE DISCARDABLE

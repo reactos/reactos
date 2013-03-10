@@ -21,6 +21,10 @@
 
 #include <libxml/xmlwriter.h>
 
+#include "buf.h"
+#include "enc.h"
+#include "save.h"
+
 #define B64LINELEN 72
 #define B64CRLF "\r\n"
 
@@ -548,9 +552,9 @@ xmlTextWriterStartDocument(xmlTextWriterPtr writer, const char *version,
     writer->out->encoder = encoder;
     if (encoder != NULL) {
 	if (writer->out->conv == NULL) {
-	    writer->out->conv = xmlBufferCreateSize(4000);
+	    writer->out->conv = xmlBufCreateSize(4000);
 	}
-        xmlCharEncOutFunc(encoder, writer->out->conv, NULL);
+        xmlCharEncOutput(writer->out, 1);
         if ((writer->doc != NULL) && (writer->doc->encoding == NULL))
             writer->doc->encoding = xmlStrdup((xmlChar *)writer->out->encoder->name);
     } else
@@ -1074,10 +1078,10 @@ xmlTextWriterStartElementNS(xmlTextWriterPtr writer,
     sum += count;
 
     if (namespaceURI != 0) {
-        xmlTextWriterNsStackEntry *p = (xmlTextWriterNsStackEntry *) 
+        xmlTextWriterNsStackEntry *p = (xmlTextWriterNsStackEntry *)
         xmlMalloc(sizeof(xmlTextWriterNsStackEntry));
         if (p == 0) {
-            xmlWriterErrMsg(writer, XML_ERR_NO_MEMORY, 
+            xmlWriterErrMsg(writer, XML_ERR_NO_MEMORY,
                             "xmlTextWriterStartElementNS : out of memory!\n");
             return -1;
         }
@@ -1501,8 +1505,8 @@ xmlTextWriterWriteString(xmlTextWriterPtr writer, const xmlChar * content)
                     break;
                 case XML_TEXTWRITER_ATTRIBUTE:
                     buf = NULL;
-                    xmlAttrSerializeTxtContent(writer->out->buffer, writer->doc,
-                                               NULL, content);
+                    xmlBufAttrSerializeTxtContent(writer->out->buffer,
+                                                  writer->doc, NULL, content);
                     break;
 		default:
 		    break;
@@ -1663,7 +1667,7 @@ xmlTextWriterWriteBase64(xmlTextWriterPtr writer, const char *data,
  * Write hqx encoded data to an xmlOutputBuffer.
  * ::todo
  *
- * Returns the bytes written (may be 0 because of buffering) 
+ * Returns the bytes written (may be 0 because of buffering)
  * or -1 in case of error
  */
 static int
@@ -1672,8 +1676,8 @@ xmlOutputBufferWriteBinHex(xmlOutputBufferPtr out,
 {
     int count;
     int sum;
-    static char hex[16] = 
-    	{'0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'};
+    static char hex[16] =
+	{'0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'};
     int i;
 
     if ((out == NULL) || (data == NULL) || (len < 0)) {
@@ -1849,7 +1853,7 @@ xmlTextWriterStartAttributeNS(xmlTextWriterPtr writer,
         nsentry.uri = (xmlChar *)namespaceURI;
         nsentry.elem = xmlListFront(writer->nodes);
 
-        curns = (xmlTextWriterNsStackEntry *)xmlListSearch(writer->nsstack, 
+        curns = (xmlTextWriterNsStackEntry *)xmlListSearch(writer->nsstack,
                                                            (void *)&nsentry);
         if ((curns != NULL)) {
             xmlFree(buf);
@@ -2496,8 +2500,8 @@ xmlTextWriterEndPI(xmlTextWriterPtr writer)
 
     if (writer->indent) {
         count = xmlOutputBufferWriteString(writer->out, "\n");
-      	if (count < 0)
-       	return -1;
+	if (count < 0)
+	return -1;
         sum += count;
     }
 
@@ -4603,6 +4607,26 @@ xmlTextWriterSetIndentString(xmlTextWriterPtr writer, const xmlChar * str)
         return -1;
     else
         return 0;
+}
+
+/**
+ * xmlTextWriterSetQuoteChar:
+ * @writer:  the xmlTextWriterPtr
+ * @quotechar:  the quote character
+ *
+ * Set the character used for quoting attributes.
+ *
+ * Returns -1 on error or 0 otherwise.
+ */
+int
+xmlTextWriterSetQuoteChar(xmlTextWriterPtr writer, xmlChar quotechar)
+{
+    if ((writer == NULL) || ((quotechar != '\'') && (quotechar != '"')))
+        return -1;
+
+    writer->qchar = quotechar;
+
+    return 0;
 }
 
 /**

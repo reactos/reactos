@@ -437,7 +437,7 @@ ObpLookupObjectName(IN HANDLE RootHandle OPTIONAL,
         }
         else if (!(ObjectName->Length) || !(ObjectName->Buffer))
         {
-            /* Just return the Root Directory if we didn't get a name*/
+            /* Just return the Root Directory if we didn't get a name */
             Status = ObReferenceObjectByPointer(RootDirectory,
                                                 0,
                                                 ObjectType,
@@ -719,7 +719,7 @@ ParseFromRoot:
                 if (ObjectNameInfo->Name.Buffer)
                 {
                     /* Free it */
-                    ExFreePoolWithTag(ObjectNameInfo->Name.Buffer, OB_NAME_TAG );
+                    ExFreePoolWithTag(ObjectNameInfo->Name.Buffer, OB_NAME_TAG);
                 }
 
                 /* Write new one */
@@ -796,6 +796,11 @@ ReparseObject:
                     /* Reparse again */
                     Reparse = TRUE;
                     --MaxReparse;
+                    if (MaxReparse == 0)
+                    {
+                        Object = NULL;
+                        break;
+                    }
 
                     /* Start over from root if we got sent back there */
                     if ((Status == STATUS_REPARSE_OBJECT) ||

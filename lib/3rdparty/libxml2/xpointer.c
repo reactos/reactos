@@ -7,7 +7,7 @@
  *
  * Added support for the element() scheme described in:
  * W3C Proposed Recommendation 13 November 2002
- * http://www.w3.org/TR/2002/PR-xptr-element-20021113/  
+ * http://www.w3.org/TR/2002/PR-xptr-element-20021113/
  *
  * See Copyright for the status of this software.
  *
@@ -47,19 +47,19 @@
 #endif
 #endif
 
-#define TODO 								\
+#define TODO								\
     xmlGenericError(xmlGenericErrorContext,				\
 	    "Unimplemented block at %s:%d\n",				\
             __FILE__, __LINE__);
 
-#define STRANGE 							\
+#define STRANGE							\
     xmlGenericError(xmlGenericErrorContext,				\
 	    "Internal error at %s:%d\n",				\
             __FILE__, __LINE__);
 
 /************************************************************************
  *									*
- * 		Some factorized error routines				*
+ *		Some factorized error routines				*
  *									*
  ************************************************************************/
 
@@ -134,7 +134,7 @@ xmlNodePtr xmlXPtrAdvanceNode(xmlNodePtr cur, int *level);
 static int
 xmlXPtrGetArity(xmlNodePtr cur) {
     int i;
-    if (cur == NULL) 
+    if ((cur == NULL) || (cur->type == XML_NAMESPACE_DECL))
 	return(-1);
     cur = cur->children;
     for (i = 0;cur != NULL;cur = cur->next) {
@@ -157,7 +157,7 @@ xmlXPtrGetArity(xmlNodePtr cur) {
 static int
 xmlXPtrGetIndex(xmlNodePtr cur) {
     int i;
-    if (cur == NULL) 
+    if ((cur == NULL) || (cur->type == XML_NAMESPACE_DECL))
 	return(-1);
     for (i = 1;cur != NULL;cur = cur->prev) {
 	if ((cur->type == XML_ELEMENT_NODE) ||
@@ -179,11 +179,11 @@ xmlXPtrGetIndex(xmlNodePtr cur) {
 static xmlNodePtr
 xmlXPtrGetNthChild(xmlNodePtr cur, int no) {
     int i;
-    if (cur == NULL) 
+    if ((cur == NULL) || (cur->type == XML_NAMESPACE_DECL))
 	return(cur);
     cur = cur->children;
     for (i = 0;i <= no;cur = cur->next) {
-	if (cur == NULL) 
+	if (cur == NULL)
 	    return(cur);
 	if ((cur->type == XML_ELEMENT_NODE) ||
 	    (cur->type == XML_DOCUMENT_NODE) ||
@@ -553,7 +553,7 @@ xmlXPtrNewRangeNodeObject(xmlNodePtr start, xmlXPathObjectPtr end) {
 	    break;
 	case XPATH_NODESET:
 	    /*
-	     * Empty set ... 
+	     * Empty set ...
 	     */
 	    if (end->nodesetval->nodeNr <= 0)
 		return(NULL);
@@ -731,7 +731,7 @@ xmlXPtrLocationSetDel(xmlLocationSetPtr cur, xmlXPathObjectPtr val) {
 
     if (i >= cur->locNr) {
 #ifdef DEBUG
-        xmlGenericError(xmlGenericErrorContext, 
+        xmlGenericError(xmlGenericErrorContext,
 	        "xmlXPtrLocationSetDel: Range wasn't found in RangeList\n");
 #endif
         return;
@@ -903,7 +903,7 @@ static void xmlXPtrEvalChildSeq(xmlXPathParserContextPtr ctxt, xmlChar *name);
 #define NXT(val) ctxt->cur[(val)]
 #define CUR_PTR ctxt->cur
 
-#define SKIP_BLANKS 							\
+#define SKIP_BLANKS							\
     while (IS_BLANK_CH(*(ctxt->cur))) NEXT
 
 #define CURRENT (*ctxt->cur)
@@ -945,7 +945,7 @@ xmlXPtrGetChildNo(xmlXPathParserContextPtr ctxt, int indx) {
  * xmlXPtrEvalXPtrPart:
  * @ctxt:  the XPointer Parser context
  * @name:  the preparsed Scheme for the XPtrPart
- * 
+ *
  * XPtrPart ::= 'xpointer' '(' XPtrExpr ')'
  *            | Scheme '(' SchemeSpecificExpr ')'
  *
@@ -953,7 +953,7 @@ xmlXPtrGetChildNo(xmlXPathParserContextPtr ctxt, int indx) {
  *
  * SchemeSpecificExpr ::= StringWithBalancedParens
  *
- * StringWithBalancedParens ::=  
+ * StringWithBalancedParens ::=
  *              [^()]* ('(' StringWithBalancedParens ')' [^()]*)*
  *              [VC: Parenthesis escaping]
  *
@@ -971,7 +971,7 @@ xmlXPtrGetChildNo(xmlXPathParserContextPtr ctxt, int indx) {
  *
  * Parse and evaluate an XPtrPart. Basically it generates the unescaped
  * string and if the scheme is 'xpointer' it will call the XPath interpreter.
- * 
+ *
  * TODO: there is no new scheme registration mechanism
  */
 
@@ -1007,21 +1007,14 @@ xmlXPtrEvalXPtrPart(xmlXPathParserContextPtr ctxt, xmlChar *name) {
 		NEXT;
 		break;
 	    }
-	    *cur++ = CUR;
 	} else if (CUR == '(') {
 	    level++;
-	    *cur++ = CUR;
 	} else if (CUR == '^') {
-	    NEXT;
-	    if ((CUR == ')') || (CUR == '(') || (CUR == '^')) {
-		*cur++ = CUR;
-	    } else {
-		*cur++ = '^';
-		*cur++ = CUR;
-	    }
-	} else {
-	    *cur++ = CUR;
+            if ((NXT(1) == ')') || (NXT(1) == '(') || (NXT(1) == '^')) {
+                NEXT;
+            }
 	}
+        *cur++ = CUR;
 	NEXT;
     }
     *cur = 0;
@@ -1104,7 +1097,7 @@ xmlXPtrEvalXPtrPart(xmlXPathParserContextPtr ctxt, xmlChar *name) {
 	    xmlFree(name);
 	    XP_ERROR(XPATH_MEMORY_ERROR);
 	}
-	
+
 	xmlXPathRegisterNs(ctxt->context, prefix, URI);
 	CUR_PTR = left;
 	xmlFree(URI);
@@ -1236,7 +1229,7 @@ xmlXPtrEvalChildSeq(xmlXPathParserContextPtr ctxt, xmlChar *name) {
     while (CUR == '/') {
 	int child = 0;
 	NEXT;
-        
+
 	while ((CUR >= '0') && (CUR <= '9')) {
 	    child = child * 10 + (CUR - '0');
 	    NEXT;
@@ -1260,7 +1253,7 @@ static void
 xmlXPtrEvalXPointer(xmlXPathParserContextPtr ctxt) {
     if (ctxt->valueTab == NULL) {
 	/* Allocate the value stack */
-	ctxt->valueTab = (xmlXPathObjectPtr *) 
+	ctxt->valueTab = (xmlXPathObjectPtr *)
 			 xmlMalloc(10 * sizeof(xmlXPathObjectPtr));
 	if (ctxt->valueTab == NULL) {
 	    xmlXPtrErrMemory("allocating evaluation context");
@@ -1269,6 +1262,7 @@ xmlXPtrEvalXPointer(xmlXPathParserContextPtr ctxt) {
 	ctxt->valueNr = 0;
 	ctxt->valueMax = 10;
 	ctxt->value = NULL;
+	ctxt->valueFrame = 0;
     }
     SKIP_BLANKS;
     if (CUR == '/') {
@@ -1402,13 +1396,13 @@ xmlXPtrEval(const xmlChar *str, xmlXPathContextPtr ctx) {
 		    /*
 		     * Evaluation may push a root nodeset which is unused
 		     */
-		    xmlNodeSetPtr set; 
+		    xmlNodeSetPtr set;
 		    set = tmp->nodesetval;
 		    if ((set->nodeNr != 1) ||
 			(set->nodeTab[0] != (xmlNodePtr) ctx->doc))
 			stack++;
 		} else
-		    stack++;    
+		    stack++;
 	    }
 	    xmlXPathFreeObject(tmp);
         }
@@ -1422,7 +1416,7 @@ xmlXPtrEval(const xmlChar *str, xmlXPathContextPtr ctx) {
 	xmlXPathFreeObject(res);
 	res = NULL;
     }
-        
+
     xmlXPathFreeParserContext(ctxt);
     return(res);
 }
@@ -1450,11 +1444,13 @@ xmlXPtrBuildRangeNodeList(xmlXPathObjectPtr range) {
 	return(NULL);
     start = (xmlNodePtr) range->user;
 
-    if (start == NULL)
+    if ((start == NULL) || (start->type == XML_NAMESPACE_DECL))
 	return(NULL);
     end = range->user2;
     if (end == NULL)
 	return(xmlCopyNode(start, 1));
+    if (end->type == XML_NAMESPACE_DECL)
+        return(NULL);
 
     cur = start;
     index1 = range->index;
@@ -1484,7 +1480,7 @@ xmlXPtrBuildRangeNodeList(xmlXPathObjectPtr range) {
 		/* prune and return full set */
 		if (last != NULL)
 		    xmlAddNextSibling(last, tmp);
-		else 
+		else
 		    xmlAddChild(parent, tmp);
 		return(list);
 	    } else {
@@ -1738,7 +1734,7 @@ xmlXPtrNbLocChildren(xmlNodePtr node) {
  * @ctxt:  the XPointer Parser context
  * @nargs:  the number of args
  *
- * Function implementing here() operation 
+ * Function implementing here() operation
  * as described in 5.4.3
  */
 static void
@@ -1747,7 +1743,7 @@ xmlXPtrHereFunction(xmlXPathParserContextPtr ctxt, int nargs) {
 
     if (ctxt->context->here == NULL)
 	XP_ERROR(XPTR_SYNTAX_ERROR);
-    
+
     valuePush(ctxt, xmlXPtrNewLocationSetNodes(ctxt->context->here, NULL));
 }
 
@@ -1756,7 +1752,7 @@ xmlXPtrHereFunction(xmlXPathParserContextPtr ctxt, int nargs) {
  * @ctxt:  the XPointer Parser context
  * @nargs:  the number of args
  *
- * Function implementing origin() operation 
+ * Function implementing origin() operation
  * as described in 5.4.3
  */
 static void
@@ -1765,7 +1761,7 @@ xmlXPtrOriginFunction(xmlXPathParserContextPtr ctxt, int nargs) {
 
     if (ctxt->context->origin == NULL)
 	XP_ERROR(XPTR_SYNTAX_ERROR);
-    
+
     valuePush(ctxt, xmlXPtrNewLocationSetNodes(ctxt->context->origin, NULL));
 }
 
@@ -1774,7 +1770,7 @@ xmlXPtrOriginFunction(xmlXPathParserContextPtr ctxt, int nargs) {
  * @ctxt:  the XPointer Parser context
  * @nargs:  the number of args
  *
- * Function implementing start-point() operation 
+ * Function implementing start-point() operation
  * as described in 5.4.3
  * ----------------
  * location-set start-point(location-set)
@@ -1866,7 +1862,7 @@ xmlXPtrStartPointFunction(xmlXPathParserContextPtr ctxt, int nargs) {
  * @ctxt:  the XPointer Parser context
  * @nargs:  the number of args
  *
- * Function implementing end-point() operation 
+ * Function implementing end-point() operation
  * as described in 5.4.3
  * ----------------------------
  * location-set end-point(location-set)
@@ -2002,7 +1998,7 @@ xmlXPtrCoveringRange(xmlXPathParserContextPtr ctxt, xmlXPathObjectPtr loc) {
 			case XML_NOTATION_NODE:
 			case XML_HTML_DOCUMENT_NODE: {
 			    int indx = xmlXPtrGetIndex(node);
-			     
+
 			    node = node->parent;
 			    return(xmlXPtrNewRange(node, indx - 1,
 					           node, indx + 1));
@@ -2249,7 +2245,7 @@ xmlXPtrRangeToFunction(xmlXPathParserContextPtr ctxt, int nargs) {
 
     cur = ctxt->cur;
     newset = xmlXPtrLocationSetCreate(NULL);
-    
+
     for (i = 0; i < oldset->nodeNr; i++) {
 	ctxt->cur = cur;
 
@@ -2283,7 +2279,7 @@ xmlXPtrRangeToFunction(xmlXPathParserContextPtr ctxt, int nargs) {
 	    res = valuePop(ctxt);
 	    xmlXPathFreeObject(res);
 	}
-	
+
 	ctxt->context->node = NULL;
     }
 
@@ -2303,14 +2299,14 @@ xmlXPtrRangeToFunction(xmlXPathParserContextPtr ctxt, int nargs) {
  * @level: incremented/decremented to show level in tree
  *
  * Advance to the next element or text node in document order
- * TODO: add a stack for entering/exiting entities 
+ * TODO: add a stack for entering/exiting entities
  *
  * Returns -1 in case of failure, 0 otherwise
  */
 xmlNodePtr
 xmlXPtrAdvanceNode(xmlNodePtr cur, int *level) {
 next:
-    if (cur == NULL)
+    if ((cur == NULL) || (cur->type == XML_NAMESPACE_DECL))
 	return(NULL);
     if (cur->children != NULL) {
         cur = cur->children ;
@@ -2368,7 +2364,7 @@ xmlXPtrAdvanceChar(xmlNodePtr *node, int *indx, int bytes) {
     if ((node == NULL) || (indx == NULL))
 	return(-1);
     cur = *node;
-    if (cur == NULL)
+    if ((cur == NULL) || (cur->type == XML_NAMESPACE_DECL))
 	return(-1);
     pos = *indx;
 
@@ -2406,7 +2402,7 @@ xmlXPtrAdvanceChar(xmlNodePtr *node, int *indx, int bytes) {
 	    return(0);
 	}
 	/*
-	 * We should have a text (or cdata) node ... 
+	 * We should have a text (or cdata) node ...
 	 */
 	len = 0;
 	if ((cur->type != XML_ELEMENT_NODE) &&
@@ -2459,9 +2455,10 @@ xmlXPtrMatchString(const xmlChar *string, xmlNodePtr start, int startindex,
 
     if (string == NULL)
 	return(-1);
-    if (start == NULL)
+    if ((start == NULL) || (start->type == XML_NAMESPACE_DECL))
 	return(-1);
-    if ((end == NULL) || (endindex == NULL))
+    if ((end == NULL) || (*end == NULL) ||
+        ((*end)->type == XML_NAMESPACE_DECL) || (endindex == NULL))
 	return(-1);
     cur = start;
     if (cur == NULL)
@@ -2544,13 +2541,12 @@ xmlXPtrSearchString(const xmlChar *string, xmlNodePtr *start, int *startindex,
 
     if (string == NULL)
 	return(-1);
-    if ((start == NULL) || (startindex == NULL))
+    if ((start == NULL) || (*start == NULL) ||
+        ((*start)->type == XML_NAMESPACE_DECL) || (startindex == NULL))
 	return(-1);
     if ((end == NULL) || (endindex == NULL))
 	return(-1);
     cur = *start;
-    if (cur == NULL)
-	return(-1);
     pos = *startindex - 1;
     first = string[0];
 
@@ -2583,7 +2579,7 @@ xmlXPtrSearchString(const xmlChar *string, xmlNodePtr *start, int *startindex,
 		    /*
 		     * An empty string is considered to match before each
 		     * character of the string-value and after the final
-		     * character. 
+		     * character.
 		     */
 #ifdef DEBUG_RANGES
 		    xmlGenericError(xmlGenericErrorContext,
@@ -2624,13 +2620,11 @@ xmlXPtrGetLastChar(xmlNodePtr *node, int *indx) {
     xmlNodePtr cur;
     int pos, len = 0;
 
-    if ((node == NULL) || (indx == NULL))
+    if ((node == NULL) || (*node == NULL) ||
+        ((*node)->type == XML_NAMESPACE_DECL) || (indx == NULL))
 	return(-1);
     cur = *node;
     pos = *indx;
-
-    if (cur == NULL)
-	return(-1);
 
     if ((cur->type == XML_ELEMENT_NODE) ||
 	(cur->type == XML_DOCUMENT_NODE) ||
@@ -2735,7 +2729,7 @@ xmlXPtrGetEndPoint(xmlXPathObjectPtr obj, xmlNodePtr *node, int *indx) {
  * @nargs:  the number of args
  *
  * Function implementing the string-range() function
- * range as described in 5.4.2 
+ * range as described in 5.4.2
  *
  * ------------------------------
  * [Definition: For each location in the location-set argument,
@@ -2899,7 +2893,7 @@ error:
  * @ctxt:  the XPointer Parser context
  *
  *  [8]   Predicate ::=   '[' PredicateExpr ']'
- *  [9]   PredicateExpr ::=   Expr 
+ *  [9]   PredicateExpr ::=   Expr
  *
  * Evaluate a predicate as in xmlXPathEvalPredicate() but for
  * a Location Set instead of a node set
@@ -2948,7 +2942,7 @@ xmlXPtrEvalRangePredicate(xmlXPathParserContextPtr ctxt) {
 	 */
         cur = ctxt->cur;
 	newset = xmlXPtrLocationSetCreate(NULL);
-	
+
         for (i = 0; i < oldset->locNr; i++) {
 	    ctxt->cur = cur;
 
@@ -2984,7 +2978,7 @@ xmlXPtrEvalRangePredicate(xmlXPathParserContextPtr ctxt) {
 		res = valuePop(ctxt);
 		xmlXPathFreeObject(res);
 	    }
-	    
+
 	    ctxt->context->node = NULL;
 	}
 

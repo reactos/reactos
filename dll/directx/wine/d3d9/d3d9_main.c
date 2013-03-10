@@ -40,10 +40,7 @@ IDirect3D9 * WINAPI DECLSPEC_HOTPATCH Direct3DCreate9(UINT sdk_version)
     TRACE("sdk_version %#x.\n", sdk_version);
 
     if (!(object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*object))))
-    {
-        ERR("Failed to allocate d3d9 object memory.\n");
         return NULL;
-    }
 
     if (!d3d9_init(object, FALSE))
     {
@@ -64,10 +61,7 @@ HRESULT WINAPI DECLSPEC_HOTPATCH Direct3DCreate9Ex(UINT sdk_version, IDirect3D9E
     TRACE("sdk_version %#x, d3d9ex %p.\n", sdk_version, d3d9ex);
 
     if (!(object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*object))))
-    {
-        ERR("Failed to allocate d3d9 object memory.\n");
         return E_OUTOFMEMORY;
-    }
 
     if (!d3d9_init(object, TRUE))
     {

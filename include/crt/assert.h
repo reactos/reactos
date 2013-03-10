@@ -20,8 +20,21 @@
 extern "C" {
 #endif
 
-  _CRTIMP void __cdecl _assert(const char *_Message,const char *_File,unsigned _Line);
-  _CRTIMP void __cdecl _wassert(const wchar_t *_Message,const wchar_t *_File,unsigned _Line);
+  _CRTIMP
+  void
+  __cdecl
+  _assert(
+    _In_z_ const char *_Message,
+    _In_z_ const char *_File,
+    _In_ unsigned _Line);
+
+  _CRTIMP
+  void
+  __cdecl
+  _wassert(
+    _In_z_ const wchar_t *_Message,
+    _In_z_ const wchar_t *_File,
+    _In_ unsigned _Line);
 
 #ifdef __cplusplus
 }

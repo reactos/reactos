@@ -4358,7 +4358,6 @@ BOOL WINAPI FlashWindow(_In_ HWND, _In_ BOOL);
 BOOL WINAPI FlashWindowEx(_In_ PFLASHWINFO);
 #endif
 int WINAPI FrameRect(_In_ HDC, _In_ LPCRECT, _In_ HBRUSH);
-BOOL WINAPI FrameRgn(HDC,HRGN,HBRUSH,int,int);
 HWND WINAPI GetActiveWindow(void);
 HWND WINAPI GetAncestor(_In_ HWND, _In_ UINT);
 SHORT WINAPI GetAsyncKeyState(_In_ int);
@@ -4678,7 +4677,6 @@ GetUserObjectSecurity(
 HWND WINAPI GetWindow(_In_ HWND, _In_ UINT);
 DWORD WINAPI GetWindowContextHelpId(_In_ HWND);
 HDC WINAPI GetWindowDC(_In_opt_ HWND);
-BOOL WINAPI GetWindowExtEx(HDC,LPSIZE);
 BOOL WINAPI GetWindowPlacement(_In_ HWND, _Inout_ WINDOWPLACEMENT*);
 BOOL WINAPI GetWindowRect(_In_ HWND, _Out_ LPRECT);
 int WINAPI GetWindowRgn(_In_ HWND, _In_ HRGN);

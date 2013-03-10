@@ -55,7 +55,7 @@ ScmLogError(DWORD dwEventId,
                                 L"Service Control Manager");
     if (hLog == NULL)
     {
-        DPRINT1("ScmLogEvent: RegisterEventSourceW failed %d\n", GetLastError());
+        DPRINT1("ScmLogEvent: RegisterEventSourceW failed %lu\n", GetLastError());
         return;
     }
 
@@ -69,7 +69,7 @@ ScmLogError(DWORD dwEventId,
                       lpStrings,
                       NULL))
     {
-        DPRINT1("ScmLogEvent: ReportEventW failed %d\n", GetLastError());
+        DPRINT1("ScmLogEvent: ReportEventW failed %lu\n", GetLastError());
     }
 
     DeregisterEventSource(hLog);
@@ -153,7 +153,7 @@ ScmNamedPipeHandleRequest(PVOID Request,
                           PVOID Reply,
                           LPDWORD ReplySize)
 {
-    DbgPrint("SCM READ: %s\n", Request);
+    DbgPrint("SCM READ: %p\n", Request);
 
     *ReplySize = 0;
     return FALSE;
@@ -173,7 +173,7 @@ ScmNamedPipeThread(LPVOID Context)
 
     hPipe = (HANDLE)Context;
 
-    DPRINT("ScmNamedPipeThread(%x) - Accepting SCM commands through named pipe\n", hPipe);
+    DPRINT("ScmNamedPipeThread(%p) - Accepting SCM commands through named pipe\n", hPipe);
 
     for (;;)
     {
@@ -201,13 +201,13 @@ ScmNamedPipeThread(LPVOID Context)
         }
     }
 
-    DPRINT("ScmNamedPipeThread(%x) - Disconnecting named pipe connection\n", hPipe);
+    DPRINT("ScmNamedPipeThread(%p) - Disconnecting named pipe connection\n", hPipe);
 
     FlushFileBuffers(hPipe);
     DisconnectNamedPipe(hPipe);
     CloseHandle(hPipe);
 
-    DPRINT("ScmNamedPipeThread(%x) - Done.\n", hPipe);
+    DPRINT("ScmNamedPipeThread(%p) - Done.\n", hPipe);
 
     return ERROR_SUCCESS;
 }
@@ -233,11 +233,11 @@ ScmCreateNamedPipe(VOID)
               NULL);
     if (hPipe == INVALID_HANDLE_VALUE)
     {
-        DPRINT("CreateNamedPipe() failed (%d)\n", GetLastError());
+        DPRINT("CreateNamedPipe() failed (%lu)\n", GetLastError());
         return FALSE;
     }
 
-    DPRINT("CreateNamedPipe() - calling ConnectNamedPipe(%x)\n", hPipe);
+    DPRINT("CreateNamedPipe() - calling ConnectNamedPipe(%p)\n", hPipe);
     bConnected = ConnectNamedPipe(hPipe,
                                   NULL) ? TRUE : (GetLastError() == ERROR_PIPE_CONNECTED);
     DPRINT("CreateNamedPipe() - ConnectNamedPipe() returned %d\n", bConnected);
@@ -253,7 +253,7 @@ ScmCreateNamedPipe(VOID)
                                &dwThreadId);
         if (!hThread)
         {
-            DPRINT("Could not create thread (%d)\n", GetLastError());
+            DPRINT("Could not create thread (%lu)\n", GetLastError());
             DisconnectNamedPipe(hPipe);
             CloseHandle(hPipe);
             DPRINT("CreateNamedPipe() - returning FALSE\n");
@@ -278,7 +278,7 @@ DWORD WINAPI
 ScmNamedPipeListenerThread(LPVOID Context)
 {
 //    HANDLE hPipe;
-    DPRINT("ScmNamedPipeListenerThread(%x) - aka SCM.\n", Context);
+    DPRINT("ScmNamedPipeListenerThread(%p) - aka SCM.\n", Context);
 
 //    hPipe = (HANDLE)Context;
     for (;;)
@@ -294,7 +294,7 @@ ScmNamedPipeListenerThread(LPVOID Context)
         DPRINT("\nSCM: named pipe session created.\n");
         Sleep(10);
     }
-    DPRINT("\n\nWARNING: ScmNamedPipeListenerThread(%x) - Aborted.\n\n", Context);
+    DPRINT("\n\nWARNING: ScmNamedPipeListenerThread(%p) - Aborted.\n\n", Context);
     return ERROR_SUCCESS;
 }
 

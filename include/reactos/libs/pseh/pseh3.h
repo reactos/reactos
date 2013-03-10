@@ -150,7 +150,7 @@ void * __cdecl __attribute__((error("Can only be used inside an exception filter
     (__builtin_constant_p(_FilterExpression) ? (void*)(unsigned long)(unsigned char)(unsigned long)(_FilterExpression) : _Filter)
 
 #define _SEH3$_DEFINE_DUMMY_FINALLY(_Name) \
-    auto inline __attribute__((always_inline,gnu_inline)) int _Name(int Action) { return 0; }
+    auto inline __attribute__((always_inline,gnu_inline)) int _Name(int Action) { (void)Action; return 0; }
 
 #define _SEH3$_DECLARE_CLEANUP_FUNC(_Name) \
     auto inline __attribute__((always_inline,gnu_inline)) void _Name(volatile SEH3$_REGISTRATION_FRAME *p)
@@ -158,6 +158,7 @@ void * __cdecl __attribute__((error("Can only be used inside an exception filter
 #define _SEH3$_DEFINE_CLEANUP_FUNC(_Name) \
     _SEH3$_DECLARE_CLEANUP_FUNC(_Name) \
     { \
+        (void)p; \
         /* Unregister the frame */ \
         if (_SEH3$_TryLevel == 1) _SEH3$_UnregisterFrame(&_SEH3$_TrylevelFrame); \
         else _SEH3$_UnregisterTryLevel(&_SEH3$_TrylevelFrame); \

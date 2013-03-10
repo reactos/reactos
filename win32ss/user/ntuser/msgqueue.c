@@ -1352,7 +1352,7 @@ IntTrackMouseMove(PWND pwndTrack, PDESKTOP pDesk, PMSG msg, USHORT hittest)
                              0, 0);
 
          if ( pDesk->dwDTFlags & DF_TME_HOVER )
-            IntKillTimer(UserHMGetHandle(pDesk->spwndTrack), ID_EVENT_SYSTIMER_MOUSEHOVER, TRUE);
+            IntKillTimer(pDesk->spwndTrack, ID_EVENT_SYSTIMER_MOUSEHOVER, TRUE);
 
          /* Clear the flags to sign a change. */
          pDesk->dwDTFlags &= ~(DF_TME_LEAVE|DF_TME_HOVER);

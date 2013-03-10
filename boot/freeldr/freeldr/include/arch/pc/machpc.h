@@ -57,6 +57,7 @@ ULONG PcDiskGetCacheableBlockCount(UCHAR DriveNumber);
 
 TIMEINFO* PcGetTime(VOID);
 
+BOOLEAN PcInitializeBootDevices(VOID);
 PCONFIGURATION_COMPONENT_DATA PcHwDetect(VOID);
 VOID PcHwIdle(VOID);
 

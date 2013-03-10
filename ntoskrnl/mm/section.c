@@ -677,6 +677,7 @@ l_ReadHeaderFromFile:
             pssSegments[i].Length.QuadPart = pishSectionHeaders[i].Misc.VirtualSize;
 
         pssSegments[i].Length.LowPart = ALIGN_UP_BY(pssSegments[i].Length.LowPart, nSectionAlignment);
+        /* FIXME: always false */
         if (pssSegments[i].Length.QuadPart < pssSegments[i].Length.QuadPart)
             DIE(("Cannot align the virtual size of section %u\n", i));
 
@@ -1394,52 +1395,6 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
    }
 
    /*
-    * Map anonymous memory for BSS sections
-    */
-   if (Segment->Image.Characteristics & IMAGE_SCN_CNT_UNINITIALIZED_DATA)
-   {
-      /* We'll be unlocking the address space below.  Prevent us from being preempted
-       * in faulting in the page. */
-      MmCreatePageFileMapping(Process, Address, MM_WAIT_ENTRY);
-      MmUnlockSectionSegment(Segment);
-      MI_SET_USAGE(MI_USAGE_SECTION);
-      if (Process) MI_SET_PROCESS2(Process->ImageFileName);
-      if (!Process) MI_SET_PROCESS2("Kernel Section");
-      Status = MmRequestPageMemoryConsumer(MC_USER, FALSE, &Page);
-      if (!NT_SUCCESS(Status))
-      {
-          MmUnlockAddressSpace(AddressSpace);
-          Status = MmRequestPageMemoryConsumer(MC_USER, TRUE, &Page);
-          MmLockAddressSpace(AddressSpace);
-      }
-      if (!NT_SUCCESS(Status))
-      {
-          KeBugCheck(MEMORY_MANAGEMENT);
-      }
-      /* Remove the wait entry we placed, so that we can map the page */
-      MmDeletePageFileMapping(Process, PAddress, &SwapEntry);
-      Status = MmCreateVirtualMapping(Process,
-                                      PAddress,
-                                      Region->Protect,
-                                      &Page,
-                                      1);
-      if (!NT_SUCCESS(Status))
-      {
-          DPRINT("MmCreateVirtualMapping failed, not out of memory\n");
-          KeBugCheck(MEMORY_MANAGEMENT);
-          return(Status);
-      }
-      MmInsertRmap(Page, Process, Address);
-
-      /*
-       * Cleanup and release locks
-       */
-      MiSetPageEvent(Process, Address);
-      DPRINT("Address 0x%.8X\n", Address);
-      return(STATUS_SUCCESS);
-   }
-
-   /*
     * Get the entry corresponding to the offset within the section
     */
    Entry = MmGetPageEntrySectionSegment(Segment, &Offset);
@@ -1508,7 +1463,7 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
       MmUnlockSectionSegment(Segment);
 
       MmDeletePageFileMapping(Process, PAddress, &FakeSwapEntry);
-      DPRINT("CreateVirtualMapping Page %x Process %p PAddress %p Attributes %x\n", 
+      DPRINT("CreateVirtualMapping Page %x Process %p PAddress %p Attributes %x\n",
               Page, Process, PAddress, Attributes);
       Status = MmCreateVirtualMapping(Process,
                                       PAddress,
@@ -2058,7 +2013,7 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
                  Address);
          KeBugCheckEx(MEMORY_MANAGEMENT, SwapEntry, Page, (ULONG_PTR)Process, (ULONG_PTR)Address);
       }
-      MmReleasePageMemoryConsumer(MC_USER, Page); 
+      MmReleasePageMemoryConsumer(MC_USER, Page);
       MiSetPageEvent(NULL, NULL);
       return(STATUS_SUCCESS);
    }

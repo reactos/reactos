@@ -21,6 +21,7 @@
 #include <libxml/xmlerror.h>
 #include <libxml/parserInternals.h>
 #include <libxml/xpathInternals.h>
+#include <libxml/xpath.h>
 #include "xslt.h"
 #include "xsltInternals.h"
 #include "xsltutils.h"
@@ -37,9 +38,9 @@ xsltInitDocKeyTable(xsltTransformContextPtr ctxt, const xmlChar *name,
                     const xmlChar *nameURI);
 
 /************************************************************************
- * 									*
- * 			Type functions 					*
- * 									*
+ *									*
+ *			Type functions					*
+ *									*
  ************************************************************************/
 
 /**
@@ -158,7 +159,7 @@ xsltFreeKeyTable(xsltKeyTablePtr keyt) {
     if (keyt->nameURI != NULL)
 	xmlFree(keyt->nameURI);
     if (keyt->keys != NULL)
-	xmlHashFree(keyt->keys, 
+	xmlHashFree(keyt->keys,
 		    (xmlHashDeallocator) xmlXPathFreeNodeSet);
     memset(keyt, -1, sizeof(xsltKeyTable));
     xmlFree(keyt);
@@ -182,9 +183,9 @@ xsltFreeKeyTableList(xsltKeyTablePtr keyt) {
 }
 
 /************************************************************************
- * 									*
- * 		The interpreter for the precompiled patterns		*
- * 									*
+ *									*
+ *		The interpreter for the precompiled patterns		*
+ *									*
  ************************************************************************/
 
 
@@ -311,8 +312,8 @@ xsltAddKey(xsltStylesheetPtr style, const xmlChar *name,
 	        end = skipPredicate(match, end);
 		if (end <= 0) {
 		    xsltTransformError(NULL, style, inst,
-		                       "key pattern is malformed: %s",
-				       key->match);
+		        "xsl:key : 'match' pattern is malformed: %s",
+		        key->match);
 		    if (style != NULL) style->errors++;
 		    goto error;
 		}
@@ -321,7 +322,7 @@ xsltAddKey(xsltStylesheetPtr style, const xmlChar *name,
 	}
 	if (current == end) {
 	    xsltTransformError(NULL, style, inst,
-			       "key pattern is empty\n");
+			       "xsl:key : 'match' pattern is empty\n");
 	    if (style != NULL) style->errors++;
 	    goto error;
 	}
@@ -344,6 +345,12 @@ xsltAddKey(xsltStylesheetPtr style, const xmlChar *name,
 	}
 	current = end;
     }
+    if (pattern == NULL) {
+        xsltTransformError(NULL, style, inst,
+                           "xsl:key : 'match' pattern is empty\n");
+        if (style != NULL) style->errors++;
+        goto error;
+    }
 #ifdef WITH_XSLT_DEBUG_KEYS
     xsltGenericDebug(xsltGenericDebugContext,
 	"   resulting pattern %s\n", pattern);
@@ -356,17 +363,25 @@ xsltAddKey(xsltStylesheetPtr style, const xmlChar *name,
     *   Maybe a search for "$", if it occurs outside of quotation
     *   marks, could be sufficient.
     */
+#ifdef XML_XPATH_NOVAR
+    key->comp = xsltXPathCompileFlags(style, pattern, XML_XPATH_NOVAR);
+#else
     key->comp = xsltXPathCompile(style, pattern);
+#endif
     if (key->comp == NULL) {
 	xsltTransformError(NULL, style, inst,
-		"xsl:key : XPath pattern compilation failed '%s'\n",
+		"xsl:key : 'match' pattern compilation failed '%s'\n",
 		         pattern);
 	if (style != NULL) style->errors++;
     }
+#ifdef XML_XPATH_NOVAR
+    key->usecomp = xsltXPathCompileFlags(style, use, XML_XPATH_NOVAR);
+#else
     key->usecomp = xsltXPathCompile(style, use);
+#endif
     if (key->usecomp == NULL) {
 	xsltTransformError(NULL, style, inst,
-		"xsl:key : XPath pattern compilation failed '%s'\n",
+		"xsl:key : 'use' expression compilation failed '%s'\n",
 		         use);
 	if (style != NULL) style->errors++;
     }

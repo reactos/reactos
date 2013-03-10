@@ -1133,296 +1133,1188 @@ WINSETUPAPI PVOID WINAPI MyRealloc(PVOID, DWORD);
 WINSETUPAPI LONG WINAPI QueryRegistryValue(HKEY, PCWSTR, PBYTE*, PDWORD, PDWORD);
 WINSETUPAPI DWORD WINAPI RetreiveFileSecurity(PCWSTR, PSECURITY_DESCRIPTOR*);
 
-WINSETUPAPI BOOL WINAPI SetupAddInstallSectionToDiskSpaceListA(HDSKSPC,HINF,HINF,PCSTR,PVOID,UINT);
-WINSETUPAPI BOOL WINAPI SetupAddInstallSectionToDiskSpaceListW(HDSKSPC,HINF,HINF,PCWSTR,PVOID,UINT);
-WINSETUPAPI BOOL WINAPI SetupAddSectionToDiskSpaceListA(HDSKSPC,HINF,HINF,PCSTR,UINT,PVOID,UINT);
-WINSETUPAPI BOOL WINAPI SetupAddSectionToDiskSpaceListW(HDSKSPC,HINF,HINF,PCWSTR,UINT,PVOID,UINT);
-WINSETUPAPI BOOL WINAPI SetupAddToDiskSpaceListA(HDSKSPC,PCSTR,LONGLONG,UINT,PVOID,UINT);
-WINSETUPAPI BOOL WINAPI SetupAddToDiskSpaceListW(HDSKSPC,PCWSTR,LONGLONG,UINT,PVOID,UINT);
-WINSETUPAPI BOOL WINAPI SetupAddToSourceListA(DWORD,PCSTR);
-WINSETUPAPI BOOL WINAPI SetupAddToSourceListW(DWORD,PCWSTR);
-WINSETUPAPI BOOL WINAPI SetupAdjustDiskSpaceListA(HDSKSPC,LPCSTR,LONGLONG,PVOID,UINT);
-WINSETUPAPI BOOL WINAPI SetupAdjustDiskSpaceListW(HDSKSPC,LPCWSTR,LONGLONG,PVOID,UINT);
-WINSETUPAPI UINT WINAPI SetupBackupErrorA(HWND,PCSTR,PCSTR,PCSTR,UINT,DWORD);
-WINSETUPAPI UINT WINAPI SetupBackupErrorW(HWND,PCWSTR,PCWSTR,PCWSTR,UINT,DWORD);
+WINSETUPAPI BOOL WINAPI SetupAddInstallSectionToDiskSpaceListA(_In_ HDSKSPC, _In_ HINF, _In_opt_ HINF, _In_ PCSTR, _Reserved_ PVOID, _Reserved_ UINT);
+WINSETUPAPI BOOL WINAPI SetupAddInstallSectionToDiskSpaceListW(_In_ HDSKSPC, _In_ HINF, _In_opt_ HINF, _In_ PCWSTR, _Reserved_ PVOID, _Reserved_ UINT);
+WINSETUPAPI BOOL WINAPI SetupAddSectionToDiskSpaceListA(_In_ HDSKSPC, _In_ HINF, _In_opt_ HINF, _In_ PCSTR, _In_ UINT, _Reserved_ PVOID, _Reserved_ UINT);
+WINSETUPAPI BOOL WINAPI SetupAddSectionToDiskSpaceListW(_In_ HDSKSPC, _In_ HINF, _In_opt_ HINF, _In_ PCWSTR, _In_ UINT, _Reserved_ PVOID, _Reserved_ UINT);
+WINSETUPAPI BOOL WINAPI SetupAddToDiskSpaceListA(_In_ HDSKSPC, _In_ PCSTR, _In_ LONGLONG, _In_ UINT, _Reserved_ PVOID, _Reserved_ UINT);
+WINSETUPAPI BOOL WINAPI SetupAddToDiskSpaceListW(_In_ HDSKSPC, _In_ PCWSTR, _In_ LONGLONG, _In_ UINT, _Reserved_ PVOID, _Reserved_ UINT);
+WINSETUPAPI BOOL WINAPI SetupAddToSourceListA(_In_ DWORD, _In_ PCSTR);
+WINSETUPAPI BOOL WINAPI SetupAddToSourceListW(_In_ DWORD, _In_ PCWSTR);
+WINSETUPAPI BOOL WINAPI SetupAdjustDiskSpaceListA(_In_ HDSKSPC, _In_ LPCSTR, _In_ LONGLONG, _Reserved_ PVOID, _Reserved_ UINT);
+WINSETUPAPI BOOL WINAPI SetupAdjustDiskSpaceListW(_In_ HDSKSPC, _In_ LPCWSTR, _In_ LONGLONG, _Reserved_ PVOID, _Reserved_ UINT);
+WINSETUPAPI UINT WINAPI SetupBackupErrorA(_In_ HWND, _In_opt_ PCSTR, _In_ PCSTR, _In_opt_ PCSTR, _In_ UINT, _In_ DWORD);
+WINSETUPAPI UINT WINAPI SetupBackupErrorW(_In_ HWND, _In_opt_ PCWSTR, _In_ PCWSTR, _In_opt_ PCWSTR, _In_ UINT, _In_ DWORD);
 WINSETUPAPI BOOL WINAPI SetupCancelTemporary(VOID);
-WINSETUPAPI BOOL WINAPI SetupCloseFileQueue(HSPFILEQ);
-WINSETUPAPI VOID WINAPI SetupCloseInfFile(HINF);
+WINSETUPAPI BOOL WINAPI SetupCloseFileQueue(_In_ HSPFILEQ);
+WINSETUPAPI VOID WINAPI SetupCloseInfFile(_In_ HINF);
 WINSETUPAPI VOID WINAPI SetupCloseLog(VOID);
-WINSETUPAPI BOOL WINAPI SetupCommitFileQueueA(HWND,HSPFILEQ,PSP_FILE_CALLBACK_A,PVOID);
-WINSETUPAPI BOOL WINAPI SetupCommitFileQueueW(HWND,HSPFILEQ,PSP_FILE_CALLBACK_W,PVOID);
-WINSETUPAPI UINT WINAPI SetupCopyErrorA(HWND,PCSTR,PCSTR,PCSTR,PCSTR,PCSTR,UINT,DWORD,PSTR,DWORD,PDWORD);
-WINSETUPAPI UINT WINAPI SetupCopyErrorW(HWND,PCWSTR,PCWSTR,PCWSTR,PCWSTR,PCWSTR,UINT,DWORD,PWSTR,DWORD,PDWORD);
-WINSETUPAPI BOOL WINAPI SetupCopyOEMInfA(PCSTR,PCSTR,DWORD,DWORD,PSTR,DWORD,PDWORD,PSTR*);
-WINSETUPAPI BOOL WINAPI SetupCopyOEMInfW(PCWSTR,PCWSTR,DWORD,DWORD,PWSTR,DWORD,PDWORD,PWSTR*);
-WINSETUPAPI HDSKSPC WINAPI SetupCreateDiskSpaceListA(PVOID,DWORD,UINT);
-WINSETUPAPI HDSKSPC WINAPI SetupCreateDiskSpaceListW(PVOID,DWORD,UINT);
-WINSETUPAPI DWORD WINAPI SetupDecompressOrCopyFileA(PCSTR,PCSTR,PUINT);
-WINSETUPAPI DWORD WINAPI SetupDecompressOrCopyFileW(PCWSTR,PCWSTR,PUINT);
-WINSETUPAPI UINT WINAPI SetupDefaultQueueCallbackA(PVOID,UINT,UINT_PTR,UINT_PTR);
-WINSETUPAPI UINT WINAPI SetupDefaultQueueCallbackW(PVOID,UINT,UINT_PTR,UINT_PTR);
-WINSETUPAPI UINT WINAPI SetupDeleteErrorA(HWND,PCSTR,PCSTR,UINT,DWORD);
-WINSETUPAPI UINT WINAPI SetupDeleteErrorW(HWND,PCWSTR,PCWSTR,UINT,DWORD);
-WINSETUPAPI BOOL WINAPI SetupDestroyDiskSpaceList(HDSKSPC);
-WINSETUPAPI BOOL WINAPI SetupDiAskForOEMDisk(HDEVINFO,PSP_DEVINFO_DATA);
-WINSETUPAPI BOOL WINAPI SetupDiBuildClassInfoList(DWORD,LPGUID,DWORD,PDWORD);
-WINSETUPAPI BOOL WINAPI SetupDiBuildClassInfoListExA(DWORD,LPGUID,DWORD,PDWORD,PCSTR,PVOID);
-WINSETUPAPI BOOL WINAPI SetupDiBuildClassInfoListExW(DWORD,LPGUID,DWORD,PDWORD,PCWSTR,PVOID);
-WINSETUPAPI BOOL WINAPI SetupDiBuildDriverInfoList(HDEVINFO,PSP_DEVINFO_DATA,DWORD);
-WINSETUPAPI BOOL WINAPI SetupDiCallClassInstaller(DI_FUNCTION,HDEVINFO,PSP_DEVINFO_DATA);
-WINSETUPAPI BOOL WINAPI SetupDiCancelDriverInfoSearch(HDEVINFO);
-WINSETUPAPI BOOL WINAPI SetupDiChangeState(HDEVINFO,PSP_DEVINFO_DATA);
-WINSETUPAPI BOOL WINAPI SetupDiClassGuidsFromNameA(PCSTR,LPGUID,DWORD,PDWORD);
-WINSETUPAPI BOOL WINAPI SetupDiClassGuidsFromNameW(PCWSTR,LPGUID,DWORD,PDWORD);
-WINSETUPAPI BOOL WINAPI SetupDiClassGuidsFromNameExA(PCSTR,LPGUID,DWORD,PDWORD,PCSTR,PVOID);
-WINSETUPAPI BOOL WINAPI SetupDiClassGuidsFromNameExW(PCWSTR,LPGUID,DWORD,PDWORD,PCWSTR,PVOID);
-WINSETUPAPI BOOL WINAPI SetupDiClassNameFromGuidA(CONST GUID*,PSTR,DWORD,PDWORD);
-WINSETUPAPI BOOL WINAPI SetupDiClassNameFromGuidW(CONST GUID*,PWSTR,DWORD,PDWORD);
-WINSETUPAPI BOOL WINAPI SetupDiClassNameFromGuidExA(CONST GUID*,PSTR,DWORD,PDWORD,PCSTR,PVOID);
-WINSETUPAPI BOOL WINAPI SetupDiClassNameFromGuidExW(CONST GUID*,PWSTR,DWORD,PDWORD,PCWSTR,PVOID);
-WINSETUPAPI BOOL WINAPI SetupDiCreateDeviceInfoA(HDEVINFO,PCSTR,CONST GUID*,PCSTR,HWND,DWORD,PSP_DEVINFO_DATA);
-WINSETUPAPI BOOL WINAPI SetupDiCreateDeviceInfoW(HDEVINFO,PCWSTR,CONST GUID*,PCWSTR,HWND,DWORD,PSP_DEVINFO_DATA);
-WINSETUPAPI HDEVINFO WINAPI SetupDiCreateDeviceInfoList(CONST GUID*,HWND);
-WINSETUPAPI HDEVINFO WINAPI SetupDiCreateDeviceInfoListExA(CONST GUID*,HWND,PCSTR,PVOID);
-WINSETUPAPI HDEVINFO WINAPI SetupDiCreateDeviceInfoListExW(CONST GUID*,HWND,PCWSTR,PVOID);
-WINSETUPAPI BOOL WINAPI SetupDiCreateDeviceInterfaceA(HDEVINFO,PSP_DEVINFO_DATA,CONST GUID*,PCSTR,DWORD,PSP_DEVICE_INTERFACE_DATA);
-WINSETUPAPI BOOL WINAPI SetupDiCreateDeviceInterfaceW(HDEVINFO,PSP_DEVINFO_DATA,CONST GUID*,PCWSTR,DWORD,PSP_DEVICE_INTERFACE_DATA);
-WINSETUPAPI HKEY WINAPI SetupDiCreateDeviceInterfaceRegKeyA(HDEVINFO,PSP_DEVICE_INTERFACE_DATA,DWORD,REGSAM,HINF,PCSTR);
-WINSETUPAPI HKEY WINAPI SetupDiCreateDeviceInterfaceRegKeyW(HDEVINFO,PSP_DEVICE_INTERFACE_DATA,DWORD,REGSAM,HINF,PCWSTR);
-WINSETUPAPI HKEY WINAPI SetupDiCreateDevRegKeyA(HDEVINFO,PSP_DEVINFO_DATA,DWORD,DWORD,DWORD,HINF,PCSTR);
-WINSETUPAPI HKEY WINAPI SetupDiCreateDevRegKeyW(HDEVINFO,PSP_DEVINFO_DATA,DWORD,DWORD,DWORD,HINF,PCWSTR);
-WINSETUPAPI BOOL WINAPI SetupDiDeleteDeviceInfo(HDEVINFO,PSP_DEVINFO_DATA);
-WINSETUPAPI BOOL WINAPI SetupDiDeleteDeviceInterfaceData(HDEVINFO,PSP_DEVICE_INTERFACE_DATA);
-WINSETUPAPI BOOL WINAPI SetupDiDeleteDeviceInterfaceRegKey(HDEVINFO,PSP_DEVICE_INTERFACE_DATA,DWORD);
-WINSETUPAPI BOOL WINAPI SetupDiDeleteDevRegKey(HDEVINFO,PSP_DEVINFO_DATA,DWORD,DWORD,DWORD);
-WINSETUPAPI BOOL WINAPI SetupDiDestroyClassImageList(PSP_CLASSIMAGELIST_DATA);
-WINSETUPAPI BOOL WINAPI SetupDiDestroyDeviceInfoList(HDEVINFO);
-WINSETUPAPI BOOL WINAPI SetupDiDestroyDriverInfoList(HDEVINFO,PSP_DEVINFO_DATA,DWORD);
-WINSETUPAPI INT WINAPI SetupDiDrawMiniIcon(HDC,RECT,INT,DWORD);
-WINSETUPAPI BOOL WINAPI SetupDiEnumDeviceInfo(HDEVINFO,DWORD,PSP_DEVINFO_DATA);
-WINSETUPAPI BOOL WINAPI SetupDiEnumDeviceInterfaces(HDEVINFO,PSP_DEVINFO_DATA,CONST GUID*,DWORD,PSP_DEVICE_INTERFACE_DATA);
-WINSETUPAPI BOOL WINAPI SetupDiEnumDriverInfoA(HDEVINFO,PSP_DEVINFO_DATA,DWORD,DWORD,PSP_DRVINFO_DATA_A);
-WINSETUPAPI BOOL WINAPI SetupDiEnumDriverInfoW(HDEVINFO,PSP_DEVINFO_DATA,DWORD,DWORD,PSP_DRVINFO_DATA_W);
-WINSETUPAPI BOOL WINAPI SetupDiGetActualSectionToInstallA(HINF,PCSTR,PSTR,DWORD,PDWORD,PSTR*);
-WINSETUPAPI BOOL WINAPI SetupDiGetActualSectionToInstallExA(HINF,PCSTR,PSP_ALTPLATFORM_INFO,PSTR,DWORD,PDWORD,PSTR*,PVOID);
-WINSETUPAPI BOOL WINAPI SetupDiGetActualSectionToInstallExW(HINF,PCWSTR,PSP_ALTPLATFORM_INFO,PWSTR,DWORD,PDWORD,PWSTR*,PVOID);
-WINSETUPAPI BOOL WINAPI SetupDiGetActualSectionToInstallW(HINF,PCWSTR,PWSTR,DWORD,PDWORD,PWSTR*);
-WINSETUPAPI BOOL WINAPI SetupDiGetClassBitmapIndex(CONST GUID*,PINT);
-WINSETUPAPI BOOL WINAPI SetupDiGetClassDescriptionA(CONST GUID*,PSTR,DWORD,PDWORD);
-WINSETUPAPI BOOL WINAPI SetupDiGetClassDescriptionW(CONST GUID*,PWSTR,DWORD,PDWORD);
-WINSETUPAPI BOOL WINAPI SetupDiGetClassDescriptionExA(CONST GUID*,PSTR,DWORD,PDWORD,PCSTR,PVOID);
-WINSETUPAPI BOOL WINAPI SetupDiGetClassDescriptionExW(CONST GUID*,PWSTR,DWORD,PDWORD,PCWSTR,PVOID);
-WINSETUPAPI BOOL WINAPI SetupDiGetClassDevPropertySheetsA(HDEVINFO,PSP_DEVINFO_DATA,LPPROPSHEETHEADERA,DWORD,PDWORD,DWORD);
-WINSETUPAPI BOOL WINAPI SetupDiGetClassDevPropertySheetsW(HDEVINFO,PSP_DEVINFO_DATA,LPPROPSHEETHEADERW,DWORD,PDWORD,DWORD);
-WINSETUPAPI HDEVINFO WINAPI SetupDiGetClassDevsA(CONST GUID*,PCSTR,HWND,DWORD);
-WINSETUPAPI HDEVINFO WINAPI SetupDiGetClassDevsW(CONST GUID*,PCWSTR,HWND,DWORD);
-WINSETUPAPI HDEVINFO WINAPI SetupDiGetClassDevsExA(CONST GUID*,PCSTR,HWND,DWORD,HDEVINFO,PCSTR,PVOID);
-WINSETUPAPI HDEVINFO WINAPI SetupDiGetClassDevsExW(CONST GUID*,PCWSTR,HWND,DWORD,HDEVINFO,PCWSTR,PVOID);
-WINSETUPAPI BOOL WINAPI SetupDiGetClassImageIndex(PSP_CLASSIMAGELIST_DATA,CONST GUID*,PINT);
-WINSETUPAPI BOOL WINAPI SetupDiGetClassImageList(PSP_CLASSIMAGELIST_DATA);
-WINSETUPAPI BOOL WINAPI SetupDiGetClassImageListExA(PSP_CLASSIMAGELIST_DATA,PCSTR,PVOID);
-WINSETUPAPI BOOL WINAPI SetupDiGetClassImageListExW(PSP_CLASSIMAGELIST_DATA,PCWSTR,PVOID);
-WINSETUPAPI BOOL WINAPI SetupDiGetClassInstallParamsA(HDEVINFO,PSP_DEVINFO_DATA,PSP_CLASSINSTALL_HEADER,DWORD,PDWORD);
-WINSETUPAPI BOOL WINAPI SetupDiGetClassInstallParamsW(HDEVINFO,PSP_DEVINFO_DATA,PSP_CLASSINSTALL_HEADER,DWORD,PDWORD);
-WINSETUPAPI BOOL WINAPI SetupDiGetClassRegistryPropertyA(LPGUID,DWORD,PDWORD,PBYTE,DWORD,PDWORD,PCSTR,PVOID);
-WINSETUPAPI BOOL WINAPI SetupDiGetClassRegistryPropertyW(LPGUID,DWORD,PDWORD,PBYTE,DWORD,PDWORD,PCWSTR,PVOID);
-WINSETUPAPI BOOL WINAPI SetupDiGetDeviceInfoListClass(HDEVINFO,LPGUID);
-WINSETUPAPI BOOL WINAPI SetupDiGetDeviceInfoListDetailA(HDEVINFO,PSP_DEVINFO_LIST_DETAIL_DATA_A);
-WINSETUPAPI BOOL WINAPI SetupDiGetDeviceInfoListDetailW(HDEVINFO,PSP_DEVINFO_LIST_DETAIL_DATA_W);
-WINSETUPAPI BOOL WINAPI SetupDiGetDeviceInstallParamsA(HDEVINFO,PSP_DEVINFO_DATA,PSP_DEVINSTALL_PARAMS_A);
-WINSETUPAPI BOOL WINAPI SetupDiGetDeviceInstallParamsW(HDEVINFO,PSP_DEVINFO_DATA,PSP_DEVINSTALL_PARAMS_W);
-WINSETUPAPI BOOL WINAPI SetupDiGetDeviceInstanceIdA(HDEVINFO,PSP_DEVINFO_DATA,PSTR,DWORD,PDWORD);
-WINSETUPAPI BOOL WINAPI SetupDiGetDeviceInstanceIdW(HDEVINFO,PSP_DEVINFO_DATA,PWSTR,DWORD,PDWORD);
-WINSETUPAPI BOOL WINAPI SetupDiGetDeviceInterfaceAlias(HDEVINFO,PSP_DEVICE_INTERFACE_DATA,CONST GUID*,PSP_DEVICE_INTERFACE_DATA);
-WINSETUPAPI BOOL WINAPI SetupDiGetDeviceInterfaceDetailA(HDEVINFO,PSP_DEVICE_INTERFACE_DATA,PSP_DEVICE_INTERFACE_DETAIL_DATA_A,DWORD,PDWORD,PSP_DEVINFO_DATA);
-WINSETUPAPI BOOL WINAPI SetupDiGetDeviceInterfaceDetailW(HDEVINFO,PSP_DEVICE_INTERFACE_DATA,PSP_DEVICE_INTERFACE_DETAIL_DATA_W,DWORD,PDWORD,PSP_DEVINFO_DATA);
-WINSETUPAPI BOOL WINAPI SetupDiGetDeviceRegistryPropertyA(HDEVINFO,PSP_DEVINFO_DATA,DWORD,PDWORD,PBYTE,DWORD,PDWORD);
-WINSETUPAPI BOOL WINAPI SetupDiGetDeviceRegistryPropertyW(HDEVINFO,PSP_DEVINFO_DATA,DWORD,PDWORD,PBYTE,DWORD,PDWORD);
-WINSETUPAPI BOOL WINAPI SetupDiGetDriverInfoDetailA(HDEVINFO,PSP_DEVINFO_DATA,PSP_DRVINFO_DATA_A,PSP_DRVINFO_DETAIL_DATA_A,DWORD,PDWORD);
-WINSETUPAPI BOOL WINAPI SetupDiGetDriverInfoDetailW(HDEVINFO,PSP_DEVINFO_DATA,PSP_DRVINFO_DATA_W,PSP_DRVINFO_DETAIL_DATA_W,DWORD,PDWORD);
-WINSETUPAPI BOOL WINAPI SetupDiGetDriverInstallParamsA(HDEVINFO,PSP_DEVINFO_DATA,PSP_DRVINFO_DATA_A,PSP_DRVINSTALL_PARAMS);
-WINSETUPAPI BOOL WINAPI SetupDiGetDriverInstallParamsW(HDEVINFO,PSP_DEVINFO_DATA,PSP_DRVINFO_DATA_W,PSP_DRVINSTALL_PARAMS);
-WINSETUPAPI BOOL WINAPI SetupDiGetHwProfileFriendlyNameA(DWORD,PSTR,DWORD,PDWORD);
-WINSETUPAPI BOOL WINAPI SetupDiGetHwProfileFriendlyNameExA(DWORD,PSTR,DWORD,PDWORD,PCSTR,PVOID);
-WINSETUPAPI BOOL WINAPI SetupDiGetHwProfileFriendlyNameExW(DWORD,PWSTR,DWORD,PDWORD,PCWSTR,PVOID);
+WINSETUPAPI BOOL WINAPI SetupCommitFileQueueA(_In_opt_ HWND, _In_ HSPFILEQ, _In_ PSP_FILE_CALLBACK_A, _In_ PVOID);
+WINSETUPAPI BOOL WINAPI SetupCommitFileQueueW(_In_opt_ HWND, _In_ HSPFILEQ, _In_ PSP_FILE_CALLBACK_W, _In_ PVOID);
+
+WINSETUPAPI
+UINT
+WINAPI
+SetupCopyErrorA(
+  _In_ HWND hwndParent,
+  _In_opt_ PCSTR DialogTitle,
+  _In_opt_ PCSTR DiskName,
+  _In_ PCSTR PathToSource,
+  _In_ PCSTR SourceFile,
+  _In_opt_ PCSTR TargetPathFile,
+  _In_ UINT Win32ErrorCode,
+  _In_ DWORD Style,
+  _Out_writes_opt_(PathBufferSize) PSTR PathBuffer,
+  _In_ DWORD PathBufferSize,
+  _Out_opt_ PDWORD PathRequiredSize);
+
+WINSETUPAPI
+UINT
+WINAPI
+SetupCopyErrorW(
+  _In_ HWND hwndParent,
+  _In_opt_ PCWSTR DialogTitle,
+  _In_opt_ PCWSTR DiskName,
+  _In_ PCWSTR PathToSource,
+  _In_ PCWSTR SourceFile,
+  _In_opt_ PCWSTR TargetPathFile,
+  _In_ UINT Win32ErrorCode,
+  _In_ DWORD Style,
+  _Out_writes_opt_(PathBufferSize) PWSTR PathBuffer,
+  _In_ DWORD PathBufferSize,
+  _Out_opt_ PDWORD PathRequiredSize);
+
+WINSETUPAPI
+BOOL
+WINAPI
+SetupCopyOEMInfA(
+  _In_ PCSTR SourceInfFileName,
+  _In_opt_ PCSTR OEMSourceMediaLocation,
+  _In_ DWORD OEMSourceMediaType,
+  _In_ DWORD CopyStyle,
+  _Out_writes_opt_(DestinationInfFileNameSize) PSTR DestinationInfFileName,
+  _In_ DWORD DestinationInfFileNameSize,
+  _Out_opt_ PDWORD RequiredSize,
+  _Out_opt_ PSTR *DestinationInfFileNameComponent);
+
+WINSETUPAPI
+BOOL
+WINAPI
+SetupCopyOEMInfW(
+  _In_ PCWSTR SourceInfFileName,
+  _In_opt_ PCWSTR OEMSourceMediaLocation,
+  _In_ DWORD OEMSourceMediaType,
+  _In_ DWORD CopyStyle,
+  _Out_writes_opt_(DestinationInfFileNameSize) PWSTR DestinationInfFileName,
+  _In_ DWORD DestinationInfFileNameSize,
+  _Out_opt_ PDWORD RequiredSize,
+  _Out_opt_ PWSTR  *DestinationInfFileNameComponent);
+
+WINSETUPAPI HDSKSPC WINAPI SetupCreateDiskSpaceListA(_Reserved_ PVOID, _Reserved_ DWORD, _In_ UINT);
+WINSETUPAPI HDSKSPC WINAPI SetupCreateDiskSpaceListW(_Reserved_ PVOID, _Reserved_ DWORD, _In_ UINT);
+WINSETUPAPI DWORD WINAPI SetupDecompressOrCopyFileA(_In_ PCSTR, _In_ PCSTR, _In_opt_ PUINT);
+WINSETUPAPI DWORD WINAPI SetupDecompressOrCopyFileW(_In_ PCWSTR, _In_ PCWSTR, _In_opt_ PUINT);
+WINSETUPAPI UINT WINAPI SetupDefaultQueueCallbackA(_In_ PVOID, _In_ UINT, _In_ UINT_PTR, _In_ UINT_PTR);
+WINSETUPAPI UINT WINAPI SetupDefaultQueueCallbackW(_In_ PVOID, _In_ UINT, _In_ UINT_PTR, _In_ UINT_PTR);
+WINSETUPAPI UINT WINAPI SetupDeleteErrorA(_In_ HWND, _In_opt_ PCSTR, _In_ PCSTR, _In_ UINT, _In_ DWORD);
+WINSETUPAPI UINT WINAPI SetupDeleteErrorW(_In_ HWND, _In_opt_ PCWSTR, _In_ PCWSTR, _In_ UINT, _In_ DWORD);
+WINSETUPAPI BOOL WINAPI SetupDestroyDiskSpaceList(_Inout_ HDSKSPC);
+WINSETUPAPI BOOL WINAPI SetupDiAskForOEMDisk(_In_ HDEVINFO, _In_opt_ PSP_DEVINFO_DATA);
+
+_Success_(return != FALSE)
+WINSETUPAPI
+BOOL
+WINAPI
+SetupDiBuildClassInfoList(
+  _In_ DWORD Flags,
+  _Out_writes_to_opt_(ClassGuidListSize, *RequiredSize) LPGUID ClassGuidList,
+  _In_ DWORD ClassGuidListSize,
+  _Out_ PDWORD RequiredSize);
+
+_Success_(return != FALSE)
+WINSETUPAPI
+BOOL
+WINAPI
+SetupDiBuildClassInfoListExA(
+  _In_ DWORD Flags,
+  _Out_writes_to_opt_(ClassGuidListSize, *RequiredSize) LPGUID ClassGuidList,
+  _In_ DWORD ClassGuidListSize,
+  _Out_ PDWORD RequiredSize,
+  _In_opt_ PCSTR MachineName,
+  _Reserved_ PVOID Reserved);
+
+_Success_(return != FALSE)
+WINSETUPAPI
+BOOL
+WINAPI
+SetupDiBuildClassInfoListExW(
+  _In_ DWORD Flags,
+  _Out_writes_to_opt_(ClassGuidListSize, *RequiredSize) LPGUID ClassGuidList,
+  _In_ DWORD ClassGuidListSize,
+  _Out_ PDWORD RequiredSize,
+  _In_opt_ PCWSTR MachineName,
+  _Reserved_ PVOID Reserved);
+
+WINSETUPAPI BOOL WINAPI SetupDiBuildDriverInfoList(_In_ HDEVINFO, _Inout_opt_ PSP_DEVINFO_DATA, _In_ DWORD);
+WINSETUPAPI BOOL WINAPI SetupDiCallClassInstaller(_In_ DI_FUNCTION, _In_ HDEVINFO, _In_opt_ PSP_DEVINFO_DATA);
+WINSETUPAPI BOOL WINAPI SetupDiCancelDriverInfoSearch(_In_ HDEVINFO);
+WINSETUPAPI BOOL WINAPI SetupDiChangeState(_In_ HDEVINFO, _Inout_ PSP_DEVINFO_DATA);
+
+_Success_(return != FALSE)
+WINSETUPAPI
+BOOL
+WINAPI
+SetupDiClassGuidsFromNameA(
+  _In_ PCSTR ClassName,
+  _Out_writes_to_(ClassGuidListSize, *RequiredSize) LPGUID ClassGuidList,
+  _In_ DWORD ClassGuidListSize,
+  _Out_ PDWORD RequiredSize);
+
+_Success_(return != FALSE)
+WINSETUPAPI
+BOOL
+WINAPI
+SetupDiClassGuidsFromNameW(
+  _In_ PCWSTR ClassName,
+  _Out_writes_to_(ClassGuidListSize, *RequiredSize) LPGUID ClassGuidList,
+  _In_ DWORD ClassGuidListSize,
+  _Out_ PDWORD RequiredSize);
+
+_Success_(return != FALSE)
+WINSETUPAPI
+BOOL
+WINAPI
+SetupDiClassGuidsFromNameExA(
+  _In_ PCSTR ClassName,
+  _Out_writes_to_(ClassGuidListSize, *RequiredSize) LPGUID ClassGuidList,
+  _In_ DWORD ClassGuidListSize,
+  _Out_ PDWORD RequiredSize,
+  _In_opt_ PCSTR MachineName,
+  _Reserved_ PVOID Reserved);
+
+_Success_(return != FALSE)
+WINSETUPAPI
+BOOL
+WINAPI
+SetupDiClassGuidsFromNameExW(
+  _In_ PCWSTR ClassName,
+  _Out_writes_to_(ClassGuidListSize, *RequiredSize) LPGUID ClassGuidList,
+  _In_ DWORD ClassGuidListSize,
+  _Out_ PDWORD RequiredSize,
+  _In_opt_ PCWSTR MachineName,
+  _Reserved_ PVOID Reserved);
+
+WINSETUPAPI
+BOOL
+WINAPI
+SetupDiClassNameFromGuidA(
+  _In_ CONST GUID *ClassGuid,
+  _Out_writes_(ClassNameSize) PSTR ClassName,
+  _In_ DWORD ClassNameSize,
+  _Out_opt_ PDWORD RequiredSize);
+
+WINSETUPAPI
+BOOL
+WINAPI
+SetupDiClassNameFromGuidW(
+  _In_ CONST GUID *ClassGuid,
+  _Out_writes_(ClassNameSize) PWSTR ClassName,
+  _In_ DWORD ClassNameSize,
+  _Out_opt_ PDWORD RequiredSize);
+
+WINSETUPAPI
+BOOL
+WINAPI
+SetupDiClassNameFromGuidExA(
+  _In_ CONST GUID *ClassGuid,
+  _Out_writes_(ClassNameSize) PSTR ClassName,
+  _In_ DWORD ClassNameSize,
+  _Out_opt_ PDWORD RequiredSize,
+  _In_opt_ PCSTR MachineName,
+  _Reserved_ PVOID Reserved);
+
+WINSETUPAPI
+BOOL
+WINAPI
+SetupDiClassNameFromGuidExW(
+  _In_ CONST GUID *ClassGuid,
+  _Out_writes_(ClassNameSize) PWSTR ClassName,
+  _In_ DWORD ClassNameSize,
+  _Out_opt_ PDWORD RequiredSize,
+  _In_opt_ PCWSTR MachineName,
+  _Reserved_ PVOID Reserved);
+
+WINSETUPAPI BOOL WINAPI SetupDiCreateDeviceInfoA(_In_ HDEVINFO, _In_ PCSTR, _In_ CONST GUID*, _In_opt_ PCSTR, _In_opt_ HWND, _In_ DWORD, _Out_opt_ PSP_DEVINFO_DATA);
+WINSETUPAPI BOOL WINAPI SetupDiCreateDeviceInfoW(_In_ HDEVINFO, _In_ PCWSTR, _In_ CONST GUID*, _In_opt_ PCWSTR, _In_opt_ HWND, _In_ DWORD, _Out_opt_ PSP_DEVINFO_DATA);
+_Check_return_ WINSETUPAPI HDEVINFO WINAPI SetupDiCreateDeviceInfoList(_In_opt_ CONST GUID*, _In_opt_ HWND);
+_Check_return_ WINSETUPAPI HDEVINFO WINAPI SetupDiCreateDeviceInfoListExA(_In_opt_ CONST GUID*, _In_opt_ HWND, _In_opt_ PCSTR, _Reserved_ PVOID);
+_Check_return_ WINSETUPAPI HDEVINFO WINAPI SetupDiCreateDeviceInfoListExW(_In_opt_ CONST GUID*, _In_opt_ HWND, _In_opt_ PCWSTR, _Reserved_ PVOID);
+WINSETUPAPI BOOL WINAPI SetupDiCreateDeviceInterfaceA(_In_ HDEVINFO, _In_ PSP_DEVINFO_DATA, _In_ CONST GUID*, _In_opt_ PCSTR, _In_ DWORD, _Out_opt_ PSP_DEVICE_INTERFACE_DATA);
+WINSETUPAPI BOOL WINAPI SetupDiCreateDeviceInterfaceW(_In_ HDEVINFO, _In_ PSP_DEVINFO_DATA, _In_ CONST GUID*, _In_opt_ PCWSTR, _In_ DWORD, _Out_opt_ PSP_DEVICE_INTERFACE_DATA);
+_Check_return_ WINSETUPAPI HKEY WINAPI SetupDiCreateDeviceInterfaceRegKeyA(_In_ HDEVINFO, _In_ PSP_DEVICE_INTERFACE_DATA, _Reserved_ DWORD, _In_ REGSAM, _In_opt_ HINF, _In_opt_ PCSTR);
+_Check_return_ WINSETUPAPI HKEY WINAPI SetupDiCreateDeviceInterfaceRegKeyW(_In_ HDEVINFO, _In_ PSP_DEVICE_INTERFACE_DATA, _Reserved_ DWORD, _In_ REGSAM, _In_opt_ HINF, _In_opt_ PCWSTR);
+_Check_return_ WINSETUPAPI HKEY WINAPI SetupDiCreateDevRegKeyA(_In_ HDEVINFO, _In_ PSP_DEVINFO_DATA, _In_ DWORD, _In_ DWORD, _In_ DWORD, _In_opt_ HINF, _In_opt_ PCSTR);
+_Check_return_ WINSETUPAPI HKEY WINAPI SetupDiCreateDevRegKeyW(_In_ HDEVINFO, _In_ PSP_DEVINFO_DATA, _In_ DWORD, _In_ DWORD, _In_ DWORD, _In_opt_ HINF, _In_opt_ PCWSTR);
+WINSETUPAPI BOOL WINAPI SetupDiDeleteDeviceInfo(_In_ HDEVINFO, _In_ PSP_DEVINFO_DATA);
+WINSETUPAPI BOOL WINAPI SetupDiDeleteDeviceInterfaceData(_In_ HDEVINFO, _In_ PSP_DEVICE_INTERFACE_DATA);
+WINSETUPAPI BOOL WINAPI SetupDiDeleteDeviceInterfaceRegKey(_In_ HDEVINFO, _In_ PSP_DEVICE_INTERFACE_DATA, _Reserved_ DWORD);
+WINSETUPAPI BOOL WINAPI SetupDiDeleteDevRegKey(_In_ HDEVINFO, _In_ PSP_DEVINFO_DATA, _In_ DWORD, _In_ DWORD, _In_ DWORD);
+WINSETUPAPI BOOL WINAPI SetupDiDestroyClassImageList(_In_ PSP_CLASSIMAGELIST_DATA);
+WINSETUPAPI BOOL WINAPI SetupDiDestroyDeviceInfoList(_In_ HDEVINFO);
+WINSETUPAPI BOOL WINAPI SetupDiDestroyDriverInfoList(_In_ HDEVINFO, _In_opt_ PSP_DEVINFO_DATA, _In_ DWORD);
+WINSETUPAPI INT WINAPI SetupDiDrawMiniIcon(_In_ HDC, _In_ RECT, _In_ INT, _In_ DWORD);
+WINSETUPAPI BOOL WINAPI SetupDiEnumDeviceInfo(_In_ HDEVINFO, _In_ DWORD, _Out_ PSP_DEVINFO_DATA);
+WINSETUPAPI BOOL WINAPI SetupDiEnumDeviceInterfaces(_In_ HDEVINFO, _In_opt_ PSP_DEVINFO_DATA, _In_ CONST GUID*, _In_ DWORD, _Out_ PSP_DEVICE_INTERFACE_DATA);
+WINSETUPAPI BOOL WINAPI SetupDiEnumDriverInfoA(_In_ HDEVINFO, _In_opt_ PSP_DEVINFO_DATA, _In_ DWORD, _In_ DWORD, _Out_ PSP_DRVINFO_DATA_A);
+WINSETUPAPI BOOL WINAPI SetupDiEnumDriverInfoW(_In_ HDEVINFO, _In_opt_ PSP_DEVINFO_DATA, _In_ DWORD, _In_ DWORD, _Out_ PSP_DRVINFO_DATA_W);
+
+WINSETUPAPI
+BOOL
+WINAPI
+SetupDiGetActualSectionToInstallA(
+  _In_ HINF InfHandle,
+  _In_ PCSTR InfSectionName,
+  _Out_writes_opt_(InfSectionWithExtSize) PSTR InfSectionWithExt,
+  _In_ DWORD InfSectionWithExtSize,
+  _Out_opt_ PDWORD RequiredSize,
+  _Out_opt_ PSTR *Extension);
+
+WINSETUPAPI
+BOOL
+WINAPI
+SetupDiGetActualSectionToInstallW(
+  _In_ HINF InfHandle,
+  _In_ PCWSTR InfSectionName,
+  _Out_writes_opt_(InfSectionWithExtSize) PWSTR InfSectionWithExt,
+  _In_ DWORD InfSectionWithExtSize,
+  _Out_opt_ PDWORD RequiredSize,
+  _Out_opt_ PWSTR *Extension);
+
+WINSETUPAPI
+BOOL
+WINAPI
+SetupDiGetActualSectionToInstallExA(
+  _In_ HINF InfHandle,
+  _In_ PCSTR InfSectionName,
+  _In_opt_ PSP_ALTPLATFORM_INFO AlternatePlatformInfo,
+  _Out_writes_opt_(InfSectionWithExtSize) PSTR InfSectionWithExt,
+  _In_ DWORD InfSectionWithExtSize,
+  _Out_opt_ PDWORD RequiredSize,
+  _Out_opt_ PSTR *Extension,
+  _Reserved_ PVOID Reserved);
+
+WINSETUPAPI
+BOOL
+WINAPI
+SetupDiGetActualSectionToInstallExW(
+  _In_ HINF InfHandle,
+  _In_ PCWSTR InfSectionName,
+  _In_opt_ PSP_ALTPLATFORM_INFO AlternatePlatformInfo,
+  _Out_writes_opt_(InfSectionWithExtSize) PWSTR InfSectionWithExt,
+  _In_ DWORD InfSectionWithExtSize,
+  _Out_opt_ PDWORD RequiredSize,
+  _Out_opt_ PWSTR *Extension,
+  _Reserved_ PVOID Reserved);
+
+WINSETUPAPI BOOL WINAPI SetupDiGetClassBitmapIndex(_In_opt_ CONST GUID*, _Out_ PINT);
+
+WINSETUPAPI
+BOOL
+WINAPI
+SetupDiGetClassDescriptionA(
+  _In_ CONST GUID *ClassGuid,
+  _Out_writes_(ClassDescriptionSize) PSTR ClassDescription,
+  _In_ DWORD ClassDescriptionSize,
+  _Out_opt_ PDWORD RequiredSize);
+
+WINSETUPAPI
+BOOL
+WINAPI
+SetupDiGetClassDescriptionW(
+  _In_ CONST GUID *ClassGuid,
+  _Out_writes_(ClassDescriptionSize) PWSTR ClassDescription,
+  _In_ DWORD ClassDescriptionSize,
+  _Out_opt_ PDWORD RequiredSize);
+
+WINSETUPAPI
+BOOL
+WINAPI
+SetupDiGetClassDescriptionExA(
+  _In_ CONST GUID *ClassGuid,
+  _Out_writes_(ClassDescriptionSize) PSTR ClassDescription,
+  _In_ DWORD ClassDescriptionSize,
+  _Out_opt_ PDWORD RequiredSize,
+  _In_opt_ PCSTR MachineName,
+  _Reserved_ PVOID Reserved);
+
+WINSETUPAPI
+BOOL
+WINAPI
+SetupDiGetClassDescriptionExW(
+  _In_ CONST GUID *ClassGuid,
+  _Out_writes_(ClassDescriptionSize) PWSTR ClassDescription,
+  _In_ DWORD ClassDescriptionSize,
+  _Out_opt_ PDWORD RequiredSize,
+  _In_opt_ PCWSTR MachineName,
+  _Reserved_ PVOID Reserved);
+
+WINSETUPAPI BOOL WINAPI SetupDiGetClassDevPropertySheetsA(_In_ HDEVINFO, _In_opt_ PSP_DEVINFO_DATA, _In_ LPPROPSHEETHEADERA, _In_ DWORD, _Out_opt_ PDWORD, _In_ DWORD);
+WINSETUPAPI BOOL WINAPI SetupDiGetClassDevPropertySheetsW(_In_ HDEVINFO, _In_opt_ PSP_DEVINFO_DATA, _In_ LPPROPSHEETHEADERW, _In_ DWORD, _Out_opt_ PDWORD, _In_ DWORD);
+_Check_return_ WINSETUPAPI HDEVINFO WINAPI SetupDiGetClassDevsA(_In_opt_ CONST GUID*, _In_opt_ PCSTR, _In_opt_ HWND, _In_ DWORD);
+_Check_return_ WINSETUPAPI HDEVINFO WINAPI SetupDiGetClassDevsW(_In_opt_ CONST GUID*, _In_opt_ PCWSTR, _In_opt_ HWND, _In_ DWORD);
+_Check_return_ WINSETUPAPI HDEVINFO WINAPI SetupDiGetClassDevsExA(_In_opt_ CONST GUID*, _In_opt_ PCSTR, _In_opt_ HWND, _In_ DWORD, _In_opt_ HDEVINFO, _In_opt_ PCSTR, _Reserved_ PVOID);
+_Check_return_ WINSETUPAPI HDEVINFO WINAPI SetupDiGetClassDevsExW(_In_opt_ CONST GUID*, _In_opt_ PCWSTR, _In_opt_ HWND, _In_ DWORD, _In_opt_ HDEVINFO, _In_opt_ PCWSTR, _Reserved_ PVOID);
+WINSETUPAPI BOOL WINAPI SetupDiGetClassImageIndex(_In_ PSP_CLASSIMAGELIST_DATA, _In_ CONST GUID*, _Out_ PINT);
+WINSETUPAPI BOOL WINAPI SetupDiGetClassImageList(_Out_ PSP_CLASSIMAGELIST_DATA);
+WINSETUPAPI BOOL WINAPI SetupDiGetClassImageListExA(_Out_ PSP_CLASSIMAGELIST_DATA, _In_opt_ PCSTR, _Reserved_ PVOID);
+WINSETUPAPI BOOL WINAPI SetupDiGetClassImageListExW(_Out_ PSP_CLASSIMAGELIST_DATA, _In_opt_ PCWSTR, _Reserved_ PVOID);
+
+_Success_(return != FALSE)
+WINSETUPAPI
+BOOL
+WINAPI
+SetupDiGetClassInstallParamsA(
+  _In_ HDEVINFO DeviceInfoSet,
+  _In_opt_ PSP_DEVINFO_DATA DeviceInfoData,
+  _Out_writes_bytes_to_opt_(ClassInstallParamsSize, *RequiredSize) PSP_CLASSINSTALL_HEADER ClassInstallParams,
+  _In_ DWORD ClassInstallParamsSize,
+  _Out_opt_ PDWORD RequiredSize);
+
+_Success_(return != FALSE)
+WINSETUPAPI
+BOOL
+WINAPI
+SetupDiGetClassInstallParamsW(
+  _In_ HDEVINFO DeviceInfoSet,
+  _In_opt_ PSP_DEVINFO_DATA DeviceInfoData,
+  _Out_writes_bytes_to_opt_(ClassInstallParamsSize, *RequiredSize) PSP_CLASSINSTALL_HEADER ClassInstallParams,
+  _In_ DWORD ClassInstallParamsSize,
+  _Out_opt_ PDWORD RequiredSize);
+
+_Success_(return != FALSE)
+WINSETUPAPI
+BOOL
+WINAPI
+SetupDiGetClassRegistryPropertyA(
+  _In_ CONST GUID *ClassGuid,
+  _In_ DWORD Property,
+  _Out_opt_ PDWORD PropertyRegDataType,
+  _Out_writes_bytes_to_(PropertyBufferSize, *RequiredSize) PBYTE PropertyBuffer,
+  _In_ DWORD PropertyBufferSize,
+  _Out_opt_ PDWORD RequiredSize,
+  _In_opt_ PCSTR MachineName,
+  _Reserved_ PVOID Reserved);
+
+_Success_(return != FALSE)
+WINSETUPAPI
+BOOL
+WINAPI
+SetupDiGetClassRegistryPropertyW(
+  _In_ CONST GUID *ClassGuid,
+  _In_ DWORD Property,
+  _Out_opt_ PDWORD PropertyRegDataType,
+  _Out_writes_bytes_to_(PropertyBufferSize, *RequiredSize) PBYTE PropertyBuffer,
+  _In_ DWORD PropertyBufferSize,
+  _Out_opt_ PDWORD RequiredSize,
+  _In_opt_ PCWSTR MachineName, 
+  _Reserved_ PVOID Reserved);
+
+WINSETUPAPI BOOL WINAPI SetupDiGetDeviceInfoListClass(_In_ HDEVINFO, _Out_ LPGUID);
+WINSETUPAPI BOOL WINAPI SetupDiGetDeviceInfoListDetailA(_In_ HDEVINFO, _Out_ PSP_DEVINFO_LIST_DETAIL_DATA_A);
+WINSETUPAPI BOOL WINAPI SetupDiGetDeviceInfoListDetailW(_In_ HDEVINFO, _Out_ PSP_DEVINFO_LIST_DETAIL_DATA_W);
+WINSETUPAPI BOOL WINAPI SetupDiGetDeviceInstallParamsA(_In_ HDEVINFO, _In_opt_ PSP_DEVINFO_DATA, _Out_ PSP_DEVINSTALL_PARAMS_A);
+WINSETUPAPI BOOL WINAPI SetupDiGetDeviceInstallParamsW(_In_ HDEVINFO, _In_opt_ PSP_DEVINFO_DATA, _Out_ PSP_DEVINSTALL_PARAMS_W);
+
+WINSETUPAPI
+BOOL
+WINAPI
+SetupDiGetDeviceInstanceIdA(
+  _In_ HDEVINFO DeviceInfoSet,
+  _In_ PSP_DEVINFO_DATA DeviceInfoData,
+  _Out_writes_opt_(DeviceInstanceIdSize) PSTR DeviceInstanceId,
+  _In_ DWORD DeviceInstanceIdSize,
+  _Out_opt_ PDWORD RequiredSize);
+
+WINSETUPAPI
+BOOL
+WINAPI
+SetupDiGetDeviceInstanceIdW(
+  _In_ HDEVINFO DeviceInfoSet,
+  _In_ PSP_DEVINFO_DATA DeviceInfoData,
+  _Out_writes_opt_(DeviceInstanceIdSize) PWSTR DeviceInstanceId,
+  _In_ DWORD DeviceInstanceIdSize,
+  _Out_opt_ PDWORD RequiredSize);
+
+WINSETUPAPI BOOL WINAPI SetupDiGetDeviceInterfaceAlias(_In_ HDEVINFO, _In_ PSP_DEVICE_INTERFACE_DATA, _In_ CONST GUID*, _Out_ PSP_DEVICE_INTERFACE_DATA);
+
+_Success_(return != FALSE)
+_At_((LPSTR)DeviceInterfaceDetailData->DevicePath, _Post_z_)
+WINSETUPAPI
+BOOL
+WINAPI
+SetupDiGetDeviceInterfaceDetailA(
+  _In_ HDEVINFO DeviceInfoSet,
+  _In_ PSP_DEVICE_INTERFACE_DATA DeviceInterfaceData,
+  _Inout_updates_bytes_to_opt_(DeviceInterfaceDetailDataSize, *RequiredSize) PSP_DEVICE_INTERFACE_DETAIL_DATA_A DeviceInterfaceDetailData, 
+  _In_ DWORD DeviceInterfaceDetailDataSize,
+  _Out_opt_ _Out_range_(>=, sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA_A)) PDWORD RequiredSize,
+  _Out_opt_ PSP_DEVINFO_DATA DeviceInfoData);
+
+_Success_(return != FALSE)
+_At_((LPWSTR)DeviceInterfaceDetailData->DevicePath, _Post_z_)
+WINSETUPAPI
+BOOL
+WINAPI
+SetupDiGetDeviceInterfaceDetailW(
+  _In_ HDEVINFO DeviceInfoSet,
+  _In_ PSP_DEVICE_INTERFACE_DATA DeviceInterfaceData,
+  _Out_writes_bytes_to_opt_(DeviceInterfaceDetailDataSize, *RequiredSize) PSP_DEVICE_INTERFACE_DETAIL_DATA_W DeviceInterfaceDetailData,
+  _In_ DWORD DeviceInterfaceDetailDataSize,
+  _Out_opt_ _Out_range_(>=, sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA_W)) PDWORD RequiredSize,
+  _Out_opt_ PSP_DEVINFO_DATA DeviceInfoData);
+
+_Success_(return != FALSE)
+_When_((*PropertyRegDataType == REG_SZ), _At_((PSTR) PropertyBuffer, _Post_valid_))
+_When_((*PropertyRegDataType == REG_MULTI_SZ), _At_((PZZSTR) PropertyBuffer, _Post_valid_))
+WINSETUPAPI
+BOOL
+WINAPI
+SetupDiGetDeviceRegistryPropertyA(
+  _In_ HDEVINFO DeviceInfoSet,
+  _In_ PSP_DEVINFO_DATA DeviceInfoData,
+  _In_ DWORD Property,
+  _Out_opt_ PDWORD PropertyRegDataType, 
+  _Out_writes_bytes_to_opt_(PropertyBufferSize, *RequiredSize) PBYTE PropertyBuffer,
+  _In_ DWORD PropertyBufferSize,
+  _Out_opt_ PDWORD RequiredSize);
+
+_Success_(return != FALSE)
+_When_((*PropertyRegDataType == REG_SZ), _At_((PWSTR) PropertyBuffer, _Post_valid_))
+_When_((*PropertyRegDataType == REG_MULTI_SZ), _At_((PZZWSTR) PropertyBuffer, _Post_valid_))
+WINSETUPAPI
+BOOL
+WINAPI
+SetupDiGetDeviceRegistryPropertyW(
+  _In_ HDEVINFO DeviceInfoSet,
+  _In_ PSP_DEVINFO_DATA DeviceInfoData,
+  _In_ DWORD Property,
+  _Out_opt_ PDWORD PropertyRegDataType,
+  _Out_writes_bytes_to_opt_(PropertyBufferSize, *RequiredSize) PBYTE PropertyBuffer,
+  _In_ DWORD PropertyBufferSize,
+  _Out_opt_ PDWORD RequiredSize);
+
+WINSETUPAPI
+BOOL
+WINAPI
+SetupDiGetDriverInfoDetailA(
+  _In_ HDEVINFO DeviceInfoSet,
+  _In_opt_ PSP_DEVINFO_DATA DeviceInfoData,
+  _In_ PSP_DRVINFO_DATA_A DriverInfoData,
+  _Inout_updates_bytes_opt_(DriverInfoDetailDataSize) PSP_DRVINFO_DETAIL_DATA_A DriverInfoDetailData, 
+  _In_ DWORD DriverInfoDetailDataSize,
+  _Out_opt_ PDWORD RequiredSize);
+
+WINSETUPAPI
+BOOL
+WINAPI
+SetupDiGetDriverInfoDetailW(
+  _In_ HDEVINFO DeviceInfoSet,
+  _In_opt_ PSP_DEVINFO_DATA DeviceInfoData,
+  _In_ PSP_DRVINFO_DATA_W DriverInfoData,
+  _Inout_updates_bytes_opt_(DriverInfoDetailDataSize) PSP_DRVINFO_DETAIL_DATA_W DriverInfoDetailData,
+  _In_ DWORD DriverInfoDetailDataSize,
+  _Out_opt_ PDWORD RequiredSize);
+
+WINSETUPAPI BOOL WINAPI SetupDiGetDriverInstallParamsA(_In_ HDEVINFO, _In_opt_ PSP_DEVINFO_DATA, _In_ PSP_DRVINFO_DATA_A, _Out_ PSP_DRVINSTALL_PARAMS);
+WINSETUPAPI BOOL WINAPI SetupDiGetDriverInstallParamsW(_In_ HDEVINFO, _In_opt_ PSP_DEVINFO_DATA, _In_ PSP_DRVINFO_DATA_W, _Out_ PSP_DRVINSTALL_PARAMS);
+
+WINSETUPAPI
+BOOL
+WINAPI
+SetupDiGetHwProfileFriendlyNameA(
+  _In_ DWORD HwProfile,
+  _Out_writes_(FriendlyNameSize) PSTR FriendlyName,
+  _In_ DWORD FriendlyNameSize,
+  _Out_opt_ PDWORD RequiredSize);
+
+WINSETUPAPI
+BOOL
+WINAPI
+SetupDiGetHwProfileFriendlyNameW(
+  _In_ DWORD HwProfile,
+  _Out_writes_(FriendlyNameSize) PWSTR FriendlyName,
+  _In_ DWORD FriendlyNameSize,
+  _Out_opt_ PDWORD RequiredSize);
+
+WINSETUPAPI
+BOOL
+WINAPI
+SetupDiGetHwProfileFriendlyNameExA(
+  _In_ DWORD HwProfile,
+  _Out_writes_(FriendlyNameSize) PSTR FriendlyName,
+  _In_ DWORD FriendlyNameSize,
+  _Out_opt_ PDWORD RequiredSize,
+  _In_opt_ PCSTR MachineName,
+  _Reserved_ PVOID Reserved);
+
+WINSETUPAPI
+BOOL
+WINAPI
+SetupDiGetHwProfileFriendlyNameExW(
+  _In_ DWORD HwProfile,
+  _Out_writes_(FriendlyNameSize) PWSTR FriendlyName,
+  _In_ DWORD FriendlyNameSize,
+  _Out_opt_ PDWORD RequiredSize,
+  _In_opt_ PCWSTR MachineName,
+  _Reserved_ PVOID Reserved);
+
 WINSETUPAPI BOOL WINAPI SetupDiGetHwProfileFriendlyNameW(DWORD,PWSTR,DWORD,PDWORD);
-WINSETUPAPI BOOL WINAPI SetupDiGetHwProfileList(PDWORD,DWORD,PDWORD,PDWORD);
-WINSETUPAPI BOOL WINAPI SetupDiGetHwProfileListExA(PDWORD,DWORD,PDWORD,PDWORD,PCSTR,PVOID);
-WINSETUPAPI BOOL WINAPI SetupDiGetHwProfileListExW(PDWORD,DWORD,PDWORD,PDWORD,PCWSTR,PVOID);
-WINSETUPAPI BOOL WINAPI SetupDiGetINFClassA(PCSTR,LPGUID,PSTR,DWORD,PDWORD);
-WINSETUPAPI BOOL WINAPI SetupDiGetINFClassW(PCWSTR,LPGUID,PWSTR,DWORD,PDWORD);
-WINSETUPAPI BOOL WINAPI SetupDiGetSelectedDevice(HDEVINFO,PSP_DEVINFO_DATA);
-WINSETUPAPI BOOL WINAPI SetupDiGetSelectedDriverA(HDEVINFO,PSP_DEVINFO_DATA,PSP_DRVINFO_DATA_A);
-WINSETUPAPI BOOL WINAPI SetupDiGetSelectedDriverW(HDEVINFO,PSP_DEVINFO_DATA,PSP_DRVINFO_DATA_W);
-WINSETUPAPI HPROPSHEETPAGE WINAPI SetupDiGetWizardage(HDEVINFO,PSP_DEVINFO_DATA,PSP_INSTALLWIZARD_DATA,DWORD,DWORD);
-WINSETUPAPI BOOL WINAPI SetupDiInstallClassA(HWND,PCSTR,DWORD,HSPFILEQ);
-WINSETUPAPI BOOL WINAPI SetupDiInstallClassW(HWND,PCWSTR,DWORD,HSPFILEQ);
-WINSETUPAPI BOOL WINAPI SetupDiInstallClassExA(HWND,PCSTR,DWORD,HSPFILEQ,CONST GUID*,PVOID,PVOID);
-WINSETUPAPI BOOL WINAPI SetupDiInstallClassExW(HWND,PCWSTR,DWORD,HSPFILEQ,CONST GUID*,PVOID,PVOID);
-WINSETUPAPI BOOL WINAPI SetupDiInstallDevice(HDEVINFO,PSP_DEVINFO_DATA);
-WINSETUPAPI BOOL WINAPI SetupDiInstallDeviceInterfaces(HDEVINFO,PSP_DEVINFO_DATA);
-WINSETUPAPI BOOL WINAPI SetupDiInstallDriverFiles(HDEVINFO,PSP_DEVINFO_DATA);
-WINSETUPAPI BOOL WINAPI SetupDiLoadClassIcon(CONST GUID*,HICON*,PINT);
+
+_Success_(return != FALSE)
+WINSETUPAPI
+BOOL
+WINAPI
+SetupDiGetHwProfileList(
+  _Out_writes_to_(HwProfileListSize, *RequiredSize) PDWORD HwProfileList,
+  _In_ DWORD HwProfileListSize,
+  _Out_ PDWORD RequiredSize,
+  _Out_opt_ PDWORD CurrentlyActiveIndex);
+
+_Success_(return != FALSE)
+WINSETUPAPI
+BOOL
+WINAPI
+SetupDiGetHwProfileListExA(
+  _Out_writes_to_(HwProfileListSize, *RequiredSize) PDWORD HwProfileList,
+  _In_ DWORD HwProfileListSize,
+  _Out_ PDWORD RequiredSize,
+  _Out_opt_ PDWORD CurrentlyActiveIndex,
+  _In_opt_ PCSTR MachineName,
+  _Reserved_ PVOID Reserved);
+
+_Success_(return != FALSE)
+WINSETUPAPI
+BOOL
+WINAPI
+SetupDiGetHwProfileListExW(
+  _Out_writes_to_(HwProfileListSize, *RequiredSize) PDWORD HwProfileList,
+  _In_ DWORD HwProfileListSize,
+  _Out_ PDWORD RequiredSize,
+  _Out_opt_ PDWORD CurrentlyActiveIndex,
+  _In_opt_ PCWSTR MachineName,
+  _Reserved_ PVOID Reserved);
+
+WINSETUPAPI
+BOOL
+WINAPI
+SetupDiGetINFClassA(
+  _In_ PCSTR InfName,
+  _Out_ LPGUID ClassGuid,
+  _Out_writes_(ClassNameSize) PSTR ClassName,
+  _In_ DWORD ClassNameSize,
+  _Out_opt_ PDWORD RequiredSize);
+
+WINSETUPAPI
+BOOL
+WINAPI
+SetupDiGetINFClassW(
+  _In_ PCWSTR InfName,
+  _Out_ LPGUID ClassGuid,
+  _Out_writes_(ClassNameSize) PWSTR ClassName,
+  _In_ DWORD ClassNameSize,
+  _Out_opt_ PDWORD RequiredSize);
+
+WINSETUPAPI BOOL WINAPI SetupDiGetSelectedDevice(_In_ HDEVINFO, _Out_ PSP_DEVINFO_DATA);
+WINSETUPAPI BOOL WINAPI SetupDiGetSelectedDriverA(_In_ HDEVINFO, _In_opt_ PSP_DEVINFO_DATA, _Out_ PSP_DRVINFO_DATA_A);
+WINSETUPAPI BOOL WINAPI SetupDiGetSelectedDriverW(_In_ HDEVINFO, _In_opt_ PSP_DEVINFO_DATA, _Out_ PSP_DRVINFO_DATA_W);
+WINSETUPAPI HPROPSHEETPAGE WINAPI SetupDiGetWizardPage(_In_ HDEVINFO, _In_opt_ PSP_DEVINFO_DATA, _In_ PSP_INSTALLWIZARD_DATA, _In_ DWORD, _In_ DWORD);
+WINSETUPAPI BOOL WINAPI SetupDiInstallClassA(_In_opt_ HWND, _In_ PCSTR, _In_ DWORD, _In_opt_ HSPFILEQ);
+WINSETUPAPI BOOL WINAPI SetupDiInstallClassW(_In_opt_ HWND, _In_ PCWSTR, _In_ DWORD, _In_opt_ HSPFILEQ);
+WINSETUPAPI BOOL WINAPI SetupDiInstallClassExA(_In_opt_ HWND, _In_opt_ PCSTR, _In_ DWORD, _In_opt_ HSPFILEQ, _In_opt_ CONST GUID*, _Reserved_ PVOID, _Reserved_ PVOID);
+WINSETUPAPI BOOL WINAPI SetupDiInstallClassExW(_In_opt_ HWND, _In_opt_ PCWSTR, _In_ DWORD, _In_opt_ HSPFILEQ, _In_opt_ CONST GUID*, _Reserved_ PVOID, _Reserved_ PVOID);
+WINSETUPAPI BOOL WINAPI SetupDiInstallDevice(_In_ HDEVINFO, _Inout_ PSP_DEVINFO_DATA);
+WINSETUPAPI BOOL WINAPI SetupDiInstallDeviceInterfaces(_In_ HDEVINFO, _In_ PSP_DEVINFO_DATA);
+WINSETUPAPI BOOL WINAPI SetupDiInstallDriverFiles(_In_ HDEVINFO, _In_ PSP_DEVINFO_DATA);
+WINSETUPAPI BOOL WINAPI SetupDiLoadClassIcon(_In_ CONST GUID*, _Out_opt_ HICON*, _Out_opt_ PINT);
 WINSETUPAPI BOOL WINAPI SetupDiMoveDuplicateDevice(HDEVINFO,PSP_DEVINFO_DATA);
-WINSETUPAPI HKEY WINAPI SetupDiOpenClassRegKey(CONST GUID*,REGSAM);
-WINSETUPAPI HKEY WINAPI SetupDiOpenClassRegKeyExA(CONST GUID*,REGSAM,DWORD,PCSTR,PVOID);
-WINSETUPAPI HKEY WINAPI SetupDiOpenClassRegKeyExW(CONST GUID*,REGSAM,DWORD,PCWSTR,PVOID);
-WINSETUPAPI BOOL WINAPI SetupDiOpenDeviceInfoA(HDEVINFO,PCSTR,HWND,DWORD,PSP_DEVINFO_DATA);
-WINSETUPAPI BOOL WINAPI SetupDiOpenDeviceInfoW(HDEVINFO,PCWSTR,HWND,DWORD,PSP_DEVINFO_DATA);
-WINSETUPAPI BOOL WINAPI SetupDiOpenDeviceInterfaceA(HDEVINFO,PCSTR,DWORD,PSP_DEVICE_INTERFACE_DATA);
-WINSETUPAPI BOOL WINAPI SetupDiOpenDeviceInterfaceW(HDEVINFO,PCWSTR,DWORD,PSP_DEVICE_INTERFACE_DATA);
-WINSETUPAPI HKEY WINAPI SetupDiOpenDeviceInterfaceRegKey(HDEVINFO,PSP_DEVICE_INTERFACE_DATA,DWORD,REGSAM);
-WINSETUPAPI HKEY WINAPI SetupDiOpenDevRegKey(HDEVINFO,PSP_DEVINFO_DATA,DWORD,DWORD,DWORD,REGSAM);
-WINSETUPAPI BOOL WINAPI SetupDiRegisterCoDeviceInstallers(HDEVINFO,PSP_DEVINFO_DATA);
-WINSETUPAPI BOOL WINAPI SetupDiRegisterDeviceInfo(HDEVINFO,PSP_DEVINFO_DATA,DWORD,PSP_DETSIG_CMPPROC,PVOID,PSP_DEVINFO_DATA);
-WINSETUPAPI BOOL WINAPI SetupDiRemoveDevice(HDEVINFO,PSP_DEVINFO_DATA);
-WINSETUPAPI BOOL WINAPI SetupDiRemoveDeviceInterface(HDEVINFO,PSP_DEVICE_INTERFACE_DATA);
-WINSETUPAPI BOOL WINAPI SetupDiSelectBestCompatDrv(HDEVINFO,PSP_DEVINFO_DATA);
-WINSETUPAPI BOOL WINAPI SetupDiSelectDevice(HDEVINFO,PSP_DEVINFO_DATA);
-WINSETUPAPI BOOL WINAPI SetupDiSelectOEMDrv(HWND,HDEVINFO,PSP_DEVINFO_DATA);
-WINSETUPAPI BOOL WINAPI SetupDiSetClassInstallParamsA(HDEVINFO,PSP_DEVINFO_DATA,PSP_CLASSINSTALL_HEADER,DWORD);
-WINSETUPAPI BOOL WINAPI SetupDiSetClassInstallParamsW(HDEVINFO,PSP_DEVINFO_DATA,PSP_CLASSINSTALL_HEADER,DWORD);
-WINSETUPAPI BOOL WINAPI SetupDiSetClassRegistryPropertyA(LPGUID,DWORD,CONST BYTE*,DWORD,PCSTR,PVOID);
-WINSETUPAPI BOOL WINAPI SetupDiSetClassRegistryPropertyW(LPGUID,DWORD,CONST BYTE*,DWORD,PCWSTR,PVOID);
-WINSETUPAPI BOOL WINAPI SetupDiSetDeviceInstallParamsA(HDEVINFO,PSP_DEVINFO_DATA,PSP_DEVINSTALL_PARAMS_A);
-WINSETUPAPI BOOL WINAPI SetupDiSetDeviceInstallParamsW(HDEVINFO,PSP_DEVINFO_DATA,PSP_DEVINSTALL_PARAMS_W);
-WINSETUPAPI BOOL WINAPI SetupDiSetDeviceRegistryPropertyA(HDEVINFO,PSP_DEVINFO_DATA,DWORD,CONST BYTE*,DWORD);
-WINSETUPAPI BOOL WINAPI SetupDiSetDeviceRegistryPropertyW(HDEVINFO,PSP_DEVINFO_DATA,DWORD,CONST BYTE*,DWORD);
-WINSETUPAPI BOOL WINAPI SetupDiSetDriverInstallParamsA(HDEVINFO,PSP_DEVINFO_DATA,PSP_DRVINFO_DATA_A,PSP_DRVINSTALL_PARAMS);
-WINSETUPAPI BOOL WINAPI SetupDiSetDriverInstallParamsW(HDEVINFO,PSP_DEVINFO_DATA,PSP_DRVINFO_DATA_W,PSP_DRVINSTALL_PARAMS);
-WINSETUPAPI BOOL WINAPI SetupDiSetSelectedDevice(HDEVINFO,PSP_DEVINFO_DATA);
-WINSETUPAPI BOOL WINAPI SetupDiSetSelectedDriverA(HDEVINFO,PSP_DEVINFO_DATA,PSP_DRVINFO_DATA_A);
-WINSETUPAPI BOOL WINAPI SetupDiSetSelectedDriverW(HDEVINFO,PSP_DEVINFO_DATA,PSP_DRVINFO_DATA_W);
-WINSETUPAPI BOOL WINAPI SetupDiUnremoveDevice(HDEVINFO,PSP_DEVINFO_DATA);
-WINSETUPAPI HDSKSPC WINAPI SetupDuplicateDiskSpaceListA(HDSKSPC,PVOID,DWORD,UINT);
-WINSETUPAPI HDSKSPC WINAPI SetupDuplicateDiskSpaceListW(HDSKSPC,PVOID,DWORD,UINT);
-WINSETUPAPI BOOL WINAPI SetupFindFirstLineA(HINF,PCSTR,PCSTR,PINFCONTEXT);
-WINSETUPAPI BOOL WINAPI SetupFindFirstLineW(HINF,PCWSTR,PCWSTR,PINFCONTEXT);
-WINSETUPAPI BOOL WINAPI SetupFindNextLine(PINFCONTEXT,PINFCONTEXT);
-WINSETUPAPI BOOL WINAPI SetupFindNextMatchLineA(PINFCONTEXT,PCSTR,PINFCONTEXT);
-WINSETUPAPI BOOL WINAPI SetupFindNextMatchLineW(PINFCONTEXT,PCWSTR,PINFCONTEXT);
+_Check_return_ WINSETUPAPI HKEY WINAPI SetupDiOpenClassRegKey(_In_opt_ CONST GUID*, _In_ REGSAM);
+_Check_return_ WINSETUPAPI HKEY WINAPI SetupDiOpenClassRegKeyExA(_In_opt_ CONST GUID*, _In_ REGSAM, _In_ DWORD, _In_opt_ PCSTR, _Reserved_ PVOID);
+_Check_return_ WINSETUPAPI HKEY WINAPI SetupDiOpenClassRegKeyExW(_In_opt_ CONST GUID*, _In_ REGSAM, _In_ DWORD, _In_opt_ PCWSTR, _Reserved_ PVOID);
+WINSETUPAPI BOOL WINAPI SetupDiOpenDeviceInfoA(_In_ HDEVINFO, _In_ PCSTR, _In_opt_ HWND, _In_ DWORD, _Out_opt_ PSP_DEVINFO_DATA);
+WINSETUPAPI BOOL WINAPI SetupDiOpenDeviceInfoW(_In_ HDEVINFO, _In_ PCWSTR, _In_opt_ HWND, _In_ DWORD, _Out_opt_ PSP_DEVINFO_DATA);
+WINSETUPAPI BOOL WINAPI SetupDiOpenDeviceInterfaceA(_In_ HDEVINFO, _In_ PCSTR, _In_ DWORD, _Out_opt_ PSP_DEVICE_INTERFACE_DATA);
+WINSETUPAPI BOOL WINAPI SetupDiOpenDeviceInterfaceW(_In_ HDEVINFO, _In_ PCWSTR, _In_ DWORD, _Out_opt_ PSP_DEVICE_INTERFACE_DATA);
+_Check_return_ WINSETUPAPI HKEY WINAPI SetupDiOpenDeviceInterfaceRegKey(_In_ HDEVINFO, _In_ PSP_DEVICE_INTERFACE_DATA, _Reserved_ DWORD, _In_ REGSAM);
+_Check_return_ WINSETUPAPI HKEY WINAPI SetupDiOpenDevRegKey(_In_ HDEVINFO, _In_ PSP_DEVINFO_DATA, _In_ DWORD, _In_ DWORD, _In_ DWORD, _In_ REGSAM);
+WINSETUPAPI BOOL WINAPI SetupDiRegisterCoDeviceInstallers(_In_ HDEVINFO, _In_ PSP_DEVINFO_DATA);
+WINSETUPAPI BOOL WINAPI SetupDiRegisterDeviceInfo(_In_ HDEVINFO, _Inout_ PSP_DEVINFO_DATA, _In_ DWORD, _In_opt_ PSP_DETSIG_CMPPROC, _In_opt_ PVOID, _Out_opt_ PSP_DEVINFO_DATA);
+WINSETUPAPI BOOL WINAPI SetupDiRemoveDevice(_In_ HDEVINFO, _Inout_ PSP_DEVINFO_DATA);
+WINSETUPAPI BOOL WINAPI SetupDiRemoveDeviceInterface(_In_ HDEVINFO, _Inout_ PSP_DEVICE_INTERFACE_DATA);
+WINSETUPAPI BOOL WINAPI SetupDiSelectBestCompatDrv(_In_ HDEVINFO, _Inout_opt_ PSP_DEVINFO_DATA);
+WINSETUPAPI BOOL WINAPI SetupDiSelectDevice(_In_ HDEVINFO, _Inout_opt_ PSP_DEVINFO_DATA);
+WINSETUPAPI BOOL WINAPI SetupDiSelectOEMDrv(_In_opt_ HWND, _In_ HDEVINFO, _In_opt_ PSP_DEVINFO_DATA);
+
+WINSETUPAPI
+BOOL
+WINAPI
+SetupDiSetClassInstallParamsA(
+  _In_ HDEVINFO DeviceInfoSet,
+  _In_opt_ PSP_DEVINFO_DATA DeviceInfoData,
+  _In_reads_bytes_opt_(ClassInstallParamsSize) PSP_CLASSINSTALL_HEADER ClassInstallParams,
+  _In_ DWORD ClassInstallParamsSize);
+
+WINSETUPAPI
+BOOL
+WINAPI
+SetupDiSetClassInstallParamsW(
+  _In_ HDEVINFO DeviceInfoSet,
+  _In_opt_ PSP_DEVINFO_DATA DeviceInfoData,
+  _In_reads_bytes_opt_(ClassInstallParamsSize) PSP_CLASSINSTALL_HEADER ClassInstallParams,
+  _In_ DWORD ClassInstallParamsSize);
+
+WINSETUPAPI
+BOOL
+WINAPI
+SetupDiSetClassRegistryPropertyA(
+  _In_ CONST GUID *ClassGuid,
+  _In_ DWORD Property,
+  _In_reads_bytes_opt_(PropertyBufferSize) CONST BYTE *PropertyBuffer, 
+  _In_ DWORD PropertyBufferSize,
+  _In_opt_ PCSTR MachineName,
+  _Reserved_ PVOID Reserved);
+
+WINSETUPAPI
+BOOL
+WINAPI
+SetupDiSetClassRegistryPropertyW(
+  _In_ CONST GUID *ClassGuid,
+  _In_ DWORD Property,
+  _In_reads_bytes_opt_(PropertyBufferSize) CONST BYTE *PropertyBuffer,
+  _In_ DWORD PropertyBufferSize,
+  _In_opt_ PCWSTR MachineName,
+  _Reserved_ PVOID Reserved);
+
+WINSETUPAPI BOOL WINAPI SetupDiSetDeviceInstallParamsA(_In_ HDEVINFO, _In_opt_ PSP_DEVINFO_DATA, _In_ PSP_DEVINSTALL_PARAMS_A);
+WINSETUPAPI BOOL WINAPI SetupDiSetDeviceInstallParamsW(_In_ HDEVINFO, _In_opt_ PSP_DEVINFO_DATA, _In_ PSP_DEVINSTALL_PARAMS_W);
+
+WINSETUPAPI
+BOOL
+WINAPI
+SetupDiSetDeviceRegistryPropertyA(
+  _In_ HDEVINFO DeviceInfoSet,
+  _Inout_ PSP_DEVINFO_DATA DeviceInfoData,
+  _In_ DWORD Property,
+  _In_reads_bytes_opt_(PropertyBufferSize) CONST BYTE *PropertyBuffer,
+  _In_ DWORD PropertyBufferSize);
+
+WINSETUPAPI
+BOOL
+WINAPI
+SetupDiSetDeviceRegistryPropertyW(
+  _In_ HDEVINFO DeviceInfoSet,
+  _Inout_ PSP_DEVINFO_DATA DeviceInfoData,
+  _In_ DWORD Property,
+  _In_reads_bytes_opt_(PropertyBufferSize) CONST BYTE *PropertyBuffer,
+  _In_ DWORD PropertyBufferSize);
+
+WINSETUPAPI BOOL WINAPI SetupDiSetDriverInstallParamsA(_In_ HDEVINFO, _In_opt_ PSP_DEVINFO_DATA, _In_ PSP_DRVINFO_DATA_A, _In_ PSP_DRVINSTALL_PARAMS);
+WINSETUPAPI BOOL WINAPI SetupDiSetDriverInstallParamsW(_In_ HDEVINFO, _In_opt_ PSP_DEVINFO_DATA, _In_ PSP_DRVINFO_DATA_W, _In_ PSP_DRVINSTALL_PARAMS);
+WINSETUPAPI BOOL WINAPI SetupDiSetSelectedDevice(_In_ HDEVINFO, _In_ PSP_DEVINFO_DATA);
+WINSETUPAPI BOOL WINAPI SetupDiSetSelectedDriverA(_In_ HDEVINFO, _Inout_opt_ PSP_DEVINFO_DATA, _Inout_opt_ PSP_DRVINFO_DATA_A);
+WINSETUPAPI BOOL WINAPI SetupDiSetSelectedDriverW(_In_ HDEVINFO, _Inout_opt_ PSP_DEVINFO_DATA, _Inout_opt_ PSP_DRVINFO_DATA_W);
+WINSETUPAPI BOOL WINAPI SetupDiUnremoveDevice(_In_ HDEVINFO, _Inout_ PSP_DEVINFO_DATA);
+WINSETUPAPI HDSKSPC WINAPI SetupDuplicateDiskSpaceListA(_In_ HDSKSPC, _Reserved_ PVOID, _Reserved_ DWORD, _In_ UINT);
+WINSETUPAPI HDSKSPC WINAPI SetupDuplicateDiskSpaceListW(_In_ HDSKSPC, _Reserved_ PVOID, _Reserved_ DWORD, _In_ UINT);
+WINSETUPAPI BOOL WINAPI SetupFindFirstLineA(_In_ HINF, _In_ PCSTR, _In_opt_ PCSTR, _Out_ PINFCONTEXT);
+WINSETUPAPI BOOL WINAPI SetupFindFirstLineW(_In_ HINF, _In_ PCWSTR, _In_opt_ PCWSTR, _Out_ PINFCONTEXT);
+WINSETUPAPI BOOL WINAPI SetupFindNextLine(_In_ PINFCONTEXT, _Out_ PINFCONTEXT);
+WINSETUPAPI BOOL WINAPI SetupFindNextMatchLineA(_In_ PINFCONTEXT, _In_opt_ PCSTR, _Out_ PINFCONTEXT);
+WINSETUPAPI BOOL WINAPI SetupFindNextMatchLineW(_In_ PINFCONTEXT, _In_opt_ PCWSTR, _Out_ PINFCONTEXT);
 WINSETUPAPI BOOL WINAPI SetupFreeA(PCSTR**,UINT);
 WINSETUPAPI BOOL WINAPI SetupFreeW(PCWSTR**,UINT);
-WINSETUPAPI BOOL WINAPI SetupGetBackupInformationA(HSPFILEQ,PSP_BACKUP_QUEUE_PARAMS_A);
-WINSETUPAPI BOOL WINAPI SetupGetBackupInformationW(HSPFILEQ,PSP_BACKUP_QUEUE_PARAMS_W);
-WINSETUPAPI BOOL WINAPI SetupGetBinaryField(PINFCONTEXT,DWORD,PBYTE,DWORD,LPDWORD);
-WINSETUPAPI DWORD WINAPI SetupGetFieldCount(PINFCONTEXT);
-WINSETUPAPI DWORD WINAPI SetupGetFileCompressionInfoA(PCSTR,PSTR*,PDWORD,PDWORD,PUINT);
-WINSETUPAPI DWORD WINAPI SetupGetFileCompressionInfoW(PCWSTR,PWSTR*,PDWORD,PDWORD,PUINT);
-WINSETUPAPI BOOL WINAPI SetupGetFileCompressionInfoExA(PCSTR,PSTR,DWORD,PDWORD,PDWORD,PDWORD,PUINT);
-WINSETUPAPI BOOL WINAPI SetupGetFileCompressionInfoExW(PCWSTR,PWSTR,DWORD,PDWORD,PDWORD,PDWORD,PUINT);
-WINSETUPAPI BOOL WINAPI SetupGetInfFileListA(PCSTR,DWORD,PSTR,DWORD,PDWORD);
-WINSETUPAPI BOOL WINAPI SetupGetInfFileListW(PCWSTR,DWORD,PWSTR,DWORD,PDWORD);
-WINSETUPAPI BOOL WINAPI SetupGetInfInformationA(LPCVOID,DWORD,PSP_INF_INFORMATION,DWORD,PDWORD);
-WINSETUPAPI BOOL WINAPI SetupGetInfInformationW(LPCVOID,DWORD,PSP_INF_INFORMATION,DWORD,PDWORD);
-WINSETUPAPI BOOL WINAPI SetupGetIntField(PINFCONTEXT,DWORD,PINT);
-WINSETUPAPI BOOL WINAPI SetupGetLineByIndexA(HINF,PCSTR,DWORD,PINFCONTEXT);
-WINSETUPAPI BOOL WINAPI SetupGetLineByIndexW(HINF,PCWSTR,DWORD,PINFCONTEXT);
-WINSETUPAPI LONG WINAPI SetupGetLineCountA(HINF,PCSTR);
-WINSETUPAPI LONG WINAPI SetupGetLineCountW(HINF,PCWSTR);
-WINSETUPAPI BOOL WINAPI SetupGetLineTextA(PINFCONTEXT,HINF,PCSTR,PCSTR,PSTR,DWORD,PDWORD);
-WINSETUPAPI BOOL WINAPI SetupGetLineTextW(PINFCONTEXT,HINF,PCWSTR,PCWSTR,PWSTR,DWORD,PDWORD);
-WINSETUPAPI BOOL WINAPI SetupGetMultiSzFieldA(PINFCONTEXT,DWORD,PSTR,DWORD,LPDWORD);
-WINSETUPAPI BOOL WINAPI SetupGetMultiSzFieldW(PINFCONTEXT,DWORD,PWSTR,DWORD,LPDWORD);
-WINSETUPAPI BOOL WINAPI SetupGetSourceFileLocationA(HINF,PINFCONTEXT,PCSTR,PUINT,PSTR,DWORD,PDWORD);
-WINSETUPAPI BOOL WINAPI SetupGetSourceFileLocationW(HINF,PINFCONTEXT,PCWSTR,PUINT,PWSTR,DWORD,PDWORD);
-WINSETUPAPI BOOL WINAPI SetupGetSourceFileSizeA(HINF,PINFCONTEXT,PCSTR,PCSTR,PDWORD,UINT);
-WINSETUPAPI BOOL WINAPI SetupGetSourceFileSizeW(HINF,PINFCONTEXT,PCWSTR,PCWSTR,PDWORD,UINT);
-WINSETUPAPI BOOL WINAPI SetupGetSourceInfoA(HINF,UINT,UINT,PSTR,DWORD,PDWORD);
-WINSETUPAPI BOOL WINAPI SetupGetSourceInfoW(HINF,UINT,UINT,PWSTR,DWORD,PDWORD);
-WINSETUPAPI BOOL WINAPI SetupGetStringFieldA(PINFCONTEXT,DWORD,PSTR,DWORD,PDWORD);
-WINSETUPAPI BOOL WINAPI SetupGetStringFieldW(PINFCONTEXT,DWORD,PWSTR,DWORD,PDWORD);
-WINSETUPAPI BOOL WINAPI SetupGetTargetPathA(HINF,PINFCONTEXT,PCSTR,PSTR,DWORD,PDWORD);
-WINSETUPAPI BOOL WINAPI SetupGetTargetPathW(HINF,PINFCONTEXT,PCWSTR,PWSTR,DWORD,PDWORD);
-WINSETUPAPI PVOID WINAPI SetupInitDefaultQueueCallback(HWND);
-WINSETUPAPI PVOID WINAPI SetupInitDefaultQueueCallbackEx(HWND,HWND,UINT,DWORD,PVOID);
-WINSETUPAPI HSPFILELOG WINAPI SetupInitializeFileLogA(PCSTR,DWORD);
-WINSETUPAPI HSPFILELOG WINAPI SetupInitializeFileLogW(PCWSTR,DWORD);
-WINSETUPAPI BOOL WINAPI SetupInstallFileA(HINF,PINFCONTEXT,PCSTR,PCSTR,PCSTR,DWORD,PSP_FILE_CALLBACK_A,PVOID);
-WINSETUPAPI BOOL WINAPI SetupInstallFileW(HINF,PINFCONTEXT,PCWSTR,PCWSTR,PCWSTR,DWORD,PSP_FILE_CALLBACK_W,PVOID);
-WINSETUPAPI BOOL WINAPI SetupInstallFileExA(HINF,PINFCONTEXT,PCSTR,PCSTR,PCSTR,DWORD,PSP_FILE_CALLBACK_A,PVOID,PBOOL);
-WINSETUPAPI BOOL WINAPI SetupInstallFileExW(HINF,PINFCONTEXT,PCWSTR,PCWSTR,PCWSTR,DWORD,PSP_FILE_CALLBACK_W,PVOID,PBOOL);
-WINSETUPAPI BOOL WINAPI SetupInstallFilesFromInfSectionA(HINF,HINF,HSPFILEQ,PCSTR,PCSTR,UINT);
-WINSETUPAPI BOOL WINAPI SetupInstallFilesFromInfSectionW(HINF,HINF,HSPFILEQ,PCWSTR,PCWSTR,UINT);
-WINSETUPAPI BOOL WINAPI SetupInstallFromInfSectionA(HWND,HINF,PCSTR,UINT,HKEY,PCSTR,UINT,PSP_FILE_CALLBACK_A,PVOID,HDEVINFO,PSP_DEVINFO_DATA);
-WINSETUPAPI BOOL WINAPI SetupInstallFromInfSectionW(HWND,HINF,PCWSTR,UINT,HKEY,PCWSTR,UINT,PSP_FILE_CALLBACK_W,PVOID,HDEVINFO,PSP_DEVINFO_DATA);
-WINSETUPAPI BOOL WINAPI SetupInstallServicesFromInfSectionA(HINF,PCSTR,DWORD);
-WINSETUPAPI BOOL WINAPI SetupInstallServicesFromInfSectionW(HINF,PCWSTR,DWORD);
-WINSETUPAPI BOOL WINAPI SetupInstallServicesFromInfSectionExA(HINF,PCSTR,DWORD,HDEVINFO,PSP_DEVINFO_DATA,PVOID,PVOID);
-WINSETUPAPI BOOL WINAPI SetupInstallServicesFromInfSectionExW(HINF,PCWSTR,DWORD,HDEVINFO,PSP_DEVINFO_DATA,PVOID,PVOID);
-WINSETUPAPI BOOL WINAPI SetupIterateCabinetA(PCSTR,DWORD,PSP_FILE_CALLBACK_A,PVOID);
-WINSETUPAPI BOOL WINAPI SetupIterateCabinetW(PCWSTR,DWORD,PSP_FILE_CALLBACK_W,PVOID);
-WINSETUPAPI BOOL WINAPI SetupLogErrorA(LPCSTR,LogSeverity);
-WINSETUPAPI BOOL WINAPI SetupLogErrorW(LPCWSTR,LogSeverity);
-WINSETUPAPI BOOL WINAPI SetupLogFileA(HSPFILELOG,PCSTR,PCSTR,PCSTR,DWORD,PCSTR,PCSTR,PCSTR,DWORD);
-WINSETUPAPI BOOL WINAPI SetupLogFileW(HSPFILELOG,PCWSTR,PCWSTR,PCWSTR,DWORD,PCWSTR,PCWSTR,PCWSTR,DWORD);
-WINSETUPAPI BOOL WINAPI SetupOpenAppendInfFileA(PCSTR,HINF,PUINT);
-WINSETUPAPI BOOL WINAPI SetupOpenAppendInfFileW(PCWSTR,HINF,PUINT);
+WINSETUPAPI BOOL WINAPI SetupGetBackupInformationA(_In_ HSPFILEQ, _Inout_ PSP_BACKUP_QUEUE_PARAMS_A);
+WINSETUPAPI BOOL WINAPI SetupGetBackupInformationW(_In_ HSPFILEQ, _Inout_ PSP_BACKUP_QUEUE_PARAMS_W);
+
+_Success_(return != FALSE)
+WINSETUPAPI
+BOOL
+WINAPI
+SetupGetBinaryField(
+  _In_ PINFCONTEXT Context,
+  _In_ DWORD FieldIndex,
+  _Out_writes_bytes_to_opt_(ReturnBufferSize, *RequiredSize) PBYTE ReturnBuffer,
+  _In_ DWORD ReturnBufferSize,
+  _Out_opt_ LPDWORD RequiredSize);
+
+WINSETUPAPI DWORD WINAPI SetupGetFieldCount(_In_ PINFCONTEXT);
+WINSETUPAPI DWORD WINAPI SetupGetFileCompressionInfoA(_In_ PCSTR, _Out_ PSTR*, _Out_ PDWORD, _Out_ PDWORD, _Out_ PUINT);
+WINSETUPAPI DWORD WINAPI SetupGetFileCompressionInfoW(_In_ PCWSTR, _Out_ PWSTR*, _Out_ PDWORD, _Out_ PDWORD, _Out_ PUINT);
+
+WINSETUPAPI
+BOOL
+WINAPI
+SetupGetFileCompressionInfoExA(
+  _In_ PCSTR SourceFileName,
+  _In_reads_opt_(ActualSourceFileNameBufferLen) PSTR ActualSourceFileNameBuffer,
+  _In_ DWORD ActualSourceFileNameBufferLen,
+  _Out_opt_ PDWORD RequiredBufferLen, 
+  _Out_ PDWORD SourceFileSize,
+  _Out_ PDWORD TargetFileSize,
+  _Out_ PUINT CompressionType);
+
+WINSETUPAPI
+BOOL
+WINAPI
+SetupGetFileCompressionInfoExW(
+  _In_ PCWSTR SourceFileName,
+  _In_reads_opt_(ActualSourceFileNameBufferLen) PWSTR ActualSourceFileNameBuffer,
+  _In_ DWORD ActualSourceFileNameBufferLen,
+  _Out_opt_ PDWORD RequiredBufferLen,
+  _Out_ PDWORD SourceFileSize,
+  _Out_ PDWORD TargetFileSize,
+  _Out_ PUINT CompressionType);
+
+WINSETUPAPI
+BOOL
+WINAPI
+SetupGetInfFileListA(
+  _In_opt_ PCSTR DirectoryPath,
+  _In_ DWORD InfStyle,
+  _Out_writes_opt_(ReturnBufferSize) PSTR ReturnBuffer, 
+  _In_ DWORD ReturnBufferSize,
+  _Out_opt_ PDWORD RequiredSize);
+
+WINSETUPAPI
+BOOL
+WINAPI
+SetupGetInfFileListW(
+  _In_opt_ PCWSTR DirectoryPath,
+  _In_ DWORD InfStyle,
+  _Out_writes_(ReturnBufferSize) PWSTR ReturnBuffer,
+  _In_ DWORD ReturnBufferSize,
+  _Out_opt_ PDWORD RequiredSize);
+
+_Success_(return != FALSE)
+WINSETUPAPI
+BOOL
+WINAPI
+SetupGetInfInformationA(
+  _In_ LPCVOID InfSpec,
+  _In_ DWORD SearchControl,
+  _Out_writes_bytes_to_opt_(ReturnBufferSize, *RequiredSize) PSP_INF_INFORMATION ReturnBuffer, 
+  _In_ DWORD ReturnBufferSize,
+  _Out_opt_ PDWORD RequiredSize);
+
+_Success_(return != FALSE)
+WINSETUPAPI
+BOOL
+WINAPI
+SetupGetInfInformationW(
+  _In_ LPCVOID InfSpec,
+  _In_ DWORD SearchControl,
+  _Out_writes_bytes_to_opt_(ReturnBufferSize, *RequiredSize) PSP_INF_INFORMATION ReturnBuffer,
+  _In_ DWORD ReturnBufferSize,
+  _Out_opt_ PDWORD RequiredSize);
+
+WINSETUPAPI BOOL WINAPI SetupGetIntField(_In_ PINFCONTEXT, _In_ DWORD, _Out_ PINT);
+WINSETUPAPI BOOL WINAPI SetupGetLineByIndexA(_In_ HINF, _In_ PCSTR, _In_ DWORD, _Out_ PINFCONTEXT);
+WINSETUPAPI BOOL WINAPI SetupGetLineByIndexW(_In_ HINF, _In_ PCWSTR, _In_ DWORD, _Out_ PINFCONTEXT);
+WINSETUPAPI LONG WINAPI SetupGetLineCountA(_In_ HINF, _In_ PCSTR);
+WINSETUPAPI LONG WINAPI SetupGetLineCountW(_In_ HINF, _In_ PCWSTR);
+
+WINSETUPAPI
+BOOL
+WINAPI
+SetupGetLineTextA(
+  _In_opt_ PINFCONTEXT Context,
+  _In_opt_ HINF InfHandle,
+  _In_opt_ PCSTR Section,
+  _In_opt_ PCSTR Key,
+  _Out_writes_opt_(ReturnBufferSize) PSTR ReturnBuffer,
+  _In_ DWORD ReturnBufferSize,
+  _Out_opt_ PDWORD RequiredSize);
+
+WINSETUPAPI
+BOOL
+WINAPI
+SetupGetLineTextW(
+  _In_opt_ PINFCONTEXT Context,
+  _In_opt_ HINF InfHandle,
+  _In_opt_ PCWSTR Section,
+  _In_opt_ PCWSTR Key,
+  _Out_writes_opt_(ReturnBufferSize) PWSTR ReturnBuffer,
+  _In_ DWORD ReturnBufferSize,
+  _Out_opt_ PDWORD RequiredSize);
+
+WINSETUPAPI
+BOOL
+WINAPI
+SetupGetMultiSzFieldA(
+  _In_ PINFCONTEXT Context,
+  _In_ DWORD FieldIndex,
+  _Out_writes_opt_(ReturnBufferSize) PSTR ReturnBuffer,
+  _In_ DWORD ReturnBufferSize,
+  _Out_opt_ LPDWORD RequiredSize);
+
+WINSETUPAPI
+BOOL
+WINAPI
+SetupGetMultiSzFieldW(
+  _In_ PINFCONTEXT Context,
+  _In_ DWORD FieldIndex,
+  _Out_writes_opt_(ReturnBufferSize) PWSTR ReturnBuffer,
+  _In_ DWORD ReturnBufferSize,
+  _Out_opt_ LPDWORD RequiredSize);
+
+WINSETUPAPI
+BOOL
+WINAPI
+SetupGetSourceFileLocationA(
+  _In_ HINF InfHandle,
+  _In_opt_ PINFCONTEXT InfContext,
+  _In_opt_ PCSTR FileName,
+  _Out_ PUINT SourceId,
+  _Out_writes_opt_(ReturnBufferSize) PSTR ReturnBuffer,
+  _In_ DWORD ReturnBufferSize,
+  _Out_opt_ PDWORD RequiredSize);
+
+WINSETUPAPI
+BOOL
+WINAPI
+SetupGetSourceFileLocationW(
+  _In_ HINF InfHandle,
+  _In_opt_ PINFCONTEXT InfContext,
+  _In_opt_ PCWSTR FileName,
+  _Out_ PUINT SourceId,
+  _Out_writes_opt_(ReturnBufferSize) PWSTR ReturnBuffer,
+  _In_ DWORD ReturnBufferSize,
+  _Out_opt_ PDWORD RequiredSize);
+
+WINSETUPAPI BOOL WINAPI SetupGetSourceFileSizeA(_In_ HINF, _In_opt_ PINFCONTEXT, _In_opt_ PCSTR, _In_opt_ PCSTR, _Out_ PDWORD, _In_ UINT);
+WINSETUPAPI BOOL WINAPI SetupGetSourceFileSizeW(_In_ HINF, _In_opt_ PINFCONTEXT, _In_opt_ PCWSTR, _In_opt_ PCWSTR, _Out_ PDWORD, _In_ UINT);
+
+WINSETUPAPI
+BOOL
+WINAPI
+SetupGetSourceInfoA(
+  _In_ HINF InfHandle,
+  _In_ UINT SourceId,
+  _In_ UINT InfoDesired,
+  _Out_writes_opt_(ReturnBufferSize) PSTR ReturnBuffer,
+  _In_ DWORD ReturnBufferSize,
+  _Out_opt_ PDWORD RequiredSize);
+
+WINSETUPAPI
+BOOL
+WINAPI
+SetupGetSourceInfoW(
+  _In_ HINF InfHandle,
+  _In_ UINT SourceId,
+  _In_ UINT InfoDesired,
+  _Out_writes_opt_(ReturnBufferSize) PWSTR ReturnBuffer,
+  _In_ DWORD ReturnBufferSize,
+  _Out_opt_ PDWORD RequiredSize);
+
+WINSETUPAPI
+BOOL
+WINAPI
+SetupGetStringFieldA(
+  _In_ PINFCONTEXT Context,
+  _In_ DWORD FieldIndex,
+  _Out_writes_opt_(ReturnBufferSize) PSTR ReturnBuffer,
+  _In_ DWORD ReturnBufferSize,
+  _Out_opt_ PDWORD RequiredSize);
+
+WINSETUPAPI
+BOOL
+WINAPI
+SetupGetStringFieldW(
+  _In_ PINFCONTEXT Context,
+  _In_ DWORD FieldIndex,
+  _Out_writes_opt_(ReturnBufferSize) PWSTR ReturnBuffer,
+  _In_ DWORD ReturnBufferSize,
+  _Out_opt_ PDWORD RequiredSize);
+
+WINSETUPAPI
+BOOL
+WINAPI
+SetupGetTargetPathA(
+  _In_ HINF InfHandle,
+  _In_opt_ PINFCONTEXT InfContext,
+  _In_opt_ PCSTR Section,
+  _Out_writes_opt_(ReturnBufferSize) PSTR ReturnBuffer,
+  _In_ DWORD ReturnBufferSize,
+  _Out_opt_ PDWORD RequiredSize);
+
+WINSETUPAPI
+BOOL
+WINAPI
+SetupGetTargetPathW(
+  _In_ HINF InfHandle,
+  _In_opt_ PINFCONTEXT InfContext,
+  _In_opt_ PCWSTR Section,
+  _Out_writes_opt_(ReturnBufferSize) PWSTR ReturnBuffer,
+  _In_ DWORD ReturnBufferSize,
+  _Out_opt_ PDWORD RequiredSize);
+
+WINSETUPAPI PVOID WINAPI SetupInitDefaultQueueCallback(_In_opt_ HWND);
+WINSETUPAPI PVOID WINAPI SetupInitDefaultQueueCallbackEx(_In_opt_ HWND, _In_opt_ HWND, _In_ UINT, _Reserved_ DWORD, _Reserved_ PVOID);
+WINSETUPAPI HSPFILELOG WINAPI SetupInitializeFileLogA(_In_opt_ PCSTR, _In_ DWORD);
+WINSETUPAPI HSPFILELOG WINAPI SetupInitializeFileLogW(_In_opt_ PCWSTR, _In_ DWORD);
+WINSETUPAPI BOOL WINAPI SetupInstallFileA(_In_opt_ HINF, _In_opt_ PINFCONTEXT, _In_opt_ PCSTR, _In_opt_ PCSTR, _In_opt_ PCSTR, _In_ DWORD, _In_opt_ PSP_FILE_CALLBACK_A, _In_opt_ PVOID);
+WINSETUPAPI BOOL WINAPI SetupInstallFileW(_In_opt_ HINF, _In_opt_ PINFCONTEXT, _In_opt_ PCWSTR, _In_opt_ PCWSTR, _In_opt_ PCWSTR, _In_ DWORD, _In_opt_ PSP_FILE_CALLBACK_W, _In_opt_ PVOID);
+WINSETUPAPI BOOL WINAPI SetupInstallFileExA(_In_opt_ HINF, _In_opt_ PINFCONTEXT, _In_opt_ PCSTR, _In_opt_ PCSTR, _In_opt_ PCSTR, _In_ DWORD, _In_opt_ PSP_FILE_CALLBACK_A, _In_opt_ PVOID, _Out_ PBOOL);
+WINSETUPAPI BOOL WINAPI SetupInstallFileExW(_In_opt_ HINF, _In_opt_ PINFCONTEXT, _In_opt_ PCWSTR, _In_opt_ PCWSTR, _In_opt_ PCWSTR, _In_ DWORD, _In_opt_ PSP_FILE_CALLBACK_W, _In_opt_ PVOID, _Out_ PBOOL);
+WINSETUPAPI BOOL WINAPI SetupInstallFilesFromInfSectionA(_In_ HINF, _In_opt_ HINF, _In_ HSPFILEQ, _In_ PCSTR, _In_opt_ PCSTR, _In_ UINT);
+WINSETUPAPI BOOL WINAPI SetupInstallFilesFromInfSectionW(_In_ HINF, _In_opt_ HINF, _In_ HSPFILEQ, _In_ PCWSTR, _In_opt_ PCWSTR, _In_ UINT);
+WINSETUPAPI BOOL WINAPI SetupInstallFromInfSectionA(_In_opt_ HWND, _In_ HINF, _In_ PCSTR, _In_ UINT, _In_opt_ HKEY, _In_opt_ PCSTR, _In_ UINT, _In_opt_ PSP_FILE_CALLBACK_A, _In_opt_ PVOID, _In_opt_ HDEVINFO, _In_opt_ PSP_DEVINFO_DATA);
+WINSETUPAPI BOOL WINAPI SetupInstallFromInfSectionW(_In_opt_ HWND, _In_ HINF, _In_ PCWSTR, _In_ UINT, _In_opt_ HKEY, _In_opt_ PCWSTR, _In_ UINT, _In_opt_ PSP_FILE_CALLBACK_W, _In_opt_ PVOID, _In_opt_ HDEVINFO, _In_opt_ PSP_DEVINFO_DATA);
+WINSETUPAPI BOOL WINAPI SetupInstallServicesFromInfSectionA(_In_ HINF, _In_ PCSTR, _In_ DWORD);
+WINSETUPAPI BOOL WINAPI SetupInstallServicesFromInfSectionW(_In_ HINF, _In_ PCWSTR, _In_ DWORD);
+WINSETUPAPI BOOL WINAPI SetupInstallServicesFromInfSectionExA(_In_ HINF, _In_ PCSTR, _In_ DWORD, _In_opt_ HDEVINFO, _In_opt_ PSP_DEVINFO_DATA, _Reserved_ PVOID, _Reserved_ PVOID);
+WINSETUPAPI BOOL WINAPI SetupInstallServicesFromInfSectionExW(_In_ HINF, _In_ PCWSTR, _In_ DWORD, _In_opt_ HDEVINFO, _In_opt_ PSP_DEVINFO_DATA, _Reserved_ PVOID, _Reserved_ PVOID);
+WINSETUPAPI BOOL WINAPI SetupIterateCabinetA(_In_ PCSTR, _Reserved_ DWORD, _In_ PSP_FILE_CALLBACK_A, _In_ PVOID);
+WINSETUPAPI BOOL WINAPI SetupIterateCabinetW(_In_ PCWSTR, _Reserved_ DWORD, _In_ PSP_FILE_CALLBACK_W, _In_ PVOID);
+WINSETUPAPI BOOL WINAPI SetupLogErrorA(_In_ LPCSTR, _In_ LogSeverity);
+WINSETUPAPI BOOL WINAPI SetupLogErrorW(_In_ LPCWSTR, _In_ LogSeverity);
+WINSETUPAPI BOOL WINAPI SetupLogFileA(_In_ HSPFILELOG, _In_opt_ PCSTR, _In_ PCSTR, _In_ PCSTR, _In_ DWORD, _In_opt_ PCSTR, _In_opt_ PCSTR, _In_opt_ PCSTR, _In_ DWORD);
+WINSETUPAPI BOOL WINAPI SetupLogFileW(_In_ HSPFILELOG, _In_opt_ PCWSTR, _In_ PCWSTR, _In_ PCWSTR, _In_ DWORD, _In_opt_ PCWSTR, _In_opt_ PCWSTR, _In_opt_ PCWSTR, _In_ DWORD);
+
+WINSETUPAPI
+BOOL
+WINAPI
+SetupOpenAppendInfFileA(
+  _In_opt_ PCSTR FileName,
+  _In_ HINF InfHandle,
+  _Out_opt_ PUINT ErrorLine);
+
+WINSETUPAPI
+BOOL
+WINAPI
+SetupOpenAppendInfFileW(
+  _In_opt_ PCWSTR FileName,
+  _In_ HINF InfHandle,
+  _Out_opt_ PUINT ErrorLine);
+
 WINSETUPAPI HSPFILEQ WINAPI SetupOpenFileQueue(VOID);
-WINSETUPAPI HINF WINAPI SetupOpenInfFileA(PCSTR,PCSTR,DWORD,PUINT);
-WINSETUPAPI HINF WINAPI SetupOpenInfFileW(PCWSTR,PCWSTR,DWORD,PUINT);
-WINSETUPAPI BOOL WINAPI SetupOpenLog(BOOL);
+
+WINSETUPAPI
+HINF
+WINAPI
+SetupOpenInfFileA(
+  _In_ PCSTR FileName,
+  _In_opt_ PCSTR InfClass,
+  _In_ DWORD InfStyle,
+  _Out_opt_ PUINT ErrorLine);
+
+WINSETUPAPI
+HINF
+WINAPI
+SetupOpenInfFileW(
+  _In_ PCWSTR FileName,
+  _In_opt_ PCWSTR InfClass,
+  _In_ DWORD InfStyle,
+  _Out_opt_ PUINT ErrorLine);
+
+WINSETUPAPI BOOL WINAPI SetupOpenLog(_In_ BOOL);
 WINSETUPAPI HINF WINAPI SetupOpenMasterInf(VOID);
-WINSETUPAPI UINT WINAPI SetupPromptForDiskA(HWND,PCSTR,PCSTR,PCSTR,PCSTR,PCSTR,DWORD,PSTR,DWORD,PDWORD);
-WINSETUPAPI UINT WINAPI SetupPromptForDiskW(HWND,PCWSTR,PCWSTR,PCWSTR,PCWSTR,PCWSTR,DWORD,PWSTR,DWORD,PDWORD);
-WINSETUPAPI INT WINAPI SetupPromptReboot(HSPFILEQ,HWND,BOOL);
+
+WINSETUPAPI
+UINT
+WINAPI
+SetupPromptForDiskA(
+  _In_ HWND hwndParent,
+  _In_opt_ PCSTR DialogTitle,
+  _In_opt_ PCSTR DiskName,
+  _In_opt_ PCSTR PathToSource,
+  _In_ PCSTR FileSought,
+  _In_opt_ PCSTR TagFile,
+  _In_ DWORD DiskPromptStyle,
+  _Out_writes_opt_(PathBufferSize) PSTR PathBuffer,
+  _In_ DWORD PathBufferSize,
+  _Out_opt_ PDWORD PathRequiredSize);
+
+WINSETUPAPI
+UINT
+WINAPI
+SetupPromptForDiskW(
+  _In_ HWND hwndParent,
+  _In_opt_ PCWSTR DialogTitle,
+  _In_opt_ PCWSTR DiskName,
+  _In_opt_ PCWSTR PathToSource,
+  _In_ PCWSTR FileSought,
+  _In_opt_ PCWSTR TagFile,
+  _In_ DWORD DiskPromptStyle,
+  _Out_writes_opt_(PathBufferSize) PWSTR PathBuffer,
+  _In_ DWORD PathBufferSize,
+  _Out_opt_ PDWORD PathRequiredSize);
+
+WINSETUPAPI INT WINAPI SetupPromptReboot(_In_opt_ HSPFILEQ, _In_opt_ HWND, _In_ BOOL);
 WINSETUPAPI BOOL WINAPI SetupQueryA(DWORD,PCSTR**,PUINT);
 WINSETUPAPI BOOL WINAPI SetupQueryW(DWORD,PCWSTR**,PUINT);
-WINSETUPAPI BOOL WINAPI SetupQueryDrivesInDiskSpaceListA(HDSKSPC,PSTR,DWORD,PDWORD);
-WINSETUPAPI BOOL WINAPI SetupQueryDrivesInDiskSpaceListW(HDSKSPC,PWSTR,DWORD,PDWORD);
-WINSETUPAPI BOOL WINAPI SetupQueryFileLogA(HSPFILELOG,PCSTR,PCSTR,SetupFileLogInfo,PSTR,DWORD,PDWORD);
-WINSETUPAPI BOOL WINAPI SetupQueryFileLogW(HSPFILELOG,PCWSTR,PCWSTR,SetupFileLogInfo,PWSTR,DWORD,PDWORD);
-WINSETUPAPI BOOL WINAPI SetupQueryInfFileInformationA(PSP_INF_INFORMATION,UINT,PSTR,DWORD,PDWORD);
-WINSETUPAPI BOOL WINAPI SetupQueryInfFileInformationW(PSP_INF_INFORMATION,UINT,PWSTR,DWORD,PDWORD);
-WINSETUPAPI BOOL WINAPI SetupQueryInfOriginalFileInformationA(PSP_INF_INFORMATION,UINT,PSP_ALTPLATFORM_INFO,PSP_ORIGINAL_FILE_INFO_A);
-WINSETUPAPI BOOL WINAPI SetupQueryInfOriginalFileInformationW(PSP_INF_INFORMATION,UINT,PSP_ALTPLATFORM_INFO,PSP_ORIGINAL_FILE_INFO_W);
-WINSETUPAPI BOOL WINAPI SetupQueryInfVersionInformationA(PSP_INF_INFORMATION,UINT,PSTR,PSTR,DWORD,PDWORD);
-WINSETUPAPI BOOL WINAPI SetupQueryInfVersionInformationW(PSP_INF_INFORMATION,UINT,PCWSTR,PWSTR,DWORD,PDWORD);
-WINSETUPAPI BOOL WINAPI SetupQuerySpaceRequiredOnDriveA(HDSKSPC,PCSTR,LONGLONG*,PVOID,UINT);
-WINSETUPAPI BOOL WINAPI SetupQuerySpaceRequiredOnDriveW(HDSKSPC,PCWSTR,LONGLONG*,PVOID,UINT);
-WINSETUPAPI BOOL WINAPI SetupQueueCopyA(HSPFILEQ,PCSTR,PCSTR,PCSTR,PCSTR,PCSTR,PCSTR,PCSTR,DWORD);
-WINSETUPAPI BOOL WINAPI SetupQueueCopyW(HSPFILEQ,PCWSTR,PCWSTR,PCWSTR,PCWSTR,PCWSTR,PCWSTR,PCWSTR,DWORD);
-WINSETUPAPI BOOL WINAPI SetupQueueCopyIndirectA(PSP_FILE_COPY_PARAMS_A);
-WINSETUPAPI BOOL WINAPI SetupQueueCopyIndirectW(PSP_FILE_COPY_PARAMS_W);
-WINSETUPAPI BOOL WINAPI SetupQueueCopySectionA(HSPFILEQ,PCSTR,HINF,HINF,PCSTR,DWORD);
-WINSETUPAPI BOOL WINAPI SetupQueueCopySectionW(HSPFILEQ,PCWSTR,HINF,HINF,PCWSTR,DWORD);
-WINSETUPAPI BOOL WINAPI SetupQueueDefaultCopyA(HSPFILEQ,HINF,PCSTR,PCSTR,PCSTR,DWORD);
-WINSETUPAPI BOOL WINAPI SetupQueueDefaultCopyW(HSPFILEQ,HINF,PCWSTR,PCWSTR,PCWSTR,DWORD);
-WINSETUPAPI BOOL WINAPI SetupQueueDeleteA(HSPFILEQ,PCSTR,PCSTR);
-WINSETUPAPI BOOL WINAPI SetupQueueDeleteW(HSPFILEQ,PCWSTR,PCWSTR);
-WINSETUPAPI BOOL WINAPI SetupQueueDeleteSectionA(HSPFILEQ,HINF,HINF,PCSTR);
-WINSETUPAPI BOOL WINAPI SetupQueueDeleteSectionW(HSPFILEQ,HINF,HINF,PCWSTR);
-WINSETUPAPI BOOL WINAPI SetupQueueRenameA(HSPFILEQ,PCSTR,PCSTR,PCSTR,PCSTR);
-WINSETUPAPI BOOL WINAPI SetupQueueRenameW(HSPFILEQ,PCWSTR,PCWSTR,PCWSTR,PCWSTR);
-WINSETUPAPI BOOL WINAPI SetupQueueRenameSectionA(HSPFILEQ,HINF,HINF,PCSTR);
-WINSETUPAPI BOOL WINAPI SetupQueueRenameSectionW(HSPFILEQ,HINF,HINF,PCWSTR);
-WINSETUPAPI BOOL WINAPI SetupRemoveFileLogEntryA(HSPFILELOG,PCSTR,PCSTR);
-WINSETUPAPI BOOL WINAPI SetupRemoveFileLogEntryW(HSPFILELOG,PCWSTR,PCWSTR);
-WINSETUPAPI BOOL WINAPI SetupRemoveFromDiskSpaceListA(HDSKSPC,PCSTR,UINT,PVOID,UINT);
-WINSETUPAPI BOOL WINAPI SetupRemoveFromDiskSpaceListW(HDSKSPC,PCWSTR,UINT,PVOID,UINT);
-WINSETUPAPI BOOL WINAPI SetupRemoveFromSourceListA(DWORD,PCSTR);
-WINSETUPAPI BOOL WINAPI SetupRemoveFromSourceListW(DWORD,PCWSTR);
-WINSETUPAPI BOOL WINAPI SetupRemoveInstallSectionFromDiskSpaceListA(HDSKSPC,HINF,HINF,PCSTR,PVOID,UINT);
-WINSETUPAPI BOOL WINAPI SetupRemoveInstallSectionFromDiskSpaceListW(HDSKSPC,HINF,HINF,PCWSTR,PVOID,UINT);
-WINSETUPAPI BOOL WINAPI SetupRemoveSectionFromDiskSpaceListA(HDSKSPC,HINF,HINF,PCSTR,UINT,PVOID,UINT);
-WINSETUPAPI BOOL WINAPI SetupRemoveSectionFromDiskSpaceListW(HDSKSPC,HINF,HINF,PCWSTR,UINT,PVOID,UINT);
-WINSETUPAPI UINT WINAPI SetupRenameErrorA(HWND,PCSTR,PCSTR,PCSTR,UINT,DWORD);
-WINSETUPAPI UINT WINAPI SetupRenameErrorW(HWND,PCWSTR,PCWSTR,PCWSTR,UINT,DWORD);
-WINSETUPAPI BOOL WINAPI SetupScanFileQueueA(HSPFILEQ,DWORD,HWND,PSP_FILE_CALLBACK_A,PVOID,PDWORD);
-WINSETUPAPI BOOL WINAPI SetupScanFileQueueW(HSPFILEQ,DWORD,HWND,PSP_FILE_CALLBACK_W,PVOID,PDWORD);
-WINSETUPAPI BOOL WINAPI SetupSetDirectoryIdA(HINF,DWORD,PCSTR);
-WINSETUPAPI BOOL WINAPI SetupSetDirectoryIdW(HINF,DWORD,PCWSTR);
-WINSETUPAPI BOOL WINAPI SetupSetDirectoryIdExA(HINF,DWORD,PCSTR,DWORD,DWORD,PVOID);
-WINSETUPAPI BOOL WINAPI SetupSetDirectoryIdExW(HINF,DWORD,PCWSTR,DWORD,DWORD,PVOID);
-WINSETUPAPI BOOL WINAPI SetupSetFileQueueAlternatePlatformA(HSPFILEQ,PSP_ALTPLATFORM_INFO,PCSTR);
-WINSETUPAPI BOOL WINAPI SetupSetFileQueueAlternatePlatformW(HSPFILEQ,PSP_ALTPLATFORM_INFO,PCWSTR);
-WINSETUPAPI BOOL WINAPI SetupSetNonInteractiveMode(BOOL);
-WINSETUPAPI BOOL WINAPI SetupSetPlatformPathOverrideA(PCSTR);
-WINSETUPAPI BOOL WINAPI SetupSetPlatformPathOverrideW(PCWSTR);
-WINSETUPAPI BOOL WINAPI SetupSetSourceListA(DWORD,PCSTR*,UINT);
-WINSETUPAPI BOOL WINAPI SetupSetSourceListW(DWORD,PCWSTR*,UINT);
-WINSETUPAPI VOID WINAPI SetupTermDefaultQueueCallback(PVOID);
-WINSETUPAPI BOOL WINAPI SetupTerminateFileLog(HSPFILELOG);
+
+WINSETUPAPI
+BOOL
+WINAPI
+SetupQueryDrivesInDiskSpaceListA(
+  _In_ HDSKSPC DiskSpace,
+  _Out_writes_opt_(ReturnBufferSize) PSTR ReturnBuffer,
+  _In_ DWORD ReturnBufferSize,
+  _Out_opt_ PDWORD RequiredSize);
+
+WINSETUPAPI
+BOOL
+WINAPI
+SetupQueryDrivesInDiskSpaceListW(
+  _In_ HDSKSPC DiskSpace,
+  _Out_writes_opt_(ReturnBufferSize) PWSTR ReturnBuffer,
+  _In_ DWORD ReturnBufferSize,
+  _Out_opt_ PDWORD RequiredSize);
+
+WINSETUPAPI
+BOOL
+WINAPI
+SetupQueryFileLogA(
+  _In_ HSPFILELOG FileLogHandle,
+  _In_opt_ PCSTR LogSectionName,
+  _In_ PCSTR TargetFilename,
+  _In_ SetupFileLogInfo DesiredInfo,
+  _Out_writes_opt_(ReturnBufferSize) PSTR DataOut,
+  _In_ DWORD ReturnBufferSize,
+  _Out_opt_ PDWORD RequiredSize);
+
+WINSETUPAPI
+BOOL
+WINAPI
+SetupQueryFileLogW(
+  _In_ HSPFILELOG FileLogHandle,
+  _In_opt_ PCWSTR LogSectionName,
+  _In_ PCWSTR TargetFilename,
+  _In_ SetupFileLogInfo DesiredInfo,
+  _Out_writes_opt_(ReturnBufferSize) PWSTR DataOut,
+  _In_ DWORD ReturnBufferSize,
+  _Out_opt_ PDWORD RequiredSize);
+
+WINSETUPAPI
+BOOL
+WINAPI
+SetupQueryInfFileInformationA(
+  _In_ PSP_INF_INFORMATION InfInformation,
+  _In_ UINT InfIndex,
+  _Out_writes_opt_(ReturnBufferSize) PSTR ReturnBuffer,
+  _In_ DWORD ReturnBufferSize,
+  _Out_opt_ PDWORD RequiredSize);
+
+WINSETUPAPI
+BOOL
+WINAPI
+SetupQueryInfFileInformationW(
+  _In_ PSP_INF_INFORMATION InfInformation,
+  _In_ UINT InfIndex,
+  _Out_writes_opt_(ReturnBufferSize) PWSTR ReturnBuffer,
+  _In_ DWORD ReturnBufferSize,
+  _Out_opt_ PDWORD RequiredSize);
+
+WINSETUPAPI
+BOOL
+WINAPI
+SetupQueryInfOriginalFileInformationA(
+  _In_ PSP_INF_INFORMATION InfInformation,
+  _In_ UINT InfIndex,
+  _In_opt_ PSP_ALTPLATFORM_INFO AlternatePlatformInfo,
+  _Out_ PSP_ORIGINAL_FILE_INFO_A OriginalFileInfo);
+
+WINSETUPAPI
+BOOL
+WINAPI
+SetupQueryInfOriginalFileInformationW(
+  _In_ PSP_INF_INFORMATION InfInformation,
+  _In_ UINT InfIndex,
+  _In_opt_ PSP_ALTPLATFORM_INFO AlternatePlatformInfo,
+  _Out_ PSP_ORIGINAL_FILE_INFO_W OriginalFileInfo);
+
+WINSETUPAPI
+BOOL
+WINAPI
+SetupQueryInfVersionInformationA(
+  _In_ PSP_INF_INFORMATION InfInformation,
+  _In_ UINT InfIndex,
+  _In_opt_ PCSTR Key,
+  _Out_writes_opt_(ReturnBufferSize) PSTR ReturnBuffer,
+  _In_ DWORD ReturnBufferSize,
+  _Out_opt_ PDWORD RequiredSize);
+
+WINSETUPAPI
+BOOL
+WINAPI
+SetupQueryInfVersionInformationW(
+  _In_ PSP_INF_INFORMATION InfInformation,
+  _In_ UINT InfIndex,
+  _In_opt_ PCWSTR Key,
+  _Out_writes_opt_(ReturnBufferSize) PWSTR ReturnBuffer,
+  _In_ DWORD ReturnBufferSize,
+  _Out_opt_ PDWORD RequiredSize);
+
+WINSETUPAPI BOOL WINAPI SetupQuerySpaceRequiredOnDriveA(_In_ HDSKSPC, _In_ PCSTR, _Out_ LONGLONG*, _Reserved_ PVOID, _Reserved_ UINT);
+WINSETUPAPI BOOL WINAPI SetupQuerySpaceRequiredOnDriveW(_In_ HDSKSPC, _In_ PCWSTR, _Out_ LONGLONG*, _Reserved_ PVOID, _Reserved_ UINT);
+WINSETUPAPI BOOL WINAPI SetupQueueCopyA(_In_ HSPFILEQ, _In_opt_ PCSTR, _In_opt_ PCSTR, _In_ PCSTR, _In_opt_ PCSTR, _In_opt_ PCSTR, _In_ PCSTR, _In_opt_ PCSTR, _In_ DWORD);
+WINSETUPAPI BOOL WINAPI SetupQueueCopyW(_In_ HSPFILEQ, _In_opt_ PCWSTR, _In_opt_ PCWSTR, _In_ PCWSTR, _In_opt_ PCWSTR, _In_opt_ PCWSTR, _In_ PCWSTR, _In_opt_ PCWSTR, _In_ DWORD);
+WINSETUPAPI BOOL WINAPI SetupQueueCopyIndirectA(_In_ PSP_FILE_COPY_PARAMS_A);
+WINSETUPAPI BOOL WINAPI SetupQueueCopyIndirectW(_In_ PSP_FILE_COPY_PARAMS_W);
+WINSETUPAPI BOOL WINAPI SetupQueueCopySectionA(_In_ HSPFILEQ, _In_opt_ PCSTR, _In_ HINF, _In_opt_ HINF, _In_ PCSTR, _In_ DWORD);
+WINSETUPAPI BOOL WINAPI SetupQueueCopySectionW(_In_ HSPFILEQ, _In_opt_ PCWSTR, _In_ HINF, _In_opt_ HINF, _In_ PCWSTR, _In_ DWORD);
+WINSETUPAPI BOOL WINAPI SetupQueueDefaultCopyA(_In_ HSPFILEQ, _In_ HINF, _In_opt_ PCSTR, _In_ PCSTR, _In_opt_ PCSTR, _In_ DWORD);
+WINSETUPAPI BOOL WINAPI SetupQueueDefaultCopyW(_In_ HSPFILEQ, _In_ HINF, _In_opt_ PCWSTR, _In_ PCWSTR, _In_opt_ PCWSTR, _In_ DWORD);
+WINSETUPAPI BOOL WINAPI SetupQueueDeleteA(_In_ HSPFILEQ, _In_ PCSTR, _In_opt_ PCSTR);
+WINSETUPAPI BOOL WINAPI SetupQueueDeleteW(_In_ HSPFILEQ, _In_ PCWSTR, _In_opt_ PCWSTR);
+WINSETUPAPI BOOL WINAPI SetupQueueDeleteSectionA(_In_ HSPFILEQ, _In_ HINF, _In_opt_ HINF, _In_ PCSTR);
+WINSETUPAPI BOOL WINAPI SetupQueueDeleteSectionW(_In_ HSPFILEQ, _In_ HINF, _In_opt_ HINF, _In_ PCWSTR);
+WINSETUPAPI BOOL WINAPI SetupQueueRenameA(_In_ HSPFILEQ, _In_ PCSTR, _In_opt_ PCSTR, _In_opt_ PCSTR, _In_ PCSTR);
+WINSETUPAPI BOOL WINAPI SetupQueueRenameW(_In_ HSPFILEQ, _In_ PCWSTR, _In_opt_ PCWSTR, _In_opt_ PCWSTR, _In_ PCWSTR);
+WINSETUPAPI BOOL WINAPI SetupQueueRenameSectionA(_In_ HSPFILEQ, _In_ HINF, _In_opt_ HINF, _In_ PCSTR);
+WINSETUPAPI BOOL WINAPI SetupQueueRenameSectionW(_In_ HSPFILEQ, _In_ HINF, _In_opt_ HINF, _In_ PCWSTR);
+WINSETUPAPI BOOL WINAPI SetupRemoveFileLogEntryA(_In_ HSPFILELOG, _In_opt_ PCSTR, _In_opt_ PCSTR);
+WINSETUPAPI BOOL WINAPI SetupRemoveFileLogEntryW(_In_ HSPFILELOG, _In_opt_ PCWSTR, _In_opt_ PCWSTR);
+WINSETUPAPI BOOL WINAPI SetupRemoveFromDiskSpaceListA(_In_ HDSKSPC, _In_ PCSTR, _In_ UINT, _Reserved_ PVOID, _Reserved_ UINT);
+WINSETUPAPI BOOL WINAPI SetupRemoveFromDiskSpaceListW(_In_ HDSKSPC, _In_ PCWSTR, _In_ UINT, _Reserved_ PVOID, _Reserved_ UINT);
+WINSETUPAPI BOOL WINAPI SetupRemoveFromSourceListA(_In_ DWORD, _In_ PCSTR);
+WINSETUPAPI BOOL WINAPI SetupRemoveFromSourceListW(_In_ DWORD, _In_ PCWSTR);
+WINSETUPAPI BOOL WINAPI SetupRemoveInstallSectionFromDiskSpaceListA(_In_ HDSKSPC, _In_ HINF, _In_opt_ HINF, _In_ PCSTR, _Reserved_ PVOID, _Reserved_ UINT);
+WINSETUPAPI BOOL WINAPI SetupRemoveInstallSectionFromDiskSpaceListW(_In_ HDSKSPC, _In_ HINF, _In_opt_ HINF, _In_ PCWSTR, _Reserved_ PVOID, _Reserved_ UINT);
+WINSETUPAPI BOOL WINAPI SetupRemoveSectionFromDiskSpaceListA(_In_ HDSKSPC, _In_ HINF, _In_opt_ HINF, _In_ PCSTR, _In_ UINT, _Reserved_ PVOID, _Reserved_ UINT);
+WINSETUPAPI BOOL WINAPI SetupRemoveSectionFromDiskSpaceListW(_In_ HDSKSPC, _In_ HINF, _In_opt_ HINF, _In_ PCWSTR, _In_ UINT, _Reserved_ PVOID, _Reserved_ UINT);
+WINSETUPAPI UINT WINAPI SetupRenameErrorA(_In_ HWND, _In_opt_ PCSTR, _In_ PCSTR, _In_ PCSTR, _In_ UINT, _In_ DWORD);
+WINSETUPAPI UINT WINAPI SetupRenameErrorW(_In_ HWND, _In_opt_ PCWSTR, _In_ PCWSTR, _In_ PCWSTR, _In_ UINT, _In_ DWORD);
+WINSETUPAPI BOOL WINAPI SetupScanFileQueueA(_In_ HSPFILEQ, _In_ DWORD, _In_opt_ HWND, _In_opt_ PSP_FILE_CALLBACK_A, _In_opt_ PVOID, _Out_ PDWORD);
+WINSETUPAPI BOOL WINAPI SetupScanFileQueueW(_In_ HSPFILEQ, _In_ DWORD, _In_opt_ HWND, _In_opt_ PSP_FILE_CALLBACK_W, _In_opt_ PVOID, _Out_ PDWORD);
+WINSETUPAPI BOOL WINAPI SetupSetDirectoryIdA(_In_ HINF, _In_ DWORD, _In_opt_ PCSTR);
+WINSETUPAPI BOOL WINAPI SetupSetDirectoryIdW(_In_ HINF, _In_ DWORD, _In_opt_ PCWSTR);
+WINSETUPAPI BOOL WINAPI SetupSetDirectoryIdExA(_In_ HINF, _In_ DWORD, _In_opt_ PCSTR, _In_ DWORD, _Reserved_ DWORD, _Reserved_ PVOID);
+WINSETUPAPI BOOL WINAPI SetupSetDirectoryIdExW(_In_ HINF, _In_ DWORD, _In_opt_ PCWSTR, _In_ DWORD, _Reserved_ DWORD, _Reserved_ PVOID);
+WINSETUPAPI BOOL WINAPI SetupSetFileQueueAlternatePlatformA(_In_ HSPFILEQ, _In_opt_ PSP_ALTPLATFORM_INFO, _In_opt_ PCSTR);
+WINSETUPAPI BOOL WINAPI SetupSetFileQueueAlternatePlatformW(_In_ HSPFILEQ, _In_opt_ PSP_ALTPLATFORM_INFO, _In_opt_ PCWSTR);
+WINSETUPAPI BOOL WINAPI SetupSetNonInteractiveMode(_In_ BOOL);
+WINSETUPAPI BOOL WINAPI SetupSetPlatformPathOverrideA(_In_opt_ PCSTR);
+WINSETUPAPI BOOL WINAPI SetupSetPlatformPathOverrideW(_In_opt_ PCWSTR);
+
+WINSETUPAPI
+BOOL
+WINAPI
+SetupSetSourceListA(
+  _In_ DWORD Flags,
+  _In_reads_(SourceCount) PCSTR *SourceList,
+  _In_ UINT SourceCount);
+
+WINSETUPAPI
+BOOL
+WINAPI
+SetupSetSourceListW(
+  _In_ DWORD Flags,
+  _In_reads_(SourceCount) PCWSTR *SourceList,
+  _In_ UINT SourceCount);
+
+WINSETUPAPI VOID WINAPI SetupTermDefaultQueueCallback(_In_ PVOID);
+WINSETUPAPI BOOL WINAPI SetupTerminateFileLog(_In_ HSPFILELOG);
 
 WINSETUPAPI DWORD WINAPI StampFileSecurity(PCWSTR, PSECURITY_DESCRIPTOR);
 

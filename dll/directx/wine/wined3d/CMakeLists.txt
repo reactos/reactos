@@ -22,6 +22,7 @@ list(APPEND SOURCE
     palette.c
     query.c
     resource.c
+    sampler.c
     shader.c
     shader_sm1.c
     shader_sm4.c

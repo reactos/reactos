@@ -20,6 +20,7 @@ LsapInitLsa(VOID)
 {
     HANDLE hEvent;
     DWORD dwError;
+    NTSTATUS Status;
 
     TRACE("LsapInitLsa() called\n");
 
@@ -28,6 +29,22 @@ LsapInitLsa(VOID)
 
     /* Initialize the LSA database */
     LsapInitDatabase();
+
+    /* Initialize registered authentication packages */
+    Status = LsapInitAuthPackages();
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("LsapInitAuthPackages() failed (Status 0x%08lx)\n", Status);
+        return Status;
+    }
+
+    /* Start the authentication port thread */
+    Status = StartAuthenticationPort();
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("StartAuthenticationPort() failed (Status 0x%08lx)\n", Status);
+        return Status;
+    }
 
     /* Start the RPC server */
     LsarStartRpcServer();
@@ -60,8 +77,6 @@ LsapInitLsa(VOID)
     SetEvent(hEvent);
 
     /* NOTE: Do not close the event handle!!!! */
-
-    StartAuthenticationPort();
 
     return STATUS_SUCCESS;
 }

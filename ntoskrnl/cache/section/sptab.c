@@ -123,10 +123,9 @@ MiSectionPageTableGet(PRTL_GENERIC_TABLE Table,
                                            ENTRIES_PER_ELEMENT * PAGE_SIZE);
     PageTable = RtlLookupElementGenericTable(Table, &SearchFileOffset);
 
-    DPRINT("MiSectionPageTableGet(%08x,%08x%08x)\n",
+    DPRINT("MiSectionPageTableGet(%p,%I64x)\n",
            Table,
-           FileOffset->HighPart,
-           FileOffset->LowPart);
+           FileOffset->QuadPart);
 
     return PageTable;
 }
@@ -154,10 +153,9 @@ MiSectionPageTableGetOrAllocate(PRTL_GENERIC_TABLE Table,
                                                       sizeof(SectionZeroPageTable),
                                                       NULL);
         if (!PageTableSlice) return NULL;
-        DPRINT("Allocate page table %x (%08x%08x)\n",
+        DPRINT("Allocate page table %p (%I64x)\n",
                PageTableSlice,
-               PageTableSlice->FileOffset.u.HighPart,
-               PageTableSlice->FileOffset.u.LowPart);
+               PageTableSlice->FileOffset.QuadPart);
     }
     return PageTableSlice;
 }
@@ -283,11 +281,10 @@ MmFreePageTablesSectionSegment(PMM_SECTION_SEGMENT Segment,
     PCACHE_SECTION_PAGE_TABLE Element;
     DPRINT("MiFreePageTablesSectionSegment(%p)\n", &Segment->PageTable);
     while ((Element = RtlGetElementGenericTable(&Segment->PageTable, 0))) {
-        DPRINT("Delete table for <%wZ> %x -> %08x%08x\n",
+        DPRINT("Delete table for <%wZ> %p -> %I64x\n",
                Segment->FileObject ? &Segment->FileObject->FileName : NULL,
                Segment,
-               Element->FileOffset.u.HighPart,
-               Element->FileOffset.u.LowPart);
+               Element->FileOffset.QuadPart);
         if (FreePage)
         {
             ULONG i;
@@ -299,10 +296,10 @@ MmFreePageTablesSectionSegment(PMM_SECTION_SEGMENT Segment,
                 Entry = Element->PageEntries[i];
                 if (Entry && !IS_SWAP_FROM_SSE(Entry))
                 {
-                    DPRINT("Freeing page %x:%x @ %x\n",
+                    DPRINT("Freeing page %p:%Ix @ %I64x\n",
                            Segment,
                            Entry,
-                           Offset.LowPart);
+                           Offset.QuadPart);
 
                     FreePage(Segment, &Offset);
                 }

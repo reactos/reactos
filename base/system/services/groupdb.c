@@ -96,7 +96,7 @@ CreateGroupOrderListRoutine(PWSTR ValueName,
 {
     PSERVICE_GROUP Group;
 
-    DPRINT("CreateGroupOrderListRoutine(%S, %x, %x, %x, %x, %x)\n",
+    DPRINT("CreateGroupOrderListRoutine(%S, %x, %p, %x, %p, %p)\n",
            ValueName, ValueType, ValueData, ValueLength, Context, EntryContext);
 
     if (ValueType == REG_BINARY &&
@@ -172,7 +172,7 @@ CreateGroupListRoutine(PWSTR ValueName,
                                         QueryTable,
                                         (PVOID)Group,
                                         NULL);
-        DPRINT("%x %d %S\n", Status, Group->TagCount, (PWSTR)ValueData);
+        DPRINT("%x %lu %S\n", Status, Group->TagCount, (PWSTR)ValueData);
 
         InsertTailList(&GroupListHead,
                        &Group->GroupListEntry);

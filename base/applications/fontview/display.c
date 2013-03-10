@@ -88,7 +88,7 @@ Display_DrawText(HDC hDC, DISPLAYDATA* pData, int nYPos)
 	GetTextMetrics(hDC, &tm);
 
 	swprintf(szCaption, L"%s%s", pData->szTypeFaceName, pData->szFormat);
-	TextOutW(hDC, 0, y, szCaption, wcslen(szCaption));
+	TextOutW(hDC, 0, y, szCaption, (INT)wcslen(szCaption));
 	y += tm.tmHeight + SPACING1;
 
 	/* Draw a seperation Line */
@@ -103,15 +103,15 @@ Display_DrawText(HDC hDC, DISPLAYDATA* pData, int nYPos)
 	SelectObject(hDC, pData->hCharSetFont);
 	GetTextMetrics(hDC, &tm);
 	swprintf(szCaption, L"abcdefghijklmnopqrstuvwxyz");
-	TextOutW(hDC, 0, y, szCaption, wcslen(szCaption));
+	TextOutW(hDC, 0, y, szCaption, (INT)wcslen(szCaption));
 	y += tm.tmHeight + 1;
 
 	swprintf(szCaption, L"ABCDEFGHIJKLMNOPQRSTUVWXYZ");
-	TextOutW(hDC, 0, y, szCaption, wcslen(szCaption));
+	TextOutW(hDC, 0, y, szCaption, (INT)wcslen(szCaption));
 	y += tm.tmHeight + 1;
 
 	swprintf(szCaption, L"0123456789.:,;(\"~!@#$%^&*')");
-	TextOutW(hDC, 0, y, szCaption, wcslen(szCaption));
+	TextOutW(hDC, 0, y, szCaption, (INT)wcslen(szCaption));
 	y += tm.tmHeight + 1;
 
 	/* Draw a seperation Line */
@@ -124,16 +124,38 @@ Display_DrawText(HDC hDC, DISPLAYDATA* pData, int nYPos)
 	for (i = 0; i < MAX_SIZES; i++)
 	{
 		SelectObject(hDC, pData->hFonts[i]);
-		TextOutW(hDC, 20, y, pData->szString, wcslen(pData->szString));
+		TextOutW(hDC, 20, y, pData->szString, (INT)wcslen(pData->szString));
 		GetTextMetrics(hDC, &tm);
 		y += tm.tmHeight + 1;
 		SelectObject(hDC, pData->hSizeFont);
 		swprintf(szSize, L"%d", pData->nSizes[i]);
-		TextOutW(hDC, 0, y - 13 - tm.tmDescent, szSize, wcslen(szSize));
+		TextOutW(hDC, 0, y - 13 - tm.tmDescent, szSize, (INT)wcslen(szSize));
 	}
 	SelectObject(hDC, hOldFont);
 
 	return y;
+}
+
+static int
+CALLBACK
+EnumFontFamProcW(
+	const LOGFONTW *lpelfe,
+	const TEXTMETRICW *lptm,
+	DWORD FontType,
+	LPARAM lParam)
+{
+	PNEWTEXTMETRICW pntmw = (PNEWTEXTMETRICW)lptm;
+	PBOOL pfOpenType = (PBOOL)lParam;
+
+	if (FontType & TRUETYPE_FONTTYPE)
+	{
+		if (pntmw->ntmFlags & (NTM_TT_OPENTYPE | NTM_PS_OPENTYPE))
+		{
+			*pfOpenType = TRUE;
+			return FALSE;
+		}
+	}
+	return TRUE;
 }
 
 static LRESULT
@@ -160,12 +182,27 @@ Display_SetTypeFace(HWND hwnd, PEXTLOGFONTW pExtLogFont)
 	pData->hCharSetFont = CreateFontIndirectW(&logfont);
 
 	/* Get font format */
-	// FIXME: Get the real font format (OpenType?)
 	SelectObject(hDC, pData->hCharSetFont);
 	GetTextMetrics(hDC, &tm);
-	if ((tm.tmPitchAndFamily & TMPF_TRUETYPE) == TMPF_TRUETYPE)
+	if (tm.tmPitchAndFamily & TMPF_TRUETYPE)
 	{
-		swprintf(pData->szFormat, L" (TrueType)");
+		BOOL fOpenType = FALSE;
+
+		EnumFontFamiliesExW(hDC, &logfont,
+			EnumFontFamProcW, (LPARAM)&fOpenType, 0);
+
+		if (fOpenType)
+			swprintf(pData->szFormat, L" (OpenType)");
+		else
+			swprintf(pData->szFormat, L" (TrueType)");
+	}
+	else if (tm.tmPitchAndFamily & TMPF_VECTOR)
+	{
+		swprintf(pData->szFormat, L" (Vector)");
+	}
+	else
+	{
+		swprintf(pData->szFormat, L" (Raster)");
 	}
 
 	for (i = 0; i < MAX_SIZES; i++)
@@ -381,7 +418,7 @@ Display_OnPrint(HWND hwnd)
 	TEXTMETRIC tm;
 	int copies, yPos;
 	DISPLAYDATA* pData;
-	
+
 	pData = malloc(sizeof(DISPLAYDATA));
 	ZeroMemory(pData, sizeof(DISPLAYDATA));
 

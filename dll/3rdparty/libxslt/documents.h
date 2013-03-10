@@ -20,26 +20,26 @@
 extern "C" {
 #endif
 
-XSLTPUBFUN xsltDocumentPtr XSLTCALL	
+XSLTPUBFUN xsltDocumentPtr XSLTCALL
 		xsltNewDocument		(xsltTransformContextPtr ctxt,
 					 xmlDocPtr doc);
-XSLTPUBFUN xsltDocumentPtr XSLTCALL	
-    		xsltLoadDocument	(xsltTransformContextPtr ctxt,
+XSLTPUBFUN xsltDocumentPtr XSLTCALL
+		xsltLoadDocument	(xsltTransformContextPtr ctxt,
 					 const xmlChar *URI);
-XSLTPUBFUN xsltDocumentPtr XSLTCALL	
-    		xsltFindDocument	(xsltTransformContextPtr ctxt,
+XSLTPUBFUN xsltDocumentPtr XSLTCALL
+		xsltFindDocument	(xsltTransformContextPtr ctxt,
 					 xmlDocPtr doc);
-XSLTPUBFUN void XSLTCALL		
-    		xsltFreeDocuments	(xsltTransformContextPtr ctxt);
+XSLTPUBFUN void XSLTCALL
+		xsltFreeDocuments	(xsltTransformContextPtr ctxt);
 
-XSLTPUBFUN xsltDocumentPtr XSLTCALL	
-    		xsltLoadStyleDocument	(xsltStylesheetPtr style,
+XSLTPUBFUN xsltDocumentPtr XSLTCALL
+		xsltLoadStyleDocument	(xsltStylesheetPtr style,
 					 const xmlChar *URI);
-XSLTPUBFUN xsltDocumentPtr XSLTCALL	
-    		xsltNewStyleDocument	(xsltStylesheetPtr style,
+XSLTPUBFUN xsltDocumentPtr XSLTCALL
+		xsltNewStyleDocument	(xsltStylesheetPtr style,
 					 xmlDocPtr doc);
-XSLTPUBFUN void XSLTCALL		
-    		xsltFreeStyleDocuments	(xsltStylesheetPtr style);
+XSLTPUBFUN void XSLTCALL
+		xsltFreeStyleDocuments	(xsltStylesheetPtr style);
 
 /*
  * Hooks for document loading

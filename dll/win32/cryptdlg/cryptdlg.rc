@@ -45,7 +45,7 @@
 #ifdef LANGUAGE_FR_FR
     #include "cryptdlg_Fr.rc"
 #endif
-#ifdef LANGAUE_HE_IL
+#ifdef LANGUAGE_HE_IL
     #include "cryptdlg_He.rc"
 #endif
 #ifdef LANGUAGE_HU_HU

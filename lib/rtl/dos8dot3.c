@@ -225,12 +225,18 @@ RtlGenerate8dot3Name(IN PUNICODE_STRING Name,
 
 /*
  * @implemented
+ * Note: the function does not conform to the annotations.
+ * SpacesFound is not always set!
  */
+_IRQL_requires_max_(PASSIVE_LEVEL)
+_Must_inspect_result_
+NTSYSAPI
 BOOLEAN
 NTAPI
-RtlIsNameLegalDOS8Dot3(IN PCUNICODE_STRING UnicodeName,
-                       IN OUT POEM_STRING AnsiName OPTIONAL,
-                       IN OUT PBOOLEAN SpacesFound OPTIONAL)
+RtlIsNameLegalDOS8Dot3 (
+    _In_ PCUNICODE_STRING Name,
+    _Inout_opt_ POEM_STRING OemName,
+    _Out_opt_ PBOOLEAN NameContainsSpaces)
 {
     static const char Illegal[] = "*?<>|\"+=,;[]:/\\\345";
     int Dot = -1;
@@ -238,34 +244,37 @@ RtlIsNameLegalDOS8Dot3(IN PCUNICODE_STRING UnicodeName,
     char Buffer[12];
     OEM_STRING OemString;
     BOOLEAN GotSpace = FALSE;
+    NTSTATUS Status;
 
-    if (!AnsiName)
+    if (!OemName)
     {
         OemString.Length = sizeof(Buffer);
         OemString.MaximumLength = sizeof(Buffer);
         OemString.Buffer = Buffer;
-        AnsiName = &OemString;
+        OemName = &OemString;
     }
-    if (RtlUpcaseUnicodeStringToCountedOemString( AnsiName, UnicodeName, FALSE ) != STATUS_SUCCESS)
+
+    Status = RtlUpcaseUnicodeStringToCountedOemString(OemName, Name, FALSE);
+    if (!NT_SUCCESS(Status))
         return FALSE;
 
-    if ((AnsiName->Length > 12) || (AnsiName->Buffer == NULL)) return FALSE;
+    if ((OemName->Length > 12) || (OemName->Buffer == NULL)) return FALSE;
 
     /* a starting . is invalid, except for . and .. */
-    if (AnsiName->Buffer[0] == '.')
+    if (OemName->Buffer[0] == '.')
     {
-        if (AnsiName->Length != 1 && (AnsiName->Length != 2 || AnsiName->Buffer[1] != '.')) return FALSE;
-        if (SpacesFound) *SpacesFound = FALSE;
+        if (OemName->Length != 1 && (OemName->Length != 2 || OemName->Buffer[1] != '.')) return FALSE;
+        if (NameContainsSpaces) *NameContainsSpaces = FALSE;
         return TRUE;
     }
 
-    for (i = 0; i < AnsiName->Length; i++)
+    for (i = 0; i < OemName->Length; i++)
     {
-        switch (AnsiName->Buffer[i])
+        switch (OemName->Buffer[i])
         {
         case ' ':
             /* leading/trailing spaces not allowed */
-            if (!i || i == AnsiName->Length-1 || AnsiName->Buffer[i+1] == '.') return FALSE;
+            if (!i || i == OemName->Length-1 || OemName->Buffer[i+1] == '.') return FALSE;
             GotSpace = TRUE;
             break;
         case '.':
@@ -273,7 +282,7 @@ RtlIsNameLegalDOS8Dot3(IN PCUNICODE_STRING UnicodeName,
             Dot = i;
             break;
         default:
-            if (strchr(Illegal, AnsiName->Buffer[i])) return FALSE;
+            if (strchr(Illegal, OemName->Buffer[i])) return FALSE;
             break;
         }
     }
@@ -282,13 +291,13 @@ RtlIsNameLegalDOS8Dot3(IN PCUNICODE_STRING UnicodeName,
      */
     if (Dot == -1)
     {
-        if (AnsiName->Length > 8) return FALSE;
+        if (OemName->Length > 8) return FALSE;
     }
     else
     {
-        if (Dot > 8 || (AnsiName->Length - Dot > 4) || Dot == AnsiName->Length - 1) return FALSE;
+        if (Dot > 8 || (OemName->Length - Dot > 4) || Dot == OemName->Length - 1) return FALSE;
     }
-    if (SpacesFound) *SpacesFound = GotSpace;
+    if (NameContainsSpaces) *NameContainsSpaces = GotSpace;
     return TRUE;
 }
 

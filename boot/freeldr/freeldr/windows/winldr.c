@@ -30,7 +30,6 @@ DBG_DEFAULT_CHANNEL(WINDOWS);
 extern ULONG reactos_disk_count;
 extern ARC_DISK_SIGNATURE reactos_arc_disk_info[];
 
-extern BOOLEAN UseRealHeap;
 extern ULONG LoaderPagesSpanned;
 extern BOOLEAN AcpiPresent;
 
@@ -582,7 +581,6 @@ LoadAndBootWindowsCommon(
 	SystemRoot = strstr(BootPath, "\\");
 
 	/* Detect hardware */
-	UseRealHeap = TRUE;
 	LoaderBlock->ConfigurationRoot = MachHwDetect();
 
 	if (OperatingSystemVersion == 0)

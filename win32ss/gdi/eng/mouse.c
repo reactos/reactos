@@ -661,7 +661,7 @@ GreSetPointerShape(
         psurfMask = SURFACE_ShareLockSurface(hbmMask);
     else
     {
-        ASSERT(fl & SPS_ALPHA);
+        //ASSERT(fl & SPS_ALPHA);
         psurfMask = NULL;
     }
 

@@ -1,9 +1,9 @@
 Libpng-manual.txt - A description on how to use and modify libpng
 
- libpng version 1.5.12 - July 11, 2012
+ libpng version 1.5.14 - January 24, 2013
  Updated and distributed by Glenn Randers-Pehrson
  <glennrp at users.sourceforge.net>
- Copyright (c) 1998-2011 Glenn Randers-Pehrson
+ Copyright (c) 1998-2012 Glenn Randers-Pehrson
 
  This document is released under the libpng license.
  For conditions of distribution and use, see the disclaimer
@@ -11,9 +11,9 @@ Libpng-manual.txt - A description on how to use and modify libpng
 
  Based on:
 
- libpng versions 0.97, January 1998, through 1.5.12 - July 11, 2012
+ libpng versions 0.97, January 1998, through 1.5.14 - January 24, 2013
  Updated and distributed by Glenn Randers-Pehrson
- Copyright (c) 1998-2011 Glenn Randers-Pehrson
+ Copyright (c) 1998-2012 Glenn Randers-Pehrson
 
  libpng 1.0 beta 6  version 0.96 May 28, 1997
  Updated and distributed by Andreas Dilger
@@ -48,7 +48,7 @@ of reducing the amount of time and effort it takes to support the PNG
 file format in application programs.
 
 The PNG specification (second edition), November 2003, is available as
-a W3C Recommendation and as an ISO Standard (ISO/IEC 15948:2003 (E)) at
+a W3C Recommendation and as an ISO Standard (ISO/IEC 15948:2004 (E)) at
 <http://www.w3.org/TR/2003/REC-PNG-20031110/
 The W3C and ISO documents have identical technical content.
 
@@ -650,9 +650,6 @@ where 0x7fffffffL means unlimited.  You can retrieve this limit with
 
    chunk_cache_max = png_get_chunk_cache_max(png_ptr);
 
-This limit also applies to the number of buffers that can be allocated
-by png_decompress_chunk() while decompressing iTXt, zTXt, and iCCP chunks.
-
 You can also set a limit on the amount of memory that a compressed chunk
 other than IDAT can occupy, with
 
@@ -723,11 +720,11 @@ Libpng only supports composing onto a single color (using png_set_background;
 see below).  Otherwise you must do the composition yourself and, in this case,
 you may need to call png_set_alpha_mode:
 
-#if PNG_LIBPNG_VER >= 10504
-   png_set_alpha_mode(png_ptr, mode, screen_gamma);
-#else
-   png_set_gamma(png_ptr, screen_gamma, 1.0/screen_gamma);
-#endif
+    #if PNG_LIBPNG_VER >= 10504
+       png_set_alpha_mode(png_ptr, mode, screen_gamma);
+    #else
+       png_set_gamma(png_ptr, screen_gamma, 1.0/screen_gamma);
+    #endif
 
 The screen_gamma value is the same as the argument to png_set_gamma; however,
 how it affects the output depends on the mode.  png_set_alpha_mode() sets the
@@ -1152,8 +1149,8 @@ gamma when combining semitransparent pixels with the background color.
     int_file_gamma - 100,000 times the gamma at which the
                      file is written
 
-    png_get_cHRM(png_ptr, info_ptr,  &white_x, &white_y, &red_x, &red_y,
-                     &green_x, &green_y, &blue_x, &blue_y)
+    png_get_cHRM(png_ptr, info_ptr,  &white_x, &white_y, &red_x,
+                     &red_y, &green_x, &green_y, &blue_x, &blue_y)
     png_get_cHRM_XYZ(png_ptr, info_ptr, &red_X, &red_Y, &red_Z, &green_X,
                      &green_Y, &green_Z, &blue_X, &blue_Y, &blue_Z)
     png_get_cHRM_fixed(png_ptr, info_ptr, &int_white_x, &int_white_y,
@@ -1164,8 +1161,9 @@ gamma when combining semitransparent pixels with the background color.
                      &int_blue_X, &int_blue_Y, &int_blue_Z)
 
     {white,red,green,blue}_{x,y}
-                     A color space encoding specified using the chromaticities
-                     of the end points and the white point. (PNG_INFO_cHRM)
+                     A color space encoding specified using the
+                     chromaticities of the end points and the
+                     white point. (PNG_INFO_cHRM)
 
     {red,green,blue}_{X,Y,Z}
                      A color space encoding specified using the encoding end
@@ -1576,17 +1574,19 @@ Within the matrix,
      "A" means the transformation is obtained by png_set_add_alpha().
      "X" means the transformation is obtained by png_set_expand().
      "1" means the transformation is obtained by
-         png_set_expand_gray_1_2_4_to_8() (and by png_set_expand() if there
-         is no transparency in the original or the final format).
+         png_set_expand_gray_1_2_4_to_8() (and by png_set_expand()
+         if there is no transparency in the original or the final
+         format).
      "C" means the transformation is obtained by png_set_gray_to_rgb().
      "G" means the transformation is obtained by png_set_rgb_to_gray().
      "P" means the transformation is obtained by
          png_set_expand_palette_to_rgb().
      "p" means the transformation is obtained by png_set_packing().
      "Q" means the transformation is obtained by png_set_quantize().
-     "T" means the transformation is obtained by png_set_tRNS_to_alpha().
-     "B" means the transformation is obtained by png_set_background(), or
-         png_strip_alpha().
+     "T" means the transformation is obtained by
+         png_set_tRNS_to_alpha().
+     "B" means the transformation is obtained by
+         png_set_background(), or png_strip_alpha().
 
 When an entry has multiple transforms listed all are required to cause the
 right overall transformation.  When two transforms are separated by a comma
@@ -1671,8 +1671,8 @@ with alpha.
 
     if (color_type == PNG_COLOR_TYPE_RGB ||
         color_type == PNG_COLOR_TYPE_RGB_ALPHA)
-       png_set_rgb_to_gray(png_ptr, error_action, double red_weight,
-          double green_weight);
+       png_set_rgb_to_gray(png_ptr, error_action,
+          double red_weight, double green_weight);
 
     error_action = 1: silently do the conversion
 
@@ -1694,7 +1694,8 @@ with alpha.
 In the corresponding fixed point API the red_weight and green_weight values are
 simply scaled by 100,000:
 
-    png_set_rgb_to_gray(png_ptr, error_action, png_fixed_point red_weight,
+    png_set_rgb_to_gray(png_ptr, error_action,
+       png_fixed_point red_weight,
        png_fixed_point green_weight);
 
 If you have set error_action = 1 or 2, you can
@@ -2189,7 +2190,7 @@ sPLT, only the n'th item in the structure is freed, where n is "seq".
 The default behavior is only to free data that was allocated internally
 by libpng.  This can be changed, so that libpng will not free the data,
 or so that it will free data that was allocated by the user with png_malloc()
-or png_zalloc() and passed in via a png_set_*() function, with
+or png_calloc() and passed in via a png_set_*() function, with
 
     png_data_freer(png_ptr, info_ptr, freer, mask)
 
@@ -2210,7 +2211,7 @@ or png_destroy_*() is supposed to free the data.  When the user assumes
 responsibility for libpng-allocated data, the application must use
 png_free() to free it, and when the user transfers responsibility to libpng
 for data that the user has allocated, the user must have used png_malloc()
-or png_zalloc() to allocate it.
+or png_calloc() to allocate it.
 
 If you allocated your row_pointers in a single block, as suggested above in
 the description of the high level read interface, you must not transfer
@@ -3028,8 +3029,8 @@ tEXt chunk use RFC 1123 format dates (e.g. "22 May 1997 18:07:10 GMT"),
 although this isn't a requirement.  Unlike the tIME chunk, the
 "Creation Time" tEXt chunk is not expected to be automatically changed
 by the software.  To facilitate the use of RFC 1123 dates, a function
-png_convert_to_rfc1123(png_timep) is provided to convert from PNG
-time to an RFC 1123 format string.
+png_convert_to_rfc1123(png_ptr, png_timep) is provided to convert
+from PNG time to an RFC 1123 format string.
 
 Writing unknown chunks
 
@@ -3391,7 +3392,7 @@ png_destroy_write_struct().
 The default behavior is only to free data that was allocated internally
 by libpng.  This can be changed, so that libpng will not free the data,
 or so that it will free data that was allocated by the user with png_malloc()
-or png_zalloc() and passed in via a png_set_*() function, with
+or png_calloc() and passed in via a png_set_*() function, with
 
     png_data_freer(png_ptr, info_ptr, freer, mask)
 
@@ -3427,7 +3428,7 @@ When the user assumes responsibility for libpng-allocated data, the
 application must use
 png_free() to free it, and when the user transfers responsibility to libpng
 for data that the user has allocated, the user must have used png_malloc()
-or png_zalloc() to allocate it.
+or png_calloc() to allocate it.
 
 If you allocated text_ptr.text, text_ptr.lang, and text_ptr.translated_keyword
 separately, do not transfer responsibility for freeing text_ptr to libpng,
@@ -3455,12 +3456,13 @@ in pngmem.c, pngrio.c, pngwio.c, and pngerror.c, respectively.  To change
 these functions, call the appropriate png_set_*_fn() function.
 
 Memory allocation is done through the functions png_malloc(), png_calloc(),
-and png_free().  These currently just call the standard C functions.
-png_calloc() calls png_malloc() and then clears the newly
-allocated memory to zero.  There is limited support for certain systems
-with segmented memory architectures and the types of pointers declared by
-png.h match this; you will have to use appropriate pointers in your
-application.  Since it is
+and png_free().  The png_malloc() and png_free() functions currently just
+call the standard C functions and png_calloc() calls png_malloc() and then
+clears the newly allocated memory to zero; note that png_calloc(png_ptr, size)
+is not the same as the calloc(number, size) function provided by stdlib.h.
+There is limited support for certain systems with segmented memory
+architectures and the types of pointers declared by png.h match this; you
+will have to use appropriate pointers in your application.  Since it is
 unlikely that the method of handling memory allocation on a platform
 will change between applications, these functions must be modified in
 the library at compile time.  If you prefer to use a different method
@@ -4089,8 +4091,8 @@ png_get_mmx_bitdepth_threshold(), png_get_mmx_rowbytes_threshold(),
 png_set_asm_flags(), and png_mmx_supported()
 
 We removed the obsolete png_check_sig(), png_memcpy_check(), and
-png_memset_check() functions.  Instead use !png_sig_cmp(), memcpy(),
-and memset(), respectively.
+png_memset_check() functions.  Instead use !png_sig_cmp(), png_memcpy(),
+and png_memset(), respectively.
 
 The function png_set_gray_1_2_4_to_8() was removed. It has been
 deprecated since libpng-1.0.18 and 1.2.9, when it was replaced with
@@ -4127,7 +4129,9 @@ png_set_strip_error_numbers() was removed from the library by default.
 
 The png_zalloc() and png_zfree() functions are no longer exported.
 The png_zalloc() function no longer zeroes out the memory that it
-allocates.
+allocates.  Applications that called png_zalloc(png_ptr, number, size)
+can call png_calloc(png_ptr, number*size) instead, and can call
+png_free() instead of png_zfree().
 
 Support for dithering was disabled by default in libpng-1.4.0, because
 it has not been well tested and doesn't actually "dither".
@@ -4161,8 +4165,8 @@ A. Changes that affect users of libpng
 
 There are no substantial API changes between the non-deprecated parts of
 the 1.4.5 API and the 1.5.0 API; however, the ability to directly access
-the main libpng control structures, png_struct and png_info, deprecated
-in earlier versions of libpng, has been completely removed from
+members of the main libpng control structures, png_struct and png_info,
+deprecated in earlier versions of libpng, has been completely removed from
 libpng 1.5.
 
 We no longer include zlib.h in png.h.  Applications that need access
@@ -4170,9 +4174,12 @@ to information in zlib.h will need to add the '#include "zlib.h"'
 directive.  It does not matter whether it is placed prior to or after
 the '"#include png.h"' directive.
 
-We moved the png_strcpy(), png_strncpy(), png_strlen(), png_memcpy(),
-png_memcmp(), png_sprintf, and png_memcpy() macros into a private
-header file (pngpriv.h) that is not accessible to applications.
+The png_sprintf(), png_strcpy(), and png_strncpy() macros are no longer used
+and were removed.
+
+We moved the png_strlen(), png_memcpy(), png_memset(), and png_memcmp()
+macros into a private header file (pngpriv.h) that is not accessible to
+applications.
 
 In png_get_iCCP, the type of "profile" was changed from png_charpp
 to png_bytepp, and in png_set_iCCP, from png_charp to png_const_bytep.
@@ -4571,7 +4578,7 @@ pngtest) appear in
 pngpriv.h
 above the comment that says
 
-  /* Maintainer: Put new private prototypes here ^ and in libpngpf.3 */
+  /* Maintainer: Put new private prototypes here ^ */
 
 To avoid polluting the global namespace, the names of all exported
 functions and variables begin with "png_", and all publicly visible C
@@ -4588,7 +4595,7 @@ left parenthesis that follows it:
     for (i = 2; i > 0; --i)
        y[i] = a(x) + (int)b;
 
-We prefer #ifdef and #ifndef to #if defined() and if !defined()
+We prefer #ifdef and #ifndef to #if defined() and #if !defined()
 when there is only one macro being tested.
 
 We prefer to express integers that are used as bit masks in hex format,
@@ -4602,13 +4609,13 @@ Other rules can be inferred by inspecting the libpng source.
 
 XIV. Y2K Compliance in libpng
 
-July 11, 2012
+January 24, 2013
 
 Since the PNG Development group is an ad-hoc body, we can't make
 an official declaration.
 
 This is your unofficial assurance that libpng from version 0.71 and
-upward through 1.5.12 are Y2K compliant.  It is my belief that earlier
+upward through 1.5.14 are Y2K compliant.  It is my belief that earlier
 versions were also Y2K compliant.
 
 Libpng only has two year fields.  One is a 2-byte unsigned integer that

@@ -35,7 +35,7 @@ BEGIN
     POPUP "&אפשרויות" BEGIN
         MENUITEM "&חדש\tF2",       IDM_NEW
         MENUITEM SEPARATOR
-        MENUITEM "&Mark Question", IDM_MARKQ // to be invented
+        MENUITEM "סימון בשאלה", IDM_MARKQ // to be invented
         MENUITEM SEPARATOR
         MENUITEM "&מתחיל",      IDM_BEGINNER
         MENUITEM "מ&תקדם",      IDM_ADVANCED

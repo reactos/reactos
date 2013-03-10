@@ -2165,6 +2165,7 @@ SamrCreateUserInDomain(IN SAMPR_HANDLE DomainHandle,
     /* Initialize fixed user data */
     memset(&FixedUserData, 0, sizeof(SAM_USER_FIXED_DATA));
     FixedUserData.Version = 1;
+    FixedUserData.Reserved = 0;
     FixedUserData.LastLogon.QuadPart = 0;
     FixedUserData.LastLogoff.QuadPart = 0;
     FixedUserData.PasswordLastSet.QuadPart = 0;
@@ -2176,6 +2177,12 @@ SamrCreateUserInDomain(IN SAMPR_HANDLE DomainHandle,
     FixedUserData.UserAccountControl = USER_ACCOUNT_DISABLED |
                                        USER_PASSWORD_NOT_REQUIRED |
                                        USER_NORMAL_ACCOUNT;
+    FixedUserData.CountryCode = 0;
+    FixedUserData.CodePage = 0;
+    FixedUserData.BadPasswordCount = 0;
+    FixedUserData.LogonCount = 0;
+    FixedUserData.AdminCount = 0;
+    FixedUserData.OperatorCount = 0;
 
     /* Set fixed user data attribute */
     Status = SampSetObjectAttribute(UserObject,
@@ -2309,7 +2316,58 @@ SamrCreateUserInDomain(IN SAMPR_HANDLE DomainHandle,
         return Status;
     }
 
-    /* FIXME: Set default user attributes */
+    /* FIXME: Set LogonHours attribute*/
+    /* FIXME: Set Groups attribute*/
+
+    /* Set LMPwd attribute*/
+    Status = SampSetObjectAttribute(UserObject,
+                                    L"LMPwd",
+                                    REG_BINARY,
+                                    NULL,
+                                    0);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Set NTPwd attribute*/
+    Status = SampSetObjectAttribute(UserObject,
+                                    L"NTPwd",
+                                    REG_BINARY,
+                                    NULL,
+                                    0);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Set LMPwdHistory attribute*/
+    Status = SampSetObjectAttribute(UserObject,
+                                    L"LMPwdHistory",
+                                    REG_BINARY,
+                                    NULL,
+                                    0);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Set NTPwdHistory attribute*/
+    Status = SampSetObjectAttribute(UserObject,
+                                    L"NTPwdHistory",
+                                    REG_BINARY,
+                                    NULL,
+                                    0);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* FIXME: Set SecDesc attribute*/
 
     if (NT_SUCCESS(Status))
     {
@@ -5986,6 +6044,79 @@ done:
 
 
 static NTSTATUS
+SampQueryUserInternal1(PSAM_DB_OBJECT UserObject,
+                      PSAMPR_USER_INFO_BUFFER *Buffer)
+{
+    PSAMPR_USER_INFO_BUFFER InfoBuffer = NULL;
+    ULONG Length = 0;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    *Buffer = NULL;
+
+    InfoBuffer = midl_user_allocate(sizeof(SAMPR_USER_INFO_BUFFER));
+    if (InfoBuffer == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    /* Get the NT password */
+    Length = 0;
+    SampGetObjectAttribute(UserObject,
+                           L"NTPwd",
+                           NULL,
+                           NULL,
+                           &Length);
+
+    if (Length == sizeof(ENCRYPTED_NT_OWF_PASSWORD))
+    {
+        Status = SampGetObjectAttribute(UserObject,
+                                        L"NTPwd",
+                                        NULL,
+                                        (PVOID)&InfoBuffer->Internal1.EncryptedNtOwfPassword,
+                                        &Length);
+        if (!NT_SUCCESS(Status))
+            goto done;
+    }
+
+    InfoBuffer->Internal1.NtPasswordPresent = (Length == sizeof(ENCRYPTED_NT_OWF_PASSWORD));
+
+    /* Get the LM password */
+    Length = 0;
+    SampGetObjectAttribute(UserObject,
+                           L"LMPwd",
+                           NULL,
+                           NULL,
+                           &Length);
+
+    if (Length == sizeof(ENCRYPTED_LM_OWF_PASSWORD))
+    {
+        Status = SampGetObjectAttribute(UserObject,
+                                        L"LMPwd",
+                                        NULL,
+                                        (PVOID)&InfoBuffer->Internal1.EncryptedLmOwfPassword,
+                                        &Length);
+        if (!NT_SUCCESS(Status))
+            goto done;
+    }
+
+    InfoBuffer->Internal1.LmPasswordPresent = (Length == sizeof(ENCRYPTED_LM_OWF_PASSWORD));
+
+    InfoBuffer->Internal1.PasswordExpired = FALSE;
+
+    *Buffer = InfoBuffer;
+
+done:
+    if (!NT_SUCCESS(Status))
+    {
+        if (InfoBuffer != NULL)
+        {
+            midl_user_free(InfoBuffer);
+        }
+    }
+
+    return Status;
+}
+
+
+static NTSTATUS
 SampQueryUserParameters(PSAM_DB_OBJECT UserObject,
                         PSAMPR_USER_INFO_BUFFER *Buffer)
 {
@@ -6076,6 +6207,10 @@ SamrQueryInformationUser(IN SAMPR_HANDLE UserHandle,
                             USER_READ_PREFERENCES |
                             USER_READ_LOGON |
                             USER_READ_ACCOUNT;
+            break;
+
+        case UserInternal1Information:
+            DesiredAccess = 0;
             break;
 
         default:
@@ -6174,7 +6309,10 @@ SamrQueryInformationUser(IN SAMPR_HANDLE UserHandle,
                                           Buffer);
             break;
 
-//        case UserInternal1Information:
+        case UserInternal1Information:
+            Status = SampQueryUserInternal1(UserObject,
+                                            Buffer);
+            break;
 
         case UserParametersInformation:
             Status = SampQueryUserParameters(UserObject,
@@ -6376,6 +6514,61 @@ SampSetUserExpires(PSAM_DB_OBJECT UserObject,
     FixedData.AccountExpires.LowPart = Buffer->Expires.AccountExpires.LowPart;
     FixedData.AccountExpires.HighPart = Buffer->Expires.AccountExpires.HighPart;
 
+    Status = SampSetObjectAttribute(UserObject,
+                                    L"F",
+                                    REG_BINARY,
+                                    &FixedData,
+                                    Length);
+
+done:
+    return Status;
+}
+
+
+static NTSTATUS
+SampSetUserInternal1(PSAM_DB_OBJECT UserObject,
+                     PSAMPR_USER_INFO_BUFFER Buffer)
+{
+    SAM_USER_FIXED_DATA FixedData;
+    ULONG Length = 0;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    /* FIXME: Decrypt NT password */
+    /* FIXME: Decrypt LM password */
+
+    Status = SampSetUserPassword(UserObject,
+                                 &Buffer->Internal1.EncryptedNtOwfPassword,
+                                 Buffer->Internal1.NtPasswordPresent,
+                                 &Buffer->Internal1.EncryptedLmOwfPassword,
+                                 Buffer->Internal1.LmPasswordPresent);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    /* Get the fixed user attributes */
+    Length = sizeof(SAM_USER_FIXED_DATA);
+    Status = SampGetObjectAttribute(UserObject,
+                                    L"F",
+                                    NULL,
+                                    (PVOID)&FixedData,
+                                    &Length);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    if (Buffer->Internal1.PasswordExpired)
+    {
+        /* The pasword was last set ages ago */
+        FixedData.PasswordLastSet.LowPart = 0;
+        FixedData.PasswordLastSet.HighPart = 0;
+    }
+    else
+    {
+        /* The pasword was last set right now */
+        Status = NtQuerySystemTime(&FixedData.PasswordLastSet);
+        if (!NT_SUCCESS(Status))
+            goto done;
+    }
+
+    /* Set the fixed user attributes */
     Status = SampSetObjectAttribute(UserObject,
                                     L"F",
                                     REG_BINARY,
@@ -6604,6 +6797,7 @@ SamrSetInformationUser(IN SAMPR_HANDLE UserHandle,
             break;
 
         case UserSetPasswordInformation:
+        case UserInternal1Information:
             DesiredAccess = USER_FORCE_PASSWORD_CHANGE;
             break;
 
@@ -6749,7 +6943,10 @@ SamrSetInformationUser(IN SAMPR_HANDLE UserHandle,
                                         Buffer);
             break;
 
-//        case UserInternal1Information:
+        case UserInternal1Information:
+            Status = SampSetUserInternal1(UserObject,
+                                          Buffer);
+            break;
 
         case UserParametersInformation:
             Status = SampSetObjectAttribute(UserObject,
@@ -6811,7 +7008,7 @@ SamrGetGroupsForUser(IN SAMPR_HANDLE UserHandle,
     TRACE("SamrGetGroupsForUser(%p %p)\n",
           UserHandle, Groups);
 
-    /* Validate the domain handle */
+    /* Validate the user handle */
     Status = SampValidateDbObject(UserHandle,
                                   SamDbUserObject,
                                   USER_LIST_GROUPS,
@@ -6937,15 +7134,88 @@ SamrTestPrivateFunctionsUser(IN SAMPR_HANDLE UserHandle)
     return STATUS_NOT_IMPLEMENTED;
 }
 
+
 /* Function 44 */
 NTSTATUS
 NTAPI
 SamrGetUserDomainPasswordInformation(IN SAMPR_HANDLE UserHandle,
                                      OUT PUSER_DOMAIN_PASSWORD_INFORMATION PasswordInformation)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    SAM_DOMAIN_FIXED_DATA DomainFixedData;
+    SAM_USER_FIXED_DATA UserFixedData;
+    PSAM_DB_OBJECT DomainObject;
+    PSAM_DB_OBJECT UserObject;
+    ULONG Length = 0;
+    NTSTATUS Status;
+
+    TRACE("(%p %p)\n",
+          UserHandle, PasswordInformation);
+
+    /* Validate the user handle */
+    Status = SampValidateDbObject(UserHandle,
+                                  SamDbUserObject,
+                                  0,
+                                  &UserObject);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampValidateDbObject failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Validate the domain object */
+    Status = SampValidateDbObject((SAMPR_HANDLE)UserObject->ParentObject,
+                                  SamDbDomainObject,
+                                  DOMAIN_READ_PASSWORD_PARAMETERS,
+                                  &DomainObject);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampValidateDbObject failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Get fixed user data */
+    Length = sizeof(SAM_USER_FIXED_DATA);
+    Status = SampGetObjectAttribute(UserObject,
+                                    L"F",
+                                    NULL,
+                                    (PVOID)&UserFixedData,
+                                    &Length);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("SampGetObjectAttribute failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    if ((UserObject->RelativeId == DOMAIN_USER_RID_KRBTGT) ||
+        (UserFixedData.UserAccountControl & (USER_INTERDOMAIN_TRUST_ACCOUNT |
+                                             USER_WORKSTATION_TRUST_ACCOUNT |
+                                             USER_SERVER_TRUST_ACCOUNT)))
+    {
+        PasswordInformation->MinPasswordLength = 0;
+        PasswordInformation->PasswordProperties = 0;
+    }
+    else
+    {
+        /* Get fixed domain data */
+        Length = sizeof(SAM_DOMAIN_FIXED_DATA);
+        Status = SampGetObjectAttribute(DomainObject,
+                                        L"F",
+                                        NULL,
+                                        (PVOID)&DomainFixedData,
+                                        &Length);
+        if (!NT_SUCCESS(Status))
+        {
+            TRACE("SampGetObjectAttribute failed with status 0x%08lx\n", Status);
+            return Status;
+        }
+
+        PasswordInformation->MinPasswordLength = DomainFixedData.MinPasswordLength;
+        PasswordInformation->PasswordProperties = DomainFixedData.PasswordProperties;
+    }
+
+    return STATUS_SUCCESS;
 }
+
 
 /* Function 45 */
 NTSTATUS
@@ -7158,8 +7428,8 @@ SamrCreateUser2InDomain(IN SAMPR_HANDLE DomainHandle,
     }
 
     /* Initialize fixed user data */
-    memset(&FixedUserData, 0, sizeof(SAM_USER_FIXED_DATA));
     FixedUserData.Version = 1;
+    FixedUserData.Reserved = 0;
     FixedUserData.LastLogon.QuadPart = 0;
     FixedUserData.LastLogoff.QuadPart = 0;
     FixedUserData.PasswordLastSet.QuadPart = 0;
@@ -7171,6 +7441,12 @@ SamrCreateUser2InDomain(IN SAMPR_HANDLE DomainHandle,
     FixedUserData.UserAccountControl = USER_ACCOUNT_DISABLED |
                                        USER_PASSWORD_NOT_REQUIRED |
                                        AccountType;
+    FixedUserData.CountryCode = 0;
+    FixedUserData.CodePage = 0;
+    FixedUserData.BadPasswordCount = 0;
+    FixedUserData.LogonCount = 0;
+    FixedUserData.AdminCount = 0;
+    FixedUserData.OperatorCount = 0;
 
     /* Set fixed user data attribute */
     Status = SampSetObjectAttribute(UserObject,
@@ -7292,7 +7568,70 @@ SamrCreateUser2InDomain(IN SAMPR_HANDLE DomainHandle,
         return Status;
     }
 
-    /* FIXME: Set default user attributes */
+    /* Set the Parameters attribute */
+    Status = SampSetObjectAttribute(UserObject,
+                                    L"Parameters",
+                                    REG_SZ,
+                                    EmptyString.Buffer,
+                                    EmptyString.MaximumLength);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* FIXME: Set LogonHours attribute*/
+    /* FIXME: Set Groups attribute*/
+
+    /* Set LMPwd attribute*/
+    Status = SampSetObjectAttribute(UserObject,
+                                    L"LMPwd",
+                                    REG_BINARY,
+                                    NULL,
+                                    0);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Set NTPwd attribute*/
+    Status = SampSetObjectAttribute(UserObject,
+                                    L"NTPwd",
+                                    REG_BINARY,
+                                    NULL,
+                                    0);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Set LMPwdHistory attribute*/
+    Status = SampSetObjectAttribute(UserObject,
+                                    L"LMPwdHistory",
+                                    REG_BINARY,
+                                    NULL,
+                                    0);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Set NTPwdHistory attribute*/
+    Status = SampSetObjectAttribute(UserObject,
+                                    L"NTPwdHistory",
+                                    REG_BINARY,
+                                    NULL,
+                                    0);
+    if (!NT_SUCCESS(Status))
+    {
+        TRACE("failed with status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* FIXME: Set SecDesc attribute*/
 
     if (NT_SUCCESS(Status))
     {

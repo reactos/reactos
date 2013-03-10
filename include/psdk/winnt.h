@@ -312,19 +312,33 @@ typedef void* __ptr64 PVOID64;
 #endif
 
 typedef wchar_t WCHAR;
-typedef WCHAR *PWCHAR,*LPWCH,*PWCH,*NWPSTR,*LPWSTR,*PWSTR,*PZZWSTR;
-typedef CONST WCHAR *LPCWCH,*PCWCH,*LPCWSTR,*PCWSTR,*PCZZWSTR;
-typedef CHAR *PCHAR,*LPCH,*PCH,*NPSTR,*LPSTR,*PSTR;
-typedef CONST CHAR *LPCCH,*PCCH,*PCSTR,*LPCSTR;
-typedef PWSTR *PZPWSTR;
-typedef CONST PWSTR *PCZPWSTR;
-typedef WCHAR UNALIGNED *LPUWSTR,*PUWSTR;
-typedef PCWSTR *PZPCWSTR;
-typedef CONST WCHAR UNALIGNED *LPCUWSTR,*PCUWSTR;
-typedef PSTR *PZPSTR;
-typedef CONST PSTR *PCZPSTR;
-typedef PCSTR *PZPCSTR;
 
+typedef _Null_terminated_ WCHAR *NWPSTR, *LPWSTR, *PWSTR;
+typedef _Null_terminated_ PWSTR *PZPWSTR;
+typedef _Null_terminated_ CONST PWSTR *PCZPWSTR;
+typedef _Null_terminated_ WCHAR UNALIGNED *LPUWSTR, *PUWSTR;
+typedef _Null_terminated_ CONST WCHAR *LPCWSTR, *PCWSTR;
+typedef _Null_terminated_ PCWSTR *PZPCWSTR;
+typedef _Null_terminated_ CONST WCHAR UNALIGNED *LPCUWSTR, *PCUWSTR;
+
+typedef _NullNull_terminated_ WCHAR *PZZWSTR;
+typedef _NullNull_terminated_ CONST WCHAR *PCZZWSTR;
+typedef _NullNull_terminated_ WCHAR UNALIGNED *PUZZWSTR;
+typedef _NullNull_terminated_ CONST WCHAR UNALIGNED *PCUZZWSTR;
+
+typedef WCHAR *PWCHAR, *LPWCH, *PWCH;
+typedef CONST WCHAR *LPCWCH, *PCWCH;
+typedef CHAR *PCHAR, *LPCH, *PCH;
+typedef CONST CHAR *LPCCH, *PCCH;
+
+typedef _Null_terminated_ CHAR *NPSTR, *LPSTR, *PSTR;
+typedef _Null_terminated_ PSTR *PZPSTR;
+typedef _Null_terminated_ CONST PSTR *PCZPSTR;
+typedef _Null_terminated_ CONST CHAR *LPCSTR, *PCSTR;
+typedef _Null_terminated_ PCSTR *PZPCSTR;
+
+typedef _NullNull_terminated_ CHAR *PZZSTR;
+typedef _NullNull_terminated_ CONST CHAR *PCZZSTR;
 
 #ifdef UNICODE
 #ifndef _TCHAR_DEFINED
@@ -2420,13 +2434,15 @@ typedef struct _ACL_SIZE_INFORMATION {
 } ACL_SIZE_INFORMATION, *PACL_SIZE_INFORMATION;
 
 typedef
+_IRQL_requires_same_
+_Function_class_(EXCEPTION_ROUTINE)
 EXCEPTION_DISPOSITION
 NTAPI
 EXCEPTION_ROUTINE(
-    _Inout_ struct _EXCEPTION_RECORD *ExceptionRecord,
-    _In_ PVOID EstablisherFrame,
-    _Inout_ struct _CONTEXT *ContextRecord,
-    _In_ PVOID DispatcherContext);
+  _Inout_ struct _EXCEPTION_RECORD *ExceptionRecord,
+  _In_ PVOID EstablisherFrame,
+  _Inout_ struct _CONTEXT *ContextRecord,
+  _In_ PVOID DispatcherContext);
 
 typedef EXCEPTION_ROUTINE *PEXCEPTION_ROUTINE;
 
@@ -2726,8 +2742,22 @@ typedef struct _UNWIND_HISTORY_TABLE
     UNWIND_HISTORY_TABLE_ENTRY Entry[UNWIND_HISTORY_TABLE_SIZE];
 } UNWIND_HISTORY_TABLE, *PUNWIND_HISTORY_TABLE;
 
-typedef PRUNTIME_FUNCTION (*PGET_RUNTIME_FUNCTION_CALLBACK)(DWORD64 ControlPc,PVOID Context);
-typedef DWORD (*POUT_OF_PROCESS_FUNCTION_TABLE_CALLBACK)(HANDLE Process,PVOID TableAddress,PDWORD Entries,PRUNTIME_FUNCTION *Functions);
+typedef
+_Function_class_(GET_RUNTIME_FUNCTION_CALLBACK)
+PRUNTIME_FUNCTION
+(*PGET_RUNTIME_FUNCTION_CALLBACK)(
+  _In_ DWORD64 ControlPc,
+  _In_opt_ PVOID Context);
+
+typedef
+_Function_class_(OUT_OF_PROCESS_FUNCTION_TABLE_CALLBACK)
+_Must_inspect_result_
+DWORD
+(*POUT_OF_PROCESS_FUNCTION_TABLE_CALLBACK)(
+  _In_ HANDLE Process,
+  _In_ PVOID TableAddress,
+  _Out_ PDWORD Entries,
+  _Out_ PRUNTIME_FUNCTION *Functions);
 
 #define OUT_OF_PROCESS_FUNCTION_TABLE_CALLBACK_EXPORT_NAME "OutOfProcessFunctionTableCallback"
 
@@ -3817,45 +3847,40 @@ typedef SLIST_HEADER SLIST_HEADER32, *PSLIST_HEADER32;
 NTSYSAPI
 VOID
 NTAPI
-RtlInitializeSListHead (
-    IN PSLIST_HEADER ListHead
-    );
+RtlInitializeSListHead(
+  _Out_ PSLIST_HEADER ListHead);
+
+_Must_inspect_result_
+NTSYSAPI
+PSLIST_ENTRY
+NTAPI
+RtlFirstEntrySList(
+  _In_ const SLIST_HEADER *ListHead);
 
 NTSYSAPI
 PSLIST_ENTRY
 NTAPI
-RtlFirstEntrySList (
-    IN const SLIST_HEADER *ListHead
-    );
+RtlInterlockedPopEntrySList(
+  _Inout_ PSLIST_HEADER ListHead);
 
 NTSYSAPI
 PSLIST_ENTRY
 NTAPI
-RtlInterlockedPopEntrySList (
-    IN PSLIST_HEADER ListHead
-    );
+RtlInterlockedPushEntrySList(
+  _Inout_ PSLIST_HEADER ListHead,
+  _Inout_ __drv_aliasesMem PSLIST_ENTRY ListEntry);
 
 NTSYSAPI
 PSLIST_ENTRY
 NTAPI
-RtlInterlockedPushEntrySList (
-    IN PSLIST_HEADER ListHead,
-    IN PSLIST_ENTRY ListEntry
-    );
-
-NTSYSAPI
-PSLIST_ENTRY
-NTAPI
-RtlInterlockedFlushSList (
-    IN PSLIST_HEADER ListHead
-    );
+RtlInterlockedFlushSList(
+  _Inout_ PSLIST_HEADER ListHead);
 
 NTSYSAPI
 WORD
 NTAPI
-RtlQueryDepthSList (
-    IN PSLIST_HEADER ListHead
-    );
+RtlQueryDepthSList(
+  _In_ PSLIST_HEADER ListHead);
 
 #ifndef _RTL_RUN_ONCE_DEF
 #define _RTL_RUN_ONCE_DEF
@@ -3921,9 +3946,8 @@ NTSYSAPI
 PVOID
 NTAPI
 RtlPcToFileHeader(
-    IN PVOID PcValue,
-    PVOID* BaseOfImage
-);
+  _In_ PVOID PcValue,
+  _Out_ PVOID* BaseOfImage);
 
 NTSYSAPI
 VOID
@@ -5321,7 +5345,7 @@ typedef OSVERSIONINFOEXA OSVERSIONINFOEX,*POSVERSIONINFOEX,*LPOSVERSIONINFOEX;
 #define VER_SET_CONDITION(lc,t,c) ((lc) = VerSetConditionMask((lc),(t),(c)))
 
 #if (_WIN32_WINNT >= 0x0500)
-ULONGLONG WINAPI VerSetConditionMask(ULONGLONG,DWORD,BYTE);
+ULONGLONG WINAPI VerSetConditionMask(_In_ ULONGLONG, _In_ DWORD, _In_ BYTE);
 #endif
 
 typedef enum _HEAP_INFORMATION_CLASS {
@@ -5370,14 +5394,14 @@ typedef struct _SYSTEM_LOGICAL_PROCESSOR_INFORMATION {
   } DUMMYUNIONNAME;
 } SYSTEM_LOGICAL_PROCESSOR_INFORMATION, *PSYSTEM_LOGICAL_PROCESSOR_INFORMATION;
 
+_Check_return_
 NTSYSAPI
 SIZE_T
 NTAPI
 RtlCompareMemory (
-    const VOID *Source1,
-    const VOID *Source2,
-    SIZE_T Length
-    );
+  _In_ const VOID *Source1,
+  _In_ const VOID *Source2,
+  _In_ SIZE_T Length);
 
 #define RtlMoveMemory memmove
 #define RtlCopyMemory memcpy
@@ -5386,8 +5410,8 @@ RtlCompareMemory (
 
 FORCEINLINE
 PVOID
-RtlSecureZeroMemory(IN PVOID Buffer,
-                    IN SIZE_T Length)
+RtlSecureZeroMemory(_Out_writes_bytes_all_(Length) PVOID Buffer,
+                    _In_ SIZE_T Length)
 {
     volatile char *VolatilePointer;
 
@@ -5560,6 +5584,7 @@ MemoryBarrier(VOID)
 
 #define YieldProcessor _mm_pause
 
+__analysis_noreturn
 FORCEINLINE
 VOID
 DbgRaiseAssertionFailure(VOID)

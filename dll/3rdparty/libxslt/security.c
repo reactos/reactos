@@ -181,7 +181,7 @@ xsltGetSecurityPrefs(xsltSecurityPrefsPtr sec, xsltSecurityOption option) {
  */
 void
 xsltSetDefaultSecurityPrefs(xsltSecurityPrefsPtr sec) {
-    
+
     xsltDefaultSecurityPrefs = sec;
 }
 
@@ -206,7 +206,7 @@ xsltGetDefaultSecurityPrefs(void) {
  *
  * Returns -1 in case of error, 0 otherwise
  */
-int                    
+int
 xsltSetCtxtSecurityPrefs(xsltSecurityPrefsPtr sec,
 	                 xsltTransformContextPtr ctxt) {
     if (ctxt == NULL)
@@ -265,7 +265,7 @@ xsltSecurityForbid(xsltSecurityPrefsPtr sec ATTRIBUTE_UNUSED,
  *
  * TODO: remove at some point !!!
  * Local copy of xmlCheckFilename to avoid a hard dependency on
- * a new version of libxml2 
+ * a new version of libxml2
  *
  * if stat is not available on the target machine,
  * returns 1.  if stat fails, returns 0 (if calling
@@ -282,7 +282,7 @@ xsltCheckFilename (const char *path)
 #if defined(WIN32) && !defined(__CYGWIN__)
     DWORD dwAttrs;
 
-    dwAttrs = GetFileAttributes(path); 
+    dwAttrs = GetFileAttributes(path);
     if (dwAttrs != INVALID_FILE_ATTRIBUTES) {
         if (dwAttrs & FILE_ATTRIBUTE_DIRECTORY) {
             return 2;

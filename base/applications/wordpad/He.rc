@@ -162,14 +162,14 @@ STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "עיצוב פסקה"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Indentation", -1, 10, 10, 120, 68
-    LTEXT "Left", -1, 15, 22, 40, 13
+    GROUPBOX "ריווח", -1, 10, 10, 120, 68
+    LTEXT "שמאל", -1, 15, 22, 40, 13
     EDITTEXT IDC_PARA_LEFT, 55, 20, 60, 13
-    LTEXT "Right", -1, 15, 40, 40, 13
+    LTEXT "ימין", -1, 15, 40, 40, 13
     EDITTEXT IDC_PARA_RIGHT, 55, 38, 60, 13
-    LTEXT "First line", -1, 15, 58, 40, 13
+    LTEXT "שורה ראשונה", -1, 15, 58, 40, 13
     EDITTEXT IDC_PARA_FIRST, 55, 56, 60, 13
-    LTEXT "Alignment", -1, 15, 87, 40, 13
+    LTEXT "יישור", -1, 15, 87, 40, 13
     COMBOBOX IDC_PARA_ALIGN, 55, 85, 60, 60, CBS_DROPDOWNLIST
     PUSHBUTTON "אישור", IDOK, 137, 15, 50, 15
     PUSHBUTTON "ביטול", IDCANCEL, 137, 33, 50, 15
@@ -177,7 +177,7 @@ END
 
 IDD_TABSTOPS DIALOG 30, 20, 200, 110
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "Tabs"
+CAPTION "טאבים"
 FONT 8, "MS SHell DLg"
 BEGIN
     GROUPBOX "Tab stops", -1, 10, 10, 120, 90

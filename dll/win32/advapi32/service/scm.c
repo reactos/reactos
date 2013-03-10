@@ -165,6 +165,8 @@ ChangeServiceConfig2A(SC_HANDLE hService,
 
     TRACE("ChangeServiceConfig2A() called\n");
 
+    if (lpInfo == NULL) return TRUE;
+
     /* Fill relevent field of the Info structure */
     Info.dwInfoLevel = dwInfoLevel;
     switch (dwInfoLevel)
@@ -183,9 +185,6 @@ ChangeServiceConfig2A(SC_HANDLE hService,
             SetLastError(ERROR_INVALID_PARAMETER);
             return FALSE;
     }
-
-    if (lpInfo == NULL)
-        return TRUE;
 
     RpcTryExcept
     {
@@ -224,6 +223,8 @@ ChangeServiceConfig2W(SC_HANDLE hService,
 
     TRACE("ChangeServiceConfig2W() called\n");
 
+    if (lpInfo == NULL) return TRUE;
+
     /* Fill relevent field of the Info structure */
     Info.dwInfoLevel = dwInfoLevel;
     switch (dwInfoLevel)
@@ -241,9 +242,6 @@ ChangeServiceConfig2W(SC_HANDLE hService,
             SetLastError(ERROR_INVALID_PARAMETER);
             return FALSE;
     }
-
-    if (lpInfo == NULL)
-        return TRUE;
 
     RpcTryExcept
     {
@@ -926,6 +924,12 @@ EnumServiceGroupW(SC_HANDLE hSCManager,
         return FALSE;
     }
 
+    if (pcbBytesNeeded == NULL || lpServicesReturned == NULL)
+    {
+        SetLastError(ERROR_INVALID_ADDRESS);
+        return FALSE;
+    }
+
     if (lpServices == NULL || cbBufSize < sizeof(ENUM_SERVICE_STATUSW))
     {
         lpStatusPtr = &ServiceStatus;
@@ -1027,6 +1031,12 @@ EnumServicesStatusA(SC_HANDLE hSCManager,
         return FALSE;
     }
 
+    if (pcbBytesNeeded == NULL || lpServicesReturned == NULL)
+    {
+        SetLastError(ERROR_INVALID_ADDRESS);
+        return FALSE;
+    }
+
     if (lpServices == NULL || cbBufSize < sizeof(ENUM_SERVICE_STATUSA))
     {
         lpStatusPtr = &ServiceStatus;
@@ -1110,6 +1120,12 @@ EnumServicesStatusW(SC_HANDLE hSCManager,
     if (!hSCManager)
     {
         SetLastError(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
+
+    if (pcbBytesNeeded == NULL || lpServicesReturned == NULL)
+    {
+        SetLastError(ERROR_INVALID_ADDRESS);
         return FALSE;
     }
 
@@ -1207,8 +1223,13 @@ EnumServicesStatusExA(SC_HANDLE hSCManager,
         return FALSE;
     }
 
-    if (lpServices == NULL ||
-        cbBufSize < sizeof(ENUM_SERVICE_STATUS_PROCESSA))
+    if (pcbBytesNeeded == NULL || lpServicesReturned == NULL)
+    {
+        SetLastError(ERROR_INVALID_ADDRESS);
+        return FALSE;
+    }
+
+    if (lpServices == NULL || cbBufSize < sizeof(ENUM_SERVICE_STATUS_PROCESSA))
     {
         lpStatusPtr = &ServiceStatus;
         dwBufferSize = sizeof(ENUM_SERVICE_STATUS_PROCESSA);
@@ -1307,8 +1328,13 @@ EnumServicesStatusExW(SC_HANDLE hSCManager,
         return FALSE;
     }
 
-    if (lpServices == NULL ||
-        cbBufSize < sizeof(ENUM_SERVICE_STATUS_PROCESSW))
+    if (pcbBytesNeeded == NULL || lpServicesReturned == NULL)
+    {
+        SetLastError(ERROR_INVALID_ADDRESS);
+        return FALSE;
+    }
+
+    if (lpServices == NULL || cbBufSize < sizeof(ENUM_SERVICE_STATUS_PROCESSW))
     {
         lpStatusPtr = &ServiceStatus;
         dwBufferSize = sizeof(ENUM_SERVICE_STATUS_PROCESSW);

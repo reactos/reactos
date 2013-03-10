@@ -72,8 +72,6 @@ static CRITICAL_SECTION wined3d_wndproc_cs = {&wined3d_wndproc_cs_debug, -1, 0, 
  * where appropriate. */
 struct wined3d_settings wined3d_settings =
 {
-    VS_HW,          /* Hardware by default */
-    PS_HW,          /* Hardware by default */
     TRUE,           /* Use of GLSL enabled by default */
     ORM_FBO,        /* Use FBOs to do offscreen rendering */
     RTL_READTEX,    /* Default render target locking method */
@@ -84,6 +82,9 @@ struct wined3d_settings wined3d_settings =
     TRUE,           /* Multisampling enabled by default. */
     FALSE,          /* No strict draw ordering. */
     TRUE,           /* Don't try to render onscreen by default. */
+    ~0U,            /* No VS shader model limit by default. */
+    ~0U,            /* No GS shader model limit by default. */
+    ~0U,            /* No PS shader model limit by default. */
 };
 
 /* Do not call while under the GL lock. */
@@ -196,27 +197,6 @@ static BOOL wined3d_dll_init(HINSTANCE hInstDLL)
 
     if (hkey || appkey)
     {
-        if ( !get_config_key( hkey, appkey, "VertexShaderMode", buffer, size) )
-        {
-            if (!strcmp(buffer,"none"))
-            {
-                TRACE("Disable vertex shaders\n");
-                wined3d_settings.vs_mode = VS_NONE;
-            }
-        }
-        if ( !get_config_key( hkey, appkey, "PixelShaderMode", buffer, size) )
-        {
-            if (!strcmp(buffer,"enabled"))
-            {
-                TRACE("Allow pixel shaders\n");
-                wined3d_settings.ps_mode = PS_HW;
-            }
-            if (!strcmp(buffer,"disabled"))
-            {
-                TRACE("Disable pixel shaders\n");
-                wined3d_settings.ps_mode = PS_NONE;
-            }
-        }
         if ( !get_config_key( hkey, appkey, "UseGLSL", buffer, size) )
         {
             if (!strcmp(buffer,"disabled"))
@@ -323,13 +303,13 @@ static BOOL wined3d_dll_init(HINSTANCE hInstDLL)
             TRACE("Not always rendering backbuffers offscreen.\n");
             wined3d_settings.always_offscreen = FALSE;
         }
+        if (!get_config_key_dword(hkey, appkey, "MaxShaderModelVS", &wined3d_settings.max_sm_vs))
+            TRACE("Limiting VS shader model to %u.\n", wined3d_settings.max_sm_vs);
+        if (!get_config_key_dword(hkey, appkey, "MaxShaderModelGS", &wined3d_settings.max_sm_gs))
+            TRACE("Limiting GS shader model to %u.\n", wined3d_settings.max_sm_gs);
+        if (!get_config_key_dword(hkey, appkey, "MaxShaderModelPS", &wined3d_settings.max_sm_ps))
+            TRACE("Limiting PS shader model to %u.\n", wined3d_settings.max_sm_ps);
     }
-    if (wined3d_settings.vs_mode == VS_HW)
-        TRACE("Allow HW vertex shaders\n");
-    if (wined3d_settings.ps_mode == PS_NONE)
-        TRACE("Disable pixel shaders\n");
-    if (wined3d_settings.glslRequested)
-        TRACE("If supported by your system, GL Shading Language will be used\n");
 
     if (appkey) RegCloseKey( appkey );
     if (hkey) RegCloseKey( hkey );

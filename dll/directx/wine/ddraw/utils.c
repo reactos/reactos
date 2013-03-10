@@ -446,6 +446,7 @@ enum wined3d_format_id PixelFormat_DD2WineD3D(const DDPIXELFORMAT *DDPixelFormat
 
                 }
                 WARN("32 bit RGB pixel format does not match.\n");
+                return WINED3DFMT_UNKNOWN;
 
             default:
                 WARN("Invalid dwRGBBitCount in Pixelformat structure.\n");
@@ -457,10 +458,6 @@ enum wined3d_format_id PixelFormat_DD2WineD3D(const DDPIXELFORMAT *DDPixelFormat
         /* Alpha only Pixelformat */
         switch(DDPixelFormat->u1.dwAlphaBitDepth)
         {
-            case 1:
-            case 2:
-            case 4:
-                FIXME("Unsupported Alpha-Only bit depth 0x%x.\n", DDPixelFormat->u1.dwAlphaBitDepth);
             case 8:
                 return WINED3DFMT_A8_UNORM;
 

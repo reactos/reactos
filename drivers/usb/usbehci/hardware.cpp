@@ -127,6 +127,13 @@ CUSBHardwareDevice::QueryInterface(
     return STATUS_UNSUCCESSFUL;
 }
 
+LPCWSTR
+STDMETHODCALLTYPE
+CUSBHardwareDevice::GetUSBType()
+{
+    return L"USBEHCI";
+}
+
 NTSTATUS
 STDMETHODCALLTYPE
 CUSBHardwareDevice::Initialize(

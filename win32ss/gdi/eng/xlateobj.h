@@ -58,8 +58,8 @@ VOID
 NTAPI
 EXLATEOBJ_vInitialize(
     _Out_ PEXLATEOBJ pexlo,
-    _In_ PPALETTE ppalSrc,
-    _In_ PPALETTE ppalDst,
+    _In_opt_ PPALETTE ppalSrc,
+    _In_opt_ PPALETTE ppalDst,
     _In_ COLORREF crSrcBackColor,
     _In_ COLORREF crDstBackColor,
     _In_ COLORREF crDstForeColor);

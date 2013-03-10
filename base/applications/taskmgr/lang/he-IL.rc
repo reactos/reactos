@@ -50,11 +50,11 @@ BEGIN
     END
     POPUP "&חלונות"
     BEGIN
-        MENUITEM "Tile &Horizontally",          ID_WINDOWS_TILEHORIZONTALLY
-        MENUITEM "Tile &Vertically",            ID_WINDOWS_TILEVERTICALLY
+        MENUITEM "חלונות מוערמים",          ID_WINDOWS_TILEHORIZONTALLY
+        MENUITEM "חלונות זה לצד זה",            ID_WINDOWS_TILEVERTICALLY
         MENUITEM "&מזער",                   ID_WINDOWS_MINIMIZE
         MENUITEM "&הגדל",                   ID_WINDOWS_MAXIMIZE
-        MENUITEM "&Cascade",                    ID_WINDOWS_CASCADE
+        MENUITEM "מדורג",                    ID_WINDOWS_CASCADE
         MENUITEM "ה&בא לפנים",             ID_WINDOWS_BRINGTOFRONT
     END
     POPUP "&עזרה"
@@ -67,11 +67,11 @@ END
 
 IDR_WINDOWSMENU MENU DISCARDABLE
 BEGIN
-    MENUITEM "Tile &Horizontally",          ID_WINDOWS_TILEHORIZONTALLY
-    MENUITEM "Tile &Vertically",            ID_WINDOWS_TILEVERTICALLY
+    MENUITEM "חלונות מוערמים",          ID_WINDOWS_TILEHORIZONTALLY
+    MENUITEM "חלונות זה לצד זה",            ID_WINDOWS_TILEVERTICALLY
     MENUITEM "&מזער",                   ID_WINDOWS_MINIMIZE
     MENUITEM "&הגדל",                   ID_WINDOWS_MAXIMIZE
-    MENUITEM "&Cascade",                    ID_WINDOWS_CASCADE
+    MENUITEM "מדורג",                    ID_WINDOWS_CASCADE
     MENUITEM "ה&בא לפנים",             ID_WINDOWS_BRINGTOFRONT
 END
 
@@ -98,7 +98,7 @@ BEGIN
         MENUITEM "Tile &Vertically",            ID_WINDOWS_TILEVERTICALLY
         MENUITEM "&מזער",                   ID_WINDOWS_MINIMIZE
         MENUITEM "&הגדל",                   ID_WINDOWS_MAXIMIZE
-        MENUITEM "&Cascade",                    ID_WINDOWS_CASCADE
+        MENUITEM "מדורג",                    ID_WINDOWS_CASCADE
         MENUITEM SEPARATOR
         MENUITEM "&סיים משימה",                   ID_APPLICATION_PAGE_ENDTASK
         MENUITEM "&עבור אל תהליך",              ID_APPLICATION_PAGE_GOTOPROCESS
@@ -183,7 +183,7 @@ BEGIN
                     WS_BORDER | WS_TABSTOP,7,7,233,177
     PUSHBUTTON      "&סיים תהליך",IDC_ENDPROCESS,171,189,69,14
     CONTROL         "&הראה תהליכים מכל המשתמשים",IDC_SHOWALLPROCESSES,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,191,111,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,191,126,10
 END
 
 //IDD_PERFORMANCE_PAGE DIALOGEX 0, 0, 247, 210
@@ -195,10 +195,10 @@ BEGIN
     GROUPBOX        "שימוש בזיכרון",IDC_MEM_USAGE_FRAME,5,63,60,54,BS_LEFTTEXT,WS_EX_TRANSPARENT
     GROUPBOX        "סך הכל",IDC_TOTALS_FRAME,5,122,111,39,0,WS_EX_TRANSPARENT
     GROUPBOX        "Commit Charge (K)",IDC_COMMIT_CHARGE_FRAME,5,166,111,39,0,WS_EX_TRANSPARENT
-    GROUPBOX        "Physical Memory (K)",IDC_PHYSICAL_MEMORY_FRAME,131,122,111,39,0,WS_EX_TRANSPARENT
-    GROUPBOX        "Kernel Memory (K)",IDC_KERNEL_MEMORY_FRAME,131,166,111,39,0,WS_EX_TRANSPARENT
+    GROUPBOX        "זכרון פיזי (K)",IDC_PHYSICAL_MEMORY_FRAME,131,122,111,39,0,WS_EX_TRANSPARENT
+    GROUPBOX        "זיכרון ליבה (K)",IDC_KERNEL_MEMORY_FRAME,131,166,111,39,0,WS_EX_TRANSPARENT
     LTEXT           "מזהים יחודיים",IDS_TOTALS_HANDLE_COUNT,12,131,27,8
-    LTEXT           "Threads",IDS_TOTALS_THREAD_COUNT,12,140,27,8
+    LTEXT           "תהליכי משנה",IDS_TOTALS_THREAD_COUNT,12,140,27,8
     LTEXT           "תהליכים",IDS_TOTALS_PROCESS_COUNT,12,149,34,8
     EDITTEXT        IDC_TOTALS_HANDLE_COUNT,65,131,45,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
@@ -206,9 +206,9 @@ BEGIN
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_TOTALS_PROCESS_COUNT,65,149,45,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT           "Total",IDS_COMMIT_CHARGE_TOTAL,12,175,27,8
-    LTEXT           "Limit",IDS_COMMIT_CHARGE_LIMIT,12,184,15,8,NOT WS_BORDER
-    LTEXT           "Peak",IDS_COMMIT_CHARGE_PEAK,12,193,34,8
+    LTEXT           "סה""כ",IDS_COMMIT_CHARGE_TOTAL,12,175,27,8
+    LTEXT           "הגבלה",IDS_COMMIT_CHARGE_LIMIT,12,184,15,8,NOT WS_BORDER
+    LTEXT           "שיא",IDS_COMMIT_CHARGE_PEAK,12,193,34,8
     EDITTEXT        IDC_COMMIT_CHARGE_TOTAL,65,174,45,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_COMMIT_CHARGE_LIMIT,65,184,45,8,ES_RIGHT |
@@ -251,7 +251,7 @@ BEGIN
     CONTROL         "List2",IDC_DEBUG_CHANNELS_LIST,"SysListView32",LVS_REPORT |
                     LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP |
 		    LVS_SORTASCENDING,7,7,233,177
-    PUSHBUTTON      "Close",IDOK,171,189,69,14
+    PUSHBUTTON      "סגירה",IDOK,171,189,69,14
 END
 
 IDD_AFFINITY_DIALOG DIALOGEX DISCARDABLE  0, 0, 231, 154

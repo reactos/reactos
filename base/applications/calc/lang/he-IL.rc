@@ -151,7 +151,7 @@ BEGIN
                     BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
     PUSHBUTTON      "CE",IDC_BUTTON_CE,222,38,43,18,BS_CENTER | BS_VCENTER |
                     BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
-    PUSHBUTTON      "Back",IDC_BUTTON_BACK,177,38,43,18,BS_CENTER |
+    PUSHBUTTON      "חזרה",IDC_BUTTON_BACK,177,38,43,18,BS_CENTER |
                     BS_VCENTER | BS_NOTIFY | BS_OWNERDRAW | WS_TABSTOP
     RTEXT           "",IDC_TEXT_OUTPUT,5,1,305,14,SS_CENTERIMAGE,
                     WS_EX_CLIENTEDGE
@@ -350,7 +350,7 @@ BEGIN
     BEGIN
         MENUITEM "רגילה",                    IDM_VIEW_STANDARD, CHECKED
         MENUITEM "מדעית",                  IDM_VIEW_SCIENTIFIC, CHECKED
-        MENUITEM "Conversion",                  IDM_VIEW_CONVERSION
+        MENUITEM "המרה",                  IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
         MENUITEM "הקס\tF5",                     IDM_VIEW_HEX, CHECKED
         MENUITEM "עשרוני\tF6",                 IDM_VIEW_DEC, CHECKED
@@ -382,7 +382,7 @@ BEGIN
     BEGIN
         MENUITEM "רגילה",                    IDM_VIEW_STANDARD, CHECKED
         MENUITEM "מדעית",                  IDM_VIEW_SCIENTIFIC, CHECKED
-        MENUITEM "Conversion",                  IDM_VIEW_CONVERSION
+        MENUITEM "המרה",                  IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
         MENUITEM "הקס\tF5",                     IDM_VIEW_HEX, CHECKED
         MENUITEM "עשרוני\tF6",                 IDM_VIEW_DEC, CHECKED
@@ -415,7 +415,7 @@ BEGIN
     BEGIN
         MENUITEM "רגילה",                    IDM_VIEW_STANDARD, CHECKED
         MENUITEM "מדעית",                  IDM_VIEW_SCIENTIFIC, CHECKED
-        MENUITEM "Conversion",                  IDM_VIEW_CONVERSION
+        MENUITEM "המרה",                  IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
         MENUITEM "קיבוץ ספרות",                IDM_VIEW_GROUP, CHECKED
     END
@@ -441,7 +441,7 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_CONV_ANGLE          "זוית"
     IDS_CONV_AREA           "שטח"
-    IDS_CONV_CONSUMPTION    "Consumption (engines)"
+    IDS_CONV_CONSUMPTION    "צריכה (מנועים)"
     IDS_CONV_CURRENCY       "מטבע"
     IDS_CONV_ENERGY         "אנרגיה"
     IDS_CONV_LENGTH         "מרחק"
@@ -449,7 +449,7 @@ BEGIN
     IDS_CONV_PRESSURE       "לחץ"
     IDS_CONV_TEMPERATURE    "טמפרטורה"
     IDS_CONV_TIME           "זמן"
-    IDS_CONV_VELOCITY       "Velocity"
+    IDS_CONV_VELOCITY       "תאוצה"
     IDS_CONV_VOLUME         "נפח"
     IDS_CONV_WEIGHT         "משקל"
 END
@@ -536,18 +536,18 @@ END
 // TYPES OF ENERGIES
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_ENERGY_15_C_CALORIES        "15 °C calories"
+    IDS_ENERGY_15_C_CALORIES        "15 °C קלוריות"
     IDS_ENERGY_BTUS                 "British Thermal Units"
     IDS_ENERGY_ERGS                 "Ergs"
     IDS_ENERGY_EVS                  "Electron-Volts"
     IDS_ENERGY_FOOT_POUNDS          "Foot-Pounds"
     IDS_ENERGY_IT_CALORIES          "International Table calories"
     IDS_ENERGY_IT_KILOCALORIES      "International Table kilocalories"
-    IDS_ENERGY_JOULES               "Joules"
-    IDS_ENERGY_KILOJOULES           "Kilojoules"
-    IDS_ENERGY_KILOWATT_HOURS       "Kilowatt hours"
-    IDS_ENERGY_NUTRITION_CALORIES   "Nutrition calories"
-    IDS_ENERGY_TH_CALORIES          "Thermochemical calorie"
+    IDS_ENERGY_JOULES               "ג'ול"
+    IDS_ENERGY_KILOJOULES           "קילוג'ול"
+    IDS_ENERGY_KILOWATT_HOURS       "קילוואט שעה"
+    IDS_ENERGY_NUTRITION_CALORIES   "קלוריות תזונתיות"
+    IDS_ENERGY_TH_CALORIES          "קלוריה תרמו כימית"
 END
 
 // TYPES OF LENGTHS
@@ -617,11 +617,11 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_PRESSURE_ATMOSPHERES        "אטמוספירות"
-    IDS_PRESSURE_BARS               "Bars"
+    IDS_PRESSURE_BARS               "בר"
     IDS_PRESSURE_HECTOPASCALS       "Hectopascals"
-    IDS_PRESSURE_KILOPASCALS        "Kilopascals"
+    IDS_PRESSURE_KILOPASCALS        "קילופסקל"
     IDS_PRESSURE_MM_OF_MERCURY      "Millimeters of mercury"
-    IDS_PRESSURE_PASCALS            "Pascals"
+    IDS_PRESSURE_PASCALS            "פסקל"
     IDS_PRESSURE_PSI                "Pounds-force per square inch"
 END
 

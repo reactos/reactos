@@ -189,6 +189,67 @@ WlxInitialize(
 /*
  * @implemented
  */
+BOOL
+WINAPI
+WlxScreenSaverNotify(
+    PVOID pWlxContext,
+    BOOL  *pSecure)
+{
+#if 0
+    WCHAR szBuffer[2];
+    HKEY hKey;
+    DWORD bufferSize = sizeof(szBuffer);
+    DWORD varType = REG_SZ;
+    LONG rc;
+
+    TRACE("(%p %p)\n", pWlxContext, pSecure);
+
+    *pSecure = TRUE;
+
+    /*
+     * Policy setting:
+     *    HKLM\Software\Policies\Microsoft\Windows\Control Panel\Desktop : ScreenSaverIsSecure
+     * User setting:
+     *    HKCU\Control Panel\Desktop : ScreenSaverIsSecure
+     */
+
+    rc = RegOpenKeyExW(HKEY_CURRENT_USER,
+                       L"Control Panel\\Desktop",
+                       0,
+                       KEY_QUERY_VALUE,
+                       &hKey);
+    TRACE("RegOpenKeyExW: %ld\n", rc);
+    if (rc == ERROR_SUCCESS)
+    {
+        rc = RegQueryValueExW(hKey,
+                              L"ScreenSaverIsSecure",
+                              NULL,
+                              &varType,
+                              (LPBYTE)szBuffer,
+                              &bufferSize);
+
+        TRACE("RegQueryValueExW: %ld\n", rc);
+
+        if (rc == ERROR_SUCCESS)
+        {
+            TRACE("szBuffer: \"%S\"\n", szBuffer);
+            *pSecure = _wtoi(szBuffer);
+        }
+
+        RegCloseKey(hKey);
+    }
+
+    TRACE("*pSecure: %ld\n", *pSecure);
+#endif
+
+    *pSecure = FALSE;
+
+    return TRUE;
+}
+
+/*
+ * @implemented
+ */
 BOOL WINAPI
 WlxStartApplication(
 	PVOID pWlxContext,
@@ -416,6 +477,7 @@ DoLoginTasks(
 	TOKEN_STATISTICS Stats;
 	PWLX_PROFILE_V2_0 pProfile = NULL;
 	DWORD cbStats, cbSize;
+	DWORD dwLength;
 	BOOL bResult;
 
 	if (!LogonUserW(UserName, Domain, Password,
@@ -425,6 +487,21 @@ DoLoginTasks(
 	{
 		WARN("LogonUserW() failed\n");
 		goto cleanup;
+	}
+
+	/* Store the logon time in the context */
+	GetLocalTime(&pgContext->LogonTime);
+
+	/* Store user and domain in the context */
+	wcscpy(pgContext->UserName, UserName);
+	if (Domain == NULL || wcslen(Domain) == 0)
+	{
+		dwLength = 256;
+		GetComputerNameW(pgContext->Domain, &dwLength);
+	}
+	else
+	{
+		wcscpy(pgContext->Domain, Domain);
 	}
 
 	/* Get profile path */
@@ -456,13 +533,15 @@ DoLoginTasks(
 	pProfile->dwType = WLX_PROFILE_TYPE_V2_0;
 	pProfile->pszProfile = ProfilePath;
 
-	lpEnvironment = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, 32 * sizeof(WCHAR));
+	lpEnvironment = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
+	                          (wcslen(pgContext->Domain)+ 14 + 1) * sizeof(WCHAR));
 	if (!lpEnvironment)
 	{
 		WARN("HeapAlloc() failed\n");
 		goto cleanup;
 	}
-	wcscpy(lpEnvironment, L"LOGONSERVER=\\\\Test");
+
+	wsprintfW(lpEnvironment, L"LOGONSERVER=\\\\%s", pgContext->Domain);
 
 	pProfile->pszEnvironment = lpEnvironment;
 
@@ -680,6 +759,22 @@ WlxWkstaLockedSAS(
 
 	return pGinaUI->LockedSAS(pgContext);
 }
+
+
+/*
+ * @implemented
+ */
+VOID
+WINAPI
+WlxDisplayLockedNotice(PVOID pWlxContext)
+{
+    PGINA_CONTEXT pgContext = (PGINA_CONTEXT)pWlxContext;
+
+    TRACE("WlxDisplayLockedNotice()\n");
+
+    pGinaUI->DisplayLockedNotice(pgContext);
+}
+
 
 /*
  * @implemented

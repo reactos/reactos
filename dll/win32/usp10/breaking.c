@@ -132,7 +132,7 @@ void BREAK_line(const WCHAR *chars, int count, const SCRIPT_ANALYSIS *sa, SCRIPT
             case b_NL:
             case b_BK:
                 if (i < count-1) else_break(&break_before[i+1],b_r);
-                    else_break(&break_before[i],b_x);
+                else_break(&break_before[i],b_x);
                 break;
             /* LB7 */
             case b_SP:

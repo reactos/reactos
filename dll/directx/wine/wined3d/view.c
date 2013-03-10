@@ -77,10 +77,7 @@ HRESULT CDECL wined3d_rendertarget_view_create(struct wined3d_resource *resource
 
     object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*object));
     if (!object)
-    {
-        ERR("Failed to allocate memory\n");
         return E_OUTOFMEMORY;
-    }
 
     wined3d_rendertarget_view_init(object, resource, parent);
 

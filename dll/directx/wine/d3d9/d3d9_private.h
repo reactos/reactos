@@ -154,6 +154,13 @@ struct d3d9_device
     struct fvf_declaration *fvf_decls;
     UINT fvf_decl_count, fvf_decl_size;
 
+    struct wined3d_buffer *vertex_buffer;
+    UINT vertex_buffer_size;
+    UINT vertex_buffer_pos;
+    struct wined3d_buffer *index_buffer;
+    UINT index_buffer_size;
+    UINT index_buffer_pos;
+
     BOOL in_destruction;
     BOOL not_reset;
     BOOL in_scene;
@@ -197,9 +204,9 @@ struct d3d9_surface
     BOOL getdc_supported;
 };
 
-HRESULT surface_init(struct d3d9_surface *surface, struct d3d9_device *device,
-        UINT width, UINT height, D3DFORMAT format, BOOL lockable, BOOL discard, UINT level,
-        DWORD usage, D3DPOOL pool, D3DMULTISAMPLE_TYPE multisample_type, DWORD multisample_quality) DECLSPEC_HIDDEN;
+HRESULT surface_init(struct d3d9_surface *surface, struct d3d9_device *device, UINT width, UINT height,
+        D3DFORMAT format, BOOL lockable, BOOL discard, DWORD usage, D3DPOOL pool,
+        D3DMULTISAMPLE_TYPE multisample_type, DWORD multisample_quality) DECLSPEC_HIDDEN;
 struct d3d9_surface *unsafe_impl_from_IDirect3DSurface9(IDirect3DSurface9 *iface) DECLSPEC_HIDDEN;
 
 struct d3d9_vertexbuffer

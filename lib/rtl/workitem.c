@@ -456,7 +456,7 @@ RtlpQueueIoWorkerThread(IN OUT PRTLP_WORKITEM WorkItem)
             /* Couldn't find an appropriate thread, see if we can use the persistent thread (if it exists) for now */
             if (ThreadPoolIOWorkerThreads == 0)
             {
-                DPRINT1("Failed to find a worker thread for the work item 0x%p!\n");
+                DPRINT1("Failed to find a worker thread for the work item 0x%p!\n", WorkItem);
                 ASSERT(IsListEmpty(&ThreadPoolIOWorkerThreadsList));
                 return STATUS_NO_MEMORY;
             }

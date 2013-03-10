@@ -232,11 +232,23 @@ SampCreateUserAccount(HKEY hDomainKey,
     HKEY hNamesKey = NULL;
 
     /* Initialize fixed user data */
-    memset(&FixedUserData, 0, sizeof(SAM_USER_FIXED_DATA));
     FixedUserData.Version = 1;
-
+    FixedUserData.Reserved = 0;
+    FixedUserData.LastLogon.QuadPart = 0;
+    FixedUserData.LastLogoff.QuadPart = 0;
+    FixedUserData.PasswordLastSet.QuadPart = 0;
+    FixedUserData.AccountExpires.LowPart = MAXULONG;
+    FixedUserData.AccountExpires.HighPart = MAXLONG;
+    FixedUserData.LastBadPasswordTime.QuadPart = 0;
     FixedUserData.UserId = ulRelativeId;
+    FixedUserData.PrimaryGroupId = DOMAIN_GROUP_RID_USERS;
     FixedUserData.UserAccountControl = UserAccountControl;
+    FixedUserData.CountryCode = 0;
+    FixedUserData.CodePage = 0;
+    FixedUserData.BadPasswordCount = 0;
+    FixedUserData.LogonCount = 0;
+    FixedUserData.AdminCount = 0;
+    FixedUserData.OperatorCount = 0;
 
     swprintf(szAccountKeyName, L"Users\\%08lX", ulRelativeId);
 
@@ -326,6 +338,43 @@ SampCreateUserAccount(HKEY hDomainKey,
                       REG_SZ,
                       (LPVOID)lpEmptyString,
                       sizeof(WCHAR));
+
+        /* FIXME: Set LogonHours attribute*/
+        /* FIXME: Set Groups attribute*/
+
+        /* Set LMPwd attribute*/
+        RegSetValueEx(hAccountKey,
+                      L"LMPwd",
+                      0,
+                      REG_BINARY,
+                      NULL,
+                      0);
+
+        /* Set NTPwd attribute*/
+        RegSetValueEx(hAccountKey,
+                      L"NTPwd",
+                      0,
+                      REG_BINARY,
+                      NULL,
+                      0);
+
+        /* Set LMPwdHistory attribute*/
+        RegSetValueEx(hAccountKey,
+                      L"LMPwdHistory",
+                      0,
+                      REG_BINARY,
+                      NULL,
+                      0);
+
+        /* Set NTPwdHistory attribute*/
+        RegSetValueEx(hAccountKey,
+                      L"NTPwdHistory",
+                      0,
+                      REG_BINARY,
+                      NULL,
+                      0);
+
+        /* FIXME: Set SecDesc attribute*/
 
         RegCloseKey(hAccountKey);
     }

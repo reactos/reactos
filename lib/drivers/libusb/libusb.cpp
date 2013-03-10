@@ -28,7 +28,7 @@ USBLIB_AddDevice(
     NTSTATUS Status;
     PHCDCONTROLLER HcdController;
 
-    DPRINT1("EHCI_AddDevice\n");
+    DPRINT1("USBLIB_AddDevice\n");
 
     /* first create the controller object */
     Status = CreateHCDController(&HcdController);
@@ -114,7 +114,7 @@ USBLIB_Dispatch(
         }
         default:
         {
-            DPRINT1("EHCI_Dispatch> Major %lu Minor %lu unhandeled\n", IoStack->MajorFunction, IoStack->MinorFunction);
+            DPRINT1("USBLIB_Dispatch> Major %lu Minor %lu unhandeled\n", IoStack->MajorFunction, IoStack->MinorFunction);
             Status = STATUS_SUCCESS;
         }
     }

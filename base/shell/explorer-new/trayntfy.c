@@ -51,11 +51,12 @@ SysPagerWnd_CreateNotifyItemData(IN OUT PSYS_PAGER_WND_DATA This)
     PNOTIFY_ITEM *findNotifyPointer = &This->NotifyItems;
     PNOTIFY_ITEM notifyItem;
 
-    notifyItem = malloc(sizeof(*notifyItem));
+    notifyItem = HeapAlloc(hProcessHeap,
+                           HEAP_ZERO_MEMORY,
+                           sizeof(*notifyItem));
     if (notifyItem == NULL)
         return NULL;
 
-    ZeroMemory(notifyItem, sizeof(*notifyItem));
     notifyItem->next = NULL;
 
     while (*findNotifyPointer != NULL)
@@ -248,7 +249,9 @@ SysPagerWnd_RemoveButton(IN OUT PSYS_PAGER_WND_DATA This,
 
         if (!(deleteItem->iconData.dwState & NIS_HIDDEN))
             This->VisibleButtonCount--;
-        free(deleteItem);
+        HeapFree(hProcessHeap,
+                 0,
+                 deleteItem);
         This->ButtonCount--;
 
         while (updateItem != NULL)
@@ -377,7 +380,7 @@ SysPagerWnd_Create(IN OUT PSYS_PAGER_WND_DATA This)
                     sizeof(TBBUTTON),
                     0);
 
-        This->SysIcons = ImageList_Create(16, 16, ILC_COLOR32, 0, 1000);
+        This->SysIcons = ImageList_Create(16, 16, ILC_COLOR32 | ILC_MASK, 0, 1000);
         SendMessage(This->hWndToolbar, TB_SETIMAGELIST, 0, (LPARAM)This->SysIcons);
 
         BtnSize.cx = BtnSize.cy = 18;
@@ -615,12 +618,10 @@ CreateSysPagerWnd(IN HWND hWndParent,
     HWND hWnd = NULL;
 
     SpData = HeapAlloc(hProcessHeap,
-                       0,
+                       HEAP_ZERO_MEMORY,
                        sizeof(*SpData));
     if (SpData != NULL)
     {
-        ZeroMemory(SpData, sizeof(*SpData));
-
         /* Create the window. The tray window is going to move it to the correct
            position and resize it as needed. */
         dwStyle = WS_CHILD | WS_CLIPSIBLINGS;
@@ -757,7 +758,7 @@ TrayClockWnd_UpdateTheme(IN OUT PTRAY_CLOCK_WND_DATA This)
                      TMT_FONT,
                      &clockFont);
 
-        hFont = CreateFontIndirect(&clockFont);
+        hFont = CreateFontIndirectW(&clockFont);
 
         TrayClockWnd_SetFont(This,
                              hFont,
@@ -1357,13 +1358,10 @@ CreateTrayClockWnd(IN HWND hWndParent,
     HWND hWnd = NULL;
 
     TcData = HeapAlloc(hProcessHeap,
-                       0,
+                       HEAP_ZERO_MEMORY,
                        sizeof(*TcData));
     if (TcData != NULL)
     {
-        ZeroMemory(TcData,
-                   sizeof(*TcData));
-
         TcData->IsHorizontal = TRUE;
         /* Create the window. The tray window is going to move it to the correct
            position and resize it as needed. */
@@ -1841,13 +1839,10 @@ CreateTrayNotifyWnd(IN OUT ITrayWindow *TrayWindow,
         return NULL;
 
     TnData = HeapAlloc(hProcessHeap,
-                       0,
+                       HEAP_ZERO_MEMORY,
                        sizeof(*TnData));
     if (TnData != NULL)
     {
-        ZeroMemory(TnData,
-                   sizeof(*TnData));
-
         TnData->TrayWindow = TrayWindow;
         TnData->HideClock = bHideClock;
 

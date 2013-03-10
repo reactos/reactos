@@ -572,8 +572,8 @@ ExpRemovePoolTracker(IN ULONG Key,
         //
         if (!TableEntry->Key)
         {
-            DPRINT1("Empty item reached in tracker table. Tag=0x%08lx, NumberOfBytes=%lu, PoolType=%d\n",
-                    Key, (ULONG)NumberOfBytes, PoolType);
+            DPRINT1("Empty item reached in tracker table. Hash=0x%lx, TableMask=0x%lx, Tag=0x%08lx, NumberOfBytes=%lu, PoolType=%d\n",
+                    Hash, TableMask, Key, (ULONG)NumberOfBytes, PoolType);
             ASSERT(Hash == TableMask);
         }
 
