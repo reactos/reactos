@@ -206,7 +206,7 @@ GuiDrawRegion(PCONSOLE Console, SMALL_RECT* Region);
 static NTSTATUS WINAPI
 GuiResizeBuffer(PCONSOLE Console, PCONSOLE_SCREEN_BUFFER ScreenBuffer, COORD Size);
 VOID FASTCALL
-GuiConsoleInitScrollbar(PGUI_CONSOLE_DATA GuiData);
+GuiConsoleResizeWindow(PGUI_CONSOLE_DATA GuiData);
 
 
 static LRESULT
@@ -482,10 +482,14 @@ GuiApplyUserSettings(PGUI_CONSOLE_DATA GuiData,
             SizeChanged = TRUE;
     }
 
+    GuiData->GuiInfo.AutoPosition = pConInfo->ci.u.GuiInfo.AutoPosition;
+    GuiData->GuiInfo.WindowOrigin = pConInfo->ci.u.GuiInfo.WindowOrigin;
+
     if (SizeChanged)
     {
+        /* Resize the window to the user's values */
         GuiData->WindowSizeLock = TRUE;
-        GuiConsoleInitScrollbar(GuiData);
+        GuiConsoleResizeWindow(GuiData);
         GuiData->WindowSizeLock = FALSE;
     }
 
@@ -514,15 +518,17 @@ GuiGetGuiData(HWND hWnd)
 
 VOID
 FASTCALL
-GuiConsoleInitScrollbar(PGUI_CONSOLE_DATA GuiData)
+GuiConsoleResizeWindow(PGUI_CONSOLE_DATA GuiData)
 {
     PCONSOLE Console = GuiData->Console;
     SCROLLINFO sInfo;
 
-    DWORD Width = Console->Size.X * GuiData->CharWidth + 2 * (GetSystemMetrics(SM_CXFRAME) + GetSystemMetrics(SM_CXEDGE));
-    DWORD Height = Console->Size.Y * GuiData->CharHeight + 2 * (GetSystemMetrics(SM_CYFRAME) + GetSystemMetrics(SM_CYEDGE)) + GetSystemMetrics(SM_CYCAPTION);
+    DWORD Width  = Console->Size.X * GuiData->CharWidth  +
+                       2 * (GetSystemMetrics(SM_CXFRAME) + GetSystemMetrics(SM_CXEDGE));
+    DWORD Height = Console->Size.Y * GuiData->CharHeight +
+                       2 * (GetSystemMetrics(SM_CYFRAME) + GetSystemMetrics(SM_CYEDGE)) + GetSystemMetrics(SM_CYCAPTION);
 
-    /* set scrollbar sizes */
+    /* Set scrollbar sizes */
     sInfo.cbSize = sizeof(SCROLLINFO);
     sInfo.fMask = SIF_RANGE | SIF_PAGE | SIF_POS;
     sInfo.nMin = 0;
@@ -548,14 +554,19 @@ GuiConsoleInitScrollbar(PGUI_CONSOLE_DATA GuiData)
         SetScrollInfo(GuiData->hWindow, SB_HORZ, &sInfo, TRUE);
         Height += GetSystemMetrics(SM_CYHSCROLL);
         ShowScrollBar(GuiData->hWindow, SB_HORZ, TRUE);
-
     }
     else
     {
         ShowScrollBar(GuiData->hWindow, SB_HORZ, FALSE);
     }
 
-    SetWindowPos(GuiData->hWindow, NULL, 0, 0, Width, Height,
+    /* Resize and reposition the window  */
+    SetWindowPos(GuiData->hWindow,
+                 NULL,
+                 (GuiData->GuiInfo.AutoPosition ? 0 : GuiData->GuiInfo.WindowOrigin.x),
+                 (GuiData->GuiInfo.AutoPosition ? 0 : GuiData->GuiInfo.WindowOrigin.y),
+                 Width,
+                 Height,
                  SWP_NOZORDER | SWP_NOMOVE | SWP_NOACTIVATE);
 }
 
@@ -563,21 +574,21 @@ static BOOL
 GuiConsoleHandleNcCreate(HWND hWnd, LPCREATESTRUCTW Create)
 {
     PGUI_CONSOLE_DATA GuiData = (PGUI_CONSOLE_DATA)Create->lpCreateParams;
-    PCONSOLE Console = GuiData->Console;
+    PCONSOLE Console;
     HDC Dc;
     HFONT OldFont;
     TEXTMETRICW Metrics;
     SIZE CharSize;
 
-    GuiData->hWindow = hWnd;
-
     if (NULL == GuiData)
     {
-        DPRINT1("GuiConsoleNcCreate: RtlAllocateHeap failed\n");
+        DPRINT1("GuiConsoleNcCreate: No GUI data\n");
         return FALSE;
     }
 
-    InitializeCriticalSection(&GuiData->Lock);
+    Console = GuiData->Console;
+
+    GuiData->hWindow = hWnd;
 
     GuiData->Font = CreateFontW(LOWORD(GuiData->GuiInfo.FontSize),
                                 0, // HIWORD(GuiData->GuiInfo.FontSize),
@@ -593,11 +604,12 @@ GuiConsoleHandleNcCreate(HWND hWnd, LPCREATESTRUCTW Create)
                                 NONANTIALIASED_QUALITY,
                                 FIXED_PITCH | GuiData->GuiInfo.FontFamily /* FF_DONTCARE */,
                                 GuiData->GuiInfo.FaceName);
+
     if (NULL == GuiData->Font)
     {
         DPRINT1("GuiConsoleNcCreate: CreateFont failed\n");
-        DeleteCriticalSection(&GuiData->Lock);
-        RtlFreeHeap(ConSrvHeap, 0, GuiData);
+        GuiData->hWindow = NULL;
+        SetEvent(GuiData->hGuiInitEvent);
         return FALSE;
     }
     Dc = GetDC(GuiData->hWindow);
@@ -605,8 +617,8 @@ GuiConsoleHandleNcCreate(HWND hWnd, LPCREATESTRUCTW Create)
     {
         DPRINT1("GuiConsoleNcCreate: GetDC failed\n");
         DeleteObject(GuiData->Font);
-        DeleteCriticalSection(&GuiData->Lock);
-        RtlFreeHeap(ConSrvHeap, 0, GuiData);
+        GuiData->hWindow = NULL;
+        SetEvent(GuiData->hGuiInitEvent);
         return FALSE;
     }
     OldFont = SelectObject(Dc, GuiData->Font);
@@ -615,8 +627,8 @@ GuiConsoleHandleNcCreate(HWND hWnd, LPCREATESTRUCTW Create)
         DPRINT1("GuiConsoleNcCreate: SelectObject failed\n");
         ReleaseDC(GuiData->hWindow, Dc);
         DeleteObject(GuiData->Font);
-        DeleteCriticalSection(&GuiData->Lock);
-        RtlFreeHeap(ConSrvHeap, 0, GuiData);
+        GuiData->hWindow = NULL;
+        SetEvent(GuiData->hGuiInitEvent);
         return FALSE;
     }
     if (!GetTextMetricsW(Dc, &Metrics))
@@ -625,11 +637,11 @@ GuiConsoleHandleNcCreate(HWND hWnd, LPCREATESTRUCTW Create)
         SelectObject(Dc, OldFont);
         ReleaseDC(GuiData->hWindow, Dc);
         DeleteObject(GuiData->Font);
-        DeleteCriticalSection(&GuiData->Lock);
-        RtlFreeHeap(ConSrvHeap, 0, GuiData);
+        GuiData->hWindow = NULL;
+        SetEvent(GuiData->hGuiInitEvent);
         return FALSE;
     }
-    GuiData->CharWidth = Metrics.tmMaxCharWidth;
+    GuiData->CharWidth  = Metrics.tmMaxCharWidth;
     GuiData->CharHeight = Metrics.tmHeight + Metrics.tmExternalLeading;
 
     /* Measure real char width more precisely if possible. */
@@ -645,14 +657,14 @@ GuiConsoleHandleNcCreate(HWND hWnd, LPCREATESTRUCTW Create)
     Console->ActiveBuffer->ForceCursorOff = FALSE;
     ////////////////////////////////////////////////////////////////////////////
 
-    DPRINT("Console %p GuiData %p\n", Console, GuiData);
     SetWindowLongPtrW(GuiData->hWindow, GWLP_USERDATA, (DWORD_PTR)GuiData);
 
     SetTimer(GuiData->hWindow, CONGUI_UPDATE_TIMER, CONGUI_UPDATE_TIME, NULL);
     GuiConsoleCreateSysMenu(GuiData->hWindow);
 
+    /* Resize the window to the user's values */
     GuiData->WindowSizeLock = TRUE;
-    GuiConsoleInitScrollbar(GuiData);
+    GuiConsoleResizeWindow(GuiData);
     GuiData->WindowSizeLock = FALSE;
 
     SetEvent(GuiData->hGuiInitEvent);
@@ -1041,16 +1053,13 @@ GuiConsoleHandleClose(PGUI_CONSOLE_DATA GuiData)
 }
 
 static VOID
-GuiConsoleHandleNcDestroy(PGUI_CONSOLE_DATA GuiData, HWND hWnd)
+GuiConsoleHandleNcDestroy(PGUI_CONSOLE_DATA GuiData)
 {
-    PCONSOLE Console = GuiData->Console;
+    KillTimer(GuiData->hWindow, CONGUI_UPDATE_TIMER);
+    GetSystemMenu(GuiData->hWindow, TRUE);
 
-    KillTimer(hWnd, 1);
-    Console->TermIFace.Data = NULL;
-    DeleteCriticalSection(&GuiData->Lock);
-    GetSystemMenu(hWnd, TRUE);
-
-    RtlFreeHeap(ConSrvHeap, 0, GuiData);
+    SetWindowLongPtrW(GuiData->hWindow, GWLP_USERDATA, (DWORD_PTR)NULL);
+    GuiData->hWindow = NULL;
 }
 
 static COORD
@@ -1269,7 +1278,8 @@ GuiConsoleResize(PGUI_CONSOLE_DATA GuiData, WPARAM wParam, LPARAM lParam)
 {
     PCONSOLE Console = GuiData->Console;
 
-    if ((GuiData->WindowSizeLock == FALSE) && (wParam == SIZE_RESTORED || wParam == SIZE_MAXIMIZED || wParam == SIZE_MINIMIZED))
+    if ((GuiData->WindowSizeLock == FALSE) &&
+        (wParam == SIZE_RESTORED || wParam == SIZE_MAXIMIZED || wParam == SIZE_MINIMIZED))
     {
         PCONSOLE_SCREEN_BUFFER Buff = Console->ActiveBuffer;
         DWORD windx, windy, charx, chary;
@@ -1308,7 +1318,7 @@ GuiConsoleResize(PGUI_CONSOLE_DATA GuiData, WPARAM wParam, LPARAM lParam)
             Console->Size.Y = (chary <= Buff->ScreenBufferSize.Y) ? chary : Buff->ScreenBufferSize.Y;
         }
 
-        GuiConsoleInitScrollbar(GuiData);
+        GuiConsoleResizeWindow(GuiData);
 
         // Adjust the start of the visible area if we are attempting to show nonexistent areas
         if((Buff->ScreenBufferSize.X - Buff->ShowX) < Console->Size.X) Buff->ShowX = Buff->ScreenBufferSize.X - Console->Size.X;
@@ -1489,7 +1499,7 @@ GuiConsoleWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             break;
 
         case WM_NCDESTROY:
-            GuiConsoleHandleNcDestroy(GuiData, hWnd);
+            GuiConsoleHandleNcDestroy(GuiData);
             break;
 
         case WM_PAINT:
@@ -1642,18 +1652,21 @@ GuiConsoleNotifyWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 TranslateMessage(&Msg);
                 DispatchMessageW(&Msg);
             }
-            DestroyWindow(GuiData->hWindow);
-            GuiData->hWindow = NULL;
 
-            WindowCount = GetWindowLongW(hWnd, GWL_USERDATA);
-            WindowCount--;
-            SetWindowLongW(hWnd, GWL_USERDATA, WindowCount);
-            if (0 == WindowCount)
+            if (GuiData->hWindow != NULL) /* && DestroyWindow(GuiData->hWindow) */
             {
-                NotifyWnd = NULL;
-                DestroyWindow(hWnd);
-                DPRINT1("CONSRV: Going to quit the Gui Thread!!\n");
-                PostQuitMessage(0);
+                DestroyWindow(GuiData->hWindow);
+
+                WindowCount = GetWindowLongW(hWnd, GWL_USERDATA);
+                WindowCount--;
+                SetWindowLongW(hWnd, GWL_USERDATA, WindowCount);
+                if (0 == WindowCount)
+                {
+                    NotifyWnd = NULL;
+                    DestroyWindow(hWnd);
+                    DPRINT1("CONSRV: Going to quit the Gui Thread!!\n");
+                    PostQuitMessage(0);
+                }
             }
 
             return 0;
@@ -1843,6 +1856,10 @@ GuiCleanupConsole(PCONSOLE Console)
         DPRINT1("Destroy hIconSm\n");
         DestroyIcon(GuiData->hIconSm);
     }
+
+    Console->TermIFace.Data = NULL;
+    DeleteCriticalSection(&GuiData->Lock);
+    RtlFreeHeap(ConSrvHeap, 0, GuiData);
 }
 
 static VOID WINAPI
@@ -2149,6 +2166,8 @@ GuiInitConsole(PCONSOLE Console,
     GuiData->Console = Console;
     GuiData->hWindow = NULL;
 
+    InitializeCriticalSection(&GuiData->Lock);
+
     /* Set up the GUI data */
     wcsncpy(GuiData->GuiInfo.FaceName, ConsoleInfo->u.GuiInfo.FaceName, LF_FACESIZE);
     GuiData->GuiInfo.FontFamily     = ConsoleInfo->u.GuiInfo.FontFamily;
@@ -2195,14 +2214,22 @@ GuiInitConsole(PCONSOLE Console,
      */
     GuiData->hGuiInitEvent = CreateEventW(NULL, FALSE, FALSE, NULL);
 
-    /* Create the GUI console */
+    /* Create the terminal window */
     PostMessageW(NotifyWnd, PM_CREATE_CONSOLE, GuiData->GuiInfo.ShowWindow, (LPARAM)GuiData);
 
     /* Wait until initialization has finished */
     WaitForSingleObject(GuiData->hGuiInitEvent, INFINITE);
-    DPRINT1("Received event Console %p GuiData %p X %d Y %d\n", Console, GuiData, Console->Size.X, Console->Size.Y);
     CloseHandle(GuiData->hGuiInitEvent);
     GuiData->hGuiInitEvent = NULL;
+
+    /* Check whether we really succeeded in initializing the terminal window */
+    if (GuiData->hWindow == NULL)
+    {
+        DPRINT1("GuiInitConsole - We failed at creating a new terminal window\n");
+        // ConioCleanupConsole(Console);
+        GuiCleanupConsole(Console);
+        return STATUS_UNSUCCESSFUL;
+    }
 
     return STATUS_SUCCESS;
 }

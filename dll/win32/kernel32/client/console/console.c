@@ -145,6 +145,7 @@ ConsoleControlDispatcher(IN LPVOID lpThreadParameter)
     ASSERT(ConsoleInitialized);
 
     RtlEnterCriticalSection(&ConsoleLock);
+
     nExitCode = 0;
     if ((nCode != CTRL_C_EVENT) || (NtCurrentPeb()->ProcessParameters->ConsoleFlags != 1))
     {
@@ -175,6 +176,7 @@ ConsoleControlDispatcher(IN LPVOID lpThreadParameter)
     }
 
     RtlLeaveCriticalSection(&ConsoleLock);
+
     ExitThread(nExitCode);
     return STATUS_SUCCESS;
 }

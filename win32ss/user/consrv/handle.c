@@ -598,14 +598,8 @@ ConSrvNewProcess(PCSR_PROCESS SourceProcess,
 
     PCONSOLE_PROCESS_DATA SourceProcessData, TargetProcessData;
 
-    DPRINT1("ConSrvNewProcess\n");
-    DPRINT1("SourceProcess = 0x%p ; TargetProcess = 0x%p\n", SourceProcess, TargetProcess);
-
     /* An empty target process is invalid */
-    if (!TargetProcess)
-        return STATUS_INVALID_PARAMETER;
-
-    DPRINT1("ConSrvNewProcess - OK\n");
+    if (!TargetProcess) return STATUS_INVALID_PARAMETER;
 
     TargetProcessData = ConsoleGetPerProcessData(TargetProcess);
 
@@ -624,8 +618,7 @@ ConSrvNewProcess(PCSR_PROCESS SourceProcess,
     RtlInitializeCriticalSection(&TargetProcessData->HandleTableLock);
 
     /* Do nothing if the source process is NULL */
-    if (!SourceProcess)
-        return STATUS_SUCCESS;
+    if (!SourceProcess) return STATUS_SUCCESS;
 
     SourceProcessData = ConsoleGetPerProcessData(SourceProcess);
 
@@ -644,10 +637,6 @@ ConSrvNewProcess(PCSR_PROCESS SourceProcess,
         /* Temporary save the parent's console */
         TargetProcessData->ParentConsole = SourceProcessData->Console;
     }
-    else
-    {
-        DPRINT1("ConSrvNewProcess - We don't inherit a handle table : SourceProcessData->Console = 0x%p ; TargetProcess->Flags = %lu\n", SourceProcessData->Console, TargetProcess->Flags);
-    }
 
     return STATUS_SUCCESS;
 }
@@ -665,8 +654,6 @@ ConSrvConnect(IN PCSR_PROCESS CsrProcess,
     NTSTATUS Status = STATUS_SUCCESS;
     PCONSOLE_CONNECTION_INFO ConnectInfo = (PCONSOLE_CONNECTION_INFO)ConnectionInfo;
     PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrProcess);
-
-    DPRINT1("ConSrvConnect\n");
 
     if ( ConnectionInfo       == NULL ||
          ConnectionInfoLength == NULL ||
@@ -743,7 +730,6 @@ ConSrvConnect(IN PCSR_PROCESS CsrProcess,
 
     /* Set the Ctrl Dispatcher */
     ProcessData->CtrlDispatcher = ConnectInfo->CtrlDispatcher;
-    DPRINT("CONSRV: CtrlDispatcher address: %x\n", ProcessData->CtrlDispatcher);
 
     return STATUS_SUCCESS;
 }

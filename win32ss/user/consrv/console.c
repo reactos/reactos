@@ -54,7 +54,7 @@ ConSrvConsoleCtrlEventTimeout(DWORD Event,
             return;
         }
 
-        DPRINT1("We succeeded at creating ProcessData->CtrlDispatcher remote thread, ProcessId = %x, Process = 0x%p\n", ProcessData->Process->ClientId.UniqueProcess, ProcessData->Process);
+        DPRINT("We succeeded at creating ProcessData->CtrlDispatcher remote thread, ProcessId = %x, Process = 0x%p\n", ProcessData->Process->ClientId.UniqueProcess, ProcessData->Process);
         WaitForSingleObject(Thread, Timeout);
         CloseHandle(Thread);
     }
@@ -513,13 +513,9 @@ CSR_API(SrvOpenConsole)
     PCONSOLE_OPENCONSOLE OpenConsoleRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.OpenConsoleRequest;
     PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrGetClientThread()->Process);
 
-    DPRINT("SrvOpenConsole\n");
-
     OpenConsoleRequest->ConsoleHandle = INVALID_HANDLE_VALUE;
 
     RtlEnterCriticalSection(&ProcessData->HandleTableLock);
-
-    DPRINT1("ProcessData = 0x%p ; ProcessData->Console = 0x%p\n", ProcessData, ProcessData->Console);
 
     if (ProcessData->Console)
     {
@@ -529,9 +525,7 @@ CSR_API(SrvOpenConsole)
         PCONSOLE Console = ProcessData->Console;
         Object_t *Object;
 
-        DPRINT1("SrvOpenConsole - Checkpoint 1\n");
         EnterCriticalSection(&Console->Lock);
-        DPRINT1("SrvOpenConsole - Checkpoint 2\n");
 
         if (OpenConsoleRequest->HandleType == HANDLE_OUTPUT)
         {
@@ -574,8 +568,6 @@ CSR_API(SrvAllocConsole)
     PCONSOLE_ALLOCCONSOLE AllocConsoleRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.AllocConsoleRequest;
     PCSR_PROCESS CsrProcess = CsrGetClientThread()->Process;
     PCONSOLE_PROCESS_DATA ProcessData = ConsoleGetPerProcessData(CsrProcess);
-
-    DPRINT("SrvAllocConsole\n");
 
     if (ProcessData->Console != NULL)
     {
@@ -632,7 +624,6 @@ CSR_API(SrvAllocConsole)
 
     /* Set the Ctrl Dispatcher */
     ProcessData->CtrlDispatcher = AllocConsoleRequest->CtrlDispatcher;
-    DPRINT("CONSRV: CtrlDispatcher address: %x\n", ProcessData->CtrlDispatcher);
 
     return STATUS_SUCCESS;
 }
@@ -645,8 +636,6 @@ CSR_API(SrvAttachConsole)
     PCSR_PROCESS TargetProcess = CsrGetClientThread()->Process; // Ourselves.
     HANDLE ProcessId = ULongToHandle(AttachConsoleRequest->ProcessId);
     PCONSOLE_PROCESS_DATA SourceProcessData, TargetProcessData;
-
-    DPRINT("SrvAttachConsole\n");
 
     TargetProcessData = ConsoleGetPerProcessData(TargetProcess);
 
@@ -674,19 +663,15 @@ CSR_API(SrvAttachConsole)
             return Status;
         }
 
-        DPRINT("We, process (ID) %lu;%lu\n", TargetProcess->ClientId.UniqueProcess, TargetProcess->ClientId.UniqueThread);
         ProcessId = ULongToHandle(ProcessInfo.InheritedFromUniqueProcessId);
-        DPRINT("Parent process ID = %lu\n", ProcessId);
     }
 
     /* Lock the source process via its PID */
     Status = CsrLockProcessByClientId(ProcessId, &SourceProcess);
-    DPRINT1("Lock process Id %lu - Status %lu\n", ProcessId, Status);
     if (!NT_SUCCESS(Status)) return Status;
 
     SourceProcessData = ConsoleGetPerProcessData(SourceProcess);
 
-    DPRINT1("SourceProcessData->Console = 0x%p\n", SourceProcessData->Console);
     if (SourceProcessData->Console == NULL)
     {
         Status = STATUS_INVALID_HANDLE;
@@ -733,7 +718,6 @@ CSR_API(SrvAttachConsole)
 
     /* Set the Ctrl Dispatcher */
     TargetProcessData->CtrlDispatcher = AttachConsoleRequest->CtrlDispatcher;
-    DPRINT("CONSRV: CtrlDispatcher address: %x\n", TargetProcessData->CtrlDispatcher);
 
     Status = STATUS_SUCCESS;
 
@@ -761,8 +745,6 @@ CSR_API(SrvSetConsoleMode)
     NTSTATUS Status;
     PCONSOLE_GETSETCONSOLEMODE ConsoleModeRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.ConsoleModeRequest;
     Object_t* Object = NULL;
-
-    DPRINT("SrvSetConsoleMode\n");
 
     Status = ConSrvGetObject(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
                                 ConsoleModeRequest->ConsoleHandle,
@@ -796,8 +778,6 @@ CSR_API(SrvGetConsoleMode)
     NTSTATUS Status;
     PCONSOLE_GETSETCONSOLEMODE ConsoleModeRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.ConsoleModeRequest;
     Object_t* Object = NULL;
-
-    DPRINT("SrvGetConsoleMode\n");
 
     Status = ConSrvGetObject(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
                                 ConsoleModeRequest->ConsoleHandle,
@@ -833,8 +813,6 @@ CSR_API(SrvSetConsoleTitle)
     // PCSR_PROCESS Process = CsrGetClientThread()->Process;
     PCONSOLE Console;
     PWCHAR Buffer;
-
-    DPRINT("SrvSetConsoleTitle\n");
 
     if (!CsrValidateMessageBuffer(ApiMessage,
                                   (PVOID)&TitleRequest->Title,
@@ -886,8 +864,6 @@ CSR_API(SrvGetConsoleTitle)
     // PCSR_PROCESS Process = CsrGetClientThread()->Process;
     PCONSOLE Console;
     DWORD Length;
-
-    DPRINT("SrvGetConsoleTitle\n");
 
     if (!CsrValidateMessageBuffer(ApiMessage,
                                   (PVOID)&TitleRequest->Title,
@@ -960,8 +936,6 @@ CSR_API(SrvGetConsoleHardwareState)
     PCONSOLE_SCREEN_BUFFER Buff;
     PCONSOLE Console;
 
-    DPRINT("SrvGetConsoleHardwareState\n");
-
     Status = ConSrvGetScreenBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
                                   HardwareStateRequest->OutputHandle,
                                   &Buff,
@@ -987,8 +961,6 @@ CSR_API(SrvSetConsoleHardwareState)
     PCONSOLE_GETSETHWSTATE HardwareStateRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.HardwareStateRequest;
     PCONSOLE_SCREEN_BUFFER Buff;
     PCONSOLE Console;
-
-    DPRINT("SrvSetConsoleHardwareState\n");
 
     Status = ConSrvGetScreenBuffer(ConsoleGetPerProcessData(CsrGetClientThread()->Process),
                                   HardwareStateRequest->OutputHandle,
@@ -1016,8 +988,6 @@ CSR_API(SrvGetConsoleWindow)
     PCONSOLE_GETWINDOW GetWindowRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.GetWindowRequest;
     PCONSOLE Console;
 
-    DPRINT("SrvGetConsoleWindow\n");
-
     Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console, TRUE);
     if (!NT_SUCCESS(Status)) return Status;
 
@@ -1032,8 +1002,6 @@ CSR_API(SrvSetConsoleIcon)
     NTSTATUS Status;
     PCONSOLE_SETICON SetIconRequest = &((PCONSOLE_API_MESSAGE)ApiMessage)->Data.SetIconRequest;
     PCONSOLE Console;
-
-    DPRINT("SrvSetConsoleIcon\n");
 
     Status = ConSrvGetConsole(ConsoleGetPerProcessData(CsrGetClientThread()->Process), &Console, TRUE);
     if (!NT_SUCCESS(Status)) return Status;
@@ -1102,8 +1070,6 @@ CSR_API(SrvGetConsoleProcessList)
     PCONSOLE_PROCESS_DATA current;
     PLIST_ENTRY current_entry;
     ULONG nItems = 0;
-
-    DPRINT("SrvGetConsoleProcessList\n");
 
     if (!CsrValidateMessageBuffer(ApiMessage,
                                   (PVOID)&GetProcessListRequest->pProcessIds,
