@@ -205,8 +205,23 @@ NTSTATUS
 NTAPI
 SamrShutdownSamServer(IN SAMPR_HANDLE ServerHandle)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PSAM_DB_OBJECT ServerObject;
+    NTSTATUS Status;
+
+    TRACE("(%p)\n", ServerHandle);
+
+    /* Validate the server handle */
+    Status = SampValidateDbObject(ServerHandle,
+                                  SamDbServerObject,
+                                  SAM_SERVER_SHUTDOWN,
+                                  &ServerObject);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    /* Shut the server down */
+    RpcMgmtStopServerListening(0);
+
+    return STATUS_SUCCESS;
 }
 
 
