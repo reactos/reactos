@@ -27,6 +27,43 @@ WINE_DEFAULT_DEBUG_CHANNEL(samsrv);
 
 NTSTATUS
 NTAPI
+SamIConnect(IN PSAMPR_SERVER_NAME ServerName,
+            OUT SAMPR_HANDLE *ServerHandle,
+            IN ACCESS_MASK DesiredAccess,
+            IN BOOLEAN Trusted)
+{
+    PSAM_DB_OBJECT ServerObject;
+    NTSTATUS Status;
+
+    TRACE("SamIConnect(%p %p %lx %ld)\n",
+          ServerName, ServerHandle, DesiredAccess, Trusted);
+
+    /* Map generic access rights */
+    RtlMapGenericMask(&DesiredAccess,
+                      pServerMapping);
+
+    /* Open the Server Object */
+    Status = SampOpenDbObject(NULL,
+                              NULL,
+                              L"SAM",
+                              0,
+                              SamDbServerObject,
+                              DesiredAccess,
+                              &ServerObject);
+    if (NT_SUCCESS(Status))
+    {
+        ServerObject->Trusted = Trusted;
+        *ServerHandle = (SAMPR_HANDLE)ServerObject;
+    }
+
+    TRACE("SamIConnect done (Status 0x%08lx)\n", Status);
+
+    return Status;
+}
+
+
+NTSTATUS
+NTAPI
 SamIInitialize(VOID)
 {
     NTSTATUS Status = STATUS_SUCCESS;

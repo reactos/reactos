@@ -50,6 +50,7 @@ typedef struct _SAM_DB_OBJECT
     HANDLE KeyHandle;
     HANDLE MembersKeyHandle;  // only used by Aliases
     ULONG RelativeId;
+    BOOLEAN Trusted;
     struct _SAM_DB_OBJECT *ParentObject;
 } SAM_DB_OBJECT, *PSAM_DB_OBJECT;
 
@@ -111,6 +112,9 @@ typedef struct _SAM_USER_FIXED_DATA
     USHORT AdminCount;
     USHORT OperatorCount;
 } SAM_USER_FIXED_DATA, *PSAM_USER_FIXED_DATA;
+
+
+extern PGENERIC_MAPPING pServerMapping;
 
 
 /* database.c */

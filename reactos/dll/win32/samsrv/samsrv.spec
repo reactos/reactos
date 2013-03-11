@@ -4,7 +4,7 @@
 @ stub SamIAmIGC
 @ stub SamIChangePasswordForeignUser
 @ stub SamIChangePasswordForeignUser2
-@ stub SamIConnect
+@ stdcall SamIConnect(ptr ptr long long)
 @ stub SamICreateAccountByRid
 @ stub SamIDemote
 @ stub SamIDemoteUndo

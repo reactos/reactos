@@ -57,6 +57,8 @@ static GENERIC_MAPPING UserMapping =
     USER_ALL_ACCESS
 };
 
+PGENERIC_MAPPING pServerMapping = &ServerMapping;
+
 
 /* FUNCTIONS *****************************************************************/
 
@@ -6043,13 +6045,18 @@ done:
 }
 
 
-static NTSTATUS
+static
+NTSTATUS
 SampQueryUserInternal1(PSAM_DB_OBJECT UserObject,
-                      PSAMPR_USER_INFO_BUFFER *Buffer)
+                       PSAMPR_USER_INFO_BUFFER *Buffer)
 {
     PSAMPR_USER_INFO_BUFFER InfoBuffer = NULL;
     ULONG Length = 0;
     NTSTATUS Status = STATUS_SUCCESS;
+
+    /* Fail, if the caller is not a trusted caller */
+    if (UserObject->Trusted == FALSE)
+        return STATUS_INVALID_INFO_CLASS;
 
     *Buffer = NULL;
 
