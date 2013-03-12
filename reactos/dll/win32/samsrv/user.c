@@ -321,6 +321,69 @@ done:
 
 
 NTSTATUS
+SampRemoveUserFromAllGroups(IN PSAM_DB_OBJECT UserObject)
+{
+    PGROUP_MEMBERSHIP GroupsBuffer = NULL;
+    PSAM_DB_OBJECT GroupObject;
+    ULONG Length = 0;
+    ULONG i;
+    NTSTATUS Status;
+
+    SampGetObjectAttribute(UserObject,
+                           L"Groups",
+                           NULL,
+                           NULL,
+                           &Length);
+
+    if (Length == 0)
+        return STATUS_SUCCESS;
+
+    GroupsBuffer = midl_user_allocate(Length);
+    if (GroupsBuffer == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto done;
+    }
+
+    Status = SampGetObjectAttribute(UserObject,
+                                    L"Groups",
+                                    NULL,
+                                    GroupsBuffer,
+                                    &Length);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    for (i = 0; i < (Length / sizeof(GROUP_MEMBERSHIP)); i++)
+    {
+        Status = SampOpenGroupObject(UserObject->ParentObject,
+                                     GroupsBuffer[i].RelativeId,
+                                     0,
+                                     &GroupObject);
+        if (!NT_SUCCESS(Status))
+        {
+            goto done;
+        }
+
+        Status = SampRemoveMemberFromGroup(GroupObject,
+                                           UserObject->RelativeId);
+
+        SampCloseDbObject(GroupObject);
+
+        if (!NT_SUCCESS(Status))
+        {
+            goto done;
+        }
+    }
+
+done:
+    if (GroupsBuffer != NULL)
+        midl_user_free(GroupsBuffer);
+
+    return Status;
+}
+
+
+NTSTATUS
 SampSetUserPassword(IN PSAM_DB_OBJECT UserObject,
                     IN PENCRYPTED_NT_OWF_PASSWORD NtPassword,
                     IN BOOLEAN NtPasswordPresent,

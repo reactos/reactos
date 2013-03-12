@@ -15,6 +15,30 @@ WINE_DEFAULT_DEBUG_CHANNEL(samsrv);
 
 /* FUNCTIONS ***************************************************************/
 
+NTSTATUS
+SampOpenGroupObject(IN PSAM_DB_OBJECT DomainObject,
+                    IN ULONG GroupId,
+                    IN ACCESS_MASK DesiredAccess,
+                    OUT PSAM_DB_OBJECT *GroupObject)
+{
+    WCHAR szRid[9];
+
+    TRACE("(%p %lu %lx %p)\n",
+          DomainObject, GroupId, DesiredAccess, GroupObject);
+
+    /* Convert the RID into a string (hex) */
+    swprintf(szRid, L"%08lX", GroupId);
+
+    /* Create the user object */
+    return SampOpenDbObject(DomainObject,
+                            L"Groups",
+                            szRid,
+                            GroupId,
+                            SamDbGroupObject,
+                            DesiredAccess,
+                            GroupObject);
+}
+
 
 NTSTATUS
 SampAddMemberToGroup(IN PSAM_DB_OBJECT GroupObject,

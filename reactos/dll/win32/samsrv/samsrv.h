@@ -117,6 +117,15 @@ typedef struct _SAM_USER_FIXED_DATA
 extern PGENERIC_MAPPING pServerMapping;
 
 
+/* alias.c */
+
+NTSTATUS
+SampOpenAliasObject(IN PSAM_DB_OBJECT DomainObject,
+                    IN ULONG AliasId,
+                    IN ACCESS_MASK DesiredAccess,
+                    OUT PSAM_DB_OBJECT *AliasObject);
+
+
 /* database.c */
 
 NTSTATUS
@@ -191,6 +200,12 @@ SampCheckAccountNameInDomain(IN PSAM_DB_OBJECT DomainObject,
 
 
 /* group.h */
+
+NTSTATUS
+SampOpenGroupObject(IN PSAM_DB_OBJECT DomainObject,
+                    IN ULONG GroupId,
+                    IN ACCESS_MASK DesiredAccess,
+                    OUT PSAM_DB_OBJECT *GroupObject);
 
 NTSTATUS
 SampAddMemberToGroup(IN PSAM_DB_OBJECT GroupObject,
@@ -300,6 +315,9 @@ SampSetUserGroupAttributes(IN PSAM_DB_OBJECT DomainObject,
                            IN ULONG UserId,
                            IN ULONG GroupId,
                            IN ULONG GroupAttributes);
+
+NTSTATUS
+SampRemoveUserFromAllGroups(IN PSAM_DB_OBJECT UserObject);
 
 NTSTATUS
 SampSetUserPassword(IN PSAM_DB_OBJECT UserObject,
