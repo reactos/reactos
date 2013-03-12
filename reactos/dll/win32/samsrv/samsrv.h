@@ -69,11 +69,11 @@ typedef struct _SAM_DOMAIN_FIXED_DATA
     ULONG Reserved;
     LARGE_INTEGER CreationTime;
     LARGE_INTEGER DomainModifiedCount;
-    LARGE_INTEGER MaxPasswordAge;
-    LARGE_INTEGER MinPasswordAge;
-    LARGE_INTEGER ForceLogoff;
-    LARGE_INTEGER LockoutDuration;
-    LARGE_INTEGER LockoutObservationWindow;
+    LARGE_INTEGER MaxPasswordAge;               /* relative Time */
+    LARGE_INTEGER MinPasswordAge;               /* relative Time */
+    LARGE_INTEGER ForceLogoff;                  /* relative Time */
+    LARGE_INTEGER LockoutDuration;              /* relative Time */
+    LARGE_INTEGER LockoutObservationWindow;     /* relative Time */
     LARGE_INTEGER ModifiedCountAtLastPromotion;
     ULONG NextRid;
     ULONG PasswordProperties;

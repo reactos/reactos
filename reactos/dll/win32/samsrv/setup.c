@@ -13,9 +13,13 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(samsrv);
 
+
 /* GLOBALS *****************************************************************/
 
+#define TICKS_PER_SECOND 10000000LL
+
 SID_IDENTIFIER_AUTHORITY SecurityNtAuthority = {SECURITY_NT_AUTHORITY};
+
 
 /* FUNCTIONS ***************************************************************/
 
@@ -423,11 +427,11 @@ SampCreateDomain(IN HKEY hDomainsKey,
     FixedData.Version = 1;
     NtQuerySystemTime(&FixedData.CreationTime);
     FixedData.DomainModifiedCount.QuadPart = 0;
-//    FixedData.MaxPasswordAge                 // 6 Weeks
-    FixedData.MinPasswordAge.QuadPart = 0;     // Now
-//    FixedData.ForceLogoff
-//    FixedData.LockoutDuration                // 30 minutes
-//    FixedData.LockoutObservationWindow       // 30 minutes
+    FixedData.MaxPasswordAge.QuadPart = -(6LL * 7LL * 24LL * 60LL * 60LL * TICKS_PER_SECOND); /* 6 weeks */
+    FixedData.MinPasswordAge.QuadPart = 0;                                                    /* right now */
+//    FixedData.ForceLogoff.QuadPart = // very far in the future aka never
+    FixedData.LockoutDuration.QuadPart = -(30LL * 60LL * TICKS_PER_SECOND);                   /* 30 minutes */
+    FixedData.LockoutObservationWindow.QuadPart = -(30LL * 60LL * TICKS_PER_SECOND);          /* 30 minutes */
     FixedData.ModifiedCountAtLastPromotion.QuadPart = 0;
     FixedData.NextRid = 1000;
     FixedData.PasswordProperties = 0;
