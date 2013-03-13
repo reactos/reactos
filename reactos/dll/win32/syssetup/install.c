@@ -439,10 +439,10 @@ EnableUserModePnpManager(VOID)
     bRet = TRUE;
 
 cleanup:
-    if (hSCManager != NULL)
-        CloseServiceHandle(hSCManager);
     if (hService != NULL)
         CloseServiceHandle(hService);
+    if (hSCManager != NULL)
+        CloseServiceHandle(hSCManager);
     return bRet;
 }
 
