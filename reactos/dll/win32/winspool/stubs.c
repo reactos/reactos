@@ -1,4 +1,4 @@
-/* $Id$
+/* $Id: stubs.c 58214 2013-01-24 23:00:42Z akhaldi $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS winspool DRV

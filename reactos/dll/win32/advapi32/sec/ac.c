@@ -1,4 +1,4 @@
-/* $Id$
+/* $Id: ac.c 57331 2012-09-19 02:32:58Z ion $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries

@@ -1,5 +1,5 @@
 /*
- * $Id$
+ * $Id: memccpy.c 30288 2007-11-09 11:22:29Z fireball $
  */
 
 #include <string.h>

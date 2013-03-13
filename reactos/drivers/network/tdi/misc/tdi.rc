@@ -1,4 +1,4 @@
-/* $Id$ */
+/* $Id: tdi.rc 21695 2006-04-22 05:22:34Z tretiakov $ */
 
 #define REACTOS_VERSION_DLL
 #define REACTOS_STR_FILE_DESCRIPTION	"TDI wrapper kernel module\0"

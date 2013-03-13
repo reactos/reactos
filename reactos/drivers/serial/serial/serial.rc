@@ -1,4 +1,4 @@
-/* $Id$ */
+/* $Id: serial.rc 22516 2006-06-22 22:14:51Z hpoussin $ */
 
 #define REACTOS_VERSION_DLL
 #define REACTOS_STR_FILE_DESCRIPTION	"Serial Port Device Driver\0"

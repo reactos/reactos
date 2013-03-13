@@ -1,4 +1,4 @@
-/* $Id$ */
+/* $Id: parallel.rc 21498 2006-04-07 10:15:34Z tretiakov $ */
 
 #define REACTOS_VERSION_DLL
 #define REACTOS_STR_FILE_DESCRIPTION	"Parallel Port Device Driver\0"

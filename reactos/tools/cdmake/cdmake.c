@@ -22,7 +22,7 @@
  * convert long filename to iso9660 file name by Magnus Olsen
  * magnus@greatlord.com
  *
- * $Id$
+ * $Id: cdmake.c 58431 2013-03-05 08:07:21Z tkreuzer $
  */
 
 /* According to his website, this file was released into the public domain by Phillip J. Erdelsky */

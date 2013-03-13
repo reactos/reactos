@@ -1,4 +1,4 @@
-/* $Id$
+/* $Id: alarms.c 54535 2011-11-29 14:55:58Z dgorbachev $
  *
  * PROJECT:         ReactOS Power Configuration Applet
  * LICENSE:         GPL - See COPYING in the top level directory

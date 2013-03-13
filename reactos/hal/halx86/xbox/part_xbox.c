@@ -1,4 +1,4 @@
-/* $Id$
+/* $Id: part_xbox.c 43124 2009-09-23 20:59:08Z hpoussin $
  *
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel

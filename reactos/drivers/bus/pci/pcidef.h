@@ -1,5 +1,5 @@
 /*
- *	$Id$
+ *	$Id: pcidef.h 45685 2010-02-26 11:43:19Z gedmurphy $
  *
  *	PCI defines and function prototypes
  *	Copyright 1994, Drew Eckhardt

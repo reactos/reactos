@@ -1,4 +1,4 @@
-/* $Id$
+/* $Id: odbccp32.c 54535 2011-11-29 14:55:58Z dgorbachev $
  *
  * PROJECT:         ReactOS ODBC Control Panel Applet
  * FILE:            dll/cpl/main/main.c

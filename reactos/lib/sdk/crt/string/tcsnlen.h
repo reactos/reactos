@@ -1,4 +1,4 @@
-/* $Id$
+/* $Id: tcsnlen.h 38052 2008-12-13 21:28:05Z tkreuzer $
  */
 
 #include <stddef.h>

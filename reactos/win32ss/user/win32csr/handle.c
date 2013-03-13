@@ -1,4 +1,4 @@
-/* $Id$
+/* $Id: handle.c 56955 2012-07-23 20:25:11Z tfaber $
  *
  * reactos/subsys/csrss/api/handle.c
  *

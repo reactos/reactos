@@ -1,4 +1,4 @@
-/* $Id$ */
+/* $Id: ntvdm.rc 27460 2007-07-08 10:19:12Z cfinck $ */
 
 #include <windows.h>
 #define REACTOS_STR_FILE_DESCRIPTION	"ReactOS Virtual DOS Machine\0"

@@ -1,4 +1,4 @@
-/* $Id$
+/* $Id: vis.h 56311 2012-04-01 20:42:43Z akhaldi $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS Win32k subsystem

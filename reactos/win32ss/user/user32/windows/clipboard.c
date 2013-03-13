@@ -1,4 +1,4 @@
-/* $Id$
+/* $Id: clipboard.c 53657 2011-09-09 15:24:14Z rharabien $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/clipboard.c

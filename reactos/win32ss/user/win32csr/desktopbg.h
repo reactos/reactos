@@ -1,4 +1,4 @@
-/* $Id$
+/* $Id: desktopbg.h 47315 2010-05-23 00:51:29Z jmorlan $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries

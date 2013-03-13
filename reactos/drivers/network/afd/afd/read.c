@@ -1,4 +1,4 @@
-/* $Id$
+/* $Id: read.c 57975 2012-12-23 09:53:36Z cgutman $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/read.c

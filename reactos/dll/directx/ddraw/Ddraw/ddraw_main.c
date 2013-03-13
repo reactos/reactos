@@ -1,4 +1,4 @@
-/* $Id$
+/* $Id: ddraw_main.c 49872 2010-11-30 16:29:49Z fireball $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS DirectX

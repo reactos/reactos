@@ -1,4 +1,4 @@
-$Id$
+$Id: readme.txt 58335 2013-02-17 15:06:22Z tkreuzer $
 
 This is SMDLL: a helper library to talk to the ReactOS session manager (SM).
 

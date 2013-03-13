@@ -16,7 +16,7 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-/* $Id$
+/* $Id: mouse.c 56254 2012-03-28 07:09:53Z tkreuzer $
  *
  * PROJECT:         ReactOS Main Control Panel
  * FILE:            dll/cpl/main/mouse.c

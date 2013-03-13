@@ -1,4 +1,4 @@
-/* $Id$
+/* $Id: lookupss.c 58237 2013-01-27 00:07:58Z hbelusca $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries

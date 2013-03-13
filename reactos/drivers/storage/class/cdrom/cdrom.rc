@@ -1,4 +1,4 @@
-/* $Id$ */
+/* $Id: cdrom.rc 26227 2007-04-01 16:29:16Z fireball $ */
 
 #define REACTOS_VERSION_DLL
 #define REACTOS_STR_FILE_DESCRIPTION	"CD-ROM Class Driver\0"

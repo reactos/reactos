@@ -1,4 +1,4 @@
-/* $Id$ */
+/* $Id: isapnp.rc 27431 2007-07-06 20:18:43Z fireball $ */
 
 #define REACTOS_VERSION_DLL
 #define REACTOS_STR_FILE_DESCRIPTION	"ISA Plug And Play Bus Driver\0"

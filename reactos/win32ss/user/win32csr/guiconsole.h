@@ -1,4 +1,4 @@
-/* $Id$
+/* $Id: guiconsole.h 57326 2012-09-18 21:45:00Z akhaldi $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries

@@ -1,5 +1,5 @@
 /*
- * $Id$
+ * $Id: memset.c 30266 2007-11-08 10:54:42Z fireball $
  */
 
 #include <string.h>

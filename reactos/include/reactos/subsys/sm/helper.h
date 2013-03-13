@@ -5,7 +5,7 @@
 #include <sm/api.h>
 #endif
 
-/* $Id$ */
+/* $Id: helper.h 37769 2008-11-30 13:46:35Z sginsberg $ */
 
 /* smlib/connect.c */
 NTSTATUS WINAPI

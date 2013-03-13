@@ -1,4 +1,4 @@
-/* $Id$ */
+/* $Id: lan.rc 21693 2006-04-22 04:56:37Z tretiakov $ */
 
 #define REACTOS_VERSION_DLL
 #define REACTOS_STR_FILE_DESCRIPTION	"TCP/IP protocol driver\0"

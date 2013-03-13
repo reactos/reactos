@@ -1,4 +1,4 @@
-/* $Id$
+/* $Id: tuiconsole.c 47693 2010-06-08 06:38:14Z jmorlan $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries

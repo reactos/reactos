@@ -1,4 +1,4 @@
-/* $Id$ */
+/* $Id: d3d9.rc 33008 2008-04-17 19:15:43Z greatlrd $ */
 
 #define REACTOS_VERSION_DLL
 #define REACTOS_STR_FILE_DESCRIPTION	"ReactOS Direct3D\0"

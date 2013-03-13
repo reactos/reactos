@@ -1,4 +1,4 @@
-/* $Id$
+/* $Id: winsta.c 51082 2011-03-17 13:19:18Z gadamopoulos $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll

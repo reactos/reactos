@@ -16,7 +16,7 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-/* $Id$
+/* $Id: hostname.c 58214 2013-01-24 23:00:42Z akhaldi $
  *
  * COPYRIGHT : See COPYING in the top level directory
  * PROJECT   : ReactOS/Win32 get host name

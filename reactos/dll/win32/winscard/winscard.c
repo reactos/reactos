@@ -16,7 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-/* $Id$
+/* $Id: winscard.c 43790 2009-10-27 10:34:16Z dgorbachev $
  *
  * PROJECT:         ReactOS SmartCard API
  * FILE:            lib/winscard/winscard.c

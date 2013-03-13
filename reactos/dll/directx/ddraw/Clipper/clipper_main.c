@@ -1,4 +1,4 @@
-/* $Id$
+/* $Id: clipper_main.c 36519 2008-09-25 19:26:09Z tkreuzer $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS DirectX

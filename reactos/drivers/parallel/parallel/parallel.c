@@ -1,4 +1,4 @@
-/* $Id$
+/* $Id: parallel.c 54094 2011-10-12 12:24:19Z akhaldi $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel

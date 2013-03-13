@@ -1,4 +1,4 @@
-/* $Id$
+/* $Id: halxbox.h 56228 2012-03-25 16:57:10Z sginsberg $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         Xbox HAL

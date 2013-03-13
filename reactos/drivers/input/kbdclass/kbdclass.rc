@@ -1,4 +1,4 @@
-/* $Id$ */
+/* $Id: kbdclass.rc 21598 2006-04-16 07:11:56Z hpoussin $ */
 
 #define REACTOS_VERSION_DLL
 #define REACTOS_STR_FILE_DESCRIPTION	"Keyboard Device Driver\0"

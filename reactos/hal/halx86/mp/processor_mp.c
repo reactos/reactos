@@ -1,4 +1,4 @@
-/* $Id$
+/* $Id: processor_mp.c 47674 2010-06-07 20:37:19Z sir_richard $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel

@@ -1,4 +1,4 @@
-/* $Id$
+/* $Id: internal.h 21298 2006-03-12 00:08:41Z jimtabor $
 */
 /*
  * epsapi.h

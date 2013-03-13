@@ -1,4 +1,4 @@
-/* $Id$
+/* $Id: dllmain.c 43790 2009-10-27 10:34:16Z dgorbachev $
  *
  * dllmain.c - ReactOS/Win32 Console+User Enviroment Subsystem Server
  *

@@ -1,5 +1,5 @@
 /*
- * $Id$
+ * $Id: memcmp.c 50647 2011-02-10 11:35:05Z tkreuzer $
  */
 
 #include <string.h>
