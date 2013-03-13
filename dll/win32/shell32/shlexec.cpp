@@ -450,6 +450,11 @@ static UINT_PTR SHELL_ExecuteW(const WCHAR *lpCmd, WCHAR *env, BOOL shWait,
     startup.cb = sizeof(STARTUPINFOW);
     startup.dwFlags = STARTF_USESHOWWINDOW;
     startup.wShowWindow = psei->nShow;
+    startup.lpTitle = (LPWSTR)(psei->fMask & (SEE_MASK_HASLINKNAME | SEE_MASK_HASTITLE) ? psei->lpClass : NULL);
+
+    if (psei->fMask & SEE_MASK_HASLINKNAME)
+        startup.dwFlags |= STARTF_TITLEISLINKNAME;
+
     dwCreationFlags = CREATE_UNICODE_ENVIRONMENT;
 
     if (psei->fMask & SEE_MASK_NO_CONSOLE)

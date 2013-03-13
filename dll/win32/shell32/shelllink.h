@@ -67,11 +67,11 @@ private:
 	LPWSTR        sWorkDir;
 	LPWSTR        sDescription;
 	LPWSTR        sPathRel;
- 	LPWSTR        sProduct;
- 	LPWSTR        sComponent;
+	LPWSTR        sProduct;
+	LPWSTR        sComponent;
 	volume_info   volume;
-    LPWSTR        sLinkPath;
-    BOOL          bRunAs;
+	LPWSTR        sLinkPath;
+	BOOL          bRunAs;
 	BOOL          bDirty;
 	INT           iIdOpen;  /* id of the "Open" entry in the context menu */
 	CComPtr<IUnknown>		site;
