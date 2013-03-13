@@ -2516,6 +2516,7 @@ ExAllocatePoolWithQuotaTag(IN POOL_TYPE PoolType,
     return ExAllocatePoolWithTag(PoolType, NumberOfBytes, Tag);
 }
 
+#if DBG && KDBG
 
 BOOLEAN
 ExpKdbgExtPool(
@@ -2612,5 +2613,6 @@ ExpKdbgExtPool(
     return TRUE;
 }
 
+#endif // DBG && KDBG
 
 /* EOF */
