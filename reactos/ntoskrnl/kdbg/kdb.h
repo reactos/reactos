@@ -114,6 +114,12 @@ KdbpPrint(
    IN PCHAR Format,
    IN ...  OPTIONAL);
 
+BOOLEAN
+NTAPI
+KdbpGetHexNumber(
+    IN PCHAR pszNum,
+    OUT ULONG_PTR *pulValue);
+
 /* from kdb_expr.c */
 
 BOOLEAN

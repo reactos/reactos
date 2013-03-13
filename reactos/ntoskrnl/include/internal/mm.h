@@ -257,7 +257,7 @@ typedef struct _MEMORY_AREA
     ULONG Protect;
     ULONG Flags;
     BOOLEAN DeleteInProgress;
-    ULONG PageOpCount;
+    ULONG Magic;
     PVOID Vad;
     union
     {
@@ -585,6 +585,15 @@ MmMapMemoryArea(PVOID BaseAddress,
                 SIZE_T Length,
                 ULONG Consumer,
                 ULONG Protection);
+
+VOID
+NTAPI
+MiRosCheckMemoryAreas(
+   PMMSUPPORT AddressSpace);
+
+VOID
+NTAPI
+MiCheckAllProcessMemoryAreas(VOID);
 
 /* npool.c *******************************************************************/
 
@@ -1748,3 +1757,13 @@ MmGetKernelAddressSpace(VOID)
 {
     return MmKernelAddressSpace;
 }
+
+
+/* expool.c ******************************************************************/
+
+VOID
+NTAPI
+ExpCheckPoolAllocation(
+    PVOID P,
+    POOL_TYPE PoolType,
+    ULONG Tag);
