@@ -624,44 +624,199 @@ typedef struct _FILEMUIINFO {
 #define IS_LOW_SURROGATE(ch) ((ch) >= LOW_SURROGATE_START  && (ch) <= LOW_SURROGATE_END)
 #define IS_SURROGATE_PAIR(high,low) (IS_HIGH_SURROGATE(high) && IS_LOW_SURROGATE(low))
 
-int WINAPI CompareStringA(LCID,DWORD,LPCSTR,int,LPCSTR,int);
-int WINAPI CompareStringW(LCID,DWORD,LPCWSTR,int,LPCWSTR,int);
-LCID WINAPI ConvertDefaultLocale(LCID);
-BOOL WINAPI EnumCalendarInfoA(CALINFO_ENUMPROCA,LCID,CALID,CALTYPE);
-BOOL WINAPI EnumCalendarInfoW(CALINFO_ENUMPROCW,LCID,CALID,CALTYPE);
-BOOL WINAPI EnumDateFormatsA(DATEFMT_ENUMPROCA,LCID,DWORD);
-BOOL WINAPI EnumDateFormatsW(DATEFMT_ENUMPROCW,LCID,DWORD);
-BOOL WINAPI EnumSystemCodePagesA(CODEPAGE_ENUMPROCA,DWORD);
-BOOL WINAPI EnumSystemCodePagesW(CODEPAGE_ENUMPROCW,DWORD);
-BOOL WINAPI EnumSystemGeoID(GEOCLASS,GEOID,GEO_ENUMPROC);
-BOOL WINAPI EnumSystemLocalesA(LOCALE_ENUMPROCA,DWORD);
-BOOL WINAPI EnumSystemLocalesW(LOCALE_ENUMPROCW,DWORD);
-BOOL WINAPI EnumTimeFormatsA(TIMEFMT_ENUMPROCA,LCID,DWORD);
-BOOL WINAPI EnumTimeFormatsW(TIMEFMT_ENUMPROCW,LCID,DWORD);
-int WINAPI FoldStringA(DWORD,LPCSTR,int,LPSTR,int);
-int WINAPI FoldStringW(DWORD,LPCWSTR,int,LPWSTR,int);
+int
+WINAPI
+CompareStringA(
+  _In_ LCID Locale,
+  _In_ DWORD dwCmpFlags,
+  _In_reads_(cchCount1) LPCSTR lpString1,
+  _In_ int cchCount1,
+  _In_reads_(cchCount2) LPCSTR lpString2,
+  _In_ int cchCount2);
+
+int
+WINAPI
+CompareStringW(
+  _In_ LCID Locale,
+  _In_ DWORD dwCmpFlags,
+  _In_reads_(cchCount1) LPCWSTR lpString1,
+  _In_ int cchCount1,
+  _In_reads_(cchCount2) LPCWSTR lpString2,
+  _In_ int cchCount2);
+
+LCID WINAPI ConvertDefaultLocale(_In_ LCID);
+BOOL WINAPI EnumCalendarInfoA(_In_ CALINFO_ENUMPROCA, _In_ LCID, _In_ CALID, _In_ CALTYPE);
+BOOL WINAPI EnumCalendarInfoW(_In_ CALINFO_ENUMPROCW, _In_ LCID, _In_ CALID, _In_ CALTYPE);
+BOOL WINAPI EnumDateFormatsA(_In_ DATEFMT_ENUMPROCA, _In_ LCID, _In_ DWORD);
+BOOL WINAPI EnumDateFormatsW(_In_ DATEFMT_ENUMPROCW, _In_ LCID, _In_ DWORD);
+BOOL WINAPI EnumSystemCodePagesA(_In_ CODEPAGE_ENUMPROCA, _In_ DWORD);
+BOOL WINAPI EnumSystemCodePagesW(_In_ CODEPAGE_ENUMPROCW, _In_ DWORD);
+BOOL WINAPI EnumSystemGeoID(_In_ GEOCLASS, _In_ GEOID, _In_ GEO_ENUMPROC);
+BOOL WINAPI EnumSystemLocalesA(_In_ LOCALE_ENUMPROCA, _In_ DWORD);
+BOOL WINAPI EnumSystemLocalesW(_In_ LOCALE_ENUMPROCW, _In_ DWORD);
+BOOL WINAPI EnumTimeFormatsA(_In_ TIMEFMT_ENUMPROCA, _In_ LCID, _In_ DWORD);
+BOOL WINAPI EnumTimeFormatsW(_In_ TIMEFMT_ENUMPROCW, _In_ LCID, _In_ DWORD);
+
+int
+WINAPI
+FoldStringA(
+  _In_ DWORD dwMapFlags,
+  _In_reads_(cchSrc) LPCSTR lpSrcStr,
+  _In_ int cchSrc,
+  _Out_writes_opt_(cchDest) LPSTR lpDestStr,
+  _In_ int cchDest);
+
+int
+WINAPI
+FoldStringW(
+  _In_ DWORD dwMapFlags,
+  _In_reads_(cchSrc) LPCWSTR lpSrcStr,
+  _In_ int cchSrc,
+  _Out_writes_opt_(cchDest) LPWSTR lpDestStr,
+  _In_ int cchDest);
+
 UINT WINAPI GetACP(void);
-int WINAPI GetCalendarInfoA(LCID,CALID,CALTYPE,LPSTR,int,LPDWORD);
-int WINAPI GetCalendarInfoW(LCID,CALID,CALTYPE,LPWSTR,int,LPDWORD);
-BOOL WINAPI GetCPInfo(UINT,LPCPINFO);
-BOOL WINAPI GetCPInfoExA(UINT,DWORD,LPCPINFOEXA);
-BOOL WINAPI GetCPInfoExW(UINT,DWORD,LPCPINFOEXW);
-int WINAPI GetCurrencyFormatA(LCID,DWORD,LPCSTR,const CURRENCYFMTA*,LPSTR,int);
-int WINAPI GetCurrencyFormatW(LCID,DWORD,LPCWSTR,const CURRENCYFMTW*,LPWSTR,int);
+
+int
+WINAPI
+GetCalendarInfoA(
+  _In_ LCID Locale,
+  _In_ CALID Calendar,
+  _In_ CALTYPE CalType,
+  _Out_writes_opt_(cchData) LPSTR lpCalData,
+  _In_ int cchData,
+  _Out_opt_ LPDWORD lpValue);
+
+int
+WINAPI
+GetCalendarInfoW(
+  _In_ LCID Locale,
+  _In_ CALID Calendar,
+  _In_ CALTYPE CalType,
+  _Out_writes_opt_(cchData) LPWSTR lpCalData,
+  _In_ int cchData,
+  _Out_opt_ LPDWORD lpValue);
+
+BOOL WINAPI GetCPInfo(_In_ UINT, _Out_ LPCPINFO);
+BOOL WINAPI GetCPInfoExA(_In_ UINT, _In_ DWORD, _Out_ LPCPINFOEXA);
+BOOL WINAPI GetCPInfoExW(_In_ UINT, _In_ DWORD, _Out_ LPCPINFOEXW);
+
+int
+WINAPI
+GetCurrencyFormatA(
+  _In_ LCID Locale,
+  _In_ DWORD dwFlags,
+  _In_ LPCSTR lpValue,
+  _In_opt_ const CURRENCYFMTA *lpFormat,
+  _Out_writes_opt_(cchCurrency) LPSTR lpCurrencyStr,
+  _In_ int cchCurrency);
+
+int
+WINAPI
+GetCurrencyFormatW(
+  _In_ LCID Locale,
+  _In_ DWORD dwFlags,
+  _In_ LPCWSTR lpValue,
+  _In_opt_ const CURRENCYFMTW *lpFormat,
+  _Out_writes_opt_(cchCurrency) LPWSTR lpCurrencyStr,
+  _In_ int cchCurrency);
+
 int WINAPI GetDateFormatA(LCID,DWORD,const SYSTEMTIME*,LPCSTR,LPSTR,int);
 int WINAPI GetDateFormatW(LCID,DWORD,const SYSTEMTIME*,LPCWSTR,LPWSTR,int);
-int WINAPI GetGeoInfoA(GEOID,GEOTYPE,LPSTR,int,LANGID);
-int WINAPI GetGeoInfoW(GEOID,GEOTYPE,LPWSTR,int,LANGID);
-int WINAPI GetLocaleInfoA(LCID,LCTYPE,LPSTR,int);
-int WINAPI GetLocaleInfoW(LCID,LCTYPE,LPWSTR,int);
-BOOL WINAPI GetNLSVersion(NLS_FUNCTION,LCID,LPNLSVERSIONINFO);
-int WINAPI GetNumberFormatA(LCID,DWORD,LPCSTR,const NUMBERFMTA*,LPSTR,int);
-int WINAPI GetNumberFormatW(LCID,DWORD,LPCWSTR,const NUMBERFMTW*,LPWSTR,int);
+
+int
+WINAPI
+GetGeoInfoA(
+  _In_ GEOID Location,
+  _In_ GEOTYPE GeoType,
+  _Out_writes_opt_(cchData) LPSTR lpGeoData,
+  _In_ int cchData,
+  _In_ LANGID LangId);
+
+int
+WINAPI
+GetGeoInfoW(
+  _In_ GEOID Location,
+  _In_ GEOTYPE GeoType,
+  _Out_writes_opt_(cchData) LPWSTR lpGeoData,
+  _In_ int cchData,
+  _In_ LANGID LangId);
+
+int
+WINAPI
+GetLocaleInfoA(
+  _In_ LCID Locale,
+  _In_ LCTYPE LCType,
+  _Out_writes_opt_(cchData) LPSTR lpLCData,
+  _In_ int cchData);
+
+int
+WINAPI
+GetLocaleInfoW(
+  _In_ LCID Locale,
+  _In_ LCTYPE LCType,
+  _Out_writes_opt_(cchData) LPWSTR lpLCData,
+  _In_ int cchData);
+
+BOOL WINAPI GetNLSVersion(_In_ NLS_FUNCTION, _In_ LCID, _Inout_ LPNLSVERSIONINFO);
+
+int
+WINAPI
+GetNumberFormatA(
+  _In_ LCID Locale,
+  _In_ DWORD dwFlags,
+  _In_ LPCSTR lpValue,
+  _In_opt_ const NUMBERFMTA *lpFormat,
+  _Out_writes_opt_(cchNumber) LPSTR lpNumberStr,
+  _In_ int cchNumber);
+
+int
+WINAPI
+GetNumberFormatW(
+  _In_ LCID Locale,
+  _In_ DWORD dwFlags,
+  _In_ LPCWSTR lpValue,
+  _In_opt_ const NUMBERFMTW *lpFormat,
+  _Out_writes_opt_(cchNumber) LPWSTR lpNumberStr,
+  _In_ int cchNumber);
+
 UINT WINAPI GetOEMCP(void);
-BOOL WINAPI GetStringTypeA(LCID,DWORD,LPCSTR,int,LPWORD);
-BOOL WINAPI GetStringTypeW(DWORD,LPCWSTR,int,LPWORD);
-BOOL WINAPI GetStringTypeExA(LCID,DWORD,LPCSTR,int,LPWORD);
-BOOL WINAPI GetStringTypeExW(LCID,DWORD,LPCWSTR,int,LPWORD);
+
+BOOL
+WINAPI
+GetStringTypeA(
+  _In_ LCID Locale,
+  _In_ DWORD dwInfoType,
+  _In_reads_(cchSrc) LPCSTR lpSrcStr,
+  _In_ int cchSrc,
+  _Out_ LPWORD lpCharType);
+
+BOOL
+WINAPI
+GetStringTypeW(
+  _In_ DWORD dwInfoType,
+  _In_reads_(cchSrc) LPCWSTR lpSrcStr,
+  _In_ int cchSrc,
+  _Out_ LPWORD lpCharType);
+
+BOOL
+WINAPI
+GetStringTypeExA(
+  _In_ LCID Locale,
+  _In_ DWORD dwInfoType,
+  _In_reads_(cchSrc) LPCSTR lpSrcStr,
+  _In_ int cchSrc,
+  _Out_writes_(cchSrc) LPWORD lpCharType);
+
+BOOL
+WINAPI
+GetStringTypeExW(
+  _In_ LCID Locale,
+  _In_ DWORD dwInfoType,
+  _In_reads_(cchSrc) LPCWSTR lpSrcStr,
+  _In_ int cchSrc,
+  _Out_writes_(cchSrc) LPWORD lpCharType);
+
 LANGID WINAPI GetSystemDefaultLangID(void);
 LCID WINAPI GetSystemDefaultLCID(void);
 LCID WINAPI GetThreadLocale(void);
@@ -670,60 +825,199 @@ int WINAPI GetTimeFormatW(LCID,DWORD,const SYSTEMTIME*,LPCWSTR,LPWSTR,int);
 LANGID WINAPI GetUserDefaultLangID(void);
 LCID WINAPI GetUserDefaultLCID(void);
 LANGID WINAPI GetUserDefaultUILanguage(void);
-GEOID WINAPI GetUserGeoID(GEOCLASS);
-BOOL WINAPI IsDBCSLeadByte(BYTE);
-BOOL WINAPI IsDBCSLeadByteEx(UINT,BYTE);
-BOOL WINAPI IsNLSDefinedString(NLS_FUNCTION,DWORD,LPNLSVERSIONINFO,LPCWSTR,int);
-BOOL WINAPI IsValidCodePage(UINT);
-BOOL WINAPI IsValidLocale(LCID,DWORD);
-int WINAPI LCMapStringA(LCID,DWORD,LPCSTR,int,LPSTR,int);
-int WINAPI LCMapStringW(LCID,DWORD,LPCWSTR,int,LPWSTR,int);
+GEOID WINAPI GetUserGeoID(_In_ GEOCLASS);
+BOOL WINAPI IsDBCSLeadByte(_In_ BYTE);
+BOOL WINAPI IsDBCSLeadByteEx(_In_ UINT, _In_ BYTE);
+
+BOOL
+WINAPI
+IsNLSDefinedString(
+  _In_ NLS_FUNCTION Function,
+  _In_ DWORD dwFlags,
+  _In_ LPNLSVERSIONINFO lpVersionInformation,
+  _In_reads_(cchStr) LPCWSTR lpString,
+  _In_ int cchStr);
+
+BOOL WINAPI IsValidCodePage(_In_ UINT);
+BOOL WINAPI IsValidLocale(_In_ LCID, _In_ DWORD);
+
+int
+WINAPI
+LCMapStringA(
+  _In_ LCID Locale,
+  _In_ DWORD dwMapFlags,
+  _In_reads_(cchSrc) LPCSTR lpSrcStr,
+  _In_ int cchSrc,
+  _Out_writes_opt_(_Inexpressible_(cchDest)) LPSTR lpDestStr,
+  _In_ int cchDest);
+
+int
+WINAPI
+LCMapStringW(
+  _In_ LCID Locale,
+  _In_ DWORD dwMapFlags,
+  _In_reads_(cchSrc) LPCWSTR lpSrcStr,
+  _In_ int cchSrc,
+  _Out_writes_opt_(_Inexpressible_(cchDest)) LPWSTR lpDestStr,
+  _In_ int cchDest);
+
 int WINAPI MultiByteToWideChar(UINT,DWORD,LPCSTR,int,LPWSTR,int);
-int WINAPI SetCalendarInfoA(LCID,CALID,CALTYPE,LPCSTR);
-int WINAPI SetCalendarInfoW(LCID,CALID,CALTYPE,LPCWSTR);
-BOOL WINAPI SetLocaleInfoA(LCID,LCTYPE,LPCSTR);
-BOOL WINAPI SetLocaleInfoW(LCID,LCTYPE,LPCWSTR);
-BOOL WINAPI SetThreadLocale(LCID);
-LANGID WINAPI SetThreadUILanguage(LANGID);
+int WINAPI SetCalendarInfoA(_In_ LCID, _In_ CALID, _In_ CALTYPE, _In_ LPCSTR);
+int WINAPI SetCalendarInfoW(_In_ LCID, _In_ CALID, _In_ CALTYPE, _In_ LPCWSTR);
+BOOL WINAPI SetLocaleInfoA(_In_ LCID, _In_ LCTYPE, _In_ LPCSTR);
+BOOL WINAPI SetLocaleInfoW(_In_ LCID, _In_ LCTYPE, _In_ LPCWSTR);
+BOOL WINAPI SetThreadLocale(_In_ LCID);
+LANGID WINAPI SetThreadUILanguage(_In_ LANGID);
 BOOL WINAPI SetUserDefaultLCID(LCID);
 BOOL WINAPI SetUserDefaultUILanguage(LANGID);
-BOOL WINAPI SetUserGeoID(GEOID);
+BOOL WINAPI SetUserGeoID(_In_ GEOID);
 int WINAPI WideCharToMultiByte(UINT,DWORD,LPCWSTR,int,LPSTR,int,LPCSTR,LPBOOL);
 #if (WINVER >= 0x0500)
-BOOL WINAPI EnumCalendarInfoExA(CALINFO_ENUMPROCEXA,LCID,CALID,CALTYPE);
-BOOL WINAPI EnumCalendarInfoExW(CALINFO_ENUMPROCEXW,LCID,CALID,CALTYPE);
-BOOL WINAPI EnumDateFormatsExA(DATEFMT_ENUMPROCEXA,LCID,DWORD);
-BOOL WINAPI EnumDateFormatsExW(DATEFMT_ENUMPROCEXW,LCID,DWORD);
-BOOL WINAPI EnumSystemLanguageGroupsA(LANGUAGEGROUP_ENUMPROCA,DWORD,LONG_PTR);
-BOOL WINAPI EnumSystemLanguageGroupsW(LANGUAGEGROUP_ENUMPROCW,DWORD,LONG_PTR);
-BOOL WINAPI EnumLanguageGroupLocalesA(LANGGROUPLOCALE_ENUMPROCA,LGRPID,DWORD,LONG_PTR);
-BOOL WINAPI EnumLanguageGroupLocalesW(LANGGROUPLOCALE_ENUMPROCW,LGRPID,DWORD,LONG_PTR);
-BOOL WINAPI EnumUILanguagesA(UILANGUAGE_ENUMPROCA,DWORD,LONG_PTR);
-BOOL WINAPI EnumUILanguagesW(UILANGUAGE_ENUMPROCW,DWORD,LONG_PTR);
+BOOL WINAPI EnumCalendarInfoExA(_In_ CALINFO_ENUMPROCEXA, _In_ LCID, _In_ CALID, _In_ CALTYPE);
+BOOL WINAPI EnumCalendarInfoExW(_In_ CALINFO_ENUMPROCEXW, _In_ LCID, _In_ CALID, _In_ CALTYPE);
+BOOL WINAPI EnumDateFormatsExA(_In_ DATEFMT_ENUMPROCEXA, _In_ LCID, _In_ DWORD);
+BOOL WINAPI EnumDateFormatsExW(_In_ DATEFMT_ENUMPROCEXW, _In_ LCID, _In_ DWORD);
+BOOL WINAPI EnumSystemLanguageGroupsA(_In_ LANGUAGEGROUP_ENUMPROCA, _In_ DWORD, _In_ LONG_PTR);
+BOOL WINAPI EnumSystemLanguageGroupsW(_In_ LANGUAGEGROUP_ENUMPROCW, _In_ DWORD, _In_ LONG_PTR);
+BOOL WINAPI EnumLanguageGroupLocalesA(_In_ LANGGROUPLOCALE_ENUMPROCA, _In_ LGRPID, _In_ DWORD, _In_ LONG_PTR);
+BOOL WINAPI EnumLanguageGroupLocalesW(_In_ LANGGROUPLOCALE_ENUMPROCW, _In_ LGRPID, _In_ DWORD, _In_ LONG_PTR);
+BOOL WINAPI EnumUILanguagesA(_In_ UILANGUAGE_ENUMPROCA, _In_ DWORD, _In_ LONG_PTR);
+BOOL WINAPI EnumUILanguagesW(_In_ UILANGUAGE_ENUMPROCW, _In_ DWORD, _In_ LONG_PTR);
 LANGID WINAPI GetSystemDefaultUILanguage(void);
 LANGID WINAPI GetUserDefaultUILanguage(void);
-BOOL WINAPI IsValidLanguageGroup(LGRPID,DWORD);
+BOOL WINAPI IsValidLanguageGroup(_In_ LGRPID, _In_ DWORD);
 #endif /* (WINVER >= 0x0500) */
+
 #if (WINVER >= 0x0600)
-BOOL WINAPI GetFileMUIInfo(DWORD,PCWSTR,PFILEMUIINFO,DWORD*);
-BOOL WINAPI GetFileMUIPath(DWORD,PCWSTR,PWSTR,PULONG,PWSTR,PULONG,PULONGLONG);
+
+_Success_(return != FALSE)
+BOOL
+WINAPI
+GetFileMUIInfo(
+  _In_ DWORD dwFlags,
+  _In_ PCWSTR pcwszFilePath,
+  _Inout_updates_bytes_to_opt_(*pcbFileMUIInfo, *pcbFileMUIInfo) PFILEMUIINFO pFileMUIInfo,
+  _Inout_ DWORD *pcbFileMUIInfo);
+
+BOOL
+WINAPI
+GetFileMUIPath(
+  _In_ DWORD dwFlags,
+  _In_ PCWSTR pcwszFilePath,
+  _Inout_updates_opt_(*pcchLanguage) PWSTR pwszLanguage,
+  _Inout_ PULONG pcchLanguage,
+  _Out_writes_opt_(*pcchFileMUIPath) PWSTR pwszFileMUIPath,
+  _Inout_ PULONG pcchFileMUIPath,
+  _Inout_ PULONGLONG pululEnumerator);
+
 WINBASEAPI
-int WINAPI GetLocaleInfoEx(LPCWSTR,LCTYPE,LPWSTR,int);
-BOOL WINAPI GetProcessPreferredUILanguages(DWORD,PULONG,PZZWSTR,PULONG);
-BOOL WINAPI GetSystemPreferredUILanguages(DWORD,PULONG,PZZWSTR,PULONG);
-BOOL WINAPI GetThreadPreferredUILanguages(DWORD,PULONG,PZZWSTR,PULONG);
+int
+WINAPI
+GetLocaleInfoEx(
+  _In_opt_ LPCWSTR lpLocaleName,
+  _In_ LCTYPE LCType,
+  _Out_writes_opt_(cchData) LPWSTR lpLCData,
+  _In_ int cchData);
+
+BOOL
+WINAPI
+GetProcessPreferredUILanguages(
+  _In_ DWORD dwFlags,
+  _Out_ PULONG pulNumLanguages,
+  _Out_writes_opt_(*pcchLanguagesBuffer) PZZWSTR pwszLanguagesBuffer,
+  _Inout_ PULONG pcchLanguagesBuffer);
+
+BOOL
+WINAPI
+GetSystemPreferredUILanguages(
+  _In_ DWORD dwFlags,
+  _Out_ PULONG pulNumLanguages,
+  _Out_writes_opt_(*pcchLanguagesBuffer) PZZWSTR pwszLanguagesBuffer,
+  _Inout_ PULONG pcchLanguagesBuffer);
+
+BOOL
+WINAPI
+GetThreadPreferredUILanguages(
+  _In_ DWORD dwFlags,
+  _Out_ PULONG pulNumLanguages,
+  _Out_writes_opt_(*pcchLanguagesBuffer) PZZWSTR pwszLanguagesBuffer,
+  _Inout_ PULONG pcchLanguagesBuffer);
+
 LANGID WINAPI GetThreadUILanguage(void);
-BOOL WINAPI GetUILanguageInfo(DWORD,PCZZWSTR,PZZWSTR,PDWORD,PDWORD);
-BOOL WINAPI GetUserPreferredUILanguages(DWORD,PULONG,PZZWSTR,PULONG);
-int WINAPI IdnToAscii(DWORD,LPCWSTR,int,LPWSTR,int);
-int WINAPI IdnToNameprepUnicode(DWORD,LPCWSTR,int,LPWSTR,int);
-int WINAPI IdnToUnicode(DWORD,LPCWSTR,int,LPWSTR,int);
-BOOL WINAPI IsNormalizedString(NORM_FORM,LPCWSTR,int);
-int WINAPI NormalizeString(NORM_FORM,LPCWSTR,int,LPWSTR,int);
-int WINAPI GetStringScripts(DWORD,LPCWSTR,int,LPWSTR,int);
-BOOL WINAPI SetProcessPreferredUILanguages(DWORD,PCZZWSTR,PULONG);
-BOOL WINAPI SetThreadPreferredUILanguages(DWORD,PCZZWSTR,PULONG);
-BOOL WINAPI VerifyScripts(DWORD,LPCWSTR,int,LPCWSTR,int);
+
+BOOL
+WINAPI
+GetUILanguageInfo(
+  _In_ DWORD dwFlags,
+  _In_ PCZZWSTR pwmszLanguage,
+  _Out_writes_opt_(*pcchFallbackLanguages) PZZWSTR pwszFallbackLanguages,
+  _Inout_opt_ PDWORD pcchFallbackLanguages,
+  _Out_ PDWORD pAttributes);
+
+BOOL
+WINAPI
+GetUserPreferredUILanguages(
+  _In_ DWORD dwFlags,
+  _Out_ PULONG pulNumLanguages,
+  _Out_writes_opt_(*pcchLanguagesBuffer) PZZWSTR pwszLanguagesBuffer,
+  _Inout_ PULONG pcchLanguagesBuffer);
+
+int
+WINAPI
+IdnToAscii(
+  _In_ DWORD dwFlags,
+  _In_reads_(cchUnicodeChar) LPCWSTR lpUnicodeCharStr,
+  _In_ int cchUnicodeChar,
+  _Out_writes_opt_(cchASCIIChar) LPWSTR lpASCIICharStr,
+  _In_ int cchASCIIChar);
+
+int
+WINAPI
+IdnToNameprepUnicode(
+  _In_ DWORD dwFlags,
+  _In_reads_(cchUnicodeChar) LPCWSTR lpUnicodeCharStr,
+  _In_ int cchUnicodeChar,
+  _Out_writes_opt_(cchNameprepChar) LPWSTR lpNameprepCharStr,
+  _In_ int cchNameprepChar);
+
+int
+WINAPI
+IdnToUnicode(
+  _In_ DWORD dwFlags,
+  _In_reads_(cchASCIIChar) LPCWSTR lpASCIICharStr,
+  _In_ int cchASCIIChar,
+  _Out_writes_opt_(cchUnicodeChar) LPWSTR lpUnicodeCharStr,
+  _In_ int cchUnicodeChar);
+
+BOOL
+WINAPI
+IsNormalizedString(
+  _In_ NORM_FORM NormForm,
+  _In_reads_(cwLength) LPCWSTR lpString,
+  _In_ int cwLength);
+
+int
+WINAPI
+NormalizeString(
+  _In_ NORM_FORM NormForm,
+  _In_reads_(cwSrcLength) LPCWSTR lpSrcString,
+  _In_ int cwSrcLength,
+  _Out_writes_opt_(cwDstLength) LPWSTR lpDstString,
+  _In_ int cwDstLength);
+
+int
+WINAPI
+GetStringScripts(
+  _In_ DWORD dwFlags,
+  _In_ LPCWSTR lpString,
+  _In_ int cchString,
+  _Out_writes_opt_(cchScripts) LPWSTR lpScripts,
+  _In_ int cchScripts);
+
+BOOL WINAPI SetProcessPreferredUILanguages(_In_ DWORD, _In_opt_ PCZZWSTR, _Out_opt_ PULONG);
+BOOL WINAPI SetThreadPreferredUILanguages(_In_ DWORD, _In_opt_ PCZZWSTR, _Out_opt_ PULONG);
+BOOL WINAPI VerifyScripts(_In_ DWORD, _In_ LPCWSTR, _In_ int, _In_ LPCWSTR, _In_ int);
+
 #endif /* (WINVER >= 0x0600) */
 
 #ifdef UNICODE
