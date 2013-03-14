@@ -1,5 +1,4 @@
-/* $Id: halinit_up.c 53675 2011-09-10 18:58:01Z tkreuzer $
- *
+/*
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
  * FILE:          ntoskrnl/hal/x86/halinit.c

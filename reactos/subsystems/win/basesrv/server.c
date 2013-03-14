@@ -1,5 +1,4 @@
-/* $Id: server.c 43790 2009-10-27 10:34:16Z dgorbachev $
- *
+/*
  * server.c - ReactOS/Win32 base enviroment subsystem server
  *
  * ReactOS Operating System

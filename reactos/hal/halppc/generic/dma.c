@@ -1,5 +1,4 @@
-/* $Id: dma.c 24759 2006-11-14 20:59:48Z ion $
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/hal/x86/dma.c

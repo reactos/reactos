@@ -1,6 +1,3 @@
-/*
- * $Id: halirq.h 53677 2011-09-10 21:56:07Z tkreuzer $
- */
 
 #pragma once
 

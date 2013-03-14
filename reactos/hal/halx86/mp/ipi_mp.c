@@ -1,5 +1,4 @@
-/* $Id: ipi_mp.c 45020 2010-01-09 22:43:16Z ekohl $
- *
+/*
  * COPYRIGHT:             See COPYING in the top level directory
  * PROJECT:               ReactOS kernel
  * FILE:                  hal/halx86/mp/ipi_mp.c
