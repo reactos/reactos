@@ -1,5 +1,4 @@
-/* $Id: ArgumentParser.h 15091 2005-05-07 21:24:31Z sedwards $ */
-
+//
 // ArgumentParser.h: interface for the CArgumentParser class.
 //
 //////////////////////////////////////////////////////////////////////

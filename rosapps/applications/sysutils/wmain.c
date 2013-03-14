@@ -1,5 +1,4 @@
-/* $Id: wmain.c 15091 2005-05-07 21:24:31Z sedwards $
- *
+/*
  * Entry point for programs that use wmain()
  */
 #include <stdio.h>

@@ -1,4 +1,3 @@
-/* $Id: ctm.rc 35880 2008-09-02 14:00:30Z dreimer $ */
 
 #include <windows.h>
 #include "resource.h"

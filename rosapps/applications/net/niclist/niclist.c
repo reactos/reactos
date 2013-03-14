@@ -1,5 +1,4 @@
-/* $Id: niclist.c 17609 2005-09-02 21:13:10Z hpoussin $
- *
+/*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS packet driver interface list utility
  * FILE:        apps/net/niclist/niclist.c

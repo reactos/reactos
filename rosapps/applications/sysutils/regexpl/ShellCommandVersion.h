@@ -1,5 +1,4 @@
-/* $Id: ShellCommandVersion.h 15091 2005-05-07 21:24:31Z sedwards $ */
-
+//
 // ShellCommandVersion.h: interface for the CShellCommandVersion class.
 //
 //////////////////////////////////////////////////////////////////////

@@ -1,5 +1,4 @@
-/* $Id: Console.h 42968 2009-08-30 15:35:14Z sginsberg $ */
-
+//
 // Console.h: interface for the CConsole class.
 //
 //////////////////////////////////////////////////////////////////////

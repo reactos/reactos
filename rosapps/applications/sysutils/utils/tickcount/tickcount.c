@@ -1,5 +1,3 @@
-/* $Id: tickcount.c 22417 2006-06-19 13:55:51Z gedmurphy $
-*/
 /*
  tickcount -- Display the kernel tick count (or any tick count passed as an
  argument or as input) in human-readable format

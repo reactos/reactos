@@ -1,5 +1,4 @@
-/* $Id: ShellCommandOwner.cpp 38906 2009-01-18 18:40:02Z sginsberg $
- *
+/*
  * regexpl - Console Registry Explorer
  *
  * Copyright (C) 2000-2005 Nedko Arnaudov <nedko@users.sourceforge.net>

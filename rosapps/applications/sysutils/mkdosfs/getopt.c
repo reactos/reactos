@@ -1,5 +1,4 @@
 /*
- * $Id$
  * This is an unpublished work copyright (c) 1998 HELIOS Software GmbH
  * 30827 Garbsen, Germany
  */

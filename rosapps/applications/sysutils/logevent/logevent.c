@@ -16,8 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: hostname.c 21664 2006-04-19 20:14:03Z gedmurphy $
- *
+/*
  * COPYRIGHT : See COPYING in the top level directory
  * PROJECT   : Event Logging Utility
  * FILE      : logevent.c

@@ -1,5 +1,4 @@
-/* $Id: ShellCommandDACL.h 15091 2005-05-07 21:24:31Z sedwards $ */
-
+//
 // ShellCommandDACL.h: interface for the CShellCommandDACL class.
 //
 //////////////////////////////////////////////////////////////////////

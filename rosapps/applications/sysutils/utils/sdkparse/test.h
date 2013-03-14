@@ -1,5 +1,3 @@
-/* $Id: test.h 22385 2006-06-17 16:45:48Z gedmurphy $
-*/
 /*
  * test.h
  *

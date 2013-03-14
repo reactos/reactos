@@ -1,4 +1,3 @@
-/* $Id: pice.rc 21687 2006-04-21 16:36:34Z tretiakov $ */
 
 #define REACTOS_VERSION_DLL
 #define REACTOS_STR_FILE_DESCRIPTION	"PICE Debugger\0"

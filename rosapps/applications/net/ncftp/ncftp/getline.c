@@ -1,6 +1,3 @@
-/* Based on: "$Id: getline.c 44107 2009-11-11 18:19:42Z fireball $"; */
-static const char copyright[] = "getline:  Copyright (C) 1991, 1992, 1993, Chris Thewalt";
-
 /*
  * Copyright (C) 1991, 1992, 1993 by Chris Thewalt (thewalt@ce.berkeley.edu)
  *
@@ -20,6 +17,8 @@ static const char copyright[] = "getline:  Copyright (C) 1991, 1992, 1993, Chris
 /*
  * Note:  This version has been updated by Mike Gleason <mgleason@ncftp.com>
  */
+
+static const char copyright[] = "getline:  Copyright (C) 1991, 1992, 1993, Chris Thewalt";
 
 #if defined(WIN32) || defined(_WINDOWS)
 #	include <windows.h>

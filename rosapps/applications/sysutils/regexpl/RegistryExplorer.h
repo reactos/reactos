@@ -1,4 +1,3 @@
-/* $Id: RegistryExplorer.h 12802 2005-01-04 21:36:26Z narnaoud $ */
 
 #ifndef _REGISTRY_EXPLORER_H__INCLUDED
 #define _REGISTRY_EXPLORER_H__INCLUDED

@@ -1,5 +1,4 @@
-/* $Id: ShellCommandDir.h 15091 2005-05-07 21:24:31Z sedwards $ */
-
+//
 // ShellCommandDir.h: interface for the CShellCommandDir class.
 //
 //////////////////////////////////////////////////////////////////////

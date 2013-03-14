@@ -1,5 +1,4 @@
-/* $Id: SecurityDescriptor.cpp 12813 2005-01-05 02:21:05Z narnaoud $
- *
+/*
  * regexpl - Console Registry Explorer
  *
  * Copyright (C) 2000-2005 Nedko Arnaudov <nedko@users.sourceforge.net>

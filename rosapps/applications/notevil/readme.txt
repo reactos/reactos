@@ -1,4 +1,3 @@
-$Id: readme.txt 34303 2008-07-05 11:46:22Z fireball $
 
 ReactOS Coders Console Parade
 -----------------------------

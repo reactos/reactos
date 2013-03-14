@@ -1,5 +1,4 @@
-/* $Id: lsdd.c 37749 2008-11-29 21:23:45Z sginsberg $
- *
+/*
  * FILE  : lsdd.c
  * AUTHOR: Emanuele ALIBERTI
  * DATE  : 2000-08-04

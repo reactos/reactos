@@ -1,5 +1,4 @@
-/* $Id: ShellCommandDeleteValue.h 15091 2005-05-07 21:24:31Z sedwards $ */
-
+//
 // ShellCommandDeleteValue.h: interface for the CShellCommandDeleteValue class.
 //
 //////////////////////////////////////////////////////////////////////

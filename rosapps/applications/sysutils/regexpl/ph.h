@@ -1,5 +1,4 @@
-/* $Id: ph.h 54378 2011-11-14 22:14:52Z jimtabor $ */
-
+//
 // ph.h : include file for standard system include files,
 //  or project specific include files that are used frequently, but
 //      are changed infrequently

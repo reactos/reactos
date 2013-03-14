@@ -1,5 +1,4 @@
-/* $Id: nts2w32err.c 24501 2006-10-13 10:56:52Z janderwald $
- *
+/*
  * Convert NTSTATUS codes to Win32 error codes: run it
  * on a NT box AND on a ROS box, then diff the results.
  *

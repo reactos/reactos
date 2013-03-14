@@ -1,5 +1,4 @@
-/* $Id: gdb2.cpp 42968 2009-08-30 15:35:14Z sginsberg $
- *
+/*
  * gdb2 - gdb output splitter
  *
  * Copyright (C) 2000,2001 Nedko Arnaoudov <nedkohome@atia.com>

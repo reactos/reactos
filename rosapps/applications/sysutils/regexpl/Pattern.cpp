@@ -1,5 +1,4 @@
-/* $Id: Pattern.cpp 29689 2007-10-19 23:05:02Z dreimer $
- *
+/*
  * regexpl - Console Registry Explorer
  *
  * Copyright (C) 2000-2005 Nedko Arnaudov <nedko@users.sourceforge.net>

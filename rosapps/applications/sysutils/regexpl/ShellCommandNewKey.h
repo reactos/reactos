@@ -1,5 +1,4 @@
-/* $Id: ShellCommandNewKey.h 15091 2005-05-07 21:24:31Z sedwards $ */
-
+//
 // ShellCommandNewKey.h: interface for the CShellCommandNewKey class.
 //
 //////////////////////////////////////////////////////////////////////

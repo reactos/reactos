@@ -1,5 +1,4 @@
-/* $Id: chklib.c 42932 2009-08-25 00:31:45Z gschneider $
- *
+/*
  * chklib.c
  *
  * Copyright (C) 1998, 1999 Emanuele Aliberti.

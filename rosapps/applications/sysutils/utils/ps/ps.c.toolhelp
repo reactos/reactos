@@ -1,5 +1,4 @@
-/* $Id: ps.c.toolhelp 21303 2006-03-12 00:41:06Z jimtabor $
- *
+/*
  *  ReactOS ps - process list console viewer
  *
  *  ps.c

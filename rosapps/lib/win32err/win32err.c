@@ -1,5 +1,4 @@
-/* $Id: win32err.c 16861 2005-07-29 13:46:03Z ea $
- *
+/*
  * win32err.c
  *
  * Copyright (c) 1998 Mark Russinovich
