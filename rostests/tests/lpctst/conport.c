@@ -1,4 +1,4 @@
-/* $Id$
+/* $Id: conport.c 37750 2008-11-29 21:37:54Z sginsberg $
  *
  * reactos/apps/lpc/conport.c
  *

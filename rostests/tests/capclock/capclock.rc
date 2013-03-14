@@ -1,4 +1,4 @@
-/* $Id$ */
+/* $Id: capclock.rc 19235 2005-11-14 23:44:15Z sedwards $ */
 
 #include <windows.h>
 

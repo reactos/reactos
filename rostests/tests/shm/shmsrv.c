@@ -1,4 +1,4 @@
-/* $Id$
+/* $Id: shmsrv.c 15091 2005-05-07 21:24:31Z sedwards $
  *
  * FILE  : reactos/apps/shm/shmsrv.c
  * AUTHOR: David Welch

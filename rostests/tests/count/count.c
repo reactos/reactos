@@ -1,4 +1,4 @@
-/* $Id$
+/* $Id: count.c 15091 2005-05-07 21:24:31Z sedwards $
  *
  */
 #include <stdio.h>
