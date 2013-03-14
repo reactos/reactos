@@ -1,5 +1,3 @@
-/* $Id: tcsrchr.h 41916 2009-07-12 10:40:39Z ros-arm-bringup $
- */
 
 #include <tchar.h>
 

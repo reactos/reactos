@@ -1,5 +1,3 @@
-/* $Id: strxspn.h 30291 2007-11-09 12:20:16Z fireball $
- */
 
 #include <limits.h>
 #include <string.h>

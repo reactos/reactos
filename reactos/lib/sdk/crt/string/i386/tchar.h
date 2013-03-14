@@ -1,5 +1,3 @@
-/* $Id: tchar.h 53439 2011-08-25 09:34:26Z tkreuzer $
- */
 
 #ifndef __TCHAR_INC_S__
 #define __TCHAR_INC_S__

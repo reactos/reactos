@@ -1,5 +1,3 @@
-/* $Id: tcsncpy.h 30283 2007-11-08 21:06:20Z fireball $
- */
 
 #include <stddef.h>
 #include <tchar.h>

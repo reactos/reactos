@@ -1,5 +1,4 @@
-/* $Id: setjmp.s 49836 2010-11-28 09:53:22Z tkreuzer $
- *
+/*
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries
  * PURPOSE:           Implementation of _setjmp/longjmp

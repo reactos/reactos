@@ -1,5 +1,4 @@
-/* $Id: witow.c 54651 2011-12-14 22:09:24Z spetreolle $
- *
+/*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
  * FILE:        lib/msvcrt/stdlib/itow.c

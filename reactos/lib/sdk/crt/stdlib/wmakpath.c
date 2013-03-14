@@ -11,8 +11,6 @@
  *
  */
 
-/* $Id: wmakpath.c 53713 2011-09-15 17:11:53Z tkreuzer $
- */
 #include <precomp.h>
 
 /*
