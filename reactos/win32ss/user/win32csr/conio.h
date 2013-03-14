@@ -1,5 +1,4 @@
-/* $Id: conio.h 55617 2012-02-15 20:29:08Z ion $
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            subsys/csrss/include/conio.h

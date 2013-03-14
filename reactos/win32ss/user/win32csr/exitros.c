@@ -1,5 +1,4 @@
-/* $Id: exitros.c 58411 2013-03-02 22:22:56Z gadamopoulos $
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS CSRSS subsystem
  * FILE:            subsys/csrss/win32csr/exitros.c

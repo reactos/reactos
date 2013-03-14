@@ -1,5 +1,4 @@
-/* $Id: resource.h 51293 2011-04-09 12:01:36Z mkupfer $
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Win32 subsystem
  * FILE:            subsys/csrss/win32csr/resource.h

@@ -1,4 +1,4 @@
-/* $Id: init.c 31400 2007-12-22 17:18:32Z fireball $
+/*
  * PROJECT:     ReactOS CSRSS
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        subsystems/win32/csrss/api/alias.c

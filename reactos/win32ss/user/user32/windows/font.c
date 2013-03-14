@@ -16,8 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: font.c 48387 2010-07-31 22:36:22Z fireball $
- *
+/*
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
  * PURPOSE:         Input

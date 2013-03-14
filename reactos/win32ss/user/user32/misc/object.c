@@ -16,8 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: object.c 57652 2012-10-30 16:50:11Z gadamopoulos $
- *
+/*
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/misc/dde.c
  * PURPOSE:         DDE

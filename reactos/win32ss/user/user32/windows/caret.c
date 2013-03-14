@@ -16,8 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: caret.c 54199 2011-10-19 16:17:32Z rharabien $
- *
+/*
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/caret.c
  * PURPOSE:         Caret

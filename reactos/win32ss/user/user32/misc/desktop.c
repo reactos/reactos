@@ -1,5 +1,4 @@
-/* $Id: desktop.c 57236 2012-09-04 05:37:13Z jimtabor $
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/misc/desktop.c

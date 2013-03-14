@@ -1,4 +1,3 @@
-/* $Id: win32k.rc 56311 2012-04-01 20:42:43Z akhaldi $ */
 
 #define REACTOS_VERSION_DLL
 #define REACTOS_STR_FILE_DESCRIPTION	"W32 GDI KM subsystem\0"
