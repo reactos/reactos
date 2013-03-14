@@ -1,6 +1,3 @@
-/* $Id: fiber.c 15091 2005-05-07 21:24:31Z sedwards $
-*/
-
 #include <assert.h>
 #include <limits.h>
 #include <stdio.h>

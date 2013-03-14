@@ -1,5 +1,4 @@
-/* $Id: lpcclt.c 15091 2005-05-07 21:24:31Z sedwards $
- *
+/*
  * DESCRIPTION: Simple LPC Client
  * PROGRAMMER:  David Welch
  */

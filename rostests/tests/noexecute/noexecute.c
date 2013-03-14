@@ -1,7 +1,3 @@
-/*
- * $Id: noexecute.c 19171 2005-11-12 08:40:47Z sedwards $
- */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

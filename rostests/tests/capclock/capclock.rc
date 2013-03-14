@@ -1,5 +1,3 @@
-/* $Id: capclock.rc 19235 2005-11-14 23:44:15Z sedwards $ */
-
 #include <windows.h>
 
 #define REACTOS_STR_FILE_DESCRIPTION	"ReactOS W32 Caption Clock\0"

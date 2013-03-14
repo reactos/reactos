@@ -1,5 +1,4 @@
-/* $Id: capclock.c 47551 2010-06-03 20:08:26Z tkreuzer $
- *
+/*
  * DESCRIPTION: Simple Win32 Caption Clock
  * PROJECT    : ReactOS (test applications)
  * AUTHOR     : Emanuele Aliberti

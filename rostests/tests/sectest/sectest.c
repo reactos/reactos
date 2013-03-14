@@ -1,4 +1,3 @@
-/* $Id: sectest.c 19171 2005-11-12 08:40:47Z sedwards $ */
 #define UNICODE
 #define _UNICODE
 #include <windows.h>
