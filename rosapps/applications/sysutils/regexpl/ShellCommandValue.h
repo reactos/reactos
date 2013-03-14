@@ -1,4 +1,4 @@
-/* $Id$ */
+/* $Id: ShellCommandValue.h 15091 2005-05-07 21:24:31Z sedwards $ */
 
 // ShellCommandValue.h: interface for the CShellCommandValue class.
 //

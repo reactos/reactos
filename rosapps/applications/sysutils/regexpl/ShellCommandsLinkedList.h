@@ -1,4 +1,4 @@
-/* $Id$ */
+/* $Id: ShellCommandsLinkedList.h 15091 2005-05-07 21:24:31Z sedwards $ */
 
 // ShellCommandsLinkedList.h: interface for the CShellCommandsLinkedList class.
 //

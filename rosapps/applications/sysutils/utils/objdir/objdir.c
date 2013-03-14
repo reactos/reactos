@@ -1,4 +1,4 @@
-/* $Id$
+/* $Id: objdir.c 37749 2008-11-29 21:23:45Z sginsberg $
  *
  * DESCRIPTION: Object Manager Simple Explorer
  * PROGRAMMER:  David Welch

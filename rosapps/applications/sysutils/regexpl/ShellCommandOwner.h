@@ -1,4 +1,4 @@
-/* $Id$ */
+/* $Id: ShellCommandOwner.h 15091 2005-05-07 21:24:31Z sedwards $ */
 
 // ShellCommandOwner.h: interface for the CShellCommandOwner class.
 //

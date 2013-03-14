@@ -1,4 +1,4 @@
-/* $Id$
+/* $Id: ShellCommandConnect.cpp 29689 2007-10-19 23:05:02Z dreimer $
  *
  * regexpl - Console Registry Explorer
  *

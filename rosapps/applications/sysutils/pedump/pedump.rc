@@ -1,4 +1,4 @@
-/* $Id$ */
+/* $Id: pedump.rc 16861 2005-07-29 13:46:03Z ea $ */
 
 #define REACTOS_STR_FILE_DESCRIPTION	"Tool to dump a PE image file.\0"
 #define REACTOS_STR_INTERNAL_NAME	"pedump\0"

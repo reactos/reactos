@@ -1,4 +1,4 @@
-/* $Id$ */
+/* $Id: RegistryTree.h 15091 2005-05-07 21:24:31Z sedwards $ */
 
 // RegistryTree.h: interface for the CRegistryTree class.
 //

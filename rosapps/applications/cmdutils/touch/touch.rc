@@ -1,4 +1,4 @@
-/* $Id$ */
+/* $Id: touch.rc 16861 2005-07-29 13:46:03Z ea $ */
 
 #define REACTOS_STR_FILE_DESCRIPTION	"ReactOS Touch utility\0"
 #define REACTOS_STR_INTERNAL_NAME	"touch\0"

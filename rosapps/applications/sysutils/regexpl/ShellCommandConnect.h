@@ -1,4 +1,4 @@
-/* $Id$ */
+/* $Id: ShellCommandConnect.h 15091 2005-05-07 21:24:31Z sedwards $ */
 
 // ShellCommandConnect.h: interface for the CShellCommandConnect class.
 //

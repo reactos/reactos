@@ -1,4 +1,4 @@
-/* $Id$ */
+/* $Id: ShellCommandChangeKey.h 15091 2005-05-07 21:24:31Z sedwards $ */
 
 // ShellCommandChangeKey.h: interface for the CShellCommandChangeKey class.
 //

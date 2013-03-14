@@ -1,5 +1,5 @@
 -*- Mode: Text -*-
-$Id$
+$Id: README 34303 2008-07-05 11:46:22Z fireball $
 
 Registry Explorer is console mode tool for reading/writing ReactOS
 registry. Currently, access is provided only by means of interactive

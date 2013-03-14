@@ -4,7 +4,7 @@
 # Created: 1993-05-16
 # Public domain
 
-# $Id$
+# $Id: mkinstalldirs 21499 2006-04-07 10:16:12Z tretiakov $
 
 errstatus=0
 

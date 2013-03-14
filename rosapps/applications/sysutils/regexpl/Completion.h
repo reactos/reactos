@@ -1,4 +1,4 @@
-/* $Id$ */
+/* $Id: Completion.h 15091 2005-05-07 21:24:31Z sedwards $ */
 
 // Completion.h - declaration for completion related functions
 
