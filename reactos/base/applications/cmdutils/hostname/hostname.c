@@ -44,7 +44,7 @@ int main (int argc, char ** argv)
 			printf ("%s\n", ComputerName);
 			return EXIT_SUCCESS;
 		}
-		fprintf (stderr, "%s: Win32 error %ld.\n",
+		fprintf (stderr, "%s: Win32 error %lu.\n",
 			argv[0], GetLastError());
 		return EXIT_FAILURE;
 	}else{
