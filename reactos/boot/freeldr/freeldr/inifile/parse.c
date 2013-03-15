@@ -122,7 +122,7 @@ BOOLEAN IniParseFile(PCHAR IniFileData, ULONG IniFileSize)
 			// First check to make sure we're inside a [section]
 			if (CurrentSection == NULL)
 			{
-				printf("Error: freeldr.ini:%ld: Setting '%s' found outside of a [section].\n", CurrentLineNumber, IniFileLine);
+				printf("Error: freeldr.ini:%lu: Setting '%s' found outside of a [section].\n", CurrentLineNumber, IniFileLine);
 				printf("Press any key to continue...\n");
 				MachConsGetCh();
 				CurrentLineNumber++;
