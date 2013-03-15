@@ -838,7 +838,7 @@ enum __SAL_YesNo {_SAL_notpresent, _SAL_no, _SAL_maybe, _SAL_yes, _SAL_default};
 #define _Outptr_result_maybenull_                                   _SAL2_NAME(_Outptr_result_maybenull_) _Group_([SA_Pre(Null=SA_No,Notref=1)] [SA_Pre(WritableElementsConst=1,Notref=1)] [SA_Post(Valid=SA_Yes)] [SA_Post(Deref=1,Null=SA_Maybe,Notref=1,ValidElements="\n""1")] )
 //#define _Outptr_result_maybenull_z_
 #define _Outptr_result_nullonfailure_                               _SAL2_NAME(_Outptr_result_nullonfailure_) _Group_(_Outptr_ [SAL_context(p1="SAL_failed")] _Group_([SAL_post] _Deref_post_null_) )
-//#define _Outptr_result_z_
+#define _Outptr_result_z_                                           _SAL2_NAME(_Outptr_result_z_) _Group_([SA_Pre(Null=SA_No,Notref=1)] [SA_Pre(WritableElementsConst=1,Notref=1)] [SA_Post(Valid=SA_Yes)] _Deref_post_z_)
 //#define _Outref_
 //#define _Outref_result_buffer_(size)
 //#define _Outref_result_buffer_all_(size)
