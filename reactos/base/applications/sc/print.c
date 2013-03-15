@@ -81,10 +81,10 @@ PrintService(LPCTSTR lpServiceName,
 
     _tprintf(_T(")\n"));
 
-    _tprintf(_T("\tWIN32_EXIT_CODE    : %d  (0x%x)\n"),
+    _tprintf(_T("\tWIN32_EXIT_CODE    : %u  (0x%x)\n"),
         (unsigned int)pStatus->dwWin32ExitCode,
         (unsigned int)pStatus->dwWin32ExitCode);
-    _tprintf(_T("\tSERVICE_EXIT_CODE  : %d  (0x%x)\n"),
+    _tprintf(_T("\tSERVICE_EXIT_CODE  : %u  (0x%x)\n"),
         (unsigned int)pStatus->dwServiceSpecificExitCode,
         (unsigned int)pStatus->dwServiceSpecificExitCode);
     _tprintf(_T("\tCHECKPOINT         : 0x%x\n"),
