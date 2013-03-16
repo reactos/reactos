@@ -1,5 +1,4 @@
-/* $Id: window.c 58214 2013-01-24 23:00:42Z akhaldi $
- *
+/*
  * WINDOW.C - activate & window internal commands.
  *
  * clone from 4nt activate command
