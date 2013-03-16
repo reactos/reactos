@@ -1,5 +1,4 @@
-/* $Id: winlogon.h 50813 2011-02-18 20:16:43Z gadamopoulos $
- *
+/*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS kernel
  * FILE:        include/reactos/winlogon.h

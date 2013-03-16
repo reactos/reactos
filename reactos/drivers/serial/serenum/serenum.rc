@@ -1,4 +1,3 @@
-/* $Id: serenum.rc 21507 2006-04-07 15:34:51Z tretiakov $ */
 
 #define REACTOS_VERSION_DLL
 #define REACTOS_STR_FILE_DESCRIPTION	"Serial port enumerator\0"

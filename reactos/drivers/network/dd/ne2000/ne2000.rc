@@ -1,4 +1,3 @@
-/* $Id: ne2000.rc 21473 2006-04-05 16:35:30Z tretiakov $ */
 
 #define REACTOS_VERSION_DLL
 #define REACTOS_STR_FILE_DESCRIPTION	"Novell NE2000 network driver\0"

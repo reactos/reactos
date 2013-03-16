@@ -1,5 +1,4 @@
-/* $Id: class2.h 49129 2010-10-12 20:17:55Z pschweitzer $
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            services/storage/include/class2.h

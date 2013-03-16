@@ -1,5 +1,4 @@
-/* $Id: sb16.c 37762 2008-11-30 11:16:55Z sginsberg $
- *
+/*
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
  * FILE:                 services/dd/sound/sb16.c

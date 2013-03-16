@@ -1,4 +1,3 @@
-/* $Id: bootvid.rc 31840 2008-01-17 14:50:36Z cfinck $ */
 
 #define REACTOS_VERSION_DLL
 #define REACTOS_STR_FILE_DESCRIPTION	"VGA Boot Driver\0"

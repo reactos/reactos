@@ -1,4 +1,3 @@
-/* $Id: blue.rc 21706 2006-04-22 14:01:25Z tretiakov $ */
 
 #define REACTOS_VERSION_DLL
 #define REACTOS_STR_FILE_DESCRIPTION	"HAL Console Device Driver\0"

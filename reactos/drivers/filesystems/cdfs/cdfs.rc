@@ -1,4 +1,3 @@
-/* $Id: cdfs.rc 21710 2006-04-22 16:36:21Z tretiakov $ */
 
 #define REACTOS_VERSION_DLL
 #define REACTOS_STR_FILE_DESCRIPTION	"ISO9660 Driver\0"

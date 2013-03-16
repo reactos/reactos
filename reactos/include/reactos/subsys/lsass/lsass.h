@@ -1,5 +1,4 @@
-/* $Id: lsass.h 58304 2013-02-10 12:09:21Z ekohl $
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            include/lsass/lsass.h

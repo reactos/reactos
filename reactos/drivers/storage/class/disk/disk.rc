@@ -1,4 +1,3 @@
-/* $Id: disk.rc 21397 2006-03-27 07:38:43Z peterw $ */
 
 #define REACTOS_VERSION_DLL
 #define REACTOS_STR_FILE_DESCRIPTION	"Disk Class Driver\0"

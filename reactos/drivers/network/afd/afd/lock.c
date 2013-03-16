@@ -1,4 +1,4 @@
-/* $Id: lock.c 57237 2012-09-04 07:42:21Z cgutman $
+/*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/lock.c

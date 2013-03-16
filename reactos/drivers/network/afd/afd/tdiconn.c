@@ -1,4 +1,4 @@
-/* $Id: tdiconn.c 56389 2012-04-22 13:11:54Z tfaber $
+/*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/tdiconn.c

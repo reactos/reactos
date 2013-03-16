@@ -1,4 +1,3 @@
-/* $Id: ext2fs.rc 12852 2005-01-06 13:58:04Z mf $ */
 
 #define REACTOS_VERSION_DLL
 #define REACTOS_STR_FILE_DESCRIPTION	"Linux ext2 IFS Driver\0"

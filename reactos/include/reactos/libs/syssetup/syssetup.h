@@ -1,5 +1,3 @@
-/* $Id: syssetup.h 45020 2010-01-09 22:43:16Z ekohl $
-*/
 /*
  * syssetup.h
  *

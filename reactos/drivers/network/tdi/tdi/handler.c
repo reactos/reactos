@@ -1,5 +1,4 @@
-/* $Id: handler.c 52934 2011-07-27 19:33:08Z akhaldi $
- *
+/*
  * DESCRIPTION: Default TDI event handlers.
  */
 #include "precomp.h"
