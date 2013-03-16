@@ -19,6 +19,12 @@
 /* Start a service that runs in its own process */
 #define SERVICE_CONTROL_START_OWN   81
 
+/*
+ * Start event name used by OpenSCManager
+ * to know whether the SCM is initialized.
+ */
+#define SCM_START_EVENT L"SvcctrlStartEvent_A3752DX"
+
 typedef struct _SCM_CONTROL_PACKET
 {
     DWORD dwSize;
