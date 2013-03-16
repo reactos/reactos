@@ -1,4 +1,3 @@
-/* $Id: winscard.rc 22413 2006-06-19 12:43:39Z gedmurphy $ */
 
 #define REACTOS_VERSION_DLL
 #define REACTOS_STR_FILE_DESCRIPTION	"ReactOS SmartCard API\0"

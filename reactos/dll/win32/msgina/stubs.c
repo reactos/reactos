@@ -1,5 +1,4 @@
-/* $Id: stubs.c 58363 2013-02-24 19:44:41Z ekohl $
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS msgina.dll
  * FILE:            lib/msgina/stubs.c

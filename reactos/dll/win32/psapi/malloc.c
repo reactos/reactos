@@ -1,5 +1,3 @@
-/* $Id: malloc.c 37763 2008-11-30 11:42:05Z sginsberg $
- */
 /*
  * COPYRIGHT:   None
  * LICENSE:     Public domain

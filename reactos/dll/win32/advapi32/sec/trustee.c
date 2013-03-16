@@ -1,5 +1,4 @@
-/* $Id: trustee.c 53225 2011-08-14 11:31:23Z akhaldi $
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/advapi32/sec/trustee.c

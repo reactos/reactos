@@ -1,5 +1,4 @@
-/* $Id: sec.c 56451 2012-04-29 21:39:32Z ekohl $
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/advapi32/sec/sec.c

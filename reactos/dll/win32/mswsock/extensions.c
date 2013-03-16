@@ -1,10 +1,9 @@
-/* $Id: stubs.c 12852 2005-01-06 13:58:04Z mf $
- *
- * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS WinSock DLL
- * FILE:        stubs.c
- * PURPOSE:     WSAIoctl wrappers for Microsoft extensions to Winsock
- * PROGRAMMERS: KJK::Hyperion <hackbunny@reactos.com>
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS WinSock DLL
+ * FILE:            stubs.c
+ * PURPOSE:         WSAIoctl wrappers for Microsoft extensions to Winsock
+ * PROGRAMMERS:     KJK::Hyperion <hackbunny@reactos.com>
  * REVISIONS:
  */
 

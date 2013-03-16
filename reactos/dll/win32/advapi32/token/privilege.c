@@ -1,5 +1,4 @@
-/* $Id: privilege.c 37763 2008-11-30 11:42:05Z sginsberg $
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/advapi32/token/privilege.c

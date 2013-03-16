@@ -16,8 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-/* $Id: hid.c 58214 2013-01-24 23:00:42Z akhaldi $
- *
+/*
  * PROJECT:         ReactOS Hid User Library
  * FILE:            lib/hid/hid.c
  * PURPOSE:         ReactOS Hid User Library

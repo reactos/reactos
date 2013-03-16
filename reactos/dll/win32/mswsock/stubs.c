@@ -1,10 +1,9 @@
-/* $Id: stubs.c 53180 2011-08-11 15:07:19Z akhaldi $
- *
- * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS WinSock DLL
- * FILE:        stubs.c
- * PURPOSE:     Stub functions
- * PROGRAMMERS: Ge van Geldorp (ge@gse.nl)
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS WinSock DLL
+ * FILE:            stubs.c
+ * PURPOSE:         Stub functions
+ * PROGRAMMERS:     Ge van Geldorp (ge@gse.nl)
  * REVISIONS:
  */
 
