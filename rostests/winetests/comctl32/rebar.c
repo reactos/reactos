@@ -21,14 +21,16 @@
 #define _WIN32_WINNT 0x500
 #define _WIN32_IE 0x500
 
+#include <wine/test.h>
+
 #include <assert.h>
-#include <stdarg.h>
+//#include <stdarg.h>
 
-#include <windows.h>
+//#include <windows.h>
+#include <wingdi.h>
+#include <winuser.h>
 #include <commctrl.h>
-#include <uxtheme.h>
-
-#include "wine/test.h"
+//#include <uxtheme.h>
 
 static RECT height_change_notify_rect;
 static HWND hMainWnd;

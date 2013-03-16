@@ -292,6 +292,7 @@ static LRESULT WINAPI TreeviewWndProc(HWND hwnd, UINT message, WPARAM wParam, LP
     if (defwndproc_counter) msg.flags |= defwinproc;
     msg.wParam = wParam;
     msg.lParam = lParam;
+    msg.id = 0;
     add_message(sequences, TREEVIEW_SEQ_INDEX, &msg);
 
     defwndproc_counter++;
@@ -1001,7 +1002,10 @@ static LRESULT CALLBACK parent_wnd_proc(HWND hWnd, UINT message, WPARAM wParam, 
     if (defwndproc_counter) msg.flags |= defwinproc;
     msg.wParam = wParam;
     msg.lParam = lParam;
-    if (message == WM_NOTIFY && lParam) msg.id = ((NMHDR*)lParam)->code;
+    if (message == WM_NOTIFY && lParam)
+        msg.id = ((NMHDR*)lParam)->code;
+    else
+        msg.id = 0;
 
     /* log system messages, except for painting */
     if (message < WM_USER &&
@@ -1946,6 +1950,19 @@ static void test_TVM_HITTEST(void)
     DestroyWindow(hTree);
 }
 
+static void test_WM_GETDLGCODE(void)
+{
+    DWORD code;
+    HWND hTree;
+
+    hTree = create_treeview_control(0);
+
+    code = SendMessageA(hTree, WM_GETDLGCODE, VK_TAB, 0);
+    ok(code == (DLGC_WANTCHARS | DLGC_WANTARROWS), "0x%08x\n", code);
+
+    DestroyWindow(hTree);
+}
+
 START_TEST(treeview)
 {
     HMODULE hComctl32;
@@ -2019,6 +2036,7 @@ START_TEST(treeview)
     test_TVS_CHECKBOXES();
     test_TVM_GETNEXTITEM();
     test_TVM_HITTEST();
+    test_WM_GETDLGCODE();
 
     if (!load_v6_module(&ctx_cookie, &hCtx))
     {
@@ -2044,6 +2062,7 @@ START_TEST(treeview)
     /* comctl32 version 6 tests start here */
     test_expandedimage();
     test_htreeitem_layout();
+    test_WM_GETDLGCODE();
 
     unload_v6_module(ctx_cookie, hCtx);
 

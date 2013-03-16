@@ -18,10 +18,14 @@
  */
 
 #include <assert.h>
-#include <windows.h>
+//#include <windows.h>
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <winuser.h>
 #include <commctrl.h>
 
-#include "wine/test.h"
+//#include "wine/test.h"
 #include "msg.h"
 
 #define EDITBOX_SEQ_INDEX  0

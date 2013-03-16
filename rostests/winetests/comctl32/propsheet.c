@@ -18,13 +18,15 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <windows.h>
+#include <wine/test.h>
+
+//#include <windows.h>
+#include <wingdi.h>
+#include <winuser.h>
 #include <commctrl.h>
 #include "msg.h"
 
 #include "resources.h"
-
-#include "wine/test.h"
 
 static HWND parenthwnd;
 static HWND sheethwnd;
@@ -821,7 +823,7 @@ if (0)
     ok(r == 4, "got %d\n", r);
 
     /* select page that can't be created */
-    ret = SendMessageA(hdlg, PSM_SETCURSEL, 3, 0);
+    ret = SendMessageA(hdlg, PSM_SETCURSEL, 3, 1);
     ok(ret == TRUE, "got %d\n", ret);
 
     r = SendMessageA(tab, TCM_GETITEMCOUNT, 0, 0);

@@ -19,18 +19,20 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
+#include <wine/test.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
+//#include <stdarg.h>
 
-#include "commctrl.h"
+//#include "windef.h"
+//#include "winbase.h"
+#include <winuser.h>
+#include <wingdi.h>
+#include <winnls.h>
+#include <commctrl.h>
 
-#include "wine/test.h"
 #include "v6util.h"
-#include <assert.h>
-#include <windows.h>
+//#include <assert.h>
+//#include <windows.h>
 #include "msg.h"
 
 #define expect(expected, got) ok(expected == got, "Expected %d, got %d\n", expected, got);
@@ -588,6 +590,7 @@ static LRESULT WINAPI monthcal_subclass_proc(HWND hwnd, UINT message, WPARAM wPa
     if (defwndproc_counter) msg.flags |= defwinproc;
     msg.wParam = wParam;
     msg.lParam = lParam;
+    msg.id = 0;
     add_message(sequences, MONTHCAL_SEQ_INDEX, &msg);
 
     /* some debug output for style changing */
@@ -1367,10 +1370,8 @@ static void test_monthrange(void)
 
     hwnd = create_monthcal_control(0);
 
-    st_visible[0].wYear = 0;
-    st_visible[0].wMonth = 0;
-    st_visible[0].wDay = 0;
-    st_daystate[1] = st_daystate[0] = st_visible[1] = st_visible[0];
+    memset(&st_visible, 0, sizeof(st_visible));
+    memset(&st_daystate, 0, sizeof(st_daystate));
 
     st.wYear = 2000;
     st.wMonth = 11;

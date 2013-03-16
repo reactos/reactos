@@ -19,8 +19,8 @@
  */
 
 #include <assert.h>
-#include <windows.h>
-#include "wine/test.h"
+//#include <windows.h>
+#include <wine/test.h>
 
 /* undocumented SWP flags - from SDK 3.1 */
 #define SWP_NOCLIENTSIZE	0x0800

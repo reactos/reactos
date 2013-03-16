@@ -19,16 +19,16 @@
  */
 #include <stdarg.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "winnls.h"
-#include "winreg.h"
-#include "commctrl.h"
-#include "shlwapi.h"
+#include <windef.h>
+#include <winbase.h>
+//#include "wingdi.h"
+#include <winuser.h>
+//#include "winnls.h"
+#include <winreg.h>
+#include <commctrl.h>
+//#include "shlwapi.h"
 
-#include "wine/test.h"
+#include <wine/test.h>
 
 /* Keys for testing MRU functions */
 #define REG_TEST_BASEKEYA    "Software\\Wine"

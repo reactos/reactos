@@ -18,12 +18,21 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
 
-#include <windows.h>
+//#include <windows.h>
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <wingdi.h>
+#include <winnls.h>
+#include <objbase.h>
 #include <commctrl.h>
 #include <assert.h>
 
-#include "wine/test.h"
+#include <wine/test.h>
 #include "v6util.h"
 #include "msg.h"
 
@@ -409,6 +418,7 @@ static LRESULT WINAPI header_subclass_proc(HWND hwnd, UINT message, WPARAM wPara
     if (defwndproc_counter) msg.flags |= defwinproc;
     msg.wParam = wParam;
     msg.lParam = lParam;
+    msg.id = 0;
     add_message(sequences, HEADER_SEQ_INDEX, &msg);
 
     defwndproc_counter++;

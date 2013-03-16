@@ -17,11 +17,14 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <assert.h>
-#include <windows.h>
-#include <commctrl.h>
+#include <wine/test.h>
 
-#include "wine/test.h"
+#include <assert.h>
+//#include <windows.h>
+#include <wingdi.h>
+#include <winuser.h>
+#include <winnls.h>
+#include <commctrl.h>
 
 #define expect(expected, got) ok(got == expected, "Expected %d, got %d\n", expected, got)
 

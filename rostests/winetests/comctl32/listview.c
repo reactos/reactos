@@ -3,7 +3,7 @@
  *
  * Copyright 2006 Mike McCormack for CodeWeavers
  * Copyright 2007 George Gov
- * Copyright 2009-2012 Nikolay Sivov
+ * Copyright 2009-2013 Nikolay Sivov
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,11 +20,14 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdio.h>
-#include <windows.h>
+#include <wine/test.h>
+
+//#include <stdio.h>
+//#include <windows.h>
+#include <wingdi.h>
+#include <winuser.h>
 #include <commctrl.h>
 
-#include "wine/test.h"
 #include "v6util.h"
 #include "msg.h"
 
@@ -52,6 +55,8 @@ static BOOL blockEdit;
 static BOOL g_block_hover;
 /* notification data for LVN_ITEMCHANGED */
 static NMLISTVIEW g_nmlistview;
+/* notification data for LVN_ITEMCHANGING */
+static NMLISTVIEW g_nmlistview_changing;
 /* format reported to control:
    -1 falls to defproc, anything else returned */
 static INT notifyFormat;
@@ -63,6 +68,8 @@ static LVITEMA g_itema;
 static BOOL g_disp_A_to_W;
 /* dispinfo data sent with LVN_LVN_ENDLABELEDIT */
 static NMLVDISPINFO g_editbox_disp_info;
+/* when this is set focus will be tested on LVN_DELETEITEM */
+static BOOL g_focus_test_LVN_DELETEITEM;
 
 static HWND subclass_editbox(HWND hwndListview);
 
@@ -207,7 +214,7 @@ static const struct message ownerdata_deselect_all_parent_seq[] = {
     { 0 }
 };
 
-static const struct message select_all_parent_seq[] = {
+static const struct message change_all_parent_seq[] = {
     { WM_NOTIFY, sent|id, 0, 0, LVN_ITEMCHANGING },
     { WM_NOTIFY, sent|id, 0, 0, LVN_ITEMCHANGED },
 
@@ -222,6 +229,15 @@ static const struct message select_all_parent_seq[] = {
 
     { WM_NOTIFY, sent|id, 0, 0, LVN_ITEMCHANGING },
     { WM_NOTIFY, sent|id, 0, 0, LVN_ITEMCHANGED },
+    { 0 }
+};
+
+static const struct message changing_all_parent_seq[] = {
+    { WM_NOTIFY, sent|id, 0, 0, LVN_ITEMCHANGING },
+    { WM_NOTIFY, sent|id, 0, 0, LVN_ITEMCHANGING },
+    { WM_NOTIFY, sent|id, 0, 0, LVN_ITEMCHANGING },
+    { WM_NOTIFY, sent|id, 0, 0, LVN_ITEMCHANGING },
+    { WM_NOTIFY, sent|id, 0, 0, LVN_ITEMCHANGING },
     { 0 }
 };
 
@@ -243,6 +259,18 @@ static const struct message getitemposition_seq1[] = {
 
 static const struct message getitemposition_seq2[] = {
     { LVM_GETITEMPOSITION, sent|id, 0, 0, LISTVIEW_ID },
+    { HDM_GETITEMRECT, sent|id, 0, 0, HEADER_ID },
+    { 0 }
+};
+
+static const struct message getsubitemrect_seq[] = {
+    { LVM_GETSUBITEMRECT, sent|id|wparam, -1, 0, LISTVIEW_ID },
+    { HDM_GETITEMRECT, sent|id, 0, 0, HEADER_ID },
+    { LVM_GETSUBITEMRECT, sent|id|wparam, 0, 0, LISTVIEW_ID },
+    { HDM_GETITEMRECT, sent|id, 0, 0, HEADER_ID },
+    { LVM_GETSUBITEMRECT, sent|id|wparam, -10, 0, LISTVIEW_ID },
+    { HDM_GETITEMRECT, sent|id, 0, 0, HEADER_ID },
+    { LVM_GETSUBITEMRECT, sent|id|wparam, 20, 0, LISTVIEW_ID },
     { HDM_GETITEMRECT, sent|id, 0, 0, HEADER_ID },
     { 0 }
 };
@@ -309,6 +337,41 @@ static const struct message listview_header_changed_seq[] = {
     { LVM_SETCOLUMNA, sent },
     { WM_NOTIFY, sent|id|defwinproc, 0, 0, LISTVIEW_ID },
     { WM_NOTIFY, sent|id|defwinproc, 0, 0, LISTVIEW_ID },
+    { 0 }
+};
+
+static const struct message parent_header_click_seq[] = {
+    { WM_NOTIFY, sent|id, 0, 0, LVN_COLUMNCLICK },
+    { WM_NOTIFY, sent|id, 0, 0, HDN_ITEMCLICKA },
+    { 0 }
+};
+
+static const struct message parent_header_divider_dclick_seq[] = {
+    { WM_NOTIFY, sent|id, 0, 0, HDN_ITEMCHANGINGA },
+    { WM_NOTIFY, sent|id, 0, 0, NM_CUSTOMDRAW },
+    { WM_NOTIFY, sent|id, 0, 0, NM_CUSTOMDRAW },
+    { WM_NOTIFY, sent|id, 0, 0, HDN_ITEMCHANGEDA },
+    { WM_NOTIFY, sent|id, 0, 0, HDN_DIVIDERDBLCLICKA },
+    { 0 }
+};
+
+static const struct message listview_set_imagelist[] = {
+    { LVM_SETIMAGELIST, sent|id, 0, 0, LISTVIEW_ID },
+    { 0 }
+};
+
+static const struct message listview_header_set_imagelist[] = {
+    { LVM_SETIMAGELIST, sent|id, 0, 0, LISTVIEW_ID },
+    { HDM_SETIMAGELIST, sent|id, 0, 0, HEADER_ID },
+    { 0 }
+};
+
+static const struct message parent_insert_focused_seq[] = {
+    { WM_NOTIFY, sent|id, 0, 0, LVN_ITEMCHANGING },
+    { WM_NOTIFY, sent|id, 0, 0, LVN_ITEMCHANGING },
+    { WM_NOTIFY, sent|id, 0, 0, LVN_ITEMCHANGED },
+    { WM_NOTIFY, sent|id, 0, 0, LVN_ITEMCHANGED },
+    { WM_NOTIFY, sent|id, 0, 0, LVN_INSERTITEM },
     { 0 }
 };
 
@@ -390,6 +453,12 @@ static LRESULT WINAPI parent_wnd_proc(HWND hwnd, UINT message, WPARAM wParam, LP
                                                "BEGIN" : "END", pScroll->dx, pScroll->dy);
               }
               break;
+          case LVN_ITEMCHANGING:
+              {
+                  NMLISTVIEW *nmlv = (NMLISTVIEW*)lParam;
+                  g_nmlistview_changing = *nmlv;
+              }
+              break;
           case LVN_ITEMCHANGED:
               {
                   NMLISTVIEW *nmlv = (NMLISTVIEW*)lParam;
@@ -414,6 +483,16 @@ static LRESULT WINAPI parent_wnd_proc(HWND hwnd, UINT message, WPARAM wParam, LP
                       ok(dispinfo->item.cchTextMax == 260 ||
                          broken(dispinfo->item.cchTextMax == 264) /* NT4 reports aligned size */,
                       "buffer size %d\n", dispinfo->item.cchTextMax);
+              }
+              break;
+          case LVN_DELETEITEM:
+              if (g_focus_test_LVN_DELETEITEM)
+              {
+                  NMLISTVIEW *nmlv = (NMLISTVIEW*)lParam;
+                  UINT state;
+
+                  state = SendMessageA(((NMHDR*)lParam)->hwndFrom, LVM_GETITEMSTATE, nmlv->iItem, LVIS_FOCUSED);
+                  ok(state == 0, "got state %x\n", state);
               }
               break;
           case NM_HOVER:
@@ -626,6 +705,7 @@ static LRESULT WINAPI editbox_subclass_proc(HWND hwnd, UINT message, WPARAM wPar
     if (defwndproc_counter) msg.flags |= defwinproc;
     msg.wParam = wParam;
     msg.lParam = lParam;
+    msg.id = 0;
 
     /* all we need is sizing */
     if (message == WM_WINDOWPOSCHANGING ||
@@ -1586,6 +1666,8 @@ static void test_create(void)
     rect.top  = 1;
     rect.right = rect.bottom = -10;
     r = SendMessage(hList, LVM_GETSUBITEMRECT, -1, (LPARAM)&rect);
+    /* right value contains garbage, probably because header columns are not set up */
+    expect(0, rect.bottom);
     expect(1, r);
 
     hHeader = (HWND)SendMessage(hList, LVM_GETHEADER, 0, 0);
@@ -1686,7 +1768,10 @@ static LRESULT WINAPI cd_wndproc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
                 return CDRF_NOTIFYSUBITEMDRAW;
             case CDDS_ITEMPREPAINT | CDDS_SUBITEM:
                 clr = GetBkColor(nmlvcd->nmcd.hdc);
-                todo_wine ok(clr == c0ffee, "clr=%.8x\n", clr);
+                if (nmlvcd->iSubItem)
+                    todo_wine ok(clr == c0ffee, "clr=%.8x\n", clr);
+                else
+                    ok(clr == c0ffee, "clr=%.8x\n", clr);
                 return CDRF_NOTIFYPOSTPAINT;
             case CDDS_ITEMPOSTPAINT | CDDS_SUBITEM:
                 clr = GetBkColor(nmlvcd->nmcd.hdc);
@@ -2092,28 +2177,32 @@ static void test_multiselect(void)
 
     hwnd = create_listview_control(LVS_REPORT);
 
-    for (i=0;i<items;i++) {
-	    insert_item(hwnd, 0);
-    }
+    for (i = 0; i < items; i++)
+        insert_item(hwnd, 0);
 
     item_count = (int)SendMessage(hwnd, LVM_GETITEMCOUNT, 0, 0);
+    expect(items, item_count);
 
-    expect(items,item_count);
+    for (i = 0; i < 4; i++) {
+        LVITEMA item;
 
-    for (i=0;i<4;i++) {
         task = task_list[i];
 
 	/* deselect all items */
-	ListView_SetItemState(hwnd, -1, 0, LVIS_SELECTED);
+        item.state = 0;
+        item.stateMask = LVIS_SELECTED;
+        SendMessageA(hwnd, LVM_SETITEMSTATE, -1, (LPARAM)&item);
 	SendMessage(hwnd, LVM_SETSELECTIONMARK, 0, -1);
 
 	/* set initial position */
 	SendMessage(hwnd, LVM_SETSELECTIONMARK, 0, (task.initPos == -1 ? item_count -1 : task.initPos));
-	ListView_SetItemState(hwnd,(task.initPos == -1 ? item_count -1 : task.initPos),LVIS_SELECTED ,LVIS_SELECTED);
 
-	selected_count = (int)SendMessage(hwnd, LVM_GETSELECTEDCOUNT, 0, 0);
+        item.state = LVIS_SELECTED;
+        item.stateMask = LVIS_SELECTED;
+        SendMessageA(hwnd, LVM_SETITEMSTATE, task.initPos == -1 ? item_count-1 : task.initPos, (LPARAM)&item);
 
-	ok(selected_count == 1, "There should be only one selected item at the beginning (is %d)\n",selected_count);
+	selected_count = SendMessageA(hwnd, LVM_GETSELECTEDCOUNT, 0, 0);
+	ok(selected_count == 1, "expected 1, got %d\n", selected_count);
 
 	/* Set SHIFT key pressed */
         GetKeyboardState(kstate);
@@ -2151,7 +2240,9 @@ static void test_multiselect(void)
     expect(FALSE, r);
 
     /* select all, check notifications */
-    ListView_SetItemState(hwnd, -1, 0, LVIS_SELECTED);
+    item.state = 0;
+    item.stateMask = LVIS_SELECTED;
+    SendMessageA(hwnd, LVM_SETITEMSTATE, -1, (LPARAM)&item);
 
     flush_sequences(sequences, NUM_MSG_SEQUENCES);
 
@@ -2160,14 +2251,65 @@ static void test_multiselect(void)
     r = SendMessageA(hwnd, LVM_SETITEMSTATE, -1, (LPARAM)&item);
     expect(TRUE, r);
 
-    ok_sequence(sequences, PARENT_SEQ_INDEX, select_all_parent_seq,
+    ok_sequence(sequences, PARENT_SEQ_INDEX, change_all_parent_seq,
                 "select all notification", FALSE);
 
+    /* select all again (all selected already) */
+    flush_sequences(sequences, NUM_MSG_SEQUENCES);
+
+    memset(&g_nmlistview_changing, 0xcc, sizeof(g_nmlistview_changing));
+
+    item.stateMask = LVIS_SELECTED;
+    item.state     = LVIS_SELECTED;
+    r = SendMessageA(hwnd, LVM_SETITEMSTATE, -1, (LPARAM)&item);
+    expect(TRUE, r);
+
+    ok(g_nmlistview_changing.uNewState == LVIS_SELECTED, "got 0x%x\n", g_nmlistview_changing.uNewState);
+    ok(g_nmlistview_changing.uOldState == LVIS_SELECTED, "got 0x%x\n", g_nmlistview_changing.uOldState);
+    ok(g_nmlistview_changing.uChanged == LVIF_STATE, "got 0x%x\n", g_nmlistview_changing.uChanged);
+
+    ok_sequence(sequences, PARENT_SEQ_INDEX, changing_all_parent_seq,
+                "select all notification 2", FALSE);
+
     /* deselect all items */
-    ListView_SetItemState(hwnd, -1, 0, LVIS_SELECTED);
+    flush_sequences(sequences, NUM_MSG_SEQUENCES);
+
+    item.state = 0;
+    item.stateMask = LVIS_SELECTED;
+    SendMessageA(hwnd, LVM_SETITEMSTATE, -1, (LPARAM)&item);
+
+    ok_sequence(sequences, PARENT_SEQ_INDEX, change_all_parent_seq,
+                "deselect all notification", FALSE);
+
+    /* deselect all items again */
+    flush_sequences(sequences, NUM_MSG_SEQUENCES);
+    item.state = 0;
+    item.stateMask = LVIS_SELECTED;
+    SendMessageA(hwnd, LVM_SETITEMSTATE, -1, (LPARAM)&item);
+    ok_sequence(sequences, PARENT_SEQ_INDEX, empty_seq, "deselect all notification 2", FALSE);
+
+    /* any non-zero state value does the same */
+    flush_sequences(sequences, NUM_MSG_SEQUENCES);
+
+    memset(&g_nmlistview_changing, 0xcc, sizeof(g_nmlistview_changing));
+
+    item.stateMask = LVIS_SELECTED;
+    item.state     = LVIS_CUT;
+    r = SendMessageA(hwnd, LVM_SETITEMSTATE, -1, (LPARAM)&item);
+    expect(TRUE, r);
+
+    ok(g_nmlistview_changing.uNewState == 0, "got 0x%x\n", g_nmlistview_changing.uNewState);
+    ok(g_nmlistview_changing.uOldState == 0, "got 0x%x\n", g_nmlistview_changing.uOldState);
+    ok(g_nmlistview_changing.uChanged == LVIF_STATE, "got 0x%x\n", g_nmlistview_changing.uChanged);
+
+    ok_sequence(sequences, PARENT_SEQ_INDEX, changing_all_parent_seq,
+                "set state all notification 3", FALSE);
+
     SendMessage(hwnd, LVM_SETSELECTIONMARK, 0, -1);
-    for (i=0;i<3;i++) {
-        ListView_SetItemState(hwnd, i, LVIS_SELECTED, LVIS_SELECTED);
+    for (i = 0; i < 3; i++) {
+        item.state = LVIS_SELECTED;
+        item.stateMask = LVIS_SELECTED;
+        SendMessageA(hwnd, LVM_SETITEMSTATE, i, (LPARAM)&item);
     }
 
     r = SendMessage(hwnd, LVM_GETSELECTEDCOUNT, 0, 0);
@@ -2192,7 +2334,9 @@ static void test_multiselect(void)
     expect(3, r);
 
     /* select one more */
-    ListView_SetItemState(hwnd, 3, LVIS_SELECTED, LVIS_SELECTED);
+    item.state = LVIS_SELECTED;
+    item.stateMask = LVIS_SELECTED;
+    SendMessageA(hwnd, LVM_SETITEMSTATE, 3, (LPARAM)&item);
 
     for (i=0;i<3;i++) {
         r = ListView_GetItemState(hwnd, i, LVIS_SELECTED);
@@ -2402,7 +2546,6 @@ static void test_subitem_rect(void)
 
     expect(100, rect.left);
     expect(250, rect.right);
-todo_wine
     expect(3, rect.top);
 
     rect.left = LVIR_BOUNDS;
@@ -2413,7 +2556,6 @@ todo_wine
 
     expect(250, rect.left);
     expect(450, rect.right);
-todo_wine
     expect(3, rect.top);
 
     /* item LVS_REPORT padding isn't applied to subitems */
@@ -2457,6 +2599,36 @@ todo_wine
 
     SendMessage(hwnd, LVM_SCROLL, -10, 0);
 
+    /* test header interaction */
+    subclass_header(hwnd);
+    flush_sequences(sequences, NUM_MSG_SEQUENCES);
+
+    rect.left = LVIR_BOUNDS;
+    rect.top  = 1;
+    rect.right = rect.bottom = 0;
+    r = SendMessage(hwnd, LVM_GETSUBITEMRECT, -1, (LPARAM)&rect);
+    expect(1, r);
+
+    rect.left = LVIR_BOUNDS;
+    rect.top  = 1;
+    rect.right = rect.bottom = 0;
+    r = SendMessage(hwnd, LVM_GETSUBITEMRECT, 0, (LPARAM)&rect);
+    expect(1, r);
+
+    rect.left = LVIR_BOUNDS;
+    rect.top  = 1;
+    rect.right = rect.bottom = 0;
+    r = SendMessage(hwnd, LVM_GETSUBITEMRECT, -10, (LPARAM)&rect);
+    expect(1, r);
+
+    rect.left = LVIR_BOUNDS;
+    rect.top  = 1;
+    rect.right = rect.bottom = 0;
+    r = SendMessage(hwnd, LVM_GETSUBITEMRECT, 20, (LPARAM)&rect);
+    expect(1, r);
+
+    ok_sequence(sequences, LISTVIEW_SEQ_INDEX, getsubitemrect_seq, "LVM_GETSUBITEMRECT negative index", FALSE);
+
     DestroyWindow(hwnd);
 
     /* test subitem rects after re-arranging columns */
@@ -2498,13 +2670,11 @@ todo_wine
     rect2.top  = 1;
     rect2.right = rect2.bottom = -1;
     r = SendMessage(hwnd, LVM_GETSUBITEMRECT, 2, (LPARAM)&rect2);
-todo_wine {
     expect(TRUE, r);
     expect(rect.right, rect2.right);
     expect(rect.left, rect2.left);
     expect(rect.bottom, rect2.top);
     ok(rect2.bottom > rect2.top, "expected not zero height\n");
-}
 
     arr[0] = 1; arr[1] = 0; arr[2] = 2;
     r = SendMessage(hwnd, LVM_SETCOLUMNORDERARRAY, 3, (LPARAM)arr);
@@ -2956,7 +3126,7 @@ static void test_ownerdata(void)
     res = SendMessageA(hwnd, LVM_SETITEMSTATE, -1, (LPARAM)&item);
     expect(TRUE, res);
 
-    ok_sequence(sequences, PARENT_SEQ_INDEX, empty_seq, "ownerdata deselect all notification", TRUE);
+    ok_sequence(sequences, PARENT_SEQ_INDEX, empty_seq, "ownerdata deselect all notification", FALSE);
 
     /* select one, then deselect all */
     item.stateMask = LVIS_SELECTED;
@@ -4434,9 +4604,7 @@ static void test_getitemspacing(void)
     HWND hwnd;
     DWORD ret;
     INT cx, cy;
-    HIMAGELIST himl;
-    HBITMAP hbmp;
-    LVITEMA itema;
+    HIMAGELIST himl40, himl80;
 
     cx = GetSystemMetrics(SM_CXICONSPACING) - GetSystemMetrics(SM_CXICON);
     cy = GetSystemMetrics(SM_CYICONSPACING) - GetSystemMetrics(SM_CYICON);
@@ -4444,56 +4612,113 @@ static void test_getitemspacing(void)
     /* LVS_ICON */
     hwnd = create_listview_control(LVS_ICON);
     ret = SendMessage(hwnd, LVM_GETITEMSPACING, FALSE, 0);
-todo_wine {
     expect(cx, LOWORD(ret));
     expect(cy, HIWORD(ret));
-}
+
     /* now try with icons */
-    himl = ImageList_Create(40, 40, 0, 4, 4);
-    ok(himl != NULL, "failed to create imagelist\n");
-    hbmp = CreateBitmap(40, 40, 1, 1, NULL);
-    ok(hbmp != NULL, "failed to create bitmap\n");
-    ret = ImageList_Add(himl, hbmp, 0);
-    expect(0, ret);
-    ret = SendMessage(hwnd, LVM_SETIMAGELIST, 0, (LPARAM)himl);
+    himl40 = ImageList_Create(40, 40, 0, 4, 4);
+    ok(himl40 != NULL, "failed to create imagelist\n");
+    himl80 = ImageList_Create(80, 80, 0, 4, 4);
+    ok(himl80 != NULL, "failed to create imagelist\n");
+    ret = SendMessage(hwnd, LVM_SETIMAGELIST, LVSIL_NORMAL, (LPARAM)himl40);
     expect(0, ret);
 
-    itema.mask = LVIF_IMAGE;
-    itema.iImage = 0;
-    itema.iItem = 0;
-    itema.iSubItem = 0;
-    ret = SendMessage(hwnd, LVM_INSERTITEM, 0, (LPARAM)&itema);
-    expect(0, ret);
     ret = SendMessage(hwnd, LVM_GETITEMSPACING, FALSE, 0);
-todo_wine {
     /* spacing + icon size returned */
     expect(cx + 40, LOWORD(ret));
     expect(cy + 40, HIWORD(ret));
-}
+    /* try changing icon size */
+    SendMessage(hwnd, LVM_SETIMAGELIST, LVSIL_NORMAL, (LPARAM)himl80);
+
+    ret = SendMessage(hwnd, LVM_GETITEMSPACING, FALSE, 0);
+    /* spacing + icon size returned */
+    expect(cx + 80, LOWORD(ret));
+    expect(cy + 80, HIWORD(ret));
+
+    /* set own icon spacing */
+    ret = SendMessage(hwnd, LVM_SETICONSPACING, 0, MAKELPARAM(100, 100));
+    expect(cx + 80, LOWORD(ret));
+    expect(cy + 80, HIWORD(ret));
+
+    ret = SendMessage(hwnd, LVM_GETITEMSPACING, FALSE, 0);
+    /* set size returned */
+    expect(100, LOWORD(ret));
+    expect(100, HIWORD(ret));
+
+    /* now change image list - icon spacing should be unaffected */
+    SendMessage(hwnd, LVM_SETIMAGELIST, LVSIL_NORMAL, (LPARAM)himl40);
+
+    ret = SendMessage(hwnd, LVM_GETITEMSPACING, FALSE, 0);
+    /* set size returned */
+    expect(100, LOWORD(ret));
+    expect(100, HIWORD(ret));
+
+    /* spacing = 0 - keep previous value */
+    ret = SendMessage(hwnd, LVM_SETICONSPACING, 0, MAKELPARAM(0, -1));
+    expect(100, LOWORD(ret));
+    expect(100, HIWORD(ret));
+
+    ret = SendMessage(hwnd, LVM_GETITEMSPACING, FALSE, 0);
+    expect(100, LOWORD(ret));
+
+    expect(0xFFFF, HIWORD(ret));
+
+    if (sizeof(void*) == 8)
+    {
+        /* NOTE: -1 is not treated the same as (DWORD)-1 by 64bit listview */
+        ret = SendMessage(hwnd, LVM_SETICONSPACING, 0, (DWORD)-1);
+        expect(100, LOWORD(ret));
+        expect(0xFFFF, HIWORD(ret));
+
+        ret = SendMessage(hwnd, LVM_SETICONSPACING, 0, -1);
+        expect(0xFFFF, LOWORD(ret));
+        expect(0xFFFF, HIWORD(ret));
+    }
+    else
+    {
+        ret = SendMessage(hwnd, LVM_SETICONSPACING, 0, -1);
+        expect(100, LOWORD(ret));
+        expect(0xFFFF, HIWORD(ret));
+    }
+    ret = SendMessage(hwnd, LVM_GETITEMSPACING, FALSE, 0);
+    /* spacing + icon size returned */
+    expect(cx + 40, LOWORD(ret));
+    expect(cy + 40, HIWORD(ret));
+
+    SendMessage(hwnd, LVM_SETIMAGELIST, LVSIL_NORMAL, 0);
+    ImageList_Destroy(himl80);
     DestroyWindow(hwnd);
     /* LVS_SMALLICON */
     hwnd = create_listview_control(LVS_SMALLICON);
     ret = SendMessage(hwnd, LVM_GETITEMSPACING, FALSE, 0);
-todo_wine {
     expect(cx, LOWORD(ret));
     expect(cy, HIWORD(ret));
-}
+
+    /* spacing does not depend on selected view type */
+    ret = SendMessage(hwnd, LVM_SETIMAGELIST, LVSIL_NORMAL, (LPARAM)himl40);
+    expect(0, ret);
+
+    ret = SendMessage(hwnd, LVM_GETITEMSPACING, FALSE, 0);
+    /* spacing + icon size returned */
+    expect(cx + 40, LOWORD(ret));
+    expect(cy + 40, HIWORD(ret));
+
+    SendMessage(hwnd, LVM_SETIMAGELIST, LVSIL_NORMAL, 0);
+    ImageList_Destroy(himl40);
     DestroyWindow(hwnd);
     /* LVS_REPORT */
     hwnd = create_listview_control(LVS_REPORT);
     ret = SendMessage(hwnd, LVM_GETITEMSPACING, FALSE, 0);
-todo_wine {
     expect(cx, LOWORD(ret));
     expect(cy, HIWORD(ret));
-}
+
     DestroyWindow(hwnd);
     /* LVS_LIST */
     hwnd = create_listview_control(LVS_LIST);
     ret = SendMessage(hwnd, LVM_GETITEMSPACING, FALSE, 0);
-todo_wine {
     expect(cx, LOWORD(ret));
     expect(cy, HIWORD(ret));
-}
+
     DestroyWindow(hwnd);
 }
 
@@ -4910,6 +5135,146 @@ static void test_header_notification(void)
     DestroyWindow(list);
 }
 
+static void test_header_notification2(void)
+{
+    static char textA[] = "newtext";
+    HWND list, header;
+    HDITEMW itemW;
+    NMHEADERW nmhdr;
+    LVCOLUMNA col;
+    DWORD ret;
+    WCHAR buffer[100];
+    struct message parent_header_notify_seq[] = {
+        { WM_NOTIFY, sent|id, 0, 0, 0 },
+        { 0 }
+    };
+
+    list = create_listview_control(LVS_REPORT);
+    ok(list != NULL, "failed to create listview window\n");
+
+    memset(&col, 0, sizeof(col));
+    col.mask = LVCF_WIDTH | LVCF_TEXT;
+    col.cx = 100;
+    col.pszText = textA;
+    ret = SendMessage(list, LVM_INSERTCOLUMNA, 0, (LPARAM)&col);
+    expect(0, ret);
+
+    header = ListView_GetHeader(list);
+    ok(header != 0, "No header\n");
+    memset(&itemW, 0, sizeof(itemW));
+    itemW.mask = HDI_WIDTH | HDI_ORDER | HDI_TEXT;
+    itemW.pszText = buffer;
+    itemW.cchTextMax = sizeof(buffer);
+    ret = SendMessageW(header, HDM_GETITEMW, 0, (LPARAM)&itemW);
+    expect(1, ret);
+
+    nmhdr.hdr.hwndFrom = header;
+    nmhdr.hdr.idFrom = GetWindowLongPtr(header, GWLP_ID);
+    nmhdr.iItem = 0;
+    nmhdr.iButton = 0;
+    nmhdr.pitem = &itemW;
+
+    flush_sequences(sequences, NUM_MSG_SEQUENCES);
+    nmhdr.hdr.code = HDN_ITEMCHANGINGW;
+    ret = SendMessageW(list, WM_NOTIFY, 0, (LPARAM)&nmhdr);
+    parent_header_notify_seq[0].id = HDN_ITEMCHANGINGA;
+    ok_sequence(sequences, PARENT_SEQ_INDEX, parent_header_notify_seq,
+                "header notify, parent", TRUE);
+    todo_wine
+    ok(nmhdr.hdr.code == HDN_ITEMCHANGINGA, "Expected ANSI notification code\n");
+    flush_sequences(sequences, NUM_MSG_SEQUENCES);
+    nmhdr.hdr.code = HDN_ITEMCHANGEDW;
+    ret = SendMessageW(list, WM_NOTIFY, 0, (LPARAM)&nmhdr);
+    parent_header_notify_seq[0].id = HDN_ITEMCHANGEDA;
+    ok_sequence(sequences, PARENT_SEQ_INDEX, parent_header_notify_seq,
+                "header notify, parent", TRUE);
+    todo_wine
+    ok(nmhdr.hdr.code == HDN_ITEMCHANGEDA, "Expected ANSI notification code\n");
+    /* HDN_ITEMCLICK sets focus to list, which generates messages we don't want to check */
+    SetFocus(list);
+    flush_sequences(sequences, NUM_MSG_SEQUENCES);
+    nmhdr.hdr.code = HDN_ITEMCLICKW;
+    ret = SendMessageW(list, WM_NOTIFY, 0, (LPARAM)&nmhdr);
+    ok_sequence(sequences, PARENT_SEQ_INDEX, parent_header_click_seq,
+                "header notify, parent", FALSE);
+    ok(nmhdr.hdr.code == HDN_ITEMCLICKA, "Expected ANSI notification code\n");
+    flush_sequences(sequences, NUM_MSG_SEQUENCES);
+    nmhdr.hdr.code = HDN_ITEMDBLCLICKW;
+    ret = SendMessageW(list, WM_NOTIFY, 0, (LPARAM)&nmhdr);
+    ok_sequence(sequences, PARENT_SEQ_INDEX, empty_seq,
+                "header notify, parent", FALSE);
+    ok(nmhdr.hdr.code == HDN_ITEMDBLCLICKW, "Expected Unicode notification code\n");
+    flush_sequences(sequences, NUM_MSG_SEQUENCES);
+    nmhdr.hdr.code = HDN_DIVIDERDBLCLICKW;
+    ret = SendMessageW(list, WM_NOTIFY, 0, (LPARAM)&nmhdr);
+    ok_sequence(sequences, PARENT_SEQ_INDEX, parent_header_divider_dclick_seq,
+                "header notify, parent", TRUE);
+    ok(nmhdr.hdr.code == HDN_DIVIDERDBLCLICKA, "Expected ANSI notification code\n");
+    flush_sequences(sequences, NUM_MSG_SEQUENCES);
+    nmhdr.hdr.code = HDN_BEGINTRACKW;
+    ret = SendMessageW(list, WM_NOTIFY, 0, (LPARAM)&nmhdr);
+    ok_sequence(sequences, PARENT_SEQ_INDEX, empty_seq,
+                "header notify, parent", FALSE);
+    ok(nmhdr.hdr.code == HDN_BEGINTRACKW, "Expected Unicode notification code\n");
+    flush_sequences(sequences, NUM_MSG_SEQUENCES);
+    nmhdr.hdr.code = HDN_ENDTRACKW;
+    ret = SendMessageW(list, WM_NOTIFY, 0, (LPARAM)&nmhdr);
+    parent_header_notify_seq[0].id = HDN_ENDTRACKA;
+    ok_sequence(sequences, PARENT_SEQ_INDEX, parent_header_notify_seq,
+                "header notify, parent", FALSE);
+    ok(nmhdr.hdr.code == HDN_ENDTRACKA, "Expected ANSI notification code\n");
+    flush_sequences(sequences, NUM_MSG_SEQUENCES);
+    nmhdr.hdr.code = HDN_TRACKW;
+    ret = SendMessageW(list, WM_NOTIFY, 0, (LPARAM)&nmhdr);
+    parent_header_notify_seq[0].id = HDN_TRACKA;
+    ok_sequence(sequences, PARENT_SEQ_INDEX, parent_header_notify_seq,
+                "header notify, parent", FALSE);
+    ok(nmhdr.hdr.code == HDN_TRACKA, "Expected ANSI notification code\n");
+    flush_sequences(sequences, NUM_MSG_SEQUENCES);
+    nmhdr.hdr.code = HDN_BEGINDRAG;
+    ret = SendMessageW(list, WM_NOTIFY, 0, (LPARAM)&nmhdr);
+    ok_sequence(sequences, PARENT_SEQ_INDEX, empty_seq,
+                "header notify, parent", FALSE);
+    flush_sequences(sequences, NUM_MSG_SEQUENCES);
+    nmhdr.hdr.code = HDN_ENDDRAG;
+    ret = SendMessageW(list, WM_NOTIFY, 0, (LPARAM)&nmhdr);
+    parent_header_notify_seq[0].id = HDN_ENDDRAG;
+    ok_sequence(sequences, PARENT_SEQ_INDEX, parent_header_notify_seq,
+                "header notify, parent", FALSE);
+    flush_sequences(sequences, NUM_MSG_SEQUENCES);
+    nmhdr.hdr.code = HDN_FILTERCHANGE;
+    ret = SendMessageW(list, WM_NOTIFY, 0, (LPARAM)&nmhdr);
+    parent_header_notify_seq[0].id = HDN_FILTERCHANGE;
+    parent_header_notify_seq[0].flags |= optional; /* NT4 does not send this message */
+    ok_sequence(sequences, PARENT_SEQ_INDEX, parent_header_notify_seq,
+                "header notify, parent", FALSE);
+    parent_header_notify_seq[0].flags &= ~optional;
+    flush_sequences(sequences, NUM_MSG_SEQUENCES);
+    nmhdr.hdr.code = HDN_BEGINFILTEREDIT;
+    ret = SendMessageW(list, WM_NOTIFY, 0, (LPARAM)&nmhdr);
+    ok_sequence(sequences, PARENT_SEQ_INDEX, empty_seq,
+                "header notify, parent", FALSE);
+    flush_sequences(sequences, NUM_MSG_SEQUENCES);
+    nmhdr.hdr.code = HDN_ENDFILTEREDIT;
+    ret = SendMessageW(list, WM_NOTIFY, 0, (LPARAM)&nmhdr);
+    ok_sequence(sequences, PARENT_SEQ_INDEX, empty_seq,
+                "header notify, parent", FALSE);
+    flush_sequences(sequences, NUM_MSG_SEQUENCES);
+    nmhdr.hdr.code = HDN_ITEMSTATEICONCLICK;
+    ret = SendMessageW(list, WM_NOTIFY, 0, (LPARAM)&nmhdr);
+    ok_sequence(sequences, PARENT_SEQ_INDEX, empty_seq,
+                "header notify, parent", FALSE);
+    flush_sequences(sequences, NUM_MSG_SEQUENCES);
+    nmhdr.hdr.code = HDN_ITEMKEYDOWN;
+    ret = SendMessageW(list, WM_NOTIFY, 0, (LPARAM)&nmhdr);
+    ok_sequence(sequences, PARENT_SEQ_INDEX, empty_seq,
+                "header notify, parent", FALSE);
+
+    flush_sequences(sequences, NUM_MSG_SEQUENCES);
+
+    DestroyWindow(list);
+}
+
 static void test_createdragimage(void)
 {
     HIMAGELIST himl;
@@ -4999,6 +5364,198 @@ static void test_LVM_SETITEMTEXT(void)
     DestroyWindow(hwnd);
 }
 
+static void test_imagelists(void)
+{
+    HWND hwnd, header;
+    HIMAGELIST himl1, himl2, himl3;
+    LRESULT ret;
+
+    himl1 = ImageList_Create(40, 40, 0, 4, 4);
+    himl2 = ImageList_Create(40, 40, 0, 4, 4);
+    himl3 = ImageList_Create(40, 40, 0, 4, 4);
+    ok(himl1 != NULL, "Failed to create imagelist\n");
+    ok(himl2 != NULL, "Failed to create imagelist\n");
+    ok(himl3 != NULL, "Failed to create imagelist\n");
+
+    hwnd = create_listview_control(LVS_REPORT | LVS_SHAREIMAGELISTS);
+    header = subclass_header(hwnd);
+
+    ok(header != NULL, "Expected header\n");
+    ret = SendMessage(header, HDM_GETIMAGELIST, 0, 0);
+    ok(ret == 0, "Expected no imagelist, got %p\n", (HIMAGELIST)ret);
+
+    flush_sequences(sequences, NUM_MSG_SEQUENCES);
+
+    ret = SendMessageW(hwnd, LVM_SETIMAGELIST, LVSIL_NORMAL, (LPARAM)himl1);
+    ok(ret == 0, "Expected no imagelist, got %p\n", (HIMAGELIST)ret);
+    ok_sequence(sequences, LISTVIEW_SEQ_INDEX, listview_set_imagelist,
+                "set normal image list", FALSE);
+
+    flush_sequences(sequences, NUM_MSG_SEQUENCES);
+
+    ret = SendMessageW(hwnd, LVM_SETIMAGELIST, LVSIL_STATE, (LPARAM)himl2);
+    ok(ret == 0, "Expected no imagelist, got %p\n", (HIMAGELIST)ret);
+    ok_sequence(sequences, LISTVIEW_SEQ_INDEX, listview_set_imagelist,
+                "set state image list", TRUE);
+
+    ret = SendMessage(header, HDM_GETIMAGELIST, 0, 0);
+    ok(ret == 0, "Expected no imagelist, got %p\n", (HIMAGELIST)ret);
+
+    flush_sequences(sequences, NUM_MSG_SEQUENCES);
+
+    ret = SendMessageW(hwnd, LVM_SETIMAGELIST, LVSIL_SMALL, (LPARAM)himl3);
+    ok(ret == 0, "Expected no imagelist, got %p\n", (HIMAGELIST)ret);
+    ok_sequence(sequences, LISTVIEW_SEQ_INDEX, listview_header_set_imagelist,
+                "set small image list", FALSE);
+
+    ret = SendMessage(header, HDM_GETIMAGELIST, 0, 0);
+    ok((HIMAGELIST)ret == himl3, "Expected imagelist %p, got %p\n", himl3, (HIMAGELIST)ret);
+    DestroyWindow(hwnd);
+
+    hwnd = create_listview_control(WS_VISIBLE | LVS_ICON);
+
+    flush_sequences(sequences, NUM_MSG_SEQUENCES);
+
+    ret = SendMessageW(hwnd, LVM_SETIMAGELIST, LVSIL_NORMAL, (LPARAM)himl1);
+    ok(ret == 0, "Expected no imagelist, got %p\n", (HIMAGELIST)ret);
+    ok_sequence(sequences, LISTVIEW_SEQ_INDEX, listview_set_imagelist,
+                "set normal image list", FALSE);
+
+    flush_sequences(sequences, NUM_MSG_SEQUENCES);
+
+    ret = SendMessageW(hwnd, LVM_SETIMAGELIST, LVSIL_STATE, (LPARAM)himl2);
+    ok(ret == 0, "Expected no imagelist, got %p\n", (HIMAGELIST)ret);
+    ok_sequence(sequences, LISTVIEW_SEQ_INDEX, listview_set_imagelist,
+                "set state image list", FALSE);
+
+    flush_sequences(sequences, NUM_MSG_SEQUENCES);
+
+    ret = SendMessageW(hwnd, LVM_SETIMAGELIST, LVSIL_SMALL, (LPARAM)himl3);
+    ok(ret == 0, "Expected no imagelist, got %p\n", (HIMAGELIST)ret);
+    ok_sequence(sequences, LISTVIEW_SEQ_INDEX, listview_set_imagelist,
+                "set small image list", FALSE);
+
+    header = ListView_GetHeader(hwnd);
+    ok(header == NULL, "Expected no header, got %p\n", header);
+
+    SetWindowLongPtr(hwnd, GWL_STYLE, GetWindowLongPtr(hwnd, GWL_STYLE) | LVS_REPORT);
+
+    header = (HWND)SendMessage(hwnd, LVM_GETHEADER, 0, 0);
+    ok(header != NULL, "Expected header, got NULL\n");
+
+    ret = SendMessage(header, HDM_GETIMAGELIST, 0, 0);
+    ok((HIMAGELIST)ret == himl3, "Expected imagelist %p, got %p\n", himl3, (HIMAGELIST)ret);
+
+    DestroyWindow(hwnd);
+}
+
+static void test_deleteitem(void)
+{
+    LVITEMA item;
+    UINT state;
+    HWND hwnd;
+    BOOL ret;
+
+    hwnd = create_listview_control(LVS_REPORT);
+
+    insert_item(hwnd, 0);
+    insert_item(hwnd, 0);
+    insert_item(hwnd, 0);
+    insert_item(hwnd, 0);
+    insert_item(hwnd, 0);
+
+    g_focus_test_LVN_DELETEITEM = TRUE;
+
+    /* delete focused item (not the last index) */
+    item.stateMask = LVIS_FOCUSED;
+    item.state = LVIS_FOCUSED;
+    ret = SendMessageA(hwnd, LVM_SETITEMSTATE, 2, (LPARAM)&item);
+    ok(ret == TRUE, "got %d\n", ret);
+    ret = SendMessageA(hwnd, LVM_DELETEITEM, 2, 0);
+    ok(ret == TRUE, "got %d\n", ret);
+    /* next item gets focus */
+    state = SendMessageA(hwnd, LVM_GETITEMSTATE, 2, LVIS_FOCUSED);
+    ok(state == LVIS_FOCUSED, "got %x\n", state);
+
+    /* focus last item and delete it */
+    item.stateMask = LVIS_FOCUSED;
+    item.state = LVIS_FOCUSED;
+    ret = SendMessageA(hwnd, LVM_SETITEMSTATE, 3, (LPARAM)&item);
+    ok(ret == TRUE, "got %d\n", ret);
+    ret = SendMessageA(hwnd, LVM_DELETEITEM, 3, 0);
+    ok(ret == TRUE, "got %d\n", ret);
+    /* new last item gets focus */
+    state = SendMessageA(hwnd, LVM_GETITEMSTATE, 2, LVIS_FOCUSED);
+    ok(state == LVIS_FOCUSED, "got %x\n", state);
+
+    /* focus first item and delete it */
+    item.stateMask = LVIS_FOCUSED;
+    item.state = LVIS_FOCUSED;
+    ret = SendMessageA(hwnd, LVM_SETITEMSTATE, 0, (LPARAM)&item);
+    ok(ret == TRUE, "got %d\n", ret);
+    ret = SendMessageA(hwnd, LVM_DELETEITEM, 0, 0);
+    ok(ret == TRUE, "got %d\n", ret);
+    /* new first item gets focus */
+    state = SendMessageA(hwnd, LVM_GETITEMSTATE, 0, LVIS_FOCUSED);
+    ok(state == LVIS_FOCUSED, "got %x\n", state);
+
+    g_focus_test_LVN_DELETEITEM = FALSE;
+
+    DestroyWindow(hwnd);
+}
+
+static void test_insertitem(void)
+{
+    LVITEMA item;
+    UINT state;
+    HWND hwnd;
+    INT ret;
+
+    hwnd = create_listview_control(LVS_REPORT);
+
+    /* insert item 0 focused */
+    item.mask = LVIF_STATE;
+    item.state = LVIS_FOCUSED;
+    item.stateMask = LVIS_FOCUSED;
+    item.iItem = 0;
+    item.iSubItem = 0;
+    ret = SendMessageA(hwnd, LVM_INSERTITEMA, 0, (LPARAM)&item);
+    ok(ret == 0, "got %d\n", ret);
+
+    state = SendMessageA(hwnd, LVM_GETITEMSTATE, 0, LVIS_FOCUSED);
+    ok(state == LVIS_FOCUSED, "got %x\n", state);
+
+    flush_sequences(sequences, NUM_MSG_SEQUENCES);
+
+    /* insert item 1, focus shift */
+    item.mask = LVIF_STATE;
+    item.state = LVIS_FOCUSED;
+    item.stateMask = LVIS_FOCUSED;
+    item.iItem = 1;
+    item.iSubItem = 0;
+    ret = SendMessageA(hwnd, LVM_INSERTITEMA, 0, (LPARAM)&item);
+    ok(ret == 1, "got %d\n", ret);
+
+    ok_sequence(sequences, PARENT_SEQ_INDEX, parent_insert_focused_seq, "insert focused", TRUE);
+
+    state = SendMessageA(hwnd, LVM_GETITEMSTATE, 1, LVIS_FOCUSED);
+    ok(state == LVIS_FOCUSED, "got %x\n", state);
+
+    /* insert item 2, no focus shift */
+    item.mask = LVIF_STATE;
+    item.state = 0;
+    item.stateMask = LVIS_FOCUSED;
+    item.iItem = 2;
+    item.iSubItem = 0;
+    ret = SendMessageA(hwnd, LVM_INSERTITEMA, 0, (LPARAM)&item);
+    ok(ret == 2, "got %d\n", ret);
+
+    state = SendMessageA(hwnd, LVM_GETITEMSTATE, 1, LVIS_FOCUSED);
+    ok(state == LVIS_FOCUSED, "got %x\n", state);
+
+    DestroyWindow(hwnd);
+}
+
 START_TEST(listview)
 {
     HMODULE hComctl32;
@@ -5028,6 +5585,7 @@ START_TEST(listview)
     g_is_below_5 = is_below_comctl_5();
 
     test_header_notification();
+    test_header_notification2();
     test_images();
     test_checkboxes();
     test_items();
@@ -5064,6 +5622,9 @@ START_TEST(listview)
     test_createdragimage();
     test_dispinfo();
     test_LVM_SETITEMTEXT();
+    test_imagelists();
+    test_deleteitem();
+    test_insertitem();
 
     if (!load_v6_module(&ctx_cookie, &hCtx))
     {
@@ -5093,6 +5654,9 @@ START_TEST(listview)
     test_scrollnotify();
     test_LVS_EX_TRANSPARENTBKGND();
     test_LVS_EX_HEADERINALLVIEWS();
+    test_deleteitem();
+    test_multiselect();
+    test_insertitem();
 
     unload_v6_module(ctx_cookie, hCtx);
 

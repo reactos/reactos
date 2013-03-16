@@ -18,10 +18,13 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <windows.h>
+#include <wine/test.h>
+
+//#include <windows.h>
+#include <wingdi.h>
+#include <winuser.h>
 #include <commctrl.h>
 
-#include "wine/test.h"
 #include "msg.h"
 
 #define NUM_MSG_SEQUENCES   1

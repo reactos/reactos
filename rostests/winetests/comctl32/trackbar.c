@@ -17,11 +17,14 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <windows.h>
+#include <wine/test.h>
+
+//#include <windows.h>
+#include <wingdi.h>
+#include <winuser.h>
 #include <commctrl.h>
 #include <stdio.h>
 
-#include "wine/test.h"
 #include "msg.h"
 
 #define expect(expected, got) ok(got == expected, "Expected %d, got %d\n", expected, got)
@@ -442,6 +445,7 @@ static LRESULT WINAPI trackbar_subclass_proc(HWND hwnd, UINT message, WPARAM wPa
     if (defwndproc_counter) msg.flags |= defwinproc;
     msg.wParam = wParam;
     msg.lParam = lParam;
+    msg.id = 0;
     add_message(sequences, TRACKBAR_SEQ_INDEX, &msg);
 
     defwndproc_counter++;

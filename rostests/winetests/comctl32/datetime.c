@@ -17,10 +17,15 @@
 * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
 */
 
-#include <windows.h>
+//#include <windows.h>
+#include <stdarg.h>
+#include <windef.h>
+#include <winbase.h>
+#include <wingdi.h>
+#include <winuser.h>
+#include <winnls.h>
 #include <commctrl.h>
-
-#include "wine/test.h"
+//#include "wine/test.h"
 #include "msg.h"
 
 #define expect(EXPECTED, GOT) ok((GOT)==(EXPECTED), "Expected %d, got %ld\n", (EXPECTED), (GOT))
@@ -147,6 +152,7 @@ static LRESULT WINAPI datetime_subclass_proc(HWND hwnd, UINT message, WPARAM wPa
     if (defwndproc_counter) msg.flags |= defwinproc;
     msg.wParam = wParam;
     msg.lParam = lParam;
+    msg.id = 0;
     add_message(sequences, DATETIME_SEQ_INDEX, &msg);
 
     defwndproc_counter++;

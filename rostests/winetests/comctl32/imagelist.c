@@ -21,24 +21,28 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#define WIN32_NO_STATUS
+#define _INC_WINDOWS
+#define COM_NO_WINDOWS_H
+
 #define COBJMACROS
 #define CONST_VTABLE
 
-#include <stdarg.h>
+//#include <stdarg.h>
 #include <stdio.h>
 #include <assert.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "objbase.h"
-#include "commctrl.h" /* must be included after objbase.h to get ImageList_Write */
-#include "initguid.h"
-#include "commoncontrols.h"
-#include "shellapi.h"
+#include <windef.h>
+#include <winbase.h>
+#include <wingdi.h>
+//#include "winuser.h"
+#include <objbase.h>
+#include <commctrl.h> /* must be included after objbase.h to get ImageList_Write */
+#include <initguid.h>
+#include <commoncontrols.h>
+#include <shellapi.h>
 
-#include "wine/test.h"
+#include <wine/test.h>
 #include "v6util.h"
 
 #undef VISIBLE
@@ -492,6 +496,70 @@ static void test_DrawIndirect(void)
     DestroyWindow(hwndfortest);
 }
 
+static int get_color_format(HBITMAP bmp)
+{
+    BITMAPINFO bmi;
+    HDC hdc = CreateCompatibleDC(0);
+    HBITMAP hOldBmp = SelectObject(hdc, bmp);
+    int ret;
+
+    memset(&bmi, 0, sizeof(bmi));
+    bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    ret = GetDIBits(hdc, bmp, 0, 0, 0, &bmi, DIB_RGB_COLORS);
+    ok(ret, "GetDIBits failed\n");
+
+    SelectObject(hdc, hOldBmp);
+    DeleteDC(hdc);
+    return bmi.bmiHeader.biBitCount;
+}
+
+static void test_merge_colors(void)
+{
+    HIMAGELIST himl[8], hmerge;
+    int sizes[] = { ILC_COLOR, ILC_COLOR | ILC_MASK, ILC_COLOR4, ILC_COLOR8, ILC_COLOR16, ILC_COLOR24, ILC_COLOR32, ILC_COLORDDB };
+    HICON hicon1;
+    IMAGEINFO info;
+    int bpp, i, j;
+
+    hicon1 = CreateIcon(hinst, 32, 32, 1, 1, icon_bits, icon_bits);
+    ok(hicon1 != NULL, "failed to create hicon1\n");
+
+    for (i = 0; i < 8; i++)
+    {
+        himl[i] = ImageList_Create(32, 32, sizes[i], 0, 3);
+        ok(himl[i] != NULL, "failed to create himl[%d]\n", i);
+        ok(0 == ImageList_AddIcon(himl[i], hicon1), "add icon1 to himl[%d] failed\n", i);
+        if (i == 0 || i == 1 || i == 7)
+        {
+            ImageList_GetImageInfo(himl[i], 0, &info);
+            sizes[i] = get_color_format(info.hbmImage);
+        }
+    }
+    DestroyIcon(hicon1);
+    for (i = 0; i < 8; i++)
+        for (j = 0; j < 8; j++)
+        {
+            hmerge = ImageList_Merge(himl[i], 0, himl[j], 0, 0, 0);
+            ok(hmerge != NULL, "merge himl[%d], himl[%d] failed\n", i, j);
+
+            ImageList_GetImageInfo(hmerge, 0, &info);
+            bpp = get_color_format(info.hbmImage);
+            /* ILC_COLOR[X] is defined as [X] */
+            if (i == 4 && j == 7)
+                ok(bpp == 16, /* merging ILC_COLOR16 with ILC_COLORDDB seems to be a special case */
+                    "wrong biBitCount %d when merging lists %d (%d) and %d (%d)\n", bpp, i, sizes[i], j, sizes[j]);
+            else
+                ok(bpp == (i > j ? sizes[i] : sizes[j]),
+                    "wrong biBitCount %d when merging lists %d (%d) and %d (%d)\n", bpp, i, sizes[i], j, sizes[j]);
+            ok(info.hbmMask != 0, "Imagelist merged from %d and %d had no mask\n", i, j);
+
+            if (hmerge) ImageList_Destroy(hmerge);
+        }
+
+    for (i = 0; i < 8; i++)
+        ImageList_Destroy(himl[i]);
+}
+
 static void test_merge(void)
 {
     HIMAGELIST himl1, himl2, hmerge;
@@ -782,22 +850,21 @@ static void check_ilhead_data(const char *ilh_data, INT cx, INT cy, INT cur, INT
 static HBITMAP create_bitmap(INT cx, INT cy, COLORREF color, const char *comment)
 {
     HDC hdc;
-    char bmibuf[sizeof(BITMAPINFO) + 256 * sizeof(RGBQUAD)];
-    BITMAPINFO *bmi = (BITMAPINFO *)bmibuf;
+    BITMAPINFO bmi;
     HBITMAP hbmp, hbmp_old;
     HBRUSH hbrush;
     RECT rc = { 0, 0, cx, cy };
 
     hdc = CreateCompatibleDC(0);
 
-    memset(bmi, 0, sizeof(*bmi));
-    bmi->bmiHeader.biSize = sizeof(bmi->bmiHeader);
-    bmi->bmiHeader.biHeight = cx;
-    bmi->bmiHeader.biWidth = cy;
-    bmi->bmiHeader.biBitCount = 24;
-    bmi->bmiHeader.biPlanes = 1;
-    bmi->bmiHeader.biCompression = BI_RGB;
-    hbmp = CreateDIBSection(hdc, bmi, DIB_RGB_COLORS, NULL, NULL, 0);
+    memset(&bmi, 0, sizeof(bmi));
+    bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
+    bmi.bmiHeader.biHeight = cx;
+    bmi.bmiHeader.biWidth = cy;
+    bmi.bmiHeader.biBitCount = 24;
+    bmi.bmiHeader.biPlanes = 1;
+    bmi.bmiHeader.biCompression = BI_RGB;
+    hbmp = CreateDIBSection(hdc, &bmi, DIB_RGB_COLORS, NULL, NULL, 0);
 
     hbmp_old = SelectObject(hdc, hbmp);
 
@@ -1161,6 +1228,7 @@ static void test_shell_imagelist(void)
     if (!pSHGetImageList)
     {
         win_skip("SHGetImageList not available, skipping test\n");
+        FreeLibrary(hShell32);
         return;
     }
 
@@ -1169,8 +1237,10 @@ static void test_shell_imagelist(void)
 
     ok(SUCCEEDED(hr), "SHGetImageList failed, hr=%x\n", hr);
 
-    if (hr != S_OK)
+    if (hr != S_OK) {
+        FreeLibrary(hShell32);
         return;
+    }
 
     IImageList_GetImageCount(iml, &out);
     ok(out > 0, "IImageList_GetImageCount returned out <= 0\n");
@@ -2015,6 +2085,7 @@ START_TEST(imagelist)
     test_imagecount();
     test_DrawIndirect();
     test_merge();
+    test_merge_colors();
     test_imagelist_storage();
     test_iconsize();
 

@@ -18,12 +18,15 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <wine/test.h>
+
 #include <assert.h>
-#include <windows.h>
+//#include <windows.h>
+#include <wingdi.h>
+#include <winuser.h>
 #include <commctrl.h>
 #include <stdio.h>
 
-#include "wine/test.h"
 #include "msg.h"
 
 #define DEFAULT_MIN_TAB_WIDTH 54
@@ -352,6 +355,7 @@ static LRESULT WINAPI parentWindowProcess(HWND hwnd, UINT message, WPARAM wParam
         if (defwndproc_counter) msg.flags |= defwinproc;
         msg.wParam = wParam;
         msg.lParam = lParam;
+        msg.id = 0;
         add_message(sequences, PARENT_SEQ_INDEX, &msg);
     }
 
@@ -419,6 +423,7 @@ static LRESULT WINAPI tabSubclassProcess(HWND hwnd, UINT message, WPARAM wParam,
         if (defwndproc_counter) msg.flags |= defwinproc;
         msg.wParam = wParam;
         msg.lParam = lParam;
+        msg.id = 0;
         add_message(sequences, TAB_SEQ_INDEX, &msg);
     }
 
