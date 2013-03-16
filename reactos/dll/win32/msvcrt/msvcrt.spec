@@ -832,7 +832,7 @@
 # stub _snprintf_c
 # stub _snprintf_c_l
 # stub _snprintf_l
-# stub _snprintf_s
+@ varargs _snprintf_s(ptr long long ptr)
 # stub _snprintf_s_l
 # stub _snscanf
 # stub _snscanf_l
@@ -840,7 +840,7 @@
 # stub _snscanf_s_l
 @ varargs _snwprintf(ptr long wstr)
 # stub _snwprintf_l
-# stub _snwprintf_s
+@ varargs _snwprintf_s(ptr long long ptr)
 # stub _snwprintf_s_l
 # stub _snwscanf
 # stub _snwscanf_l
@@ -985,11 +985,11 @@
 @ cdecl _vsnprintf_c(ptr long str ptr) _vsnprintf
 # @ cdecl _vsnprintf_c_l(ptr long str ptr ptr) _vsnprintf_l
 # @ cdecl _vsnprintf_l(ptr long str ptr ptr)
-# @ cdecl _vsnprintf_s(ptr long long str ptr)
+@ cdecl _vsnprintf_s(ptr long long str ptr)
 # @ cdecl _vsnprintf_s_l(ptr long long str ptr ptr)
 @ cdecl _vsnwprintf(ptr long wstr ptr)
 # @ cdecl _vsnwprintf_l(ptr long wstr ptr ptr)
-# @ cdecl _vsnwprintf_s(ptr long long wstr ptr)
+@ cdecl _vsnwprintf_s(ptr long long wstr ptr)
 # @ cdecl _vsnwprintf_s_l(ptr long long wstr ptr ptr)
 # stub _vsprintf_l
 @ cdecl _vsprintf_p(ptr long str ptr)
@@ -1313,7 +1313,7 @@
 @ cdecl -arch=x86_64 sinf(long)
 @ cdecl sinh(double)
 @ varargs sprintf(ptr str)
-# @ varargs sprintf_s(ptr long str)
+@ varargs sprintf_s(ptr long str)
 @ cdecl sqrt(double)
 @ cdecl -arch=x86_64 sqrtf(long)
 @ cdecl srand(long)
@@ -1348,7 +1348,7 @@
 @ cdecl strtoul(str ptr long)
 @ cdecl strxfrm(ptr str long)
 @ varargs swprintf(ptr wstr)
-# @ varargs swprintf_s(ptr long wstr)
+@ varargs swprintf_s(ptr long wstr)
 @ varargs swscanf(wstr wstr)
 # @ varargs swscanf_s(wstr wstr)
 @ cdecl system(str)
@@ -1374,9 +1374,9 @@
 @ cdecl vprintf_s(str ptr)
 # stub vsnprintf
 @ cdecl vsprintf(ptr str ptr)
-# @ cdecl vsprintf_s(ptr long str ptr)
+@ cdecl vsprintf_s(ptr long str ptr)
 @ cdecl vswprintf(ptr wstr ptr)
-# @ cdecl vswprintf_s(ptr long wstr ptr)
+@ cdecl vswprintf_s(ptr long wstr ptr)
 @ cdecl vwprintf(wstr ptr)
 @ cdecl vwprintf_s(wstr ptr)
 # stub wcrtomb
