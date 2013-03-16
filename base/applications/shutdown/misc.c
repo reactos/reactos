@@ -179,7 +179,7 @@ VOID DisplayError(DWORD dwError)
 
     /* Prints out the error message to the user */
     fprintf(stderr, resMsg);
-    fwprintf(stderr, L"Error code: %d\n", dwError);
+    fwprintf(stderr, L"Error code: %lu\n", dwError);
 
     LocalFree(lpMsgBuf);
     LocalFree(resMsg);

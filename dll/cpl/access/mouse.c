@@ -1,5 +1,4 @@
-/* $Id: mouse.c 29112 2007-09-19 21:31:49Z ekohl $
- *
+/*
  * PROJECT:         ReactOS Accessibility Control Panel
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            dll/cpl/access/mouse.c

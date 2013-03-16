@@ -1,5 +1,4 @@
-/* $Id: main.c 12852 2005-01-06 13:58:04Z mf $
- *
+/*
  * PROJECT:         ReactOS Multimedia Control Panel
  * FILE:            dll/cpl/mmsys/mmsys.c
  * PURPOSE:         ReactOS Multimedia Control Panel

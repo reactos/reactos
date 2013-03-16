@@ -1632,6 +1632,12 @@ NtUserSwitchDesktop(HDESK hdesk)
       RETURN(FALSE);
    }
 
+   if (PsGetCurrentProcessSessionId() != pdesk->rpwinstaParent->dwSessionId)
+   {
+      ERR("NtUserSwitchDesktop called for a desktop of a different session\n");
+      RETURN(FALSE);  
+   }
+
    if(pdesk == gpdeskInputDesktop)
    {
        WARN("NtUserSwitchDesktop called for active desktop\n");

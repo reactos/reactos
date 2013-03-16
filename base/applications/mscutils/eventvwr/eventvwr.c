@@ -695,7 +695,7 @@ QueryEventMessages(LPWSTR lpMachineName,
     else
         _snwprintf(szWindowTitle+i, dwMaxLength, L"%s", lpComputerName);
 
-    swprintf(szStatusText, L"%s has %d event(s)", lpLogName, dwTotalRecords);
+    swprintf(szStatusText, L"%s has %lu event(s)", lpLogName, dwTotalRecords);
 
     // Update the status bar
     SendMessageW(hwndStatus, SB_SETTEXT, (WPARAM)0, (LPARAM)szStatusText);

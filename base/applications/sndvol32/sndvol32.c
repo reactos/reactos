@@ -16,8 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-/* $Id$
- *
+/*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS Sound Volume Control
  * FILE:        subsys/system/sndvol32/sndvol32.c

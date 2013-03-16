@@ -1,6 +1,3 @@
-/*
- * $Id: halirq.h 23669 2006-08-23 16:58:43Z ion $
- */
 
 #pragma once
 

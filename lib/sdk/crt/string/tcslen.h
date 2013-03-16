@@ -1,5 +1,3 @@
-/* $Id$
- */
 
 #include <stddef.h>
 #include <tchar.h>

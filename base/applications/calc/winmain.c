@@ -229,12 +229,12 @@ static void load_config(void)
 
     /* Try to load last selected layout */
     GetProfileString(TEXT("SciCalc"), TEXT("layout"), TEXT("0"), buf, SIZEOF(buf));
-    if (_stscanf(buf, TEXT("%ld"), &calc.layout) != 1)
+    if (_stscanf(buf, TEXT("%lu"), &calc.layout) != 1)
         calc.layout = CALC_LAYOUT_STANDARD;
 
     /* Try to load last selected formatting option */
     GetProfileString(TEXT("SciCalc"), TEXT("UseSep"), TEXT("0"), buf, SIZEOF(buf));
-    if (_stscanf(buf, TEXT("%ld"), &tmp) != 1)
+    if (_stscanf(buf, TEXT("%lu"), &tmp) != 1)
         calc.usesep = FALSE;
     else
         calc.usesep = (tmp == 1) ? TRUE : FALSE;

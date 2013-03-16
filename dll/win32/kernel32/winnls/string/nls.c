@@ -1,5 +1,4 @@
-/* $Id: nls.c 52854 2011-07-24 23:42:09Z ion $
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            dll/win32/kernel32/misc/nls.c

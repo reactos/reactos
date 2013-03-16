@@ -205,16 +205,16 @@ DATETIME_SetSystemTime (DATETIME_INFO *infoPtr, DWORD flag, const SYSTEMTIME *sy
           systime->wHour, systime->wMinute, systime->wSecond);
 
     if (flag == GDT_VALID) {
-      if (systime->wYear == 0 ||
-          systime->wMonth < 1 || systime->wMonth > 12 ||
-          systime->wDay < 1 ||
-          systime->wDay > MONTHCAL_MonthLength(systime->wMonth, systime->wYear) ||
-          systime->wHour > 23 ||
-          systime->wMinute > 59 ||
-          systime->wSecond > 59 ||
-          systime->wMilliseconds > 999
-          )
-        return FALSE;
+        if (systime->wYear == 0 ||
+            systime->wMonth < 1 || systime->wMonth > 12 ||
+            systime->wDay < 1 ||
+            systime->wDay > MONTHCAL_MonthLength(systime->wMonth, systime->wYear) ||
+            systime->wHour > 23 ||
+            systime->wMinute > 59 ||
+            systime->wSecond > 59 ||
+            systime->wMilliseconds > 999
+           )
+            return FALSE;
 
         /* Windows returns true if the date is valid but outside the limits set */
         if (DATETIME_IsDateInValidRange(infoPtr, systime) == FALSE)

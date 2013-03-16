@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * PROJECT:         ReactOS ODBC Control Panel Applet
  * FILE:            dll/cpl/main/main.c
  * PURPOSE:         applet initialization

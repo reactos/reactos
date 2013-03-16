@@ -1,6 +1,3 @@
-/*
- * $Id$
- */
 
 #pragma once
 

@@ -105,9 +105,22 @@ extern "C" {
 /* Set the FPU control word as cw = (cw & ~unMask) | (unNew & unMask),
  * i.e. change the bits in unMask to have the values they have in unNew,
  * leaving other bits unchanged. */
-__MINGW_NOTHROW _CRTIMP unsigned int __cdecl _controlfp (unsigned int unNew, unsigned int unMask);
-__MINGW_NOTHROW _CRTIMP unsigned int __cdecl _control87 (unsigned int unNew, unsigned int unMask);
 
+__MINGW_NOTHROW
+_CRTIMP
+unsigned int
+__cdecl
+_controlfp(
+  _In_ unsigned int unNew,
+  _In_ unsigned int unMask);
+
+__MINGW_NOTHROW
+_CRTIMP
+unsigned int
+__cdecl
+_control87(
+  _In_ unsigned int unNew,
+  _In_ unsigned int unMask);
 
 __MINGW_NOTHROW _CRTIMP unsigned int __cdecl _clearfp (void);	/* Clear the FPU status word */
 __MINGW_NOTHROW _CRTIMP unsigned int __cdecl _statusfp (void);	/* Report the FPU status word */
@@ -136,17 +149,74 @@ __MINGW_NOTHROW _CRTIMP int * __cdecl __fpecode(void);
  * but they really belong in math.h.
  */
 
-__MINGW_NOTHROW _CRTIMP double __cdecl _chgsign	(double);
-__MINGW_NOTHROW _CRTIMP double __cdecl _copysign (double, double);
-__MINGW_NOTHROW _CRTIMP double __cdecl _logb (double);
-__MINGW_NOTHROW _CRTIMP double __cdecl _nextafter (double, double);
-__MINGW_NOTHROW _CRTIMP double __cdecl _scalb (double, long);
+_Check_return_
+__MINGW_NOTHROW
+_CRTIMP
+double
+__cdecl
+_chgsign(
+  _In_ double);
 
-__MINGW_NOTHROW _CRTIMP int __cdecl _finite (double);
-__MINGW_NOTHROW _CRTIMP int __cdecl _fpclass (double);
-__MINGW_NOTHROW _CRTIMP int __cdecl _isnan (double);
+_Check_return_
+__MINGW_NOTHROW
+_CRTIMP
+double
+__cdecl
+_copysign(
+  _In_ double,
+  _In_ double);
 
-#ifdef	__cplusplus
+_Check_return_
+__MINGW_NOTHROW
+_CRTIMP
+double
+__cdecl
+_logb(
+  _In_ double);
+
+_Check_return_
+__MINGW_NOTHROW
+_CRTIMP
+double
+__cdecl
+_nextafter(
+  _In_ double,
+  _In_ double);
+
+_Check_return_
+__MINGW_NOTHROW
+_CRTIMP
+double
+__cdecl
+_scalb(
+  _In_ double,
+  _In_ long);
+
+_Check_return_
+__MINGW_NOTHROW
+_CRTIMP
+int
+__cdecl
+_finite(
+  _In_ double);
+
+_Check_return_
+__MINGW_NOTHROW
+_CRTIMP
+int
+__cdecl
+_fpclass(
+  _In_ double);
+
+_Check_return_
+__MINGW_NOTHROW
+_CRTIMP
+int
+__cdecl
+_isnan(
+  _In_ double);
+
+#ifdef __cplusplus
 }
 #endif
 

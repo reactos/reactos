@@ -16,8 +16,7 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-/* $Id$
- *
+/*
  * COPYRIGHT : See COPYING in the top level directory
  * PROJECT   : ReactOS/Win32 get host name
  * FILE      : subsys/system/hostname/hostname.c
@@ -44,7 +43,7 @@ int main (int argc, char ** argv)
 			printf ("%s\n", ComputerName);
 			return EXIT_SUCCESS;
 		}
-		fprintf (stderr, "%s: Win32 error %ld.\n",
+		fprintf (stderr, "%s: Win32 error %lu.\n",
 			argv[0], GetLastError());
 		return EXIT_FAILURE;
 	}else{

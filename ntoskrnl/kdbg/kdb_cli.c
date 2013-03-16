@@ -90,6 +90,8 @@ static BOOLEAN KdbpCmdSet(ULONG Argc, PCHAR Argv[]);
 static BOOLEAN KdbpCmdHelp(ULONG Argc, PCHAR Argv[]);
 static BOOLEAN KdbpCmdDmesg(ULONG Argc, PCHAR Argv[]);
 
+BOOLEAN ExpKdbgExtPool(ULONG Argc, PCHAR Argv[]);
+
 #ifdef __ROS_DWARF__
 static BOOLEAN KdbpCmdPrintStruct(ULONG Argc, PCHAR Argv[]);
 #endif
@@ -178,7 +180,8 @@ static const struct
     { "set", "set [var] [value]", "Sets var to value or displays value of var.", KdbpCmdSet },
     { "dmesg", "dmesg", "Display debug messages on screen, with navigation on pages.", KdbpCmdDmesg },
     { "kmsg", "kmsg", "Kernel dmesg. Alias for dmesg.", KdbpCmdDmesg },
-    { "help", "help", "Display help screen.", KdbpCmdHelp }
+    { "help", "help", "Display help screen.", KdbpCmdHelp },
+    { "!pool", "!pool [Address [Flags]]", "Display information about pool allocations.", ExpKdbgExtPool }
 };
 
 /* FUNCTIONS *****************************************************************/
@@ -401,6 +404,24 @@ KdbpEvaluateExpression(
     }
 
     return Ok;
+}
+
+BOOLEAN
+NTAPI
+KdbpGetHexNumber(
+    IN PCHAR pszNum,
+    OUT ULONG_PTR *pulValue)
+{
+    char *endptr;
+
+    /* Skip optional '0x' prefix */
+    if ((pszNum[0] == '0') && ((pszNum[1] == 'x') || (pszNum[1] == 'X')))
+        pszNum += 2;
+
+    /* Make a number from the string (hex) */
+    *pulValue = strtoul(pszNum, &endptr, 16);
+
+    return (*endptr == '\0');
 }
 
 /*!\brief Evaluates an expression and displays the result.

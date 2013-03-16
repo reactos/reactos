@@ -147,8 +147,8 @@ DWORD WINAPI GetSize (LPVOID lpMem)
  * MRU-Functions  {COMCTL32}
  *
  * NOTES
- * The MRU-Api is a set of functions to manipulate lists of M.R.U. (Most Recently
- * Used) items. It is an undocumented Api that is used (at least) by the shell
+ * The MRU-API is a set of functions to manipulate lists of M.R.U. (Most Recently
+ * Used) items. It is an undocumented API that is used (at least) by the shell
  * and explorer to implement their recent documents feature.
  *
  * Since these functions are undocumented, they are unsupported by MS and

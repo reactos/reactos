@@ -1,5 +1,4 @@
-/* $Id: lock.c 55795 2012-02-21 21:38:08Z ion $
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            dll/win32/kernel32/file/lock.c

@@ -1,5 +1,3 @@
-/* $Id$
- */
 /*
  * COPYRIGHT:   None
  * LICENSE:     Public domain

@@ -1,5 +1,3 @@
-/* $Id$
- */
 
 #define _x(_X_) (_X_)
 #define _strxspn strcspn

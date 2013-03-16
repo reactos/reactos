@@ -1,4 +1,3 @@
-/* $Id: acpi.rc 21698 2006-04-22 05:55:17Z tretiakov $ */
 
 #define REACTOS_VERSION_DLL
 #define REACTOS_STR_FILE_DESCRIPTION	"ReactOS ACPI Driver\0"

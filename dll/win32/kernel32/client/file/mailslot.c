@@ -1,5 +1,4 @@
-/* $Id: mailslot.c 55791 2012-02-21 19:19:44Z ion $
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/kernel32/file/mailslot.c

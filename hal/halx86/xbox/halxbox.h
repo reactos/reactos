@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         Xbox HAL
  * FILE:            hal/halx86/xbox/halxbox.h

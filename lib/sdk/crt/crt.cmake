@@ -135,13 +135,17 @@ list(APPEND CRT_SOURCE
     printf/_cprintf.c
     printf/_cwprintf.c
     printf/_snprintf.c
+    printf/_snprintf_s.c
     printf/_snwprintf.c
+    printf/_snwprintf_s.c
     printf/_vcprintf.c
     printf/_vcwprintf.c
     printf/_vscprintf.c
     printf/_vscwprintf.c
     printf/_vsnprintf.c
+    printf/_vsnprintf_s.c
     printf/_vsnwprintf.c
+    printf/_vsnwprintf_s.c
     printf/_vsprintf_p.c
     printf/fprintf.c
     printf/fprintf_s.c
@@ -150,8 +154,10 @@ list(APPEND CRT_SOURCE
     printf/printf.c
     printf/printf_s.c
     printf/sprintf.c
+    printf/sprintf_s.c
     printf/streamout.c
     printf/swprintf.c
+    printf/swprintf_s.c
     printf/vfprintf.c
     printf/vfprintf_s.c
     printf/vfwprintf.c
@@ -159,7 +165,9 @@ list(APPEND CRT_SOURCE
     printf/vprintf.c
     printf/vprintf_s.c
     printf/vsprintf.c
+    printf/vsprintf_s.c
     printf/vswprintf.c
+    printf/vswprintf_s.c
     printf/vwprintf.c
     printf/vwprintf_s.c
     printf/wprintf.c
@@ -252,6 +260,10 @@ list(APPEND CRT_SOURCE
     stdlib/wmakpath_s.c
     string/_mbsnlen.c
     string/_mbstrnlen.c
+    string/_splitpath.c
+    string/_splitpath_s.c
+    string/_wsplitpath.c
+    string/_wsplitpath_s.c
     string/atof.c
     string/atoi.c
     string/atoi64.c
@@ -263,7 +275,6 @@ list(APPEND CRT_SOURCE
     string/itow.c
     string/mbstowcs_s.c
     string/scanf.c
-    string/splitp.c
     string/strcoll.c
     string/strcspn.c
     string/strdup.c
@@ -291,7 +302,6 @@ list(APPEND CRT_SOURCE
     string/wcstombs_s.c
     string/wcstoul.c
     string/wctype.c
-    string/wsplitp.c
     string/wtoi.c
     string/wtoi64.c
     string/wtol.c

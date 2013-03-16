@@ -131,11 +131,11 @@ extern "C" {
 
   typedef void (__cdecl *_purecall_handler)(void);
 
-  _CRTIMP _purecall_handler __cdecl _set_purecall_handler(_purecall_handler _Handler);
+  _CRTIMP _purecall_handler __cdecl _set_purecall_handler(_In_opt_ _purecall_handler _Handler);
   _CRTIMP _purecall_handler __cdecl _get_purecall_handler(void);
 
   typedef void (__cdecl *_invalid_parameter_handler)(const wchar_t *,const wchar_t *,const wchar_t *,unsigned int,uintptr_t);
-  _invalid_parameter_handler __cdecl _set_invalid_parameter_handler(_invalid_parameter_handler _Handler);
+  _invalid_parameter_handler __cdecl _set_invalid_parameter_handler(_In_opt_ _invalid_parameter_handler _Handler);
   _invalid_parameter_handler __cdecl _get_invalid_parameter_handler(void);
 
 #include <errno.h>
@@ -186,8 +186,8 @@ extern "C" {
 
   _CRTIMP errno_t __cdecl _get_environ(_Out_ char***);
   _CRTIMP errno_t __cdecl _get_wenviron(_Out_ wchar_t***);
-  _CRTIMP errno_t __cdecl _get_pgmptr(_Deref_out_z_ char **_Value);
-  _CRTIMP errno_t __cdecl _get_wpgmptr(_Deref_out_z_ wchar_t **_Value);
+  _CRTIMP errno_t __cdecl _get_pgmptr(_Outptr_result_z_ char **_Value);
+  _CRTIMP errno_t __cdecl _get_wpgmptr(_Outptr_result_z_ wchar_t **_Value);
 
 #ifdef _M_CEE_PURE
   _CRTIMP int* __cdecl __p__fmode();
@@ -330,7 +330,7 @@ extern "C" {
   void
   __cdecl
   qsort(
-    _Inout_updates_bytes_(_NumOfElements * _SizeOfElements) void *_Base,
+    _Inout_updates_bytes_(_NumOfElements * _SizeOfElements) _Post_readable_byte_size_(_NumOfElements * _SizeOfElements) void *_Base,
     _In_ size_t _NumOfElements,
     _In_ size_t _SizeOfElements,
     _In_ int (__cdecl *_PtFuncCompare)(const void *,const void *));
@@ -464,6 +464,7 @@ extern "C" {
 
 #endif /* _INTEGRAL_MAX_BITS >= 64 */
 
+  _Check_return_
   ldiv_t
   __cdecl
   ldiv(
@@ -710,6 +711,7 @@ extern "C" {
   malloc(
     _In_ size_t _Size);
 
+  _Success_(return != 0)
   _Check_return_
   _Ret_maybenull_
   _Post_writable_byte_size_(_NewSize)
@@ -719,6 +721,7 @@ extern "C" {
     _Pre_maybenull_ _Post_invalid_ void *_Memory,
     _In_ size_t _NewSize);
 
+  _Success_(return != 0)
   _Check_return_
   _Ret_maybenull_
   _Post_writable_byte_size_(_Count * _Size)
@@ -768,6 +771,7 @@ extern "C" {
     _In_ size_t _Alignment,
     _In_ size_t _Offset);
 
+  _Success_(return != 0)
   _Check_return_
   _Ret_maybenull_
   _Post_writable_byte_size_(_Size)
@@ -779,6 +783,7 @@ extern "C" {
     _In_ size_t _Size,
     _In_ size_t _Alignment);
 
+  _Success_(return != 0)
   _Check_return_
   _Ret_maybenull_
   _Post_writable_byte_size_(_Count * _Size)
@@ -791,6 +796,7 @@ extern "C" {
     _In_ size_t _Size,
     _In_ size_t _Alignment);
 
+  _Success_(return != 0)
   _Check_return_
   _Ret_maybenull_
   _Post_writable_byte_size_(_Size)
@@ -1143,12 +1149,14 @@ extern "C" {
     _In_z_ char *_Str,
     _In_opt_ _locale_t _Locale);
 
+  _Check_return_
   unsigned long
   __cdecl
   _lrotl(
     _In_ unsigned long _Val,
     _In_ int _Shift);
 
+  _Check_return_
   unsigned long
   __cdecl
   _lrotr(
@@ -1426,10 +1434,10 @@ extern "C" {
 
   __MINGW_EXTENSION typedef struct { long long quot, rem; } lldiv_t;
 
-  __MINGW_EXTENSION lldiv_t __cdecl lldiv(long long, long long);
+  _Check_return_ __MINGW_EXTENSION lldiv_t __cdecl lldiv(_In_ long long, _In_ long long);
 
 #ifndef _MSC_VER
-  __MINGW_EXTENSION __CRT_INLINE long long __cdecl llabs(long long _j) { return (_j >= 0 ? _j : -_j); }
+  __MINGW_EXTENSION __CRT_INLINE long long __cdecl llabs(_In_ long long _j) { return (_j >= 0 ? _j : -_j); }
 #endif
 
   __MINGW_EXTENSION long long  __cdecl strtoll(const char* __restrict__, char** __restrict, int);

@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/smlib/compses.c

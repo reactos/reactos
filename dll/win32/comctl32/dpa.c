@@ -459,7 +459,7 @@ BOOL WINAPI DPA_Grow (HDPA hdpa, INT nGrow)
 /**************************************************************************
  * DPA_Clone [COMCTL32.331]
  *
- * Copies a pointer array to an other one or creates a copy
+ * Copies a pointer array to another one or creates a copy
  *
  * PARAMS
  *     hdpa    [I] handle (pointer) to the existing (source) pointer array

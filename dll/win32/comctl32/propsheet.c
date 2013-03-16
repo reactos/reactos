@@ -168,7 +168,7 @@ static BOOL PROPSHEET_SetCurSel(HWND hwndDlg,
                                 int index,
                                 int skipdir,
                                 HPROPSHEETPAGE hpage);
-static int PROPSHEET_GetPageIndex(HPROPSHEETPAGE hpage, const PropSheetInfo* psInfo);
+static int PROPSHEET_GetPageIndex(HPROPSHEETPAGE hpage, const PropSheetInfo* psInfo, int original_index);
 static PADDING_INFO PROPSHEET_GetPaddingInfoWizard(HWND hwndDlg, const PropSheetInfo* psInfo);
 static BOOL PROPSHEET_DoCommand(HWND hwnd, WORD wID);
 static BOOL PROPSHEET_RemovePage(HWND hwndDlg, int index, HPROPSHEETPAGE hpage);
@@ -1998,9 +1998,8 @@ static BOOL PROPSHEET_SetCurSel(HWND hwndDlg,
   HWND hwndTabControl = GetDlgItem(hwndDlg, IDC_TABCONTROL);
 
   TRACE("index %d, skipdir %d, hpage %p\n", index, skipdir, hpage);
-  /* hpage takes precedence over index */
-  if (hpage != NULL)
-    index = PROPSHEET_GetPageIndex(hpage, psInfo);
+
+  index = PROPSHEET_GetPageIndex(hpage, psInfo, index);
 
   if (index < 0 || index >= psInfo->nPages)
   {
@@ -2331,13 +2330,8 @@ static BOOL PROPSHEET_RemovePage(HWND hwndDlg,
   if (!psInfo) {
     return FALSE;
   }
-  /*
-   * hpage takes precedence over index.
-   */
-  if (hpage != 0)
-  {
-    index = PROPSHEET_GetPageIndex(hpage, psInfo);
-  }
+
+  index = PROPSHEET_GetPageIndex(hpage, psInfo, index);
 
   /* Make sure that index is within range */
   if (index < 0 || index >= psInfo->nPages)
@@ -2575,16 +2569,11 @@ static LRESULT PROPSHEET_IndexToHwnd(HWND hwndDlg, int iPageIndex)
  */
 static LRESULT PROPSHEET_PageToIndex(HWND hwndDlg, HPROPSHEETPAGE hPage)
 {
-    int index;
     PropSheetInfo * psInfo = GetPropW(hwndDlg, PropSheetInfoStr);
 
     TRACE("(%p, %p)\n", hwndDlg, hPage);
 
-    for (index = 0; index < psInfo->nPages; index++)
-        if (psInfo->proppage[index].hpage == hPage)
-            return index;
-    WARN("%p not found\n", hPage);
-    return -1;
+    return PROPSHEET_GetPageIndex(hPage, psInfo, -1);
 }
 
 /******************************************************************************
@@ -2660,26 +2649,20 @@ static BOOL PROPSHEET_RecalcPageSizes(HWND hwndDlg)
  *            PROPSHEET_GetPageIndex
  *
  * Given a HPROPSHEETPAGE, returns the index of the corresponding page from
- * the array of PropPageInfo.
+ * the array of PropPageInfo. If page is not found original index is used
+ * (page takes precedence over index).
  */
-static int PROPSHEET_GetPageIndex(HPROPSHEETPAGE hpage, const PropSheetInfo* psInfo)
+static int PROPSHEET_GetPageIndex(HPROPSHEETPAGE page, const PropSheetInfo* psInfo, int original_index)
 {
-  BOOL found = FALSE;
-  int index = 0;
+    int index;
 
-  TRACE("hpage %p\n", hpage);
-  while ((index < psInfo->nPages) && (found == FALSE))
-  {
-    if (psInfo->proppage[index].hpage == hpage)
-      found = TRUE;
-    else
-      index++;
-  }
+    TRACE("page %p index %d\n", page, original_index);
 
-  if (found == FALSE)
-    index = -1;
+    for (index = 0; index < psInfo->nPages; index++)
+        if (psInfo->proppage[index].hpage == page)
+            return index;
 
-  return index;
+    return original_index;
 }
 
 /******************************************************************************

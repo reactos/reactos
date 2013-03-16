@@ -163,28 +163,40 @@ typedef struct _BATTERY_STATUS {
 #define BATTERY_CLASS_MAJOR_VERSION       0x0001
 #define BATTERY_CLASS_MINOR_VERSION       0x0000
 
+_Function_class_(BCLASS_QUERY_TAG_CALLBACK)
+_IRQL_requires_same_
+_IRQL_requires_max_(PASSIVE_LEVEL)
+_Check_return_
 typedef NTSTATUS
 (NTAPI BCLASS_QUERY_TAG_CALLBACK)(
-  IN PVOID Context,
-  OUT PULONG BatteryTag);
+  _In_ PVOID Context,
+  _Out_ PULONG BatteryTag);
 typedef BCLASS_QUERY_TAG_CALLBACK *PBCLASS_QUERY_TAG_CALLBACK;
 
+_Function_class_(BCLASS_QUERY_INFORMATION_CALLBACK)
+_IRQL_requires_same_
+_IRQL_requires_max_(PASSIVE_LEVEL)
+_Check_return_
 typedef NTSTATUS
 (NTAPI BCLASS_QUERY_INFORMATION_CALLBACK)(
-  IN PVOID Context,
-  IN ULONG BatteryTag,
-  IN BATTERY_QUERY_INFORMATION_LEVEL Level,
-  IN LONG AtRate,
-  OUT PVOID Buffer,
-  IN ULONG BufferLength,
-  OUT PULONG ReturnedLength);
+  _In_ PVOID Context,
+  _In_ ULONG BatteryTag,
+  _In_ BATTERY_QUERY_INFORMATION_LEVEL Level,
+  _In_ LONG AtRate,
+  _Out_writes_bytes_to_(BufferLength, *ReturnedLength) PVOID Buffer,
+  _In_ ULONG BufferLength,
+  _Out_ PULONG ReturnedLength);
 typedef BCLASS_QUERY_INFORMATION_CALLBACK *PBCLASS_QUERY_INFORMATION_CALLBACK;
 
+_Function_class_(BCLASS_QUERY_STATUS_CALLBACK)
+_IRQL_requires_same_
+_IRQL_requires_max_(PASSIVE_LEVEL)
+_Check_return_
 typedef NTSTATUS
 (NTAPI BCLASS_QUERY_STATUS_CALLBACK)(
-  IN PVOID Context,
-  IN ULONG BatteryTag,
-  OUT PBATTERY_STATUS BatteryStatus);
+  _In_ PVOID Context,
+  _In_ ULONG BatteryTag,
+  _Out_ PBATTERY_STATUS BatteryStatus);
 typedef BCLASS_QUERY_STATUS_CALLBACK *PBCLASS_QUERY_STATUS_CALLBACK;
 
 typedef struct _BATTERY_NOTIFY {
@@ -193,24 +205,36 @@ typedef struct _BATTERY_NOTIFY {
   ULONG HighCapacity;
 } BATTERY_NOTIFY, *PBATTERY_NOTIFY;
 
+_Function_class_(BCLASS_SET_STATUS_NOTIFY_CALLBACK)
+_IRQL_requires_same_
+_IRQL_requires_max_(PASSIVE_LEVEL)
+_Check_return_
 typedef NTSTATUS
 (NTAPI BCLASS_SET_STATUS_NOTIFY_CALLBACK)(
-  IN PVOID Context,
-  IN ULONG BatteryTag,
-  IN PBATTERY_NOTIFY BatteryNotify);
+  _In_ PVOID Context,
+  _In_ ULONG BatteryTag,
+  _In_ PBATTERY_NOTIFY BatteryNotify);
 typedef BCLASS_SET_STATUS_NOTIFY_CALLBACK *PBCLASS_SET_STATUS_NOTIFY_CALLBACK;
 
+_Function_class_(BCLASS_SET_INFORMATION_CALLBACK)
+_IRQL_requires_same_
+_IRQL_requires_max_(PASSIVE_LEVEL)
+_Check_return_
 typedef NTSTATUS
 (NTAPI BCLASS_SET_INFORMATION_CALLBACK)(
-  IN PVOID Context,
-  IN ULONG BatteryTag,
-  IN BATTERY_SET_INFORMATION_LEVEL Level,
-  IN PVOID Buffer OPTIONAL);
+  _In_ PVOID Context,
+  _In_ ULONG BatteryTag,
+  _In_ BATTERY_SET_INFORMATION_LEVEL Level,
+  _In_opt_ PVOID Buffer);
 typedef BCLASS_SET_INFORMATION_CALLBACK *PBCLASS_SET_INFORMATION_CALLBACK;
 
+_Function_class_(BCLASS_DISABLE_STATUS_NOTIFY_CALLBACK)
+_IRQL_requires_same_
+_IRQL_requires_max_(PASSIVE_LEVEL)
+_Check_return_
 typedef NTSTATUS
 (NTAPI BCLASS_DISABLE_STATUS_NOTIFY_CALLBACK)(
-  IN PVOID Context);
+  _In_ PVOID Context);
 typedef BCLASS_DISABLE_STATUS_NOTIFY_CALLBACK *PBCLASS_DISABLE_STATUS_NOTIFY_CALLBACK;
 
 typedef PBCLASS_QUERY_TAG_CALLBACK BCLASS_QUERY_TAG;
@@ -302,57 +326,67 @@ typedef struct _BATTERY_TAG_CHANGE {
 #define BCLASSAPI DECLSPEC_IMPORT
 #endif
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
+_Check_return_
 BCLASSAPI
 NTSTATUS
 NTAPI
 BatteryClassInitializeDevice(
-  IN PBATTERY_MINIPORT_INFO MiniportInfo,
-  IN PVOID *ClassData);
+  _In_ PBATTERY_MINIPORT_INFO MiniportInfo,
+  _Out_ PVOID *ClassData);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
+_Check_return_
 BCLASSAPI
 NTSTATUS
 NTAPI
 BatteryClassIoctl(
-  IN PVOID ClassData,
-  IN OUT PIRP Irp);
+  _In_ PVOID ClassData,
+  _Inout_ PIRP Irp);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 BCLASSAPI
 NTSTATUS
 NTAPI
 BatteryClassStatusNotify(
-  IN PVOID  ClassData);
+  _In_ PVOID ClassData);
 
 #if (NTDDI_VERSION >= NTDDI_WINXP)
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
+_Check_return_
 BCLASSAPI
 NTSTATUS
 NTAPI
 BatteryClassQueryWmiDataBlock(
-  IN PVOID ClassData,
-  IN OUT PDEVICE_OBJECT DeviceObject,
-  IN OUT PIRP Irp,
-  IN ULONG GuidIndex,
-  OUT PULONG InstanceLengthArray,
-  IN ULONG OutBufferSize,
-  OUT PUCHAR Buffer OPTIONAL);
+  _In_ PVOID ClassData,
+  _Inout_ PDEVICE_OBJECT DeviceObject,
+  _Inout_ PIRP Irp,
+  _In_ ULONG GuidIndex,
+  _Out_writes_(1) PULONG InstanceLengthArray,
+  _In_ ULONG OutBufferSize,
+  _Out_writes_bytes_opt_(OutBufferSize) PUCHAR Buffer);
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
+_Check_return_
 BCLASSAPI
 NTSTATUS
 NTAPI
 BatteryClassSystemControl(
-  IN PVOID ClassData,
-  IN PVOID WmiLibContext, /* PWMILIB_CONTEXT */
-  IN PDEVICE_OBJECT DeviceObject,
-  IN OUT PIRP Irp,
-  OUT PVOID Disposition); /* PSYSCTL_IRP_DISPOSITION */
+  _In_ PVOID ClassData,
+  _In_ PVOID WmiLibContext, /* PWMILIB_CONTEXT */
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _Inout_ PIRP Irp,
+  _Out_ PVOID Disposition); /* PSYSCTL_IRP_DISPOSITION */
 
 #endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 BCLASSAPI
 NTSTATUS
 NTAPI
 BatteryClassUnload(
-  IN PVOID ClassData);
+  _In_ PVOID ClassData);
 
 #endif /* _WINDOWS_H */
 

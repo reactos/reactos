@@ -1644,7 +1644,8 @@ MiSessionRemoveProcess(VOID)
     ASSERT(MmIsAddressValid(MmSessionSpace) == TRUE);
 
     /* Remove the process from the list ,and dereference the session */
-    RemoveEntryList(&CurrentProcess->SessionProcessLinks);
+    // DO NOT ENABLE THIS UNLESS YOU FIXED THE NP POOL CORRUPTION THAT IT CAUSES!!!
+    //RemoveEntryList(&CurrentProcess->SessionProcessLinks);
     //MiDereferenceSession();
 }
 
@@ -1673,7 +1674,8 @@ MiSessionAddProcess(IN PEPROCESS NewProcess)
     NewProcess->Session = SessionGlobal;
 
     /* Insert it into the process list */
-    InsertTailList(&SessionGlobal->ProcessList, &NewProcess->SessionProcessLinks);
+    // DO NOT ENABLE THIS UNLESS YOU FIXED THE NP POOL CORRUPTION THAT IT CAUSES!!!
+    //InsertTailList(&SessionGlobal->ProcessList, &NewProcess->SessionProcessLinks);
 
     /* Set the flag */
     PspSetProcessFlag(NewProcess, PSF_PROCESS_IN_SESSION_BIT);

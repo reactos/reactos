@@ -1123,7 +1123,7 @@ REBAR_MoveChildWindows (const REBAR_INFO *infoPtr, UINT start, UINT endplus)
  * or infoPtr->uNumBands if none */
 static int next_visible(const REBAR_INFO *infoPtr, int i)
 {
-    int n;
+    unsigned int n;
     for (n = i + 1; n < infoPtr->uNumBands; n++)
         if (!HIDDENBAND(REBAR_GetBand(infoPtr, n)))
             break;

@@ -1059,14 +1059,12 @@ HKLM,"SOFTWARE\ReactOS\ReactOS\CurrentVersion\IFS","FATX",0x00000000,"ufatx.dll"
 
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon","ConsoleShell",0x00020000,"%SystemRoot%\system32\cmd.exe"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon","Shell",0x00020000,"%SystemRoot%\explorer.exe"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon","StartServices",0x00010001,0x00000001
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon","StartLsass",0x00010001,0x00000001
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon","Userinit",0x00020000,"%SystemRoot%\system32\userinit.exe"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon","AutoAdminLogon",0x00000000,"1"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon","DefaultUserName",0x00000000,"Administrator"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon","DefaultPassword",0x00000000,"Secret"
 
-;Time Zone Servers
+; Time Zone Servers
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\DateTime\Servers","1",0x00000000,"pool.ntp.org"
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\DateTime\Servers","2",0x00000000,"asia.pool.ntp.org"
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\DateTime\Servers","3",0x00000000,"europe.pool.ntp.org"

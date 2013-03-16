@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Display Control Panel
  * FILE:            dll/cpl/desk/dibitmap.c

@@ -50,6 +50,7 @@ typedef struct _SAM_DB_OBJECT
     HANDLE KeyHandle;
     HANDLE MembersKeyHandle;  // only used by Aliases
     ULONG RelativeId;
+    BOOLEAN Trusted;
     struct _SAM_DB_OBJECT *ParentObject;
 } SAM_DB_OBJECT, *PSAM_DB_OBJECT;
 
@@ -68,11 +69,11 @@ typedef struct _SAM_DOMAIN_FIXED_DATA
     ULONG Reserved;
     LARGE_INTEGER CreationTime;
     LARGE_INTEGER DomainModifiedCount;
-    LARGE_INTEGER MaxPasswordAge;
-    LARGE_INTEGER MinPasswordAge;
-    LARGE_INTEGER ForceLogoff;
-    LARGE_INTEGER LockoutDuration;
-    LARGE_INTEGER LockoutObservationWindow;
+    LARGE_INTEGER MaxPasswordAge;               /* relative Time */
+    LARGE_INTEGER MinPasswordAge;               /* relative Time */
+    LARGE_INTEGER ForceLogoff;                  /* relative Time */
+    LARGE_INTEGER LockoutDuration;              /* relative Time */
+    LARGE_INTEGER LockoutObservationWindow;     /* relative Time */
     LARGE_INTEGER ModifiedCountAtLastPromotion;
     ULONG NextRid;
     ULONG PasswordProperties;
@@ -111,6 +112,18 @@ typedef struct _SAM_USER_FIXED_DATA
     USHORT AdminCount;
     USHORT OperatorCount;
 } SAM_USER_FIXED_DATA, *PSAM_USER_FIXED_DATA;
+
+
+extern PGENERIC_MAPPING pServerMapping;
+
+
+/* alias.c */
+
+NTSTATUS
+SampOpenAliasObject(IN PSAM_DB_OBJECT DomainObject,
+                    IN ULONG AliasId,
+                    IN ACCESS_MASK DesiredAccess,
+                    OUT PSAM_DB_OBJECT *AliasObject);
 
 
 /* database.c */
@@ -187,6 +200,12 @@ SampCheckAccountNameInDomain(IN PSAM_DB_OBJECT DomainObject,
 
 
 /* group.h */
+
+NTSTATUS
+SampOpenGroupObject(IN PSAM_DB_OBJECT DomainObject,
+                    IN ULONG GroupId,
+                    IN ACCESS_MASK DesiredAccess,
+                    OUT PSAM_DB_OBJECT *GroupObject);
 
 NTSTATUS
 SampAddMemberToGroup(IN PSAM_DB_OBJECT GroupObject,
@@ -296,6 +315,9 @@ SampSetUserGroupAttributes(IN PSAM_DB_OBJECT DomainObject,
                            IN ULONG UserId,
                            IN ULONG GroupId,
                            IN ULONG GroupAttributes);
+
+NTSTATUS
+SampRemoveUserFromAllGroups(IN PSAM_DB_OBJECT UserObject);
 
 NTSTATUS
 SampSetUserPassword(IN PSAM_DB_OBJECT UserObject,

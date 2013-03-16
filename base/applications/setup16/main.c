@@ -143,7 +143,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
     else
     {
         WCHAR szMsg[MAX_PATH];
-        wsprintf(szMsg, L"Failed to load the installer. Error %d", GetLastError());
+        wsprintf(szMsg, L"Failed to load the installer. Error %lu", GetLastError());
         MessageBoxW(0, szMsg, L"Error", MB_OK | MB_ICONERROR);
         DeleteDirectory(szTempPath);
         return 1;

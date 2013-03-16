@@ -1,4 +1,3 @@
-/* $Id$ */
 
 #include <windows.h>
 #define REACTOS_STR_FILE_DESCRIPTION	"ReactOS Virtual DOS Machine\0"

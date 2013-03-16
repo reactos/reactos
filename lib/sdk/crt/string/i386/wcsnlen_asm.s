@@ -1,5 +1,3 @@
-/* $Id$
- */
 
 #define _UNICODE
 #include "tcsnlen.inc"

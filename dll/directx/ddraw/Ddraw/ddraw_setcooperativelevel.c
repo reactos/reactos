@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS DirectX
  * FILE:                 ddraw/ddraw/ddraw_main.c

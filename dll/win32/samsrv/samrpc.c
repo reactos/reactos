@@ -57,6 +57,8 @@ static GENERIC_MAPPING UserMapping =
     USER_ALL_ACCESS
 };
 
+PGENERIC_MAPPING pServerMapping = &ServerMapping;
+
 
 /* FUNCTIONS *****************************************************************/
 
@@ -203,8 +205,23 @@ NTSTATUS
 NTAPI
 SamrShutdownSamServer(IN SAMPR_HANDLE ServerHandle)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PSAM_DB_OBJECT ServerObject;
+    NTSTATUS Status;
+
+    TRACE("(%p)\n", ServerHandle);
+
+    /* Validate the server handle */
+    Status = SampValidateDbObject(ServerHandle,
+                                  SamDbServerObject,
+                                  SAM_SERVER_SHUTDOWN,
+                                  &ServerObject);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    /* Shut the server down */
+    RpcMgmtStopServerListening(0);
+
+    return STATUS_SUCCESS;
 }
 
 
@@ -6043,13 +6060,18 @@ done:
 }
 
 
-static NTSTATUS
+static
+NTSTATUS
 SampQueryUserInternal1(PSAM_DB_OBJECT UserObject,
-                      PSAMPR_USER_INFO_BUFFER *Buffer)
+                       PSAMPR_USER_INFO_BUFFER *Buffer)
 {
     PSAMPR_USER_INFO_BUFFER InfoBuffer = NULL;
     ULONG Length = 0;
     NTSTATUS Status = STATUS_SUCCESS;
+
+    /* Fail, if the caller is not a trusted caller */
+    if (UserObject->Trusted == FALSE)
+        return STATUS_INVALID_INFO_CLASS;
 
     *Buffer = NULL;
 

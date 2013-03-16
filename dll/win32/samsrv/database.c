@@ -210,7 +210,7 @@ SampCreateDbObject(IN PSAM_DB_OBJECT ParentObject,
     }
 
     NewObject = RtlAllocateHeap(RtlGetProcessHeap(),
-                                0,
+                                HEAP_ZERO_MEMORY,
                                 sizeof(SAM_DB_OBJECT));
     if (NewObject == NULL)
     {
@@ -242,6 +242,9 @@ SampCreateDbObject(IN PSAM_DB_OBJECT ParentObject,
     NewObject->MembersKeyHandle = MembersKeyHandle;
     NewObject->RelativeId = RelativeId;
     NewObject->ParentObject = ParentObject;
+
+    if (ParentObject != NULL)
+        NewObject->Trusted = ParentObject->Trusted;
 
     *DbObject = NewObject;
 
@@ -359,7 +362,7 @@ SampOpenDbObject(IN PSAM_DB_OBJECT ParentObject,
     }
 
     NewObject = RtlAllocateHeap(RtlGetProcessHeap(),
-                                0,
+                                HEAP_ZERO_MEMORY,
                                 sizeof(SAM_DB_OBJECT));
     if (NewObject == NULL)
     {
@@ -390,6 +393,9 @@ SampOpenDbObject(IN PSAM_DB_OBJECT ParentObject,
     NewObject->MembersKeyHandle = MembersKeyHandle;
     NewObject->RelativeId = RelativeId;
     NewObject->ParentObject = ParentObject;
+
+    if (ParentObject != NULL)
+        NewObject->Trusted = ParentObject->Trusted;
 
     *DbObject = NewObject;
 

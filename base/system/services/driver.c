@@ -141,13 +141,11 @@ ScmGetDriverStatus(PSERVICE lpService,
 
     if (lpService->Status.dwServiceType == SERVICE_KERNEL_DRIVER)
     {
-        RtlInitUnicodeString(&DirName,
-                             L"\\Driver");
+        RtlInitUnicodeString(&DirName, L"\\Driver");
     }
-    else
+    else // if (lpService->Status.dwServiceType == SERVICE_FILE_SYSTEM_DRIVER)
     {
-        RtlInitUnicodeString(&DirName,
-                             L"\\FileSystem");
+        RtlInitUnicodeString(&DirName, L"\\FileSystem");
     }
 
     InitializeObjectAttributes(&ObjectAttributes,

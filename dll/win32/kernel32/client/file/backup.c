@@ -1,5 +1,4 @@
-/* $Id: backup.c 48475 2010-08-07 05:02:58Z sir_richard $
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/kernel32/file/backup.c

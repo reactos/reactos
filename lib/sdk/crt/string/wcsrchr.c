@@ -1,5 +1,3 @@
-/* $Id$
- */
 
 #define _UNICODE
 #define _XINT wchar_t

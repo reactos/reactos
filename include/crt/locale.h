@@ -68,19 +68,68 @@ extern "C" {
 
 #endif
 
-  int __cdecl _configthreadlocale(int _Flag);
-  char *__cdecl setlocale(int _Category,const char *_Locale);
-  _CRTIMP struct lconv *__cdecl localeconv(void);
-  _locale_t __cdecl _get_current_locale(void);
-  _locale_t __cdecl _create_locale(int _Category,const char *_Locale);
-  void __cdecl _free_locale(_locale_t _Locale);
-  _locale_t __cdecl __get_current_locale(void);
-  _locale_t __cdecl __create_locale(int _Category,const char *_Locale);
-  void __cdecl __free_locale(_locale_t _Locale);
+  _Check_return_opt_
+  int
+  __cdecl
+  _configthreadlocale(
+    _In_ int _Flag);
+
+  _Check_return_opt_
+  char*
+  __cdecl
+  setlocale(
+    _In_ int _Category,
+    _In_opt_z_ const char *_Locale);
+
+  _Check_return_opt_
+  _CRTIMP
+  struct lconv*
+  __cdecl
+  localeconv(void);
+
+  _Check_return_opt_
+  _locale_t
+  __cdecl
+  _get_current_locale(void);
+
+  _Check_return_opt_
+  _locale_t
+  __cdecl
+  _create_locale(
+    _In_ int _Category,
+    _In_z_ const char *_Locale);
+
+  void
+  __cdecl
+  _free_locale(
+    _In_opt_ _locale_t _Locale);
+
+  _Check_return_
+  _locale_t
+  __cdecl
+  __get_current_locale(void);
+
+  _Check_return_
+  _locale_t
+  __cdecl
+  __create_locale(
+    _In_ int _Category,
+    _In_z_ const char *_Locale);
+
+  void
+  __cdecl
+  __free_locale(
+    _In_opt_ _locale_t _Locale);
 
 #ifndef _WLOCALE_DEFINED
 #define _WLOCALE_DEFINED
-  _CRTIMP wchar_t *__cdecl _wsetlocale(int _Category,const wchar_t *_Locale);
+  _Check_return_opt_
+  _CRTIMP
+  wchar_t*
+  __cdecl
+  _wsetlocale(
+    _In_ int _Category,
+    _In_opt_z_ const wchar_t *_Locale);
 #endif
 
 #ifdef __cplusplus

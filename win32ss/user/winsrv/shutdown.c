@@ -34,6 +34,7 @@ typedef struct tagNOTIFY_CONTEXT
     WPARAM wParam;
     LPARAM lParam;
     HDESK Desktop;
+    HDESK OldDesktop;
     DWORD StartTime;
     DWORD QueryResult;
     HWND Dlg;
@@ -398,7 +399,12 @@ NotifyDesktopEnum(LPWSTR DesktopName, LPARAM lParam)
         return FALSE;
     }
 
+    Context->OldDesktop = GetThreadDesktop(GetCurrentThreadId());
+    SwitchDesktop(Context->Desktop);
+
     EnumDesktopWindows(Context->Desktop, NotifyTopLevelEnum, lParam);
+
+    SwitchDesktop(Context->OldDesktop);
 
     CloseDesktop(Context->Desktop);
 
