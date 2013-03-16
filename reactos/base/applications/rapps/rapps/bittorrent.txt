@@ -2,13 +2,13 @@
 
 [Section]
 Name = BitTorrent
-Version = 7.7.2
+Version = 7.8
 Licence = Freeware for non-commercial uses
 Description = The Original BitTorrent Client.
-Size = 956KB
+Size = 1012KB
 Category = 5
 URLSite = http://www.bittorrent.com/
-URLDownload = http://download.bittorrent.com/7.7.2/BitTorrent.exe
+URLDownload = http://download.bittorrent.com/7.8/BitTorrent.exe
 CDPath = none
 
 [Section.0407]
