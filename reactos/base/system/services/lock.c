@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Service Control Manager
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        base/system/services/lock.c
- * PURPOSE:     Service lock functions
+ * PURPOSE:     User-side Services Start Serialization Lock functions
  * COPYRIGHT:   Copyright 2012 Hermès Bélusca
  */
 
@@ -16,6 +16,7 @@
 
 /* GLOBALS *******************************************************************/
 
+/* The unique user service start lock of the SCM */
 static PSTART_LOCK pServiceStartLock = NULL;
 
 
