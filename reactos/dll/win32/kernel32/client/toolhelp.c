@@ -1,5 +1,4 @@
-/* $Id: toolhelp.c 54071 2011-10-10 12:14:12Z tfaber $
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            dll/win32/kernel32/misc/toolhelp.c

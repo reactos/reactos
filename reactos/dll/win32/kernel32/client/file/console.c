@@ -1,5 +1,4 @@
-/* $Id: console.c 55081 2012-01-22 22:27:08Z gadamopoulos $
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            dll/win32/kernel32/misc/console.c

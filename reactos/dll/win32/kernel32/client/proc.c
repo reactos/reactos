@@ -1,5 +1,4 @@
-/* $Id: proc.c 57086 2012-08-16 15:39:40Z akhaldi $
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/kernel32/proc/proc.c

@@ -1,5 +1,4 @@
-/* $Id: lzexpand.c 52854 2011-07-24 23:42:09Z ion $
- * 
+/* 
  * LZ Decompression functions
  *
  * Copyright 1996 Marcus Meissner

@@ -1,5 +1,4 @@
-/* $Id: except.c 57269 2012-09-11 03:50:20Z mnordell $
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/kernel32/misc/except.c

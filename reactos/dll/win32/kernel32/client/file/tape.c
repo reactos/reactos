@@ -1,5 +1,4 @@
-/* $Id: tape.c 54334 2011-11-07 07:41:52Z ion $
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/kernel32/file/tape.c

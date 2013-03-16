@@ -1,5 +1,4 @@
-/* $Id: dllmain.c 56414 2012-04-25 10:17:29Z tfaber $
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/kernel32/misc/dllmain.c

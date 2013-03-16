@@ -1,5 +1,4 @@
-/* $Id: time.c 52770 2011-07-22 02:13:57Z ion $
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/kernel32/misc/time.c

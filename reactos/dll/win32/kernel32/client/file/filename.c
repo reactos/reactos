@@ -1,5 +1,4 @@
-/* $Id: file.c 54310 2011-11-06 04:13:21Z ion $
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/kernel32/file/file.c
