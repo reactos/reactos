@@ -1,5 +1,4 @@
-/* $Id: ddraw_setcooperativelevel.c 40864 2009-05-09 12:27:40Z dchapyshev $
- *
+/*
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS DirectX
  * FILE:                 ddraw/ddraw/ddraw_main.c

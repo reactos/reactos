@@ -1,5 +1,4 @@
-/* $Id: desk.c 54535 2011-11-29 14:55:58Z dgorbachev $
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Display Control Panel
  * FILE:            dll/cpl/desk/desk.c

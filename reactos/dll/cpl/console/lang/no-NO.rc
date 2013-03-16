@@ -1,5 +1,4 @@
-/* $Id: en-US.rc 31950 2008-01-22 19:08:51Z dreimer $
- *
+/*
  * PROJECT:         ReactOS Console Configuration DLL
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            dll/win32/console/lang/en-US.rc

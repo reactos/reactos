@@ -1,5 +1,4 @@
-/* $Id: surface_stubs.c 37917 2008-12-07 21:48:44Z dgorbachev $
- *
+/*
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS DirectX
  * FILE:                 ddraw/surface/surface_stubs.c

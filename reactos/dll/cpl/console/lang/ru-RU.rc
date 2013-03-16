@@ -1,5 +1,4 @@
 // Russian language resource file (Dmitry Chapyshev, 2007-06-11)
-/* $Id: en-US.rc 24928 2006-11-28 19:07:27Z janderwald $ */
 
 #include <commctrl.h>
 

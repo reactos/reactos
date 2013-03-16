@@ -1,5 +1,4 @@
-/* $Id: background.c 55583 2012-02-13 20:52:20Z rharabien $
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Display Control Panel
  * FILE:            dll/cpl/desk/background.c

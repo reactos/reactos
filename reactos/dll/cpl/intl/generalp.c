@@ -16,8 +16,7 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-/* $Id: generalp.c 56849 2012-07-07 23:02:14Z fireball $
- *
+/*
  * PROJECT:         ReactOS International Control Panel
  * FILE:            dll/cpl/intl/generalp.c
  * PURPOSE:         General property page

@@ -1,6 +1,4 @@
-
-/* $Id: main.c 37776 2008-11-30 19:28:11Z hyperion $
- *
+/*
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
  * FILE:                 lib/ddraw/ddraw.c

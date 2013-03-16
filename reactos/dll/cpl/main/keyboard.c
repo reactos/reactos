@@ -16,8 +16,7 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-/* $Id: keyboard.c 54535 2011-11-29 14:55:58Z dgorbachev $
- *
+/*
  * PROJECT:         ReactOS Main Control Panel
  * FILE:            dll/cpl/main/keyboard.c
  * PURPOSE:         Keyboard Control Panel

@@ -1,5 +1,4 @@
-/* $Id: sort.c 52956 2011-07-28 14:54:48Z akhaldi $
- *
+/*
  * PROJECT:         ReactOS International Control Panel
  * FILE:            dll/cpl/intl/sort.c
  * PURPOSE:         Sorting property page
