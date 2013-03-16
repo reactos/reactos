@@ -260,6 +260,10 @@ list(APPEND CRT_SOURCE
     stdlib/wmakpath_s.c
     string/_mbsnlen.c
     string/_mbstrnlen.c
+    string/_splitpath.c
+    string/_splitpath_s.c
+    string/_wsplitpath.c
+    string/_wsplitpath_s.c
     string/atof.c
     string/atoi.c
     string/atoi64.c
@@ -271,7 +275,6 @@ list(APPEND CRT_SOURCE
     string/itow.c
     string/mbstowcs_s.c
     string/scanf.c
-    string/splitp.c
     string/strcoll.c
     string/strcspn.c
     string/strdup.c
@@ -299,7 +302,6 @@ list(APPEND CRT_SOURCE
     string/wcstombs_s.c
     string/wcstoul.c
     string/wctype.c
-    string/wsplitp.c
     string/wtoi.c
     string/wtoi64.c
     string/wtol.c

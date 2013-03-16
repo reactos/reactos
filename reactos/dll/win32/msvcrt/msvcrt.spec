@@ -857,7 +857,7 @@
 @ cdecl _spawnvp(long str ptr)
 @ cdecl _spawnvpe(long str ptr ptr)
 @ cdecl _splitpath(str ptr ptr ptr ptr)
-# stub _splitpath_s
+@ cdecl _splitpath_s(str ptr long ptr long ptr long ptr long)
 # stub _sprintf_l
 # stub _sprintf_p_l
 # stub _sprintf_s_l
@@ -1127,7 +1127,7 @@
 @ cdecl _wspawnvp(long wstr ptr)
 @ cdecl _wspawnvpe(long wstr ptr ptr)
 @ cdecl _wsplitpath(wstr ptr ptr ptr ptr)
-# @ cdecl _wsplitpath_s(wstr ptr long ptr long ptr long ptr long)
+@ cdecl _wsplitpath_s(wstr ptr long ptr long ptr long ptr long)
 @ cdecl _wstat(wstr ptr)
 @ cdecl _wstati64(wstr ptr)
 @ cdecl _wstat64(wstr ptr)

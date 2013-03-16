@@ -26,6 +26,8 @@ list(APPEND LIBCNTPR_SOURCE
     search/bsearch.c
     search/lfind.c
     stdlib/qsort.c
+    string/_splitpath.c
+    string/_wsplitpath.c
     string/ctype.c
     string/iswctype.c
     string/is_wctype.c
@@ -46,7 +48,6 @@ list(APPEND LIBCNTPR_SOURCE
     string/itoa.c
     string/itow.c
     string/mbstowcs_nt.c
-    string/splitp.c
     string/strtol.c
     string/strtoul.c
     string/strtoull.c
@@ -55,7 +56,6 @@ list(APPEND LIBCNTPR_SOURCE
     string/wcstombs_nt.c
     string/wcstoul.c
     string/wctype.c
-    string/wsplitp.c
     string/wtoi64.c
     string/wtoi.c
     string/wtol.c
