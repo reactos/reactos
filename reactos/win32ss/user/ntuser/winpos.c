@@ -2218,11 +2218,15 @@ co_WinPosShowWindow(PWND Wnd, INT Cmd)
 
    if ((Cmd == SW_HIDE) || (Cmd == SW_MINIMIZE))
    {
-      if ( ( Wnd->spwndParent == UserGetDesktopWindow() && !ActivateOtherWindowMin(Wnd) ) ||
-           // and Rule #1.
-           ( Wnd == pti->MessageQueue->spwndActive && pti->MessageQueue == IntGetFocusMessageQueue() ) )
+      if ( Wnd == pti->MessageQueue->spwndActive && pti->MessageQueue == IntGetFocusMessageQueue()  )
       {
-         co_WinPosActivateOtherWindow(Wnd);
+          if ( Wnd->spwndParent == UserGetDesktopWindow())
+          {
+              if(!ActivateOtherWindowMin(Wnd))
+                co_WinPosActivateOtherWindow(Wnd);
+          }
+          else
+              co_WinPosActivateOtherWindow(Wnd);
       }
 
       /* Revert focus to parent */
